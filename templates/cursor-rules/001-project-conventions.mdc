@@ -1,0 +1,91 @@
+---
+description: 프로젝트 핵심 규칙 — 언어, 기술 스택, 아키텍처, 코드 컨벤션
+alwaysApply: true
+---
+
+# 프로젝트 컨벤션
+
+## Project Overview
+
+{PROJECT_DESCRIPTION}
+
+### 핵심 목표
+
+- {GOAL_1}
+- {GOAL_2}
+- {GOAL_3}
+
+## Language Convention
+
+- **문서 본문**: {DOCUMENT_LANGUAGE} (예: 한국어, English)
+- **코드/변수/필드명**: {CODE_LANGUAGE} (예: English)
+- **파일/폴더 명명**: {NAMING_CONVENTION} (예: kebab-case, camelCase)
+
+## Tech Stack
+
+| 구분 | 기술 | 버전 |
+|------|------|------|
+| Language | {LANGUAGE} | {VERSION} |
+| Framework | {FRAMEWORK} | {VERSION} |
+| Database | {DATABASE} | {VERSION} |
+| Build Tool | {BUILD_TOOL} | {VERSION} |
+| Test Framework | {TEST_FRAMEWORK} | {VERSION} |
+| Package Manager | {PACKAGE_MANAGER} | {VERSION} |
+
+## Architecture
+
+### 소스 구조
+
+```
+{PROJECT_ROOT}/
+├── {SRC_DIR}/              ← 소스 코드
+│   ├── {MODULE_1}/
+│   ├── {MODULE_2}/
+│   └── {MODULE_3}/
+├── {TEST_DIR}/             ← 테스트
+├── {CONFIG_DIR}/           ← 설정 파일
+└── {DOCS_DIR}/             ← 문서
+```
+
+### 주요 설계 결정
+
+- {ARCHITECTURE_DECISION_1}
+- {ARCHITECTURE_DECISION_2}
+
+## Code Conventions
+
+### 코드 스타일
+
+- 들여쓰기: {INDENT_STYLE} (예: 2 spaces, 4 spaces, tabs)
+- 줄 길이: {MAX_LINE_LENGTH}자
+- 문자열: {STRING_STYLE} (예: single quotes, double quotes)
+
+### 네이밍 규칙
+
+| 대상 | 규칙 | 예시 |
+|------|------|------|
+| 변수/함수 | {VARIABLE_NAMING} | {VARIABLE_EXAMPLE} |
+| 클래스/타입 | {CLASS_NAMING} | {CLASS_EXAMPLE} |
+| 상수 | {CONSTANT_NAMING} | {CONSTANT_EXAMPLE} |
+| 파일명 | {FILE_NAMING} | {FILE_EXAMPLE} |
+
+### 코드 품질 도구
+
+```bash
+# 린트
+{LINT_COMMAND}
+
+# 포맷팅
+{FORMAT_COMMAND}
+
+# 타입 체크
+{TYPE_CHECK_COMMAND}
+
+# 테스트
+{TEST_COMMAND}
+```
+
+### 금지 패턴
+
+- {ANTI_PATTERN_1}
+- {ANTI_PATTERN_2}
