@@ -58,7 +58,6 @@ opal/                            ← OPAL AI 에이전트 (크로스 플랫폼)
 ├── core/                        에이전트 코어 (AGENT.md, identity-template.md)
 │   └── references/              참조 레지스트리 (skills.md, agents.md, mcps.md)
 ├── skills/                      OPAL 전용 스킬 (onboarding, project-init, orchestrator, skill-manager)
-├── catalog/                     스킬 카탈로그 (skills-catalog.md)
 └── templates/                   프로젝트 에이전트 템플릿
 
 cursor-rules/                    ← Cursor 프로젝트 규칙 템플릿
@@ -94,7 +93,6 @@ cursor-rules/                    ← Cursor 프로젝트 규칙 템플릿
 │   └── mcps.md                  MCP 서버 목록 (향후)
 ├── skills/                      OPAL 전용 스킬
 ├── community-skills/            커뮤니티 스킬 (31개, OPAL 전용)
-├── catalog/                     전체 카탈로그 (549+, 검색용)
 └── templates/                   프로젝트 에이전트 템플릿
 ```
 

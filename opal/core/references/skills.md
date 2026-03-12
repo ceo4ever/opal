@@ -28,16 +28,16 @@ OPAL 에이전트가 사용할 수 있는 모든 스킬 목록.
 `~/.opal/skills/` 에 위치. OPAL 에이전트에서만 사용.
 
 | 스킬 | 트리거 | 경로 |
-|------|--------|------|
-| onboarding | (자동: identity.md 없을 때) | `~/.opal/skills/onboarding/SKILL.md` |
-| project-init | "프로젝트 에이전트 만들어줘" | `~/.opal/skills/project-init/SKILL.md` |
-| orchestrator | (자동: .opal/AGENT.md 있을 때) | `~/.opal/skills/orchestrator/SKILL.md` |
-| skill-manager | "스킬 검색", "스킬 설치해줘", "설치된 스킬 목록" | `~/.opal/skills/skill-manager/SKILL.md` |
+|---------------|-----------------------------|------|
+| onboarding    | (자동: identity.md 없을 때)    | `~/.opal/skills/onboarding/SKILL.md` |
+| project-init  | "프로젝트 에이전트 만들어줘"       | `~/.opal/skills/project-init/SKILL.md` |
+| orchestrator  | (자동: .opal/AGENT.md 있을 때) | `~/.opal/skills/orchestrator/SKILL.md` |
+| skill-manager | "스킬 검색", "스킬 찾아줘", "스킬 설치해줘", "설치된 스킬", "스킬 삭제" | `~/.opal/skills/skill-manager/SKILL.md` |
 
 ## 커뮤니티 스킬
 
 `~/.opal/community-skills/` 에 위치. 기본 번들 31개.
-추가 스킬은 `skill-manager`로 카탈로그(`~/.opal/catalog/skills-catalog.md`)에서 검색/설치.
+추가 스킬은 `skill-manager`로 검색/설치 (`npx skills find` 또는 [skills.sh](https://skills.sh/)).
 
 ### Anthropic 공식 (18개)
 

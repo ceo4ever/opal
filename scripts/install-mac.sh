@@ -287,15 +287,6 @@ install_opal() {
     # 커뮤니티 스킬 복사
     install_opal_community_skills
 
-    # 카탈로그 복사
-    local catalog_src="$FRAMEWORK_ROOT/opal/catalog"
-    local catalog_dst="$opal_home/catalog"
-    if [[ -d "$catalog_src" ]]; then
-        mkdir -p "$catalog_dst"
-        cp -Rf "$catalog_src"/. "$catalog_dst"/
-        success "스킬 카탈로그 → $catalog_dst/"
-    fi
-
     # 부트스트래퍼 설치
     echo ""
     info "OPAL 부트스트래퍼 설치..."

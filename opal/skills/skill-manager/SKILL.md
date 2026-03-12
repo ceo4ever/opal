@@ -1,14 +1,15 @@
 ---
 name: skill-manager
 description: |
-  OPAL 커뮤니티 스킬 카탈로그 검색 및 설치 관리.
+  OPAL 커뮤니티 스킬 검색, 설치, 관리.
   "스킬 검색", "스킬 찾아줘", "○○ 관련 스킬 있어?", "스킬 설치해줘",
-  "설치된 스킬 목록", "스킬 삭제해줘" 시 사용.
+  "설치된 스킬 목록", "설치된 스킬", "스킬 삭제해줘" 시 사용.
 ---
 
 # Skill Manager
 
 커뮤니티 스킬을 검색, 설치, 관리하는 OPAL 전용 스킬이다.
+검색에는 `npx skills` CLI([vercel-labs/skills](https://github.com/vercel-labs/skills))를 활용한다.
 
 ## 프로세스
 
@@ -16,24 +17,45 @@ description: |
 
 사용자가 특정 기능의 스킬을 찾을 때:
 
-1. `~/.opal/catalog/skills-catalog.md`를 Read로 읽는다
-2. 사용자 요청 키워드와 매칭하여 관련 스킬을 찾는다
-3. 결과를 테이블로 제시한다:
+**1단계: 설치된 스킬 확인**
+
+`~/.opal/references/skills.md`를 Read로 읽어 이미 설치된 스킬 중 매칭되는 것이 있는지 확인한다.
+
+- 있으면: "이미 설치되어 있습니다" + 경로 안내 → 종료
+- 없으면: 2단계로 진행
+
+**2단계: 생태계 검색**
+
+```bash
+npx skills find [query]
+```
+
+실행 결과에서 관련 스킬을 찾아 사용자에게 표시한다:
 
 ```
-| 스킬명 | 설명 | 상태 |
-|--------|------|------|
-| anthropics/pdf | PDF 추출/생성/폼 처리 | ✅ 설치됨 |
-| openai/playwright | 브라우저 자동화 | 미설치 |
+| 스킬명 | 설명 | 설치 명령 |
+|--------|------|----------|
+| owner/repo@skill | 설명 | npx skills add owner/repo@skill |
+```
+
+**폴백 (npx 실행 실패 시):**
+
+Node.js가 설치되어 있지 않으면 아래와 같이 안내한다:
+
+```
+npx 명령을 실행할 수 없습니다. 아래 방법으로 스킬을 검색해주세요:
+
+- 웹 카탈로그: https://skills.sh/
+- Node.js 설치 후: npx skills find [query]
 ```
 
 ### 2. 스킬 설치
 
-카탈로그에서 찾은 미설치 스킬을 설치할 때:
+검색 결과에서 사용자가 설치를 요청하면:
 
-1. 카탈로그에서 소스 URL을 확인한다
-2. 임시 디렉토리에 `git clone --depth 1`으로 리포를 clone한다
-3. 필요한 스킬 디렉토리를 추출한다
+1. 검색 결과의 `owner/repo@skill` 정보에서 GitHub 저장소 URL을 구성한다
+2. 임시 디렉토리에 `git clone --depth 1 https://github.com/{owner}/{repo}.git`으로 clone한다
+3. 해당 스킬 디렉토리를 추출한다
 4. OPAL 커뮤니티 스킬 디렉토리에 복사한다:
 
 ```
@@ -41,7 +63,7 @@ description: |
 ```
 
 5. 임시 디렉토리를 정리한다
-6. `~/.opal/references/skills.md`에 새 스킬 항목을 추가한다
+6. `~/.opal/references/skills.md`의 커뮤니티 스킬 섹션에 새 항목을 추가한다
 
 ### 3. 설치된 스킬 목록
 
@@ -49,7 +71,7 @@ description: |
 ls ~/.opal/community-skills/
 ```
 
-벤더별로 그룹핑하여 표시한다.
+벤더별로 그룹핑하여 표시한다. `references/skills.md`의 커뮤니티 스킬 섹션과 대조하여 보여준다.
 
 ### 4. 스킬 삭제
 
@@ -57,7 +79,16 @@ ls ~/.opal/community-skills/
 
 1. 삭제 대상 확인 (벤더/스킬명)
 2. 해당 디렉토리를 `rm -rf`로 삭제
-3. 결과 보고
+3. `~/.opal/references/skills.md`에서 해당 항목을 제거한다
+4. 결과 보고
+
+### 5. 스킬 업데이트 확인
+
+```bash
+npx skills check
+```
+
+설치된 스킬의 업데이트 가능 여부를 확인한다. (Node.js 필요)
 
 ## 설치 경로 규칙
 
@@ -78,6 +109,6 @@ OPAL 에이전트는 `~/.opal/references/skills.md`를 통해 이 스킬들을 �
 
 ## 참고
 
-- 카탈로그 소스: [ceo4ever/awesome-agent-skills](https://github.com/ceo4ever/awesome-agent-skills)
+- 스킬 검색 엔진: [skills.sh](https://skills.sh/) (vercel-labs/skills)
 - 기본 번들 스킬(31개)은 `install-mac.sh`로 자동 설치된다
-- 추가 스킬은 이 스킬을 통해 온디맨드로 설치한다
+- 추가 스킬은 이 스킬을 통해 온디맨드로 검색/설치한다

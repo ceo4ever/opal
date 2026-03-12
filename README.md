@@ -42,7 +42,7 @@ Project Layer (프로젝트마다 설정)
 | **version-mgr** | 버전 관리 | 산출물 v{Major}.{Minor} 버전 관리, 덮어쓰기 금지 |
 | **wireframe-builder** | 와이어프레임 | 단일 HTML 인터랙티브 와이어프레임 생성 |
 
-**커뮤니티 스킬 (기본 번들 31개)**: Anthropic 공식 18개, Google Labs Stitch 6개, Vercel 개발 핵심 4개, 코드 품질 & 보안 3개. OPAL 내부(`~/.opal/community-skills/`)에만 설치. 추가 스킬은 `skill-manager`로 549+ 카탈로그에서 검색/설치.
+**커뮤니티 스킬 (기본 번들 31개)**: Anthropic 공식 18개, Google Labs Stitch 6개, Vercel 개발 핵심 4개, 코드 품질 & 보안 3개. OPAL 내부(`~/.opal/community-skills/`)에만 설치. 추가 스킬은 `skill-manager`로 [skills.sh](https://skills.sh/) 생태계에서 검색/설치.
 
 ### Agents (3개)
 
@@ -61,7 +61,7 @@ Project Layer (프로젝트마다 설정)
 | **onboarding** | 초기 정체성 인터뷰 → identity.md 생성 |
 | **project-init** | 프로젝트 에이전트 초기화 |
 | **orchestrator** | 프로젝트 오케스트레이션 (서브에이전트 관리) |
-| **skill-manager** | 커뮤니티 스킬 카탈로그 검색/설치/관리 |
+| **skill-manager** | 커뮤니티 스킬 검색/설치/관리 (npx skills 연동) |
 
 ---
 
@@ -184,7 +184,6 @@ ai-framework/
 │   ├── core/                    에이전트 코어 (AGENT.md)
 │   │   └── references/          참조 레지스트리 (skills.md, agents.md, mcps.md)
 │   ├── skills/                  OPAL 전용 스킬 (4개)
-│   ├── catalog/                 스킬 카탈로그
 │   └── templates/               프로젝트 에이전트 템플릿
 ├── cursor-rules/                Cursor 프로젝트 규칙 템플릿
 ├── scripts/                     설치 스크립트
