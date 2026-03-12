@@ -23,116 +23,89 @@ AI 환경(Claude Code, Cursor, Codex 등)에서 IT 프로젝트를 체계적으�
 ### 소스 구조 (이 저장소)
 
 ```
-claude/                          ← Claude Code 전용 컴포넌트
-├── skills/                      ← 스킬 정의 (Markdown 기반)
-│   ├── task-flow/             핵심 오케스트레이터: TASK → RESEARCH → PLAN → TODO → EXECUTE
-│   ├── api-analyzer/             외부 API 7단계 분석 및 명세서 생성
-│   ├── doc-writer/               기술 문서 표준 템플릿 (모든 문서 스킬의 베이스)
-│   ├── interview/                구조화된 Q&A 요구사항 수집
-│   ├── version-mgr/              산출물 버전 관리 (v{Major}.{Minor}, 덮어쓰기 금지)
-│   └── wireframe-builder/        단일 HTML 인터랙티브 와이어프레임 생성
-├── agents/                      ← 에이전트 정의 (자율 실행 단위)
-│   ├── task-flow-qa/          산출물 품질 검증 (5단계 문서 리뷰)
-│   ├── task-flow-planner/     실행 아키텍처 설계 (복잡 모드 Part C 생성)
-│   └── task-flow-test/        테스트 실행 (코드 동적 검증)
-└── hooks/                       ← 훅 정의 (이벤트 트리거, 예정)
+skills/                          ← 프레임워크 스킬 (단일 소스, 3개 플랫폼 공용)
+├── task-flow/                   핵심 오케스트레이터: TASK → RESEARCH → PLAN → TODO → EXECUTE
+├── api-analyzer/                외부 API 7단계 분석 및 명세서 생성
+├── doc-writer/                  기술 문서 표준 템플릿 (모든 문서 스킬의 베이스)
+├── interview/                   구조화된 Q&A 요구사항 수집
+├── version-mgr/                 산출물 버전 관리 (v{Major}.{Minor}, 덮어쓰기 금지)
+└── wireframe-builder/           단일 HTML 인터랙티브 와이어프레임 생성
 
-cursor/                          ← Cursor 전용 컴포넌트
-├── skills/                      ← claude/skills/와 동일 내용
-└── agents/                      ← 플랫 파일 형식 (.md)
-    ├── task-flow-qa.md
-    ├── task-flow-planner.md
-    └── task-flow-test.md
+agents/                          ← 에이전트 (플랫폼별 포맷 분리)
+├── claude/                      ← AGENT.md 디렉토리 기반
+│   ├── task-flow-qa/            산출물 품질 검증
+│   ├── task-flow-planner/       실행 아키텍처 설계
+│   └── task-flow-test/          코드 동적 검증
+├── cursor/                      ← 플랫 파일 형식 (.md)
+│   ├── task-flow-qa.md
+│   ├── task-flow-planner.md
+│   └── task-flow-test.md
+└── antigravity/                 ← SKILL.md로 통합
+    ├── task-flow-qa/
+    ├── task-flow-planner/
+    └── task-flow-test/
 
-antigravity/                     ← Antigravity 전용 컴포넌트
-└── skills/                      ← 스킬 정의 (에이전트도 스킬로 통합)
-    ├── task-flow/             핵심 오케스트레이터 (Antigravity 특화)
-    ├── task-flow-qa/          산출물 품질 검증 (AGENT→SKILL 변환)
-    ├── task-flow-planner/     실행 아키텍처 설계 (AGENT→SKILL 변환)
-    ├── task-flow-test/        테스트 실행 (AGENT→SKILL 변환)
-    ├── api-analyzer/          외부 API 분석
-    ├── doc-writer/            기술 문서 표준
-    ├── interview/             요구사항 수집
-    ├── version-mgr/           버전 관리
-    └── wireframe-builder/     와이어프레임 생성
+community-skills/                ← 외부 커뮤니티 스킬 (기본 번들 31개)
+├── anthropics/                  Anthropic 공식 (18개)
+├── google-labs-code/            Google Labs Stitch (6개)
+├── vercel-labs/                 Vercel 개발 핵심 (4개)
+├── trailofbits/                 Trail of Bits (1개)
+├── getsentry/                   Sentry (1개)
+└── openai/                      OpenAI (1개)
 
-templates/opal/                  ← OPAL AI 에이전트 (크로스 플랫폼)
-├── bootstrapper/                ← 부트스트래퍼 (플랫폼별)
-│   ├── claude-bootstrap.md      Claude Code용
-│   ├── cursor-bootstrap.mdc    Cursor용
-│   └── gemini-bootstrap.md     Antigravity용
-├── core/                        ← 에이전트 코어 (플랫폼 독립)
-│   ├── AGENT.md                 에이전트 핵심 정의
-│   └── identity-template.md    정체성 템플릿
-├── skills/                      ← OPAL 전용 스킬
-│   ├── onboarding/              초기 정체성 인터뷰
-│   ├── project-init/            프로젝트 에이전트 생성
-│   └── orchestrator/            프로젝트 오케스트레이션
-└── templates/                   ← 프로젝트 에이전트 템플릿
-    └── project-agent.md
+opal/                            ← OPAL AI 에이전트 (크로스 플랫폼)
+├── bootstrapper/                부트스트래퍼 (플랫폼별)
+├── core/                        에이전트 코어 (AGENT.md, identity-template.md)
+│   └── references/              참조 레지스트리 (skills.md, agents.md, mcps.md)
+├── skills/                      OPAL 전용 스킬 (onboarding, project-init, orchestrator, skill-manager)
+├── catalog/                     스킬 카탈로그 (skills-catalog.md)
+└── templates/                   프로젝트 에이전트 템플릿
+
+cursor-rules/                    ← Cursor 프로젝트 규칙 템플릿
 ```
 
 ### 배포 구조 (사용자 홈)
 
-이 프레임워크를 사용하려면 각 플랫폼의 배포 경로에 복사한다 (또는 심볼릭 링크).
+`install-mac.sh`가 소스에서 각 플랫폼의 배포 경로로 복사한다.
 
 ```
 ~/.claude/                       ← Claude Code 전용
-├── skills/                      ← Claude Code가 자동 탐색 (네이티브 기능)
+├── skills/                      ← skills/ 복사 (프레임워크 스킬만)
 │   ├── task-flow/
 │   ├── api-analyzer/
 │   └── ...
-├── agents/                      ← 스킬에서 탐색 경로로 참조 (디렉토리 기반)
-│   ├── task-flow-qa/
-│   │   └── AGENT.md
-│   ├── task-flow-planner/
-│   │   └── AGENT.md
-│   └── task-flow-test/
-│       └── AGENT.md
-└── hooks/                       ← (예정)
+└── agents/                      ← agents/claude/ 복사
 
 ~/.cursor/                       ← Cursor 전용
-├── skills/                      ← Cursor가 자동 탐색 (네이티브 기능)
-│   ├── task-flow/
-│   └── ...
-└── agents/                      ← Cursor가 자동 탐색 (플랫 파일 형식)
-    ├── task-flow-qa.md
-    ├── task-flow-planner.md
-    └── task-flow-test.md
+├── skills/                      ← skills/ 복사 (프레임워크 스킬만)
+└── agents/                      ← agents/cursor/ 복사
 
 ~/.gemini/antigravity/           ← Antigravity 전용
-└── skills/                      ← 글로벌 스킬 (에이전트도 스킬로 통합)
+└── skills/                      ← skills/ + agents/antigravity/ 복사
     ├── task-flow/
-    ├── task-flow-qa/
-    ├── task-flow-planner/
-    ├── task-flow-test/
-    ├── api-analyzer/
-    └── ...
+    └── task-flow-qa/            에이전트도 스킬로 통합
 
 ~/.opal/                         ← OPAL AI 에이전트 홈 (크로스 플랫폼)
-├── AGENT.md                     ← 에이전트 핵심 정의
-├── identity.md                  ← 정체성 (온보딩으로 생성)
-├── skills/                      ← OPAL 전용 스킬
-│   ├── onboarding/
-│   ├── project-init/
-│   └── orchestrator/
-└── templates/
-    ├── identity-template.md
-    └── project-agent.md
+├── AGENT.md                     에이전트 핵심 정의
+├── identity.md                  정체성 (온보딩으로 생성)
+├── references/                  참조 레지스트리 (부트스트랩 시 Read)
+│   ├── skills.md                스킬 목록 (41개)
+│   ├── agents.md                에이전트 목록 (3개)
+│   └── mcps.md                  MCP 서버 목록 (향후)
+├── skills/                      OPAL 전용 스킬
+├── community-skills/            커뮤니티 스킬 (31개, OPAL 전용)
+├── catalog/                     전체 카탈로그 (549+, 검색용)
+└── templates/                   프로젝트 에이전트 템플릿
 ```
 
-**Skills**: 각 플랫폼의 skills 디렉토리에 복사하면 자동 탐색. SKILL.md 포맷은 3개 플랫폼 모두 동일.
-
-**Agents/QA 스킬**: Claude Code는 `agents/` 디렉토리 기반, Cursor는 `agents/` 플랫 파일, Antigravity는 `skills/`로 통합. 스킬은 플랫폼 독립적 탐색 경로로 에이전트/스킬을 찾는다 (프로젝트 로컬 → 사용자 홈 순서).
-
-**OPAL**: `~/.opal/`에 에이전트 코어와 전용 스킬을 배치. 각 AI 플랫폼에 부트스트래퍼(3줄)를 삽입하여 세션 시작 시 AGENT.md를 로드한다.
+**설치 원칙**: 프레임워크 스킬은 단일 소스(`skills/`)에서 3개 플랫폼에 동일하게 복사. 에이전트만 플랫폼별 포맷 차이로 `agents/{platform}/`에서 분리 관리. 커뮤니티 스킬은 OPAL 내부(`~/.opal/community-skills/`)에만 설치되며, 플랫폼 네이티브 디렉토리에는 복사하지 않는다.
 
 ### 컴포넌트 유형
 
 | 유형 | 설명 | 현재 상태 |
 |------|------|----------|
-| **Skills** | 특정 작업을 수행하는 절차적 가이드 (SKILL.md) | `claude/skills/` 에 6개, `antigravity/skills/` 에 9개 (에이전트 3개 포함) |
-| **Agents** | 독립 컨텍스트에서 자율 실행하는 에이전트 (AGENT.md) | `claude/agents/` 에 3개, `cursor/agents/` 에 3개 (플랫 파일) |
+| **Skills** | 특정 작업을 수행하는 절차적 가이드 (SKILL.md) | `skills/` 6개 + `community-skills/` 31개 |
+| **Agents** | 독립 컨텍스트에서 자율 실행하는 에이전트 (AGENT.md) | `agents/` 3개 × 3 플랫폼 |
 | **Hooks** | 이벤트 기반으로 자동 실행되는 트리거 | 확장 예정 |
 
 ### 컴포넌트 간 의존 관계
@@ -149,21 +122,22 @@ templates/opal/                  ← OPAL AI 에이전트 (크로스 플랫폼)
 
 ### Skill 추가 시
 
-1. `claude/skills/{skill-name}/SKILL.md` 생성
+1. `skills/{skill-name}/SKILL.md` 생성
 2. YAML frontmatter에 `name`, `description` 정의 (description에 트리거 키워드 포함)
 3. 단계별 프로세스와 산출물 형식을 명확히 기술
 4. 필요 시 `references/` 하위에 상세 가이드 추가
 
 ### Agent 추가 시
 
-1. `claude/agents/{agent-name}/AGENT.md` 생성
-2. YAML frontmatter에 `name`, `description` 정의
-3. **Cursor 호환 필드 추가** (Claude Code는 무시하므로 양쪽 호환):
-   - `model: inherit` — Cursor용: 상위 에이전트 모델 상속
-   - `readonly: true` — Cursor용: 읽기 전용 여부 (코드 수정 안 하는 에이전트인 경우)
-4. 입력/출력 명세, 실행 프로세스, 검증 기준을 명확히 기술
-5. 네이밍: `{대상 워크플로우}-{역할}` (예: `task-flow-qa`)
-6. **호출하는 스킬의 SKILL.md에 에이전트 탐색 경로 명시** (3-플랫폼 지원):
+3개 플랫폼별로 에이전트 파일을 생성한다:
+
+1. `agents/claude/{agent-name}/AGENT.md` — 디렉토리 기반
+2. `agents/cursor/{agent-name}.md` — 플랫 파일
+3. `agents/antigravity/{agent-name}/SKILL.md` — 스킬로 통합
+4. YAML frontmatter에 `name`, `description` 정의
+5. 입력/출력 명세, 실행 프로세스, 검증 기준을 명확히 기술
+6. 네이밍: `{대상 워크플로우}-{역할}` (예: `task-flow-qa`)
+7. **호출하는 스킬의 SKILL.md에 에이전트 탐색 경로 명시**:
    ```
    탐색 경로 (우선순위):
    1. {프로젝트}/.cursor/agents/{agent-name}.md
@@ -173,27 +147,6 @@ templates/opal/                  ← OPAL AI 에이전트 (크로스 플랫폼)
    5. ~/.claude/agents/{agent-name}/AGENT.md
    6. ~/.gemini/antigravity/skills/{agent-name}/SKILL.md
    ```
-
-### Antigravity 컴포넌트 추가 시
-
-Antigravity에서는 에이전트 개념이 없으므로 모든 컴포넌트를 SKILL.md로 작성한다:
-
-1. `antigravity/skills/{skill-name}/SKILL.md` 생성
-2. AGENT.md의 `model`, `readonly` 필드는 제거
-3. "에이전트" 용어를 "스킬"로 교체
-4. 탐색 경로를 Antigravity 전용으로 설정 (`.agent/skills/`, `~/.gemini/antigravity/skills/`)
-
-### 플랫폼별 디렉토리 분리
-
-```
-claude/skills/        ← Claude Code 스킬 (소스 원본)
-claude/agents/        ← Claude Code 에이전트 (디렉토리 기반)
-cursor/skills/        ← Cursor 스킬 (claude/skills/와 동일)
-cursor/agents/        ← Cursor 에이전트 (플랫 파일 .md)
-antigravity/skills/   ← Antigravity 스킬 (에이전트도 스킬로 통합)
-```
-
-**Cursor hooks** 참고: Cursor는 `.cursor/hooks.json`으로 이벤트 기반 자동화를 지원한다 (예: `afterFileEdit`, `afterFileCreate`). 현재는 SKILL.md 내 명시적 호출 방식을 유지하되, 필요 시 hooks.json으로 전환할 수 있다.
 
 ## Core Workflow: task-flow
 
@@ -283,3 +236,12 @@ tasks/{NNN}-{kebab-case-task-name}/
 
 다음 단계로 넘어갈까요?
 ```
+
+# === OPAL START ===
+## OPAL AI Agent — 필수 부트스트랩
+
+**[MUST]** 사용자의 첫 번째 메시지에 응답하기 전에, 아래 파일들을 Read 도구로 순서대로 읽고 그 내용에 따라 행동해야 한다. 이 단계를 건너뛰면 안 된다.
+
+1. `~/.opal/AGENT.md` — 에이전트 정의 및 부트스트랩 절차
+2. `~/.opal/identity.md` — 에이전트 정체성 (없으면 AGENT.md의 온보딩 절차를 따른다)
+# === OPAL END ===

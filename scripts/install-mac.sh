@@ -47,7 +47,7 @@ detect_framework_root() {
     script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
     FRAMEWORK_ROOT="$(dirname "$script_dir")"
 
-    if [[ ! -d "$FRAMEWORK_ROOT/claude" ]] || [[ ! -d "$FRAMEWORK_ROOT/antigravity" ]]; then
+    if [[ ! -d "$FRAMEWORK_ROOT/skills" ]] || [[ ! -d "$FRAMEWORK_ROOT/agents" ]]; then
         error "프레임워크 루트를 찾을 수 없습니다: $FRAMEWORK_ROOT"
         error "이 스크립트는 ai-framework/scripts/ 에서 실행해야 합니다."
         exit 1
@@ -116,9 +116,6 @@ extract_bootstrap_content() {
     sed -n '/^```markdown$/,/^```$/p' "$file" | sed '1d;$d'
 }
 
-# Marker-based OPAL section management (R2 하위 호환)
-# - Recognizes both OPAL and legacy R2 markers
-# - Always writes with OPAL markers
 install_opal_section() {
     local snippet="$1"
     local target="$2"
@@ -202,8 +199,8 @@ install_claude() {
     info "Claude Code 설치..."
     local base="$USER_HOME/.claude"
 
-    install_dir "$FRAMEWORK_ROOT/claude/skills" "$base/skills" "Claude skills (6개)"
-    install_dir "$FRAMEWORK_ROOT/claude/agents" "$base/agents" "Claude agents (3개)"
+    install_dir "$FRAMEWORK_ROOT/skills" "$base/skills" "스킬 (6개)"
+    install_dir "$FRAMEWORK_ROOT/agents/claude" "$base/agents" "Claude 에이전트 (3개)"
 }
 
 install_cursor() {
@@ -211,8 +208,8 @@ install_cursor() {
     info "Cursor 설치..."
     local base="$USER_HOME/.cursor"
 
-    install_dir "$FRAMEWORK_ROOT/cursor/skills" "$base/skills" "Cursor skills (6개)"
-    install_dir "$FRAMEWORK_ROOT/cursor/agents" "$base/agents" "Cursor agents (3개)"
+    install_dir "$FRAMEWORK_ROOT/skills" "$base/skills" "스킬 (6개)"
+    install_dir "$FRAMEWORK_ROOT/agents/cursor" "$base/agents" "Cursor 에이전트 (3개)"
 }
 
 install_antigravity() {
@@ -220,26 +217,84 @@ install_antigravity() {
     info "Antigravity 설치..."
     local base="$USER_HOME/.gemini/antigravity"
 
-    install_dir "$FRAMEWORK_ROOT/antigravity/skills" "$base/skills" "Antigravity skills (9개)"
+    install_dir "$FRAMEWORK_ROOT/skills" "$base/skills" "스킬 (6개)"
+
+    for agent_dir in "$FRAMEWORK_ROOT/agents/antigravity"/*/; do
+        if [[ -d "$agent_dir" ]]; then
+            local agent_name
+            agent_name="$(basename "$agent_dir")"
+            install_dir "$agent_dir" "$base/skills/$agent_name" "에이전트→스킬: $agent_name"
+        fi
+    done
+}
+
+install_opal_community_skills() {
+    local cs_src="$FRAMEWORK_ROOT/community-skills"
+    local cs_dst="$USER_HOME/.opal/community-skills"
+
+    if [[ ! -d "$cs_src" ]]; then
+        warn "community-skills/ 디렉토리가 없습니다 (스킵)"
+        return
+    fi
+
+    mkdir -p "$cs_dst"
+
+    for vendor_dir in "$cs_src"/*/; do
+        if [[ -d "$vendor_dir" ]]; then
+            cp -Rf "$vendor_dir" "$cs_dst/"
+        fi
+    done
+
+    local cs_count
+    cs_count="$(find "$cs_src" -mindepth 2 -maxdepth 2 -type d | wc -l | tr -d ' ')"
+    success "커뮤니티 스킬 ${cs_count}개 → $cs_dst/"
+}
+
+install_opal_references() {
+    local ref_src="$FRAMEWORK_ROOT/opal/core/references"
+    local ref_dst="$USER_HOME/.opal/references"
+
+    if [[ ! -d "$ref_src" ]]; then
+        warn "opal/core/references/ 디렉토리가 없습니다 (스킵)"
+        return
+    fi
+
+    mkdir -p "$ref_dst"
+    cp -Rf "$ref_src"/. "$ref_dst"/
+    success "참조 레지스트리 → $ref_dst/"
 }
 
 install_opal() {
     echo ""
     info "OPAL AI 에이전트 설치..."
-    local opal_dir="$FRAMEWORK_ROOT/templates/opal"
+    local opal_dir="$FRAMEWORK_ROOT/opal"
     local opal_home="$USER_HOME/.opal"
 
-    # ~/.opal/ 에이전트 홈 설치
     mkdir -p "$opal_home"
 
     cp "$opal_dir/core/AGENT.md" "$opal_home/AGENT.md"
     success "OPAL AGENT.md → $opal_home/AGENT.md"
 
-    install_dir "$opal_dir/skills" "$opal_home/skills" "OPAL skills (3개)"
+    install_dir "$opal_dir/skills" "$opal_home/skills" "OPAL 스킬 (4개)"
     install_dir "$opal_dir/templates" "$opal_home/templates" "OPAL templates"
 
     cp "$opal_dir/core/identity-template.md" "$opal_home/templates/identity-template.md"
     success "identity-template.md → $opal_home/templates/"
+
+    # 참조 레지스트리 복사
+    install_opal_references
+
+    # 커뮤니티 스킬 복사
+    install_opal_community_skills
+
+    # 카탈로그 복사
+    local catalog_src="$FRAMEWORK_ROOT/opal/catalog"
+    local catalog_dst="$opal_home/catalog"
+    if [[ -d "$catalog_src" ]]; then
+        mkdir -p "$catalog_dst"
+        cp -Rf "$catalog_src"/. "$catalog_dst"/
+        success "스킬 카탈로그 → $catalog_dst/"
+    fi
 
     # 부트스트래퍼 설치
     echo ""
@@ -252,7 +307,6 @@ install_opal() {
     cp "$opal_dir/bootstrapper/cursor-bootstrap.mdc" "$USER_HOME/.cursor/rules/000-opal-agent.mdc"
     success "Cursor OPAL → $USER_HOME/.cursor/rules/000-opal-agent.mdc"
 
-    # Cursor: 기존 R2 규칙 파일 제거
     if [[ -f "$USER_HOME/.cursor/rules/000-r2-persona.mdc" ]]; then
         rm "$USER_HOME/.cursor/rules/000-r2-persona.mdc"
         success "Cursor 기존 R2 규칙 제거: 000-r2-persona.mdc"
