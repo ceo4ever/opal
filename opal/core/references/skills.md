@@ -62,7 +62,7 @@ OPAL 에이전트가 사용할 수 있는 모든 스킬 목록.
 | anthropics/claude-api | Claude API, Anthropic SDK 연동 | `~/.opal/community-skills/anthropics/claude-api/SKILL.md` |
 | anthropics/template | 스킬 기본 템플릿 | `~/.opal/community-skills/anthropics/template/SKILL.md` |
 
-### Google Labs Stitch (6개)
+### Google Labs Stitch (5개)
 
 | 스킬 | 트리거 | 경로 |
 |------|--------|------|
@@ -70,10 +70,9 @@ OPAL 에이전트가 사용할 수 있는 모든 스킬 목록.
 | google-labs-code/enhance-prompt | 프롬프트 개선, UI 프롬프트 최적화 | `~/.opal/community-skills/google-labs-code/enhance-prompt/SKILL.md` |
 | google-labs-code/react-components | Stitch→React 변환, 컴포넌트 생성 | `~/.opal/community-skills/google-labs-code/react-components/SKILL.md` |
 | google-labs-code/remotion | 워크스루 영상, Remotion 비디오 | `~/.opal/community-skills/google-labs-code/remotion/SKILL.md` |
-| google-labs-code/shadcn-ui | shadcn/ui, 컴포넌트 라이브러리 | `~/.opal/community-skills/google-labs-code/shadcn-ui/SKILL.md` |
 | google-labs-code/stitch-loop | 디자인→코드 반복, Stitch 자동화 | `~/.opal/community-skills/google-labs-code/stitch-loop/SKILL.md` |
 
-### Vercel 개발 핵심 (4개)
+### Vercel 개발 핵심 (5개)
 
 | 스킬 | 트리거 | 경로 |
 |------|--------|------|
@@ -81,6 +80,7 @@ OPAL 에이전트가 사용할 수 있는 모든 스킬 목록.
 | vercel-labs/web-design-guidelines | 웹 디자인 가이드라인, UI 리뷰 | `~/.opal/community-skills/vercel-labs/web-design-guidelines/SKILL.md` |
 | vercel-labs/composition-patterns | React 컴포지션 패턴, 재사용 컴포넌트 | `~/.opal/community-skills/vercel-labs/composition-patterns/SKILL.md` |
 | vercel-labs/next-best-practices | Next.js 베스트 프랙티스, RSC, 데이터 패턴 | `~/.opal/community-skills/vercel-labs/next-best-practices/SKILL.md` |
+| vercel-labs/shadcn | shadcn/ui 컴포넌트, UI 빌드, 프론트엔드 | `~/.opal/community-skills/vercel-labs/shadcn/SKILL.md` |
 
 ### 코드 품질 & 보안 (3개)
 
