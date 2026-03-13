@@ -1,0 +1,10 @@
+{
+  "name": "sequential-thinking",
+  "description": "복잡한 문제를 단계별로 분해하고 추론 경로를 탐색하는 구조적 사고 MCP",
+  "install_type": "config_merge",
+  "config": {
+    "command": "npx",
+    "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"]
+  },
+  "platforms": ["claude", "cursor", "gemini", "antigravity"]
+}

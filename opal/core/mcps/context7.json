@@ -1,0 +1,10 @@
+{
+  "name": "context7",
+  "description": "라이브러리 최신 공식 문서와 코드 예제를 실시간 조회하는 MCP",
+  "install_type": "config_merge",
+  "config": {
+    "command": "npx",
+    "args": ["-y", "@upstash/context7-mcp@latest"]
+  },
+  "platforms": ["claude", "cursor", "gemini", "antigravity"]
+}

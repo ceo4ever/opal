@@ -87,7 +87,7 @@ show_menu() {
     echo "  [2] Cursor         (skills + agents → ~/.cursor/)"
     echo "  [3] Antigravity    (skills → ~/.gemini/antigravity/)"
     echo "  [4] OPAL           (AI 에이전트 → ~/.opal/)"
-    echo "  [5] MCP 서버       (MCP 설정 → ~/.claude/, ~/.cursor/)"
+    echo "  [5] MCP 서버       (MCP 설정 → claude, cursor, gemini, antigravity)"
     echo "  [6] 전체 설치"
     echo "  [0] 종료"
     echo ""
@@ -110,7 +110,8 @@ config = json.loads(sys.argv[3])
 
 if os.path.exists(target):
     with open(target) as f:
-        data = json.load(f)
+        content = f.read().strip()
+    data = json.loads(content) if content else {}
 else:
     data = {}
 
@@ -231,7 +232,7 @@ install_claude() {
     info "Claude Code 설치..."
     local base="$USER_HOME/.claude"
 
-    install_dir "$FRAMEWORK_ROOT/skills" "$base/skills" "스킬 (6개)"
+    install_dir "$FRAMEWORK_ROOT/skills" "$base/skills" "스킬 (7개)"
     install_dir "$FRAMEWORK_ROOT/agents/claude" "$base/agents" "Claude 에이전트 (3개)"
 }
 
@@ -240,7 +241,7 @@ install_cursor() {
     info "Cursor 설치..."
     local base="$USER_HOME/.cursor"
 
-    install_dir "$FRAMEWORK_ROOT/skills" "$base/skills" "스킬 (6개)"
+    install_dir "$FRAMEWORK_ROOT/skills" "$base/skills" "스킬 (7개)"
     install_dir "$FRAMEWORK_ROOT/agents/cursor" "$base/agents" "Cursor 에이전트 (3개)"
 }
 
@@ -249,7 +250,7 @@ install_antigravity() {
     info "Antigravity 설치..."
     local base="$USER_HOME/.gemini/antigravity"
 
-    install_dir "$FRAMEWORK_ROOT/skills" "$base/skills" "스킬 (6개)"
+    install_dir "$FRAMEWORK_ROOT/skills" "$base/skills" "스킬 (7개)"
 
     for agent_dir in "$FRAMEWORK_ROOT/agents/antigravity"/*/; do
         if [[ -d "$agent_dir" ]]; then
@@ -258,6 +259,42 @@ install_antigravity() {
             install_dir "$agent_dir" "$base/skills/$agent_name" "에이전트→스킬: $agent_name"
         fi
     done
+}
+
+find_cli_bin() {
+    local cli_name="$1"
+    shift
+    local fallback_paths=("$@")
+
+    if command -v "$cli_name" &>/dev/null; then
+        command -v "$cli_name"
+        return 0
+    fi
+
+    for path in "${fallback_paths[@]}"; do
+        if [[ -x "$path" ]]; then
+            echo "$path"
+            return 0
+        fi
+    done
+
+    return 1
+}
+
+install_mcp_cli() {
+    local cli_bin="$1"
+    local scope_flag="$2"
+    local name="$3"
+    local cmd="$4"
+    shift 4
+    local args=("$@")
+
+    # 이미 등록되어 있으면 스킵
+    if "$cli_bin" mcp get "$name" &>/dev/null; then
+        return 0
+    fi
+
+    "$cli_bin" mcp add $scope_flag "$name" -- "$cmd" "${args[@]}" &>/dev/null
 }
 
 install_mcp() {
@@ -278,32 +315,71 @@ install_mcp() {
     for mcp_file in "$mcp_src"/*.json; do
         [[ -f "$mcp_file" ]] || continue
 
-        local name config install_type platforms
+        local name config install_type platforms command args_json
         name=$(python3 -c "import json; print(json.load(open('$mcp_file'))['name'])")
         config=$(python3 -c "import json; print(json.dumps(json.load(open('$mcp_file'))['config']))")
         install_type=$(python3 -c "import json; print(json.load(open('$mcp_file'))['install_type'])")
         platforms=$(python3 -c "import json; print(' '.join(json.load(open('$mcp_file'))['platforms']))")
+        command=$(python3 -c "import json; print(json.load(open('$mcp_file'))['config'].get('command',''))")
+        args_json=$(python3 -c "import json; print('\n'.join(json.load(open('$mcp_file'))['config'].get('args',[])))")
 
         if [[ "$install_type" != "config_merge" ]]; then
             info "  $name: $install_type 타입 — 수동 설치 필요"
             continue
         fi
 
-        for platform in $platforms; do
-            local target=""
-            case "$platform" in
-                claude) target="$USER_HOME/.claude/mcp.json" ;;
-                cursor) target="$USER_HOME/.cursor/mcp.json" ;;
-            esac
+        # args_json → args_array 변환
+        local args_array=()
+        while IFS= read -r arg; do
+            [[ -n "$arg" ]] && args_array+=("$arg")
+        done <<< "$args_json"
 
-            if [[ -n "$target" ]]; then
-                mkdir -p "$(dirname "$target")"
-                merge_mcp_config "$target" "$name" "$config"
-            fi
+        local installed_platforms=()
+        for platform in $platforms; do
+            case "$platform" in
+                claude)
+                    local bin
+                    if bin=$(find_cli_bin claude "$USER_HOME/.local/bin/claude"); then
+                        if install_mcp_cli "$bin" "--scope user" "$name" "$command" "${args_array[@]}"; then
+                            installed_platforms+=("claude")
+                        fi
+                    else
+                        warn "claude CLI 없음 — 수동 등록: claude mcp add $name -- $command ${args_array[*]}"
+                    fi
+                    ;;
+                gemini)
+                    local bin
+                    if bin=$(find_cli_bin gemini /opt/homebrew/bin/gemini /usr/local/bin/gemini); then
+                        if install_mcp_cli "$bin" "-s user" "$name" "$command" "${args_array[@]}"; then
+                            installed_platforms+=("gemini")
+                        fi
+                    else
+                        warn "gemini CLI 없음 — config_merge 폴백"
+                        local target="$USER_HOME/.gemini/settings.json"
+                        mkdir -p "$(dirname "$target")"
+                        merge_mcp_config "$target" "$name" "$config"
+                        installed_platforms+=("gemini")
+                    fi
+                    ;;
+                cursor)
+                    local target="$USER_HOME/.cursor/mcp.json"
+                    mkdir -p "$(dirname "$target")"
+                    merge_mcp_config "$target" "$name" "$config"
+                    installed_platforms+=("cursor")
+                    ;;
+                antigravity)
+                    local target="$USER_HOME/.gemini/antigravity/mcp_config.json"
+                    mkdir -p "$(dirname "$target")"
+                    merge_mcp_config "$target" "$name" "$config"
+                    installed_platforms+=("antigravity")
+                    ;;
+            esac
         done
 
-        success "$name MCP → claude, cursor"
-        ((count++))
+        if [[ ${#installed_platforms[@]} -gt 0 ]]; then
+            success "$name MCP → ${installed_platforms[*]}"
+            ((count++))
+        fi
     done
 
     if [[ $count -eq 0 ]]; then
@@ -447,10 +523,12 @@ print_summary() {
     [[ -d "$opal_home" ]] && \
         echo "    ~/.opal/                       OPAL 에이전트 홈"
 
-    [[ -f "$claude_base/mcp.json" ]] && \
-        echo "    ~/.claude/mcp.json             MCP 설정"
+    echo "    Claude MCP                     claude mcp add (CLI 등록)"
+    echo "    Gemini MCP                     gemini mcp add (CLI 등록)"
     [[ -f "$cursor_base/mcp.json" ]] && \
-        echo "    ~/.cursor/mcp.json             MCP 설정"
+        echo "    ~/.cursor/mcp.json             MCP 설정 (config_merge)"
+    [[ -f "$USER_HOME/.gemini/antigravity/mcp_config.json" ]] && \
+        echo "    ~/.gemini/antigravity/mcp_config.json  MCP 설정 (config_merge)"
 
     echo ""
 }

@@ -14,7 +14,8 @@ OPAL 에이전트가 사용할 수 있는 모든 스킬 목록.
 | doc-writer | "문서 작성해줘", "명세서 만들어줘", "보고서 작성" | 기술 문서 표준 템플릿 (모든 문서 스킬의 베이스) |
 | interview | "검토해줘", "확인해줘", "궁금한 거 물어봐" | 구조화된 Q&A 요구사항 수집 |
 | version-mgr | "업데이트해줘", "수정해줘", "버전 올려줘" | 산출물 v{Major}.{Minor} 버전 관리 |
-| wireframe-builder | "와이어프레임", "화면 설계", "UI 목업", "프로토타입" | 단일 HTML 인터랙티브 와이어프레임 |
+| wireframe-builder | "와이어프레임", "화면 설계", "UI 설계", "화면 구조", "화면 도출" | UI 분석·설계 — 정책서/요구사항 → wireframe.md 생성 |
+| ui-designer | "UI 구현", "UI 만들어줘", "화면 구현", "wireframe 구현", "프로토타입 만들어줘" | UI 구현 — wireframe.md → React + shadcn/ui 기반 UI |
 
 탐색 경로 (우선순위):
 1. `{프로젝트}/.cursor/skills/{skill}/SKILL.md`

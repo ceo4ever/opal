@@ -28,8 +28,9 @@ skills/                          ← 프레임워크 스킬 (단일 소스, 3개
 ├── api-analyzer/                외부 API 7단계 분석 및 명세서 생성
 ├── doc-writer/                  기술 문서 표준 템플릿 (모든 문서 스킬의 베이스)
 ├── interview/                   구조화된 Q&A 요구사항 수집
+├── ui-designer/                 UI 구현 — wireframe.md → React + shadcn/ui 기반 UI
 ├── version-mgr/                 산출물 버전 관리 (v{Major}.{Minor}, 덮어쓰기 금지)
-└── wireframe-builder/           단일 HTML 인터랙티브 와이어프레임 생성
+└── wireframe-builder/           UI 분석·설계 — 정책서/요구사항 → wireframe.md 생성
 
 agents/                          ← 에이전트 (플랫폼별 포맷 분리)
 ├── claude/                      ← AGENT.md 디렉토리 기반
@@ -75,17 +76,20 @@ cursor-rules/                    ← Cursor 프로젝트 규칙 템플릿
 │   ├── api-analyzer/
 │   └── ...
 ├── agents/                      ← agents/claude/ 복사
-└── mcp.json                     ← MCP 서버 설정 (opal/core/mcps/에서 머지)
+└── .claude.json                 ← MCP 서버 설정 (claude mcp add로 등록)
 
 ~/.cursor/                       ← Cursor 전용
 ├── skills/                      ← skills/ 복사 (프레임워크 스킬만)
 ├── agents/                      ← agents/cursor/ 복사
 └── mcp.json                     ← MCP 서버 설정 (opal/core/mcps/에서 머지)
 
-~/.gemini/antigravity/           ← Antigravity 전용
-└── skills/                      ← skills/ + agents/antigravity/ 복사
-    ├── task-flow/
-    └── task-flow-qa/            에이전트도 스킬로 통합
+~/.gemini/                       ← Gemini CLI / Antigravity
+├── settings.json                ← MCP 서버 설정 (Gemini CLI)
+└── antigravity/
+    ├── skills/                  ← skills/ + agents/antigravity/ 복사
+    │   ├── task-flow/
+    │   └── task-flow-qa/        에이전트도 스킬로 통합
+    └── mcp_config.json          ← MCP 서버 설정 (Antigravity)
 
 ~/.opal/                         ← OPAL AI 에이전트 홈 (크로스 플랫폼)
 ├── AGENT.md                     에이전트 핵심 정의
@@ -93,7 +97,7 @@ cursor-rules/                    ← Cursor 프로젝트 규칙 템플릿
 ├── references/                  참조 레지스트리 (부트스트랩 시 Read)
 │   ├── skills.md                스킬 목록 (41개)
 │   ├── agents.md                에이전트 목록 (3개)
-│   └── mcps.md                  MCP 서버 목록 (1개)
+│   └── mcps.md                  MCP 서버 목록 (3개)
 ├── skills/                      OPAL 전용 스킬
 ├── community-skills/            커뮤니티 스킬 (31개, OPAL 전용)
 └── templates/                   프로젝트 에이전트 템플릿
@@ -105,7 +109,7 @@ cursor-rules/                    ← Cursor 프로젝트 규칙 템플릿
 
 | 유형 | 설명 | 현재 상태 |
 |------|------|----------|
-| **Skills** | 특정 작업을 수행하는 절차적 가이드 (SKILL.md) | `skills/` 6개 + `community-skills/` 31개 |
+| **Skills** | 특정 작업을 수행하는 절차적 가이드 (SKILL.md) | `skills/` 7개 + `community-skills/` 31개 |
 | **Agents** | 독립 컨텍스트에서 자율 실행하는 에이전트 (AGENT.md) | `agents/` 3개 × 3 플랫폼 |
 | **Hooks** | 이벤트 기반으로 자동 실행되는 트리거 | 확장 예정 |
 

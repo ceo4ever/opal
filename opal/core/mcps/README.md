@@ -14,7 +14,7 @@
     "args": ["-y", "@package/server-name"],
     "env": {}
   },
-  "platforms": ["claude", "cursor"]
+  "platforms": ["claude", "cursor", "gemini", "antigravity"]
 }
 ```
 
@@ -26,7 +26,7 @@
 | `description` | string | ✅ | `references/mcps.md` 등록용 설명 |
 | `install_type` | string | ✅ | 설치 패턴 (아래 참조) |
 | `config` | object | ✅ | `mcpServers.{name}` 아래에 들어갈 설정 |
-| `platforms` | string[] | ✅ | 설치 대상: `claude`, `cursor` |
+| `platforms` | string[] | ✅ | 설치 대상: `claude`, `cursor`, `gemini`, `antigravity` |
 
 ### install_type
 
@@ -57,10 +57,14 @@
 
 ### 플랫폼별 설정 경로
 
-| 플랫폼 | mcp.json 경로 |
-|--------|---------------|
-| `claude` | `~/.claude/mcp.json` |
-| `cursor` | `~/.cursor/mcp.json` |
+| 플랫폼 | 설정 방식 | 비고 |
+|--------|----------|------|
+| `claude` | `claude mcp add --scope user` | `.claude.json`에 등록 |
+| `gemini` | `gemini mcp add -s user` | `~/.gemini/settings.json`에 등록 (CLI 없으면 config_merge 폴백) |
+| `cursor` | config_merge | `~/.cursor/mcp.json` 수동 머지 (CLI 미지원) |
+| `antigravity` | config_merge | `~/.gemini/antigravity/mcp_config.json` 수동 머지 (CLI 미지원) |
+
+> **Note**: Claude Code와 Gemini CLI는 자체 `mcp add` CLI 명령어로 등록해야 한다. `mcp.json` 직접 편집은 무시될 수 있다.
 
 ## 새 MCP 추가 방법
 
