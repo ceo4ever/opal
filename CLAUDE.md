@@ -47,8 +47,8 @@ agents/                          ← 에이전트 (플랫폼별 포맷 분리)
 
 community-skills/                ← 외부 커뮤니티 스킬 (기본 번들 31개)
 ├── anthropics/                  Anthropic 공식 (18개)
-├── google-labs-code/            Google Labs Stitch (6개)
-├── vercel-labs/                 Vercel 개발 핵심 (4개)
+├── google-labs-code/            Google Labs Stitch (5개)
+├── vercel-labs/                 Vercel 개발 핵심 (5개)
 ├── trailofbits/                 Trail of Bits (1개)
 ├── getsentry/                   Sentry (1개)
 └── openai/                      OpenAI (1개)
@@ -56,7 +56,8 @@ community-skills/                ← 외부 커뮤니티 스킬 (기본 번들 3
 opal/                            ← OPAL AI 에이전트 (크로스 플랫폼)
 ├── bootstrapper/                부트스트래퍼 (플랫폼별)
 ├── core/                        에이전트 코어 (AGENT.md, identity-template.md)
-│   └── references/              참조 레지스트리 (skills.md, agents.md, mcps.md)
+│   ├── references/              참조 레지스트리 (skills.md, agents.md, mcps.md)
+│   └── mcps/                    MCP 설정 템플릿 (서버별 JSON, install-mac.sh가 배포)
 ├── skills/                      OPAL 전용 스킬 (onboarding, project-init, orchestrator, skill-manager)
 └── templates/                   프로젝트 에이전트 템플릿
 
@@ -73,11 +74,13 @@ cursor-rules/                    ← Cursor 프로젝트 규칙 템플릿
 │   ├── task-flow/
 │   ├── api-analyzer/
 │   └── ...
-└── agents/                      ← agents/claude/ 복사
+├── agents/                      ← agents/claude/ 복사
+└── mcp.json                     ← MCP 서버 설정 (opal/core/mcps/에서 머지)
 
 ~/.cursor/                       ← Cursor 전용
 ├── skills/                      ← skills/ 복사 (프레임워크 스킬만)
-└── agents/                      ← agents/cursor/ 복사
+├── agents/                      ← agents/cursor/ 복사
+└── mcp.json                     ← MCP 서버 설정 (opal/core/mcps/에서 머지)
 
 ~/.gemini/antigravity/           ← Antigravity 전용
 └── skills/                      ← skills/ + agents/antigravity/ 복사
@@ -90,7 +93,7 @@ cursor-rules/                    ← Cursor 프로젝트 규칙 템플릿
 ├── references/                  참조 레지스트리 (부트스트랩 시 Read)
 │   ├── skills.md                스킬 목록 (41개)
 │   ├── agents.md                에이전트 목록 (3개)
-│   └── mcps.md                  MCP 서버 목록 (향후)
+│   └── mcps.md                  MCP 서버 목록 (1개)
 ├── skills/                      OPAL 전용 스킬
 ├── community-skills/            커뮤니티 스킬 (31개, OPAL 전용)
 └── templates/                   프로젝트 에이전트 템플릿

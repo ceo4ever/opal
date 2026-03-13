@@ -1,0 +1,10 @@
+{
+  "name": "shadcn",
+  "description": "shadcn/ui 컴포넌트 검색, 조회, 설치 MCP 서버",
+  "install_type": "config_merge",
+  "config": {
+    "command": "npx",
+    "args": ["-y", "shadcn@latest", "mcp"]
+  },
+  "platforms": ["claude", "cursor"]
+}

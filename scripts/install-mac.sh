@@ -87,13 +87,45 @@ show_menu() {
     echo "  [2] Cursor         (skills + agents → ~/.cursor/)"
     echo "  [3] Antigravity    (skills → ~/.gemini/antigravity/)"
     echo "  [4] OPAL           (AI 에이전트 → ~/.opal/)"
-    echo "  [5] 전체 설치"
+    echo "  [5] MCP 서버       (MCP 설정 → ~/.claude/, ~/.cursor/)"
+    echo "  [6] 전체 설치"
     echo "  [0] 종료"
     echo ""
-    read -rp "선택 (0-5): " MENU_CHOICE
+    read -rp "선택 (0-6): " MENU_CHOICE
 }
 
 # ─── Install Helpers ─────────────────────────────────────
+
+merge_mcp_config() {
+    local target="$1"
+    local name="$2"
+    local config="$3"
+
+    python3 -c "
+import json, os, sys
+
+target = sys.argv[1]
+name = sys.argv[2]
+config = json.loads(sys.argv[3])
+
+if os.path.exists(target):
+    with open(target) as f:
+        data = json.load(f)
+else:
+    data = {}
+
+data.setdefault('mcpServers', {})
+
+if name in data['mcpServers']:
+    sys.exit(0)
+
+data['mcpServers'][name] = config
+
+with open(target, 'w') as f:
+    json.dump(data, f, indent=2)
+    f.write('\n')
+" "$target" "$name" "$config"
+}
 
 install_dir() {
     local src="$1"
@@ -226,6 +258,59 @@ install_antigravity() {
             install_dir "$agent_dir" "$base/skills/$agent_name" "에이전트→스킬: $agent_name"
         fi
     done
+}
+
+install_mcp() {
+    local mcp_src="$FRAMEWORK_ROOT/opal/core/mcps"
+
+    if [[ ! -d "$mcp_src" ]]; then
+        warn "opal/core/mcps/ 디렉토리가 없습니다 (스킵)"
+        return
+    fi
+
+    if ! command -v python3 &>/dev/null; then
+        warn "python3이 없어 MCP 설정을 자동 머지할 수 없습니다"
+        info "수동 설정: https://modelcontextprotocol.io/quickstart"
+        return
+    fi
+
+    local count=0
+    for mcp_file in "$mcp_src"/*.json; do
+        [[ -f "$mcp_file" ]] || continue
+
+        local name config install_type platforms
+        name=$(python3 -c "import json; print(json.load(open('$mcp_file'))['name'])")
+        config=$(python3 -c "import json; print(json.dumps(json.load(open('$mcp_file'))['config']))")
+        install_type=$(python3 -c "import json; print(json.load(open('$mcp_file'))['install_type'])")
+        platforms=$(python3 -c "import json; print(' '.join(json.load(open('$mcp_file'))['platforms']))")
+
+        if [[ "$install_type" != "config_merge" ]]; then
+            info "  $name: $install_type 타입 — 수동 설치 필요"
+            continue
+        fi
+
+        for platform in $platforms; do
+            local target=""
+            case "$platform" in
+                claude) target="$USER_HOME/.claude/mcp.json" ;;
+                cursor) target="$USER_HOME/.cursor/mcp.json" ;;
+            esac
+
+            if [[ -n "$target" ]]; then
+                mkdir -p "$(dirname "$target")"
+                merge_mcp_config "$target" "$name" "$config"
+            fi
+        done
+
+        success "$name MCP → claude, cursor"
+        ((count++))
+    done
+
+    if [[ $count -eq 0 ]]; then
+        info "머지할 MCP 서버가 없습니다"
+    else
+        success "MCP 서버 ${count}건 설정 완료"
+    fi
 }
 
 install_opal_community_skills() {
@@ -362,6 +447,11 @@ print_summary() {
     [[ -d "$opal_home" ]] && \
         echo "    ~/.opal/                       OPAL 에이전트 홈"
 
+    [[ -f "$claude_base/mcp.json" ]] && \
+        echo "    ~/.claude/mcp.json             MCP 설정"
+    [[ -f "$cursor_base/mcp.json" ]] && \
+        echo "    ~/.cursor/mcp.json             MCP 설정"
+
     echo ""
 }
 
@@ -399,11 +489,21 @@ main() {
                 print_summary "${installed[@]}"
                 ;;
             5)
+                echo ""
+                info "MCP 서버 설정..."
+                install_mcp
+                installed+=("MCP 서버 설정")
+                print_summary "${installed[@]}"
+                ;;
+            6)
                 install_claude
                 install_cursor
                 install_antigravity
                 install_opal
-                installed+=("Claude Code" "Cursor" "Antigravity" "OPAL")
+                echo ""
+                info "MCP 서버 설정..."
+                install_mcp
+                installed+=("Claude Code" "Cursor" "Antigravity" "OPAL" "MCP 서버")
                 print_summary "${installed[@]}"
                 ;;
             0)
