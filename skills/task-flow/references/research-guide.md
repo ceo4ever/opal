@@ -1,5 +1,8 @@
 # RESEARCH 단계 상세 가이드
 
+> **Full Task 전용**: 이 가이드는 Full Task 모드의 RESEARCH 단계에서 사용된다.
+> Short Task에서는 이 단계가 없으며, `references/plan-guide.md`의 "Short Task 통합 PLAN" 섹션의 "코드 분석" 파트를 참조한다.
+
 TASK.md의 요구사항을 바탕으로, 구현에 필요한 모든 정보를 수집하고 분석한다.
 "충분히 조사하지 않고 코딩에 들어가는 것"이 가장 흔한 실패 원인이다.
 

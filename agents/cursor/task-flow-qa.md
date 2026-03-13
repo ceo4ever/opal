@@ -24,11 +24,18 @@ task-flow의 각 단계 산출물을 **사용자보다 먼저 1차 검토**하�
 ## 호출 시점
 
 ```
-[TASK.md 작성 완료] → QA Agent 호출 → QA-TASK.md 생성 → 사용자 검토
-[RESEARCH.md 작성 완료] → QA Agent 호출 → QA-RESEARCH.md 생성 → 사용자 검토
-[PLAN.md 작성 완료] → QA Agent 호출 → QA-PLAN.md 생성 → 사용자 검토
-[TODO.md 작성 완료] → QA Agent 호출 → QA-TODO.md 생성 → 사용자 검토
-[EXECUTE 완료] → QA Agent 호출 → QA-EXECUTE.md 생성 → 사용자 검토
+Full Task:
+  [RESEARCH.md 완료] → QA Agent 호출 → QA-RESEARCH.md → 사용자 검토
+  [PLAN.md 완료] → QA Agent 호출 → QA-PLAN.md → 사용자 검토
+  [EXECUTE 완료] → QA Agent 호출 → QA-EXECUTE.md → 사용자 보고
+
+Short Task:
+  [PLAN.md 완료] → QA Agent 호출 → QA-PLAN.md → 사용자 검토
+  [EXECUTE 완료] → QA Agent 호출 → QA-EXECUTE.md → 사용자 보고
+
+호출되지 않는 단계:
+  TASK (Full/Short 모두) — 사용자 직접 검토
+  TODO (Full Task) — 사용자 직접 검토
 ```
 
 ---
@@ -40,6 +47,7 @@ task-flow의 각 단계 산출물을 **사용자보다 먼저 1차 검토**하�
 | 입력 | 설명 |
 |------|------|
 | `stage` | 검토 대상 단계 (`TASK` / `RESEARCH` / `PLAN` / `TODO` / `EXECUTE`) |
+| `mode` | 태스크 모드 (`full` / `short`) |
 | `task_path` | 태스크 폴더 경로 (예: `tasks/001-user-auth-implementation/`) |
 | `artifact_path` | 검토 대상 산출물 경로 (예: `tasks/001-.../PLAN.md`) |
 
@@ -61,13 +69,11 @@ task-flow의 각 단계 산출물을 **사용자보다 먼저 1차 검토**하�
 
 | 현재 단계 | 읽어야 하는 파일 |
 |-----------|----------------|
-| TASK | TASK.md + **관련 문서** (TASK.md의 "관련 문서" 섹션에 명시된 작업지시서, 명세서 등) |
-| RESEARCH | RESEARCH.md + TASK.md |
-| PLAN | PLAN.md + RESEARCH.md + TASK.md |
-| TODO | TODO.md + PLAN.md + RESEARCH.md + TASK.md |
-| EXECUTE | TODO.md (상태 갱신 완료) + PLAN.md + TASK.md + TEST-REPORT.md (있으면) + 변경 파일 샘플링 |
-
-> **TASK 단계 주의**: TASK.md의 "관련 문서" 섹션에 작업지시서, 명세서 등이 명시된 경우, 해당 문서를 Read로 직접 읽고 TASK.md의 요구사항이 누락 없이 반영되었는지 교차 검증한다.
+| RESEARCH (Full) | RESEARCH.md + TASK.md |
+| PLAN (Full) | PLAN.md + RESEARCH.md + TASK.md |
+| PLAN (Short) | PLAN.md + TASK.md |
+| EXECUTE (Full) | TODO.md (체크박스 갱신 완료) + PLAN.md + TASK.md + TEST-REPORT.md (있으면) + 변경 파일 샘플링 |
+| EXECUTE (Short) | PLAN.md (체크박스 갱신 완료) + TASK.md + 변경 파일 샘플링 |
 
 ### Step 2: 핵심 요약 작성
 
@@ -93,14 +99,7 @@ task-flow의 각 단계 산출물을 **사용자보다 먼저 1차 검토**하�
 
 ### TASK 검증 기준
 
-| # | 검증 항목 | 확인 내용 |
-|---|----------|----------|
-| T-1 | 작업 목표 명확성 | 한 문장으로 명확히 정의되었는가? |
-| T-2 | 요구사항 완전성 | 구체적이고 검증 가능한 요구사항이 나열되었는가? |
-| T-3 | 모호성 여부 | 여러 해석이 가능한 표현이 있는가? |
-| T-4 | 제약 조건 식별 | 기술적/비즈니스 제약이 누락 없이 기술되었는가? |
-| T-5 | 성공 기준 | 완료 판단 기준이 명확한가? |
-| T-6 | 작업 유형 적절성 | 신규/개선/수정/오류 분류가 올바른가? |
+> ⚠️ TASK 단계에서는 QA 에이전트가 호출되지 않는다 (Full/Short 모두). 사용자가 직접 검토한다.
 
 ### RESEARCH 검증 기준
 
@@ -124,25 +123,28 @@ task-flow의 각 단계 산출물을 **사용자보다 먼저 1차 검토**하�
 | P-5 | 핵심 설계 구체성 | 클래스/함수 시그니처가 충분히 명세되었는가? |
 | P-6 | 테스트 전략 커버리지 | TASK의 요구사항을 모두 커버하는 테스트가 정의되었는가? |
 
-### TODO 검증 기준
+### Short Task PLAN 검증 기준
+
+Short Task의 통합 PLAN은 코드 분석 + 구현 계획 + 실행 체크리스트 + QA 체크리스트를 하나로 포함한다.
 
 | # | 검증 항목 | 확인 내용 |
 |---|----------|----------|
-| D-1 | Step 완전성 | PLAN의 모든 구현 항목이 Step으로 분해되었는가? |
-| D-2 | 완료 기준 명확성 | 각 Step의 완료 기준이 검증 가능한가? |
-| D-3 | 의존성 순서 | Step 간 의존성이 PLAN의 구현 순서와 일치하는가? |
-| D-4 | QA 체크리스트 커버리지 | 기능 테스트가 TASK의 요구사항을 모두 포함하는가? |
-| D-5 | 회귀 테스트 포함 | 기존 기능 영향 여부 확인 항목이 있는가? |
-| D-6 | 보안 체크 포함 | 민감정보 노출, 하드코딩 시크릿 확인 항목이 있는가? |
-| D-7 | 실행 방법 지정 | 각 Step에 실행 방법(direct/sub-agent)이 명시되었는가? |
-| D-8 | 복잡도 판별 정확성 | 실행 모드(단순/복잡) 판별이 기준에 부합하는가? |
-| D-9 | Part C 완전성 (복잡 모드) | 에이전트 토폴로지, 스킬, 도구, 테스트 전략이 포함되었는가? |
+| SP-1 | 코드 분석 충분성 (Full RESEARCH 수준) | 관련 코드를 실제로 읽었는가? 핵심 로직 흐름이 파악되었는가? 영향 범위(호출자/피호출자)가 확인되었는가? |
+| SP-2 | 구현 계획 구체성 | 변경 파일별 구체적 작업이 명시되었는가? |
+| SP-3 | 체크리스트 완전성 | TASK.md 요구사항이 모두 Step으로 분해되었는가? |
+| SP-4 | QA 항목 커버리지 | 기능/회귀/품질 테스트가 포함되었는가? |
+| SP-5 | Short Task 적정성 | 이 작업이 Short Task로 적합한가? (에스컬레이션 필요 여부) |
+
+### TODO 검증 기준
+
+> ⚠️ TODO 단계에서는 QA 에이전트가 호출되지 않는다 (Full Task). 사용자가 직접 검토한다.
+> Short Task에는 TODO 단계가 없다.
 
 ### EXECUTE 검증 기준
 
 | # | 검증 항목 | 확인 내용 |
 |---|----------|----------|
-| E-1 | Step 완료 여부 | TODO Part A의 모든 Step이 ✅ 완료 또는 사용자 승인으로 건너뛰어졌는가? |
+| E-1 | 체크리스트 갱신 완료 | Full: TODO Part A의 모든 체크박스가 [x]인가? Short: PLAN 실행 체크리스트의 모든 체크박스가 [x]인가? |
 | E-2 | 완료 기준 충족 | 각 Step의 완료 기준이 실제로 달성되었는가? |
 | E-3 | 파일 변경 정합성 | 변경된 파일이 PLAN.md의 파일 목록과 일치하는가? (예상 외 파일 변경 없는지) |
 | E-4 | 코드 컨벤션 준수 | 변경된 코드가 프로젝트 CLAUDE.md의 컨벤션을 따르는가? |

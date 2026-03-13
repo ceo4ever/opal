@@ -155,39 +155,53 @@ cursor-rules/                    ← Cursor 프로젝트 규칙 템플릿
 
 ## Core Workflow: task-flow
 
-모든 개발 작업의 중심 5단계 파이프라인:
+모든 개발 작업의 중심 파이프라인. 작업 규모에 따라 Full Task / Short Task 듀얼 모드로 동작한다.
+
+### Full Task (복잡하거나 난이도 높은 작업)
 
 ```
-사용자 지시 → [TASK] → [QA] → 사용자 검토
-                                    ↓
-            [RESEARCH] → [QA] → 사용자 검토
-                                    ↓
-               [PLAN] → [QA] → 사용자 검토
-                                    ↓
-               [TODO A+B] → 복잡도 판별
-                              ├─ 단순: [QA] → 승인 → [EXECUTE 직접] → [QA] → 완료 보고
-                              └─ 복잡: [Planner→Part C] → [QA] → 승인 → [EXECUTE 오케스트레이션] → [Test] → [QA] → 완료 보고
+사용자 지시 → [TASK] → 검토 → [RESEARCH] → [QA] → 검토
+                                                       ↓
+                                             [PLAN] → [QA] → 검토
+                                                       ↓
+                                             [TODO] → 검토
+                                                       ↓
+                                    승인 → [EXECUTE] → [QA] → 완료 보고
 ```
 
-**핵심 규칙**: 사용자의 명시적 승인 전까지 코드 생성/수정 금지. 각 단계 산출물 작성 후 QA 에이전트가 1차 검토를 수행한 뒤 사용자에게 보고.
+### Short Task (간단한 버그 수정, 설정 변경 등)
 
-**적응적 실행**: TODO 단계에서 복잡도를 판별하여, 단순 태스크는 메인 에이전트가 직접 실행하고, 복잡 태스크는 Planner가 설계한 토폴로지에 따라 서브 에이전트가 병렬 실행한다.
+```
+사용자 지시 → [TASK] → 검토 → [PLAN 통합] → [QA] → 승인 → [EXECUTE] → [QA] → 완료 보고
+```
+
+**모드 판별**: TASK 단계에서 자동 판별 (변경 파일 ≤3, Step ≤5, 단일 모듈, 외부 의존성 없음 → Short Task). 사용자가 오버라이드 가능.
+
+**핵심 규칙**: 사용자의 명시적 승인 전까지 코드 생성/수정 금지.
+
+**QA 호출**: TASK와 TODO에서는 QA 생략(사용자 직접 검토). RESEARCH, PLAN, EXECUTE에서 QA 에이전트가 1차 검토.
+
+**적응적 실행**: Full Task의 TODO 단계에서 복잡도를 판별하여, 단순 태스크는 메인 에이전트가 직접 실행하고, 복잡 태스크는 Planner가 설계한 토폴로지에 따라 서브 에이전트가 병렬 실행한다.
 
 ### 산출물 저장 구조
 
+**Full Task:**
 ```
 tasks/{NNN}-{kebab-case-task-name}/
-├── TASK.md           작업 정의서
-├── QA-TASK.md        TASK QA 리뷰
-├── RESEARCH.md       분석 결과
-├── QA-RESEARCH.md    RESEARCH QA 리뷰
-├── PLAN.md           구현 계획
-├── QA-PLAN.md        PLAN QA 리뷰
-├── TODO.md           실행 체크리스트 + QA (+ Part C 복잡 모드)
-├── QA-TODO.md        TODO QA 리뷰
-├── QA-EXECUTE.md     EXECUTE QA 리뷰
-├── TEST-REPORT.md    테스트 리포트 (복잡 모드)
-└── skills/           동적 생성 스킬 (복잡 모드, 필요 시)
+├── TASK.md, RESEARCH.md, QA-RESEARCH.md
+├── PLAN.md, QA-PLAN.md
+├── TODO.md
+├── QA-EXECUTE.md
+├── TEST-REPORT.md (복잡 모드)
+└── skills/ (동적 생성, 복잡 모드)
+```
+
+**Short Task:**
+```
+tasks/{NNN}-{kebab-case-task-name}/
+├── TASK.md
+├── PLAN.md, QA-PLAN.md
+└── QA-EXECUTE.md
 ```
 
 태스크 폴더명에 3자리 순번을 접두사로 붙인다 (예: `001-user-auth-implementation`). 새 태스크 생성 시 `tasks/` 폴더의 기존 최대 번호 + 1, 폴더가 없으면 001부터 시작.
@@ -238,6 +252,16 @@ tasks/{NNN}-{kebab-case-task-name}/
 - 검증 항목 {N}개 중 {통과}개 Pass, {경고}개 Warning
 - {주요 지적 사항 요약}
 - 판정: {✅ Pass / ⚠️ Needs Revision}
+
+다음 단계로 넘어갈까요?
+```
+
+QA가 없는 단계 (TASK, TODO)의 보고 형식:
+
+```
+📋 [{단계명}] 완료 보고
+
+📎 산출물: tasks/{NNN}-{태스크명}/{단계}.md
 
 다음 단계로 넘어갈까요?
 ```
