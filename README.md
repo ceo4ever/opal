@@ -1,6 +1,6 @@
-# AI 개발 프레임워크
+# OPAL — Open Protocol for Agentic Links
 
-AI 환경(Claude Code, Cursor, Antigravity 등)에서 IT 프로젝트를 체계적으로 수행하기 위한 **범용 AI 개발 프레임워크**.
+AI 환경(Claude Code, Cursor, Codex 등)에서 IT 프로젝트를 체계적으로 수행하기 위한 **범용 AI 개발 프레임워크**.
 에이전트, 스킬, 훅 등의 재사용 가능한 컴포넌트를 만들어 다양한 AI 도구와 프로젝트에 적용할 수 있다.
 
 ---
@@ -31,7 +31,7 @@ Project Layer (프로젝트마다 설정)
 
 ## 컴포넌트 목록
 
-### Skills (6개 프레임워크 + 31개 커뮤니티)
+### Skills (7개 프레임워크 + 31개 커뮤니티)
 
 | 스킬 | 설명 | 용도 |
 |------|------|------|
@@ -39,15 +39,17 @@ Project Layer (프로젝트마다 설정)
 | **api-analyzer** | 외부 API 분석 | 7단계 분석 및 API 명세서 생성 |
 | **doc-writer** | 기술 문서 표준 | 모든 문서 스킬의 베이스 템플릿 |
 | **interview** | 요구사항 수집 | 구조화된 Q&A로 요구사항 수집 및 갭 탐지 |
+| **ui-designer** | UI 구현 | wireframe.md → React + shadcn/ui 기반 UI 구현 |
 | **version-mgr** | 버전 관리 | 산출물 v{Major}.{Minor} 버전 관리, 덮어쓰기 금지 |
-| **wireframe-builder** | 와이어프레임 | 단일 HTML 인터랙티브 와이어프레임 생성 |
+| **wireframe-builder** | UI 분석·설계 | 정책서/요구사항 → wireframe.md 생성 |
 
-**커뮤니티 스킬 (기본 번들 31개)**: Anthropic 공식 18개, Google Labs Stitch 6개, Vercel 개발 핵심 4개, 코드 품질 & 보안 3개. OPAL 내부(`~/.opal/community-skills/`)에만 설치. 추가 스킬은 `skill-manager`로 [skills.sh](https://skills.sh/) 생태계에서 검색/설치.
+**커뮤니티 스킬 (기본 번들 31개)**: Anthropic 공식 18개, Google Labs Stitch 5개, Vercel 개발 핵심 5개, 코드 품질 & 보안 3개. OPAL 내부(`~/.opal/community-skills/`)에만 설치. 추가 스킬은 `skill-manager`로 [skills.sh](https://skills.sh/) 생태계에서 검색/설치.
 
-### Agents (3개)
+### Agents (4개 × 3 플랫폼)
 
 | 에이전트 | 설명 | 호출 시점 |
 |---------|------|----------|
+| **task-flow-agent** | 워커 에이전트 | 각 단계(RESEARCH/PLAN/TODO/EXECUTE)를 독립 컨텍스트에서 실행 |
 | **task-flow-qa** | 산출물 품질 검증 | 각 단계 산출물 작성 후 (5단계 문서 리뷰) |
 | **task-flow-planner** | 실행 아키텍처 설계 | TODO 단계에서 복잡 모드 판별 시 (Part C 생성) |
 | **task-flow-test** | 테스트 실행 | EXECUTE 완료 후 복잡 모드에서 (코드 동적 검증) |
@@ -158,31 +160,33 @@ TASK → RESEARCH → PLAN → TODO → EXECUTE
 ## 소스 구조
 
 ```
-ai-framework/
+opal/
 ├── README.md
 ├── CLAUDE.md                    이 저장소 자체의 프로젝트 설정
-├── skills/                      프레임워크 스킬 (6개, 3개 플랫폼 공용)
+├── skills/                      프레임워크 스킬 (7개, 3개 플랫폼 공용)
 │   ├── task-flow/
 │   ├── api-analyzer/
 │   ├── doc-writer/
 │   ├── interview/
+│   ├── ui-designer/
 │   ├── version-mgr/
 │   └── wireframe-builder/
-├── agents/                      에이전트 (플랫폼별 포맷 분리)
+├── agents/                      에이전트 (4개 × 3 플랫폼, 포맷 분리)
 │   ├── claude/                  AGENT.md 디렉토리 기반
 │   ├── cursor/                  플랫 파일 .md
 │   └── antigravity/             SKILL.md로 통합
 ├── community-skills/            커뮤니티 스킬 기본 번들 (31개)
 │   ├── anthropics/              Anthropic 공식 (18개)
-│   ├── google-labs-code/        Google Labs Stitch (6개)
-│   ├── vercel-labs/             Vercel 개발 핵심 (4개)
+│   ├── google-labs-code/        Google Labs Stitch (5개)
+│   ├── vercel-labs/             Vercel 개발 핵심 (5개)
 │   ├── trailofbits/             Trail of Bits (1개)
 │   ├── getsentry/               Sentry (1개)
 │   └── openai/                  OpenAI (1개)
 ├── opal/                        OPAL AI 에이전트 (크로스 플랫폼)
 │   ├── bootstrapper/            부트스트래퍼 (플랫폼별)
-│   ├── core/                    에이전트 코어 (AGENT.md)
-│   │   └── references/          참조 레지스트리 (skills.md, agents.md, mcps.md)
+│   ├── core/                    에이전트 코어 (AGENT.md, identity-template.md)
+│   │   ├── references/          참조 레지스트리 (skills.md, agents.md, mcps.md)
+│   │   └── mcps/                MCP 설정 템플릿 (서버별 JSON)
 │   ├── skills/                  OPAL 전용 스킬 (4개)
 │   └── templates/               프로젝트 에이전트 템플릿
 ├── cursor-rules/                Cursor 프로젝트 규칙 템플릿
