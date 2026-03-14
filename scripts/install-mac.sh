@@ -233,7 +233,7 @@ install_claude() {
     local base="$USER_HOME/.claude"
 
     install_dir "$FRAMEWORK_ROOT/skills" "$base/skills" "스킬 (7개)"
-    install_dir "$FRAMEWORK_ROOT/agents/claude" "$base/agents" "Claude 에이전트 (3개)"
+    install_dir "$FRAMEWORK_ROOT/agents/claude" "$base/agents" "Claude 에이전트 (4개)"
 }
 
 install_cursor() {
@@ -242,7 +242,7 @@ install_cursor() {
     local base="$USER_HOME/.cursor"
 
     install_dir "$FRAMEWORK_ROOT/skills" "$base/skills" "스킬 (7개)"
-    install_dir "$FRAMEWORK_ROOT/agents/cursor" "$base/agents" "Cursor 에이전트 (3개)"
+    install_dir "$FRAMEWORK_ROOT/agents/cursor" "$base/agents" "Cursor 에이전트 (4개)"
 }
 
 install_antigravity() {
@@ -259,6 +259,16 @@ install_antigravity() {
             install_dir "$agent_dir" "$base/skills/$agent_name" "에이전트→스킬: $agent_name"
         fi
     done
+
+    # Gemini CLI agents 배포: Cursor 에이전트 파일을 ~/.gemini/agents/에 복사
+    local gemini_agents="$USER_HOME/.gemini/agents"
+    mkdir -p "$gemini_agents"
+    for agent_file in "$FRAMEWORK_ROOT/agents/cursor"/*.md; do
+        if [[ -f "$agent_file" ]]; then
+            cp "$agent_file" "$gemini_agents/"
+        fi
+    done
+    success "Gemini CLI agents → $gemini_agents/"
 }
 
 find_cli_bin() {

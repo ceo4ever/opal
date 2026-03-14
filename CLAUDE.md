@@ -34,14 +34,17 @@ skills/                          ← 프레임워크 스킬 (단일 소스, 3개
 
 agents/                          ← 에이전트 (플랫폼별 포맷 분리)
 ├── claude/                      ← AGENT.md 디렉토리 기반
+│   ├── task-flow-agent/         워커 에이전트 (각 단계 실행)
 │   ├── task-flow-qa/            산출물 품질 검증
 │   ├── task-flow-planner/       실행 아키텍처 설계
 │   └── task-flow-test/          코드 동적 검증
 ├── cursor/                      ← 플랫 파일 형식 (.md)
+│   ├── task-flow-agent.md
 │   ├── task-flow-qa.md
 │   ├── task-flow-planner.md
 │   └── task-flow-test.md
 └── antigravity/                 ← SKILL.md로 통합
+    ├── task-flow-agent/
     ├── task-flow-qa/
     ├── task-flow-planner/
     └── task-flow-test/
@@ -85,6 +88,7 @@ cursor-rules/                    ← Cursor 프로젝트 규칙 템플릿
 
 ~/.gemini/                       ← Gemini CLI / Antigravity
 ├── settings.json                ← MCP 서버 설정 (Gemini CLI)
+├── agents/                      ← agents/cursor/ 복사 (Gemini CLI 네이티브)
 └── antigravity/
     ├── skills/                  ← skills/ + agents/antigravity/ 복사
     │   ├── task-flow/
@@ -96,7 +100,7 @@ cursor-rules/                    ← Cursor 프로젝트 규칙 템플릿
 ├── identity.md                  정체성 (온보딩으로 생성)
 ├── references/                  참조 레지스트리 (부트스트랩 시 Read)
 │   ├── skills.md                스킬 목록 (41개)
-│   ├── agents.md                에이전트 목록 (3개)
+│   ├── agents.md                에이전트 목록 (4개)
 │   └── mcps.md                  MCP 서버 목록 (3개)
 ├── skills/                      OPAL 전용 스킬
 ├── community-skills/            커뮤니티 스킬 (31개, OPAL 전용)
@@ -110,7 +114,7 @@ cursor-rules/                    ← Cursor 프로젝트 규칙 템플릿
 | 유형 | 설명 | 현재 상태 |
 |------|------|----------|
 | **Skills** | 특정 작업을 수행하는 절차적 가이드 (SKILL.md) | `skills/` 7개 + `community-skills/` 31개 |
-| **Agents** | 독립 컨텍스트에서 자율 실행하는 에이전트 (AGENT.md) | `agents/` 3개 × 3 플랫폼 |
+| **Agents** | 독립 컨텍스트에서 자율 실행하는 에이전트 (AGENT.md) | `agents/` 4개 × 3 플랫폼 |
 | **Hooks** | 이벤트 기반으로 자동 실행되는 트리거 | 확장 예정 |
 
 ### 컴포넌트 간 의존 관계
@@ -119,7 +123,8 @@ cursor-rules/                    ← Cursor 프로젝트 규칙 템플릿
 - **version-mgr** → 산출물을 생성·수정하는 모든 스킬에 적용
 - **interview** → 요구사항 불명확 시 다른 스킬에서 호출
 - **task-flow** → 개발 작업의 주 진입점 (5단계 파이프라인)
-- **task-flow-qa** → task-flow 각 단계 완료 후 명시적으로 호출되는 QA 에이전트
+- **task-flow-agent** → task-flow의 각 단계를 독립 컨텍스트에서 실행하는 워커 에이전트
+- **task-flow-qa** → task-flow 각 단계 완료 후 오케스트레이터가 호출하는 QA 에이전트
 - **task-flow-planner** → task-flow TODO 단계에서 복잡 모드 시 실행 아키텍처 설계
 - **task-flow-test** → task-flow EXECUTE 단계에서 복잡 모드 시 코드 동적 검증
 
@@ -155,33 +160,33 @@ cursor-rules/                    ← Cursor 프로젝트 규칙 템플릿
 
 ## Core Workflow: task-flow
 
-모든 개발 작업의 중심 파이프라인. 작업 규모에 따라 Full Task / Short Task 듀얼 모드로 동작한다.
+모든 개발 작업의 중심 파이프라인. 작업 규모에 따라 Full Task / Short Task 듀얼 모드로 동작한다. 알투는 오케스트레이터로서 워커 에이전트(`task-flow-agent`)를 디스패치하고, 실제 분석/설계/실행은 워커의 격리된 컨텍스트에서 수행한다.
 
 ### Full Task (복잡하거나 난이도 높은 작업)
 
 ```
-사용자 지시 → [TASK] → 검토 → [RESEARCH] → [QA] → 검토
-                                                       ↓
-                                             [PLAN] → [QA] → 검토
-                                                       ↓
-                                             [TODO] → 검토
-                                                       ↓
-                                    승인 → [EXECUTE] → [QA] → 완료 보고
+사용자 지시 → [TASK 직접] → 검토 → [워커: RESEARCH] → [QA] → 검토
+                                                              ↓
+                                                    [워커: PLAN] → [QA] → 검토
+                                                              ↓
+                                                    [워커: TODO] → 검토
+                                                              ↓
+                                           승인 → [워커: EXECUTE] → [QA] → 완료 보고
 ```
 
 ### Short Task (간단한 버그 수정, 설정 변경 등)
 
 ```
-사용자 지시 → [TASK] → 검토 → [PLAN 통합] → [QA] → 승인 → [EXECUTE] → [QA] → 완료 보고
+사용자 지시 → [TASK 직접] → 검토 → [워커: PLAN 통합] → [QA] → 승인 → [워커: EXECUTE] → [QA] → 완료 보고
 ```
 
 **모드 판별**: TASK 단계에서 자동 판별 (변경 파일 ≤3, Step ≤5, 단일 모듈, 외부 의존성 없음 → Short Task). 사용자가 오버라이드 가능.
 
 **핵심 규칙**: 사용자의 명시적 승인 전까지 코드 생성/수정 금지.
 
-**QA 호출**: TASK와 TODO에서는 QA 생략(사용자 직접 검토). RESEARCH, PLAN, EXECUTE에서 QA 에이전트가 1차 검토.
+**QA 호출**: TASK와 TODO에서는 QA 생략(사용자 직접 검토). RESEARCH, PLAN, EXECUTE에서 오케스트레이터가 QA 에이전트를 호출하여 1차 검토.
 
-**적응적 실행**: Full Task의 TODO 단계에서 복잡도를 판별하여, 단순 태스크는 메인 에이전트가 직접 실행하고, 복잡 태스크는 Planner가 설계한 토폴로지에 따라 서브 에이전트가 병렬 실행한다.
+**적응적 실행**: Full Task의 TODO 단계에서 복잡도를 판별하여, 단순 태스크는 워커가 직접 실행하고, 복잡 태스크는 워커 내부에서 Planner가 설계한 토폴로지에 따라 서브 에이전트가 병렬 실행한다.
 
 ### 산출물 저장 구조
 

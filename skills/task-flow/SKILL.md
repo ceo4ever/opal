@@ -36,25 +36,27 @@ description: |
 
 ## 워크플로우 개요
 
+알투는 **오케스트레이터**로서 워커 에이전트를 디스패치하고, 실제 분석/설계/실행은 워커의 격리된 컨텍스트에서 수행한다.
+
 ```
-사용자 지시 → [Git 점검] → [TASK] → 모드 판별 → 사용자 검토
-                                        │
-                    ┌───────────────────┴───────────────────┐
-                    ▼                                       ▼
-              [Full Task]                             [Short Task]
-                    │                                       │
-          [RESEARCH] → [QA] → 검토                [PLAN 통합] → [QA] → 검토
-                    │                                       │
-          [PLAN] → [QA] → 검토                        승인 → [EXECUTE]
-                    │                                       │
-          [TODO] → 검토                             [QA] → 완료 보고
+사용자 지시 → [Git 점검] → [TASK 직접] → 모드 판별 → 사용자 검토
+                                              │
+                    ┌─────────────────────────┴─────────────────────────┐
+                    ▼                                                   ▼
+              [Full Task]                                         [Short Task]
+                    │                                                   │
+          [워커: RESEARCH] → [QA] → 검토                    [워커: PLAN 통합] → [QA] → 검토
+                    │                                                   │
+          [워커: PLAN] → [QA] → 검토                             승인 → [워커: EXECUTE]
+                    │                                                   │
+          [워커: TODO] → 검토                                    [QA] → 완료 보고
                     │
-              승인 → [EXECUTE]
+              승인 → [워커: EXECUTE]
                     │
               [QA] → 완료 보고
 ```
 
-**핵심 규칙**: 사용자의 명시적 승인 전까지 코드 생성/수정 금지. 각 단계 완료 후 사용자에게 보고하고 승인을 받는다.
+**핵심 규칙**: 사용자의 명시적 승인 전까지 코드 생성/수정 금지. 오케스트레이터가 워커를 디스패치하여 각 단계를 실행하고, 사용자에게 보고한다.
 
 ---
 
@@ -89,9 +91,157 @@ Short Task 진행 중 PLAN 작성 시 복잡도가 예상보다 높아진 경우
 
 ---
 
+## 오케스트레이터-워커 실행 모델
+
+### 오케스트레이터(알투)의 역할
+
+알투는 오케스트레이터로서 다음 역할만 수행한다:
+
+1. **TASK 단계 직접 수행** -- 사용자 지시를 구조화하는 것은 오케스트레이터의 본질적 역할
+2. **워커 디스패치** -- 각 단계(RESEARCH/PLAN/TODO/EXECUTE) 시작 시 워커 에이전트를 디스패치
+3. **QA/Planner/Test 에이전트 호출** -- 워커 완료 후 필요한 에이전트를 오케스트레이터가 직접 호출
+4. **게이트 체크포인트 중계** -- 워커 결과를 사용자에게 보고하고 승인을 받음
+5. **태스크 상태 추적** -- 각 태스크의 현재 단계, 워커 상태, 블로커 여부를 관리
+
+### 워커 에이전트 정의
+
+**에이전트 이름**: `task-flow-agent`
+
+**에이전트 탐색 경로** (우선순위):
+1. `{프로젝트}/.cursor/agents/task-flow-agent.md`
+2. `{프로젝트}/.claude/agents/task-flow-agent/AGENT.md`
+3. `{프로젝트}/.agent/skills/task-flow-agent/SKILL.md`
+4. `~/.cursor/agents/task-flow-agent.md`
+5. `~/.claude/agents/task-flow-agent/AGENT.md`
+6. `~/.gemini/agents/task-flow-agent.md`
+7. `~/.gemini/antigravity/skills/task-flow-agent/SKILL.md`
+
+**워커의 역할**:
+- 코드 읽기/분석 (Glob, Grep, Read)
+- 산출물(.md) 작성 (RESEARCH.md, PLAN.md, TODO.md)
+- 코드 구현/수정 (Edit, Write, Bash)
+- 완료 시 결과를 오케스트레이터에 반환
+
+### 워커 디스패치 규칙
+
+**디스패치 시점**: TASK 이후의 각 단계 시작 시 (RESEARCH, PLAN, TODO, EXECUTE)
+
+**프롬프트 구성**: 오케스트레이터가 워커를 디스패치할 때, 아래 형식으로 프롬프트를 구성한다:
+
+```
+task-flow {단계명} 워커로서 아래 태스크를 수행하라.
+
+**태스크**: {태스크 제목}
+**단계**: {RESEARCH | PLAN | PLAN-SHORT | TODO | EXECUTE | EXECUTE-SHORT}
+**태스크 폴더**: {tasks/{NNN}-{name}/}
+
+**이전 산출물** (읽어서 컨텍스트를 확보하라):
+- {tasks/{NNN}-{name}/TASK.md}
+- {tasks/{NNN}-{name}/RESEARCH.md}  ← 해당 시
+- {tasks/{NNN}-{name}/PLAN.md}      ← 해당 시
+- {tasks/{NNN}-{name}/TODO.md}      ← 해당 시
+
+**단계 가이드** (읽고 프로세스를 따르라):
+- {skills/task-flow/references/{guide}.md 의 절대 경로}
+
+**프로젝트 컨벤션** (읽고 규칙을 따르라):
+- {프로젝트 루트의 CLAUDE.md 절대 경로}
+
+**산출물 저장 경로**: {tasks/{NNN}-{name}/{산출물}.md}
+
+**실행 규칙**:
+1. 가이드를 읽고 프로세스를 따른다
+2. 산출물을 저장 경로에 작성한다
+3. 완료 시 artifact_path, summary, status를 반환한다
+4. 블로커 발생 시 즉시 status: blocked로 반환한다
+5. QA 에이전트는 호출하지 않는다
+```
+
+**단계별 이전 산출물 매핑:**
+
+| 단계 | 이전 산출물 | 가이드 | 산출물 |
+|------|-----------|--------|--------|
+| RESEARCH | TASK.md | research-guide.md | RESEARCH.md |
+| PLAN (Full) | TASK.md, RESEARCH.md | plan-guide.md (Full) | PLAN.md |
+| PLAN (Short) | TASK.md | plan-guide.md (Short) | PLAN.md |
+| TODO | TASK.md, RESEARCH.md, PLAN.md | todo-guide.md | TODO.md |
+| EXECUTE (Full 단순) | TASK.md, TODO.md | execute-guide.md | 코드 변경 |
+| EXECUTE (Full 복잡) | TASK.md, TODO.md (Part C 포함) | execute-guide.md | 코드 변경 |
+| EXECUTE (Short) | TASK.md, PLAN.md | execute-guide.md | 코드 변경 |
+
+### 워커 결과 수신
+
+워커가 완료되면 아래 형식으로 결과를 반환한다:
+
+- **artifact_path**: 생성/수정한 산출물 경로
+- **summary**: 핵심 요약 (3~5줄)
+- **status**: `success` | `blocked`
+- **blockers**: 블로커 목록 (있는 경우)
+
+**성공 시 (status: success)**:
+1. 오케스트레이터가 QA 에이전트를 호출 (QA 호출 맵에 따라)
+2. QA 결과를 포함하여 사용자에게 보고
+3. 사용자 응답에 따라 다음 단계 진행 또는 수정
+
+**블로커 시 (status: blocked)**:
+1. 오케스트레이터가 블로커 내용을 사용자에게 중계
+2. 사용자 지시에 따라 재개 또는 대응
+
+### 워커 연속성 (Resume)
+
+같은 태스크의 연속 단계에서 이전 워커를 이어서 사용하면 컨텍스트(코드 분석 결과 등)가 보존되어 품질이 향상된다.
+
+**resume 가능 시** (Claude Code, Cursor):
+- 동일 워커를 resume하여 다음 단계를 수행
+- 추가 전달: "다음 단계는 {단계명}이다. {가이드}.md를 읽고 따르라."
+- 예: RESEARCH 워커를 resume하여 PLAN 수행 → 코드 분석 컨텍스트 보존
+
+**resume 불가 시** (Gemini CLI, Antigravity, 또는 새 워커):
+- 새 워커에 이전 단계 산출물(.md) 경로를 전달
+- 워커가 산출물을 Read하여 컨텍스트를 복원
+
+**플랫폼별 resume 지원:**
+
+| 플랫폼 | resume 지원 | 비고 |
+|--------|-----------|------|
+| Claude Code | O | Agent 도구의 resume 파라미터 |
+| Cursor | O | Resume agent {id} |
+| Gemini CLI | X | 매 단계 새 워커 |
+| Antigravity | X | 폴백: 직접 실행 |
+
+**resume 가능 단계 쌍 및 가치:**
+
+| 이전 단계 | 다음 단계 | resume 가치 | 이유 |
+|----------|----------|------------|------|
+| RESEARCH | PLAN | 높음 | 코드 분석 컨텍스트 보존으로 설계 품질 향상 |
+| PLAN | TODO | 중간 | PLAN 설계 컨텍스트 보존 |
+| TODO | EXECUTE | 낮음 | TODO는 문서 분해 단계라 컨텍스트가 가벼움 |
+
+### 크로스 플랫폼 폴백
+
+서브 에이전트 도구(Agent/Task)를 사용할 수 없는 플랫폼에서는, 오케스트레이터가 워커 에이전트 파일을 Read하고 직접 실행한다.
+
+**폴백 규칙**:
+1. 서브 에이전트 도구 사용 가능? → 워커 에이전트를 서브 에이전트로 디스패치
+2. 사용 불가? → 워커 에이전트 파일을 Read → 지시 내용 확인 → 오케스트레이터가 직접 수행
+3. 이 경우 컨텍스트 격리 이점은 없으나, **워커의 절차/규칙은 동일하게 적용**
+
+**플랫폼별 정리:**
+
+| 플랫폼 | 워커 실행 방법 | resume | QA 호출 주체 |
+|--------|--------------|--------|-------------|
+| Claude Code | Agent 도구 → task-flow-agent | 가능 | 오케스트레이터 |
+| Cursor | 서브 에이전트 자동 위임 / `/task-flow-agent` | 가능 | 오케스트레이터 |
+| Gemini CLI | agents/task-flow-agent.md 자동 노출 | 불가 | 오케스트레이터 |
+| Antigravity | 폴백: SKILL.md Read → 직접 실행 | 불가 | 오케스트레이터 |
+
+> references/ 가이드는 실행 주체와 무관하게 동일하게 적용된다. "누가 실행하든" 같은 프로세스를 따른다.
+
+---
+
 ## QA 에이전트 호출 규칙
 
-QA가 필요한 단계에서 QA 에이전트를 **서브 에이전트(Task 도구)** 로 호출한다.
+QA가 필요한 단계에서 **오케스트레이터가** QA 에이전트를 **서브 에이전트(Task 도구)** 로 호출한다. 워커는 QA를 호출하지 않는다.
 
 **에이전트 이름**: `task-flow-qa`
 
@@ -130,7 +280,9 @@ QA가 필요한 단계에서 QA 에이전트를 **서브 에이전트(Task 도�
 
 ## Planner 에이전트 호출 규칙 (Full Task 복잡 모드 전용)
 
-Full Task의 TODO 단계에서 복잡 모드 판정 시, Planner 에이전트를 호출하여 Part C를 생성한다.
+TODO 워커가 Part A + Part B + 복잡도 판별 결과를 반환하면, **오케스트레이터가** 판정을 확인하고 복잡 모드 시 Planner 에이전트를 호출하여 Part C를 생성한다.
+
+**흐름**: TODO 워커 완료 → 오케스트레이터가 복잡 모드 확인 → Planner 호출 → Part C를 TODO.md에 추가 → 사용자에게 보고
 
 **에이전트 이름**: `task-flow-planner`
 
@@ -156,7 +308,7 @@ Full Task의 TODO 단계에서 복잡 모드 판정 시, Planner 에이전트를
 
 ## Test 에이전트 호출 규칙 (Full Task 복잡 모드 전용)
 
-Full Task의 복잡 모드 EXECUTE 완료 후, Test 에이전트를 호출하여 TEST-REPORT.md를 생성한다.
+EXECUTE 워커 완료 후, **오케스트레이터가** Test 에이전트를 호출하여 TEST-REPORT.md를 생성한다.
 
 **에이전트 이름**: `task-flow-test`
 
@@ -319,7 +471,9 @@ TASK.md 작성 완료 후:
 
 ## STEP 2 (Full): RESEARCH (분석)
 
-TASK.md의 요구사항을 바탕으로, 구현에 필요한 모든 정보를 수집하고 분석한다.
+**오케스트레이터가 RESEARCH 워커를 디스패치한다.**
+
+> **워커 디스패치**: 단계=RESEARCH, 이전 산출물=TASK.md, 가이드=research-guide.md, 산출물=RESEARCH.md
 
 **상세 가이드**: `references/research-guide.md`를 읽고 따른다.
 
@@ -337,15 +491,19 @@ TASK.md의 요구사항을 바탕으로, 구현에 필요한 모든 정보를 �
 
 (● 필수 / ○ 선택 / - 불필요)
 
-### ⚠️ QA 에이전트 호출 (필수)
+### 워커 완료 시
 
-RESEARCH.md 작성 완료 후, **반드시 QA 에이전트를 호출**한다. QA 결과를 포함하여 사용자에게 보고.
+워커가 RESEARCH.md를 반환하면, **오케스트레이터가 QA 에이전트를 호출**한다. QA 결과를 포함하여 사용자에게 보고.
 
 ---
 
 ## STEP 3 (Full): PLAN (구현 계획)
 
-RESEARCH.md의 분석 결과를 바탕으로 구체적인 구현 계획을 세운다.
+**오케스트레이터가 PLAN 워커를 디스패치한다.**
+
+> **워커 디스패치**: 단계=PLAN, 이전 산출물=TASK.md+RESEARCH.md, 가이드=plan-guide.md (Full Task 섹션), 산출물=PLAN.md
+>
+> **resume 가능 시**: RESEARCH 워커를 이어서(resume) PLAN을 수행한다. 코드 분석 컨텍스트가 보존되어 설계 품질이 향상된다.
 
 **상세 가이드**: `references/plan-guide.md`의 "Full Task PLAN" 섹션을 읽고 따른다.
 
@@ -359,15 +517,17 @@ RESEARCH.md의 분석 결과를 바탕으로 구체적인 구현 계획을 세�
 4. **의존성** — 추가 패키지, 환경 설정 변경 사항
 5. **테스트 전략** — 어떤 테스트를 작성할지, 성공 기준
 
-### ⚠️ QA 에이전트 호출 (필수)
+### 워커 완료 시
 
-PLAN.md 작성 완료 후, **반드시 QA 에이전트를 호출**한다. QA 결과를 포함하여 사용자에게 보고.
+워커가 PLAN.md를 반환하면, **오케스트레이터가 QA 에이전트를 호출**한다. QA 결과를 포함하여 사용자에게 보고.
 
 ---
 
 ## STEP 4 (Full): TODO (실행 체크리스트)
 
-PLAN.md를 실행 가능한 세부 작업 단위로 분해한다.
+**오케스트레이터가 TODO 워커를 디스패치한다.**
+
+> **워커 디스패치**: 단계=TODO, 이전 산출물=TASK.md+RESEARCH.md+PLAN.md, 가이드=todo-guide.md, 산출물=TODO.md
 
 **상세 가이드**: `references/todo-guide.md`를 읽고 따른다.
 
@@ -406,8 +566,8 @@ Part A 작성 후, 아래 기준으로 실행 모드를 결정한다:
 2. 사용자에게 **승인 요청** (QA 생략)
 
 **복잡 모드:**
-1. Part A + Part B 작성
-2. **task-flow-planner 에이전트 호출** → Part C 생성
+1. 워커가 Part A + Part B + 복잡도 판별 결과를 반환
+2. **오케스트레이터가** 복잡 모드 판정 확인 → **task-flow-planner 에이전트 호출** → Part C 생성
 3. TODO.md (A+B+C) 완성
 4. 사용자에게 **승인 요청** (QA 생략)
 
@@ -427,39 +587,43 @@ Part A 작성 후, 아래 기준으로 실행 모드를 결정한다:
 
 ## STEP 5 (Full): EXECUTE (실행)
 
-TODO.md가 사용자의 승인을 받으면 실행을 시작한다.
+TODO.md가 사용자의 승인을 받으면, **오케스트레이터가 EXECUTE 워커를 디스패치한다.**
+
+> **워커 디스패치**: 단계=EXECUTE, 이전 산출물=TASK.md+TODO.md(+Part C), 가이드=execute-guide.md, 산출물=코드 변경
 
 **상세 가이드**: `references/execute-guide.md`를 읽고 따른다.
 
 ### 체크리스트 갱신 규칙
 
-각 Step 완료 시 TODO.md의 체크박스를 즉시 갱신한다:
+워커가 각 Step 완료 시 TODO.md의 체크박스를 즉시 갱신한다:
 - `- [ ] 완료` → `- [x] 완료`
 
 ### 단순 모드 실행
 
-메인 에이전트가 Step 순서대로 직접 실행한다:
+워커가 Step 순서대로 직접 실행한다:
 
 1. Part A의 Step을 의존성 순서대로 하나씩 실행
 2. 각 Step 완료 시: TODO.md 체크박스 갱신
-3. 블로커 발생 시 즉시 사용자에게 보고
-4. 모든 Step 완료 후:
-   - Part B QA 체크리스트를 인라인으로 검증
+3. 블로커 발생 시 즉시 오케스트레이터에 반환
+4. 모든 Step 완료 후 결과 반환 → **오케스트레이터가**:
+   - Part B QA 체크리스트를 확인
    - **QA 에이전트 호출** → QA-EXECUTE.md 생성
    - 사용자에게 완료 보고
 
 ### 복잡 모드 실행
 
-Part C 토폴로지에 따라 서브 에이전트를 배치하여 실행한다:
+워커가 Part C 토폴로지에 따라 내부 서브 에이전트를 배치하여 실행한다:
 
 1. Part C-3 도구 요구사항 확인 — 미설치 도구 설치 (사용자 확인 후)
 2. Part C-1 에이전트 토폴로지에 따라 배치(batch) 구성
 3. 각 배치: 서브 에이전트를 **병렬로** Task 도구로 실행
 4. 배치 완료마다 TODO.md 체크박스 갱신 + 진행 보고
-5. 전체 에이전트 완료 후:
+5. 전체 에이전트 완료 후 결과 반환 → **오케스트레이터가**:
    - **task-flow-test 에이전트 호출** → TEST-REPORT.md 생성
    - **QA 에이전트 호출** → QA-EXECUTE.md 생성
    - 사용자에게 완료 보고
+
+> **복잡 모드 + 중첩 불가 시** (Cursor 등): 워커가 내부 서브 에이전트를 호출할 수 없는 플랫폼에서는, 오케스트레이터가 Part C 토폴로지에 따라 배치별 서브 에이전트를 직접 디스패치한다.
 
 ---
 
@@ -469,7 +633,9 @@ Part C 토폴로지에 따라 서브 에이전트를 배치하여 실행한다:
 
 ## STEP 2 (Short): PLAN 통합 (코드 분석 + 구현 계획 + 체크리스트)
 
-TASK.md를 바탕으로, 코드 분석 · 구현 계획 · 실행 체크리스트를 하나의 PLAN.md로 작성한다.
+**오케스트레이터가 PLAN(통합) 워커를 디스패치한다.**
+
+> **워커 디스패치**: 단계=PLAN-SHORT, 이전 산출물=TASK.md, 가이드=plan-guide.md (Short Task 섹션), 산출물=PLAN.md
 
 > ⚠️ **Short Task는 단계를 줄이는 것이지, 분석을 줄이는 것이 아니다.** 코드 분석은 Full Task의 RESEARCH와 동일한 깊이로 수행한다. 관련 코드를 실제로 읽고, 로직 흐름과 영향 범위를 파악한 뒤에 계획을 세운다.
 
@@ -529,9 +695,9 @@ PLAN 작성 중 아래 상황이 발생하면 에스컬레이션을 제안한다
 - 변경 파일 > 3
 - 다중 모듈에 걸치는 변경 발견
 
-### ⚠️ QA 에이전트 호출 (필수)
+### 워커 완료 시
 
-PLAN.md 작성 완료 후, **반드시 QA 에이전트를 호출**한다. QA 결과를 포함하여 사용자에게 보고.
+워커가 PLAN.md를 반환하면, **오케스트레이터가 QA 에이전트를 호출**한다. QA 결과를 포함하여 사용자에게 보고.
 
 ```
 📋 [PLAN] 완료 보고
@@ -550,22 +716,24 @@ PLAN.md 작성 완료 후, **반드시 QA 에이전트를 호출**한다. QA 결
 
 ## STEP 3 (Short): EXECUTE (실행)
 
-PLAN.md가 사용자의 승인을 받으면 실행을 시작한다.
+PLAN.md가 사용자의 승인을 받으면, **오케스트레이터가 EXECUTE 워커를 디스패치한다.**
+
+> **워커 디스패치**: 단계=EXECUTE-SHORT, 이전 산출물=TASK.md+PLAN.md, 가이드=execute-guide.md, 산출물=코드 변경
 
 **상세 가이드**: `references/execute-guide.md`를 읽고 따른다.
 
 ### 체크리스트 갱신 규칙
 
-각 Step 완료 시 PLAN.md의 실행 체크리스트를 즉시 갱신한다:
+워커가 각 Step 완료 시 PLAN.md의 실행 체크리스트를 즉시 갱신한다:
 - `- [ ] Step N: ...` → `- [x] Step N: ...`
 
 ### 실행 흐름
 
-1. PLAN.md의 실행 체크리스트(섹션 3)를 순서대로 실행
+1. 워커가 PLAN.md의 실행 체크리스트(섹션 3)를 순서대로 실행
 2. 각 Step 완료 시: PLAN.md 체크박스 갱신
-3. 블로커 발생 시 즉시 사용자에게 보고
-4. 모든 Step 완료 후:
-   - QA 체크리스트(섹션 4)를 인라인으로 검증
+3. 블로커 발생 시 즉시 오케스트레이터에 반환
+4. 모든 Step 완료 후 결과 반환 → **오케스트레이터가**:
+   - QA 체크리스트(섹션 4)를 확인
    - **QA 에이전트 호출** → QA-EXECUTE.md 생성
    - 사용자에게 완료 보고
 
@@ -613,25 +781,72 @@ PLAN.md가 사용자의 승인을 받으면 실행을 시작한다.
 
 ---
 
+## 다중 태스크 실행
+
+오케스트레이터-워커 모델을 활용하면, 여러 태스크를 동시에 진행할 수 있다.
+
+### 동시 실행 모델
+
+- 알투가 태스크 A의 사용자 검토 대기 중에 태스크 B의 워커를 디스패치할 수 있다
+- 각 워커는 독립 컨텍스트에서 실행되므로, 태스크 간 간섭이 없다
+- Claude Code에서는 `run_in_background` 를 활용하여 워커를 백그라운드로 실행 가능
+
+### 태스크 상태 추적
+
+오케스트레이터는 각 태스크의 상태를 추적한다:
+- 현재 단계 (TASK / RESEARCH / PLAN / TODO / EXECUTE)
+- 워커 상태 (진행 중 / 대기 / 완료)
+- 블로커 여부
+
+`tasks/` 폴더의 산출물 존재 여부로 상태를 복원할 수 있다. 예: RESEARCH.md가 있고 PLAN.md가 없으면 → PLAN 단계 진입 가능.
+
+### 통합 보고
+
+사용자 요청 시 전체 태스크의 상태를 일괄 보고한다:
+```
+📋 태스크 현황
+
+1. tasks/010-auth-feature/ — EXECUTE 진행 중 (워커 실행 중)
+2. tasks/011-bugfix-token/ — PLAN 검토 대기 (사용자 승인 필요)
+3. tasks/012-ui-redesign/ — RESEARCH 완료 (QA 진행 중)
+```
+
+### 파일 충돌 경고
+
+여러 태스크의 EXECUTE 워커가 같은 파일을 수정하려 할 때, 오케스트레이터가 경고한다:
+- EXECUTE 워커 디스패치 전 다른 태스크의 변경 파일 범위를 확인
+- 충돌 가능성이 있으면 사용자에게 경고하고 실행 순서를 제안
+
+---
+
 ## 실행 모드
 
 ### 전체 실행 — Full Task
 ```
 사용자: "새 태스크: 사용자 인증 기능 개발"
-→ TASK → (검토) → RESEARCH → QA → (검토) → PLAN → QA → (검토)
-→ TODO → (승인) → EXECUTE → QA → 완료
+→ TASK(직접) → (검토) → [워커: RESEARCH] → QA → (검토)
+→ [워커: PLAN] → QA → (검토) → [워커: TODO] → (승인)
+→ [워커: EXECUTE] → QA → 완료
 ```
 
 ### 전체 실행 — Short Task
 ```
 사용자: "버그 수정: 로그인 시 토큰 만료 에러"
-→ TASK → (검토) → PLAN(통합) → QA → (승인) → EXECUTE → QA → 완료
+→ TASK(직접) → (검토) → [워커: PLAN 통합] → QA → (승인) → [워커: EXECUTE] → QA → 완료
+```
+
+### 다중 태스크 동시 실행
+```
+사용자: "태스크 A 검토 대기 중에 태스크 B 시작"
+→ 태스크 A: [워커: PLAN] 완료 → 사용자 검토 대기
+→ 태스크 B: TASK(직접) → [워커: RESEARCH] (백그라운드 실행)
+→ 사용자: "태스크 A 승인" → [워커: TODO] 디스패치
 ```
 
 ### 단계별 실행
 ```
 사용자: "인증 기능 RESEARCH만 해줘"
-→ 기존 TASK.md 참조 → RESEARCH만 실행 → 보고
+→ 기존 TASK.md 참조 → [워커: RESEARCH]만 실행 → 보고
 ```
 
 ### 이어하기

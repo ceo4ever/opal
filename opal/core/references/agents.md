@@ -7,6 +7,13 @@ OPAL 에이전트가 호출할 수 있는 서브에이전트 목록.
 
 task-flow 스킬의 각 단계에서 호출되는 서브에이전트.
 
+### task-flow-agent
+
+- **역할**: 워커 에이전트 -- task-flow 각 단계(RESEARCH/PLAN/TODO/EXECUTE)를 독립 컨텍스트에서 실행
+- **호출 시점**: 각 단계 시작 시 오케스트레이터가 디스패치
+- **입력**: 단계, 태스크 폴더 경로, 이전 산출물 경로, 가이드 경로, 프로젝트 컨벤션 경로
+- **출력**: 산출물(.md) + 결과 반환 (artifact_path, summary, status, blockers, changed_files)
+
 ### task-flow-qa
 
 - **역할**: 산출물 품질 검증 (5단계 문서 리뷰)
