@@ -193,6 +193,7 @@ cursor-rules/                    ← Cursor 프로젝트 규칙 템플릿
 **Full Task:**
 ```
 tasks/{NNN}-{kebab-case-task-name}/
+├── STATE.md             ← 실시간 상태 추적 (체크포인트)
 ├── TASK.md, RESEARCH.md, QA-RESEARCH.md
 ├── PLAN.md, QA-PLAN.md
 ├── TODO.md
@@ -205,6 +206,7 @@ tasks/{NNN}-{kebab-case-task-name}/
 **Short Task:**
 ```
 tasks/{NNN}-{kebab-case-task-name}/
+├── STATE.md             ← 실시간 상태 추적 (체크포인트)
 ├── TASK.md
 ├── PLAN.md, QA-PLAN.md
 ├── QA-EXECUTE.md
