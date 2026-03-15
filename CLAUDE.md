@@ -162,7 +162,7 @@ cursor-rules/                    ← Cursor 프로젝트 규칙 템플릿
 
 모든 개발 작업의 중심 파이프라인. 작업 규모에 따라 Full Task / Short Task 듀얼 모드로 동작한다. 알투는 오케스트레이터로서 워커 에이전트(`task-flow-agent`)를 디스패치하고, 실제 분석/설계/실행은 워커의 격리된 컨텍스트에서 수행한다.
 
-### Full Task (복잡하거나 난이도 높은 작업)
+### Full Task (대규모 변경, 사용자 요청 시)
 
 ```
 사용자 지시 → [TASK 직접] → 검토 → [워커: RESEARCH] → [QA] → 검토
@@ -174,13 +174,13 @@ cursor-rules/                    ← Cursor 프로젝트 규칙 템플릿
                                            승인 → [워커: EXECUTE] → [QA] → 완료 보고
 ```
 
-### Short Task (간단한 버그 수정, 설정 변경 등)
+### Short Task (기본 모드)
 
 ```
 사용자 지시 → [TASK 직접] → 검토 → [워커: PLAN 통합] → [QA] → 승인 → [워커: EXECUTE] → [QA] → 완료 보고
 ```
 
-**모드 판별**: TASK 단계에서 자동 판별 (변경 파일 ≤3, Step ≤5, 단일 모듈, 외부 의존성 없음 → Short Task). 사용자가 오버라이드 가능.
+**모드 판별**: 모든 작업은 Short Task로 시작. Full Task 트리거 (변경 파일 ≥10, 다단계 기술 의사결정, 다중 모듈 연쇄 영향) 해당 시 Full을 제안하고 사용자가 결정.
 
 **핵심 규칙**: 사용자의 명시적 승인 전까지 코드 생성/수정 금지.
 
@@ -198,6 +198,7 @@ tasks/{NNN}-{kebab-case-task-name}/
 ├── TODO.md
 ├── QA-EXECUTE.md
 ├── TEST-REPORT.md (복잡 모드)
+├── DONE.md
 └── skills/ (동적 생성, 복잡 모드)
 ```
 
@@ -206,7 +207,8 @@ tasks/{NNN}-{kebab-case-task-name}/
 tasks/{NNN}-{kebab-case-task-name}/
 ├── TASK.md
 ├── PLAN.md, QA-PLAN.md
-└── QA-EXECUTE.md
+├── QA-EXECUTE.md
+└── DONE.md
 ```
 
 태스크 폴더명에 3자리 순번을 접두사로 붙인다 (예: `001-user-auth-implementation`). 새 태스크 생성 시 `tasks/` 폴더의 기존 최대 번호 + 1, 폴더가 없으면 001부터 시작.
@@ -252,6 +254,7 @@ tasks/{NNN}-{kebab-case-task-name}/
 
 📎 산출물: tasks/{NNN}-{태스크명}/{단계}.md
 📎 QA 리뷰: tasks/{NNN}-{태스크명}/QA-{단계}.md
+📎 완료 리포트: tasks/{NNN}-{태스크명}/DONE.md  ← EXECUTE 단계만
 
 [QA 요약]
 - 검증 항목 {N}개 중 {통과}개 Pass, {경고}개 Warning
