@@ -180,20 +180,23 @@ cursor-rules/                    ← Cursor 프로젝트 규칙 템플릿
                                                               ↓
                                                     [워커: TODO] → 검토
                                                               ↓
-                                           승인 → [워커: EXECUTE] → [QA] → 완료 보고
+                                      [워커: TEST-SCENARIO 작성] → 검토/승인
+                                                              ↓
+                                            [워커: EXECUTE] → [test 호출] → 완료 보고
 ```
 
 ### Short Task (기본 모드)
 
 ```
-사용자 지시 → [TASK 직접] → 검토 → [워커: PLAN 통합] → [QA] → 승인 → [워커: EXECUTE] → [QA] → 완료 보고
+사용자 지시 → [TASK 직접] → 검토 → [워커: PLAN 통합] → [QA] → 검토
+  → [워커: TEST-SCENARIO 작성] → 검토/승인 → [워커: EXECUTE] → [test 호출] → 완료 보고
 ```
 
 **모드 판별**: 모든 작업은 Short Task로 시작. Full Task 트리거 (변경 파일 ≥10, 다단계 기술 의사결정, 다중 모듈 연쇄 영향) 해당 시 Full을 제안하고 사용자가 결정.
 
 **핵심 규칙**: 사용자의 명시적 승인 전까지 코드 생성/수정 금지.
 
-**QA 호출**: TASK와 TODO에서는 QA 생략(사용자 직접 검토). RESEARCH, PLAN, EXECUTE에서 오케스트레이터가 QA 에이전트를 호출하여 1차 검토.
+**QA 호출**: TASK와 TODO에서는 QA 생략(사용자 직접 검토). RESEARCH, PLAN에서 오케스트레이터가 QA 에이전트를 호출하여 1차 검토. EXECUTE에서는 task-flow-test가 코드 동적 검증을 수행.
 
 **적응적 실행**: Full Task의 TODO 단계에서 복잡도를 판별하여, 단순 태스크는 워커가 직접 실행하고, 복잡 태스크는 워커 내부에서 Planner가 설계한 토폴로지에 따라 서브 에이전트가 병렬 실행한다.
 
@@ -206,8 +209,7 @@ tasks/{NNN}-{kebab-case-task-name}/
 ├── TASK.md, RESEARCH.md, QA-RESEARCH.md
 ├── PLAN.md, QA-PLAN.md
 ├── TODO.md
-├── QA-EXECUTE.md
-├── TEST-REPORT.md (복잡 모드)
+├── TEST-SCENARIO.md     ← 테스트 시나리오 + 실행 결과 (단일 파일)
 ├── DONE.md
 └── skills/ (동적 생성, 복잡 모드)
 ```
@@ -218,7 +220,7 @@ tasks/{NNN}-{kebab-case-task-name}/
 ├── STATE.md             ← 실시간 상태 추적 (체크포인트)
 ├── TASK.md
 ├── PLAN.md, QA-PLAN.md
-├── QA-EXECUTE.md
+├── TEST-SCENARIO.md     ← 테스트 시나리오 + 실행 결과
 └── DONE.md
 ```
 

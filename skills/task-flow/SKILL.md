@@ -47,13 +47,15 @@ description: |
                     │                                                   │
           [워커: RESEARCH] → [QA] → 검토                    [워커: PLAN 통합] → [QA] → 검토
                     │                                                   │
-          [워커: PLAN] → [QA] → 검토                             승인 → [워커: EXECUTE]
+          [워커: PLAN] → [QA] → 검토                    [워커: TEST-SCENARIO 작성] → 검토/승인
                     │                                                   │
-          [워커: TODO] → 검토                                    [QA] → 완료 보고
+          [워커: TODO] → 검토                                    [워커: EXECUTE]
+                    │                                                   │
+    [워커: TEST-SCENARIO 작성] → 검토/승인                  [test 호출] → 완료 보고
                     │
-              승인 → [워커: EXECUTE]
+              [워커: EXECUTE]
                     │
-              [QA] → 완료 보고
+              [test 호출] → 완료 보고
 ```
 
 **핵심 규칙**: 사용자의 명시적 승인 전까지 코드 생성/수정 금지. 오케스트레이터가 워커를 디스패치하여 각 단계를 실행하고, 사용자에게 보고한다.
@@ -168,6 +170,8 @@ task-flow {단계명} 워커로서 아래 태스크를 수행하라.
 | PLAN (Full) | TASK.md, RESEARCH.md | plan-guide.md (Full) | PLAN.md |
 | PLAN (Short) | TASK.md | plan-guide.md (Short) | PLAN.md |
 | TODO | TASK.md, RESEARCH.md, PLAN.md | todo-guide.md | TODO.md |
+| TEST-SCENARIO (Full) | TASK.md, TODO.md | test-scenario-guide.md | TEST-SCENARIO.md |
+| TEST-SCENARIO (Short) | TASK.md, PLAN.md | test-scenario-guide.md | TEST-SCENARIO.md |
 | EXECUTE (Full 단순) | TASK.md, TODO.md | execute-guide.md | 코드 변경 |
 | EXECUTE (Full 복잡) | TASK.md, TODO.md (Part C 포함) | execute-guide.md | 코드 변경 |
 | EXECUTE (Short) | TASK.md, PLAN.md | execute-guide.md | 코드 변경 |
@@ -277,7 +281,7 @@ QA가 필요한 단계에서 **오케스트레이터가** QA 에이전트를 **�
 | RESEARCH | **QA 호출** | (해당 없음) |
 | PLAN | **QA 호출** | **QA 호출** |
 | TODO | 생략 | (해당 없음) |
-| EXECUTE | **QA 호출** | **QA 호출** |
+| EXECUTE | **test 호출** | **test 호출** |
 
 ---
 
@@ -309,9 +313,9 @@ TODO 워커가 Part A + Part B + 복잡도 판별 결과를 반환하면, **오�
 
 ---
 
-## Test 에이전트 호출 규칙 (Full Task 복잡 모드 전용)
+## Test 에이전트 호출 규칙 (EXECUTE 완료 후, 모든 모드)
 
-EXECUTE 워커 완료 후, **오케스트레이터가** Test 에이전트를 호출하여 TEST-REPORT.md를 생성한다.
+EXECUTE 워커 완료 후, **오케스트레이터가** Test 에이전트를 호출하여 TEST-SCENARIO.md에 실행 결과를 채운다.
 
 **에이전트 이름**: `task-flow-test`
 
@@ -329,9 +333,10 @@ EXECUTE 워커 완료 후, **오케스트레이터가** Test 에이전트를 호
 2. 서브 에이전트(Task 도구)를 실행한다
 3. 전달 정보:
    - task_path: 태스크 폴더 경로
-   - todo_path: TODO.md 경로
+   - scenario_path: TEST-SCENARIO.md 경로
    - changed_files: EXECUTE에서 변경된 파일 목록
-4. 서브 에이전트가 TEST-REPORT.md를 생성한다
+   - mode: full-simple / full-complex / short
+4. 서브 에이전트가 TEST-SCENARIO.md에 결과를 채우고 판정을 기록한다
 ```
 
 ---
@@ -362,8 +367,7 @@ tasks/{NNN}-{태스크명}/
 ├── PLAN.md              ← 구현 계획
 ├── QA-PLAN.md           ← PLAN QA 리뷰
 ├── TODO.md              ← 실행 체크리스트 (+ Part C 복잡 모드)
-├── QA-EXECUTE.md        ← EXECUTE QA 리뷰
-├── TEST-REPORT.md       ← 테스트 리포트 (복잡 모드)
+├── TEST-SCENARIO.md     ← 테스트 시나리오 + 실행 결과 (단일 파일)
 ├── DONE.md              ← 완료 리포트
 └── skills/              ← 동적 생성 스킬 (복잡 모드, 필요 시)
 ```
@@ -376,7 +380,7 @@ tasks/{NNN}-{태스크명}/
 ├── TASK.md              ← 작업 정의서
 ├── PLAN.md              ← 통합 PLAN (코드 분석 + 구현 계획 + 체크리스트)
 ├── QA-PLAN.md           ← PLAN QA 리뷰
-├── QA-EXECUTE.md        ← EXECUTE QA 리뷰
+├── TEST-SCENARIO.md     ← 테스트 시나리오 + 실행 결과
 └── DONE.md              ← 완료 리포트
 ```
 
@@ -605,7 +609,7 @@ TODO.md가 사용자의 승인을 받으면, **오케스트레이터가 EXECUTE 
 워커가 각 Step 완료 시 TODO.md의 체크박스를 즉시 갱신한다:
 - `- [ ] 완료` → `- [x] 완료`
 
-**QA 체크리스트 갱신**: 모든 실행 Step 완료 후, QA 에이전트 호출 전에 워커가 Part B QA 체크리스트의 각 항목을 실제 검증하고 체크박스를 갱신한다:
+**QA 체크리스트 갱신**: 모든 실행 Step 완료 후, test 에이전트 호출 전에 워커가 Part B QA 체크리스트의 각 항목을 실제 검증하고 체크박스를 갱신한다:
 - 통과 항목: `- [ ]` → `- [x]`
 - 미통과 항목: `- [ ]` 유지 + 사유를 인라인 주석으로 기록 (예: `- [ ] 항목 <!-- 사유: ... -->`)
 
@@ -619,7 +623,7 @@ TODO.md가 사용자의 승인을 받으면, **오케스트레이터가 EXECUTE 
 4. 모든 Step 완료 후:
    - Part B QA 체크리스트를 검증하고 체크박스 갱신 (통과: `[x]`, 미통과: `[ ]` + 사유)
    - 결과 반환 → **오케스트레이터가**:
-     - **QA 에이전트 호출** → QA-EXECUTE.md 생성
+     - **task-flow-test 에이전트 호출** → TEST-SCENARIO.md에 결과 채움 + 판정
      - **DONE.md 생성** (완료 리포트 규칙 참조)
      - 사용자에게 완료 보고
 
@@ -634,8 +638,7 @@ TODO.md가 사용자의 승인을 받으면, **오케스트레이터가 EXECUTE 
 5. 전체 에이전트 완료 후:
    - Part B QA 체크리스트를 검증하고 체크박스 갱신 (통과: `[x]`, 미통과: `[ ]` + 사유)
    - 결과 반환 → **오케스트레이터가**:
-     - **task-flow-test 에이전트 호출** → TEST-REPORT.md 생성
-     - **QA 에이전트 호출** → QA-EXECUTE.md 생성
+     - **task-flow-test 에이전트 호출** → TEST-SCENARIO.md에 결과 채움 + 판정
      - **DONE.md 생성** (완료 리포트 규칙 참조)
      - 사용자에게 완료 보고
 
@@ -743,7 +746,7 @@ PLAN.md가 사용자의 승인을 받으면, **오케스트레이터가 EXECUTE 
 워커가 각 Step 완료 시 PLAN.md의 실행 체크리스트를 즉시 갱신한다:
 - `- [ ] Step N: ...` → `- [x] Step N: ...`
 
-**QA 체크리스트 갱신**: 모든 실행 Step 완료 후, QA 에이전트 호출 전에 워커가 QA 체크리스트(섹션 4)의 각 항목을 실제 검증하고 체크박스를 갱신한다:
+**QA 체크리스트 갱신**: 모든 실행 Step 완료 후, test 에이전트 호출 전에 워커가 QA 체크리스트(섹션 4)의 각 항목을 실제 검증하고 체크박스를 갱신한다:
 - 통과 항목: `- [ ]` → `- [x]`
 - 미통과 항목: `- [ ]` 유지 + 사유를 인라인 주석으로 기록 (예: `- [ ] 항목 <!-- 사유: ... -->`)
 
@@ -755,7 +758,7 @@ PLAN.md가 사용자의 승인을 받으면, **오케스트레이터가 EXECUTE 
 4. 모든 Step 완료 후:
    - QA 체크리스트(섹션 4)를 검증하고 체크박스 갱신 (통과: `[x]`, 미통과: `[ ]` + 사유)
    - 결과 반환 → **오케스트레이터가**:
-     - **QA 에이전트 호출** → QA-EXECUTE.md 생성
+     - **task-flow-test 에이전트 호출** → TEST-SCENARIO.md에 결과 채움 + 판정
      - **DONE.md 생성** (완료 리포트 규칙 참조)
      - 사용자에게 완료 보고
 
@@ -768,7 +771,7 @@ PLAN.md가 사용자의 승인을 받으면, **오케스트레이터가 EXECUTE 
 ## 완료 리포트 (DONE.md) 생성 규칙
 
 ### 생성 시점
-QA 에이전트 호출 완료 후, 최종 완료 보고 직전에 생성한다.
+task-flow-test 에이전트 호출 완료 후, 최종 완료 보고 직전에 생성한다.
 
 ### 생성 주체
 **오케스트레이터**가 생성한다. 오케스트레이터는 모든 단계 결과(TASK, PLAN, EXECUTE, QA)를 알고 있으므로 종합 리포트를 작성할 수 있다.
@@ -796,9 +799,9 @@ QA 에이전트 호출 완료 후, 최종 완료 보고 직전에 생성한다.
 ### After
 {변경 후 상태/동작}
 
-## QA 결과
-{QA 단계별 결과 요약: Pass/Fail 수}
-{QA 체크리스트 결과 요약}
+## 테스트 결과
+{TEST-SCENARIO.md 판정: All Pass / Partial Fail / Critical Fail}
+{시나리오 N/M Pass, 회귀 테스트 결과, 코드 품질 결과}
 
 ## 산출물 목록
 | 파일 | 설명 |
@@ -887,7 +890,7 @@ QA 에이전트 호출 완료 후, 최종 완료 보고 직전에 생성한다.
 
 ## 게이트 체크포인트 규칙
 
-### QA가 있는 단계 (RESEARCH, PLAN, EXECUTE)
+### QA가 있는 단계 (RESEARCH, PLAN)
 
 ```
 📋 [{단계명}] 완료 보고
@@ -970,13 +973,14 @@ STATE.md가 있으면 정확한 상태를 즉시 파악할 수 있다. STATE.md�
 사용자: "새 태스크: 사용자 인증 기능 개발"
 → TASK(직접) → (검토) → [워커: RESEARCH] → QA → (검토)
 → [워커: PLAN] → QA → (검토) → [워커: TODO] → (승인)
-→ [워커: EXECUTE] → QA → 완료
+→ [워커: TEST-SCENARIO 작성] → (검토/승인) → [워커: EXECUTE] → [test 호출] → 완료
 ```
 
 ### 전체 실행 — Short Task
 ```
 사용자: "버그 수정: 로그인 시 토큰 만료 에러"
-→ TASK(직접) → (검토) → [워커: PLAN 통합] → QA → (승인) → [워커: EXECUTE] → QA → 완료
+→ TASK(직접) → (검토) → [워커: PLAN 통합] → QA → (검토)
+→ [워커: TEST-SCENARIO 작성] → (검토/승인) → [워커: EXECUTE] → [test 호출] → 완료
 ```
 
 ### 다중 태스크 동시 실행

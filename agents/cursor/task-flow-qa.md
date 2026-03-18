@@ -1,8 +1,9 @@
 ---
 name: task-flow-qa
 description: |
-  **task-flow 산출물 품질 검증 에이전트**. TASK → RESEARCH → PLAN → TODO → EXECUTE 각 단계 산출물을 독립적으로 검토하여 요약과 판정을 제공합니다.
-  이 에이전트는 task-flow 스킬의 각 단계 산출물(.md) 작성 직후, 사용자 검토 전에 호출됩니다.
+  **task-flow 산출물 품질 검증 에이전트**. RESEARCH, PLAN 단계 산출물을 독립적으로 검토하여 요약과 판정을 제공합니다.
+  이 에이전트는 task-flow 스킬의 산출물(.md) 작성 직후, 사용자 검토 전에 호출됩니다.
+  EXECUTE 검증은 task-flow-test가 담당합니다 (코드 동적 검증).
   메인 에이전트가 SKILL.md의 "QA 에이전트 호출 규칙"에 따라 서브 에이전트(Task 도구)로 명시적으로 호출해야 합니다. 시스템이 자동으로 호출하지 않습니다.
   산출물 작성자와 분리된 독립 컨텍스트에서 실행되어 객관적 검토를 보장합니다.
 model: inherit
@@ -27,15 +28,14 @@ task-flow의 각 단계 산출물을 **사용자보다 먼저 1차 검토**하�
 Full Task:
   [RESEARCH.md 완료] → QA Agent 호출 → QA-RESEARCH.md → 사용자 검토
   [PLAN.md 완료] → QA Agent 호출 → QA-PLAN.md → 사용자 검토
-  [EXECUTE 완료] → QA Agent 호출 → QA-EXECUTE.md → 사용자 보고
 
 Short Task:
   [PLAN.md 완료] → QA Agent 호출 → QA-PLAN.md → 사용자 검토
-  [EXECUTE 완료] → QA Agent 호출 → QA-EXECUTE.md → 사용자 보고
 
 호출되지 않는 단계:
   TASK (Full/Short 모두) — 사용자 직접 검토
   TODO (Full Task) — 사용자 직접 검토
+  EXECUTE (Full/Short 모두) — task-flow-test가 코드 동적 검증으로 대체
 ```
 
 ---
@@ -46,18 +46,12 @@ Short Task:
 
 | 입력 | 설명 |
 |------|------|
-| `stage` | 검토 대상 단계 (`TASK` / `RESEARCH` / `PLAN` / `TODO` / `EXECUTE`) |
+| `stage` | 검토 대상 단계 (`RESEARCH` / `PLAN`) |
 | `mode` | 태스크 모드 (`full` / `short`) |
 | `task_path` | 태스크 폴더 경로 (예: `tasks/001-user-auth-implementation/`) |
 | `artifact_path` | 검토 대상 산출물 경로 (예: `tasks/001-.../PLAN.md`) |
 
 에이전트는 `task_path` 내의 이전 단계 산출물을 자동으로 탐색하여 교차 참조한다.
-
-**EXECUTE 단계 추가 입력:**
-| 입력 | 설명 |
-|------|------|
-| `changed_files` | 변경된 파일 목록 |
-| `test_report_path` | TEST-REPORT.md 경로 (복잡 모드) |
 
 ---
 
@@ -72,8 +66,6 @@ Short Task:
 | RESEARCH (Full) | RESEARCH.md + TASK.md |
 | PLAN (Full) | PLAN.md + RESEARCH.md + TASK.md |
 | PLAN (Short) | PLAN.md + TASK.md |
-| EXECUTE (Full) | TODO.md (체크박스 갱신 완료) + PLAN.md + TASK.md + TEST-REPORT.md (있으면) + 변경 파일 샘플링 |
-| EXECUTE (Short) | PLAN.md (체크박스 갱신 완료) + TASK.md + 변경 파일 샘플링 |
 
 ### Step 2: 핵심 요약 작성
 
@@ -142,15 +134,7 @@ Short Task의 통합 PLAN은 코드 분석 + 구현 계획 + 실행 체크리스
 
 ### EXECUTE 검증 기준
 
-| # | 검증 항목 | 확인 내용 |
-|---|----------|----------|
-| E-1 | 체크리스트 갱신 완료 | Full: TODO Part A의 모든 체크박스가 [x]인가? Short: PLAN 실행 체크리스트의 모든 체크박스가 [x]인가? |
-| E-2 | 완료 기준 충족 | 각 Step의 완료 기준이 실제로 달성되었는가? |
-| E-3 | 파일 변경 정합성 | 변경된 파일이 PLAN.md의 파일 목록과 일치하는가? (예상 외 파일 변경 없는지) |
-| E-4 | 코드 컨벤션 준수 | 변경된 코드가 프로젝트 CLAUDE.md의 컨벤션을 따르는가? |
-| E-5 | 테스트 결과 확인 | TEST-REPORT.md(복잡 모드) 또는 인라인 테스트(단순 모드) 결과가 Pass인가? |
-| E-6 | 블로커 해결 여부 | 발생했던 블로커가 모두 해결되었는가? |
-| E-7 | QA 체크리스트 충족 | Part B QA 체크리스트 항목이 모두 통과되었는가? |
+> EXECUTE 단계에서는 QA 에이전트가 호출되지 않는다 (Full/Short 모두). task-flow-test가 코드 동적 검증으로 대체한다.
 
 ---
 
@@ -164,7 +148,7 @@ Short Task의 통합 PLAN은 코드 분석 + 구현 계획 + 실행 체크리스
 tasks/{NNN}-{태스크명}/QA-{단계명}.md
 ```
 
-예: `tasks/001-user-auth-implementation/QA-PLAN.md`, `tasks/001-user-auth-implementation/QA-EXECUTE.md`
+예: `tasks/001-user-auth-implementation/QA-RESEARCH.md`, `tasks/001-user-auth-implementation/QA-PLAN.md`
 
 ### 문서 템플릿
 
@@ -248,18 +232,4 @@ task-flow에서 PLAN.md 작성 완료 후:
 다음 단계(TODO)로 넘어갈까요?
 ```
 
-EXECUTE 완료 후:
-
-```
-1. EXECUTE 완료 (모든 Step ✅)
-2. QA Agent 호출:
-   - stage: EXECUTE
-   - task_path: tasks/003-payment-integration/
-   - artifact_path: tasks/003-payment-integration/TODO.md
-   - changed_files: [src/payment.ts, ...]
-   - test_report_path: tasks/003-payment-integration/TEST-REPORT.md
-3. QA Agent가 TODO.md + PLAN.md + TASK.md + TEST-REPORT.md + 변경 파일 읽기
-4. 검증 수행 (E-1 ~ E-7)
-5. QA-EXECUTE.md 생성
-6. 사용자에게 보고
-```
+> EXECUTE 완료 후에는 task-flow-test가 TEST-SCENARIO.md를 실행하여 코드를 동적 검증한다. QA 에이전트는 호출되지 않는다.

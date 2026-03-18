@@ -17,7 +17,7 @@ TODO.md의 승인을 받은 후, 실제로 코드를 작성하고 검증하는 �
 워커가 Step 순서대로 직접 실행한다.
 
 ```
-Step 1 → Step 2 → ... → Step N → 인라인 테스트 → QA → 완료 보고
+Step 1 → Step 2 → ... → Step N → 인라인 테스트 → 결과 반환 → test 호출 → 완료 보고
 ```
 
 **실행 규칙:**
@@ -35,7 +35,7 @@ Step 1 → Step 2 → ... → Step N → 인라인 테스트 → QA → 완료 �
 4. 모든 Step 완료 후:
    - Part B QA 체크리스트를 검증하고 체크박스 갱신 (체크리스트 갱신 규칙 참조)
    - 결과 반환 → 오케스트레이터가:
-     - QA 에이전트 호출 → QA-EXECUTE.md 생성
+     - task-flow-test 에이전트 호출 → TEST-SCENARIO.md에 결과 채움 + 판정
      - DONE.md 생성 (완료 리포트 생성 규칙 참조)
      - 사용자에게 완료 보고
 
@@ -46,7 +46,7 @@ Step 1 → Step 2 → ... → Step N → 인라인 테스트 → QA → 완료 �
 > **복잡 모드 + 중첩 불가 시**: Cursor 등 워커가 내부 서브 에이전트를 호출할 수 없는 플랫폼에서는, 오케스트레이터가 Part C 토폴로지에 따라 배치별 서브 에이전트를 직접 디스패치한다. 워커는 `status: blocked`, `blockers: ["중첩 서브 에이전트 불가"]`를 반환한다.
 
 ```
-Batch 1: [Agent-1, Agent-2 병렬] → Batch 2: [Agent-3] → ... → Test Agent → QA → 완료 보고
+Batch 1: [Agent-1, Agent-2 병렬] → Batch 2: [Agent-3] → ... → 결과 반환 → Test Agent → 완료 보고
 ```
 
 **실행 규칙:**
@@ -62,8 +62,7 @@ Batch 1: [Agent-1, Agent-2 병렬] → Batch 2: [Agent-3] → ... → Test Agent
 3. 전체 에이전트 완료 후:
    - Part B QA 체크리스트를 검증하고 체크박스 갱신 (체크리스트 갱신 규칙 참조)
    - 결과 반환 → 오케스트레이터가:
-     - task-flow-test 에이전트 호출 → TEST-REPORT.md 생성
-     - QA 에이전트 호출 → QA-EXECUTE.md 생성
+     - task-flow-test 에이전트 호출 → TEST-SCENARIO.md에 결과 채움 + 판정
      - DONE.md 생성 (완료 리포트 생성 규칙 참조)
      - 사용자에게 완료 보고
 
@@ -77,7 +76,7 @@ Batch 1: [Agent-1, Agent-2 병렬] → Batch 2: [Agent-3] → ... → Test Agent
 4. 모든 Step 완료 후:
    - QA 체크리스트(섹션 4)를 검증하고 체크박스 갱신 (체크리스트 갱신 규칙 참조)
    - 결과 반환 → 오케스트레이터가:
-     - QA 에이전트 호출 → QA-EXECUTE.md 생성
+     - task-flow-test 에이전트 호출 → TEST-SCENARIO.md에 결과 채움 + 판정
      - DONE.md 생성 (완료 리포트 생성 규칙 참조)
      - 사용자에게 완료 보고
 
@@ -125,7 +124,7 @@ EXECUTE 중 각 Step 완료 시 즉시 체크박스를 갱신한다.
 
 ### QA 체크리스트 갱신
 
-모든 실행 Step 완료 후, QA 에이전트 호출 전에 워커가 QA 체크리스트를 검증하고 갱신한다.
+모든 실행 Step 완료 후, test 에이전트 호출 전에 워커가 QA 체크리스트를 검증하고 갱신한다.
 
 **대상**:
 - Full Task → TODO.md Part B
@@ -197,22 +196,20 @@ EXECUTE 단계에서 워커가 수행하는 STATE.md 갱신:
 📋 [EXECUTE] 완료 보고
 
 📎 산출물: {변경 파일 목록}
-📎 테스트: tasks/{NNN}-{태스크명}/TEST-REPORT.md (복잡 모드)
-📎 QA 리뷰: tasks/{NNN}-{태스크명}/QA-EXECUTE.md
+📎 테스트: tasks/{NNN}-{태스크명}/TEST-SCENARIO.md
 📎 완료 리포트: tasks/{NNN}-{태스크명}/DONE.md
 
 [실행 요약]
 - 전체 Step {N}개 중 {완료}개 완료
 - 변경 파일 {M}개
-- 테스트: {결과}
-- QA 판정: {✅ Pass / ⚠️ Needs Revision}
+- 테스트 판정: {All Pass / Partial Fail / Critical Fail}
 ```
 
 ---
 
 ## 완료 리포트 (DONE.md) 생성 규칙
 
-QA 에이전트 호출 완료 후, 최종 완료 보고 직전에 **오케스트레이터가** DONE.md를 생성한다.
+task-flow-test 에이전트 호출 완료 후, 최종 완료 보고 직전에 **오케스트레이터가** DONE.md를 생성한다.
 
 **저장 경로**: `tasks/{NNN}-{태스크명}/DONE.md`
 
@@ -236,9 +233,9 @@ QA 에이전트 호출 완료 후, 최종 완료 보고 직전에 **오케스트
 ### After
 {변경 후 상태/동작}
 
-## QA 결과
-{QA 단계별 결과 요약: Pass/Fail 수}
-{QA 체크리스트 결과 요약}
+## 테스트 결과
+{TEST-SCENARIO.md 판정: All Pass / Partial Fail / Critical Fail}
+{시나리오 N/M Pass, 회귀 테스트 결과, 코드 품질 결과}
 
 ## 산출물 목록
 | 파일 | 설명 |
@@ -247,15 +244,15 @@ QA 에이전트 호출 완료 후, 최종 완료 보고 직전에 **오케스트
 
 ---
 
-## QA 에이전트 호출 (EXECUTE 단계)
+## test 에이전트 호출 (EXECUTE 단계)
 
-EXECUTE 완료 후, **오케스트레이터가** QA 에이전트를 호출하여 QA-EXECUTE.md를 생성한다. 워커는 QA를 호출하지 않는다.
+EXECUTE 완료 후, **오케스트레이터가** task-flow-test 에이전트를 호출하여 TEST-SCENARIO.md에 실행 결과를 채우고 판정을 기록한다. 워커는 test를 호출하지 않는다.
 
 **호출 정보:**
-- stage: `EXECUTE`
 - task_path: 태스크 폴더 경로
-- artifact_path: TODO.md (상태 갱신 완료된 버전)
-- 추가 참조: TEST-REPORT.md (복잡 모드), 변경 파일 목록
+- scenario_path: TEST-SCENARIO.md 경로
+- changed_files: EXECUTE에서 변경된 파일 목록
+- mode: full-simple / full-complex / short
 
 ---
 
@@ -286,13 +283,12 @@ Part C-2에서 스킬이 필요한 에이전트가 있을 때:
 - [ ] 코드가 프로젝트 컨벤션(CLAUDE.md)을 따르는가?
 - [ ] QA 체크리스트(Part B / 섹션 4) 체크박스가 갱신되었는가?
 - [ ] DONE.md 완료 리포트가 생성되었는가?
-- [ ] TEST-REPORT.md가 생성되었는가? (복잡 모드)
-- [ ] QA-EXECUTE.md가 생성되었는가?
+- [ ] TEST-SCENARIO.md에 테스트 결과가 채워졌는가?
 
 ---
 
-## QA 에이전트 호출 안내
+## test 에이전트 호출 안내
 
-EXECUTE 완료 후, **오케스트레이터가 QA 에이전트를 호출**하여 QA-EXECUTE.md를 생성한다.
+EXECUTE 완료 후, **오케스트레이터가 task-flow-test 에이전트를 호출**하여 TEST-SCENARIO.md에 실행 결과를 채우고 판정을 기록한다.
 
-> **워커는 QA를 호출하지 않는다.** 워커는 실행 결과(artifact_path, summary, status, changed_files)를 오케스트레이터에 반환하고, 오케스트레이터가 QA 에이전트를 별도로 호출한다.
+> **워커는 test를 호출하지 않는다.** 워커는 실행 결과(artifact_path, summary, status, changed_files)를 오케스트레이터에 반환하고, 오케스트레이터가 task-flow-test 에이전트를 별도로 호출한다.
