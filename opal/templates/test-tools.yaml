@@ -1,0 +1,125 @@
+# .opal/test-tools.yaml
+# 테스트 도구 레지스트리 — 프로젝트 루트 기준
+#
+# 사용법:
+#   1. 이 파일을 프로젝트 루트의 .opal/test-tools.yaml 에 복사한다.
+#   2. stack 섹션에 실제 프로젝트 스택을 선언한다.
+#   3. tools 섹션에서 불필요한 카테고리를 제거하거나 도구를 추가한다.
+#
+# 우선순위:
+#   {project}/.opal/test-tools.yaml  →  ~/.opal/templates/test-tools.yaml (글로벌 기본값)
+#   둘 다 없으면 task-flow-test가 package.json / pyproject.toml 기반으로 추론 (fallback)
+#
+# 스키마 참조: opal/core/references/test-tools-schema.yaml
+
+version: "1.0"
+
+# ─── 스택 선언 ────────────────────────────────────────────────────────────────
+# 도구 카테고리 자동 추론에 사용된다.
+# 유효값: typescript | python | go | java | rust | ...
+stack:
+  language: typescript      # 주 언어
+  framework: nextjs         # 프레임워크 (선택) — nextjs | express | fastapi | gin | ...
+  runtime: node             # 런타임 (선택) — node | bun | deno | python | go | ...
+
+# ─── 전역 도구 ────────────────────────────────────────────────────────────────
+# 스택에 무관하게 모든 프로젝트에 적용되는 필수 도구.
+# task-flow-test가 항상 실행한다.
+global:
+  - name: gitleaks
+    purpose: 하드코딩 시크릿 스캔 (보안)
+    category: security
+    check: "gitleaks version"
+    install:
+      mac: "brew install gitleaks"
+      windows: "choco install gitleaks"
+      linux: "curl -sSfL https://github.com/gitleaks/gitleaks/releases/latest/download/gitleaks_linux_amd64.tar.gz | tar -xz -C /usr/local/bin gitleaks"
+    install_fallback: "https://github.com/gitleaks/gitleaks/releases"
+    required: true
+
+# ─── 카테고리별 도구 ──────────────────────────────────────────────────────────
+# stack 선언에 따라 활성화된다.
+# 각 카테고리에 도구가 여러 개인 경우 첫 번째 항목이 기본값으로 사용된다.
+tools:
+
+  # 단위 테스트
+  unit:
+    - name: vitest
+      purpose: 단위 테스트 (Vite 기반)
+      check: "npx vitest --version"
+      install: "npm install -D vitest"
+      required: true
+    # - name: jest
+    #   purpose: 단위 테스트 (Jest)
+    #   check: "npx jest --version"
+    #   install: "npm install -D jest ts-jest @types/jest"
+    #   required: false
+
+  # E2E / 통합 테스트
+  e2e:
+    - name: playwright
+      purpose: E2E 브라우저 테스트
+      check: "npx playwright --version"
+      install: "npm install -D @playwright/test && npx playwright install"
+      required: false
+    # - name: cypress
+    #   purpose: E2E 브라우저 테스트 (Cypress)
+    #   check: "npx cypress --version"
+    #   install: "npm install -D cypress"
+    #   required: false
+
+  # 린트
+  lint:
+    - name: eslint
+      purpose: JavaScript/TypeScript 정적 분석
+      check: "npx eslint --version"
+      install: "npm install -D eslint"
+      required: true
+
+  # 타입 체크
+  typecheck:
+    - name: tsc
+      purpose: TypeScript 타입 안전성 검사
+      check: "npx tsc --version"
+      install: "npm install -D typescript"
+      required: true
+
+  # 포맷터
+  format:
+    - name: prettier
+      purpose: 코드 포맷 일관성 검사
+      check: "npx prettier --version"
+      install: "npm install -D prettier"
+      required: false
+
+# ─── Python 스택 예시 (주석 해제하여 사용) ────────────────────────────────────
+# stack:
+#   language: python
+#   framework: fastapi
+#   runtime: python
+#
+# tools:
+#   unit:
+#     - name: pytest
+#       purpose: 단위/통합 테스트
+#       check: "pytest --version"
+#       install: "pip install pytest"
+#       required: true
+#   lint:
+#     - name: ruff
+#       purpose: Python 빠른 린터
+#       check: "ruff --version"
+#       install: "pip install ruff"
+#       required: true
+#   typecheck:
+#     - name: mypy
+#       purpose: Python 타입 체크
+#       check: "mypy --version"
+#       install: "pip install mypy"
+#       required: true
+#   format:
+#     - name: black
+#       purpose: Python 코드 포맷터
+#       check: "black --version"
+#       install: "pip install black"
+#       required: false

@@ -20,7 +20,8 @@ TEST-SCENARIO.md는 두 가지 역할을 수행한다:
 | 대상 (뭘 테스트할지) | task-flow-agent | PLAN/TODO 완료 후, EXECUTE 전 |
 | 조건 (어떤 입력/상태) | task-flow-agent | 동일 |
 | 기대 결과 (성공 기준) | task-flow-agent | 동일 |
-| 도구/실행 명령/결과/상세 | task-flow-test | EXECUTE 완료 후 |
+| 도구 (어떤 도구로 테스트할지) | task-flow-agent | 동일 — `.opal/test-tools.yaml` 레지스트리 기반 결정 |
+| 실행 명령/결과/상세 | task-flow-test | EXECUTE 완료 후 |
 | 코드 품질/보안/회귀/판정 | task-flow-test | EXECUTE 완료 후 |
 
 ---
@@ -35,6 +36,29 @@ PLAN.md(Short) 또는 TODO.md(Full)에서 아래 정보를 확인한다:
 - QA 체크리스트 (기능 테스트, 회귀 테스트 항목)
 - TASK.md의 요구사항
 
+### Step 1-b: 도구 사전 확인
+
+테스트 도구를 사전에 결정하여 시나리오의 "도구" 필드를 task-flow-agent가 기입한다.
+
+1. `{project}/.opal/test-tools.yaml` 존재 여부 확인
+2. **있으면**: `stack` 및 `tools` 섹션을 읽어 사용 가능한 도구 목록 파악
+3. **없으면**: 프로젝트 설정 파일(`package.json`, `pyproject.toml` 등)에서 추론
+   - `package.json`의 `devDependencies`에 vitest/jest 있으면 → unit: vitest/jest
+   - `pyproject.toml`에 pytest 있으면 → unit: pytest
+4. 아래 시나리오 유형 → 도구 매핑 테이블을 참조하여 각 시나리오에 사용할 도구 결정
+5. TEST-SCENARIO.md의 각 시나리오 "도구" 필드에 결정된 도구를 기입
+
+**시나리오 유형 → 도구 매핑 테이블:**
+
+| 시나리오 유형 | 대응 카테고리 | 예시 도구 (TypeScript) | 예시 도구 (Python) |
+|-------------|------------|----------------------|------------------|
+| 함수/클래스 단위 검증 | unit | vitest, jest | pytest |
+| API 엔드포인트 검증 | e2e 또는 unit | playwright, supertest | pytest + httpx |
+| 브라우저 UI 검증 | e2e | playwright, cypress | playwright |
+| 린트/포맷 | lint, format | eslint, prettier | ruff, black |
+| 타입 안전성 | typecheck | tsc | mypy |
+| 시크릿/보안 | security | gitleaks (global) | gitleaks (global) |
+
 ### Step 2: 시나리오 도출
 
 TASK.md의 각 요구사항에 대해 시나리오를 도출한다:
@@ -47,12 +71,13 @@ TASK.md의 각 요구사항에 대해 시나리오를 도출한다:
 
 ### Step 3: 시나리오 작성
 
-각 시나리오에 대해 아래 3가지를 작성한다:
+각 시나리오에 대해 아래 4가지를 작성한다:
 - **대상**: 어떤 기능/변경점을 테스트하는지
 - **조건**: 입력 데이터, 사전 상태, 환경 조건
 - **기대 결과**: 성공 기준 (구체적으로, 검증 가능하게)
+- **도구**: Step 1-b에서 결정한 도구 기입 (예: `vitest`, `playwright`, `gitleaks`)
 
-나머지 필드(도구, 실행 명령, 결과, 상세)는 비워둔다 -- task-flow-test가 채운다.
+나머지 필드(실행 명령, 결과, 상세)는 비워둔다 -- task-flow-test가 채운다.
 
 ### Step 4: 문서 전용 태스크 확인
 
@@ -85,7 +110,7 @@ TASK.md의 각 요구사항에 대해 시나리오를 도출한다:
 | 대상 | {테스트 대상 기능/변경점} |
 | 조건 | {입력, 사전 상태, 환경} |
 | 기대 결과 | {성공 기준} |
-| 도구 | _{task-flow-test가 채움}_ |
+| 도구 | {task-flow-agent가 결정 / task-flow-test가 검증} |
 | 실행 명령 | _{task-flow-test가 채움}_ |
 | 결과 | _{task-flow-test가 채움: Pass / Fail / Skip}_ |
 | 상세 | _{task-flow-test가 채움}_ |
@@ -97,7 +122,7 @@ TASK.md의 각 요구사항에 대해 시나리오를 도출한다:
 | 대상 | {테스트 대상 기능/변경점} |
 | 조건 | {입력, 사전 상태, 환경} |
 | 기대 결과 | {성공 기준} |
-| 도구 | _{task-flow-test가 채움}_ |
+| 도구 | {task-flow-agent가 결정 / task-flow-test가 검증} |
 | 실행 명령 | _{task-flow-test가 채움}_ |
 | 결과 | _{task-flow-test가 채움: Pass / Fail / Skip}_ |
 | 상세 | _{task-flow-test가 채움}_ |
@@ -156,6 +181,7 @@ tasks/{NNN}-{태스크명}/TEST-SCENARIO.md
 
 - [ ] TASK.md의 모든 요구사항에 대해 시나리오가 존재하는가?
 - [ ] 각 시나리오의 기대 결과가 구체적이고 검증 가능한가?
-- [ ] task-flow-agent 담당 필드(대상/조건/기대 결과)만 작성하고, task-flow-test 담당 필드는 비워두었는가?
+- [ ] task-flow-agent 담당 필드(대상/조건/기대 결과/도구)를 작성하고, task-flow-test 담당 필드(실행 명령/결과/상세)는 비워두었는가?
+- [ ] Step 1-b에서 `.opal/test-tools.yaml` 또는 프로젝트 설정 파일을 참조하여 도구를 결정했는가?
 - [ ] 문서 전용 태스크인 경우 스킵 규칙을 적용했는가?
 - [ ] 설계 빈틈 발견 시 피드백 섹션에 기록했는가?

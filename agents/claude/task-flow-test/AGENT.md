@@ -57,19 +57,48 @@ EXECUTE 단계 완료 후, TEST-SCENARIO.md를 입력으로 받아 **실제 실�
 
 ### Step 1: TEST-SCENARIO.md 읽기 + 테스트 환경 확인
 
-1. `scenario_path`의 TEST-SCENARIO.md를 읽어 시나리오 목록(S-1~S-N)을 파악
-2. 테스트 도구 설치 여부 확인 (프로젝트 설정 파일 기반)
-3. 테스트 실행 가능 상태인지 검증 (의존성 설치, 빌드 성공 등)
-4. 환경 문제 발견 시 -> TEST-SCENARIO.md 해당 항목에 환경 이슈로 기록
+#### Step 1-a: .opal/test-tools.yaml 로드
+
+1. `{task_path}`의 프로젝트 루트에서 `.opal/test-tools.yaml` 존재 여부 확인
+2. **있으면**: 레지스트리 로드 — `stack`, `global`, `tools` 섹션 파악
+3. **없으면**: `package.json`의 `devDependencies` 또는 `pyproject.toml`을 읽어 사용 가능한 도구를 추론 (fallback)
+4. TEST-SCENARIO.md를 읽어 시나리오 목록(S-1~S-N) 파악
+
+#### Step 1-b: 도구 설치 여부 확인 (레지스트리 기반)
+
+레지스트리(`global` + `tools`)의 각 도구에 대해 `check` 명령을 실행하여 설치 여부를 확인한다.
+
+**required: true 도구 미설치 시:**
+
+1. OS 감지:
+   - `uname -s` 실행 → `Darwin` → mac, `Linux` → linux
+   - Windows: `$env:OS` 환경변수 → windows
+2. `install` 필드 구조에 따라 설치 명령 선택:
+   - 플랫폼 맵(`mac` / `windows` / `linux` 키)이면 → 감지된 OS 키의 명령 사용
+   - 단일 문자열이면 → 그대로 사용 (npm/pip 등 크로스플랫폼 도구)
+   - 해당 플랫폼 키 미존재 시 → `install_fallback` URL 제시
+3. 선택된 설치 명령을 사용자에게 제안하고 승인 요청
+4. 승인 시 설치 실행 → 재확인
+5. **미승인 시**: 해당 시나리오를 "환경 미준비 — Skip"으로 기록 후 계속 진행
+
+**required: false 도구 미설치 시:**
+
+- 해당 시나리오를 Skip 처리 (사용자 승인 불필요)
+
+#### Step 1-c: 실행 가능 상태 검증
+
+1. 의존성 설치 여부 확인 (예: `node_modules` 존재, `pip install -r requirements.txt` 완료 등)
+2. 빌드 성공 여부 확인 (해당 시)
+3. 환경 문제 발견 시 → TEST-SCENARIO.md 해당 항목에 환경 이슈로 기록
 
 ### Step 2: 시나리오 실행 (S-1~S-N)
 
 TEST-SCENARIO.md의 각 시나리오에 대해:
-1. **도구 결정**: 시나리오의 대상/조건을 분석하여 적합한 테스트 도구 선택
+1. **도구 검증**: task-flow-agent가 기입한 도구를 확인 — 설치 여부는 Step 1-b에서 이미 처리됨
 2. **실행 명령 구성**: 도구에 맞는 실행 명령 작성
 3. **실행**: 명령 실행
 4. **결과 기록**: Pass / Fail / Skip + 상세 정보
-5. TEST-SCENARIO.md의 해당 시나리오에 도구/실행 명령/결과/상세를 채움
+5. TEST-SCENARIO.md의 해당 시나리오에 실행 명령/결과/상세를 채움
 
 ### Step 3: 회귀 테스트
 
@@ -126,7 +155,7 @@ tasks/{NNN}-{태스크명}/TEST-SCENARIO.md  (갱신)
 ### 갱신 내용
 
 task-flow-agent가 비워둔 필드를 채운다:
-- 각 시나리오(S-1~S-N)의 도구/실행 명령/결과/상세
+- 각 시나리오(S-1~S-N)의 실행 명령/결과/상세 (도구는 task-flow-agent가 사전 기입)
 - 코드 품질 섹션의 도구/결과/상세
 - 보안 섹션의 결과/상세
 - 회귀 테스트 섹션의 테스트 스위트/결과/상세
