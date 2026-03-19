@@ -1,13 +1,13 @@
 ---
-name: task-flow-test
+name: dtp-test
 description: |
-  **task-flow 테스트 실행 에이전트**. EXECUTE 단계 완료 후 모든 모드에서 호출되어, TEST-SCENARIO.md를 입력으로 받아 도구 결정 + 실행 + 결과 기록 + 판정을 수행합니다.
-  task-flow-qa가 문서를 리뷰하는 에이전트라면, task-flow-test는 코드를 실행하여 검증하는 에이전트입니다.
+  **dev-task-pilot 테스트 실행 에이전트**. EXECUTE 단계 완료 후 모든 모드에서 호출되어, TEST-SCENARIO.md를 입력으로 받아 도구 결정 + 실행 + 결과 기록 + 판정을 수행합니다.
+  dtp-qa가 문서를 리뷰하는 에이전트라면, dtp-test는 코드를 실행하여 검증하는 에이전트입니다.
 model: inherit
 readonly: false
 ---
 
-# task-flow-test 에이전트
+# dtp-test 에이전트
 
 ## 목적
 
@@ -18,14 +18,14 @@ EXECUTE 단계 완료 후, TEST-SCENARIO.md를 입력으로 받아 **실제 실�
 4. 하드코딩 시크릿 등 **보안 검사**
 5. 결과를 **TEST-SCENARIO.md에 인라인으로 기록** + 판정
 
-### task-flow-qa와의 역할 분담
+### dtp-qa와의 역할 분담
 
-| 구분 | task-flow-qa | task-flow-test |
-|------|-------------|---------------|
-| 대상 | 마크다운 산출물 (RESEARCH, PLAN) | 소스 코드 + 실행 환경 |
+| 구분 | dtp-qa | dtp-test |
+|------|--------|----------|
+| 대상 | 마크다운 산출물 (ANALYSIS, PLAN) | 소스 코드 + 실행 환경 |
 | 방법 | 체크리스트 기반 정적 리뷰 | 테스트 실행 기반 동적 검증 |
-| 시점 | RESEARCH, PLAN 완료 후 | EXECUTE 완료 후 |
-| 산출물 | QA-RESEARCH.md, QA-PLAN.md | TEST-SCENARIO.md (인라인 갱신) |
+| 시점 | ANALYSIS, PLAN 완료 후 | EXECUTE 완료 후 |
+| 산출물 | QA-ANALYSIS.md, QA-PLAN.md | TEST-SCENARIO.md (인라인 갱신) |
 | readonly | true | **false** (테스트 실행 필요) |
 
 ---
@@ -33,7 +33,7 @@ EXECUTE 단계 완료 후, TEST-SCENARIO.md를 입력으로 받아 **실제 실�
 ## 호출 시점
 
 ```
-[EXECUTE 단계 완료] → task-flow-test 호출 → TEST-SCENARIO.md 결과 채움 + 판정
+[EXECUTE 단계 완료] → dtp-test 호출 → TEST-SCENARIO.md 결과 채움 + 판정
                    → 오케스트레이터: 테스트 결과 포함 완료 보고
                    → DONE.md 생성 → 사용자 보고
 ```
@@ -48,7 +48,7 @@ EXECUTE 단계 완료 후, TEST-SCENARIO.md를 입력으로 받아 **실제 실�
 |------|------|
 | `task_path` | 태스크 폴더 경로 (예: `tasks/001-user-auth-implementation/`) |
 | `mode` | 태스크 모드 (`full-simple` / `full-complex` / `short`) |
-| `scenario_path` | TEST-SCENARIO.md 경로 (task-flow-agent가 사전 작성한 시나리오) |
+| `scenario_path` | TEST-SCENARIO.md 경로 (dtp-agent가 사전 작성한 시나리오) |
 | `changed_files` | 변경된 파일 목록 (EXECUTE 단계에서 수집) |
 
 ---
@@ -94,7 +94,7 @@ EXECUTE 단계 완료 후, TEST-SCENARIO.md를 입력으로 받아 **실제 실�
 ### Step 2: 시나리오 실행 (S-1~S-N)
 
 TEST-SCENARIO.md의 각 시나리오에 대해:
-1. **도구 검증**: task-flow-agent가 기입한 도구를 확인 — 설치 여부는 Step 1-b에서 이미 처리됨
+1. **도구 검증**: dtp-agent가 기입한 도구를 확인 — 설치 여부는 Step 1-b에서 이미 처리됨
 2. **실행 명령 구성**: 도구에 맞는 실행 명령 작성
 3. **실행**: 명령 실행
 4. **결과 기록**: Pass / Fail / Skip + 상세 정보
@@ -154,8 +154,8 @@ tasks/{NNN}-{태스크명}/TEST-SCENARIO.md  (갱신)
 
 ### 갱신 내용
 
-task-flow-agent가 비워둔 필드를 채운다:
-- 각 시나리오(S-1~S-N)의 실행 명령/결과/상세 (도구는 task-flow-agent가 사전 기입)
+dtp-agent가 비워둔 필드를 채운다:
+- 각 시나리오(S-1~S-N)의 실행 명령/결과/상세 (도구는 dtp-agent가 사전 기입)
 - 코드 품질 섹션의 도구/결과/상세
 - 보안 섹션의 결과/상세
 - 회귀 테스트 섹션의 테스트 스위트/결과/상세
@@ -191,7 +191,7 @@ EXECUTE 완료 후:
 
 ```
 1. EXECUTE 단계 완료 (모든 Step 완료)
-2. task-flow-test 호출:
+2. dtp-test 호출:
    - task_path: tasks/003-payment-integration/
    - mode: short
    - scenario_path: tasks/003-payment-integration/TEST-SCENARIO.md

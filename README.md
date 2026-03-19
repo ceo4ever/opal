@@ -35,7 +35,7 @@ Project Layer (프로젝트마다 설정)
 
 | 스킬 | 설명 | 용도 |
 |------|------|------|
-| **task-flow** | 핵심 오케스트레이터 | TASK → RESEARCH → PLAN → TODO → EXECUTE 5단계 파이프라인 |
+| **dev-task-pilot** | 핵심 오케스트레이터 | TASK → ANALYSIS → PLAN → TODO → EXECUTE 5단계 파이프라인 |
 | **api-analyzer** | 외부 API 분석 | 7단계 분석 및 API 명세서 생성 |
 | **doc-writer** | 기술 문서 표준 | 모든 문서 스킬의 베이스 템플릿 |
 | **interview** | 요구사항 수집 | 구조화된 Q&A로 요구사항 수집 및 갭 탐지 |
@@ -49,10 +49,10 @@ Project Layer (프로젝트마다 설정)
 
 | 에이전트 | 설명 | 호출 시점 |
 |---------|------|----------|
-| **task-flow-agent** | 워커 에이전트 | 각 단계(RESEARCH/PLAN/TODO/EXECUTE)를 독립 컨텍스트에서 실행 |
-| **task-flow-qa** | 산출물 품질 검증 | 각 단계 산출물 작성 후 (5단계 문서 리뷰) |
-| **task-flow-planner** | 실행 아키텍처 설계 | TODO 단계에서 복잡 모드 판별 시 (Part C 생성) |
-| **task-flow-test** | 테스트 실행 | EXECUTE 완료 후 복잡 모드에서 (코드 동적 검증) |
+| **dtp-agent** | 워커 에이전트 | 각 단계(ANALYSIS/PLAN/TODO/EXECUTE)를 독립 컨텍스트에서 실행 |
+| **dtp-qa** | 산출물 품질 검증 | 각 단계 산출물 작성 후 (5단계 문서 리뷰) |
+| **dtp-planner** | 실행 아키텍처 설계 | TODO 단계에서 복잡 모드 판별 시 (Part C 생성) |
+| **dtp-test** | 테스트 실행 | EXECUTE 완료 후 복잡 모드에서 (코드 동적 검증) |
 
 ### OPAL AI 에이전트
 
@@ -113,11 +113,11 @@ cp -r agents/antigravity/* ~/.gemini/antigravity/skills/
 
 | 섹션 | 읽는 컴포넌트 | 필수 여부 |
 |------|-------------|----------|
-| Project Overview | task-flow (TASK 작성) | 필수 |
-| Language Convention | doc-writer, task-flow-qa | 필수 |
-| Tech Stack | task-flow-planner (도구 탐색) | 필수 |
-| Architecture | task-flow (RESEARCH), task-flow-planner | 권장 |
-| Code Conventions | task-flow-qa (E-4), EXECUTE 서브에이전트 | 필수 |
+| Project Overview | dev-task-pilot (TASK 작성) | 필수 |
+| Language Convention | doc-writer, dtp-qa | 필수 |
+| Tech Stack | dtp-planner (도구 탐색) | 필수 |
+| Architecture | dev-task-pilot (ANALYSIS), dtp-planner | 권장 |
+| Code Conventions | dtp-qa (E-4), EXECUTE 서브에이전트 | 필수 |
 
 ### Cursor: .cursor/rules/
 
@@ -129,7 +129,7 @@ cp cursor-rules/*.mdc {프로젝트}/.cursor/rules/
 | 파일 | 모드 | 설명 |
 |------|------|------|
 | `001-project-conventions.mdc` | Always | 프로젝트 핵심 규칙 |
-| `002-development-workflow.mdc` | Always | task-flow 파이프라인 |
+| `002-development-workflow.mdc` | Always | dev-task-pilot 파이프라인 |
 | `100-document-standards.mdc` | Agent Requested | 문서 표준 + 버전 관리 |
 | `101-task-artifacts.mdc` | Agent Requested | 태스크 산출물 구조 |
 
@@ -139,16 +139,16 @@ cp cursor-rules/*.mdc {프로젝트}/.cursor/rules/
 
 ---
 
-## 핵심 워크플로우: task-flow
+## 핵심 워크플로우: dev-task-pilot
 
 ```
-TASK → RESEARCH → PLAN → TODO → EXECUTE
+TASK → ANALYSIS → PLAN → TODO → EXECUTE
 ```
 
 | 단계 | 목적 | 산출물 |
 |------|------|--------|
 | **TASK** | 작업 정의 | TASK.md |
-| **RESEARCH** | 기술 분석 | RESEARCH.md |
+| **ANALYSIS** | 기술 분석 | ANALYSIS.md |
 | **PLAN** | 구현 설계 | PLAN.md |
 | **TODO** | 실행 계획 | TODO.md (Part A + B + C) |
 | **EXECUTE** | 코드 구현 | 승인된 계획에 따른 코드 변경 |
@@ -164,7 +164,7 @@ opal/
 ├── README.md
 ├── CLAUDE.md                    이 저장소 자체의 프로젝트 설정
 ├── skills/                      프레임워크 스킬 (7개, 3개 플랫폼 공용)
-│   ├── task-flow/
+│   ├── dev-task-pilot/
 │   ├── api-analyzer/
 │   ├── doc-writer/
 │   ├── interview/

@@ -35,7 +35,7 @@ Step 1 → Step 2 → ... → Step N → 인라인 테스트 → 결과 반환 �
 4. 모든 Step 완료 후:
    - Part B QA 체크리스트를 검증하고 체크박스 갱신 (체크리스트 갱신 규칙 참조)
    - 결과 반환 → 오케스트레이터가:
-     - task-flow-test 에이전트 호출 → TEST-SCENARIO.md에 결과 채움 + 판정
+     - dtp-test 에이전트 호출 → TEST-SCENARIO.md에 결과 채움 + 판정
      - DONE.md 생성 (완료 리포트 생성 규칙 참조)
      - 사용자에게 완료 보고
 
@@ -62,7 +62,7 @@ Batch 1: [Agent-1, Agent-2 병렬] → Batch 2: [Agent-3] → ... → 결과 반
 3. 전체 에이전트 완료 후:
    - Part B QA 체크리스트를 검증하고 체크박스 갱신 (체크리스트 갱신 규칙 참조)
    - 결과 반환 → 오케스트레이터가:
-     - task-flow-test 에이전트 호출 → TEST-SCENARIO.md에 결과 채움 + 판정
+     - dtp-test 에이전트 호출 → TEST-SCENARIO.md에 결과 채움 + 판정
      - DONE.md 생성 (완료 리포트 생성 규칙 참조)
      - 사용자에게 완료 보고
 
@@ -76,7 +76,7 @@ Batch 1: [Agent-1, Agent-2 병렬] → Batch 2: [Agent-3] → ... → 결과 반
 4. 모든 Step 완료 후:
    - QA 체크리스트(섹션 4)를 검증하고 체크박스 갱신 (체크리스트 갱신 규칙 참조)
    - 결과 반환 → 오케스트레이터가:
-     - task-flow-test 에이전트 호출 → TEST-SCENARIO.md에 결과 채움 + 판정
+     - dtp-test 에이전트 호출 → TEST-SCENARIO.md에 결과 채움 + 판정
      - DONE.md 생성 (완료 리포트 생성 규칙 참조)
      - 사용자에게 완료 보고
 
@@ -149,7 +149,7 @@ EXECUTE 단계에서 워커가 수행하는 STATE.md 갱신:
 | 블로커 발생 | `상태: 블로커` + `블로커` 섹션 업데이트 |
 | 의사결정 발생 | `의사결정 로그`에 행 추가 |
 
-**비-EXECUTE 단계**(RESEARCH, PLAN, TODO)에서는 워커가 STATE.md를 갱신하지 않는다 (단계 시작/완료는 오케스트레이터가 관리).
+**비-EXECUTE 단계**(ANALYSIS, PLAN, TODO)에서는 워커가 STATE.md를 갱신하지 않는다 (단계 시작/완료는 오케스트레이터가 관리).
 
 **갱신 방법**: Edit 도구로 해당 섹션만 교체 (1회 Edit 수준 오버헤드).
 
@@ -209,7 +209,7 @@ EXECUTE 단계에서 워커가 수행하는 STATE.md 갱신:
 
 ## 완료 리포트 (DONE.md) 생성 규칙
 
-task-flow-test 에이전트 호출 완료 후, 최종 완료 보고 직전에 **오케스트레이터가** DONE.md를 생성한다.
+dtp-test 에이전트 호출 완료 후, 최종 완료 보고 직전에 **오케스트레이터가** DONE.md를 생성한다.
 
 **저장 경로**: `tasks/{NNN}-{태스크명}/DONE.md`
 
@@ -246,7 +246,7 @@ task-flow-test 에이전트 호출 완료 후, 최종 완료 보고 직전에 **
 
 ## test 에이전트 호출 (EXECUTE 단계)
 
-EXECUTE 완료 후, **오케스트레이터가** task-flow-test 에이전트를 호출하여 TEST-SCENARIO.md에 실행 결과를 채우고 판정을 기록한다. 워커는 test를 호출하지 않는다.
+EXECUTE 완료 후, **오케스트레이터가** dtp-test 에이전트를 호출하여 TEST-SCENARIO.md에 실행 결과를 채우고 판정을 기록한다. 워커는 test를 호출하지 않는다.
 
 **호출 정보:**
 - task_path: 태스크 폴더 경로
@@ -289,6 +289,6 @@ Part C-2에서 스킬이 필요한 에이전트가 있을 때:
 
 ## test 에이전트 호출 안내
 
-EXECUTE 완료 후, **오케스트레이터가 task-flow-test 에이전트를 호출**하여 TEST-SCENARIO.md에 실행 결과를 채우고 판정을 기록한다.
+EXECUTE 완료 후, **오케스트레이터가 dtp-test 에이전트를 호출**하여 TEST-SCENARIO.md에 실행 결과를 채우고 판정을 기록한다.
 
-> **워커는 test를 호출하지 않는다.** 워커는 실행 결과(artifact_path, summary, status, changed_files)를 오케스트레이터에 반환하고, 오케스트레이터가 task-flow-test 에이전트를 별도로 호출한다.
+> **워커는 test를 호출하지 않는다.** 워커는 실행 결과(artifact_path, summary, status, changed_files)를 오케스트레이터에 반환하고, 오케스트레이터가 dtp-test 에이전트를 별도로 호출한다.

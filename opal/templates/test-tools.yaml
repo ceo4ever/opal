@@ -8,7 +8,7 @@
 #
 # 우선순위:
 #   {project}/.opal/test-tools.yaml  →  ~/.opal/templates/test-tools.yaml (글로벌 기본값)
-#   둘 다 없으면 task-flow-test가 package.json / pyproject.toml 기반으로 추론 (fallback)
+#   둘 다 없으면 dtp-test가 package.json / pyproject.toml 기반으로 추론 (fallback)
 #
 # 스키마 참조: opal/core/references/test-tools-schema.yaml
 
@@ -24,7 +24,7 @@ stack:
 
 # ─── 전역 도구 ────────────────────────────────────────────────────────────────
 # 스택에 무관하게 모든 프로젝트에 적용되는 필수 도구.
-# task-flow-test가 항상 실행한다.
+# dtp-test가 항상 실행한다.
 global:
   - name: gitleaks
     purpose: 하드코딩 시크릿 스캔 (보안)

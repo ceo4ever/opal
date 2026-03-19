@@ -65,13 +65,13 @@ TASK.md의 요구사항이 모두 충족되는지 확인한다.
 
 ### Part C: 실행 아키텍처 (복잡 모드 전용)
 
-**이 파트는 복잡 모드에서만 생성된다.** Part A + B 작성 완료 후 복잡도 판별을 거쳐, 복잡 모드로 판정되면 `task-flow-planner` 에이전트가 Part C를 자동 생성한다.
+**이 파트는 복잡 모드에서만 생성된다.** Part A + B 작성 완료 후 복잡도 판별을 거쳐, 복잡 모드로 판정되면 `dtp-planner` 에이전트가 Part C를 자동 생성한다.
 
 Part C는 다음을 포함한다:
 - **C-1. 에이전트 토폴로지** — Step 간 의존성 DAG 기반 에이전트 그룹핑 및 실행 순서
 - **C-2. 스킬 요구사항** — 기존 스킬 매칭 + 신규 스킬 필요 여부
 - **C-3. 도구 요구사항** — CLI, MCP, 패키지 설치/설정 필요 사항
-- **C-4. 테스트 전략** — task-flow-test 에이전트의 실행 계획
+- **C-4. 테스트 전략** — dtp-test 에이전트의 실행 계획
 
 상세 형식은 `references/execute-plan-guide.md`를 참조한다.
 
@@ -98,7 +98,7 @@ Part A 작성 완료 후, 아래 기준으로 실행 모드를 결정한다:
 ```markdown
 # TODO: {태스크 제목}
 
-> 작성일: YYYY-MM-DD | 참조: TASK.md, RESEARCH.md, PLAN.md
+> 작성일: YYYY-MM-DD | 참조: TASK.md, ANALYSIS.md, PLAN.md
 
 ## Part A: 실행 체크리스트
 
@@ -131,7 +131,7 @@ Part A 작성 완료 후, 아래 기준으로 실행 모드를 결정한다:
 
 ---
 
-## Part C: 실행 아키텍처 (복잡 모드 시 task-flow-planner가 생성)
+## Part C: 실행 아키텍처 (복잡 모드 시 dtp-planner가 생성)
 
 {복잡 모드일 때만 이 섹션이 추가된다}
 

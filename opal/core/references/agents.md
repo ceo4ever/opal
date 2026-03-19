@@ -3,37 +3,37 @@
 OPAL 에이전트가 호출할 수 있는 서브에이전트 목록.
 각 에이전트는 독립 컨텍스트에서 실행되며, 호출 시 해당 AGENT.md(또는 SKILL.md)를 Read로 읽어 지시를 전달한다.
 
-## task-flow 에이전트
+## dev-task-pilot 에이전트
 
-task-flow 스킬의 각 단계에서 호출되는 서브에이전트.
+dev-task-pilot 스킬의 각 단계에서 호출되는 서브에이전트.
 
-### task-flow-agent
+### dtp-agent
 
-- **역할**: 워커 에이전트 -- task-flow 각 단계(RESEARCH/PLAN/TODO/EXECUTE)를 독립 컨텍스트에서 실행
+- **역할**: 워커 에이전트 -- dev-task-pilot 각 단계(ANALYSIS/PLAN/TODO/EXECUTE)를 독립 컨텍스트에서 실행
 - **호출 시점**: 각 단계 시작 시 오케스트레이터가 디스패치
 - **입력**: 단계, 태스크 폴더 경로, 이전 산출물 경로, 가이드 경로, 프로젝트 컨벤션 경로
 - **출력**: 산출물(.md) + 결과 반환 (artifact_path, summary, status, blockers, changed_files)
 
-### task-flow-qa
+### dtp-qa
 
 - **역할**: 산출물 품질 검증 (5단계 문서 리뷰)
-- **호출 시점**: task-flow 각 단계(TASK, RESEARCH, PLAN, TODO, EXECUTE) 완료 후
+- **호출 시점**: dev-task-pilot 각 단계(TASK, ANALYSIS, PLAN) 완료 후
 - **입력**: 검증 대상 산출물 경로
 - **출력**: QA-{단계}.md 리뷰 문서
 
-### task-flow-planner
+### dtp-planner
 
 - **역할**: 실행 아키텍처 설계 (복잡 모드 Part C 생성)
 - **호출 시점**: TODO 단계에서 복잡 태스크로 판별 시
-- **입력**: TASK.md, RESEARCH.md, PLAN.md, TODO.md (Part A+B)
+- **입력**: TASK.md, ANALYSIS.md, PLAN.md, TODO.md (Part A+B)
 - **출력**: TODO.md Part C (실행 토폴로지)
 
-### task-flow-test
+### dtp-test
 
 - **역할**: 코드 동적 검증 (테스트 실행)
-- **호출 시점**: EXECUTE 단계 완료 후 (복잡 모드)
-- **입력**: 구현된 코드, TODO.md 체크리스트
-- **출력**: TEST-REPORT.md
+- **호출 시점**: EXECUTE 단계 완료 후
+- **입력**: TEST-SCENARIO.md, 변경된 파일 목록
+- **출력**: TEST-SCENARIO.md (결과 채움 + 판정)
 
 ## 탐색 경로
 

@@ -1,7 +1,7 @@
 ---
-name: task-flow-agent
+name: dtp-agent
 description: |
-  task-flow 파이프라인의 각 단계(RESEARCH/PLAN/TODO/EXECUTE)를
+  dev-task-pilot 파이프라인의 각 단계(ANALYSIS/PLAN/TODO/EXECUTE)를
   독립 컨텍스트에서 실행하는 워커 에이전트.
   오케스트레이터가 단계, 태스크 경로, 참조 가이드를 전달하면
   해당 단계의 산출물을 작성하거나 코드를 구현한다.
@@ -17,11 +17,11 @@ max_turns: 50
 timeout_mins: 30
 ---
 
-# task-flow 워커 에이전트
+# dev-task-pilot 워커 에이전트
 
 ## 역할
 
-- 오케스트레이터(알투)로부터 지시받은 단계(RESEARCH / PLAN / TODO / EXECUTE)를 수행
+- 오케스트레이터(알투)로부터 지시받은 단계(ANALYSIS / PLAN / TODO / EXECUTE)를 수행
 - 산출물(.md)을 작성하거나 코드를 구현/수정
 - 완료 시 결과를 오케스트레이터에 반환
 
@@ -38,7 +38,7 @@ timeout_mins: 30
 
 | 단계 | 가이드 파일 | 산출물 |
 |------|-----------|--------|
-| RESEARCH | references/research-guide.md | RESEARCH.md |
+| ANALYSIS | references/analysis-guide.md | ANALYSIS.md |
 | PLAN (Full) | references/plan-guide.md (Full Task 섹션) | PLAN.md |
 | PLAN (Short) | references/plan-guide.md (Short Task 섹션) | PLAN.md |
 | TODO | references/todo-guide.md | TODO.md |
@@ -70,7 +70,7 @@ EXECUTE 단계에서 워커가 STATE.md를 갱신한다:
 - **블로커 발생 시**: `상태: 블로커` + `블로커` 섹션 업데이트
 - **의사결정 시**: `의사결정 로그`에 행 추가
 
-비-EXECUTE 단계(RESEARCH, PLAN, TODO)에서는 워커가 STATE.md를 갱신하지 않는다 (오케스트레이터가 관리).
+비-EXECUTE 단계(ANALYSIS, PLAN, TODO)에서는 워커가 STATE.md를 갱신하지 않는다 (오케스트레이터가 관리).
 
 갱신 방법: Edit 도구로 해당 섹션만 교체 (1회 Edit 수준 오버헤드).
 

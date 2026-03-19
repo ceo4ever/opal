@@ -33,7 +33,7 @@ AI 환경(Claude Code, Cursor, Codex 등)에서 IT 프로젝트를 체계적으�
 
 ```
 skills/                          ← 프레임워크 스킬 (단일 소스, 3개 플랫폼 공용)
-├── task-flow/                   핵심 오케스트레이터: TASK → RESEARCH → PLAN → TODO → EXECUTE
+├── dev-task-pilot/              핵심 오케스트레이터: TASK → ANALYSIS → PLAN → TODO → EXECUTE
 ├── api-analyzer/                외부 API 7단계 분석 및 명세서 생성
 ├── doc-writer/                  기술 문서 표준 템플릿 (모든 문서 스킬의 베이스)
 ├── interview/                   구조화된 Q&A 요구사항 수집
@@ -43,20 +43,20 @@ skills/                          ← 프레임워크 스킬 (단일 소스, 3개
 
 agents/                          ← 에이전트 (플랫폼별 포맷 분리)
 ├── claude/                      ← AGENT.md 디렉토리 기반
-│   ├── task-flow-agent/         워커 에이전트 (각 단계 실행)
-│   ├── task-flow-qa/            산출물 품질 검증
-│   ├── task-flow-planner/       실행 아키텍처 설계
-│   └── task-flow-test/          코드 동적 검증
+│   ├── dtp-agent/               워커 에이전트 (각 단계 실행)
+│   ├── dtp-qa/                  산출물 품질 검증
+│   ├── dtp-planner/             실행 아키텍처 설계
+│   └── dtp-test/                코드 동적 검증
 ├── cursor/                      ← 플랫 파일 형식 (.md)
-│   ├── task-flow-agent.md
-│   ├── task-flow-qa.md
-│   ├── task-flow-planner.md
-│   └── task-flow-test.md
+│   ├── dtp-agent.md
+│   ├── dtp-qa.md
+│   ├── dtp-planner.md
+│   └── dtp-test.md
 └── antigravity/                 ← SKILL.md로 통합
-    ├── task-flow-agent/
-    ├── task-flow-qa/
-    ├── task-flow-planner/
-    └── task-flow-test/
+    ├── dtp-agent/
+    ├── dtp-qa/
+    ├── dtp-planner/
+    └── dtp-test/
 
 community-skills/                ← 외부 커뮤니티 스킬 (기본 번들 31개)
 ├── anthropics/                  Anthropic 공식 (18개)
@@ -84,7 +84,7 @@ cursor-rules/                    ← Cursor 프로젝트 규칙 템플릿
 ```
 ~/.claude/                       ← Claude Code 전용
 ├── skills/                      ← skills/ 복사 (프레임워크 스킬만)
-│   ├── task-flow/
+│   ├── dev-task-pilot/
 │   ├── api-analyzer/
 │   └── ...
 ├── agents/                      ← agents/claude/ 복사
@@ -100,8 +100,8 @@ cursor-rules/                    ← Cursor 프로젝트 규칙 템플릿
 ├── agents/                      ← agents/cursor/ 복사 (Gemini CLI 네이티브)
 └── antigravity/
     ├── skills/                  ← skills/ + agents/antigravity/ 복사
-    │   ├── task-flow/
-    │   └── task-flow-qa/        에이전트도 스킬로 통합
+    │   ├── dev-task-pilot/
+    │   └── dtp-qa/              에이전트도 스킬로 통합
     └── mcp_config.json          ← MCP 서버 설정 (Antigravity)
 
 ~/.opal/                         ← OPAL AI 에이전트 홈 (크로스 플랫폼)
@@ -131,11 +131,11 @@ cursor-rules/                    ← Cursor 프로젝트 규칙 템플릿
 - **doc-writer** → 모든 문서 생성 스킬의 포맷/규칙 베이스
 - **version-mgr** → 산출물을 생성·수정하는 모든 스킬에 적용
 - **interview** → 요구사항 불명확 시 다른 스킬에서 호출
-- **task-flow** → 개발 작업의 주 진입점 (5단계 파이프라인)
-- **task-flow-agent** → task-flow의 각 단계를 독립 컨텍스트에서 실행하는 워커 에이전트
-- **task-flow-qa** → task-flow 각 단계 완료 후 오케스트레이터가 호출하는 QA 에이전트
-- **task-flow-planner** → task-flow TODO 단계에서 복잡 모드 시 실행 아키텍처 설계
-- **task-flow-test** → task-flow EXECUTE 단계에서 복잡 모드 시 코드 동적 검증
+- **dev-task-pilot** → 개발 작업의 주 진입점 (5단계 파이프라인)
+- **dtp-agent** → dev-task-pilot의 각 단계를 독립 컨텍스트에서 실행하는 워커 에이전트
+- **dtp-qa** → dev-task-pilot 각 단계 완료 후 오케스트레이터가 호출하는 QA 에이전트
+- **dtp-planner** → dev-task-pilot TODO 단계에서 복잡 모드 시 실행 아키텍처 설계
+- **dtp-test** → dev-task-pilot EXECUTE 단계에서 복잡 모드 시 코드 동적 검증
 
 ## 새 컴포넌트 작성 가이드
 
@@ -155,7 +155,7 @@ cursor-rules/                    ← Cursor 프로젝트 규칙 템플릿
 3. `agents/antigravity/{agent-name}/SKILL.md` — 스킬로 통합
 4. YAML frontmatter에 `name`, `description` 정의
 5. 입력/출력 명세, 실행 프로세스, 검증 기준을 명확히 기술
-6. 네이밍: `{대상 워크플로우}-{역할}` (예: `task-flow-qa`)
+6. 네이밍: `{대상 워크플로우}-{역할}` (예: `dtp-qa`)
 7. **호출하는 스킬의 SKILL.md에 에이전트 탐색 경로 명시**:
    ```
    탐색 경로 (우선순위):
@@ -167,14 +167,14 @@ cursor-rules/                    ← Cursor 프로젝트 규칙 템플릿
    6. ~/.gemini/antigravity/skills/{agent-name}/SKILL.md
    ```
 
-## Core Workflow: task-flow
+## Core Workflow: dev-task-pilot
 
-모든 개발 작업의 중심 파이프라인. 작업 규모에 따라 Full Task / Short Task 듀얼 모드로 동작한다. 알투는 오케스트레이터로서 워커 에이전트(`task-flow-agent`)를 디스패치하고, 실제 분석/설계/실행은 워커의 격리된 컨텍스트에서 수행한다.
+모든 개발 작업의 중심 파이프라인. 작업 규모에 따라 Full Task / Short Task 듀얼 모드로 동작한다. 알투는 오케스트레이터로서 워커 에이전트(`dtp-agent`)를 디스패치하고, 실제 분석/설계/실행은 워커의 격리된 컨텍스트에서 수행한다.
 
 ### Full Task (대규모 변경, 사용자 요청 시)
 
 ```
-사용자 지시 → [TASK 직접] → 검토 → [워커: RESEARCH] → [QA] → 검토
+사용자 지시 → [TASK 직접] → 검토 → [워커: ANALYSIS] → [QA] → 검토
                                                               ↓
                                                     [워커: PLAN] → [QA] → 검토
                                                               ↓
@@ -196,7 +196,7 @@ cursor-rules/                    ← Cursor 프로젝트 규칙 템플릿
 
 **핵심 규칙**: 사용자의 명시적 승인 전까지 코드 생성/수정 금지.
 
-**QA 호출**: TASK와 TODO에서는 QA 생략(사용자 직접 검토). RESEARCH, PLAN에서 오케스트레이터가 QA 에이전트를 호출하여 1차 검토. EXECUTE에서는 task-flow-test가 코드 동적 검증을 수행.
+**QA 호출**: TASK와 TODO에서는 QA 생략(사용자 직접 검토). ANALYSIS, PLAN에서 오케스트레이터가 QA 에이전트를 호출하여 1차 검토. EXECUTE에서는 dtp-test가 코드 동적 검증을 수행.
 
 **적응적 실행**: Full Task의 TODO 단계에서 복잡도를 판별하여, 단순 태스크는 워커가 직접 실행하고, 복잡 태스크는 워커 내부에서 Planner가 설계한 토폴로지에 따라 서브 에이전트가 병렬 실행한다.
 
@@ -206,7 +206,7 @@ cursor-rules/                    ← Cursor 프로젝트 규칙 템플릿
 ```
 tasks/{NNN}-{kebab-case-task-name}/
 ├── STATE.md             ← 실시간 상태 추적 (체크포인트)
-├── TASK.md, RESEARCH.md, QA-RESEARCH.md
+├── TASK.md, ANALYSIS.md, QA-ANALYSIS.md
 ├── PLAN.md, QA-PLAN.md
 ├── TODO.md
 ├── TEST-SCENARIO.md     ← 테스트 시나리오 + 실행 결과 (단일 파일)
@@ -228,7 +228,7 @@ tasks/{NNN}-{kebab-case-task-name}/
 
 ### 작업 유형별 분석 깊이
 
-| 유형 | 트리거 키워드 | RESEARCH 깊이 |
+| 유형 | 트리거 키워드 | ANALYSIS 깊이 |
 |------|-------------|--------------|
 | 신규 개발 | "새로 만들어", "추가해" | 심층 (기술 선택, 아키텍처) |
 | 기능 개선 | "개선해", "최적화" | 중간 (현재 구현 + 개선 방안) |

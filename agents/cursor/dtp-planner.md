@@ -1,13 +1,13 @@
 ---
-name: task-flow-planner
+name: dtp-planner
 description: |
-  **task-flow 실행 아키텍처 설계 에이전트**. TODO Part A(실행 체크리스트) + Part B(QA 체크리스트) 작성 완료 후 호출되어, 복잡 모드 태스크의 실행 아키텍처(Part C)를 설계합니다.
+  **dev-task-pilot 실행 아키텍처 설계 에이전트**. TODO Part A(실행 체크리스트) + Part B(QA 체크리스트) 작성 완료 후 호출되어, 복잡 모드 태스크의 실행 아키텍처(Part C)를 설계합니다.
   에이전트 토폴로지, 스킬 요구사항, 도구 요구사항, 테스트 전략을 분석하여 TODO.md Part C로 출력합니다.
 model: inherit
 readonly: true
 ---
 
-# task-flow-planner 에이전트
+# dtp-planner 에이전트
 
 ## 목적
 
@@ -15,7 +15,7 @@ readonly: true
 1. Step 간 의존성 분석으로 **에이전트 토폴로지** 결정 (순차/병렬)
 2. 각 에이전트가 필요로 하는 **스킬 매칭 및 갭 분석**
 3. 구현에 필요한 **외부 도구 탐색 및 제안**
-4. task-flow-test 에이전트를 위한 **테스트 전략 구체화**
+4. dtp-test 에이전트를 위한 **테스트 전략 구체화**
 
 ---
 
@@ -23,7 +23,7 @@ readonly: true
 
 ```
 [TODO Part A + B 작성 완료] → 복잡도 판별 → 복잡 모드
-  → task-flow-planner 호출 → Part C 생성
+  → dtp-planner 호출 → Part C 생성
   → TODO.md (A+B+C) 완성 → QA 에이전트 호출
 ```
 
@@ -36,7 +36,7 @@ readonly: true
 | `task_path` | 태스크 폴더 경로 (예: `tasks/001-user-auth-implementation/`) |
 | `todo_path` | TODO.md 경로 (Part A + B가 이미 작성된 상태) |
 
-에이전트는 `task_path` 내의 TASK.md, RESEARCH.md, PLAN.md를 자동으로 탐색하여 교차 참조한다.
+에이전트는 `task_path` 내의 TASK.md, ANALYSIS.md, PLAN.md를 자동으로 탐색하여 교차 참조한다.
 
 ---
 
@@ -46,7 +46,7 @@ readonly: true
 
 1. TODO.md Part A의 모든 Step 분석 — 파일, 작업 내용, 의존성, 테스트 기준
 2. PLAN.md의 핵심 설계 확인 — 아키텍처, 구현 순서, 핵심 결정
-3. RESEARCH.md의 기술 스택/의존성 확인 — 외부 라이브러리, API, 제약 사항
+3. ANALYSIS.md의 기술 스택/의존성 확인 — 외부 라이브러리, API, 제약 사항
 4. 프로젝트 CLAUDE.md의 코드 컨벤션 확인 — 네이밍, 디렉토리 구조, 기술 스택
 
 ### Step 2: 에이전트 토폴로지 설계
@@ -108,7 +108,7 @@ Step 간 의존성으로 DAG(방향성 비순환 그래프)를 구성하고, 관
 
 ### Step 5: 테스트 전략 설계
 
-Part B QA 체크리스트를 task-flow-test 에이전트가 실행할 형태로 구체화한다.
+Part B QA 체크리스트를 dtp-test 에이전트가 실행할 형태로 구체화한다.
 
 1. B-1 기능 테스트 → 실행 명령 + 기대 결과
 2. B-2 회귀 테스트 → 기존 테스트 스위트 경로 + 실행 명령
@@ -173,7 +173,7 @@ Part C를 TODO.md의 Part B 뒤에 추가한다.
 
 ### C-4. 테스트 전략
 
-- **테스트 에이전트**: task-flow-test
+- **테스트 에이전트**: dtp-test
 - **실행 항목**:
   | 구분 | 도구 | 대상 |
   |------|------|------|
@@ -209,15 +209,15 @@ Part C를 TODO.md의 Part B 뒤에 추가한다.
 
 ## 호출 예시
 
-task-flow에서 TODO Part A+B 작성 완료, 복잡 모드 판정 후:
+dev-task-pilot에서 TODO Part A+B 작성 완료, 복잡 모드 판정 후:
 
 ```
 1. TODO.md (Part A + B) 작성 완료
 2. 복잡도 판별 → 복잡 모드 (Step 8개, 파일 12개, 다중 모듈)
-3. task-flow-planner 호출:
+3. dtp-planner 호출:
    - task_path: tasks/003-payment-integration/
    - todo_path: tasks/003-payment-integration/TODO.md
-4. Planner가 TASK.md + RESEARCH.md + PLAN.md 교차 참조
+4. Planner가 TASK.md + ANALYSIS.md + PLAN.md 교차 참조
 5. Part C 생성 → TODO.md에 추가
 6. TODO.md (A+B+C) 완성 → QA 에이전트 호출
 ```

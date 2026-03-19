@@ -1,8 +1,8 @@
 ---
-name: task-flow
+name: dev-task-pilot
 description: |
   **개발 작업 워크플로우 오케스트레이터**. Full Task(5단계)와 Short Task(3단계) 듀얼 모드로 작업 규모에 맞는 파이프라인을 제공합니다.
-  - Full Task: TASK → RESEARCH → PLAN → TODO → EXECUTE (복잡하거나 난이도 높은 작업)
+  - Full Task: TASK → ANALYSIS → PLAN → TODO → EXECUTE (복잡하거나 난이도 높은 작업)
   - Short Task: TASK → PLAN(통합) → EXECUTE (기본 모드, 대부분의 작업)
   반드시 이 스킬을 사용해야 하는 상황: "새 태스크", "개발 시작", "기능 개발", "오류 수정", "기능 수정", "기능 개선", "리서치해줘", "분석해줘", "계획 세워줘", "TODO 만들어줘", 코드 작성/수정이 필요한 모든 개발 작업 요청 시.
   ⚠️ 승인 전까지 분석과 계획만 수행합니다. 실제 코드 구현은 사용자의 명시적 "승인" 후 EXECUTE 단계에서 수행됩니다.
@@ -45,7 +45,7 @@ description: |
                     ▼                                                   ▼
               [Full Task]                                         [Short Task]
                     │                                                   │
-          [워커: RESEARCH] → [QA] → 검토                    [워커: PLAN 통합] → [QA] → 검토
+          [워커: ANALYSIS] → [QA] → 검토                    [워커: PLAN 통합] → [QA] → 검토
                     │                                                   │
           [워커: PLAN] → [QA] → 검토                    [워커: TEST-SCENARIO 작성] → 검토/승인
                     │                                                   │
@@ -76,7 +76,7 @@ description: |
 |---|------|----------|
 | 1 | 사용자 명시 요청 | "Full로 해줘" 등 사용자가 직접 지정 |
 | 2 | 예상 변경 파일 ≥10개 | TASK.md 요구사항에서 추정 (대규모 변경) |
-| 3 | 다단계 기술 의사결정 필요 | 아키텍처 선택, 기술 스택 비교 등 별도 RESEARCH가 필요한 수준 |
+| 3 | 다단계 기술 의사결정 필요 | 아키텍처 선택, 기술 스택 비교 등 별도 ANALYSIS가 필요한 수준 |
 | 4 | 다중 모듈 간 연쇄 영향 | 변경 A가 B, C에 연쇄적으로 영향하여 독립적 분석이 필요 |
 
 **조건 2~4에 해당하면 Full Task를 제안하되, 사용자가 "Short로 해줘"라고 하면 Short로 진행한다.**
@@ -92,7 +92,7 @@ description: |
 
 Short Task 진행 중 PLAN 작성 시 Full Task 조건에 해당하는 상황이 발견된 경우:
 - 예상 변경 파일 ≥10개, 다단계 기술 의사결정 필요, 다중 모듈 간 연쇄 영향 중 하나라도 해당 → 에스컬레이션 제안
-- 사용자 승인 시 Full Task로 전환 (TASK.md 유지, RESEARCH부터 시작)
+- 사용자 승인 시 Full Task로 전환 (TASK.md 유지, ANALYSIS부터 시작)
 
 ---
 
@@ -103,51 +103,51 @@ Short Task 진행 중 PLAN 작성 시 Full Task 조건에 해당하는 상황이
 알투는 오케스트레이터로서 다음 역할만 수행한다:
 
 1. **TASK 단계 직접 수행** -- 사용자 지시를 구조화하는 것은 오케스트레이터의 본질적 역할
-2. **워커 디스패치** -- 각 단계(RESEARCH/PLAN/TODO/EXECUTE) 시작 시 워커 에이전트를 디스패치
+2. **워커 디스패치** -- 각 단계(ANALYSIS/PLAN/TODO/EXECUTE) 시작 시 워커 에이전트를 디스패치
 3. **QA/Planner/Test 에이전트 호출** -- 워커 완료 후 필요한 에이전트를 오케스트레이터가 직접 호출
 4. **게이트 체크포인트 중계** -- 워커 결과를 사용자에게 보고하고 승인을 받음
 5. **태스크 상태 추적** -- 각 태스크의 현재 단계, 워커 상태, 블로커 여부를 관리
 
 ### 워커 에이전트 정의
 
-**에이전트 이름**: `task-flow-agent`
+**에이전트 이름**: `dtp-agent`
 
 **에이전트 탐색 경로** (우선순위):
-1. `{프로젝트}/.cursor/agents/task-flow-agent.md`
-2. `{프로젝트}/.claude/agents/task-flow-agent/AGENT.md`
-3. `{프로젝트}/.agent/skills/task-flow-agent/SKILL.md`
-4. `~/.cursor/agents/task-flow-agent.md`
-5. `~/.claude/agents/task-flow-agent/AGENT.md`
-6. `~/.gemini/agents/task-flow-agent.md`
-7. `~/.gemini/antigravity/skills/task-flow-agent/SKILL.md`
+1. `{프로젝트}/.cursor/agents/dtp-agent.md`
+2. `{프로젝트}/.claude/agents/dtp-agent/AGENT.md`
+3. `{프로젝트}/.agent/skills/dtp-agent/SKILL.md`
+4. `~/.cursor/agents/dtp-agent.md`
+5. `~/.claude/agents/dtp-agent/AGENT.md`
+6. `~/.gemini/agents/dtp-agent.md`
+7. `~/.gemini/antigravity/skills/dtp-agent/SKILL.md`
 
 **워커의 역할**:
 - 코드 읽기/분석 (Glob, Grep, Read)
-- 산출물(.md) 작성 (RESEARCH.md, PLAN.md, TODO.md)
+- 산출물(.md) 작성 (ANALYSIS.md, PLAN.md, TODO.md)
 - 코드 구현/수정 (Edit, Write, Bash)
 - 완료 시 결과를 오케스트레이터에 반환
 
 ### 워커 디스패치 규칙
 
-**디스패치 시점**: TASK 이후의 각 단계 시작 시 (RESEARCH, PLAN, TODO, EXECUTE)
+**디스패치 시점**: TASK 이후의 각 단계 시작 시 (ANALYSIS, PLAN, TODO, EXECUTE)
 
 **프롬프트 구성**: 오케스트레이터가 워커를 디스패치할 때, 아래 형식으로 프롬프트를 구성한다:
 
 ```
-task-flow {단계명} 워커로서 아래 태스크를 수행하라.
+dev-task-pilot {단계명} 워커로서 아래 태스크를 수행하라.
 
 **태스크**: {태스크 제목}
-**단계**: {RESEARCH | PLAN | PLAN-SHORT | TODO | EXECUTE | EXECUTE-SHORT}
+**단계**: {ANALYSIS | PLAN | PLAN-SHORT | TODO | EXECUTE | EXECUTE-SHORT}
 **태스크 폴더**: {tasks/{NNN}-{name}/}
 
 **이전 산출물** (읽어서 컨텍스트를 확보하라):
 - {tasks/{NNN}-{name}/TASK.md}
-- {tasks/{NNN}-{name}/RESEARCH.md}  ← 해당 시
+- {tasks/{NNN}-{name}/ANALYSIS.md}  ← 해당 시
 - {tasks/{NNN}-{name}/PLAN.md}      ← 해당 시
 - {tasks/{NNN}-{name}/TODO.md}      ← 해당 시
 
 **단계 가이드** (읽고 프로세스를 따르라):
-- {skills/task-flow/references/{guide}.md 의 절대 경로}
+- {skills/dev-task-pilot/references/{guide}.md 의 절대 경로}
 
 **프로젝트 컨벤션** (읽고 규칙을 따르라):
 - {프로젝트 루트의 CLAUDE.md 절대 경로}
@@ -166,10 +166,10 @@ task-flow {단계명} 워커로서 아래 태스크를 수행하라.
 
 | 단계 | 이전 산출물 | 가이드 | 산출물 |
 |------|-----------|--------|--------|
-| RESEARCH | TASK.md | research-guide.md | RESEARCH.md |
-| PLAN (Full) | TASK.md, RESEARCH.md | plan-guide.md (Full) | PLAN.md |
+| ANALYSIS | TASK.md | analysis-guide.md | ANALYSIS.md |
+| PLAN (Full) | TASK.md, ANALYSIS.md | plan-guide.md (Full) | PLAN.md |
 | PLAN (Short) | TASK.md | plan-guide.md (Short) | PLAN.md |
-| TODO | TASK.md, RESEARCH.md, PLAN.md | todo-guide.md | TODO.md |
+| TODO | TASK.md, ANALYSIS.md, PLAN.md | todo-guide.md | TODO.md |
 | TEST-SCENARIO (Full) | TASK.md, TODO.md | test-scenario-guide.md | TEST-SCENARIO.md |
 | TEST-SCENARIO (Short) | TASK.md, PLAN.md | test-scenario-guide.md | TEST-SCENARIO.md |
 | EXECUTE (Full 단순) | TASK.md, TODO.md | execute-guide.md | 코드 변경 |
@@ -201,7 +201,7 @@ task-flow {단계명} 워커로서 아래 태스크를 수행하라.
 **resume 가능 시** (Claude Code, Cursor):
 - 동일 워커를 resume하여 다음 단계를 수행
 - 추가 전달: "다음 단계는 {단계명}이다. {가이드}.md를 읽고 따르라."
-- 예: RESEARCH 워커를 resume하여 PLAN 수행 → 코드 분석 컨텍스트 보존
+- 예: ANALYSIS 워커를 resume하여 PLAN 수행 → 코드 분석 컨텍스트 보존
 
 **resume 불가 시** (Gemini CLI, Antigravity, 또는 새 워커):
 - 새 워커에 이전 단계 산출물(.md) 경로를 전달
@@ -220,7 +220,7 @@ task-flow {단계명} 워커로서 아래 태스크를 수행하라.
 
 | 이전 단계 | 다음 단계 | resume 가치 | 이유 |
 |----------|----------|------------|------|
-| RESEARCH | PLAN | 높음 | 코드 분석 컨텍스트 보존으로 설계 품질 향상 |
+| ANALYSIS | PLAN | 높음 | 코드 분석 컨텍스트 보존으로 설계 품질 향상 |
 | PLAN | TODO | 중간 | PLAN 설계 컨텍스트 보존 |
 | TODO | EXECUTE | 낮음 | TODO는 문서 분해 단계라 컨텍스트가 가벼움 |
 
@@ -237,9 +237,9 @@ task-flow {단계명} 워커로서 아래 태스크를 수행하라.
 
 | 플랫폼 | 워커 실행 방법 | resume | QA 호출 주체 |
 |--------|--------------|--------|-------------|
-| Claude Code | Agent 도구 → task-flow-agent | 가능 | 오케스트레이터 |
-| Cursor | 서브 에이전트 자동 위임 / `/task-flow-agent` | 가능 | 오케스트레이터 |
-| Gemini CLI | agents/task-flow-agent.md 자동 노출 | 불가 | 오케스트레이터 |
+| Claude Code | Agent 도구 → dtp-agent | 가능 | 오케스트레이터 |
+| Cursor | 서브 에이전트 자동 위임 / `/dtp-agent` | 가능 | 오케스트레이터 |
+| Gemini CLI | agents/dtp-agent.md 자동 노출 | 불가 | 오케스트레이터 |
 | Antigravity | 폴백: SKILL.md Read → 직접 실행 | 불가 | 오케스트레이터 |
 
 > references/ 가이드는 실행 주체와 무관하게 동일하게 적용된다. "누가 실행하든" 같은 프로세스를 따른다.
@@ -250,15 +250,15 @@ task-flow {단계명} 워커로서 아래 태스크를 수행하라.
 
 QA가 필요한 단계에서 **오케스트레이터가** QA 에이전트를 **서브 에이전트(Task 도구)** 로 호출한다. 워커는 QA를 호출하지 않는다.
 
-**에이전트 이름**: `task-flow-qa`
+**에이전트 이름**: `dtp-qa`
 
 **에이전트 탐색 경로** (우선순위):
-1. `{프로젝트}/.cursor/agents/task-flow-qa.md`
-2. `{프로젝트}/.claude/agents/task-flow-qa/AGENT.md`
-3. `{프로젝트}/.agent/skills/task-flow-qa/SKILL.md`
-4. `~/.cursor/agents/task-flow-qa.md`
-5. `~/.claude/agents/task-flow-qa/AGENT.md`
-6. `~/.gemini/antigravity/skills/task-flow-qa/SKILL.md`
+1. `{프로젝트}/.cursor/agents/dtp-qa.md`
+2. `{프로젝트}/.claude/agents/dtp-qa/AGENT.md`
+3. `{프로젝트}/.agent/skills/dtp-qa/SKILL.md`
+4. `~/.cursor/agents/dtp-qa.md`
+5. `~/.claude/agents/dtp-qa/AGENT.md`
+6. `~/.gemini/antigravity/skills/dtp-qa/SKILL.md`
 
 **호출 방법**:
 ```
@@ -278,7 +278,7 @@ QA가 필요한 단계에서 **오케스트레이터가** QA 에이전트를 **�
 | 단계 | Full Task | Short Task |
 |------|-----------|------------|
 | TASK | 생략 | 생략 |
-| RESEARCH | **QA 호출** | (해당 없음) |
+| ANALYSIS | **QA 호출** | (해당 없음) |
 | PLAN | **QA 호출** | **QA 호출** |
 | TODO | 생략 | (해당 없음) |
 | EXECUTE | **test 호출** | **test 호출** |
@@ -291,15 +291,15 @@ TODO 워커가 Part A + Part B + 복잡도 판별 결과를 반환하면, **오�
 
 **흐름**: TODO 워커 완료 → 오케스트레이터가 복잡 모드 확인 → Planner 호출 → Part C를 TODO.md에 추가 → 사용자에게 보고
 
-**에이전트 이름**: `task-flow-planner`
+**에이전트 이름**: `dtp-planner`
 
 **에이전트 탐색 경로** (우선순위):
-1. `{프로젝트}/.cursor/agents/task-flow-planner.md`
-2. `{프로젝트}/.claude/agents/task-flow-planner/AGENT.md`
-3. `{프로젝트}/.agent/skills/task-flow-planner/SKILL.md`
-4. `~/.cursor/agents/task-flow-planner.md`
-5. `~/.claude/agents/task-flow-planner/AGENT.md`
-6. `~/.gemini/antigravity/skills/task-flow-planner/SKILL.md`
+1. `{프로젝트}/.cursor/agents/dtp-planner.md`
+2. `{프로젝트}/.claude/agents/dtp-planner/AGENT.md`
+3. `{프로젝트}/.agent/skills/dtp-planner/SKILL.md`
+4. `~/.cursor/agents/dtp-planner.md`
+5. `~/.claude/agents/dtp-planner/AGENT.md`
+6. `~/.gemini/antigravity/skills/dtp-planner/SKILL.md`
 
 **호출 방법**:
 ```
@@ -317,15 +317,15 @@ TODO 워커가 Part A + Part B + 복잡도 판별 결과를 반환하면, **오�
 
 EXECUTE 워커 완료 후, **오케스트레이터가** Test 에이전트를 호출하여 TEST-SCENARIO.md에 실행 결과를 채운다.
 
-**에이전트 이름**: `task-flow-test`
+**에이전트 이름**: `dtp-test`
 
 **에이전트 탐색 경로** (우선순위):
-1. `{프로젝트}/.cursor/agents/task-flow-test.md`
-2. `{프로젝트}/.claude/agents/task-flow-test/AGENT.md`
-3. `{프로젝트}/.agent/skills/task-flow-test/SKILL.md`
-4. `~/.cursor/agents/task-flow-test.md`
-5. `~/.claude/agents/task-flow-test/AGENT.md`
-6. `~/.gemini/antigravity/skills/task-flow-test/SKILL.md`
+1. `{프로젝트}/.cursor/agents/dtp-test.md`
+2. `{프로젝트}/.claude/agents/dtp-test/AGENT.md`
+3. `{프로젝트}/.agent/skills/dtp-test/SKILL.md`
+4. `~/.cursor/agents/dtp-test.md`
+5. `~/.claude/agents/dtp-test/AGENT.md`
+6. `~/.gemini/antigravity/skills/dtp-test/SKILL.md`
 
 **호출 방법**:
 ```
@@ -345,7 +345,7 @@ EXECUTE 워커 완료 후, **오케스트레이터가** Test 에이전트를 호
 
 사용자의 지시를 받으면, 먼저 작업 유형을 판별한다. 유형에 따라 각 단계의 깊이가 달라진다.
 
-| 유형 | 식별 키워드 | RESEARCH 깊이 (Full) | PLAN 범위 |
+| 유형 | 식별 키워드 | ANALYSIS 깊이 (Full) | PLAN 범위 |
 |------|-----------|---------------------|----------|
 | 🆕 신규 개발 | "새로 만들어", "추가해", "구현해" | 심층 (기술 선택, 아키텍처, 유사 사례) | 전체 설계 |
 | 🔧 기능 개선 | "개선해", "최적화", "성능" | 중간 (현재 구현 + 개선 방안) | 변경 범위 특정 |
@@ -362,8 +362,8 @@ EXECUTE 워커 완료 후, **오케스트레이터가** Test 에이전트를 호
 tasks/{NNN}-{태스크명}/
 ├── STATE.md             ← 실시간 상태 추적 (체크포인트)
 ├── TASK.md              ← 작업 정의서
-├── RESEARCH.md          ← 분석 결과
-├── QA-RESEARCH.md       ← RESEARCH QA 리뷰
+├── ANALYSIS.md          ← 분석 결과
+├── QA-ANALYSIS.md       ← ANALYSIS QA 리뷰
 ├── PLAN.md              ← 구현 계획
 ├── QA-PLAN.md           ← PLAN QA 리뷰
 ├── TODO.md              ← 실행 체크리스트 (+ Part C 복잡 모드)
@@ -480,15 +480,15 @@ TASK.md 작성 완료 후:
 # Full Task 경로
 # ═══════════════════════════════════════
 
-## STEP 2 (Full): RESEARCH (분석)
+## STEP 2 (Full): ANALYSIS (분석)
 
-**오케스트레이터가 RESEARCH 워커를 디스패치한다.**
+**오케스트레이터가 ANALYSIS 워커를 디스패치한다.**
 
-> **워커 디스패치**: 단계=RESEARCH, 이전 산출물=TASK.md, 가이드=research-guide.md, 산출물=RESEARCH.md
+> **워커 디스패치**: 단계=ANALYSIS, 이전 산출물=TASK.md, 가이드=analysis-guide.md, 산출물=ANALYSIS.md
 
-**상세 가이드**: `references/research-guide.md`를 읽고 따른다.
+**상세 가이드**: `references/analysis-guide.md`를 읽고 따른다.
 
-### RESEARCH 단계 핵심
+### ANALYSIS 단계 핵심
 
 분석 대상 (작업 유형별 깊이 조절):
 
@@ -504,7 +504,7 @@ TASK.md 작성 완료 후:
 
 ### 워커 완료 시
 
-워커가 RESEARCH.md를 반환하면, **오케스트레이터가 QA 에이전트를 호출**한다. QA 결과를 포함하여 사용자에게 보고.
+워커가 ANALYSIS.md를 반환하면, **오케스트레이터가 QA 에이전트를 호출**한다. QA 결과를 포함하여 사용자에게 보고.
 
 ---
 
@@ -512,9 +512,9 @@ TASK.md 작성 완료 후:
 
 **오케스트레이터가 PLAN 워커를 디스패치한다.**
 
-> **워커 디스패치**: 단계=PLAN, 이전 산출물=TASK.md+RESEARCH.md, 가이드=plan-guide.md (Full Task 섹션), 산출물=PLAN.md
+> **워커 디스패치**: 단계=PLAN, 이전 산출물=TASK.md+ANALYSIS.md, 가이드=plan-guide.md (Full Task 섹션), 산출물=PLAN.md
 >
-> **resume 가능 시**: RESEARCH 워커를 이어서(resume) PLAN을 수행한다. 코드 분석 컨텍스트가 보존되어 설계 품질이 향상된다.
+> **resume 가능 시**: ANALYSIS 워커를 이어서(resume) PLAN을 수행한다. 코드 분석 컨텍스트가 보존되어 설계 품질이 향상된다.
 
 **상세 가이드**: `references/plan-guide.md`의 "Full Task PLAN" 섹션을 읽고 따른다.
 
@@ -538,7 +538,7 @@ TASK.md 작성 완료 후:
 
 **오케스트레이터가 TODO 워커를 디스패치한다.**
 
-> **워커 디스패치**: 단계=TODO, 이전 산출물=TASK.md+RESEARCH.md+PLAN.md, 가이드=todo-guide.md, 산출물=TODO.md
+> **워커 디스패치**: 단계=TODO, 이전 산출물=TASK.md+ANALYSIS.md+PLAN.md, 가이드=todo-guide.md, 산출물=TODO.md
 
 **상세 가이드**: `references/todo-guide.md`를 읽고 따른다.
 
@@ -578,7 +578,7 @@ Part A 작성 후, 아래 기준으로 실행 모드를 결정한다:
 
 **복잡 모드:**
 1. 워커가 Part A + Part B + 복잡도 판별 결과를 반환
-2. **오케스트레이터가** 복잡 모드 판정 확인 → **task-flow-planner 에이전트 호출** → Part C 생성
+2. **오케스트레이터가** 복잡 모드 판정 확인 → **dtp-planner 에이전트 호출** → Part C 생성
 3. TODO.md (A+B+C) 완성
 4. 사용자에게 **승인 요청** (QA 생략)
 
@@ -623,7 +623,7 @@ TODO.md가 사용자의 승인을 받으면, **오케스트레이터가 EXECUTE 
 4. 모든 Step 완료 후:
    - Part B QA 체크리스트를 검증하고 체크박스 갱신 (통과: `[x]`, 미통과: `[ ]` + 사유)
    - 결과 반환 → **오케스트레이터가**:
-     - **task-flow-test 에이전트 호출** → TEST-SCENARIO.md에 결과 채움 + 판정
+     - **dtp-test 에이전트 호출** → TEST-SCENARIO.md에 결과 채움 + 판정
      - **DONE.md 생성** (완료 리포트 규칙 참조)
      - 사용자에게 완료 보고
 
@@ -638,7 +638,7 @@ TODO.md가 사용자의 승인을 받으면, **오케스트레이터가 EXECUTE 
 5. 전체 에이전트 완료 후:
    - Part B QA 체크리스트를 검증하고 체크박스 갱신 (통과: `[x]`, 미통과: `[ ]` + 사유)
    - 결과 반환 → **오케스트레이터가**:
-     - **task-flow-test 에이전트 호출** → TEST-SCENARIO.md에 결과 채움 + 판정
+     - **dtp-test 에이전트 호출** → TEST-SCENARIO.md에 결과 채움 + 판정
      - **DONE.md 생성** (완료 리포트 규칙 참조)
      - 사용자에게 완료 보고
 
@@ -656,7 +656,7 @@ TODO.md가 사용자의 승인을 받으면, **오케스트레이터가 EXECUTE 
 
 > **워커 디스패치**: 단계=PLAN-SHORT, 이전 산출물=TASK.md, 가이드=plan-guide.md (Short Task 섹션), 산출물=PLAN.md
 
-> ⚠️ **Short Task는 단계를 줄이는 것이지, 분석을 줄이는 것이 아니다.** 코드 분석은 Full Task의 RESEARCH와 동일한 깊이로 수행한다. 관련 코드를 실제로 읽고, 로직 흐름과 영향 범위를 파악한 뒤에 계획을 세운다.
+> ⚠️ **Short Task는 단계를 줄이는 것이지, 분석을 줄이는 것이 아니다.** 코드 분석은 Full Task의 ANALYSIS와 동일한 깊이로 수행한다. 관련 코드를 실제로 읽고, 로직 흐름과 영향 범위를 파악한 뒤에 계획을 세운다.
 
 **상세 가이드**: `references/plan-guide.md`의 "Short Task 통합 PLAN" 섹션을 읽고 따른다.
 
@@ -758,7 +758,7 @@ PLAN.md가 사용자의 승인을 받으면, **오케스트레이터가 EXECUTE 
 4. 모든 Step 완료 후:
    - QA 체크리스트(섹션 4)를 검증하고 체크박스 갱신 (통과: `[x]`, 미통과: `[ ]` + 사유)
    - 결과 반환 → **오케스트레이터가**:
-     - **task-flow-test 에이전트 호출** → TEST-SCENARIO.md에 결과 채움 + 판정
+     - **dtp-test 에이전트 호출** → TEST-SCENARIO.md에 결과 채움 + 판정
      - **DONE.md 생성** (완료 리포트 규칙 참조)
      - 사용자에게 완료 보고
 
@@ -771,7 +771,7 @@ PLAN.md가 사용자의 승인을 받으면, **오케스트레이터가 EXECUTE 
 ## 완료 리포트 (DONE.md) 생성 규칙
 
 ### 생성 시점
-task-flow-test 에이전트 호출 완료 후, 최종 완료 보고 직전에 생성한다.
+dtp-test 에이전트 호출 완료 후, 최종 완료 보고 직전에 생성한다.
 
 ### 생성 주체
 **오케스트레이터**가 생성한다. 오케스트레이터는 모든 단계 결과(TASK, PLAN, EXECUTE, QA)를 알고 있으므로 종합 리포트를 작성할 수 있다.
@@ -823,7 +823,7 @@ task-flow-test 에이전트 호출 완료 후, 최종 완료 보고 직전에 �
 
 ## 현재 상태
 - 모드: {Full Task / Short Task}
-- 단계: {TASK / RESEARCH / PLAN / TODO / EXECUTE}
+- 단계: {TASK / ANALYSIS / PLAN / TODO / EXECUTE}
 - 진행: {Step N/M 완료 (EXECUTE 시) / 완료 (비-EXECUTE 시)}
 - 상태: {진행 중 / 대기 중 / 블로커 / 완료}
 
@@ -831,7 +831,7 @@ task-flow-test 에이전트 호출 완료 후, 최종 완료 보고 직전에 �
 | 산출물 | 상태 |
 |--------|------|
 | TASK.md | {완료 / 미생성} |
-| RESEARCH.md | {완료 / 미생성 / 해당없음} |
+| ANALYSIS.md | {완료 / 미생성 / 해당없음} |
 | PLAN.md | {완료 / 진행 중 / 미생성} |
 | TODO.md | {완료 / 미생성 / 해당없음} |
 | QA-*.md | {완료 / 미생성} |
@@ -890,7 +890,7 @@ task-flow-test 에이전트 호출 완료 후, 최종 완료 보고 직전에 �
 
 ## 게이트 체크포인트 규칙
 
-### QA가 있는 단계 (RESEARCH, PLAN)
+### QA가 있는 단계 (ANALYSIS, PLAN)
 
 ```
 📋 [{단계명}] 완료 보고
@@ -940,12 +940,12 @@ task-flow-test 에이전트 호출 완료 후, 최종 완료 보고 직전에 �
 ### 태스크 상태 추적
 
 오케스트레이터는 각 태스크의 상태를 STATE.md를 통해 추적한다:
-- 현재 단계 (TASK / RESEARCH / PLAN / TODO / EXECUTE)
+- 현재 단계 (TASK / ANALYSIS / PLAN / TODO / EXECUTE)
 - 워커 상태 (진행 중 / 대기 / 완료)
 - 블로커 여부
 - EXECUTE 진행률 (Step N/M)
 
-STATE.md가 있으면 정확한 상태를 즉시 파악할 수 있다. STATE.md가 없으면 `tasks/` 폴더의 산출물 존재 여부로 상태를 추론한다 (폴백). 예: RESEARCH.md가 있고 PLAN.md가 없으면 → PLAN 단계 진입 가능.
+STATE.md가 있으면 정확한 상태를 즉시 파악할 수 있다. STATE.md가 없으면 `tasks/` 폴더의 산출물 존재 여부로 상태를 추론한다 (폴백). 예: ANALYSIS.md가 있고 PLAN.md가 없으면 → PLAN 단계 진입 가능.
 
 ### 통합 보고
 
@@ -955,7 +955,7 @@ STATE.md가 있으면 정확한 상태를 즉시 파악할 수 있다. STATE.md�
 
 1. tasks/010-auth-feature/ — EXECUTE 진행 중 (워커 실행 중)
 2. tasks/011-bugfix-token/ — PLAN 검토 대기 (사용자 승인 필요)
-3. tasks/012-ui-redesign/ — RESEARCH 완료 (QA 진행 중)
+3. tasks/012-ui-redesign/ — ANALYSIS 완료 (QA 진행 중)
 ```
 
 ### 파일 충돌 경고
@@ -971,7 +971,7 @@ STATE.md가 있으면 정확한 상태를 즉시 파악할 수 있다. STATE.md�
 ### 전체 실행 — Full Task
 ```
 사용자: "새 태스크: 사용자 인증 기능 개발"
-→ TASK(직접) → (검토) → [워커: RESEARCH] → QA → (검토)
+→ TASK(직접) → (검토) → [워커: ANALYSIS] → QA → (검토)
 → [워커: PLAN] → QA → (검토) → [워커: TODO] → (승인)
 → [워커: TEST-SCENARIO 작성] → (검토/승인) → [워커: EXECUTE] → [test 호출] → 완료
 ```
@@ -987,14 +987,14 @@ STATE.md가 있으면 정확한 상태를 즉시 파악할 수 있다. STATE.md�
 ```
 사용자: "태스크 A 검토 대기 중에 태스크 B 시작"
 → 태스크 A: [워커: PLAN] 완료 → 사용자 검토 대기
-→ 태스크 B: TASK(직접) → [워커: RESEARCH] (백그라운드 실행)
+→ 태스크 B: TASK(직접) → [워커: ANALYSIS] (백그라운드 실행)
 → 사용자: "태스크 A 승인" → [워커: TODO] 디스패치
 ```
 
 ### 단계별 실행
 ```
-사용자: "인증 기능 RESEARCH만 해줘"
-→ 기존 TASK.md 참조 → [워커: RESEARCH]만 실행 → 보고
+사용자: "인증 기능 ANALYSIS만 해줘"
+→ 기존 TASK.md 참조 → [워커: ANALYSIS]만 실행 → 보고
 ```
 
 ### 이어하기

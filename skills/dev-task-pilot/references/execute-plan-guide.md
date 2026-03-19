@@ -1,6 +1,6 @@
 # 실행 아키텍처 설계 상세 가이드
 
-task-flow-planner 에이전트가 TODO.md Part C(실행 아키텍처)를 설계할 때 참조하는 상세 가이드이다.
+dtp-planner 에이전트가 TODO.md Part C(실행 아키텍처)를 설계할 때 참조하는 상세 가이드이다.
 
 ---
 

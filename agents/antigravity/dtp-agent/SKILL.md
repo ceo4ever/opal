@@ -1,18 +1,18 @@
 ---
-name: task-flow-agent
+name: dtp-agent
 description: |
-  task-flow 파이프라인의 각 단계(RESEARCH/PLAN/TODO/EXECUTE)를
-  독립 컨텍스트에서 실행하는 워커 에이전트.
-  오케스트레이터가 단계, 태스크 경로, 참조 가이드를 전달하면
-  해당 단계의 산출물을 작성하거나 코드를 구현한다.
-model: inherit
+  dev-task-pilot 파이프라인의 각 단계(ANALYSIS/PLAN/TODO/EXECUTE)를 실행하는 워커 스킬.
+  Antigravity에서는 서브 에이전트 기능이 없으므로, 메인 에이전트가 이 SKILL.md를 Read하고 지시에 따라 직접 실행한다.
+  가이드의 프로세스 자체는 서브 에이전트 실행과 동일하다.
 ---
 
-# task-flow 워커 에이전트
+# dev-task-pilot 워커 에이전트 (폴백 모드)
+
+> **실행 방식**: Antigravity에서는 서브 에이전트가 지원되지 않으므로, 메인 에이전트가 이 파일을 Read한 후 아래 프로세스를 직접 수행한다. 컨텍스트 격리 이점은 없으나, 동일한 절차와 규칙이 적용된다.
 
 ## 역할
 
-- 오케스트레이터(알투)로부터 지시받은 단계(RESEARCH / PLAN / TODO / EXECUTE)를 수행
+- 오케스트레이터(알투)로부터 지시받은 단계(ANALYSIS / PLAN / TODO / EXECUTE)를 수행
 - 산출물(.md)을 작성하거나 코드를 구현/수정
 - 완료 시 결과를 오케스트레이터에 반환
 
@@ -29,7 +29,7 @@ model: inherit
 
 | 단계 | 가이드 파일 | 산출물 |
 |------|-----------|--------|
-| RESEARCH | references/research-guide.md | RESEARCH.md |
+| ANALYSIS | references/analysis-guide.md | ANALYSIS.md |
 | PLAN (Full) | references/plan-guide.md (Full Task 섹션) | PLAN.md |
 | PLAN (Short) | references/plan-guide.md (Short Task 섹션) | PLAN.md |
 | TODO | references/todo-guide.md | TODO.md |
@@ -55,15 +55,15 @@ model: inherit
 
 ## STATE.md 갱신 책임
 
-EXECUTE 단계에서 워커가 STATE.md를 갱신한다:
+EXECUTE 단계에서 워커(또는 메인 에이전트가 폴백 실행 시)가 STATE.md를 갱신한다:
 
 - **Step 완료 시**: `진행: Step N/M 완료` 업데이트
 - **블로커 발생 시**: `상태: 블로커` + `블로커` 섹션 업데이트
 - **의사결정 시**: `의사결정 로그`에 행 추가
 
-비-EXECUTE 단계(RESEARCH, PLAN, TODO)에서는 워커가 STATE.md를 갱신하지 않는다 (오케스트레이터가 관리).
+비-EXECUTE 단계(ANALYSIS, PLAN, TODO)에서는 STATE.md를 갱신하지 않는다 (오케스트레이터가 관리).
 
-갱신 방법: Edit 도구로 해당 섹션만 교체 (1회 Edit 수준 오버헤드).
+갱신 방법: Edit 도구(write_file)로 해당 섹션만 교체 (1회 수준 오버헤드).
 
 ---
 
@@ -77,7 +77,5 @@ EXECUTE 단계에서 워커가 STATE.md를 갱신한다:
 
 ### 복잡 모드
 
-- Part C 토폴로지에 따라 내부 서브 에이전트를 배치(batch) 실행한다
-- `execute-guide.md`의 서브 에이전트 프롬프트 구성 규칙을 따른다
-- 내부 서브 에이전트는 워커의 컨텍스트 내에서 실행된다
-- **중첩 불가 플랫폼(Cursor 등)에서는**: 오케스트레이터에 `status: blocked`, `blockers: ["중첩 서브 에이전트 불가"]`를 반환하여 오케스트레이터가 직접 배치 디스패치하도록 한다
+- Antigravity에서는 내부 서브 에이전트를 실행할 수 없으므로, 메인 에이전트가 Part C 토폴로지의 배치 순서에 따라 직접 순차 실행한다
+- `execute-guide.md`의 프롬프트 구성은 참조하되, 메인 에이전트가 직접 수행하는 폴백 방식으로 실행한다

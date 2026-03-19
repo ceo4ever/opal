@@ -1,8 +1,8 @@
 # TEST-SCENARIO.md 작성 가이드
 
-> **실행 컨텍스트**: 이 가이드는 워커 에이전트(task-flow-agent)의 컨텍스트에서 실행된다.
+> **실행 컨텍스트**: 이 가이드는 워커 에이전트(dtp-agent)의 컨텍스트에서 실행된다.
 > PLAN(Short) 또는 TODO(Full) 완료 후, EXECUTE 전에 워커가 이 가이드를 읽고 TEST-SCENARIO.md를 작성한다.
-> 작성된 TEST-SCENARIO.md는 사용자 검토 게이트를 거친 후, EXECUTE 완료 시 task-flow-test가 실행 결과를 채운다.
+> 작성된 TEST-SCENARIO.md는 사용자 검토 게이트를 거친 후, EXECUTE 완료 시 dtp-test가 실행 결과를 채운다.
 
 ---
 
@@ -17,12 +17,12 @@ TEST-SCENARIO.md는 두 가지 역할을 수행한다:
 
 | 구성요소 | 담당 | 시점 |
 |---------|------|------|
-| 대상 (뭘 테스트할지) | task-flow-agent | PLAN/TODO 완료 후, EXECUTE 전 |
-| 조건 (어떤 입력/상태) | task-flow-agent | 동일 |
-| 기대 결과 (성공 기준) | task-flow-agent | 동일 |
-| 도구 (어떤 도구로 테스트할지) | task-flow-agent | 동일 — `.opal/test-tools.yaml` 레지스트리 기반 결정 |
-| 실행 명령/결과/상세 | task-flow-test | EXECUTE 완료 후 |
-| 코드 품질/보안/회귀/판정 | task-flow-test | EXECUTE 완료 후 |
+| 대상 (뭘 테스트할지) | dtp-agent | PLAN/TODO 완료 후, EXECUTE 전 |
+| 조건 (어떤 입력/상태) | dtp-agent | 동일 |
+| 기대 결과 (성공 기준) | dtp-agent | 동일 |
+| 도구 (어떤 도구로 테스트할지) | dtp-agent | 동일 — `.opal/test-tools.yaml` 레지스트리 기반 결정 |
+| 실행 명령/결과/상세 | dtp-test | EXECUTE 완료 후 |
+| 코드 품질/보안/회귀/판정 | dtp-test | EXECUTE 완료 후 |
 
 ---
 
@@ -38,7 +38,7 @@ PLAN.md(Short) 또는 TODO.md(Full)에서 아래 정보를 확인한다:
 
 ### Step 1-b: 도구 사전 확인
 
-테스트 도구를 사전에 결정하여 시나리오의 "도구" 필드를 task-flow-agent가 기입한다.
+테스트 도구를 사전에 결정하여 시나리오의 "도구" 필드를 dtp-agent가 기입한다.
 
 1. `{project}/.opal/test-tools.yaml` 존재 여부 확인
 2. **있으면**: `stack` 및 `tools` 섹션을 읽어 사용 가능한 도구 목록 파악
@@ -77,13 +77,13 @@ TASK.md의 각 요구사항에 대해 시나리오를 도출한다:
 - **기대 결과**: 성공 기준 (구체적으로, 검증 가능하게)
 - **도구**: Step 1-b에서 결정한 도구 기입 (예: `vitest`, `playwright`, `gitleaks`)
 
-나머지 필드(실행 명령, 결과, 상세)는 비워둔다 -- task-flow-test가 채운다.
+나머지 필드(실행 명령, 결과, 상세)는 비워둔다 -- dtp-test가 채운다.
 
 ### Step 4: 문서 전용 태스크 확인
 
 변경 파일이 모두 `.md` 파일이면:
 - 시나리오 목록 섹션에 "문서 전용 변경 -- 코드 테스트 대상 없음" 명시
-- 코드 품질/보안/회귀 섹션은 템플릿 그대로 유지 (task-flow-test가 스킵 판단)
+- 코드 품질/보안/회귀 섹션은 템플릿 그대로 유지 (dtp-test가 스킵 판단)
 - 시나리오는 문서 품질 관련 항목만 작성 (내용 정합성, 참조 링크 유효성 등)
 
 ### Step 5: 설계 검증
@@ -110,10 +110,10 @@ TASK.md의 각 요구사항에 대해 시나리오를 도출한다:
 | 대상 | {테스트 대상 기능/변경점} |
 | 조건 | {입력, 사전 상태, 환경} |
 | 기대 결과 | {성공 기준} |
-| 도구 | {task-flow-agent가 결정 / task-flow-test가 검증} |
-| 실행 명령 | _{task-flow-test가 채움}_ |
-| 결과 | _{task-flow-test가 채움: Pass / Fail / Skip}_ |
-| 상세 | _{task-flow-test가 채움}_ |
+| 도구 | {dtp-agent가 결정 / dtp-test가 검증} |
+| 실행 명령 | _{dtp-test가 채움}_ |
+| 결과 | _{dtp-test가 채움: Pass / Fail / Skip}_ |
+| 상세 | _{dtp-test가 채움}_ |
 
 ### S-2: {시나리오 제목}
 
@@ -122,10 +122,10 @@ TASK.md의 각 요구사항에 대해 시나리오를 도출한다:
 | 대상 | {테스트 대상 기능/변경점} |
 | 조건 | {입력, 사전 상태, 환경} |
 | 기대 결과 | {성공 기준} |
-| 도구 | {task-flow-agent가 결정 / task-flow-test가 검증} |
-| 실행 명령 | _{task-flow-test가 채움}_ |
-| 결과 | _{task-flow-test가 채움: Pass / Fail / Skip}_ |
-| 상세 | _{task-flow-test가 채움}_ |
+| 도구 | {dtp-agent가 결정 / dtp-test가 검증} |
+| 실행 명령 | _{dtp-test가 채움}_ |
+| 결과 | _{dtp-test가 채움: Pass / Fail / Skip}_ |
+| 상세 | _{dtp-test가 채움}_ |
 
 ## 코드 품질
 
@@ -150,7 +150,7 @@ TASK.md의 각 요구사항에 대해 시나리오를 도출한다:
 
 ## 판정
 
-**_{task-flow-test가 채움: All Pass / Partial Fail / Critical Fail}_ -- _{판정 근거}_**
+**_{dtp-test가 채움: All Pass / Partial Fail / Critical Fail}_ -- _{판정 근거}_**
 
 ## 설계 피드백
 
@@ -181,7 +181,7 @@ tasks/{NNN}-{태스크명}/TEST-SCENARIO.md
 
 - [ ] TASK.md의 모든 요구사항에 대해 시나리오가 존재하는가?
 - [ ] 각 시나리오의 기대 결과가 구체적이고 검증 가능한가?
-- [ ] task-flow-agent 담당 필드(대상/조건/기대 결과/도구)를 작성하고, task-flow-test 담당 필드(실행 명령/결과/상세)는 비워두었는가?
+- [ ] dtp-agent 담당 필드(대상/조건/기대 결과/도구)를 작성하고, dtp-test 담당 필드(실행 명령/결과/상세)는 비워두었는가?
 - [ ] Step 1-b에서 `.opal/test-tools.yaml` 또는 프로젝트 설정 파일을 참조하여 도구를 결정했는가?
 - [ ] 문서 전용 태스크인 경우 스킵 규칙을 적용했는가?
 - [ ] 설계 빈틈 발견 시 피드백 섹션에 기록했는가?

@@ -16,8 +16,8 @@ version:
 
 stack:
   description: |
-    프로젝트 스택 선언. task-flow-agent의 Step 1-b 도구 추론과
-    task-flow-test의 Step 1-a fallback 추론에 사용된다.
+    프로젝트 스택 선언. dtp-agent의 Step 1-b 도구 추론과
+    dtp-test의 Step 1-a fallback 추론에 사용된다.
   required: false
   fields:
     language:
@@ -41,7 +41,7 @@ stack:
 global:
   description: |
     스택에 무관하게 모든 프로젝트에 적용되는 도구 목록.
-    task-flow-test가 항상 실행한다 (required: true 기본값).
+    dtp-test가 항상 실행한다 (required: true 기본값).
   required: false
   type: list
   item_fields:
@@ -136,7 +136,7 @@ tools:
 # ─── 우선순위 및 Fallback 규칙 ────────────────────────────────────────────────
 
 resolution_order:
-  description: task-flow-test의 레지스트리 탐색 순서
+  description: dtp-test의 레지스트리 탐색 순서
   steps:
     1: "{project}/.opal/test-tools.yaml — 프로젝트별 오버라이드 (최우선)"
     2: "~/.opal/templates/test-tools.yaml — 글로벌 기본값"
@@ -147,7 +147,7 @@ resolution_order:
 scenario_type_mapping:
   description: |
     시나리오 유형에 따라 어떤 카테고리의 도구를 사용할지 정의.
-    task-flow-agent의 Step 1-b와 test-scenario-guide.md의 매핑 테이블에 사용된다.
+    dtp-agent의 Step 1-b와 test-scenario-guide.md의 매핑 테이블에 사용된다.
   mappings:
     - scenario_type: 함수/클래스 단위 검증
       category: unit

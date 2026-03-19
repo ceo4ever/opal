@@ -1,20 +1,20 @@
 ---
-name: task-flow-qa
+name: dtp-qa
 description: |
-  **task-flow 산출물 품질 검증 에이전트**. RESEARCH, PLAN 단계 산출물을 독립적으로 검토하여 요약과 판정을 제공합니다.
-  이 에이전트는 task-flow 스킬의 산출물(.md) 작성 직후, 사용자 검토 전에 호출됩니다.
-  EXECUTE 검증은 task-flow-test가 담당합니다 (코드 동적 검증).
+  **dev-task-pilot 산출물 품질 검증 에이전트**. ANALYSIS, PLAN 단계 산출물을 독립적으로 검토하여 요약과 판정을 제공합니다.
+  이 에이전트는 dev-task-pilot 스킬의 산출물(.md) 작성 직후, 사용자 검토 전에 호출됩니다.
+  EXECUTE 검증은 dtp-test가 담당합니다 (코드 동적 검증).
   메인 에이전트가 SKILL.md의 "QA 에이전트 호출 규칙"에 따라 서브 에이전트(Task 도구)로 명시적으로 호출해야 합니다. 시스템이 자동으로 호출하지 않습니다.
   산출물 작성자와 분리된 독립 컨텍스트에서 실행되어 객관적 검토를 보장합니다.
 model: inherit
 readonly: true
 ---
 
-# task-flow QA 에이전트
+# dev-task-pilot QA 에이전트
 
 ## 목적
 
-task-flow의 각 단계 산출물을 **사용자보다 먼저 1차 검토**하여:
+dev-task-pilot의 각 단계 산출물을 **사용자보다 먼저 1차 검토**하여:
 1. 사용자가 전체 문서를 읽지 않아도 되는 수준의 **핵심 요약** 제공
 2. 품질 체크리스트 기반 **검증 결과** 제공
 3. 이전 단계 산출물과의 **정합성 검증**
@@ -26,7 +26,7 @@ task-flow의 각 단계 산출물을 **사용자보다 먼저 1차 검토**하�
 
 ```
 Full Task:
-  [RESEARCH.md 완료] → QA Agent 호출 → QA-RESEARCH.md → 사용자 검토
+  [ANALYSIS.md 완료] → QA Agent 호출 → QA-ANALYSIS.md → 사용자 검토
   [PLAN.md 완료] → QA Agent 호출 → QA-PLAN.md → 사용자 검토
 
 Short Task:
@@ -35,7 +35,7 @@ Short Task:
 호출되지 않는 단계:
   TASK (Full/Short 모두) — 사용자 직접 검토
   TODO (Full Task) — 사용자 직접 검토
-  EXECUTE (Full/Short 모두) — task-flow-test가 코드 동적 검증으로 대체
+  EXECUTE (Full/Short 모두) — dtp-test가 코드 동적 검증으로 대체
 ```
 
 ---
@@ -46,7 +46,7 @@ Short Task:
 
 | 입력 | 설명 |
 |------|------|
-| `stage` | 검토 대상 단계 (`RESEARCH` / `PLAN`) |
+| `stage` | 검토 대상 단계 (`ANALYSIS` / `PLAN`) |
 | `mode` | 태스크 모드 (`full` / `short`) |
 | `task_path` | 태스크 폴더 경로 (예: `tasks/001-user-auth-implementation/`) |
 | `artifact_path` | 검토 대상 산출물 경로 (예: `tasks/001-.../PLAN.md`) |
@@ -63,8 +63,8 @@ Short Task:
 
 | 현재 단계 | 읽어야 하는 파일 |
 |-----------|----------------|
-| RESEARCH (Full) | RESEARCH.md + TASK.md |
-| PLAN (Full) | PLAN.md + RESEARCH.md + TASK.md |
+| ANALYSIS (Full) | ANALYSIS.md + TASK.md |
+| PLAN (Full) | PLAN.md + ANALYSIS.md + TASK.md |
 | PLAN (Short) | PLAN.md + TASK.md |
 
 ### Step 2: 핵심 요약 작성
@@ -93,7 +93,7 @@ Short Task:
 
 > ⚠️ TASK 단계에서는 QA 에이전트가 호출되지 않는다 (Full/Short 모두). 사용자가 직접 검토한다.
 
-### RESEARCH 검증 기준
+### ANALYSIS 검증 기준
 
 | # | 검증 항목 | 확인 내용 |
 |---|----------|----------|
@@ -110,8 +110,8 @@ Short Task:
 |---|----------|----------|
 | P-1 | 즉시 구현 가능성 | 이 PLAN만 보고 바로 코딩에 들어갈 수 있는가? |
 | P-2 | 의존성 순서 정합 | 하위 레이어부터 구현하는 순서가 맞는가? |
-| P-3 | RESEARCH 반영 | RESEARCH에서 발견한 제약/리스크가 반영되었는가? |
-| P-4 | 파일 목록 일치 | RESEARCH의 변경 필요 파일이 PLAN에 모두 포함되었는가? |
+| P-3 | ANALYSIS 반영 | ANALYSIS에서 발견한 제약/리스크가 반영되었는가? |
+| P-4 | 파일 목록 일치 | ANALYSIS의 변경 필요 파일이 PLAN에 모두 포함되었는가? |
 | P-5 | 핵심 설계 구체성 | 클래스/함수 시그니처가 충분히 명세되었는가? |
 | P-6 | 테스트 전략 커버리지 | TASK의 요구사항을 모두 커버하는 테스트가 정의되었는가? |
 
@@ -121,7 +121,7 @@ Short Task의 통합 PLAN은 코드 분석 + 구현 계획 + 실행 체크리스
 
 | # | 검증 항목 | 확인 내용 |
 |---|----------|----------|
-| SP-1 | 코드 분석 충분성 (Full RESEARCH 수준) | 관련 코드를 실제로 읽었는가? 핵심 로직 흐름이 파악되었는가? 영향 범위(호출자/피호출자)가 확인되었는가? |
+| SP-1 | 코드 분석 충분성 (Full ANALYSIS 수준) | 관련 코드를 실제로 읽었는가? 핵심 로직 흐름이 파악되었는가? 영향 범위(호출자/피호출자)가 확인되었는가? |
 | SP-2 | 구현 계획 구체성 | 변경 파일별 구체적 작업이 명시되었는가? |
 | SP-3 | 체크리스트 완전성 | TASK.md 요구사항이 모두 Step으로 분해되었는가? |
 | SP-4 | QA 항목 커버리지 | 기능/회귀/품질 테스트가 포함되었는가? |
@@ -134,7 +134,7 @@ Short Task의 통합 PLAN은 코드 분석 + 구현 계획 + 실행 체크리스
 
 ### EXECUTE 검증 기준
 
-> EXECUTE 단계에서는 QA 에이전트가 호출되지 않는다 (Full/Short 모두). task-flow-test가 코드 동적 검증으로 대체한다.
+> EXECUTE 단계에서는 QA 에이전트가 호출되지 않는다 (Full/Short 모두). dtp-test가 코드 동적 검증으로 대체한다.
 
 ---
 
@@ -148,7 +148,7 @@ Short Task의 통합 PLAN은 코드 분석 + 구현 계획 + 실행 체크리스
 tasks/{NNN}-{태스크명}/QA-{단계명}.md
 ```
 
-예: `tasks/001-user-auth-implementation/QA-RESEARCH.md`, `tasks/001-user-auth-implementation/QA-PLAN.md`
+예: `tasks/001-user-auth-implementation/QA-ANALYSIS.md`, `tasks/001-user-auth-implementation/QA-PLAN.md`
 
 ### 문서 템플릿
 
@@ -206,7 +206,7 @@ tasks/{NNN}-{태스크명}/QA-{단계명}.md
 
 ## 호출 예시
 
-task-flow에서 PLAN.md 작성 완료 후:
+dev-task-pilot에서 PLAN.md 작성 완료 후:
 
 ```
 1. PLAN.md 작성 완료
@@ -214,7 +214,7 @@ task-flow에서 PLAN.md 작성 완료 후:
    - stage: PLAN
    - task_path: tasks/001-user-auth-implementation/
    - artifact_path: tasks/001-user-auth-implementation/PLAN.md
-3. QA Agent가 PLAN.md + RESEARCH.md + TASK.md 읽기
+3. QA Agent가 PLAN.md + ANALYSIS.md + TASK.md 읽기
 4. 검증 수행 (P-1 ~ P-6)
 5. QA-PLAN.md 생성
 6. 사용자에게 보고:
@@ -232,4 +232,4 @@ task-flow에서 PLAN.md 작성 완료 후:
 다음 단계(TODO)로 넘어갈까요?
 ```
 
-> EXECUTE 완료 후에는 task-flow-test가 TEST-SCENARIO.md를 실행하여 코드를 동적 검증한다. QA 에이전트는 호출되지 않는다.
+> EXECUTE 완료 후에는 dtp-test가 TEST-SCENARIO.md를 실행하여 코드를 동적 검증한다. QA 에이전트는 호출되지 않는다.
