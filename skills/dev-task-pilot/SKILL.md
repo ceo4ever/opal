@@ -3,7 +3,7 @@ name: dev-task-pilot
 description: |
   **개발 작업 워크플로우 오케스트레이터**. Full Task(5단계)와 Short Task(3단계) 듀얼 모드로 작업 규모에 맞는 파이프라인을 제공합니다.
   - Full Task: TASK → ANALYSIS → PLAN → TODO → EXECUTE (복잡하거나 난이도 높은 작업)
-  - Short Task: TASK → PLAN(통합) → EXECUTE (기본 모드, 대부분의 작업)
+  - Short Task: TASK → PLAN(통합) → TEST-SCENARIO → EXECUTE (기본 모드, 대부분의 작업)
   반드시 이 스킬을 사용해야 하는 상황: "새 태스크", "개발 시작", "기능 개발", "오류 수정", "기능 수정", "기능 개선", "리서치해줘", "분석해줘", "계획 세워줘", "TODO 만들어줘", 코드 작성/수정이 필요한 모든 개발 작업 요청 시.
   ⚠️ 승인 전까지 분석과 계획만 수행합니다. 실제 코드 구현은 사용자의 명시적 "승인" 후 EXECUTE 단계에서 수행됩니다.
 ---
@@ -728,14 +728,34 @@ PLAN 작성 중 아래 상황이 발생하면 에스컬레이션을 제안한다
 - 검증 항목 {N}개 중 {통과}개 Pass, {경고}개 Warning
 - 판정: {✅ Pass / ⚠️ Needs Revision}
 
+승인하시면 TEST-SCENARIO 작성으로 넘어갑니다.
+```
+
+---
+
+## STEP 3 (Short): TEST-SCENARIO (테스트 시나리오)
+
+PLAN.md가 사용자의 승인을 받으면, **오케스트레이터가 TEST-SCENARIO 워커를 디스패치한다.**
+
+> **워커 디스패치**: 단계=TEST-SCENARIO, 이전 산출물=TASK.md+PLAN.md, 가이드=test-scenario-guide.md, 산출물=TEST-SCENARIO.md
+
+**상세 가이드**: `references/test-scenario-guide.md`를 읽고 따른다.
+
+워커 완료 시 사용자에게 보고:
+
+```
+📋 [TEST-SCENARIO] 완료 보고
+
+📎 산출물: tasks/{NNN}-{태스크명}/TEST-SCENARIO.md
+
 승인하시면 EXECUTE를 시작합니다.
 ```
 
 ---
 
-## STEP 3 (Short): EXECUTE (실행)
+## STEP 4 (Short): EXECUTE (실행)
 
-PLAN.md가 사용자의 승인을 받으면, **오케스트레이터가 EXECUTE 워커를 디스패치한다.**
+TEST-SCENARIO.md가 사용자의 승인을 받으면, **오케스트레이터가 EXECUTE 워커를 디스패치한다.**
 
 > **워커 디스패치**: 단계=EXECUTE-SHORT, 이전 산출물=TASK.md+PLAN.md, 가이드=execute-guide.md, 산출물=코드 변경
 

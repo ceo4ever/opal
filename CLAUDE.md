@@ -189,7 +189,8 @@ cursor-rules/                    ← Cursor 프로젝트 규칙 템플릿
 
 ```
 사용자 지시 → [TASK 직접] → 검토 → [워커: PLAN 통합] → [QA] → 검토
-  → [워커: TEST-SCENARIO 작성] → 검토/승인 → [워커: EXECUTE] → [test 호출] → 완료 보고
+  → [워커: TEST-SCENARIO 작성] → 검토/승인
+  → [워커: EXECUTE] → [test 호출] → 완료 보고
 ```
 
 **모드 판별**: 모든 작업은 Short Task로 시작. Full Task 트리거 (변경 파일 ≥10, 다단계 기술 의사결정, 다중 모듈 연쇄 영향) 해당 시 Full을 제안하고 사용자가 결정.
