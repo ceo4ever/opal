@@ -6,6 +6,7 @@ description: |
   오케스트레이터가 단계, 태스크 경로, 참조 가이드를 전달하면
   해당 단계의 산출물을 작성하거나 코드를 구현한다.
 model: inherit
+color: blue
 ---
 
 # dev-task-pilot 워커 에이전트

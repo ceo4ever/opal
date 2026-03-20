@@ -7,6 +7,7 @@ description: |
   메인 에이전트가 SKILL.md의 "QA 에이전트 호출 규칙"에 따라 서브 에이전트(Task 도구)로 명시적으로 호출해야 합니다. 시스템이 자동으로 호출하지 않습니다.
   산출물 작성자와 분리된 독립 컨텍스트에서 실행되어 객관적 검토를 보장합니다.
 model: inherit
+color: green
 readonly: true
 ---
 

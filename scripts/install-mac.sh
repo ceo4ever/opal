@@ -232,8 +232,10 @@ install_claude() {
     info "Claude Code 설치..."
     local base="$USER_HOME/.claude"
 
-    install_dir "$FRAMEWORK_ROOT/skills" "$base/skills" "스킬 (7개)"
-    install_dir "$FRAMEWORK_ROOT/agents/claude" "$base/agents" "Claude 에이전트 (4개)"
+    local skill_count=$(find "$FRAMEWORK_ROOT/skills" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')
+    local claude_agent_count=$(find "$FRAMEWORK_ROOT/agents/claude" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')
+    install_dir "$FRAMEWORK_ROOT/skills" "$base/skills" "스킬 (${skill_count}개)"
+    install_dir "$FRAMEWORK_ROOT/agents/claude" "$base/agents" "Claude 에이전트 (${claude_agent_count}개)"
 }
 
 install_cursor() {
@@ -241,8 +243,10 @@ install_cursor() {
     info "Cursor 설치..."
     local base="$USER_HOME/.cursor"
 
-    install_dir "$FRAMEWORK_ROOT/skills" "$base/skills" "스킬 (7개)"
-    install_dir "$FRAMEWORK_ROOT/agents/cursor" "$base/agents" "Cursor 에이전트 (4개)"
+    local skill_count=$(find "$FRAMEWORK_ROOT/skills" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')
+    local cursor_agent_count=$(find "$FRAMEWORK_ROOT/agents/cursor" -mindepth 1 -maxdepth 1 -name '*.md' | wc -l | tr -d ' ')
+    install_dir "$FRAMEWORK_ROOT/skills" "$base/skills" "스킬 (${skill_count}개)"
+    install_dir "$FRAMEWORK_ROOT/agents/cursor" "$base/agents" "Cursor 에이전트 (${cursor_agent_count}개)"
 }
 
 install_antigravity() {
@@ -250,7 +254,8 @@ install_antigravity() {
     info "Antigravity 설치..."
     local base="$USER_HOME/.gemini/antigravity"
 
-    install_dir "$FRAMEWORK_ROOT/skills" "$base/skills" "스킬 (7개)"
+    local skill_count=$(find "$FRAMEWORK_ROOT/skills" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')
+    install_dir "$FRAMEWORK_ROOT/skills" "$base/skills" "스킬 (${skill_count}개)"
 
     for agent_dir in "$FRAMEWORK_ROOT/agents/antigravity"/*/; do
         if [[ -d "$agent_dir" ]]; then
@@ -446,7 +451,8 @@ install_opal() {
     cp "$opal_dir/core/AGENT.md" "$opal_home/AGENT.md"
     success "OPAL AGENT.md → $opal_home/AGENT.md"
 
-    install_dir "$opal_dir/skills" "$opal_home/skills" "OPAL 스킬 (4개)"
+    local opal_skill_count=$(find "$opal_dir/skills" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')
+    install_dir "$opal_dir/skills" "$opal_home/skills" "OPAL 스킬 (${opal_skill_count}개)"
     install_dir "$opal_dir/templates" "$opal_home/templates" "OPAL templates"
 
     cp "$opal_dir/core/identity-template.md" "$opal_home/templates/identity-template.md"
