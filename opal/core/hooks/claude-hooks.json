@@ -1,0 +1,24 @@
+{
+  "SubagentStop": [
+    {
+      "matcher": "",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "osascript -e 'display notification \"서브에이전트 작업이 완료되었습니다\" with title \"Claude Code\" sound name \"Glass\"'"
+        }
+      ]
+    }
+  ],
+  "Stop": [
+    {
+      "matcher": "",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "osascript -e 'display notification \"응답이 완료되었습니다\" with title \"Claude Code\" sound name \"Glass\"'"
+        }
+      ]
+    }
+  ]
+}

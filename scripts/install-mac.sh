@@ -128,6 +128,36 @@ with open(target, 'w') as f:
 " "$target" "$name" "$config"
 }
 
+merge_hooks_config() {
+    local target="$1"
+    local hooks_json="$2"
+
+    python3 -c "
+import json, os, sys
+
+target = sys.argv[1]
+hooks_file = sys.argv[2]
+
+with open(hooks_file) as f:
+    source_hooks = json.load(f)
+
+if os.path.exists(target):
+    with open(target) as f:
+        content = f.read().strip()
+    data = json.loads(content) if content else {}
+else:
+    data = {}
+
+data.setdefault('hooks', {})
+for event, rules in source_hooks.items():
+    data['hooks'][event] = rules
+
+with open(target, 'w') as f:
+    json.dump(data, f, indent=2)
+    f.write('\n')
+" "$target" "$hooks_json"
+}
+
 install_dir() {
     local src="$1"
     local dst="$2"
@@ -236,6 +266,14 @@ install_claude() {
     local claude_agent_count=$(find "$FRAMEWORK_ROOT/agents/claude" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')
     install_dir "$FRAMEWORK_ROOT/skills" "$base/skills" "스킬 (${skill_count}개)"
     install_dir "$FRAMEWORK_ROOT/agents/claude" "$base/agents" "Claude 에이전트 (${claude_agent_count}개)"
+
+    # hooks 설치
+    local hooks_src="$FRAMEWORK_ROOT/opal/core/hooks/claude-hooks.json"
+    if [[ -f "$hooks_src" ]] && command -v python3 &>/dev/null; then
+        local settings="$base/settings.json"
+        merge_hooks_config "$settings" "$hooks_src"
+        success "Claude Code hooks → $settings"
+    fi
 }
 
 install_cursor() {
