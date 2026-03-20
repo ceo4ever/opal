@@ -8,7 +8,7 @@ description: |
 
 # 웹 페이지 마크다운 변환 스킬
 
-> 작성일: 2026-03-20 | 버전: v1.0
+> 작성일: 2026-03-20 | 버전: v1.1
 
 URL을 입력받아 웹 페이지 콘텐츠를 정제된 마크다운(.md)으로 변환한다. 2단계 폴백 전략으로 다양한 웹 페이지를 안정적으로 처리하고, 복수 URL은 서브에이전트로 병렬 처리한다.
 
@@ -33,10 +33,9 @@ URL 입력 (단일 또는 복수)
   │     ├─ Phase 1: WebFetch (내장 도구)
   │     │     ├─ 성공 → 본문 추출 + MD 정제 → 저장
   │     │     └─ 실패 (403, 빈 콘텐츠, JS 필요, 타임아웃)
-  │     │           └─ Phase 2: 브라우저 폴백
-  │     │                 ├─ Playwright MCP 있음 → MCP 도구 사용
-  │     │                 └─ Playwright MCP 없음 → 스크립트 실행
-  │     │                       └─ Playwright 미설치 → 설치 안내 후 중단
+  │     │           └─ Phase 2: 브라우저 폴백 (Crawl4AI)
+  │     │                 ├─ Crawl4AI 설치됨 → Python 스크립트 실행
+  │     │                 └─ Crawl4AI 미설치 → 설치 안내 후 중단
   │     └─ 결과: {slug}.md 저장
   │
   └─ 복수 URL → 서브에이전트 병렬 디스패치
@@ -85,77 +84,69 @@ WebFetch(url="{URL}", prompt="이 페이지의 본문 콘텐츠를 마크다운�
 
 ---
 
-## Phase 2: 브라우저 폴백
+## Phase 2: 브라우저 폴백 (Crawl4AI)
 
-JavaScript 렌더링이 필요한 페이지를 헤드리스 브라우저로 처리한다.
+JavaScript 렌더링이 필요한 페이지를 Crawl4AI(Playwright 내장)로 처리한다.
 
-### 도구 선택 (우선순위)
-
-1. **Playwright MCP** (최우선): MCP 서버 `playwright`가 연결되어 있으면 MCP 도구를 사용한다
-2. **Playwright 스크립트**: MCP가 없으면 로컬 Playwright로 직접 실행한다
-
-### 옵션 1: Playwright MCP 사용
-
-Playwright MCP가 연결되어 있으면 다음 순서로 실행한다:
-
-```
-1. browser_navigate → URL 로드
-2. browser_wait → 페이지 렌더링 대기 (networkidle)
-3. browser_snapshot → 페이지 스냅샷 획득
-4. 스냅샷에서 콘텐츠 추출 → 추출 모드(full/clean)에 따라 MD 정제
-5. browser_close → 세션 종료
-```
-
-### 옵션 2: Playwright 스크립트 실행
-
-Playwright MCP가 없으면 Node.js 스크립트로 실행한다.
+### 설치 확인
 
 ```bash
-# Playwright 설치 확인
-npx playwright --version 2>/dev/null
-
-# 미설치 시 안내 메시지 출력 후 중단
-# "Playwright가 설치되어 있지 않습니다. 아래 명령으로 설치해주세요:
-#  npm install -D playwright && npx playwright install chromium"
+python3 -c "import crawl4ai" 2>/dev/null
 ```
 
-설치되어 있으면 인라인 스크립트를 실행한다:
+### 실행
+
+Crawl4AI가 설치되어 있으면 Python 스크립트로 실행한다:
 
 ```bash
-node -e "
-const { chromium } = require('playwright');
-(async () => {
-  const browser = await chromium.launch({ headless: true });
-  const page = await browser.newPage();
-  await page.goto('${URL}', { waitUntil: 'networkidle', timeout: 30000 });
-  const html = await page.content();
-  console.log(html);
-  await browser.close();
-})();
-" > /tmp/wtm_raw.html
+python3 -c "
+import asyncio, json, sys
+from crawl4ai import AsyncWebCrawler, BrowserConfig, CrawlerRunConfig
+from crawl4ai.content_filter_strategy import PruningContentFilter
+
+async def crawl():
+    browser_config = BrowserConfig(headless=True)
+    prune = PruningContentFilter(threshold=0.5)
+    crawler_config = CrawlerRunConfig(
+        word_count_threshold=10,
+        remove_overlay_elements=True,
+        process_iframes=True,
+        content_filter=prune,
+    )
+    async with AsyncWebCrawler(config=browser_config) as crawler:
+        result = await crawler.arun(url='${URL}', config=crawler_config)
+        if not result.success:
+            print(json.dumps({'success': False, 'status_code': result.status_code}))
+            sys.exit(1)
+        mode = '${MODE}'
+        md = result.markdown.fit_markdown if mode == 'clean' else result.markdown.raw_markdown
+        print(md)
+
+asyncio.run(crawl())
+"
 ```
 
-획득한 HTML에서 추출 모드(full/clean)에 따라 콘텐츠를 추출하고 MD로 정제한다.
+- **full 모드**: `result.markdown.raw_markdown` — 전체 콘텐츠 보존 (HTML→마크다운 직접 변환)
+- **clean 모드**: `result.markdown.fit_markdown` — PruningContentFilter로 노이즈 제거된 본문
 
-### Playwright 미설치 시
+Crawl4AI가 마크다운 변환을 내장하므로, 별도 MD 정제 로직이 불필요하다.
+
+### Crawl4AI 미설치 시
 
 사용자에게 설치 방법을 안내하고 Phase 2를 중단한다. Phase 1 결과가 있으면 (불완전하더라도) 그것을 사용한다.
 
 ```
-⚠️ 브라우저 폴백 불가: Playwright가 설치되어 있지 않습니다.
+⚠️ 브라우저 폴백 불가: Crawl4AI가 설치되어 있지 않습니다.
 
 설치 방법:
-  npm install -D playwright && npx playwright install chromium
-
-또는 Playwright MCP 서버를 등록하세요:
-  claude mcp add playwright -- npx -y @playwright/mcp@latest
+  pip install crawl4ai && crawl4ai-setup
 ```
 
 ---
 
 ## 콘텐츠 추출 및 MD 정제
 
-Phase 1, 2 모두 동일한 정제 규칙을 적용한다. 추출 모드에 따라 제거 범위가 달라진다.
+Phase 1에서는 아래 정제 규칙을 적용한다. Phase 2(Crawl4AI)는 마크다운 변환을 내장하므로 별도 정제가 불필요하다.
 
 ### 공통 제거 대상 (full/clean 모두)
 
@@ -194,7 +185,7 @@ clean 모드에서만 아래 요소를 추가로 제거한다:
 
 > 소스: {URL}
 > 캡처일: {YYYY-MM-DD HH:mm}
-> 추출 방식: {WebFetch | Playwright MCP | Playwright Script}
+> 추출 방식: {WebFetch | Crawl4AI}
 > 추출 모드: {full | clean}
 
 ---
@@ -277,7 +268,7 @@ URL 목록 수신
 | # | URL | 방식 | 결과 | 저장 경로 |
 |---|-----|------|------|----------|
 | 1 | {url} | WebFetch | ✅ 성공 | {path} |
-| 2 | {url} | Playwright | ✅ 성공 | {path} |
+| 2 | {url} | Crawl4AI | ✅ 성공 | {path} |
 | 3 | {url} | WebFetch | ⚠️ 부분 성공 | {path} |
 ```
 
@@ -301,17 +292,12 @@ URL 목록 수신
 | 도구 | 필수 여부 | 용도 |
 |------|----------|------|
 | WebFetch (내장) | 필수 | Phase 1 경량 fetch |
-| Playwright MCP (`@playwright/mcp`) | 선택 | Phase 2 브라우저 (우선) |
-| Playwright (`playwright`) | 선택 | Phase 2 브라우저 (대체) |
+| Crawl4AI (`crawl4ai`) | 선택 | Phase 2 브라우저 폴백 (Playwright 내장) |
 | Agent 도구 | 선택 | 복수 URL 병렬 처리 |
 
-Playwright MCP 등록 방법:
+Crawl4AI 설치 방법:
 ```bash
-# Claude Code
-claude mcp add playwright -- npx -y @playwright/mcp@latest
-
-# Cursor (.cursor/mcp.json)
-{ "mcpServers": { "playwright": { "command": "npx", "args": ["-y", "@playwright/mcp@latest"] } } }
+pip install crawl4ai && crawl4ai-setup
 ```
 
 ---
@@ -321,3 +307,4 @@ claude mcp add playwright -- npx -y @playwright/mcp@latest
 | 버전 | 날짜 | 변경내용 |
 |------|------|---------|
 | v1.0 | 2026-03-20 | 초기 작성 — full/clean 듀얼 모드, 2단계 폴백(WebFetch→Playwright), 복수 URL 병렬 처리(wtm-worker) |
+| v1.1 | 2026-03-20 | Phase 2 백엔드를 Playwright에서 Crawl4AI로 교체 — 마크다운 변환 내장, Anti-bot/stealth 지원 |

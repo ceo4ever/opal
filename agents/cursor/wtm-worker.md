@@ -2,7 +2,7 @@
 name: wtm-worker
 description: |
   web-to-markdown 스킬의 워커 에이전트.
-  단일 URL을 받아 Phase 1(WebFetch) → Phase 2(Playwright) 폴백 전략으로
+  단일 URL을 받아 Phase 1(WebFetch) → Phase 2(Crawl4AI) 폴백 전략으로
   웹 페이지를 마크다운으로 변환한다. 복수 URL 병렬 처리 시 오케스트레이터가 URL별로 디스패치한다.
 model: claude-haiku-4-5
 readonly: false
@@ -45,13 +45,14 @@ timeout_mins: 15
 3. 성공하면 → MD 정제 → 저장 → 결과 반환
 4. 실패하면 → Phase 2로 전환
 
-### Phase 2: 브라우저 폴백
+### Phase 2: 브라우저 폴백 (Crawl4AI)
 
-1. Playwright MCP 연결 여부 확인
-   - **MCP 있음**: browser_navigate → browser_wait → browser_snapshot → 추출 모드에 따라 MD 정제
-   - **MCP 없음**: Playwright 스크립트 실행 (`shell` 도구 사용)
-   - **Playwright 미설치**: 설치 안내 메시지 반환
-2. 획득한 HTML을 추출 모드에 따라 정제하고 저장
+1. Crawl4AI 설치 여부 확인 (`python3 -c "import crawl4ai"`)
+   - **설치됨**: Crawl4AI Python 스크립트 실행 (`shell` 도구 사용)
+     - full 모드: `result.markdown.raw_markdown` (전체 콘텐츠 보존)
+     - clean 모드: `result.markdown.fit_markdown` (PruningContentFilter로 노이즈 제거)
+   - **미설치**: `pip install crawl4ai && crawl4ai-setup` 안내 후 중단
+2. Crawl4AI가 마크다운 변환을 내장하므로 별도 MD 정제 불필요
 
 ### MD 정제
 
@@ -65,7 +66,7 @@ timeout_mins: 15
 
 > 소스: {URL}
 > 캡처일: {YYYY-MM-DD HH:mm}
-> 추출 방식: {WebFetch | Playwright MCP | Playwright Script}
+> 추출 방식: {WebFetch | Crawl4AI}
 > 추출 모드: {full | clean}
 
 ---
@@ -79,7 +80,7 @@ timeout_mins: 15
 
 - **url**: 처리한 URL
 - **save_path**: 저장된 파일 경로
-- **method**: 사용한 방식 (`WebFetch` | `Playwright MCP` | `Playwright Script`)
+- **method**: 사용한 방식 (`WebFetch` | `Crawl4AI`)
 - **status**: `success` | `partial` | `failed`
 - **summary**: 결과 요약 (1줄)
 
