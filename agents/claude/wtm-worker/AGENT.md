@@ -4,7 +4,7 @@ description: |
   web-to-markdown 스킬의 워커 에이전트.
   단일 URL을 받아 Phase 1(WebFetch) → Phase 2(Playwright) 폴백 전략으로
   웹 페이지를 마크다운으로 변환한다. 복수 URL 병렬 처리 시 오케스트레이터가 URL별로 디스패치한다.
-model: inherit
+model: haiku
 color: green
 ---
 

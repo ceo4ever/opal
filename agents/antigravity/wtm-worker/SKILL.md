@@ -4,6 +4,7 @@ description: |
   web-to-markdown 스킬의 워커 스킬.
   Antigravity에서는 서브 에이전트 기능이 없으므로, 메인 에이전트가 이 SKILL.md를 Read하고 지시에 따라 직접 실행한다.
   단일 URL을 받아 Phase 1(fetch) → Phase 2(Playwright) 폴백 전략으로 웹 페이지를 마크다운으로 변환한다.
+model: gemini-3-flash
 ---
 
 # web-to-markdown 워커 에이전트 (폴백 모드)

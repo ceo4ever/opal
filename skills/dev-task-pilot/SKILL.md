@@ -162,6 +162,19 @@ dev-task-pilot {단계명} 워커로서 아래 태스크를 수행하라.
 5. QA 에이전트는 호출하지 않는다
 ```
 
+**단계별 model 오버라이드 (Claude Code 전용)**:
+
+dtp-agent의 기본 model은 sonnet이지만, Claude Code에서 Agent 도구 호출 시 단계에 따라 오버라이드한다:
+
+| 단계 | model | 근거 |
+|------|-------|------|
+| ANALYSIS | `haiku` | 정보 수집·코드 읽기 중심 |
+| PLAN | `sonnet` | 설계, 추론 필요 (기본값과 동일) |
+| TODO | `haiku` | 체크리스트 분해, 경량 |
+| EXECUTE | `sonnet` | 코드 작성, 고성능 필요 (기본값과 동일) |
+
+> Cursor, Antigravity에서는 호출 시 model 오버라이드가 불가하므로, 에이전트 파일의 기본 model을 사용한다. dtp-agent는 EXECUTE 기준(가장 높은 요구)으로 고정.
+
 **단계별 이전 산출물 매핑:**
 
 | 단계 | 이전 산출물 | 가이드 | 산출물 |

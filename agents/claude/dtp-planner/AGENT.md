@@ -3,7 +3,7 @@ name: dtp-planner
 description: |
   **dev-task-pilot 실행 아키텍처 설계 에이전트**. TODO Part A(실행 체크리스트) + Part B(QA 체크리스트) 작성 완료 후 호출되어, 복잡 모드 태스크의 실행 아키텍처(Part C)를 설계합니다.
   에이전트 토폴로지, 스킬 요구사항, 도구 요구사항, 테스트 전략을 분석하여 TODO.md Part C로 출력합니다.
-model: inherit
+model: sonnet
 color: purple
 readonly: true
 ---

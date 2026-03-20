@@ -3,7 +3,7 @@ name: dtp-test
 description: |
   **dev-task-pilot 테스트 실행 에이전트**. EXECUTE 단계 완료 후 모든 모드에서 호출되어, TEST-SCENARIO.md를 입력으로 받아 도구 결정 + 실행 + 결과 기록 + 판정을 수행합니다.
   dtp-qa가 문서를 리뷰하는 에이전트라면, dtp-test는 코드를 실행하여 검증하는 에이전트입니다.
-model: inherit
+model: sonnet
 color: orange
 readonly: false
 ---

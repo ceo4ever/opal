@@ -4,6 +4,7 @@ description: |
   dev-task-pilot 파이프라인의 각 단계(ANALYSIS/PLAN/TODO/EXECUTE)를 실행하는 워커 스킬.
   Antigravity에서는 서브 에이전트 기능이 없으므로, 메인 에이전트가 이 SKILL.md를 Read하고 지시에 따라 직접 실행한다.
   가이드의 프로세스 자체는 서브 에이전트 실행과 동일하다.
+model: gemini-3.1-pro
 ---
 
 # dev-task-pilot 워커 에이전트 (폴백 모드)
