@@ -1,0 +1,83 @@
+---
+name: wtm-worker
+description: |
+  web-to-markdown 스킬의 워커 스킬.
+  Antigravity에서는 서브 에이전트 기능이 없으므로, 메인 에이전트가 이 SKILL.md를 Read하고 지시에 따라 직접 실행한다.
+  단일 URL을 받아 Phase 1(fetch) → Phase 2(Playwright) 폴백 전략으로 웹 페이지를 마크다운으로 변환한다.
+---
+
+# web-to-markdown 워커 에이전트 (폴백 모드)
+
+> **실행 방식**: Antigravity에서는 서브 에이전트가 지원되지 않으므로, 메인 에이전트가 이 파일을 Read한 후 아래 프로세스를 직접 수행한다. 컨텍스트 격리 이점은 없으나, 동일한 절차와 규칙이 적용된다.
+
+## 역할
+
+단일 URL을 받아 웹 페이지 콘텐츠를 마크다운으로 변환하고 파일로 저장한다.
+
+## 입력
+
+오케스트레이터 프롬프트에서 아래 정보를 확인한다:
+
+- **url**: 변환할 웹 페이지 URL
+- **save_path**: 산출물 저장 경로
+- **mode**: 추출 모드 (`full` | `clean`, 기본값: `full`)
+
+## 실행 프로세스
+
+### Phase 1: fetch
+
+1. 웹 fetch 도구로 URL을 가져온다
+   - **full 모드**: script/style만 제거, 구조 요소(nav/sidebar 등) 보존
+   - **clean 모드**: 비본문 요소(nav/header/footer/sidebar/광고) 제거
+2. 성공 판정:
+   - HTTP 정상 응답
+   - 콘텐츠 100자 이상
+   - JS 의존 메시지 없음
+3. 성공하면 → MD 정제 → 저장 → 결과 반환
+4. 실패하면 → Phase 2로 전환
+
+### Phase 2: 브라우저 폴백
+
+1. Playwright MCP 연결 여부 확인
+   - **MCP 있음**: 브라우저 도구로 URL 로드 → 스냅샷 → 추출 모드에 따라 MD 정제
+   - **MCP 없음**: Playwright 스크립트 실행
+   - **Playwright 미설치**: 설치 안내 메시지 반환
+2. 획득한 HTML을 추출 모드에 따라 정제하고 저장
+
+### MD 정제
+
+- **공통 제거**: script, style, noscript, iframe, 쿠키 배너, 트래킹 픽셀
+- **clean 모드 추가 제거**: nav, header, footer, aside, sidebar, 광고, 소셜 공유
+
+### 산출물 형식
+
+```markdown
+# {페이지 타이틀}
+
+> 소스: {URL}
+> 캡처일: {YYYY-MM-DD HH:mm}
+> 추출 방식: {fetch | Playwright MCP | Playwright Script}
+> 추출 모드: {full | clean}
+
+---
+
+{마크다운 콘텐츠}
+```
+
+## 반환 형식
+
+완료 시 아래 정보를 반환한다:
+
+- **url**: 처리한 URL
+- **save_path**: 저장된 파일 경로
+- **method**: 사용한 방식 (`fetch` | `Playwright MCP` | `Playwright Script`)
+- **status**: `success` | `partial` | `failed`
+- **summary**: 결과 요약 (1줄)
+
+## 실행 규칙
+
+1. Phase 1을 반드시 먼저 시도한다 — Phase 2는 Phase 1 실패 시에만 실행
+2. 인증 필요 페이지(로그인 리다이렉트)는 안내 후 중단한다
+3. 10만자 초과 시 truncate하고 안내 메시지를 추가한다
+4. robots.txt 차단 시 강제 우회하지 않는다
+5. 타임아웃: Phase 1은 15초, Phase 2는 30초
