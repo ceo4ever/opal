@@ -1,10 +1,9 @@
 ---
 name: opal-project-init
 description: |
-  프로젝트 문서 템플릿 자동 생성 스킬. 신규 프로젝트는 인터뷰를 통해, 기존 프로젝트는
-  코드 자동 분석 + 확인/보정 인터뷰를 통해 프로젝트 정보를 수집하고, context7 MCP로
-  최신 기술 문서를 조회한 뒤, 플레이스홀더 기반 템플릿에 치환하여 docs/ 문서와
-  LLM 플랫폼별 AI 지시 파일(CLAUDE.md, GEMINI.md, .cursorrules)을 생성한다.
+  프로젝트 PM 프로필 및 문서 자동 생성 스킬. 일반 프로젝트는 PM 인터뷰 후 .opal/만 생성.
+  개발 프로젝트는 PM 인터뷰 + 기술 인터뷰를 통해 docs/, 플랫폼 파일(CLAUDE.md 등),
+  .opal/(PM 프로필 + 메모리 인덱스)를 생성한다.
 triggers:
   - "프로젝트 초기 셋팅"
   - "프로젝트 스캐폴드"
@@ -20,14 +19,16 @@ version: 1.1.0
 
 # opal-project-init
 
-프로젝트 문서 및 AI 지시 파일을 자동 생성하는 스킬.
+프로젝트 PM 프로필 및 문서를 자동 생성하는 스킬.
 
 ## 개요
 
-**두 가지 모드**를 지원한다:
+**두 가지 카테고리**를 지원한다:
 
-- **신규 프로젝트 모드** (new): 인터뷰 → context7 조회 → 템플릿 치환 → 파일 생성
-- **기존 프로젝트 모드** (existing): 코드 자동 분석 → 확인/보정 인터뷰 → context7 조회 → 템플릿 필터링 → 파일 생성/병합
+- **일반 프로젝트** (scope=opal-only): PM 인터뷰 → `.opal/AGENT.md` + `.opal/MEMORY.md` 생성
+- **개발 프로젝트** (scope=full): PM 인터뷰 + 기술 인터뷰 → docs + platform + `.opal/` 생성
+  - 신규 모드 (new): 인터뷰 → context7 조회 → 템플릿 치환 → 파일 생성
+  - 기존 모드 (existing): 코드 자동 분석 → 확인/보정 인터뷰 → context7 조회 → 파일 생성/병합
 
 AI 에이전트가 직접 실행하며, 외부 템플릿 엔진(Jinja2 등)을 사용하지 않는다.
 
@@ -35,9 +36,10 @@ AI 에이전트가 직접 실행하며, 외부 템플릿 엔진(Jinja2 등)을 �
 
 ```
 ~/.opal/skills/opal-project-init/templates/
-├── common/          # 공통 (모든 유형)
+├── common/          # 공통 (모든 카테고리)
 │   ├── docs/        # INDEX.md, server/*, client/*
-│   └── platform/    # CLAUDE.md, GEMINI.md, .cursorrules
+│   ├── platform/    # CLAUDE.md, GEMINI.md, .cursorrules
+│   └── opal/        # AGENT.md (PM 프로필), MEMORY.md (메모리 인덱스)
 ├── web/             # 웹 프로젝트 추가
 ├── ai-agent/        # AI 에이전트 프로젝트 추가
 └── optional/        # 조건부 (SQLITE_SETUP, CHAT_UI_GUIDE)
@@ -47,27 +49,99 @@ AI 에이전트가 직접 실행하며, 외부 템플릿 엔진(Jinja2 등)을 �
 
 ## 실행 프로세스
 
-### Step 0: 모드 선택
+### Step 0: 프로젝트 카테고리 선택
 
-프로젝트 루트에 소스 코드가 존재하는지 확인하여 모드를 판별한다.
+프로젝트 루트에 소스 코드가 존재하는지 확인하여 카테고리를 자동 판별한다.
 
-**자동 판별 기준**: 아래 파일 중 하나라도 존재하면 "기존 프로젝트"를 제안한다.
+**자동 판별 기준**: 아래 파일 중 하나라도 존재하면 "개발 프로젝트"를 제안한다.
 - `package.json`, `pyproject.toml`, `requirements.txt`
 - `go.mod`, `Cargo.toml`, `pom.xml`, `build.gradle`
 - `src/`, `app/`, `server/`, `client/` 디렉토리
 
 ```
-[모드 선택]
+[프로젝트 카테고리 선택]
 
 프로젝트 루트를 분석한 결과, {소스 코드 존재/미존재} 상태입니다.
+
+프로젝트 유형을 선택하세요:
+  1. 일반 프로젝트 — 비개발 (기획, 문서, 프레임워크 등) → .opal/만 생성
+  2. 개발 프로젝트 — 소스코드 있는 개발 프로젝트 → docs + platform + .opal/ 생성
+```
+
+- **일반 프로젝트** 선택 시: Step 0-PM → Step 7(scope=opal-only) → Step 8
+- **개발 프로젝트** 선택 시: Step 0-PM → Step 0-DEV → (신규/기존에 따라) Step 1~8
+
+---
+
+### Step 0-PM: PM 공통 인터뷰 (일반/개발 공통)
+
+모든 프로젝트에서 PM 프로필 작성에 필요한 정보를 수집한다.
+
+```
+[PM 공통 인터뷰]
+
+Q1. 프로젝트명
+  - 영어명 (디렉토리·코드용):
+  - 한글명 (문서 제목용):
+  - 한 줄 설명:
+
+Q2. 도메인/분야
+  - 이 프로젝트가 속한 도메인 또는 분야 (예: 광고, 이커머스, AI 프레임워크):
+
+Q3. 페르소나
+  - 이 프로젝트에서 어떤 관점으로 사고해야 하는가?
+  - (예: "광고 성과 데이터 정합성 최우선", "사용자 경험 중심", "재사용성과 확장성 우선")
+
+Q4. 의사결정 원칙
+  - 트레이드오프 상황에서 우선할 원칙 1~3가지
+  - (예: "데이터 정합성 > UI 미관", "코드 가독성 > 성능 최적화")
+
+Q5. 현재 Phase
+  - 현재 진행 중인 Phase (예: "Phase 1: 데이터 파이프라인 구축")
+  - 다음 Phase (예: "Phase 2: 대시보드 구현")
+```
+
+→ 수집한 값을 플레이스홀더에 매핑:
+- Q1 → `PROJECT_NAME`, `PROJECT_DESCRIPTION`
+- Q2 → `DOMAIN_NAME`
+- Q3 → `PERSONA`
+- Q4 → `DECISION_PRINCIPLES`
+- Q5 → `CURRENT_PHASE`
+
+**일반 프로젝트인 경우**: 개발 전용 플레이스홀더에 기본값을 주입하고 Step 7로 직행한다.
+
+```json
+{
+  "scope": "opal-only",
+  "placeholders": {
+    "PROJECT_NAME": "{Q1 영어명}",
+    "PROJECT_DESCRIPTION": "{Q1 설명}",
+    "DOMAIN_NAME": "{Q2}",
+    "PERSONA": "{Q3}",
+    "DECISION_PRINCIPLES": "{Q4}",
+    "CURRENT_PHASE": "{Q5}"
+  }
+}
+```
+
+**개발 프로젝트인 경우**: Step 0-DEV로 진행한다.
+
+---
+
+### Step 0-DEV: 개발 프로젝트 모드 선택 (개발 프로젝트 전용)
+
+소스 코드 존재 여부로 신규/기존을 판별한다.
+
+```
+[개발 프로젝트 모드 선택]
 
 어떤 모드로 진행할까요?
   1. 신규 프로젝트 — 처음부터 인터뷰 시작 (Step 1~8)
   2. 기존 프로젝트 — 코드 자동 분석 후 확인/보정 인터뷰 (Step 0-A → Step 4~8)
 ```
 
-- **신규 프로젝트** 선택 시: 기존 Step 1~8 그대로 진행
-- **기존 프로젝트** 선택 시: Step 0-A(자동 분석) → Step 0-B(확인/보정 인터뷰) → Step 4~8 진행
+- **신규** 선택 시: Step 1~8 진행
+- **기존** 선택 시: Step 0-A(자동 분석) → Step 0-B(확인/보정 인터뷰) → Step 4~8 진행
 
 ---
 
@@ -261,6 +335,9 @@ Q4. 아키텍처
 | {{API_URL_LOCAL}} | http://localhost:{SERVER_PORT} |
 | {{TECH_STACK_BACKEND}} | {스택 + context7 최신 버전} |
 | {{TECH_STACK_FRONTEND}} | {스택 + context7 최신 버전} |
+| {{PERSONA}} | {Step 0-PM Q3 페르소나} |
+| {{DECISION_PRINCIPLES}} | {Step 0-PM Q4 의사결정 원칙} |
+| {{CURRENT_PHASE}} | {Step 0-PM Q5 현재 Phase} |
 | {{SQLITE_DB_PATH}} | {조건부: DB에 sqlite 포함 시} |
 | {{DOMAIN_EXAMPLES}} | {조건부: 멀티도메인 시} |
 | {{CHAT_API_ENDPOINT}} | {조건부: 채팅 기능 선택 시} |
@@ -330,15 +407,21 @@ Step 5의 매핑표와 Step 6의 파일 목록을 config.json으로 만들어 `a
 
 프로젝트 루트에 임시 config.json을 Write한다:
 
+**개발 프로젝트 (scope=full)**:
+
 ```json
 {
   "projectRoot": "{프로젝트 절대 경로}",
   "projectType": "{Step 1에서 선택한 유형}",
   "mode": "new",
+  "scope": "full",
   "placeholders": {
-    "PROJECT_NAME": "{Step 5 매핑표 값}",
-    "PROJECT_DESCRIPTION": "...",
-    "DOMAIN_NAME": "...",
+    "PROJECT_NAME": "{Step 0-PM Q1}",
+    "PROJECT_DESCRIPTION": "{Step 0-PM Q1}",
+    "DOMAIN_NAME": "{Step 0-PM Q2}",
+    "PERSONA": "{Step 0-PM Q3}",
+    "DECISION_PRINCIPLES": "{Step 0-PM Q4}",
+    "CURRENT_PHASE": "{Step 0-PM Q5}",
     "SERVER_PORT": "...",
     "CLIENT_PORT": "...",
     "DB_TYPE": "...",
@@ -354,9 +437,29 @@ Step 5의 매핑표와 Step 6의 파일 목록을 config.json으로 만들어 `a
 }
 ```
 
+**일반 프로젝트 (scope=opal-only)**:
+
+```json
+{
+  "projectRoot": "{프로젝트 절대 경로}",
+  "projectType": "custom",
+  "mode": "new",
+  "scope": "opal-only",
+  "placeholders": {
+    "PROJECT_NAME": "{Step 0-PM Q1}",
+    "PROJECT_DESCRIPTION": "{Step 0-PM Q1}",
+    "DOMAIN_NAME": "{Step 0-PM Q2}",
+    "PERSONA": "{Step 0-PM Q3}",
+    "DECISION_PRINCIPLES": "{Step 0-PM Q4}",
+    "CURRENT_PHASE": "{Step 0-PM Q5}"
+  }
+}
+```
+
 | 필드 | 타입 | 기본값 | 설명 |
 |------|------|--------|------|
 | `mode` | `"new"` \| `"existing"` | `"new"` | 프로젝트 모드. 기존 프로젝트는 `"existing"` |
+| `scope` | `"full"` \| `"opal-only"` | `"full"` | 생성 범위. 일반 프로젝트는 `"opal-only"` |
 | `excludeTemplates` | `string[]` | `[]` | 기존 모드에서 제외할 템플릿 상대 경로 목록 (예: `["docs/server/UV_SETUP.md"]`) |
 ```
 
@@ -417,11 +520,14 @@ node ~/.opal/skills/opal-project-init/scripts/apply.js --config {config.json 경
 
 ### Step 8: 완료 보고
 
+**개발 프로젝트 (scope=full)**:
+
 ```
 ---
 opal-project-init 완료
 
 프로젝트: {PROJECT_NAME}
+카테고리: 개발 프로젝트
 유형: {PROJECT_TYPE}
 기술 스택: {TECH_STACK_BACKEND} + {TECH_STACK_FRONTEND}
 
@@ -434,10 +540,28 @@ opal-project-init 완료
 - .opal/MEMORY.md (메모리 인덱스)
 
 다음 단계:
-1. .opal/AGENT.md에서 PM 프로필을 커스터마이징 (페르소나, 의사결정 원칙, 금지사항 등)
+1. .opal/AGENT.md에서 PM 프로필을 커스터마이징 (금지사항, 도메인 지식, 프로젝트 규칙 등)
 2. docs/INDEX.md에서 문서 구조 확인
 3. CLAUDE.md의 컨벤션 섹션 검토 및 커스터마이징
 4. docs/server/ENVIRONMENT.md를 참고하여 .env.local 설정
 5. 개발 시작!
+---
+```
+
+**일반 프로젝트 (scope=opal-only)**:
+
+```
+---
+opal-project-init 완료
+
+프로젝트: {PROJECT_NAME}
+카테고리: 일반 프로젝트
+
+생성된 파일:
+- .opal/AGENT.md (PM 프로필)
+- .opal/MEMORY.md (메모리 인덱스)
+
+다음 단계:
+1. .opal/AGENT.md에서 금지사항, 도메인 지식, 프로젝트 규칙 커스터마이징
 ---
 ```

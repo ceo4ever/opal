@@ -347,6 +347,14 @@ function main() {
     process.exit(1);
   }
 
+  // scope 결정: config > 기본값 "full"
+  const scope = config.scope || "full";
+
+  if (scope !== "full" && scope !== "opal-only") {
+    console.error(`설정 오류: scope는 "full" 또는 "opal-only"이어야 합니다 (입력: "${scope}")`);
+    process.exit(1);
+  }
+
   // CURRENT_DATE 동적 주입
   placeholders["CURRENT_DATE"] = new Date().toISOString().split("T")[0];
 
@@ -358,59 +366,23 @@ function main() {
   console.log(`  프로젝트: ${absRoot}`);
   console.log(`  유형: ${projectType}`);
   console.log(`  모드: ${mode}`);
+  console.log(`  scope: ${scope}`);
   console.log(`  dry-run: ${dryRun}`);
   if (excludeTemplates.length > 0) {
     console.log(`  제외 템플릿: ${excludeTemplates.join(", ")}`);
   }
   console.log("");
 
-  // 1) 공통 문서
-  console.log("[1/4] 공통 문서 (common/docs/)");
-  for (const rel of COMMON_DOCS) {
-    if (isExcluded(rel, excludeTemplates)) {
-      console.log(`  SKIP (제외 목록): ${rel}`);
-      skippedFiles.push(rel);
-      continue;
-    }
-    const src = path.join(TEMPLATES_DIR, "common", rel);
-    const dest = path.join(absRoot, rel);
-    const f = processFile(src, dest, placeholders, dryRun, mode, "docs");
-    if (f) {
-      createdFiles.push(f);
-    } else if (mode === "existing" && fs.existsSync(dest)) {
-      skippedFiles.push(rel);
-    }
-  }
-
-  // 2) 플랫폼 파일
-  console.log("\n[2/4] 플랫폼 AI 지시 파일");
-  for (const { src, dest } of PLATFORM_FILES) {
-    const srcPath = path.join(TEMPLATES_DIR, "common", src);
-    const destPath = path.join(absRoot, dest);
-    const fileType =
-      dest === "CLAUDE.md" ? "platform-claude" : "platform-other";
-    const f = processFile(
-      srcPath,
-      destPath,
-      placeholders,
-      dryRun,
-      mode,
-      fileType
-    );
-    if (f) createdFiles.push(f);
-  }
-
-  // 3) 유형별 추가 문서
-  const typeDocs = TYPE_DOCS[projectType] || [];
-  if (typeDocs.length > 0) {
-    console.log(`\n[3/4] 유형별 추가 (${projectType}/)`);
-    for (const rel of typeDocs) {
+  if (scope === "full") {
+    // 1) 공통 문서
+    console.log("[1/4] 공통 문서 (common/docs/)");
+    for (const rel of COMMON_DOCS) {
       if (isExcluded(rel, excludeTemplates)) {
         console.log(`  SKIP (제외 목록): ${rel}`);
         skippedFiles.push(rel);
         continue;
       }
-      const src = path.join(TEMPLATES_DIR, projectType, rel);
+      const src = path.join(TEMPLATES_DIR, "common", rel);
       const dest = path.join(absRoot, rel);
       const f = processFile(src, dest, placeholders, dryRun, mode, "docs");
       if (f) {
@@ -419,33 +391,74 @@ function main() {
         skippedFiles.push(rel);
       }
     }
-  } else {
-    console.log(`\n[3/4] 유형별 추가: 없음 (${projectType})`);
-  }
 
-  // 4) 조건부 문서
-  const optionalEntries = Object.entries(optional).filter(([, v]) => v);
-  if (optionalEntries.length > 0) {
-    console.log("\n[4/4] 조건부 문서");
-    for (const [key] of optionalEntries) {
-      const rel = OPTIONAL_DOCS[key];
-      if (!rel) continue;
-      if (isExcluded(rel, excludeTemplates)) {
-        console.log(`  SKIP (제외 목록): ${rel}`);
-        skippedFiles.push(rel);
-        continue;
+    // 2) 플랫폼 파일
+    console.log("\n[2/4] 플랫폼 AI 지시 파일");
+    for (const { src, dest } of PLATFORM_FILES) {
+      const srcPath = path.join(TEMPLATES_DIR, "common", src);
+      const destPath = path.join(absRoot, dest);
+      const fileType =
+        dest === "CLAUDE.md" ? "platform-claude" : "platform-other";
+      const f = processFile(
+        srcPath,
+        destPath,
+        placeholders,
+        dryRun,
+        mode,
+        fileType
+      );
+      if (f) createdFiles.push(f);
+    }
+
+    // 3) 유형별 추가 문서
+    const typeDocs = TYPE_DOCS[projectType] || [];
+    if (typeDocs.length > 0) {
+      console.log(`\n[3/4] 유형별 추가 (${projectType}/)`);
+      for (const rel of typeDocs) {
+        if (isExcluded(rel, excludeTemplates)) {
+          console.log(`  SKIP (제외 목록): ${rel}`);
+          skippedFiles.push(rel);
+          continue;
+        }
+        const src = path.join(TEMPLATES_DIR, projectType, rel);
+        const dest = path.join(absRoot, rel);
+        const f = processFile(src, dest, placeholders, dryRun, mode, "docs");
+        if (f) {
+          createdFiles.push(f);
+        } else if (mode === "existing" && fs.existsSync(dest)) {
+          skippedFiles.push(rel);
+        }
       }
-      const src = path.join(TEMPLATES_DIR, "optional", rel);
-      const dest = path.join(absRoot, rel);
-      const f = processFile(src, dest, placeholders, dryRun, mode, "docs");
-      if (f) {
-        createdFiles.push(f);
-      } else if (mode === "existing" && fs.existsSync(dest)) {
-        skippedFiles.push(rel);
+    } else {
+      console.log(`\n[3/4] 유형별 추가: 없음 (${projectType})`);
+    }
+
+    // 4) 조건부 문서
+    const optionalEntries = Object.entries(optional).filter(([, v]) => v);
+    if (optionalEntries.length > 0) {
+      console.log("\n[4/4] 조건부 문서");
+      for (const [key] of optionalEntries) {
+        const rel = OPTIONAL_DOCS[key];
+        if (!rel) continue;
+        if (isExcluded(rel, excludeTemplates)) {
+          console.log(`  SKIP (제외 목록): ${rel}`);
+          skippedFiles.push(rel);
+          continue;
+        }
+        const src = path.join(TEMPLATES_DIR, "optional", rel);
+        const dest = path.join(absRoot, rel);
+        const f = processFile(src, dest, placeholders, dryRun, mode, "docs");
+        if (f) {
+          createdFiles.push(f);
+        } else if (mode === "existing" && fs.existsSync(dest)) {
+          skippedFiles.push(rel);
+        }
       }
+    } else {
+      console.log("\n[4/4] 조건부 문서: 없음");
     }
   } else {
-    console.log("\n[4/4] 조건부 문서: 없음");
+    console.log("[1/4]~[4/4] 스킵 (scope=opal-only)");
   }
 
   // 5) .opal/ 파일 (PM 에이전트 프로필 + 메모리 인덱스)
@@ -473,6 +486,7 @@ function main() {
     projectRoot: absRoot,
     projectType,
     mode,
+    scope,
     filesCreated: createdFiles.length,
     filesSkipped: skippedFiles.length,
     files: createdFiles.map((f) => path.relative(absRoot, f)),

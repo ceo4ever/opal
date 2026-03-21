@@ -98,7 +98,7 @@ merge_mcp_config() {
     local name="$2"
     local config="$3"
 
-    python3 -c "
+    /usr/bin/python3 -c "
 import json, os, sys
 
 target = sys.argv[1]
@@ -129,7 +129,7 @@ merge_hooks_config() {
     local target="$1"
     local hooks_json="$2"
 
-    python3 -c "
+    /usr/bin/python3 -c "
 import json, os, sys
 
 target = sys.argv[1]
@@ -314,7 +314,7 @@ install_opal() {
 
     # ── Claude Code hooks ──
     local hooks_src="$FRAMEWORK_ROOT/opal/core/hooks/claude-hooks.json"
-    if [[ -f "$hooks_src" ]] && command -v python3 &>/dev/null; then
+    if [[ -f "$hooks_src" ]] && [[ -x /usr/bin/python3 ]]; then
         local settings="$USER_HOME/.claude/settings.json"
         mkdir -p "$(dirname "$settings")"
         merge_hooks_config "$settings" "$hooks_src"
@@ -456,7 +456,7 @@ install_mcp() {
         return
     fi
 
-    if ! command -v python3 &>/dev/null; then
+    if [[ ! -x /usr/bin/python3 ]]; then
         warn "python3이 없어 MCP 설정을 자동 머지할 수 없습니다"
         info "수동 설정: https://modelcontextprotocol.io/quickstart"
         return
@@ -467,12 +467,12 @@ install_mcp() {
         [[ -f "$mcp_file" ]] || continue
 
         local name config install_type platforms command args_json
-        name=$(python3 -c "import json; print(json.load(open('$mcp_file'))['name'])")
-        config=$(python3 -c "import json; print(json.dumps(json.load(open('$mcp_file'))['config']))")
-        install_type=$(python3 -c "import json; print(json.load(open('$mcp_file'))['install_type'])")
-        platforms=$(python3 -c "import json; print(' '.join(json.load(open('$mcp_file'))['platforms']))")
-        command=$(python3 -c "import json; print(json.load(open('$mcp_file'))['config'].get('command',''))")
-        args_json=$(python3 -c "import json; print('\n'.join(json.load(open('$mcp_file'))['config'].get('args',[])))")
+        name=$(/usr/bin/python3 -c "import json; print(json.load(open('$mcp_file'))['name'])")
+        config=$(/usr/bin/python3 -c "import json; print(json.dumps(json.load(open('$mcp_file'))['config']))")
+        install_type=$(/usr/bin/python3 -c "import json; print(json.load(open('$mcp_file'))['install_type'])")
+        platforms=$(/usr/bin/python3 -c "import json; print(' '.join(json.load(open('$mcp_file'))['platforms']))")
+        command=$(/usr/bin/python3 -c "import json; print(json.load(open('$mcp_file'))['config'].get('command',''))")
+        args_json=$(/usr/bin/python3 -c "import json; print('\n'.join(json.load(open('$mcp_file'))['config'].get('args',[])))")
 
         if [[ "$install_type" != "config_merge" ]]; then
             info "  $name: $install_type 타입 — 수동 설치 필요"
