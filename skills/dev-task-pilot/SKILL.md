@@ -113,8 +113,8 @@ Short Task 진행 중 PLAN 작성 시 Full Task 조건에 해당하는 상황이
 
 | 모드 | 워커 에이전트 | 역할 |
 |------|-------------|------|
-| Full Task | `dtp-dev-full-agent` | ANALYSIS/PLAN/TODO/TEST-SCENARIO/EXECUTE |
-| Short Task | `dtp-dev-short-agent` | PLAN-SHORT/TEST-SCENARIO/EXECUTE-SHORT |
+| Full Task | `dtp-dev-agent` | ANALYSIS / PLAN / TODO / TEST-SCENARIO / EXECUTE |
+| Short Task | `dtp-dev-agent` | PLAN-SHORT / TEST-SCENARIO / EXECUTE-SHORT |
 | Wireframe UI | `dtp-wireframe-ui-agent` | WIREFRAME/EXECUTE-WIREFRAME |
 
 ### 에이전트 탐색 경로 (모든 에이전트 공통)
@@ -623,16 +623,16 @@ TASK → WIREFRAME → EXECUTE → QA
 ### Full Task
 ```
 사용자: "새 태스크: 사용자 인증 기능 개발"
-→ TASK(직접) → (검토) → [dtp-dev-full-agent: ANALYSIS] → QA → (검토)
-→ [dtp-dev-full-agent: PLAN] → QA → (검토) → [dtp-dev-full-agent: TODO] → (승인)
-→ [dtp-dev-full-agent: TEST-SCENARIO] → (검토/승인) → [dtp-dev-full-agent: EXECUTE] → [dtp-dev-test-agent] → 완료
+→ TASK(직접) → (검토) → [dtp-dev-agent: ANALYSIS] → QA → (검토)
+→ [dtp-dev-agent: PLAN] → QA → (검토) → [dtp-dev-agent: TODO] → (승인)
+→ [dtp-dev-agent: TEST-SCENARIO] → (검토/승인) → [dtp-dev-agent: EXECUTE] → [dtp-dev-test-agent] → 완료
 ```
 
 ### Short Task
 ```
 사용자: "버그 수정: 로그인 시 토큰 만료 에러"
-→ TASK(직접) → (검토) → [dtp-dev-short-agent: PLAN 통합] → QA → (검토)
-→ [dtp-dev-short-agent: TEST-SCENARIO] → (검토/승인) → [dtp-dev-short-agent: EXECUTE] → [dtp-dev-test-agent] → 완료
+→ TASK(직접) → (검토) → [dtp-dev-agent: PLAN 통합] → QA → (검토)
+→ [dtp-dev-agent: TEST-SCENARIO] → (검토/승인) → [dtp-dev-agent: EXECUTE] → [dtp-dev-test-agent] → 완료
 ```
 
 ### Wireframe UI

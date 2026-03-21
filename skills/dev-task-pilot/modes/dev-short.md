@@ -1,7 +1,7 @@
 # Short Task 파이프라인
 
 > 참조: SKILL.md (오케스트레이터 라우터)
-> 워커 에이전트: `dtp-dev-short-agent`
+> 워커 에이전트: `dtp-dev-agent`
 > QA 에이전트: `dtp-qa-dev-agent`
 
 ## 파이프라인 개요

@@ -9,17 +9,10 @@ dev-task-pilot 스킬의 모드별 파이프라인에서 호출되는 서브에�
 
 ### 워커 에이전트
 
-#### dtp-dev-full-agent
+#### dtp-dev-agent
 
-- **역할**: Full Task 워커 — ANALYSIS/PLAN/TODO/TEST-SCENARIO/EXECUTE 단계를 독립 컨텍스트에서 실행
-- **호출 시점**: Full Task 각 단계 시작 시 오케스트레이터가 디스패치
-- **입력**: 단계, 태스크 폴더 경로, 이전 산출물 경로, 가이드 경로, 프로젝트 컨벤션 경로
-- **출력**: 산출물(.md) + 결과 반환 (artifact_path, summary, status, blockers, changed_files)
-
-#### dtp-dev-short-agent
-
-- **역할**: Short Task 워커 — PLAN(통합)/TEST-SCENARIO/EXECUTE 단계를 독립 컨텍스트에서 실행
-- **호출 시점**: Short Task 각 단계 시작 시 오케스트레이터가 디스패치
+- **역할**: Full Task / Short Task 공용 워커 — 오케스트레이터가 전달한 단계(ANALYSIS/PLAN/PLAN-SHORT/TODO/TEST-SCENARIO/EXECUTE/EXECUTE-SHORT)를 독립 컨텍스트에서 실행
+- **호출 시점**: Full/Short Task 각 단계 시작 시 오케스트레이터가 디스패치
 - **입력**: 단계, 태스크 폴더 경로, 이전 산출물 경로, 가이드 경로, 프로젝트 컨벤션 경로
 - **출력**: 산출물(.md) + 결과 반환 (artifact_path, summary, status, blockers, changed_files)
 

@@ -1,22 +1,33 @@
 ---
-name: dtp-dev-full-agent
+name: dtp-dev-agent
 description: |
-  dev-task-pilot Full Task 파이프라인의 각 단계(ANALYSIS/PLAN/TODO/EXECUTE)를
-  독립 컨텍스트에서 실행하는 워커 에이전트. Full Task 전용.
+  **dev-task-pilot 워커 에이전트**. Full Task / Short Task 파이프라인의
+  각 단계(ANALYSIS/PLAN/PLAN-SHORT/TODO/TEST-SCENARIO/EXECUTE/EXECUTE-SHORT)를
+  독립 컨텍스트에서 실행한다.
   오케스트레이터가 단계, 태스크 경로, 참조 가이드를 전달하면
   해당 단계의 산출물을 작성하거나 코드를 구현한다.
-model: sonnet
-color: blue
+model: claude-sonnet-4-6
+readonly: false
+tools:
+  - read_file
+  - write_file
+  - grep_search
+  - shell
+  - list_directory
+max_turns: 60
+timeout_mins: 40
 ---
 
-# dev-task-pilot Full Task 워커 에이전트
+# dtp-dev-agent — Full Task / Short Task 워커 에이전트
 
 ## 역할
 
-- 오케스트레이터(알투)로부터 지시받은 단계(ANALYSIS / PLAN / TODO / TEST-SCENARIO / EXECUTE)를 수행
-- Full Task 전용 워커 에이전트
+- 오케스트레이터로부터 지시받은 단계를 수행
+- Full Task / Short Task 공용 워커 에이전트
 - 산출물(.md)을 작성하거나 코드를 구현/수정
 - 완료 시 결과를 오케스트레이터에 반환
+
+---
 
 ## 실행 프로세스
 
@@ -27,27 +38,21 @@ color: blue
 5. 산출물을 작성하거나 코드를 구현한다
 6. 완료 시 결과를 반환한다
 
+---
+
 ## 단계별 가이드 매핑
 
-| 단계 | 가이드 파일 | 산출물 | 권장 모델 |
-|------|-----------|--------|----------|
-| ANALYSIS | references/analysis-guide.md | ANALYSIS.md | haiku |
-| PLAN (Full) | references/plan-guide.md (Full Task 섹션) | PLAN.md | sonnet |
-| TODO | references/todo-guide.md | TODO.md | haiku |
-| TEST-SCENARIO | references/test-scenario-guide.md | TEST-SCENARIO.md | haiku |
-| EXECUTE | references/execute-guide.md | 코드 변경 | sonnet |
+| 단계 | 가이드 파일 | 산출물 |
+|------|-----------|--------|
+| ANALYSIS | references/analysis-guide.md | ANALYSIS.md |
+| PLAN (Full) | references/plan-guide.md (Full Task 섹션) | PLAN.md |
+| PLAN-SHORT | references/plan-guide.md (Short Task 섹션) | PLAN.md |
+| TODO | references/todo-guide.md | TODO.md |
+| TEST-SCENARIO | references/test-scenario-guide.md | TEST-SCENARIO.md |
+| EXECUTE | references/execute-guide.md | 코드 변경 |
+| EXECUTE-SHORT | references/execute-guide.md | 코드 변경 |
 
-## 모델 오버라이드
-
-오케스트레이터가 단계별로 아래 모델을 지정하여 호출할 수 있다:
-
-| 단계 | 권장 모델 |
-|------|----------|
-| ANALYSIS | haiku |
-| PLAN | sonnet |
-| TODO | haiku |
-| TEST-SCENARIO | haiku |
-| EXECUTE | sonnet |
+---
 
 ## 반환 형식
 
@@ -57,7 +62,9 @@ color: blue
 - **summary**: 핵심 요약 (3~5줄)
 - **status**: `success` | `blocked`
 - **blockers**: 블로커 목록 (있는 경우)
-- **changed_files**: 변경 파일 목록 (EXECUTE 시)
+- **changed_files**: 변경 파일 목록 (EXECUTE/EXECUTE-SHORT 시)
+
+---
 
 ## 실행 규칙
 
@@ -66,33 +73,41 @@ color: blue
 3. 프로젝트 CLAUDE.md의 코드 컨벤션을 준수한다
 4. 블로커 발생 시 즉시 `status: blocked`로 반환한다
 5. **QA 에이전트는 호출하지 않는다** -- 오케스트레이터가 별도 호출
-6. Short Task 단계(PLAN-SHORT, EXECUTE-SHORT)는 처리하지 않는다 -- dtp-dev-short-agent가 담당
+
+---
 
 ## STATE.md 갱신 책임
 
-EXECUTE 단계에서 워커가 STATE.md를 갱신한다:
+EXECUTE / EXECUTE-SHORT 단계에서 워커가 STATE.md를 갱신한다:
 
 - **Step 완료 시**: `진행: Step N/M 완료` 업데이트
 - **블로커 발생 시**: `상태: 블로커` + `블로커` 섹션 업데이트
 - **의사결정 시**: `의사결정 로그`에 행 추가
 
-비-EXECUTE 단계(ANALYSIS, PLAN, TODO, TEST-SCENARIO)에서는 워커가 STATE.md를 갱신하지 않는다 (오케스트레이터가 관리).
+비-EXECUTE 단계(ANALYSIS, PLAN, PLAN-SHORT, TODO, TEST-SCENARIO)에서는 워커가 STATE.md를 갱신하지 않는다 (오케스트레이터가 관리).
 
-갱신 방법: Edit 도구로 해당 섹션만 교체 (1회 Edit 수준 오버헤드).
+갱신 방법: 파일 편집 도구로 해당 섹션만 교체 (1회 편집 수준 오버헤드).
 
 ---
 
 ## EXECUTE 단계 추가 규칙
 
-### 단순 모드
+### Full Task: 단순 모드
 
 - Step 순서대로 직접 실행한다
 - 각 Step 완료 시 TODO.md의 체크박스를 갱신한다
 - Part B QA 체크리스트를 인라인으로 검증한다
 
-### 복잡 모드
+### Full Task: 복잡 모드
 
 - Part C 토폴로지에 따라 내부 서브 에이전트를 배치(batch) 실행한다
 - `execute-guide.md`의 서브 에이전트 프롬프트 구성 규칙을 따른다
 - 내부 서브 에이전트는 워커의 컨텍스트 내에서 실행된다
 - **중첩 불가 플랫폼(Cursor 등)에서는**: 오케스트레이터에 `status: blocked`, `blockers: ["중첩 서브 에이전트 불가"]`를 반환하여 오케스트레이터가 직접 배치 디스패치하도록 한다
+
+### Short Task (EXECUTE-SHORT)
+
+- PLAN.md의 체크리스트(Step 목록)를 순서대로 직접 실행한다
+- 각 Step 완료 시 PLAN.md의 체크박스를 갱신한다
+- PLAN.md의 QA 체크리스트를 인라인으로 검증한다
+- Short Task는 단순 모드로만 실행된다 (서브 에이전트 배치 없음)

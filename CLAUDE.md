@@ -45,24 +45,21 @@ skills/                          ← 프레임워크 스킬 (단일 소스, 3개
 
 agents/                          ← 에이전트 (플랫폼별 포맷 분리)
 ├── claude/                      ← AGENT.md 디렉토리 기반
-│   ├── dtp-dev-full-agent/      Full Task 워커 에이전트
-│   ├── dtp-dev-short-agent/     Short Task 워커 에이전트
+│   ├── dtp-dev-agent/            Full/Short Task 워커 에이전트
 │   ├── dtp-wireframe-ui-agent/  Wireframe UI 워커 에이전트
 │   ├── dtp-qa-dev-agent/        Full/Short 문서 QA
 │   ├── dtp-qa-wireframe-agent/  Wireframe UI QA
 │   ├── dtp-action-plan-agent/   실행 아키텍처 설계 (Part C)
 │   └── dtp-dev-test-agent/      코드 동적 검증
 ├── cursor/                      ← 플랫 파일 형식 (.md)
-│   ├── dtp-dev-full-agent.md
-│   ├── dtp-dev-short-agent.md
+│   ├── dtp-dev-agent.md
 │   ├── dtp-wireframe-ui-agent.md
 │   ├── dtp-qa-dev-agent.md
 │   ├── dtp-qa-wireframe-agent.md
 │   ├── dtp-action-plan-agent.md
 │   └── dtp-dev-test-agent.md
 └── antigravity/                 ← SKILL.md로 통합
-    ├── dtp-dev-full-agent/
-    ├── dtp-dev-short-agent/
+    ├── dtp-dev-agent/
     ├── dtp-wireframe-ui-agent/
     ├── dtp-qa-dev-agent/
     ├── dtp-qa-wireframe-agent/
@@ -134,7 +131,7 @@ cursor-rules/                    ← Cursor 프로젝트 규칙 템플릿
 | 유형 | 설명 | 현재 상태 |
 |------|------|----------|
 | **Skills** | 특정 작업을 수행하는 절차적 가이드 (SKILL.md) | `skills/` 7개 + `community-skills/` 31개 |
-| **Agents** | 독립 컨텍스트에서 자율 실행하는 에이전트 (AGENT.md) | `agents/` 7개 × 3 플랫폼 |
+| **Agents** | 독립 컨텍스트에서 자율 실행하는 에이전트 (AGENT.md) | `agents/` 6개 × 3 플랫폼 |
 | **Hooks** | 이벤트 기반으로 자동 실행되는 트리거 | 확장 예정 |
 
 ### 컴포넌트 간 의존 관계
@@ -143,8 +140,7 @@ cursor-rules/                    ← Cursor 프로젝트 규칙 템플릿
 - **version-mgr** → 산출물을 생성·수정하는 모든 스킬에 적용
 - **interview** → 요구사항 불명확 시 다른 스킬에서 호출
 - **dev-task-pilot** → 개발 작업의 주 진입점 (5단계 파이프라인)
-- **dtp-dev-full-agent** → Full Task 워커 (ANALYSIS/PLAN/TODO/EXECUTE)
-- **dtp-dev-short-agent** → Short Task 워커 (PLAN/TEST-SCENARIO/EXECUTE)
+- **dtp-dev-agent** → Full/Short Task 공용 워커 (ANALYSIS/PLAN/PLAN-SHORT/TODO/TEST-SCENARIO/EXECUTE/EXECUTE-SHORT)
 - **dtp-wireframe-ui-agent** → Wireframe UI 워커 (WIREFRAME/EXECUTE, wireframe-builder + ui-designer 호출)
 - **dtp-qa-dev-agent** → Full/Short Task 산출물 QA
 - **dtp-qa-wireframe-agent** → Wireframe UI QA (wireframe.md 검증 + 빌드/린트 + 코드 대조)
