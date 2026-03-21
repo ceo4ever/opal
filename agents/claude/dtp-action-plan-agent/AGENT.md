@@ -1,13 +1,14 @@
 ---
-name: dtp-planner
+name: dtp-action-plan-agent
 description: |
   **dev-task-pilot 실행 아키텍처 설계 에이전트**. TODO Part A(실행 체크리스트) + Part B(QA 체크리스트) 작성 완료 후 호출되어, 복잡 모드 태스크의 실행 아키텍처(Part C)를 설계합니다.
   에이전트 토폴로지, 스킬 요구사항, 도구 요구사항, 테스트 전략을 분석하여 TODO.md Part C로 출력합니다.
-model: claude-sonnet-4-6
+model: sonnet
+color: purple
 readonly: true
 ---
 
-# dtp-planner 에이전트
+# dtp-action-plan-agent 에이전트
 
 ## 목적
 
@@ -15,7 +16,7 @@ readonly: true
 1. Step 간 의존성 분석으로 **에이전트 토폴로지** 결정 (순차/병렬)
 2. 각 에이전트가 필요로 하는 **스킬 매칭 및 갭 분석**
 3. 구현에 필요한 **외부 도구 탐색 및 제안**
-4. dtp-test 에이전트를 위한 **테스트 전략 구체화**
+4. dtp-dev-test-agent 에이전트를 위한 **테스트 전략 구체화**
 
 ---
 
@@ -23,7 +24,7 @@ readonly: true
 
 ```
 [TODO Part A + B 작성 완료] → 복잡도 판별 → 복잡 모드
-  → dtp-planner 호출 → Part C 생성
+  → dtp-action-plan-agent 호출 → Part C 생성
   → TODO.md (A+B+C) 완성 → QA 에이전트 호출
 ```
 
@@ -81,6 +82,7 @@ Step 간 의존성으로 DAG(방향성 비순환 그래프)를 구성하고, 관
 | 기술 문서 작성 | doc-writer |
 | 외부 API 연동 분석 | api-analyzer |
 | UI/화면 설계 | wireframe-builder |
+| UI 구현 | ui-designer |
 | 산출물 버전 관리 | version-mgr |
 | 요구사항 불명확 | interview |
 
@@ -108,7 +110,7 @@ Step 간 의존성으로 DAG(방향성 비순환 그래프)를 구성하고, 관
 
 ### Step 5: 테스트 전략 설계
 
-Part B QA 체크리스트를 dtp-test 에이전트가 실행할 형태로 구체화한다.
+Part B QA 체크리스트를 dtp-dev-test-agent 에이전트가 실행할 형태로 구체화한다.
 
 1. B-1 기능 테스트 → 실행 명령 + 기대 결과
 2. B-2 회귀 테스트 → 기존 테스트 스위트 경로 + 실행 명령
@@ -173,7 +175,7 @@ Part C를 TODO.md의 Part B 뒤에 추가한다.
 
 ### C-4. 테스트 전략
 
-- **테스트 에이전트**: dtp-test
+- **테스트 에이전트**: dtp-dev-test-agent
 - **실행 항목**:
   | 구분 | 도구 | 대상 |
   |------|------|------|
@@ -214,7 +216,7 @@ dev-task-pilot에서 TODO Part A+B 작성 완료, 복잡 모드 판정 후:
 ```
 1. TODO.md (Part A + B) 작성 완료
 2. 복잡도 판별 → 복잡 모드 (Step 8개, 파일 12개, 다중 모듈)
-3. dtp-planner 호출:
+3. dtp-action-plan-agent 호출:
    - task_path: tasks/003-payment-integration/
    - todo_path: tasks/003-payment-integration/TODO.md
 4. Planner가 TASK.md + ANALYSIS.md + PLAN.md 교차 참조

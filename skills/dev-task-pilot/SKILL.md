@@ -1,16 +1,17 @@
 ---
 name: dev-task-pilot
 description: |
-  **개발 작업 워크플로우 오케스트레이터**. Full Task(5단계)와 Short Task(3단계) 듀얼 모드로 작업 규모에 맞는 파이프라인을 제공합니다.
+  **개발 작업 워크플로우 오케스트레이터**. Full Task / Short Task / Wireframe UI 멀티 모드로 작업 유형에 맞는 파이프라인을 제공합니다.
   - Full Task: TASK → ANALYSIS → PLAN → TODO → EXECUTE (복잡하거나 난이도 높은 작업)
   - Short Task: TASK → PLAN(통합) → TEST-SCENARIO → EXECUTE (기본 모드, 대부분의 작업)
-  반드시 이 스킬을 사용해야 하는 상황: "새 태스크", "개발 시작", "기능 개발", "오류 수정", "기능 수정", "기능 개선", "리서치해줘", "분석해줘", "계획 세워줘", "TODO 만들어줘", 코드 작성/수정이 필요한 모든 개발 작업 요청 시.
+  - Wireframe UI: TASK → WIREFRAME → EXECUTE → QA (UI 설계·구현 전용)
+  반드시 이 스킬을 사용해야 하는 상황: "새 태스크", "개발 시작", "기능 개발", "오류 수정", "기능 수정", "기능 개선", "리서치해줘", "분석해줘", "계획 세워줘", "TODO 만들어줘", "와이어프레임", "UI 만들어줘", "화면 구현", 코드 작성/수정이 필요한 모든 개발 작업 요청 시.
   ⚠️ 승인 전까지 분석과 계획만 수행합니다. 실제 코드 구현은 사용자의 명시적 "승인" 후 EXECUTE 단계에서 수행됩니다.
 ---
 
-# 개발 작업 워크플로우 (Full Task / Short Task 듀얼 모드)
+# 개발 작업 워크플로우 (Full Task / Short Task / Wireframe UI 멀티 모드)
 
-## 🚫 구현 금지 원칙 (최우선 규칙)
+## 구현 금지 원칙 (최우선 규칙)
 
 **사용자가 명시적으로 "승인", "진행해", "구현해", "개발 시작" 등의 실행 허가를 내릴 때까지 코드를 작성하거나 파일을 생성/수정하지 않는다.**
 
@@ -36,26 +37,15 @@ description: |
 
 ## 워크플로우 개요
 
-알투는 **오케스트레이터**로서 워커 에이전트를 디스패치하고, 실제 분석/설계/실행은 워커의 격리된 컨텍스트에서 수행한다.
+알투는 **오케스트레이터**로서 모드를 판별하고, 모드별 워커 에이전트를 디스패치하여 실행한다.
 
 ```
 사용자 지시 → [Git 점검] → [TASK 직접] → 모드 판별 → 사용자 검토
                                               │
-                    ┌─────────────────────────┴─────────────────────────┐
-                    ▼                                                   ▼
-              [Full Task]                                         [Short Task]
-                    │                                                   │
-          [워커: ANALYSIS] → [QA] → 검토                    [워커: PLAN 통합] → [QA] → 검토
-                    │                                                   │
-          [워커: PLAN] → [QA] → 검토                    [워커: TEST-SCENARIO 작성] → 검토/승인
-                    │                                                   │
-          [워커: TODO] → 검토                                    [워커: EXECUTE]
-                    │                                                   │
-    [워커: TEST-SCENARIO 작성] → 검토/승인                  [test 호출] → 완료 보고
-                    │
-              [워커: EXECUTE]
-                    │
-              [test 호출] → 완료 보고
+                    ┌─────────────────────────┼─────────────────────────┐
+                    ▼                         ▼                         ▼
+              [Full Task]              [Short Task]            [Wireframe UI]
+              modes/dev-full.md        modes/dev-short.md      modes/wireframe-ui.md
 ```
 
 **핵심 규칙**: 사용자의 명시적 승인 전까지 코드 생성/수정 금지. 오케스트레이터가 워커를 디스패치하여 각 단계를 실행하고, 사용자에게 보고한다.
@@ -68,9 +58,19 @@ description: |
 
 모든 작업은 Short Task로 시작한다. Short Task는 단계를 줄여 속도를 높이는 것이지, 분석 품질을 낮추는 것이 아니다.
 
+### Wireframe UI 트리거 조건
+
+아래 조건 중 하나라도 해당하면 Wireframe UI 모드를 **적용**한다:
+
+| # | 조건 | 판별 방법 |
+|---|------|----------|
+| 1 | 사용자 명시 요청 | "와이어프레임", "UI 만들어줘", "화면 구현", "프로토타입" |
+| 2 | wireframe.md 제공 | wireframe.md가 입력물로 제공됨 |
+| 3 | UI 구현 요청 + 정책서/기획서 | 정책서/기획서와 함께 UI 구현을 요청 |
+
 ### Full Task 트리거 조건
 
-아래 조건 중 하나라도 해당하면 Full Task를 **제안**한다 (최종 결정은 사용자):
+Wireframe UI가 아닌 경우, 아래 조건 중 하나라도 해당하면 Full Task를 **제안**한다 (최종 결정은 사용자):
 
 | # | 조건 | 판별 방법 |
 |---|------|----------|
@@ -86,6 +86,7 @@ description: |
 사용자가 모드를 지정할 수 있다:
 - "Full로 해줘" → Full Task 강제
 - "Short로 해줘" → Short Task 강제
+- "와이어프레임으로" → Wireframe UI 강제
 - 지정하지 않으면 자동 판별 결과를 따름
 
 ### 에스컬레이션 규칙
@@ -102,92 +103,53 @@ Short Task 진행 중 PLAN 작성 시 Full Task 조건에 해당하는 상황이
 
 알투는 오케스트레이터로서 다음 역할만 수행한다:
 
-1. **TASK 단계 직접 수행** -- 사용자 지시를 구조화하는 것은 오케스트레이터의 본질적 역할
-2. **워커 디스패치** -- 각 단계(ANALYSIS/PLAN/TODO/EXECUTE) 시작 시 워커 에이전트를 디스패치
-3. **QA/Planner/Test 에이전트 호출** -- 워커 완료 후 필요한 에이전트를 오케스트레이터가 직접 호출
-4. **게이트 체크포인트 중계** -- 워커 결과를 사용자에게 보고하고 승인을 받음
-5. **태스크 상태 추적** -- 각 태스크의 현재 단계, 워커 상태, 블로커 여부를 관리
+1. **TASK 단계 직접 수행** — 사용자 지시를 구조화하는 것은 오케스트레이터의 본질적 역할
+2. **워커 디스패치** — 모드별 워커 에이전트를 디스패치
+3. **QA/Planner/Test 에이전트 호출** — 워커 완료 후 필요한 에이전트를 오케스트레이터가 직접 호출
+4. **게이트 체크포인트 중계** — 워커 결과를 사용자에게 보고하고 승인을 받음
+5. **태스크 상태 추적** — 각 태스크의 현재 단계, 워커 상태, 블로커 여부를 관리
 
-### 워커 에이전트 정의
+### 모드별 워커 에이전트
 
-**에이전트 이름**: `dtp-agent`
+| 모드 | 워커 에이전트 | 역할 |
+|------|-------------|------|
+| Full Task | `dtp-dev-full-agent` | ANALYSIS/PLAN/TODO/TEST-SCENARIO/EXECUTE |
+| Short Task | `dtp-dev-short-agent` | PLAN-SHORT/TEST-SCENARIO/EXECUTE-SHORT |
+| Wireframe UI | `dtp-wireframe-ui-agent` | WIREFRAME/EXECUTE-WIREFRAME |
 
-**에이전트 탐색 경로** (우선순위):
-1. `{프로젝트}/.cursor/agents/dtp-agent.md`
-2. `{프로젝트}/.claude/agents/dtp-agent/AGENT.md`
-3. `{프로젝트}/.agent/skills/dtp-agent/SKILL.md`
-4. `~/.cursor/agents/dtp-agent.md`
-5. `~/.claude/agents/dtp-agent/AGENT.md`
-6. `~/.gemini/agents/dtp-agent.md`
-7. `~/.gemini/antigravity/skills/dtp-agent/SKILL.md`
+### 에이전트 탐색 경로 (모든 에이전트 공통)
 
-**워커의 역할**:
-- 코드 읽기/분석 (Glob, Grep, Read)
-- 산출물(.md) 작성 (ANALYSIS.md, PLAN.md, TODO.md)
-- 코드 구현/수정 (Edit, Write, Bash)
-- 완료 시 결과를 오케스트레이터에 반환
+에이전트명을 `{agent-name}`으로 치환하여 탐색:
+
+1. `{프로젝트}/.cursor/agents/{agent-name}.md`
+2. `{프로젝트}/.cursor/agents/{agent-name}/AGENT.md`
+3. `{프로젝트}/.claude/agents/{agent-name}/AGENT.md`
+4. `{프로젝트}/.agent/skills/{agent-name}/SKILL.md`
+5. `~/.cursor/agents/{agent-name}.md`
+6. `~/.cursor/agents/{agent-name}/AGENT.md`
+7. `~/.claude/agents/{agent-name}/AGENT.md`
+8. `~/.gemini/antigravity/skills/{agent-name}/SKILL.md`
 
 ### 워커 디스패치 규칙
 
-**디스패치 시점**: TASK 이후의 각 단계 시작 시 (ANALYSIS, PLAN, TODO, EXECUTE)
+**디스패치 시점**: TASK 이후의 각 단계 시작 시
 
-**프롬프트 구성**: 오케스트레이터가 워커를 디스패치할 때, 아래 형식으로 프롬프트를 구성한다:
-
-```
-dev-task-pilot {단계명} 워커로서 아래 태스크를 수행하라.
-
-**태스크**: {태스크 제목}
-**단계**: {ANALYSIS | PLAN | PLAN-SHORT | TODO | EXECUTE | EXECUTE-SHORT}
-**태스크 폴더**: {tasks/{NNN}-{name}/}
-
-**이전 산출물** (읽어서 컨텍스트를 확보하라):
-- {tasks/{NNN}-{name}/TASK.md}
-- {tasks/{NNN}-{name}/ANALYSIS.md}  ← 해당 시
-- {tasks/{NNN}-{name}/PLAN.md}      ← 해당 시
-- {tasks/{NNN}-{name}/TODO.md}      ← 해당 시
-
-**단계 가이드** (읽고 프로세스를 따르라):
-- {skills/dev-task-pilot/references/{guide}.md 의 절대 경로}
-
-**프로젝트 컨벤션** (읽고 규칙을 따르라):
-- {프로젝트 루트의 CLAUDE.md 절대 경로}
-
-**산출물 저장 경로**: {tasks/{NNN}-{name}/{산출물}.md}
-
-**실행 규칙**:
-1. 가이드를 읽고 프로세스를 따른다
-2. 산출물을 저장 경로에 작성한다
-3. 완료 시 artifact_path, summary, status를 반환한다
-4. 블로커 발생 시 즉시 status: blocked로 반환한다
-5. QA 에이전트는 호출하지 않는다
-```
+**프롬프트 구성**: 오케스트레이터가 워커를 디스패치할 때, 모드별 파이프라인 파일(`modes/*.md`)에 정의된 프롬프트 형식을 사용한다.
 
 **단계별 model 오버라이드 (Claude Code 전용)**:
 
-dtp-agent의 기본 model은 sonnet이지만, Claude Code에서 Agent 도구 호출 시 단계에 따라 오버라이드한다:
+| 모드 | 단계 | model | 근거 |
+|------|------|-------|------|
+| Full | ANALYSIS | `haiku` | 정보 수집·코드 읽기 중심 |
+| Full | PLAN | `sonnet` | 설계, 추론 필요 |
+| Full | TODO | `haiku` | 체크리스트 분해, 경량 |
+| Full | EXECUTE | `sonnet` | 코드 작성, 고성능 필요 |
+| Short | PLAN-SHORT | `sonnet` | 분석+설계 통합 |
+| Short | EXECUTE-SHORT | `sonnet` | 코드 작성 |
+| Wireframe | WIREFRAME | `sonnet` | wireframe-builder 스킬 실행 |
+| Wireframe | EXECUTE-WIREFRAME | `sonnet` | ui-designer 스킬 실행 |
 
-| 단계 | model | 근거 |
-|------|-------|------|
-| ANALYSIS | `haiku` | 정보 수집·코드 읽기 중심 |
-| PLAN | `sonnet` | 설계, 추론 필요 (기본값과 동일) |
-| TODO | `haiku` | 체크리스트 분해, 경량 |
-| EXECUTE | `sonnet` | 코드 작성, 고성능 필요 (기본값과 동일) |
-
-> Cursor, Antigravity에서는 호출 시 model 오버라이드가 불가하므로, 에이전트 파일의 기본 model을 사용한다. dtp-agent는 EXECUTE 기준(가장 높은 요구)으로 고정.
-
-**단계별 이전 산출물 매핑:**
-
-| 단계 | 이전 산출물 | 가이드 | 산출물 |
-|------|-----------|--------|--------|
-| ANALYSIS | TASK.md | analysis-guide.md | ANALYSIS.md |
-| PLAN (Full) | TASK.md, ANALYSIS.md | plan-guide.md (Full) | PLAN.md |
-| PLAN (Short) | TASK.md | plan-guide.md (Short) | PLAN.md |
-| TODO | TASK.md, ANALYSIS.md, PLAN.md | todo-guide.md | TODO.md |
-| TEST-SCENARIO (Full) | TASK.md, TODO.md | test-scenario-guide.md | TEST-SCENARIO.md |
-| TEST-SCENARIO (Short) | TASK.md, PLAN.md | test-scenario-guide.md | TEST-SCENARIO.md |
-| EXECUTE (Full 단순) | TASK.md, TODO.md | execute-guide.md | 코드 변경 |
-| EXECUTE (Full 복잡) | TASK.md, TODO.md (Part C 포함) | execute-guide.md | 코드 변경 |
-| EXECUTE (Short) | TASK.md, PLAN.md | execute-guide.md | 코드 변경 |
+> Cursor, Antigravity에서는 호출 시 model 오버라이드가 불가하므로, 에이전트 파일의 기본 model을 사용한다.
 
 ### 워커 결과 수신
 
@@ -197,6 +159,7 @@ dtp-agent의 기본 model은 sonnet이지만, Claude Code에서 Agent 도구 호
 - **summary**: 핵심 요약 (3~5줄)
 - **status**: `success` | `blocked`
 - **blockers**: 블로커 목록 (있는 경우)
+- **changed_files**: 변경 파일 목록 (EXECUTE 시)
 
 **성공 시 (status: success)**:
 1. 오케스트레이터가 QA 에이전트를 호출 (QA 호출 맵에 따라)
@@ -214,7 +177,6 @@ dtp-agent의 기본 model은 sonnet이지만, Claude Code에서 Agent 도구 호
 **resume 가능 시** (Claude Code, Cursor):
 - 동일 워커를 resume하여 다음 단계를 수행
 - 추가 전달: "다음 단계는 {단계명}이다. {가이드}.md를 읽고 따르라."
-- 예: ANALYSIS 워커를 resume하여 PLAN 수행 → 코드 분석 컨텍스트 보존
 
 **resume 불가 시** (Gemini CLI, Antigravity, 또는 새 워커):
 - 새 워커에 이전 단계 산출물(.md) 경로를 전달
@@ -229,14 +191,6 @@ dtp-agent의 기본 model은 sonnet이지만, Claude Code에서 Agent 도구 호
 | Gemini CLI | X | 매 단계 새 워커 |
 | Antigravity | X | 폴백: 직접 실행 |
 
-**resume 가능 단계 쌍 및 가치:**
-
-| 이전 단계 | 다음 단계 | resume 가치 | 이유 |
-|----------|----------|------------|------|
-| ANALYSIS | PLAN | 높음 | 코드 분석 컨텍스트 보존으로 설계 품질 향상 |
-| PLAN | TODO | 중간 | PLAN 설계 컨텍스트 보존 |
-| TODO | EXECUTE | 낮음 | TODO는 문서 분해 단계라 컨텍스트가 가벼움 |
-
 ### 크로스 플랫폼 폴백
 
 서브 에이전트 도구(Agent/Task)를 사용할 수 없는 플랫폼에서는, 오케스트레이터가 워커 에이전트 파일을 Read하고 직접 실행한다.
@@ -246,15 +200,6 @@ dtp-agent의 기본 model은 sonnet이지만, Claude Code에서 Agent 도구 호
 2. 사용 불가? → 워커 에이전트 파일을 Read → 지시 내용 확인 → 오케스트레이터가 직접 수행
 3. 이 경우 컨텍스트 격리 이점은 없으나, **워커의 절차/규칙은 동일하게 적용**
 
-**플랫폼별 정리:**
-
-| 플랫폼 | 워커 실행 방법 | resume | QA 호출 주체 |
-|--------|--------------|--------|-------------|
-| Claude Code | Agent 도구 → dtp-agent | 가능 | 오케스트레이터 |
-| Cursor | 서브 에이전트 자동 위임 / `/dtp-agent` | 가능 | 오케스트레이터 |
-| Gemini CLI | agents/dtp-agent.md 자동 노출 | 불가 | 오케스트레이터 |
-| Antigravity | 폴백: SKILL.md Read → 직접 실행 | 불가 | 오케스트레이터 |
-
 > references/ 가이드는 실행 주체와 무관하게 동일하게 적용된다. "누가 실행하든" 같은 프로세스를 따른다.
 
 ---
@@ -263,38 +208,24 @@ dtp-agent의 기본 model은 sonnet이지만, Claude Code에서 Agent 도구 호
 
 QA가 필요한 단계에서 **오케스트레이터가** QA 에이전트를 **서브 에이전트(Task 도구)** 로 호출한다. 워커는 QA를 호출하지 않는다.
 
-**에이전트 이름**: `dtp-qa`
+### 모드별 QA 에이전트
 
-**에이전트 탐색 경로** (우선순위):
-1. `{프로젝트}/.cursor/agents/dtp-qa.md`
-2. `{프로젝트}/.claude/agents/dtp-qa/AGENT.md`
-3. `{프로젝트}/.agent/skills/dtp-qa/SKILL.md`
-4. `~/.cursor/agents/dtp-qa.md`
-5. `~/.claude/agents/dtp-qa/AGENT.md`
-6. `~/.gemini/antigravity/skills/dtp-qa/SKILL.md`
+| 모드 | QA 에이전트 | 역할 |
+|------|-----------|------|
+| Full Task | `dtp-qa-dev-agent` | ANALYSIS, PLAN 산출물 검증 |
+| Short Task | `dtp-qa-dev-agent` | PLAN 산출물 검증 |
+| Wireframe UI | `dtp-qa-wireframe-agent` | wireframe.md 검증 + 빌드/코드 대조 |
 
-**호출 방법**:
-```
-1. 위 탐색 경로에서 에이전트 파일을 찾아 Read로 읽는다
-2. 서브 에이전트(Task 도구)를 실행한다
-3. 전달 정보:
-   - mode: full / short
-   - stage: 현재 단계
-   - task_path: 태스크 폴더 경로
-   - artifact_path: 검토 대상 산출물 경로
-4. 서브 에이전트가 QA-{단계}.md를 생성한다
-5. QA 결과를 포함하여 사용자에게 보고한다
-```
+### QA 호출 맵
 
-**QA 호출 맵:**
-
-| 단계 | Full Task | Short Task |
-|------|-----------|------------|
-| TASK | 생략 | 생략 |
-| ANALYSIS | **QA 호출** | (해당 없음) |
-| PLAN | **QA 호출** | **QA 호출** |
-| TODO | 생략 | (해당 없음) |
-| EXECUTE | **test 호출** | **test 호출** |
+| 단계 | Full Task | Short Task | Wireframe UI |
+|------|-----------|------------|-------------|
+| TASK | 생략 | 생략 | 생략 |
+| ANALYSIS | **dtp-qa-dev-agent** | (해당 없음) | (해당 없음) |
+| PLAN | **dtp-qa-dev-agent** | **dtp-qa-dev-agent** | (해당 없음) |
+| WIREFRAME | (해당 없음) | (해당 없음) | **dtp-qa-wireframe-agent** |
+| TODO | 생략 | (해당 없음) | (해당 없음) |
+| EXECUTE | **dtp-dev-test-agent** | **dtp-dev-test-agent** | **dtp-qa-wireframe-agent** |
 
 ---
 
@@ -304,45 +235,19 @@ TODO 워커가 Part A + Part B + 복잡도 판별 결과를 반환하면, **오�
 
 **흐름**: TODO 워커 완료 → 오케스트레이터가 복잡 모드 확인 → Planner 호출 → Part C를 TODO.md에 추가 → 사용자에게 보고
 
-**에이전트 이름**: `dtp-planner`
-
-**에이전트 탐색 경로** (우선순위):
-1. `{프로젝트}/.cursor/agents/dtp-planner.md`
-2. `{프로젝트}/.claude/agents/dtp-planner/AGENT.md`
-3. `{프로젝트}/.agent/skills/dtp-planner/SKILL.md`
-4. `~/.cursor/agents/dtp-planner.md`
-5. `~/.claude/agents/dtp-planner/AGENT.md`
-6. `~/.gemini/antigravity/skills/dtp-planner/SKILL.md`
-
-**호출 방법**:
-```
-1. 위 탐색 경로에서 에이전트 파일을 찾아 Read로 읽는다
-2. 서브 에이전트(Task 도구)를 실행한다
-3. 전달 정보:
-   - task_path: 태스크 폴더 경로
-   - todo_path: TODO.md 경로
-4. 서브 에이전트가 TODO.md에 Part C를 추가한다
-```
+**에이전트 이름**: `dtp-action-plan-agent`
 
 ---
 
-## Test 에이전트 호출 규칙 (EXECUTE 완료 후, 모든 모드)
+## Test 에이전트 호출 규칙 (Full/Short EXECUTE 완료 후)
 
 EXECUTE 워커 완료 후, **오케스트레이터가** Test 에이전트를 호출하여 TEST-SCENARIO.md에 실행 결과를 채운다.
 
-**에이전트 이름**: `dtp-test`
-
-**에이전트 탐색 경로** (우선순위):
-1. `{프로젝트}/.cursor/agents/dtp-test.md`
-2. `{프로젝트}/.claude/agents/dtp-test/AGENT.md`
-3. `{프로젝트}/.agent/skills/dtp-test/SKILL.md`
-4. `~/.cursor/agents/dtp-test.md`
-5. `~/.claude/agents/dtp-test/AGENT.md`
-6. `~/.gemini/antigravity/skills/dtp-test/SKILL.md`
+**에이전트 이름**: `dtp-dev-test-agent`
 
 **호출 방법**:
 ```
-1. 위 탐색 경로에서 에이전트 파일을 찾아 Read로 읽는다
+1. 에이전트 탐색 경로에서 에이전트 파일을 찾아 Read로 읽는다
 2. 서브 에이전트(Task 도구)를 실행한다
 3. 전달 정보:
    - task_path: 태스크 폴더 경로
@@ -351,6 +256,8 @@ EXECUTE 워커 완료 후, **오케스트레이터가** Test 에이전트를 호
    - mode: full-simple / full-complex / short
 4. 서브 에이전트가 TEST-SCENARIO.md에 결과를 채우고 판정을 기록한다
 ```
+
+> Wireframe UI 모드에서는 dtp-dev-test-agent 대신 dtp-qa-wireframe-agent가 빌드/린트 + 대조 검증을 수행한다.
 
 ---
 
@@ -364,6 +271,7 @@ EXECUTE 워커 완료 후, **오케스트레이터가** Test 에이전트를 호
 | 🔧 기능 개선 | "개선해", "최적화", "성능" | 중간 (현재 구현 + 개선 방안) | 변경 범위 특정 |
 | 🐛 오류 수정 | "에러", "버그", "안 돼", "오류" | 집중 (원인 분석, 재현 조건) | 수정 포인트만 |
 | ✏️ 기능 수정 | "변경해", "바꿔", "수정해" | 중간 (영향 범위 분석) | 변경 + 회귀 테스트 |
+| 🎨 UI 구현 | "와이어프레임", "UI", "화면", "프로토타입" | (Wireframe UI 모드) | wireframe.md 기반 |
 
 ---
 
@@ -394,6 +302,18 @@ tasks/{NNN}-{태스크명}/
 ├── PLAN.md              ← 통합 PLAN (코드 분석 + 구현 계획 + 체크리스트)
 ├── QA-PLAN.md           ← PLAN QA 리뷰
 ├── TEST-SCENARIO.md     ← 테스트 시나리오 + 실행 결과
+└── DONE.md              ← 완료 리포트
+```
+
+### Wireframe UI
+
+```
+tasks/{NNN}-{태스크명}/
+├── STATE.md             ← 실시간 상태 추적
+├── TASK.md              ← 작업 정의서 (Wireframe 특화)
+├── wireframe.md         ← wireframe-builder 산출물
+├── QA-WIREFRAME.md      ← WIREFRAME 단계 QA 리뷰
+├── QA-EXECUTE-UI.md     ← EXECUTE 단계 QA 리뷰 (빌드/린트 + 대조)
 └── DONE.md              ← 완료 리포트
 ```
 
@@ -433,11 +353,11 @@ tasks/{NNN}-{태스크명}/
 
 ---
 
-## STEP 1: TASK (작업 정의) — Full/Short 공통
+## STEP 1: TASK (작업 정의) — 모든 모드 공통
 
 사용자의 지시를 구조화된 작업 정의서로 정리한다.
 
-### TASK.md 작성 항목
+### TASK.md 작성 항목 (Full/Short)
 
 ```markdown
 # TASK: {태스크 제목}
@@ -461,6 +381,10 @@ tasks/{NNN}-{태스크명}/
 {참조할 기존 산출물 경로}
 ```
 
+### TASK.md 작성 항목 (Wireframe UI)
+
+Wireframe UI 모드의 TASK.md는 `references/wireframe-task-guide.md`를 참조한다.
+
 ### 작업 정의 시 확인 사항
 
 사용자의 지시가 모호하거나 빠진 부분이 있으면 **먼저 질문한다**. 추측하지 않는다.
@@ -468,7 +392,7 @@ tasks/{NNN}-{태스크명}/
 ### 모드 판별 및 보고
 
 TASK.md 작성 완료 후:
-1. 모드 판별 규칙에 따라 Full/Short를 판별한다
+1. 모드 판별 규칙에 따라 Full/Short/Wireframe UI를 판별한다
 2. 사용자에게 보고한다:
 
 ```
@@ -476,7 +400,7 @@ TASK.md 작성 완료 후:
 
 📎 산출물: tasks/{NNN}-{태스크명}/TASK.md
 
-💡 모드 제안: {Short Task / Full Task}
+💡 모드 제안: {Short Task / Full Task / Wireframe UI}
    근거: {조건 충족/미충족 요약}
 
 다음 단계로 넘어갈까요? (모드 변경도 가능합니다)
@@ -489,325 +413,43 @@ TASK.md 작성 완료 후:
 
 ---
 
-# ═══════════════════════════════════════
-# Full Task 경로
-# ═══════════════════════════════════════
+## 모드별 파이프라인 → modes/ 파일로 위임
 
-## STEP 2 (Full): ANALYSIS (분석)
+TASK 이후의 각 모드별 단계는 별도 파일에 정의되어 있다. 오케스트레이터는 모드 판별 후 해당 파일을 Read하여 파이프라인을 실행한다.
 
-**오케스트레이터가 ANALYSIS 워커를 디스패치한다.**
+### Full Task
 
-> **워커 디스패치**: 단계=ANALYSIS, 이전 산출물=TASK.md, 가이드=analysis-guide.md, 산출물=ANALYSIS.md
-
-**상세 가이드**: `references/analysis-guide.md`를 읽고 따른다.
-
-### ANALYSIS 단계 핵심
-
-분석 대상 (작업 유형별 깊이 조절):
-
-| 분석 영역 | 신규 | 개선 | 수정 | 오류 |
-|----------|------|------|------|------|
-| 기존 코드베이스 분석 | ● | ● | ● | ● |
-| 외부 API/라이브러리 조사 | ● | ○ | - | - |
-| 유사 구현 패턴 참조 | ● | ○ | - | - |
-| 영향 범위 분석 | ● | ● | ● | ○ |
-| 원인 분석 (Root Cause) | - | - | - | ● |
-
-(● 필수 / ○ 선택 / - 불필요)
-
-### 워커 완료 시
-
-워커가 ANALYSIS.md를 반환하면, **오케스트레이터가 QA 에이전트를 호출**한다. QA 결과를 포함하여 사용자에게 보고.
-
----
-
-## STEP 3 (Full): PLAN (구현 계획)
-
-**오케스트레이터가 PLAN 워커를 디스패치한다.**
-
-> **워커 디스패치**: 단계=PLAN, 이전 산출물=TASK.md+ANALYSIS.md, 가이드=plan-guide.md (Full Task 섹션), 산출물=PLAN.md
->
-> **resume 가능 시**: ANALYSIS 워커를 이어서(resume) PLAN을 수행한다. 코드 분석 컨텍스트가 보존되어 설계 품질이 향상된다.
-
-**상세 가이드**: `references/plan-guide.md`의 "Full Task PLAN" 섹션을 읽고 따른다.
-
-### PLAN 단계 핵심
-
-구현 계획에 반드시 포함되는 항목:
-
-1. **구현 순서** — 파일별 작업을 순서대로 나열
-2. **파일 목록** — 신규 생성/수정 대상 파일 전체 경로
-3. **핵심 설계** — 클래스 구조, 함수 시그니처, 데이터 모델 등
-4. **의존성** — 추가 패키지, 환경 설정 변경 사항
-5. **테스트 전략** — 어떤 테스트를 작성할지, 성공 기준
-
-### 워커 완료 시
-
-워커가 PLAN.md를 반환하면, **오케스트레이터가 QA 에이전트를 호출**한다. QA 결과를 포함하여 사용자에게 보고.
-
----
-
-## STEP 4 (Full): TODO (실행 체크리스트)
-
-**오케스트레이터가 TODO 워커를 디스패치한다.**
-
-> **워커 디스패치**: 단계=TODO, 이전 산출물=TASK.md+ANALYSIS.md+PLAN.md, 가이드=todo-guide.md, 산출물=TODO.md
-
-**상세 가이드**: `references/todo-guide.md`를 읽고 따른다.
-
-### TODO 단계 핵심
-
-TODO.md는 실행 모드에 따라 2~3개 파트로 구성된다:
-
-**Part A: 실행 체크리스트**
-- PLAN의 각 구현 항목을 작업 단위로 분해
-- 각 작업에 체크박스, 테스트 기준, 실행 방법(direct/sub-agent) 명시
-- 작업 간 의존성 순서를 표시
-
-**Part B: QA 체크리스트**
-- 기능 테스트 항목
-- 회귀 테스트 항목
-- 코드 품질 체크
-
-### 복잡도 판별
-
-Part A 작성 후, 아래 기준으로 실행 모드를 결정한다:
-
-| 기준 | 단순 모드 | 복잡 모드 |
-|------|----------|----------|
-| Step 수 | ≤5개 | 6개 이상 |
-| 변경 파일 수 | ≤3개 | 4개 이상 |
-| 모듈 범위 | 단일 모듈 | 다중 모듈/레이어 |
-| 작업 유형 | 오류 수정, 단순 기능 수정 | 신규 개발, 대규모 개선 |
-| 외부 의존성 | 없음 | 새 API, 새 패키지, 새 도구 필요 |
-
-**하나라도 "복잡 모드" 기준에 해당하면 복잡 모드를 적용한다.**
-
-### 모드별 분기
-
-**단순 모드:**
-1. Part A + Part B 작성
-2. 사용자에게 **승인 요청** (QA 생략)
-
-**복잡 모드:**
-1. 워커가 Part A + Part B + 복잡도 판별 결과를 반환
-2. **오케스트레이터가** 복잡 모드 판정 확인 → **dtp-planner 에이전트 호출** → Part C 생성
-3. TODO.md (A+B+C) 완성
-4. 사용자에게 **승인 요청** (QA 생략)
-
-### 사용자 보고
+**파이프라인 파일**: `modes/dev-full.md`
 
 ```
-📋 [TODO] 완료 보고
+TASK → ANALYSIS → PLAN → TODO → TEST-SCENARIO → EXECUTE
+```
 
-📎 산출물: tasks/{NNN}-{태스크명}/TODO.md
-   실행 모드: {단순 / 복잡}
-   Step 수: {N}개
+### Short Task
 
-승인하시면 EXECUTE를 시작합니다.
+**파이프라인 파일**: `modes/dev-short.md`
+
+```
+TASK → PLAN(통합) → TEST-SCENARIO → EXECUTE
+```
+
+### Wireframe UI
+
+**파이프라인 파일**: `modes/wireframe-ui.md`
+
+```
+TASK → WIREFRAME → EXECUTE → QA
 ```
 
 ---
-
-## STEP 5 (Full): EXECUTE (실행)
-
-TODO.md가 사용자의 승인을 받으면, **오케스트레이터가 EXECUTE 워커를 디스패치한다.**
-
-> **워커 디스패치**: 단계=EXECUTE, 이전 산출물=TASK.md+TODO.md(+Part C), 가이드=execute-guide.md, 산출물=코드 변경
-
-**상세 가이드**: `references/execute-guide.md`를 읽고 따른다.
-
-### 체크리스트 갱신 규칙
-
-워커가 각 Step 완료 시 TODO.md의 체크박스를 즉시 갱신한다:
-- `- [ ] 완료` → `- [x] 완료`
-
-**QA 체크리스트 갱신**: 모든 실행 Step 완료 후, test 에이전트 호출 전에 워커가 Part B QA 체크리스트의 각 항목을 실제 검증하고 체크박스를 갱신한다:
-- 통과 항목: `- [ ]` → `- [x]`
-- 미통과 항목: `- [ ]` 유지 + 사유를 인라인 주석으로 기록 (예: `- [ ] 항목 <!-- 사유: ... -->`)
-
-### 단순 모드 실행
-
-워커가 Step 순서대로 직접 실행한다:
-
-1. Part A의 Step을 의존성 순서대로 하나씩 실행
-2. 각 Step 완료 시: TODO.md 체크박스 갱신
-3. 블로커 발생 시 즉시 오케스트레이터에 반환
-4. 모든 Step 완료 후:
-   - Part B QA 체크리스트를 검증하고 체크박스 갱신 (통과: `[x]`, 미통과: `[ ]` + 사유)
-   - 결과 반환 → **오케스트레이터가**:
-     - **dtp-test 에이전트 호출** → TEST-SCENARIO.md에 결과 채움 + 판정
-     - **DONE.md 생성** (완료 리포트 규칙 참조)
-     - 사용자에게 완료 보고
-
-### 복잡 모드 실행
-
-워커가 Part C 토폴로지에 따라 내부 서브 에이전트를 배치하여 실행한다:
-
-1. Part C-3 도구 요구사항 확인 — 미설치 도구 설치 (사용자 확인 후)
-2. Part C-1 에이전트 토폴로지에 따라 배치(batch) 구성
-3. 각 배치: 서브 에이전트를 **병렬로** Task 도구로 실행
-4. 배치 완료마다 TODO.md 체크박스 갱신 + 진행 보고
-5. 전체 에이전트 완료 후:
-   - Part B QA 체크리스트를 검증하고 체크박스 갱신 (통과: `[x]`, 미통과: `[ ]` + 사유)
-   - 결과 반환 → **오케스트레이터가**:
-     - **dtp-test 에이전트 호출** → TEST-SCENARIO.md에 결과 채움 + 판정
-     - **DONE.md 생성** (완료 리포트 규칙 참조)
-     - 사용자에게 완료 보고
-
-> **복잡 모드 + 중첩 불가 시** (Cursor 등): 워커가 내부 서브 에이전트를 호출할 수 없는 플랫폼에서는, 오케스트레이터가 Part C 토폴로지에 따라 배치별 서브 에이전트를 직접 디스패치한다.
-
----
-
-# ═══════════════════════════════════════
-# Short Task 경로
-# ═══════════════════════════════════════
-
-## STEP 2 (Short): PLAN 통합 (코드 분석 + 구현 계획 + 체크리스트)
-
-**오케스트레이터가 PLAN(통합) 워커를 디스패치한다.**
-
-> **워커 디스패치**: 단계=PLAN-SHORT, 이전 산출물=TASK.md, 가이드=plan-guide.md (Short Task 섹션), 산출물=PLAN.md
-
-> ⚠️ **Short Task는 단계를 줄이는 것이지, 분석을 줄이는 것이 아니다.** 코드 분석은 Full Task의 ANALYSIS와 동일한 깊이로 수행한다. 관련 코드를 실제로 읽고, 로직 흐름과 영향 범위를 파악한 뒤에 계획을 세운다.
-
-**상세 가이드**: `references/plan-guide.md`의 "Short Task 통합 PLAN" 섹션을 읽고 따른다.
-
-### Short Task PLAN.md 구조
-
-```markdown
-# PLAN: {태스크 제목}
-
-> 작성일: YYYY-MM-DD | 모드: Short Task | 참조: TASK.md
-
-## 1. 코드 분석
-
-### 관련 파일
-| 파일 | 역할 | 변경 필요 |
-|------|------|----------|
-
-### 현재 구현
-{핵심 로직 흐름: 입력 → 처리 → 출력}
-{관련 함수/클래스 시그니처와 역할}
-
-### 영향 범위
-{호출자/피호출자 의존 관계}
-{관련 테스트 파일}
-
-## 2. 구현 계획
-
-### 변경 파일
-| # | 파일 경로 | 변경 내용 |
-|---|----------|----------|
-
-### 핵심 설계
-{클래스/함수 시그니처, 변경 포인트 등}
-
-## 3. 실행 체크리스트
-
-- [ ] Step 1: {제목} — {파일} — {작업 내용}
-- [ ] Step 2: ...
-
-## 4. QA 체크리스트
-
-### 기능 테스트
-- [ ] {항목}
-
-### 회귀 테스트
-- [ ] {항목}
-
-### 코드 품질
-- [ ] {항목}
-```
-
-### 에스컬레이션 확인
-
-PLAN 작성 중 아래 상황이 발생하면 에스컬레이션을 제안한다:
-- 예상 변경 파일 ≥10개
-- 다단계 기술 의사결정 필요
-- 다중 모듈 간 연쇄 영향
-
-### 워커 완료 시
-
-워커가 PLAN.md를 반환하면, **오케스트레이터가 QA 에이전트를 호출**한다. QA 결과를 포함하여 사용자에게 보고.
-
-```
-📋 [PLAN] 완료 보고
-
-📎 산출물: tasks/{NNN}-{태스크명}/PLAN.md
-📎 QA 리뷰: tasks/{NNN}-{태스크명}/QA-PLAN.md
-
-[QA 요약]
-- 검증 항목 {N}개 중 {통과}개 Pass, {경고}개 Warning
-- 판정: {✅ Pass / ⚠️ Needs Revision}
-
-승인하시면 TEST-SCENARIO 작성으로 넘어갑니다.
-```
-
----
-
-## STEP 3 (Short): TEST-SCENARIO (테스트 시나리오)
-
-PLAN.md가 사용자의 승인을 받으면, **오케스트레이터가 TEST-SCENARIO 워커를 디스패치한다.**
-
-> **워커 디스패치**: 단계=TEST-SCENARIO, 이전 산출물=TASK.md+PLAN.md, 가이드=test-scenario-guide.md, 산출물=TEST-SCENARIO.md
-
-**상세 가이드**: `references/test-scenario-guide.md`를 읽고 따른다.
-
-워커 완료 시 사용자에게 보고:
-
-```
-📋 [TEST-SCENARIO] 완료 보고
-
-📎 산출물: tasks/{NNN}-{태스크명}/TEST-SCENARIO.md
-
-승인하시면 EXECUTE를 시작합니다.
-```
-
----
-
-## STEP 4 (Short): EXECUTE (실행)
-
-TEST-SCENARIO.md가 사용자의 승인을 받으면, **오케스트레이터가 EXECUTE 워커를 디스패치한다.**
-
-> **워커 디스패치**: 단계=EXECUTE-SHORT, 이전 산출물=TASK.md+PLAN.md, 가이드=execute-guide.md, 산출물=코드 변경
-
-**상세 가이드**: `references/execute-guide.md`를 읽고 따른다.
-
-### 체크리스트 갱신 규칙
-
-워커가 각 Step 완료 시 PLAN.md의 실행 체크리스트를 즉시 갱신한다:
-- `- [ ] Step N: ...` → `- [x] Step N: ...`
-
-**QA 체크리스트 갱신**: 모든 실행 Step 완료 후, test 에이전트 호출 전에 워커가 QA 체크리스트(섹션 4)의 각 항목을 실제 검증하고 체크박스를 갱신한다:
-- 통과 항목: `- [ ]` → `- [x]`
-- 미통과 항목: `- [ ]` 유지 + 사유를 인라인 주석으로 기록 (예: `- [ ] 항목 <!-- 사유: ... -->`)
-
-### 실행 흐름
-
-1. 워커가 PLAN.md의 실행 체크리스트(섹션 3)를 순서대로 실행
-2. 각 Step 완료 시: PLAN.md 체크박스 갱신
-3. 블로커 발생 시 즉시 오케스트레이터에 반환
-4. 모든 Step 완료 후:
-   - QA 체크리스트(섹션 4)를 검증하고 체크박스 갱신 (통과: `[x]`, 미통과: `[ ]` + 사유)
-   - 결과 반환 → **오케스트레이터가**:
-     - **dtp-test 에이전트 호출** → TEST-SCENARIO.md에 결과 채움 + 판정
-     - **DONE.md 생성** (완료 리포트 규칙 참조)
-     - 사용자에게 완료 보고
-
----
-
-# ═══════════════════════════════════════
-# 공통 규칙
-# ═══════════════════════════════════════
 
 ## 완료 리포트 (DONE.md) 생성 규칙
 
 ### 생성 시점
-dtp-test 에이전트 호출 완료 후, 최종 완료 보고 직전에 생성한다.
+모든 모드에서 최종 검증 완료 후, 완료 보고 직전에 생성한다.
 
 ### 생성 주체
-**오케스트레이터**가 생성한다. 오케스트레이터는 모든 단계 결과(TASK, PLAN, EXECUTE, QA)를 알고 있으므로 종합 리포트를 작성할 수 있다.
+**오케스트레이터**가 생성한다.
 
 ### 저장 경로
 `tasks/{NNN}-{태스크명}/DONE.md`
@@ -817,7 +459,7 @@ dtp-test 에이전트 호출 완료 후, 최종 완료 보고 직전에 생성�
 ```markdown
 # DONE: {태스크 제목}
 
-> 완료일: YYYY-MM-DD | 모드: {Full Task / Short Task} | 작업 유형: {신규/개선/수정/오류}
+> 완료일: YYYY-MM-DD | 모드: {Full Task / Short Task / Wireframe UI} | 작업 유형: {신규/개선/수정/오류/Wireframe UI}
 
 ## 완료 요약
 {작업 결과를 1~3문장으로 요약}
@@ -833,8 +475,7 @@ dtp-test 에이전트 호출 완료 후, 최종 완료 보고 직전에 생성�
 {변경 후 상태/동작}
 
 ## 테스트 결과
-{TEST-SCENARIO.md 판정: All Pass / Partial Fail / Critical Fail}
-{시나리오 N/M Pass, 회귀 테스트 결과, 코드 품질 결과}
+{TEST-SCENARIO.md 판정 또는 QA-EXECUTE-UI.md 판정}
 
 ## 산출물 목록
 | 파일 | 설명 |
@@ -855,8 +496,8 @@ dtp-test 에이전트 호출 완료 후, 최종 완료 보고 직전에 생성�
 > 최종 갱신: YYYY-MM-DD HH:mm
 
 ## 현재 상태
-- 모드: {Full Task / Short Task}
-- 단계: {TASK / ANALYSIS / PLAN / TODO / EXECUTE}
+- 모드: {Full Task / Short Task / Wireframe UI}
+- 단계: {TASK / ANALYSIS / PLAN / TODO / WIREFRAME / EXECUTE}
 - 진행: {Step N/M 완료 (EXECUTE 시) / 완료 (비-EXECUTE 시)}
 - 상태: {진행 중 / 대기 중 / 블로커 / 완료}
 
@@ -865,8 +506,9 @@ dtp-test 에이전트 호출 완료 후, 최종 완료 보고 직전에 생성�
 |--------|------|
 | TASK.md | {완료 / 미생성} |
 | ANALYSIS.md | {완료 / 미생성 / 해당없음} |
-| PLAN.md | {완료 / 진행 중 / 미생성} |
+| PLAN.md | {완료 / 진행 중 / 미생성 / 해당없음} |
 | TODO.md | {완료 / 미생성 / 해당없음} |
+| wireframe.md | {완료 / 미생성 / 해당없음} |
 | QA-*.md | {완료 / 미생성} |
 | DONE.md | {완료 / 미생성} |
 
@@ -897,11 +539,8 @@ dtp-test 에이전트 호출 완료 후, 최종 완료 보고 직전에 생성�
 | 의사결정 발생 | 오케스트레이터/워커 | `의사결정 로그` 행 추가 |
 | 블로커 발생 | 워커 | `상태: 블로커`, `블로커` 섹션 갱신 |
 | 사용자 피드백 (미반영) | 오케스트레이터 | `사용자 지시 (미반영)` 섹션 갱신 |
-| 사용자 피드백 반영 완료 | 오케스트레이터/워커 | `사용자 지시 (미반영)` 클리어 |
 | QA 완료 | 오케스트레이터 | `완료 산출물`에 QA 상태 추가 |
 | DONE.md 생성 | 오케스트레이터 | `상태: 완료`, 전체 갱신 |
-
-**갱신 방법**: Edit 도구로 해당 섹션만 교체 (1회 Edit 수준 오버헤드)
 
 ### STATE.md 복원 프로토콜
 
@@ -923,14 +562,13 @@ dtp-test 에이전트 호출 완료 후, 최종 완료 보고 직전에 생성�
 
 ## 게이트 체크포인트 규칙
 
-### QA가 있는 단계 (ANALYSIS, PLAN)
+### QA가 있는 단계
 
 ```
 📋 [{단계명}] 완료 보고
 
 📎 산출물: tasks/{NNN}-{태스크명}/{단계}.md
 📎 QA 리뷰: tasks/{NNN}-{태스크명}/QA-{단계}.md
-📎 완료 리포트: tasks/{NNN}-{태스크명}/DONE.md  ← EXECUTE 단계만
 
 [QA 요약]
 - 검증 항목 {N}개 중 {통과}개 Pass, {경고}개 Warning
@@ -940,7 +578,7 @@ dtp-test 에이전트 호출 완료 후, 최종 완료 보고 직전에 생성�
 다음 단계({다음 단계명})로 넘어갈까요?
 ```
 
-### QA가 없는 단계 (TASK, TODO)
+### QA가 없는 단계
 
 ```
 📋 [{단계명}] 완료 보고
@@ -972,62 +610,37 @@ dtp-test 에이전트 호출 완료 후, 최종 완료 보고 직전에 생성�
 
 ### 태스크 상태 추적
 
-오케스트레이터는 각 태스크의 상태를 STATE.md를 통해 추적한다:
-- 현재 단계 (TASK / ANALYSIS / PLAN / TODO / EXECUTE)
-- 워커 상태 (진행 중 / 대기 / 완료)
-- 블로커 여부
-- EXECUTE 진행률 (Step N/M)
-
-STATE.md가 있으면 정확한 상태를 즉시 파악할 수 있다. STATE.md가 없으면 `tasks/` 폴더의 산출물 존재 여부로 상태를 추론한다 (폴백). 예: ANALYSIS.md가 있고 PLAN.md가 없으면 → PLAN 단계 진입 가능.
-
-### 통합 보고
-
-사용자 요청 시 전체 태스크의 상태를 일괄 보고한다:
-```
-📋 태스크 현황
-
-1. tasks/010-auth-feature/ — EXECUTE 진행 중 (워커 실행 중)
-2. tasks/011-bugfix-token/ — PLAN 검토 대기 (사용자 승인 필요)
-3. tasks/012-ui-redesign/ — ANALYSIS 완료 (QA 진행 중)
-```
+오케스트레이터는 각 태스크의 상태를 STATE.md를 통해 추적한다. STATE.md가 없으면 `tasks/` 폴더의 산출물 존재 여부로 상태를 추론한다 (폴백).
 
 ### 파일 충돌 경고
 
-여러 태스크의 EXECUTE 워커가 같은 파일을 수정하려 할 때, 오케스트레이터가 경고한다:
-- EXECUTE 워커 디스패치 전 다른 태스크의 변경 파일 범위를 확인
-- 충돌 가능성이 있으면 사용자에게 경고하고 실행 순서를 제안
+여러 태스크의 EXECUTE 워커가 같은 파일을 수정하려 할 때, 오케스트레이터가 경고한다.
 
 ---
 
-## 실행 모드
+## 실행 모드 예시
 
-### 전체 실행 — Full Task
+### Full Task
 ```
 사용자: "새 태스크: 사용자 인증 기능 개발"
-→ TASK(직접) → (검토) → [워커: ANALYSIS] → QA → (검토)
-→ [워커: PLAN] → QA → (검토) → [워커: TODO] → (승인)
-→ [워커: TEST-SCENARIO 작성] → (검토/승인) → [워커: EXECUTE] → [test 호출] → 완료
+→ TASK(직접) → (검토) → [dtp-dev-full-agent: ANALYSIS] → QA → (검토)
+→ [dtp-dev-full-agent: PLAN] → QA → (검토) → [dtp-dev-full-agent: TODO] → (승인)
+→ [dtp-dev-full-agent: TEST-SCENARIO] → (검토/승인) → [dtp-dev-full-agent: EXECUTE] → [dtp-dev-test-agent] → 완료
 ```
 
-### 전체 실행 — Short Task
+### Short Task
 ```
 사용자: "버그 수정: 로그인 시 토큰 만료 에러"
-→ TASK(직접) → (검토) → [워커: PLAN 통합] → QA → (검토)
-→ [워커: TEST-SCENARIO 작성] → (검토/승인) → [워커: EXECUTE] → [test 호출] → 완료
+→ TASK(직접) → (검토) → [dtp-dev-short-agent: PLAN 통합] → QA → (검토)
+→ [dtp-dev-short-agent: TEST-SCENARIO] → (검토/승인) → [dtp-dev-short-agent: EXECUTE] → [dtp-dev-test-agent] → 완료
 ```
 
-### 다중 태스크 동시 실행
+### Wireframe UI
 ```
-사용자: "태스크 A 검토 대기 중에 태스크 B 시작"
-→ 태스크 A: [워커: PLAN] 완료 → 사용자 검토 대기
-→ 태스크 B: TASK(직접) → [워커: ANALYSIS] (백그라운드 실행)
-→ 사용자: "태스크 A 승인" → [워커: TODO] 디스패치
-```
-
-### 단계별 실행
-```
-사용자: "인증 기능 ANALYSIS만 해줘"
-→ 기존 TASK.md 참조 → [워커: ANALYSIS]만 실행 → 보고
+사용자: "대시보드 UI 만들어줘" + 정책서.md 제공
+→ TASK(직접, wireframe-task-guide 참조) → (검토)
+→ [dtp-wireframe-ui-agent: WIREFRAME] → [dtp-qa-wireframe-agent] → (검토)
+→ [dtp-wireframe-ui-agent: EXECUTE] → [dtp-qa-wireframe-agent] → 완료
 ```
 
 ### 이어하기

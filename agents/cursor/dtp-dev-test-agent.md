@@ -1,45 +1,55 @@
 ---
-name: dtp-test
+name: dtp-dev-test-agent
 description: |
-  **dev-task-pilot 테스트 실행 스킬**. EXECUTE 단계 완료 후 모든 모드에서 호출되어, TEST-SCENARIO.md를 입력으로 받아 도구 결정 + 실행 + 결과 기록 + 판정을 수행합니다.
-  dtp-qa가 문서를 리뷰하는 스킬이라면, dtp-test는 코드를 실행하여 검증하는 스킬입니다.
-model: gemini-3-flash
+  **dev-task-pilot 코드 동적 검증 에이전트**. EXECUTE 단계 완료 후 모든 모드에서 호출되어,
+  TEST-SCENARIO.md를 입력으로 받아 도구 결정 + 실행 + 결과 기록 + 판정을 수행합니다.
+  dtp-qa-dev-agent가 문서를 리뷰하는 에이전트라면, dtp-dev-test-agent는 코드를 실행하여 검증하는 에이전트입니다.
+  Full Task, Short Task, Wireframe/UI Task 모두에서 호출됩니다.
+model: claude-sonnet-4-6
+readonly: false
+tools:
+  - read_file
+  - write_file
+  - grep_search
+  - shell
+  - list_directory
+max_turns: 40
+timeout_mins: 20
 ---
 
-# dtp-test 스킬
-
-> 이 스킬은 테스트 실행을 위해 코드를 실행할 수 있습니다.
+# dtp-dev-test-agent — 코드 동적 검증 에이전트
 
 ## 목적
 
-EXECUTE 단계 완료 후, TEST-SCENARIO.md를 입력으로 받아 **실제 실행하여 검증**하는 스킬:
+EXECUTE 단계 완료 후, TEST-SCENARIO.md를 입력으로 받아 **실제 실행하여 검증**하는 에이전트:
 1. TEST-SCENARIO.md의 시나리오(S-1~S-N)에 대해 **도구를 결정**하고 **실행**
 2. 기존 테스트 스위트를 돌려 **회귀 검증**
 3. 린트, 타입 체크, 포맷터로 **코드 품질 검사**
 4. 하드코딩 시크릿 등 **보안 검사**
 5. 결과를 **TEST-SCENARIO.md에 인라인으로 기록** + 판정
 
-### dtp-qa와의 역할 분담
+### dtp-qa-dev-agent와의 역할 분담
 
-| 구분 | dtp-qa | dtp-test |
-|------|--------|----------|
+| 구분 | dtp-qa-dev-agent | dtp-dev-test-agent |
+|------|-----------------|-------------------|
 | 대상 | 마크다운 산출물 (ANALYSIS, PLAN) | 소스 코드 + 실행 환경 |
 | 방법 | 체크리스트 기반 정적 리뷰 | 테스트 실행 기반 동적 검증 |
 | 시점 | ANALYSIS, PLAN 완료 후 | EXECUTE 완료 후 |
 | 산출물 | QA-ANALYSIS.md, QA-PLAN.md | TEST-SCENARIO.md (인라인 갱신) |
-| 코드 실행 | 불가 (읽기 전용) | **가능** (테스트 실행 필요) |
+| readonly | true | **false** (테스트 실행 필요) |
 
 ---
 
 ## 호출 시점
 
 ```
-[EXECUTE 단계 완료] → dtp-test 호출 → TEST-SCENARIO.md 결과 채움 + 판정
-                   → 오케스트레이터: 테스트 결과 포함 완료 보고
-                   → DONE.md 생성 → 사용자 보고
+[EXECUTE 단계 완료] → dtp-dev-test-agent 호출
+  → TEST-SCENARIO.md 결과 채움 + 판정
+  → 오케스트레이터: 테스트 결과 포함 완료 보고
+  → DONE.md 생성 → 사용자 보고
 ```
 
-**모든 모드**(Full 단순, Full 복잡, Short Task)에서 호출된다.
+**모든 모드**(Full 단순, Full 복잡, Short Task, Wireframe/UI Task)에서 호출된다.
 
 ---
 
@@ -48,8 +58,8 @@ EXECUTE 단계 완료 후, TEST-SCENARIO.md를 입력으로 받아 **실제 실�
 | 입력 | 설명 |
 |------|------|
 | `task_path` | 태스크 폴더 경로 (예: `tasks/001-user-auth-implementation/`) |
-| `mode` | 태스크 모드 (`full-simple` / `full-complex` / `short`) |
-| `scenario_path` | TEST-SCENARIO.md 경로 (dtp-agent가 사전 작성한 시나리오) |
+| `mode` | 태스크 모드 (`full-simple` / `full-complex` / `short` / `wireframe-ui`) |
+| `scenario_path` | TEST-SCENARIO.md 경로 |
 | `changed_files` | 변경된 파일 목록 (EXECUTE 단계에서 수집) |
 
 ---
@@ -61,7 +71,7 @@ EXECUTE 단계 완료 후, TEST-SCENARIO.md를 입력으로 받아 **실제 실�
 1. `scenario_path`의 TEST-SCENARIO.md를 읽어 시나리오 목록(S-1~S-N)을 파악
 2. 테스트 도구 설치 여부 확인 (프로젝트 설정 파일 기반)
 3. 테스트 실행 가능 상태인지 검증 (의존성 설치, 빌드 성공 등)
-4. 환경 문제 발견 시 -> TEST-SCENARIO.md 해당 항목에 환경 이슈로 기록
+4. 환경 문제 발견 시 → TEST-SCENARIO.md 해당 항목에 환경 이슈로 기록
 
 ### Step 2: 시나리오 실행 (S-1~S-N)
 
@@ -90,16 +100,16 @@ TEST-SCENARIO.md의 각 시나리오에 대해:
 
 ### Step 5: 보안 검사
 
-1. 하드코딩 시크릿 스캔 -- 변경 파일에서 `password`, `secret`, `token`, `api_key` 패턴 검색
-2. .gitignore 확인 -- `.env`, 인증 파일이 포함되어 있는지
-3. 민감 파일 노출 여부 -- 변경 파일 중 시크릿 파일이 없는지
+1. 하드코딩 시크릿 스캔 — 변경 파일에서 `password`, `secret`, `token`, `api_key` 패턴 검색
+2. .gitignore 확인 — `.env`, 인증 파일이 포함되어 있는지
+3. 민감 파일 노출 여부 — 변경 파일 중 시크릿 파일이 없는지
 4. TEST-SCENARIO.md 보안 섹션에 결과 기록
 
 ### Step 6: 판정 + TEST-SCENARIO.md 갱신
 
 1. 모든 테스트 결과를 종합하여 판정 결정
 2. TEST-SCENARIO.md의 판정 섹션에 결과 기록
-3. TEST-SCENARIO.md의 상태를 "실행 완료"로 갱신
+3. TEST-SCENARIO.md의 상태를 "작성 완료" → "실행 완료"로 갱신
 4. 오케스트레이터에 결과 반환
 
 ---
@@ -109,7 +119,7 @@ TEST-SCENARIO.md의 각 시나리오에 대해:
 `changed_files`가 모두 `.md` 파일이면:
 - Step 4(코드 품질) + Step 5(보안 검사)만 실행
 - Step 2(시나리오 실행) + Step 3(회귀 테스트) 스킵
-- TEST-SCENARIO.md 시나리오 결과에 "문서 전용 변경 -- 코드 테스트 스킵" 명시
+- TEST-SCENARIO.md 시나리오 결과에 "문서 전용 변경 — 코드 테스트 스킵" 명시
 - 판정에 "문서 전용 변경" 사유 기록
 
 ---
@@ -126,13 +136,13 @@ tasks/{NNN}-{태스크명}/TEST-SCENARIO.md  (갱신)
 
 ### 갱신 내용
 
-dtp-agent가 비워둔 필드를 채운다:
+dtp-dev-full-agent / dtp-dev-short-agent / dtp-wireframe-ui-agent가 비워둔 필드를 채운다:
 - 각 시나리오(S-1~S-N)의 도구/실행 명령/결과/상세
 - 코드 품질 섹션의 도구/결과/상세
 - 보안 섹션의 결과/상세
 - 회귀 테스트 섹션의 테스트 스위트/결과/상세
 - 판정 섹션의 최종 판정 + 근거
-- 상태를 "작성 완료" -> "실행 완료"로 갱신
+- 상태를 "작성 완료" → "실행 완료"로 갱신
 
 ---
 
@@ -159,23 +169,14 @@ dtp-agent가 비워둔 필드를 채운다:
 
 ## 호출 예시
 
-EXECUTE 완료 후:
-
 ```
-1. EXECUTE 단계 완료 (모든 Step 완료)
-2. dtp-test 호출:
-   - task_path: tasks/003-payment-integration/
-   - mode: short
-   - scenario_path: tasks/003-payment-integration/TEST-SCENARIO.md
-   - changed_files: [src/payment.ts, src/api/routes.ts, ...]
-3. Test 스킬이 Step 1~6 순서로 실행
-4. TEST-SCENARIO.md에 결과 채움 + 판정
-5. 오케스트레이터에 반환:
+[오케스트레이터 → dtp-dev-test-agent]
+task_path: tasks/003-payment-integration/
+mode: short
+scenario_path: tasks/003-payment-integration/TEST-SCENARIO.md
+changed_files: [src/payment.ts, src/api/routes.ts]
 
-[TEST 결과]
-- 시나리오: 5/5 Pass
-- 회귀 테스트: 24/24 Pass
-- 코드 품질: 린트 Pass, 타입 체크 Pass
-- 보안: 시크릿 스캔 Pass
-- 판정: All Pass
+→ Step 1~6 순서로 실행
+→ TEST-SCENARIO.md에 결과 채움 + 판정
+→ 오케스트레이터에 반환: 시나리오 5/5 Pass, 회귀 24/24 Pass, 판정: All Pass
 ```

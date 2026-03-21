@@ -33,7 +33,9 @@ AI 환경(Claude Code, Cursor, Codex 등)에서 IT 프로젝트를 체계적으�
 
 ```
 skills/                          ← 프레임워크 스킬 (단일 소스, 3개 플랫폼 공용)
-├── dev-task-pilot/              핵심 오케스트레이터: TASK → ANALYSIS → PLAN → TODO → EXECUTE
+├── dev-task-pilot/              핵심 오케스트레이터: Full Task / Short Task / Wireframe UI 멀티 모드
+│   ├── modes/                   모드별 파이프라인 (dev-full.md, dev-short.md, wireframe-ui.md)
+│   └── references/              단계별 가이드 (analysis-guide.md, plan-guide.md 등)
 ├── api-analyzer/                외부 API 7단계 분석 및 명세서 생성
 ├── doc-writer/                  기술 문서 표준 템플릿 (모든 문서 스킬의 베이스)
 ├── interview/                   구조화된 Q&A 요구사항 수집
@@ -43,20 +45,29 @@ skills/                          ← 프레임워크 스킬 (단일 소스, 3개
 
 agents/                          ← 에이전트 (플랫폼별 포맷 분리)
 ├── claude/                      ← AGENT.md 디렉토리 기반
-│   ├── dtp-agent/               워커 에이전트 (각 단계 실행)
-│   ├── dtp-qa/                  산출물 품질 검증
-│   ├── dtp-planner/             실행 아키텍처 설계
-│   └── dtp-test/                코드 동적 검증
+│   ├── dtp-dev-full-agent/      Full Task 워커 에이전트
+│   ├── dtp-dev-short-agent/     Short Task 워커 에이전트
+│   ├── dtp-wireframe-ui-agent/  Wireframe UI 워커 에이전트
+│   ├── dtp-qa-dev-agent/        Full/Short 문서 QA
+│   ├── dtp-qa-wireframe-agent/  Wireframe UI QA
+│   ├── dtp-action-plan-agent/   실행 아키텍처 설계 (Part C)
+│   └── dtp-dev-test-agent/      코드 동적 검증
 ├── cursor/                      ← 플랫 파일 형식 (.md)
-│   ├── dtp-agent.md
-│   ├── dtp-qa.md
-│   ├── dtp-planner.md
-│   └── dtp-test.md
+│   ├── dtp-dev-full-agent.md
+│   ├── dtp-dev-short-agent.md
+│   ├── dtp-wireframe-ui-agent.md
+│   ├── dtp-qa-dev-agent.md
+│   ├── dtp-qa-wireframe-agent.md
+│   ├── dtp-action-plan-agent.md
+│   └── dtp-dev-test-agent.md
 └── antigravity/                 ← SKILL.md로 통합
-    ├── dtp-agent/
-    ├── dtp-qa/
-    ├── dtp-planner/
-    └── dtp-test/
+    ├── dtp-dev-full-agent/
+    ├── dtp-dev-short-agent/
+    ├── dtp-wireframe-ui-agent/
+    ├── dtp-qa-dev-agent/
+    ├── dtp-qa-wireframe-agent/
+    ├── dtp-action-plan-agent/
+    └── dtp-dev-test-agent/
 
 community-skills/                ← 외부 커뮤니티 스킬 (기본 번들 31개)
 ├── anthropics/                  Anthropic 공식 (18개)
@@ -123,7 +134,7 @@ cursor-rules/                    ← Cursor 프로젝트 규칙 템플릿
 | 유형 | 설명 | 현재 상태 |
 |------|------|----------|
 | **Skills** | 특정 작업을 수행하는 절차적 가이드 (SKILL.md) | `skills/` 7개 + `community-skills/` 31개 |
-| **Agents** | 독립 컨텍스트에서 자율 실행하는 에이전트 (AGENT.md) | `agents/` 4개 × 3 플랫폼 |
+| **Agents** | 독립 컨텍스트에서 자율 실행하는 에이전트 (AGENT.md) | `agents/` 7개 × 3 플랫폼 |
 | **Hooks** | 이벤트 기반으로 자동 실행되는 트리거 | 확장 예정 |
 
 ### 컴포넌트 간 의존 관계
@@ -132,10 +143,13 @@ cursor-rules/                    ← Cursor 프로젝트 규칙 템플릿
 - **version-mgr** → 산출물을 생성·수정하는 모든 스킬에 적용
 - **interview** → 요구사항 불명확 시 다른 스킬에서 호출
 - **dev-task-pilot** → 개발 작업의 주 진입점 (5단계 파이프라인)
-- **dtp-agent** → dev-task-pilot의 각 단계를 독립 컨텍스트에서 실행하는 워커 에이전트
-- **dtp-qa** → dev-task-pilot 각 단계 완료 후 오케스트레이터가 호출하는 QA 에이전트
-- **dtp-planner** → dev-task-pilot TODO 단계에서 복잡 모드 시 실행 아키텍처 설계
-- **dtp-test** → dev-task-pilot EXECUTE 단계에서 복잡 모드 시 코드 동적 검증
+- **dtp-dev-full-agent** → Full Task 워커 (ANALYSIS/PLAN/TODO/EXECUTE)
+- **dtp-dev-short-agent** → Short Task 워커 (PLAN/TEST-SCENARIO/EXECUTE)
+- **dtp-wireframe-ui-agent** → Wireframe UI 워커 (WIREFRAME/EXECUTE, wireframe-builder + ui-designer 호출)
+- **dtp-qa-dev-agent** → Full/Short Task 산출물 QA
+- **dtp-qa-wireframe-agent** → Wireframe UI QA (wireframe.md 검증 + 빌드/린트 + 코드 대조)
+- **dtp-action-plan-agent** → Full Task TODO 복잡 모드 시 실행 아키텍처 설계
+- **dtp-dev-test-agent** → Full/Short EXECUTE 완료 후 코드 동적 검증
 
 ## 새 컴포넌트 작성 가이드
 

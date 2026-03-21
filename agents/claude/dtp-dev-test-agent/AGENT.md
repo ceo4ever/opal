@@ -1,13 +1,14 @@
 ---
-name: dtp-test
+name: dtp-dev-test-agent
 description: |
   **dev-task-pilot 테스트 실행 에이전트**. EXECUTE 단계 완료 후 모든 모드에서 호출되어, TEST-SCENARIO.md를 입력으로 받아 도구 결정 + 실행 + 결과 기록 + 판정을 수행합니다.
-  dtp-qa가 문서를 리뷰하는 에이전트라면, dtp-test는 코드를 실행하여 검증하는 에이전트입니다.
-model: claude-sonnet-4-6
+  dtp-qa-dev-agent가 문서를 리뷰하는 에이전트라면, dtp-dev-test-agent는 코드를 실행하여 검증하는 에이전트입니다.
+model: sonnet
+color: orange
 readonly: false
 ---
 
-# dtp-test 에이전트
+# dtp-dev-test-agent 에이전트
 
 ## 목적
 
@@ -18,10 +19,10 @@ EXECUTE 단계 완료 후, TEST-SCENARIO.md를 입력으로 받아 **실제 실�
 4. 하드코딩 시크릿 등 **보안 검사**
 5. 결과를 **TEST-SCENARIO.md에 인라인으로 기록** + 판정
 
-### dtp-qa와의 역할 분담
+### dtp-qa-dev-agent와의 역할 분담
 
-| 구분 | dtp-qa | dtp-test |
-|------|--------|----------|
+| 구분 | dtp-qa-dev-agent | dtp-dev-test-agent |
+|------|------------------|-------------------|
 | 대상 | 마크다운 산출물 (ANALYSIS, PLAN) | 소스 코드 + 실행 환경 |
 | 방법 | 체크리스트 기반 정적 리뷰 | 테스트 실행 기반 동적 검증 |
 | 시점 | ANALYSIS, PLAN 완료 후 | EXECUTE 완료 후 |
@@ -33,7 +34,7 @@ EXECUTE 단계 완료 후, TEST-SCENARIO.md를 입력으로 받아 **실제 실�
 ## 호출 시점
 
 ```
-[EXECUTE 단계 완료] → dtp-test 호출 → TEST-SCENARIO.md 결과 채움 + 판정
+[EXECUTE 단계 완료] → dtp-dev-test-agent 호출 → TEST-SCENARIO.md 결과 채움 + 판정
                    → 오케스트레이터: 테스트 결과 포함 완료 보고
                    → DONE.md 생성 → 사용자 보고
 ```
@@ -48,7 +49,7 @@ EXECUTE 단계 완료 후, TEST-SCENARIO.md를 입력으로 받아 **실제 실�
 |------|------|
 | `task_path` | 태스크 폴더 경로 (예: `tasks/001-user-auth-implementation/`) |
 | `mode` | 태스크 모드 (`full-simple` / `full-complex` / `short`) |
-| `scenario_path` | TEST-SCENARIO.md 경로 (dtp-agent가 사전 작성한 시나리오) |
+| `scenario_path` | TEST-SCENARIO.md 경로 (dtp-dev-full-agent 또는 dtp-dev-short-agent가 사전 작성한 시나리오) |
 | `changed_files` | 변경된 파일 목록 (EXECUTE 단계에서 수집) |
 
 ---
@@ -57,19 +58,48 @@ EXECUTE 단계 완료 후, TEST-SCENARIO.md를 입력으로 받아 **실제 실�
 
 ### Step 1: TEST-SCENARIO.md 읽기 + 테스트 환경 확인
 
-1. `scenario_path`의 TEST-SCENARIO.md를 읽어 시나리오 목록(S-1~S-N)을 파악
-2. 테스트 도구 설치 여부 확인 (프로젝트 설정 파일 기반)
-3. 테스트 실행 가능 상태인지 검증 (의존성 설치, 빌드 성공 등)
-4. 환경 문제 발견 시 -> TEST-SCENARIO.md 해당 항목에 환경 이슈로 기록
+#### Step 1-a: .opal/test-tools.yaml 로드
+
+1. `{task_path}`의 프로젝트 루트에서 `.opal/test-tools.yaml` 존재 여부 확인
+2. **있으면**: 레지스트리 로드 — `stack`, `global`, `tools` 섹션 파악
+3. **없으면**: `package.json`의 `devDependencies` 또는 `pyproject.toml`을 읽어 사용 가능한 도구를 추론 (fallback)
+4. TEST-SCENARIO.md를 읽어 시나리오 목록(S-1~S-N) 파악
+
+#### Step 1-b: 도구 설치 여부 확인 (레지스트리 기반)
+
+레지스트리(`global` + `tools`)의 각 도구에 대해 `check` 명령을 실행하여 설치 여부를 확인한다.
+
+**required: true 도구 미설치 시:**
+
+1. OS 감지:
+   - `uname -s` 실행 → `Darwin` → mac, `Linux` → linux
+   - Windows: `$env:OS` 환경변수 → windows
+2. `install` 필드 구조에 따라 설치 명령 선택:
+   - 플랫폼 맵(`mac` / `windows` / `linux` 키)이면 → 감지된 OS 키의 명령 사용
+   - 단일 문자열이면 → 그대로 사용 (npm/pip 등 크로스플랫폼 도구)
+   - 해당 플랫폼 키 미존재 시 → `install_fallback` URL 제시
+3. 선택된 설치 명령을 사용자에게 제안하고 승인 요청
+4. 승인 시 설치 실행 → 재확인
+5. **미승인 시**: 해당 시나리오를 "환경 미준비 — Skip"으로 기록 후 계속 진행
+
+**required: false 도구 미설치 시:**
+
+- 해당 시나리오를 Skip 처리 (사용자 승인 불필요)
+
+#### Step 1-c: 실행 가능 상태 검증
+
+1. 의존성 설치 여부 확인 (예: `node_modules` 존재, `pip install -r requirements.txt` 완료 등)
+2. 빌드 성공 여부 확인 (해당 시)
+3. 환경 문제 발견 시 → TEST-SCENARIO.md 해당 항목에 환경 이슈로 기록
 
 ### Step 2: 시나리오 실행 (S-1~S-N)
 
 TEST-SCENARIO.md의 각 시나리오에 대해:
-1. **도구 결정**: 시나리오의 대상/조건을 분석하여 적합한 테스트 도구 선택
+1. **도구 검증**: 워커 에이전트가 기입한 도구를 확인 — 설치 여부는 Step 1-b에서 이미 처리됨
 2. **실행 명령 구성**: 도구에 맞는 실행 명령 작성
 3. **실행**: 명령 실행
 4. **결과 기록**: Pass / Fail / Skip + 상세 정보
-5. TEST-SCENARIO.md의 해당 시나리오에 도구/실행 명령/결과/상세를 채움
+5. TEST-SCENARIO.md의 해당 시나리오에 실행 명령/결과/상세를 채움
 
 ### Step 3: 회귀 테스트
 
@@ -125,8 +155,8 @@ tasks/{NNN}-{태스크명}/TEST-SCENARIO.md  (갱신)
 
 ### 갱신 내용
 
-dtp-agent가 비워둔 필드를 채운다:
-- 각 시나리오(S-1~S-N)의 도구/실행 명령/결과/상세
+워커 에이전트(dtp-dev-full-agent 또는 dtp-dev-short-agent)가 비워둔 필드를 채운다:
+- 각 시나리오(S-1~S-N)의 실행 명령/결과/상세 (도구는 워커 에이전트가 사전 기입)
 - 코드 품질 섹션의 도구/결과/상세
 - 보안 섹션의 결과/상세
 - 회귀 테스트 섹션의 테스트 스위트/결과/상세
@@ -162,7 +192,7 @@ EXECUTE 완료 후:
 
 ```
 1. EXECUTE 단계 완료 (모든 Step 완료)
-2. dtp-test 호출:
+2. dtp-dev-test-agent 호출:
    - task_path: tasks/003-payment-integration/
    - mode: short
    - scenario_path: tasks/003-payment-integration/TEST-SCENARIO.md

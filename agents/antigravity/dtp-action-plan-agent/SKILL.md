@@ -1,14 +1,19 @@
 ---
-name: dtp-planner
+name: dtp-action-plan-agent
 description: |
   **dev-task-pilot 실행 아키텍처 설계 에이전트**. TODO Part A(실행 체크리스트) + Part B(QA 체크리스트) 작성 완료 후 호출되어, 복잡 모드 태스크의 실행 아키텍처(Part C)를 설계합니다.
   에이전트 토폴로지, 스킬 요구사항, 도구 요구사항, 테스트 전략을 분석하여 TODO.md Part C로 출력합니다.
-model: sonnet
-color: purple
-readonly: true
+  Antigravity에서는 서브 에이전트 기능이 없으므로, 메인 에이전트가 이 SKILL.md를 Read하고 지시에 따라 직접 실행한다.
+model: gemini-3.1-pro
 ---
 
-# dtp-planner 에이전트
+# dtp-action-plan-agent (폴백 모드)
+
+## 실행 방식
+
+Antigravity에서는 서브 에이전트가 지원되지 않으므로, 오케스트레이터가 이 스킬을 Read하여 직접 실행한다.
+
+---
 
 ## 목적
 
@@ -16,7 +21,7 @@ readonly: true
 1. Step 간 의존성 분석으로 **에이전트 토폴로지** 결정 (순차/병렬)
 2. 각 에이전트가 필요로 하는 **스킬 매칭 및 갭 분석**
 3. 구현에 필요한 **외부 도구 탐색 및 제안**
-4. dtp-test 에이전트를 위한 **테스트 전략 구체화**
+4. dtp-dev-test-agent 스킬을 위한 **테스트 전략 구체화**
 
 ---
 
@@ -24,8 +29,8 @@ readonly: true
 
 ```
 [TODO Part A + B 작성 완료] → 복잡도 판별 → 복잡 모드
-  → dtp-planner 호출 → Part C 생성
-  → TODO.md (A+B+C) 완성 → QA 에이전트 호출
+  → dtp-action-plan-agent 호출 → Part C 생성
+  → TODO.md (A+B+C) 완성 → QA 스킬 호출
 ```
 
 ---
@@ -37,7 +42,7 @@ readonly: true
 | `task_path` | 태스크 폴더 경로 (예: `tasks/001-user-auth-implementation/`) |
 | `todo_path` | TODO.md 경로 (Part A + B가 이미 작성된 상태) |
 
-에이전트는 `task_path` 내의 TASK.md, ANALYSIS.md, PLAN.md를 자동으로 탐색하여 교차 참조한다.
+스킬은 `task_path` 내의 TASK.md, ANALYSIS.md, PLAN.md를 자동으로 탐색하여 교차 참조한다.
 
 ---
 
@@ -48,7 +53,7 @@ readonly: true
 1. TODO.md Part A의 모든 Step 분석 — 파일, 작업 내용, 의존성, 테스트 기준
 2. PLAN.md의 핵심 설계 확인 — 아키텍처, 구현 순서, 핵심 결정
 3. ANALYSIS.md의 기술 스택/의존성 확인 — 외부 라이브러리, API, 제약 사항
-4. 프로젝트 CLAUDE.md의 코드 컨벤션 확인 — 네이밍, 디렉토리 구조, 기술 스택
+4. 프로젝트 설정 파일의 코드 컨벤션 확인 — 네이밍, 디렉토리 구조, 기술 스택
 
 ### Step 2: 에이전트 토폴로지 설계
 
@@ -62,7 +67,7 @@ Step 간 의존성으로 DAG(방향성 비순환 그래프)를 구성하고, 관
 **각 에이전트에 대해 결정할 사항:**
 - 역할명 (예: "DB 레이어 구현", "API 라우트 구현")
 - 담당 Step 목록
-- 실행 방법: sub-agent
+- 실행 방법: 스킬 체이닝
 - 필요 컨텍스트 (어떤 산출물/파일의 어느 섹션을 읽어야 하는지)
 - 에이전트 간 실행 순서 (순차/병렬)
 
@@ -109,7 +114,7 @@ Step 간 의존성으로 DAG(방향성 비순환 그래프)를 구성하고, 관
 
 ### Step 5: 테스트 전략 설계
 
-Part B QA 체크리스트를 dtp-test 에이전트가 실행할 형태로 구체화한다.
+Part B QA 체크리스트를 dtp-dev-test-agent 스킬이 실행할 형태로 구체화한다.
 
 1. B-1 기능 테스트 → 실행 명령 + 기대 결과
 2. B-2 회귀 테스트 → 기존 테스트 스위트 경로 + 실행 명령
@@ -135,46 +140,30 @@ Part C를 TODO.md의 Part B 뒤에 추가한다.
 
 #### Agent-1: {역할명}
 - **담당 Step**: Step {X}, Step {Y}
-- **실행 방법**: sub-agent
+- **실행 방법**: 스킬 체이닝
 - **필요 컨텍스트**: {PLAN.md §N 섹션명, 기존 파일 경로 등}
 - **필요 스킬**: {스킬명 또는 "없음 (직접 구현)"}
 - **필요 도구**: {도구명 또는 "없음"}
 
-#### Agent-2: {역할명}
-- ...
-
 #### 실행 순서
-```
-[Agent-1] → [Agent-2, Agent-3 병렬] → [Agent-4] → [Test Agent]
-```
+[Agent-1] → [Agent-2, Agent-3 병렬] → [Agent-4] → [Test]
 
 ### C-2. 스킬 요구사항
 
 | 스킬 | 상태 | 용도 | 비고 |
 |------|------|------|------|
-| doc-writer | ✅ 기존 | API 문서 생성 | |
-| api-analyzer | ✅ 기존 | 외부 API 분석 | Agent-{N}에서 호출 |
-| {new-skill} | 🆕 생성 필요 | {용도} | 등록 권장 / 1회성 |
-
-#### 신규 스킬 상세 (있는 경우)
-- **이름**: {skill-name}
-- **용도**: {무엇을 하는 스킬인지}
-- **재사용성**: 높음 → `~/.claude/skills/` 등록 권장 / 낮음 → 인라인 지침
-- **SKILL.md 초안**: (간략 구조)
-- **저장 위치**: `tasks/{NNN}/skills/{name}/SKILL.md`
+| doc-writer | 기존 | API 문서 생성 | |
+| {new-skill} | 생성 필요 | {용도} | 등록 권장 / 1회성 |
 
 ### C-3. 도구 요구사항
 
 | 도구 | 유형 | 상태 | 용도 |
 |------|------|------|------|
-| {도구명} | CLI / MCP / 패키지 | ✅ 설치됨 / ⚠️ 설치 필요 / ⚠️ 설정 필요 | {용도} |
-
-#### 추천 도구 (웹 검색 결과, 있는 경우)
-- **{tool-name}**: {설명} — {추천 이유} — {설치 방법}
+| {도구명} | CLI / MCP / 패키지 | 설치됨 / 설치 필요 / 설정 필요 | {용도} |
 
 ### C-4. 테스트 전략
 
-- **테스트 에이전트**: dtp-test
+- **테스트 스킬**: dtp-dev-test-agent
 - **실행 항목**:
   | 구분 | 도구 | 대상 |
   |------|------|------|
@@ -186,39 +175,6 @@ Part C를 TODO.md의 Part B 뒤에 추가한다.
 
 ---
 
-## 동적 스킬 생성 규칙
+## Antigravity 폴백 실행 안내
 
-스킬 갭 발견 시 처리 흐름:
-
-```
-스킬 갭 발견
-  ├─ 재사용성 높음 (다른 프로젝트에서도 쓸 수 있는 범용 패턴)
-  │   ├─ SKILL.md 초안 작성 → tasks/{NNN}/skills/{name}/SKILL.md
-  │   ├─ 현재 태스크에서 사용
-  │   └─ 사용자에게 등록 요청: "~/.claude/skills/{name}/에 등록할까요?"
-  │
-  └─ 재사용성 낮음 (이 태스크 전용 패턴)
-      └─ 인라인 지침으로 에이전트 프롬프트에 직접 포함
-```
-
-**스킬 생성 기준:**
-- 3개 이상의 Step에서 동일 패턴 반복 → 스킬 후보
-- 다른 프로젝트 유형에서도 필요할 패턴 → 등록 권장
-- 프로젝트 특화 로직 → 인라인 지침
-
----
-
-## 호출 예시
-
-dev-task-pilot에서 TODO Part A+B 작성 완료, 복잡 모드 판정 후:
-
-```
-1. TODO.md (Part A + B) 작성 완료
-2. 복잡도 판별 → 복잡 모드 (Step 8개, 파일 12개, 다중 모듈)
-3. dtp-planner 호출:
-   - task_path: tasks/003-payment-integration/
-   - todo_path: tasks/003-payment-integration/TODO.md
-4. Planner가 TASK.md + ANALYSIS.md + PLAN.md 교차 참조
-5. Part C 생성 → TODO.md에 추가
-6. TODO.md (A+B+C) 완성 → QA 에이전트 호출
-```
+Antigravity에서는 내부 서브 에이전트를 실행할 수 없으므로, 메인 에이전트가 Part C 토폴로지의 배치 순서에 따라 직접 순차 실행한다. Part C 설계 결과는 실행 순서의 참조 문서로 활용된다.

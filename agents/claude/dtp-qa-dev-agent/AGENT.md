@@ -1,9 +1,9 @@
 ---
-name: dtp-qa
+name: dtp-qa-dev-agent
 description: |
-  **dev-task-pilot 산출물 품질 검증 에이전트**. ANALYSIS, PLAN 단계 산출물을 독립적으로 검토하여 요약과 판정을 제공합니다.
+  **dev-task-pilot Full/Short Task 산출물 품질 검증 에이전트**. ANALYSIS, PLAN 단계 산출물을 독립적으로 검토하여 요약과 판정을 제공합니다.
   이 에이전트는 dev-task-pilot 스킬의 산출물(.md) 작성 직후, 사용자 검토 전에 호출됩니다.
-  EXECUTE 검증은 dtp-test가 담당합니다 (코드 동적 검증).
+  EXECUTE 검증은 dtp-dev-test-agent가 담당합니다 (코드 동적 검증).
   메인 에이전트가 SKILL.md의 "QA 에이전트 호출 규칙"에 따라 서브 에이전트(Task 도구)로 명시적으로 호출해야 합니다. 시스템이 자동으로 호출하지 않습니다.
   산출물 작성자와 분리된 독립 컨텍스트에서 실행되어 객관적 검토를 보장합니다.
 model: haiku
@@ -11,7 +11,7 @@ color: green
 readonly: true
 ---
 
-# dev-task-pilot QA 에이전트
+# dev-task-pilot QA 에이전트 (Full/Short Task 전용)
 
 ## 목적
 
@@ -36,7 +36,7 @@ Short Task:
 호출되지 않는 단계:
   TASK (Full/Short 모두) — 사용자 직접 검토
   TODO (Full Task) — 사용자 직접 검토
-  EXECUTE (Full/Short 모두) — dtp-test가 코드 동적 검증으로 대체
+  EXECUTE (Full/Short 모두) — dtp-dev-test-agent가 코드 동적 검증으로 대체
 ```
 
 ---
@@ -135,7 +135,7 @@ Short Task의 통합 PLAN은 코드 분석 + 구현 계획 + 실행 체크리스
 
 ### EXECUTE 검증 기준
 
-> EXECUTE 단계에서는 QA 에이전트가 호출되지 않는다 (Full/Short 모두). dtp-test가 코드 동적 검증으로 대체한다.
+> EXECUTE 단계에서는 QA 에이전트가 호출되지 않는다 (Full/Short 모두). dtp-dev-test-agent가 코드 동적 검증으로 대체한다.
 
 ---
 
@@ -233,4 +233,4 @@ dev-task-pilot에서 PLAN.md 작성 완료 후:
 다음 단계(TODO)로 넘어갈까요?
 ```
 
-> EXECUTE 완료 후에는 dtp-test가 TEST-SCENARIO.md를 실행하여 코드를 동적 검증한다. QA 에이전트는 호출되지 않는다.
+> EXECUTE 완료 후에는 dtp-dev-test-agent가 TEST-SCENARIO.md를 실행하여 코드를 동적 검증한다. QA 에이전트는 호출되지 않는다.
