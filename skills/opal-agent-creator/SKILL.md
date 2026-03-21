@@ -79,7 +79,7 @@ create-subagents의 전체 프로세스를 실행한다:
 
 ### 개선 모드
 
-1. 기존 에이전트의 Claude 버전(`agents/claude/{name}/AGENT.md`)을 Read로 로드한다.
+1. 기존 에이전트(`agents/{name}/AGENT.md`)를 Read로 로드한다.
 2. create-subagents의 설계 원칙을 참조하여 개선 플로우를 실행한다.
 3. 사용자 피드백에 따라 반복 개선한다.
 
@@ -94,80 +94,30 @@ create-subagents의 전체 프로세스를 실행한다:
 
 Phase 1에서 완성된 Claude AGENT.md를 기준으로 3플랫폼 파일 생성 및 후처리를 수행한다. 아래 5개 항목을 순차 수행한다.
 
-### 2-1. 3플랫폼 에이전트 파일 생성
+### 2-1. 에이전트 파일 저장
 
-Phase 1에서 완성된 Claude AGENT.md를 기준으로 3개 플랫폼 파일을 생성한다.
+Phase 1에서 완성된 AGENT.md를 단일 경로에 저장한다.
 
 ```
-Claude 원본 (AGENT.md)
-  +-- 그대로 저장 --> agents/claude/{name}/AGENT.md
-  +-- Cursor 변환 --> agents/cursor/{name}.md
-  +-- Antigravity 변환 --> agents/antigravity/{name}/SKILL.md
+AGENT.md --> agents/{name}/AGENT.md
 ```
 
-#### Claude -> Cursor 변환 규칙
-
-frontmatter 변환:
-
-| Claude 필드 | Cursor 변환 |
-|-------------|------------|
-| `name` | 그대로 유지 |
-| `description` | 그대로 유지 |
-| `model` | 그대로 유지 |
-| `color` | **삭제** |
-| `tools` | 도구명 변환 (아래 테이블) |
-| -- | `readonly: false` **추가** |
-| -- | `max_turns: 50` **추가** |
-| -- | `timeout_mins: 30` **추가** |
-
-도구명 변환 테이블:
-
-| Claude | Cursor |
-|--------|--------|
-| Read | read_file |
-| Write | write_file |
-| Edit | write_file |
-| Bash | shell |
-| Grep | grep_search |
-| Glob | list_directory |
-
-본문: 그대로 유지한다.
-
-#### Claude -> Antigravity 변환 규칙
-
-frontmatter 변환:
-- `name` + `description`만 유지한다.
-- `description`에 다음 문구를 추가한다: "Antigravity에서는 서브 에이전트 기능이 없으므로, 메인 에이전트가 이 SKILL.md를 Read하고 지시에 따라 직접 실행한다."
-- `model`, `color`, `tools` 등 나머지 필드를 삭제한다.
-
-파일 변환:
-- 파일명을 `SKILL.md`로 변경한다 (AGENT.md가 아님).
-- 제목에 "(폴백 모드)"를 추가한다.
-- 제목 아래에 폴백 실행 방식 안내를 blockquote로 추가한다:
-  ```
-  > **실행 방식**: Antigravity에서는 서브 에이전트가 지원되지 않으므로, 메인 에이전트가 이 파일을 Read한 후 아래 프로세스를 직접 수행한다. 컨텍스트 격리 이점은 없으나, 동일한 절차와 규칙이 적용된다.
-  ```
-- 본문 내 도구 참조를 변환한다: Edit -> write_file 등.
+단일 포맷으로 모든 플랫폼에서 공유한다. 플랫폼별 변환은 불필요하다.
 
 ### 2-2. YAML frontmatter 보정
 
-3플랫폼 파일의 frontmatter가 규격에 맞는지 검증하고 보정한다.
+AGENT.md의 frontmatter가 규격에 맞는지 검증하고 보정한다.
 
-| 필드 | Claude | Cursor | Antigravity |
-|------|--------|--------|-------------|
-| name | kebab-case | 동일 | 동일 |
-| description | 역할 + 트리거 | 동일 | 동일 + 폴백 안내 |
-| model | inherit/sonnet/opus/haiku | 동일 | 삭제 |
-| color | 선택 (UI 색상) | 삭제 | 삭제 |
-| tools | Claude 도구명 | Cursor 도구명 변환 | 삭제 |
-| readonly | -- | false | -- |
-| max_turns | -- | 50 (기본) | -- |
-| timeout_mins | -- | 30 (기본) | -- |
+| 필드 | 설명 |
+|------|------|
+| name | kebab-case, 디렉토리명과 일치 |
+| description | 역할 + 트리거 키워드 |
+| model | inherit/sonnet/opus/haiku |
+| tools | 필요한 도구만 최소 권한 |
 
 검증 항목:
 - `name`이 kebab-case이고 디렉토리명과 일치하는가
 - `description`에 역할과 호출 시점이 명시되어 있는가
-- 플랫폼별 고유 필드가 올바르게 적용되었는가
 
 ### 2-3. 에이전트 레지스트리 등록
 
@@ -200,13 +150,11 @@ version-mgr 스킬의 규칙을 따른다.
   ```
   > 작성일: {오늘 날짜} | 버전: v1.0
   ```
-- 3개 플랫폼 파일 모두 동일 버전을 부여한다.
 
 **개선 모드:**
 - 변경 범위를 파악하여 Major/Minor를 결정한다.
   - 구조적 변경 (역할 재정의, 프로세스 추가/삭제): Major 증가
   - 내용 수정 (기존 프로세스 수정, 버그 수정): Minor 증가
-- 3개 플랫폼 파일 모두 동일 버전으로 갱신한다.
 
 ### 2-5. 탐색 경로 안내
 
@@ -214,14 +162,8 @@ version-mgr 스킬의 규칙을 따른다.
 
 ```
 탐색 경로 (우선순위):
-1. {프로젝트}/.cursor/agents/{name}.md
-2. {프로젝트}/.cursor/agents/{name}/AGENT.md
-3. {프로젝트}/.claude/agents/{name}/AGENT.md
-4. {프로젝트}/.agent/skills/{name}/SKILL.md
-5. ~/.cursor/agents/{name}.md
-6. ~/.cursor/agents/{name}/AGENT.md
-7. ~/.claude/agents/{name}/AGENT.md
-8. ~/.gemini/antigravity/skills/{name}/SKILL.md
+1. {프로젝트}/.opal/agents/{name}/AGENT.md
+2. ~/.opal/agents/{name}/AGENT.md
 ```
 
 사용자에게 호출하는 스킬의 SKILL.md 경로를 확인하고, 해당 파일에 위 탐색 경로를 추가하도록 안내한다.
@@ -232,12 +174,10 @@ version-mgr 스킬의 규칙을 따른다.
 
 Phase 2 완료 후 아래 항목을 검증한다:
 
-- [ ] Claude AGENT.md가 `agents/claude/{name}/AGENT.md`에 저장되었는가
-- [ ] Cursor 파일이 `agents/cursor/{name}.md`에 저장되었는가
-- [ ] Antigravity SKILL.md가 `agents/antigravity/{name}/SKILL.md`에 저장되었는가
-- [ ] 3플랫폼 파일의 frontmatter가 각 플랫폼 규격에 맞는가
+- [ ] AGENT.md가 `agents/{name}/AGENT.md`에 저장되었는가
+- [ ] frontmatter가 규격에 맞는가
 - [ ] `~/.opal/references/agents.md`에 항목이 등록되었는가
-- [ ] 버전 태깅이 적용되었는가 (3플랫폼 동일 버전)
+- [ ] 버전 태깅이 적용되었는가
 - [ ] name이 kebab-case이고 `{워크플로우}-{역할}` 패턴을 따르는가
 - [ ] 한국어 본문 / 영어 코드 규칙을 준수하는가
 
@@ -246,9 +186,7 @@ Phase 2 완료 후 아래 항목을 검증한다:
 ```
 [opal-agent-creator 완료]
 - 에이전트: {name}
-- Claude: agents/claude/{name}/AGENT.md
-- Cursor: agents/cursor/{name}.md
-- Antigravity: agents/antigravity/{name}/SKILL.md
+- 경로: agents/{name}/AGENT.md
 - 버전: v{버전}
 - 레지스트리: 등록 완료
 - 호출 스킬: {탐색 경로 안내 완료 / 해당 없음}

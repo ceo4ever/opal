@@ -18,11 +18,8 @@ OPAL 에이전트가 사용할 수 있는 모든 스킬 목록.
 | ui-designer | "UI 구현", "UI 만들어줘", "화면 구현", "wireframe 구현", "프로토타입 만들어줘" | UI 구현 — wireframe.md → React + shadcn/ui 기반 UI |
 
 탐색 경로 (우선순위):
-1. `{프로젝트}/.cursor/skills/{skill}/SKILL.md`
-2. `{프로젝트}/.claude/skills/{skill}/SKILL.md`
-3. `~/.cursor/skills/{skill}/SKILL.md`
-4. `~/.claude/skills/{skill}/SKILL.md`
-5. `~/.gemini/antigravity/skills/{skill}/SKILL.md`
+1. `{프로젝트}/.opal/skills/{skill}/SKILL.md`
+2. `~/.opal/skills/{skill}/SKILL.md`
 
 ## OPAL 전용 스킬
 
@@ -30,10 +27,10 @@ OPAL 에이전트가 사용할 수 있는 모든 스킬 목록.
 
 | 스킬 | 트리거 | 경로 |
 |---------------|-----------------------------|------|
-| onboarding    | (자동: identity.md 없을 때)    | `~/.opal/skills/onboarding/SKILL.md` |
-| project-init  | "프로젝트 에이전트 만들어줘"       | `~/.opal/skills/project-init/SKILL.md` |
-| orchestrator  | (자동: .opal/AGENT.md 있을 때) | `~/.opal/skills/orchestrator/SKILL.md` |
-| skill-manager | "스킬 검색", "스킬 찾아줘", "스킬 설치해줘", "설치된 스킬", "스킬 삭제" | `~/.opal/skills/skill-manager/SKILL.md` |
+| opal-onboarding    | (자동: identity.md 없을 때)    | `~/.opal/skills/opal-onboarding/SKILL.md` |
+| opal-project-init  | "프로젝트 초기 셋팅", "프로젝트 시작", "프로젝트 문서 만들어줘", "기존 프로젝트 문서화", "docs 생성" | `~/.opal/skills/opal-project-init/SKILL.md` |
+| opal-orchestrator  | (자동: .opal/AGENT.md 있을 때) | `~/.opal/skills/opal-orchestrator/SKILL.md` |
+| opal-skill-manager | "스킬 검색", "스킬 찾아줘", "스킬 설치해줘", "설치된 스킬", "스킬 삭제" | `~/.opal/skills/opal-skill-manager/SKILL.md` |
 
 ## 커뮤니티 스킬
 

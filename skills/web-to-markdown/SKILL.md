@@ -233,12 +233,8 @@ URL에서 도메인과 경로를 조합하여 kebab-case slug를 생성한다:
 **에이전트 이름**: `wtm-worker`
 
 탐색 경로 (우선순위):
-1. `{프로젝트}/.cursor/agents/wtm-worker.md`
-2. `{프로젝트}/.claude/agents/wtm-worker/AGENT.md`
-3. `{프로젝트}/.agent/skills/wtm-worker/SKILL.md`
-4. `~/.cursor/agents/wtm-worker.md`
-5. `~/.claude/agents/wtm-worker/AGENT.md`
-6. `~/.gemini/antigravity/skills/wtm-worker/SKILL.md`
+1. `{프로젝트}/.opal/agents/wtm-worker/AGENT.md`
+2. `~/.opal/agents/wtm-worker/AGENT.md`
 
 ### 실행 방식
 

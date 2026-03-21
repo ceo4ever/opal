@@ -59,14 +59,19 @@ dev-task-pilot 스킬의 모드별 파이프라인에서 호출되는 서브에�
 
 에이전트 파일 탐색 우선순위 (플랫폼 공통):
 
-1. `{프로젝트}/.cursor/agents/{agent-name}.md`
-2. `{프로젝트}/.cursor/agents/{agent-name}/AGENT.md`
-3. `{프로젝트}/.claude/agents/{agent-name}/AGENT.md`
-4. `{프로젝트}/.agent/skills/{agent-name}/SKILL.md`
-5. `~/.cursor/agents/{agent-name}.md`
-6. `~/.cursor/agents/{agent-name}/AGENT.md`
-7. `~/.claude/agents/{agent-name}/AGENT.md`
-8. `~/.gemini/antigravity/skills/{agent-name}/SKILL.md`
+1. `{프로젝트}/.opal/agents/{agent-name}/AGENT.md`
+2. `~/.opal/agents/{agent-name}/AGENT.md`
+
+## web-to-markdown 에이전트
+
+### 워커 에이전트
+
+#### wtm-worker
+
+- **역할**: web-to-markdown 워커 — 단일 URL을 받아 Phase 1(WebFetch) → Phase 2(Crawl4AI) 폴백 전략으로 웹 페이지를 마크다운으로 변환
+- **호출 시점**: web-to-markdown 스킬에서 URL별로 오케스트레이터가 디스패치
+- **입력**: url, save_path, mode (full/clean)
+- **출력**: 마크다운 파일 (save_path에 저장)
 
 ## 향후 추가 에이전트
 

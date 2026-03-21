@@ -121,14 +121,8 @@ Short Task 진행 중 PLAN 작성 시 Full Task 조건에 해당하는 상황이
 
 에이전트명을 `{agent-name}`으로 치환하여 탐색:
 
-1. `{프로젝트}/.cursor/agents/{agent-name}.md`
-2. `{프로젝트}/.cursor/agents/{agent-name}/AGENT.md`
-3. `{프로젝트}/.claude/agents/{agent-name}/AGENT.md`
-4. `{프로젝트}/.agent/skills/{agent-name}/SKILL.md`
-5. `~/.cursor/agents/{agent-name}.md`
-6. `~/.cursor/agents/{agent-name}/AGENT.md`
-7. `~/.claude/agents/{agent-name}/AGENT.md`
-8. `~/.gemini/antigravity/skills/{agent-name}/SKILL.md`
+1. `{프로젝트}/.opal/agents/{agent-name}/AGENT.md`
+2. `~/.opal/agents/{agent-name}/AGENT.md`
 
 ### 워커 디스패치 규칙
 

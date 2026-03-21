@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# install-mac.sh — AI Development Framework Installer (macOS)
+# install-mac.sh — OPAL AI Framework Installer (macOS)
 #
 # Usage: ./scripts/install-mac.sh
 #
@@ -36,8 +36,8 @@ error()   { echo -e "${RED}[ERROR]${NC} $1"; }
 print_banner() {
     echo ""
     echo -e "${CYAN}╔══════════════════════════════════════════════════════╗${NC}"
-    echo -e "${CYAN}║${NC}  ${BOLD}AI Development Framework Installer${NC}  (macOS)        ${CYAN}║${NC}"
-    echo -e "${CYAN}║${NC}  Claude Code · Cursor · Antigravity · OPAL          ${CYAN}║${NC}"
+    echo -e "${CYAN}║${NC}  ${BOLD}OPAL AI Framework Installer${NC}  (macOS)               ${CYAN}║${NC}"
+    echo -e "${CYAN}║${NC}  통합 배포: ~/.opal/ (skills + agents)                ${CYAN}║${NC}"
     echo -e "${CYAN}╚══════════════════════════════════════════════════════╝${NC}"
     echo ""
 }
@@ -49,7 +49,7 @@ detect_framework_root() {
 
     if [[ ! -d "$FRAMEWORK_ROOT/skills" ]] || [[ ! -d "$FRAMEWORK_ROOT/agents" ]]; then
         error "프레임워크 루트를 찾을 수 없습니다: $FRAMEWORK_ROOT"
-        error "이 스크립트는 ai-framework/scripts/ 에서 실행해야 합니다."
+        error "이 스크립트는 opal/scripts/ 에서 실행해야 합니다."
         exit 1
     fi
 
@@ -83,15 +83,12 @@ show_menu() {
     echo ""
     echo -e "${BOLD}설치 대상을 선택하세요:${NC}"
     echo ""
-    echo "  [1] Claude Code    (skills + agents → ~/.claude/)"
-    echo "  [2] Cursor         (skills + agents → ~/.cursor/)"
-    echo "  [3] Antigravity    (skills → ~/.gemini/antigravity/)"
-    echo "  [4] OPAL           (AI 에이전트 → ~/.opal/)"
-    echo "  [5] MCP 서버       (MCP 설정 → claude, cursor, gemini, antigravity)"
-    echo "  [6] 전체 설치"
+    echo "  [1] OPAL 설치      (skills + agents + 부트스트래퍼 → ~/.opal/)"
+    echo "  [2] MCP 서버 설정   (MCP 설정 → claude, cursor, gemini, antigravity)"
+    echo "  [3] 전체 설치       (OPAL + MCP 서버)"
     echo "  [0] 종료"
     echo ""
-    read -rp "선택 (0-6): " MENU_CHOICE
+    read -rp "선택 (0-3): " MENU_CHOICE
 }
 
 # ─── Install Helpers ─────────────────────────────────────
@@ -255,64 +252,165 @@ install_opal_section() {
     fi
 }
 
-# ─── Platform Installers ─────────────────────────────────
+# ─── OPAL Installer ─────────────────────────────────────
 
-install_claude() {
+install_opal() {
     echo ""
-    info "Claude Code 설치..."
-    local base="$USER_HOME/.claude"
+    info "OPAL AI 프레임워크 설치..."
+    local opal_dir="$FRAMEWORK_ROOT/opal"
+    local opal_home="$USER_HOME/.opal"
 
-    local skill_count=$(find "$FRAMEWORK_ROOT/skills" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')
-    local claude_agent_count=$(find "$FRAMEWORK_ROOT/agents/claude" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')
-    install_dir "$FRAMEWORK_ROOT/skills" "$base/skills" "스킬 (${skill_count}개)"
-    install_dir "$FRAMEWORK_ROOT/agents/claude" "$base/agents" "Claude 에이전트 (${claude_agent_count}개)"
+    mkdir -p "$opal_home"
 
-    # hooks 설치
-    local hooks_src="$FRAMEWORK_ROOT/opal/core/hooks/claude-hooks.json"
-    if [[ -f "$hooks_src" ]] && command -v python3 &>/dev/null; then
-        local settings="$base/settings.json"
-        merge_hooks_config "$settings" "$hooks_src"
-        success "Claude Code hooks → $settings"
-    fi
-}
+    # ── OPAL 코어 ──
+    cp "$opal_dir/core/AGENT.md" "$opal_home/AGENT.md"
+    success "OPAL AGENT.md → $opal_home/AGENT.md"
 
-install_cursor() {
-    echo ""
-    info "Cursor 설치..."
-    local base="$USER_HOME/.cursor"
+    # ── 프레임워크 스킬 (skills/ → ~/.opal/skills/) ──
+    local fw_skill_count
+    fw_skill_count=$(find "$FRAMEWORK_ROOT/skills" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')
+    install_dir "$FRAMEWORK_ROOT/skills" "$opal_home/skills" "프레임워크 스킬 (${fw_skill_count}개)"
 
-    local skill_count=$(find "$FRAMEWORK_ROOT/skills" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')
-    local cursor_agent_count=$(find "$FRAMEWORK_ROOT/agents/cursor" -mindepth 1 -maxdepth 1 -name '*.md' | wc -l | tr -d ' ')
-    install_dir "$FRAMEWORK_ROOT/skills" "$base/skills" "스킬 (${skill_count}개)"
-    install_dir "$FRAMEWORK_ROOT/agents/cursor" "$base/agents" "Cursor 에이전트 (${cursor_agent_count}개)"
-}
+    # ── OPAL 전용 스킬 (opal/skills/ → ~/.opal/skills/) ──
+    local opal_skill_count
+    opal_skill_count=$(find "$opal_dir/skills" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')
+    for skill_dir in "$opal_dir/skills"/*/; do
+        if [[ -d "$skill_dir" ]]; then
+            local skill_name
+            skill_name="$(basename "$skill_dir")"
+            install_dir "$skill_dir" "$opal_home/skills/$skill_name" "OPAL 스킬: $skill_name"
+        fi
+    done
+    success "OPAL 전용 스킬 ${opal_skill_count}개 → $opal_home/skills/"
 
-install_antigravity() {
-    echo ""
-    info "Antigravity 설치..."
-    local base="$USER_HOME/.gemini/antigravity"
-
-    local skill_count=$(find "$FRAMEWORK_ROOT/skills" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')
-    install_dir "$FRAMEWORK_ROOT/skills" "$base/skills" "스킬 (${skill_count}개)"
-
-    for agent_dir in "$FRAMEWORK_ROOT/agents/antigravity"/*/; do
+    # ── 에이전트 (agents/ → ~/.opal/agents/) ──
+    local agent_count
+    agent_count=$(find "$FRAMEWORK_ROOT/agents" -mindepth 1 -maxdepth 1 -type d ! -name 'claude' | wc -l | tr -d ' ')
+    mkdir -p "$opal_home/agents"
+    for agent_dir in "$FRAMEWORK_ROOT/agents"/*/; do
         if [[ -d "$agent_dir" ]]; then
             local agent_name
             agent_name="$(basename "$agent_dir")"
-            install_dir "$agent_dir" "$base/skills/$agent_name" "에이전트→스킬: $agent_name"
+            # 레거시 claude 디렉토리는 스킵
+            [[ "$agent_name" == "claude" ]] && continue
+            [[ "$agent_name" == "cursor" ]] && continue
+            [[ "$agent_name" == "antigravity" ]] && continue
+            install_dir "$agent_dir" "$opal_home/agents/$agent_name" "에이전트: $agent_name"
+        fi
+    done
+    success "에이전트 ${agent_count}개 → $opal_home/agents/"
+
+    # ── 템플릿 ──
+    install_dir "$opal_dir/templates" "$opal_home/templates" "OPAL templates"
+
+    cp "$opal_dir/core/identity-template.md" "$opal_home/templates/identity-template.md"
+    success "identity-template.md → $opal_home/templates/"
+
+    # ── 참조 레지스트리 ──
+    install_opal_references
+
+    # ── 커뮤니티 스킬 ──
+    install_opal_community_skills
+
+    # ── Claude Code hooks ──
+    local hooks_src="$FRAMEWORK_ROOT/opal/core/hooks/claude-hooks.json"
+    if [[ -f "$hooks_src" ]] && command -v python3 &>/dev/null; then
+        local settings="$USER_HOME/.claude/settings.json"
+        mkdir -p "$(dirname "$settings")"
+        merge_hooks_config "$settings" "$hooks_src"
+        success "Claude Code hooks → $settings"
+    fi
+
+    # ── 부트스트래퍼 설치 ──
+    echo ""
+    info "OPAL 부트스트래퍼 설치..."
+
+    install_opal_section "$opal_dir/bootstrapper/claude-bootstrap.md" \
+        "$USER_HOME/.claude/CLAUDE.md" "Claude"
+
+    mkdir -p "$USER_HOME/.cursor/rules"
+    cp "$opal_dir/bootstrapper/cursor-bootstrap.mdc" "$USER_HOME/.cursor/rules/000-opal-agent.mdc"
+    success "Cursor OPAL → $USER_HOME/.cursor/rules/000-opal-agent.mdc"
+
+    if [[ -f "$USER_HOME/.cursor/rules/000-r2-persona.mdc" ]]; then
+        rm "$USER_HOME/.cursor/rules/000-r2-persona.mdc"
+        success "Cursor 기존 R2 규칙 제거: 000-r2-persona.mdc"
+    fi
+
+    install_opal_section "$opal_dir/bootstrapper/gemini-bootstrap.md" \
+        "$USER_HOME/.gemini/GEMINI.md" "Gemini"
+
+    # ── 레거시 정리 안내 ──
+    print_cleanup_notice
+}
+
+install_opal_community_skills() {
+    local cs_src="$FRAMEWORK_ROOT/community-skills"
+    local cs_dst="$USER_HOME/.opal/community-skills"
+
+    if [[ ! -d "$cs_src" ]]; then
+        warn "community-skills/ 디렉토리가 없습니다 (스킵)"
+        return
+    fi
+
+    mkdir -p "$cs_dst"
+
+    for vendor_dir in "$cs_src"/*/; do
+        if [[ -d "$vendor_dir" ]]; then
+            cp -Rf "$vendor_dir" "$cs_dst/"
         fi
     done
 
-    # Gemini CLI agents 배포: Cursor 에이전트 파일을 ~/.gemini/agents/에 복사
-    local gemini_agents="$USER_HOME/.gemini/agents"
-    mkdir -p "$gemini_agents"
-    for agent_file in "$FRAMEWORK_ROOT/agents/cursor"/*.md; do
-        if [[ -f "$agent_file" ]]; then
-            cp "$agent_file" "$gemini_agents/"
-        fi
-    done
-    success "Gemini CLI agents → $gemini_agents/"
+    local cs_count
+    cs_count="$(find "$cs_src" -mindepth 2 -maxdepth 2 -type d | wc -l | tr -d ' ')"
+    success "커뮤니티 스킬 ${cs_count}개 → $cs_dst/"
 }
+
+install_opal_references() {
+    local ref_src="$FRAMEWORK_ROOT/opal/core/references"
+    local ref_dst="$USER_HOME/.opal/references"
+
+    if [[ ! -d "$ref_src" ]]; then
+        warn "opal/core/references/ 디렉토리가 없습니다 (스킵)"
+        return
+    fi
+
+    mkdir -p "$ref_dst"
+    cp -Rf "$ref_src"/. "$ref_dst"/
+    success "참조 레지스트리 → $ref_dst/"
+}
+
+# ─── Legacy Cleanup Notice ───────────────────────────────
+
+print_cleanup_notice() {
+    local legacy_paths=()
+
+    [[ -d "$USER_HOME/.claude/skills" ]] && legacy_paths+=("~/.claude/skills/")
+    [[ -d "$USER_HOME/.claude/agents" ]] && legacy_paths+=("~/.claude/agents/")
+    [[ -d "$USER_HOME/.cursor/skills" ]] && legacy_paths+=("~/.cursor/skills/")
+    [[ -d "$USER_HOME/.cursor/agents" ]] && legacy_paths+=("~/.cursor/agents/")
+    [[ -d "$USER_HOME/.gemini/antigravity/skills" ]] && legacy_paths+=("~/.gemini/antigravity/skills/")
+    [[ -d "$USER_HOME/.gemini/agents" ]] && legacy_paths+=("~/.gemini/agents/")
+
+    if [[ ${#legacy_paths[@]} -gt 0 ]]; then
+        echo ""
+        echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+        echo -e "${YELLOW}  레거시 배포 경로 감지${NC}"
+        echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+        echo ""
+        echo "  스킬/에이전트가 이제 ~/.opal/ 단일 경로로 배포됩니다."
+        echo "  아래 레거시 경로는 더 이상 사용되지 않으므로 수동 삭제를 권장합니다:"
+        echo ""
+        for path in "${legacy_paths[@]}"; do
+            echo -e "    ${RED}rm -rf $path${NC}"
+        done
+        echo ""
+        echo "  * MCP 설정 파일(mcp.json, settings.json)과 부트스트래퍼는 그대로 유지하세요."
+        echo ""
+    fi
+}
+
+# ─── MCP Installer ───────────────────────────────────────
 
 find_cli_bin() {
     local cli_name="$1"
@@ -442,86 +540,6 @@ install_mcp() {
     fi
 }
 
-install_opal_community_skills() {
-    local cs_src="$FRAMEWORK_ROOT/community-skills"
-    local cs_dst="$USER_HOME/.opal/community-skills"
-
-    if [[ ! -d "$cs_src" ]]; then
-        warn "community-skills/ 디렉토리가 없습니다 (스킵)"
-        return
-    fi
-
-    mkdir -p "$cs_dst"
-
-    for vendor_dir in "$cs_src"/*/; do
-        if [[ -d "$vendor_dir" ]]; then
-            cp -Rf "$vendor_dir" "$cs_dst/"
-        fi
-    done
-
-    local cs_count
-    cs_count="$(find "$cs_src" -mindepth 2 -maxdepth 2 -type d | wc -l | tr -d ' ')"
-    success "커뮤니티 스킬 ${cs_count}개 → $cs_dst/"
-}
-
-install_opal_references() {
-    local ref_src="$FRAMEWORK_ROOT/opal/core/references"
-    local ref_dst="$USER_HOME/.opal/references"
-
-    if [[ ! -d "$ref_src" ]]; then
-        warn "opal/core/references/ 디렉토리가 없습니다 (스킵)"
-        return
-    fi
-
-    mkdir -p "$ref_dst"
-    cp -Rf "$ref_src"/. "$ref_dst"/
-    success "참조 레지스트리 → $ref_dst/"
-}
-
-install_opal() {
-    echo ""
-    info "OPAL AI 에이전트 설치..."
-    local opal_dir="$FRAMEWORK_ROOT/opal"
-    local opal_home="$USER_HOME/.opal"
-
-    mkdir -p "$opal_home"
-
-    cp "$opal_dir/core/AGENT.md" "$opal_home/AGENT.md"
-    success "OPAL AGENT.md → $opal_home/AGENT.md"
-
-    local opal_skill_count=$(find "$opal_dir/skills" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')
-    install_dir "$opal_dir/skills" "$opal_home/skills" "OPAL 스킬 (${opal_skill_count}개)"
-    install_dir "$opal_dir/templates" "$opal_home/templates" "OPAL templates"
-
-    cp "$opal_dir/core/identity-template.md" "$opal_home/templates/identity-template.md"
-    success "identity-template.md → $opal_home/templates/"
-
-    # 참조 레지스트리 복사
-    install_opal_references
-
-    # 커뮤니티 스킬 복사
-    install_opal_community_skills
-
-    # 부트스트래퍼 설치
-    echo ""
-    info "OPAL 부트스트래퍼 설치..."
-
-    install_opal_section "$opal_dir/bootstrapper/claude-bootstrap.md" \
-        "$USER_HOME/.claude/CLAUDE.md" "Claude"
-
-    mkdir -p "$USER_HOME/.cursor/rules"
-    cp "$opal_dir/bootstrapper/cursor-bootstrap.mdc" "$USER_HOME/.cursor/rules/000-opal-agent.mdc"
-    success "Cursor OPAL → $USER_HOME/.cursor/rules/000-opal-agent.mdc"
-
-    if [[ -f "$USER_HOME/.cursor/rules/000-r2-persona.mdc" ]]; then
-        rm "$USER_HOME/.cursor/rules/000-r2-persona.mdc"
-        success "Cursor 기존 R2 규칙 제거: 000-r2-persona.mdc"
-    fi
-
-    install_opal_section "$opal_dir/bootstrapper/gemini-bootstrap.md" \
-        "$USER_HOME/.gemini/GEMINI.md" "Antigravity"
-}
-
 # ─── Summary ─────────────────────────────────────────────
 
 count_items() {
@@ -550,37 +568,30 @@ print_summary() {
     echo ""
     echo -e "  ${BOLD}설치 경로:${NC}"
 
-    local claude_base="$USER_HOME/.claude"
-    local cursor_base="$USER_HOME/.cursor"
-    local ag_base="$USER_HOME/.gemini/antigravity"
     local opal_home="$USER_HOME/.opal"
 
-    [[ -d "$claude_base/skills" ]] && \
-        echo "    ~/.claude/skills/              $(count_items "$claude_base/skills" "*") skills"
-    [[ -d "$claude_base/agents" ]] && \
-        echo "    ~/.claude/agents/              $(count_items "$claude_base/agents" "*") agents"
-    [[ -f "$claude_base/CLAUDE.md" ]] && grep -qF "$OPAL_START" "$claude_base/CLAUDE.md" && \
-        echo "    ~/.claude/CLAUDE.md            OPAL 포함"
+    [[ -d "$opal_home/skills" ]] && \
+        echo "    ~/.opal/skills/              $(count_items "$opal_home/skills" "*") skills"
+    [[ -d "$opal_home/agents" ]] && \
+        echo "    ~/.opal/agents/              $(count_items "$opal_home/agents" "*") agents"
+    [[ -d "$opal_home/community-skills" ]] && \
+        echo "    ~/.opal/community-skills/    커뮤니티 스킬"
+    [[ -d "$opal_home/references" ]] && \
+        echo "    ~/.opal/references/          참조 레지스트리"
+    [[ -d "$opal_home/templates" ]] && \
+        echo "    ~/.opal/templates/           프로젝트 템플릿"
 
-    [[ -d "$cursor_base/skills" ]] && \
-        echo "    ~/.cursor/skills/              $(count_items "$cursor_base/skills" "*") skills"
-    [[ -d "$cursor_base/agents" ]] && \
-        echo "    ~/.cursor/agents/              $(count_items "$cursor_base/agents" "*.md") agents"
-    [[ -f "$cursor_base/rules/000-opal-agent.mdc" ]] && \
-        echo "    ~/.cursor/rules/               OPAL 포함"
-
-    [[ -d "$ag_base/skills" ]] && \
-        echo "    ~/.gemini/antigravity/skills/   $(count_items "$ag_base/skills" "*") skills"
+    [[ -f "$USER_HOME/.claude/CLAUDE.md" ]] && grep -qF "$OPAL_START" "$USER_HOME/.claude/CLAUDE.md" && \
+        echo "    ~/.claude/CLAUDE.md          OPAL 부트스트래퍼"
+    [[ -f "$USER_HOME/.cursor/rules/000-opal-agent.mdc" ]] && \
+        echo "    ~/.cursor/rules/             OPAL 부트스트래퍼"
     [[ -f "$USER_HOME/.gemini/GEMINI.md" ]] && grep -qF "$OPAL_START" "$USER_HOME/.gemini/GEMINI.md" && \
-        echo "    ~/.gemini/GEMINI.md            OPAL 포함"
+        echo "    ~/.gemini/GEMINI.md          OPAL 부트스트래퍼"
 
-    [[ -d "$opal_home" ]] && \
-        echo "    ~/.opal/                       OPAL 에이전트 홈"
-
-    echo "    Claude MCP                     claude mcp add (CLI 등록)"
-    echo "    Gemini MCP                     gemini mcp add (CLI 등록)"
-    [[ -f "$cursor_base/mcp.json" ]] && \
-        echo "    ~/.cursor/mcp.json             MCP 설정 (config_merge)"
+    echo "    Claude MCP                   claude mcp add (CLI 등록)"
+    echo "    Gemini MCP                   gemini mcp add (CLI 등록)"
+    [[ -f "$USER_HOME/.cursor/mcp.json" ]] && \
+        echo "    ~/.cursor/mcp.json           MCP 설정 (config_merge)"
     [[ -f "$USER_HOME/.gemini/antigravity/mcp_config.json" ]] && \
         echo "    ~/.gemini/antigravity/mcp_config.json  MCP 설정 (config_merge)"
 
@@ -601,41 +612,23 @@ main() {
 
         case "$MENU_CHOICE" in
             1)
-                install_claude
-                installed+=("Claude Code (skills + agents)")
+                install_opal
+                installed+=("OPAL (skills + agents + 부트스트래퍼)")
                 print_summary "${installed[@]}"
                 ;;
             2)
-                install_cursor
-                installed+=("Cursor (skills + agents)")
-                print_summary "${installed[@]}"
-                ;;
-            3)
-                install_antigravity
-                installed+=("Antigravity (skills)")
-                print_summary "${installed[@]}"
-                ;;
-            4)
-                install_opal
-                installed+=("OPAL (AI 에이전트)")
-                print_summary "${installed[@]}"
-                ;;
-            5)
                 echo ""
                 info "MCP 서버 설정..."
                 install_mcp
                 installed+=("MCP 서버 설정")
                 print_summary "${installed[@]}"
                 ;;
-            6)
-                install_claude
-                install_cursor
-                install_antigravity
+            3)
                 install_opal
                 echo ""
                 info "MCP 서버 설정..."
                 install_mcp
-                installed+=("Claude Code" "Cursor" "Antigravity" "OPAL" "MCP 서버")
+                installed+=("OPAL (skills + agents + 부트스트래퍼)" "MCP 서버")
                 print_summary "${installed[@]}"
                 ;;
             0)

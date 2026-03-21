@@ -129,11 +129,8 @@ dev-task-pilot WIREFRAME 워커로서 아래 태스크를 수행하라.
 
 ### wireframe-builder 스킬 탐색 경로
 
-1. `{프로젝트}/.cursor/skills/wireframe-builder/SKILL.md`
-2. `{프로젝트}/.claude/skills/wireframe-builder/SKILL.md`
-3. `~/.cursor/skills/wireframe-builder/SKILL.md`
-4. `~/.claude/skills/wireframe-builder/SKILL.md`
-5. `~/.gemini/antigravity/skills/wireframe-builder/SKILL.md`
+1. `{프로젝트}/.opal/skills/wireframe-builder/SKILL.md`
+2. `~/.opal/skills/wireframe-builder/SKILL.md`
 
 ### 워커 완료 시
 
@@ -190,11 +187,8 @@ dev-task-pilot EXECUTE-WIREFRAME 워커로서 아래 태스크를 수행하라.
 
 ### ui-designer 스킬 탐색 경로
 
-1. `{프로젝트}/.cursor/skills/ui-designer/SKILL.md`
-2. `{프로젝트}/.claude/skills/ui-designer/SKILL.md`
-3. `~/.cursor/skills/ui-designer/SKILL.md`
-4. `~/.claude/skills/ui-designer/SKILL.md`
-5. `~/.gemini/antigravity/skills/ui-designer/SKILL.md`
+1. `{프로젝트}/.opal/skills/ui-designer/SKILL.md`
+2. `~/.opal/skills/ui-designer/SKILL.md`
 
 ### 워커 완료 시
 

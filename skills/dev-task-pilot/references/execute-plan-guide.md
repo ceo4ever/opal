@@ -57,10 +57,8 @@ Batch N: [최종 통합/테스트 에이전트]
 
 ```
 탐색 경로 (우선순위):
-1. {프로젝트}/.cursor/skills/
-2. {프로젝트}/.claude/skills/
-3. ~/.cursor/skills/
-4. ~/.claude/skills/
+1. {프로젝트}/.opal/skills/
+2. ~/.opal/skills/
 ```
 
 | 스킬 | 트리거 조건 | 입출력 |
