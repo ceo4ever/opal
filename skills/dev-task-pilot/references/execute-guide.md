@@ -10,6 +10,68 @@ TODO.md의 승인을 받은 후, 실제로 코드를 작성하고 검증하는 �
 
 ---
 
+## 금지 행동 (EXECUTE 가드레일)
+
+### 절대 금지
+
+| # | 금지 행동 | 이유 |
+|---|----------|------|
+| 1 | PLAN/TODO/execution-plan.json에 없는 파일 생성/수정 | 계획 밖 변경은 추적 불가, 회귀 리스크 |
+| 2 | 설계(클래스 구조, 함수 시그니처, DB 스키마)를 임의로 변경 | PLAN에서 QA를 통과한 설계를 무효화 |
+| 3 | 다른 영역 침범 (FE 워커가 BE 파일 수정, 또는 그 반대) | 병렬 실행 시 충돌 발생 |
+| 4 | PLAN에 명시되지 않은 패키지 설치 | 의존성 변경은 사전 승인 필요 |
+| 5 | 환경변수/시크릿을 소스 코드에 하드코딩 | 보안 위반 — 아래 보안 가드레일 참조 |
+
+### 판단 기준: 즉시 멈추고 보고 vs 진행 후 보고
+
+**즉시 멈추고 보고 (블로커 처리)**:
+- PLAN의 설계와 실제 코드 간 구조적 불일치 발견 (파일 구조, 함수 시그니처 등)
+- 필요한 외부 API/서비스가 응답하지 않음
+- 타입 에러가 연쇄적으로 발생하여 3개 이상 파일에 영향
+- 보안 가드레일 위반 감지
+
+**진행 후 보고 (완료 보고에 포함)**:
+- 사소한 네이밍 조정 (함수명, 변수명 — 시그니처 변경 없이)
+- 더미 데이터 내용 조정
+- 코드 포매팅 차이
+- import 순서 정리
+- deprecated 경고 (동작은 함)
+
+---
+
+## 보안 가드레일 (기본 수준)
+
+EXECUTE 중 아래 패턴을 감지하면 **즉시 실행을 중단**하고 블로커로 보고한다:
+
+| # | 패턴 | 감지 방법 | 조치 |
+|---|------|----------|------|
+| 1 | 하드코딩 시크릿 | `password=`, `secret=`, `api_key=`, `token=` 리터럴 값 | 환경변수로 교체 제안 |
+| 2 | SQL Injection 취약점 | f-string/문자열 연결로 SQL 구성 | 파라미터 바인딩으로 교체 제안 |
+| 3 | 민감 파일 커밋 위험 | `.env`, `credentials.*`, `*.pem` 파일 생성 시 `.gitignore` 미포함 | `.gitignore` 추가 제안 |
+| 4 | 무제한 입력 | 사용자 입력을 검증 없이 DB/파일시스템에 전달 | 입력 검증 추가 제안 |
+
+---
+
+## execution-plan.json 기반 실행
+
+execution-plan.json이 존재하면, 워커는 이 파일을 기반으로 실행 항목을 파악한다.
+
+**입력 우선순위**:
+1. `execution-plan.json` (있으면) — FE/BE 구조화된 실행 순서
+2. `TODO.md` Part A (Full Task, JSON 없을 때) — Step별 체크리스트
+3. `PLAN.md` 섹션 3 (Short Task, JSON 없을 때) — 실행 체크리스트
+
+**execution-plan.json 읽기 규칙**:
+1. `execution_order.sequence`에 따라 phase별 실행
+2. phase 1 (common) 완료 후 phase 2 (FE/BE 병렬) 시작
+3. 각 항목의 `depends_on`을 확인하여 선행 작업 완료 여부 검증
+4. FE screen 항목: ui-designer plan-driven 모드의 입력으로 전달
+   - ui-designer 스킬 탐색: `{프로젝트}/.opal/skills/ui-designer/SKILL.md` → `~/.opal/skills/ui-designer/SKILL.md`
+   - plan-driven 모드 파이프라인: `modes/plan-driven.md`
+5. BE layer 항목: model → dto → service → router 순서로 순차 실행
+
+---
+
 ## 실행 모드별 동작
 
 ### 단순 모드 (Simple Mode)
@@ -284,6 +346,9 @@ Part C-2에서 스킬이 필요한 에이전트가 있을 때:
 - [ ] QA 체크리스트(Part B / 섹션 4) 체크박스가 갱신되었는가?
 - [ ] DONE.md 완료 리포트가 생성되었는가?
 - [ ] TEST-SCENARIO.md에 테스트 결과가 채워졌는가?
+- [ ] PLAN/execution-plan.json에 없는 파일을 생성/수정하지 않았는가?
+- [ ] 하드코딩 시크릿이 없는가?
+- [ ] FE/BE 영역 간 침범이 없는가? (병렬 실행 시)
 
 ---
 

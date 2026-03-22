@@ -92,6 +92,29 @@ EXECUTE 단계 완료 후, TEST-SCENARIO.md를 입력으로 받아 **실제 실�
 2. 빌드 성공 여부 확인 (해당 시)
 3. 환경 문제 발견 시 → TEST-SCENARIO.md 해당 항목에 환경 이슈로 기록
 
+### Step 1.5: 스모크 테스트 (Smoke Test)
+
+프로젝트의 서버/앱이 정상 기동되는지 확인한다. 런타임 에러(import 오류, 초기화 실패 등)를 코드 실행 전에 감지한다.
+
+1. 프로젝트 설정에서 서버 기동 정보를 파악한다:
+   - `docs/server/README.md` — 서버 실행 명령
+   - `docs/client/README.md` — 클라이언트 실행 명령
+   - `package.json`의 `scripts.dev` / `scripts.start`
+   - `pyproject.toml`의 실행 설정
+2. **서버 기동 정보가 없으면**: 스모크 테스트 스킵 (Step 2로 진행)
+3. **있으면**:
+   a. 서버 기동 명령을 백그라운드로 실행
+   b. 5초 대기 후 health check URL에 HTTP GET 요청 (curl 또는 WebFetch)
+      - 기본 URL: `http://localhost:{포트}` (FE) / `http://localhost:{포트}/health` 또는 `/docs` (BE)
+   c. HTTP 200 응답이면 → Pass
+   d. 타임아웃(30초) 또는 에러이면 → Fail + 에러 내용 기록
+   e. 서버 프로세스 종료 (kill)
+4. TEST-SCENARIO.md에 스모크 테스트 결과 기록:
+   - 섹션: "스모크 테스트"
+   - 내용: 기동 명령, health check URL, 결과(Pass/Fail), 에러 상세(있으면)
+
+> 스모크 Fail은 Critical Fail로 분류한다 — 서버가 기동되지 않으면 다른 테스트도 의미 없음.
+
 ### Step 2: 시나리오 실행 (S-1~S-N)
 
 TEST-SCENARIO.md의 각 시나리오에 대해:
@@ -115,6 +138,15 @@ TEST-SCENARIO.md의 각 시나리오에 대해:
 1. 린트 실행 (eslint, flake8 등)
 2. 타입 체크 (tsc, mypy 등)
 3. 포맷터 확인 (prettier, black 등)
+3.5. **code-review 스킬 연계**: 변경 파일에 대해 추가 패턴 검사를 수행한다
+   - 스킬 탐색 경로:
+     1. `{프로젝트}/.opal/community-skills/getsentry/code-review/SKILL.md`
+     2. `~/.opal/community-skills/getsentry/code-review/SKILL.md`
+   - 스킬이 존재하면 Read하여 검사 기준을 파악하고, 변경 파일에 대해:
+     - N+1 쿼리 패턴 (ORM 사용 시 loop 내 쿼리)
+     - Runtime error 가능성 (null reference, 범위 초과, 미초기화 변수)
+     - 성능 안티패턴 (불필요한 재렌더링, 무한 루프 위험)
+   - 스킬이 없으면 기본 코드 품질 검사만 수행 (기존 동작 유지)
 4. TEST-SCENARIO.md 코드 품질 섹션에 결과 기록
 
 ### Step 5: 보안 검사
@@ -169,9 +201,9 @@ tasks/{NNN}-{태스크명}/TEST-SCENARIO.md  (갱신)
 
 | 판정 | 조건 |
 |------|------|
-| **All Pass** | 모든 시나리오 Pass, 회귀 Pass, 품질/보안 이슈 없음 |
+| **All Pass** | 모든 시나리오 Pass, 스모크 Pass(해당 시), 회귀 Pass, 품질/보안 이슈 없음 |
 | **Partial Fail** | 일부 시나리오 Fail 또는 경미한 품질 이슈 (수정 후 재실행 권장) |
-| **Critical Fail** | 핵심 시나리오 Fail 또는 보안 이슈 (반드시 수정 필요) |
+| **Critical Fail** | 핵심 시나리오 Fail 또는 보안 이슈 또는 **스모크 Fail** (반드시 수정 필요) |
 
 ---
 

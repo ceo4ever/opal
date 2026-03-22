@@ -19,3 +19,9 @@
 | # | 작업 | 결과 | 날짜 |
 |---|------|------|------|
 | 1 | opal-project-init 일반 프로젝트(scope=opal-only) 모드 추가 | 완료 (dfb2a18) | 2026-03-21 |
+
+## 프로젝트
+
+| 카테고리 | 파일 | 설명 |
+|----------|------|------|
+| project | [memory/project_security_task.md](memory/project_security_task.md) | 030에서 분리된 보안 전용 스킬+에이전트 생성 예정 |

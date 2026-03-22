@@ -104,12 +104,18 @@ dev-task-pilot PLAN-SHORT 워커로서 아래 태스크를 수행하라.
 **프로젝트 컨벤션**:
 - {프로젝트 루트의 CLAUDE.md 절대 경로}
 
-**산출물 저장 경로**: {tasks/{NNN}-{name}/PLAN.md}
+**추가 참조**:
+- {~/.opal/references/skills.md} (기술 스택별 추천 스킬 섹션)
+- {~/.opal/references/mcps.md} (MCP 서버 목록)
+
+**산출물 저장 경로**:
+- {tasks/{NNN}-{name}/PLAN.md}
+- {tasks/{NNN}-{name}/execution-plan.json} (FE/BE 작업 시)
 ```
 
 ### 워커 완료 시
 
-워커가 PLAN.md를 반환하면, **오케스트레이터가 dtp-qa-dev-agent를 호출**한다. QA 결과를 포함하여 사용자에게 보고.
+워커가 PLAN.md (+ execution-plan.json)를 반환하면, **오케스트레이터가 dtp-qa-dev-agent를 호출**한다. QA 결과를 포함하여 사용자에게 보고.
 
 ```
 📋 [PLAN] 완료 보고
@@ -185,7 +191,23 @@ TEST-SCENARIO.md가 사용자의 승인을 받으면, **오케스트레이터가
 - 통과 항목: `- [ ]` → `- [x]`
 - 미통과 항목: `- [ ]` 유지 + 사유를 인라인 주석으로 기록 (예: `- [ ] 항목 <!-- 사유: ... -->`)
 
-### 실행 흐름
+### FE/BE 병렬 실행 (execution-plan.json 존재 시)
+
+execution-plan.json이 존재하고 frontend + backend 모두 있으면:
+
+1. common 항목 먼저 실행 (공통 타입, 설정 등)
+2. FE + BE를 **병렬 서브에이전트**로 디스패치 (dev-full.md의 FE/BE 프롬프트와 동일 형식)
+   - FE 서브에이전트: 화면별 ui-designer plan-driven 모드 호출
+   - BE 서브에이전트: layer 순서대로 순차 실행
+3. 양측 완료 후 QA 체크리스트 검증 → dtp-dev-test-agent → DONE.md
+
+> Short Task는 단계 축약이지 품질 축약이 아님 — FE/BE 병렬 디스패치도 Full Task와 동일 수준으로 적용.
+
+execution-plan.json이 없거나 단일 영역(FE만 또는 BE만)이면 → 기존 순차 실행 (아래).
+
+---
+
+### 순차 실행 (기존 — fallback)
 
 1. 워커가 PLAN.md의 실행 체크리스트(섹션 3)를 순서대로 실행
 2. 각 Step 완료 시: PLAN.md 체크박스 갱신

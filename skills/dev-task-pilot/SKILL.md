@@ -60,13 +60,22 @@ description: |
 
 ### Wireframe UI 트리거 조건
 
-아래 조건 중 하나라도 해당하면 Wireframe UI 모드를 **적용**한다:
+사용자가 **"와이어프레임"을 명시적으로 언급**한 경우에만 적용한다.
+"화면 구현", "UI 만들어줘", "화면 수정" 등은 Wireframe UI가 **아니다** — Short/Full Task에서 ui-designer plan-driven 모드로 수행한다.
 
 | # | 조건 | 판별 방법 |
 |---|------|----------|
-| 1 | 사용자 명시 요청 | "와이어프레임", "UI 만들어줘", "화면 구현", "프로토타입" |
+| 1 | 사용자가 "와이어프레임" 언급 | "와이어프레임 만들어줘", "wireframe", "와이어프레임으로 해줘" |
 | 2 | wireframe.md 제공 | wireframe.md가 입력물로 제공됨 |
-| 3 | UI 구현 요청 + 정책서/기획서 | 정책서/기획서와 함께 UI 구현을 요청 |
+
+**그 외 모든 FE/UI 작업은 Short/Full Task**:
+
+| 상황 | 모드 | UI 구현 방법 |
+|------|------|------------|
+| 기존 프로젝트에 화면 추가 | Short/Full Task | EXECUTE에서 ui-designer plan-driven 모드 |
+| 기존 화면 UI 수정 | Short/Full Task | EXECUTE에서 ui-designer plan-driven 모드 |
+| API + 화면 동시 개발 | Short/Full Task | FE/BE 병렬 — FE는 ui-designer, BE는 직접 구현 |
+| 와이어프레임부터 설계 | Wireframe UI | wireframe-builder → ui-designer scaffold 모드 |
 
 ### Full Task 트리거 조건
 
@@ -88,6 +97,8 @@ Wireframe UI가 아닌 경우, 아래 조건 중 하나라도 해당하면 Full 
 - "Short로 해줘" → Short Task 강제
 - "와이어프레임으로" → Wireframe UI 강제
 - 지정하지 않으면 자동 판별 결과를 따름
+
+> **주의**: "화면 수정해줘", "UI 고쳐줘", "컴포넌트 추가해줘" 같은 요청은 **기존 프로젝트 작업**이므로 Wireframe UI가 아니라 **Short/Full Task**로 진행한다. EXECUTE에서 ui-designer plan-driven 모드가 FE 화면 작업을 담당한다.
 
 ### 에스컬레이션 규칙
 
@@ -283,6 +294,7 @@ tasks/{NNN}-{태스크명}/
 ├── QA-PLAN.md           ← PLAN QA 리뷰
 ├── TODO.md              ← 실행 체크리스트 (+ Part C 복잡 모드)
 ├── TEST-SCENARIO.md     ← 테스트 시나리오 + 실행 결과 (단일 파일)
+├── execution-plan.json  ← 실행 계획 (PLAN에서 생성, FE/BE 작업 시)
 ├── DONE.md              ← 완료 리포트
 └── skills/              ← 동적 생성 스킬 (복잡 모드, 필요 시)
 ```
@@ -296,6 +308,7 @@ tasks/{NNN}-{태스크명}/
 ├── PLAN.md              ← 통합 PLAN (코드 분석 + 구현 계획 + 체크리스트)
 ├── QA-PLAN.md           ← PLAN QA 리뷰
 ├── TEST-SCENARIO.md     ← 테스트 시나리오 + 실행 결과
+├── execution-plan.json  ← 실행 계획 (PLAN에서 생성, FE/BE 작업 시)
 └── DONE.md              ← 완료 리포트
 ```
 
@@ -325,6 +338,10 @@ tasks/{NNN}-{태스크명}/
 1. **CLAUDE.md** (또는 프로젝트 설정 파일): 기술 스택, 코드 컨벤션, 아키텍처 규칙
 2. **기존 산출물**: 프로젝트에 관련 문서(설계서, 명세서, 정책서 등)가 있으면 참조
 3. **기존 코드 패턴**: 프로젝트의 기존 구현이 어떤 패턴을 따르는지 확인
+4. **기술 스택 사전 판별**: TASK 단계에서 프로젝트 기술 스택을 빠르게 파악한다
+   - `package.json` (Node.js/React/Next.js), `pyproject.toml` (Python/FastAPI), `go.mod`, `pom.xml`, `Cargo.toml`
+   - `~/.opal/references/skills.md`의 "기술 스택별 추천 스킬" 참조
+   - 판별 결과를 TASK.md에 "기술 스택" 필드로 기록
 
 ---
 

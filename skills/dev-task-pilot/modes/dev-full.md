@@ -66,6 +66,10 @@ dev-task-pilot ANALYSIS 워커로서 아래 태스크를 수행하라.
 **프로젝트 컨벤션**:
 - {프로젝트 루트의 CLAUDE.md 절대 경로}
 
+**추가 참조**:
+- {~/.opal/references/skills.md} (기술 스택별 추천 스킬 섹션)
+- {skills/dev-task-pilot/references/dev-tools-registry.md 절대 경로} (있으면)
+
 **산출물 저장 경로**: {tasks/{NNN}-{name}/ANALYSIS.md}
 ```
 
@@ -114,12 +118,17 @@ dev-task-pilot PLAN 워커로서 아래 태스크를 수행하라.
 **프로젝트 컨벤션**:
 - {프로젝트 루트의 CLAUDE.md 절대 경로}
 
-**산출물 저장 경로**: {tasks/{NNN}-{name}/PLAN.md}
+**추가 입력**:
+- {tasks/{NNN}-{name}/ANALYSIS.md}의 "6. 기술 컨텍스트" 섹션
+
+**산출물 저장 경로**:
+- {tasks/{NNN}-{name}/PLAN.md}
+- {tasks/{NNN}-{name}/execution-plan.json} (FE/BE 작업 시)
 ```
 
 ### 워커 완료 시
 
-워커가 PLAN.md를 반환하면, **오케스트레이터가 dtp-qa-dev-agent를 호출**한다. QA 결과를 포함하여 사용자에게 보고.
+워커가 PLAN.md (+ execution-plan.json)를 반환하면, **오케스트레이터가 dtp-qa-dev-agent를 호출**한다. QA 결과를 포함하여 사용자에게 보고.
 
 ---
 
@@ -298,7 +307,61 @@ TEST-SCENARIO.md가 사용자의 승인을 받으면, **오케스트레이터가
 
 > **복잡 모드 + 중첩 불가 시** (Cursor 등): 워커가 내부 서브 에이전트를 호출할 수 없는 플랫폼에서는, 오케스트레이터가 Part C 토폴로지에 따라 배치별 서브 에이전트를 직접 디스패치한다.
 
-### 워커 디스패치 프롬프트
+### execution-plan.json 기반 FE/BE 병렬 디스패치
+
+execution-plan.json이 존재하고 frontend + backend 모두 포함된 경우, **오케스트레이터가** 아래 순서로 디스패치한다:
+
+**Phase 1: Common 실행**
+- `execution_order.sequence`의 phase 1 항목 (공통 타입, 설정 등)
+- 단일 워커로 순차 실행
+
+**Phase 2: FE + BE 병렬 디스패치**
+- **FE 서브에이전트**: `frontend.screens` 배열을 전달
+  - 각 screen에 대해 ui-designer plan-driven 모드 호출
+  - 화면 간 독립적이면 내부 병렬 가능
+- **BE 서브에이전트**: `backend.layers` 배열을 전달
+  - layer 순서(model→dto→service→router)에 따라 순차 실행
+
+**FE 서브에이전트 프롬프트**:
+
+```
+dev-task-pilot EXECUTE 워커(FE)로서 아래 화면을 구현하라.
+
+**담당 영역**: Frontend
+**태스크 폴더**: {tasks/{NNN}-{name}/}
+**실행 계획**: {tasks/{NNN}-{name}/execution-plan.json}의 frontend.screens
+
+**화면별 구현**:
+- 각 screen 객체를 ui-designer plan-driven 모드의 입력으로 전달
+- ui-designer 스킬 탐색: {프로젝트}/.opal/skills/ui-designer/SKILL.md → ~/.opal/skills/ui-designer/SKILL.md
+- SKILL.md의 모드 판별 → modes/plan-driven.md Read → 프로세스 따름
+
+**가이드**: {skills/dev-task-pilot/references/execute-guide.md 절대 경로}
+**컨벤션**: {프로젝트 루트의 CLAUDE.md 절대 경로}
+```
+
+**BE 서브에이전트 프롬프트**:
+
+```
+dev-task-pilot EXECUTE 워커(BE)로서 아래 레이어를 구현하라.
+
+**담당 영역**: Backend
+**태스크 폴더**: {tasks/{NNN}-{name}/}
+**실행 계획**: {tasks/{NNN}-{name}/execution-plan.json}의 backend.layers
+
+**레이어 실행 순서**: depends_on에 따라 순차 (일반적으로 model→dto→service→router)
+**가이드**: {skills/dev-task-pilot/references/execute-guide.md 절대 경로}
+**컨벤션**: {프로젝트 루트의 CLAUDE.md 절대 경로}
+```
+
+**Phase 3: 완료**
+- FE + BE 모두 완료 → **dtp-dev-test-agent 호출** → **DONE.md 생성** → 사용자 보고
+
+**fallback**: execution-plan.json이 없거나 단일 영역(FE만/BE만)이면 → 기존 TODO.md 기반 순차 실행 (아래 프롬프트).
+
+---
+
+### 워커 디스패치 프롬프트 (기존 방식 — fallback)
 
 ```
 dev-task-pilot EXECUTE 워커로서 아래 태스크를 수행하라.

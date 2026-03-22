@@ -87,3 +87,49 @@ OPAL 에이전트가 사용할 수 있는 모든 스킬 목록.
 | trailofbits/modern-python | Python, uv, ruff, pytest, 모던 Python | `~/.opal/community-skills/trailofbits/modern-python/SKILL.md` |
 | getsentry/code-review | 코드 리뷰, PR 리뷰 | `~/.opal/community-skills/getsentry/code-review/SKILL.md` |
 | openai/security-best-practices | 보안 리뷰, 보안 취약점, 시큐리티 | `~/.opal/community-skills/openai/security-best-practices/SKILL.md` |
+
+---
+
+## 기술 스택별 추천 스킬
+
+> dev-task-pilot의 ANALYSIS 단계에서 프로젝트 기술 스택을 식별한 후, 이 매핑을 참조하여 PLAN 단계에서 적용할 스킬/MCP를 결정한다.
+> `(미등록)` 표시는 해당 스택 전용 커뮤니티 스킬이 아직 없음을 의미한다. context7 MCP로 최신 문서 조회는 가능.
+
+### FE 기술 스택
+
+| 기술 | 식별 조건 | 추천 스킬 | 추천 MCP |
+|------|----------|----------|---------|
+| React | package.json: `react` | vercel-labs/react-best-practices, vercel-labs/composition-patterns | context7 |
+| Next.js | package.json: `next` | vercel-labs/next-best-practices + 위 React 스킬 | context7 |
+| shadcn/ui | `components.json` 존재 또는 `components/ui/` 디렉토리 | vercel-labs/shadcn | shadcn MCP, context7 |
+| Tailwind CSS | `tailwind.config.*` 존재 | (shadcn 스킬에 포함) | context7 |
+| Vue | package.json: `vue` | (미등록) | context7 |
+| Nuxt | package.json: `nuxt` | (미등록) | context7 |
+| Angular | package.json: `@angular/core` | (미등록) | context7 |
+| Svelte | package.json: `svelte` | (미등록) | context7 |
+
+### BE 기술 스택
+
+| 기술 | 식별 조건 | 추천 스킬 | 추천 MCP |
+|------|----------|----------|---------|
+| Python | `pyproject.toml` 또는 `requirements.txt` 존재 | trailofbits/modern-python | context7 |
+| FastAPI | pyproject.toml/requirements.txt: `fastapi` | trailofbits/modern-python | context7 |
+| Django | pyproject.toml/requirements.txt: `django` | trailofbits/modern-python | context7 |
+| Flask | pyproject.toml/requirements.txt: `flask` | trailofbits/modern-python | context7 |
+| Node.js/Express | package.json: `express` | (미등록) | context7 |
+| NestJS | package.json: `@nestjs/core` | (미등록) | context7 |
+| Java/Spring Boot | `pom.xml` 또는 `build.gradle`: `spring-boot` | (미등록) | context7 |
+| Kotlin/Spring | `build.gradle.kts`: `spring-boot` | (미등록) | context7 |
+| Go | `go.mod` 존재 | (미등록) | context7 |
+| Go/Gin | go.mod: `gin-gonic/gin` | (미등록) | context7 |
+| Go/Echo | go.mod: `labstack/echo` | (미등록) | context7 |
+| Rust/Actix | `Cargo.toml`: `actix-web` | (미등록) | context7 |
+
+### 공통 (모든 프로젝트)
+
+| 용도 | 추천 스킬 | 적용 시점 |
+|------|----------|----------|
+| UI 구현 | ui-designer | EXECUTE 단계 (FE 화면 작업) |
+| 코드 리뷰 | getsentry/code-review | TEST 단계 |
+| 웹앱 테스트 | anthropics/webapp-testing | TEST 단계 (Playwright) |
+| 프론트엔드 디자인 | anthropics/frontend-design | PLAN 단계 (UI/UX 설계 참조) |

@@ -262,6 +262,17 @@ install_opal() {
 
     mkdir -p "$opal_home"
 
+    # ── 프레임워크 디렉토리 클린 삭제 (사용자 데이터 보존) ──
+    info "기존 프레임워크 파일 정리 (사용자 데이터 보존)..."
+    local clean_dirs=("skills" "agents" "references" "community-skills" "templates")
+    for dir in "${clean_dirs[@]}"; do
+        if [[ -d "$opal_home/$dir" ]]; then
+            rm -rf "$opal_home/$dir"
+            success "삭제: $opal_home/$dir/"
+        fi
+    done
+    # 보존: identity.md, AGENT.md, projects/ (사용자 데이터)
+
     # ── OPAL 코어 ──
     cp "$opal_dir/core/AGENT.md" "$opal_home/AGENT.md"
     success "OPAL AGENT.md → $opal_home/AGENT.md"

@@ -18,6 +18,22 @@ PLAN은 "설계서"가 아니라 "실행 가능한 구현 청사진"이다. 이 
 
 ### 계획 수립 프로세스
 
+#### 0단계: 기술 컨텍스트 로딩 (의무)
+
+ANALYSIS.md의 "6. 기술 컨텍스트" 섹션과 프로젝트 문서를 참조하여 설계에 반영한다.
+
+1. **ANALYSIS.md "기술 컨텍스트" 확인**: 식별된 기술 스택 + 추천 스킬/MCP 목록 확인
+2. **추천 스킬 Read**: 추천 스킬의 SKILL.md를 Read하여 설계 결정에 반영할 규칙/패턴을 파악
+   - 예: react-best-practices → dynamic import, 워터폴 제거 패턴
+   - 예: modern-python → uv, ruff, async session 패턴
+   - 예: shadcn → FieldGroup/Field 폼 구조, gap 레이아웃 규칙
+3. **MCP 활용**: context7로 최신 API 문서 참조, shadcn MCP로 컴포넌트 조회
+4. **FE 설계 시**: ui-designer SKILL.md의 "화면 유형별 구현 패턴"과 "shadcn Critical Rules"를 참조
+   - 탐색: `{프로젝트}/.opal/skills/ui-designer/SKILL.md` → `~/.opal/skills/ui-designer/SKILL.md`
+5. 설계에 영향을 미친 스킬/MCP를 PLAN.md "참조 도구" 섹션에 기록
+
+---
+
 #### 1단계: 구현 범위 확정
 
 ANALYSIS.md에서 파악한 변경 필요 파일 목록을 확정한다.
@@ -49,6 +65,29 @@ ANALYSIS.md에서 파악한 변경 필요 파일 목록을 확정한다.
 4. 외부 인터페이스 (API, UI) → 최상위
 5. 테스트 → 각 단계별 검증
 
+#### 영역 태그 규칙 (FE + BE 작업 시)
+
+FE + BE 모두 포함하는 작업에서는 각 구현 항목에 영역 태그를 부여한다:
+
+- `[FE]` — 프론트엔드 전용 (컴포넌트, 페이지, 스타일링)
+- `[BE]` — 백엔드 전용 (모델, 서비스, 라우터, DTO)
+- `[공통]` — FE/BE 공유 (타입 정의, 설정, 공유 DTO)
+
+구현 순서 테이블에 영역 컬럼을 추가한다:
+
+```markdown
+| 순서 | 영역 | 작업 | 파일 | 예상 난이도 |
+|------|------|------|------|-----------|
+| 1 | [공통] | 공유 타입 정의 | shared/types.ts | 쉬움 |
+| 2 | [BE] | 데이터 모델 | models/user.py | 보통 |
+| 3 | [BE] | API 라우터 | routers/user.py | 보통 |
+| 4 | [FE] | 사용자 목록 화면 | pages/users.tsx | 보통 |
+```
+
+영역 태그는 EXECUTE에서 FE/BE 병렬 디스패치의 기반이 된다.
+
+---
+
 #### 3단계: 핵심 설계 명세
 
 각 파일의 핵심 구현 내용을 명세한다. 전체 코드를 쓰는 것이 아니라, **클래스/함수 시그니처와 핵심 로직**을 정의한다.
@@ -60,6 +99,12 @@ ANALYSIS.md에서 파악한 변경 필요 파일 목록을 확정한다.
 - **쿼리**: 주요 SQL/쿼리문
 - **설정값**: 환경변수 추가 항목
 
+**FE 화면 설계 시** (0단계에서 ui-designer 참조한 경우):
+- 각 화면의 유형(dashboard, crud, form, auth, detail, settings, report, monitor)을 명시
+- 화면별 주요 shadcn 컴포넌트를 명시
+- 화면별 action(new: 신규 생성 / modify: 기존 수정)을 명시
+- 인터랙션(사용자 동작 → 결과)을 정의
+
 #### 4단계: 의존성 및 환경 변경
 
 추가 패키지, 환경 설정 변경 사항을 정리한다.
@@ -67,6 +112,84 @@ ANALYSIS.md에서 파악한 변경 필요 파일 목록을 확정한다.
 #### 5단계: 테스트 전략
 
 어떤 테스트를 작성할지, 각 테스트의 성공 기준을 정의한다.
+
+---
+
+#### 6단계: execution-plan.json 생성 (FE/BE 작업 시)
+
+FE 또는 BE 작업이 포함된 태스크에서는 execution-plan.json을 생성한다.
+이 파일은 EXECUTE 단계에서 FE/BE 병렬 디스패치의 입력으로 사용된다.
+
+**저장 경로**: `tasks/{NNN}-{태스크명}/execution-plan.json`
+
+**생성 조건**:
+- FE 또는 BE 작업이 있으면 생성
+- 문서 전용 작업이면 생성하지 않음
+- Short Task에서도 FE/BE 작업이면 생성
+
+**스키마**:
+
+```json
+{
+  "task_id": "NNN-태스크명",
+  "common": {
+    "items": [
+      {
+        "id": "C-1",
+        "description": "작업 설명",
+        "files": ["파일 경로"],
+        "depends_on": []
+      }
+    ]
+  },
+  "frontend": {
+    "screens": [
+      {
+        "id": "FE-1",
+        "name": "화면명",
+        "type": "crud | dashboard | form | auth | detail | settings | report | monitor",
+        "action": "new | modify",
+        "route": "/경로",
+        "files": ["파일 경로"],
+        "shadcn_components": ["컴포넌트명"],
+        "depends_on": ["C-1"],
+        "ui_work": {
+          "description": "UI 작업 설명",
+          "components_to_create": ["컴포넌트명"],
+          "components_to_modify": ["컴포넌트명"]
+        },
+        "api_work": {
+          "endpoints": ["GET /api/...", "POST /api/..."],
+          "description": "API 연동 설명"
+        }
+      }
+    ]
+  },
+  "backend": {
+    "layers": [
+      {
+        "id": "BE-1",
+        "layer": "model | dto | service | router",
+        "description": "작업 설명",
+        "files": ["파일 경로"],
+        "depends_on": []
+      }
+    ]
+  },
+  "execution_order": {
+    "strategy": "common-first-then-parallel",
+    "sequence": [
+      { "phase": 1, "items": ["C-*"], "note": "공통 먼저" },
+      { "phase": 2, "parallel": ["frontend", "backend"], "note": "FE/BE 병렬" }
+    ]
+  }
+}
+```
+
+**BE layers 순서 규칙**: model → dto → service → router (하위 레이어부터)
+**FE screens**: 화면별 독립 단위. 각 screen은 ui-designer plan-driven 모드의 입력으로 사용됨.
+**common**: FE/BE 공유 타입, 설정 등. 반드시 먼저 실행.
+**frontend/backend가 비어있으면**: 해당 키를 생략하거나 빈 배열로 둔다.
 
 ---
 
@@ -96,6 +219,17 @@ ANALYSIS.md에서 파악한 변경 필요 파일 목록을 확정한다.
 ## 6. 리스크 및 대응
 | 리스크 | 영향 | 대응 방안 |
 |--------|------|----------|
+
+## 7. 참조 도구 (0단계에서 로딩)
+### 사용 스킬
+| 스킬 | 설계에 반영한 내용 |
+|------|-----------------|
+### 사용 MCP
+| MCP | 조회 결과 요약 |
+|-----|--------------|
+
+## 참조: execution-plan.json (FE/BE 작업 시)
+{tasks/{NNN}-{태스크명}/execution-plan.json 경로}
 ```
 
 ---
@@ -107,6 +241,9 @@ ANALYSIS.md에서 파악한 변경 필요 파일 목록을 확정한다.
 - [ ] ANALYSIS에서 발견한 제약/리스크가 PLAN에 반영되었는가?
 - [ ] 테스트 전략이 TASK.md의 요구사항을 모두 커버하는가?
 - [ ] 프로젝트 코드 컨벤션을 따르는가?
+- [ ] 추천 스킬(기술 컨텍스트)을 Read하고 설계에 반영했는가?
+- [ ] FE+BE 작업 시 영역 태그([FE]/[BE]/[공통])를 부여했는가?
+- [ ] FE/BE 작업 시 execution-plan.json을 생성했는가?
 
 ---
 
@@ -129,10 +266,12 @@ Short Task에서는 ANALYSIS, PLAN, TODO를 하나의 **PLAN.md**로 통합한�
 
 > ⚠️ **Short Task는 단계를 줄여 속도를 높이는 것이지, 분석 품질을 낮추는 것이 아니다.** 코드 분석은 Full Task의 ANALYSIS와 동일한 깊이로 수행해야 한다. 충분한 분석 없이 계획을 세우면 구현 중 재작업이 발생한다.
 
+0. **기술 컨텍스트 로딩**: Full Task 0단계와 동일. docs/ + skills.md + mcps.md 참조 → 추천 스킬 Read → 설계 반영.
 1. **코드 분석** (Full Task ANALYSIS 수준): 기존 코드를 실제로 읽고 구조·흐름·영향 범위를 파악한다.
-2. **구현 계획**: 변경할 파일과 변경 내용을 구체적으로 정의한다.
+2. **구현 계획**: 변경할 파일과 변경 내용을 구체적으로 정의한다. FE+BE 시 영역 태그 부여.
 3. **실행 체크리스트**: 구현 순서대로 Step을 나열한다 (5개 이하 권장).
 4. **QA 체크리스트**: 기능 테스트, 회귀 테스트, 코드 품질 항목을 정의한다.
+5. **execution-plan.json 생성** (FE/BE 작업 시): Full Task 6단계와 동일 스키마. 간소화 가능하지만 구조는 동일.
 
 #### 코드 분석 상세 프로세스
 
@@ -202,6 +341,13 @@ Short Task에서는 ANALYSIS, PLAN, TODO를 하나의 **PLAN.md**로 통합한�
 - [ ] {항목}
 ### 코드 품질
 - [ ] {항목}
+
+## 5. 기술 컨텍스트
+### 기술 스택
+| 영역 | 기술 | 적용 스킬 |
+|------|------|----------|
+### 참조: execution-plan.json (FE/BE 작업 시)
+{경로}
 ```
 
 ---
@@ -215,6 +361,8 @@ Short Task에서는 ANALYSIS, PLAN, TODO를 하나의 **PLAN.md**로 통합한�
 - [ ] 실행 체크리스트가 TASK.md 요구사항을 모두 커버하는가?
 - [ ] QA 항목이 기능/회귀/품질을 포함하는가?
 - [ ] Step 수가 5개 이하인가? (초과 시 에스컬레이션 고려)
+- [ ] 기술 컨텍스트를 로딩하고 추천 스킬을 참조했는가?
+- [ ] FE+BE 작업 시 영역 태그와 execution-plan.json을 작성했는가?
 
 ---
 
