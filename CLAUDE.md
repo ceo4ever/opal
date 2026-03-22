@@ -72,6 +72,11 @@ opal/                            ← OPAL AI 에이전트 (크로스 플랫폼)
 └── templates/                   프로젝트 에이전트 템플릿
 
 cursor-rules/                    ← Cursor 프로젝트 규칙 템플릿
+
+.opal/                           ← 이 프로젝트의 PM 프로필 및 메모리 (opal-project-init이 생성)
+├── AGENT.md                     PM 프로필 (역할, 페르소나, 의사결정 원칙, 프로젝트 규칙)
+├── MEMORY.md                    메모리 인덱스 (카테고리 + 작업 히스토리)
+└── memory/                      개별 메모리 파일 (작업 기록, 아키텍처 결정, 도메인 지식 등)
 ```
 
 ### 배포 구조 (사용자 홈)

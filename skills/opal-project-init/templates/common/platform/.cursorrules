@@ -28,6 +28,14 @@ alwaysApply: true
 - 환경 설정: `docs/server/ENVIRONMENT.md`, `docs/client/ENVIRONMENT.md`
 - 문제 해결: `docs/client/COMMON_ISSUES.md`
 
+## OPAL 프로젝트 에이전트
+
+`.opal/` 디렉토리에 이 프로젝트의 PM 프로필과 메모리가 있다.
+
+- `.opal/AGENT.md` — PM 프로필 (역할, 페르소나, 의사결정 원칙, 프로젝트 규칙)
+- `.opal/MEMORY.md` — 메모리 인덱스 (작업 히스토리, 도메인 지식, 아키텍처 결정 등)
+- `.opal/memory/` — 개별 메모리 파일
+
 ## 개발 환경
 
 - 서버: http://localhost:{{SERVER_PORT}}
