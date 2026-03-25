@@ -18,12 +18,14 @@
 
 | # | 작업 | 단계 | 경로 | 날짜 |
 |---|------|------|------|------|
-| 1 | 태스크 진행 단계 메모리 추적 기능 추가 | 완료 (359a7dd) | - | 2026-03-22 |
-| 2 | context-compactor 스킬 (031) | PLAN ✅ → TODO 대기 | tasks/031-context-compactor-skill/ | 2026-03-22 |
-| 3 | opal-project-init scope=opal-only 모드 추가 | 완료 (dfb2a18) | - | 2026-03-21 |
+| 1 | dtp→otp 리스트럭처링 (032) | TASK ✅ → ANALYSIS 대기 | tasks/032-dtp-to-otp-restructure/ | 2026-03-25 |
+| 2 | 태스크 진행 단계 메모리 추적 기능 추가 | 완료 (359a7dd) | - | 2026-03-22 |
+| 3 | context-compactor 스킬 (031) | PLAN ✅ → TODO 대기 | tasks/031-context-compactor-skill/ | 2026-03-22 |
+| 4 | opal-project-init scope=opal-only 모드 추가 | 완료 (dfb2a18) | - | 2026-03-21 |
 
 ## 프로젝트
 
 | 카테고리 | 파일 | 설명 |
 |----------|------|------|
 | project | [memory/project_security_task.md](memory/project_security_task.md) | 030에서 분리된 보안 전용 스킬+에이전트 생성 예정 |
+| project | [memory/project_otp_doc_plan.md](memory/project_otp_doc_plan.md) | otp-doc 문서 전용 스킬 계획 — otp-dev 계열 완료 후 설계 예정 |
