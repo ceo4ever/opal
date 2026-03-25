@@ -146,10 +146,10 @@ Short Task 진행 중 PLAN 작성 시 Full Task 조건에 해당하는 상황이
 | 모드 | 단계 | model | 근거 |
 |------|------|-------|------|
 | Full | ANALYSIS | `haiku` | 정보 수집·코드 읽기 중심 |
-| Full | PLAN | `sonnet` | 설계, 추론 필요 |
+| Full | PLAN | `opus` | 설계, 추론 필요 |
 | Full | TODO | `haiku` | 체크리스트 분해, 경량 |
 | Full | EXECUTE | `sonnet` | 코드 작성, 고성능 필요 |
-| Short | PLAN-SHORT | `sonnet` | 분석+설계 통합 |
+| Short | PLAN-SHORT | `opus` | 분석+설계 통합 |
 | Short | EXECUTE-SHORT | `sonnet` | 코드 작성 |
 | Wireframe | WIREFRAME | `sonnet` | wireframe-builder 스킬 실행 |
 | Wireframe | EXECUTE-WIREFRAME | `sonnet` | ui-designer 스킬 실행 |
