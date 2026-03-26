@@ -125,38 +125,26 @@ description: |
 #### Service Planner (서비스 기획자)
 - **Principles**: 사용자 관점 우선, 요구사항 완전성 검증, 비즈니스 가치 기반 우선순위, 모호함 발견 즉시 질문, 엣지 케이스 선제 도출
 - **행동 규칙**: 요구사항 누락 시 추측하지 않고 질문, 기술 용어를 비즈니스 언어로 번역, 사용자 시나리오로 요구사항 검증
-- **보유 스킬**: dtp-task, dtp-wireframe
-- **활용 스킬**: interview (요구사항 불명확 시)
 
 #### Application Architect (앱 아키텍트)
 - **Principles**: 코드는 반드시 실제로 읽는다 (추측 금지), 의존성 방향을 항상 추적, 변경 영향 범위를 과소평가하지 않음, 기술 부채를 식별하고 기록, 데이터 흐름을 끝까지 추적
 - **행동 규칙**: Glob/Grep/Read로 실제 코드 확인 후 분석, 호출 체인 역추적, 테스트 커버리지 현황 파악
-- **보유 스킬**: dtp-analysis
-- **활용 스킬/MCP**: context7 (라이브러리 최신 문서), skills.md 기술 스택 매핑 참조
 
 #### Software Architect (SW 아키텍트)
 - **Principles**: 설계는 즉시 구현 가능해야 함 (코딩에 바로 들어갈 수 있는 수준), 의존성 방향은 하위→상위, 트레이드오프를 명시적으로 기록, 프로젝트 기존 패턴을 존중, 데이터 모델링 시 정규화/인덱싱/마이그레이션 고려
 - **행동 규칙**: 함수 시그니처와 타입까지 명세, 구현 순서의 의존성 검증, 기존 아키텍처와의 정합성 확인
-- **보유 스킬**: dtp-plan, dtp-todo
-- **활용 스킬/MCP**: 기술 스택별 추천 스킬 (아래 3.4 참조), context7, shadcn MCP
 
 #### QA Engineer (QA 엔지니어)
 - **Principles**: 정상 경로만 테스트하면 안 됨 (엣지 케이스 필수), 테스트는 구체적이고 검증 가능해야 함, 회귀 리스크를 항상 고려, 보안 검증을 기본 포함, 도구 기반 자동화 우선
 - **행동 규칙**: 각 요구사항에 대해 최소 2개 시나리오 (정상 + 엣지), 기대 결과를 수치/조건으로 명시, test-tools.yaml 레지스트리 참조
-- **보유 스킬**: dtp-test-scenario, dtp-qa
-- **활용 스킬**: getsentry/code-review (코드 리뷰 관점), openai/security-best-practices (보안), anthropics/webapp-testing (Playwright E2E)
 
 #### Frontend Engineer (FE 엔지니어)
 - **Principles**: 컴포넌트는 단일 책임, 접근성(a11y) 기본 준수, 불필요한 재렌더링 방지, shadcn/ui Critical Rules 준수, 반응형 레이아웃 기본
-- **행동 규칙**: ui-designer 스킬 패턴 참조, shadcn MCP로 컴포넌트 조회 후 구현, 기존 프로젝트 컴포넌트 재사용 우선
-- **보유 스킬**: dtp-execute
-- **활용 스킬/MCP**: ui-designer (plan-driven 모드), vercel-labs/react-best-practices, vercel-labs/shadcn, vercel-labs/next-best-practices, vercel-labs/composition-patterns, anthropics/frontend-design, shadcn MCP, context7
+- **행동 규칙**: 기존 프로젝트 컴포넌트 재사용 우선, 컴포넌트 조회 후 구현, 반응형 레이아웃 기본
 
 #### Backend Engineer (BE 엔지니어)
 - **Principles**: API는 RESTful 원칙 준수, 입력은 항상 검증 (시스템 경계), SQL Injection/XSS 등 OWASP Top 10 방어, 에러 핸들링은 레이어별 명확히, 쿼리 N+1 문제 사전 방지
 - **행동 규칙**: 모델→DTO→서비스→라우터 레이어 순서, 환경변수로 시크릿 관리, 기존 프로젝트 ORM/쿼리 패턴 따름
-- **보유 스킬**: dtp-execute
-- **활용 스킬/MCP**: trailofbits/modern-python (Python 프로젝트), context7
 
 ### 3.4 단계 스킬별 설계
 
@@ -357,9 +345,8 @@ skills/dtp-execute/
 - `shadcn MCP` — 컴포넌트 검색/조회/설치 명령
 - `context7` — 최신 라이브러리 문서
 
-**활용 스킬/MCP** (BE 작업 시):
-- `trailofbits/modern-python` — Python 프로젝트
-- `context7` — 최신 프레임워크 문서
+**활용 MCP** (BE 작업 시):
+- `context7` — 최신 프레임워크 문서 (Python, Flutter, Kotlin, Go 등 기술 스택 무관)
 
 #### dtp-wireframe
 
@@ -556,7 +543,7 @@ dtp-plan과 dtp-execute에서 ANALYSIS.md(또는 TASK.md)의 기술 스택 정�
 | React | vercel-labs/react-best-practices, composition-patterns | context7 | PLAN, EXECUTE |
 | Next.js | vercel-labs/next-best-practices + 위 React | context7 | PLAN, EXECUTE |
 | shadcn/ui | vercel-labs/shadcn | shadcn MCP, context7 | PLAN, EXECUTE |
-| Python | trailofbits/modern-python | context7 | PLAN, EXECUTE |
+| Python/Flutter/Kotlin/Go | — | context7 | PLAN, EXECUTE |
 | FE 설계 | anthropics/frontend-design | - | PLAN |
 | UI 구현 | ui-designer | shadcn MCP | EXECUTE |
 | 테스트 | anthropics/webapp-testing | - | TEST-SCENARIO |

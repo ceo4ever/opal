@@ -33,9 +33,33 @@ AI 환경(Claude Code, Cursor, Codex 등)에서 IT 프로젝트를 체계적으�
 
 ```
 skills/                          ← 프레임워크 스킬 (단일 소스, ~/.opal/skills/로 배포)
-├── dev-task-pilot/              핵심 오케스트레이터: Full Task / Short Task / Wireframe UI 멀티 모드
-│   ├── modes/                   모드별 파이프라인 (dev-full.md, dev-short.md, wireframe-ui.md)
-│   └── references/              단계별 가이드 (analysis-guide.md, plan-guide.md 등)
+├── dtp-dev/                     오케스트레이터: Full Task 파이프라인
+├── dtp-dev-short/               오케스트레이터: Short Task 파이프라인
+├── dtp-dev-wf/                  오케스트레이터: Wireframe UI 파이프라인
+├── dtp-task/                    단계: TASK.md 작성
+│   ├── references/task-guide.md
+│   └── personas/service-planner.md
+├── dtp-analysis/                단계: 코드베이스 분석
+│   ├── references/              analysis-guide.md, tech-context-guide.md
+│   └── personas/application-architect.md
+├── dtp-plan/                    단계: 구현 계획
+│   ├── references/plan-guide.md
+│   └── personas/software-architect.md
+├── dtp-todo/                    단계: 실행 체크리스트 확장 (Full Task 전용)
+│   ├── references/              todo-guide.md, execute-plan-guide.md
+│   └── personas/software-architect.md
+├── dtp-test-scenario/           단계: 테스트 시나리오
+│   ├── references/test-scenario-guide.md
+│   └── personas/qa-engineer.md
+├── dtp-execute/                 단계: 코드 실행
+│   ├── references/              execute-guide.md, checkpoint-guide.md
+│   └── personas/                frontend-engineer.md, backend-engineer.md
+├── dtp-wireframe/               단계: 와이어프레임 생성
+│   └── personas/service-planner.md
+├── dtp-qa/                      단계: QA 검증
+│   ├── references/              qa-dev-guide.md, qa-wireframe-guide.md
+│   └── personas/qa-engineer.md
+├── dev-task-pilot/              (레거시, 안정화 후 삭제 예정)
 ├── api-analyzer/                외부 API 7단계 분석 및 명세서 생성
 ├── doc-writer/                  기술 문서 표준 템플릿 (모든 문서 스킬의 베이스)
 ├── interview/                   구조화된 Q&A 요구사항 수집
@@ -47,12 +71,15 @@ skills/                          ← 프레임워크 스킬 (단일 소스, ~/.o
 └── wireframe-builder/           UI 분석·설계 — 정책서/요구사항 → wireframe.md 생성
 
 agents/                          ← 에이전트 (단일 AGENT.md 포맷)
-├── dtp-dev-agent/               Full/Short Task 워커 에이전트
-├── dtp-wireframe-ui-agent/      Wireframe UI 워커 에이전트
-├── dtp-qa-dev-agent/            Full/Short 문서 QA
-├── dtp-qa-wireframe-agent/      Wireframe UI QA
-├── dtp-action-plan-agent/       실행 아키텍처 설계 (Part C)
-├── dtp-dev-test-agent/          코드 동적 검증
+├── dtp-worker/                  범용 워커 (단계 스킬 실행)
+├── dtp-qa-worker/               QA 워커 (산출물 검증)
+├── dtp-test-worker/             Test 워커 (동적 검증)
+├── dtp-dev-agent/               (레거시, 안정화 후 삭제 예정)
+├── dtp-wireframe-ui-agent/      (레거시)
+├── dtp-qa-dev-agent/            (레거시)
+├── dtp-qa-wireframe-agent/      (레거시)
+├── dtp-action-plan-agent/       (레거시)
+├── dtp-dev-test-agent/          (레거시)
 └── wtm-worker/                  web-to-markdown 병렬 처리 워커
 
 community-skills/                ← 외부 커뮤니티 스킬 (기본 번들 31개)

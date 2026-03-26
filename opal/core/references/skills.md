@@ -9,7 +9,17 @@ OPAL 에이전트가 사용할 수 있는 모든 스킬 목록.
 
 | 스킬 | 트리거 | 설명 |
 |------|--------|------|
-| dev-task-pilot | 코드 변경이 수반되는 모든 개발 작업: 버그 수정, 기능 추가/수정/개선, 성능 최적화, 리팩토링, UI 구현, 와이어프레임 설계. "새 태스크", "dtp"도 트리거. 단, 코드 설명만 하는 요청, API 명세서(api-analyzer), 문서(doc-writer), PR 리뷰, git 작업, 단순 설정 변경은 제외 | Full Task / Short Task / Wireframe UI 멀티 모드 파이프라인 |
+| dtp-dev | "개발해줘", "Full Task", "/dtp-dev", 대규모 코드 변경 (≥10파일, 다단계 의사결정, 다중 모듈 연쇄 영향) | Full Task 오케스트레이터 |
+| dtp-dev-short | "수정해줘", "Short", "/dtp-dev-short", 소규모 코드 변경 (버그 수정, 단순 기능 수정/추가) | Short Task 오케스트레이터 |
+| dtp-dev-wf | "와이어프레임", "wireframe", "/dtp-dev-wf" | Wireframe UI 오케스트레이터 |
+| dtp-task | (오케스트레이터 디스패치) | TASK.md 작성 |
+| dtp-analysis | (오케스트레이터 디스패치) | 코드베이스 분석 |
+| dtp-plan | (오케스트레이터 디스패치) | 구현 계획 |
+| dtp-todo | (오케스트레이터 디스패치) | 실행 체크리스트 확장 (Full Task 전용) |
+| dtp-test-scenario | (오케스트레이터 디스패치) | 테스트 시나리오 작성 |
+| dtp-execute | (오케스트레이터 디스패치) | 코드 실행 |
+| dtp-wireframe | (오케스트레이터 디스패치) | 와이어프레임 생성 |
+| dtp-qa | (오케스트레이터 디스패치) | QA 검증 |
 | api-analyzer | "API 분석해줘", "API 명세서", "API 검토", "외부 API 조사" | 외부 API 7단계 분석 및 명세서 생성 |
 | doc-writer | "문서 작성해줘", "명세서 만들어줘", "보고서 작성" | 기술 문서 표준 템플릿 (모든 문서 스킬의 베이스) |
 | interview | "검토해줘", "확인해줘", "궁금한 거 물어봐" | 구조화된 Q&A 요구사항 수집 |
@@ -92,7 +102,7 @@ OPAL 에이전트가 사용할 수 있는 모든 스킬 목록.
 
 ## 기술 스택별 추천 스킬
 
-> dev-task-pilot의 ANALYSIS 단계에서 프로젝트 기술 스택을 식별한 후, 이 매핑을 참조하여 PLAN 단계에서 적용할 스킬/MCP를 결정한다.
+> dtp-analysis 단계에서 프로젝트 기술 스택을 식별한 후, 이 매핑을 참조하여 dtp-plan 단계에서 적용할 스킬/MCP를 결정한다.
 > `(미등록)` 표시는 해당 스택 전용 커뮤니티 스킬이 아직 없음을 의미한다. context7 MCP로 최신 문서 조회는 가능.
 
 ### FE 기술 스택
