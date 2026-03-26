@@ -14,8 +14,6 @@
 | 개발 | otp-wf | //otp-wf / //otpwf | 와이어프레임 설계 → UI 구현 | `//otpwf 대시보드 화면 설계해줘` | |
 | 분석 | api-analyzer | //api-analyzer | 외부 API 7단계 분석 → 명세서 생성 | `//api-analyzer {URL}` | |
 | 분석 | interview | //interview | 구조화된 Q&A로 요구사항 수집 | `//interview 요구사항 확인해줘` | |
-| 문서 | doc-writer | //doc-writer | 기술 문서 표준 템플릿 | `//doc-writer API 명세서 작성해줘` | |
-| 문서 | version-mgr | //version-mgr | 산출물 버전 태깅 (v{Major}.{Minor}) | `//version-mgr 버전 올려줘` | |
 | UI | wireframe-builder | //wireframe-builder | 정책서/요구사항 → wireframe.md 생성 | `//wireframe-builder 화면 설계해줘` | |
 | UI | ui-designer | //ui-designer | wireframe.md → React + shadcn/ui 구현 | `//ui-designer UI 구현해줘` | |
 | 관리 | opal-project-init | //opal-project-init | 프로젝트 문서(docs/) + OPAL 에이전트 생성 | `//opal-project-init` | |
