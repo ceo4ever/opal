@@ -26,15 +26,15 @@ PLAN.md §3.3 기반. 각 파일은 Principles + 행동 규칙만 포함 (활용
 | 1-8 | `skills/dtp-wireframe/personas/service-planner.md` | 1-1과 동일 내용 복사 |
 | 1-9 | `skills/dtp-qa/personas/qa-engineer.md` | 1-5와 동일 내용 복사 |
 
-- [ ] 1-1: service-planner.md
-- [ ] 1-2: application-architect.md
-- [ ] 1-3: software-architect.md
-- [ ] 1-4: software-architect.md (dtp-todo, 1-3 복사)
-- [ ] 1-5: qa-engineer.md
-- [ ] 1-6: frontend-engineer.md
-- [ ] 1-7: backend-engineer.md
-- [ ] 1-8: service-planner.md (dtp-wireframe, 1-1 복사)
-- [ ] 1-9: qa-engineer.md (dtp-qa, 1-5 복사)
+- [x] 1-1: service-planner.md
+- [x] 1-2: application-architect.md
+- [x] 1-3: software-architect.md
+- [x] 1-4: software-architect.md (dtp-todo, 1-3 복사)
+- [x] 1-5: qa-engineer.md
+- [x] 1-6: frontend-engineer.md
+- [x] 1-7: backend-engineer.md
+- [x] 1-8: service-planner.md (dtp-wireframe, 1-1 복사)
+- [x] 1-9: qa-engineer.md (dtp-qa, 1-5 복사)
 
 ---
 
@@ -47,8 +47,8 @@ PLAN.md §3.4 dtp-task 기반. 콘텐츠 소스: 기존 `skills/dev-task-pilot/S
 | 2-1 | `skills/dtp-task/SKILL.md` (~150줄) | TASK.md 작성 프로세스, frontmatter, 활용 스킬(interview), 산출물 형식 |
 | 2-2 | `skills/dtp-task/references/task-guide.md` | TASK.md 작성 규칙 상세 (기존 SKILL.md §STEP 1 이관) |
 
-- [ ] 2-1: SKILL.md
-- [ ] 2-2: task-guide.md
+- [x] 2-1: SKILL.md
+- [x] 2-2: task-guide.md
 
 ---
 
@@ -62,9 +62,9 @@ PLAN.md §3.4 dtp-analysis 기반. 콘텐츠 소스: 기존 `references/analysis
 | 3-2 | `skills/dtp-analysis/references/analysis-guide.md` | 분석 프로세스 상세 (기존 이관, 기술 컨텍스트 부분 분리) |
 | 3-3 | `skills/dtp-analysis/references/tech-context-guide.md` | 신규: 기술 스택 로딩 통합 (프로젝트 문서 확인 → 스택 식별 → 스킬/MCP 매핑) |
 
-- [ ] 3-1: SKILL.md
-- [ ] 3-2: analysis-guide.md
-- [ ] 3-3: tech-context-guide.md (신규)
+- [x] 3-1: SKILL.md
+- [x] 3-2: analysis-guide.md
+- [x] 3-3: tech-context-guide.md (신규)
 
 ---
 
@@ -77,8 +77,8 @@ PLAN.md §3.4 dtp-plan 기반. 콘텐츠 소스: 기존 `references/plan-guide.m
 | 4-1 | `skills/dtp-plan/SKILL.md` (~250줄) | 입력 계약, ANALYSIS.md 유무 분기, 활용 스킬/MCP(기술 스택별), 산출물 형식 |
 | 4-2 | `skills/dtp-plan/references/plan-guide.md` | 통합 PLAN 가이드 (ANALYSIS 존재/미존재 분기, 설계 프로세스) |
 
-- [ ] 4-1: SKILL.md
-- [ ] 4-2: plan-guide.md
+- [x] 4-1: SKILL.md
+- [x] 4-2: plan-guide.md
 
 ---
 
@@ -92,9 +92,9 @@ PLAN.md §3.4 dtp-todo 기반. 콘텐츠 소스: 기존 `references/todo-guide.m
 | 5-2 | `skills/dtp-todo/references/todo-guide.md` | 체크리스트 분해 규칙 (기존 이관) |
 | 5-3 | `skills/dtp-todo/references/execute-plan-guide.md` | 복잡 모드 Part C 설계 (기존 이관) |
 
-- [ ] 5-1: SKILL.md
-- [ ] 5-2: todo-guide.md
-- [ ] 5-3: execute-plan-guide.md
+- [x] 5-1: SKILL.md
+- [x] 5-2: todo-guide.md
+- [x] 5-3: execute-plan-guide.md
 
 ---
 
@@ -107,8 +107,8 @@ PLAN.md §3.4 dtp-test-scenario 기반. 콘텐츠 소스: 기존 `references/tes
 | 6-1 | `skills/dtp-test-scenario/SKILL.md` (~150줄) | 시나리오 도출, 도구 결정, 활용 스킬(webapp-testing, security-best-practices), 산출물 형식 |
 | 6-2 | `skills/dtp-test-scenario/references/test-scenario-guide.md` | 시나리오 작성 규칙 (기존 이관) |
 
-- [ ] 6-1: SKILL.md
-- [ ] 6-2: test-scenario-guide.md
+- [x] 6-1: SKILL.md
+- [x] 6-2: test-scenario-guide.md
 
 ---
 
@@ -122,9 +122,9 @@ PLAN.md §3.4 dtp-execute 기반. 콘텐츠 소스: 기존 `references/execute-g
 | 7-2 | `skills/dtp-execute/references/execute-guide.md` | 실행 규칙 + 가드레일 (기존 이관) |
 | 7-3 | `skills/dtp-execute/references/checkpoint-guide.md` | DONE.md 생성 규칙 (기존 이관) |
 
-- [ ] 7-1: SKILL.md
-- [ ] 7-2: execute-guide.md
-- [ ] 7-3: checkpoint-guide.md
+- [x] 7-1: SKILL.md
+- [x] 7-2: execute-guide.md
+- [x] 7-3: checkpoint-guide.md
 
 ---
 
@@ -136,7 +136,7 @@ PLAN.md §3.4 dtp-wireframe 기반. 콘텐츠 소스: 기존 `modes/wireframe-ui
 |---|------|------|
 | 8-1 | `skills/dtp-wireframe/SKILL.md` (~150줄) | wireframe-builder 위임, 활용 스킬(wireframe-builder, interview), 산출물 |
 
-- [ ] 8-1: SKILL.md
+- [x] 8-1: SKILL.md
 
 ---
 
@@ -150,9 +150,9 @@ PLAN.md §3.4 dtp-qa 기반. 콘텐츠 소스: 기존 `agents/dtp-qa-dev-agent/A
 | 9-2 | `skills/dtp-qa/references/qa-dev-guide.md` | Full/Short QA 기준 (기존 dtp-qa-dev-agent 이관) |
 | 9-3 | `skills/dtp-qa/references/qa-wireframe-guide.md` | Wireframe QA 기준 (기존 dtp-qa-wireframe-agent + wireframe-qa-guide 이관) |
 
-- [ ] 9-1: SKILL.md
-- [ ] 9-2: qa-dev-guide.md
-- [ ] 9-3: qa-wireframe-guide.md
+- [x] 9-1: SKILL.md
+- [x] 9-2: qa-dev-guide.md
+- [x] 9-3: qa-wireframe-guide.md
 
 ---
 
@@ -164,7 +164,7 @@ PLAN.md §3.5 dtp-dev 기반. 콘텐츠 소스: 기존 `SKILL.md` 공통 규칙 
 |---|------|------|
 | 10-1 | `skills/dtp-dev/SKILL.md` (~300줄) | Full Task 파이프라인, 디스패치 프롬프트 템플릿, 공통 규칙, 게이트, STATE.md, QA/Test 호출 |
 
-- [ ] 10-1: SKILL.md
+- [x] 10-1: SKILL.md
 
 ---
 
@@ -176,7 +176,7 @@ PLAN.md §3.5 dtp-dev-short 기반. 콘텐츠 소스: 기존 `SKILL.md` 공통 �
 |---|------|------|
 | 11-1 | `skills/dtp-dev-short/SKILL.md` (~250줄) | Short Task 파이프라인 (ANALYSIS/TODO 생략), 에스컬레이션 규칙 |
 
-- [ ] 11-1: SKILL.md
+- [x] 11-1: SKILL.md
 
 ---
 
@@ -188,7 +188,7 @@ PLAN.md §3.5 dtp-dev-wf 기반. 콘텐츠 소스: 기존 `SKILL.md` 공통 규�
 |---|------|------|
 | 12-1 | `skills/dtp-dev-wf/SKILL.md` (~200줄) | Wireframe UI 파이프라인, ui-designer 연동 |
 
-- [ ] 12-1: SKILL.md
+- [x] 12-1: SKILL.md
 
 ---
 
@@ -202,9 +202,9 @@ PLAN.md §3.6 기반.
 | 13-2 | `agents/dtp-qa-worker/AGENT.md` | QA 워커: dtp-qa Read → 검증, readonly: true (기본) |
 | 13-3 | `agents/dtp-test-worker/AGENT.md` | Test 워커: TEST-SCENARIO.md 기반 동적 검증 |
 
-- [ ] 13-1: dtp-worker/AGENT.md
-- [ ] 13-2: dtp-qa-worker/AGENT.md
-- [ ] 13-3: dtp-test-worker/AGENT.md
+- [x] 13-1: dtp-worker/AGENT.md
+- [x] 13-2: dtp-qa-worker/AGENT.md
+- [x] 13-3: dtp-test-worker/AGENT.md
 
 ---
 
@@ -219,10 +219,10 @@ PLAN.md §1 수정 파일 기반. 신규 스킬 완성 후 마지막에 교체 (
 | 14-3 | `~/.opal/references/skills.md` | 14-1과 동기화 |
 | 14-4 | `~/.opal/references/agents.md` | 14-2와 동기화 |
 
-- [ ] 14-1: 소스 skills.md
-- [ ] 14-2: 소스 agents.md
-- [ ] 14-3: 배포 skills.md (동기화)
-- [ ] 14-4: 배포 agents.md (동기화)
+- [x] 14-1: 소스 skills.md
+- [x] 14-2: 소스 agents.md
+- [x] 14-3: 배포 skills.md (동기화)
+- [x] 14-4: 배포 agents.md (동기화)
 
 ---
 
@@ -232,7 +232,7 @@ PLAN.md §1 수정 파일 기반. 신규 스킬 완성 후 마지막에 교체 (
 |---|------|------|
 | 15-1 | `CLAUDE.md` | 소스 구조 섹션에 dtp 컴포지션 아키텍처 반영 (skills/ 하위 11개, agents/ 하위 3개) |
 
-- [ ] 15-1: CLAUDE.md
+- [x] 15-1: CLAUDE.md
 
 ---
 
@@ -242,7 +242,7 @@ PLAN.md §1 수정 파일 기반. 신규 스킬 완성 후 마지막에 교체 (
 |---|------|------|
 | 16-1 | `.opal/MEMORY.md` | 작업 히스토리 #1 단계를 "완료 (커밋해시)" 로 갱신 |
 
-- [ ] 16-1: .opal/MEMORY.md
+- [x] 16-1: .opal/MEMORY.md
 
 ---
 
@@ -251,19 +251,19 @@ PLAN.md §1 수정 파일 기반. 신규 스킬 완성 후 마지막에 교체 (
 PLAN.md §6 기반.
 
 ### 기능 검증
-- [ ] 각 SKILL.md < 500줄
-- [ ] 각 스킬 자기완결 (외부 스킬 references 참조 없음)
-- [ ] YAML frontmatter — name(kebab-case), description("반드시 이 스킬을 사용해야 하는 상황:" 패턴)
-- [ ] 페르소나가 각 스킬의 personas/에 배치됨
-- [ ] 페르소나에 활용 스킬/MCP 없음 (Principles + 행동 규칙만)
-- [ ] 오케스트레이터 디스패치 프롬프트가 올바른 스킬 경로 참조
-- [ ] 각 산출물 형식에 입출력 계약 명시 (> 입력: / > 출력:)
+- [x] 각 SKILL.md < 500줄
+- [x] 각 스킬 자기완결 (외부 스킬 references 참조 없음)
+- [x] YAML frontmatter — name(kebab-case), description("반드시 이 스킬을 사용해야 하는 상황:" 패턴)
+- [x] 페르소나가 각 스킬의 personas/에 배치됨
+- [x] 페르소나에 활용 스킬/MCP 없음 (Principles + 행동 규칙만)
+- [x] 오케스트레이터 디스패치 프롬프트가 올바른 스킬 경로 참조
+- [x] 각 산출물 형식에 입출력 계약 명시 (> 입력: / > 출력:)
 
 ### 정합성 검증
-- [ ] 레지스트리에 11개 스킬 + 3개 에이전트 등록
-- [ ] 레지스트리에서 기존 dev-task-pilot + dtp-*-agent 제거
-- [ ] CLAUDE.md 소스 구조가 실제 파일과 일치
-- [ ] 모든 스킬 탐색 경로에 실제 파일 존재
+- [x] 레지스트리에 11개 스킬 + 3개 에이전트 등록
+- [x] 레지스트리에서 기존 dev-task-pilot + dtp-*-agent 제거
+- [x] CLAUDE.md 소스 구조가 실제 파일과 일치
+- [x] 모든 스킬 탐색 경로에 실제 파일 존재
 
 ### 동적 검증
 - [ ] dtp-dev: "회원가입 기능 개발해줘" → TASK → ANALYSIS 파이프라인
