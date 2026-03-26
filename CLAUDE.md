@@ -33,9 +33,9 @@ AI 환경(Claude Code, Cursor, Codex 등)에서 IT 프로젝트를 체계적으�
 
 ```
 skills/                          ← 프레임워크 스킬 (단일 소스, ~/.opal/skills/로 배포)
-├── dtp-dev/                     오케스트레이터: Full Task 파이프라인
-├── dtp-dev-short/               오케스트레이터: Short Task 파이프라인
-├── dtp-dev-wf/                  오케스트레이터: Wireframe UI 파이프라인
+├── otp-dev/                     오케스트레이터: Full Task 파이프라인
+├── otp-dev-short/               오케스트레이터: Short Task 파이프라인 (기본 진입점)
+├── otp-wf/                      오케스트레이터: Wireframe UI 파이프라인
 ├── dtp-task/                    단계: TASK.md 작성
 │   ├── references/task-guide.md
 │   └── personas/service-planner.md

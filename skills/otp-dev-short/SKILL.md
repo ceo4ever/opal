@@ -1,8 +1,9 @@
 ---
-name: dtp-dev-short
+name: otp-dev-short
 description: |
-  **Short Task 오케스트레이터**. 소규모 개발 작업을 4단계 파이프라인으로 수행한다. ANALYSIS와 TODO를 생략하고, PLAN에서 분석+설계를 통합한다.
-  반드시 이 스킬을 사용해야 하는 상황: "수정해줘", "Short", "/dtp-dev-short", 코드 변경이 수반되는 소규모 작업 (버그 수정, 단순 기능 수정/추가, 리팩토링).
+  **Short Task 오케스트레이터 (기본 모드)**. 코드 변경이 수반되는 모든 개발 작업의 기본 진입점. 4단계 파이프라인으로 수행한다.
+  반드시 이 스킬을 사용해야 하는 상황: "개발해줘", "수정해줘", "기능 추가해줘", "버그 수정해줘", "리팩토링해줘", "otp-dev-short", 코드 변경이 수반되는 모든 작업 (사용자가 Full Task를 명시하지 않은 경우).
+  PLAN 단계에서 규모가 크다고 판단되면 Full Task(otp-dev) 에스컬레이션을 제안한다.
   코드를 읽기만 하는 설명 요청, API 명세서(api-analyzer), 문서(doc-writer), PR 리뷰, git 작업, 단순 설정 변경은 이 스킬이 아니다.
 ---
 
@@ -128,7 +129,7 @@ dtp-execute 스킬을 수행하라.
 
 ## 에스컬레이션 규칙
 
-dtp-plan 결과에서 아래 조건이 감지되면 **Full Task(dtp-dev) 전환을 제안**한다:
+dtp-plan 결과에서 아래 조건이 감지되면 **Full Task(otp-dev) 전환을 제안**한다:
 
 | 조건 | 판별 방법 |
 |------|----------|
@@ -142,7 +143,7 @@ dtp-plan 결과에서 아래 조건이 감지되면 **Full Task(dtp-dev) 전환�
 이 작업은 Short Task 범위를 초과할 수 있습니다:
 - {해당 조건}
 
-Full Task(dtp-dev)로 전환할까요?
+Full Task(otp-dev)로 전환할까요?
 - "Full로 해줘" → Full Task 전환
 - "Short로 진행해" → Short Task 유지
 ```
@@ -151,7 +152,7 @@ Full Task(dtp-dev)로 전환할까요?
 
 ## STATE.md 관리
 
-dtp-dev와 동일. 오케스트레이터 전용.
+otp-dev와 동일. 오케스트레이터 전용.
 
 ### STATE.md 템플릿
 
@@ -190,13 +191,13 @@ dtp-dev와 동일. 오케스트레이터 전용.
 
 ## 프로젝트 메모리 동기화
 
-dtp-dev와 동일. `{프로젝트}/.opal/MEMORY.md` 존재 시 작업 히스토리 갱신.
+otp-dev와 동일. `{프로젝트}/.opal/MEMORY.md` 존재 시 작업 히스토리 갱신.
 
 ---
 
 ## 스킬 탐색 경로
 
-dtp-dev와 동일.
+otp-dev와 동일.
 1. `{프로젝트}/.opal/skills/dtp-{stage}/SKILL.md`
 2. `~/.opal/skills/dtp-{stage}/SKILL.md`
 
@@ -204,7 +205,7 @@ dtp-dev와 동일.
 
 ## 게이트 체크포인트
 
-dtp-dev와 동일. 각 단계 완료 시 사용자 보고 + 승인 대기.
+otp-dev와 동일. 각 단계 완료 시 사용자 보고 + 승인 대기.
 
 ---
 

@@ -1,9 +1,9 @@
 ---
-name: dtp-dev-wf
+name: otp-wf
 description: |
   **Wireframe UI 오케스트레이터**. 와이어프레임 설계부터 UI 구현까지 4단계 파이프라인으로 수행한다.
-  반드시 이 스킬을 사용해야 하는 상황: "와이어프레임", "wireframe", "/dtp-dev-wf", 와이어프레임부터 설계가 필요한 UI 작업.
-  "화면 구현", "UI 만들어줘", "화면 수정" 등 기존 프로젝트 기반 UI 작업은 dtp-dev 또는 dtp-dev-short에서 ui-designer plan-driven 모드로 수행한다.
+  반드시 이 스킬을 사용해야 하는 상황: "와이어프레임", "wireframe", "otp-wf", 와이어프레임부터 설계가 필요한 UI 작업.
+  "화면 구현", "UI 만들어줘", "화면 수정" 등 기존 프로젝트 기반 UI 작업은 otp-dev 또는 otp-dev-short에서 ui-designer plan-driven 모드로 수행한다.
 ---
 
 # Wireframe UI 오케스트레이터
@@ -125,7 +125,7 @@ dtp-execute 스킬을 수행하라.
 
 ## STATE.md 관리
 
-dtp-dev와 동일. 오케스트레이터 전용.
+otp-dev와 동일. 오케스트레이터 전용.
 
 ### STATE.md 템플릿
 
@@ -163,13 +163,13 @@ dtp-dev와 동일. 오케스트레이터 전용.
 
 ## 프로젝트 메모리 동기화
 
-dtp-dev와 동일. `{프로젝트}/.opal/MEMORY.md` 존재 시 작업 히스토리 갱신.
+otp-dev와 동일. `{프로젝트}/.opal/MEMORY.md` 존재 시 작업 히스토리 갱신.
 
 ---
 
 ## 스킬 탐색 경로
 
-dtp-dev와 동일.
+otp-dev와 동일.
 1. `{프로젝트}/.opal/skills/dtp-{stage}/SKILL.md`
 2. `~/.opal/skills/dtp-{stage}/SKILL.md`
 
@@ -177,7 +177,7 @@ dtp-dev와 동일.
 
 ## 게이트 체크포인트
 
-dtp-dev와 동일. 각 단계 완료 시 사용자 보고 + 승인 대기.
+otp-dev와 동일. 각 단계 완료 시 사용자 보고 + 승인 대기.
 
 ---
 
