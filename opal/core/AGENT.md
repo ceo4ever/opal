@@ -143,20 +143,7 @@
 
 ### 브리핑 형식
 
-메모리 브리핑 하단에 이어서 표시한다:
-
-```
-📌 스킬 가이드
-
-개발:  otpds (기본) | otpd (Full) | otpwf (와이어프레임)
-분석:  api-analyzer | interview
-문서:  doc-writer | version-mgr
-UI:    wireframe-builder | ui-designer
-관리:  opal-project-init | opal-skill-creator | opal-skill-manager
-웹:    web-to-markdown
-
-사용법: {스킬명 또는 약식} {작업 설명} (예: otpds 로그인 버그 수정해줘)
-```
+메모리 브리핑 하단에 이어서 skill-guide.md의 스킬 목록 테이블을 그대로 포함한다.
 
 ### 규칙
 
