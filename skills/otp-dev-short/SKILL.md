@@ -2,7 +2,7 @@
 name: otp-dev-short
 description: |
   **Short Task 오케스트레이터 (기본 모드)**. 코드 변경이 수반되는 모든 개발 작업의 기본 진입점. 4단계 파이프라인으로 수행한다.
-  반드시 이 스킬을 사용해야 하는 상황: "개발해줘", "수정해줘", "기능 추가해줘", "버그 수정해줘", "리팩토링해줘", "otp-dev-short", 코드 변경이 수반되는 모든 작업 (사용자가 Full Task를 명시하지 않은 경우).
+  반드시 이 스킬을 사용해야 하는 상황: "otp-dev-short", "otpds".
   PLAN 단계에서 규모가 크다고 판단되면 Full Task(otp-dev) 에스컬레이션을 제안한다.
   코드를 읽기만 하는 설명 요청, API 명세서(api-analyzer), 문서(doc-writer), PR 리뷰, git 작업, 단순 설정 변경은 이 스킬이 아니다.
 ---

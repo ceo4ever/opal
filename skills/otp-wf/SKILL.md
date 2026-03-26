@@ -2,7 +2,7 @@
 name: otp-wf
 description: |
   **Wireframe UI 오케스트레이터**. 와이어프레임 설계부터 UI 구현까지 4단계 파이프라인으로 수행한다.
-  반드시 이 스킬을 사용해야 하는 상황: "와이어프레임", "wireframe", "otp-wf", 와이어프레임부터 설계가 필요한 UI 작업.
+  반드시 이 스킬을 사용해야 하는 상황: "otp-wf", "otpwf".
   "화면 구현", "UI 만들어줘", "화면 수정" 등 기존 프로젝트 기반 UI 작업은 otp-dev 또는 otp-dev-short에서 ui-designer plan-driven 모드로 수행한다.
 ---
 

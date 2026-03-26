@@ -9,9 +9,9 @@ OPAL 에이전트가 사용할 수 있는 모든 스킬 목록.
 
 | 스킬 | 트리거 | 설명 |
 |------|--------|------|
-| otp-dev | "Full Task로 해줘", "Full로 개발해줘", "otp-dev" — 사용자가 명시적으로 Full Task 요청 시 | Full Task 오케스트레이터 |
-| otp-dev-short | "개발해줘", "수정해줘", "기능 추가해줘", "버그 수정해줘", "리팩토링해줘", "otp-dev-short" — 코드 변경 수반 작업의 기본 진입점 | Short Task 오케스트레이터 (기본 모드) |
-| otp-wf | "와이어프레임", "wireframe", "otp-wf" | Wireframe UI 오케스트레이터 |
+| otp-dev | "otp-dev", "otpd" — 사용자가 명시적으로 Full Task 요청 시 | Full Task 오케스트레이터 |
+| otp-dev-short | "otp-dev-short", "otpds" — 코드 변경 수반 작업의 기본 진입점 | Short Task 오케스트레이터 (기본 모드) |
+| otp-wf | "otp-wf", "otpwf" | Wireframe UI 오케스트레이터 |
 | dtp-task | (오케스트레이터 디스패치) | TASK.md 작성 |
 | dtp-analysis | (오케스트레이터 디스패치) | 코드베이스 분석 |
 | dtp-plan | (오케스트레이터 디스패치) | 구현 계획 |
