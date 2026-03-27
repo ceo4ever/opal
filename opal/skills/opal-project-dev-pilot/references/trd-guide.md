@@ -30,6 +30,27 @@
   context7 → resolve-library-id("fastapi") → query-docs("latest version, configuration")
   context7 → resolve-library-id("next.js") → query-docs("app router, server components")
   shadcn → search_items("file upload") → 컴포넌트 존재 확인
+  웹 검색 → "{라이브러리} deprecation 2026" → 지원 종료 예정 확인
+```
+
+### Deprecation / Breaking Change 체크 (필수)
+
+기술 스택 버전 확정 시, 각 핵심 라이브러리에 대해 아래를 확인한다:
+
+| 체크 항목 | 방법 |
+|----------|------|
+| 최신 안정 버전인가 | context7 또는 공식 문서 |
+| deprecation 예정인가 | 웹 검색: "{라이브러리} deprecation" |
+| 다음 메이저 버전 breaking change가 있는가 | 릴리즈 노트/마이그레이션 가이드 확인 |
+| 의존하는 하위 패키지가 호환되는가 | 패키지 호환성 매트릭스 확인 |
+
+확인 결과를 TRD의 "기술적 제약/트레이드오프" 섹션에 기록한다.
+
+```
+예:
+| 결정 | 선택 | 대안 | 근거 |
+|------|------|------|------|
+| Gemini SDK | google-genai 1.x | google-generativeai (deprecated) | google-generativeai는 2026 Q2 지원 종료 예정 |
 ```
 
 ### 커뮤니티 스킬 참조 (기술 스택별)
@@ -158,6 +179,7 @@ TRD 작성 후 캡틴에게 넘기기 전, 아래를 1:1 대조한다:
 - [ ] 외부 연동의 인증 방식과 에러 처리가 명시되었는가
 - [ ] 성능 목표가 구체적 수치로 정의되었는가
 - [ ] 기술적 결정에 근거가 있는가 (트레이드오프 섹션)
+- [ ] 핵심 라이브러리의 deprecation/breaking change를 확인했는가
 - [ ] docs/ARCHITECTURE.md와 정합성이 맞는가
 
 ## 캡틴 확정 후 후속 조치 체크
