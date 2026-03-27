@@ -29,3 +29,4 @@
 |----------|------|------|
 | project | [memory/project_security_task.md](memory/project_security_task.md) | 030에서 분리된 보안 전용 스킬+에이전트 생성 예정 |
 | project | [memory/project_otp_doc_plan.md](memory/project_otp_doc_plan.md) | otp-doc 문서 전용 스킬 계획 — otp-dev 계열 완료 후 설계 예정 |
+| project | [memory/project_opi_vision.md](memory/project_opi_vision.md) | opi 비전: 프로젝트=WHAT/WHY 정의, 스킬=HOW 수행. opi 산출물이 모든 스킬의 컨텍스트 |

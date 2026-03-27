@@ -1,567 +1,455 @@
 ---
 name: opal-project-init
 description: |
-  프로젝트 PM 프로필 및 문서 자동 생성 스킬. 일반 프로젝트는 PM 인터뷰 후 .opal/만 생성.
-  개발 프로젝트는 PM 인터뷰 + 기술 인터뷰를 통해 docs/, 플랫폼 파일(CLAUDE.md 등),
-  .opal/(PM 프로필 + 메모리 인덱스)를 생성한다.
+  프로젝트 환경 초기화 및 최신화 스킬. 프로젝트를 분석하고 캡틴과 대화하여
+  docs/(PROJECT.md, ARCHITECTURE.md 등)와 .opal/(AGENT.md, MEMORY.md)를 직접 작성한다.
+  기존 프로젝트 문서가 있으면 코드와 비교하여 최신화를 제안한다.
 triggers:
+  - "프로젝트 초기화"
   - "프로젝트 초기 셋팅"
-  - "프로젝트 스캐폴드"
   - "프로젝트 시작"
-  - "새 프로젝트 문서 만들어줘"
   - "프로젝트 문서 생성"
-  - "기존 프로젝트 문서화"
   - "프로젝트 문서 만들어줘"
+  - "프로젝트 최신화"
+  - "프로젝트 문서 업데이트"
   - "docs 생성"
-  - "프로젝트에 문서 추가"
-version: 1.1.0
+  - "opi"
+version: 2.0.0
 ---
 
 # opal-project-init
 
-프로젝트 PM 프로필 및 문서를 자동 생성하는 스킬.
+프로젝트 환경을 초기화하거나 최신화하는 스킬.
 
-## 개요
+## 설계 원칙
 
-**두 가지 카테고리**를 지원한다:
+프로젝트는 **WHAT**(무엇을)과 **WHY**(왜)를 정의하는 것이다. HOW(어떻게)는 다양할 수 있다.
+opi가 만든 프로젝트 환경(`docs/`, `.opal/`)은 모든 스킬(otp-dev, otp-doc 등)의 컨텍스트가 된다.
 
-- **일반 프로젝트** (scope=opal-only): PM 인터뷰 → `.opal/AGENT.md` + `.opal/MEMORY.md` 생성
-- **개발 프로젝트** (scope=full): PM 인터뷰 + 기술 인터뷰 → docs + platform + `.opal/` 생성
-  - 신규 모드 (new): 인터뷰 → context7 조회 → 템플릿 치환 → 파일 생성
-  - 기존 모드 (existing): 코드 자동 분석 → 확인/보정 인터뷰 → context7 조회 → 파일 생성/병합
+**핵심 규칙**:
+- 모든 문서는 알투가 프로젝트를 분석한 후 **직접 작성**한다. 플레이스홀더 치환이 아니다.
+- 작성 후 반드시 **캡틴 검토 → 피드백 → 반영** 사이클을 거친다.
+- 문서 작성 시 반드시 참조 가이드를 Read한다:
+  - `~/.opal/skills/opal-project-init/references/docs-guide.md` — docs 문서 구조/내용 지침
+  - `~/.opal/skills/opal-project-init/references/agent-guide.md` — AGENT.md 구조/내용 지침
 
-AI 에이전트가 직접 실행하며, 외부 템플릿 엔진(Jinja2 등)을 사용하지 않는다.
+## 모드 판별
 
-## 템플릿 위치
+프로젝트 루트에서 `.opal/AGENT.md` 존재 여부로 자동 판별한다.
 
-```
-~/.opal/skills/opal-project-init/templates/
-├── common/          # 공통 (모든 카테고리)
-│   ├── docs/        # INDEX.md, server/*, client/*
-│   ├── platform/    # CLAUDE.md, GEMINI.md, .cursorrules
-│   └── opal/        # AGENT.md (PM 프로필), MEMORY.md (메모리 인덱스)
-├── web/             # 웹 프로젝트 추가
-├── ai-agent/        # AI 에이전트 프로젝트 추가
-└── optional/        # 조건부 (SQLITE_SETUP, CHAT_UI_GUIDE)
-```
+| 조건 | 모드 |
+|------|------|
+| `.opal/AGENT.md` 미존재 | **초기화 모드** — 처음부터 환경 구축 |
+| `.opal/AGENT.md` 존재 | **최신화 모드** — 기존 환경을 현재 상태에 맞게 갱신 |
 
 ---
 
-## 실행 프로세스
+## 초기화 모드
 
-### Step 0: 프로젝트 카테고리 선택
+`.opal/AGENT.md`가 없는 프로젝트에서 실행한다. 4개 Phase로 진행한다.
 
-프로젝트 루트에 소스 코드가 존재하는지 확인하여 카테고리를 자동 판별한다.
+### Phase 1: 프로젝트 이해
 
-**자동 판별 기준**: 아래 파일 중 하나라도 존재하면 "개발 프로젝트"를 제안한다.
+소스 분석과 캡틴 대화를 통해 프로젝트를 파악한다.
+
+**1-1. 프로젝트 소스 분석**
+
+프로젝트 루트를 스캔하여 기초 정보를 수집한다.
+
+| 분석 대상 | 추출 정보 |
+|----------|----------|
+| `package.json` | 프로젝트명, 설명, 프론트엔드 스택 (next→Next.js, react→React, vue→Vue.js) |
+| `pyproject.toml` / `requirements.txt` | 백엔드 스택 (fastapi→FastAPI, django→Django, flask→Flask) |
+| `go.mod` / `Cargo.toml` / `pom.xml` / `build.gradle` | 백엔드 스택 (Go, Rust, Java 등) |
+| `src/`, `app/`, `server/`, `client/` | 프로젝트 구조 유형 |
+| `.env`, `docker-compose.yml` | 포트, DB 타입, 외부 서비스 |
+| `README.md` | 프로젝트 설명, 설치 방법 |
+| `CLAUDE.md`, `.cursorrules`, `GEMINI.md` | 기존 컨벤션, 아키텍처 규칙 |
+| `docs/` 디렉토리 | 기존 문서 존재 여부 |
+
+**1-2. 프로젝트 카테고리 판별**
+
+분석 결과를 바탕으로 카테고리를 자동 제안한다.
+
+자동 판별 기준 — 아래 파일 중 하나라도 존재하면 **개발 프로젝트**를 제안:
 - `package.json`, `pyproject.toml`, `requirements.txt`
 - `go.mod`, `Cargo.toml`, `pom.xml`, `build.gradle`
 - `src/`, `app/`, `server/`, `client/` 디렉토리
 
 ```
-[프로젝트 카테고리 선택]
+[프로젝트 분석 결과]
 
-프로젝트 루트를 분석한 결과, {소스 코드 존재/미존재} 상태입니다.
+프로젝트 루트를 분석했습니다.
+{분석에서 파악한 주요 정보 요약}
 
-프로젝트 유형을 선택하세요:
-  1. 일반 프로젝트 — 비개발 (기획, 문서, 프레임워크 등) → .opal/만 생성
-  2. 개발 프로젝트 — 소스코드 있는 개발 프로젝트 → docs + platform + .opal/ 생성
+프로젝트 카테고리:
+  1. 일반 프로젝트 — 비개발 (기획, 문서, 프레임워크 등)
+  2. 개발 프로젝트 — 소스코드가 있는 개발 프로젝트
+
+추천: {자동 판별 결과}. 맞나요?
 ```
 
-- **일반 프로젝트** 선택 시: Step 0-PM → Step 7(scope=opal-only) → Step 8
-- **개발 프로젝트** 선택 시: Step 0-PM → Step 0-DEV → (신규/기존에 따라) Step 1~8
+**1-3. 캡틴 인터뷰**
+
+캡틴은 전문가가 아닐 수 있다. **객관식 중심으로 쉽게 답할 수 있게** 하고, 맞는 것이 없으면 직접 입력하게 한다.
+
+**진행 방식**:
+1. 기본 질문 세트(7개)를 **한 번에 하나씩** 진행한다
+2. 시작 시 "7개 질문을 드리겠습니다" 안내한다
+3. 이전 답변을 기반으로 다음 질문의 선택지를 맞춤 생성한다
+4. 기본 질문 완료 후, 추가 질문이 필요하면 "N개 더 여쭤볼게요" 안내 후 진행
+
+**시작 안내**:
+
+```
+프로젝트를 파악하기 위해 7개 질문을 드리겠습니다.
+객관식으로 준비했으니 편하게 답해주세요. 없으면 직접 입력하시면 됩니다.
+```
+
+**기본 질문 (7개, 한 번에 하나씩)**:
+
+```
+Q1/7. 프로젝트명
+      분석 결과: {소스에서 추출한 이름 (있으면)}
+      → 맞으면 그대로, 수정하려면 알려주세요.
+      (분석 결과 없으면: "프로젝트 이름을 알려주세요.")
+
+Q2/7. 이 프로젝트를 한 줄로 설명하면?
+      → 직접 입력
+
+Q3/7. 어떤 분야의 프로젝트인가요?
+      a) 웹 서비스 (이커머스, SaaS, 커뮤니티 등)
+      b) 모바일 앱
+      c) AI/ML (에이전트, 데이터 분석, 자동화 등)
+      d) 인프라/DevOps
+      e) 기획/문서 (비개발)
+      f) 프레임워크/라이브러리
+      g) 기타: 직접 입력해주세요
+
+Q4/7. 지금 어느 단계에 있나요?
+      a) 아이디어 단계 (구상 중)
+      b) 초기 설계 (기획/설계 진행 중)
+      c) 개발 중 (MVP 또는 기능 개발)
+      d) 안정화 (버그 수정, 최적화)
+      e) 운영 중 (유지보수)
+      f) 기타: 직접 입력해주세요
+
+Q5/7. 알투가 이 프로젝트의 PM으로서 어떤 관점으로 검토하면 좋을까요?
+      {Q3 도메인 답변을 기반으로 맞춤 제안 2~3개 생성}
+      a) {도메인 맞춤 제안 1}
+      b) {도메인 맞춤 제안 2}
+      c) 잘 모르겠어요 (알투가 제안할게요)
+      d) 직접 입력
+
+Q6/7. 이 프로젝트에서 가장 중요한 원칙이 있나요?
+      {Q3 도메인 기반으로 예시 제안}
+      a) {예: "UX 단순성 최우선"}
+      b) {예: "데이터 정합성 최우선"}
+      c) 아직 없어요 (나중에 정할게요)
+      d) 직접 입력
+
+Q7/7. 추가로 만들고 싶은 문서가 있나요?
+      a) PRD (제품 요구사항 정의서)
+      b) 기능명세서
+      c) 기획서
+      d) 지금은 없어요
+      e) 기타: 직접 입력해주세요
+```
+
+**추가 질문** (기본 질문 완료 후, 필요 시):
+
+개발 프로젝트인 경우, 기술적 질문이 추가로 필요할 수 있다.
+
+```
+기본 질문 끝났습니다! {N}개만 더 여쭤볼게요.
+
+Q8. 기술 스택을 알려주세요 (분석에서 파악한 것이 있으면 확인)
+    분석 결과: {파악된 스택}
+    → 맞으면 그대로, 수정/추가하려면 알려주세요.
+
+Q9. ...
+```
+
+**규칙**:
+- **반드시 한 번에 하나씩** 질문한다. 한꺼번에 여러 개 묻지 않는다.
+- 질문 번호에 **전체 개수를 표시**한다 (Q1/7, Q2/7...)
+- 소스 분석에서 이미 파악한 것은 **기본값으로 제시**하고 확인만 받는다
+- 이전 답변을 기반으로 다음 질문의 **선택지를 맞춤 생성**한다 (특히 Q5, Q6)
+- **"잘 모르겠어요"** 선택지를 항상 포함한다 — 알투가 대신 제안
+- 추가 질문 시작 전에 반드시 **"N개 더 여쭤볼게요"** 안내
 
 ---
 
-### Step 0-PM: PM 공통 인터뷰 (일반/개발 공통)
+### Phase 2: 공통 문서 작성 + 검토
 
-모든 프로젝트에서 PM 프로필 작성에 필요한 정보를 수집한다.
+참조 가이드를 Read한 후 문서를 직접 작성한다.
 
-```
-[PM 공통 인터뷰]
+**사전 준비**: 아래 가이드를 반드시 Read한다.
+- `~/.opal/skills/opal-project-init/references/docs-guide.md`
+- `~/.opal/skills/opal-project-init/references/agent-guide.md`
 
-Q1. 프로젝트명
-  - 영어명 (디렉토리·코드용):
-  - 한글명 (문서 제목용):
-  - 한 줄 설명:
+**2-1. 작성 대상**
 
-Q2. 도메인/분야
-  - 이 프로젝트가 속한 도메인 또는 분야 (예: 광고, 이커머스, AI 프레임워크):
+| 순서 | 파일 | 설명 | 참조 가이드 |
+|------|------|------|------------|
+| 1 | `docs/PROJECT.md` | 프로젝트 정의 (SSOT) | docs-guide.md |
+| 2 | `.opal/AGENT.md` | PM 프로필 (역할, 검토 기준, 업무 지침) | agent-guide.md |
+| 3 | `.opal/MEMORY.md` | 메모리 인덱스 (빈 상태로 생성) | - |
+| 4 | 캡틴 요청 문서 | PRD, 기획서 등 캡틴이 추가 요청한 문서 | docs-guide.md |
 
-Q3. 페르소나
-  - 이 프로젝트에서 어떤 관점으로 사고해야 하는가?
-  - (예: "광고 성과 데이터 정합성 최우선", "사용자 경험 중심", "재사용성과 확장성 우선")
+**2-2. 작성 프로세스**
 
-Q4. 의사결정 원칙
-  - 트레이드오프 상황에서 우선할 원칙 1~3가지
-  - (예: "데이터 정합성 > UI 미관", "코드 가독성 > 성능 최적화")
+각 문서를 순서대로 작성한다:
 
-Q5. 현재 Phase
-  - 현재 진행 중인 Phase (예: "Phase 1: 데이터 파이프라인 구축")
-  - 다음 Phase (예: "Phase 2: 대시보드 구현")
-```
+1. 참조 가이드의 구조에 맞춰 초안을 작성한다
+2. 캡틴에게 초안을 제시한다
+3. 캡틴 피드백을 받아 반영한다
+4. 캡틴 승인 후 확정한다
 
-→ 수집한 값을 플레이스홀더에 매핑:
-- Q1 → `PROJECT_NAME`, `PROJECT_DESCRIPTION`
-- Q2 → `DOMAIN_NAME`
-- Q3 → `PERSONA`
-- Q4 → `DECISION_PRINCIPLES`
-- Q5 → `CURRENT_PHASE`
+**2-3. 문서 등록 프로토콜**
 
-**일반 프로젝트인 경우**: 개발 전용 플레이스홀더에 기본값을 주입하고 Step 7로 직행한다.
+캡틴 요청 문서를 포함하여 새 문서를 생성할 때마다:
 
-```json
-{
-  "scope": "opal-only",
-  "placeholders": {
-    "PROJECT_NAME": "{Q1 영어명}",
-    "PROJECT_DESCRIPTION": "{Q1 설명}",
-    "DOMAIN_NAME": "{Q2}",
-    "PERSONA": "{Q3}",
-    "DECISION_PRINCIPLES": "{Q4}",
-    "CURRENT_PHASE": "{Q5}"
-  }
-}
-```
+1. 캡틴에게 확인: "이 문서를 프로젝트 문서로 등록할까요?"
+2. 용도 인터뷰: "이 문서의 용도는 무엇인가요? 어떤 작업에서 참조하면 좋을까요?"
+3. 캡틴 승인 시 `docs/PROJECT.md`의 프로젝트 문서 테이블에 등록
+4. 등록되지 않은 문서는 다른 스킬이 참조하지 않는다
 
-**개발 프로젝트인 경우**: Step 0-DEV로 진행한다.
-
----
-
-### Step 0-DEV: 개발 프로젝트 모드 선택 (개발 프로젝트 전용)
-
-소스 코드 존재 여부로 신규/기존을 판별한다.
-
-```
-[개발 프로젝트 모드 선택]
-
-어떤 모드로 진행할까요?
-  1. 신규 프로젝트 — 처음부터 인터뷰 시작 (Step 1~8)
-  2. 기존 프로젝트 — 코드 자동 분석 후 확인/보정 인터뷰 (Step 0-A → Step 4~8)
-```
-
-- **신규** 선택 시: Step 1~8 진행
-- **기존** 선택 시: Step 0-A(자동 분석) → Step 0-B(확인/보정 인터뷰) → Step 4~8 진행
-
----
-
-### Step 0-A: 자동 분석 (기존 프로젝트 모드 전용)
-
-기존 프로젝트 모드에서만 실행한다. 코드와 설정 파일을 스캔하여 플레이스홀더를 자동 추론한다.
-
-**소스 코드 분석**:
-
-| 분석 대상 | 추출 정보 |
-|----------|----------|
-| `package.json` | name → `PROJECT_NAME`, description → `PROJECT_DESCRIPTION`, dependencies로 프론트엔드 스택 추론 (next → Next.js, react → React, vue → Vue.js) |
-| `pyproject.toml` / `requirements.txt` | 백엔드 스택 추론 (fastapi → Python/FastAPI, django → Python/Django, flask → Python/Flask) |
-| `go.mod` | 백엔드 스택 추론 (Go) |
-| `Cargo.toml` | 백엔드 스택 추론 (Rust) |
-| 디렉토리 구조 | `src/`, `app/`, `server/`, `client/` 등으로 프로젝트 유형 추론 (web/ai-agent/data/custom) |
-| `.env`, `docker-compose.yml` | `SERVER_PORT`, `CLIENT_PORT` 추출 (PORT, SERVER_PORT, CLIENT_PORT, NEXT_PUBLIC_PORT 등) |
-| DB 관련 env 또는 의존성 | `DB_TYPE` 추론 (mysql, postgresql, sqlite, mongodb 등) |
-
-**LLM 플랫폼 파일 분석**:
-
-| 분석 대상 | 추출 정보 |
-|----------|----------|
-| `README.md` | 프로젝트 설명, 기술 스택, 설치 방법 → `PROJECT_NAME`, `PROJECT_DESCRIPTION` 보정 |
-| `CLAUDE.md` | 기존 코드 컨벤션, 아키텍처 규칙 파악 → 새 문서에 기존 규칙 반영. OPAL 마커(`# === OPAL START ===`) 존재 여부 확인 |
-| `.cursorrules` | 기존 Cursor 규칙 파악 → 병합 시 보존 |
-| `GEMINI.md` | 기존 Gemini 설정 파악 → 병합 시 보존 |
-| `docs/` 디렉토리 | 기존 문서 구조 파악 → 이미 존재하는 문서는 생성하지 않음 |
-
-**자동 추론 결과 → 플레이스홀더 매핑**:
-
-| 분석 소스 | 추론 대상 |
-|----------|----------|
-| package.json name | `PROJECT_NAME` |
-| package.json description | `PROJECT_DESCRIPTION` |
-| package.json dependencies에 next 포함 | `TECH_STACK_FRONTEND` = "Next.js" |
-| package.json dependencies에 react만 | `TECH_STACK_FRONTEND` = "React" |
-| pyproject.toml에 fastapi 포함 | `TECH_STACK_BACKEND` = "Python/FastAPI" |
-| pyproject.toml에 django 포함 | `TECH_STACK_BACKEND` = "Python/Django" |
-| .env의 PORT, SERVER_PORT | `SERVER_PORT` |
-| .env의 CLIENT_PORT, NEXT_PUBLIC_PORT | `CLIENT_PORT` |
-| DB 관련 env 또는 의존성 | `DB_TYPE` |
-| README.md 제목/설명 | `PROJECT_NAME`, `PROJECT_DESCRIPTION` 보정 |
-| CLAUDE.md 컨벤션 섹션 | 새 문서 생성 시 기존 규칙 참조 |
-| .cursorrules 내용 | 병합 시 기존 규칙 보존 |
-| docs/ 기존 파일 목록 | 중복 파일 생성 방지 (이미 있으면 스킵) |
-
----
-
-### Step 0-B: 확인/보정 인터뷰 (기존 프로젝트 모드 전용)
-
-자동 분석 결과를 사용자에게 보여주고 확인/보정을 요청한다. 기존 Step 1~3의 인터뷰를 대체한다.
-
-```
-[자동 분석 결과 확인]
-
-아래는 프로젝트 코드를 분석한 결과입니다. 수정이 필요한 항목만 알려주세요.
-
-- 프로젝트명: {분석된 영어명} (한글명을 입력해주세요)
-- 한 줄 설명: {분석된 설명 또는 "입력해주세요"}
-- 기술 스택: {분석된 백엔드} + {분석된 프론트엔드} + {분석된 DB}
-- 포트: 백엔드 {분석된 포트 또는 8000} / 프론트엔드 {분석된 포트 또는 3000}
-- 유형: {추론된 유형} ({추론 근거})
-- 도메인명: {추론된 주요 모듈명 또는 "입력해주세요"}
-- 아키텍처: {단일/멀티 도메인}
-
-특별 기능:
-  [ ] 채팅/메시징 기능     → CHAT_UI_GUIDE.md 생성
-  [ ] SQLite 로컬 개발     → SQLITE_SETUP.md 생성
-  [ ] 인증/권한 관리       → 관련 섹션 포함
-
-수정할 항목이 있으면 알려주세요. 없으면 "확인"이라고 답해주세요.
-```
-
-사용자가 "확인"하면 분석 결과로 진행, 수정 사항이 있으면 반영한 뒤 진행한다.
-
-> 확인/보정 인터뷰 완료 후 Step 4(context7 조회)로 이동한다. Step 1~3은 건너뛴다.
-
----
-
-### Step 1: 프로젝트 유형 인터뷰 (Round 0) — 신규 모드 전용
-
-사용자에게 프로젝트 유형을 묻는다. 이 선택에 따라 후속 질문과 포함 템플릿이 달라진다.
-
-```
-[Round 0 — 프로젝트 유형 선택]
-
-어떤 유형의 프로젝트인가요?
-  1. web        — 웹 애플리케이션 (CRUD, 대시보드 등)
-  2. ai-agent   — AI 에이전트 시스템 (LangChain, 멀티에이전트 등)
-  3. data       — 데이터 분석/파이프라인
-  4. custom     — 직접 정의 (공통 템플릿만 생성)
-```
-
-→ 선택값을 `PROJECT_TYPE` 변수에 저장
-
----
-
-### Step 2: 기본 정보 인터뷰 (Round 1) — 신규 모드 전용
-
-4개 질문을 한 번에 제시한다.
-
-```
-[Round 1 — 프로젝트 기본 정보]
-
-Q1. 프로젝트명
-  - 영어명 (디렉토리·코드용, 예: my-project):
-  - 한글명 (문서 제목용, 예: 나의 프로젝트):
-  - 한 줄 설명:
-
-Q2. 기술 스택
-  백엔드 (선택 또는 직접 입력):
-    1. Python/FastAPI   2. Node.js/Express   3. Go/Gin   4. 직접 입력
-  프론트엔드 (선택 또는 직접 입력):
-    1. Next.js   2. React   3. Vue.js   4. 직접 입력
-  데이터베이스 (선택 또는 직접 입력):
-    1. MySQL   2. PostgreSQL   3. SQLite   4. MySQL+SQLite(로컬)   5. 직접 입력
-
-Q3. 포트 및 도메인
-  - 백엔드 포트 (기본: 8000):
-  - 프론트엔드 포트 (기본: 3000):
-  - 주요 도메인명 (서비스 모듈 단위, 예: aic, user, product):
-
-Q4. 아키텍처
-  도메인 구조:
-    1. 단일 도메인
-    2. 멀티 도메인
-```
-
----
-
-### Step 3: 특별 기능 인터뷰 (Round 2) — 신규 모드 전용
-
-```
-[Round 2 — 특별 기능 선택 (복수 선택 가능)]
-
-포함할 기능 및 문서를 선택하세요:
-  [ ] 채팅/메시징 기능     → CHAT_UI_GUIDE.md 생성
-  [ ] SQLite 로컬 개발     → SQLITE_SETUP.md 생성
-  [ ] 인증/권한 관리       → 관련 섹션 포함
-```
-
-> DB에서 "MySQL+SQLite(로컬)"을 선택했으면 SQLite는 자동 포함
-
----
-
-### Step 4: context7 MCP 기술 정보 조회
-
-인터뷰 완료 후, 선택한 기술 스택에 대해 context7 MCP로 최신 정보를 조회한다.
-
-**조회 절차**:
-1. `mcp__context7__resolve-library-id({라이브러리명})` → library_id 획득
-2. `mcp__context7__query-docs(library_id, {조회 토픽})` → 최신 정보
-
-**기술 스택별 조회 대상**:
-
-| 선택한 스택 | resolve 인자 | query 토픽 |
-|------------|-------------|-----------|
-| Python/FastAPI | `"fastapi"` | "latest version, uvicorn configuration" |
-| Node.js/Express | `"express"` | "latest version, middleware setup" |
-| Next.js | `"nextjs"` | "latest version, app router configuration" |
-| React | `"react"` | "latest version, recommended setup" |
-| SQLAlchemy (Python+DB) | `"sqlalchemy"` | "async configuration, latest patterns" |
-| Tailwind CSS | `"tailwindcss"` | "v4 configuration" |
-| Zustand | `"zustand"` | "latest patterns, store setup" |
-
-**반영 방법**:
-- `TECH_STACK_BACKEND`에 조회된 최신 버전 반영 (예: "Python 3.12, FastAPI 0.115+")
-- `TECH_STACK_FRONTEND`에 조회된 최신 버전 반영 (예: "Next.js 15, TypeScript 5.x")
-- 구버전/deprecated 설정 사용 방지
-
-**context7 사용 불가 시**: 인터뷰에서 수집한 정보만으로 진행 (폴백)
-
----
-
-### Step 5: 플레이스홀더 매핑표 작성
-
-인터뷰 결과 + context7 조회 결과를 합산하여 매핑표를 만든다.
+**2-4. MEMORY.md 형식**
 
 ```markdown
-## 플레이스홀더 매핑
+# {프로젝트명} 프로젝트 Memory Index
 
-| 플레이스홀더 | 값 |
-|------------|-----|
-| {{PROJECT_NAME}} | {사용자 입력 영어명} |
-| {{PROJECT_DESCRIPTION}} | {사용자 입력 설명} |
-| {{DOMAIN_NAME}} | {사용자 입력 도메인명} |
-| {{SERVER_PORT}} | {사용자 입력 또는 기본값 8000} |
-| {{CLIENT_PORT}} | {사용자 입력 또는 기본값 3000} |
-| {{DB_TYPE}} | {선택값} |
-| {{API_URL_LOCAL}} | http://localhost:{SERVER_PORT} |
-| {{TECH_STACK_BACKEND}} | {스택 + context7 최신 버전} |
-| {{TECH_STACK_FRONTEND}} | {스택 + context7 최신 버전} |
-| {{PERSONA}} | {Step 0-PM Q3 페르소나} |
-| {{DECISION_PRINCIPLES}} | {Step 0-PM Q4 의사결정 원칙} |
-| {{CURRENT_PHASE}} | {Step 0-PM Q5 현재 Phase} |
-| {{SQLITE_DB_PATH}} | {조건부: DB에 sqlite 포함 시} |
-| {{DOMAIN_EXAMPLES}} | {조건부: 멀티도메인 시} |
-| {{CHAT_API_ENDPOINT}} | {조건부: 채팅 기능 선택 시} |
+## 프로젝트
+{빈 상태 — 프로젝트 진행하며 축적}
 ```
-
-이 매핑표를 사용자에게 보여주고 확인을 받는다.
 
 ---
 
-### Step 6: 포함할 템플릿 파일 결정
+### Phase 3: 개발 문서 (개발 프로젝트만)
 
-프로젝트 유형과 선택한 기능에 따라 포함 파일을 확정한다.
+일반 프로젝트는 이 Phase를 건너뛰고 Phase 4로 간다.
 
-#### 기존 프로젝트 모드 템플릿 필터링
+**3-1. 추가 분석**
 
-기존 프로젝트 모드에서는 기술 스택과 불일치하는 템플릿을 자동 제외한다. 제외 대상은 config.json의 `excludeTemplates` 배열에 추가한다.
+Phase 1의 기초 분석을 심화한다:
+- 기술 스택 상세 (버전, 설정, 의존성 관계)
+- 아키텍처 (레이어 구조, 모듈 분리, 데이터 흐름)
+- 코드 구조 (디렉토리 레이아웃, 네이밍 패턴, 공통 모듈)
+- 개발 환경 (포트, 환경 변수, 빌드 도구)
 
-| 조건 | 제외 대상 |
-|------|----------|
-| 백엔드가 Python 계열이 아닌 경우 | `docs/server/UV_SETUP.md` |
-| 프론트엔드가 없는 경우 | `docs/client/` 전체 (README.md, ARCHITECTURE.md, ENVIRONMENT.md, PROJECT_STRUCTURE.md, OPENAPI_GUIDE.md, COMMON_ISSUES.md) |
-| 백엔드가 없는 경우 | `docs/server/` 전체 |
-| DB가 SQLite를 포함하지 않는 경우 | `docs/server/SQLITE_SETUP.md` |
+기술적 결정사항이 불명확하면 캡틴에게 추가 질문한다.
 
-또한, `docs/` 디렉토리에 이미 존재하는 파일은 건너뛴다 (덮어쓰지 않음).
+**3-2. 작성 대상**
 
-**항상 포함 (common/)**:
-- `docs/INDEX.md`
-- `docs/server/README.md`
-- `docs/server/ENVIRONMENT.md`
-- `docs/server/PROJECT_STRUCTURE.md`
-- `docs/server/UV_SETUP.md` (백엔드가 Python 계열일 때)
-- `docs/client/README.md`
-- `docs/client/ARCHITECTURE.md`
-- `docs/client/ENVIRONMENT.md`
-- `docs/client/PROJECT_STRUCTURE.md`
-- `docs/client/OPENAPI_GUIDE.md`
-- `docs/client/COMMON_ISSUES.md`
-- `platform/CLAUDE.md`
-- `platform/GEMINI.md`
-- `platform/.cursorrules`
+| 문서 | 조건 | 참조 가이드 |
+|------|------|------------|
+| `docs/ARCHITECTURE.md` | 항상 | docs-guide.md |
+| `docs/CONVENTIONS.md` | 항상 | docs-guide.md |
+| `docs/BACKEND.md` | 백엔드 있을 때 | docs-guide.md |
+| `docs/FRONTEND.md` | 프론트엔드 있을 때 | docs-guide.md |
 
-**유형별 추가 포함**:
+**3-3. 작성 프로세스**
 
-| 유형 | 추가 파일 | 소스 |
-|------|----------|------|
-| web | DOMAIN_GUIDE.md, HOW_TO_REQUEST_NEW_DOMAIN.md | `templates/web/` |
-| ai-agent | DOMAIN_GUIDE.md, HOW_TO_REQUEST_NEW_DOMAIN.md | `templates/ai-agent/` |
-| data | (공통만) | - |
-| custom | (공통만) | - |
+Phase 2와 동일한 프로세스를 따른다:
 
-**조건부 포함 (optional/)**:
-
-| 조건 | 파일 |
-|------|------|
-| DB에 sqlite 포함 또는 SQLite 로컬 개발 선택 | `SQLITE_SETUP.md` |
-| 채팅/메시징 기능 선택 | `CHAT_UI_GUIDE.md` |
-| 멀티 도메인 선택 | `HOW_TO_REQUEST_NEW_DOMAIN.md` (이미 web/ai-agent에 포함) |
+1. docs-guide.md 구조에 맞춰 초안 작성
+2. 캡틴에게 초안 제시
+3. 피드백 반영
+4. 각 문서를 `docs/PROJECT.md` 문서 테이블에 등록
 
 ---
 
-### Step 7: 템플릿 적용 (Node.js 스크립트)
+### Phase 4: 플랫폼 파일 + 완료
 
-Step 5의 매핑표와 Step 6의 파일 목록을 config.json으로 만들어 `apply.js`를 실행한다.
+**4-1. 플랫폼 파일 생성**
 
-**7-1. config.json 생성**
-
-프로젝트 루트에 임시 config.json을 Write한다:
-
-**개발 프로젝트 (scope=full)**:
-
-```json
-{
-  "projectRoot": "{프로젝트 절대 경로}",
-  "projectType": "{Step 1에서 선택한 유형}",
-  "mode": "new",
-  "scope": "full",
-  "placeholders": {
-    "PROJECT_NAME": "{Step 0-PM Q1}",
-    "PROJECT_DESCRIPTION": "{Step 0-PM Q1}",
-    "DOMAIN_NAME": "{Step 0-PM Q2}",
-    "PERSONA": "{Step 0-PM Q3}",
-    "DECISION_PRINCIPLES": "{Step 0-PM Q4}",
-    "CURRENT_PHASE": "{Step 0-PM Q5}",
-    "SERVER_PORT": "...",
-    "CLIENT_PORT": "...",
-    "DB_TYPE": "...",
-    "API_URL_LOCAL": "...",
-    "TECH_STACK_BACKEND": "...",
-    "TECH_STACK_FRONTEND": "..."
-  },
-  "optional": {
-    "sqlite": false,
-    "chat": false
-  },
-  "excludeTemplates": []
-}
-```
-
-**일반 프로젝트 (scope=opal-only)**:
-
-```json
-{
-  "projectRoot": "{프로젝트 절대 경로}",
-  "projectType": "custom",
-  "mode": "new",
-  "scope": "opal-only",
-  "placeholders": {
-    "PROJECT_NAME": "{Step 0-PM Q1}",
-    "PROJECT_DESCRIPTION": "{Step 0-PM Q1}",
-    "DOMAIN_NAME": "{Step 0-PM Q2}",
-    "PERSONA": "{Step 0-PM Q3}",
-    "DECISION_PRINCIPLES": "{Step 0-PM Q4}",
-    "CURRENT_PHASE": "{Step 0-PM Q5}"
-  }
-}
-```
-
-| 필드 | 타입 | 기본값 | 설명 |
-|------|------|--------|------|
-| `mode` | `"new"` \| `"existing"` | `"new"` | 프로젝트 모드. 기존 프로젝트는 `"existing"` |
-| `scope` | `"full"` \| `"opal-only"` | `"full"` | 생성 범위. 일반 프로젝트는 `"opal-only"` |
-| `excludeTemplates` | `string[]` | `[]` | 기존 모드에서 제외할 템플릿 상대 경로 목록 (예: `["docs/server/UV_SETUP.md"]`) |
-```
-
-**7-2. 스크립트 실행**
+`apply.js` 스크립트로 플랫폼 부트스트래퍼를 생성한다.
 
 ```bash
-# 신규 프로젝트 (기본값)
 node ~/.opal/skills/opal-project-init/scripts/apply.js --config {config.json 경로}
-
-# 기존 프로젝트
-node ~/.opal/skills/opal-project-init/scripts/apply.js --config {config.json 경로} --mode existing
 ```
 
-> `--mode` CLI 옵션은 config.json의 `mode` 필드보다 우선한다. 둘 다 없으면 기본값 `"new"`.
+config.json 형식:
 
-스크립트가 자동으로:
-- common/ 템플릿 → `{프로젝트루트}/docs/`
-- platform/ 템플릿 → `{프로젝트루트}/CLAUDE.md`, `GEMINI.md`, `.cursorrules`
-- {유형}/ 템플릿 → `{프로젝트루트}/docs/`
-- optional/ 템플릿 → 조건에 따라 포함/제외
-- opal/ 템플릿 → `{프로젝트루트}/.opal/AGENT.md`, `.opal/MEMORY.md` (PM 프로필)
-
-**7-3. dry-run (미리보기)**
-
-```bash
-node ~/.opal/skills/opal-project-init/scripts/apply.js --config {config.json 경로} --dry-run
+```json
+{
+  "projectRoot": "{프로젝트 절대 경로}",
+  "scope": "platform-only"
+}
 ```
 
-**7-4. 결과 확인**
+생성 대상:
 
-실행 완료 후 `{프로젝트루트}/.opal-project-init-result.json`에 결과가 저장된다.
+| 템플릿 소스 | 생성 위치 | 내용 |
+|------------|----------|------|
+| `templates/common/platform/CLAUDE.md` | `{프로젝트}/CLAUDE.md` | OPAL 부트스트래퍼 |
+| `templates/common/platform/GEMINI.md` | `{프로젝트}/GEMINI.md` | OPAL 부트스트래퍼 |
+| `templates/common/platform/.cursorrules` | `{프로젝트}/.cursorrules` | OPAL 부트스트래퍼 |
 
-**폴백**: Node.js가 없는 환경에서는 AI가 직접 Read → 치환 → Write로 수행한다.
+기존 파일 처리:
+- `CLAUDE.md`: OPAL 마커(`# === OPAL START ===`) 기반 병합. 기존 사용자 내용 보존 + 부트스트래퍼 갱신
+- `GEMINI.md`, `.cursorrules`: 기존 파일 `.bak` 백업 후 부트스트래퍼 추가
+- 이미 OPAL 마커가 있으면 갱신만 수행
 
-**저장 경로 매핑**:
-- `templates/common/docs/{파일}` → `{프로젝트루트}/docs/{파일}`
-- `templates/{유형}/docs/{파일}` → `{프로젝트루트}/docs/{파일}`
-- `templates/optional/docs/{파일}` → `{프로젝트루트}/docs/{파일}`
-- `templates/common/platform/CLAUDE.md` → `{프로젝트루트}/CLAUDE.md`
-- `templates/common/platform/GEMINI.md` → `{프로젝트루트}/GEMINI.md`
-- `templates/common/platform/.cursorrules` → `{프로젝트루트}/.cursorrules`
-- `templates/common/opal/AGENT.md` → `{프로젝트루트}/.opal/AGENT.md`
-- `templates/common/opal/MEMORY.md` → `{프로젝트루트}/.opal/MEMORY.md`
+Node.js가 없는 환경에서는 알투가 직접 부트스트래퍼를 삽입한다.
 
-**기존 파일 처리**:
+**4-2. 완료 보고 + 원래 요청으로 복귀**
 
-| 모드 | 파일 유형 | 동작 |
-|------|----------|------|
-| new | 모든 파일 | 기존 파일이 있으면 사용자에게 덮어쓰기 확인 |
-| existing | `CLAUDE.md` | 기존 파일 `.bak` 백업 후, OPAL 마커 기반 병합 (부트스트래퍼 갱신 + 기존 사용자 내용 보존 + 새 프로젝트 섹션 추가) |
-| existing | `GEMINI.md`, `.cursorrules` | 기존 파일 `.bak` 백업 후, 기존 내용 끝에 구분선(`---`) + 새 내용 추가. 사용자에게 수동 정리 안내 |
-| existing | `docs/**` 파일 | 이미 존재하면 건너뛰기 (덮어쓰지 않음), 없는 파일만 새로 생성 |
-| existing | `.opal/AGENT.md` | 이미 존재하면 건너뛰기 (PM 커스터마이징 보존), 없으면 새로 생성 |
-| existing | `.opal/MEMORY.md` | 이미 존재하면 건너뛰기, 없으면 새로 생성 |
-| existing | `excludeTemplates` 목록 | 해당 파일은 완전히 건너뛰기 |
+opi는 프로젝트 셋업이 목적이지만, 캡틴의 **원래 요청**이 있었다면 자연스럽게 다음 단계로 이어간다.
 
----
-
-### Step 8: 완료 보고
-
-**개발 프로젝트 (scope=full)**:
+캡틴의 원래 요청을 분석하여:
+- **개발 요청** ("만들어줘", "개발해줘") → otp 스킬로 이어가기 제안
+- **문서 요청** ("PRD 작성해줘", "기획서 만들어줘") → 문서 작업으로 이어가기 제안
+- **셋업만 요청** ("프로젝트 초기화해줘") → 완료 보고만
 
 ```
 ---
-opal-project-init 완료
+opi 완료
 
-프로젝트: {PROJECT_NAME}
-카테고리: 개발 프로젝트
-유형: {PROJECT_TYPE}
-기술 스택: {TECH_STACK_BACKEND} + {TECH_STACK_FRONTEND}
+프로젝트: {프로젝트명}
+카테고리: {개발/일반} 프로젝트
 
-생성된 파일:
-- docs/INDEX.md
-- docs/server/ ({N}개)
-- docs/client/ ({M}개)
-- CLAUDE.md, GEMINI.md, .cursorrules
-- .opal/AGENT.md (PM 프로필)
-- .opal/MEMORY.md (메모리 인덱스)
+생성된 문서:
+- {생성된 문서 목록}
 
-다음 단계:
-1. .opal/AGENT.md에서 PM 프로필을 커스터마이징 (금지사항, 도메인 지식, 프로젝트 규칙 등)
-2. docs/INDEX.md에서 문서 구조 확인
-3. CLAUDE.md의 컨벤션 섹션 검토 및 커스터마이징
-4. docs/server/ENVIRONMENT.md를 참고하여 .env.local 설정
-5. 개발 시작!
+플랫폼 파일:
+- CLAUDE.md, GEMINI.md, .cursorrules (부트스트래퍼)
 ---
 ```
 
-**일반 프로젝트 (scope=opal-only)**:
+**원래 요청으로 자동 복귀**:
+
+opi는 프로젝트 셋업 수단이지 목적이 아니다. 캡틴의 원래 요청을 기억하고, 셋업 완료 즉시 다음 단계로 넘어간다.
+
+```
+[원래 요청이 개발인 경우] → 셋업 완료 보고 후 바로 otp 실행
+알투: "프로젝트 셋업 완료했습니다. {원래 요청}에 맞춰 개발을 시작합니다."
+  → otp-dev 또는 otp-dev-short를 자동 판단하여 바로 TASK 단계 진입
+
+[원래 요청이 문서인 경우] → 셋업 완료 후 바로 문서 작성 시작
+알투: "프로젝트 셋업 완료했습니다. {요청한 문서} 작성을 시작합니다."
+
+[셋업만 요청한 경우] → 완료 보고만
+알투: "프로젝트 셋업 완료했습니다. 무엇을 도와드릴까요?"
+```
+
+**자동 판단 기준**:
+- 전체 앱/서비스 개발 ("만들어줘", "개발해줘") → opal-dev-builder (PRD/TRD → 로드맵 → 태스크 순차 실행)
+- 단일 기능 추가/수정 → otp-dev 또는 otp-dev-short
+- 문서 작업 → 해당 문서 작성 시작
+- 판단 불확실 → 캡틴에게 간단히 확인
+
+캡틴에게 "어떤 스킬로 할래요?"라고 묻지 않는다. 알투가 PM으로서 판단하고 바로 진행한다.
+
+> **참고**: opal-dev-builder 스킬은 별도 태스크(034)에서 개발 예정.
+> 스킬 미존재 시 otp-dev로 폴백한다.
+
+---
+
+## 최신화 모드
+
+`.opal/AGENT.md`가 이미 존재하는 프로젝트에서 실행한다. 4개 Phase로 진행한다.
+
+### Phase 1: 현재 상태 분석
+
+기존 환경을 파악한다.
+
+1. `.opal/AGENT.md` Read — PM 프로필 현재 상태
+2. `docs/` 전체 Read — 등록된 문서 현재 상태
+3. `docs/PROJECT.md`의 프로젝트 문서 테이블 확인 — 등록된 문서 목록 파악
+
+---
+
+### Phase 2: 프로젝트 유형별 분석
+
+**개발 프로젝트** (코드가 있는 프로젝트):
+
+1. 현재 코드베이스 분석 (Phase 1의 분석 항목과 동일)
+2. 변경점 감지:
+   - 기술 스택 변경 (새 의존성 추가/삭제, 버전 변경)
+   - 새 모듈/서비스 추가
+   - 아키텍처 변경 (디렉토리 구조 변경)
+   - Phase 진행
+3. 개발 문서 내용과 실제 코드 비교:
+   - `docs/ARCHITECTURE.md`와 실제 구조 차이
+   - `docs/CONVENTIONS.md`와 실제 코드 패턴 차이
+   - `docs/BACKEND.md`, `docs/FRONTEND.md`와 실제 구현 차이
+
+**일반/문서 프로젝트** (코드가 없는 프로젝트):
+
+1. `docs/` 하위 문서 전체 스캔
+2. 문서 정리 상태 점검:
+   - 문서 테이블에 미등록된 문서가 있는가
+   - 등록된 문서 중 삭제/이동된 것이 있는가
+   - 설명/용도가 비어있거나 오래된 것이 있는가
+
+---
+
+### Phase 3: 변경 사항 정리 + 캡틴 검토
+
+**절대 규칙**: 자동으로 문서를 덮어쓰지 않는다. 캡틴 승인 후에만 업데이트한다.
+
+1. 캡틴에게 분석 결과를 보고한다:
+
+   **개발 프로젝트 보고 예시**:
+   ```
+   [프로젝트 최신화 분석]
+
+   변경 감지 항목:
+   - 기술 스택: React 18 → React 19로 업그레이드됨
+   - 새 모듈: src/services/notification/ 추가됨
+   - 아키텍처: API 라우트 구조 변경 없음
+
+   문서 상태:
+   - docs/ARCHITECTURE.md: 디렉토리 구조 섹션 업데이트 필요
+   - docs/FRONTEND.md: React 버전 및 새 패턴 반영 필요
+   - docs/BACKEND.md: 변경 없음
+
+   업데이트를 진행할까요?
+   ```
+
+   **일반 프로젝트 보고 예시**:
+   ```
+   [프로젝트 최신화 분석]
+
+   문서 상태:
+   - 미등록 문서 발견: docs/meeting-notes.md, docs/roadmap.md
+   - 삭제된 문서: docs/TEMP_PLAN.md (테이블에 등록되어 있으나 파일 없음)
+   - Phase 변경: Phase 1 → Phase 2 진행 필요?
+
+   정리를 진행할까요?
+   ```
+
+2. 미등록 문서 → 캡틴에게 용도 인터뷰 → 등록 여부 결정
+3. 캡틴 승인 → 해당 문서만 업데이트
+4. 업데이트 시 docs-guide.md, agent-guide.md를 참조하여 구조 일관성 유지
+
+---
+
+### Phase 4: 플랫폼 파일 갱신
+
+부트스트래퍼가 최신인지 확인하고, 필요 시 갱신한다.
+
+1. `CLAUDE.md`, `GEMINI.md`, `.cursorrules`의 OPAL 마커 확인
+2. 마커가 없거나 구버전이면 갱신 (기존 사용자 내용 보존)
+3. 변경이 없으면 스킵
+
+완료 보고:
 
 ```
 ---
-opal-project-init 완료
+opi 최신화 완료
 
-프로젝트: {PROJECT_NAME}
-카테고리: 일반 프로젝트
+프로젝트: {프로젝트명}
 
-생성된 파일:
-- .opal/AGENT.md (PM 프로필)
-- .opal/MEMORY.md (메모리 인덱스)
+업데이트된 문서:
+- {변경된 파일 목록}
 
-다음 단계:
-1. .opal/AGENT.md에서 금지사항, 도메인 지식, 프로젝트 규칙 커스터마이징
+새로 등록된 문서:
+- {있으면 목록}
+
+변경 없음:
+- {변경 없는 파일 목록}
 ---
 ```

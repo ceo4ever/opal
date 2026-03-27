@@ -68,13 +68,15 @@ dtp-plan 스킬을 수행하라.
 **스킬 경로**: {dtp-plan/SKILL.md 탐색 경로}
 **태스크 폴더**: {tasks/{NNN}-{name}/}
 **이전 산출물**: {TASK.md 경로}
-**프로젝트 컨벤션**: {CLAUDE.md 경로}
+**프로젝트 컨텍스트**: {docs/PROJECT.md + 문서 테이블에서 매칭되는 참조 문서. docs/ 미존재 시 CLAUDE.md 폴백}
 **산출물 저장 경로**: {PLAN.md 경로}, {execution-plan.json 경로 (FE/BE 시)}
 ```
 
 **model**: opus
 
-워커 완료 → **dtp-qa 워커 호출** (단계: PLAN) → QA 결과 포함하여 사용자 보고.
+워커 완료 → **dtp-qa 워커 호출** (단계: PLAN) → **PM 검토 게이트** → QA 결과 + PM 검토 포함하여 사용자 보고.
+
+> **PM 검토 게이트**: `.opal/AGENT.md`가 존재하면, 오케스트레이터(알투)가 PM 검토 기준으로 산출물을 검토한다. 상세 절차는 글로벌 AGENT.md의 "PM 컨텍스트 로드 > PM 검토 게이트"를 따른다. AGENT.md 미존재 시 스킵.
 
 ---
 
@@ -90,7 +92,7 @@ dtp-test-scenario 스킬을 수행하라.
 **스킬 경로**: {dtp-test-scenario/SKILL.md 탐색 경로}
 **태스크 폴더**: {tasks/{NNN}-{name}/}
 **이전 산출물**: {TASK.md 경로}, {PLAN.md 경로}
-**프로젝트 컨벤션**: {CLAUDE.md 경로}
+**프로젝트 컨텍스트**: {docs/PROJECT.md + 문서 테이블에서 매칭되는 참조 문서. docs/ 미존재 시 CLAUDE.md 폴백}
 **산출물 저장 경로**: {TEST-SCENARIO.md 경로}
 ```
 
@@ -113,7 +115,7 @@ dtp-execute 스킬을 수행하라.
 **태스크 폴더**: {tasks/{NNN}-{name}/}
 **checklist_source**: {PLAN.md 경로}, 섹션: 3. 실행 체크리스트
 **execution-plan.json**: {경로 (있으면)}
-**프로젝트 컨벤션**: {CLAUDE.md 경로}
+**프로젝트 컨텍스트**: {docs/PROJECT.md + 문서 테이블에서 매칭되는 참조 문서. docs/ 미존재 시 CLAUDE.md 폴백}
 ```
 
 **model**: sonnet

@@ -67,13 +67,13 @@ dtp-analysis 스킬을 수행하라.
 **스킬 경로**: {dtp-analysis/SKILL.md 탐색 경로}
 **태스크 폴더**: {tasks/{NNN}-{name}/}
 **이전 산출물**: {TASK.md 경로}
-**프로젝트 컨벤션**: {CLAUDE.md 경로}
+**프로젝트 컨텍스트**: {docs/PROJECT.md + 문서 테이블에서 매칭되는 참조 문서. docs/ 미존재 시 CLAUDE.md 폴백}
 **산출물 저장 경로**: {ANALYSIS.md 경로}
 ```
 
 **model**: haiku
 
-워커 완료 → **dtp-qa 워커 호출** (단계: ANALYSIS) → QA 결과 포함하여 사용자 보고.
+워커 완료 → **dtp-qa 워커 호출** (단계: ANALYSIS) → **PM 검토 게이트** → QA 결과 + PM 검토 포함하여 사용자 보고. (PM 검토: 글로벌 AGENT.md "PM 컨텍스트 로드" 참조. AGENT.md 미존재 시 스킵)
 
 ---
 
@@ -89,13 +89,13 @@ dtp-plan 스킬을 수행하라.
 **스킬 경로**: {dtp-plan/SKILL.md 탐색 경로}
 **태스크 폴더**: {tasks/{NNN}-{name}/}
 **이전 산출물**: {TASK.md 경로}, {ANALYSIS.md 경로}
-**프로젝트 컨벤션**: {CLAUDE.md 경로}
+**프로젝트 컨텍스트**: {docs/PROJECT.md + 문서 테이블에서 매칭되는 참조 문서. docs/ 미존재 시 CLAUDE.md 폴백}
 **산출물 저장 경로**: {PLAN.md 경로}, {execution-plan.json 경로 (FE/BE 시)}
 ```
 
 **model**: opus
 
-워커 완료 → **dtp-qa 워커 호출** (단계: PLAN) → QA 결과 포함하여 사용자 보고.
+워커 완료 → **dtp-qa 워커 호출** (단계: PLAN) → **PM 검토 게이트** → QA 결과 + PM 검토 포함하여 사용자 보고. (PM 검토: 글로벌 AGENT.md "PM 컨텍스트 로드" 참조. AGENT.md 미존재 시 스킵)
 
 ---
 
@@ -111,7 +111,7 @@ dtp-todo 스킬을 수행하라.
 **스킬 경로**: {dtp-todo/SKILL.md 탐색 경로}
 **태스크 폴더**: {tasks/{NNN}-{name}/}
 **이전 산출물**: {TASK.md 경로}, {ANALYSIS.md 경로}, {PLAN.md 경로}
-**프로젝트 컨벤션**: {CLAUDE.md 경로}
+**프로젝트 컨텍스트**: {docs/PROJECT.md + 문서 테이블에서 매칭되는 참조 문서. docs/ 미존재 시 CLAUDE.md 폴백}
 **산출물 저장 경로**: {TODO.md 경로}
 ```
 
@@ -133,7 +133,7 @@ dtp-test-scenario 스킬을 수행하라.
 **스킬 경로**: {dtp-test-scenario/SKILL.md 탐색 경로}
 **태스크 폴더**: {tasks/{NNN}-{name}/}
 **이전 산출물**: {TASK.md 경로}, {PLAN.md 경로}, {TODO.md 경로}
-**프로젝트 컨벤션**: {CLAUDE.md 경로}
+**프로젝트 컨텍스트**: {docs/PROJECT.md + 문서 테이블에서 매칭되는 참조 문서. docs/ 미존재 시 CLAUDE.md 폴백}
 **산출물 저장 경로**: {TEST-SCENARIO.md 경로}
 ```
 
@@ -156,7 +156,7 @@ dtp-execute 스킬을 수행하라.
 **태스크 폴더**: {tasks/{NNN}-{name}/}
 **checklist_source**: {TODO.md 경로}, 섹션: Part A
 **execution-plan.json**: {경로 (있으면)}
-**프로젝트 컨벤션**: {CLAUDE.md 경로}
+**프로젝트 컨텍스트**: {docs/PROJECT.md + 문서 테이블에서 매칭되는 참조 문서. docs/ 미존재 시 CLAUDE.md 폴백}
 ```
 
 **model**: sonnet
