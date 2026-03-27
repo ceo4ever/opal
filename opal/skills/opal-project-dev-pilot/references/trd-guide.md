@@ -7,12 +7,44 @@
 
 ## 작성 전 준비
 
-다음 문서를 반드시 Read한다:
+### 문서 Read (필수)
+
 - `docs/PRD.md` — 기능 요구사항, 우선순위 매트릭스
 - `docs/PROJECT.md` — 프로젝트 원칙, 기준
 - `docs/ARCHITECTURE.md` — 기존 아키텍처, 기술 스택
 - `docs/CONVENTIONS.md` — 코드 컨벤션 (있으면)
 - `.opal/AGENT.md` — PM 검토 기준
+
+### MCP 활용 (기술 결정 시)
+
+기술 스택 버전 확정, API 설계, 라이브러리 선택 시 최신 정보를 조회한다.
+
+| MCP | 용도 | 사용 시점 |
+|-----|------|----------|
+| context7 | 라이브러리 최신 버전/API 문서 조회 | 기술 스택 버전 확정, 설정 방법 확인 |
+| shadcn | UI 컴포넌트 존재 여부/사용법 확인 | FE 기술 결정 시 |
+| 웹 검색 | 외부 API 문서, 가격, 제한사항 | 외부 연동 설계 시 |
+
+```
+사용 예:
+  context7 → resolve-library-id("fastapi") → query-docs("latest version, configuration")
+  context7 → resolve-library-id("next.js") → query-docs("app router, server components")
+  shadcn → search_items("file upload") → 컴포넌트 존재 확인
+```
+
+### 커뮤니티 스킬 참조 (기술 스택별)
+
+ARCHITECTURE.md의 기술 스택에 따라 해당 스킬을 Read하여 베스트 프랙티스를 반영한다.
+
+| 기술 스택 | 참조 스킬 | 경로 |
+|----------|----------|------|
+| React | `vercel-labs/react-best-practices` | `~/.opal/community-skills/vercel-labs/` |
+| Next.js | `vercel-labs/next-best-practices` | `~/.opal/community-skills/vercel-labs/` |
+| shadcn/ui | `vercel-labs/shadcn` | `~/.opal/community-skills/vercel-labs/` |
+| Python | `trailofbits/modern-python` | `~/.opal/community-skills/trailofbits/` |
+| Claude API | `anthropics/claude-api` | `~/.opal/community-skills/anthropics/` |
+
+해당 기술 스택이 프로젝트에 포함되어 있으면 스킬을 Read하고, TRD의 기술 결정에 반영한다.
 
 ---
 
