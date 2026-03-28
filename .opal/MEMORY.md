@@ -18,7 +18,8 @@
 
 | # | 작업 | 단계 | 경로 | 날짜 |
 |---|------|------|------|------|
-| 1 | opi 전면 재설계 + PM 역할 실체화 (033) | 완료 (1b041b1) | tasks/033-opal-framework-doc-pm-restructure/ | 2026-03-27 |
+| 1 | opal-project-dev-pilot 스킬 개발 (034) | 완료 (e20bad2) | tasks/034-opal-dev-pilot/ | 2026-03-27 |
+| 2 | opi 전면 재설계 + PM 역할 실체화 (033) | 완료 (1b041b1) | tasks/033-opal-framework-doc-pm-restructure/ | 2026-03-27 |
 | 2 | dtp 컴포지션 아키텍처 전환 (032) | 완료 (ff9b13d) | tasks/032-dtp-to-otp-restructure/ | 2026-03-26 |
 | 2 | 태스크 진행 단계 메모리 추적 기능 추가 | 완료 (359a7dd) | - | 2026-03-22 |
 | 3 | context-compactor 스킬 (031) | PLAN ✅ → TODO 대기 | tasks/031-context-compactor-skill/ | 2026-03-22 |
