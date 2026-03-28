@@ -12,7 +12,7 @@
 
 | # | 금지 행동 | 이유 |
 |---|----------|------|
-| 1 | PLAN/TODO/execution-plan.json에 없는 파일 생성/수정 | 계획 밖 변경은 추적 불가, 회귀 리스크 |
+| 1 | PLAN/execution-plan.json에 없는 파일 생성/수정 | 계획 밖 변경은 추적 불가, 회귀 리스크 |
 | 2 | 설계(클래스 구조, 함수 시그니처, DB 스키마)를 임의로 변경 | PLAN에서 QA를 통과한 설계를 무효화 |
 | 3 | 다른 영역 침범 (FE 워커가 BE 파일 수정, 또는 그 반대) | 병렬 실행 시 충돌 발생 |
 | 4 | PLAN에 명시되지 않은 패키지 설치 | 의존성 변경은 사전 승인 필요 |
@@ -54,8 +54,7 @@ execution-plan.json이 존재하면, 워커는 이 파일을 기반으로 실행
 
 **입력 우선순위**:
 1. `execution-plan.json` (있으면) -- FE/BE 구조화된 실행 순서
-2. `TODO.md` Part A (Full Task, JSON 없을 때) -- Step별 체크리스트
-3. `PLAN.md` 섹션 3 (Short Task, JSON 없을 때) -- 실행 체크리스트
+2. `PLAN.md` 섹션 3 실행 체크리스트 (JSON 없을 때)
 
 **execution-plan.json 읽기 규칙**:
 1. `execution_order.sequence`에 따라 phase별 실행
@@ -79,19 +78,19 @@ Step 1 → Step 2 → ... → Step N → 인라인 테스트 → 결과 반환 �
 ```
 
 **실행 규칙:**
-1. Part A의 Step을 의존성 순서대로 하나씩 실행
+1. PLAN.md 실행 체크리스트(섹션 3)의 Step을 의존성 순서대로 하나씩 실행
 2. 각 Step 실행 시:
    - 대상 파일 Read → 내용 파악
    - Edit/Write로 코드 작성/수정
    - Step의 테스트 기준에 따라 인라인 테스트 실행
-   - TODO.md 체크박스 갱신
+   - PLAN.md 체크박스 갱신
    - STATE.md `진행: Step N/M 완료` 갱신
 3. 블로커 발생 시:
    - STATE.md `상태: 블로커` + `블로커` 섹션 갱신
    - 즉시 사용자에게 보고
    - 사용자 지시 대기
 4. 모든 Step 완료 후:
-   - Part B QA 체크리스트를 검증하고 체크박스 갱신
+   - PLAN.md 섹션 4 QA 체크리스트를 검증하고 체크박스 갱신
    - 결과 반환 → 오케스트레이터가 dtp-test 호출 → DONE.md 생성 → 완료 보고
 
 ### 복잡 모드 (Complex Mode)
@@ -112,17 +111,6 @@ Batch 1: [Agent-1, Agent-2 병렬] → Batch 2: [Agent-3] → ... → 결과 반
    - 배치 완료 시 진행 보고 + STATE.md 갱신
 3. 전체 에이전트 완료 후:
    - Part B QA 체크리스트를 검증하고 체크박스 갱신
-   - 결과 반환
-
-### Short Task 모드
-
-워커가 PLAN.md 기반으로 실행한다:
-
-1. PLAN.md 실행 체크리스트(섹션 3)를 순서대로 실행
-2. 각 Step 완료 시: PLAN.md 체크박스 갱신 + STATE.md `진행: Step N/M 완료` 갱신
-3. 블로커 발생 시: STATE.md `상태: 블로커` → 즉시 사용자에게 보고
-4. 모든 Step 완료 후:
-   - QA 체크리스트(섹션 4)를 검증하고 체크박스 갱신
    - 결과 반환
 
 ---
@@ -161,22 +149,17 @@ Batch 1: [Agent-1, Agent-2 병렬] → Batch 2: [Agent-3] → ... → 결과 반
 
 EXECUTE 중 각 Step 완료 시 즉시 체크박스를 갱신한다.
 
-**Full Task** -- TODO.md Part A의 각 Step:
+PLAN.md 실행 체크리스트(섹션 3)의 각 Step:
 - `- [ ] 완료` → `- [x] 완료`
-
-**Short Task** -- PLAN.md 실행 체크리스트(섹션 3)의 각 Step:
-- `- [ ] Step N: ...` → `- [x] Step N: ...`
 
 ### QA 체크리스트 갱신
 
 모든 실행 Step 완료 후, test 에이전트 호출 전에 워커가 QA 체크리스트를 검증하고 갱신한다.
 
-**대상**:
-- Full Task → TODO.md Part B
-- Short Task → PLAN.md 섹션 4
+**대상**: PLAN.md 섹션 4 QA 체크리스트
 
 **절차**:
-1. QA 체크리스트의 각 항목(기능 테스트, 회귀 테스트, 코드 품질)을 실제로 검증
+1. QA 체크리스트의 각 항목(기능 테스트, 회귀 테스트, 코드 품질, 보안)을 실제로 검증
 2. 통과한 항목: `- [ ]` → `- [x]`
 3. 미통과 항목: `- [ ]` 유지 + 사유를 인라인 주석으로 기록
 

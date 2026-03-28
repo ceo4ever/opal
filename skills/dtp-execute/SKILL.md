@@ -13,8 +13,7 @@ description: |
 - **호출자**: 오케스트레이터(dtp-dev, dtp-dev-short, dtp-dev-wf)가 EXECUTE 단계를 디스패치
 - **실행 주체**: 워커 에이전트 (dtp-dev-agent 또는 dtp-wireframe-ui-agent)
 - **입력**: `checklist_source` (오케스트레이터가 경로+섹션 지정)
-  - Full Task: `TODO.md` Part A (또는 `execution-plan.json`)
-  - Short Task: `PLAN.md` 섹션 3 실행 체크리스트
+  - `PLAN.md` 섹션 3 실행 체크리스트 (또는 `execution-plan.json`)
   - Wireframe UI: wireframe.md 기반 실행 항목
 - **출력**: 코드 변경 + `changed_files` 목록
 
@@ -51,24 +50,21 @@ Read ~/.opal/skills/dtp-execute/references/execute-guide.md
 
 **입력 우선순위**:
 1. `execution-plan.json` (있으면) -- FE/BE 구조화된 실행 순서
-2. `TODO.md` Part A (Full Task, JSON 없을 때) -- Step별 체크리스트
-3. `PLAN.md` 섹션 3 (Short Task, JSON 없을 때) -- 실행 체크리스트
+2. `PLAN.md` 섹션 3 실행 체크리스트 (JSON 없을 때)
 
 ### Step 3. 코드 작성 및 검증
 
-실행 모드(단순/복잡/Short)에 따라 execute-guide.md의 절차를 따른다.
+실행 모드(단순/복잡)에 따라 execute-guide.md의 절차를 따른다.
 
 ### Step 4. 체크리스트 갱신
 
 각 Step 완료 시 체크박스를 실시간 갱신한다:
-- Full Task: `TODO.md` Part A의 `- [ ]` → `- [x]`
-- Short Task: `PLAN.md` 섹션 3의 `- [ ]` → `- [x]`
+PLAN.md 섹션 3 실행 체크리스트의 `- [ ] 완료` → `- [x] 완료`
 
 ### Step 5. QA 체크리스트 검증
 
 모든 실행 Step 완료 후, dtp-test 호출 전에 워커가 QA 체크리스트를 자체 검증한다:
-- Full Task → `TODO.md` Part B
-- Short Task → `PLAN.md` 섹션 4
+`PLAN.md` 섹션 4 QA 체크리스트
 
 ## 가드레일
 
@@ -76,7 +72,7 @@ Read ~/.opal/skills/dtp-execute/references/execute-guide.md
 
 | # | 금지 행동 | 이유 |
 |---|----------|------|
-| 1 | PLAN/TODO/execution-plan.json에 없는 파일 생성/수정 | 계획 밖 변경은 추적 불가 |
+| 1 | PLAN/execution-plan.json에 없는 파일 생성/수정 | 계획 밖 변경은 추적 불가 |
 | 2 | 설계(클래스 구조, 함수 시그니처, DB 스키마)를 임의로 변경 | PLAN에서 QA를 통과한 설계를 무효화 |
 | 3 | 다른 영역 침범 (FE 워커가 BE 파일 수정, 또는 그 반대) | 병렬 실행 시 충돌 발생 |
 | 4 | PLAN에 명시되지 않은 패키지 설치 | 의존성 변경은 사전 승인 필요 |
@@ -107,14 +103,6 @@ Step 1 → Step 2 → ... → Step N → QA 체크리스트 → 결과 반환
 
 ```
 Batch 1: [Agent-1, Agent-2 병렬] → Batch 2: [Agent-3] → ... → QA 체크리스트 → 결과 반환
-```
-
-### Short Task 모드
-
-PLAN.md 섹션 3 기반으로 순차 실행한다.
-
-```
-Step 1 → Step 2 → ... → Step N → QA 체크리스트 → 결과 반환
 ```
 
 ## FE 역할 분담: ui-designer vs dtp-execute

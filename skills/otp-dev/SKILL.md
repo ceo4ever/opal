@@ -1,7 +1,7 @@
 ---
 name: otp-dev
 description: |
-  **Full Task 오케스트레이터**. 대규모 개발 작업을 5단계 파이프라인으로 수행한다.
+  **Full Task 오케스트레이터**. 대규모 개발 작업을 4단계 파이프라인으로 수행한다.
   반드시 이 스킬을 사용해야 하는 상황: "otp-dev", "otpd".
   코드를 읽기만 하는 설명 요청, API 명세서(api-analyzer), 문서(doc-writer), PR 리뷰, git 작업, 단순 설정 변경은 이 스킬이 아니다.
 ---
@@ -29,8 +29,7 @@ description: |
 
 ```
 dtp-task → dtp-analysis → [QA] → 검토
-  → dtp-plan → [QA] → 검토
-  → dtp-todo → dtp-test-scenario → 검토/승인
+  → dtp-plan → dtp-test-scenario → [QA] → 검토/승인
   → dtp-execute → [Test] → 완료
 ```
 
@@ -76,9 +75,11 @@ dtp-analysis 스킬을 수행하라.
 
 ---
 
-## STEP 3: PLAN
+## STEP 3: PLAN + TEST-SCENARIO
 
-워커를 디스패치하여 구현 계획을 수립한다.
+워커를 연속 디스패치하여 구현 계획과 테스트 시나리오를 작성한다.
+
+### 3-1. PLAN 워커 디스패치
 
 **디스패치 프롬프트**:
 
@@ -94,33 +95,22 @@ dtp-plan 스킬을 수행하라.
 
 **model**: opus
 
-워커 완료 → **dtp-qa 워커 호출** (단계: PLAN) → **PM 검토 게이트** → QA 결과 + PM 검토 포함하여 사용자 보고. (PM 검토: 글로벌 AGENT.md "PM 컨텍스트 로드" 참조. AGENT.md 미존재 시 스킵)
+워커 완료 → **dtp-qa 워커 호출** (단계: PLAN) → **PM 검토 게이트**.
 
----
+> **PM 검토 게이트**: `.opal/AGENT.md`가 존재하면, 오케스트레이터(알투)가 PM 검토 기준으로 산출물을 검토한다. 상세 절차는 글로벌 AGENT.md의 "PM 컨텍스트 로드 > PM 검토 게이트"를 따른다. AGENT.md 미존재 시 스킵.
 
-## STEP 4: TODO + TEST-SCENARIO
+### TEST-SCENARIO 스킵 조건
 
-워커를 연속 디스패치하여 실행 체크리스트와 테스트 시나리오를 작성한다.
+작업 유형이 **문서 전용**(코드 변경 없음, .md 파일만 수정)인 경우:
+- TEST-SCENARIO 워커 디스패치를 **스킵**한다
+- PLAN + QA + PM 검토만으로 승인 게이트를 구성한다
+- 사용자 보고 시 "TEST-SCENARIO: 문서 전용 작업으로 스킵" 표기
 
-### 4-1. TODO 워커 디스패치
+**판별 기준**: PLAN.md의 파일 변경 계획에서 수정 대상이 모두 `.md` 파일이고, 소스 코드(.ts/.js/.py/.go/.java/.kt/.rs 등)가 없으면 문서 전용으로 판별.
 
-**디스패치 프롬프트**:
+### 3-2. TEST-SCENARIO 워커 디스패치 (연속)
 
-```
-dtp-todo 스킬을 수행하라.
-
-**스킬 경로**: {dtp-todo/SKILL.md 탐색 경로}
-**태스크 폴더**: {tasks/{NNN}-{name}/}
-**이전 산출물**: {TASK.md 경로}, {ANALYSIS.md 경로}, {PLAN.md 경로}
-**프로젝트 컨텍스트**: {docs/PROJECT.md + 문서 테이블에서 매칭되는 참조 문서. docs/ 미존재 시 CLAUDE.md 폴백}
-**산출물 저장 경로**: {TODO.md 경로}
-```
-
-**model**: haiku
-
-### 4-2. TEST-SCENARIO 워커 디스패치
-
-TODO 워커 완료 후, 연속으로 TEST-SCENARIO 워커를 디스패치한다.
+QA + PM 검토 게이트 통과 후, TEST-SCENARIO 워커를 연속 디스패치한다.
 
 **디스패치 프롬프트**:
 
@@ -129,20 +119,20 @@ dtp-test-scenario 스킬을 수행하라.
 
 **스킬 경로**: {dtp-test-scenario/SKILL.md 탐색 경로}
 **태스크 폴더**: {tasks/{NNN}-{name}/}
-**이전 산출물**: {TASK.md 경로}, {PLAN.md 경로}, {TODO.md 경로}
+**이전 산출물**: {TASK.md 경로}, {PLAN.md 경로}
 **프로젝트 컨텍스트**: {docs/PROJECT.md + 문서 테이블에서 매칭되는 참조 문서. docs/ 미존재 시 CLAUDE.md 폴백}
 **산출물 저장 경로**: {TEST-SCENARIO.md 경로}
 ```
 
 **model**: haiku
 
-### 4-3. 사용자 보고
+### 3-3. 사용자 보고
 
-두 워커 완료 → 사용자에게 TODO + TEST-SCENARIO를 함께 보고. **승인 = EXECUTE 시작 허가**.
+두 워커 완료 → 사용자에게 PLAN + TEST-SCENARIO를 함께 보고. **승인 = EXECUTE 시작 허가**.
 
 ---
 
-## STEP 5: EXECUTE
+## STEP 4: EXECUTE
 
 워커를 디스패치하여 코드를 작성한다.
 
@@ -153,7 +143,7 @@ dtp-execute 스킬을 수행하라.
 
 **스킬 경로**: {dtp-execute/SKILL.md 탐색 경로}
 **태스크 폴더**: {tasks/{NNN}-{name}/}
-**checklist_source**: {TODO.md 경로}, 섹션: Part A
+**checklist_source**: {PLAN.md 경로}, 섹션: 3. 실행 체크리스트
 **execution-plan.json**: {경로 (있으면)}
 **프로젝트 컨텍스트**: {docs/PROJECT.md + 문서 테이블에서 매칭되는 참조 문서. docs/ 미존재 시 CLAUDE.md 폴백}
 ```
@@ -202,7 +192,7 @@ execution-plan.json이 존재하고 FE+BE 모두 포함 시:
 
 ## 현재 상태
 - 모드: Full Task
-- 단계: {TASK / ANALYSIS / PLAN / TODO+TEST-SCENARIO / EXECUTE}
+- 단계: {TASK / ANALYSIS / PLAN+TEST-SCENARIO / EXECUTE}
 - 진행: {Step N/M 완료 (EXECUTE 시)}
 - 상태: {진행 중 / 대기 중 / 블로커 / 완료}
 
@@ -212,7 +202,6 @@ execution-plan.json이 존재하고 FE+BE 모두 포함 시:
 | TASK.md | {완료 / 미생성} |
 | ANALYSIS.md | {완료 / 미생성} |
 | PLAN.md | {완료 / 미생성} |
-| TODO.md | {완료 / 미생성} |
 | TEST-SCENARIO.md | {완료 / 미생성} |
 | QA-*.md | {완료 / 미생성} |
 | DONE.md | {완료 / 미생성} |
@@ -272,3 +261,4 @@ execution-plan.json이 존재하고 FE+BE 모두 포함 시:
 |------|------|---------|
 | v1.0 | 2026-03-26 | 초기 작성 — dev-task-pilot 컴포지션 전환 |
 | v1.1 | 2026-03-28 | TEST-SCENARIO를 TODO STEP에 통합, EXECUTE 후 커밋 규칙 추가 |
+| v1.2 | 2026-03-28 | TODO를 PLAN에 흡수하여 5→4 STEP, TEST-SCENARIO를 PLAN STEP에 통합, TEST-SCENARIO 스킵 조건 추가 |

@@ -18,7 +18,8 @@
 
 | # | 작업 | 단계 | 경로 | 날짜 |
 |---|------|------|------|------|
-| 1 | otp 파이프라인 TEST-SCENARIO 재배치 + 커밋 규칙 (036) | EXECUTE ✅ → 커밋 대기 | tasks/036-otp-pipeline-test-scenario-reorder/ | 2026-03-28 |
+| 1 | PLAN+TODO 통합 + TEST-SCENARIO 스킵 조건 (037) | EXECUTE ✅ → 커밋 대기 | tasks/037-plan-todo-merge/ | 2026-03-28 |
+| 2 | otp 파이프라인 TEST-SCENARIO 재배치 + 커밋 규칙 (036) | 완료 (a3ebc8e) | tasks/036-otp-pipeline-test-scenario-reorder/ | 2026-03-28 |
 | 2 | opal-project-dev-pilot 스킬 개발 (034) | 완료 (e20bad2) | tasks/034-opal-dev-pilot/ | 2026-03-27 |
 | 2 | opi 전면 재설계 + PM 역할 실체화 (033) | 완료 (1b041b1) | tasks/033-opal-framework-doc-pm-restructure/ | 2026-03-27 |
 | 2 | dtp 컴포지션 아키텍처 전환 (032) | 완료 (ff9b13d) | tasks/032-dtp-to-otp-restructure/ | 2026-03-26 |
