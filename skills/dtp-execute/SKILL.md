@@ -117,18 +117,60 @@ PLAN.md 섹션 3 기반으로 순차 실행한다.
 Step 1 → Step 2 → ... → Step N → QA 체크리스트 → 결과 반환
 ```
 
+## FE 역할 분담: ui-designer vs dtp-execute
+
+FE 태스크에서 **UI 구현**과 **비UI 작업**의 담당을 명확히 구분한다.
+
+### ui-designer 담당 (UI 구현)
+
+화면에 보이는 것을 만드는 작업. shadcn/ui + React 컴포넌트 전문.
+
+| 작업 | 예시 |
+|------|------|
+| 페이지 레이아웃 | 전체 화면 구조, 헤더/사이드바/콘텐츠 배치 |
+| UI 컴포넌트 구현 | 버튼, 폼, 테이블, 카드, 다이얼로그 등 |
+| shadcn 컴포넌트 조합 | shadcn MCP 조회 → 설치 → 조합 |
+| 스타일링 | Tailwind CSS, 반응형 레이아웃 |
+| 인터랙션 UI | 탭, 아코디언, 드롭다운, 모달 등 |
+| 폼 UI | 입력 필드, 유효성 표시, 에러 메시지 표시 |
+
+**호출 방법**: execution-plan.json의 FE screen 항목을 ui-designer plan-driven 모드로 전달.
+
+### dtp-execute 담당 (비UI FE 작업)
+
+화면 뒤에서 동작하는 것을 만드는 작업.
+
+| 작업 | 예시 |
+|------|------|
+| API 연동 | fetch/axios, API 클라이언트, 에러 처리 |
+| 상태 관리 | zustand, context, React Query 설정 |
+| 라우팅 설정 | Next.js app router, 페이지 구조 |
+| 타입 정의 | TypeScript 인터페이스, OpenAPI 타입 생성 |
+| 유틸리티 | 헬퍼 함수, 포맷터, 밸리데이터 |
+| 환경 설정 | .env, 빌드 설정, 패키지 설치 |
+| 인증/인가 로직 | 토큰 관리, 가드, 미들웨어 |
+
+### 실행 순서 (FE 태스크)
+
+```
+dtp-execute:
+  1. 비UI 작업 먼저 (라우팅, 타입, API 클라이언트, 상태 관리)
+  2. ui-designer 호출 (화면 UI 구현)
+  3. UI + 비UI 통합 (API 연결, 이벤트 핸들러 바인딩)
+```
+
 ## 활용 스킬/MCP (FE)
 
-| 스킬/MCP | 용도 | 사용 시점 |
-|----------|------|----------|
-| ui-designer (plan-driven) | wireframe.md 기반 UI 구현 | FE screen 항목 실행 시 |
-| vercel-labs/react-best-practices | React 패턴 참조 | 컴포넌트 설계 시 |
-| vercel-labs/shadcn | shadcn/ui 컴포넌트 사용법 | UI 컴포넌트 구현 시 |
-| vercel-labs/next-best-practices | Next.js 패턴 참조 | Next.js 프로젝트 시 |
-| vercel-labs/composition-patterns | 컴포지션 패턴 참조 | 컴포넌트 조합 시 |
-| anthropics/frontend-design | 프론트엔드 설계 참조 | FE 아키텍처 결정 시 |
-| shadcn MCP | shadcn 컴포넌트 검색·설치 | 컴포넌트 추가 시 |
-| context7 | 라이브러리 문서 조회 | 외부 라이브러리 API 확인 시 |
+| 스킬/MCP | 담당 | 용도 |
+|----------|------|------|
+| **ui-designer** (plan-driven) | UI 구현 | 화면 레이아웃 + shadcn 컴포넌트 구현 |
+| shadcn MCP | UI 구현 | 컴포넌트 검색·조회·설치 (ui-designer가 사용) |
+| vercel-labs/shadcn | UI 구현 | shadcn Critical Rules, 폼/레이아웃 패턴 |
+| vercel-labs/react-best-practices | 비UI | React 패턴 (상태 관리, 훅 등) |
+| vercel-labs/next-best-practices | 비UI | Next.js 패턴 (라우팅, RSC 등) |
+| vercel-labs/composition-patterns | 공통 | 컴포넌트 조합 패턴 |
+| anthropics/frontend-design | 공통 | FE 아키텍처/UX 설계 참조 |
+| context7 | 비UI | 라이브러리 문서 조회 |
 
 ## 활용 MCP (BE)
 
@@ -142,7 +184,10 @@ execution-plan.json이 존재하면:
 1. `execution_order.sequence`에 따라 phase별 실행
 2. phase 1 (common) 완료 후 phase 2 (FE/BE 병렬) 시작
 3. 각 항목의 `depends_on`을 확인하여 선행 작업 완료 여부 검증
-4. FE screen 항목: ui-designer plan-driven 모드의 입력으로 전달
+4. **FE 항목 실행 순서**:
+   a. 비UI 작업 먼저 (dtp-execute): 라우팅, 타입 정의, API 클라이언트, 상태 관리
+   b. UI 구현 (ui-designer): screen 항목을 ui-designer plan-driven 모드로 전달
+   c. 통합 (dtp-execute): API 연결, 이벤트 핸들러 바인딩, 최종 조립
 5. BE layer 항목: model → dto → service → router 순서로 순차 실행
 
 ## 블로커 처리
