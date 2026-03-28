@@ -5,7 +5,7 @@ description: |
   버그 수정, 기능 추가/수정/개선, 성능 최적화, 리팩토링, UI 구현,
   와이어프레임 설계 등 실제 코드 변경이 필요한 작업에 사용한다.
   코드를 읽기만 하는 설명 요청, API 명세서 작성(api-analyzer),
-  문서 작성(doc-writer), PR 리뷰(code-review), git 작업,
+  문서 작성(otp-write), PR 리뷰(code-review), git 작업,
   단순 설정 1줄 변경은 이 스킬이 아니다.
 ---
 

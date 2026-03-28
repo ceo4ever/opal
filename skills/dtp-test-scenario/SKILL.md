@@ -115,7 +115,7 @@ Read ~/.opal/skills/dtp-test-scenario/references/test-scenario-guide.md
 tasks/{NNN}-{태스크명}/TEST-SCENARIO.md
 ```
 
-기존 TEST-SCENARIO.md가 있으면 version-mgr 규칙에 따라 버전 관리한다.
+기존 TEST-SCENARIO.md가 있으면 opal-doc-standard 규칙에 따라 버전 관리한다.
 
 ## 시나리오 작성 체크리스트
 

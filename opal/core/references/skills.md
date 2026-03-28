@@ -12,6 +12,7 @@ OPAL 에이전트가 사용할 수 있는 모든 스킬 목록.
 | otp-dev | "otp-dev", "otpd" — 사용자가 명시적으로 Full Task 요청 시 | Full Task 오케스트레이터 |
 | otp-dev-short | "otp-dev-short", "otpds" — 코드 변경 수반 작업의 기본 진입점 | Short Task 오케스트레이터 (기본 모드) |
 | otp-wf | "otp-wf", "otpwf" | Wireframe UI 오케스트레이터 |
+| otp-write | "otp-write", "otpw" — 문서/보고서/가이드/설계서 작성 요청 시 | 범용 문서 작성 오케스트레이터 |
 | dtp-task | (오케스트레이터 디스패치) | TASK.md 작성 |
 | dtp-analysis | (오케스트레이터 디스패치) | 코드베이스 분석 |
 | dtp-plan | (오케스트레이터 디스패치) | 구현 계획 |
@@ -21,9 +22,7 @@ OPAL 에이전트가 사용할 수 있는 모든 스킬 목록.
 | dtp-wireframe | (오케스트레이터 디스패치) | 와이어프레임 생성 |
 | dtp-qa | (오케스트레이터 디스패치) | QA 검증 |
 | api-analyzer | "API 분석해줘", "API 명세서", "API 검토", "외부 API 조사" | 외부 API 7단계 분석 및 명세서 생성 |
-| doc-writer | "문서 작성해줘", "명세서 만들어줘", "보고서 작성" | 기술 문서 표준 템플릿 (모든 문서 스킬의 베이스) |
 | interview | "검토해줘", "확인해줘", "궁금한 거 물어봐" | 구조화된 Q&A 요구사항 수집 |
-| version-mgr | "업데이트해줘", "수정해줘", "버전 올려줘" | 산출물 v{Major}.{Minor} 버전 관리 |
 | wireframe-builder | "와이어프레임", "화면 설계", "UI 설계", "화면 구조", "화면 도출" | UI 분석·설계 — 정책서/요구사항 → wireframe.md 생성 |
 | ui-designer | "UI 구현", "UI 만들어줘", "화면 구현", "wireframe 구현", "프로토타입 만들어줘" | UI 구현 — wireframe.md → React + shadcn/ui 기반 UI |
 

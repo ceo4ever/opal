@@ -77,7 +77,7 @@ description: |
 ### Phase 4: 산출물 생성
 
 1. wireframe.md 스키마에 따라 구조화된 마크다운을 생성한다.
-2. version-mgr 규칙에 따라 버전을 관리한다.
+2. opal-doc-standard 규칙에 따라 버전을 관리한다.
 3. 산출물 경로: `{태스크 폴더}/wireframe.md` 또는 사용자 지정 경로.
 
 ---

@@ -15,8 +15,7 @@ skill-creator 커뮤니티 스킬로 SKILL.md 콘텐츠를 생성한 뒤, OPAL �
 | 스킬 | 역할 | 필수 |
 |------|------|------|
 | skill-creator | Phase 1 콘텐츠 생성 위임 | O |
-| version-mgr | Phase 2 버전 태깅 | O |
-| doc-writer | 문서 표준 규칙 참조 | O |
+| opal-doc-standard | 문서 표준 + 버전 관리 규칙 참조 (Read: ~/.opal/references/opal-doc-standard.md) | O |
 
 ## 진입 분기
 
@@ -72,7 +71,7 @@ skill-creator의 전체 프로세스를 실행한다:
 
 단, SKILL.md 작성 시 아래 OPAL 규칙을 skill-creator에 컨텍스트로 전달한다:
 
-- 한국어 본문, 영어 코드/필드명 (doc-writer 규칙)
+- 한국어 본문, 영어 코드/필드명 (opal-doc-standard 규칙)
 - 명령형(imperative) 문체
 - SKILL.md 500줄 이하 유지
 - 필요 시 `references/` 하위에 상세 가이드 분리
@@ -153,7 +152,7 @@ description: |
 
 ### 2-4. 버전 태깅
 
-version-mgr 스킬의 규칙을 따른다.
+opal-doc-standard 규칙을 따른다 (Read: `~/.opal/references/opal-doc-standard.md`).
 
 **신규 생성 모드:**
 - SKILL.md 상단에 메타정보를 추가한다:

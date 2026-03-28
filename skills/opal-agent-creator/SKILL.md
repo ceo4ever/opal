@@ -17,8 +17,7 @@ create-subagents 커뮤니티 스킬로 에이전트 콘텐츠를 설계한 뒤,
 | 스킬 | 역할 | 필수 |
 |------|------|------|
 | create-subagents | Phase 1 콘텐츠 생성 위임 | O |
-| version-mgr | Phase 2 버전 태깅 | O |
-| doc-writer | 문서 표준 규칙 참조 | O |
+| opal-doc-standard | 문서 표준 + 버전 관리 규칙 참조 (Read: ~/.opal/references/opal-doc-standard.md) | O |
 
 ## 진입 분기
 
@@ -72,7 +71,7 @@ create-subagents의 전체 프로세스를 실행한다:
 
 단, 에이전트 작성 시 아래 OPAL 규칙을 create-subagents에 컨텍스트로 전달한다:
 
-- 한국어 본문, 영어 코드/필드명 (doc-writer 규칙)
+- 한국어 본문, 영어 코드/필드명 (opal-doc-standard 규칙)
 - 명령형(imperative) 문체
 - 시스템 프롬프트에 역할, 실행 프로세스, 반환 형식, 실행 규칙 필수 포함
 - XML 태그 구조 또는 Markdown 구조 (에이전트 복잡도에 따라 선택)
@@ -143,7 +142,7 @@ AGENT.md의 frontmatter가 규격에 맞는지 검증하고 보정한다.
 
 ### 2-4. 버전 태깅
 
-version-mgr 스킬의 규칙을 따른다.
+opal-doc-standard 규칙을 따른다 (Read: `~/.opal/references/opal-doc-standard.md`).
 
 **신규 생성 모드:**
 - AGENT.md 상단에 메타정보를 추가한다:

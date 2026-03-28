@@ -36,6 +36,7 @@ skills/                          ← 프레임워크 스킬 (단일 소스, ~/.o
 ├── otp-dev/                     오케스트레이터: Full Task 파이프라인
 ├── otp-dev-short/               오케스트레이터: Short Task 파이프라인 (기본 진입점)
 ├── otp-wf/                      오케스트레이터: Wireframe UI 파이프라인
+├── otp-write/                   오케스트레이터: 범용 문서 작성 파이프라인
 ├── dtp-task/                    단계: TASK.md 작성
 │   ├── references/task-guide.md
 │   └── personas/service-planner.md
@@ -61,12 +62,10 @@ skills/                          ← 프레임워크 스킬 (단일 소스, ~/.o
 │   └── personas/qa-engineer.md
 ├── dev-task-pilot/              (레거시, 안정화 후 삭제 예정)
 ├── api-analyzer/                외부 API 7단계 분석 및 명세서 생성
-├── doc-writer/                  기술 문서 표준 템플릿 (모든 문서 스킬의 베이스)
 ├── interview/                   구조화된 Q&A 요구사항 수집
 ├── opal-agent-creator/          OPAL 에이전트 생성 파이프라인
 ├── opal-skill-creator/          OPAL 스킬 생성 파이프라인
 ├── ui-designer/                 UI 구현 — wireframe.md → React + shadcn/ui 기반 UI
-├── version-mgr/                 산출물 버전 관리 (v{Major}.{Minor}, 덮어쓰기 금지)
 ├── web-to-markdown/             웹 페이지 마크다운 변환 (2단계 폴백)
 └── wireframe-builder/           UI 분석·설계 — 정책서/요구사항 → wireframe.md 생성
 
@@ -153,14 +152,13 @@ cursor-rules/                    ← Cursor 프로젝트 규칙 템플릿
 
 | 유형 | 설명 | 현재 상태 |
 |------|------|----------|
-| **Skills** | 특정 작업을 수행하는 절차적 가이드 (SKILL.md) | `skills/` 10개 + `community-skills/` 31개 |
+| **Skills** | 특정 작업을 수행하는 절차적 가이드 (SKILL.md) | `skills/` 9개 + `community-skills/` 31개 |
 | **Agents** | 독립 컨텍스트에서 자율 실행하는 에이전트 (AGENT.md) | `agents/` 7개 × 1 포맷 |
 | **Hooks** | 이벤트 기반으로 자동 실행되는 트리거 | 확장 예정 |
 
 ### 컴포넌트 간 의존 관계
 
-- **doc-writer** → 모든 문서 생성 스킬의 포맷/규칙 베이스
-- **version-mgr** → 산출물을 생성·수정하는 모든 스킬에 적용
+- **opal-doc-standard** → 모든 문서 산출물의 표준 규칙 (doc-writer + version-mgr 통합, ~/.opal/references/)
 - **interview** → 요구사항 불명확 시 다른 스킬에서 호출
 - **dev-task-pilot** → 개발 작업의 주 진입점 (5단계 파이프라인)
 - **dtp-dev-agent** → Full/Short Task 공용 워커 (ANALYSIS/PLAN/PLAN-SHORT/TODO/TEST-SCENARIO/EXECUTE/EXECUTE-SHORT)

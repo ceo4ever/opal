@@ -129,7 +129,7 @@ Read ~/.opal/skills/dtp-analysis/references/analysis-guide.md
 tasks/{NNN}-{태스크명}/ANALYSIS.md
 ```
 
-기존 ANALYSIS.md가 있으면 version-mgr 규칙에 따라 버전 관리한다.
+기존 ANALYSIS.md가 있으면 opal-doc-standard 규칙에 따라 버전 관리한다.
 
 ## 분석 품질 체크리스트
 

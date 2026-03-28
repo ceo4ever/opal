@@ -3,7 +3,7 @@ name: otp-dev
 description: |
   **Full Task 오케스트레이터**. 대규모 개발 작업을 4단계 파이프라인으로 수행한다.
   반드시 이 스킬을 사용해야 하는 상황: "otp-dev", "otpd".
-  코드를 읽기만 하는 설명 요청, API 명세서(api-analyzer), 문서(doc-writer), PR 리뷰, git 작업, 단순 설정 변경은 이 스킬이 아니다.
+  코드를 읽기만 하는 설명 요청, API 명세서(api-analyzer), 문서 작성(otp-write), PR 리뷰, git 작업, 단순 설정 변경은 이 스킬이 아니다.
 ---
 
 # Full Task 오케스트레이터

@@ -78,7 +78,7 @@ Read ~/.opal/references/skills.md
 **매핑 규칙**:
 - 프레임워크 스킬: 해당 프레임워크 전용 스킬이 있으면 우선 추천
 - 커뮤니티 스킬: 기술 스택과 관련된 커뮤니티 스킬 포함
-- 범용 스킬: 특정 기술과 무관하게 항상 유용한 스킬 (version-mgr, doc-writer 등)
+- 범용 참조: 특정 기술과 무관하게 항상 유용한 참조 문서 (opal-doc-standard 등)
 
 **기록 형식**:
 ```markdown

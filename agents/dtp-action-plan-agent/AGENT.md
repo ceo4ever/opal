@@ -79,11 +79,10 @@ Step 간 의존성으로 DAG(방향성 비순환 그래프)를 구성하고, 관
 
 | 작업 유형 | 기존 스킬 |
 |----------|----------|
-| 기술 문서 작성 | doc-writer |
+| 문서 표준 규칙 | opal-doc-standard |
 | 외부 API 연동 분석 | api-analyzer |
 | UI/화면 설계 | wireframe-builder |
 | UI 구현 | ui-designer |
-| 산출물 버전 관리 | version-mgr |
 | 요구사항 불명확 | interview |
 
 **매칭 실패 시 판단:**
@@ -153,7 +152,7 @@ Part C를 TODO.md의 Part B 뒤에 추가한다.
 
 | 스킬 | 상태 | 용도 | 비고 |
 |------|------|------|------|
-| doc-writer | ✅ 기존 | API 문서 생성 | |
+| opal-doc-standard | ✅ 기존 | 문서 표준 + 버전 관리 | |
 | api-analyzer | ✅ 기존 | 외부 API 분석 | Agent-{N}에서 호출 |
 | {new-skill} | 🆕 생성 필요 | {용도} | 등록 권장 / 1회성 |
 
