@@ -18,7 +18,8 @@
 
 | # | 작업 | 단계 | 경로 | 날짜 |
 |---|------|------|------|------|
-| 1 | opal-project-dev-pilot 스킬 개발 (034) | 완료 (e20bad2) | tasks/034-opal-dev-pilot/ | 2026-03-27 |
+| 1 | otp 파이프라인 TEST-SCENARIO 재배치 + 커밋 규칙 (036) | EXECUTE ✅ → 커밋 대기 | tasks/036-otp-pipeline-test-scenario-reorder/ | 2026-03-28 |
+| 2 | opal-project-dev-pilot 스킬 개발 (034) | 완료 (e20bad2) | tasks/034-opal-dev-pilot/ | 2026-03-27 |
 | 2 | opi 전면 재설계 + PM 역할 실체화 (033) | 완료 (1b041b1) | tasks/033-opal-framework-doc-pm-restructure/ | 2026-03-27 |
 | 2 | dtp 컴포지션 아키텍처 전환 (032) | 완료 (ff9b13d) | tasks/032-dtp-to-otp-restructure/ | 2026-03-26 |
 | 2 | 태스크 진행 단계 메모리 추적 기능 추가 | 완료 (359a7dd) | - | 2026-03-22 |
@@ -32,3 +33,4 @@
 | project | [memory/project_security_task.md](memory/project_security_task.md) | 030에서 분리된 보안 전용 스킬+에이전트 생성 예정 |
 | project | [memory/project_otp_doc_plan.md](memory/project_otp_doc_plan.md) | otp-doc 문서 전용 스킬 계획 — otp-dev 계열 완료 후 설계 예정 |
 | project | [memory/project_opi_vision.md](memory/project_opi_vision.md) | opi 비전: 프로젝트=WHAT/WHY 정의, 스킬=HOW 수행. opi 산출물이 모든 스킬의 컨텍스트 |
+| feedback | [memory/feedback_otp_pipeline_discipline.md](memory/feedback_otp_pipeline_discipline.md) | otp 파이프라인 단계 스킵 금지 + EXECUTE 후 무단 커밋 금지 |

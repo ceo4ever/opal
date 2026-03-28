@@ -1,7 +1,7 @@
 ---
 name: otp-dev
 description: |
-  **Full Task 오케스트레이터**. 대규모 개발 작업을 7단계 파이프라인으로 수행한다.
+  **Full Task 오케스트레이터**. 대규모 개발 작업을 5단계 파이프라인으로 수행한다.
   반드시 이 스킬을 사용해야 하는 상황: "otp-dev", "otpd".
   코드를 읽기만 하는 설명 요청, API 명세서(api-analyzer), 문서(doc-writer), PR 리뷰, git 작업, 단순 설정 변경은 이 스킬이 아니다.
 ---
@@ -30,8 +30,7 @@ description: |
 ```
 dtp-task → dtp-analysis → [QA] → 검토
   → dtp-plan → [QA] → 검토
-  → dtp-todo → 검토
-  → dtp-test-scenario → 검토/승인
+  → dtp-todo → dtp-test-scenario → 검토/승인
   → dtp-execute → [Test] → 완료
 ```
 
@@ -99,9 +98,11 @@ dtp-plan 스킬을 수행하라.
 
 ---
 
-## STEP 4: TODO
+## STEP 4: TODO + TEST-SCENARIO
 
-워커를 디스패치하여 실행 체크리스트를 상세 분해한다.
+워커를 연속 디스패치하여 실행 체크리스트와 테스트 시나리오를 작성한다.
+
+### 4-1. TODO 워커 디스패치
 
 **디스패치 프롬프트**:
 
@@ -117,13 +118,9 @@ dtp-todo 스킬을 수행하라.
 
 **model**: haiku
 
-워커 완료 → 사용자에게 보고 (QA 없음). 승인 대기.
+### 4-2. TEST-SCENARIO 워커 디스패치
 
----
-
-## STEP 5: TEST-SCENARIO
-
-워커를 디스패치하여 테스트 시나리오를 작성한다.
+TODO 워커 완료 후, 연속으로 TEST-SCENARIO 워커를 디스패치한다.
 
 **디스패치 프롬프트**:
 
@@ -139,11 +136,13 @@ dtp-test-scenario 스킬을 수행하라.
 
 **model**: haiku
 
-워커 완료 → 사용자에게 보고. **승인 = EXECUTE 시작 허가**.
+### 4-3. 사용자 보고
+
+두 워커 완료 → 사용자에게 TODO + TEST-SCENARIO를 함께 보고. **승인 = EXECUTE 시작 허가**.
 
 ---
 
-## STEP 6: EXECUTE
+## STEP 5: EXECUTE
 
 워커를 디스패치하여 코드를 작성한다.
 
@@ -175,6 +174,10 @@ execution-plan.json이 존재하고 FE+BE 모두 포함 시:
 2. **DONE.md 생성** (checkpoint-guide.md 참조)
 3. 사용자에게 완료 보고
 
+### 커밋 규칙
+
+**커밋은 사용자가 명시적으로 요청할 때만 수행한다.** EXECUTE 완료, DONE.md 생성, 테스트 통과 후에도 자동으로 커밋하지 않는다. 완료 보고만 하고 사용자 지시를 기다린다.
+
 ---
 
 ## STATE.md 관리
@@ -199,7 +202,7 @@ execution-plan.json이 존재하고 FE+BE 모두 포함 시:
 
 ## 현재 상태
 - 모드: Full Task
-- 단계: {TASK / ANALYSIS / PLAN / TODO / TEST-SCENARIO / EXECUTE}
+- 단계: {TASK / ANALYSIS / PLAN / TODO+TEST-SCENARIO / EXECUTE}
 - 진행: {Step N/M 완료 (EXECUTE 시)}
 - 상태: {진행 중 / 대기 중 / 블로커 / 완료}
 
@@ -268,3 +271,4 @@ execution-plan.json이 존재하고 FE+BE 모두 포함 시:
 | 버전 | 날짜 | 변경내용 |
 |------|------|---------|
 | v1.0 | 2026-03-26 | 초기 작성 — dev-task-pilot 컴포지션 전환 |
+| v1.1 | 2026-03-28 | TEST-SCENARIO를 TODO STEP에 통합, EXECUTE 후 커밋 규칙 추가 |

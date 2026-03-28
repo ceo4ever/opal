@@ -1,7 +1,7 @@
 ---
 name: otp-dev-short
 description: |
-  **Short Task 오케스트레이터 (기본 모드)**. 코드 변경이 수반되는 모든 개발 작업의 기본 진입점. 4단계 파이프라인으로 수행한다.
+  **Short Task 오케스트레이터 (기본 모드)**. 코드 변경이 수반되는 모든 개발 작업의 기본 진입점. 3단계 파이프라인으로 수행한다.
   반드시 이 스킬을 사용해야 하는 상황: "otp-dev-short", "otpds".
   PLAN 단계에서 규모가 크다고 판단되면 Full Task(otp-dev) 에스컬레이션을 제안한다.
   코드를 읽기만 하는 설명 요청, API 명세서(api-analyzer), 문서(doc-writer), PR 리뷰, git 작업, 단순 설정 변경은 이 스킬이 아니다.
@@ -29,8 +29,7 @@ description: |
 ## 파이프라인
 
 ```
-dtp-task → dtp-plan (ANALYSIS.md 없이) → [QA] → 검토
-  → dtp-test-scenario → 검토/승인
+dtp-task → dtp-plan (ANALYSIS.md 없이) → [QA] → dtp-test-scenario → 검토/승인
   → dtp-execute → [Test] → 완료
 ```
 
@@ -56,9 +55,11 @@ dtp-task → dtp-plan (ANALYSIS.md 없이) → [QA] → 검토
 
 ---
 
-## STEP 2: PLAN (분석 + 설계 통합)
+## STEP 2: PLAN + TEST-SCENARIO (분석 + 설계 + 테스트 시나리오 통합)
 
 워커를 디스패치하여 코드 분석과 구현 계획을 통합 수립한다. **ANALYSIS.md를 전달하지 않는다** → dtp-plan이 자동으로 코드 분석을 포함한다.
+
+### PLAN 디스패치
 
 **디스패치 프롬프트**:
 
@@ -74,15 +75,13 @@ dtp-plan 스킬을 수행하라.
 
 **model**: opus
 
-워커 완료 → **dtp-qa 워커 호출** (단계: PLAN) → **PM 검토 게이트** → QA 결과 + PM 검토 포함하여 사용자 보고.
+워커 완료 → **dtp-qa 워커 호출** (단계: PLAN) → **PM 검토 게이트**.
 
 > **PM 검토 게이트**: `.opal/AGENT.md`가 존재하면, 오케스트레이터(알투)가 PM 검토 기준으로 산출물을 검토한다. 상세 절차는 글로벌 AGENT.md의 "PM 컨텍스트 로드 > PM 검토 게이트"를 따른다. AGENT.md 미존재 시 스킵.
 
----
+### TEST-SCENARIO 디스패치 (연속)
 
-## STEP 3: TEST-SCENARIO
-
-워커를 디스패치하여 테스트 시나리오를 작성한다.
+QA + PM 검토 게이트 통과 후, TEST-SCENARIO 워커를 연속 디스패치한다.
 
 **디스패치 프롬프트**:
 
@@ -98,11 +97,13 @@ dtp-test-scenario 스킬을 수행하라.
 
 **model**: haiku
 
-워커 완료 → 사용자에게 보고. **승인 = EXECUTE 시작 허가**.
+### 사용자 보고
+
+워커 완료 → PLAN + TEST-SCENARIO를 함께 사용자에게 보고. **승인 = EXECUTE 시작 허가**.
 
 ---
 
-## STEP 4: EXECUTE
+## STEP 3: EXECUTE
 
 워커를 디스패치하여 코드를 작성한다.
 
@@ -126,6 +127,10 @@ dtp-execute 스킬을 수행하라.
 1. **dtp-test 워커 호출** → TEST-SCENARIO.md에 결과 채움 + 판정
 2. **DONE.md 생성**
 3. 사용자에게 완료 보고
+
+### 커밋 규칙
+
+**커밋은 사용자가 명시적으로 요청할 때만 수행한다.** EXECUTE 완료, DONE.md 생성, 테스트 통과 후에도 자동으로 커밋하지 않는다. 완료 보고만 하고 사용자 지시를 기다린다.
 
 ---
 
@@ -165,7 +170,7 @@ otp-dev와 동일. 오케스트레이터 전용.
 
 ## 현재 상태
 - 모드: Short Task
-- 단계: {TASK / PLAN / TEST-SCENARIO / EXECUTE}
+- 단계: {TASK / PLAN+TEST-SCENARIO / EXECUTE}
 - 진행: {Step N/M 완료 (EXECUTE 시)}
 - 상태: {진행 중 / 대기 중 / 블로커 / 완료}
 
@@ -216,3 +221,4 @@ otp-dev와 동일. 각 단계 완료 시 사용자 보고 + 승인 대기.
 | 버전 | 날짜 | 변경내용 |
 |------|------|---------|
 | v1.0 | 2026-03-26 | 초기 작성 — dev-task-pilot 컴포지션 전환 |
+| v1.1 | 2026-03-28 | TEST-SCENARIO를 PLAN STEP에 통합, EXECUTE 후 커밋 규칙 추가 |
