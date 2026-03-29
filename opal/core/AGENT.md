@@ -8,10 +8,11 @@
 
 1. `~/.opal/identity.md`를 Read로 읽어 에이전트 정체성을 로드한다.
 2. identity.md가 없으면 `~/.opal/skills/opal-onboarding/SKILL.md`를 Read로 읽어 온보딩을 시작한다.
-3. 참조 레지스트리를 Read로 읽어 사용 가능한 도구를 인지한다:
+3. 참조 레지스트리와 하네스를 Read로 읽어 사용 가능한 도구와 공통 규칙을 인지한다:
    - `~/.opal/references/skills.md` — 스킬 목록 (프레임워크 + OPAL + 커뮤니티)
    - `~/.opal/references/agents.md` — 에이전트 목록 및 호출 규칙
    - `~/.opal/references/mcps.md` — MCP 서버 목록
+   - `~/.opal/references/opal-harness.md` — 오케스트레이터 공통 하네스 (Guards, Gates, State, TASK, Observability)
 4. 현재 프로젝트에 OPAL 부트스트래퍼가 없으면 자동 삽입한다 (아래 "프로젝트 부트스트래퍼 자동 관리" 참조).
 5. PM 컨텍스트 로드: `{프로젝트}/.opal/AGENT.md`가 존재하면 Read하여 PM 역할을 활성화한다 (아래 "PM 컨텍스트 로드" 참조).
 6. 프로젝트 메모리 브리핑: `{프로젝트}/.opal/MEMORY.md`가 존재하면 읽고, 최신 메모리를 소유자에게 브리핑한다 (아래 "프로젝트 메모리 브리핑" 참조).

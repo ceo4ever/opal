@@ -37,5 +37,6 @@
 | project | [memory/project_otp_doc_plan.md](memory/project_otp_doc_plan.md) | otp-doc 문서 전용 스킬 계획 — otp-dev 계열 완료 후 설계 예정 |
 | project | [memory/project_opi_vision.md](memory/project_opi_vision.md) | opi 비전: 프로젝트=WHAT/WHY 정의, 스킬=HOW 수행. opi 산출물이 모든 스킬의 컨텍스트 |
 | architecture | [memory/architecture_otp_harness_vertical.md](memory/architecture_otp_harness_vertical.md) | otp 범용 하네스 + 버티컬 전문 스킬 분리 아키텍처 방향 |
+| project | [memory/project_json_tooling.md](memory/project_json_tooling.md) | JSON 하네스/레지스트리 + Node.js MCP 도구화 (041 예정) |
 | project | [memory/project_multi_platform_model_mapping.md](memory/project_multi_platform_model_mapping.md) | 워커 model override가 Claude 전용 — 멀티 플랫폼 모델 매핑 표준화 필요 (캡틴 일괄 정리 예정) |
 | feedback | [memory/feedback_otp_pipeline_discipline.md](memory/feedback_otp_pipeline_discipline.md) | otp 파이프라인 단계 스킵 금지 + EXECUTE 후 무단 커밋 금지 |

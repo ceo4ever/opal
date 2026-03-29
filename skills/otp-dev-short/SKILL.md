@@ -9,137 +9,50 @@ description: |
 
 # Short Task 오케스트레이터
 
-## 구현 금지 원칙 (최우선 규칙)
-
-**사용자가 명시적으로 "승인", "진행해", "구현해" 등의 실행 허가를 내릴 때까지 코드를 작성하거나 파일을 생성/수정하지 않는다.**
-
-허용: 산출물 문서(.md) 작성, QA 에이전트 호출, 코드베이스 읽기/분석, 웹 검색.
-금지 (승인 전): 소스 코드 파일 생성/수정, 패키지 설치, DB 스키마 변경, 설정 파일 수정.
-
----
-
-## Git 사전 점검
-
-태스크 시작 전 `git status`를 확인한다:
-- **클린 상태**: 진행
-- **커밋되지 않은 변경**: 사용자에게 커밋/스태시를 제안한 후 진행
-
----
-
-## 파이프라인
-
-```
-dtp-task → dtp-plan (ANALYSIS.md 없이) → [QA] → dtp-test-scenario → 검토/승인
-  → dtp-execute → [Test] → 완료
-```
-
-> **Short Task는 단계를 줄이는 것이지, 분석을 줄이는 것이 아니다.** dtp-plan이 ANALYSIS.md 없이 호출되면 코드 분석을 직접 수행한다. 분석 품질은 Full Task와 동일해야 한다.
+## Harness
+모드: Short Task (TASK → PLAN+TEST-SCENARIO → EXECUTE)
+> 부트스트랩에서 로드되지 않은 경우: `~/.opal/references/opal-harness.md`를 Read한다.
 
 ---
 
 ## STEP 1: TASK
 
-오케스트레이터가 **직접 수행**한다.
-
-1. `dtp-task/SKILL.md`를 Read한다.
-   - 탐색: `{프로젝트}/.opal/skills/dtp-task/SKILL.md` → `~/.opal/skills/dtp-task/SKILL.md`
-2. 스킬 프로세스를 따라 TASK.md를 작성한다.
-3. STATE.md를 생성한다.
-4. 사용자에게 보고:
-
-```
-📋 [TASK] 완료 보고
-📎 산출물: tasks/{NNN}-{태스크명}/TASK.md
-다음 단계(PLAN)로 넘어갈까요?
-```
+harness "4. TASK 공통 프로세스" 참조. 다음 단계명: PLAN.
 
 ---
 
-## STEP 2: PLAN + TEST-SCENARIO (분석 + 설계 + 테스트 시나리오 통합)
+## STEP 2: PLAN + TEST-SCENARIO
 
-워커를 디스패치하여 코드 분석과 구현 계획을 통합 수립한다. **ANALYSIS.md를 전달하지 않는다** → dtp-plan이 자동으로 코드 분석을 포함한다.
+워커를 디스패치하여 코드 분석과 구현 계획을 통합 수립한다. **ANALYSIS.md를 전달하지 않는다** -- dtp-plan이 자동으로 코드 분석을 포함한다.
+
+> **Short Task는 단계를 줄이는 것이지, 분석을 줄이는 것이 아니다.** ANALYSIS.md 없이 호출되면 dtp-plan이 코드 분석을 직접 수행한다. 분석 품질은 Full Task와 동일해야 한다.
 
 ### PLAN 디스패치
 
-**디스패치 프롬프트**:
-
-```
-dtp-plan 스킬을 수행하라.
-
-**스킬 경로**: {dtp-plan/SKILL.md 탐색 경로}
-**태스크 폴더**: {tasks/{NNN}-{name}/}
-**이전 산출물**: {TASK.md 경로}
-**프로젝트 컨텍스트**: {docs/PROJECT.md + 문서 테이블에서 매칭되는 참조 문서. docs/ 미존재 시 CLAUDE.md 폴백}
-**산출물 저장 경로**: {PLAN.md 경로}, {execution-plan.json 경로 (FE/BE 시)}
-```
-
-**model**: opus
-
-워커 완료 → **dtp-qa 워커 호출** (단계: PLAN) → **PM 검토 게이트**.
-
-> **PM 검토 게이트**: `.opal/AGENT.md`가 존재하면, 오케스트레이터(알투)가 PM 검토 기준으로 산출물을 검토한다. 상세 절차는 글로벌 AGENT.md의 "PM 컨텍스트 로드 > PM 검토 게이트"를 따른다. AGENT.md 미존재 시 스킵.
+dtp-plan 워커 디스패치. **model**: opus. 이전 산출물: TASK.md만 (ANALYSIS.md 없음).
+워커 완료 -> **QA Gate** -> **PM Gate**.
 
 ### TEST-SCENARIO 스킵 조건
 
-작업 유형이 **문서 전용**(코드 변경 없음, .md 파일만 수정)인 경우:
-- TEST-SCENARIO 워커 디스패치를 **스킵**한다
-- PLAN + QA + PM 검토만으로 승인 게이트를 구성한다
-- 사용자 보고 시 "TEST-SCENARIO: 문서 전용 작업으로 스킵" 표기
-
-**판별 기준**: PLAN.md의 파일 변경 계획에서 수정 대상이 모두 `.md` 파일이고, 소스 코드(.ts/.js/.py/.go/.java/.kt/.rs 등)가 없으면 문서 전용으로 판별.
+**문서 전용** 작업(PLAN.md 파일 변경 계획이 모두 `.md`, 소스 코드 없음)이면 스킵. 보고 시 "TEST-SCENARIO: 문서 전용 작업으로 스킵" 표기.
 
 ### TEST-SCENARIO 디스패치 (연속)
 
-QA + PM 검토 게이트 통과 후, TEST-SCENARIO 워커를 연속 디스패치한다.
-
-**디스패치 프롬프트**:
-
-```
-dtp-test-scenario 스킬을 수행하라.
-
-**스킬 경로**: {dtp-test-scenario/SKILL.md 탐색 경로}
-**태스크 폴더**: {tasks/{NNN}-{name}/}
-**이전 산출물**: {TASK.md 경로}, {PLAN.md 경로}
-**프로젝트 컨텍스트**: {docs/PROJECT.md + 문서 테이블에서 매칭되는 참조 문서. docs/ 미존재 시 CLAUDE.md 폴백}
-**산출물 저장 경로**: {TEST-SCENARIO.md 경로}
-```
-
-**model**: haiku
-
-### 사용자 보고
-
-워커 완료 → PLAN + TEST-SCENARIO를 함께 사용자에게 보고. **승인 = EXECUTE 시작 허가**.
+QA + PM Gate 통과 후 dtp-test-scenario 워커 연속 디스패치. **model**: haiku. 이전 산출물: TASK.md + PLAN.md.
+워커 완료 -> PLAN + TEST-SCENARIO를 함께 사용자에게 보고. **승인 = EXECUTE 시작 허가**.
 
 ---
 
 ## STEP 3: EXECUTE
 
-워커를 디스패치하여 코드를 작성한다.
-
-**디스패치 프롬프트**:
-
-```
-dtp-execute 스킬을 수행하라.
-
-**스킬 경로**: {dtp-execute/SKILL.md 탐색 경로}
-**태스크 폴더**: {tasks/{NNN}-{name}/}
-**checklist_source**: {PLAN.md 경로}, 섹션: 3. 실행 체크리스트
-**execution-plan.json**: {경로 (있으면)}
-**프로젝트 컨텍스트**: {docs/PROJECT.md + 문서 테이블에서 매칭되는 참조 문서. docs/ 미존재 시 CLAUDE.md 폴백}
-```
-
-**model**: sonnet
+dtp-execute 워커 디스패치. **model**: sonnet. checklist_source: PLAN.md 섹션 "3. 실행 체크리스트". execution-plan.json 있으면 전달.
 
 ### EXECUTE 완료 후
 
 워커가 changed_files를 반환하면:
-1. **dtp-test 워커 호출** → TEST-SCENARIO.md에 결과 채움 + 판정
+1. **dtp-test 워커 호출** -> TEST-SCENARIO.md에 결과 채움 + 판정
 2. **DONE.md 생성**
 3. 사용자에게 완료 보고
-
-### 커밋 규칙
-
-**커밋은 사용자가 명시적으로 요청할 때만 수행한다.** EXECUTE 완료, DONE.md 생성, 테스트 통과 후에도 자동으로 커밋하지 않는다. 완료 보고만 하고 사용자 지시를 기다린다.
 
 ---
 
@@ -149,79 +62,27 @@ dtp-plan 결과에서 아래 조건이 감지되면 **Full Task(otp-dev) 전환�
 
 | 조건 | 판별 방법 |
 |------|----------|
-| 예상 변경 파일 ≥10개 | PLAN.md 파일 변경 계획에서 카운트 |
+| 예상 변경 파일 >= 10개 | PLAN.md 파일 변경 계획에서 카운트 |
 | 다단계 기술 의사결정 | 아키텍처 선택, 기술 스택 비교가 필요한 수준 |
 | 다중 모듈 연쇄 영향 | 변경이 3개 이상 독립 모듈에 연쇄 영향 |
 
 ```
-⚠️ [에스컬레이션 제안]
-
-이 작업은 Short Task 범위를 초과할 수 있습니다:
-- {해당 조건}
-
+[에스컬레이션 제안]
+이 작업은 Short Task 범위를 초과할 수 있습니다: {해당 조건}
 Full Task(otp-dev)로 전환할까요?
-- "Full로 해줘" → Full Task 전환
-- "Short로 진행해" → Short Task 유지
+- "Full로 해줘" -> Full Task 전환
+- "Short로 진행해" -> Short Task 유지
 ```
 
 ---
 
-## STATE.md 관리
+## STATE.md 도메인 치환값
 
-otp-dev와 동일. 오케스트레이터 전용.
-
-### STATE.md 템플릿
-
-```markdown
-# STATE: {태스크 제목}
-
-> 최종 갱신: YYYY-MM-DD HH:mm
-
-## 현재 상태
-- 모드: Short Task
-- 단계: {TASK / PLAN+TEST-SCENARIO / EXECUTE}
-- 진행: {Step N/M 완료 (EXECUTE 시)}
-- 상태: {진행 중 / 대기 중 / 블로커 / 완료}
-
-## 완료 산출물
-| 산출물 | 상태 |
-|--------|------|
-| TASK.md | {완료 / 미생성} |
-| PLAN.md | {완료 / 미생성} |
-| TEST-SCENARIO.md | {완료 / 미생성} |
-| QA-*.md | {완료 / 미생성} |
-| DONE.md | {완료 / 미생성} |
-
-## 의사결정 로그
-| # | 시점 | 결정 | 근거 |
-|---|------|------|------|
-
-## 블로커
-없음
-
-## 다음 액션
-{다음으로 수행할 작업}
-```
-
----
-
-## 프로젝트 메모리 동기화
-
-otp-dev와 동일. `{프로젝트}/.opal/MEMORY.md` 존재 시 작업 히스토리 갱신.
-
----
-
-## 스킬 탐색 경로
-
-otp-dev와 동일.
-1. `{프로젝트}/.opal/skills/dtp-{stage}/SKILL.md`
-2. `~/.opal/skills/dtp-{stage}/SKILL.md`
-
----
-
-## 게이트 체크포인트
-
-otp-dev와 동일. 각 단계 완료 시 사용자 보고 + 승인 대기.
+| 필드 | 값 |
+|------|------|
+| 모드 | Short Task |
+| 단계 목록 | TASK / PLAN+TEST-SCENARIO / EXECUTE |
+| 산출물 목록 | TASK.md, PLAN.md, TEST-SCENARIO.md, QA-*.md, DONE.md |
 
 ---
 
@@ -229,6 +90,7 @@ otp-dev와 동일. 각 단계 완료 시 사용자 보고 + 승인 대기.
 
 | 버전 | 날짜 | 변경내용 |
 |------|------|---------|
-| v1.0 | 2026-03-26 | 초기 작성 — dev-task-pilot 컴포지션 전환 |
+| v1.0 | 2026-03-26 | 초기 작성 -- dev-task-pilot 컴포지션 전환 |
 | v1.1 | 2026-03-28 | TEST-SCENARIO를 PLAN STEP에 통합, EXECUTE 후 커밋 규칙 추가 |
 | v1.2 | 2026-03-28 | TEST-SCENARIO 문서 전용 스킵 조건 추가 |
+| v1.3 | 2026-03-28 | harness 참조 슬림화 -- 공통 인프라를 opal-harness.md로 위임 |
