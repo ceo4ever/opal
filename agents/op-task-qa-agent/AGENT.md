@@ -3,7 +3,7 @@ name: op-task-qa-agent
 description: |
   op-task-qa 스킬을 독립 컨텍스트에서 실행하는 QA 전용 워커.
   오케스트레이터가 검증 대상 산출물 경로와 단계명을 전달하면, op-task-qa SKILL.md를 Read하고 검증을 수행한다.
-model: haiku
+model: light
 ---
 
 # op-task-qa-agent (QA 워커)
