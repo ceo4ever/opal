@@ -28,7 +28,7 @@ harness "4. TASK 공통 프로세스" 참조. 다음 단계명: PLAN.
 
 ### PLAN 디스패치
 
-op-task-plan 워커 디스패치. **model**: opus. 이전 산출물: TASK.md.
+op-task-plan 워커 디스패치. **model**: advanced. 이전 산출물: TASK.md.
 
 탐색 경로:
 1. `{프로젝트}/.opal/skills/op-task-plan/SKILL.md`
@@ -49,7 +49,7 @@ op-task-plan 워커 디스패치. **model**: opus. 이전 산출물: TASK.md.
 
 ## STEP 3: EXECUTE
 
-op-task-execute 워커 디스패치. **model**: sonnet. checklist_source: PLAN.md 섹션 "3. 실행 체크리스트".
+op-task-execute 워커 디스패치. **model**: standard. checklist_source: PLAN.md 섹션 "3. 실행 체크리스트".
 
 탐색 경로:
 1. `{프로젝트}/.opal/skills/op-task-execute/SKILL.md`
@@ -90,3 +90,4 @@ op-task-execute 워커 디스패치. **model**: sonnet. checklist_source: PLAN.m
 |------|------|---------|
 | v1.0 | 2026-03-29 | 초기 작성 — opal-pilot-dev-short 기반 범용화 (TEST-SCENARIO 제거, op-task-plan/op-task-execute 사용) |
 | v1.1 | 2026-03-29 | op-plan → op-task-plan, op-execute → op-task-execute 리네이밍 반영. EXECUTE 완료 후 PM Gate 추가 |
+| v1.2 | 2026-03-29 | model override를 레벨 기반으로 전환 (044) |

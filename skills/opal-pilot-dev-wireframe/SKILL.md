@@ -39,7 +39,7 @@ Harness "TASK 공통 프로세스"를 따르되, 아래를 추가:
 
 > wireframe.md가 이미 존재하면 **스킵** → EXECUTE.
 
-워커 디스패치로 wireframe.md 생성. **model**: sonnet.
+워커 디스패치로 wireframe.md 생성. **model**: standard.
 - 스킬: op-dev-wireframe, 입력: TASK.md + 정책서/이미지
 - 완료 → op-task-qa 호출 (단계: WIREFRAME) → 사용자 보고
 
@@ -47,7 +47,7 @@ Harness "TASK 공통 프로세스"를 따르되, 아래를 추가:
 
 ## STEP 3: EXECUTE (UI 구현)
 
-워커 디스패치로 wireframe.md 기반 UI 구현. **model**: sonnet.
+워커 디스패치로 wireframe.md 기반 UI 구현. **model**: standard.
 - 스킬: op-dev-execute, checklist_source: wireframe.md
 - **UI 구현 모드**: ui-designer scaffold(프로토) 또는 plan-driven(프로덕션) 호출
 
@@ -73,3 +73,4 @@ Harness STATE.md 템플릿에 적용:
 | v1.0 | 2026-03-26 | 초기 작성 — dev-task-pilot 컴포지션 전환 |
 | v1.1 | 2026-03-28 | Harness 참조 전환으로 슬림화 |
 | v1.2 | 2026-03-29 | 컴포넌트 리네이밍 (042) |
+| v1.3 | 2026-03-29 | model override를 레벨 기반으로 전환 (044) |

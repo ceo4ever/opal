@@ -66,7 +66,7 @@ create-subagents의 전체 프로세스를 실행한다:
 1. **name** -- kebab-case, `{워크플로우}-{역할}` 패턴 권장 (예: `op-task-qa`, `wtm-agent`)
 2. **description** -- 역할 + 언제 호출되는지 기술
 3. **tools** -- 최소 권한 원칙 적용 (Read, Write, Edit, Bash, Grep, Glob 중 필요한 것만)
-4. **model** -- 복잡도에 따라 선택 (opus: 복잡 추론, sonnet: 범용, haiku: 단순 작업)
+4. **model** -- 레벨로 지정 (advanced: 복잡 추론, standard: 범용, light: 단순 작업). 레벨→모델 매핑: opal-model-mapping.md 참조
 5. **system prompt** -- 역할, 실행 프로세스, 반환 형식, 실행 규칙 포함
 
 단, 에이전트 작성 시 아래 OPAL 규칙을 create-subagents에 컨텍스트로 전달한다:
@@ -111,7 +111,7 @@ AGENT.md의 frontmatter가 규격에 맞는지 검증하고 보정한다.
 |------|------|
 | name | kebab-case, 디렉토리명과 일치 |
 | description | 역할 + 트리거 키워드 |
-| model | inherit/sonnet/opus/haiku |
+| model | inherit/light/standard/advanced |
 | tools | 필요한 도구만 최소 권한 |
 
 검증 항목:
@@ -198,3 +198,4 @@ Phase 2 완료 후 아래 항목을 검증한다:
 | 버전 | 날짜 | 변경내용 |
 |------|------|---------|
 | v1.0 | 2026-03-20 | 초기 작성 |
+| v1.1 | 2026-03-29 | model 필드를 레벨 기반으로 전환 (044) |

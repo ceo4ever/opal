@@ -29,7 +29,7 @@ harness "4. TASK 공통 프로세스" 참조. 다음 단계명: PLAN.
 
 ### PLAN 디스패치
 
-op-dev-plan 워커 디스패치. **model**: opus. 이전 산출물: TASK.md만 (ANALYSIS.md 없음).
+op-dev-plan 워커 디스패치. **model**: advanced. 이전 산출물: TASK.md만 (ANALYSIS.md 없음).
 워커 완료 -> **QA Gate** -> **PM Gate**.
 
 ### TEST-SCENARIO 스킵 조건
@@ -38,14 +38,14 @@ op-dev-plan 워커 디스패치. **model**: opus. 이전 산출물: TASK.md만 (
 
 ### TEST-SCENARIO 디스패치 (연속)
 
-QA + PM Gate 통과 후 op-dev-test-scenario 워커 연속 디스패치. **model**: haiku. 이전 산출물: TASK.md + PLAN.md.
+QA + PM Gate 통과 후 op-dev-test-scenario 워커 연속 디스패치. **model**: light. 이전 산출물: TASK.md + PLAN.md.
 워커 완료 -> PLAN + TEST-SCENARIO를 함께 사용자에게 보고. **승인 = EXECUTE 시작 허가**.
 
 ---
 
 ## STEP 3: EXECUTE
 
-op-dev-execute 워커 디스패치. **model**: sonnet. checklist_source: PLAN.md 섹션 "3. 실행 체크리스트". execution-plan.json 있으면 전달.
+op-dev-execute 워커 디스패치. **model**: standard. checklist_source: PLAN.md 섹션 "3. 실행 체크리스트". execution-plan.json 있으면 전달.
 
 ### EXECUTE 완료 후
 
@@ -95,3 +95,4 @@ Full Task(opal-pilot-dev)로 전환할까요?
 | v1.2 | 2026-03-28 | TEST-SCENARIO 문서 전용 스킵 조건 추가 |
 | v1.3 | 2026-03-28 | harness 참조 슬림화 -- 공통 인프라를 opal-harness.md로 위임 |
 | v1.4 | 2026-03-29 | 컴포넌트 리네이밍 (042) |
+| v1.5 | 2026-03-29 | model override를 레벨 기반으로 전환 (044) |

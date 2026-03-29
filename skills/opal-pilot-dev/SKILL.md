@@ -26,7 +26,7 @@ op-dev-analysis 스킬을 수행하라.
 **프로젝트 컨텍스트**: {docs/PROJECT.md + 매칭 참조 문서. 미존재 시 CLAUDE.md 폴백}
 **산출물 저장 경로**: {ANALYSIS.md 경로}
 ```
-**model**: haiku
+**model**: light
 
 워커 완료 → **QA Gate** → **PM Gate** → 사용자 보고.
 
@@ -42,7 +42,7 @@ op-dev-plan 스킬을 수행하라.
 **프로젝트 컨텍스트**: {docs/PROJECT.md + 매칭 참조 문서. 미존재 시 CLAUDE.md 폴백}
 **산출물 저장 경로**: {PLAN.md 경로}, {execution-plan.json 경로 (FE/BE 시)}
 ```
-**model**: opus
+**model**: advanced
 
 워커 완료 → **QA Gate** → **PM Gate**.
 
@@ -61,7 +61,7 @@ op-dev-test-scenario 스킬을 수행하라.
 **프로젝트 컨텍스트**: {docs/PROJECT.md + 매칭 참조 문서. 미존재 시 CLAUDE.md 폴백}
 **산출물 저장 경로**: {TEST-SCENARIO.md 경로}
 ```
-**model**: haiku
+**model**: light
 
 두 워커 완료 → 사용자에게 PLAN + TEST-SCENARIO 함께 보고. **승인 = EXECUTE 시작 허가**.
 
@@ -77,7 +77,7 @@ op-dev-execute 스킬을 수행하라.
 **execution-plan.json**: {경로 (있으면)}
 **프로젝트 컨텍스트**: {docs/PROJECT.md + 매칭 참조 문서. 미존재 시 CLAUDE.md 폴백}
 ```
-**model**: sonnet
+**model**: standard
 
 ### FE/BE 병렬 (execution-plan.json 존재 시)
 1. Phase 1: Common → 단일 워커 순차
@@ -103,3 +103,4 @@ op-dev-execute 스킬을 수행하라.
 | v1.2 | 2026-03-28 | TODO를 PLAN에 흡수하여 5→4 STEP, TEST-SCENARIO를 PLAN STEP에 통합, TEST-SCENARIO 스킵 조건 추가 |
 | v1.3 | 2026-03-28 | Harness 참조 전환으로 슬림화 (265→105줄) |
 | v1.4 | 2026-03-29 | 컴포넌트 리네이밍 (042) |
+| v1.5 | 2026-03-29 | model override를 레벨 기반으로 전환 (044) |
