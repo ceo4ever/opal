@@ -1,7 +1,7 @@
 ---
 name: 멀티 플랫폼 모델 매핑 필요
 description: 오케스트레이터 워커 디스패치 시 model override가 Claude 전용(haiku/opus/sonnet) — Gemini, OpenAI 등 플랫폼별 모델 매핑 표준화 필요
-type: project
+type: task
 ---
 
 현재 모든 오케스트레이터(otp-dev, otp-dev-short 등)의 워커 디스패치 model override가 Claude 전용이다.
