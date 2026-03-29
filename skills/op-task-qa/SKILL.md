@@ -12,7 +12,7 @@ description: |
 ## 실행 컨텍스트
 
 - **호출자**: 범용 오케스트레이터(opal-project-pilot, opal-pilot-write)가 QA 검증을 디스패치
-- **실행 주체**: QA 전용 워커 에이전트 (op-task-qa-agent)
+- **실행 주체**: QA 전용 워커 에이전트 (opal-task-qa-agent)
 - **입력**: 검증 대상 산출물 경로 + `stage` (단계명)
 - **출력**: `tasks/{NNN}-{태스크명}/QA-{단계}.md`
 

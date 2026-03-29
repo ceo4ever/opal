@@ -15,18 +15,11 @@ opal-pilot 오케스트레이터(opal-pilot-dev, opal-pilot-dev-short, opal-pilo
 - **출력**: 산출물(.md) + 결과 반환 (artifact_path, summary, status, blockers, changed_files)
 - **참고**: opal-project-pilot에서는 op-task-plan(opus), op-task-execute(sonnet)을 사용
 
-### op-task-qa-agent
+### opal-task-qa-agent
 
-- **역할**: 범용 QA 에이전트 — op-task-qa 스킬로 도메인 무관 산출물 품질 검증
-- **호출 시점**: TASK, PLAN 완료 후 (범용 오케스트레이터: opal-project-pilot, opal-pilot-write)
-- **입력**: 검증 대상 산출물 경로, 단계명, TASK.md 경로
-- **출력**: QA-{단계}.md 리뷰 문서
-
-### op-dev-qa-agent
-
-- **역할**: Dev QA 에이전트 — op-dev-qa 스킬로 코드 개발 산출물 검증
-- **호출 시점**: ANALYSIS, PLAN, WIREFRAME, EXECUTE-UI 완료 후 (dev 오케스트레이터: opal-pilot-dev, opal-pilot-dev-short, opal-pilot-dev-wireframe)
-- **입력**: 검증 대상 산출물 경로, 단계명, TASK.md 경로
+- **역할**: 범용 QA 워커 — 오케스트레이터가 전달한 qa_skill(op-dev-qa 또는 op-task-qa)의 SKILL.md를 Read하고 산출물 품질 검증
+- **호출 시점**: 단계 완료 후 QA Gate에서 오케스트레이터가 디스패치
+- **입력**: qa_skill, 검증 대상 산출물 경로, 단계명, TASK.md 경로
 - **출력**: QA-{단계}.md 리뷰 문서
 
 ### op-dev-test-agent

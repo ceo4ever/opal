@@ -72,13 +72,12 @@ Project Layer (프로젝트마다 설정)
 | **ui-designer** | UI 구현 — wireframe.md → React + shadcn/ui 기반 UI |
 | **web-to-markdown** | 웹 페이지 마크다운 변환 (2단계 폴백) |
 
-### 에이전트 (5개, 단일 AGENT.md 포맷)
+### 에이전트 (4개, 단일 AGENT.md 포맷)
 
 | 에이전트 | 설명 | 호출 시점 |
 |---------|------|----------|
 | **opal-task-agent** | 범용 워커 | 각 단계 스킬을 독립 컨텍스트에서 실행 |
-| **op-task-qa-agent** | 범용 QA 에이전트 | 도메인 무관 산출물 품질 검증 (opp/opw) |
-| **op-dev-qa-agent** | Dev QA 에이전트 | 코드 개발 산출물 검증 (opd/opds/opdw) |
+| **opal-task-qa-agent** | 범용 QA 워커 | qa_skill로 QA 스킬 동적 실행 (op-dev-qa / op-task-qa) |
 | **op-dev-test-agent** | Test 에이전트 | EXECUTE 완료 후 코드 동적 검증 |
 | **wtm-agent** | 웹 마크다운 변환 에이전트 | web-to-markdown 스킬에서 호출 |
 
@@ -203,10 +202,9 @@ opal/
 │   ├── ui-designer/             독립: UI 구현
 │   ├── web-to-markdown/         독립: 웹 마크다운 변환
 │   └── wireframe-builder/       독립: UI 분석·설계
-├── agents/                      에이전트 (5개, 단일 AGENT.md 포맷)
+├── agents/                      에이전트 (4개, 단일 AGENT.md 포맷)
 │   ├── opal-task-agent/         범용 워커
-│   ├── op-task-qa-agent/        범용 QA 에이전트
-│   ├── op-dev-qa-agent/         Dev QA 에이전트
+│   ├── opal-task-qa-agent/      범용 QA 워커
 │   ├── op-dev-test-agent/       Test 에이전트
 │   └── wtm-agent/               웹 마크다운 변환 에이전트
 ├── community-skills/            커뮤니티 스킬 기본 번들 (31개)

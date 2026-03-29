@@ -29,6 +29,7 @@
 
 | # | 작업 | 단계 | 경로 | 날짜 |
 |---|------|------|------|------|
+| 0 | QA 에이전트 통합 — opal-task-qa-agent (048) | 완료 | tasks/048-qa-agent-unify/ | 2026-03-29 |
 | 0 | op-task-qa → op-dev-qa 리네이밍 + 범용 op-task-qa 신규 (046) | 완료 | tasks/046-qa-skill-rename/ | 2026-03-29 |
 | 0 | 멀티 플랫폼 모델 매핑 참조 + 스킬 적용 (044) | 완료 (8aaec44) | tasks/044-model-mapping-reference/ | 2026-03-29 |
 | 0 | opal-project-pilot + 범용 스킬 + 에이전트 리네이밍 (045) | 완료 (6fa0438) | tasks/045-opal-project-pilot/ | 2026-03-29 |

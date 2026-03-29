@@ -17,7 +17,7 @@
 
 - **kebab-case** 사용: `user-auth-implementation`, `op-dev-plan`
 - 스킬 폴더: `{그룹}-{역할}` — `opal-pilot-dev`, `op-dev-analysis`, `op-task-qa`
-- 에이전트 폴더: `{대상 워크플로우}-{역할}` — `opal-task-agent`, `wtm-agent`
+- 에이전트 폴더: `{대상 워크플로우}-{역할}` — `opal-task-agent`, `opal-task-qa-agent`, `wtm-agent`
 - 태스크 폴더: `{NNN}-{설명}` — `043-doc-standard-enhancement`
 
 ### 컴포넌트 네이밍 체계

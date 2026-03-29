@@ -38,8 +38,7 @@ OPAL은 2-레이어 아키텍처로 동작한다.
 │  ┌──────────────────────────────────────────────────┐   │
 │  │  서브에이전트 (Agent 도구로 디스패치)               │   │
 │  │  ├─ opal-task-agent: 단계 스킬 실행 워커            │   │
-│  │  ├─ op-task-qa-agent: 범용 QA 검증                │   │
-│  │  ├─ op-dev-qa-agent: Dev QA 검증                  │   │
+│  │  ├─ opal-task-qa-agent: QA 스킬 동적 실행          │   │
 │  │  ├─ op-dev-test-agent: 테스트 실행                 │   │
 │  │  └─ wtm-agent: 웹→마크다운 변환                    │   │
 │  └──────────────────────────────────────────────────┘   │
@@ -57,7 +56,7 @@ OPAL은 2-레이어 아키텍처로 동작한다.
 | `AGENT.md` | 에이전트 핵심 정의 (부트스트랩, 행동 규칙, PM 역할) |
 | `identity.md` | 에이전트 정체성 (이름, 성격, 톤) |
 | `skills/` | 프레임워크 스킬 21개 + OPAL 전용 스킬 4개 |
-| `agents/` | 서브에이전트 5개 |
+| `agents/` | 서브에이전트 4개 |
 | `community-skills/` | 커뮤니티 스킬 37개 (6개 조직) |
 | `references/` | 레지스트리 (skills.md, agents.md, mcps.md, opal-harness.md, opal-doc-standard.md) |
 | `tools/` | 스킬 레지스트리 CLI (skill-registry.js) |
@@ -121,8 +120,7 @@ OPAL은 2-레이어 아키텍처로 동작한다.
 | 에이전트 | 모델 | 역할 |
 |---------|------|------|
 | opal-task-agent | standard | 범용 워커 — 단계 스킬 실행 |
-| op-task-qa-agent | light | 범용 QA — 도메인 무관 산출물 품질 검증 |
-| op-dev-qa-agent | light | Dev QA — 코드 개발 산출물 검증 |
+| opal-task-qa-agent | light | 범용 QA 워커 — qa_skill로 QA 스킬 동적 실행 |
 | op-dev-test-agent | standard | Test — 동적 검증 (테스트 실행 + 판정) |
 | wtm-agent | light | web-to-markdown 병렬 처리 |
 
@@ -200,10 +198,9 @@ opal/                                    ← 이 저장소
 │   ├── opal-agent-creator/              OPAL: 에이전트 생성
 │   ├── opal-skill-creator/              OPAL: 스킬 생성
 │   └── opal-project-init/               OPAL: 프로젝트 초기화
-├── agents/                              에이전트 (5개)
+├── agents/                              에이전트 (4개)
 │   ├── opal-task-agent/                 범용 워커
-│   ├── op-task-qa-agent/                범용 QA 에이전트
-│   ├── op-dev-qa-agent/                 Dev QA 에이전트
+│   ├── opal-task-qa-agent/              범용 QA 워커
 │   ├── op-dev-test-agent/               테스트 에이전트
 │   └── wtm-agent/                       웹→마크다운 에이전트
 ├── community-skills/                    커뮤니티 스킬 (37개, 6개 조직)
