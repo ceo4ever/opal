@@ -17,8 +17,15 @@ opal-pilot 오케스트레이터(opal-pilot-dev, opal-pilot-dev-short, opal-pilo
 
 ### op-task-qa-agent
 
-- **역할**: QA 에이전트 — op-task-qa 스킬을 Read하고 산출물 품질 검증 수행
-- **호출 시점**: ANALYSIS, PLAN, WIREFRAME, EXECUTE-UI 완료 후 오케스트레이터가 호출
+- **역할**: 범용 QA 에이전트 — op-task-qa 스킬로 도메인 무관 산출물 품질 검증
+- **호출 시점**: TASK, PLAN 완료 후 (범용 오케스트레이터: opal-project-pilot, opal-pilot-write)
+- **입력**: 검증 대상 산출물 경로, 단계명, TASK.md 경로
+- **출력**: QA-{단계}.md 리뷰 문서
+
+### op-dev-qa-agent
+
+- **역할**: Dev QA 에이전트 — op-dev-qa 스킬로 코드 개발 산출물 검증
+- **호출 시점**: ANALYSIS, PLAN, WIREFRAME, EXECUTE-UI 완료 후 (dev 오케스트레이터: opal-pilot-dev, opal-pilot-dev-short, opal-pilot-dev-wireframe)
 - **입력**: 검증 대상 산출물 경로, 단계명, TASK.md 경로
 - **출력**: QA-{단계}.md 리뷰 문서
 

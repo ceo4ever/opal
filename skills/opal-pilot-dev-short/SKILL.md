@@ -30,7 +30,7 @@ harness "4. TASK 공통 프로세스" 참조. 다음 단계명: PLAN.
 ### PLAN 디스패치
 
 op-dev-plan 워커 디스패치. **model**: advanced. 이전 산출물: TASK.md만 (ANALYSIS.md 없음).
-워커 완료 -> **QA Gate** -> **PM Gate**.
+워커 완료 -> **QA Gate** (op-dev-qa) -> **PM Gate**.
 
 ### TEST-SCENARIO 스킵 조건
 

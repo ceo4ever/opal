@@ -23,14 +23,14 @@
 |----------|------|------|------|
 | task | 예정 | [memory/project_security_task.md](memory/project_security_task.md) | 보안 전용 스킬+에이전트 생성 |
 | task | 예정 | [memory/project_skill_source_move.md](memory/project_skill_source_move.md) | OPAL 전용 스킬 소스 opal/skills/로 이동 |
-| task | 예정 | [memory/project_qa_skill_rename.md](memory/project_qa_skill_rename.md) | op-task-qa → op-dev-qa 리네이밍 + 범용 QA 신규 |
 | project | 유효 | [memory/project_opi_vision.md](memory/project_opi_vision.md) | opi 비전: 프로젝트=WHAT/WHY, 스킬=HOW |
 
 ## 작업 히스토리 (최대 10개, FIFO)
 
 | # | 작업 | 단계 | 경로 | 날짜 |
 |---|------|------|------|------|
-| 0 | 멀티 플랫폼 모델 매핑 참조 + 스킬 적용 (044) | EXECUTE 완료 | tasks/044-model-mapping-reference/ | 2026-03-29 |
+| 0 | op-task-qa → op-dev-qa 리네이밍 + 범용 op-task-qa 신규 (046) | 완료 | tasks/046-qa-skill-rename/ | 2026-03-29 |
+| 0 | 멀티 플랫폼 모델 매핑 참조 + 스킬 적용 (044) | 완료 (8aaec44) | tasks/044-model-mapping-reference/ | 2026-03-29 |
 | 0 | opal-project-pilot + 범용 스킬 + 에이전트 리네이밍 (045) | 완료 (6fa0438) | tasks/045-opal-project-pilot/ | 2026-03-29 |
 | 1 | opi 프로젝트 최신화 | 완료 | docs/, .opal/ | 2026-03-29 |
 | 1 | opal-doc-standard v2.0 문서 유형 확장 (043) | 완료 (76b6010) | tasks/043-doc-standard-enhancement/ | 2026-03-29 |

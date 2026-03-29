@@ -34,7 +34,7 @@ op-task-plan 워커 디스패치. **model**: advanced. 이전 산출물: TASK.md
 1. `{프로젝트}/.opal/skills/op-task-plan/SKILL.md`
 2. `~/.opal/skills/op-task-plan/SKILL.md`
 
-워커 완료 -> **QA Gate** -> **PM Gate** -> 사용자에게 보고.
+워커 완료 -> **QA Gate** (op-task-qa) -> **PM Gate** -> 사용자에게 보고.
 
 보고 형식:
 ```

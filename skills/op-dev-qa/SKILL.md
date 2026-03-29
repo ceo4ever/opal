@@ -1,25 +1,24 @@
 ---
-name: op-task-qa
+name: op-dev-qa
 description: |
-  **범용 QA 검증 스킬**. 도메인 무관 산출물(TASK.md, PLAN.md 등)의 품질을 검증한다.
-  코드 개발 QA는 op-dev-qa, 범용 QA는 이 스킬을 사용한다.
-  반드시 이 스킬을 사용해야 하는 상황: 범용 오케스트레이터(opal-project-pilot, opal-pilot-write)가 QA 검증을 디스패치할 때.
-  필수 입력: 검증 대상 산출물 경로 + 단계명. 보장 출력: QA-{단계}.md.
+  **QA 검증 단계 스킬**. 산출물의 품질을 검증하여 QA 리포트를 생성한다. 단계에 따라 qa-dev-guide 또는 qa-wireframe-guide를 참조한다.
+  반드시 이 스킬을 사용해야 하는 상황: 오케스트레이터가 QA 검증을 디스패치할 때.
+  필수 입력: 검증 대상 산출물 경로 + 단계명. 선택 입력: TASK.md. 보장 출력: QA-{단계}.md.
 ---
 
-# op-task-qa — 범용 QA 검증
+# op-dev-qa — Dev QA 검증
 
 ## 실행 컨텍스트
 
-- **호출자**: 범용 오케스트레이터(opal-project-pilot, opal-pilot-write)가 QA 검증을 디스패치
-- **실행 주체**: QA 전용 워커 에이전트 (op-task-qa-agent)
+- **호출자**: 오케스트레이터가 QA 검증을 디스패치
+- **실행 주체**: QA 전용 워커 에이전트 (op-dev-qa-agent)
 - **입력**: 검증 대상 산출물 경로 + `stage` (단계명)
 - **출력**: `tasks/{NNN}-{태스크명}/QA-{단계}.md`
 
 ## 페르소나
 
 ```
-Read ~/.opal/skills/op-task-qa/personas/qa-engineer.md
+Read ~/.opal/skills/op-dev-qa/personas/qa-engineer.md
 ```
 
 페르소나 파일이 없으면 다음 역할을 따른다:
@@ -33,19 +32,24 @@ Read ~/.opal/skills/op-task-qa/personas/qa-engineer.md
 
 | 입력 | 설명 |
 |------|------|
-| `stage` | 검토 대상 단계 (`TASK` / `PLAN` / `EXECUTE`) |
+| `stage` | 검토 대상 단계 (`ANALYSIS` / `PLAN` / `WIREFRAME` / `EXECUTE-UI`) |
+| `mode` | 태스크 모드 (`full` / `short` / `wireframe-ui`) |
 | `task_path` | 태스크 폴더 경로 |
 | `artifact_path` | 검증 대상 산출물 경로 |
+| `changed_files` | 변경된 코드 파일 목록 (EXECUTE-UI 시 필수) |
 
 ## 프로세스
 
 ### Step 1. 단계별 가이드 로딩
 
-모든 단계에서 동일한 범용 가이드를 참조한다:
+단계명에 따라 참조 가이드를 결정한다:
 
-```
-Read ~/.opal/skills/op-task-qa/references/qa-general-guide.md
-```
+| 단계 | 가이드 |
+|------|--------|
+| ANALYSIS | `Read ~/.opal/skills/op-dev-qa/references/qa-dev-guide.md` |
+| PLAN | `Read ~/.opal/skills/op-dev-qa/references/qa-dev-guide.md` |
+| WIREFRAME | `Read ~/.opal/skills/op-dev-qa/references/qa-wireframe-guide.md` |
+| EXECUTE-UI | `Read ~/.opal/skills/op-dev-qa/references/qa-wireframe-guide.md` |
 
 ### Step 2. 산출물 읽기
 
@@ -53,9 +57,11 @@ Read ~/.opal/skills/op-task-qa/references/qa-general-guide.md
 
 | 현재 단계 | 읽어야 하는 파일 |
 |-----------|----------------|
-| TASK | TASK.md |
-| PLAN | PLAN.md + TASK.md |
-| EXECUTE | 실행 결과 산출물 + PLAN.md + TASK.md |
+| ANALYSIS (Full) | ANALYSIS.md + TASK.md |
+| PLAN (Full) | PLAN.md + ANALYSIS.md + TASK.md |
+| PLAN (Short) | PLAN.md + TASK.md |
+| WIREFRAME | wireframe.md + TASK.md |
+| EXECUTE-UI | wireframe.md + changed_files + TASK.md |
 
 ### Step 3. 품질 검증
 
@@ -71,6 +77,13 @@ Read ~/.opal/skills/op-task-qa/references/qa-general-guide.md
 
 검증 결과를 QA-{단계}.md로 작성한다.
 
+## 활용 스킬
+
+| 스킬 | 용도 | 사용 시점 |
+|------|------|----------|
+| getsentry/code-review | 코드 품질 리뷰 참조 | EXECUTE 후 코드 리뷰 시 |
+| openai/security-best-practices | 보안 검증 참조 | 보안 관련 검증 시 |
+
 ## 검증 기준 요약
 
 ### 공통 검증 원칙
@@ -82,11 +95,16 @@ Read ~/.opal/skills/op-task-qa/references/qa-general-guide.md
 | 명확성 | 모호하지 않고 구체적인가 |
 | 실행 가능성 | 이 산출물만으로 다음 단계를 진행할 수 있는가 |
 
-### 범용 단계별 검증 ID
+### Dev 단계별 검증 ID
 
-- TASK: T-1 ~ T-4 (목표 명확성, 요구사항 완전성, 제약 조건 명시, 산출물 정의)
-- PLAN: GP-1 ~ GP-6 (즉시 실행 가능성, 의존성 순서, TASK 반영, 파일 목록 완전성, 설계 구체성, 체크리스트 커버리지)
-- EXECUTE: GE-1 ~ GE-3 (체크리스트 완료, 산출물 존재, TASK 충족)
+- ANALYSIS: R-1 ~ R-6 (TASK 커버리지, 코드 실독, 파일 완전성, 영향 범위, 리스크, 깊이)
+- PLAN (Full): P-1 ~ P-6 (구현 가능성, 의존성 순서, ANALYSIS 반영, 파일 일치, 설계 구체성, 테스트 전략)
+- PLAN (Short): SP-1 ~ SP-5 (코드 분석, 구현 계획, 체크리스트 완전성, QA 항목, Short 적정성)
+
+### Wireframe 단계별 검증 ID
+
+- WIREFRAME: W-1 ~ W-5 (섹션 완전성, 화면 목록, 상세 설계, shadcn 매핑, 구현 가능성)
+- EXECUTE-UI: E-1 ~ E-6 (빌드 성공, 린트 통과, 화면 커버리지, 레이아웃 대조, 컴포넌트 대조, 인터랙션 구현)
 
 ## QA-{단계}.md 통일 형식
 
@@ -127,7 +145,7 @@ Read ~/.opal/skills/op-task-qa/references/qa-general-guide.md
 tasks/{NNN}-{태스크명}/QA-{단계}.md
 ```
 
-예: `QA-TASK.md`, `QA-PLAN.md`, `QA-EXECUTE.md`
+예: `QA-ANALYSIS.md`, `QA-PLAN.md`, `QA-WIREFRAME.md`, `QA-EXECUTE-UI.md`
 
 ## 판정 기준
 

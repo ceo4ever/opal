@@ -113,6 +113,15 @@
         "paths": ["{project}/.opal/skills/op-dev-wireframe/SKILL.md", "~/.opal/skills/op-dev-wireframe/SKILL.md"],
         "stage": "WIREFRAME",
         "dispatched_by": ["opal-pilot-dev-wireframe"]
+      },
+      {
+        "name": "op-dev-qa",
+        "alias": null,
+        "description": "Dev QA 검증 (코드 개발 산출물)",
+        "triggers": ["^op-dev-qa$"],
+        "paths": ["{project}/.opal/skills/op-dev-qa/SKILL.md", "~/.opal/skills/op-dev-qa/SKILL.md"],
+        "stage": "QA",
+        "dispatched_by": ["opal-pilot-dev", "opal-pilot-dev-short", "opal-pilot-dev-wireframe"]
       }
     ],
     "op-task": [
@@ -128,11 +137,11 @@
       {
         "name": "op-task-qa",
         "alias": null,
-        "description": "QA 검증",
+        "description": "범용 QA 검증 (도메인 무관 산출물)",
         "triggers": ["^op-task-qa$"],
         "paths": ["{project}/.opal/skills/op-task-qa/SKILL.md", "~/.opal/skills/op-task-qa/SKILL.md"],
         "stage": "QA",
-        "dispatched_by": ["opal-pilot-dev", "opal-pilot-dev-short", "opal-pilot-dev-wireframe", "opal-pilot-write-tech", "opal-project-pilot"]
+        "dispatched_by": ["opal-pilot-write", "opal-project-pilot"]
       },
       {
         "name": "op-task-plan",

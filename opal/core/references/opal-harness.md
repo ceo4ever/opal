@@ -52,8 +52,15 @@
 
 ### QA Gate
 
-단계 완료 후 op-task-qa 에이전트를 호출하여 산출물을 검증한다.
-- op-task-qa 탐색: `{프로젝트}/.opal/skills/op-task-qa/SKILL.md` -> `~/.opal/skills/op-task-qa/SKILL.md`
+단계 완료 후 QA 에이전트를 호출하여 산출물을 검증한다.
+
+| 오케스트레이터 도메인 | QA 스킬 | QA 에이전트 |
+|---------------------|---------|------------|
+| dev (opd/opds/opdw) | op-dev-qa | op-dev-qa-agent |
+| 범용 (opp/opw) | op-task-qa | op-task-qa-agent |
+
+각 오케스트레이터 SKILL.md에서 QA 스킬명을 명시한다.
+탐색 경로: `{프로젝트}/.opal/skills/{qa-skill}/SKILL.md` -> `~/.opal/skills/{qa-skill}/SKILL.md`
 
 ### PM Gate
 

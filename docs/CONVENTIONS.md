@@ -26,7 +26,7 @@
 |--------|------|------|
 | `opal-pilot-*` | 오케스트레이터 (도메인 특화) | opal-pilot-dev, opal-pilot-write |
 | `opal-project-*` | 오케스트레이터 (범용) | opal-project-pilot |
-| `op-dev-*` | dev 도메인 단계 스킬 | op-dev-analysis, op-dev-plan |
+| `op-dev-*` | dev 도메인 단계 스킬 | op-dev-analysis, op-dev-plan, op-dev-qa |
 | `op-task-*` | 범용 단계 스킬 | op-task, op-task-qa, op-task-plan, op-task-execute |
 | `opal-task-*` | 범용 워커 에이전트 | opal-task-agent |
 | `opal-*` | OPAL 프레임워크 전용 | opal-project-init, opal-onboarding |

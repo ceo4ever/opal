@@ -28,7 +28,7 @@ op-dev-analysis 스킬을 수행하라.
 ```
 **model**: light
 
-워커 완료 → **QA Gate** → **PM Gate** → 사용자 보고.
+워커 완료 → **QA Gate** (op-dev-qa) → **PM Gate** → 사용자 보고.
 
 ## STEP 3: PLAN + TEST-SCENARIO
 워커를 연속 디스패치하여 구현 계획과 테스트 시나리오를 작성한다.
@@ -44,7 +44,7 @@ op-dev-plan 스킬을 수행하라.
 ```
 **model**: advanced
 
-워커 완료 → **QA Gate** → **PM Gate**.
+워커 완료 → **QA Gate** (op-dev-qa) → **PM Gate**.
 
 ### TEST-SCENARIO 스킵 조건
 작업 유형이 **문서 전용**(.md 파일만 수정, 소스 코드 없음)인 경우:

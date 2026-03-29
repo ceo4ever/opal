@@ -41,7 +41,7 @@ Harness "TASK 공통 프로세스"를 따르되, 아래를 추가:
 
 워커 디스패치로 wireframe.md 생성. **model**: standard.
 - 스킬: op-dev-wireframe, 입력: TASK.md + 정책서/이미지
-- 완료 → op-task-qa 호출 (단계: WIREFRAME) → 사용자 보고
+- 완료 → op-dev-qa 호출 (단계: WIREFRAME) → 사용자 보고
 
 ---
 
@@ -52,7 +52,7 @@ Harness "TASK 공통 프로세스"를 따르되, 아래를 추가:
 - **UI 구현 모드**: ui-designer scaffold(프로토) 또는 plan-driven(프로덕션) 호출
 
 ### 완료 후
-1. op-task-qa 호출 (단계: EXECUTE-UI) → 빌드/린트 + wireframe↔코드 대조
+1. op-dev-qa 호출 (단계: EXECUTE-UI) → 빌드/린트 + wireframe↔코드 대조
 2. DONE.md 생성 → 사용자 완료 보고
 
 ---

@@ -38,7 +38,8 @@ OPAL은 2-레이어 아키텍처로 동작한다.
 │  ┌──────────────────────────────────────────────────┐   │
 │  │  서브에이전트 (Agent 도구로 디스패치)               │   │
 │  │  ├─ opal-task-agent: 단계 스킬 실행 워커            │   │
-│  │  ├─ op-task-qa-agent: QA 검증                     │   │
+│  │  ├─ op-task-qa-agent: 범용 QA 검증                │   │
+│  │  ├─ op-dev-qa-agent: Dev QA 검증                  │   │
 │  │  ├─ op-dev-test-agent: 테스트 실행                 │   │
 │  │  └─ wtm-agent: 웹→마크다운 변환                    │   │
 │  └──────────────────────────────────────────────────┘   │
@@ -56,7 +57,7 @@ OPAL은 2-레이어 아키텍처로 동작한다.
 | `AGENT.md` | 에이전트 핵심 정의 (부트스트랩, 행동 규칙, PM 역할) |
 | `identity.md` | 에이전트 정체성 (이름, 성격, 톤) |
 | `skills/` | 프레임워크 스킬 21개 + OPAL 전용 스킬 4개 |
-| `agents/` | 서브에이전트 4개 |
+| `agents/` | 서브에이전트 5개 |
 | `community-skills/` | 커뮤니티 스킬 37개 (6개 조직) |
 | `references/` | 레지스트리 (skills.md, agents.md, mcps.md, opal-harness.md, opal-doc-standard.md) |
 | `tools/` | 스킬 레지스트리 CLI (skill-registry.js) |
@@ -96,8 +97,9 @@ OPAL은 2-레이어 아키텍처로 동작한다.
 | | op-dev-test-scenario | 테스트 시나리오 생성 |
 | | op-dev-execute | 코드 실행 (체크포인트 기반) |
 | | op-dev-wireframe | 와이어프레임 생성 |
+| | op-dev-qa | Dev QA 검증 (코드 개발 산출물) |
 | **범용 단계** | op-task | TASK.md 작성 |
-| | op-task-qa | QA 검증 |
+| | op-task-qa | 범용 QA 검증 (도메인 무관 산출물) |
 | | op-task-plan | 범용 계획 수립 (도메인 무관) |
 | | op-task-execute | 범용 실행 (도메인 무관) |
 | **독립** | api-analyzer | 외부 API 7단계 분석 |
@@ -118,10 +120,11 @@ OPAL은 2-레이어 아키텍처로 동작한다.
 
 | 에이전트 | 모델 | 역할 |
 |---------|------|------|
-| opal-task-agent | Sonnet | 범용 워커 — 단계 스킬 실행 |
-| op-task-qa-agent | Haiku | QA — 산출물 품질 검증 |
-| op-dev-test-agent | Sonnet | Test — 동적 검증 (테스트 실행 + 판정) |
-| wtm-agent | Haiku | web-to-markdown 병렬 처리 |
+| opal-task-agent | standard | 범용 워커 — 단계 스킬 실행 |
+| op-task-qa-agent | light | 범용 QA — 도메인 무관 산출물 품질 검증 |
+| op-dev-qa-agent | light | Dev QA — 코드 개발 산출물 검증 |
+| op-dev-test-agent | standard | Test — 동적 검증 (테스트 실행 + 판정) |
+| wtm-agent | light | web-to-markdown 병렬 처리 |
 
 ### 커뮤니티 스킬 (Community Skills)
 
@@ -171,7 +174,7 @@ opal/core/mcps/*    ──── install ─→  ~/.cursor/rules/ (부트스트�
 
 ```
 opal/                                    ← 이 저장소
-├── skills/                              스킬 (24개)
+├── skills/                              스킬 (25개)
 │   ├── opal-pilot-dev/                  오케스트레이터: Full Task
 │   ├── opal-pilot-dev-short/            오케스트레이터: Short Task (기본)
 │   ├── opal-pilot-dev-wireframe/        오케스트레이터: Wireframe UI
@@ -184,8 +187,9 @@ opal/                                    ← 이 저장소
 │   ├── op-dev-test-scenario/            dev: 테스트 시나리오
 │   ├── op-dev-execute/                  dev: 코드 실행
 │   ├── op-dev-wireframe/                dev: 와이어프레임 생성
+│   ├── op-dev-qa/                       dev: Dev QA 검증
 │   ├── op-task/                         범용: TASK.md 작성
-│   ├── op-task-qa/                      범용: QA 검증
+│   ├── op-task-qa/                      범용: QA 검증 (도메인 무관)
 │   ├── op-task-plan/                    범용: 계획 수립 (도메인 무관)
 │   ├── op-task-execute/                 범용: 실행 (도메인 무관)
 │   ├── api-analyzer/                    독립: API 분석
@@ -196,9 +200,10 @@ opal/                                    ← 이 저장소
 │   ├── opal-agent-creator/              OPAL: 에이전트 생성
 │   ├── opal-skill-creator/              OPAL: 스킬 생성
 │   └── opal-project-init/               OPAL: 프로젝트 초기화
-├── agents/                              에이전트 (4개)
+├── agents/                              에이전트 (5개)
 │   ├── opal-task-agent/                 범용 워커
-│   ├── op-task-qa-agent/                QA 에이전트
+│   ├── op-task-qa-agent/                범용 QA 에이전트
+│   ├── op-dev-qa-agent/                 Dev QA 에이전트
 │   ├── op-dev-test-agent/               테스트 에이전트
 │   └── wtm-agent/                       웹→마크다운 에이전트
 ├── community-skills/                    커뮤니티 스킬 (37개, 6개 조직)
