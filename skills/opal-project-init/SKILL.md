@@ -267,16 +267,7 @@ Phase 2와 동일한 프로세스를 따른다:
 `apply.js` 스크립트로 플랫폼 부트스트래퍼를 생성한다.
 
 ```bash
-node ~/.opal/skills/opal-project-init/scripts/apply.js --config {config.json 경로}
-```
-
-config.json 형식:
-
-```json
-{
-  "projectRoot": "{프로젝트 절대 경로}",
-  "scope": "platform-only"
-}
+node ~/.opal/skills/opal-project-init/scripts/apply.js --project-root {프로젝트 경로}
 ```
 
 생성 대상:
