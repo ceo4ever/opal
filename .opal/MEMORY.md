@@ -24,13 +24,15 @@
 | task | 예정 | [memory/project_security_task.md](memory/project_security_task.md) | 보안 전용 스킬+에이전트 생성 |
 | task | 예정 | [memory/project_multi_platform_model_mapping.md](memory/project_multi_platform_model_mapping.md) | 멀티 플랫폼 모델 매핑 표준화 |
 | task | 예정 | [memory/project_skill_source_move.md](memory/project_skill_source_move.md) | OPAL 전용 스킬 소스 opal/skills/로 이동 |
+| task | 예정 | [memory/project_qa_skill_rename.md](memory/project_qa_skill_rename.md) | op-task-qa → op-dev-qa 리네이밍 + 범용 QA 신규 |
 | project | 유효 | [memory/project_opi_vision.md](memory/project_opi_vision.md) | opi 비전: 프로젝트=WHAT/WHY, 스킬=HOW |
 
 ## 작업 히스토리 (최대 10개, FIFO)
 
 | # | 작업 | 단계 | 경로 | 날짜 |
 |---|------|------|------|------|
-| 0 | opi 프로젝트 최신화 | 완료 | docs/, .opal/ | 2026-03-29 |
+| 0 | opal-project-pilot + 범용 스킬 + 에이전트 리네이밍 (045) | EXECUTE ✅ → 커밋 대기 | tasks/045-opal-project-pilot/ | 2026-03-29 |
+| 1 | opi 프로젝트 최신화 | 완료 | docs/, .opal/ | 2026-03-29 |
 | 1 | opal-doc-standard v2.0 문서 유형 확장 (043) | 완료 (76b6010) | tasks/043-doc-standard-enhancement/ | 2026-03-29 |
 | 2 | 컴포넌트 리네이밍 + 레거시 정리 (042) | 완료 (16b6f1a) | tasks/042-skills-registry-reclassify/ | 2026-03-29 |
 | 2 | otp-write-tech 스킬 개발 (039) | 완료 | tasks/039-otp-write-tech-skill/ | 2026-03-29 |

@@ -11,7 +11,7 @@ description: |
 ## 실행 컨텍스트
 
 - **호출자**: 오케스트레이터(opal-pilot-dev, opal-pilot-dev-short, opal-pilot-dev-wireframe)가 EXECUTE 단계를 디스패치
-- **실행 주체**: 워커 에이전트 (op-dev-agent 또는 dtp-wireframe-ui-agent)
+- **실행 주체**: 워커 에이전트 (opal-task-agent 또는 dtp-wireframe-ui-agent)
 - **입력**: `checklist_source` (오케스트레이터가 경로+섹션 지정)
   - `PLAN.md` 섹션 3 실행 체크리스트 (또는 `execution-plan.json`)
   - Wireframe UI: wireframe.md 기반 실행 항목

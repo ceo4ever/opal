@@ -38,12 +38,20 @@ skills/                          ← 스킬 (단일 소스, ~/.opal/skills/로 �
 ├── opal-pilot-dev-wireframe/    오케스트레이터: Wireframe UI (opdw)
 ├── opal-pilot-write/            오케스트레이터: 범용 문서 작성 (opw)
 ├── opal-pilot-write-tech/       오케스트레이터: 서비스 기획 산출물 (opwt)
+├── opal-project-pilot/          오케스트레이터: 범용 프로젝트 (opp)
+│   └── SKILL.md
 ├── op-task/                     범용 단계: TASK.md 작성
 │   ├── references/task-guide.md
 │   └── personas/service-planner.md
 ├── op-task-qa/                  범용 단계: QA 검증
 │   ├── references/              qa-dev-guide.md, qa-wireframe-guide.md
 │   └── personas/qa-engineer.md
+├── op-task-plan/                범용 단계: 계획 수립 (도메인 무관)
+│   ├── references/plan-guide.md
+│   └── personas/generalist-architect.md
+├── op-task-execute/             범용 단계: 실행 (도메인 무관)
+│   ├── references/execute-guide.md
+│   └── personas/generalist-executor.md
 ├── op-dev-analysis/             dev 단계: 코드베이스 분석
 │   ├── references/              analysis-guide.md, tech-context-guide.md
 │   └── personas/application-architect.md
@@ -70,7 +78,7 @@ skills/                          ← 스킬 (단일 소스, ~/.opal/skills/로 �
 └── wireframe-builder/           독립: UI 분석·설계 — 정책서/요구사항 → wireframe.md 생성
 
 agents/                          ← 에이전트 (단일 AGENT.md 포맷)
-├── op-dev-agent/                범용 워커 (단계 스킬 실행)
+├── opal-task-agent/             범용 워커 (단계 스킬 실행)
 ├── op-task-qa-agent/            QA 에이전트 (산출물 검증)
 ├── op-dev-test-agent/           Test 에이전트 (동적 검증)
 └── wtm-agent/                   web-to-markdown 병렬 처리 에이전트
@@ -114,7 +122,7 @@ cursor-rules/                    ← Cursor 프로젝트 규칙 템플릿
 │   ├── opal-orchestrator/
 │   └── ...
 ├── agents/                      에이전트 (4개, 단일 AGENT.md 포맷)
-│   ├── op-dev-agent/
+│   ├── opal-task-agent/
 │   ├── op-task-qa-agent/
 │   └── ...
 ├── references/                  참조 레지스트리 (부트스트랩 시 Read)
@@ -146,16 +154,18 @@ cursor-rules/                    ← Cursor 프로젝트 규칙 템플릿
 
 | 유형 | 설명 | 현재 상태 |
 |------|------|----------|
-| **Skills** | 특정 작업을 수행하는 절차적 가이드 (SKILL.md) | `skills/` 21개 + `community-skills/` 31개 |
+| **Skills** | 특정 작업을 수행하는 절차적 가이드 (SKILL.md) | `skills/` 24개 + `community-skills/` 31개 |
 | **Agents** | 독립 컨텍스트에서 자율 실행하는 에이전트 (AGENT.md) | `agents/` 4개 × 1 포맷 |
 | **Hooks** | 이벤트 기반으로 자동 실행되는 트리거 | 확장 예정 |
 
 ### 컴포넌트 간 의존 관계
 
 - **opal-pilot-*** → 태스크 파이프라인 오케스트레이터 (dev: opd/opds/opdw, write: opw/opwt)
+- **opal-project-pilot (opp)** → 범용 프로젝트 오케스트레이터 (TASK → PLAN → EXECUTE)
 - **op-dev-*** → dev 도메인 단계 스킬 (analysis/plan/todo/test-scenario/execute/wireframe)
 - **op-task / op-task-qa** → 범용 단계 스킬 (TASK.md 작성, QA 검증)
-- **op-dev-agent** → 범용 워커 (단계 스킬 실행)
+- **op-task-plan / op-task-execute** → 범용 단계 스킬 (도메인 무관 계획/실행, opal-project-pilot이 사용)
+- **opal-task-agent** → 범용 워커 (단계 스킬 실행)
 - **op-task-qa-agent** → QA 에이전트 (산출물 검증)
 - **op-dev-test-agent** → Test 에이전트 (EXECUTE 완료 후 동적 검증)
 - **opal-doc-standard** → 모든 문서 산출물의 표준 규칙 (doc-writer + version-mgr 통합, ~/.opal/references/)

@@ -37,7 +37,7 @@ OPAL은 2-레이어 아키텍처로 동작한다.
 │            ▼                                             │
 │  ┌──────────────────────────────────────────────────┐   │
 │  │  서브에이전트 (Agent 도구로 디스패치)               │   │
-│  │  ├─ op-dev-agent: 단계 스킬 실행 워커              │   │
+│  │  ├─ opal-task-agent: 단계 스킬 실행 워커            │   │
 │  │  ├─ op-task-qa-agent: QA 검증                     │   │
 │  │  ├─ op-dev-test-agent: 테스트 실행                 │   │
 │  │  └─ wtm-agent: 웹→마크다운 변환                    │   │
@@ -89,6 +89,7 @@ OPAL은 2-레이어 아키텍처로 동작한다.
 | | opal-pilot-dev-wireframe (opdw) | Wireframe UI: TASK → WIREFRAME → EXECUTE |
 | | opal-pilot-write (opw) | 범용 문서: TASK → PLAN → WRITE |
 | | opal-pilot-write-tech (opwt) | 서비스 기획 산출물: 네트워크형 오케스트레이션 |
+| | opal-project-pilot (opp) | 범용 프로젝트: TASK → PLAN → EXECUTE |
 | **dev 단계** | op-dev-analysis | 코드베이스 분석 + 기술 컨텍스트 수집 |
 | | op-dev-plan | 구현 계획 (PLAN+TODO 통합) |
 | | op-dev-todo | 실행 체크리스트 확장 (Full Task 전용) |
@@ -97,6 +98,8 @@ OPAL은 2-레이어 아키텍처로 동작한다.
 | | op-dev-wireframe | 와이어프레임 생성 |
 | **범용 단계** | op-task | TASK.md 작성 |
 | | op-task-qa | QA 검증 |
+| | op-task-plan | 범용 계획 수립 (도메인 무관) |
+| | op-task-execute | 범용 실행 (도메인 무관) |
 | **독립** | api-analyzer | 외부 API 7단계 분석 |
 | | interview | 구조화된 Q&A 요구사항 수집 |
 | | ui-designer | wireframe.md → React + shadcn/ui 구현 |
@@ -115,7 +118,7 @@ OPAL은 2-레이어 아키텍처로 동작한다.
 
 | 에이전트 | 모델 | 역할 |
 |---------|------|------|
-| op-dev-agent | Sonnet | 범용 워커 — 단계 스킬 실행 |
+| opal-task-agent | Sonnet | 범용 워커 — 단계 스킬 실행 |
 | op-task-qa-agent | Haiku | QA — 산출물 품질 검증 |
 | op-dev-test-agent | Sonnet | Test — 동적 검증 (테스트 실행 + 판정) |
 | wtm-agent | Haiku | web-to-markdown 병렬 처리 |
@@ -168,12 +171,13 @@ opal/core/mcps/*    ──── install ─→  ~/.cursor/rules/ (부트스트�
 
 ```
 opal/                                    ← 이 저장소
-├── skills/                              스킬 (21개)
+├── skills/                              스킬 (24개)
 │   ├── opal-pilot-dev/                  오케스트레이터: Full Task
 │   ├── opal-pilot-dev-short/            오케스트레이터: Short Task (기본)
 │   ├── opal-pilot-dev-wireframe/        오케스트레이터: Wireframe UI
 │   ├── opal-pilot-write/                오케스트레이터: 범용 문서
 │   ├── opal-pilot-write-tech/           오케스트레이터: 서비스 기획 산출물
+│   ├── opal-project-pilot/              오케스트레이터: 범용 프로젝트 (opp)
 │   ├── op-dev-analysis/                 dev: 코드베이스 분석
 │   ├── op-dev-plan/                     dev: 구현 계획
 │   ├── op-dev-todo/                     dev: 실행 체크리스트 (Full 전용)
@@ -182,6 +186,8 @@ opal/                                    ← 이 저장소
 │   ├── op-dev-wireframe/                dev: 와이어프레임 생성
 │   ├── op-task/                         범용: TASK.md 작성
 │   ├── op-task-qa/                      범용: QA 검증
+│   ├── op-task-plan/                    범용: 계획 수립 (도메인 무관)
+│   ├── op-task-execute/                 범용: 실행 (도메인 무관)
 │   ├── api-analyzer/                    독립: API 분석
 │   ├── interview/                       독립: 요구사항 수집
 │   ├── ui-designer/                     독립: UI 구현
@@ -191,7 +197,7 @@ opal/                                    ← 이 저장소
 │   ├── opal-skill-creator/              OPAL: 스킬 생성
 │   └── opal-project-init/               OPAL: 프로젝트 초기화
 ├── agents/                              에이전트 (4개)
-│   ├── op-dev-agent/                    범용 워커
+│   ├── opal-task-agent/                 범용 워커
 │   ├── op-task-qa-agent/                QA 에이전트
 │   ├── op-dev-test-agent/               테스트 에이전트
 │   └── wtm-agent/                       웹→마크다운 에이전트

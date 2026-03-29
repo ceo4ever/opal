@@ -17,16 +17,18 @@
 
 - **kebab-case** 사용: `user-auth-implementation`, `op-dev-plan`
 - 스킬 폴더: `{그룹}-{역할}` — `opal-pilot-dev`, `op-dev-analysis`, `op-task-qa`
-- 에이전트 폴더: `{대상 워크플로우}-{역할}` — `op-dev-agent`, `wtm-agent`
+- 에이전트 폴더: `{대상 워크플로우}-{역할}` — `opal-task-agent`, `wtm-agent`
 - 태스크 폴더: `{NNN}-{설명}` — `043-doc-standard-enhancement`
 
 ### 컴포넌트 네이밍 체계
 
 | 접두사 | 의미 | 예시 |
 |--------|------|------|
-| `opal-pilot-*` | 오케스트레이터 | opal-pilot-dev, opal-pilot-write |
+| `opal-pilot-*` | 오케스트레이터 (도메인 특화) | opal-pilot-dev, opal-pilot-write |
+| `opal-project-*` | 오케스트레이터 (범용) | opal-project-pilot |
 | `op-dev-*` | dev 도메인 단계 스킬 | op-dev-analysis, op-dev-plan |
-| `op-task-*` | 범용 단계 스킬 | op-task, op-task-qa |
+| `op-task-*` | 범용 단계 스킬 | op-task, op-task-qa, op-task-plan, op-task-execute |
+| `opal-task-*` | 범용 워커 에이전트 | opal-task-agent |
 | `opal-*` | OPAL 프레임워크 전용 | opal-project-init, opal-onboarding |
 
 ### 약어 (Alias)
@@ -38,6 +40,7 @@
 | opdw | opal-pilot-dev-wireframe |
 | opw | opal-pilot-write |
 | opwt | opal-pilot-write-tech |
+| opp | opal-project-pilot |
 | opi | opal-project-init |
 
 ## 파일 구조

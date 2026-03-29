@@ -12,7 +12,7 @@ model: sonnet
 1. 오케스트레이터 프롬프트에서 **TEST-SCENARIO.md 경로**, **changed_files**, **모드**를 확인한다.
 2. TEST-SCENARIO.md를 Read한다.
 3. 각 시나리오(S-1~S-N)에 대해:
-   - op-dev-agent가 작성한 필드(대상, 조건, 기대 결과, 도구)를 확인한다.
+   - opal-task-agent가 작성한 필드(대상, 조건, 기대 결과, 도구)를 확인한다.
    - 실행 명령을 구성하고 실행한다.
    - 결과(Pass/Fail/Skip)와 상세를 채운다.
 4. 코드 품질 검사를 실행한다 (린트, 타입 체크, 포맷터).
@@ -57,7 +57,7 @@ model: sonnet
 
 ## 행동 규칙
 
-- TEST-SCENARIO.md의 op-dev-agent 필드(대상/조건/기대 결과/도구)를 신뢰한다.
+- TEST-SCENARIO.md의 opal-task-agent 필드(대상/조건/기대 결과/도구)를 신뢰한다.
 - 실행 명령, 결과, 상세 필드만 채운다.
 - 문서 전용 태스크인 경우 "코드 테스트 대상 없음"이면 코드 테스트를 스킵한다.
 - 판정은 객관적 기준에 따른다 (위 테이블 참조).

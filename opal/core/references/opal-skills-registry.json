@@ -5,6 +5,15 @@
   "groups": {
     "opal-pilot": [
       {
+        "name": "opal-project-pilot",
+        "alias": "opp",
+        "description": "범용 프로젝트 오케스트레이터 (코드/문서 무관 범용 태스크)",
+        "triggers": ["^opal-project-pilot$", "^opp$", "(?i)(범용\\s*프로젝트|범용\\s*태스크)"],
+        "paths": ["{project}/.opal/skills/opal-project-pilot/SKILL.md", "~/.opal/skills/opal-project-pilot/SKILL.md"],
+        "domain": "generic",
+        "pipeline": "TASK → PLAN → EXECUTE"
+      },
+      {
         "name": "opal-pilot-dev",
         "alias": "opd",
         "description": "Full Task 오케스트레이터",
@@ -114,7 +123,7 @@
         "triggers": ["^op-task$"],
         "paths": ["{project}/.opal/skills/op-task/SKILL.md", "~/.opal/skills/op-task/SKILL.md"],
         "stage": "TASK",
-        "dispatched_by": ["opal-pilot-dev", "opal-pilot-dev-short", "opal-pilot-dev-wireframe", "opal-pilot-write"]
+        "dispatched_by": ["opal-pilot-dev", "opal-pilot-dev-short", "opal-pilot-dev-wireframe", "opal-pilot-write", "opal-project-pilot"]
       },
       {
         "name": "op-task-qa",
@@ -123,7 +132,25 @@
         "triggers": ["^op-task-qa$"],
         "paths": ["{project}/.opal/skills/op-task-qa/SKILL.md", "~/.opal/skills/op-task-qa/SKILL.md"],
         "stage": "QA",
-        "dispatched_by": ["opal-pilot-dev", "opal-pilot-dev-short", "opal-pilot-dev-wireframe", "opal-pilot-write-tech"]
+        "dispatched_by": ["opal-pilot-dev", "opal-pilot-dev-short", "opal-pilot-dev-wireframe", "opal-pilot-write-tech", "opal-project-pilot"]
+      },
+      {
+        "name": "op-task-plan",
+        "alias": null,
+        "description": "범용 계획 수립 (도메인 무관)",
+        "triggers": ["^op-task-plan$"],
+        "paths": ["{project}/.opal/skills/op-task-plan/SKILL.md", "~/.opal/skills/op-task-plan/SKILL.md"],
+        "stage": "PLAN",
+        "dispatched_by": ["opal-project-pilot"]
+      },
+      {
+        "name": "op-task-execute",
+        "alias": null,
+        "description": "범용 실행 (도메인 무관)",
+        "triggers": ["^op-task-execute$"],
+        "paths": ["{project}/.opal/skills/op-task-execute/SKILL.md", "~/.opal/skills/op-task-execute/SKILL.md"],
+        "stage": "EXECUTE",
+        "dispatched_by": ["opal-project-pilot"]
       }
     ],
     "standalone": [

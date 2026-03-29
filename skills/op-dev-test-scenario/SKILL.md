@@ -11,7 +11,7 @@ description: |
 ## 실행 컨텍스트
 
 - **호출자**: 오케스트레이터(opal-pilot-dev, opal-pilot-dev-short)가 TEST-SCENARIO 단계를 디스패치
-- **실행 주체**: 워커 에이전트 (op-dev-agent)
+- **실행 주체**: 워커 에이전트 (opal-task-agent)
 - **입력**: `tasks/{NNN}-{태스크명}/TASK.md` + `PLAN.md` (선택: `TODO.md`)
 - **출력**: `tasks/{NNN}-{태스크명}/TEST-SCENARIO.md`
 
@@ -51,10 +51,10 @@ Read ~/.opal/skills/op-dev-test-scenario/references/test-scenario-guide.md
 
 | 구성요소 | 담당 | 시점 |
 |---------|------|------|
-| 대상 (뭘 테스트할지) | op-dev-agent | PLAN/TODO 완료 후, EXECUTE 전 |
-| 조건 (어떤 입력/상태) | op-dev-agent | 동일 |
-| 기대 결과 (성공 기준) | op-dev-agent | 동일 |
-| 도구 (어떤 도구로 테스트할지) | op-dev-agent | 동일 -- `.opal/test-tools.yaml` 기반 |
+| 대상 (뭘 테스트할지) | opal-task-agent | PLAN/TODO 완료 후, EXECUTE 전 |
+| 조건 (어떤 입력/상태) | opal-task-agent | 동일 |
+| 기대 결과 (성공 기준) | opal-task-agent | 동일 |
+| 도구 (어떤 도구로 테스트할지) | opal-task-agent | 동일 -- `.opal/test-tools.yaml` 기반 |
 | 실행 명령/결과/상세 | op-dev-test-agent | EXECUTE 완료 후 |
 | 코드 품질/보안/회귀/판정 | op-dev-test-agent | EXECUTE 완료 후 |
 
@@ -74,7 +74,7 @@ Read ~/.opal/skills/op-dev-test-scenario/references/test-scenario-guide.md
 | 대상 | {테스트 대상 기능/변경점} |
 | 조건 | {입력, 사전 상태, 환경} |
 | 기대 결과 | {성공 기준} |
-| 도구 | {op-dev-agent가 결정} |
+| 도구 | {opal-task-agent가 결정} |
 | 실행 명령 | _{op-dev-test-agent가 채움}_ |
 | 결과 | _{op-dev-test-agent가 채움: Pass / Fail / Skip}_ |
 | 상세 | _{op-dev-test-agent가 채움}_ |
@@ -123,7 +123,7 @@ TEST-SCENARIO.md 작성 후 자체 검증한다:
 
 - [ ] TASK.md의 모든 요구사항에 대해 시나리오가 존재하는가
 - [ ] 각 시나리오의 기대 결과가 구체적이고 검증 가능한가
-- [ ] op-dev-agent 담당 필드(대상/조건/기대 결과/도구)를 작성하고, op-dev-test-agent 담당 필드(실행 명령/결과/상세)는 비워두었는가
+- [ ] opal-task-agent 담당 필드(대상/조건/기대 결과/도구)를 작성하고, op-dev-test-agent 담당 필드(실행 명령/결과/상세)는 비워두었는가
 - [ ] `.opal/test-tools.yaml` 또는 프로젝트 설정 파일을 참조하여 도구를 결정했는가
 - [ ] 문서 전용 태스크인 경우 스킵 규칙을 적용했는가
 - [ ] 설계 빈틈 발견 시 피드백 섹션에 기록했는가

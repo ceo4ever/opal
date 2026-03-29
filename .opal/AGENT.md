@@ -48,7 +48,7 @@ AI 에이전트 프레임워크 설계 전문가 — 모든 산출물을 **재�
 | 하네스 (Harness) | 오케스트레이터 공통 인프라 — Guards, Gates, State, TASK 프로세스, Observability |
 | 오케스트레이터 | 다단계 파이프라인을 조종하는 최상위 스킬 (opal-pilot-*) |
 | 단계 스킬 | 오케스트레이터가 호출하는 개별 단계 (op-dev-*, op-task-*) |
-| 워커 | 서브에이전트로 디스패치되어 단계 스킬을 실행하는 에이전트 (op-dev-agent 등) |
+| 워커 | 서브에이전트로 디스패치되어 단계 스킬을 실행하는 에이전트 (opal-task-agent 등) |
 | 게이트 | 단계 완료 후 승인을 받는 체크포인트 (단계 게이트, QA Gate, PM Gate) |
 | 가드 | 실행 전 제약 조건 (구현 금지 원칙, Git 사전 점검, 커밋 규칙) |
 | SSOT | Single Source of Truth — 정보의 단일 진실 원천 |

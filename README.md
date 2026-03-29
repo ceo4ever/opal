@@ -35,7 +35,7 @@ Project Layer (프로젝트마다 설정)
 
 ## 컴포넌트 목록
 
-### 오케스트레이터 (opal-pilot)
+### 오케스트레이터
 
 | 스킬 | 약어 | 설명 |
 |------|------|------|
@@ -44,13 +44,16 @@ Project Layer (프로젝트마다 설정)
 | **opal-pilot-dev-wireframe** | opdw | Wireframe UI 파이프라인 (TASK → WIREFRAME → EXECUTE) |
 | **opal-pilot-write** | opw | 범용 문서 작성 (TASK → PLAN → WRITE) |
 | **opal-pilot-write-tech** | opwt | 서비스 기획 산출물 네트워크 (Phase 1~4) |
+| **opal-project-pilot** | opp | 범용 프로젝트 파이프라인 (TASK → PLAN → EXECUTE) |
 
-### 단계 스킬 (op-dev / op-task)
+### 단계 스킬 (op-dev / op-task / op-*)
 
 | 스킬 | 성격 | 설명 |
 |------|------|------|
 | **op-task** | 범용 | TASK.md 작성 |
 | **op-task-qa** | 범용 | QA 검증 |
+| **op-task-plan** | 범용 | 계획 수립 (도메인 무관) |
+| **op-task-execute** | 범용 | 실행 (도메인 무관) |
 | **op-dev-analysis** | dev | 코드베이스 분석 |
 | **op-dev-plan** | dev | 구현 계획 |
 | **op-dev-todo** | dev | 실행 체크리스트 확장 (Full Task 전용) |
@@ -72,7 +75,7 @@ Project Layer (프로젝트마다 설정)
 
 | 에이전트 | 설명 | 호출 시점 |
 |---------|------|----------|
-| **op-dev-agent** | 범용 워커 | 각 단계 스킬을 독립 컨텍스트에서 실행 |
+| **opal-task-agent** | 범용 워커 | 각 단계 스킬을 독립 컨텍스트에서 실행 |
 | **op-task-qa-agent** | QA 에이전트 | 산출물 품질 검증 |
 | **op-dev-test-agent** | Test 에이전트 | EXECUTE 완료 후 코드 동적 검증 |
 | **wtm-agent** | 웹 마크다운 변환 에이전트 | web-to-markdown 스킬에서 호출 |
@@ -198,7 +201,7 @@ opal/
 │   ├── web-to-markdown/         독립: 웹 마크다운 변환
 │   └── wireframe-builder/       독립: UI 분석·설계
 ├── agents/                      에이전트 (4개, 단일 AGENT.md 포맷)
-│   ├── op-dev-agent/            범용 워커
+│   ├── opal-task-agent/         범용 워커
 │   ├── op-task-qa-agent/        QA 에이전트
 │   ├── op-dev-test-agent/       Test 에이전트
 │   └── wtm-agent/               웹 마크다운 변환 에이전트

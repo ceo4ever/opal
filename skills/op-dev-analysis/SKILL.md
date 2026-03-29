@@ -11,7 +11,7 @@ description: |
 ## 실행 컨텍스트
 
 - **호출자**: 오케스트레이터(opal-pilot-dev)가 ANALYSIS 단계를 디스패치
-- **실행 주체**: 워커 에이전트 (op-dev-agent)
+- **실행 주체**: 워커 에이전트 (opal-task-agent)
 - **입력**: `tasks/{NNN}-{태스크명}/TASK.md`
 - **출력**: `tasks/{NNN}-{태스크명}/ANALYSIS.md`
 

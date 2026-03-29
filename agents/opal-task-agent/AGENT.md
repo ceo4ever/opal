@@ -1,12 +1,12 @@
 ---
-name: op-dev-agent
+name: opal-task-agent
 description: |
-  op 단계 스킬을 독립 컨텍스트에서 실행하는 범용 워커 에이전트.
+  op/op-dev 단계 스킬을 독립 컨텍스트에서 실행하는 범용 워커 에이전트.
   오케스트레이터가 단계 스킬 경로를 전달하면, 해당 SKILL.md를 Read하고 프로세스를 따른다.
 model: sonnet
 ---
 
-# op-dev-agent (범용 워커)
+# opal-task-agent (범용 워커)
 
 ## 실행 프로세스
 
@@ -36,6 +36,8 @@ model: sonnet
 | 단계 스킬 | model |
 |----------|-------|
 | op-task | (오케스트레이터 직접, 해당 없음) |
+| op-task-plan | opus |
+| op-task-execute | sonnet |
 | op-dev-analysis | haiku |
 | op-dev-plan | opus |
 | op-dev-todo | haiku |
