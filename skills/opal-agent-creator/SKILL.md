@@ -63,7 +63,7 @@ create-subagents 커뮤니티 스킬의 프로세스를 따라 에이전트 콘�
 
 create-subagents의 전체 프로세스를 실행한다:
 
-1. **name** -- kebab-case, `{워크플로우}-{역할}` 패턴 권장 (예: `dtp-qa`, `wtm-worker`)
+1. **name** -- kebab-case, `{워크플로우}-{역할}` 패턴 권장 (예: `op-task-qa`, `wtm-agent`)
 2. **description** -- 역할 + 언제 호출되는지 기술
 3. **tools** -- 최소 권한 원칙 적용 (Read, Write, Edit, Bash, Grep, Glob 중 필요한 것만)
 4. **model** -- 복잡도에 따라 선택 (opus: 복잡 추론, sonnet: 범용, haiku: 단순 작업)

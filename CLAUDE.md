@@ -32,54 +32,48 @@ AI 환경(Claude Code, Cursor, Codex 등)에서 IT 프로젝트를 체계적으�
 ### 소스 구조 (이 저장소)
 
 ```
-skills/                          ← 프레임워크 스킬 (단일 소스, ~/.opal/skills/로 배포)
-├── otp-dev/                     오케스트레이터: Full Task 파이프라인
-├── otp-dev-short/               오케스트레이터: Short Task 파이프라인 (기본 진입점)
-├── otp-wf/                      오케스트레이터: Wireframe UI 파이프라인
-├── otp-write/                   오케스트레이터: 범용 문서 작성 파이프라인
-├── dtp-task/                    단계: TASK.md 작성
+skills/                          ← 스킬 (단일 소스, ~/.opal/skills/로 배포)
+├── opal-pilot-dev/              오케스트레이터: Full Task (opd)
+├── opal-pilot-dev-short/        오케스트레이터: Short Task (opds, 기본 진입점)
+├── opal-pilot-dev-wireframe/    오케스트레이터: Wireframe UI (opdw)
+├── opal-pilot-write/            오케스트레이터: 범용 문서 작성 (opw)
+├── opal-pilot-write-tech/       오케스트레이터: 서비스 기획 산출물 (opwt)
+├── op-task/                     범용 단계: TASK.md 작성
 │   ├── references/task-guide.md
 │   └── personas/service-planner.md
-├── dtp-analysis/                단계: 코드베이스 분석
-│   ├── references/              analysis-guide.md, tech-context-guide.md
-│   └── personas/application-architect.md
-├── dtp-plan/                    단계: 구현 계획
-│   ├── references/plan-guide.md
-│   └── personas/software-architect.md
-├── dtp-todo/                    단계: 실행 체크리스트 확장 (Full Task 전용)
-│   ├── references/              todo-guide.md, execute-plan-guide.md
-│   └── personas/software-architect.md
-├── dtp-test-scenario/           단계: 테스트 시나리오
-│   ├── references/test-scenario-guide.md
-│   └── personas/qa-engineer.md
-├── dtp-execute/                 단계: 코드 실행
-│   ├── references/              execute-guide.md, checkpoint-guide.md
-│   └── personas/                frontend-engineer.md, backend-engineer.md
-├── dtp-wireframe/               단계: 와이어프레임 생성
-│   └── personas/service-planner.md
-├── dtp-qa/                      단계: QA 검증
+├── op-task-qa/                  범용 단계: QA 검증
 │   ├── references/              qa-dev-guide.md, qa-wireframe-guide.md
 │   └── personas/qa-engineer.md
-├── dev-task-pilot/              (레거시, 안정화 후 삭제 예정)
-├── api-analyzer/                외부 API 7단계 분석 및 명세서 생성
-├── interview/                   구조화된 Q&A 요구사항 수집
-├── opal-agent-creator/          OPAL 에이전트 생성 파이프라인
-├── opal-skill-creator/          OPAL 스킬 생성 파이프라인
-├── ui-designer/                 UI 구현 — wireframe.md → React + shadcn/ui 기반 UI
-├── web-to-markdown/             웹 페이지 마크다운 변환 (2단계 폴백)
-└── wireframe-builder/           UI 분석·설계 — 정책서/요구사항 → wireframe.md 생성
+├── op-dev-analysis/             dev 단계: 코드베이스 분석
+│   ├── references/              analysis-guide.md, tech-context-guide.md
+│   └── personas/application-architect.md
+├── op-dev-plan/                 dev 단계: 구현 계획
+│   ├── references/plan-guide.md
+│   └── personas/software-architect.md
+├── op-dev-todo/                 dev 단계: 실행 체크리스트 확장 (Full Task 전용)
+│   ├── references/              todo-guide.md, execute-plan-guide.md
+│   └── personas/software-architect.md
+├── op-dev-test-scenario/        dev 단계: 테스트 시나리오
+│   ├── references/test-scenario-guide.md
+│   └── personas/qa-engineer.md
+├── op-dev-execute/              dev 단계: 코드 실행
+│   ├── references/              execute-guide.md, checkpoint-guide.md
+│   └── personas/                frontend-engineer.md, backend-engineer.md
+├── op-dev-wireframe/            dev 단계: 와이어프레임 생성
+│   └── personas/service-planner.md
+├── api-analyzer/                독립: 외부 API 7단계 분석 및 명세서 생성
+├── interview/                   독립: 구조화된 Q&A 요구사항 수집
+├── opal-agent-creator/          OPAL: 에이전트 생성 파이프라인
+├── opal-skill-creator/          OPAL: 스킬 생성 파이프라인
+├── ui-designer/                 독립: UI 구현 — wireframe.md → React + shadcn/ui 기반 UI
+├── web-to-markdown/             독립: 웹 페이지 마크다운 변환 (2단계 폴백)
+└── wireframe-builder/           독립: UI 분석·설계 — 정책서/요구사항 → wireframe.md 생성
 
 agents/                          ← 에이전트 (단일 AGENT.md 포맷)
-├── dtp-worker/                  범용 워커 (단계 스킬 실행)
-├── dtp-qa-worker/               QA 워커 (산출물 검증)
-├── dtp-test-worker/             Test 워커 (동적 검증)
-├── dtp-dev-agent/               (레거시, 안정화 후 삭제 예정)
-├── dtp-wireframe-ui-agent/      (레거시)
-├── dtp-qa-dev-agent/            (레거시)
-├── dtp-qa-wireframe-agent/      (레거시)
-├── dtp-action-plan-agent/       (레거시)
-├── dtp-dev-test-agent/          (레거시)
-└── wtm-worker/                  web-to-markdown 병렬 처리 워커
+├── op-dev-agent/                범용 워커 (단계 스킬 실행)
+├── op-task-qa-agent/            QA 에이전트 (산출물 검증)
+├── op-dev-test-agent/           Test 에이전트 (동적 검증)
+└── wtm-agent/                   web-to-markdown 병렬 처리 에이전트
 
 community-skills/                ← 외부 커뮤니티 스킬 (기본 번들 31개)
 ├── anthropics/                  Anthropic 공식 (18개)
@@ -113,15 +107,15 @@ cursor-rules/                    ← Cursor 프로젝트 규칙 템플릿
 ~/.opal/                         ← 통합 배포 경로 (모든 플랫폼 공유)
 ├── AGENT.md                     에이전트 핵심 정의
 ├── identity.md                  정체성 (온보딩으로 생성)
-├── skills/                      프레임워크 스킬 + OPAL 전용 스킬 (14개)
-│   ├── dev-task-pilot/          ← skills/ 에서 복사
-│   ├── api-analyzer/
+├── skills/                      스킬 (opal-pilot + op-dev + op-task + standalone + opal)
+│   ├── opal-pilot-dev/          ← skills/ 에서 복사
+│   ├── op-dev-plan/
 │   ├── opal-onboarding/         ← opal/skills/ 에서 복사
 │   ├── opal-orchestrator/
 │   └── ...
-├── agents/                      에이전트 (7개, 단일 AGENT.md 포맷)
-│   ├── dtp-dev-agent/
-│   ├── dtp-qa-dev-agent/
+├── agents/                      에이전트 (4개, 단일 AGENT.md 포맷)
+│   ├── op-dev-agent/
+│   ├── op-task-qa-agent/
 │   └── ...
 ├── references/                  참조 레지스트리 (부트스트랩 시 Read)
 │   ├── skills.md                스킬 목록
@@ -152,21 +146,20 @@ cursor-rules/                    ← Cursor 프로젝트 규칙 템플릿
 
 | 유형 | 설명 | 현재 상태 |
 |------|------|----------|
-| **Skills** | 특정 작업을 수행하는 절차적 가이드 (SKILL.md) | `skills/` 9개 + `community-skills/` 31개 |
-| **Agents** | 독립 컨텍스트에서 자율 실행하는 에이전트 (AGENT.md) | `agents/` 7개 × 1 포맷 |
+| **Skills** | 특정 작업을 수행하는 절차적 가이드 (SKILL.md) | `skills/` 21개 + `community-skills/` 31개 |
+| **Agents** | 독립 컨텍스트에서 자율 실행하는 에이전트 (AGENT.md) | `agents/` 4개 × 1 포맷 |
 | **Hooks** | 이벤트 기반으로 자동 실행되는 트리거 | 확장 예정 |
 
 ### 컴포넌트 간 의존 관계
 
+- **opal-pilot-*** → 태스크 파이프라인 오케스트레이터 (dev: opd/opds/opdw, write: opw/opwt)
+- **op-dev-*** → dev 도메인 단계 스킬 (analysis/plan/todo/test-scenario/execute/wireframe)
+- **op-task / op-task-qa** → 범용 단계 스킬 (TASK.md 작성, QA 검증)
+- **op-dev-agent** → 범용 워커 (단계 스킬 실행)
+- **op-task-qa-agent** → QA 에이전트 (산출물 검증)
+- **op-dev-test-agent** → Test 에이전트 (EXECUTE 완료 후 동적 검증)
 - **opal-doc-standard** → 모든 문서 산출물의 표준 규칙 (doc-writer + version-mgr 통합, ~/.opal/references/)
 - **interview** → 요구사항 불명확 시 다른 스킬에서 호출
-- **dev-task-pilot** → 개발 작업의 주 진입점 (5단계 파이프라인)
-- **dtp-dev-agent** → Full/Short Task 공용 워커 (ANALYSIS/PLAN/PLAN-SHORT/TODO/TEST-SCENARIO/EXECUTE/EXECUTE-SHORT)
-- **dtp-wireframe-ui-agent** → Wireframe UI 워커 (WIREFRAME/EXECUTE, wireframe-builder + ui-designer 호출)
-- **dtp-qa-dev-agent** → Full/Short Task 산출물 QA
-- **dtp-qa-wireframe-agent** → Wireframe UI QA (wireframe.md 검증 + 빌드/린트 + 코드 대조)
-- **dtp-action-plan-agent** → Full Task TODO 복잡 모드 시 실행 아키텍처 설계
-- **dtp-dev-test-agent** → Full/Short EXECUTE 완료 후 코드 동적 검증
 
 ## 새 컴포넌트 작성 가이드
 
@@ -184,7 +177,7 @@ cursor-rules/                    ← Cursor 프로젝트 규칙 템플릿
 1. `agents/{agent-name}/AGENT.md` 생성
 2. YAML frontmatter에 `name`, `description` 정의
 3. 입력/출력 명세, 실행 프로세스, 검증 기준을 명확히 기술
-4. 네이밍: `{대상 워크플로우}-{역할}` (예: `dtp-qa`)
+4. 네이밍: `{대상 워크플로우}-{역할}` (예: `op-task-qa`)
 5. **호출하는 스킬의 SKILL.md에 에이전트 탐색 경로 명시**:
    ```
    탐색 경로 (우선순위):

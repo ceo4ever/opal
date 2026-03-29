@@ -230,11 +230,11 @@ URL에서 도메인과 경로를 조합하여 kebab-case slug를 생성한다:
 
 ### 워커 에이전트
 
-**에이전트 이름**: `wtm-worker`
+**에이전트 이름**: `wtm-agent`
 
 탐색 경로 (우선순위):
-1. `{프로젝트}/.opal/agents/wtm-worker/AGENT.md`
-2. `~/.opal/agents/wtm-worker/AGENT.md`
+1. `{프로젝트}/.opal/agents/wtm-agent/AGENT.md`
+2. `~/.opal/agents/wtm-agent/AGENT.md`
 
 ### 실행 방식
 
@@ -302,5 +302,5 @@ pip install crawl4ai && crawl4ai-setup
 
 | 버전 | 날짜 | 변경내용 |
 |------|------|---------|
-| v1.0 | 2026-03-20 | 초기 작성 — full/clean 듀얼 모드, 2단계 폴백(WebFetch→Playwright), 복수 URL 병렬 처리(wtm-worker) |
+| v1.0 | 2026-03-20 | 초기 작성 — full/clean 듀얼 모드, 2단계 폴백(WebFetch→Playwright), 복수 URL 병렬 처리(wtm-agent) |
 | v1.1 | 2026-03-20 | Phase 2 백엔드를 Playwright에서 Crawl4AI로 교체 — 마크다운 변환 내장, Anti-bot/stealth 지원 |

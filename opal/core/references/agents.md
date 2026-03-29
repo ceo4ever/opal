@@ -3,27 +3,27 @@
 OPAL 에이전트가 호출할 수 있는 서브에이전트 목록.
 각 에이전트는 독립 컨텍스트에서 실행되며, 호출 시 해당 AGENT.md(또는 SKILL.md)를 Read로 읽어 지시를 전달한다.
 
-## dtp 에이전트
+## opal-pilot 에이전트
 
-dtp 오케스트레이터(dtp-dev, dtp-dev-short, dtp-dev-wf)가 호출하는 서브에이전트.
+opal-pilot 오케스트레이터(opal-pilot-dev, opal-pilot-dev-short, opal-pilot-dev-wireframe)가 호출하는 서브에이전트.
 
-### dtp-worker
+### op-dev-agent
 
-- **역할**: 범용 워커 — 오케스트레이터가 전달한 단계 스킬(dtp-analysis, dtp-plan 등)의 SKILL.md를 Read하고 프로세스를 따라 산출물 생성
+- **역할**: 범용 워커 — 오케스트레이터가 전달한 단계 스킬(op-dev-analysis, op-dev-plan 등)의 SKILL.md를 Read하고 프로세스를 따라 산출물 생성
 - **호출 시점**: 각 단계 시작 시 오케스트레이터가 디스패치
 - **입력**: 스킬 경로, 태스크 폴더, 이전 산출물, 프로젝트 컨벤션
 - **출력**: 산출물(.md) + 결과 반환 (artifact_path, summary, status, blockers, changed_files)
 
-### dtp-qa-worker
+### op-task-qa-agent
 
-- **역할**: QA 워커 — dtp-qa 스킬을 Read하고 산출물 품질 검증 수행
+- **역할**: QA 에이전트 — op-task-qa 스킬을 Read하고 산출물 품질 검증 수행
 - **호출 시점**: ANALYSIS, PLAN, WIREFRAME, EXECUTE-UI 완료 후 오케스트레이터가 호출
 - **입력**: 검증 대상 산출물 경로, 단계명, TASK.md 경로
 - **출력**: QA-{단계}.md 리뷰 문서
 
-### dtp-test-worker
+### op-dev-test-agent
 
-- **역할**: Test 워커 — TEST-SCENARIO.md 기반 동적 검증 (테스트 실행 + 결과 채움 + 판정)
+- **역할**: Test 에이전트 — TEST-SCENARIO.md 기반 동적 검증 (테스트 실행 + 결과 채움 + 판정)
 - **호출 시점**: EXECUTE 완료 후 오케스트레이터가 호출
 - **입력**: TEST-SCENARIO.md, 변경된 파일 목록, 모드(full-simple/full-complex/short)
 - **출력**: TEST-SCENARIO.md (결과 채움 + 판정)
@@ -37,11 +37,9 @@ dtp 오케스트레이터(dtp-dev, dtp-dev-short, dtp-dev-wf)가 호출하는 �
 
 ## web-to-markdown 에이전트
 
-### 워커 에이전트
+### wtm-agent
 
-#### wtm-worker
-
-- **역할**: web-to-markdown 워커 — 단일 URL을 받아 Phase 1(WebFetch) → Phase 2(Crawl4AI) 폴백 전략으로 웹 페이지를 마크다운으로 변환
+- **역할**: web-to-markdown 에이전트 — 단일 URL을 받아 Phase 1(WebFetch) → Phase 2(Crawl4AI) 폴백 전략으로 웹 페이지를 마크다운으로 변환
 - **호출 시점**: web-to-markdown 스킬에서 URL별로 오케스트레이터가 디스패치
 - **입력**: url, save_path, mode (full/clean)
 - **출력**: 마크다운 파일 (save_path에 저장)

@@ -264,7 +264,7 @@ install_opal() {
 
     # ── 프레임워크 디렉토리 클린 삭제 (사용자 데이터 보존) ──
     info "기존 프레임워크 파일 정리 (사용자 데이터 보존)..."
-    local clean_dirs=("skills" "agents" "references" "community-skills" "templates")
+    local clean_dirs=("skills" "agents" "references" "community-skills" "templates" "tools")
     for dir in "${clean_dirs[@]}"; do
         if [[ -d "$opal_home/$dir" ]]; then
             rm -rf "$opal_home/$dir"
@@ -316,6 +316,24 @@ install_opal() {
 
     cp "$opal_dir/core/identity-template.md" "$opal_home/templates/identity-template.md"
     success "identity-template.md → $opal_home/templates/"
+
+    # ── 도구 (opal/tools/ → ~/.opal/tools/) ──
+    if [[ -d "$opal_dir/tools" ]]; then
+        install_dir "$opal_dir/tools" "$opal_home/tools" "OPAL 도구"
+        # Node.js 환경 체크
+        if command -v node &>/dev/null; then
+            local node_check
+            node_check="$(node "$opal_home/tools/check-env.js" 2>/dev/null)" || true
+            if node -e "const d=$node_check; process.exit(d.node?0:1)" 2>/dev/null; then
+                success "Node.js 환경 확인: $(node --version)"
+            else
+                warn "Node.js 버전이 낮습니다. v18 이상 권장"
+            fi
+        else
+            warn "Node.js가 설치되어 있지 않습니다. opal/tools/ 기능이 제한됩니다"
+            info "  설치: https://nodejs.org/ 또는 brew install node"
+        fi
+    fi
 
     # ── 참조 레지스트리 ──
     install_opal_references
@@ -589,6 +607,8 @@ print_summary() {
         echo "    ~/.opal/community-skills/    커뮤니티 스킬"
     [[ -d "$opal_home/references" ]] && \
         echo "    ~/.opal/references/          참조 레지스트리"
+    [[ -d "$opal_home/tools" ]] && \
+        echo "    ~/.opal/tools/               파싱 도구 (Node.js)"
     [[ -d "$opal_home/templates" ]] && \
         echo "    ~/.opal/templates/           프로젝트 템플릿"
 

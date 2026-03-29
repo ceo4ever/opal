@@ -1,7 +1,19 @@
 # OPAL Harness -- 오케스트레이터 공통 인프라
 
-> otp-* 오케스트레이터가 공유하는 프로세스 규칙.
-> 각 otp SKILL.md 상단에서 이 문서를 Read하고, 도메인 고유 부분만 직접 정의한다.
+> opal-pilot-* 오케스트레이터가 공유하는 프로세스 규칙.
+> 각 opal-pilot SKILL.md 상단에서 이 문서를 Read하고, 도메인 고유 부분만 직접 정의한다.
+
+---
+
+## 0. 용어 정의
+
+| 약어 | 풀네임 | 설명 |
+|------|--------|------|
+| opal-pilot | OPAL Pilot | 태스크 파이프라인을 조종하는 오케스트레이터 |
+| op-dev | OPAL Pilot Dev Phase | dev 도메인 단계 스킬 (코드 변경 수반) |
+| op-task | OPAL Pilot Task Phase | 범용 단계 스킬 (도메인 무관) |
+| opd / opds / opdw | OPAL Pilot Dev 약어 | Full / Short / Wireframe |
+| opw / opwt | OPAL Pilot Write 약어 | Write / Write-Tech |
 
 ---
 
@@ -40,8 +52,8 @@
 
 ### QA Gate
 
-단계 완료 후 dtp-qa 워커를 호출하여 산출물을 검증한다.
-- dtp-qa 탐색: `{프로젝트}/.opal/skills/dtp-qa/SKILL.md` -> `~/.opal/skills/dtp-qa/SKILL.md`
+단계 완료 후 op-task-qa 에이전트를 호출하여 산출물을 검증한다.
+- op-task-qa 탐색: `{프로젝트}/.opal/skills/op-task-qa/SKILL.md` -> `~/.opal/skills/op-task-qa/SKILL.md`
 
 ### PM Gate
 
@@ -68,7 +80,7 @@ AGENT.md 미존재 시 스킵.
 
 ### STATE.md 공통 템플릿
 
-각 otp는 이 템플릿의 `{모드}`, `{단계 목록}`, `{산출물 목록}`을 도메인에 맞게 치환한다.
+각 opal-pilot는 이 템플릿의 `{모드}`, `{단계 목록}`, `{산출물 목록}`을 도메인에 맞게 치환한다.
 
 ```markdown
 # STATE: {태스크 제목}
@@ -107,8 +119,8 @@ AGENT.md 미존재 시 스킵.
 
 오케스트레이터가 **직접 수행**한다 (워커 디스패치 없음).
 
-1. `dtp-task/SKILL.md`를 Read한다.
-   - 탐색: `{프로젝트}/.opal/skills/dtp-task/SKILL.md` -> `~/.opal/skills/dtp-task/SKILL.md`
+1. `op-task/SKILL.md`를 Read한다.
+   - 탐색: `{프로젝트}/.opal/skills/op-task/SKILL.md` -> `~/.opal/skills/op-task/SKILL.md`
 2. 스킬 프로세스를 따라 TASK.md를 작성한다.
 3. STATE.md를 생성한다.
 4. 사용자에게 보고하고 다음 단계 승인을 받는다.
@@ -119,7 +131,7 @@ AGENT.md 미존재 시 스킵.
 다음 단계({다음 단계명})로 넘어갈까요?
 ```
 
-> 도메인별 추가 확인 필드(문서 유형, 출력 모드 등)는 각 otp SKILL.md에서 정의.
+> 도메인별 추가 확인 필드(문서 유형, 출력 모드 등)는 각 opal-pilot SKILL.md에서 정의.
 
 ---
 
@@ -127,9 +139,13 @@ AGENT.md 미존재 시 스킵.
 
 ### 스킬 탐색 경로
 
-모든 단계 스킬:
-1. `{프로젝트}/.opal/skills/dtp-{stage}/SKILL.md`
-2. `~/.opal/skills/dtp-{stage}/SKILL.md`
+dev 단계 스킬:
+1. `{프로젝트}/.opal/skills/op-dev-{stage}/SKILL.md`
+2. `~/.opal/skills/op-dev-{stage}/SKILL.md`
+
+범용 단계 스킬:
+1. `{프로젝트}/.opal/skills/op-task{-suffix}/SKILL.md`
+2. `~/.opal/skills/op-task{-suffix}/SKILL.md`
 
 에이전트:
 1. `{프로젝트}/.opal/agents/{agent-name}/AGENT.md`

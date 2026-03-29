@@ -1,0 +1,220 @@
+{
+  "$schema": "opal-skills-registry-v1",
+  "version": "3.0.0",
+  "updated_at": "2026-03-29",
+  "groups": {
+    "opal-pilot": [
+      {
+        "name": "opal-pilot-dev",
+        "alias": "opd",
+        "description": "Full Task 오케스트레이터",
+        "triggers": ["^opal-pilot-dev$", "^opd$", "(?i)full\\s*task"],
+        "paths": ["{project}/.opal/skills/opal-pilot-dev/SKILL.md", "~/.opal/skills/opal-pilot-dev/SKILL.md"],
+        "domain": "dev",
+        "pipeline": "TASK → ANALYSIS → PLAN+TEST-SCENARIO → EXECUTE"
+      },
+      {
+        "name": "opal-pilot-dev-short",
+        "alias": "opds",
+        "description": "Short Task 오케스트레이터 (기본 모드)",
+        "triggers": ["^opal-pilot-dev-short$", "^opds$"],
+        "paths": ["{project}/.opal/skills/opal-pilot-dev-short/SKILL.md", "~/.opal/skills/opal-pilot-dev-short/SKILL.md"],
+        "domain": "dev",
+        "pipeline": "TASK → PLAN+TEST-SCENARIO → EXECUTE"
+      },
+      {
+        "name": "opal-pilot-dev-wireframe",
+        "alias": "opdw",
+        "description": "Wireframe UI 오케스트레이터",
+        "triggers": ["^opal-pilot-dev-wireframe$", "^opdw$"],
+        "paths": ["{project}/.opal/skills/opal-pilot-dev-wireframe/SKILL.md", "~/.opal/skills/opal-pilot-dev-wireframe/SKILL.md"],
+        "domain": "dev",
+        "pipeline": "TASK → WIREFRAME → EXECUTE"
+      },
+      {
+        "name": "opal-pilot-write",
+        "alias": "opw",
+        "description": "범용 문서 작성 오케스트레이터",
+        "triggers": ["^opal-pilot-write$", "^opw$", "(?i)(문서|보고서|가이드|기획서|명세서|설계서|정책서)\\s*(작성|써줘|만들어)"],
+        "paths": ["{project}/.opal/skills/opal-pilot-write/SKILL.md", "~/.opal/skills/opal-pilot-write/SKILL.md"],
+        "domain": "write",
+        "pipeline": "TASK → PLAN → WRITE"
+      },
+      {
+        "name": "opal-pilot-write-tech",
+        "alias": "opwt",
+        "description": "서비스 기획 산출물 네트워크 오케스트레이터",
+        "triggers": ["^opal-pilot-write-tech$", "^opwt$", "(?i)(기획\\s*문서\\s*세트|기술\\s*산출물\\s*작성|기획\\s*문서\\s*(검토|최신화))"],
+        "paths": ["{project}/.opal/skills/opal-pilot-write-tech/SKILL.md", "~/.opal/skills/opal-pilot-write-tech/SKILL.md"],
+        "domain": "write-tech",
+        "pipeline": "Phase 1~4 (병렬 분석 → PM 진단 → 병렬 작성 → 정합성 검증)"
+      }
+    ],
+    "op-dev": [
+      {
+        "name": "op-dev-analysis",
+        "alias": null,
+        "description": "코드베이스 분석",
+        "triggers": ["^op-dev-analysis$"],
+        "paths": ["{project}/.opal/skills/op-dev-analysis/SKILL.md", "~/.opal/skills/op-dev-analysis/SKILL.md"],
+        "stage": "ANALYSIS",
+        "dispatched_by": ["opal-pilot-dev"]
+      },
+      {
+        "name": "op-dev-plan",
+        "alias": null,
+        "description": "구현 계획",
+        "triggers": ["^op-dev-plan$"],
+        "paths": ["{project}/.opal/skills/op-dev-plan/SKILL.md", "~/.opal/skills/op-dev-plan/SKILL.md"],
+        "stage": "PLAN",
+        "dispatched_by": ["opal-pilot-dev", "opal-pilot-dev-short"]
+      },
+      {
+        "name": "op-dev-todo",
+        "alias": null,
+        "description": "실행 체크리스트 확장 (Full Task 전용)",
+        "triggers": ["^op-dev-todo$"],
+        "paths": ["{project}/.opal/skills/op-dev-todo/SKILL.md", "~/.opal/skills/op-dev-todo/SKILL.md"],
+        "stage": "TODO",
+        "dispatched_by": ["opal-pilot-dev"]
+      },
+      {
+        "name": "op-dev-test-scenario",
+        "alias": null,
+        "description": "테스트 시나리오 작성",
+        "triggers": ["^op-dev-test-scenario$"],
+        "paths": ["{project}/.opal/skills/op-dev-test-scenario/SKILL.md", "~/.opal/skills/op-dev-test-scenario/SKILL.md"],
+        "stage": "TEST-SCENARIO",
+        "dispatched_by": ["opal-pilot-dev", "opal-pilot-dev-short"]
+      },
+      {
+        "name": "op-dev-execute",
+        "alias": null,
+        "description": "코드 실행",
+        "triggers": ["^op-dev-execute$"],
+        "paths": ["{project}/.opal/skills/op-dev-execute/SKILL.md", "~/.opal/skills/op-dev-execute/SKILL.md"],
+        "stage": "EXECUTE",
+        "dispatched_by": ["opal-pilot-dev", "opal-pilot-dev-short", "opal-pilot-dev-wireframe"]
+      },
+      {
+        "name": "op-dev-wireframe",
+        "alias": null,
+        "description": "와이어프레임 생성",
+        "triggers": ["^op-dev-wireframe$"],
+        "paths": ["{project}/.opal/skills/op-dev-wireframe/SKILL.md", "~/.opal/skills/op-dev-wireframe/SKILL.md"],
+        "stage": "WIREFRAME",
+        "dispatched_by": ["opal-pilot-dev-wireframe"]
+      }
+    ],
+    "op-task": [
+      {
+        "name": "op-task",
+        "alias": null,
+        "description": "TASK.md 작성",
+        "triggers": ["^op-task$"],
+        "paths": ["{project}/.opal/skills/op-task/SKILL.md", "~/.opal/skills/op-task/SKILL.md"],
+        "stage": "TASK",
+        "dispatched_by": ["opal-pilot-dev", "opal-pilot-dev-short", "opal-pilot-dev-wireframe", "opal-pilot-write"]
+      },
+      {
+        "name": "op-task-qa",
+        "alias": null,
+        "description": "QA 검증",
+        "triggers": ["^op-task-qa$"],
+        "paths": ["{project}/.opal/skills/op-task-qa/SKILL.md", "~/.opal/skills/op-task-qa/SKILL.md"],
+        "stage": "QA",
+        "dispatched_by": ["opal-pilot-dev", "opal-pilot-dev-short", "opal-pilot-dev-wireframe", "opal-pilot-write-tech"]
+      }
+    ],
+    "standalone": [
+      {
+        "name": "api-analyzer",
+        "alias": null,
+        "description": "외부 API 7단계 분석 및 명세서 생성",
+        "triggers": ["^api-analyzer$", "(?i)API\\s*(분석|명세서|검토|조사)"],
+        "paths": ["{project}/.opal/skills/api-analyzer/SKILL.md", "~/.opal/skills/api-analyzer/SKILL.md"]
+      },
+      {
+        "name": "interview",
+        "alias": null,
+        "description": "구조화된 Q&A 요구사항 수집",
+        "triggers": ["^interview$", "(?i)(검토해줘|확인해줘|궁금한\\s*거\\s*물어봐)"],
+        "paths": ["{project}/.opal/skills/interview/SKILL.md", "~/.opal/skills/interview/SKILL.md"]
+      },
+      {
+        "name": "wireframe-builder",
+        "alias": null,
+        "description": "UI 분석·설계 — 정책서/요구사항 → wireframe.md 생성",
+        "triggers": ["^wireframe-builder$", "(?i)(와이어프레임|화면\\s*설계|UI\\s*설계|화면\\s*구조|화면\\s*도출)"],
+        "paths": ["{project}/.opal/skills/wireframe-builder/SKILL.md", "~/.opal/skills/wireframe-builder/SKILL.md"]
+      },
+      {
+        "name": "ui-designer",
+        "alias": null,
+        "description": "UI 구현 — wireframe.md → React + shadcn/ui 기반 UI",
+        "triggers": ["^ui-designer$", "(?i)(UI\\s*구현|UI\\s*만들어|화면\\s*구현|wireframe\\s*구현|프로토타입\\s*만들어)"],
+        "paths": ["{project}/.opal/skills/ui-designer/SKILL.md", "~/.opal/skills/ui-designer/SKILL.md"]
+      },
+      {
+        "name": "web-to-markdown",
+        "alias": null,
+        "description": "웹 페이지 마크다운 변환",
+        "triggers": ["^web-to-markdown$", "(?i)(웹\\s*페이지\\s*마크다운|URL\\s*읽어|사이트\\s*내용\\s*정리)"],
+        "paths": ["{project}/.opal/skills/web-to-markdown/SKILL.md", "~/.opal/skills/web-to-markdown/SKILL.md"]
+      }
+    ],
+    "opal": [
+      {
+        "name": "opal-onboarding",
+        "alias": null,
+        "description": "에이전트 온보딩",
+        "triggers": ["^opal-onboarding$"],
+        "paths": ["~/.opal/skills/opal-onboarding/SKILL.md"],
+        "auto_trigger": "identity.md 없을 때"
+      },
+      {
+        "name": "opal-project-init",
+        "alias": "opi",
+        "description": "프로젝트 초기화 + 최신화",
+        "triggers": ["^opal-project-init$", "^opi$", "(?i)(프로젝트\\s*초기\\s*셋팅|프로젝트\\s*시작|프로젝트\\s*문서\\s*만들어|프로젝트\\s*최신화)"],
+        "paths": ["~/.opal/skills/opal-project-init/SKILL.md"]
+      },
+      {
+        "name": "opal-project-dev-pilot",
+        "alias": "opdp",
+        "description": "PRD/TRD → 로드맵 → 태스크 순차 실행",
+        "triggers": ["^opal-project-dev-pilot$", "^opdp$", "(?i)(프로젝트\\s*개발\\s*시작|개발\\s*계획|개발\\s*파일럿)"],
+        "paths": ["~/.opal/skills/opal-project-dev-pilot/SKILL.md"]
+      },
+      {
+        "name": "opal-orchestrator",
+        "alias": null,
+        "description": "오케스트레이션 모드",
+        "triggers": ["^opal-orchestrator$"],
+        "paths": ["~/.opal/skills/opal-orchestrator/SKILL.md"],
+        "auto_trigger": ".opal/AGENT.md 있을 때"
+      },
+      {
+        "name": "opal-skill-creator",
+        "alias": null,
+        "description": "OPAL 프레임워크 스킬 생성/개선",
+        "triggers": ["^opal-skill-creator$", "(?i)(스킬\\s*만들어|스킬\\s*생성|스킬\\s*개선|새\\s*스킬)"],
+        "paths": ["~/.opal/skills/opal-skill-creator/SKILL.md"]
+      },
+      {
+        "name": "opal-agent-creator",
+        "alias": null,
+        "description": "OPAL 프레임워크 에이전트 생성/개선",
+        "triggers": ["^opal-agent-creator$", "(?i)(에이전트\\s*만들어|에이전트\\s*생성|에이전트\\s*개선)"],
+        "paths": ["~/.opal/skills/opal-agent-creator/SKILL.md"]
+      },
+      {
+        "name": "opal-skill-manager",
+        "alias": null,
+        "description": "커뮤니티 스킬 검색/설치/삭제",
+        "triggers": ["^opal-skill-manager$", "(?i)(스킬\\s*검색|스킬\\s*찾아|스킬\\s*설치|설치된\\s*스킬|스킬\\s*삭제)"],
+        "paths": ["~/.opal/skills/opal-skill-manager/SKILL.md"]
+      }
+    ]
+  }
+}

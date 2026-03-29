@@ -22,7 +22,7 @@ wireframe.md 또는 execution-plan.json을 입력으로 받아 React + shadcn/ui
 
 **판별 규칙**:
 - wireframe.md가 입력 → scaffold 모드
-- dev-task-pilot EXECUTE에서 호출 → plan-driven 모드
+- opal-pilot EXECUTE에서 호출 → plan-driven 모드
 - 사용자 명시 ("프로토타입") → scaffold 모드
 - 사용자 명시 ("프로젝트에", "화면 추가", "화면 수정") → plan-driven 모드
 - 명시하지 않으면 입력물로 판별

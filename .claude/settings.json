@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node opal/tools/skill-registry.js match \"문서 작성해줘\")",
+      "Bash(node opal/tools/skill-registry.js match \"화면 설계해줘\")",
+      "Bash(node opal/tools/skill-registry.js get otp-dev)",
+      "Bash(node opal/tools/skill-registry.js list --type=otp)",
+      "Bash(node opal/tools/skill-registry.js validate)",
+      "Bash(node opal/tools/skill-registry/skill-registry.js match \"//otpds 로그인\")",
+      "Bash(node opal/tools/skill-registry/skill-registry.js validate)",
+      "Bash(node opal/tools/check-env.js)",
+      "Bash(node opal/tools/skill-registry/skill-registry.js match \"//otpds 로그인 버그\")",
+      "Bash(node opal/tools/skill-registry/skill-registry.js match \"Word 문서 만들어줘\")",
+      "Bash(node opal/tools/skill-registry/skill-registry.js match \"API 분석해줘\")",
+      "Bash(node opal/tools/skill-registry/skill-registry.js list --group=otp)",
+      "Bash(node opal/tools/skill-registry/skill-registry.js match \"//opi\")",
+      "Bash(node opal/tools/skill-registry/skill-registry.js match \"//opdp\")",
+      "Bash(node opal/tools/skill-registry/skill-registry.js match \"스킬 검색해줘\")",
+      "Bash(node opal/tools/skill-registry/skill-registry.js match \"코드 리뷰해줘\")",
+      "Bash(node opal/tools/skill-registry/skill-registry.js match \"Excel 파일 만들어줘\")",
+      "Bash(node opal/tools/skill-registry/skill-registry.js list --group=anthropics)",
+      "Bash(node opal/tools/skill-registry/skill-registry.js list --group=opal)"
+    ]
+  }
+}

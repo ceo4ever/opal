@@ -264,9 +264,9 @@ PRD/TRD를 기반으로 태스크를 분할한다.
 
 | 조건 | 스킬 |
 |------|------|
-| 코드 변경 10+ 파일, 다중 모듈 | `//otpd` (Full Task) |
-| 코드 변경 <10 파일, 단일 모듈 | `//otpds` (Short Task) |
-| 와이어프레임 + UI 구현 | `//otpwf` (Wireframe) |
+| 코드 변경 10+ 파일, 다중 모듈 | `//opd` (Full Task) |
+| 코드 변경 <10 파일, 단일 모듈 | `//opds` (Short Task) |
+| 와이어프레임 + UI 구현 | `//opdw` (Wireframe) |
 
 ### 3-3. PM 검수
 
@@ -341,9 +341,9 @@ Phase 4 시작 전:
 for each 태스크 in ROADMAP:
   1. 캡틴에게 태스크 시작 보고
   2. 스킬 판단에 따라 otp 호출:
-     - //otpd  → Full Task 오케스트레이터
-     - //otpds → Short Task 오케스트레이터
-     - //otpwf → Wireframe 오케스트레이터
+     - //opd  → Full Task 오케스트레이터
+     - //opds → Short Task 오케스트레이터
+     - //opdw → Wireframe 오케스트레이터
   3. otp 완료 → PM 검수 (완료 산출물 확인)
   4. 캡틴에게 태스크 완료 보고
   5. STATE.md 갱신 (해당 태스크 상태 업데이트)
@@ -357,7 +357,7 @@ for each 태스크 in ROADMAP:
 [Phase 4] 태스크 {N}/{M} 시작
 
 태스크: {태스크 제목}
-스킬: {//otpd | //otpds | //otpwf}
+스킬: {//opd | //opds | //opdw}
 설명: {태스크 설명}
 
 진행합니다.
@@ -525,8 +525,8 @@ PM 검수 로그 축적
 
 | # | 태스크 | 경로 | 스킬 | 결과 |
 |---|--------|------|------|------|
-| T1 | {제목} | tasks/{NNN}-... | //otpds | 완료 |
-| T2 | {제목} | tasks/{NNN}-... | //otpds | 완료 |
+| T1 | {제목} | tasks/{NNN}-... | //opds | 완료 |
+| T2 | {제목} | tasks/{NNN}-... | //opds | 완료 |
 
 ## 프로젝트 요약
 
@@ -556,12 +556,12 @@ opdp 내에서 참조하는 스킬 탐색:
 2. `~/.opal/skills/opal-project-init/SKILL.md`
 
 **otp (Phase 4 태스크 실행)**:
-1. `{프로젝트}/.opal/skills/otp-dev/SKILL.md` (Full Task)
-2. `~/.opal/skills/otp-dev/SKILL.md`
-3. `{프로젝트}/.opal/skills/otp-dev-short/SKILL.md` (Short Task)
-4. `~/.opal/skills/otp-dev-short/SKILL.md`
-5. `{프로젝트}/.opal/skills/otp-wf/SKILL.md` (Wireframe)
-6. `~/.opal/skills/otp-wf/SKILL.md`
+1. `{프로젝트}/.opal/skills/opal-pilot-dev/SKILL.md` (Full Task)
+2. `~/.opal/skills/opal-pilot-dev/SKILL.md`
+3. `{프로젝트}/.opal/skills/opal-pilot-dev-short/SKILL.md` (Short Task)
+4. `~/.opal/skills/opal-pilot-dev-short/SKILL.md`
+5. `{프로젝트}/.opal/skills/opal-pilot-dev-wireframe/SKILL.md` (Wireframe)
+6. `~/.opal/skills/opal-pilot-dev-wireframe/SKILL.md`
 
 ---
 
