@@ -13,6 +13,7 @@ OPAL 에이전트가 사용할 수 있는 모든 스킬 목록.
 | otp-dev-short | "otp-dev-short", "otpds" — 코드 변경 수반 작업의 기본 진입점 | Short Task 오케스트레이터 (기본 모드) |
 | otp-wf | "otp-wf", "otpwf" | Wireframe UI 오케스트레이터 |
 | otp-write | "otp-write", "otpw" — 문서/보고서/가이드/설계서 작성 요청 시 | 범용 문서 작성 오케스트레이터 |
+| otp-write-tech | "otp-write-tech", "otpwt" — 기획 문서 세트, 기술 산출물 작성, 기획 문서 검토/최신화 | 서비스 기획 산출물 네트워크 오케스트레이터 |
 | dtp-task | (오케스트레이터 디스패치) | TASK.md 작성 |
 | dtp-analysis | (오케스트레이터 디스패치) | 코드베이스 분석 |
 | dtp-plan | (오케스트레이터 디스패치) | 구현 계획 |
