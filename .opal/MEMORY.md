@@ -1,6 +1,6 @@
 # opal Memory Index
 
-> 최종 갱신: 2026-03-21
+> 최종 갱신: 2026-03-29
 
 ## 메모리 카테고리
 
@@ -30,7 +30,9 @@
 
 | # | 작업 | 단계 | 경로 | 날짜 |
 |---|------|------|------|------|
-| 1 | 컴포넌트 리네이밍 + 레거시 정리 (042) | 완료 (16b6f1a) | tasks/042-skills-registry-reclassify/ | 2026-03-29 |
+| 0 | opi 프로젝트 최신화 | 완료 | docs/, .opal/ | 2026-03-29 |
+| 1 | opal-doc-standard v2.0 문서 유형 확장 (043) | 완료 (76b6010) | tasks/043-doc-standard-enhancement/ | 2026-03-29 |
+| 2 | 컴포넌트 리네이밍 + 레거시 정리 (042) | 완료 (16b6f1a) | tasks/042-skills-registry-reclassify/ | 2026-03-29 |
 | 2 | otp-write-tech 스킬 개발 (039) | 완료 | tasks/039-otp-write-tech-skill/ | 2026-03-29 |
 | 2 | otp-write 스킬 개발 + opal-doc-standard 통합 (038) | 완료 (a07df3c) | tasks/038-otp-write-skill/ | 2026-03-29 |
 | 3 | PLAN+TODO 통합 + TEST-SCENARIO 스킵 조건 (037) | 완료 (555db49) | tasks/037-plan-todo-merge/ | 2026-03-28 |

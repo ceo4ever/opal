@@ -184,4 +184,3 @@ cursor-rules/                    ← Cursor 프로젝트 규칙 템플릿
    1. {프로젝트}/.opal/agents/{agent-name}/AGENT.md
    2. ~/.opal/agents/{agent-name}/AGENT.md
    ```
-
