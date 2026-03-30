@@ -27,8 +27,11 @@ EXECUTE 스텝마다 즉시 검증하여 오류를 조기 차단한다. 워커�
   → build/type 검증
     → FAIL → 워커에게 수정 지시 → 재검증 (최대 2회)
     → PASS ↓
-  → test 검증
+  → unit/integration test 검증
     → FAIL → 워커에게 수정 지시 → 재검증 (최대 3회)
+    → PASS ↓
+  → E2E test 검증 (해당 시)
+    → FAIL → 1회 재시도 (flaky 대응) → 2회 연속 FAIL → 에스컬레이션
     → PASS ↓
   → QA Gate (기존 QA 에이전트)
     → 설계/아키텍처 이슈 → 즉시 에스컬레이션
@@ -47,15 +50,17 @@ EXECUTE 스텝마다 즉시 검증하여 오류를 조기 차단한다. 워커�
 |------|----------|----------------|----------|----------------|
 | L1: lint/format | 코드 스타일, 미사용 변수, import 정리 | `npm run lint`, `npm run format:check` | 수 초 | 매우 높음 |
 | L2: build/type | 컴파일 오류, 타입 불일치 | `npm run build`, `npx tsc --noEmit` | 수 초~수십 초 | 높음 |
-| L3: test | 단위/통합 테스트 실패 | `npm test`, `npm run test:unit` | 수십 초~수 분 | 중간 |
+| L3a: unit/integration | 컴포넌트 단위, 함수, API 통합 테스트 | `npm run test:unit`, `npm run test:api` | 수십 초 | 중간 |
+| L3b: E2E | 브라우저 기반 시나리오 테스트 | `npm run test:e2e`, `npx playwright test` | 수 분 | 낮음 (flaky, 느림) |
 | L4: QA | 설계 원칙, 아키텍처 패턴, 보안 | QA 에이전트 호출 | 수 분 | 낮음 (사람 판단 필요) |
 
 ### 실행 순서 원칙
 
-1. **L1 → L2 → L3 → L4** 순서를 반드시 따른다
+1. **L1 → L2 → L3a → L3b → L4** 순서를 반드시 따른다
 2. 현재 계층이 PASS가 아니면 다음 계층으로 넘어가지 않는다
 3. 자동 수정 후 **현재 계층부터** 재검증한다 (이전 계층은 재검증하지 않음 — 단, 회귀 방지 가드 예외)
-4. L4(QA)는 기존 QA Gate 프로세스(opal-harness.md)를 그대로 따른다
+4. L3b(E2E)는 ROADMAP.md에 E2E 검증 명령이 명시된 액션에만 실행한다. 미명시 시 SKIP
+5. L4(QA)는 기존 QA Gate 프로세스(opal-harness.md)를 그대로 따른다
 
 ### 검증 명령 결정
 
@@ -65,8 +70,10 @@ EXECUTE 스텝마다 즉시 검증하여 오류를 조기 차단한다. 워커�
 2. 명시되지 않으면 프로젝트 루트의 `package.json` scripts에서 추론한다:
    - lint: `lint`, `lint:check` 스크립트
    - build: `build`, `typecheck`, `tsc` 스크립트
-   - test: `test`, `test:unit`, `test:integration` 스크립트
+   - test (L3a): `test`, `test:unit`, `test:api`, `test:integration` 스크립트
+   - E2E (L3b): `test:e2e`, `e2e`, `playwright` 스크립트
 3. 추론 불가 시 해당 계층을 건너뛴다 (SKIP으로 로그 기록)
+4. L3b(E2E)는 ROADMAP.md에 E2E 검증 명령이 명시된 액션에만 실행. 미명시 시 SKIP
 
 ---
 
@@ -166,7 +173,7 @@ lint 오류 {N}건을 수정하라:
       수정 후 `npx tsc --noEmit`으로 재검증하라.
 ```
 
-### 3-3. test 실패
+### 3-3. L3a: unit/integration test 실패
 
 **재시도 한도**: 최대 3회 — 초과 시 사용자 에스컬레이션
 
@@ -218,7 +225,70 @@ lint 오류 {N}건을 수정하라:
 2. 에러 스택 트레이스에서 소스 파일 경로를 추출한다
 3. 워커가 현재 Step에서 수정한 파일 목록과 교차 확인한다
 
-### 3-4. QA 설계/아키텍처 이슈
+### 3-4. L3b: E2E test 실패
+
+**재시도 한도**: 최대 1회 — 2회 연속 실패 시 사용자 에스컬레이션
+
+E2E 테스트는 실제 브라우저를 띄워 시나리오를 실행하므로, unit/integration과 다른 전략이 필요하다.
+
+**L3a와의 차이**:
+
+| 항목 | L3a (unit/integration) | L3b (E2E) |
+|------|----------------------|-----------|
+| 실행 환경 | Node (브라우저 없음) | 실제 브라우저 (Playwright, Cypress) |
+| 소요 시간 | 수십 초 | 수 분 |
+| 결정성 | 높음 (결과 재현 가능) | 낮음 (타이밍, 네트워크 이슈로 flaky) |
+| 자동 수정 가능성 | 중간 | 낮음 (실패 원인 특정 어려움) |
+| 재시도 한도 | 3회 | 1회 |
+
+**적용 조건**: ROADMAP.md 액션의 검증 명령에 E2E 명령이 명시된 경우에만 실행한다. E2E 검증 명령이 없으면 L3b를 SKIP하고 L4로 진행한다.
+
+**도메인별 E2E 도구 예시**:
+
+| 도메인 | 도구 | 검증 명령 예시 |
+|--------|------|--------------|
+| FE (React/Next.js) | Playwright | `npx playwright test --project=auth` |
+| FE (React/Next.js) | Cypress | `npx cypress run --spec "cypress/e2e/auth/**"` |
+| 풀스택 | Playwright | `npm run test:e2e` |
+
+**자동 수정 흐름**:
+
+1. L3a 통과 후, E2E 검증 명령을 실행한다
+2. FAIL 시 **1회만 재시도** — flaky 테스트 대응
+   - 재시도 전 워커에게 수정 지시하지 않음 (동일 코드로 재실행)
+3. 2회 연속 FAIL → 에스컬레이션
+   - E2E 실패는 FE/BE 어느 쪽 원인인지 특정이 어려우므로 사람 판단이 효율적
+
+**에스컬레이션 형식**:
+
+```
+⚠️ [검증 루프 에스컬레이션] E2E test 실패
+
+액션: {액션명}
+검증 유형: E2E test
+시도: 2/2 — 2회 연속 FAIL (flaky 아님으로 판정)
+
+실패 시나리오:
+  - {테스트 파일} > {시나리오명}
+    {에러 메시지 또는 스크린샷 경로}
+
+관련 액션:
+  - {현재 액션이 의존하는 다른 액션 목록}
+
+E2E 실패는 원인 특정이 어렵습니다. 다음 중 선택해주세요:
+1. 실패 로그 분석 후 워커에게 수정 지시
+2. 해당 E2E 테스트를 스킵하고 진행
+3. 관련 액션을 함께 재검토
+```
+
+**병렬 그룹에서의 E2E 전략**:
+
+병렬 그룹의 개별 액션마다 E2E를 실행하면 비효율적이다. 대안:
+- **개별 액션**: L3a(unit/integration)까지만 자동 루프 실행
+- **병렬 그룹 머지 후**: 통합 시점에 E2E 일괄 실행
+- ROADMAP.md에서 E2E 검증 시점을 `개별` 또는 `머지 후`로 지정 가능
+
+### 3-5. QA 설계/아키텍처 이슈
 
 **재시도 한도**: 0회 — 즉시 사용자 에스컬레이션
 
@@ -412,7 +482,8 @@ QA 피드백:
 |----------|-----------|------------|
 | lint/format | 제한 없음 (즉시 수정) | - |
 | build/type | 2회 | 사용자 에스컬레이션 |
-| test | 3회 | 사용자 에스컬레이션 |
+| unit/integration test (L3a) | 3회 | 사용자 에스컬레이션 |
+| E2E test (L3b) | 1회 | 사용자 에스컬레이션 |
 | QA 설계/아키텍처 | 0회 | 즉시 사용자 에스컬레이션 |
 
 **참조 경로**: `~/.opal/references/opal-harness.md` > Guards > 자동 루핑 제약 (Verification Loop Guards)

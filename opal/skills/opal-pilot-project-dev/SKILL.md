@@ -306,22 +306,24 @@ opd/opds 호출 시 `actions/A{NN}-{name}/`을 태스크 폴더로 전달한다 
 
 ### 3-1a. 자동 검증 루핑
 
-각 액션 완료 후 Layered Verification(L1~L4)을 수행한다.
+각 액션 완료 후 Layered Verification(L1~L3b~L4)을 수행한다.
 상세 전략은 `references/verification-loop-guide.md` 참조.
 
 **루프 요약**:
 
 ```
 워커 액션 완료
-  → L1: lint/format 검증 → FAIL → 워커 자동 수정 (제한 없음)
-  → L2: build/type 검증 → FAIL → 워커 자동 수정 (최대 2회)
-  → L3: test 검증       → FAIL → 워커 자동 수정 (최대 3회)
-  → L4: QA Gate          → 설계 이슈 → 즉시 에스컬레이션
+  → L1: lint/format 검증  → FAIL → 워커 자동 수정 (제한 없음)
+  → L2: build/type 검증   → FAIL → 워커 자동 수정 (최대 2회)
+  → L3a: unit/integration → FAIL → 워커 자동 수정 (최대 3회)
+  → L3b: E2E (해당 시)    → FAIL → 1회 재시도 → 2연속 FAIL → 에스컬레이션
+  → L4: QA Gate            → 설계 이슈 → 즉시 에스컬레이션
   → 전체 PASS → 완료
 ```
 
 **핵심 규칙**:
-- 하위 계층 통과 후에만 상위 계층으로 진행 (L1 → L2 → L3 → L4)
+- 하위 계층 통과 후에만 상위 계층으로 진행 (L1 → L2 → L3a → L3b → L4)
+- **L3b(E2E)**: ROADMAP.md에 E2E 검증 명령이 명시된 액션에만 실행. 병렬 그룹에서는 머지 후 일괄 실행도 가능
 - **회귀 방지**: 자동 수정 후 이전 통과 테스트 재실행. 회귀 발생 시 루프 즉시 중단 + 에스컬레이션
 - **에스컬레이션**: 재시도 한도 초과 시 사용자에게 보고 (하네스 "자동 루핑 제약" Guards 준수)
 - **사용자 게이트 유지**: 루핑은 agentic이지만 최종 확정은 반드시 사용자를 거친다
