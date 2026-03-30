@@ -29,13 +29,13 @@
 
 | # | 작업 | 단계 | 경로 | 시작일시 | 완료일시 |
 |---|------|------|------|---------|---------|
-| 1 | CLAUDE.md 슬림화 + PM 컨텍스트 최적화 (047) | 완료 | tasks/047-opi-claude-md-slim/ | 2026-03-30 | 2026-03-30 |
-| 2 | QA 에이전트 통합 (048) | 완료 | tasks/048-qa-agent-unify/ | 2026-03-29 | 2026-03-29 |
-| 3 | op-task-qa → op-dev-qa 리네이밍 + 범용 QA (046) | 완료 | tasks/046-qa-skill-rename/ | 2026-03-29 | 2026-03-29 |
-| 4 | 멀티 플랫폼 모델 매핑 참조 + 스킬 적용 (044) | 완료 | tasks/044-model-mapping-reference/ | 2026-03-29 | 2026-03-30 |
-| 5 | opal-project-pilot + 범용 스킬 + 에이전트 리네이밍 (045) | 완료 | tasks/045-opal-project-pilot/ | 2026-03-29 | 2026-03-29 |
-| 6 | opal-doc-standard v2.0 문서 유형 확장 (043) | 완료 | tasks/043-doc-standard-enhancement/ | 2026-03-29 | 2026-03-29 |
-| 7 | 컴포넌트 리네이밍 + 레거시 정리 (042) | 완료 | tasks/042-skills-registry-reclassify/ | 2026-03-29 | 2026-03-29 |
-| 8 | otp-write-tech 스킬 개발 (039) | 완료 | tasks/039-otp-write-tech-skill/ | 2026-03-29 | 2026-03-29 |
-| 9 | otp-write 스킬 개발 + opal-doc-standard 통합 (038) | 완료 | tasks/038-otp-write-skill/ | 2026-03-29 | 2026-03-29 |
-| 10 | PLAN+TODO 통합 + TEST-SCENARIO 스킵 조건 (037) | 완료 | tasks/037-plan-todo-merge/ | 2026-03-28 | 2026-03-28 |
+| 1 | opi 범용 프로젝트 분석 개선 (050) | 완료 | tasks/050-opi-universal-analysis/ | 2026-03-30 | 2026-03-30 |
+| 2 | 워커 에이전트 프로젝트 컨텍스트 자율 로딩 (049) | 완료 | tasks/049-agent-project-context/ | 2026-03-30 | 2026-03-30 |
+| 3 | CLAUDE.md 슬림화 + PM 컨텍스트 최적화 (047) | 완료 | tasks/047-opi-claude-md-slim/ | 2026-03-30 | 2026-03-30 |
+| 4 | QA 에이전트 통합 (048) | 완료 | tasks/048-qa-agent-unify/ | 2026-03-29 | 2026-03-29 |
+| 5 | op-task-qa → op-dev-qa 리네이밍 + 범용 QA (046) | 완료 | tasks/046-qa-skill-rename/ | 2026-03-29 | 2026-03-29 |
+| 6 | 멀티 플랫폼 모델 매핑 참조 + 스킬 적용 (044) | 완료 | tasks/044-model-mapping-reference/ | 2026-03-29 | 2026-03-30 |
+| 7 | opal-project-pilot + 범용 스킬 + 에이전트 리네이밍 (045) | 완료 | tasks/045-opal-project-pilot/ | 2026-03-29 | 2026-03-29 |
+| 8 | opal-doc-standard v2.0 문서 유형 확장 (043) | 완료 | tasks/043-doc-standard-enhancement/ | 2026-03-29 | 2026-03-29 |
+| 9 | 컴포넌트 리네이밍 + 레거시 정리 (042) | 완료 | tasks/042-skills-registry-reclassify/ | 2026-03-29 | 2026-03-29 |
+| 10 | otp-write-tech 스킬 개발 (039) | 완료 | tasks/039-otp-write-tech-skill/ | 2026-03-29 | 2026-03-29 |

@@ -12,10 +12,17 @@ model: standard
 
 1. 오케스트레이터 프롬프트에서 **스킬 경로**, **태스크 폴더**, **이전 산출물**을 확인한다.
 2. 스킬 SKILL.md를 Read한다.
-3. 스킬의 `personas/`에서 지정된 페르소나를 Read한다.
-4. 스킬의 references/에서 지정된 가이드를 Read한다.
-5. 스킬의 프로세스를 따라 산출물을 생성한다.
-6. 결과를 반환한다.
+3. 프로젝트 컨텍스트를 로드한다.
+   - 태스크 폴더에서 프로젝트 루트를 추론한다 (`tasks/` 상위 디렉토리).
+   - `docs/PROJECT.md`가 존재하면 Read한다.
+   - 스킬 유형에 따라 추가 문서를 Read한다:
+     - `op-dev-*` 스킬: `docs/ARCHITECTURE.md`, `docs/CONVENTIONS.md` 추가
+     - 해당 도메인 문서: `docs/FRONTEND.md`, `docs/BACKEND.md` (존재 시)
+   - `docs/` 또는 개별 문서가 없으면 스킵한다.
+4. 스킬의 `personas/`에서 지정된 페르소나를 Read한다.
+5. 스킬의 references/에서 지정된 가이드를 Read한다.
+6. 스킬의 프로세스를 따라 산출물을 생성한다.
+7. 결과를 반환한다.
 
 ## 결과 반환 형식
 

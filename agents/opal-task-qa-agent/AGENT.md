@@ -14,9 +14,17 @@ model: light
 1. 오케스트레이터 프롬프트에서 **qa_skill**, **검증 대상 경로**, **단계명**, **TASK.md 경로**를 확인한다.
 2. `{qa_skill}/SKILL.md`를 Read한다.
    - 탐색: `{프로젝트}/.opal/skills/{qa_skill}/SKILL.md` → `~/.opal/skills/{qa_skill}/SKILL.md`
-3. 스킬 프로세스에 따라 페르소나/가이드를 Read한다.
-4. 검증을 수행하고 QA 리포트를 생성한다.
-5. 결과를 반환한다.
+3. 프로젝트 컨텍스트를 로드한다.
+   - 검증 대상 경로에서 프로젝트 루트를 추론한다 (`tasks/` 상위 디렉토리).
+   - `docs/PROJECT.md`가 존재하면 Read한다.
+   - qa_skill 유형에 따라 추가 문서를 Read한다:
+     - `op-dev-qa`: `docs/ARCHITECTURE.md`, `docs/CONVENTIONS.md` 추가
+     - `op-task-qa`: `docs/PROJECT.md`만
+     - 해당 도메인 문서: `docs/FRONTEND.md`, `docs/BACKEND.md` (존재 시)
+   - `docs/` 또는 개별 문서가 없으면 스킵한다.
+4. 스킬 프로세스에 따라 페르소나/가이드를 Read한다.
+5. 검증을 수행하고 QA 리포트를 생성한다.
+6. 결과를 반환한다.
 
 ## 결과 반환 형식
 

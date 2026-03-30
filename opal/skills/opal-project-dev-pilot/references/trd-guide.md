@@ -74,7 +74,7 @@ ARCHITECTURE.md의 기술 스택에 따라 해당 스킬을 Read하여 베스트
 ```markdown
 # TRD: {프로젝트명}
 
-> 작성일: YYYY-MM-DD | 상태: 초안 / PM 검수 완료 / 캡틴 확정
+> 작성일: YYYY-MM-DD | 상태: 초안 / PM 검수 완료 / 사용자 확정
 > 기반: PRD vX.X (YYYY-MM-DD 확정)
 
 ## 1. 시스템 아키텍처 상세
@@ -169,7 +169,7 @@ TRD.md (기술 결정/근거)
 
 ## PM 검수 체크리스트
 
-TRD 작성 후 캡틴에게 넘기기 전, 아래를 1:1 대조한다:
+TRD 작성 후 사용자에게 넘기기 전, 아래를 1:1 대조한다:
 
 - [ ] PRD의 모든 Must 기능이 API + 데이터 모델로 커버되는가
 - [ ] PRD의 모든 Should 기능이 커버되거나 "향후 확장"에 명시되는가
@@ -182,7 +182,7 @@ TRD 작성 후 캡틴에게 넘기기 전, 아래를 1:1 대조한다:
 - [ ] 핵심 라이브러리의 deprecation/breaking change를 확인했는가
 - [ ] docs/ARCHITECTURE.md와 정합성이 맞는가
 
-## 캡틴 확정 후 후속 조치 체크
+## 사용자 확정 후 후속 조치 체크
 
 - [ ] docs/ARCHITECTURE.md를 업데이트했는가 (TRD에서 확정된 기술 스택 버전 반영)
 - [ ] docs/PROJECT.md 문서 테이블에 TRD.md 등록했는가 (설명, 용도, 참조 시점)
