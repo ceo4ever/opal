@@ -45,7 +45,7 @@
 
 | 폴더 | 네이밍 규칙 | 예시 |
 |------|-----------|------|
-| `tasks/` | `{NNN}-{설명}/` (3자리 번호-kebab-case 설명) | `054-docs-guide-project-structure/` |
+| `tasks/` | `{NNN}-{스킬약어 또는 대상}-{동작/설명}/` | `055-opi-task-record/`, `052-orchestrator-cleanup/` |
 | `skills/` | `{기능명}/` (kebab-case) | `api-analyzer/`, `interview/` |
 | `opal/skills/` | `{그룹}-{역할}/` (접두사 체계) | `opal-pilot-dev/`, `op-dev-plan/` |
 | `agents/` | `{대상}-{역할}/` | `opal-task-agent/`, `wtm-agent/` |
