@@ -1,6 +1,6 @@
 # opal Memory Index
 
-> 최종 갱신: 2026-03-30 22:30
+> 최종 갱신: 2026-03-30 14:16
 
 ## 메모리 카테고리
 
@@ -23,13 +23,13 @@
 |---|----------|----------|------|------|------|
 | 1 | 2026-03-22 | task | 예정 | [memory/project_security_task.md](memory/project_security_task.md) | 보안 전용 스킬+에이전트 생성 |
 | 3 | 2026-03-27 | project | 유효 | [memory/project_opi_vision.md](memory/project_opi_vision.md) | opi 비전: 프로젝트=WHAT/WHY, 스킬=HOW |
-| 4 | 2026-03-30 22:00 | task | 예정 | [memory/task_agentic_loop.md](memory/task_agentic_loop.md) | oppd에 agentic 자율 루핑(QA/TEST) 장치 설계 |
+| 4 | 2026-03-30 14:00 | task | 예정 | [memory/task_agentic_loop.md](memory/task_agentic_loop.md) | oppd에 agentic 자율 루핑(QA/TEST) 장치 설계 |
 
 ## 작업 히스토리 (최대 10개, FIFO)
 
 | # | 작업 | 단계 | 경로 | 시작일시 | 완료일시 |
 |---|------|------|------|---------|---------|
-| 0 | 오케스트레이터 정비 — opw 삭제 + 리네이밍 + oppd opwt 연동 (052) | 완료 | tasks/052-orchestrator-cleanup/ | 2026-03-30 21:30 | 2026-03-30 22:30 |
+| 0 | 오케스트레이터 정비 — opw 삭제 + 리네이밍 + oppd opwt 연동 (052) | 완료 | tasks/052-orchestrator-cleanup/ | 2026-03-30 13:30 | 2026-03-30 14:16 |
 | 1 | OPAL 전용 스킬 소스 이동 (051) | 완료 | tasks/051-opal-skill-source-move/ | 2026-03-30 | 2026-03-30 |
 | 2 | opi 범용 프로젝트 분석 개선 (050) | 완료 | tasks/050-opi-universal-analysis/ | 2026-03-30 | 2026-03-30 |
 | 3 | 워커 에이전트 프로젝트 컨텍스트 자율 로딩 (049) | 완료 | tasks/049-agent-project-context/ | 2026-03-30 | 2026-03-30 |
