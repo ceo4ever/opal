@@ -1,6 +1,6 @@
 # PRD 작성 가이드
 
-> opal-project-dev-pilot Phase 1에서 PRD를 작성할 때 참조하는 구조/내용 지침.
+> opal-pilot-project-dev Phase 1에서 PRD를 작성할 때 참조하는 구조/내용 지침.
 > 알투가 프로젝트를 분석하고 사용자과 대화하여 직접 작성한다.
 
 ---

@@ -1,6 +1,6 @@
 # TRD 작성 가이드
 
-> opal-project-dev-pilot Phase 2에서 TRD를 작성할 때 참조하는 구조/내용 지침.
+> opal-pilot-project-dev Phase 1에서 TRD를 작성할 때 참조하는 구조/내용 지침.
 > PRD 확정 후, 기능 요구사항을 기술적으로 어떻게 구현할지 정의한다.
 
 ---

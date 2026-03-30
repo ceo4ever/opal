@@ -1,6 +1,6 @@
 # 로드맵 수립 가이드
 
-> opal-project-dev-pilot Phase 3에서 로드맵을 수립할 때 참조하는 구조/내용 지침.
+> opal-pilot-project-dev Phase 2에서 로드맵을 수립할 때 참조하는 구조/내용 지침.
 > PRD/TRD 확정 후, 프로젝트를 실행 가능한 태스크로 분할한다.
 
 ---

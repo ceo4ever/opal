@@ -2,7 +2,7 @@
 name: op-task-execute
 description: |
   **범용 실행 스킬**. PLAN.md의 실행 체크리스트를 따라 파일 작성/수정/삭제를 수행한다.
-  반드시 이 스킬을 사용해야 하는 상황: 오케스트레이터(opal-project-pilot)가 EXECUTE 단계를 디스패치할 때.
+  반드시 이 스킬을 사용해야 하는 상황: 오케스트레이터(opal-pilot-project)가 EXECUTE 단계를 디스패치할 때.
   필수 입력: checklist_source (경로 + 섹션, 오케스트레이터 지정). 보장 출력: 파일 변경 + changed_files.
 ---
 
@@ -10,7 +10,7 @@ description: |
 
 ## 실행 컨텍스트
 
-- **호출자**: 오케스트레이터(opal-project-pilot)가 EXECUTE 단계를 디스패치
+- **호출자**: 오케스트레이터(opal-pilot-project)가 EXECUTE 단계를 디스패치
 - **실행 주체**: 워커 에이전트 (opal-task-agent)
 - **입력**: `checklist_source` (오케스트레이터가 경로+섹션 지정) — PLAN.md 섹션 3 실행 체크리스트
 - **출력**: 파일 변경 + `changed_files` 목록

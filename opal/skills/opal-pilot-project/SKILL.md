@@ -1,13 +1,12 @@
 ---
-name: opal-project-pilot
+name: opal-pilot-project
 description: |
-  **범용 프로젝트 오케스트레이터**. 코드도 순수 문서도 아닌 범용 태스크를 3단계 파이프라인으로 수행한다.
-  스킬/에이전트/문서 작성, 설정 변경, 워크플로우 수행 등 모든 유형의 태스크에 사용한다.
-  반드시 이 스킬을 사용해야 하는 상황: "opal-project-pilot", "opp".
-  코드 개발 태스크는 opal-pilot-dev-short(opds)를, 문서 작성은 opal-pilot-write(opw)를 사용한다.
+  **프로젝트 범용 오케스트레이터**. 문서 작성, 간단한 코드 수정, 설정 변경, 워크플로우 수행 등 프로젝트의 모든 범용 태스크를 3단계 파이프라인으로 수행한다.
+  반드시 이 스킬을 사용해야 하는 상황: "opal-pilot-project", "opp".
+  코드 개발 태스크는 opal-pilot-dev-short(opds)를, 기획 산출물 세트는 opal-pilot-write-tech(opwt)를 사용한다.
 ---
 
-# opal-project-pilot (범용 프로젝트 오케스트레이터)
+# opal-pilot-project (프로젝트 범용 오케스트레이터)
 
 ## Harness
 
@@ -91,3 +90,4 @@ op-task-execute 워커 디스패치. **model**: standard. checklist_source: PLAN
 | v1.0 | 2026-03-29 | 초기 작성 — opal-pilot-dev-short 기반 범용화 (TEST-SCENARIO 제거, op-task-plan/op-task-execute 사용) |
 | v1.1 | 2026-03-29 | op-plan → op-task-plan, op-execute → op-task-execute 리네이밍 반영. EXECUTE 완료 후 PM Gate 추가 |
 | v1.2 | 2026-03-29 | model override를 레벨 기반으로 전환 (044) |
+| v1.3 | 2026-03-30 | opal-project-pilot → opal-pilot-project 리네이밍 + 정체성 정비 (052) |

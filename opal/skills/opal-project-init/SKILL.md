@@ -24,7 +24,7 @@ version: 2.0.0
 ## 설계 원칙
 
 프로젝트는 **WHAT**(무엇을)과 **WHY**(왜)를 정의하는 것이다. HOW(어떻게)는 다양할 수 있다.
-opi가 만든 프로젝트 환경(`docs/`, `.opal/`)은 모든 스킬(opal-pilot-dev, opal-pilot-write 등)의 컨텍스트가 된다.
+opi가 만든 프로젝트 환경(`docs/`, `.opal/`)은 모든 스킬(opal-pilot-dev, opal-pilot-write-tech 등)의 컨텍스트가 된다.
 
 **핵심 규칙**:
 - 모든 문서는 알투가 프로젝트를 분석한 후 **직접 작성**한다. 플레이스홀더 치환이 아니다.
@@ -418,14 +418,14 @@ opi는 프로젝트 셋업 수단이지 목적이 아니다. 사용자의 원래
 ```
 
 **자동 판단 기준**:
-- 전체 앱/서비스 개발 ("만들어줘", "개발해줘") → `//opdp` opal-project-dev-pilot (PRD/TRD → 로드맵 → 태스크 순차 실행)
+- 전체 앱/서비스 개발 ("만들어줘", "개발해줘") → `//oppd` opal-pilot-project-dev (opwt로 PRD/TRD → 로드맵 → opd/opds 태스크 순차 실행)
 - 단일 기능 추가/수정 → opal-pilot-dev 또는 opal-pilot-dev-short
 - 문서 작업 → 해당 문서 작성 시작
 - 판단 불확실 → 사용자에게 간단히 확인
 
 사용자에게 "어떤 스킬로 할래요?"라고 묻지 않는다. 알투가 PM으로서 판단하고 바로 진행한다.
 
-> opdp 스킬 미존재 시 opal-pilot-dev로 폴백한다.
+> oppd 스킬 미존재 시 opal-pilot-dev로 폴백한다.
 
 ---
 

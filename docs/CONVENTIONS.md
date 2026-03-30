@@ -24,8 +24,7 @@
 
 | 접두사 | 의미 | 예시 |
 |--------|------|------|
-| `opal-pilot-*` | 오케스트레이터 (도메인 특화) | opal-pilot-dev, opal-pilot-write |
-| `opal-project-*` | 오케스트레이터 (범용) | opal-project-pilot |
+| `opal-pilot-*` | 오케스트레이터 | opal-pilot-dev, opal-pilot-write-tech, opal-pilot-project |
 | `op-dev-*` | dev 도메인 단계 스킬 | op-dev-analysis, op-dev-plan, op-dev-qa |
 | `op-task-*` | 범용 단계 스킬 | op-task, op-task-qa, op-task-plan, op-task-execute |
 | `opal-task-*` | 범용 워커 에이전트 | opal-task-agent |
@@ -38,9 +37,9 @@
 | opd | opal-pilot-dev |
 | opds | opal-pilot-dev-short |
 | opdw | opal-pilot-dev-wireframe |
-| opw | opal-pilot-write |
 | opwt | opal-pilot-write-tech |
-| opp | opal-project-pilot |
+| opp | opal-pilot-project |
+| oppd | opal-pilot-project-dev |
 | opi | opal-project-init |
 
 ## 파일 구조

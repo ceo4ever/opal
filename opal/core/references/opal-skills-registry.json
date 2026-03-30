@@ -1,15 +1,15 @@
 {
   "$schema": "opal-skills-registry-v1",
   "version": "3.0.0",
-  "updated_at": "2026-03-29",
+  "updated_at": "2026-03-30",
   "groups": {
     "opal-pilot": [
       {
-        "name": "opal-project-pilot",
+        "name": "opal-pilot-project",
         "alias": "opp",
-        "description": "범용 프로젝트 오케스트레이터 (코드/문서 무관 범용 태스크)",
-        "triggers": ["^opal-project-pilot$", "^opp$", "(?i)(범용\\s*프로젝트|범용\\s*태스크)"],
-        "paths": ["{project}/.opal/skills/opal-project-pilot/SKILL.md", "~/.opal/skills/opal-project-pilot/SKILL.md"],
+        "description": "프로젝트 범용 오케스트레이터 (문서 작성, 간단한 코드 수정 포함)",
+        "triggers": ["^opal-pilot-project$", "^opp$", "(?i)(범용\\s*프로젝트|범용\\s*태스크)"],
+        "paths": ["{project}/.opal/skills/opal-pilot-project/SKILL.md", "~/.opal/skills/opal-pilot-project/SKILL.md"],
         "domain": "generic",
         "pipeline": "TASK → PLAN → EXECUTE"
       },
@@ -39,15 +39,6 @@
         "paths": ["{project}/.opal/skills/opal-pilot-dev-wireframe/SKILL.md", "~/.opal/skills/opal-pilot-dev-wireframe/SKILL.md"],
         "domain": "dev",
         "pipeline": "TASK → WIREFRAME → EXECUTE"
-      },
-      {
-        "name": "opal-pilot-write",
-        "alias": "opw",
-        "description": "범용 문서 작성 오케스트레이터",
-        "triggers": ["^opal-pilot-write$", "^opw$", "(?i)(문서|보고서|가이드|기획서|명세서|설계서|정책서)\\s*(작성|써줘|만들어)"],
-        "paths": ["{project}/.opal/skills/opal-pilot-write/SKILL.md", "~/.opal/skills/opal-pilot-write/SKILL.md"],
-        "domain": "write",
-        "pipeline": "TASK → PLAN → WRITE"
       },
       {
         "name": "opal-pilot-write-tech",
@@ -132,7 +123,7 @@
         "triggers": ["^op-task$"],
         "paths": ["{project}/.opal/skills/op-task/SKILL.md", "~/.opal/skills/op-task/SKILL.md"],
         "stage": "TASK",
-        "dispatched_by": ["opal-pilot-dev", "opal-pilot-dev-short", "opal-pilot-dev-wireframe", "opal-pilot-write", "opal-project-pilot"]
+        "dispatched_by": ["opal-pilot-dev", "opal-pilot-dev-short", "opal-pilot-dev-wireframe", "opal-pilot-project"]
       },
       {
         "name": "op-task-qa",
@@ -141,7 +132,7 @@
         "triggers": ["^op-task-qa$"],
         "paths": ["{project}/.opal/skills/op-task-qa/SKILL.md", "~/.opal/skills/op-task-qa/SKILL.md"],
         "stage": "QA",
-        "dispatched_by": ["opal-pilot-write", "opal-project-pilot"]
+        "dispatched_by": ["opal-pilot-project"]
       },
       {
         "name": "op-task-plan",
@@ -150,7 +141,7 @@
         "triggers": ["^op-task-plan$"],
         "paths": ["{project}/.opal/skills/op-task-plan/SKILL.md", "~/.opal/skills/op-task-plan/SKILL.md"],
         "stage": "PLAN",
-        "dispatched_by": ["opal-project-pilot"]
+        "dispatched_by": ["opal-pilot-project"]
       },
       {
         "name": "op-task-execute",
@@ -159,7 +150,7 @@
         "triggers": ["^op-task-execute$"],
         "paths": ["{project}/.opal/skills/op-task-execute/SKILL.md", "~/.opal/skills/op-task-execute/SKILL.md"],
         "stage": "EXECUTE",
-        "dispatched_by": ["opal-project-pilot"]
+        "dispatched_by": ["opal-pilot-project"]
       }
     ],
     "standalone": [
@@ -216,11 +207,11 @@
         "paths": ["~/.opal/skills/opal-project-init/SKILL.md"]
       },
       {
-        "name": "opal-project-dev-pilot",
-        "alias": "opdp",
-        "description": "PRD/TRD → 로드맵 → 태스크 순차 실행",
-        "triggers": ["^opal-project-dev-pilot$", "^opdp$", "(?i)(프로젝트\\s*개발\\s*시작|개발\\s*계획|개발\\s*파일럿)"],
-        "paths": ["~/.opal/skills/opal-project-dev-pilot/SKILL.md"]
+        "name": "opal-pilot-project-dev",
+        "alias": "oppd",
+        "description": "프로젝트 개발 라이프사이클 (opwt→ROADMAP→opd/opds 순차 실행)",
+        "triggers": ["^opal-pilot-project-dev$", "^oppd$", "(?i)(프로젝트\\s*개발\\s*시작|개발\\s*계획|개발\\s*파일럿)"],
+        "paths": ["{project}/.opal/skills/opal-pilot-project-dev/SKILL.md", "~/.opal/skills/opal-pilot-project-dev/SKILL.md"]
       },
       {
         "name": "opal-orchestrator",

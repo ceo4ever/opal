@@ -13,7 +13,9 @@
 | op-dev | OPAL Pilot Dev Phase | dev 도메인 단계 스킬 (코드 변경 수반) |
 | op-task | OPAL Pilot Task Phase | 범용 단계 스킬 (도메인 무관) |
 | opd / opds / opdw | OPAL Pilot Dev 약어 | Full / Short / Wireframe |
-| opw / opwt | OPAL Pilot Write 약어 | Write / Write-Tech |
+| opwt | OPAL Pilot Write-Tech 약어 | 기획 산출물 네트워크 |
+| opp | OPAL Pilot Project 약어 | 프로젝트 범용 |
+| oppd | OPAL Pilot Project-Dev 약어 | 프로젝트 개발 라이프사이클 |
 
 ---
 
@@ -31,6 +33,13 @@
 태스크 시작 전 `git status`를 확인한다:
 - **클린 상태**: 진행
 - **커밋되지 않은 변경**: 사용자에게 커밋/스태시를 제안한 후 진행
+
+### 디스패치 의무 원칙
+
+**오케스트레이터 SKILL.md에 "워커 디스패치"로 정의된 단계(ANALYSIS, PLAN, EXECUTE 등)는 반드시 서브에이전트를 디스패치한다.** PM이 임의 판단으로 직접 실행하여 대체하지 않는다.
+
+- 허용: TASK 단계(하네스에서 "직접 수행"으로 정의), 각 SKILL.md에서 "직접 수행"으로 명시된 경우
+- 금지: "워커 디스패치"로 정의된 단계를 PM이 직접 실행
 
 ### 커밋 규칙
 
@@ -57,7 +66,7 @@
 | 오케스트레이터 도메인 | QA 스킬 (qa_skill) | QA 에이전트 |
 |---------------------|-------------------|------------|
 | dev (opd/opds/opdw) | op-dev-qa | opal-task-qa-agent |
-| 범용 (opp/opw) | op-task-qa | opal-task-qa-agent |
+| 범용 (opp) | op-task-qa | opal-task-qa-agent |
 
 각 오케스트레이터 SKILL.md에서 QA 스킬명을 명시한다.
 탐색 경로: `{프로젝트}/.opal/skills/{qa-skill}/SKILL.md` -> `~/.opal/skills/{qa-skill}/SKILL.md`
@@ -67,6 +76,19 @@
 `.opal/AGENT.md`가 존재하면 PM 검토 기준으로 산출물을 검토한다.
 상세: 글로벌 AGENT.md "PM 컨텍스트 로드 > PM 검토 게이트".
 AGENT.md 미존재 시 스킵.
+
+### 체크리스트 검증 게이트
+
+EXECUTE 완료 후, PLAN.md 실행 체크리스트 갱신을 2단계로 보장한다.
+
+**1차 책임 — 워커(서브에이전트)**:
+- EXECUTE 중 각 Step 완료 시 PLAN.md 체크박스 즉시 갱신 (`- [ ]` → `- [x]`)
+- QA 체크리스트도 검증 후 갱신
+
+**2차 검증 — 오케스트레이터(PM)**:
+- 워커 결과 수신 후 PLAN.md를 Read하여 체크리스트 갱신 상태 확인
+- 미갱신 항목 발견 시: PM이 직접 갱신
+- **체크리스트 완전 갱신 확인 후에만** DONE.md / 완료 보고로 진행
 
 ---
 

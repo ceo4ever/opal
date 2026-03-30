@@ -18,7 +18,7 @@
 ## 호출 시점
 
 ```
-범용 태스크 (opal-project-pilot, opal-pilot-write):
+범용 태스크 (opal-pilot-project):
   [TASK.md 완료] → QA 호출 → QA-TASK.md → 사용자 검토
   [PLAN.md 완료] → QA 호출 → QA-PLAN.md → 사용자 검토
   [EXECUTE 완료] → QA 호출 → QA-EXECUTE.md → 사용자 검토

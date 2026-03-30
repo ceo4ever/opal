@@ -5,7 +5,7 @@ OPAL 에이전트가 호출할 수 있는 서브에이전트 목록.
 
 ## opal-pilot 에이전트
 
-opal-pilot 오케스트레이터(opal-pilot-dev, opal-pilot-dev-short, opal-pilot-dev-wireframe, opal-project-pilot)가 호출하는 서브에이전트.
+opal-pilot 오케스트레이터(opal-pilot-dev, opal-pilot-dev-short, opal-pilot-dev-wireframe, opal-pilot-project)가 호출하는 서브에이전트.
 
 ### opal-task-agent
 
@@ -13,7 +13,7 @@ opal-pilot 오케스트레이터(opal-pilot-dev, opal-pilot-dev-short, opal-pilo
 - **호출 시점**: 각 단계 시작 시 오케스트레이터가 디스패치
 - **입력**: 스킬 경로, 태스크 폴더, 이전 산출물, 프로젝트 컨벤션
 - **출력**: 산출물(.md) + 결과 반환 (artifact_path, summary, status, blockers, changed_files)
-- **참고**: opal-project-pilot에서는 op-task-plan(opus), op-task-execute(sonnet)을 사용
+- **참고**: opal-pilot-project에서는 op-task-plan(advanced), op-task-execute(standard)을 사용
 
 ### opal-task-qa-agent
 

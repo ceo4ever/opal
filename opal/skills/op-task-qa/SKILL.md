@@ -3,7 +3,7 @@ name: op-task-qa
 description: |
   **범용 QA 검증 스킬**. 도메인 무관 산출물(TASK.md, PLAN.md 등)의 품질을 검증한다.
   코드 개발 QA는 op-dev-qa, 범용 QA는 이 스킬을 사용한다.
-  반드시 이 스킬을 사용해야 하는 상황: 범용 오케스트레이터(opal-project-pilot, opal-pilot-write)가 QA 검증을 디스패치할 때.
+  반드시 이 스킬을 사용해야 하는 상황: 범용 오케스트레이터(opal-pilot-project)가 QA 검증을 디스패치할 때.
   필수 입력: 검증 대상 산출물 경로 + 단계명. 보장 출력: QA-{단계}.md.
 ---
 
@@ -11,7 +11,7 @@ description: |
 
 ## 실행 컨텍스트
 
-- **호출자**: 범용 오케스트레이터(opal-project-pilot, opal-pilot-write)가 QA 검증을 디스패치
+- **호출자**: 범용 오케스트레이터(opal-pilot-project)가 QA 검증을 디스패치
 - **실행 주체**: QA 전용 워커 에이전트 (opal-task-qa-agent)
 - **입력**: 검증 대상 산출물 경로 + `stage` (단계명)
 - **출력**: `tasks/{NNN}-{태스크명}/QA-{단계}.md`

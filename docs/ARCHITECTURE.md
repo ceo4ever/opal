@@ -87,9 +87,9 @@ OPAL은 2-레이어 아키텍처로 동작한다.
 | **오케스트레이터** | opal-pilot-dev (opd) | Full Task: TASK → ANALYSIS → PLAN → TEST-SCENARIO → EXECUTE |
 | | opal-pilot-dev-short (opds) | Short Task (기본): TASK → PLAN → TEST-SCENARIO → EXECUTE |
 | | opal-pilot-dev-wireframe (opdw) | Wireframe UI: TASK → WIREFRAME → EXECUTE |
-| | opal-pilot-write (opw) | 범용 문서: TASK → PLAN → WRITE |
 | | opal-pilot-write-tech (opwt) | 서비스 기획 산출물: 네트워크형 오케스트레이션 |
-| | opal-project-pilot (opp) | 범용 프로젝트: TASK → PLAN → EXECUTE |
+| | opal-pilot-project (opp) | 프로젝트 범용: TASK → PLAN → EXECUTE |
+| | opal-pilot-project-dev (oppd) | 프로젝트 개발 라이프사이클: opwt → ROADMAP → opd/opds |
 | **dev 단계** | op-dev-analysis | 코드베이스 분석 + 기술 컨텍스트 수집 |
 | | op-dev-plan | 구현 계획 (PLAN+TODO 통합) |
 | | op-dev-todo | 실행 체크리스트 확장 (Full Task 전용) |
@@ -191,9 +191,9 @@ opal/                                    ← 이 저장소
 │   │   ├── opal-pilot-dev/              오케스트레이터: Full Task (opd)
 │   │   ├── opal-pilot-dev-short/        오케스트레이터: Short Task (opds)
 │   │   ├── opal-pilot-dev-wireframe/    오케스트레이터: Wireframe UI (opdw)
-│   │   ├── opal-pilot-write/            오케스트레이터: Write (opw)
 │   │   ├── opal-pilot-write-tech/       오케스트레이터: Write-Tech (opwt)
-│   │   ├── opal-project-pilot/          오케스트레이터: Project (opp)
+│   │   ├── opal-pilot-project/          오케스트레이터: Project (opp)
+│   │   ├── opal-pilot-project-dev/      오케스트레이터: Project Dev (oppd)
 │   │   ├── op-dev-{analysis,plan,todo,execute,test-scenario,qa,wireframe}/
 │   │   │                                dev 단계 스킬 (7개)
 │   │   ├── op-task{,-plan,-execute,-qa}/ 범용 단계 스킬 (4개)
@@ -202,7 +202,6 @@ opal/                                    ← 이 저장소
 │   │   ├── opal-skill-creator/          스킬 생성
 │   │   ├── opal-onboarding/             에이전트 온보딩
 │   │   ├── opal-orchestrator/           오케스트레이션 모드
-│   │   ├── opal-project-dev-pilot/      프로젝트 개발 파일럿 (opdp)
 │   │   └── opal-skill-manager/          스킬 관리
 │   └── templates/                       프로젝트 에이전트 템플릿
 ├── cursor-rules/                        Cursor 프로젝트 규칙 템플릿

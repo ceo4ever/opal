@@ -4,7 +4,7 @@ description: |
   **Short Task 오케스트레이터 (기본 모드)**. 코드 변경이 수반되는 모든 개발 작업의 기본 진입점. 3단계 파이프라인으로 수행한다.
   반드시 이 스킬을 사용해야 하는 상황: "opal-pilot-dev-short", "opds".
   PLAN 단계에서 규모가 크다고 판단되면 Full Task(opal-pilot-dev) 에스컬레이션을 제안한다.
-  코드를 읽기만 하는 설명 요청, API 명세서(api-analyzer), 문서 작성(opal-pilot-write), PR 리뷰, git 작업, 단순 설정 변경은 이 스킬이 아니다.
+  코드를 읽기만 하는 설명 요청, API 명세서(api-analyzer), 기획 문서(opal-pilot-write-tech), PR 리뷰, git 작업, 단순 설정 변경은 이 스킬이 아니다.
 ---
 
 # Short Task 오케스트레이터
