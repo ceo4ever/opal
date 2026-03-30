@@ -17,7 +17,7 @@
 ```markdown
 # {프로젝트명} PM 프로필
 
-> 프로젝트: {프로젝트명} | 생성일: YYYY-MM-DD
+> 프로젝트: {프로젝트명} | 생성일: YYYY-MM-DD HH:mm
 
 이 파일은 알투의 PM 역할을 정의한다. 프로젝트 정보는 docs/PROJECT.md를 참조한다.
 
