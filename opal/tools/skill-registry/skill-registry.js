@@ -139,7 +139,12 @@ function matchCommand(input) {
 
 function getCommand(name) {
   const skills = loadAllSkills();
-  const skill = skills.find(s => s.name === name);
+  const lower = name.toLowerCase();
+  const skill = skills.find(s =>
+    s.name === name ||
+    s.name.toLowerCase() === lower ||
+    (s.alias && s.alias.toLowerCase() === lower)
+  );
   if (skill) {
     const { _group, ...rest } = skill;
     return { ...rest, group: _group };
