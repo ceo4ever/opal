@@ -36,10 +36,11 @@ OPAL은 2-레이어 아키텍처로 동작한다.
 │            │                                             │
 │            ▼                                             │
 │  ┌──────────────────────────────────────────────────┐   │
-│  │  서브에이전트 (Agent 도구로 디스패치)               │   │
+│  │  서브에이전트 5개 (Agent 도구로 디스패치)            │   │
 │  │  ├─ opal-task-agent: 단계 스킬 실행 워커            │   │
 │  │  ├─ opal-task-qa-agent: QA 스킬 동적 실행          │   │
 │  │  ├─ op-dev-test-agent: 테스트 실행                 │   │
+│  │  ├─ opal-task-action-agent: oppd Phase 3 액션 자율 실행  │
 │  │  └─ wtm-agent: 웹→마크다운 변환                    │   │
 │  └──────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────┘
@@ -56,7 +57,7 @@ OPAL은 2-레이어 아키텍처로 동작한다.
 | `AGENT.md` | 에이전트 핵심 정의 (부트스트랩, 행동 규칙, PM 역할) |
 | `identity.md` | 에이전트 정체성 (이름, 성격, 톤) |
 | `skills/` | 독립 스킬 5개 + OPAL 스킬 24개 |
-| `agents/` | 서브에이전트 4개 |
+| `agents/` | 서브에이전트 5개 |
 | `community-skills/` | 커뮤니티 스킬 37개 (6개 조직) |
 | `references/` | 레지스트리 (skills.md, agents.md, mcps.md, opal-harness.md, opal-doc-standard.md) |
 | `tools/` | 스킬 레지스트리 CLI (skill-registry.js) |
@@ -122,6 +123,7 @@ OPAL은 2-레이어 아키텍처로 동작한다.
 | opal-task-agent | standard | 범용 워커 — 단계 스킬 실행 |
 | opal-task-qa-agent | light | 범용 QA 워커 — qa_skill로 QA 스킬 동적 실행 |
 | op-dev-test-agent | standard | Test — 동적 검증 (테스트 실행 + 판정) |
+| opal-task-action-agent | advanced | 액션 에이전트 — oppd Phase 3 자율 실행 |
 | wtm-agent | light | web-to-markdown 병렬 처리 |
 
 ### 커뮤니티 스킬 (Community Skills)
@@ -178,10 +180,11 @@ opal/                                    ← 이 저장소
 │   ├── ui-designer/                     UI 구현
 │   ├── wireframe-builder/               와이어프레임 설계
 │   └── web-to-markdown/                 웹→마크다운
-├── agents/                              에이전트 (4개)
+├── agents/                              에이전트 (5개)
 │   ├── opal-task-agent/                 범용 워커
 │   ├── opal-task-qa-agent/              범용 QA 워커
 │   ├── op-dev-test-agent/               테스트 에이전트
+│   ├── opal-task-action-agent/          액션 에이전트 (oppd Phase 3)
 │   └── wtm-agent/                       웹→마크다운 에이전트
 ├── community-skills/                    커뮤니티 스킬 (37개, 6개 조직)
 ├── opal/                                OPAL 코어

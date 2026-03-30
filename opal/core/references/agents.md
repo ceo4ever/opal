@@ -29,6 +29,13 @@ opal-pilot 오케스트레이터(opal-pilot-dev, opal-pilot-dev-short, opal-pilo
 - **입력**: TEST-SCENARIO.md, 변경된 파일 목록, 모드(full-simple/full-complex/short)
 - **출력**: TEST-SCENARIO.md (결과 채움 + 판정)
 
+### opal-task-action-agent
+
+- **역할**: 액션 에이전트 — oppd Phase 3에서 개별 액션을 자율 실행 (PLAN → QA → EXECUTE → 검증 루핑 → TEST)
+- **호출 시점**: oppd Phase 3에서 액션 실행 시 디스패치
+- **입력**: action_id, action_goal, action_scope, verify_commands, task_folder, project_context
+- **출력**: 액션 결과 (status, verdict, verification_log, changed_files, failure_context)
+
 ## 탐색 경로
 
 에이전트 파일 탐색 우선순위 (플랫폼 공통):

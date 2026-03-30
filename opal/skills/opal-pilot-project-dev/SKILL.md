@@ -2,7 +2,7 @@
 name: opal-pilot-project-dev
 description: |
   **프로젝트 개발 라이프사이클 오케스트레이터**. 아이디어부터 개발 완료(product)까지
-  opwt로 기획 산출물(PRD/TRD) 작성 → 로드맵 수립 → opd/opds로 태스크 순차 실행.
+  opwt로 기획 산출물(PRD/TRD) 작성 → 로드맵 수립 → opal-task-action-agent로 액션 자율 실행.
   모든 산출물은 PM 검수 → 사용자 확정 순서를 거친다.
   opi 없이 단독 호출도 가능 (docs/PROJECT.md 존재 시).
 triggers:
@@ -11,13 +11,13 @@ triggers:
   - "프로젝트 개발 시작"
   - "개발 계획"
   - "개발 파일럿"
-version: 3.0.0
+version: 3.1.0
 ---
 
 # opal-pilot-project-dev
 
 아이디어부터 개발 완료(product)까지 전체 라이프사이클을 3 Phase 파이프라인으로 관리한다.
-기획 산출물은 opwt에 위임하고, 코드 실행은 opd/opds에 위임하며, PM이 전체를 조율한다.
+기획 산출물은 opwt에 위임하고, 코드 실행은 opal-task-action-agent에 위임하며, PM이 전체를 조율한다.
 
 ## Harness
 
@@ -26,7 +26,7 @@ version: 3.0.0
 
 ## 설계 원칙
 
-- **위임과 조율**: 기획은 opwt, 코드는 opd/opds에 위임하고 PM이 조율한다
+- **위임과 조율**: 기획은 opwt, 코드는 opal-task-action-agent에 위임하고 PM이 조율한다
 - **PM 검수 → 사용자 확정**: PM이 통과시킨 결과물만 사용자에게 올린다
 - **세션 독립**: STATE.md 기반으로 어느 세션에서든 정확한 지점에서 재개한다
 - **agentic 지향**: 아이디어 → product까지 자율적으로 진행하되, 사용자 게이트를 거친다
@@ -59,7 +59,7 @@ tasks/{NNN}-oppd-{프로젝트명}/
 ├── STATE.md      ← 진행 상황 추적
 ├── DONE.md       ← 완료 시 랩업
 └── actions/              ← 액션 폴더
-    ├── A01-{액션명}/     ← opd/opds가 사용하는 태스크 폴더
+    ├── A01-{액션명}/     ← opal-task-action-agent가 사용하는 태스크 폴더
     │   ├── TASK.md
     │   ├── PLAN.md
     │   ├── TEST-SCENARIO.md
@@ -96,7 +96,7 @@ tasks/{NNN}-oppd-{프로젝트명}/
 |-------|------|--------|------|
 | 1 | opwt 호출 | docs/PRD.md, docs/TRD.md | 기획 산출물 작성 (opwt "작성" 모드) |
 | 2 | PM 직접 | docs/ROADMAP.md | 태스크 분할 + 로드맵 수립 |
-| 3 | opd/opds 호출 | actions/A01~A{MM} | 액션 실행 |
+| 3 | opal-task-action-agent 디스패치 | actions/A01~A{MM} | 액션 자율 실행 |
 ```
 
 ### STATE.md 초기 생성
@@ -120,7 +120,7 @@ tasks/{NNN}-oppd-{프로젝트명}/
 사전 조건 체크 → 태스크 생성 (TASK.md + STATE.md)
   → Phase 1: opwt "작성" 모드로 PRD/TRD 작성 → 사용자 확정
   → Phase 2: PM 직접 로드맵 수립 → PM 검수 → 사용자 확정
-  → Phase 3: opd/opds로 액션 실행 (순차 + 병렬) → 각 액션 PM 검수 + 자동 검증 → 전체 완료
+  → Phase 3: opal-task-action-agent로 액션 자율 실행 (순차 + 병렬) → 각 액션 PM 검수 → 전체 완료
   → DONE.md 작성
 ```
 
@@ -252,9 +252,10 @@ PRD/TRD를 기반으로 태스크를 분할한다.
 
 ---
 
-## Phase 3: 액션 실행 (opd/opds 위임)
+## Phase 3: 액션 실행 (opal-task-action-agent 위임)
 
-의존성 그래프 기반으로 opd/opds 스킬을 호출하여 액션을 실행한다 (순차 + 병렬 혼합).
+의존성 그래프 기반으로 opal-task-action-agent를 디스패치하여 액션을 자율 실행한다 (순차 + 병렬 혼합).
+에이전트는 PLAN → QA → TEST-SCENARIO → EXECUTE → VERIFY → TEST 파이프라인을 사용자 개입 없이 완주하고 결과를 반환한다.
 
 ### 3-0. 의존성 최신 검증 (Phase 3 시작 전)
 
@@ -282,69 +283,91 @@ groups = buildParallelGroups(ROADMAP.actions)  # 의존성 그래프 → 실행 
 for each group in groups:
   if group.type == "sequential":
     1. 사용자에게 액션 시작 보고
-    2. 스킬 판단에 따라 호출:
-       - //opd  → Full Task 오케스트레이터
-       - //opds → Short Task 오케스트레이터
-       - //opdw → Wireframe 오케스트레이터
-       (태스크 폴더: actions/A{NN}-{name}/)
-    3. 스킬 완료 → 자동 검증 루핑 (3-1a)
+    2. opal-task-action-agent를 Agent 도구로 디스패치:
+       프롬프트에 포함할 파라미터:
+       - action_id: A{NN}-{name}
+       - action_goal: ROADMAP.md에서 추출한 액션 목표
+       - action_scope: ROADMAP.md에서 추출한 변경 범위
+       - verify_commands: ROADMAP.md에서 추출한 검증 명령
+       - task_folder: actions/A{NN}-{name}/
+       - project_root: {프로젝트 루트}
+       - project_context: [docs/PROJECT.md, docs/ARCHITECTURE.md, docs/CONVENTIONS.md]
+    3. 에이전트 결과 수신 → 결과 처리 (아래 참조)
     4. PM 검수 (완료 산출물 확인)
     5. 사용자에게 액션 완료 보고
-    6. STATE.md 갱신
+    6. STATE.md 갱신 (verification_log 기록 포함)
 
   if group.type == "parallel":
     1. 사용자에게 병렬 그룹 시작 보고
     2. 병렬 액션 실행 (3-1b)
-    3. 각 액션 완료 → 자동 검증 루핑 (3-1a)
-    4. 전체 머지 + 통합 테스트
-    5. PM 검수 (그룹 단위)
-    6. 사용자에게 그룹 완료 보고
-    7. STATE.md 갱신
+    3. 전체 머지 + 통합 테스트
+    4. PM 검수 (그룹 단위)
+    5. 사용자에게 그룹 완료 보고
+    6. STATE.md 갱신
 ```
 
-opd/opds 호출 시 `actions/A{NN}-{name}/`을 태스크 폴더로 전달한다 (opd/opds 내부 로직 변경 없음).
+#### 에이전트 결과 처리
+
+opal-task-action-agent는 `status`와 `verdict`를 반환한다:
+
+| status | verdict | 동작 |
+|--------|---------|------|
+| `completed` | `All Pass` | PM 검수 → 다음 액션 |
+| `completed` | `Partial Fail` | PM 검수 → 사용자에게 Partial Fail 사실 보고 후 판단 |
+| `failed` | `Critical Fail` | 사용자에게 에스컬레이션 (`failure_context` 포함) |
+| `failed` | - | 사용자에게 에스컬레이션 (`failure_context` 포함) |
+
+에이전트가 반환하는 `verification_log`는 STATE.md의 "검증 루프 로그" 섹션에 기록한다.
 
 ### 3-1a. 자동 검증 루핑
 
-각 액션 완료 후 Layered Verification(L1~L3b~L4)을 수행한다.
+**opal-task-action-agent가 자체적으로 검증 루핑을 수행한다.** oppd는 에이전트의 `verification_log`를 STATE.md에 기록만 한다.
+
 상세 전략은 `references/verification-loop-guide.md` 참조.
 
-**루프 요약**:
+**에이전트 내부 루프** (oppd가 아닌 에이전트 내부에서 실행됨):
 
 ```
-워커 액션 완료
-  → L1: lint/format 검증  → FAIL → 워커 자동 수정 (제한 없음)
-  → L2: build/type 검증   → FAIL → 워커 자동 수정 (최대 2회)
-  → L3a: unit/integration → FAIL → 워커 자동 수정 (최대 3회)
-  → L3b: E2E (해당 시)    → FAIL → 1회 재시도 → 2연속 FAIL → 에스컬레이션
-  → L4: QA Gate            → 설계 이슈 → 즉시 에스컬레이션
-  → 전체 PASS → 완료
+EXECUTE 완료
+  → L1: lint/format 검증  → FAIL → 에이전트가 워커에 수정 지시 (제한 없음)
+  → L2: build/type 검증   → FAIL → 에이전트가 워커에 수정 지시 (최대 2회)
+  → L3a: unit/integration → FAIL → 에이전트가 워커에 수정 지시 (최대 3회)
+  → L3b: E2E (해당 시)    → FAIL → 1회 재실행 → 2연속 FAIL → status: failed 반환
+  → 전체 PASS → TEST 단계 → 결과 반환
 ```
+
+**oppd의 역할**:
+- 에이전트 결과의 `verification_log`를 STATE.md "검증 루프 로그" 섹션에 기록
+- `status: failed` 수신 시 `failure_context`를 포함하여 사용자에게 에스컬레이션
+- 에이전트 성공 시 PM 검수 진행
 
 **핵심 규칙**:
-- 하위 계층 통과 후에만 상위 계층으로 진행 (L1 → L2 → L3a → L3b → L4)
+- 하위 계층 통과 후에만 상위 계층으로 진행 (L1 → L2 → L3a → L3b)
 - **L3b(E2E)**: ROADMAP.md에 E2E 검증 명령이 명시된 액션에만 실행. 병렬 그룹에서는 머지 후 일괄 실행도 가능
-- **회귀 방지**: 자동 수정 후 이전 통과 테스트 재실행. 회귀 발생 시 루프 즉시 중단 + 에스컬레이션
-- **에스컬레이션**: 재시도 한도 초과 시 사용자에게 보고 (하네스 "자동 루핑 제약" Guards 준수)
-- **사용자 게이트 유지**: 루핑은 agentic이지만 최종 확정은 반드시 사용자를 거친다
+- **회귀 방지**: 에이전트가 자동 수정 후 이전 통과 테스트 재실행. 회귀 발생 시 루프 즉시 중단 + `status: failed` 반환
+- **에스컬레이션**: 에이전트가 `status: failed`로 반환 → oppd가 사용자에게 보고 (하네스 "자동 루핑 제약" Guards 준수)
 
 ### 3-1b. 병렬 액션 실행
 
-의존성이 없는 액션을 worktree 격리 + 병렬 디스패치로 동시 실행한다.
+의존성이 없는 액션을 worktree 격리 + opal-task-action-agent 병렬 디스패치로 동시 실행한다.
 상세 전략은 `references/parallel-execution-guide.md` 참조.
 
 **실행 요약**:
 
 ```
 1. worktree 생성: .worktrees/{action-id}/ (각 액션 격리)
-2. Agent 도구로 워커 병렬 디스패치 (각 worktree에서 독립 실행)
-3. 결과 수집 후 순차 머지 (변경 범위 작은 순)
-4. 머지마다 통합 테스트 실행
-5. worktree 정리
+2. Agent 도구로 opal-task-action-agent를 병렬 디스패치 (각 worktree에서 독립 실행)
+   - 디스패치 프롬프트에 project_root를 worktree 경로로 설정
+   - 나머지 파라미터(action_id, action_goal 등)는 순차 실행과 동일
+3. 각 에이전트 결과 수집 (status, verdict, verification_log, changed_files)
+4. 결과 수집 후 순차 머지 (변경 범위 작은 순)
+5. 머지마다 통합 테스트 실행
+6. worktree 정리
 ```
 
 **핵심 규칙**:
-- **오케스트레이터 단독 갱신**: STATE.md는 오케스트레이터만 갱신 (동시 쓰기 충돌 방지)
+- **오케스트레이터 단독 갱신**: STATE.md는 오케스트레이터(oppd)만 갱신 (동시 쓰기 충돌 방지)
+- **에이전트 결과 처리**: 각 에이전트의 결과를 개별적으로 처리 (3-1 "에이전트 결과 처리" 참조)
 - **머지 충돌 시**: PM이 조정 (자동 해결 가능 → 직접 해결, 설계 판단 필요 → 사용자 에스컬레이션)
 - **Fallback**: worktree/Agent 도구 미지원 시 순차 실행으로 폴백 (하네스 "병렬 실행 State" 참조)
 
@@ -352,7 +375,7 @@ opd/opds 호출 시 `actions/A{NN}-{name}/`을 태스크 폴더로 전달한다 
 
 ```
 [Phase 3] 액션 {N}/{M} 시작
-액션: {액션 제목} | 스킬: {//opd | //opds | //opdw}
+액션: {액션 제목} | 에이전트: opal-task-action-agent
 ```
 
 ```
@@ -384,7 +407,7 @@ oppd 완료
 ## PM 검수 흐름 (각 Phase 공통)
 
 ```
-산출물 생성 (opwt/opd/opds 또는 PM 직접)
+산출물 생성 (opwt/opal-task-action-agent 또는 PM 직접)
   │
   ▼
 PM 검수
@@ -429,7 +452,7 @@ PM 검수 로그에서 **반복 패턴**이 감지되면 PM 학습 루프로 승
 |-------|------|--------|------|
 | 1-PLAN | opwt | docs/PRD.md, docs/TRD.md | {미시작 / opwt 진행 / 사용자 검토 / 확정} |
 | 2-ROADMAP | PM 직접 | docs/ROADMAP.md | {미시작 / 작성 중 / PM 검수 / 사용자 검토 / 확정} |
-| 3-EXECUTE | opd/opds | - | {미시작 / T{N}/{M} 진행 중 / 완료} |
+| 3-EXECUTE | opal-task-action-agent | - | {미시작 / A{N}/{M} 진행 중 / 완료} |
 
 ## 로드맵 (Phase 2 확정 후)
 | # | 액션 | 스킬 | actions/ 경로 | 상태 |
@@ -517,7 +540,11 @@ PM 검수 로그에서 **반복 패턴**이 감지되면 PM 학습 루프로 승
 1. `{프로젝트}/.opal/skills/opal-pilot-write-tech/SKILL.md`
 2. `~/.opal/skills/opal-pilot-write-tech/SKILL.md`
 
-**opd/opds/opdw (Phase 3 태스크 실행)**:
+**opal-task-action-agent (Phase 3 액션 자율 실행)**:
+1. `{프로젝트}/.opal/agents/opal-task-action-agent/AGENT.md`
+2. `~/.opal/agents/opal-task-action-agent/AGENT.md`
+
+**opd/opds/opdw (독립 호출 시 — 사용자 `//` 커맨드)**:
 1. `{프로젝트}/.opal/skills/opal-pilot-dev/SKILL.md` (Full Task)
 2. `~/.opal/skills/opal-pilot-dev/SKILL.md`
 3. `{프로젝트}/.opal/skills/opal-pilot-dev-short/SKILL.md` (Short Task)
@@ -543,3 +570,4 @@ PM 검수 로그에서 **반복 패턴**이 감지되면 PM 학습 루프로 승
 | v1.0 | 2026-03-26 | 초기 작성 — 4 Phase 파이프라인 (PRD/TRD/ROADMAP/EXECUTE) |
 | v2.0 | 2026-03-30 | opal-project-dev-pilot → opal-pilot-project-dev 리네이밍. Phase 1~2(PRD/TRD)를 opwt 위임으로 전환. 4→3 Phase 슬림화 (052) |
 | v3.0 | 2026-03-30 | agentic 자율 루핑 + 병렬 실행 + actions 구조 (053) |
+| v3.1 | 2026-03-30 | Phase 3 opd/opds 호출 → opal-task-action-agent 디스패치로 전환 (056) |
