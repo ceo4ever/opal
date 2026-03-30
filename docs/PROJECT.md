@@ -25,6 +25,32 @@
 - 하네스 준수 > 개별 최적화
 - 프로세스 일관성 > 속도
 
+## 프로젝트 구조
+
+### 폴더 구조맵
+
+| 폴더 | 역할 | 설명 |
+|------|------|------|
+| `docs/` | 프로젝트 문서 | 아키텍처, 컨벤션 등 프로젝트 레벨 문서 |
+| `tasks/` | 태스크 산출물 | `{NNN}-{설명}/` 형식의 작업 단위 폴더 |
+| `skills/` | 독립 스킬 소스 | 파이프라인 없이 단독 사용하는 스킬 |
+| `agents/` | 에이전트 소스 | 서브에이전트 정의 |
+| `opal/skills/` | OPAL 스킬 소스 | 오케스트레이터, 단계 스킬 등 OPAL 전용 |
+| `opal/core/` | 프레임워크 코어 | 레퍼런스, MCP 설정, 도구 |
+| `community-skills/` | 커뮤니티 스킬 | 외부 조직 제공 스킬 |
+| `scripts/` | 설치 스크립트 | install-mac.sh 등 |
+| `.opal/` | PM 프로필 | 에이전트/메모리 설정 |
+
+### 네이밍 규칙
+
+| 폴더 | 네이밍 규칙 | 예시 |
+|------|-----------|------|
+| `tasks/` | `{NNN}-{설명}/` (3자리 번호-kebab-case 설명) | `054-docs-guide-project-structure/` |
+| `skills/` | `{기능명}/` (kebab-case) | `api-analyzer/`, `interview/` |
+| `opal/skills/` | `{그룹}-{역할}/` (접두사 체계) | `opal-pilot-dev/`, `op-dev-plan/` |
+| `agents/` | `{대상}-{역할}/` | `opal-task-agent/`, `wtm-agent/` |
+| `docs/` | `{대문자}.md` | `PROJECT.md`, `ARCHITECTURE.md` |
+
 ## 프로젝트 문서
 
 | 문서 | 설명 | 용도 | 참조 시점 |
