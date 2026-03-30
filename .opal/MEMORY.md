@@ -24,8 +24,6 @@
 | 1 | 2026-03-22 | task | 예정 | [memory/project_security_task.md](memory/project_security_task.md) | 보안 전용 스킬+에이전트 생성 |
 | 3 | 2026-03-27 | project | 유효 | [memory/project_opi_vision.md](memory/project_opi_vision.md) | opi 비전: 프로젝트=WHAT/WHY, 스킬=HOW |
 | 4 | 2026-03-30 14:00 | task | 예정 | [memory/task_agentic_loop.md](memory/task_agentic_loop.md) | oppd에 agentic 자율 루핑(QA/TEST) 장치 설계 |
-| 5 | 2026-03-30 14:30 | feedback | 유효 | [memory/feedback_datetime_format.md](memory/feedback_datetime_format.md) | 날짜 vs 일시 표기 기준 — 시점 추적 필요 시만 일시 |
-
 ## 작업 히스토리 (최대 10개, FIFO)
 
 | # | 작업 | 단계 | 경로 | 시작일시 | 완료일시 |
