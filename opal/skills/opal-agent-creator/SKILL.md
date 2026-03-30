@@ -147,7 +147,7 @@ opal-doc-standard 규칙을 따른다 (Read: `~/.opal/references/opal-doc-standa
 **신규 생성 모드:**
 - AGENT.md 상단에 메타정보를 추가한다:
   ```
-  > 작성일: {오늘 날짜} | 버전: v1.0
+  > 작성일: {오늘 일시 YYYY-MM-DD HH:mm KST} | 버전: v1.0
   ```
 
 **개선 모드:**
