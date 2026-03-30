@@ -1,6 +1,6 @@
 # opal Memory Index
 
-> 최종 갱신: 2026-03-30 15:48
+> 최종 갱신: 2026-03-30 16:05
 
 ## 메모리 카테고리
 
@@ -28,13 +28,13 @@
 
 | # | 작업 | 단계 | 경로 | 시작일시 | 완료일시 |
 |---|------|------|------|---------|---------|
-| 0 | docs-guide 프로젝트 구조 섹션 역할 분리 (054) | 완료 | tasks/054-docs-guide-project-structure/ | 2026-03-30 15:30 | 2026-03-30 15:48 |
-| 1 | oppd agentic 자율 루핑 + 병렬 실행 설계 (053) | 완료 | tasks/053-oppd-agentic-loop/ | 2026-03-30 14:33 | 2026-03-30 15:45 |
-| 2 | 오케스트레이터 정비 — opw 삭제 + 리네이밍 + oppd opwt 연동 (052) | 완료 | tasks/052-orchestrator-cleanup/ | 2026-03-30 13:30 | 2026-03-30 14:16 |
-| 3 | OPAL 전용 스킬 소스 이동 (051) | 완료 | tasks/051-opal-skill-source-move/ | 2026-03-30 | 2026-03-30 |
-| 4 | opi 범용 프로젝트 분석 개선 (050) | 완료 | tasks/050-opi-universal-analysis/ | 2026-03-30 | 2026-03-30 |
-| 5 | 워커 에이전트 프로젝트 컨텍스트 자율 로딩 (049) | 완료 | tasks/049-agent-project-context/ | 2026-03-30 | 2026-03-30 |
-| 6 | CLAUDE.md 슬림화 + PM 컨텍스트 최적화 (047) | 완료 | tasks/047-opi-claude-md-slim/ | 2026-03-30 | 2026-03-30 |
-| 7 | QA 에이전트 통합 (048) | 완료 | tasks/048-qa-agent-unify/ | 2026-03-29 | 2026-03-29 |
-| 8 | op-task-qa → op-dev-qa 리네이밍 + 범용 QA (046) | 완료 | tasks/046-qa-skill-rename/ | 2026-03-29 | 2026-03-29 |
-| 9 | 멀티 플랫폼 모델 매핑 참조 + 스킬 적용 (044) | 완료 | tasks/044-model-mapping-reference/ | 2026-03-29 | 2026-03-30 |
+| 0 | opi tasks/ 태스크 기록 추가 (055) | 완료 | tasks/055-opi-task-record/ | 2026-03-30 16:00 | 2026-03-30 16:05 |
+| 1 | docs-guide 프로젝트 구조 섹션 역할 분리 (054) | 완료 | tasks/054-docs-guide-project-structure/ | 2026-03-30 15:30 | 2026-03-30 15:48 |
+| 2 | oppd agentic 자율 루핑 + 병렬 실행 설계 (053) | 완료 | tasks/053-oppd-agentic-loop/ | 2026-03-30 14:33 | 2026-03-30 15:45 |
+| 3 | 오케스트레이터 정비 — opw 삭제 + 리네이밍 + oppd opwt 연동 (052) | 완료 | tasks/052-orchestrator-cleanup/ | 2026-03-30 13:30 | 2026-03-30 14:16 |
+| 4 | OPAL 전용 스킬 소스 이동 (051) | 완료 | tasks/051-opal-skill-source-move/ | 2026-03-30 | 2026-03-30 |
+| 5 | opi 범용 프로젝트 분석 개선 (050) | 완료 | tasks/050-opi-universal-analysis/ | 2026-03-30 | 2026-03-30 |
+| 6 | 워커 에이전트 프로젝트 컨텍스트 자율 로딩 (049) | 완료 | tasks/049-agent-project-context/ | 2026-03-30 | 2026-03-30 |
+| 7 | CLAUDE.md 슬림화 + PM 컨텍스트 최적화 (047) | 완료 | tasks/047-opi-claude-md-slim/ | 2026-03-30 | 2026-03-30 |
+| 8 | QA 에이전트 통합 (048) | 완료 | tasks/048-qa-agent-unify/ | 2026-03-29 | 2026-03-29 |
+| 9 | op-task-qa → op-dev-qa 리네이밍 + 범용 QA (046) | 완료 | tasks/046-qa-skill-rename/ | 2026-03-29 | 2026-03-29 |
