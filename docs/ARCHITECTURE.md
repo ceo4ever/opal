@@ -55,7 +55,7 @@ OPAL은 2-레이어 아키텍처로 동작한다.
 |----------|------|
 | `AGENT.md` | 에이전트 핵심 정의 (부트스트랩, 행동 규칙, PM 역할) |
 | `identity.md` | 에이전트 정체성 (이름, 성격, 톤) |
-| `skills/` | 프레임워크 스킬 21개 + OPAL 전용 스킬 4개 |
+| `skills/` | 독립 스킬 5개 + OPAL 스킬 24개 |
 | `agents/` | 서브에이전트 4개 |
 | `community-skills/` | 커뮤니티 스킬 37개 (6개 조직) |
 | `references/` | 레지스트리 (skills.md, agents.md, mcps.md, opal-harness.md, opal-doc-standard.md) |
@@ -154,8 +154,8 @@ OPAL은 2-레이어 아키텍처로 동작한다.
 ```
 소스 (이 저장소)                    배포 대상 (~/.opal/)
 ─────────────────                  ──────────────────
-skills/*            ──┐
-opal/skills/*       ──┼─ install ─→  ~/.opal/skills/
+skills/* (독립 5개) ──┐
+opal/skills/* (24개)──┼─ install ─→  ~/.opal/skills/
 agents/*            ──┤              ~/.opal/agents/
 community-skills/*  ──┤              ~/.opal/community-skills/
 opal/core/*         ──┘              ~/.opal/references/, tools/, templates/
@@ -172,32 +172,12 @@ opal/core/mcps/*    ──── install ─→  ~/.cursor/rules/ (부트스트�
 
 ```
 opal/                                    ← 이 저장소
-├── skills/                              스킬 (25개)
-│   ├── opal-pilot-dev/                  오케스트레이터: Full Task
-│   ├── opal-pilot-dev-short/            오케스트레이터: Short Task (기본)
-│   ├── opal-pilot-dev-wireframe/        오케스트레이터: Wireframe UI
-│   ├── opal-pilot-write/                오케스트레이터: 범용 문서
-│   ├── opal-pilot-write-tech/           오케스트레이터: 서비스 기획 산출물
-│   ├── opal-project-pilot/              오케스트레이터: 범용 프로젝트 (opp)
-│   ├── op-dev-analysis/                 dev: 코드베이스 분석
-│   ├── op-dev-plan/                     dev: 구현 계획
-│   ├── op-dev-todo/                     dev: 실행 체크리스트 (Full 전용)
-│   ├── op-dev-test-scenario/            dev: 테스트 시나리오
-│   ├── op-dev-execute/                  dev: 코드 실행
-│   ├── op-dev-wireframe/                dev: 와이어프레임 생성
-│   ├── op-dev-qa/                       dev: Dev QA 검증
-│   ├── op-task/                         범용: TASK.md 작성
-│   ├── op-task-qa/                      범용: QA 검증 (도메인 무관)
-│   ├── op-task-plan/                    범용: 계획 수립 (도메인 무관)
-│   ├── op-task-execute/                 범용: 실행 (도메인 무관)
-│   ├── api-analyzer/                    독립: API 분석
-│   ├── interview/                       독립: 요구사항 수집
-│   ├── ui-designer/                     독립: UI 구현
-│   ├── wireframe-builder/               독립: 와이어프레임 설계
-│   ├── web-to-markdown/                 독립: 웹→마크다운
-│   ├── opal-agent-creator/              OPAL: 에이전트 생성
-│   ├── opal-skill-creator/              OPAL: 스킬 생성
-│   └── opal-project-init/               OPAL: 프로젝트 초기화
+├── skills/                              독립 스킬 (5개, 파이프라인 없이 단독 사용)
+│   ├── api-analyzer/                    외부 API 분석
+│   ├── interview/                       요구사항 수집
+│   ├── ui-designer/                     UI 구현
+│   ├── wireframe-builder/               와이어프레임 설계
+│   └── web-to-markdown/                 웹→마크다운
 ├── agents/                              에이전트 (4개)
 │   ├── opal-task-agent/                 범용 워커
 │   ├── opal-task-qa-agent/              범용 QA 워커
@@ -206,11 +186,27 @@ opal/                                    ← 이 저장소
 ├── community-skills/                    커뮤니티 스킬 (37개, 6개 조직)
 ├── opal/                                OPAL 코어
 │   ├── bootstrapper/                    플랫폼별 부트스트래퍼
-│   ├── core/                            에이전트 코어 + 레퍼런스 + MCP + 훅 + 도구
-│   ├── skills/                          OPAL 전용 스킬 (onboarding, orchestrator, skill-manager)
+│   ├── core/                            에이전트 코어 + 레퍼런스 + MCP + 도구
+│   ├── skills/                          OPAL 스킬 (24개)
+│   │   ├── opal-pilot-dev/              오케스트레이터: Full Task (opd)
+│   │   ├── opal-pilot-dev-short/        오케스트레이터: Short Task (opds)
+│   │   ├── opal-pilot-dev-wireframe/    오케스트레이터: Wireframe UI (opdw)
+│   │   ├── opal-pilot-write/            오케스트레이터: Write (opw)
+│   │   ├── opal-pilot-write-tech/       오케스트레이터: Write-Tech (opwt)
+│   │   ├── opal-project-pilot/          오케스트레이터: Project (opp)
+│   │   ├── op-dev-{analysis,plan,todo,execute,test-scenario,qa,wireframe}/
+│   │   │                                dev 단계 스킬 (7개)
+│   │   ├── op-task{,-plan,-execute,-qa}/ 범용 단계 스킬 (4개)
+│   │   ├── opal-project-init/           프로젝트 초기화 (opi)
+│   │   ├── opal-agent-creator/          에이전트 생성
+│   │   ├── opal-skill-creator/          스킬 생성
+│   │   ├── opal-onboarding/             에이전트 온보딩
+│   │   ├── opal-orchestrator/           오케스트레이션 모드
+│   │   ├── opal-project-dev-pilot/      프로젝트 개발 파일럿 (opdp)
+│   │   └── opal-skill-manager/          스킬 관리
 │   └── templates/                       프로젝트 에이전트 템플릿
-├── cursor-rules/                        Cursor 프로젝트 규칙 템플릿 (4개)
+├── cursor-rules/                        Cursor 프로젝트 규칙 템플릿
 ├── scripts/                             설치 스크립트 (install-mac.sh)
-├── tasks/                               태스크 산출물 (001~043)
+├── tasks/                               태스크 산출물
 ├── docs/                                프로젝트 문서
 └── .opal/                               이 프로젝트의 PM 프로필 + 메모리

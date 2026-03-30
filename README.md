@@ -177,56 +177,15 @@ TASK → PLAN+TEST-SCENARIO → EXECUTE
 ## 소스 구조
 
 ```
-opal/
-├── README.md
-├── CLAUDE.md                    이 저장소 자체의 프로젝트 설정
-├── skills/                      스킬 (~/.opal/skills/로 배포)
-│   ├── opal-pilot-dev/          오케스트레이터: Full Task (opd)
-│   ├── opal-pilot-dev-short/    오케스트레이터: Short Task (opds)
-│   ├── opal-pilot-dev-wireframe/ 오케스트레이터: Wireframe UI (opdw)
-│   ├── opal-pilot-write/        오케스트레이터: Write (opw)
-│   ├── opal-pilot-write-tech/   오케스트레이터: Write-Tech (opwt)
-│   ├── op-task/                 범용 단계: TASK.md 작성
-│   ├── op-task-qa/              범용 단계: QA 검증 (도메인 무관)
-│   ├── op-dev-analysis/         dev 단계: 코드베이스 분석
-│   ├── op-dev-plan/             dev 단계: 구현 계획
-│   ├── op-dev-todo/             dev 단계: 실행 체크리스트
-│   ├── op-dev-test-scenario/    dev 단계: 테스트 시나리오
-│   ├── op-dev-execute/          dev 단계: 코드 실행
-│   ├── op-dev-wireframe/        dev 단계: 와이어프레임 생성
-│   ├── op-dev-qa/               dev 단계: Dev QA 검증
-│   ├── api-analyzer/            독립: 외부 API 분석
-│   ├── interview/               독립: 요구사항 수집
-│   ├── opal-agent-creator/      OPAL: 에이전트 생성
-│   ├── opal-skill-creator/      OPAL: 스킬 생성
-│   ├── ui-designer/             독립: UI 구현
-│   ├── web-to-markdown/         독립: 웹 마크다운 변환
-│   └── wireframe-builder/       독립: UI 분석·설계
-├── agents/                      에이전트 (4개, 단일 AGENT.md 포맷)
-│   ├── opal-task-agent/         범용 워커
-│   ├── opal-task-qa-agent/      범용 QA 워커
-│   ├── op-dev-test-agent/       Test 에이전트
-│   └── wtm-agent/               웹 마크다운 변환 에이전트
-├── community-skills/            커뮤니티 스킬 기본 번들 (31개)
-│   ├── anthropics/              Anthropic 공식 (18개)
-│   ├── google-labs-code/        Google Labs Stitch (5개)
-│   ├── vercel-labs/             Vercel 개발 핵심 (5개)
-│   ├── trailofbits/             Trail of Bits (1개)
-│   ├── getsentry/               Sentry (1개)
-│   └── openai/                  OpenAI (1개)
-├── opal/                        OPAL AI 에이전트 (크로스 플랫폼)
-│   ├── bootstrapper/            부트스트래퍼 (플랫폼별)
-│   ├── core/                    에이전트 코어 (AGENT.md, identity-template.md)
-│   │   ├── references/          참조 레지스트리 + JSON 스킬 레지스트리
-│   │   └── mcps/                MCP 설정 템플릿 (서버별 JSON)
-│   ├── skills/                  OPAL 전용 스킬 (4개, opal- 접두사)
-│   ├── tools/                   CLI 도구 (skill-registry, check-env)
-│   └── templates/               프로젝트 에이전트 템플릿
-├── cursor-rules/                Cursor 프로젝트 규칙 템플릿
-├── scripts/                     설치 스크립트
-│   └── install-mac.sh
-└── tasks/                       태스크 산출물
+skills/                          독립 스킬 (5개, 파이프라인 없이 단독 사용)
+opal/skills/                     OPAL 스킬 (24개, 오케스트레이터 + 단계 스킬 + OPAL 전용)
+agents/                          에이전트 (4개, 단일 AGENT.md 포맷)
+community-skills/                커뮤니티 스킬 (31개)
+opal/core/                       에이전트 코어 + 참조 레지스트리
+scripts/                         설치 스크립트
 ```
+
+상세 아키텍처와 디렉토리 구조는 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)를 참조한다.
 
 ---
 

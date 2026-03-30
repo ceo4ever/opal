@@ -22,20 +22,19 @@
 | # | 등록일시 | 카테고리 | 상태 | 파일 | 설명 |
 |---|----------|----------|------|------|------|
 | 1 | 2026-03-22 | task | 예정 | [memory/project_security_task.md](memory/project_security_task.md) | 보안 전용 스킬+에이전트 생성 |
-| 2 | 2026-03-29 | task | 예정 | [memory/project_skill_source_move.md](memory/project_skill_source_move.md) | OPAL 전용 스킬 소스 opal/skills/로 이동 |
 | 3 | 2026-03-27 | project | 유효 | [memory/project_opi_vision.md](memory/project_opi_vision.md) | opi 비전: 프로젝트=WHAT/WHY, 스킬=HOW |
 
 ## 작업 히스토리 (최대 10개, FIFO)
 
 | # | 작업 | 단계 | 경로 | 시작일시 | 완료일시 |
 |---|------|------|------|---------|---------|
-| 1 | opi 범용 프로젝트 분석 개선 (050) | 완료 | tasks/050-opi-universal-analysis/ | 2026-03-30 | 2026-03-30 |
-| 2 | 워커 에이전트 프로젝트 컨텍스트 자율 로딩 (049) | 완료 | tasks/049-agent-project-context/ | 2026-03-30 | 2026-03-30 |
-| 3 | CLAUDE.md 슬림화 + PM 컨텍스트 최적화 (047) | 완료 | tasks/047-opi-claude-md-slim/ | 2026-03-30 | 2026-03-30 |
-| 4 | QA 에이전트 통합 (048) | 완료 | tasks/048-qa-agent-unify/ | 2026-03-29 | 2026-03-29 |
-| 5 | op-task-qa → op-dev-qa 리네이밍 + 범용 QA (046) | 완료 | tasks/046-qa-skill-rename/ | 2026-03-29 | 2026-03-29 |
-| 6 | 멀티 플랫폼 모델 매핑 참조 + 스킬 적용 (044) | 완료 | tasks/044-model-mapping-reference/ | 2026-03-29 | 2026-03-30 |
-| 7 | opal-project-pilot + 범용 스킬 + 에이전트 리네이밍 (045) | 완료 | tasks/045-opal-project-pilot/ | 2026-03-29 | 2026-03-29 |
-| 8 | opal-doc-standard v2.0 문서 유형 확장 (043) | 완료 | tasks/043-doc-standard-enhancement/ | 2026-03-29 | 2026-03-29 |
-| 9 | 컴포넌트 리네이밍 + 레거시 정리 (042) | 완료 | tasks/042-skills-registry-reclassify/ | 2026-03-29 | 2026-03-29 |
-| 10 | otp-write-tech 스킬 개발 (039) | 완료 | tasks/039-otp-write-tech-skill/ | 2026-03-29 | 2026-03-29 |
+| 1 | OPAL 전용 스킬 소스 이동 (051) | 완료 | tasks/051-opal-skill-source-move/ | 2026-03-30 | 2026-03-30 |
+| 2 | opi 범용 프로젝트 분석 개선 (050) | 완료 | tasks/050-opi-universal-analysis/ | 2026-03-30 | 2026-03-30 |
+| 3 | 워커 에이전트 프로젝트 컨텍스트 자율 로딩 (049) | 완료 | tasks/049-agent-project-context/ | 2026-03-30 | 2026-03-30 |
+| 4 | CLAUDE.md 슬림화 + PM 컨텍스트 최적화 (047) | 완료 | tasks/047-opi-claude-md-slim/ | 2026-03-30 | 2026-03-30 |
+| 5 | QA 에이전트 통합 (048) | 완료 | tasks/048-qa-agent-unify/ | 2026-03-29 | 2026-03-29 |
+| 6 | op-task-qa → op-dev-qa 리네이밍 + 범용 QA (046) | 완료 | tasks/046-qa-skill-rename/ | 2026-03-29 | 2026-03-29 |
+| 7 | 멀티 플랫폼 모델 매핑 참조 + 스킬 적용 (044) | 완료 | tasks/044-model-mapping-reference/ | 2026-03-29 | 2026-03-30 |
+| 8 | opal-project-pilot + 범용 스킬 + 에이전트 리네이밍 (045) | 완료 | tasks/045-opal-project-pilot/ | 2026-03-29 | 2026-03-29 |
+| 9 | opal-doc-standard v2.0 문서 유형 확장 (043) | 완료 | tasks/043-doc-standard-enhancement/ | 2026-03-29 | 2026-03-29 |
+| 10 | 컴포넌트 리네이밍 + 레거시 정리 (042) | 완료 | tasks/042-skills-registry-reclassify/ | 2026-03-29 | 2026-03-29 |

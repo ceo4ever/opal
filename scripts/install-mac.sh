@@ -277,12 +277,12 @@ install_opal() {
     cp "$opal_dir/core/AGENT.md" "$opal_home/AGENT.md"
     success "OPAL AGENT.md → $opal_home/AGENT.md"
 
-    # ── 프레임워크 스킬 (skills/ → ~/.opal/skills/) ──
+    # ── 독립 스킬 (skills/ → ~/.opal/skills/) ──
     local fw_skill_count
     fw_skill_count=$(find "$FRAMEWORK_ROOT/skills" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')
-    install_dir "$FRAMEWORK_ROOT/skills" "$opal_home/skills" "프레임워크 스킬 (${fw_skill_count}개)"
+    install_dir "$FRAMEWORK_ROOT/skills" "$opal_home/skills" "독립 스킬 (${fw_skill_count}개)"
 
-    # ── OPAL 전용 스킬 (opal/skills/ → ~/.opal/skills/) ──
+    # ── OPAL 스킬 (opal/skills/ → ~/.opal/skills/) ──
     local opal_skill_count
     opal_skill_count=$(find "$opal_dir/skills" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')
     for skill_dir in "$opal_dir/skills"/*/; do
@@ -292,7 +292,7 @@ install_opal() {
             install_dir "$skill_dir" "$opal_home/skills/$skill_name" "OPAL 스킬: $skill_name"
         fi
     done
-    success "OPAL 전용 스킬 ${opal_skill_count}개 → $opal_home/skills/"
+    success "OPAL 스킬 ${opal_skill_count}개 → $opal_home/skills/"
 
     # ── 에이전트 (agents/ → ~/.opal/agents/) ──
     local agent_count
@@ -370,7 +370,7 @@ install_opal() {
         "$USER_HOME/.gemini/GEMINI.md" "Gemini"
 
     # ── 레거시 정리 안내 ──
-    print_cleanup_notice
+    # print_cleanup_notice
 }
 
 install_opal_community_skills() {
