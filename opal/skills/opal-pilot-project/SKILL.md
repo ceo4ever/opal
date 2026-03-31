@@ -57,9 +57,10 @@ op-task-execute 워커 디스패치. **model**: standard. checklist_source: PLAN
 ### EXECUTE 완료 후
 
 워커가 changed_files를 반환하면:
-1. **PM Gate** — .opal/AGENT.md 기준 실행 결과 검토 (리네이밍 잔여, 문서 일관성 등)
-2. **DONE.md 생성**
-3. 사용자에게 완료 보고
+1. **QA Gate** (op-task-qa) — QA 에이전트 호출
+2. **PM Gate** — QA 결과 + 실행 결과 검토 + QA 체크리스트 갱신 (공통 하네스 §2 "QA 체크리스트 검증" 참조)
+3. **DONE.md 생성**
+4. 사용자에게 완료 보고
 
 보고 형식:
 ```
@@ -83,6 +84,27 @@ op-task-execute 워커 디스패치. **model**: standard. checklist_source: PLAN
 
 ---
 
+## Agentic Mode
+
+opal-harness-agentic.md 참조. `--agentic` 플래그 활성화 시 이 스킬의 차이점만 기술한다.
+
+### 활성화
+
+`//opp --agentic {작업 설명}` 형식으로 호출. STATE.md 모드 필드를 `agentic`으로 기록한다.
+
+### 자율 게이트 흐름
+
+```
+TASK (PM 직접) → PLAN Gate → EXECUTE Gate
+                  PM 자율 검토   PM 자율 검토
+```
+
+- TASK 이후 2개 게이트를 PM이 자율 통과
+- 각 게이트에서 opal-harness-agentic.md "Gate 루핑 규칙" 적용
+- AGENTIC-LOG.md에 모든 판단/오류/수정/의사결정 기록
+
+---
+
 ## 변경이력
 
 | 버전 | 날짜 | 변경내용 |
@@ -91,3 +113,5 @@ op-task-execute 워커 디스패치. **model**: standard. checklist_source: PLAN
 | v1.1 | 2026-03-29 | op-plan → op-task-plan, op-execute → op-task-execute 리네이밍 반영. EXECUTE 완료 후 PM Gate 추가 |
 | v1.2 | 2026-03-29 | model override를 레벨 기반으로 전환 (044) |
 | v1.3 | 2026-03-30 | opal-project-pilot → opal-pilot-project 리네이밍 + 정체성 정비 (052) |
+| v1.4 | 2026-03-31 | Agentic Mode 섹션 추가 (057) |
+| v1.5 | 2026-03-31 | §7 참조 → opal-harness-agentic.md 참조 전환. EXECUTE 후 QA Gate + QA 체크리스트 갱신 추가 (058) |

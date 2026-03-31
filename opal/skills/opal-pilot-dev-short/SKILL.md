@@ -51,8 +51,9 @@ op-dev-execute 워커 디스패치. **model**: standard. checklist_source: PLAN.
 
 워커가 changed_files를 반환하면:
 1. **op-dev-test-agent 워커 호출** -> TEST-SCENARIO.md에 결과 채움 + 판정
-2. **DONE.md 생성**
-3. 사용자에게 완료 보고
+2. **PM Gate** — TEST-SCENARIO 결과 검토 + QA 체크리스트 갱신 (공통 하네스 §2 "QA 체크리스트 검증" 참조)
+3. **DONE.md 생성**
+4. 사용자에게 완료 보고
 
 ---
 
@@ -86,6 +87,31 @@ Full Task(opal-pilot-dev)로 전환할까요?
 
 ---
 
+## Agentic Mode
+
+opal-harness-agentic.md 참조. `--agentic` 플래그 활성화 시 이 스킬의 차이점만 기술한다.
+
+### 활성화
+
+`//opds --agentic {작업 설명}` 형식으로 호출. STATE.md 모드 필드를 `agentic`으로 기록한다.
+
+### 자율 게이트 흐름
+
+```
+TASK (PM 직접) → PLAN+TEST-SCENARIO Gate → EXECUTE Gate
+                   PM 자율 검토              PM 자율 검토
+```
+
+- TASK 이후 2개 게이트를 PM이 자율 통과
+- 각 게이트에서 opal-harness-agentic.md "Gate 루핑 규칙" 적용
+- AGENTIC-LOG.md에 모든 판단/오류/수정/의사결정 기록
+
+### 에스컬레이션 규칙 (agentic 유지)
+
+에스컬레이션 규칙(Full Task 전환 제안)은 agentic mode에서도 유지한다. PM이 판단하여 자동 전환하지 않고, 사용자에게 에스컬레이션으로 보고한다.
+
+---
+
 ## 변경이력
 
 | 버전 | 날짜 | 변경내용 |
@@ -96,3 +122,5 @@ Full Task(opal-pilot-dev)로 전환할까요?
 | v1.3 | 2026-03-28 | harness 참조 슬림화 -- 공통 인프라를 opal-harness.md로 위임 |
 | v1.4 | 2026-03-29 | 컴포넌트 리네이밍 (042) |
 | v1.5 | 2026-03-29 | model override를 레벨 기반으로 전환 (044) |
+| v1.6 | 2026-03-31 | Agentic Mode 섹션 추가 (057) |
+| v1.7 | 2026-03-31 | §7 참조 → opal-harness-agentic.md 참조 전환. EXECUTE 후 PM Gate + QA 체크리스트 갱신 추가 (058) |

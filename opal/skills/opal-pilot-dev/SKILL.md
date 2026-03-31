@@ -87,13 +87,34 @@ op-dev-execute 스킬을 수행하라.
 ### EXECUTE 완료 후
 워커가 changed_files를 반환하면:
 1. **op-dev-test-agent 워커 호출** → TEST-SCENARIO.md에 결과 채움 + 판정
-2. **DONE.md 생성** (checkpoint-guide.md 참조)
-3. 사용자에게 완료 보고
+2. **PM Gate** — TEST-SCENARIO 결과 검토 + QA 체크리스트 갱신 (공통 하네스 §2 "QA 체크리스트 검증" 참조)
+3. **DONE.md 생성** (checkpoint-guide.md 참조)
+4. 사용자에게 완료 보고
 
 ## STATE.md 도메인 설정
 - 모드: Full Task
 - 단계: TASK / ANALYSIS / PLAN+TEST-SCENARIO / EXECUTE
 - 산출물: TASK.md, ANALYSIS.md, PLAN.md, TEST-SCENARIO.md, QA-*.md, DONE.md
+
+## Agentic Mode
+
+opal-harness-agentic.md 참조. `--agentic` 플래그 활성화 시 이 스킬의 차이점만 기술한다.
+
+### 활성화
+
+`//opd --agentic {작업 설명}` 형식으로 호출. STATE.md 모드 필드를 `agentic`으로 기록한다.
+
+### 자율 게이트 흐름
+
+```
+TASK (PM 직접) → ANALYSIS Gate → PLAN+TEST-SCENARIO Gate → EXECUTE Gate
+                   PM 자율 검토      PM 자율 검토              PM 자율 검토
+```
+
+- TASK 이후 3개 게이트를 PM이 자율 통과
+- EXECUTE 진입 = PM이 대행 승인 (구현 금지 원칙의 "실행 허가"를 PM이 판단)
+- 각 게이트에서 opal-harness-agentic.md "Gate 루핑 규칙" 적용
+- AGENTIC-LOG.md에 모든 판단/오류/수정/의사결정 기록
 
 ## 변경이력
 | 버전 | 날짜 | 변경내용 |
@@ -104,3 +125,5 @@ op-dev-execute 스킬을 수행하라.
 | v1.3 | 2026-03-28 | Harness 참조 전환으로 슬림화 (265→105줄) |
 | v1.4 | 2026-03-29 | 컴포넌트 리네이밍 (042) |
 | v1.5 | 2026-03-29 | model override를 레벨 기반으로 전환 (044) |
+| v1.6 | 2026-03-31 | Agentic Mode 섹션 추가 (057) |
+| v1.7 | 2026-03-31 | §7 참조 → opal-harness-agentic.md 참조 전환. EXECUTE 후 PM Gate + QA 체크리스트 갱신 추가 (058) |

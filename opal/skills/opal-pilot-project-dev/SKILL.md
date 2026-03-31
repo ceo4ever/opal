@@ -563,6 +563,42 @@ PM 검수 로그에서 **반복 패턴**이 감지되면 PM 학습 루프로 승
 
 ---
 
+## Agentic Mode
+
+opal-harness-agentic.md 참조. `--agentic` 플래그 활성화 시 이 스킬의 차이점만 기술한다.
+
+### 활성화
+
+`//oppd --agentic {작업 설명}` 형식으로 호출. STATE.md 모드 필드를 `agentic`으로 기록한다.
+
+### 자율 게이트 흐름
+
+```
+Phase 1 Gate → Phase 2 Gate → Phase 3 (액션 내부 Gate + 액션 간 Gate)
+PM 자율 검토    PM 자율 검토    PM 자율 검토
+```
+
+#### Phase 1~2: 사용자 확정 게이트 대행
+
+- Phase 1 (opwt 결과): PM이 PRD/TRD 품질을 검토하여 자율 확정 → Phase 2 진행
+- Phase 2 (ROADMAP): PM이 로드맵을 검수하여 자율 확정 → Phase 3 진행
+
+#### Phase 3: 액션 실행
+
+- **액션 내부**: 각 액션이 opds 파이프라인(TASK→PLAN→EXECUTE)이므로, 액션 내 각 Gate에도 **opal-harness-agentic.md "Gate 루핑 규칙"** 동일 적용
+- **액션 간 게이트**: PM이 각 액션 결과를 검수하여 자율 승인 → 다음 액션 진행
+  - interactive에서는 "다음 액션으로 넘어갈까요?" 사용자 게이트 → agentic에서는 PM이 대행
+  - 각 액션 완료 시 AGENTIC-LOG.md에 `GATE` 엔트리 기록
+  - 액션 실패(status: failed) 시에도 PM이 판단: 재시도 가능 → `FIX` + 재디스패치, 불가 → `ESCALATION`
+
+### oppd 고유 에스컬레이션 조건
+
+opal-harness-agentic.md "에스컬레이션 조건" 공통 기준에 추가:
+- PRD/TRD에서 사용자 비즈니스 판단이 필요한 경우
+- 액션 Critical Fail로 전체 로드맵 재조정이 필요한 경우
+
+---
+
 ## 변경이력
 
 | 버전 | 날짜 | 변경내용 |
@@ -571,3 +607,5 @@ PM 검수 로그에서 **반복 패턴**이 감지되면 PM 학습 루프로 승
 | v2.0 | 2026-03-30 | opal-project-dev-pilot → opal-pilot-project-dev 리네이밍. Phase 1~2(PRD/TRD)를 opwt 위임으로 전환. 4→3 Phase 슬림화 (052) |
 | v3.0 | 2026-03-30 | agentic 자율 루핑 + 병렬 실행 + actions 구조 (053) |
 | v3.1 | 2026-03-30 | Phase 3 opd/opds 호출 → opal-task-action-agent 디스패치로 전환 (056) |
+| v3.2 | 2026-03-31 | Agentic Mode 섹션 추가 — 전 Phase 적용 (057) |
+| v3.3 | 2026-03-31 | §7 참조 → opal-harness-agentic.md 참조 전환 (058) |
