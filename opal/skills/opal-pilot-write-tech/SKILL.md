@@ -26,6 +26,7 @@ description: |
 **필수 4종**: PRD, TRD, 서비스 정책서(복수), IA(기능 포함)
 **선택 4종**: 기능도, 순서도, 운영 정책서, 서비스 매뉴얼
 **순서 체인**: PRD → TRD → 서비스 정책서 → IA (역방향도 가능)
+**외부 참조**: 와이어프레임, ERD, API 명세서 등 프로젝트 내 기존 문서를 참조하여 작성 품질 향상 (읽기 전용, 선택적)
 
 ## 산출물 저장 구조
 
@@ -47,7 +48,7 @@ description: |
 - 워커 프롬프트: `references/network-guide.md` "Phase 1 워커 프롬프트"
 
 ### Phase 2: PM 진단
-PM 직접 수행: 워커 결과 종합 → 교차 논리 검토 → 누락/불일치 진단 → 문서별 조치(보강/재작성/신규) → `diagnosis.json` 생성 → 배치 편성(`depends_on` 기반) → 사용자 진단 보고
+PM 직접 수행: 워커 결과 종합 → 교차 논리 검토 → 누락/불일치 진단 → **외부 참조 산출물 스캔** → 문서별 조치(보강/재작성/신규) → `diagnosis.json` 생성 → 배치 편성(`depends_on` 기반) → 사용자 진단 보고
 
 ### Phase 3: 병렬 작성
 - `diagnosis.json` 파싱 → 배치별 순회 (독립=병렬, 의존=순차)
@@ -78,8 +79,8 @@ opal-doc-standard 적용: `~/.opal/references/opal-doc-standard.md`
 
 ## 참조 가이드
 
-- `references/network-guide.md` — 산출물 정의, 연결 맵, diagnosis.json 스키마, 워커 프롬프트, 배치 규칙, IA 형식
-- `references/consistency-rules.md` — 유형 간/내 검증, QA 워커 프롬프트
+- `references/network-guide.md` — 산출물 정의, 연결 맵, diagnosis.json 스키마, 워커 프롬프트, 배치 규칙, IA 형식, **외부 참조 산출물 가이드**
+- `references/consistency-rules.md` — 유형 간/내 검증, QA 워커 프롬프트, **외부 참조 검증**
 
 ## 변경이력
 
@@ -88,3 +89,4 @@ opal-doc-standard 적용: `~/.opal/references/opal-doc-standard.md`
 | v1.0 | 2026-03-29 | 초기 작성 |
 | v1.1 | 2026-03-28 | Harness 참조 전환으로 슬림화 |
 | v1.2 | 2026-03-29 | 컴포넌트 리네이밍 (042) |
+| v1.3 | 2026-04-01 | 외부 참조 산출물 지원 — diagnosis.json reference_artifacts[], 워커 프롬프트 확장, 외부 참조 검증 규칙 (062) |
