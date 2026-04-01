@@ -80,6 +80,7 @@
 2. 공통 하네스 Read 후, 모드에 따라 **서브 하네스 1개를 추가 Read**한다:
    - `--agentic` 플래그 없음 (기본) → `opal-harness-interactive.md`
    - `--agentic` 플래그 있음 → `opal-harness-agentic.md`
+   - **단, 해당 서브 하네스가 현재 세션 컨텍스트에 이미 로딩되어 있으면 Read를 스킵한다.**
 3. 새 모드 추가 시: 이 테이블에 행을 추가하고, 서브 하네스 파일을 생성한다
 
 ### QA 체크리스트 검증
