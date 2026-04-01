@@ -66,7 +66,7 @@ description: |
 ```markdown
 # TASK: {제목}
 
-> 작성일: YYYY-MM-DD | 작업 유형: {신규/개선/수정/오류/Wireframe UI} | 적용 스킬: {약어}
+> 작성일: YYYY-MM-DD | 작업 유형: {신규/개선/수정/오류/Wireframe UI} | 적용 스킬: {약어} | 모드: {interactive/agentic}
 > 입력: 사용자 요청
 > 출력: TASK.md
 
@@ -149,6 +149,7 @@ tasks/{NNN}-{스킬약어}-{태스크명}/TASK.md
 
 TASK.md 완성 전에 다음을 확인한다:
 
+- [ ] 모드(interactive/agentic)가 헤더에 기록되었는가
 - [ ] 작업 유형이 정확히 판별되었는가
 - [ ] 작업 목표가 1-2문장으로 명확한가
 - [ ] 요구사항이 검증 가능한 단위로 분리되었는가

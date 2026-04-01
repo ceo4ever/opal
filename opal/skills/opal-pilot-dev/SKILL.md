@@ -11,6 +11,10 @@ description: |
 모드: Full Task (TASK → ANALYSIS → PLAN+TEST-SCENARIO → EXECUTE)
 > 부트스트랩에서 로드되지 않은 경우: `~/.opal/references/opal-harness.md`를 Read한다.
 
+**[MUST]** 스킬 시작 즉시 모드에 따라 서브 하네스를 Read한다. 이 단계를 건너뛰면 안 된다:
+- `--agentic` 플래그 있음 → `~/.opal/references/opal-harness-agentic.md`를 Read한다
+- `--agentic` 없음 (기본) → `~/.opal/references/opal-harness-interactive.md`를 Read한다
+
 ## STEP 1: TASK
 opal-harness.md "TASK 공통 프로세스" 참조.
 
