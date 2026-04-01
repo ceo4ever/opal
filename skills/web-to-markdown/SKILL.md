@@ -10,7 +10,7 @@ description: |
 
 > 작성일: 2026-03-20 | 버전: v1.1
 
-URL을 입력받아 웹 페이지 콘텐츠를 정제된 마크다운(.md)으로 변환한다. 2단계 폴백 전략으로 다양한 웹 페이지를 안정적으로 처리하고, 복수 URL은 서브에이전트로 병렬 처리한다.
+URL을 입력받아 웹 페이지 콘텐츠를 정제된 마크다운(.md)으로 변환한다. 3단계 폴백 전략으로 다양한 웹 페이지를 안정적으로 처리하고, 복수 URL은 서브에이전트로 병렬 처리한다.
 
 ## 추출 모드
 
@@ -33,9 +33,12 @@ URL 입력 (단일 또는 복수)
   │     ├─ Phase 1: WebFetch (내장 도구)
   │     │     ├─ 성공 → 본문 추출 + MD 정제 → 저장
   │     │     └─ 실패 (403, 빈 콘텐츠, JS 필요, 타임아웃)
-  │     │           └─ Phase 2: 브라우저 폴백 (Crawl4AI)
-  │     │                 ├─ Crawl4AI 설치됨 → Python 스크립트 실행
-  │     │                 └─ Crawl4AI 미설치 → 설치 안내 후 중단
+  │     │           └─ Phase 2: 브라우저 폴백 (Crawl4AI, Python 3.10+)
+  │     │                 ├─ 설치됨 + 버전 OK → Python 스크립트 실행
+  │     │                 └─ 미설치 또는 버전 불일치
+  │     │                       └─ Phase 3: Node Playwright 폴백
+  │     │                             ├─ playwright npm 설치됨 → Node 스크립트 실행 + MD 정제
+  │     │                             └─ 미설치 → 설치 안내 후 중단
   │     └─ 결과: {slug}.md 저장
   │
   └─ 복수 URL → 서브에이전트 병렬 디스패치
@@ -90,9 +93,13 @@ JavaScript 렌더링이 필요한 페이지를 Crawl4AI(Playwright 내장)로 �
 
 ### 설치 확인
 
+Python 3.10+ 버전과 crawl4ai 패키지를 동시에 확인한다:
+
 ```bash
-python3 -c "import crawl4ai" 2>/dev/null
+python3 -c "import sys; assert sys.version_info >= (3, 10), 'Python 3.10+ required'; import crawl4ai" 2>/dev/null
 ```
+
+import 성공 시 진입. 버전 불일치 또는 패키지 미설치 시 Phase 3로 전환한다.
 
 ### 실행
 
@@ -131,22 +138,61 @@ asyncio.run(crawl())
 
 Crawl4AI가 마크다운 변환을 내장하므로, 별도 MD 정제 로직이 불필요하다.
 
-### Crawl4AI 미설치 시
+### Crawl4AI 사용 불가 시
 
-사용자에게 설치 방법을 안내하고 Phase 2를 중단한다. Phase 1 결과가 있으면 (불완전하더라도) 그것을 사용한다.
+설치 안내 없이 즉시 Phase 3(Node Playwright)로 전환한다.
+
+---
+
+## Phase 3: Node Playwright 폴백
+
+Crawl4AI를 사용할 수 없을 때(미설치, Python 버전 불일치, 런타임 오류) Node.js Playwright로 폴백한다.
+
+### 설치 확인
+
+```bash
+node -e "require('playwright')" 2>/dev/null
+```
+
+성공 시 진입. 실패 시 설치 안내 후 중단한다.
+
+### 실행
+
+```bash
+node -e "
+const { chromium } = require('playwright');
+(async () => {
+  const browser = await chromium.launch({ headless: true });
+  const page = await browser.newPage();
+  await page.goto('${URL}', { waitUntil: 'networkidle', timeout: 30000 });
+  const html = await page.content();
+  console.log(html);
+  await browser.close();
+})();
+"
+```
+
+Phase 3는 HTML을 stdout으로 출력한다. **에이전트가 이 HTML을 받아서 MD 정제 규칙(아래 "콘텐츠 추출 및 MD 정제" 섹션)을 적용한 뒤 .md 파일로 저장한다.** stdout을 파일로 직접 리다이렉트(`> file.txt`)하지 않는다.
+
+### Playwright 미설치 시
+
+사용자에게 설치 방법을 안내하고 중단한다. Phase 1 결과가 있으면 (불완전하더라도) 그것을 사용한다.
 
 ```
-⚠️ 브라우저 폴백 불가: Crawl4AI가 설치되어 있지 않습니다.
+⚠️ 모든 브라우저 폴백 불가: Crawl4AI, Playwright 모두 사용할 수 없습니다.
 
-설치 방법:
-  pip install crawl4ai && crawl4ai-setup
+설치 방법 (택 1):
+  • Crawl4AI: pip install crawl4ai && crawl4ai-setup  (Python 3.10+ 필요)
+  • Playwright: npm install playwright
 ```
 
 ---
 
 ## 콘텐츠 추출 및 MD 정제
 
-Phase 1에서는 아래 정제 규칙을 적용한다. Phase 2(Crawl4AI)는 마크다운 변환을 내장하므로 별도 정제가 불필요하다.
+Phase 1과 Phase 3에서 아래 정제 규칙을 적용한다. Phase 2(Crawl4AI)는 마크다운 변환을 내장하므로 별도 정제가 불필요하다.
+
+**중요**: 어떤 Phase를 거치든 최종 산출물은 반드시 아래 "산출물 형식"을 따르는 .md 파일이어야 한다. 중간 파일(.txt, .html 등)을 생성하지 않는다.
 
 ### 공통 제거 대상 (full/clean 모두)
 
@@ -185,7 +231,7 @@ clean 모드에서만 아래 요소를 추가로 제거한다:
 
 > 소스: {URL}
 > 캡처일: {YYYY-MM-DD HH:mm}
-> 추출 방식: {WebFetch | Crawl4AI}
+> 추출 방식: {WebFetch | Crawl4AI | Playwright}
 > 추출 모드: {full | clean}
 
 ---
@@ -201,10 +247,9 @@ clean 모드에서만 아래 요소를 추가로 제거한다:
 
 | 순위 | 조건 | 경로 |
 |------|------|------|
-| 1 | DTP 태스크 작업 중 | `{task-folder}/references/{slug}.md` |
-| 2 | 프로젝트 내 기본 경로 | `{project}/docs/web-captures/{slug}.md` |
-| 3 | 사용자 지정 경로 | 사용자가 명시한 경로 |
-| 4 | 임시 경로 | `/tmp/web-to-markdown/{slug}.md` |
+| 1 | 사용자 지정 경로 | 사용자가 명시한 경로 |
+| 2 | 태스크 작업 중 | `{task-folder}/references/{slug}.md` |
+| 3 | 그 외 | `/tmp/web-to-markdown/{slug}.md` |
 
 ### slug 생성 규칙
 
@@ -214,13 +259,13 @@ URL에서 도메인과 경로를 조합하여 kebab-case slug를 생성한다:
 - 최대 80자, 초과 시 뒤에서 truncate
 - 동일 slug 존재 시 `{slug}-{n}.md` (n=2,3,...)
 
-### DTP 태스크 폴더 감지
+### 태스크 폴더 감지
 
-현재 작업 컨텍스트에서 DTP 태스크 폴더를 감지한다:
+현재 작업 컨텍스트에서 태스크 폴더를 감지한다:
 
 1. 현재 대화에서 사용 중인 태스크 경로 확인 (예: `tasks/{task-name}/`)
 2. 해당 폴더 내 `references/` 디렉토리 존재 확인 (없으면 생성)
-3. 태스크 폴더를 감지할 수 없으면 순위 2로 넘어간다
+3. 태스크 폴더를 감지할 수 없으면 순위 3(임시 경로)으로 넘어간다
 
 ---
 
@@ -279,7 +324,7 @@ URL 목록 수신
 | 매우 긴 페이지 (10만자 초과) | 본문을 10만자에서 truncate, 안내 메시지 추가 |
 | 리다이렉트 | 최종 URL을 따라가되, 메타정보에 원본+최종 URL 모두 기록 |
 | robots.txt 차단 | 안내 후 중단 (강제 우회 금지) |
-| 타임아웃 | Phase 1: 15초, Phase 2: 30초 후 실패 처리 |
+| 타임아웃 | Phase 1: 15초, Phase 2/3: 30초 후 실패 처리 |
 
 ---
 
@@ -288,12 +333,17 @@ URL 목록 수신
 | 도구 | 필수 여부 | 용도 |
 |------|----------|------|
 | WebFetch (내장) | 필수 | Phase 1 경량 fetch |
-| Crawl4AI (`crawl4ai`) | 선택 | Phase 2 브라우저 폴백 (Playwright 내장) |
+| Crawl4AI (`crawl4ai`) | 선택 | Phase 2 브라우저 폴백 (Python 3.10+, Playwright 내장) |
+| Playwright (`playwright`) | 선택 | Phase 3 브라우저 폴백 (Node.js) |
 | Agent 도구 | 선택 | 복수 URL 병렬 처리 |
 
-Crawl4AI 설치 방법:
+설치 방법 (브라우저 폴백, 택 1 이상):
 ```bash
+# Crawl4AI (Python 3.10+)
 pip install crawl4ai && crawl4ai-setup
+
+# Playwright (Node.js)
+npm install playwright
 ```
 
 ---
@@ -304,3 +354,4 @@ pip install crawl4ai && crawl4ai-setup
 |------|------|---------|
 | v1.0 | 2026-03-20 | 초기 작성 — full/clean 듀얼 모드, 2단계 폴백(WebFetch→Playwright), 복수 URL 병렬 처리(wtm-agent) |
 | v1.1 | 2026-03-20 | Phase 2 백엔드를 Playwright에서 Crawl4AI로 교체 — 마크다운 변환 내장, Anti-bot/stealth 지원 |
+| v1.2 | 2026-04-01 | 3단계 폴백(WebFetch→Crawl4AI→Node Playwright), Phase 2 Python 버전 체크, 저장 경로 간소화, wtm 약어 등록 |
