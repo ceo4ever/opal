@@ -213,12 +213,14 @@ oppd Phase 3에서 병렬 태스크 실행 시 STATE.md를 다음과 같이 확�
 1. `op-task/SKILL.md`를 Read한다.
    - 탐색: `{프로젝트}/.opal/skills/op-task/SKILL.md` -> `~/.opal/skills/op-task/SKILL.md`
 2. 스킬 프로세스를 따라 TASK.md를 작성한다.
-3. STATE.md를 생성한다.
-4. 사용자에게 보고하고 다음 단계 승인을 받는다.
+3. **STEP 5(오케스트레이터 선택)에서 결정된 스킬약어**를 폴더명과 TASK.md 헤더 `적용 스킬` 필드에 반영한다.
+4. STATE.md를 생성한다.
+5. 사용자에게 보고하고 다음 단계 승인을 받는다.
 
 ```
 📋 [TASK] 완료 보고
-📎 산출물: tasks/{NNN}-{태스크명}/TASK.md
+📎 산출물: tasks/{NNN}-{스킬약어}-{태스크명}/TASK.md
+적용 스킬: {약어}
 다음 단계({다음 단계명})로 넘어갈까요?
 ```
 

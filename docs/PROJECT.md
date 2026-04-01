@@ -45,7 +45,7 @@
 
 | 폴더 | 네이밍 규칙 | 예시 |
 |------|-----------|------|
-| `tasks/` | `{NNN}-{스킬약어 또는 대상}-{동작/설명}/` | `055-opi-task-record/`, `052-orchestrator-cleanup/` |
+| `tasks/` | `{NNN}-{스킬약어}-{설명}/` | `066-opp-orchestrator-skill-gate/`, `062-opp-opwt-external-refs/` |
 | `skills/` | `{기능명}/` (kebab-case) | `api-analyzer/`, `interview/` |
 | `opal/skills/` | `{그룹}-{역할}/` (접두사 체계) | `opal-pilot-dev/`, `op-dev-plan/` |
 | `agents/` | `{대상}-{역할}/` | `opal-task-agent/`, `wtm-agent/` |

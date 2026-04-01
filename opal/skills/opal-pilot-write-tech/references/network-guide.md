@@ -24,6 +24,16 @@
 | **운영 정책서** | 운영 기준, 권한, 처리 절차 등 내부 운영 규정 |
 | **서비스 매뉴얼** | 사용자 또는 운영자 대상 사용 가이드 |
 
+### 프로젝트 특화 선택 타입
+
+> 모든 프로젝트에 해당하지 않으며, 프로젝트 특성에 따라 선택적으로 추가한다.
+
+| 유형 | 설명 | 수량 | 적용 조건 |
+|------|------|------|----------|
+| **외부 API 명세서** | 서드파티 API 스펙 분석·활용 정책 기획 산출물. 메타, 구글광고, 카카오 등 외부 API를 연동하는 기획 단계에서 작성한다. API 제공 데이터 구조, 한도/제약, 인증 방식, 활용 범위를 정리하고 정책서·IA·TRD와 논리적으로 연결한다. | API 공급자별 또는 도메인별 | 외부(서드파티) API 연동 프로젝트 |
+
+> **내부 API와의 구분**: 외부 API 명세서는 기획 단계 산출물이다. 시스템 자체 API 설계(내부 API)는 개발 단계에서 별도로 처리하며 opwt 관리 대상이 아니다.
+
 ---
 
 ## 2. 논리적 연결 맵
@@ -54,6 +64,22 @@ TRD ↔ IA
 서비스 정책서 ↔ 운영 정책서
   서비스 정책서 → 운영 정책서: 서비스 규정 → 운영 처리 절차 도출
   운영 정책서 → 서비스 정책서: 운영 기준 → 서비스 정책 보완
+
+외부 API 명세서 ↔ TRD (외부 API 연동 프로젝트 한정)
+  외부 API 명세서 → TRD: API 엔드포인트/파라미터/응답 스펙 → 기술 요구사항 도출
+  TRD → 외부 API 명세서: 기술 제약(인증, 한도) → 명세서 보완
+
+외부 API 명세서 ↔ 서비스 정책서 (외부 API 연동 프로젝트 한정)
+  외부 API 명세서 → 서비스 정책서: API 한도/제약/정책 → 서비스 정책 규칙 반영
+  서비스 정책서 → 외부 API 명세서: 서비스 정책 결정 → API 활용 범위 재검토
+
+외부 API 명세서 ↔ IA (외부 API 연동 프로젝트 한정)
+  외부 API 명세서 → IA: API 제공 데이터 필드 → 기능 정의 및 표시 항목 설계
+  IA → 외부 API 명세서: 기능 요구 데이터 → 필요 API 필드 보완 확인
+
+외부 API 명세서 ↔ 와이어프레임 (외부 API 연동 프로젝트 한정)
+  외부 API 명세서 → 와이어프레임: API 응답 데이터 구조 → 화면 구성요소 설계 검증
+  와이어프레임 → 외부 API 명세서: 화면 표시 항목 → API 필드 커버리지 확인
 ```
 
 ### 유형 내 연결 (복수 정책서 간)
@@ -157,7 +183,7 @@ Phase 2 PM 진단 산출물 JSON 구조.
   "documents": [
     {
       "id": "고유 식별자 (kebab-case)",
-      "type": "PRD | TRD | 서비스 정책서 | IA | 기능도 | 순서도 | 운영 정책서 | 서비스 매뉴얼",
+      "type": "PRD | TRD | 서비스 정책서 | IA | 기능도 | 순서도 | 운영 정책서 | 서비스 매뉴얼 | 외부 API 명세서",
       "name": "문서명",
       "path": "기존 경로 (없으면 null)",
       "status": "보강 | 재작성 | 신규 | OK",
@@ -360,6 +386,43 @@ Phase 2 PM 진단 산출물 JSON 구조.
 미결정 항목 목록을 요약하여 보고한다.
 ```
 
+### 7-4. 외부 API 명세서 신규 작성 (프로젝트 특화)
+
+```
+## 작업 지시
+
+당신은 기술 문서 작성 전문가입니다. 외부(서드파티) API를 기획 관점에서 분석하고 명세서를 작성합니다.
+
+### 대상 API
+- API명: {name} (예: Meta Marketing API, Google Ads API)
+- 저장 경로: {target_path}
+- 분석 범위: {scope} (예: 광고 캠페인 데이터 조회, 인사이트 리포트 등)
+
+### 참조 문서
+{depends_on 문서 목록과 경로}
+
+### 수행 작업
+
+1. 참조 문서(PRD, TRD 등)를 읽어 프로젝트에서 이 API를 어떤 목적으로 활용하는지 파악한다.
+2. 다음 항목을 중심으로 외부 API 명세서를 작성한다:
+   - **개요**: API 공급자, 용도, 버전, 공식 문서 링크
+   - **인증 방식**: OAuth, API Key 등 인증 메커니즘 및 토큰 관리
+   - **주요 엔드포인트**: 프로젝트에서 활용할 엔드포인트 목록 (경로, 메서드, 설명)
+   - **요청/응답 스펙**: 주요 파라미터, 응답 필드, 데이터 타입
+   - **한도 및 제약**: Rate limit, 데이터 보존 기간, 접근 권한 범위
+   - **활용 시나리오**: 프로젝트 기능과 API 엔드포인트 매핑
+   - **미결정 항목**: 확인 필요한 사항 목록
+3. 기획 관점에서 정책서·IA와의 연결 항목을 명시한다:
+   - 정책 규칙에 반영해야 할 API 제약 사항
+   - IA 기능 정의에 반영할 API 제공 데이터 필드
+4. 내부 API 설계(개발 단계)와 혼동하지 않도록 "기획 산출물" 임을 명시한다.
+
+### 출력
+
+작성된 외부 API 명세서를 지정 경로에 저장한다.
+미결정 항목 목록을 요약하여 보고한다.
+```
+
 ---
 
 ## 8. 배치 편성 규칙
@@ -415,9 +478,17 @@ depends_on가 있는 문서  →  의존 문서 배치 완료 후 다음 배치
 
 ## 9. IA 형식 가이드
 
-### IA JSON 스키마
+### 산출물 구성
 
-IA는 메뉴 구조와 기능 정의를 통합한 JSON으로 작성한다.
+IA는 **JSON + Mermaid 사이트맵** 이중 출력을 기본으로 한다.
+
+| 파일 | 역할 | 필수 여부 |
+|------|------|----------|
+| `ia.json` | 구조 데이터 — 기능 정의, 정책 연결, 조건 등 전체 스펙 | 필수 |
+| `ia-sitemap.md` | Mermaid 시각화 — 계층 구조 사이트맵, 기획 검토용 | 필수 |
+| `ia.xlsx` | 스프레드시트 내보내기 — 외부 공유, 비개발자 협업 시 | 선택 |
+
+### IA JSON 스키마
 
 ```json
 {
@@ -427,16 +498,17 @@ IA는 메뉴 구조와 기능 정의를 통합한 JSON으로 작성한다.
     {
       "id": "메뉴 고유 식별자 (kebab-case)",
       "name": "메뉴명",
+      "type": "html | app | popup | batch | external-api",
       "depth": 1,
       "parent_id": null,
+      "description": "화면 설명",
       "path": "URL 경로 (해당 시)",
       "access": "public | member | admin",
       "features": [
         {
           "id": "기능 고유 식별자",
           "name": "기능명",
-          "description": "기능 설명",
-          "conditions": ["조건 1", "조건 2"],
+          "description": "기능 설명 (조건/규칙 포함)",
           "linked_policy": ["연관 정책서 id"]
         }
       ],
@@ -451,29 +523,82 @@ IA는 메뉴 구조와 기능 정의를 통합한 JSON으로 작성한다.
 | 필드 | 설명 |
 |------|------|
 | `menus[].id` | kebab-case 고유 식별자. 예: `home`, `mypage-order` |
+| `menus[].type` | 화면 타입: `html`(웹 페이지), `app`(앱 화면), `popup`(팝업), `batch`(배치), `external-api`(외부 API 연동) |
 | `menus[].depth` | 메뉴 깊이. 최상위 = 1 |
 | `menus[].parent_id` | 부모 메뉴 id. 최상위는 `null` |
+| `menus[].description` | 화면 설명 — 화면의 목적과 주요 내용 |
 | `menus[].access` | 접근 권한: `public`(비회원), `member`(로그인 필요), `admin`(관리자) |
-| `features[].conditions` | 기능 실행 조건 또는 비즈니스 규칙 |
+| `features[].description` | 기능 설명 — 동작 방식, 조건, 비즈니스 규칙 통합 기술 |
 | `features[].linked_policy` | 이 기능과 관련된 서비스 정책서 id |
 
-### JSON → xlsx 변환 프로세스
+### Mermaid 사이트맵 변환 스펙
 
-IA JSON이 확정된 후 xlsx로 변환한다.
+IA JSON을 `flowchart TD` Mermaid 다이어그램으로 변환한다.
 
-1. **검토 완료 확인**: PM이 JSON 내용을 검토하고 승인한다.
-2. **변환 실행**: JSON 구조를 xlsx 시트로 변환한다.
-   - Sheet 1: 메뉴 구조 (id, name, depth, parent_id, path, access)
-   - Sheet 2: 기능 정의 (menu_id, feature_id, name, description, conditions, linked_policy)
-3. **경로**: JSON과 동일 경로에 같은 이름으로 저장. 예: `ia.json` → `ia.xlsx`
+#### JSON 필드 → Mermaid 매핑
 
-### .md 폴백
+| JSON 필드 | Mermaid 대응 |
+|-----------|-------------|
+| `id` | 노드 ID |
+| `name` | 노드 레이블 (`["name"]`) |
+| `depth` | `classDef depth{N}` 스타일 |
+| `parent_id` | `parent_id --> id` 엣지 |
+| `access: admin` | `classDef admin` 스타일 오버라이드 |
 
-xlsx 변환이 불필요한 경우(스타트업 초기, 내부 팀 협업 등) `.md` 형태로 대체한다.
+#### classDef 스타일 기준
 
-- 메뉴 구조: 계층형 목록(unordered list)으로 표현
-- 기능 정의: 각 메뉴 섹션 하위에 테이블 형태로 작성
-- 조건/정책 연결: 인라인 주석 또는 별도 "조건 및 정책 연결" 섹션으로 기술
+```
+classDef root    fill:#1a1a1a,color:#fff,stroke:none       ← 루트 (depth 0)
+classDef depth1  fill:#555,color:#fff,stroke:none,rx:6     ← 1depth
+classDef depth2  fill:#999,color:#fff,stroke:none          ← 2depth
+classDef depth3  fill:#ccc,color:#333,stroke:none          ← 3depth
+classDef admin   fill:#4a6fa5,color:#fff,stroke:none       ← 관리자 전용 메뉴
+classDef member  fill:#5a9a6a,color:#fff,stroke:none       ← 로그인 필요 메뉴
+```
+
+> `access`가 `admin` 또는 `member`이면 depth 스타일 대신 access 스타일을 적용한다.
+
+#### 파일명 및 저장 경로
+
+- JSON과 동일 경로에 저장: `ia.json` → `ia-sitemap.md`
+- Mermaid 코드 블록(` ```mermaid `)으로 래핑하여 .md 파일로 저장
+
+#### 대규모 IA 분리 기준
+
+| 노드 수 | 처리 방식 |
+|---------|----------|
+| 50개 이하 | 단일 파일 (`ia-sitemap.md`) |
+| 50개 초과 | 도메인(1depth 기준)별 분리 (`ia-sitemap-{domain}.md`) + 전체 개요 (`ia-sitemap.md`에 1depth만 표시) |
+
+### 검토 도구 내보내기 (선택)
+
+xlsx가 필요한 경우(외부 공유, 비개발자 협업 등) JSON 확정 후 단일 시트로 변환한다.
+저장 경로: JSON과 동일 경로. 예: `ia.json` → `ia.xlsx`
+
+#### 단일 시트 컬럼 정의
+
+| # | 컬럼명 | JSON 매핑 | 설명 |
+|---|--------|-----------|------|
+| 1 | 번호 | 자동 순번 | 행 번호 |
+| 2 | 1Depth | depth=1 `name` | 최상위 메뉴명 |
+| 3 | 2Depth | depth=2 `name` | 2단계 메뉴명 |
+| 4 | 3Depth | depth=3 `name` | 3단계 메뉴명 |
+| 5 | 4Depth | depth=4 `name` | 4단계 메뉴명 |
+| 6 | 타입 | `type` | html/App/Popup/Batch/외부Api |
+| 7 | 화면ID | `id` | kebab-case 고유 식별자 |
+| 8 | 화면명 | `name` | 현재 depth의 메뉴명 |
+| 9 | 화면 설명 | `description` | 화면 목적 및 주요 내용 |
+| 10 | URL | `path` | URL 경로 |
+| 11 | 접근권한 | `access` | public/member/admin |
+| 12 | 기능 | `features[].name` | 기능명 (복수 시 행 반복) |
+| 13 | 기능 설명 | `features[].description` | 기능 동작, 조건, 규칙 |
+| 14 | 비고 | `features[].linked_policy` + 메모 | 정책서 연관 id, 이슈 등 |
+
+#### 행 구성 규칙
+
+- **기능이 없는 메뉴**: 기능/기능 설명/비고 컬럼 공란, 메뉴 행 1개
+- **기능이 복수인 메뉴**: 기능별로 행 반복, 메뉴 정보(1~11번 컬럼) 셀 병합
+- **Depth 컬럼**: 해당 depth 컬럼만 채우고 하위 depth 컬럼은 공란
 
 ---
 
@@ -488,7 +613,7 @@ opwt 관리 산출물(필수 4종 + 선택 4종) 외에, 프로젝트에 존재�
 |------|------|--------------|----------|
 | `wireframe` | 화면 와이어프레임 분석 문서 (.md) | 서비스 정책서, IA | 화면 구성요소/기능 동작으로 정책 상세화, IA 기능 정의 보완 |
 | `erd` | ERD 모델링 산출물 (Mermaid, DBML) | 서비스 정책서, TRD | 엔티티/속성으로 정책 데이터 규칙 검증, TRD 데이터 모델 정합성 |
-| `api-spec` | API 명세서 (OpenAPI, 마크다운 등) | TRD, 서비스 정책서 | API 엔드포인트/파라미터로 TRD 기술 구현 보완, 정책 규칙 반영 확인 |
+| `api-spec` | 내부 API 명세서 — 개발 단계에서 설계된 시스템 자체 API 문서 (OpenAPI, 마크다운 등). **기획 단계의 외부 API 명세서와 구분**: 외부(서드파티) API는 opwt 관리 타입 "외부 API 명세서"로 작성한다 | TRD, 서비스 정책서 | API 엔드포인트/파라미터로 TRD 기술 구현 보완, 정책 규칙 반영 확인 |
 
 ### 참조 산출물 획득
 

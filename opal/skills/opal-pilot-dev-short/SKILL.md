@@ -32,6 +32,11 @@ harness "4. TASK 공통 프로세스" 참조. 다음 단계명: PLAN.
 op-dev-plan 워커 디스패치. **model**: advanced. 이전 산출물: TASK.md만 (ANALYSIS.md 없음).
 워커 완료 -> **QA Gate** (op-dev-qa) -> **PM Gate**.
 
+> **[PM 컨텍스트 주입]** 워커 디스패치 프롬프트의 첫 줄에 `[WORKER]`를 삽입한다. `[WORKER]` 마커가 있으면 워커는 부트스트랩을 생략한다. PM은 디스패치 시 다음을 프롬프트에 포함해야 한다:
+> 1. 하네스 Guards 핵심 규칙 (구현 금지 원칙, 커밋 규칙)
+> 2. 관련 참조 문서 경로 (docs/PROJECT.md 문서 테이블 기반)
+> 3. 기술 스택 연동 지시 (기존 "참조 문서 전달 의무" 통합)
+
 ### TEST-SCENARIO 스킵 조건
 
 **문서 전용** 작업(PLAN.md 파일 변경 계획이 모두 `.md`, 소스 코드 없음)이면 스킵. 보고 시 "TEST-SCENARIO: 문서 전용 작업으로 스킵" 표기.
@@ -41,11 +46,15 @@ op-dev-plan 워커 디스패치. **model**: advanced. 이전 산출물: TASK.md�
 QA + PM Gate 통과 후 op-dev-test-scenario 워커 연속 디스패치. **model**: light. 이전 산출물: TASK.md + PLAN.md.
 워커 완료 -> PLAN + TEST-SCENARIO를 함께 사용자에게 보고. **승인 = EXECUTE 시작 허가**.
 
+> **[PM 컨텍스트 주입]** 디스패치 프롬프트 첫 줄에 `[WORKER]` 삽입. 하네스 Guards 핵심 규칙 + 관련 참조 문서 경로를 포함한다.
+
 ---
 
 ## STEP 3: EXECUTE
 
 op-dev-execute 워커 디스패치. **model**: standard. checklist_source: PLAN.md 섹션 "3. 실행 체크리스트". execution-plan.json 있으면 전달.
+
+> **[PM 컨텍스트 주입]** 디스패치 프롬프트 첫 줄에 `[WORKER]` 삽입. 하네스 Guards 핵심 규칙 + 관련 참조 문서 경로를 포함한다.
 
 ### EXECUTE 완료 후
 
@@ -124,3 +133,4 @@ TASK (PM 직접) → PLAN+TEST-SCENARIO Gate → EXECUTE Gate
 | v1.5 | 2026-03-29 | model override를 레벨 기반으로 전환 (044) |
 | v1.6 | 2026-03-31 | Agentic Mode 섹션 추가 (057) |
 | v1.7 | 2026-03-31 | §7 참조 → opal-harness-agentic.md 참조 전환. EXECUTE 후 PM Gate + QA 체크리스트 갱신 추가 (058) |
+| v1.8 | 2026-04-01 | 전체 워커 디스패치 서술에 `[WORKER]` 마커 + PM 컨텍스트 주입 지침 추가 (063) |

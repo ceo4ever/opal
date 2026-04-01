@@ -43,6 +43,11 @@ Harness "TASK 공통 프로세스"를 따르되, 아래를 추가:
 - 스킬: op-dev-wireframe, 입력: TASK.md + 정책서/이미지
 - 완료 → op-dev-qa 호출 (단계: WIREFRAME) → 사용자 보고
 
+> **[PM 컨텍스트 주입]** 워커 디스패치 프롬프트의 첫 줄에 `[WORKER]`를 삽입한다. `[WORKER]` 마커가 있으면 워커는 부트스트랩을 생략한다. PM은 디스패치 시 다음을 프롬프트에 포함해야 한다:
+> 1. 하네스 Guards 핵심 규칙 (구현 금지 원칙, 커밋 규칙)
+> 2. 관련 참조 문서 경로 (docs/PROJECT.md 문서 테이블 기반)
+> 3. 기술 스택 연동 지시 (기존 "참조 문서 전달 의무" 통합)
+
 ---
 
 ## STEP 3: EXECUTE (UI 구현)
@@ -50,6 +55,8 @@ Harness "TASK 공통 프로세스"를 따르되, 아래를 추가:
 워커 디스패치로 wireframe.md 기반 UI 구현. **model**: standard.
 - 스킬: op-dev-execute, checklist_source: wireframe.md
 - **UI 구현 모드**: ui-designer scaffold(프로토) 또는 plan-driven(프로덕션) 호출
+
+> **[PM 컨텍스트 주입]** 디스패치 프롬프트 첫 줄에 `[WORKER]` 삽입. 하네스 Guards 핵심 규칙 + 관련 참조 문서 경로를 포함한다.
 
 ### 완료 후
 1. op-dev-qa 호출 (단계: EXECUTE-UI) → 빌드/린트 + wireframe↔코드 대조
@@ -74,3 +81,4 @@ Harness STATE.md 템플릿에 적용:
 | v1.1 | 2026-03-28 | Harness 참조 전환으로 슬림화 |
 | v1.2 | 2026-03-29 | 컴포넌트 리네이밍 (042) |
 | v1.3 | 2026-03-29 | model override를 레벨 기반으로 전환 (044) |
+| v1.4 | 2026-04-01 | WIREFRAME/EXECUTE 워커 디스패치에 `[WORKER]` 마커 + PM 컨텍스트 주입 지침 추가 (063) |

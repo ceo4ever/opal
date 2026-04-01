@@ -19,12 +19,15 @@ opal-harness.md "TASK 공통 프로세스" 참조.
 
 **디스패치 프롬프트**:
 ```
+[WORKER]
 op-dev-analysis 스킬을 수행하라.
 **스킬 경로**: {op-dev-analysis/SKILL.md 탐색 경로}
 **태스크 폴더**: {tasks/{NNN}-{name}/}
 **이전 산출물**: {TASK.md 경로}
 **프로젝트 컨텍스트**: {docs/PROJECT.md + 매칭 참조 문서. 미존재 시 CLAUDE.md 폴백}
 **산출물 저장 경로**: {ANALYSIS.md 경로}
+**하네스 Guards**: PLAN.md에 없는 파일 생성/수정 금지. PLAN 설계를 임의 변경 금지. 블로커 발생 시 즉시 중단 후 보고.
+**참조 문서**: {docs/PROJECT.md 문서 테이블 기반 관련 문서 경로}
 ```
 **model**: light
 
@@ -35,12 +38,15 @@ op-dev-analysis 스킬을 수행하라.
 
 ### 3-1. PLAN 디스패치
 ```
+[WORKER]
 op-dev-plan 스킬을 수행하라.
 **스킬 경로**: {op-dev-plan/SKILL.md 탐색 경로}
 **태스크 폴더**: {tasks/{NNN}-{name}/}
 **이전 산출물**: {TASK.md 경로}, {ANALYSIS.md 경로}
 **프로젝트 컨텍스트**: {docs/PROJECT.md + 매칭 참조 문서. 미존재 시 CLAUDE.md 폴백}
 **산출물 저장 경로**: {PLAN.md 경로}, {execution-plan.json 경로 (FE/BE 시)}
+**하네스 Guards**: PLAN.md에 없는 파일 생성/수정 금지. PLAN 설계를 임의 변경 금지. 블로커 발생 시 즉시 중단 후 보고.
+**참조 문서**: {docs/PROJECT.md 문서 테이블 기반 관련 문서 경로}
 ```
 **model**: advanced
 
@@ -54,12 +60,15 @@ op-dev-plan 스킬을 수행하라.
 ### 3-2. TEST-SCENARIO 디스패치 (연속)
 QA + PM Gate 통과 후 연속 디스패치한다.
 ```
+[WORKER]
 op-dev-test-scenario 스킬을 수행하라.
 **스킬 경로**: {op-dev-test-scenario/SKILL.md 탐색 경로}
 **태스크 폴더**: {tasks/{NNN}-{name}/}
 **이전 산출물**: {TASK.md 경로}, {PLAN.md 경로}
 **프로젝트 컨텍스트**: {docs/PROJECT.md + 매칭 참조 문서. 미존재 시 CLAUDE.md 폴백}
 **산출물 저장 경로**: {TEST-SCENARIO.md 경로}
+**하네스 Guards**: PLAN.md에 없는 파일 생성/수정 금지. PLAN 설계를 임의 변경 금지. 블로커 발생 시 즉시 중단 후 보고.
+**참조 문서**: {docs/PROJECT.md 문서 테이블 기반 관련 문서 경로}
 ```
 **model**: light
 
@@ -70,12 +79,15 @@ op-dev-test-scenario 스킬을 수행하라.
 
 **디스패치 프롬프트**:
 ```
+[WORKER]
 op-dev-execute 스킬을 수행하라.
 **스킬 경로**: {op-dev-execute/SKILL.md 탐색 경로}
 **태스크 폴더**: {tasks/{NNN}-{name}/}
 **checklist_source**: {PLAN.md 경로}, 섹션: 3. 실행 체크리스트
 **execution-plan.json**: {경로 (있으면)}
 **프로젝트 컨텍스트**: {docs/PROJECT.md + 매칭 참조 문서. 미존재 시 CLAUDE.md 폴백}
+**하네스 Guards**: PLAN.md에 없는 파일 생성/수정 금지. PLAN 설계를 임의 변경 금지. 블로커 발생 시 즉시 중단 후 보고.
+**참조 문서**: {docs/PROJECT.md 문서 테이블 기반 관련 문서 경로}
 ```
 **model**: standard
 
@@ -127,3 +139,4 @@ TASK (PM 직접) → ANALYSIS Gate → PLAN+TEST-SCENARIO Gate → EXECUTE Gate
 | v1.5 | 2026-03-29 | model override를 레벨 기반으로 전환 (044) |
 | v1.6 | 2026-03-31 | Agentic Mode 섹션 추가 (057) |
 | v1.7 | 2026-03-31 | §7 참조 → opal-harness-agentic.md 참조 전환. EXECUTE 후 PM Gate + QA 체크리스트 갱신 추가 (058) |
+| v1.8 | 2026-04-01 | 전체 워커 디스패치 프롬프트에 `[WORKER]` 마커 + 하네스 Guards + 참조 문서 주입 지침 추가 (063) |

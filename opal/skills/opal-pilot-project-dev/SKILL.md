@@ -285,6 +285,7 @@ for each group in groups:
     1. 사용자에게 액션 시작 보고
     2. opal-task-action-agent를 Agent 도구로 디스패치:
        프롬프트에 포함할 파라미터:
+       - [WORKER] (프롬프트 첫 줄 — 부트스트랩 생략 마커)
        - action_id: A{NN}-{name}
        - action_goal: ROADMAP.md에서 추출한 액션 목표
        - action_scope: ROADMAP.md에서 추출한 변경 범위
@@ -292,6 +293,8 @@ for each group in groups:
        - task_folder: actions/A{NN}-{name}/
        - project_root: {프로젝트 루트}
        - project_context: [docs/PROJECT.md, docs/ARCHITECTURE.md, docs/CONVENTIONS.md]
+       - harness_guards: "PLAN.md에 없는 파일 생성/수정 금지. PLAN 설계를 임의 변경 금지. 블로커 발생 시 즉시 중단 후 보고."
+       - reference_docs: {docs/PROJECT.md 문서 테이블 기반 현재 액션 관련 문서 경로}
     3. 에이전트 결과 수신 → 결과 처리 (아래 참조)
     4. PM 검수 (완료 산출물 확인)
     5. 사용자에게 액션 완료 보고
@@ -357,8 +360,10 @@ EXECUTE 완료
 ```
 1. worktree 생성: .worktrees/{action-id}/ (각 액션 격리)
 2. Agent 도구로 opal-task-action-agent를 병렬 디스패치 (각 worktree에서 독립 실행)
+   - 디스패치 프롬프트 첫 줄에 [WORKER] 삽입 (부트스트랩 생략 마커)
    - 디스패치 프롬프트에 project_root를 worktree 경로로 설정
    - 나머지 파라미터(action_id, action_goal 등)는 순차 실행과 동일
+   - harness_guards 및 reference_docs도 동일하게 포함
 3. 각 에이전트 결과 수집 (status, verdict, verification_log, changed_files)
 4. 결과 수집 후 순차 머지 (변경 범위 작은 순)
 5. 머지마다 통합 테스트 실행
@@ -609,3 +614,4 @@ opal-harness-agentic.md "에스컬레이션 조건" 공통 기준에 추가:
 | v3.1 | 2026-03-30 | Phase 3 opd/opds 호출 → opal-task-action-agent 디스패치로 전환 (056) |
 | v3.2 | 2026-03-31 | Agentic Mode 섹션 추가 — 전 Phase 적용 (057) |
 | v3.3 | 2026-03-31 | §7 참조 → opal-harness-agentic.md 참조 전환 (058) |
+| v3.4 | 2026-04-01 | Phase 3 opal-task-action-agent 디스패치 프롬프트에 `[WORKER]` 마커 + harness_guards + reference_docs 파라미터 추가 (063) |

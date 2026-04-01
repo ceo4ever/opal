@@ -35,6 +35,11 @@ op-task-plan 워커 디스패치. **model**: advanced. 이전 산출물: TASK.md
 
 워커 완료 -> **QA Gate** (op-task-qa) -> **PM Gate** -> 사용자에게 보고.
 
+> **[PM 컨텍스트 주입]** 워커 디스패치 프롬프트의 첫 줄에 `[WORKER]`를 삽입한다. `[WORKER]` 마커가 있으면 워커는 부트스트랩을 생략한다. PM은 디스패치 시 다음을 프롬프트에 포함해야 한다:
+> 1. 하네스 Guards 핵심 규칙 (구현 금지 원칙, 커밋 규칙)
+> 2. 관련 참조 문서 경로 (docs/PROJECT.md 문서 테이블 기반)
+> 3. 기술 스택 연동 지시 (기존 "참조 문서 전달 의무" 통합)
+
 보고 형식:
 ```
 📋 [PLAN] 완료 보고
@@ -53,6 +58,8 @@ op-task-execute 워커 디스패치. **model**: standard. checklist_source: PLAN
 탐색 경로:
 1. `{프로젝트}/.opal/skills/op-task-execute/SKILL.md`
 2. `~/.opal/skills/op-task-execute/SKILL.md`
+
+> **[PM 컨텍스트 주입]** 디스패치 프롬프트 첫 줄에 `[WORKER]` 삽입. 하네스 Guards 핵심 규칙 + 관련 참조 문서 경로를 포함한다.
 
 ### EXECUTE 완료 후
 
@@ -115,3 +122,4 @@ TASK (PM 직접) → PLAN Gate → EXECUTE Gate
 | v1.3 | 2026-03-30 | opal-project-pilot → opal-pilot-project 리네이밍 + 정체성 정비 (052) |
 | v1.4 | 2026-03-31 | Agentic Mode 섹션 추가 (057) |
 | v1.5 | 2026-03-31 | §7 참조 → opal-harness-agentic.md 참조 전환. EXECUTE 후 QA Gate + QA 체크리스트 갱신 추가 (058) |
+| v1.6 | 2026-04-01 | PLAN/EXECUTE 워커 디스패치 서술에 `[WORKER]` 마커 + PM 컨텍스트 주입 지침 추가 (063) |
