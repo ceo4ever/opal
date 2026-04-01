@@ -252,6 +252,41 @@ install_opal_section() {
     fi
 }
 
+# ─── Gemini Config ──────────────────────────────────────
+
+install_gemini_config() {
+    local config="$USER_HOME/.gemini/settings.json"
+    local include_dirs=("~/.opal/" "~/.gemini/")
+
+    mkdir -p "$(dirname "$config")"
+
+    /usr/bin/python3 -c "
+import json, os, sys
+
+config_path = sys.argv[1]
+new_dirs = sys.argv[2:]
+
+if os.path.exists(config_path):
+    with open(config_path) as f:
+        content = f.read().strip()
+    data = json.loads(content) if content else {}
+else:
+    data = {}
+
+ctx = data.setdefault('context', {})
+existing = set(ctx.get('includeDirectories', []))
+for d in new_dirs:
+    existing.add(d)
+ctx['includeDirectories'] = sorted(existing)
+
+with open(config_path, 'w') as f:
+    json.dump(data, f, indent=2)
+    f.write('\n')
+" "$config" "${include_dirs[@]}"
+
+    success "Gemini 외부 경로 접근 설정 → $config"
+}
+
 # ─── OPAL Installer ─────────────────────────────────────
 
 install_opal() {
@@ -368,6 +403,9 @@ install_opal() {
 
     install_opal_section "$opal_dir/bootstrapper/gemini-bootstrap.md" \
         "$USER_HOME/.gemini/GEMINI.md" "Gemini"
+
+    # ── Gemini CLI 외부 경로 접근 설정 ──
+    install_gemini_config
 
     # ── 레거시 정리 안내 ──
     # print_cleanup_notice
