@@ -15,7 +15,7 @@ EXECUTE 스텝마다 즉시 검증하여 오류를 조기 차단한다. 워커�
 
 - **대상**: oppd Phase 3 — 태스크별 EXECUTE 액션 실행 시
 - **주체**: 오케스트레이터(oppd)가 루프를 관리하고, 워커(opal-task-agent)가 수정을 수행한다
-- **전제**: ROADMAP.md 각 태스크의 "완료 기준"에 검증 명령(lint, build, test)이 명시되어 있어야 한다
+- **전제**: WBS.md 각 태스크의 "완료 기준"에 검증 명령(lint, build, test)이 명시되어 있어야 한다
 
 ### 루프 흐름 요약
 
@@ -59,21 +59,21 @@ EXECUTE 스텝마다 즉시 검증하여 오류를 조기 차단한다. 워커�
 1. **L1 → L2 → L3a → L3b → L4** 순서를 반드시 따른다
 2. 현재 계층이 PASS가 아니면 다음 계층으로 넘어가지 않는다
 3. 자동 수정 후 **현재 계층부터** 재검증한다 (이전 계층은 재검증하지 않음 — 단, 회귀 방지 가드 예외)
-4. L3b(E2E)는 ROADMAP.md에 E2E 검증 명령이 명시된 액션에만 실행한다. 미명시 시 SKIP
+4. L3b(E2E)는 WBS.md에 E2E 검증 명령이 명시된 액션에만 실행한다. 미명시 시 SKIP
 5. L4(QA)는 기존 QA Gate 프로세스(opal-harness.md)를 그대로 따른다
 
 ### 검증 명령 결정
 
-검증 명령은 ROADMAP.md 태스크의 "완료 기준" 또는 프로젝트의 `package.json` / 설정 파일에서 결정한다:
+검증 명령은 WBS.md 태스크의 "완료 기준" 또는 프로젝트의 `package.json` / 설정 파일에서 결정한다:
 
-1. ROADMAP.md 태스크에 검증 명령이 명시되어 있으면 그것을 사용한다
+1. WBS.md 태스크에 검증 명령이 명시되어 있으면 그것을 사용한다
 2. 명시되지 않으면 프로젝트 루트의 `package.json` scripts에서 추론한다:
    - lint: `lint`, `lint:check` 스크립트
    - build: `build`, `typecheck`, `tsc` 스크립트
    - test (L3a): `test`, `test:unit`, `test:api`, `test:integration` 스크립트
    - E2E (L3b): `test:e2e`, `e2e`, `playwright` 스크립트
 3. 추론 불가 시 해당 계층을 건너뛴다 (SKIP으로 로그 기록)
-4. L3b(E2E)는 ROADMAP.md에 E2E 검증 명령이 명시된 액션에만 실행. 미명시 시 SKIP
+4. L3b(E2E)는 WBS.md에 E2E 검증 명령이 명시된 액션에만 실행. 미명시 시 SKIP
 
 ---
 
@@ -241,7 +241,7 @@ E2E 테스트는 실제 브라우저를 띄워 시나리오를 실행하므로, 
 | 자동 수정 가능성 | 중간 | 낮음 (실패 원인 특정 어려움) |
 | 재시도 한도 | 3회 | 1회 |
 
-**적용 조건**: ROADMAP.md 액션의 검증 명령에 E2E 명령이 명시된 경우에만 실행한다. E2E 검증 명령이 없으면 L3b를 SKIP하고 L4로 진행한다.
+**적용 조건**: WBS.md 액션의 검증 명령에 E2E 명령이 명시된 경우에만 실행한다. E2E 검증 명령이 없으면 L3b를 SKIP하고 L4로 진행한다.
 
 **도메인별 E2E 도구 예시**:
 
@@ -286,7 +286,7 @@ E2E 실패는 원인 특정이 어렵습니다. 다음 중 선택해주세요:
 병렬 그룹의 개별 액션마다 E2E를 실행하면 비효율적이다. 대안:
 - **개별 액션**: L3a(unit/integration)까지만 자동 루프 실행
 - **병렬 그룹 머지 후**: 통합 시점에 E2E 일괄 실행
-- ROADMAP.md에서 E2E 검증 시점을 `개별` 또는 `머지 후`로 지정 가능
+- WBS.md에서 E2E 검증 시점을 `개별` 또는 `머지 후`로 지정 가능
 
 ### 3-5. QA 설계/아키텍처 이슈
 
@@ -420,7 +420,7 @@ QA 피드백:
 
 **컬럼 설명**:
 - `#`: 순번 (태스크별 누적)
-- `태스크`: ROADMAP.md의 태스크 ID
+- `태스크`: WBS.md의 태스크 ID
 - `검증 유형`: `lint` / `build` / `test` / `QA`
 - `시도`: `{현재 시도}/{최대 시도}` — lint는 `N/∞`, build는 `N/2`, test는 `N/3`, QA는 `1/1`
 - `결과`: `Pass` / `Fail` / `Skip` / `Regression` / `Escalation`
@@ -492,4 +492,4 @@ QA 피드백:
 
 - `opal-harness.md` — 오케스트레이터 공통 인프라 (Guards, Gates, State)
 - `opal-pilot-project-dev/SKILL.md` — oppd Phase 3 실행 프로세스
-- `opal-pilot-project-dev/references/roadmap-guide.md` — 태스크 분할 및 완료 기준 정의
+- `opal-pilot-project-dev/references/wbs-guide.md` — 태스크 분할 및 완료 기준 정의
