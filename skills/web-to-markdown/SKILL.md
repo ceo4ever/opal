@@ -8,9 +8,9 @@ description: |
 
 # 웹 페이지 마크다운 변환 스킬
 
-> 작성일: 2026-03-20 | 버전: v1.3
+> 작성일: 2026-03-20 | 버전: v1.4
 
-URL을 입력받아 웹 페이지 콘텐츠를 정제된 마크다운(.md)으로 변환한다. 3단계 폴백 전략으로 다양한 웹 페이지를 안정적으로 처리하고, 복수 URL은 서브에이전트로 병렬 처리한다.
+URL을 입력받아 웹 페이지 콘텐츠를 정제된 마크다운(.md)으로 변환한다. 2단계 폴백 전략으로 다양한 웹 페이지를 안정적으로 처리하고, 복수 URL은 서브에이전트로 병렬 처리한다.
 
 ## 추출 모드
 
@@ -19,8 +19,13 @@ URL을 입력받아 웹 페이지 콘텐츠를 정제된 마크다운(.md)으로
 | **full** (기본) | 전체 콘텐츠 보존. nav, sidebar, header, footer 등 구조 요소를 유지한다. 메뉴 구조, 내비게이션 링크 등 유용한 정보가 보존된다. | 사이트 구조 파악, 메뉴/링크 수집, 전체 페이지 아카이빙 |
 | **clean** | 본문만 추출. nav, header, footer, sidebar, 광고 등 비본문 요소를 제거한다. | 본문 콘텐츠만 필요할 때, 문서/블로그 아티클 추출 |
 | **wireframe** | 와이어프레임 분석. 화면 구조, 구성요소, 기능 동작, 네비게이션, 데이터 I/O를 구조화된 기획 관점으로 추출한다. | 와이어프레임 HTML을 기획 문서로 변환할 때, opwt 정책서/IA 작성 시 참조 |
+| **browser** | Playwright MCP 즉시 사용. WebFetch(Phase 1) 생략. | localhost, SPA/동적 페이지, 캡틴 명시 요청 |
 
 사용자가 모드를 명시하지 않으면 **full** 모드를 적용한다. "본문만", "내용만", "clean" 등의 키워드가 있으면 clean 모드를 적용한다. "와이어프레임", "wireframe", "화면 분석", "기획 분석" 등의 키워드가 있으면 wireframe 모드를 적용한다.
+
+"브라우저로", "browser", "로컬" 등의 키워드가 있거나,
+URL 호스트가 `localhost`, `127.0.0.1`, `[::1]`인 경우 `browser` 모드를 자동 적용한다.
+browser 모드에서는 Phase 1(WebFetch)을 생략하고 Phase 2(Playwright MCP)로 즉시 진입한다.
 
 ---
 
@@ -31,15 +36,16 @@ URL 입력 (단일 또는 복수)
   │
   ├─ 단일 URL → 직접 처리
   │     │
+  │     ├─ [browser 모드] → Phase 1 생략, Phase 2로 즉시 이동
+  │     │     (localhost/127.0.0.1/[::1] URL 자동 감지 포함)
+  │     │
   │     ├─ Phase 1: WebFetch (내장 도구)
   │     │     ├─ 성공 → 본문 추출 + MD 정제 → 저장
   │     │     └─ 실패 (403, 빈 콘텐츠, JS 필요, 타임아웃)
-  │     │           └─ Phase 2: 브라우저 폴백 (Crawl4AI, Python 3.10+)
-  │     │                 ├─ 설치됨 + 버전 OK → Python 스크립트 실행
-  │     │                 └─ 미설치 또는 버전 불일치
-  │     │                       └─ Phase 3: Node Playwright 폴백
-  │     │                             ├─ playwright npm 설치됨 → Node 스크립트 실행 + MD 정제
-  │     │                             └─ 미설치 → 설치 안내 후 중단
+  │     │           └─ Phase 2: Playwright MCP
+  │     │                 ├─ browser_navigate(url) → browser_snapshot()
+  │     │                 ├─ Claude가 Accessibility Tree를 Markdown으로 정제
+  │     │                 └─ MCP 미등록 → 설치 안내 후 중단
   │     └─ 결과: {slug}.md 저장
   │
   └─ 복수 URL → 서브에이전트 병렬 디스패치
@@ -88,103 +94,42 @@ WebFetch(url="{URL}", prompt="이 페이지의 본문 콘텐츠를 마크다운�
 
 ---
 
-## Phase 2: 브라우저 폴백 (Crawl4AI)
+## Phase 2: Playwright MCP
 
-JavaScript 렌더링이 필요한 페이지를 Crawl4AI(Playwright 내장)로 처리한다.
+JavaScript 렌더링이 필요한 페이지를 Playwright MCP로 처리한다. `browser` 모드에서도 동일하게 사용한다.
 
-### 설치 확인
+### MCP 등록 확인
 
-Python 3.10+ 버전과 crawl4ai 패키지를 동시에 확인한다:
-
-```bash
-python3 -c "import sys; assert sys.version_info >= (3, 10), 'Python 3.10+ required'; import crawl4ai" 2>/dev/null
-```
-
-import 성공 시 진입. 버전 불일치 또는 패키지 미설치 시 Phase 3로 전환한다.
+Claude Code `settings.json`에 Playwright MCP 서버가 등록되어 있어야 한다.
+미등록 시 아래 "Playwright MCP 미등록 시" 안내를 따른다.
 
 ### 실행
 
-Crawl4AI가 설치되어 있으면 Python 스크립트로 실행한다:
+1. `browser_navigate(url="{URL}")` 호출
+2. `browser_snapshot()` 호출 — Accessibility Tree 반환
+3. Claude가 반환값을 받아 "콘텐츠 추출 및 MD 정제" 규칙으로 Markdown 정제
 
-```bash
-python3 -c "
-import asyncio, json, sys
-from crawl4ai import AsyncWebCrawler, BrowserConfig, CrawlerRunConfig
-from crawl4ai.content_filter_strategy import PruningContentFilter
+- **full 모드**: 전체 구조(nav, sidebar, header, footer)를 보존하며 Markdown으로 변환.
+- **clean 모드**: 비본문 요소(nav, header, footer, sidebar, 광고)를 제거하고 본문만 추출.
 
-async def crawl():
-    browser_config = BrowserConfig(headless=True)
-    prune = PruningContentFilter(threshold=0.5)
-    crawler_config = CrawlerRunConfig(
-        word_count_threshold=10,
-        remove_overlay_elements=True,
-        process_iframes=True,
-        content_filter=prune,
-    )
-    async with AsyncWebCrawler(config=browser_config) as crawler:
-        result = await crawler.arun(url='${URL}', config=crawler_config)
-        if not result.success:
-            print(json.dumps({'success': False, 'status_code': result.status_code}))
-            sys.exit(1)
-        mode = '${MODE}'
-        md = result.markdown.fit_markdown if mode == 'clean' else result.markdown.raw_markdown
-        print(md)
+### Playwright MCP 미등록 시
 
-asyncio.run(crawl())
-"
-```
-
-- **full 모드**: `result.markdown.raw_markdown` — 전체 콘텐츠 보존 (HTML→마크다운 직접 변환)
-- **clean 모드**: `result.markdown.fit_markdown` — PruningContentFilter로 노이즈 제거된 본문
-
-Crawl4AI가 마크다운 변환을 내장하므로, 별도 MD 정제 로직이 불필요하다.
-
-### Crawl4AI 사용 불가 시
-
-설치 안내 없이 즉시 Phase 3(Node Playwright)로 전환한다.
-
----
-
-## Phase 3: Node Playwright 폴백
-
-Crawl4AI를 사용할 수 없을 때(미설치, Python 버전 불일치, 런타임 오류) Node.js Playwright로 폴백한다.
-
-### 설치 확인
-
-```bash
-node -e "require('playwright')" 2>/dev/null
-```
-
-성공 시 진입. 실패 시 설치 안내 후 중단한다.
-
-### 실행
-
-```bash
-node -e "
-const { chromium } = require('playwright');
-(async () => {
-  const browser = await chromium.launch({ headless: true });
-  const page = await browser.newPage();
-  await page.goto('${URL}', { waitUntil: 'networkidle', timeout: 30000 });
-  const html = await page.content();
-  console.log(html);
-  await browser.close();
-})();
-"
-```
-
-Phase 3는 HTML을 stdout으로 출력한다. **에이전트가 이 HTML을 받아서 MD 정제 규칙(아래 "콘텐츠 추출 및 MD 정제" 섹션)을 적용한 뒤 .md 파일로 저장한다.** stdout을 파일로 직접 리다이렉트(`> file.txt`)하지 않는다.
-
-### Playwright 미설치 시
-
-사용자에게 설치 방법을 안내하고 중단한다. Phase 1 결과가 있으면 (불완전하더라도) 그것을 사용한다.
+사용자에게 등록 방법을 안내하고 중단한다:
 
 ```
-⚠️ 모든 브라우저 폴백 불가: Crawl4AI, Playwright 모두 사용할 수 없습니다.
+⚠️ 브라우저 폴백 불가: Playwright MCP가 등록되어 있지 않습니다.
 
-설치 방법 (택 1):
-  • Crawl4AI: pip install crawl4ai && crawl4ai-setup  (Python 3.10+ 필요)
-  • Playwright: npm install playwright
+등록 방법:
+  Claude Code settings.json에 아래 내용을 추가하세요.
+  {
+    "mcpServers": {
+      "playwright": {
+        "command": "npx",
+        "args": ["@playwright/mcp@latest"]
+      }
+    }
+  }
+  npx가 자동으로 패키지를 가져오므로 별도 설치가 불필요합니다.
 ```
 
 ---
@@ -198,7 +143,8 @@ wireframe 모드는 기존 3단계 폴백 위에 분석 레이어를 추가하�
 ```
 URL 입력 (wireframe 모드)
   │
-  ├─ 기존 3단계 폴백으로 HTML/마크다운 취득 (full 모드 기반)
+  ├─ 기존 2단계 폴백으로 콘텐츠 취득 (full 모드 기반)
+  │   Phase 1: WebFetch → Phase 2: Playwright MCP
   │
   └─ 분석 레이어 적용
         ├─ 화면 개요 추출 (타이틀, 목적, URL 경로)
@@ -221,7 +167,7 @@ WebFetch(url="{URL}", prompt="이 와이어프레임 페이지를 기획 관점�
 
 > 소스: {URL}
 > 캡처일: {YYYY-MM-DD HH:mm}
-> 추출 방식: {WebFetch | Crawl4AI | Playwright}
+> 추출 방식: {WebFetch | Playwright MCP}
 > 추출 모드: wireframe
 
 ---
@@ -309,7 +255,7 @@ URL 경로 기반 kebab-case로 파일명을 생성한다:
 
 ## 콘텐츠 추출 및 MD 정제
 
-Phase 1과 Phase 3에서 아래 정제 규칙을 적용한다. Phase 2(Crawl4AI)는 마크다운 변환을 내장하므로 별도 정제가 불필요하다.
+모든 Phase에서 아래 정제 규칙을 적용한다. Phase 2(Playwright MCP)는 Accessibility Tree를 반환하므로 Claude가 직접 Markdown으로 정제한다.
 
 **중요**: 어떤 Phase를 거치든 최종 산출물은 반드시 아래 "산출물 형식"을 따르는 .md 파일이어야 한다. 중간 파일(.txt, .html 등)을 생성하지 않는다.
 
@@ -350,7 +296,7 @@ clean 모드에서만 아래 요소를 추가로 제거한다:
 
 > 소스: {URL}
 > 캡처일: {YYYY-MM-DD HH:mm}
-> 추출 방식: {WebFetch | Crawl4AI | Playwright}
+> 추출 방식: {WebFetch | Playwright MCP}
 > 추출 모드: {full | clean}
 
 ---
@@ -400,6 +346,17 @@ URL에서 도메인과 경로를 조합하여 kebab-case slug를 생성한다:
 1. `{프로젝트}/.opal/agents/wtm-agent/AGENT.md`
 2. `~/.opal/agents/wtm-agent/AGENT.md`
 
+### 처리 방식 선택 기준
+
+| 조건 | 권장 방식 |
+|------|----------|
+| URL 수 2~5개, 서로 다른 호스트 | 서브에이전트 병렬 디스패치 |
+| URL이 동일 호스트이거나 browser 모드 적용 대상 | PM 직접 순차 수집 |
+| URL 수 6개 이상 또는 browser 모드 포함 | PM 직접 순차 수집 |
+
+> 참조: opal-harness §7.4 Concurrency Limit — 합산 200KB 초과 또는 단일 50KB 초과 시
+> 순차 실행 또는 Max 2개 병렬로 제한한다.
+
 ### 실행 방식
 
 ```
@@ -422,6 +379,33 @@ URL 목록 수신
         └─ 전체 완료 후 결과 종합
 ```
 
+### PM 직접 순차 수집 패턴
+
+PM(오케스트레이터)이 Playwright MCP를 직접 순차 호출하여 콘텐츠를 사전 수집하고,
+수집된 Markdown 파일 경로를 워커에게 주입한다.
+
+**동작 흐름:**
+```
+URL 목록 수신 (동일 호스트 또는 browser 모드)
+  │
+  ├─ PM이 URL별 순차 처리
+  │     ├─ browser_navigate(url) → browser_snapshot()
+  │     ├─ Claude가 Markdown 정제
+  │     └─ {task-folder}/collected-refs/{slug}.md 저장
+  │
+  └─ 수집 완료 후 워커 병렬 디스패치
+        prompt 예시: "다음 경로의 참조 문서를 활용하여 작업을 수행해줘.
+                     참조 경로: {task-folder}/collected-refs/{slug}.md"
+```
+
+**사용 시나리오 비교:**
+- 기존: URL 21개 → 에이전트 21개 → 각자 Playwright 브라우저 인스턴스 생성 → 리소스 고갈
+- 개선: PM이 Playwright MCP 직접 21회 순차 호출 → md 수집 → 워커 병렬 디스패치
+
+**저장 경로:**
+- `{task-folder}/collected-refs/{slug}.md`
+- 태스크 폴더 감지 불가 시: `/tmp/web-to-markdown/collected-refs/{slug}.md`
+
 ### 결과 보고
 
 ```
@@ -430,7 +414,7 @@ URL 목록 수신
 | # | URL | 방식 | 결과 | 저장 경로 |
 |---|-----|------|------|----------|
 | 1 | {url} | WebFetch | ✅ 성공 | {path} |
-| 2 | {url} | Crawl4AI | ✅ 성공 | {path} |
+| 2 | {url} | Playwright MCP | ✅ 성공 | {path} |
 | 3 | {url} | WebFetch | ⚠️ 부분 성공 | {path} |
 ```
 
@@ -445,27 +429,41 @@ URL 목록 수신
 | 매우 긴 페이지 (10만자 초과) | 본문을 10만자에서 truncate, 안내 메시지 추가 |
 | 리다이렉트 | 최종 URL을 따라가되, 메타정보에 원본+최종 URL 모두 기록 |
 | robots.txt 차단 | 안내 후 중단 (강제 우회 금지) |
-| 타임아웃 | Phase 1: 15초, Phase 2/3: 30초 후 실패 처리 |
+| 타임아웃 | Phase 1: 15초, Phase 2(Playwright MCP): 30초 후 실패 처리 |
 
 ---
 
 ## 의존성
 
+### 필수 MCP
+
+| MCP | 필요 시점 | 미등록 시 동작 |
+|-----|----------|--------------|
+| `playwright` | browser 모드 진입 시, 또는 Phase 1 실패 후 Phase 2 진입 시 | 등록 안내 메시지 출력 후 즉시 중단 |
+
+**사전 확인 규칙**: browser 모드가 명시되거나 localhost/127.0.0.1/[::1] URL이 감지된 경우, Phase 진입 전에 `playwright` MCP 도구(`browser_navigate`) 가용 여부를 ToolSearch 또는 세션 컨텍스트에서 확인한다. 미등록 확인 시 아래 "Playwright MCP 미등록 시" 안내를 즉시 출력하고 실행을 중단한다.
+
+> Phase 1(WebFetch) 경로에서는 MCP 사전 확인을 수행하지 않는다. Phase 1 성공 시 Playwright MCP 없이 완료 가능하므로 불필요한 확인을 방지한다.
+
 | 도구 | 필수 여부 | 용도 |
 |------|----------|------|
 | WebFetch (내장) | 필수 | Phase 1 경량 fetch |
-| Crawl4AI (`crawl4ai`) | 선택 | Phase 2 브라우저 폴백 (Python 3.10+, Playwright 내장) |
-| Playwright (`playwright`) | 선택 | Phase 3 브라우저 폴백 (Node.js) |
+| Playwright MCP (`@playwright/mcp`) | 필수 (MCP 등록) | Phase 2 브라우저 렌더링, browser 모드 |
 | Agent 도구 | 선택 | 복수 URL 병렬 처리 |
 
-설치 방법 (브라우저 폴백, 택 1 이상):
-```bash
-# Crawl4AI (Python 3.10+)
-pip install crawl4ai && crawl4ai-setup
-
-# Playwright (Node.js)
-npm install playwright
+등록 방법:
+```json
+// Claude Code settings.json
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": ["@playwright/mcp@latest"]
+    }
+  }
+}
 ```
+npx가 자동으로 패키지를 가져오므로 별도 설치가 불필요하다.
 
 ---
 
@@ -477,3 +475,4 @@ npm install playwright
 | v1.1 | 2026-03-20 | Phase 2 백엔드를 Playwright에서 Crawl4AI로 교체 — 마크다운 변환 내장, Anti-bot/stealth 지원 |
 | v1.2 | 2026-04-01 | 3단계 폴백(WebFetch→Crawl4AI→Node Playwright), Phase 2 Python 버전 체크, 저장 경로 간소화, wtm 약어 등록 |
 | v1.3 | 2026-04-01 | wireframe 모드 추가 — 기획 관점 화면 분석, 5섹션 산출물 형식, docs/wireframes/ 저장 경로, _index.md 자동 생성, 복수 URL 디스패치 시 모드 전달 명시 |
+| v1.4 | 2026-04-02 | Phase 2를 Crawl4AI → Playwright MCP로 교체, Phase 3 Node Playwright 삭제, browser 모드 추가, PM 직접 순차 수집 패턴 추가 |

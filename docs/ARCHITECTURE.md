@@ -107,6 +107,7 @@ OPAL은 2-레이어 아키텍처로 동작한다.
 | | ui-designer | wireframe.md → React + shadcn/ui 구현 |
 | | wireframe-builder | 정책서/요구사항 → wireframe.md |
 | | web-to-markdown | 웹 페이지 마크다운 변환 |
+| | erd-modeler | DB ERD 모델링 (개념→논리→물리→DDL) |
 | **OPAL** | opal-project-init (opi) | 프로젝트 초기화/최신화 |
 | | opal-agent-creator | 에이전트 생성 파이프라인 |
 | | opal-skill-creator | 스킬 생성 파이프라인 |
@@ -156,7 +157,7 @@ OPAL은 2-레이어 아키텍처로 동작한다.
 ```
 소스 (이 저장소)                    배포 대상 (~/.opal/)
 ─────────────────                  ──────────────────
-skills/* (독립 5개) ──┐
+skills/* (독립 6개) ──┐
 opal/skills/* (24개)──┼─ install ─→  ~/.opal/skills/
 agents/*            ──┤              ~/.opal/agents/
 community-skills/*  ──┤              ~/.opal/community-skills/
@@ -174,8 +175,9 @@ opal/core/mcps/*    ──── install ─→  ~/.cursor/rules/ (부트스트�
 
 ```
 opal/                                    ← 이 저장소
-├── skills/                              독립 스킬 (5개, 파이프라인 없이 단독 사용)
+├── skills/                              독립 스킬 (6개, 파이프라인 없이 단독 사용)
 │   ├── api-analyzer/                    외부 API 분석
+│   ├── erd-modeler/                     DB ERD 모델링 (개념→논리→물리→DDL)
 │   ├── interview/                       요구사항 수집
 │   ├── ui-designer/                     UI 구현
 │   ├── wireframe-builder/               와이어프레임 설계

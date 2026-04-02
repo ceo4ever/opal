@@ -3,6 +3,14 @@
 OPAL 에이전트가 사용할 수 있는 MCP(Model Context Protocol) 서버 목록.
 MCP 서버가 등록되면 에이전트가 해당 도구를 인지하고 활용할 수 있다.
 
+## 스킬 MCP 의존성
+
+MCP 의존성이 있는 스킬 목록. 스킬 호출 전 해당 MCP가 등록되어 있는지 확인한다.
+
+| 스킬명 | 필요 MCP | 용도 | 미등록 시 동작 |
+|--------|----------|------|--------------|
+| web-to-markdown (wtm) | `playwright` | browser 모드 / Phase 2 브라우저 렌더링 | Phase 1(WebFetch) 성공 시 정상 완료. Phase 2 진입 필요 시 등록 안내 후 중단 |
+
 ## 등록된 MCP 서버
 
 ### shadcn
@@ -41,6 +49,56 @@ MCP 서버가 등록되면 에이전트가 해당 도구를 인지하고 활용�
   - `resolve-library-id`: 라이브러리 이름을 Context7 호환 ID로 변환
   - `get-library-docs`: 특정 주제의 최신 문서 조회
 - **사용 예시**: 프로젝트 환경 설정 시 최신 API 문서 참조, deprecated 메서드 방지, "use context7"으로 자동 활성화
+
+### playwright
+
+- **설명**: Chromium 기반 브라우저 자동화 MCP. JavaScript 렌더링이 필요한 페이지, SPA, localhost 접근에 사용
+- **프로토콜**: stdio
+- **설정 경로**: `~/.claude/settings.json` (Claude Code), `~/.cursor/mcp.json`, `~/.gemini/settings.json`
+- **설치 방식**: npx 자동 (별도 설치 불필요)
+- **제공 도구**:
+  - `browser_navigate`: URL로 브라우저 이동
+  - `browser_snapshot`: Accessibility Tree 스냅샷 반환
+  - `browser_click`: 요소 클릭
+  - `browser_type`: 텍스트 입력
+- **사용 예시**: SPA/동적 페이지 렌더링 후 콘텐츠 추출, localhost 페이지 접근, wtm browser 모드
+
+## MCP 등록 방법
+
+### Claude Code (settings.json)
+
+`~/.claude/settings.json`에 `mcpServers` 키를 추가한다:
+
+```json
+{
+  "mcpServers": {
+    "{server-name}": {
+      "command": "npx",
+      "args": ["{package-name}@latest"]
+    }
+  }
+}
+```
+
+**Playwright MCP 등록 예시:**
+
+```json
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": ["@playwright/mcp@latest"]
+    }
+  }
+}
+```
+
+> npx가 패키지를 자동으로 가져오므로 별도 설치 불필요. Claude Code 재시작 후 적용.
+
+### 설정 동기화
+
+`install-mac.sh`의 `config_merge` 방식을 사용하는 MCP는 자동 배포된다.
+수동 등록 MCP(`playwright` 등)는 위 방법으로 직접 추가해야 한다.
 
 ## 등록 형식
 
