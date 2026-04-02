@@ -97,6 +97,10 @@ tasks/{NNN}-opwt-{name}/ANALYSIS.md
 - 단계 시작 시: `단계: ANALYSIS 진행 중`
 - 단계 완료 시: `ANALYSIS ✅`, 완료 산출물 갱신
 
+### 게이트
+
+ANALYSIS 완료 → 사용자 확인 (interactive) / PM 자율 승인 (agentic)
+
 ---
 
 ## PLAN 단계
@@ -131,6 +135,8 @@ tasks/{NNN}-opwt-{name}/PLAN.md
 ### 공통
 
 - **STATE 갱신**: 단계 시작/완료 시 STATE.md 갱신
+- **QA Gate** (op-task-qa) — PLAN.md 검증
+- **PM Gate** (TASK.md 요구사항 체크박스 갱신 포함 — 하네스 §3 참조)
 - **게이트**: PLAN.md + 배치 계획 사용자 확인 (interactive) / PM 자율 승인 (agentic)
 
 ---
@@ -156,7 +162,7 @@ tasks/{NNN}-opwt-{name}/PLAN.md
 
 ### 게이트 (배치별)
 
-배치 완료 → PM 검토 → 사용자 확인 (interactive) / PM 자율 승인 후 다음 배치 (agentic)
+배치 완료 → **QA Gate** (op-task-qa) → PM 검토 → 사용자 확인 (interactive) / PM 자율 승인 후 다음 배치 (agentic)
 배치 완료 후 `docs/PROJECT.md` 등록 확인
 
 ---
@@ -216,3 +222,4 @@ opal-doc-standard 적용: `~/.opal/references/opal-doc-standard.md`
 | v1.6 | 2026-04-01 | Phase 1/3/4 워커 디스패치에 `[WORKER]` 마커 + PM 컨텍스트 주입 지침 추가 (063) |
 | v2.0 | 2026-04-01 | 재설계 — Phase 1-4 → 하네스 표준 단계(TASK/ANALYSIS/PLAN/EXECUTE/QA), TASK 단계 추가, 각 단계 STATE 갱신 명시, 병렬 원칙 적용 (067) |
 | v2.1 | 2026-04-01 | 단계별 산출물 문서 추가 — ANALYSIS.md(워커 결과 취합), PLAN.md(진단 근거+배치+QA체크리스트), QA 단계 PLAN.md 갱신 의무 (067) |
+| v2.2 | 2026-04-02 | ANALYSIS 게이트 + PLAN QA Gate + EXECUTE 배치별 QA Gate 추가 (072) |

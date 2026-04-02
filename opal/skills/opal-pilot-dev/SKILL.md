@@ -54,7 +54,7 @@ op-dev-plan 스킬을 수행하라.
 ```
 **model**: advanced
 
-워커 완료 → **QA Gate** (op-dev-qa) → **PM Gate**.
+워커 완료 → **QA Gate** (op-dev-qa) → **PM Gate** (TASK.md 요구사항 체크박스 갱신 포함 — 하네스 §3 참조).
 
 ### TEST-SCENARIO 스킵 조건
 작업 유형이 **문서 전용**(.md 파일만 수정, 소스 코드 없음)인 경우:
@@ -144,3 +144,4 @@ TASK (PM 직접) → ANALYSIS Gate → PLAN+TEST-SCENARIO Gate → EXECUTE Gate
 | v1.6 | 2026-03-31 | Agentic Mode 섹션 추가 (057) |
 | v1.7 | 2026-03-31 | §7 참조 → opal-harness-agentic.md 참조 전환. EXECUTE 후 PM Gate + QA 체크리스트 갱신 추가 (058) |
 | v1.8 | 2026-04-01 | 전체 워커 디스패치 프롬프트에 `[WORKER]` 마커 + 하네스 Guards + 참조 문서 주입 지침 추가 (063) |
+| v1.9 | 2026-04-02 | PLAN PM Gate에 TASK.md 체크박스 갱신 명시 (072) |

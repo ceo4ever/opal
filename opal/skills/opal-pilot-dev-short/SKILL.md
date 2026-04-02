@@ -34,7 +34,7 @@ harness "4. TASK 공통 프로세스" 참조. 다음 단계명: PLAN.
 ### PLAN 디스패치
 
 op-dev-plan 워커 디스패치. **model**: advanced. 이전 산출물: TASK.md만 (ANALYSIS.md 없음).
-워커 완료 -> **QA Gate** (op-dev-qa) -> **PM Gate**.
+워커 완료 -> **QA Gate** (op-dev-qa) -> **PM Gate** (TASK.md 요구사항 체크박스 갱신 포함 — 하네스 §3 참조).
 
 > **[PM 컨텍스트 주입]** 워커 디스패치 프롬프트의 첫 줄에 `[WORKER]`를 삽입한다. `[WORKER]` 마커가 있으면 워커는 부트스트랩을 생략한다. PM은 디스패치 시 다음을 프롬프트에 포함해야 한다:
 > 1. 하네스 Guards 핵심 규칙 (구현 금지 원칙, 커밋 규칙)
@@ -138,3 +138,4 @@ TASK (PM 직접) → PLAN+TEST-SCENARIO Gate → EXECUTE Gate
 | v1.6 | 2026-03-31 | Agentic Mode 섹션 추가 (057) |
 | v1.7 | 2026-03-31 | §7 참조 → opal-harness-agentic.md 참조 전환. EXECUTE 후 PM Gate + QA 체크리스트 갱신 추가 (058) |
 | v1.8 | 2026-04-01 | 전체 워커 디스패치 서술에 `[WORKER]` 마커 + PM 컨텍스트 주입 지침 추가 (063) |
+| v1.9 | 2026-04-02 | PLAN PM Gate에 TASK.md 체크박스 갱신 명시 (072) |
