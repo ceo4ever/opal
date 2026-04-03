@@ -1,0 +1,28 @@
+# OPAL Python 의존성 — 통합 관리
+# 설치: ~/.opal/venv/bin/pip install -r requirements.txt
+
+# --- Office XML (docx / pptx / xlsx 공통) ---
+openpyxl>=3.1.0
+pandas>=2.0.0
+lxml>=5.0.0
+defusedxml>=0.7.0
+
+# --- PDF ---
+pypdf>=4.0.0
+pdf2image>=1.17.0
+pdfplumber>=0.11.0
+
+# --- Image / GIF ---
+Pillow>=10.0.0
+imageio>=2.31.0
+imageio-ffmpeg>=0.4.9
+numpy>=1.24.0
+
+# --- AI / MCP ---
+anthropic>=0.39.0
+mcp>=1.1.0
+PyYAML>=6.0.0
+
+# --- Web Testing ---
+# 설치 후 별도 초기화 필요: ~/.opal/venv/bin/playwright install
+playwright>=1.40.0

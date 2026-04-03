@@ -86,9 +86,10 @@ show_menu() {
     echo "  [1] OPAL 설치      (skills + agents + 부트스트래퍼 → ~/.opal/)"
     echo "  [2] MCP 서버 설정   (MCP 설정 → claude, cursor, gemini, antigravity)"
     echo "  [3] 전체 설치       (OPAL + MCP 서버)"
+    echo "  [4] Python 패키지   (requirements.txt → ~/.opal/.venv/ 업데이트)"
     echo "  [0] 종료"
     echo ""
-    read -rp "선택 (0-3): " MENU_CHOICE
+    read -rp "선택 (0-4): " MENU_CHOICE
 }
 
 # ─── Install Helpers ─────────────────────────────────────
@@ -370,6 +371,9 @@ install_opal() {
         fi
     fi
 
+    # ── Python venv ──
+    install_opal_venv
+
     # ── 참조 레지스트리 ──
     install_opal_references
 
@@ -431,6 +435,33 @@ install_opal_community_skills() {
     local cs_count
     cs_count="$(find "$cs_src" -mindepth 2 -maxdepth 2 -type d | wc -l | tr -d ' ')"
     success "커뮤니티 스킬 ${cs_count}개 → $cs_dst/"
+}
+
+install_opal_venv() {
+    local venv_dir="$USER_HOME/.opal/.venv"
+    local req_src="$FRAMEWORK_ROOT/opal/tools/requirements.txt"
+
+    if [[ ! -f "$req_src" ]]; then
+        warn "opal/tools/requirements.txt 없음 — Python venv 스킵"
+        return
+    fi
+
+    echo ""
+    info "Python 가상환경 설정..."
+
+    if [[ ! -d "$venv_dir" ]]; then
+        python3 -m venv "$venv_dir"
+        success "venv 생성: $venv_dir"
+    else
+        success "venv 기존 사용: $venv_dir"
+    fi
+
+    "$venv_dir/bin/pip" install --quiet --upgrade pip
+    "$venv_dir/bin/pip" install --quiet -r "$req_src"
+    success "Python 패키지 설치 완료 (requirements.txt)"
+
+    "$venv_dir/bin/playwright" install --quiet 2>/dev/null || \
+        warn "playwright install 실패 — 수동 실행: ~/.opal/.venv/bin/playwright install"
 }
 
 install_opal_references() {
@@ -647,6 +678,8 @@ print_summary() {
         echo "    ~/.opal/references/          참조 레지스트리"
     [[ -d "$opal_home/tools" ]] && \
         echo "    ~/.opal/tools/               파싱 도구 (Node.js)"
+    [[ -d "$opal_home/.venv" ]] && \
+        echo "    ~/.opal/.venv/                Python 가상환경"
     [[ -d "$opal_home/templates" ]] && \
         echo "    ~/.opal/templates/           프로젝트 템플릿"
 
@@ -698,6 +731,13 @@ main() {
                 info "MCP 서버 설정..."
                 install_mcp
                 installed+=("OPAL (skills + agents + 부트스트래퍼)" "MCP 서버")
+                print_summary "${installed[@]}"
+                ;;
+            4)
+                echo ""
+                info "Python 패키지 업데이트..."
+                install_opal_venv
+                installed+=("Python 패키지 (.venv)")
                 print_summary "${installed[@]}"
                 ;;
             0)
