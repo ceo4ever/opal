@@ -356,6 +356,14 @@ install_opal() {
     # ── 도구 (opal/tools/ → ~/.opal/tools/) ──
     if [[ -d "$opal_dir/tools" ]]; then
         install_dir "$opal_dir/tools" "$opal_home/tools" "OPAL 도구"
+
+        # ── playwright-tool 실행 권한 ──
+        local playwright_run="$opal_home/tools/playwright-tool/run.sh"
+        if [[ -f "$playwright_run" ]]; then
+            chmod +x "$playwright_run"
+            success "playwright-tool run.sh 실행 권한 설정"
+        fi
+
         # Node.js 환경 체크
         if command -v node &>/dev/null; then
             local node_check

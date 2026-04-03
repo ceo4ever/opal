@@ -8,9 +8,57 @@ description: |
 
 # 웹 페이지 마크다운 변환 스킬
 
-> 작성일: 2026-03-20 | 버전: v1.4
+> 작성일: 2026-03-20 | 버전: v1.7
 
 URL을 입력받아 웹 페이지 콘텐츠를 정제된 마크다운(.md)으로 변환한다. 2단계 폴백 전략으로 다양한 웹 페이지를 안정적으로 처리하고, 복수 URL은 서브에이전트로 병렬 처리한다.
+
+---
+
+## 호출 인터페이스
+
+> 다른 스킬·에이전트·PM이 이 스킬을 호출할 때 참조한다.
+
+### 사용자/PM 호출 (쌍슬래시 커맨드)
+
+```
+//wtm {url}                          # 단일 URL, full 모드
+//wtm {url1} {url2} {url3}           # 복수 URL, 병렬 처리
+//wtm --browser {url}                # browser 모드 (SPA/동적 페이지, localhost)
+//wtm --browser {url1} {url2}        # browser 모드 + 복수 URL, 병렬 처리
+//wtm --clean {url}                  # 본문만 추출
+//wtm --wireframe {url}              # 와이어프레임 분석
+```
+
+### 에이전트 디스패치 (Agent prompt 예시)
+
+단일 URL:
+```
+이 스킬(web-to-markdown)을 사용해 아래 URL을 마크다운으로 변환해줘.
+URL: {url}
+모드: {full|clean|wireframe|browser}
+저장 경로: {path}
+```
+
+복수 URL (병렬):
+```
+이 스킬(web-to-markdown)을 사용해 아래 URL 목록을 마크다운으로 변환해줘.
+URL 목록:
+  - {url1} → {save-path1}
+  - {url2} → {save-path2}
+모드: {full|clean|browser}
+각 URL은 서브에이전트로 병렬 처리한다.
+```
+
+### 입출력 요약
+
+| 항목 | 내용 |
+|------|------|
+| 입력 | URL 1개 이상, 모드 (기본: full) |
+| 출력 | `{slug}.md` 파일 (산출물 형식 섹션 참조) |
+| 저장 경로 | 사용자 지정 > 태스크 폴더 > `/tmp/web-to-markdown/` |
+| 복수 URL | 자동 병렬 처리 (2~5개), browser 모드도 병렬 허용 |
+
+---
 
 ## 추출 모드
 
@@ -19,14 +67,14 @@ URL을 입력받아 웹 페이지 콘텐츠를 정제된 마크다운(.md)으로
 | **full** (기본) | 전체 콘텐츠 보존. nav, sidebar, header, footer 등 구조 요소를 유지한다. 메뉴 구조, 내비게이션 링크 등 유용한 정보가 보존된다. | 사이트 구조 파악, 메뉴/링크 수집, 전체 페이지 아카이빙 |
 | **clean** | 본문만 추출. nav, header, footer, sidebar, 광고 등 비본문 요소를 제거한다. | 본문 콘텐츠만 필요할 때, 문서/블로그 아티클 추출 |
 | **wireframe** | 와이어프레임 분석. 화면 구조, 구성요소, 기능 동작, 네비게이션, 데이터 I/O를 구조화된 기획 관점으로 추출한다. | 와이어프레임 HTML을 기획 문서로 변환할 때, opwt 정책서/IA 작성 시 참조 |
-| **--browser** | Playwright MCP 즉시 사용. WebFetch(Phase 1) 생략. | localhost, SPA/동적 페이지, 캡틴 명시 요청 |
+| **--browser** | playwright-tool CLI 즉시 호출. WebFetch(Phase 1) 생략. | localhost, SPA/동적 페이지, 캡틴 명시 요청 |
 
 사용자가 모드를 명시하지 않으면 **full** 모드를 적용한다. "본문만", "내용만", "clean" 등의 키워드가 있으면 clean 모드를 적용한다. "와이어프레임", "wireframe", "화면 분석", "기획 분석" 등의 키워드가 있으면 wireframe 모드를 적용한다.
 
 `--browser`, "브라우저로", "browser", "로컬" 등의 키워드가 있거나,
 URL 호스트가 `localhost`, `127.0.0.1`, `[::1]`인 경우 `browser` 모드를 자동 적용한다.
 (`browser`와 `--browser` 둘 다 허용한다.)
-browser 모드에서는 Phase 1(WebFetch)을 생략하고 Phase 2(Playwright MCP)로 즉시 진입한다.
+browser 모드에서는 Phase 1(WebFetch)을 생략하고 Phase 2(playwright-tool CLI)로 즉시 진입한다.
 
 ---
 
@@ -43,10 +91,10 @@ URL 입력 (단일 또는 복수)
   │     ├─ Phase 1: WebFetch (내장 도구)
   │     │     ├─ 성공 → 본문 추출 + MD 정제 → 저장
   │     │     └─ 실패 (403, 빈 콘텐츠, JS 필요, 타임아웃)
-  │     │           └─ Phase 2: Playwright MCP
-  │     │                 ├─ browser_navigate(url) → browser_snapshot()
-  │     │                 ├─ Claude가 Accessibility Tree를 Markdown으로 정제
-  │     │                 └─ MCP 미등록 → 설치 안내 후 중단
+  │     │           └─ Phase 2: playwright-tool CLI
+  │     │                 ├─ bash run.sh {url} --mode {mode}
+  │     │                 ├─ {"ok": true} → content 정제 → MD 저장
+  │     │                 └─ run.sh 미설치 → 설치 안내 후 중단
   │     └─ 결과: {slug}.md 저장
   │
   └─ 복수 URL → 서브에이전트 병렬 디스패치
@@ -95,49 +143,41 @@ WebFetch(url="{URL}", prompt="이 페이지의 본문 콘텐츠를 마크다운�
 
 ---
 
-## Phase 2: Playwright MCP
+## Phase 2: playwright-tool CLI
 
-JavaScript 렌더링이 필요한 페이지를 Playwright MCP로 처리한다. `browser` 모드에서도 동일하게 사용한다.
+JavaScript 렌더링이 필요한 페이지를 playwright-tool CLI로 처리한다. `browser` 모드에서도 동일하게 사용한다.
 
-### MCP 등록 확인
+### CLI 설치 확인
 
-Claude Code `settings.json`에 Playwright MCP 서버가 등록되어 있어야 한다.
-미등록 시 아래 "Playwright MCP 미등록 시" 안내를 따른다.
+```bash
+ls ~/.opal/tools/playwright-tool/run.sh 2>/dev/null || echo "NOT_FOUND"
+```
+
+`NOT_FOUND` 출력 시 아래 "playwright-tool 미설치 시" 안내를 따른다.
 
 ### 실행
 
-1. `browser_navigate(url="{URL}")` 호출
-2. `browser_snapshot()` 호출 — Accessibility Tree 반환
-3. Claude가 반환값을 받아 "콘텐츠 추출 및 MD 정제" 규칙으로 Markdown 정제
-4. **스냅샷 보관** (선택): `/tmp/playwright-mcp/` 에 생성된 최신 `page-*.yml`을 태스크 폴더로 복사한다.
+1. `~/.opal/tools/playwright-tool/run.sh` 경로 확인
+2. Bash 호출:
    ```bash
-   # 가장 최근 yml → {task-folder}/references/snapshots/{slug}.yml
-   cp $(ls -t /tmp/playwright-mcp/page-*.yml | head -1) {task-folder}/references/snapshots/{slug}.yml
+   bash ~/.opal/tools/playwright-tool/run.sh {url} --mode {full|clean}
    ```
-   - 태스크 폴더가 없으면 스킵
-   - 보관한 yml은 파서 없이 Claude가 직접 재처리 가능 (재fetch 불필요)
+3. JSON 출력 파싱: `{"ok": true, "content": "..."}`
+4. `content`를 "콘텐츠 추출 및 MD 정제" 규칙에 따라 최종 정제
+5. `{slug}.md` 저장
+
+실패 시: `{"ok": false, "error": "..."}` → 오류 사유 안내 후 중단
 
 - **full 모드**: 전체 구조(nav, sidebar, header, footer)를 보존하며 Markdown으로 변환.
 - **clean 모드**: 비본문 요소(nav, header, footer, sidebar, 광고)를 제거하고 본문만 추출.
 
-### Playwright MCP 미등록 시
+### playwright-tool 미설치 시
 
-사용자에게 등록 방법을 안내하고 중단한다:
+사용자에게 설치 방법을 안내하고 중단한다:
 
 ```
-⚠️ 브라우저 폴백 불가: Playwright MCP가 등록되어 있지 않습니다.
-
-등록 방법:
-  Claude Code settings.json에 아래 내용을 추가하세요.
-  {
-    "mcpServers": {
-      "playwright": {
-        "command": "npx",
-        "args": ["@playwright/mcp@latest"]
-      }
-    }
-  }
-  npx가 자동으로 패키지를 가져오므로 별도 설치가 불필요합니다.
+playwright-tool CLI가 설치되어 있지 않습니다.
+설치 방법: install-mac.sh 실행 후 옵션 1 (OPAL 설치) 선택
 ```
 
 ---
@@ -152,7 +192,7 @@ wireframe 모드는 기존 3단계 폴백 위에 분석 레이어를 추가하�
 URL 입력 (wireframe 모드)
   │
   ├─ 기존 2단계 폴백으로 콘텐츠 취득 (full 모드 기반)
-  │   Phase 1: WebFetch → Phase 2: Playwright MCP
+  │   Phase 1: WebFetch → Phase 2: playwright-tool CLI
   │
   └─ 분석 레이어 적용
         ├─ 화면 개요 추출 (타이틀, 목적, URL 경로)
@@ -175,7 +215,7 @@ WebFetch(url="{URL}", prompt="이 와이어프레임 페이지를 기획 관점�
 
 > 소스: {URL}
 > 캡처일: {YYYY-MM-DD HH:mm}
-> 추출 방식: {WebFetch | Playwright MCP}
+> 추출 방식: {WebFetch | playwright-tool CLI}
 > 추출 모드: wireframe
 
 ---
@@ -263,7 +303,7 @@ URL 경로 기반 kebab-case로 파일명을 생성한다:
 
 ## 콘텐츠 추출 및 MD 정제
 
-모든 Phase에서 아래 정제 규칙을 적용한다. Phase 2(Playwright MCP)는 Accessibility Tree를 반환하므로 Claude가 직접 Markdown으로 정제한다.
+모든 Phase에서 아래 정제 규칙을 적용한다. Phase 2(playwright-tool CLI)는 content 필드로 Markdown을 직접 반환하므로 추가 정제만 수행한다.
 
 **중요**: 어떤 Phase를 거치든 최종 산출물은 반드시 아래 "산출물 형식"을 따르는 .md 파일이어야 한다. 중간 파일(.txt, .html 등)을 생성하지 않는다.
 
@@ -304,7 +344,7 @@ clean 모드에서만 아래 요소를 추가로 제거한다:
 
 > 소스: {URL}
 > 캡처일: {YYYY-MM-DD HH:mm}
-> 추출 방식: {WebFetch | Playwright MCP}
+> 추출 방식: {WebFetch | playwright-tool CLI}
 > 추출 모드: {full | clean}
 
 ---
@@ -359,8 +399,9 @@ URL에서 도메인과 경로를 조합하여 kebab-case slug를 생성한다:
 | 조건 | 권장 방식 |
 |------|----------|
 | URL 수 2~5개, 서로 다른 호스트 | 서브에이전트 병렬 디스패치 |
-| URL이 동일 호스트이거나 browser 모드 적용 대상 | PM 직접 순차 수집 |
-| URL 수 6개 이상 또는 browser 모드 포함 | PM 직접 순차 수집 |
+| URL이 동일 호스트 | PM 직접 순차 수집 |
+| URL 수 6개 이상 (browser 모드 제외) | PM 직접 순차 수집 |
+| browser 모드 + 복수 URL | 에이전트 병렬 디스패치 허용 (각자 독립 브라우저 인스턴스) |
 
 > 참조: opal-harness §7.4 Concurrency Limit — 합산 200KB 초과 또는 단일 50KB 초과 시
 > 순차 실행 또는 Max 2개 병렬로 제한한다.
@@ -376,12 +417,19 @@ URL 목록 수신
   │
   └─ 서브에이전트 디스패치
         ├─ URL별 Agent 도구 호출 (동시 실행)
-        │     prompt: "다음 URL의 웹 페이지를 마크다운으로 변환해줘.
+        │     prompt (기본 모드): "다음 URL의 웹 페이지를 마크다운으로 변환해줘.
         │              URL: {url}
         │              저장 경로: {save-path}
         │              모드: {mode}  ← full | clean | wireframe 중 하나를 명시
-        │              Phase 1(WebFetch) 시도 후 실패하면 Phase 2(브라우저)로 폴백.
+        │              Phase 1(WebFetch) 시도 후 실패하면 Phase 2(playwright-tool CLI)로 폴백.
         │              wireframe 모드인 경우 취득한 콘텐츠에 분석 레이어를 적용하여 산출물을 생성해줘.
+        │              결과를 {save-path}에 저장하고, 성공 여부와 사용한 방식을 보고해줘."
+        │     prompt (browser 모드): "다음 URL의 웹 페이지를 마크다운으로 변환해줘.
+        │              URL: {url}
+        │              저장 경로: {save-path}
+        │              모드: {mode}
+        │              browser 모드: playwright-tool CLI를 직접 호출하여 콘텐츠를 추출해줘.
+        │              WebFetch 단계를 생략하고 즉시 CLI를 실행한다.
         │              결과를 {save-path}에 저장하고, 성공 여부와 사용한 방식을 보고해줘."
         │
         └─ 전체 완료 후 결과 종합
@@ -389,16 +437,16 @@ URL 목록 수신
 
 ### PM 직접 순차 수집 패턴
 
-PM(오케스트레이터)이 Playwright MCP를 직접 순차 호출하여 콘텐츠를 사전 수집하고,
+PM(오케스트레이터)이 WebFetch를 직접 순차 호출하여 콘텐츠를 사전 수집하고,
 수집된 Markdown 파일 경로를 워커에게 주입한다.
 
 **동작 흐름:**
 ```
-URL 목록 수신 (동일 호스트 또는 browser 모드)
+URL 목록 수신 (동일 호스트, URL 6개 이상)
   │
   ├─ PM이 URL별 순차 처리
-  │     ├─ browser_navigate(url) → browser_snapshot()
-  │     ├─ Claude가 Markdown 정제
+  │     ├─ Phase 1: WebFetch → 성공 시 Markdown 정제
+  │     ├─ Phase 1 실패 시: bash ~/.opal/tools/playwright-tool/run.sh {url} --mode {mode}
   │     └─ {task-folder}/collected-refs/{slug}.md 저장
   │
   └─ 수집 완료 후 워커 병렬 디스패치
@@ -407,8 +455,8 @@ URL 목록 수신 (동일 호스트 또는 browser 모드)
 ```
 
 **사용 시나리오 비교:**
-- 기존: URL 21개 → 에이전트 21개 → 각자 Playwright 브라우저 인스턴스 생성 → 리소스 고갈
-- 개선: PM이 Playwright MCP 직접 21회 순차 호출 → md 수집 → 워커 병렬 디스패치
+- 기존: URL 21개 → 에이전트 21개 → 각자 브라우저 인스턴스 생성 → 리소스 고갈
+- 개선: PM이 직접 21회 순차 수집 → md 수집 → 워커 병렬 디스패치
 
 **저장 경로:**
 - `{task-folder}/collected-refs/{slug}.md`
@@ -422,7 +470,7 @@ URL 목록 수신 (동일 호스트 또는 browser 모드)
 | # | URL | 방식 | 결과 | 저장 경로 |
 |---|-----|------|------|----------|
 | 1 | {url} | WebFetch | ✅ 성공 | {path} |
-| 2 | {url} | Playwright MCP | ✅ 성공 | {path} |
+| 2 | {url} | playwright-tool CLI | ✅ 성공 | {path} |
 | 3 | {url} | WebFetch | ⚠️ 부분 성공 | {path} |
 ```
 
@@ -437,41 +485,41 @@ URL 목록 수신 (동일 호스트 또는 browser 모드)
 | 매우 긴 페이지 (10만자 초과) | 본문을 10만자에서 truncate, 안내 메시지 추가 |
 | 리다이렉트 | 최종 URL을 따라가되, 메타정보에 원본+최종 URL 모두 기록 |
 | robots.txt 차단 | 안내 후 중단 (강제 우회 금지) |
-| 타임아웃 | Phase 1: 15초, Phase 2(Playwright MCP): 30초 후 실패 처리 |
+| 타임아웃 | Phase 1: 15초, Phase 2(playwright-tool CLI): 30초 후 실패 처리 |
 
 ---
 
 ## 의존성
 
-### 필수 MCP
+### 필수 도구
 
-| MCP | 필요 시점 | 미등록 시 동작 |
-|-----|----------|--------------|
-| `playwright` | browser 모드 진입 시, 또는 Phase 1 실패 후 Phase 2 진입 시 | 등록 안내 메시지 출력 후 즉시 중단 |
+| 도구 | 필요 시점 | 미설치 시 동작 |
+|------|----------|--------------|
+| `playwright-tool` CLI | browser 모드 진입 시, 또는 Phase 1 실패 후 Phase 2 진입 시 | 설치 안내 메시지 출력 후 즉시 중단 |
 
-**사전 확인 규칙**: browser 모드가 명시되거나 localhost/127.0.0.1/[::1] URL이 감지된 경우, Phase 진입 전에 `playwright` MCP 도구(`browser_navigate`) 가용 여부를 ToolSearch 또는 세션 컨텍스트에서 확인한다. 미등록 확인 시 아래 "Playwright MCP 미등록 시" 안내를 즉시 출력하고 실행을 중단한다.
+**사전 확인 규칙**: browser 모드가 명시되거나 localhost/127.0.0.1/[::1] URL이 감지된 경우, Phase 진입 전에 아래 Bash 명령으로 `run.sh` 파일 존재 여부를 확인한다. 미설치 확인 시 "playwright-tool 미설치 시" 안내를 즉시 출력하고 실행을 중단한다.
 
-> Phase 1(WebFetch) 경로에서는 MCP 사전 확인을 수행하지 않는다. Phase 1 성공 시 Playwright MCP 없이 완료 가능하므로 불필요한 확인을 방지한다.
+```bash
+ls ~/.opal/tools/playwright-tool/run.sh 2>/dev/null || echo "NOT_FOUND"
+```
+
+> Phase 1(WebFetch) 경로에서는 CLI 사전 확인을 수행하지 않는다. Phase 1 성공 시 playwright-tool 없이 완료 가능하므로 불필요한 확인을 방지한다.
 
 | 도구 | 필수 여부 | 용도 |
 |------|----------|------|
 | WebFetch (내장) | 필수 | Phase 1 경량 fetch |
-| Playwright MCP (`@playwright/mcp`) | 필수 (MCP 등록) | Phase 2 브라우저 렌더링, browser 모드 |
+| `playwright-tool` CLI | 필수 (OPAL 설치) | Phase 2 브라우저 렌더링, browser 모드 |
 | Agent 도구 | 선택 | 복수 URL 병렬 처리 |
 
-등록 방법:
-```json
-// Claude Code settings.json
-{
-  "mcpServers": {
-    "playwright": {
-      "command": "npx",
-      "args": ["@playwright/mcp@latest"]
-    }
-  }
-}
+설치 확인:
+```bash
+ls ~/.opal/tools/playwright-tool/run.sh
 ```
-npx가 자동으로 패키지를 가져오므로 별도 설치가 불필요하다.
+
+미설치 시 설치 방법:
+```
+scripts/install-mac.sh → 옵션 1 (OPAL 설치)
+```
 
 ---
 
@@ -486,3 +534,5 @@ npx가 자동으로 패키지를 가져오므로 별도 설치가 불필요하�
 | v1.4 | 2026-04-02 | Phase 2를 Crawl4AI → Playwright MCP로 교체, Phase 3 Node Playwright 삭제, browser 모드 추가, PM 직접 순차 수집 패턴 추가 |
 | v1.5 | 2026-04-03 | browser 모드 트리거 키워드 `--browser` 추가 (`browser` 하위 호환 유지) |
 | v1.6 | 2026-04-03 | Phase 2 스냅샷 보관 단계 추가 — `/tmp/playwright-mcp/` → task 폴더 자동 복사, yml 재처리 지원 (078) |
+| v1.7 | 2026-04-03 | Phase 2를 Playwright MCP → playwright-tool CLI로 교체, browser 모드 병렬 디스패치 허용, MCP 의존성 제거 (079) |
+| v1.8 | 2026-04-03 | 호출 인터페이스 섹션 추가 — 쌍슬래시 커맨드, 에이전트 디스패치 예시, 입출력 요약 (079) |
