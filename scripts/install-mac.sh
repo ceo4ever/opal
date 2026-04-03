@@ -460,18 +460,34 @@ install_opal_venv() {
     "$venv_dir/bin/pip" install --quiet -r "$req_src"
     success "Python 패키지 설치 완료 (requirements.txt)"
 
-    # playwright 브라우저 설치 (기본: Chromium)
-    info "Playwright 브라우저 설치 (기본: Chromium)..."
-    if "$venv_dir/bin/playwright" install chromium 2>/dev/null; then
-        success "Chromium 설치 완료"
+    # playwright 브라우저 확인 및 설치
+    local pw_cache="$USER_HOME/Library/Caches/ms-playwright"
+    local missing_browsers=()
+
+    if [[ -d "$pw_cache" ]] && [[ -n "$(ls -A "$pw_cache" 2>/dev/null)" ]]; then
+        success "Playwright 브라우저 이미 설치됨 (스킵)"
+        echo -e "  ${CYAN}설치된 브라우저:${NC} $(ls "$pw_cache" | tr '\n' ' ')"
+
+        ls "$pw_cache" | grep -q "^chromium"  || missing_browsers+=("chromium")
+        ls "$pw_cache" | grep -q "^firefox"   || missing_browsers+=("firefox")
+        ls "$pw_cache" | grep -q "^webkit"    || missing_browsers+=("webkit")
     else
-        warn "Chromium 설치 실패 — 수동 실행: ~/.opal/.venv/bin/playwright install chromium"
+        info "Playwright 브라우저 설치 (기본: Chromium)..."
+        if "$venv_dir/bin/playwright" install chromium 2>/dev/null; then
+            success "Chromium 설치 완료"
+        else
+            warn "Chromium 설치 실패 — 수동 실행: ~/.opal/.venv/bin/playwright install chromium"
+        fi
+        missing_browsers+=("firefox" "webkit")
     fi
 
-    echo ""
-    echo -e "  ${CYAN}추가 브라우저가 필요하면:${NC}"
-    echo "    ~/.opal/.venv/bin/playwright install firefox"
-    echo "    ~/.opal/.venv/bin/playwright install webkit"
+    if [[ ${#missing_browsers[@]} -gt 0 ]]; then
+        echo ""
+        echo -e "  ${CYAN}미설치 브라우저 설치 명령어:${NC}"
+        for browser in "${missing_browsers[@]}"; do
+            echo "    ~/.opal/.venv/bin/playwright install $browser"
+        done
+    fi
     echo ""
 }
 
