@@ -156,47 +156,31 @@ opwt를 "작성" 모드로 호출한다:
 opwt가 자체 Phase 1~4(병렬 분석 → PM 진단 → 병렬 작성 → 정합성 검증)를 수행한다.
 oppd PM은 opwt의 정합성 검증(Phase 4) 결과를 신뢰한다.
 
-### 1-1b. SDD 명세 검증 (PM 직접 수행)
+### 1-1b. SDD 명세 검증 (op-spec-validator 디스패치)
 
-opwt 완료 후, PM이 PRD·TRD를 직접 읽어 명세 완성도를 검증한다.
+opwt 완료 후, PM이 `op-spec-validator` 에이전트를 디스패치하여 PRD/TRD 명세 완성도를 검증한다.
 **이 단계를 통과하지 않으면 1-2 사용자 확정으로 진행하지 않는다.**
 
-#### PRD 검증 체크리스트
+#### 디스패치 형식
 
-`docs/PRD.md`를 Read하여 아래 항목을 1:1 판정한다.
+op-spec-validator 에이전트에 아래 정보를 전달한다:
 
-| # | 항목 | 검증 기준 | 판정 |
-|---|------|-----------|------|
-| P1 | Non-goals 섹션 존재 | 섹션이 있고 내용이 비어 있지 않음 | Pass / Fail |
-| P2 | 타깃 유저 시나리오 형식 | `As a ... I want ... so that ...` 형식, 최소 1개 | Pass / Fail |
-| P3 | 핵심 요구사항 Must 분류 | Must/Should/Nice-to-have 구분이 명시됨 | Pass / Fail |
-| P4 | Acceptance Criteria 존재 | Must 핵심 기능당 최소 1개, GIVEN/WHEN/THEN 형식 | Pass / Fail |
-| P5 | 모호한 표현 없음 | "빠르게", "쉽게", "적절히" 등 수량화 불가 표현 없음 | Pass / Fail |
-| P6 | Open Questions 섹션 존재 | 섹션이 있고 "없음" 또는 구체적 항목이 기재됨 | Pass / Fail |
+```
+검증 요청:
+- PRD 경로: docs/PRD.md
+- TRD 경로: docs/TRD.md
+- 검증 대상: ALL
+```
 
-> **PRD 통과 기준**: P1~P6 전항 Pass. 1개라도 Fail이면 PRD Fail.
+#### 결과 수신 및 처리
 
-#### TRD 검증 체크리스트
-
-`docs/TRD.md`를 Read하여 아래 항목을 1:1 판정한다.
-
-| # | 항목 | 검증 기준 | 판정 |
-|---|------|-----------|------|
-| T1 | 기술 스택 버전 명시 | 주요 라이브러리/프레임워크에 버전이 명시됨 | Pass / Fail |
-| T2 | 성능 요구사항 수치화 | 응답시간, 처리량 등이 수치로 명시됨 (미결 허용: "[미결: 수치 확정 필요]"로 표시된 경우 Pass) | Pass / Fail |
-| T3 | 보안 요구사항 명시 | 인증/인가 방식이 구체적으로 기술됨 | Pass / Fail |
-| T4 | PRD Must 기능 커버리지 | PRD의 Must 기능이 모두 TRD에 반영됨 | Pass / Fail |
-| T5 | Open Questions 섹션 존재 | 섹션이 있고 "없음" 또는 구체적 항목이 기재됨 | Pass / Fail |
-
-> **TRD 통과 기준**: T1~T5 전항 Pass. 1개라도 Fail이면 TRD Fail.
-
-#### 판정 결과 처리
+에이전트가 반환하는 구조화 결과(종합 판정 + 상세 결과)를 수신한다.
 
 | 판정 | 처리 |
 |------|------|
-| PRD Pass + TRD Pass | 1-2 사용자 확정으로 진행 |
-| PRD Fail | opwt "수정" 모드 재호출 — Fail 항목을 `이슈`로 전달 |
-| TRD Fail | opwt "수정" 모드 재호출 — Fail 항목을 `이슈`로 전달 |
+| 종합 Pass | 1-2 사용자 확정으로 진행 |
+| PRD Fail | opwt "수정" 모드 재호출 — Fail 항목의 수정 제안을 `이슈`로 전달 |
+| TRD Fail | opwt "수정" 모드 재호출 — Fail 항목의 수정 제안을 `이슈`로 전달 |
 | PRD+TRD 모두 Fail | opwt "수정" 모드 재호출 — 두 문서의 Fail 항목을 통합 전달 |
 
 #### Fail 시 opwt 재호출 형식
@@ -205,12 +189,12 @@ opwt 완료 후, PM이 PRD·TRD를 직접 읽어 명세 완성도를 검증한�
 //opwt 수정
 - 대상 문서: {PRD | TRD | PRD, TRD}
 - 이슈:
-  - [P{번호}] {항목명}: {Fail 사유}
-  - [T{번호}] {항목명}: {Fail 사유}
+  - [P{번호}] {항목명}: {Fail 사유} → 제안: {수정 제안}
+  - [T{번호}] {항목명}: {Fail 사유} → 제안: {수정 제안}
 - 참조 문서: docs/PROJECT.md, docs/ARCHITECTURE.md
 ```
 
-opwt 재작성 완료 후 1-1b 검증을 재수행한다. (무한루프 방지: 최대 2회)
+opwt 재작성 완료 후 op-spec-validator를 재디스패치한다. (무한루프 방지: 최대 2회)
 2회 Fail 시 미통과 항목을 사용자에게 보고하고 판단을 요청한다.
 
 ### 1-2. 사용자 확정

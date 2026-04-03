@@ -1,7 +1,7 @@
 {
   "$schema": "opal-skills-registry-v1",
-  "version": "3.0.0",
-  "updated_at": "2026-03-30",
+  "version": "3.1.0",
+  "updated_at": "2026-04-03",
   "groups": {
     "opal-pilot": [
       {
@@ -219,6 +219,12 @@
         "description": "프로젝트 개발 라이프사이클 (opwt→ROADMAP→opd/opds 순차 실행)",
         "triggers": ["^opal-pilot-project-dev$", "^oppd$", "(?i)(프로젝트\\s*개발\\s*시작|개발\\s*계획|개발\\s*파일럿)"],
         "paths": ["{project}/.opal/skills/opal-pilot-project-dev/SKILL.md", "~/.opal/skills/opal-pilot-project-dev/SKILL.md"]
+      },
+      {
+        "name": "op-spec-validator",
+        "description": "SDD 명세 검증 워커 (PRD/TRD 체크리스트 기반 판정, 오케스트레이터 디스패치 전용)",
+        "paths": ["{project}/.opal/skills/op-spec-validator/SKILL.md", "~/.opal/skills/op-spec-validator/SKILL.md"],
+        "dispatched_by": ["opal-pilot-project-dev"]
       },
       {
         "name": "opal-orchestrator",
