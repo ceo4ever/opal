@@ -19,12 +19,13 @@ URL을 입력받아 웹 페이지 콘텐츠를 정제된 마크다운(.md)으로
 | **full** (기본) | 전체 콘텐츠 보존. nav, sidebar, header, footer 등 구조 요소를 유지한다. 메뉴 구조, 내비게이션 링크 등 유용한 정보가 보존된다. | 사이트 구조 파악, 메뉴/링크 수집, 전체 페이지 아카이빙 |
 | **clean** | 본문만 추출. nav, header, footer, sidebar, 광고 등 비본문 요소를 제거한다. | 본문 콘텐츠만 필요할 때, 문서/블로그 아티클 추출 |
 | **wireframe** | 와이어프레임 분석. 화면 구조, 구성요소, 기능 동작, 네비게이션, 데이터 I/O를 구조화된 기획 관점으로 추출한다. | 와이어프레임 HTML을 기획 문서로 변환할 때, opwt 정책서/IA 작성 시 참조 |
-| **browser** | Playwright MCP 즉시 사용. WebFetch(Phase 1) 생략. | localhost, SPA/동적 페이지, 캡틴 명시 요청 |
+| **--browser** | Playwright MCP 즉시 사용. WebFetch(Phase 1) 생략. | localhost, SPA/동적 페이지, 캡틴 명시 요청 |
 
 사용자가 모드를 명시하지 않으면 **full** 모드를 적용한다. "본문만", "내용만", "clean" 등의 키워드가 있으면 clean 모드를 적용한다. "와이어프레임", "wireframe", "화면 분석", "기획 분석" 등의 키워드가 있으면 wireframe 모드를 적용한다.
 
-"브라우저로", "browser", "로컬" 등의 키워드가 있거나,
+`--browser`, "브라우저로", "browser", "로컬" 등의 키워드가 있거나,
 URL 호스트가 `localhost`, `127.0.0.1`, `[::1]`인 경우 `browser` 모드를 자동 적용한다.
+(`browser`와 `--browser` 둘 다 허용한다.)
 browser 모드에서는 Phase 1(WebFetch)을 생략하고 Phase 2(Playwright MCP)로 즉시 진입한다.
 
 ---
@@ -108,6 +109,13 @@ Claude Code `settings.json`에 Playwright MCP 서버가 등록되어 있어야 �
 1. `browser_navigate(url="{URL}")` 호출
 2. `browser_snapshot()` 호출 — Accessibility Tree 반환
 3. Claude가 반환값을 받아 "콘텐츠 추출 및 MD 정제" 규칙으로 Markdown 정제
+4. **스냅샷 보관** (선택): `/tmp/playwright-mcp/` 에 생성된 최신 `page-*.yml`을 태스크 폴더로 복사한다.
+   ```bash
+   # 가장 최근 yml → {task-folder}/references/snapshots/{slug}.yml
+   cp $(ls -t /tmp/playwright-mcp/page-*.yml | head -1) {task-folder}/references/snapshots/{slug}.yml
+   ```
+   - 태스크 폴더가 없으면 스킵
+   - 보관한 yml은 파서 없이 Claude가 직접 재처리 가능 (재fetch 불필요)
 
 - **full 모드**: 전체 구조(nav, sidebar, header, footer)를 보존하며 Markdown으로 변환.
 - **clean 모드**: 비본문 요소(nav, header, footer, sidebar, 광고)를 제거하고 본문만 추출.
@@ -476,3 +484,5 @@ npx가 자동으로 패키지를 가져오므로 별도 설치가 불필요하�
 | v1.2 | 2026-04-01 | 3단계 폴백(WebFetch→Crawl4AI→Node Playwright), Phase 2 Python 버전 체크, 저장 경로 간소화, wtm 약어 등록 |
 | v1.3 | 2026-04-01 | wireframe 모드 추가 — 기획 관점 화면 분석, 5섹션 산출물 형식, docs/wireframes/ 저장 경로, _index.md 자동 생성, 복수 URL 디스패치 시 모드 전달 명시 |
 | v1.4 | 2026-04-02 | Phase 2를 Crawl4AI → Playwright MCP로 교체, Phase 3 Node Playwright 삭제, browser 모드 추가, PM 직접 순차 수집 패턴 추가 |
+| v1.5 | 2026-04-03 | browser 모드 트리거 키워드 `--browser` 추가 (`browser` 하위 호환 유지) |
+| v1.6 | 2026-04-03 | Phase 2 스냅샷 보관 단계 추가 — `/tmp/playwright-mcp/` → task 폴더 자동 복사, yml 재처리 지원 (078) |

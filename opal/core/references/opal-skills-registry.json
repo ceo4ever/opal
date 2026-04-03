@@ -170,14 +170,14 @@
       },
       {
         "name": "wireframe-builder",
-        "alias": null,
+        "alias": "wfb",
         "description": "UI 분석·설계 — 정책서/요구사항 → wireframe.md 생성",
         "triggers": ["^wireframe-builder$", "(?i)(와이어프레임|화면\\s*설계|UI\\s*설계|화면\\s*구조|화면\\s*도출)"],
         "paths": ["{project}/.opal/skills/wireframe-builder/SKILL.md", "~/.opal/skills/wireframe-builder/SKILL.md"]
       },
       {
         "name": "ui-designer",
-        "alias": null,
+        "alias": "uid",
         "description": "UI 구현 — wireframe.md → React + shadcn/ui 기반 UI",
         "triggers": ["^ui-designer$", "(?i)(UI\\s*구현|UI\\s*만들어|화면\\s*구현|wireframe\\s*구현|프로토타입\\s*만들어)"],
         "paths": ["{project}/.opal/skills/ui-designer/SKILL.md", "~/.opal/skills/ui-designer/SKILL.md"]
@@ -191,7 +191,7 @@
       },
       {
         "name": "erd-modeler",
-        "alias": null,
+        "alias": "erm",
         "description": "DB ERD 모델링 — 개념(Mermaid) → 논리(Mermaid) → 물리(DBML→DDL) 3단계",
         "triggers": ["^erd-modeler$", "(?i)(ERD\\s*(만들어|설계|작성|생성)|데이터\\s*모델링|테이블\\s*설계|논리\\s*모델링|물리\\s*모델링|DDL\\s*생성|스키마\\s*설계|엔티티\\s*설계)"],
         "paths": ["{project}/.opal/skills/erd-modeler/SKILL.md", "~/.opal/skills/erd-modeler/SKILL.md"]
@@ -200,7 +200,7 @@
     "opal": [
       {
         "name": "opal-onboarding",
-        "alias": null,
+        "alias": "onb",
         "description": "에이전트 온보딩",
         "triggers": ["^opal-onboarding$"],
         "paths": ["~/.opal/skills/opal-onboarding/SKILL.md"],
@@ -230,21 +230,21 @@
       },
       {
         "name": "opal-skill-creator",
-        "alias": null,
+        "alias": "osc",
         "description": "OPAL 프레임워크 스킬 생성/개선",
         "triggers": ["^opal-skill-creator$", "(?i)(스킬\\s*만들어|스킬\\s*생성|스킬\\s*개선|새\\s*스킬)"],
         "paths": ["~/.opal/skills/opal-skill-creator/SKILL.md"]
       },
       {
         "name": "opal-agent-creator",
-        "alias": null,
+        "alias": "oac",
         "description": "OPAL 프레임워크 에이전트 생성/개선",
         "triggers": ["^opal-agent-creator$", "(?i)(에이전트\\s*만들어|에이전트\\s*생성|에이전트\\s*개선)"],
         "paths": ["~/.opal/skills/opal-agent-creator/SKILL.md"]
       },
       {
         "name": "opal-skill-manager",
-        "alias": null,
+        "alias": "osm",
         "description": "커뮤니티 스킬 검색/설치/삭제",
         "triggers": ["^opal-skill-manager$", "(?i)(스킬\\s*검색|스킬\\s*찾아|스킬\\s*설치|설치된\\s*스킬|스킬\\s*삭제)"],
         "paths": ["~/.opal/skills/opal-skill-manager/SKILL.md"]
