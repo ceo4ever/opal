@@ -460,8 +460,19 @@ install_opal_venv() {
     "$venv_dir/bin/pip" install --quiet -r "$req_src"
     success "Python 패키지 설치 완료 (requirements.txt)"
 
-    "$venv_dir/bin/playwright" install --quiet 2>/dev/null || \
-        warn "playwright install 실패 — 수동 실행: ~/.opal/.venv/bin/playwright install"
+    # playwright 브라우저 설치 (기본: Chromium)
+    info "Playwright 브라우저 설치 (기본: Chromium)..."
+    if "$venv_dir/bin/playwright" install chromium 2>/dev/null; then
+        success "Chromium 설치 완료"
+    else
+        warn "Chromium 설치 실패 — 수동 실행: ~/.opal/.venv/bin/playwright install chromium"
+    fi
+
+    echo ""
+    echo -e "  ${CYAN}추가 브라우저가 필요하면:${NC}"
+    echo "    ~/.opal/.venv/bin/playwright install firefox"
+    echo "    ~/.opal/.venv/bin/playwright install webkit"
+    echo ""
 }
 
 install_opal_references() {
