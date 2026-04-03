@@ -26,10 +26,12 @@
 | 4 | 2026-03-30 14:00 | task | 완료 | [memory/task_agentic_loop.md](memory/task_agentic_loop.md) | oppd에 agentic 자율 루핑(QA/TEST) 장치 설계 |
 | 5 | 2026-03-31 16:30 | feedback | 유효 | [memory/feedback_qa_checklist.md](memory/feedback_qa_checklist.md) | EXECUTE 후 PM이 QA 체크리스트 반드시 갱신 — DONE.md 전 필수 |
 | 6 | 2026-04-02 11:30 | feedback | 유효 | [memory/feedback_skip_qa_warning.md](memory/feedback_skip_qa_warning.md) | [경고] 배포(Sync) 전 QA Gate 생략 금지 — 068 태스크 실수 재발 방지 |
+| 7 | 2026-04-03 17:00 | task | 진행중 | [memory/task_opsdd_design.md](memory/task_opsdd_design.md) | opsdd 스킬 설계 방안 검토 (080) — SPEC>TASK 원칙 확정, PLAN 대기 |
 ## 작업 히스토리 (최대 10개, FIFO)
 
 | # | 작업 | 단계 | 경로 | 시작일시 | 완료일시 |
 |---|------|------|------|---------|---------|
+| 0 | opsdd 스킬 설계 방안 검토 (080) | PLAN 대기 | tasks/080-opp-opsdd-design-proposal/ | 2026-04-03 17:00 | - |
 | 0 | opi 프로젝트 최신화 (077) | 완료 | tasks/077-opi-project-update/ | 2026-04-03 | 2026-04-03 |
 | 0 | xlsx-tool CLI + Python .venv 통합 (076) | 완료 | tasks/076-opp-xlsx-tool/ | 2026-04-03 | 2026-04-03 |
 | 0 | oppd WBS 전환 태스크 (075) | 완료 | tasks/075-opp-oppd-wbs-transition/ | 2026-04-02 | 2026-04-02 |
