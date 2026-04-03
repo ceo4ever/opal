@@ -188,6 +188,13 @@
         "description": "웹 페이지 마크다운 변환",
         "triggers": ["^web-to-markdown$", "^wtm$", "(?i)(웹\\s*페이지\\s*마크다운|URL\\s*읽어|사이트\\s*내용\\s*정리)"],
         "paths": ["{project}/.opal/skills/web-to-markdown/SKILL.md", "~/.opal/skills/web-to-markdown/SKILL.md"]
+      },
+      {
+        "name": "erd-modeler",
+        "alias": null,
+        "description": "DB ERD 모델링 — 개념(Mermaid) → 논리(Mermaid) → 물리(DBML→DDL) 3단계",
+        "triggers": ["^erd-modeler$", "(?i)(ERD\\s*(만들어|설계|작성|생성)|데이터\\s*모델링|테이블\\s*설계|논리\\s*모델링|물리\\s*모델링|DDL\\s*생성|스키마\\s*설계|엔티티\\s*설계)"],
+        "paths": ["{project}/.opal/skills/erd-modeler/SKILL.md", "~/.opal/skills/erd-modeler/SKILL.md"]
       }
     ],
     "opal": [

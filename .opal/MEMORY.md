@@ -30,6 +30,9 @@
 
 | # | 작업 | 단계 | 경로 | 시작일시 | 완료일시 |
 |---|------|------|------|---------|---------|
+| 0 | opi 프로젝트 최신화 (077) | 완료 | tasks/077-opi-project-update/ | 2026-04-03 | 2026-04-03 |
+| 0 | xlsx-tool CLI + Python .venv 통합 (076) | 완료 | tasks/076-opp-xlsx-tool/ | 2026-04-03 | 2026-04-03 |
+| 0 | oppd WBS 전환 태스크 (075) | 완료 | tasks/075-opp-oppd-wbs-transition/ | 2026-04-02 | 2026-04-02 |
 | 0 | opi 프로젝트 최신화 (074) | 완료 | tasks/074-opi-project-update/ | 2026-04-02 | 2026-04-02 |
 | 0 | OPAL 스킬 MCP 사전 확인 메커니즘 (073) | 완료 | tasks/073-opp-mcp-skill-registration/ | 2026-04-02 | 2026-04-02 |
 | 0 | 오케스트레이터 게이트 점검 — TASK.md 체크박스 + 누락 게이트 (072) | 완료 | tasks/072-opp-gate-checklist-fix/ | 2026-04-02 | 2026-04-02 |

@@ -59,8 +59,9 @@ OPAL은 2-레이어 아키텍처로 동작한다.
 | `skills/` | 독립 스킬 5개 + OPAL 스킬 24개 |
 | `agents/` | 서브에이전트 5개 |
 | `community-skills/` | 커뮤니티 스킬 37개 (6개 조직) |
-| `references/` | 레지스트리 (skills.md, agents.md, mcps.md, opal-harness.md, opal-doc-standard.md) |
-| `tools/` | 스킬 레지스트리 CLI (skill-registry.js) |
+| `references/` | 레지스트리 (skills.md, agents.md, mcps.md, opal-harness.md, opal-doc-standard.md, tools.md) |
+| `tools/` | CLI 도구 (skill-registry/, xlsx-tool/, check-env.js, requirements.txt) |
+| `.venv/` | Python 가상환경 (openpyxl, pandas, playwright 등 — requirements.txt로 관리) |
 | `templates/` | 프로젝트 에이전트 템플릿 |
 
 ### Project Layer (`{프로젝트}/`)
@@ -90,7 +91,7 @@ OPAL은 2-레이어 아키텍처로 동작한다.
 | | opal-pilot-dev-wireframe (opdw) | Wireframe UI: TASK → WIREFRAME → EXECUTE |
 | | opal-pilot-write-tech (opwt) | 서비스 기획 산출물: 네트워크형 오케스트레이션 |
 | | opal-pilot-project (opp) | 프로젝트 범용: TASK → PLAN → EXECUTE |
-| | opal-pilot-project-dev (oppd) | 프로젝트 개발 라이프사이클: opwt → ROADMAP → opd/opds |
+| | opal-pilot-project-dev (oppd) | 프로젝트 개발 라이프사이클: opwt → WBS → opd/opds |
 | **dev 단계** | op-dev-analysis | 코드베이스 분석 + 기술 컨텍스트 수집 |
 | | op-dev-plan | 구현 계획 (PLAN+TODO 통합) |
 | | op-dev-todo | 실행 체크리스트 확장 (Full Task 전용) |
@@ -161,12 +162,21 @@ skills/* (독립 6개) ──┐
 opal/skills/* (24개)──┼─ install ─→  ~/.opal/skills/
 agents/*            ──┤              ~/.opal/agents/
 community-skills/*  ──┤              ~/.opal/community-skills/
-opal/core/*         ──┘              ~/.opal/references/, tools/, templates/
+opal/core/          ──┤              ~/.opal/AGENT.md
+  references/       ──┤              ~/.opal/references/
+opal/tools/         ──┤              ~/.opal/tools/
+opal/templates/     ──┘              ~/.opal/templates/
 
-opal/bootstrapper/* ──── install ─→  ~/.claude/CLAUDE.md (부트스트래퍼 삽입)
-opal/core/mcps/*    ──── install ─→  ~/.cursor/rules/ (부트스트래퍼)
-                                     ~/.gemini/GEMINI.md (부트스트래퍼)
-                                     각 플랫폼 MCP 설정 머지
+opal/tools/requirements.txt ──────→  ~/.opal/.venv/ (Python 가상환경 생성/업데이트)
+
+opal/bootstrapper/* ──── install ─→  ~/.claude/CLAUDE.md
+                                     ~/.cursor/rules/000-opal-agent.mdc
+                                     ~/.gemini/GEMINI.md
+
+opal/core/mcps/*    ──── install ─→  claude mcp add --scope user (Claude)
+                                     gemini mcp add -s user (Gemini)
+                                     ~/.cursor/mcp.json (Cursor)
+                                     ~/.gemini/antigravity/mcp_config.json (Antigravity)
 ```
 
 `install-mac.sh`가 소스에서 `~/.opal/`로 통합 배포한다. 플랫폼별 디렉토리에는 부트스트래퍼와 MCP 설정만 배치한다.
@@ -191,7 +201,15 @@ opal/                                    ← 이 저장소
 ├── community-skills/                    커뮤니티 스킬 (37개, 6개 조직)
 ├── opal/                                OPAL 코어
 │   ├── bootstrapper/                    플랫폼별 부트스트래퍼
-│   ├── core/                            에이전트 코어 + 레퍼런스 + MCP + 도구
+│   ├── core/                            에이전트 코어 + 레퍼런스 + MCP
+│   │   ├── references/                  레지스트리 (harness, skills, agents, mcps, tools 등)
+│   │   ├── mcps/                        MCP 설정 (shadcn, context7, playwright 등)
+│   │   └── hooks/                       Claude Code hooks 설정
+│   ├── tools/                           CLI 도구
+│   │   ├── skill-registry/              스킬 레지스트리 CLI (skill-registry.js)
+│   │   ├── xlsx-tool/                   xlsx 읽기/쓰기 CLI (run.sh)
+│   │   ├── check-env.js                 Node.js 환경 체크
+│   │   └── requirements.txt             Python 의존성 (venv 관리)
 │   ├── skills/                          OPAL 스킬 (24개)
 │   │   ├── opal-pilot-dev/              오케스트레이터: Full Task (opd)
 │   │   ├── opal-pilot-dev-short/        오케스트레이터: Short Task (opds)

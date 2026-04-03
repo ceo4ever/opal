@@ -1,0 +1,10 @@
+{
+  "name": "playwright",
+  "description": "Playwright 브라우저 자동화 MCP — JS 렌더링 페이지 크롤링, browser 모드 wtm 스킬에서 사용",
+  "install_type": "config_merge",
+  "config": {
+    "command": "npx",
+    "args": ["@playwright/mcp@latest"]
+  },
+  "platforms": ["claude", "cursor", "gemini", "antigravity"]
+}
