@@ -1,13 +1,18 @@
 ---
 name: orchestrator
+deprecated: true
+deprecated_by: opal/core/references/opal-pm.md
 description: |
-  **OPAL 프로젝트 오케스트레이션 스킬**. 프로젝트 에이전트가 있을 때, 소유자의 지시를 프로젝트 에이전트에게 전달하고 결과를 검토하여 보고한다.
-  AGENT.md에서 {프로젝트}/.opal/AGENT.md가 존재할 때 자동으로 이 스킬의 패턴을 적용한다.
+  **[폐기됨]** PM 행동 프로세스는 `opal-pm.md` 레퍼런스로 이관되었습니다.
 ---
 
-# OPAL 프로젝트 오케스트레이션
+# ~~OPAL 프로젝트 오케스트레이션~~ (폐기됨)
 
-## 목적
+> **폐기 안내**: 이 스킬은 더 이상 사용되지 않습니다.
+> PM 행동 프로세스는 `opal/core/references/opal-pm.md` 레퍼런스를 참조하세요.
+> 폐기 태스크: 086-opp-opal-pilot-pm
+
+## 목적 (참고용)
 
 OPAL 에이전트가 소유자와 프로젝트 에이전트 사이의 오케스트레이터로 동작한다.
 소유자의 지시를 해석하고, 프로젝트 에이전트에게 전달하며, 결과를 검토하여 소유자에게 보고한다.
