@@ -37,7 +37,7 @@ op-task-plan 워커 디스패치. **model**: advanced. 이전 산출물: TASK.md
 1. `{프로젝트}/.opal/skills/op-task-plan/SKILL.md`
 2. `~/.opal/skills/op-task-plan/SKILL.md`
 
-워커 완료 -> **QA Gate** (op-task-qa) -> **PM Gate** (TASK.md 요구사항 체크박스 갱신 포함 — 하네스 §3 참조) -> 사용자에게 보고.
+워커 완료 -> **QA Gate** (op-task-qa — 체크리스트 갱신 포함) -> **PM Gate** (체크리스트 갱신 상태 확인 — 하네스 interactive §3 참조. 미갱신 시 QA 재소환) -> 사용자에게 보고.
 
 > **[PM 컨텍스트 주입]** 워커 디스패치 프롬프트의 첫 줄에 `[WORKER]`를 삽입한다. `[WORKER]` 마커가 있으면 워커는 부트스트랩을 생략한다. PM은 디스패치 시 다음을 프롬프트에 포함해야 한다:
 > 1. 하네스 Guards 핵심 규칙 (구현 금지 원칙, 커밋 규칙)
@@ -68,9 +68,9 @@ op-task-execute 워커 디스패치. **model**: standard. checklist_source: PLAN
 ### EXECUTE 완료 후
 
 워커가 changed_files를 반환하면:
-1. **QA Gate** (op-task-qa) — QA 에이전트 호출
-2. **PM Gate** — QA 결과 + 실행 결과 검토 + QA 체크리스트 갱신 (공통 하네스 §2 "QA 체크리스트 검증" 참조)
-3. **DONE.md 생성**
+1. **QA Gate** (op-task-qa) — QA 에이전트 호출 (체크리스트 갱신 포함)
+2. **PM Gate** — QA 결과 + 실행 결과 검토 + **체크리스트 갱신 상태 확인** (하네스 interactive §3 참조). 미갱신 시 QA 에이전트 재소환
+3. **모든 체크리스트 갱신 완료 확인 후** DONE.md 생성
 4. 사용자에게 완료 보고
 
 보고 형식:
@@ -128,3 +128,4 @@ TASK (PM 직접) → PLAN Gate → EXECUTE Gate
 | v1.5 | 2026-03-31 | §7 참조 → opal-harness-agentic.md 참조 전환. EXECUTE 후 QA Gate + QA 체크리스트 갱신 추가 (058) |
 | v1.6 | 2026-04-01 | PLAN/EXECUTE 워커 디스패치 서술에 `[WORKER]` 마커 + PM 컨텍스트 주입 지침 추가 (063) |
 | v1.7 | 2026-04-02 | PLAN PM Gate에 TASK.md 체크박스 갱신 명시 (072) |
+| v1.8 | 2026-04-05 | QA Gate에 체크리스트 갱신 포함 + PM Gate에 갱신 상태 확인 + QA 재소환 절차 추가 (085) |

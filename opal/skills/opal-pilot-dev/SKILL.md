@@ -54,7 +54,7 @@ op-dev-plan 스킬을 수행하라.
 ```
 **model**: advanced
 
-워커 완료 → **QA Gate** (op-dev-qa) → **PM Gate** (TASK.md 요구사항 체크박스 갱신 포함 — 하네스 §3 참조).
+워커 완료 → **QA Gate** (op-dev-qa — 체크리스트 갱신 포함) → **PM Gate** (체크리스트 갱신 상태 확인 — 하네스 interactive §3 참조. 미갱신 시 QA 재소환).
 
 ### TEST-SCENARIO 스킵 조건
 작업 유형이 **문서 전용**(.md 파일만 수정, 소스 코드 없음)인 경우:
@@ -103,8 +103,8 @@ op-dev-execute 스킬을 수행하라.
 ### EXECUTE 완료 후
 워커가 changed_files를 반환하면:
 1. **op-dev-test-agent 워커 호출** → TEST-SCENARIO.md에 결과 채움 + 판정
-2. **PM Gate** — TEST-SCENARIO 결과 검토 + QA 체크리스트 갱신 (공통 하네스 §2 "QA 체크리스트 검증" 참조)
-3. **DONE.md 생성** (checkpoint-guide.md 참조)
+2. **PM Gate** — TEST-SCENARIO 결과 검토 + **체크리스트 갱신 상태 확인** (하네스 interactive §3 참조). 미갱신 시 QA 에이전트 재소환
+3. **모든 체크리스트 갱신 완료 확인 후** DONE.md 생성 (checkpoint-guide.md 참조)
 4. 사용자에게 완료 보고
 
 ## STATE.md 도메인 설정
@@ -145,3 +145,4 @@ TASK (PM 직접) → ANALYSIS Gate → PLAN+TEST-SCENARIO Gate → EXECUTE Gate
 | v1.7 | 2026-03-31 | §7 참조 → opal-harness-agentic.md 참조 전환. EXECUTE 후 PM Gate + QA 체크리스트 갱신 추가 (058) |
 | v1.8 | 2026-04-01 | 전체 워커 디스패치 프롬프트에 `[WORKER]` 마커 + 하네스 Guards + 참조 문서 주입 지침 추가 (063) |
 | v1.9 | 2026-04-02 | PLAN PM Gate에 TASK.md 체크박스 갱신 명시 (072) |
+| v2.0 | 2026-04-05 | QA Gate에 체크리스트 갱신 포함 + PM Gate에 갱신 상태 확인 + QA 재소환 절차 추가 (085) |
