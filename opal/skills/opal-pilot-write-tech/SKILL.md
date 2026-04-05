@@ -187,6 +187,8 @@ PLAN.md의 QA 체크리스트를 검증 결과로 갱신한다 (하네스 §2 QA
 - **Pass**: DONE.md 생성
 - **Fail**: EXECUTE 부분 재진입 (실패 문서만)
 
+> **추가작업**: 태스크 완료 후 추가작업이 필요하면 하네스 §3 "추가작업 프로세스"를 따른다.
+
 ---
 
 ## STATE.md 네트워크 확장
@@ -223,3 +225,4 @@ opal-doc-standard 적용: `~/.opal/references/opal-doc-standard.md`
 | v2.0 | 2026-04-01 | 재설계 — Phase 1-4 → 하네스 표준 단계(TASK/ANALYSIS/PLAN/EXECUTE/QA), TASK 단계 추가, 각 단계 STATE 갱신 명시, 병렬 원칙 적용 (067) |
 | v2.1 | 2026-04-01 | 단계별 산출물 문서 추가 — ANALYSIS.md(워커 결과 취합), PLAN.md(진단 근거+배치+QA체크리스트), QA 단계 PLAN.md 갱신 의무 (067) |
 | v2.2 | 2026-04-02 | ANALYSIS 게이트 + PLAN QA Gate + EXECUTE 배치별 QA Gate 추가 (072) |
+| v2.3 | 2026-04-05 | EXECUTE 후 추가작업 참조 가이드 추가 — 하네스 §3 추가작업 프로세스 (087) |

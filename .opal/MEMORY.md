@@ -27,10 +27,12 @@
 | 5 | 2026-03-31 16:30 | feedback | 유효 | [memory/feedback_qa_checklist.md](memory/feedback_qa_checklist.md) | EXECUTE 후 PM이 QA 체크리스트 반드시 갱신 — DONE.md 전 필수 |
 | 6 | 2026-04-02 11:30 | feedback | 유효 | [memory/feedback_skip_qa_warning.md](memory/feedback_skip_qa_warning.md) | [경고] 배포(Sync) 전 QA Gate 생략 금지 — 068 태스크 실수 재발 방지 |
 | 7 | 2026-04-03 17:00 | task | 진행중 | [memory/task_opsdd_design.md](memory/task_opsdd_design.md) | opsdd 스킬 설계 방안 검토 (080) — SPEC>TASK 원칙 확정, PLAN 대기 |
+| 8 | 2026-04-05 21:00 | feedback | 유효 | [memory/feedback_artifact_gate.md](memory/feedback_artifact_gate.md) | 산출물 기반 강제(Artifact Gate) — QA 산출물 없으면 다음 단계 진입 불가. 규칙 준수를 구조로 강제 |
 ## 작업 히스토리 (최대 10개, FIFO)
 
 | # | 작업 | 단계 | 경로 | 시작일시 | 완료일시 |
 |---|------|------|------|---------|---------|
+| 0 | 역할 전환 규칙 + 추가작업 프로세스 (087) | 완료 | tasks/087-opp-role-switch-addon-process/ | 2026-04-05 | 2026-04-05 |
 | 0 | opal-pm 레퍼런스 구축 (086) | 완료 | tasks/086-opp-opal-pilot-pm/ | 2026-04-05 | 2026-04-05 |
 | 0 | QA 체크리스트 갱신 강제 (085) | 완료 | tasks/085-opp-qa-checklist-enforcement/ | 2026-04-05 | 2026-04-05 |
 | 0 | opi 최신화 모드 정밀도 개선 (084) | 완료 | tasks/084-opp-opi-update-mode-enhance/ | 2026-04-05 | 2026-04-05 |

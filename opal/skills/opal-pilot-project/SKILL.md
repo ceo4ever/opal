@@ -83,6 +83,8 @@ op-task-execute 워커 디스패치. **model**: standard. checklist_source: PLAN
 
 > TEST-SCENARIO 없음: 범용 작업은 코드 테스트가 불필요하다.
 
+> **추가작업**: 태스크 완료 후 추가작업이 필요하면 하네스 §3 "추가작업 프로세스"를 따른다.
+
 ---
 
 ## STATE.md 도메인 치환값
@@ -129,3 +131,4 @@ TASK (PM 직접) → PLAN Gate → EXECUTE Gate
 | v1.6 | 2026-04-01 | PLAN/EXECUTE 워커 디스패치 서술에 `[WORKER]` 마커 + PM 컨텍스트 주입 지침 추가 (063) |
 | v1.7 | 2026-04-02 | PLAN PM Gate에 TASK.md 체크박스 갱신 명시 (072) |
 | v1.8 | 2026-04-05 | QA Gate에 체크리스트 갱신 포함 + PM Gate에 갱신 상태 확인 + QA 재소환 절차 추가 (085) |
+| v1.9 | 2026-04-05 | EXECUTE 후 추가작업 참조 가이드 추가 — 하네스 §3 추가작업 프로세스 (087) |
