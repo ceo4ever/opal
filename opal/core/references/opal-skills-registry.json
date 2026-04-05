@@ -1,7 +1,7 @@
 {
   "$schema": "opal-skills-registry-v1",
-  "version": "3.1.0",
-  "updated_at": "2026-04-03",
+  "version": "3.2.0",
+  "updated_at": "2026-04-05",
   "groups": {
     "opal-pilot": [
       {
@@ -48,6 +48,15 @@
         "paths": ["{project}/.opal/skills/opal-pilot-write-tech/SKILL.md", "~/.opal/skills/opal-pilot-write-tech/SKILL.md"],
         "domain": "write-tech",
         "pipeline": "Phase 1~4 (병렬 분석 → PM 진단 → 병렬 작성 → 정합성 검증)"
+      },
+      {
+        "name": "opal-pilot-sdd",
+        "alias": "opsdd",
+        "description": "SDD 기반 오케스트레이터 (SPEC→VERIFY→PLAN→TASKS→VERIFY→LOOP→DONE)",
+        "triggers": ["^opal-pilot-sdd$", "^opsdd$", "(?i)(SDD\\s*오케스트레이터|SDD\\s*개발|명세\\s*주도\\s*개발)"],
+        "paths": ["{project}/.opal/skills/opal-pilot-sdd/SKILL.md", "~/.opal/skills/opal-pilot-sdd/SKILL.md"],
+        "domain": "sdd",
+        "pipeline": "SPEC → VERIFY → PLAN → TASKS → VERIFY → LOOP → DONE"
       }
     ],
     "op-dev": [
@@ -113,6 +122,44 @@
         "paths": ["{project}/.opal/skills/op-dev-qa/SKILL.md", "~/.opal/skills/op-dev-qa/SKILL.md"],
         "stage": "QA",
         "dispatched_by": ["opal-pilot-dev", "opal-pilot-dev-short", "opal-pilot-dev-wireframe"]
+      }
+    ],
+    "op-sdd": [
+      {
+        "name": "op-sdd-spec",
+        "alias": null,
+        "description": "SPEC 단계 — spec.md 작성",
+        "triggers": ["^op-sdd-spec$"],
+        "paths": ["{project}/.opal/skills/op-sdd-spec/SKILL.md", "~/.opal/skills/op-sdd-spec/SKILL.md"],
+        "stage": "SPEC",
+        "dispatched_by": ["opal-pilot-sdd"]
+      },
+      {
+        "name": "op-sdd-verify",
+        "alias": null,
+        "description": "VERIFY 단계 — 3계층 검증 + 테스트 시나리오",
+        "triggers": ["^op-sdd-verify$"],
+        "paths": ["{project}/.opal/skills/op-sdd-verify/SKILL.md", "~/.opal/skills/op-sdd-verify/SKILL.md"],
+        "stage": "VERIFY",
+        "dispatched_by": ["opal-pilot-sdd"]
+      },
+      {
+        "name": "op-sdd-plan",
+        "alias": null,
+        "description": "SPEC-PLAN 단계 — 아키텍처 설계",
+        "triggers": ["^op-sdd-plan$"],
+        "paths": ["{project}/.opal/skills/op-sdd-plan/SKILL.md", "~/.opal/skills/op-sdd-plan/SKILL.md"],
+        "stage": "SPEC-PLAN",
+        "dispatched_by": ["opal-pilot-sdd"]
+      },
+      {
+        "name": "op-sdd-tasks",
+        "alias": null,
+        "description": "TASKS 단계 — 태스크 분해",
+        "triggers": ["^op-sdd-tasks$"],
+        "paths": ["{project}/.opal/skills/op-sdd-tasks/SKILL.md", "~/.opal/skills/op-sdd-tasks/SKILL.md"],
+        "stage": "TASKS",
+        "dispatched_by": ["opal-pilot-sdd"]
       }
     ],
     "op-task": [

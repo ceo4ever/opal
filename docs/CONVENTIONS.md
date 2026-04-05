@@ -19,6 +19,7 @@
 - 스킬 폴더: `{그룹}-{역할}` — `opal-pilot-dev`, `op-dev-analysis`, `op-task-qa`
 - 에이전트 폴더: `{대상 워크플로우}-{역할}` — `opal-task-agent`, `opal-task-qa-agent`, `wtm-agent`
 - 태스크 폴더: `{NNN}-{스킬약어 또는 대상}-{동작/설명}` — `055-opi-task-record`, `052-orchestrator-cleanup`
+- SDD 명세 폴더: `specs/{NNN}-{feature-name}/` — 순번 3자리 0-패딩, kebab-case
 
 ### 컴포넌트 네이밍 체계
 
@@ -28,6 +29,7 @@
 | `op-dev-*` | dev 도메인 단계 스킬 | op-dev-analysis, op-dev-plan, op-dev-qa |
 | `op-task-*` | 범용 단계 스킬 | op-task, op-task-qa, op-task-plan, op-task-execute |
 | `opal-task-*` | 범용 워커 에이전트 | opal-task-agent |
+| `op-sdd-*` | SDD 단계 스킬 | op-sdd-spec, op-sdd-verify, op-sdd-plan, op-sdd-tasks |
 | `opal-*` | OPAL 프레임워크 전용 | opal-project-init, opal-onboarding |
 
 ### 약어 (Alias)
@@ -41,6 +43,7 @@
 | opp | opal-pilot-project |
 | oppd | opal-pilot-project-dev |
 | opi | opal-project-init |
+| opsdd | opal-pilot-sdd |
 
 ## 파일 구조
 

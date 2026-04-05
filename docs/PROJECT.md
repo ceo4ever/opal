@@ -51,6 +51,16 @@
 | `agents/` | `{대상}-{역할}/` | `opal-task-agent/`, `wtm-agent/` |
 | `docs/` | `{대문자}.md` | `PROJECT.md`, `ARCHITECTURE.md` |
 
+## 주요 컴포넌트 (SDD 파이프라인)
+
+| 컴포넌트 | 약어 | 유형 | 설명 |
+|----------|------|------|------|
+| `opal-pilot-sdd` | opsdd | 오케스트레이터 | SDD 기반 오케스트레이터: SPEC → VERIFY → PLAN → TASKS → EXECUTE |
+| `op-sdd-spec` | - | 단계 스킬 | SPEC 단계 — SDD 명세 작성 |
+| `op-sdd-verify` | - | 단계 스킬 | VERIFY 단계 — SDD 명세 검증 |
+| `op-sdd-plan` | - | 단계 스킬 | SPEC-PLAN 단계 — SDD 구현 계획 수립 |
+| `op-sdd-tasks` | - | 단계 스킬 | TASKS 단계 — SDD 태스크 분해 |
+
 ## 프로젝트 문서
 
 | 문서 | 설명 | 용도 | 참조 시점 |

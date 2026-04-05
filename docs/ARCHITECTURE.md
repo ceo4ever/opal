@@ -92,6 +92,7 @@ OPAL은 2-레이어 아키텍처로 동작한다.
 | | opal-pilot-write-tech (opwt) | 서비스 기획 산출물: 네트워크형 오케스트레이션 |
 | | opal-pilot-project (opp) | 프로젝트 범용: TASK → PLAN → EXECUTE |
 | | opal-pilot-project-dev (oppd) | 프로젝트 개발 라이프사이클: opwt → WBS → opd/opds |
+| | opal-pilot-sdd (opsdd) | SDD 기반 오케스트레이터: SPEC → SPEC-VERIFY → SPEC-PLAN → TASKS → TASKS-VERIFY → EXECUTE-LOOP → DONE |
 | **dev 단계** | op-dev-analysis | 코드베이스 분석 + 기술 컨텍스트 수집 |
 | | op-dev-plan | 구현 계획 (PLAN+TODO 통합) |
 | | op-dev-todo | 실행 체크리스트 확장 (Full Task 전용) |
@@ -103,6 +104,10 @@ OPAL은 2-레이어 아키텍처로 동작한다.
 | | op-task-qa | 범용 QA 검증 (도메인 무관 산출물) |
 | | op-task-plan | 범용 계획 수립 (도메인 무관) |
 | | op-task-execute | 범용 실행 (도메인 무관) |
+| **SDD 단계** | op-sdd-spec | SPEC 단계 — SDD 명세 작성 |
+| | op-sdd-verify | VERIFY 단계 — SDD 명세 검증 |
+| | op-sdd-plan | SPEC-PLAN 단계 — SDD 구현 계획 수립 |
+| | op-sdd-tasks | TASKS 단계 — SDD 태스크 분해 |
 | **독립** | api-analyzer | 외부 API 7단계 분석 |
 | | interview | 구조화된 Q&A 요구사항 수집 |
 | | ui-designer | wireframe.md → React + shadcn/ui 구현 |
