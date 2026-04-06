@@ -23,10 +23,8 @@
 |---|----------|----------|------|------|------|
 | 1 | 2026-03-22 | task | 예정 | [memory/project_security_task.md](memory/project_security_task.md) | 보안 전용 스킬+에이전트 생성 |
 | 3 | 2026-03-27 | project | 유효 | [memory/project_opi_vision.md](memory/project_opi_vision.md) | opi 비전: 프로젝트=WHAT/WHY, 스킬=HOW |
-| 4 | 2026-03-30 14:00 | task | 완료 | [memory/task_agentic_loop.md](memory/task_agentic_loop.md) | oppd에 agentic 자율 루핑(QA/TEST) 장치 설계 |
 | 5 | 2026-03-31 16:30 | feedback | 유효 | [memory/feedback_qa_checklist.md](memory/feedback_qa_checklist.md) | EXECUTE 후 PM이 QA 체크리스트 반드시 갱신 — DONE.md 전 필수 |
 | 6 | 2026-04-02 11:30 | feedback | 유효 | [memory/feedback_skip_qa_warning.md](memory/feedback_skip_qa_warning.md) | [경고] 배포(Sync) 전 QA Gate 생략 금지 — 068 태스크 실수 재발 방지 |
-| 7 | 2026-04-03 17:00 | task | 완료 | [memory/task_opsdd_design.md](memory/task_opsdd_design.md) | opsdd 오케스트레이터 스킬 설계 완료 (080) — 7단계 파이프라인, 신규 13개 파일 |
 | 8 | 2026-04-05 21:00 | feedback | 유효 | [memory/feedback_artifact_gate.md](memory/feedback_artifact_gate.md) | 산출물 기반 강제(Artifact Gate) — QA 산출물 없으면 다음 단계 진입 불가. 규칙 준수를 구조로 강제 |
 ## 작업 히스토리 (최대 10개, FIFO)
 
