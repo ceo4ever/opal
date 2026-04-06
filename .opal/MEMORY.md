@@ -25,11 +25,13 @@
 | 3 | 2026-03-27 | project | 유효 | [memory/project_opi_vision.md](memory/project_opi_vision.md) | opi 비전: 프로젝트=WHAT/WHY, 스킬=HOW |
 | 5 | 2026-03-31 16:30 | feedback | 유효 | [memory/feedback_qa_checklist.md](memory/feedback_qa_checklist.md) | EXECUTE 후 PM이 QA 체크리스트 반드시 갱신 — DONE.md 전 필수 |
 | 6 | 2026-04-02 11:30 | feedback | 유효 | [memory/feedback_skip_qa_warning.md](memory/feedback_skip_qa_warning.md) | [경고] 배포(Sync) 전 QA Gate 생략 금지 — 068 태스크 실수 재발 방지 |
-| 8 | 2026-04-05 21:00 | feedback | 유효 | [memory/feedback_artifact_gate.md](memory/feedback_artifact_gate.md) | 산출물 기반 강제(Artifact Gate) — QA 산출물 없으면 다음 단계 진입 불가. 규칙 준수를 구조로 강제 |
+
+
 ## 작업 히스토리 (최대 10개, FIFO)
 
 | # | 작업 | 단계 | 경로 | 시작일시 | 완료일시 |
 |---|------|------|------|---------|---------|
+| 0 | Artifact Gate 설계 및 적용 (090) | 완료 | tasks/090-opp-artifact-gate/ | 2026-04-06 | 2026-04-06 |
 | 0 | opi docs 백업 기능 추가 (088) | 완료 | tasks/088-opp-opi-docs-backup/ | 2026-04-06 | 2026-04-06 |
 | 0 | opsdd 오케스트레이터 스킬 설계 (080) | 완료 | tasks/080-opp-opsdd-design-proposal/ | 2026-04-03 | 2026-04-06 |
 | 0 | 역할 전환 규칙 + 추가작업 프로세스 (087) | 완료 | tasks/087-opp-role-switch-addon-process/ | 2026-04-05 | 2026-04-05 |

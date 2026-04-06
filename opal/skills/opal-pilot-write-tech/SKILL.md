@@ -100,7 +100,14 @@ tasks/{NNN}-opwt-{name}/ANALYSIS.md
 
 ### 게이트
 
-ANALYSIS 완료 → 사용자 확인 (interactive) / PM 자율 승인 (agentic)
+ANALYSIS 완료 후 아래 절차를 순서대로 수행한다:
+
+1. **PM Gate (자가 체크)** — ANALYSIS는 PM이 직접 수행하는 단계이므로 외부 QA 에이전트 호출 없이 PM이 자가 점검한다.
+   - AGENT.md 검토 기준(§4) 7항목을 체크한다
+   - ANALYSIS.md 내용이 모든 워커 결과를 취합하고 있는지 확인한다
+   - 문서별 요약 및 이슈 목록이 누락 없이 작성되었는지 확인한다
+   - Artifact Gate: `ANALYSIS.md` 파일이 존재하고 내용이 있는지 확인한다
+2. 사용자 확인 (interactive) / PM 자율 승인 (agentic)
 
 ---
 
@@ -163,7 +170,7 @@ tasks/{NNN}-opwt-{name}/PLAN.md
 
 ### 게이트 (배치별)
 
-배치 완료 → **QA Gate** (op-task-qa) → PM 검토 → 사용자 확인 (interactive) / PM 자율 승인 후 다음 배치 (agentic)
+배치 완료 → **QA Gate** (op-task-qa) → **PM Gate** (배치 단위 간이 검토 — 하네스 §3 참조. 전체 PM Gate는 QA 단계 최종 판정에서 수행) → 사용자 확인 (interactive) / PM 자율 승인 후 다음 배치 (agentic)
 배치 완료 후 `docs/PROJECT.md` 등록 확인
 
 ---
@@ -228,3 +235,4 @@ opal-doc-standard 적용: `~/.opal/references/opal-doc-standard.md`
 | v2.2 | 2026-04-02 | ANALYSIS 게이트 + PLAN QA Gate + EXECUTE 배치별 QA Gate 추가 (072) |
 | v2.3 | 2026-04-05 | EXECUTE 후 추가작업 참조 가이드 추가 — 하네스 §3 추가작업 프로세스 (087) |
 | v2.4 | 2026-04-06 | PMO 그룹 신설 + 개발 WBS 추가 — 커버 범위 및 TASK 확인 항목 갱신 (089) |
+| v2.5 | 2026-04-06 | ANALYSIS PM Gate(자가 체크) 추가 + EXECUTE 배치 게이트 "PM 검토" → "PM Gate" 명확화 (090) |
