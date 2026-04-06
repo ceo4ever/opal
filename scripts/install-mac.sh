@@ -253,6 +253,41 @@ install_opal_section() {
     fi
 }
 
+# ─── Claude Permissions ─────────────────────────────────
+
+install_claude_permissions() {
+    local settings="$USER_HOME/.claude/settings.json"
+
+    mkdir -p "$(dirname "$settings")"
+
+    /usr/bin/python3 -c "
+import json, os, sys
+
+settings_path = sys.argv[1]
+opal_home = sys.argv[2]
+
+perm_entry = f'Read({opal_home}/**)'
+
+if os.path.exists(settings_path):
+    with open(settings_path) as f:
+        content = f.read().strip()
+    data = json.loads(content) if content else {}
+else:
+    data = {}
+
+perms = data.setdefault('permissions', {})
+allow = perms.setdefault('allow', [])
+
+if perm_entry not in allow:
+    allow.append(perm_entry)
+    with open(settings_path, 'w') as f:
+        json.dump(data, f, indent=2)
+        f.write('\n')
+" "$settings" "$USER_HOME/.opal"
+
+    success "Claude Code ~/.opal 읽기 권한 → $settings"
+}
+
 # ─── Gemini Config ──────────────────────────────────────
 
 install_gemini_config() {
@@ -415,6 +450,9 @@ install_opal() {
 
     install_opal_section "$opal_dir/bootstrapper/gemini-bootstrap.md" \
         "$USER_HOME/.gemini/GEMINI.md" "Gemini"
+
+    # ── Claude Code ~/.opal 읽기 권한 ──
+    install_claude_permissions
 
     # ── Gemini CLI 외부 경로 접근 설정 ──
     install_gemini_config
