@@ -23,6 +23,8 @@ description: |
 
 harness "4. TASK 공통 프로세스" 참조. 다음 단계명: PLAN.
 
+TASK 완료 → **State Gate** (하네스 §3 참조 — STATE.md 갱신 확인) → 사용자 보고.
+
 ---
 
 ## STEP 2: PLAN + TEST-SCENARIO
@@ -34,7 +36,11 @@ harness "4. TASK 공통 프로세스" 참조. 다음 단계명: PLAN.
 ### PLAN 디스패치
 
 op-dev-plan 워커 디스패치. **model**: advanced. 이전 산출물: TASK.md만 (ANALYSIS.md 없음).
-워커 완료 -> **QA Gate** (op-dev-qa — 체크리스트 갱신 포함) -> **PM Gate** (체크리스트 갱신 상태 확인 — 하네스 interactive §3 참조. 미갱신 시 QA 재소환).
+워커 완료
+  → **QA Gate** (op-dev-qa — 체크리스트 갱신 포함)
+  → **Artifact Gate** (하네스 §2.5 참조)
+  → **State Gate** (하네스 §3 참조 — STATE.md 갱신 확인)
+  → **PM Gate** (체크리스트 갱신 상태 확인 — 하네스 interactive §3 참조. 미갱신 시 QA 재소환).
 
 > **[PM 컨텍스트 주입]** 워커 디스패치 프롬프트의 첫 줄에 `[WORKER]`를 삽입한다. `[WORKER]` 마커가 있으면 워커는 부트스트랩을 생략한다. PM은 디스패치 시 다음을 프롬프트에 포함해야 한다:
 > 1. 하네스 Guards 핵심 규칙 (구현 금지 원칙, 커밋 규칙)
@@ -64,7 +70,8 @@ op-dev-execute 워커 디스패치. **model**: standard. checklist_source: PLAN.
 
 워커가 changed_files를 반환하면:
 1. **op-dev-test-agent 워커 호출** -> TEST-SCENARIO.md에 결과 채움 + 판정
-2. **PM Gate** — TEST-SCENARIO 결과 검토 + **체크리스트 갱신 상태 확인** (하네스 interactive §3 참조). 미갱신 시 QA 에이전트 재소환
+2. **State Gate** (하네스 §3 참조 — STATE.md 갱신 확인)
+3. **PM Gate** — TEST-SCENARIO 결과 검토 + **체크리스트 갱신 상태 확인** (하네스 interactive §3 참조). 미갱신 시 QA 에이전트 재소환
 3. **모든 체크리스트 갱신 완료 확인 후** DONE.md 생성
 4. 사용자에게 완료 보고
 
@@ -157,3 +164,4 @@ TASK (PM 직접) → PLAN+TEST-SCENARIO Gate → EXECUTE Gate
 | v2.0 | 2026-04-04 | 에스컬레이션 규칙에 조기 에스컬레이션 (TASK 완료 직후) 조항 추가 (083) |
 | v2.1 | 2026-04-05 | QA Gate에 체크리스트 갱신 포함 + PM Gate에 갱신 상태 확인 + QA 재소환 절차 추가 (085) |
 | v2.2 | 2026-04-05 | EXECUTE 후 추가작업 참조 가이드 추가 — 하네스 §3 추가작업 프로세스 (087) |
+| v2.3 | 2026-04-07 | TASK/PLAN/EXECUTE 각 단계 Gate 순서에 State Gate 추가 (094) |

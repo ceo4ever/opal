@@ -37,6 +37,8 @@ Harness "TASK 공통 프로세스"를 따르되, 아래를 추가:
 - 입력물 분류 + wireframe.md 경로 (기존/생성 필요)
 - 보고 시 입력물 분기 판별 결과 포함
 
+TASK 완료 → **State Gate** (하네스 §3 참조 — STATE.md 갱신 확인) → 사용자 보고.
+
 ---
 
 ## STEP 2: WIREFRAME
@@ -45,7 +47,11 @@ Harness "TASK 공통 프로세스"를 따르되, 아래를 추가:
 
 워커 디스패치로 wireframe.md 생성. **model**: standard.
 - 스킬: op-dev-wireframe, 입력: TASK.md + 정책서/이미지
-- 완료 → op-dev-qa 호출 (단계: WIREFRAME) → **PM Gate** (TASK.md 요구사항 체크박스 갱신 포함 — 하네스 §3 참조) → 사용자 보고
+- 완료
+  → op-dev-qa 호출 (단계: WIREFRAME)
+  → **Artifact Gate** (하네스 §2.5 참조)
+  → **State Gate** (하네스 §3 참조 — STATE.md 갱신 확인)
+  → **PM Gate** (TASK.md 요구사항 체크박스 갱신 포함 — 하네스 §3 참조) → 사용자 보고
 
 > **[PM 컨텍스트 주입]** 워커 디스패치 프롬프트의 첫 줄에 `[WORKER]`를 삽입한다. `[WORKER]` 마커가 있으면 워커는 부트스트랩을 생략한다. PM은 디스패치 시 다음을 프롬프트에 포함해야 한다:
 > 1. 하네스 Guards 핵심 규칙 (구현 금지 원칙, 커밋 규칙)
@@ -64,8 +70,9 @@ Harness "TASK 공통 프로세스"를 따르되, 아래를 추가:
 
 ### 완료 후
 1. op-dev-qa 호출 (단계: EXECUTE-UI) → 빌드/린트 + wireframe↔코드 대조
-2. **PM Gate** — QA 결과 + 실행 결과 검토 + 체크리스트 갱신 (하네스 §2, §3 참조)
-3. DONE.md 생성 → 사용자 완료 보고
+2. **State Gate** (하네스 §3 참조 — STATE.md 갱신 확인)
+3. **PM Gate** — QA 결과 + 실행 결과 검토 + 체크리스트 갱신 (하네스 §2, §3 참조)
+4. DONE.md 생성 → 사용자 완료 보고
 
 ---
 
@@ -75,6 +82,27 @@ Harness STATE.md 템플릿에 적용:
 - `{모드}`: Wireframe UI
 - `{단계 목록}`: TASK / WIREFRAME / EXECUTE
 - `{산출물 목록}`: TASK.md, wireframe.md(기존 존재 가능), QA-*.md, DONE.md
+
+---
+
+## Agentic Mode
+
+opal-harness-agentic.md 참조. `--agentic` 플래그 활성화 시 이 스킬의 차이점만 기술한다.
+
+### 활성화
+
+`//opdw --agentic {작업 설명}` 형식으로 호출. STATE.md 모드 필드를 `agentic`으로 기록한다.
+
+### 자율 게이트 흐름
+
+```
+TASK (PM 직접) → WIREFRAME Gate → EXECUTE Gate
+                  PM 자율 검토     PM 자율 검토
+```
+
+- TASK 이후 2개 게이트를 PM이 자율 통과
+- 각 게이트에서 opal-harness-agentic.md "Gate 루핑 규칙" 적용
+- AGENTIC-LOG.md에 모든 판단/오류/수정/의사결정 기록
 
 ---
 
@@ -88,3 +116,4 @@ Harness STATE.md 템플릿에 적용:
 | v1.3 | 2026-03-29 | model override를 레벨 기반으로 전환 (044) |
 | v1.4 | 2026-04-01 | WIREFRAME/EXECUTE 워커 디스패치에 `[WORKER]` 마커 + PM 컨텍스트 주입 지침 추가 (063) |
 | v1.5 | 2026-04-02 | 서브 하네스 [MUST] 추가 + WIREFRAME/EXECUTE PM Gate 추가 (072) |
+| v1.6 | 2026-04-07 | TASK/WIREFRAME/EXECUTE 각 단계 Gate 순서에 State Gate 추가 + Agentic Mode 섹션 신설 (094) |

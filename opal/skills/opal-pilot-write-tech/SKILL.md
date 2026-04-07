@@ -64,6 +64,7 @@ description: |
 
 - TASK.md 작성 (모드, 대상 문서 유형, 외부 참조, 저장 경로 포함)
 - STATE.md 초기화 (하네스 §3 STATE.md 공통 템플릿 + 네트워크 확장 섹션 포함)
+- **State Gate** (하네스 §3 참조 — STATE.md 갱신 확인)
 - 보고 후 다음 단계 승인 (interactive) / 자율 진행 (agentic)
 
 ---
@@ -107,7 +108,8 @@ ANALYSIS 완료 후 아래 절차를 순서대로 수행한다:
    - ANALYSIS.md 내용이 모든 워커 결과를 취합하고 있는지 확인한다
    - 문서별 요약 및 이슈 목록이 누락 없이 작성되었는지 확인한다
    - Artifact Gate: `ANALYSIS.md` 파일이 존재하고 내용이 있는지 확인한다
-2. 사용자 확인 (interactive) / PM 자율 승인 (agentic)
+2. **State Gate** (하네스 §3 참조 — STATE.md 갱신 확인)
+3. 사용자 확인 (interactive) / PM 자율 승인 (agentic)
 
 ---
 
@@ -144,6 +146,8 @@ tasks/{NNN}-opwt-{name}/PLAN.md
 
 - **STATE 갱신**: 단계 시작/완료 시 STATE.md 갱신
 - **QA Gate** (op-task-qa) — PLAN.md 검증
+- **Artifact Gate** (하네스 §2.5 참조)
+- **State Gate** (하네스 §3 참조 — STATE.md 갱신 확인)
 - **PM Gate** (TASK.md 요구사항 체크박스 갱신 포함 — 하네스 §3 참조)
 - **게이트**: PLAN.md + 배치 계획 사용자 확인 (interactive) / PM 자율 승인 (agentic)
 
@@ -170,7 +174,11 @@ tasks/{NNN}-opwt-{name}/PLAN.md
 
 ### 게이트 (배치별)
 
-배치 완료 → **QA Gate** (op-task-qa) → **PM Gate** (배치 단위 간이 검토 — 하네스 §3 참조. 전체 PM Gate는 QA 단계 최종 판정에서 수행) → 사용자 확인 (interactive) / PM 자율 승인 후 다음 배치 (agentic)
+배치 완료
+  → **QA Gate** (op-task-qa)
+  → **State Gate** (하네스 §3 참조 — STATE.md 갱신 확인)
+  → **PM Gate** (배치 단위 간이 검토 — 하네스 §3 참조. 전체 PM Gate는 QA 단계 최종 판정에서 수행)
+  → 사용자 확인 (interactive) / PM 자율 승인 후 다음 배치 (agentic)
 배치 완료 후 `docs/PROJECT.md` 등록 확인
 
 ---
@@ -183,7 +191,7 @@ QA 워커 디스패치 (`references/consistency-rules.md` 기반, 유형 간+내
 
 ### STATE 갱신
 
-- 단계 시작/완료 시 STATE.md 갱신
+- 단계 시작/완료 시 STATE.md 갱신 (하네스 §3 State Gate 기준 적용)
 
 ### 산출물
 
@@ -192,6 +200,7 @@ PLAN.md의 QA 체크리스트를 검증 결과로 갱신한다 (하네스 §2 QA
 
 ### PM 최종 판정
 
+- **State Gate** (하네스 §3 참조 — STATE.md 갱신 확인) → **PM Gate** 진입
 - **Pass**: DONE.md 생성
 - **Fail**: EXECUTE 부분 재진입 (실패 문서만)
 
@@ -236,3 +245,4 @@ opal-doc-standard 적용: `~/.opal/references/opal-doc-standard.md`
 | v2.3 | 2026-04-05 | EXECUTE 후 추가작업 참조 가이드 추가 — 하네스 §3 추가작업 프로세스 (087) |
 | v2.4 | 2026-04-06 | PMO 그룹 신설 + 개발 WBS 추가 — 커버 범위 및 TASK 확인 항목 갱신 (089) |
 | v2.5 | 2026-04-06 | ANALYSIS PM Gate(자가 체크) 추가 + EXECUTE 배치 게이트 "PM 검토" → "PM Gate" 명확화 (090) |
+| v2.6 | 2026-04-07 | TASK/ANALYSIS/PLAN/EXECUTE/QA 각 단계 Gate에 State Gate 참조 추가 (094) |

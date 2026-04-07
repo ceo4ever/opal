@@ -20,10 +20,12 @@
 
 단계 완료 후 QA 에이전트를 호출하여 산출물을 검증한다.
 
-| 오케스트레이터 도메인 | QA 스킬 (qa_skill) | QA 에이전트 |
-|---------------------|-------------------|------------|
-| dev (opd/opds/opdw) | op-dev-qa | opal-task-qa-agent |
-| 범용 (opp) | op-task-qa | opal-task-qa-agent |
+| 오케스트레이터 도메인 | QA 스킬 (qa_skill) | QA 에이전트 | 비고 |
+|---------------------|-------------------|------------|------|
+| dev (opd/opds/opdw) | op-dev-qa | opal-task-qa-agent | |
+| 범용 (opp) | op-task-qa | opal-task-qa-agent | |
+| SDD (opsdd) | op-task-qa (SPEC/REVIEW/DESIGN Phase) / op-dev-qa (EXECUTE-LOOP Phase) | opal-task-qa-agent | Phase별 QA 스킬이 다름 |
+| 기획 산출물 (opwt) | op-task-qa | opal-task-qa-agent | 기획 문서 검증 |
 
 각 오케스트레이터 SKILL.md에서 QA 스킬명을 명시한다.
 탐색 경로: `{프로젝트}/.opal/skills/{qa-skill}/SKILL.md` -> `~/.opal/skills/{qa-skill}/SKILL.md`
@@ -57,6 +59,26 @@ QA Gate 완료 후 PM Gate 진입 전, 필수 산출물 파일의 존재 여부�
 `.opal/AGENT.md`가 존재하면 PM 검토 기준으로 산출물을 검토한다.
 상세: `opal-pm.md` §4 "PM 검토 게이트" 참조.
 AGENT.md 미존재 시 스킵.
+
+---
+
+### State Gate 확인 (모든 PM Gate 공통)
+
+PM Gate 진입 전, State Gate(하네스 §3 참조)를 먼저 확인한다.
+
+**PLAN PM Gate 시**:
+1. STATE.md `최종 갱신` 타임스탬프가 PLAN 완료 시점 이후인지 확인한다
+2. `단계` 필드가 `PLAN`(또는 해당 단계)을 반영하는지 확인한다
+3. `상태` 필드가 `대기 중`인지 확인한다
+4. 미갱신/오갱신 시: PM이 즉시 STATE.md를 갱신하고 State Gate 재확인 후 PM Gate 진행
+
+**EXECUTE PM Gate 시**:
+1. STATE.md `최종 갱신` 타임스탬프가 EXECUTE 완료 시점 이후인지 확인한다
+2. `단계` 필드가 현재 완료된 단계를 반영하는지 확인한다
+3. `상태` 필드가 `대기 중`인지 확인한다
+4. 미갱신/오갱신 시: PM이 즉시 STATE.md를 갱신하고 State Gate 재확인 후 PM Gate 진행
+
+> **State Gate 미통과 시**: STATE.md 갱신 수행 후 PM Gate를 재진입한다. 미갱신 상태에서 DONE.md 생성으로 진행하지 않는다.
 
 ---
 
@@ -105,3 +127,4 @@ EXECUTE 완료 후, PLAN.md 실행 체크리스트 갱신을 2단계로 보장�
 | v1.2 | 2026-04-05 | §3 PM Gate에 체크리스트 갱신 상태 확인 절차 추가 + §4에서 PM 직접 갱신 → QA 재소환으로 변경 (085) |
 | v1.3 | 2026-04-05 | §3 PM Gate 참조 경로를 `opal-pm.md §4`로 갱신 (086) |
 | v1.4 | 2026-04-06 | §2.5 Artifact Gate 신설 — QA Gate 완료 후 PM Gate 진입 전 산출물 존재 여부 강제 확인 (090) |
+| v1.5 | 2026-04-07 | §2 QA 도메인 테이블에 opsdd/opwt 행 추가. §3 PM Gate에 State Gate 확인 서브섹션 신설 (094) |

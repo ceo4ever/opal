@@ -28,6 +28,8 @@
 
 | # | 작업 | 단계 | 경로 | 시작일시 | 완료일시 |
 |---|------|------|------|---------|---------|
+| 0 | Harness State Gate + op-task 배경 분석 섹션 추가 (094) | 완료 | tasks/094-opp-harness-state-gate/ | 2026-04-07 | 2026-04-07 |
+| 0 | opsdd EXECUTE-LOOP 개선 — opal-sdd-action-agent 신설 (095) | 완료 | tasks/095-opp-opsdd-execute-loop/ | 2026-04-07 | 2026-04-07 |
 | 0 | opsdd 스킬 구현 — 5단계 파이프라인 (093) | 완료 | tasks/093-opp-opsdd-impl/ | 2026-04-07 | 2026-04-07 |
 | 0 | Artifact Gate 설계 및 적용 (090) | 완료 | tasks/090-opp-artifact-gate/ | 2026-04-06 | 2026-04-06 |
 | 0 | opi docs 백업 기능 추가 (088) | 완료 | tasks/088-opp-opi-docs-backup/ | 2026-04-06 | 2026-04-06 |
@@ -36,5 +38,3 @@
 | 0 | opal-pm 레퍼런스 구축 (086) | 완료 | tasks/086-opp-opal-pilot-pm/ | 2026-04-05 | 2026-04-05 |
 | 0 | QA 체크리스트 갱신 강제 (085) | 완료 | tasks/085-opp-qa-checklist-enforcement/ | 2026-04-05 | 2026-04-05 |
 | 0 | opi 최신화 모드 정밀도 개선 (084) | 완료 | tasks/084-opp-opi-update-mode-enhance/ | 2026-04-05 | 2026-04-05 |
-| 0 | 하네스/스킬 문서 4건 정비 (083) | 완료 | tasks/083-opp-harness-plan-fixes/ | 2026-04-04 | 2026-04-04 |
-| 0 | opsdd 스킬 설계 방안 검토 (080) | 완료 | tasks/080-opp-opsdd-design-proposal/ | 2026-04-03 17:00 | 2026-04-06 |
