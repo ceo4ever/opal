@@ -1,19 +1,19 @@
 ---
 name: op-sdd-plan
 description: |
-  **SDD 아키텍처 설계 스킬**. SPEC.md + TEST-SCENARIOS.md를 기반으로 기능 수준의 아키텍처 설계(SPEC-PLAN.md)를 작성한다.
-  반드시 이 스킬을 사용해야 하는 상황: 오케스트레이터(opal-pilot-sdd)가 SPEC-PLAN Phase를 디스패치할 때.
-  필수 입력: SPEC.md, TEST-SCENARIOS.md. 보장 출력: SPEC-PLAN.md.
+  **SDD 아키텍처 설계 + ACT 분해 스킬**. SPEC.md + TEST-SCENARIOS.md를 기반으로 기능 수준의 아키텍처 설계와 ACT 분해(SPEC-PLAN.md)를 작성한다.
+  반드시 이 스킬을 사용해야 하는 상황: 오케스트레이터(opal-pilot-sdd)가 DESIGN Phase를 디스패치할 때.
+  필수 입력: SPEC.md, TEST-SCENARIOS.md. 보장 출력: tasks/{NNN}-{feature}/SPEC-PLAN.md (아키텍처 + ACT 분해 + 병렬/순서 의존관계 통합).
 agent: opal-task-agent
 model: advanced
 ---
 
-# SDD 아키텍처 설계 (SPEC-PLAN)
+# SDD 아키텍처 설계 + ACT 분해 (SPEC-PLAN)
 
 ## 실행 컨텍스트
 
 이 스킬은 워커 에이전트(opal-task-agent)의 컨텍스트에서 실행된다.
-오케스트레이터(opal-pilot-sdd)가 Phase 3: SPEC-PLAN에서 워커를 디스패치하면, 워커가 이 스킬을 읽고 프로세스를 따른다.
+오케스트레이터(opal-pilot-sdd)가 Phase 3: DESIGN에서 워커를 디스패치하면, 워커가 이 스킬을 읽고 프로세스를 따른다.
 서브 에이전트 사용이 불가능한 플랫폼에서는 오케스트레이터가 직접 이 스킬을 따른다.
 
 ---
@@ -29,23 +29,23 @@ model: advanced
 | 항목 | 설명 |
 |------|------|
 | **필수 입력** | SPEC.md, TEST-SCENARIOS.md |
-| **선택 입력** | VERIFY.md (SPEC-VERIFY 결과 — 경고/이슈 반영용) |
+| **선택 입력** | SPEC 검증 결과 메모 (REVIEW Phase에서 PM이 주입) |
 | **프로젝트 컨텍스트** | docs/ARCHITECTURE.md, docs/PROJECT.md, docs/CONVENTIONS.md, 코드베이스 |
-| **보장 출력** | specs/{NNN}-{feature}/SPEC-PLAN.md |
+| **보장 출력** | tasks/{NNN}-{feature}/SPEC-PLAN.md |
 
 ---
 
-## SPEC-PLAN.md vs T{N}/PLAN.md
+## SPEC-PLAN.md vs ACT/PLAN.md
 
-이 스킬이 생성하는 SPEC-PLAN.md와 기존 op-dev-plan이 생성하는 PLAN.md는 역할이 다르다.
+이 스킬이 생성하는 SPEC-PLAN.md와 각 ACT 내부 PLAN.md는 역할이 다르다.
 
-| 항목 | SPEC-PLAN.md (이 스킬) | T{N}/PLAN.md (op-dev-plan) |
-|------|----------------------|---------------------------|
-| 범위 | 기능 전체 | 개별 태스크 1개 |
-| 수준 | 설계 레벨 (HOW — 아키텍처) | 구현 레벨 (HOW — 코드) |
-| 내용 | 컴포넌트 구성, 데이터 모델, API, 기술 결정 | 파일별 변경 계획, 구현 순서, 실행 체크리스트 |
-| 소비자 | op-sdd-tasks (태스크 분해의 입력) | op-task-execute (코드 구현의 입력) |
-| 타이밍 | EXECUTE-LOOP 이전 (Phase 3) | EXECUTE-LOOP 내부 (각 태스크 실행 시) |
+| 항목 | SPEC-PLAN.md (이 스킬) | ACT-{NNN}/PLAN.md (op-dev-plan) |
+|------|----------------------|----------------------------------|
+| 범위 | 기능 전체 | 개별 ACT 1개 |
+| 수준 | 설계 레벨 (HOW — 아키텍처 + ACT 분해) | 구현 레벨 (HOW — 코드) |
+| 내용 | 컴포넌트 구성, 데이터 모델, API, 기술 결정, ACT 목록, 의존관계, 병렬 그룹 | 파일별 변경 계획, 구현 순서, 실행 체크리스트 |
+| 소비자 | opsdd 오케스트레이터 (EXECUTE-LOOP 진입 기준) | op-dev-execute (코드 구현의 입력) |
+| 타이밍 | EXECUTE-LOOP 이전 (Phase 3: DESIGN) | EXECUTE-LOOP 내부 (각 ACT 실행 시) |
 
 ---
 
@@ -53,17 +53,17 @@ model: advanced
 
 ### Step 1: 입력 로딩
 
-1. SPEC.md를 Read한다 -- 요구사항(FR/NFR), 수용 기준(AC), 제약 조건(Constraints)을 파악한다.
-2. TEST-SCENARIOS.md를 Read한다 -- 테스트 시나리오와 AC 매핑을 파악한다.
-3. VERIFY.md가 존재하면 Read한다 -- SPEC-VERIFY에서 발견된 경고/이슈를 확인하여 설계에 반영한다.
+1. SPEC.md를 Read한다 — 요구사항(FR/NFR), 수용 기준(AC), 제약 조건(Constraints)을 파악한다.
+2. TEST-SCENARIOS.md를 Read한다 — 테스트 시나리오와 AC 매핑을 파악한다.
+3. 디스패치 프롬프트에 REVIEW Phase 검증 메모가 있으면 확인하여 설계에 반영한다.
 
 ### Step 2: 기존 아키텍처 분석
 
 프로젝트의 현재 아키텍처를 파악한다. **추측하지 말고 실제로 읽어서 파악한다.**
 
-1. `docs/ARCHITECTURE.md`를 Read한다 -- 시스템 구조, 레이어, 컴포넌트 관계를 파악한다.
-2. `docs/PROJECT.md`를 Read한다 -- 기술 스택, 프로젝트 구조를 확인한다.
-3. `docs/CONVENTIONS.md`를 Read한다 -- 네이밍 규칙, 코드 패턴, 디렉토리 구조를 확인한다.
+1. `docs/ARCHITECTURE.md`를 Read한다 — 시스템 구조, 레이어, 컴포넌트 관계를 파악한다.
+2. `docs/PROJECT.md`를 Read한다 — 기술 스택, 프로젝트 구조를 확인한다.
+3. `docs/CONVENTIONS.md`를 Read한다 — 네이밍 규칙, 코드 패턴, 디렉토리 구조를 확인한다.
 4. Glob/Grep/Read로 코드베이스를 탐색한다:
    - 기존 컴포넌트 구조와 의존성 패턴
    - 기존 데이터 모델 (스키마, 엔티티, 관계)
@@ -153,13 +153,81 @@ SPEC.md의 Constraints 섹션의 모든 항목이 설계에 반영되었는지 �
 |---|-------------------|--------------|----------|
 ```
 
-### Step 10: SPEC-PLAN.md 작성
+### Step 10: ACT 분해
+
+아키텍처 컴포넌트를 기반으로 실행 단위(ACT)를 도출한다.
+
+**분해 원칙**:
+
+1. **컴포넌트 → ACT 매핑**: 아키텍처 컴포넌트/모듈이 ACT 후보
+2. **응집도 우선**: 하나의 ACT는 단일 컴포넌트 또는 밀접한 컴포넌트 그룹
+3. **단일 워커 완결**: 각 ACT는 워커 1명이 한 세션에 완료할 수 있는 크기
+4. **설계 근거 필수**: 아키텍처 설계에 근거 없는 ACT를 생성하지 않는다
+
+**ACT ID**: `ACT-{NNN}` — 001부터 순차 부여. 3자리 zero-padded.
+
+**ACT별 기재 사항**:
+- 범위 (변경 대상 파일/모듈)
+- AC 매핑 (해당 ACT가 구현하는 AC)
+- TS 매핑 (해당 ACT가 통과해야 할 TS)
+- 의존 ACT
+- 완료 기준
+
+**추적 매트릭스 작성**:
+
+모든 AC가 하나 이상의 ACT에 매핑되어야 한다. 빈틈이 있으면 ACT를 추가한다.
+
+| AC | FR | TS | 담당 ACT | 커버리지 |
+|----|----|----|---------|----------|
+
+### Step 11: 의존관계 그래프 결정
+
+ACT 간 의존관계를 설계 문서에서 도출한다.
+
+**의존관계 도출 기준**:
+
+| 관계 유형 | 예시 | 의존 방향 |
+|----------|------|----------|
+| 데이터 모델 → 서비스 | 모델 정의 후 서비스 구현 | ACT(모델) → ACT(서비스) |
+| 서비스 → API | 비즈니스 로직 후 라우터 | ACT(서비스) → ACT(API) |
+| API → UI | 엔드포인트 후 화면 연동 | ACT(API) → ACT(UI) |
+| 공통 모듈 → 의존 모듈 | 공유 타입/유틸 먼저 | ACT(공통) → ACT(의존) |
+
+**표기 형식**: 방향 그래프 (ASCII)
+
+```
+ACT-001 → ACT-002 → ACT-004
+ACT-001 → ACT-003 → ACT-004
+```
+
+**검증**:
+- 순환 의존이 없어야 한다 (A → B → A 금지)
+- 모든 ACT가 그래프에 포함되어야 한다 (고립 ACT도 명시)
+
+### Step 12: 병렬 실행 그룹 식별
+
+의존관계 그래프에서 동시 실행 가능한 ACT 그룹을 식별한다.
+
+**그룹핑 규칙**:
+- 의존관계가 없는 ACT끼리 같은 그룹
+- 모든 선행 ACT가 완료된 후 실행 가능한 ACT끼리 같은 그룹
+- 그룹 번호는 실행 순서를 나타냄
+
+**표기 형식**:
+
+```
+Group 1 (병렬): ACT-001, ACT-005
+Group 2 (병렬): ACT-002, ACT-003    ← ACT-001 완료 후
+Group 3 (순차): ACT-004              ← ACT-002, ACT-003 완료 후
+```
+
+### Step 13: SPEC-PLAN.md 작성
 
 아래 출력 형식에 따라 SPEC-PLAN.md를 작성한다.
 
-**저장 경로**: `specs/{NNN}-{feature}/SPEC-PLAN.md`
+**저장 경로**: `tasks/{NNN}-{feature}/SPEC-PLAN.md`
 
-### Step 11: 결과 반환
+### Step 14: 결과 반환
 
 워커는 SPEC-PLAN.md 경로와 요약을 오케스트레이터에 반환한다.
 워커는 QA를 호출하지 않는다. 오케스트레이터가 PM Gate를 직접 수행한다.
@@ -278,6 +346,41 @@ SPEC.md의 Constraints 섹션의 모든 항목이 설계에 반영되었는지 �
 
 | # | 제약 조건 (SPEC.md) | 설계 반영 위치 | 반영 방식 |
 |---|-------------------|--------------|----------|
+
+## 8. ACT 분해
+
+### 추적 매트릭스
+
+| AC | FR | TS | 담당 ACT | 커버리지 |
+|----|----|----|---------|----------|
+| AC-01 | FR-01, FR-02 | TS-01, TS-02 | ACT-001, ACT-002 | 완료 |
+| AC-02 | FR-03 | TS-03 | ACT-003 | 완료 |
+
+### 의존관계 그래프
+
+ACT-001 → ACT-002 → ACT-004
+ACT-001 → ACT-003 → ACT-004
+
+### 실행 그룹
+
+Group 1 (병렬): ACT-001, ACT-005
+Group 2 (병렬): ACT-002, ACT-003    ← ACT-001 완료 후
+Group 3 (순차): ACT-004              ← ACT-002, ACT-003 완료 후
+
+### ACT 목록
+
+#### ACT-001: {ACT명}
+- **폴더**: tasks/{NNN}-{feature}/actions/ACT-001-{name}/
+- **범위**: {변경 대상 파일/모듈}
+- **AC 매핑**: AC-01, AC-02
+- **FR 매핑**: FR-01, FR-02
+- **TS 매핑**: TS-01, TS-02
+- **의존**: 없음
+- **완료 기준**: TS-01, TS-02 Green
+- **상태**: ⬜ 대기
+
+#### ACT-002: {ACT명}
+- ...
 ```
 
 ---
@@ -286,7 +389,7 @@ SPEC.md의 Constraints 섹션의 모든 항목이 설계에 반영되었는지 �
 
 | 참조 | 용도 | 로딩 시점 |
 |------|------|----------|
-| `references/spec-plan-guide.md` | SPEC-PLAN.md 7섹션 상세 가이드 | Step 1 (오케스트레이터 references/ 경로) |
+| `references/spec-plan-guide.md` | SPEC-PLAN.md 상세 가이드 | Step 1 (오케스트레이터 references/ 경로) |
 | `docs/ARCHITECTURE.md` | 기존 시스템 아키텍처 | Step 2 |
 | `docs/PROJECT.md` | 프로젝트 정의, 기술 스택 | Step 2 |
 | `docs/CONVENTIONS.md` | 코드 컨벤션, 네이밍 규칙 | Step 2 |
@@ -304,7 +407,11 @@ SPEC.md의 Constraints 섹션의 모든 항목이 설계에 반영되었는지 �
 - [ ] 컴포넌트 간 의존 방향이 명확한가? (순환 의존 없음)
 - [ ] API 설계에 에러 케이스가 포함되었는가?
 - [ ] 데이터 모델에 인덱싱 전략이 포함되었는가?
-- [ ] SPEC-PLAN.md만 보고 태스크 분해에 들어갈 수 있는가?
+- [ ] 모든 AC가 추적 매트릭스에 포함되어 있는가? (누락 AC = 구현 누락)
+- [ ] 모든 TS가 하나 이상의 ACT에 매핑되어 있는가?
+- [ ] 의존관계 그래프에 순환이 없는가?
+- [ ] 모든 ACT가 단일 워커 1세션 완결 크기인가?
+- [ ] 병렬 실행 그룹이 식별되어 있는가?
 - [ ] 코드베이스를 실제로 읽고 분석했는가? (추측 금지)
 - [ ] 한국어 본문 + 영어 코드/필드명 규칙을 따르는가?
 
@@ -314,4 +421,5 @@ SPEC.md의 Constraints 섹션의 모든 항목이 설계에 반영되었는지 �
 
 | 버전 | 날짜 | 변경내용 |
 |------|------|---------|
-| v1.0 | 2026-04-05 | 초기 작성 -- opsdd Phase 3 아키텍처 설계 스킬 |
+| v1.0 | 2026-04-05 | 초기 작성 — opsdd Phase 3 아키텍처 설계 스킬 |
+| v2.0 | 2026-04-07 | op-sdd-tasks 통합 — ACT 분해 + 추적 매트릭스 + 의존관계 그래프 + 병렬 그룹 포함. 출력 경로 specs/ → tasks/ 단일 루트로 통합 (093) |

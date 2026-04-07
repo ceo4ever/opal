@@ -3,7 +3,7 @@ name: op-sdd-spec
 description: |
   **SDD 명세 작성 단계 스킬**. TASK.md와 프로젝트 컨텍스트를 분석하여 10섹션 표준 구조의 SPEC.md를 작성한다.
   반드시 이 스킬을 사용해야 하는 상황: 오케스트레이터(opal-pilot-sdd)가 SPEC 단계를 디스패치할 때.
-  필수 입력: TASK.md. 선택 입력: docs/PROJECT.md, docs/ARCHITECTURE.md, 코드베이스. 보장 출력: specs/{NNN}-{feature}/SPEC.md.
+  필수 입력: TASK.md. 선택 입력: docs/PROJECT.md, docs/ARCHITECTURE.md, 코드베이스. 보장 출력: tasks/{NNN}-{feature}/SPEC.md.
 ---
 
 # op-sdd-spec -- SDD 명세 작성
@@ -13,8 +13,8 @@ description: |
 - **호출자**: 오케스트레이터(opal-pilot-sdd)가 SPEC 단계를 디스패치
 - **실행 주체**: 워커 에이전트 (opal-task-agent)
 - **model**: advanced
-- **입력**: `tasks/{NNN}-{태스크명}/TASK.md`
-- **출력**: `specs/{NNN}-{feature}/SPEC.md`
+- **입력**: `tasks/{NNN}-{feature}/TASK.md`
+- **출력**: `tasks/{NNN}-{feature}/SPEC.md`
 
 서브 에이전트 사용이 불가능한 플랫폼에서는 오케스트레이터가 직접 이 스킬을 따른다.
 
@@ -40,7 +40,7 @@ Read ~/.opal/skills/op-sdd-spec/personas/spec-writer.md
 |------|------|
 | **필수 입력** | TASK.md |
 | **선택 입력** | docs/PROJECT.md, docs/ARCHITECTURE.md, docs/CONVENTIONS.md, 코드베이스 |
-| **보장 출력** | specs/{NNN}-{feature}/SPEC.md |
+| **보장 출력** | tasks/{NNN}-{feature}/SPEC.md |
 
 ### 입력 상세
 
@@ -63,7 +63,7 @@ Read ~/.opal/skills/op-sdd-spec/personas/spec-writer.md
 1. `docs/PROJECT.md`를 Read한다 (없으면 스킵)
 2. `docs/ARCHITECTURE.md`를 Read한다 (없으면 스킵)
 3. `docs/CONVENTIONS.md`를 Read한다 (없으면 스킵)
-4. `specs/` 디렉토리에 기존 spec이 있으면 Glob으로 확인하고, 최근 spec 1~2개를 Read하여 형식과 수준을 참조한다
+4. `tasks/` 디렉토리에 기존 SDD 태스크가 있으면 Glob으로 확인하고, 최근 SPEC.md 1~2개를 Read하여 형식과 수준을 참조한다
 
 ### Step 2: TASK.md 분석
 
@@ -153,9 +153,9 @@ TASK.md를 정밀하게 분석한다.
 
 ### Step 7: SPEC.md 저장
 
-1. `specs/{NNN}-{feature}/` 디렉토리를 생성한다 ({NNN}은 TASK.md의 태스크 번호, {feature}는 기능명 kebab-case)
-2. SPEC.md를 저장한다
-3. 기존 SPEC.md가 있으면 버전 관리 규칙에 따라 처리한다
+1. `tasks/{NNN}-{feature}/` 디렉토리가 이미 생성되어 있다 (오케스트레이터가 Phase 0: TASK에서 생성).
+2. SPEC.md를 저장한다.
+3. 기존 SPEC.md가 있으면 버전 관리 규칙에 따라 처리한다.
 
 ### Step 8: 결과 반환
 
@@ -163,7 +163,7 @@ TASK.md를 정밀하게 분석한다.
 
 **반환 형식**:
 ```
-SPEC 완료: specs/{NNN}-{feature}/SPEC.md
+SPEC 완료: tasks/{NNN}-{feature}/SPEC.md
 - 10섹션 완비: {Yes/No}
 - AC 수: {N}개
 - OQ 상태: {없음 / N개 미해소}
@@ -175,7 +175,7 @@ SPEC 완료: specs/{NNN}-{feature}/SPEC.md
 [OQ-UNRESOLVED] SPEC 작성 완료, 미해소 OQ {N}개:
 - OQ-01: {질문}
 - OQ-02: {질문}
-소유자 판단 필요. SPEC-VERIFY 진행 불가.
+소유자 판단 필요. REVIEW Phase 진행 불가.
 ```
 
 ---
@@ -186,7 +186,7 @@ SPEC 완료: specs/{NNN}-{feature}/SPEC.md
 # SPEC: {기능명}
 
 > 버전: 1.0 | 작성일: YYYY-MM-DD | 상태: Draft
-> TASK: tasks/{NNN}-{태스크명}/TASK.md
+> TASK: tasks/{NNN}-{feature}/TASK.md
 
 ## 1. Background (배경)
 
@@ -268,7 +268,7 @@ SPEC 완료: specs/{NNN}-{feature}/SPEC.md
 ## 저장 경로
 
 ```
-specs/{NNN}-{feature}/SPEC.md
+tasks/{NNN}-{feature}/SPEC.md
 ```
 
 - `{NNN}`: TASK.md의 태스크 번호 (3자리 zero-padded)
@@ -303,7 +303,7 @@ SPEC.md 작성 후 자체 검증한다:
 
 **반환 형식**:
 ```
-SPEC 완료: specs/{NNN}-{feature}/SPEC.md
+SPEC 완료: tasks/{NNN}-{feature}/SPEC.md
 ```
 
 ---
@@ -313,3 +313,4 @@ SPEC 완료: specs/{NNN}-{feature}/SPEC.md
 | 버전 | 날짜 | 변경내용 |
 |------|------|---------|
 | v1.0 | 2026-04-05 | 초기 작성 -- PLAN D5/D13 기반, 10섹션 표준 구조 + GIVEN/WHEN/THEN AC + OQ 해소 프로세스 |
+| v1.1 | 2026-04-07 | 출력 경로 specs/ → tasks/ 단일 루트로 통합 (093) |

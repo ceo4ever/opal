@@ -1,8 +1,8 @@
 ---
 name: opal-pilot-sdd
 description: |
-  **SDD(Spec-Driven Development) 오케스트레이터**. 명세 기반 개발을 7단계 파이프라인으로 수행한다.
-  기능 단위로 SPEC.md(SSOT) 작성 → 검증 → 설계 → 태스크 분해 → 검증 → 반복 실행 → 완료.
+  **SDD(Spec-Driven Development) 오케스트레이터**. 명세 기반 개발을 5단계 파이프라인으로 수행한다.
+  기능 단위로 SPEC.md(SSOT) 작성 → PM 직접 검증 + TEST-SCENARIOS.md 작성 → 아키텍처 설계 + ACT 분해 → 반복 실행 → 완료.
   반드시 이 스킬을 사용해야 하는 상황: "opal-pilot-sdd", "opsdd".
   단일 태스크 개발은 opds/opd를, 범용 작업은 opp를 사용한다.
 triggers:
@@ -10,17 +10,17 @@ triggers:
   - "opsdd"
   - "SDD 개발"
   - "명세 기반 개발"
-version: 1.0.0
+version: 2.0.0
 ---
 
 # opal-pilot-sdd (SDD 오케스트레이터)
 
-명세(SPEC.md)를 SSOT로 삼아 검증 → 설계 → 태스크 분해 → 반복 실행까지 7단계 파이프라인으로 관리한다.
-EXECUTE-LOOP에서 기존 opal-pilot(opds/opd/opp)을 재활용하며, PM이 전체를 조율한다.
+명세(SPEC.md)를 SSOT로 삼아 검증 → 설계 → ACT 분해 → 반복 실행까지 5단계 파이프라인으로 관리한다.
+EXECUTE-LOOP에서 op-dev-plan + op-dev-execute를 직접 디스패치하며, PM이 전체를 조율한다.
 
 ## Harness
 
-모드: SDD Task (TASK → SPEC → SPEC-VERIFY → SPEC-PLAN → TASKS → TASKS-VERIFY → EXECUTE-LOOP → DONE)
+모드: SDD Task (TASK → SPEC → REVIEW → DESIGN → EXECUTE-LOOP → DONE)
 > 부트스트랩에서 로드되지 않은 경우: `~/.opal/references/opal-harness.md`를 Read한다.
 
 **[MUST]** 스킬 시작 즉시 모드에 따라 서브 하네스를 Read한다. 이 단계를 건너뛰면 안 된다:
@@ -29,17 +29,26 @@ EXECUTE-LOOP에서 기존 opal-pilot(opds/opd/opp)을 재활용하며, PM이 전
 
 ---
 
-## 7단계 파이프라인 요약
+## 5단계 파이프라인 요약
 
 ```
-TASK (하네스 §4 -- PM 직접)
-  → Phase 1: SPEC ──────── SPEC.md 작성 (WHAT/WHY)
-  → Phase 2: SPEC-VERIFY ── 3계층 검증 + TEST-SCENARIOS.md 도출
-  → Phase 3: SPEC-PLAN ──── 아키텍처/설계 수립 (HOW)
-  → Phase 4: TASKS ──────── 태스크 분해 + TASKS.md (추적 매트릭스)
-  → Phase 5: TASKS-VERIFY ── 커버리지/의존관계 검증
-  → Phase 6: EXECUTE-LOOP ── 태스크별 반복 실행 (기존 opds/opd/opp 재활용)
-  → Phase 7: DONE ────────── 최종 검증 + DONE.md
+WHAT 단계
+─────────────────────────────────────────────────────────
+Phase 0: TASK      PM 직접    TASK.md 생성 (메타데이터)
+Phase 1: SPEC      워커       op-sdd-spec → SPEC.md
+                              PM Gate → 사용자 Gate
+Phase 2: REVIEW    PM 직접    구조 검증 (S-1~S-6) → TEST-SCENARIOS.md 작성
+                              → FR↔TS 커버리지 확인 → 사용자 Gate
+── WHAT 완료 / 기준 확정 ──────────────────────────────────
+HOW 단계
+─────────────────────────────────────────────────────────
+Phase 3: DESIGN    워커       op-sdd-plan → SPEC-PLAN.md (아키텍처 + ACT 분해)
+                              PM Gate → 사용자 Gate
+Phase 4: EXECUTE   ACT 루프   각 ACT 자율 실행
+                              op-dev-plan → PM Gate
+                              → op-dev-execute → TEST.md → DONE.md
+Phase 5: DONE      PM 직접    전체 ACT DONE + 전체 TS Green 확인
+                              → 사용자 Gate
 ```
 
 ---
@@ -57,25 +66,26 @@ TASK (하네스 §4 -- PM 직접)
 
 ## 폴더 구조
 
-두 세계(SDD + OPAL)를 분리하고 TASK.md의 `spec_path`로 브릿지한다.
+모든 산출물을 `tasks/{NNN}-{feature}/` 단일 루트에 통합한다.
 
 ```
-specs/{NNN}-{feature}/            ← SDD 세계
-├── SPEC.md                       # Phase 1
-├── VERIFY.md                     # Phase 2, 5 (누적 저널)
-├── tests/TEST-SCENARIOS.md       # Phase 2
-├── SPEC-PLAN.md                  # Phase 3
-├── TASKS.md                      # Phase 4 (추적 매트릭스 + 상태)
-└── tasks/T{N}-{name}/            # Phase 6 (태스크별 실행)
-
-tasks/{NNN}-opsdd-{feature}/      ← OPAL 세계
-├── TASK.md (spec_path 필드 포함)
-├── STATE.md
-├── AGENTIC-LOG.md (agentic 시)
-└── DONE.md
+tasks/{NNN}-{feature}/
+├── TASK.md                  # Phase 0 — 메타데이터
+├── SPEC.md                  # Phase 1 — 기능 명세 SSOT (FR/NFR/제약조건)
+├── TEST-SCENARIOS.md        # Phase 2 — SPEC 기반 테스트 기준 + ACT별 TS 매핑
+├── SPEC-PLAN.md             # Phase 3 — 아키텍처 설계 + ACT 분해 + 병렬/순서 의존관계
+├── STATE.md                 # 전체 진행 상태 (Phase + ACT 목록 상태 통합 관리)
+├── DONE.md                  # Phase 5 — 최종 완료 확인
+└── actions/
+    ├── ACT-001-{name}/
+    │   ├── PLAN.md          # op-dev-plan 산출물
+    │   ├── TEST.md          # op-dev-execute 산출물 (TS 실행 결과)
+    │   └── DONE.md          # PM 작성 (ACT 완료 확인)
+    └── ACT-002-{name}/
+        └── ...
 ```
 
-**순번 채번**: specs/ 내 기존 최대 번호 + 1 (`{NNN}` 3자리 0-패딩).
+**순번 채번**: tasks/ 내 기존 최대 번호 + 1 (`{NNN}` 3자리 0-패딩).
 
 ---
 
@@ -84,10 +94,10 @@ tasks/{NNN}-opsdd-{feature}/      ← OPAL 세계
 harness "4. TASK 공통 프로세스" 참조. 다음 단계명: SPEC.
 
 **TASK.md 추가 필드**:
-- `spec_path: specs/{NNN}-{feature}/` -- SDD 세계 경로
-- `feature: {기능명}` -- 간결한 기능 식별자
+- `feature: {기능명}` — 간결한 기능 식별자 (kebab-case)
 
-TASK.md 작성 후 specs/{NNN}-{feature}/ 디렉토리를 생성한다.
+**base_path 설정**: `tasks/{NNN}-{feature}/` 를 TASK 공통 프로세스의 base_path로 지정한다.
+하네스 §4 저장 경로 규칙에 따라 이 경로에 TASK.md + STATE.md가 생성된다.
 
 ---
 
@@ -99,178 +109,116 @@ TASK.md 작성 후 specs/{NNN}-{feature}/ 디렉토리를 생성한다.
 ```
 [WORKER] op-sdd-spec 스킬을 수행하라.
 **스킬 경로**: {op-sdd-spec/SKILL.md 탐색 경로}
-**태스크 폴더**: {tasks/{NNN}-opsdd-{feature}/}
-**spec_path**: {specs/{NNN}-{feature}/}
+**태스크 폴더**: tasks/{NNN}-{feature}/
 **프로젝트 컨텍스트**: {docs/PROJECT.md + 매칭 참조 문서}
 **하네스 Guards**: 구현 금지. SPEC.md 외 파일 생성 금지.
 **참조 문서**: {관련 문서 경로}
 ```
 **에이전트**: opal-task-agent | **model**: advanced
 
-**Gate**: PM Gate → 사용자 Gate (QA Gate 없음 -- 다음 Phase가 전문 검증)
+**Gate**: PM Gate → 사용자 Gate (QA Gate 없음 — 다음 Phase에서 PM이 직접 검증)
 
 > SPEC.md 상세 구조: `references/spec-guide.md` 참조
 
 ---
 
-## Phase 2: SPEC-VERIFY
+## Phase 2: REVIEW
 
-워커를 디스패치하여 SPEC.md 3계층 검증 + TEST-SCENARIOS.md를 도출한다.
+PM이 직접 SPEC.md를 검증하고 TEST-SCENARIOS.md를 작성한다. **워커 디스패치 없음.**
 
-**디스패치 프롬프트**:
+**REVIEW 흐름**:
+
 ```
-[WORKER] op-sdd-verify 스킬을 수행하라.
-**스킬 경로**: {op-sdd-verify/SKILL.md 탐색 경로}
-**mode**: spec
-**태스크 폴더**: {tasks/{NNN}-opsdd-{feature}/}
-**spec_path**: {specs/{NNN}-{feature}/}
-**이전 산출물**: {SPEC.md 경로}
-**프로젝트 컨텍스트**: {docs/PROJECT.md + 매칭 참조 문서}
-**하네스 Guards**: SPEC.md 직접 수정 금지. 판정과 피드백만 제공.
-**참조 문서**: {관련 문서 경로}
+1. 구조 검증 (PM 직접, 빠르게)
+   verify-guide.md 참조 — S-1~S-6 항목 체크
+
+2. TEST-SCENARIOS.md 작성 (PM 직접)
+   SPEC.md의 각 FR → AC → TS 도출
+   이 과정에서 의미적/도메인 검증(M-1~M-6, D-1~D-2) 자연스럽게 수행
+
+3. FR↔TS 커버리지 확인 (PM 직접)
+   커버 안 된 FR → SPEC.md 보완 또는 TS 추가
 ```
-**에이전트**: opal-task-agent | **model**: advanced
 
-**Gate**: QA Gate (op-task-qa, opal-task-qa-agent) → PM Gate → 사용자 Gate
+**산출물**: `tasks/{NNN}-{feature}/TEST-SCENARIOS.md`
 
-검증 수행자(op-sdd-verify) ≠ 검증 리뷰어(opal-task-qa-agent) 원칙 적용.
+**REVIEW Fail 처리**: 구조 검증 Fail 또는 커버리지 갭 해소 불가 → Phase 1(SPEC)을 재실행한다.
 
-**산출물**: VERIFY.md (SPEC 검증 섹션), TEST-SCENARIOS.md
+**Gate**: 사용자 Gate
 
-> 검증 상세: `references/verify-guide.md` 참조
-
-### SPEC-VERIFY Fail 처리
-
-Fail 시 피드백을 기반으로 Phase 1(SPEC)을 재실행한다. SPEC.md 갱신 후 재검증.
+> REVIEW 상세: `references/verify-guide.md` 참조
 
 ---
 
-## Phase 3: SPEC-PLAN
+## Phase 3: DESIGN
 
-워커를 디스패치하여 SPEC-PLAN.md(아키텍처/설계)를 작성한다.
+워커를 디스패치하여 SPEC-PLAN.md(아키텍처 설계 + ACT 분해)를 작성한다.
 
 **디스패치 프롬프트**:
 ```
 [WORKER] op-sdd-plan 스킬을 수행하라.
 **스킬 경로**: {op-sdd-plan/SKILL.md 탐색 경로}
-**태스크 폴더**: {tasks/{NNN}-opsdd-{feature}/}
-**spec_path**: {specs/{NNN}-{feature}/}
+**태스크 폴더**: tasks/{NNN}-{feature}/
 **이전 산출물**: {SPEC.md 경로}, {TEST-SCENARIOS.md 경로}
+**REVIEW 검증 메모**: {구조 검증 Warning 등 REVIEW 결과 요약}
 **프로젝트 컨텍스트**: {docs/PROJECT.md + 매칭 참조 문서}
 **하네스 Guards**: 구현 금지. SPEC-PLAN.md 외 파일 생성 금지.
 **참조 문서**: {관련 문서 경로}
 ```
 **에이전트**: opal-task-agent | **model**: advanced
 
-**Gate**: PM Gate → 사용자 Gate (QA Gate 없음 -- 설계 결정은 PM 판단, TASKS-VERIFY에서 간접 검증)
+**Gate**: PM Gate → 사용자 Gate (QA Gate 없음 — 설계 + ACT 분해는 PM 판단)
 
 > SPEC-PLAN.md 상세 구조: `references/spec-plan-guide.md` 참조
 
 ---
 
-## Phase 4: TASKS
+## Phase 4: EXECUTE-LOOP
 
-워커를 디스패치하여 TASKS.md(태스크 분해 + 추적 매트릭스)를 작성한다.
+SPEC-PLAN.md의 의존 순서대로 ACT를 반복 실행한다. 각 ACT는 op-dev-plan + op-dev-execute 워커를 직접 디스패치한다.
 
-**디스패치 프롬프트**:
-```
-[WORKER] op-sdd-tasks 스킬을 수행하라.
-**스킬 경로**: {op-sdd-tasks/SKILL.md 탐색 경로}
-**태스크 폴더**: {tasks/{NNN}-opsdd-{feature}/}
-**spec_path**: {specs/{NNN}-{feature}/}
-**이전 산출물**: {SPEC.md 경로}, {SPEC-PLAN.md 경로}, {TEST-SCENARIOS.md 경로}
-**프로젝트 컨텍스트**: {docs/PROJECT.md + 매칭 참조 문서}
-**하네스 Guards**: 구현 금지. TASKS.md 외 파일 생성 금지.
-**참조 문서**: {관련 문서 경로}
-```
-**에이전트**: opal-task-agent | **model**: advanced
+### ACT 실행 순서
 
-**Gate**: PM Gate → 사용자 Gate (QA Gate 없음 -- 다음 Phase가 전문 검증)
+1. **op-dev-plan 디스패치**: PLAN.md 작성
+2. **PM Gate**: PLAN.md 검토
+3. **op-dev-execute 디스패치**: 구현 + 테스트 통합 수행 → TEST.md 작성
+4. **TEST.md 확인**: Pass → DONE.md 작성 | Fail → 재시도 루프
+5. **STATE.md 갱신**: ACT 상태 + TS 상태 갱신
 
----
+### 재시도 루프
 
-## Phase 5: TASKS-VERIFY
-
-워커를 디스패치하여 TASKS.md의 커버리지/의존관계를 검증한다.
-
-**디스패치 프롬프트**:
-```
-[WORKER] op-sdd-verify 스킬을 수행하라.
-**스킬 경로**: {op-sdd-verify/SKILL.md 탐색 경로}
-**mode**: tasks
-**태스크 폴더**: {tasks/{NNN}-opsdd-{feature}/}
-**spec_path**: {specs/{NNN}-{feature}/}
-**이전 산출물**: {SPEC.md}, {SPEC-PLAN.md}, {TASKS.md}, {TEST-SCENARIOS.md}
-**프로젝트 컨텍스트**: {docs/PROJECT.md + 매칭 참조 문서}
-**하네스 Guards**: TASKS.md 직접 수정 금지. 판정과 피드백만 제공.
-**참조 문서**: {관련 문서 경로}
-```
-**에이전트**: opal-task-agent | **model**: standard
-
-**Gate**: QA Gate (op-task-qa, opal-task-qa-agent) → PM Gate → 사용자 Gate
-
-**산출물**: VERIFY.md (TASKS 검증 섹션 추가 -- 누적)
-
-> 검증 상세: `references/verify-guide.md` 참조
-
-### TASKS-VERIFY Fail 처리
-
-Fail 시 피드백을 기반으로 Phase 4(TASKS)를 재실행한다. TASKS.md 갱신 후 재검증.
-
----
-
-## Phase 6: EXECUTE-LOOP
-
-TASKS.md의 의존 순서대로 태스크를 반복 실행한다. 각 태스크는 기존 opal-pilot 오케스트레이터에 위임한다.
-
-### 스킬 결정 기준
-
-| TASKS.md 예상 규모 | 위임 스킬 |
-|-------------------|----------|
-| Small / Standard | opds (3단계) |
-| Large | opd (4단계) |
-| 비코드 | opp (3단계) |
-
-### 디스패치 시 SDD 컨텍스트 주입
-
-기존 오케스트레이터 디스패치에 다음을 추가 주입한다:
-- SPEC.md 경로 + 해당 태스크의 AC 매핑
-- SPEC-PLAN.md 경로 (설계 참조)
-- TEST-SCENARIOS.md의 해당 TS 목록
-- "테스트 먼저 작성 후 구현" TDD 지시
-- task_folder: `specs/{NNN}-{feature}/tasks/T{N}-{name}/`
+TEST Fail 시 PLAN.md를 재사용하고 op-dev-execute만 재디스패치한다.
+하네스 §1 자동 루핑 제약 준수 (unit/integration 최대 3회).
 
 ### 병렬 실행
 
-의존관계 없는 태스크는 worktree 격리 + 병렬 디스패치:
-- worktree 경로: `.worktrees/{spec-NNN}-T{N}/`
+의존관계 없는 ACT는 worktree 격리 + 병렬 디스패치:
+- worktree 경로: `.worktrees/{NNN}-ACT-{NNN}/`
 - 결과 수집 → 순차 머지 → 통합 테스트 → worktree 정리
 
 ### 상태 갱신
 
-태스크 완료마다 갱신:
-- TASKS.md: 해당 태스크 상태 (⬜→🔄→✅/❌)
-- TEST-SCENARIOS.md: 해당 TS 결과
-- STATE.md: 진행 현황 (T{N}/{M})
+ACT 완료마다 STATE.md 갱신:
+- ACT 상태: ⬜ 대기 → 🔄 진행 중 → ✅/❌
+- TS 상태: Red → Green/Fail
 
 ### Gate
 
-- **interactive**: 각 태스크 시작/완료마다 사용자 Gate
-- **agentic**: PM이 태스크 간 Gate를 자율 통과
+- **interactive**: 각 ACT 시작 전(op-dev-plan 승인) + 완료마다 사용자 Gate
+- **agentic**: PM이 ACT 간 Gate를 자율 통과
 
 > EXECUTE-LOOP 상세: `references/execute-loop-guide.md` 참조
 
 ---
 
-## Phase 7: DONE
+## Phase 5: DONE
 
-모든 태스크 완료 후 최종 검증을 수행한다.
+모든 ACT 완료 후 최종 검증을 수행한다.
 
 1. 전체 TS Green 확인 (TEST-SCENARIOS.md)
-2. VERIFY.md에 DONE 검증 섹션 추가
-3. QA Gate (op-dev-qa, opal-task-qa-agent)
-4. PM Gate → 사용자 Gate
-5. DONE.md 생성
+2. 전체 ACT DONE.md 존재 확인
+3. PM Gate → 사용자 Gate
+4. DONE.md 생성
 
 ---
 
@@ -279,9 +227,9 @@ TASKS.md의 의존 순서대로 태스크를 반복 실행한다. 각 태스크�
 | 필드 | 값 |
 |------|------|
 | 모드 | SDD Task |
-| 단계 목록 | TASK / SPEC / SPEC-VERIFY / SPEC-PLAN / TASKS / TASKS-VERIFY / EXECUTE-LOOP / DONE |
-| 산출물 목록 | TASK.md, SPEC.md, VERIFY.md(SPEC), TEST-SCENARIOS.md, SPEC-PLAN.md, TASKS.md, VERIFY.md(TASKS), EXECUTE-LOOP(T{N}/{M}), DONE.md |
-| SDD 경로 | spec_path: specs/{NNN}-{feature}/, task_path: tasks/{NNN}-opsdd-{feature}/ |
+| 단계 목록 | TASK / SPEC / REVIEW / DESIGN / EXECUTE-LOOP / DONE |
+| 산출물 목록 | TASK.md, SPEC.md, TEST-SCENARIOS.md, SPEC-PLAN.md, actions/ACT-{N}/, DONE.md |
+| 태스크 경로 | tasks/{NNN}-{feature}/ |
 
 ### STATE.md 구조
 
@@ -293,7 +241,6 @@ TASKS.md의 의존 순서대로 태스크를 반복 실행한다. 각 태스크�
 ## 현재 상태
 - 모드: SDD Task
 - Phase: {현재 Phase}
-- 진행: {T{N}/{M} (EXECUTE-LOOP 시)}
 - 상태: {진행 중 / 대기 중 / 블로커 / 완료}
 
 ## 완료 산출물
@@ -301,17 +248,20 @@ TASKS.md의 의존 순서대로 태스크를 반복 실행한다. 각 태스크�
 |--------|------|
 | TASK.md | {⬜ / ✅} |
 | SPEC.md | {⬜ / ✅} |
-| VERIFY.md (SPEC) | {⬜ / ✅} |
 | TEST-SCENARIOS.md | {⬜ / ✅} |
 | SPEC-PLAN.md | {⬜ / ✅} |
-| TASKS.md | {⬜ / ✅} |
-| VERIFY.md (TASKS) | {⬜ / ✅} |
-| EXECUTE-LOOP | {⬜ / T{N}/{M}} |
+| EXECUTE-LOOP | {⬜ / ACT-{N}/{M}} |
 | DONE.md | {⬜ / ✅} |
 
-## SDD 경로
-- spec_path: specs/{NNN}-{feature}/
-- task_path: tasks/{NNN}-opsdd-{feature}/
+## EXECUTE-LOOP 현황
+
+### ACT 목록
+| ACT | 이름 | 그룹 | 상태 | 완료일 |
+|-----|------|------|------|--------|
+
+### TS 상태
+| TS ID | 담당 ACT | 상태 |
+|-------|---------|------|
 
 ## 의사결정 로그
 | # | 시점 | 결정 | 근거 |
@@ -338,13 +288,11 @@ opal-harness-agentic.md 참조. `--agentic` 플래그 활성화 시 이 스킬�
 
 ```
 TASK (PM 직접)
-  → SPEC Gate         -- PM 자율 검토
-  → SPEC-VERIFY Gate  -- PM 자율 검토
-  → SPEC-PLAN Gate    -- PM 자율 검토
-  → TASKS Gate        -- PM 자율 검토
-  → TASKS-VERIFY Gate -- PM 자율 검토
-  → EXECUTE-LOOP      -- PM 자율 관리 (태스크별 Gate 포함)
-  → DONE              -- PM 자율 완료 + 최종 보고
+  → SPEC Gate        -- PM 자율 검토
+  → REVIEW           -- PM 직접 수행 (구조검증 + TS작성 + 커버리지)
+  → DESIGN Gate      -- PM 자율 검토
+  → EXECUTE-LOOP     -- PM 자율 관리 (ACT별 Gate 포함)
+  → DONE             -- PM 자율 완료 + 최종 보고
 ```
 
 - 모든 Phase Gate를 PM이 자율 통과
@@ -362,17 +310,17 @@ opal-harness-agentic.md §5 적용:
 opal-harness-agentic.md §6 공통 기준에 추가:
 - SPEC.md의 Open Questions가 해소되지 않는 경우
 - AC 커버리지 갭이 발생하고 자동 해소 불가한 경우
-- 태스크 간 의존관계 순환이 감지된 경우
+- ACT 간 의존관계 순환이 감지된 경우
 - SPEC.md 갱신이 Goals/Non-goals 변경을 수반하는 경우 (스코프 변경)
 
 ### AGENTIC-LOG.md 카테고리
 
 | 카테고리 | 기록 내용 |
 |----------|----------|
-| GATE | Phase Gate + 태스크 간 Gate 판단 |
+| GATE | Phase Gate + ACT 간 Gate 판단 |
 | ERROR | 검증 실패, 회귀 감지 |
 | FIX | 워커 재지시 |
-| DECISION | 스킬 선택(opds/opd), 병렬 그룹핑 |
+| DECISION | ACT 순서/병렬 그룹핑 결정 |
 | IMPROVE | SPEC.md 갱신 반영 |
 | ESCALATION | 사용자 에스컬레이션 |
 
@@ -382,4 +330,5 @@ opal-harness-agentic.md §6 공통 기준에 추가:
 
 | 버전 | 날짜 | 변경내용 |
 |------|------|---------|
-| v1.0 | 2026-04-05 | 초기 작성 -- 7단계 SDD 파이프라인 오케스트레이터 (080) |
+| v1.0 | 2026-04-05 | 초기 작성 — 7단계 SDD 파이프라인 오케스트레이터 (080) |
+| v2.0 | 2026-04-07 | 7→5단계 파이프라인 재작성. tasks/ 단일 루트 통합. EXECUTE-LOOP를 op-dev-plan+op-dev-execute 직접 디스패치로 전환. SPEC-VERIFY/TASKS-VERIFY 제거 → REVIEW Phase PM 직접 검증으로 통합. op-sdd-tasks 삭제 → op-sdd-plan 통합. ACT 구조 도입 (093) |

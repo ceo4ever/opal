@@ -197,7 +197,7 @@ PM → DONE.md 확정
 | 1 | `opal/skills/opal-pilot-sdd/SKILL.md` | **대폭 수정** | 7→5단계, 폴더 구조 단일화, EXECUTE-LOOP 재작성, SPEC-VERIFY 제거, TASKS-VERIFY 제거 |
 | 2 | `opal/skills/opal-pilot-sdd/references/execute-loop-guide.md` | **대폭 수정** | opds/opd → op-dev-plan + op-dev-execute 직접 호출로 전환, ACT 구조 반영 |
 | 3 | `opal/skills/opal-pilot-sdd/references/verify-guide.md` | **대폭 수정** | REVIEW Phase PM 직접 검증 가이드로 전환, TASKS-VERIFY 제거 |
-| 4 | `opal/skills/op-sdd-verify/SKILL.md` | **역할 변경** | 워커 스킬 → PM 레퍼런스 (디스패치 프롬프트 제거, 체크리스트 중심 재작성) |
+| 4 | `opal/skills/op-sdd-verify/SKILL.md` | **변경 없음** | PM이 직접 읽고 체크리스트로 활용. 파일 수정 불필요. opsdd 오케스트레이터에서 디스패치 지시만 제거. |
 | 5 | `opal/skills/op-sdd-plan/SKILL.md` | **수정** | op-sdd-tasks 통합 — SPEC-PLAN.md에 ACT 분해까지 포함, 출력 경로 수정 |
 | 6 | `opal/skills/op-sdd-tasks/SKILL.md` | **삭제** | op-sdd-plan에 통합 |
 | 7 | `opal/skills/op-sdd-spec/SKILL.md` | 소폭 수정 | 출력 경로 tasks/ 기준으로 수정 |
@@ -219,18 +219,21 @@ PM → DONE.md 확정
 
 - [ ] `opal-pilot-sdd/SKILL.md` Phase 4 — opds/opd → op-dev-plan + op-dev-execute 직접 디스패치
 - [ ] `opal-pilot-sdd/SKILL.md` Phase 4 — actions/ 구조 반영 (ACT-{NNN}-{name}/)
-- [ ] `execute-loop-guide.md` — 전체 재작성 (ACT 루프 구조, 디스패치 프롬프트 템플릿)
+- [ ] `opal-pilot-sdd/SKILL.md` Phase 4 — ACT 에이전트가 구현 + 테스트 통합 수행 (op-dev-qa 별도 디스패치 제거)
+- [ ] `opal-pilot-sdd/SKILL.md` Phase 4 — ACT 재시도 루프 정의 (PM이 관리, op-dev-execute만 재디스패치)
+- [ ] `opal-pilot-sdd/SKILL.md` Phase 4 — ACT STATE.md 제거 반영 (상위 STATE.md가 ACT 목록 통합 관리)
+- [ ] `execute-loop-guide.md` — 전체 재작성 (ACT 루프 구조, 디스패치 프롬프트 템플릿, 재시도 패턴)
 
 ### Step 3: REVIEW Phase + Verify 간소화
 
 - [ ] `opal-pilot-sdd/SKILL.md` Phase 2 → REVIEW (PM 직접) 로 전환
 - [ ] `opal-pilot-sdd/SKILL.md` SPEC-VERIFY / TASKS-VERIFY Phase 제거
-- [ ] `op-sdd-verify/SKILL.md` — 워커 → PM 레퍼런스로 재작성
+- [ ] `op-sdd-verify/SKILL.md` — 수정 없음 (PM이 직접 읽고 체크리스트로 활용)
 - [ ] `verify-guide.md` — REVIEW Phase PM 직접 검증 가이드로 재작성
 
 ### Step 4: 단계 스킬 수정
 
-- [ ] `op-sdd-plan/SKILL.md` — op-sdd-tasks 통합, SPEC-PLAN.md에 ACT 분해 포함
+- [ ] `op-sdd-plan/SKILL.md` — op-sdd-tasks 통합, SPEC-PLAN.md에 ACT 분해 + 병렬/순서 의존관계 포함
 - [ ] `op-sdd-tasks/SKILL.md` — 삭제
 - [ ] `op-sdd-spec/SKILL.md` — 출력 경로 수정
 
@@ -238,8 +241,9 @@ PM → DONE.md 확정
 
 - [ ] 신규 5단계 파이프라인 실제 opsdd 호출 테스트
 - [ ] 폴더가 tasks/ 단일 루트로 생성되는지 확인
-- [ ] EXECUTE-LOOP에서 op-dev-plan + op-dev-execute가 actions/ACT-{N}/ 경로에서 정상 동작하는지 확인
-- [ ] TEST-SCENARIOS.md → ACT TEST.md 연결이 정상 동작하는지 확인
+- [ ] EXECUTE-LOOP에서 ACT 에이전트가 actions/ACT-{N}/ 경로에서 구현 + 테스트 통합 수행하는지 확인
+- [ ] ACT 재시도 루프 (FAIL → op-dev-execute 재디스패치 → 재테스트) 정상 동작 확인
+- [ ] 상위 STATE.md가 ACT 목록 상태를 정확히 반영하는지 확인
 
 ---
 

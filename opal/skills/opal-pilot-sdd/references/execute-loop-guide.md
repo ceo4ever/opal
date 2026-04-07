@@ -1,205 +1,149 @@
 # EXECUTE-LOOP 상세 가이드
 
-> opal-pilot-sdd Phase 6: EXECUTE-LOOP의 상세 운영 지침.
-> 오케스트레이터(opsdd)가 태스크별 반복 실행을 관리할 때 참조한다.
+> opal-pilot-sdd Phase 4: EXECUTE-LOOP의 상세 운영 지침.
+> 오케스트레이터(opsdd)가 ACT 단위 반복 실행을 관리할 때 참조한다.
 > SKILL.md에서 분리된 상세 내용.
 
 ---
 
 ## 1. 개요
 
-EXECUTE-LOOP는 TASKS.md에 정의된 태스크를 의존 순서에 따라 반복 실행하는 단계이다. 각 태스크는 기존 opal-pilot 오케스트레이터(opds/opd/opp)에 위임하여 실행하며, opsdd 오케스트레이터가 루프 관리, 상태 갱신, 검증 루프를 담당한다.
+EXECUTE-LOOP는 SPEC-PLAN.md에 정의된 ACT를 의존 순서에 따라 반복 실행하는 단계다. PM이 직접 루프를 관리하며 각 ACT는 op-dev-plan + op-dev-execute 워커에 디스패치한다.
 
 **핵심 원칙**:
-- 기존 opal-pilot 파이프라인을 재활용한다 (신규 실행 스킬 불필요)
-- TASKS.md의 의존관계 그래프가 실행 순서를 결정한다
-- SDD 컨텍스트(SPEC.md, SPEC-PLAN.md, AC/TS 매핑)를 디스패치 시 주입한다
-- TDD 원칙: 테스트 먼저 작성 후 구현
+- opds/opd 위임 없음 — op-dev-plan + op-dev-execute를 직접 디스패치
+- ACT 에이전트가 구현 + 테스트를 통합 수행 (op-dev-qa 별도 디스패치 없음)
+- SPEC-PLAN.md의 의존관계 그래프가 ACT 실행 순서를 결정
+- SDD 컨텍스트(SPEC.md, SPEC-PLAN.md, AC/TS 매핑)를 디스패치 시 주입
+- 재시도 루프: PM 관리, op-dev-execute만 재디스패치
+
+**자동 루핑 제약** (하네스 §1 연동):
+
+| 실패 유형 | 최대 재시도 | 초과 시 동작 |
+|----------|-----------|------------|
+| lint/format | 제한 없음 (즉시 수정) | — |
+| build/type | 2회 | PM이 소유자 에스컬레이션 |
+| unit/integration test | 3회 | PM이 소유자 에스컬레이션 |
+| E2E test | 1회 | PM이 소유자 에스컬레이션 |
+| QA 설계/아키텍처 | 0회 | 즉시 소유자 에스컬레이션 |
 
 ---
 
-## 2. 태스크별 실행 흐름
+## 2. ACT별 실행 흐름
 
 ```
-for each task T in dependency_order(TASKS.md):
-  1. 스킬 결정 (TASKS.md의 예상 규모 기반)
-  2. SDD 컨텍스트 주입 + 디스패치
-  3. 오케스트레이터 완료 대기
-  4. 상태 갱신 (TASKS.md, TEST-SCENARIOS.md, STATE.md)
-  5. 다음 태스크 또는 그룹으로 진행
+SPEC-PLAN.md에서 실행 그룹 확인
+  → for each Group in execution_order(SPEC-PLAN.md):
+      → if Group has single ACT:
+          순차 실행 (섹션 3)
+      → if Group has multiple independent ACTs:
+          병렬 실행 (섹션 4) + worktree 격리
+      → Group 완료 후 STATE.md 갱신
+      → 다음 Group 진행
 ```
 
-### 상세 단계
+### 2-1. 단일 ACT 실행 순서
 
-**2-1. TASKS.md에서 다음 실행 대상 결정**:
-- 의존관계 그래프에서 모든 선행 태스크가 완료된 태스크를 선택한다
-- 복수의 태스크가 실행 가능하면 병렬 그룹으로 처리한다 (섹션 5 참조)
-
-**2-2. 스킬 결정**:
-- TASKS.md의 각 태스크에 기록된 `예상 규모`와 `추천 스킬`을 참조한다
-- 스킬 결정 기준 테이블 (섹션 3)에 따라 최종 결정한다
-
-**2-3. 디스패치**:
-- SDD 컨텍스트 주입 디스패치 프롬프트 (섹션 4)를 사용한다
-- 태스크 폴더: `specs/{NNN}-{feature}/tasks/T{N}-{name}/`
-
-**2-4. 완료 후 상태 갱신**:
-- 섹션 6의 상태 갱신 절차를 따른다
+1. **op-dev-plan 디스패치**: PLAN.md 작성 (섹션 5-1 프롬프트 사용)
+2. **PM Gate**: PLAN.md 검토 → 승인 or 재지시
+3. **op-dev-execute 디스패치**: 구현 + 테스트 통합 수행 (섹션 5-2 프롬프트 사용)
+4. **TEST.md 확인**: 워커가 작성한 TEST.md 검토
+5. **Pass/Fail 판정**:
+   - Pass → DONE.md 작성 → STATE.md 갱신
+   - Fail → 재시도 루프 (섹션 6)
 
 ---
 
-## 3. 스킬 결정 기준 테이블
+## 3. ACT 폴더 구조
 
-TASKS.md의 `예상 규모`와 `추천 스킬`을 기반으로 실행 스킬을 결정한다.
+각 ACT는 고유 폴더에서 실행된다.
 
-| 조건 | 스킬 | 파이프라인 | 적용 상황 |
-|------|------|----------|----------|
-| Small / Standard, 코드 작업, 파일 1~3개 | `opds` | TASK -> PLAN+TEST-SCENARIO -> EXECUTE | 단일 모듈, 구조 명확, 분석 불필요 |
-| Large, 코드 작업, 파일 4개+, 다중 모듈 | `opd` | TASK -> ANALYSIS -> PLAN+TEST-SCENARIO -> EXECUTE | 코드 분석 필요, 다중 모듈 영향 |
-| 비코드 작업 (문서, 설정, 스크립트) | `opp` | TASK -> PLAN -> EXECUTE | 코드 외 산출물 |
+```
+tasks/{NNN}-{feature}/
+├── actions/
+│   ├── ACT-001-{name}/
+│   │   ├── PLAN.md      ← op-dev-plan 산출물
+│   │   ├── TEST.md      ← op-dev-execute 산출물 (TS 실행 결과)
+│   │   └── DONE.md      ← PM 작성 (ACT 완료 확인)
+│   ├── ACT-002-{name}/
+│   │   └── ...
+│   └── ACT-003-{name}/
+│       └── ...
+```
 
-### 스킬 전환 규칙
-
-EXECUTE-LOOP 진행 중 스킬 전환이 필요할 수 있다:
-
-| 전환 | 조건 | 절차 |
-|------|------|------|
-| opds -> opd | opds 실행 중 예상보다 복잡 (분석 필요, 파일 증가) | PM 승인 후 opd로 재디스패치 |
-| opd -> opds | opd 분석 결과 예상보다 단순 | PM 판단으로 opds 전환 가능 |
-| opp -> opds/opd | 비코드로 판단했으나 코드 변경 필요 | PM 판단으로 전환 |
-
-**agentic 모드**: 스킬 전환 시 AGENTIC-LOG.md에 `DECISION` 카테고리로 전환 근거를 기록한다.
+**ACT 폴더 네이밍**: `ACT-{NNN}-{name}` (NNN: 3자리 zero-padded, name: kebab-case)
 
 ---
 
-## 4. SDD 컨텍스트 주입 디스패치 프롬프트
+## 4. 병렬 실행 패턴
 
-EXECUTE-LOOP에서 기존 opal-pilot 오케스트레이터를 호출할 때, SDD 컨텍스트를 주입하여 spec 기반 개발을 보장한다.
+### 4-1. 의존관계 그래프에서 병렬 그룹 빌드
 
-### 디스패치 프롬프트 템플릿
+SPEC-PLAN.md의 `실행 그룹` 섹션 또는 `의존관계 그래프`에서 병렬 그룹을 도출한다.
 
 ```
-[WORKER] {스킬명} 스킬을 수행하라.
-
-**태스크 폴더**: specs/{NNN}-{feature}/tasks/T{N}-{name}/
-
-**SDD 컨텍스트**:
-- **SPEC.md**: specs/{NNN}-{feature}/SPEC.md
-- **SPEC-PLAN.md**: specs/{NNN}-{feature}/SPEC-PLAN.md
-- **AC 매핑**: {해당 태스크의 AC 목록 -- 예: AC-01, AC-03}
-- **TS 매핑**: {해당 태스크의 TS 목록 -- 예: TS-01, TS-02, TS-04}
-- **TDD 지시**: 테스트 먼저 작성 후 구현
-
-**태스크 설명**: {TASKS.md에서 해당 태스크의 범위/설명}
-
-**완료 기준**: {TASKS.md에서 해당 태스크의 완료 기준 -- 예: TS-01, TS-02 Green}
-
-**하네스 Guards**: 구현 승인됨. 커밋 허용. `~/.opal/` 직접 수정 금지.
-```
-
-### 필드별 설명
-
-| 필드 | 설명 | 출처 |
-|------|------|------|
-| `{스킬명}` | opds, opd, opp 중 하나 | 스킬 결정 기준 테이블 |
-| `SPEC.md` | 기능 명세 SSOT 경로 | 고정 |
-| `SPEC-PLAN.md` | 아키텍처 설계 경로 | 고정 |
-| `AC 매핑` | 해당 태스크가 구현하는 AC 목록 | TASKS.md > 해당 태스크 > AC 매핑 |
-| `TS 매핑` | 해당 태스크가 통과해야 할 TS 목록 | TASKS.md > 해당 태스크 > TS 매핑 |
-| `TDD 지시` | 테스트 우선 구현 지시 | 고정 |
-| `태스크 설명` | 해당 태스크의 범위와 변경 대상 | TASKS.md > 해당 태스크 > 범위 |
-| `완료 기준` | 해당 태스크의 완료 판단 기준 | TASKS.md > 해당 태스크 > 완료 기준 |
-
-### TDD 워커 지시 상세
-
-디스패치된 워커(opds/opd)에게 TDD 패턴을 강제한다:
-
-1. **Red**: TEST-SCENARIOS.md에서 해당 TS의 시나리오를 읽고 테스트 스켈레톤을 먼저 생성한다
-2. **Green**: 테스트를 통과하는 최소한의 구현 코드를 작성한다
-3. **Refactor**: 코드 품질을 개선한다 (테스트가 깨지지 않도록)
-
-워커가 참조할 테스트 시나리오 정보:
-```
-테스트 시나리오 참조: specs/{NNN}-{feature}/tests/TEST-SCENARIOS.md
-해당 시나리오:
-- TS-01: {시나리오명} -- {유형} -- GIVEN: {조건}, WHEN: {행위}, THEN: {기대}
-- TS-02: {시나리오명} -- {유형} -- GIVEN: {조건}, WHEN: {행위}, THEN: {기대}
-```
-
----
-
-## 5. 병렬 실행 패턴
-
-oppd Phase 3의 병렬 실행 패턴을 opsdd EXECUTE-LOOP에 적용한다.
-
-### 5-1. 의존관계 그래프에서 병렬 그룹 빌드
-
-TASKS.md의 `실행 그룹` 섹션 또는 `의존관계 그래프`에서 병렬 그룹을 도출한다.
-
-```python
-# 의사코드 (Kahn's algorithm 기반 -- oppd parallel-execution-guide 참조)
-groups = buildParallelGroups(TASKS.md)
+groups = buildParallelGroups(SPEC-PLAN.md["8. ACT 분해"]["실행 그룹"])
 
 for each group in groups:
-  if group has single task:
-    -> 순차 실행 (일반 디스패치)
-  if group has multiple independent tasks:
-    -> worktree 격리 + 병렬 워커 디스패치
-    -> 결과 수집 -> 순차 머지 -> 통합 테스트
-    -> worktree 정리
+  if group has single ACT:
+    → 순차 실행 (일반 디스패치)
+  if group has multiple independent ACTs:
+    → worktree 격리 + 병렬 워커 디스패치
+    → 결과 수집 → 순차 머지 → 통합 테스트
+    → worktree 정리
 ```
 
-### 5-2. worktree 격리
+### 4-2. worktree 격리
 
-각 병렬 태스크는 독립된 git worktree에서 실행한다.
+각 병렬 ACT는 독립된 git worktree에서 실행한다.
 
 **디렉토리 구조**:
 ```
 {프로젝트 루트}/
-├── .worktrees/                     # worktree 루트 (gitignore 대상)
-│   ├── {spec-NNN}-T{N}/            # T{N} 태스크 전용 worktree
-│   └── {spec-NNN}-T{M}/            # T{M} 태스크 전용 worktree
-└── specs/
+├── .worktrees/
+│   ├── {NNN}-ACT-001/    ← ACT-001 전용 worktree
+│   └── {NNN}-ACT-002/    ← ACT-002 전용 worktree
+└── tasks/
     └── {NNN}-{feature}/
-        └── tasks/
-            ├── T{N}-{name}/
-            └── T{M}-{name}/
+        └── actions/
+            ├── ACT-001-{name}/
+            └── ACT-002-{name}/
 ```
 
-**브랜치 네이밍**: `feat/opsdd-{spec-NNN}-T{N}` (예: `feat/opsdd-001-T2`)
+**브랜치 네이밍**: `feat/opsdd-{NNN}-ACT-{NNN}` (예: `feat/opsdd-001-ACT-002`)
 
 **worktree 생성**:
 ```bash
 mkdir -p .worktrees
-git worktree add .worktrees/{spec-NNN}-T{N} -b feat/opsdd-{spec-NNN}-T{N}
+git worktree add .worktrees/{NNN}-ACT-001 -b feat/opsdd-{NNN}-ACT-001
 ```
 
 **worktree 정리** (머지 완료 후):
 ```bash
-git worktree remove .worktrees/{spec-NNN}-T{N}
-git branch -d feat/opsdd-{spec-NNN}-T{N}
+git worktree remove .worktrees/{NNN}-ACT-001
+git branch -d feat/opsdd-{NNN}-ACT-001
 ```
 
-### 5-3. 병렬 디스패치
+### 4-3. 병렬 디스패치
 
-병렬 그룹의 모든 태스크에 대해 Agent 도구를 동일 응답 내에서 병렬 호출한다.
+병렬 그룹의 모든 ACT에 대해 Agent 도구를 동일 응답 내에서 병렬 호출한다.
 
 각 워커에게 worktree 경로를 명시:
 ```
-**작업 디렉토리**: {프로젝트 루트}/.worktrees/{spec-NNN}-T{N}/
-**브랜치**: feat/opsdd-{spec-NNN}-T{N}
+**작업 디렉토리**: {프로젝트 루트}/.worktrees/{NNN}-ACT-{NNN}/
+**브랜치**: feat/opsdd-{NNN}-ACT-{NNN}
 **제약**: 이 worktree 내에서만 파일을 수정하라.
 ```
 
-### 5-4. 결과 수집과 머지
+### 4-4. 결과 수집과 머지
 
 1. 모든 병렬 워커 완료 대기
 2. 변경 범위가 작은 순서대로 main 브랜치에 순차 머지
-3. 각 머지 후 즉시 검증 (lint -> build -> test)
-4. 머지 충돌 발생 시 PM이 조정 (자동 해결 가능하면 직접, 아니면 에스컬레이션)
+3. 각 머지 후 즉시 검증 (lint → build → test)
+4. 머지 충돌 발생 시 PM이 조정
 5. 모든 머지 완료 후 통합 테스트
 
-### 5-5. Fallback
+### 4-5. Fallback
 
 | 환경 | 전략 |
 |------|------|
@@ -209,153 +153,268 @@ git branch -d feat/opsdd-{spec-NNN}-T{N}
 
 ---
 
-## 6. 상태 갱신 절차
+## 5. 디스패치 프롬프트 템플릿
 
-EXECUTE-LOOP에서 각 태스크의 실행 상태를 3곳에 동기화한다.
+### 5-1. op-dev-plan 디스패치 (PLAN.md 작성)
 
-### 6-1. TASKS.md 상태 갱신
+```
+[WORKER] op-dev-plan 스킬을 수행하라.
 
-| 이벤트 | 갱신 |
-|--------|------|
-| 태스크 실행 시작 | `상태: ⬜ 대기` -> `상태: 🔄 진행 중` |
-| 태스크 실행 완료 (성공) | `상태: 🔄 진행 중` -> `상태: ✅ 완료` |
-| 태스크 실행 실패 | `상태: 🔄 진행 중` -> `상태: ❌ 실패` |
+**ACT 폴더**: tasks/{NNN}-{feature}/actions/ACT-{NNN}-{name}/
 
-### 6-2. TEST-SCENARIOS.md 상태 갱신
+**SDD 컨텍스트**:
+- **SPEC.md**: tasks/{NNN}-{feature}/SPEC.md
+- **SPEC-PLAN.md**: tasks/{NNN}-{feature}/SPEC-PLAN.md
+- **TEST-SCENARIOS.md**: tasks/{NNN}-{feature}/TEST-SCENARIOS.md
+- **AC 매핑**: {해당 ACT의 AC 목록 — 예: AC-01, AC-03}
+- **TS 매핑**: {해당 ACT의 TS 목록 — 예: TS-01, TS-02, TS-04}
 
-| 이벤트 | 갱신 |
-|--------|------|
-| 해당 태스크의 TS 테스트 통과 | `상태: Red` -> `상태: Green` |
-| 해당 태스크의 TS 테스트 실패 | `상태: Red` -> `상태: Fail` (재시도 루프 진입) |
+**ACT 설명**: {SPEC-PLAN.md "8. ACT 분해"에서 해당 ACT의 범위/설명}
 
-### 6-3. STATE.md 진행 현황 갱신
+**완료 기준**: {해당 ACT의 완료 기준 — 예: TS-01, TS-02 Green}
+
+**하네스 Guards**: 구현 금지. PLAN.md 외 파일 생성 금지.
+
+**산출물**: tasks/{NNN}-{feature}/actions/ACT-{NNN}-{name}/PLAN.md
+```
+
+### 5-2. op-dev-execute 디스패치 (구현 + 테스트 통합)
+
+```
+[WORKER] op-dev-execute 스킬을 수행하라.
+
+**ACT 폴더**: tasks/{NNN}-{feature}/actions/ACT-{NNN}-{name}/
+
+**SDD 컨텍스트**:
+- **SPEC.md**: tasks/{NNN}-{feature}/SPEC.md
+- **SPEC-PLAN.md**: tasks/{NNN}-{feature}/SPEC-PLAN.md
+- **PLAN.md**: tasks/{NNN}-{feature}/actions/ACT-{NNN}-{name}/PLAN.md
+- **TEST-SCENARIOS.md**: tasks/{NNN}-{feature}/TEST-SCENARIOS.md
+- **AC 매핑**: {해당 ACT의 AC 목록}
+- **TS 매핑**: {해당 ACT의 TS 목록}
+
+**ACT 설명**: {SPEC-PLAN.md에서 해당 ACT의 범위/설명}
+
+**완료 기준**: {해당 ACT의 완료 기준}
+
+**하네스 Guards**: 구현 승인됨. 커밋 허용. `~/.opal/` 직접 수정 금지.
+
+**산출물**:
+- 구현 코드 (PLAN.md 기반)
+- tasks/{NNN}-{feature}/actions/ACT-{NNN}-{name}/TEST.md (TS 실행 결과)
+```
+
+### 5-3. op-dev-execute 재디스패치 (재시도)
+
+재시도 시 PLAN.md는 재사용하고 op-dev-execute만 재디스패치한다.
+
+```
+[WORKER] op-dev-execute 스킬을 수행하라. (재시도 {N}차)
+
+**ACT 폴더**: tasks/{NNN}-{feature}/actions/ACT-{NNN}-{name}/
+
+**재시도 컨텍스트**:
+- **실패한 TS**: {TS-01, TS-02 — 실패 사유}
+- **이전 TEST.md**: tasks/{NNN}-{feature}/actions/ACT-{NNN}-{name}/TEST.md
+- **수정 지시**: {구체적 수정 방향}
+
+**SDD 컨텍스트**:
+- **SPEC.md**: tasks/{NNN}-{feature}/SPEC.md
+- **PLAN.md**: tasks/{NNN}-{feature}/actions/ACT-{NNN}-{name}/PLAN.md (재사용)
+- **TS 매핑**: {해당 ACT의 TS 목록}
+
+**하네스 Guards**: 구현 승인됨. 커밋 허용. `~/.opal/` 직접 수정 금지.
+
+**산출물**: tasks/{NNN}-{feature}/actions/ACT-{NNN}-{name}/TEST.md (갱신)
+```
+
+---
+
+## 6. 재시도 루프
+
+TEST 실패 또는 PM 재테스트 요청 시:
+
+```
+        ┌──────────────────────────────────────┐
+        ↓                                      │ FAIL / 재수정 요청
+PM → op-dev-execute 재디스패치 (PLAN.md 재사용)
+PM → TEST.md 확인
+        │ PASS
+        ↓
+PM → DONE.md 작성
+```
+
+**재시도 규칙**:
+- op-dev-plan은 재디스패치하지 않는다 (PLAN.md 이미 존재)
+- op-dev-execute에 실패한 TS 정보와 수정 지시를 주입한다
+- 하네스 §1 자동 루핑 제약 테이블 준수 (unit/integration 최대 3회)
+- 최대 재시도 초과 시 PM이 소유자 에스컬레이션
+
+---
+
+## 7. TEST.md 구조
+
+op-dev-execute 워커가 ACT 폴더에 작성하는 테스트 결과 문서.
 
 ```markdown
-## 현재 상태
+# TEST: ACT-{NNN} {ACT명}
+
+> 작성일: YYYY-MM-DD | SPEC-PLAN.md v{X.Y} 기준
+
+## TS 실행 결과
+
+| TS ID | 설명 | 유형 | 결과 | 비고 |
+|-------|------|------|------|------|
+| TS-01 | {시나리오명} | unit | Green / Fail | {실패 시 오류 요약} |
+| TS-02 | {시나리오명} | integration | Green / Fail | |
+
+## 실행 환경
+
+- 실행 도구: {Jest / Pytest / 등}
+- 실행 명령: `{테스트 명령}`
+
+## 실패 상세 (Fail 시)
+
+### TS-{N} 실패
+
+```
+{오류 메시지 + 스택 트레이스}
+```
+
+- **원인 분석**: {실패 원인}
+- **수정 필요**: {수정 방향}
+
+## 종합 판정
+
+- 총 TS: {N}개
+- Green: {N}개 / Fail: {N}개
+- **판정**: Pass / Fail
+```
+
+---
+
+## 8. DONE.md 구조
+
+PM이 ACT 완료 확인 시 작성하는 문서.
+
+```markdown
+# DONE: ACT-{NNN} {ACT명}
+
+> 완료일: YYYY-MM-DD
+
+## 완료 확인
+
+- TS 상태: 모두 Green ({N}개)
+- 구현 파일: {변경된 파일 목록}
+- 재시도 횟수: {N}회 (0회 = 첫 시도 통과)
+
+## 비고
+
+{특이 사항 또는 다음 ACT 주의 사항}
+```
+
+---
+
+## 9. STATE.md ACT 상태 관리
+
+상위 STATE.md가 전체 ACT 목록의 상태를 통합 관리한다 (ACT 내부 STATE.md 없음).
+
+### 9-1. ACT 상태 필드
+
+| 상태 | 의미 |
+|------|------|
+| ⬜ 대기 | 아직 시작 안 함 |
+| 🔄 진행 중 | EXECUTE-LOOP에서 실행 중 |
+| ✅ 완료 | 모든 TS Green + DONE.md 작성 |
+| ❌ 실패 | 최대 재시도 초과 — 에스컬레이션 필요 |
+
+### 9-2. STATE.md EXECUTE-LOOP 섹션 구조
+
+```markdown
+## EXECUTE-LOOP 현황
+
 - Phase: EXECUTE-LOOP
-- 진행: T{현재}/{총 태스크 수}
+- 진행: ACT {현재}/{총 수}
 - 상태: 진행 중
+
+### ACT 목록
+
+| ACT | 이름 | 그룹 | 상태 | 완료일 |
+|-----|------|------|------|--------|
+| ACT-001 | {name} | Group 1 | ✅ 완료 | YYYY-MM-DD |
+| ACT-002 | {name} | Group 2 | 🔄 진행 중 | — |
+| ACT-003 | {name} | Group 2 | ⬜ 대기 | — |
+| ACT-004 | {name} | Group 3 | ⬜ 대기 | — |
+
+### TS 상태
+
+| TS ID | 담당 ACT | 상태 |
+|-------|---------|------|
+| TS-01 | ACT-001 | Green |
+| TS-02 | ACT-001 | Green |
+| TS-03 | ACT-002 | Red |
 ```
 
-**갱신 시점**:
-- 태스크 시작/완료/실패마다 갱신
-- 병렬 그룹 시작/완료마다 갱신
-- 검증 루프 진입/완료마다 갱신
+### 9-3. 갱신 시점
+
+| 이벤트 | 갱신 내용 |
+|--------|----------|
+| ACT 시작 | ACT 상태 ⬜ → 🔄 |
+| ACT TEST.md 확인 (Pass) | ACT 상태 🔄 → ✅, TS 상태 → Green |
+| ACT TEST.md 확인 (Fail) | ACT 상태 유지 🔄, TS 상태 → Fail, 재시도 루프 진입 |
+| 최대 재시도 초과 | ACT 상태 🔄 → ❌, 에스컬레이션 |
+| DONE.md 작성 | 완료일 기록 |
 
 ---
 
-## 7. 검증 루프
-
-oppd의 Layered Verification 모델을 EXECUTE-LOOP 내 각 태스크에 적용한다.
-
-### 7-1. 검증 계층
-
-| 계층 | 검증 대상 | 최대 재시도 |
-|------|----------|-----------|
-| L1: lint/format | 코드 스타일, 미사용 변수 | 제한 없음 |
-| L2: build/type | 컴파일 오류, 타입 불일치 | 2회 |
-| L3a: unit/integration | 컴포넌트, 함수, API 테스트 | 3회 |
-| L3b: E2E | 브라우저 시나리오 (해당 시) | 1회 |
-
-**실행 순서**: L1 -> L2 -> L3a -> L3b (하위 계층 PASS 후 상위 진행)
-
-### 7-2. 검증 루프 흐름
-
-```
-워커 EXECUTE 완료
-  -> L1 lint 검증
-    -> FAIL -> 워커에게 수정 지시 -> 재검증 (반복)
-    -> PASS
-  -> L2 build 검증
-    -> FAIL -> 워커에게 수정 지시 (최대 2회)
-    -> PASS
-  -> L3a test 검증
-    -> FAIL -> 워커에게 수정 지시 (최대 3회)
-    -> PASS
-  -> L3b E2E (해당 시)
-    -> FAIL -> 1회 재시도 -> 2회 연속 FAIL -> 에스컬레이션
-    -> PASS
-  -> 태스크 완료 + 상태 갱신
-```
-
-### 7-3. 하네스 Guards 준수
-
-오케스트레이터 공통 하네스(`opal-harness.md`)의 **자동 루핑 제약(Verification Loop Guards)** 을 준수한다.
-
-- 재시도 한도 초과 시 사용자 에스컬레이션
-- 회귀 감지 시 즉시 중단 + 에스컬레이션
-- QA 설계/아키텍처 이슈는 즉시 에스컬레이션 (재시도 0회)
-
-### 7-4. 회귀 방지 가드
-
-자동 수정 후 기존 통과 코드가 깨지지 않도록 한다:
-
-1. L3(test) 자동 수정 완료 후 전체 테스트 스위트 재실행
-2. 이전 통과 테스트가 새로 실패하면 회귀로 판정
-3. 회귀 감지 시 루프 즉시 중단 + 에스컬레이션
-
----
-
-## 8. 전체 흐름 예시
+## 10. 전체 흐름 예시
 
 ### 시나리오
 
-specs/001-user-auth/ 기능의 TASKS.md에 4개 태스크:
+tasks/001-user-auth/의 SPEC-PLAN.md에 4개 ACT:
 
 ```
-T1: 데이터 모델 (Small -> opds, 의존: 없음)
-T2: 인증 API (Standard -> opds, 의존: T1)
-T3: 세션 관리 (Standard -> opds, 의존: T1)
-T4: 통합 테스트 (Small -> opds, 의존: T2, T3)
+ACT-001: 데이터 모델 (의존: 없음)
+ACT-002: 인증 API (의존: ACT-001)
+ACT-003: 세션 관리 (의존: ACT-001)
+ACT-004: 통합 테스트 (의존: ACT-002, ACT-003)
+
+실행 그룹:
+Group 1 (순차): ACT-001
+Group 2 (병렬): ACT-002, ACT-003  ← ACT-001 완료 후
+Group 3 (순차): ACT-004            ← ACT-002, ACT-003 완료 후
 ```
 
 ### 실행 순서
 
 ```
-Group 1 (순차): T1
-  -> opds 디스패치 + SDD 컨텍스트 주입
-  -> 완료 -> TASKS.md T1 ✅, TS-01/TS-02 Green
+Group 1 (순차): ACT-001
+  → op-dev-plan 디스패치 → PM Gate → PLAN.md 확인
+  → op-dev-execute 디스패치 → TEST.md 확인 → Pass
+  → DONE.md 작성 → STATE.md 갱신 (ACT-001 ✅)
 
-Group 2 (병렬): T2, T3  <- T1 완료 후
-  -> worktree 생성: .worktrees/001-T2/, .worktrees/001-T3/
-  -> 병렬 디스패치 (opds x 2)
-  -> 결과 수집 -> 순차 머지 -> 통합 테스트
-  -> TASKS.md T2/T3 ✅, TS-01/TS-02/TS-03/TS-04 Green
+Group 2 (병렬): ACT-002, ACT-003  ← ACT-001 완료 후
+  → worktree 생성: .worktrees/001-ACT-002/, .worktrees/001-ACT-003/
+  → 병렬 디스패치:
+      ACT-002: op-dev-plan → PM Gate → op-dev-execute
+      ACT-003: op-dev-plan → PM Gate → op-dev-execute
+  → 결과 수집 → 순차 머지 → 통합 테스트
+  → DONE.md 작성 x2 → STATE.md 갱신 (ACT-002/003 ✅)
 
-Group 3 (순차): T4  <- T2, T3 완료 후
-  -> opds 디스패치 + SDD 컨텍스트 주입
-  -> 완료 -> TASKS.md T4 ✅, TS-05 Green
-  -> 전체 TS Green 확인 -> EXECUTE-LOOP 완료
-```
-
-### 디스패치 예시 (T2)
-
-```
-[WORKER] opds 스킬을 수행하라.
-
-**태스크 폴더**: specs/001-user-auth/tasks/T2-auth-api/
-
-**SDD 컨텍스트**:
-- **SPEC.md**: specs/001-user-auth/SPEC.md
-- **SPEC-PLAN.md**: specs/001-user-auth/SPEC-PLAN.md
-- **AC 매핑**: AC-01, AC-03
-- **TS 매핑**: TS-01, TS-02, TS-04
-- **TDD 지시**: 테스트 먼저 작성 후 구현
-
-**태스크 설명**: POST /auth/login, /auth/logout 인증 API 구현
-
-**완료 기준**: TS-01, TS-02, TS-04 Green
-
-**하네스 Guards**: 구현 승인됨. 커밋 허용. `~/.opal/` 직접 수정 금지.
+Group 3 (순차): ACT-004  ← ACT-002, ACT-003 완료 후
+  → op-dev-plan 디스패치 → PM Gate → op-dev-execute
+  → TEST.md: TS-05 Fail → 재시도 루프
+    → op-dev-execute 재디스패치 (1차 재시도) → TS-05 Green
+  → DONE.md 작성 → STATE.md 갱신 (ACT-004 ✅)
+  → 전체 TS Green 확인 → EXECUTE-LOOP 완료
 ```
 
 ---
 
 ## 관련 문서
 
-- `opal-pilot-sdd/SKILL.md` -- opsdd 오케스트레이터 메인 (Phase 6 개요)
-- `verify-guide.md` -- 검증 상세 (DONE 검증)
-- `spec-guide.md` -- SPEC.md 구조 (SDD 컨텍스트 참조)
-- `spec-plan-guide.md` -- SPEC-PLAN.md 구조 (SDD 컨텍스트 참조)
-- `~/.opal/skills/opal-pilot-project-dev/references/parallel-execution-guide.md` -- oppd 병렬 실행 패턴 원본
-- `~/.opal/skills/opal-pilot-project-dev/references/verification-loop-guide.md` -- oppd 검증 루프 패턴 원본
+- `opal-pilot-sdd/SKILL.md` — opsdd 오케스트레이터 메인 (Phase 4: EXECUTE-LOOP 개요)
+- `verify-guide.md` — REVIEW Phase PM 직접 검증 가이드
+- `spec-guide.md` — SPEC.md 구조 참조
+- `spec-plan-guide.md` — SPEC-PLAN.md 구조 (ACT 분해 섹션 포함)
+- `~/.opal/references/opal-harness.md` — §1 자동 루핑 제약 (재시도 한도 기준)
