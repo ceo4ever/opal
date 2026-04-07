@@ -1,9 +1,9 @@
 ---
 name: op-sdd-tasks
 description: |
-  **SDD 태스크 분해 스킬**. spec.md + SPEC-PLAN.md + test-scenarios.md를 기반으로 실행 가능한 tasks.md를 작성한다.
+  **SDD 태스크 분해 스킬**. SPEC.md + SPEC-PLAN.md + TEST-SCENARIOS.md를 기반으로 실행 가능한 TASKS.md를 작성한다.
   반드시 이 스킬을 사용해야 하는 상황: 오케스트레이터(opal-pilot-sdd)가 TASKS Phase를 디스패치할 때.
-  필수 입력: spec.md, SPEC-PLAN.md, test-scenarios.md. 보장 출력: tasks.md (추적 매트릭스 + 의존관계 + 태스크 목록 포함).
+  필수 입력: SPEC.md, SPEC-PLAN.md, TEST-SCENARIOS.md. 보장 출력: TASKS.md (추적 매트릭스 + 의존관계 + 태스크 목록 포함).
 ---
 
 # SDD 태스크 분해 (TASKS)
@@ -29,17 +29,17 @@ description: |
 
 | 항목 | 설명 |
 |------|------|
-| **필수 입력** | spec.md, SPEC-PLAN.md, test-scenarios.md |
+| **필수 입력** | SPEC.md, SPEC-PLAN.md, TEST-SCENARIOS.md |
 | **선택 입력** | 프로젝트 컨텍스트 (docs/ARCHITECTURE.md, docs/CONVENTIONS.md) |
-| **보장 출력** | specs/{NNN}-{feature}/tasks.md |
+| **보장 출력** | specs/{NNN}-{feature}/TASKS.md |
 
 ### 입력 파일 역할
 
 | 파일 | 역할 |
 |------|------|
-| spec.md | SSOT — AC/FR/EC 정의, 추적 매트릭스의 원천 |
+| SPEC.md | SSOT — AC/FR/EC 정의, 추적 매트릭스의 원천 |
 | SPEC-PLAN.md | 아키텍처/설계 — 컴포넌트 구조가 태스크 분해의 기반 |
-| test-scenarios.md | TS 목록 — AC↔TS 매핑, 태스크별 완료 기준 |
+| TEST-SCENARIOS.md | TS 목록 — AC↔TS 매핑, 태스크별 완료 기준 |
 
 ---
 
@@ -48,21 +48,21 @@ description: |
 ### Step 1: 입력 파일 로딩
 
 1. 디스패치 프롬프트에 명시된 `spec_path`에서 아래 파일을 Read한다:
-   - `specs/{NNN}-{feature}/spec.md`
+   - `specs/{NNN}-{feature}/SPEC.md`
    - `specs/{NNN}-{feature}/SPEC-PLAN.md`
-   - `specs/{NNN}-{feature}/tests/test-scenarios.md`
+   - `specs/{NNN}-{feature}/tests/TEST-SCENARIOS.md`
 2. 프로젝트 컨텍스트가 필요하면 `docs/ARCHITECTURE.md`, `docs/CONVENTIONS.md`를 Read한다.
 
 ### Step 2: AC/FR 분석
 
-spec.md에서 아래 정보를 추출한다:
+SPEC.md에서 아래 정보를 추출한다:
 
 1. **FR 목록**: `[FR-01]`, `[FR-02]`, ... — 기능 요구사항 전체
 2. **AC 목록**: `AC-01`, `AC-02`, ... — GIVEN/WHEN/THEN 형식의 수용 기준 전체
 3. **EC 목록**: `[EC-01]`, ... — 엣지 케이스 (태스크에 명시적으로 포함 필요)
 4. **NFR 목록**: `[NFR-01]`, ... — 비기능 요구사항 (횡단 관심사로 별도 태스크 또는 기존 태스크에 통합)
 
-**검증**: AC가 3개 미만이면 spec.md 불완전 — 에스컬레이션한다.
+**검증**: AC가 3개 미만이면 SPEC.md 불완전 — 에스컬레이션한다.
 
 ### Step 3: 설계 기반 태스크 분해
 
@@ -96,9 +96,9 @@ SPEC-PLAN.md의 아키텍처 컴포넌트를 기반으로 태스크를 도출한
 
 **작성 규칙**:
 
-1. spec.md의 모든 AC를 나열한다
+1. SPEC.md의 모든 AC를 나열한다
 2. 각 AC에 관련 FR을 매핑한다
-3. test-scenarios.md에서 해당 AC의 TS를 매핑한다
+3. TEST-SCENARIOS.md에서 해당 AC의 TS를 매핑한다
 4. Step 3에서 도출한 태스크 중 해당 AC를 구현하는 태스크를 매핑한다
 5. **커버리지 컬럼**: 매핑이 완전하면 `완료`, 부분이면 `부분 — {사유}`
 
@@ -180,23 +180,23 @@ Group 3 (순차): T4         ← T2, T3 완료 후
 | ✅ 완료 | 모든 TS Green |
 | ❌ 실패 | 에스컬레이션 필요 |
 
-### Step 9: tasks.md 작성
+### Step 9: TASKS.md 작성
 
-아래 출력 형식에 따라 tasks.md를 작성한다.
+아래 출력 형식에 따라 TASKS.md를 작성한다.
 
 ### Step 10: 결과 반환
 
-워커는 tasks.md 경로와 요약을 오케스트레이터에 반환한다.
+워커는 TASKS.md 경로와 요약을 오케스트레이터에 반환한다.
 워커는 QA를 호출하지 않는다. 오케스트레이터가 다음 Phase(TASKS-VERIFY)에서 검증한다.
 
 ---
 
-## tasks.md 출력 형식
+## TASKS.md 출력 형식
 
 ```markdown
 # Tasks: {기능명}
 
-> spec.md v{X.Y} 기준 | 총 태스크: {N}개
+> SPEC.md v{X.Y} 기준 | 총 태스크: {N}개
 
 ## 추적 매트릭스 (Requirements Traceability Matrix)
 

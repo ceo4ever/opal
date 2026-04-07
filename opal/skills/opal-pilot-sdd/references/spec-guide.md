@@ -1,13 +1,13 @@
-# spec.md 작성 가이드
+# SPEC.md 작성 가이드
 
-> opal-pilot-sdd Phase 1: SPEC에서 spec.md를 작성할 때 참조하는 상세 지침.
+> opal-pilot-sdd Phase 1: SPEC에서 SPEC.md를 작성할 때 참조하는 상세 지침.
 > op-sdd-spec 스킬과 연동된다.
 
 ---
 
-## 1. spec.md 개요
+## 1. SPEC.md 개요
 
-spec.md는 SDD 파이프라인의 **SSOT(Single Source of Truth)** 이다. 기능의 WHAT/WHY를 정의하며, 이후 모든 단계(검증, 설계, 태스크 분해, 구현)의 근거가 된다.
+SPEC.md는 SDD 파이프라인의 **SSOT(Single Source of Truth)** 이다. 기능의 WHAT/WHY를 정의하며, 이후 모든 단계(검증, 설계, 태스크 분해, 구현)의 근거가 된다.
 
 **핵심 원칙**:
 - WHAT(무엇을 할 것인가)을 기술한다. HOW(어떻게 구현할 것인가)는 SPEC-PLAN.md의 영역이다.
@@ -18,7 +18,7 @@ spec.md는 SDD 파이프라인의 **SSOT(Single Source of Truth)** 이다. 기�
 
 ## 2. 10섹션 표준 구조
 
-spec.md는 반드시 아래 10개 섹션을 모두 포함해야 한다. 섹션 누락 시 SPEC-VERIFY에서 구조적 검증 Fail 처리된다.
+SPEC.md는 반드시 아래 10개 섹션을 모두 포함해야 한다. 섹션 누락 시 SPEC-VERIFY에서 구조적 검증 Fail 처리된다.
 
 ```markdown
 # SPEC: {기능명}
@@ -217,7 +217,7 @@ spec 작성 과정에서 발생한 미해결 질문을 기록한다.
 
 ## 5. 기능 분할 기준
 
-spec.md가 너무 크면 Spec Theater 함정에 빠진다. 아래 기준으로 분할을 판별한다.
+SPEC.md가 너무 크면 Spec Theater 함정에 빠진다. 아래 기준으로 분할을 판별한다.
 
 **분할 신호**:
 - TASK.md의 요구사항이 3개 이상의 독립적 기능을 포함
@@ -228,7 +228,7 @@ spec.md가 너무 크면 Spec Theater 함정에 빠진다. 아래 기준으로 �
 **분할 제안 형식**:
 ```
 [SCOPE-SPLIT] {기능A}, {기능B}, {기능C}로 분할을 제안합니다.
-각각 독립된 spec.md로 작성하면 검증/구현이 용이합니다.
+각각 독립된 SPEC.md로 작성하면 검증/구현이 용이합니다.
 계속 진행할까요?
 ```
 
@@ -238,7 +238,7 @@ spec.md가 너무 크면 Spec Theater 함정에 빠진다. 아래 기준으로 �
 
 ## 6. 버전 관리
 
-spec.md는 살아있는 문서로서 구현 중 변경이 허용된다. 단, 변경 이력을 기록해야 한다.
+SPEC.md는 살아있는 문서로서 구현 중 변경이 허용된다. 단, 변경 이력을 기록해야 한다.
 
 **상태 전이**:
 ```
@@ -267,7 +267,7 @@ Draft → Verified (SPEC-VERIFY 통과) → Implemented (DONE)
 
 ## 7. 품질 기준 요약
 
-spec.md 작성 후 op-sdd-spec 스킬이 자체 검증하는 항목:
+SPEC.md 작성 후 op-sdd-spec 스킬이 자체 검증하는 항목:
 
 | # | 검증 항목 | 기준 |
 |---|----------|------|
@@ -290,5 +290,5 @@ spec.md 작성 후 op-sdd-spec 스킬이 자체 검증하는 항목:
 ## 관련 문서
 
 - `op-sdd-spec/SKILL.md` -- spec 작성 스킬 프로세스
-- `verify-guide.md` -- spec.md 검증 상세 (SPEC-VERIFY)
-- `spec-plan-guide.md` -- spec.md 기반 아키텍처 설계 (SPEC-PLAN)
+- `verify-guide.md` -- SPEC.md 검증 상세 (SPEC-VERIFY)
+- `spec-plan-guide.md` -- SPEC.md 기반 아키텍처 설계 (SPEC-PLAN)

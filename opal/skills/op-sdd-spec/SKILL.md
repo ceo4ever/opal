@@ -1,9 +1,9 @@
 ---
 name: op-sdd-spec
 description: |
-  **SDD 명세 작성 단계 스킬**. TASK.md와 프로젝트 컨텍스트를 분석하여 10섹션 표준 구조의 spec.md를 작성한다.
+  **SDD 명세 작성 단계 스킬**. TASK.md와 프로젝트 컨텍스트를 분석하여 10섹션 표준 구조의 SPEC.md를 작성한다.
   반드시 이 스킬을 사용해야 하는 상황: 오케스트레이터(opal-pilot-sdd)가 SPEC 단계를 디스패치할 때.
-  필수 입력: TASK.md. 선택 입력: docs/PROJECT.md, docs/ARCHITECTURE.md, 코드베이스. 보장 출력: specs/{NNN}-{feature}/spec.md.
+  필수 입력: TASK.md. 선택 입력: docs/PROJECT.md, docs/ARCHITECTURE.md, 코드베이스. 보장 출력: specs/{NNN}-{feature}/SPEC.md.
 ---
 
 # op-sdd-spec -- SDD 명세 작성
@@ -14,7 +14,7 @@ description: |
 - **실행 주체**: 워커 에이전트 (opal-task-agent)
 - **model**: advanced
 - **입력**: `tasks/{NNN}-{태스크명}/TASK.md`
-- **출력**: `specs/{NNN}-{feature}/spec.md`
+- **출력**: `specs/{NNN}-{feature}/SPEC.md`
 
 서브 에이전트 사용이 불가능한 플랫폼에서는 오케스트레이터가 직접 이 스킬을 따른다.
 
@@ -40,7 +40,7 @@ Read ~/.opal/skills/op-sdd-spec/personas/spec-writer.md
 |------|------|
 | **필수 입력** | TASK.md |
 | **선택 입력** | docs/PROJECT.md, docs/ARCHITECTURE.md, docs/CONVENTIONS.md, 코드베이스 |
-| **보장 출력** | specs/{NNN}-{feature}/spec.md |
+| **보장 출력** | specs/{NNN}-{feature}/SPEC.md |
 
 ### 입력 상세
 
@@ -88,7 +88,7 @@ TASK.md를 정밀하게 분석한다.
 3. 기존 패턴과 컨벤션을 식별한다 -- spec 작성 시 이를 존중한다
 4. 기존 시스템과의 통합 포인트를 식별한다
 
-### Step 4: spec.md 10섹션 작성
+### Step 4: SPEC.md 10섹션 작성
 
 아래 출력 형식에 따라 10섹션을 모두 작성한다. 각 섹션별 작성 지침:
 
@@ -151,19 +151,19 @@ TASK.md를 정밀하게 분석한다.
 
 아래 품질 체크리스트를 자체 수행한다. 미달 항목이 있으면 수정 후 다시 검증한다.
 
-### Step 7: spec.md 저장
+### Step 7: SPEC.md 저장
 
 1. `specs/{NNN}-{feature}/` 디렉토리를 생성한다 ({NNN}은 TASK.md의 태스크 번호, {feature}는 기능명 kebab-case)
-2. spec.md를 저장한다
-3. 기존 spec.md가 있으면 버전 관리 규칙에 따라 처리한다
+2. SPEC.md를 저장한다
+3. 기존 SPEC.md가 있으면 버전 관리 규칙에 따라 처리한다
 
 ### Step 8: 결과 반환
 
-워커는 QA를 직접 호출하지 않는다. spec.md 작성이 완료되면 결과를 오케스트레이터에 반환한다. 오케스트레이터가 QA 단계 실행 여부를 결정한다.
+워커는 QA를 직접 호출하지 않는다. SPEC.md 작성이 완료되면 결과를 오케스트레이터에 반환한다. 오케스트레이터가 QA 단계 실행 여부를 결정한다.
 
 **반환 형식**:
 ```
-SPEC 완료: specs/{NNN}-{feature}/spec.md
+SPEC 완료: specs/{NNN}-{feature}/SPEC.md
 - 10섹션 완비: {Yes/No}
 - AC 수: {N}개
 - OQ 상태: {없음 / N개 미해소}
@@ -180,7 +180,7 @@ SPEC 완료: specs/{NNN}-{feature}/spec.md
 
 ---
 
-## spec.md 출력 형식
+## SPEC.md 출력 형식
 
 ```markdown
 # SPEC: {기능명}
@@ -268,18 +268,18 @@ SPEC 완료: specs/{NNN}-{feature}/spec.md
 ## 저장 경로
 
 ```
-specs/{NNN}-{feature}/spec.md
+specs/{NNN}-{feature}/SPEC.md
 ```
 
 - `{NNN}`: TASK.md의 태스크 번호 (3자리 zero-padded)
 - `{feature}`: 기능명 kebab-case
-- 기존 spec.md가 있으면 opal-doc-standard 규칙에 따라 버전 관리한다
+- 기존 SPEC.md가 있으면 opal-doc-standard 규칙에 따라 버전 관리한다
 
 ---
 
 ## 품질 체크리스트
 
-spec.md 작성 후 자체 검증한다:
+SPEC.md 작성 후 자체 검증한다:
 
 - [ ] 10섹션이 모두 존재하는가
 - [ ] AC가 모두 GIVEN/WHEN/THEN 형식인가
@@ -299,11 +299,11 @@ spec.md 작성 후 자체 검증한다:
 
 ## 완료 후 동작
 
-워커는 QA를 직접 호출하지 않는다. spec.md 작성이 완료되면 결과를 오케스트레이터에 반환한다. 오케스트레이터가 QA 단계 실행 여부를 결정한다.
+워커는 QA를 직접 호출하지 않는다. SPEC.md 작성이 완료되면 결과를 오케스트레이터에 반환한다. 오케스트레이터가 QA 단계 실행 여부를 결정한다.
 
 **반환 형식**:
 ```
-SPEC 완료: specs/{NNN}-{feature}/spec.md
+SPEC 완료: specs/{NNN}-{feature}/SPEC.md
 ```
 
 ---

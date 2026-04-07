@@ -1,9 +1,9 @@
 ---
 name: op-sdd-verify
 description: |
-  **SDD 명세/태스크 검증 단계 스킬**. mode에 따라 spec.md 또는 tasks.md를 검증하고 verify.md 저널에 결과를 누적 기록한다.
+  **SDD 명세/태스크 검증 단계 스킬**. mode에 따라 SPEC.md 또는 TASKS.md를 검증하고 VERIFY.md 저널에 결과를 누적 기록한다.
   반드시 이 스킬을 사용해야 하는 상황: opsdd 오케스트레이터가 SPEC-VERIFY 또는 TASKS-VERIFY Phase를 디스패치할 때.
-  필수 입력: mode + spec_path. 보장 출력: verify.md (해당 섹션 추가) + test-scenarios.md (mode=spec 시).
+  필수 입력: mode + spec_path. 보장 출력: VERIFY.md (해당 섹션 추가) + TEST-SCENARIOS.md (mode=spec 시).
 ---
 
 # op-sdd-verify -- SDD 명세/태스크 검증
@@ -30,8 +30,8 @@ Read {skill_dir}/personas/spec-verifier.md
 
 | mode | Phase | 역할 | model |
 |------|-------|------|-------|
-| `spec` | Phase 2: SPEC-VERIFY | spec.md 3계층 검증 + test-scenarios.md 도출 | advanced |
-| `tasks` | Phase 5: TASKS-VERIFY | tasks.md 커버리지/의존관계 검증 | standard |
+| `spec` | Phase 2: SPEC-VERIFY | SPEC.md 3계층 검증 + TEST-SCENARIOS.md 도출 | advanced |
+| `tasks` | Phase 5: TASKS-VERIFY | TASKS.md 커버리지/의존관계 검증 | standard |
 
 ---
 
@@ -42,7 +42,7 @@ Read {skill_dir}/personas/spec-verifier.md
 | 입력 | 설명 | 필수 |
 |------|------|------|
 | `spec_path` | specs/{NNN}-{feature}/ 경로 | 필수 |
-| `spec.md` | spec_path/spec.md -- 검증 대상 명세 | 필수 |
+| `SPEC.md` | spec_path/SPEC.md -- 검증 대상 명세 | 필수 |
 | `docs/PROJECT.md` | 프로젝트 정의 | 선택 |
 | `docs/ARCHITECTURE.md` | 시스템 아키텍처 | 선택 |
 | `docs/CONVENTIONS.md` | 코드 컨벤션 | 선택 |
@@ -52,9 +52,9 @@ Read {skill_dir}/personas/spec-verifier.md
 | 입력 | 설명 | 필수 |
 |------|------|------|
 | `spec_path` | specs/{NNN}-{feature}/ 경로 | 필수 |
-| `tasks.md` | spec_path/tasks.md -- 검증 대상 태스크 분해 | 필수 |
-| `spec.md` | spec_path/spec.md -- 원본 명세 (교차 검증) | 필수 |
-| `test-scenarios.md` | spec_path/tests/test-scenarios.md -- TS 커버리지 검증 | 필수 |
+| `TASKS.md` | spec_path/TASKS.md -- 검증 대상 태스크 분해 | 필수 |
+| `SPEC.md` | spec_path/SPEC.md -- 원본 명세 (교차 검증) | 필수 |
+| `TEST-SCENARIOS.md` | spec_path/tests/TEST-SCENARIOS.md -- TS 커버리지 검증 | 필수 |
 | `SPEC-PLAN.md` | spec_path/SPEC-PLAN.md -- 설계 참조 | 선택 |
 
 ## 출력 (mode별)
@@ -63,14 +63,14 @@ Read {skill_dir}/personas/spec-verifier.md
 
 | 출력 | 경로 | 설명 |
 |------|------|------|
-| verify.md (SPEC 검증 섹션) | `{spec_path}/verify.md` | 신규 생성 또는 SPEC 검증 섹션 추가 |
-| test-scenarios.md | `{spec_path}/tests/test-scenarios.md` | AC에서 도출한 테스트 시나리오 |
+| VERIFY.md (SPEC 검증 섹션) | `{spec_path}/VERIFY.md` | 신규 생성 또는 SPEC 검증 섹션 추가 |
+| TEST-SCENARIOS.md | `{spec_path}/tests/TEST-SCENARIOS.md` | AC에서 도출한 테스트 시나리오 |
 
 ### mode=tasks
 
 | 출력 | 경로 | 설명 |
 |------|------|------|
-| verify.md (TASKS 검증 섹션 추가) | `{spec_path}/verify.md` | 기존 verify.md에 TASKS 검증 섹션 누적 |
+| VERIFY.md (TASKS 검증 섹션 추가) | `{spec_path}/VERIFY.md` | 기존 VERIFY.md에 TASKS 검증 섹션 누적 |
 
 ---
 
@@ -78,7 +78,7 @@ Read {skill_dir}/personas/spec-verifier.md
 
 ### Step 1. 입력 로딩
 
-1. `{spec_path}/spec.md`를 Read한다
+1. `{spec_path}/SPEC.md`를 Read한다
 2. 프로젝트 컨텍스트를 Read한다 (docs/PROJECT.md, docs/ARCHITECTURE.md, docs/CONVENTIONS.md)
 
 ### Step 2. 구조적 검증
@@ -124,15 +124,15 @@ Read {skill_dir}/personas/spec-verifier.md
 2. 정상 케이스 + 예외 케이스 + 경계값 케이스를 모두 포함한다
 3. Edge Cases(EC) 항목에서 추가 시나리오를 도출한다
 4. 유형을 분류한다: `unit` / `integration` / `e2e`
-5. `{spec_path}/tests/test-scenarios.md`에 작성한다
+5. `{spec_path}/tests/TEST-SCENARIOS.md`에 작성한다
 
-### Step 6. verify.md 작성
+### Step 6. VERIFY.md 작성
 
-검증 결과를 verify.md의 SPEC 검증 섹션으로 작성한다 (아래 출력 형식 참조).
+검증 결과를 VERIFY.md의 SPEC 검증 섹션으로 작성한다 (아래 출력 형식 참조).
 
 ### Step 7. 판정
 
-판정 로직에 따라 최종 판정을 내리고 verify.md에 기록한다.
+판정 로직에 따라 최종 판정을 내리고 VERIFY.md에 기록한다.
 
 ---
 
@@ -140,23 +140,23 @@ Read {skill_dir}/personas/spec-verifier.md
 
 ### Step 1. 입력 로딩
 
-1. `{spec_path}/tasks.md`를 Read한다
-2. `{spec_path}/spec.md`를 Read한다
-3. `{spec_path}/tests/test-scenarios.md`를 Read한다
+1. `{spec_path}/TASKS.md`를 Read한다
+2. `{spec_path}/SPEC.md`를 Read한다
+3. `{spec_path}/tests/TEST-SCENARIOS.md`를 Read한다
 4. `{spec_path}/SPEC-PLAN.md`를 Read한다 (존재 시)
 
 ### Step 2. AC 커버리지 검증
 
 | # | 검증 항목 | 기준 | 실패 시 판정 |
 |---|----------|------|-------------|
-| T-1 | 모든 AC >= 1 태스크에 매핑 | spec.md의 모든 AC가 tasks.md의 최소 1개 태스크에 할당 | Fail |
-| T-2 | 역매핑 완전성 | tasks.md의 모든 태스크가 최소 1개 AC에 매핑 | Warning |
+| T-1 | 모든 AC >= 1 태스크에 매핑 | SPEC.md의 모든 AC가 TASKS.md의 최소 1개 태스크에 할당 | Fail |
+| T-2 | 역매핑 완전성 | TASKS.md의 모든 태스크가 최소 1개 AC에 매핑 | Warning |
 
 ### Step 3. TS 커버리지 검증
 
 | # | 검증 항목 | 기준 | 실패 시 판정 |
 |---|----------|------|-------------|
-| T-3 | 모든 TS >= 1 태스크에 할당 | test-scenarios.md의 모든 시나리오가 최소 1개 태스크에 할당 | Fail |
+| T-3 | 모든 TS >= 1 태스크에 할당 | TEST-SCENARIOS.md의 모든 시나리오가 최소 1개 태스크에 할당 | Fail |
 | T-4 | 테스트 유형 균형 | unit/integration/e2e가 적절히 분포 | Warning |
 
 ### Step 4. 의존관계 유효성 검증
@@ -164,7 +164,7 @@ Read {skill_dir}/personas/spec-verifier.md
 | # | 검증 항목 | 기준 | 실패 시 판정 |
 |---|----------|------|-------------|
 | T-5 | 순환 의존 없음 | 태스크 간 의존 그래프에 순환이 없음 | Fail |
-| T-6 | 누락 의존 없음 | 의존 대상 태스크가 tasks.md에 존재 | Fail |
+| T-6 | 누락 의존 없음 | 의존 대상 태스크가 TASKS.md에 존재 | Fail |
 | T-7 | 불필요 의존 없음 | 실제 의존 관계가 아닌 의존 선언 없음 | Warning |
 
 ### Step 5. 자기 완결성 검증
@@ -183,15 +183,15 @@ Read {skill_dir}/personas/spec-verifier.md
 
 ### Step 7. 추적 매트릭스 최종화
 
-AC <-> FR <-> TS <-> 태스크 간 추적 매트릭스를 작성하여 verify.md에 포함한다.
+AC <-> FR <-> TS <-> 태스크 간 추적 매트릭스를 작성하여 VERIFY.md에 포함한다.
 
-### Step 8. verify.md 갱신
+### Step 8. VERIFY.md 갱신
 
-검증 결과를 기존 verify.md의 TASKS 검증 섹션으로 누적 추가한다 (아래 출력 형식 참조).
+검증 결과를 기존 VERIFY.md의 TASKS 검증 섹션으로 누적 추가한다 (아래 출력 형식 참조).
 
 ### Step 9. 판정
 
-판정 로직에 따라 최종 판정을 내리고 verify.md에 기록한다.
+판정 로직에 따라 최종 판정을 내리고 VERIFY.md에 기록한다.
 
 ---
 
@@ -225,11 +225,11 @@ AC <-> FR <-> TS <-> 태스크 간 추적 매트릭스를 작성하여 verify.md
 
 ---
 
-## 출력 형식: verify.md
+## 출력 형식: VERIFY.md
 
-verify.md는 누적 저널 방식으로 Phase별 섹션을 추가한다.
+VERIFY.md는 누적 저널 방식으로 Phase별 섹션을 추가한다.
 
-### verify.md 전체 구조
+### VERIFY.md 전체 구조
 
 ```markdown
 # Validation Journal: {기능명}
@@ -305,16 +305,16 @@ verify.md는 누적 저널 방식으로 Phase별 섹션을 추가한다.
 
 ---
 
-## 출력 형식: test-scenarios.md
+## 출력 형식: TEST-SCENARIOS.md
 
 mode=spec에서 AC로부터 도출한 테스트 시나리오를 작성한다.
 
-### test-scenarios.md 구조
+### TEST-SCENARIOS.md 구조
 
 ```markdown
 # Test Scenarios: {기능명}
 
-> 버전: 1.0 | 작성일: YYYY-MM-DD | spec.md v{X.Y} 기준
+> 버전: 1.0 | 작성일: YYYY-MM-DD | SPEC.md v{X.Y} 기준
 > 상태: Red (TDD -- 시나리오만 정의, 구현 전)
 
 ## 추적 매트릭스
@@ -368,8 +368,8 @@ SPEC 검증 완료 후 자체 검증한다:
 - [ ] 도메인 검증 2개 항목(D-1~D-2)을 모두 수행했는가
 - [ ] 모든 AC에서 최소 1개 테스트 시나리오를 도출했는가
 - [ ] 정상/예외/경계값 케이스를 포함했는가
-- [ ] test-scenarios.md의 추적 매트릭스가 완전한가
-- [ ] verify.md SPEC 검증 섹션이 템플릿 형식에 맞는가
+- [ ] TEST-SCENARIOS.md의 추적 매트릭스가 완전한가
+- [ ] VERIFY.md SPEC 검증 섹션이 템플릿 형식에 맞는가
 - [ ] 판정에 구체적 근거가 첨부되었는가
 
 ### mode=tasks 체크리스트
@@ -381,7 +381,7 @@ TASKS 검증 완료 후 자체 검증한다:
 - [ ] 자기 완결성 검증 2개 항목(T-8~T-9)을 모두 수행했는가
 - [ ] 크기 적정성 검증 2개 항목(T-10~T-11)을 모두 수행했는가
 - [ ] 추적 매트릭스(AC<->FR<->TS<->태스크)가 완전한가
-- [ ] verify.md TASKS 검증 섹션이 기존 내용에 누적 추가되었는가
+- [ ] VERIFY.md TASKS 검증 섹션이 기존 내용에 누적 추가되었는가
 - [ ] 판정에 구체적 근거가 첨부되었는가
 
 ---
@@ -394,12 +394,12 @@ TASKS 검증 완료 후 자체 검증한다:
 
 mode=spec:
 ```
-SPEC-VERIFY 완료: {spec_path}/verify.md + {spec_path}/tests/test-scenarios.md | 판정: {Pass / Pass with Warnings / Fail}
+SPEC-VERIFY 완료: {spec_path}/VERIFY.md + {spec_path}/tests/TEST-SCENARIOS.md | 판정: {Pass / Pass with Warnings / Fail}
 ```
 
 mode=tasks:
 ```
-TASKS-VERIFY 완료: {spec_path}/verify.md (TASKS 섹션 추가) | 판정: {Pass / Fail}
+TASKS-VERIFY 완료: {spec_path}/VERIFY.md (TASKS 섹션 추가) | 판정: {Pass / Fail}
 ```
 
 ---

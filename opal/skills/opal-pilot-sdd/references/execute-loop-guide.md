@@ -8,12 +8,12 @@
 
 ## 1. 개요
 
-EXECUTE-LOOP는 tasks.md에 정의된 태스크를 의존 순서에 따라 반복 실행하는 단계이다. 각 태스크는 기존 opal-pilot 오케스트레이터(opds/opd/opp)에 위임하여 실행하며, opsdd 오케스트레이터가 루프 관리, 상태 갱신, 검증 루프를 담당한다.
+EXECUTE-LOOP는 TASKS.md에 정의된 태스크를 의존 순서에 따라 반복 실행하는 단계이다. 각 태스크는 기존 opal-pilot 오케스트레이터(opds/opd/opp)에 위임하여 실행하며, opsdd 오케스트레이터가 루프 관리, 상태 갱신, 검증 루프를 담당한다.
 
 **핵심 원칙**:
 - 기존 opal-pilot 파이프라인을 재활용한다 (신규 실행 스킬 불필요)
-- tasks.md의 의존관계 그래프가 실행 순서를 결정한다
-- SDD 컨텍스트(spec.md, SPEC-PLAN.md, AC/TS 매핑)를 디스패치 시 주입한다
+- TASKS.md의 의존관계 그래프가 실행 순서를 결정한다
+- SDD 컨텍스트(SPEC.md, SPEC-PLAN.md, AC/TS 매핑)를 디스패치 시 주입한다
 - TDD 원칙: 테스트 먼저 작성 후 구현
 
 ---
@@ -21,22 +21,22 @@ EXECUTE-LOOP는 tasks.md에 정의된 태스크를 의존 순서에 따라 반�
 ## 2. 태스크별 실행 흐름
 
 ```
-for each task T in dependency_order(tasks.md):
-  1. 스킬 결정 (tasks.md의 예상 규모 기반)
+for each task T in dependency_order(TASKS.md):
+  1. 스킬 결정 (TASKS.md의 예상 규모 기반)
   2. SDD 컨텍스트 주입 + 디스패치
   3. 오케스트레이터 완료 대기
-  4. 상태 갱신 (tasks.md, test-scenarios.md, STATE.md)
+  4. 상태 갱신 (TASKS.md, TEST-SCENARIOS.md, STATE.md)
   5. 다음 태스크 또는 그룹으로 진행
 ```
 
 ### 상세 단계
 
-**2-1. tasks.md에서 다음 실행 대상 결정**:
+**2-1. TASKS.md에서 다음 실행 대상 결정**:
 - 의존관계 그래프에서 모든 선행 태스크가 완료된 태스크를 선택한다
 - 복수의 태스크가 실행 가능하면 병렬 그룹으로 처리한다 (섹션 5 참조)
 
 **2-2. 스킬 결정**:
-- tasks.md의 각 태스크에 기록된 `예상 규모`와 `추천 스킬`을 참조한다
+- TASKS.md의 각 태스크에 기록된 `예상 규모`와 `추천 스킬`을 참조한다
 - 스킬 결정 기준 테이블 (섹션 3)에 따라 최종 결정한다
 
 **2-3. 디스패치**:
@@ -50,7 +50,7 @@ for each task T in dependency_order(tasks.md):
 
 ## 3. 스킬 결정 기준 테이블
 
-tasks.md의 `예상 규모`와 `추천 스킬`을 기반으로 실행 스킬을 결정한다.
+TASKS.md의 `예상 규모`와 `추천 스킬`을 기반으로 실행 스킬을 결정한다.
 
 | 조건 | 스킬 | 파이프라인 | 적용 상황 |
 |------|------|----------|----------|
@@ -84,15 +84,15 @@ EXECUTE-LOOP에서 기존 opal-pilot 오케스트레이터를 호출할 때, SDD
 **태스크 폴더**: specs/{NNN}-{feature}/tasks/T{N}-{name}/
 
 **SDD 컨텍스트**:
-- **spec.md**: specs/{NNN}-{feature}/spec.md
+- **SPEC.md**: specs/{NNN}-{feature}/SPEC.md
 - **SPEC-PLAN.md**: specs/{NNN}-{feature}/SPEC-PLAN.md
 - **AC 매핑**: {해당 태스크의 AC 목록 -- 예: AC-01, AC-03}
 - **TS 매핑**: {해당 태스크의 TS 목록 -- 예: TS-01, TS-02, TS-04}
 - **TDD 지시**: 테스트 먼저 작성 후 구현
 
-**태스크 설명**: {tasks.md에서 해당 태스크의 범위/설명}
+**태스크 설명**: {TASKS.md에서 해당 태스크의 범위/설명}
 
-**완료 기준**: {tasks.md에서 해당 태스크의 완료 기준 -- 예: TS-01, TS-02 Green}
+**완료 기준**: {TASKS.md에서 해당 태스크의 완료 기준 -- 예: TS-01, TS-02 Green}
 
 **하네스 Guards**: 구현 승인됨. 커밋 허용. `~/.opal/` 직접 수정 금지.
 ```
@@ -102,25 +102,25 @@ EXECUTE-LOOP에서 기존 opal-pilot 오케스트레이터를 호출할 때, SDD
 | 필드 | 설명 | 출처 |
 |------|------|------|
 | `{스킬명}` | opds, opd, opp 중 하나 | 스킬 결정 기준 테이블 |
-| `spec.md` | 기능 명세 SSOT 경로 | 고정 |
+| `SPEC.md` | 기능 명세 SSOT 경로 | 고정 |
 | `SPEC-PLAN.md` | 아키텍처 설계 경로 | 고정 |
-| `AC 매핑` | 해당 태스크가 구현하는 AC 목록 | tasks.md > 해당 태스크 > AC 매핑 |
-| `TS 매핑` | 해당 태스크가 통과해야 할 TS 목록 | tasks.md > 해당 태스크 > TS 매핑 |
+| `AC 매핑` | 해당 태스크가 구현하는 AC 목록 | TASKS.md > 해당 태스크 > AC 매핑 |
+| `TS 매핑` | 해당 태스크가 통과해야 할 TS 목록 | TASKS.md > 해당 태스크 > TS 매핑 |
 | `TDD 지시` | 테스트 우선 구현 지시 | 고정 |
-| `태스크 설명` | 해당 태스크의 범위와 변경 대상 | tasks.md > 해당 태스크 > 범위 |
-| `완료 기준` | 해당 태스크의 완료 판단 기준 | tasks.md > 해당 태스크 > 완료 기준 |
+| `태스크 설명` | 해당 태스크의 범위와 변경 대상 | TASKS.md > 해당 태스크 > 범위 |
+| `완료 기준` | 해당 태스크의 완료 판단 기준 | TASKS.md > 해당 태스크 > 완료 기준 |
 
 ### TDD 워커 지시 상세
 
 디스패치된 워커(opds/opd)에게 TDD 패턴을 강제한다:
 
-1. **Red**: test-scenarios.md에서 해당 TS의 시나리오를 읽고 테스트 스켈레톤을 먼저 생성한다
+1. **Red**: TEST-SCENARIOS.md에서 해당 TS의 시나리오를 읽고 테스트 스켈레톤을 먼저 생성한다
 2. **Green**: 테스트를 통과하는 최소한의 구현 코드를 작성한다
 3. **Refactor**: 코드 품질을 개선한다 (테스트가 깨지지 않도록)
 
 워커가 참조할 테스트 시나리오 정보:
 ```
-테스트 시나리오 참조: specs/{NNN}-{feature}/tests/test-scenarios.md
+테스트 시나리오 참조: specs/{NNN}-{feature}/tests/TEST-SCENARIOS.md
 해당 시나리오:
 - TS-01: {시나리오명} -- {유형} -- GIVEN: {조건}, WHEN: {행위}, THEN: {기대}
 - TS-02: {시나리오명} -- {유형} -- GIVEN: {조건}, WHEN: {행위}, THEN: {기대}
@@ -134,11 +134,11 @@ oppd Phase 3의 병렬 실행 패턴을 opsdd EXECUTE-LOOP에 적용한다.
 
 ### 5-1. 의존관계 그래프에서 병렬 그룹 빌드
 
-tasks.md의 `실행 그룹` 섹션 또는 `의존관계 그래프`에서 병렬 그룹을 도출한다.
+TASKS.md의 `실행 그룹` 섹션 또는 `의존관계 그래프`에서 병렬 그룹을 도출한다.
 
 ```python
 # 의사코드 (Kahn's algorithm 기반 -- oppd parallel-execution-guide 참조)
-groups = buildParallelGroups(tasks.md)
+groups = buildParallelGroups(TASKS.md)
 
 for each group in groups:
   if group has single task:
@@ -213,7 +213,7 @@ git branch -d feat/opsdd-{spec-NNN}-T{N}
 
 EXECUTE-LOOP에서 각 태스크의 실행 상태를 3곳에 동기화한다.
 
-### 6-1. tasks.md 상태 갱신
+### 6-1. TASKS.md 상태 갱신
 
 | 이벤트 | 갱신 |
 |--------|------|
@@ -221,7 +221,7 @@ EXECUTE-LOOP에서 각 태스크의 실행 상태를 3곳에 동기화한다.
 | 태스크 실행 완료 (성공) | `상태: 🔄 진행 중` -> `상태: ✅ 완료` |
 | 태스크 실행 실패 | `상태: 🔄 진행 중` -> `상태: ❌ 실패` |
 
-### 6-2. test-scenarios.md 상태 갱신
+### 6-2. TEST-SCENARIOS.md 상태 갱신
 
 | 이벤트 | 갱신 |
 |--------|------|
@@ -300,7 +300,7 @@ oppd의 Layered Verification 모델을 EXECUTE-LOOP 내 각 태스크에 적용�
 
 ### 시나리오
 
-specs/001-user-auth/ 기능의 tasks.md에 4개 태스크:
+specs/001-user-auth/ 기능의 TASKS.md에 4개 태스크:
 
 ```
 T1: 데이터 모델 (Small -> opds, 의존: 없음)
@@ -314,17 +314,17 @@ T4: 통합 테스트 (Small -> opds, 의존: T2, T3)
 ```
 Group 1 (순차): T1
   -> opds 디스패치 + SDD 컨텍스트 주입
-  -> 완료 -> tasks.md T1 ✅, TS-01/TS-02 Green
+  -> 완료 -> TASKS.md T1 ✅, TS-01/TS-02 Green
 
 Group 2 (병렬): T2, T3  <- T1 완료 후
   -> worktree 생성: .worktrees/001-T2/, .worktrees/001-T3/
   -> 병렬 디스패치 (opds x 2)
   -> 결과 수집 -> 순차 머지 -> 통합 테스트
-  -> tasks.md T2/T3 ✅, TS-01/TS-02/TS-03/TS-04 Green
+  -> TASKS.md T2/T3 ✅, TS-01/TS-02/TS-03/TS-04 Green
 
 Group 3 (순차): T4  <- T2, T3 완료 후
   -> opds 디스패치 + SDD 컨텍스트 주입
-  -> 완료 -> tasks.md T4 ✅, TS-05 Green
+  -> 완료 -> TASKS.md T4 ✅, TS-05 Green
   -> 전체 TS Green 확인 -> EXECUTE-LOOP 완료
 ```
 
@@ -336,7 +336,7 @@ Group 3 (순차): T4  <- T2, T3 완료 후
 **태스크 폴더**: specs/001-user-auth/tasks/T2-auth-api/
 
 **SDD 컨텍스트**:
-- **spec.md**: specs/001-user-auth/spec.md
+- **SPEC.md**: specs/001-user-auth/SPEC.md
 - **SPEC-PLAN.md**: specs/001-user-auth/SPEC-PLAN.md
 - **AC 매핑**: AC-01, AC-03
 - **TS 매핑**: TS-01, TS-02, TS-04
@@ -355,7 +355,7 @@ Group 3 (순차): T4  <- T2, T3 완료 후
 
 - `opal-pilot-sdd/SKILL.md` -- opsdd 오케스트레이터 메인 (Phase 6 개요)
 - `verify-guide.md` -- 검증 상세 (DONE 검증)
-- `spec-guide.md` -- spec.md 구조 (SDD 컨텍스트 참조)
+- `spec-guide.md` -- SPEC.md 구조 (SDD 컨텍스트 참조)
 - `spec-plan-guide.md` -- SPEC-PLAN.md 구조 (SDD 컨텍스트 참조)
 - `~/.opal/skills/opal-pilot-project-dev/references/parallel-execution-guide.md` -- oppd 병렬 실행 패턴 원본
 - `~/.opal/skills/opal-pilot-project-dev/references/verification-loop-guide.md` -- oppd 검증 루프 패턴 원본

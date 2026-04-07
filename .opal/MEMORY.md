@@ -22,9 +22,6 @@
 | # | 등록일시 | 카테고리 | 상태 | 파일 | 설명 |
 |---|----------|----------|------|------|------|
 | 1 | 2026-03-22 | task | 예정 | [memory/project_security_task.md](memory/project_security_task.md) | 보안 전용 스킬+에이전트 생성 |
-| 3 | 2026-03-27 | project | 유효 | [memory/project_opi_vision.md](memory/project_opi_vision.md) | opi 비전: 프로젝트=WHAT/WHY, 스킬=HOW |
-| 5 | 2026-03-31 16:30 | feedback | 유효 | [memory/feedback_qa_checklist.md](memory/feedback_qa_checklist.md) | EXECUTE 후 PM이 QA 체크리스트 반드시 갱신 — DONE.md 전 필수 |
-| 6 | 2026-04-02 11:30 | feedback | 유효 | [memory/feedback_skip_qa_warning.md](memory/feedback_skip_qa_warning.md) | [경고] 배포(Sync) 전 QA Gate 생략 금지 — 068 태스크 실수 재발 방지 |
 
 
 ## 작업 히스토리 (최대 10개, FIFO)

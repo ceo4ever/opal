@@ -7,12 +7,12 @@
 
 ## 1. 개요
 
-검증은 opsdd 파이프라인에서 **구현 전 품질 보장**의 핵심이다. spec.md 작성 후, tasks.md 분해 후 각각 전문 검증을 수행하여 환각, 스코프 드리프트, 추적성 갭을 사전에 차단한다.
+검증은 opsdd 파이프라인에서 **구현 전 품질 보장**의 핵심이다. SPEC.md 작성 후, TASKS.md 분해 후 각각 전문 검증을 수행하여 환각, 스코프 드리프트, 추적성 갭을 사전에 차단한다.
 
 **검증 시점**:
-- Phase 2: SPEC-VERIFY -- spec.md 3계층 검증 + test-scenarios.md 도출 (mode=spec)
-- Phase 5: TASKS-VERIFY -- tasks.md 커버리지/의존관계 검증 (mode=tasks)
-- Phase 7: DONE -- 최종 검증 (verify.md에 DONE 검증 섹션 추가)
+- Phase 2: SPEC-VERIFY -- SPEC.md 3계층 검증 + TEST-SCENARIOS.md 도출 (mode=spec)
+- Phase 5: TASKS-VERIFY -- TASKS.md 커버리지/의존관계 검증 (mode=tasks)
+- Phase 7: DONE -- 최종 검증 (VERIFY.md에 DONE 검증 섹션 추가)
 
 **원칙**:
 - 검증 수행자(op-sdd-verify)와 검증 리뷰어(opal-task-qa-agent)는 분리한다
@@ -36,7 +36,7 @@
 | S-5 | FR 번호 체계 | [FR-NN] 형식으로 번호가 부여됨 | Warning |
 | S-6 | 버전/상태 메타데이터 | 버전, 작성일, 상태가 기재됨 | Warning |
 
-**검증 방법**: spec.md를 Read하여 각 항목을 체크한다. 구조적 검증은 내용 품질과 무관하게 형식만 확인한다.
+**검증 방법**: SPEC.md를 Read하여 각 항목을 체크한다. 구조적 검증은 내용 품질과 무관하게 형식만 확인한다.
 
 ### 2-2. 의미적 검증
 
@@ -74,9 +74,9 @@
 
 ---
 
-## 3. verify.md 누적 저널 구조
+## 3. VERIFY.md 누적 저널 구조
 
-verify.md는 모든 검증 결과를 **하나의 파일에 시간순으로 누적**하는 저널이다. Phase별로 섹션이 추가된다.
+VERIFY.md는 모든 검증 결과를 **하나의 파일에 시간순으로 누적**하는 저널이다. Phase별로 섹션이 추가된다.
 
 ### 3-1. 전체 구조
 
@@ -154,8 +154,8 @@ verify.md는 모든 검증 결과를 **하나의 파일에 시간순으로 누�
 
 ### 3-2. 누적 규칙
 
-- verify.md가 없으면 신규 생성한다
-- 기존 verify.md가 있으면 해당 Phase 섹션을 **하단에 추가**한다
+- VERIFY.md가 없으면 신규 생성한다
+- 기존 VERIFY.md가 있으면 해당 Phase 섹션을 **하단에 추가**한다
 - 이전 Phase의 검증 결과는 수정하지 않는다
 - 재검증 시 이전 판정 아래에 `### 재검증 ({N}차)` 섹션을 추가한다
 
@@ -184,7 +184,7 @@ Phase 6(EXECUTE-LOOP) 완료 후 최종 검증 결과를 추가한다:
 
 ---
 
-## 4. test-scenarios.md 구조
+## 4. TEST-SCENARIOS.md 구조
 
 mode=spec에서 AC로부터 도출한 테스트 시나리오를 기록하는 문서이다.
 
@@ -193,7 +193,7 @@ mode=spec에서 AC로부터 도출한 테스트 시나리오를 기록하는 문
 ```markdown
 # Test Scenarios: {기능명}
 
-> 버전: 1.0 | 작성일: YYYY-MM-DD | spec.md v{X.Y} 기준
+> 버전: 1.0 | 작성일: YYYY-MM-DD | SPEC.md v{X.Y} 기준
 > 상태: Red (TDD -- 시나리오만 정의, 구현 전)
 
 ## 추적 매트릭스
@@ -269,7 +269,7 @@ Red  ->  Skip   (PM/소유자 판단으로 제외)
 | 판정 | 조건 | 후속 조치 |
 |------|------|----------|
 | **Pass** | 모든 항목 Pass (Warning 0개) | Phase 3(SPEC-PLAN) 진행 |
-| **Pass with Warnings** | Fail 0개 + Warning 1~2개 | Phase 3 진행 가능, Warning을 verify.md에 기록 |
+| **Pass with Warnings** | Fail 0개 + Warning 1~2개 | Phase 3 진행 가능, Warning을 VERIFY.md에 기록 |
 | **Fail** | Fail 1개 이상, 또는 Warning 3개 이상 | 재작성 지시 -> op-sdd-spec에 피드백 |
 
 ### 5-2. TASKS 검증 (mode=tasks) 판정
@@ -312,11 +312,11 @@ TASKS 검증에서는 "Pass with Warnings" 판정이 없다. 커버리지 갭이
 
 ## 6. SPEC 검증에서 테스트 시나리오 도출
 
-SPEC-VERIFY의 핵심 산출물 중 하나가 test-scenarios.md이다. 이것이 TDD의 "Red" 단계에 해당한다.
+SPEC-VERIFY의 핵심 산출물 중 하나가 TEST-SCENARIOS.md이다. 이것이 TDD의 "Red" 단계에 해당한다.
 
 ### 6-1. 도출 프로세스
 
-1. spec.md의 모든 AC를 순회한다
+1. SPEC.md의 모든 AC를 순회한다
 2. 각 AC의 GIVEN/WHEN/THEN을 테스트 케이스로 변환한다:
    - **정상 케이스**: GIVEN + WHEN -> THEN 그대로
    - **예외 케이스**: GIVEN 변형 (전제 위반) -> 에러 기대
@@ -350,9 +350,9 @@ AC에서 테스트 시나리오를 도출할 수 없으면 AC 자체의 품질 �
 
 | # | 항목 | 상세 |
 |---|------|------|
-| T-1 | AC 커버리지 | spec.md의 **모든** AC가 tasks.md의 최소 1개 태스크에 매핑. 빈틈 = 구현 누락 |
-| T-2 | 역매핑 완전성 | tasks.md의 **모든** 태스크가 최소 1개 AC에 매핑. 매핑 없는 태스크 = 불필요 태스크 |
-| T-3 | TS 커버리지 | test-scenarios.md의 **모든** 시나리오가 최소 1개 태스크에 할당. 미할당 TS = 테스트 누락 |
+| T-1 | AC 커버리지 | SPEC.md의 **모든** AC가 TASKS.md의 최소 1개 태스크에 매핑. 빈틈 = 구현 누락 |
+| T-2 | 역매핑 완전성 | TASKS.md의 **모든** 태스크가 최소 1개 AC에 매핑. 매핑 없는 태스크 = 불필요 태스크 |
+| T-3 | TS 커버리지 | TEST-SCENARIOS.md의 **모든** 시나리오가 최소 1개 태스크에 할당. 미할당 TS = 테스트 누락 |
 | T-4 | 테스트 유형 균형 | unit만 있고 integration/e2e가 없으면 Warning |
 
 ### 7-2. 의존관계 검증
@@ -360,7 +360,7 @@ AC에서 테스트 시나리오를 도출할 수 없으면 AC 자체의 품질 �
 | # | 항목 | 상세 |
 |---|------|------|
 | T-5 | 순환 의존 | DAG(방향 비순환 그래프)인지 확인. 순환 발견 시 Fail |
-| T-6 | 누락 의존 | 의존 대상 태스크가 tasks.md에 실제 존재하는지 확인 |
+| T-6 | 누락 의존 | 의존 대상 태스크가 TASKS.md에 실제 존재하는지 확인 |
 | T-7 | 불필요 의존 | 실제로는 의존 관계가 없는데 의존 선언한 경우 Warning (병렬성 저해) |
 
 ### 7-3. 자기 완결성 검증
@@ -382,7 +382,7 @@ AC에서 테스트 시나리오를 도출할 수 없으면 AC 자체의 품질 �
 ## 관련 문서
 
 - `op-sdd-verify/SKILL.md` -- 검증 스킬 프로세스 (mode=spec/tasks)
-- `spec-guide.md` -- spec.md 작성 가이드 (검증 대상)
+- `spec-guide.md` -- SPEC.md 작성 가이드 (검증 대상)
 - `spec-plan-guide.md` -- SPEC-PLAN.md 작성 가이드 (TASKS-VERIFY 참조)
 - `execute-loop-guide.md` -- EXECUTE-LOOP 검증 루프 (L1-L3b)
 - `~/.opal/skills/opal-pilot-project-dev/references/verification-loop-guide.md` -- oppd 검증 루프 원본

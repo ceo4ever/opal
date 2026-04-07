@@ -7,10 +7,10 @@
 
 ## 1. SPEC-PLAN.md 개요
 
-SPEC-PLAN.md는 spec.md의 WHAT를 HOW로 변환하는 **기능 수준 아키텍처 설계** 문서이다. 컴포넌트 구성, 데이터 모델, API 설계, 기술 결정을 수립하여 태스크 분해(op-sdd-tasks)의 입력이 된다.
+SPEC-PLAN.md는 SPEC.md의 WHAT를 HOW로 변환하는 **기능 수준 아키텍처 설계** 문서이다. 컴포넌트 구성, 데이터 모델, API 설계, 기술 결정을 수립하여 태스크 분해(op-sdd-tasks)의 입력이 된다.
 
 **핵심 원칙**:
-- spec.md(WHAT)를 기반으로 설계(HOW)를 수립한다
+- SPEC.md(WHAT)를 기반으로 설계(HOW)를 수립한다
 - 기존 아키텍처를 존중하고, 신규 컴포넌트는 기존 패턴에 맞춘다
 - 모든 기술 결정에 근거와 대안을 기록한다
 - SPEC-PLAN.md만 보고 태스크 분해에 들어갈 수 있어야 한다
@@ -41,7 +41,7 @@ SPEC-PLAN.md는 아래 7개 섹션으로 구성된다.
 ```markdown
 # SPEC-PLAN: {기능명}
 
-> 버전: 1.0 | 작성일: YYYY-MM-DD | spec.md v{X.Y} 기준
+> 버전: 1.0 | 작성일: YYYY-MM-DD | SPEC.md v{X.Y} 기준
 
 ## 1. 아키텍처 설계
 ## 2. 데이터 모델
@@ -58,7 +58,7 @@ SPEC-PLAN.md는 아래 7개 섹션으로 구성된다.
 
 ### 4-1. 아키텍처 설계
 
-spec.md의 요구사항을 아키텍처 컴포넌트에 매핑한다.
+SPEC.md의 요구사항을 아키텍처 컴포넌트에 매핑한다.
 
 **포함 내용**:
 
@@ -90,7 +90,7 @@ Controller → Service → Repository → Model
 
 ### 4-2. 데이터 모델
 
-spec.md의 도메인 모델과 요구사항을 기반으로 데이터 모델을 설계한다.
+SPEC.md의 도메인 모델과 요구사항을 기반으로 데이터 모델을 설계한다.
 
 **포함 내용**:
 
@@ -121,7 +121,7 @@ spec.md의 도메인 모델과 요구사항을 기반으로 데이터 모델을 
 
 ### 4-3. API 설계
 
-spec.md의 FR과 AC를 기반으로 API를 설계한다.
+SPEC.md의 FR과 AC를 기반으로 API를 설계한다.
 
 **포함 내용**:
 
@@ -141,7 +141,7 @@ spec.md의 FR과 AC를 기반으로 API를 설계한다.
 
 **작성 기준**:
 - 프로젝트의 기존 API 패턴(인증 방식, 응답 형식, 에러 코드)을 따른다
-- spec.md의 AC와 직접 대응되는 엔드포인트가 있어야 한다
+- SPEC.md의 AC와 직접 대응되는 엔드포인트가 있어야 한다
 - Edge Cases(EC)에 대한 에러 응답이 포함되어야 한다
 
 ### 4-4. 기술 결정
@@ -175,7 +175,7 @@ spec.md의 FR과 AC를 기반으로 API를 설계한다.
 
 ### 4-5. 보안 고려사항
 
-spec.md의 Constraints와 NFR에서 보안 관련 요구사항을 추출하여 설계에 반영한다.
+SPEC.md의 Constraints와 NFR에서 보안 관련 요구사항을 추출하여 설계에 반영한다.
 
 **포함 내용**:
 
@@ -210,23 +210,23 @@ spec.md의 Constraints와 NFR에서 보안 관련 요구사항을 추출하여 �
 | 비즈니스 | 계정 잠금 | 잠금 해제 시간 안내 | 429 |
 | 시스템 | DB 연결 실패 | 재시도 + 로깅 | 503 |
 
-2. **실패 시나리오**: test-scenarios.md의 부정 시나리오 기반 주요 실패 경로
+2. **실패 시나리오**: TEST-SCENARIOS.md의 부정 시나리오 기반 주요 실패 경로
 
 3. **복구 전략**: 재시도, 폴백, 서킷브레이커 등
 
 ### 4-7. 제약 반영
 
-spec.md의 Constraints 섹션의 모든 항목이 설계에 반영되었는지 확인한다.
+SPEC.md의 Constraints 섹션의 모든 항목이 설계에 반영되었는지 확인한다.
 
 **기록 형식**:
 
-| # | 제약 조건 (spec.md) | 설계 반영 위치 | 반영 방식 |
+| # | 제약 조건 (SPEC.md) | 설계 반영 위치 | 반영 방식 |
 |---|-------------------|--------------|----------|
 | 1 | 기존 PostgreSQL 사용 | 2. 데이터 모델 | 기존 DB에 테이블 추가 |
 | 2 | Next.js API Routes | 3. API 설계 | API Routes 패턴 사용 |
 
 **작성 기준**:
-- spec.md Constraints를 하나씩 읽고 매핑한다
+- SPEC.md Constraints를 하나씩 읽고 매핑한다
 - 반영되지 않은 제약이 있으면 설계를 수정한다
 - 매핑이 불가능한 제약은 사유를 기록한다
 
@@ -236,9 +236,9 @@ spec.md의 Constraints 섹션의 모든 항목이 설계에 반영되었는지 �
 
 SPEC-PLAN.md 작성 전에 반드시 아래를 수행한다:
 
-1. **spec.md**: 요구사항(FR/NFR), 수용 기준(AC), 제약 조건(Constraints) 파악
-2. **test-scenarios.md**: 테스트 시나리오와 AC 매핑 파악
-3. **verify.md**: SPEC-VERIFY에서 발견된 경고/이슈 확인
+1. **SPEC.md**: 요구사항(FR/NFR), 수용 기준(AC), 제약 조건(Constraints) 파악
+2. **TEST-SCENARIOS.md**: 테스트 시나리오와 AC 매핑 파악
+3. **VERIFY.md**: SPEC-VERIFY에서 발견된 경고/이슈 확인
 4. **docs/ARCHITECTURE.md**: 기존 시스템 구조, 레이어, 컴포넌트 관계
 5. **docs/PROJECT.md**: 기술 스택, 프로젝트 구조
 6. **docs/CONVENTIONS.md**: 네이밍 규칙, 코드 패턴, 디렉토리 구조
@@ -252,9 +252,9 @@ SPEC-PLAN.md 작성 전에 반드시 아래를 수행한다:
 
 | # | 검증 항목 | 기준 |
 |---|----------|------|
-| 1 | FR -> 컴포넌트 매핑 | spec.md의 모든 FR이 아키텍처 컴포넌트에 매핑 |
-| 2 | Constraints 반영 | spec.md의 모든 제약이 "7. 제약 반영"에 매핑 |
-| 3 | 부정 시나리오 | test-scenarios.md의 부정 시나리오가 에러 핸들링에 반영 |
+| 1 | FR -> 컴포넌트 매핑 | SPEC.md의 모든 FR이 아키텍처 컴포넌트에 매핑 |
+| 2 | Constraints 반영 | SPEC.md의 모든 제약이 "7. 제약 반영"에 매핑 |
+| 3 | 부정 시나리오 | TEST-SCENARIOS.md의 부정 시나리오가 에러 핸들링에 반영 |
 | 4 | 아키텍처 정합 | 기존 ARCHITECTURE.md와 충돌 없음 |
 | 5 | 컨벤션 준수 | CONVENTIONS.md 패턴 준수 |
 | 6 | 기술 결정 근거 | 모든 TD-N에 근거 + 대안 기록 |
@@ -269,6 +269,6 @@ SPEC-PLAN.md 작성 전에 반드시 아래를 수행한다:
 ## 관련 문서
 
 - `op-sdd-plan/SKILL.md` -- SPEC-PLAN 작성 스킬 프로세스
-- `spec-guide.md` -- spec.md 작성 가이드 (입력 문서)
+- `spec-guide.md` -- SPEC.md 작성 가이드 (입력 문서)
 - `verify-guide.md` -- 검증 상세 (TASKS-VERIFY에서 설계 반영 간접 검증)
 - `execute-loop-guide.md` -- EXECUTE-LOOP에서 SPEC-PLAN.md 활용 방법

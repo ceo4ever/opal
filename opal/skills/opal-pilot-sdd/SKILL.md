@@ -2,7 +2,7 @@
 name: opal-pilot-sdd
 description: |
   **SDD(Spec-Driven Development) 오케스트레이터**. 명세 기반 개발을 7단계 파이프라인으로 수행한다.
-  기능 단위로 spec.md(SSOT) 작성 → 검증 → 설계 → 태스크 분해 → 검증 → 반복 실행 → 완료.
+  기능 단위로 SPEC.md(SSOT) 작성 → 검증 → 설계 → 태스크 분해 → 검증 → 반복 실행 → 완료.
   반드시 이 스킬을 사용해야 하는 상황: "opal-pilot-sdd", "opsdd".
   단일 태스크 개발은 opds/opd를, 범용 작업은 opp를 사용한다.
 triggers:
@@ -15,7 +15,7 @@ version: 1.0.0
 
 # opal-pilot-sdd (SDD 오케스트레이터)
 
-명세(spec.md)를 SSOT로 삼아 검증 → 설계 → 태스크 분해 → 반복 실행까지 7단계 파이프라인으로 관리한다.
+명세(SPEC.md)를 SSOT로 삼아 검증 → 설계 → 태스크 분해 → 반복 실행까지 7단계 파이프라인으로 관리한다.
 EXECUTE-LOOP에서 기존 opal-pilot(opds/opd/opp)을 재활용하며, PM이 전체를 조율한다.
 
 ## Harness
@@ -33,10 +33,10 @@ EXECUTE-LOOP에서 기존 opal-pilot(opds/opd/opp)을 재활용하며, PM이 전
 
 ```
 TASK (하네스 §4 -- PM 직접)
-  → Phase 1: SPEC ──────── spec.md 작성 (WHAT/WHY)
-  → Phase 2: SPEC-VERIFY ── 3계층 검증 + test-scenarios.md 도출
+  → Phase 1: SPEC ──────── SPEC.md 작성 (WHAT/WHY)
+  → Phase 2: SPEC-VERIFY ── 3계층 검증 + TEST-SCENARIOS.md 도출
   → Phase 3: SPEC-PLAN ──── 아키텍처/설계 수립 (HOW)
-  → Phase 4: TASKS ──────── 태스크 분해 + tasks.md (추적 매트릭스)
+  → Phase 4: TASKS ──────── 태스크 분해 + TASKS.md (추적 매트릭스)
   → Phase 5: TASKS-VERIFY ── 커버리지/의존관계 검증
   → Phase 6: EXECUTE-LOOP ── 태스크별 반복 실행 (기존 opds/opd/opp 재활용)
   → Phase 7: DONE ────────── 최종 검증 + DONE.md
@@ -61,11 +61,11 @@ TASK (하네스 §4 -- PM 직접)
 
 ```
 specs/{NNN}-{feature}/            ← SDD 세계
-├── spec.md                       # Phase 1
-├── verify.md                     # Phase 2, 5 (누적 저널)
-├── tests/test-scenarios.md       # Phase 2
+├── SPEC.md                       # Phase 1
+├── VERIFY.md                     # Phase 2, 5 (누적 저널)
+├── tests/TEST-SCENARIOS.md       # Phase 2
 ├── SPEC-PLAN.md                  # Phase 3
-├── tasks.md                      # Phase 4 (추적 매트릭스 + 상태)
+├── TASKS.md                      # Phase 4 (추적 매트릭스 + 상태)
 └── tasks/T{N}-{name}/            # Phase 6 (태스크별 실행)
 
 tasks/{NNN}-opsdd-{feature}/      ← OPAL 세계
@@ -93,7 +93,7 @@ TASK.md 작성 후 specs/{NNN}-{feature}/ 디렉토리를 생성한다.
 
 ## Phase 1: SPEC
 
-워커를 디스패치하여 spec.md를 작성한다.
+워커를 디스패치하여 SPEC.md를 작성한다.
 
 **디스패치 프롬프트**:
 ```
@@ -102,20 +102,20 @@ TASK.md 작성 후 specs/{NNN}-{feature}/ 디렉토리를 생성한다.
 **태스크 폴더**: {tasks/{NNN}-opsdd-{feature}/}
 **spec_path**: {specs/{NNN}-{feature}/}
 **프로젝트 컨텍스트**: {docs/PROJECT.md + 매칭 참조 문서}
-**하네스 Guards**: 구현 금지. spec.md 외 파일 생성 금지.
+**하네스 Guards**: 구현 금지. SPEC.md 외 파일 생성 금지.
 **참조 문서**: {관련 문서 경로}
 ```
 **에이전트**: opal-task-agent | **model**: advanced
 
 **Gate**: PM Gate → 사용자 Gate (QA Gate 없음 -- 다음 Phase가 전문 검증)
 
-> spec.md 상세 구조: `references/spec-guide.md` 참조
+> SPEC.md 상세 구조: `references/spec-guide.md` 참조
 
 ---
 
 ## Phase 2: SPEC-VERIFY
 
-워커를 디스패치하여 spec.md 3계층 검증 + test-scenarios.md를 도출한다.
+워커를 디스패치하여 SPEC.md 3계층 검증 + TEST-SCENARIOS.md를 도출한다.
 
 **디스패치 프롬프트**:
 ```
@@ -124,9 +124,9 @@ TASK.md 작성 후 specs/{NNN}-{feature}/ 디렉토리를 생성한다.
 **mode**: spec
 **태스크 폴더**: {tasks/{NNN}-opsdd-{feature}/}
 **spec_path**: {specs/{NNN}-{feature}/}
-**이전 산출물**: {spec.md 경로}
+**이전 산출물**: {SPEC.md 경로}
 **프로젝트 컨텍스트**: {docs/PROJECT.md + 매칭 참조 문서}
-**하네스 Guards**: spec.md 직접 수정 금지. 판정과 피드백만 제공.
+**하네스 Guards**: SPEC.md 직접 수정 금지. 판정과 피드백만 제공.
 **참조 문서**: {관련 문서 경로}
 ```
 **에이전트**: opal-task-agent | **model**: advanced
@@ -135,13 +135,13 @@ TASK.md 작성 후 specs/{NNN}-{feature}/ 디렉토리를 생성한다.
 
 검증 수행자(op-sdd-verify) ≠ 검증 리뷰어(opal-task-qa-agent) 원칙 적용.
 
-**산출물**: verify.md (SPEC 검증 섹션), test-scenarios.md
+**산출물**: VERIFY.md (SPEC 검증 섹션), TEST-SCENARIOS.md
 
 > 검증 상세: `references/verify-guide.md` 참조
 
 ### SPEC-VERIFY Fail 처리
 
-Fail 시 피드백을 기반으로 Phase 1(SPEC)을 재실행한다. spec.md 갱신 후 재검증.
+Fail 시 피드백을 기반으로 Phase 1(SPEC)을 재실행한다. SPEC.md 갱신 후 재검증.
 
 ---
 
@@ -155,7 +155,7 @@ Fail 시 피드백을 기반으로 Phase 1(SPEC)을 재실행한다. spec.md 갱
 **스킬 경로**: {op-sdd-plan/SKILL.md 탐색 경로}
 **태스크 폴더**: {tasks/{NNN}-opsdd-{feature}/}
 **spec_path**: {specs/{NNN}-{feature}/}
-**이전 산출물**: {spec.md 경로}, {test-scenarios.md 경로}
+**이전 산출물**: {SPEC.md 경로}, {TEST-SCENARIOS.md 경로}
 **프로젝트 컨텍스트**: {docs/PROJECT.md + 매칭 참조 문서}
 **하네스 Guards**: 구현 금지. SPEC-PLAN.md 외 파일 생성 금지.
 **참조 문서**: {관련 문서 경로}
@@ -170,7 +170,7 @@ Fail 시 피드백을 기반으로 Phase 1(SPEC)을 재실행한다. spec.md 갱
 
 ## Phase 4: TASKS
 
-워커를 디스패치하여 tasks.md(태스크 분해 + 추적 매트릭스)를 작성한다.
+워커를 디스패치하여 TASKS.md(태스크 분해 + 추적 매트릭스)를 작성한다.
 
 **디스패치 프롬프트**:
 ```
@@ -178,9 +178,9 @@ Fail 시 피드백을 기반으로 Phase 1(SPEC)을 재실행한다. spec.md 갱
 **스킬 경로**: {op-sdd-tasks/SKILL.md 탐색 경로}
 **태스크 폴더**: {tasks/{NNN}-opsdd-{feature}/}
 **spec_path**: {specs/{NNN}-{feature}/}
-**이전 산출물**: {spec.md 경로}, {SPEC-PLAN.md 경로}, {test-scenarios.md 경로}
+**이전 산출물**: {SPEC.md 경로}, {SPEC-PLAN.md 경로}, {TEST-SCENARIOS.md 경로}
 **프로젝트 컨텍스트**: {docs/PROJECT.md + 매칭 참조 문서}
-**하네스 Guards**: 구현 금지. tasks.md 외 파일 생성 금지.
+**하네스 Guards**: 구현 금지. TASKS.md 외 파일 생성 금지.
 **참조 문서**: {관련 문서 경로}
 ```
 **에이전트**: opal-task-agent | **model**: advanced
@@ -191,7 +191,7 @@ Fail 시 피드백을 기반으로 Phase 1(SPEC)을 재실행한다. spec.md 갱
 
 ## Phase 5: TASKS-VERIFY
 
-워커를 디스패치하여 tasks.md의 커버리지/의존관계를 검증한다.
+워커를 디스패치하여 TASKS.md의 커버리지/의존관계를 검증한다.
 
 **디스패치 프롬프트**:
 ```
@@ -200,32 +200,32 @@ Fail 시 피드백을 기반으로 Phase 1(SPEC)을 재실행한다. spec.md 갱
 **mode**: tasks
 **태스크 폴더**: {tasks/{NNN}-opsdd-{feature}/}
 **spec_path**: {specs/{NNN}-{feature}/}
-**이전 산출물**: {spec.md}, {SPEC-PLAN.md}, {tasks.md}, {test-scenarios.md}
+**이전 산출물**: {SPEC.md}, {SPEC-PLAN.md}, {TASKS.md}, {TEST-SCENARIOS.md}
 **프로젝트 컨텍스트**: {docs/PROJECT.md + 매칭 참조 문서}
-**하네스 Guards**: tasks.md 직접 수정 금지. 판정과 피드백만 제공.
+**하네스 Guards**: TASKS.md 직접 수정 금지. 판정과 피드백만 제공.
 **참조 문서**: {관련 문서 경로}
 ```
 **에이전트**: opal-task-agent | **model**: standard
 
 **Gate**: QA Gate (op-task-qa, opal-task-qa-agent) → PM Gate → 사용자 Gate
 
-**산출물**: verify.md (TASKS 검증 섹션 추가 -- 누적)
+**산출물**: VERIFY.md (TASKS 검증 섹션 추가 -- 누적)
 
 > 검증 상세: `references/verify-guide.md` 참조
 
 ### TASKS-VERIFY Fail 처리
 
-Fail 시 피드백을 기반으로 Phase 4(TASKS)를 재실행한다. tasks.md 갱신 후 재검증.
+Fail 시 피드백을 기반으로 Phase 4(TASKS)를 재실행한다. TASKS.md 갱신 후 재검증.
 
 ---
 
 ## Phase 6: EXECUTE-LOOP
 
-tasks.md의 의존 순서대로 태스크를 반복 실행한다. 각 태스크는 기존 opal-pilot 오케스트레이터에 위임한다.
+TASKS.md의 의존 순서대로 태스크를 반복 실행한다. 각 태스크는 기존 opal-pilot 오케스트레이터에 위임한다.
 
 ### 스킬 결정 기준
 
-| tasks.md 예상 규모 | 위임 스킬 |
+| TASKS.md 예상 규모 | 위임 스킬 |
 |-------------------|----------|
 | Small / Standard | opds (3단계) |
 | Large | opd (4단계) |
@@ -234,9 +234,9 @@ tasks.md의 의존 순서대로 태스크를 반복 실행한다. 각 태스크�
 ### 디스패치 시 SDD 컨텍스트 주입
 
 기존 오케스트레이터 디스패치에 다음을 추가 주입한다:
-- spec.md 경로 + 해당 태스크의 AC 매핑
+- SPEC.md 경로 + 해당 태스크의 AC 매핑
 - SPEC-PLAN.md 경로 (설계 참조)
-- test-scenarios.md의 해당 TS 목록
+- TEST-SCENARIOS.md의 해당 TS 목록
 - "테스트 먼저 작성 후 구현" TDD 지시
 - task_folder: `specs/{NNN}-{feature}/tasks/T{N}-{name}/`
 
@@ -249,8 +249,8 @@ tasks.md의 의존 순서대로 태스크를 반복 실행한다. 각 태스크�
 ### 상태 갱신
 
 태스크 완료마다 갱신:
-- tasks.md: 해당 태스크 상태 (⬜→🔄→✅/❌)
-- test-scenarios.md: 해당 TS 결과
+- TASKS.md: 해당 태스크 상태 (⬜→🔄→✅/❌)
+- TEST-SCENARIOS.md: 해당 TS 결과
 - STATE.md: 진행 현황 (T{N}/{M})
 
 ### Gate
@@ -266,8 +266,8 @@ tasks.md의 의존 순서대로 태스크를 반복 실행한다. 각 태스크�
 
 모든 태스크 완료 후 최종 검증을 수행한다.
 
-1. 전체 TS Green 확인 (test-scenarios.md)
-2. verify.md에 DONE 검증 섹션 추가
+1. 전체 TS Green 확인 (TEST-SCENARIOS.md)
+2. VERIFY.md에 DONE 검증 섹션 추가
 3. QA Gate (op-dev-qa, opal-task-qa-agent)
 4. PM Gate → 사용자 Gate
 5. DONE.md 생성
@@ -280,7 +280,7 @@ tasks.md의 의존 순서대로 태스크를 반복 실행한다. 각 태스크�
 |------|------|
 | 모드 | SDD Task |
 | 단계 목록 | TASK / SPEC / SPEC-VERIFY / SPEC-PLAN / TASKS / TASKS-VERIFY / EXECUTE-LOOP / DONE |
-| 산출물 목록 | TASK.md, spec.md, verify.md(SPEC), test-scenarios.md, SPEC-PLAN.md, tasks.md, verify.md(TASKS), EXECUTE-LOOP(T{N}/{M}), DONE.md |
+| 산출물 목록 | TASK.md, SPEC.md, VERIFY.md(SPEC), TEST-SCENARIOS.md, SPEC-PLAN.md, TASKS.md, VERIFY.md(TASKS), EXECUTE-LOOP(T{N}/{M}), DONE.md |
 | SDD 경로 | spec_path: specs/{NNN}-{feature}/, task_path: tasks/{NNN}-opsdd-{feature}/ |
 
 ### STATE.md 구조
@@ -300,12 +300,12 @@ tasks.md의 의존 순서대로 태스크를 반복 실행한다. 각 태스크�
 | 산출물 | 상태 |
 |--------|------|
 | TASK.md | {⬜ / ✅} |
-| spec.md | {⬜ / ✅} |
-| verify.md (SPEC) | {⬜ / ✅} |
-| test-scenarios.md | {⬜ / ✅} |
+| SPEC.md | {⬜ / ✅} |
+| VERIFY.md (SPEC) | {⬜ / ✅} |
+| TEST-SCENARIOS.md | {⬜ / ✅} |
 | SPEC-PLAN.md | {⬜ / ✅} |
-| tasks.md | {⬜ / ✅} |
-| verify.md (TASKS) | {⬜ / ✅} |
+| TASKS.md | {⬜ / ✅} |
+| VERIFY.md (TASKS) | {⬜ / ✅} |
 | EXECUTE-LOOP | {⬜ / T{N}/{M}} |
 | DONE.md | {⬜ / ✅} |
 
@@ -360,10 +360,10 @@ opal-harness-agentic.md §5 적용:
 ### opsdd 고유 에스컬레이션 조건
 
 opal-harness-agentic.md §6 공통 기준에 추가:
-- spec.md의 Open Questions가 해소되지 않는 경우
+- SPEC.md의 Open Questions가 해소되지 않는 경우
 - AC 커버리지 갭이 발생하고 자동 해소 불가한 경우
 - 태스크 간 의존관계 순환이 감지된 경우
-- spec.md 갱신이 Goals/Non-goals 변경을 수반하는 경우 (스코프 변경)
+- SPEC.md 갱신이 Goals/Non-goals 변경을 수반하는 경우 (스코프 변경)
 
 ### AGENTIC-LOG.md 카테고리
 
@@ -373,7 +373,7 @@ opal-harness-agentic.md §6 공통 기준에 추가:
 | ERROR | 검증 실패, 회귀 감지 |
 | FIX | 워커 재지시 |
 | DECISION | 스킬 선택(opds/opd), 병렬 그룹핑 |
-| IMPROVE | spec.md 갱신 반영 |
+| IMPROVE | SPEC.md 갱신 반영 |
 | ESCALATION | 사용자 에스컬레이션 |
 
 ---

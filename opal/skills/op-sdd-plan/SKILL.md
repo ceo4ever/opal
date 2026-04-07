@@ -1,9 +1,9 @@
 ---
 name: op-sdd-plan
 description: |
-  **SDD 아키텍처 설계 스킬**. spec.md + test-scenarios.md를 기반으로 기능 수준의 아키텍처 설계(SPEC-PLAN.md)를 작성한다.
+  **SDD 아키텍처 설계 스킬**. SPEC.md + TEST-SCENARIOS.md를 기반으로 기능 수준의 아키텍처 설계(SPEC-PLAN.md)를 작성한다.
   반드시 이 스킬을 사용해야 하는 상황: 오케스트레이터(opal-pilot-sdd)가 SPEC-PLAN Phase를 디스패치할 때.
-  필수 입력: spec.md, test-scenarios.md. 보장 출력: SPEC-PLAN.md.
+  필수 입력: SPEC.md, TEST-SCENARIOS.md. 보장 출력: SPEC-PLAN.md.
 agent: opal-task-agent
 model: advanced
 ---
@@ -28,8 +28,8 @@ model: advanced
 
 | 항목 | 설명 |
 |------|------|
-| **필수 입력** | spec.md, test-scenarios.md |
-| **선택 입력** | verify.md (SPEC-VERIFY 결과 — 경고/이슈 반영용) |
+| **필수 입력** | SPEC.md, TEST-SCENARIOS.md |
+| **선택 입력** | VERIFY.md (SPEC-VERIFY 결과 — 경고/이슈 반영용) |
 | **프로젝트 컨텍스트** | docs/ARCHITECTURE.md, docs/PROJECT.md, docs/CONVENTIONS.md, 코드베이스 |
 | **보장 출력** | specs/{NNN}-{feature}/SPEC-PLAN.md |
 
@@ -53,9 +53,9 @@ model: advanced
 
 ### Step 1: 입력 로딩
 
-1. spec.md를 Read한다 -- 요구사항(FR/NFR), 수용 기준(AC), 제약 조건(Constraints)을 파악한다.
-2. test-scenarios.md를 Read한다 -- 테스트 시나리오와 AC 매핑을 파악한다.
-3. verify.md가 존재하면 Read한다 -- SPEC-VERIFY에서 발견된 경고/이슈를 확인하여 설계에 반영한다.
+1. SPEC.md를 Read한다 -- 요구사항(FR/NFR), 수용 기준(AC), 제약 조건(Constraints)을 파악한다.
+2. TEST-SCENARIOS.md를 Read한다 -- 테스트 시나리오와 AC 매핑을 파악한다.
+3. VERIFY.md가 존재하면 Read한다 -- SPEC-VERIFY에서 발견된 경고/이슈를 확인하여 설계에 반영한다.
 
 ### Step 2: 기존 아키텍처 분석
 
@@ -73,16 +73,16 @@ model: advanced
 
 ### Step 3: 컴포넌트 설계
 
-spec.md의 요구사항을 아키텍처 컴포넌트에 매핑한다.
+SPEC.md의 요구사항을 아키텍처 컴포넌트에 매핑한다.
 
-1. **신규 컴포넌트 식별**: spec.md의 FR을 기존 아키텍처에 매핑하여 신규/수정 컴포넌트를 결정한다.
+1. **신규 컴포넌트 식별**: SPEC.md의 FR을 기존 아키텍처에 매핑하여 신규/수정 컴포넌트를 결정한다.
 2. **의존관계 정의**: 컴포넌트 간 의존성 방향을 정의한다 (하위 → 상위).
 3. **인터페이스 정의**: 컴포넌트 간 통신 인터페이스를 정의한다.
 4. **기존 패턴 준수 확인**: 신규 컴포넌트가 기존 아키텍처 패턴(레이어링, 네이밍, 디렉토리 구조)을 따르는지 확인한다.
 
 ### Step 4: 데이터 모델 설계
 
-spec.md의 도메인 모델과 요구사항을 기반으로 데이터 모델을 설계한다.
+SPEC.md의 도메인 모델과 요구사항을 기반으로 데이터 모델을 설계한다.
 
 1. **엔티티 정의**: 핵심 엔티티, 속성, 타입을 정의한다.
 2. **관계 설계**: 엔티티 간 관계(1:1, 1:N, N:M)를 정의한다.
@@ -93,7 +93,7 @@ spec.md의 도메인 모델과 요구사항을 기반으로 데이터 모델을 
 
 ### Step 5: API 설계
 
-spec.md의 FR과 AC를 기반으로 API를 설계한다.
+SPEC.md의 FR과 AC를 기반으로 API를 설계한다.
 
 1. **엔드포인트 목록**: HTTP 메서드, 경로, 설명을 정의한다.
 2. **요청/응답 스키마**: 각 엔드포인트의 입출력 타입을 정의한다.
@@ -121,7 +121,7 @@ spec.md의 FR과 AC를 기반으로 API를 설계한다.
 
 ### Step 7: 보안 고려사항
 
-spec.md의 Constraints와 NFR에서 보안 관련 요구사항을 추출하여 설계에 반영한다.
+SPEC.md의 Constraints와 NFR에서 보안 관련 요구사항을 추출하여 설계에 반영한다.
 
 1. **인증/인가**: 어떤 리소스에 어떤 수준의 접근 제어가 필요한지 정의한다.
 2. **데이터 보호**: 민감 데이터 식별 및 보호 전략(암호화, 마스킹 등)을 정의한다.
@@ -133,15 +133,15 @@ spec.md의 Constraints와 NFR에서 보안 관련 요구사항을 추출하여 �
 기능 전체에 대한 에러 핸들링 전략을 수립한다.
 
 1. **예외 처리 전략**: 에러 분류(비즈니스 에러, 시스템 에러, 외부 연동 에러)와 처리 방식을 정의한다.
-2. **실패 시나리오**: test-scenarios.md의 부정 시나리오를 기반으로 주요 실패 경로를 식별한다.
+2. **실패 시나리오**: TEST-SCENARIOS.md의 부정 시나리오를 기반으로 주요 실패 경로를 식별한다.
 3. **복구 전략**: 실패 시 복구/재시도/폴백 방안을 정의한다.
 4. **로깅/모니터링**: 에러 추적에 필요한 로깅 포인트를 식별한다.
 
 ### Step 9: 제약 반영 확인
 
-spec.md의 Constraints 섹션의 모든 항목이 설계에 반영되었는지 최종 확인한다.
+SPEC.md의 Constraints 섹션의 모든 항목이 설계에 반영되었는지 최종 확인한다.
 
-1. spec.md Constraints를 하나씩 읽는다.
+1. SPEC.md Constraints를 하나씩 읽는다.
 2. 각 제약 조건이 설계의 어느 부분에서 반영되었는지 매핑한다.
 3. 반영되지 않은 제약이 있으면 설계를 수정한다.
 4. 매핑 결과를 "7. 제약 반영" 섹션에 기록한다.
@@ -149,7 +149,7 @@ spec.md의 Constraints 섹션의 모든 항목이 설계에 반영되었는지 �
 제약 반영 기록 형식:
 
 ```markdown
-| # | 제약 조건 (spec.md) | 설계 반영 위치 | 반영 방식 |
+| # | 제약 조건 (SPEC.md) | 설계 반영 위치 | 반영 방식 |
 |---|-------------------|--------------|----------|
 ```
 
@@ -171,7 +171,7 @@ spec.md의 Constraints 섹션의 모든 항목이 설계에 반영되었는지 �
 ```markdown
 # SPEC-PLAN: {기능명}
 
-> 버전: 1.0 | 작성일: YYYY-MM-DD | spec.md v{X.Y} 기준
+> 버전: 1.0 | 작성일: YYYY-MM-DD | SPEC.md v{X.Y} 기준
 
 ## 1. 아키텍처 설계
 
@@ -276,7 +276,7 @@ spec.md의 Constraints 섹션의 모든 항목이 설계에 반영되었는지 �
 
 ## 7. 제약 반영
 
-| # | 제약 조건 (spec.md) | 설계 반영 위치 | 반영 방식 |
+| # | 제약 조건 (SPEC.md) | 설계 반영 위치 | 반영 방식 |
 |---|-------------------|--------------|----------|
 ```
 
@@ -295,9 +295,9 @@ spec.md의 Constraints 섹션의 모든 항목이 설계에 반영되었는지 �
 
 ## 품질 체크리스트
 
-- [ ] spec.md의 모든 FR이 아키텍처 컴포넌트에 매핑되었는가?
-- [ ] spec.md의 모든 Constraints가 "7. 제약 반영"에 매핑되었는가?
-- [ ] test-scenarios.md의 부정 시나리오가 "6. 에러 핸들링"에 반영되었는가?
+- [ ] SPEC.md의 모든 FR이 아키텍처 컴포넌트에 매핑되었는가?
+- [ ] SPEC.md의 모든 Constraints가 "7. 제약 반영"에 매핑되었는가?
+- [ ] TEST-SCENARIOS.md의 부정 시나리오가 "6. 에러 핸들링"에 반영되었는가?
 - [ ] 기존 ARCHITECTURE.md와의 정합성이 확인되었는가?
 - [ ] 기존 CONVENTIONS.md의 패턴을 따르는가?
 - [ ] 모든 기술 결정(TD-N)에 근거와 대안이 기록되었는가?
