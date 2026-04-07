@@ -16,7 +16,7 @@ version: 2.0.0
 # opal-pilot-sdd (SDD 오케스트레이터)
 
 명세(SPEC.md)를 SSOT로 삼아 검증 → 설계 → ACT 분해 → 반복 실행까지 5단계 파이프라인으로 관리한다.
-EXECUTE-LOOP에서 op-dev-plan + op-dev-execute를 직접 디스패치하며, PM이 전체를 조율한다.
+EXECUTE-LOOP에서 `opal-sdd-action-agent`에 단일 디스패치하며, PM이 전체를 조율한다.
 
 ## Harness
 
@@ -44,9 +44,8 @@ HOW 단계
 ─────────────────────────────────────────────────────────
 Phase 3: DESIGN    워커       op-sdd-plan → SPEC-PLAN.md (아키텍처 + ACT 분해)
                               PM Gate → 사용자 Gate
-Phase 4: EXECUTE   ACT 루프   각 ACT 자율 실행
-                              op-dev-plan → PM Gate
-                              → op-dev-execute → TEST.md → DONE.md
+Phase 4: EXECUTE   ACT 루프   사용자 Gate → opal-sdd-action-agent 디스패치
+                              → 결과 수신 → DONE.md
 Phase 5: DONE      PM 직접    전체 ACT DONE + 전체 TS Green 확인
                               → 사용자 Gate
 ```
@@ -116,7 +115,9 @@ harness "4. TASK 공통 프로세스" 참조. 다음 단계명: SPEC.
 ```
 **에이전트**: opal-task-agent | **model**: advanced
 
-**Gate**: PM Gate → 사용자 Gate (QA Gate 없음 — 다음 Phase에서 PM이 직접 검증)
+**Gate**:
+  → **State Gate** (하네스 §3 참조 — STATE.md 갱신 확인)
+  → **PM Gate** → 사용자 Gate (QA Gate 없음 — 다음 Phase에서 PM이 직접 검증)
 
 > SPEC.md 상세 구조: `references/spec-guide.md` 참조
 
@@ -167,7 +168,9 @@ PM이 직접 SPEC.md를 검증하고 TEST-SCENARIOS.md를 작성한다. **워커
 ```
 **에이전트**: opal-task-agent | **model**: advanced
 
-**Gate**: PM Gate → 사용자 Gate (QA Gate 없음 — 설계 + ACT 분해는 PM 판단)
+**Gate**:
+  → **State Gate** (하네스 §3 참조 — STATE.md 갱신 확인)
+  → **PM Gate** → 사용자 Gate (QA Gate 없음 — 설계 + ACT 분해는 PM 판단)
 
 > SPEC-PLAN.md 상세 구조: `references/spec-plan-guide.md` 참조
 
@@ -175,19 +178,19 @@ PM이 직접 SPEC.md를 검증하고 TEST-SCENARIOS.md를 작성한다. **워커
 
 ## Phase 4: EXECUTE-LOOP
 
-SPEC-PLAN.md의 의존 순서대로 ACT를 반복 실행한다. 각 ACT는 op-dev-plan + op-dev-execute 워커를 직접 디스패치한다.
+SPEC-PLAN.md의 의존 순서대로 ACT를 반복 실행한다. 각 ACT는 `opal-sdd-action-agent`에 단일 디스패치하여 자율 완주한다.
 
 ### ACT 실행 순서
 
-1. **op-dev-plan 디스패치**: PLAN.md 작성
-2. **PM Gate**: PLAN.md 검토
-3. **op-dev-execute 디스패치**: 구현 + 테스트 통합 수행 → TEST.md 작성
-4. **TEST.md 확인**: Pass → DONE.md 작성 | Fail → 재시도 루프
+1. **사용자 Gate**: ACT 시작 전 승인 (interactive 모드)
+2. **opal-sdd-action-agent 디스패치**: ACT 폴더 생성 + PLAN + EXECUTE + VERIFY 루프 자율 완주
+3. **결과 수신**: status 확인
+4. **Pass/Fail 판정**: Pass → DONE.md 작성 | Fail → 재시도 루프
 5. **STATE.md 갱신**: ACT 상태 + TS 상태 갱신
 
 ### 재시도 루프
 
-TEST Fail 시 PLAN.md를 재사용하고 op-dev-execute만 재디스패치한다.
+`status: failed` 반환 시 오류 컨텍스트를 주입하여 opal-sdd-action-agent를 재디스패치한다.
 하네스 §1 자동 루핑 제약 준수 (unit/integration 최대 3회).
 
 ### 병렬 실행
@@ -198,13 +201,15 @@ TEST Fail 시 PLAN.md를 재사용하고 op-dev-execute만 재디스패치한다
 
 ### 상태 갱신
 
-ACT 완료마다 STATE.md 갱신:
+ACT 완료마다 STATE.md 갱신 (하네스 §3 State Gate 기준 적용):
 - ACT 상태: ⬜ 대기 → 🔄 진행 중 → ✅/❌
 - TS 상태: Red → Green/Fail
 
+**State Gate**: ACT 완료 후 STATE.md 갱신 → **State Gate** (하네스 §3 참조 — STATE.md 갱신 확인) → PM Gate 진입
+
 ### Gate
 
-- **interactive**: 각 ACT 시작 전(op-dev-plan 승인) + 완료마다 사용자 Gate
+- **interactive**: 각 ACT 시작 전 사용자 Gate (opal-sdd-action-agent 디스패치 승인) + 완료마다 사용자 Gate
 - **agentic**: PM이 ACT 간 Gate를 자율 통과
 
 > EXECUTE-LOOP 상세: `references/execute-loop-guide.md` 참조
@@ -332,3 +337,5 @@ opal-harness-agentic.md §6 공통 기준에 추가:
 |------|------|---------|
 | v1.0 | 2026-04-05 | 초기 작성 — 7단계 SDD 파이프라인 오케스트레이터 (080) |
 | v2.0 | 2026-04-07 | 7→5단계 파이프라인 재작성. tasks/ 단일 루트 통합. EXECUTE-LOOP를 op-dev-plan+op-dev-execute 직접 디스패치로 전환. SPEC-VERIFY/TASKS-VERIFY 제거 → REVIEW Phase PM 직접 검증으로 통합. op-sdd-tasks 삭제 → op-sdd-plan 통합. ACT 구조 도입 (093) |
+| v2.1 | 2026-04-07 | Phase 1 SPEC, Phase 3 DESIGN Gate에 State Gate 참조 추가. Phase 4 EXECUTE-LOOP STATE.md 갱신에 State Gate 기준 명시 (094) |
+| v2.2 | 2026-04-07 | Phase 4 ACT 실행 구조 변경 — op-dev-plan+op-dev-execute 이중 디스패치 → opal-sdd-action-agent 단일 디스패치. 사용자 Gate 명시 (095) |

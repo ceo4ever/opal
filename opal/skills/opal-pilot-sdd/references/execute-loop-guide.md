@@ -8,14 +8,14 @@
 
 ## 1. 개요
 
-EXECUTE-LOOP는 SPEC-PLAN.md에 정의된 ACT를 의존 순서에 따라 반복 실행하는 단계다. PM이 직접 루프를 관리하며 각 ACT는 op-dev-plan + op-dev-execute 워커에 디스패치한다.
+EXECUTE-LOOP는 SPEC-PLAN.md에 정의된 ACT를 의존 순서에 따라 반복 실행하는 단계다. PM이 루프를 관리하며 각 ACT는 `opal-sdd-action-agent`에 단일 디스패치한다. 에이전트가 ACT 폴더 생성 → PLAN → EXECUTE → VERIFY 루프를 자율 완주한다.
 
 **핵심 원칙**:
-- opds/opd 위임 없음 — op-dev-plan + op-dev-execute를 직접 디스패치
-- ACT 에이전트가 구현 + 테스트를 통합 수행 (op-dev-qa 별도 디스패치 없음)
+- opds/opd 위임 없음 — opal-sdd-action-agent에 단일 디스패치
+- 에이전트 내부에서 op-sdd-action-plan + op-dev-execute + VERIFY 루프를 순차 수행
 - SPEC-PLAN.md의 의존관계 그래프가 ACT 실행 순서를 결정
-- SDD 컨텍스트(SPEC.md, SPEC-PLAN.md, AC/TS 매핑)를 디스패치 시 주입
-- 재시도 루프: PM 관리, op-dev-execute만 재디스패치
+- SDD 컨텍스트(SPEC.md, SPEC-PLAN.md, TEST-SCENARIOS.md, AC/TS 매핑)를 디스패치 시 주입
+- 재시도 루프: PM 관리, opal-sdd-action-agent 재디스패치
 
 **자동 루핑 제약** (하네스 §1 연동):
 
@@ -44,13 +44,12 @@ SPEC-PLAN.md에서 실행 그룹 확인
 
 ### 2-1. 단일 ACT 실행 순서
 
-1. **op-dev-plan 디스패치**: PLAN.md 작성 (섹션 5-1 프롬프트 사용)
-2. **PM Gate**: PLAN.md 검토 → 승인 or 재지시
-3. **op-dev-execute 디스패치**: 구현 + 테스트 통합 수행 (섹션 5-2 프롬프트 사용)
-4. **TEST.md 확인**: 워커가 작성한 TEST.md 검토
-5. **Pass/Fail 판정**:
+1. **사용자 Gate**: ACT 시작 전 승인 (interactive 모드)
+2. **opal-sdd-action-agent 디스패치**: ACT 폴더 생성 + PLAN + EXECUTE + VERIFY 자율 완주 (섹션 5-1 프롬프트 사용)
+3. **결과 수신**: status 확인
+4. **Pass/Fail 판정**:
    - Pass → DONE.md 작성 → STATE.md 갱신
-   - Fail → 재시도 루프 (섹션 6)
+   - Fail → 재시도 루프 (섹션 6) 또는 에스컬레이션
 
 ---
 
@@ -155,98 +154,75 @@ git branch -d feat/opsdd-{NNN}-ACT-001
 
 ## 5. 디스패치 프롬프트 템플릿
 
-### 5-1. op-dev-plan 디스패치 (PLAN.md 작성)
+### 5-1. opal-sdd-action-agent 디스패치
 
 ```
-[WORKER] op-dev-plan 스킬을 수행하라.
+[WORKER] opal-sdd-action-agent를 실행하라.
 
-**ACT 폴더**: tasks/{NNN}-{feature}/actions/ACT-{NNN}-{name}/
+**에이전트 경로**: {opal/agents/opal-sdd-action-agent/AGENT.md 탐색 경로}
 
-**SDD 컨텍스트**:
-- **SPEC.md**: tasks/{NNN}-{feature}/SPEC.md
-- **SPEC-PLAN.md**: tasks/{NNN}-{feature}/SPEC-PLAN.md
-- **TEST-SCENARIOS.md**: tasks/{NNN}-{feature}/TEST-SCENARIOS.md
-- **AC 매핑**: {해당 ACT의 AC 목록 — 예: AC-01, AC-03}
-- **TS 매핑**: {해당 ACT의 TS 목록 — 예: TS-01, TS-02, TS-04}
-
-**ACT 설명**: {SPEC-PLAN.md "8. ACT 분해"에서 해당 ACT의 범위/설명}
-
-**완료 기준**: {해당 ACT의 완료 기준 — 예: TS-01, TS-02 Green}
-
-**하네스 Guards**: 구현 금지. PLAN.md 외 파일 생성 금지.
-
-**산출물**: tasks/{NNN}-{feature}/actions/ACT-{NNN}-{name}/PLAN.md
+**입력 명세**:
+- **act_id**: ACT-{NNN}-{name}
+- **act_goal**: {SPEC-PLAN.md "8. ACT 분해"에서 해당 ACT의 목표}
+- **act_scope**: {해당 ACT의 변경 대상 파일/모듈}
+- **ac_mapping**: {해당 ACT의 AC 목록 — 예: AC-01, AC-03}
+- **ts_mapping**: {해당 ACT의 TS 목록 — 예: TS-01, TS-02, TS-04}
+- **verify_commands**: {lint/build/test 명령어}
+- **task_folder**: tasks/{NNN}-{feature}/
+- **sdd_context**:
+  - SPEC.md: tasks/{NNN}-{feature}/SPEC.md
+  - SPEC-PLAN.md: tasks/{NNN}-{feature}/SPEC-PLAN.md
+  - TEST-SCENARIOS.md: tasks/{NNN}-{feature}/TEST-SCENARIOS.md
 ```
 
-### 5-2. op-dev-execute 디스패치 (구현 + 테스트 통합)
+### 5-2. opal-sdd-action-agent 재디스패치 (재시도)
+
+재시도 시 이전 실패 컨텍스트를 추가 주입한다.
 
 ```
-[WORKER] op-dev-execute 스킬을 수행하라.
+[WORKER] opal-sdd-action-agent를 실행하라. (재시도 {N}차)
 
-**ACT 폴더**: tasks/{NNN}-{feature}/actions/ACT-{NNN}-{name}/
+**에이전트 경로**: {opal/agents/opal-sdd-action-agent/AGENT.md 탐색 경로}
 
-**SDD 컨텍스트**:
-- **SPEC.md**: tasks/{NNN}-{feature}/SPEC.md
-- **SPEC-PLAN.md**: tasks/{NNN}-{feature}/SPEC-PLAN.md
-- **PLAN.md**: tasks/{NNN}-{feature}/actions/ACT-{NNN}-{name}/PLAN.md
-- **TEST-SCENARIOS.md**: tasks/{NNN}-{feature}/TEST-SCENARIOS.md
-- **AC 매핑**: {해당 ACT의 AC 목록}
-- **TS 매핑**: {해당 ACT의 TS 목록}
-
-**ACT 설명**: {SPEC-PLAN.md에서 해당 ACT의 범위/설명}
-
-**완료 기준**: {해당 ACT의 완료 기준}
-
-**하네스 Guards**: 구현 승인됨. 커밋 허용. `~/.opal/` 직접 수정 금지.
-
-**산출물**:
-- 구현 코드 (PLAN.md 기반)
-- tasks/{NNN}-{feature}/actions/ACT-{NNN}-{name}/TEST.md (TS 실행 결과)
-```
-
-### 5-3. op-dev-execute 재디스패치 (재시도)
-
-재시도 시 PLAN.md는 재사용하고 op-dev-execute만 재디스패치한다.
-
-```
-[WORKER] op-dev-execute 스킬을 수행하라. (재시도 {N}차)
-
-**ACT 폴더**: tasks/{NNN}-{feature}/actions/ACT-{NNN}-{name}/
+**입력 명세**:
+- **act_id**: ACT-{NNN}-{name}
+- **act_goal**: {해당 ACT의 목표}
+- **act_scope**: {해당 ACT의 변경 대상 파일/모듈}
+- **ac_mapping**: {해당 ACT의 AC 목록}
+- **ts_mapping**: {해당 ACT의 TS 목록}
+- **verify_commands**: {lint/build/test 명령어}
+- **task_folder**: tasks/{NNN}-{feature}/
+- **sdd_context**:
+  - SPEC.md: tasks/{NNN}-{feature}/SPEC.md
+  - SPEC-PLAN.md: tasks/{NNN}-{feature}/SPEC-PLAN.md
+  - TEST-SCENARIOS.md: tasks/{NNN}-{feature}/TEST-SCENARIOS.md
 
 **재시도 컨텍스트**:
+- **실패한 계층**: {L2 / L3a / L3b}
 - **실패한 TS**: {TS-01, TS-02 — 실패 사유}
-- **이전 TEST.md**: tasks/{NNN}-{feature}/actions/ACT-{NNN}-{name}/TEST.md
+- **이전 verification_log**: {직전 에이전트 반환 로그}
 - **수정 지시**: {구체적 수정 방향}
-
-**SDD 컨텍스트**:
-- **SPEC.md**: tasks/{NNN}-{feature}/SPEC.md
-- **PLAN.md**: tasks/{NNN}-{feature}/actions/ACT-{NNN}-{name}/PLAN.md (재사용)
-- **TS 매핑**: {해당 ACT의 TS 목록}
-
-**하네스 Guards**: 구현 승인됨. 커밋 허용. `~/.opal/` 직접 수정 금지.
-
-**산출물**: tasks/{NNN}-{feature}/actions/ACT-{NNN}-{name}/TEST.md (갱신)
 ```
 
 ---
 
 ## 6. 재시도 루프
 
-TEST 실패 또는 PM 재테스트 요청 시:
+에이전트 `status: failed` 반환 시 PM이 재디스패치한다:
 
 ```
-        ┌──────────────────────────────────────┐
-        ↓                                      │ FAIL / 재수정 요청
-PM → op-dev-execute 재디스패치 (PLAN.md 재사용)
-PM → TEST.md 확인
-        │ PASS
+        ┌──────────────────────────────────────────────────┐
+        ↓                                                  │ status: failed
+PM → opal-sdd-action-agent 재디스패치 (재시도 컨텍스트 주입)
+PM → 결과 수신 (status 확인)
+        │ status: completed
         ↓
 PM → DONE.md 작성
 ```
 
 **재시도 규칙**:
-- op-dev-plan은 재디스패치하지 않는다 (PLAN.md 이미 존재)
-- op-dev-execute에 실패한 TS 정보와 수정 지시를 주입한다
+- 에이전트 내부 VERIFY 루프 한도 초과 시 PM 레벨 재디스패치로 전환
+- 재디스패치 시 실패 계층, 실패 TS, 수정 지시를 주입한다 (섹션 5-2 프롬프트)
 - 하네스 §1 자동 루핑 제약 테이블 준수 (unit/integration 최대 3회)
 - 최대 재시도 초과 시 PM이 소유자 에스컬레이션
 
@@ -389,22 +365,23 @@ Group 3 (순차): ACT-004            ← ACT-002, ACT-003 완료 후
 
 ```
 Group 1 (순차): ACT-001
-  → op-dev-plan 디스패치 → PM Gate → PLAN.md 확인
-  → op-dev-execute 디스패치 → TEST.md 확인 → Pass
-  → DONE.md 작성 → STATE.md 갱신 (ACT-001 ✅)
+  → 사용자 Gate (ACT-001 시작 승인)
+  → opal-sdd-action-agent 디스패치 (자율 완주: PLAN → EXECUTE → VERIFY)
+  → status: completed → DONE.md 작성 → STATE.md 갱신 (ACT-001 ✅)
 
 Group 2 (병렬): ACT-002, ACT-003  ← ACT-001 완료 후
   → worktree 생성: .worktrees/001-ACT-002/, .worktrees/001-ACT-003/
-  → 병렬 디스패치:
-      ACT-002: op-dev-plan → PM Gate → op-dev-execute
-      ACT-003: op-dev-plan → PM Gate → op-dev-execute
+  → 병렬 디스패치 (동일 응답 내):
+      ACT-002: opal-sdd-action-agent (worktree: .worktrees/001-ACT-002/)
+      ACT-003: opal-sdd-action-agent (worktree: .worktrees/001-ACT-003/)
   → 결과 수집 → 순차 머지 → 통합 테스트
   → DONE.md 작성 x2 → STATE.md 갱신 (ACT-002/003 ✅)
 
 Group 3 (순차): ACT-004  ← ACT-002, ACT-003 완료 후
-  → op-dev-plan 디스패치 → PM Gate → op-dev-execute
-  → TEST.md: TS-05 Fail → 재시도 루프
-    → op-dev-execute 재디스패치 (1차 재시도) → TS-05 Green
+  → 사용자 Gate (ACT-004 시작 승인)
+  → opal-sdd-action-agent 디스패치
+  → status: failed (L3a TS-05 3회 초과) → PM 레벨 재시도 루프
+    → opal-sdd-action-agent 재디스패치 (1차, 수정 지시 주입) → status: completed
   → DONE.md 작성 → STATE.md 갱신 (ACT-004 ✅)
   → 전체 TS Green 확인 → EXECUTE-LOOP 완료
 ```
