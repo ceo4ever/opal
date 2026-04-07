@@ -69,16 +69,28 @@ PM Gate 진입 전, State Gate(하네스 §3 참조)를 먼저 확인한다.
 **PLAN PM Gate 시**:
 1. STATE.md `최종 갱신` 타임스탬프가 PLAN 완료 시점 이후인지 확인한다
 2. `단계` 필드가 `PLAN`(또는 해당 단계)을 반영하는지 확인한다
-3. `상태` 필드가 `대기 중`인지 확인한다
+3. `상태` 필드가 `QA Gate 대기`인지 확인한다
 4. 미갱신/오갱신 시: PM이 즉시 STATE.md를 갱신하고 State Gate 재확인 후 PM Gate 진행
 
 **EXECUTE PM Gate 시**:
 1. STATE.md `최종 갱신` 타임스탬프가 EXECUTE 완료 시점 이후인지 확인한다
 2. `단계` 필드가 현재 완료된 단계를 반영하는지 확인한다
-3. `상태` 필드가 `대기 중`인지 확인한다
+3. `상태` 필드가 `QA Gate 대기`인지 확인한다
 4. 미갱신/오갱신 시: PM이 즉시 STATE.md를 갱신하고 State Gate 재확인 후 PM Gate 진행
 
 > **State Gate 미통과 시**: STATE.md 갱신 수행 후 PM Gate를 재진입한다. 미갱신 상태에서 DONE.md 생성으로 진행하지 않는다.
+
+### Gate별 STATE.md 상태값 전이
+
+각 Gate 통과 시 PM은 STATE.md 상태값을 즉시 갱신한다.
+
+| Gate | 통과 전 상태 | 통과 후 상태 | 갱신 주체 |
+|------|------------|------------|---------|
+| QA Gate 통과 | `QA Gate 대기` | `PM Gate 대기` | PM |
+| PM Gate 통과 | `PM Gate 대기` | `사용자 확인 대기` | PM |
+| 사용자 확인 완료 | `사용자 확인 대기` | `완료` | PM |
+
+**갱신 원칙**: Gate 통과 즉시 갱신한다. Gate 통과 후 다음 Gate로 진입 전에 STATE.md가 갱신되어 있어야 한다.
 
 ---
 
@@ -128,3 +140,4 @@ EXECUTE 완료 후, PLAN.md 실행 체크리스트 갱신을 2단계로 보장�
 | v1.3 | 2026-04-05 | §3 PM Gate 참조 경로를 `opal-pm.md §4`로 갱신 (086) |
 | v1.4 | 2026-04-06 | §2.5 Artifact Gate 신설 — QA Gate 완료 후 PM Gate 진입 전 산출물 존재 여부 강제 확인 (090) |
 | v1.5 | 2026-04-07 | §2 QA 도메인 테이블에 opsdd/opwt 행 추가. §3 PM Gate에 State Gate 확인 서브섹션 신설 (094) |
+| v1.6 | 2026-04-07 | §3 State Gate 상태값 `대기 중` → `QA Gate 대기`로 변경. Gate별 STATE.md 상태값 전이 표 신설 (096) |
