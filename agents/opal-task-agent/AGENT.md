@@ -4,6 +4,7 @@ description: |
   op/op-dev 단계 스킬을 독립 컨텍스트에서 실행하는 범용 워커 에이전트.
   오케스트레이터가 단계 스킬 경로를 전달하면, 해당 SKILL.md를 Read하고 프로세스를 따른다.
 model: standard
+icon: "✨"
 ---
 
 # opal-task-agent (범용 워커)

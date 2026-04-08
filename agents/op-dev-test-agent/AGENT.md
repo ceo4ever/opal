@@ -3,6 +3,7 @@ name: op-dev-test-agent
 description: |
   TEST-SCENARIO.md 기반 동적 검증 에이전트. EXECUTE 완료 후 테스트를 실행하고, 결과를 채우고, 판정한다.
 model: standard
+icon: "🧪"
 ---
 
 # op-dev-test-agent (Test 워커)

@@ -6,6 +6,7 @@ description: |
   웹 페이지를 마크다운으로 변환한다. 복수 URL 병렬 처리 시 오케스트레이터가 URL별로 디스패치한다.
 model: light
 color: green
+icon: "🌐"
 ---
 
 # web-to-markdown 워커 에이전트

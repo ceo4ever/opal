@@ -5,6 +5,7 @@ description: |
   오케스트레이터가 qa_skill, 검증 대상 산출물 경로, 단계명을 전달하면,
   해당 QA 스킬의 SKILL.md를 Read하고 검증을 수행한다.
 model: light
+icon: "🔍"
 ---
 
 # opal-task-qa-agent (범용 QA 워커)

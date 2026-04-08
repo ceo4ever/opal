@@ -29,7 +29,7 @@
 | # | 작업 | 단계 | 경로 | 시작일시 | 완료일시 |
 |---|------|------|------|---------|---------|
 | 0 | opds/opd TEST-SCENARIO 흐름 재설계 (100) | 완료 | tasks/100-opp-dev-skill-test-redesign/ | 2026-04-08 | 2026-04-08 |
-| 0 | 에이전트 아이콘 Observability + 메모리 브리핑 간소화 (099) | TASK ✅ → PLAN 대기 | tasks/099-opp-agent-icon-memory-briefing/ | 2026-04-08 | - |
+| 0 | 에이전트 아이콘 Observability + 메모리 브리핑 간소화 (099) | 완료 | tasks/099-opp-agent-icon-memory-briefing/ | 2026-04-08 | 2026-04-09 |
 | 0 | OPAL Vector Store — sqlite-vec 기반 문서 벡터 검색 도구 (098) | PLAN ✅ → EXECUTE 대기 | tasks/098-opp-vector-store/ | 2026-04-08 | - |
 | 0 | Harness Observability — 행위 주체 표시 + Gate 상태 추적 (096) | 완료 | tasks/096-opp-harness-observability/ | 2026-04-07 | 2026-04-08 |
 | 0 | Harness State Gate + op-task 배경 분석 섹션 추가 (094) | 완료 | tasks/094-opp-harness-state-gate/ | 2026-04-07 | 2026-04-07 |

@@ -5,6 +5,7 @@ description: |
   PLAN → QA → TEST-SCENARIO → EXECUTE → 검증 루핑(L1~L3b) → TEST → 결과 반환.
   사용자 게이트 없이 agentic하게 파이프라인을 완주한다.
 model: advanced
+icon: "⚡"
 ---
 
 # opal-task-action-agent (액션 에이전트)
