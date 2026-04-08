@@ -10,7 +10,7 @@ description: |
 # Short Task 오케스트레이터
 
 ## Harness
-모드: Short Task (TASK → PLAN+TEST-SCENARIO → EXECUTE)
+모드: Short Task (TASK → PLAN → TEST-SCENARIO → EXECUTE → TEST)
 > 부트스트랩에서 로드되지 않은 경우: `~/.opal/references/opal-harness.md`를 Read한다.
 
 **[MUST]** 스킬 시작 즉시 모드에 따라 서브 하네스를 Read한다. 이 단계를 건너뛰면 안 된다:
@@ -27,19 +27,13 @@ TASK 완료 → **State Gate** (하네스 §3 참조 — STATE.md 갱신 확인)
 
 ---
 
-## STEP 2: PLAN + TEST-SCENARIO
-
-워커를 디스패치하여 코드 분석과 구현 계획을 통합 수립한다. **ANALYSIS.md를 전달하지 않는다** -- op-dev-plan이 자동으로 코드 분석을 포함한다.
-
-> **Short Task는 단계를 줄이는 것이지, 분석을 줄이는 것이 아니다.** ANALYSIS.md 없이 호출되면 op-dev-plan이 코드 분석을 직접 수행한다. 분석 품질은 Full Task와 동일해야 한다.
+## STEP 2: PLAN
 
 ### PLAN 디스패치
 
 op-dev-plan 워커 디스패치. **model**: advanced. 이전 산출물: TASK.md만 (ANALYSIS.md 없음).
-워커 완료
-  → **QA Gate** (op-dev-qa — 체크리스트 갱신 포함) → **State Gate**
-  → **Artifact Gate** (하네스 §2.5 참조) → **State Gate**
-  → **PM Gate** (체크리스트 갱신 상태 확인 — 하네스 interactive §3 참조. 미갱신 시 QA 재소환) → **State Gate**
+
+> **Short Task는 단계를 줄이는 것이지, 분석을 줄이는 것이 아니다.** ANALYSIS.md 없이 호출되면 op-dev-plan이 코드 분석을 직접 수행한다. 분석 품질은 Full Task와 동일해야 한다.
 
 > **[PM 컨텍스트 주입]** 워커 디스패치 프롬프트의 첫 줄에 `[WORKER]`를 삽입한다. `[WORKER]` 마커가 있으면 워커는 부트스트랩을 생략한다. PM은 디스패치 시 다음을 프롬프트에 포함해야 한다:
 > 1. 하네스 Guards 핵심 규칙 (구현 금지 원칙, 커밋 규칙)
@@ -50,12 +44,18 @@ op-dev-plan 워커 디스패치. **model**: advanced. 이전 산출물: TASK.md�
 
 **문서 전용** 작업(PLAN.md 파일 변경 계획이 모두 `.md`, 소스 코드 없음)이면 스킵. 보고 시 "TEST-SCENARIO: 문서 전용 작업으로 스킵" 표기.
 
-### TEST-SCENARIO 디스패치 (연속)
+### TEST-SCENARIO 디스패치
 
-QA + PM Gate 통과 후 op-dev-test-scenario 워커 연속 디스패치. **model**: light. 이전 산출물: TASK.md + PLAN.md.
-워커 완료 -> PLAN + TEST-SCENARIO를 함께 사용자에게 보고. **승인 = EXECUTE 시작 허가**.
+PLAN 완료 직후 연속 디스패치. **model**: light. 이전 산출물: TASK.md + PLAN.md.
 
 > **[PM 컨텍스트 주입]** 디스패치 프롬프트 첫 줄에 `[WORKER]` 삽입. 하네스 Guards 핵심 규칙 + 관련 참조 문서 경로를 포함한다.
+
+워커 완료
+  → **State Gate**
+  → **QA Gate** (op-dev-qa — PLAN.md + TEST-SCENARIO.md 동시 검토) → **State Gate**
+  → **Artifact Gate** (하네스 §2.5 참조) → **State Gate**
+  → **PM Gate** (체크리스트 갱신 상태 확인 — 하네스 interactive §3 참조. 미갱신 시 QA 재소환) → **State Gate**
+  → 사용자에게 PLAN + TEST-SCENARIO 함께 보고. 승인 = EXECUTE 시작 허가.
 
 ---
 
@@ -68,12 +68,45 @@ op-dev-execute 워커 디스패치. **model**: standard. checklist_source: PLAN.
 ### EXECUTE 완료 후
 
 워커가 changed_files를 반환하면:
-1. **op-dev-test-agent 워커 호출** → TEST-SCENARIO.md에 결과 채움 + 판정 → **State Gate**
-2. **PM Gate** — TEST-SCENARIO 결과 검토 + **체크리스트 갱신 상태 확인** (하네스 interactive §3 참조). 미갱신 시 QA 에이전트 재소환 → **State Gate**
-3. **모든 체크리스트 갱신 완료 확인 후** DONE.md 생성
-4. 사용자에게 완료 보고
+→ **State Gate** → **TEST 단계 진입**
 
-> **추가작업**: 태스크 완료 후 추가작업이 필요하면 하네스 §3 "추가작업 프로세스"를 따른다.
+---
+
+## STEP 4: TEST
+
+op-dev-test-agent 워커 디스패치. TEST-SCENARIO.md 실행 + 결과 기록 + PASS/FAIL 판정.
+
+> **[PM 컨텍스트 주입]** 디스패치 프롬프트 첫 줄에 `[WORKER]` 삽입. 하네스 Guards 핵심 규칙 + TEST-SCENARIO.md 경로 + changed_files 전달.
+
+워커 완료 → **State Gate**
+
+### PASS 시
+
+QA Gate (op-dev-qa — 체크리스트 갱신 포함) → **State Gate**
+→ **PM Gate** (TEST 결과 검토 + 체크리스트 갱신 상태 확인. 미갱신 시 QA 재소환) → **State Gate**
+→ 모든 체크리스트 갱신 완료 확인 후 DONE.md 생성
+→ 사용자에게 완료 보고
+
+### FAIL 시 (루핑 — 최대 3회, 하네스 §1 L3a)
+
+1. PM이 TEST-SCENARIO.md에서 FAIL 항목을 추출한다
+2. op-dev-execute 워커 디스패치 (fix 모드):
+   ```
+   [WORKER]
+   op-dev-execute 스킬을 수행하라 (fix 모드).
+   **모드**: fix
+   **fix 컨텍스트**:
+     - 실패한 TEST-SCENARIO 항목: {FAIL 항목 목록}
+     - 현재 시도 회차: {N}/3
+     - 실패 요약: {op-dev-test-agent 결과 요약}
+   **checklist_source**: PLAN.md 실행 체크리스트 (실패 항목 집중)
+   **하네스 Guards**: fix 범위를 실패 항목으로 한정. 회귀 방지: 이전 PASS 항목 재실행.
+   ```
+3. fix 완료 → **State Gate** → op-dev-test-agent 재호출 (루프)
+4. 3회 초과 시 사용자 에스컬레이션:
+   "TEST {N}회 FAIL — 수동 개입 필요. 실패 항목: {목록}"
+
+> **추가작업**: 태스크 완료 후 추가작업이 필요하면 하네스 §3 추가작업 프로세스를 따른다.
 
 ---
 
@@ -115,7 +148,7 @@ Full Task(opal-pilot-dev)로 전환할까요?
 | 필드 | 값 |
 |------|------|
 | 모드 | Short Task |
-| 단계 목록 | TASK / PLAN+TEST-SCENARIO / EXECUTE |
+| 단계 목록 | TASK / PLAN / TEST-SCENARIO / EXECUTE / TEST |
 
 **진행 현황 행 예시** (STATE.md 초기 생성 시 이 구조로 작성):
 
@@ -125,20 +158,27 @@ Full Task(opal-pilot-dev)로 전환할까요?
 | 1 | TASK | 작업 | ⬜ | - |
 | 2 | TASK | 사용자 확인 | ⬜ | - |
 | 3 | PLAN | 작업 | ⬜ | - |
-| 4 | PLAN | QA Gate | ⬜ | - |
-| 5 | PLAN | State Gate | ⬜ | - |
-| 6 | PLAN | Artifact Gate | ⬜ | - |
+| 4 | TEST-SCENARIO | 작업 | ⬜ | - |
+| 5 | TEST-SCENARIO | State Gate | ⬜ | - |
+| 6 | PLAN | QA Gate | ⬜ | - |
 | 7 | PLAN | State Gate | ⬜ | - |
-| 8 | PLAN | PM Gate | ⬜ | - |
+| 8 | PLAN | Artifact Gate | ⬜ | - |
 | 9 | PLAN | State Gate | ⬜ | - |
-| 10 | PLAN | 사용자 확인 | ⬜ | - |
-| 11 | EXECUTE | 작업 | ⬜ | - |
-| 12 | EXECUTE | QA Gate | ⬜ | - |
-| 13 | EXECUTE | State Gate | ⬜ | - |
-| 14 | EXECUTE | PM Gate | ⬜ | - |
-| 15 | EXECUTE | State Gate | ⬜ | - |
-| 16 | EXECUTE | 사용자 확인 | ⬜ | - |
+| 10 | PLAN | PM Gate | ⬜ | - |
+| 11 | PLAN | State Gate | ⬜ | - |
+| 12 | PLAN | 사용자 확인 | ⬜ | - |
+| 13 | EXECUTE | 작업 | ⬜ | - |
+| 14 | EXECUTE | State Gate | ⬜ | - |
+| 15 | TEST | 작업 | ⬜ | - |
+| 16 | TEST | State Gate | ⬜ | - |
+| 17 | TEST | QA Gate | ⬜ | - |
+| 18 | TEST | State Gate | ⬜ | - |
+| 19 | TEST | PM Gate | ⬜ | - |
+| 20 | TEST | State Gate | ⬜ | - |
+| 21 | TEST | 사용자 확인 | ⬜ | - |
 ```
+
+> TEST 루핑 발생 시: "TEST | fix 작업 (N/3)", "TEST | State Gate (N/3)" 행을 동적 추가한다.
 
 ---
 
@@ -153,11 +193,11 @@ opal-harness-agentic.md 참조. `--agentic` 플래그 활성화 시 이 스킬�
 ### 자율 게이트 흐름
 
 ```
-TASK (PM 직접) → PLAN+TEST-SCENARIO Gate → EXECUTE Gate
-                   PM 자율 검토              PM 자율 검토
+TASK (PM 직접) → PLAN+TEST-SCENARIO Gate → EXECUTE Gate → TEST Gate
+                   PM 자율 검토              PM 자율 검토    PM 자율 검토
 ```
 
-- TASK 이후 2개 게이트를 PM이 자율 통과
+- TASK 이후 3개 게이트를 PM이 자율 통과
 - 각 게이트에서 opal-harness-agentic.md "Gate 루핑 규칙" 적용
 - AGENTIC-LOG.md에 모든 판단/오류/수정/의사결정 기록
 
@@ -186,3 +226,4 @@ TASK (PM 직접) → PLAN+TEST-SCENARIO Gate → EXECUTE Gate
 | v2.2 | 2026-04-05 | EXECUTE 후 추가작업 참조 가이드 추가 — 하네스 §3 추가작업 프로세스 (087) |
 | v2.3 | 2026-04-07 | TASK/PLAN/EXECUTE 각 단계 Gate 순서에 State Gate 추가 (094) |
 | v2.4 | 2026-04-07 | State Gate를 PM Gate 전 1개 → 각 Gate 직후로 재배치 (097) |
+| v2.5 | 2026-04-08 | TEST-SCENARIO를 Gates 앞으로 이동 + TEST 단계 공식화 + TEST 루핑 구현 (100) |

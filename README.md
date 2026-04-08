@@ -116,7 +116,7 @@ AI 채팅창에서 `//`로 시작하는 입력은 **OPAL 스킬 호출**로 처�
 
 **언제 쓰나**: 코드 변경이 수반되는 모든 개발 작업의 기본 진입점. 버그 수정, 기능 추가, 리팩토링 등.
 
-**파이프라인**: `TASK → PLAN+테스트시나리오 → EXECUTE`
+**파이프라인**: `TASK → PLAN → TEST-SCENARIO → EXECUTE → TEST`
 
 **산출물**: `TASK.md`, `PLAN.md`, `TEST-SCENARIO.md`, `DONE.md`
 
@@ -140,11 +140,12 @@ AI 채팅창에서 `//`로 시작하는 입력은 **OPAL 스킬 호출**로 처�
 1. AI → TASK.md 작성 (작업 정의, 요구사항, 범위)
         "TASK 완료했습니다. PLAN 단계로 넘어갈까요?"
 
-2. 승인 →  AI → 코드 분석 + PLAN.md 작성 (변경 파일 목록, 구현 방법, 테스트 시나리오)
-            "PLAN 검토해주세요. 승인하시면 구현 시작합니다."
+2. 승인 → AI → PLAN.md 작성 + TEST-SCENARIO.md 작성 (검증 기준 선정의)
+            "PLAN + 테스트 시나리오 검토해주세요. 승인하시면 구현 시작합니다."
 
-3. 승인 → AI → 코드 구현 → 테스트 실행 → DONE.md 생성
-            "구현 완료했습니다. 변경 파일: src/..."
+3. 승인 → AI → 코드 구현 (EXECUTE)
+            → 테스트 실행 (TEST) — 실패 시 자동 수정 후 재테스트 (최대 3회)
+            → DONE.md 생성 + 완료 보고
 ```
 
 #### Full Task 에스컬레이션
@@ -165,7 +166,7 @@ Full Task(opd)로 전환할까요?
 
 **언제 쓰나**: 대규모 기능 개발, 여러 모듈에 걸친 변경, 아키텍처 수준의 작업.
 
-**파이프라인**: `TASK → ANALYSIS → PLAN+테스트시나리오 → EXECUTE`
+**파이프라인**: `TASK → ANALYSIS → PLAN → TEST-SCENARIO → EXECUTE → TEST`
 
 **산출물**: `TASK.md`, `ANALYSIS.md`, `PLAN.md`, `TEST-SCENARIO.md`, `DONE.md`
 
@@ -194,10 +195,12 @@ Full Task(opd)로 전환할까요?
 2. 승인 → AI → 코드베이스 분석 → ANALYSIS.md 작성 (의존 관계, 영향 범위, 기술 리스크)
             "분석 완료. PLAN 단계로 넘어갈까요?"
 
-3. 승인 → AI → PLAN.md + TEST-SCENARIO.md 작성
-            "계획 검토해주세요. 승인하시면 구현 시작합니다."
+3. 승인 → AI → PLAN.md 작성 + TEST-SCENARIO.md 작성 (검증 기준 선정의)
+            "PLAN + 테스트 시나리오 검토해주세요. 승인하시면 구현 시작합니다."
 
-4. 승인 → AI → 코드 구현 → 테스트 → DONE.md 생성
+4. 승인 → AI → 코드 구현 (EXECUTE)
+            → 테스트 실행 (TEST) — 실패 시 자동 수정 후 재테스트 (최대 3회)
+            → DONE.md 생성 + 완료 보고
 ```
 
 ---
