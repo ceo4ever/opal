@@ -266,7 +266,8 @@ import json, os, sys
 settings_path = sys.argv[1]
 opal_home = sys.argv[2]
 
-perm_entry = f'Read({opal_home}/**)'
+# 절대 경로와 틸다 경로 모두 등록 (Claude Code가 두 형태를 별도로 매칭)
+perm_entries = [f'Read({opal_home}/**)', 'Read(~/.opal/**)']
 
 if os.path.exists(settings_path):
     with open(settings_path) as f:
@@ -278,8 +279,13 @@ else:
 perms = data.setdefault('permissions', {})
 allow = perms.setdefault('allow', [])
 
-if perm_entry not in allow:
-    allow.append(perm_entry)
+changed = False
+for perm_entry in perm_entries:
+    if perm_entry not in allow:
+        allow.append(perm_entry)
+        changed = True
+
+if changed:
     with open(settings_path, 'w') as f:
         json.dump(data, f, indent=2)
         f.write('\n')

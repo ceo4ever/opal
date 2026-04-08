@@ -28,6 +28,7 @@
 
 | # | 작업 | 단계 | 경로 | 시작일시 | 완료일시 |
 |---|------|------|------|---------|---------|
+| 0 | Harness Observability — 행위 주체 표시 + Gate 상태 추적 (096) | 완료 | tasks/096-opp-harness-observability/ | 2026-04-07 | 2026-04-08 |
 | 0 | Harness State Gate + op-task 배경 분석 섹션 추가 (094) | 완료 | tasks/094-opp-harness-state-gate/ | 2026-04-07 | 2026-04-07 |
 | 0 | opsdd EXECUTE-LOOP 개선 — opal-sdd-action-agent 신설 (095) | 완료 | tasks/095-opp-opsdd-execute-loop/ | 2026-04-07 | 2026-04-07 |
 | 0 | opsdd 스킬 구현 — 5단계 파이프라인 (093) | 완료 | tasks/093-opp-opsdd-impl/ | 2026-04-07 | 2026-04-07 |
@@ -37,4 +38,3 @@
 | 0 | 역할 전환 규칙 + 추가작업 프로세스 (087) | 완료 | tasks/087-opp-role-switch-addon-process/ | 2026-04-05 | 2026-04-05 |
 | 0 | opal-pm 레퍼런스 구축 (086) | 완료 | tasks/086-opp-opal-pilot-pm/ | 2026-04-05 | 2026-04-05 |
 | 0 | QA 체크리스트 갱신 강제 (085) | 완료 | tasks/085-opp-qa-checklist-enforcement/ | 2026-04-05 | 2026-04-05 |
-| 0 | opi 최신화 모드 정밀도 개선 (084) | 완료 | tasks/084-opp-opi-update-mode-enhance/ | 2026-04-05 | 2026-04-05 |
