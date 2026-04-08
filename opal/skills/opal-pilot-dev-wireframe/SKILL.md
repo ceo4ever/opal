@@ -48,10 +48,9 @@ TASK 완료 → **State Gate** (하네스 §3 참조 — STATE.md 갱신 확인)
 워커 디스패치로 wireframe.md 생성. **model**: standard.
 - 스킬: op-dev-wireframe, 입력: TASK.md + 정책서/이미지
 - 완료
-  → op-dev-qa 호출 (단계: WIREFRAME)
-  → **Artifact Gate** (하네스 §2.5 참조)
-  → **State Gate** (하네스 §3 참조 — STATE.md 갱신 확인)
-  → **PM Gate** (TASK.md 요구사항 체크박스 갱신 포함 — 하네스 §3 참조) → 사용자 보고
+  → op-dev-qa 호출 (단계: WIREFRAME) → **State Gate**
+  → **Artifact Gate** (하네스 §2.5 참조) → **State Gate**
+  → **PM Gate** (TASK.md 요구사항 체크박스 갱신 포함 — 하네스 §3 참조) → **State Gate** → 사용자 보고
 
 > **[PM 컨텍스트 주입]** 워커 디스패치 프롬프트의 첫 줄에 `[WORKER]`를 삽입한다. `[WORKER]` 마커가 있으면 워커는 부트스트랩을 생략한다. PM은 디스패치 시 다음을 프롬프트에 포함해야 한다:
 > 1. 하네스 Guards 핵심 규칙 (구현 금지 원칙, 커밋 규칙)
@@ -69,10 +68,9 @@ TASK 완료 → **State Gate** (하네스 §3 참조 — STATE.md 갱신 확인)
 > **[PM 컨텍스트 주입]** 디스패치 프롬프트 첫 줄에 `[WORKER]` 삽입. 하네스 Guards 핵심 규칙 + 관련 참조 문서 경로를 포함한다.
 
 ### 완료 후
-1. op-dev-qa 호출 (단계: EXECUTE-UI) → 빌드/린트 + wireframe↔코드 대조
-2. **State Gate** (하네스 §3 참조 — STATE.md 갱신 확인)
-3. **PM Gate** — QA 결과 + 실행 결과 검토 + 체크리스트 갱신 (하네스 §2, §3 참조)
-4. DONE.md 생성 → 사용자 완료 보고
+1. op-dev-qa 호출 (단계: EXECUTE-UI) → 빌드/린트 + wireframe↔코드 대조 → **State Gate**
+2. **PM Gate** — QA 결과 + 실행 결과 검토 + 체크리스트 갱신 (하네스 §2, §3 참조) → **State Gate**
+3. DONE.md 생성 → 사용자 완료 보고
 
 ---
 
@@ -117,3 +115,4 @@ TASK (PM 직접) → WIREFRAME Gate → EXECUTE Gate
 | v1.4 | 2026-04-01 | WIREFRAME/EXECUTE 워커 디스패치에 `[WORKER]` 마커 + PM 컨텍스트 주입 지침 추가 (063) |
 | v1.5 | 2026-04-02 | 서브 하네스 [MUST] 추가 + WIREFRAME/EXECUTE PM Gate 추가 (072) |
 | v1.6 | 2026-04-07 | TASK/WIREFRAME/EXECUTE 각 단계 Gate 순서에 State Gate 추가 + Agentic Mode 섹션 신설 (094) |
+| v1.7 | 2026-04-07 | State Gate를 PM Gate 전 1개 → 각 Gate 직후로 재배치 (097) |

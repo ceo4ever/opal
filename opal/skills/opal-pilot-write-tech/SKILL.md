@@ -145,10 +145,9 @@ tasks/{NNN}-opwt-{name}/PLAN.md
 ### 공통
 
 - **STATE 갱신**: 단계 시작/완료 시 STATE.md 갱신
-- **QA Gate** (op-task-qa) — PLAN.md 검증
-- **Artifact Gate** (하네스 §2.5 참조)
-- **State Gate** (하네스 §3 참조 — STATE.md 갱신 확인)
-- **PM Gate** (TASK.md 요구사항 체크박스 갱신 포함 — 하네스 §3 참조)
+- **QA Gate** (op-task-qa) — PLAN.md 검증 → **State Gate**
+- **Artifact Gate** (하네스 §2.5 참조) → **State Gate**
+- **PM Gate** (TASK.md 요구사항 체크박스 갱신 포함 — 하네스 §3 참조) → **State Gate**
 - **게이트**: PLAN.md + 배치 계획 사용자 확인 (interactive) / PM 자율 승인 (agentic)
 
 ---
@@ -175,9 +174,8 @@ tasks/{NNN}-opwt-{name}/PLAN.md
 ### 게이트 (배치별)
 
 배치 완료
-  → **QA Gate** (op-task-qa)
-  → **State Gate** (하네스 §3 참조 — STATE.md 갱신 확인)
-  → **PM Gate** (배치 단위 간이 검토 — 하네스 §3 참조. 전체 PM Gate는 QA 단계 최종 판정에서 수행)
+  → **QA Gate** (op-task-qa) → **State Gate**
+  → **PM Gate** (배치 단위 간이 검토 — 하네스 §3 참조. 전체 PM Gate는 QA 단계 최종 판정에서 수행) → **State Gate**
   → 사용자 확인 (interactive) / PM 자율 승인 후 다음 배치 (agentic)
 배치 완료 후 `docs/PROJECT.md` 등록 확인
 
@@ -200,7 +198,7 @@ PLAN.md의 QA 체크리스트를 검증 결과로 갱신한다 (하네스 §2 QA
 
 ### PM 최종 판정
 
-- **State Gate** (하네스 §3 참조 — STATE.md 갱신 확인) → **PM Gate** 진입
+- **PM Gate** 진입 → **State Gate**
 - **Pass**: DONE.md 생성
 - **Fail**: EXECUTE 부분 재진입 (실패 문서만)
 
@@ -246,3 +244,4 @@ opal-doc-standard 적용: `~/.opal/references/opal-doc-standard.md`
 | v2.4 | 2026-04-06 | PMO 그룹 신설 + 개발 WBS 추가 — 커버 범위 및 TASK 확인 항목 갱신 (089) |
 | v2.5 | 2026-04-06 | ANALYSIS PM Gate(자가 체크) 추가 + EXECUTE 배치 게이트 "PM 검토" → "PM Gate" 명확화 (090) |
 | v2.6 | 2026-04-07 | TASK/ANALYSIS/PLAN/EXECUTE/QA 각 단계 Gate에 State Gate 참조 추가 (094) |
+| v2.7 | 2026-04-07 | State Gate를 PM Gate 전 1개 → 각 Gate 직후로 재배치. EXECUTE 배치 Artifact Gate 제거(opwt 구조상 해당 없음) (097) |

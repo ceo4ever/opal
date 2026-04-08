@@ -37,10 +37,9 @@ TASK 완료 → **State Gate** (하네스 §3 참조 — STATE.md 갱신 확인)
 
 op-dev-plan 워커 디스패치. **model**: advanced. 이전 산출물: TASK.md만 (ANALYSIS.md 없음).
 워커 완료
-  → **QA Gate** (op-dev-qa — 체크리스트 갱신 포함)
-  → **Artifact Gate** (하네스 §2.5 참조)
-  → **State Gate** (하네스 §3 참조 — STATE.md 갱신 확인)
-  → **PM Gate** (체크리스트 갱신 상태 확인 — 하네스 interactive §3 참조. 미갱신 시 QA 재소환).
+  → **QA Gate** (op-dev-qa — 체크리스트 갱신 포함) → **State Gate**
+  → **Artifact Gate** (하네스 §2.5 참조) → **State Gate**
+  → **PM Gate** (체크리스트 갱신 상태 확인 — 하네스 interactive §3 참조. 미갱신 시 QA 재소환) → **State Gate**
 
 > **[PM 컨텍스트 주입]** 워커 디스패치 프롬프트의 첫 줄에 `[WORKER]`를 삽입한다. `[WORKER]` 마커가 있으면 워커는 부트스트랩을 생략한다. PM은 디스패치 시 다음을 프롬프트에 포함해야 한다:
 > 1. 하네스 Guards 핵심 규칙 (구현 금지 원칙, 커밋 규칙)
@@ -69,9 +68,8 @@ op-dev-execute 워커 디스패치. **model**: standard. checklist_source: PLAN.
 ### EXECUTE 완료 후
 
 워커가 changed_files를 반환하면:
-1. **op-dev-test-agent 워커 호출** -> TEST-SCENARIO.md에 결과 채움 + 판정
-2. **State Gate** (하네스 §3 참조 — STATE.md 갱신 확인)
-3. **PM Gate** — TEST-SCENARIO 결과 검토 + **체크리스트 갱신 상태 확인** (하네스 interactive §3 참조). 미갱신 시 QA 에이전트 재소환
+1. **op-dev-test-agent 워커 호출** → TEST-SCENARIO.md에 결과 채움 + 판정 → **State Gate**
+2. **PM Gate** — TEST-SCENARIO 결과 검토 + **체크리스트 갱신 상태 확인** (하네스 interactive §3 참조). 미갱신 시 QA 에이전트 재소환 → **State Gate**
 3. **모든 체크리스트 갱신 완료 확인 후** DONE.md 생성
 4. 사용자에게 완료 보고
 
@@ -118,7 +116,29 @@ Full Task(opal-pilot-dev)로 전환할까요?
 |------|------|
 | 모드 | Short Task |
 | 단계 목록 | TASK / PLAN+TEST-SCENARIO / EXECUTE |
-| 산출물 목록 | TASK.md, PLAN.md, TEST-SCENARIO.md, QA-*.md, DONE.md |
+
+**진행 현황 행 예시** (STATE.md 초기 생성 시 이 구조로 작성):
+
+```markdown
+| # | 단계 | 항목 | 상태 | 시점 |
+|---|------|------|------|------|
+| 1 | TASK | 작업 | ⬜ | - |
+| 2 | TASK | 사용자 확인 | ⬜ | - |
+| 3 | PLAN | 작업 | ⬜ | - |
+| 4 | PLAN | QA Gate | ⬜ | - |
+| 5 | PLAN | State Gate | ⬜ | - |
+| 6 | PLAN | Artifact Gate | ⬜ | - |
+| 7 | PLAN | State Gate | ⬜ | - |
+| 8 | PLAN | PM Gate | ⬜ | - |
+| 9 | PLAN | State Gate | ⬜ | - |
+| 10 | PLAN | 사용자 확인 | ⬜ | - |
+| 11 | EXECUTE | 작업 | ⬜ | - |
+| 12 | EXECUTE | QA Gate | ⬜ | - |
+| 13 | EXECUTE | State Gate | ⬜ | - |
+| 14 | EXECUTE | PM Gate | ⬜ | - |
+| 15 | EXECUTE | State Gate | ⬜ | - |
+| 16 | EXECUTE | 사용자 확인 | ⬜ | - |
+```
 
 ---
 
@@ -165,3 +185,4 @@ TASK (PM 직접) → PLAN+TEST-SCENARIO Gate → EXECUTE Gate
 | v2.1 | 2026-04-05 | QA Gate에 체크리스트 갱신 포함 + PM Gate에 갱신 상태 확인 + QA 재소환 절차 추가 (085) |
 | v2.2 | 2026-04-05 | EXECUTE 후 추가작업 참조 가이드 추가 — 하네스 §3 추가작업 프로세스 (087) |
 | v2.3 | 2026-04-07 | TASK/PLAN/EXECUTE 각 단계 Gate 순서에 State Gate 추가 (094) |
+| v2.4 | 2026-04-07 | State Gate를 PM Gate 전 1개 → 각 Gate 직후로 재배치 (097) |
