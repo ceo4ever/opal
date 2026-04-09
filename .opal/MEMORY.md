@@ -22,6 +22,7 @@
 | # | 등록일시 | 카테고리 | 상태 | 파일 | 설명 |
 |---|----------|----------|------|------|------|
 | 1 | 2026-03-22 | task | 예정 | [memory/project_security_task.md](memory/project_security_task.md) | 보안 전용 스킬+에이전트 생성 |
+| 2 | 2026-04-09 | task | 예정 | [memory/task_098_vector_store.md](memory/task_098_vector_store.md) | OPAL Vector Store — sqlite-vec 기반 문서 벡터 검색 도구 (PLAN ✅, EXECUTE 보류) |
 
 
 ## 작업 히스토리 (최대 10개, FIFO)
