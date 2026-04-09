@@ -23,6 +23,8 @@ OPAL_START="# === OPAL START ==="
 OPAL_END="# === OPAL END ==="
 R2_START="# === R2 START ==="
 R2_END="# === R2 END ==="
+HARDENING_START="# === GEMINI HARDENING START ==="
+HARDENING_END="# === GEMINI HARDENING END ==="
 
 # ─── Logging ─────────────────────────────────────────────
 
@@ -174,7 +176,12 @@ install_dir() {
 
 extract_bootstrap_content() {
     local file="$1"
-    sed -n '/^```markdown$/,/^```$/p' "$file" | sed '1d;$d'
+    # 4-backtick 외부 블록 우선 (내부에 ``` 포함 가능), 없으면 3-backtick 블록 사용
+    if grep -q '^````markdown$' "$file"; then
+        sed -n '/^````markdown$/,/^````$/p' "$file" | sed '1d;$d'
+    else
+        sed -n '/^```markdown$/,/^```$/p' "$file" | sed '1d;$d'
+    fi
 }
 
 install_opal_section() {
@@ -250,6 +257,61 @@ install_opal_section() {
             echo "$OPAL_END"
         } >> "$target"
         success "$label OPAL 추가 (기존 내용 보존): $target"
+    fi
+}
+
+install_gemini_hardening() {
+    local snippet="$1"
+    local target="$2"
+    local label="$3"
+
+    local content
+    content="$(extract_bootstrap_content "$snippet")"
+
+    if [[ -z "$content" ]]; then
+        error "HARDENING 부트스트래퍼 내용을 추출할 수 없습니다: $snippet"
+        return 1
+    fi
+
+    mkdir -p "$(dirname "$target")"
+
+    if [[ ! -f "$target" ]]; then
+        {
+            echo "$HARDENING_START"
+            echo "$content"
+            echo "$HARDENING_END"
+        } > "$target"
+        success "$label HARDENING 설치 (새 파일): $target"
+
+    elif grep -qF "$HARDENING_START" "$target"; then
+        local tmp
+        tmp="$(mktemp)"
+        local in_section=0
+
+        while IFS= read -r line || [[ -n "$line" ]]; do
+            if [[ "$line" == "$HARDENING_START" ]]; then
+                in_section=1
+                echo "$HARDENING_START"
+                echo "$content"
+                echo "$HARDENING_END"
+            elif [[ "$line" == "$HARDENING_END" ]]; then
+                in_section=0
+            elif [[ $in_section -eq 0 ]]; then
+                echo "$line"
+            fi
+        done < "$target" > "$tmp"
+
+        mv "$tmp" "$target"
+        success "$label HARDENING 업데이트 (마커 교체): $target"
+
+    else
+        {
+            echo ""
+            echo "$HARDENING_START"
+            echo "$content"
+            echo "$HARDENING_END"
+        } >> "$target"
+        success "$label HARDENING 추가 (기존 내용 보존): $target"
     fi
 }
 
@@ -455,6 +517,9 @@ install_opal() {
     fi
 
     install_opal_section "$opal_dir/bootstrapper/gemini-bootstrap.md" \
+        "$USER_HOME/.gemini/GEMINI.md" "Gemini"
+
+    install_gemini_hardening "$opal_dir/bootstrapper/gemini-hardening.md" \
         "$USER_HOME/.gemini/GEMINI.md" "Gemini"
 
     # ── Claude Code ~/.opal 읽기 권한 ──
@@ -768,6 +833,8 @@ print_summary() {
         echo "    ~/.cursor/rules/             OPAL 부트스트래퍼"
     [[ -f "$USER_HOME/.gemini/GEMINI.md" ]] && grep -qF "$OPAL_START" "$USER_HOME/.gemini/GEMINI.md" && \
         echo "    ~/.gemini/GEMINI.md          OPAL 부트스트래퍼"
+    [[ -f "$USER_HOME/.gemini/GEMINI.md" ]] && grep -qF "$HARDENING_START" "$USER_HOME/.gemini/GEMINI.md" && \
+        echo "    ~/.gemini/GEMINI.md          GEMINI HARDENING"
 
     echo "    Claude MCP                   claude mcp add (CLI 등록)"
     echo "    Gemini MCP                   gemini mcp add (CLI 등록)"
