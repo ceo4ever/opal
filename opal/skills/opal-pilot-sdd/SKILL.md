@@ -249,6 +249,10 @@ ACT 완료마다 STATE.md 갱신 (하네스 §3 State Gate 기준 적용):
 - 상태: {진행 중 / 대기 중 / 블로커 / 완료}
 
 ## 완료 산출물
+
+> 공통 하네스 §2 "단계별 주요 산출물 표준 파일명" + "QA 산출물 표준 파일명" 참조.
+> opsdd는 Phase 기반 독자 구조이므로 진행 현황 행 대신 이 테이블로 산출물을 추적한다.
+
 | 산출물 | 상태 |
 |--------|------|
 | TASK.md | {⬜ / ✅} |
@@ -340,3 +344,4 @@ opal-harness-agentic.md §6 공통 기준에 추가:
 | v2.1 | 2026-04-07 | Phase 1 SPEC, Phase 3 DESIGN Gate에 State Gate 참조 추가. Phase 4 EXECUTE-LOOP STATE.md 갱신에 State Gate 기준 명시 (094) |
 | v2.2 | 2026-04-07 | Phase 4 ACT 실행 구조 변경 — op-dev-plan+op-dev-execute 이중 디스패치 → opal-sdd-action-agent 단일 디스패치. 사용자 Gate 명시 (095) |
 | v2.3 | 2026-04-07 | QA Gate 없는 Phase(SPEC/DESIGN/EXECUTE-LOOP)는 State Gate 단독 구조 유지 확인. 하네스 §3 진행 현황 테이블 적용 (097) |
+| v2.4 | 2026-04-09 | STATE.md 완료 산출물 섹션에 공통 하네스 §2 참조 문구 추가 (101) |

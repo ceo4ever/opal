@@ -156,26 +156,32 @@ Full Task(opal-pilot-dev)로 전환할까요?
 | # | 단계 | 항목 | 상태 | 시점 |
 |---|------|------|------|------|
 | 1 | TASK | 작업 | ⬜ | - |
-| 2 | TASK | 사용자 확인 | ⬜ | - |
-| 3 | PLAN | 작업 | ⬜ | - |
-| 4 | TEST-SCENARIO | 작업 | ⬜ | - |
-| 5 | TEST-SCENARIO | State Gate | ⬜ | - |
-| 6 | PLAN | QA Gate | ⬜ | - |
-| 7 | PLAN | State Gate | ⬜ | - |
-| 8 | PLAN | Artifact Gate | ⬜ | - |
-| 9 | PLAN | State Gate | ⬜ | - |
-| 10 | PLAN | PM Gate | ⬜ | - |
+| 2 | TASK | TASK.md 생성 | ⬜ | - |
+| 3 | TASK | 사용자 확인 | ⬜ | - |
+| 4 | PLAN | 작업 | ⬜ | - |
+| 5 | PLAN | PLAN.md 생성 | ⬜ | - |
+| 6 | TEST-SCENARIO | 작업 | ⬜ | - |
+| 7 | TEST-SCENARIO | TEST-SCENARIO.md 생성 | ⬜ | - |
+| 8 | TEST-SCENARIO | State Gate | ⬜ | - |
+| 9 | PLAN | QA Gate | ⬜ | - |
+| 10 | PLAN | QA-PLAN.md 생성 | ⬜ | - |
 | 11 | PLAN | State Gate | ⬜ | - |
-| 12 | PLAN | 사용자 확인 | ⬜ | - |
-| 13 | EXECUTE | 작업 | ⬜ | - |
-| 14 | EXECUTE | State Gate | ⬜ | - |
-| 15 | TEST | 작업 | ⬜ | - |
-| 16 | TEST | State Gate | ⬜ | - |
-| 17 | TEST | QA Gate | ⬜ | - |
-| 18 | TEST | State Gate | ⬜ | - |
-| 19 | TEST | PM Gate | ⬜ | - |
+| 12 | PLAN | Artifact Gate | ⬜ | - |
+| 13 | PLAN | State Gate | ⬜ | - |
+| 14 | PLAN | PM Gate | ⬜ | - |
+| 15 | PLAN | State Gate | ⬜ | - |
+| 16 | PLAN | 사용자 확인 | ⬜ | - |
+| 17 | EXECUTE | 작업 | ⬜ | - |
+| 18 | EXECUTE | State Gate | ⬜ | - |
+| 19 | TEST | 작업 | ⬜ | - |
 | 20 | TEST | State Gate | ⬜ | - |
-| 21 | TEST | 사용자 확인 | ⬜ | - |
+| 21 | TEST | QA Gate | ⬜ | - |
+| 22 | TEST | QA-EXECUTE.md 생성 | ⬜ | - |
+| 23 | TEST | State Gate | ⬜ | - |
+| 24 | TEST | PM Gate | ⬜ | - |
+| 25 | TEST | DONE.md 생성 | ⬜ | - |
+| 26 | TEST | State Gate | ⬜ | - |
+| 27 | TEST | 사용자 확인 | ⬜ | - |
 ```
 
 > TEST 루핑 발생 시: "TEST | fix 작업 (N/3)", "TEST | State Gate (N/3)" 행을 동적 추가한다.
@@ -227,3 +233,4 @@ TASK (PM 직접) → PLAN+TEST-SCENARIO Gate → EXECUTE Gate → TEST Gate
 | v2.3 | 2026-04-07 | TASK/PLAN/EXECUTE 각 단계 Gate 순서에 State Gate 추가 (094) |
 | v2.4 | 2026-04-07 | State Gate를 PM Gate 전 1개 → 각 Gate 직후로 재배치 (097) |
 | v2.5 | 2026-04-08 | TEST-SCENARIO를 Gates 앞으로 이동 + TEST 단계 공식화 + TEST 루핑 구현 (100) |
+| v2.6 | 2026-04-09 | STATE.md 도메인 치환값 — 진행 현황 행 예시에 산출물 생성 행 추가 (101) |

@@ -106,23 +106,28 @@ op-task-execute 워커 디스패치. **model**: standard. checklist_source: PLAN
 | # | 단계 | 항목 | 상태 | 시점 |
 |---|------|------|------|------|
 | 1 | TASK | 작업 | ⬜ | - |
-| 2 | TASK | 사용자 확인 | ⬜ | - |
-| 3 | PLAN | 작업 | ⬜ | - |
-| 4 | PLAN | QA Gate | ⬜ | - |
-| 5 | PLAN | State Gate | ⬜ | - |
-| 6 | PLAN | Artifact Gate | ⬜ | - |
-| 7 | PLAN | State Gate | ⬜ | - |
-| 8 | PLAN | PM Gate | ⬜ | - |
-| 9 | PLAN | State Gate | ⬜ | - |
-| 10 | PLAN | 사용자 확인 | ⬜ | - |
-| 11 | EXECUTE | 작업 | ⬜ | - |
-| 12 | EXECUTE | QA Gate | ⬜ | - |
-| 13 | EXECUTE | State Gate | ⬜ | - |
-| 14 | EXECUTE | Artifact Gate | ⬜ | - |
-| 15 | EXECUTE | State Gate | ⬜ | - |
-| 16 | EXECUTE | PM Gate | ⬜ | - |
+| 2 | TASK | TASK.md 생성 | ⬜ | - |
+| 3 | TASK | 사용자 확인 | ⬜ | - |
+| 4 | PLAN | 작업 | ⬜ | - |
+| 5 | PLAN | PLAN.md 생성 | ⬜ | - |
+| 6 | PLAN | QA Gate | ⬜ | - |
+| 7 | PLAN | QA-PLAN.md 생성 | ⬜ | - |
+| 8 | PLAN | State Gate | ⬜ | - |
+| 9 | PLAN | Artifact Gate | ⬜ | - |
+| 10 | PLAN | State Gate | ⬜ | - |
+| 11 | PLAN | PM Gate | ⬜ | - |
+| 12 | PLAN | State Gate | ⬜ | - |
+| 13 | PLAN | 사용자 확인 | ⬜ | - |
+| 14 | EXECUTE | 작업 | ⬜ | - |
+| 15 | EXECUTE | QA Gate | ⬜ | - |
+| 16 | EXECUTE | QA-EXECUTE.md 생성 | ⬜ | - |
 | 17 | EXECUTE | State Gate | ⬜ | - |
-| 18 | EXECUTE | 사용자 확인 | ⬜ | - |
+| 18 | EXECUTE | Artifact Gate | ⬜ | - |
+| 19 | EXECUTE | State Gate | ⬜ | - |
+| 20 | EXECUTE | PM Gate | ⬜ | - |
+| 21 | EXECUTE | DONE.md 생성 | ⬜ | - |
+| 22 | EXECUTE | State Gate | ⬜ | - |
+| 23 | EXECUTE | 사용자 확인 | ⬜ | - |
 ```
 
 ---
@@ -164,3 +169,4 @@ TASK (PM 직접) → PLAN Gate → EXECUTE Gate
 | v1.9 | 2026-04-05 | EXECUTE 후 추가작업 참조 가이드 추가 — 하네스 §3 추가작업 프로세스 (087) |
 | v2.0 | 2026-04-07 | TASK/PLAN/EXECUTE 각 단계 Gate 순서에 State Gate 추가 (094) |
 | v2.1 | 2026-04-07 | State Gate를 PM Gate 전 1개 → 각 Gate 직후로 재배치 (097) |
+| v2.2 | 2026-04-09 | STATE.md 도메인 치환값 — 진행 현황 행 예시에 산출물 생성 행 추가 (101) |

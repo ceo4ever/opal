@@ -81,6 +81,34 @@ Harness STATE.md 템플릿에 적용:
 - `{단계 목록}`: TASK / WIREFRAME / EXECUTE
 - `{산출물 목록}`: TASK.md, wireframe.md(기존 존재 가능), QA-*.md, DONE.md
 
+**진행 현황 행 예시** (STATE.md 초기 생성 시 이 구조로 작성):
+
+| # | 단계 | 항목 | 상태 | 시점 |
+|---|------|------|------|------|
+| 1 | TASK | 작업 | ⬜ | - |
+| 2 | TASK | TASK.md 생성 | ⬜ | - |
+| 3 | TASK | 사용자 확인 | ⬜ | - |
+| 4 | WIREFRAME | 작업 | ⬜ | - |
+| 5 | WIREFRAME | wireframe.md 생성 | ⬜ | - |
+| 6 | WIREFRAME | QA Gate | ⬜ | - |
+| 7 | WIREFRAME | QA-WIREFRAME.md 생성 | ⬜ | - |
+| 8 | WIREFRAME | State Gate | ⬜ | - |
+| 9 | WIREFRAME | Artifact Gate | ⬜ | - |
+| 10 | WIREFRAME | State Gate | ⬜ | - |
+| 11 | WIREFRAME | PM Gate | ⬜ | - |
+| 12 | WIREFRAME | State Gate | ⬜ | - |
+| 13 | WIREFRAME | 사용자 확인 | ⬜ | - |
+| 14 | EXECUTE | 작업 | ⬜ | - |
+| 15 | EXECUTE | QA Gate | ⬜ | - |
+| 16 | EXECUTE | QA-EXECUTE.md 생성 | ⬜ | - |
+| 17 | EXECUTE | State Gate | ⬜ | - |
+| 18 | EXECUTE | PM Gate | ⬜ | - |
+| 19 | EXECUTE | DONE.md 생성 | ⬜ | - |
+| 20 | EXECUTE | State Gate | ⬜ | - |
+| 21 | EXECUTE | 사용자 확인 | ⬜ | - |
+
+> WIREFRAME 스킵 시 (wireframe.md 기존 존재): WIREFRAME 단계 행(#4-#13)을 `-`로 표기한다.
+
 ---
 
 ## Agentic Mode
@@ -116,3 +144,4 @@ TASK (PM 직접) → WIREFRAME Gate → EXECUTE Gate
 | v1.5 | 2026-04-02 | 서브 하네스 [MUST] 추가 + WIREFRAME/EXECUTE PM Gate 추가 (072) |
 | v1.6 | 2026-04-07 | TASK/WIREFRAME/EXECUTE 각 단계 Gate 순서에 State Gate 추가 + Agentic Mode 섹션 신설 (094) |
 | v1.7 | 2026-04-07 | State Gate를 PM Gate 전 1개 → 각 Gate 직후로 재배치 (097) |
+| v1.8 | 2026-04-09 | STATE.md 도메인 치환값 — 진행 현황 행 예시 신규 추가 (산출물 생성 행 포함) (101) |

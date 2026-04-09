@@ -111,6 +111,20 @@ Artifact Gate(interactive §2.5 / agentic §4)에서 확인하는 필수 산출�
 | EXECUTE QA | `QA-EXECUTE.md` | `tasks/{NNN}-{name}/` |
 | ANALYSIS QA | `QA-ANALYSIS.md` | `tasks/{NNN}-{name}/` (해당 단계가 있는 스킬만) |
 
+### 단계별 주요 산출물 표준 파일명
+
+진행 현황 산출물 행에서 추적하는 파일명의 기본값.
+오케스트레이터 SKILL.md에서 오버라이드 가능하며, 명시가 없으면 이 표준을 따른다.
+
+| 단계 | 주요 산출물 | 위치 |
+|------|-----------|------|
+| TASK | `TASK.md` | `tasks/{NNN}-{name}/` |
+| ANALYSIS | `ANALYSIS.md` | `tasks/{NNN}-{name}/` (해당 단계가 있는 스킬만) |
+| PLAN | `PLAN.md` | `tasks/{NNN}-{name}/` |
+| TEST-SCENARIO | `TEST-SCENARIO.md` | `tasks/{NNN}-{name}/` (해당 단계가 있는 스킬만) |
+| WIREFRAME | `wireframe.md` | `tasks/{NNN}-{name}/` (opdw 전용) |
+| DONE | `DONE.md` | `tasks/{NNN}-{name}/` |
+
 **스킬별 산출물 오버라이드**: 각 오케스트레이터 SKILL.md의 "STATE.md 도메인 치환값" 또는 별도 섹션에서 단계별 QA 산출물 파일명을 명시할 수 있다.
 
 **스킬별 검증 방식**:
@@ -137,6 +151,7 @@ Artifact Gate(interactive §2.5 / agentic §4)에서 확인하는 필수 산출�
 | TASK 완료 | 오케스트레이터 | STATE.md 초기 생성 + 진행 현황 행 구성 | 진행 중 | **필수** |
 | 단계 시작 | 오케스트레이터 | 해당 단계 작업 행 → 🔄 | 진행 중 | **필수** |
 | 단계 완료(작업) | 워커(1차) + PM(확인) | 해당 단계 작업 행 → ✅ | - | **필수** |
+| 산출물 생성 완료 | 워커(1차) + PM(확인) | 해당 산출물 생성 행 → ✅ | - | **필수** |
 | QA Gate 통과 | PM | QA Gate 행 → ✅ | - | **필수** |
 | State Gate (QA 직후) | PM | State Gate 행 → ✅ | - | **필수** |
 | Artifact Gate 통과 | PM | Artifact Gate 행 → ✅ | - | **필수** |
@@ -202,10 +217,20 @@ Artifact Gate(interactive §2.5 / agentic §4)에서 확인하는 필수 산출�
 ```
 
 **진행 현황 행 구성 규칙**:
-- TASK 단계: `작업`, `사용자 확인` 2행 (Gate 없음)
-- 일반 단계(PLAN/EXECUTE 등): `작업`, `QA Gate`, `State Gate`, `Artifact Gate`, `State Gate`, `PM Gate`, `State Gate`, `사용자 확인` 순
+- TASK 단계: `작업`, `TASK.md 생성`, `사용자 확인` (Gate 없음)
+- 일반 단계(PLAN/EXECUTE 등): `작업`, `{산출물} 생성`, `QA Gate`, `{QA 산출물} 생성`, `State Gate`, `Artifact Gate`, `State Gate`, `PM Gate`, `State Gate`, `사용자 확인` 순
+- 최종 단계(EXECUTE/TEST): PM Gate 직후 `DONE.md 생성`, 이어서 `State Gate`, `사용자 확인`
 - Gate가 없는 단계(opp TASK 등)는 해당 행 생략
+- 산출물이 없는 단계(EXECUTE 작업 = 코드 변경)는 산출물 행 생략
 - 오케스트레이터 SKILL.md "STATE.md 도메인 치환값"에 해당 스킬의 진행 현황 행 예시가 명시됨
+
+**산출물 행 규칙**:
+1. 위치: `작업` 완료 직후, `QA Gate` 직전
+2. 항목명: `{파일명} 생성` (예: `PLAN.md 생성`)
+3. 상태 전이: ⬜ → ✅ (파일 생성 확인 시)
+4. 순서 강제: 앞 행(작업)이 ✅가 아니면 산출물 행 진행 불가
+5. QA 산출물 행: QA Gate 직후, Artifact Gate 직전에 위치
+6. DONE.md 행: 최종 단계 PM Gate 직후, 사용자 확인 직전에 위치
 
 ### ADD_DONE.md 템플릿
 
@@ -592,3 +617,4 @@ OPAL 도구는 모두 `~/.opal/tools/{tool-name}/run.sh` 래퍼를 통해 호출
 | v3.0 | 2026-04-07 | §3 STATE.md 이벤트 테이블 전면 재설계 — Gate별 진행 현황 테이블 행 갱신으로 통합. `완료 산출물` 섹션 → `진행 현황` 행 기반 테이블로 교체. Artifact Gate 이벤트 추가. 수행 순서 강제 원칙 추가. 레거시 Gate 상태값 deprecated (097) |
 | v3.0 | 2026-04-07 | §3 STATE.md 이벤트 테이블에 "강제" 명시 + 갱신 모델(워커 1차 + PM 확인) 추가. §3 State Gate 섹션 신설 — 자가 점검 프롬프트 + 차단 원칙 + 표준 Gate 순서 문구 (094) |
 | v3.1 | 2026-04-07 | §3 상태값 확장(`대기 중` → Gate 3단계) + 이벤트 테이블 Gate 행 추가 + State Gate 이전 단계 차단 규칙. §5 행위 주체 표시 신설(PM직접/워커디스패치/워커완료). 레거시 호환 노트 추가 (096) |
+| v3.2 | 2026-04-09 | §2 단계별 주요 산출물 표준 파일명 추가. §3 이벤트 테이블 산출물 생성 행 추가. 진행 현황 행 구성 규칙에 산출물 행 규칙 추가 (101) |

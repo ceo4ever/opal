@@ -28,6 +28,7 @@
 
 | # | 작업 | 단계 | 경로 | 시작일시 | 완료일시 |
 |---|------|------|------|---------|---------|
+| 0 | STATE.md 진행 현황 + 완료 산출물 통합 (101) | 완료 | tasks/101-opp-state-artifact-integration/ | 2026-04-09 | 2026-04-09 |
 | 0 | opds/opd TEST-SCENARIO 흐름 재설계 (100) | 완료 | tasks/100-opp-dev-skill-test-redesign/ | 2026-04-08 | 2026-04-08 |
 | 0 | 에이전트 아이콘 Observability + 메모리 브리핑 간소화 (099) | 완료 | tasks/099-opp-agent-icon-memory-briefing/ | 2026-04-08 | 2026-04-09 |
 | 0 | OPAL Vector Store — sqlite-vec 기반 문서 벡터 검색 도구 (098) | PLAN ✅ → EXECUTE 대기 | tasks/098-opp-vector-store/ | 2026-04-08 | - |
