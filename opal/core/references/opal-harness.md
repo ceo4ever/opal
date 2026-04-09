@@ -107,9 +107,9 @@ Artifact Gate(interactive §2.5 / agentic §4)에서 확인하는 필수 산출�
 
 | 단계 | 필수 산출물 파일 | 위치 |
 |------|--------------|------|
-| PLAN QA | `QA-PLAN.md` | `tasks/{NNN}-{name}/` |
-| EXECUTE QA | `QA-EXECUTE.md` | `tasks/{NNN}-{name}/` |
-| ANALYSIS QA | `QA-ANALYSIS.md` | `tasks/{NNN}-{name}/` (해당 단계가 있는 스킬만) |
+| PLAN QA | `QA-PLAN.md` | `tasks/{NNN}-{YYMMDD}-{name}/` |
+| EXECUTE QA | `QA-EXECUTE.md` | `tasks/{NNN}-{YYMMDD}-{name}/` |
+| ANALYSIS QA | `QA-ANALYSIS.md` | `tasks/{NNN}-{YYMMDD}-{name}/` (해당 단계가 있는 스킬만) |
 
 ### 단계별 주요 산출물 표준 파일명
 
@@ -118,12 +118,12 @@ Artifact Gate(interactive §2.5 / agentic §4)에서 확인하는 필수 산출�
 
 | 단계 | 주요 산출물 | 위치 |
 |------|-----------|------|
-| TASK | `TASK.md` | `tasks/{NNN}-{name}/` |
-| ANALYSIS | `ANALYSIS.md` | `tasks/{NNN}-{name}/` (해당 단계가 있는 스킬만) |
-| PLAN | `PLAN.md` | `tasks/{NNN}-{name}/` |
-| TEST-SCENARIO | `TEST-SCENARIO.md` | `tasks/{NNN}-{name}/` (해당 단계가 있는 스킬만) |
-| WIREFRAME | `wireframe.md` | `tasks/{NNN}-{name}/` (opdw 전용) |
-| DONE | `DONE.md` | `tasks/{NNN}-{name}/` |
+| TASK | `TASK.md` | `tasks/{NNN}-{YYMMDD}-{name}/` |
+| ANALYSIS | `ANALYSIS.md` | `tasks/{NNN}-{YYMMDD}-{name}/` (해당 단계가 있는 스킬만) |
+| PLAN | `PLAN.md` | `tasks/{NNN}-{YYMMDD}-{name}/` |
+| TEST-SCENARIO | `TEST-SCENARIO.md` | `tasks/{NNN}-{YYMMDD}-{name}/` (해당 단계가 있는 스킬만) |
+| WIREFRAME | `wireframe.md` | `tasks/{NNN}-{YYMMDD}-{name}/` (opdw 전용) |
+| DONE | `DONE.md` | `tasks/{NNN}-{YYMMDD}-{name}/` |
 
 **스킬별 산출물 오버라이드**: 각 오케스트레이터 SKILL.md의 "STATE.md 도메인 치환값" 또는 별도 섹션에서 단계별 QA 산출물 파일명을 명시할 수 있다.
 
@@ -393,6 +393,15 @@ oppd Phase 3에서 병렬 태스크 실행 시 STATE.md를 다음과 같이 확�
    - 탐색: `{프로젝트}/.opal/skills/op-task/SKILL.md` -> `~/.opal/skills/op-task/SKILL.md`
 2. 스킬 프로세스를 따라 TASK.md를 작성한다.
 
+#### 태스크 번호 채번 규칙
+
+신규 태스크 생성 시:
+1. `.opal/MEMORY.md` 헤더의 `last_task_number` 필드를 읽는다
+2. `last_task_number + 1`을 계산한다
+3. 태스크 폴더를 생성한다 (`tasks/{NNN}-{YYMMDD}-{스킬약어}-{태스크명}/`)
+   - `{YYMMDD}`: `node ~/.opal/tools/date/date.js yymmdd` 실행하여 KST 기준 취득
+4. TASK.md 작성 완료 후 `.opal/MEMORY.md`의 `last_task_number`를 갱신한다
+
 #### 오케스트레이터 공통 영역 (스킬 완료 후 후처리)
 
 3. **STEP 5(오케스트레이터 선택)에서 결정된 스킬약어**를 폴더명과 TASK.md 헤더 `적용 스킬` 필드에 반영한다.
@@ -405,13 +414,13 @@ oppd Phase 3에서 병렬 태스크 실행 시 STATE.md를 다음과 같이 확�
 | 조건 | 저장 경로 |
 |------|----------|
 | `base_path` 지정 시 (오케스트레이터가 명시 주입) | `{base_path}/` (폴더 구조는 오케스트레이터 정의를 따름) |
-| `base_path` 없음 (기본) | `tasks/{NNN}-{스킬약어}-{태스크명}/` |
+| `base_path` 없음 (기본) | `tasks/{NNN}-{YYMMDD}-{스킬약어}-{태스크명}/` |
 
 > **`base_path` 용도**: opsdd와 같이 단일 루트 폴더에 모든 산출물을 통합하는 오케스트레이터에서 활용한다. 기존 opp/opds/opd 등 `base_path`를 주입하지 않는 오케스트레이터는 기본 경로(`tasks/`)를 그대로 사용하므로 동작에 영향 없다.
 
 ```
 📋 [TASK] 완료 보고
-📎 산출물: tasks/{NNN}-{스킬약어}-{태스크명}/TASK.md
+📎 산출물: tasks/{NNN}-{YYMMDD}-{스킬약어}-{태스크명}/TASK.md
 적용 스킬: {약어}
 다음 단계({다음 단계명})로 넘어갈까요?
 ```
@@ -443,6 +452,15 @@ dev 단계 스킬:
 - DONE.md 생성: `단계` 컬럼 -> `완료`
 
 **FIFO 규칙**: 항목 추가 후 작업 히스토리가 10개를 초과하면 가장 오래된 행(테이블 맨 아래)을 즉시 삭제한다. 추가와 삭제를 같은 시점에 수행한다.
+
+#### 타임스탬프 취득 규칙 (필수)
+
+시작일시/완료일시 기록 시 반드시 bash 명령을 실행하여 KST 현재 시각을 취득한다:
+- 일시 (`YYYY-MM-DD HH:mm`): `node ~/.opal/tools/date/date.js datetime`
+- 일자 (`YYYY-MM-DD`): `node ~/.opal/tools/date/date.js date`
+- 폴더명용 (`YYMMDD`): `node ~/.opal/tools/date/date.js yymmdd`
+
+**bash 생략 금지**: 컨텍스트에 날짜가 있어도 bash 실행은 필수다. 시간(HH:mm)까지 정확히 기록해야 한다.
 
 ### 행위 주체 표시
 
@@ -618,3 +636,4 @@ OPAL 도구는 모두 `~/.opal/tools/{tool-name}/run.sh` 래퍼를 통해 호출
 | v3.0 | 2026-04-07 | §3 STATE.md 이벤트 테이블에 "강제" 명시 + 갱신 모델(워커 1차 + PM 확인) 추가. §3 State Gate 섹션 신설 — 자가 점검 프롬프트 + 차단 원칙 + 표준 Gate 순서 문구 (094) |
 | v3.1 | 2026-04-07 | §3 상태값 확장(`대기 중` → Gate 3단계) + 이벤트 테이블 Gate 행 추가 + State Gate 이전 단계 차단 규칙. §5 행위 주체 표시 신설(PM직접/워커디스패치/워커완료). 레거시 호환 노트 추가 (096) |
 | v3.2 | 2026-04-09 | §2 단계별 주요 산출물 표준 파일명 추가. §3 이벤트 테이블 산출물 생성 행 추가. 진행 현황 행 구성 규칙에 산출물 행 규칙 추가 (101) |
+| v3.3 | 2026-04-09 | §4 저장 경로 날짜 포함 형식으로 변경(`{NNN}-{YYMMDD}-{스킬약어}-{태스크명}`) + 태스크 번호 채번 규칙 추가(`last_task_number` 기반). §5 타임스탬프 취득 규칙(필수) 추가 — bash 생략 금지 (102) |

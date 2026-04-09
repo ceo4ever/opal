@@ -145,13 +145,13 @@ description: |
 ## 저장 경로
 
 ```
-tasks/{NNN}-{스킬약어}-{태스크명}/TASK.md
+tasks/{NNN}-{YYMMDD}-{스킬약어}-{태스크명}/TASK.md
 ```
 
-- `{NNN}`: 3자리 순번 (001, 002, ...)
+- `{NNN}`: 3자리 순번 — `.opal/MEMORY.md`의 `last_task_number` + 1로 채번 (harness §4 참조)
+- `{YYMMDD}`: TASK 단계 시작일 (KST) — `node ~/.opal/tools/date/date.js yymmdd` 실행하여 취득
 - `{스킬약어}`: STEP 5에서 결정된 오케스트레이터 약어 (예: `opp`, `opd`, `opds`, `opdw`, `opwt`)
 - `{태스크명}`: kebab-case (예: `user-auth-implementation`)
-- 기존 `tasks/` 폴더의 최대 번호 + 1로 자동 채번한다
 - `tasks/` 폴더가 없으면 생성한다
 
 ### STEP 5. 오케스트레이터 선택
@@ -219,3 +219,4 @@ TASK.md 완성 전에 다음을 확인한다:
 |------|------|---------|
 | v1.0 | — | 초기 작성 |
 | v1.1 | 2026-04-07 | "대화 내용 반영" 절에 "배경 분석 (대화에서 도출)" 섹션 추가. TASK.md 템플릿 갱신. 체크리스트 항목 분리 (094) |
+| v1.2 | 2026-04-09 | 저장 경로 날짜 포함 형식으로 변경(`{NNN}-{YYMMDD}-{스킬약어}-{태스크명}`). `{NNN}` 채번 방식을 `last_task_number` 기반으로 변경. `{YYMMDD}` 항목 추가 (102) |
