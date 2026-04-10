@@ -61,25 +61,39 @@ Phase별 점검 항목(파일 존재 + 체크리스트 완전성)을 PM이 직�
 
 전체 섹션 삭제. Gate Fail 공통 처리(§5)의 Artifact Gate 행도 함께 제거.
 
-#### R-1-2. §3 PM Gate — 자가 진단 절차 추가
+#### R-1-2. §3 PM Gate — 자가 진단 절차 추가 (알고리즘/데이터 분리 구조)
 
-PM Gate 진입 시 아래 자가 진단을 수행한다. STATE.md를 Read하여 현재 Phase를 파악하고, Phase에 맞는 항목을 점검한다.
+**설계 원칙**:
+- **하네스** = 알고리즘 SSOT (PM이 따를 절차)
+- **SKILL.md** = 데이터 선언 (스킬별 산출물 목록)
+- PM은 하네스 한 곳만 읽어서 절차를 파악하고, 하네스 절차가 SKILL.md Read를 강제한다
 
-**공통 점검 항목 (Phase별)**:
+**PM Gate 자가 진단 절차** (harness-interactive.md §3에 추가):
+```
+1. STATE.md Read → 현재 Phase 파악
+2. 현재 SKILL.md "## PM Gate 점검 목록" 섹션 Read → 해당 Phase 행 확인
+3. 점검 목록의 각 산출물 Read → 존재 + 내용 확인
+4. 체크리스트 위치 Read → [ ] 발견 시:
+     a. 해당 항목과 관련된 산출물 Read
+     b. 실제로 작업이 완료됐는지 내용으로 판단
+     c. 완료 확인 → [x]로 직접 갱신
+     d. 미완료 확인 → 미완료 항목 목록에 추가
+5. 판정:
+     Pass (미완료 항목 없음) → PM 검토 기준(opal-pm.md §4)으로 진행
+     Fail (미완료 항목 있음) → 항목별 이유 명시 + 사용자 보고
+```
 
-| Phase | 점검 항목 |
-|-------|----------|
-| PLAN | ① 주요 산출물(PLAN.md) 존재 + 비어있지 않음<br>② PLAN.md §3 실행 체크리스트 `[ ]` 없음<br>③ PLAN.md §4 QA 체크리스트 `[ ]` 없음<br>④ QA 산출물(QA-PLAN.md) 존재 + 비어있지 않음 |
-| EXECUTE | ① PLAN.md 실행 체크리스트 `[ ]` 없음 (모두 `[x]`)<br>② QA 산출물(QA-EXECUTE.md) 존재 + 비어있지 않음 |
-| 기타 단계 | ① 해당 단계 주요 산출물 존재 + 비어있지 않음<br>② QA 산출물 존재 + 비어있지 않음 (QA Gate가 있는 경우) |
+**SKILL.md "PM Gate 점검 목록" 섹션** (R-3 각 SKILL.md에 추가):
+```markdown
+## PM Gate 점검 목록
 
-**판정**:
-- 전체 Pass → PM 검토 기준(`opal-pm.md §4`) 수행으로 진행
-- Fail → 즉시 차단 + 실패 항목 명시 + 사용자 에스컬레이션
-
-**스킬별 오버라이드**:
-- 각 오케스트레이터 SKILL.md의 "PM Gate 자가 진단 오버라이드" 섹션에 스킬 고유 점검 항목을 추가할 수 있다.
-- 오버라이드가 없으면 이 공통 항목을 그대로 적용한다.
+| Phase | 산출물 | 체크리스트 위치 |
+|-------|-------|----------------|
+| PLAN  | PLAN.md, QA-PLAN.md | PLAN.md §3, §4 |
+| EXECUTE | QA-EXECUTE.md | PLAN.md §3 |
+```
+- 스킬별 Phase가 추가되는 경우 해당 Phase 행을 추가한다
+- 체크리스트가 없는 Phase는 체크리스트 위치를 `-`로 표기
 
 #### R-1-3. §4 체크리스트 검증 게이트 섹션 정리
 
@@ -89,7 +103,7 @@ PM Gate 자가 진단에 체크리스트 확인이 통합되었으므로 §4를 
 
 재소환·재지시 처리 테이블에서 Artifact Gate 행 제거.
 
-**AC**: PM Gate가 STATE.md를 Read하고 현재 Phase를 파악하는 명시적 자가 진단 절차를 가진다. 점검 항목 중 하나라도 Fail이면 DONE.md 생성으로 진행하지 않는다.
+**AC**: PM Gate가 STATE.md → SKILL.md "PM Gate 점검 목록" → 산출물 Read → [ ] 내용 판단 → 직접 [x] 갱신 또는 사용자 보고 순서로 동작한다. 에이전트 재호출 없이 PM이 내용 기반으로 판단하며, 진짜 미완료 항목만 사용자에게 보고된다.
 
 ---
 
@@ -111,18 +125,26 @@ PM Gate 자가 진단에 체크리스트 확인이 통합되었으므로 §4를 
 
 ### R-3. 각 오케스트레이터 SKILL.md — 진행 현황 행 예시 수정
 
-**대상**: 아래 4개 소스 파일의 "STATE.md 도메인 치환값" 진행 현황 행 예시
+**대상**: 아래 6개 소스 파일의 "STATE.md 도메인 치환값" 진행 현황 행 예시
 
 | 파일 | 제거 대상 행 |
 |------|------------|
-| `opal/skills/opal-pilot-project/SKILL.md` | Artifact Gate 행(#9, #18) + 직후 State Gate 행(#10, #19) |
-| `opal/skills/opal-pilot-dev-short/SKILL.md` | 동일 패턴의 Artifact Gate + State Gate 행 |
-| `opal/skills/opal-pilot-dev-wireframe/SKILL.md` | 동일 |
-| `opal/skills/opal-pilot-sdd/SKILL.md` | 104 태스크 STATE.md 템플릿과 조율하여 반영 |
+| `opal/skills/opal-pilot-project/SKILL.md` | Artifact Gate 행 + 직후 State Gate 행 (PLAN·EXECUTE 각 1쌍) |
+| `opal/skills/opal-pilot-dev/SKILL.md` | Artifact Gate 행 + 직후 State Gate 행 (ANALYSIS·PLAN Gate 각 1쌍) |
+| `opal/skills/opal-pilot-dev-short/SKILL.md` | 동일 패턴 제거 + **TEST-SCENARIO 행 순서 정정** (PLAN 행 중간에 삽입된 순서 이상 수정) |
+| `opal/skills/opal-pilot-dev-wireframe/SKILL.md` | Artifact Gate 행 + 직후 State Gate 행 (WIREFRAME 단계) |
+| `opal/skills/opal-pilot-write-tech/SKILL.md` | 모드별 Artifact Gate 행 + 직후 State Gate 행 제거 |
+| `opal/skills/opal-pilot-sdd/SKILL.md` | 105 태스크에서 반영된 Artifact Gate 행 제거 (Task 106 PM Gate 개선에 맞춰 재조율) |
 
-SKILL.md 파이프라인 섹션(STEP 2 PLAN, STEP 3 EXECUTE)에서 `Artifact Gate` 참조 텍스트도 제거.
+SKILL.md 파이프라인 섹션(Phase별 Gate 설명)에서 `Artifact Gate` 참조 텍스트도 제거.
 
-**AC**: 모든 오케스트레이터 SKILL.md의 진행 현황 행 예시에 Artifact Gate 행이 없다.
+**제거 후 단계별 Gate 순서 (표준)**:
+```
+작업 → {산출물} 생성 → QA Gate → {QA 산출물} 생성 → State Gate → PM Gate → State Gate → 사용자 확인
+```
+(QA Gate 없는 단계: 작업 → {산출물} 생성 → State Gate → PM Gate → State Gate → 사용자 확인)
+
+**AC**: 모든 오케스트레이터 SKILL.md의 진행 현황 행 예시에 Artifact Gate 행이 없고, Gate 순서가 표준을 따른다.
 
 ---
 
@@ -146,9 +168,11 @@ SKILL.md 파이프라인 섹션(STEP 2 PLAN, STEP 3 EXECUTE)에서 `Artifact Gat
 - `opal/core/references/opal-harness-interactive.md` — §2.5 Artifact Gate, §3 PM Gate, §4 체크리스트 검증 게이트, §5 Gate Fail
 - `opal/core/references/opal-harness.md` — §3 STATE.md 공통 구조, 진행 현황 행 구성 규칙
 - `opal/skills/opal-pilot-project/SKILL.md` — opp 진행 현황 행 예시
-- `opal/skills/opal-pilot-dev-short/SKILL.md` — opds 진행 현황 행 예시
+- `opal/skills/opal-pilot-dev/SKILL.md` — opd 진행 현황 행 예시
+- `opal/skills/opal-pilot-dev-short/SKILL.md` — opds 진행 현황 행 예시 + TEST-SCENARIO 순서 이상
 - `opal/skills/opal-pilot-dev-wireframe/SKILL.md` — opdw 진행 현황 행 예시
-- `opal/skills/opal-pilot-sdd/SKILL.md` — opsdd (104 태스크 조율)
+- `opal/skills/opal-pilot-write-tech/SKILL.md` — opwt 진행 현황 행 예시 (모드별 가변)
+- `opal/skills/opal-pilot-sdd/SKILL.md` — opsdd (105 태스크 조율)
 - 선행 태스크 `tasks/090-opp-artifact-gate/` — Artifact Gate 도입 배경
 - 선행 태스크 `tasks/097-opp-harness-gate-state/` — State Gate 도입 배경
-- 연관 태스크 `tasks/104-opp-opsdd-state-gate-verify/` — opsdd SKILL.md 중복 수정 범위
+- 연관 태스크 `tasks/105-opp-opsdd-state-gate-verify/` — opsdd SKILL.md 중복 수정 범위

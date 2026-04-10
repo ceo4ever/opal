@@ -41,7 +41,6 @@ op-task-plan 워커 디스패치. **model**: advanced. 이전 산출물: TASK.md
 
 워커 완료
   → **QA Gate** (op-task-qa — 체크리스트 갱신 포함) → **State Gate**
-  → **Artifact Gate** (하네스 §2.5 참조) → **State Gate**
   → **PM Gate** (체크리스트 갱신 상태 확인 — 하네스 interactive §3 참조. 미갱신 시 QA 재소환) → **State Gate** → 사용자에게 보고.
 
 > **[PM 컨텍스트 주입]** 워커 디스패치 프롬프트의 첫 줄에 `[WORKER]`를 삽입한다. `[WORKER]` 마커가 있으면 워커는 부트스트랩을 생략한다. PM은 디스패치 시 다음을 프롬프트에 포함해야 한다:
@@ -74,10 +73,9 @@ op-task-execute 워커 디스패치. **model**: standard. checklist_source: PLAN
 
 워커가 changed_files를 반환하면:
 1. **QA Gate** (op-task-qa) — QA 에이전트 호출 (체크리스트 갱신 포함) → **State Gate**
-2. **Artifact Gate** (하네스 §2.5 참조) → **State Gate**
-3. **PM Gate** — QA 결과 + 실행 결과 검토 + **체크리스트 갱신 상태 확인** (하네스 interactive §3 참조). 미갱신 시 QA 에이전트 재소환 → **State Gate**
-4. **모든 체크리스트 갱신 완료 확인 후** DONE.md 생성
-5. 사용자에게 완료 보고
+2. **PM Gate** — QA 결과 + 실행 결과 검토 + **체크리스트 갱신 상태 확인** (하네스 interactive §3 참조). 미갱신 시 QA 에이전트 재소환 → **State Gate**
+3. **모든 체크리스트 갱신 완료 확인 후** DONE.md 생성
+4. 사용자에게 완료 보고
 
 보고 형식:
 ```
@@ -113,22 +111,27 @@ op-task-execute 워커 디스패치. **model**: standard. checklist_source: PLAN
 | 6 | PLAN | QA Gate | ⬜ | - |
 | 7 | PLAN | QA-PLAN.md 생성 | ⬜ | - |
 | 8 | PLAN | State Gate | ⬜ | - |
-| 9 | PLAN | Artifact Gate | ⬜ | - |
+| 9 | PLAN | PM Gate | ⬜ | - |
 | 10 | PLAN | State Gate | ⬜ | - |
-| 11 | PLAN | PM Gate | ⬜ | - |
-| 12 | PLAN | State Gate | ⬜ | - |
-| 13 | PLAN | 사용자 확인 | ⬜ | - |
-| 14 | EXECUTE | 작업 | ⬜ | - |
-| 15 | EXECUTE | QA Gate | ⬜ | - |
-| 16 | EXECUTE | QA-EXECUTE.md 생성 | ⬜ | - |
-| 17 | EXECUTE | State Gate | ⬜ | - |
-| 18 | EXECUTE | Artifact Gate | ⬜ | - |
-| 19 | EXECUTE | State Gate | ⬜ | - |
-| 20 | EXECUTE | PM Gate | ⬜ | - |
-| 21 | EXECUTE | DONE.md 생성 | ⬜ | - |
-| 22 | EXECUTE | State Gate | ⬜ | - |
-| 23 | EXECUTE | 사용자 확인 | ⬜ | - |
+| 11 | PLAN | 사용자 확인 | ⬜ | - |
+| 12 | EXECUTE | 작업 | ⬜ | - |
+| 13 | EXECUTE | QA Gate | ⬜ | - |
+| 14 | EXECUTE | QA-EXECUTE.md 생성 | ⬜ | - |
+| 15 | EXECUTE | State Gate | ⬜ | - |
+| 16 | EXECUTE | PM Gate | ⬜ | - |
+| 17 | EXECUTE | DONE.md 생성 | ⬜ | - |
+| 18 | EXECUTE | State Gate | ⬜ | - |
+| 19 | EXECUTE | 사용자 확인 | ⬜ | - |
 ```
+
+---
+
+## PM Gate 점검 목록
+
+| Phase | 산출물 | 체크리스트 위치 |
+|-------|-------|----------------|
+| PLAN | PLAN.md, QA-PLAN.md | PLAN.md §3, §4 |
+| EXECUTE | QA-EXECUTE.md | PLAN.md §3 |
 
 ---
 
@@ -170,3 +173,4 @@ TASK (PM 직접) → PLAN Gate → EXECUTE Gate
 | v2.0 | 2026-04-07 | TASK/PLAN/EXECUTE 각 단계 Gate 순서에 State Gate 추가 (094) |
 | v2.1 | 2026-04-07 | State Gate를 PM Gate 전 1개 → 각 Gate 직후로 재배치 (097) |
 | v2.2 | 2026-04-09 | STATE.md 도메인 치환값 — 진행 현황 행 예시에 산출물 생성 행 추가 (101) |
+| v2.3 | 2026-04-10 | Artifact Gate 제거 + PM Gate 점검 목록 섹션 추가 + 파이프라인 현황판 이름 변경 (106) |

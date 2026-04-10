@@ -284,7 +284,7 @@ ACT 완료마다 STATE.md 갱신 (하네스 §3 State Gate 기준 적용):
 - Phase: {현재 Phase}
 - 상태: {진행 중 / 완료 / 블로커 / 추가작업중 / 추가작업완료}
 
-## 진행 현황
+## 파이프라인 현황판
 
 > 상태값: ⬜ 대기 / 🔄 진행 중 / ✅ 완료 / ❌ 실패 / - 해당 없음
 > **수행 원칙**: 위에서 아래로 순서대로 처리한다. 현재 행이 ✅가 아니면 다음 행으로 진행 불가.
@@ -297,43 +297,37 @@ ACT 완료마다 STATE.md 갱신 (하네스 §3 State Gate 기준 적용):
 | 4 | SPEC | 워커 디스패치 | ⬜ | |
 | 5 | SPEC | SPEC.md 생성 | ⬜ | |
 | 6 | SPEC | State Gate | ⬜ | |
-| 7 | SPEC | Artifact Gate | ⬜ | |
+| 7 | SPEC | PM Gate | ⬜ | |
 | 8 | SPEC | State Gate | ⬜ | |
-| 9 | SPEC | PM Gate | ⬜ | |
-| 10 | SPEC | State Gate | ⬜ | |
-| 11 | SPEC | 사용자 확인 | ⬜ | |
-| 12 | REVIEW | 구조 검증 (S-1~S-6) | ⬜ | |
-| 13 | REVIEW | TEST-SCENARIOS.md 작성 | ⬜ | |
-| 14 | REVIEW | FR↔TS 커버리지 확인 | ⬜ | |
+| 9 | SPEC | 사용자 확인 | ⬜ | |
+| 10 | REVIEW | 구조 검증 (S-1~S-6) | ⬜ | |
+| 11 | REVIEW | TEST-SCENARIOS.md 작성 | ⬜ | |
+| 12 | REVIEW | FR↔TS 커버리지 확인 | ⬜ | |
+| 13 | REVIEW | State Gate | ⬜ | |
+| 14 | REVIEW | PM Gate | ⬜ | |
 | 15 | REVIEW | State Gate | ⬜ | |
-| 16 | REVIEW | Artifact Gate | ⬜ | |
-| 17 | REVIEW | State Gate | ⬜ | |
-| 18 | REVIEW | PM Gate | ⬜ | |
-| 19 | REVIEW | State Gate | ⬜ | |
-| 20 | REVIEW | 사용자 확인 | ⬜ | |
-| 21 | DESIGN | 워커 디스패치 | ⬜ | |
-| 22 | DESIGN | SPEC-PLAN.md 생성 | ⬜ | |
-| 23 | DESIGN | State Gate | ⬜ | |
-| 24 | DESIGN | Artifact Gate | ⬜ | |
-| 25 | DESIGN | State Gate | ⬜ | |
-| 26 | DESIGN | PM Gate | ⬜ | |
-| 27 | DESIGN | State Gate | ⬜ | |
-| 28 | DESIGN | 사용자 확인 | ⬜ | |
-| 29 | EXECUTE | ACT 실행 (상세: ACT 목록 참조) | ⬜ | |
-| 30 | EXECUTE | State Gate | ⬜ | |
-| 31 | EXECUTE | PM Gate | ⬜ | |
-| 32 | EXECUTE | State Gate | ⬜ | |
-| 33 | EXECUTE | 사용자 확인 | ⬜ | |
-| 34 | VERIFY | E2E 테스트 수행 | ⬜ | |
-| 35 | VERIFY | TS 전체 Green 확인 | ⬜ | |
-| 36 | VERIFY | State Gate | ⬜ | |
-| 37 | VERIFY | PM Gate | ⬜ | |
-| 38 | VERIFY | State Gate | ⬜ | |
-| 39 | VERIFY | 사용자 확인 | ⬜ | |
-| 40 | DONE | State Gate | ⬜ | |
-| 41 | DONE | DONE.md 생성 | ⬜ | |
-| 42 | DONE | State Gate | ⬜ | |
-| 43 | DONE | 사용자 확인 | ⬜ | |
+| 16 | REVIEW | 사용자 확인 | ⬜ | |
+| 17 | DESIGN | 워커 디스패치 | ⬜ | |
+| 18 | DESIGN | SPEC-PLAN.md 생성 | ⬜ | |
+| 19 | DESIGN | State Gate | ⬜ | |
+| 20 | DESIGN | PM Gate | ⬜ | |
+| 21 | DESIGN | State Gate | ⬜ | |
+| 22 | DESIGN | 사용자 확인 | ⬜ | |
+| 23 | EXECUTE | ACT 실행 (상세: ACT 목록 참조) | ⬜ | |
+| 24 | EXECUTE | State Gate | ⬜ | |
+| 25 | EXECUTE | PM Gate | ⬜ | |
+| 26 | EXECUTE | State Gate | ⬜ | |
+| 27 | EXECUTE | 사용자 확인 | ⬜ | |
+| 28 | VERIFY | E2E 테스트 수행 | ⬜ | |
+| 29 | VERIFY | TS 전체 Green 확인 | ⬜ | |
+| 30 | VERIFY | State Gate | ⬜ | |
+| 31 | VERIFY | PM Gate | ⬜ | |
+| 32 | VERIFY | State Gate | ⬜ | |
+| 33 | VERIFY | 사용자 확인 | ⬜ | |
+| 34 | DONE | State Gate | ⬜ | |
+| 35 | DONE | DONE.md 생성 | ⬜ | |
+| 36 | DONE | State Gate | ⬜ | |
+| 37 | DONE | 사용자 확인 | ⬜ | |
 
 ## ACT 목록 (SSOT — EXECUTE Phase 상세)
 
@@ -374,6 +368,16 @@ ACT 완료마다 STATE.md 갱신 (하네스 §3 State Gate 기준 적용):
 ## 다음 액션
 {다음으로 수행할 작업}
 ```
+
+---
+
+## PM Gate 점검 목록
+
+| Phase | 산출물 | 체크리스트 위치 |
+|-------|-------|----------------|
+| SPEC | SPEC.md, QA-SPEC.md | - |
+| DESIGN | SPEC-PLAN.md | - |
+| EXECUTE | QA-EXECUTE.md | PLAN.md §3 |
 
 ---
 
@@ -439,3 +443,4 @@ opal-harness-agentic.md §6 공통 기준에 추가:
 | v2.3 | 2026-04-07 | QA Gate 없는 Phase(SPEC/DESIGN/EXECUTE-LOOP)는 State Gate 단독 구조 유지 확인. 하네스 §3 진행 현황 테이블 적용 (097) |
 | v2.4 | 2026-04-09 | STATE.md 완료 산출물 섹션에 공통 하네스 §2 참조 문구 추가 (101) |
 | v2.5.0 | 2026-04-10 | R-1 STATE.md 도메인 치환값 → 43행 진행 현황 구조로 교체 + ACT 목록 SSOT + TS 현황 + SPEC 변경이력 섹션 추가; R-2 VERIFY Phase(Phase 5) 신설 + DONE → Phase 6; R-3 EXECUTE-LOOP L1/L2 검증 루프 명시 (105) |
+| v2.6.0 | 2026-04-10 | Artifact Gate 제거 + PM Gate 점검 목록 섹션 추가 + 파이프라인 현황판 이름 변경 (106) |

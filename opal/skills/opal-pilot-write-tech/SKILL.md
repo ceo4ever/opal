@@ -146,7 +146,6 @@ tasks/{NNN}-opwt-{name}/PLAN.md
 
 - **STATE 갱신**: 단계 시작/완료 시 STATE.md 갱신
 - **QA Gate** (op-task-qa) — PLAN.md 검증 → **State Gate**
-- **Artifact Gate** (하네스 §2.5 참조) → **State Gate**
 - **PM Gate** (TASK.md 요구사항 체크박스 갱신 포함 — 하네스 §3 참조) → **State Gate**
 - **게이트**: PLAN.md + 배치 계획 사용자 확인 (interactive) / PM 자율 승인 (agentic)
 
@@ -226,6 +225,15 @@ opal-doc-standard 적용: `~/.opal/references/opal-doc-standard.md`
 - `references/network-guide.md` — 산출물 정의, 연결 맵, diagnosis.json 스키마, 워커 프롬프트, 배치 규칙, IA 형식, **외부 참조 산출물 가이드**
 - `references/consistency-rules.md` — 유형 간/내 검증, QA 워커 프롬프트, **외부 참조 검증**
 
+## PM Gate 점검 목록
+
+| Phase | 산출물 | 체크리스트 위치 |
+|-------|-------|----------------|
+| PLAN | PLAN.md, QA-PLAN.md | PLAN.md §3, §4 |
+| EXECUTE | QA-EXECUTE.md | - |
+
+---
+
 ## 변경이력
 
 | 버전 | 날짜 | 변경내용 |
@@ -245,3 +253,4 @@ opal-doc-standard 적용: `~/.opal/references/opal-doc-standard.md`
 | v2.5 | 2026-04-06 | ANALYSIS PM Gate(자가 체크) 추가 + EXECUTE 배치 게이트 "PM 검토" → "PM Gate" 명확화 (090) |
 | v2.6 | 2026-04-07 | TASK/ANALYSIS/PLAN/EXECUTE/QA 각 단계 Gate에 State Gate 참조 추가 (094) |
 | v2.7 | 2026-04-07 | State Gate를 PM Gate 전 1개 → 각 Gate 직후로 재배치. EXECUTE 배치 Artifact Gate 제거(opwt 구조상 해당 없음) (097) |
+| v2.8 | 2026-04-10 | Artifact Gate 제거 + PM Gate 점검 목록 섹션 추가 + 파이프라인 현황판 이름 변경 (106) |

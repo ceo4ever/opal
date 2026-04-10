@@ -53,7 +53,6 @@ PLAN 완료 직후 연속 디스패치. **model**: light. 이전 산출물: TASK
 워커 완료
   → **State Gate**
   → **QA Gate** (op-dev-qa — PLAN.md + TEST-SCENARIO.md 동시 검토) → **State Gate**
-  → **Artifact Gate** (하네스 §2.5 참조) → **State Gate**
   → **PM Gate** (체크리스트 갱신 상태 확인 — 하네스 interactive §3 참조. 미갱신 시 QA 재소환) → **State Gate**
   → 사용자에게 PLAN + TEST-SCENARIO 함께 보고. 승인 = EXECUTE 시작 허가.
 
@@ -166,25 +165,32 @@ Full Task(opal-pilot-dev)로 전환할까요?
 | 9 | PLAN | QA Gate | ⬜ | - |
 | 10 | PLAN | QA-PLAN.md 생성 | ⬜ | - |
 | 11 | PLAN | State Gate | ⬜ | - |
-| 12 | PLAN | Artifact Gate | ⬜ | - |
+| 12 | PLAN | PM Gate | ⬜ | - |
 | 13 | PLAN | State Gate | ⬜ | - |
-| 14 | PLAN | PM Gate | ⬜ | - |
-| 15 | PLAN | State Gate | ⬜ | - |
-| 16 | PLAN | 사용자 확인 | ⬜ | - |
-| 17 | EXECUTE | 작업 | ⬜ | - |
-| 18 | EXECUTE | State Gate | ⬜ | - |
-| 19 | TEST | 작업 | ⬜ | - |
-| 20 | TEST | State Gate | ⬜ | - |
-| 21 | TEST | QA Gate | ⬜ | - |
-| 22 | TEST | QA-EXECUTE.md 생성 | ⬜ | - |
-| 23 | TEST | State Gate | ⬜ | - |
-| 24 | TEST | PM Gate | ⬜ | - |
-| 25 | TEST | DONE.md 생성 | ⬜ | - |
-| 26 | TEST | State Gate | ⬜ | - |
-| 27 | TEST | 사용자 확인 | ⬜ | - |
+| 14 | PLAN | 사용자 확인 | ⬜ | - |
+| 15 | EXECUTE | 작업 | ⬜ | - |
+| 16 | EXECUTE | State Gate | ⬜ | - |
+| 17 | TEST | 작업 | ⬜ | - |
+| 18 | TEST | State Gate | ⬜ | - |
+| 19 | TEST | QA Gate | ⬜ | - |
+| 20 | TEST | QA-EXECUTE.md 생성 | ⬜ | - |
+| 21 | TEST | State Gate | ⬜ | - |
+| 22 | TEST | PM Gate | ⬜ | - |
+| 23 | TEST | DONE.md 생성 | ⬜ | - |
+| 24 | TEST | State Gate | ⬜ | - |
+| 25 | TEST | 사용자 확인 | ⬜ | - |
 ```
 
 > TEST 루핑 발생 시: "TEST | fix 작업 (N/3)", "TEST | State Gate (N/3)" 행을 동적 추가한다.
+
+---
+
+## PM Gate 점검 목록
+
+| Phase | 산출물 | 체크리스트 위치 |
+|-------|-------|----------------|
+| PLAN+TEST-SCENARIO | PLAN.md, TEST-SCENARIO.md, QA-PLAN.md | PLAN.md §3, §4 |
+| EXECUTE | QA-EXECUTE.md | PLAN.md §3 |
 
 ---
 
@@ -234,3 +240,4 @@ TASK (PM 직접) → PLAN+TEST-SCENARIO Gate → EXECUTE Gate → TEST Gate
 | v2.4 | 2026-04-07 | State Gate를 PM Gate 전 1개 → 각 Gate 직후로 재배치 (097) |
 | v2.5 | 2026-04-08 | TEST-SCENARIO를 Gates 앞으로 이동 + TEST 단계 공식화 + TEST 루핑 구현 (100) |
 | v2.6 | 2026-04-09 | STATE.md 도메인 치환값 — 진행 현황 행 예시에 산출물 생성 행 추가 (101) |
+| v2.7 | 2026-04-10 | Artifact Gate 제거 + PM Gate 점검 목록 섹션 추가 + 파이프라인 현황판 이름 변경 (106) |

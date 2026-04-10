@@ -49,7 +49,6 @@ TASK 완료 → **State Gate** (하네스 §3 참조 — STATE.md 갱신 확인)
 - 스킬: op-dev-wireframe, 입력: TASK.md + 정책서/이미지
 - 완료
   → op-dev-qa 호출 (단계: WIREFRAME) → **State Gate**
-  → **Artifact Gate** (하네스 §2.5 참조) → **State Gate**
   → **PM Gate** (TASK.md 요구사항 체크박스 갱신 포함 — 하네스 §3 참조) → **State Gate** → 사용자 보고
 
 > **[PM 컨텍스트 주입]** 워커 디스패치 프롬프트의 첫 줄에 `[WORKER]`를 삽입한다. `[WORKER]` 마커가 있으면 워커는 부트스트랩을 생략한다. PM은 디스패치 시 다음을 프롬프트에 포함해야 한다:
@@ -93,21 +92,28 @@ Harness STATE.md 템플릿에 적용:
 | 6 | WIREFRAME | QA Gate | ⬜ | - |
 | 7 | WIREFRAME | QA-WIREFRAME.md 생성 | ⬜ | - |
 | 8 | WIREFRAME | State Gate | ⬜ | - |
-| 9 | WIREFRAME | Artifact Gate | ⬜ | - |
+| 9 | WIREFRAME | PM Gate | ⬜ | - |
 | 10 | WIREFRAME | State Gate | ⬜ | - |
-| 11 | WIREFRAME | PM Gate | ⬜ | - |
-| 12 | WIREFRAME | State Gate | ⬜ | - |
-| 13 | WIREFRAME | 사용자 확인 | ⬜ | - |
-| 14 | EXECUTE | 작업 | ⬜ | - |
-| 15 | EXECUTE | QA Gate | ⬜ | - |
-| 16 | EXECUTE | QA-EXECUTE.md 생성 | ⬜ | - |
-| 17 | EXECUTE | State Gate | ⬜ | - |
-| 18 | EXECUTE | PM Gate | ⬜ | - |
-| 19 | EXECUTE | DONE.md 생성 | ⬜ | - |
-| 20 | EXECUTE | State Gate | ⬜ | - |
-| 21 | EXECUTE | 사용자 확인 | ⬜ | - |
+| 11 | WIREFRAME | 사용자 확인 | ⬜ | - |
+| 12 | EXECUTE | 작업 | ⬜ | - |
+| 13 | EXECUTE | QA Gate | ⬜ | - |
+| 14 | EXECUTE | QA-EXECUTE.md 생성 | ⬜ | - |
+| 15 | EXECUTE | State Gate | ⬜ | - |
+| 16 | EXECUTE | PM Gate | ⬜ | - |
+| 17 | EXECUTE | DONE.md 생성 | ⬜ | - |
+| 18 | EXECUTE | State Gate | ⬜ | - |
+| 19 | EXECUTE | 사용자 확인 | ⬜ | - |
 
-> WIREFRAME 스킵 시 (wireframe.md 기존 존재): WIREFRAME 단계 행(#4-#13)을 `-`로 표기한다.
+> WIREFRAME 스킵 시 (wireframe.md 기존 존재): WIREFRAME 단계 행(#4-#11)을 `-`로 표기한다.
+
+---
+
+## PM Gate 점검 목록
+
+| Phase | 산출물 | 체크리스트 위치 |
+|-------|-------|----------------|
+| WIREFRAME | wireframe.md, QA-WIREFRAME.md | - |
+| EXECUTE | QA-EXECUTE.md | - |
 
 ---
 
@@ -145,3 +151,4 @@ TASK (PM 직접) → WIREFRAME Gate → EXECUTE Gate
 | v1.6 | 2026-04-07 | TASK/WIREFRAME/EXECUTE 각 단계 Gate 순서에 State Gate 추가 + Agentic Mode 섹션 신설 (094) |
 | v1.7 | 2026-04-07 | State Gate를 PM Gate 전 1개 → 각 Gate 직후로 재배치 (097) |
 | v1.8 | 2026-04-09 | STATE.md 도메인 치환값 — 진행 현황 행 예시 신규 추가 (산출물 생성 행 포함) (101) |
+| v1.9 | 2026-04-10 | Artifact Gate 제거 + PM Gate 점검 목록 섹션 추가 + 파이프라인 현황판 이름 변경 (106) |

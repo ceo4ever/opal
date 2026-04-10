@@ -39,7 +39,6 @@ op-dev-analysis 스킬을 수행하라.
 
 워커 완료
   → **State Gate**
-  → **Artifact Gate** (ANALYSIS.md 존재 확인) → **State Gate**
   → **PM Gate** (분석 방향 종합 검토) → **State Gate**
   → 사용자 보고 (분석 방향 검토 후 PLAN 진입 승인).
 
@@ -83,7 +82,6 @@ op-dev-test-scenario 스킬을 수행하라.
 두 워커 완료
   → **State Gate**
   → **QA Gate** (op-dev-qa — ANALYSIS.md + PLAN.md + TEST-SCENARIO.md 통합 검토, 체크리스트 갱신 포함) → **State Gate**
-  → **Artifact Gate** (하네스 §2.5 참조) → **State Gate**
   → **PM Gate** (체크리스트 갱신 상태 확인. 미갱신 시 QA 재소환) → **State Gate**
   → 사용자에게 PLAN + TEST-SCENARIO 함께 보고. 승인 = EXECUTE 시작 허가.
 
@@ -168,38 +166,44 @@ QA Gate (op-dev-qa — 체크리스트 갱신 포함) → **State Gate**
 | 4 | ANALYSIS | 작업 | ⬜ | - |
 | 5 | ANALYSIS | ANALYSIS.md 생성 | ⬜ | - |
 | 6 | ANALYSIS | State Gate | ⬜ | - |
-| 7 | ANALYSIS | Artifact Gate | ⬜ | - |
+| 7 | ANALYSIS | PM Gate | ⬜ | - |
 | 8 | ANALYSIS | State Gate | ⬜ | - |
-| 9 | ANALYSIS | PM Gate | ⬜ | - |
-| 10 | ANALYSIS | State Gate | ⬜ | - |
-| 11 | ANALYSIS | 사용자 확인 | ⬜ | - |
-| 12 | PLAN | 작업 | ⬜ | - |
-| 13 | PLAN | PLAN.md 생성 | ⬜ | - |
-| 14 | TEST-SCENARIO | 작업 | ⬜ | - |
-| 15 | TEST-SCENARIO | TEST-SCENARIO.md 생성 | ⬜ | - |
-| 16 | TEST-SCENARIO | State Gate | ⬜ | - |
-| 17 | PLAN | QA Gate | ⬜ | - |
-| 18 | PLAN | QA-PLAN.md 생성 | ⬜ | - |
+| 9 | ANALYSIS | 사용자 확인 | ⬜ | - |
+| 10 | PLAN | 작업 | ⬜ | - |
+| 11 | PLAN | PLAN.md 생성 | ⬜ | - |
+| 12 | TEST-SCENARIO | 작업 | ⬜ | - |
+| 13 | TEST-SCENARIO | TEST-SCENARIO.md 생성 | ⬜ | - |
+| 14 | TEST-SCENARIO | State Gate | ⬜ | - |
+| 15 | PLAN | QA Gate | ⬜ | - |
+| 16 | PLAN | QA-PLAN.md 생성 | ⬜ | - |
+| 17 | PLAN | State Gate | ⬜ | - |
+| 18 | PLAN | PM Gate | ⬜ | - |
 | 19 | PLAN | State Gate | ⬜ | - |
-| 20 | PLAN | Artifact Gate | ⬜ | - |
-| 21 | PLAN | State Gate | ⬜ | - |
-| 22 | PLAN | PM Gate | ⬜ | - |
-| 23 | PLAN | State Gate | ⬜ | - |
-| 24 | PLAN | 사용자 확인 | ⬜ | - |
-| 25 | EXECUTE | 작업 | ⬜ | - |
-| 26 | EXECUTE | State Gate | ⬜ | - |
-| 27 | TEST | 작업 | ⬜ | - |
-| 28 | TEST | State Gate | ⬜ | - |
-| 29 | TEST | QA Gate | ⬜ | - |
-| 30 | TEST | QA-EXECUTE.md 생성 | ⬜ | - |
-| 31 | TEST | State Gate | ⬜ | - |
-| 32 | TEST | PM Gate | ⬜ | - |
-| 33 | TEST | DONE.md 생성 | ⬜ | - |
-| 34 | TEST | State Gate | ⬜ | - |
-| 35 | TEST | 사용자 확인 | ⬜ | - |
+| 20 | PLAN | 사용자 확인 | ⬜ | - |
+| 21 | EXECUTE | 작업 | ⬜ | - |
+| 22 | EXECUTE | State Gate | ⬜ | - |
+| 23 | TEST | 작업 | ⬜ | - |
+| 24 | TEST | State Gate | ⬜ | - |
+| 25 | TEST | QA Gate | ⬜ | - |
+| 26 | TEST | QA-EXECUTE.md 생성 | ⬜ | - |
+| 27 | TEST | State Gate | ⬜ | - |
+| 28 | TEST | PM Gate | ⬜ | - |
+| 29 | TEST | DONE.md 생성 | ⬜ | - |
+| 30 | TEST | State Gate | ⬜ | - |
+| 31 | TEST | 사용자 확인 | ⬜ | - |
 ```
 
 > TEST 루핑 발생 시: "TEST | fix 작업 (N/3)", "TEST | State Gate (N/3)" 행을 동적 추가한다.
+
+## PM Gate 점검 목록
+
+| Phase | 산출물 | 체크리스트 위치 |
+|-------|-------|----------------|
+| ANALYSIS | ANALYSIS.md | - |
+| PLAN+TEST-SCENARIO | PLAN.md, TEST-SCENARIO.md, QA-PLAN.md | PLAN.md §3, §4 |
+| EXECUTE | QA-EXECUTE.md | PLAN.md §3 |
+
+---
 
 ## Agentic Mode
 
@@ -241,3 +245,4 @@ TASK (PM 직접) → ANALYSIS Gate → PLAN+TEST-SCENARIO Gate → EXECUTE Gate 
 | v2.4 | 2026-04-08 | TEST-SCENARIO를 Gates 앞으로 이동 + TEST 단계 공식화 + TEST 루핑 구현 (100) |
 | v2.5 | 2026-04-09 | STATE.md 도메인 설정 — 진행 현황 행 예시에 산출물 생성 행 추가 (101) |
 | v2.6 | 2026-04-10 | ANALYSIS Gate 슬림화 — QA·PM Gate 제거, State Gate + Artifact Gate만 유지. PLAN QA 범위 확대 — ANALYSIS.md 포함 통합 검토 (107) |
+| v2.7 | 2026-04-10 | Artifact Gate 제거 + PM Gate 점검 목록 섹션 추가 + 파이프라인 현황판 이름 변경 (106) |

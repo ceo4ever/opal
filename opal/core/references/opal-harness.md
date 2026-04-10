@@ -102,7 +102,7 @@
 
 ### QA 산출물 표준 파일명
 
-Artifact Gate(interactive §2.5 / agentic §4)에서 확인하는 필수 산출물 파일명의 기본값.
+PM Gate 자가 진단(interactive §3 / agentic §4)에서 확인하는 필수 산출물 파일명의 기본값.
 오케스트레이터 SKILL.md에서 오버라이드 가능하며, 명시가 없으면 이 표준을 따른다.
 
 | 단계 | 필수 산출물 파일 | 위치 |
@@ -113,7 +113,7 @@ Artifact Gate(interactive §2.5 / agentic §4)에서 확인하는 필수 산출�
 
 ### 단계별 주요 산출물 표준 파일명
 
-진행 현황 산출물 행에서 추적하는 파일명의 기본값.
+파이프라인 현황판 산출물 행에서 추적하는 파일명의 기본값.
 오케스트레이터 SKILL.md에서 오버라이드 가능하며, 명시가 없으면 이 표준을 따른다.
 
 | 단계 | 주요 산출물 | 위치 |
@@ -146,16 +146,14 @@ Artifact Gate(interactive §2.5 / agentic §4)에서 확인하는 필수 산출�
 
 > **[강제]** 아래 각 이벤트 발생 시 STATE.md 갱신은 **필수**다. 갱신 미수행 시 다음 단계 진입이 금지된다. 각 Gate 직후 State Gate가 갱신 여부를 확인하며, 미갱신 감지 시 즉시 차단한다.
 
-| 이벤트 | 갱신 주체 | 진행 현황 테이블 갱신 | 상태: 필드 | 강제 여부 |
+| 이벤트 | 갱신 주체 | 파이프라인 현황판 행 갱신 | 상태: 필드 | 강제 여부 |
 |--------|----------|--------------------|-----------|----------|
-| TASK 완료 | 오케스트레이터 | STATE.md 초기 생성 + 진행 현황 행 구성 | 진행 중 | **필수** |
+| TASK 완료 | 오케스트레이터 | STATE.md 초기 생성 + 파이프라인 현황판 행 구성 | 진행 중 | **필수** |
 | 단계 시작 | 오케스트레이터 | 해당 단계 작업 행 → 🔄 | 진행 중 | **필수** |
 | 단계 완료(작업) | 워커(1차) + PM(확인) | 해당 단계 작업 행 → ✅ | - | **필수** |
 | 산출물 생성 완료 | 워커(1차) + PM(확인) | 해당 산출물 생성 행 → ✅ | - | **필수** |
 | QA Gate 통과 | PM | QA Gate 행 → ✅ | - | **필수** |
 | State Gate (QA 직후) | PM | State Gate 행 → ✅ | - | **필수** |
-| Artifact Gate 통과 | PM | Artifact Gate 행 → ✅ | - | **필수** |
-| State Gate (Artifact 직후) | PM | State Gate 행 → ✅ | - | **필수** |
 | PM Gate 통과 | PM | PM Gate 행 → ✅ | - | **필수** |
 | State Gate (PM 직후) | PM | State Gate 행 → ✅ | - | **필수** |
 | 사용자 확인 완료 | PM | 사용자 확인 행 → ✅ | 완료 | **필수** |
@@ -167,7 +165,7 @@ Artifact Gate(interactive §2.5 / agentic §4)에서 확인하는 필수 산출�
 
 **갱신 모델**: 워커가 1차 갱신을 수행하고(best effort), PM이 각 Gate 직후 State Gate에서 확인하여 미갱신/오갱신 시 즉시 보완한다.
 
-**수행 순서 강제 원칙**: 진행 현황 테이블은 위에서 아래로 순서대로 처리한다. 현재 행이 ✅가 아니면 다음 행으로 진행 불가. Gate가 없는 단계(TASK 등)는 해당 Gate 행을 생략한다.
+**수행 순서 강제 원칙**: 파이프라인 현황판 테이블은 위에서 아래로 순서대로 처리한다. 현재 행이 ✅가 아니면 다음 행으로 진행 불가. Gate가 없는 단계(TASK 등)는 해당 Gate 행을 생략한다.
 
 **상태: 필드 전이 흐름**:
 
@@ -177,13 +175,13 @@ Artifact Gate(interactive §2.5 / agentic §4)에서 확인하는 필수 산출�
 ↑_________________________추가작업 반복 시___↓
 ```
 
-> **레거시 호환**: 기존 STATE.md의 `QA Gate 대기` / `PM Gate 대기` / `사용자 확인 대기` 값은 진행 현황 테이블로 통합되어 더 이상 사용하지 않는다. 기존 파일의 소급 변경은 불필요하며, 신규 작성 시 행 기반 테이블을 사용한다.
+> **레거시 호환**: 기존 STATE.md의 `QA Gate 대기` / `PM Gate 대기` / `사용자 확인 대기` 값은 파이프라인 현황판 테이블로 통합되어 더 이상 사용하지 않는다. 기존 파일의 소급 변경은 불필요하며, 신규 작성 시 행 기반 테이블을 사용한다.
 
 > `추가작업중` / `추가작업완료`는 기본 상태값(완료 후 후속 작업 전용)이며, 병렬 실행 State의 열거형과 독립된다.
 
 ### STATE.md 공통 템플릿
 
-각 opal-pilot는 이 템플릿의 `{모드}`, `{단계 목록}`, `{진행 현황 행 목록}`을 도메인에 맞게 치환한다.
+각 opal-pilot는 이 템플릿의 `{모드}`, `{단계 목록}`, `{파이프라인 현황판 행 목록}`을 도메인에 맞게 치환한다.
 
 ```markdown
 # STATE: {태스크 제목}
@@ -196,14 +194,14 @@ Artifact Gate(interactive §2.5 / agentic §4)에서 확인하는 필수 산출�
 - 진행: {Step N/M 완료 (EXECUTE 시)}
 - 상태: {진행 중 / 완료 / 블로커 / 추가작업중 / 추가작업완료}
 
-## 진행 현황
+## 파이프라인 현황판
 
 > 상태값: ⬜ 대기 / 🔄 진행 중 / ✅ 완료 / ❌ 실패 / - 해당 없음
 > **수행 원칙**: 위에서 아래로 순서대로 처리한다. 현재 행이 ✅가 아니면 다음 행으로 진행 불가.
 
 | # | 단계 | 항목 | 상태 | 시점 |
 |---|------|------|------|------|
-{진행 현황 행 목록}
+{파이프라인 현황판 행 목록}
 
 ## 의사결정 로그
 | # | 시점 | 결정 | 근거 |
@@ -216,23 +214,23 @@ Artifact Gate(interactive §2.5 / agentic §4)에서 확인하는 필수 산출�
 {다음으로 수행할 작업}
 ```
 
-**진행 현황 행 구성 규칙**:
+**파이프라인 현황판 행 구성 규칙**:
 - TASK 단계: `작업`, `TASK.md 생성`, `사용자 확인` (Gate 없음)
-- 일반 단계(PLAN/EXECUTE 등): `작업`, `{산출물} 생성`, `QA Gate`, `{QA 산출물} 생성`, `State Gate`, `Artifact Gate`, `State Gate`, `PM Gate`, `State Gate`, `사용자 확인` 순
+- 일반 단계(PLAN/EXECUTE 등): `작업`, `{산출물} 생성`, `QA Gate`, `{QA 산출물} 생성`, `State Gate`, `PM Gate`, `State Gate`, `사용자 확인` 순
 - 최종 단계(EXECUTE/TEST): PM Gate 직후 `DONE.md 생성`, 이어서 `State Gate`, `사용자 확인`
 - Gate가 없는 단계(opp TASK 등)는 해당 행 생략
 - 산출물이 없는 단계(EXECUTE 작업 = 코드 변경)는 산출물 행 생략
-- 오케스트레이터 SKILL.md "STATE.md 도메인 치환값"에 해당 스킬의 진행 현황 행 예시가 명시됨
+- 오케스트레이터 SKILL.md "STATE.md 도메인 치환값"에 해당 스킬의 파이프라인 현황판 행 예시가 명시됨
 
 **산출물 행 규칙**:
 1. 위치: `작업` 완료 직후, `QA Gate` 직전
 2. 항목명: `{파일명} 생성` (예: `PLAN.md 생성`)
 3. 상태 전이: ⬜ → ✅ (파일 생성 확인 시)
 4. 순서 강제: 앞 행(작업)이 ✅가 아니면 산출물 행 진행 불가
-5. QA 산출물 행: QA Gate 직후, Artifact Gate 직전에 위치
+5. QA 산출물 행: QA Gate 직후에 위치
 6. DONE.md 행: 최종 단계 PM Gate 직후, 사용자 확인 직전에 위치
 
-#### opsdd (opal-pilot-sdd) 진행 현황 행 예시
+#### opsdd (opal-pilot-sdd) 파이프라인 현황판 행 예시
 
 | # | Phase | 항목 |
 |---|-------|------|
@@ -242,43 +240,37 @@ Artifact Gate(interactive §2.5 / agentic §4)에서 확인하는 필수 산출�
 | 4 | SPEC | 워커 디스패치 |
 | 5 | SPEC | SPEC.md 생성 |
 | 6 | SPEC | State Gate |
-| 7 | SPEC | Artifact Gate |
+| 7 | SPEC | PM Gate |
 | 8 | SPEC | State Gate |
-| 9 | SPEC | PM Gate |
-| 10 | SPEC | State Gate |
-| 11 | SPEC | 사용자 확인 |
-| 12 | REVIEW | 구조 검증 (S-1~S-6) |
-| 13 | REVIEW | TEST-SCENARIOS.md 작성 |
-| 14 | REVIEW | FR↔TS 커버리지 확인 |
+| 9 | SPEC | 사용자 확인 |
+| 10 | REVIEW | 구조 검증 (S-1~S-6) |
+| 11 | REVIEW | TEST-SCENARIOS.md 작성 |
+| 12 | REVIEW | FR↔TS 커버리지 확인 |
+| 13 | REVIEW | State Gate |
+| 14 | REVIEW | PM Gate |
 | 15 | REVIEW | State Gate |
-| 16 | REVIEW | Artifact Gate |
-| 17 | REVIEW | State Gate |
-| 18 | REVIEW | PM Gate |
-| 19 | REVIEW | State Gate |
-| 20 | REVIEW | 사용자 확인 |
-| 21 | DESIGN | 워커 디스패치 |
-| 22 | DESIGN | SPEC-PLAN.md 생성 |
-| 23 | DESIGN | State Gate |
-| 24 | DESIGN | Artifact Gate |
-| 25 | DESIGN | State Gate |
-| 26 | DESIGN | PM Gate |
-| 27 | DESIGN | State Gate |
-| 28 | DESIGN | 사용자 확인 |
-| 29 | EXECUTE | ACT 실행 (상세: ACT 목록 참조) |
-| 30 | EXECUTE | State Gate |
-| 31 | EXECUTE | PM Gate |
-| 32 | EXECUTE | State Gate |
-| 33 | EXECUTE | 사용자 확인 |
-| 34 | VERIFY | E2E 테스트 수행 |
-| 35 | VERIFY | TS 전체 Green 확인 |
-| 36 | VERIFY | State Gate |
-| 37 | VERIFY | PM Gate |
-| 38 | VERIFY | State Gate |
-| 39 | VERIFY | 사용자 확인 |
-| 40 | DONE | State Gate |
-| 41 | DONE | DONE.md 생성 |
-| 42 | DONE | State Gate |
-| 43 | DONE | 사용자 확인 |
+| 16 | REVIEW | 사용자 확인 |
+| 17 | DESIGN | 워커 디스패치 |
+| 18 | DESIGN | SPEC-PLAN.md 생성 |
+| 19 | DESIGN | State Gate |
+| 20 | DESIGN | PM Gate |
+| 21 | DESIGN | State Gate |
+| 22 | DESIGN | 사용자 확인 |
+| 23 | EXECUTE | ACT 실행 (상세: ACT 목록 참조) |
+| 24 | EXECUTE | State Gate |
+| 25 | EXECUTE | PM Gate |
+| 26 | EXECUTE | State Gate |
+| 27 | EXECUTE | 사용자 확인 |
+| 28 | VERIFY | E2E 테스트 수행 |
+| 29 | VERIFY | TS 전체 Green 확인 |
+| 30 | VERIFY | State Gate |
+| 31 | VERIFY | PM Gate |
+| 32 | VERIFY | State Gate |
+| 33 | VERIFY | 사용자 확인 |
+| 34 | DONE | State Gate |
+| 35 | DONE | DONE.md 생성 |
+| 36 | DONE | State Gate |
+| 37 | DONE | 사용자 확인 |
 
 ### ADD_DONE.md 템플릿
 
@@ -402,7 +394,7 @@ oppd Phase 3에서 병렬 태스크 실행 시 STATE.md를 다음과 같이 확�
 
 > **소유자**: PM(오케스트레이터). 단계 완료 후 PM Gate 진입 전 반드시 통과해야 한다.
 
-**Gate 위치**: QA Gate → Artifact Gate → **State Gate** → PM Gate
+**Gate 위치**: QA Gate → **State Gate** → PM Gate
 
 **자가 점검 프롬프트**:
 
@@ -424,7 +416,6 @@ oppd Phase 3에서 병렬 태스크 실행 시 STATE.md를 다음과 같이 확�
 ```
 워커 완료
   → QA Gate (체크리스트 갱신 포함)
-  → Artifact Gate (하네스 §2.5 참조)
   → State Gate (하네스 §3 참조 — STATE.md 갱신 확인)
   → PM Gate (종합 검토)
 ```
@@ -686,3 +677,4 @@ OPAL 도구는 모두 `~/.opal/tools/{tool-name}/run.sh` 래퍼를 통해 호출
 | v3.2 | 2026-04-09 | §2 단계별 주요 산출물 표준 파일명 추가. §3 이벤트 테이블 산출물 생성 행 추가. 진행 현황 행 구성 규칙에 산출물 행 규칙 추가 (101) |
 | v3.3 | 2026-04-09 | §4 저장 경로 날짜 포함 형식으로 변경(`{NNN}-{YYMMDD}-{스킬약어}-{태스크명}`) + 태스크 번호 채번 규칙 추가(`last_task_number` 기반). §5 타임스탬프 취득 규칙(필수) 추가 — bash 생략 금지 (102) |
 | v3.4 | 2026-04-10 | §3 진행 현황 행 구성 규칙에 opsdd (opal-pilot-sdd) 43행 진행 현황 예시 추가 (R-5, 105) |
+| v3.5 | 2026-04-10 | Artifact Gate 제거 + 파이프라인 현황판 이름 변경 (R-4) + PM Gate 관련 참조 정리 (106) |
