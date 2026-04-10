@@ -1,7 +1,7 @@
 # opal Memory Index
 
-> 최종 갱신: 2026-04-10 10:36
-> last_task_number: 104
+> 최종 갱신: 2026-04-10 17:56
+> last_task_number: 107
 
 ## 메모리 카테고리
 
@@ -30,6 +30,9 @@
 
 | 등록일자 | 작업 | 단계 | 경로 | 시작일시 | 완료일시 |
 |----------|------|------|------|---------|---------|
+| 2026-04-10 | opd ANALYSIS Gate 슬림화 + PLAN QA 범위 확대 (107) | 완료 | tasks/107-opp-opd-analysis-gate-redesign/ | 2026-04-10 17:39 | 2026-04-10 17:56 |
+| 2026-04-10 | PM Gate 자가 진단 통합 + Artifact Gate 제거 (106) | PLAN 대기 | tasks/106-opp-pm-gate-self-diagnosis/ | 2026-04-10 17:39 | - |
+| 2026-04-10 | opsdd STATE Gate 완성 + VERIFY Phase 추가 (105) | PLAN 대기 | tasks/105-opp-opsdd-state-gate-verify/ | 2026-04-10 17:39 | - |
 | 2026-04-10 | README 전면 개편 + AGENT.md 정체성 추가 (104) | 완료 | - | 2026-04-10 10:36 | 2026-04-10 10:36 |
 | 2026-04-09 | Gemini Hardening 글로벌 배포 (103) | 완료 | tasks/103-opp-gemini-hardening-deploy/ | 2026-04-09 | 2026-04-09 17:38 |
 | 2026-04-09 | MEMORY.md 구조 개선 (102) | 완료 | tasks/102-260409-opp-memory-structure-improvement/ | 2026-04-09 10:29 | 2026-04-09 13:01 |
@@ -38,7 +41,3 @@
 | 2026-04-08 | 에이전트 아이콘 Observability + 메모리 브리핑 간소화 (099) | 완료 | tasks/099-opp-agent-icon-memory-briefing/ | 2026-04-08 | 2026-04-09 |
 | 2026-04-08 | OPAL Vector Store — sqlite-vec 기반 문서 벡터 검색 도구 (098) | PLAN ✅ → EXECUTE 대기 | tasks/098-opp-vector-store/ | 2026-04-08 | - |
 | 2026-04-07 | Harness Observability — 행위 주체 표시 + Gate 상태 추적 (096) | 완료 | tasks/096-opp-harness-observability/ | 2026-04-07 | 2026-04-08 |
-| 2026-04-07 | Harness State Gate + op-task 배경 분석 섹션 추가 (094) | 완료 | tasks/094-opp-harness-state-gate/ | 2026-04-07 | 2026-04-07 |
-| 2026-04-07 | opsdd EXECUTE-LOOP 개선 — opal-sdd-action-agent 신설 (095) | 완료 | tasks/095-opp-opsdd-execute-loop/ | 2026-04-07 | 2026-04-07 |
-| 2026-04-07 | opsdd 스킬 구현 — 5단계 파이프라인 (093) | 완료 | tasks/093-opp-opsdd-impl/ | 2026-04-07 | 2026-04-07 |
-| 2026-04-06 | Artifact Gate 설계 및 적용 (090) | 완료 | tasks/090-opp-artifact-gate/ | 2026-04-06 | 2026-04-06 |
