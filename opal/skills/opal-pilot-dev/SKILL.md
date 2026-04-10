@@ -39,7 +39,8 @@ op-dev-analysis 스킬을 수행하라.
 
 워커 완료
   → **State Gate**
-  → **Artifact Gate** (ANALYSIS.md 존재 확인)
+  → **Artifact Gate** (ANALYSIS.md 존재 확인) → **State Gate**
+  → **PM Gate** (분석 방향 종합 검토) → **State Gate**
   → 사용자 보고 (분석 방향 검토 후 PLAN 진입 승인).
 
 ## STEP 3: PLAN
@@ -168,31 +169,34 @@ QA Gate (op-dev-qa — 체크리스트 갱신 포함) → **State Gate**
 | 5 | ANALYSIS | ANALYSIS.md 생성 | ⬜ | - |
 | 6 | ANALYSIS | State Gate | ⬜ | - |
 | 7 | ANALYSIS | Artifact Gate | ⬜ | - |
-| 8 | ANALYSIS | 사용자 확인 | ⬜ | - |
-| 9 | PLAN | 작업 | ⬜ | - |
-| 10 | PLAN | PLAN.md 생성 | ⬜ | - |
-| 11 | TEST-SCENARIO | 작업 | ⬜ | - |
-| 12 | TEST-SCENARIO | TEST-SCENARIO.md 생성 | ⬜ | - |
-| 13 | TEST-SCENARIO | State Gate | ⬜ | - |
-| 14 | PLAN | QA Gate | ⬜ | - |
-| 15 | PLAN | QA-PLAN.md 생성 | ⬜ | - |
-| 16 | PLAN | State Gate | ⬜ | - |
-| 17 | PLAN | Artifact Gate | ⬜ | - |
-| 18 | PLAN | State Gate | ⬜ | - |
-| 19 | PLAN | PM Gate | ⬜ | - |
-| 20 | PLAN | State Gate | ⬜ | - |
-| 21 | PLAN | 사용자 확인 | ⬜ | - |
-| 22 | EXECUTE | 작업 | ⬜ | - |
-| 23 | EXECUTE | State Gate | ⬜ | - |
-| 24 | TEST | 작업 | ⬜ | - |
-| 25 | TEST | State Gate | ⬜ | - |
-| 26 | TEST | QA Gate | ⬜ | - |
-| 27 | TEST | QA-EXECUTE.md 생성 | ⬜ | - |
+| 8 | ANALYSIS | State Gate | ⬜ | - |
+| 9 | ANALYSIS | PM Gate | ⬜ | - |
+| 10 | ANALYSIS | State Gate | ⬜ | - |
+| 11 | ANALYSIS | 사용자 확인 | ⬜ | - |
+| 12 | PLAN | 작업 | ⬜ | - |
+| 13 | PLAN | PLAN.md 생성 | ⬜ | - |
+| 14 | TEST-SCENARIO | 작업 | ⬜ | - |
+| 15 | TEST-SCENARIO | TEST-SCENARIO.md 생성 | ⬜ | - |
+| 16 | TEST-SCENARIO | State Gate | ⬜ | - |
+| 17 | PLAN | QA Gate | ⬜ | - |
+| 18 | PLAN | QA-PLAN.md 생성 | ⬜ | - |
+| 19 | PLAN | State Gate | ⬜ | - |
+| 20 | PLAN | Artifact Gate | ⬜ | - |
+| 21 | PLAN | State Gate | ⬜ | - |
+| 22 | PLAN | PM Gate | ⬜ | - |
+| 23 | PLAN | State Gate | ⬜ | - |
+| 24 | PLAN | 사용자 확인 | ⬜ | - |
+| 25 | EXECUTE | 작업 | ⬜ | - |
+| 26 | EXECUTE | State Gate | ⬜ | - |
+| 27 | TEST | 작업 | ⬜ | - |
 | 28 | TEST | State Gate | ⬜ | - |
-| 29 | TEST | PM Gate | ⬜ | - |
-| 30 | TEST | DONE.md 생성 | ⬜ | - |
+| 29 | TEST | QA Gate | ⬜ | - |
+| 30 | TEST | QA-EXECUTE.md 생성 | ⬜ | - |
 | 31 | TEST | State Gate | ⬜ | - |
-| 32 | TEST | 사용자 확인 | ⬜ | - |
+| 32 | TEST | PM Gate | ⬜ | - |
+| 33 | TEST | DONE.md 생성 | ⬜ | - |
+| 34 | TEST | State Gate | ⬜ | - |
+| 35 | TEST | 사용자 확인 | ⬜ | - |
 ```
 
 > TEST 루핑 발생 시: "TEST | fix 작업 (N/3)", "TEST | State Gate (N/3)" 행을 동적 추가한다.
