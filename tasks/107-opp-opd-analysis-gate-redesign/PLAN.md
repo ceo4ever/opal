@@ -1,6 +1,6 @@
 ---
 task_id: "107"
-status: PLAN
+status: DONE
 ---
 
 # PLAN: opd ANALYSIS Gate 슬림화 + PLAN QA 범위 확대
@@ -25,7 +25,8 @@ status: PLAN
 ```
 워커 완료
   → **State Gate**
-  → **Artifact Gate** (ANALYSIS.md 존재 확인)
+  → **Artifact Gate** (ANALYSIS.md 존재 확인) → **State Gate**
+  → **PM Gate** (분석 방향 종합 검토) → **State Gate**
   → 사용자 보고 (분석 방향 검토 후 PLAN 진입 승인).
 ```
 
@@ -43,7 +44,7 @@ status: PLAN
 
 ### 3. STATE.md 진행 현황 행 예시 — 전면 교체
 
-ANALYSIS 행 5개로 축소 + 행 번호 전체 재정렬 (37행 → 32행).
+ANALYSIS 행 8개로 재구성 + 행 번호 전체 재정렬 (37행 → 35행).
 
 | # | 단계 | 항목 |
 |---|------|------|
@@ -54,43 +55,46 @@ ANALYSIS 행 5개로 축소 + 행 번호 전체 재정렬 (37행 → 32행).
 | 5 | ANALYSIS | ANALYSIS.md 생성 |
 | 6 | ANALYSIS | State Gate |
 | 7 | ANALYSIS | Artifact Gate |
-| 8 | ANALYSIS | 사용자 확인 |
-| 9 | PLAN | 작업 |
-| 10 | PLAN | PLAN.md 생성 |
-| 11 | TEST-SCENARIO | 작업 |
-| 12 | TEST-SCENARIO | TEST-SCENARIO.md 생성 |
-| 13 | TEST-SCENARIO | State Gate |
-| 14 | PLAN | QA Gate |
-| 15 | PLAN | QA-PLAN.md 생성 |
-| 16 | PLAN | State Gate |
-| 17 | PLAN | Artifact Gate |
-| 18 | PLAN | State Gate |
-| 19 | PLAN | PM Gate |
-| 20 | PLAN | State Gate |
-| 21 | PLAN | 사용자 확인 |
-| 22 | EXECUTE | 작업 |
-| 23 | EXECUTE | State Gate |
-| 24 | TEST | 작업 |
-| 25 | TEST | State Gate |
-| 26 | TEST | QA Gate |
-| 27 | TEST | QA-EXECUTE.md 생성 |
+| 8 | ANALYSIS | State Gate |
+| 9 | ANALYSIS | PM Gate |
+| 10 | ANALYSIS | State Gate |
+| 11 | ANALYSIS | 사용자 확인 |
+| 12 | PLAN | 작업 |
+| 13 | PLAN | PLAN.md 생성 |
+| 14 | TEST-SCENARIO | 작업 |
+| 15 | TEST-SCENARIO | TEST-SCENARIO.md 생성 |
+| 16 | TEST-SCENARIO | State Gate |
+| 17 | PLAN | QA Gate |
+| 18 | PLAN | QA-PLAN.md 생성 |
+| 19 | PLAN | State Gate |
+| 20 | PLAN | Artifact Gate |
+| 21 | PLAN | State Gate |
+| 22 | PLAN | PM Gate |
+| 23 | PLAN | State Gate |
+| 24 | PLAN | 사용자 확인 |
+| 25 | EXECUTE | 작업 |
+| 26 | EXECUTE | State Gate |
+| 27 | TEST | 작업 |
 | 28 | TEST | State Gate |
-| 29 | TEST | PM Gate |
-| 30 | TEST | DONE.md 생성 |
+| 29 | TEST | QA Gate |
+| 30 | TEST | QA-EXECUTE.md 생성 |
 | 31 | TEST | State Gate |
-| 32 | TEST | 사용자 확인 |
+| 32 | TEST | PM Gate |
+| 33 | TEST | DONE.md 생성 |
+| 34 | TEST | State Gate |
+| 35 | TEST | 사용자 확인 |
 
 ### 4. 변경이력 추가
 
 ```
-| v2.6 | 2026-04-10 | ANALYSIS Gate 슬림화 — QA·PM Gate 제거, State Gate + Artifact Gate만 유지. PLAN QA 범위 확대 — ANALYSIS.md 포함 통합 검토 (107) |
+| v2.6 | 2026-04-10 | ANALYSIS Gate 재설계 — QA Gate 제거, Artifact Gate → State Gate → PM Gate → State Gate 유지. PLAN QA 범위 확대 — ANALYSIS.md 포함 통합 검토 (107) |
 ```
 
 > 기존 v2.5가 STATE.md 도메인 설정(101)이므로 이 변경은 v2.6.
 
 ## 실행 체크리스트
 
-- [ ] STEP 2 ANALYSIS 워커 완료 후 Gate 블록 교체
-- [ ] STEP 3 QA Gate 검토 범위 텍스트 수정
-- [ ] STATE.md 행 예시 전체 교체 (행 번호 재정렬)
-- [ ] 변경이력 행 추가
+- [x] STEP 2 ANALYSIS 워커 완료 후 Gate 블록 교체 (QA Gate 제거, Artifact→State→PM Gate→State 유지)
+- [x] STEP 3 QA Gate 검토 범위 텍스트 수정 (ANALYSIS.md 추가)
+- [x] STATE.md 행 예시 전체 교체 (37행 → 35행, 행 번호 재정렬)
+- [x] 변경이력 행 추가 (v2.6)
