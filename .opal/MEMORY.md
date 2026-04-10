@@ -32,7 +32,7 @@
 |----------|------|------|------|---------|---------|
 | 2026-04-10 | opd ANALYSIS Gate 슬림화 + PLAN QA 범위 확대 (107) | 완료 | tasks/107-opp-opd-analysis-gate-redesign/ | 2026-04-10 17:39 | 2026-04-10 17:56 |
 | 2026-04-10 | PM Gate 자가 진단 통합 + Artifact Gate 제거 (106) | PLAN 대기 | tasks/106-opp-pm-gate-self-diagnosis/ | 2026-04-10 17:39 | - |
-| 2026-04-10 | opsdd STATE Gate 완성 + VERIFY Phase 추가 (105) | PLAN 대기 | tasks/105-opp-opsdd-state-gate-verify/ | 2026-04-10 17:39 | - |
+| 2026-04-10 | opsdd STATE Gate 완성 + VERIFY Phase 추가 (105) | 완료 | tasks/105-opp-opsdd-state-gate-verify/ | 2026-04-10 17:39 | 2026-04-10 19:02 |
 | 2026-04-10 | README 전면 개편 + AGENT.md 정체성 추가 (104) | 완료 | - | 2026-04-10 10:36 | 2026-04-10 10:36 |
 | 2026-04-09 | Gemini Hardening 글로벌 배포 (103) | 완료 | tasks/103-opp-gemini-hardening-deploy/ | 2026-04-09 | 2026-04-09 17:38 |
 | 2026-04-09 | MEMORY.md 구조 개선 (102) | 완료 | tasks/102-260409-opp-memory-structure-improvement/ | 2026-04-09 10:29 | 2026-04-09 13:01 |

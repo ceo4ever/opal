@@ -232,6 +232,54 @@ Artifact Gate(interactive §2.5 / agentic §4)에서 확인하는 필수 산출�
 5. QA 산출물 행: QA Gate 직후, Artifact Gate 직전에 위치
 6. DONE.md 행: 최종 단계 PM Gate 직후, 사용자 확인 직전에 위치
 
+#### opsdd (opal-pilot-sdd) 진행 현황 행 예시
+
+| # | Phase | 항목 |
+|---|-------|------|
+| 1 | TASK | TASK.md 작성 |
+| 2 | TASK | STATE.md 생성 |
+| 3 | TASK | 사용자 확인 |
+| 4 | SPEC | 워커 디스패치 |
+| 5 | SPEC | SPEC.md 생성 |
+| 6 | SPEC | State Gate |
+| 7 | SPEC | Artifact Gate |
+| 8 | SPEC | State Gate |
+| 9 | SPEC | PM Gate |
+| 10 | SPEC | State Gate |
+| 11 | SPEC | 사용자 확인 |
+| 12 | REVIEW | 구조 검증 (S-1~S-6) |
+| 13 | REVIEW | TEST-SCENARIOS.md 작성 |
+| 14 | REVIEW | FR↔TS 커버리지 확인 |
+| 15 | REVIEW | State Gate |
+| 16 | REVIEW | Artifact Gate |
+| 17 | REVIEW | State Gate |
+| 18 | REVIEW | PM Gate |
+| 19 | REVIEW | State Gate |
+| 20 | REVIEW | 사용자 확인 |
+| 21 | DESIGN | 워커 디스패치 |
+| 22 | DESIGN | SPEC-PLAN.md 생성 |
+| 23 | DESIGN | State Gate |
+| 24 | DESIGN | Artifact Gate |
+| 25 | DESIGN | State Gate |
+| 26 | DESIGN | PM Gate |
+| 27 | DESIGN | State Gate |
+| 28 | DESIGN | 사용자 확인 |
+| 29 | EXECUTE | ACT 실행 (상세: ACT 목록 참조) |
+| 30 | EXECUTE | State Gate |
+| 31 | EXECUTE | PM Gate |
+| 32 | EXECUTE | State Gate |
+| 33 | EXECUTE | 사용자 확인 |
+| 34 | VERIFY | E2E 테스트 수행 |
+| 35 | VERIFY | TS 전체 Green 확인 |
+| 36 | VERIFY | State Gate |
+| 37 | VERIFY | PM Gate |
+| 38 | VERIFY | State Gate |
+| 39 | VERIFY | 사용자 확인 |
+| 40 | DONE | State Gate |
+| 41 | DONE | DONE.md 생성 |
+| 42 | DONE | State Gate |
+| 43 | DONE | 사용자 확인 |
+
 ### ADD_DONE.md 템플릿
 
 추가작업 완료 시 작성한다. DONE.md와는 별도 문서이며, DONE.md는 원본 완료 기록으로 보존하고 수정하지 않는다.
@@ -637,3 +685,4 @@ OPAL 도구는 모두 `~/.opal/tools/{tool-name}/run.sh` 래퍼를 통해 호출
 | v3.1 | 2026-04-07 | §3 상태값 확장(`대기 중` → Gate 3단계) + 이벤트 테이블 Gate 행 추가 + State Gate 이전 단계 차단 규칙. §5 행위 주체 표시 신설(PM직접/워커디스패치/워커완료). 레거시 호환 노트 추가 (096) |
 | v3.2 | 2026-04-09 | §2 단계별 주요 산출물 표준 파일명 추가. §3 이벤트 테이블 산출물 생성 행 추가. 진행 현황 행 구성 규칙에 산출물 행 규칙 추가 (101) |
 | v3.3 | 2026-04-09 | §4 저장 경로 날짜 포함 형식으로 변경(`{NNN}-{YYMMDD}-{스킬약어}-{태스크명}`) + 태스크 번호 채번 규칙 추가(`last_task_number` 기반). §5 타임스탬프 취득 규칙(필수) 추가 — bash 생략 금지 (102) |
+| v3.4 | 2026-04-10 | §3 진행 현황 행 구성 규칙에 opsdd (opal-pilot-sdd) 43행 진행 현황 예시 추가 (R-5, 105) |

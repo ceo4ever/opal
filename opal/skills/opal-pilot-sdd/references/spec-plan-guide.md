@@ -266,9 +266,29 @@ SPEC-PLAN.md 작성 전에 반드시 아래를 수행한다:
 
 ---
 
+## 7. 주의사항
+
+### ACT 블록 구조 작성 시
+
+SPEC-PLAN.md의 "8. ACT 분해" 섹션에서 각 ACT를 기술할 때 아래 원칙을 준수한다.
+
+> **주의**: ACT 블록에 상태 필드(`- **상태**: 대기/완료`)를 두지 않는다.
+> ACT 실행 상태는 STATE.md ACT 목록 테이블이 SSOT다.
+> 이중 추적(SPEC-PLAN.md + STATE.md)은 갱신 누락의 직접 원인이 된다.
+
+---
+
 ## 관련 문서
 
 - `op-sdd-plan/SKILL.md` -- SPEC-PLAN 작성 스킬 프로세스
 - `spec-guide.md` -- SPEC.md 작성 가이드 (입력 문서)
 - `verify-guide.md` -- 검증 상세 (TASKS-VERIFY에서 설계 반영 간접 검증)
 - `execute-loop-guide.md` -- EXECUTE-LOOP에서 SPEC-PLAN.md 활용 방법
+
+---
+
+## 변경이력
+
+| 날짜 | 버전 | 변경내용 |
+|------|------|---------|
+| 2026-04-10 | R-4 | §7 주의사항 추가 — ACT 블록에 상태 필드 금지 원칙 (STATE.md ACT 목록 테이블이 SSOT) |

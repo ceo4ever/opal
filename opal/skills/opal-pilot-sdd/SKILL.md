@@ -1,8 +1,8 @@
 ---
 name: opal-pilot-sdd
 description: |
-  **SDD(Spec-Driven Development) 오케스트레이터**. 명세 기반 개발을 5단계 파이프라인으로 수행한다.
-  기능 단위로 SPEC.md(SSOT) 작성 → PM 직접 검증 + TEST-SCENARIOS.md 작성 → 아키텍처 설계 + ACT 분해 → 반복 실행 → 완료.
+  **SDD(Spec-Driven Development) 오케스트레이터**. 명세 기반 개발을 6단계 파이프라인으로 수행한다.
+  기능 단위로 SPEC.md(SSOT) 작성 → PM 직접 검증 + TEST-SCENARIOS.md 작성 → 아키텍처 설계 + ACT 분해 → 반복 실행 → E2E 검증 → 완료.
   반드시 이 스킬을 사용해야 하는 상황: "opal-pilot-sdd", "opsdd".
   단일 태스크 개발은 opds/opd를, 범용 작업은 opp를 사용한다.
 triggers:
@@ -10,17 +10,17 @@ triggers:
   - "opsdd"
   - "SDD 개발"
   - "명세 기반 개발"
-version: 2.0.0
+version: 2.5.0
 ---
 
 # opal-pilot-sdd (SDD 오케스트레이터)
 
-명세(SPEC.md)를 SSOT로 삼아 검증 → 설계 → ACT 분해 → 반복 실행까지 5단계 파이프라인으로 관리한다.
+명세(SPEC.md)를 SSOT로 삼아 검증 → 설계 → ACT 분해 → 반복 실행 → E2E 검증까지 6단계 파이프라인으로 관리한다.
 EXECUTE-LOOP에서 `opal-sdd-action-agent`에 단일 디스패치하며, PM이 전체를 조율한다.
 
 ## Harness
 
-모드: SDD Task (TASK → SPEC → REVIEW → DESIGN → EXECUTE-LOOP → DONE)
+모드: SDD Task (TASK → SPEC → REVIEW → DESIGN → EXECUTE-LOOP → VERIFY → DONE)
 > 부트스트랩에서 로드되지 않은 경우: `~/.opal/references/opal-harness.md`를 Read한다.
 
 **[MUST]** 스킬 시작 즉시 모드에 따라 서브 하네스를 Read한다. 이 단계를 건너뛰면 안 된다:
@@ -29,7 +29,7 @@ EXECUTE-LOOP에서 `opal-sdd-action-agent`에 단일 디스패치하며, PM이 �
 
 ---
 
-## 5단계 파이프라인 요약
+## 6단계 파이프라인 요약
 
 ```
 WHAT 단계
@@ -46,7 +46,9 @@ Phase 3: DESIGN    워커       op-sdd-plan → SPEC-PLAN.md (아키텍처 + ACT
                               PM Gate → 사용자 Gate
 Phase 4: EXECUTE   ACT 루프   사용자 Gate → opal-sdd-action-agent 디스패치
                               → 결과 수신 → DONE.md
-Phase 5: DONE      PM 직접    전체 ACT DONE + 전체 TS Green 확인
+Phase 5: VERIFY    PM 직접    Playwright E2E → TEST-SCENARIOS.md 추적 매트릭스 갱신
+                              → 전체 TS Green 확인 → 사용자 Gate
+Phase 6: DONE      PM 직접    최종 확인 → DONE.md 생성
                               → 사용자 Gate
 ```
 
@@ -74,7 +76,7 @@ tasks/{NNN}-{feature}/
 ├── TEST-SCENARIOS.md        # Phase 2 — SPEC 기반 테스트 기준 + ACT별 TS 매핑
 ├── SPEC-PLAN.md             # Phase 3 — 아키텍처 설계 + ACT 분해 + 병렬/순서 의존관계
 ├── STATE.md                 # 전체 진행 상태 (Phase + ACT 목록 상태 통합 관리)
-├── DONE.md                  # Phase 5 — 최종 완료 확인
+├── DONE.md                  # Phase 6 — 최종 완료 확인
 └── actions/
     ├── ACT-001-{name}/
     │   ├── PLAN.md          # op-dev-plan 산출물
@@ -199,11 +201,24 @@ SPEC-PLAN.md의 의존 순서대로 ACT를 반복 실행한다. 각 ACT는 `opal
 - worktree 경로: `.worktrees/{NNN}-ACT-{NNN}/`
 - 결과 수집 → 순차 머지 → 통합 테스트 → worktree 정리
 
+### L1/L2 검증 루프 (PM 직접 실행)
+
+PM은 워커가 각 ACT를 완료할 때마다 다음을 직접 실행한다:
+- **L1**: `tsc --noEmit` — lint + type check
+- **L2**: `pnpm build` — 전체 빌드
+
+Pass → STATE.md ACT 목록 L1 ✅, L2 ✅, 상태 ✅ 갱신
+Fail → 워커에 SendMessage로 수정 지시 → 재검증 (L1부터)
+L2 2회 초과 실패 → 캡틴 에스컬레이션
+
+전체 ACT 완료 후에도 최종 L1 + L2 통합 빌드 확인 필수.
+
 ### 상태 갱신
 
 ACT 완료마다 STATE.md 갱신 (하네스 §3 State Gate 기준 적용):
 - ACT 상태: ⬜ 대기 → 🔄 진행 중 → ✅/❌
 - TS 상태: Red → Green/Fail
+- L1/L2: ACT 완료 후 PM 직접 검증 → 결과 즉시 갱신
 
 **State Gate**: ACT 완료 후 STATE.md 갱신 → **State Gate** (하네스 §3 참조 — STATE.md 갱신 확인) → PM Gate 진입
 
@@ -216,13 +231,34 @@ ACT 완료마다 STATE.md 갱신 (하네스 §3 State Gate 기준 적용):
 
 ---
 
-## Phase 5: DONE
+## Phase 5: VERIFY
 
-모든 ACT 완료 후 최종 검증을 수행한다.
+### 개요
+- 수행 주체: PM 직접 (워커 디스패치 없음)
+- 진입 조건: EXECUTE-LOOP 전체 ACT ✅ + 최종 L2 빌드 Pass
+- Gate: State Gate → PM Gate → State Gate → 사용자 Gate
 
-1. 전체 TS Green 확인 (TEST-SCENARIOS.md)
+### 수행 절차
+1. TEST-SCENARIOS.md의 모든 시나리오를 Playwright E2E로 수행
+2. 각 시나리오 Pass/Fail 확인 즉시 TEST-SCENARIOS.md 추적 매트릭스 갱신 (배치 금지)
+3. STATE.md TS 현황 요약 갱신 (Green/Red/Fail/Skip 건수)
+
+### 완료 조건
+- 전체 TS Green (또는 Skip + 사유 기록)
+- State Gate → PM Gate → State Gate → 사용자 확인 순으로 Gate 통과
+
+### Fail 처리
+- 해당 ACT 재지시 또는 코드 직접 수정 → 재검증
+
+---
+
+## Phase 6: DONE
+
+모든 ACT 완료 및 VERIFY Phase 통과 후 최종 확인을 수행한다.
+
+1. 전체 TS Green 확인 (STATE.md TS 현황)
 2. 전체 ACT DONE.md 존재 확인
-3. PM Gate → 사용자 Gate
+3. State Gate → 사용자 Gate
 4. DONE.md 생성
 
 ---
@@ -232,7 +268,7 @@ ACT 완료마다 STATE.md 갱신 (하네스 §3 State Gate 기준 적용):
 | 필드 | 값 |
 |------|------|
 | 모드 | SDD Task |
-| 단계 목록 | TASK / SPEC / REVIEW / DESIGN / EXECUTE-LOOP / DONE |
+| 단계 목록 | TASK / SPEC / REVIEW / DESIGN / EXECUTE-LOOP / VERIFY / DONE |
 | 산출물 목록 | TASK.md, SPEC.md, TEST-SCENARIOS.md, SPEC-PLAN.md, actions/ACT-{N}/, DONE.md |
 | 태스크 경로 | tasks/{NNN}-{feature}/ |
 
@@ -246,31 +282,87 @@ ACT 완료마다 STATE.md 갱신 (하네스 §3 State Gate 기준 적용):
 ## 현재 상태
 - 모드: SDD Task
 - Phase: {현재 Phase}
-- 상태: {진행 중 / 대기 중 / 블로커 / 완료}
+- 상태: {진행 중 / 완료 / 블로커 / 추가작업중 / 추가작업완료}
 
-## 완료 산출물
+## 진행 현황
 
-> 공통 하네스 §2 "단계별 주요 산출물 표준 파일명" + "QA 산출물 표준 파일명" 참조.
-> opsdd는 Phase 기반 독자 구조이므로 진행 현황 행 대신 이 테이블로 산출물을 추적한다.
+> 상태값: ⬜ 대기 / 🔄 진행 중 / ✅ 완료 / ❌ 실패 / - 해당 없음
+> **수행 원칙**: 위에서 아래로 순서대로 처리한다. 현재 행이 ✅가 아니면 다음 행으로 진행 불가.
 
-| 산출물 | 상태 |
-|--------|------|
-| TASK.md | {⬜ / ✅} |
-| SPEC.md | {⬜ / ✅} |
-| TEST-SCENARIOS.md | {⬜ / ✅} |
-| SPEC-PLAN.md | {⬜ / ✅} |
-| EXECUTE-LOOP | {⬜ / ACT-{N}/{M}} |
-| DONE.md | {⬜ / ✅} |
+| # | Phase | 항목 | 상태 | 시점 |
+|---|-------|------|------|------|
+| 1 | TASK | TASK.md 작성 | ⬜ | |
+| 2 | TASK | STATE.md 생성 | ⬜ | |
+| 3 | TASK | 사용자 확인 | ⬜ | |
+| 4 | SPEC | 워커 디스패치 | ⬜ | |
+| 5 | SPEC | SPEC.md 생성 | ⬜ | |
+| 6 | SPEC | State Gate | ⬜ | |
+| 7 | SPEC | Artifact Gate | ⬜ | |
+| 8 | SPEC | State Gate | ⬜ | |
+| 9 | SPEC | PM Gate | ⬜ | |
+| 10 | SPEC | State Gate | ⬜ | |
+| 11 | SPEC | 사용자 확인 | ⬜ | |
+| 12 | REVIEW | 구조 검증 (S-1~S-6) | ⬜ | |
+| 13 | REVIEW | TEST-SCENARIOS.md 작성 | ⬜ | |
+| 14 | REVIEW | FR↔TS 커버리지 확인 | ⬜ | |
+| 15 | REVIEW | State Gate | ⬜ | |
+| 16 | REVIEW | Artifact Gate | ⬜ | |
+| 17 | REVIEW | State Gate | ⬜ | |
+| 18 | REVIEW | PM Gate | ⬜ | |
+| 19 | REVIEW | State Gate | ⬜ | |
+| 20 | REVIEW | 사용자 확인 | ⬜ | |
+| 21 | DESIGN | 워커 디스패치 | ⬜ | |
+| 22 | DESIGN | SPEC-PLAN.md 생성 | ⬜ | |
+| 23 | DESIGN | State Gate | ⬜ | |
+| 24 | DESIGN | Artifact Gate | ⬜ | |
+| 25 | DESIGN | State Gate | ⬜ | |
+| 26 | DESIGN | PM Gate | ⬜ | |
+| 27 | DESIGN | State Gate | ⬜ | |
+| 28 | DESIGN | 사용자 확인 | ⬜ | |
+| 29 | EXECUTE | ACT 실행 (상세: ACT 목록 참조) | ⬜ | |
+| 30 | EXECUTE | State Gate | ⬜ | |
+| 31 | EXECUTE | PM Gate | ⬜ | |
+| 32 | EXECUTE | State Gate | ⬜ | |
+| 33 | EXECUTE | 사용자 확인 | ⬜ | |
+| 34 | VERIFY | E2E 테스트 수행 | ⬜ | |
+| 35 | VERIFY | TS 전체 Green 확인 | ⬜ | |
+| 36 | VERIFY | State Gate | ⬜ | |
+| 37 | VERIFY | PM Gate | ⬜ | |
+| 38 | VERIFY | State Gate | ⬜ | |
+| 39 | VERIFY | 사용자 확인 | ⬜ | |
+| 40 | DONE | State Gate | ⬜ | |
+| 41 | DONE | DONE.md 생성 | ⬜ | |
+| 42 | DONE | State Gate | ⬜ | |
+| 43 | DONE | 사용자 확인 | ⬜ | |
 
-## EXECUTE-LOOP 현황
+## ACT 목록 (SSOT — EXECUTE Phase 상세)
 
-### ACT 목록
-| ACT | 이름 | 그룹 | 상태 | 완료일 |
-|-----|------|------|------|--------|
+> DESIGN 완료 후 SPEC-PLAN.md의 ACT를 기반으로 동적 삽입.
+> ACT 완료 시 즉시 갱신. SPEC-PLAN.md에는 ACT 상태를 두지 않는다.
 
-### TS 상태
-| TS ID | 담당 ACT | 상태 |
-|-------|---------|------|
+| ACT | 이름 | 그룹 | 의존 | 코드 | L1 lint | L2 build | 상태 | 시작 | 완료 |
+|-----|------|------|------|------|---------|----------|------|------|------|
+
+> 상태값: ⬜ 대기 / 🔄 진행 중 / ✅ 완료 / ❌ 실패
+> L1/L2: ACT 완료 후 PM이 검증 실행. ❌→✅ = 1차 실패 → 수정 → 재통과
+
+## TS 현황 (VERIFY Phase 요약)
+
+> TEST-SCENARIOS.md 추적 매트릭스의 요약. 테스트 수행 시 즉시 갱신.
+
+| 상태 | 건수 |
+|------|------|
+| Green | 0 |
+| Red | 0 |
+| Fail | 0 |
+| Skip | 0 |
+
+## SPEC 변경 이력
+
+> REVIEW 이후 SPEC.md가 변경된 경우 기록. 변경 추적이 안 되면 TS와 정합성이 깨진다.
+
+| # | 시점 | 변경 내용 | 사유 |
+|---|------|----------|------|
 
 ## 의사결정 로그
 | # | 시점 | 결정 | 근거 |
@@ -300,7 +392,8 @@ TASK (PM 직접)
   → SPEC Gate        -- PM 자율 검토
   → REVIEW           -- PM 직접 수행 (구조검증 + TS작성 + 커버리지)
   → DESIGN Gate      -- PM 자율 검토
-  → EXECUTE-LOOP     -- PM 자율 관리 (ACT별 Gate 포함)
+  → EXECUTE-LOOP     -- PM 자율 관리 (ACT별 Gate + L1/L2 검증 포함)
+  → VERIFY           -- PM 직접 수행 (Playwright E2E + TS 전체 Green 확인)
   → DONE             -- PM 자율 완료 + 최종 보고
 ```
 
@@ -345,3 +438,4 @@ opal-harness-agentic.md §6 공통 기준에 추가:
 | v2.2 | 2026-04-07 | Phase 4 ACT 실행 구조 변경 — op-dev-plan+op-dev-execute 이중 디스패치 → opal-sdd-action-agent 단일 디스패치. 사용자 Gate 명시 (095) |
 | v2.3 | 2026-04-07 | QA Gate 없는 Phase(SPEC/DESIGN/EXECUTE-LOOP)는 State Gate 단독 구조 유지 확인. 하네스 §3 진행 현황 테이블 적용 (097) |
 | v2.4 | 2026-04-09 | STATE.md 완료 산출물 섹션에 공통 하네스 §2 참조 문구 추가 (101) |
+| v2.5.0 | 2026-04-10 | R-1 STATE.md 도메인 치환값 → 43행 진행 현황 구조로 교체 + ACT 목록 SSOT + TS 현황 + SPEC 변경이력 섹션 추가; R-2 VERIFY Phase(Phase 5) 신설 + DONE → Phase 6; R-3 EXECUTE-LOOP L1/L2 검증 루프 명시 (105) |
