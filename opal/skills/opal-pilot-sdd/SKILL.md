@@ -375,7 +375,7 @@ ACT 완료마다 STATE.md 갱신 (하네스 §3 State Gate 기준 적용):
 
 | Phase | 산출물 | 체크리스트 위치 |
 |-------|-------|----------------|
-| SPEC | SPEC.md, QA-SPEC.md | - |
+| SPEC | TASK.md, SPEC.md, QA-SPEC.md | TASK.md 요구사항 |
 | DESIGN | SPEC-PLAN.md | - |
 | EXECUTE | QA-EXECUTE.md | PLAN.md §3 |
 
@@ -444,3 +444,4 @@ opal-harness-agentic.md §6 공통 기준에 추가:
 | v2.4 | 2026-04-09 | STATE.md 완료 산출물 섹션에 공통 하네스 §2 참조 문구 추가 (101) |
 | v2.5.0 | 2026-04-10 | R-1 STATE.md 도메인 치환값 → 43행 진행 현황 구조로 교체 + ACT 목록 SSOT + TS 현황 + SPEC 변경이력 섹션 추가; R-2 VERIFY Phase(Phase 5) 신설 + DONE → Phase 6; R-3 EXECUTE-LOOP L1/L2 검증 루프 명시 (105) |
 | v2.6.0 | 2026-04-10 | Artifact Gate 제거 + PM Gate 점검 목록 섹션 추가 + 파이프라인 현황판 이름 변경 (106) |
+| v2.7.0 | 2026-04-11 | PM Gate 점검 목록 — PLAN-equivalent Phase에 TASK.md 요구사항 추가 (108) |

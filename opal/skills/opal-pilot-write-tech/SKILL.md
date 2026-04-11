@@ -229,7 +229,7 @@ opal-doc-standard 적용: `~/.opal/references/opal-doc-standard.md`
 
 | Phase | 산출물 | 체크리스트 위치 |
 |-------|-------|----------------|
-| PLAN | PLAN.md, QA-PLAN.md | PLAN.md §3, §4 |
+| PLAN | TASK.md, PLAN.md, QA-PLAN.md | TASK.md 요구사항, PLAN.md §3, §4 |
 | EXECUTE | QA-EXECUTE.md | - |
 
 ---
@@ -254,3 +254,4 @@ opal-doc-standard 적용: `~/.opal/references/opal-doc-standard.md`
 | v2.6 | 2026-04-07 | TASK/ANALYSIS/PLAN/EXECUTE/QA 각 단계 Gate에 State Gate 참조 추가 (094) |
 | v2.7 | 2026-04-07 | State Gate를 PM Gate 전 1개 → 각 Gate 직후로 재배치. EXECUTE 배치 Artifact Gate 제거(opwt 구조상 해당 없음) (097) |
 | v2.8 | 2026-04-10 | Artifact Gate 제거 + PM Gate 점검 목록 섹션 추가 + 파이프라인 현황판 이름 변경 (106) |
+| v2.9 | 2026-04-11 | PM Gate 점검 목록 — PLAN-equivalent Phase에 TASK.md 요구사항 추가 (108) |

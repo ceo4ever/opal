@@ -189,7 +189,7 @@ Full Task(opal-pilot-dev)로 전환할까요?
 
 | Phase | 산출물 | 체크리스트 위치 |
 |-------|-------|----------------|
-| PLAN+TEST-SCENARIO | PLAN.md, TEST-SCENARIO.md, QA-PLAN.md | PLAN.md §3, §4 |
+| PLAN+TEST-SCENARIO | TASK.md, PLAN.md, TEST-SCENARIO.md, QA-PLAN.md | TASK.md 요구사항, PLAN.md §3, §4 |
 | EXECUTE | QA-EXECUTE.md | PLAN.md §3 |
 
 ---
@@ -241,3 +241,4 @@ TASK (PM 직접) → PLAN+TEST-SCENARIO Gate → EXECUTE Gate → TEST Gate
 | v2.5 | 2026-04-08 | TEST-SCENARIO를 Gates 앞으로 이동 + TEST 단계 공식화 + TEST 루핑 구현 (100) |
 | v2.6 | 2026-04-09 | STATE.md 도메인 치환값 — 진행 현황 행 예시에 산출물 생성 행 추가 (101) |
 | v2.7 | 2026-04-10 | Artifact Gate 제거 + PM Gate 점검 목록 섹션 추가 + 파이프라인 현황판 이름 변경 (106) |
+| v2.8 | 2026-04-11 | PM Gate 점검 목록 — PLAN-equivalent Phase에 TASK.md 요구사항 추가 (108) |

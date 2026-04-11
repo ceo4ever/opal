@@ -130,7 +130,7 @@ op-task-execute 워커 디스패치. **model**: standard. checklist_source: PLAN
 
 | Phase | 산출물 | 체크리스트 위치 |
 |-------|-------|----------------|
-| PLAN | PLAN.md, QA-PLAN.md | PLAN.md §3, §4 |
+| PLAN | TASK.md, PLAN.md, QA-PLAN.md | TASK.md 요구사항, PLAN.md §3, §4 |
 | EXECUTE | QA-EXECUTE.md | PLAN.md §3 |
 
 ---
@@ -174,3 +174,4 @@ TASK (PM 직접) → PLAN Gate → EXECUTE Gate
 | v2.1 | 2026-04-07 | State Gate를 PM Gate 전 1개 → 각 Gate 직후로 재배치 (097) |
 | v2.2 | 2026-04-09 | STATE.md 도메인 치환값 — 진행 현황 행 예시에 산출물 생성 행 추가 (101) |
 | v2.3 | 2026-04-10 | Artifact Gate 제거 + PM Gate 점검 목록 섹션 추가 + 파이프라인 현황판 이름 변경 (106) |
+| v2.4 | 2026-04-11 | PM Gate 점검 목록 — PLAN-equivalent Phase에 TASK.md 요구사항 추가 (108) |
