@@ -1,7 +1,7 @@
 # opal Memory Index
 
-> 최종 갱신: 2026-04-11 22:45
-> last_task_number: 109
+> 최종 갱신: 2026-04-12 11:59
+> last_task_number: 111
 
 ## 메모리 카테고리
 
@@ -30,6 +30,8 @@
 
 | 등록일자 | 작업 | 단계 | 경로 | 시작일시 | 완료일시 |
 |----------|------|------|------|---------|---------|
+| 2026-04-12 | opal-harness.md 모듈화 — harness/ 폴더 분리 (111) | 완료 | tasks/111-260412-opp-harness-modularize/ | 2026-04-12 11:59 | 2026-04-12 12:57 |
+| 2026-04-12 | opal-harness.md 구조화 리팩토링 (110) | 완료 | tasks/110-260412-opp-harness-restructure/ | 2026-04-12 11:14 | 2026-04-12 11:38 |
 | 2026-04-11 | @header 표준 + code-scan 통합 워크플로우 (109) | 완료 | tasks/109-opp-header-standard/ | 2026-04-11 22:45 | 2026-04-12 |
 | 2026-04-11 | PM Gate 점검 목록 — TASK.md 요구사항 추가 (108) | 완료 | tasks/108-opp-pm-gate-tasklist/ | 2026-04-11 13:19 | 2026-04-11 13:59 |
 | 2026-04-10 | opd ANALYSIS Gate 슬림화 + PLAN QA 범위 확대 (107) | 완료 | tasks/107-opp-opd-analysis-gate-redesign/ | 2026-04-10 17:39 | 2026-04-10 17:56 |
