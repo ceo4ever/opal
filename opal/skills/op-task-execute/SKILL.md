@@ -63,6 +63,20 @@ PLAN.md 섹션 3 실행 체크리스트를 읽어 전체 Step과 의존성을 �
 3. Step의 완료 기준에 따라 검증
 4. PLAN.md 체크박스 갱신: `- [ ] 완료` → `- [x] 완료`
 
+### Step 3-H. @header 작성 (code-scan 대상 확장자 파일)
+
+파일을 생성하거나 수정할 때, 대상 확장자에 해당하면 @header를 작성/갱신한다.
+
+**대상 확장자**: `.py .js .ts .vue .jsx .tsx .svelte .kt .kts .java .swift`  
++ 프로젝트 `.opal/code-scan.json`의 `extensions`에 추가된 확장자
+
+**절차**:
+1. `~/.opal/references/header-standard.md` Read하여 포맷 확인
+2. 파일 언어에 맞는 주석 포맷으로 @header 작성/갱신
+   - **생성 시**: 필수 필드 모두 작성 (`module`, `layer`, `domain`, `description`, `exports`)
+   - **수정 시**: 변경된 내용에 해당하는 필드만 갱신
+3. 삽입 위치: 파일 최상단 (shebang 다음 / frontmatter 다음 / 없으면 첫 줄)
+
 ### Step 4. 체크리스트 갱신
 
 각 Step 완료 시 즉시 체크박스를 갱신한다.
@@ -127,3 +141,4 @@ PLAN.md 섹션 3 실행 체크리스트를 읽어 전체 Step과 의존성을 �
 |------|------|---------|
 | v1.0 | 2026-03-29 | 초기 작성 — op-dev-execute 기반 범용화 (FE/BE 특화 제거) |
 | v1.1 | 2026-03-29 | 리네이밍: op-execute → op-task-execute |
+| v1.2 | 2026-04-12 | Step 3-H @header 작성 규칙 추가 — code-scan 대상 확장자 파일 생성/수정 시 워커 @header 작성 의무 (109) |

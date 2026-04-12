@@ -56,6 +56,20 @@ Read ~/.opal/skills/op-dev-execute/references/execute-guide.md
 
 실행 모드(단순/복잡)에 따라 execute-guide.md의 절차를 따른다.
 
+### Step 3-H. @header 작성 (code-scan 대상 확장자 파일)
+
+파일을 생성하거나 수정할 때, 대상 확장자에 해당하면 @header를 작성/갱신한다.
+
+**대상 확장자**: `.py .js .ts .vue .jsx .tsx .svelte .kt .kts .java .swift`  
++ 프로젝트 `.opal/code-scan.json`의 `extensions`에 추가된 확장자
+
+**절차**:
+1. `~/.opal/references/header-standard.md` Read하여 포맷 확인
+2. 파일 언어에 맞는 주석 포맷으로 @header 작성/갱신
+   - **생성 시**: 필수 필드 모두 작성 (`module`, `layer`, `domain`, `description`, `exports`)
+   - **수정 시**: 변경된 내용에 해당하는 필드만 갱신
+3. 삽입 위치: 파일 최상단 (shebang 다음 / frontmatter 다음 / 없으면 첫 줄)
+
 ### Step 4. 체크리스트 갱신
 
 각 Step 완료 시 체크박스를 실시간 갱신한다:
@@ -216,3 +230,12 @@ execution-plan.json이 존재하면:
 - [ ] PLAN/execution-plan.json에 없는 파일을 생성/수정하지 않았는가
 - [ ] 하드코딩 시크릿이 없는가
 - [ ] FE/BE 영역 간 침범이 없는가 (병렬 실행 시)
+
+---
+
+## 변경이력
+
+| 버전 | 날짜 | 변경내용 |
+|------|------|---------|
+| v1.0 | - | 초기 작성 |
+| v1.1 | 2026-04-12 | Step 3-H @header 작성 규칙 추가 — code-scan 대상 확장자 파일 생성/수정 시 워커 @header 작성 의무 (109) |

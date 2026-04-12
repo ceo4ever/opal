@@ -66,8 +66,98 @@
 
 ---
 
+## code-scan
+
+**용도**: 코드 파일의 `@header` 메타블록 스캔 — 도메인/레이어/의존 관계 조회  
+**실행 경로**: `node ~/.opal/tools/code-scan/code-scan.js <command>`  
+**소스 경로**: `opal/tools/code-scan/`  
+**의존성**: Node.js (외부 패키지 없음)
+
+### 커맨드
+
+```bash
+# 전체 스캔 (scope 미지정 시 프로젝트 전체)
+node ~/.opal/tools/code-scan/code-scan.js scan [path] [--scope <name>]
+
+# 도메인별 조회 (인자 없으면 목록)
+node ~/.opal/tools/code-scan/code-scan.js domain [name]
+
+# 레이어별 조회 (인자 없으면 목록)
+node ~/.opal/tools/code-scan/code-scan.js layer [name]
+
+# 헤더 내 키워드 검색
+node ~/.opal/tools/code-scan/code-scan.js search <keyword>
+
+# 도메인/레이어 요약
+node ~/.opal/tools/code-scan/code-scan.js summary
+
+# 의존 관계 추적
+node ~/.opal/tools/code-scan/code-scan.js depends <module>
+
+# @header 없는 파일 목록
+node ~/.opal/tools/code-scan/code-scan.js missing
+```
+
+### 주요 옵션
+
+| 옵션 | 설명 |
+|------|------|
+| `--scope <name>` | 스코프 필터 (`.opal/code-scan.json`의 `scopes` 키) |
+| `--domain <name>` | 도메인 필터 |
+| `--layer <name>` | 레이어 필터 |
+| `--exclude <patterns>` | 제외 패턴 (쉼표 구분, 와일드카드 지원) |
+| `--brief` | 한 줄 요약 출력 (기본값) |
+| `--full` | 전체 헤더 JSON 출력 |
+| `--json` | 파이프용 raw JSON 출력 |
+
+### 프로젝트 설정
+
+프로젝트 루트의 `.opal/code-scan.json`으로 스코프와 필터를 정의한다.
+
+```json
+{
+  "scopes": { "be": "workspace/backend/", "fe": "workspace/frontend/src/" },
+  "extensions": [".py", ".js", ".ts", ".vue"],
+  "exclude": ["node_modules", "__pycache__"],
+  "excludePatterns": ["__init__.py", "test_*", "*.spec.ts"]
+}
+```
+
+### PM 관리 방안
+
+`{프로젝트}/.opal/code-scan.json`은 PM이 생성하고 관리한다.
+
+- **생성 시점**: code-scan 도구를 처음 사용하려 할 때 파일이 없으면 PM이 생성
+- **갱신 트리거**: 신규 도메인/폴더 추가, 대규모 리팩토링, 신규 언어 도입
+- **PM Gate 확인**: EXECUTE 완료 후 PM Gate에서 신규 scope/domain 반영 여부 확인
+
+상세 관리 절차: `~/.opal/references/opal-pm.md` §9 참조
+
+### 사용 예시
+
+```bash
+# BE 스코프 도메인 요약
+node ~/.opal/tools/code-scan/code-scan.js summary --scope be
+
+# auth 모듈 의존 관계 추적
+node ~/.opal/tools/code-scan/code-scan.js depends auth
+
+# @header 누락 파일 확인
+node ~/.opal/tools/code-scan/code-scan.js missing --scope fe
+
+# exports 필드 전용 검색 (함수/API/컴포넌트 위치 탐색)
+node ~/.opal/tools/code-scan/code-scan.js exports "issueToken"
+
+# @header 검증 (PM Gate용)
+node ~/.opal/tools/code-scan/code-scan.js scan src/auth/auth.service.ts --json
+```
+
+---
+
 ## 변경이력
 
 | 버전 | 날짜 | 내용 |
 |------|------|------|
 | v1.0 | 2026-04-03 | xlsx-tool 등록 (076) |
+| v1.1 | 2026-04-11 | code-scan 등록 |
+| v1.2 | 2026-04-12 | code-scan 섹션에 PM 관리 방안 서브섹션 추가 + exports 커맨드 사용 예시 추가 (109) |

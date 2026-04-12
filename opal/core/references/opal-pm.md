@@ -102,6 +102,14 @@ PM은 프로젝트에 `.opal/AGENT.md`가 존재할 때 활성화되며, 다음�
 문서와 실제 코드가 다를 경우 **코드(실질적 문서) 기준**으로 작업하고, 불일치 사항을 PM에게 보고한다.
 ```
 
+### code-scan 사전 범위 파악
+
+`.opal/code-scan.json`이 존재하는 프로젝트에서, 디스패치 전에 code-scan으로 변경 대상의 범위를 파악한다:
+
+- `code-scan scan <scope>` 로 변경 대상 도메인/레이어 파악
+- 변경 대상 파일의 domain/layer/depends 파악 → 워커 컨텍스트 주입에 활용
+- `code-scan.json` 없으면 일반 파일 탐색(Glob/Grep) 사용
+
 ### 디스패치 전 선언
 
 워커 디스패치 직전, Observability 선언을 수행한다 (하네스 §5 참조):
@@ -129,6 +137,11 @@ PM은 프로젝트에 `.opal/AGENT.md`가 존재할 때 활성화되며, 다음�
 5. 참조 문서 내용이 산출물에 반영되었는가
 6. `docs/PROJECT.md`의 프로젝트 원칙/기준에 부합하는가
 7. 금지사항 위반 여부
+8. EXECUTE 결과 changed_files 중 code-scan 대상 확장자 파일에 @header가 올바르게 작성되었는가
+   - 확인 방법: `code-scan scan <file> --json` 실행
+   - 결과 없음: @header 누락 → Fail
+   - 결과 있음: module/layer/domain/description/exports 필드 존재 여부 확인 → 누락 시 Fail
+   - EXECUTE 결과에 새 domain/scope 추가 시 code-scan.json 갱신 여부도 함께 확인 (§9 참조)
 
 ### 판정
 
@@ -210,8 +223,51 @@ PM은 프로젝트에 `.opal/AGENT.md`가 존재할 때 활성화되며, 다음�
 
 ---
 
+## 9. code-scan.json PM 관리 의무
+
+`{프로젝트}/.opal/code-scan.json`은 code-scan 도구의 프로젝트별 설정 파일이다.
+PM이 이 파일의 생성과 갱신을 담당한다.
+
+### 생성 시점
+
+code-scan 도구를 처음 사용하려 할 때 `.opal/code-scan.json`이 없으면 PM이 직접 생성한다.
+
+최소 구조:
+
+```json
+{
+  "scopes": {},
+  "extensions": [".py", ".js", ".ts", ".vue", ".jsx", ".tsx", ".svelte", ".kt", ".kts", ".java", ".swift"],
+  "exclude": ["node_modules", "__pycache__", ".git", "dist", "build", ".venv"],
+  "excludePatterns": []
+}
+```
+
+`scopes`는 프로젝트의 BE/FE 디렉터리 구조에 맞게 정의한다.
+예: `{ "be": "backend/src/", "fe": "frontend/src/" }`
+
+### 갱신 트리거
+
+다음 상황에서 PM이 code-scan.json을 검토하고 필요 시 갱신한다:
+
+1. **신규 도메인/폴더 추가**: EXECUTE 결과로 새 도메인 또는 주요 폴더가 추가된 경우
+2. **대규모 리팩토링**: 폴더 구조가 변경된 경우
+3. **신규 기술 스택 추가**: 기존 extensions에 없는 확장자를 가진 언어가 도입된 경우
+
+### PM Gate 확인 절차
+
+PM Gate(§4 검토 절차 8번)에서 code-scan.json 갱신이 필요하다고 판단되면:
+1. `.opal/code-scan.json`을 Read하여 현재 상태 확인
+2. 갱신 필요 시 직접 수정한다 (이 경우는 PM이 직접 갱신 허용)
+3. 갱신 내용을 소유자에게 보고한다
+
+> 상세 도구 사용법: `~/.opal/references/tools.md` code-scan 섹션 참조
+
+---
+
 ## 변경이력
 
 | 버전 | 날짜 | 내용 |
 |------|------|------|
 | v1.0 | 2026-04-05 | 초기 작성 — opal-orchestrator 폐기 + AGENT.md PM 규칙 이관. §1~§8 구조화 (086) |
+| v1.1 | 2026-04-12 | §3 디스패치 전 code-scan 사전 범위 파악 추가 + §4 검토 절차 8번(@header 검증) 추가 + §9 code-scan.json PM 관리 의무 신규 추가 (109) |

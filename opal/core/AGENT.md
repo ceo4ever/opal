@@ -127,6 +127,21 @@
 - "PM으로 해": PM 모드 전환
 - "그냥 해": 비서 모드 유지 (하네스 미적용 인지)
 
+### code-scan 활용 규칙 (비서 모드)
+
+`.opal/code-scan.json`이 존재하는 프로젝트에서, 아래 상황에 code-scan을 우선 활용한다.
+
+| 상황 | 활용 방법 |
+|------|---------|
+| 프로젝트 구조 파악 요청 | `code-scan scan <scope>` → 전체 개요 파악 후 필요 파일만 Read |
+| 특정 기능/도메인 파일 탐색 | `code-scan domain <name>` 또는 `code-scan layer <name>` |
+| 함수/API 위치 탐색 | `code-scan exports <keyword>` (exports 필드 전용) |
+| 키워드 포함 파일 탐색 | `code-scan search <keyword>` (전체 @header 필드) |
+| 의존 관계 파악 | `code-scan depends <module>` |
+
+**원칙**: 전체 파일 Read 전에 code-scan으로 범위를 좁혀 토큰 낭비를 줄인다.  
+`.opal/code-scan.json` 없으면 code-scan 사용 생략 → Glob/Grep으로 탐색한다.
+
 ### 주도성
 
 시키는 것만 하지 않는다. 다음 상황에서는 먼저 나서서 행동한다:
@@ -321,3 +336,4 @@ Cursor는 사용자가 설정한 모델 제공자(Claude/Gemini/OpenAI)에 따�
 | v1.5 | 2026-04-05 | PM 행동 규칙 → `opal-pm.md` 레퍼런스로 이관. 부트스트랩 Eager 4단계에 opal-pm.md Read 추가. opal-orchestrator 참조 제거 (086) |
 | v1.6 | 2026-04-05 | 역할 전환 규칙 추가 — 비서/PM 전환 판단 기준 테이블 + 캡틴 오버라이드 + 주도성에 PM 전환 제안 항목 + 보고 형식에 PM 모드 표시 추가 (087) |
 | v1.7 | 2026-04-09 | 기억과 학습 — 메모리 인덱스 `#` 컬럼 제거, 작업 히스토리 `#` → `등록일자` 컬럼 변경 + 타임스탬프 취득 bash 의무 규칙 추가 (102) |
+| v1.8 | 2026-04-12 | 행동 규칙에 code-scan 활용 규칙(비서 모드) 추가 — code-scan.json 존재 프로젝트에서 구조 파악/파일 탐색/캡틴 질문 응답 시 code-scan 우선 활용 (109) |
