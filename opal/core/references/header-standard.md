@@ -17,7 +17,7 @@
 | `domain` | 필수 | string | 비즈니스 도메인 (예: auth, user, payment) |
 | `description` | 필수 | string | 파일의 역할 한 줄 요약 |
 | `exports` | 필수 | string[] | 외부에 노출하는 항목 목록. layer에 따라 내용이 달라진다 (§4 참조). |
-| `depends` | 선택 | string[] | 이 파일이 의존하는 모듈/외부 API 목록 |
+| `depends` | 선택 | string[] | 이 파일이 의존하는 모듈/외부 API 목록. 코드 파일: module ID(kebab-case), 기획/설계 문서: 참조 문서명 — 예: `["auth-service"]`, `["결제_정책서", "회원_ERD"]` |
 | `note` | 선택 | string | 추가 메모 (작업 흔적, 특이사항) |
 
 ### layer 표준값
@@ -27,6 +27,9 @@
 
 **문서 layer**:
 `spec` / `analysis` / `report` / `skill` / `task` / `plan` / `reference`
+
+**기획/설계 layer**:
+`policy` / `ia` / `wireframe` / `erd` / `api-spec`
 
 규칙: 표준값을 우선 사용하고, 프로젝트 도메인에 따라 추가 정의 가능.
 
@@ -114,11 +117,12 @@
 ```html
 <!--
 @header {
-  "module": "auth-spec",
-  "layer": "spec",
-  "domain": "auth",
-  "description": "인증 모듈 기능 명세",
-  "exports": ["로그인 플로우", "토큰 갱신 정책", "세션 만료 처리"]
+  "module": "payment-policy",
+  "layer": "policy",
+  "domain": "payment",
+  "description": "결제 정책 체계 정의",
+  "exports": ["환불 정책", "부분결제 기준", "PG 수수료 산정"],
+  "depends": ["결제_ERD", "PG연동_API명세"]
 }
 -->
 ```
@@ -146,6 +150,11 @@
 | `analysis` | 분석 결과/핵심 발견 | `["병목 구간 3개", "개선 우선순위"]` |
 | `report` | 보고 항목 | `["주간 배포 현황", "이슈 요약"]` |
 | `skill` | 스킬이 수행하는 파이프라인/단계 | `["TASK→PLAN→EXECUTE"]` |
+| `policy` | 정책/규칙 항목 | `["환불 정책", "부분결제 기준", "PG 수수료 산정"]` |
+| `ia` | 주요 화면/메뉴 구조 | `["GNB 구조", "마이페이지 IA", "결제 플로우"]` |
+| `wireframe` | 화면/컴포넌트명 | `["로그인 화면", "상품 목록", "결제 확인 팝업"]` |
+| `erd` | 엔티티/테이블명 | `["User", "Order", "Payment"]` |
+| `api-spec` | API 엔드포인트 또는 서비스명 | `["POST /payments", "PG 결제 승인 API"]` |
 
 ---
 
@@ -176,3 +185,4 @@ code-scan.js의 기본 지원 확장자와 동일하다:
 | 버전 | 날짜 | 내용 |
 |------|------|------|
 | v1.0 | 2026-04-12 | 초기 작성 — 필드 정의 7개 + 언어별 예시 6개 + layer별 exports 가이드 + 삽입 위치 규칙 (109) |
+| v1.1 | 2026-04-12 | 기획/설계 layer 5개 추가(`policy`/`ia`/`wireframe`/`erd`/`api-spec`) + `depends` 필드 설명 보강 + exports 가이드 확장 + Markdown 예시 갱신 (113) |
