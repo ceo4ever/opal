@@ -57,7 +57,7 @@ PM·오케스트레이터·알투(비서)는 code-scan을 통해 프로젝트 �
 
 | 역할 | 활용 시점 | 권장 커맨드 |
 |------|---------|-----------|
-| 알투(비서) | 구조 파악 요청 / 파일 탐색 / 캡틴 질문 응답 | `scan`, `domain`, `layer`, `search`, `exports` |
+| 알투(비서) | 구조 파악 요청 / 파일 탐색 / 소유자 질문 응답 | `scan`, `domain`, `layer`, `search`, `exports` |
 | PM(오케스트레이터) | TASK/PLAN 수립 전 도메인 파악, 디스패치 전 범위 확인 | `scan`, `domain`, `depends` |
 | PM Gate | EXECUTE 완료 후 @header 검증 | `scan <file> --json` |
 
