@@ -3,23 +3,22 @@ name: ui-designer
 description: |
   **UI 구현 스킬**. 두 가지 모드를 지원합니다:
   1. **scaffold 모드**: wireframe.md를 입력으로 받아 전체 프로젝트를 새로 생성
-  2. **plan-driven 모드**: PLAN.md의 FE 화면 설계 섹션(§3.N.2)을 입력으로 받아 기존 프로젝트에 화면을 추가/수정
+  2. **plan-driven 모드**: execution-plan.json의 screen 객체를 입력으로 받아 기존 프로젝트에 화면을 추가/수정
   반드시 이 스킬을 사용해야 하는 상황: "UI 구현", "UI 만들어줘", "화면 구현",
   "wireframe 구현", "프로토타입 만들어줘", wireframe.md 기반 UI 생성 요청,
-  PLAN.md 기반 FE 화면 구현.
-version: 1.1
+  execution-plan.json 기반 FE 화면 구현.
 ---
 
 # UI Designer 스킬
 
-wireframe.md 또는 PLAN.md를 입력으로 받아 React + shadcn/ui 기반 UI를 구현한다.
+wireframe.md 또는 execution-plan.json을 입력으로 받아 React + shadcn/ui 기반 UI를 구현한다.
 
 ## 모드 판별
 
 | 모드 | 입력 | 파이프라인 파일 | 용도 |
 |------|------|--------------|------|
 | **scaffold** | wireframe.md | `modes/scaffold.md` | 새 프로젝트 생성 (프로토타입/프로덕션) |
-| **plan-driven** | PLAN.md §3.N.2 FE 화면 설계 | `modes/plan-driven.md` | 프로젝트에 화면 추가/수정 |
+| **plan-driven** | execution-plan.json screen 객체 | `modes/plan-driven.md` | 프로젝트에 화면 추가/수정 |
 
 **판별 규칙**:
 - wireframe.md가 입력 → scaffold 모드
@@ -308,12 +307,3 @@ wireframe.md
 3. **더미 데이터 원칙**: 프로토타입 모드에서는 현실적인 한국어 더미 데이터를 사용한다 (lorem ipsum 금지).
 4. **코드 재사용성**: 프로토타입에서 작성한 컴포넌트가 프로덕션에서도 동작하도록, React + shadcn 표준 패턴만 사용한다.
 5. **AI Slop 방지**: 지나친 중앙 정렬, 보라색 그라디언트, 균일한 둥근 모서리, Inter 폰트 남용을 피한다.
-
----
-
-## 변경이력
-
-| 버전 | 일시 | 변경내용 |
-|------|------|---------|
-| v1.0 | - | 초기 작성 — scaffold/plan-driven 두 모드 지원 |
-| v1.1 | 2026-04-13 13:48 | plan-driven 모드 입력 전환 — frontmatter description에서 execution-plan.json 참조를 PLAN.md §3.N.2로 변경, 모드 판별 테이블의 plan-driven 입력을 "PLAN.md §3.N.2 FE 화면 설계"로 변경 (114) |

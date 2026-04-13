@@ -1,7 +1,7 @@
 # opal Memory Index
 
-> 최종 갱신: 2026-04-12 18:20
-> last_task_number: 113
+> 최종 갱신: 2026-04-13 14:11
+> last_task_number: 114
 
 ## 메모리 카테고리
 
@@ -30,6 +30,7 @@
 
 | 등록일자 | 작업 | 단계 | 경로 | 시작일시 | 완료일시 |
 |----------|------|------|------|---------|---------|
+| 2026-04-13 | op-dev-plan 탑다운 기능 중심 구조 개편 + 후속 파이프라인 정합화 (114) | 완료 | tasks/114-260413-opp-op-dev-plan-feature-driven-redesign/ | 2026-04-13 12:28 | 2026-04-13 14:11 |
 | 2026-04-12 | .md @header 필드 재정의 — 기획/설계 layer 5개 (113) | 완료 | tasks/113-260412-opp-header-standard-md-layer/ | 2026-04-12 18:20 | 2026-04-12 18:30 |
 | 2026-04-12 | 역할 전환 메커니즘 v2 — 프로젝트 기반 자동 전환 (112) | 완료 | tasks/112-260412-opp-role-switch-v2/ | 2026-04-12 14:11 | 2026-04-12 14:46 |
 | 2026-04-12 | opal-harness.md 모듈화 — harness/ 폴더 분리 (111) | 완료 | tasks/111-260412-opp-harness-modularize/ | 2026-04-12 11:59 | 2026-04-12 12:57 |
@@ -39,4 +40,3 @@
 | 2026-04-10 | opd ANALYSIS Gate 슬림화 + PLAN QA 범위 확대 (107) | 완료 | tasks/107-opp-opd-analysis-gate-redesign/ | 2026-04-10 17:39 | 2026-04-10 17:56 |
 | 2026-04-10 | PM Gate 자가 진단 통합 + Artifact Gate 제거 (106) | 완료 | tasks/106-opp-pm-gate-self-diagnosis/ | 2026-04-10 17:39 | 2026-04-10 23:33 |
 | 2026-04-10 | opsdd STATE Gate 완성 + VERIFY Phase 추가 (105) | 완료 | tasks/105-opp-opsdd-state-gate-verify/ | 2026-04-10 17:39 | 2026-04-10 19:02 |
-| 2026-04-10 | README 전면 개편 + AGENT.md 정체성 추가 (104) | 완료 | - | 2026-04-10 10:36 | 2026-04-10 10:36 |

@@ -3,8 +3,7 @@ name: op-dev-execute
 description: |
   **코드 실행 단계 스킬**. 오케스트레이터가 지정한 체크리스트를 따라 실제 코드를 작성하고 검증한다. FE/BE 작업 시 해당 페르소나를 적용한다.
   반드시 이 스킬을 사용해야 하는 상황: 오케스트레이터(opal-pilot-dev, opal-pilot-dev-short, opal-pilot-dev-wireframe)가 EXECUTE 단계를 디스패치할 때.
-  필수 입력: checklist_source (경로 + 섹션, 오케스트레이터 지정). 보장 출력: 코드 변경 + changed_files.
-version: 1.2
+  필수 입력: checklist_source (경로 + 섹션, 오케스트레이터 지정). 선택 입력: execution-plan.json. 보장 출력: 코드 변경 + changed_files.
 ---
 
 # op-dev-execute — 코드 실행
@@ -14,8 +13,7 @@ version: 1.2
 - **호출자**: 오케스트레이터(opal-pilot-dev, opal-pilot-dev-short, opal-pilot-dev-wireframe)가 EXECUTE 단계를 디스패치
 - **실행 주체**: 워커 에이전트 (opal-task-agent 또는 dtp-wireframe-ui-agent)
 - **입력**: `checklist_source` (오케스트레이터가 경로+섹션 지정)
-  - `PLAN.md` §4 실행 체크리스트 (기능 중심 구조, 기본)
-  - 폴백: `PLAN.md` §3 실행 체크리스트 (과거 형식)
+  - `PLAN.md` 섹션 3 실행 체크리스트 (또는 `execution-plan.json`)
   - Wireframe UI: wireframe.md 기반 실행 항목
 - **출력**: 코드 변경 + `changed_files` 목록
 
@@ -51,14 +49,8 @@ Read ~/.opal/skills/op-dev-execute/references/execute-guide.md
 오케스트레이터가 지정한 `checklist_source`에서 실행 항목을 파악한다.
 
 **입력 우선순위**:
-1. `PLAN.md §4` 실행 체크리스트 (기능 중심 구조, F-NNN 소속 기능 포함) — 기본 입력
-2. 폴백: `PLAN.md §3` 실행 체크리스트 (과거 형식 PLAN.md)
-3. 폴백: `execution-plan.json` (과거 태스크에 json만 있는 경우)
-
-**PLAN.md에 §2·§3 기능별 섹션이 없는 경우 (과거 태스크)**:
-- §3 실행 체크리스트가 있으면 그대로 실행
-- execution-plan.json이 있으면 기존 json 기반 실행 로직 적용
-- 둘 다 없으면 블로커 보고
+1. `execution-plan.json` (있으면) -- FE/BE 구조화된 실행 순서
+2. `PLAN.md` 섹션 3 실행 체크리스트 (JSON 없을 때)
 
 ### Step 3. 코드 작성 및 검증
 
@@ -81,12 +73,12 @@ Read ~/.opal/skills/op-dev-execute/references/execute-guide.md
 ### Step 4. 체크리스트 갱신
 
 각 Step 완료 시 체크박스를 실시간 갱신한다:
-PLAN.md 실행 체크리스트의 `- [ ] 완료` → `- [x] 완료`
+PLAN.md 섹션 3 실행 체크리스트의 `- [ ] 완료` → `- [x] 완료`
 
 ### Step 5. QA 체크리스트 검증
 
 모든 실행 Step 완료 후, op-dev-test-agent 호출 전에 워커가 QA 체크리스트를 자체 검증한다:
-`PLAN.md` §5 QA 체크리스트 (기능 중심 구조) 또는 §4 (과거 형식)
+`PLAN.md` 섹션 4 QA 체크리스트
 
 ## 가드레일
 
@@ -94,7 +86,7 @@ PLAN.md 실행 체크리스트의 `- [ ] 완료` → `- [x] 완료`
 
 | # | 금지 행동 | 이유 |
 |---|----------|------|
-| 1 | PLAN.md에 없는 파일 생성/수정 | 계획 밖 변경은 추적 불가 |
+| 1 | PLAN/execution-plan.json에 없는 파일 생성/수정 | 계획 밖 변경은 추적 불가 |
 | 2 | 설계(클래스 구조, 함수 시그니처, DB 스키마)를 임의로 변경 | PLAN에서 QA를 통과한 설계를 무효화 |
 | 3 | 다른 영역 침범 (FE 워커가 BE 파일 수정, 또는 그 반대) | 병렬 실행 시 충돌 발생 |
 | 4 | PLAN에 명시되지 않은 패키지 설치 | 의존성 변경은 사전 승인 필요 |
@@ -144,9 +136,7 @@ FE 태스크에서 **UI 구현**과 **비UI 작업**의 담당을 명확히 구�
 | 인터랙션 UI | 탭, 아코디언, 드롭다운, 모달 등 |
 | 폼 UI | 입력 필드, 유효성 표시, 에러 메시지 표시 |
 
-**호출 방법**: PLAN.md §3.N.2 FE 화면 설계 섹션을 Read하여 ui-designer plan-driven 모드 입력으로 전달.
-
-탐색 경로: `{프로젝트}/.opal/skills/ui-designer/SKILL.md` → `~/.opal/skills/ui-designer/SKILL.md`
+**호출 방법**: execution-plan.json의 FE screen 항목을 ui-designer plan-driven 모드로 전달.
 
 ### op-dev-execute 담당 (비UI FE 작업)
 
@@ -164,14 +154,11 @@ FE 태스크에서 **UI 구현**과 **비UI 작업**의 담당을 명확히 구�
 
 ### 실행 순서 (FE 태스크)
 
-PLAN.md §4 실행 체크리스트 기반:
-
 ```
 op-dev-execute:
-  1. PLAN.md §4 실행 체크리스트에서 Step을 Phase 순서대로 실행
-  2. FE Step 중 ui-designer가 필요한 화면 → PLAN.md §3.N.2 FE 화면 설계 섹션을 Read하여 ui-designer plan-driven 모드 입력으로 전달
-  3. BE Step: PLAN.md §4 체크리스트의 의존 순서대로 실행
-  4. 통합: Step 완료 후 QA 체크리스트 검증
+  1. 비UI 작업 먼저 (라우팅, 타입, API 클라이언트, 상태 관리)
+  2. ui-designer 호출 (화면 UI 구현)
+  3. UI + 비UI 통합 (API 연결, 이벤트 핸들러 바인딩)
 ```
 
 ## 활용 스킬/MCP (FE)
@@ -193,20 +180,17 @@ op-dev-execute:
 |-----|------|----------|
 | context7 | 라이브러리 문서 조회 (Python, Flutter, Kotlin, Go 등) | 외부 라이브러리 API 확인 시 |
 
-## PLAN.md 기반 실행
+## execution-plan.json 기반 실행
 
-PLAN.md §4 실행 체크리스트를 기반으로:
-
-1. `§4.1 Phase 그룹핑`에 따라 Phase별 실행
-2. Phase 내 독립 Step은 병렬 또는 순차 실행 (토폴로지 판단)
-3. 각 Step의 `depends_on`(또는 **의존** 필드)을 확인하여 선행 작업 완료 여부 검증
+execution-plan.json이 존재하면:
+1. `execution_order.sequence`에 따라 phase별 실행
+2. phase 1 (common) 완료 후 phase 2 (FE/BE 병렬) 시작
+3. 각 항목의 `depends_on`을 확인하여 선행 작업 완료 여부 검증
 4. **FE 항목 실행 순서**:
    a. 비UI 작업 먼저 (op-dev-execute): 라우팅, 타입 정의, API 클라이언트, 상태 관리
-   b. UI 구현 (ui-designer): PLAN.md §3.N.2 FE 화면 설계 섹션을 ui-designer plan-driven 모드로 전달
+   b. UI 구현 (ui-designer): screen 항목을 ui-designer plan-driven 모드로 전달
    c. 통합 (op-dev-execute): API 연결, 이벤트 핸들러 바인딩, 최종 조립
-5. BE Step: model → dto → service → router 순서로 순차 실행
-
-**execution-plan.json 사용 안 함**: 새 태스크에서는 PLAN.md §4·§3.N.2를 직접 읽는다. 과거 태스크의 json 파일은 폴백으로만 참조.
+5. BE layer 항목: model → dto → service → router 순서로 순차 실행
 
 ## 블로커 처리
 
@@ -243,7 +227,7 @@ PLAN.md §4 실행 체크리스트를 기반으로:
 - [ ] 변경 파일 목록이 PLAN.md의 파일 목록과 일치하는가
 - [ ] 코드가 프로젝트 컨벤션을 따르는가
 - [ ] QA 체크리스트 체크박스가 갱신되었는가
-- [ ] PLAN.md에 없는 파일을 생성/수정하지 않았는가
+- [ ] PLAN/execution-plan.json에 없는 파일을 생성/수정하지 않았는가
 - [ ] 하드코딩 시크릿이 없는가
 - [ ] FE/BE 영역 간 침범이 없는가 (병렬 실행 시)
 
@@ -255,4 +239,3 @@ PLAN.md §4 실행 체크리스트를 기반으로:
 |------|------|---------|
 | v1.0 | - | 초기 작성 |
 | v1.1 | 2026-04-12 | Step 3-H @header 작성 규칙 추가 — code-scan 대상 확장자 파일 생성/수정 시 워커 @header 작성 의무 (109) |
-| v1.2 | 2026-04-13 13:48 | PLAN.md 기반 실행 전환 — 입력 우선순위를 "PLAN.md §4 > §3 > json 폴백"으로 변경, execution-plan.json 기반 실행 섹션을 PLAN.md §4·§3.N.2 기능 루프 기반으로 재작성, FE 역할 분담의 ui-designer 호출 방법을 "PLAN.md §3.N.2 FE 화면 설계 참조"로 변경, 가드레일·품질 체크리스트에서 json 참조를 PLAN.md로 통일, 과거 태스크 폴백 규칙 서술 (114) |
