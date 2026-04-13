@@ -8,7 +8,7 @@ description: |
 # Full Task 오케스트레이터
 
 ## Harness
-모드: Full Task (TASK → ANALYSIS → PLAN → TEST-SCENARIO → EXECUTE → TEST)
+모드: Full Task (TASK → ANALYSIS → PLAN → EXECUTE → TEST)
 > 부트스트랩에서 로드되지 않은 경우: `~/.opal/references/opal-harness.md`를 Read한다.
 
 **[MUST]** 스킬 시작 즉시 모드에 따라 서브 하네스를 Read한다. 이 단계를 건너뛰면 안 된다:
@@ -52,37 +52,26 @@ op-dev-plan 스킬을 수행하라.
 **태스크 폴더**: {tasks/{NNN}-{name}/}
 **이전 산출물**: {TASK.md 경로}, {ANALYSIS.md 경로}
 **프로젝트 컨텍스트**: {docs/PROJECT.md + 매칭 참조 문서. 미존재 시 CLAUDE.md 폴백}
-**산출물 저장 경로**: {PLAN.md 경로}, {execution-plan.json 경로 (FE/BE 시)}
+**산출물 저장 경로**: {PLAN.md 경로}, {TEST-SCENARIO.md 경로}, {execution-plan.json 경로 (FE/BE 시)}
 **하네스 Guards**: PLAN.md에 없는 파일 생성/수정 금지. PLAN 설계를 임의 변경 금지. 블로커 발생 시 즉시 중단 후 보고.
 **참조 문서**: {docs/PROJECT.md 문서 테이블 기반 관련 문서 경로}
 ```
 **model**: advanced
 
-### 3-2. TEST-SCENARIO 디스패치 (PLAN 완료 직후)
+> op-dev-plan 워커가 PLAN.md와 TEST-SCENARIO.md를 통합 작성한다. (문서 전용 작업 시 TEST-SCENARIO.md 스킵 — 워커가 자체 판별)
 
-PLAN 완료 직후 연속 디스패치한다.
-```
-[WORKER]
-op-dev-test-scenario 스킬을 수행하라.
-**스킬 경로**: {op-dev-test-scenario/SKILL.md 탐색 경로}
-**태스크 폴더**: {tasks/{NNN}-{name}/}
-**이전 산출물**: {TASK.md 경로}, {PLAN.md 경로}
-**프로젝트 컨텍스트**: {docs/PROJECT.md + 매칭 참조 문서. 미존재 시 CLAUDE.md 폴백}
-**산출물 저장 경로**: {TEST-SCENARIO.md 경로}
-**하네스 Guards**: PLAN.md에 없는 파일 생성/수정 금지. PLAN 설계를 임의 변경 금지. 블로커 발생 시 즉시 중단 후 보고.
-**참조 문서**: {docs/PROJECT.md 문서 테이블 기반 관련 문서 경로}
-```
-**model**: light
-
-### TEST-SCENARIO 스킵 조건
-작업 유형이 **문서 전용**(.md 파일만 수정, 소스 코드 없음)인 경우:
-- TEST-SCENARIO 디스패치를 **스킵**, "TEST-SCENARIO: 문서 전용 작업으로 스킵" 표기
-- **판별**: PLAN.md 파일 변경 계획에 `.ts/.js/.py/.go/.java/.kt/.rs` 등이 없으면 문서 전용
-
-두 워커 완료
+PLAN 완료
   → **State Gate**
-  → **QA Gate** (op-dev-qa — ANALYSIS.md + PLAN.md + TEST-SCENARIO.md 통합 검토, 체크리스트 갱신 포함) → **State Gate**
-  → **PM Gate** (체크리스트 갱신 상태 확인. 미갱신 시 QA 재소환) → **State Gate**
+  → **PM Gate** (PLAN.md + TEST-SCENARIO.md 직접 검증 — 점검 목록 참조):
+    1. `{PLAN.md 경로}` Read — §4.2 실행 체크리스트, §5 QA 체크리스트 확인
+    2. `{TEST-SCENARIO.md 경로}` Read — 시나리오 목록, 코드 품질, 보안 항목 확인 (스킵 시 해당 없음)
+    3. 검증 체크리스트:
+       - [ ] TASK.md 요구사항 전체 커버 여부 (PLAN.md §1.2 기능 목록 대조)
+       - [ ] PLAN.md §4.2 실행 체크리스트 완성도 (소속 F-ID, 완료 기준 명시)
+       - [ ] TEST-SCENARIO.md 시나리오가 TASK.md 요구사항 전체를 커버하는가
+       - [ ] TEST-SCENARIO.md 보안 항목(시크릿 스캔, .gitignore) 포함 여부
+       - [ ] 설계 피드백 섹션에 미해결 빈틈이 없는가
+  → **State Gate**
   → 사용자에게 PLAN + TEST-SCENARIO 함께 보고. 승인 = EXECUTE 시작 허가.
 
 ## STEP 4: EXECUTE
@@ -124,9 +113,16 @@ op-dev-test-agent 워커 디스패치. TEST-SCENARIO.md 실행 + 결과 기록 +
 
 ### PASS 시
 
-QA Gate (op-dev-qa — 체크리스트 갱신 포함) → **State Gate**
-→ **PM Gate** (TEST 결과 검토 + 체크리스트 갱신 상태 확인. 미갱신 시 QA 재소환) → **State Gate**
-→ 모든 체크리스트 갱신 완료 확인 후 DONE.md 생성 (checkpoint-guide.md 참조)
+→ **PM Gate** (TEST-SCENARIO.md 직접 검증):
+  1. `{TEST-SCENARIO.md 경로}` Read — 시나리오 PASS/FAIL 전체 확인
+  2. 검증 체크리스트:
+     - [ ] TEST-SCENARIO.md 모든 시나리오 PASS
+     - [ ] 코드 품질 항목(린트/타입/포맷) 모두 Pass
+     - [ ] 보안 항목(시크릿 스캔/.gitignore) Pass
+     - [ ] 회귀 테스트 항목 Pass
+     - [ ] 설계 피드백 미해결 빈틈 없음
+→ **State Gate**
+→ DONE.md 생성 (checkpoint-guide.md 참조)
 → 사용자에게 완료 보고
 
 ### FAIL 시 (루핑 — 최대 3회, 하네스 §1 L3a)
@@ -152,8 +148,8 @@ QA Gate (op-dev-qa — 체크리스트 갱신 포함) → **State Gate**
 
 ## STATE.md 도메인 설정
 - 모드: Full Task
-- 단계: TASK / ANALYSIS / PLAN / TEST-SCENARIO / EXECUTE / TEST
-- 산출물: TASK.md, ANALYSIS.md, PLAN.md, TEST-SCENARIO.md, QA-*.md, DONE.md
+- 단계: TASK / ANALYSIS / PLAN / EXECUTE / TEST
+- 산출물: TASK.md, ANALYSIS.md, PLAN.md, TEST-SCENARIO.md, DONE.md
 
 **진행 현황 행 예시** (STATE.md 초기 생성 시 이 구조로 작성):
 
@@ -171,26 +167,19 @@ QA Gate (op-dev-qa — 체크리스트 갱신 포함) → **State Gate**
 | 9 | ANALYSIS | 사용자 확인 | ⬜ | - |
 | 10 | PLAN | 작업 | ⬜ | - |
 | 11 | PLAN | PLAN.md 생성 | ⬜ | - |
-| 12 | TEST-SCENARIO | 작업 | ⬜ | - |
-| 13 | TEST-SCENARIO | TEST-SCENARIO.md 생성 | ⬜ | - |
-| 14 | TEST-SCENARIO | State Gate | ⬜ | - |
-| 15 | PLAN | QA Gate | ⬜ | - |
-| 16 | PLAN | QA-PLAN.md 생성 | ⬜ | - |
-| 17 | PLAN | State Gate | ⬜ | - |
-| 18 | PLAN | PM Gate | ⬜ | - |
-| 19 | PLAN | State Gate | ⬜ | - |
-| 20 | PLAN | 사용자 확인 | ⬜ | - |
-| 21 | EXECUTE | 작업 | ⬜ | - |
-| 22 | EXECUTE | State Gate | ⬜ | - |
-| 23 | TEST | 작업 | ⬜ | - |
-| 24 | TEST | State Gate | ⬜ | - |
-| 25 | TEST | QA Gate | ⬜ | - |
-| 26 | TEST | QA-EXECUTE.md 생성 | ⬜ | - |
-| 27 | TEST | State Gate | ⬜ | - |
-| 28 | TEST | PM Gate | ⬜ | - |
-| 29 | TEST | DONE.md 생성 | ⬜ | - |
-| 30 | TEST | State Gate | ⬜ | - |
-| 31 | TEST | 사용자 확인 | ⬜ | - |
+| 12 | PLAN | TEST-SCENARIO.md 생성 | ⬜ | - |
+| 13 | PLAN | State Gate | ⬜ | - |
+| 14 | PLAN | PM Gate | ⬜ | - |
+| 15 | PLAN | State Gate | ⬜ | - |
+| 16 | PLAN | 사용자 확인 | ⬜ | - |
+| 17 | EXECUTE | 작업 | ⬜ | - |
+| 18 | EXECUTE | State Gate | ⬜ | - |
+| 19 | TEST | 작업 | ⬜ | - |
+| 20 | TEST | State Gate | ⬜ | - |
+| 21 | TEST | PM Gate | ⬜ | - |
+| 22 | TEST | DONE.md 생성 | ⬜ | - |
+| 23 | TEST | State Gate | ⬜ | - |
+| 24 | TEST | 사용자 확인 | ⬜ | - |
 ```
 
 > TEST 루핑 발생 시: "TEST | fix 작업 (N/3)", "TEST | State Gate (N/3)" 행을 동적 추가한다.
@@ -200,8 +189,8 @@ QA Gate (op-dev-qa — 체크리스트 갱신 포함) → **State Gate**
 | Phase | 산출물 | 체크리스트 위치 |
 |-------|-------|----------------|
 | ANALYSIS | ANALYSIS.md | - |
-| PLAN+TEST-SCENARIO | TASK.md, PLAN.md, TEST-SCENARIO.md, QA-PLAN.md | TASK.md 요구사항, PLAN.md §3, §4 |
-| EXECUTE | QA-EXECUTE.md | PLAN.md §3 |
+| PLAN | TASK.md, PLAN.md, TEST-SCENARIO.md | TASK.md 요구사항, PLAN.md §4.2, §5; TEST-SCENARIO.md 시나리오 목록/보안/설계 피드백 |
+| TEST | TEST-SCENARIO.md | TEST-SCENARIO.md 시나리오 결과/코드품질/보안/회귀 |
 
 ---
 
@@ -216,8 +205,8 @@ opal-harness-agentic.md 참조. `--agentic` 플래그 활성화 시 이 스킬�
 ### 자율 게이트 흐름
 
 ```
-TASK (PM 직접) → ANALYSIS Gate → PLAN+TEST-SCENARIO Gate → EXECUTE Gate → TEST Gate
-                   PM 자율 검토      PM 자율 검토              PM 자율 검토    PM 자율 검토
+TASK (PM 직접) → ANALYSIS Gate → PLAN Gate → EXECUTE Gate → TEST Gate
+                   PM 자율 검토      PM 자율 검토   PM 자율 검토    PM 자율 검토
 ```
 
 - TASK 이후 4개 게이트를 PM이 자율 통과
@@ -247,3 +236,4 @@ TASK (PM 직접) → ANALYSIS Gate → PLAN+TEST-SCENARIO Gate → EXECUTE Gate 
 | v2.6 | 2026-04-10 | ANALYSIS Gate 슬림화 — QA·PM Gate 제거, State Gate + Artifact Gate만 유지. PLAN QA 범위 확대 — ANALYSIS.md 포함 통합 검토 (107) |
 | v2.7 | 2026-04-10 | Artifact Gate 제거 + PM Gate 점검 목록 섹션 추가 + 파이프라인 현황판 이름 변경 (106) |
 | v2.8 | 2026-04-11 | PM Gate 점검 목록 — PLAN-equivalent Phase에 TASK.md 요구사항 추가 (108) |
+| v2.9 | 2026-04-13 | STEP 3에서 TEST-SCENARIO 별도 디스패치 + QA Gate 제거. PLAN 워커가 TEST-SCENARIO.md 통합 작성. PM Gate에 PLAN.md+TEST-SCENARIO.md Read + 검증 체크리스트 추가. STEP 5 TEST QA Gate 제거, PM Gate에 TEST-SCENARIO.md Read + 검증 체크리스트 추가. Agentic Mode 흐름도 갱신. STATE.md 행 예시 31→24행 갱신 (115) |

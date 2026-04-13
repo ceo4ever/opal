@@ -10,7 +10,7 @@ description: |
 # Short Task 오케스트레이터
 
 ## Harness
-모드: Short Task (TASK → PLAN → TEST-SCENARIO → EXECUTE → TEST)
+모드: Short Task (TASK → PLAN → EXECUTE → TEST)
 > 부트스트랩에서 로드되지 않은 경우: `~/.opal/references/opal-harness.md`를 Read한다.
 
 **[MUST]** 스킬 시작 즉시 모드에 따라 서브 하네스를 Read한다. 이 단계를 건너뛰면 안 된다:
@@ -40,20 +40,21 @@ op-dev-plan 워커 디스패치. **model**: advanced. 이전 산출물: TASK.md�
 > 2. 관련 참조 문서 경로 (docs/PROJECT.md 문서 테이블 기반)
 > 3. 기술 스택 연동 지시 (기존 "참조 문서 전달 의무" 통합)
 
-### TEST-SCENARIO 스킵 조건
+> op-dev-plan 워커가 PLAN.md와 TEST-SCENARIO.md를 통합 작성한다. (문서 전용 작업 시 TEST-SCENARIO.md 스킵 — 워커가 자체 판별)
 
-**문서 전용** 작업(PLAN.md 파일 변경 계획이 모두 `.md`, 소스 코드 없음)이면 스킵. 보고 시 "TEST-SCENARIO: 문서 전용 작업으로 스킵" 표기.
-
-### TEST-SCENARIO 디스패치
-
-PLAN 완료 직후 연속 디스패치. **model**: light. 이전 산출물: TASK.md + PLAN.md.
-
-> **[PM 컨텍스트 주입]** 디스패치 프롬프트 첫 줄에 `[WORKER]` 삽입. 하네스 Guards 핵심 규칙 + 관련 참조 문서 경로를 포함한다.
-
-워커 완료
+PLAN 완료
   → **State Gate**
-  → **QA Gate** (op-dev-qa — PLAN.md + TEST-SCENARIO.md 동시 검토) → **State Gate**
-  → **PM Gate** (체크리스트 갱신 상태 확인 — 하네스 interactive §3 참조. 미갱신 시 QA 재소환) → **State Gate**
+  → **PM Gate** (PLAN.md + TEST-SCENARIO.md 직접 검증 — 점검 목록 참조):
+    1. `{PLAN.md 경로}` Read — §4.2 실행 체크리스트, §5 QA 체크리스트 확인
+    2. `{TEST-SCENARIO.md 경로}` Read — 시나리오 목록, 코드 품질, 보안 항목 확인 (스킵 시 해당 없음)
+    3. 검증 체크리스트:
+       - [ ] TASK.md 요구사항 전체 커버 여부 (PLAN.md §1.2 기능 목록 대조)
+       - [ ] PLAN.md §4.2 실행 체크리스트 완성도 (소속 F-ID, 완료 기준 명시)
+       - [ ] TEST-SCENARIO.md 시나리오가 TASK.md 요구사항 전체를 커버하는가
+       - [ ] TEST-SCENARIO.md 보안 항목(시크릿 스캔, .gitignore) 포함 여부
+       - [ ] 설계 피드백 섹션에 미해결 빈틈이 없는가
+       - [ ] 규모 기준 초과 시 Full Task 에스컬레이션 검토 여부
+  → **State Gate**
   → 사용자에게 PLAN + TEST-SCENARIO 함께 보고. 승인 = EXECUTE 시작 허가.
 
 ---
@@ -81,9 +82,16 @@ op-dev-test-agent 워커 디스패치. TEST-SCENARIO.md 실행 + 결과 기록 +
 
 ### PASS 시
 
-QA Gate (op-dev-qa — 체크리스트 갱신 포함) → **State Gate**
-→ **PM Gate** (TEST 결과 검토 + 체크리스트 갱신 상태 확인. 미갱신 시 QA 재소환) → **State Gate**
-→ 모든 체크리스트 갱신 완료 확인 후 DONE.md 생성
+→ **PM Gate** (TEST-SCENARIO.md 직접 검증):
+  1. `{TEST-SCENARIO.md 경로}` Read — 시나리오 PASS/FAIL 전체 확인
+  2. 검증 체크리스트:
+     - [ ] TEST-SCENARIO.md 모든 시나리오 PASS
+     - [ ] 코드 품질 항목(린트/타입/포맷) 모두 Pass
+     - [ ] 보안 항목(시크릿 스캔/.gitignore) Pass
+     - [ ] 회귀 테스트 항목 Pass
+     - [ ] 설계 피드백 미해결 빈틈 없음
+→ **State Gate**
+→ DONE.md 생성
 → 사용자에게 완료 보고
 
 ### FAIL 시 (루핑 — 최대 3회, 하네스 §1 L3a)
@@ -147,7 +155,7 @@ Full Task(opal-pilot-dev)로 전환할까요?
 | 필드 | 값 |
 |------|------|
 | 모드 | Short Task |
-| 단계 목록 | TASK / PLAN / TEST-SCENARIO / EXECUTE / TEST |
+| 단계 목록 | TASK / PLAN / EXECUTE / TEST |
 
 **진행 현황 행 예시** (STATE.md 초기 생성 시 이 구조로 작성):
 
@@ -159,26 +167,19 @@ Full Task(opal-pilot-dev)로 전환할까요?
 | 3 | TASK | 사용자 확인 | ⬜ | - |
 | 4 | PLAN | 작업 | ⬜ | - |
 | 5 | PLAN | PLAN.md 생성 | ⬜ | - |
-| 6 | TEST-SCENARIO | 작업 | ⬜ | - |
-| 7 | TEST-SCENARIO | TEST-SCENARIO.md 생성 | ⬜ | - |
-| 8 | TEST-SCENARIO | State Gate | ⬜ | - |
-| 9 | PLAN | QA Gate | ⬜ | - |
-| 10 | PLAN | QA-PLAN.md 생성 | ⬜ | - |
-| 11 | PLAN | State Gate | ⬜ | - |
-| 12 | PLAN | PM Gate | ⬜ | - |
-| 13 | PLAN | State Gate | ⬜ | - |
-| 14 | PLAN | 사용자 확인 | ⬜ | - |
-| 15 | EXECUTE | 작업 | ⬜ | - |
-| 16 | EXECUTE | State Gate | ⬜ | - |
-| 17 | TEST | 작업 | ⬜ | - |
-| 18 | TEST | State Gate | ⬜ | - |
-| 19 | TEST | QA Gate | ⬜ | - |
-| 20 | TEST | QA-EXECUTE.md 생성 | ⬜ | - |
-| 21 | TEST | State Gate | ⬜ | - |
-| 22 | TEST | PM Gate | ⬜ | - |
-| 23 | TEST | DONE.md 생성 | ⬜ | - |
-| 24 | TEST | State Gate | ⬜ | - |
-| 25 | TEST | 사용자 확인 | ⬜ | - |
+| 6 | PLAN | TEST-SCENARIO.md 생성 | ⬜ | - |
+| 7 | PLAN | State Gate | ⬜ | - |
+| 8 | PLAN | PM Gate | ⬜ | - |
+| 9 | PLAN | State Gate | ⬜ | - |
+| 10 | PLAN | 사용자 확인 | ⬜ | - |
+| 11 | EXECUTE | 작업 | ⬜ | - |
+| 12 | EXECUTE | State Gate | ⬜ | - |
+| 13 | TEST | 작업 | ⬜ | - |
+| 14 | TEST | State Gate | ⬜ | - |
+| 15 | TEST | PM Gate | ⬜ | - |
+| 16 | TEST | DONE.md 생성 | ⬜ | - |
+| 17 | TEST | State Gate | ⬜ | - |
+| 18 | TEST | 사용자 확인 | ⬜ | - |
 ```
 
 > TEST 루핑 발생 시: "TEST | fix 작업 (N/3)", "TEST | State Gate (N/3)" 행을 동적 추가한다.
@@ -189,8 +190,8 @@ Full Task(opal-pilot-dev)로 전환할까요?
 
 | Phase | 산출물 | 체크리스트 위치 |
 |-------|-------|----------------|
-| PLAN+TEST-SCENARIO | TASK.md, PLAN.md, TEST-SCENARIO.md, QA-PLAN.md | TASK.md 요구사항, PLAN.md §3, §4 |
-| EXECUTE | QA-EXECUTE.md | PLAN.md §3 |
+| PLAN | TASK.md, PLAN.md, TEST-SCENARIO.md | TASK.md 요구사항, PLAN.md §4.2, §5; TEST-SCENARIO.md 시나리오 목록/보안/설계 피드백 |
+| TEST | TEST-SCENARIO.md | TEST-SCENARIO.md 시나리오 결과/코드품질/보안/회귀 |
 
 ---
 
@@ -205,8 +206,8 @@ opal-harness-agentic.md 참조. `--agentic` 플래그 활성화 시 이 스킬�
 ### 자율 게이트 흐름
 
 ```
-TASK (PM 직접) → PLAN+TEST-SCENARIO Gate → EXECUTE Gate → TEST Gate
-                   PM 자율 검토              PM 자율 검토    PM 자율 검토
+TASK (PM 직접) → PLAN Gate → EXECUTE Gate → TEST Gate
+                   PM 자율 검토   PM 자율 검토    PM 자율 검토
 ```
 
 - TASK 이후 3개 게이트를 PM이 자율 통과
@@ -242,3 +243,4 @@ TASK (PM 직접) → PLAN+TEST-SCENARIO Gate → EXECUTE Gate → TEST Gate
 | v2.6 | 2026-04-09 | STATE.md 도메인 치환값 — 진행 현황 행 예시에 산출물 생성 행 추가 (101) |
 | v2.7 | 2026-04-10 | Artifact Gate 제거 + PM Gate 점검 목록 섹션 추가 + 파이프라인 현황판 이름 변경 (106) |
 | v2.8 | 2026-04-11 | PM Gate 점검 목록 — PLAN-equivalent Phase에 TASK.md 요구사항 추가 (108) |
+| v2.9 | 2026-04-13 | STEP 2에서 TEST-SCENARIO 별도 디스패치 + QA Gate 제거. PLAN 워커가 TEST-SCENARIO.md 통합 작성. PM Gate에 PLAN.md+TEST-SCENARIO.md Read + 검증 체크리스트 추가. STEP 4 TEST QA Gate 제거, PM Gate에 TEST-SCENARIO.md Read + 검증 체크리스트 추가. Agentic Mode 흐름도 갱신. STATE.md 행 예시 25→18행 갱신 (115) |

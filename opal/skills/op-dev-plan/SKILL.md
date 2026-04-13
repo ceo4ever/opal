@@ -3,7 +3,7 @@ name: op-dev-plan
 description: |
   **구현 계획 수립 단계 스킬**. TASK.md와 ANALYSIS.md(선택)를 기반으로 탑다운 기능 중심 구조로 실행 가능한 구현 청사진을 작성한다. 기능(F-NNN) 단위로 분석·설계·QA를 추적한다. ANALYSIS.md 유무에 따라 분석 깊이가 자동 조절된다. 기능 개수에 따라 Flat/Multi-Feature 모드를 자동 선택한다.
   반드시 이 스킬을 사용해야 하는 상황: 오케스트레이터(opal-pilot-dev, opal-pilot-dev-short)가 PLAN 단계를 디스패치할 때.
-  필수 입력: TASK.md. 선택 입력: ANALYSIS.md. 보장 출력: PLAN.md (기능 중심 구조, 실행 체크리스트+복잡도 판별+기능-QA 매트릭스 포함).
+  필수 입력: TASK.md. 선택 입력: ANALYSIS.md. 보장 출력: PLAN.md (기능 중심 구조, 실행 체크리스트+복잡도 판별+기능-QA 매트릭스 포함), TEST-SCENARIO.md.
 version: 2.0
 ---
 
@@ -29,7 +29,7 @@ version: 2.0
 |------|------|
 | **필수 입력** | TASK.md |
 | **선택 입력** | ANALYSIS.md |
-| **보장 출력** | PLAN.md (기능 중심 구조 §1~§9, 기능-QA 매트릭스 포함) |
+| **보장 출력** | PLAN.md (기능 중심 구조 §1~§9, 기능-QA 매트릭스 포함), TEST-SCENARIO.md |
 
 ---
 
@@ -138,10 +138,29 @@ plan-guide.md의 "복잡도 판별" 섹션을 따라 실행 모드를 결정한�
 
 아래 기능 중심 출력 형식으로 PLAN.md를 작성한다.
 
-### Step 10: 결과 반환
+### Step 10: TEST-SCENARIO.md 작성
 
-워커는 PLAN.md 경로와 요약을 오케스트레이터에 반환한다.
-워커는 QA를 호출하지 않는다. 오케스트레이터가 QA 에이전트를 별도로 호출한다.
+PLAN.md 완료 후 연속으로 TEST-SCENARIO.md를 작성한다.
+
+PLAN 단계에서 코드 분석과 설계를 완료한 상태이므로, 이 시점이 테스트 시나리오 작성에 가장 적합하다.
+
+**형식**: `op-dev-test-scenario/SKILL.md`의 "TEST-SCENARIO.md 통일 형식"을 따른다.
+
+**작성 범위**:
+- **시나리오 목록**: TASK.md 요구사항 × PLAN.md 기능별 설계(§3.N.5 테스트 시나리오)를 기반으로 S-NNN 단위로 도출. 각 시나리오에 대상/조건/기대 결과/도구를 작성한다. (실행 명령/결과/상세는 op-dev-test-agent가 채움)
+- **코드 품질**: 린트 / 타입 체크 / 포맷터 항목 (결과/상세는 op-dev-test-agent가 채움)
+- **보안**: 하드코딩 시크릿 스캔 / .gitignore 확인 항목
+- **회귀 테스트**: 테스트 스위트 항목
+- **판정**: op-dev-test-agent가 채울 영역 표기
+- **설계 피드백**: 시나리오 도출 과정에서 발견한 PLAN 빈틈 기록 (없으면 "없음")
+
+**스킵 조건**: 작업 유형이 문서 전용(`.md` 파일만 수정, 소스 코드 없음)이면 TEST-SCENARIO.md 작성을 스킵한다. 스킵 시 결과 반환에 "TEST-SCENARIO: 문서 전용 작업으로 스킵" 표기.
+
+**저장 경로**: `tasks/{NNN}-{태스크명}/TEST-SCENARIO.md`
+
+### Step 11: 결과 반환
+
+워커는 PLAN.md 경로와 TEST-SCENARIO.md 경로(또는 스킵 여부)를 요약과 함께 오케스트레이터에 반환한다.
 
 ---
 
@@ -373,3 +392,4 @@ FE 화면이 있으면 아래 포맷으로 기재:
 | v1.0 | - | 초기 작성 |
 | v1.1 | - | 입출력 테이블 정비 |
 | v2.0 | 2026-04-13 13:48 | 탑다운 기능 중심 구조 전면 개편 — PLAN.md 출력 형식을 §1~§9 기능 중심 구조(F-NNN 하위 섹션 반복)로 교체, 기능 식별 Step 신설, 기능별 분석·설계·통합 실행 계획으로 프로세스 재정렬, 6영역 태그 확장, execution-plan.json 폐기(Deprecated), 기능-QA 매트릭스 추가, Flat/Multi-Feature 모드 판별 추가 (114) |
+| v2.1 | 2026-04-13 | Step 10 TEST-SCENARIO.md 작성 추가 + Step 11 결과 반환 갱신. 보장 출력에 TEST-SCENARIO.md 포함. 오케스트레이터(opd/opds)에서 TEST-SCENARIO 별도 디스패치 제거에 따른 통합 작성 (115) |
