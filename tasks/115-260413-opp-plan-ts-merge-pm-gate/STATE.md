@@ -10,7 +10,7 @@ layer: task
 > 태스크: tasks/115-260413-opp-plan-ts-merge-pm-gate/
 > 모드: Project Task (opp) | interactive
 > 최종 갱신: 2026-04-13
-> 상태: 진행 중 (사용자 확인 대기)
+> 상태: 완료
 
 ## 파이프라인 현황판
 
@@ -37,4 +37,4 @@ layer: task
 | 19 | EXECUTE | PM Gate | ✅ | 2026-04-13 |
 | 20 | EXECUTE | DONE.md 생성 | ✅ | 2026-04-13 |
 | 21 | EXECUTE | State Gate | ✅ | 2026-04-13 |
-| 22 | EXECUTE | 사용자 확인 | ⬜ | - |
+| 22 | EXECUTE | 사용자 확인 | ✅ | 2026-04-13 |
