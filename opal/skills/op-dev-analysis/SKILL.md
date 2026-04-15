@@ -11,7 +11,7 @@ description: |
 ## 실행 컨텍스트
 
 - **호출자**: 오케스트레이터(opal-pilot-dev)가 ANALYSIS 단계를 디스패치
-- **실행 주체**: 워커 에이전트 (opal-task-agent)
+- **실행 주체**: 워커 에이전트 — PM이 agents.md 매핑 테이블에 따라 적합한 에이전트를 선택한다 (폴백: opal-task-agent)
 - **입력**: `tasks/{NNN}-{태스크명}/TASK.md`
 - **출력**: `tasks/{NNN}-{태스크명}/ANALYSIS.md`
 
@@ -151,3 +151,10 @@ ANALYSIS.md 작성 후 자체 검증한다:
 ```
 ANALYSIS 완료: tasks/{NNN}-{태스크명}/ANALYSIS.md
 ```
+
+## 변경이력
+
+| 버전 | 날짜 | 내용 |
+|------|------|------|
+| v1.0 | 2025-XX-XX | 초판 |
+| v1.2 | 2026-04-15 | 실행 주체에 전문 에이전트 체계 안내 추가 (117) |

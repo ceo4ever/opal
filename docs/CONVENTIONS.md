@@ -17,7 +17,9 @@
 
 - **kebab-case** 사용: `user-auth-implementation`, `op-dev-plan`
 - 스킬 폴더: `{그룹}-{역할}` — `opal-pilot-dev`, `op-dev-analysis`, `op-task-qa`
-- 에이전트 폴더: `{대상 워크플로우}-{역할}` — `opal-task-agent`, `opal-task-qa-agent`, `wtm-agent`
+- OPAL 에이전트 폴더: `opal/agents/{agent-name}/` — `opal-task-agent`, `opal-fe-agent`, `opal-be-agent`, `opal-plan-agent`, `opal-test-agent`, `opal-planning-agent`, `opal-db-agent`
+- 범용 에이전트 폴더: `agents/{agent-name}/` — `wtm-agent` (OPAL 무관)
+- 전문 에이전트 네이밍: `opal-{domain}-agent` — `opal-fe-agent`, `opal-be-agent`, `opal-db-agent`
 - 태스크 폴더: `{NNN}-{스킬약어 또는 대상}-{동작/설명}` — `055-opi-task-record`, `052-orchestrator-cleanup`
 - SDD 명세 폴더: `specs/{NNN}-{feature-name}/` — 순번 3자리 0-패딩, kebab-case
 
@@ -29,6 +31,7 @@
 | `op-dev-*` | dev 도메인 단계 스킬 | op-dev-analysis, op-dev-plan, op-dev-qa |
 | `op-task-*` | 범용 단계 스킬 | op-task, op-task-qa, op-task-plan, op-task-execute |
 | `opal-task-*` | 범용 워커 에이전트 | opal-task-agent |
+| `opal-{domain}-agent` | 전문 워커 에이전트 | opal-fe-agent, opal-be-agent, opal-db-agent, opal-plan-agent, opal-test-agent, opal-planning-agent |
 | `op-sdd-*` | SDD 단계 스킬 | op-sdd-spec, op-sdd-verify, op-sdd-plan, op-sdd-tasks |
 | `opal-*` | OPAL 프레임워크 전용 | opal-project-init, opal-onboarding |
 
@@ -61,8 +64,11 @@ skills/{skill-name}/
 ### 에이전트 구조
 
 ```
-agents/{agent-name}/
-└── AGENT.md              필수 — YAML frontmatter + 입출력 명세 + 실행 프로세스
+opal/agents/{agent-name}/    OPAL 전용 에이전트 (전문 + 범용)
+└── AGENT.md                 필수 — YAML frontmatter + 입출력 명세 + 실행 프로세스
+
+agents/{agent-name}/          범용 에이전트 (OPAL 무관)
+└── AGENT.md
 ```
 
 ### YAML Frontmatter

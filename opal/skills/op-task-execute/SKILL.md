@@ -11,7 +11,7 @@ description: |
 ## 실행 컨텍스트
 
 - **호출자**: 오케스트레이터(opal-pilot-project)가 EXECUTE 단계를 디스패치
-- **실행 주체**: 워커 에이전트 (opal-task-agent)
+- **실행 주체**: 워커 에이전트 — PM이 agents.md 매핑 테이블에 따라 적합한 에이전트를 선택한다 (폴백: opal-task-agent)
 - **입력**: `checklist_source` (오케스트레이터가 경로+섹션 지정) — PLAN.md 섹션 3 실행 체크리스트
 - **출력**: 파일 변경 + `changed_files` 목록
 
@@ -142,3 +142,4 @@ PLAN.md 섹션 3 실행 체크리스트를 읽어 전체 Step과 의존성을 �
 | v1.0 | 2026-03-29 | 초기 작성 — op-dev-execute 기반 범용화 (FE/BE 특화 제거) |
 | v1.1 | 2026-03-29 | 리네이밍: op-execute → op-task-execute |
 | v1.2 | 2026-04-12 | Step 3-H @header 작성 규칙 추가 — code-scan 대상 확장자 파일 생성/수정 시 워커 @header 작성 의무 (109) |
+| v1.3 | 2026-04-15 | 실행 주체에 전문 에이전트 체계 안내 추가 (117) |

@@ -433,10 +433,23 @@ install_opal() {
     done
     success "OPAL 스킬 ${opal_skill_count}개 → $opal_home/skills/"
 
-    # ── 에이전트 (agents/ → ~/.opal/agents/) ──
-    local agent_count
-    agent_count=$(find "$FRAMEWORK_ROOT/agents" -mindepth 1 -maxdepth 1 -type d ! -name 'claude' | wc -l | tr -d ' ')
+    # ── 에이전트 (opal/agents/ + agents/ → ~/.opal/agents/) ──
+    local agent_count=0
     mkdir -p "$opal_home/agents"
+
+    # OPAL 전용 에이전트 (opal/agents/)
+    if [[ -d "$opal_dir/agents" ]]; then
+        for agent_dir in "$opal_dir/agents"/*/; do
+            if [[ -d "$agent_dir" ]]; then
+                local agent_name
+                agent_name="$(basename "$agent_dir")"
+                install_dir "$agent_dir" "$opal_home/agents/$agent_name" "에이전트: $agent_name"
+                ((agent_count++))
+            fi
+        done
+    fi
+
+    # 범용 에이전트 (agents/ — OPAL 무관)
     for agent_dir in "$FRAMEWORK_ROOT/agents"/*/; do
         if [[ -d "$agent_dir" ]]; then
             local agent_name
@@ -446,6 +459,7 @@ install_opal() {
             [[ "$agent_name" == "cursor" ]] && continue
             [[ "$agent_name" == "antigravity" ]] && continue
             install_dir "$agent_dir" "$opal_home/agents/$agent_name" "에이전트: $agent_name"
+            ((agent_count++))
         fi
     done
     success "에이전트 ${agent_count}개 → $opal_home/agents/"

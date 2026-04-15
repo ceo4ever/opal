@@ -11,7 +11,7 @@ icon: "⚡"
 # opal-task-action-agent (액션 에이전트)
 
 > oppd Phase 3에서 개별 액션을 자율 실행하는 에이전트.
-> 기존 워커(opal-task-agent, opal-task-qa-agent, op-dev-test-agent)를 Agent 도구로 디스패치하여
+> 기존 워커(opal-task-agent, opal-task-qa-agent, opal-test-agent)를 Agent 도구로 디스패치하여
 > PLAN → QA → TEST-SCENARIO → EXECUTE → VERIFY → TEST 파이프라인을 사용자 개입 없이 완주한다.
 
 ---
@@ -56,7 +56,7 @@ icon: "⚡"
    → 한도 초과/회귀 시 status: failed로 반환
 
 6. TEST
-   → op-dev-test-agent 디스패치
+   → opal-test-agent 디스패치
    → TEST-SCENARIO.md 결과 채움 + 판정
    → Critical Fail → status: failed로 반환
 ```
@@ -141,7 +141,7 @@ icon: "⚡"
 
 ### 6단계: TEST
 
-1. op-dev-test-agent를 Agent 도구로 디스패치한다.
+1. opal-test-agent를 Agent 도구로 디스패치한다.
    - 전달: TEST-SCENARIO.md 경로, `changed_files`, mode: `short`
 2. 테스트 에이전트가 시나리오별 실행 + 판정을 수행한다.
 3. 판정 결과를 확인한다:
@@ -222,7 +222,7 @@ icon: "⚡"
 2. **STATE.md를 갱신하지 않는다** — oppd의 책임이다.
 3. **하네스 Guards의 재시도 한도를 준수한다** — `~/.opal/references/opal-harness.md` > Guards > 자동 루핑 제약 참조.
 4. **회귀 발생 시 즉시 중단하고 `status: failed`로 반환한다.**
-5. **기존 워커를 Agent 도구로 디스패치한다** — opal-task-agent, opal-task-qa-agent, op-dev-test-agent.
+5. **기존 워커를 Agent 도구로 디스패치한다** — opal-task-agent, opal-task-qa-agent, opal-test-agent.
 6. **각 워커 디스패치 시 프로젝트 컨텍스트를 전달한다** — `project_context`에 명시된 문서 경로를 프롬프트에 포함.
 7. **커밋하지 않는다** — oppd가 머지/커밋을 관리한다.
 

@@ -1,7 +1,7 @@
 # opal Memory Index
 
-> 최종 갱신: 2026-04-13 17:23
-> last_task_number: 115
+> 최종 갱신: 2026-04-15 08:02
+> last_task_number: 117
 
 ## 메모리 카테고리
 
@@ -30,7 +30,8 @@
 
 | 등록일자 | 작업 | 단계 | 경로 | 시작일시 | 완료일시 |
 |----------|------|------|------|---------|---------|
-| 2026-04-13 | PLAN 워커 TEST-SCENARIO 통합 + QA Gate 제거 + PM Gate 검증 강화 (115) | PLAN ⬜ | tasks/115-260413-opp-plan-ts-merge-pm-gate/ | 2026-04-13 17:23 | - |
+| 2026-04-15 | 전문 개발 에이전트 시스템 설계 (117) | TASK ✅ → PLAN 대기 | tasks/117-260415-opp-specialist-agent-system/ | 2026-04-15 08:02 | |
+| 2026-04-13 | PLAN 워커 TEST-SCENARIO 통합 + QA Gate 제거 + PM Gate 검증 강화 (115) | 완료 | tasks/115-260413-opp-plan-ts-merge-pm-gate/ | 2026-04-13 17:23 | 2026-04-13 |
 | 2026-04-13 | op-dev-plan 탑다운 기능 중심 구조 개편 + 후속 파이프라인 정합화 (114) | 완료 | tasks/114-260413-opp-op-dev-plan-feature-driven-redesign/ | 2026-04-13 12:28 | 2026-04-13 14:11 |
 | 2026-04-12 | .md @header 필드 재정의 — 기획/설계 layer 5개 (113) | 완료 | tasks/113-260412-opp-header-standard-md-layer/ | 2026-04-12 18:20 | 2026-04-12 18:30 |
 | 2026-04-12 | 역할 전환 메커니즘 v2 — 프로젝트 기반 자동 전환 (112) | 완료 | tasks/112-260412-opp-role-switch-v2/ | 2026-04-12 14:11 | 2026-04-12 14:46 |
@@ -40,4 +41,3 @@
 | 2026-04-11 | PM Gate 점검 목록 — TASK.md 요구사항 추가 (108) | 완료 | tasks/108-opp-pm-gate-tasklist/ | 2026-04-11 13:19 | 2026-04-11 13:59 |
 | 2026-04-10 | opd ANALYSIS Gate 슬림화 + PLAN QA 범위 확대 (107) | 완료 | tasks/107-opp-opd-analysis-gate-redesign/ | 2026-04-10 17:39 | 2026-04-10 17:56 |
 | 2026-04-10 | PM Gate 자가 진단 통합 + Artifact Gate 제거 (106) | 완료 | tasks/106-opp-pm-gate-self-diagnosis/ | 2026-04-10 17:39 | 2026-04-10 23:33 |
-| 2026-04-10 | opsdd STATE Gate 완성 + VERIFY Phase 추가 (105) | 완료 | tasks/105-opp-opsdd-state-gate-verify/ | 2026-04-10 17:39 | 2026-04-10 19:02 |

@@ -12,7 +12,7 @@ version: 1.2
 ## 실행 컨텍스트
 
 - **호출자**: 오케스트레이터(opal-pilot-dev, opal-pilot-dev-short, opal-pilot-dev-wireframe)가 EXECUTE 단계를 디스패치
-- **실행 주체**: 워커 에이전트 (opal-task-agent 또는 dtp-wireframe-ui-agent)
+- **실행 주체**: 워커 에이전트 — PM이 agents.md 매핑 테이블 또는 PLAN.md agent 필드에 따라 적합한 에이전트를 선택한다 (폴백: opal-task-agent). Wireframe UI: dtp-wireframe-ui-agent.
 - **입력**: `checklist_source` (오케스트레이터가 경로+섹션 지정)
   - `PLAN.md` §4 실행 체크리스트 (기능 중심 구조, 기본)
   - 폴백: `PLAN.md` §3 실행 체크리스트 (과거 형식)
@@ -256,3 +256,4 @@ PLAN.md §4 실행 체크리스트를 기반으로:
 | v1.0 | - | 초기 작성 |
 | v1.1 | 2026-04-12 | Step 3-H @header 작성 규칙 추가 — code-scan 대상 확장자 파일 생성/수정 시 워커 @header 작성 의무 (109) |
 | v1.2 | 2026-04-13 13:48 | PLAN.md 기반 실행 전환 — 입력 우선순위를 "PLAN.md §4 > §3 > json 폴백"으로 변경, execution-plan.json 기반 실행 섹션을 PLAN.md §4·§3.N.2 기능 루프 기반으로 재작성, FE 역할 분담의 ui-designer 호출 방법을 "PLAN.md §3.N.2 FE 화면 설계 참조"로 변경, 가드레일·품질 체크리스트에서 json 참조를 PLAN.md로 통일, 과거 태스크 폴백 규칙 서술 (114) |
+| v1.3 | 2026-04-15 | 실행 주체에 전문 에이전트 체계 안내 추가 — PM이 agents.md 매핑 기반 에이전트 선택 (117) |

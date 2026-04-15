@@ -36,10 +36,15 @@ OPAL은 2-레이어 아키텍처로 동작한다.
 │            │                                             │
 │            ▼                                             │
 │  ┌──────────────────────────────────────────────────┐   │
-│  │  서브에이전트 5개 (Agent 도구로 디스패치)            │   │
-│  │  ├─ opal-task-agent: 단계 스킬 실행 워커            │   │
+│  │  서브에이전트 10개 (Agent 도구로 디스패치)           │   │
+│  │  ├─ opal-task-agent: 범용 워커 (폴백)              │   │
+│  │  ├─ opal-plan-agent: PLAN 단계 전문 (advanced)     │   │
+│  │  ├─ opal-fe-agent: FE EXECUTE 전문                 │   │
+│  │  ├─ opal-be-agent: BE EXECUTE 전문                 │   │
+│  │  ├─ opal-db-agent: DB 설계+구현 전문               │   │
+│  │  ├─ opal-planning-agent: 서비스 기획 전문          │   │
+│  │  ├─ opal-test-agent: 테스트 전문 (도메인별 모드)   │   │
 │  │  ├─ opal-task-qa-agent: QA 스킬 동적 실행          │   │
-│  │  ├─ op-dev-test-agent: 테스트 실행                 │   │
 │  │  ├─ opal-task-action-agent: oppd Phase 3 액션 자율 실행  │
 │  │  └─ wtm-agent: 웹→마크다운 변환                    │   │
 │  └──────────────────────────────────────────────────┘   │
@@ -57,7 +62,7 @@ OPAL은 2-레이어 아키텍처로 동작한다.
 | `AGENT.md` | 에이전트 핵심 정의 (부트스트랩, 행동 규칙, PM 역할) |
 | `identity.md` | 에이전트 정체성 (이름, 성격, 톤) |
 | `skills/` | 독립 스킬 5개 + OPAL 스킬 24개 |
-| `agents/` | 서브에이전트 5개 |
+| `agents/` | 서브에이전트 10개 (전문 6 + 범용 4) |
 | `community-skills/` | 커뮤니티 스킬 37개 (6개 조직) |
 | `references/` | 레지스트리 (skills.md, agents.md, mcps.md, opal-harness.md, opal-doc-standard.md, tools.md) |
 | `tools/` | CLI 도구 (skill-registry/, xlsx-tool/, check-env.js, requirements.txt) |
@@ -125,13 +130,26 @@ OPAL은 2-레이어 아키텍처로 동작한다.
 
 독립 컨텍스트에서 자율 실행하는 서브에이전트. `AGENT.md` 단일 파일.
 
+**범용 에이전트 (기존)**
+
 | 에이전트 | 모델 | 역할 |
 |---------|------|------|
-| opal-task-agent | standard | 범용 워커 — 단계 스킬 실행 |
+| opal-task-agent | standard | 범용 워커 — 단계 스킬 실행 (폴백) |
 | opal-task-qa-agent | light | 범용 QA 워커 — qa_skill로 QA 스킬 동적 실행 |
-| op-dev-test-agent | standard | Test — 동적 검증 (테스트 실행 + 판정) |
 | opal-task-action-agent | advanced | 액션 에이전트 — oppd Phase 3 자율 실행 |
+| opal-sdd-action-agent | advanced | SDD 액션 에이전트 |
 | wtm-agent | light | web-to-markdown 병렬 처리 |
+
+**전문 에이전트 (Specialist)**
+
+| 에이전트 | 모델 | 단계 | 영역 | 역할 |
+|---------|------|------|------|------|
+| opal-plan-agent | advanced | PLAN | 공통 | 코드 분석 + 기능 설계 + 에이전트 라우팅 |
+| opal-fe-agent | standard | EXECUTE | FE | 프론트엔드 구현 전문 |
+| opal-be-agent | standard | EXECUTE | BE | 백엔드 구현 전문 |
+| opal-db-agent | standard | PLAN, EXECUTE | DB | DB 모델 설계 + 마이그레이션 구현 |
+| opal-planning-agent | advanced | EXECUTE | 기획 | 서비스 기획 산출물 작성/관리 |
+| opal-test-agent | standard | TEST | 공통 | 테스트 전문 (BE/FE/E2E 모드) |
 
 ### 커뮤니티 스킬 (Community Skills)
 
@@ -165,7 +183,8 @@ OPAL은 2-레이어 아키텍처로 동작한다.
 ─────────────────                  ──────────────────
 skills/* (독립 6개) ──┐
 opal/skills/* (24개)──┼─ install ─→  ~/.opal/skills/
-agents/*            ──┤              ~/.opal/agents/
+opal/agents/* (10개)──┤              ~/.opal/agents/
+agents/* (범용 1개) ──┤
 community-skills/*  ──┤              ~/.opal/community-skills/
 opal/core/          ──┤              ~/.opal/AGENT.md
   references/       ──┤              ~/.opal/references/
@@ -197,11 +216,7 @@ opal/                                    ← 이 저장소
 │   ├── ui-designer/                     UI 구현
 │   ├── wireframe-builder/               와이어프레임 설계
 │   └── web-to-markdown/                 웹→마크다운
-├── agents/                              에이전트 (5개)
-│   ├── opal-task-agent/                 범용 워커
-│   ├── opal-task-qa-agent/              범용 QA 워커
-│   ├── op-dev-test-agent/               테스트 에이전트
-│   ├── opal-task-action-agent/          액션 에이전트 (oppd Phase 3)
+├── agents/                              범용 에이전트 (OPAL 무관)
 │   └── wtm-agent/                       웹→마크다운 에이전트
 ├── community-skills/                    커뮤니티 스킬 (37개, 6개 조직)
 ├── opal/                                OPAL 코어
@@ -231,6 +246,17 @@ opal/                                    ← 이 저장소
 │   │   ├── opal-onboarding/             에이전트 온보딩
 │   │   ├── opal-orchestrator/           오케스트레이션 모드
 │   │   └── opal-skill-manager/          스킬 관리
+│   ├── agents/                          OPAL 에이전트 (10개: 전문 6 + 범용 4)
+│   │   ├── opal-plan-agent/             전문: PLAN 설계 (advanced)
+│   │   ├── opal-fe-agent/               전문: FE 구현
+│   │   ├── opal-be-agent/               전문: BE 구현
+│   │   ├── opal-db-agent/               전문: DB 설계+구현
+│   │   ├── opal-planning-agent/         전문: 서비스 기획 (advanced)
+│   │   ├── opal-test-agent/             전문: 테스트 (도메인별 모드)
+│   │   ├── opal-task-agent/             범용 워커 (폴백)
+│   │   ├── opal-task-qa-agent/          범용 QA 워커
+│   │   ├── opal-task-action-agent/      액션 에이전트 (oppd)
+│   │   └── opal-sdd-action-agent/       SDD 액션 에이전트
 │   └── templates/                       프로젝트 에이전트 템플릿
 ├── cursor-rules/                        Cursor 프로젝트 규칙 템플릿
 ├── scripts/                             설치 스크립트 (install-mac.sh)
