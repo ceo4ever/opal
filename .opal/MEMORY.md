@@ -1,7 +1,7 @@
 # opal Memory Index
 
-> 최종 갱신: 2026-04-15 08:02
-> last_task_number: 117
+> 최종 갱신: 2026-04-15 14:20
+> last_task_number: 118
 
 ## 메모리 카테고리
 
@@ -30,7 +30,8 @@
 
 | 등록일자 | 작업 | 단계 | 경로 | 시작일시 | 완료일시 |
 |----------|------|------|------|---------|---------|
-| 2026-04-15 | 전문 개발 에이전트 시스템 설계 (117) | TASK ✅ → PLAN 대기 | tasks/117-260415-opp-specialist-agent-system/ | 2026-04-15 08:02 | |
+| 2026-04-15 | code-scan search/exports 정규식 전환 (118) | 완료 | tasks/118-260415-opp-code-scan-regex-search/ | 2026-04-15 14:09 | 2026-04-15 14:22 |
+| 2026-04-15 | 전문 개발 에이전트 시스템 설계 (117) | 완료 | tasks/117-260415-opp-specialist-agent-system/ | 2026-04-15 08:02 | 2026-04-15 14:20 |
 | 2026-04-13 | PLAN 워커 TEST-SCENARIO 통합 + QA Gate 제거 + PM Gate 검증 강화 (115) | 완료 | tasks/115-260413-opp-plan-ts-merge-pm-gate/ | 2026-04-13 17:23 | 2026-04-13 |
 | 2026-04-13 | op-dev-plan 탑다운 기능 중심 구조 개편 + 후속 파이프라인 정합화 (114) | 완료 | tasks/114-260413-opp-op-dev-plan-feature-driven-redesign/ | 2026-04-13 12:28 | 2026-04-13 14:11 |
 | 2026-04-12 | .md @header 필드 재정의 — 기획/설계 layer 5개 (113) | 완료 | tasks/113-260412-opp-header-standard-md-layer/ | 2026-04-12 18:20 | 2026-04-12 18:30 |
