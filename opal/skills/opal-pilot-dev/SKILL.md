@@ -34,6 +34,7 @@ op-dev-analysis 스킬을 수행하라.
 **산출물 저장 경로**: {ANALYSIS.md 경로}
 **하네스 Guards**: PLAN.md에 없는 파일 생성/수정 금지. PLAN 설계를 임의 변경 금지. 블로커 발생 시 즉시 중단 후 보고.
 **참조 문서**: {docs/PROJECT.md 문서 테이블 기반 관련 문서 경로}
+**핵심 제약**: {[MUST] <문서명> §N: <인용문> 형식으로 원문 인용 필수 항목. 요약 허용 항목은 일반 목록}
 ```
 **model**: light
 
@@ -55,6 +56,7 @@ op-dev-plan 스킬을 수행하라.
 **산출물 저장 경로**: {PLAN.md 경로}, {TEST-SCENARIO.md 경로}, {execution-plan.json 경로 (FE/BE 시)}
 **하네스 Guards**: PLAN.md에 없는 파일 생성/수정 금지. PLAN 설계를 임의 변경 금지. 블로커 발생 시 즉시 중단 후 보고.
 **참조 문서**: {docs/PROJECT.md 문서 테이블 기반 관련 문서 경로}
+**핵심 제약**: {[MUST] <문서명> §N: <인용문> 형식으로 원문 인용 필수 항목. 요약 허용 항목은 일반 목록}
 ```
 **model**: advanced
 
@@ -88,6 +90,7 @@ op-dev-execute 스킬을 수행하라.
 **프로젝트 컨텍스트**: {docs/PROJECT.md + 매칭 참조 문서. 미존재 시 CLAUDE.md 폴백}
 **하네스 Guards**: PLAN.md에 없는 파일 생성/수정 금지. PLAN 설계를 임의 변경 금지. 블로커 발생 시 즉시 중단 후 보고.
 **참조 문서**: {docs/PROJECT.md 문서 테이블 기반 관련 문서 경로}
+**핵심 제약**: {[MUST] <문서명> §N: <인용문> 형식으로 원문 인용 필수 항목. 요약 허용 항목은 일반 목록}
 ```
 **model**: standard
 
@@ -237,3 +240,4 @@ TASK (PM 직접) → ANALYSIS Gate → PLAN Gate → EXECUTE Gate → TEST Gate
 | v2.7 | 2026-04-10 | Artifact Gate 제거 + PM Gate 점검 목록 섹션 추가 + 파이프라인 현황판 이름 변경 (106) |
 | v2.8 | 2026-04-11 | PM Gate 점검 목록 — PLAN-equivalent Phase에 TASK.md 요구사항 추가 (108) |
 | v2.9 | 2026-04-13 | STEP 3에서 TEST-SCENARIO 별도 디스패치 + QA Gate 제거. PLAN 워커가 TEST-SCENARIO.md 통합 작성. PM Gate에 PLAN.md+TEST-SCENARIO.md Read + 검증 체크리스트 추가. STEP 5 TEST QA Gate 제거, PM Gate에 TEST-SCENARIO.md Read + 검증 체크리스트 추가. Agentic Mode 흐름도 갱신. STATE.md 행 예시 31→24행 갱신 (115) |
+| v3.0 | 2026-04-15 | ANALYSIS/PLAN/EXECUTE 디스패치 프롬프트에 `**핵심 제약**:` 필드 추가 — `[MUST] <문서명> §N: <인용문>` 원문 인용 포맷 명시 (120) |

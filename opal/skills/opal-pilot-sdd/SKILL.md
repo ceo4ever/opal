@@ -114,6 +114,7 @@ harness "4. TASK 공통 프로세스" 참조. 다음 단계명: SPEC.
 **프로젝트 컨텍스트**: {docs/PROJECT.md + 매칭 참조 문서}
 **하네스 Guards**: 구현 금지. SPEC.md 외 파일 생성 금지.
 **참조 문서**: {관련 문서 경로}
+**핵심 제약**: {[MUST] <문서명> §N: <인용문> 형식으로 원문 인용 필수 항목. 요약 허용 항목은 일반 목록}
 ```
 **에이전트**: opal-task-agent | **model**: advanced
 
@@ -167,6 +168,7 @@ PM이 직접 SPEC.md를 검증하고 TEST-SCENARIOS.md를 작성한다. **워커
 **프로젝트 컨텍스트**: {docs/PROJECT.md + 매칭 참조 문서}
 **하네스 Guards**: 구현 금지. SPEC-PLAN.md 외 파일 생성 금지.
 **참조 문서**: {관련 문서 경로}
+**핵심 제약**: {[MUST] <문서명> §N: <인용문> 형식으로 원문 인용 필수 항목. 요약 허용 항목은 일반 목록}
 ```
 **에이전트**: opal-task-agent | **model**: advanced
 
@@ -445,3 +447,4 @@ opal-harness-agentic.md §6 공통 기준에 추가:
 | v2.5.0 | 2026-04-10 | R-1 STATE.md 도메인 치환값 → 43행 진행 현황 구조로 교체 + ACT 목록 SSOT + TS 현황 + SPEC 변경이력 섹션 추가; R-2 VERIFY Phase(Phase 5) 신설 + DONE → Phase 6; R-3 EXECUTE-LOOP L1/L2 검증 루프 명시 (105) |
 | v2.6.0 | 2026-04-10 | Artifact Gate 제거 + PM Gate 점검 목록 섹션 추가 + 파이프라인 현황판 이름 변경 (106) |
 | v2.7.0 | 2026-04-11 | PM Gate 점검 목록 — PLAN-equivalent Phase에 TASK.md 요구사항 추가 (108) |
+| v2.8.0 | 2026-04-15 | Phase 1(SPEC)/Phase 3(DESIGN) 디스패치 프롬프트에 `**핵심 제약**:` 필드 추가 — `[MUST] <문서명> §N: <인용문>` 원문 인용 포맷 명시 (120) |

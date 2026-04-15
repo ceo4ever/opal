@@ -1,7 +1,7 @@
 # opal Memory Index
 
-> 최종 갱신: 2026-04-15 14:51
-> last_task_number: 119
+> 최종 갱신: 2026-04-15 15:24
+> last_task_number: 121
 
 ## 메모리 카테고리
 
@@ -30,6 +30,8 @@
 
 | 등록일자 | 작업 | 단계 | 경로 | 시작일시 | 완료일시 |
 |----------|------|------|------|---------|---------|
+| 2026-04-15 | 파이프라인 현황판 CLOSE 단계 분리 (121) | TASK ✅ → PLAN 대기 | tasks/121-260415-opp-close-stage-separation/ | 2026-04-15 15:18 | |
+| 2026-04-15 | opal-pm.md 핵심 제약 인용 의무 규칙 추가 + 파일럿 디스패치 템플릿 보완 (120) | 완료 | tasks/120-260415-opp-pm-constraint-citation-rule/ | 2026-04-15 15:10 | 2026-04-15 15:24 |
 | 2026-04-15 | README.md 업데이트 — 최근 변경 반영 + 설치/설정 확장 (119) | 완료 | tasks/119-260415-opp-readme-update/ | 2026-04-15 14:28 | 2026-04-15 14:51 |
 | 2026-04-15 | code-scan search/exports 정규식 전환 (118) | 완료 | tasks/118-260415-opp-code-scan-regex-search/ | 2026-04-15 14:09 | 2026-04-15 14:22 |
 | 2026-04-15 | 전문 개발 에이전트 시스템 설계 (117) | 완료 | tasks/117-260415-opp-specialist-agent-system/ | 2026-04-15 08:02 | 2026-04-15 14:20 |
@@ -39,7 +41,3 @@
 | 2026-04-12 | 역할 전환 메커니즘 v2 — 프로젝트 기반 자동 전환 (112) | 완료 | tasks/112-260412-opp-role-switch-v2/ | 2026-04-12 14:11 | 2026-04-12 14:46 |
 | 2026-04-12 | opal-harness.md 모듈화 — harness/ 폴더 분리 (111) | 완료 | tasks/111-260412-opp-harness-modularize/ | 2026-04-12 11:59 | 2026-04-12 12:57 |
 | 2026-04-12 | opal-harness.md 구조화 리팩토링 (110) | 완료 | tasks/110-260412-opp-harness-restructure/ | 2026-04-12 11:14 | 2026-04-12 11:38 |
-| 2026-04-11 | @header 표준 + code-scan 통합 워크플로우 (109) | 완료 | tasks/109-opp-header-standard/ | 2026-04-11 22:45 | 2026-04-12 |
-| 2026-04-11 | PM Gate 점검 목록 — TASK.md 요구사항 추가 (108) | 완료 | tasks/108-opp-pm-gate-tasklist/ | 2026-04-11 13:19 | 2026-04-11 13:59 |
-| 2026-04-10 | opd ANALYSIS Gate 슬림화 + PLAN QA 범위 확대 (107) | 완료 | tasks/107-opp-opd-analysis-gate-redesign/ | 2026-04-10 17:39 | 2026-04-10 17:56 |
-| 2026-04-10 | PM Gate 자가 진단 통합 + Artifact Gate 제거 (106) | 완료 | tasks/106-opp-pm-gate-self-diagnosis/ | 2026-04-10 17:39 | 2026-04-10 23:33 |

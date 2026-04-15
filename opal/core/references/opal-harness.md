@@ -225,9 +225,10 @@ Lazy 로드 모듈. 각 §의 stub이 로드 시점과 파일 경로를 지시�
 신규 태스크 생성 시:
 1. `.opal/MEMORY.md` 헤더의 `last_task_number` 필드를 읽는다
 2. `last_task_number + 1`을 계산한다
-3. 태스크 폴더를 생성한다 (`tasks/{NNN}-{YYMMDD}-{스킬약어}-{태스크명}/`)
+3. **즉시 `.opal/MEMORY.md`의 `last_task_number`를 갱신한다** — 폴더 생성 전에 수행하여 동시 실행 인스턴스 간 번호 중복을 방지한다
+4. 태스크 폴더를 생성한다 (`tasks/{NNN}-{YYMMDD}-{스킬약어}-{태스크명}/`)
    - `{YYMMDD}`: `node ~/.opal/tools/date/date.js yymmdd` 실행하여 KST 기준 취득
-4. TASK.md 작성 완료 후 `.opal/MEMORY.md`의 `last_task_number`를 갱신한다
+5. TASK.md를 작성한다
 
 #### 오케스트레이터 공통 영역 (스킬 완료 후 후처리)
 
@@ -362,3 +363,4 @@ OPAL 도구는 모두 `~/.opal/tools/{tool-name}/run.sh` 래퍼를 통해 호출
 | v3.6 | 2026-04-12 | §8 EXECUTE @header 규칙 추가 — 파일 생성/수정 시 워커 작성 의무 + 적용 대상 확장자 + md 파일 HTML comment 포맷 지원 + code-scan 활용 가이드 (B안) 추가. 기존 §8 OPAL Tools → §9로 번호 변경 (109) |
 | v3.7 | 2026-04-12 | §3 State 리팩토링 — opsdd 파이프라인 현황판 예시 제거(opsdd SKILL.md에 존재), 병렬 실행 State 제거(oppd SKILL.md/guide에 존재), State Gate 자가 점검 프롬프트 deprecated 상태값 갱신 (110) |
 | v4.0 | 2026-04-12 | 하네스 모듈화 — §2 QA 표준, §3 템플릿/추가작업, §5 Observability, §7 병렬 처리, §8 @header 규칙을 `harness/` 개별 모듈로 분리. §2에 모듈 매핑 테이블 추가. 각 § stub에 [필수 로드] + 적용 주체/시점/PM Gate 검증 명시 (111) |
+| v4.1 | 2026-04-15 | §4 태스크 번호 채번 규칙 — `last_task_number` 갱신 시점을 "TASK.md 완료 후" → "채번 직후(폴더 생성 전)"으로 변경. 동시 실행 인스턴스 간 번호 중복 방지 (120) |
