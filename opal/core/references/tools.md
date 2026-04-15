@@ -85,8 +85,9 @@ node ~/.opal/tools/code-scan/code-scan.js domain [name]
 # 레이어별 조회 (인자 없으면 목록)
 node ~/.opal/tools/code-scan/code-scan.js layer [name]
 
-# 헤더 내 키워드 검색
-node ~/.opal/tools/code-scan/code-scan.js search <keyword>
+# 헤더 내 패턴 검색 (정규식 지원, 대소문자 무시)
+node ~/.opal/tools/code-scan/code-scan.js search <pattern>
+# 예: search "auth.*service", search "^user", search "login|logout"
 
 # 도메인/레이어 요약
 node ~/.opal/tools/code-scan/code-scan.js summary
@@ -145,8 +146,9 @@ node ~/.opal/tools/code-scan/code-scan.js depends auth
 # @header 누락 파일 확인
 node ~/.opal/tools/code-scan/code-scan.js missing --scope fe
 
-# exports 필드 전용 검색 (함수/API/컴포넌트 위치 탐색)
+# exports 필드 전용 검색 (정규식 지원, 대소문자 무시)
 node ~/.opal/tools/code-scan/code-scan.js exports "issueToken"
+# 예: exports "^get[A-Z]", exports "Token$", exports "create|update"
 
 # @header 검증 (PM Gate용)
 node ~/.opal/tools/code-scan/code-scan.js scan src/auth/auth.service.ts --json

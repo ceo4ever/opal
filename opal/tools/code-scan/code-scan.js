@@ -23,7 +23,7 @@ const path = require('path');
 // Constants
 // ═══════════════════════════════════════════
 
-const VERSION = '1.1.0';
+const VERSION = '1.2.0';
 const HEADER_READ_BYTES = 8192;
 
 const DEFAULT_CONFIG = {
@@ -42,8 +42,8 @@ Commands:
   scan [path]           Scan files for @header (default: all scopes)
   domain [name]         List domains, or filter by domain
   layer [name]          List layers, or filter by layer
-  search <keyword>      Search within header content
-  exports <keyword>     Search within exports field only
+  search <pattern>      Search within header content (regex, case-insensitive)
+  exports <pattern>     Search within exports field only (regex, case-insensitive)
   summary               Project overview by domain/layer
   depends <module>      Show dependency relationships
   missing               List files without @header
@@ -446,11 +446,17 @@ function cmdLayer(projectRoot, config, opts) {
 
 function cmdSearch(projectRoot, config, opts) {
   const keyword = opts.commandArg;
-  if (!keyword) { console.error('Usage: code-scan search <keyword>'); process.exit(1); }
+  if (!keyword) { console.error('Usage: code-scan search <pattern>'); process.exit(1); }
+
+  let regex;
+  try { regex = new RegExp(keyword, 'i'); }
+  catch (err) {
+    console.error(`Invalid regex: ${keyword} — ${err.message}`);
+    process.exit(1);
+  }
 
   const all = scanHeaders(projectRoot, config, { ...opts, domain: null, layer: null });
-  const kw = keyword.toLowerCase();
-  const matches = all.filter(r => JSON.stringify(r.header).toLowerCase().includes(kw));
+  const matches = all.filter(r => regex.test(JSON.stringify(r.header)));
 
   // Re-apply filters
   const filtered = matches.filter(r => {
@@ -463,13 +469,19 @@ function cmdSearch(projectRoot, config, opts) {
 
 function cmdExports(projectRoot, config, opts) {
   const keyword = opts.commandArg;
-  if (!keyword) { console.error('Usage: code-scan exports <keyword>'); process.exit(1); }
+  if (!keyword) { console.error('Usage: code-scan exports <pattern>'); process.exit(1); }
+
+  let regex;
+  try { regex = new RegExp(keyword, 'i'); }
+  catch (err) {
+    console.error(`Invalid regex: ${keyword} — ${err.message}`);
+    process.exit(1);
+  }
 
   const all = scanHeaders(projectRoot, config, { ...opts, domain: null, layer: null });
-  const kw = keyword.toLowerCase();
   const matches = all.filter(r => {
     if (!r.header.exports || !Array.isArray(r.header.exports)) return false;
-    return r.header.exports.some(e => e.toLowerCase().includes(kw));
+    return r.header.exports.some(e => regex.test(e));
   });
 
   // Re-apply domain/layer filters
@@ -611,3 +623,4 @@ main();
 // 변경이력
 // v1.0.0 — 초기 작성 — scan/domain/layer/search/summary/depends/missing 커맨드
 // v1.1.0 — 2026-04-12 — exports 커맨드 추가 — exports 필드 전용 검색 (109)
+// v1.2.0 — 2026-04-15 — search/exports 커맨드 정규식 기반 전환 (default regex, case-insensitive) (118)

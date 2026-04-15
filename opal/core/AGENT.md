@@ -165,8 +165,8 @@
 |------|---------|
 | 프로젝트 구조 파악 요청 | `code-scan scan <scope>` → 전체 개요 파악 후 필요 파일만 Read |
 | 특정 기능/도메인 파일 탐색 | `code-scan domain <name>` 또는 `code-scan layer <name>` |
-| 함수/API 위치 탐색 | `code-scan exports <keyword>` (exports 필드 전용) |
-| 키워드 포함 파일 탐색 | `code-scan search <keyword>` (전체 @header 필드) |
+| 함수/API 위치 탐색 | `code-scan exports <pattern>` (exports 필드 전용, 정규식 지원) |
+| 키워드/패턴 포함 파일 탐색 | `code-scan search <pattern>` (전체 @header 필드, 정규식 지원) |
 | 의존 관계 파악 | `code-scan depends <module>` |
 
 **원칙**: 전체 파일 Read 전에 code-scan으로 범위를 좁혀 토큰 낭비를 줄인다.  

@@ -66,7 +66,7 @@ PM·오케스트레이터·알투(비서)는 code-scan을 통해 프로젝트 �
 1. `.opal/code-scan.json` 존재 여부 확인 → 없으면 PM이 생성 (`opal-pm.md §9` 참조)
 2. `code-scan scan <scope>` 로 전체 개요 파악
 3. 필요 시 `code-scan domain <name>` / `code-scan layer <name>` 으로 범위 좁히기
-4. 특정 기능 탐색: `code-scan exports <keyword>` (exports 필드 전용) 또는 `code-scan search <keyword>` (전체 필드)
+4. 특정 기능 탐색: `code-scan exports <pattern>` (exports 필드 전용, 정규식 지원) 또는 `code-scan search <pattern>` (전체 필드, 정규식 지원)
 5. 식별된 파일만 선택적으로 Read
 
 #### 적용 조건
