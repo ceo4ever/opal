@@ -8,7 +8,7 @@ description: |
 # Full Task 오케스트레이터
 
 ## Harness
-모드: Full Task (TASK → ANALYSIS → PLAN → EXECUTE → TEST)
+모드: Full Task (TASK → ANALYSIS → PLAN → EXECUTE → TEST → CLOSE)
 > 부트스트랩에서 로드되지 않은 경우: `~/.opal/references/opal-harness.md`를 Read한다.
 
 **[MUST]** 스킬 시작 즉시 모드에 따라 서브 하네스를 Read한다. 이 단계를 건너뛰면 안 된다:
@@ -125,8 +125,15 @@ op-dev-test-agent 워커 디스패치. TEST-SCENARIO.md 실행 + 결과 기록 +
      - [ ] 회귀 테스트 항목 Pass
      - [ ] 설계 피드백 미해결 빈틈 없음
 → **State Gate**
-→ DONE.md 생성 (checkpoint-guide.md 참조)
-→ 사용자에게 완료 보고
+→ 사용자에게 완료 보고 후 CLOSE 단계 진입 승인 요청
+
+보고 형식:
+```
+📋 [TEST] 완료 보고
+📎 변경 파일: {changed_files}
+📎 산출물: {TEST-SCENARIO.md 등}
+다음 단계(CLOSE)로 넘어갈까요?
+```
 
 ### FAIL 시 (루핑 — 최대 3회, 하네스 §1 L3a)
 
@@ -147,11 +154,28 @@ op-dev-test-agent 워커 디스패치. TEST-SCENARIO.md 실행 + 결과 기록 +
 4. 3회 초과 시 사용자 에스컬레이션:
    "TEST {N}회 FAIL — 수동 개입 필요. 실패 항목: {목록}"
 
+---
+
+## STEP 6: CLOSE
+
+모든 체크리스트 갱신 완료 확인 후 태스크를 마감한다.
+
+1. DONE.md 생성 (checkpoint-guide.md 참조)
+2. State Gate (하네스 §3 참조)
+3. 완료 보고
+
+보고 형식:
+```
+✅ [CLOSE] 태스크 완료
+📎 산출물: tasks/{NNN}-{태스크명}/DONE.md
+태스크가 완료되었습니다.
+```
+
 > **추가작업**: 태스크 완료 후 추가작업이 필요하면 하네스 §3 추가작업 프로세스를 따른다.
 
 ## STATE.md 도메인 설정
 - 모드: Full Task
-- 단계: TASK / ANALYSIS / PLAN / EXECUTE / TEST
+- 단계: TASK / ANALYSIS / PLAN / EXECUTE / TEST / CLOSE
 - 산출물: TASK.md, ANALYSIS.md, PLAN.md, TEST-SCENARIO.md, DONE.md
 
 **진행 현황 행 예시** (STATE.md 초기 생성 시 이 구조로 작성):
@@ -180,9 +204,10 @@ op-dev-test-agent 워커 디스패치. TEST-SCENARIO.md 실행 + 결과 기록 +
 | 19 | TEST | 작업 | ⬜ | - |
 | 20 | TEST | State Gate | ⬜ | - |
 | 21 | TEST | PM Gate | ⬜ | - |
-| 22 | TEST | DONE.md 생성 | ⬜ | - |
-| 23 | TEST | State Gate | ⬜ | - |
-| 24 | TEST | 사용자 확인 | ⬜ | - |
+| 22 | TEST | State Gate | ⬜ | - |
+| 23 | TEST | 사용자 확인 | ⬜ | - |
+| 24 | CLOSE | DONE.md 생성 | ⬜ | - |
+| 25 | CLOSE | State Gate | ⬜ | - |
 ```
 
 > TEST 루핑 발생 시: "TEST | fix 작업 (N/3)", "TEST | State Gate (N/3)" 행을 동적 추가한다.
@@ -208,11 +233,11 @@ opal-harness-agentic.md 참조. `--agentic` 플래그 활성화 시 이 스킬�
 ### 자율 게이트 흐름
 
 ```
-TASK (PM 직접) → ANALYSIS Gate → PLAN Gate → EXECUTE Gate → TEST Gate
-                   PM 자율 검토      PM 자율 검토   PM 자율 검토    PM 자율 검토
+TASK (PM 직접) → ANALYSIS Gate → PLAN Gate → EXECUTE Gate → TEST Gate → CLOSE
+                   PM 자율 검토      PM 자율 검토   PM 자율 검토    PM 자율 검토   (사용자 승인 후 자동 진행)
 ```
 
-- TASK 이후 4개 게이트를 PM이 자율 통과
+- TASK 이후 4개 게이트를 PM이 자율 통과 (CLOSE 진입은 사용자 승인 필수)
 - EXECUTE 진입 = PM이 대행 승인 (구현 금지 원칙의 "실행 허가"를 PM이 판단)
 - 각 게이트에서 opal-harness-agentic.md "Gate 루핑 규칙" 적용
 - AGENTIC-LOG.md에 모든 판단/오류/수정/의사결정 기록
@@ -241,3 +266,4 @@ TASK (PM 직접) → ANALYSIS Gate → PLAN Gate → EXECUTE Gate → TEST Gate
 | v2.8 | 2026-04-11 | PM Gate 점검 목록 — PLAN-equivalent Phase에 TASK.md 요구사항 추가 (108) |
 | v2.9 | 2026-04-13 | STEP 3에서 TEST-SCENARIO 별도 디스패치 + QA Gate 제거. PLAN 워커가 TEST-SCENARIO.md 통합 작성. PM Gate에 PLAN.md+TEST-SCENARIO.md Read + 검증 체크리스트 추가. STEP 5 TEST QA Gate 제거, PM Gate에 TEST-SCENARIO.md Read + 검증 체크리스트 추가. Agentic Mode 흐름도 갱신. STATE.md 행 예시 31→24행 갱신 (115) |
 | v3.0 | 2026-04-15 | ANALYSIS/PLAN/EXECUTE 디스패치 프롬프트에 `**핵심 제약**:` 필드 추가 — `[MUST] <문서명> §N: <인용문>` 원문 인용 포맷 명시 (120) |
+| v3.1 | 2026-04-15 | STEP 6 CLOSE 단계 신설 + TEST PM Gate 후 State Gate/사용자 확인 추가 + 진행 현황 행 CLOSE 2행 구조 반영 + 보고 형식 C안 적용 (121) |

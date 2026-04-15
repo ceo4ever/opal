@@ -10,7 +10,7 @@ description: |
 
 ## Harness
 
-모드: Project Task (TASK → PLAN → EXECUTE)
+모드: Project Task (TASK → PLAN → EXECUTE → CLOSE)
 > 부트스트랩에서 로드되지 않은 경우: `~/.opal/references/opal-harness.md`를 Read한다.
 
 **[MUST]** 스킬 시작 즉시 모드에 따라 서브 하네스를 Read한다. 이 단계를 건너뛰면 안 된다:
@@ -74,18 +74,34 @@ op-task-execute 워커 디스패치. **model**: standard. checklist_source: PLAN
 워커가 changed_files를 반환하면:
 1. **QA Gate** (op-task-qa) — QA 에이전트 호출 (체크리스트 갱신 포함) → **State Gate**
 2. **PM Gate** — QA 결과 + 실행 결과 검토 + **체크리스트 갱신 상태 확인** (하네스 interactive §3 참조). 미갱신 시 QA 에이전트 재소환 → **State Gate**
-3. **모든 체크리스트 갱신 완료 확인 후** DONE.md 생성
-4. 사용자에게 완료 보고
+3. 사용자에게 완료 보고 후 CLOSE 단계 진입 승인 요청
 
 보고 형식:
 ```
-✅ [EXECUTE] 완료 보고
+📋 [EXECUTE] 완료 보고
 📎 변경 파일: {changed_files}
-📎 산출물: tasks/{NNN}-{태스크명}/DONE.md
-태스크가 완료되었습니다.
+📎 산출물: {QA-EXECUTE.md 등}
+다음 단계(CLOSE)로 넘어갈까요?
 ```
 
 > TEST-SCENARIO 없음: 범용 작업은 코드 테스트가 불필요하다.
+
+---
+
+## STEP 4: CLOSE
+
+모든 체크리스트 갱신 완료 확인 후 태스크를 마감한다.
+
+1. DONE.md 생성
+2. State Gate (하네스 §3 참조)
+3. 완료 보고
+
+보고 형식:
+```
+✅ [CLOSE] 태스크 완료
+📎 산출물: tasks/{NNN}-{태스크명}/DONE.md
+태스크가 완료되었습니다.
+```
 
 > **추가작업**: 태스크 완료 후 추가작업이 필요하면 하네스 §3 "추가작업 프로세스"를 따른다.
 
@@ -96,7 +112,7 @@ op-task-execute 워커 디스패치. **model**: standard. checklist_source: PLAN
 | 필드 | 값 |
 |------|------|
 | 모드 | Project Task |
-| 단계 목록 | TASK / PLAN / EXECUTE |
+| 단계 목록 | TASK / PLAN / EXECUTE / CLOSE |
 
 **진행 현황 행 예시** (STATE.md 초기 생성 시 이 구조로 작성):
 
@@ -119,9 +135,10 @@ op-task-execute 워커 디스패치. **model**: standard. checklist_source: PLAN
 | 14 | EXECUTE | QA-EXECUTE.md 생성 | ⬜ | - |
 | 15 | EXECUTE | State Gate | ⬜ | - |
 | 16 | EXECUTE | PM Gate | ⬜ | - |
-| 17 | EXECUTE | DONE.md 생성 | ⬜ | - |
-| 18 | EXECUTE | State Gate | ⬜ | - |
-| 19 | EXECUTE | 사용자 확인 | ⬜ | - |
+| 17 | EXECUTE | State Gate | ⬜ | - |
+| 18 | EXECUTE | 사용자 확인 | ⬜ | - |
+| 19 | CLOSE   | DONE.md 생성 | ⬜ | - |
+| 20 | CLOSE   | State Gate | ⬜ | - |
 ```
 
 ---
@@ -146,11 +163,11 @@ opal-harness-agentic.md 참조. `--agentic` 플래그 활성화 시 이 스킬�
 ### 자율 게이트 흐름
 
 ```
-TASK (PM 직접) → PLAN Gate → EXECUTE Gate
-                  PM 자율 검토   PM 자율 검토
+TASK (PM 직접) → PLAN Gate → EXECUTE Gate → CLOSE
+                  PM 자율 검토   PM 자율 검토   (사용자 승인 후 자동 진행)
 ```
 
-- TASK 이후 2개 게이트를 PM이 자율 통과
+- TASK 이후 2개 게이트를 PM이 자율 통과 (CLOSE 진입은 사용자 승인 필수)
 - 각 게이트에서 opal-harness-agentic.md "Gate 루핑 규칙" 적용
 - AGENTIC-LOG.md에 모든 판단/오류/수정/의사결정 기록
 
@@ -175,3 +192,4 @@ TASK (PM 직접) → PLAN Gate → EXECUTE Gate
 | v2.2 | 2026-04-09 | STATE.md 도메인 치환값 — 진행 현황 행 예시에 산출물 생성 행 추가 (101) |
 | v2.3 | 2026-04-10 | Artifact Gate 제거 + PM Gate 점검 목록 섹션 추가 + 파이프라인 현황판 이름 변경 (106) |
 | v2.4 | 2026-04-11 | PM Gate 점검 목록 — PLAN-equivalent Phase에 TASK.md 요구사항 추가 (108) |
+| v2.5 | 2026-04-15 | STEP 4 CLOSE 단계 신설 + 진행 현황 행 예시 CLOSE 2행 구조 반영 + 보고 형식 C안 적용 (121) |

@@ -193,13 +193,38 @@ QA 워커 디스패치 (`references/consistency-rules.md` 기반, 유형 간+내
 ### 산출물
 
 PLAN.md의 QA 체크리스트를 검증 결과로 갱신한다 (하네스 §2 QA 체크리스트 갱신 의무).
-모든 항목이 `[x]` 또는 "N/A + 사유"로 채워진 후 DONE.md를 생성한다.
+모든 항목이 `[x]` 또는 "N/A + 사유"로 채워져야 한다.
 
 ### PM 최종 판정
 
 - **PM Gate** 진입 → **State Gate**
-- **Pass**: DONE.md 생성
+- **Pass**: 사용자에게 완료 보고 후 CLOSE 단계 진입 승인 요청
+
+  보고 형식:
+  ```
+  📋 [QA] 완료 보고
+  📎 산출물: {QA 결과 파일}
+  다음 단계(CLOSE)로 넘어갈까요?
+  ```
+
 - **Fail**: EXECUTE 부분 재진입 (실패 문서만)
+
+---
+
+## CLOSE 단계
+
+QA 최종 판정 Pass 후 태스크를 마감한다.
+
+1. DONE.md 생성
+2. State Gate (하네스 §3 참조)
+3. 완료 보고
+
+보고 형식:
+```
+✅ [CLOSE] 태스크 완료
+📎 산출물: tasks/{NNN}-{태스크명}/DONE.md
+태스크가 완료되었습니다.
+```
 
 > **추가작업**: 태스크 완료 후 추가작업이 필요하면 하네스 §3 "추가작업 프로세스"를 따른다.
 
@@ -210,7 +235,7 @@ PLAN.md의 QA 체크리스트를 검증 결과로 갱신한다 (하네스 §2 QA
 하네스 STATE.md 기본 구조에 도메인 고유 섹션 추가:
 
 - `{모드}`: 작성/수정/분석
-- `{단계 목록}`: TASK → ANALYSIS → PLAN → EXECUTE → QA (모드에 따라 일부 생략)
+- `{단계 목록}`: TASK → ANALYSIS → PLAN → EXECUTE → QA → CLOSE (모드에 따라 일부 생략)
 - **네트워크 상태**: 산출물 | 유형 | 상태 | 버전 | 경로
 - **배치 계획**: Batch | 문서 | 의존 | 상태
 
@@ -255,3 +280,4 @@ opal-doc-standard 적용: `~/.opal/references/opal-doc-standard.md`
 | v2.7 | 2026-04-07 | State Gate를 PM Gate 전 1개 → 각 Gate 직후로 재배치. EXECUTE 배치 Artifact Gate 제거(opwt 구조상 해당 없음) (097) |
 | v2.8 | 2026-04-10 | Artifact Gate 제거 + PM Gate 점검 목록 섹션 추가 + 파이프라인 현황판 이름 변경 (106) |
 | v2.9 | 2026-04-11 | PM Gate 점검 목록 — PLAN-equivalent Phase에 TASK.md 요구사항 추가 (108) |
+| v3.0 | 2026-04-15 | CLOSE 단계 섹션 신설 + QA 단계에서 DONE.md 생성 분리 + QA Pass 보고 형식 C안 적용 + 단계 목록 CLOSE 추가 (121) |

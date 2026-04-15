@@ -20,7 +20,7 @@ EXECUTE-LOOP에서 `opal-sdd-action-agent`에 단일 디스패치하며, PM이 �
 
 ## Harness
 
-모드: SDD Task (TASK → SPEC → REVIEW → DESIGN → EXECUTE-LOOP → VERIFY → DONE)
+모드: SDD Task (TASK → SPEC → REVIEW → DESIGN → EXECUTE-LOOP → VERIFY → CLOSE)
 > 부트스트랩에서 로드되지 않은 경우: `~/.opal/references/opal-harness.md`를 Read한다.
 
 **[MUST]** 스킬 시작 즉시 모드에 따라 서브 하네스를 Read한다. 이 단계를 건너뛰면 안 된다:
@@ -47,9 +47,9 @@ Phase 3: DESIGN    워커       op-sdd-plan → SPEC-PLAN.md (아키텍처 + ACT
 Phase 4: EXECUTE   ACT 루프   사용자 Gate → opal-sdd-action-agent 디스패치
                               → 결과 수신 → DONE.md
 Phase 5: VERIFY    PM 직접    Playwright E2E → TEST-SCENARIOS.md 추적 매트릭스 갱신
-                              → 전체 TS Green 확인 → 사용자 Gate
-Phase 6: DONE      PM 직접    최종 확인 → DONE.md 생성
-                              → 사용자 Gate
+                              → 전체 TS Green 확인 → 사용자 Gate (= CLOSE 진입 게이트)
+Phase 6: CLOSE     PM 직접    최종 확인 → DONE.md 생성
+                              → State Gate
 ```
 
 ---
@@ -254,14 +254,23 @@ ACT 완료마다 STATE.md 갱신 (하네스 §3 State Gate 기준 적용):
 
 ---
 
-## Phase 6: DONE
+## Phase 6: CLOSE
 
-모든 ACT 완료 및 VERIFY Phase 통과 후 최종 확인을 수행한다.
+모든 ACT 완료 및 VERIFY Phase 통과(사용자 확인 = CLOSE 진입 게이트) 후 태스크를 마감한다.
 
 1. 전체 TS Green 확인 (STATE.md TS 현황)
 2. 전체 ACT DONE.md 존재 확인
-3. State Gate → 사용자 Gate
-4. DONE.md 생성
+3. DONE.md 생성
+4. State Gate
+
+보고 형식:
+```
+✅ [CLOSE] 태스크 완료
+📎 산출물: tasks/{NNN}-{feature}/DONE.md
+태스크가 완료되었습니다.
+```
+
+> **추가작업**: 태스크 완료 후 추가작업이 필요하면 하네스 §3 "추가작업 프로세스"를 따른다.
 
 ---
 
@@ -270,7 +279,7 @@ ACT 완료마다 STATE.md 갱신 (하네스 §3 State Gate 기준 적용):
 | 필드 | 값 |
 |------|------|
 | 모드 | SDD Task |
-| 단계 목록 | TASK / SPEC / REVIEW / DESIGN / EXECUTE-LOOP / VERIFY / DONE |
+| 단계 목록 | TASK / SPEC / REVIEW / DESIGN / EXECUTE-LOOP / VERIFY / CLOSE |
 | 산출물 목록 | TASK.md, SPEC.md, TEST-SCENARIOS.md, SPEC-PLAN.md, actions/ACT-{N}/, DONE.md |
 | 태스크 경로 | tasks/{NNN}-{feature}/ |
 
@@ -283,7 +292,7 @@ ACT 완료마다 STATE.md 갱신 (하네스 §3 State Gate 기준 적용):
 
 ## 현재 상태
 - 모드: SDD Task
-- Phase: {현재 Phase}
+- Phase: {현재 Phase (TASK/SPEC/REVIEW/DESIGN/EXECUTE-LOOP/VERIFY/CLOSE)}
 - 상태: {진행 중 / 완료 / 블로커 / 추가작업중 / 추가작업완료}
 
 ## 파이프라인 현황판
@@ -326,10 +335,8 @@ ACT 완료마다 STATE.md 갱신 (하네스 §3 State Gate 기준 적용):
 | 31 | VERIFY | PM Gate | ⬜ | |
 | 32 | VERIFY | State Gate | ⬜ | |
 | 33 | VERIFY | 사용자 확인 | ⬜ | |
-| 34 | DONE | State Gate | ⬜ | |
-| 35 | DONE | DONE.md 생성 | ⬜ | |
-| 36 | DONE | State Gate | ⬜ | |
-| 37 | DONE | 사용자 확인 | ⬜ | |
+| 34 | CLOSE | DONE.md 생성 | ⬜ | |
+| 35 | CLOSE | State Gate | ⬜ | |
 
 ## ACT 목록 (SSOT — EXECUTE Phase 상세)
 
@@ -399,8 +406,8 @@ TASK (PM 직접)
   → REVIEW           -- PM 직접 수행 (구조검증 + TS작성 + 커버리지)
   → DESIGN Gate      -- PM 자율 검토
   → EXECUTE-LOOP     -- PM 자율 관리 (ACT별 Gate + L1/L2 검증 포함)
-  → VERIFY           -- PM 직접 수행 (Playwright E2E + TS 전체 Green 확인)
-  → DONE             -- PM 자율 완료 + 최종 보고
+  → VERIFY           -- PM 직접 수행 (Playwright E2E + TS 전체 Green 확인 + 사용자 Gate = CLOSE 진입 게이트)
+  → CLOSE            -- (사용자 승인 후) DONE.md 생성 + State Gate + 최종 보고
 ```
 
 - 모든 Phase Gate를 PM이 자율 통과
@@ -448,3 +455,4 @@ opal-harness-agentic.md §6 공통 기준에 추가:
 | v2.6.0 | 2026-04-10 | Artifact Gate 제거 + PM Gate 점검 목록 섹션 추가 + 파이프라인 현황판 이름 변경 (106) |
 | v2.7.0 | 2026-04-11 | PM Gate 점검 목록 — PLAN-equivalent Phase에 TASK.md 요구사항 추가 (108) |
 | v2.8.0 | 2026-04-15 | Phase 1(SPEC)/Phase 3(DESIGN) 디스패치 프롬프트에 `**핵심 제약**:` 필드 추가 — `[MUST] <문서명> §N: <인용문>` 원문 인용 포맷 명시 (120) |
+| v2.9.0 | 2026-04-15 | Phase 6 DONE→CLOSE 리네이밍 + 4행→2행 통일 + 단계 목록 갱신 + Agentic Mode 흐름도 갱신 + CLOSE 보고 형식 C안 적용 (121) |
