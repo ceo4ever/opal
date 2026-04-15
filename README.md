@@ -33,6 +33,7 @@ AI 도구(Claude Code, Cursor 등)를 쓰다 보면 공통적인 한계에 부�
 - **PM 역할 분리** — 에이전트가 프로젝트 매니저로서 워커(서브에이전트)를 지휘
 - **QA 내장** — 테스트 시나리오 작성 → 구현 → 자동 검증이 파이프라인 안에 포함
 - **Agentic Mode** — `--agentic` 플래그로 전 단계를 자율 실행
+- **전문 에이전트(Specialist Agent)** — 도메인별 전문 워커가 FE/BE/DB/기획/테스트를 담당
 - **커뮤니티 스킬** — 외부 조직이 제공하는 스킬을 원본 수정 없이 통합
 
 ---
@@ -41,9 +42,10 @@ AI 도구(Claude Code, Cursor 등)를 쓰다 보면 공통적인 한계에 부�
 
 1. [설치](#설치)
 2. [프로젝트 설정](#프로젝트-설정)
-3. [핵심 개념 — Pilot과 `//` 커맨드](#핵심-개념--pilot과--커맨드)
-4. [Pilot 비교 & 사용 사례](#pilot-비교--사용-사례)
-5. [Pilot 사용법](#pilot-사용법)
+3. [빠른 시작](#빠른-시작)
+4. [핵심 개념 — Pilot과 `//` 커맨드](#핵심-개념--pilot과--커맨드)
+5. [Pilot 비교 & 사용 사례](#pilot-비교--사용-사례)
+6. [Pilot 사용법](#pilot-사용법)
    - [opds — 개발 Short Task](#opds--개발-short-task-기본)
    - [opd — 개발 Full Task](#opd--개발-full-task)
    - [opdw — Wireframe UI](#opdw--wireframe-ui)
@@ -51,13 +53,27 @@ AI 도구(Claude Code, Cursor 등)를 쓰다 보면 공통적인 한계에 부�
    - [opsdd — SDD 명세 기반 개발](#opsdd--sdd-명세-기반-개발)
    - [opwt — 서비스 기획 산출물](#opwt--서비스-기획-산출물)
    - [oppd — 프로젝트 개발 라이프사이클](#oppd--프로젝트-개발-라이프사이클)
-6. [독립 스킬 사용법](#독립-스킬-사용법)
-7. [Agentic Mode — 자율 실행](#agentic-mode--자율-실행)
-8. [아키텍처 개요](#아키텍처-개요)
+7. [독립 스킬 사용법](#독립-스킬-사용법)
+8. [Agentic Mode — 자율 실행](#agentic-mode--자율-실행)
+9. [전문 에이전트 (Specialist Agent)](#전문-에이전트-specialist-agent)
+10. [아키텍처 개요](#아키텍처-개요)
+11. [트러블슈팅](#트러블슈팅)
 
 ---
 
 ## 설치
+
+### 사전 요구사항
+
+| 항목 | 요구사항 |
+|------|---------|
+| **OS** | macOS (`install-mac.sh` 기준) |
+| **필수 도구** | bash, git, Node.js v18+, Python 3 |
+| **지원 AI 플랫폼** | Claude Code, Cursor, Gemini (Antigravity) |
+
+> Node.js는 skill-registry, date 등 CLI 도구 실행에 필요하다. Python은 MCP 서버 venv 구성에 필요하다.
+
+### 설치 실행
 
 ```bash
 git clone {REPO_URL} opal
@@ -73,7 +89,56 @@ cd opal
 | `[2]` MCP 서버 설정 | Claude Code / Cursor / Gemini용 MCP 설정 |
 | `[3]` 전체 설치 | OPAL + MCP 서버 동시 설치 |
 
-설치 후 **AI 도구를 재시작**하면 즉시 사용 가능하다.
+### 설치 옵션별 상세
+
+**`[1]` OPAL 설치**가 배치하는 파일:
+
+| 배치 대상 | 경로 |
+|----------|------|
+| 에이전트 코어 | `~/.opal/AGENT.md` |
+| 스킬 (독립 + OPAL) | `~/.opal/skills/` |
+| 에이전트 (전문 + 범용) | `~/.opal/agents/` |
+| 참조 레지스트리 | `~/.opal/references/` |
+| CLI 도구 | `~/.opal/tools/` |
+| 커뮤니티 스킬 | `~/.opal/community-skills/` |
+| 템플릿 | `~/.opal/templates/` |
+| Python 가상환경 | `~/.opal/.venv/` |
+| 부트스트래퍼 (Claude) | `~/.claude/CLAUDE.md` |
+| 부트스트래퍼 (Cursor) | `~/.cursor/rules/000-opal-agent.mdc` |
+| 부트스트래퍼 (Gemini) | `~/.gemini/GEMINI.md` |
+| Claude hooks/권한 | `~/.claude/settings.json` |
+| Gemini 경로 접근 | `~/.gemini/settings.json` |
+
+**`[2]` MCP 서버 설정**이 구성하는 플랫폼:
+
+| 플랫폼 | 설정 방식 | 설정 파일 |
+|--------|----------|----------|
+| Claude Code | `claude mcp add --scope user` | CLI 등록 |
+| Gemini | `gemini mcp add -s user` | CLI 등록 (폴백: `~/.gemini/settings.json`) |
+| Cursor | config_merge | `~/.cursor/mcp.json` |
+| Antigravity | config_merge | `~/.gemini/antigravity/mcp_config.json` |
+
+**`[3]` 전체 설치**는 `[1]` + `[2]`를 순차 실행한다.
+
+### 설치 후 검증
+
+```bash
+ls ~/.opal/
+```
+
+정상 설치 시 다음 항목이 보인다:
+
+```
+AGENT.md  identity.md  skills/  agents/  references/  tools/  templates/  community-skills/
+```
+
+AI 도구를 재시작하면 첫 응답에 부트스트랩 체크리스트가 표시된다:
+
+```
+[부트스트랩] ✅ identity ✅ harness ✅ PM ...
+```
+
+이 메시지가 나타나면 설치가 정상 완료된 것이다.
 
 ---
 
@@ -91,6 +156,14 @@ AI 채팅창에서 아래 커맨드를 입력하면 프로젝트 설정을 자�
 
 > `opi`(opal-project-init)가 프로젝트를 분석하고 `.opal/AGENT.md`, `docs/PROJECT.md`, `docs/CONVENTIONS.md` 등을 생성한다.
 
+#### `//opi` 생성물 상세
+
+| 파일 | 역할 |
+|------|------|
+| `.opal/AGENT.md` | PM 프로필 — 프로젝트별 검토 기준, 금지사항, 확정 기준 |
+| `docs/PROJECT.md` | 프로젝트 정의 SSOT — 개요, 원칙, 문서 레지스트리 |
+| `docs/CONVENTIONS.md` | 코드/문서 컨벤션 — 네이밍, 파일 구조, 커밋 규칙 |
+
 ### 수동 설정 — Claude Code
 
 프로젝트 루트 `CLAUDE.md`에 다음 섹션을 포함한다.
@@ -107,6 +180,32 @@ AI 채팅창에서 아래 커맨드를 입력하면 프로젝트 설정을 자�
 
 ## Code Conventions
 {코드 스타일, 네이밍 규칙 등}
+```
+
+### 수동 설정 — Cursor
+
+`~/.cursor/rules/000-opal-agent.mdc`가 전역 자동 적용(`alwaysApply: true`)되므로, 프로젝트당 추가 설정은 필요 없다. OPAL 설치 시 자동으로 배치된다.
+
+### 수동 설정 — Gemini
+
+프로젝트 루트 `GEMINI.md`에 OPAL 부트스트래퍼를 삽입한다. Claude Code의 `CLAUDE.md`와 동일한 형식이다.
+
+---
+
+## 빠른 시작
+
+설치와 프로젝트 설정(`//opi`)이 끝났다면, 간단한 작업으로 파이프라인을 체험해 보자.
+
+```
+//opp README에 프로젝트 설명 추가해줘
+```
+
+AI가 `TASK.md`를 작성하고 승인을 요청한다. "진행해"라고 답하면 `PLAN.md` 작성 → 실행까지 단계별로 진행된다. 각 단계가 끝날 때마다 결과를 보고하고 다음 단계 진행 여부를 확인한다.
+
+코드 변경이 수반되는 작업이라면 `//opds`를 사용한다:
+
+```
+//opds 로그인 버튼 클릭 시 스피너가 표시되지 않는 버그 수정
 ```
 
 ---
@@ -159,6 +258,17 @@ Pilot은 작업을 여러 단계로 나누어 실행한다. 각 단계가 끝날
 
 **핵심 규칙**: 사용자가 명시적으로 승인하기 전까지 코드를 생성하거나 파일을 수정하지 않는다.
 
+### 비서 모드와 PM 모드
+
+OPAL 에이전트는 **비서**와 **PM** 두 가지 역할을 수행한다.
+
+| 역할 | 활성 조건 | 동작 |
+|------|----------|------|
+| **비서** | 프로젝트 밖 (`.opal/AGENT.md` 없음) | 일상 대화, 일반 업무 지원 |
+| **PM** | 프로젝트 내 (`.opal/AGENT.md` 존재) | 태스크 관리, 워커 디스패치, Gate 검토 |
+
+프로젝트에 `.opal/AGENT.md`가 있으면 PM 모드로 자동 전환된다. PM 모드에서는 `//` 커맨드로 파이프라인을 실행할 때 워커(서브에이전트)를 지휘하고 각 단계의 품질을 검토한다. `.opal/AGENT.md`가 없는 환경에서는 비서 모드로 동작하여 일반적인 대화와 업무를 지원한다.
+
 ---
 
 ## Pilot 비교 & 사용 사례
@@ -167,11 +277,11 @@ Pilot은 작업을 여러 단계로 나누어 실행한다. 각 단계가 끝날
 
 | Pilot | 이름 | 적합한 작업 규모 | 파이프라인 | 주요 산출물 |
 |-------|------|----------------|-----------|------------|
-| `//opds` | Short Task Dev | 소~중 (단일 기능 단위) | TASK → PLAN → TEST-SCENARIO → EXECUTE → TEST | TASK, PLAN, TEST-SCENARIO, DONE |
-| `//opd` | Full Task Dev | 중~대 (멀티 모듈) | TASK → ANALYSIS → PLAN → TEST-SCENARIO → EXECUTE → TEST | + ANALYSIS |
+| `//opds` | Short Task Dev | 소~중 (단일 기능 단위) | TASK → PLAN(+테스트 시나리오) → EXECUTE → TEST | TASK, PLAN, DONE |
+| `//opd` | Full Task Dev | 중~대 (멀티 모듈) | TASK → ANALYSIS → PLAN(+테스트 시나리오) → EXECUTE → TEST | + ANALYSIS |
 | `//opdw` | Wireframe UI | 소~중 (화면 단위) | TASK → WIREFRAME → EXECUTE | wireframe.md, UI 컴포넌트 |
 | `//opp` | 범용 Project | 제한 없음 | TASK → PLAN → EXECUTE | TASK, PLAN, DONE |
-| `//opsdd` | SDD 개발 | 중~대 (명세 복잡) | TASK → SPEC → REVIEW → DESIGN → EXECUTE-LOOP → DONE | SPEC, TEST-SCENARIOS, SPEC-PLAN, STATE |
+| `//opsdd` | SDD 개발 | 중~대 (명세 복잡) | TASK → SPEC → VERIFY → REVIEW → DESIGN → EXECUTE-LOOP → DONE | SPEC, TEST-SCENARIOS, SPEC-PLAN, STATE |
 | `//opwt` | 기획 산출물 | 제한 없음 | TASK → (ANALYSIS →) PLAN → EXECUTE → QA | PRD, TRD, IA, 정책서, WBS |
 | `//oppd` | 프로젝트 Dev | 대 (전체 라이프사이클) | PLAN(기획) → WBS → EXECUTE(코드) | 기획 산출물 전체 + 코드 |
 
@@ -345,9 +455,9 @@ PRD, TRD, 서비스 정책서, IA 등 **기획 문서를 작성하거나 최신�
 
 **언제 쓰나**: 코드 변경이 수반되는 모든 개발 작업의 기본 진입점. 버그 수정, 기능 추가, 리팩토링 등.
 
-**파이프라인**: `TASK → PLAN → TEST-SCENARIO → EXECUTE → TEST`
+**파이프라인**: `TASK → PLAN(+테스트 시나리오) → EXECUTE → TEST`
 
-**산출물**: `TASK.md`, `PLAN.md`, `TEST-SCENARIO.md`, `DONE.md`
+**산출물**: `TASK.md`, `PLAN.md`(테스트 시나리오 포함), `DONE.md`
 
 #### 진행 흐름
 
@@ -355,8 +465,8 @@ PRD, TRD, 서비스 정책서, IA 등 **기획 문서를 작성하거나 최신�
 1. AI → TASK.md 작성 (작업 정의, 요구사항, 범위)
         "TASK 완료했습니다. PLAN 단계로 넘어갈까요?"
 
-2. 승인 → AI → PLAN.md 작성 + TEST-SCENARIO.md 작성 (검증 기준 선정의)
-            "PLAN + 테스트 시나리오 검토해주세요. 승인하시면 구현 시작합니다."
+2. 승인 → AI → PLAN.md 작성 (구현 계획 + 테스트 시나리오)
+            "PLAN 검토해주세요. 승인하시면 구현 시작합니다."
 
 3. 승인 → AI → 코드 구현 (EXECUTE)
             → 테스트 실행 (TEST) — 실패 시 자동 수정 후 재테스트 (최대 3회)
@@ -381,9 +491,9 @@ Full Task(opd)로 전환할까요?
 
 **언제 쓰나**: 대규모 기능 개발, 여러 모듈에 걸친 변경, 아키텍처 수준의 작업.
 
-**파이프라인**: `TASK → ANALYSIS → PLAN → TEST-SCENARIO → EXECUTE → TEST`
+**파이프라인**: `TASK → ANALYSIS → PLAN(+테스트 시나리오) → EXECUTE → TEST`
 
-**산출물**: `TASK.md`, `ANALYSIS.md`, `PLAN.md`, `TEST-SCENARIO.md`, `DONE.md`
+**산출물**: `TASK.md`, `ANALYSIS.md`, `PLAN.md`(테스트 시나리오 포함), `DONE.md`
 
 > `opds`와 차이: ANALYSIS 단계가 추가되어 코드베이스를 먼저 깊이 분석한 후 계획을 수립한다.
 
@@ -396,8 +506,8 @@ Full Task(opd)로 전환할까요?
 2. 승인 → AI → 코드베이스 분석 → ANALYSIS.md 작성 (의존 관계, 영향 범위, 기술 리스크)
             "분석 완료. PLAN 단계로 넘어갈까요?"
 
-3. 승인 → AI → PLAN.md 작성 + TEST-SCENARIO.md 작성
-            "PLAN + 테스트 시나리오 검토해주세요. 승인하시면 구현 시작합니다."
+3. 승인 → AI → PLAN.md 작성 (구현 계획 + 테스트 시나리오)
+            "PLAN 검토해주세요. 승인하시면 구현 시작합니다."
 
 4. 승인 → AI → 코드 구현 (EXECUTE)
             → 테스트 실행 (TEST) — 실패 시 자동 수정 후 재테스트 (최대 3회)
@@ -439,7 +549,7 @@ Full Task(opd)로 전환할까요?
 
 **언제 쓰나**: "무엇을 만들지"를 먼저 엄밀하게 정의한 뒤 개발하고 싶을 때. 기능 명세(SPEC)를 SSOT로 삼아 테스트 시나리오 → 설계 → 구현까지 파이프라인을 관리한다.
 
-**파이프라인**: `TASK → SPEC → REVIEW → DESIGN → EXECUTE-LOOP → DONE`
+**파이프라인**: `TASK → SPEC → VERIFY → REVIEW → DESIGN → EXECUTE-LOOP → DONE`
 
 **산출물**:
 
@@ -611,15 +721,34 @@ tasks/{NNN}-{기능명}/
 
 ---
 
+## 전문 에이전트 (Specialist Agent)
+
+OPAL의 Pilot은 작업을 단계별로 나누어 워커(서브에이전트)에게 디스패치한다. 기본적으로 범용 워커(`opal-task-agent`)가 모든 단계를 처리하지만, 도메인별 전문성이 필요한 단계에서는 **전문 에이전트**가 투입된다.
+
+PM은 PLAN.md의 각 Step에 명시된 **단계 + 영역** 조합을 보고 적합한 전문 에이전트를 자동으로 선택·라우팅한다. 예를 들어 FE 영역의 EXECUTE 단계에는 `opal-fe-agent`가, DB 영역의 PLAN 단계에는 `opal-db-agent`가 투입된다.
+
+| 에이전트 | 영역 | 단계 | 역할 |
+|---------|------|------|------|
+| `opal-plan-agent` | 공통 | PLAN | 코드 분석 + 기능 설계 + 에이전트 라우팅 |
+| `opal-fe-agent` | FE | EXECUTE | React, shadcn/ui, Tailwind 전문 구현 |
+| `opal-be-agent` | BE | EXECUTE | API 설계, OWASP, 레이어 구조 전문 구현 |
+| `opal-db-agent` | DB | PLAN, EXECUTE | DB 모델 설계 + 마이그레이션 |
+| `opal-planning-agent` | 기획 | EXECUTE | 서비스 기획 산출물 (PRD, TRD 등) |
+| `opal-test-agent` | 공통 | TEST | BE/FE/E2E 테스트 모드 |
+
+> 전문 에이전트가 매칭되지 않는 단계·영역 조합에서는 범용 `opal-task-agent`가 폴백으로 사용된다.
+
+---
+
 ## 아키텍처 개요
 
 ```
 Global Layer (~/.opal/)          한 번 설치 → 모든 프로젝트에서 사용
 ┌─────────────────────────────────────────────────────────┐
 │  skills/        Pilot(오케스트레이터) + 단계 스킬        │
-│  agents/        서브에이전트 (워커)                      │
+│  agents/        서브에이전트 (전문 6종 + 범용 4종)       │
 │  community-skills/  외부 조직 제공 스킬 (31개)           │
-│  references/    레지스트리 + 가이드 문서                 │
+│  references/    레지스트리 + 모듈화된 하네스 (harness/)  │
 │  AGENT.md       AI 에이전트 코어                         │
 │  identity.md    에이전트 정체성                          │
 └────────────────────────┬────────────────────────────────┘
@@ -633,4 +762,33 @@ Project Layer (프로젝트마다 설정)
 └─────────────────────────────────────────────────────────┘
 ```
 
+코드 파일에 `@header` 주석으로 메타데이터를 기록하고, `code-scan` 도구로 빠르게 탐색한다.
+
 상세 아키텍처와 컴포넌트 구조는 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)를 참조한다.
+
+---
+
+## 트러블슈팅
+
+### 부트스트랩 체크리스트가 뜨지 않음
+
+- AI 도구를 재시작했는지 확인한다
+- `~/.opal/AGENT.md` 파일이 존재하는지 확인한다: `ls ~/.opal/AGENT.md`
+- 플랫폼별 부트스트래퍼 파일이 존재하는지 확인한다:
+  - Claude Code: `~/.claude/CLAUDE.md`
+  - Cursor: `~/.cursor/rules/000-opal-agent.mdc`
+  - Gemini: `~/.gemini/GEMINI.md`
+
+### `//` 커맨드 매칭 실패
+
+- Node.js가 설치되어 있는지 확인한다: `node --version` (v18+ 필요)
+- skill-registry 도구가 동작하는지 확인한다: `node ~/.opal/tools/skill-registry/skill-registry.js list`
+- 스킬 이름의 정식 또는 약식 명칭이 정확한지 확인한다
+
+### MCP 연결 실패
+
+- 플랫폼별 MCP 설정 파일을 확인한다:
+  - Claude Code: `claude mcp list`
+  - Cursor: `~/.cursor/mcp.json`
+  - Gemini: `~/.gemini/settings.json`
+- MCP 서버가 설치되어 있는지 확인한다: 설치 메뉴에서 `[2]` 또는 `[3]`을 선택했는지 확인
