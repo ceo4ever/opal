@@ -12,7 +12,7 @@
 
 | 필드 | 필수 여부 | 타입 | 설명 |
 |------|---------|------|------|
-| `module` | 필수 | string | 모듈 고유 식별자 (kebab-case). 프로젝트 내 unique를 권장한다. `code-scan depends` 명령이 module 필드를 키로 의존 관계를 추적하므로 중복 시 추적이 부정확해진다. |
+| `module` | 필수 | string | 모듈 고유 식별자. 파일 네이밍 컨벤션을 따른다 — Python은 snake_case, TypeScript/JS는 kebab-case, Kotlin/Swift는 PascalCase. 프로젝트 내 unique를 권장한다. `code-scan depends` 명령이 module 필드를 키로 의존 관계를 추적하므로 중복 시 추적이 부정확해진다. |
 | `layer` | 필수 | string | 아키텍처 레이어. 표준값은 아래 테이블 참조. |
 | `domain` | 필수 | string | 비즈니스 도메인 (예: auth, user, payment) |
 | `description` | 필수 | string | 파일의 역할 한 줄 요약 |
@@ -57,7 +57,7 @@
 ```python
 """
 @header {
-  "module": "auth-service",
+  "module": "auth_service",
   "layer": "service",
   "domain": "auth",
   "description": "JWT 발급 및 검증 처리",
@@ -186,3 +186,4 @@ code-scan.js의 기본 지원 확장자와 동일하다:
 |------|------|------|
 | v1.0 | 2026-04-12 | 초기 작성 — 필드 정의 7개 + 언어별 예시 6개 + layer별 exports 가이드 + 삽입 위치 규칙 (109) |
 | v1.1 | 2026-04-12 | 기획/설계 layer 5개 추가(`policy`/`ia`/`wireframe`/`erd`/`api-spec`) + `depends` 필드 설명 보강 + exports 가이드 확장 + Markdown 예시 갱신 (113) |
+| v1.2 | 2026-04-17 | §2 `module` 필드 — kebab-case 단일 → 언어별 컨벤션(Python: snake_case, TS/JS: kebab-case, Kotlin/Swift: PascalCase). §3 Python 예시 module 값 수정 |

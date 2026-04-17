@@ -9,13 +9,13 @@
 | 문서 본문 | 한국어 (기술 용어는 영어 병기) |
 | 코드/변수/필드명 | English |
 | YAML frontmatter 키 | English |
-| 파일/폴더 이름 | English, kebab-case |
+| 파일/폴더 이름 | English, kebab-case (Python 파일은 snake_case) |
 
 ## 네이밍 규칙
 
 ### 파일/폴더
 
-- **kebab-case** 사용: `user-auth-implementation`, `op-dev-plan`
+- **kebab-case** 사용: `user-auth-implementation`, `op-dev-plan` (Python 파일은 **snake_case**: `creative_response.py`, `user_auth.py`)
 - 스킬 폴더: `{그룹}-{역할}` — `opal-pilot-dev`, `op-dev-analysis`, `op-task-qa`
 - OPAL 에이전트 폴더: `opal/agents/{agent-name}/` — `opal-task-agent`, `opal-fe-agent`, `opal-be-agent`, `opal-plan-agent`, `opal-test-agent`, `opal-planning-agent`, `opal-db-agent`
 - 범용 에이전트 폴더: `agents/{agent-name}/` — `wtm-agent` (OPAL 무관)
