@@ -1,7 +1,7 @@
 {
   "$schema": "opal-skills-registry-v1",
-  "version": "3.2.0",
-  "updated_at": "2026-04-05",
+  "version": "3.3.0",
+  "updated_at": "2026-04-17",
   "groups": {
     "opal-pilot": [
       {
@@ -57,6 +57,15 @@
         "paths": ["{project}/.opal/skills/opal-pilot-sdd/SKILL.md", "~/.opal/skills/opal-pilot-sdd/SKILL.md"],
         "domain": "sdd",
         "pipeline": "SPEC → VERIFY → PLAN → TASKS → VERIFY → LOOP → DONE"
+      },
+      {
+        "name": "opal-pilot-gc",
+        "alias": "opgc",
+        "description": "보안·컨벤션 체크 경량 Pilot (커밋 전 수동 실행, GC = Garbage Collector)",
+        "triggers": ["^opal-pilot-gc$", "^opgc$", "^gc$", "(?i)(garbage\\s*collect|커밋\\s*전\\s*체크|보안\\s*컨벤션\\s*체크)"],
+        "paths": ["{project}/.opal/skills/opal-pilot-gc/SKILL.md", "~/.opal/skills/opal-pilot-gc/SKILL.md"],
+        "domain": "quality",
+        "pipeline": "SCAN → CHECK → REPORT → APPLY → CLOSE"
       }
     ],
     "op-dev": [

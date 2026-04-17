@@ -70,3 +70,4 @@ node ~/.opal/tools/skill-registry/skill-registry.js validate
 | 웹앱 테스트 | anthropics/webapp-testing | TEST 단계 (Playwright) |
 | 프론트엔드 디자인 | anthropics/frontend-design | PLAN 단계 (UI/UX 설계 참조) |
 | SDD 명세 주도 개발 | opal-pilot-sdd (opsdd) | 명세 기반 개발 전체 (SPEC→VERIFY→PLAN→TASKS) |
+| 보안·컨벤션 체크 (커밋 전) | opal-pilot-gc (opgc / gc) | 수동 실행 (`//opgc`) |

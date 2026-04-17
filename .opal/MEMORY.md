@@ -1,6 +1,6 @@
 # opal Memory Index
 
-> 최종 갱신: 2026-04-17 09:25
+> 최종 갱신: 2026-04-17 17:09
 > last_task_number: 123
 
 ## 메모리 카테고리
@@ -22,7 +22,7 @@
 
 | 등록일시 | 카테고리 | 상태 | 파일 | 설명 |
 |----------|----------|------|------|------|
-| 2026-03-22 | task | 예정 | [memory/project_security_task.md](memory/project_security_task.md) | 보안 전용 스킬+에이전트 생성 |
+| 2026-03-22 | project | 진행 중 | [memory/project_security_task.md](memory/project_security_task.md) | 보안 전용 컴포넌트 — TEST(코드 보안) 122에서 완료, PLAN(설계 보안)은 후속 분리 유지 |
 | 2026-04-09 | task | 예정 | [memory/task_098_vector_store.md](memory/task_098_vector_store.md) | OPAL Vector Store — sqlite-vec 기반 문서 벡터 검색 도구 (PLAN ✅, EXECUTE 보류) |
 
 
@@ -31,7 +31,7 @@
 | 등록일자 | 작업 | 단계 | 경로 | 시작일시 | 완료일시 |
 |----------|------|------|------|---------|---------|
 | 2026-04-17 | 산출물 인용 위치 추적 하네스 — Citation Rules (123) | 완료 | tasks/123-260417-opp-citation-rules/ | 2026-04-17 08:35 | 2026-04-17 09:25 |
-| 2026-04-17 | opal-pilot-gc 경량 Pilot + 보안/컨벤션 에이전트 개발 (122) | TASK 진행 중 | tasks/122-260417-opp-opal-gc/ | 2026-04-17 07:42 | - |
+| 2026-04-17 | opal-pilot-gc 경량 Pilot + 보안/컨벤션 에이전트 개발 (122) | 완료 | tasks/122-260417-opp-opal-gc/ | 2026-04-17 07:42 | 2026-04-17 17:09 |
 | 2026-04-15 | 파이프라인 현황판 CLOSE 단계 분리 (121) | 완료 | tasks/121-260415-opp-close-stage-separation/ | 2026-04-15 15:18 | 2026-04-15 17:20 |
 | 2026-04-15 | opal-pm.md 핵심 제약 인용 의무 규칙 추가 + 파일럿 디스패치 템플릿 보완 (120) | 완료 | tasks/120-260415-opp-pm-constraint-citation-rule/ | 2026-04-15 15:10 | 2026-04-15 15:24 |
 | 2026-04-15 | README.md 업데이트 — 최근 변경 반영 + 설치/설정 확장 (119) | 완료 | tasks/119-260415-opp-readme-update/ | 2026-04-15 14:28 | 2026-04-15 14:51 |

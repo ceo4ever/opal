@@ -61,6 +61,16 @@
 | `op-sdd-plan` | - | 단계 스킬 | SPEC-PLAN 단계 — SDD 구현 계획 수립 |
 | `op-sdd-tasks` | - | 단계 스킬 | TASKS 단계 — SDD 태스크 분해 |
 
+## 주요 컴포넌트 (GC 파이프라인)
+
+커밋 전 코드 보안·컨벤션 점검용 경량 Pilot (2026-04 신설).
+
+| 컴포넌트 | 약어 | 유형 | 설명 |
+|----------|------|------|------|
+| `opal-pilot-gc` | opgc / gc | 경량 오케스트레이터 | GC 5단계 Pilot: SCAN → CHECK → REPORT → APPLY → CLOSE |
+| `opal-security-checker` | - | 서브에이전트 | 보안 체크 — OWASP Top 10 / CWE Top 25 / SANS Top 25 Base + `docs/SECURITY.md` 누적 |
+| `opal-convention-checker` | - | 서브에이전트 | 컨벤션 체크 — 프로젝트 `docs/CONVENTIONS.md` 유일 기준 (부재 시 초안 유도) |
+
 ## 프로젝트 문서
 
 | 문서 | 설명 | 용도 | 참조 시점 |

@@ -41,6 +41,34 @@ opal-pilot 오케스트레이터(opal-pilot-dev, opal-pilot-dev-short, opal-pilo
 - **입력**: action_id, action_goal, action_scope, verify_commands, task_folder, project_context
 - **출력**: 액션 결과 (status, verdict, verification_log, changed_files, failure_context)
 
+## opal-pilot-gc 서브에이전트
+
+`opal-pilot-gc`(opgc) 경량 Pilot이 **CHECK 단계에서 병렬 디스패치**하는 서브에이전트. 각 에이전트는 독립 컨텍스트에서 실행되어 **자기완결 보고서**(체크리스트 내장, 5단계 상태 모델)를 생성한다.
+
+### opal-security-checker
+
+- **역할**: 코드 보안 체크 전담 — OWASP Top 10 (2021) / CWE Top 25 / SANS Top 25 기준의 Base 원칙 강제 적용 + `docs/SECURITY.md`가 있으면 병합하여 시크릿·인증/인가·입력 검증·의존성·로깅·암호화·설정을 점검. 부재 시 초안 생성을 유도(opi 재사용)
+- **호출 시점**: opal-pilot-gc의 CHECK 단계 (병렬)
+- **단계**: CHECK (opal-pilot-gc 내부 단계)
+- **영역**: 보안
+- **model**: advanced
+- **자체 로드 문서**: `~/.opal/skills/opal-pilot-gc/references/base-security-checklist.md`, `~/.opal/skills/opal-pilot-gc/references/report-security-template.md`, `docs/SECURITY.md`(있는 경우), 커뮤니티 스킬 래핑(`openai/security-best-practices`)
+- **입력**: 대상 파일 목록, 범위(`staged`/`all`), 기술 스택 감지 결과, `docs/SECURITY.md` 경로(있는 경우)
+- **출력**: `GC-SECURITY-{타임스탬프}.md` — 체크리스트 내장 자기완결 보고서 (요약 지표 + 5단계 상태 + 카테고리/심각도/Base vs 프로젝트 출처 + 문서 업데이트 제안)
+- **에이전트 경로**: `opal/agents/opal-security-checker/`
+
+### opal-convention-checker
+
+- **역할**: 코드 컨벤션 체크 전담 — 프로젝트 `docs/CONVENTIONS.md`를 **유일 기준**으로 네이밍·들여쓰기·파일 구조·죽은 코드·미사용 import·문서화 규칙을 점검. 문서 부재 시 초안 생성을 유도(opi 재사용). **프레임워크 내장 공통 기본값 없음**
+- **호출 시점**: opal-pilot-gc의 CHECK 단계 (병렬)
+- **단계**: CHECK (opal-pilot-gc 내부 단계)
+- **영역**: 컨벤션
+- **model**: standard
+- **자체 로드 문서**: `docs/CONVENTIONS.md`(필수 — 부재 시 초안 유도), `~/.opal/skills/opal-pilot-gc/references/base-convention-checklist.md`, `~/.opal/skills/opal-pilot-gc/references/report-convention-template.md`
+- **입력**: 대상 파일 목록, 범위(`staged`/`all`), `docs/CONVENTIONS.md` 경로
+- **출력**: `GC-CONVENTION-{타임스탬프}.md` — 체크리스트 내장 자기완결 보고서
+- **에이전트 경로**: `opal/agents/opal-convention-checker/`
+
 ## 전문 에이전트 (Specialist)
 
 PM이 PLAN.md의 단계+영역 조합으로 직접 디스패치하는 전문 워커 에이전트.
@@ -118,6 +146,8 @@ PM이 단계+영역으로 에이전트를 선택하고, opal-plan-agent가 PLAN.
 | opal-db-agent | PLAN, EXECUTE | DB | standard | DB 설계 문서, 표준사전(엑셀) |
 | opal-planning-agent | EXECUTE | 기획 | advanced | 기획 산출물, 와이어프레임 등 |
 | opal-test-agent | TEST | 공통 | standard | ARCHITECTURE.md (테스트 섹션) |
+| opal-security-checker | CHECK (opgc) | 보안 | advanced | base-security-checklist, SECURITY.md |
+| opal-convention-checker | CHECK (opgc) | 컨벤션 | standard | CONVENTIONS.md, base-convention-checklist |
 
 ## 폴백 규칙
 
