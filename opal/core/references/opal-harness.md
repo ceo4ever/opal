@@ -104,6 +104,7 @@ Lazy 로드 모듈. 각 §의 stub이 로드 시점과 파일 경로를 지시�
 | Observability | `harness/observability.md` | 워커 디스패치 직전 (매 디스패치마다) | §5 |
 | 병렬 처리 | `harness/parallel-execution.md` | 병렬 디스패치 시 | §7 |
 | @header 규칙 | `harness/header-rules.md` | EXECUTE 단계에서 코드 파일 생성/수정 시 | §8 |
+| 인용 규칙 | `harness/citation-rules.md` | TASK/ANALYSIS/PLAN 산출물 작성 시 | §2 |
 
 > 탐색 경로: `{프로젝트}/.opal/references/harness/{file}` → `~/.opal/references/harness/{file}`
 
@@ -372,3 +373,4 @@ OPAL 도구는 모두 `~/.opal/tools/{tool-name}/run.sh` 래퍼를 통해 호출
 | v4.0 | 2026-04-12 | 하네스 모듈화 — §2 QA 표준, §3 템플릿/추가작업, §5 Observability, §7 병렬 처리, §8 @header 규칙을 `harness/` 개별 모듈로 분리. §2에 모듈 매핑 테이블 추가. 각 § stub에 [필수 로드] + 적용 주체/시점/PM Gate 검증 명시 (111) |
 | v4.1 | 2026-04-15 | §4 태스크 번호 채번 규칙 — `last_task_number` 갱신 시점을 "TASK.md 완료 후" → "채번 직후(폴더 생성 전)"으로 변경. 동시 실행 인스턴스 간 번호 중복 방지 (120) |
 | v4.2 | 2026-04-15 | §1 Guards에 CLOSE 진입 게이트 Guard 신설 + §3 이벤트 테이블 CLOSE 귀속 + 상태 전이 흐름 CLOSE 명시 + 레거시 호환 원칙 추가 (121) |
+| v4.3 | 2026-04-17 | §2 하네스 모듈 테이블에 citation-rules 추가 — 산출물 인용 규칙 신설 (123) |
