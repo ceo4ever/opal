@@ -23,6 +23,7 @@ PM이 작업 영역을 감지하여 관련 문서를 추가 선별한다. 정적
 | 외부 API 연동 포함 | Glob: API 분석 디렉토리 | 매체/서비스명 매칭 |
 | 기존 코드 수정 | code-scan: 변경 대상 파일의 depends 확인 | 의존 관계 파일 포함 |
 | 이전 태스크 결과 참조 | .opal/MEMORY.md 관련 항목 | 관련 태스크 산출물 경로 |
+| 작업 대상 파일 경로 | docs/PROJECT.md "## 프로젝트 구성" 섹션 | 요소 경로 prefix 매칭 → 매칭 요소의 전문 에이전트 참조 주입 (아래 §라우팅 참조) |
 
 ## PM 상황 판단 (추가 주입)
 
@@ -53,3 +54,58 @@ PM 판단       → 위 두 가지로 못 잡는 맥락적 문서 보완
 ## 검증
 
 워커 결과 검토(§4 PM Gate) 시, 주입한 참조 문서의 내용이 산출물에 반영되었는지 확인한다.
+
+---
+
+## PROJECT.md 프로젝트 구성 기반 라우팅
+
+워커 디스패치 시 대상 파일 경로를 `docs/PROJECT.md`의 "## 프로젝트 구성" 섹션 요소 경로와 매칭하여 적합한 `전문 에이전트`를 자동 선정한다. opgc의 SCAN 동적 분할 병렬 디스패치도 동일 규약을 사용한다.
+
+### 절차
+
+1. `docs/PROJECT.md`의 "## 프로젝트 구성" 섹션 파싱 → `[(요소, 경로, 기술스택, 전문에이전트), ...]`
+2. 디스패치 대상 파일 목록에서 파일별 경로 → **가장 긴 prefix** 매칭 요소 선정
+3. 매칭된 요소의 `전문 에이전트`를 워커 디스패치 시 참조로 주입
+4. 섹션 부재 시 또는 매칭 실패 시: `opal-task-agent`(범용)으로 폴백
+
+### 의사코드
+
+```python
+def route(file_path, project_config):
+    if not project_config.has_section("프로젝트 구성"):
+        return "opal-task-agent"  # 하위호환 폴백
+    best = None
+    for element in project_config.elements:
+        # 경로 필드는 쉼표로 복수 경로 허용 (예: "opal/, skills/, agents/")
+        for prefix in element.paths:
+            if file_path.startswith(prefix):
+                if best is None or len(prefix) > len(best.matched_prefix):
+                    best = element
+                    best.matched_prefix = prefix
+    return best.agent if best else "opal-task-agent"
+```
+
+### 예시
+
+**프로젝트 구성 테이블**:
+
+```
+| 요소 | 경로 | 기술 스택 | 전문 에이전트 |
+|------|------|-----------|---------------|
+| frontend | web/ | React | opal-fe-agent |
+| backend | api/ | FastAPI | opal-be-agent |
+| batch | batch/ | (Backend 상속) | opal-be-agent |
+```
+
+**라우팅 결과**:
+
+- `web/components/Button.tsx` → `frontend` 매칭 → **opal-fe-agent**
+- `api/routers/user.py` → `backend` 매칭 → **opal-be-agent**
+- `batch/daily_report.py` → `batch` 매칭 → **opal-be-agent** (Backend 상속)
+- `scripts/deploy.sh` → 매칭 요소 없음 → **opal-task-agent** (폴백)
+
+### opgc SCAN 동적 분할 연계
+
+opgc(opal-pilot-gc)는 SCAN 단계에서 이 규약을 사용하여 `target_files`를 요소별로 분할하고, CHECK 단계에서 `(요소 × 체커)` 매트릭스로 병렬 디스패치한다. 각 체커 호출에는 매칭된 전문 에이전트 정보가 참조로 주입된다.
+
+상세: `opal/skills/opal-pilot-gc/SKILL.md` STEP 1.5 / STEP 2.2.

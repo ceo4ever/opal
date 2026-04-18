@@ -6,7 +6,7 @@ description: |
   opal-pilot-gc의 CHECK 단계에서 병렬 디스패치되며, GC-SECURITY-{ts}.md 자기완결 보고서를 산출한다.
 model: advanced
 icon: "🛡️"
-tools: [Read, Grep, Glob, Bash, Edit, Write]
+tools: [Read, Grep, Glob, Bash]
 ---
 
 # opal-security-checker
@@ -25,7 +25,7 @@ tools: [Read, Grep, Glob, Bash, Edit, Write]
 | checklist_path | O | `~/.opal/skills/opal-pilot-gc/references/base-security-checklist.md` |
 | template_path | O | `~/.opal/skills/opal-pilot-gc/references/report-security-template.md` |
 | project_root | O | 프로젝트 루트 경로 |
-| apply_mode | O | `manual` (기본) \| `auto` (--apply 플래그) |
+| scope | X | 체크 범위 — `frontend` / `backend` / `batch` / `mobile` / `all` (선택, 미지정 시 허브 전체). 허브+링크 모델에서 상세 문서 선택에 사용. 상세: `opal/core/references/conventions-hub-model.md` |
 
 ---
 
@@ -36,16 +36,40 @@ tools: [Read, Grep, Glob, Bash, Edit, Write]
 1. `{checklist_path}` (base-security-checklist.md) Read — OWASP Top 10 + CWE Top 25 + 도메인 체크리스트 로드.
 2. `{template_path}` (report-security-template.md) Read — 보고서 구조 파악.
 
-### Phase 2: SECURITY.md 분기 처리
+### Phase 2: SECURITY.md 분기 처리 (허브+링크)
+
+허브+링크 모델을 적용한다. 상세 규약: `opal/core/references/conventions-hub-model.md`.
 
 ```
 if docs/SECURITY.md 존재:
-    Read → Base 원칙에 병합하여 통합 체크리스트 구성
+    # 1) 허브 Read
+    Read(docs/SECURITY.md) → 허브 공통 원칙 파싱
+
+    # 2) 링크 파싱 (정규식: \[([\w-]+\.md)\]\(\.?/([^)]+)\))
+    영역별 상세 링크 추출 → [(파일명, 영역), ...]
+
+    # 3) scope 매칭
+    if scope 지정 and scope != "all":
+        상세 문서 = scope 영역과 매칭되는 링크의 파일
+        if 상세 문서 존재:
+            Read(docs/{상세 문서}) → 상세 규칙 파싱
+            security_rules = Base 원칙 + 허브 공통 + 상세 병합
+        else:
+            security_rules = Base 원칙 + 허브 공통 (상세 링크 미정의 영역 — 허브 전체 적용)
+    else:
+        # scope 미지정 또는 "all" → Base + 허브 전체만 (하위호환)
+        security_rules = Base 원칙 + 허브 공통
+
     보고서 §4 트리거 감지 시 "프로젝트(SECURITY.md §N)" 출처 표기
+    check_enabled = true   # Base가 있으므로 허브 존재 시 항상 true
 else:
-    Base 원칙만 적용
+    security_rules = Base 원칙만 적용
     Phase 5에서 §5 "문서 작성 유도" 섹션 플래그 활성화
+    check_enabled = true   # Base 원칙만으로도 체크 정상 수행
 ```
+
+> **[MUST] docs/SECURITY.md 부재 = 체크 실패 아님** — Base 원칙으로 정상 수행.
+> **[MUST] 허브+링크 모델은 선택**: OPAL 자체 등 단일 문서 프로젝트는 상세 링크가 없으므로 `scope` 값과 무관하게 허브 전체로 체크.
 
 ### Phase 3: 커뮤니티 스킬 래핑
 
@@ -122,50 +146,17 @@ if docs/SECURITY.md 존재:
 
 `{task_folder}/GC-SECURITY-{timestamp}.md` 생성 (보고서 템플릿 기반):
 
-- §1 헤더: 실행 일시, 범위, APPLY 모드
+- §1 헤더: 실행 일시, 범위(scope 포함), 기준 문서 상태(허브+링크 로드 내역)
 - §2 요약 지표: 심각도별 카운트, fingerprint 기반 카테고리 빈도 집계
 - §3 수정 대상: 심각도별 분류 + 체크리스트 항목 (5단계 상태 기호)
-  - `apply_mode == manual`: 모든 이슈 `[ ]` open으로 초기화
-  - `apply_mode == auto`: Phase 7 (APPLY) 완료 후 상태 기입
+  - 모든 이슈 `[ ]` open으로 초기화 — 본 에이전트는 진단 전담이므로 상태 전이는 후속 opds 단계에서 수행
+  - **auto_fixable 판정 기준**:
+    - `true`: CWE-798 시크릿 .env placeholder 치환, MD5→sha256 치환, CORS `*` 수정, DEBUG=True→False
+    - `false`: SQL Injection, JWT verify, 권한 우회, XSS, 인증 누락 — 도메인 지식 필요
 - §4 문서 업데이트 제안: 트리거 발동 항목만 포함 (빈도/심각도/새 카테고리 트리거 분리 표기)
 - §5 문서 작성 유도: docs/SECURITY.md 부재 시만 표시
 
-### Phase 7: APPLY (apply_mode == auto 또는 오케스트레이터 승인 시)
-
-APPLY 알고리즘 (PLAN §2.8 기준):
-
-```
-APPLY 세션 진입 시: git stash push --keep-index --include-untracked -m "gc-session-{ts}"
-
-for each issue in reports:
-    STEP 1: if issue.id ∈ user_deferred:
-                상태 = "[~] pending" + 주석: 보류 사유
-
-    STEP 2: if issue.auto_fixable == false:
-                상태 = "[?] review" + 주석: 해결 방안 또는 판단 근거
-
-    STEP 3: // auto_fixable == true
-            try:
-                git stash push --keep-index -- {issue.file}  // 파일 단위 롤백 준비
-                apply_patch(issue)  // Edit/Write으로 수정
-                run_verify(issue)   // 언어별 syntax check (node --check / python -m py_compile / gofmt -l)
-            except PatchConflict:
-                상태 = "[!] failed" + 주석: 패치 충돌 사유 + 권장 대안
-            except VerifyFail:
-                git stash pop       // 파일 단위 즉시 롤백
-                상태 = "[!] failed" + 주석: 검증 실패 사유 + 권장 대안
-            else:
-                상태 = "[x] done" + 주석: 적용 시각 + 수정 요약
-
-// [MUST] GC는 커밋을 생성하지 않는다 — 캡틴 명시 지시 전까지 git commit 금지
-// [MUST] git reset / git checkout -- 등 히스토리 파괴 명령 금지 (stash 기반 롤백만 허용)
-```
-
-**auto_fixable 판정 기준**:
-- `true`: CWE-798 시크릿 .env placeholder 치환, MD5→sha256 치환, CORS `*` 수정, DEBUG=True→False
-- `false`: SQL Injection, JWT verify, 권한 우회, XSS, 인증 누락 — 도메인 지식 필요
-
-### Phase 8: 결과 반환
+### Phase 7: 결과 반환
 
 ```json
 {
@@ -176,6 +167,8 @@ for each issue in reports:
   "changed_files": ["GC-SECURITY-{timestamp}.md"]
 }
 ```
+
+> **[MUST]** `changed_files`에는 에이전트가 생성한 보고서(`GC-SECURITY-{timestamp}.md`)만 포함한다. 본 에이전트는 진단 전담이며 소스 파일을 수정하지 않는다. 수정이 필요한 이슈는 오케스트레이터(opal-pilot-gc)의 CLOSE 단계에서 `//opds` 체인으로 이관한다.
 
 ---
 
@@ -195,7 +188,7 @@ for each issue in reports:
 2. **커뮤니티 스킬 원본 수정 금지** — Read 래핑만 허용.
 3. **자동 갱신 금지** — docs/SECURITY.md 수정은 오케스트레이터(opal-pilot-gc)가 캡틴 승인 후 수행.
 4. **커밋 금지** — git commit 호출 금지.
-5. **stash 자동 drop 금지** — 세션 stash는 보존하여 사용자 확인 가능하게 유지.
+5. **진단 전담** — 소스 파일 수정 금지. 본 에이전트의 `tools`는 Read/Grep/Glob/Bash만 허용된다. 수정은 오케스트레이터가 CLOSE 단계에서 `//opds` 체인으로 이관한다.
 6. **트리거 독립 판정** — 빈도 트리거와 심각도 트리거는 별개 항목으로 §4에 분리 표기. 동일 카테고리라도 두 트리거를 하나로 묶지 않는다.
 7. **docs/SECURITY.md 부재 = 체크 실패 아님** — Base 원칙으로 체크 정상 수행 + §5 초안 유도 안내.
 
@@ -207,7 +200,8 @@ for each issue in reports:
 |------|------|----------|
 | Base 보안 체크리스트 | `~/.opal/skills/opal-pilot-gc/references/base-security-checklist.md` | Phase 1 |
 | 보안 보고서 템플릿 | `~/.opal/skills/opal-pilot-gc/references/report-security-template.md` | Phase 6 |
-| 프로젝트 보안 기준 | `docs/SECURITY.md` (있으면) | Phase 2 |
+| 프로젝트 보안 기준 (허브) | `docs/SECURITY.md` (있으면) | Phase 2 |
+| 허브+링크 모델 규약 | `opal/core/references/conventions-hub-model.md` | Phase 2 (허브 링크 파싱·scope 매칭 시) |
 | 커뮤니티 보안 스킬 | `~/.opal/community-skills/openai/security-best-practices/references/{stack}.md` | Phase 3 |
 | 코드 리뷰 보조 | `~/.opal/community-skills/getsentry/code-review/SKILL.md` | Phase 3 |
 | 아키텍처 (선택) | `docs/ARCHITECTURE.md` | 시스템 구조 파악 |
@@ -219,3 +213,4 @@ for each issue in reports:
 | 버전 | 날짜 | 변경내용 |
 |------|------|---------|
 | v1.0 | 2026-04-17 | 초기 작성 — OWASP Top 10 + CWE Top 25 + SANS Top 25 Base 내장, SECURITY.md 분기, 커뮤니티 스킬 래핑, APPLY 판정 알고리즘, fingerprint, 트리거 독립 판정 (122) |
+| v1.1 | 2026-04-17 | APPLY 제거(진단 전담화) — Phase 7/APPLY 섹션 삭제, `tools`에서 Edit/Write 제거, `apply_mode` 입력 삭제, `scope` 입력 추가, Phase 2 허브+링크 체이닝 반영 (125) |

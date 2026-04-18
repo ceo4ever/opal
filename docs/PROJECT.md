@@ -67,16 +67,24 @@
 
 | 컴포넌트 | 약어 | 유형 | 설명 |
 |----------|------|------|------|
-| `opal-pilot-gc` | opgc / gc | 경량 오케스트레이터 | GC 5단계 Pilot: SCAN → CHECK → REPORT → APPLY → CLOSE |
+| `opal-pilot-gc` | opgc / gc | 경량 오케스트레이터 | GC 4단계 Pilot: SCAN → CHECK → REPORT → CLOSE |
 | `opal-security-checker` | - | 서브에이전트 | 보안 체크 — OWASP Top 10 / CWE Top 25 / SANS Top 25 Base + `docs/SECURITY.md` 누적 |
 | `opal-convention-checker` | - | 서브에이전트 | 컨벤션 체크 — 프로젝트 `docs/CONVENTIONS.md` 유일 기준 (부재 시 초안 유도) |
 
+## 프로젝트 구성
+
+> 프로젝트의 기술적 요소를 영역별로 정의한다. opgc SCAN/디스패치, PM 컨텍스트 주입 시 이 표를 기반으로 영역 매칭과 전문 에이전트 선정이 이루어진다. 부재 시 오케스트레이터는 단일 요소 기본값(프로젝트 전체 × 체커)으로 폴백한다.
+
+| 요소 | 경로 | 기술 스택 | 전문 에이전트 |
+|------|------|-----------|--------------|
+| Framework | `opal/`, `skills/`, `agents/` | Markdown, YAML, Bash, Node.js | opal-task-agent (범용) |
+
 ## 프로젝트 문서
 
-| 문서 | 설명 | 용도 | 참조 시점 |
-|------|------|------|----------|
-| `.opal/AGENT.md` | PM 프로필 | PM 역할 및 검토 기준 | 부트스트랩 시 자동 |
-| `docs/PROJECT.md` | 프로젝트 정의 (SSOT) | 프로젝트 개요, 원칙, 문서 허브 | 부트스트랩 시 자동 |
-| `docs/ARCHITECTURE.md` | 시스템 아키텍처 | 구조, 컴포넌트 관계, 배포 모델 | 개발 작업 시 항상 |
-| `docs/CONVENTIONS.md` | 코드 및 문서 컨벤션 | 네이밍, 파일 구조, 커밋 규칙 | 개발 작업 시 항상 |
-| `README.md` | 프레임워크 공개 소개 문서 | Pilot 개념, 사용 사례, 프레임워크 철학 정의 | Pilot 추가/변경 시, 사용자 대면 문서 작업 시, 프레임워크 철학/방향 관련 작업 시 |
+| 문서 | 설명 | 용도 | 적용 범위 | 참조 시점 |
+|------|------|------|----------|----------|
+| `.opal/AGENT.md` | PM 프로필 | PM 역할 및 검토 기준 | Framework | 부트스트랩 시 자동 |
+| `docs/PROJECT.md` | 프로젝트 정의 (SSOT) | 프로젝트 개요, 원칙, 문서 허브 | Framework | 부트스트랩 시 자동 |
+| `docs/ARCHITECTURE.md` | 시스템 아키텍처 | 구조, 컴포넌트 관계, 배포 모델 | Framework | 개발 작업 시 항상 |
+| `docs/CONVENTIONS.md` | 코드 및 문서 컨벤션 | 네이밍, 파일 구조, 커밋 규칙 | Framework | 개발 작업 시 항상 |
+| `README.md` | 프레임워크 공개 소개 문서 | Pilot 개념, 사용 사례, 프레임워크 철학 정의 | Framework | Pilot 추가/변경 시, 사용자 대면 문서 작업 시, 프레임워크 철학/방향 관련 작업 시 |

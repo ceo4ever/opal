@@ -148,3 +148,11 @@ tasks/{NNN}-{설명}/
 - 커밋은 캡틴이 명시적으로 요청할 때만 수행
 - 커밋 메시지는 한국어
 - 하나의 태스크 = 하나의 커밋 (원칙)
+
+---
+
+> **참고 — 허브+링크 모델**
+> OPAL 프레임워크 자체는 단일 `docs/CONVENTIONS.md`를 사용한다(단일 진입점).
+> 다중 구성(FE/BE/Batch/Mobile 등) 프로젝트는 허브+링크 모델 적용 가능 —
+> 영역별 상세 문서(`FE-CONVENTIONS.md`, `BE-CONVENTIONS.md` 등)를 분리하고 본 허브에서 링크로 연결한다.
+> 규약: `opal/core/references/conventions-hub-model.md` 참조.

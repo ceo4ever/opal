@@ -52,9 +52,9 @@ opal-pilot 오케스트레이터(opal-pilot-dev, opal-pilot-dev-short, opal-pilo
 - **단계**: CHECK (opal-pilot-gc 내부 단계)
 - **영역**: 보안
 - **model**: advanced
-- **자체 로드 문서**: `~/.opal/skills/opal-pilot-gc/references/base-security-checklist.md`, `~/.opal/skills/opal-pilot-gc/references/report-security-template.md`, `docs/SECURITY.md`(있는 경우), 커뮤니티 스킬 래핑(`openai/security-best-practices`)
-- **입력**: 대상 파일 목록, 범위(`staged`/`all`), 기술 스택 감지 결과, `docs/SECURITY.md` 경로(있는 경우)
-- **출력**: `GC-SECURITY-{타임스탬프}.md` — 체크리스트 내장 자기완결 보고서 (요약 지표 + 5단계 상태 + 카테고리/심각도/Base vs 프로젝트 출처 + 문서 업데이트 제안)
+- **자체 로드 문서**: `~/.opal/skills/opal-pilot-gc/references/base-security-checklist.md`, `~/.opal/skills/opal-pilot-gc/references/report-security-template.md`, `docs/SECURITY.md`(허브, 있는 경우 — 허브+링크 체이닝), 커뮤니티 스킬 래핑(`openai/security-best-practices`)
+- **입력**: 대상 파일 목록, 범위(`staged`/`all`), 기술 스택 감지 결과, `docs/SECURITY.md` 경로(있는 경우), `scope`(`frontend`/`backend`/`batch`/`mobile`/`all` — 선택, 허브+링크 상세 문서 매칭용)
+- **출력**: `GC-SECURITY-{타임스탬프}[-{element}].md` — 체크리스트 내장 자기완결 보고서 (요약 지표 + 5단계 상태 + 카테고리/심각도/Base vs 프로젝트 출처 + 문서 업데이트 제안). 진단 전담이므로 `changed_files`에 소스 파일 포함 금지(보고서만)
 - **에이전트 경로**: `opal/agents/opal-security-checker/`
 
 ### opal-convention-checker
@@ -64,9 +64,9 @@ opal-pilot 오케스트레이터(opal-pilot-dev, opal-pilot-dev-short, opal-pilo
 - **단계**: CHECK (opal-pilot-gc 내부 단계)
 - **영역**: 컨벤션
 - **model**: standard
-- **자체 로드 문서**: `docs/CONVENTIONS.md`(필수 — 부재 시 초안 유도), `~/.opal/skills/opal-pilot-gc/references/base-convention-checklist.md`, `~/.opal/skills/opal-pilot-gc/references/report-convention-template.md`
-- **입력**: 대상 파일 목록, 범위(`staged`/`all`), `docs/CONVENTIONS.md` 경로
-- **출력**: `GC-CONVENTION-{타임스탬프}.md` — 체크리스트 내장 자기완결 보고서
+- **자체 로드 문서**: `docs/CONVENTIONS.md`(허브, 필수 — 부재 시 초안 유도. 허브+링크 체이닝), `~/.opal/skills/opal-pilot-gc/references/base-convention-checklist.md`, `~/.opal/skills/opal-pilot-gc/references/report-convention-template.md`
+- **입력**: 대상 파일 목록, 범위(`staged`/`all`), `docs/CONVENTIONS.md` 경로, `scope`(`frontend`/`backend`/`batch`/`mobile`/`all` — 선택, 허브+링크 상세 문서 매칭용)
+- **출력**: `GC-CONVENTION-{타임스탬프}[-{element}].md` — 체크리스트 내장 자기완결 보고서. 진단 전담이므로 `changed_files`에 소스 파일 포함 금지(보고서만)
 - **에이전트 경로**: `opal/agents/opal-convention-checker/`
 
 ## 전문 에이전트 (Specialist)
@@ -146,8 +146,8 @@ PM이 단계+영역으로 에이전트를 선택하고, opal-plan-agent가 PLAN.
 | opal-db-agent | PLAN, EXECUTE | DB | standard | DB 설계 문서, 표준사전(엑셀) |
 | opal-planning-agent | EXECUTE | 기획 | advanced | 기획 산출물, 와이어프레임 등 |
 | opal-test-agent | TEST | 공통 | standard | ARCHITECTURE.md (테스트 섹션) |
-| opal-security-checker | CHECK (opgc) | 보안 | advanced | base-security-checklist, SECURITY.md |
-| opal-convention-checker | CHECK (opgc) | 컨벤션 | standard | CONVENTIONS.md, base-convention-checklist |
+| opal-security-checker | CHECK (opgc) | 보안 | advanced | base-security-checklist, SECURITY.md (허브+링크 체이닝 — conventions-hub-model.md 참조) |
+| opal-convention-checker | CHECK (opgc) | 컨벤션 | standard | CONVENTIONS.md, base-convention-checklist (허브+링크 체이닝 — conventions-hub-model.md 참조) |
 
 ## 폴백 규칙
 

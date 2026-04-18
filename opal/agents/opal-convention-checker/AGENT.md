@@ -6,7 +6,7 @@ description: |
   CONVENTIONS.md 부재 시 체크 생략 + 초안 생성 유도. opal-pilot-gc CHECK 단계에서 병렬 디스패치.
 model: standard
 icon: "📏"
-tools: [Read, Grep, Glob, Bash, Edit, Write]
+tools: [Read, Grep, Glob, Bash]
 ---
 
 # opal-convention-checker
@@ -28,18 +28,36 @@ tools: [Read, Grep, Glob, Bash, Edit, Write]
 | checklist_path | O | `~/.opal/skills/opal-pilot-gc/references/base-convention-checklist.md` |
 | template_path | O | `~/.opal/skills/opal-pilot-gc/references/report-convention-template.md` |
 | project_root | O | 프로젝트 루트 경로 |
-| apply_mode | O | `manual` (기본) \| `auto` (--apply 플래그) |
+| scope | X | 체크 범위 — `frontend` / `backend` / `batch` / `mobile` / `all` (선택, 미지정 시 허브 전체). 허브+링크 모델에서 상세 문서 선택에 사용. 상세: `opal/core/references/conventions-hub-model.md` |
 
 ---
 
 ## 실행 프로세스
 
-### Phase 1: 기준 문서 분기 처리
+### Phase 1: 기준 문서 분기 처리 (허브+링크)
+
+허브+링크 모델을 적용한다. 상세 규약: `opal/core/references/conventions-hub-model.md`.
 
 ```
 if docs/CONVENTIONS.md 존재:
-    Read → 규칙 파싱 (섹션별 규칙 추출)
-    conventions_rules = 파싱된 규칙 목록
+    # 1) 허브 Read
+    Read(docs/CONVENTIONS.md) → 허브 공통 원칙 파싱 (섹션별 규칙 추출)
+
+    # 2) 링크 파싱 (정규식: \[([\w-]+\.md)\]\(\.?/([^)]+)\))
+    영역별 상세 링크 추출 → [(파일명, 영역), ...]
+
+    # 3) scope 매칭
+    if scope 지정 and scope != "all":
+        상세 문서 = scope 영역과 매칭되는 링크의 파일
+        if 상세 문서 존재:
+            Read(docs/{상세 문서}) → 상세 규칙 파싱
+            conventions_rules = 허브 공통 + 상세 병합
+        else:
+            conventions_rules = 허브 공통만 (상세 링크 미정의 영역 — 허브 전체 적용)
+    else:
+        # scope 미지정 또는 "all" → 허브 전체만 적용 (하위호환 — 단일 문서 모델)
+        conventions_rules = 허브 공통만
+
     check_enabled = true
 else:
     check_enabled = false
@@ -50,6 +68,8 @@ else:
 > **[MUST] docs/CONVENTIONS.md 부재 = 체크 실패 아님.**
 > 부재 시 "CONVENTIONS.md가 없습니다" 안내 + 코드베이스 분석 기반 초안 생성 유도.
 > 에이전트가 자체 규칙을 만들어 체크하는 것은 금지.
+>
+> **[MUST] 허브+링크 모델은 선택**: OPAL 자체 등 단일 문서 프로젝트는 상세 링크가 없으므로 `scope` 값과 무관하게 허브 전체로 체크(예시 B 참조).
 
 ### Phase 2: 참조 문서 로드
 
@@ -113,11 +133,11 @@ if docs/CONVENTIONS.md 존재:
 
 `{task_folder}/GC-CONVENTION-{timestamp}.md` 생성 (보고서 템플릿 기반):
 
-- §1 헤더: 실행 일시, 범위, 기준 문서 상태, APPLY 모드
+- §1 헤더: 실행 일시, 범위(scope 포함), 기준 문서 상태(허브+링크 로드 내역)
 - §2 요약 지표
 - §3 수정 대상:
   - `check_enabled == false`: §3 전체 섹션 "CONVENTIONS.md 부재 — 체크 생략" 표기
-  - `check_enabled == true`: 이슈 목록 (5단계 상태, apply_mode에 따라 초기화)
+  - `check_enabled == true`: 이슈 목록 (5단계 상태, 모든 이슈 `[ ]` open으로 초기화 — 본 에이전트는 진단 전담이므로 상태 전이는 후속 opds 단계에서 수행)
   - **[MUST]** Low/Info 항목도 참조 URL 필드 포함 (모르면 "참조: TBD — {도구/규칙} 링크" 형태)
 - §4 문서 업데이트 제안: 트리거 발동 항목만 (빈도/새 카테고리 트리거 분리 표기)
 - §5 문서 작성 유도: CONVENTIONS.md 부재 시만 표시
@@ -135,15 +155,7 @@ docs/CONVENTIONS.md 부재 감지
 승인 시 초안 생성을 시작합니다. (yes/no)
 ```
 
-### Phase 6: APPLY (apply_mode == auto 또는 오케스트레이터 승인 시)
-
-opal-security-checker와 동일한 APPLY 알고리즘 적용 (PLAN §2.8 기준):
-- APPLY 세션 진입 전 git stash (세션 스냅샷)
-- 각 이슈별 파일 단위 stash → 수정 → syntax check → 성공/실패 분기
-- **[MUST]** 커밋 금지, stash 자동 drop 금지
-- **[MUST]** docs/CONVENTIONS.md 갱신은 오케스트레이터 캡틴 승인 후만
-
-### Phase 7: 결과 반환
+### Phase 6: 결과 반환
 
 ```json
 {
@@ -154,6 +166,8 @@ opal-security-checker와 동일한 APPLY 알고리즘 적용 (PLAN §2.8 기준)
   "changed_files": ["GC-CONVENTION-{timestamp}.md"]
 }
 ```
+
+> **[MUST]** `changed_files`에는 에이전트가 생성한 보고서(`GC-CONVENTION-{timestamp}.md`)만 포함한다. 본 에이전트는 진단 전담이며 소스 파일을 수정하지 않는다. 수정이 필요한 이슈는 오케스트레이터(opal-pilot-gc)의 CLOSE 단계에서 `//opds` 체인으로 이관한다.
 
 ---
 
@@ -201,7 +215,8 @@ opal-security-checker와 동일한 APPLY 알고리즘 적용 (PLAN §2.8 기준)
 
 | 문서 | 경로 | 참조 시점 |
 |------|------|----------|
-| 프로젝트 컨벤션 기준 (유일 기준) | `docs/CONVENTIONS.md` | Phase 1 |
+| 프로젝트 컨벤션 기준 (허브) | `docs/CONVENTIONS.md` | Phase 1 |
+| 허브+링크 모델 규약 | `opal/core/references/conventions-hub-model.md` | Phase 1 (허브 링크 파싱·scope 매칭 시) |
 | 컨벤션 카테고리 목록 | `~/.opal/skills/opal-pilot-gc/references/base-convention-checklist.md` | Phase 2 |
 | 컨벤션 보고서 템플릿 | `~/.opal/skills/opal-pilot-gc/references/report-convention-template.md` | Phase 2 |
 | 코드 리뷰 보조 | `~/.opal/community-skills/getsentry/code-review/SKILL.md` | Phase 2 |
@@ -214,3 +229,4 @@ opal-security-checker와 동일한 APPLY 알고리즘 적용 (PLAN §2.8 기준)
 | 버전 | 날짜 | 변경내용 |
 |------|------|---------|
 | v1.0 | 2026-04-17 | 초기 작성 — CONVENTIONS.md 유일 기준, 부재 시 초안 유도, 내장 규칙 금지, getsentry 래핑, APPLY 판정, fingerprint (122) |
+| v1.1 | 2026-04-17 | APPLY 제거(진단 전담화) — Phase 6/APPLY 섹션 삭제, `tools`에서 Edit/Write 제거, `apply_mode` 입력 삭제, `scope` 입력 추가, Phase 1 허브+링크 체이닝 반영 (125) |
