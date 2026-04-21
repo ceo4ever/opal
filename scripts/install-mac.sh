@@ -174,6 +174,25 @@ install_dir() {
     fi
 }
 
+# 배포용 .md 파일에서 "## 변경이력" 섹션부터 파일 끝까지 제거
+# 사용: strip_deploy_md <source_path> <destination_path>
+strip_deploy_md() {
+    local src="$1"
+    local dst="$2"
+    /usr/bin/awk 'BEGIN{keep=1} /^## 변경이력$/{keep=0} keep==1{print}' "$src" > "$dst"
+}
+
+# 디렉토리 하위 모든 .md 파일에서 "## 변경이력" 섹션 제거 (in-place)
+# 사용: strip_deploy_md_recursive <directory>
+strip_deploy_md_recursive() {
+    local root="$1"
+    /usr/bin/find "$root" -type f -name "*.md" -print0 | while IFS= read -r -d '' file; do
+        if /usr/bin/grep -q '^## 변경이력$' "$file"; then
+            /usr/bin/awk 'BEGIN{keep=1} /^## 변경이력$/{keep=0} keep==1{print}' "$file" > "${file}.tmp" && /bin/mv "${file}.tmp" "$file"
+        fi
+    done
+}
+
 extract_bootstrap_content() {
     local file="$1"
     # 4-backtick 외부 블록 우선 (내부에 ``` 포함 가능), 없으면 3-backtick 블록 사용
@@ -413,7 +432,7 @@ install_opal() {
     # 보존: identity.md, AGENT.md, projects/ (사용자 데이터)
 
     # ── OPAL 코어 ──
-    cp "$opal_dir/core/AGENT.md" "$opal_home/AGENT.md"
+    strip_deploy_md "$opal_dir/core/AGENT.md" "$opal_home/AGENT.md"
     success "OPAL AGENT.md → $opal_home/AGENT.md"
 
     # ── 독립 스킬 (skills/ → ~/.opal/skills/) ──
@@ -431,6 +450,7 @@ install_opal() {
             install_dir "$skill_dir" "$opal_home/skills/$skill_name" "OPAL 스킬: $skill_name"
         fi
     done
+    strip_deploy_md_recursive "$opal_home/skills"
     success "OPAL 스킬 ${opal_skill_count}개 → $opal_home/skills/"
 
     # ── 에이전트 (opal/agents/ + agents/ → ~/.opal/agents/) ──
@@ -462,6 +482,7 @@ install_opal() {
             ((agent_count++))
         fi
     done
+    strip_deploy_md_recursive "$opal_home/agents"
     success "에이전트 ${agent_count}개 → $opal_home/agents/"
 
     # ── 템플릿 ──
@@ -633,6 +654,8 @@ install_opal_references() {
 
     mkdir -p "$ref_dst"
     cp -Rf "$ref_src"/. "$ref_dst"/
+    # 배포된 모든 .md 파일에서 변경이력 섹션 제거
+    strip_deploy_md_recursive "$ref_dst"
     success "참조 레지스트리 → $ref_dst/"
 }
 

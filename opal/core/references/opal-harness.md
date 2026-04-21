@@ -5,21 +5,6 @@
 
 ---
 
-## 0. 용어 정의
-
-| 약어 | 풀네임 | 설명 |
-|------|--------|------|
-| opal-pilot | OPAL Pilot | 태스크 파이프라인을 조종하는 오케스트레이터 |
-| op-dev | OPAL Pilot Dev Phase | dev 도메인 단계 스킬 (코드 변경 수반) |
-| op-task | OPAL Pilot Task Phase | 범용 단계 스킬 (도메인 무관) |
-| opd / opds / opdw | OPAL Pilot Dev 약어 | Full / Short / Wireframe |
-| opwt | OPAL Pilot Write-Tech 약어 | 기획 산출물 네트워크 |
-| opp | OPAL Pilot Project 약어 | 프로젝트 범용 |
-| oppd | OPAL Pilot Project-Dev 약어 | 프로젝트 개발 라이프사이클 |
-| 폴백 (Fallback) | - | TASK.md에 명시된 1차 방식 실패 후 대체 방식으로 전환하는 행위. 리소스 폴백(§7.5)과 워커 폴백(§1, §7.6)을 구분한다. |
-
----
-
 ## 1. Guards (제약)
 
 ### 구현 금지 원칙 (최우선 규칙)
@@ -105,6 +90,8 @@ Lazy 로드 모듈. 각 §의 stub이 로드 시점과 파일 경로를 지시�
 | 병렬 처리 | `harness/parallel-execution.md` | 병렬 디스패치 시 | §7 |
 | @header 규칙 | `harness/header-rules.md` | EXECUTE 단계에서 코드 파일 생성/수정 시 | §8 |
 | 인용 규칙 | `harness/citation-rules.md` | TASK/ANALYSIS/PLAN 산출물 작성 시 | §2 |
+| State 관리 | `harness/state.md` | TASK 단계 시작 / Gate 직후 State Gate | §3 |
+| TASK 공통 프로세스 | `harness/task-process.md` | TASK 단계 진입 시 | §4 |
 
 > 탐색 경로: `{프로젝트}/.opal/references/harness/{file}` → `~/.opal/references/harness/{file}`
 
@@ -121,147 +108,23 @@ Lazy 로드 모듈. 각 §의 stub이 로드 시점과 파일 경로를 지시�
 
 ## 3. State (상태 관리)
 
-### STATE.md 기본 구조
-
-오케스트레이터 전용. 단계 스킬은 STATE.md를 갱신하지 않는다 (EXECUTE Step 진행 제외).
-
-> **[강제]** 아래 각 이벤트 발생 시 STATE.md 갱신은 **필수**다. 갱신 미수행 시 다음 단계 진입이 금지된다. 각 Gate 직후 State Gate가 갱신 여부를 확인하며, 미갱신 감지 시 즉시 차단한다.
-
-| 이벤트 | 갱신 주체 | 파이프라인 현황판 행 갱신 | 상태: 필드 | 강제 여부 |
-|--------|----------|--------------------|-----------|----------|
-| TASK 완료 | 오케스트레이터 | STATE.md 초기 생성 + 파이프라인 현황판 행 구성 | 진행 중 | **필수** |
-| 단계 시작 | 오케스트레이터 | 해당 단계 작업 행 → 🔄 | 진행 중 | **필수** |
-| 단계 완료(작업) | 워커(1차) + PM(확인) | 해당 단계 작업 행 → ✅ | - | **필수** |
-| 산출물 생성 완료 | 워커(1차) + PM(확인) | 해당 산출물 생성 행 → ✅ | - | **필수** |
-| QA Gate 통과 | PM | QA Gate 행 → ✅ | - | **필수** |
-| State Gate (QA 직후) | PM | State Gate 행 → ✅ | - | **필수** |
-| PM Gate 통과 | PM | PM Gate 행 → ✅ | - | **필수** |
-| State Gate (PM 직후) | PM | State Gate 행 → ✅ | - | **필수** |
-| 사용자 확인 완료 | PM | 사용자 확인 행 → ✅ | 완료 (직전 단계가 CLOSE 진입 게이트인 경우) | **필수** |
-| EXECUTE Step 완료 | 워커(1차) + PM(확인) | - | 진행: Step N/M | **필수** |
-| 블로커 | 워커 | 해당 행 → ❌ | 블로커 | **필수** |
-| 태스크 완료 | 오케스트레이터 | CLOSE 단계 State Gate 행 → ✅ | 완료 (CLOSE 단계 완료 시 발생) | **필수** |
-| 추가작업 진입 | 오케스트레이터 | - | 추가작업중 (CLOSE 단계 재진입) | **필수** |
-| 추가작업 완료 | 오케스트레이터 | - | 추가작업완료 (CLOSE 재진입 완료) | **필수** |
-
-**갱신 모델**: 워커가 1차 갱신을 수행하고(best effort), PM이 각 Gate 직후 State Gate에서 확인하여 미갱신/오갱신 시 즉시 보완한다.
-
-**수행 순서 강제 원칙**: 파이프라인 현황판 테이블은 위에서 아래로 순서대로 처리한다. 현재 행이 ✅가 아니면 다음 행으로 진행 불가. Gate가 없는 단계(TASK 등)는 해당 Gate 행을 생략한다.
-
-**상태: 필드 전이 흐름**:
-
-```
-진행 중 → (CLOSE 단계 완료) → 완료
-완료 → 추가작업중(CLOSE 재진입) → 추가작업완료
-↑________________________추가작업 반복 시___↓
-```
-
-> **레거시 호환**: 기존 STATE.md의 `QA Gate 대기` / `PM Gate 대기` / `사용자 확인 대기` 값은 파이프라인 현황판 테이블로 통합되어 더 이상 사용하지 않는다. 기존 파일의 소급 변경은 불필요하며, 신규 작성 시 행 기반 테이블을 사용한다.
-
-> **레거시 호환 (CLOSE 단계)**: 기존 STATE.md(CLOSE 단계 도입 전 생성)는 소급 변경하지 않는다. 신규 태스크부터 CLOSE 단계를 반영한다. 기존 STATE.md의 "최종 단계에 부착된 마감 블록"은 레거시 구조로 유효하다.
-
-> `추가작업중` / `추가작업완료`는 기본 상태값(완료 후 후속 작업 전용)이며, oppd 병렬 실행 State의 열거형과 독립된다 (상세: oppd SKILL.md 참조).
-
-### STATE.md 공통 템플릿
-
-> **[필수 로드]** TASK 단계에서 STATE.md 초기 생성 시 로드한다.
-> 탐색: `harness/state-template.md`
+> **[필수 로드]** TASK 단계 시작 / EXECUTE Step 진행 / Gate 직후 State Gate 수행 시 로드한다.
+> 탐색: `harness/state.md`
 >
-> 적용 주체: PM(오케스트레이터)
-> 적용 시점: STATE.md 초기 생성 시
-> PM Gate 검증: STATE.md가 공통 템플릿 구조를 따르는가
-
-### 추가작업 프로세스
-
-> **[필수 로드]** 태스크 완료 후 추가 수정 필요 시 로드한다.
-> 탐색: `harness/additional-work.md`
->
-> 적용 주체: PM(오케스트레이터)
-> 적용 시점: 태스크 완료 후 추가 수정 감지 시
-> PM Gate 검증: ADD_DONE.md 템플릿 준수, 상태 전이가 올바른가
-
-### 세션 복원
-
-새 세션에서 `tasks/{NNN}-{name}/STATE.md`가 존재하면 Read하여 정확한 지점에서 재개한다.
-
----
-
-### State Gate
-
-> **소유자**: PM(오케스트레이터). 단계 완료 후 PM Gate 진입 전 반드시 통과해야 한다.
-
-**Gate 위치**: QA Gate → **State Gate** → PM Gate
-
-**자가 점검 프롬프트**:
-
-> 1. `tasks/{NNN}-{name}/STATE.md`의 `최종 갱신` 타임스탬프가 현재 단계 완료 시점 이후인가?
-> 2. `단계` 필드가 현재 완료된 단계를 반영하는가?
-> 3. 파이프라인 현황판 테이블에서 현재 단계의 행이 올바른 상태값인가? (완료 행: ✅ / 진행 중 행: 🔄 / 미착수 행: ⬜) `상태:` 필드가 적절한 값인가? (진행 중 / 완료 / 추가작업중 / 추가작업완료)
-
-| 확인 결과 | 동작 |
-|----------|------|
-| 3개 항목 모두 충족 | PM Gate 진입 허용 |
-| 1개 이상 미충족 | STATE.md를 즉시 갱신 후 State Gate 재통과 → PM Gate 진입 |
-
-**이전 단계 차단 규칙**: 이전 단계의 상태가 `완료`가 아니면 다음 단계 진입을 금지한다. State Gate는 현재 단계의 STATE.md 갱신 여부와 함께, 이전 단계 상태가 `완료`인지도 확인한다.
-
-**차단 원칙**: State Gate 미통과 상태에서 PM Gate 및 DONE.md 생성 단계로 진입하지 않는다.
-
-**표준 Gate 순서 문구** (각 SKILL.md 단계에 적용):
-
-```
-워커 완료
-  → QA Gate (체크리스트 갱신 포함)
-  → State Gate (하네스 §3 참조 — STATE.md 갱신 확인)
-  → PM Gate (종합 검토)
-```
+> 적용 주체: PM(오케스트레이터), 워커(EXECUTE Step 갱신)
+> 적용 시점: TASK/EXECUTE/Gate 단계 전반
+> PM Gate 검증: STATE.md 갱신 여부, 파이프라인 현황판 행 상태 정합성
 
 ---
 
 ## 4. TASK 공통 프로세스
 
-오케스트레이터가 **직접 수행**한다 (워커 디스패치 없음).
-
-#### 스킬 영역 (op-task 프로세스)
-
-1. `op-task/SKILL.md`를 Read한다.
-   - 탐색: `{프로젝트}/.opal/skills/op-task/SKILL.md` -> `~/.opal/skills/op-task/SKILL.md`
-2. 스킬 프로세스를 따라 TASK.md를 작성한다.
-
-#### 태스크 번호 채번 규칙
-
-신규 태스크 생성 시:
-1. `.opal/MEMORY.md` 헤더의 `last_task_number` 필드를 읽는다
-2. `last_task_number + 1`을 계산한다
-3. **즉시 `.opal/MEMORY.md`의 `last_task_number`를 갱신한다** — 폴더 생성 전에 수행하여 동시 실행 인스턴스 간 번호 중복을 방지한다
-4. 태스크 폴더를 생성한다 (`tasks/{NNN}-{YYMMDD}-{스킬약어}-{태스크명}/`)
-   - `{YYMMDD}`: `node ~/.opal/tools/date/date.js yymmdd` 실행하여 KST 기준 취득
-5. TASK.md를 작성한다
-
-#### 오케스트레이터 공통 영역 (스킬 완료 후 후처리)
-
-3. **STEP 5(오케스트레이터 선택)에서 결정된 스킬약어**를 폴더명과 TASK.md 헤더 `적용 스킬` 필드에 반영한다.
-4. **`--agentic` 플래그 여부를 TASK.md 헤더 `모드` 필드에 반드시 기록한다** (`interactive` 또는 `agentic`).
-5. **[필수] STATE.md를 생성한다** (§3 템플릿 참조). 이 단계를 건너뛰면 세션 복원과 상태 추적이 불가능하다.
-6. 사용자에게 보고하고 다음 단계 승인을 받는다.
-
-#### 저장 경로 규칙
-
-| 조건 | 저장 경로 |
-|------|----------|
-| `base_path` 지정 시 (오케스트레이터가 명시 주입) | `{base_path}/` (폴더 구조는 오케스트레이터 정의를 따름) |
-| `base_path` 없음 (기본) | `tasks/{NNN}-{YYMMDD}-{스킬약어}-{태스크명}/` |
-
-> **`base_path` 용도**: opsdd와 같이 단일 루트 폴더에 모든 산출물을 통합하는 오케스트레이터에서 활용한다. 기존 opp/opds/opd 등 `base_path`를 주입하지 않는 오케스트레이터는 기본 경로(`tasks/`)를 그대로 사용하므로 동작에 영향 없다.
-
-```
-📋 [TASK] 완료 보고
-📎 산출물: tasks/{NNN}-{YYMMDD}-{스킬약어}-{태스크명}/TASK.md
-적용 스킬: {약어}
-다음 단계({다음 단계명})로 넘어갈까요?
-```
-
-> 도메인별 추가 확인 필드(문서 유형, 출력 모드 등)는 각 opal-pilot SKILL.md에서 정의.
+> **[필수 로드]** TASK 단계 진입 시 로드한다.
+> 탐색: `harness/task-process.md`
+>
+> 적용 주체: PM(오케스트레이터)
+> 적용 시점: TASK 단계 진입 / 태스크 채번 / 저장 경로 판단 시
+> PM Gate 검증: TASK.md 헤더 필드 준수, STATE.md 생성 완료, 저장 경로 규칙 준수
 
 ---
 
@@ -374,3 +237,4 @@ OPAL 도구는 모두 `~/.opal/tools/{tool-name}/run.sh` 래퍼를 통해 호출
 | v4.1 | 2026-04-15 | §4 태스크 번호 채번 규칙 — `last_task_number` 갱신 시점을 "TASK.md 완료 후" → "채번 직후(폴더 생성 전)"으로 변경. 동시 실행 인스턴스 간 번호 중복 방지 (120) |
 | v4.2 | 2026-04-15 | §1 Guards에 CLOSE 진입 게이트 Guard 신설 + §3 이벤트 테이블 CLOSE 귀속 + 상태 전이 흐름 CLOSE 명시 + 레거시 호환 원칙 추가 (121) |
 | v4.3 | 2026-04-17 | §2 하네스 모듈 테이블에 citation-rules 추가 — 산출물 인용 규칙 신설 (123) |
+| v4.4 | 2026-04-21 | 다운사이징 — §0 용어 정의 삭제, §3 State 본문 → harness/state.md 분리, §3 레거시 호환 노트 3건 삭제, §4 TASK 공통 프로세스 본문 → harness/task-process.md 분리, §2 모듈 테이블에 state.md·task-process.md 행 추가 (128) |
