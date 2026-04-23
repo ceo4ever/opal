@@ -60,13 +60,36 @@ TASK 완료 → **State Gate** (하네스 §3 참조 — STATE.md 갱신 확인)
 
 ## STEP 3: EXECUTE (UI 구현)
 
+### 3-1. 라우팅 결정 (v2.2 신설)
+
+와이어프레임 파이프라인의 EXECUTE는 **FE 단일 라우팅**을 사용한다 (분배 디스패치 대상 아님).
+
+- **기본 에이전트**: `opal-fe-agent` (FE 전문)
+- **근거**: wireframe.md에는 PLAN.md §4.2와 같은 agent 필드가 없다(op-dev-wireframe 산출물). 와이어프레임 구현은 본질적으로 FE 작업이므로 UI 전문 에이전트를 직접 지정한다.
+- **폴백**: `opal-fe-agent` 사용 불가 플랫폼이면 `opal-task-agent`로 디스패치 (op-dev-execute/SKILL.md 매핑에 따라 generalist-guide로 폴백).
+
+### 3-2. 디스패치 프롬프트
+
 워커 디스패치로 wireframe.md 기반 UI 구현. **model**: standard.
-- 스킬: op-dev-execute, checklist_source: wireframe.md
-- **UI 구현 모드**: ui-designer scaffold(프로토) 또는 plan-driven(프로덕션) 호출
 
-> **[PM 컨텍스트 주입]** 디스패치 프롬프트 첫 줄에 `[WORKER]` 삽입. 하네스 Guards 핵심 규칙 + 관련 참조 문서 경로를 포함한다.
+```
+[WORKER]
+op-dev-execute 스킬을 수행하라.
+**스킬 경로**: {op-dev-execute/SKILL.md 탐색 경로}
+**태스크 폴더**: tasks/{NNN}-{태스크명}/
+**checklist_source**: wireframe.md
+**UI 구현 모드**: ui-designer scaffold(프로토타입) 또는 plan-driven(프로덕션)
+**담당 Step**: wireframe.md 전체 (분배 없음)
+**Scope 제한**: FE 영역. 영역 외 파일 수정 시 즉시 블로커 보고.
+**하네스 Guards**: wireframe.md에 없는 화면 추가 금지. 설계 임의 변경 금지. 블로커 발생 시 즉시 중단 후 보고.
+**참조 문서**: {docs/PROJECT.md 문서 테이블 기반 관련 문서 경로}
+**핵심 제약**: {[MUST] <문서명> §N: <인용문> 형식 원문 인용}
+```
 
-### 완료 후
+> **에이전트별 자동 가이드 선택**: `opal-fe-agent`로 라우팅되면 워커는 op-dev-execute/SKILL.md 매핑에 따라 execute-specialist-guide.md를 자동 Read한다.
+
+### 3-3. 완료 후
+
 1. op-dev-qa 호출 (단계: EXECUTE-UI) → 빌드/린트 + wireframe↔코드 대조 → **State Gate**
 2. **PM Gate** — QA 결과 + 실행 결과 검토 + 체크리스트 갱신 (하네스 §2, §3 참조) → **State Gate**
 3. 사용자에게 완료 보고 후 CLOSE 단계 진입 승인 요청
@@ -182,3 +205,4 @@ TASK (PM 직접) → WIREFRAME Gate → EXECUTE Gate → CLOSE
 | v1.9 | 2026-04-10 | Artifact Gate 제거 + PM Gate 점검 목록 섹션 추가 + 파이프라인 현황판 이름 변경 (106) |
 | v2.0 | 2026-04-11 | PM Gate 점검 목록 — PLAN-equivalent Phase에 TASK.md 요구사항 추가 (108) |
 | v2.1 | 2026-04-15 | STEP 4 CLOSE 단계 신설 + EXECUTE PM Gate 후 State Gate/사용자 확인 추가 + 진행 현황 행 CLOSE 2행 구조 반영 + 보고 형식 C안 적용 (121) |
+| v2.2 | 2026-04-23 11:39 | STEP 3 EXECUTE를 FE 단일 라우팅(opal-fe-agent)으로 지정 — 와이어프레임 전용 흐름상 PLAN.md §4.2 분배 디스패치 미적용 근거 명시, 디스패치 프롬프트에 담당 Step/Scope 제한 필드 추가 (129) |

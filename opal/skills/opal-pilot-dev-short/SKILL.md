@@ -61,14 +61,37 @@ PLAN 완료
 
 ## STEP 3: EXECUTE
 
-op-dev-execute 워커 디스패치. **model**: standard. checklist_source: PLAN.md 섹션 "3. 실행 체크리스트". execution-plan.json 있으면 전달.
+### 3-1. 분배 디스패치 절차 (v3.1 신설)
 
-> **[PM 컨텍스트 주입]** 디스패치 프롬프트 첫 줄에 `[WORKER]` 삽입. 하네스 Guards 핵심 규칙 + 관련 참조 문서 경로를 포함한다.
+1. **PLAN.md §4.2 실행 체크리스트 Read** — 각 Step의 `영역`·`agent` 필드를 확인한다.
+2. **영역별 Step 묶음 생성** — 동일 agent(opal-fe-agent, opal-be-agent, opal-db-agent, opal-task-agent)가 배정된 Step을 하나의 배치로 묶는다.
+3. **Phase 순서 순회** — PLAN.md §4.1 Phase 그룹핑에 따라 Phase별로:
+   - Phase 내 독립 배치가 복수면 Agent 도구 병렬 호출
+   - 순차 의존이 있으면 순차 호출
+4. **각 배치마다 워커 디스패치** — 해당 agent로 op-dev-execute 워커 디스패치 (model: standard).
+5. **폴백** — PLAN.md §4.2에 agent 필드가 없거나 "미지정"인 경우 `opal-task-agent` 단일 디스패치로 PLAN 전체를 처리한다.
 
-### EXECUTE 완료 후
+### 3-2. 디스패치 프롬프트
 
-워커가 changed_files를 반환하면:
-→ **State Gate** → **TEST 단계 진입**
+```
+[WORKER]
+op-dev-execute 스킬을 수행하라.
+**스킬 경로**: {op-dev-execute/SKILL.md 탐색 경로}
+**태스크 폴더**: tasks/{NNN}-{태스크명}/
+**checklist_source**: {PLAN.md 경로}, 섹션: 4.2 실행 체크리스트
+**담당 Step**: {이 워커가 처리할 Step 번호 목록 — 예: 3, 5, 7}
+**Scope 제한**: {agent 영역 — FE / BE / DB / 공통}. 영역 외 파일 수정 시 즉시 블로커 보고.
+**프로젝트 컨텍스트**: {docs/PROJECT.md + 매칭 참조 문서}
+**하네스 Guards**: PLAN.md에 없는 파일 생성/수정 금지. PLAN 설계를 임의 변경 금지. 블로커 발생 시 즉시 중단 후 보고.
+**참조 문서**: {docs/PROJECT.md 문서 테이블 기반 관련 문서 경로}
+**핵심 제약**: {[MUST] <문서명> §N: <인용문> 형식 원문 인용}
+```
+
+> **에이전트별 자동 가이드 선택**: 워커는 op-dev-execute/SKILL.md의 매핑 테이블에 따라 자기 에이전트 이름으로 execute-specialist-guide.md 또는 execute-generalist-guide.md를 자동 Read한다. PM이 `applied_guide` 파라미터를 주입하지 않는다.
+
+### 3-3. EXECUTE 완료 후
+
+모든 배치 완료 → changed_files 병합 → **State Gate** → **TEST 단계 진입**.
 
 ---
 
@@ -270,3 +293,4 @@ TASK (PM 직접) → PLAN Gate → EXECUTE Gate → TEST Gate → CLOSE
 | v2.8 | 2026-04-11 | PM Gate 점검 목록 — PLAN-equivalent Phase에 TASK.md 요구사항 추가 (108) |
 | v2.9 | 2026-04-13 | STEP 2에서 TEST-SCENARIO 별도 디스패치 + QA Gate 제거. PLAN 워커가 TEST-SCENARIO.md 통합 작성. PM Gate에 PLAN.md+TEST-SCENARIO.md Read + 검증 체크리스트 추가. STEP 4 TEST QA Gate 제거, PM Gate에 TEST-SCENARIO.md Read + 검증 체크리스트 추가. Agentic Mode 흐름도 갱신. STATE.md 행 예시 25→18행 갱신 (115) |
 | v3.0 | 2026-04-15 | STEP 5 CLOSE 단계 신설 + TEST PM Gate 후 State Gate/사용자 확인 추가 + 진행 현황 행 CLOSE 2행 구조 반영 + 보고 형식 C안 적용 (121) |
+| v3.1 | 2026-04-23 11:39 | STEP 3 EXECUTE에 PLAN.md §4.2 agent 필드 기반 분배 디스패치 절차 추가 — 영역별 Step 묶음·Phase 순서 순회·담당 Step/Scope 제한 필드 추가·agent 필드 없음 폴백 규칙 명시 (129) |

@@ -61,10 +61,7 @@ PLAN.md §4 실행 체크리스트를 기반으로 워커는 실행 항목을 �
 1. `§4.1 Phase 그룹핑`에 따라 Phase별 실행
 2. Phase 내 독립 Step은 순차 실행 (오케스트레이터 판단으로 병렬 가능)
 3. 각 Step의 `**의존**` 필드를 확인하여 선행 작업 완료 여부 검증
-4. FE Step 중 ui-designer가 필요한 화면:
-   - PLAN.md §3.N.2에서 `##### 화면: {화면명}` 서브섹션을 Read
-   - 서브섹션 내용을 ui-designer plan-driven 모드 입력으로 전달
-   - 탐색 경로: `{프로젝트}/.opal/skills/ui-designer/SKILL.md` → `~/.opal/skills/ui-designer/SKILL.md`
+4. FE Step 중 ui-designer 연동이 필요한 경우는 **선택된 실행 가이드**(specialist 또는 generalist)의 FE 절차를 따른다
 5. BE Step: §4 체크리스트의 의존 순서대로 실행 (model → dto → service → router)
 
 **과거 태스크 폴백 규칙**:
@@ -216,3 +213,4 @@ Part C-2에서 스킬이 필요한 에이전트가 있을 때:
 |------|------|---------|
 | v1.0 | - | 초기 작성 |
 | v1.1 | 2026-04-13 13:48 | PLAN.md 기반 실행 전환 — 입력 우선순위를 "PLAN.md §4 > §3 > json 폴백"으로 변경, "PLAN.md 기반 실행" 섹션으로 재작성 (기능 루프, FE 화면 설계 §3.N.2 참조), 금지 행동·품질 체크리스트에서 json 참조를 PLAN.md로 통일, 과거 태스크 폴백 규칙 추가, §5 QA 체크리스트 참조로 갱신 (114) |
+| v1.2 | 2026-04-23 11:39 | FE ui-designer 분기(L64-67) 제거 → specialist/generalist 가이드로 위임. 나머지 공통 규칙 유지 (129) |

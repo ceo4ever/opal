@@ -1,10 +1,10 @@
 ---
 name: op-dev-execute
 description: |
-  **코드 실행 단계 스킬**. 오케스트레이터가 지정한 체크리스트를 따라 실제 코드를 작성하고 검증한다. FE/BE 작업 시 해당 페르소나를 적용한다.
+  **코드 실행 단계 스킬**. 오케스트레이터가 지정한 체크리스트를 따라 실제 코드를 작성하고 검증한다. 에이전트 이름 매핑으로 specialist/generalist 가이드를 자동 선택한다.
   반드시 이 스킬을 사용해야 하는 상황: 오케스트레이터(opal-pilot-dev, opal-pilot-dev-short, opal-pilot-dev-wireframe)가 EXECUTE 단계를 디스패치할 때.
   필수 입력: checklist_source (경로 + 섹션, 오케스트레이터 지정). 보장 출력: 코드 변경 + changed_files.
-version: 1.2
+version: 2.0
 ---
 
 # op-dev-execute — 코드 실행
@@ -12,39 +12,27 @@ version: 1.2
 ## 실행 컨텍스트
 
 - **호출자**: 오케스트레이터(opal-pilot-dev, opal-pilot-dev-short, opal-pilot-dev-wireframe)가 EXECUTE 단계를 디스패치
-- **실행 주체**: 워커 에이전트 — PM이 agents.md 매핑 테이블 또는 PLAN.md agent 필드에 따라 적합한 에이전트를 선택한다 (폴백: opal-task-agent). Wireframe UI: dtp-wireframe-ui-agent.
+- **실행 주체**: 워커 에이전트 — 에이전트 이름 → 매핑 테이블 → 실행 가이드 자동 선택. 폴백: agent 필드 없음 / 미지정 에이전트 → generalist 가이드.
 - **입력**: `checklist_source` (오케스트레이터가 경로+섹션 지정)
   - `PLAN.md` §4 실행 체크리스트 (기능 중심 구조, 기본)
   - 폴백: `PLAN.md` §3 실행 체크리스트 (과거 형식)
   - Wireframe UI: wireframe.md 기반 실행 항목
 - **출력**: 코드 변경 + `changed_files` 목록
-
-## 페르소나
-
-작업 유형에 따라 페르소나를 선택한다:
-
-- **FE 작업**:
-  ```
-  Read ~/.opal/skills/op-dev-execute/personas/frontend-engineer.md
-  ```
-- **BE 작업**:
-  ```
-  Read ~/.opal/skills/op-dev-execute/personas/backend-engineer.md
-  ```
-
-페르소나 파일이 없으면 다음 역할을 따른다:
-- FE: 시니어 프론트엔드 엔지니어 (React, shadcn/ui, 접근성 중시)
-- BE: 시니어 백엔드 엔지니어 (API 설계, 데이터 모델링, 보안 중시)
+- **페르소나 처리**: 선택된 가이드(specialist/generalist)에 위임한다
 
 ## 프로세스
 
-### Step 1. 실행 가이드 로딩
+### Step 1. 실행 가이드 선택 및 로딩
 
-```
-Read ~/.opal/skills/op-dev-execute/references/execute-guide.md
-```
+본 에이전트 이름을 확인 → 아래 매핑 테이블 조회 → 두 파일 Read:
 
-가이드의 금지 행동, 보안 가드레일, 실행 모드별 동작을 숙지한다.
+| 에이전트 | Read 대상 |
+|---------|---------|
+| opal-fe-agent, opal-be-agent, opal-db-agent | references/execute-guide.md + references/execute-specialist-guide.md |
+| opal-task-agent (범용) | references/execute-guide.md + references/execute-generalist-guide.md |
+| 기타 / 미지정 | references/execute-guide.md + references/execute-generalist-guide.md (폴백) |
+
+> **에이전트별 자동 가이드 선택**: 가이드의 금지 행동, 보안 가드레일, 실행 모드별 동작, 페르소나 처리를 숙지한다.
 
 ### Step 2. 체크리스트 확인
 
@@ -127,72 +115,6 @@ Step 1 → Step 2 → ... → Step N → QA 체크리스트 → 결과 반환
 Batch 1: [Agent-1, Agent-2 병렬] → Batch 2: [Agent-3] → ... → QA 체크리스트 → 결과 반환
 ```
 
-## FE 역할 분담: ui-designer vs op-dev-execute
-
-FE 태스크에서 **UI 구현**과 **비UI 작업**의 담당을 명확히 구분한다.
-
-### ui-designer 담당 (UI 구현)
-
-화면에 보이는 것을 만드는 작업. shadcn/ui + React 컴포넌트 전문.
-
-| 작업 | 예시 |
-|------|------|
-| 페이지 레이아웃 | 전체 화면 구조, 헤더/사이드바/콘텐츠 배치 |
-| UI 컴포넌트 구현 | 버튼, 폼, 테이블, 카드, 다이얼로그 등 |
-| shadcn 컴포넌트 조합 | shadcn MCP 조회 → 설치 → 조합 |
-| 스타일링 | Tailwind CSS, 반응형 레이아웃 |
-| 인터랙션 UI | 탭, 아코디언, 드롭다운, 모달 등 |
-| 폼 UI | 입력 필드, 유효성 표시, 에러 메시지 표시 |
-
-**호출 방법**: PLAN.md §3.N.2 FE 화면 설계 섹션을 Read하여 ui-designer plan-driven 모드 입력으로 전달.
-
-탐색 경로: `{프로젝트}/.opal/skills/ui-designer/SKILL.md` → `~/.opal/skills/ui-designer/SKILL.md`
-
-### op-dev-execute 담당 (비UI FE 작업)
-
-화면 뒤에서 동작하는 것을 만드는 작업.
-
-| 작업 | 예시 |
-|------|------|
-| API 연동 | fetch/axios, API 클라이언트, 에러 처리 |
-| 상태 관리 | zustand, context, React Query 설정 |
-| 라우팅 설정 | Next.js app router, 페이지 구조 |
-| 타입 정의 | TypeScript 인터페이스, OpenAPI 타입 생성 |
-| 유틸리티 | 헬퍼 함수, 포맷터, 밸리데이터 |
-| 환경 설정 | .env, 빌드 설정, 패키지 설치 |
-| 인증/인가 로직 | 토큰 관리, 가드, 미들웨어 |
-
-### 실행 순서 (FE 태스크)
-
-PLAN.md §4 실행 체크리스트 기반:
-
-```
-op-dev-execute:
-  1. PLAN.md §4 실행 체크리스트에서 Step을 Phase 순서대로 실행
-  2. FE Step 중 ui-designer가 필요한 화면 → PLAN.md §3.N.2 FE 화면 설계 섹션을 Read하여 ui-designer plan-driven 모드 입력으로 전달
-  3. BE Step: PLAN.md §4 체크리스트의 의존 순서대로 실행
-  4. 통합: Step 완료 후 QA 체크리스트 검증
-```
-
-## 활용 스킬/MCP (FE)
-
-| 스킬/MCP | 담당 | 용도 |
-|----------|------|------|
-| **ui-designer** (plan-driven) | UI 구현 | 화면 레이아웃 + shadcn 컴포넌트 구현 |
-| shadcn MCP | UI 구현 | 컴포넌트 검색·조회·설치 (ui-designer가 사용) |
-| vercel-labs/shadcn | UI 구현 | shadcn Critical Rules, 폼/레이아웃 패턴 |
-| vercel-labs/react-best-practices | 비UI | React 패턴 (상태 관리, 훅 등) |
-| vercel-labs/next-best-practices | 비UI | Next.js 패턴 (라우팅, RSC 등) |
-| vercel-labs/composition-patterns | 공통 | 컴포넌트 조합 패턴 |
-| anthropics/frontend-design | 공통 | FE 아키텍처/UX 설계 참조 |
-| context7 | 비UI | 라이브러리 문서 조회 |
-
-## 활용 MCP (BE)
-
-| MCP | 용도 | 사용 시점 |
-|-----|------|----------|
-| context7 | 라이브러리 문서 조회 (Python, Flutter, Kotlin, Go 등) | 외부 라이브러리 API 확인 시 |
-
 ## PLAN.md 기반 실행
 
 PLAN.md §4 실행 체크리스트를 기반으로:
@@ -200,11 +122,7 @@ PLAN.md §4 실행 체크리스트를 기반으로:
 1. `§4.1 Phase 그룹핑`에 따라 Phase별 실행
 2. Phase 내 독립 Step은 병렬 또는 순차 실행 (토폴로지 판단)
 3. 각 Step의 `depends_on`(또는 **의존** 필드)을 확인하여 선행 작업 완료 여부 검증
-4. **FE 항목 실행 순서**:
-   a. 비UI 작업 먼저 (op-dev-execute): 라우팅, 타입 정의, API 클라이언트, 상태 관리
-   b. UI 구현 (ui-designer): PLAN.md §3.N.2 FE 화면 설계 섹션을 ui-designer plan-driven 모드로 전달
-   c. 통합 (op-dev-execute): API 연결, 이벤트 핸들러 바인딩, 최종 조립
-5. BE Step: model → dto → service → router 순서로 순차 실행
+4. FE/BE 세부 실행 순서는 선택된 실행 가이드(specialist 또는 generalist)의 절차를 따른다
 
 **execution-plan.json 사용 안 함**: 새 태스크에서는 PLAN.md §4·§3.N.2를 직접 읽는다. 과거 태스크의 json 파일은 폴백으로만 참조.
 
@@ -257,3 +175,4 @@ PLAN.md §4 실행 체크리스트를 기반으로:
 | v1.1 | 2026-04-12 | Step 3-H @header 작성 규칙 추가 — code-scan 대상 확장자 파일 생성/수정 시 워커 @header 작성 의무 (109) |
 | v1.2 | 2026-04-13 13:48 | PLAN.md 기반 실행 전환 — 입력 우선순위를 "PLAN.md §4 > §3 > json 폴백"으로 변경, execution-plan.json 기반 실행 섹션을 PLAN.md §4·§3.N.2 기능 루프 기반으로 재작성, FE 역할 분담의 ui-designer 호출 방법을 "PLAN.md §3.N.2 FE 화면 설계 참조"로 변경, 가드레일·품질 체크리스트에서 json 참조를 PLAN.md로 통일, 과거 태스크 폴백 규칙 서술 (114) |
 | v1.3 | 2026-04-15 | 실행 주체에 전문 에이전트 체계 안내 추가 — PM이 agents.md 매핑 기반 에이전트 선택 (117) |
+| v2.0 | 2026-04-23 11:39 | 3구획 구조 전환 — references/ 에 execute-specialist-guide.md / execute-generalist-guide.md 신설, SKILL.md에 에이전트 이름 매핑 테이블 삽입, 페르소나/FE 역할 분담/FE·BE MCP 테이블 섹션을 범용 가이드로 이관, 실행 컨텍스트·Step 1·PLAN.md 기반 실행 섹션 재작성 (129) |
