@@ -16,6 +16,8 @@ model: advanced
 오케스트레이터(opal-pilot-sdd)가 Phase 3: DESIGN에서 워커를 디스패치하면, 워커가 이 스킬을 읽고 프로세스를 따른다.
 서브 에이전트 사용이 불가능한 플랫폼에서는 오케스트레이터가 직접 이 스킬을 따른다.
 
+> **[MUST]** 산출물 작성·검증 시 `opal/core/references/harness/citation-rules.md`를 Read하여 규칙(근거 제시 원칙 / 트랙별 매트릭스 / [MUST] 토큰 / 영역 간 용어 일관성 / decision_required 계약)을 준수한다.
+
 ---
 
 ## 페르소나
@@ -423,3 +425,4 @@ Group 3 (순차): ACT-004              ← ACT-002, ACT-003 완료 후
 |------|------|---------|
 | v1.0 | 2026-04-05 | 초기 작성 — opsdd Phase 3 아키텍처 설계 스킬 |
 | v2.0 | 2026-04-07 | op-sdd-tasks 통합 — ACT 분해 + 추적 매트릭스 + 의존관계 그래프 + 병렬 그룹 포함. 출력 경로 specs/ → tasks/ 단일 루트로 통합 (093) |
+| v2.1 | 2026-04-24 | citation-rules 트리거 1줄 주입 — SSOT + Trigger 패턴 (130) |

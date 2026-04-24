@@ -14,6 +14,8 @@ description: |
 오케스트레이터(opal-pilot-project)가 워커를 디스패치하면, 워커가 이 스킬을 읽고 프로세스를 따른다.
 서브 에이전트 사용이 불가능한 플랫폼에서는 오케스트레이터가 직접 이 스킬을 따른다.
 
+> **[MUST]** 산출물 작성·검증 시 `opal/core/references/harness/citation-rules.md`를 Read하여 규칙(근거 제시 원칙 / 트랙별 매트릭스 / [MUST] 토큰 / 영역 간 용어 일관성 / decision_required 계약)을 준수한다.
+
 ---
 
 ## 페르소나
@@ -206,3 +208,4 @@ description: |
 | v1.0 | 2026-03-29 | 초기 작성 — op-dev-plan 기반 범용화 (FE/BE 특화 제거) |
 | v1.1 | 2026-03-29 | 리네이밍: op-plan → op-task-plan |
 | v1.2 | 2026-04-17 | §1 참조 문서 테이블 신설 + 관련 파일 근거 컬럼 + §2 핵심 설계 인용 필드 추가 + citation-rules 적용 (123) |
+| v1.3 | 2026-04-24 | citation-rules 트리거 1줄 주입 — SSOT + Trigger 패턴 (130) |

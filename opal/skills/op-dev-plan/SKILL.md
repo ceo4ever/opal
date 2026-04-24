@@ -15,6 +15,8 @@ version: 2.2
 오케스트레이터가 워커를 디스패치하면, 워커가 이 스킬을 읽고 프로세스를 따른다.
 서브 에이전트 사용이 불가능한 플랫폼에서는 오케스트레이터가 직접 이 스킬을 따른다.
 
+> **[MUST]** 산출물 작성·검증 시 `opal/core/references/harness/citation-rules.md`를 Read하여 규칙(근거 제시 원칙 / 트랙별 매트릭스 / [MUST] 토큰 / 영역 간 용어 일관성 / decision_required 계약)을 준수한다.
+
 ---
 
 ## 페르소나
@@ -446,3 +448,4 @@ PM이 디스패치 시 전문 에이전트 매핑 테이블(agents.md)을 주입
 | v2.1 | 2026-04-13 | Step 10 TEST-SCENARIO.md 작성 추가 + Step 11 결과 반환 갱신. 보장 출력에 TEST-SCENARIO.md 포함. 오케스트레이터(opd/opds)에서 TEST-SCENARIO 별도 디스패치 제거에 따른 통합 작성 (115) |
 | v2.2 | 2026-04-15 | §4.2 실행 체크리스트 Step에 영역+agent 필드 추가, agent 배정 규칙 테이블 추가, docs/ 갱신 Step 자동 생성 규칙 추가, 영역 태그에 문서 추가 (117) |
 | v2.3 | 2026-04-17 | §3 파일 변경 테이블 근거 컬럼 추가 + §3.N.2 인라인 인용 지시 + §8.3 참조 문서 테이블 신설 + citation-rules 적용 (123) |
+| v2.4 | 2026-04-24 | citation-rules 트리거 1줄 주입 — SSOT + Trigger 패턴 (130) |

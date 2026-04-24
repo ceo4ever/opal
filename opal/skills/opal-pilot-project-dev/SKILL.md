@@ -28,6 +28,8 @@ version: 4.0.0
 - `--agentic` 플래그 있음 → `~/.opal/references/opal-harness-agentic.md`를 Read한다
 - `--agentic` 없음 (기본) → `~/.opal/references/opal-harness-interactive.md`를 Read한다
 
+> **[MUST]** 산출물 작성·검증 시 `opal/core/references/harness/citation-rules.md`를 Read하여 규칙(근거 제시 원칙 / 트랙별 매트릭스 / [MUST] 토큰 / 영역 간 용어 일관성 / decision_required 계약)을 준수한다.
+
 ## 설계 원칙
 
 - **위임과 조율**: 기획은 opwt, 코드는 opal-task-action-agent에 위임하고 PM이 조율한다
@@ -670,3 +672,4 @@ opal-harness-agentic.md "에스컬레이션 조건" 공통 기준에 추가:
 | v3.3 | 2026-03-31 | §7 참조 → opal-harness-agentic.md 참조 전환 (058) |
 | v3.4 | 2026-04-01 | Phase 3 opal-task-action-agent 디스패치 프롬프트에 `[WORKER]` 마커 + harness_guards + reference_docs 파라미터 추가 (063) |
 | v4.0 | 2026-04-02 | ROADMAP → WBS 전면 전환. Phase 2 명칭·산출물·참조 변경. Work Package 계층 도입. `--wbs` 플래그 추가. STATE.md 템플릿 경량화 (액션 상태 추적을 WBS.md로 이관) (075) |
+| v4.1 | 2026-04-24 | citation-rules 트리거 1줄 주입 — SSOT + Trigger 패턴 (130) |

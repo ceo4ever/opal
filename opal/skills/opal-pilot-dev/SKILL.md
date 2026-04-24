@@ -15,6 +15,8 @@ description: |
 - `--agentic` 플래그 있음 → `~/.opal/references/opal-harness-agentic.md`를 Read한다
 - `--agentic` 없음 (기본) → `~/.opal/references/opal-harness-interactive.md`를 Read한다
 
+> **[MUST]** 산출물 작성·검증 시 `opal/core/references/harness/citation-rules.md`를 Read하여 규칙(근거 제시 원칙 / 트랙별 매트릭스 / [MUST] 토큰 / 영역 간 용어 일관성 / decision_required 계약)을 준수한다.
+
 ## STEP 1: TASK
 opal-harness.md "TASK 공통 프로세스" 참조.
 
@@ -287,3 +289,4 @@ TASK (PM 직접) → ANALYSIS Gate → PLAN Gate → EXECUTE Gate → TEST Gate 
 | v3.0 | 2026-04-15 | ANALYSIS/PLAN/EXECUTE 디스패치 프롬프트에 `**핵심 제약**:` 필드 추가 — `[MUST] <문서명> §N: <인용문>` 원문 인용 포맷 명시 (120) |
 | v3.1 | 2026-04-15 | STEP 6 CLOSE 단계 신설 + TEST PM Gate 후 State Gate/사용자 확인 추가 + 진행 현황 행 CLOSE 2행 구조 반영 + 보고 형식 C안 적용 (121) |
 | v3.2 | 2026-04-23 11:39 | STEP 4 EXECUTE에 PLAN.md §4.2 agent 필드 기반 분배 디스패치 절차 추가 — FE/BE 병렬 섹션 agent 필드 기반 일반화·담당 Step/Scope 제한 필드 추가·execution-plan.json 폴백 유지 (129) |
+| v3.3 | 2026-04-24 | citation-rules 트리거 1줄 주입 — SSOT + Trigger 패턴 (130) |

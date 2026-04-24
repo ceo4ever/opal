@@ -3,6 +3,8 @@
 > **실행 컨텍스트**: 이 가이드는 QA 전용 워커 에이전트의 컨텍스트에서 실행된다.
 > 산출물 작성자와 분리된 독립 컨텍스트에서 실행되어 객관적 검토를 보장한다.
 
+> **[MUST]** 산출물 작성·검증 시 `opal/core/references/harness/citation-rules.md`를 Read하여 규칙(근거 제시 원칙 / 트랙별 매트릭스 / [MUST] 토큰 / 영역 간 용어 일관성 / decision_required 계약)을 준수한다.
+
 ---
 
 ## 목적
@@ -155,3 +157,4 @@ Short Task의 통합 PLAN은 코드 분석 + 구현 계획 + 실행 체크리스
 |------|------|---------|
 | v1.0 | - | 초기 작성 — ANALYSIS R-1~R-6, PLAN(Full) P-1~P-6, PLAN(Short) SP-1~SP-5 검증 기준 |
 | v1.1 | 2026-04-13 13:48 | PLAN (Full) 검증 기준 테이블에 P-7 기능-QA 커버리지 행 추가 — Multi-Feature 모드에서 모든 F-NNN이 §5.1에서 최소 1개 QA 항목 커버, Flat 모드 자동 Pass (114) |
+| v1.2 | 2026-04-24 | citation-rules 트리거 1줄 주입 — SSOT + Trigger 패턴 (130) |

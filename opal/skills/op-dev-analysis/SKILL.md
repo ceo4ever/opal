@@ -15,6 +15,8 @@ description: |
 - **입력**: `tasks/{NNN}-{태스크명}/TASK.md`
 - **출력**: `tasks/{NNN}-{태스크명}/ANALYSIS.md`
 
+> **[MUST]** 산출물 작성·검증 시 `opal/core/references/harness/citation-rules.md`를 Read하여 규칙(근거 제시 원칙 / 트랙별 매트릭스 / [MUST] 토큰 / 영역 간 용어 일관성 / decision_required 계약)을 준수한다.
+
 ## 페르소나
 
 ```
@@ -173,3 +175,4 @@ ANALYSIS 완료: tasks/{NNN}-{태스크명}/ANALYSIS.md
 | v1.0 | 2025-XX-XX | 초판 |
 | v1.2 | 2026-04-15 | 실행 주체에 전문 에이전트 체계 안내 추가 (117) |
 | v1.3 | 2026-04-17 | §0 참조 문서 테이블 신설 + §1.1/§5 근거 컬럼 추가 (유형+외부URL 지원) + citation-rules 적용 (123) |
+| v1.4 | 2026-04-24 | citation-rules 트리거 1줄 주입 — SSOT + Trigger 패턴 (130) |

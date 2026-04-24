@@ -13,6 +13,8 @@ description: |
 이 스킬은 **오케스트레이터가 직접 수행**한다. 서브에이전트를 생성하지 않는다.
 사용자와 대화하며 요구사항을 확인하고, 결과물(TASK.md)을 작성한다.
 
+> **[MUST]** 산출물 작성·검증 시 `opal/core/references/harness/citation-rules.md`를 Read하여 규칙(근거 제시 원칙 / 트랙별 매트릭스 / [MUST] 토큰 / 영역 간 용어 일관성 / decision_required 계약)을 준수한다.
+
 ## 페르소나
 
 `personas/service-planner.md`를 Read하여 페르소나를 로드한다.
@@ -227,3 +229,4 @@ TASK.md 완성 전에 다음을 확인한다:
 | v1.1 | 2026-04-07 | "대화 내용 반영" 절에 "배경 분석 (대화에서 도출)" 섹션 추가. TASK.md 템플릿 갱신. 체크리스트 항목 분리 (094) |
 | v1.2 | 2026-04-09 | 저장 경로 날짜 포함 형식으로 변경(`{NNN}-{YYMMDD}-{스킬약어}-{태스크명}`). `{NNN}` 채번 방식을 `last_task_number` 기반으로 변경. `{YYMMDD}` 항목 추가 (102) |
 | v1.3 | 2026-04-17 | "관련 문서" 섹션을 유형+경로/URL 포함 테이블 포맷으로 전환 + citation-rules 참조 지시 추가 (123) |
+| v1.4 | 2026-04-24 | citation-rules 트리거 1줄 주입 — SSOT + Trigger 패턴 (130) |

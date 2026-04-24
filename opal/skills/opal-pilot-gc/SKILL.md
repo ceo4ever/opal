@@ -18,6 +18,8 @@ description: |
 - `--agentic` 플래그 있음 → `~/.opal/references/opal-harness-agentic.md`를 Read한다
 - `--agentic` 없음 (기본) → `~/.opal/references/opal-harness-interactive.md`를 Read한다
 
+> **[MUST]** 산출물 작성·검증 시 `opal/core/references/harness/citation-rules.md`를 Read하여 규칙(근거 제시 원칙 / 트랙별 매트릭스 / [MUST] 토큰 / 영역 간 용어 일관성 / decision_required 계약)을 준수한다.
+
 > **[MUST] 진단 전담**: 본 스킬은 코드 파일을 수정하지 않는다(APPLY 단계 제거됨). 수정이 필요한 이슈는 CLOSE 단계에서 `//opds` 체인으로 이관한다. Guards §1 "소스 파일 수정 금지" 원칙과 부합한다.
 
 ---
@@ -476,3 +478,4 @@ fingerprint = sha1(fingerprint_input).hex()[:16]
 |------|------|---------|
 | v1.0 | 2026-04-17 | 초기 작성 — 5단계 파이프라인, arguments 파싱, STATE.md 치환값, 에이전트 병렬 디스패치, Agentic Mode, CLOSE 진입 게이트, 트리거 독립 판정, stash 롤백, fingerprint (122) |
 | v1.1 | 2026-04-17 | APPLY 제거(진단 전담화) — 4단계 파이프라인(SCAN/CHECK/REPORT/CLOSE), CLI 토글 전환(`--security`/`--convention`, `--apply`/`--only X` 제거), PROJECT.md 프로젝트 구성 기반 동적 분할 병렬 디스패치, 체커에 `scope` 입력 + 허브+링크 체이닝, opds 수동 체인 가이드 (125) |
+| v1.2 | 2026-04-24 | citation-rules 트리거 1줄 주입 — SSOT + Trigger 패턴 (130) |

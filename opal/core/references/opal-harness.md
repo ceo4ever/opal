@@ -104,6 +104,13 @@ Lazy 로드 모듈. 각 §의 stub이 로드 시점과 파일 경로를 지시�
 > 적용 시점: QA Gate 수행 시
 > PM Gate 검증: QA 산출물 파일명이 표준을 따르는가, 체크리스트 갱신 규칙이 적용되었는가
 
+### Citation Rules 적용 의무
+
+> **[MUST]** 모든 pilot(오케스트레이터) / PLAN·TASK·ANALYSIS 스킬 / QA 스킬은 각자 다루는 산출물의 작성·검증 시 `opal/core/references/harness/citation-rules.md`를 필수 Read하고 그 규칙을 준수한다.
+>
+> 적용 범위: 근거 제시 원칙(§0) / 트랙별 근거 매트릭스(§1.5) / [MUST] 토큰 대상(§2.5) / 영역 간 용어 일관성 + decision_required 계약(§7)
+> 적용 모드: interactive · agentic 양쪽 모두
+
 ---
 
 ## 3. State (상태 관리)
@@ -238,3 +245,4 @@ OPAL 도구는 모두 `~/.opal/tools/{tool-name}/run.sh` 래퍼를 통해 호출
 | v4.2 | 2026-04-15 | §1 Guards에 CLOSE 진입 게이트 Guard 신설 + §3 이벤트 테이블 CLOSE 귀속 + 상태 전이 흐름 CLOSE 명시 + 레거시 호환 원칙 추가 (121) |
 | v4.3 | 2026-04-17 | §2 하네스 모듈 테이블에 citation-rules 추가 — 산출물 인용 규칙 신설 (123) |
 | v4.4 | 2026-04-21 | 다운사이징 — §0 용어 정의 삭제, §3 State 본문 → harness/state.md 분리, §3 레거시 호환 노트 3건 삭제, §4 TASK 공통 프로세스 본문 → harness/task-process.md 분리, §2 모듈 테이블에 state.md·task-process.md 행 추가 (128) |
+| v4.5 | 2026-04-24 | §2 Citation Rules 적용 의무 블록 추가 — 모든 pilot/스킬/가이드/QA 대상 인용 규칙 필수 적용 선언 (130) |

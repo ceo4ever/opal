@@ -16,6 +16,8 @@ description: |
 - **입력**: 검증 대상 산출물 경로 + `stage` (단계명)
 - **출력**: `tasks/{NNN}-{태스크명}/QA-{단계}.md`
 
+> **[MUST]** 산출물 작성·검증 시 `opal/core/references/harness/citation-rules.md`를 Read하여 규칙(근거 제시 원칙 / 트랙별 매트릭스 / [MUST] 토큰 / 영역 간 용어 일관성 / decision_required 계약)을 준수한다.
+
 ## 페르소나
 
 ```
@@ -158,3 +160,10 @@ QA 리포트 생성이 완료되면 결과를 오케스트레이터에 반환한
 ```
 QA 완료: tasks/{NNN}-{태스크명}/QA-{단계}.md | 판정: {Pass / Needs Revision}
 ```
+
+## 변경이력
+
+| 버전 | 날짜 | 변경내용 |
+|------|------|---------|
+| v1.0 | - | 초기 작성 — 범용 QA 검증 스킬 (op-dev-qa 기반 도메인 무관화) |
+| v1.1 | 2026-04-24 | citation-rules 트리거 1줄 주입 — SSOT + Trigger 패턴 (130) |
