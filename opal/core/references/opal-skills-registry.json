@@ -251,6 +251,13 @@
         "description": "DB ERD 모델링 — 개념(Mermaid) → 논리(Mermaid) → 물리(DBML→DDL) 3단계",
         "triggers": ["^erd-modeler$", "^erm$", "(?i)(ERD\\s*(만들어|설계|작성|생성)|데이터\\s*모델링|테이블\\s*설계|논리\\s*모델링|물리\\s*모델링|DDL\\s*생성|스키마\\s*설계|엔티티\\s*설계)"],
         "paths": ["{project}/.opal/skills/erd-modeler/SKILL.md", "~/.opal/skills/erd-modeler/SKILL.md"]
+      },
+      {
+        "name": "html-mockup",
+        "alias": "mockup",
+        "description": "CDN 기반 정적 HTML 화면 빠른 생성 — 태스크 컨텍스트 자동 흡수 + 인터뷰",
+        "triggers": ["^html-mockup$", "^mockup$", "(?i)(목업|모크업|HTML\\s*화면\\s*만들|HTML\\s*목업)"],
+        "paths": ["{project}/.opal/skills/html-mockup/SKILL.md", "~/.opal/skills/html-mockup/SKILL.md"]
       }
     ],
     "opal": [

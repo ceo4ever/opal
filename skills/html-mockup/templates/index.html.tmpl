@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{TITLE}}</title>
+
+  <!-- 1. Pretendard 한글 폰트 -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+
+  <!-- 2. Tailwind CSS CDN (Play CDN) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- 3. DaisyUI @4 -->
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4/dist/full.min.css" rel="stylesheet">
+
+  <!-- 4. Alpine.js @3 (defer) -->
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3/dist/cdn.min.js"></script>
+
+  <!-- 5. Lucide Icons (latest) -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+
+  <!-- 공통 스타일 -->
+  <link rel="stylesheet" href="./shared/style.css">
+</head>
+<body class="font-pretendard bg-base-200 min-h-screen">
+
+  <main class="mockup-container py-8">
+    <header class="mb-8">
+      <h1 class="text-3xl font-bold mb-2">{{TITLE}}</h1>
+      <p class="text-base-content/70">총 {{COUNT}}개 화면</p>
+    </header>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {{ITEMS}}
+    </div>
+  </main>
+
+  <!-- 카드 템플릿 (스킬이 N개 화면에 대해 반복 치환) -->
+  <!--
+  각 카드 마크업:
+  <a href="{{FILE}}.html" class="card bg-base-100 shadow hover:shadow-lg transition cursor-pointer">
+    <div class="card-body">
+      <h2 class="card-title flex items-center gap-2">
+        <i data-lucide="{{ICON}}" class="w-5 h-5"></i>
+        {{NAME}}
+      </h2>
+      <p class="text-sm text-base-content/70">{{DESC}}</p>
+    </div>
+  </a>
+
+  치환 변수:
+    {{TITLE}}  — 화면 묶음 제목 (예: "html-mockup 화면 인덱스")
+    {{COUNT}}  — 화면 개수 (정수)
+    {{ITEMS}}  — 위 카드 마크업의 N개 연결 문자열
+    {{FILE}}   — 화면 파일명 (확장자 제외, 예: login)
+    {{ICON}}   — Lucide 아이콘 이름 (AI 추론: 로그인=log-in, 대시보드=layout-dashboard 등)
+    {{NAME}}   — 화면 사람 이름 (예: 로그인)
+    {{DESC}}   — 화면 1줄 설명 (인터뷰 §3 응답 또는 추론)
+  -->
+
+  <script src="./shared/main.js" defer></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.lucide && typeof window.lucide.createIcons === 'function') {
+        window.lucide.createIcons();
+      }
+    });
+  </script>
+</body>
+</html>

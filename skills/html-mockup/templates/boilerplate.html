@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{TITLE}}</title>
+
+  <!-- 1. Pretendard 한글 폰트 -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+
+  <!-- 2. Tailwind CSS CDN (Play CDN) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- 3. DaisyUI @4 -->
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4/dist/full.min.css" rel="stylesheet">
+
+  <!-- 4. Alpine.js @3 (defer) -->
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3/dist/cdn.min.js"></script>
+
+  <!-- 5. Lucide Icons (latest) -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+
+  <!-- 공통 스타일 -->
+  <link rel="stylesheet" href="./shared/style.css">
+
+  <!-- 화면 전용 확장 (다크모드 ON 시 또는 인라인 CSS) -->
+  {{EXTRA_HEAD}}
+</head>
+<body class="font-pretendard">
+
+  <!-- 내비게이션 (단일 파일 모드 또는 다중 화면 공통 nav) -->
+  {{NAV}}
+
+  <!-- 화면 본문 -->
+  {{BODY}}
+
+  <!-- 공통 스크립트 -->
+  <script src="./shared/main.js" defer></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.lucide && typeof window.lucide.createIcons === 'function') {
+        window.lucide.createIcons();
+      }
+    });
+  </script>
+</body>
+</html>
