@@ -149,6 +149,51 @@ PM이 단계+영역으로 에이전트를 선택하고, opal-plan-agent가 PLAN.
 | opal-security-checker | CHECK (opgc) | 보안 | advanced | base-security-checklist, SECURITY.md (허브+링크 체이닝 — conventions-hub-model.md 참조) |
 | opal-convention-checker | CHECK (opgc) | 컨벤션 | standard | CONVENTIONS.md, base-convention-checklist (허브+링크 체이닝 — conventions-hub-model.md 참조) |
 
+## 플랫폼 sub-agent 어댑터 변환 규칙
+
+OPAL 에이전트(`~/.opal/agents/{name}/AGENT.md`)를 각 AI 플랫폼의 sub-agent로 등록하기 위한 어댑터 변환 규칙이다.
+`scripts/install-mac.sh`의 `install_{claude,cursor,gemini}_agents` 함수가 이 규칙을 참조한다.
+
+### 플랫폼별 메커니즘 (2026-04 기준)
+
+| 플랫폼 | 메커니즘 | 등록 경로 | 공식 문서 |
+|--------|---------|----------|----------|
+| Claude Code | 지원 | `~/.claude/agents/{name}.md` | [Claude Code Sub-agents](https://code.claude.com/docs/en/sub-agents) |
+| Cursor | 지원 (v2.4+) | `~/.cursor/agents/{name}.md` | [Cursor Subagents](https://cursor.com/docs/subagents) |
+| Gemini CLI | 지원 | `~/.gemini/agents/{name}.md` | [Gemini CLI Subagents](https://geminicli.com/docs/core/subagents/) |
+| Antigravity | **미지원** | (없음) | [Sub-agents 기능 요청](https://discuss.ai.google.dev/t/antigravity-sub-agents/114381) — 내부 팀 검토 중 |
+
+### frontmatter 변환 규칙
+
+OPAL frontmatter → 플랫폼 frontmatter:
+
+| OPAL 필드 | Claude Code | Cursor | Gemini CLI |
+|----------|------------|--------|-----------|
+| `name` | `name` (그대로) | `name` (그대로) | `name` (그대로) |
+| `description` | `description` (그대로) | `description` (그대로) | `description` (그대로) |
+| `model: light` | `model: haiku` | `model: inherit` | `model: gemini-2.5-flash-lite` |
+| `model: standard` | `model: sonnet` | `model: inherit` | `model: gemini-2.5-flash` |
+| `model: advanced` | `model: opus` | `model: inherit` | `model: gemini-2.5-pro` |
+| `icon` | (제거 — 미지원) | (제거 — 미지원) | (제거 — 미지원) |
+| (기타 OPAL 전용 필드) | (제거) | (제거) | (제거) |
+
+> Cursor는 사용자가 IDE에서 모델 제공자를 직접 설정하므로 `inherit`로 위임한다 (→ `opal/core/references/opal-model-mapping.md` §4 Cursor 특이사항).
+
+> Cursor `inherit` 정책은 사용자 IDE 모델 설정 위임을 의미한다. Cursor가 향후 `light/standard/advanced` alias를 도입하면 본 표와 `scripts/install-mac.sh` `emit_platform_agent_adapter` 함수의 인라인 매핑을 동시 갱신해야 한다.
+
+### 본문(System Prompt) 처리
+
+OPAL `AGENT.md` 본문은 **변경 없이** 어댑터 markdown body로 그대로 복사된다.
+어댑터 파일 상단에 `AUTO-GENERATED` 주석 헤더를 삽입하여 직접 편집을 가드한다 (편집은 `opal/agents/{name}/AGENT.md` 소스에서 수행).
+
+### Antigravity 미지원 처리
+
+Antigravity는 2026-04 기준 커스텀 sub-agent를 지원하지 않는다 ([공식 응답](https://discuss.ai.google.dev/t/antigravity-sub-agents/114381) — "feature request has been escalated to the relevant internal teams for review").
+대안 메커니즘인 [Agent Skills](https://antigravity.google/docs/skills)는 SKILL.md 기반 지식 패키징 시스템이며 sub-agent 추상화와 다르므로, 본 태스크 범위에서 적용 제외한다.
+향후 Antigravity가 sub-agent를 출시하면 `install_antigravity_agents()`를 추가하고 이 표를 갱신한다.
+
+> 현재 Antigravity 사용 시 OPAL 부트스트래퍼는 `~/.gemini/GEMINI.md`(Antigravity가 Gemini CLI 호환 경로 사용)를 통해 동작하며, sub-agent 디스패치만 미지원이다.
+
 ## 폴백 규칙
 
 1. agents.md에 전문 에이전트 섹션 없음 → 기존 방식 (opal-task-agent + PM 컨텍스트 주입)
@@ -245,3 +290,11 @@ project: mams
 - **출력**: {생성하는 산출물}
 - **에이전트 경로**: `opal/agents/{agent-name}/`
 ```
+
+## 변경이력
+
+| 버전 | 날짜 | 변경내용 |
+|------|------|---------|
+| v1.1 | 2026-04-30 | 플랫폼 sub-agent 어댑터 변환 규칙 §추가 — Claude/Cursor/Gemini 4개 플랫폼 메커니즘 표 + frontmatter 변환 규칙 + Antigravity 미지원 처리 (133) |
+| v1.2 | 2026-04-30 | emit_platform_agent_adapter description 평탄화 — Claude Code 파서 호환 (133) |
+| v1.3 | 2026-04-30 | AUTO-GENERATED 헤더 검사 범위를 전체 파일로 확장 — frontmatter 외 헤더 위치 오탐지 결함 수정 (133) |
