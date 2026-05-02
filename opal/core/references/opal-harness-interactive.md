@@ -31,8 +31,21 @@
 탐색 경로: `{프로젝트}/.opal/skills/{qa-skill}/SKILL.md` -> `~/.opal/skills/{qa-skill}/SKILL.md`
 
 **QA Gate 완료 즉시 — State Gate**:
-파이프라인 현황판 테이블에서 QA Gate 행 → ✅, 바로 이어지는 State Gate 행 → ✅로 갱신한다.
+파이프라인 현황판에서 QA Gate 행과 바로 이어지는 State Gate 행을 state-tool로 갱신한다.
+
+```
+~/.opal/tools/state-tool/run.sh mark tasks/{NNN}-.../ --row <QA Gate 행 N> --done
+~/.opal/tools/state-tool/run.sh mark tasks/{NNN}-.../ --row <State Gate 행 N+1> --done
+```
+
+또는 표준 4행 패턴(QA Gate → State Gate → PM Gate → State Gate)인 경우 gate-pass 1회로 일괄 처리 권장:
+
+```
+~/.opal/tools/state-tool/run.sh gate-pass tasks/{NNN}-.../ --start <QA Gate 행 N>
+```
+
 미갱신 시 PM이 즉시 갱신한다. 갱신 확인 후 PM Gate로 진입한다.
+근거: TASK F-12 / PLAN §2.11 G-6 / §2.13 G-10
 Fail 시: §4 Gate Fail 공통 처리 참조.
 
 ---
@@ -57,6 +70,10 @@ PM Gate 진입 시 아래 순서로 자가 진단을 수행한다.
 5. **판정**:
    - 미완료 항목 없음 → PM 검토 기준(`opal-pm.md §4`) 수행으로 진행
    - 미완료 항목 있음 → 항목별 이유 명시 후 사용자 보고 (에이전트 재호출 없음)
+6. **STATE.md 정합성 자동 검증** (`state validate`):
+   - 실행: `~/.opal/tools/state-tool/run.sh validate tasks/{NNN}-.../`
+   - violations[] 0건이면 Pass, ≥1건이면 PM Gate Fail (재작업)
+   - 근거: TASK F-10 / PLAN §2.6
 
 > **설계 의도**: `[ ]` 발견 시 에이전트를 재호출하지 않는다. PM이 직접 내용을 읽고 판단하여 오탐을 걸러내고, 진짜 미완료 항목만 사용자에게 올린다.
 
@@ -78,8 +95,18 @@ PM Gate에서 해당 단계에 관련된 하네스 모듈이 적용되었는지 
 > 적용 조건 미해당 모듈은 검증 스킵. 적용 조건 해당 모듈만 검증한다.
 
 **PM Gate 완료 즉시 — State Gate**:
-파이프라인 현황판 테이블에서 PM Gate 행 → ✅, 바로 이어지는 State Gate 행 → ✅로 갱신한다.
+파이프라인 현황판에서 PM Gate 행과 바로 이어지는 State Gate 행을 state-tool로 갱신한다.
+
+```
+~/.opal/tools/state-tool/run.sh mark tasks/{NNN}-.../ --row <PM Gate 행 N> --done
+~/.opal/tools/state-tool/run.sh mark tasks/{NNN}-.../ --row <State Gate 행 N+1> --done
+```
+
+CLOSE 단계 첫 행 mark 시 도구가 prev_user_row 자동 검증을 수행한다. prev_user_row(owner=user, status=done)가 미존재하거나 조건 불충족이면 도구가 `close_gate_violation`으로 거부한다. 이 경우 사용자 확인 행을 먼저 `--owner user`로 mark한 뒤 재시도한다.
+근거: PLAN §2.16 G-13
+
 미갱신 시 PM이 즉시 갱신한다. 갱신 확인 후 사용자 확인으로 진입한다.
+근거: TASK F-12 / PLAN §2.11 G-6
 Fail 시: §4 Gate Fail 공통 처리 참조.
 
 ---
@@ -159,3 +186,4 @@ Gate 통과 실패 시 아래 절차를 따른다. 각 Gate 섹션의 "Fail 시 
 | v2.2 | 2026-04-10 | §2.5 Artifact Gate 제거 + §3 PM Gate 자가 진단 5단계 절차 추가 + §4 체크리스트 검증 게이트 제거 + R-4 파이프라인 현황판 이름 변경 (106) |
 | v2.3 | 2026-04-12 | §4 순서 강제 원칙 — 직접 서술 → 공통 하네스 §3 참조로 교체 (원칙 일원화) (110) |
 | v2.4 | 2026-04-12 | §3 PM Gate에 하네스 모듈 적용 확인 서브섹션 추가 — 6개 모듈 체크포인트 테이블 (111) |
+| v2.5 | 2026-05-01 | §2 QA Gate 직후 / §3 PM Gate 직후 state-tool `mark` 호출 표기 추가 + gate-pass 일괄 처리 권장 (§2.13 G-10). §3 자가 진단 6번 항목 `state validate` 추가 (§2.6). §3 PM Gate 직후 CLOSE 진입 close_gate_violation 자동 검증 명시 (§2.16 G-13) (134) |

@@ -28,7 +28,22 @@
 
 3. **STEP 5(오케스트레이터 선택)에서 결정된 스킬약어**를 폴더명과 TASK.md 헤더 `적용 스킬` 필드에 반영한다.
 4. **`--agentic` 플래그 여부를 TASK.md 헤더 `모드` 필드에 반드시 기록한다** (`interactive` 또는 `agentic`).
-5. **[필수] STATE.md를 생성한다** (§3 템플릿 참조). 이 단계를 건너뛰면 세션 복원과 상태 추적이 불가능하다.
+5. **[필수] `state init`을 호출하여 STATE.md를 생성한다**. 이 단계를 건너뛰면 세션 복원과 상태 추적이 불가능하다. LLM이 직접 작성하는 것은 금지된다 (`harness/state-template.md` §[MUST] 블록).
+
+   ```bash
+   ~/.opal/tools/state-tool/run.sh init <task-path> \
+     --skill <약어> \
+     --mode <interactive|agentic> \
+     [--task-title <태스크 제목>] \
+     [--next-action <첫 액션 텍스트>]
+   ```
+
+   - `--task-title`: STATE.md 1행 제목 (생략 시 task-path 마지막 디렉토리명)
+   - `--next-action`: `## 다음 액션` 초기값 (생략 시 `"PLAN 단계 진입"`)
+   - 행 구성(`--rows-spec`/`--rows-from`)은 오케스트레이터 SKILL.md "STATE.md 도메인 치환값" 참조
+
+   근거: `tasks/134-260501-opp-pipeline-state-tool/TASK.md` F-9 / `PLAN.md` §2.11 G-8 / §2.19.1 / §1.5 M-3
+
 6. 사용자에게 보고하고 다음 단계 승인을 받는다.
 
 #### 저장 경로 규칙
@@ -56,3 +71,4 @@
 | 버전 | 날짜 | 내용 |
 |------|------|------|
 | v1.0 | 2026-04-21 | 다운사이징 — opal-harness.md §4 분리 (128) |
+| v1.1 | 2026-05-01 | 31번 항목(5번) `[필수] STATE.md를 생성한다` → `[필수] state init 호출` 표현 교체. `--task-title` / `--next-action` 인자 명시 — TASK F-9 / PLAN §2.11 G-8 / §2.19.1 / §1.5 M-3 (134) |

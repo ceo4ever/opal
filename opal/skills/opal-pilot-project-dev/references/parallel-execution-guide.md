@@ -249,7 +249,11 @@ Agent(prompt="A03 워커 프롬프트", cwd=".worktrees/A03-auth-api/")
 디스패치된 모든 워커의 결과를 수집한 후 다음을 수행한다:
 
 1. 각 워커의 반환 결과(성공/실패, 산출물, 검증 결과)를 확인
-2. STATE.md 갱신 (오케스트레이터만 수행)
+2. `state-tool` 호출 (오케스트레이터만 수행, 머지 이력은 자유 텍스트 영역):
+   ```bash
+   ~/.opal/tools/state-tool/run.sh mark <task-path> --row <액션_행N> --done --note 'A{NN} 완료'
+   ```
+   > **[R-10]** oppd 비표준 행 구성 — `gate-pass` 사용 불가. `mark` 개별 호출 필수 (`tasks/134-260501-opp-pipeline-state-tool/PLAN.md` §2.13 G-10, R-10)
 3. 실패한 액션이 있으면:
    - 자동 검증 루핑 적용 (verification-loop-guide.md 참조)
    - 루핑 한도 초과 시 사용자 에스컬레이션
@@ -349,23 +353,26 @@ npm run lint && npm run build && npm test
 
 ## 7. STATE.md 갱신
 
+> **[MUST] 파이프라인 행 상태 변경은 `~/.opal/tools/state-tool/run.sh` 호출로만 수행한다. LLM이 STATE.md를 직접 편집하는 것은 금지된다.**
+> — `tasks/134-260501-opp-pipeline-state-tool/TASK.md` F-18 / `PLAN.md` §1.5 M-29 / §3 Step 11
+
 ### 7-1. 갱신 원칙
 
-**오케스트레이터 단독 갱신 원칙**: STATE.md는 오케스트레이터(oppd)만 갱신한다. 워커는 자신의 작업 결과만 반환하고, STATE.md를 직접 수정하지 않는다.
+**오케스트레이터 단독 갱신 원칙**: STATE.md 파이프라인 행은 오케스트레이터(oppd)만 `state-tool` 호출로 갱신한다. 워커는 자신의 작업 결과만 반환하고, STATE.md를 직접 수정하지 않는다.
 
 이 원칙은 병렬 실행에서 동시 쓰기 충돌을 원천 방지한다.
 
 ### 7-2. 갱신 시점
 
-| 이벤트 | 갱신 내용 |
-|--------|----------|
-| 병렬 그룹 시작 | 그룹 요약 테이블에 그룹 추가, 태스크 상세에 각 액션 `대기` 등록 |
-| 워커 디스패치 | 해당 액션 상태 -> `진행 중`, worktree/브랜치 정보 기록 |
-| 워커 완료 (성공) | 해당 액션 상태 -> `완료`, 그룹 요약 완료 카운트 증가 |
-| 워커 완료 (실패) | 해당 액션 상태 -> `실패`, 블로커 섹션에 사유 기록 |
-| 검증 루프 진행 | 검증 루프 로그 테이블에 시도 이력 추가 |
-| 머지 완료 | 머지 이력 테이블에 기록, 그룹 상태 -> `머지 중` 또는 `완료` |
-| 통합 테스트 통과 | 그룹 상태 -> `완료` |
+| 이벤트 | 갱신 내용 | state-tool 호출 |
+|--------|----------|----------------|
+| 병렬 그룹 시작 | 그룹 요약 테이블에 그룹 추가, 태스크 상세에 각 액션 `대기` 등록 | `state advance --row <N>` |
+| 워커 디스패치 | 해당 액션 상태 -> `진행 중`, worktree/브랜치 정보 기록 | (worktree/브랜치 정보는 자유 텍스트 영역) |
+| 워커 완료 (성공) | 해당 액션 상태 -> `완료`, 그룹 요약 완료 카운트 증가 | `state mark --row <N> --done --note 'A{NN} 완료'` |
+| 워커 완료 (실패) | 해당 액션 상태 -> `실패`, 블로커 섹션에 사유 기록 | `state block --row <N> --reason '<사유>'` (블로커 섹션은 자유 텍스트 영역) |
+| 검증 루프 진행 | 검증 루프 로그 테이블에 시도 이력 추가 | (검증 루프 로그는 자유 텍스트 영역 — state-tool 범위 밖) |
+| 머지 완료 | 머지 이력 테이블에 기록, 그룹 상태 -> `머지 중` 또는 `완료` | `state mark --row <N> --done --note '그룹 완료'` (머지 이력은 자유 텍스트 영역) |
+| 통합 테스트 통과 | 그룹 상태 -> `완료` | `state mark --row <N> --done` |
 
 ### 7-3. 그룹 요약 + 태스크 상세 테이블
 
@@ -426,7 +433,10 @@ git worktree를 사용할 수 없는 환경에서는 순차 실행으로 폴백�
 1. 병렬 그룹의 액션을 순차 목록으로 변환
 2. 각 액션을 메인 브랜치에서 순서대로 실행
 3. 액션 완료마다 커밋하여 롤백 포인트 확보
-4. STATE.md에는 `{"type": "sequential (fallback)"}` 기록
+4. `state-tool` 호출로 fallback 상태 기록:
+   ```bash
+   ~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done --note 'sequential fallback'
+   ```
 
 ```
 # worktree 미지원 시 — 순차 실행
@@ -434,7 +444,7 @@ for action in parallel_group.actions:
     execute(action)          # 메인 브랜치에서 직접 실행
     verify(action)           # 검증
     commit(action)           # 완료 커밋
-    update_state(action)     # STATE.md 갱신
+    state mark <task-path> --row <N> --done  # state-tool 호출로 행 갱신
 ```
 
 ### 8-2. Agent 도구 미지원 플랫폼
@@ -541,3 +551,11 @@ git branch -d feat/oppd-A03
 |---|------|-----------|----------|-----------|------------------|
 | 1 | A    | A02 → A03 | 없음     | Pass      | 2026-03-30 15:00 |
 ```
+
+---
+
+## 변경이력
+
+| 날짜 | 버전 | 변경내용 |
+|------|------|---------|
+| 2026-05-01 | R-2 | state-tool 도입 — STATE.md 직접 편집 금지 + `state-tool` 호출 표현 교체. §4-3 결과 수집, §7-1 갱신 원칙, §7-2 갱신 시점 표, §8-1 Fallback 절차에 `state mark`/`state advance`/`state block` 호출 표기 통일. oppd 비표준 행 구성 R-10 명시(gate-pass 금지 — mark 개별 호출). 머지 이력/검증 루프 로그는 자유 텍스트 영역으로 보존 — TASK F-18 / PLAN §1.5 M-29 / §3 Step 11 (134) |

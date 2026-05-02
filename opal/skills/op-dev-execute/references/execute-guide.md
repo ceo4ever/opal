@@ -77,6 +77,10 @@ PLAN.md §4 실행 체크리스트를 기반으로 워커는 실행 항목을 �
 
 ## 실행 모드별 동작
 
+> **[MUST] 워커는 자기 단계 작업 행만 mark 가능.** `state mark --as-worker` 호출 시 `--worker-stage EXECUTE`를 반드시 지정해야 하며, 다른 단계 행(PLAN, TASK 등)을 갱신하려 하면 도구가 `worker_scope_violation`으로 거부한다.
+>
+> 근거: `tasks/134-260501-opp-pipeline-state-tool/TASK.md` F-16 / `PLAN.md` §2.4 워커 권한 게이트(T-10) / §2.18 에러 카탈로그 #1 `worker_scope_violation` / §2.19.4 `--as-worker`+`--worker-stage` 종속 규칙 / `opal/core/references/harness/state.md` v1.1
+
 ### 단순 모드 (Simple Mode)
 
 워커가 Step 순서대로 직접 실행한다.
@@ -92,9 +96,9 @@ Step 1 → Step 2 → ... → Step N → 인라인 테스트 → 결과 반환 �
    - Edit/Write로 코드 작성/수정
    - Step의 테스트 기준에 따라 인라인 테스트 실행
    - PLAN.md 체크박스 갱신
-   - STATE.md `진행: Step N/M 완료` 갱신
+   - `~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done --as-worker --worker-stage EXECUTE --step <N/M>` 호출
 3. 블로커 발생 시:
-   - STATE.md `상태: 블로커` + `블로커` 섹션 갱신
+   - `~/.opal/tools/state-tool/run.sh block <task-path> --row <N> --reason "<블로커 설명>"` 호출
    - 즉시 사용자에게 보고
    - 사용자 지시 대기
 4. 모든 Step 완료 후:
@@ -116,7 +120,7 @@ Batch 1: [Agent-1, Agent-2 병렬] → Batch 2: [Agent-3] → ... → 결과 반
 2. 각 배치 실행 시:
    - 배치 내 에이전트를 **병렬로** Task 도구로 실행
    - 각 서브 에이전트에 전달할 정보: 담당 Step + 컨텍스트 + 코드 컨벤션 + 스킬
-   - 배치 완료 시 진행 보고 + STATE.md 갱신
+   - 배치 완료 시 진행 보고 + `~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done --as-worker --worker-stage EXECUTE --step <N/M>` 호출
 3. 전체 에이전트 완료 후:
    - Part B QA 체크리스트를 검증하고 체크박스 갱신
    - 결과 반환
@@ -214,3 +218,4 @@ Part C-2에서 스킬이 필요한 에이전트가 있을 때:
 | v1.0 | - | 초기 작성 |
 | v1.1 | 2026-04-13 13:48 | PLAN.md 기반 실행 전환 — 입력 우선순위를 "PLAN.md §4 > §3 > json 폴백"으로 변경, "PLAN.md 기반 실행" 섹션으로 재작성 (기능 루프, FE 화면 설계 §3.N.2 참조), 금지 행동·품질 체크리스트에서 json 참조를 PLAN.md로 통일, 과거 태스크 폴백 규칙 추가, §5 QA 체크리스트 참조로 갱신 (114) |
 | v1.2 | 2026-04-23 11:39 | FE ui-designer 분기(L64-67) 제거 → specialist/generalist 가이드로 위임. 나머지 공통 규칙 유지 (129) |
+| v1.3 | 2026-05-01 | EXECUTE Step 갱신 → `state mark --as-worker --worker-stage EXECUTE --step <N/M>` 호출 교체. 블로커 갱신 → `state block` 호출 교체. `[MUST] 워커는 자기 단계 작업 행만 mark 가능` 추가 — TASK F-16 / PLAN §2.4(T-10) / §2.11 G-6 / §2.18 #1 / §3 Step 9 (134) |

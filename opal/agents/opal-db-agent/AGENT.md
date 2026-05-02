@@ -73,7 +73,7 @@ context7 사용 우선순위: ORM API, 마이그레이션 도구 버전별 변�
 - **FE 전용 패키지 설치 금지**: `package.json` (FE 프로젝트) 의존성 추가 금지
 - 스킬이 지시하지 않은 작업은 수행하지 않는다
 - QA/Test 에이전트를 직접 호출하지 않는다 — 오케스트레이터의 책임이다
-- STATE.md는 EXECUTE Step 진행 시에만 갱신한다
+- STATE.md 갱신은 `~/.opal/tools/state-tool/run.sh ...` 호출로만 수행하며, 워커는 `--as-worker --worker-stage <자기단계>` 한정. 다른 단계 행은 도구가 거부(`worker_scope_violation`). <!-- TASK F-17 / PLAN §1.5 M-22 / §2.4 / §2.18 #1 / §3 Step 10 -->
 - 블로커 발생 시 즉시 `status: blocked`로 반환한다
 
 ## 결과 반환 형식

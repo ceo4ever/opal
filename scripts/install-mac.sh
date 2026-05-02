@@ -724,6 +724,13 @@ install_opal() {
             success "playwright-tool run.sh 실행 권한 설정"
         fi
 
+        # ── state-tool 실행 권한 (TASK F-20 / PLAN §1.5 M-41 / §1 D-16 / §3 Step 15) ──
+        local state_run="$opal_home/tools/state-tool/run.sh"
+        if [[ -f "$state_run" ]]; then
+            chmod +x "$state_run"
+            success "state-tool run.sh 실행 권한 설정"
+        fi
+
         # Node.js 환경 체크
         if command -v node &>/dev/null; then
             local node_check

@@ -122,6 +122,21 @@ Lazy 로드 모듈. 각 §의 stub이 로드 시점과 파일 경로를 지시�
 > 적용 시점: TASK/EXECUTE/Gate 단계 전반
 > PM Gate 검증: STATE.md 갱신 여부, 파이프라인 현황판 행 상태 정합성
 
+> **[MUST]** 파이프라인 현황판 행 상태 변경은 `state-tool`로만 수행한다. LLM이 STATE.md 마크다운 표를 직접 편집하는 것은 금지된다.
+>
+> - TASK 단계 시작: `~/.opal/tools/state-tool/run.sh init <task-path> --skill <약어> --mode <모드>`
+> - 단계 시작(⬜→🔄): `~/.opal/tools/state-tool/run.sh advance <task-path> --row <N>`
+> - 단계 완료(→✅): `~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done`
+> - 워커 완료(EXECUTE Step): `~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done --as-worker --worker-stage <stage>`
+> - Gate 직후 일괄 처리: `~/.opal/tools/state-tool/run.sh gate-pass <task-path> --start <N>`
+> - 추가작업 행 삽입: `~/.opal/tools/state-tool/run.sh add-row <task-path> --after <N> --stage <단계> --item <항목>`
+>
+> 위반 시 도구가 거부하며 에러 코드를 반환한다. 주요 에러:
+> `marker_missing`(STATE.md 마커 누락) / `worker_scope_violation`(워커 권한 초과) / `state_not_initialized`(state.json 미존재)
+> — 전체 에러 카탈로그 23종: `tasks/134-260501-opp-pipeline-state-tool/PLAN.md` §2.18
+>
+> 근거: `tasks/134-260501-opp-pipeline-state-tool/TASK.md` F-13 / `PLAN.md` §1.5 M-8 / §3 Step 3
+
 ---
 
 ## 4. TASK 공통 프로세스
@@ -211,6 +226,7 @@ OPAL 도구는 모두 `~/.opal/tools/{tool-name}/run.sh` 래퍼를 통해 호출
 | 도구 | 용도 | 트리거 조건 |
 |------|------|------------|
 | `xlsx-tool` | xlsx 읽기/쓰기/검색 | xlsx 파일 처리 요청 |
+| `state-tool` | 파이프라인 현황판 JSON SSOT 관리 (9개 서브 명령: `init`/`show`/`advance`/`mark`/`block`/`validate`/`add-row`/`status`/`gate-pass`) | TASK 단계 시작 / Gate 직후 / 추가작업 진입 |
 
 > 전체 사용법: `~/.opal/references/tools.md`
 
@@ -246,3 +262,4 @@ OPAL 도구는 모두 `~/.opal/tools/{tool-name}/run.sh` 래퍼를 통해 호출
 | v4.3 | 2026-04-17 | §2 하네스 모듈 테이블에 citation-rules 추가 — 산출물 인용 규칙 신설 (123) |
 | v4.4 | 2026-04-21 | 다운사이징 — §0 용어 정의 삭제, §3 State 본문 → harness/state.md 분리, §3 레거시 호환 노트 3건 삭제, §4 TASK 공통 프로세스 본문 → harness/task-process.md 분리, §2 모듈 테이블에 state.md·task-process.md 행 추가 (128) |
 | v4.5 | 2026-04-24 | §2 Citation Rules 적용 의무 블록 추가 — 모든 pilot/스킬/가이드/QA 대상 인용 규칙 필수 적용 선언 (130) |
+| v4.6 | 2026-05-01 | §3 state-tool [MUST] 호출 의무 블록 추가 — 파이프라인 현황판 행 상태 변경은 state-tool로만, 위반 시 에러 코드 목록 + PLAN §2.18 링크. §9 도구 테이블에 state-tool 행 추가 (트리거: TASK 단계 시작 / Gate 직후 / 추가작업 진입) (134) |

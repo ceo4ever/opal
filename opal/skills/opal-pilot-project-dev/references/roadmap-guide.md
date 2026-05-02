@@ -202,5 +202,5 @@ A01 (기본 구조)
 ## 사용자 확정 후 후속 조치 체크
 
 - [ ] docs/PROJECT.md 문서 테이블에 ROADMAP.md 등록했는가 (설명, 용도, 참조 시점)
-- [ ] STATE.md를 갱신했는가 (3-ROADMAP → 확정, 로드맵 테이블 채움)
+- [ ] `state-tool` 호출로 갱신했는가 (3-ROADMAP → 확정, 로드맵 테이블 채움)
 - [ ] .opal/MEMORY.md 작업 히스토리를 갱신했는가

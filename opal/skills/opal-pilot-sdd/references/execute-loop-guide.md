@@ -38,7 +38,7 @@ SPEC-PLAN.md에서 실행 그룹 확인
           순차 실행 (섹션 3)
       → if Group has multiple independent ACTs:
           병렬 실행 (섹션 4) + worktree 격리
-      → Group 완료 후 STATE.md 갱신
+      → Group 완료 후 state-tool 호출로 STATE.md 행 갱신 (§9 참조)
       → 다음 Group 진행
 ```
 
@@ -48,7 +48,7 @@ SPEC-PLAN.md에서 실행 그룹 확인
 2. **opal-sdd-action-agent 디스패치**: ACT 폴더 생성 + PLAN + EXECUTE + VERIFY 자율 완주 (섹션 5-1 프롬프트 사용)
 3. **결과 수신**: status 확인
 4. **Pass/Fail 판정**:
-   - Pass → DONE.md 작성 → STATE.md 갱신
+   - Pass → DONE.md 작성 → `state mark` 호출로 ACT 행 ✅ 갱신 (§9 참조)
    - Fail → 재시도 루프 (섹션 6) 또는 에스컬레이션
 
 ---
@@ -293,6 +293,17 @@ PM이 ACT 완료 확인 시 작성하는 문서.
 
 ## 9. STATE.md ACT 상태 관리
 
+> **[MUST] 파이프라인 행 상태 변경은 `~/.opal/tools/state-tool/run.sh` 호출로만 수행한다. LLM이 STATE.md를 직접 편집하는 것은 금지된다.**
+> — `tasks/134-260501-opp-pipeline-state-tool/TASK.md` F-18 / `PLAN.md` §1.5 M-31 / §3 Step 11
+>
+> **[R-10]** opsdd 비표준 행 구성 — `gate-pass` 사용 불가. `mark` 개별 호출 필수 (`PLAN.md` §2.13 G-10, R-10)
+>
+> ACT 행 갱신 예시 (`opal/skills/opal-pilot-sdd/SKILL.md` §EXECUTE-LOOP ACT 갱신 표준 참조):
+> ```bash
+> ~/.opal/tools/state-tool/run.sh mark <task-path> --row <ACT_행N> --done --note 'ACT-001 완료'
+> ```
+> ACT 목록 SSOT는 `opal/skills/opal-pilot-sdd/SKILL.md` "STATE.md 도메인 치환값" 섹션에 있으며, 본 섹션(§9)은 표기 통일 목적으로만 참조한다.
+
 상위 STATE.md가 전체 ACT 목록의 상태를 통합 관리한다 (ACT 내부 STATE.md 없음).
 
 ### 9-1. ACT 상태 필드
@@ -395,7 +406,7 @@ Group 3 (순차): ACT-004            ← ACT-002, ACT-003 완료 후
 Group 1 (순차): ACT-001
   → 사용자 Gate (ACT-001 시작 승인)
   → opal-sdd-action-agent 디스패치 (자율 완주: PLAN → EXECUTE → VERIFY)
-  → status: completed → DONE.md 작성 → STATE.md 갱신 (ACT-001 ✅)
+  → status: completed → DONE.md 작성 → `state mark --row <N> --done --note 'ACT-001 완료'` (ACT-001 ✅)
 
 Group 2 (병렬): ACT-002, ACT-003  ← ACT-001 완료 후
   → worktree 생성: .worktrees/001-ACT-002/, .worktrees/001-ACT-003/
@@ -403,14 +414,14 @@ Group 2 (병렬): ACT-002, ACT-003  ← ACT-001 완료 후
       ACT-002: opal-sdd-action-agent (worktree: .worktrees/001-ACT-002/)
       ACT-003: opal-sdd-action-agent (worktree: .worktrees/001-ACT-003/)
   → 결과 수집 → 순차 머지 → 통합 테스트
-  → DONE.md 작성 x2 → STATE.md 갱신 (ACT-002/003 ✅)
+  → DONE.md 작성 x2 → `state mark` 개별 호출 x2 (ACT-002/003 ✅)
 
 Group 3 (순차): ACT-004  ← ACT-002, ACT-003 완료 후
   → 사용자 Gate (ACT-004 시작 승인)
   → opal-sdd-action-agent 디스패치
   → status: failed (L3a TS-05 3회 초과) → PM 레벨 재시도 루프
     → opal-sdd-action-agent 재디스패치 (1차, 수정 지시 주입) → status: completed
-  → DONE.md 작성 → STATE.md 갱신 (ACT-004 ✅)
+  → DONE.md 작성 → `state mark --row <N> --done --note 'ACT-004 완료'` (ACT-004 ✅)
   → 전체 TS Green 확인 → EXECUTE-LOOP 완료
 ```
 
@@ -431,3 +442,4 @@ Group 3 (순차): ACT-004  ← ACT-002, ACT-003 완료 후
 | 날짜 | 버전 | 변경내용 |
 |------|------|---------|
 | 2026-04-10 | R-3 | ACT 목록 테이블 L1/L2 컬럼 추가 (의존, 코드, L1 lint, L2 build, 시작, 완료) + L1/L2 검증 루프 규칙 섹션 추가 + 9-3 갱신 시점 테이블에 L1/L2 이벤트 행 추가 |
+| 2026-05-01 | R-4 | state-tool 도입 — §2 실행 흐름 + §2-1 단일 ACT 실행에 `state mark` 호출 표기. §9 ACT 상태 관리에 `[MUST]` state-tool 호출 블록 + R-10 비표준 행 구성 표기(gate-pass 금지). §10 전체 흐름 예시 STATE.md 갱신 표현 → `state mark` 호출 표기. ACT 목록 SSOT는 SKILL.md 보존 — TASK F-18 / PLAN §1.5 M-31 / §3 Step 11 (134) |

@@ -186,6 +186,22 @@ tasks/{NNN}-{YYMMDD}-{스킬약어}-{태스크명}/TASK.md
 #### STATE.md 리마인더
 
 > **[오케스트레이터 후처리]** op-task 프로세스 완료 후, 오케스트레이터는 하네스 §4 "오케스트레이터 공통 영역"을 수행해야 한다. 특히 **STATE.md 생성**을 잊지 않는다.
+>
+> **[MUST] STATE.md는 `state-tool`로만 생성한다. LLM이 직접 작성하는 것은 금지된다.** (`harness/state-template.md` §[MUST] 블록 — TASK F-16 / PLAN §1.5 M-18)
+>
+> `state init`을 호출하여 STATE.md를 생성한다 (PLAN §3 Step 5 / §2.11 G-8):
+>
+> ```bash
+> ~/.opal/tools/state-tool/run.sh init <task-path> \
+>   --skill <opp|opd|opds|opdw|opwt|opgc|oppd|opsdd> \
+>   --mode <interactive|agentic> \
+>   [--task-title <태스크 제목>] \
+>   [--next-action <첫 액션 텍스트>]
+> ```
+>
+> - `--task-title`: STATE.md 1행 제목 (생략 시 `<task-path>` 마지막 디렉토리명 — PLAN §2.19.1)
+> - `--next-action`: `## 다음 액션` 초기값 (생략 시 `"PLAN 단계 진입"` — PLAN §2.11 G-8)
+> - 행 구성(`--rows-spec`/`--rows-from`)은 오케스트레이터 SKILL.md "STATE.md 도메인 치환값" 참조 (PLAN §2.3)
 
 #### 완료 보고 형식
 

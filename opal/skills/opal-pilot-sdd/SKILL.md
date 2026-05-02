@@ -121,8 +121,16 @@ harness "4. TASK 공통 프로세스" 참조. 다음 단계명: SPEC.
 **에이전트**: opal-task-agent | **model**: advanced
 
 **Gate**:
-  → **State Gate** (하네스 §3 참조 — STATE.md 갱신 확인)
-  → **PM Gate** → 사용자 Gate (QA Gate 없음 — 다음 Phase에서 PM이 직접 검증)
+  → **State Gate** → **PM Gate** → 사용자 Gate (QA Gate 없음 — 다음 Phase에서 PM이 직접 검증)
+
+State Gate 시 state-tool 호출 (R-10: gate-pass 금지 — mark 4회 개별 호출 필수):
+
+```
+~/.opal/tools/state-tool/run.sh mark <task-path> --row 6 --done   # State Gate
+~/.opal/tools/state-tool/run.sh mark <task-path> --row 7 --done   # PM Gate
+~/.opal/tools/state-tool/run.sh mark <task-path> --row 8 --done   # State Gate
+~/.opal/tools/state-tool/run.sh mark <task-path> --row 9 --done --owner user --note '캡틴 확인: SPEC 완료'
+```
 
 > SPEC.md 상세 구조: `references/spec-guide.md` 참조
 
@@ -175,8 +183,16 @@ PM이 직접 SPEC.md를 검증하고 TEST-SCENARIOS.md를 작성한다. **워커
 **에이전트**: opal-task-agent | **model**: advanced
 
 **Gate**:
-  → **State Gate** (하네스 §3 참조 — STATE.md 갱신 확인)
-  → **PM Gate** → 사용자 Gate (QA Gate 없음 — 설계 + ACT 분해는 PM 판단)
+  → **State Gate** → **PM Gate** → 사용자 Gate (QA Gate 없음 — 설계 + ACT 분해는 PM 판단)
+
+State Gate 시 state-tool 호출 (R-10: gate-pass 금지 — mark 4회 개별 호출 필수):
+
+```
+~/.opal/tools/state-tool/run.sh mark <task-path> --row 19 --done  # State Gate
+~/.opal/tools/state-tool/run.sh mark <task-path> --row 20 --done  # PM Gate
+~/.opal/tools/state-tool/run.sh mark <task-path> --row 21 --done  # State Gate
+~/.opal/tools/state-tool/run.sh mark <task-path> --row 22 --done --owner user --note '캡틴 확인: DESIGN 완료'
+```
 
 > SPEC-PLAN.md 상세 구조: `references/spec-plan-guide.md` 참조
 
@@ -192,7 +208,7 @@ SPEC-PLAN.md의 의존 순서대로 ACT를 반복 실행한다. 각 ACT는 `opal
 2. **opal-sdd-action-agent 디스패치**: ACT 폴더 생성 + PLAN + EXECUTE + VERIFY 루프 자율 완주
 3. **결과 수신**: status 확인
 4. **Pass/Fail 판정**: Pass → DONE.md 작성 | Fail → 재시도 루프
-5. **STATE.md 갱신**: ACT 상태 + TS 상태 갱신
+5. **state-tool로 STATE.md ACT 행 갱신**: ACT 상태 + TS 상태 갱신
 
 ### 재시도 루프
 
@@ -219,12 +235,21 @@ L2 2회 초과 실패 → 소유자 에스컬레이션
 
 ### 상태 갱신
 
-ACT 완료마다 STATE.md 갱신 (하네스 §3 State Gate 기준 적용):
-- ACT 상태: ⬜ 대기 → 🔄 진행 중 → ✅/❌
-- TS 상태: Red → Green/Fail
-- L1/L2: ACT 완료 후 PM 직접 검증 → 결과 즉시 갱신
+ACT 완료마다 state-tool을 호출하여 STATE.md를 갱신한다 (R-10: gate-pass 금지 — mark 4회 개별 호출 필수):
+- ACT 목록 행은 `add-row --after <N> --stage EXECUTE --item 'ACT-{N}: {이름}'` 로 동적 삽입
+- ACT 상태 갱신: `mark <task-path> --row <ACT_행N> --done`
+- TS 상태, L1/L2: ACT 완료 후 PM 직접 검증 → ACT 목록 내 해당 열 갱신
 
-**State Gate**: ACT 완료 후 STATE.md 갱신 → **State Gate** (하네스 §3 참조 — STATE.md 갱신 확인) → PM Gate 진입
+> **[R-13] ACT 동적 행**: `--rows-acts` 옵션은 미구현. ACT 행은 EXECUTE Phase 진입 후 수동으로 `add-row`로 삽입한다.
+
+**State Gate** (ACT 루프 완료 후, EXECUTE 행 #24~#27 처리):
+
+```
+~/.opal/tools/state-tool/run.sh mark <task-path> --row 24 --done  # State Gate
+~/.opal/tools/state-tool/run.sh mark <task-path> --row 25 --done  # PM Gate
+~/.opal/tools/state-tool/run.sh mark <task-path> --row 26 --done  # State Gate
+~/.opal/tools/state-tool/run.sh mark <task-path> --row 27 --done --owner user --note '캡틴 확인: EXECUTE 완료'
+```
 
 ### Gate
 
@@ -263,7 +288,14 @@ ACT 완료마다 STATE.md 갱신 (하네스 §3 State Gate 기준 적용):
 1. 전체 TS Green 확인 (STATE.md TS 현황)
 2. 전체 ACT DONE.md 존재 확인
 3. DONE.md 생성
-4. State Gate
+4. State Gate:
+
+```
+~/.opal/tools/state-tool/run.sh mark <task-path> --row 34 --done  # DONE.md 생성
+~/.opal/tools/state-tool/run.sh mark <task-path> --row 35 --done  # State Gate (CLOSE 완료)
+```
+
+> **CLOSE 게이트 제약 (§2.16 G-13)**: CLOSE 단계 최초 진입 행(#34)은 `--auto-pass` 적용 불가 (`close_gate_violation`). 반드시 위 명시 호출로 처리한다.
 
 보고 형식:
 ```
@@ -284,6 +316,21 @@ ACT 완료마다 STATE.md 갱신 (하네스 §3 State Gate 기준 적용):
 | 단계 목록 | TASK / SPEC / REVIEW / DESIGN / EXECUTE-LOOP / VERIFY / CLOSE |
 | 산출물 목록 | TASK.md, SPEC.md, TEST-SCENARIOS.md, SPEC-PLAN.md, actions/ACT-{N}/, DONE.md |
 | 태스크 경로 | tasks/{NNN}-{feature}/ |
+
+> **[SSOT]** `state-tool init` 호출 시 이 섹션의 파이프라인 현황판 행 테이블을 `--rows-from` 옵션으로 참조한다:
+>
+> ```
+> ~/.opal/tools/state-tool/run.sh init <task-path> --skill opsdd --rows-from opal/skills/opal-pilot-sdd/SKILL.md
+> ```
+>
+> state-tool이 이 파일의 "파이프라인 현황판" 테이블(35행)을 읽어 state.json을 초기화한다. 행 데이터를 직접 편집하지 않는다.
+>
+> **[R-10 비표준 행 구성]** opsdd는 35행 + ACT 동적 행 비표준 구조를 사용한다. `gate-pass`(4-row 일괄) 사용 불가 — `mark` 4회 개별 호출 필수. `gate-pass` 호출 시 `gate_pattern_mismatch` 에러가 반환된다.
+>
+> **[R-13 ACT 동적 행]** `--rows-acts` 옵션은 미구현. EXECUTE Phase 진입 후 `add-row`로 ACT 행을 수동 삽입한다:
+> ```
+> ~/.opal/tools/state-tool/run.sh add-row <task-path> --after 23 --stage EXECUTE --item 'ACT-001: {이름}'
+> ```
 
 ### STATE.md 구조
 
@@ -398,7 +445,11 @@ opal-harness-agentic.md 참조. `--agentic` 플래그 활성화 시 이 스킬�
 
 ### 활성화
 
-`//opsdd --agentic {기능 설명}` 형식으로 호출. STATE.md 모드 필드를 `agentic`으로 기록한다.
+`//opsdd --agentic {기능 설명}` 형식으로 호출. STATE.md 모드 필드를 `agentic`으로 기록한다:
+
+```
+~/.opal/tools/state-tool/run.sh init <task-path> --skill opsdd --mode agentic --rows-from opal/skills/opal-pilot-sdd/SKILL.md
+```
 
 ### 자율 게이트 흐름
 
@@ -414,6 +465,12 @@ TASK (PM 직접)
 
 - 모든 Phase Gate를 PM이 자율 통과
 - EXECUTE-LOOP 진입 = PM이 대행 승인 (구현 금지 원칙의 "실행 허가"를 PM이 판단)
+- 자율 통과 시 state-tool `--auto-pass` 호출 (P-8):
+  ```
+  ~/.opal/tools/state-tool/run.sh mark <task-path> --row N --done --auto-pass --note '<근거>'
+  ```
+- **CLOSE 단계 최초 진입 행(#34)은 `--auto-pass` 금지** (`close_gate_violation` — §2.16 G-13); 반드시 명시 호출
+- R-10 비표준 행 구성: `gate-pass` 금지 — mark 4회 개별 호출 필수 (agentic에서도 동일 적용)
 - AGENTIC-LOG.md에 모든 판단/오류/수정/의사결정 기록
 
 ### Gate 루핑
@@ -459,3 +516,4 @@ opal-harness-agentic.md §6 공통 기준에 추가:
 | v2.8.0 | 2026-04-15 | Phase 1(SPEC)/Phase 3(DESIGN) 디스패치 프롬프트에 `**핵심 제약**:` 필드 추가 — `[MUST] <문서명> §N: <인용문>` 원문 인용 포맷 명시 (120) |
 | v2.9.0 | 2026-04-15 | Phase 6 DONE→CLOSE 리네이밍 + 4행→2행 통일 + 단계 목록 갱신 + Agentic Mode 흐름도 갱신 + CLOSE 보고 형식 C안 적용 (121) |
 | v3.0.0 | 2026-04-24 | citation-rules 트리거 1줄 주입 — SSOT + Trigger 패턴 (130) |
+| v3.1.0 | 2026-05-01 | state-tool 도입 — STATE.md 직접 편집 금지 + `state-tool` 호출 표현 교체 (P-1~P-8 패턴 적용). `--rows-from` SSOT 지시 + R-10 비표준 행 gate-pass 금지 + mark 4회 개별 호출 필수 블록 추가. R-13 ACT 동적 행 `add-row` 임시 가이드. CLOSE State Gate mark 명시 + G-13 제약 추가. agentic `--auto-pass` + CLOSE 진입 게이트 거부 정책 추가 (134) |

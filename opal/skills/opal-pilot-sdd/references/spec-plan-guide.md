@@ -273,7 +273,7 @@ SPEC-PLAN.md 작성 전에 반드시 아래를 수행한다:
 SPEC-PLAN.md의 "8. ACT 분해" 섹션에서 각 ACT를 기술할 때 아래 원칙을 준수한다.
 
 > **주의**: ACT 블록에 상태 필드(`- **상태**: 대기/완료`)를 두지 않는다.
-> ACT 실행 상태는 STATE.md ACT 목록 테이블이 SSOT다.
+> ACT 실행 상태는 state.json(SSOT)이며 STATE.md ACT 목록 테이블은 `state-tool`이 렌더한 뷰다.
 > 이중 추적(SPEC-PLAN.md + STATE.md)은 갱신 누락의 직접 원인이 된다.
 
 ---
@@ -292,3 +292,4 @@ SPEC-PLAN.md의 "8. ACT 분해" 섹션에서 각 ACT를 기술할 때 아래 원
 | 날짜 | 버전 | 변경내용 |
 |------|------|---------|
 | 2026-04-10 | R-4 | §7 주의사항 추가 — ACT 블록에 상태 필드 금지 원칙 (STATE.md ACT 목록 테이블이 SSOT) |
+| 2026-05-01 | R-5 | §7 SSOT 표현 갱신 — state.json SSOT + STATE.md는 state-tool 렌더 뷰 (TASK F-18 / PLAN §1.5 M-38 / §3 Step 12) |

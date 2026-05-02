@@ -39,7 +39,16 @@ Harness "TASK 공통 프로세스"를 따르되, 아래를 추가:
 - 입력물 분류 + wireframe.md 경로 (기존/생성 필요)
 - 보고 시 입력물 분기 판별 결과 포함
 
-TASK 완료 → **State Gate** (하네스 §3 참조 — STATE.md 갱신 확인) → 사용자 보고.
+TASK 완료 → **State Gate** (state-tool 호출로 갱신 확인 — 아래 명령):
+
+```
+~/.opal/tools/state-tool/run.sh advance <task-path> --row 1   # 작업 행 🔄
+~/.opal/tools/state-tool/run.sh mark <task-path> --row 1 --done
+~/.opal/tools/state-tool/run.sh mark <task-path> --row 2 --done  # TASK.md 생성 행
+~/.opal/tools/state-tool/run.sh mark <task-path> --row 3 --done --owner user --note '캡틴 확인: TASK 완료'
+```
+
+→ 사용자 보고.
 
 ---
 
@@ -50,8 +59,20 @@ TASK 완료 → **State Gate** (하네스 §3 참조 — STATE.md 갱신 확인)
 워커 디스패치로 wireframe.md 생성. **model**: standard.
 - 스킬: op-dev-wireframe, 입력: TASK.md + 정책서/이미지
 - 완료
-  → op-dev-qa 호출 (단계: WIREFRAME) → **State Gate**
-  → **PM Gate** (TASK.md 요구사항 체크박스 갱신 포함 — 하네스 §3 참조) → **State Gate** → 사용자 보고
+  → op-dev-qa 호출 (단계: WIREFRAME) → **State Gate** → **PM Gate** (TASK.md 요구사항 체크박스 갱신 포함) → **State Gate** → 사용자 보고
+
+State Gate / PM Gate 시 state-tool 호출:
+
+```
+# QA Gate 완료 후 (4-row 일괄): WIREFRAME 행 #6~#9
+~/.opal/tools/state-tool/run.sh gate-pass <task-path> --start 6
+
+# PM Gate 후 State Gate
+~/.opal/tools/state-tool/run.sh mark <task-path> --row 10 --done
+
+# 사용자 확인
+~/.opal/tools/state-tool/run.sh mark <task-path> --row 11 --done --owner user --note '캡틴 확인: WIREFRAME 완료'
+```
 
 > **[PM 컨텍스트 주입]** 워커 디스패치 프롬프트의 첫 줄에 `[WORKER]`를 삽입한다. `[WORKER]` 마커가 있으면 워커는 부트스트랩을 생략한다. PM은 디스패치 시 다음을 프롬프트에 포함해야 한다:
 > 1. 하네스 Guards 핵심 규칙 (구현 금지 원칙, 커밋 규칙)
@@ -92,9 +113,21 @@ op-dev-execute 스킬을 수행하라.
 
 ### 3-3. 완료 후
 
-1. op-dev-qa 호출 (단계: EXECUTE-UI) → 빌드/린트 + wireframe↔코드 대조 → **State Gate**
-2. **PM Gate** — QA 결과 + 실행 결과 검토 + 체크리스트 갱신 (하네스 §2, §3 참조) → **State Gate**
-3. 사용자에게 완료 보고 후 CLOSE 단계 진입 승인 요청
+1. op-dev-qa 호출 (단계: EXECUTE-UI) → 빌드/린트 + wireframe↔코드 대조 → **State Gate** → **PM Gate** (QA 결과 + 실행 결과 검토 + 체크리스트 갱신) → **State Gate**
+2. 사용자에게 완료 보고 후 CLOSE 단계 진입 승인 요청
+
+State Gate / PM Gate 시 state-tool 호출:
+
+```
+# QA Gate 완료 후 (4-row 일괄): EXECUTE 행 #13~#16
+~/.opal/tools/state-tool/run.sh gate-pass <task-path> --start 13
+
+# PM Gate 후 State Gate
+~/.opal/tools/state-tool/run.sh mark <task-path> --row 17 --done
+
+# 사용자 확인
+~/.opal/tools/state-tool/run.sh mark <task-path> --row 18 --done --owner user --note '캡틴 확인: EXECUTE 완료'
+```
 
 보고 형식:
 ```
@@ -111,7 +144,17 @@ op-dev-execute 스킬을 수행하라.
 모든 체크리스트 갱신 완료 확인 후 태스크를 마감한다.
 
 1. DONE.md 생성
-2. State Gate (하네스 §3 참조)
+2. State Gate:
+
+```
+~/.opal/tools/state-tool/run.sh mark <task-path> --row 19 --done  # DONE.md 생성
+~/.opal/tools/state-tool/run.sh mark <task-path> --row 20 --done  # State Gate (CLOSE 완료)
+```
+
+> **CLOSE 게이트 제약 (§2.16 G-13)**: CLOSE 단계 최초 진입 행은 `--auto-pass` 적용 불가 (`close_gate_violation`). 반드시 위 `mark --row 19 --done` 명시 호출로 처리한다.
+
+> **추가작업 발생 시 (P-6)**: `add-row --after 20 --stage CLOSE --item '추가 작업 항목'` → 작업 완료 후 `status --set additional_work_done`
+
 3. 완료 보고
 
 보고 형식:
@@ -131,6 +174,14 @@ Harness STATE.md 템플릿에 적용:
 - `{모드}`: Wireframe UI
 - `{단계 목록}`: TASK / WIREFRAME / EXECUTE / CLOSE
 - `{산출물 목록}`: TASK.md, wireframe.md(기존 존재 가능), QA-*.md, DONE.md
+
+> **[SSOT]** `state-tool init` 호출 시 이 섹션의 행 테이블을 `--rows-from` 옵션으로 참조한다:
+>
+> ```
+> ~/.opal/tools/state-tool/run.sh init <task-path> --skill opdw --rows-from opal/skills/opal-pilot-dev-wireframe/SKILL.md
+> ```
+>
+> state-tool이 이 파일의 "진행 현황 행 예시" 테이블을 읽어 state.json을 초기화한다. 행 데이터를 직접 편집하지 않는다.
 
 **진행 현황 행 예시** (STATE.md 초기 생성 시 이 구조로 작성):
 
@@ -176,7 +227,11 @@ opal-harness-agentic.md 참조. `--agentic` 플래그 활성화 시 이 스킬�
 
 ### 활성화
 
-`//opdw --agentic {작업 설명}` 형식으로 호출. STATE.md 모드 필드를 `agentic`으로 기록한다.
+`//opdw --agentic {작업 설명}` 형식으로 호출. STATE.md 모드 필드를 `agentic`으로 기록한다:
+
+```
+~/.opal/tools/state-tool/run.sh init <task-path> --skill opdw --mode agentic --rows-from opal/skills/opal-pilot-dev-wireframe/SKILL.md
+```
 
 ### 자율 게이트 흐름
 
@@ -187,6 +242,8 @@ TASK (PM 직접) → WIREFRAME Gate → EXECUTE Gate → CLOSE
 
 - TASK 이후 2개 게이트를 PM이 자율 통과 (CLOSE 진입은 사용자 승인 필수)
 - 각 게이트에서 opal-harness-agentic.md "Gate 루핑 규칙" 적용
+- 자율 통과 시 `mark --row N --done --auto-pass --note '<근거>'` 호출 (P-8)
+- **CLOSE 단계 최초 진입 행은 `--auto-pass` 금지** (`close_gate_violation` — §2.16 G-13); 반드시 명시 호출
 - AGENTIC-LOG.md에 모든 판단/오류/수정/의사결정 기록
 
 ---
@@ -209,3 +266,4 @@ TASK (PM 직접) → WIREFRAME Gate → EXECUTE Gate → CLOSE
 | v2.1 | 2026-04-15 | STEP 4 CLOSE 단계 신설 + EXECUTE PM Gate 후 State Gate/사용자 확인 추가 + 진행 현황 행 CLOSE 2행 구조 반영 + 보고 형식 C안 적용 (121) |
 | v2.2 | 2026-04-23 11:39 | STEP 3 EXECUTE를 FE 단일 라우팅(opal-fe-agent)으로 지정 — 와이어프레임 전용 흐름상 PLAN.md §4.2 분배 디스패치 미적용 근거 명시, 디스패치 프롬프트에 담당 Step/Scope 제한 필드 추가 (129) |
 | v2.3 | 2026-04-24 | citation-rules 트리거 1줄 주입 — SSOT + Trigger 패턴 (130) |
+| v2.4 | 2026-05-01 | state-tool 도입 — STATE.md 직접 편집 금지 + `state-tool` 호출 표현 교체 (P-1~P-8 패턴 적용). "STATE.md 도메인 치환값" SSOT 보존 + `--rows-from` 파싱 SSOT 명시. agentic 활성화에 `--auto-pass` + CLOSE 진입 게이트 거부 정책 추가 (134) |

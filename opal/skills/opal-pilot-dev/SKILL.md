@@ -20,7 +20,11 @@ description: |
 ## STEP 1: TASK
 opal-harness.md "TASK 공통 프로세스" 참조.
 
-TASK 완료 → **State Gate** (하네스 §3 참조 — STATE.md 갱신 확인) → 사용자 보고.
+TASK 완료 → **State Gate** (하네스 §3 참조 — `state-tool` 호출로 갱신 확인) → 사용자 보고.
+
+> **[MUST] State Gate 수행**: `~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done` 호출. LLM이 STATE.md 마크다운 표를 직접 편집하는 것은 금지된다.
+> **단계 시작 (P-3)**: `~/.opal/tools/state-tool/run.sh advance <task-path> --row <N>` 호출로 해당 단계 작업 행을 🔄로 전환.
+> 근거: `tasks/134-260501-opp-pipeline-state-tool/TASK.md` F-15 / `PLAN.md` §1.5 M-10 / §3 Step 8 P-1 / P-3
 
 ## STEP 2: ANALYSIS
 워커를 디스패치하여 코드베이스를 분석한다.
@@ -45,6 +49,10 @@ op-dev-analysis 스킬을 수행하라.
   → **PM Gate** (분석 방향 종합 검토) → **State Gate**
   → 사용자 보고 (분석 방향 검토 후 PLAN 진입 승인).
 
+> **Gate 일괄 처리 (P-2)**: QA Gate 행 N부터 시작하는 표준 4행(QA Gate / State Gate / PM Gate / State Gate)은 `~/.opal/tools/state-tool/run.sh gate-pass <task-path> --start <N>` 1회 호출로 일괄 ✅ 처리 가능 (§2.13 G-10 — 표준 행 구성 한정).
+> **사용자 확인 (P-5)**: 사용자 발화 후 PM이 `~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done --owner user --note '캡틴 확인: ...'` 호출.
+> 근거: `PLAN.md` §2.13 G-10 / §3 Step 8 P-2 / P-5
+
 ## STEP 3: PLAN
 
 ### 3-1. PLAN 디스패치
@@ -65,7 +73,7 @@ op-dev-plan 스킬을 수행하라.
 > op-dev-plan 워커가 PLAN.md와 TEST-SCENARIO.md를 통합 작성한다. (문서 전용 작업 시 TEST-SCENARIO.md 스킵 — 워커가 자체 판별)
 
 PLAN 완료
-  → **State Gate**
+  → **State Gate** (`~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done` 호출 — P-1)
   → **PM Gate** (PLAN.md + TEST-SCENARIO.md 직접 검증 — 점검 목록 참조):
     1. `{PLAN.md 경로}` Read — §4.2 실행 체크리스트, §5 QA 체크리스트 확인
     2. `{TEST-SCENARIO.md 경로}` Read — 시나리오 목록, 코드 품질, 보안 항목 확인 (스킵 시 해당 없음)
@@ -75,8 +83,12 @@ PLAN 완료
        - [ ] TEST-SCENARIO.md 시나리오가 TASK.md 요구사항 전체를 커버하는가
        - [ ] TEST-SCENARIO.md 보안 항목(시크릿 스캔, .gitignore) 포함 여부
        - [ ] 설계 피드백 섹션에 미해결 빈틈이 없는가
-  → **State Gate**
+  → **State Gate** (`~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done` 호출 — P-1)
   → 사용자에게 PLAN + TEST-SCENARIO 함께 보고. 승인 = EXECUTE 시작 허가.
+
+> **Gate 일괄 처리 (P-2)**: PLAN QA Gate 행 N부터 시작하는 표준 4행은 `~/.opal/tools/state-tool/run.sh gate-pass <task-path> --start <N>` 1회 호출로 일괄 ✅ 처리 가능 (§2.13 G-10).
+> **사용자 확인 (P-5)**: 사용자 발화 후 PM이 `~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done --owner user --note '캡틴 확인: ...'` 호출. CLOSE 진입 전 이 행의 `owner=user` 여부를 도구가 자동 검증한다 (§2.16 G-13).
+> 근거: `PLAN.md` §3 Step 8 P-1 / P-2 / P-5 / §2.13 G-10 / §2.16 G-13
 
 ## STEP 4: EXECUTE
 
@@ -123,7 +135,11 @@ PLAN.md §4.2의 agent 필드에 따라 FE/BE 배치를 구성한다:
 
 ### 4-4. EXECUTE 완료 후
 
-모든 배치 완료 → changed_files 병합 → **State Gate** → **TEST 단계 진입**.
+모든 배치 완료 → changed_files 병합 → **State Gate** (`~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done` 호출 — P-1) → **TEST 단계 진입**.
+
+> **EXECUTE Step 완료 (P-4)**: 워커가 `~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done --as-worker --worker-stage EXECUTE --step <N/M>` 호출 (T-10 워커 권한 게이트).
+> **블로커 발생 (P-7)**: `~/.opal/tools/state-tool/run.sh block <task-path> --row <N> --reason '...'` 호출. STATE.md 블로커 섹션 자유 텍스트는 PM이 별도 작성.
+> 근거: `PLAN.md` §3 Step 8 P-1 / P-4 / P-7 / §2.11 G-6
 
 ---
 
@@ -133,7 +149,7 @@ op-dev-test-agent 워커 디스패치. TEST-SCENARIO.md 실행 + 결과 기록 +
 
 > **[PM 컨텍스트 주입]** 디스패치 프롬프트 첫 줄에 `[WORKER]` 삽입. 하네스 Guards 핵심 규칙 + TEST-SCENARIO.md 경로 + changed_files 전달.
 
-워커 완료 → **State Gate**
+워커 완료 → **State Gate** (`~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done` 호출 — P-1)
 
 ### PASS 시
 
@@ -145,8 +161,12 @@ op-dev-test-agent 워커 디스패치. TEST-SCENARIO.md 실행 + 결과 기록 +
      - [ ] 보안 항목(시크릿 스캔/.gitignore) Pass
      - [ ] 회귀 테스트 항목 Pass
      - [ ] 설계 피드백 미해결 빈틈 없음
-→ **State Gate**
+→ **State Gate** (`~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done` 호출 — P-1)
 → 사용자에게 완료 보고 후 CLOSE 단계 진입 승인 요청
+
+> **Gate 일괄 처리 (P-2)**: TEST QA Gate 행 N부터 시작하는 표준 4행은 `~/.opal/tools/state-tool/run.sh gate-pass <task-path> --start <N>` 1회 호출로 일괄 ✅ 처리 가능 (§2.13 G-10).
+> **사용자 확인 (P-5)**: 사용자 발화 후 PM이 `~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done --owner user --note '캡틴 확인: ...'` 호출.
+> 근거: `PLAN.md` §3 Step 8 P-1 / P-2 / P-5
 
 보고 형식:
 ```
@@ -171,7 +191,7 @@ op-dev-test-agent 워커 디스패치. TEST-SCENARIO.md 실행 + 결과 기록 +
    **checklist_source**: PLAN.md 실행 체크리스트 (실패 항목 집중)
    **하네스 Guards**: fix 범위를 실패 항목으로 한정. 회귀 방지: 이전 PASS 항목 재실행.
    ```
-3. fix 완료 → **State Gate** → op-dev-test-agent 재호출 (루프)
+3. fix 완료 → **State Gate** (`~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done` 호출 — P-1) → op-dev-test-agent 재호출 (루프)
 4. 3회 초과 시 사용자 에스컬레이션:
    "TEST {N}회 FAIL — 수동 개입 필요. 실패 항목: {목록}"
 
@@ -182,8 +202,12 @@ op-dev-test-agent 워커 디스패치. TEST-SCENARIO.md 실행 + 결과 기록 +
 모든 체크리스트 갱신 완료 확인 후 태스크를 마감한다.
 
 1. DONE.md 생성 (checkpoint-guide.md 참조)
-2. State Gate (하네스 §3 참조)
+2. State Gate (하네스 §3 참조) — `~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done` 호출 (P-1)
 3. 완료 보고
+
+> **CLOSE 진입 게이트 자동 검증**: CLOSE 단계 첫 행 mark 시 도구가 직전 단계 사용자 확인 행의 `owner=user` 여부를 자동 검증한다. 미통과 시 `close_gate_violation` 에러 반환 — agentic 모드의 `--auto-pass`도 거부됨 (§2.16 G-13 / PLAN §3 Step 8 P-8).
+> **추가작업 진입 (P-6)**: `~/.opal/tools/state-tool/run.sh add-row <task-path> --after <N> --stage CLOSE --item '...'` 호출 → current_status 자동 `additional_work` 전환. 완료 시 `~/.opal/tools/state-tool/run.sh status <task-path> --set additional_work_done`.
+> 근거: `PLAN.md` §3 Step 8 P-1 / P-6 / P-8 / §2.16 G-13
 
 보고 형식:
 ```
@@ -194,12 +218,17 @@ op-dev-test-agent 워커 디스패치. TEST-SCENARIO.md 실행 + 결과 기록 +
 
 > **추가작업**: 태스크 완료 후 추가작업이 필요하면 하네스 §3 추가작업 프로세스를 따른다.
 
-## STATE.md 도메인 설정
-- 모드: Full Task
-- 단계: TASK / ANALYSIS / PLAN / EXECUTE / TEST / CLOSE
-- 산출물: TASK.md, ANALYSIS.md, PLAN.md, TEST-SCENARIO.md, DONE.md
+## STATE.md 도메인 치환값
 
-**진행 현황 행 예시** (STATE.md 초기 생성 시 이 구조로 작성):
+| 필드 | 값 |
+|------|------|
+| 모드 | Full Task |
+| 단계 목록 | TASK / ANALYSIS / PLAN / EXECUTE / TEST / CLOSE |
+
+**진행 현황 행 예시** (아래 표는 `state init --rows-from <SKILL.md>` 또는 `--rows-spec` 인자의 SSOT — LLM이 직접 작성하는 것은 금지된다):
+
+> **[MUST] STATE.md 초기 생성**: `~/.opal/tools/state-tool/run.sh init <task-path> --skill opd --mode <interactive|agentic> --rows-from <SKILL.md 경로>` 호출. `--rows-from`이 아래 표를 파싱하여 행 구성을 자동 추출한다.
+> 근거: `tasks/134-260501-opp-pipeline-state-tool/TASK.md` F-15 / `PLAN.md` §2.3 / §2.20.2 / §3 Step 8 (P-3 advance, P-1 mark)
 
 ```markdown
 | # | 단계 | 항목 | 상태 | 시점 |
@@ -231,7 +260,7 @@ op-dev-test-agent 워커 디스패치. TEST-SCENARIO.md 실행 + 결과 기록 +
 | 25 | CLOSE | State Gate | ⬜ | - |
 ```
 
-> TEST 루핑 발생 시: "TEST | fix 작업 (N/3)", "TEST | State Gate (N/3)" 행을 동적 추가한다.
+> TEST 루핑 발생 시: `~/.opal/tools/state-tool/run.sh add-row <task-path> --after <N> --stage TEST --item 'fix 작업 (N/3)'` 호출로 동적 추가한다 (P-6 추가작업 행 추가 패턴).
 
 ## PM Gate 점검 목록
 
@@ -249,7 +278,13 @@ opal-harness-agentic.md 참조. `--agentic` 플래그 활성화 시 이 스킬�
 
 ### 활성화
 
-`//opd --agentic {작업 설명}` 형식으로 호출. STATE.md 모드 필드를 `agentic`으로 기록한다.
+`//opd --agentic {작업 설명}` 형식으로 호출. `state init` 시 `--mode agentic`을 지정하여 STATE.md 모드 필드를 `agentic`으로 기록한다.
+
+> **[MUST] agentic 모드 STATE 갱신**: 게이트 자율 통과 시 `~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done --auto-pass --note '<PM 판단 근거>'` 호출 (P-8). `--auto-pass` 명시 시 `state.json rows[N].note`에 "agentic auto-pass: <근거>"가 자동 기재된다.
+>
+> **[MUST] CLOSE 진입 게이트 거부 정책 (P-8 / §2.16 G-13)**: CLOSE 단계 첫 행은 `--auto-pass` 거부(`agentic_close_gate_requires_user` 에러). agentic 모드라도 CLOSE 진입 직전 캡틴에게 보고 후 사용자 발화("확인"/"승인")를 받아 직전 단계 사용자 확인 행을 `--owner user`로 mark한 뒤 CLOSE 첫 행을 진행한다.
+>
+> 근거: `tasks/134-260501-opp-pipeline-state-tool/TASK.md` F-15 / `PLAN.md` §2.15 G-12 / §2.16 G-13 / §3 Step 8 P-8
 
 ### 자율 게이트 흐름
 
@@ -290,3 +325,4 @@ TASK (PM 직접) → ANALYSIS Gate → PLAN Gate → EXECUTE Gate → TEST Gate 
 | v3.1 | 2026-04-15 | STEP 6 CLOSE 단계 신설 + TEST PM Gate 후 State Gate/사용자 확인 추가 + 진행 현황 행 CLOSE 2행 구조 반영 + 보고 형식 C안 적용 (121) |
 | v3.2 | 2026-04-23 11:39 | STEP 4 EXECUTE에 PLAN.md §4.2 agent 필드 기반 분배 디스패치 절차 추가 — FE/BE 병렬 섹션 agent 필드 기반 일반화·담당 Step/Scope 제한 필드 추가·execution-plan.json 폴백 유지 (129) |
 | v3.3 | 2026-04-24 | citation-rules 트리거 1줄 주입 — SSOT + Trigger 패턴 (130) |
+| v3.4 | 2026-05-01 | state-tool 도입 — STATE.md 직접 편집 금지 + `state-tool` 호출 표현 교체 (P-1~P-8 패턴 적용). "STATE.md 도메인 치환값" SSOT 보존 + `--rows-from` 파싱 SSOT 명시. agentic 활성화에 `--auto-pass` + CLOSE 진입 게이트 거부 정책(§2.16 G-13) 추가 (134) |

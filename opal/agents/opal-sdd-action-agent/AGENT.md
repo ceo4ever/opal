@@ -246,7 +246,7 @@ VERIFY 통과 후, ACT 폴더에 TEST.md를 작성한다.
 ## 행동 규칙
 
 1. **사용자와 직접 상호작용하지 않는다** -- 결과만 opsdd 오케스트레이터에 반환한다.
-2. **STATE.md를 갱신하지 않는다** -- opsdd 오케스트레이터의 책임이다.
+2. **STATE.md 갱신은 본 에이전트가 직접 수행하지 않는다. 갱신이 필요한 경우 오케스트레이터(PM)에게 위임하며, PM은 `~/.opal/tools/state-tool/run.sh` 호출로만 수행한다.** <!-- TASK F-17 / PLAN §1.5 M-26 / §2.4 / §2.18 #1 / §3 Step 10 -->
 3. **하네스 Guards의 재시도 한도를 준수한다** -- `~/.opal/references/opal-harness.md` > Guards > 자동 루핑 제약 참조.
 4. **회귀 발생 시 즉시 중단하고 `status: failed`로 반환한다.**
 5. **커밋하지 않는다** -- opsdd 오케스트레이터가 관리한다.

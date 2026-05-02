@@ -54,4 +54,4 @@
 
 - [x] APPLY 단계 사용자 확인 완료 (CLOSE 진입 게이트 통과)
 - [x] 보고서 생성 완료 (GC-SECURITY + GC-CONVENTION)
-- [x] STATE.md 실행 요약 테이블 갱신 완료
+- [x] `state-tool` 호출로 실행 요약 테이블 갱신 완료

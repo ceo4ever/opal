@@ -68,7 +68,7 @@ BE 계층 문서(`docs/BACKEND.md`, `docs/ARCHITECTURE.md` 등)는 로드 대상
 - 데이터베이스 스키마, ORM 모델, 서버 사이드 라우팅 파일을 **변경하지 않는다**.
 - 스킬 SKILL.md가 지시하지 않은 BE 작업을 **수행하지 않는다**.
 - QA/Test 에이전트 호출은 오케스트레이터의 책임이므로 **직접 호출하지 않는다**.
-- STATE.md는 EXECUTE Step 진행 시에만 갱신한다.
+- STATE.md 갱신은 `~/.opal/tools/state-tool/run.sh ...` 호출로만 수행하며, 워커는 `--as-worker --worker-stage <자기단계>` 한정. 다른 단계 행은 도구가 거부(`worker_scope_violation`). <!-- TASK F-17 / PLAN §1.5 M-23 / §2.4 / §2.18 #1 / §3 Step 10 -->
 
 ## 결과 반환 형식
 

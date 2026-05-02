@@ -107,7 +107,23 @@ tasks/{NNN}-oppd-{프로젝트명}/
 
 ### STATE.md 초기 생성
 
-아래 "STATE.md 관리" 섹션의 템플릿으로 생성한다.
+state-tool을 호출하여 초기화한다:
+
+```
+~/.opal/tools/state-tool/run.sh init <task-path> --skill oppd --rows-from opal/skills/opal-pilot-project-dev/SKILL.md
+```
+
+> **[R-10 비표준 행 구성]** oppd는 Phase 기반(1-PLAN/2-WBS/3-EXECUTE) 비표준 행 구조를 사용한다. `gate-pass`(4-row 일괄) 사용 불가 — `mark` 4회 개별 호출 필수. `gate-pass` 호출 시 `gate_pattern_mismatch` 에러가 반환된다.
+>
+> 각 Gate 전환 시:
+> ```
+> ~/.opal/tools/state-tool/run.sh mark <task-path> --row <QA_Gate_N> --done
+> ~/.opal/tools/state-tool/run.sh mark <task-path> --row <State_Gate_N> --done
+> ~/.opal/tools/state-tool/run.sh mark <task-path> --row <PM_Gate_N> --done
+> ~/.opal/tools/state-tool/run.sh mark <task-path> --row <State_Gate_N+1> --done
+> ```
+
+아래 "STATE.md 관리" 섹션의 템플릿으로 STATE.md 본문을 작성한다.
 
 ---
 
@@ -226,7 +242,10 @@ opwt 완료 후, PM이 결과를 종합하여 사용자에게 보고한다:
 
 1. `docs/PROJECT.md`의 문서 테이블에 PRD.md, TRD.md를 등록한다
 2. `docs/ARCHITECTURE.md`를 업데이트한다 (TRD에서 확정된 기술 스택 버전 반영)
-3. `STATE.md`를 갱신한다 (Phase 1 → 확정)
+3. STATE.md Phase 진행 현황 갱신 (Phase 1 → 확정) — state-tool을 호출한다:
+   ```
+   ~/.opal/tools/state-tool/run.sh mark <task-path> --row <Phase1_확정_행N> --done --owner user --note '캡틴 확인: Phase 1 확정'
+   ```
 4. `.opal/MEMORY.md`의 작업 히스토리를 갱신한다
 
 ---
@@ -302,7 +321,10 @@ PRD/TRD를 기반으로 태스크를 분할한다.
 ### 2-5. 사용자 확정 후 후속 조치 (필수)
 
 1. `docs/PROJECT.md`의 문서 테이블에 WBS.md를 등록한다
-2. `STATE.md`를 갱신한다 (Phase 2 → 확정)
+2. STATE.md Phase 진행 현황 갱신 (Phase 2 → 확정) — state-tool을 호출한다:
+   ```
+   ~/.opal/tools/state-tool/run.sh mark <task-path> --row <Phase2_확정_행N> --done --owner user --note '캡틴 확인: Phase 2 확정'
+   ```
 3. `.opal/MEMORY.md`의 작업 히스토리를 갱신한다
 
 ---
@@ -353,7 +375,10 @@ for each group in groups:
     3. 에이전트 결과 수신 → 결과 처리 (아래 참조)
     4. PM 검수 (완료 산출물 확인)
     5. 사용자에게 액션 완료 보고
-    6. STATE.md 갱신 (verification_log 기록 포함)
+    6. STATE.md Phase 3 행 갱신 — state-tool을 호출한다:
+       ```
+       ~/.opal/tools/state-tool/run.sh mark <task-path> --row <Phase3_액션_행N> --done --note 'A{NN} 완료'
+       ```
 
   if group.type == "parallel":
     1. 사용자에게 병렬 그룹 시작 보고
@@ -361,7 +386,10 @@ for each group in groups:
     3. 전체 머지 + 통합 테스트
     4. PM 검수 (그룹 단위)
     5. 사용자에게 그룹 완료 보고
-    6. STATE.md 갱신
+    6. STATE.md 병렬 그룹 행 갱신 — state-tool을 호출한다:
+       ```
+       ~/.opal/tools/state-tool/run.sh mark <task-path> --row <그룹_행N> --done --note '그룹 완료'
+       ```
 ```
 
 #### 에이전트 결과 처리
@@ -673,3 +701,4 @@ opal-harness-agentic.md "에스컬레이션 조건" 공통 기준에 추가:
 | v3.4 | 2026-04-01 | Phase 3 opal-task-action-agent 디스패치 프롬프트에 `[WORKER]` 마커 + harness_guards + reference_docs 파라미터 추가 (063) |
 | v4.0 | 2026-04-02 | ROADMAP → WBS 전면 전환. Phase 2 명칭·산출물·참조 변경. Work Package 계층 도입. `--wbs` 플래그 추가. STATE.md 템플릿 경량화 (액션 상태 추적을 WBS.md로 이관) (075) |
 | v4.1 | 2026-04-24 | citation-rules 트리거 1줄 주입 — SSOT + Trigger 패턴 (130) |
+| v4.2 | 2026-05-01 | state-tool 도입 — STATE.md 직접 편집 금지 + `state-tool` 호출 표현 교체 (P-1~P-8 패턴 적용). 태스크 생성 init 호출 + `--rows-from` SSOT. R-10 비표준 행 구성 `gate-pass` 금지 + mark 4회 개별 호출 필수 블록 추가. Phase 1~3 각 확정/완료 시 mark 호출 명시 (134) |

@@ -12,22 +12,32 @@
 
 > **[강제]** 아래 각 이벤트 발생 시 STATE.md 갱신은 **필수**다. 갱신 미수행 시 다음 단계 진입이 금지된다. 각 Gate 직후 State Gate가 갱신 여부를 확인하며, 미갱신 감지 시 즉시 차단한다.
 
-| 이벤트 | 갱신 주체 | 파이프라인 현황판 행 갱신 | 상태: 필드 | 강제 여부 |
-|--------|----------|--------------------|-----------|----------|
-| TASK 완료 | 오케스트레이터 | STATE.md 초기 생성 + 파이프라인 현황판 행 구성 | 진행 중 | **필수** |
-| 단계 시작 | 오케스트레이터 | 해당 단계 작업 행 → 🔄 | 진행 중 | **필수** |
-| 단계 완료(작업) | 워커(1차) + PM(확인) | 해당 단계 작업 행 → ✅ | - | **필수** |
-| 산출물 생성 완료 | 워커(1차) + PM(확인) | 해당 산출물 생성 행 → ✅ | - | **필수** |
-| QA Gate 통과 | PM | QA Gate 행 → ✅ | - | **필수** |
-| State Gate (QA 직후) | PM | State Gate 행 → ✅ | - | **필수** |
-| PM Gate 통과 | PM | PM Gate 행 → ✅ | - | **필수** |
-| State Gate (PM 직후) | PM | State Gate 행 → ✅ | - | **필수** |
-| 사용자 확인 완료 | PM | 사용자 확인 행 → ✅ | 완료 (직전 단계가 CLOSE 진입 게이트인 경우) | **필수** |
-| EXECUTE Step 완료 | 워커(1차) + PM(확인) | - | 진행: Step N/M | **필수** |
-| 블로커 | 워커 | 해당 행 → ❌ | 블로커 | **필수** |
-| 태스크 완료 | 오케스트레이터 | CLOSE 단계 State Gate 행 → ✅ | 완료 (CLOSE 단계 완료 시 발생) | **필수** |
-| 추가작업 진입 | 오케스트레이터 | - | 추가작업중 (CLOSE 단계 재진입) | **필수** |
-| 추가작업 완료 | 오케스트레이터 | - | 추가작업완료 (CLOSE 재진입 완료) | **필수** |
+> **[MUST] 파이프라인 행 상태 변경은 `state-tool`로만 수행한다. LLM이 STATE.md 마크다운 표를 직접 편집하는 것은 금지된다.**
+>
+> 호출 형식: `~/.opal/tools/state-tool/run.sh <command> <task-path> [options]`
+>
+> 위반 시 도구가 거부하며 에러 코드를 반환한다. 주요 에러:
+> `marker_missing`(STATE.md 마커 누락) / `worker_scope_violation`(워커 권한 초과) / `state_not_initialized`(state.json 미존재)
+> — 전체 에러 카탈로그 23종: `tasks/134-260501-opp-pipeline-state-tool/PLAN.md` §2.18
+>
+> 근거: `tasks/134-260501-opp-pipeline-state-tool/TASK.md` F-7 / `PLAN.md` §2.11 G-6 / §1.5 M-1
+
+| 이벤트 | 갱신 주체 | 파이프라인 현황판 행 갱신 | 상태: 필드 | 강제 여부 | 갱신 명령 |
+|--------|----------|--------------------|-----------|----------|---------|
+| TASK 완료 | 오케스트레이터 | STATE.md 초기 생성 + 파이프라인 현황판 행 구성 | 진행 중 | **필수** | `~/.opal/tools/state-tool/run.sh init <task-path> --skill <약어> --mode <모드>` |
+| 단계 시작 | 오케스트레이터 | 해당 단계 작업 행 → 🔄 | 진행 중 | **필수** | `~/.opal/tools/state-tool/run.sh advance <task-path> --row <N>` |
+| 단계 완료(작업) | 워커(1차) + PM(확인) | 해당 단계 작업 행 → ✅ | - | **필수** | `~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done` |
+| 산출물 생성 완료 | 워커(1차) + PM(확인) | 해당 산출물 생성 행 → ✅ | - | **필수** | `~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done` |
+| QA Gate 통과 | PM | QA Gate 행 → ✅ | - | **필수** | `~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done` |
+| State Gate (QA 직후) | PM | State Gate 행 → ✅ | - | **필수** | `~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done` |
+| PM Gate 통과 | PM | PM Gate 행 → ✅ | - | **필수** | `~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done` |
+| State Gate (PM 직후) | PM | State Gate 행 → ✅ | - | **필수** | `~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done` |
+| 사용자 확인 완료 | PM | 사용자 확인 행 → ✅ | 완료 (직전 단계가 CLOSE 진입 게이트인 경우) | **필수** | `~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done --owner user` |
+| EXECUTE Step 완료 | 워커(1차) + PM(확인) | - | 진행: Step N/M | **필수** | `~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done --as-worker --worker-stage EXECUTE --step <N/M>` |
+| 블로커 | 워커 | 해당 행 → ❌ | 블로커 | **필수** | `~/.opal/tools/state-tool/run.sh block <task-path> --row <N> --reason <text>` |
+| 태스크 완료 | 오케스트레이터 | CLOSE 단계 State Gate 행 → ✅ | 완료 (CLOSE 단계 완료 시 발생) | **필수** | `~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done` |
+| 추가작업 진입 | 오케스트레이터 | - | 추가작업중 (CLOSE 단계 재진입) | **필수** | `~/.opal/tools/state-tool/run.sh add-row <task-path> --after <N> --stage <단계> --item <항목>` |
+| 추가작업 완료 | 오케스트레이터 | - | 추가작업완료 (CLOSE 재진입 완료) | **필수** | `~/.opal/tools/state-tool/run.sh status <task-path> --set additional_work_done` |
 
 **갱신 모델**: 워커가 1차 갱신을 수행하고(best effort), PM이 각 Gate 직후 State Gate에서 확인하여 미갱신/오갱신 시 즉시 보완한다.
 
@@ -102,3 +112,4 @@
 | 버전 | 날짜 | 내용 |
 |------|------|------|
 | v1.0 | 2026-04-21 | 다운사이징 — opal-harness.md §3 분리. 레거시 호환 노트 3건 제외 (128) |
+| v1.1 | 2026-05-01 | 갱신 이벤트 표에 "갱신 명령" 컬럼 추가 + `[MUST] state-tool 호출만 허용` 블록 추가 — TASK F-7 / PLAN §2.11 G-6 / §1.5 M-1 (134) |

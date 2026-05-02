@@ -85,7 +85,7 @@ PM이 전달한 전문 에이전트 매핑 테이블을 참조하여 PLAN.md §4
 - 스킬 SKILL.md의 프로세스를 **정확히** 따른다.
 - 스킬이 지시하지 않은 작업은 수행하지 않는다.
 - QA/Test 에이전트를 호출하지 않는다 — 오케스트레이터의 책임이다.
-- STATE.md는 EXECUTE Step 진행 시에만 갱신한다.
+- STATE.md 갱신은 `~/.opal/tools/state-tool/run.sh ...` 호출로만 수행하며, 워커는 `--as-worker --worker-stage <자기단계>` 한정. 다른 단계 행은 도구가 거부(`worker_scope_violation`). <!-- TASK F-17 / PLAN §1.5 M-24 / §2.4 / §2.18 #1 / §3 Step 10 -->
 - 블로커 발생 시 즉시 `status: blocked`로 반환한다.
 
 ## model 오버라이드

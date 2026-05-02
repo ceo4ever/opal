@@ -42,12 +42,26 @@ PM이 다음 조건을 자동 인식하면 추가작업 프로세스 진입을 �
 #### 진입 절차
 
 1. STATE.md 상태를 `완료` → `추가작업중`으로 갱신
-2. 추가작업 수행
+   - `add-row` 실행 시 current_status가 `done`이면 자동으로 `additional_work`로 전환 (PLAN §2.11 G-7)
+   - 명시 호출 옵션: `~/.opal/tools/state-tool/run.sh status tasks/{NNN}-.../ --set additional_work`
+2. 추가작업 행 삽입:
+   ```
+   ~/.opal/tools/state-tool/run.sh add-row tasks/{NNN}-.../ --after <마지막행N> --stage CLOSE --item "추가작업 항목명"
+   ```
+   - 응답: `{"ok": true, "command": "add-row", "row_id": N+1, "current_status": "additional_work"}`
+   - 근거: TASK F-11 / PLAN §2.11 G-7
 3. CLOSE 단계 재진입: ADD_DONE.md 작성 (DONE.md는 원본 완료 기록으로 보존, 수정 금지)
 4. 스킬별 검증 수행 (아래 테이블 참조)
-5. State Gate (STATE.md 갱신 확인)
+5. State Gate (추가작업 행 ✅ 처리):
+   ```
+   ~/.opal/tools/state-tool/run.sh mark tasks/{NNN}-.../ --row <N+1> --done
+   ```
 6. 사용자 확인
-7. STATE.md 상태를 `추가작업중` → `추가작업완료`로 갱신
+7. STATE.md 상태를 `추가작업중` → `추가작업완료`로 갱신:
+   ```
+   ~/.opal/tools/state-tool/run.sh status tasks/{NNN}-.../ --set additional_work_done
+   ```
+   - 근거: PLAN §2.11 G-7 (`additional_work → additional_work_done` 전환은 명시 호출만)
 
 #### 스킬별 검증 오버라이드
 
@@ -69,3 +83,4 @@ PM이 다음 조건을 자동 인식하면 추가작업 프로세스 진입을 �
 |------|------|---------|
 | v1.0 | 2026-04-05 | 최초 작성 — opal-harness.md §3에서 분리 (087) |
 | v1.1 | 2026-04-15 | CLOSE 재진입 원칙 추가 + 진입 절차 State Gate/사용자 확인 포함 (121) |
+| v1.2 | 2026-05-01 | 진입 절차 1~7번에 state-tool 호출 명세 추가 — `add-row` / `mark` / `status --set additional_work_done` (§2.11 G-7) + 자동 전환 명시 (134) |

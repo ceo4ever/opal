@@ -40,6 +40,33 @@
    - 구조 변경 → ARCHITECTURE.md 갱신 필요?
    - 새 패턴 도입 → CONVENTIONS.md 갱신 필요?
    - 갱신 필요 시: PM이 직접 갱신하거나, opi 최신화를 제안
+12. STATE.md 정합성 자동 검증 (state validate)
+   - 실행: `~/.opal/tools/state-tool/run.sh validate tasks/{NNN}-.../`
+   - 결과: violations[] 0건이면 Pass, ≥1건이면 PM Gate Fail (재작업)
+   - 근거: TASK F-10 / PLAN §2.6
+
+### 자가 진단 (PM Gate 진입 전 체크)
+
+1. 파이프라인 현황판 행 상태가 state-tool로만 갱신되었는가 (LLM 직접 편집 0건)
+2. 각 Gate 직후 State Gate 행이 즉시 ✅ 처리되었는가
+3. CLOSE 진입 게이트 통과 확인 — CLOSE 단계 첫 행 mark 시 prev_user_row(owner=user, status=done)가 존재하는가
+   - 미통과 시 도구가 `close_gate_violation`으로 거부함 — 사용자 확인 행 먼저 처리 필요
+   - 근거: PLAN §2.16 G-13
+4. 최근 24시간 의사결정 로그에 `--force` 사용 0건 확인
+   - 누적 발생 시 별도 태스크로 우회 제한 정책 재설계 필요
+   - 근거: PLAN §2.17 트리거 #1/#3/#8 / R-11
+
+### Gate 통과 일괄 처리 (gate-pass)
+
+표준 단계 행 구성(QA Gate → State Gate → PM Gate → State Gate 4행 연속)에서 PM이 `gate-pass` 1회 호출로 4행 일괄 ✅ 처리한다.
+
+```
+~/.opal/tools/state-tool/run.sh gate-pass tasks/{NNN}-.../ --start <QA Gate 행 번호>
+```
+
+- 적용 조건: 4행이 정확히 `["QA Gate", "State Gate", "PM Gate", "State Gate"]` 패턴이고 동일 stage인 경우
+- 비표준 행 구성(opsdd/oppd 등): `gate_pattern_mismatch` / `gate_stage_mixed` 거부 → `mark` 4회 개별 호출 사용
+- 근거: PLAN §2.13 G-10 / R-10
 
 ### 판정
 
@@ -65,3 +92,4 @@
 | 버전 | 날짜 | 내용 |
 |------|------|------|
 | v1.0 | 2026-04-21 | 다운사이징 — opal-pm.md §4 분리 (128) |
+| v1.1 | 2026-05-01 | 검토 절차 12번 `state validate` 추가 + 자가 진단 섹션(force 사용 0건 확인 R-11 / CLOSE 게이트 close_gate_violation §2.16 G-13) + gate-pass 일괄 처리 절차 추가 §2.13 G-10 (134) |

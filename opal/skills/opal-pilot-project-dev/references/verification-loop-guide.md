@@ -431,7 +431,16 @@ QA 피드백:
 
 ## 6. PM 루프 모니터링
 
-오케스트레이터(oppd)는 PM 역할로서 검증 루프의 진행 상황을 모니터링하고, STATE.md를 통해 추적 가능한 상태를 유지한다.
+> **[MUST] 파이프라인 행 상태 변경은 `~/.opal/tools/state-tool/run.sh` 호출로만 수행한다. LLM이 STATE.md를 직접 편집하는 것은 금지된다.**
+> — `tasks/134-260501-opp-pipeline-state-tool/TASK.md` F-18 / `PLAN.md` §1.5 M-30 / §3 Step 11
+>
+> 예: EXECUTE Step 완료 시:
+> ```bash
+> ~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done --as-worker --worker-stage EXECUTE --step <N/M>
+> ```
+> **[R-10]** oppd 비표준 행 구성 — `gate-pass` 사용 불가. `mark` 개별 호출 필수.
+
+오케스트레이터(oppd)는 PM 역할로서 검증 루프의 진행 상황을 모니터링하고, `state-tool` 호출로 STATE.md 행 상태를 갱신하여 추적 가능한 상태를 유지한다.
 
 ### STATE.md 검증 루프 로그 갱신 시점
 
@@ -493,3 +502,11 @@ QA 피드백:
 - `opal-harness.md` — 오케스트레이터 공통 인프라 (Guards, Gates, State)
 - `opal-pilot-project-dev/SKILL.md` — oppd Phase 3 실행 프로세스
 - `opal-pilot-project-dev/references/wbs-guide.md` — 태스크 분할 및 완료 기준 정의
+
+---
+
+## 변경이력
+
+| 날짜 | 버전 | 변경내용 |
+|------|------|---------|
+| 2026-05-01 | R-2 | state-tool 도입 — §6 PM 루프 모니터링에 `[MUST]` state-tool 호출 블록 추가. oppd 비표준 행 구성 R-10 명시(gate-pass 금지). EXECUTE Step 완료 시 `state mark --as-worker` 호출 표기. "STATE.md 검증 루프 로그" 섹션(§5/§6)은 자유 텍스트 영역으로 보존 — TASK F-18 / PLAN §1.5 M-30 / §3 Step 11 (134) |

@@ -33,7 +33,7 @@ PM이 사용자를 대행하는 만큼, interactive 모드보다 **책임과 의
 
 | 의무 | 설명 |
 |------|------|
-| **판단 기록 의무** | 매 게이트에서 Pass/Fail 판단 근거를 AGENTIC-LOG.md에 기록한다. 왜 승인했는지, 무엇을 확인했는지 명시. |
+| **판단 기록 의무** | 매 게이트에서 Pass/Fail 판단 근거를 AGENTIC-LOG.md에 기록한다. 왜 승인했는지, 무엇을 확인했는지 명시. agentic auto-pass(`--auto-pass`) 사용 시 state.json `note` 필드에 "agentic auto-pass: ..." 형태로 자동 기재되므로 AGENTIC-LOG.md의 `GATE` 엔트리와 이중 추적된다 (PLAN §2.8). |
 | **산출물 직접 검증 의무** | 체크리스트 수준이 아닌, 산출물을 **직접 Read하여 내용 수준까지 검증**한다. 요구사항 누락, 설계 오류, 일관성 문제를 내용 기반으로 판단. |
 | **완수 의무** | 100% 완수까지 루핑한다. 미완료 항목을 추적하고, 모든 체크리스트 항목이 충족될 때까지 진행. |
 | **품질 책임** | PM이 최종 품질에 책임진다. 사용자가 agentic 결과를 받았을 때 추가 수정이 불필요한 수준이 목표. |
@@ -61,8 +61,52 @@ PM이 사용자를 대행하는 만큼, interactive 모드보다 **책임과 의
 
 | 판정 | 동작 |
 |------|------|
-| **Pass** | PM이 자동 승인하고 다음 단계 진행 — 판단 근거를 AGENTIC-LOG.md에 기록 |
+| **Pass** | PM이 자동 승인하고 다음 단계 진행 — 판단 근거를 AGENTIC-LOG.md에 기록. 아래 state-tool 호출로 행을 ✅ 처리한다 |
 | **Fail** | PM이 워커에게 재지시 → 재검토 (아래 "Gate 루핑 규칙" 참조) |
+
+**Pass 시 state-tool 호출**:
+
+일반 단계 Gate 통과 시 (`--auto-pass`는 사용자 확인 행 전용):
+
+```
+~/.opal/tools/state-tool/run.sh mark tasks/{NNN}-.../ --row <N> --done
+```
+
+사용자 확인 행(agentic 모드에서 PM이 사용자 대행 자율 통과):
+
+```
+~/.opal/tools/state-tool/run.sh mark tasks/{NNN}-.../ \
+  --row <N> --done \
+  --auto-pass \
+  --note "agentic auto-pass: <PM 판단 근거>"
+```
+
+- `--auto-pass` 명시 시 state.json `rows[N].owner = "auto"`, `note`에 "agentic auto-pass: ..." 자동 기재 (PLAN T-9)
+- agentic auto-pass는 state.json `note`에 자동 기재되므로 별도 감사 로그 불필요 (PLAN §2.8)
+- 근거: TASK F-12 / PLAN §2.15 G-12
+
+**CLOSE 진입 게이트 (agentic 모드 예외)**:
+
+CLOSE 단계 첫 행은 `--auto-pass` 거부됨. 도구가 `agentic_close_gate_requires_user` 에러로 거부한다.
+
+```json
+{"ok": false, "error": "agentic_close_gate_requires_user", "row_id": N}
+```
+
+CLOSE 진입 절차:
+1. PM이 캡틴에게 CLOSE 진입 직전 상황을 보고한다
+2. 캡틴(사용자)의 승인 발화(`승인`/`확인`/`확인완료` 등)를 받는다
+3. 직전 단계 사용자 확인 행(prev_user_row)을 `--owner user`로 mark한다:
+   ```
+   ~/.opal/tools/state-tool/run.sh mark tasks/{NNN}-.../ \
+     --row <사용자 확인 행 N> --done \
+     --owner user \
+     --note "캡틴 확인: <발화 요약>"
+   ```
+4. 이후 CLOSE 첫 행 mark 시 도구가 prev_user_row 자동 검증을 통과시킨다
+
+- `--force` 우회 시 STATE.md 의사결정 로그 자동 기재 + `--note` 필수 (미제공 시 `note_required_for_force` 거부)
+- 근거: PLAN §2.16 G-13 / R-12
 
 ## 5. Gate 루핑 규칙
 
@@ -108,7 +152,7 @@ PM이 자율 진행을 중단하고 사용자에게 올리는 기준:
 | `커밋 규칙` | agentic mode에서도 사용자 명시 요청 시에만 커밋 수행 |
 | `디스패치 의무 원칙` | 워커 디스패치로 정의된 단계는 반드시 서브에이전트 사용 |
 | `자동 루핑 제약` | 공통 하네스 §1 Guards의 기존 한도 그대로 적용 |
-| `CLOSE 진입 게이트` | 사용자의 확인된 지시(`승인`/`확인`/`확인완료` 등)가 없으면 CLOSE 단계 진입 불가. agentic 모드에서도 이 규칙은 유지 — 다른 Gate는 PM 자율 통과 허용이나 CLOSE 진입은 예외. |
+| `CLOSE 진입 게이트` | 사용자의 확인된 지시(`승인`/`확인`/`확인완료` 등)가 없으면 CLOSE 단계 진입 불가. agentic 모드에서도 이 규칙은 유지 — 다른 Gate는 PM 자율 통과 허용이나 CLOSE 진입은 예외. CLOSE 첫 행에 `--auto-pass` 시도 시 도구가 `agentic_close_gate_requires_user`로 거부한다. PM은 CLOSE 진입 직전 캡틴 보고 후 사용자 발화를 받아 prev_user_row를 `--owner user`로 mark해야 한다 (§4 CLOSE 진입 게이트 절차 참조 / PLAN §2.16 G-13 / R-12). |
 
 ## 8. AGENTIC-LOG.md (PM 대행 일지)
 
@@ -185,3 +229,4 @@ PM이 수행한 모든 활동을 시계열로 기록하여, 사용자가 사후�
 | v1.2 | 2026-04-06 | §4 강화 검토 기준에 Artifact Gate 항목 추가 (090) |
 | v1.3 | 2026-04-12 | §4 Artifact Gate 참조(§2.5) → PM Gate 자가 진단 참조로 수정 + §7.6 참조를 모듈화 구조에 맞게 갱신 (111) |
 | v1.4 | 2026-04-15 | §7 유지되는 규칙 테이블에 "CLOSE 진입 게이트" 행 추가 — agentic 모드에서도 CLOSE 진입은 사용자 승인 필수 (121) |
+| v1.5 | 2026-05-01 | §4 Pass 시 state-tool `mark --done` / `--auto-pass` 호출 표기 추가 + CLOSE 진입 게이트 4단계 절차 신설 (agentic_close_gate_requires_user 거부 / --owner user 필수 / §2.16 G-13 R-12). §3 판단 기록 의무에 auto-pass note 자동 기재 설명 추가. §7 CLOSE 진입 게이트 행 보강 (134) |

@@ -110,7 +110,11 @@ git ls-files
 
 ### 1.4 STATE.md 생성
 
-태스크 폴더 생성 + STATE.md 초기화 (§STATE.md 도메인 치환값 참조).
+태스크 폴더 생성 + STATE.md 초기화:
+
+```
+~/.opal/tools/state-tool/run.sh init <task-path> --skill opgc --rows-from opal/skills/opal-pilot-gc/SKILL.md
+```
 
 ### 1.5 PROJECT.md 프로젝트 구성 기반 분할
 
@@ -149,7 +153,7 @@ else:
 
 > **[MUST] 하위호환**: "프로젝트 구성" 섹션이 없는 기존 프로젝트에서는 fallback(프로젝트 전체 × 체커)으로 진행하여 1+1 단일 디스패치와 동일하게 동작한다.
 
-**산출물**: STATE.md 갱신 (분할 결과는 내부 참조, STATE.md에는 디스패치 매트릭스 요약만 기록)
+**산출물**: state-tool로 STATE.md 갱신 (분할 결과는 내부 참조, STATE.md에는 디스패치 매트릭스 요약만 기록)
 
 **게이트**: 없음 (자동 진행)
 
@@ -300,7 +304,7 @@ Critical 또는 High 이슈 1건 이상 → "[심각도 트리거]" 제안 생�
 
 단일 요소(Fallback)인 경우 기존 2행 + 합계 포맷 유지.
 
-**산출물**: `GC-SECURITY-{ts}[-{element}].md` × N, `GC-CONVENTION-{ts}[-{element}].md` × N, STATE.md 갱신
+**산출물**: `GC-SECURITY-{ts}[-{element}].md` × N, `GC-CONVENTION-{ts}[-{element}].md` × N, state-tool로 STATE.md 갱신
 
 **게이트**: 사용자 확인 (기본) — Agentic 모드에서 자율 통과
 
@@ -333,7 +337,14 @@ CLOSE로 진행할까요? 수정이 필요하면 CLOSE 단계에서 //opds 체�
 
 ### 4.2 State Gate
 
-하네스 §3 State Gate 참조 — STATE.md CLOSE 단계 행 `✅` 전환.
+state-tool 호출로 CLOSE 단계 행 갱신:
+
+```
+~/.opal/tools/state-tool/run.sh mark <task-path> --row 7 --done  # DONE.md 생성
+~/.opal/tools/state-tool/run.sh mark <task-path> --row 8 --done  # State Gate (CLOSE 완료)
+```
+
+> **CLOSE 게이트 제약 (§2.16 G-13)**: CLOSE 단계 최초 진입 행(#7)은 `--auto-pass` 적용 불가 (`close_gate_violation`). 반드시 위 명시 호출로 처리한다.
 
 ### 4.3 수정이 필요한 경우 — opds 체인
 
@@ -392,6 +403,14 @@ opgc 실행 결과 {N}건 이슈 감지
 | 모드 | GC |
 | 단계 목록 | SCAN / CHECK / REPORT / CLOSE |
 
+> **[SSOT]** `state-tool init` 호출 시 이 섹션의 행 테이블을 `--rows-from` 옵션으로 참조한다:
+>
+> ```
+> ~/.opal/tools/state-tool/run.sh init <task-path> --skill opgc --rows-from opal/skills/opal-pilot-gc/SKILL.md
+> ```
+>
+> state-tool이 이 파일의 "파이프라인 현황판 행 구조" 테이블을 읽어 state.json을 초기화한다. 행 데이터를 직접 편집하지 않는다.
+
 **파이프라인 현황판 행 구조** (STATE.md 초기 생성 시):
 
 ```markdown
@@ -429,6 +448,15 @@ Agentic 모드 특수 규칙:
 - **CLOSE 진입 게이트만 유지** — REPORT 사용자 확인 게이트는 자율 통과
 - `AGENTIC-LOG.md`를 태스크 폴더에 생성하여 자율 결정 내역을 기록
 - 보고서 내 `[?] review` 항목은 **건너뛰지 않고** 주석에 "agentic: 사용자 확인 필요" 표기
+- 자율 통과 시 state-tool `--auto-pass` 호출 (P-8):
+  ```
+  ~/.opal/tools/state-tool/run.sh mark <task-path> --row N --done --auto-pass --note '<근거>'
+  ```
+- **CLOSE 단계 최초 진입 행은 `--auto-pass` 금지** (`close_gate_violation` — §2.16 G-13); 반드시 명시 호출
+- init 시 `--mode agentic` 플래그 추가:
+  ```
+  ~/.opal/tools/state-tool/run.sh init <task-path> --skill opgc --mode agentic --rows-from opal/skills/opal-pilot-gc/SKILL.md
+  ```
 - CLOSE 진입 전 캡틴 확인 메시지 표시:
   ```
   [Agentic CLOSE 게이트] 자율 실행 완료. CLOSE 진입 승인? (y/n)
@@ -479,3 +507,4 @@ fingerprint = sha1(fingerprint_input).hex()[:16]
 | v1.0 | 2026-04-17 | 초기 작성 — 5단계 파이프라인, arguments 파싱, STATE.md 치환값, 에이전트 병렬 디스패치, Agentic Mode, CLOSE 진입 게이트, 트리거 독립 판정, stash 롤백, fingerprint (122) |
 | v1.1 | 2026-04-17 | APPLY 제거(진단 전담화) — 4단계 파이프라인(SCAN/CHECK/REPORT/CLOSE), CLI 토글 전환(`--security`/`--convention`, `--apply`/`--only X` 제거), PROJECT.md 프로젝트 구성 기반 동적 분할 병렬 디스패치, 체커에 `scope` 입력 + 허브+링크 체이닝, opds 수동 체인 가이드 (125) |
 | v1.2 | 2026-04-24 | citation-rules 트리거 1줄 주입 — SSOT + Trigger 패턴 (130) |
+| v1.3 | 2026-05-01 | state-tool 도입 — SCAN 1.4 init 호출 명시 + CLOSE State Gate를 state-tool mark 명시 호출로 교체 + `--rows-from` SSOT 지시 + agentic `--auto-pass` + CLOSE 진입 게이트 거부 정책 추가 (134) |
