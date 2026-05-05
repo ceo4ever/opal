@@ -1,2 +1,20 @@
 .DS_Store
 .opal/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.tox/
+build/
+dist/
+venv/
+.venv/
+env/
+.env
