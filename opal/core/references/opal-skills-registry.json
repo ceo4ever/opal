@@ -258,6 +258,18 @@
         "description": "CDN 기반 정적 HTML 화면 빠른 생성 — 태스크 컨텍스트 자동 흡수 + 인터뷰",
         "triggers": ["^html-mockup$", "^mockup$", "(?i)(목업|모크업|HTML\\s*화면\\s*만들|HTML\\s*목업)"],
         "paths": ["{project}/.opal/skills/html-mockup/SKILL.md", "~/.opal/skills/html-mockup/SKILL.md"]
+      },
+      {
+        "name": "system-architecture-html",
+        "alias": "html-sa",
+        "description": "시스템 아키텍처 다이어그램 HTML 생성 — 다층 구조, 색상 코드, 빌드 우선순위 배지",
+        "triggers": [
+          "^html-sa$",
+          "^system-architecture-html$",
+          "(?i)(시스템\\s*아키텍처\\s*HTML|아키텍처\\s*다이어그램\\s*HTML)",
+          "(?i)(architecture\\s*diagram\\s*HTML|system\\s*architecture\\s*HTML)"
+        ],
+        "paths": ["{project}/.opal/skills/system-architecture-html/SKILL.md"]
       }
     ],
     "opal": [
