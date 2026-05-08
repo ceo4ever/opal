@@ -30,6 +30,22 @@ tools: [Read, Grep, Glob, Bash]
 | project_root | O | 프로젝트 루트 경로 |
 | scope | X | 체크 범위 — `frontend` / `backend` / `batch` / `mobile` / `all` (선택, 미지정 시 허브 전체). 허브+링크 모델에서 상세 문서 선택에 사용. 상세: `opal/core/references/conventions-hub-model.md` |
 
+### PM Gate 호출 시나리오 (참고)
+
+opp/opd/opds/opdw EXECUTE PM Gate에서 호출될 때의 파라미터 매핑:
+
+| 파라미터 | 값 (PM Gate 호출 시) |
+|---------|------------------|
+| task_folder | 현재 태스크 폴더 (예: `tasks/136-.../`) |
+| target_files | EXECUTE 워커가 반환한 `changed_files`를 영역 prefix 매칭으로 분할한 부분집합 (단일 호출 시 전체) |
+| timestamp | 호출별 고유 ts. 영역별 병렬 디스패치 시 각 호출별로 분리하여 보고서 파일명 충돌 방지 |
+| checklist_path | `~/.opal/skills/opal-pilot-gc/references/base-convention-checklist.md` (opgc 호출과 동일) |
+| template_path | `~/.opal/skills/opal-pilot-gc/references/report-convention-template.md` (opgc 호출과 동일) |
+| project_root | 프로젝트 루트 절대 경로 |
+| scope | 영역명(`frontend`/`backend`/`batch`/`mobile` 등 — `docs/PROJECT.md` "## 프로젝트 구성" 요소명) 또는 `all`(단일 문서 프로젝트 / 매칭 실패 폴백) |
+
+> 트리거 조건·판정 기준·스킵 조건은 `opal/core/references/harness/pm-review-gate.md` §검토 절차 §13 참조.
+
 ---
 
 ## 실행 프로세스
@@ -131,7 +147,12 @@ if docs/CONVENTIONS.md 존재:
 
 ### Phase 5: 보고서 생성
 
-`{task_folder}/GC-CONVENTION-{timestamp}.md` 생성 (보고서 템플릿 기반):
+`{task_folder}/GC-CONVENTION-{file_suffix}.md` 생성 (보고서 템플릿 기반):
+
+- `file_suffix` 규약:
+  - `scope == "all"` 또는 단일 호출 → `{timestamp}` (예: `GC-CONVENTION-2026-05-08T14-32-18.md`)
+  - `scope` = 특정 영역 → `{scope}-{timestamp}` (예: `GC-CONVENTION-{scope}-2026-05-08T14-32-18.md`)
+- 영역별 병렬 디스패치 시 호출별 `timestamp`가 분리되므로 파일명 충돌 없음.
 
 - §1 헤더: 실행 일시, 범위(scope 포함), 기준 문서 상태(허브+링크 로드 내역)
 - §2 요약 지표
@@ -159,11 +180,11 @@ docs/CONVENTIONS.md 부재 감지
 
 ```json
 {
-  "artifact_path": "{task_folder}/GC-CONVENTION-{timestamp}.md",
+  "artifact_path": "{task_folder}/GC-CONVENTION-{file_suffix}.md",
   "summary": "컨벤션 체크 완료: 총 {N}건 (Medium {N} / Low {N} / Info {N})",
   "status": "completed | blocked",
   "blockers": [],
-  "changed_files": ["GC-CONVENTION-{timestamp}.md"]
+  "changed_files": ["GC-CONVENTION-{file_suffix}.md"]
 }
 ```
 
@@ -230,3 +251,4 @@ docs/CONVENTIONS.md 부재 감지
 |------|------|---------|
 | v1.0 | 2026-04-17 | 초기 작성 — CONVENTIONS.md 유일 기준, 부재 시 초안 유도, 내장 규칙 금지, getsentry 래핑, APPLY 판정, fingerprint (122) |
 | v1.1 | 2026-04-17 | APPLY 제거(진단 전담화) — Phase 6/APPLY 섹션 삭제, `tools`에서 Edit/Write 제거, `apply_mode` 입력 삭제, `scope` 입력 추가, Phase 1 허브+링크 체이닝 반영 (125) |
+| v1.2 | 2026-05-08 | PM Gate 호출 시나리오 표 추가(§입력 명세) + Phase 5 file_suffix 변수 도입(단일/영역별 2종 규약) + Phase 6 artifact_path/changed_files 동기 갱신 (136) |

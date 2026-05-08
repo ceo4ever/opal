@@ -44,6 +44,22 @@
    - 실행: `~/.opal/tools/state-tool/run.sh validate tasks/{NNN}-.../`
    - 결과: violations[] 0건이면 Pass, ≥1건이면 PM Gate Fail (재작업)
    - 근거: TASK F-10 / PLAN §2.6
+13. 컨벤션 자동 진단
+   - **트리거 조건**: 단계 = EXECUTE이고 워커 반환 `changed_files` 중 docs/, .opal/, *.md, tasks/ 외 파일이 ≥1건 (R-6 스킵 조건의 역)
+   - **영역 분할 절차**: `docs/PROJECT.md` "## 프로젝트 구성" 섹션 prefix 매칭으로 영역별 분할 — 의사코드는 `opal/core/references/pm/context-injection.md` §PROJECT.md 프로젝트 구성 기반 라우팅을 그대로 적용 (→ D-3). 매칭 실패 시 단일 호출(`scope=all`)로 폴백 (→ D-4 예시 B)
+   - **호출**: 영역별로 opal-convention-checker 워커 디스패치 — 파라미터 매핑은 `opal/agents/opal-convention-checker/AGENT.md` §입력 명세 §PM Gate 호출 시나리오 표 참조 (→ D-2)
+   - **호출 입력 명세**: `target_files = changed_files ∩ 영역 prefix`, `scope = 영역명` (단일 호출 시 `scope=all`), `task_folder = 현재 태스크 폴더`, `timestamp` = 영역별 분리 (병렬 호출별 고유 ts)
+   - **판정 기준**:
+     | 발견 이슈 심각도 | 결과 |
+     |---------------|------|
+     | Critical 또는 High ≥1건 | **Fail** → 워커 재지시 1회 → 미해결 시 캡틴 에스컬레이션 |
+     | Medium 이하만 | **Pass** + 캡틴에 보고서 경로 요약 보고 |
+   - **스킵 조건** (3종):
+     1. `changed_files` = 0건
+     2. `changed_files`가 docs/, .opal/, *.md, tasks/ 등 컨벤션 적용 외 파일만 포함
+     3. `docs/CONVENTIONS.md` 부재 → 체커가 `check_enabled=false`로 자체 처리(`GC-CONVENTION-*.md` §5 "문서 작성 유도"만 작성) + PM Gate Pass
+   - **하위 호환**: `.opal/AGENT.md` 미존재 시 PM Gate 자체 스킵(§판정 4번째 항목)이므로 본 §13도 동시 스킵 (→ D-1 §판정)
+   - **근거**: TASK.md R-1~R-7 / `tasks/136-260508-opp-pm-gate-convention-auto-check/PLAN.md` §2 핵심 설계
 
 ### 자가 진단 (PM Gate 진입 전 체크)
 
@@ -93,3 +109,4 @@
 |------|------|------|
 | v1.0 | 2026-04-21 | 다운사이징 — opal-pm.md §4 분리 (128) |
 | v1.1 | 2026-05-01 | 검토 절차 12번 `state validate` 추가 + 자가 진단 섹션(force 사용 0건 확인 R-11 / CLOSE 게이트 close_gate_violation §2.16 G-13) + gate-pass 일괄 처리 절차 추가 §2.13 G-10 (134) |
+| v1.2 | 2026-05-08 | 검토 절차 13번 `컨벤션 자동 진단` 신설 — 트리거/영역 분할/호출/입력 명세/판정/스킵 3종/하위 호환 7개 소절 (136) |

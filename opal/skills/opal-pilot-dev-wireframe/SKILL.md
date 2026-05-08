@@ -217,7 +217,7 @@ Harness STATE.md 템플릿에 적용:
 | Phase | 산출물 | 체크리스트 위치 |
 |-------|-------|----------------|
 | WIREFRAME | TASK.md, wireframe.md, QA-WIREFRAME.md | TASK.md 요구사항 |
-| EXECUTE | QA-EXECUTE.md | - |
+| EXECUTE | QA-EXECUTE.md, GC-CONVENTION-*.md | - |
 
 ---
 
@@ -267,3 +267,4 @@ TASK (PM 직접) → WIREFRAME Gate → EXECUTE Gate → CLOSE
 | v2.2 | 2026-04-23 11:39 | STEP 3 EXECUTE를 FE 단일 라우팅(opal-fe-agent)으로 지정 — 와이어프레임 전용 흐름상 PLAN.md §4.2 분배 디스패치 미적용 근거 명시, 디스패치 프롬프트에 담당 Step/Scope 제한 필드 추가 (129) |
 | v2.3 | 2026-04-24 | citation-rules 트리거 1줄 주입 — SSOT + Trigger 패턴 (130) |
 | v2.4 | 2026-05-01 | state-tool 도입 — STATE.md 직접 편집 금지 + `state-tool` 호출 표현 교체 (P-1~P-8 패턴 적용). "STATE.md 도메인 치환값" SSOT 보존 + `--rows-from` 파싱 SSOT 명시. agentic 활성화에 `--auto-pass` + CLOSE 진입 게이트 거부 정책 추가 (134) |
+| v2.5 | 2026-05-08 | PM Gate 점검 목록 EXECUTE 행 산출물에 GC-CONVENTION-*.md 추가 — 컨벤션 자동 진단 EXECUTE PM Gate 발동 (136) |

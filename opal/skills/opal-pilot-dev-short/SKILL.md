@@ -127,6 +127,7 @@ op-dev-test-agent 워커 디스패치. TEST-SCENARIO.md 실행 + 결과 기록 +
      - [ ] 보안 항목(시크릿 스캔/.gitignore) Pass
      - [ ] 회귀 테스트 항목 Pass
      - [ ] 설계 피드백 미해결 빈틈 없음
+     - [ ] 컨벤션 자동 진단 PASS (changed_files 컨벤션 적용 대상 ≥1건 시 발동, GC-CONVENTION-*.md 보고서 Critical/High 0건)
 → **State Gate** (`~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done` 호출 — P-1)
 → 사용자에게 완료 보고 후 CLOSE 단계 진입 승인 요청
 
@@ -264,7 +265,7 @@ Full Task(opal-pilot-dev)로 전환할까요?
 | Phase | 산출물 | 체크리스트 위치 |
 |-------|-------|----------------|
 | PLAN | TASK.md, PLAN.md, TEST-SCENARIO.md | TASK.md 요구사항, PLAN.md §4.2, §5; TEST-SCENARIO.md 시나리오 목록/보안/설계 피드백 |
-| TEST | TEST-SCENARIO.md | TEST-SCENARIO.md 시나리오 결과/코드품질/보안/회귀 |
+| TEST | TEST-SCENARIO.md, GC-CONVENTION-*.md | TEST-SCENARIO.md 시나리오 결과/코드품질/보안/회귀, 컨벤션 자동 진단 PASS |
 
 ---
 
@@ -327,3 +328,4 @@ TASK (PM 직접) → PLAN Gate → EXECUTE Gate → TEST Gate → CLOSE
 | v3.1 | 2026-04-23 11:39 | STEP 3 EXECUTE에 PLAN.md §4.2 agent 필드 기반 분배 디스패치 절차 추가 — 영역별 Step 묶음·Phase 순서 순회·담당 Step/Scope 제한 필드 추가·agent 필드 없음 폴백 규칙 명시 (129) |
 | v3.2 | 2026-04-24 | citation-rules 트리거 1줄 주입 — SSOT + Trigger 패턴 (130) |
 | v3.3 | 2026-05-01 | state-tool 도입 — STATE.md 직접 편집 금지 + `state-tool` 호출 표현 교체 (P-1~P-8 패턴 적용). "STATE.md 도메인 치환값" SSOT 보존 + `--rows-from` 파싱 SSOT 명시. agentic 활성화에 `--auto-pass` + CLOSE 진입 게이트 거부 정책 추가 (134) |
+| v3.4 | 2026-05-08 | PM Gate 점검 목록 TEST 행 산출물에 GC-CONVENTION-*.md 추가 + STEP 4 TEST PM Gate 검증 체크리스트에 6번째 항목 '컨벤션 자동 진단 PASS' 신설 (136) |
