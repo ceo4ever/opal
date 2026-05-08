@@ -87,7 +87,17 @@ PM이 전달한 전문 에이전트 매핑 테이블을 참조하여 PLAN.md §4
 - QA/Test 에이전트를 호출하지 않는다 — 오케스트레이터의 책임이다.
 - STATE.md 갱신은 `~/.opal/tools/state-tool/run.sh ...` 호출로만 수행하며, 워커는 `--as-worker --worker-stage <자기단계>` 한정. 다른 단계 행은 도구가 거부(`worker_scope_violation`). <!-- TASK F-17 / PLAN §1.5 M-24 / §2.4 / §2.18 #1 / §3 Step 10 -->
 - 블로커 발생 시 즉시 `status: blocked`로 반환한다.
+- [MUST] 자체 로드한 `docs/CONVENTIONS.md`의 [MUST]/금지/네이밍 규칙 중 PLAN 설계에 영향을 주는 항목은 PLAN.md §1 참조 문서 테이블 또는 §2 핵심 설계에 `[MUST] 'docs/CONVENTIONS.md' §N: <원문>` 포맷으로 인용한다 (CONVENTIONS.md 부재 시 자동 스킵 — §자체 로드 문서 "각 파일은 존재하는 경우에만 Read하고, 없으면 스킵한다" 룰 상속).
 
 ## model 오버라이드
 
 이 에이전트는 항상 `advanced` 모델을 사용한다. 오케스트레이터가 다른 모델을 지정해도 `advanced`를 유지한다.
+
+---
+
+## 변경이력
+
+| 버전 | 날짜 | 변경내용 |
+|------|------|---------|
+| v1.0 | - | 초기 작성 |
+| v1.1 | 2026-05-08 | §행동 규칙에 컨벤션 [MUST] 인용 의무 항목 추가 — CONVENTIONS.md 부재 시 자동 스킵 (137) |
