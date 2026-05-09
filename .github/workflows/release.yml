@@ -1,0 +1,43 @@
+# 변경이력: (139) 2026-05-09 — GitHub Release Workflow 신규 (J 영역)
+#   태그 push 트리거 / tarball / sha256sums / attest-build-provenance v2 / softprops/action-gh-release@v2
+# 근거: PLAN.md §3.3.2 골격 (D-12) + D2 fork 호환 (${{ github.repository }})
+
+name: release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build tarball and sha256sums
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          ARCHIVE="opal-${TAG}.tar.gz"
+          tar --exclude='.git' --exclude='tasks' -czf "${ARCHIVE}" .
+          sha256sum "${ARCHIVE}" > sha256sums.txt
+          echo "ARCHIVE=${ARCHIVE}" >> "${GITHUB_ENV}"
+
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-checksums: sha256sums.txt
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            opal-*.tar.gz
+            sha256sums.txt
+          generate_release_notes: true

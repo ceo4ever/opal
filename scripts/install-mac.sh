@@ -8,6 +8,7 @@
 #   v1.1 2026-04-30: 플랫폼 sub-agent 어댑터 자동 생성 추가 (Claude/Cursor/Gemini, Antigravity 미지원) — task 133
 #   v1.2 2026-04-30: emit_platform_agent_adapter description 평탄화 — Claude Code 파서 호환 (133)
 #   v1.3 2026-04-30: AUTO-GENERATED 헤더 검사를 전체 파일로 확장 — head 3 라인 한정 시 frontmatter만 봐서 오탐지하던 결함 수정 (133)
+#   v1.4 2026-05-08 KST: install_opal_bin/register_path_in_shell_rc 신설 + tools/ strip 호출 추가 (D 영역 PATH 등록) (139)
 #
 
 set -euo pipefail
@@ -632,6 +633,53 @@ install_gemini_agents() {
     success "Gemini CLI 어댑터 ${count}개 → $agents_dst/"
 }
 
+# ─── OPAL bin PATH 등록 (D 영역) ────────────────────────
+
+# ~/.opal/bin/opal-cli symlink 생성 후 셸 rc 파일에 PATH 등록
+# 사용: install_opal_bin
+install_opal_bin() {
+    local bin_dir="$USER_HOME/.opal/bin"
+    local cli_target="$USER_HOME/.opal/tools/opal-cli/run.sh"
+
+    if [[ ! -f "$cli_target" ]]; then
+        warn "opal-cli/run.sh 부재 — bin 생성 스킵 (Step 3 이후 동작)"
+        return
+    fi
+    chmod +x "$cli_target"
+    mkdir -p "$bin_dir"
+    ln -sfn "$cli_target" "$bin_dir/opal-cli"
+    success "opal-cli 심볼릭 링크 → $bin_dir/opal-cli"
+
+    register_path_in_shell_rc "$bin_dir"
+}
+
+# 셸 rc 파일(zsh/bash/profile)에 OPAL PATH 마커 1회만 추가 (idempotent)
+# fish 사용자는 별도 안내
+# 사용: register_path_in_shell_rc <bin_dir>
+register_path_in_shell_rc() {
+    local bin_dir="$1"
+    local marker="# === OPAL PATH ==="
+    local marker_end="# === OPAL PATH END ==="
+    local rc_files=("$USER_HOME/.zshrc" "$USER_HOME/.bashrc" "$USER_HOME/.profile")
+    local export_line='export PATH="$HOME/.opal/bin:$PATH"'
+
+    for rc in "${rc_files[@]}"; do
+        [[ -f "$rc" ]] || continue
+        if grep -qF "$marker" "$rc"; then
+            success "PATH 이미 등록됨: $rc"
+            continue
+        fi
+        printf '\n%s\n%s\n%s\n' "$marker" "$export_line" "$marker_end" >> "$rc"
+        success "PATH 등록 → $rc"
+    done
+
+    # fish는 config.fish 구조가 달라 별도 안내
+    if command -v fish &>/dev/null; then
+        info "fish 사용자: ~/.config/fish/config.fish 에 다음 줄을 추가하세요:"
+        info "  set -gx PATH \$HOME/.opal/bin \$PATH"
+    fi
+}
+
 # ─── OPAL Installer ─────────────────────────────────────
 
 install_opal() {
@@ -716,6 +764,7 @@ install_opal() {
     # ── 도구 (opal/tools/ → ~/.opal/tools/) ──
     if [[ -d "$opal_dir/tools" ]]; then
         install_dir "$opal_dir/tools" "$opal_home/tools" "OPAL 도구"
+        strip_deploy_md_recursive "$opal_home/tools"
 
         # ── playwright-tool 실행 권한 ──
         local playwright_run="$opal_home/tools/playwright-tool/run.sh"
@@ -798,6 +847,9 @@ install_opal() {
 
     # ── Gemini CLI 외부 경로 접근 설정 ──
     install_gemini_config
+
+    # ── opal-cli bin symlink + PATH 등록 ──
+    install_opal_bin
 
     # ── 레거시 정리 안내 ──
     # print_cleanup_notice

@@ -1,7 +1,7 @@
 # opal Memory Index
 
-> 최종 갱신: 2026-05-08 13:57 (135 ADD-1 완료)
-> last_task_number: 135
+> 최종 갱신: 2026-05-08 23:51 (140 TASK 진입)
+> last_task_number: 140
 
 ## 메모리 카테고리
 
@@ -30,6 +30,10 @@
 
 | 등록일자 | 작업 | 단계 | 경로 | 시작일시 | 완료일시 |
 |----------|------|------|------|---------|---------|
+| 2026-05-09 | 배포 채널 정비 + Get Started UX 통합 (P1) — `scripts/install.sh`/`install.ps1`/`install/{macos,windows}` one-liner + `opal/tools/opal-cli/` 5 서브커맨드 + `opal/tools/doctor/` 4섹션 + `opal/core/AGENT.md` Eager Step 6.5 cwd 분기 + `opal/skills/opal-start/` 신규 + `opal-onboarding` triggers 보강 + `opal-skills-registry.json` v3.4.0 + `.github/workflows/release.yml` (attest-build-provenance v2) + README §설치 4 Step 정제 + ARCHITECTURE.md §배포 채널 현행 전환. 캡틴 결정: D1=`opal-cli` 명칭(opalrb 충돌 회피), D2=`https://github.com/ceo4ever/opal`. v0.1 태그 push로 첫 release 발동 (139) | 완료 | tasks/139-260508-opp-distribute-and-getstarted/ | 2026-05-08 21:43 | 2026-05-09 09:07 |
+| 2026-05-08 | opi 프로젝트 초기화 — `.opal/AGENT.md` 신규 + `docs/CONVENTIONS.md` 구현 규칙 섹션 신설 + `docs/ARCHITECTURE.md` 외부 의존 서비스 섹션 신설 + `docs/PROJECT.md` 문서 테이블 보강. 후속 태스크 139(P1)로 배포 채널 정비 + Get Started UX 통합 진행 (138) | 완료 | tasks/138-260508-opi-opal/ | 2026-05-08 17:43 | 2026-05-08 21:43 |
+| 2026-05-08 | PLAN 워커 컨벤션 [MUST] 인용 강제 — 사전 주입 강화 (제안 A). 잠재 적용 지점 4종 정밀 분석 후 #1·#3 채택 + #2 부분 채택 + #4 비채택 결정. 5개 파일 변경(dispatch-process v1.1 / op-task-plan SKILL v1.4 / plan-guide v1.2 / op-dev-plan SKILL v2.5 / opal-plan-agent v1.1). 136(B)와 검사 시점·대상·메커니즘 분리 → 사전·사후 이중 안전망 완성 (137) | 완료 | tasks/137-260508-opp-plan-convention-injection/ | 2026-05-08 16:50 | 2026-05-08 22:56 |
+| 2026-05-08 | PM Gate 컨벤션 자동 진단 — opal-convention-checker를 changed_files 영역별로 병렬 디스패치하여 GC-CONVENTION-{area}-{ts}.md 보고서 생성, Critical/High 시 PM Gate Fail. opp/opdw=EXECUTE PM Gate, opd/opds=TEST PM Gate에 §13 발동(R-T4 (b) 옵션 채택). 변경 파일 6개(pm-review-gate v1.2 / opal-convention-checker AGENT.md v1.2 / opp v2.8 / opd v3.5 / opds v3.4 / opdw v2.5) (136) | 완료 | tasks/136-260508-opp-pm-gate-convention-auto-check/ | 2026-05-08 13:11 | 2026-05-08 22:08 |
 | 2026-05-07 | 시스템 아키텍처 HTML 스킬 OPAL 통합 + 트윈 빌드 비교 — standalone 일반 도구 스킬로 정착, `//html-sa` 호출 가능화, 원본 vs OPAL 호환 수정본 두 HTML 산출, ADD-1로 §2 컨텍스트 흡수 보강(code-scan + 의존성 매니페스트 + 디렉토리 트리) (135) | 추가작업완료 | tasks/135-260507-opp-system-arch-html-skill-port/ | 2026-05-07 11:11 | 2026-05-08 13:57 |
 | 2026-04-30 | 멀티 플랫폼 에이전트 배포 메커니즘 — Claude/Cursor/Gemini sub-agent 어댑터 자동 생성 (133) | 완료 | tasks/133-260430-opp-platform-agent-deploy/ | 2026-04-30 14:48 | 2026-04-30 16:55 |
 | 2026-04-30 | html-mockup 일반 스킬 신규 개발 (132) | 완료 | tasks/132-260430-opp-html-mockup-skill/ | 2026-04-30 11:27 | 2026-04-30 13:14 |

@@ -3,6 +3,10 @@ name: onboarding
 description: |
   **OPAL AI 에이전트 초기 정체성 설정 스킬**. ~/.opal/identity.md가 없을 때 자동 실행되어, 소유자와 인터뷰를 통해 에이전트 정체성을 정의한다.
   AGENT.md의 부트스트랩 절차에서 identity.md가 없으면 이 스킬이 호출된다.
+triggers:
+  - "//onboarding"
+  - "정체성 재설정"
+  - "온보딩 다시"
 ---
 
 # OPAL 온보딩 — 에이전트 정체성 설정
@@ -169,6 +173,8 @@ OPAL 에이전트의 정체성(이름, 성격, 호칭 등)을 소유자와의 �
 - 수정 요청 시: 해당 Step으로 돌아가 재질문
 - 승인 시: identity.md 생성 후 에이전트 활성화
 
+다음에 다시 정체성을 변경하려면 `//start` 또는 `//onboarding`을 사용하세요.
+
 ### Step 10: identity.md 생성
 
 `~/.opal/templates/identity-template.md`를 Read로 읽어 템플릿으로 사용한다.
@@ -250,3 +256,10 @@ created_at: {현재 날짜}
 소유자가 "정체성 재설정", "온보딩 다시" 등을 요청하면:
 1. 기존 identity.md를 백업 (identity.md.bak)
 2. 이 스킬을 처음부터 다시 실행
+
+## 변경이력
+
+| 버전 | 일시 | 변경내용 |
+|------|------|---------|
+| v1.0 | 2026-05-09 00:00 | 초기 작성 |
+| v1.1 | 2026-05-09 09:00 | triggers 신설 (//onboarding·정체성 재설정·온보딩 다시) + Step 9 //start·//onboarding 재호출 안내 추가 (139) |

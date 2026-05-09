@@ -63,82 +63,60 @@ AI 도구(Claude Code, Cursor 등)를 쓰다 보면 공통적인 한계에 부�
 
 ## 설치
 
-### 사전 요구사항
+### Step 1: 사전 요구사항 확인
 
 | 항목 | 요구사항 |
 |------|---------|
-| **OS** | macOS (`install-mac.sh` 기준) |
-| **필수 도구** | bash, git, Node.js v18+, Python 3 |
+| **OS** | macOS / Linux / Windows |
+| **필수 도구** | bash(또는 PowerShell), git, Node.js v18+, Python 3 |
 | **지원 AI 플랫폼** | Claude Code, Cursor, Gemini (Antigravity) |
 
-> Node.js는 skill-registry, date 등 CLI 도구 실행에 필요하다. Python은 MCP 서버 venv 구성에 필요하다.
+> Node.js는 skill-registry, state-tool 등 CLI 도구 실행에 필요하다. Python은 MCP 서버 venv 구성에 필요하다.
 
-### 설치 실행
+### Step 2: One-liner 설치
+
+**macOS / Linux**
 
 ```bash
-git clone {REPO_URL} opal
-cd opal
-./scripts/install-mac.sh
+curl -fsSL https://raw.githubusercontent.com/ceo4ever/opal/main/scripts/install.sh | bash
 ```
 
-설치 메뉴에서 선택한다:
+**Windows (PowerShell)**
 
-| 옵션 | 설명 |
+```powershell
+iex (irm https://raw.githubusercontent.com/ceo4ever/opal/main/scripts/install.ps1)
+```
+
+`Restricted` 정책 환경에서는:
+
+```powershell
+powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/ceo4ever/opal/main/scripts/install.ps1 | iex"
+```
+
+> 특정 버전 고정: `OPAL_VERSION=v0.1` 환경변수 사용 (mac/linux) 또는 `$env:OPAL_VERSION = 'v0.1'` (Windows).
+
+### Step 3: 부트스트랩 체크리스트 확인
+
+AI 도구(Claude Code / Cursor / Gemini)를 재시작하면 첫 응답에 다음과 같이 표시된다.
+
+```
+[부트스트랩] ✅ identity ✅ harness ✅ PM ⏳ registry ⏳ references ⏳ model-mapping
+[안내] 프로젝트 작업이라면 //opi 또는 //opp/opd/opds 로 진입하세요
+```
+
+이 메시지가 나타나면 설치가 정상 완료된 것이다. (`identity.md`가 없으면 자동으로 에이전트 온보딩이 시작된다.)
+
+### Step 4: 다음 단계
+
+| 명령 | 용도 |
 |------|------|
-| `[1]` OPAL 설치 | 스킬·에이전트·부트스트래퍼 → `~/.opal/` |
-| `[2]` MCP 서버 설정 | Claude Code / Cursor / Gemini용 MCP 설정 |
-| `[3]` 전체 설치 | OPAL + MCP 서버 동시 설치 |
+| `//opi` | 프로젝트 환경 초기화 (`.opal/AGENT.md`, `docs/PROJECT.md` 등 생성) |
+| `//start` | 재진입 가이드 — 현재 상태 진단 + 다음 액션 권유 |
+| `opal-cli doctor` | 의존성·경로·MCP·부트스트래퍼 정합성 진단 |
+| `opal-cli update` | 최신 release 동기화 (사용자 데이터 보존) |
+| `opal-cli uninstall` | `~/.opal/` 제거 + 부트스트래퍼 마커 회수 |
 
-### 설치 옵션별 상세
-
-**`[1]` OPAL 설치**가 배치하는 파일:
-
-| 배치 대상 | 경로 |
-|----------|------|
-| 에이전트 코어 | `~/.opal/AGENT.md` |
-| 스킬 (독립 + OPAL) | `~/.opal/skills/` |
-| 에이전트 (전문 + 범용) | `~/.opal/agents/` |
-| 참조 레지스트리 | `~/.opal/references/` |
-| CLI 도구 | `~/.opal/tools/` |
-| 커뮤니티 스킬 | `~/.opal/community-skills/` |
-| 템플릿 | `~/.opal/templates/` |
-| Python 가상환경 | `~/.opal/.venv/` |
-| 부트스트래퍼 (Claude) | `~/.claude/CLAUDE.md` |
-| 부트스트래퍼 (Cursor) | `~/.cursor/rules/000-opal-agent.mdc` |
-| 부트스트래퍼 (Gemini) | `~/.gemini/GEMINI.md` |
-| Claude hooks/권한 | `~/.claude/settings.json` |
-| Gemini 경로 접근 | `~/.gemini/settings.json` |
-
-**`[2]` MCP 서버 설정**이 구성하는 플랫폼:
-
-| 플랫폼 | 설정 방식 | 설정 파일 |
-|--------|----------|----------|
-| Claude Code | `claude mcp add --scope user` | CLI 등록 |
-| Gemini | `gemini mcp add -s user` | CLI 등록 (폴백: `~/.gemini/settings.json`) |
-| Cursor | config_merge | `~/.cursor/mcp.json` |
-| Antigravity | config_merge | `~/.gemini/antigravity/mcp_config.json` |
-
-**`[3]` 전체 설치**는 `[1]` + `[2]`를 순차 실행한다.
-
-### 설치 후 검증
-
-```bash
-ls ~/.opal/
-```
-
-정상 설치 시 다음 항목이 보인다:
-
-```
-AGENT.md  identity.md  skills/  agents/  references/  tools/  templates/  community-skills/
-```
-
-AI 도구를 재시작하면 첫 응답에 부트스트랩 체크리스트가 표시된다:
-
-```
-[부트스트랩] ✅ identity ✅ harness ✅ PM ...
-```
-
-이 메시지가 나타나면 설치가 정상 완료된 것이다.
+> `opal-cli` 명령은 PATH에 자동 등록된다. 셸 재시작 후 `opal-cli --help`로 전체 서브커맨드를 확인할 수 있다.
 
 ---
 
