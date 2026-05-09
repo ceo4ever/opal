@@ -1,6 +1,6 @@
 # STATE: 139-260508-opp-distribute-and-getstarted
 
-> 최종 갱신: 2026-05-09 22:31
+> 최종 갱신: 2026-05-09 22:53
 
 ## 현재 상태
 - 모드: interactive
@@ -38,6 +38,8 @@
 | 14 | 2026-05-09 21:57 | current_status changed: additional_work → additional_work_done | v0.2.5: update.sh /tags 폴백 + archive tarball URL — install.sh v1.2와 정합 |
 | 15 | 2026-05-09 22:30 | current_status changed: additional_work_done → additional_work | v0.2.6: opal-cli --version이 framework 버전(~/.opal/VERSION) 표시 |
 | 16 | 2026-05-09 22:31 | current_status changed: additional_work → additional_work_done | v0.2.6: opal-cli --version이 framework 버전 표시 — CLI 자체 버전 하드코딩 폐기 |
+| 17 | 2026-05-09 22:52 | current_status changed: additional_work_done → additional_work | v0.2.7: install.ps1 latest tag 자동 조회 + URL 분기 + tar --exclude tasks/* + Remove-Item 강건화 |
+| 18 | 2026-05-09 22:53 | current_status changed: additional_work → additional_work_done | v0.2.7: install.ps1 latest tag + URL 분기 + tar --exclude + Remove-Item 강건화 |
 
 ## 블로커
 없음

@@ -32,15 +32,66 @@
 #Requires -Version 5.1
 
 Set-StrictMode -Version 3.0
+# 변경이력
+#   v1.0   2026-05-09 12:00  초기 작성 — Windows one-liner 진입 (139)
+#   v1.0.1 2026-05-09 23:00  Resolve-DefaultVersion + URL 분기(archive/refs/tags) +
+#                            tar --exclude tasks/* + Remove-Item 단축 경로 강건화 (139 추가작업)
 $ErrorActionPreference = 'Stop'
 
 # ─── 환경 변수 오버라이드 ────────────────────────────────────────────────────
 $OpalRepo    = if ($env:OPAL_REPO)    { $env:OPAL_REPO    } else { 'ceo4ever/opal' }
-$OpalVersion = if ($env:OPAL_VERSION) { $env:OPAL_VERSION } else { 'main' }
+$OpalVersion = $env:OPAL_VERSION  # 미설정 시 Resolve-DefaultVersion 호출
 $DryRun      = ($env:OPAL_DRY_RUN -eq '1')
 
-$TarballUrl  = "https://github.com/$OpalRepo/archive/refs/heads/$OpalVersion.tar.gz"
-$ShaUrl      = "https://github.com/$OpalRepo/releases/download/$OpalVersion/sha256sums.txt"
+# ─── Resolve-DefaultVersion (install.sh v1.2 와 정합) ─────────────────────
+# OpalVersion 미설정 시 자동 결정:
+#   1) /releases/latest → tag_name
+#   2) 폴백: /tags?per_page=1 → name
+#   3) 두 단계 모두 실패 시 "main"
+function Resolve-DefaultVersion {
+    if ($OpalVersion) { return }
+    if ($DryRun)      { $script:OpalVersion = 'main'; return }
+
+    $latest = $null
+    try {
+        $resp = Invoke-RestMethod -Uri "https://api.github.com/repos/$OpalRepo/releases/latest" -ErrorAction Stop
+        if ($resp.tag_name) { $latest = $resp.tag_name }
+    } catch {}
+
+    if (-not $latest) {
+        try {
+            $resp = Invoke-RestMethod -Uri "https://api.github.com/repos/$OpalRepo/tags?per_page=1" -ErrorAction Stop
+            if ($resp -and $resp.Count -gt 0 -and $resp[0].name) {
+                $latest = $resp[0].name
+                Write-Host "[OPAL] 최신 태그 자동 선택: $latest (release 자산 없음 — archive tarball 사용)" -ForegroundColor Cyan
+            }
+        } catch {}
+    } else {
+        Write-Host "[OPAL] 최신 release 자동 선택: $latest" -ForegroundColor Cyan
+    }
+
+    if ($latest) {
+        $script:OpalVersion = $latest
+    } else {
+        $script:OpalVersion = 'main'
+        Write-Warning "[OPAL] 최신 버전 조회 실패 — main 브랜치 사용"
+    }
+}
+
+Resolve-DefaultVersion
+
+# windows.ps1 이 ~/.opal/VERSION 에 정확한 버전을 기록할 수 있도록 env 로 전달
+$env:OPAL_VERSION = $OpalVersion
+
+# ─── URL 구성 ─────────────────────────────────────────────────────────────────
+# release tag(v*): archive/refs/tags 사용 (release 자산 의존 X)
+# branch (main 등): archive/refs/heads
+if ($OpalVersion -like 'v*') {
+    $TarballUrl = "https://github.com/$OpalRepo/archive/refs/tags/$OpalVersion.tar.gz"
+} else {
+    $TarballUrl = "https://github.com/$OpalRepo/archive/refs/heads/$OpalVersion.tar.gz"
+}
+$ShaUrl = "https://github.com/$OpalRepo/releases/download/$OpalVersion/sha256sums.txt"
 
 # ─── 함수 정의 ───────────────────────────────────────────────────────────────
 
@@ -175,10 +226,20 @@ function Invoke-PlatformInstaller {
     $extractDir = Join-Path $DestDir 'opal-src'
     New-Item -ItemType Directory -Path $extractDir -Force | Out-Null
 
-    # tar: Windows 10 1803+ 기본 tar 또는 Git for Windows tar 사용
-    & tar -xzf $TarballPath -C $extractDir --strip-components 1
+    # tar: Windows 10 1803+ 기본 tar 또는 Git for Windows tar 사용.
+    # --exclude 'tasks*' / '*/tasks/*' — 프로젝트 작업 산출물(tasks/) 제외:
+    #   archive 에는 tasks/ 가 포함되지만 install 대상이 아니다. tasks/backup/ 의 한글 파일명이
+    #   Windows tar.exe(libarchive)에서 인코딩 처리 실패로 압축 해제를 throw 시키므로 제외.
+    & tar -xzf $TarballPath -C $extractDir --strip-components 1 `
+        --exclude='tasks/*' --exclude='*/tasks/*' --exclude='tasks' --exclude='*/tasks'
     if ($LASTEXITCODE -ne 0) {
-        throw "[OPAL] tarball 압축 해제 실패 (exit code: $LASTEXITCODE)"
+        # tar 가 일부 오류로 0 이 아닌 코드를 반환해도 핵심 자산이 풀렸으면 진행 가능.
+        # opal/ 디렉토리 존재 여부로 검증.
+        if (Test-Path (Join-Path $extractDir 'opal')) {
+            Write-Warning "[OPAL] tar 일부 오류 (exit=$LASTEXITCODE) 발생했으나 핵심 자산은 풀렸습니다. 계속 진행."
+        } else {
+            throw "[OPAL] tarball 압축 해제 실패 (exit code: $LASTEXITCODE)"
+        }
     }
 
     $windowsInstaller = Join-Path $extractDir 'scripts' 'install' 'windows.ps1'
@@ -227,8 +288,15 @@ function Invoke-OpalInstall {
         Write-Host ''
     }
     finally {
-        if (Test-Path $tmpDir) {
-            Remove-Item -Recurse -Force -Path $tmpDir -ErrorAction SilentlyContinue
+        # 단축 경로(8.3) 처리 + 정리 실패 무시 (Resolve-Path 로 long path 우선 시도)
+        try {
+            if (Test-Path -LiteralPath $tmpDir) {
+                $resolved = (Resolve-Path -LiteralPath $tmpDir -ErrorAction SilentlyContinue).Path
+                if (-not $resolved) { $resolved = $tmpDir }
+                Remove-Item -LiteralPath $resolved -Recurse -Force -ErrorAction SilentlyContinue
+            }
+        } catch {
+            Write-Warning "[OPAL] 임시 디렉토리 정리 실패 (수동 삭제: $tmpDir)"
         }
     }
 }
