@@ -1,6 +1,6 @@
 # STATE: 139-260508-opp-distribute-and-getstarted
 
-> 최종 갱신: 2026-05-09 21:57
+> 최종 갱신: 2026-05-09 22:31
 
 ## 현재 상태
 - 모드: interactive
@@ -36,6 +36,8 @@
 | 12 | 2026-05-09 21:31 | current_status changed: additional_work → additional_work_done | v0.2.4: install.sh /tags 폴백 + archive tarball — release 자산 없어도 정상 동작 |
 | 13 | 2026-05-09 21:56 | current_status changed: additional_work_done → additional_work | v0.2.5: update.sh에 /tags 폴백 추가 (install.sh v1.2와 동일) |
 | 14 | 2026-05-09 21:57 | current_status changed: additional_work → additional_work_done | v0.2.5: update.sh /tags 폴백 + archive tarball URL — install.sh v1.2와 정합 |
+| 15 | 2026-05-09 22:30 | current_status changed: additional_work_done → additional_work | v0.2.6: opal-cli --version이 framework 버전(~/.opal/VERSION) 표시 |
+| 16 | 2026-05-09 22:31 | current_status changed: additional_work → additional_work_done | v0.2.6: opal-cli --version이 framework 버전 표시 — CLI 자체 버전 하드코딩 폐기 |
 
 ## 블로커
 없음

@@ -13,12 +13,12 @@
 #   v1.0 2026-05-08 11:00 초기 구현 — install/update/doctor/uninstall/mcp 디스패처 (139)
 #   v1.0.1 2026-05-09 14:15 KST: BASH_SOURCE symlink chain 해석 보강 — ~/.opal/bin/opal-cli symlink 호출 시 lib/ 검색 실패 fix (139 추가작업)
 #   v1.0.2 2026-05-09 17:45 KST: 색상 변수 $'...' 패턴 적용 — cat heredoc usage()/lib에서 \033[1m 리터럴 노출 fix (139 추가작업)
+#   v1.0.3 2026-05-09 22:35 KST: --version이 ~/.opal/VERSION(framework 버전) 표시. OPAL_CLI_VERSION 하드코딩 폐기 — CLI 진입점 자체 버전과 framework 버전 통일 (139 추가작업)
 #
 
 set -euo pipefail
 
-# ─── 버전 ────────────────────────────────────────────────────
-OPAL_CLI_VERSION="1.0.2"
+# 버전은 ~/.opal/VERSION (framework 버전)에서 읽는다 — opal-cli --version 처리에서 사용.
 
 # ─── 경로 ────────────────────────────────────────────────────
 # BASH_SOURCE의 symlink chain을 따라 실제 위치 탐색
@@ -92,7 +92,14 @@ dispatch() {
 
     case "$subcommand" in
         --version|-v)
-            echo "opal-cli $OPAL_CLI_VERSION"
+            local opal_home="${OPAL_HOME:-$HOME/.opal}"
+            if [[ -f "$opal_home/VERSION" ]]; then
+                local fw_version
+                fw_version="$(tr -d '[:space:]' < "$opal_home/VERSION")"
+                echo "opal-cli $fw_version"
+            else
+                echo "opal-cli (unknown — run install or update first)"
+            fi
             exit 0
             ;;
         --help|-h|help)
