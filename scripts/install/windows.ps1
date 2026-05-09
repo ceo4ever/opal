@@ -41,6 +41,7 @@
                                  부트스트래퍼 마커(Claude/Cursor/Gemini OPAL+HARDENING) 자동 삽입 (139 추가작업, v0.3.0)
         v1.1.1 2026-05-10 00:35  Install-OpalCore의 $skillCount/$agentCount .Count 접근을 @() 캐스트로 변경 — Set-StrictMode 3.0 환경에서 single object .Count 차단 결함 fix (139 추가작업, v0.3.1)
         v1.2.0 2026-05-10 00:40  Find-GitBash 신규 + Register-OpalBin 이 Git Bash explicit 경로 사용 — WSL bash.exe(/bin/bash 부재) 우회 결함 fix (139 추가작업, v0.3.2)
+        v1.2.1 2026-05-10 08:50  opal-cli.ps1 미생성 + 옛 .ps1 정리 — PowerShell default ExecutionPolicy(Restricted) 차단 회피, .cmd 만 사용 (139 추가작업, v0.3.3)
 #>
 
 #Requires -Version 5.1
@@ -460,7 +461,7 @@ function Register-OpalBin {
     #>
     $cliTarget = [IO.Path]::Combine($OpalHome, 'tools', 'opal-cli', 'run.sh')
     $cliWrapper = Join-Path $OpalBinDir 'opal-cli.cmd'
-    $cliPs1 = Join-Path $OpalBinDir 'opal-cli.ps1'
+    $cliPs1Old  = Join-Path $OpalBinDir 'opal-cli.ps1'
 
     if (-not (Test-Path $cliTarget)) {
         Write-OpalWarn "opal-cli/run.sh 부재 — bin 생성 스킵 (Step 3 완료 후 재실행 필요)."
@@ -492,14 +493,13 @@ function Register-OpalBin {
     Set-Content -Path $cliWrapper -Value $cmdContent -Encoding ASCII
     Write-OpalOk "opal-cli.cmd 래퍼 생성: $cliWrapper"
 
-    # PowerShell 래퍼 (pwsh/powershell 환경)
-    if ($bashExe -eq 'bash') {
-        $ps1Content = "& bash `"$runScriptPosix`" @args`n"
-    } else {
-        $ps1Content = "& `"$bashExe`" `"$runScriptPosix`" @args`n"
+    # opal-cli.ps1 은 만들지 않는다 — PowerShell default ExecutionPolicy(Restricted) 가 .ps1 을 차단하므로
+    # 사용자가 PowerShell 에서도 .cmd 가 자동 호출되도록 PATHEXT 매칭에 위임한다.
+    # 옛 .ps1 잔존 파일이 있으면 제거 (PowerShell 이 .ps1 을 우선시하면 ExecutionPolicy 차단으로 실패)
+    if (Test-Path -LiteralPath $cliPs1Old) {
+        Remove-Item -Force -LiteralPath $cliPs1Old -ErrorAction SilentlyContinue
+        Write-OpalInfo 'opal-cli.ps1 제거 (PowerShell ExecutionPolicy 차단 회피, .cmd 사용으로 위임)'
     }
-    Set-Content -Path $cliPs1 -Value $ps1Content -Encoding UTF8
-    Write-OpalOk "opal-cli.ps1 래퍼 생성: $cliPs1"
 }
 
 function Register-EnvPath {
@@ -544,8 +544,7 @@ function Register-EnvPath {
     Write-Host '         opal-cli doctor       # 환경 진단 (4섹션)'
     Write-Host ''
     Write-Host '    PATH 미적용 시 절대 경로 호출도 가능:'
-    Write-Host '         & "$env:USERPROFILE\.opal\bin\opal-cli.ps1" doctor'
-    Write-Host '         %USERPROFILE%\.opal\bin\opal-cli.cmd doctor'
+    Write-Host '         %USERPROFILE%\.opal\bin\opal-cli.cmd doctor    (cmd / PowerShell 모두 동작)'
     Write-Host ''
 }
 

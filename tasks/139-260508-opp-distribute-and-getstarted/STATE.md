@@ -1,6 +1,6 @@
 # STATE: 139-260508-opp-distribute-and-getstarted
 
-> 최종 갱신: 2026-05-10 00:36
+> 최종 갱신: 2026-05-10 08:51
 
 ## 현재 상태
 - 모드: interactive
@@ -58,6 +58,8 @@
 | 34 | 2026-05-10 00:29 | current_status changed: additional_work → additional_work_done | v0.3.1: Install-OpalCore .Count → @() 캐스트 fix |
 | 35 | 2026-05-10 00:35 | current_status changed: additional_work_done → additional_work | v0.3.2: opal-cli.cmd/.ps1 래퍼가 Git Bash explicit 경로 사용 (WSL 우회) |
 | 36 | 2026-05-10 00:36 | current_status changed: additional_work → additional_work_done | v0.3.2: Find-GitBash + Register-OpalBin이 Git Bash explicit 경로 사용 (WSL 우회) |
+| 37 | 2026-05-10 08:49 | current_status changed: additional_work_done → additional_work | v0.3.3: opal-cli.ps1 제거 — PowerShell ExecutionPolicy 차단 회피. .cmd만 사용 |
+| 38 | 2026-05-10 08:51 | current_status changed: additional_work → additional_work_done | v0.3.3: opal-cli.ps1 미생성 + 옛 .ps1 정리 (PowerShell ExecutionPolicy 회피) |
 
 ## 블로커
 없음
