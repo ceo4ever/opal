@@ -9,6 +9,7 @@
 #   v1.2 2026-04-30: emit_platform_agent_adapter description 평탄화 — Claude Code 파서 호환 (133)
 #   v1.3 2026-04-30: AUTO-GENERATED 헤더 검사를 전체 파일로 확장 — head 3 라인 한정 시 frontmatter만 봐서 오탐지하던 결함 수정 (133)
 #   v1.4 2026-05-08 KST: install_opal_bin/register_path_in_shell_rc 신설 + tools/ strip 호출 추가 (D 영역 PATH 등록) (139)
+#   v1.5 2026-05-09 14:20 KST: install_opal_bin에 PATH 사용 방법 안내 추가 — source/exec/새 터미널 옵션 + 절대 경로 폴백 명시 (139 추가작업)
 #
 
 set -euo pipefail
@@ -651,6 +652,23 @@ install_opal_bin() {
     success "opal-cli 심볼릭 링크 → $bin_dir/opal-cli"
 
     register_path_in_shell_rc "$bin_dir"
+
+    # 현재 셸에 즉시 적용하는 방법 안내 (PATH는 새 셸/source 후 동작)
+    echo ""
+    info "opal-cli 사용 방법:"
+    echo -e "    ${BOLD}1) 현재 셸에 즉시 적용${NC} — 다음 중 하나 실행:"
+    echo    "         source ~/.zshrc      (zsh 사용자)"
+    echo    "         source ~/.bashrc     (bash 사용자)"
+    echo    "         exec \$SHELL          (현재 셸 재시작)"
+    echo -e "    ${BOLD}2) 또는 새 터미널 열기${NC} — PATH 자동 적용"
+    echo ""
+    echo -e "    ${BOLD}검증:${NC}"
+    echo    "         opal-cli --version    # 버전 출력"
+    echo    "         opal-cli doctor       # 환경 진단 (4섹션)"
+    echo ""
+    echo -e "    ${BOLD}PATH 미적용 시 절대 경로 호출도 가능:${NC}"
+    echo    "         ~/.opal/bin/opal-cli doctor"
+    echo ""
 }
 
 # 셸 rc 파일(zsh/bash/profile)에 OPAL PATH 마커 1회만 추가 (idempotent)

@@ -14,13 +14,21 @@
 #
 # 변경이력:
 #   v1.0 2026-05-08 KST 초기 구현 — 4섹션 순차 출력 + exit code 0/1 (139)
+#   v1.0.1 2026-05-09 14:15 KST: BASH_SOURCE symlink chain 해석 보강 — opal-cli/run.sh와 정합성 유지 (139 추가작업)
 #
 
 set -euo pipefail
 
 # ─── 경로 ─────────────────────────────────────────────────────
+# BASH_SOURCE의 symlink chain을 따라 실제 위치 탐색 (BSD readlink 호환)
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SOURCE="${BASH_SOURCE[0]}"
+while [ -L "$SOURCE" ]; do
+    DIR="$(cd -P "$(dirname "$SOURCE")" >/dev/null && pwd)"
+    SOURCE="$(readlink "$SOURCE")"
+    [[ "$SOURCE" != /* ]] && SOURCE="$DIR/$SOURCE"
+done
+SCRIPT_DIR="$(cd -P "$(dirname "$SOURCE")" >/dev/null && pwd)"
 LIB_DIR="$SCRIPT_DIR/lib"
 
 # ─── checks.sh 로드 ──────────────────────────────────────────

@@ -31,7 +31,8 @@
         docs/CONVENTIONS.md §구현 규칙 — 플랫폼 분기 격리
 
     변경이력:
-        v1.0  2026-05-09 12:00  신규 작성 — Windows 플랫폼 인스톨러 골격 (139)
+        v1.0   2026-05-09 12:00  신규 작성 — Windows 플랫폼 인스톨러 골격 (139)
+        v1.0.1 2026-05-09 14:30  Register-EnvPath 안내 보강 — 즉시 새로고침/검증/절대 경로 호출 (139 추가작업, macOS install_opal_bin과 동등)
 #>
 
 #Requires -Version 5.1
@@ -208,13 +209,30 @@ function Register-EnvPath {
         $newPath = "$marker;$currentPath".TrimEnd(';')
         [System.Environment]::SetEnvironmentVariable('PATH', $newPath, 'User')
         Write-OpalOk "PATH 등록 완료: $marker"
-        Write-OpalInfo '새 터미널 세션을 열면 opal-cli 명령을 사용할 수 있습니다.'
     }
 
     # 현재 세션 PATH 에도 즉시 반영
     if ($env:PATH -notmatch [regex]::Escape($marker)) {
         $env:PATH = "$marker;$env:PATH"
     }
+
+    # 사용 방법 안내 (macOS install_opal_bin과 동등)
+    Write-Host ''
+    Write-OpalInfo 'opal-cli 사용 방법:'
+    Write-Host '    1) 현재 PowerShell 세션은 즉시 사용 가능 (위에서 $env:PATH 자동 갱신).'
+    Write-Host '    2) 다른 세션/창에서는 다음 중 하나로 적용:'
+    Write-Host '         - 새 터미널 창 열기 (PowerShell / Windows Terminal / cmd)'
+    Write-Host '         - 같은 세션 강제 새로고침: $env:PATH = [Environment]::GetEnvironmentVariable("PATH","User") + ";" + $env:PATH'
+    Write-Host '         - Chocolatey 사용 시: refreshenv'
+    Write-Host ''
+    Write-Host '    검증:'
+    Write-Host '         opal-cli --version    # 버전 출력'
+    Write-Host '         opal-cli doctor       # 환경 진단 (4섹션)'
+    Write-Host ''
+    Write-Host '    PATH 미적용 시 절대 경로 호출도 가능:'
+    Write-Host '         & "$env:USERPROFILE\.opal\bin\opal-cli.ps1" doctor'
+    Write-Host '         %USERPROFILE%\.opal\bin\opal-cli.cmd doctor'
+    Write-Host ''
 }
 
 function Register-Bootstrapper {
