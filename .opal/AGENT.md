@@ -48,7 +48,7 @@ AI 프레임워크 설계 전문가 — 모든 산출물을 **재사용성, 플�
 |------|------|
 | Pilot | 오케스트레이터(`opal-pilot-*`). 작업을 단계 파이프라인으로 분해하고 워커를 지휘 |
 | Harness | 오케스트레이터 공통 인프라 (Guards/Gates/State/Observability) |
-| Agentic Mode | `--agentic` 플래그로 PM 검토를 자율 진행하는 모드 |
+| 하네스 모드 체계 (3-way) | `semi-agentic`(기본) / `--interactive`(명시) / `--agentic`(명시). semi-agentic: PLAN까지 사용자 검토, EXECUTE 이후 PM 자율, CLOSE 진입 사용자 승인 필수. 기본 모드는 플래그 없이 호출 시 자동 적용 |
 | 부트스트래퍼 | `CLAUDE.md`/`.cursorrules`/`GEMINI.md` 마커 영역. AI 도구 시작 시 OPAL 에이전트를 로드 |
 | 2-Layer 모델 | Global(`~/.opal/`) + Project(`{프로젝트}/`) 분리 — 글로벌 자산은 install로 배포, 프로젝트 자산은 opi로 생성 |
 | Specialist Agent | 도메인별 전문 워커 (FE/BE/DB/PLAN/Test/Planning) |
@@ -70,3 +70,4 @@ AI 프레임워크 설계 전문가 — 모든 산출물을 **재사용성, 플�
 
 | # | 원칙 | 맥락 | 확정일 |
 |---|------|------|--------|
+| 1 | PLAN까지 캡틴 검토 / EXECUTE 이후 PM 자율 / CLOSE 진입 캡틴 승인 — 모든 pilot의 기본 작업 패턴 (semi-agentic 모드 기본 채택) | 본 패턴은 캡틴의 작업 효율 + 설계 검토 가치의 균형점이며, 태스크 140에서 SSOT 등록 | 2026-05-09 |

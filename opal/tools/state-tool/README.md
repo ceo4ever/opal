@@ -38,7 +38,7 @@
 ```bash
 ~/.opal/tools/state-tool/run.sh init <task-path> \
   --skill <opp|opd|opds|opdw|opwt|opgc|oppd|opsdd> \
-  --mode <interactive|agentic> \
+  --mode <interactive|semi-agentic|agentic> \
   [--task-title <text>] \
   [--next-action <text>] \
   [--rows-spec <inline-json>] \
@@ -106,7 +106,7 @@
 - `--owner`와 `--auto-pass`는 배타적
 - `--as-worker` 사용 시 `--worker-stage` 필수
 - `--auto-pass` 사용 시 `owner = "auto"`, note에 "agentic auto-pass" 자동 기재
-- CLOSE 첫 행 + agentic 모드 + `--auto-pass` 조합 거부
+- CLOSE 첫 행 + agentic/semi-agentic 모드 + `--auto-pass` 조합 거부 (`agentic_close_gate_requires_user`)
 - `--force` 사용 시 `--note` 필수 + 의사결정 로그 자동 기재
 
 ---
@@ -135,6 +135,7 @@
 - 스키마 필수 필드 존재 여부
 - 사용자 확인 행 `owner` 정합성
 - interactive 모드에서 `owner=auto` 사용 여부
+- semi-agentic 모드에서 EXECUTE-equivalent 이전 행 `owner=auto` 사용 여부 (`semi_agentic_pre_execute_auto_pass_denied`)
 - STATE.md 마커 존재 여부
 
 **응답 예시**:
@@ -250,7 +251,7 @@
 | 13 | `owner_flag_conflict` | mark | 1 | --owner와 --auto-pass 동시 사용 |
 | 14 | `auto_pass_in_interactive_mode` | validate | 1 | interactive 모드에서 owner=auto |
 | 15 | `close_gate_violation` | mark/advance | 1 | CLOSE 진입 게이트 위반 |
-| 16 | `agentic_close_gate_requires_user` | mark | 1 | agentic CLOSE 첫 행에 --auto-pass 거부 |
+| 16 | `agentic_close_gate_requires_user` | mark | 1 | agentic/semi-agentic CLOSE 첫 행에 --auto-pass 거부 |
 | 17 | `note_required_for_force` | init --force / mark --force | 1 | --force 시 --note 미제공 |
 | 18 | `rows_spec_invalid_json` | init --rows-spec | 1 | --rows-spec JSON 배열 아님 |
 | 19 | `skill_md_parse_error` | init --rows-from | 1 | SKILL.md 행 추출 실패 |
@@ -258,6 +259,8 @@
 | 21 | `worker_stage_required` | mark | 1 | --as-worker 시 --worker-stage 미지정 |
 | 22 | `rows_input_conflict` | init | 1 | --rows-spec과 --rows-from 동시 사용 |
 | 23 | `rows_acts_not_implemented` | init --rows-acts | 2 | opsdd ACT 동적 주입 미구현 |
+| 24 | `semi_agentic_pre_execute_auto_pass_denied` | mark / validate | 1 | semi-agentic 모드에서 EXECUTE 등가 단계 이전 행에 --auto-pass 사용 불가 |
+| 25 | `mode_flag_conflict` | (state init 포함 -- 향후) | 1 | 다중 모드 플래그 동시 사용 불가 |
 
 ---
 
@@ -274,4 +277,11 @@
 | PLAN.md | `tasks/134-260501-opp-pipeline-state-tool/PLAN.md` | §2.1~§2.20 전체 설계 SSOT |
 | TASK.md | `tasks/134-260501-opp-pipeline-state-tool/TASK.md` | T-1~T-13 기술 결정 |
 | state.schema.json | `opal/tools/state-tool/schema/state.schema.json` | JSON Schema Draft-07 |
+
+## 변경이력
+
+| 버전 | 일시 (KST) | 태스크 | 변경 내용 |
+|------|-----------|--------|---------|
+| v1.0 | 2026-05-01 | (134) | 최초 작성 |
+| v1.1 | 2026-05-09 11:22 | (140) | 3-way 모드 지원: init --mode semi-agentic 추가, mark/validate semi-agentic 경계 게이트 문서화, 오류 #24/#25 추가 |
 | xlsx-tool 패턴 | `opal/tools/xlsx-tool/run.sh:1-12` | OPAL Tools 래퍼 패턴 |

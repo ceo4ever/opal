@@ -8,10 +8,12 @@
 
 > **[MUST] STATE.md를 LLM이 직접 작성하는 것은 금지된다. 반드시 `state init` 호출로 생성해야 한다.**
 >
+> **기본값: `semi-agentic`.** 캡틴이 `--interactive` 또는 `--agentic`을 명시 호출하지 않으면 자동 적용된다.
+>
 > ```bash
 > ~/.opal/tools/state-tool/run.sh init <task-path> \
 >   --skill <opp|opd|opds|opdw|opwt|opgc|oppd|opsdd> \
->   --mode <interactive|agentic> \
+>   --mode <interactive|semi-agentic|agentic> \
 >   [--task-title <태스크 제목>] \
 >   [--next-action <첫 액션 텍스트>]
 > ```
@@ -53,7 +55,7 @@
 > 최종 갱신: YYYY-MM-DD HH:mm
 
 ## 현재 상태
-- 모드: {모드}
+- 모드: {모드}  (값: `interactive` / `semi-agentic` / `agentic` 중 하나)
 - 단계: {단계 목록}
 - 진행: {Step N/M 완료 (EXECUTE 시)}
 - 상태: {진행 중 / 완료 / 블로커 / 추가작업중 / 추가작업완료}
@@ -102,8 +104,9 @@
 
 ## 변경이력
 
-| 버전 | 날짜 | 변경내용 |
+| 버전 | 일시 | 변경내용 |
 |------|------|---------|
 | v1.0 | 2026-04-12 | 최초 작성 — opal-harness.md §3에서 분리 (111) |
 | v1.1 | 2026-04-15 | CLOSE 단계 공통 블록 규칙 추가 + 최종 단계 예외 규칙 제거 + CLOSE 진입 게이트 원칙 반영 + DONE.md 행 규칙을 CLOSE 귀속으로 변경 + 레거시 호환 원칙 추가 (121) |
 | v1.2 | 2026-05-01 | `[MUST] LLM 직접 작성 금지 — state init 호출` 블록 추가. 마커 형식 명세(T-6). 자유 텍스트 3개 섹션 자동 생성 명세(§2.11 G-8). 기존 템플릿 본문은 출력 형식 참조용으로 보존 + 마커 주입 — TASK F-8 / PLAN §2.11 G-8 / §2.19.1 / §1.5 M-2 (134) |
+| v1.3 | 2026-05-09 11:22 | --mode choices에 semi-agentic 추가 + 기본값 안내 추가 + 모드 필드 3-way 값 안내 (140) |

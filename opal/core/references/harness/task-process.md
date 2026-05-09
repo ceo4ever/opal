@@ -27,13 +27,13 @@
 #### 오케스트레이터 공통 영역 (스킬 완료 후 후처리)
 
 3. **STEP 5(오케스트레이터 선택)에서 결정된 스킬약어**를 폴더명과 TASK.md 헤더 `적용 스킬` 필드에 반영한다.
-4. **`--agentic` 플래그 여부를 TASK.md 헤더 `모드` 필드에 반드시 기록한다** (`interactive` 또는 `agentic`).
+4. **모드 플래그(`--interactive` / `--semi-agentic` / `--agentic`)를 TASK.md 헤더 `모드` 필드에 반드시 기록한다** (`interactive` / `semi-agentic` (기본) / `agentic`). 모드 플래그가 없으면 기본값 `semi-agentic`.
 5. **[필수] `state init`을 호출하여 STATE.md를 생성한다**. 이 단계를 건너뛰면 세션 복원과 상태 추적이 불가능하다. LLM이 직접 작성하는 것은 금지된다 (`harness/state-template.md` §[MUST] 블록).
 
    ```bash
    ~/.opal/tools/state-tool/run.sh init <task-path> \
      --skill <약어> \
-     --mode <interactive|agentic> \
+     --mode <interactive|semi-agentic|agentic> \
      [--task-title <태스크 제목>] \
      [--next-action <첫 액션 텍스트>]
    ```
@@ -68,7 +68,8 @@
 
 ## 변경이력
 
-| 버전 | 날짜 | 내용 |
+| 버전 | 일시 | 변경내용 |
 |------|------|------|
 | v1.0 | 2026-04-21 | 다운사이징 — opal-harness.md §4 분리 (128) |
 | v1.1 | 2026-05-01 | 31번 항목(5번) `[필수] STATE.md를 생성한다` → `[필수] state init 호출` 표현 교체. `--task-title` / `--next-action` 인자 명시 — TASK F-9 / PLAN §2.11 G-8 / §2.19.1 / §1.5 M-3 (134) |
+| v1.2 | 2026-05-09 11:22 | --mode choices 3-way 갱신 + 기본값 semi-agentic 명시 (140) |

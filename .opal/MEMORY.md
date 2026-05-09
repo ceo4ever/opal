@@ -1,6 +1,6 @@
 # opal Memory Index
 
-> 최종 갱신: 2026-05-08 23:51 (140 TASK 진입)
+> 최종 갱신: 2026-05-09 12:18 (140 완료)
 > last_task_number: 140
 
 ## 메모리 카테고리
@@ -22,6 +22,7 @@
 
 | 등록일시 | 카테고리 | 상태 | 파일 | 설명 |
 |----------|----------|------|------|------|
+| 2026-05-09 | preferences | 유지 | [memory/preferences_default_semi_agentic.md](memory/preferences_default_semi_agentic.md) | 캡틴 기본 작업 패턴: PLAN 검토 + EXECUTE 자율 (semi-agentic 모드 기본 채택) |
 | 2026-03-22 | project | 진행 중 | [memory/project_security_task.md](memory/project_security_task.md) | 보안 전용 컴포넌트 — TEST(코드 보안) 122에서 완료, PLAN(설계 보안)은 후속 분리 유지 |
 | 2026-04-09 | task | 예정 | [memory/task_098_vector_store.md](memory/task_098_vector_store.md) | OPAL Vector Store — sqlite-vec 기반 문서 벡터 검색 도구 (PLAN ✅, EXECUTE 보류) |
 
@@ -30,6 +31,7 @@
 
 | 등록일자 | 작업 | 단계 | 경로 | 시작일시 | 완료일시 |
 |----------|------|------|------|---------|---------|
+| 2026-05-09 | semi-agentic 모드 도입 + 전체 pilot 기본 모드 변경 — 3-way 모드 체계(interactive/semi-agentic 기본/agentic) 신설. 신규 N-1(opal-harness-semi-agentic.md) + N-2(preferences 메모리) + 수정 19종(하네스 3 / 부트스트랩 4 / op-task / pilot 7 / state-tool 2 / .opal 2) + Step 9 보정 docs/CONVENTIONS.md L161 = 총 22 변경 + GC-C001/C002 헤더 보정 3종. D-DEC-1(oppd Phase 2 WBS) / D-DEC-2(opsdd Phase 3 DESIGN) / D-DEC-5(MODE_BOUNDARY_STAGES) / D-DEC-7(AGENTIC-LOG EXECUTE 진입 시점). install + 6단계 동작 검증 모두 PASS (140) | 완료 | tasks/140-260508-opp-default-semi-agentic-mode/ | 2026-05-08 23:51 | 2026-05-09 12:18 |
 | 2026-05-09 | 배포 채널 정비 + Get Started UX 통합 (P1) — `scripts/install.sh`/`install.ps1`/`install/{macos,windows}` one-liner + `opal/tools/opal-cli/` 5 서브커맨드 + `opal/tools/doctor/` 4섹션 + `opal/core/AGENT.md` Eager Step 6.5 cwd 분기 + `opal/skills/opal-start/` 신규 + `opal-onboarding` triggers 보강 + `opal-skills-registry.json` v3.4.0 + `.github/workflows/release.yml` (attest-build-provenance v2) + README §설치 4 Step 정제 + ARCHITECTURE.md §배포 채널 현행 전환. 캡틴 결정: D1=`opal-cli` 명칭(opalrb 충돌 회피), D2=`https://github.com/ceo4ever/opal`. v0.1 태그 push로 첫 release 발동 (139) | 완료 | tasks/139-260508-opp-distribute-and-getstarted/ | 2026-05-08 21:43 | 2026-05-09 09:07 |
 | 2026-05-08 | opi 프로젝트 초기화 — `.opal/AGENT.md` 신규 + `docs/CONVENTIONS.md` 구현 규칙 섹션 신설 + `docs/ARCHITECTURE.md` 외부 의존 서비스 섹션 신설 + `docs/PROJECT.md` 문서 테이블 보강. 후속 태스크 139(P1)로 배포 채널 정비 + Get Started UX 통합 진행 (138) | 완료 | tasks/138-260508-opi-opal/ | 2026-05-08 17:43 | 2026-05-08 21:43 |
 | 2026-05-08 | PLAN 워커 컨벤션 [MUST] 인용 강제 — 사전 주입 강화 (제안 A). 잠재 적용 지점 4종 정밀 분석 후 #1·#3 채택 + #2 부분 채택 + #4 비채택 결정. 5개 파일 변경(dispatch-process v1.1 / op-task-plan SKILL v1.4 / plan-guide v1.2 / op-dev-plan SKILL v2.5 / opal-plan-agent v1.1). 136(B)와 검사 시점·대상·메커니즘 분리 → 사전·사후 이중 안전망 완성 (137) | 완료 | tasks/137-260508-opp-plan-convention-injection/ | 2026-05-08 16:50 | 2026-05-08 22:56 |
@@ -39,15 +41,3 @@
 | 2026-04-30 | html-mockup 일반 스킬 신규 개발 (132) | 완료 | tasks/132-260430-opp-html-mockup-skill/ | 2026-04-30 11:27 | 2026-04-30 13:14 |
 | 2026-04-24 | Citation Rules 하네스 보편화 — 근거 제시 원칙 강화 (130) | 완료 | tasks/130-260424-opp-plan-citation-hardening/ | 2026-04-24 08:30 | 2026-04-24 11:42 |
 | 2026-04-22 | op-dev-execute 구획화 + EXECUTE 디스패치 라우팅 전파 (129) | 완료 | tasks/129-260422-opp-op-dev-execute-agent-guide-split/ | 2026-04-22 23:17 | 2026-04-23 12:31 |
-| 2026-04-20 | 부트스트랩 다운사이징 (128) | 완료 | tasks/128-260420-opp-bootstrap-downsizing/ | 2026-04-20 20:21 | 2026-04-21 12:51 |
-| 2026-04-18 | opi 인터뷰 흐름 재설계 (126) | 완료 | tasks/126-260418-opp-opi-interview-redesign/ | 2026-04-18 23:03 | 2026-04-21 13:30 |
-| 2026-04-18 | oppd FE/BE 전문 에이전트 라우팅 적용 (127) | TASK 🔄 | tasks/127-260418-opp-oppd-specialist-agent-routing/ | 2026-04-18 22:57 | - |
-| 2026-04-17 | opgc 진단 전담화 + 프로젝트 구성 표준 정립 (125) | 완료 | tasks/125-260417-opp-opgc-diagnosis-split-dispatch/ | 2026-04-17 23:52 | 2026-04-18 14:20 |
-| 2026-04-17 | opal-pm.md 다운사이징 — pm/ 폴더 분리 최적화 (124) | 완료 | tasks/124-260417-opp-pm-optimization/ | 2026-04-17 17:51 | 2026-04-17 18:57 |
-| 2026-04-17 | 산출물 인용 위치 추적 하네스 — Citation Rules (123) | 완료 | tasks/123-260417-opp-citation-rules/ | 2026-04-17 08:35 | 2026-04-17 09:25 |
-| 2026-04-17 | opal-pilot-gc 경량 Pilot + 보안/컨벤션 에이전트 개발 (122) | 완료 | tasks/122-260417-opp-opal-gc/ | 2026-04-17 07:42 | 2026-04-17 17:09 |
-| 2026-04-15 | 파이프라인 현황판 CLOSE 단계 분리 (121) | 완료 | tasks/121-260415-opp-close-stage-separation/ | 2026-04-15 15:18 | 2026-04-15 17:20 |
-| 2026-04-15 | opal-pm.md 핵심 제약 인용 의무 규칙 추가 + 파일럿 디스패치 템플릿 보완 (120) | 완료 | tasks/120-260415-opp-pm-constraint-citation-rule/ | 2026-04-15 15:10 | 2026-04-15 15:24 |
-| 2026-04-15 | README.md 업데이트 — 최근 변경 반영 + 설치/설정 확장 (119) | 완료 | tasks/119-260415-opp-readme-update/ | 2026-04-15 14:28 | 2026-04-15 14:51 |
-| 2026-04-15 | code-scan search/exports 정규식 전환 (118) | 완료 | tasks/118-260415-opp-code-scan-regex-search/ | 2026-04-15 14:09 | 2026-04-15 14:22 |
-| 2026-04-15 | 전문 개발 에이전트 시스템 설계 (117) | 완료 | tasks/117-260415-opp-specialist-agent-system/ | 2026-04-15 08:02 | 2026-04-15 14:20 |

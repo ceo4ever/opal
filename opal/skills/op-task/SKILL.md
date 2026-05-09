@@ -106,7 +106,7 @@ description: |
 ```markdown
 # TASK: {제목}
 
-> 작성일: YYYY-MM-DD | 작업 유형: {신규/개선/수정/오류/Wireframe UI} | 적용 스킬: {약어} | 모드: {interactive/agentic}
+> 작성일: YYYY-MM-DD | 작업 유형: {신규/개선/수정/오류/Wireframe UI} | 적용 스킬: {약어} | 모드: {interactive|semi-agentic|agentic}
 > 입력: 사용자 요청
 > 출력: TASK.md
 
@@ -194,11 +194,12 @@ tasks/{NNN}-{YYMMDD}-{스킬약어}-{태스크명}/TASK.md
 > ```bash
 > ~/.opal/tools/state-tool/run.sh init <task-path> \
 >   --skill <opp|opd|opds|opdw|opwt|opgc|oppd|opsdd> \
->   --mode <interactive|agentic> \
+>   --mode <interactive|semi-agentic|agentic> \
 >   [--task-title <태스크 제목>] \
 >   [--next-action <첫 액션 텍스트>]
 > ```
 >
+> - `--mode`: 기본값 `semi-agentic`. `--interactive` 또는 `--agentic` 명시 호출 시 해당 모드.
 > - `--task-title`: STATE.md 1행 제목 (생략 시 `<task-path>` 마지막 디렉토리명 — PLAN §2.19.1)
 > - `--next-action`: `## 다음 액션` 초기값 (생략 시 `"PLAN 단계 진입"` — PLAN §2.11 G-8)
 > - 행 구성(`--rows-spec`/`--rows-from`)은 오케스트레이터 SKILL.md "STATE.md 도메인 치환값" 참조 (PLAN §2.3)
@@ -222,7 +223,7 @@ tasks/{NNN}-{YYMMDD}-{스킬약어}-{태스크명}/TASK.md
 
 TASK.md 완성 전에 다음을 확인한다:
 
-- [ ] 모드(interactive/agentic)가 헤더에 기록되었는가
+- [ ] 모드(interactive|semi-agentic|agentic)가 헤더에 기록되었는가
 - [ ] 작업 유형이 정확히 판별되었는가
 - [ ] 작업 목표가 1-2문장으로 명확한가
 - [ ] 스킬 호출 전 대화에서 분석/조사가 선행되었다면 "배경 분석 (대화에서 도출)" 섹션을 포함했는가 (없으면 생략)
@@ -246,3 +247,4 @@ TASK.md 완성 전에 다음을 확인한다:
 | v1.2 | 2026-04-09 | 저장 경로 날짜 포함 형식으로 변경(`{NNN}-{YYMMDD}-{스킬약어}-{태스크명}`). `{NNN}` 채번 방식을 `last_task_number` 기반으로 변경. `{YYMMDD}` 항목 추가 (102) |
 | v1.3 | 2026-04-17 | "관련 문서" 섹션을 유형+경로/URL 포함 테이블 포맷으로 전환 + citation-rules 참조 지시 추가 (123) |
 | v1.4 | 2026-04-24 | citation-rules 트리거 1줄 주입 — SSOT + Trigger 패턴 (130) |
+| v1.5 | 2026-05-09 11:22 | 모드 필드 3-way 갱신 + state init choices 갱신 + 기본값 안내 추가 (140) |

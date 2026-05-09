@@ -1,6 +1,8 @@
 # opal-harness-interactive.md
 
-> interactive 모드(기본) 전용 하네스. 공통 하네스(opal-harness.md)와 함께 로드한다.
+> interactive 모드(`--interactive` 명시) 전용 하네스. 공통 하네스(opal-harness.md)와 함께 로드한다.
+
+> **semi-agentic 모드의 PLAN-equivalent 종료 시점까지의 동작은 본 문서를 준용한다** (semi-agentic 하네스 §4).
 
 ---
 
@@ -187,3 +189,4 @@ Gate 통과 실패 시 아래 절차를 따른다. 각 Gate 섹션의 "Fail 시 
 | v2.3 | 2026-04-12 | §4 순서 강제 원칙 — 직접 서술 → 공통 하네스 §3 참조로 교체 (원칙 일원화) (110) |
 | v2.4 | 2026-04-12 | §3 PM Gate에 하네스 모듈 적용 확인 서브섹션 추가 — 6개 모듈 체크포인트 테이블 (111) |
 | v2.5 | 2026-05-01 | §2 QA Gate 직후 / §3 PM Gate 직후 state-tool `mark` 호출 표기 추가 + gate-pass 일괄 처리 권장 (§2.13 G-10). §3 자가 진단 6번 항목 `state validate` 추가 (§2.6). §3 PM Gate 직후 CLOSE 진입 close_gate_violation 자동 검증 명시 (§2.16 G-13) (134) |
+| v2.6 | 2026-05-09 11:22 | 도입부 semi-agentic 모드의 PLAN까지 동작 준용 안내 추가 (140) |

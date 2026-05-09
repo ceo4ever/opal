@@ -3,7 +3,7 @@
   "module": "state_tool",
   "layer": "util",
   "domain": "opal-pipeline",
-  "description": "OPAL 파이프라인 현황판 JSON SSOT 관리 CLI — 9개 서브 명령(init/show/advance/mark/block/validate/add-row/status/gate-pass)",
+  "description": "OPAL 파이프라인 현황판 JSON SSOT 관리 CLI — 9개 서브 명령(init/show/advance/mark/block/validate/add-row/status/gate-pass) + 3-way 모드(interactive/semi-agentic/agentic) 지원",
   "exports": [
     "cmd_init", "cmd_show", "cmd_advance", "cmd_mark",
     "cmd_block", "cmd_validate", "cmd_add_row", "cmd_status", "cmd_gate_pass"
@@ -30,6 +30,14 @@ STAGE_ENUM = [
     "WIREFRAME", "QA", "SPEC", "REVIEW", "DESIGN",
     "VERIFY", "SCAN", "CHECK", "REPORT", "WBS", "CLOSE"
 ]
+
+# semi-agentic 모드 경계 — 이 stage 집합에 속하는 행은 EXECUTE-equivalent 이전으로 간주
+# (PLAN-equivalent 단계까지 사용자 검토 강제) — D-DEC-5 (140)
+MODE_BOUNDARY_STAGES = {
+    "TASK", "ANALYSIS", "PLAN",
+    "SPEC", "REVIEW", "DESIGN",
+    "WBS", "WIREFRAME",
+}
 
 STATUS_LABEL_MAP = {
     "pending":     "⬜",
@@ -64,7 +72,11 @@ ERROR_CODES = {
     "owner_flag_conflict":            "--owner와 --auto-pass는 동시 사용 불가",
     "auto_pass_in_interactive_mode":  "interactive 모드에서 사용자 확인 행(row {row_id})이 owner=auto로 done 처리됨",
     "close_gate_violation":           "CLOSE 단계 첫 행 진입 — 직전 단계 사용자 확인 행이 owner=user/status=done이 아님",
-    "agentic_close_gate_requires_user": "agentic 모드 CLOSE 첫 행에 --auto-pass 사용 불가 (§2.16 G-13)",
+    "agentic_close_gate_requires_user": "agentic/semi-agentic 모드 CLOSE 첫 행에 --auto-pass 사용 불가 (§2.16 G-13)",
+    "semi_agentic_pre_execute_auto_pass_denied":
+        "semi-agentic 모드에서 EXECUTE-equivalent 단계 이전 행(row {row_id}, stage={stage})에 --auto-pass 사용 불가 — PLAN-equivalent까지 사용자 검토 필수",
+    "mode_flag_conflict":
+        "다중 모드 플래그 동시 사용 — --interactive/--semi-agentic/--agentic 중 하나만 사용 가능",
     "note_required_for_force":        "--force 사용 시 --note 필수 (트리거 §2.17 #1/#3/#8)",
     "rows_spec_invalid_json":         "--rows-spec 인자가 유효한 JSON 배열이 아님",
     "skill_md_parse_error":           "--rows-from SKILL.md에서 행 추출 실패: {reason}",
@@ -322,8 +334,8 @@ def check_close_gate(state, row_index, command, auto_pass=False, force=False):
     if not is_first_close:
         return
 
-    # agentic 모드 + auto-pass 거부 (§2.16 G-13)
-    if auto_pass and state.get("mode") == "agentic":
+    # agentic / semi-agentic 모드 + auto-pass 거부 (§2.16 G-13 / D-DEC-5b)
+    if auto_pass and state.get("mode") in ("agentic", "semi-agentic"):
         err(command, "agentic_close_gate_requires_user", row_id=row["row_id"])
 
     if force:
@@ -826,6 +838,12 @@ def cmd_mark(args):
     check_close_gate(state, row_index, command,
                      auto_pass=args.auto_pass, force=args.force)
 
+    # semi-agentic 모드에서 EXECUTE-equivalent 이전 행은 --auto-pass 거부 (D-DEC-5)
+    if args.auto_pass and state.get("mode") == "semi-agentic":
+        if row["stage"] in MODE_BOUNDARY_STAGES:
+            err(command, "semi_agentic_pre_execute_auto_pass_denied",
+                row_id=row["row_id"], stage=row["stage"])
+
     now_str = get_kst_datetime(command)
     row["status"]       = "done"
     row["status_label"] = "✅"
@@ -953,6 +971,14 @@ def cmd_validate(args):
                     "row_id": row["row_id"],
                     "detail": f"interactive mode but owner=auto"
                 })
+            if owner == "auto" and mode == "semi-agentic":
+                # PLAN-equivalent 이전 행에 owner=auto는 위반 (D-DEC-5)
+                if row.get("stage") in MODE_BOUNDARY_STAGES:
+                    violations.append({
+                        "code":   "semi_agentic_pre_execute_auto_pass_denied",
+                        "row_id": row["row_id"],
+                        "detail": f"semi-agentic mode but owner=auto on stage={row.get('stage')}"
+                    })
 
     # 마커 존재 여부
     md = load_state_md(task_path)
@@ -1177,7 +1203,7 @@ def build_parser():
     p_init.add_argument("--skill", required=True,
                         choices=["opp","opd","opds","opdw","opwt","opgc","oppd","opsdd"])
     p_init.add_argument("--mode", required=True,
-                        choices=["interactive","agentic"])
+                        choices=["interactive","semi-agentic","agentic"])
     p_init.add_argument("--task-title")
     p_init.add_argument("--next-action")
     rows_group = p_init.add_mutually_exclusive_group()  # C-1

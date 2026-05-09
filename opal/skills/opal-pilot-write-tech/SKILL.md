@@ -16,8 +16,10 @@ description: |
 > 병렬 처리 원칙은 하네스 §7을 따른다 — 읽기는 병렬 툴콜, 독립 작업은 병렬 Agent 디스패치.
 
 **[MUST]** 스킬 시작 즉시 모드에 따라 서브 하네스를 Read한다. 이 단계를 건너뛰면 안 된다:
-- `--agentic` 플래그 있음 → `~/.opal/references/opal-harness-agentic.md`를 Read한다
-- `--agentic` 없음 (기본) → `~/.opal/references/opal-harness-interactive.md`를 Read한다
+- `--interactive` 플래그 → `~/.opal/references/opal-harness-interactive.md`를 Read한다
+- `--agentic` 플래그 → `~/.opal/references/opal-harness-agentic.md`를 Read한다
+- 모드 플래그 없음 (기본) 또는 `--semi-agentic` → `~/.opal/references/opal-harness-semi-agentic.md`를 Read한다
+- 다중 모드 플래그 동시 사용 시 즉시 캡틴에게 보고 + state init도 거부 (`mode_flag_conflict`)
 
 > **[MUST]** 산출물 작성·검증 시 `opal/core/references/harness/citation-rules.md`를 Read하여 규칙(근거 제시 원칙 / 트랙별 매트릭스 / [MUST] 토큰 / 영역 간 용어 일관성 / decision_required 계약)을 준수한다.
 
@@ -67,7 +69,7 @@ description: |
 - TASK.md 작성 (모드, 대상 문서 유형, 외부 참조, 저장 경로 포함)
 - STATE.md 초기화 — state-tool을 호출한다:
   ```
-  ~/.opal/tools/state-tool/run.sh init <task-path> --skill opwt --rows-from opal/skills/opal-pilot-write-tech/SKILL.md
+  ~/.opal/tools/state-tool/run.sh init <task-path> --skill opwt --mode <interactive|semi-agentic|agentic> --rows-from opal/skills/opal-pilot-write-tech/SKILL.md
   ```
 - **State Gate** — state-tool 호출로 갱신 확인:
   ```
@@ -313,6 +315,51 @@ opal-doc-standard 적용: `~/.opal/references/opal-doc-standard.md`
 
 ---
 
+## Agentic / Semi-Agentic 모드
+
+opal-harness-agentic.md / opal-harness-semi-agentic.md 참조. 본 절은 이 스킬의 차이점만 기술한다.
+
+### 기본 모드 (semi-agentic)
+
+기본 호출(`//opwt {작업}`)은 semi-agentic 모드. PLAN(간략/진단보고)-equivalent까지 사용자 검토, EXECUTE-equivalent 이후 PM 자율, CLOSE 진입은 사용자 승인 필수.
+
+**모드 경계** (이 시점부터 PM 자율):
+- PLAN(간략/진단보고) 사용자 확정 행 통과 후 → EXECUTE 작업 행부터 PM 자율
+- 분석 모드(진단 보고)는 EXECUTE가 없으므로 semi-agentic이라도 PLAN(진단보고)까지로 종료
+
+### 명시 모드
+
+| 호출 | 모드 |
+|------|------|
+| `//opwt 작업` | semi-agentic (기본) |
+| `//opwt --interactive 작업` | interactive — 모든 단계 사용자 승인 |
+| `//opwt --agentic 작업` | agentic — 모든 단계 PM 자율 (CLOSE 진입 제외) |
+
+### 자율 게이트 흐름 (semi-agentic, 작성/수정 모드)
+
+```
+TASK → ANALYSIS Gate → PLAN Gate → EXECUTE Gate → QA/CLOSE
+사용자   사용자 승인      사용자 승인    PM 자율         사용자 승인 필수
+                        (모드 경계)
+```
+
+- ANALYSIS/PLAN Gate까지 사용자 승인 필수 (interactive 동작)
+- PLAN 사용자 확정 행 통과 후 EXECUTE Gate는 PM 자율 통과
+- CLOSE 진입은 사용자 승인 필수 (공통 게이트)
+- 각 게이트에서 opal-harness-agentic.md "Gate 루핑 규칙" 적용
+- AGENTIC-LOG.md 생성: EXECUTE 등가 첫 행 advance/mark 시점
+
+### CLOSE 진입 게이트 (공통)
+
+semi-agentic / agentic 모두 CLOSE 첫 행 `--auto-pass` 거부 (`agentic_close_gate_requires_user`). 캡틴 발화 후 직전 사용자 확인 행 `--owner user` mark 필수.
+
+### AGENTIC-LOG.md 생성 시점
+
+- agentic: TASK 시작 시점
+- semi-agentic: EXECUTE-equivalent 첫 행 advance 시점에 PM이 생성
+
+---
+
 ## 변경이력
 
 | 버전 | 날짜 | 변경내용 |
@@ -337,3 +384,4 @@ opal-doc-standard 적용: `~/.opal/references/opal-doc-standard.md`
 | v3.0 | 2026-04-15 | CLOSE 단계 섹션 신설 + QA 단계에서 DONE.md 생성 분리 + QA Pass 보고 형식 C안 적용 + 단계 목록 CLOSE 추가 (121) |
 | v3.1 | 2026-04-24 | citation-rules 트리거 1줄 주입 — SSOT + Trigger 패턴 (130) |
 | v3.2 | 2026-05-01 | state-tool 도입 — STATE.md 직접 편집 금지 + `state-tool` 호출 표현 교체 (P-1~P-8 패턴 적용). TASK/ANALYSIS/PLAN/EXECUTE/QA/CLOSE 각 단계 State Gate를 state-tool 명시 호출로 교체. "STATE.md 도메인 치환값" 섹션 리네이밍 + `--rows-from` SSOT 지시. CLOSE 게이트 제약 (§2.16 G-13) + P-6 add-row 가이드 추가 (134) |
+| v3.3 | 2026-05-09 11:22 | 3-way 모드 체계 도입 — semi-agentic 기본 채택 + Agentic/Semi-Agentic 모드 절 신규 추가 + Harness 절 3-way 분기 + state init --mode 인수 추가 (140) |

@@ -13,8 +13,10 @@ description: |
 > 부트스트랩에서 로드되지 않은 경우: `~/.opal/references/opal-harness.md`를 Read한다.
 
 **[MUST]** 스킬 시작 즉시 모드에 따라 서브 하네스를 Read한다. 이 단계를 건너뛰면 안 된다:
-- `--agentic` 플래그 있음 → `~/.opal/references/opal-harness-agentic.md`를 Read한다
-- `--agentic` 없음 (기본) → `~/.opal/references/opal-harness-interactive.md`를 Read한다
+- `--interactive` 플래그 → `~/.opal/references/opal-harness-interactive.md`를 Read한다
+- `--agentic` 플래그 → `~/.opal/references/opal-harness-agentic.md`를 Read한다
+- 모드 플래그 없음 (기본) 또는 `--semi-agentic` → `~/.opal/references/opal-harness-semi-agentic.md`를 Read한다
+- 다중 모드 플래그 동시 사용 시 즉시 캡틴에게 보고 + state init도 거부 (`mode_flag_conflict`)
 
 > **[MUST]** 산출물 작성·검증 시 `opal/core/references/harness/citation-rules.md`를 Read하여 규칙(근거 제시 원칙 / 트랙별 매트릭스 / [MUST] 토큰 / 영역 간 용어 일관성 / decision_required 계약)을 준수한다.
 
@@ -221,30 +223,57 @@ Harness STATE.md 템플릿에 적용:
 
 ---
 
-## Agentic Mode
+## Agentic / Semi-Agentic 모드
 
-opal-harness-agentic.md 참조. `--agentic` 플래그 활성화 시 이 스킬의 차이점만 기술한다.
+opal-harness-agentic.md / opal-harness-semi-agentic.md 참조. 본 절은 이 스킬의 차이점만 기술한다.
+
+### 기본 모드 (semi-agentic)
+
+기본 호출(`//opdw {작업}`)은 semi-agentic 모드. WIREFRAME(PLAN-equivalent)까지 사용자 검토, EXECUTE-equivalent 이후 PM 자율, CLOSE 진입은 사용자 승인 필수.
+
+**모드 경계** (이 시점부터 PM 자율):
+- WIREFRAME 사용자 확인 행 통과 후 → EXECUTE 작업 행부터 PM 자율
+
+### 명시 모드
+
+| 호출 | 모드 |
+|------|------|
+| `//opdw 작업` | semi-agentic (기본) |
+| `//opdw --interactive 작업` | interactive — 모든 단계 사용자 승인 |
+| `//opdw --agentic 작업` | agentic — 모든 단계 PM 자율 (CLOSE 진입 제외) |
 
 ### 활성화
 
-`//opdw --agentic {작업 설명}` 형식으로 호출. STATE.md 모드 필드를 `agentic`으로 기록한다:
+STATE.md 모드 필드를 지정하여 기록한다 (기본: `semi-agentic`):
 
 ```
-~/.opal/tools/state-tool/run.sh init <task-path> --skill opdw --mode agentic --rows-from opal/skills/opal-pilot-dev-wireframe/SKILL.md
+~/.opal/tools/state-tool/run.sh init <task-path> --skill opdw --mode <interactive|semi-agentic|agentic> --rows-from opal/skills/opal-pilot-dev-wireframe/SKILL.md
 ```
 
-### 자율 게이트 흐름
+### 자율 게이트 흐름 (semi-agentic)
 
 ```
-TASK (PM 직접) → WIREFRAME Gate → EXECUTE Gate → CLOSE
-                  PM 자율 검토     PM 자율 검토    (사용자 승인 후 자동 진행)
+TASK → WIREFRAME Gate → EXECUTE Gate → CLOSE
+사용자   사용자 승인        PM 자율         사용자 승인 필수
+         (모드 경계)
 ```
 
-- TASK 이후 2개 게이트를 PM이 자율 통과 (CLOSE 진입은 사용자 승인 필수)
+- WIREFRAME Gate까지 사용자 승인 필수 (interactive 동작)
+- WIREFRAME 사용자 확인 행 통과 후 EXECUTE Gate는 PM 자율 통과
+- CLOSE 진입은 사용자 승인 필수 (공통 게이트)
 - 각 게이트에서 opal-harness-agentic.md "Gate 루핑 규칙" 적용
 - 자율 통과 시 `mark --row N --done --auto-pass --note '<근거>'` 호출 (P-8)
-- **CLOSE 단계 최초 진입 행은 `--auto-pass` 금지** (`close_gate_violation` — §2.16 G-13); 반드시 명시 호출
-- AGENTIC-LOG.md에 모든 판단/오류/수정/의사결정 기록
+- **CLOSE 단계 최초 진입 행은 `--auto-pass` 금지** (`agentic_close_gate_requires_user` — §2.16 G-13)
+- AGENTIC-LOG.md 생성: EXECUTE 등가 첫 행 advance/mark 시점
+
+### CLOSE 진입 게이트 (공통)
+
+semi-agentic / agentic 모두 CLOSE 첫 행 `--auto-pass` 거부 (`agentic_close_gate_requires_user`). 캡틴 발화 후 직전 사용자 확인 행 `--owner user` mark 필수.
+
+### AGENTIC-LOG.md 생성 시점
+
+- agentic: TASK 시작 시점
+- semi-agentic: EXECUTE-equivalent 첫 행 advance 시점에 PM이 생성
 
 ---
 
@@ -268,3 +297,4 @@ TASK (PM 직접) → WIREFRAME Gate → EXECUTE Gate → CLOSE
 | v2.3 | 2026-04-24 | citation-rules 트리거 1줄 주입 — SSOT + Trigger 패턴 (130) |
 | v2.4 | 2026-05-01 | state-tool 도입 — STATE.md 직접 편집 금지 + `state-tool` 호출 표현 교체 (P-1~P-8 패턴 적용). "STATE.md 도메인 치환값" SSOT 보존 + `--rows-from` 파싱 SSOT 명시. agentic 활성화에 `--auto-pass` + CLOSE 진입 게이트 거부 정책 추가 (134) |
 | v2.5 | 2026-05-08 | PM Gate 점검 목록 EXECUTE 행 산출물에 GC-CONVENTION-*.md 추가 — 컨벤션 자동 진단 EXECUTE PM Gate 발동 (136) |
+| v2.6 | 2026-05-09 11:22 | 3-way 모드 체계 도입 — semi-agentic 기본 채택 + Agentic/Semi-Agentic 모드 절 확장 + Harness 절 3-way 분기 + WIREFRAME 모드 경계 명시 (140) |

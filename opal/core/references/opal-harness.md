@@ -65,15 +65,18 @@
 
 | 모듈 | 역할 | 로드 조건 | 탐색 경로 |
 |------|------|----------|----------|
-| `opal-harness-interactive.md` | interactive 모드 (Gates — 단계/QA/PM/체크리스트 게이트) | `--agentic` 플래그 **없음** (기본) | `~/.opal/references/opal-harness-interactive.md` |
+| `opal-harness-semi-agentic.md` | semi-agentic 모드 (기본 — PLAN까지 interactive 흐름, EXECUTE 이후 agentic 흐름, CLOSE 게이트 공통) | 모드 플래그 없음 (기본) 또는 `--semi-agentic` | `~/.opal/references/opal-harness-semi-agentic.md` |
+| `opal-harness-interactive.md` | interactive 모드 (Gates — 단계/QA/PM/체크리스트 게이트) | `--interactive` 플래그 **있음** | `~/.opal/references/opal-harness-interactive.md` |
 | `opal-harness-agentic.md` | agentic 모드 (PM 대행, 자율 검토, Gate 루핑, AGENTIC-LOG) | `--agentic` 플래그 **있음** | `~/.opal/references/opal-harness-agentic.md` |
 
 ### 로딩 규칙
 
 1. 오케스트레이터는 **공통 하네스**(`opal-harness.md`)를 Read한다 (부트스트랩 또는 Harness 섹션)
 2. 공통 하네스 Read 후, 모드에 따라 **서브 하네스 1개를 추가 Read**한다:
-   - `--agentic` 플래그 없음 (기본) → `opal-harness-interactive.md`
-   - `--agentic` 플래그 있음 → `opal-harness-agentic.md`
+   - 모드 플래그 없음 (기본) 또는 `--semi-agentic` → `opal-harness-semi-agentic.md`
+   - `--interactive` → `opal-harness-interactive.md`
+   - `--agentic` → `opal-harness-agentic.md`
+   - 다중 모드 플래그 동시 사용 → `mode_flag_conflict` 에러 (state init도 동일 거부)
    - **단, 해당 서브 하네스가 현재 세션 컨텍스트에 이미 로딩되어 있으면 Read를 스킵한다.**
 3. 새 모드 추가 시: 이 테이블에 행을 추가하고, 서브 하네스 파일을 생성한다
 
@@ -263,3 +266,4 @@ OPAL 도구는 모두 `~/.opal/tools/{tool-name}/run.sh` 래퍼를 통해 호출
 | v4.4 | 2026-04-21 | 다운사이징 — §0 용어 정의 삭제, §3 State 본문 → harness/state.md 분리, §3 레거시 호환 노트 3건 삭제, §4 TASK 공통 프로세스 본문 → harness/task-process.md 분리, §2 모듈 테이블에 state.md·task-process.md 행 추가 (128) |
 | v4.5 | 2026-04-24 | §2 Citation Rules 적용 의무 블록 추가 — 모든 pilot/스킬/가이드/QA 대상 인용 규칙 필수 적용 선언 (130) |
 | v4.6 | 2026-05-01 | §3 state-tool [MUST] 호출 의무 블록 추가 — 파이프라인 현황판 행 상태 변경은 state-tool로만, 위반 시 에러 코드 목록 + PLAN §2.18 링크. §9 도구 테이블에 state-tool 행 추가 (트리거: TASK 단계 시작 / Gate 직후 / 추가작업 진입) (134) |
+| v4.7 | 2026-05-09 11:22 | §2 모듈 구조 표에 semi-agentic 행 추가 + 로딩 규칙 3-way 갱신 (140) |

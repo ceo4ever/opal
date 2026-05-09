@@ -7,12 +7,13 @@
 ## 1. 모드 정의
 
 PM이 사용자를 대행하여 단계 게이트를 자율 통과하는 모드.
-**opt-in 방식**이며, `--agentic` 플래그 없이는 항상 interactive 모드로 동작한다.
+**opt-in 방식**이며, `--agentic` 플래그 없이는 semi-agentic 모드(기본)로 동작한다.
 
 | 모드 | 설명 |
 |------|------|
-| `interactive` | 기본 동작. 각 단계 완료 시 사용자 승인을 받는다. |
-| `agentic` | PM이 사용자를 대행하여 자율 진행. PM은 사용자 역할을 맡으므로 interactive보다 **높은 검토 기준과 기록 의무**를 진다. |
+| `interactive` | `--interactive` 명시. 각 단계 완료 시 사용자 승인을 받는다. |
+| `semi-agentic` | **기본**. PLAN-equivalent까지 사용자 승인, EXECUTE-equivalent 이후 PM 자율. CLOSE 진입은 사용자 승인 필수 (공통 게이트). 본 문서의 §3~§9는 semi-agentic의 EXECUTE 이후 동작에도 동일 적용된다. |
+| `agentic` | `--agentic` 명시. PM이 사용자를 대행하여 자율 진행. PM은 사용자 역할을 맡으므로 interactive보다 **높은 검토 기준과 기록 의무**를 진다. |
 
 ## 2. 활성화 방법
 
@@ -152,12 +153,16 @@ PM이 자율 진행을 중단하고 사용자에게 올리는 기준:
 | `커밋 규칙` | agentic mode에서도 사용자 명시 요청 시에만 커밋 수행 |
 | `디스패치 의무 원칙` | 워커 디스패치로 정의된 단계는 반드시 서브에이전트 사용 |
 | `자동 루핑 제약` | 공통 하네스 §1 Guards의 기존 한도 그대로 적용 |
-| `CLOSE 진입 게이트` | 사용자의 확인된 지시(`승인`/`확인`/`확인완료` 등)가 없으면 CLOSE 단계 진입 불가. agentic 모드에서도 이 규칙은 유지 — 다른 Gate는 PM 자율 통과 허용이나 CLOSE 진입은 예외. CLOSE 첫 행에 `--auto-pass` 시도 시 도구가 `agentic_close_gate_requires_user`로 거부한다. PM은 CLOSE 진입 직전 캡틴 보고 후 사용자 발화를 받아 prev_user_row를 `--owner user`로 mark해야 한다 (§4 CLOSE 진입 게이트 절차 참조 / PLAN §2.16 G-13 / R-12). |
+| `CLOSE 진입 게이트` | 사용자의 확인된 지시(`승인`/`확인`/`확인완료` 등)가 없으면 CLOSE 단계 진입 불가. agentic / semi-agentic 양쪽 모두 이 규칙은 유지 — 다른 Gate는 PM 자율 통과 허용이나 CLOSE 진입은 예외. CLOSE 첫 행에 `--auto-pass` 시도 시 도구가 `agentic_close_gate_requires_user`로 거부한다 (agentic/semi-agentic 모두 동일 코드). PM은 CLOSE 진입 직전 캡틴 보고 후 사용자 발화를 받아 prev_user_row를 `--owner user`로 mark해야 한다 (§4 CLOSE 진입 게이트 절차 참조 / PLAN §2.16 G-13 / R-12). |
 
 ## 8. AGENTIC-LOG.md (PM 대행 일지)
 
 agentic mode 시작 시 태스크 폴더에 `AGENTIC-LOG.md`를 자동 생성한다.
 PM이 수행한 모든 활동을 시계열로 기록하여, 사용자가 사후에 전체 과정을 추적할 수 있게 한다.
+
+**생성 시점**:
+- agentic 모드: TASK 시작 시점 (즉시 생성)
+- semi-agentic 모드: EXECUTE-equivalent 첫 행 advance 또는 mark 시점 (PM이 EXECUTE 진입 시 생성)
 
 **생성 위치**: `tasks/{NNN}-{name}/AGENTIC-LOG.md`
 
@@ -230,3 +235,4 @@ PM이 수행한 모든 활동을 시계열로 기록하여, 사용자가 사후�
 | v1.3 | 2026-04-12 | §4 Artifact Gate 참조(§2.5) → PM Gate 자가 진단 참조로 수정 + §7.6 참조를 모듈화 구조에 맞게 갱신 (111) |
 | v1.4 | 2026-04-15 | §7 유지되는 규칙 테이블에 "CLOSE 진입 게이트" 행 추가 — agentic 모드에서도 CLOSE 진입은 사용자 승인 필수 (121) |
 | v1.5 | 2026-05-01 | §4 Pass 시 state-tool `mark --done` / `--auto-pass` 호출 표기 추가 + CLOSE 진입 게이트 4단계 절차 신설 (agentic_close_gate_requires_user 거부 / --owner user 필수 / §2.16 G-13 R-12). §3 판단 기록 의무에 auto-pass note 자동 기재 설명 추가. §7 CLOSE 진입 게이트 행 보강 (134) |
+| v1.6 | 2026-05-09 11:22 | §1 모드 정의에 semi-agentic 행 추가 / §7 CLOSE 게이트 행 semi-agentic 공통 적용 명시 / §8 AGENTIC-LOG 생성 시점 분기 (140) |

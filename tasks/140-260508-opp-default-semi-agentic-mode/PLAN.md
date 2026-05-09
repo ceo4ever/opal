@@ -823,7 +823,7 @@ if args.auto_pass and state.get("mode") == "semi-agentic":
 
 ### Step 1: 신규 하네스 파일 작성 — `opal-harness-semi-agentic.md`
 
-- [ ] 완료
+- [x] 완료
 - **파일**: `opal/core/references/opal-harness-semi-agentic.md` (신규 N-1)
 - **작업 내용**: §2 핵심 설계 N-1에 명시된 9개 섹션 구조로 작성. 모드 정의 / 활성화 방법 / 모드 경계 / PLAN-equivalent까지 동작 / EXECUTE 이후 동작 / CLOSE 진입 게이트 / AGENTIC-LOG 생성 시점 / 3-way 차이 표 / 유지되는 규칙. 변경이력 표 v1.0 행 포함.
 - **완료 기준**:
@@ -838,7 +838,7 @@ if args.auto_pass and state.get("mode") == "semi-agentic":
 
 ### Step 2: 공통 하네스 + 모드 분기 보강 — opal-harness 3종
 
-- [ ] 완료
+- [x] 완료
 - **파일**: M-1 `opal/core/references/opal-harness.md` / M-2 `opal/core/references/opal-harness-interactive.md` / M-3 `opal/core/references/opal-harness-agentic.md` (각 1파일, 같은 Step 내 순차 처리 — 동일 도메인)
 - **작업 내용**: §2 핵심 설계 M-1~M-3 명세대로 3-way 모드 분기 갱신. 각 파일에 변경이력 행 추가.
 - **완료 기준**:
@@ -851,7 +851,7 @@ if args.auto_pass and state.get("mode") == "semi-agentic":
 
 ### Step 3: 부트스트랩/공통 참조 갱신 — state-template / task-process / skill-commands / opal/AGENT.md
 
-- [ ] 완료
+- [x] 완료
 - **파일**: M-4 `opal/core/references/harness/state-template.md` / M-5 `opal/core/references/harness/task-process.md` / M-6 `opal/core/references/harness/skill-commands.md` / M-7 `opal/AGENT.md`
 - **작업 내용**: §2 핵심 설계 M-4~M-7 명세대로 mode choices / 기본값 안내 / 쌍슬래시 예시 / 도메인 지식 표 갱신. 각 파일에 변경이력 행 추가(opal/AGENT.md는 변경이력 표 존재 여부 확인 후 결정).
 - **완료 기준**:
@@ -865,7 +865,7 @@ if args.auto_pass and state.get("mode") == "semi-agentic":
 
 ### Step 4: op-task SKILL.md 갱신
 
-- [ ] 완료
+- [x] 완료
 - **파일**: M-8 `opal/skills/op-task/SKILL.md`
 - **작업 내용**: §2 핵심 설계 M-8 명세대로 (a) TASK.md 헤더 모드 필드 3-way (b) state init mode choices (c) 작성 체크리스트 (d) 변경이력 v1.5 행 추가.
 - **완료 기준**:
@@ -879,7 +879,7 @@ if args.auto_pass and state.get("mode") == "semi-agentic":
 
 ### Step 5: state-tool 코드 변경 — state_tool.py / README.md
 
-- [ ] 완료
+- [x] 완료
 - **파일**: M-16 `opal/tools/state-tool/state_tool.py` + M-17 `opal/tools/state-tool/README.md`
 - **작업 내용**: §2 핵심 설계 M-16/M-17 명세대로 — (a) `--mode` choices에 `semi-agentic` 추가 (b) `MODE_BOUNDARY_STAGES` 상수 신설 (c) ERROR_CODES 신규 2종 + 기존 1종 메시지 갱신 (d) `check_close_gate` 조건 확장 (e) `cmd_mark`에 semi-agentic pre-EXECUTE 검증 추가 (f) `cmd_validate` 보강 (g) @header 갱신 (h) README mode choices 갱신 + 에러 카탈로그 갱신.
 - **완료 기준**:
@@ -907,7 +907,7 @@ if args.auto_pass and state.get("mode") == "semi-agentic":
 
 ### Step 6: pilot 7종 SKILL.md 일괄 갱신
 
-- [ ] 완료
+- [x] 완료
 - **파일**: M-9 ~ M-15 (opp/opd/opds/opdw/opwt/oppd/opsdd 7개 파일)
 - **작업 내용**: §2 핵심 설계 M-9~M-15 공통 패턴(a~d)을 각 pilot에 적용:
   - (a) Harness 절 모드 분기 3-way
@@ -934,7 +934,7 @@ if args.auto_pass and state.get("mode") == "semi-agentic":
 
 ### Step 7: 메모리/확정 기준 등록 — N-2 + M-18 + M-19
 
-- [ ] 완료
+- [x] 완료
 - **파일**: N-2 `.opal/memory/preferences_default_semi_agentic.md` (신규) / M-18 `.opal/AGENT.md` / M-19 `.opal/MEMORY.md`
 - **작업 내용**: §2 핵심 설계 N-2 / M-18 / M-19 명세대로 메모리 파일 생성 + 확정 기준 행 추가 + 메모리 인덱스 행 추가.
 - **완료 기준**:
