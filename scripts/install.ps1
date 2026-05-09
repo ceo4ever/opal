@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     OPAL Windows one-liner installer (irm/iex entry point).
 

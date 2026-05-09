@@ -1,6 +1,6 @@
 # STATE: 139-260508-opp-distribute-and-getstarted
 
-> 최종 갱신: 2026-05-09 23:35
+> 최종 갱신: 2026-05-09 23:48
 
 ## 현재 상태
 - 모드: interactive
@@ -48,6 +48,8 @@
 | 24 | 2026-05-09 23:25 | current_status changed: additional_work → additional_work_done | v0.2.10: install.ps1 env export 제거 + windows.ps1 -OpalVersion param + ~/.opal/VERSION 기록 |
 | 25 | 2026-05-09 23:35 | current_status changed: additional_work_done → additional_work | v0.2.11: windows.ps1 호출을 powershell -ExecutionPolicy Bypass -File로 변경 |
 | 26 | 2026-05-09 23:35 | current_status changed: additional_work → additional_work_done | v0.2.11: install.ps1이 windows.ps1을 ExecutionPolicy Bypass + -File로 호출 (PSSecurityException 회피) |
+| 27 | 2026-05-09 23:45 | current_status changed: additional_work_done → additional_work | v0.2.12: PowerShell 5.1 한글 인코딩 — .ps1 파일에 UTF-8 BOM 추가 |
+| 28 | 2026-05-09 23:48 | current_status changed: additional_work → additional_work_done | v0.2.12: .ps1 파일에 UTF-8 BOM 추가 (PowerShell 5.1 한글 인코딩) |
 
 ## 블로커
 없음

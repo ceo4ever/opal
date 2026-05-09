@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     OPAL Windows 플랫폼 인스톨러 (install/macos.sh 와 대칭).
 
