@@ -1,6 +1,6 @@
 # STATE: 139-260508-opp-distribute-and-getstarted
 
-> 최종 갱신: 2026-05-09 23:54
+> 최종 갱신: 2026-05-10 00:21
 
 ## 현재 상태
 - 모드: interactive
@@ -52,6 +52,8 @@
 | 28 | 2026-05-09 23:48 | current_status changed: additional_work → additional_work_done | v0.2.12: .ps1 파일에 UTF-8 BOM 추가 (PowerShell 5.1 한글 인코딩) |
 | 29 | 2026-05-09 23:53 | current_status changed: additional_work_done → additional_work | v0.2.13: install.ps1 BOM 제거 (iex 호환), windows.ps1 BOM 유지 (-File cp949 회피) |
 | 30 | 2026-05-09 23:54 | current_status changed: additional_work → additional_work_done | v0.2.13: install.ps1 BOM 제거(iex 호환), windows.ps1 BOM 유지(-File cp949 회피) |
+| 31 | 2026-05-10 00:07 | current_status changed: additional_work_done → additional_work | v0.3.0: Windows 전면 이식 1단계 — Install-OpalCore + Register-Bootstrapper + Strip 본격 구현 |
+| 32 | 2026-05-10 00:21 | current_status changed: additional_work → additional_work_done | v0.3.0: Windows Install-OpalCore + Register-Bootstrapper 본격 구현 + Strip 변경이력 |
 
 ## 블로커
 없음
