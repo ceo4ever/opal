@@ -4,7 +4,7 @@
  * opal-project-init 플랫폼 파일 적용 스크립트
  *
  * 역할: OPAL 부트스트래퍼가 포함된 플랫폼 파일(CLAUDE.md, GEMINI.md, .cursorrules)만 처리.
- *       docs/, .opal/ 문서는 알투가 직접 작성하므로 이 스크립트의 범위가 아님.
+ *       docs/, .opal/ 문서는 에이전트가 직접 작성하므로 이 스크립트의 범위가 아님.
  *
  * 사용법:
  *   node apply.js --project-root /path/to/project

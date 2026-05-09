@@ -437,7 +437,7 @@ class TestMark(BaseTestCase):
 
     def test_mark_owner_user(self):
         """G-12: mark --owner user → owner=user 저장 (PLAN §2.15 G-12)"""
-        self._mark(1, owner="user", note="캡틴 확인")
+        self._mark(1, owner="user", note="소유자 확인")
         state = self._state()
         self.assertEqual(state["rows"][0]["owner"], "user")
 

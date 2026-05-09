@@ -42,7 +42,7 @@
   - 해결 방안: 환경 변수(`process.env.API_KEY`) 또는 시크릿 매니저로 이동
   - 자동 수정: N
   - 참조: <https://owasp.org/Top10/A07_2021-Identification_and_Authentication_Failures/>
-  - **적용 시각**: 2026-04-17 14:31 — 캡틴 수동 조치 후 재검증 통과
+  - **적용 시각**: 2026-04-17 14:31 — 소유자 수동 조치 후 재검증 통과
 
 ### High (2건)
 

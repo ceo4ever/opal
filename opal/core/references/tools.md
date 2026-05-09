@@ -171,7 +171,7 @@
 
 # 사용자 확인 행 처리
 ~/.opal/tools/state-tool/run.sh mark tasks/134-.../ \
-  --row 11 --done --owner user --note "캡틴 확인: PLAN 단계 검토 완료"
+  --row 11 --done --owner user --note "{owner_name} 확인: PLAN 단계 검토 완료"
 
 # 추가작업 행 삽입
 ~/.opal/tools/state-tool/run.sh add-row tasks/134-.../ \
@@ -296,3 +296,4 @@ node ~/.opal/tools/code-scan/code-scan.js scan src/auth/auth.service.ts --json
 | v1.1 | 2026-04-11 | code-scan 등록 |
 | v1.2 | 2026-04-12 | code-scan 섹션에 PM 관리 방안 서브섹션 추가 + exports 커맨드 사용 예시 추가 (109) |
 | v1.3 | 2026-05-01 | state-tool 섹션 신규 추가 — 파이프라인 현황판 JSON SSOT 관리 CLI 9개 서브 명령 등록 (134) |
+| v1.4 | 2026-05-09 18:30 | 개인 식별자 누설 정정 — note 예시 "캡틴 확인" → "{owner_name} 확인" placeholder 치환 (139) |

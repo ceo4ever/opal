@@ -171,7 +171,7 @@ docs/CONVENTIONS.md 부재 감지
 
 분석 항목: 네이밍 패턴 / 들여쓰기 방식 / 파일 구조 / import 순서 / 문서화 현황
 생성 방식: opal-project-init (opi) 스킬 재사용
-캡틴 승인 후 저장 (자동 저장 금지)
+소유자 승인 후 저장 (자동 저장 금지)
 
 승인 시 초안 생성을 시작합니다. (yes/no)
 ```
@@ -208,7 +208,7 @@ docs/CONVENTIONS.md 부재 감지
 2. **프레임워크 내장 공통 컨벤션 기본값 포함 금지** — 규칙은 반드시 docs/CONVENTIONS.md에서만.
 3. **CONVENTIONS.md 부재 = 체크 실패 아님** — 초안 생성 유도 + 체크 생략.
 4. **커뮤니티 스킬 원본 수정 금지** — getsentry/code-review Read 래핑만.
-5. **자동 갱신 금지** — docs/CONVENTIONS.md 수정은 오케스트레이터 캡틴 승인 후.
+5. **자동 갱신 금지** — docs/CONVENTIONS.md 수정은 오케스트레이터 소유자 승인 후.
 6. **커밋 금지** — git commit 호출 금지.
 7. **Low/Info 참조 URL 필수** — 모를 경우 "참조: TBD — {관련 도구/규칙} 링크" 형태로 placeholder 기입.
 8. **트리거 분리 표기** — 빈도/심각도/새 카테고리 트리거 각각 별개 §4 항목으로 표기.
@@ -217,7 +217,7 @@ docs/CONVENTIONS.md 부재 감지
 
 ## 초안 생성 유도 상세 (CONVENTIONS.md 부재 시)
 
-오케스트레이터(opal-pilot-gc)가 캡틴 승인 시 실행하는 초안 생성 흐름:
+오케스트레이터(opal-pilot-gc)가 소유자 승인 시 실행하는 초안 생성 흐름:
 
 1. 코드베이스 샘플 분석 (preprocessing):
    - 네이밍 패턴: 파일명, 변수명, 함수명 샘플 추출
@@ -227,7 +227,7 @@ docs/CONVENTIONS.md 부재 감지
    - 문서화: JSDoc/docstring 사용 현황
 2. opi 스킬 재사용 (`opal-project-init` Phase 2 작성 프로세스):
    - 분석 결과를 opi에 입력으로 전달
-   - opi의 캡틴 승인 후 저장 프로토콜 준수
+   - opi의 소유자 승인 후 저장 프로토콜 준수
 3. 초안에 base-convention-checklist.md의 8개 카테고리 섹션 placeholder 포함
 
 ---
@@ -252,3 +252,4 @@ docs/CONVENTIONS.md 부재 감지
 | v1.0 | 2026-04-17 | 초기 작성 — CONVENTIONS.md 유일 기준, 부재 시 초안 유도, 내장 규칙 금지, getsentry 래핑, APPLY 판정, fingerprint (122) |
 | v1.1 | 2026-04-17 | APPLY 제거(진단 전담화) — Phase 6/APPLY 섹션 삭제, `tools`에서 Edit/Write 제거, `apply_mode` 입력 삭제, `scope` 입력 추가, Phase 1 허브+링크 체이닝 반영 (125) |
 | v1.2 | 2026-05-08 | PM Gate 호출 시나리오 표 추가(§입력 명세) + Phase 5 file_suffix 변수 도입(단일/영역별 2종 규약) + Phase 6 artifact_path/changed_files 동기 갱신 (136) |
+| v1.3 | 2026-05-09 | personal identity 누설 정정 — "캡틴" → "소유자" 4건 (139) |

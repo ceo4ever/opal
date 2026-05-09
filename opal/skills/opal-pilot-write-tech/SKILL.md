@@ -19,7 +19,7 @@ description: |
 - `--interactive` 플래그 → `~/.opal/references/opal-harness-interactive.md`를 Read한다
 - `--agentic` 플래그 → `~/.opal/references/opal-harness-agentic.md`를 Read한다
 - 모드 플래그 없음 (기본) 또는 `--semi-agentic` → `~/.opal/references/opal-harness-semi-agentic.md`를 Read한다
-- 다중 모드 플래그 동시 사용 시 즉시 캡틴에게 보고 + state init도 거부 (`mode_flag_conflict`)
+- 다중 모드 플래그 동시 사용 시 즉시 사용자에게 보고 + state init도 거부 (`mode_flag_conflict`)
 
 > **[MUST]** 산출물 작성·검증 시 `opal/core/references/harness/citation-rules.md`를 Read하여 규칙(근거 제시 원칙 / 트랙별 매트릭스 / [MUST] 토큰 / 영역 간 용어 일관성 / decision_required 계약)을 준수한다.
 
@@ -76,7 +76,7 @@ description: |
   ~/.opal/tools/state-tool/run.sh advance <task-path> --row 1   # TASK 행 🔄
   ~/.opal/tools/state-tool/run.sh mark <task-path> --row 1 --done
   ~/.opal/tools/state-tool/run.sh mark <task-path> --row 2 --done  # TASK.md 생성 행
-  ~/.opal/tools/state-tool/run.sh mark <task-path> --row 3 --done --owner user --note '캡틴 확인: TASK 완료'
+  ~/.opal/tools/state-tool/run.sh mark <task-path> --row 3 --done --owner user --note '소유자 확인: TASK 완료'
   ```
 - 보고 후 다음 단계 승인 (interactive) / 자율 진행 (agentic)
 
@@ -128,7 +128,7 @@ ANALYSIS 완료 후 아래 절차를 순서대로 수행한다:
    ```
 3. 사용자 확인 (interactive) / PM 자율 승인 (agentic):
    ```
-   ~/.opal/tools/state-tool/run.sh mark <task-path> --row <ANALYSIS_사용자확인_N> --done --owner user --note '캡틴 확인: ANALYSIS 완료'
+   ~/.opal/tools/state-tool/run.sh mark <task-path> --row <ANALYSIS_사용자확인_N> --done --owner user --note '소유자 확인: ANALYSIS 완료'
    ```
 
 ---
@@ -171,7 +171,7 @@ State Gate 시 state-tool 호출 (4-row 일괄):
 ```
 ~/.opal/tools/state-tool/run.sh gate-pass <task-path> --start <PLAN_QA_Gate_행N>
 ~/.opal/tools/state-tool/run.sh mark <task-path> --row <PLAN_State_Gate_N+4> --done  # PM Gate 후 State Gate
-~/.opal/tools/state-tool/run.sh mark <task-path> --row <PLAN_사용자확인_N> --done --owner user --note '캡틴 확인: PLAN 완료'
+~/.opal/tools/state-tool/run.sh mark <task-path> --row <PLAN_사용자확인_N> --done --owner user --note '소유자 확인: PLAN 완료'
 ```
 - **게이트**: PLAN.md + 배치 계획 사용자 확인 (interactive) / PM 자율 승인 (agentic)
 
@@ -209,7 +209,7 @@ State Gate 시 state-tool 호출 (4-row 일괄):
   → 사용자 확인 (interactive) / PM 자율 승인 후 다음 배치 (agentic):
   ```
   ~/.opal/tools/state-tool/run.sh mark <task-path> --row <EXECUTE_Batch_State_Gate_N+4> --done
-  ~/.opal/tools/state-tool/run.sh mark <task-path> --row <EXECUTE_Batch_사용자확인_N> --done --owner user --note '캡틴 확인: Batch N 완료'
+  ~/.opal/tools/state-tool/run.sh mark <task-path> --row <EXECUTE_Batch_사용자확인_N> --done --owner user --note '소유자 확인: Batch N 완료'
   ```
 배치 완료 후 `docs/PROJECT.md` 등록 확인
 
@@ -351,7 +351,7 @@ TASK → ANALYSIS Gate → PLAN Gate → EXECUTE Gate → QA/CLOSE
 
 ### CLOSE 진입 게이트 (공통)
 
-semi-agentic / agentic 모두 CLOSE 첫 행 `--auto-pass` 거부 (`agentic_close_gate_requires_user`). 캡틴 발화 후 직전 사용자 확인 행 `--owner user` mark 필수.
+semi-agentic / agentic 모두 CLOSE 첫 행 `--auto-pass` 거부 (`agentic_close_gate_requires_user`). 소유자 발화 후 직전 사용자 확인 행 `--owner user` mark 필수.
 
 ### AGENTIC-LOG.md 생성 시점
 
@@ -385,3 +385,4 @@ semi-agentic / agentic 모두 CLOSE 첫 행 `--auto-pass` 거부 (`agentic_close
 | v3.1 | 2026-04-24 | citation-rules 트리거 1줄 주입 — SSOT + Trigger 패턴 (130) |
 | v3.2 | 2026-05-01 | state-tool 도입 — STATE.md 직접 편집 금지 + `state-tool` 호출 표현 교체 (P-1~P-8 패턴 적용). TASK/ANALYSIS/PLAN/EXECUTE/QA/CLOSE 각 단계 State Gate를 state-tool 명시 호출로 교체. "STATE.md 도메인 치환값" 섹션 리네이밍 + `--rows-from` SSOT 지시. CLOSE 게이트 제약 (§2.16 G-13) + P-6 add-row 가이드 추가 (134) |
 | v3.3 | 2026-05-09 11:22 | 3-way 모드 체계 도입 — semi-agentic 기본 채택 + Agentic/Semi-Agentic 모드 절 신규 추가 + Harness 절 3-way 분기 + state init --mode 인수 추가 (140) |
+| v3.4 | 2026-05-09 18:30 | 개인 식별자 "캡틴" → "소유자"/"사용자" 치환 — 배포 파일 정체성 누설 정정 (139) |

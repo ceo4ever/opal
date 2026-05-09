@@ -374,9 +374,9 @@ opgc 실행 결과 {N}건 이슈 감지
 - 각 이슈의 fix_hint를 근거로 수정하고, 보고서 체크박스를 `[x] done`으로 갱신
 
 ## 제약
-- [?] review 항목은 본 태스크 제외 (캡틴 판단 필요)
+- [?] review 항목은 본 태스크 제외 (소유자 판단 필요)
 - 기존 테스트 회귀 금지
-- 커밋은 캡틴 지시 시만 (하네스 Guards §1)
+- 커밋은 소유자 지시 시만 (하네스 Guards §1)
 - docs/CONVENTIONS.md, docs/SECURITY.md 자동 갱신 금지
 ```
 
@@ -457,7 +457,7 @@ Agentic 모드 특수 규칙:
   ```
   ~/.opal/tools/state-tool/run.sh init <task-path> --skill opgc --mode agentic --rows-from opal/skills/opal-pilot-gc/SKILL.md
   ```
-- CLOSE 진입 전 캡틴 확인 메시지 표시:
+- CLOSE 진입 전 소유자 확인 메시지 표시:
   ```
   [Agentic CLOSE 게이트] 자율 실행 완료. CLOSE 진입 승인? (y/n)
   ```
@@ -508,3 +508,4 @@ fingerprint = sha1(fingerprint_input).hex()[:16]
 | v1.1 | 2026-04-17 | APPLY 제거(진단 전담화) — 4단계 파이프라인(SCAN/CHECK/REPORT/CLOSE), CLI 토글 전환(`--security`/`--convention`, `--apply`/`--only X` 제거), PROJECT.md 프로젝트 구성 기반 동적 분할 병렬 디스패치, 체커에 `scope` 입력 + 허브+링크 체이닝, opds 수동 체인 가이드 (125) |
 | v1.2 | 2026-04-24 | citation-rules 트리거 1줄 주입 — SSOT + Trigger 패턴 (130) |
 | v1.3 | 2026-05-01 | state-tool 도입 — SCAN 1.4 init 호출 명시 + CLOSE State Gate를 state-tool mark 명시 호출로 교체 + `--rows-from` SSOT 지시 + agentic `--auto-pass` + CLOSE 진입 게이트 거부 정책 추가 (134) |
+| v1.4 | 2026-05-09 18:30 | 개인 식별자 "캡틴" → "소유자" 치환 — 배포 파일 정체성 누설 정정 (139) |

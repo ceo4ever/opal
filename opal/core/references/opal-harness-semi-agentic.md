@@ -61,14 +61,14 @@
 - semi-agentic / agentic 양쪽 모두 동일 에러 코드로 거부
 
 CLOSE 진입 절차:
-1. PM이 캡틴에게 CLOSE 진입 직전 상황을 보고한다
-2. 캡틴(사용자)의 승인 발화(`승인`/`확인`/`확인완료` 등)를 받는다
+1. PM이 소유자에게 CLOSE 진입 직전 상황을 보고한다
+2. 소유자(사용자)의 승인 발화(`승인`/`확인`/`확인완료` 등)를 받는다
 3. 직전 단계 사용자 확인 행(prev_user_row)을 `--owner user`로 mark한다:
    ```
    ~/.opal/tools/state-tool/run.sh mark tasks/{NNN}-.../ \
      --row <사용자 확인 행 N> --done \
      --owner user \
-     --note "캡틴 확인: <발화 요약>"
+     --note "{owner_name} 확인: <발화 요약>"
    ```
 4. 이후 CLOSE 첫 행 mark 시 도구가 prev_user_row 자동 검증을 통과시킨다
 
@@ -111,3 +111,4 @@ CLOSE 진입 절차:
 | 버전 | 날짜 | 내용 |
 |------|------|------|
 | v1.0 | 2026-05-09 11:22 | 초기 작성 — semi-agentic 신규 모드 SSOT (140) |
+| v1.1 | 2026-05-09 18:30 | 개인 식별자 누설 정정 — "캡틴" → "소유자" / note 예시 "{owner_name} 확인" placeholder 치환 (139) |

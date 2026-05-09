@@ -15,7 +15,7 @@ description: |
 - `--interactive` 플래그 → `~/.opal/references/opal-harness-interactive.md`를 Read한다
 - `--agentic` 플래그 → `~/.opal/references/opal-harness-agentic.md`를 Read한다
 - 모드 플래그 없음 (기본) 또는 `--semi-agentic` → `~/.opal/references/opal-harness-semi-agentic.md`를 Read한다
-- 다중 모드 플래그 동시 사용 시 즉시 캡틴에게 보고 + state init도 거부 (`mode_flag_conflict`)
+- 다중 모드 플래그 동시 사용 시 즉시 사용자에게 보고 + state init도 거부 (`mode_flag_conflict`)
 
 > **[MUST]** 산출물 작성·검증 시 `opal/core/references/harness/citation-rules.md`를 Read하여 규칙(근거 제시 원칙 / 트랙별 매트릭스 / [MUST] 토큰 / 영역 간 용어 일관성 / decision_required 계약)을 준수한다.
 
@@ -52,7 +52,7 @@ op-dev-analysis 스킬을 수행하라.
   → 사용자 보고 (분석 방향 검토 후 PLAN 진입 승인).
 
 > **Gate 일괄 처리 (P-2)**: QA Gate 행 N부터 시작하는 표준 4행(QA Gate / State Gate / PM Gate / State Gate)은 `~/.opal/tools/state-tool/run.sh gate-pass <task-path> --start <N>` 1회 호출로 일괄 ✅ 처리 가능 (§2.13 G-10 — 표준 행 구성 한정).
-> **사용자 확인 (P-5)**: 사용자 발화 후 PM이 `~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done --owner user --note '캡틴 확인: ...'` 호출.
+> **사용자 확인 (P-5)**: 사용자 발화 후 PM이 `~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done --owner user --note '소유자 확인: ...'` 호출.
 > 근거: `PLAN.md` §2.13 G-10 / §3 Step 8 P-2 / P-5
 
 ## STEP 3: PLAN
@@ -89,7 +89,7 @@ PLAN 완료
   → 사용자에게 PLAN + TEST-SCENARIO 함께 보고. 승인 = EXECUTE 시작 허가.
 
 > **Gate 일괄 처리 (P-2)**: PLAN QA Gate 행 N부터 시작하는 표준 4행은 `~/.opal/tools/state-tool/run.sh gate-pass <task-path> --start <N>` 1회 호출로 일괄 ✅ 처리 가능 (§2.13 G-10).
-> **사용자 확인 (P-5)**: 사용자 발화 후 PM이 `~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done --owner user --note '캡틴 확인: ...'` 호출. CLOSE 진입 전 이 행의 `owner=user` 여부를 도구가 자동 검증한다 (§2.16 G-13).
+> **사용자 확인 (P-5)**: 사용자 발화 후 PM이 `~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done --owner user --note '소유자 확인: ...'` 호출. CLOSE 진입 전 이 행의 `owner=user` 여부를 도구가 자동 검증한다 (§2.16 G-13).
 > 근거: `PLAN.md` §3 Step 8 P-1 / P-2 / P-5 / §2.13 G-10 / §2.16 G-13
 
 ## STEP 4: EXECUTE
@@ -168,7 +168,7 @@ op-dev-test-agent 워커 디스패치. TEST-SCENARIO.md 실행 + 결과 기록 +
 → 사용자에게 완료 보고 후 CLOSE 단계 진입 승인 요청
 
 > **Gate 일괄 처리 (P-2)**: TEST QA Gate 행 N부터 시작하는 표준 4행은 `~/.opal/tools/state-tool/run.sh gate-pass <task-path> --start <N>` 1회 호출로 일괄 ✅ 처리 가능 (§2.13 G-10).
-> **사용자 확인 (P-5)**: 사용자 발화 후 PM이 `~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done --owner user --note '캡틴 확인: ...'` 호출.
+> **사용자 확인 (P-5)**: 사용자 발화 후 PM이 `~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done --owner user --note '소유자 확인: ...'` 호출.
 > 근거: `PLAN.md` §3 Step 8 P-1 / P-2 / P-5
 
 보고 형식:
@@ -298,7 +298,7 @@ opal-harness-agentic.md / opal-harness-semi-agentic.md 참조. 본 절은 이 �
 
 > **[MUST] agentic 모드 STATE 갱신**: 게이트 자율 통과 시 `~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done --auto-pass --note '<PM 판단 근거>'` 호출 (P-8). `--auto-pass` 명시 시 `state.json rows[N].note`에 "agentic auto-pass: <근거>"가 자동 기재된다.
 >
-> **[MUST] CLOSE 진입 게이트 거부 정책 (P-8 / §2.16 G-13)**: CLOSE 단계 첫 행은 `--auto-pass` 거부(`agentic_close_gate_requires_user` 에러). agentic/semi-agentic 모드라도 CLOSE 진입 직전 캡틴에게 보고 후 사용자 발화("확인"/"승인")를 받아 직전 단계 사용자 확인 행을 `--owner user`로 mark한 뒤 CLOSE 첫 행을 진행한다.
+> **[MUST] CLOSE 진입 게이트 거부 정책 (P-8 / §2.16 G-13)**: CLOSE 단계 첫 행은 `--auto-pass` 거부(`agentic_close_gate_requires_user` 에러). agentic/semi-agentic 모드라도 CLOSE 진입 직전 소유자에게 보고 후 사용자 발화("확인"/"승인")를 받아 직전 단계 사용자 확인 행을 `--owner user`로 mark한 뒤 CLOSE 첫 행을 진행한다.
 >
 > 근거: `tasks/134-260501-opp-pipeline-state-tool/TASK.md` F-15 / `PLAN.md` §2.15 G-12 / §2.16 G-13 / §3 Step 8 P-8
 
@@ -319,7 +319,7 @@ TASK → ANALYSIS Gate → PLAN Gate → EXECUTE Gate → TEST Gate → CLOSE
 
 ### CLOSE 진입 게이트 (공통)
 
-semi-agentic / agentic 모두 CLOSE 첫 행 `--auto-pass` 거부 (`agentic_close_gate_requires_user`). 캡틴 발화 후 직전 사용자 확인 행 `--owner user` mark 필수.
+semi-agentic / agentic 모두 CLOSE 첫 행 `--auto-pass` 거부 (`agentic_close_gate_requires_user`). 소유자 발화 후 직전 사용자 확인 행 `--owner user` mark 필수.
 
 ### AGENTIC-LOG.md 생성 시점
 
@@ -356,3 +356,4 @@ semi-agentic / agentic 모두 CLOSE 첫 행 `--auto-pass` 거부 (`agentic_close
 | v3.4 | 2026-05-01 | state-tool 도입 — STATE.md 직접 편집 금지 + `state-tool` 호출 표현 교체 (P-1~P-8 패턴 적용). "STATE.md 도메인 치환값" SSOT 보존 + `--rows-from` 파싱 SSOT 명시. agentic 활성화에 `--auto-pass` + CLOSE 진입 게이트 거부 정책(§2.16 G-13) 추가 (134) |
 | v3.5 | 2026-05-08 | PM Gate 점검 목록 TEST 행 산출물에 GC-CONVENTION-*.md 추가 + STEP 5 TEST PM Gate 검증 체크리스트에 6번째 항목 '컨벤션 자동 진단 PASS' 신설 (136) |
 | v3.6 | 2026-05-09 11:22 | 3-way 모드 체계 도입 — semi-agentic 기본 채택 + Agentic/Semi-Agentic 모드 절 확장 + Harness 절 3-way 분기 + state init choices 갱신 (140) |
+| v3.7 | 2026-05-09 18:30 | 개인 식별자 "캡틴" → "소유자"/"사용자" 치환 — 배포 파일 정체성 누설 정정 (139) |

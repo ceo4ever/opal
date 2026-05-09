@@ -95,14 +95,14 @@ CLOSE 단계 첫 행은 `--auto-pass` 거부됨. 도구가 `agentic_close_gate_r
 ```
 
 CLOSE 진입 절차:
-1. PM이 캡틴에게 CLOSE 진입 직전 상황을 보고한다
-2. 캡틴(사용자)의 승인 발화(`승인`/`확인`/`확인완료` 등)를 받는다
+1. PM이 소유자에게 CLOSE 진입 직전 상황을 보고한다
+2. 소유자(사용자)의 승인 발화(`승인`/`확인`/`확인완료` 등)를 받는다
 3. 직전 단계 사용자 확인 행(prev_user_row)을 `--owner user`로 mark한다:
    ```
    ~/.opal/tools/state-tool/run.sh mark tasks/{NNN}-.../ \
      --row <사용자 확인 행 N> --done \
      --owner user \
-     --note "캡틴 확인: <발화 요약>"
+     --note "{owner_name} 확인: <발화 요약>"
    ```
 4. 이후 CLOSE 첫 행 mark 시 도구가 prev_user_row 자동 검증을 통과시킨다
 
@@ -153,7 +153,7 @@ PM이 자율 진행을 중단하고 사용자에게 올리는 기준:
 | `커밋 규칙` | agentic mode에서도 사용자 명시 요청 시에만 커밋 수행 |
 | `디스패치 의무 원칙` | 워커 디스패치로 정의된 단계는 반드시 서브에이전트 사용 |
 | `자동 루핑 제약` | 공통 하네스 §1 Guards의 기존 한도 그대로 적용 |
-| `CLOSE 진입 게이트` | 사용자의 확인된 지시(`승인`/`확인`/`확인완료` 등)가 없으면 CLOSE 단계 진입 불가. agentic / semi-agentic 양쪽 모두 이 규칙은 유지 — 다른 Gate는 PM 자율 통과 허용이나 CLOSE 진입은 예외. CLOSE 첫 행에 `--auto-pass` 시도 시 도구가 `agentic_close_gate_requires_user`로 거부한다 (agentic/semi-agentic 모두 동일 코드). PM은 CLOSE 진입 직전 캡틴 보고 후 사용자 발화를 받아 prev_user_row를 `--owner user`로 mark해야 한다 (§4 CLOSE 진입 게이트 절차 참조 / PLAN §2.16 G-13 / R-12). |
+| `CLOSE 진입 게이트` | 사용자의 확인된 지시(`승인`/`확인`/`확인완료` 등)가 없으면 CLOSE 단계 진입 불가. agentic / semi-agentic 양쪽 모두 이 규칙은 유지 — 다른 Gate는 PM 자율 통과 허용이나 CLOSE 진입은 예외. CLOSE 첫 행에 `--auto-pass` 시도 시 도구가 `agentic_close_gate_requires_user`로 거부한다 (agentic/semi-agentic 모두 동일 코드). PM은 CLOSE 진입 직전 소유자 보고 후 사용자 발화를 받아 prev_user_row를 `--owner user`로 mark해야 한다 (§4 CLOSE 진입 게이트 절차 참조 / PLAN §2.16 G-13 / R-12). |
 
 ## 8. AGENTIC-LOG.md (PM 대행 일지)
 
@@ -236,3 +236,4 @@ PM이 수행한 모든 활동을 시계열로 기록하여, 사용자가 사후�
 | v1.4 | 2026-04-15 | §7 유지되는 규칙 테이블에 "CLOSE 진입 게이트" 행 추가 — agentic 모드에서도 CLOSE 진입은 사용자 승인 필수 (121) |
 | v1.5 | 2026-05-01 | §4 Pass 시 state-tool `mark --done` / `--auto-pass` 호출 표기 추가 + CLOSE 진입 게이트 4단계 절차 신설 (agentic_close_gate_requires_user 거부 / --owner user 필수 / §2.16 G-13 R-12). §3 판단 기록 의무에 auto-pass note 자동 기재 설명 추가. §7 CLOSE 진입 게이트 행 보강 (134) |
 | v1.6 | 2026-05-09 11:22 | §1 모드 정의에 semi-agentic 행 추가 / §7 CLOSE 게이트 행 semi-agentic 공통 적용 명시 / §8 AGENTIC-LOG 생성 시점 분기 (140) |
+| v1.7 | 2026-05-09 18:30 | 개인 식별자 누설 정정 — "캡틴" → "소유자" / note 예시 "{owner_name} 확인" placeholder 치환 (139) |

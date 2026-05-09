@@ -27,7 +27,7 @@ EXECUTE-LOOP에서 `opal-sdd-action-agent`에 단일 디스패치하며, PM이 �
 - `--interactive` 플래그 → `~/.opal/references/opal-harness-interactive.md`를 Read한다
 - `--agentic` 플래그 → `~/.opal/references/opal-harness-agentic.md`를 Read한다
 - 모드 플래그 없음 (기본) 또는 `--semi-agentic` → `~/.opal/references/opal-harness-semi-agentic.md`를 Read한다
-- 다중 모드 플래그 동시 사용 시 즉시 캡틴에게 보고 + state init도 거부 (`mode_flag_conflict`)
+- 다중 모드 플래그 동시 사용 시 즉시 사용자에게 보고 + state init도 거부 (`mode_flag_conflict`)
 
 > **[MUST]** 산출물 작성·검증 시 `opal/core/references/harness/citation-rules.md`를 Read하여 규칙(근거 제시 원칙 / 트랙별 매트릭스 / [MUST] 토큰 / 영역 간 용어 일관성 / decision_required 계약)을 준수한다.
 
@@ -131,7 +131,7 @@ State Gate 시 state-tool 호출 (R-10: gate-pass 금지 — mark 4회 개별 �
 ~/.opal/tools/state-tool/run.sh mark <task-path> --row 6 --done   # State Gate
 ~/.opal/tools/state-tool/run.sh mark <task-path> --row 7 --done   # PM Gate
 ~/.opal/tools/state-tool/run.sh mark <task-path> --row 8 --done   # State Gate
-~/.opal/tools/state-tool/run.sh mark <task-path> --row 9 --done --owner user --note '캡틴 확인: SPEC 완료'
+~/.opal/tools/state-tool/run.sh mark <task-path> --row 9 --done --owner user --note '소유자 확인: SPEC 완료'
 ```
 
 > SPEC.md 상세 구조: `references/spec-guide.md` 참조
@@ -193,7 +193,7 @@ State Gate 시 state-tool 호출 (R-10: gate-pass 금지 — mark 4회 개별 �
 ~/.opal/tools/state-tool/run.sh mark <task-path> --row 19 --done  # State Gate
 ~/.opal/tools/state-tool/run.sh mark <task-path> --row 20 --done  # PM Gate
 ~/.opal/tools/state-tool/run.sh mark <task-path> --row 21 --done  # State Gate
-~/.opal/tools/state-tool/run.sh mark <task-path> --row 22 --done --owner user --note '캡틴 확인: DESIGN 완료'
+~/.opal/tools/state-tool/run.sh mark <task-path> --row 22 --done --owner user --note '소유자 확인: DESIGN 완료'
 ```
 
 > SPEC-PLAN.md 상세 구조: `references/spec-plan-guide.md` 참조
@@ -250,7 +250,7 @@ ACT 완료마다 state-tool을 호출하여 STATE.md를 갱신한다 (R-10: gate
 ~/.opal/tools/state-tool/run.sh mark <task-path> --row 24 --done  # State Gate
 ~/.opal/tools/state-tool/run.sh mark <task-path> --row 25 --done  # PM Gate
 ~/.opal/tools/state-tool/run.sh mark <task-path> --row 26 --done  # State Gate
-~/.opal/tools/state-tool/run.sh mark <task-path> --row 27 --done --owner user --note '캡틴 확인: EXECUTE 완료'
+~/.opal/tools/state-tool/run.sh mark <task-path> --row 27 --done --owner user --note '소유자 확인: EXECUTE 완료'
 ```
 
 ### Gate
@@ -505,7 +505,7 @@ TASK (PM 직접)
 
 ### CLOSE 진입 게이트 (공통)
 
-semi-agentic / agentic 모두 CLOSE 첫 행 `--auto-pass` 거부 (`agentic_close_gate_requires_user`). 캡틴 발화 후 직전 사용자 확인 행 `--owner user` mark 필수.
+semi-agentic / agentic 모두 CLOSE 첫 행 `--auto-pass` 거부 (`agentic_close_gate_requires_user`). 소유자 발화 후 직전 사용자 확인 행 `--owner user` mark 필수.
 
 ### AGENTIC-LOG.md 생성 시점
 
@@ -557,3 +557,4 @@ opal-harness-agentic.md §6 공통 기준에 추가:
 | v3.0.0 | 2026-04-24 | citation-rules 트리거 1줄 주입 — SSOT + Trigger 패턴 (130) |
 | v3.1.0 | 2026-05-01 | state-tool 도입 — STATE.md 직접 편집 금지 + `state-tool` 호출 표현 교체 (P-1~P-8 패턴 적용). `--rows-from` SSOT 지시 + R-10 비표준 행 gate-pass 금지 + mark 4회 개별 호출 필수 블록 추가. R-13 ACT 동적 행 `add-row` 임시 가이드. CLOSE State Gate mark 명시 + G-13 제약 추가. agentic `--auto-pass` + CLOSE 진입 게이트 거부 정책 추가 (134) |
 | v3.2.0 | 2026-05-09 11:22 | 3-way 모드 체계 도입 — semi-agentic 기본 채택 + Agentic/Semi-Agentic 모드 절 확장 + Phase 3 DESIGN 모드 경계 명시(D-DEC-2) + AGENTIC-LOG 생성 시점 분기 + Harness 절 3-way 분기 + state init --mode choices 갱신 (140) |
+| v3.3.0 | 2026-05-09 18:30 | 개인 식별자 "캡틴" → "소유자"/"사용자" 치환 — 배포 파일 정체성 누설 정정 (139) |

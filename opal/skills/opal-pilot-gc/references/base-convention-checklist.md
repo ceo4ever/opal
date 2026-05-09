@@ -102,4 +102,4 @@
 6. 문서화 규칙 (JSDoc/docstring 적용 범위)
 7. 코드 품질 가이드라인 (선택)
 
-> 초안 생성 방식: `opal-project-init` 스킬 재사용 (Phase 2 작성 프로세스 + opi 캡틴 승인 프로토콜 준수)
+> 초안 생성 방식: `opal-project-init` 스킬 재사용 (Phase 2 작성 프로세스 + opi 소유자 승인 프로토콜 준수)
