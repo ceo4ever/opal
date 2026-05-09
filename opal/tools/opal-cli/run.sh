@@ -12,12 +12,13 @@
 # 변경이력:
 #   v1.0 2026-05-08 11:00 초기 구현 — install/update/doctor/uninstall/mcp 디스패처 (139)
 #   v1.0.1 2026-05-09 14:15 KST: BASH_SOURCE symlink chain 해석 보강 — ~/.opal/bin/opal-cli symlink 호출 시 lib/ 검색 실패 fix (139 추가작업)
+#   v1.0.2 2026-05-09 17:45 KST: 색상 변수 $'...' 패턴 적용 — cat heredoc usage()/lib에서 \033[1m 리터럴 노출 fix (139 추가작업)
 #
 
 set -euo pipefail
 
 # ─── 버전 ────────────────────────────────────────────────────
-OPAL_CLI_VERSION="1.0.1"
+OPAL_CLI_VERSION="1.0.2"
 
 # ─── 경로 ────────────────────────────────────────────────────
 # BASH_SOURCE의 symlink chain을 따라 실제 위치 탐색
@@ -32,12 +33,14 @@ SCRIPT_DIR="$(cd -P "$(dirname "$SOURCE")" >/dev/null && pwd)"
 LIB_DIR="$SCRIPT_DIR/lib"
 
 # ─── Colors ──────────────────────────────────────────────────
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-BOLD='\033[1m'
-NC='\033[0m'
+# bash $'...' 패턴 — escape sequence를 ANSI 문자로 해석하여 변수에 저장.
+# cat <<EOF heredoc 출력에서도 정상 동작 (cat은 escape 미해석 → 변수에 이미 ANSI 들어가 있어야 함).
+RED=$'\033[0;31m'
+GREEN=$'\033[0;32m'
+YELLOW=$'\033[1;33m'
+BLUE=$'\033[0;34m'
+BOLD=$'\033[1m'
+NC=$'\033[0m'
 
 info()    { echo -e "${BLUE}[INFO]${NC} $1"; }
 success() { echo -e "${GREEN}  ✓${NC} $1"; }
