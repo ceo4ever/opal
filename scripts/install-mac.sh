@@ -11,6 +11,7 @@
 #   v1.4 2026-05-08 KST: install_opal_bin/register_path_in_shell_rc 신설 + tools/ strip 호출 추가 (D 영역 PATH 등록) (139)
 #   v1.5 2026-05-09 14:20 KST: install_opal_bin에 PATH 사용 방법 안내 추가 — source/exec/새 터미널 옵션 + 절대 경로 폴백 명시 (139 추가작업)
 #   v1.6 2026-05-09 15:00 KST: 비대화형 모드 추가 — OPAL_AUTO_INSTALL=1 또는 stdin이 tty가 아닐 때(pipe) detect_user 자동 통과 + 메뉴 [3] 전체 설치 자동 실행. one-liner `curl | bash` 호환 결함 fix (139 추가작업, P0)
+#   v1.7 2026-05-09 17:30 KST: install_opal_venv pip 호출에 --no-cache-dir 추가 — "Cache entry deserialization failed" 경고 차단 (139 추가작업)
 #
 
 set -euo pipefail
@@ -923,8 +924,9 @@ install_opal_venv() {
         success "venv 기존 사용: $venv_dir"
     fi
 
-    "$venv_dir/bin/pip" install --quiet --upgrade pip
-    "$venv_dir/bin/pip" install --quiet -r "$req_src"
+    # --no-cache-dir: pip HTTP 캐시 deserialization 경고(다양한 pip 버전 간 캐시 포맷 비호환) 차단
+    "$venv_dir/bin/pip" install --quiet --no-cache-dir --upgrade pip
+    "$venv_dir/bin/pip" install --quiet --no-cache-dir -r "$req_src"
     success "Python 패키지 설치 완료 (requirements.txt)"
 
     # playwright 브라우저 확인 및 설치
