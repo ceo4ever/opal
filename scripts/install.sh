@@ -31,6 +31,8 @@
 #
 # 변경이력:
 #   v1.0 2026-05-09 10:00: 신규 작성 — macOS/Linux 통합 one-liner 진입점 (139)
+#   v1.1 2026-05-09 21:20: OPAL_VERSION default를 latest release로 변경 + export로 install-mac.sh에 전달
+#                          + release 자산 URL(opal-{tag}.tar.gz) 사용으로 sha256 매칭 (139 추가작업)
 #
 
 # ─── [MUST] 부분 다운로드 실행 방지 ─────────────────────────────────────────
@@ -42,15 +44,55 @@
 set -euo pipefail
 
 # ─── 환경 변수 기본값 ────────────────────────────────────────────────────────
-# [MUST] PLAN §3.1.2: "OPAL_REPO(기본 ceo4ever/opal), OPAL_VERSION(기본 main)"
+# OPAL_REPO  : GitHub 저장소 (기본: ceo4ever/opal)   [MUST] D2
+# OPAL_VERSION: 명시 시 그 버전, 미명시 시 latest release tag 자동 조회 (실패 시 "main" 폴백)
+# OPAL_DRY_RUN: 1 이면 실제 fetch 없이 흐름만 출력
 OPAL_REPO="${OPAL_REPO:-ceo4ever/opal}"
-OPAL_VERSION="${OPAL_VERSION:-main}"
 OPAL_DRY_RUN="${OPAL_DRY_RUN:-0}"
 
+# ─── 출력 헬퍼 (URL 구성 전에 정의 — resolve_default_version에서 사용) ───
+info()    { printf '\033[0;34m[opal]\033[0m %s\n' "$*"; }
+success() { printf '\033[0;32m[opal]\033[0m %s\n' "$*"; }
+warn()    { printf '\033[0;33m[opal] WARN:\033[0m %s\n' "$*" >&2; }
+error()   { printf '\033[0;31m[opal] ERROR:\033[0m %s\n' "$*" >&2; exit 1; }
+
+# ─── resolve_default_version ─────────────────────────────────────────────
+# OPAL_VERSION이 미설정이면 GitHub API로 latest release tag 조회.
+# 실패 시 "main" 폴백 + 경고.
+resolve_default_version() {
+    if [[ -n "${OPAL_VERSION:-}" ]]; then
+        return 0
+    fi
+
+    if [[ "${OPAL_DRY_RUN}" == "1" ]]; then
+        OPAL_VERSION="main"
+        return 0
+    fi
+
+    local latest
+    latest="$(curl -fsSL --proto '=https' --tlsv1.2 \
+        "https://api.github.com/repos/${OPAL_REPO}/releases/latest" 2>/dev/null \
+        | grep '"tag_name"' | head -1 | sed 's/.*"tag_name": "\([^"]*\)".*/\1/')" || true
+
+    if [[ -n "${latest}" ]]; then
+        OPAL_VERSION="${latest}"
+        info "최신 release 자동 선택: ${OPAL_VERSION}"
+    else
+        OPAL_VERSION="main"
+        warn "최신 release 조회 실패 — main 브랜치 사용"
+    fi
+}
+
+resolve_default_version
+
+# install-mac.sh가 ~/.opal/VERSION에 정확한 버전을 기록할 수 있도록 export
+export OPAL_VERSION
+
 # ─── URL 구성 ─────────────────────────────────────────────────────────────────
-# branch/main 은 heads/ 참조, 태그(v*)는 tags/ 참조로 분기
+# release tag(v*): release 자산 사용 (체크섬·attestation 매칭)
+# branch (main 등): GitHub archive 사용 (sha256sums.txt 없음 — 체크섬 검증 스킵)
 if [[ "${OPAL_VERSION}" == v* ]]; then
-    TARBALL_URL="https://github.com/${OPAL_REPO}/archive/refs/tags/${OPAL_VERSION}.tar.gz"
+    TARBALL_URL="https://github.com/${OPAL_REPO}/releases/download/${OPAL_VERSION}/opal-${OPAL_VERSION}.tar.gz"
 else
     TARBALL_URL="https://github.com/${OPAL_REPO}/archive/refs/heads/${OPAL_VERSION}.tar.gz"
 fi
@@ -67,11 +109,7 @@ cleanup() {
 }
 trap cleanup EXIT
 
-# ─── 출력 헬퍼 ────────────────────────────────────────────────────────────────
-info()    { printf '\033[0;34m[opal]\033[0m %s\n' "$*"; }
-success() { printf '\033[0;32m[opal]\033[0m %s\n' "$*"; }
-warn()    { printf '\033[0;33m[opal] WARN:\033[0m %s\n' "$*" >&2; }
-error()   { printf '\033[0;31m[opal] ERROR:\033[0m %s\n' "$*" >&2; exit 1; }
+# 출력 헬퍼는 환경 변수 결정 전에 위에서 정의됨
 
 # ─── detect_platform ─────────────────────────────────────────────────────────
 # uname -s 결과로 플랫폼을 판별한다.

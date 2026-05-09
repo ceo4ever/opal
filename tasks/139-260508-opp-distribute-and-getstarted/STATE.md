@@ -1,6 +1,6 @@
 # STATE: 139-260508-opp-distribute-and-getstarted
 
-> 최종 갱신: 2026-05-09 21:09
+> 최종 갱신: 2026-05-09 21:18
 
 ## 현재 상태
 - 모드: interactive
@@ -30,6 +30,8 @@
 | 6 | 2026-05-09 21:03 | current_status changed: additional_work → additional_work_done | v0.2.1: install이 ~/.opal/VERSION 기록 + opal-cli update 버전 비교 로직 + --force 옵션 |
 | 7 | 2026-05-09 21:07 | current_status changed: additional_work_done → additional_work | v0.2.2: install 출력 quiet 모드 default — info/success 침묵, OPAL_VERBOSE=1 시 자세히, step()으로 단계 표시 |
 | 8 | 2026-05-09 21:09 | current_status changed: additional_work → additional_work_done | v0.2.2: install 출력 quiet 모드 default + step() + 마무리 정제 + install_opal_bin PATH 안내 verbose only |
+| 9 | 2026-05-09 21:16 | current_status changed: additional_work_done → additional_work | v0.2.3: install.sh가 latest release 자동 조회 + OPAL_VERSION export + release tarball URL 정합 |
+| 10 | 2026-05-09 21:18 | current_status changed: additional_work → additional_work_done | v0.2.3: install.sh가 latest release 자동 선택 + OPAL_VERSION export + release 자산 URL |
 
 ## 블로커
 없음
