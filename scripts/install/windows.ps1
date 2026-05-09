@@ -34,9 +34,16 @@
         v1.0   2026-05-09 12:00  신규 작성 — Windows 플랫폼 인스톨러 골격 (139)
         v1.0.1 2026-05-09 14:30  Register-EnvPath 안내 보강 — 즉시 새로고침/검증/절대 경로 호출 (139 추가작업, macOS install_opal_bin과 동등)
         v1.0.2 2026-05-09 23:15  Register-OpalBin의 Join-Path 다중 인자(5.1 비호환) → [IO.Path]::Combine (139 추가작업)
+        v1.0.3 2026-05-09 23:30  -OpalVersion 파라미터 신규 + Invoke-OpalWindowsInstall 끝에 ~/.opal/VERSION 기록 (env 잔존 결함 회피, install-mac.sh v1.8과 정합) (139 추가작업)
 #>
 
 #Requires -Version 5.1
+
+# install.ps1 이 -OpalVersion 으로 전달하는 framework 버전.
+# ~/.opal/VERSION 기록에 사용. 미전달 시 "main" 폴백.
+param(
+    [string]$OpalVersion = 'main'
+)
 
 Set-StrictMode -Version 3.0
 $ErrorActionPreference = 'Stop'
@@ -273,10 +280,18 @@ function Invoke-OpalWindowsInstall {
     Register-EnvPath
     Register-Bootstrapper
 
+    # ~/.opal/VERSION 기록 — opal-cli update 비교 기준 (install-mac.sh v1.8 과 정합)
+    if (-not (Test-Path $OpalHome)) {
+        New-Item -ItemType Directory -Path $OpalHome -Force | Out-Null
+    }
+    $versionFile = Join-Path $OpalHome 'VERSION'
+    Set-Content -Path $versionFile -Value $OpalVersion -Encoding ASCII -NoNewline
+    Write-OpalOk "버전 기록 → $versionFile ($OpalVersion)"
+
     Write-Host ''
     Write-OpalOk '설치 흐름 완료.'
     Write-OpalInfo '부트스트래퍼 및 핵심 자산 복사는 TS-006(Windows VM) 검증 후 활성화됩니다.'
     Write-Host ''
 }
 
-Invoke-OpalWindowsInstall
+Invoke-OpalWindowsInstall -OpalVersion $OpalVersion

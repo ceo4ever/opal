@@ -38,6 +38,8 @@ Set-StrictMode -Version 3.0
 #                            tar --exclude tasks/* + Remove-Item 단축 경로 강건화 (139 추가작업)
 #   v1.0.2 2026-05-09 23:15  Invoke-PlatformInstaller 의 Join-Path 다중 인자(5.1 비호환)
 #                            → [IO.Path]::Combine 으로 변경. tasks/ 자체는 .gitattributes export-ignore 로 archive 에서 제외 (139 추가작업)
+#   v1.0.3 2026-05-09 23:30  $env:OPAL_VERSION export 제거 — PowerShell 세션 잔존 결함 회피.
+#                            windows.ps1 호출 시 -OpalVersion 파라미터로 명시 전달 (139 추가작업)
 $ErrorActionPreference = 'Stop'
 
 # ─── 환경 변수 오버라이드 ────────────────────────────────────────────────────
@@ -82,8 +84,9 @@ function Resolve-DefaultVersion {
 
 Resolve-DefaultVersion
 
-# windows.ps1 이 ~/.opal/VERSION 에 정확한 버전을 기록할 수 있도록 env 로 전달
-$env:OPAL_VERSION = $OpalVersion
+# 주의: $env:OPAL_VERSION 으로 export 하지 않는다.
+#       PowerShell 세션에 값이 잔존하여 다음 실행 시 사용자 명시로 오인되는 결함을 회피.
+#       windows.ps1 에는 -OpalVersion 파라미터로 명시 전달한다.
 
 # ─── URL 구성 ─────────────────────────────────────────────────────────────────
 # release tag(v*): archive/refs/tags 사용 (release 자산 의존 X)
@@ -251,7 +254,8 @@ function Invoke-PlatformInstaller {
     }
 
     Write-Host '[OPAL] windows.ps1 실행 중...' -ForegroundColor Cyan
-    & $windowsInstaller
+    # -OpalVersion 파라미터로 명시 전달 — env 잔존 결함 회피
+    & $windowsInstaller -OpalVersion $script:OpalVersion
     if ($LASTEXITCODE -ne 0) {
         throw "[OPAL] windows.ps1 실행 실패 (exit code: $LASTEXITCODE)"
     }
