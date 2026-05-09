@@ -40,6 +40,8 @@ Set-StrictMode -Version 3.0
 #                            → [IO.Path]::Combine 으로 변경. tasks/ 자체는 .gitattributes export-ignore 로 archive 에서 제외 (139 추가작업)
 #   v1.0.3 2026-05-09 23:30  $env:OPAL_VERSION export 제거 — PowerShell 세션 잔존 결함 회피.
 #                            windows.ps1 호출 시 -OpalVersion 파라미터로 명시 전달 (139 추가작업)
+#   v1.0.4 2026-05-09 23:40  windows.ps1 호출을 powershell.exe -ExecutionPolicy Bypass -File 로 변경.
+#                            Restricted/RemoteSigned 환경에서 다운로드된 .ps1 실행 차단(PSSecurityException) 회피 (139 추가작업)
 $ErrorActionPreference = 'Stop'
 
 # ─── 환경 변수 오버라이드 ────────────────────────────────────────────────────
@@ -254,8 +256,15 @@ function Invoke-PlatformInstaller {
     }
 
     Write-Host '[OPAL] windows.ps1 실행 중...' -ForegroundColor Cyan
-    # -OpalVersion 파라미터로 명시 전달 — env 잔존 결함 회피
-    & $windowsInstaller -OpalVersion $script:OpalVersion
+    # ExecutionPolicy Bypass 로 명시 — Restricted/RemoteSigned 환경에서도 다운로드된 .ps1 실행 가능.
+    # 현재 실행 중인 PowerShell engine 경로 사용 (PS 5.1 powershell.exe, PS 7 pwsh.exe 자동 매칭).
+    $psExe = (Get-Process -Id $PID).Path
+    if (-not $psExe -or -not (Test-Path $psExe)) {
+        # 폴백: PSHOME 기준
+        $psExe = Join-Path $PSHOME 'powershell.exe'
+        if (-not (Test-Path $psExe)) { $psExe = Join-Path $PSHOME 'pwsh.exe' }
+    }
+    & $psExe -ExecutionPolicy Bypass -NoProfile -File $windowsInstaller -OpalVersion $script:OpalVersion
     if ($LASTEXITCODE -ne 0) {
         throw "[OPAL] windows.ps1 실행 실패 (exit code: $LASTEXITCODE)"
     }
