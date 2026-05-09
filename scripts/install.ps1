@@ -36,6 +36,8 @@ Set-StrictMode -Version 3.0
 #   v1.0   2026-05-09 12:00  초기 작성 — Windows one-liner 진입 (139)
 #   v1.0.1 2026-05-09 23:00  Resolve-DefaultVersion + URL 분기(archive/refs/tags) +
 #                            tar --exclude tasks/* + Remove-Item 단축 경로 강건화 (139 추가작업)
+#   v1.0.2 2026-05-09 23:15  Invoke-PlatformInstaller 의 Join-Path 다중 인자(5.1 비호환)
+#                            → [IO.Path]::Combine 으로 변경. tasks/ 자체는 .gitattributes export-ignore 로 archive 에서 제외 (139 추가작업)
 $ErrorActionPreference = 'Stop'
 
 # ─── 환경 변수 오버라이드 ────────────────────────────────────────────────────
@@ -242,7 +244,8 @@ function Invoke-PlatformInstaller {
         }
     }
 
-    $windowsInstaller = Join-Path $extractDir 'scripts' 'install' 'windows.ps1'
+    # [IO.Path]::Combine — PowerShell 5.1 에서도 다중 path 결합 안전 (Join-Path 5.1 은 위치 인자 2개만).
+    $windowsInstaller = [IO.Path]::Combine($extractDir, 'scripts', 'install', 'windows.ps1')
     if (-not (Test-Path $windowsInstaller)) {
         throw "[OPAL] windows.ps1 을 찾을 수 없습니다: $windowsInstaller"
     }

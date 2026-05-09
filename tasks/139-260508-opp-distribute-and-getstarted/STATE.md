@@ -1,6 +1,6 @@
 # STATE: 139-260508-opp-distribute-and-getstarted
 
-> 최종 갱신: 2026-05-09 22:53
+> 최종 갱신: 2026-05-09 23:14
 
 ## 현재 상태
 - 모드: interactive
@@ -40,6 +40,8 @@
 | 16 | 2026-05-09 22:31 | current_status changed: additional_work → additional_work_done | v0.2.6: opal-cli --version이 framework 버전 표시 — CLI 자체 버전 하드코딩 폐기 |
 | 17 | 2026-05-09 22:52 | current_status changed: additional_work_done → additional_work | v0.2.7: install.ps1 latest tag 자동 조회 + URL 분기 + tar --exclude tasks/* + Remove-Item 강건화 |
 | 18 | 2026-05-09 22:53 | current_status changed: additional_work → additional_work_done | v0.2.7: install.ps1 latest tag + URL 분기 + tar --exclude + Remove-Item 강건화 |
+| 19 | 2026-05-09 23:13 | current_status changed: additional_work_done → additional_work | v0.2.8: .gitattributes export-ignore + windows.ps1 Join-Path 5.1 호환 |
+| 20 | 2026-05-09 23:14 | current_status changed: additional_work → additional_work_done | v0.2.8: .gitattributes export-ignore + windows.ps1 Join-Path → [IO.Path]::Combine + install.ps1 같은 fix |
 
 ## 블로커
 없음

@@ -33,6 +33,7 @@
     변경이력:
         v1.0   2026-05-09 12:00  신규 작성 — Windows 플랫폼 인스톨러 골격 (139)
         v1.0.1 2026-05-09 14:30  Register-EnvPath 안내 보강 — 즉시 새로고침/검증/절대 경로 호출 (139 추가작업, macOS install_opal_bin과 동등)
+        v1.0.2 2026-05-09 23:15  Register-OpalBin의 Join-Path 다중 인자(5.1 비호환) → [IO.Path]::Combine (139 추가작업)
 #>
 
 #Requires -Version 5.1
@@ -164,7 +165,8 @@ function Register-OpalBin {
         Windows Developer Mode 또는 관리자 권한이 있으면 New-Item -ItemType SymbolicLink 사용 가능.
         권한 없는 환경을 위해 .cmd 래퍼를 기본으로 사용한다.
     #>
-    $cliTarget = Join-Path $OpalHome 'tools' 'opal-cli' 'run.sh'
+    # [IO.Path]::Combine — PowerShell 5.1 호환 다중 path 결합 (Join-Path 5.1 위치 인자 2개 제한 회피)
+    $cliTarget = [IO.Path]::Combine($OpalHome, 'tools', 'opal-cli', 'run.sh')
     $cliWrapper = Join-Path $OpalBinDir 'opal-cli.cmd'
     $cliPs1 = Join-Path $OpalBinDir 'opal-cli.ps1'
 
