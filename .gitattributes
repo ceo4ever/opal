@@ -6,11 +6,14 @@
 # 개발자 작업 산출물 (사용자 install 대상 아님)
 tasks/ export-ignore
 
-# 문서 백업 (개발 진행 중 임시 백업물)
-docs/backup/ export-ignore
+# 프로젝트 문서 (install 자산 아님 — GitHub UI 에서 직접 열람 가능)
+docs/ export-ignore
 
 # 스킬·에이전트 내부 백업 디렉토리 (있을 경우)
 */backup/ export-ignore
+
+# 본 framework 자체 PM 프로필·메모리 (install 대상 아님)
+.opal/ export-ignore
 
 # git 메타·CI 설정 (사용자 install 대상 아님)
 .github/ export-ignore
