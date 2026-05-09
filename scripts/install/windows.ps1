@@ -40,6 +40,7 @@
                                  Strip 변경이력(Remove-ChangelogSection/Recursive) +
                                  부트스트래퍼 마커(Claude/Cursor/Gemini OPAL+HARDENING) 자동 삽입 (139 추가작업, v0.3.0)
         v1.1.1 2026-05-10 00:35  Install-OpalCore의 $skillCount/$agentCount .Count 접근을 @() 캐스트로 변경 — Set-StrictMode 3.0 환경에서 single object .Count 차단 결함 fix (139 추가작업, v0.3.1)
+        v1.2.0 2026-05-10 00:40  Find-GitBash 신규 + Register-OpalBin 이 Git Bash explicit 경로 사용 — WSL bash.exe(/bin/bash 부재) 우회 결함 fix (139 추가작업, v0.3.2)
 #>
 
 #Requires -Version 5.1
@@ -414,17 +415,49 @@ function Install-OpalCore {
     Write-OpalOk '핵심 자산 복사 완료.'
 }
 
+function Find-GitBash {
+    <#
+    .SYNOPSIS
+        Git for Windows 의 bash.exe 경로를 탐색한다 (WSL 의 bash.exe 우회 목적).
+    .NOTES
+        Windows PATH 의 bash.exe 는 보통 WSL 런처라 /bin/bash 부재 시 실패.
+        Git Bash 의 bash.exe 를 explicit 경로로 호출해야 opal-cli.cmd 가 정상 동작.
+    .OUTPUTS
+        bash.exe 절대 경로 또는 $null
+    #>
+    $candidates = @(
+        'C:\Program Files\Git\bin\bash.exe',
+        'C:\Program Files\Git\usr\bin\bash.exe',
+        'C:\Program Files (x86)\Git\bin\bash.exe',
+        "$env:LOCALAPPDATA\Programs\Git\bin\bash.exe"
+    )
+    foreach ($c in $candidates) {
+        if (Test-Path -LiteralPath $c) { return $c }
+    }
+    # git.exe 경로 기반 추정
+    $gitCmd = Get-Command git -ErrorAction SilentlyContinue
+    if ($gitCmd) {
+        $gitDir = Split-Path -Parent $gitCmd.Source
+        $derived = @(
+            (Join-Path (Split-Path -Parent $gitDir) 'bin\bash.exe'),
+            (Join-Path $gitDir 'bash.exe')
+        )
+        foreach ($c in $derived) {
+            if (Test-Path -LiteralPath $c) { return $c }
+        }
+    }
+    return $null
+}
+
 function Register-OpalBin {
     <#
     .SYNOPSIS
         ~/.opal/bin/opal-cli 래퍼 스크립트를 생성한다.
         Windows 에서는 symlink 대신 .cmd 래퍼 또는 PowerShell 래퍼를 사용한다.
+        bash 는 Git for Windows 의 bash.exe 를 explicit 경로로 호출 (WSL 의존 제거).
     .NOTES
         macOS 대칭: scripts/install-mac.sh install_opal_bin() — ln -sfn 으로 symlink 생성.
-        Windows Developer Mode 또는 관리자 권한이 있으면 New-Item -ItemType SymbolicLink 사용 가능.
-        권한 없는 환경을 위해 .cmd 래퍼를 기본으로 사용한다.
     #>
-    # [IO.Path]::Combine — PowerShell 5.1 호환 다중 path 결합 (Join-Path 5.1 위치 인자 2개 제한 회피)
     $cliTarget = [IO.Path]::Combine($OpalHome, 'tools', 'opal-cli', 'run.sh')
     $cliWrapper = Join-Path $OpalBinDir 'opal-cli.cmd'
     $cliPs1 = Join-Path $OpalBinDir 'opal-cli.ps1'
@@ -438,13 +471,33 @@ function Register-OpalBin {
         New-Item -ItemType Directory -Path $OpalBinDir -Force | Out-Null
     }
 
-    # .cmd 래퍼 (cmd.exe 환경 호환)
-    $cmdContent = "@echo off`r`nbash `"$($cliTarget -replace '\\', '/')`" %*`r`n"
+    # bash.exe 경로 결정 — Git for Windows 우선 (WSL 우회)
+    $bashExe = Find-GitBash
+    if ($bashExe) {
+        Write-OpalInfo "Git Bash 발견: $bashExe"
+    } else {
+        Write-OpalWarn 'Git Bash 미발견 — PATH 의 bash 사용 (WSL 일 수 있음).'
+        Write-OpalWarn 'opal-cli 가 동작하지 않으면 Git for Windows 설치: https://git-scm.com/download/win'
+        $bashExe = 'bash'
+    }
+
+    $runScriptPosix = $cliTarget -replace '\\', '/'
+
+    # .cmd 래퍼 (cmd.exe 환경)
+    if ($bashExe -eq 'bash') {
+        $cmdContent = "@echo off`r`nbash `"$runScriptPosix`" %*`r`n"
+    } else {
+        $cmdContent = "@echo off`r`n`"$bashExe`" `"$runScriptPosix`" %*`r`n"
+    }
     Set-Content -Path $cliWrapper -Value $cmdContent -Encoding ASCII
     Write-OpalOk "opal-cli.cmd 래퍼 생성: $cliWrapper"
 
-    # PowerShell 래퍼 (pwsh/powershell 환경 호환)
-    $ps1Content = "& bash `"$($cliTarget -replace '\\', '/')`" @args`n"
+    # PowerShell 래퍼 (pwsh/powershell 환경)
+    if ($bashExe -eq 'bash') {
+        $ps1Content = "& bash `"$runScriptPosix`" @args`n"
+    } else {
+        $ps1Content = "& `"$bashExe`" `"$runScriptPosix`" @args`n"
+    }
     Set-Content -Path $cliPs1 -Value $ps1Content -Encoding UTF8
     Write-OpalOk "opal-cli.ps1 래퍼 생성: $cliPs1"
 }
