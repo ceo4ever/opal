@@ -13,6 +13,7 @@
 #   v1.6 2026-05-09 15:00 KST: 비대화형 모드 추가 — OPAL_AUTO_INSTALL=1 또는 stdin이 tty가 아닐 때(pipe) detect_user 자동 통과 + 메뉴 [3] 전체 설치 자동 실행. one-liner `curl | bash` 호환 결함 fix (139 추가작업, P0)
 #   v1.7 2026-05-09 17:30 KST: install_opal_venv pip 호출에 --no-cache-dir 추가 — "Cache entry deserialization failed" 경고 차단 (139 추가작업)
 #   v1.8 2026-05-09 21:00 KST: install_opal() 끝에 ~/.opal/VERSION 기록 추가 — opal-cli update의 로컬/리모트 버전 비교 기반 (139 추가작업)
+#   v1.9 2026-05-09 21:15 KST: 출력 quiet 모드 default — info/success 침묵, OPAL_VERBOSE=1 시 자세히. step() 신규로 단계 진행 표시. main() 비대화형 분기 정제 (139 추가작업)
 #
 
 set -euo pipefail
@@ -37,11 +38,15 @@ HARDENING_START="# === GEMINI HARDENING START ==="
 HARDENING_END="# === GEMINI HARDENING END ==="
 
 # ─── Logging ─────────────────────────────────────────────
+# OPAL_VERBOSE=1 시 info/success 자세한 출력. default(미설정/0)는 quiet — 단계 진행만 표시.
 
-info()    { echo -e "${BLUE}[INFO]${NC} $1"; }
-success() { echo -e "${GREEN}  ✓${NC} $1"; }
+OPAL_VERBOSE="${OPAL_VERBOSE:-0}"
+
+info()    { [[ "$OPAL_VERBOSE" == "1" ]] && echo -e "${BLUE}[INFO]${NC} $1" || true; }
+success() { [[ "$OPAL_VERBOSE" == "1" ]] && echo -e "${GREEN}  ✓${NC} $1" || true; }
 warn()    { echo -e "${YELLOW}[WARN]${NC} $1"; }
 error()   { echo -e "${RED}[ERROR]${NC} $1"; }
+step()    { echo -e "${BLUE}▸${NC} $1"; }
 
 # ─── Core Functions ──────────────────────────────────────
 
@@ -664,22 +669,24 @@ install_opal_bin() {
 
     register_path_in_shell_rc "$bin_dir"
 
-    # 현재 셸에 즉시 적용하는 방법 안내 (PATH는 새 셸/source 후 동작)
-    echo ""
-    info "opal-cli 사용 방법:"
-    echo -e "    ${BOLD}1) 현재 셸에 즉시 적용${NC} — 다음 중 하나 실행:"
-    echo    "         source ~/.zshrc      (zsh 사용자)"
-    echo    "         source ~/.bashrc     (bash 사용자)"
-    echo    "         exec \$SHELL          (현재 셸 재시작)"
-    echo -e "    ${BOLD}2) 또는 새 터미널 열기${NC} — PATH 자동 적용"
-    echo ""
-    echo -e "    ${BOLD}검증:${NC}"
-    echo    "         opal-cli --version    # 버전 출력"
-    echo    "         opal-cli doctor       # 환경 진단 (4섹션)"
-    echo ""
-    echo -e "    ${BOLD}PATH 미적용 시 절대 경로 호출도 가능:${NC}"
-    echo    "         ~/.opal/bin/opal-cli doctor"
-    echo ""
+    # 자세한 PATH 사용 안내는 OPAL_VERBOSE=1 때만. quiet 모드는 main()의 마무리 echo에 통합됨.
+    if [[ "$OPAL_VERBOSE" == "1" ]]; then
+        echo ""
+        info "opal-cli 사용 방법:"
+        echo -e "    ${BOLD}1) 현재 셸에 즉시 적용${NC} — 다음 중 하나 실행:"
+        echo    "         source ~/.zshrc      (zsh 사용자)"
+        echo    "         source ~/.bashrc     (bash 사용자)"
+        echo    "         exec \$SHELL          (현재 셸 재시작)"
+        echo -e "    ${BOLD}2) 또는 새 터미널 열기${NC} — PATH 자동 적용"
+        echo ""
+        echo -e "    ${BOLD}검증:${NC}"
+        echo    "         opal-cli --version    # 버전 출력"
+        echo    "         opal-cli doctor       # 환경 진단 (4섹션)"
+        echo ""
+        echo -e "    ${BOLD}PATH 미적용 시 절대 경로 호출도 가능:${NC}"
+        echo    "         ~/.opal/bin/opal-cli doctor"
+        echo ""
+    fi
 }
 
 # 셸 rc 파일(zsh/bash/profile)에 OPAL PATH 마커 1회만 추가 (idempotent)
@@ -1224,14 +1231,30 @@ main() {
     # 비대화형 모드 (one-liner curl | bash 호환): 메뉴 [3] 전체 설치 자동 실행
     if [[ "${OPAL_AUTO_INSTALL:-0}" == "1" ]] || [[ ! -t 0 ]]; then
         echo ""
-        info "비대화형 모드 — 메뉴 [3] 전체 설치(OPAL + MCP) 자동 진행"
+        step "OPAL 자산 배포 중..."
         install_opal
-        echo ""
-        info "MCP 서버 설정..."
+        step "MCP 서버 설정 중..."
         install_mcp
-        installed+=("OPAL (skills + agents + 부트스트래퍼)" "MCP 서버")
-        print_summary "${installed[@]}"
-        info "비대화형 설치 완료. 종료합니다."
+
+        # 자세한 요약은 verbose 모드에서만 표시
+        if [[ "$OPAL_VERBOSE" == "1" ]]; then
+            installed+=("OPAL (skills + agents + 부트스트래퍼)" "MCP 서버")
+            print_summary "${installed[@]}"
+        fi
+
+        # 마무리 (quiet/verbose 공통)
+        local final_version="${OPAL_VERSION:-main}"
+        [[ -f "$USER_HOME/.opal/VERSION" ]] && final_version="$(tr -d '[:space:]' < "$USER_HOME/.opal/VERSION")"
+        echo ""
+        echo -e "${GREEN}✓${NC} OPAL 설치 완료 (${final_version})"
+        echo ""
+        echo "  • ~/.opal/                  스킬·에이전트·도구"
+        echo "  • ~/.opal/bin/opal-cli      CLI 진입점 (PATH 등록됨)"
+        echo ""
+        echo "다음 단계:"
+        echo "  새 터미널 열기 또는  source ~/.zshrc"
+        echo "  opal-cli doctor      # 환경 진단"
+        echo ""
         exit 0
     fi
 

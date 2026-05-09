@@ -1,6 +1,6 @@
 # STATE: 139-260508-opp-distribute-and-getstarted
 
-> 최종 갱신: 2026-05-09 21:03
+> 최종 갱신: 2026-05-09 21:09
 
 ## 현재 상태
 - 모드: interactive
@@ -28,6 +28,8 @@
 | 4 | 2026-05-09 20:57 | current_status changed: additional_work → additional_work_done | v0.2.0: opal/ 31 파일 personal-identity 정정 — 알투 35→0 / 캡틴 59→0 (본문 기준), 변경이력 행 인용 20 라인 의도 보존 |
 | 5 | 2026-05-09 21:01 | current_status changed: additional_work_done → additional_work | v0.2.1: opal-cli update 버전 비교 로직 + ~/.opal/VERSION 기록 |
 | 6 | 2026-05-09 21:03 | current_status changed: additional_work → additional_work_done | v0.2.1: install이 ~/.opal/VERSION 기록 + opal-cli update 버전 비교 로직 + --force 옵션 |
+| 7 | 2026-05-09 21:07 | current_status changed: additional_work_done → additional_work | v0.2.2: install 출력 quiet 모드 default — info/success 침묵, OPAL_VERBOSE=1 시 자세히, step()으로 단계 표시 |
+| 8 | 2026-05-09 21:09 | current_status changed: additional_work → additional_work_done | v0.2.2: install 출력 quiet 모드 default + step() + 마무리 정제 + install_opal_bin PATH 안내 verbose only |
 
 ## 블로커
 없음
