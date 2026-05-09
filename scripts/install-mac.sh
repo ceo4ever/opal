@@ -10,6 +10,7 @@
 #   v1.3 2026-04-30: AUTO-GENERATED 헤더 검사를 전체 파일로 확장 — head 3 라인 한정 시 frontmatter만 봐서 오탐지하던 결함 수정 (133)
 #   v1.4 2026-05-08 KST: install_opal_bin/register_path_in_shell_rc 신설 + tools/ strip 호출 추가 (D 영역 PATH 등록) (139)
 #   v1.5 2026-05-09 14:20 KST: install_opal_bin에 PATH 사용 방법 안내 추가 — source/exec/새 터미널 옵션 + 절대 경로 폴백 명시 (139 추가작업)
+#   v1.6 2026-05-09 15:00 KST: 비대화형 모드 추가 — OPAL_AUTO_INSTALL=1 또는 stdin이 tty가 아닐 때(pipe) detect_user 자동 통과 + 메뉴 [3] 전체 설치 자동 실행. one-liner `curl | bash` 호환 결함 fix (139 추가작업, P0)
 #
 
 set -euo pipefail
@@ -74,6 +75,14 @@ detect_user() {
     info "현재 사용자: ${BOLD}$current_user${NC}"
     info "홈 디렉토리: ${BOLD}$USER_HOME${NC}"
     echo ""
+
+    # 비대화형 모드 (one-liner curl | bash 호환):
+    #   - OPAL_AUTO_INSTALL=1 명시적 설정
+    #   - 또는 stdin이 tty가 아님 (pipe로 호출됨)
+    if [[ "${OPAL_AUTO_INSTALL:-0}" == "1" ]] || [[ ! -t 0 ]]; then
+        info "비대화형 모드 — 현재 사용자에 자동 설치"
+        return 0
+    fi
 
     local confirm
     read -rp "이 계정에 설치하시겠습니까? (Y/n): " confirm
@@ -1197,6 +1206,20 @@ main() {
     detect_user
 
     local installed=()
+
+    # 비대화형 모드 (one-liner curl | bash 호환): 메뉴 [3] 전체 설치 자동 실행
+    if [[ "${OPAL_AUTO_INSTALL:-0}" == "1" ]] || [[ ! -t 0 ]]; then
+        echo ""
+        info "비대화형 모드 — 메뉴 [3] 전체 설치(OPAL + MCP) 자동 진행"
+        install_opal
+        echo ""
+        info "MCP 서버 설정..."
+        install_mcp
+        installed+=("OPAL (skills + agents + 부트스트래퍼)" "MCP 서버")
+        print_summary "${installed[@]}"
+        info "비대화형 설치 완료. 종료합니다."
+        exit 0
+    fi
 
     while true; do
         show_menu
