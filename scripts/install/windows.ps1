@@ -39,6 +39,7 @@
                                  자산 실 복사(opal/core/AGENT.md / skills+opal/skills / agents+opal/agents / opal/templates / opal/tools / opal/core/references / community-skills) +
                                  Strip 변경이력(Remove-ChangelogSection/Recursive) +
                                  부트스트래퍼 마커(Claude/Cursor/Gemini OPAL+HARDENING) 자동 삽입 (139 추가작업, v0.3.0)
+        v1.1.1 2026-05-10 00:35  Install-OpalCore의 $skillCount/$agentCount .Count 접근을 @() 캐스트로 변경 — Set-StrictMode 3.0 환경에서 single object .Count 차단 결함 fix (139 추가작업, v0.3.1)
 #>
 
 #Requires -Version 5.1
@@ -337,7 +338,8 @@ function Install-OpalCore {
         }
     }
     Remove-ChangelogRecursive -Root $skillsDst
-    $skillCount = (Get-ChildItem -Path $skillsDst -Directory -ErrorAction SilentlyContinue).Count
+    # @() 강제 array 캐스트 — Set-StrictMode 3.0 환경에서 single object 의 .Count 접근 차단 회피
+    $skillCount = @(Get-ChildItem -Path $skillsDst -Directory -ErrorAction SilentlyContinue).Count
     Write-OpalOk "스킬 ${skillCount}개 → $skillsDst"
 
     # ── 에이전트: opal/agents/ + agents/ 합쳐서 ~/.opal/agents/ (레거시 디렉토리 제외) ──
@@ -355,7 +357,7 @@ function Install-OpalCore {
         }
     }
     Remove-ChangelogRecursive -Root $agentsDst
-    $agentCount = (Get-ChildItem -Path $agentsDst -Directory -ErrorAction SilentlyContinue).Count
+    $agentCount = @(Get-ChildItem -Path $agentsDst -Directory -ErrorAction SilentlyContinue).Count
     Write-OpalOk "에이전트 ${agentCount}개 → $agentsDst"
 
     # ── 템플릿: opal/templates/ → ~/.opal/templates/ ──

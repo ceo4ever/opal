@@ -1,6 +1,6 @@
 # STATE: 139-260508-opp-distribute-and-getstarted
 
-> 최종 갱신: 2026-05-10 00:21
+> 최종 갱신: 2026-05-10 00:29
 
 ## 현재 상태
 - 모드: interactive
@@ -54,6 +54,8 @@
 | 30 | 2026-05-09 23:54 | current_status changed: additional_work → additional_work_done | v0.2.13: install.ps1 BOM 제거(iex 호환), windows.ps1 BOM 유지(-File cp949 회피) |
 | 31 | 2026-05-10 00:07 | current_status changed: additional_work_done → additional_work | v0.3.0: Windows 전면 이식 1단계 — Install-OpalCore + Register-Bootstrapper + Strip 본격 구현 |
 | 32 | 2026-05-10 00:21 | current_status changed: additional_work → additional_work_done | v0.3.0: Windows Install-OpalCore + Register-Bootstrapper 본격 구현 + Strip 변경이력 |
+| 33 | 2026-05-10 00:28 | current_status changed: additional_work_done → additional_work | v0.3.1: Set-StrictMode .Count 결함 — @() 캐스트로 fix |
+| 34 | 2026-05-10 00:29 | current_status changed: additional_work → additional_work_done | v0.3.1: Install-OpalCore .Count → @() 캐스트 fix |
 
 ## 블로커
 없음
