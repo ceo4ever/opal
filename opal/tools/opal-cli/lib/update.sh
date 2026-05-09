@@ -17,6 +17,7 @@
 # 변경이력:
 #   v1.0 2026-05-08 11:00 초기 구현 — tarball 재다운로드 + 사용자 데이터 보존 + --to 핀 옵션 (139)
 #   v1.0.1 2026-05-09 18:00 KST: install-mac.sh 호출 시 OPAL_AUTO_INSTALL=1 명시 — tty 환경에서 비대화형 분기 강제 발동, ~/.opal/tools/ 갱신 결함 fix (139 추가작업)
+#   v1.0.2 2026-05-09 21:05 KST: 로컬/리모트 버전 비교 + --force 옵션 — ~/.opal/VERSION 읽어 같은 release tag(v*)면 "이미 최신" 안내 후 종료. main/SHA/미기록은 항상 진행 (139 추가작업)
 #
 
 # ─── update 서브커맨드 ────────────────────────────────────────
@@ -24,6 +25,7 @@
 cmd_update() {
     local version=""
     local dry_run="${OPAL_DRY_RUN:-}"
+    local force=0
 
     # 인자 파싱
     while [[ $# -gt 0 ]]; do
@@ -38,6 +40,10 @@ cmd_update() {
                 ;;
             --dry-run)
                 dry_run=1
+                shift
+                ;;
+            --force|-f)
+                force=1
                 shift
                 ;;
             --help|-h)
@@ -55,6 +61,14 @@ cmd_update() {
     local opal_home="${OPAL_HOME:-$HOME/.opal}"
     local opal_repo="${OPAL_REPO:-ceo4ever/opal}"
 
+    # 로컬 설치 버전 읽기
+    local local_version=""
+    if [[ -f "$opal_home/VERSION" ]]; then
+        local_version="$(tr -d '[:space:]' < "$opal_home/VERSION" 2>/dev/null || true)"
+    fi
+    [[ -z "$local_version" ]] && local_version="(미기록)"
+    info "로컬 버전: $local_version"
+
     # 버전 미지정 시 latest release 확인
     if [[ -z "$version" ]]; then
         info "최신 버전 확인 중..."
@@ -65,7 +79,7 @@ cmd_update() {
                 2>/dev/null | grep '"tag_name"' | head -1 | sed 's/.*"tag_name": "\(.*\)".*/\1/') || true
             if [[ -n "$latest" ]]; then
                 version="$latest"
-                info "최신 버전: $version"
+                info "리모트 최신 버전: $version"
             else
                 # API 실패 시 main 브랜치 tarball 사용
                 version="main"
@@ -75,6 +89,20 @@ cmd_update() {
             error "curl을 찾을 수 없습니다. curl을 설치 후 다시 시도하세요."
             return 1
         fi
+    fi
+
+    # 버전 비교: 로컬과 리모트가 같은 release tag(v*)이면 갱신 스킵
+    # main / commit SHA / 미기록은 항상 진행 (정확한 비교 불가)
+    if [[ "$force" -eq 0 ]] \
+       && [[ "$local_version" == "$version" ]] \
+       && [[ "$local_version" == v* ]]; then
+        success "이미 최신 버전입니다 ($local_version)"
+        info "강제 재설치: opal-cli update --to $version --force"
+        return 0
+    fi
+
+    if [[ "$local_version" != "(미기록)" && "$version" != "main" && "$local_version" != "$version" ]]; then
+        info "업데이트: $local_version → $version"
     fi
 
     # Tarball URL 결정
@@ -163,22 +191,27 @@ cmd_update() {
     warn "업데이트 주의: 사용자 커스텀 스킬(skills/)은 클린 후 재배포됩니다."
     warn "커스텀 스킬이 있으면 ~/.opal/skills.user/에 백업해두세요 (후속 태스크에서 자동화 예정)."
     # OPAL_AUTO_INSTALL=1 — install-mac.sh의 비대화형 분기 강제 발동 (tty 환경에서도 자동 [3] 전체 설치).
-    # update.sh가 사용자 tty에서 호출되면 stdin이 tty → install-mac.sh의 [[ ! -t 0 ]] 조건이 false →
-    # 메뉴 read -rp가 사용자 입력 대기 또는 잘못 처리되어 install_opal() 미호출 결함 회피.
-    OPAL_AUTO_INSTALL=1 FRAMEWORK_ROOT="$extract_dir" bash "$installer"
+    # OPAL_VERSION="$version" — install-mac.sh가 ~/.opal/VERSION에 기록하는 버전 (다음 update 비교 기준).
+    OPAL_AUTO_INSTALL=1 OPAL_VERSION="$version" FRAMEWORK_ROOT="$extract_dir" bash "$installer"
     success "업데이트 완료 ($version)"
 }
 
 _update_usage() {
     cat <<EOF
-사용법: opal-cli update [--to vX.Y] [--dry-run] [--help]
+사용법: opal-cli update [--to vX.Y] [--dry-run] [--force] [--help]
 
 GitHub Releases에서 최신 OPAL을 다운로드하여 업데이트합니다.
 사용자 데이터(identity.md, projects/, community-skills/)는 보존됩니다.
 
+버전 비교:
+  로컬 ~/.opal/VERSION 과 리모트 latest tag를 비교합니다.
+  같은 release tag(v*)이면 "이미 최신" 안내 후 종료합니다.
+  main / commit SHA / 미기록 상태는 항상 갱신을 진행합니다.
+
 옵션:
-  --to vX.Y     특정 버전으로 핀 (예: --to v0.2)
+  --to vX.Y     특정 버전으로 핀 (예: --to v0.2.1)
   --dry-run     실제 다운로드 없이 동작 확인
+  --force, -f   같은 버전이라도 강제 재설치
   --help, -h    이 도움말 출력
 
 보존 항목:

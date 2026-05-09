@@ -1,6 +1,6 @@
 # STATE: 139-260508-opp-distribute-and-getstarted
 
-> 최종 갱신: 2026-05-09 20:57
+> 최종 갱신: 2026-05-09 21:03
 
 ## 현재 상태
 - 모드: interactive
@@ -26,6 +26,8 @@
 | 2 | 2026-05-09 14:28 | current_status changed: additional_work → additional_work_done | v0.1.1 hotfix: opal-cli/doctor BASH_SOURCE symlink chain + PATH 안내 보강 + Windows Register-EnvPath 안내 동등화. doctor 17/17 ALL PASS. |
 | 3 | 2026-05-09 18:23 | current_status changed: additional_work_done → additional_work | v0.2.0: personal-identity placeholder 표준 도입 + opal/ 31 파일 정정 (알투 35라인 + 캡틴 59라인) |
 | 4 | 2026-05-09 20:57 | current_status changed: additional_work → additional_work_done | v0.2.0: opal/ 31 파일 personal-identity 정정 — 알투 35→0 / 캡틴 59→0 (본문 기준), 변경이력 행 인용 20 라인 의도 보존 |
+| 5 | 2026-05-09 21:01 | current_status changed: additional_work_done → additional_work | v0.2.1: opal-cli update 버전 비교 로직 + ~/.opal/VERSION 기록 |
+| 6 | 2026-05-09 21:03 | current_status changed: additional_work → additional_work_done | v0.2.1: install이 ~/.opal/VERSION 기록 + opal-cli update 버전 비교 로직 + --force 옵션 |
 
 ## 블로커
 없음

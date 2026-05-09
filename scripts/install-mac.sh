@@ -12,6 +12,7 @@
 #   v1.5 2026-05-09 14:20 KST: install_opal_bin에 PATH 사용 방법 안내 추가 — source/exec/새 터미널 옵션 + 절대 경로 폴백 명시 (139 추가작업)
 #   v1.6 2026-05-09 15:00 KST: 비대화형 모드 추가 — OPAL_AUTO_INSTALL=1 또는 stdin이 tty가 아닐 때(pipe) detect_user 자동 통과 + 메뉴 [3] 전체 설치 자동 실행. one-liner `curl | bash` 호환 결함 fix (139 추가작업, P0)
 #   v1.7 2026-05-09 17:30 KST: install_opal_venv pip 호출에 --no-cache-dir 추가 — "Cache entry deserialization failed" 경고 차단 (139 추가작업)
+#   v1.8 2026-05-09 21:00 KST: install_opal() 끝에 ~/.opal/VERSION 기록 추가 — opal-cli update의 로컬/리모트 버전 비교 기반 (139 추가작업)
 #
 
 set -euo pipefail
@@ -878,6 +879,17 @@ install_opal() {
 
     # ── opal-cli bin symlink + PATH 등록 ──
     install_opal_bin
+
+    # ── 설치 버전 기록 (~/.opal/VERSION) ──
+    # 우선순위: $OPAL_VERSION (one-liner installer 경로) → git describe (개발자 git clone 경로) → "main" 폴백
+    # opal-cli update가 이 파일을 읽어 리모트 latest tag와 비교, 동일하면 갱신 스킵.
+    local installed_version="${OPAL_VERSION:-}"
+    if [[ -z "$installed_version" ]] && command -v git &>/dev/null && [[ -d "$FRAMEWORK_ROOT/.git" ]]; then
+        installed_version="$(cd "$FRAMEWORK_ROOT" && git describe --tags --always 2>/dev/null || echo "main")"
+    fi
+    installed_version="${installed_version:-main}"
+    echo "$installed_version" > "$opal_home/VERSION"
+    success "버전 기록 → $opal_home/VERSION ($installed_version)"
 
     # ── 레거시 정리 안내 ──
     # print_cleanup_notice
