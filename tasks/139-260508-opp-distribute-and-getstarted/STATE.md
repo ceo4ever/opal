@@ -1,6 +1,6 @@
 # STATE: 139-260508-opp-distribute-and-getstarted
 
-> 최종 갱신: 2026-05-09 21:31
+> 최종 갱신: 2026-05-09 21:57
 
 ## 현재 상태
 - 모드: interactive
@@ -34,6 +34,8 @@
 | 10 | 2026-05-09 21:18 | current_status changed: additional_work → additional_work_done | v0.2.3: install.sh가 latest release 자동 선택 + OPAL_VERSION export + release 자산 URL |
 | 11 | 2026-05-09 21:30 | current_status changed: additional_work_done → additional_work | v0.2.4: install.sh resolve_default_version /tags 폴백 + archive tarball URL — release 자산 미생성 케이스 호환 |
 | 12 | 2026-05-09 21:31 | current_status changed: additional_work → additional_work_done | v0.2.4: install.sh /tags 폴백 + archive tarball — release 자산 없어도 정상 동작 |
+| 13 | 2026-05-09 21:56 | current_status changed: additional_work_done → additional_work | v0.2.5: update.sh에 /tags 폴백 추가 (install.sh v1.2와 동일) |
+| 14 | 2026-05-09 21:57 | current_status changed: additional_work → additional_work_done | v0.2.5: update.sh /tags 폴백 + archive tarball URL — install.sh v1.2와 정합 |
 
 ## 블로커
 없음

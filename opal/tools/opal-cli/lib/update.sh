@@ -18,6 +18,7 @@
 #   v1.0 2026-05-08 11:00 초기 구현 — tarball 재다운로드 + 사용자 데이터 보존 + --to 핀 옵션 (139)
 #   v1.0.1 2026-05-09 18:00 KST: install-mac.sh 호출 시 OPAL_AUTO_INSTALL=1 명시 — tty 환경에서 비대화형 분기 강제 발동, ~/.opal/tools/ 갱신 결함 fix (139 추가작업)
 #   v1.0.2 2026-05-09 21:05 KST: 로컬/리모트 버전 비교 + --force 옵션 — ~/.opal/VERSION 읽어 같은 release tag(v*)면 "이미 최신" 안내 후 종료. main/SHA/미기록은 항상 진행 (139 추가작업)
+#   v1.0.3 2026-05-09 22:00 KST: /releases/latest 실패 시 /tags?per_page=1 폴백 + tarball URL을 archive/refs/tags로 변경 (install.sh v1.2와 정합, release 자산 미생성 케이스 호환) (139 추가작업)
 #
 
 # ─── update 서브커맨드 ────────────────────────────────────────
@@ -69,25 +70,40 @@ cmd_update() {
     [[ -z "$local_version" ]] && local_version="(미기록)"
     info "로컬 버전: $local_version"
 
-    # 버전 미지정 시 latest release 확인
+    # 버전 미지정 시 자동 결정 (install.sh v1.2 resolve_default_version과 정합)
+    #   1) /releases/latest (published release)
+    #   2) 폴백: /tags?per_page=1 (release 자산 미생성 케이스 호환)
+    #   3) 두 단계 모두 실패 시 "main" 폴백
     if [[ -z "$version" ]]; then
         info "최신 버전 확인 중..."
-        if command -v curl &>/dev/null; then
-            local latest
-            latest=$(curl -fsSL --proto '=https' --tlsv1.2 \
-                "https://api.github.com/repos/${opal_repo}/releases/latest" \
-                2>/dev/null | grep '"tag_name"' | head -1 | sed 's/.*"tag_name": "\(.*\)".*/\1/') || true
-            if [[ -n "$latest" ]]; then
-                version="$latest"
-                info "리모트 최신 버전: $version"
-            else
-                # API 실패 시 main 브랜치 tarball 사용
-                version="main"
-                warn "최신 버전 확인 실패 — main 브랜치 tarball 사용"
-            fi
-        else
+        if ! command -v curl &>/dev/null; then
             error "curl을 찾을 수 없습니다. curl을 설치 후 다시 시도하세요."
             return 1
+        fi
+
+        # 1차: /releases/latest
+        local latest
+        latest=$(curl -fsSL --proto '=https' --tlsv1.2 \
+            "https://api.github.com/repos/${opal_repo}/releases/latest" \
+            2>/dev/null | grep '"tag_name"' | head -1 | sed 's/.*"tag_name": "\([^"]*\)".*/\1/') || true
+
+        # 2차 폴백: /tags?per_page=1
+        if [[ -z "$latest" ]]; then
+            latest=$(curl -fsSL --proto '=https' --tlsv1.2 \
+                "https://api.github.com/repos/${opal_repo}/tags?per_page=1" \
+                2>/dev/null | grep '"name"' | head -1 | sed 's/.*"name": "\([^"]*\)".*/\1/') || true
+            if [[ -n "$latest" ]]; then
+                info "리모트 최신 태그: $latest (release 자산 없음 — archive tarball 사용)"
+            fi
+        else
+            info "리모트 최신 release: $latest"
+        fi
+
+        if [[ -n "$latest" ]]; then
+            version="$latest"
+        else
+            version="main"
+            warn "최신 버전 확인 실패 — main 브랜치 tarball 사용"
         fi
     fi
 
@@ -105,12 +121,12 @@ cmd_update() {
         info "업데이트: $local_version → $version"
     fi
 
-    # Tarball URL 결정
+    # Tarball URL 결정 — install.sh v1.2와 정합 (archive 사용으로 release 자산 의존 제거)
     local tarball_url
     if [[ "$version" == "main" ]]; then
         tarball_url="https://github.com/${opal_repo}/archive/refs/heads/main.tar.gz"
     else
-        tarball_url="https://github.com/${opal_repo}/releases/download/${version}/opal-${version}.tar.gz"
+        tarball_url="https://github.com/${opal_repo}/archive/refs/tags/${version}.tar.gz"
     fi
 
     info "업데이트 버전: $version"
