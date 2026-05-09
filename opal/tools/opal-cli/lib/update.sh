@@ -16,6 +16,7 @@
 #
 # 변경이력:
 #   v1.0 2026-05-08 11:00 초기 구현 — tarball 재다운로드 + 사용자 데이터 보존 + --to 핀 옵션 (139)
+#   v1.0.1 2026-05-09 18:00 KST: install-mac.sh 호출 시 OPAL_AUTO_INSTALL=1 명시 — tty 환경에서 비대화형 분기 강제 발동, ~/.opal/tools/ 갱신 결함 fix (139 추가작업)
 #
 
 # ─── update 서브커맨드 ────────────────────────────────────────
@@ -161,7 +162,10 @@ cmd_update() {
     info "업데이트 설치 중... (사용자 데이터 보존)"
     warn "업데이트 주의: 사용자 커스텀 스킬(skills/)은 클린 후 재배포됩니다."
     warn "커스텀 스킬이 있으면 ~/.opal/skills.user/에 백업해두세요 (후속 태스크에서 자동화 예정)."
-    FRAMEWORK_ROOT="$extract_dir" bash "$installer" 1
+    # OPAL_AUTO_INSTALL=1 — install-mac.sh의 비대화형 분기 강제 발동 (tty 환경에서도 자동 [3] 전체 설치).
+    # update.sh가 사용자 tty에서 호출되면 stdin이 tty → install-mac.sh의 [[ ! -t 0 ]] 조건이 false →
+    # 메뉴 read -rp가 사용자 입력 대기 또는 잘못 처리되어 install_opal() 미호출 결함 회피.
+    OPAL_AUTO_INSTALL=1 FRAMEWORK_ROOT="$extract_dir" bash "$installer"
     success "업데이트 완료 ($version)"
 }
 
