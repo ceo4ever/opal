@@ -33,6 +33,8 @@
 #   v1.0 2026-05-09 10:00: 신규 작성 — macOS/Linux 통합 one-liner 진입점 (139)
 #   v1.1 2026-05-09 21:20: OPAL_VERSION default를 latest release로 변경 + export로 install-mac.sh에 전달
 #                          + release 자산 URL(opal-{tag}.tar.gz) 사용으로 sha256 매칭 (139 추가작업)
+#   v1.2 2026-05-09 21:35: resolve_default_version에 /tags 폴백 추가 (release 자산 미생성 케이스 호환).
+#                          TARBALL_URL을 archive/refs/tags로 변경하여 release 자산 없어도 다운로드 가능 (139 추가작업)
 #
 
 # ─── [MUST] 부분 다운로드 실행 방지 ─────────────────────────────────────────
@@ -57,8 +59,10 @@ warn()    { printf '\033[0;33m[opal] WARN:\033[0m %s\n' "$*" >&2; }
 error()   { printf '\033[0;31m[opal] ERROR:\033[0m %s\n' "$*" >&2; exit 1; }
 
 # ─── resolve_default_version ─────────────────────────────────────────────
-# OPAL_VERSION이 미설정이면 GitHub API로 latest release tag 조회.
-# 실패 시 "main" 폴백 + 경고.
+# OPAL_VERSION이 미설정이면 자동 결정:
+#   1) GitHub API /releases/latest (published release)
+#   2) 폴백: GitHub API /tags?per_page=1 (가장 최근 태그 — release 자산 미생성 케이스 호환)
+#   3) 두 단계 모두 실패 시 "main" 폴백 + 경고
 resolve_default_version() {
     if [[ -n "${OPAL_VERSION:-}" ]]; then
         return 0
@@ -69,17 +73,29 @@ resolve_default_version() {
         return 0
     fi
 
+    # 1차: /releases/latest
     local latest
     latest="$(curl -fsSL --proto '=https' --tlsv1.2 \
         "https://api.github.com/repos/${OPAL_REPO}/releases/latest" 2>/dev/null \
         | grep '"tag_name"' | head -1 | sed 's/.*"tag_name": "\([^"]*\)".*/\1/')" || true
 
+    # 2차 폴백: /tags?per_page=1 (release 자산 없는 케이스 — release.yml 결함 등)
+    if [[ -z "${latest}" ]]; then
+        latest="$(curl -fsSL --proto '=https' --tlsv1.2 \
+            "https://api.github.com/repos/${OPAL_REPO}/tags?per_page=1" 2>/dev/null \
+            | grep '"name"' | head -1 | sed 's/.*"name": "\([^"]*\)".*/\1/')" || true
+        if [[ -n "${latest}" ]]; then
+            info "최신 태그 자동 선택: ${latest} (release 자산 없음 — archive tarball 사용)"
+        fi
+    else
+        info "최신 release 자동 선택: ${latest}"
+    fi
+
     if [[ -n "${latest}" ]]; then
         OPAL_VERSION="${latest}"
-        info "최신 release 자동 선택: ${OPAL_VERSION}"
     else
         OPAL_VERSION="main"
-        warn "최신 release 조회 실패 — main 브랜치 사용"
+        warn "최신 버전 조회 실패 — main 브랜치 사용"
     fi
 }
 
@@ -89,13 +105,15 @@ resolve_default_version
 export OPAL_VERSION
 
 # ─── URL 구성 ─────────────────────────────────────────────────────────────────
-# release tag(v*): release 자산 사용 (체크섬·attestation 매칭)
-# branch (main 등): GitHub archive 사용 (sha256sums.txt 없음 — 체크섬 검증 스킵)
+# release tag(v*): GitHub archive(/refs/tags) 사용 — release.yml 자산이 없어도 항상 동작.
+#                  release 자산이 있는 경우 sha256sums.txt가 동시에 존재 → verify_checksum이 검증.
+# branch (main 등): /refs/heads 사용.
 if [[ "${OPAL_VERSION}" == v* ]]; then
-    TARBALL_URL="https://github.com/${OPAL_REPO}/releases/download/${OPAL_VERSION}/opal-${OPAL_VERSION}.tar.gz"
+    TARBALL_URL="https://github.com/${OPAL_REPO}/archive/refs/tags/${OPAL_VERSION}.tar.gz"
 else
     TARBALL_URL="https://github.com/${OPAL_REPO}/archive/refs/heads/${OPAL_VERSION}.tar.gz"
 fi
+# sha256sums.txt는 release 자산. release.yml이 정상이면 존재, 아니면 verify_checksum이 graceful skip.
 SHA_URL="https://github.com/${OPAL_REPO}/releases/download/${OPAL_VERSION}/sha256sums.txt"
 
 # ─── 임시 디렉토리 + 자동 정리 ───────────────────────────────────────────────
