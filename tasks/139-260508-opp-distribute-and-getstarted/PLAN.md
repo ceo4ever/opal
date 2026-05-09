@@ -902,7 +902,7 @@ AI 도구를 재시작하면 첫 응답에 다음과 같이 표시된다:
 
 #### Step 17: 첫 release 태그 push 검증 (J 영역)
 
-- [ ] 완료
+- [x] 완료 (2026-05-09 09:09, direct) — `git tag -a v0.1` + `git push origin v0.1` 성공, release.yml 발동. tarball/sha256/attestation 생성 결과는 GitHub Actions 페이지(https://github.com/ceo4ever/opal/actions)와 release 페이지(https://github.com/ceo4ever/opal/releases/tag/v0.1)에서 캡틴 확인 필요 (private repo로 API 자동 점검 불가).
 - **소속 기능**: F-003
 - **영역**: 환경
 - **agent**: opal-task-agent

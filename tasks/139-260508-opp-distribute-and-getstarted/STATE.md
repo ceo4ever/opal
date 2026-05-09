@@ -1,12 +1,12 @@
 # STATE: 139-260508-opp-distribute-and-getstarted
 
-> 최종 갱신: 2026-05-08 22:08
+> 최종 갱신: 2026-05-09 10:17
 
 ## 현재 상태
 - 모드: interactive
 - 단계: (행 없음)
 - 진행: TASK 단계
-- 상태: 진행 중
+- 상태: 완료
 
 <!-- pipeline:start -->
 ## 파이프라인 현황판
@@ -21,6 +21,7 @@
 ## 의사결정 로그
 | # | 시점 | 결정 | 근거 |
 |---|------|------|------|
+| 1 | 2026-05-09 10:17 | current_status changed: in_progress → done | v0.1 release 발행, 캡틴 (A) PASS 확인, CLOSE 명시 승인 |
 
 ## 블로커
 없음
