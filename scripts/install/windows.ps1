@@ -72,6 +72,10 @@
                                  자식 npx 의 stdio passthrough 가 깨져 4개 MCP 모두 ✘ failed 로 남던 결함 fix.
                                  Anthropic 권고와 정합 (Windows 는 npx.cmd / npm.cmd 직접 호출). v0.3.11 의 mcp remove + 재등록 로직이
                                  기존 cmd 래핑 항목을 자동 갱신함 (140 추가작업, v0.3.12)
+        v1.5.2 2026-05-10 14:00  Cursor 부트스트래퍼 .mdc 복사 시 CRLF 정규화 + Set-ContentNoBom 적용.
+                                 mac 원본의 LF 줄끝을 그대로 옮긴 결과 Cursor for Windows 의 frontmatter 파서가
+                                 '---' 매칭에 실패해 user-level 룰이 활성화되지 않던 결함 fix
+                                 (NTFS Zone.Identifier / BOM 가설은 캡틴 진단으로 기각, LF only 차이만 남았음) (140 추가작업, v0.3.13)
 #>
 
 #Requires -Version 5.1
@@ -779,7 +783,9 @@ function Register-Bootstrapper {
         Install-OpalSection -SnippetPath $claudeSnippet -Target $claudeTarget -Label 'Claude'
     }
 
-    # ── Cursor: 단일 .mdc 파일 직접 복사 (마커 없는 형식) ──
+    # ── Cursor: 단일 .mdc 파일 (CRLF 정규화 + BOM 미부착) ──
+    # 단순 Copy-Item 은 mac 에서 만든 LF 줄끝을 그대로 옮긴다. Cursor for Windows 의
+    # frontmatter 파서가 LF only 파일에서 '---' 매칭을 실패하여 user-level 룰이 활성화되지 않던 결함 회피.
     $cursorSnippet = [IO.Path]::Combine($bsDir, 'cursor-bootstrap.mdc')
     $cursorTarget  = [IO.Path]::Combine($userHome, '.cursor', 'rules', '000-opal-agent.mdc')
     if (Test-Path $cursorSnippet) {
@@ -787,8 +793,10 @@ function Register-Bootstrapper {
         if (-not (Test-Path $cursorDir)) {
             New-Item -ItemType Directory -Path $cursorDir -Force | Out-Null
         }
-        Copy-Item -Force -Path $cursorSnippet -Destination $cursorTarget
-        Write-OpalOk "Cursor OPAL → $cursorTarget"
+        $raw = Get-Content -Path $cursorSnippet -Raw -Encoding UTF8
+        $normalized = ($raw -replace "`r`n", "`n") -replace "`n", "`r`n"
+        Set-ContentNoBom -Path $cursorTarget -Value $normalized
+        Write-OpalOk "Cursor OPAL → $cursorTarget (CRLF 정규화)"
     }
     # 레거시 R2 규칙 정리
     $legacyR2 = [IO.Path]::Combine($userHome, '.cursor', 'rules', '000-r2-persona.mdc')
