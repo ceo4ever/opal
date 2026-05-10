@@ -42,6 +42,8 @@ Set-StrictMode -Version 3.0
 #                            windows.ps1 호출 시 -OpalVersion 파라미터로 명시 전달 (139 추가작업)
 #   v1.0.4 2026-05-09 23:40  windows.ps1 호출을 powershell.exe -ExecutionPolicy Bypass -File 로 변경.
 #                            Restricted/RemoteSigned 환경에서 다운로드된 .ps1 실행 차단(PSSecurityException) 회피 (139 추가작업)
+#   v1.0.5 2026-05-10 15:30  Resolve-DefaultVersion 의 '최신 태그 자동 선택 ... (release 자산 없음 — archive tarball 사용)' 안내 라인 제거.
+#                            release 자산 부재는 정상 동작이며 사용자 노이즈 — '[OPAL] version :' 표시로 충분 (140 추가작업, v0.3.16)
 $ErrorActionPreference = 'Stop'
 
 # ─── 환경 변수 오버라이드 ────────────────────────────────────────────────────
@@ -69,11 +71,8 @@ function Resolve-DefaultVersion {
             $resp = Invoke-RestMethod -Uri "https://api.github.com/repos/$OpalRepo/tags?per_page=1" -ErrorAction Stop
             if ($resp -and $resp.Count -gt 0 -and $resp[0].name) {
                 $latest = $resp[0].name
-                Write-Host "[OPAL] 최신 태그 자동 선택: $latest (release 자산 없음 — archive tarball 사용)" -ForegroundColor Cyan
             }
         } catch {}
-    } else {
-        Write-Host "[OPAL] 최신 release 자동 선택: $latest" -ForegroundColor Cyan
     }
 
     if ($latest) {

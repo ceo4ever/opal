@@ -78,6 +78,9 @@
                                  mac 의 Cursor 는 alwaysApply: true 를 우선 적용해 통과하지만 Windows 빌드의 frontmatter 파서는
                                  globs: null 을 '매칭 영역 없음' 으로 해석해 룰을 비활성화하던 차이 (캡틴 머신에서 직접 globs 라인 삭제로 동작 검증).
                                  (140 추가작업, v0.3.14)
+        v1.5.4 2026-05-10 15:30  install 출력 노이즈 정리 — Playwright chromium 미설치 시에만 안내 ($env:LOCALAPPDATA\ms-playwright\chromium-* 검사).
+                                 마무리 단계의 'Python 미설치라면 ...' 라인을 Find-Python 부재 시에만 노출.
+                                 (140 추가작업, v0.3.16)
 #>
 
 #Requires -Version 5.1
@@ -911,11 +914,23 @@ function Install-OpalVenv {
         Write-OpalWarn "pip install 부분 실패 (upgrade=$pipUpgradeExit, install=$pipInstallExit) — 일부 패키지 누락 가능"
     }
 
-    # Playwright 브라우저 — 사용자 옵션 안내 (자동 설치 안 함, 다운로드 시간/대역폭 부담)
+    # Playwright 브라우저 — chromium 미설치 시에만 안내 (자동 설치 안 함, 다운로드 시간/대역폭 부담)
     $playwrightExe = [IO.Path]::Combine($venvDir, 'Scripts', 'playwright.exe')
     if (Test-Path $playwrightExe) {
-        Write-OpalInfo 'Playwright 브라우저 설치 (선택, 약 200MB):'
-        Write-OpalInfo "  & `"$playwrightExe`" install chromium"
+        $pwBrowsersDir = if ($env:PLAYWRIGHT_BROWSERS_PATH) {
+            $env:PLAYWRIGHT_BROWSERS_PATH
+        } else {
+            Join-Path $env:LOCALAPPDATA 'ms-playwright'
+        }
+        $hasChromium = $false
+        if (Test-Path $pwBrowsersDir) {
+            $chromiumDir = Get-ChildItem -Path $pwBrowsersDir -Filter 'chromium-*' -Directory -ErrorAction SilentlyContinue | Select-Object -First 1
+            if ($chromiumDir) { $hasChromium = $true }
+        }
+        if (-not $hasChromium) {
+            Write-OpalInfo 'Playwright 브라우저 설치 (선택, 약 200MB):'
+            Write-OpalInfo "  & `"$playwrightExe`" install chromium"
+        }
     }
 }
 
@@ -1310,7 +1325,9 @@ function Invoke-OpalWindowsInstall {
 
     Write-Host ''
     Write-OpalOk '설치 흐름 완료.'
-    Write-OpalInfo 'Python 미설치라면 일부 도구 제한 — winget install Python.Python.3.14 후 재설치 권장.'
+    if (-not (Find-Python)) {
+        Write-OpalInfo 'Python 미설치 — 일부 도구 제한. 수동 설치 후 재실행 권장: winget install Python.Python.3.14'
+    }
     Write-Host ''
 }
 
