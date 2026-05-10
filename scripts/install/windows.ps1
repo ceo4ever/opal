@@ -45,6 +45,8 @@
         v1.3.0 2026-05-10 09:15  Find-Python / Find-Node (Microsoft Store stub 회피) + Install-OpalVenv (Python venv + requirements.txt) +
                                  Install-OpalMcp (claude/cursor/gemini/antigravity 4종 등록) + Install-PlatformAgents (sub-agent 어댑터 — Claude/Cursor/Gemini 모델 매핑) +
                                  Test-WindowsDeps Python/Node optional 검출 + 미설치 안내 (139 추가작업, v0.3.4)
+        v1.3.1 2026-05-10 09:25  Install-OpalCore: skills/agents 결합을 Join-Path 명시로 — PowerShell nested @() 평탄화 결함 fix
+                                 (스킬·에이전트 0개 + 어댑터 0개 결함 회복) (139 추가작업, v0.3.5)
 #>
 
 #Requires -Version 5.1
@@ -352,8 +354,12 @@ function Install-OpalCore {
     # ── 스킬: skills/ + opal/skills/ 합쳐서 ~/.opal/skills/ ──
     $skillsDst = Join-Path $OpalHome 'skills'
     New-Item -ItemType Directory -Path $skillsDst -Force | Out-Null
-    foreach ($srcRel in @(@('skills'), @('opal', 'skills'))) {
-        $src = [IO.Path]::Combine(@($RepoRoot) + $srcRel)
+    # Join-Path 로 명시 결합 — PowerShell @() nested array 평탄화 결함 회피
+    $skillSrcs = @(
+        (Join-Path $RepoRoot 'skills'),
+        (Join-Path $RepoRoot 'opal\skills')
+    )
+    foreach ($src in $skillSrcs) {
         if (-not (Test-Path $src)) { continue }
         Get-ChildItem -Path $src -Directory -ErrorAction SilentlyContinue | ForEach-Object {
             $skillDst = Join-Path $skillsDst $_.Name
@@ -369,8 +375,11 @@ function Install-OpalCore {
     # ── 에이전트: opal/agents/ + agents/ 합쳐서 ~/.opal/agents/ (레거시 디렉토리 제외) ──
     $agentsDst = Join-Path $OpalHome 'agents'
     New-Item -ItemType Directory -Path $agentsDst -Force | Out-Null
-    foreach ($srcRel in @(@('opal', 'agents'), @('agents'))) {
-        $src = [IO.Path]::Combine(@($RepoRoot) + $srcRel)
+    $agentSrcs = @(
+        (Join-Path $RepoRoot 'opal\agents'),
+        (Join-Path $RepoRoot 'agents')
+    )
+    foreach ($src in $agentSrcs) {
         if (-not (Test-Path $src)) { continue }
         Get-ChildItem -Path $src -Directory -ErrorAction SilentlyContinue | Where-Object {
             $_.Name -notin @('claude', 'cursor', 'antigravity')
