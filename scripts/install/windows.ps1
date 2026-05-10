@@ -57,6 +57,11 @@
                                  옵트아웃: 환경변수 OPAL_AUTO_INSTALL_PYTHON=0 / winget 미보유·실패 시 graceful 폴백.
                                  설치 직후 User+Machine PATH 결합 + 표준 경로 직접 탐색으로 현재 세션 인터프리터 경로 확보.
                                  안내문구 Python 3.12 → 3.14 일괄 갱신 (140 추가작업, v0.3.9)
+        v1.4.1 2026-05-10 11:10  native command stderr → NativeCommandError 결함 일괄 보강.
+                                 상단에 $PSNativeCommandUseErrorActionPreference=$false 추가 (PowerShell 7.3+ 옵트아웃).
+                                 5.x backstop 으로 venv 생성($py -m venv) / claude CLI / gemini CLI 호출에 try/finally + ErrorAction='Continue' 격리.
+                                 claude CLI 가 idempotent 재등록 시 'MCP server X already exists' 를 stderr 로 출력해 install 중단되던 결함 fix
+                                 (140 추가작업, v0.3.10)
 #>
 
 #Requires -Version 5.1
@@ -69,6 +74,11 @@ param(
 
 Set-StrictMode -Version 3.0
 $ErrorActionPreference = 'Stop'
+
+# PowerShell 7.3+ : native command 의 stderr 가 $ErrorActionPreference 와 결합해
+# NativeCommandError(RemoteException)로 변환되어 throw 되는 결함을 사전 차단한다.
+# 5.x 에서는 변수 자체가 무시되며, 5.x 의 동일 결함은 각 native 호출 라인의 inline 격리로 회피.
+$PSNativeCommandUseErrorActionPreference = $false
 
 # ─── 상수 ────────────────────────────────────────────────────────────────────
 
@@ -821,7 +831,14 @@ function Install-OpalVenv {
     $venvDir = Join-Path $OpalHome '.venv'
     if (-not (Test-Path $venvDir)) {
         Write-OpalInfo '~/.opal/.venv 생성 중...'
-        & $py -m venv $venvDir 2>&1 | Out-Null
+        # native command stderr 격리 (5.x NativeCommandError 회피)
+        $prevErrPref = $ErrorActionPreference
+        $ErrorActionPreference = 'Continue'
+        try {
+            & $py -m venv $venvDir 2>&1 | Out-Null
+        } finally {
+            $ErrorActionPreference = $prevErrPref
+        }
         if ($LASTEXITCODE -ne 0) {
             Write-OpalWarn 'venv 생성 실패 — Python venv 스킵'
             return
@@ -978,7 +995,15 @@ function Install-OpalMcp {
                     $claudeCli = Get-Command claude -ErrorAction SilentlyContinue
                     if ($claudeCli) {
                         $args = @('mcp', 'add', '--scope', 'user', $name, '--', $config['command']) + @($config['args'])
-                        & $claudeCli.Source @args 2>&1 | Out-Null
+                        # native stderr 격리 — claude CLI 가 idempotent 재등록 시 "already exists" 를 stderr 로 출력하면
+                        # 5.x 에서 NativeCommandError(RemoteException) 로 변환되어 throw 되는 결함 회피.
+                        $prevErrPref = $ErrorActionPreference
+                        $ErrorActionPreference = 'Continue'
+                        try {
+                            & $claudeCli.Source @args 2>&1 | Out-Null
+                        } finally {
+                            $ErrorActionPreference = $prevErrPref
+                        }
                         if ($LASTEXITCODE -eq 0) { $installed += 'claude' }
                     } else {
                         Write-OpalWarn "claude CLI 없음 — ${name} 수동 등록 필요"
@@ -988,7 +1013,14 @@ function Install-OpalMcp {
                     $geminiCli = Get-Command gemini -ErrorAction SilentlyContinue
                     if ($geminiCli) {
                         $args = @('mcp', 'add', '-s', 'user', $name, '--', $config['command']) + @($config['args'])
-                        & $geminiCli.Source @args 2>&1 | Out-Null
+                        # native stderr 격리 (claude 분기와 동일 사유)
+                        $prevErrPref = $ErrorActionPreference
+                        $ErrorActionPreference = 'Continue'
+                        try {
+                            & $geminiCli.Source @args 2>&1 | Out-Null
+                        } finally {
+                            $ErrorActionPreference = $prevErrPref
+                        }
                         if ($LASTEXITCODE -eq 0) { $installed += 'gemini' }
                     } else {
                         # 폴백 — settings.json
