@@ -15,6 +15,9 @@
 #                              Windows 의 python3.exe Microsoft Store stub 으로 인한 doctor abort 결함 fix (140 추가작업, v0.3.9)
 #   v1.2 2026-05-10 12:30 KST: check_paths 의 bin/opal-cli 검출에 Windows .cmd 래퍼 인식 추가 —
 #                              Windows 에서 '미존재' 로 ⚠ 표기되던 표시 결함 fix (140 추가작업, v0.3.11)
+#   v1.3 2026-05-10 14:50 KST: check_paths 에 플랫폼별 어댑터 디렉토리 검출 추가 —
+#                              ~/.claude/agents/ / ~/.cursor/agents/ / ~/.gemini/agents/ 의 어댑터 카운트 표기.
+#                              ~/.opal/agents/ 는 'source 캐시' 로 재정의 (LLM 직접 사용 X, 어댑터 재생성용) (140 추가작업, v0.3.15)
 #
 
 # ─── 공통 상수 ──────────────────────────────────────────────
@@ -157,14 +160,34 @@ check_paths() {
         _fail "${HOME}/.opal/skills/ — 디렉토리 미존재 (필수)"
     fi
 
-    # ~/.opal/agents/ (필수)
+    # ~/.opal/agents/ (필수, source 캐시 — 어댑터 재생성용)
     if [[ -d "$OPAL_HOME/agents" ]]; then
         local agent_count
         agent_count=$(find "$OPAL_HOME/agents" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')
-        _pass "${HOME}/.opal/agents/ (${agent_count} agents)"
+        _pass "${HOME}/.opal/agents/ (${agent_count} source — 어댑터 재생성용)"
     else
         _fail "${HOME}/.opal/agents/ — 디렉토리 미존재 (필수)"
     fi
+
+    # 플랫폼별 어댑터 디렉토리 (실제 LLM 이 호출 시 읽는 곳).
+    # install 이 ~/.opal/agents/ source 를 변환·배포한다.
+    _check_adapter_dir() {
+        local label="$1" dir="$2"
+        if [[ -d "$dir" ]]; then
+            local cnt
+            cnt=$(find "$dir" -maxdepth 1 -mindepth 1 \( -name '*.md' -o -name '*.mdc' \) -type f 2>/dev/null | wc -l | tr -d ' ')
+            if [[ "${cnt:-0}" -gt 0 ]]; then
+                _pass "${dir/#$HOME/~} (${cnt} ${label} 어댑터)"
+            else
+                _warn "${dir/#$HOME/~} — 디렉토리는 있으나 어댑터 0개 (install 재실행 권장)"
+            fi
+        else
+            _warn "${dir/#$HOME/~} — 미존재 (${label} 미사용 시 무시 가능)"
+        fi
+    }
+    _check_adapter_dir "Claude"  "$HOME/.claude/agents"
+    _check_adapter_dir "Cursor"  "$HOME/.cursor/agents"
+    _check_adapter_dir "Gemini"  "$HOME/.gemini/agents"
 
     # ~/.opal/bin/opal-cli (권고 — Step 2 PATH 등록 후 생성됨, Windows 는 .cmd 래퍼)
     if [[ -L "$OPAL_HOME/bin/opal-cli" ]]; then

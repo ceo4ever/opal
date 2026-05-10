@@ -183,7 +183,7 @@ OPAL은 2-레이어 아키텍처로 동작한다.
 ─────────────────                  ──────────────────
 skills/* (독립 6개) ──┐
 opal/skills/* (24개)──┼─ install ─→  ~/.opal/skills/
-opal/agents/* (10개)──┤              ~/.opal/agents/
+opal/agents/* (10개)──┤              ~/.opal/agents/  (source 캐시 — 어댑터 재생성용)
 agents/* (범용 1개) ──┤
 community-skills/*  ──┤              ~/.opal/community-skills/
 opal/core/          ──┤              ~/.opal/AGENT.md
@@ -201,9 +201,16 @@ opal/core/mcps/*    ──── install ─→  claude mcp add --scope user (Cl
                                      gemini mcp add -s user (Gemini)
                                      ~/.cursor/mcp.json (Cursor)
                                      ~/.gemini/antigravity/mcp_config.json (Antigravity)
+
+# 어댑터 자동 생성 (실제 LLM 이 런타임에 읽는 곳)
+~/.opal/agents/* ──── install (emit) ─→ ~/.claude/agents/{name}.md   (Claude Code 형식)
+                                        ~/.cursor/agents/{name}.md   (Cursor 형식)
+                                        ~/.gemini/agents/{name}.md   (Gemini 형식)
 ```
 
-`install-mac.sh`가 소스에서 `~/.opal/`로 통합 배포한다. 플랫폼별 디렉토리에는 부트스트래퍼와 MCP 설정만 배치한다.
+`install-mac.sh`가 소스에서 `~/.opal/`로 통합 배포한다. 플랫폼별 디렉토리(`~/.claude/`, `~/.cursor/`, `~/.gemini/`)에는 부트스트래퍼·MCP 설정과 함께 **에이전트 어댑터**가 배치된다.
+
+**source vs runtime 구분**: `~/.opal/agents/`는 OPAL 표준 형식의 source 캐시이며 LLM 이 직접 읽지 않는다. 런타임에 PM 디스패치가 `Task(subagent_type=…)`로 호출하면 각 플랫폼은 **자기 어댑터 디렉토리**(`~/.claude/agents/` 등)에서 매칭한다. `~/.opal/agents/` 는 install/update 시 어댑터 재생성을 위한 단일 진실 원본 역할을 한다.
 
 ## 외부 의존 서비스
 
