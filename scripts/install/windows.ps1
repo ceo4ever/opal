@@ -50,6 +50,9 @@
         v1.3.2 2026-05-10 09:50  Set-ContentNoBom / Add-ContentNoBom 헬퍼 신규 + 모든 .md/.json 출력에 적용 —
                                  PowerShell 5.1 의 Set-Content -Encoding UTF8 가 BOM 을 추가해 Claude Code 의 frontmatter 파서가 '---' 매칭 실패하던 결함 fix
                                  (.claude/agents 어댑터가 Claude 에서 보이지 않던 문제 회복) (139 추가작업, v0.3.6)
+        v1.3.3 2026-05-10 09:58  Install-OpalVenv 의 pip 호출 격리 — ErrorActionPreference='Continue' try/finally + python -m pip 우선 사용.
+                                 Python 3.14 환경에서 pip 의 stderr 출력이 PowerShell 의 NativeCommandError(RemoteException)로 변환되어
+                                 $ErrorActionPreference='Stop' + 2>&1 조합으로 throw 되던 설치 중단 결함 fix (140 추가작업, v0.3.7)
 #>
 
 #Requires -Version 5.1
@@ -757,12 +760,35 @@ function Install-OpalVenv {
     }
 
     Write-OpalInfo 'pip 업그레이드 + requirements.txt 설치 중...'
-    & $venvPip install --quiet --no-cache-dir --upgrade pip 2>&1 | Out-Null
-    & $venvPip install --quiet --no-cache-dir -r $req 2>&1 | Out-Null
-    if ($LASTEXITCODE -eq 0) {
+    # pip 호출 격리:
+    #   - PowerShell 의 native command stderr 가 NativeCommandError(RemoteException)로 변환되어
+    #     $ErrorActionPreference='Stop' 와 결합 시 throw 되는 결함 회피.
+    #   - pip 자기 자신 업그레이드는 venvPip 직접 호출 대신 python -m pip 로 — Windows 의 pip.exe 자기교체 잠금 회피.
+    $venvPython = [IO.Path]::Combine($venvDir, 'Scripts', 'python.exe')
+    if (-not (Test-Path $venvPython)) {
+        $venvPython = [IO.Path]::Combine($venvDir, 'bin', 'python')
+    }
+    $prevErrPref = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    $pipUpgradeExit = 0
+    $pipInstallExit = 0
+    try {
+        if (Test-Path $venvPython) {
+            & $venvPython -m pip install --quiet --no-cache-dir --upgrade pip 2>&1 | Out-Null
+            $pipUpgradeExit = $LASTEXITCODE
+        } else {
+            & $venvPip install --quiet --no-cache-dir --upgrade pip 2>&1 | Out-Null
+            $pipUpgradeExit = $LASTEXITCODE
+        }
+        & $venvPip install --quiet --no-cache-dir -r $req 2>&1 | Out-Null
+        $pipInstallExit = $LASTEXITCODE
+    } finally {
+        $ErrorActionPreference = $prevErrPref
+    }
+    if ($pipInstallExit -eq 0) {
         Write-OpalOk 'Python 패키지 설치 완료 (requirements.txt)'
     } else {
-        Write-OpalWarn "pip install 부분 실패 (exit=$LASTEXITCODE) — 일부 패키지 누락 가능"
+        Write-OpalWarn "pip install 부분 실패 (upgrade=$pipUpgradeExit, install=$pipInstallExit) — 일부 패키지 누락 가능"
     }
 
     # Playwright 브라우저 — 사용자 옵션 안내 (자동 설치 안 함, 다운로드 시간/대역폭 부담)
