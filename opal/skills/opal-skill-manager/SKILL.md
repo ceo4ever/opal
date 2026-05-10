@@ -120,5 +120,29 @@ OPAL 에이전트는 `~/.opal/references/community-skills-registry.json`을 통�
 ## 참고
 
 - 스킬 검색 엔진: [skills.sh](https://skills.sh/) (vercel-labs/skills)
-- 기본 번들 스킬(31개)은 `install-mac.sh`로 자동 설치된다
-- 추가 스킬은 이 스킬을 통해 온디맨드로 검색/설치한다
+- 커뮤니티 스킬 SSOT: `npx skills` CLI — OPAL은 번들로 배포하지 않음. 사용자가 `//skill-manager` 또는 `// 커맨드` 첫 호출 시 동의 prompt를 거쳐 fetch.
+- 설치 위치: `~/.opal/community-skills/{owner}/{skill}/SKILL.md`
+- 레지스트리: `~/.opal/references/community-skills-registry.json` (v2 메타데이터 카탈로그 — 트리거 + source_repo + license)
+
+### 6. `// 커맨드` 미설치 매칭 시 자동 fetch
+
+알투가 `//pdf` 같은 community 트리거를 매칭했는데 skill-registry가 `installed: false`로 응답하면:
+
+1. 사용자에게 동의 prompt 표시:
+   ```
+   이 스킬은 외부 스킬입니다 ({source_repo} / 라이선스: {license}).
+   다운로드해서 설치할까요? (Y/n)
+   ```
+2. 수락(`Y`):
+   - `npx skills add {source_repo}` 호출
+   - 설치 완료 후 `~/.opal/community-skills/{owner}/{skill}/SKILL.md`를 Read하여 즉시 절차 실행
+3. 거부(`n`):
+   - "수동 설치는 `//skill-manager`로 — `npx skills find {keyword}`로 검색 후 설치하세요" 안내 후 종료
+4. `source_repo`가 `null` (registry에 미등재):
+   - "이 스킬은 vercel-labs/skills 카탈로그에 미등재. 수동 설치는 `//skill-manager`로" 안내
+
+## 변경이력
+
+| 버전 | 일시 | 변경내용 |
+|------|------|---------|
+| v1.1 | 2026-05-10 17:00 KST | "기본 번들 31개" 표현 제거 + fetch 흐름 SSOT 강조 + `// 커맨드` 미설치 매칭 시 자동 fetch 흐름 추가 (142) |

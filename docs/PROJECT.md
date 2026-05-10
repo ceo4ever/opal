@@ -37,7 +37,6 @@
 | `agents/` | 에이전트 소스 | 서브에이전트 정의 |
 | `opal/skills/` | OPAL 스킬 소스 | 오케스트레이터, 단계 스킬 등 OPAL 전용 |
 | `opal/core/` | 프레임워크 코어 | 레퍼런스, MCP 설정, 도구 |
-| `community-skills/` | 커뮤니티 스킬 | 외부 조직 제공 스킬 |
 | `scripts/` | 설치 스크립트 | install-mac.sh 등 |
 | `.opal/` | PM 프로필 | 에이전트/메모리 설정 |
 

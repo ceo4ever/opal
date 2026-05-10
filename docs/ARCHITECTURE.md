@@ -63,7 +63,7 @@ OPAL은 2-레이어 아키텍처로 동작한다.
 | `identity.md` | 에이전트 정체성 (이름, 성격, 톤) |
 | `skills/` | 독립 스킬 5개 + OPAL 스킬 24개 |
 | `agents/` | 서브에이전트 10개 (전문 6 + 범용 4) |
-| `community-skills/` | 커뮤니티 스킬 37개 (6개 조직) |
+| `community-skills/` | 커뮤니티 스킬 — `npx skills` (vercel-labs/skills)로 사용자가 온디맨드 fetch |
 | `references/` | 레지스트리 (skills.md, agents.md, mcps.md, opal-harness.md, opal-doc-standard.md, tools.md) |
 | `tools/` | CLI 도구 (skill-registry/, xlsx-tool/, check-env.js, requirements.txt) |
 | `.venv/` | Python 가상환경 (openpyxl, pandas, playwright 등 — requirements.txt로 관리) |
@@ -155,16 +155,15 @@ OPAL은 2-레이어 아키텍처로 동작한다.
 
 ### 커뮤니티 스킬 (Community Skills)
 
-외부 조직이 제공하는 스킬. `~/.opal/community-skills/`에 배포.
+외부 조직이 제공하는 스킬. OPAL은 번들로 배포하지 않으며, 사용자가 `//skill-manager` 또는 `// 커맨드` 첫 호출 시 동의 prompt를 거쳐 [skills.sh](https://skills.sh/) 카탈로그(vercel-labs/skills)에서 fetch한다.
 
-| 조직 | 스킬 수 | 주요 스킬 |
-|------|---------|----------|
-| Anthropic | 19개 | webapp-testing, frontend-design, claude-api, pdf, xlsx |
-| Vercel Labs | 6개 | next-best-practices, react-best-practices, shadcn |
-| Google Labs | 6개 | stitch-loop, react-components, remotion |
-| Trail of Bits | 2개 | modern-python |
-| GetSentry | 2개 | code-review |
-| OpenAI | 2개 | security-best-practices |
+| 항목 | 값 |
+|------|-----|
+| 카탈로그 SSOT | [skills.sh](https://skills.sh/) — `npx skills find` |
+| 설치 명령 | `npx skills add {owner/repo@skill}` (알투 자동 호출 또는 `//skill-manager`) |
+| 설치 위치 | `~/.opal/community-skills/{owner}/{skill}/SKILL.md` |
+| 레지스트리 | `~/.opal/references/community-skills-registry.json` (v2 메타데이터 카탈로그 — 트리거/source_repo/license) |
+| 라이선스 책임 | 사용자 fetch 시점 발생 (OPAL repo는 third-party 코드 재배포 안 함) |
 
 ### 하네스 (Harness)
 
@@ -187,7 +186,6 @@ skills/* (독립 6개) ──┐
 opal/skills/* (24개)──┼─ install ─→  ~/.opal/skills/
 opal/agents/* (12개)──┤              ~/.opal/agents/  (source 캐시 — 어댑터 재생성용)
 agents/* (범용 1개) ──┤
-community-skills/*  ──┤              ~/.opal/community-skills/
 opal/core/          ──┤              ~/.opal/AGENT.md
   references/       ──┤              ~/.opal/references/
 opal/tools/         ──┤              ~/.opal/tools/
@@ -208,6 +206,9 @@ opal/core/mcps/*    ──── install ─→  claude mcp add --scope user (Cl
 ~/.opal/agents/* ──── install (emit) ─→ ~/.claude/agents/{name}.md   (Claude Code 형식)
                                         ~/.cursor/agents/{name}.md   (Cursor 형식)
                                         ~/.gemini/agents/{name}.md   (Gemini 형식)
+
+# 커뮤니티 스킬은 install이 배포하지 않음. 사용자가 //skill-manager로 fetch:
+~/.opal/community-skills/  ←  npx skills add {owner/repo@skill}  ←  사용자 동의 prompt
 ```
 
 `install-mac.sh`가 소스에서 `~/.opal/`로 통합 배포한다. 플랫폼별 디렉토리(`~/.claude/`, `~/.cursor/`, `~/.gemini/`)에는 부트스트래퍼·MCP 설정과 함께 **에이전트 어댑터**가 배치된다.
@@ -272,7 +273,6 @@ opal/                                    ← 이 저장소
 │   └── web-to-markdown/                 웹→마크다운
 ├── agents/                              범용 에이전트 (OPAL 무관)
 │   └── wtm-agent/                       웹→마크다운 에이전트
-├── community-skills/                    커뮤니티 스킬 (37개, 6개 조직)
 ├── opal/                                OPAL 코어
 │   ├── bootstrapper/                    플랫폼별 부트스트래퍼
 │   ├── core/                            에이전트 코어 + 레퍼런스 + MCP

@@ -1,50 +1,51 @@
 {
-  "$schema": "opal-community-skills-registry-v1",
-  "version": "1.0.0",
-  "updated_at": "2026-03-29",
+  "$schema": "opal-community-skills-registry-v2",
+  "version": "2.0.0",
+  "updated_at": "2026-05-10",
+  "schema_notes": "v2: paths 폐기 (skill-registry.js가 ~/.opal/community-skills/{name}/SKILL.md 동적 계산). source_repo/license 신설.",
   "groups": {
     "anthropics": [
-      { "name": "anthropics/docx", "alias": null, "description": "Word 문서 (.docx) 생성/편집", "triggers": ["(?i)(word\\s*문서|docx|\\.docx)"], "paths": ["~/.opal/community-skills/anthropics/docx/SKILL.md"] },
-      { "name": "anthropics/doc-coauthoring", "alias": null, "description": "문서 공동 작성, 협업 편집", "triggers": ["(?i)(문서\\s*공동\\s*작성|협업\\s*편집|doc\\s*co.?author)"], "paths": ["~/.opal/community-skills/anthropics/doc-coauthoring/SKILL.md"] },
-      { "name": "anthropics/pptx", "alias": null, "description": "PowerPoint 프레젠테이션", "triggers": ["(?i)(powerpoint|pptx|프레젠테이션|\\.pptx)"], "paths": ["~/.opal/community-skills/anthropics/pptx/SKILL.md"] },
-      { "name": "anthropics/xlsx", "alias": null, "description": "Excel 스프레드시트", "triggers": ["(?i)(excel|xlsx|스프레드시트|\\.xlsx)"], "paths": ["~/.opal/community-skills/anthropics/xlsx/SKILL.md"] },
-      { "name": "anthropics/pdf", "alias": null, "description": "PDF 생성/편집/추출", "triggers": ["(?i)(pdf|\\.pdf)"], "paths": ["~/.opal/community-skills/anthropics/pdf/SKILL.md"] },
-      { "name": "anthropics/algorithmic-art", "alias": null, "description": "제너러티브 아트, p5.js", "triggers": ["(?i)(제너러티브\\s*아트|p5\\.?js|알고리즘\\s*아트)"], "paths": ["~/.opal/community-skills/anthropics/algorithmic-art/SKILL.md"] },
-      { "name": "anthropics/canvas-design", "alias": null, "description": "비주얼 디자인, PNG/PDF 아트", "triggers": ["(?i)(비주얼\\s*디자인|canvas\\s*design)"], "paths": ["~/.opal/community-skills/anthropics/canvas-design/SKILL.md"] },
-      { "name": "anthropics/frontend-design", "alias": null, "description": "프론트엔드 UI/UX 디자인", "triggers": ["(?i)(프론트엔드\\s*디자인|frontend\\s*design)"], "paths": ["~/.opal/community-skills/anthropics/frontend-design/SKILL.md"] },
-      { "name": "anthropics/slack-gif-creator", "alias": null, "description": "Slack GIF 애니메이션", "triggers": ["(?i)(slack\\s*gif|gif\\s*만들어)"], "paths": ["~/.opal/community-skills/anthropics/slack-gif-creator/SKILL.md"] },
-      { "name": "anthropics/theme-factory", "alias": null, "description": "테마, 스타일링, 디자인 시스템", "triggers": ["(?i)(테마\\s*만들어|theme\\s*factory|스타일링)"], "paths": ["~/.opal/community-skills/anthropics/theme-factory/SKILL.md"] },
-      { "name": "anthropics/web-artifacts-builder", "alias": null, "description": "HTML 아티팩트, React+Tailwind 컴포넌트", "triggers": ["(?i)(html\\s*아티팩트|web\\s*artifact)"], "paths": ["~/.opal/community-skills/anthropics/web-artifacts-builder/SKILL.md"] },
-      { "name": "anthropics/mcp-builder", "alias": null, "description": "MCP 서버 생성", "triggers": ["(?i)(mcp\\s*서버\\s*만들어|mcp\\s*builder)"], "paths": ["~/.opal/community-skills/anthropics/mcp-builder/SKILL.md"] },
-      { "name": "anthropics/webapp-testing", "alias": null, "description": "Playwright 웹앱 테스트", "triggers": ["(?i)(playwright|웹앱\\s*테스트|webapp\\s*test)"], "paths": ["~/.opal/community-skills/anthropics/webapp-testing/SKILL.md"] },
-      { "name": "anthropics/brand-guidelines", "alias": null, "description": "브랜드 컬러, 타이포그래피", "triggers": ["(?i)(브랜드\\s*가이드|brand\\s*guide)"], "paths": ["~/.opal/community-skills/anthropics/brand-guidelines/SKILL.md"] },
-      { "name": "anthropics/internal-comms", "alias": null, "description": "상태 보고서, 뉴스레터, FAQ", "triggers": ["(?i)(상태\\s*보고서|뉴스레터|internal\\s*comms)"], "paths": ["~/.opal/community-skills/anthropics/internal-comms/SKILL.md"] },
-      { "name": "anthropics/skill-creator", "alias": null, "description": "스킬 작성 가이드", "triggers": ["(?i)(skill\\s*creator|스킬\\s*만들기)"], "paths": ["~/.opal/community-skills/anthropics/skill-creator/SKILL.md"] },
-      { "name": "anthropics/claude-api", "alias": null, "description": "Claude API, Anthropic SDK", "triggers": ["(?i)(claude\\s*api|anthropic\\s*sdk)"], "paths": ["~/.opal/community-skills/anthropics/claude-api/SKILL.md"] },
-      { "name": "anthropics/template", "alias": null, "description": "스킬 기본 템플릿", "triggers": ["^anthropics/template$"], "paths": ["~/.opal/community-skills/anthropics/template/SKILL.md"] }
+      { "name": "anthropics/docx", "alias": null, "description": "Word 문서 (.docx) 생성/편집", "triggers": ["(?i)(word\\s*문서|docx|\\.docx)"], "source_repo": "anthropics/skills@docx", "license": "Apache-2.0" },
+      { "name": "anthropics/doc-coauthoring", "alias": null, "description": "문서 공동 작성, 협업 편집", "triggers": ["(?i)(문서\\s*공동\\s*작성|협업\\s*편집|doc\\s*co.?author)"], "source_repo": "anthropics/skills@doc-coauthoring", "license": "Apache-2.0" },
+      { "name": "anthropics/pptx", "alias": null, "description": "PowerPoint 프레젠테이션", "triggers": ["(?i)(powerpoint|pptx|프레젠테이션|\\.pptx)"], "source_repo": "anthropics/skills@pptx", "license": "Apache-2.0" },
+      { "name": "anthropics/xlsx", "alias": null, "description": "Excel 스프레드시트", "triggers": ["(?i)(excel|xlsx|스프레드시트|\\.xlsx)"], "source_repo": "anthropics/skills@xlsx", "license": "Apache-2.0" },
+      { "name": "anthropics/pdf", "alias": null, "description": "PDF 생성/편집/추출", "triggers": ["(?i)(pdf|\\.pdf)"], "source_repo": "anthropics/skills@pdf", "license": "Apache-2.0" },
+      { "name": "anthropics/algorithmic-art", "alias": null, "description": "제너러티브 아트, p5.js", "triggers": ["(?i)(제너러티브\\s*아트|p5\\.?js|알고리즘\\s*아트)"], "source_repo": "anthropics/skills@algorithmic-art", "license": "Apache-2.0" },
+      { "name": "anthropics/canvas-design", "alias": null, "description": "비주얼 디자인, PNG/PDF 아트", "triggers": ["(?i)(비주얼\\s*디자인|canvas\\s*design)"], "source_repo": "anthropics/skills@canvas-design", "license": "Apache-2.0" },
+      { "name": "anthropics/frontend-design", "alias": null, "description": "프론트엔드 UI/UX 디자인", "triggers": ["(?i)(프론트엔드\\s*디자인|frontend\\s*design)"], "source_repo": "anthropics/skills@frontend-design", "license": "Apache-2.0" },
+      { "name": "anthropics/slack-gif-creator", "alias": null, "description": "Slack GIF 애니메이션", "triggers": ["(?i)(slack\\s*gif|gif\\s*만들어)"], "source_repo": "anthropics/skills@slack-gif-creator", "license": "Apache-2.0" },
+      { "name": "anthropics/theme-factory", "alias": null, "description": "테마, 스타일링, 디자인 시스템", "triggers": ["(?i)(테마\\s*만들어|theme\\s*factory|스타일링)"], "source_repo": "anthropics/skills@theme-factory", "license": "Apache-2.0" },
+      { "name": "anthropics/web-artifacts-builder", "alias": null, "description": "HTML 아티팩트, React+Tailwind 컴포넌트", "triggers": ["(?i)(html\\s*아티팩트|web\\s*artifact)"], "source_repo": "anthropics/skills@web-artifacts-builder", "license": "Apache-2.0" },
+      { "name": "anthropics/mcp-builder", "alias": null, "description": "MCP 서버 생성", "triggers": ["(?i)(mcp\\s*서버\\s*만들어|mcp\\s*builder)"], "source_repo": "anthropics/skills@mcp-builder", "license": "Apache-2.0" },
+      { "name": "anthropics/webapp-testing", "alias": null, "description": "Playwright 웹앱 테스트", "triggers": ["(?i)(playwright|웹앱\\s*테스트|webapp\\s*test)"], "source_repo": "anthropics/skills@webapp-testing", "license": "Apache-2.0" },
+      { "name": "anthropics/brand-guidelines", "alias": null, "description": "브랜드 컬러, 타이포그래피", "triggers": ["(?i)(브랜드\\s*가이드|brand\\s*guide)"], "source_repo": "anthropics/skills@brand-guidelines", "license": "Apache-2.0" },
+      { "name": "anthropics/internal-comms", "alias": null, "description": "상태 보고서, 뉴스레터, FAQ", "triggers": ["(?i)(상태\\s*보고서|뉴스레터|internal\\s*comms)"], "source_repo": "anthropics/skills@internal-comms", "license": "Apache-2.0" },
+      { "name": "anthropics/skill-creator", "alias": null, "description": "스킬 작성 가이드", "triggers": ["(?i)(skill\\s*creator|스킬\\s*만들기)"], "source_repo": "anthropics/skills@skill-creator", "license": "Apache-2.0" },
+      { "name": "anthropics/claude-api", "alias": null, "description": "Claude API, Anthropic SDK", "triggers": ["(?i)(claude\\s*api|anthropic\\s*sdk)"], "source_repo": "anthropics/skills@claude-api", "license": "Apache-2.0" },
+      { "name": "anthropics/template", "alias": null, "description": "스킬 기본 템플릿", "triggers": ["^anthropics/template$"], "source_repo": "anthropics/skills@template", "license": "Apache-2.0" }
     ],
     "google-labs-code": [
-      { "name": "google-labs-code/design-md", "alias": null, "description": "DESIGN.md 디자인 시스템 문서화", "triggers": ["(?i)(design\\.?md|디자인\\s*시스템\\s*문서)"], "paths": ["~/.opal/community-skills/google-labs-code/design-md/SKILL.md"] },
-      { "name": "google-labs-code/enhance-prompt", "alias": null, "description": "프롬프트 개선", "triggers": ["(?i)(프롬프트\\s*개선|enhance\\s*prompt)"], "paths": ["~/.opal/community-skills/google-labs-code/enhance-prompt/SKILL.md"] },
-      { "name": "google-labs-code/react-components", "alias": null, "description": "Stitch→React 변환", "triggers": ["(?i)(stitch.*react|react\\s*component.*stitch)"], "paths": ["~/.opal/community-skills/google-labs-code/react-components/SKILL.md"] },
-      { "name": "google-labs-code/remotion", "alias": null, "description": "워크스루 영상, Remotion 비디오", "triggers": ["(?i)(remotion|워크스루\\s*영상)"], "paths": ["~/.opal/community-skills/google-labs-code/remotion/SKILL.md"] },
-      { "name": "google-labs-code/stitch-loop", "alias": null, "description": "디자인→코드 반복 자동화", "triggers": ["(?i)(stitch\\s*loop|디자인.*코드\\s*반복)"], "paths": ["~/.opal/community-skills/google-labs-code/stitch-loop/SKILL.md"] }
+      { "name": "google-labs-code/design-md", "alias": null, "description": "DESIGN.md 디자인 시스템 문서화", "triggers": ["(?i)(design\\.?md|디자인\\s*시스템\\s*문서)"], "source_repo": null, "license": "Unknown" },
+      { "name": "google-labs-code/enhance-prompt", "alias": null, "description": "프롬프트 개선", "triggers": ["(?i)(프롬프트\\s*개선|enhance\\s*prompt)"], "source_repo": null, "license": "Unknown" },
+      { "name": "google-labs-code/react-components", "alias": null, "description": "Stitch→React 변환", "triggers": ["(?i)(stitch.*react|react\\s*component.*stitch)"], "source_repo": null, "license": "Unknown" },
+      { "name": "google-labs-code/remotion", "alias": null, "description": "워크스루 영상, Remotion 비디오", "triggers": ["(?i)(remotion|워크스루\\s*영상)"], "source_repo": null, "license": "Unknown" },
+      { "name": "google-labs-code/stitch-loop", "alias": null, "description": "디자인→코드 반복 자동화", "triggers": ["(?i)(stitch\\s*loop|디자인.*코드\\s*반복)"], "source_repo": null, "license": "Unknown" }
     ],
     "vercel-labs": [
-      { "name": "vercel-labs/react-best-practices", "alias": null, "description": "React 베스트 프랙티스", "triggers": ["(?i)(react\\s*best\\s*practice|react\\s*베스트)"], "paths": ["~/.opal/community-skills/vercel-labs/react-best-practices/SKILL.md"] },
-      { "name": "vercel-labs/web-design-guidelines", "alias": null, "description": "웹 디자인 가이드라인", "triggers": ["(?i)(웹\\s*디자인\\s*가이드|web\\s*design\\s*guide)"], "paths": ["~/.opal/community-skills/vercel-labs/web-design-guidelines/SKILL.md"] },
-      { "name": "vercel-labs/composition-patterns", "alias": null, "description": "React 컴포지션 패턴", "triggers": ["(?i)(컴포지션\\s*패턴|composition\\s*pattern)"], "paths": ["~/.opal/community-skills/vercel-labs/composition-patterns/SKILL.md"] },
-      { "name": "vercel-labs/next-best-practices", "alias": null, "description": "Next.js 베스트 프랙티스", "triggers": ["(?i)(next\\.?js\\s*best|next\\s*베스트)"], "paths": ["~/.opal/community-skills/vercel-labs/next-best-practices/SKILL.md"] },
-      { "name": "vercel-labs/shadcn", "alias": null, "description": "shadcn/ui 컴포넌트", "triggers": ["(?i)(shadcn)"], "paths": ["~/.opal/community-skills/vercel-labs/shadcn/SKILL.md"] }
+      { "name": "vercel-labs/react-best-practices", "alias": null, "description": "React 베스트 프랙티스", "triggers": ["(?i)(react\\s*best\\s*practice|react\\s*베스트)"], "source_repo": "vercel-labs/skills@react-best-practices", "license": "Unknown" },
+      { "name": "vercel-labs/web-design-guidelines", "alias": null, "description": "웹 디자인 가이드라인", "triggers": ["(?i)(웹\\s*디자인\\s*가이드|web\\s*design\\s*guide)"], "source_repo": "vercel-labs/skills@web-design-guidelines", "license": "Unknown" },
+      { "name": "vercel-labs/composition-patterns", "alias": null, "description": "React 컴포지션 패턴", "triggers": ["(?i)(컴포지션\\s*패턴|composition\\s*pattern)"], "source_repo": "vercel-labs/skills@composition-patterns", "license": "Unknown" },
+      { "name": "vercel-labs/next-best-practices", "alias": null, "description": "Next.js 베스트 프랙티스", "triggers": ["(?i)(next\\.?js\\s*best|next\\s*베스트)"], "source_repo": "vercel-labs/skills@next-best-practices", "license": "Unknown" },
+      { "name": "vercel-labs/shadcn", "alias": null, "description": "shadcn/ui 컴포넌트", "triggers": ["(?i)(shadcn)"], "source_repo": "vercel-labs/skills@shadcn", "license": "Unknown" }
     ],
     "trailofbits": [
-      { "name": "trailofbits/modern-python", "alias": null, "description": "Python, uv, ruff, pytest", "triggers": ["(?i)(modern\\s*python|모던\\s*파이썬)"], "paths": ["~/.opal/community-skills/trailofbits/modern-python/SKILL.md"] }
+      { "name": "trailofbits/modern-python", "alias": null, "description": "Python, uv, ruff, pytest", "triggers": ["(?i)(modern\\s*python|모던\\s*파이썬)"], "source_repo": null, "license": "Unknown" }
     ],
     "getsentry": [
-      { "name": "getsentry/code-review", "alias": null, "description": "코드 리뷰, PR 리뷰", "triggers": ["(?i)(코드\\s*리뷰|PR\\s*리뷰|code\\s*review)"], "paths": ["~/.opal/community-skills/getsentry/code-review/SKILL.md"] }
+      { "name": "getsentry/code-review", "alias": null, "description": "코드 리뷰, PR 리뷰", "triggers": ["(?i)(코드\\s*리뷰|PR\\s*리뷰|code\\s*review)"], "source_repo": null, "license": "Unknown" }
     ],
     "openai": [
-      { "name": "openai/security-best-practices", "alias": null, "description": "보안 리뷰, 취약점 분석", "triggers": ["(?i)(보안\\s*리뷰|보안\\s*취약점|security\\s*review)"], "paths": ["~/.opal/community-skills/openai/security-best-practices/SKILL.md"] }
+      { "name": "openai/security-best-practices", "alias": null, "description": "보안 리뷰, 취약점 분석", "triggers": ["(?i)(보안\\s*리뷰|보안\\s*취약점|security\\s*review)"], "source_repo": "openai/skills@security-best-practices", "license": "Apache-2.0" }
     ]
   }
 }

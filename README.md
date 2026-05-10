@@ -36,7 +36,7 @@ AI 도구(Claude Code, Cursor 등)를 쓰다 보면 공통적인 한계에 부�
 - **QA 내장** — 테스트 시나리오 작성 → 구현 → 자동 검증이 파이프라인 안에 포함
 - **3-way 실행 모드** — `interactive` / `semi-agentic`(기본) / `agentic` — 사용자 검토와 PM 자율의 균형을 작업별로 선택
 - **전문 에이전트(Specialist Agent)** — 도메인별 전문 워커가 FE/BE/DB/기획/테스트를 담당
-- **커뮤니티 스킬** — 외부 조직이 제공하는 스킬을 원본 수정 없이 통합
+- **커뮤니티 스킬** — [skills.sh](https://skills.sh/) 카탈로그를 통해 외부 조직 스킬을 온디맨드로 검색·설치 (`//skill-manager`)
 
 ---
 
@@ -729,7 +729,7 @@ Global Layer (~/.opal/)          한 번 설치 → 모든 프로젝트에서 �
 ┌─────────────────────────────────────────────────────────┐
 │  skills/        Pilot(오케스트레이터) + 단계 스킬        │
 │  agents/        서브에이전트 (전문 6 + 범용 5 + GC 2)    │
-│  community-skills/ 외부 조직 제공 스킬 (30개 / 6개 조직) │
+│  community-skills/ 사용자 fetch 시 채워짐 (skills.sh 카탈로그) │
 │  references/    레지스트리 + 모듈화된 하네스 (harness/)  │
 │  AGENT.md       AI 에이전트 코어                         │
 │  identity.md    에이전트 정체성                          │

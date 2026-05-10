@@ -36,7 +36,7 @@
         v1.0.2 2026-05-09 23:15  Register-OpalBin의 Join-Path 다중 인자(5.1 비호환) → [IO.Path]::Combine (139 추가작업)
         v1.0.3 2026-05-09 23:30  -OpalVersion 파라미터 신규 + Invoke-OpalWindowsInstall 끝에 ~/.opal/VERSION 기록 (env 잔존 결함 회피, install-mac.sh v1.8과 정합) (139 추가작업)
         v1.1.0 2026-05-10 00:30  Install-OpalCore + Register-Bootstrapper 본격 구현 — install-mac.sh install_opal()/install_opal_section/install_gemini_hardening PowerShell 이식.
-                                 자산 실 복사(opal/core/AGENT.md / skills+opal/skills / agents+opal/agents / opal/templates / opal/tools / opal/core/references / community-skills) +
+                                 자산 실 복사(opal/core/AGENT.md / skills+opal/skills / agents+opal/agents / opal/templates / opal/tools / opal/core/references) +
                                  Strip 변경이력(Remove-ChangelogSection/Recursive) +
                                  부트스트래퍼 마커(Claude/Cursor/Gemini OPAL+HARDENING) 자동 삽입 (139 추가작업, v0.3.0)
         v1.1.1 2026-05-10 00:35  Install-OpalCore의 $skillCount/$agentCount .Count 접근을 @() 캐스트로 변경 — Set-StrictMode 3.0 환경에서 single object .Count 차단 결함 fix (139 추가작업, v0.3.1)
@@ -81,6 +81,7 @@
         v1.5.4 2026-05-10 15:30  install 출력 노이즈 정리 — Playwright chromium 미설치 시에만 안내 ($env:LOCALAPPDATA\ms-playwright\chromium-* 검사).
                                  마무리 단계의 'Python 미설치라면 ...' 라인을 Find-Python 부재 시에만 노출.
                                  (140 추가작업, v0.3.16)
+        v1.6.0 2026-05-10 17:00  community-skills 번들 → fetch 방식 전환 — community-skills 복사 블록 제거 + cleanDirs에서 community-skills 제거 (사용자 데이터 보존, D-4) + 종료 안내 추가 (142)
 #>
 
 #Requires -Version 5.1
@@ -390,7 +391,8 @@ function Install-OpalCore {
     .SYNOPSIS
         ~/.opal/ 에 OPAL 핵심 자산을 본격 복사한다 (install-mac.sh install_opal() PowerShell 이식).
         보존: identity.md, AGENT.md(덮어쓰지만 후속 사용자 메모는 별도 위치), projects/, .venv/.
-        클린 후 재배포: skills/, agents/, references/, tools/, templates/, community-skills/(병합).
+        클린 후 재배포: skills/, agents/, references/, tools/, templates/.
+        보존: ~/.opal/community-skills/(사용자 데이터, 142 D-4)
     #>
     param(
         [Parameter(Mandatory)]
@@ -408,7 +410,8 @@ function Install-OpalCore {
 
     # ── 클린: framework 디렉토리만 (사용자 데이터 보존) ──
     Write-OpalInfo '기존 프레임워크 파일 정리 (사용자 데이터 보존)...'
-    $cleanDirs = @('skills', 'agents', 'references', 'community-skills', 'templates', 'tools')
+    # 사용자 데이터 보존: ~/.opal/community-skills/는 install이 절대 건드리지 않음 (TASK 142 D-4)
+    $cleanDirs = @('skills', 'agents', 'references', 'templates', 'tools')
     foreach ($d in $cleanDirs) {
         $p = Join-Path $OpalHome $d
         if (Test-Path $p) {
@@ -503,20 +506,7 @@ function Install-OpalCore {
         Write-OpalOk "references → $refDst"
     }
 
-    # ── 커뮤니티 스킬: community-skills/ → ~/.opal/community-skills/ (vendor 단위 덮어쓰기) ──
-    $csSrc = [IO.Path]::Combine($RepoRoot, 'community-skills')
-    $csDst = Join-Path $OpalHome 'community-skills'
-    if (Test-Path $csSrc) {
-        if (-not (Test-Path $csDst)) {
-            New-Item -ItemType Directory -Path $csDst -Force | Out-Null
-        }
-        Get-ChildItem -Path $csSrc -Directory -ErrorAction SilentlyContinue | ForEach-Object {
-            $vendorDst = Join-Path $csDst $_.Name
-            if (Test-Path $vendorDst) { Remove-Item -Recurse -Force $vendorDst }
-            Copy-Item -Recurse -Force -Path $_.FullName -Destination $csDst
-        }
-        Write-OpalOk "community-skills → $csDst"
-    }
+    # 커뮤니티 스킬은 번들로 배포하지 않음. 사용자가 //skill-manager로 검색·설치 (TASK 142)
 
     Write-OpalOk '핵심 자산 복사 완료.'
 }
@@ -1328,6 +1318,7 @@ function Invoke-OpalWindowsInstall {
     if (-not (Find-Python)) {
         Write-OpalInfo 'Python 미설치 — 일부 도구 제한. 수동 설치 후 재실행 권장: winget install Python.Python.3.14'
     }
+    Write-OpalInfo '커뮤니티 스킬은 //skill-manager로 검색·설치하세요 (예: //skill-manager pdf)'
     Write-Host ''
 }
 

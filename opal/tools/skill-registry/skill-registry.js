@@ -1,4 +1,20 @@
 #!/usr/bin/env node
+//
+// @module      skill-registry
+// @layer       tools
+// @domain      skill-management
+// @description OPAL 스킬 레지스트리 CLI — opal-skills-registry.json + community-skills-registry.json을 로드하여
+//              // 커맨드 매칭, 스킬 조회, 목록 표시, 유효성 검증을 제공한다.
+//              v2 스키마: community 스킬의 installed 동적 계산 + fetch 정보(source_repo/license/install_command) 노출.
+// @exports     CLI: match <input> | get <name> | list [--group=X] [--domain=X] | validate
+//
+// 변경이력:
+//   v1.0 2026-05-10 17:00 KST: 초기 작성 시점 명시 (헤더 신설 — 142). community 스킬 v2 스키마 지원 추가:
+//                              - getCommunitySkillPath / isCommunitySkill 헬퍼
+//                              - loadAllSkills()에서 community 항목에 _source: 'community' 마커 부착
+//                              - matchCommand 응답에 installed/source_repo/license/install_command 필드 추가 (미설치 시 path: null)
+//                              - validate가 v2 스키마 인식 (paths 부재 정상, source_repo null은 warning)
+//
 'use strict';
 
 const fs = require('fs');
@@ -13,17 +29,17 @@ function loadJsonFile(filePath) {
   return JSON.parse(raw);
 }
 
-function flattenGroups(registry) {
+function flattenGroups(registry, source) {
   if (!registry || !registry.groups) return [];
   const skills = [];
   for (const [group, items] of Object.entries(registry.groups)) {
     if (Array.isArray(items)) {
-      items.forEach(s => skills.push({ ...s, _group: group }));
+      items.forEach(s => skills.push({ ...s, _group: group, _source: source || 'main' }));
     } else if (typeof items === 'object') {
       // nested groups (community)
       for (const [subgroup, subItems] of Object.entries(items)) {
         if (Array.isArray(subItems)) {
-          subItems.forEach(s => skills.push({ ...s, _group: `${group}/${subgroup}` }));
+          subItems.forEach(s => skills.push({ ...s, _group: `${group}/${subgroup}`, _source: source || 'main' }));
         }
       }
     }
@@ -41,14 +57,24 @@ function getReferencesDir() {
   return deployed; // fallback
 }
 
+// community 스킬 설치 경로 동적 계산 (P-1: paths 폐기, name에서 계산)
+function getCommunitySkillPath(skillName) {
+  return path.join(os.homedir(), '.opal', 'community-skills', skillName, 'SKILL.md');
+}
+
+// community 스킬 여부 판단 (_source 마커 기반)
+function isCommunitySkill(skill) {
+  return skill._source === 'community';
+}
+
 function loadAllSkills() {
   const refDir = getReferencesDir();
   const main = loadJsonFile(path.join(refDir, 'opal-skills-registry.json'));
   const community = loadJsonFile(path.join(refDir, 'community-skills-registry.json'));
 
   const skills = [];
-  if (main) skills.push(...flattenGroups(main));
-  if (community) skills.push(...flattenGroups(community));
+  if (main) skills.push(...flattenGroups(main, 'main'));
+  if (community) skills.push(...flattenGroups(community, 'community'));
   return skills;
 }
 
@@ -121,6 +147,31 @@ function matchCommand(input) {
   }
 
   if (skill) {
+    // community 스킬: v2 스키마 — installed 동적 계산 + fetch 정보 노출 (D-3, P-5)
+    if (isCommunitySkill(skill)) {
+      const skillPath = getCommunitySkillPath(skill.name);
+      const installed = fs.existsSync(skillPath);
+      const sourceRepo = skill.source_repo || null;
+      const license = skill.license || 'Unknown';
+      const installCommand = sourceRepo ? `npx skills add ${sourceRepo}` : null;
+      return {
+        found: true,
+        name: skill.name,
+        group: skill._group,
+        alias: skill.alias,
+        description: skill.description,
+        path: installed ? skillPath : null,  // 미설치 시 null (D-3)
+        domain: skill.domain || null,
+        cleanInput,
+        // community 전용 필드 (P-5)
+        installed,
+        source_repo: sourceRepo,
+        license,
+        install_command: installCommand
+      };
+    }
+
+    // main(opal) 스킬: 기존 응답 형식 유지 (호환성 보장)
     return {
       found: true,
       name: skill.name,
@@ -146,7 +197,7 @@ function getCommand(name) {
     (s.alias && s.alias.toLowerCase() === lower)
   );
   if (skill) {
-    const { _group, ...rest } = skill;
+    const { _group, _source, ...rest } = skill;
     return { ...rest, group: _group };
   }
   return { error: `Skill not found: ${name}` };
@@ -199,13 +250,46 @@ function validate() {
     errors.push(`community-skills-registry.json parse error: ${e.message}`);
   }
 
+  // community registry 스키마 버전 확인
+  const isV2Community = communityRegistry && communityRegistry['$schema'] === 'opal-community-skills-registry-v2';
+  if (communityRegistry && !isV2Community) {
+    warnings.push('community-skills-registry.json: v1 스키마 — v2 마이그레이션 권장 (paths → source_repo/license)');
+  }
+
   const skills = loadAllSkills();
   const names = new Set();
   const aliases = new Set();
 
   for (const skill of skills) {
     if (!skill.name) errors.push('Skill missing "name" field');
-    if (!skill.paths || !Array.isArray(skill.paths)) errors.push(`${skill.name}: missing "paths" array`);
+
+    // community v2 스킬: paths 부재 정상 — source_repo/license 필드 검증
+    if (isCommunitySkill(skill)) {
+      if (isV2Community) {
+        // v2: paths 없어도 OK, source_repo null이면 warning
+        if (!skill.source_repo) {
+          warnings.push(`${skill.name}: source_repo 미정 — 수동 설치 안내 필요`);
+        }
+        if (!skill.license || skill.license === 'Unknown') {
+          warnings.push(`${skill.name}: license Unknown — 사용자 동의 prompt에 "라이선스 미확인" 표시`);
+        }
+        // 설치 여부 정보 (warning만, error 아님)
+        const skillPath = getCommunitySkillPath(skill.name);
+        if (!fs.existsSync(skillPath)) {
+          // 미설치 상태는 정상 (신규 사용자 기본 상태)
+        }
+      } else {
+        // v1: paths 필드 필수
+        if (!skill.paths || !Array.isArray(skill.paths)) {
+          errors.push(`${skill.name}: missing "paths" array (v1 스키마)`);
+        }
+      }
+    } else {
+      // main(opal) 스킬: paths 필드 필수
+      if (!skill.paths || !Array.isArray(skill.paths)) {
+        errors.push(`${skill.name}: missing "paths" array`);
+      }
+    }
 
     // name uniqueness
     if (names.has(skill.name)) errors.push(`Duplicate name: ${skill.name}`);
@@ -231,8 +315,8 @@ function validate() {
       }
     }
 
-    // path existence check
-    if (skill.paths) {
+    // main 스킬 path existence check (community v2는 동적 계산이므로 생략)
+    if (!isCommunitySkill(skill) && skill.paths) {
       let found = false;
       for (const p of skill.paths) {
         const resolved = p.replace(/^~/, os.homedir()).replace(/\{project\}/g, process.cwd());
@@ -247,6 +331,7 @@ function validate() {
     total: skills.length,
     groups: mainRegistry ? Object.keys(mainRegistry.groups) : [],
     communityGroups: communityRegistry ? Object.keys(communityRegistry.groups) : [],
+    communitySchema: communityRegistry ? communityRegistry['$schema'] : null,
     errors,
     warnings
   };

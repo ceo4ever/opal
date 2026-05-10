@@ -1,7 +1,7 @@
 # opal Memory Index
 
-> 최종 갱신: 2026-05-10 16:56 (141 완료)
-> last_task_number: 141
+> 최종 갱신: 2026-05-10 17:30 (143 채번 — 142와 병행)
+> last_task_number: 143
 
 ## 메모리 카테고리
 
@@ -31,6 +31,7 @@
 
 | 등록일자 | 작업 | 단계 | 경로 | 시작일시 | 완료일시 |
 |----------|------|------|------|---------|---------|
+| 2026-05-10 | community-skills 번들 → fetch 방식 전환 (skills.sh / npx skills) — community-skills/ 폴더 통째 git rm (553 파일) + registry v2(`source_repo`/`license`, paths 폐기) + skill-registry.js v2 인식 + match 응답 4 신설 필드(installed/source_repo/license/install_command) + opal-skill-manager v1.1 + install-mac.sh v2.0(community-skills 함수/clean 제거) + windows.ps1 v1.6.0(동일) + README/ARCHITECTURE/PROJECT 갱신. D-1~D-4 SSOT(자동 fetch/메타데이터 카탈로그/미설치 감지/기존 보존). source_repo 검증: anthropics 18+openai 1+vercel-labs 5=24 형식 명시 / getsentry+google-labs-code+trailofbits=7 null. 알려진 후속: //skill-manager 매칭 결함(별도 태스크) + Windows 회귀 검증(push 후) (142) | 완료 | tasks/142-260510-opp-community-skills-fetch-migration/ | 2026-05-10 17:02 | 2026-05-10 18:36 |
 | 2026-05-10 | README 오픈소스 공개 P0 정비 — MIT LICENSE 신규 + README 배지·라이선스 섹션·OPAL_VERSION generic·부트스트랩 7칼럼·agents 13개·community-skills 30/6조직·MCP 트러블슈팅 + 추가작업 R-9(3-way 모드 체계 설명: 주요특징+ToC+섹션본문) + R-10(Windows winget Python 자동 설치 한 줄). ARCHITECTURE.md M-9(GC 체커 2행 §에이전트 표 보강) 동기화. QA pass_with_minor (Warning C-1: 분류 레이블 — 합계 13 정합, P1 후속). 별도 태스크 142로 community-skills fetch 전환 분리 결정 (141) | 완료 | tasks/141-260510-opp-readme-mit-license-p0/ | 2026-05-10 14:38 | 2026-05-10 16:56 |
 | 2026-05-09 | semi-agentic 모드 도입 + 전체 pilot 기본 모드 변경 — 3-way 모드 체계(interactive/semi-agentic 기본/agentic) 신설. 신규 N-1(opal-harness-semi-agentic.md) + N-2(preferences 메모리) + 수정 19종(하네스 3 / 부트스트랩 4 / op-task / pilot 7 / state-tool 2 / .opal 2) + Step 9 보정 docs/CONVENTIONS.md L161 = 총 22 변경 + GC-C001/C002 헤더 보정 3종. D-DEC-1(oppd Phase 2 WBS) / D-DEC-2(opsdd Phase 3 DESIGN) / D-DEC-5(MODE_BOUNDARY_STAGES) / D-DEC-7(AGENTIC-LOG EXECUTE 진입 시점). install + 6단계 동작 검증 모두 PASS (140) | 완료 | tasks/140-260508-opp-default-semi-agentic-mode/ | 2026-05-08 23:51 | 2026-05-09 12:18 |
 | 2026-05-09 | 배포 채널 정비 + Get Started UX 통합 (P1) — `scripts/install.sh`/`install.ps1`/`install/{macos,windows}` one-liner + `opal/tools/opal-cli/` 5 서브커맨드 + `opal/tools/doctor/` 4섹션 + `opal/core/AGENT.md` Eager Step 6.5 cwd 분기 + `opal/skills/opal-start/` 신규 + `opal-onboarding` triggers 보강 + `opal-skills-registry.json` v3.4.0 + `.github/workflows/release.yml` (attest-build-provenance v2) + README §설치 4 Step 정제 + ARCHITECTURE.md §배포 채널 현행 전환. 캡틴 결정: D1=`opal-cli` 명칭(opalrb 충돌 회피), D2=`https://github.com/ceo4ever/opal`. v0.1 태그 push로 첫 release 발동 (139) | 완료 | tasks/139-260508-opp-distribute-and-getstarted/ | 2026-05-08 21:43 | 2026-05-09 09:07 |

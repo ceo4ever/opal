@@ -14,6 +14,7 @@
 #   v1.7 2026-05-09 17:30 KST: install_opal_venv pip 호출에 --no-cache-dir 추가 — "Cache entry deserialization failed" 경고 차단 (139 추가작업)
 #   v1.8 2026-05-09 21:00 KST: install_opal() 끝에 ~/.opal/VERSION 기록 추가 — opal-cli update의 로컬/리모트 버전 비교 기반 (139 추가작업)
 #   v1.9 2026-05-09 21:15 KST: 출력 quiet 모드 default — info/success 침묵, OPAL_VERBOSE=1 시 자세히. step() 신규로 단계 진행 표시. main() 비대화형 분기 정제 (139 추가작업)
+#   v2.0 2026-05-10 17:00 KST: community-skills 번들 → fetch 방식 전환 — install_opal_community_skills 함수 제거 + clean_dirs에서 community-skills 제거 (사용자 데이터 보존, D-4) + 종료 안내 추가 (142)
 #
 
 set -euo pipefail
@@ -728,7 +729,8 @@ install_opal() {
 
     # ── 프레임워크 디렉토리 클린 삭제 (사용자 데이터 보존) ──
     info "기존 프레임워크 파일 정리 (사용자 데이터 보존)..."
-    local clean_dirs=("skills" "agents" "references" "community-skills" "templates" "tools")
+    # 사용자 데이터 보존: ~/.opal/community-skills/는 install이 절대 건드리지 않음 (TASK 142 D-4)
+    local clean_dirs=("skills" "agents" "references" "templates" "tools")
     for dir in "${clean_dirs[@]}"; do
         if [[ -d "$opal_home/$dir" ]]; then
             rm -rf "$opal_home/$dir"
@@ -837,8 +839,7 @@ install_opal() {
     # ── 참조 레지스트리 ──
     install_opal_references
 
-    # ── 커뮤니티 스킬 ──
-    install_opal_community_skills
+    # 커뮤니티 스킬은 번들로 배포하지 않음. 사용자가 //skill-manager로 검색·설치 (TASK 142)
 
     # ── Claude Code hooks ──
     local hooks_src="$FRAMEWORK_ROOT/opal/core/hooks/claude-hooks.json"
@@ -900,28 +901,9 @@ install_opal() {
 
     # ── 레거시 정리 안내 ──
     # print_cleanup_notice
-}
 
-install_opal_community_skills() {
-    local cs_src="$FRAMEWORK_ROOT/community-skills"
-    local cs_dst="$USER_HOME/.opal/community-skills"
-
-    if [[ ! -d "$cs_src" ]]; then
-        warn "community-skills/ 디렉토리가 없습니다 (스킵)"
-        return
-    fi
-
-    mkdir -p "$cs_dst"
-
-    for vendor_dir in "$cs_src"/*/; do
-        if [[ -d "$vendor_dir" ]]; then
-            cp -Rf "$vendor_dir" "$cs_dst/"
-        fi
-    done
-
-    local cs_count
-    cs_count="$(find "$cs_src" -mindepth 2 -maxdepth 2 -type d | wc -l | tr -d ' ')"
-    success "커뮤니티 스킬 ${cs_count}개 → $cs_dst/"
+    echo ""
+    info "커뮤니티 스킬은 //skill-manager로 검색·설치하세요 (예: //skill-manager pdf)"
 }
 
 install_opal_venv() {
