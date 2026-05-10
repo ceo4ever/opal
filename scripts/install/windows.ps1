@@ -62,6 +62,11 @@
                                  5.x backstop 으로 venv 생성($py -m venv) / claude CLI / gemini CLI 호출에 try/finally + ErrorAction='Continue' 격리.
                                  claude CLI 가 idempotent 재등록 시 'MCP server X already exists' 를 stderr 로 출력해 install 중단되던 결함 fix
                                  (140 추가작업, v0.3.10)
+        v1.5.0 2026-05-10 12:30  Windows MCP 등록 형식 보강 — Convert-McpConfigForWindows 신규.
+                                 npx/npm/node command 를 'cmd /c <원래>' 로 래핑 (Node child_process.spawn 의 .cmd shim 미해석 +
+                                 CVE-2024-27980 spawn restriction 회피) + args 의 /tmp/... → $env:TEMP\... 치환.
+                                 Merge-McpConfig 에 -Force 추가, claude/gemini CLI 등록 전 'mcp remove' 로 기존 항목 제거 + 재등록 (mcps/*.json 변경 없이 install-time 변환).
+                                 Claude/Cursor/Gemini/Antigravity 4개 platform 의 4개 MCP 가 Windows 에서 ✘ failed 로 동작하지 않던 결함 fix (140 추가작업, v0.3.11)
 #>
 
 #Requires -Version 5.1
@@ -901,15 +906,65 @@ function Install-OpalVenv {
 
 # ─── Install-OpalMcp (install-mac.sh install_mcp 이식) ──────────────────────
 
+function Convert-McpConfigForWindows {
+    <#
+    .SYNOPSIS
+        MCP config 의 command/args 를 Windows 호환 형식으로 변환한다.
+    .DESCRIPTION
+        - command 가 npx/npm/node 이면 'cmd /c <원래cmd>' 로 래핑.
+          npm 은 Windows 에서 .cmd shim 만 제공하며, Node.js 의 child_process.spawn 은
+          확장자 없는 'npx' 호출을 ENOENT 로 처리한다 (CVE-2024-27980 spawn restriction 동반).
+          cmd.exe 를 거치면 PATHEXT 매칭으로 npx.cmd 가 정상 해석된다.
+        - args 안의 unix 절대경로 (/tmp/...) 는 Windows 임시 경로 ($env:TEMP\...) 로 치환.
+    .OUTPUTS
+        새 hashtable (원본 변경 안 함).
+    #>
+    param([Parameter(Mandatory)][hashtable]$Config)
+
+    $cmd = [string]$Config['command']
+    $rawArgs = if ($Config.ContainsKey('args')) { @($Config['args']) } else { @() }
+
+    # /tmp/... → $env:TEMP\... 변환
+    $newArgs = @()
+    foreach ($arg in $rawArgs) {
+        if ($arg -is [string] -and $arg -match '^/tmp/(.*)$') {
+            $sub = $Matches[1] -replace '/', '\'
+            $newArgs += (Join-Path $env:TEMP $sub)
+        } else {
+            $newArgs += $arg
+        }
+    }
+
+    if ($cmd -in @('npx', 'npm', 'node')) {
+        $result = @{
+            command = 'cmd'
+            args    = @('/c', $cmd) + $newArgs
+        }
+    } else {
+        $result = @{
+            command = $cmd
+            args    = $newArgs
+        }
+    }
+
+    if ($Config.ContainsKey('env')) {
+        $result['env'] = $Config['env']
+    }
+
+    return $result
+}
+
 function Merge-McpConfig {
     <#
     .SYNOPSIS
-        대상 JSON 파일의 mcpServers.<name> 항목에 config 를 병합 (이미 있으면 스킵).
+        대상 JSON 파일의 mcpServers.<name> 항목에 config 를 병합한다.
+        기본: 이미 있으면 스킵. -Force 시: 덮어쓰기 (Windows MCP 형식 갱신용).
     #>
     param(
         [Parameter(Mandatory)][string]$Target,
         [Parameter(Mandatory)][string]$Name,
-        [Parameter(Mandatory)][hashtable]$Config
+        [Parameter(Mandatory)][hashtable]$Config,
+        [switch]$Force
     )
     $targetDir = Split-Path -Parent $Target
     if (-not (Test-Path $targetDir)) {
@@ -942,8 +997,8 @@ function Merge-McpConfig {
         $data['mcpServers'].PSObject.Properties | ForEach-Object { $h[$_.Name] = $_.Value }
         $h
     }
-    if ($servers.ContainsKey($Name)) {
-        return $false  # 이미 등록됨
+    if ($servers.ContainsKey($Name) -and -not $Force) {
+        return $false  # 이미 등록됨, 스킵 (덮어쓰려면 -Force)
     }
     $servers[$Name] = $Config
     $data['mcpServers'] = $servers
@@ -994,17 +1049,21 @@ function Install-OpalMcp {
                 'claude' {
                     $claudeCli = Get-Command claude -ErrorAction SilentlyContinue
                     if ($claudeCli) {
-                        $args = @('mcp', 'add', '--scope', 'user', $name, '--', $config['command']) + @($config['args'])
-                        # native stderr 격리 — claude CLI 가 idempotent 재등록 시 "already exists" 를 stderr 로 출력하면
-                        # 5.x 에서 NativeCommandError(RemoteException) 로 변환되어 throw 되는 결함 회피.
+                        # native stderr 격리 (idempotent 재등록 시 'already exists' / 'not found' 등을
+                        # 5.x 에서 NativeCommandError 로 변환하여 throw 하는 결함 회피)
                         $prevErrPref = $ErrorActionPreference
                         $ErrorActionPreference = 'Continue'
                         try {
+                            # 기존 등록 제거 (없으면 silent fail) — Windows 호환 형식으로 갱신 보장
+                            & $claudeCli.Source mcp remove $name --scope user 2>&1 | Out-Null
+
+                            $cfgWin = Convert-McpConfigForWindows -Config $config
+                            $args = @('mcp', 'add', '--scope', 'user', $name, '--', $cfgWin.command) + @($cfgWin.args)
                             & $claudeCli.Source @args 2>&1 | Out-Null
+                            if ($LASTEXITCODE -eq 0) { $installed += 'claude' }
                         } finally {
                             $ErrorActionPreference = $prevErrPref
                         }
-                        if ($LASTEXITCODE -eq 0) { $installed += 'claude' }
                     } else {
                         Write-OpalWarn "claude CLI 없음 — ${name} 수동 등록 필요"
                     }
@@ -1012,33 +1071,38 @@ function Install-OpalMcp {
                 'gemini' {
                     $geminiCli = Get-Command gemini -ErrorAction SilentlyContinue
                     if ($geminiCli) {
-                        $args = @('mcp', 'add', '-s', 'user', $name, '--', $config['command']) + @($config['args'])
-                        # native stderr 격리 (claude 분기와 동일 사유)
                         $prevErrPref = $ErrorActionPreference
                         $ErrorActionPreference = 'Continue'
                         try {
+                            & $geminiCli.Source mcp remove -s user $name 2>&1 | Out-Null
+
+                            $cfgWin = Convert-McpConfigForWindows -Config $config
+                            $args = @('mcp', 'add', '-s', 'user', $name, '--', $cfgWin.command) + @($cfgWin.args)
                             & $geminiCli.Source @args 2>&1 | Out-Null
+                            if ($LASTEXITCODE -eq 0) { $installed += 'gemini' }
                         } finally {
                             $ErrorActionPreference = $prevErrPref
                         }
-                        if ($LASTEXITCODE -eq 0) { $installed += 'gemini' }
                     } else {
                         # 폴백 — settings.json
                         $target = Join-Path $userHome '.gemini\settings.json'
-                        if (Merge-McpConfig -Target $target -Name $name -Config $config) {
+                        $cfgWin = Convert-McpConfigForWindows -Config $config
+                        if (Merge-McpConfig -Target $target -Name $name -Config $cfgWin -Force) {
                             $installed += 'gemini'
                         }
                     }
                 }
                 'cursor' {
                     $target = Join-Path $userHome '.cursor\mcp.json'
-                    if (Merge-McpConfig -Target $target -Name $name -Config $config) {
+                    $cfgWin = Convert-McpConfigForWindows -Config $config
+                    if (Merge-McpConfig -Target $target -Name $name -Config $cfgWin -Force) {
                         $installed += 'cursor'
                     }
                 }
                 'antigravity' {
                     $target = Join-Path $userHome '.gemini\antigravity\mcp_config.json'
-                    if (Merge-McpConfig -Target $target -Name $name -Config $config) {
+                    $cfgWin = Convert-McpConfigForWindows -Config $config
+                    if (Merge-McpConfig -Target $target -Name $name -Config $cfgWin -Force) {
                         $installed += 'antigravity'
                     }
                 }

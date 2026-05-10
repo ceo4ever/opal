@@ -13,6 +13,8 @@
 #                              모든 grep|head 라인에 || true 추가 — 매치 0건 + pipefail 로 인한 abort 결함 fix.
 #                              _resolve_python3 신규 — python3 → python → py 폴백 + ^3\.X\.Y 검증으로
 #                              Windows 의 python3.exe Microsoft Store stub 으로 인한 doctor abort 결함 fix (140 추가작업, v0.3.9)
+#   v1.2 2026-05-10 12:30 KST: check_paths 의 bin/opal-cli 검출에 Windows .cmd 래퍼 인식 추가 —
+#                              Windows 에서 '미존재' 로 ⚠ 표기되던 표시 결함 fix (140 추가작업, v0.3.11)
 #
 
 # ─── 공통 상수 ──────────────────────────────────────────────
@@ -164,13 +166,15 @@ check_paths() {
         _fail "${HOME}/.opal/agents/ — 디렉토리 미존재 (필수)"
     fi
 
-    # ~/.opal/bin/opal-cli (권고 — Step 2 PATH 등록 후 생성됨)
+    # ~/.opal/bin/opal-cli (권고 — Step 2 PATH 등록 후 생성됨, Windows 는 .cmd 래퍼)
     if [[ -L "$OPAL_HOME/bin/opal-cli" ]]; then
         local link_target
         link_target=$(readlink "$OPAL_HOME/bin/opal-cli" 2>/dev/null || echo "?")
         _pass "${HOME}/.opal/bin/opal-cli  →  $link_target"
     elif [[ -f "$OPAL_HOME/bin/opal-cli" ]]; then
         _pass "${HOME}/.opal/bin/opal-cli (파일)"
+    elif [[ -f "$OPAL_HOME/bin/opal-cli.cmd" ]]; then
+        _pass "${HOME}/.opal/bin/opal-cli.cmd (Windows 래퍼)"
     else
         _warn "${HOME}/.opal/bin/opal-cli — 미존재 (install_opal_bin 재실행 권장)"
     fi
