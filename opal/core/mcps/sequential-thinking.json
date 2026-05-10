@@ -4,7 +4,7 @@
   "install_type": "config_merge",
   "config": {
     "command": "npx",
-    "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"]
+    "args": ["-y", "@modelcontextprotocol/server-sequential-thinking@^2025.12"]
   },
   "platforms": ["claude", "cursor", "gemini", "antigravity"]
 }

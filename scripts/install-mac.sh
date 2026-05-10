@@ -15,6 +15,7 @@
 #   v1.8 2026-05-09 21:00 KST: install_opal() 끝에 ~/.opal/VERSION 기록 추가 — opal-cli update의 로컬/리모트 버전 비교 기반 (139 추가작업)
 #   v1.9 2026-05-09 21:15 KST: 출력 quiet 모드 default — info/success 침묵, OPAL_VERBOSE=1 시 자세히. step() 신규로 단계 진행 표시. main() 비대화형 분기 정제 (139 추가작업)
 #   v2.0 2026-05-10 17:00 KST: community-skills 번들 → fetch 방식 전환 — install_opal_community_skills 함수 제거 + clean_dirs에서 community-skills 제거 (사용자 데이터 보존, D-4) + 종료 안내 추가 (142)
+#   v2.1 2026-05-10 21:00 KST: command 화이트리스트 + fork repo banner + OPAL_HOME 가드 + playwright cache 디렉토리 생성 (144)
 #
 
 set -euo pipefail
@@ -727,6 +728,16 @@ install_opal() {
 
     mkdir -p "$opal_home"
 
+    # OPAL_HOME 가드 — 비표준 경로 거부 (GC-010, R-8)
+    local opal_home_canon
+    opal_home_canon="$(cd "$opal_home" 2>/dev/null && pwd -P || echo "$opal_home")"
+    local default_opal_canon
+    default_opal_canon="$(cd "$USER_HOME/.opal" 2>/dev/null && pwd -P || echo "$USER_HOME/.opal")"
+    if [[ "$opal_home_canon" != "$default_opal_canon" ]] && [[ "${OPAL_HOME_OVERRIDE:-}" != "1" ]]; then
+        error "비표준 OPAL_HOME 거부: $opal_home (예상: $USER_HOME/.opal). 옵트인: OPAL_HOME_OVERRIDE=1 명시"
+        return 1
+    fi
+
     # ── 프레임워크 디렉토리 클린 삭제 (사용자 데이터 보존) ──
     info "기존 프레임워크 파일 정리 (사용자 데이터 보존)..."
     # 사용자 데이터 보존: ~/.opal/community-skills/는 install이 절대 건드리지 않음 (TASK 142 D-4)
@@ -1037,6 +1048,14 @@ install_mcp_cli() {
     shift 4
     local args=("$@")
 
+    # command 화이트리스트 검증 (GC-002, R-4)
+    local cmd_basename
+    cmd_basename="$(basename "$cmd")"
+    case "$cmd_basename" in
+        npx|npm|node|python3|python) ;;
+        *) error "MCP command '$cmd' 화이트리스트 미통과 — npx/npm/node/python3만 허용"; return 1 ;;
+    esac
+
     # 이미 등록되어 있으면 스킵
     if "$cli_bin" mcp get "$name" &>/dev/null; then
         return 0
@@ -1059,6 +1078,35 @@ install_mcp() {
         return
     fi
 
+    # fork repo banner — OPAL_REPO != ceo4ever/opal 시 경고 (GC-002, R-4)
+    local opal_repo="${OPAL_REPO:-ceo4ever/opal}"
+    if [[ "$opal_repo" != "ceo4ever/opal" ]]; then
+        echo ""
+        echo "════════════════════════════════════════════════════════"
+        echo "  [FORK INSTALL] OPAL_REPO=$opal_repo"
+        echo "  이 설치본은 OPAL 공식 저장소(ceo4ever/opal)가 아닙니다."
+        echo "  MCP 서버 등록 항목을 직접 검토하세요."
+        echo "════════════════════════════════════════════════════════"
+        echo ""
+        # 비대화형 모드: OPAL_ALLOW_FORK=1 옵트인 없으면 거부
+        if [[ "${OPAL_AUTO_INSTALL:-0}" == "1" ]] || [[ ! -t 0 ]]; then
+            if [[ "${OPAL_ALLOW_FORK:-}" != "1" ]]; then
+                error "fork repo 비대화형 설치 거부. 옵트인: OPAL_ALLOW_FORK=1 명시"
+                return 1
+            fi
+        else
+            read -r -p "계속하시겠습니까? [y/N] " fork_confirm
+            if [[ "$fork_confirm" != "y" && "$fork_confirm" != "Y" ]]; then
+                info "MCP 설치를 건너뜁니다."
+                return 0
+            fi
+        fi
+    fi
+
+    # playwright cache 디렉토리 사전 생성 (args의 ~/.opal/cache/playwright-mcp 경로 보장)
+    mkdir -p "$USER_HOME/.opal/cache/playwright-mcp"
+    chmod 700 "$USER_HOME/.opal/cache"
+
     local count=0
     for mcp_file in "$mcp_src"/*.json; do
         [[ -f "$mcp_file" ]] || continue
@@ -1076,10 +1124,22 @@ install_mcp() {
             continue
         fi
 
+        # command 화이트리스트 검증 (GC-002, R-4)
+        local cmd_basename
+        cmd_basename="$(basename "$command")"
+        case "$cmd_basename" in
+            npx|npm|node|python3|python) ;;
+            *)
+                warn "$name: command '$command' 화이트리스트 미통과 — 건너뜀"
+                continue
+                ;;
+        esac
+
         # args_json → args_array 변환
         local args_array=()
         while IFS= read -r arg; do
-            [[ -n "$arg" ]] && args_array+=("$arg")
+            # ~/... → ${HOME}/... expand (MCP 클라이언트 ~ 미전개 방어)
+            [[ -n "$arg" ]] && args_array+=("${arg/#\~/$USER_HOME}")
         done <<< "$args_json"
 
         local installed_platforms=()

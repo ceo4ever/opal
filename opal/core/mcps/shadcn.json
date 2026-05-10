@@ -4,7 +4,7 @@
   "install_type": "config_merge",
   "config": {
     "command": "npx",
-    "args": ["-y", "shadcn@latest", "mcp"]
+    "args": ["-y", "shadcn@^4.7", "mcp"]
   },
   "platforms": ["claude", "cursor", "gemini", "antigravity"]
 }

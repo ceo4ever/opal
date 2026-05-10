@@ -14,6 +14,11 @@
 //                              - loadAllSkills()에서 community 항목에 _source: 'community' 마커 부착
 //                              - matchCommand 응답에 installed/source_repo/license/install_command 필드 추가 (미설치 시 path: null)
 //                              - validate가 v2 스키마 인식 (paths 부재 정상, source_repo null은 warning)
+//   v1.1 2026-05-10 21:00 KST: ReDoS 휴리스틱 + 입력 길이 제한 256자 + path 정규화 (144):
+//                              - isUnsafeRegex() 함수 신설 (MAX_PATTERN_LENGTH=100 / MAX_DOTSTAR_COUNT>2 / nested quantifier)
+//                              - matchByTriggers() 입력 길이 제한 + ReDoS 사전 검사
+//                              - resolveFirstPath() path.resolve + homedir/cwd 하위 검증 (CWE-22)
+//                              - validate()에 ReDoS 분석 warning 추가 + v2.1 스키마 인식
 //
 'use strict';
 
@@ -78,6 +83,28 @@ function loadAllSkills() {
   return skills;
 }
 
+// === ReDoS 방어 (GC-004) ===
+
+const MAX_INPUT_LENGTH = 256;    // 입력 길이 제한
+const MAX_PATTERN_LENGTH = 100;  // 패턴 길이 임계값
+const MAX_DOTSTAR_COUNT = 2;     // .* / .+ 발생 횟수 임계값 — 3회 이상(> 2)만 reject
+
+function isUnsafeRegex(pattern) {
+  if (pattern.length > MAX_PATTERN_LENGTH) {
+    return { unsafe: true, reason: `pattern length ${pattern.length} > ${MAX_PATTERN_LENGTH}` };
+  }
+  // .* 또는 .+ 발생 횟수 — 3회 이상(> MAX_DOTSTAR_COUNT)만 reject
+  const dotStarCount = (pattern.match(/\.[*+]/g) || []).length;
+  if (dotStarCount > MAX_DOTSTAR_COUNT) {
+    return { unsafe: true, reason: `.* / .+ count ${dotStarCount} > ${MAX_DOTSTAR_COUNT} (catastrophic backtracking 위험)` };
+  }
+  // nested quantifier: (xxx+)+ / (xxx*)* / (xxx+)* 류
+  if (/\([^)]*[+*]\)[+*]/.test(pattern)) {
+    return { unsafe: true, reason: 'nested quantifier detected' };
+  }
+  return { unsafe: false };
+}
+
 // === Match Command ===
 
 function extractAlias(input) {
@@ -99,6 +126,10 @@ function matchByAlias(skills, alias) {
 }
 
 function matchByTriggers(skills, input) {
+  // 입력 길이 제한 — 256자 초과 시 매칭 skip (ReDoS 방어)
+  if (input.length > MAX_INPUT_LENGTH) {
+    return null;
+  }
   for (const skill of skills) {
     if (!skill.triggers) continue;
     for (const pattern of skill.triggers) {
@@ -109,6 +140,9 @@ function matchByTriggers(skills, input) {
           flags = 'i';
           pat = pat.slice(4);
         }
+        // ReDoS 휴리스틱 사전 검사 — 위험 패턴은 skip
+        const safety = isUnsafeRegex(pat);
+        if (safety.unsafe) continue;
         const regex = new RegExp(pat, flags);
         if (regex.test(input)) {
           return skill;
@@ -123,15 +157,28 @@ function matchByTriggers(skills, input) {
 
 function resolveFirstPath(paths) {
   if (!paths) return null;
+  const homeDir = os.homedir();
+  const cwd = process.cwd();
   for (const p of paths) {
-    const resolved = p
-      .replace(/^~/, os.homedir())
-      .replace(/\{project\}/g, process.cwd());
+    let resolved = p
+      .replace(/^~/, homeDir)
+      .replace(/\{project\}/g, cwd);
+    // path.resolve로 정규화 + homedir/cwd 하위 검증 (CWE-22 path traversal 방어)
+    resolved = path.resolve(resolved);
+    if (!resolved.startsWith(homeDir) && !resolved.startsWith(cwd)) {
+      // homedir 또는 cwd 하위가 아니면 skip
+      continue;
+    }
     if (fs.existsSync(resolved)) {
       return resolved;
     }
   }
-  return paths.length > 0 ? paths[paths.length - 1].replace(/^~/, os.homedir()) : null;
+  // 폴백: 마지막 path (정규화 적용)
+  if (paths.length === 0) return null;
+  const fallback = paths[paths.length - 1]
+    .replace(/^~/, homeDir)
+    .replace(/\{project\}/g, cwd);
+  return path.resolve(fallback);
 }
 
 function matchCommand(input) {
@@ -250,8 +297,10 @@ function validate() {
     errors.push(`community-skills-registry.json parse error: ${e.message}`);
   }
 
-  // community registry 스키마 버전 확인
-  const isV2Community = communityRegistry && communityRegistry['$schema'] === 'opal-community-skills-registry-v2';
+  // community registry 스키마 버전 확인 (v2 + v2.1 모두 인식)
+  const communitySchema = communityRegistry && communityRegistry['$schema'];
+  const isV2Community = communitySchema === 'opal-community-skills-registry-v2' ||
+                        communitySchema === 'opal-community-skills-registry-v2.1';
   if (communityRegistry && !isV2Community) {
     warnings.push('community-skills-registry.json: v1 스키마 — v2 마이그레이션 권장 (paths → source_repo/license)');
   }
@@ -301,7 +350,7 @@ function validate() {
       aliases.add(skill.alias);
     }
 
-    // regex compilation test
+    // regex compilation test + ReDoS 휴리스틱 분석
     if (skill.triggers) {
       for (const pattern of skill.triggers) {
         try {
@@ -309,6 +358,11 @@ function validate() {
           let flags = '';
           if (pat.startsWith('(?i)')) { flags = 'i'; pat = pat.slice(4); }
           new RegExp(pat, flags);
+          // ReDoS 안전성 분석
+          const safety = isUnsafeRegex(pat);
+          if (safety.unsafe) {
+            warnings.push(`${skill.name}: trigger ReDoS 위험 — ${safety.reason} (pattern: ${pattern})`);
+          }
         } catch (e) {
           errors.push(`${skill.name}: invalid regex "${pattern}": ${e.message}`);
         }

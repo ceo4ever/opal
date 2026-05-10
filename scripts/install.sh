@@ -35,6 +35,8 @@
 #                          + release 자산 URL(opal-{tag}.tar.gz) 사용으로 sha256 매칭 (139 추가작업)
 #   v1.2 2026-05-09 21:35: resolve_default_version에 /tags 폴백 추가 (release 자산 미생성 케이스 호환).
 #                          TARBALL_URL을 archive/refs/tags로 변경하여 release 자산 없어도 다운로드 가능 (139 추가작업)
+#   v1.3 2026-05-10 21:00: verify_checksum 강화 — release tag + sha256sums.txt 부재 시 prompt/거부 +
+#                          main 브랜치 UNVERIFIED banner (GC-001, R-2) (144)
 #
 
 # ─── [MUST] 부분 다운로드 실행 방지 ─────────────────────────────────────────
@@ -224,7 +226,26 @@ verify_checksum() {
             --tlsv1.2 \
             --output "${sha_file}" \
             "${SHA_URL}" 2>/dev/null; then
-        warn "sha256sums.txt 없음 (브랜치 설치 또는 릴리스 미배포) — 체크섬 검증 건너뜀"
+        # sha256sums.txt 없음 — release tag(v*) 인 경우 prompt/거부 적용
+        if [[ "${OPAL_VERSION}" == v* ]]; then
+            # release tag지만 sha256sums.txt 부재 — 무결성 검증 불가
+            if [[ "${OPAL_ALLOW_UNVERIFIED:-}" == "1" ]]; then
+                warn "[UNVERIFIED] sha256sums.txt 없음 — OPAL_ALLOW_UNVERIFIED=1로 무결성 검증 없이 진행"
+                return 0
+            fi
+            # 비대화형 모드 (stdin pipe 또는 OPAL_AUTO_INSTALL=1): 기본 거부
+            if [[ ! -t 0 ]] || [[ "${OPAL_AUTO_INSTALL:-}" == "1" ]]; then
+                error "sha256sums.txt 없음 — 비대화형 모드에서 무결성 검증 없는 설치를 거부합니다. 옵트인: OPAL_ALLOW_UNVERIFIED=1"
+            fi
+            # 대화형 모드: prompt (디폴트 N)
+            read -r -p "sha256sums.txt 없음 — 무결성 검증 없이 진행하시겠습니까? [y/N] " unverified_confirm
+            if [[ "$unverified_confirm" != "y" && "$unverified_confirm" != "Y" ]]; then
+                error "사용자가 취소했습니다. 옵트인: OPAL_ALLOW_UNVERIFIED=1"
+            fi
+            warn "[UNVERIFIED] 사용자 동의로 무결성 검증 없이 진행"
+        else
+            warn "sha256sums.txt 없음 (브랜치 설치 또는 릴리스 미배포) — 체크섬 검증 건너뜀"
+        fi
         return 0
     fi
 
@@ -330,6 +351,11 @@ main() {
 
     if [[ "${OPAL_DRY_RUN}" == "1" ]]; then
         warn "=== DRY-RUN 모드 — 실제 설치 없이 흐름만 검증합니다 ==="
+    fi
+
+    # main 브랜치 UNVERIFIED banner (release tag 외 모든 버전) (R-2, GC-001)
+    if [[ "${OPAL_VERSION}" != v* ]]; then
+        warn "[UNVERIFIED] '${OPAL_VERSION}' 브랜치 설치 — SHA-256 무결성 검증 없음. 공식 릴리스(v*)를 권장합니다."
     fi
 
     detect_platform

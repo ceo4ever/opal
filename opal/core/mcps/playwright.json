@@ -4,7 +4,7 @@
   "install_type": "config_merge",
   "config": {
     "command": "npx",
-    "args": ["@playwright/mcp@latest", "--output-dir", "/tmp/playwright-mcp"]
+    "args": ["@playwright/mcp@^0.0.75", "--output-dir", "~/.opal/cache/playwright-mcp"]
   },
   "platforms": ["claude", "cursor", "gemini", "antigravity"]
 }

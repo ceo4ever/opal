@@ -44,6 +44,7 @@ Set-StrictMode -Version 3.0
 #                            Restricted/RemoteSigned 환경에서 다운로드된 .ps1 실행 차단(PSSecurityException) 회피 (139 추가작업)
 #   v1.0.5 2026-05-10 15:30  Resolve-DefaultVersion 의 '최신 태그 자동 선택 ... (release 자산 없음 — archive tarball 사용)' 안내 라인 제거.
 #                            release 자산 부재는 정상 동작이며 사용자 노이즈 — '[OPAL] version :' 표시로 충분 (140 추가작업, v0.3.16)
+#   v1.0.6 2026-05-10 21:00  Verify-Checksum 강화 — release tag + sha256sums.txt 부재 시 prompt/거부 + main UNVERIFIED banner (GC-001, R-2) (144)
 $ErrorActionPreference = 'Stop'
 
 # ─── 환경 변수 오버라이드 ────────────────────────────────────────────────────
@@ -185,7 +186,26 @@ function Verify-Checksum {
         Invoke-RestMethod -Uri $ShaUrl -OutFile $shaFile -ErrorAction Stop
     }
     catch {
-        Write-Warning "[OPAL] sha256sums.txt 를 가져올 수 없습니다 (릴리스 전 버전일 수 있음). 체크섬 검증을 건너뜁니다."
+        # sha256sums.txt 없음 — release tag(v*) 인 경우 prompt/거부 적용
+        if ($script:OpalVersion -like 'v*') {
+            if ($env:OPAL_ALLOW_UNVERIFIED -eq '1') {
+                Write-Warning "[UNVERIFIED] sha256sums.txt 없음 — OPAL_ALLOW_UNVERIFIED=1로 무결성 검증 없이 진행"
+                return
+            }
+            # 비대화형 검출: OPAL_AUTO_INSTALL=1 또는 UserInteractive 미지원 환경
+            $isNonInteractive = ($env:OPAL_AUTO_INSTALL -eq '1') -or (-not [Environment]::UserInteractive)
+            if ($isNonInteractive) {
+                throw "[OPAL] sha256sums.txt 없음 — 비대화형 모드에서 무결성 검증 없는 설치를 거부합니다. 옵트인: `$env:OPAL_ALLOW_UNVERIFIED='1'"
+            }
+            # 대화형: prompt (디폴트 N)
+            $confirm = Read-Host "sha256sums.txt 없음 — 무결성 검증 없이 진행하시겠습니까? [y/N]"
+            if ($confirm -notmatch '^[yY]$') {
+                throw "[OPAL] 사용자가 취소했습니다. 옵트인: `$env:OPAL_ALLOW_UNVERIFIED='1'"
+            }
+            Write-Warning "[UNVERIFIED] 사용자 동의로 무결성 검증 없이 진행"
+        } else {
+            Write-Warning "[OPAL] sha256sums.txt 를 가져올 수 없습니다 (릴리스 전 버전일 수 있음). 체크섬 검증을 건너뜁니다."
+        }
         return
     }
 
@@ -285,6 +305,11 @@ function Invoke-OpalInstall {
     Write-Host "[OPAL] repo    : $OpalRepo" -ForegroundColor DarkGray
     Write-Host "[OPAL] version : $OpalVersion" -ForegroundColor DarkGray
     Write-Host ''
+
+    # main 브랜치 UNVERIFIED banner (release tag 외 모든 버전) (R-2, GC-001)
+    if ($OpalVersion -notlike 'v*') {
+        Write-Warning "[UNVERIFIED] '$OpalVersion' 브랜치 설치 — SHA-256 무결성 검증 없음. 공식 릴리스(v*)를 권장합니다."
+    }
 
     Test-Deps
 

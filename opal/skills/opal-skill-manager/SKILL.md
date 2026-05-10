@@ -130,13 +130,24 @@ OPAL 에이전트는 `~/.opal/references/community-skills-registry.json`을 통�
 
 1. 사용자에게 동의 prompt 표시:
    ```
-   이 스킬은 외부 스킬입니다 ({source_repo} / 라이선스: {license}).
+   이 스킬은 외부 스킬입니다.
+   - 출처: {source_repo}
+   - 라이선스: {license}{license == "Unknown" ? "  ⚠️ 라이선스 미확인 (Unknown License) — proceed at your own risk" : ""}
+   - commit SHA: {commit_sha || "미고정 (HEAD 가변)"}
+
    다운로드해서 설치할까요? (Y/n)
    ```
+   - `license == "Unknown"` 시 **두 번째 확인** 추가:
+     ```
+     라이선스가 확인되지 않은 스킬입니다. 정말로 설치하시겠습니까?
+     This skill has an unverified license. Are you sure you want to install? (y/N)
+     ```
+     디폴트는 `N` (입력 없이 Enter 시 거부)
+   - §1 스킬 검색 결과에서도 Unknown 라이선스 항목에는 "⚠️ 라이선스 미확인" 경고를 표시한다.
 2. 수락(`Y`):
    - `npx skills add {source_repo}` 호출
    - 설치 완료 후 `~/.opal/community-skills/{owner}/{skill}/SKILL.md`를 Read하여 즉시 절차 실행
-3. 거부(`n`):
+3. 거부(`n` 또는 두 번째 확인에서 `N`):
    - "수동 설치는 `//skill-manager`로 — `npx skills find {keyword}`로 검색 후 설치하세요" 안내 후 종료
 4. `source_repo`가 `null` (registry에 미등재):
    - "이 스킬은 vercel-labs/skills 카탈로그에 미등재. 수동 설치는 `//skill-manager`로" 안내
@@ -146,3 +157,4 @@ OPAL 에이전트는 `~/.opal/references/community-skills-registry.json`을 통�
 | 버전 | 일시 | 변경내용 |
 |------|------|---------|
 | v1.1 | 2026-05-10 17:00 KST | "기본 번들 31개" 표현 제거 + fetch 흐름 SSOT 강조 + `// 커맨드` 미설치 매칭 시 자동 fetch 흐름 추가 (142) |
+| v1.2 | 2026-05-10 21:00 KST | Unknown 라이선스 두 번째 확인 + commit_sha 노출 + 빨간 경고 메시지 추가 (144) |

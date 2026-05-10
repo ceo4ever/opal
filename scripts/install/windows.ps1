@@ -82,6 +82,7 @@
                                  마무리 단계의 'Python 미설치라면 ...' 라인을 Find-Python 부재 시에만 노출.
                                  (140 추가작업, v0.3.16)
         v1.6.0 2026-05-10 17:00  community-skills 번들 → fetch 방식 전환 — community-skills 복사 블록 제거 + cleanDirs에서 community-skills 제거 (사용자 데이터 보존, D-4) + 종료 안내 추가 (142)
+        v1.7.0 2026-05-10 21:00  command 화이트리스트 + fork repo banner + OPAL_HOME 가드 (144)
 #>
 
 #Requires -Version 5.1
@@ -400,6 +401,13 @@ function Install-OpalCore {
     )
 
     Write-OpalInfo '~/.opal/ 디렉토리 준비 중...'
+
+    # OPAL_HOME 가드 — 비표준 경로 거부 (GC-010, R-8)
+    $defaultOpalHome = [IO.Path]::GetFullPath((Join-Path $env:USERPROFILE '.opal'))
+    $currentOpalHome = [IO.Path]::GetFullPath($OpalHome)
+    if ($currentOpalHome -ne $defaultOpalHome -and $env:OPAL_HOME_OVERRIDE -ne '1') {
+        throw "[OPAL] 비표준 OPAL_HOME 거부: $OpalHome (예상: $defaultOpalHome). 옵트인: `$env:OPAL_HOME_OVERRIDE='1' 명시"
+    }
 
     if (-not (Test-Path $OpalHome)) {
         New-Item -ItemType Directory -Path $OpalHome -Force | Out-Null
@@ -1049,6 +1057,30 @@ function Install-OpalMcp {
         return
     }
 
+    # fork repo banner (GC-002, R-4)
+    $opalRepo = if ($env:OPAL_REPO) { $env:OPAL_REPO } else { 'ceo4ever/opal' }
+    if ($opalRepo -ne 'ceo4ever/opal') {
+        Write-Host ''
+        Write-Host '════════════════════════════════════════════════════════'
+        Write-Host "  [FORK INSTALL] OPAL_REPO=$opalRepo"
+        Write-Host '  이 설치본은 OPAL 공식 저장소(ceo4ever/opal)가 아닙니다.'
+        Write-Host '  MCP 서버 등록 항목을 직접 검토하세요.'
+        Write-Host '════════════════════════════════════════════════════════'
+        Write-Host ''
+        # 비대화형: OPAL_ALLOW_FORK=1 옵트인 없으면 거부
+        if ($env:OPAL_AUTO_INSTALL -eq '1' -or -not [Environment]::UserInteractive) {
+            if ($env:OPAL_ALLOW_FORK -ne '1') {
+                throw '[OPAL] fork repo 비대화형 설치 거부. 옵트인: $env:OPAL_ALLOW_FORK=''1'' 명시'
+            }
+        } else {
+            $forkConfirm = Read-Host '계속하시겠습니까? [y/N]'
+            if ($forkConfirm -notmatch '^[yY]$') {
+                Write-OpalInfo 'MCP 설치를 건너뜁니다.'
+                return
+            }
+        }
+    }
+
     $userHome = $env:USERPROFILE
     $count = 0
     Get-ChildItem -Path $mcpDir -Filter '*.json' -File | ForEach-Object {
@@ -1066,6 +1098,17 @@ function Install-OpalMcp {
 
         if ($installType -ne 'config_merge') {
             Write-OpalInfo "  ${name}: ${installType} 타입 — 수동 설치 필요"
+            return
+        }
+
+        # command 화이트리스트 검증 (GC-002, R-4)
+        $allowedCmds = @('npx', 'npm', 'node', 'python3', 'python')
+        $rawCommand = $config['command']
+        $cmdBase = [IO.Path]::GetFileNameWithoutExtension($rawCommand)
+        # .cmd 확장자 제거 (npx.cmd → npx)
+        if ($cmdBase -match '\.cmd$') { $cmdBase = $cmdBase -replace '\.cmd$', '' }
+        if ($allowedCmds -notcontains $cmdBase) {
+            Write-OpalWarn "${name}: command '$rawCommand' 화이트리스트 미통과 — 건너뜀"
             return
         }
 

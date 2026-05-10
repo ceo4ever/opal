@@ -4,7 +4,7 @@
   "install_type": "config_merge",
   "config": {
     "command": "npx",
-    "args": ["-y", "@upstash/context7-mcp@latest"]
+    "args": ["-y", "@upstash/context7-mcp@^2.2"]
   },
   "platforms": ["claude", "cursor", "gemini", "antigravity"]
 }

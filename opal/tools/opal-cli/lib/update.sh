@@ -19,6 +19,7 @@
 #   v1.0.1 2026-05-09 18:00 KST: install-mac.sh 호출 시 OPAL_AUTO_INSTALL=1 명시 — tty 환경에서 비대화형 분기 강제 발동, ~/.opal/tools/ 갱신 결함 fix (139 추가작업)
 #   v1.0.2 2026-05-09 21:05 KST: 로컬/리모트 버전 비교 + --force 옵션 — ~/.opal/VERSION 읽어 같은 release tag(v*)면 "이미 최신" 안내 후 종료. main/SHA/미기록은 항상 진행 (139 추가작업)
 #   v1.0.3 2026-05-09 22:00 KST: /releases/latest 실패 시 /tags?per_page=1 폴백 + tarball URL을 archive/refs/tags로 변경 (install.sh v1.2와 정합, release 자산 미생성 케이스 호환) (139 추가작업)
+#   v1.0.4 2026-05-10 21:00 KST: verify_checksum 강화 — release tag + sha256sums.txt 부재 시 prompt/거부 + main UNVERIFIED banner (GC-001, R-2) (144)
 #
 
 # ─── update 서브커맨드 ────────────────────────────────────────
@@ -160,8 +161,13 @@ cmd_update() {
     fi
     success "다운로드 완료"
 
+    # main 브랜치 UNVERIFIED banner (release tag 외 모든 버전) (R-2, GC-001)
+    if [[ "$version" != v* ]]; then
+        warn "[UNVERIFIED] '${version}' 브랜치 업데이트 — SHA-256 무결성 검증 없음. 공식 릴리스(v*)를 권장합니다."
+    fi
+
     # 체크섬 검증 (release tarball인 경우)
-    if [[ "$version" != "main" ]]; then
+    if [[ "$version" == v* ]]; then
         local sha_url="https://github.com/${opal_repo}/releases/download/${version}/sha256sums.txt"
         local sha_file="$tmp_dir/sha256sums.txt"
         if curl -fsSL --proto '=https' --tlsv1.2 -o "$sha_file" "$sha_url" 2>/dev/null; then
@@ -178,7 +184,20 @@ cmd_update() {
             fi
             success "체크섬 검증 완료"
         else
-            warn "sha256sums.txt 다운로드 실패 — 체크섬 검증 생략"
+            # release tag지만 sha256sums.txt 부재 — 무결성 검증 불가 (R-2)
+            if [[ "${OPAL_ALLOW_UNVERIFIED:-}" == "1" ]]; then
+                warn "[UNVERIFIED] sha256sums.txt 없음 — OPAL_ALLOW_UNVERIFIED=1로 무결성 검증 없이 진행"
+            elif [[ ! -t 0 ]] || [[ "${OPAL_AUTO_INSTALL:-}" == "1" ]]; then
+                error "sha256sums.txt 없음 — 비대화형 모드에서 무결성 검증 없는 업데이트를 거부합니다. 옵트인: OPAL_ALLOW_UNVERIFIED=1"
+                return 1
+            else
+                read -r -p "sha256sums.txt 없음 — 무결성 검증 없이 진행하시겠습니까? [y/N] " unverified_confirm
+                if [[ "$unverified_confirm" != "y" && "$unverified_confirm" != "Y" ]]; then
+                    error "사용자가 취소했습니다. 옵트인: OPAL_ALLOW_UNVERIFIED=1"
+                    return 1
+                fi
+                warn "[UNVERIFIED] 사용자 동의로 무결성 검증 없이 진행"
+            fi
         fi
     fi
 

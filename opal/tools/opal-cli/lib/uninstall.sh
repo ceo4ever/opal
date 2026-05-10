@@ -18,7 +18,8 @@
 #   PATH: # === OPAL PATH ===  ~ # === OPAL PATH END ===
 #
 # 변경이력:
-#   v1.0 2026-05-08 11:00 초기 구현 — ~/.opal 제거 + 부트스트래퍼 마커 블록 회수 (139)
+#   v1.0   2026-05-08 11:00 초기 구현 — ~/.opal 제거 + 부트스트래퍼 마커 블록 회수 (139)
+#   v1.0.1 2026-05-10 21:00 비표준 OPAL_HOME 거부 가드 추가 — OPAL_HOME_OVERRIDE=1 옵트인 (144)
 #
 
 # ─── uninstall 서브커맨드 ─────────────────────────────────────
@@ -45,6 +46,16 @@ cmd_uninstall() {
     done
 
     local opal_home="${OPAL_HOME:-$HOME/.opal}"
+
+    # OPAL_HOME 가드 — 비표준 경로 거부 (GC-010, R-8)
+    local opal_home_canon
+    opal_home_canon="$(cd "$opal_home" 2>/dev/null && pwd -P || echo "$opal_home")"
+    local default_canon
+    default_canon="$(cd "$HOME/.opal" 2>/dev/null && pwd -P || echo "$HOME/.opal")"
+    if [[ "$opal_home_canon" != "$default_canon" ]] && [[ "${OPAL_HOME_OVERRIDE:-}" != "1" ]]; then
+        error "비표준 OPAL_HOME 거부: $opal_home (예상: $HOME/.opal). 옵트인: OPAL_HOME_OVERRIDE=1 명시"
+        return 1
+    fi
 
     echo ""
     warn "OPAL을 완전히 제거합니다."

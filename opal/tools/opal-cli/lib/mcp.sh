@@ -14,7 +14,8 @@
 #   MCP 서버를 등록한다. scripts/install-mac.sh:966-1056 install_mcp() 로직 래핑.
 #
 # 변경이력:
-#   v1.0 2026-05-08 11:00 초기 구현 — install_mcp 로직 래핑 + list/add/install-all (139)
+#   v1.0   2026-05-08 11:00 초기 구현 — install_mcp 로직 래핑 + list/add/install-all (139)
+#   v1.0.1 2026-05-10 21:00 command 화이트리스트 검증 추가 — npx/npm/node/python3만 허용 (144)
 #
 
 # ─── mcp 서브커맨드 ───────────────────────────────────────────
@@ -141,6 +142,14 @@ _mcp_add() {
         info "MCP 서버 설정 방법: https://modelcontextprotocol.io/quickstart"
         return 1
     fi
+
+    # command 화이트리스트 검증 (GC-002, R-4) — npx/npm/node/python3만 허용
+    local cmd_basename
+    cmd_basename="$(basename "$command")"
+    case "$cmd_basename" in
+        npx|npm|node|python3|python) ;;
+        *) error "MCP command '$command' 화이트리스트 미통과 — npx/npm/node/python3만 허용"; return 1 ;;
+    esac
 
     # args_json → args_array
     local args_array=()
