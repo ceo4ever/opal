@@ -1,6 +1,6 @@
 # STATE: 139-260508-opp-distribute-and-getstarted
 
-> 최종 갱신: 2026-05-10 09:23
+> 최종 갱신: 2026-05-10 09:50
 
 ## 현재 상태
 - 모드: interactive
@@ -64,6 +64,8 @@
 | 40 | 2026-05-10 09:17 | current_status changed: additional_work → additional_work_done | v0.3.4: Python venv + MCP 4종 등록 + 플랫폼 sub-agent 어댑터 (Claude/Cursor/Gemini) + Python/Node 선택 검출 |
 | 41 | 2026-05-10 09:21 | current_status changed: additional_work_done → additional_work | v0.3.5: Install-OpalCore의 nested array 평탄화 결함 — Join-Path 명시 결합으로 fix |
 | 42 | 2026-05-10 09:23 | current_status changed: additional_work → additional_work_done | v0.3.5: Install-OpalCore nested array 평탄화 fix (Join-Path 명시 결합) |
+| 43 | 2026-05-10 09:46 | current_status changed: additional_work_done → additional_work | v0.3.6: Set-Content UTF-8 BOM 회피 — Claude/Cursor/Gemini 어댑터 frontmatter 파싱 호환 |
+| 44 | 2026-05-10 09:50 | current_status changed: additional_work → additional_work_done | v0.3.6: BOM 없는 UTF-8 출력 (Set-ContentNoBom/Add-ContentNoBom) — Claude 어댑터 frontmatter 파싱 호환 |
 
 ## 블로커
 없음

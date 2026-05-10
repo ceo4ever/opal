@@ -47,6 +47,9 @@
                                  Test-WindowsDeps Python/Node optional 검출 + 미설치 안내 (139 추가작업, v0.3.4)
         v1.3.1 2026-05-10 09:25  Install-OpalCore: skills/agents 결합을 Join-Path 명시로 — PowerShell nested @() 평탄화 결함 fix
                                  (스킬·에이전트 0개 + 어댑터 0개 결함 회복) (139 추가작업, v0.3.5)
+        v1.3.2 2026-05-10 09:50  Set-ContentNoBom / Add-ContentNoBom 헬퍼 신규 + 모든 .md/.json 출력에 적용 —
+                                 PowerShell 5.1 의 Set-Content -Encoding UTF8 가 BOM 을 추가해 Claude Code 의 frontmatter 파서가 '---' 매칭 실패하던 결함 fix
+                                 (.claude/agents 어댑터가 Claude 에서 보이지 않던 문제 회복) (139 추가작업, v0.3.6)
 #>
 
 #Requires -Version 5.1
@@ -80,6 +83,35 @@ function Write-OpalOk    { param([string]$Msg) Write-Host "[OPAL] $Msg" -Foregro
 function Write-OpalWarn  { param([string]$Msg) Write-Host "[OPAL][WARN] $Msg" -ForegroundColor Yellow }
 function Write-OpalError { param([string]$Msg) Write-Host "[OPAL][ERROR] $Msg" -ForegroundColor Red   }
 
+# BOM 없는 UTF-8 로 파일 작성 — PowerShell 5.1 의 Set-Content -Encoding UTF8 가 BOM 을 추가하는 결함 회피.
+# Claude Code / Cursor 등의 frontmatter 파서가 첫 줄 BOM 으로 '---' 매칭 실패하는 문제 우회.
+$Script:Utf8NoBom = New-Object System.Text.UTF8Encoding $false
+function Set-ContentNoBom {
+    param(
+        [Parameter(Mandatory)][string]$Path,
+        [Parameter(Mandatory)]$Value
+    )
+    if ($Value -is [array]) {
+        $text = $Value -join "`r`n"
+    } else {
+        $text = "$Value"
+    }
+    [System.IO.File]::WriteAllText($Path, $text, $Script:Utf8NoBom)
+}
+
+function Add-ContentNoBom {
+    param(
+        [Parameter(Mandatory)][string]$Path,
+        [Parameter(Mandatory)]$Value
+    )
+    if ($Value -is [array]) {
+        $text = $Value -join "`r`n"
+    } else {
+        $text = "$Value"
+    }
+    [System.IO.File]::AppendAllText($Path, $text, $Script:Utf8NoBom)
+}
+
 # ─── Strip 변경이력 (install-mac.sh strip_deploy_md / strip_deploy_md_recursive 이식) ───
 
 function Remove-ChangelogSection {
@@ -98,7 +130,7 @@ function Remove-ChangelogSection {
         if ($line -eq '## 변경이력') { break }
         $kept += $line
     }
-    Set-Content -Path $Path -Value $kept -Encoding UTF8
+    Set-ContentNoBom -Path $Path -Value $kept
 }
 
 function Remove-ChangelogRecursive {
@@ -173,7 +205,7 @@ function Install-OpalSection {
     $block = "$OpalStart`r`n$content`r`n$OpalEnd"
 
     if (-not (Test-Path $Target)) {
-        Set-Content -Path $Target -Value "$block`r`n" -Encoding UTF8 -NoNewline
+        Set-ContentNoBom -Path $Target -Value "$block`r`n"
         Write-OpalOk "$Label OPAL 설치 (새 파일): $Target"
         return
     }
@@ -183,18 +215,18 @@ function Install-OpalSection {
         $pattern = '(?ms)' + [regex]::Escape($OpalStart) + '.*?' + [regex]::Escape($OpalEnd)
         $regex = [System.Text.RegularExpressions.Regex]::new($pattern)
         $newContent = $regex.Replace($existing, $block)
-        Set-Content -Path $Target -Value $newContent -Encoding UTF8 -NoNewline
+        Set-ContentNoBom -Path $Target -Value $newContent
         Write-OpalOk "$Label OPAL 업데이트 (마커 교체): $Target"
     }
     elseif ($existing -match [regex]::Escape($R2Start)) {
         $pattern = '(?ms)' + [regex]::Escape($R2Start) + '.*?' + [regex]::Escape($R2End)
         $regex = [System.Text.RegularExpressions.Regex]::new($pattern)
         $newContent = $regex.Replace($existing, $block)
-        Set-Content -Path $Target -Value $newContent -Encoding UTF8 -NoNewline
+        Set-ContentNoBom -Path $Target -Value $newContent
         Write-OpalOk "$Label R2→OPAL 전환 (마커 교체): $Target"
     }
     else {
-        Add-Content -Path $Target -Value "`r`n$block`r`n" -Encoding UTF8
+        Add-ContentNoBom -Path $Target -Value "`r`n$block`r`n"
         Write-OpalOk "$Label OPAL 추가 (기존 보존): $Target"
     }
 }
@@ -220,7 +252,7 @@ function Install-GeminiHardening {
     $block = "$HardeningStart`r`n$content`r`n$HardeningEnd"
 
     if (-not (Test-Path $Target)) {
-        Set-Content -Path $Target -Value "$block`r`n" -Encoding UTF8 -NoNewline
+        Set-ContentNoBom -Path $Target -Value "$block`r`n"
         Write-OpalOk "Gemini HARDENING 설치 (새 파일): $Target"
         return
     }
@@ -229,11 +261,11 @@ function Install-GeminiHardening {
         $pattern = '(?ms)' + [regex]::Escape($HardeningStart) + '.*?' + [regex]::Escape($HardeningEnd)
         $regex = [System.Text.RegularExpressions.Regex]::new($pattern)
         $newContent = $regex.Replace($existing, $block)
-        Set-Content -Path $Target -Value $newContent -Encoding UTF8 -NoNewline
+        Set-ContentNoBom -Path $Target -Value $newContent
         Write-OpalOk "Gemini HARDENING 업데이트 (마커 교체): $Target"
     }
     else {
-        Add-Content -Path $Target -Value "`r`n$block`r`n" -Encoding UTF8
+        Add-ContentNoBom -Path $Target -Value "`r`n$block`r`n"
         Write-OpalOk "Gemini HARDENING 추가 (기존 보존): $Target"
     }
 }
@@ -790,7 +822,7 @@ function Merge-McpConfig {
     $servers[$Name] = $Config
     $data['mcpServers'] = $servers
 
-    ($data | ConvertTo-Json -Depth 10) | Set-Content -Path $Target -Encoding UTF8
+    Set-ContentNoBom -Path $Target -Value ($data | ConvertTo-Json -Depth 10)
     return $true
 }
 
@@ -1014,7 +1046,7 @@ function Install-PlatformAgents {
             $header = "<!-- AUTO-GENERATED by install-windows.ps1 from ~/.opal/agents/$($fm.Name)/AGENT.md. DO NOT EDIT. -->`r`n<!-- SSOT: opal/agents/$($fm.Name)/AGENT.md -->`r`n`r`n"
 
             $output = "---`r`n" + ($fmLines -join "`r`n") + "`r`n---`r`n`r`n" + $header + $fm.Body
-            Set-Content -Path $dstFile -Value $output -Encoding UTF8 -NoNewline
+            Set-ContentNoBom -Path $dstFile -Value $output
             $count++
         }
         Write-OpalOk "${pname} 어댑터 ${count}개 → $($cfg.Dst)"
