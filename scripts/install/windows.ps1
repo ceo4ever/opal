@@ -67,6 +67,11 @@
                                  CVE-2024-27980 spawn restriction 회피) + args 의 /tmp/... → $env:TEMP\... 치환.
                                  Merge-McpConfig 에 -Force 추가, claude/gemini CLI 등록 전 'mcp remove' 로 기존 항목 제거 + 재등록 (mcps/*.json 변경 없이 install-time 변환).
                                  Claude/Cursor/Gemini/Antigravity 4개 platform 의 4개 MCP 가 Windows 에서 ✘ failed 로 동작하지 않던 결함 fix (140 추가작업, v0.3.11)
+        v1.5.1 2026-05-10 13:15  Convert-McpConfigForWindows 의 wrapping 전략 변경 — 'cmd /c npx ...' → 'npx.cmd ...' 직접 호출.
+                                 cmd /c 래핑은 PowerShell 직접 실행에선 정상이지만 Claude Code MCP host 가 stdio pipe 로 spawn 시
+                                 자식 npx 의 stdio passthrough 가 깨져 4개 MCP 모두 ✘ failed 로 남던 결함 fix.
+                                 Anthropic 권고와 정합 (Windows 는 npx.cmd / npm.cmd 직접 호출). v0.3.11 의 mcp remove + 재등록 로직이
+                                 기존 cmd 래핑 항목을 자동 갱신함 (140 추가작업, v0.3.12)
 #>
 
 #Requires -Version 5.1
@@ -911,10 +916,12 @@ function Convert-McpConfigForWindows {
     .SYNOPSIS
         MCP config 의 command/args 를 Windows 호환 형식으로 변환한다.
     .DESCRIPTION
-        - command 가 npx/npm/node 이면 'cmd /c <원래cmd>' 로 래핑.
-          npm 은 Windows 에서 .cmd shim 만 제공하며, Node.js 의 child_process.spawn 은
-          확장자 없는 'npx' 호출을 ENOENT 로 처리한다 (CVE-2024-27980 spawn restriction 동반).
-          cmd.exe 를 거치면 PATHEXT 매칭으로 npx.cmd 가 정상 해석된다.
+        - command 가 npx / npm 이면 .cmd 확장자를 명시한 직접 호출 (npx.cmd / npm.cmd) 로 변경.
+          npm 은 Windows 에서 .cmd shim 만 제공하므로 확장자 없는 'npx' 는 child_process.spawn 에서 ENOENT.
+          'cmd /c npx ...' 래핑은 PowerShell 에서는 정상 동작하지만 Claude Code 등 MCP host 의
+          stdio pipe passthrough 와 함께 사용 시 자식 프로세스 stdio 가 끊기는 케이스가 있어
+          npx.cmd 직접 호출이 권고된다.
+        - node 는 .exe 이므로 그대로 둔다.
         - args 안의 unix 절대경로 (/tmp/...) 는 Windows 임시 경로 ($env:TEMP\...) 로 치환.
     .OUTPUTS
         새 hashtable (원본 변경 안 함).
@@ -935,10 +942,14 @@ function Convert-McpConfigForWindows {
         }
     }
 
-    if ($cmd -in @('npx', 'npm', 'node')) {
+    $cmdMap = @{
+        'npx' = 'npx.cmd'
+        'npm' = 'npm.cmd'
+    }
+    if ($cmdMap.ContainsKey($cmd)) {
         $result = @{
-            command = 'cmd'
-            args    = @('/c', $cmd) + $newArgs
+            command = $cmdMap[$cmd]
+            args    = $newArgs
         }
     } else {
         $result = @{
