@@ -1,6 +1,5 @@
 ---
 description: OPAL AI 에이전트 부트스트래퍼. 세션 시작 시 에이전트를 활성화한다.
-globs:
 alwaysApply: true
 ---
 

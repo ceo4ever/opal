@@ -72,10 +72,12 @@
                                  자식 npx 의 stdio passthrough 가 깨져 4개 MCP 모두 ✘ failed 로 남던 결함 fix.
                                  Anthropic 권고와 정합 (Windows 는 npx.cmd / npm.cmd 직접 호출). v0.3.11 의 mcp remove + 재등록 로직이
                                  기존 cmd 래핑 항목을 자동 갱신함 (140 추가작업, v0.3.12)
-        v1.5.2 2026-05-10 14:00  Cursor 부트스트래퍼 .mdc 복사 시 CRLF 정규화 + Set-ContentNoBom 적용.
-                                 mac 원본의 LF 줄끝을 그대로 옮긴 결과 Cursor for Windows 의 frontmatter 파서가
-                                 '---' 매칭에 실패해 user-level 룰이 활성화되지 않던 결함 fix
-                                 (NTFS Zone.Identifier / BOM 가설은 캡틴 진단으로 기각, LF only 차이만 남았음) (140 추가작업, v0.3.13)
+        v1.5.2 2026-05-10 14:00  Cursor 부트스트래퍼 .mdc 복사 시 CRLF 정규화 + Set-ContentNoBom 적용 (일반적 호환성 보강).
+                                 (140 추가작업, v0.3.13)
+        v1.5.3 2026-05-10 14:30  Cursor 부트스트래퍼 미동작의 진짜 원인 fix — opal/bootstrapper/cursor-bootstrap.mdc 의 'globs:' 빈 값 라인 제거.
+                                 mac 의 Cursor 는 alwaysApply: true 를 우선 적용해 통과하지만 Windows 빌드의 frontmatter 파서는
+                                 globs: null 을 '매칭 영역 없음' 으로 해석해 룰을 비활성화하던 차이 (캡틴 머신에서 직접 globs 라인 삭제로 동작 검증).
+                                 (140 추가작업, v0.3.14)
 #>
 
 #Requires -Version 5.1
