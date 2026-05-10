@@ -42,6 +42,9 @@
         v1.1.1 2026-05-10 00:35  Install-OpalCore의 $skillCount/$agentCount .Count 접근을 @() 캐스트로 변경 — Set-StrictMode 3.0 환경에서 single object .Count 차단 결함 fix (139 추가작업, v0.3.1)
         v1.2.0 2026-05-10 00:40  Find-GitBash 신규 + Register-OpalBin 이 Git Bash explicit 경로 사용 — WSL bash.exe(/bin/bash 부재) 우회 결함 fix (139 추가작업, v0.3.2)
         v1.2.1 2026-05-10 08:50  opal-cli.ps1 미생성 + 옛 .ps1 정리 — PowerShell default ExecutionPolicy(Restricted) 차단 회피, .cmd 만 사용 (139 추가작업, v0.3.3)
+        v1.3.0 2026-05-10 09:15  Find-Python / Find-Node (Microsoft Store stub 회피) + Install-OpalVenv (Python venv + requirements.txt) +
+                                 Install-OpalMcp (claude/cursor/gemini/antigravity 4종 등록) + Install-PlatformAgents (sub-agent 어댑터 — Claude/Cursor/Gemini 모델 매핑) +
+                                 Test-WindowsDeps Python/Node optional 검출 + 미설치 안내 (139 추가작업, v0.3.4)
 #>
 
 #Requires -Version 5.1
@@ -259,6 +262,25 @@ function Test-WindowsDeps {
     }
 
     Write-OpalOk '의존성 확인 완료.'
+
+    # ── 선택 의존성 (warn 만, 설치 중단 안 함) ──
+    $py = Find-Python
+    if ($py) {
+        Write-OpalInfo "Python: $py"
+    } else {
+        Write-OpalWarn 'Python 미설치 — Python venv / xlsx-tool / Playwright 동작 제한'
+        Write-OpalInfo '  설치: winget install Python.Python.3.12  또는  https://www.python.org/downloads/windows/'
+    }
+    $nodeInfo = Find-Node
+    if ($nodeInfo) {
+        Write-OpalInfo "Node.js: v$($nodeInfo.Version) ($($nodeInfo.Path))"
+        if ($nodeInfo.Version -lt 18) {
+            Write-OpalWarn '  Node.js v18+ 권장 (skill-registry / state-tool 동작 보장)'
+        }
+    } else {
+        Write-OpalWarn 'Node.js 미설치 — skill-registry / state-tool 등 일부 도구 동작 제한'
+        Write-OpalInfo '  설치: winget install OpenJS.NodeJS  또는  https://nodejs.org/'
+    }
 }
 
 function Resolve-RepoRoot {
@@ -414,6 +436,47 @@ function Install-OpalCore {
     }
 
     Write-OpalOk '핵심 자산 복사 완료.'
+}
+
+function Find-Python {
+    <#
+    .SYNOPSIS
+        실 Python 3 인터프리터를 검출한다 (Microsoft Store stub 회피).
+    .NOTES
+        Windows 의 python.exe 가 Microsoft Store stub 일 경우 실행 시 stub 안내 후 종료.
+        --version 호출 결과로 진짜 Python 인지 검증.
+    .OUTPUTS
+        Python 절대 경로 또는 $null
+    #>
+    foreach ($name in @('python3', 'python', 'py')) {
+        $cmd = Get-Command $name -ErrorAction SilentlyContinue
+        if (-not $cmd) { continue }
+        try {
+            $output = & $name --version 2>&1
+            if ($LASTEXITCODE -eq 0 -and "$output" -match '^Python\s+\d+\.\d+') {
+                return $cmd.Source
+            }
+        } catch {}
+    }
+    return $null
+}
+
+function Find-Node {
+    <#
+    .SYNOPSIS
+        Node.js 검출 (선택 의존성).
+    .OUTPUTS
+        @{ Path; Version } 또는 $null
+    #>
+    $cmd = Get-Command node -ErrorAction SilentlyContinue
+    if (-not $cmd) { return $null }
+    try {
+        $output = & node --version 2>&1
+        if ($LASTEXITCODE -eq 0 -and "$output" -match '^v(\d+)\.') {
+            return @{ Path = $cmd.Source; Version = [int]$matches[1] }
+        }
+    } catch {}
+    return $null
 }
 
 function Find-GitBash {
@@ -602,6 +665,353 @@ function Register-Bootstrapper {
     }
 }
 
+# ─── Install-OpalVenv (install-mac.sh install_opal_venv 이식) ──────────────
+
+function Install-OpalVenv {
+    <#
+    .SYNOPSIS
+        ~/.opal/.venv 생성 + opal/tools/requirements.txt 설치.
+        Python 미설치 시 graceful 스킵 + 설치 안내.
+    #>
+    param([Parameter(Mandatory)][string]$RepoRoot)
+
+    $req = [IO.Path]::Combine($RepoRoot, 'opal', 'tools', 'requirements.txt')
+    if (-not (Test-Path $req)) {
+        Write-OpalWarn 'opal/tools/requirements.txt 없음 — Python venv 스킵'
+        return
+    }
+
+    $py = Find-Python
+    if (-not $py) {
+        Write-OpalWarn 'Python 미설치 — Python venv 스킵 (xlsx-tool / Playwright / 일부 MCP 도구 동작 제한)'
+        Write-OpalInfo '설치 옵션:'
+        Write-OpalInfo '  winget install Python.Python.3.12'
+        Write-OpalInfo '  또는 https://www.python.org/downloads/windows/ (PATH 추가 옵션 체크)'
+        return
+    }
+    Write-OpalInfo "Python 발견: $py"
+
+    $venvDir = Join-Path $OpalHome '.venv'
+    if (-not (Test-Path $venvDir)) {
+        Write-OpalInfo '~/.opal/.venv 생성 중...'
+        & $py -m venv $venvDir 2>&1 | Out-Null
+        if ($LASTEXITCODE -ne 0) {
+            Write-OpalWarn 'venv 생성 실패 — Python venv 스킵'
+            return
+        }
+        Write-OpalOk "venv 생성: $venvDir"
+    } else {
+        Write-OpalInfo "venv 기존 사용: $venvDir"
+    }
+
+    # Windows venv: Scripts/python.exe / Scripts/pip.exe
+    $venvPip = [IO.Path]::Combine($venvDir, 'Scripts', 'pip.exe')
+    if (-not (Test-Path $venvPip)) {
+        # 비호환 venv (mac/linux 형식)
+        $venvPip = [IO.Path]::Combine($venvDir, 'bin', 'pip')
+    }
+    if (-not (Test-Path $venvPip)) {
+        Write-OpalWarn "venv pip 없음: $venvPip — 패키지 설치 스킵"
+        return
+    }
+
+    Write-OpalInfo 'pip 업그레이드 + requirements.txt 설치 중...'
+    & $venvPip install --quiet --no-cache-dir --upgrade pip 2>&1 | Out-Null
+    & $venvPip install --quiet --no-cache-dir -r $req 2>&1 | Out-Null
+    if ($LASTEXITCODE -eq 0) {
+        Write-OpalOk 'Python 패키지 설치 완료 (requirements.txt)'
+    } else {
+        Write-OpalWarn "pip install 부분 실패 (exit=$LASTEXITCODE) — 일부 패키지 누락 가능"
+    }
+
+    # Playwright 브라우저 — 사용자 옵션 안내 (자동 설치 안 함, 다운로드 시간/대역폭 부담)
+    $playwrightExe = [IO.Path]::Combine($venvDir, 'Scripts', 'playwright.exe')
+    if (Test-Path $playwrightExe) {
+        Write-OpalInfo 'Playwright 브라우저 설치 (선택, 약 200MB):'
+        Write-OpalInfo "  & `"$playwrightExe`" install chromium"
+    }
+}
+
+# ─── Install-OpalMcp (install-mac.sh install_mcp 이식) ──────────────────────
+
+function Merge-McpConfig {
+    <#
+    .SYNOPSIS
+        대상 JSON 파일의 mcpServers.<name> 항목에 config 를 병합 (이미 있으면 스킵).
+    #>
+    param(
+        [Parameter(Mandatory)][string]$Target,
+        [Parameter(Mandatory)][string]$Name,
+        [Parameter(Mandatory)][hashtable]$Config
+    )
+    $targetDir = Split-Path -Parent $Target
+    if (-not (Test-Path $targetDir)) {
+        New-Item -ItemType Directory -Path $targetDir -Force | Out-Null
+    }
+
+    $data = @{}
+    if (Test-Path $Target) {
+        try {
+            $raw = Get-Content -Path $Target -Raw -Encoding UTF8
+            if ($raw -and $raw.Trim()) {
+                $parsed = $raw | ConvertFrom-Json -ErrorAction Stop
+                # PSCustomObject → hashtable
+                $data = @{}
+                $parsed.PSObject.Properties | ForEach-Object { $data[$_.Name] = $_.Value }
+            }
+        } catch {
+            Write-OpalWarn "기존 ${Target} 파싱 실패 — 새 파일로 작성"
+            $data = @{}
+        }
+    }
+
+    if (-not $data.ContainsKey('mcpServers')) {
+        $data['mcpServers'] = @{}
+    }
+    $servers = if ($data['mcpServers'] -is [hashtable]) {
+        $data['mcpServers']
+    } else {
+        $h = @{}
+        $data['mcpServers'].PSObject.Properties | ForEach-Object { $h[$_.Name] = $_.Value }
+        $h
+    }
+    if ($servers.ContainsKey($Name)) {
+        return $false  # 이미 등록됨
+    }
+    $servers[$Name] = $Config
+    $data['mcpServers'] = $servers
+
+    ($data | ConvertTo-Json -Depth 10) | Set-Content -Path $Target -Encoding UTF8
+    return $true
+}
+
+function Install-OpalMcp {
+    <#
+    .SYNOPSIS
+        opal/core/mcps/*.json 을 읽어 platform 별 등록.
+        - claude / gemini: CLI (있으면) `<cli> mcp add` , 없으면 config_merge 폴백
+        - cursor: ~/.cursor/mcp.json (config_merge)
+        - antigravity: ~/.gemini/antigravity/mcp_config.json (config_merge)
+    #>
+    param([Parameter(Mandatory)][string]$RepoRoot)
+
+    $mcpDir = [IO.Path]::Combine($RepoRoot, 'opal', 'core', 'mcps')
+    if (-not (Test-Path $mcpDir)) {
+        Write-OpalWarn 'opal/core/mcps/ 디렉토리 없음 — MCP 스킵'
+        return
+    }
+
+    $userHome = $env:USERPROFILE
+    $count = 0
+    Get-ChildItem -Path $mcpDir -Filter '*.json' -File | ForEach-Object {
+        try {
+            $obj = Get-Content -Path $_.FullName -Raw -Encoding UTF8 | ConvertFrom-Json
+        } catch {
+            Write-OpalWarn "MCP 설정 파싱 실패: $($_.FullName)"
+            return
+        }
+        $name = $obj.name
+        $config = @{}
+        $obj.config.PSObject.Properties | ForEach-Object { $config[$_.Name] = $_.Value }
+        $platforms = @($obj.platforms)
+        $installType = $obj.install_type
+
+        if ($installType -ne 'config_merge') {
+            Write-OpalInfo "  ${name}: ${installType} 타입 — 수동 설치 필요"
+            return
+        }
+
+        $installed = @()
+        foreach ($platform in $platforms) {
+            switch ($platform) {
+                'claude' {
+                    $claudeCli = Get-Command claude -ErrorAction SilentlyContinue
+                    if ($claudeCli) {
+                        $args = @('mcp', 'add', '--scope', 'user', $name, '--', $config['command']) + @($config['args'])
+                        & $claudeCli.Source @args 2>&1 | Out-Null
+                        if ($LASTEXITCODE -eq 0) { $installed += 'claude' }
+                    } else {
+                        Write-OpalWarn "claude CLI 없음 — ${name} 수동 등록 필요"
+                    }
+                }
+                'gemini' {
+                    $geminiCli = Get-Command gemini -ErrorAction SilentlyContinue
+                    if ($geminiCli) {
+                        $args = @('mcp', 'add', '-s', 'user', $name, '--', $config['command']) + @($config['args'])
+                        & $geminiCli.Source @args 2>&1 | Out-Null
+                        if ($LASTEXITCODE -eq 0) { $installed += 'gemini' }
+                    } else {
+                        # 폴백 — settings.json
+                        $target = Join-Path $userHome '.gemini\settings.json'
+                        if (Merge-McpConfig -Target $target -Name $name -Config $config) {
+                            $installed += 'gemini'
+                        }
+                    }
+                }
+                'cursor' {
+                    $target = Join-Path $userHome '.cursor\mcp.json'
+                    if (Merge-McpConfig -Target $target -Name $name -Config $config) {
+                        $installed += 'cursor'
+                    }
+                }
+                'antigravity' {
+                    $target = Join-Path $userHome '.gemini\antigravity\mcp_config.json'
+                    if (Merge-McpConfig -Target $target -Name $name -Config $config) {
+                        $installed += 'antigravity'
+                    }
+                }
+            }
+        }
+        if ($installed.Count -gt 0) {
+            Write-OpalOk "${name} MCP → $($installed -join ', ')"
+            $count++
+        }
+    }
+    if ($count -eq 0) {
+        Write-OpalInfo '머지할 MCP 서버가 없습니다'
+    } else {
+        Write-OpalOk "MCP 서버 ${count}건 설정 완료"
+    }
+}
+
+# ─── Install-PlatformAgents (install-mac.sh emit_platform_agent_adapter 이식) ──
+
+function Get-AgentFrontmatter {
+    <#
+    .SYNOPSIS
+        AGENT.md 의 YAML frontmatter 에서 name/description/model 추출 (정규식 기반).
+        Python PyYAML 의존 없이 stdlib 수준 파싱.
+    .OUTPUTS
+        @{ Name; Description; Model; Body }
+    #>
+    param([Parameter(Mandatory)][string]$Path)
+    $raw = Get-Content -Path $Path -Raw -Encoding UTF8
+    if ($raw -notmatch '(?s)^---\r?\n(.*?)\r?\n---\r?\n?(.*)$') {
+        return $null
+    }
+    $fmRaw = $matches[1]
+    $body = $matches[2]
+
+    $name = $null; $desc = $null; $model = 'standard'
+    $lines = $fmRaw -split "`r?`n"
+    for ($i = 0; $i -lt $lines.Count; $i++) {
+        $line = $lines[$i]
+        if ($line -match '^([A-Za-z_][A-Za-z0-9_-]*):\s*(.*)$') {
+            $key = $matches[1]
+            $val = $matches[2].Trim()
+            # `|` 또는 `>` 블록 스타일 — 들여쓰기 라인 모두 수집
+            if ($val -in @('|', '>', '|-', '>-', '|+', '>+')) {
+                $blockLines = @()
+                $j = $i + 1
+                while ($j -lt $lines.Count) {
+                    $nxt = $lines[$j]
+                    if ($nxt -match '^\s+\S' -or $nxt.Trim() -eq '') {
+                        $blockLines += $nxt.Trim()
+                        $j++
+                    } else { break }
+                }
+                $val = ($blockLines -join ' ') -replace '\s+', ' '
+                $i = $j - 1
+            } else {
+                if (($val -match '^"(.*)"$') -or ($val -match "^'(.*)'$")) {
+                    $val = $matches[1]
+                }
+            }
+            switch ($key) {
+                'name'        { $name = $val.Trim() }
+                'description' { $desc = ($val.Trim() -replace '\s+', ' ') }
+                'model'       { $model = $val.Trim() }
+            }
+        }
+    }
+    if (-not $name) {
+        $name = (Split-Path -Parent $Path | Split-Path -Leaf)
+    }
+    return @{ Name = $name; Description = $desc; Model = $model; Body = $body }
+}
+
+function Format-YamlValue {
+    param([string]$Value)
+    if (-not $Value) { return '' }
+    if ($Value -match '[:#"`{}\[\]&*!|>%@\n]' -or $Value.Contains("'")) {
+        $esc = $Value -replace '\\', '\\\\' -replace '"', '\\"'
+        return '"' + $esc + '"'
+    }
+    return $Value
+}
+
+function Install-PlatformAgents {
+    <#
+    .SYNOPSIS
+        ~/.opal/agents/* 를 Claude / Cursor / Gemini sub-agent 어댑터로 변환 + 등록.
+    .NOTES
+        macOS 대칭: scripts/install-mac.sh emit_platform_agent_adapter / install_{claude,cursor,gemini}_agents.
+        Antigravity 는 sub-agent 미지원 (2026-04 기준).
+    #>
+    $agentsSrc = Join-Path $OpalHome 'agents'
+    if (-not (Test-Path $agentsSrc)) {
+        Write-OpalWarn '~/.opal/agents 부재 — 플랫폼 어댑터 스킵'
+        return
+    }
+
+    $userHome = $env:USERPROFILE
+    $platforms = @{
+        'claude' = @{
+            Dst = Join-Path $userHome '.claude\agents'
+            ModelMap = @{ light = 'haiku'; standard = 'sonnet'; advanced = 'opus' }
+        }
+        'cursor' = @{
+            Dst = Join-Path $userHome '.cursor\agents'
+            ModelMap = @{ light = 'inherit'; standard = 'inherit'; advanced = 'inherit' }
+        }
+        'gemini' = @{
+            Dst = Join-Path $userHome '.gemini\agents'
+            ModelMap = @{ light = 'gemini-2.5-flash-lite'; standard = 'gemini-2.5-flash'; advanced = 'gemini-2.5-pro' }
+        }
+    }
+
+    foreach ($pname in $platforms.Keys) {
+        $cfg = $platforms[$pname]
+        if (-not (Test-Path $cfg.Dst)) {
+            New-Item -ItemType Directory -Path $cfg.Dst -Force | Out-Null
+        }
+        $count = 0
+        Get-ChildItem -Path $agentsSrc -Directory -ErrorAction SilentlyContinue | ForEach-Object {
+            $agentMd = Join-Path $_.FullName 'AGENT.md'
+            if (-not (Test-Path $agentMd)) { return }
+            $fm = Get-AgentFrontmatter -Path $agentMd
+            if (-not $fm) { return }
+
+            $dstFile = Join-Path $cfg.Dst "$($fm.Name).md"
+            # 사용자 파일 충돌 가드 — AUTO-GENERATED 헤더가 없으면 사용자 관리로 간주, 스킵
+            if (Test-Path $dstFile) {
+                $existing = Get-Content -Path $dstFile -Raw -Encoding UTF8
+                if ($existing -notmatch 'AUTO-GENERATED by install') {
+                    Write-OpalWarn "user-managed file (AUTO-GENERATED 헤더 없음) — 스킵: $dstFile"
+                    return
+                }
+            }
+
+            $platformModel = $cfg.ModelMap[$fm.Model]
+            if (-not $platformModel) { $platformModel = 'inherit' }
+
+            $fmLines = @()
+            $fmLines += "name: $(Format-YamlValue $fm.Name)"
+            if ($fm.Description) {
+                $fmLines += "description: $(Format-YamlValue $fm.Description)"
+            }
+            $fmLines += "model: $(Format-YamlValue $platformModel)"
+
+            $header = "<!-- AUTO-GENERATED by install-windows.ps1 from ~/.opal/agents/$($fm.Name)/AGENT.md. DO NOT EDIT. -->`r`n<!-- SSOT: opal/agents/$($fm.Name)/AGENT.md -->`r`n`r`n"
+
+            $output = "---`r`n" + ($fmLines -join "`r`n") + "`r`n---`r`n`r`n" + $header + $fm.Body
+            Set-Content -Path $dstFile -Value $output -Encoding UTF8 -NoNewline
+            $count++
+        }
+        Write-OpalOk "${pname} 어댑터 ${count}개 → $($cfg.Dst)"
+    }
+}
+
 # ─── main ────────────────────────────────────────────────────────────────────
 
 function Invoke-OpalWindowsInstall {
@@ -619,6 +1029,9 @@ function Invoke-OpalWindowsInstall {
     Register-OpalBin
     Register-EnvPath
     Register-Bootstrapper  -RepoRoot $repoRoot
+    Install-OpalVenv       -RepoRoot $repoRoot
+    Install-OpalMcp        -RepoRoot $repoRoot
+    Install-PlatformAgents
 
     # ~/.opal/VERSION 기록 — opal-cli update 비교 기준 (install-mac.sh v1.8 과 정합)
     if (-not (Test-Path $OpalHome)) {
@@ -630,7 +1043,7 @@ function Invoke-OpalWindowsInstall {
 
     Write-Host ''
     Write-OpalOk '설치 흐름 완료.'
-    Write-OpalInfo 'Python venv / MCP 등록 / 플랫폼 어댑터는 후속 hotfix(v0.3.1+)에서 추가됩니다.'
+    Write-OpalInfo 'Python 미설치라면 일부 도구 제한 — winget install Python.Python.3.12 후 재설치 권장.'
     Write-Host ''
 }
 

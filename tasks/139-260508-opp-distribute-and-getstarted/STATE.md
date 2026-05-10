@@ -1,6 +1,6 @@
 # STATE: 139-260508-opp-distribute-and-getstarted
 
-> 최종 갱신: 2026-05-10 08:51
+> 최종 갱신: 2026-05-10 09:17
 
 ## 현재 상태
 - 모드: interactive
@@ -60,6 +60,8 @@
 | 36 | 2026-05-10 00:36 | current_status changed: additional_work → additional_work_done | v0.3.2: Find-GitBash + Register-OpalBin이 Git Bash explicit 경로 사용 (WSL 우회) |
 | 37 | 2026-05-10 08:49 | current_status changed: additional_work_done → additional_work | v0.3.3: opal-cli.ps1 제거 — PowerShell ExecutionPolicy 차단 회피. .cmd만 사용 |
 | 38 | 2026-05-10 08:51 | current_status changed: additional_work → additional_work_done | v0.3.3: opal-cli.ps1 미생성 + 옛 .ps1 정리 (PowerShell ExecutionPolicy 회피) |
+| 39 | 2026-05-10 09:12 | current_status changed: additional_work_done → additional_work | v0.3.4: Python venv + MCP 등록 + 플랫폼 sub-agent 어댑터 + Python/Node 검출 (Microsoft Store stub 회피) |
+| 40 | 2026-05-10 09:17 | current_status changed: additional_work → additional_work_done | v0.3.4: Python venv + MCP 4종 등록 + 플랫폼 sub-agent 어댑터 (Claude/Cursor/Gemini) + Python/Node 선택 검출 |
 
 ## 블로커
 없음
