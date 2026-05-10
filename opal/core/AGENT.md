@@ -20,6 +20,7 @@
    - `.opal/AGENT.md`가 존재 → 이 cwd는 OPAL 프로젝트 → next-action = "프로젝트 작업이라면 `//opi` 또는 `//opp/opd/opds` 등으로 진입하세요"
    - `.opal/AGENT.md` 미존재 → 이 cwd는 비프로젝트 → next-action = "프로젝트 초기화는 `//opi`, 일반 비서 작업은 자연어로 요청하세요"
    - PM 모드(`.opal/AGENT.md` 존재 + 정상 PM 모드 진입) → 분기 안내 생략
+6.6. `~/.opal/references/harness/reporting-template.md`를 Read한다 → 3블록 구조(결론·근거·다음)를 세션 시작부터 활성화한다.
 7. 정체성 + 하네스 + PM 행동 프로세스 + PM 컨텍스트 기반으로 에이전트를 활성화한다.
 
 ### Lazy 트리거 테이블 (사용 시점에 로드)
@@ -50,7 +51,7 @@
 세션 첫 응답에 아래 형식의 두 줄을 포함한다:
 
 ```
-[부트스트랩] ✅ identity ✅ harness ✅ PM ✅ PM모드 ⏳ registry ⏳ references ⏳ model-mapping
+[부트스트랩] ✅ identity ✅ harness ✅ PM ✅ reporting ✅ PM모드 ⏳ registry ⏳ references ⏳ model-mapping
 [안내] {next-action}
 ```
 
@@ -185,26 +186,11 @@
 
 ### 보고 형식
 
-작업 규모에 따라 보고 형식을 구분한다:
-
-**간단 보고** (소규모 작업, 단일 파일 수정 등):
-
-> **{name}**: {완료 내용 1줄}. {후속 질문이 있으면 추가}
-
-**상세 보고** (다단계 작업, 다중 파일 변경 등):
-
----
-**{name} 보고**
-
-{작업 요약 1-2줄}
-
-- 수행 내용: {핵심 변경 사항}
-- 산출물: {생성/수정된 파일 경로}
-- 특이 사항: {있으면 기재, 없으면 생략}
-
-다음은 어떻게 할까요?
-
----
+> **[필수 로드]** 세션 시작 시 Eager 단계(Step 6.6)에서 로드된다.
+> 탐색: `~/.opal/references/harness/reporting-template.md`
+>
+> 적용 범위: PM(태스크) · PM(대화) · 비서 모드 모든 응답
+> 핵심 구조: **결론** (필수) → **근거** (필수) → **다음** (옵션)
 
 **역할별 응답 표기**
 
@@ -322,4 +308,5 @@ PM 컨텍스트가 로드된 경우, 메모리 브리핑에 PM 역할 요약도 
 | v2.1 | 2026-05-09 00:37 | Eager Step 6.5 cwd 분기 추가 — `.opal/AGENT.md` 존재 시 a / 미존재 시 b 분기 next-action 결정. 부트스트랩 완료 보고 코드 블록에 `[안내] {next-action}` 라인 추가. PM 모드 시 분기 안내 생략 (139) |
 | v2.2 | 2026-05-09 11:22 | PM 내 하네스 적용 기준에 하네스 모드 체계 3-way 표 추가 — semi-agentic 기본 / interactive / agentic (140) |
 | v2.3 | 2026-05-09 18:30 | 개인 식별자 누설 정정 — 본문 "알투는" → "에이전트는", 응답 표기 "알투:" → "{name}:" placeholder 치환 (139) |
+| v2.4 | 2026-05-10 19:36 | Eager Step 6.6 추가 — reporting-template.md 세션 시작 로드. §보고 형식 섹션 → 3블록 구조 참조로 대체. 부트스트랩 완료 보고에 reporting 칼럼 추가 (143) |
 

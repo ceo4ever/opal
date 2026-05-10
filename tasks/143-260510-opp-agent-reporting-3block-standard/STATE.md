@@ -1,12 +1,12 @@
 # STATE: 알투 보고 형식 표준 — 3블록 구조 정식 등재
 
-> 최종 갱신: 2026-05-10 18:04
+> 최종 갱신: 2026-05-10 19:55
 
 ## 현재 상태
 - 모드: semi-agentic
 - 단계: TASK / PLAN / EXECUTE / CLOSE
-- 진행: PLAN 단계
-- 상태: 진행 중
+- 진행: CLOSE 단계
+- 상태: 완료
 
 <!-- pipeline:start -->
 ## 파이프라인 현황판
@@ -26,21 +26,25 @@
 | 8 | PLAN | State Gate | ✅ | 2026-05-10 18:04 |
 | 9 | PLAN | PM Gate | ✅ | 2026-05-10 18:04 |
 | 10 | PLAN | State Gate | ✅ | 2026-05-10 18:04 |
-| 11 | PLAN | 사용자 확인 | ⬜ |  |
-| 12 | EXECUTE | 작업 | ⬜ |  |
-| 13 | EXECUTE | QA Gate | ⬜ |  |
-| 14 | EXECUTE | QA-EXECUTE.md 생성 | ⬜ |  |
-| 15 | EXECUTE | State Gate | ⬜ |  |
-| 16 | EXECUTE | PM Gate | ⬜ |  |
-| 17 | EXECUTE | State Gate | ⬜ |  |
-| 18 | EXECUTE | 사용자 확인 | ⬜ |  |
-| 19 | CLOSE | DONE.md 생성 | ⬜ |  |
-| 20 | CLOSE | State Gate | ⬜ |  |
+| 11 | PLAN | 사용자 확인 | ✅ | 2026-05-10 19:36 |
+| 12 | EXECUTE | 작업 | ✅ | 2026-05-10 19:44 |
+| 13 | EXECUTE | QA Gate | ✅ | 2026-05-10 19:47 |
+| 14 | EXECUTE | QA-EXECUTE.md 생성 | ✅ | 2026-05-10 19:47 |
+| 15 | EXECUTE | State Gate | ✅ | 2026-05-10 19:47 |
+| 16 | EXECUTE | PM Gate | ✅ | 2026-05-10 19:47 |
+| 17 | EXECUTE | State Gate | ✅ | 2026-05-10 19:47 |
+| 18 | EXECUTE | 사용자 확인 | ✅ | 2026-05-10 19:55 |
+| 19 | CLOSE | DONE.md 생성 | ✅ | 2026-05-10 19:55 |
+| 20 | CLOSE | State Gate | ✅ | 2026-05-10 19:55 |
 <!-- pipeline:end -->
 
 ## 의사결정 로그
 | # | 시점 | 결정 | 근거 |
 |---|------|------|------|
+| 1 | 2026-05-10 19:47 | agentic auto-pass at row 13, item=QA Gate | semi-agentic auto-pass: QA-EXECUTE Pass (Critical 0, Warning 0) |
+| 1 | 2026-05-10 19:47 | agentic auto-pass at row 15, item=State Gate | semi-agentic auto-pass: State Gate |
+| 2 | 2026-05-10 19:47 | agentic auto-pass at row 16, item=PM Gate | semi-agentic auto-pass: PM Gate Pass — QA Pass + 컨벤션 진단 Critical/High 0건 + 보존 항목 유지 + 자기참조 통과 |
+| 3 | 2026-05-10 19:47 | agentic auto-pass at row 17, item=State Gate | semi-agentic auto-pass: State Gate |
 
 ## 블로커
 없음

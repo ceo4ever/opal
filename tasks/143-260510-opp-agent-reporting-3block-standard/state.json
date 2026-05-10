@@ -4,8 +4,8 @@
   "mode": "semi-agentic",
   "schema_version": "1.0",
   "created_at": "2026-05-10 17:50",
-  "updated_at": "2026-05-10 18:04",
-  "current_status": "in_progress",
+  "updated_at": "2026-05-10 19:55",
+  "current_status": "done",
   "rows": [
     {
       "row_id": 1,
@@ -111,19 +111,19 @@
       "row_id": 11,
       "stage": "PLAN",
       "item": "사용자 확인",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
-      "owner": "PM",
-      "note": null
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-10 19:36",
+      "owner": "user",
+      "note": "캡틴 승인: EXECUTE 진입 (v1.1 보강 PLAN)"
     },
     {
       "row_id": 12,
       "stage": "EXECUTE",
       "item": "작업",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-10 19:44",
       "owner": "PM",
       "note": null
     },
@@ -131,19 +131,19 @@
       "row_id": 13,
       "stage": "EXECUTE",
       "item": "QA Gate",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
-      "owner": "PM",
-      "note": null
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-10 19:47",
+      "owner": "auto",
+      "note": "agentic auto-pass: semi-agentic auto-pass: QA-EXECUTE Pass (Critical 0, Warning 0)"
     },
     {
       "row_id": 14,
       "stage": "EXECUTE",
       "item": "QA-EXECUTE.md 생성",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-10 19:47",
       "owner": "PM",
       "note": null
     },
@@ -151,49 +151,49 @@
       "row_id": 15,
       "stage": "EXECUTE",
       "item": "State Gate",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
-      "owner": "PM",
-      "note": null
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-10 19:47",
+      "owner": "auto",
+      "note": "agentic auto-pass: semi-agentic auto-pass: State Gate"
     },
     {
       "row_id": 16,
       "stage": "EXECUTE",
       "item": "PM Gate",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
-      "owner": "PM",
-      "note": null
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-10 19:47",
+      "owner": "auto",
+      "note": "agentic auto-pass: semi-agentic auto-pass: PM Gate Pass — QA Pass + 컨벤션 진단 Critical/High 0건 + 보존 항목 유지 + 자기참조 통과"
     },
     {
       "row_id": 17,
       "stage": "EXECUTE",
       "item": "State Gate",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
-      "owner": "PM",
-      "note": null
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-10 19:47",
+      "owner": "auto",
+      "note": "agentic auto-pass: semi-agentic auto-pass: State Gate"
     },
     {
       "row_id": 18,
       "stage": "EXECUTE",
       "item": "사용자 확인",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
-      "owner": "PM",
-      "note": null
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-10 19:55",
+      "owner": "user",
+      "note": "캡틴 확인: CLOSE 진입 승인"
     },
     {
       "row_id": 19,
       "stage": "CLOSE",
       "item": "DONE.md 생성",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-10 19:55",
       "owner": "PM",
       "note": null
     },
@@ -201,9 +201,9 @@
       "row_id": 20,
       "stage": "CLOSE",
       "item": "State Gate",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-10 19:55",
       "owner": "PM",
       "note": null
     }

@@ -3,6 +3,7 @@
 > 작성일: 2026-05-10
 > 입력: TASK.md
 > 출력: PLAN.md
+> v1.1 — 캡틴 추가 요구사항(C-b) 반영: §2 M-4 재정의 + §2 Step 1 §8 단계 전환 보고 양식 추가 + §3 Step 1 작업 내용 갱신 + §4 QA 체크리스트 보강 + §5 리스크 보강
 
 ---
 
@@ -112,12 +113,26 @@
 - "통합 대체": 간단/상세 2종 형식을 삭제하고 `harness/reporting-template.md` 참조 링크 + Lazy 트리거 안내로 교체
 - 병존 시 신구 충돌 리스크 → 대체가 명확
 
-#### M-4. PM(태스크) 단계별 결론 카드 필드 표준화 → **D-5 형식 자율성에 위임 결정**
+#### M-4. PM(태스크) 단계별 결론 카드 필드 표준화 → **캡틴 게이트 3종 한정 표준 결정** (v1.1 갱신)
 
 **근거:**
-- D-5 §형식 자율성이 상위 제약 (`TASK.md` 75~82줄)
-- 단계별 표준화는 11종 분류 폐기와 동일한 "과설계" 패턴 → TASK.md §배경 "과설계 + 장황 역설" 반복
-- reporting-template.md에 예시(PLAN 단계, EXECUTE 단계)를 비규범적으로 제시하여 참고 가능
+- D-5 §형식 자율성이 상위 제약 (`TASK.md` 75~82줄) — 이 결정과 충돌하지 않음 (게이트 3종 외에는 D-5 자율성 유지)
+- 단계별 전수 표준화는 11종 분류 폐기와 동일한 "과설계" 패턴 → TASK.md §배경 "과설계 + 장황 역설" 반복 위험
+- semi-agentic 모드의 캡틴 검토 게이트는 3개로 한정(PLAN 완료 / EXECUTE 후 사용자 확인 / CLOSE 진입) → 이 3 게이트의 보고만 표준화해도 캡틴 의사결정 일관성 확보 가능
+- 3 게이트 한정 표준이 11종 분류 폐기와 충돌하지 않음 — 분류 대상이 11종이 아닌 캡틴 검토 게이트 3종
+- 각 양식의 5요소 표준 (PLAN 완료 보고 기준):
+
+| 요소 | 내용 |
+|------|------|
+| 1. 의사결정 요약 | M-1~M-N 결정 결과 한 줄씩 |
+| 2. 변경 범위 | 신규/수정/삭제 파일 N개 (간단 표) |
+| 3. 체크포인트 | 캡틴이 다음 단계 진입 전 반드시 알아야 할 핵심 (이전 결정 번복·범위 변경·리스크) |
+| 4. 실행 구성 | Step N개 / Phase 구성 (병렬·순차) |
+| 5. 다음 액션 | 승인 시 무엇이 시작되는지 |
+
+- EXECUTE 후 사용자 확인 보고: 변경 결과·검증 결과·리스크·잔여 작업·다음 액션
+- CLOSE 진입 보고: 완료 산출물·QA 결과·잔여 미해결·후속 태스크 후보·확정 요청
+- 상위 제약(D-3 일목요연 / D-4 시각구분)은 3종 양식 모두 적용. ASCII 박스 금지, 표·리스트 우선, 결론 1~2줄.
 
 ---
 
@@ -178,9 +193,17 @@
 ## §5. 형식 자율성
 ## §6. 적용 범위
 ## §7. 비보고 예시
+## §8. 단계 전환 보고 양식 (semi-agentic 캡틴 게이트 3종)
+   - §8.1 PLAN 완료 보고
+   - §8.2 EXECUTE 후 사용자 확인 보고
+   - §8.3 CLOSE 진입 보고
+## §9. 비보고 예시 (기존 §7 → §9로 번호 변경, §7은 비보고 예시 유지 또는 §9로 이동)
+## §10. 예시 카드 (기존 §8 → §10)
 
 ## 변경이력
 ```
+
+> 주: §7 비보고 예시 섹션은 §8 추가 전 마지막 섹션이었으나, §8·§9·§10 신설 후 §7을 §9로 이동하거나 §7 유지 후 §9(비보고)·§10(예시) 신설. 최종 번호는 Execute 단계에서 파일 실제 생성 시 결정.
 
 핵심 설계 결정:
 - 재사용성 보장: 프로젝트 고유 명칭·경로 하드코딩 금지 (→ D-8 §제약)
@@ -274,7 +297,7 @@
 
 ### Step 1: reporting-template.md 신규 생성
 
-- [ ] 완료
+- [x] 완료
 - **파일**: `opal/core/references/harness/reporting-template.md`
 - **작업 내용**:
   - YAML frontmatter 없음 (참조 문서이므로 plain markdown)
@@ -285,16 +308,23 @@
   - §5 형식 자율성: D-5 내용 — 표/리스트/산문 선택, 용어 풀이, 다음 블록 생략, 비보고 판단 자율
   - §6 적용 범위: D-6 내용 — PM(태스크)/PM(대화)/비서 모드
   - §7 비보고 예시: 단순 확인·단문 답변 등 방향성 예시 (명시 기준 아님)
-  - §8 예시 카드: PLAN 단계·EXECUTE 단계·PM(대화) 검토 각 1개 (비규범)
+  - §8 단계 전환 보고 양식 — PLAN 완료 / EXECUTE 후 사용자 확인 / CLOSE 진입 3종 (5요소 표준 + 양식 예시 각 1개):
+    - §8.1 PLAN 완료 보고: 의사결정 요약·변경 범위·체크포인트·실행 구성·다음 액션
+    - §8.2 EXECUTE 후 사용자 확인 보고: 변경 결과·검증 결과·리스크·잔여 작업·다음 액션
+    - §8.3 CLOSE 진입 보고: 완료 산출물·QA 결과·잔여 미해결·후속 태스크 후보·확정 요청
+    - 모든 양식: ASCII 박스 금지, 표·리스트 우선, 결론 1~2줄 (D-3/D-4 적용)
+    - 게이트 3종 외에는 D-5 형식 자율성 유지 명시
+  - §9 비보고 예시 (기존 §7 내용 → §9로 번호 이동)
+  - §10 예시 카드: PLAN 단계·EXECUTE 단계·PM(대화) 검토 각 1개 (비규범) (기존 §8 → §10)
   - 변경이력 표: v1.0 2026-05-10 HH:mm (143)
   - 재사용성: 프로젝트명·파일 경로 하드코딩 없음
-- **완료 기준**: 파일이 존재하고, D-1~D-6(§1~§6) 6개 섹션이 모두 존재하며, 각 섹션에 표/예시가 1개 이상 포함 (R-1 AC)
-- **테스트**: `ls opal/core/references/harness/reporting-template.md` 존재 확인 + 섹션 헤딩 count ≥ 6 확인
+- **완료 기준**: 파일이 존재하고, D-1~D-6(§1~§6) + §8 단계 전환 보고 양식 3종(§8.1~§8.3) 섹션이 모두 존재하며, 각 섹션에 표/예시가 1개 이상 포함 (R-1 AC)
+- **테스트**: `ls opal/core/references/harness/reporting-template.md` 존재 확인 + 섹션 헤딩 count ≥ 8 확인 (§1~§8)
 - **의존**: 없음
 
 ### Step 2: AGENT.md Eager 단계 추가 + 보고 형식 섹션 대체
 
-- [ ] 완료
+- [x] 완료
 - **파일**: `opal/core/AGENT.md`
 - **작업 내용**:
   - Eager 단계 Step 6.6 삽입 (Step 6.5와 Step 7 사이): `~/.opal/references/harness/reporting-template.md` Read 지시
@@ -307,7 +337,7 @@
 
 ### Step 3: opal-harness.md §2 하네스 모듈 테이블 행 추가
 
-- [ ] 완료
+- [x] 완료
 - **파일**: `opal/core/references/opal-harness.md`
 - **작업 내용**:
   - §2 하네스 모듈 테이블(87~97줄 인근)에 reporting-template 행 추가:
@@ -322,7 +352,7 @@
 
 ### Step 4: opal-pm.md §8 신설
 
-- [ ] 완료
+- [x] 완료
 - **파일**: `opal/core/references/opal-pm.md`
 - **작업 내용**:
   - §7(문서/코드 불일치)과 §9(code-scan) 사이에 §8 신설
@@ -338,31 +368,35 @@
 
 ### 기능 테스트
 
-- [ ] R-1: reporting-template.md 파일 존재 + D-1~D-6 섹션(§1~§6) 6개 모두 존재 + 각 섹션 표/예시 ≥ 1개
-- [ ] R-2: opal-pm.md §8 존재 + reporting-template.md 경로 명시
-- [ ] R-3: opal-harness.md §2 모듈 테이블에 reporting-template 행 존재 + 로드 시점 명시
-- [ ] R-4: AGENT.md Eager Step 6.6 존재 + reporting-template.md 경로 명시
-- [ ] R-5: AGENT.md §보고 형식에 간단/상세 2종 형식 없음 + reporting-template.md 참조 존재
-- [ ] R-6: 수정 파일 4개(reporting-template.md, AGENT.md, opal-harness.md, opal-pm.md) 모두 변경이력 행 추가 + 143 태스크 번호 포함 + KST 일시 포함
-- [ ] R-7: install-mac.sh 수정 불필요 확인 (cp -Rf 자동 배포 방식 — harness/ 하위 자동 포함)
+- [x] R-1: reporting-template.md 파일 존재 + D-1~D-6 섹션(§1~§6) 6개 모두 존재 + 각 섹션 표/예시 ≥ 1개
+- [x] R-2: opal-pm.md §8 존재 + reporting-template.md 경로 명시
+- [x] R-3: opal-harness.md §2 모듈 테이블에 reporting-template 행 존재 + 로드 시점 명시
+- [x] R-4: AGENT.md Eager Step 6.6 존재 + reporting-template.md 경로 명시
+- [x] R-5: AGENT.md §보고 형식에 간단/상세 2종 형식 없음 + reporting-template.md 참조 존재
+- [x] R-6: 수정 파일 4개(reporting-template.md, AGENT.md, opal-harness.md, opal-pm.md) 모두 변경이력 행 추가 + 143 태스크 번호 포함 + KST 일시 포함
+- [x] R-7: install-mac.sh 수정 불필요 확인 (cp -Rf 자동 배포 방식 — harness/ 하위 자동 포함)
+- [x] §8 단계 전환 보고 양식이 3종(PLAN 완료 / EXECUTE 후 사용자 확인 / CLOSE 진입) 모두 작성되어 있는가
+- [x] 각 양식이 5요소(의사결정 요약·변경 범위·체크포인트·실행 구성·다음 액션 또는 단계별 변형)를 모두 포함하는가
 
 ### 일관성 테스트
 
-- [ ] M-1 반영: AGENT.md Lazy 트리거 테이블에 reporting-template 행 없음 (Eager이므로 Lazy 추가 금지)
-- [ ] M-2 반영: reporting-template.md §5 형식 자율성에 명시 기준 없음 (자율 판단 방향성만)
-- [ ] M-3 반영: AGENT.md §보고 형식 섹션에 간단/상세 2종 형식 완전 제거
-- [ ] M-4 반영: reporting-template.md에 단계별 필드 강제 표준 없음 (예시만)
-- [ ] 자기참조 검증: reporting-template.md 본문 자체가 3블록 구조 + 일목요연·시각구분 원칙 위배하지 않음
-- [ ] 재사용성: reporting-template.md에 프로젝트명·경로 하드코딩 없음
-- [ ] 플랫폼 독립: reporting-template.md에 플랫폼 조건문(Claude/Cursor/Gemini 분기) 없음
-- [ ] 규칙 중복 없음: reporting-template.md가 다른 문서 규칙을 복제하지 않고 참조만
+- [x] M-1 반영: AGENT.md Lazy 트리거 테이블에 reporting-template 행 없음 (Eager이므로 Lazy 추가 금지)
+- [x] M-2 반영: reporting-template.md §5 형식 자율성에 명시 기준 없음 (자율 판단 방향성만)
+- [x] M-3 반영: AGENT.md §보고 형식 섹션에 간단/상세 2종 형식 완전 제거
+- [x] M-4 반영: reporting-template.md §8 양식은 캡틴 게이트 3종으로 한정되어 있고, §8 이외 단계는 D-5 형식 자율성 유지가 명시되어 있는가
+- [x] 자기참조 검증: reporting-template.md 본문 자체가 3블록 구조 + 일목요연·시각구분 원칙 위배하지 않음
+- [x] 재사용성: reporting-template.md에 프로젝트명·경로 하드코딩 없음 (헤더 출처 표기는 메타데이터, 허용)
+- [x] 플랫폼 독립: reporting-template.md에 플랫폼 조건문(Claude/Cursor/Gemini 분기) 없음
+- [x] 규칙 중복 없음: reporting-template.md가 다른 문서 규칙을 복제하지 않고 참조만
+- [x] §8 양식이 D-3 일목요연 / D-4 시각구분 원칙을 위배하지 않는가
+- [x] §8 양식과 D-5 형식 자율성이 충돌하지 않는가 (게이트 3종 외에는 자율 명시)
 
 ### 문서 품질
 
-- [ ] 한국어 본문 + 영어 코드/필드명 규칙을 따르는가 (`docs/CONVENTIONS.md` §언어 규칙)
-- [ ] kebab-case 파일/폴더 네이밍 — `reporting-template.md` 확인 (`docs/CONVENTIONS.md` §네이밍 규칙)
-- [ ] YAML frontmatter 없음 (참조 문서) — harness/ 하위 다른 파일들과 동일 형식 확인
-- [ ] 변경이력 표 형식: `버전 | 일시(KST) | 변경내용(태스크 번호)` (`docs/CONVENTIONS.md` §변경이력)
+- [x] 한국어 본문 + 영어 코드/필드명 규칙을 따르는가 (`docs/CONVENTIONS.md` §언어 규칙)
+- [x] kebab-case 파일/폴더 네이밍 — `reporting-template.md` 확인 (`docs/CONVENTIONS.md` §네이밍 규칙)
+- [x] YAML frontmatter 없음 (참조 문서) — harness/ 하위 다른 파일들과 동일 형식 확인
+- [x] 변경이력 표 형식: `버전 | 일시(KST) | 변경내용(태스크 번호)` (`docs/CONVENTIONS.md` §변경이력)
 
 ---
 
@@ -375,3 +409,4 @@
 | reporting-template.md 내용이 AGENT.md의 기존 "보고 형식" 섹션 내용과 충돌 | 에이전트 행동 불일치 | M-3 통합 대체로 기존 섹션 제거 → 충돌 원천 차단 |
 | 142 태스크 병행 중 install-mac.sh 동시 수정 | 충돌 | R-7: install-mac.sh 수정 없음 확인 → 충돌 없음 |
 | 자기참조 위배 (reporting-template.md 본문이 3블록 위반) | 신뢰성 저하 | QA 체크리스트에 자기참조 검증 항목 명시 |
+| §8 3 게이트 양식이 알투마다 다르게 채워질 위험 | 캡틴 검토 일관성 저하 | 5요소를 명시적 표준으로 기재하여 변동 폭 좁힘 (게이트 3종 외는 D-5 자율성 유지) |

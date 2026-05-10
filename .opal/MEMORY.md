@@ -1,7 +1,7 @@
 # opal Memory Index
 
-> 최종 갱신: 2026-05-10 17:30 (143 채번 — 142와 병행)
-> last_task_number: 143
+> 최종 갱신: 2026-05-10 20:30 (144 진행 중)
+> last_task_number: 144
 
 ## 메모리 카테고리
 
@@ -31,6 +31,7 @@
 
 | 등록일자 | 작업 | 단계 | 경로 | 시작일시 | 완료일시 |
 |----------|------|------|------|---------|---------|
+| 2026-05-10 | 알투 보고 형식 표준 — 3블록 구조 정식 등재. 신규 `reporting-template.md` SSOT(§1~§9 + §7 단계 전환 보고 양식 PLAN 완료/EXECUTE 후/CLOSE 진입 3종 5요소 표준) + `AGENT.md`(Eager Step 6.6 추가 + §보고 형식 섹션 통합 대체(간단/상세 2종 → 3블록 참조, 역할 표기·Observability 유지) + 부트스트랩 보고 8칼럼 reporting 추가) + `opal-harness.md`(§2 모듈 테이블 행 추가) + `opal-pm.md`(§8 신설). 의사결정 4건 — M-1 Eager 명시(이전 Lazy 결정 정직성 측면 번복) / M-2 알투 자율 판단 / M-3 통합 대체 / M-4 v1.1 재정의(캡틴 게이트 3종 한정 표준 — 11종 분류 폐기 정신 보존). QA-PLAN/QA-EXECUTE 모두 Pass + 컨벤션 자동 진단 Critical/High 0(Medium/Low 6은 기존 파일 변경이력 컬럼명 불일치 — GC-DP-C001 후속 태스크 제안). 142(community-skills fetch) 병행 충돌 가드 통과(install-mac.sh / community-skills-registry.json 미수정). 자기참조 검증(reporting-template.md 본문 자체가 3블록·일목요연·시각구분·재사용성·플랫폼 독립 5항목 모두 통과) (143) | 완료 | tasks/143-260510-opp-agent-reporting-3block-standard/ | 2026-05-10 17:30 | 2026-05-10 19:55 |
 | 2026-05-10 | community-skills 번들 → fetch 방식 전환 (skills.sh / npx skills) — community-skills/ 폴더 통째 git rm (553 파일) + registry v2(`source_repo`/`license`, paths 폐기) + skill-registry.js v2 인식 + match 응답 4 신설 필드(installed/source_repo/license/install_command) + opal-skill-manager v1.1 + install-mac.sh v2.0(community-skills 함수/clean 제거) + windows.ps1 v1.6.0(동일) + README/ARCHITECTURE/PROJECT 갱신. D-1~D-4 SSOT(자동 fetch/메타데이터 카탈로그/미설치 감지/기존 보존). source_repo 검증: anthropics 18+openai 1+vercel-labs 5=24 형식 명시 / getsentry+google-labs-code+trailofbits=7 null. 알려진 후속: //skill-manager 매칭 결함(별도 태스크) + Windows 회귀 검증(push 후) (142) | 완료 | tasks/142-260510-opp-community-skills-fetch-migration/ | 2026-05-10 17:02 | 2026-05-10 18:36 |
 | 2026-05-10 | README 오픈소스 공개 P0 정비 — MIT LICENSE 신규 + README 배지·라이선스 섹션·OPAL_VERSION generic·부트스트랩 7칼럼·agents 13개·community-skills 30/6조직·MCP 트러블슈팅 + 추가작업 R-9(3-way 모드 체계 설명: 주요특징+ToC+섹션본문) + R-10(Windows winget Python 자동 설치 한 줄). ARCHITECTURE.md M-9(GC 체커 2행 §에이전트 표 보강) 동기화. QA pass_with_minor (Warning C-1: 분류 레이블 — 합계 13 정합, P1 후속). 별도 태스크 142로 community-skills fetch 전환 분리 결정 (141) | 완료 | tasks/141-260510-opp-readme-mit-license-p0/ | 2026-05-10 14:38 | 2026-05-10 16:56 |
 | 2026-05-09 | semi-agentic 모드 도입 + 전체 pilot 기본 모드 변경 — 3-way 모드 체계(interactive/semi-agentic 기본/agentic) 신설. 신규 N-1(opal-harness-semi-agentic.md) + N-2(preferences 메모리) + 수정 19종(하네스 3 / 부트스트랩 4 / op-task / pilot 7 / state-tool 2 / .opal 2) + Step 9 보정 docs/CONVENTIONS.md L161 = 총 22 변경 + GC-C001/C002 헤더 보정 3종. D-DEC-1(oppd Phase 2 WBS) / D-DEC-2(opsdd Phase 3 DESIGN) / D-DEC-5(MODE_BOUNDARY_STAGES) / D-DEC-7(AGENTIC-LOG EXECUTE 진입 시점). install + 6단계 동작 검증 모두 PASS (140) | 완료 | tasks/140-260508-opp-default-semi-agentic-mode/ | 2026-05-08 23:51 | 2026-05-09 12:18 |
