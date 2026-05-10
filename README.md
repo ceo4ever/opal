@@ -2,6 +2,8 @@
 
 > AI 환경에서 복잡한 작업을 체계적으로 수행하는 **오픈소스 AI 에이전트 프레임워크**
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![Latest Release](https://img.shields.io/github/v/release/ceo4ever/opal)](https://github.com/ceo4ever/opal/releases)
+
 ---
 
 ## OPAL이란?
@@ -32,7 +34,7 @@ AI 도구(Claude Code, Cursor 등)를 쓰다 보면 공통적인 한계에 부�
 - **Pilot 기반 파이프라인** — 개발, 기획, 문서 등 목적에 맞는 파이프라인을 선택해 실행
 - **PM 역할 분리** — 에이전트가 프로젝트 매니저로서 워커(서브에이전트)를 지휘
 - **QA 내장** — 테스트 시나리오 작성 → 구현 → 자동 검증이 파이프라인 안에 포함
-- **Agentic Mode** — `--agentic` 플래그로 전 단계를 자율 실행
+- **3-way 실행 모드** — `interactive` / `semi-agentic`(기본) / `agentic` — 사용자 검토와 PM 자율의 균형을 작업별로 선택
 - **전문 에이전트(Specialist Agent)** — 도메인별 전문 워커가 FE/BE/DB/기획/테스트를 담당
 - **커뮤니티 스킬** — 외부 조직이 제공하는 스킬을 원본 수정 없이 통합
 
@@ -54,7 +56,7 @@ AI 도구(Claude Code, Cursor 등)를 쓰다 보면 공통적인 한계에 부�
    - [opwt — 서비스 기획 산출물](#opwt--서비스-기획-산출물)
    - [oppd — 프로젝트 개발 라이프사이클](#oppd--프로젝트-개발-라이프사이클)
 7. [독립 스킬 사용법](#독립-스킬-사용법)
-8. [Agentic Mode — 자율 실행](#agentic-mode--자율-실행)
+8. [Pilot 실행 모드 (3-way)](#pilot-실행-모드-3-way)
 9. [전문 에이전트 (Specialist Agent)](#전문-에이전트-specialist-agent)
 10. [아키텍처 개요](#아키텍처-개요)
 11. [트러블슈팅](#트러블슈팅)
@@ -72,6 +74,7 @@ AI 도구(Claude Code, Cursor 등)를 쓰다 보면 공통적인 한계에 부�
 | **지원 AI 플랫폼** | Claude Code, Cursor, Gemini (Antigravity) |
 
 > Node.js는 skill-registry, state-tool 등 CLI 도구 실행에 필요하다. Python은 MCP 서버 venv 구성에 필요하다.
+> Windows에서 Python이 설치되어 있지 않으면 install이 winget을 통해 Python 3.14를 자동으로 설치한다.
 
 ### Step 2: One-liner 설치
 
@@ -93,14 +96,14 @@ iex (irm https://raw.githubusercontent.com/ceo4ever/opal/main/scripts/install.ps
 powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/ceo4ever/opal/main/scripts/install.ps1 | iex"
 ```
 
-> 특정 버전 고정: `OPAL_VERSION=v0.1` 환경변수 사용 (mac/linux) 또는 `$env:OPAL_VERSION = 'v0.1'` (Windows).
+> 특정 버전 고정: `OPAL_VERSION=<원하는-태그>` 환경변수 사용 (mac/linux) 또는 `$env:OPAL_VERSION = '<원하는-태그>'` (Windows). 최신 태그는 [GitHub Releases](https://github.com/ceo4ever/opal/releases)에서 확인할 수 있다.
 
 ### Step 3: 부트스트랩 체크리스트 확인
 
 AI 도구(Claude Code / Cursor / Gemini)를 재시작하면 첫 응답에 다음과 같이 표시된다.
 
 ```
-[부트스트랩] ✅ identity ✅ harness ✅ PM ⏳ registry ⏳ references ⏳ model-mapping
+[부트스트랩] ✅ identity ✅ harness ✅ PM ✅ PM모드 ⏳ registry ⏳ references ⏳ model-mapping
 [안내] 프로젝트 작업이라면 //opi 또는 //opp/opd/opds 로 진입하세요
 ```
 
@@ -673,29 +676,30 @@ tasks/{NNN}-{기능명}/
 
 ---
 
-## Agentic Mode — 자율 실행
+## Pilot 실행 모드 (3-way)
 
-기본 모드에서는 각 단계마다 사용자 승인이 필요하다. `--agentic` 플래그를 추가하면 PM이 단계 간 게이트를 자율적으로 통과하여 중간 확인 없이 끝까지 실행한다.
+OPAL Pilot은 **사용자 검토**와 **PM 자율** 사이의 균형을 작업별로 선택할 수 있는 3가지 실행 모드를 제공한다. 모드 플래그를 명시하지 않으면 기본 `semi-agentic`으로 동작한다.
 
-```
-//opds --agentic {작업 설명}
-//opd --agentic {작업 설명}
-//opp --agentic {작업 설명}
-//opsdd --agentic {기능 설명}
-```
+| 모드 | 호출 | 동작 |
+|------|------|------|
+| `interactive` | `//opp --interactive {작업}` | 모든 단계 게이트마다 사용자 승인 필요 — 가장 보수적 |
+| `semi-agentic` (**기본**) | `//opp {작업}` (플래그 없음) 또는 `//opp --semi-agentic {작업}` | PLAN까지 사용자 검토, EXECUTE 이후 PM 자율, **CLOSE 진입 사용자 승인 필수** |
+| `agentic` | `//opp --agentic {작업}` | 전 단계 PM 자율 통과 — CLOSE 진입만 사용자 승인 필수 |
 
-**자율 실행 시 동작**:
+> 모든 Pilot(`opds` / `opd` / `opdw` / `opp` / `opsdd` / `opwt` / `oppd`)에 동일하게 적용된다.
+
+**자율 실행 (semi-agentic / agentic) 동작**:
 - 각 단계 완료 후 PM이 품질을 자체 검토하고 다음 단계로 진행
-- 모든 판단/오류/수정 사항은 `AGENTIC-LOG.md`에 기록
+- 모든 판단·오류·수정 사항은 `AGENTIC-LOG.md`에 기록
 - 블로커 또는 스코프 변경이 감지되면 즉시 사용자에게 에스컬레이션
 
-**언제 agentic을 쓸까**:
+**언제 어떤 모드를 쓸까**:
 
 | 상황 | 권장 모드 |
 |------|---------|
-| 작업 범위가 명확하고, 중간에 확인이 필요 없을 때 | `--agentic` |
-| 규모가 크거나, 중요한 설계 결정이 포함될 때 | 기본 (interactive) |
-| 처음 해보는 유형의 작업 | 기본 (interactive) |
+| 일상적인 개발·문서 작업 (기본) | `semi-agentic` (플래그 없음) |
+| 처음 해보는 유형 / 규모가 크고 단계마다 확인하고 싶을 때 | `--interactive` |
+| 작업 범위가 명확하고 중간 확인이 불필요할 때 | `--agentic` |
 
 ---
 
@@ -724,8 +728,8 @@ PM은 PLAN.md의 각 Step에 명시된 **단계 + 영역** 조합을 보고 적�
 Global Layer (~/.opal/)          한 번 설치 → 모든 프로젝트에서 사용
 ┌─────────────────────────────────────────────────────────┐
 │  skills/        Pilot(오케스트레이터) + 단계 스킬        │
-│  agents/        서브에이전트 (전문 6종 + 범용 4종)       │
-│  community-skills/  외부 조직 제공 스킬 (31개)           │
+│  agents/        서브에이전트 (전문 6 + 범용 5 + GC 2)    │
+│  community-skills/ 외부 조직 제공 스킬 (30개 / 6개 조직) │
 │  references/    레지스트리 + 모듈화된 하네스 (harness/)  │
 │  AGENT.md       AI 에이전트 코어                         │
 │  identity.md    에이전트 정체성                          │
@@ -769,4 +773,12 @@ Project Layer (프로젝트마다 설정)
   - Claude Code: `claude mcp list`
   - Cursor: `~/.cursor/mcp.json`
   - Gemini: `~/.gemini/settings.json`
-- MCP 서버가 설치되어 있는지 확인한다: 설치 메뉴에서 `[2]` 또는 `[3]`을 선택했는지 확인
+- MCP 서버 설치 상태를 검증한다: `claude mcp list` 또는 `opal-cli doctor` 실행 (현행 install은 자동 등록)
+
+---
+
+## License
+
+OPAL은 MIT License 하에 배포된다. 자세한 내용은 [LICENSE](LICENSE) 파일을 참조한다.
+
+Copyright (c) 2026 OPAL contributors

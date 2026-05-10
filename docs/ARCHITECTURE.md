@@ -139,6 +139,8 @@ OPAL은 2-레이어 아키텍처로 동작한다.
 | opal-task-action-agent | advanced | 액션 에이전트 — oppd Phase 3 자율 실행 |
 | opal-sdd-action-agent | advanced | SDD 액션 에이전트 |
 | wtm-agent | light | web-to-markdown 병렬 처리 |
+| opal-security-checker | advanced | 보안 체크 — OWASP Top 10 / CWE Top 25 / SANS Top 25 Base + `docs/SECURITY.md` 누적 |
+| opal-convention-checker | standard | 컨벤션 체크 — 프로젝트 `docs/CONVENTIONS.md` 유일 기준 (부재 시 초안 유도) |
 
 **전문 에이전트 (Specialist)**
 
@@ -183,7 +185,7 @@ OPAL은 2-레이어 아키텍처로 동작한다.
 ─────────────────                  ──────────────────
 skills/* (독립 6개) ──┐
 opal/skills/* (24개)──┼─ install ─→  ~/.opal/skills/
-opal/agents/* (10개)──┤              ~/.opal/agents/  (source 캐시 — 어댑터 재생성용)
+opal/agents/* (12개)──┤              ~/.opal/agents/  (source 캐시 — 어댑터 재생성용)
 agents/* (범용 1개) ──┤
 community-skills/*  ──┤              ~/.opal/community-skills/
 opal/core/          ──┤              ~/.opal/AGENT.md
