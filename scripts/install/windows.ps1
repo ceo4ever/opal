@@ -53,6 +53,10 @@
         v1.3.3 2026-05-10 09:58  Install-OpalVenv 의 pip 호출 격리 — ErrorActionPreference='Continue' try/finally + python -m pip 우선 사용.
                                  Python 3.14 환경에서 pip 의 stderr 출력이 PowerShell 의 NativeCommandError(RemoteException)로 변환되어
                                  $ErrorActionPreference='Stop' + 2>&1 조합으로 throw 되던 설치 중단 결함 fix (140 추가작업, v0.3.7)
+        v1.4.0 2026-05-10 10:35  Install-WindowsPython 신규 — Python 미설치 시 winget 으로 Python.Python.3.14 user-scope 자동 설치.
+                                 옵트아웃: 환경변수 OPAL_AUTO_INSTALL_PYTHON=0 / winget 미보유·실패 시 graceful 폴백.
+                                 설치 직후 User+Machine PATH 결합 + 표준 경로 직접 탐색으로 현재 세션 인터프리터 경로 확보.
+                                 안내문구 Python 3.12 → 3.14 일괄 갱신 (140 추가작업, v0.3.9)
 #>
 
 #Requires -Version 5.1
@@ -302,11 +306,17 @@ function Test-WindowsDeps {
 
     # ── 선택 의존성 (warn 만, 설치 중단 안 함) ──
     $py = Find-Python
+    if (-not $py) {
+        if (Install-WindowsPython) {
+            $py = Find-Python
+        }
+    }
     if ($py) {
         Write-OpalInfo "Python: $py"
     } else {
         Write-OpalWarn 'Python 미설치 — Python venv / xlsx-tool / Playwright 동작 제한'
-        Write-OpalInfo '  설치: winget install Python.Python.3.12  또는  https://www.python.org/downloads/windows/'
+        Write-OpalInfo '  설치: winget install Python.Python.3.14  또는  https://www.python.org/downloads/windows/'
+        Write-OpalInfo '  (자동 설치 옵트아웃: $env:OPAL_AUTO_INSTALL_PYTHON=0)'
     }
     $nodeInfo = Find-Node
     if ($nodeInfo) {
@@ -503,6 +513,78 @@ function Find-Python {
         } catch {}
     }
     return $null
+}
+
+function Install-WindowsPython {
+    <#
+    .SYNOPSIS
+        Python 미설치 시 winget 으로 Python 3.14 user-scope 자동 설치를 시도한다.
+    .NOTES
+        - 옵트아웃: 환경변수 OPAL_AUTO_INSTALL_PYTHON=0
+        - winget 미보유 / 비관리자 환경 / 설치 실패 시 graceful 폴백 ($false 반환)
+        - 설치 직후 PATH 즉시 반영 안 됨 — User+Machine PATH 결합 + 표준 경로 직접 탐색으로 보완
+        - winget 의 native stderr 가 NativeCommandError(RemoteException)로 변환되어
+          $ErrorActionPreference='Stop' 와 결합 시 throw 되는 결함 회피 위해 ErrorAction 격리
+    .OUTPUTS
+        설치 후 Find-Python 성공 시 $true, 아니면 $false.
+    #>
+    if ($env:OPAL_AUTO_INSTALL_PYTHON -eq '0') {
+        Write-OpalInfo 'Python 자동 설치 옵트아웃(OPAL_AUTO_INSTALL_PYTHON=0) — 스킵.'
+        return $false
+    }
+
+    if (-not (Get-Command 'winget' -ErrorAction SilentlyContinue)) {
+        Write-OpalWarn 'winget 미보유 — Python 자동 설치 불가.'
+        Write-OpalInfo '  수동 설치: https://www.python.org/downloads/windows/ (PATH 추가 옵션 체크)'
+        return $false
+    }
+
+    Write-OpalInfo 'Python 미설치 감지 — winget 으로 Python 3.14 자동 설치 시도 중...'
+    $prevErrPref = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    $exit = 1
+    try {
+        & winget install --id Python.Python.3.14 --silent --accept-package-agreements --accept-source-agreements --scope user 2>&1 | Out-Host
+        $exit = $LASTEXITCODE
+    } finally {
+        $ErrorActionPreference = $prevErrPref
+    }
+
+    if ($exit -ne 0) {
+        Write-OpalWarn "winget Python 3.14 설치 실패 (exit=$exit) — 수동 설치 권장."
+        Write-OpalInfo '  수동 설치: https://www.python.org/downloads/windows/'
+        return $false
+    }
+
+    # 설치 직후 PATH 새로고침 — winget 은 현재 세션 $env:Path 를 갱신하지 않음.
+    $machinePath = [Environment]::GetEnvironmentVariable('Path', 'Machine')
+    $userPath    = [Environment]::GetEnvironmentVariable('Path', 'User')
+    if ($machinePath -or $userPath) {
+        $env:Path = "$machinePath;$userPath"
+    }
+
+    $py = Find-Python
+    if ($py) {
+        Write-OpalOk "Python 3.14 자동 설치 완료: $py"
+        return $true
+    }
+
+    # PATH 갱신 후에도 미발견 시 winget 표준 user-scope 설치 경로 직접 탐색.
+    $candidates = @(
+        (Join-Path $env:LOCALAPPDATA 'Programs\Python\Python314\python.exe'),
+        (Join-Path ${env:ProgramFiles} 'Python314\python.exe')
+    )
+    foreach ($c in $candidates) {
+        if ($c -and (Test-Path $c)) {
+            $dir = Split-Path -Parent $c
+            $env:Path = "$dir;$($env:Path)"
+            Write-OpalOk "Python 3.14 자동 설치 완료(직접 탐색): $c"
+            return $true
+        }
+    }
+
+    Write-OpalWarn 'Python 3.14 설치는 끝났으나 현재 세션에서 탐색 실패 — 새 PowerShell 세션에서 재설치 시도 권장.'
+    return $false
 }
 
 function Find-Node {
@@ -729,8 +811,9 @@ function Install-OpalVenv {
     if (-not $py) {
         Write-OpalWarn 'Python 미설치 — Python venv 스킵 (xlsx-tool / Playwright / 일부 MCP 도구 동작 제한)'
         Write-OpalInfo '설치 옵션:'
-        Write-OpalInfo '  winget install Python.Python.3.12'
+        Write-OpalInfo '  winget install Python.Python.3.14'
         Write-OpalInfo '  또는 https://www.python.org/downloads/windows/ (PATH 추가 옵션 체크)'
+        Write-OpalInfo '  (자동 설치 옵트아웃: $env:OPAL_AUTO_INSTALL_PYTHON=0)'
         return
     }
     Write-OpalInfo "Python 발견: $py"
@@ -1110,7 +1193,7 @@ function Invoke-OpalWindowsInstall {
 
     Write-Host ''
     Write-OpalOk '설치 흐름 완료.'
-    Write-OpalInfo 'Python 미설치라면 일부 도구 제한 — winget install Python.Python.3.12 후 재설치 권장.'
+    Write-OpalInfo 'Python 미설치라면 일부 도구 제한 — winget install Python.Python.3.14 후 재설치 권장.'
     Write-Host ''
 }
 

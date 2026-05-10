@@ -9,6 +9,10 @@
 #
 # 변경이력:
 #   v1.0 2026-05-08 KST 초기 구현 — 4개 체크 함수 신설 (139)
+#   v1.1 2026-05-10 10:35 KST: check_deps set -e 안전화 + python Microsoft Store stub 회피.
+#                              모든 grep|head 라인에 || true 추가 — 매치 0건 + pipefail 로 인한 abort 결함 fix.
+#                              _resolve_python3 신규 — python3 → python → py 폴백 + ^3\.X\.Y 검증으로
+#                              Windows 의 python3.exe Microsoft Store stub 으로 인한 doctor abort 결함 fix (140 추가작업, v0.3.9)
 #
 
 # ─── 공통 상수 ──────────────────────────────────────────────
@@ -36,13 +40,32 @@ _fail() { echo "${SYM_FAIL} $1"; ((FAIL_COUNT++)) || true; }
 #   ⚠       옵션 — playwright (npx @playwright/mcp@latest)
 # ─────────────────────────────────────────────────────────────
 
+# Python 인터프리터 해석 — Microsoft Store stub 회피.
+# python3 → python → py 순으로 시도하여 --version 출력이 Python 3.X.Y 인 첫 후보를 채택한다.
+# 매치 실패 시 1 반환 (set -e 미발동).
+# 출력: "<cmd>|<version>" (성공 시), 실패 시 빈 문자열.
+_resolve_python3() {
+    local cmd raw ver
+    for cmd in python3 python py; do
+        if command -v "$cmd" &>/dev/null; then
+            raw=$("$cmd" --version 2>&1 || true)
+            ver=$(echo "$raw" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1 || true)
+            if [[ "$ver" =~ ^3\.[0-9]+\.[0-9]+$ ]]; then
+                echo "${cmd}|${ver}"
+                return 0
+            fi
+        fi
+    done
+    return 1
+}
+
 check_deps() {
     echo "[1/4] Dependencies"
 
     # bash (필수)
     if command -v bash &>/dev/null; then
         local bver
-        bver=$(bash --version 2>/dev/null | head -1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+        bver=$(bash --version 2>/dev/null | head -1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1 || true)
         _pass "bash ${bver:-?}"
     else
         _fail "bash — 미설치 (필수)"
@@ -51,7 +74,7 @@ check_deps() {
     # git (필수)
     if command -v git &>/dev/null; then
         local gver
-        gver=$(git --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+        gver=$(git --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1 || true)
         _pass "git ${gver:-?}"
     else
         _fail "git — 미설치 (필수)"
@@ -59,32 +82,32 @@ check_deps() {
 
     # node (필수 v18+)
     if command -v node &>/dev/null; then
-        local nver
-        nver=$(node --version 2>/dev/null)
-        local nmaj
-        nmaj=$(echo "$nver" | grep -oE '[0-9]+' | head -1)
+        local nver nmaj
+        nver=$(node --version 2>/dev/null || true)
+        nmaj=$(echo "${nver:-}" | grep -oE '[0-9]+' | head -1 || true)
         if [[ "${nmaj:-0}" -ge 18 ]]; then
-            _pass "Node.js ${nver}"
+            _pass "Node.js ${nver:-?}"
         else
-            _fail "Node.js ${nver} — v18+ 필요"
+            _fail "Node.js ${nver:-?} — v18+ 필요"
         fi
     else
         _fail "node — 미설치 (필수, v18+)"
     fi
 
-    # python3 (필수)
-    if command -v python3 &>/dev/null; then
-        local pver
-        pver=$(python3 --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
-        _pass "python3 ${pver:-?}"
+    # python (필수, 3.x) — Windows Microsoft Store stub 자동 회피, python3/python/py 순 폴백
+    local py_info py_cmd py_ver
+    if py_info=$(_resolve_python3); then
+        py_cmd="${py_info%|*}"
+        py_ver="${py_info#*|}"
+        _pass "${py_cmd} ${py_ver}"
     else
-        _fail "python3 — 미설치 (필수)"
+        _fail "python3 — 미설치 또는 Microsoft Store stub (실제 Python 3 필요)"
     fi
 
     # curl (필수)
     if command -v curl &>/dev/null; then
         local cver
-        cver=$(curl --version 2>/dev/null | head -1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+        cver=$(curl --version 2>/dev/null | head -1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1 || true)
         _pass "curl ${cver:-?}"
     else
         _fail "curl — 미설치 (필수)"
