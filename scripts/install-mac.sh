@@ -16,6 +16,7 @@
 #   v1.9 2026-05-09 21:15 KST: 출력 quiet 모드 default — info/success 침묵, OPAL_VERBOSE=1 시 자세히. step() 신규로 단계 진행 표시. main() 비대화형 분기 정제 (139 추가작업)
 #   v2.0 2026-05-10 17:00 KST: community-skills 번들 → fetch 방식 전환 — install_opal_community_skills 함수 제거 + clean_dirs에서 community-skills 제거 (사용자 데이터 보존, D-4) + 종료 안내 추가 (142)
 #   v2.1 2026-05-10 21:00 KST: command 화이트리스트 + fork repo banner + OPAL_HOME 가드 + playwright cache 디렉토리 생성 (144)
+#   v2.2 2026-05-12 21:35 KST: cmux-tool 등록 + opal-wtm-agent 자동 어댑터 — install_opal()의 tools/ 처리 직후 cmux-tool/run.sh chmod +x 추가 (002)
 #
 
 set -euo pipefail
@@ -827,6 +828,17 @@ install_opal() {
         if [[ -f "$state_run" ]]; then
             chmod +x "$state_run"
             success "state-tool run.sh 실행 권한 설정"
+        fi
+
+        # ── cmux-tool 실행 권한 ──
+        local cmux_run="$opal_home/tools/cmux-tool/run.sh"
+        if [[ -f "$cmux_run" ]]; then
+            chmod +x "$cmux_run"
+            success "cmux-tool run.sh 실행 권한 설정"
+            # cmux 의존성 안내 (정보성 — 설치 강제 없음)
+            if ! command -v cmux &>/dev/null; then
+                info "cmux 미감지 — Phase 2(cmux) 사용 시 https://cmux.com/ 또는 https://github.com/manaflow-ai/cmux 에서 설치 필요"
+            fi
         fi
 
         # Node.js 환경 체크

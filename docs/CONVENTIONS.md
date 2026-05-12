@@ -18,7 +18,7 @@
 - **kebab-case** 사용: `user-auth-implementation`, `op-dev-plan` (Python 파일은 **snake_case**: `creative_response.py`, `user_auth.py`)
 - 스킬 폴더: `{그룹}-{역할}` — `opal-pilot-dev`, `op-dev-analysis`, `op-task-qa`
 - OPAL 에이전트 폴더: `opal/agents/{agent-name}/` — `opal-task-agent`, `opal-fe-agent`, `opal-be-agent`, `opal-plan-agent`, `opal-test-agent`, `opal-planning-agent`, `opal-db-agent`
-- 범용 에이전트 폴더: `agents/{agent-name}/` — `wtm-agent` (OPAL 무관)
+- 범용 에이전트 폴더: `agents/{agent-name}/` — 현재 비어있음 (OPAL 표준 워커는 `opal/agents/opal-*-agent/` 사용)
 - 전문 에이전트 네이밍: `opal-{domain}-agent` — `opal-fe-agent`, `opal-be-agent`, `opal-db-agent`
 - 태스크 폴더: `{NNN}-{스킬약어 또는 대상}-{동작/설명}` — `055-opi-task-record`, `052-orchestrator-cleanup`
 - SDD 명세 폴더: `specs/{NNN}-{feature-name}/` — 순번 3자리 0-패딩, kebab-case

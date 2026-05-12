@@ -63,7 +63,7 @@ create-subagents 커뮤니티 스킬의 프로세스를 따라 에이전트 콘�
 
 create-subagents의 전체 프로세스를 실행한다:
 
-1. **name** -- kebab-case, `{워크플로우}-{역할}` 패턴 권장 (예: `op-task-qa`, `wtm-agent`)
+1. **name** -- kebab-case, `{워크플로우}-{역할}` 패턴 권장 (예: `op-task-qa`, `opal-wtm-agent`)
 2. **description** -- 역할 + 언제 호출되는지 기술
 3. **tools** -- 최소 권한 원칙 적용 (Read, Write, Edit, Bash, Grep, Glob 중 필요한 것만)
 4. **model** -- 레벨로 지정 (advanced: 복잡 추론, standard: 범용, light: 단순 작업). 레벨→모델 매핑: opal-model-mapping.md 참조
@@ -199,3 +199,4 @@ Phase 2 완료 후 아래 항목을 검증한다:
 |------|------|---------|
 | v1.0 | 2026-03-20 | 초기 작성 |
 | v1.1 | 2026-03-29 | model 필드를 레벨 기반으로 전환 (044) |
+| v1.2 | 2026-05-12 21:35 KST | L66 kebab-case 예시 갱신 — `wtm-agent` → `opal-wtm-agent` (OPAL 표준화 이전 반영) (002) |

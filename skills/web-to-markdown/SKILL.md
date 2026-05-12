@@ -21,12 +21,15 @@ URL을 입력받아 웹 페이지 콘텐츠를 정제된 마크다운(.md)으로
 ### 사용자/PM 호출 (쌍슬래시 커맨드)
 
 ```
-//wtm {url}                          # 단일 URL, full 모드
-//wtm {url1} {url2} {url3}           # 복수 URL, 병렬 처리
-//wtm --browser {url}                # browser 모드 (SPA/동적 페이지, localhost)
-//wtm --browser {url1} {url2}        # browser 모드 + 복수 URL, 병렬 처리
-//wtm --clean {url}                  # 본문만 추출
-//wtm --wireframe {url}              # 와이어프레임 분석
+//wtm {url}                                # 단일 URL, full 모드, Phase 1→2(cmux 조건부)→3
+//wtm {url1} {url2} {url3}                 # 복수 URL, 병렬 처리
+//wtm --browser {url}                      # Phase 1 생략, cmux→playwright 폴백
+//wtm --browser {url1} {url2}              # browser 모드 + 복수 URL, 병렬 처리
+//wtm --surface <handle>                   # 현재 페이지(B 모드) — navigate 안 함, cleanup 금지
+//wtm --surface <handle> {url}             # surface 재사용 + navigate(C 모드)
+//wtm --wait <ms> {url}                    # wait ms 지정 (기본 2000, 0=생략)
+//wtm --clean {url}                        # 본문만
+//wtm --wireframe {url}                    # 와이어프레임
 ```
 
 ### 에이전트 디스패치 (Agent prompt 예시)
@@ -67,35 +70,43 @@ URL 목록:
 | **full** (기본) | 전체 콘텐츠 보존. nav, sidebar, header, footer 등 구조 요소를 유지한다. 메뉴 구조, 내비게이션 링크 등 유용한 정보가 보존된다. | 사이트 구조 파악, 메뉴/링크 수집, 전체 페이지 아카이빙 |
 | **clean** | 본문만 추출. nav, header, footer, sidebar, 광고 등 비본문 요소를 제거한다. | 본문 콘텐츠만 필요할 때, 문서/블로그 아티클 추출 |
 | **wireframe** | 와이어프레임 분석. 화면 구조, 구성요소, 기능 동작, 네비게이션, 데이터 I/O를 구조화된 기획 관점으로 추출한다. | 와이어프레임 HTML을 기획 문서로 변환할 때, opwt 정책서/IA 작성 시 참조 |
-| **--browser** | playwright-tool CLI 즉시 호출. WebFetch(Phase 1) 생략. | localhost, SPA/동적 페이지, 캡틴 명시 요청 |
+| **--browser** | cmux 환경 충족 시 Phase 2(cmux), 아니면 Phase 3(playwright-tool CLI) 즉시 호출. WebFetch(Phase 1) 생략. | localhost, SPA/동적 페이지, 캡틴 명시 요청 |
+| **--surface \<handle\>** | B 모드 (현재 페이지). Phase 2(cmux)로 즉시 진입, navigate 안 함, cleanup 절대 금지. | cmux surface 재사용, 인증 세션 활용 |
+| **--surface \<handle\> {url}** | C 모드 (surface 재사용 + navigate). Phase 2(cmux) goto 호출. | surface 재사용하며 다른 URL 이동 |
 
 사용자가 모드를 명시하지 않으면 **full** 모드를 적용한다. "본문만", "내용만", "clean" 등의 키워드가 있으면 clean 모드를 적용한다. "와이어프레임", "wireframe", "화면 분석", "기획 분석" 등의 키워드가 있으면 wireframe 모드를 적용한다.
 
 `--browser`, "브라우저로", "browser", "로컬" 등의 키워드가 있거나,
 URL 호스트가 `localhost`, `127.0.0.1`, `[::1]`인 경우 `browser` 모드를 자동 적용한다.
 (`browser`와 `--browser` 둘 다 허용한다.)
-browser 모드에서는 Phase 1(WebFetch)을 생략하고 Phase 2(playwright-tool CLI)로 즉시 진입한다.
+browser 모드에서는 Phase 1(WebFetch)을 생략하고 Phase 2(cmux 조건부) → Phase 3(playwright-tool CLI)로 진입한다.
 
 ---
 
 ## 실행 흐름
 
 ```
-URL 입력 (단일 또는 복수)
+URL/--surface 입력 (단일 또는 복수)
   │
-  ├─ 단일 URL → 직접 처리
+  ├─ 단일 URL/surface → 직접 처리
   │     │
-  │     ├─ [browser 모드] → Phase 1 생략, Phase 2로 즉시 이동
+  │     ├─ [browser 모드 또는 --surface 명시] → Phase 1 생략, Phase 2(cmux)로 이동
   │     │     (localhost/127.0.0.1/[::1] URL 자동 감지 포함)
   │     │
-  │     ├─ Phase 1: WebFetch (내장 도구)
+  │     ├─ Phase 1: WebFetch (단일 URL만)
   │     │     ├─ 성공 → 본문 추출 + MD 정제 → 저장
   │     │     └─ 실패 (403, 빈 콘텐츠, JS 필요, 타임아웃)
-  │     │           └─ Phase 2: playwright-tool CLI
-  │     │                 ├─ bash run.sh {url} --mode {mode}
-  │     │                 ├─ {"ok": true} → content 정제 → MD 저장
-  │     │                 └─ run.sh 미설치 → 설치 안내 후 중단
-  │     └─ 결과: {slug}.md 저장
+  │     │           └─ Phase 2
+  │     │
+  │     ├─ Phase 2: cmux (조건부) — $CMUX_SURFACE_ID + cmux 설치 모두 충족 시만
+  │     │     ├─ run.sh 호출 (모드 A/B/C)
+  │     │     ├─ {"ok": true} → content 정제 → 저장
+  │     │     └─ {"ok": false, "fallback": "phase3"} → Phase 3
+  │     │
+  │     └─ Phase 3: playwright-tool CLI
+  │           ├─ bash run.sh {url} --mode {mode}
+  │           ├─ {"ok": true} → content 정제 → MD 저장
+  │           └─ run.sh 미설치 → 설치 안내 후 중단
   │
   └─ 복수 URL → 서브에이전트 병렬 디스패치
         ├─ URL별 서브에이전트 1개씩 생성
@@ -143,9 +154,47 @@ WebFetch(url="{URL}", prompt="이 페이지의 본문 콘텐츠를 마크다운�
 
 ---
 
-## Phase 2: playwright-tool CLI
+## Phase 2: cmux (조건부)
 
-JavaScript 렌더링이 필요한 페이지를 playwright-tool CLI로 처리한다. `browser` 모드에서도 동일하게 사용한다.
+cmux 터미널 환경에서 사용자 인증 세션을 재사용하거나 동적 페이지를 추출한다.
+
+### 환경 감지
+
+두 조건을 **모두** 충족해야 Phase 2를 사용한다. 하나라도 미충족 시 Phase 3로 즉시 폴백:
+
+```bash
+[[ -n "${CMUX_SURFACE_ID:-}" ]] && command -v cmux >/dev/null 2>&1
+```
+
+### 실행
+
+```bash
+bash ~/.opal/tools/cmux-tool/run.sh <url|--surface <handle> [url]> [--mode <m>] [--wait <ms>]
+```
+
+- A 모드 (`url` 단독): 신규 surface 열기 → 추출 후 tab close
+- B 모드 (`--surface <handle>`): 현재 페이지 추출 (cleanup 절대 금지)
+- C 모드 (`--surface <handle> <url>`): surface 재사용 + navigate (cleanup 절대 금지)
+
+JSON 출력 파싱:
+- `{"ok": true, "content": "..."}` → content 정제 → 저장
+- `{"ok": false, "fallback": "phase3"}` → Phase 3로 폴백
+
+### cmux 미설치 시
+
+Phase 3로 자동 폴백한다. 사용자가 명시적으로 cmux 설치를 원하는 경우:
+- 공식 사이트: https://cmux.com/
+- GitHub: https://github.com/manaflow-ai/cmux
+
+### 추출 방식 표기
+
+산출물 형식의 `추출 방식` 필드에 `cmux (모드 A|B|C)`로 표기한다.
+
+---
+
+## Phase 3: playwright-tool CLI
+
+JavaScript 렌더링이 필요한 페이지를 playwright-tool CLI로 처리한다. `browser` 모드 또는 Phase 1 실패 후 cmux 환경 미충족 또는 Phase 2 실패 시 진입한다.
 
 ### CLI 설치 확인
 
@@ -191,8 +240,8 @@ wireframe 모드는 기존 3단계 폴백 위에 분석 레이어를 추가하�
 ```
 URL 입력 (wireframe 모드)
   │
-  ├─ 기존 2단계 폴백으로 콘텐츠 취득 (full 모드 기반)
-  │   Phase 1: WebFetch → Phase 2: playwright-tool CLI
+  ├─ 기존 3단계 폴백으로 콘텐츠 취득 (full 모드 기반)
+  │   Phase 1: WebFetch → Phase 2: cmux(조건부) → Phase 3: playwright-tool CLI
   │
   └─ 분석 레이어 적용
         ├─ 화면 개요 추출 (타이틀, 목적, URL 경로)
@@ -303,7 +352,7 @@ URL 경로 기반 kebab-case로 파일명을 생성한다:
 
 ## 콘텐츠 추출 및 MD 정제
 
-모든 Phase에서 아래 정제 규칙을 적용한다. Phase 2(playwright-tool CLI)는 content 필드로 Markdown을 직접 반환하므로 추가 정제만 수행한다.
+모든 Phase에서 아래 정제 규칙을 적용한다. Phase 2(cmux) 및 Phase 3(playwright-tool CLI)는 content 필드로 HTML/Markdown을 직접 반환하므로 추가 정제만 수행한다.
 
 **중요**: 어떤 Phase를 거치든 최종 산출물은 반드시 아래 "산출물 형식"을 따르는 .md 파일이어야 한다. 중간 파일(.txt, .html 등)을 생성하지 않는다.
 
@@ -344,7 +393,7 @@ clean 모드에서만 아래 요소를 추가로 제거한다:
 
 > 소스: {URL}
 > 캡처일: {YYYY-MM-DD HH:mm}
-> 추출 방식: {WebFetch | playwright-tool CLI}
+> 추출 방식: {WebFetch | cmux (모드 A|B|C) | playwright-tool CLI}
 > 추출 모드: {full | clean}
 
 ---
@@ -388,11 +437,11 @@ URL에서 도메인과 경로를 조합하여 kebab-case slug를 생성한다:
 
 ### 워커 에이전트
 
-**에이전트 이름**: `wtm-agent`
+**에이전트 이름**: `opal-wtm-agent`
 
 탐색 경로 (우선순위):
-1. `{프로젝트}/.opal/agents/wtm-agent/AGENT.md`
-2. `~/.opal/agents/wtm-agent/AGENT.md`
+1. `{프로젝트}/.opal/agents/opal-wtm-agent/AGENT.md`
+2. `~/.opal/agents/opal-wtm-agent/AGENT.md`
 
 ### 처리 방식 선택 기준
 
@@ -470,9 +519,24 @@ URL 목록 수신 (동일 호스트, URL 6개 이상)
 | # | URL | 방식 | 결과 | 저장 경로 |
 |---|-----|------|------|----------|
 | 1 | {url} | WebFetch | ✅ 성공 | {path} |
-| 2 | {url} | playwright-tool CLI | ✅ 성공 | {path} |
-| 3 | {url} | WebFetch | ⚠️ 부분 성공 | {path} |
+| 2 | {url} | cmux (모드 A) | ✅ 성공 | {path} |
+| 3 | {url} | playwright-tool CLI | ✅ 성공 | {path} |
+| 4 | {url} | WebFetch | ⚠️ 부분 성공 | {path} |
 ```
+
+### B/C 모드 결과 보고 (사용자 surface)
+
+opal-wtm-agent가 B/C 모드로 추출한 경우, 반환 JSON의 `summary` 필드(2차 계층에서 자동 부착된 경고문 포함)를 사용자에게 **그대로** 노출한다. 경고문을 임의로 수정하거나 생략하지 않는다.
+
+보고 형식 예시:
+
+```
+✅ web-to-markdown 완료 (Phase 2 cmux, mode=C)
+📁 저장: {artifact_path}
+⚠️  사용자 세션 기반 추출 — 민감 정보 포함 가능, 외부 공유 시 검토 필요
+```
+
+A 모드(신규 surface 또는 일반 URL)에서는 경고문을 노출하지 않는다 (`user_owned: false`).
 
 ---
 
@@ -491,13 +555,16 @@ URL 목록 수신 (동일 호스트, URL 6개 이상)
 
 ## 의존성
 
-### 필수 도구
+### 필수/선택 도구
 
-| 도구 | 필요 시점 | 미설치 시 동작 |
-|------|----------|--------------|
-| `playwright-tool` CLI | browser 모드 진입 시, 또는 Phase 1 실패 후 Phase 2 진입 시 | 설치 안내 메시지 출력 후 즉시 중단 |
+| 도구 | 필수 여부 | 필요 시점 | 미설치 시 동작 |
+|------|----------|----------|--------------|
+| WebFetch (내장) | 필수 | Phase 1 경량 fetch | — (내장) |
+| `cmux` 0.64.3+ | 선택 | `$CMUX_SURFACE_ID` 환경에서 Phase 2 진입 | 안내 없이 Phase 3로 자동 폴백 |
+| `playwright-tool` CLI | 필수 (OPAL 설치) | Phase 3 진입 시 (cmux 환경 미충족 또는 Phase 2 실패) | 설치 안내 메시지 출력 후 즉시 중단 |
+| Agent 도구 | 선택 | 복수 URL 병렬 처리 | — |
 
-**사전 확인 규칙**: browser 모드가 명시되거나 localhost/127.0.0.1/[::1] URL이 감지된 경우, Phase 진입 전에 아래 Bash 명령으로 `run.sh` 파일 존재 여부를 확인한다. 미설치 확인 시 "playwright-tool 미설치 시" 안내를 즉시 출력하고 실행을 중단한다.
+**사전 확인 규칙**: browser 모드가 명시되거나 localhost/127.0.0.1/[::1] URL이 감지된 경우, Phase 3 진입 전에 아래 Bash 명령으로 `run.sh` 파일 존재 여부를 확인한다. 미설치 확인 시 "playwright-tool 미설치 시" 안내를 즉시 출력하고 실행을 중단한다.
 
 ```bash
 ls ~/.opal/tools/playwright-tool/run.sh 2>/dev/null || echo "NOT_FOUND"
@@ -505,19 +572,12 @@ ls ~/.opal/tools/playwright-tool/run.sh 2>/dev/null || echo "NOT_FOUND"
 
 > Phase 1(WebFetch) 경로에서는 CLI 사전 확인을 수행하지 않는다. Phase 1 성공 시 playwright-tool 없이 완료 가능하므로 불필요한 확인을 방지한다.
 
-| 도구 | 필수 여부 | 용도 |
-|------|----------|------|
-| WebFetch (내장) | 필수 | Phase 1 경량 fetch |
-| `playwright-tool` CLI | 필수 (OPAL 설치) | Phase 2 브라우저 렌더링, browser 모드 |
-| Agent 도구 | 선택 | 복수 URL 병렬 처리 |
+cmux 설치:
+- 공식 사이트: https://cmux.com/
+- GitHub: https://github.com/manaflow-ai/cmux
 
-설치 확인:
+playwright-tool 설치:
 ```bash
-ls ~/.opal/tools/playwright-tool/run.sh
-```
-
-미설치 시 설치 방법:
-```
 scripts/install-mac.sh → 옵션 1 (OPAL 설치)
 ```
 
@@ -536,3 +596,4 @@ scripts/install-mac.sh → 옵션 1 (OPAL 설치)
 | v1.6 | 2026-04-03 | Phase 2 스냅샷 보관 단계 추가 — `/tmp/playwright-mcp/` → task 폴더 자동 복사, yml 재처리 지원 (078) |
 | v1.7 | 2026-04-03 | Phase 2를 Playwright MCP → playwright-tool CLI로 교체, browser 모드 병렬 디스패치 허용, MCP 의존성 제거 (079) |
 | v1.8 | 2026-04-03 | 호출 인터페이스 섹션 추가 — 쌍슬래시 커맨드, 에이전트 디스패치 예시, 입출력 요약 (079) |
+| v1.9 | 2026-05-12 21:35 KST | 워커 에이전트 OPAL 표준화 (wtm-agent → opal-wtm-agent) + Phase 2 cmux 신설 (Phase 2 playwright → Phase 3 재번호) + `--surface <handle>` 3모드(A/B/C) + `--wait <ms>` 옵션 + Crawl4AI 잔존 참조 제거 (002) |

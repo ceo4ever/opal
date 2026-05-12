@@ -213,12 +213,28 @@ Antigravity는 2026-04 기준 커스텀 sub-agent를 지원하지 않는다 ([�
 
 ## web-to-markdown 에이전트
 
-### wtm-agent
+### opal-wtm-agent
 
-- **역할**: web-to-markdown 에이전트 — 단일 URL을 받아 Phase 1(WebFetch) → Phase 2(Crawl4AI) 폴백 전략으로 웹 페이지를 마크다운으로 변환
-- **호출 시점**: web-to-markdown 스킬에서 URL별로 오케스트레이터가 디스패치
-- **입력**: url, save_path, mode (full/clean)
-- **출력**: 마크다운 파일 (save_path에 저장)
+- **역할**: web-to-markdown 스킬 워커 — Phase 1(WebFetch) → Phase 2(cmux, 조건부) → Phase 3(playwright-tool CLI) 폴백으로 단일 URL 또는 사용자 cmux surface(B/C 모드)를 마크다운으로 변환
+- **호출 시점**: web-to-markdown 스킬에서 URL/surface별로 오케스트레이터가 디스패치
+- **단계**: 도구성 워커 (파이프라인 단계 외)
+- **영역**: 공통
+- **model**: light
+- **입력**: `url | --surface <handle> [url]`, `save_path`, `mode (full|clean|wireframe)`, `--wait <ms>` (기본 2000)
+- **출력**: 마크다운 파일(`{save_path}/{slug}.md`) + JSON 결과 (총 8필드):
+  ```json
+  {
+    "artifact_path": "...",
+    "summary": "...",
+    "status": "completed",
+    "blockers": [],
+    "changed_files": ["..."],
+    "method": "cmux|webfetch|playwright-cli",
+    "mode": "A|B|C|null",
+    "user_owned": false
+  }
+  ```
+- **에이전트 경로**: `opal/agents/opal-wtm-agent/`
 
 ## 에이전트 추가 가이드
 
@@ -298,3 +314,4 @@ project: mams
 | v1.1 | 2026-04-30 | 플랫폼 sub-agent 어댑터 변환 규칙 §추가 — Claude/Cursor/Gemini 4개 플랫폼 메커니즘 표 + frontmatter 변환 규칙 + Antigravity 미지원 처리 (133) |
 | v1.2 | 2026-04-30 | emit_platform_agent_adapter description 평탄화 — Claude Code 파서 호환 (133) |
 | v1.3 | 2026-04-30 | AUTO-GENERATED 헤더 검사 범위를 전체 파일로 확장 — frontmatter 외 헤더 위치 오탐지 결함 수정 (133) |
+| v1.4 | 2026-05-12 21:35 KST | §wtm-agent → §opal-wtm-agent 갱신 — Phase 1(WebFetch)→Phase 2(cmux 조건부)→Phase 3(playwright-tool CLI) 폴백, 입력 `--surface` 3모드, 출력 JSON 8필드, 에이전트 경로 opal/agents/opal-wtm-agent/ (002) |

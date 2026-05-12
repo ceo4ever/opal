@@ -47,7 +47,7 @@
 | `tasks/` | `{NNN}-{스킬약어}-{설명}/` | `066-opp-orchestrator-skill-gate/`, `062-opp-opwt-external-refs/` |
 | `skills/` | `{기능명}/` (kebab-case) | `api-analyzer/`, `interview/` |
 | `opal/skills/` | `{그룹}-{역할}/` (접두사 체계) | `opal-pilot-dev/`, `op-dev-plan/` |
-| `agents/` | `{대상}-{역할}/` | `opal-task-agent/`, `wtm-agent/` |
+| `agents/` | `{대상}-{역할}/` | 현재 비어있음 (모든 워커 에이전트는 `opal/agents/`로 통합) |
 | `docs/` | `{대문자}.md` | `PROJECT.md`, `ARCHITECTURE.md` |
 
 ## 주요 컴포넌트 (SDD 파이프라인)

@@ -1,0 +1,211 @@
+{
+  "task_id": "002-260512-opp-wtm-opal-standardization",
+  "skill": "opp",
+  "mode": "semi-agentic",
+  "schema_version": "1.0",
+  "created_at": "2026-05-12 18:12",
+  "updated_at": "2026-05-12 22:16",
+  "current_status": "done",
+  "rows": [
+    {
+      "row_id": 1,
+      "stage": "TASK",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-12 18:12",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 2,
+      "stage": "TASK",
+      "item": "TASK.md 생성",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-12 18:12",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 3,
+      "stage": "TASK",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-12 18:14",
+      "owner": "user",
+      "note": "캡틴 승인: 'PLAN 단계 진입'"
+    },
+    {
+      "row_id": 4,
+      "stage": "PLAN",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-12 18:22",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 5,
+      "stage": "PLAN",
+      "item": "PLAN.md 생성",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-12 18:22",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 6,
+      "stage": "PLAN",
+      "item": "QA Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-12 21:13",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 7,
+      "stage": "PLAN",
+      "item": "QA-PLAN.md 생성",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-12 18:26",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 8,
+      "stage": "PLAN",
+      "item": "State Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-12 21:13",
+      "owner": "PM",
+      "note": "PM Gate 통과 (행 8)"
+    },
+    {
+      "row_id": 9,
+      "stage": "PLAN",
+      "item": "PM Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-12 21:13",
+      "owner": "PM",
+      "note": "PM Gate 통과 (행 9)"
+    },
+    {
+      "row_id": 10,
+      "stage": "PLAN",
+      "item": "State Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-12 21:13",
+      "owner": "PM",
+      "note": "PM Gate 통과 (행 10)"
+    },
+    {
+      "row_id": 11,
+      "stage": "PLAN",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-12 21:34",
+      "owner": "user",
+      "note": "캡틴 승인: 'EXECUTE 진입'"
+    },
+    {
+      "row_id": 12,
+      "stage": "EXECUTE",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-12 21:47",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 13,
+      "stage": "EXECUTE",
+      "item": "QA Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-12 21:53",
+      "owner": "auto",
+      "note": "agentic auto-pass: semi-agentic auto-pass: EXECUTE QA Pass + PM Gate 정적 검증 통과 (bash syntax / 핵심 분기 / JSON SSOT / 변경이력 KST)"
+    },
+    {
+      "row_id": 14,
+      "stage": "EXECUTE",
+      "item": "QA-EXECUTE.md 생성",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-12 21:53",
+      "owner": "auto",
+      "note": "agentic auto-pass: semi-agentic auto-pass: EXECUTE QA Pass + PM Gate 정적 검증 통과 (bash syntax / 핵심 분기 / JSON SSOT / 변경이력 KST)"
+    },
+    {
+      "row_id": 15,
+      "stage": "EXECUTE",
+      "item": "State Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-12 21:53",
+      "owner": "auto",
+      "note": "agentic auto-pass: semi-agentic auto-pass: EXECUTE QA Pass + PM Gate 정적 검증 통과 (bash syntax / 핵심 분기 / JSON SSOT / 변경이력 KST)"
+    },
+    {
+      "row_id": 16,
+      "stage": "EXECUTE",
+      "item": "PM Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-12 21:53",
+      "owner": "auto",
+      "note": "agentic auto-pass: semi-agentic auto-pass: EXECUTE QA Pass + PM Gate 정적 검증 통과 (bash syntax / 핵심 분기 / JSON SSOT / 변경이력 KST)"
+    },
+    {
+      "row_id": 17,
+      "stage": "EXECUTE",
+      "item": "State Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-12 21:53",
+      "owner": "auto",
+      "note": "agentic auto-pass: semi-agentic auto-pass: EXECUTE QA Pass + PM Gate 정적 검증 통과 (bash syntax / 핵심 분기 / JSON SSOT / 변경이력 KST)"
+    },
+    {
+      "row_id": 18,
+      "stage": "EXECUTE",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-12 22:15",
+      "owner": "user",
+      "note": "캡틴 확인: 'EXECUTE 결과 정적 검증 충분, CLOSE 진입'"
+    },
+    {
+      "row_id": 19,
+      "stage": "CLOSE",
+      "item": "DONE.md 생성",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-12 22:16",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 20,
+      "stage": "CLOSE",
+      "item": "State Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-12 22:16",
+      "owner": "PM",
+      "note": null
+    }
+  ]
+}

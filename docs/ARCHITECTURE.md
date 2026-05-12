@@ -46,7 +46,7 @@ OPAL은 2-레이어 아키텍처로 동작한다.
 │  │  ├─ opal-test-agent: 테스트 전문 (도메인별 모드)   │   │
 │  │  ├─ opal-task-qa-agent: QA 스킬 동적 실행          │   │
 │  │  ├─ opal-task-action-agent: oppd Phase 3 액션 자율 실행  │
-│  │  └─ wtm-agent: 웹→마크다운 변환                    │   │
+│  │  └─ opal-wtm-agent: 웹→마크다운 변환                │   │
 │  └──────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────┘
 ```
@@ -138,7 +138,7 @@ OPAL은 2-레이어 아키텍처로 동작한다.
 | opal-task-qa-agent | light | 범용 QA 워커 — qa_skill로 QA 스킬 동적 실행 |
 | opal-task-action-agent | advanced | 액션 에이전트 — oppd Phase 3 자율 실행 |
 | opal-sdd-action-agent | advanced | SDD 액션 에이전트 |
-| wtm-agent | light | web-to-markdown 병렬 처리 |
+| opal-wtm-agent | light | web-to-markdown 워커 (Phase 1 WebFetch → Phase 2 cmux → Phase 3 playwright-tool CLI) |
 | opal-security-checker | advanced | 보안 체크 — OWASP Top 10 / CWE Top 25 / SANS Top 25 Base + `docs/SECURITY.md` 누적 |
 | opal-convention-checker | standard | 컨벤션 체크 — 프로젝트 `docs/CONVENTIONS.md` 유일 기준 (부재 시 초안 유도) |
 
@@ -271,8 +271,7 @@ opal/                                    ← 이 저장소
 │   ├── ui-designer/                     UI 구현
 │   ├── wireframe-builder/               와이어프레임 설계
 │   └── web-to-markdown/                 웹→마크다운
-├── agents/                              범용 에이전트 (OPAL 무관)
-│   └── wtm-agent/                       웹→마크다운 에이전트
+├── agents/                              범용 에이전트 슬롯 (현재 비어있음)
 ├── opal/                                OPAL 코어
 │   ├── bootstrapper/                    플랫폼별 부트스트래퍼
 │   ├── core/                            에이전트 코어 + 레퍼런스 + MCP
@@ -282,6 +281,7 @@ opal/                                    ← 이 저장소
 │   ├── tools/                           CLI 도구
 │   │   ├── skill-registry/              스킬 레지스트리 CLI (skill-registry.js)
 │   │   ├── xlsx-tool/                   xlsx 읽기/쓰기 CLI (run.sh)
+│   │   ├── cmux-tool/                   cmux browser 래퍼 (run.sh) — 3모드(A/B/C) + user_owned 시그널
 │   │   ├── check-env.js                 Node.js 환경 체크
 │   │   └── requirements.txt             Python 의존성 (venv 관리)
 │   ├── skills/                          OPAL 스킬 (24개)
@@ -300,7 +300,7 @@ opal/                                    ← 이 저장소
 │   │   ├── opal-onboarding/             에이전트 온보딩
 │   │   ├── opal-orchestrator/           오케스트레이션 모드
 │   │   └── opal-skill-manager/          스킬 관리
-│   ├── agents/                          OPAL 에이전트 (10개: 전문 6 + 범용 4)
+│   ├── agents/                          OPAL 에이전트 (11개: 전문 6 + 범용 4 + 도구성 1)
 │   │   ├── opal-plan-agent/             전문: PLAN 설계 (advanced)
 │   │   ├── opal-fe-agent/               전문: FE 구현
 │   │   ├── opal-be-agent/               전문: BE 구현
@@ -310,7 +310,8 @@ opal/                                    ← 이 저장소
 │   │   ├── opal-task-agent/             범용 워커 (폴백)
 │   │   ├── opal-task-qa-agent/          범용 QA 워커
 │   │   ├── opal-task-action-agent/      액션 에이전트 (oppd)
-│   │   └── opal-sdd-action-agent/       SDD 액션 에이전트
+│   │   ├── opal-sdd-action-agent/       SDD 액션 에이전트
+│   │   └── opal-wtm-agent/              웹→마크다운 워커 (Phase 1 WebFetch → Phase 2 cmux → Phase 3 playwright-tool CLI)
 │   └── templates/                       프로젝트 에이전트 템플릿
 ├── cursor-rules/                        Cursor 프로젝트 규칙 템플릿
 ├── scripts/                             설치 스크립트 (install-mac.sh)
