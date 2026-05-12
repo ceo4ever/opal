@@ -107,6 +107,12 @@ Read ~/.opal/skills/op-dev-test-scenario/references/test-scenario-guide.md
 ## 설계 피드백
 
 {시나리오 작성 과정에서 발견한 PLAN/TODO의 빈틈. 없으면 "없음"}
+
+## AC ↔ verify check 매핑 표
+
+| AC ID | 대응 시나리오 | 비고 |
+|-------|-------------|------|
+| {F-N AC (a)} | S-{N} | {검증 설명} |
 ```
 
 ## 저장 경로
@@ -127,6 +133,7 @@ TEST-SCENARIO.md 작성 후 자체 검증한다:
 - [ ] `.opal/test-tools.yaml` 또는 프로젝트 설정 파일을 참조하여 도구를 결정했는가
 - [ ] 문서 전용 태스크인 경우 스킵 규칙을 적용했는가
 - [ ] 설계 빈틈 발견 시 피드백 섹션에 기록했는가
+- [ ] TASK.md의 각 AC가 어느 시나리오(S-N)에 대응하는지 `## AC ↔ verify check 매핑 표`가 TEST-SCENARIO.md에 작성되어 있는가
 
 ## 완료 후 동작
 
@@ -142,3 +149,4 @@ TEST-SCENARIO 완료: tasks/{NNN}-{태스크명}/TEST-SCENARIO.md
 | 버전 | 날짜 | 변경내용 |
 |------|------|---------|
 | v1.2 | 2026-04-15 | 실행 주체에 전문 에이전트 체계 안내 + PLAN 통합 비고 추가 (117) |
+| v1.3 | 2026-05-12 11:16 | 시나리오 작성 체크리스트에 AC↔verify check 매핑 표 의무 룰 + 형식 예시 추가 (001) |

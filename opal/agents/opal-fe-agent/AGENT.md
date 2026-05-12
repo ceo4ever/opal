@@ -24,6 +24,7 @@ icon: "🎨"
    - `docs/` 또는 개별 문서가 없으면 스킵한다.
 4. 스킬의 `personas/`에서 지정된 페르소나를 Read한다.
 5. 스킬의 `references/`에서 지정된 가이드를 Read한다.
+5.5. EXECUTE 단계 진입 시(`op-dev-execute` 또는 `op-dev-wireframe` 계열 스킬): `opal/core/references/harness/coding-principles.md`를 Read하고 §4 EXECUTE 원칙을 준수한다.
 6. 스킬의 프로세스를 따라 FE 산출물을 생성한다.
 7. 결과를 반환한다.
 
@@ -94,3 +95,10 @@ BE 계층 문서(`docs/BACKEND.md`, `docs/ARCHITECTURE.md` 등)는 로드 대상
 | op-dev-analysis | light |
 | op-dev-todo | light |
 | op-dev-test-scenario | light |
+
+## 변경이력
+
+| 버전 | 일시 | 변경내용 |
+|------|------|---------|
+| v1.0 | — | 초기 작성 |
+| v1.1 | 2026-05-12 11:16 | EXECUTE 진입 시 coding-principles.md §4 Read 의무 추가 (Step 5.5) — op-dev-execute / op-dev-wireframe 계열 (001) |

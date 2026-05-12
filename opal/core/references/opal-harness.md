@@ -96,6 +96,7 @@ Lazy 로드 모듈. 각 §의 stub이 로드 시점과 파일 경로를 지시�
 | State 관리 | `harness/state.md` | TASK 단계 시작 / Gate 직후 State Gate | §3 |
 | TASK 공통 프로세스 | `harness/task-process.md` | TASK 단계 진입 시 | §4 |
 | 보고 형식 | `harness/reporting-template.md` | Eager 단계 (Step 6.6) — 세션 시작 시 | §보고 형식 |
+| Coding Principles | `harness/coding-principles.md` | EXECUTE 단계 진입 시 (코드 변경 워커) / PM "그냥 해" 진입 시 | §10 |
 
 > 탐색 경로: `{프로젝트}/.opal/references/harness/{file}` → `~/.opal/references/harness/{file}`
 
@@ -236,6 +237,17 @@ OPAL 도구는 모두 `~/.opal/tools/{tool-name}/run.sh` 래퍼를 통해 호출
 
 ---
 
+## 10. Coding Principles
+
+> **[필수 로드]** EXECUTE 단계에서 코드 파일 변경 시, 또는 PM "그냥 해" 직접 수행 시 로드한다.
+> 탐색: `harness/coding-principles.md`
+>
+> 적용 주체: 코드 변경하는 모든 워커 + PM("그냥 해")
+> 적용 시점: EXECUTE 단계 진입 직후 / PM 직접 수행 시
+> PM Gate 검증: 산출물에 사변적 추가·인접 코드 개선·불가능 시나리오 방어 코드가 없는가
+
+---
+
 ## 변경이력
 
 | 버전 | 날짜 | 내용 |
@@ -269,3 +281,4 @@ OPAL 도구는 모두 `~/.opal/tools/{tool-name}/run.sh` 래퍼를 통해 호출
 | v4.6 | 2026-05-01 | §3 state-tool [MUST] 호출 의무 블록 추가 — 파이프라인 현황판 행 상태 변경은 state-tool로만, 위반 시 에러 코드 목록 + PLAN §2.18 링크. §9 도구 테이블에 state-tool 행 추가 (트리거: TASK 단계 시작 / Gate 직후 / 추가작업 진입) (134) |
 | v4.7 | 2026-05-09 11:22 | §2 모듈 구조 표에 semi-agentic 행 추가 + 로딩 규칙 3-way 갱신 (140) |
 | v4.8 | 2026-05-10 19:36 | §2 하네스 모듈 테이블에 reporting-template 행 추가 — Eager 로드 (143) |
+| v4.9 | 2026-05-12 11:16 | §2 하네스 모듈 테이블에 coding-principles 행 추가 + §10 Coding Principles stub 신설 (001) |

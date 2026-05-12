@@ -59,4 +59,12 @@ icon: "✨"
 - 스킬이 지시하지 않은 작업은 수행하지 않는다.
 - QA/Test 에이전트를 호출하지 않는다 — 오케스트레이터의 책임이다.
 - STATE.md 갱신은 `~/.opal/tools/state-tool/run.sh ...` 호출로만 수행하며, 워커는 `--as-worker --worker-stage <자기단계>` 한정. 다른 단계 행은 도구가 거부(`worker_scope_violation`). <!-- TASK F-17 / PLAN §1.5 M-25 / §2.4 / §2.18 #1 / §3 Step 10 -->
+- EXECUTE 단계 진입 시(스킬이 `op-dev-execute` 또는 `op-task-execute` 계열일 때): `opal/core/references/harness/coding-principles.md`를 Read하고 §4 EXECUTE 원칙을 준수한다.
 - 블로커 발생 시 즉시 `status: blocked`로 반환한다.
+
+## 변경이력
+
+| 버전 | 일시 | 변경내용 |
+|------|------|---------|
+| v1.0 | — | 초기 작성 |
+| v1.1 | 2026-05-12 11:16 | 행동 규칙에 EXECUTE 진입 시 coding-principles.md §4 Read 의무 추가 — op-dev-execute / op-task-execute 계열 (001) |
