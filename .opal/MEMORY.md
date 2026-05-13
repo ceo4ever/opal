@@ -1,7 +1,7 @@
 # opal Memory Index
 
-> 최종 갱신: 2026-05-12 (태스크 002 채번)
-> last_task_number: 2
+> 최종 갱신: 2026-05-13 (태스크 003 채번)
+> last_task_number: 3
 
 ## 메모리 카테고리
 
@@ -34,3 +34,4 @@
 |----------|------|------|------|---------|---------|
 | 2026-05-12 | 001 카르파시 행동 원칙 흡수 — Coding Principles SSOT 신설 + TASK AC 보강 | CLOSE | tasks/001-260512-opp-coding-principles-ssot/ | 2026-05-12 10:48 | 2026-05-12 14:54 |
 | 2026-05-12 | 002 wtm-agent OPAL 표준화 + cmux 통합 + 사용자 surface 재사용 | CLOSE | tasks/002-260512-opp-wtm-opal-standardization/ | 2026-05-12 18:10 | 2026-05-12 22:15 |
+| 2026-05-13 | 003 보고 형식 양식 보강 — 결론/근거 번호화 + 이모티 prefix + 다음 블록 2갈래 | CLOSE | tasks/003-260513-opp-reporting-format-enhancement/ | 2026-05-13 17:21 | 2026-05-13 17:48 |

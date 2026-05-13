@@ -1,0 +1,211 @@
+{
+  "task_id": "003-260513-opp-reporting-format-enhancement",
+  "skill": "opp",
+  "mode": "semi-agentic",
+  "schema_version": "1.0",
+  "created_at": "2026-05-13 17:21",
+  "updated_at": "2026-05-13 17:48",
+  "current_status": "done",
+  "rows": [
+    {
+      "row_id": 1,
+      "stage": "TASK",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-13 17:21",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 2,
+      "stage": "TASK",
+      "item": "TASK.md 생성",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-13 17:21",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 3,
+      "stage": "TASK",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-13 17:23",
+      "owner": "user",
+      "note": "캡틴 승인: PLAN 진입 (semi-agentic)"
+    },
+    {
+      "row_id": 4,
+      "stage": "PLAN",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-13 17:29",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 5,
+      "stage": "PLAN",
+      "item": "PLAN.md 생성",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-13 17:29",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 6,
+      "stage": "PLAN",
+      "item": "QA Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-13 17:32",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 7,
+      "stage": "PLAN",
+      "item": "QA-PLAN.md 생성",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-13 17:32",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 8,
+      "stage": "PLAN",
+      "item": "State Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-13 17:32",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 9,
+      "stage": "PLAN",
+      "item": "PM Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-13 17:32",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 10,
+      "stage": "PLAN",
+      "item": "State Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-13 17:32",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 11,
+      "stage": "PLAN",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-13 17:34",
+      "owner": "user",
+      "note": "캡틴 승인: EXECUTE 진입 (semi-agentic 모드 경계 통과)"
+    },
+    {
+      "row_id": 12,
+      "stage": "EXECUTE",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-13 17:41",
+      "owner": "auto",
+      "note": "agentic auto-pass: semi-agentic auto-pass: EXECUTE Step 1·2·3·5 워커 완료 + Step 4·6 PM 직접 완료 / 모든 체크박스 [x]"
+    },
+    {
+      "row_id": 13,
+      "stage": "EXECUTE",
+      "item": "QA Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-13 17:43",
+      "owner": "auto",
+      "note": "agentic auto-pass: semi-agentic auto-pass: QA-EXECUTE Pass"
+    },
+    {
+      "row_id": 14,
+      "stage": "EXECUTE",
+      "item": "QA-EXECUTE.md 생성",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-13 17:43",
+      "owner": "auto",
+      "note": "agentic auto-pass: semi-agentic auto-pass: QA-EXECUTE.md 생성 완료"
+    },
+    {
+      "row_id": 15,
+      "stage": "EXECUTE",
+      "item": "State Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-13 17:43",
+      "owner": "auto",
+      "note": "agentic auto-pass: semi-agentic auto-pass: State Gate 통과"
+    },
+    {
+      "row_id": 16,
+      "stage": "EXECUTE",
+      "item": "PM Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-13 17:43",
+      "owner": "auto",
+      "note": "agentic auto-pass: semi-agentic auto-pass: PM Gate 검토 완료 — 7개 요구사항 충족, 가드레일 위반 0건, 변경이력 v1.1/v2.6 행 추가, 배포 확인"
+    },
+    {
+      "row_id": 17,
+      "stage": "EXECUTE",
+      "item": "State Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-13 17:43",
+      "owner": "auto",
+      "note": "agentic auto-pass: semi-agentic auto-pass: State Gate 통과"
+    },
+    {
+      "row_id": 18,
+      "stage": "EXECUTE",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-13 17:48",
+      "owner": "user",
+      "note": "캡틴 승인: CLOSE 진입"
+    },
+    {
+      "row_id": 19,
+      "stage": "CLOSE",
+      "item": "DONE.md 생성",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-13 17:48",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 20,
+      "stage": "CLOSE",
+      "item": "State Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-13 17:48",
+      "owner": "PM",
+      "note": null
+    }
+  ]
+}
