@@ -24,7 +24,7 @@
 | pilot | PLAN-equivalent 종료 시점 | EXECUTE-equivalent 시작 시점 |
 |-------|--------------------------|----------------------------|
 | opp   | PLAN 사용자 확인 행 (행 11) | EXECUTE 작업 행 (행 12) |
-| opd   | PLAN 사용자 확인 행 | EXECUTE 작업 행 |
+| opd   | TEST-SCENARIO 사용자 확인 행 | EXECUTE 작업 행 |
 | opds  | PLAN 사용자 확인 행 | EXECUTE 작업 행 |
 | opdw  | WIREFRAME 사용자 확인 행 | EXECUTE 작업 행 |
 | opwt  | PLAN(간략/진단보고) 사용자 확정 행 | EXECUTE 작업 행 |
@@ -90,14 +90,15 @@ CLOSE 진입 절차:
 
 ## 8. interactive / agentic / semi-agentic 차이 표
 
-| 단계 | interactive | semi-agentic | agentic |
-|------|-------------|-------------|---------|
-| TASK 완료     | 사용자 승인 | 사용자 승인 | PM 자율 |
-| ANALYSIS 완료 | 사용자 승인 | 사용자 승인 | PM 자율 |
-| PLAN 완료     | 사용자 승인 | 사용자 승인 (모드 경계) | PM 자율 |
-| EXECUTE 완료  | 사용자 승인 | PM 자율 | PM 자율 |
-| TEST 완료     | 사용자 승인 | PM 자율 | PM 자율 |
-| CLOSE 진입    | 사용자 승인 | 사용자 승인 (공통 게이트) | 사용자 승인 (공통 게이트) |
+| 단계 | interactive | semi-agentic | agentic | 비고 |
+|------|-------------|-------------|---------|------|
+| TASK 완료     | 사용자 승인 | 사용자 승인 | PM 자율 | |
+| ANALYSIS 완료 | 사용자 승인 | 사용자 승인 | PM 자율 | |
+| PLAN 완료     | 사용자 승인 | 사용자 승인 | PM 자율 | |
+| TEST-SCENARIO 완료 | 사용자 승인 | 사용자 승인 (모드 경계) | PM 자율 | opd 전용 |
+| EXECUTE 완료  | 사용자 승인 | PM 자율 | PM 자율 | |
+| TEST 완료     | 사용자 승인 | PM 자율 | PM 자율 | |
+| CLOSE 진입    | 사용자 승인 | 사용자 승인 (공통 게이트) | 사용자 승인 (공통 게이트) | |
 
 ## 9. 유지되는 규칙 (opal-harness.md §1 Guards 그대로 적용)
 
@@ -112,3 +113,4 @@ CLOSE 진입 절차:
 |------|------|------|
 | v1.0 | 2026-05-09 11:22 | 초기 작성 — semi-agentic 신규 모드 SSOT (140) |
 | v1.1 | 2026-05-09 18:30 | 개인 식별자 누설 정정 — "캡틴" → "소유자" / note 예시 "{owner_name} 확인" placeholder 치환 (139) |
+| v1.2 | 2026-05-15 16:40 | §3 opd 행 모드 경계 갱신 — PLAN 사용자 확인 행 → TEST-SCENARIO 사용자 확인 행. §8 차이 표에 TEST-SCENARIO 완료 행 추가(opd 전용) + 비고 컬럼 신설 (004) |

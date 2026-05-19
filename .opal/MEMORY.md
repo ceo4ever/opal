@@ -1,7 +1,7 @@
 # opal Memory Index
 
-> 최종 갱신: 2026-05-13 (태스크 003 채번)
-> last_task_number: 3
+> 최종 갱신: 2026-05-19 (태스크 004 완료)
+> last_task_number: 5
 
 ## 메모리 카테고리
 
@@ -35,3 +35,5 @@
 | 2026-05-12 | 001 카르파시 행동 원칙 흡수 — Coding Principles SSOT 신설 + TASK AC 보강 | CLOSE | tasks/001-260512-opp-coding-principles-ssot/ | 2026-05-12 10:48 | 2026-05-12 14:54 |
 | 2026-05-12 | 002 wtm-agent OPAL 표준화 + cmux 통합 + 사용자 surface 재사용 | CLOSE | tasks/002-260512-opp-wtm-opal-standardization/ | 2026-05-12 18:10 | 2026-05-12 22:15 |
 | 2026-05-13 | 003 보고 형식 양식 보강 — 결론/근거 번호화 + 이모티 prefix + 다음 블록 2갈래 | CLOSE | tasks/003-260513-opp-reporting-format-enhancement/ | 2026-05-13 17:21 | 2026-05-13 17:48 |
+| 2026-05-15 | 004 테스트 시나리오 양식·파이프라인 재설계 — 7섹션 양식(가설→데이터→L×M 매트릭스) + STEP 3.5 신설 + EXECUTE scenario_source + 5단계 직렬 + self-confirming 4분리 | CLOSE | tasks/004-260515-opp-test-scenario-pipeline-redesign/ | 2026-05-15 13:25 | 2026-05-19 17:59 |
+| 2026-05-15 | 005 명확화 게이트 SSOT — 추정 진행 차단 + 소크라테스식 인터뷰 | TASK | tasks/005-260515-opp-clarification-gate-ssot/ | 2026-05-15 13:59 | - |

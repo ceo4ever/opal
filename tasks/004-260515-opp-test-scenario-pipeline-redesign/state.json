@@ -1,0 +1,221 @@
+{
+  "task_id": "004-260515-opp-test-scenario-pipeline-redesign",
+  "skill": "opp",
+  "mode": "semi-agentic",
+  "schema_version": "1.0",
+  "created_at": "2026-05-15 13:25",
+  "updated_at": "2026-05-19 18:00",
+  "current_status": "done",
+  "rows": [
+    {
+      "row_id": 1,
+      "stage": "TASK",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-15 13:25",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 2,
+      "stage": "TASK",
+      "item": "TASK.md 생성",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-15 13:25",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 3,
+      "stage": "TASK",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-15 13:28",
+      "owner": "user",
+      "note": "캡틴 확인: PLAN 진입 승인"
+    },
+    {
+      "row_id": 4,
+      "stage": "PLAN",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-15 13:59",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 5,
+      "stage": "PLAN",
+      "item": "PLAN.md 생성",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-15 13:59",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 6,
+      "stage": "PLAN",
+      "item": "QA Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-15 14:03",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 7,
+      "stage": "PLAN",
+      "item": "QA-PLAN.md 생성",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-15 14:03",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 8,
+      "stage": "PLAN",
+      "item": "State Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-15 14:03",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 9,
+      "stage": "PLAN",
+      "item": "PM Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-15 14:03",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 10,
+      "stage": "PLAN",
+      "item": "State Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-15 14:03",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 11,
+      "stage": "PLAN",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-15 16:40",
+      "owner": "user",
+      "note": "캡틴 승인: EXECUTE 진입"
+    },
+    {
+      "row_id": 12,
+      "stage": "EXECUTE",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-15 16:57",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 13,
+      "stage": "EXECUTE",
+      "item": "QA Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-15 17:03",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 14,
+      "stage": "EXECUTE",
+      "item": "QA-EXECUTE.md 생성",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-15 17:03",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 15,
+      "stage": "EXECUTE",
+      "item": "State Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-15 17:03",
+      "owner": "auto",
+      "note": "agentic auto-pass: semi-agentic auto-pass: QA 32/32 Pass 후 State Gate"
+    },
+    {
+      "row_id": 16,
+      "stage": "EXECUTE",
+      "item": "PM Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-15 17:03",
+      "owner": "auto",
+      "note": "agentic auto-pass: semi-agentic auto-pass: PM spot-check 7항목 통과"
+    },
+    {
+      "row_id": 17,
+      "stage": "EXECUTE",
+      "item": "State Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-15 17:03",
+      "owner": "auto",
+      "note": "agentic auto-pass: semi-agentic auto-pass: PM Gate 후 State Gate"
+    },
+    {
+      "row_id": 18,
+      "stage": "EXECUTE",
+      "item": "M1/M2/M3 실행 방식 차원 보강",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-19 17:09",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 19,
+      "stage": "EXECUTE",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-19 17:59",
+      "owner": "user",
+      "note": "캡틴 확인: CLOSE 진입 승인 (추가작업 보강 포함)"
+    },
+    {
+      "row_id": 20,
+      "stage": "CLOSE",
+      "item": "DONE.md 생성",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-19 18:00",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 21,
+      "stage": "CLOSE",
+      "item": "State Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-19 18:00",
+      "owner": "PM",
+      "note": null
+    }
+  ]
+}

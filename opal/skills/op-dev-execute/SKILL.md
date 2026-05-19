@@ -13,10 +13,12 @@ version: 2.0
 
 - **호출자**: 오케스트레이터(opal-pilot-dev, opal-pilot-dev-short, opal-pilot-dev-wireframe)가 EXECUTE 단계를 디스패치
 - **실행 주체**: 워커 에이전트 — 에이전트 이름 → 매핑 테이블 → 실행 가이드 자동 선택. 폴백: agent 필드 없음 / 미지정 에이전트 → generalist 가이드.
-- **입력**: `checklist_source` (오케스트레이터가 경로+섹션 지정)
-  - `PLAN.md` §4 실행 체크리스트 (기능 중심 구조, 기본)
-  - 폴백: `PLAN.md` §3 실행 체크리스트 (과거 형식)
-  - Wireframe UI: wireframe.md 기반 실행 항목
+- **입력**:
+  - `checklist_source` (오케스트레이터가 경로+섹션 지정)
+    - `PLAN.md` §4 실행 체크리스트 (기능 중심 구조, 기본)
+    - 폴백: `PLAN.md` §3 실행 체크리스트 (과거 형식)
+    - Wireframe UI: wireframe.md 기반 실행 항목
+  - `scenario_source`: `TEST-SCENARIO.md` (오케스트레이터가 경로 지정) — 자가 점검 절차에 사용
 - **출력**: 코드 변경 + `changed_files` 목록
 - **페르소나 처리**: 선택된 가이드(specialist/generalist)에 위임한다
 
@@ -51,6 +53,17 @@ version: 2.0
 ### Step 3. 코드 작성 및 검증
 
 실행 모드(단순/복잡)에 따라 execute-guide.md의 절차를 따른다.
+
+### Step 3-S. 자가 점검 절차 (TDD red-green)
+
+각 Step 구현 완료 후:
+1. `scenario_source` (TEST-SCENARIO.md)에서 담당 Step 매핑 L1/L2 시나리오 식별
+2. 각 시나리오의 "실행 명령" 추출 (없으면 도구·기대결과 기반으로 명령 구성) 후 TEST-SCENARIO.md 해당 칸에 기입
+3. Bash 실행 → 결과 확인
+4. PASS: 다음 Step 진행. FAIL: 즉시 수정 후 재실행 (최대 3회)
+5. L3 시나리오: TEST 단계로 위임 (이 단계에서 실행하지 않음)
+
+**완료 기준**: checklist 100% + 담당 Step 매핑 L1/L2 시나리오 PASS
 
 ### Step 3-H. @header 작성 (code-scan 대상 확장자 파일)
 
@@ -157,6 +170,8 @@ PLAN.md §4 실행 체크리스트를 기반으로:
 
 - [ ] 모든 Step 체크박스가 [x] 또는 사용자 승인으로 건너뛰어졌는가
 - [ ] 각 Step의 테스트 기준이 통과되었는가
+- [ ] 담당 Step 매핑 L1/L2 시나리오 PASS 확인 (자가 점검 절차 완료)
+- [ ] L3 시나리오는 TEST 단계로 위임함 (이 단계에서 실행하지 않음)
 - [ ] 블로커 발생 시 사용자에게 보고되었는가
 - [ ] 변경 파일 목록이 PLAN.md의 파일 목록과 일치하는가
 - [ ] 코드가 프로젝트 컨벤션을 따르는가
@@ -176,3 +191,4 @@ PLAN.md §4 실행 체크리스트를 기반으로:
 | v1.2 | 2026-04-13 13:48 | PLAN.md 기반 실행 전환 — 입력 우선순위를 "PLAN.md §4 > §3 > json 폴백"으로 변경, execution-plan.json 기반 실행 섹션을 PLAN.md §4·§3.N.2 기능 루프 기반으로 재작성, FE 역할 분담의 ui-designer 호출 방법을 "PLAN.md §3.N.2 FE 화면 설계 참조"로 변경, 가드레일·품질 체크리스트에서 json 참조를 PLAN.md로 통일, 과거 태스크 폴백 규칙 서술 (114) |
 | v1.3 | 2026-04-15 | 실행 주체에 전문 에이전트 체계 안내 추가 — PM이 agents.md 매핑 기반 에이전트 선택 (117) |
 | v2.0 | 2026-04-23 11:39 | 3구획 구조 전환 — references/ 에 execute-specialist-guide.md / execute-generalist-guide.md 신설, SKILL.md에 에이전트 이름 매핑 테이블 삽입, 페르소나/FE 역할 분담/FE·BE MCP 테이블 섹션을 범용 가이드로 이관, 실행 컨텍스트·Step 1·PLAN.md 기반 실행 섹션 재작성 (129) |
+| v2.1 | 2026-05-15 16:40 | scenario_source 입력 파라미터 추가 + Step 3-S 자가 점검 절차(TDD red-green) 신설 + EXECUTE 품질 체크리스트에 L1/L2 시나리오 PASS 항목 + L3 TEST 위임 룰 추가 (004) |

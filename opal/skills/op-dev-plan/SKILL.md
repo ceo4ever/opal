@@ -3,8 +3,8 @@ name: op-dev-plan
 description: |
   **구현 계획 수립 단계 스킬**. TASK.md와 ANALYSIS.md(선택)를 기반으로 탑다운 기능 중심 구조로 실행 가능한 구현 청사진을 작성한다. 기능(F-NNN) 단위로 분석·설계·QA를 추적한다. ANALYSIS.md 유무에 따라 분석 깊이가 자동 조절된다. 기능 개수에 따라 Flat/Multi-Feature 모드를 자동 선택한다.
   반드시 이 스킬을 사용해야 하는 상황: 오케스트레이터(opal-pilot-dev, opal-pilot-dev-short)가 PLAN 단계를 디스패치할 때.
-  필수 입력: TASK.md. 선택 입력: ANALYSIS.md. 보장 출력: PLAN.md (기능 중심 구조, 실행 체크리스트+복잡도 판별+기능-QA 매트릭스 포함), TEST-SCENARIO.md.
-version: 2.2
+  필수 입력: TASK.md. 선택 입력: ANALYSIS.md. 보장 출력: PLAN.md (기능 중심 구조, 실행 체크리스트+복잡도 판별+기능-QA 매트릭스+리스크 가설 표 포함). TEST-SCENARIO.md는 opal-pilot-dev STEP 3.5에서 PM이 별도 작성한다.
+version: 2.6
 ---
 
 # 구현 계획 수립 (PLAN)
@@ -31,7 +31,8 @@ version: 2.2
 |------|------|
 | **필수 입력** | TASK.md |
 | **선택 입력** | ANALYSIS.md |
-| **보장 출력** | PLAN.md (기능 중심 구조 §1~§9, 기능-QA 매트릭스 포함), TEST-SCENARIO.md |
+| **보장 출력** | PLAN.md (기능 중심 구조 §1~§9 + 리스크 가설 표, 기능-QA 매트릭스 포함) |
+| **제외 출력** | TEST-SCENARIO.md — opal-pilot-dev STEP 3.5에서 PM이 별도 작성 (self-confirming 방지) |
 
 ---
 
@@ -140,29 +141,9 @@ plan-guide.md의 "복잡도 판별" 섹션을 따라 실행 모드를 결정한�
 
 아래 기능 중심 출력 형식으로 PLAN.md를 작성한다.
 
-### Step 10: TEST-SCENARIO.md 작성
+### Step 10: 결과 반환
 
-PLAN.md 완료 후 연속으로 TEST-SCENARIO.md를 작성한다.
-
-PLAN 단계에서 코드 분석과 설계를 완료한 상태이므로, 이 시점이 테스트 시나리오 작성에 가장 적합하다.
-
-**형식**: `op-dev-test-scenario/SKILL.md`의 "TEST-SCENARIO.md 통일 형식"을 따른다.
-
-**작성 범위**:
-- **시나리오 목록**: TASK.md 요구사항 × PLAN.md 기능별 설계(§3.N.5 테스트 시나리오)를 기반으로 S-NNN 단위로 도출. 각 시나리오에 대상/조건/기대 결과/도구를 작성한다. (실행 명령/결과/상세는 op-dev-test-agent가 채움)
-- **코드 품질**: 린트 / 타입 체크 / 포맷터 항목 (결과/상세는 op-dev-test-agent가 채움)
-- **보안**: 하드코딩 시크릿 스캔 / .gitignore 확인 항목
-- **회귀 테스트**: 테스트 스위트 항목
-- **판정**: op-dev-test-agent가 채울 영역 표기
-- **설계 피드백**: 시나리오 도출 과정에서 발견한 PLAN 빈틈 기록 (없으면 "없음")
-
-**스킵 조건**: 작업 유형이 문서 전용(`.md` 파일만 수정, 소스 코드 없음)이면 TEST-SCENARIO.md 작성을 스킵한다. 스킵 시 결과 반환에 "TEST-SCENARIO: 문서 전용 작업으로 스킵" 표기.
-
-**저장 경로**: `tasks/{NNN}-{태스크명}/TEST-SCENARIO.md`
-
-### Step 11: 결과 반환
-
-워커는 PLAN.md 경로와 TEST-SCENARIO.md 경로(또는 스킵 여부)를 요약과 함께 오케스트레이터에 반환한다.
+워커는 PLAN.md 경로를 요약과 함께 오케스트레이터에 반환한다. TEST-SCENARIO.md는 opal-pilot-dev STEP 3.5에서 PM이 별도 작성하므로 PLAN 워커의 출력 범위에 포함하지 않는다.
 
 ---
 
@@ -189,6 +170,21 @@ Flat 모드에서는 §2·§3의 F 하위 섹션(### F-NNN:)을 생략하고 평
 
 ### 1.3 기능 의존 그래프 (ASCII)
 {Flat 모드 시 생략 가능}
+
+---
+
+## 리스크 가설 표
+
+> PLAN 단계에서 작성. TEST-SCENARIO.md §1의 입력이 됨.
+
+| ID | 변경 단위 | 깨질 수 있는 계약 | 운영 영향 | 검증 계층 권고 | 시나리오 후보 |
+|----|----------|----------------|---------|------------|------------|
+| H-1 | {F-NNN 또는 파일} | {함수 반환 계약/DB 제약/API 계약} | {P0/P1/P2} | L1/L2/L3 | S-N 후보 |
+
+**가설 도출 예시 3종**:
+- H-예1: Repository.bulk_upsert 반환 계약 변경 → 호출자가 반환값 처리 오류 → 운영 영향 P1 → L1(단위) + L2(실 DB) 의무
+- H-예2: 병렬 동시성 → 동시 요청 시 레이스 컨디션/커넥션 풀 고갈 → 운영 영향 P0 → L2(동시성 통합) 의무
+- H-예3: NOT NULL/FK 제약 → mock 통과 후 실 DB에서 IntegrityError → 운영 영향 P1 → L2(실 DB 통합) 의무
 
 ---
 
@@ -451,3 +447,4 @@ PM이 디스패치 시 전문 에이전트 매핑 테이블(agents.md)을 주입
 | v2.3 | 2026-04-17 | §3 파일 변경 테이블 근거 컬럼 추가 + §3.N.2 인라인 인용 지시 + §8.3 참조 문서 테이블 신설 + citation-rules 적용 (123) |
 | v2.4 | 2026-04-24 | citation-rules 트리거 1줄 주입 — SSOT + Trigger 패턴 (130) |
 | v2.5 | 2026-05-08 | 품질 체크리스트에 컨벤션 [MUST] 인용 항목 신설 — op-task-plan과 대칭 (137) |
+| v2.6 | 2026-05-15 16:40 | PLAN.md 출력 형식에 "리스크 가설 표" 섹션 신설 — 변경 단위별 H-N 가설(컬럼 6종) + 도출 예시 3종 (004) |

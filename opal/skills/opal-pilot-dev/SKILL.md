@@ -1,14 +1,14 @@
 ---
 name: opal-pilot-dev
 description: |
-  **Full Task 오케스트레이터**. 대규모 개발 작업을 4단계 파이프라인으로 수행한다.
+  **Full Task 오케스트레이터**. 대규모 개발 작업을 5단계 파이프라인으로 수행한다.
   반드시 이 스킬을 사용해야 하는 상황: "opal-pilot-dev", "opd".
   코드를 읽기만 하는 설명 요청, API 명세서(api-analyzer), 기획 문서(opal-pilot-write-tech), PR 리뷰, git 작업, 단순 설정 변경은 이 스킬이 아니다.
 ---
 # Full Task 오케스트레이터
 
 ## Harness
-모드: Full Task (TASK → ANALYSIS → PLAN → EXECUTE → TEST → CLOSE)
+모드: Full Task (TASK → ANALYSIS → PLAN → TEST-SCENARIO → EXECUTE → TEST → CLOSE)
 > 부트스트랩에서 로드되지 않은 경우: `~/.opal/references/opal-harness.md`를 Read한다.
 
 **[MUST]** 스킬 시작 즉시 모드에 따라 서브 하네스를 Read한다. 이 단계를 건너뛰면 안 된다:
@@ -65,28 +65,35 @@ op-dev-plan 스킬을 수행하라.
 **태스크 폴더**: {tasks/{NNN}-{name}/}
 **이전 산출물**: {TASK.md 경로}, {ANALYSIS.md 경로}
 **프로젝트 컨텍스트**: {docs/PROJECT.md + 매칭 참조 문서. 미존재 시 CLAUDE.md 폴백}
-**산출물 저장 경로**: {PLAN.md 경로}, {TEST-SCENARIO.md 경로}, {execution-plan.json 경로 (FE/BE 시)}
+**산출물 저장 경로**: {PLAN.md 경로}, {execution-plan.json 경로 (FE/BE 시)}
 **하네스 Guards**: PLAN.md에 없는 파일 생성/수정 금지. PLAN 설계를 임의 변경 금지. 블로커 발생 시 즉시 중단 후 보고.
 **참조 문서**: {docs/PROJECT.md 문서 테이블 기반 관련 문서 경로}
 **핵심 제약**: {[MUST] <문서명> §N: <인용문> 형식으로 원문 인용 필수 항목. 요약 허용 항목은 일반 목록}
 ```
 **model**: advanced
 
-> op-dev-plan 워커가 PLAN.md와 TEST-SCENARIO.md를 통합 작성한다. (문서 전용 작업 시 TEST-SCENARIO.md 스킵 — 워커가 자체 판별)
-
 PLAN 완료
   → **State Gate** (`~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done` 호출 — P-1)
-  → **PM Gate** (PLAN.md + TEST-SCENARIO.md 직접 검증 — 점검 목록 참조):
-    1. `{PLAN.md 경로}` Read — §4.2 실행 체크리스트, §5 QA 체크리스트 확인
-    2. `{TEST-SCENARIO.md 경로}` Read — 시나리오 목록, 코드 품질, 보안 항목 확인 (스킵 시 해당 없음)
-    3. 검증 체크리스트:
+  → **PM Gate** (PLAN.md 직접 검증 — 점검 목록 참조):
+    1. `{PLAN.md 경로}` Read — §4.2 실행 체크리스트, §5 QA 체크리스트, §리스크 가설 표 확인
+    2. 검증 체크리스트:
        - [ ] TASK.md 요구사항 전체 커버 여부 (PLAN.md §1.2 기능 목록 대조)
        - [ ] PLAN.md §4.2 실행 체크리스트 완성도 (소속 F-ID, 완료 기준 명시)
-       - [ ] TEST-SCENARIO.md 시나리오가 TASK.md 요구사항 전체를 커버하는가
-       - [ ] TEST-SCENARIO.md 보안 항목(시크릿 스캔, .gitignore) 포함 여부
-       - [ ] 설계 피드백 섹션에 미해결 빈틈이 없는가
+       - [ ] PLAN.md §리스크 가설 표에 H-N 가설이 작성되어 있는가
+       - [ ] 설계 피드백/리스크 섹션에 미해결 빈틈이 없는가
   → **State Gate** (`~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done` 호출 — P-1)
-  → 사용자에게 PLAN + TEST-SCENARIO 함께 보고. 승인 = EXECUTE 시작 허가.
+  → 사용자에게 PLAN 보고. 승인 = TEST-SCENARIO 단계 진입 허가.
+
+## STEP 3.5: TEST-SCENARIO
+
+작성자: **알투(PM) + 캡틴 페어** — 오케스트레이터가 직접 작성 (워커 디스패치 없음).
+이 단계는 self-confirming 방지를 위해 PLAN 워커(opal-plan-agent)와 다른 작성자가 수행한다.
+
+1. PLAN.md §리스크 가설 표 Read
+2. `op-dev-test-scenario/SKILL.md`의 "TEST-SCENARIO.md 통일 형식"을 따라 TEST-SCENARIO.md 작성
+3. `test-scenario-guide.md`의 5단계 프로세스 적용 (Step 3 계층 결정 + Step 3-b 실행 방식 M1/M2/M3 결정)
+4. **State Gate** (`~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done` 호출 — P-1)
+5. 사용자에게 TEST-SCENARIO 보고 — 승인 = EXECUTE 시작 허가
 
 > **Gate 일괄 처리 (P-2)**: PLAN QA Gate 행 N부터 시작하는 표준 4행은 `~/.opal/tools/state-tool/run.sh gate-pass <task-path> --start <N>` 1회 호출로 일괄 ✅ 처리 가능 (§2.13 G-10).
 > **사용자 확인 (P-5)**: 사용자 발화 후 PM이 `~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done --owner user --note '소유자 확인: ...'` 호출. CLOSE 진입 전 이 행의 `owner=user` 여부를 도구가 자동 검증한다 (§2.16 G-13).
@@ -114,6 +121,9 @@ op-dev-execute 스킬을 수행하라.
 **스킬 경로**: {op-dev-execute/SKILL.md 탐색 경로}
 **태스크 폴더**: {tasks/{NNN}-{name}/}
 **checklist_source**: {PLAN.md 경로}, 섹션: 4.2 실행 체크리스트
+**scenario_source**: {TEST-SCENARIO.md 경로}
+**완료 기준**: checklist 100% + 담당 Step 매핑 L1/L2 시나리오 PASS (L3는 TEST 단계 위임)
+**자가 점검 절차**: 코드 작성 → 시나리오 "실행 명령" 추출 → Bash 실행 → PASS 확인 → 완료 보고
 **담당 Step**: {이 워커가 처리할 Step 번호 목록 — 예: 3, 5, 7}
 **Scope 제한**: {agent 영역 — FE / BE / DB / 공통}. 영역 외 파일 수정 시 즉시 블로커 보고.
 **프로젝트 컨텍스트**: {docs/PROJECT.md + 매칭 참조 문서. 미존재 시 CLAUDE.md 폴백}
@@ -146,6 +156,24 @@ PLAN.md §4.2의 agent 필드에 따라 FE/BE 배치를 구성한다:
 ---
 
 ## STEP 5: TEST
+
+### 5-0. L3 시나리오 협업 게이트
+
+TEST 단계 진입 시 opal-test-agent 디스패치 전에:
+1. TEST-SCENARIO.md에서 `[SUPERVISOR]` 마커 시나리오 식별
+2. `[SUPERVISOR]` 시나리오 존재 시:
+   - opal-test-agent를 L3 제외 모드로 디스패치 (L1/L2만 실행)
+   - PM이 사용자에게 아래 표준 양식으로 요청
+3. 사용자 응답 수신 후 결과를 TEST-SCENARIO.md에 기록
+4. L3 시나리오 없으면 정상 디스패치 진행
+
+**PM 표준 요청 양식**:
+```
+캡틴, [시나리오 S-N]은 사용자 협업 검증이 필요합니다.
+요청 내용: {시나리오 조건 요약}
+기대 결과: {기대 결과 요약}
+확인 후 결과(PASS/FAIL + 상세)를 알려주세요.
+```
 
 op-dev-test-agent 워커 디스패치. TEST-SCENARIO.md 실행 + 결과 기록 + PASS/FAIL 판정.
 
@@ -226,7 +254,7 @@ op-dev-test-agent 워커 디스패치. TEST-SCENARIO.md 실행 + 결과 기록 +
 | 필드 | 값 |
 |------|------|
 | 모드 | Full Task |
-| 단계 목록 | TASK / ANALYSIS / PLAN / EXECUTE / TEST / CLOSE |
+| 단계 목록 | TASK / ANALYSIS / PLAN / TEST-SCENARIO / EXECUTE / TEST / CLOSE |
 
 **진행 현황 행 예시** (아래 표는 `state init --rows-from <SKILL.md>` 또는 `--rows-spec` 인자의 SSOT — LLM이 직접 작성하는 것은 금지된다):
 
@@ -247,20 +275,23 @@ op-dev-test-agent 워커 디스패치. TEST-SCENARIO.md 실행 + 결과 기록 +
 | 9 | ANALYSIS | 사용자 확인 | ⬜ | - |
 | 10 | PLAN | 작업 | ⬜ | - |
 | 11 | PLAN | PLAN.md 생성 | ⬜ | - |
-| 12 | PLAN | TEST-SCENARIO.md 생성 | ⬜ | - |
-| 13 | PLAN | State Gate | ⬜ | - |
-| 14 | PLAN | PM Gate | ⬜ | - |
-| 15 | PLAN | State Gate | ⬜ | - |
-| 16 | PLAN | 사용자 확인 | ⬜ | - |
-| 17 | EXECUTE | 작업 | ⬜ | - |
-| 18 | EXECUTE | State Gate | ⬜ | - |
-| 19 | TEST | 작업 | ⬜ | - |
-| 20 | TEST | State Gate | ⬜ | - |
-| 21 | TEST | PM Gate | ⬜ | - |
-| 22 | TEST | State Gate | ⬜ | - |
-| 23 | TEST | 사용자 확인 | ⬜ | - |
-| 24 | CLOSE | DONE.md 생성 | ⬜ | - |
-| 25 | CLOSE | State Gate | ⬜ | - |
+| 12 | PLAN | State Gate | ⬜ | - |
+| 13 | PLAN | PM Gate | ⬜ | - |
+| 14 | PLAN | State Gate | ⬜ | - |
+| 15 | PLAN | 사용자 확인 | ⬜ | - |
+| 16 | TEST-SCENARIO | 작업 | ⬜ | - |
+| 17 | TEST-SCENARIO | TEST-SCENARIO.md 생성 | ⬜ | - |
+| 18 | TEST-SCENARIO | State Gate | ⬜ | - |
+| 19 | TEST-SCENARIO | 사용자 확인 | ⬜ | - |
+| 20 | EXECUTE | 작업 | ⬜ | - |
+| 21 | EXECUTE | State Gate | ⬜ | - |
+| 22 | TEST | 작업 | ⬜ | - |
+| 23 | TEST | State Gate | ⬜ | - |
+| 24 | TEST | PM Gate | ⬜ | - |
+| 25 | TEST | State Gate | ⬜ | - |
+| 26 | TEST | 사용자 확인 | ⬜ | - |
+| 27 | CLOSE | DONE.md 생성 | ⬜ | - |
+| 28 | CLOSE | State Gate | ⬜ | - |
 ```
 
 > TEST 루핑 발생 시: `~/.opal/tools/state-tool/run.sh add-row <task-path> --after <N> --stage TEST --item 'fix 작업 (N/3)'` 호출로 동적 추가한다 (P-6 추가작업 행 추가 패턴).
@@ -270,7 +301,8 @@ op-dev-test-agent 워커 디스패치. TEST-SCENARIO.md 실행 + 결과 기록 +
 | Phase | 산출물 | 체크리스트 위치 |
 |-------|-------|----------------|
 | ANALYSIS | ANALYSIS.md | - |
-| PLAN | TASK.md, PLAN.md, TEST-SCENARIO.md | TASK.md 요구사항, PLAN.md §4.2, §5; TEST-SCENARIO.md 시나리오 목록/보안/설계 피드백 |
+| PLAN | TASK.md, PLAN.md | TASK.md 요구사항, PLAN.md §4.2, §5, §리스크 가설 표 |
+| TEST-SCENARIO | TEST-SCENARIO.md | 7항목: ① mock 부재(grep) ② 사전 조건 데이터 채워짐 ③ Given/When/Then 3필드 ④ 가설↔시나리오 매핑 완전 ⑤ L1/L2/L3 계층 명시 ⑥ L3 [SUPERVISOR] 마커 + PM 요청 양식 ⑦ 실행 방식(M1/M2/M3) 명시 |
 | TEST | TEST-SCENARIO.md, GC-CONVENTION-*.md | TEST-SCENARIO.md 시나리오 결과/코드품질/보안/회귀, 컨벤션 자동 진단 PASS |
 
 ---
@@ -281,10 +313,10 @@ opal-harness-agentic.md / opal-harness-semi-agentic.md 참조. 본 절은 이 �
 
 ### 기본 모드 (semi-agentic)
 
-기본 호출(`//opd {작업}`)은 semi-agentic 모드. PLAN-equivalent까지 사용자 검토, EXECUTE-equivalent 이후 PM 자율, CLOSE 진입은 사용자 승인 필수.
+기본 호출(`//opd {작업}`)은 semi-agentic 모드. TEST-SCENARIO-equivalent까지 사용자 검토, EXECUTE-equivalent 이후 PM 자율, CLOSE 진입은 사용자 승인 필수.
 
 **모드 경계** (이 시점부터 PM 자율):
-- PLAN 사용자 확인 행 통과 후 → EXECUTE 작업 행부터 PM 자율
+- TEST-SCENARIO 사용자 확인 행 통과 후 → EXECUTE 작업 행부터 PM 자율
 
 ### 명시 모드
 
@@ -305,13 +337,13 @@ opal-harness-agentic.md / opal-harness-semi-agentic.md 참조. 본 절은 이 �
 ### 자율 게이트 흐름 (semi-agentic)
 
 ```
-TASK → ANALYSIS Gate → PLAN Gate → EXECUTE Gate → TEST Gate → CLOSE
-사용자   사용자 승인     사용자 승인    PM 자율         PM 자율     사용자 승인 필수
-                       (모드 경계)
+TASK → ANALYSIS Gate → PLAN Gate → TEST-SCENARIO Gate → EXECUTE Gate → TEST Gate → CLOSE
+사용자   사용자 승인     사용자 승인    사용자 승인             PM 자율         PM 자율     사용자 승인 필수
+                                     (모드 경계)
 ```
 
-- TASK→ANALYSIS→PLAN Gate까지 사용자 승인 필수 (interactive 동작)
-- PLAN 사용자 확인 행 통과 후 EXECUTE/TEST Gate는 PM 자율 통과
+- TASK→ANALYSIS→PLAN→TEST-SCENARIO Gate까지 사용자 승인 필수 (interactive 동작)
+- TEST-SCENARIO 사용자 확인 행 통과 후 EXECUTE/TEST Gate는 PM 자율 통과
 - EXECUTE 진입 = PM이 대행 승인 (구현 금지 원칙의 "실행 허가"를 PM이 판단)
 - CLOSE 진입은 사용자 승인 필수 (공통 게이트)
 - 각 게이트에서 opal-harness-agentic.md "Gate 루핑 규칙" 적용
@@ -357,3 +389,5 @@ semi-agentic / agentic 모두 CLOSE 첫 행 `--auto-pass` 거부 (`agentic_close
 | v3.5 | 2026-05-08 | PM Gate 점검 목록 TEST 행 산출물에 GC-CONVENTION-*.md 추가 + STEP 5 TEST PM Gate 검증 체크리스트에 6번째 항목 '컨벤션 자동 진단 PASS' 신설 (136) |
 | v3.6 | 2026-05-09 11:22 | 3-way 모드 체계 도입 — semi-agentic 기본 채택 + Agentic/Semi-Agentic 모드 절 확장 + Harness 절 3-way 분기 + state init choices 갱신 (140) |
 | v3.7 | 2026-05-09 18:30 | 개인 식별자 "캡틴" → "소유자"/"사용자" 치환 — 배포 파일 정체성 누설 정정 (139) |
+| v3.8 | 2026-05-15 16:40 | 5단계 파이프라인 재편 — STEP 3.5 TEST-SCENARIO 신설(PM 직접 작성, self-confirming 방지) + PLAN에서 TEST-SCENARIO.md 생성 제거 + STATE.md 28행 구조 갱신 + 모드 경계 이동(PLAN→TEST-SCENARIO) + 자율 게이트 흐름도 갱신 + EXECUTE 디스패치 scenario_source·완료기준·자가점검 필드 추가 + PM Gate TEST-SCENARIO Phase 행 추가 + STEP 5 L3 협업 게이트 신설 (004) |
+| v3.9 | 2026-05-19 17:05 | PM Gate TEST-SCENARIO 행 체크리스트 7항목으로 확장 (⑦ 실행 방식 명시) + STEP 3.5 절차에 M1/M2/M3 결정 명시 (004 추가작업) |

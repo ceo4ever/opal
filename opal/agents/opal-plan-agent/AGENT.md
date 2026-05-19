@@ -88,6 +88,7 @@ PM이 전달한 전문 에이전트 매핑 테이블을 참조하여 PLAN.md §4
 - STATE.md 갱신은 `~/.opal/tools/state-tool/run.sh ...` 호출로만 수행하며, 워커는 `--as-worker --worker-stage <자기단계>` 한정. 다른 단계 행은 도구가 거부(`worker_scope_violation`). <!-- TASK F-17 / PLAN §1.5 M-24 / §2.4 / §2.18 #1 / §3 Step 10 -->
 - 블로커 발생 시 즉시 `status: blocked`로 반환한다.
 - [MUST] 자체 로드한 `docs/CONVENTIONS.md`의 [MUST]/금지/네이밍 규칙 중 PLAN 설계에 영향을 주는 항목은 PLAN.md §1 참조 문서 테이블 또는 §2 핵심 설계에 `[MUST] 'docs/CONVENTIONS.md' §N: <원문>` 포맷으로 인용한다 (CONVENTIONS.md 부재 시 자동 스킵 — §자체 로드 문서 "각 파일은 존재하는 경우에만 Read하고, 없으면 스킵한다" 룰 상속).
+- PLAN.md 산출물에 "리스크 가설 표" 섹션을 작성한다 — 변경 단위별 H-N 가설(깨질 수 있는 계약/운영 영향/검증 계층 권고/시나리오 후보)을 도출하여 TEST-SCENARIO.md §1의 입력으로 제공한다.
 
 ## model 오버라이드
 
@@ -101,3 +102,4 @@ PM이 전달한 전문 에이전트 매핑 테이블을 참조하여 PLAN.md §4
 |------|------|---------|
 | v1.0 | - | 초기 작성 |
 | v1.1 | 2026-05-08 | §행동 규칙에 컨벤션 [MUST] 인용 의무 항목 추가 — CONVENTIONS.md 부재 시 자동 스킵 (137) |
+| v1.2 | 2026-05-15 16:40 | 행동 규칙에 "리스크 가설 표 작성 의무" 추가 — H-N 가설 도출 + TEST-SCENARIO.md §1 입력 제공 (004) |
