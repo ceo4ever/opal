@@ -17,6 +17,7 @@
 #   v2.0 2026-05-10 17:00 KST: community-skills 번들 → fetch 방식 전환 — install_opal_community_skills 함수 제거 + clean_dirs에서 community-skills 제거 (사용자 데이터 보존, D-4) + 종료 안내 추가 (142)
 #   v2.1 2026-05-10 21:00 KST: command 화이트리스트 + fork repo banner + OPAL_HOME 가드 + playwright cache 디렉토리 생성 (144)
 #   v2.2 2026-05-12 21:35 KST: cmux-tool 등록 + opal-wtm-agent 자동 어댑터 — install_opal()의 tools/ 처리 직후 cmux-tool/run.sh chmod +x 추가 (002)
+#   v2.3 2026-05-20: install_opal_venv Playwright 캐시 경로 OS 분기 — Linux는 ~/.cache/ms-playwright (XDG 표준). Linux one-liner 진입점 신설 동반 수정 (006)
 #
 
 set -euo pipefail
@@ -954,7 +955,14 @@ install_opal_venv() {
     success "Python 패키지 설치 완료 (requirements.txt)"
 
     # playwright 브라우저 확인 및 설치
-    local pw_cache="$USER_HOME/Library/Caches/ms-playwright"
+    # Playwright 캐시 경로: macOS ~/Library/Caches, Linux ~/.cache (XDG 표준)
+    # 출처: https://playwright.dev/docs/browsers#managing-browser-binaries
+    local pw_cache
+    if [[ "$(uname -s)" == "Linux" ]]; then
+        pw_cache="$USER_HOME/.cache/ms-playwright"
+    else
+        pw_cache="$USER_HOME/Library/Caches/ms-playwright"
+    fi
     local missing_browsers=()
 
     if [[ -d "$pw_cache" ]] && [[ -n "$(ls -A "$pw_cache" 2>/dev/null)" ]]; then

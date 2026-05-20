@@ -37,6 +37,7 @@
 #                          TARBALL_URL을 archive/refs/tags로 변경하여 release 자산 없어도 다운로드 가능 (139 추가작업)
 #   v1.3 2026-05-10 21:00: verify_checksum 강화 — release tag + sha256sums.txt 부재 시 prompt/거부 +
 #                          main 브랜치 UNVERIFIED banner (GC-001, R-2) (144)
+#   v1.4 2026-05-20: Linux fallback 안내 블록 제거 — scripts/install/linux.sh 신설로 데드코드 (006)
 #
 
 # ─── [MUST] 부분 다운로드 실행 방지 ─────────────────────────────────────────
@@ -299,7 +300,7 @@ extract_to_tmp() {
 # ─── exec_platform_installer ─────────────────────────────────────────────────
 # 플랫폼별 설치 스크립트를 실행한다.
 # macOS: scripts/install/macos.sh
-# Linux: scripts/install/linux.sh (미구현 시 fallback 안내)
+# Linux: scripts/install/linux.sh
 exec_platform_installer() {
     local installer_path
 
@@ -323,14 +324,6 @@ exec_platform_installer() {
     fi
 
     if [[ ! -f "${installer_path}" ]]; then
-        # Linux 전용 installer 미구현 시 fallback 안내
-        if [[ "${OPAL_PLATFORM}" == "linux" ]]; then
-            warn "Linux 전용 설치 스크립트가 아직 준비 중입니다 (scripts/install/linux.sh)."
-            warn "Linux 사용자는 다음 명령으로 수동 설치하세요:"
-            warn "  git clone https://github.com/${OPAL_REPO}.git opal"
-            warn "  bash opal/scripts/install-mac.sh"
-            exit 1
-        fi
         error "플랫폼 설치 스크립트를 찾을 수 없습니다: ${installer_path}"
     fi
 
