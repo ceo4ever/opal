@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "[ -S /tmp/cmux.sock ] && cmux notify --title 'Claude Code' --subtitle 'MAMS' --body 'Response ready — review' || true"
+            "command": "[ -S /tmp/cmux.sock ] && cmux notify --title 'Claude Code' --subtitle 'OPAL' --body 'Response ready — review' || true"
           }
         ]
       }
@@ -17,7 +17,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "[ -S /tmp/cmux.sock ] && cmux notify --title 'Claude Code' --subtitle 'MAMS' --body 'Permission requested' || true"
+            "command": "[ -S /tmp/cmux.sock ] && cmux notify --title 'Claude Code' --subtitle 'OPAL' --body 'Permission requested' || true"
           }
         ]
       }
@@ -28,7 +28,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "[ -S /tmp/cmux.sock ] && cmux notify --title 'Claude Code' --subtitle 'MAMS' --body 'Context compact imminent' || true"
+            "command": "[ -S /tmp/cmux.sock ] && cmux notify --title 'Claude Code' --subtitle 'OPAL' --body 'Context compact imminent' || true"
           }
         ]
       }

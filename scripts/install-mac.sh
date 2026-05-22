@@ -18,6 +18,7 @@
 #   v2.1 2026-05-10 21:00 KST: command 화이트리스트 + fork repo banner + OPAL_HOME 가드 + playwright cache 디렉토리 생성 (144)
 #   v2.2 2026-05-12 21:35 KST: cmux-tool 등록 + opal-wtm-agent 자동 어댑터 — install_opal()의 tools/ 처리 직후 cmux-tool/run.sh chmod +x 추가 (002)
 #   v2.3 2026-05-20: install_opal_venv Playwright 캐시 경로 OS 분기 — Linux는 ~/.cache/ms-playwright (XDG 표준). Linux one-liner 진입점 신설 동반 수정 (006)
+#   v2.4 2026-05-22 10:00 KST: cmux-tool lib/*.sh + examples/*.sh chmod +x 추가. 안내 메시지 "Phase 2(cmux)" → "cmux-tool" (007)
 #
 
 set -euo pipefail
@@ -836,10 +837,21 @@ install_opal() {
         if [[ -f "$cmux_run" ]]; then
             chmod +x "$cmux_run"
             success "cmux-tool run.sh 실행 권한 설정"
-            # cmux 의존성 안내 (정보성 — 설치 강제 없음)
-            if ! command -v cmux &>/dev/null; then
-                info "cmux 미감지 — Phase 2(cmux) 사용 시 https://cmux.com/ 또는 https://github.com/manaflow-ai/cmux 에서 설치 필요"
-            fi
+        fi
+
+        # ── cmux-tool lib/ 및 examples/ 실행 권한 ──
+        local cmux_lib_dir="$opal_home/tools/cmux-tool/lib"
+        local cmux_examples_dir="$opal_home/tools/cmux-tool/examples"
+        for sh_file in "$cmux_lib_dir"/*.sh "$cmux_examples_dir"/*.sh; do
+            [[ -f "$sh_file" ]] && chmod +x "$sh_file"
+        done
+        if [[ -d "$cmux_lib_dir" || -d "$cmux_examples_dir" ]]; then
+            success "cmux-tool lib/, examples/ 실행 권한 설정"
+        fi
+
+        # cmux 의존성 안내 (정보성 — 설치 강제 없음, silent fallback 정책)
+        if ! command -v cmux &>/dev/null; then
+            info "cmux 미감지 — cmux-tool 사용 시 https://cmux.com/ 또는 https://github.com/manaflow-ai/cmux 에서 설치 필요"
         fi
 
         # Node.js 환경 체크

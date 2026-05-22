@@ -1,7 +1,7 @@
 # opal Memory Index
 
-> 최종 갱신: 2026-05-20 23:15 (태스크 006 채번 — 재정렬)
-> last_task_number: 6
+> 최종 갱신: 2026-05-23 00:02 (태스크 007 CLOSE 완료)
+> last_task_number: 7
 
 ## 메모리 카테고리
 
@@ -38,3 +38,4 @@
 | 2026-05-15 | 004 테스트 시나리오 양식·파이프라인 재설계 — 7섹션 양식(가설→데이터→L×M 매트릭스) + STEP 3.5 신설 + EXECUTE scenario_source + 5단계 직렬 + self-confirming 4분리 | CLOSE | tasks/004-260515-opp-test-scenario-pipeline-redesign/ | 2026-05-15 13:25 | 2026-05-19 17:59 |
 | 2026-05-15 | 005 명확화 게이트 SSOT — 추정 진행 차단 + 소크라테스식 인터뷰 | TASK | tasks/005-260515-opp-clarification-gate-ssot/ | 2026-05-15 13:59 | - |
 | 2026-05-20 | 006 Linux 설치 스크립트 신설 — scripts/install/linux.sh (원래 001 채번 → divergent reconcile 후 006 재채번) | CLOSE | tasks/006-260520-opp-install-linux/ | 2026-05-20 08:35 | 2026-05-20 22:51 |
+| 2026-05-20 | 007 cmux-tool 범용 확장 + wtm-agent fallback 체인 재배선 (원래 006 채번 → 다른 PC 006 install-linux와 충돌하여 007 재채번) | CLOSE | tasks/007-260520-opp-cmux-tool-generic-expansion/ | 2026-05-20 20:02 | 2026-05-23 00:02 |

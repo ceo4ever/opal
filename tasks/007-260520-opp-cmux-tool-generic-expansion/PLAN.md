@@ -451,7 +451,7 @@ fi
 
 ### Step 1: docs/CMUX-REFERENCE.md 작성 (CLI/Socket API 통합 참조)
 
-- [ ] 완료
+- [x] 완료
 - **파일**: `opal/tools/cmux-tool/docs/CMUX-REFERENCE.md`
 - **작업 내용**: CMUX-TOOLS.md(`tasks/007-.../cmux/docs/CMUX-TOOLS.md:1-283`) 전량 흡수 + CMUX.md(`tasks/007-.../cmux/docs/CMUX.md`) §1 설치/§3 단축키/§6 알림 [일반] 섹션 흡수. 5섹션 구성: CLI 명령 / 단축키 / 브라우저 CLI 18종 / hooks 레시피 / Socket API. 헤더에 흡수 출처(원본 경로) 주석 + 변경이력 표 v1.0 (006) 추가.
 - **완료 기준**: 파일이 존재하고 CMUX-TOOLS.md의 §1~§5 모든 표가 보존되며, 흡수 출처 주석이 첫 줄에 있다. `head -5 opal/tools/cmux-tool/docs/CMUX-REFERENCE.md`로 확인.
@@ -460,7 +460,7 @@ fi
 
 ### Step 2: lib/ 공통 헬퍼 4파일 작성
 
-- [ ] 완료
+- [x] 완료
 - **파일**:
   - `opal/tools/cmux-tool/lib/dispatch.sh` (N-1) — 서브명령 라우팅
   - `opal/tools/cmux-tool/lib/cmux-helpers.sh` (N-2) — _lib.sh 흡수
@@ -477,7 +477,7 @@ fi
 
 ### Step 3: run.sh 디스패처 재설계
 
-- [ ] 완료
+- [x] 완료
 - **파일**: `opal/tools/cmux-tool/run.sh`
 - **작업 내용**: 현 흐름을 디스패처로 재구성. 1) 첫 인자가 http(s):// → extract로 자동 라우팅, 2) 첫 인자가 알려진 서브명령 → lib/dispatch.sh로 위임, 3) --help → 사용법 JSON(서브명령 12+1종 목록 + 공통 필드 5종). 기존 extract 흐름(open/goto/wait/get/eval/tab close + A/B/C 모드 결정 + user_owned 시그널 + B/C cleanup 금지 가드)은 `lib/dispatch.sh`의 `extract` 케이스에 보존. fallback 라벨 `"phase3"` → `"phase2"` 치환 (M-1과 연동).
 - **완료 기준**:
@@ -489,7 +489,7 @@ fi
 
 ### Step 4: examples/ E2E + hooks 샘플 작성
 
-- [ ] 완료
+- [x] 완료
 - **파일**:
   - `opal/tools/cmux-tool/examples/e2e-form-fill.sh` (N-5)
   - `opal/tools/cmux-tool/examples/e2e-branch-auto.sh` (N-6)
@@ -504,7 +504,7 @@ fi
 
 ### Step 5: README.md 갱신
 
-- [ ] 완료
+- [x] 완료
 - **파일**: `opal/tools/cmux-tool/README.md`
 - **작업 내용**: 디스패처 구조 + 12+1종 서브명령 사용법 + 공통 JSON 5필드 + 특화 필드 표 + 흡수 자산 위치·출처 표 + 변경이력 v1.1 (006). 기존 3모드(A/B/C) 섹션은 `extract` 서브명령 하위로 재배치. 안전 가드(B/C cleanup 금지) 섹션 유지.
 - **완료 기준**: README에 12+1종 서브명령이 모두 사용법 예시로 등장하고, 흡수 자산 표(11행) + 변경이력 행 추가.
@@ -513,7 +513,7 @@ fi
 
 ### Step 6: tools.md 신규 등록
 
-- [ ] 완료
+- [x] 완료
 - **파일**: `opal/core/references/tools.md`
 - **작업 내용**: 기존 3개 도구(xlsx/state/code-scan) 사이 또는 끝에 `## cmux-tool` 섹션 신규 추가. 골격: 용도 / 실행 경로 / 소스 경로 / 의존성 / 커맨드(12+1종) / 출력 형식(공통 5필드 + 특화) / 트리거 조건 표(§2.4 5행 매트릭스) / 사용 예시 / 종료 코드 / 에러 코드(폴백 4종 + 입력 정정 5종). 변경이력 v1.5 (006) 행 추가.
 - **완료 기준**: tools.md에 `## cmux-tool` 섹션 존재하고 §2.4 트리거 조건 5행 표 포함. 알투가 lazy-load 시 행 매칭으로 자동 선택 가능한 수준.
@@ -522,7 +522,7 @@ fi
 
 ### Step 7: wtm-agent AGENT.md 재배선
 
-- [ ] 완료
+- [x] 완료
 - **파일**: `opal/agents/opal-wtm-agent/AGENT.md`
 - **작업 내용**:
   - YAML frontmatter description: "Phase 1(WebFetch) → Phase 2(cmux, 조건부) → Phase 3(playwright-tool CLI) 폴백 전략" → "Phase 1(cmux-tool, 1순위) → Phase 2(playwright-tool, fallback) 2단 폴백 전략"
@@ -539,7 +539,7 @@ fi
 
 ### Step 8: web-to-markdown SKILL.md 일관성 갱신
 
-- [ ] 완료
+- [x] 완료
 - **파일**: `skills/web-to-markdown/SKILL.md`
 - **작업 내용**: AGENT.md(M-4)와 동일한 호칭/순서 갱신. L6 description, L24~33 호출 인터페이스(`//wtm` 명령 설명), L66~82 추출 모드 표, L86~115 실행 흐름 다이어그램, L119~232 Phase 섹션(Phase 1 WebFetch 섹션 삭제, Phase 2→1, Phase 3→2). **`--browser` 모드 처리 (sparring 공격 4 검증 결과 반영)** — `--browser`는 SKILL.md L26-27·L73·L79-81에서 4곳 외부 인터페이스로 명시되어 있음(`grep -rn '\-\-browser' skills/` 결과). 단순 제거 시 외부 호출자(`//wtm --browser <url>` 사용자) breaking change 발생. **결정: 모드 자체는 보존하되 의미를 갱신** — "WebFetch 생략" → "기본 동작과 동일(2단 체인). 하위 호환 alias로 유지". 변경이력 행에 "v1.6: WebFetch 제거에 따라 `--browser` 의미가 기본 동작과 일치 — alias로 deprecated 표기" 명시.
 - **완료 기준**: SKILL.md에 "Phase 1: WebFetch" 호칭 잔재 없음, `webfetch` `WebFetch` 문자열이 호출 예시 외에는 등장하지 않음. `--browser` 모드는 보존되며 "deprecated alias — 기본 동작과 동일" 명시.
@@ -548,7 +548,7 @@ fi
 
 ### Step 9: install-mac.sh 배포 처리 갱신
 
-- [ ] 완료
+- [x] 완료
 - **파일**: `scripts/install-mac.sh`
 - **작업 내용**: **L834-842 cmux-tool 블록 확장** (다른 PC 알투의 006 install-linux 변경 후 시프트된 줄번호 — playwright-tool 블록이 L820-824로 확장된 영향) — `cmux-tool/lib/*.sh` + `cmux-tool/examples/*.sh` 일괄 chmod +x. 안내 메시지 generic 표현으로 갱신 ("Phase 2(cmux) 사용 시" → "cmux-tool 사용 시"). 헤더 변경이력 v2.3 추가.
 - **완료 기준**: install-mac.sh 실행 시 `~/.opal/tools/cmux-tool/lib/*.sh`와 `examples/*.sh` 모두 실행 권한이 부여된다. 안내 메시지에서 "Phase 2(cmux)" 잔재 제거.
@@ -557,7 +557,7 @@ fi
 
 ### Step 10: tasks/007-.../cmux/ 인풋 폴더 정리
 
-- [ ] 완료
+- [x] 완료
 - **파일**: `tasks/007-260520-opp-cmux-tool-generic-expansion/cmux/` (디렉토리 전체)
 - **작업 내용**: **사전 의무 (R-T5 sparring 검증 반영)** — `rm -rf` 직전 `git add tasks/007-260520-opp-cmux-tool-generic-expansion/cmux/` + 사용자 확인 후 commit하여 git 히스토리 보존을 강제. commit 후에야 §2.7 처분표 D-1~D-11 흡수 완료를 검증하고 원본 폴더를 제거 (`rm -rf tasks/007-.../cmux/`). 흡수 출처 추적은 (1) 신규 파일 헤더 주석 (2) cmux-tool/README.md §흡수 자산 출처 표 (3) git 히스토리 세 채널 유지.
 - **완료 기준**: `tasks/007-260520-opp-cmux-tool-generic-expansion/cmux/` 폴더가 존재하지 않거나 빈 상태. **`git log -- tasks/007-.../cmux/` 출력 ≥ 1 commit (사전 add 검증)**. EXECUTE Step 9 산출물 changed_files 목록에 모든 흡수 출처 파일이 추적됨.
@@ -570,38 +570,38 @@ fi
 
 ### 기능 테스트
 
-- [ ] **R-1 충족**: `bash ~/.opal/tools/cmux-tool/run.sh --help` 출력 JSON에 12+1종 서브명령 사용법이 모두 포함되어 있다 (네비/상호작용/읽기 각 카테고리 최소 1종 이상)
-- [ ] **R-1 흡수 출처**: cmux-tool/lib/, examples/, docs/ 신규 파일 모두 헤더 주석에 `tasks/007-.../cmux/...` 원본 경로가 명시되어 있다 (EXECUTE changed_files에서 흡수 출처 추적 가능)
-- [ ] **R-2 호환**: `bash ~/.opal/tools/cmux-tool/run.sh https://example.com` (URL 단독) 호출이 기존 extract와 동일한 8필드 JSON 반환 — `ok`/`method`/`mode`/`surface`/`user_owned`/`title`/`final_url`/`content`/`bytes`/`wait_ms` 키가 모두 존재
-- [ ] **R-2 호환**: `bash ~/.opal/tools/cmux-tool/run.sh --surface surface:3` (B 모드) 호출이 기존 동작과 동일
-- [ ] **R-3 wtm-agent 일관성**: AGENT.md / SKILL.md 양쪽에서 "Phase 1: WebFetch" 호칭 잔재가 없다. fallback 트리거 4종 에러 코드가 AGENT.md에 명시되어 있다
-- [ ] **R-3 WebFetch 처리**: AGENT.md에 "WebFetch 완전 제거" 결정이 명시되어 있다 (M-1 (a)안)
-- [ ] **R-4 tools.md 등록**: `opal/core/references/tools.md`에 `## cmux-tool` 섹션이 존재하고 기존 3개 도구(xlsx/state/code-scan)와 동일한 골격(용도/실행 경로/소스 경로/의존성/커맨드/출력 형식/사용 예시/종료 코드)을 갖는다
-- [ ] **R-4 트리거 조건**: tools.md `## cmux-tool` 섹션에 §2.4 5행 트리거 매트릭스가 명시되어 있다 (웹 크롤링/정보 수집/웹 테스트/E2E/로컬 SPA)
-- [ ] **R-5 README**: cmux-tool/README.md에 12+1종 서브명령 사용법·예시·출력 스키마·에러 코드가 기재되고, 흡수 자산 위치·출처 표가 포함되어 있다. 변경이력 v1.1 (006) 행 추가
-- [ ] **R-6 install**: install-mac.sh 재실행 시 `~/.opal/tools/cmux-tool/lib/`, `examples/`, `docs/` 디렉토리가 모두 배포되고 .sh 파일에 chmod +x가 적용된다
-- [ ] **R-6 fallback 안내**: cmux 미설치 환경에서 install-mac.sh 안내 메시지가 generic 표현("cmux-tool 사용 시")으로 일관 출력
-- [ ] **R-7 cmux/ 정리**: `tasks/007-.../cmux/` 폴더가 정리되거나 후속 보류 자산만 남음. 흡수 자산은 모두 cmux-tool/ 하위 정확한 경로에 존재
-- [ ] **안전 가드**: `extract` 서브명령(B/C 모드)에서 `cmux browser <surface> tab close` 호출이 절대 발생하지 않는다 (정적 검증 — A) 케이스 내부에서만 호출)
+- [x] **R-1 충족**: `bash ~/.opal/tools/cmux-tool/run.sh --help` 출력 JSON에 12+1종 서브명령 사용법이 모두 포함되어 있다 (네비/상호작용/읽기 각 카테고리 최소 1종 이상)
+- [x] **R-1 흡수 출처**: cmux-tool/lib/, examples/, docs/ 신규 파일 모두 헤더 주석에 `tasks/007-.../cmux/...` 원본 경로가 명시되어 있다 (EXECUTE changed_files에서 흡수 출처 추적 가능)
+- [x] **R-2 호환**: `bash ~/.opal/tools/cmux-tool/run.sh https://example.com` (URL 단독) 호출이 기존 extract와 동일한 8필드 JSON 반환 — `ok`/`method`/`mode`/`surface`/`user_owned`/`title`/`final_url`/`content`/`bytes`/`wait_ms` 키가 모두 존재
+- [x] **R-2 호환**: `bash ~/.opal/tools/cmux-tool/run.sh --surface surface:3` (B 모드) 호출이 기존 동작과 동일
+- [x] **R-3 wtm-agent 일관성**: AGENT.md / SKILL.md 양쪽에서 "Phase 1: WebFetch" 호칭 잔재가 없다. fallback 트리거 4종 에러 코드가 AGENT.md에 명시되어 있다
+- [x] **R-3 WebFetch 처리**: AGENT.md에 "WebFetch 완전 제거" 결정이 명시되어 있다 (M-1 (a)안)
+- [x] **R-4 tools.md 등록**: `opal/core/references/tools.md`에 `## cmux-tool` 섹션이 존재하고 기존 3개 도구(xlsx/state/code-scan)와 동일한 골격(용도/실행 경로/소스 경로/의존성/커맨드/출력 형식/사용 예시/종료 코드)을 갖는다
+- [x] **R-4 트리거 조건**: tools.md `## cmux-tool` 섹션에 §2.4 5행 트리거 매트릭스가 명시되어 있다 (웹 크롤링/정보 수집/웹 테스트/E2E/로컬 SPA)
+- [x] **R-5 README**: cmux-tool/README.md에 12+1종 서브명령 사용법·예시·출력 스키마·에러 코드가 기재되고, 흡수 자산 위치·출처 표가 포함되어 있다. 변경이력 v1.1 (006) 행 추가
+- [x] **R-6 install**: install-mac.sh 재실행 시 `~/.opal/tools/cmux-tool/lib/`, `examples/`, `docs/` 디렉토리가 모두 배포되고 .sh 파일에 chmod +x가 적용된다
+- [x] **R-6 fallback 안내**: cmux 미설치 환경에서 install-mac.sh 안내 메시지가 generic 표현("cmux-tool 사용 시")으로 일관 출력
+- [x] **R-7 cmux/ 정리**: `tasks/007-.../cmux/` 폴더가 정리되거나 후속 보류 자산만 남음. 흡수 자산은 모두 cmux-tool/ 하위 정확한 경로에 존재
+- [x] **안전 가드**: `extract` 서브명령(B/C 모드)에서 `cmux browser <surface> tab close` 호출이 절대 발생하지 않는다 (정적 검증 — A) 케이스 내부에서만 호출)
 
 ### 일관성 테스트
 
-- [ ] **호칭 일관성**: AGENT.md ↔ SKILL.md ↔ tools.md 3개 문서에서 Phase 호칭(`Phase 1: cmux-tool`, `Phase 2: playwright-tool`)이 동일하게 표기됨
-- [ ] **에러 코드 일관성**: cmux-tool/run.sh의 9종 에러 코드 ↔ README.md 에러 코드 표 ↔ tools.md 에러 코드 표 ↔ AGENT.md fallback 트리거 코드가 모두 동일 식별자 사용
-- [ ] **JSON 스키마 일관성**: 신규 서브명령 모두 공통 5필드(`ok`/`command`/`surface`/`user_owned`/`error`) + 특화 필드 패턴 준수. extract는 기존 8필드 보존
-- [ ] **흡수 출처 추적성**: 신규 파일 헤더 주석의 원본 경로 ↔ README §흡수 자산 출처 표 두 채널이 일치
-- [ ] **CONVENTIONS 일관성**: 파일/폴더 이름 kebab-case (lib/, examples/, docs/, e2e-form-fill.sh, claude-hooks.sample.json 등), Python 파일은 snake_case (해당 없음). 코드/변수/필드명 English (서브명령 `extract`/`snapshot` 등). 문서 본문 한국어 (→ `docs/CONVENTIONS.md` §언어 규칙)
-- [ ] **플랫폼 분기 격리**: 신규 lib/*.sh, examples/*.sh, README, AGENT.md, SKILL.md 본문에 Claude/Cursor/Gemini 등 플랫폼 분기 조건문이 없다 (→ `docs/CONVENTIONS.md` §플랫폼 분기 격리)
-- [ ] **변경이력 작성 의무**: 수정된 모든 스킬·에이전트·참조 문서(`opal/agents/opal-wtm-agent/AGENT.md`, `skills/web-to-markdown/SKILL.md`, `opal/tools/cmux-tool/README.md`, `opal/core/references/tools.md`, `scripts/install-mac.sh`)에 변경이력 행(`YYYY-MM-DD HH:mm` KST + semver + 태스크 번호 `(006)`) 추가됨
+- [x] **호칭 일관성**: AGENT.md ↔ SKILL.md ↔ tools.md 3개 문서에서 Phase 호칭(`Phase 1: cmux-tool`, `Phase 2: playwright-tool`)이 동일하게 표기됨
+- [x] **에러 코드 일관성**: cmux-tool/run.sh의 9종 에러 코드 ↔ README.md 에러 코드 표 ↔ tools.md 에러 코드 표 ↔ AGENT.md fallback 트리거 코드가 모두 동일 식별자 사용
+- [x] **JSON 스키마 일관성**: 신규 서브명령 모두 공통 5필드(`ok`/`command`/`surface`/`user_owned`/`error`) + 특화 필드 패턴 준수. extract는 기존 8필드 보존
+- [x] **흡수 출처 추적성**: 신규 파일 헤더 주석의 원본 경로 ↔ README §흡수 자산 출처 표 두 채널이 일치
+- [x] **CONVENTIONS 일관성**: 파일/폴더 이름 kebab-case (lib/, examples/, docs/, e2e-form-fill.sh, claude-hooks.sample.json 등), Python 파일은 snake_case (해당 없음). 코드/변수/필드명 English (서브명령 `extract`/`snapshot` 등). 문서 본문 한국어 (→ `docs/CONVENTIONS.md` §언어 규칙)
+- [x] **플랫폼 분기 격리**: 신규 lib/*.sh, examples/*.sh, README, AGENT.md, SKILL.md 본문에 Claude/Cursor/Gemini 등 플랫폼 분기 조건문이 없다 (→ `docs/CONVENTIONS.md` §플랫폼 분기 격리)
+- [x] **변경이력 작성 의무**: 수정된 모든 스킬·에이전트·참조 문서(`opal/agents/opal-wtm-agent/AGENT.md`, `skills/web-to-markdown/SKILL.md`, `opal/tools/cmux-tool/README.md`, `opal/core/references/tools.md`, `scripts/install-mac.sh`)에 변경이력 행(`YYYY-MM-DD HH:mm` KST + semver + 태스크 번호 `(006)`) 추가됨
 
 ### 문서 품질
 
-- [ ] **한국어 본문 + 영어 코드/필드명** 규칙을 따르는가 (→ `docs/CONVENTIONS.md` §언어 규칙)
-- [ ] **kebab-case 파일/폴더 네이밍** 규칙을 따르는가 (lib/, examples/, docs/, e2e-form-fill.sh, cmux-helpers.sh, branch.sh, dispatch.sh, json.sh, claude-hooks.sample.json, CMUX-REFERENCE.md)
-- [ ] **YAML frontmatter** (해당 시 — AGENT.md): name/description/model 키가 올바르게 갱신됨
-- [ ] **인용 규칙**: PLAN §1 참조 문서 테이블 + §2 인라인 인용 + §1 끝의 [MUST] 원문 인용이 모두 작성되어 있다 (→ `opal/core/references/harness/citation-rules.md` §3.1, §3.2, §2.4)
-- [ ] **단순성 검증**: PLAN 설계에 사변적 추가·미래 대비·불필요한 레이어가 없다 (→ `opal/core/references/harness/coding-principles.md` §2)
-- [ ] **외과적 검증**: EXECUTE 시 PLAN.md 범위 밖 파일이 수정되지 않는다 (→ `opal/core/references/harness/coding-principles.md` §4)
+- [x] **한국어 본문 + 영어 코드/필드명** 규칙을 따르는가 (→ `docs/CONVENTIONS.md` §언어 규칙)
+- [x] **kebab-case 파일/폴더 네이밍** 규칙을 따르는가 (lib/, examples/, docs/, e2e-form-fill.sh, cmux-helpers.sh, branch.sh, dispatch.sh, json.sh, claude-hooks.sample.json, CMUX-REFERENCE.md)
+- [x] **YAML frontmatter** (해당 시 — AGENT.md): name/description/model 키가 올바르게 갱신됨
+- [x] **인용 규칙**: PLAN §1 참조 문서 테이블 + §2 인라인 인용 + §1 끝의 [MUST] 원문 인용이 모두 작성되어 있다 (→ `opal/core/references/harness/citation-rules.md` §3.1, §3.2, §2.4)
+- [x] **단순성 검증**: PLAN 설계에 사변적 추가·미래 대비·불필요한 레이어가 없다 (→ `opal/core/references/harness/coding-principles.md` §2)
+- [x] **외과적 검증**: EXECUTE 시 PLAN.md 범위 밖 파일이 수정되지 않는다 (→ `opal/core/references/harness/coding-principles.md` §4)
 
 ---
 

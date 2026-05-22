@@ -1,15 +1,24 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC2155
-# Usage: source "$(dirname "${BASH_SOURCE[0]}")/_lib.sh"
 #
-# cmux 0.60+ 호환 공통 함수 모음.
-# cmux CLI 변경 이력(2026-04-18 069 태스크 기준):
-#   - new-surface 는 --name/--cwd/--command 플래그를 더 이상 지원하지 않는다
-#   - 따라서 "new-surface 생성 → rename-tab → send(명령 텍스트) → send-key Enter → 검증"
-#     순서로 surface를 기동해야 한다 (이전 스크립트가 빈 surface만 만들고
-#     기동에 실패했던 회귀 방지용)
+# cmux-tool/lib/cmux-helpers.sh — cmux surface 기동·검증 공통 헬퍼
+#
+# 흡수 출처: tasks/007-260520-opp-cmux-tool-generic-expansion/cmux/scripts/_lib.sh:11-103
+# 역할: Surface 생성·기동·검증·준비 패턴 감지 함수 모음.
+#       MAMS 특화 로직(포트 하드코딩)을 제거하고 범용 인터페이스로 일반화했다.
+#
+# 공개 함수:
+#   start_surface <name> <cwd> <cmd> <log>  → surface ref 출력 (예: "surface:15")
+#   verify_surface <name> <surface> <log> <ready_pattern> [timeout_sec]
+#   ready_pattern_for <target_name>  → 준비 완료 패턴 반환
+#
+# 사용법:
+#   source "$(dirname "${BASH_SOURCE[0]}")/cmux-helpers.sh"
+#
+# 주의: cmux 0.60+ 호환. new-surface는 --name/--cwd/--command 플래그 미지원.
+#       "new-surface → rename-tab → send → send-key Enter" 순으로 기동한다.
 
-# ─── Surface 기동 ────────────────────────────────────────────────────────────
+# ─── Surface 기동 ─────────────────────────────────────────────────────────────
 # start_surface <name> <cwd> <cmd> <log>
 # 성공 시 surface ref(예: "surface:15")를 stdout으로 출력, 실패 시 비-0 반환.
 start_surface() {
@@ -52,7 +61,7 @@ start_surface() {
   printf '%s' "${surface}"
 }
 
-# ─── Surface 기동 검증 ───────────────────────────────────────────────────────
+# ─── Surface 기동 검증 ────────────────────────────────────────────────────────
 # verify_surface <name> <surface> <log> <ready_pattern> [timeout_sec]
 # 준비 완료 패턴을 로그 또는 read-screen에서 감지하면 0 반환, 시간 초과 시 비-0.
 verify_surface() {
@@ -89,15 +98,17 @@ verify_surface() {
   return 1
 }
 
-# ─── 대상별 준비 패턴 ────────────────────────────────────────────────────────
+# ─── 대상별 준비 패턴 ─────────────────────────────────────────────────────────
+# ready_pattern_for <target_name>
 # 대상 이름을 받아 해당 서버의 "기동 완료" 패턴을 반환한다.
+# 새 서버 유형은 case 블록에 추가하면 된다.
 ready_pattern_for() {
   case "$1" in
-    be)       printf '%s' 'Application startup complete|Uvicorn running on' ;;
-    fe)       printf '%s' 'Ready in|started server on' ;;
-    fe-wire)  printf '%s' 'Ready in|started server on' ;;
-    fe-test)  printf '%s' 'Ready in|started server on' ;;
-    batch)    printf '%s' 'Listening at|Running on|airflow-apiserver.*healthy' ;;
-    *)        printf '%s' 'Ready|started|listening' ;;
+    be|backend|fastapi)  printf '%s' 'Application startup complete|Uvicorn running on' ;;
+    fe|frontend|next)    printf '%s' 'Ready in|started server on' ;;
+    fe-wire|wireframe)   printf '%s' 'Ready in|started server on' ;;
+    fe-test|test)        printf '%s' 'Ready in|started server on' ;;
+    batch|airflow)       printf '%s' 'Listening at|Running on|airflow-apiserver.*healthy' ;;
+    *)                   printf '%s' 'Ready|started|listening' ;;
   esac
 }

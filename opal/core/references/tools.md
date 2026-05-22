@@ -288,6 +288,130 @@ node ~/.opal/tools/code-scan/code-scan.js scan src/auth/auth.service.ts --json
 
 ---
 
+## cmux-tool
+
+**용도**: cmux browser 자동화 래퍼 — 12+1종 서브명령으로 웹 자동화·추출·상호작용을 단일 도구로 처리  
+**실행 경로**: `bash ~/.opal/tools/cmux-tool/run.sh`  
+**소스 경로**: `opal/tools/cmux-tool/`  
+**의존성**: `cmux` 0.64.3 이상 (macOS 전용, 선택 설치) + Python 3.x (JSON 직렬화, 내장)  
+**환경 변수**: `$CMUX_SURFACE_ID` (cmux 터미널 내 자동 설정)
+
+### 트리거 조건
+
+알투가 아래 사용자 문장을 수신하면 cmux-tool을 우선 선택한다.  
+cmux 미설치 시 wtm-agent 경유 호출은 silent fallback → playwright-tool. 단독 호출 시 에러 JSON 반환.
+
+| 사용 시점 | 대표 사용자 문장 | 우선 명령 (cmux-tool) | 폴백 |
+|----------|----------------|----------------------|------|
+| **웹 크롤링** (HTML 본문 추출) | "URL 읽어줘", "사이트 내용 정리", "이 페이지 마크다운" | `bash run.sh extract <url>` | playwright-tool |
+| **정보 수집** (구조화된 데이터 조회) | "스냅샷 떠줘", "현재 페이지 구조 보여줘" | `bash run.sh snapshot --surface <h>` | (정보 조회만 — 폴백 없음) |
+| **웹 테스트** (단일 상호작용) | "로그인 버튼 눌러", "이메일 칸에 입력해" | `bash run.sh click <sel>` / `bash run.sh fill <sel> --text <v>` | playwright-tool |
+| **E2E 자동화** (다단계 시나리오) | "회원가입 폼 테스트", "결제 흐름 자동화" | `examples/e2e-form-fill.sh` 또는 fill + click + wait + snapshot 조합 | playwright-tool |
+| **로컬 SPA·동적 페이지** | "localhost:3000 분석", "Next.js 화면 확인" | `bash run.sh extract <url>` (localhost URL 자동 감지) | playwright-tool |
+
+### 커맨드 (12+1종)
+
+```bash
+# 레거시 호환: 첫 인자가 URL이면 extract 자동 라우팅
+bash ~/.opal/tools/cmux-tool/run.sh https://example.com
+
+# 서브명령 직접 지정
+bash ~/.opal/tools/cmux-tool/run.sh extract https://example.com [--mode full|clean] [--wait <ms>]
+bash ~/.opal/tools/cmux-tool/run.sh extract --surface <h> [<url>]  # B/C 모드
+bash ~/.opal/tools/cmux-tool/run.sh snapshot [--surface <h>] [--compact]
+bash ~/.opal/tools/cmux-tool/run.sh eval --script "<js>" [--surface <h>]
+bash ~/.opal/tools/cmux-tool/run.sh wait --load-state complete [--surface <h>] [--timeout-ms N]
+bash ~/.opal/tools/cmux-tool/run.sh wait --selector "<sel>" [--surface <h>]
+bash ~/.opal/tools/cmux-tool/run.sh navigate <url> [--surface <h>]
+bash ~/.opal/tools/cmux-tool/run.sh click <selector> [--surface <h>]
+bash ~/.opal/tools/cmux-tool/run.sh fill <selector> --text <value> [--surface <h>]
+bash ~/.opal/tools/cmux-tool/run.sh open <url>
+bash ~/.opal/tools/cmux-tool/run.sh open-split <url>
+bash ~/.opal/tools/cmux-tool/run.sh reload [--surface <h>]
+bash ~/.opal/tools/cmux-tool/run.sh press <key> [--surface <h>]
+bash ~/.opal/tools/cmux-tool/run.sh get <selector> [--attr <name>] [--surface <h>]
+
+# 사용법 보기
+bash ~/.opal/tools/cmux-tool/run.sh --help
+```
+
+### 출력 형식
+
+공통 5필드 + 명령별 특화 필드로 JSON 출력.
+
+```json
+// extract 성공 (기존 8필드 + command 필드 — R-2 호환)
+{
+  "ok": true, "command": "extract", "method": "cmux", "mode": "A",
+  "surface": "surface:3", "user_owned": false,
+  "title": "Example", "final_url": "https://example.com",
+  "content": "<html>...", "bytes": 315209, "wait_ms": 2000
+}
+
+// snapshot 성공
+{"ok":true,"command":"snapshot","surface":"surface:3","user_owned":true,"snapshot_text":"...","length":4096}
+
+// 실패 (공통 5필드)
+{"ok":false,"command":"click","surface":"surface:3","user_owned":true,"error":"eval_failed","detail":"..."}
+
+// 폴백 트리거 실패 (fallback 필드 포함)
+{"ok":false,"command":"extract","error":"cmux_not_installed","fallback":"phase2","install_url":"https://cmux.com/"}
+```
+
+### 에러 코드 (SSOT: run.sh / lib/dispatch.sh)
+
+| 코드 | 종료값 | wtm-agent 처리 |
+|------|--------|---------------|
+| `not_in_cmux` | 2 | 자동 폴백 (phase2) |
+| `cmux_not_installed` | 3 | 자동 폴백 (phase2) |
+| `surface_parse_failed` | 5 | 자동 폴백 (phase2) |
+| `open_failed` | 5 | 자동 폴백 (phase2) |
+| `usage` | 1 | 폴백 금지 — 호출자 수정 |
+| `invalid_surface` | 4 | 폴백 금지 — 핸들 수정 |
+| `goto_failed` | 6 | 폴백 금지 — URL 오류 |
+| `wait_failed` | 7 | 폴백 금지 — 네트워크/셀렉터 |
+| `eval_failed` | 8 | 폴백 금지 — 명령 오류 |
+
+> 에러 코드 신규 추가 순서: (1) run.sh / lib/dispatch.sh → (2) README.md → (3) tools.md → (4) AGENT.md
+
+### 사용 예시
+
+```bash
+# URL 추출 (extract A 모드)
+bash ~/.opal/tools/cmux-tool/run.sh https://docs.example.com
+
+# 사용자 surface 현재 페이지 스냅샷 (B 모드)
+bash ~/.opal/tools/cmux-tool/run.sh snapshot --surface surface:3
+
+# 폼 자동화 (click + fill + wait)
+bash ~/.opal/tools/cmux-tool/run.sh fill "#email" --text "user@example.com" --surface surface:3
+bash ~/.opal/tools/cmux-tool/run.sh click "[type=submit]" --surface surface:3
+bash ~/.opal/tools/cmux-tool/run.sh wait --load-state complete --surface surface:3
+
+# E2E 레시피 실행
+bash ~/.opal/tools/cmux-tool/examples/e2e-form-fill.sh https://example.com/login \
+  --email user@example.com --password secret
+
+# 분기 자동 결정
+bash ~/.opal/tools/cmux-tool/examples/e2e-branch-auto.sh https://localhost:3000
+```
+
+### 종료 코드
+
+| 코드 | 의미 |
+|------|------|
+| `0` | 성공 |
+| `1` | 사용법 오류 / 알 수 없는 서브명령 |
+| `2` | 환경 오류 (CMUX_SURFACE_ID 미설정) |
+| `3` | cmux 미설치 |
+| `4` | surface 핸들 형식 오류 |
+| `5` | browser open / surface 파싱 실패 |
+| `6` | URL 이동 실패 |
+| `7` | 로드 타임아웃 |
+| `8` | 명령 실행 실패 |
+
+---
+
 ## 변경이력
 
 | 버전 | 날짜 | 내용 |
@@ -297,3 +421,4 @@ node ~/.opal/tools/code-scan/code-scan.js scan src/auth/auth.service.ts --json
 | v1.2 | 2026-04-12 | code-scan 섹션에 PM 관리 방안 서브섹션 추가 + exports 커맨드 사용 예시 추가 (109) |
 | v1.3 | 2026-05-01 | state-tool 섹션 신규 추가 — 파이프라인 현황판 JSON SSOT 관리 CLI 9개 서브 명령 등록 (134) |
 | v1.4 | 2026-05-09 18:30 | 개인 식별자 누설 정정 — note 예시 "캡틴 확인" → "{owner_name} 확인" placeholder 치환 (139) |
+| v1.5 | 2026-05-22 10:00 KST | cmux-tool 섹션 신규 추가 — 12+1종 서브명령 + 트리거 조건 5행 매트릭스 + 에러 코드 9종 + fallback 4종 (007) |
