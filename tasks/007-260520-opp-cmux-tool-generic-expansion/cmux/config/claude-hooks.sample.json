@@ -1,0 +1,37 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ -S /tmp/cmux.sock ] && cmux notify --title 'Claude Code' --subtitle 'MAMS' --body 'Response ready — review' || true"
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ -S /tmp/cmux.sock ] && cmux notify --title 'Claude Code' --subtitle 'MAMS' --body 'Permission requested' || true"
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ -S /tmp/cmux.sock ] && cmux notify --title 'Claude Code' --subtitle 'MAMS' --body 'Context compact imminent' || true"
+          }
+        ]
+      }
+    ]
+  }
+}

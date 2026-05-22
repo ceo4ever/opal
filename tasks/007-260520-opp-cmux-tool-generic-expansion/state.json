@@ -1,0 +1,211 @@
+{
+  "task_id": "007-260520-opp-cmux-tool-generic-expansion",
+  "skill": "opp",
+  "mode": "semi-agentic",
+  "schema_version": "1.0",
+  "created_at": "2026-05-20 20:02",
+  "updated_at": "2026-05-22 23:17",
+  "current_status": "in_progress",
+  "rows": [
+    {
+      "row_id": 1,
+      "stage": "TASK",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-20 20:02",
+      "owner": "PM",
+      "note": "TASK 단계 작업 시작"
+    },
+    {
+      "row_id": 2,
+      "stage": "TASK",
+      "item": "TASK.md 생성",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-20 20:02",
+      "owner": "PM",
+      "note": "TASK.md 생성 완료"
+    },
+    {
+      "row_id": 3,
+      "stage": "TASK",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-20 20:47",
+      "owner": "user",
+      "note": "캡틴 확인: TASK.md 보강 후 승인 발화"
+    },
+    {
+      "row_id": 4,
+      "stage": "PLAN",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-20 21:02",
+      "owner": "PM",
+      "note": "PLAN 작업 완료 (워커 op-task-plan)"
+    },
+    {
+      "row_id": 5,
+      "stage": "PLAN",
+      "item": "PLAN.md 생성",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-20 21:02",
+      "owner": "PM",
+      "note": "PLAN.md 생성 완료"
+    },
+    {
+      "row_id": 6,
+      "stage": "PLAN",
+      "item": "QA Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-20 21:11",
+      "owner": "PM",
+      "note": "QA Gate 통과: verdict=pass_with_recommendations, 25/28 Pass + 3 Info"
+    },
+    {
+      "row_id": 7,
+      "stage": "PLAN",
+      "item": "QA-PLAN.md 생성",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-20 21:11",
+      "owner": "PM",
+      "note": "QA-PLAN.md 생성 완료"
+    },
+    {
+      "row_id": 8,
+      "stage": "PLAN",
+      "item": "State Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-20 21:11",
+      "owner": "PM",
+      "note": "QA Gate 후 State Gate"
+    },
+    {
+      "row_id": 9,
+      "stage": "PLAN",
+      "item": "PM Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-20 21:11",
+      "owner": "PM",
+      "note": "PM Gate: TASK 요구사항 R-1~R-7 ↔ PLAN Step 매핑·M-1~M-7 결정 완전성·Citation Rules 모두 충족. QA 권고 3건은 EXECUTE 단계 영역 또는 Info 수준"
+    },
+    {
+      "row_id": 10,
+      "stage": "PLAN",
+      "item": "State Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-20 21:11",
+      "owner": "PM",
+      "note": "PM Gate 후 State Gate"
+    },
+    {
+      "row_id": 11,
+      "stage": "PLAN",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-22 23:17",
+      "owner": "user",
+      "note": "캡틴 확인: PLAN v1.3 보강 후 승인 발화 — 모드 경계 통과, EXECUTE PM 자율 진입"
+    },
+    {
+      "row_id": 12,
+      "stage": "EXECUTE",
+      "item": "작업",
+      "status": "in_progress",
+      "status_label": "🔄",
+      "timestamp": "2026-05-22 23:17",
+      "owner": "PM",
+      "note": "EXECUTE 단계 작업 시작 (모드 경계 통과, semi-agentic auto-pass 적용 영역)"
+    },
+    {
+      "row_id": 13,
+      "stage": "EXECUTE",
+      "item": "QA Gate",
+      "status": "pending",
+      "status_label": "⬜",
+      "timestamp": null,
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 14,
+      "stage": "EXECUTE",
+      "item": "QA-EXECUTE.md 생성",
+      "status": "pending",
+      "status_label": "⬜",
+      "timestamp": null,
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 15,
+      "stage": "EXECUTE",
+      "item": "State Gate",
+      "status": "pending",
+      "status_label": "⬜",
+      "timestamp": null,
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 16,
+      "stage": "EXECUTE",
+      "item": "PM Gate",
+      "status": "pending",
+      "status_label": "⬜",
+      "timestamp": null,
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 17,
+      "stage": "EXECUTE",
+      "item": "State Gate",
+      "status": "pending",
+      "status_label": "⬜",
+      "timestamp": null,
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 18,
+      "stage": "EXECUTE",
+      "item": "사용자 확인",
+      "status": "pending",
+      "status_label": "⬜",
+      "timestamp": null,
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 19,
+      "stage": "CLOSE",
+      "item": "DONE.md 생성",
+      "status": "pending",
+      "status_label": "⬜",
+      "timestamp": null,
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 20,
+      "stage": "CLOSE",
+      "item": "State Gate",
+      "status": "pending",
+      "status_label": "⬜",
+      "timestamp": null,
+      "owner": "PM",
+      "note": null
+    }
+  ]
+}
