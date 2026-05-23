@@ -19,6 +19,7 @@
 #   v2.2 2026-05-12 21:35 KST: cmux-tool 등록 + opal-wtm-agent 자동 어댑터 — install_opal()의 tools/ 처리 직후 cmux-tool/run.sh chmod +x 추가 (002)
 #   v2.3 2026-05-20: install_opal_venv Playwright 캐시 경로 OS 분기 — Linux는 ~/.cache/ms-playwright (XDG 표준). Linux one-liner 진입점 신설 동반 수정 (006)
 #   v2.4 2026-05-22 10:00 KST: cmux-tool lib/*.sh + examples/*.sh chmod +x 추가. 안내 메시지 "Phase 2(cmux)" → "cmux-tool" (007)
+#   v2.5 2026-05-23 18:57 KST: detect_framework_root 검사 기준을 agents/ → opal/agents/ 로 갱신 — 태스크 002에서 wtm-agent를 opal/agents/로 이동하면서 루트 agents/ 폴더가 소멸했으나 사전 점검만 옛 구조를 검증해 즉시 차단되던 결함 fix (hotfix, "그냥 해")
 #
 
 set -euo pipefail
@@ -69,7 +70,7 @@ detect_framework_root() {
     script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
     FRAMEWORK_ROOT="$(dirname "$script_dir")"
 
-    if [[ ! -d "$FRAMEWORK_ROOT/skills" ]] || [[ ! -d "$FRAMEWORK_ROOT/agents" ]]; then
+    if [[ ! -d "$FRAMEWORK_ROOT/skills" ]] || [[ ! -d "$FRAMEWORK_ROOT/opal/agents" ]]; then
         error "프레임워크 루트를 찾을 수 없습니다: $FRAMEWORK_ROOT"
         error "이 스크립트는 opal/scripts/ 에서 실행해야 합니다."
         exit 1
