@@ -1,12 +1,12 @@
 # STATE: opwt 산출물 체계 v4 — interview 통합 + PRD 8섹션 + 시나리오·화면 흐름도 + WBS 제거
 
-> 최종 갱신: 2026-05-24 15:36
+> 최종 갱신: 2026-05-24 18:02
 
 ## 현재 상태
 - 모드: agentic
 - 단계: TASK / PLAN / EXECUTE / CLOSE
 - 진행: EXECUTE 단계
-- 상태: 완료
+- 상태: 추가작업완료
 
 <!-- pipeline:start -->
 ## 파이프라인 현황판
@@ -36,6 +36,7 @@
 | 18 | EXECUTE | 사용자 확인 | ✅ | 2026-05-24 15:35 |
 | 19 | CLOSE | DONE.md 생성 | ✅ | 2026-05-24 15:36 |
 | 20 | CLOSE | State Gate | ✅ | 2026-05-24 15:36 |
+| 21 | CLOSE | 추가작업: 산출물 저장 경로 Q6 + default 폴더 구조 100.기획/ 추가 (Round 2 누락 보완) | ✅ | 2026-05-24 18:02 |
 <!-- pipeline:end -->
 
 ## 의사결정 로그
@@ -43,6 +44,8 @@
 |---|------|------|------|
 | 1 | 2026-05-24 14:00 | agentic auto-pass at row 3, item=사용자 확인 | agentic auto-pass: 사용자가 //opp --agentic 명시 발화로 TASK 단계 승인. TASK.md 8섹션·R-1~R-8 요구사항·관련 문서 D-1~D-8 포함하여 작성 완료. STATE.md 20행 + AGENTIC-LOG.md 생성 완료. |
 | 1 | 2026-05-24 14:19 | agentic auto-pass at row 11, item=사용자 확인 | agentic auto-pass: PLAN 단계 PM Gate Pass — QA-PLAN Pass(조건부) Normal 4+Minor 3 PM 직접 보정 반영 완료. EXECUTE 진입 허가. |
+| 2 | 2026-05-24 18:00 | additional row inserted after row 20: stage=CLOSE, item=추가작업: 산출물 저장 경로 Q6 + default 폴더 구조 100.기획/ 추가 (Round 2 누락 보완), new_row_id=21 | additional work entry |
+| 3 | 2026-05-24 18:02 | current_status changed: additional_work → additional_work_done | (none) |
 
 ## 블로커
 없음

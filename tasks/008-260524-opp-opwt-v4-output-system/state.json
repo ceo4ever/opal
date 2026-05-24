@@ -4,8 +4,8 @@
   "mode": "agentic",
   "schema_version": "1.0",
   "created_at": "2026-05-24 14:00",
-  "updated_at": "2026-05-24 15:36",
-  "current_status": "done",
+  "updated_at": "2026-05-24 18:02",
+  "current_status": "additional_work_done",
   "rows": [
     {
       "row_id": 1,
@@ -204,6 +204,16 @@
       "status": "done",
       "status_label": "✅",
       "timestamp": "2026-05-24 15:36",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 21,
+      "stage": "CLOSE",
+      "item": "추가작업: 산출물 저장 경로 Q6 + default 폴더 구조 100.기획/ 추가 (Round 2 누락 보완)",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-24 18:02",
       "owner": "PM",
       "note": null
     }

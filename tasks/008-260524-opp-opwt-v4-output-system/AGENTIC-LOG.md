@@ -8,12 +8,12 @@
 |------|------|
 | 게이트 판단 | 5회 (Pass: 5 / Fail: 0) |
 | 3회 초과 Gate | 0건 (Critical: 0 / Normal: 0 / Minor: 0) |
-| 오류 발견 | 10건 (QA-PLAN Normal 4 + Minor 3 / EXECUTE 워커 폴백 2 / QA-EXECUTE Minor 1) |
-| 수정 지시 | 10건 (반영: 10 / 미반영: 0) |
-| PM 의사결정 | 3건 |
-| 개선 사항 | 0건 |
+| 오류 발견 | 11건 (QA-PLAN Normal 4 + Minor 3 / EXECUTE 워커 폴백 2 / QA-EXECUTE Minor 1 / CLOSE 후 누락 발견 1) |
+| 수정 지시 | 11건 (반영: 11 / 미반영: 0) |
+| PM 의사결정 | 4건 |
+| 개선 사항 | 1건 (default 폴더 트리 v4 신설) |
 | 에스컬레이션 | 0건 |
-| 태스크 종료 | 2026-05-24 15:36 CLOSE 완료 |
+| 태스크 종료 | 2026-05-24 15:36 CLOSE 완료 / 2026-05-24 18:01 추가작업 완료 |
 
 ## 대행 일지
 
@@ -34,3 +34,6 @@
 | 13 | 2026-05-24 14:34 | EXECUTE | GATE | EXECUTE 단계 PM Gate (강화 검토) — (i) TASK.md R-1~R-8 100% 충족 (ii) QA Pass + Minor 1건 즉시 보정 (iii) Artifact Gate — 3개 산출물 파일 Read 직접 검증 완료 (iv) PM 검토 기준 통과 — 컴포넌트 표준화/재사용성/플랫폼 독립성 (v) 이전 단계(PLAN.md M-1~M-8) 의사결정 산출물 반영 100% (vi) AGENTIC-LOG 추적성 확보. | **Pass** — CLOSE 진입 캡틴 승인 요청 대기 |
 | 14 | 2026-05-24 15:35 | CLOSE | GATE | CLOSE 진입 게이트 — 캡틴 발화 "확인"(2026-05-24 15:35) 수신. row 18(EXECUTE 사용자 확인)에 `--owner user` mark 완료. CLOSE 첫 행(row 19) 진입 허용 검증 통과. | **Pass** — CLOSE 진입 완료 |
 | 15 | 2026-05-24 15:36 | CLOSE | DECISION | 태스크 종료 — DONE.md 생성(35/35 AC 충족 / 4 QA Gate Pass / 3개 파일 변경 / 5 게이트 Pass / 0 에스컬레이션). MEMORY.md 작업 히스토리 008 행 완료일시 갱신(2026-05-24 15:35). row 19(DONE.md 생성) + row 20(State Gate) mark 완료. | 태스크 008 CLOSE 완료 |
+| 16 | 2026-05-24 17:50 | CLOSE+ | ERROR | CLOSE 후 캡틴 발견 누락 — v4 인터뷰 재구성 시 v3.4 TASK 전용 확인 항목 #4 "산출물 저장 경로"가 Round 1/2/3 어디에도 매핑 안 됨. 다른 프로젝트에서 opwt 호출 시 PROJECT.md에 폴더 등록 없으면 막힘. R-6 AC에도 명시 누락. | 추가작업 진입 결정 |
+| 17 | 2026-05-24 18:01 | CLOSE+ | FIX | 008 추가작업(row 21 add-row) — SKILL.md 보강: (a) "산출물 저장 구조" 절에 default v4 7폴더 트리(100.기획 → 170.기능시나리오) 명시 + 폴더명 컨벤션 안내 (b) Round 2 표 질문 수 2→3, Q6 산출물 저장 경로 추가 (c) Step 1에 (d) 저장 경로 자동 감지 가이드 추가 (PROJECT.md 등록 / 100.기획/ 존재 / 둘 다 없음 3분기) (d) Step 4 TASK.md 양식에 "산출물 저장 경로" 섹션 추가 (e) 변경이력 v4.1 행 추가. 검증: 100.기획/ 5건 / Q6 9건 / 산출물 저장 경로 5건 / v4.1 행 1건. | 반영 완료 |
+| 18 | 2026-05-24 18:01 | CLOSE+ | DECISION | default 폴더 구조 — 캡틴 안 기반 + 다이어그램 폴더 제거(각 산출물 별도 폴더) + 외부API명세/운영매뉴얼 미포함(b 옵션). 한국어 + 10 간격 prefix(110·120·...·170)로 확장성 확보. 시나리오는 폴더 안에 파일별 분리. | default v4 = 7폴더 (필수 4 + 선택 3) |
