@@ -32,9 +32,8 @@ description: |
 ## 커버 범위
 
 **필수 4종**: PRD, TRD, 서비스 정책서(복수), IA(기능 포함 — JSON + Mermaid 사이트맵 이중 출력)
-**선택 4종**: 기능도, 순서도, 운영 정책서, 서비스 매뉴얼
+**선택 5종**: 기능도, 기능 시나리오 다이어그램, 화면 흐름도, 운영 정책서, 서비스 매뉴얼
 **프로젝트 특화 선택**: 외부 API 명세서 (외부 API 연동 프로젝트 한정 — 메타, 구글광고 등 서드파티 API 스펙 기획 산출물화)
-**PMO**: 개발 WBS (기획 산출물 기반 개발 항목 구조화 — IA/기능 목록을 입력으로 MECE 분해)
 **순서 체인**: PRD → TRD → 서비스 정책서 → IA (역방향도 가능)
 **외부 참조**: 와이어프레임, ERD 등 프로젝트 내 기존 문서를 참조하여 작성 품질 향상 (읽기 전용, 선택적)
 
@@ -57,16 +56,83 @@ description: |
 
 오케스트레이터가 **직접 수행**한다. 하네스 §4 TASK 공통 프로세스 기반 + opwt 전용 확인 항목.
 
-### opwt 전용 확인 항목
+### interview 스킬 호출
 
-1. **모드 결정**: 작성 / 수정 / 분석
-2. **대상 문서 유형**: PRD, TRD, 정책서, IA, 외부 API 명세서, 개발 WBS 등 (복수 선택 가능)
-3. **외부 참조 여부**: 와이어프레임, ERD 등 참조할 기존 산출물 확인
-4. **산출물 저장 경로**: `docs/PROJECT.md`로 기존 구조 파악 → 없으면 제안
+TASK 단계에서 사용자 요구사항을 수집하기 위해 **interview 스킬**을 호출한다. 스킬 탐색 경로 (순서대로):
+
+1. `{프로젝트}/.opal/skills/interview/SKILL.md`
+2. `~/.opal/skills/interview/SKILL.md`
+
+### Round 1/2/3 라운드 설계
+
+| 라운드 | 질문 수 | 옵션 형식 | multiSelect | 트리거 조건 |
+|--------|--------|----------|-------------|------------|
+| Round 1 | 3개 | Q1 모드: single / Q2 표준 산출물: multiSelect / Q3 외부 API: single (조건부) | Q2 표준 산출물 항목만 | 항상 |
+| Round 2 | 2개 | Q4 부가 산출물: multiSelect (필터링) / Q5 외부 참조: multiSelect (자동 감지 확인) | 둘 다 | 항상 |
+| Round 3 | PRD 5섹션 (free text) | free text | - | **PRD가 Round 1 답변에서 표준 산출물로 선택된 경우에만** |
+
+### Step 1 — opwt 도메인 옵션 구성 (interview 호출 전)
+
+interview 스킬 호출 전에 다음 신호 탐지를 선행하여 Q3·Q4·Q5 옵션을 동적으로 구성한다.
+
+**(a) 외부 API 신호 탐지** → Q3 조건부 노출
+
+사용자 요청 및 `PROJECT.md`에서 다음 키워드/도메인 검색:
+- 키워드: "메타", "구글 광고", "카카오", "결제 게이트웨이", "OAuth", "Open API", "서드파티", "SaaS 연동"
+- 도메인: 광고 / 소셜로그인 / 결제 / AI / SMS·이메일 / 지도 / 푸시
+
+키워드 또는 도메인이 탐지되면 Q3(외부 API 연동 여부)를 Round 1에 포함한다.
+
+**(b) 부가 산출물 신호 탐지** → Q4 옵션 필터링
+
+사용자 요청에서 다음 신호 탐지 후 Q4에 해당 옵션만 노출:
+- "관리자" 언급 → 운영 정책서 후보
+- "사용자에게 안내" → 서비스 매뉴얼 후보
+- "화면 많음/UI 복잡" → 화면 흐름도 후보
+- "결제·예약·인증 복잡" → 기능 시나리오 다이어그램 후보
+- "시스템 모듈 다수" → 기능도 후보
+
+**(c) 외부 참조 자동 스캔** → Q5 옵션 자동 구성
+
+`docs/wireframes/`, `docs/erd/`, `docs/api-spec/` 폴더 스캔하여 존재하는 파일을 Q5 옵션으로 자동 구성한다.
+
+### Step 4 — interview 결과 기록
+
+interview 완료 후 결과를 TASK.md에 다음 섹션 양식으로 기록한다:
+
+```markdown
+## 산출물 결정
+
+| 분류 | 산출물 | 작성 여부 |
+|------|-------|---------|
+| 필수 | PRD | ✅ / ⬜ |
+| 필수 | TRD | ✅ / ⬜ |
+| 필수 | 서비스 정책서 | ✅ / ⬜ |
+| 필수 | IA | ✅ / ⬜ |
+| 선택 | 기능도 | ✅ / ⬜ |
+| 선택 | 기능 시나리오 다이어그램 | ✅ / ⬜ |
+| 선택 | 화면 흐름도 | ✅ / ⬜ |
+| 선택 | 운영 정책서 | ✅ / ⬜ |
+| 선택 | 서비스 매뉴얼 | ✅ / ⬜ |
+| 프로젝트 특화 | 외부 API 명세서 | ✅ / ⬜ |
+
+## 외부 참조 산출물
+
+- (탐지된 참조 파일 목록 또는 "없음")
+
+## PRD 입력 컨텍스트
+
+> PRD가 Round 1 답변에서 표준 산출물로 선택된 경우에만 작성
+
+- **배경 및 목표**: (Round 3 답변)
+- **타깃 사용자**: (Round 3 답변)
+- **주요 기능 + MVP 범위**: (Round 3 답변)
+- **Non-goals**: (Round 3 답변)
+```
 
 ### 완료 처리
 
-- TASK.md 작성 (모드, 대상 문서 유형, 외부 참조, 저장 경로 포함)
+- TASK.md 작성 (interview 결과 — 산출물 결정 표 + 외부 참조 산출물 + PRD 입력 컨텍스트 포함)
 - STATE.md 초기화 — state-tool을 호출한다:
   ```
   ~/.opal/tools/state-tool/run.sh init <task-path> --skill opwt --mode <interactive|semi-agentic|agentic> --rows-from opal/skills/opal-pilot-write-tech/SKILL.md
@@ -386,3 +452,4 @@ semi-agentic / agentic 모두 CLOSE 첫 행 `--auto-pass` 거부 (`agentic_close
 | v3.2 | 2026-05-01 | state-tool 도입 — STATE.md 직접 편집 금지 + `state-tool` 호출 표현 교체 (P-1~P-8 패턴 적용). TASK/ANALYSIS/PLAN/EXECUTE/QA/CLOSE 각 단계 State Gate를 state-tool 명시 호출로 교체. "STATE.md 도메인 치환값" 섹션 리네이밍 + `--rows-from` SSOT 지시. CLOSE 게이트 제약 (§2.16 G-13) + P-6 add-row 가이드 추가 (134) |
 | v3.3 | 2026-05-09 11:22 | 3-way 모드 체계 도입 — semi-agentic 기본 채택 + Agentic/Semi-Agentic 모드 절 신규 추가 + Harness 절 3-way 분기 + state init --mode 인수 추가 (140) |
 | v3.4 | 2026-05-09 18:30 | 개인 식별자 "캡틴" → "소유자"/"사용자" 치환 — 배포 파일 정체성 누설 정정 (139) |
+| v4.0 | 2026-05-24 14:21 | 산출물 체계 v4 — interview 통합(TASK 절 재구성) + PRD 8섹션 표준 + 기능 시나리오 다이어그램 재정의(기존 '순서도' 재정의 — 사용자 수동 재분류) + 화면 흐름도 신설 + Mermaid 시각화 표준 절 신설 + PMO 그룹 및 개발 WBS 제거 (008) |
