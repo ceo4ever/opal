@@ -17,6 +17,7 @@
 #
 # 변경이력:
 #   v1.0 2026-05-20: 신규 작성 — Linux one-liner 진입점 (006)
+#   v1.1 2026-05-24: Codex CLI 통합은 install-mac.sh 위임 경로로 자동 상속 (별도 코드 변경 없음) (009)
 #
 
 set -euo pipefail

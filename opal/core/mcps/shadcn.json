@@ -6,5 +6,5 @@
     "command": "npx",
     "args": ["-y", "shadcn@^4.7", "mcp"]
   },
-  "platforms": ["claude", "cursor", "gemini", "antigravity"]
+  "platforms": ["claude", "cursor", "gemini", "antigravity", "codex"]
 }

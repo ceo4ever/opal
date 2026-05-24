@@ -16,11 +16,11 @@
 
 ## 2. 플랫폼별 매핑 테이블
 
-| 레벨 | Claude | Gemini | OpenAI |
-|------|--------|--------|--------|
-| `light` | haiku | gemini-2.5-flash-lite | gpt-4.1-mini |
-| `standard` | sonnet | gemini-2.5-flash | gpt-4.1 |
-| `advanced` | opus | gemini-2.5-pro | o3 |
+| 레벨 | Claude | Gemini | OpenAI | Codex |
+|------|--------|--------|--------|-------|
+| `light` | haiku | gemini-2.5-flash-lite | gpt-4.1-mini | gpt-5-mini |
+| `standard` | sonnet | gemini-2.5-flash | gpt-4.1 | gpt-5-codex |
+| `advanced` | opus | gemini-2.5-pro | o3 | gpt-5.1-codex-max |
 
 > 플랫폼별 최신 모델이 출시되면 이 테이블을 갱신한다.
 
@@ -31,6 +31,7 @@
 | Claude | https://docs.anthropic.com/en/docs/about-claude/models |
 | Gemini | https://ai.google.dev/gemini-api/docs/models |
 | OpenAI | https://developers.openai.com/api/docs/models |
+| Codex | https://developers.openai.com/codex/config-reference |
 
 ## 3. 스킬에서의 참조 형식
 
@@ -58,6 +59,7 @@ model: standard
    - `CLAUDE.md` → Claude
    - `.cursorrules` / `.cursor/rules/` → Cursor
    - `GEMINI.md` → Gemini
+   - `AGENTS.md` (`~/.codex/AGENTS.md`) → Codex
 2. **매핑 로드**: 이 문서의 플랫폼별 매핑 테이블에서 해당 컬럼을 세션 컨텍스트에 로드
 3. **자동 치환**: 스킬의 레벨명(`light`/`standard`/`advanced`)을 현재 플랫폼의 실제 모델명으로 적용
 
@@ -69,6 +71,7 @@ model: standard
 - 레벨 정의(light/standard/advanced)는 변경하지 않는다
 - 갱신 후 변경이력에 기록한다
 - 소스(`opal/core/references/`)를 수정하고, `install-mac.sh`로 배포본(`~/.opal/references/`)에 동기화한다
+- Codex는 모델 ID 변경 빈도가 높다 — 분기마다 [Codex Config Reference](https://developers.openai.com/codex/config-reference) 점검.
 
 ---
 
@@ -78,3 +81,4 @@ model: standard
 |------|------|---------|
 | v1.0 | 2026-03-29 | 초기 작성 — 3레벨 정의 + Claude/Gemini/OpenAI 매핑 |
 | v1.1 | 2026-05-09 18:30 | 개인 식별자 누설 정정 — frontmatter 작성자 필드 삭제 + 변경이력 작성자 컬럼 제거 (139) |
+| v1.2 | 2026-05-24 | Codex 컬럼 추가 + 플랫폼 감지/갱신 가이드 보강 (009) |

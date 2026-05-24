@@ -1,0 +1,211 @@
+{
+  "task_id": "009-260524-opp-codex-bootstrapper-integration",
+  "skill": "opp",
+  "mode": "semi-agentic",
+  "schema_version": "1.0",
+  "created_at": "2026-05-24 18:25",
+  "updated_at": "2026-05-24 22:41",
+  "current_status": "done",
+  "rows": [
+    {
+      "row_id": 1,
+      "stage": "TASK",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-24 18:25",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 2,
+      "stage": "TASK",
+      "item": "TASK.md 생성",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-24 18:25",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 3,
+      "stage": "TASK",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-24 18:25",
+      "owner": "user",
+      "note": "캡틴 확인: //opp 호출 + 통합 범위/OS 4종 확정"
+    },
+    {
+      "row_id": 4,
+      "stage": "PLAN",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-24 19:52",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 5,
+      "stage": "PLAN",
+      "item": "PLAN.md 생성",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-24 19:52",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 6,
+      "stage": "PLAN",
+      "item": "QA Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-24 19:52",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 7,
+      "stage": "PLAN",
+      "item": "QA-PLAN.md 생성",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-24 19:52",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 8,
+      "stage": "PLAN",
+      "item": "State Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-24 19:52",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 9,
+      "stage": "PLAN",
+      "item": "PM Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-24 19:52",
+      "owner": "PM",
+      "note": "PM Gate: QA CONDITIONAL_PASS(30/33), Major-1+Minor-2 보강 PM 직접 반영 완료(PLAN v1.1)"
+    },
+    {
+      "row_id": 10,
+      "stage": "PLAN",
+      "item": "State Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-24 19:52",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 11,
+      "stage": "PLAN",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-24 20:07",
+      "owner": "user",
+      "note": "캡틴 승인: EXECUTE 진입 (a로 진행)"
+    },
+    {
+      "row_id": 12,
+      "stage": "EXECUTE",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-24 20:16",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 13,
+      "stage": "EXECUTE",
+      "item": "QA Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-24 20:26",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 14,
+      "stage": "EXECUTE",
+      "item": "QA-EXECUTE.md 생성",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-24 20:26",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 15,
+      "stage": "EXECUTE",
+      "item": "State Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-24 20:26",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 16,
+      "stage": "EXECUTE",
+      "item": "PM Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-24 20:26",
+      "owner": "auto",
+      "note": "agentic auto-pass: semi-agentic auto-pass: QA CONDITIONAL_PASS(24/25), Minor M-1은 PowerShell -replace 동작 분석 오류로 판정(정상 동작), Major/Blocker 0. R-1~R-8 전체 충족, 모델 매핑 3곳 동기화 확인"
+    },
+    {
+      "row_id": 17,
+      "stage": "EXECUTE",
+      "item": "State Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-24 20:26",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 18,
+      "stage": "EXECUTE",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-24 22:40",
+      "owner": "user",
+      "note": "캡틴 확인: print_summary Codex 부트스트래퍼 행 표시 + CLOSE 진입 승인"
+    },
+    {
+      "row_id": 19,
+      "stage": "CLOSE",
+      "item": "DONE.md 생성",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-24 22:41",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 20,
+      "stage": "CLOSE",
+      "item": "State Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-05-24 22:41",
+      "owner": "PM",
+      "note": null
+    }
+  ]
+}

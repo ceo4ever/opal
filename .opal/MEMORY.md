@@ -1,7 +1,7 @@
 # opal Memory Index
 
-> 최종 갱신: 2026-05-24 15:35 (태스크 008 CLOSE 완료)
-> last_task_number: 8
+> 최종 갱신: 2026-05-24 22:41 (태스크 009 CLOSE 완료)
+> last_task_number: 9
 
 ## 메모리 카테고리
 
@@ -40,3 +40,4 @@
 | 2026-05-20 | 006 Linux 설치 스크립트 신설 — scripts/install/linux.sh (원래 001 채번 → divergent reconcile 후 006 재채번) | CLOSE | tasks/006-260520-opp-install-linux/ | 2026-05-20 08:35 | 2026-05-20 22:51 |
 | 2026-05-20 | 007 cmux-tool 범용 확장 + wtm-agent fallback 체인 재배선 (원래 006 채번 → 다른 PC 006 install-linux와 충돌하여 007 재채번) | CLOSE | tasks/007-260520-opp-cmux-tool-generic-expansion/ | 2026-05-20 20:02 | 2026-05-23 00:02 |
 | 2026-05-24 | 008 opwt 산출물 체계 v4 — interview 통합 + PRD 8섹션 + 시나리오·화면 흐름도 + WBS 제거 (app-planning-presentation 자료 흡수) | CLOSE | tasks/008-260524-opp-opwt-v4-output-system/ | 2026-05-24 13:57 | 2026-05-24 15:35 |
+| 2026-05-24 | 009 Codex CLI OPAL 프레임워크 통합 — 4번째 플랫폼 편입 (부트스트래퍼 + sub-agent TOML 어댑터 + codex mcp add + 모델 매핑 gpt-5-mini/gpt-5-codex/gpt-5.1-codex-max) | CLOSE | tasks/009-260524-opp-codex-bootstrapper-integration/ | 2026-05-24 18:11 | 2026-05-24 22:41 |

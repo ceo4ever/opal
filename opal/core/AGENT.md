@@ -277,6 +277,12 @@ install-mac.sh가 `~/.claude/CLAUDE.md`(글로벌)에 OPAL 마커를 자동 삽�
 
 `~/.cursor/rules/000-opal-agent.mdc`가 `alwaysApply: true`로 설정되어 모든 폴더에서 자동 적용되므로 프로젝트 단위 자동 삽입은 수행하지 않는다.
 
+### Codex — 자동 삽입 스킵
+
+install-mac.sh가 `~/.codex/AGENTS.md`(글로벌)에 OPAL 마커를 자동 삽입하며, Codex CLI는 세션 시작 시 글로벌 → 프로젝트 순으로 AGENTS.md를 항상 자동 로드한다 ([Codex AGENTS.md 가이드](https://developers.openai.com/codex/guides/agents-md)). 따라서 프로젝트 단위 `AGENTS.md` 자동 삽입은 **수행하지 않는다**.
+
+이유: Claude/Cursor 절과 동일 — `~/.opal/` 미설치 환경에서는 마커가 있어도 무용이고, 설치 환경에서는 글로벌 마커가 함께 셋업된다.
+
 ### Antigravity(Gemini) — 자동 삽입 수행
 
 현재 프로젝트 루트의 `GEMINI.md`를 확인한다:
@@ -291,7 +297,7 @@ install-mac.sh가 `~/.claude/CLAUDE.md`(글로벌)에 OPAL 마커를 자동 삽�
 
 프로젝트 진입 시 다음 설정 파일들을 순차 확인하여 컨텍스트를 파악한다:
 
-- `CLAUDE.md` / `.cursor/rules/` / `GEMINI.md` — OPAL 부트스트래퍼
+- `CLAUDE.md` / `.cursor/rules/` / `GEMINI.md` / `AGENTS.md`(Codex) — OPAL 부트스트래퍼
 - `.opal/AGENT.md` — PM 역할 (검토 기준, 전문 역할, 확정 기준)
 - `docs/PROJECT.md` — 프로젝트 정의 + 문서 레지스트리
 - `docs/CONVENTIONS.md` — 코드 컨벤션
@@ -319,4 +325,5 @@ install-mac.sh가 `~/.claude/CLAUDE.md`(글로벌)에 OPAL 마커를 자동 삽�
 | v2.5 | 2026-05-12 11:16 | "그냥 해" 하네스 적용 범위 표에 Coding Principles 행 추가 (001) |
 | v2.6 | 2026-05-13 17:35 | 보고 형식 섹션 핵심 구조 라인 갱신 — 굵은 텍스트 → 이모티 prefix (`🎯` `🔍` `❓` `▶️`) (003) |
 | v2.7 | 2026-05-23 19:48 | 프로젝트 부트스트래퍼 자동 삽입 정책 정제 — Claude/Cursor는 글로벌 부트스트래퍼로 충분하므로 스킵, Antigravity(Gemini)만 자동 삽입. Step 6 문구 + "프로젝트 부트스트래퍼 자동 관리" 섹션 정합화 (hotfix, "그냥 해") |
+| v2.8 | 2026-05-24 | "프로젝트 부트스트래퍼 자동 관리" 절에 Codex 스킵 정책 추가 — Codex 글로벌 진입점이 자동 로드되므로 Claude/Cursor와 동일하게 프로젝트 마커 미삽입. 프로젝트 컨텍스트에 AGENTS.md(Codex) 추가 (009) |
 
