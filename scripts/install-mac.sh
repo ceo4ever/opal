@@ -23,6 +23,8 @@
 #   v2.6 2026-05-24: Codex CLI 통합 — install_codex_agents 신설 + install_opal/install_mcp/show_menu/print_summary codex 분기 + emit_platform_agent_adapter codex 모델 매핑 (009)
 #   v2.6.1 2026-05-24: install_codex_agents Python heredoc toml_escape docstring을 raw string(r""")으로 정정 — Python 3.12+ "\ → \\" docstring이 invalid escape sequence SyntaxWarning 13회 발생하던 결함 fix (009 EXECUTE 정정)
 #   v2.6.2 2026-05-24: print_summary에 ~/.codex/AGENTS.md OPAL 부트스트래퍼 행 추가 — 다른 플랫폼(Claude/Cursor/Gemini) 부트스트래퍼 행과 일관성 결손 결함 fix (009 EXECUTE 정정 #2 — PLAN §3.3 U-1 (7) 설계 누락)
+#   v2.7 2026-06-02 20:16 KST: 모델 매핑 최신화 — emit_platform_agent_adapter gemini(gemini-3.1-flash-lite/gemini-flash-latest/gemini-pro-latest) + codex(gpt-5.4-mini/gpt-5.5/gpt-5.3-codex) dict + codex_model_map + 기본값 gpt-5.5 (011)
+#   v2.7 2026-06-02 20:16 KST: 모델 매핑 최신화 — Gemini 부동 별칭 전환 + Codex 최신 ID 갱신 (011)
 #
 
 set -euo pipefail
@@ -551,8 +553,8 @@ opal_model = fm.get('model', 'standard')
 mapping = {
     'claude': {'light': 'haiku', 'standard': 'sonnet', 'advanced': 'opus'},
     'cursor': {'light': 'inherit', 'standard': 'inherit', 'advanced': 'inherit'},
-    'gemini': {'light': 'gemini-2.5-flash-lite', 'standard': 'gemini-2.5-flash', 'advanced': 'gemini-2.5-pro'},
-    'codex': {'light': 'gpt-5-mini', 'standard': 'gpt-5-codex', 'advanced': 'gpt-5.1-codex-max'},
+    'gemini': {'light': 'gemini-3.1-flash-lite', 'standard': 'gemini-flash-latest', 'advanced': 'gemini-pro-latest'},
+    'codex': {'light': 'gpt-5.4-mini', 'standard': 'gpt-5.5', 'advanced': 'gpt-5.3-codex'},
 }
 model_value = mapping.get(platform, {}).get(opal_model, 'inherit')
 
@@ -695,9 +697,9 @@ src, dst = sys.argv[1], sys.argv[2]
 
 # Codex sub-agent 모델 매핑 (opal-model-mapping.md §2 Codex 컬럼과 동기)
 codex_model_map = {
-    'light': 'gpt-5-mini',
-    'standard': 'gpt-5-codex',
-    'advanced': 'gpt-5.1-codex-max',
+    'light': 'gpt-5.4-mini',
+    'standard': 'gpt-5.5',
+    'advanced': 'gpt-5.3-codex',
 }
 
 def _flatten_description(s):
@@ -740,7 +742,7 @@ if not agent_name:
 
 description = _flatten_description(fm.get('description') or '')
 opal_model = fm.get('model', 'standard')
-model_value = codex_model_map.get(opal_model, 'gpt-5-codex')
+model_value = codex_model_map.get(opal_model, 'gpt-5.5')
 
 # 사용자 파일 충돌 가드 (AUTO-GENERATED 헤더 없으면 스킵)
 if os.path.isfile(dst):

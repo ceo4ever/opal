@@ -84,6 +84,7 @@
         v1.6.0 2026-05-10 17:00  community-skills 번들 → fetch 방식 전환 — community-skills 복사 블록 제거 + cleanDirs에서 community-skills 제거 (사용자 데이터 보존, D-4) + 종료 안내 추가 (142)
         v1.7.0 2026-05-10 21:00  command 화이트리스트 + fork repo banner + OPAL_HOME 가드 (144)
         v1.8.0 2026-05-24        Codex CLI 통합 — Register-Bootstrapper 에 ~/.codex/AGENTS.md 추가 + Install-OpalMcp 에 'codex' 케이스 + Install-PlatformAgents 에 codex(TOML 직렬화) 추가 (009)
+        v1.9.0 2026-06-02 20:16  모델 매핑 최신화 — ModelMap gemini(gemini-3.1-flash-lite/gemini-flash-latest/gemini-pro-latest) + codex(gpt-5.4-mini/gpt-5.5/gpt-5.3-codex) + toml 기본값 gpt-5.5 (install-mac.sh 동기, 011)
 #>
 
 #Requires -Version 5.1
@@ -1309,12 +1310,12 @@ function Install-PlatformAgents {
         }
         'gemini' = @{
             Dst = Join-Path $userHome '.gemini\agents'
-            ModelMap = @{ light = 'gemini-2.5-flash-lite'; standard = 'gemini-2.5-flash'; advanced = 'gemini-2.5-pro' }
+            ModelMap = @{ light = 'gemini-3.1-flash-lite'; standard = 'gemini-flash-latest'; advanced = 'gemini-pro-latest' }
             Format = 'md'
         }
         'codex' = @{
             Dst = Join-Path $userHome '.codex\agents'
-            ModelMap = @{ light = 'gpt-5-mini'; standard = 'gpt-5-codex'; advanced = 'gpt-5.1-codex-max' }
+            ModelMap = @{ light = 'gpt-5.4-mini'; standard = 'gpt-5.5'; advanced = 'gpt-5.3-codex' }
             Format = 'toml'
         }
     }
@@ -1332,7 +1333,7 @@ function Install-PlatformAgents {
             if (-not $fm) { return }
 
             $platformModel = $cfg.ModelMap[$fm.Model]
-            if (-not $platformModel) { $platformModel = if ($cfg.Format -eq 'toml') { 'gpt-5-codex' } else { 'inherit' } }
+            if (-not $platformModel) { $platformModel = if ($cfg.Format -eq 'toml') { 'gpt-5.5' } else { 'inherit' } }
 
             if ($cfg.Format -eq 'toml') {
                 # Codex sub-agent TOML 직렬화 (필수 필드: name/description/developer_instructions)

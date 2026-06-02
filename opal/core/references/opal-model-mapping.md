@@ -16,13 +16,15 @@
 
 ## 2. 플랫폼별 매핑 테이블
 
-| 레벨 | Claude | Gemini | OpenAI | Codex |
+| 레벨 | Claude | Gemini | OpenAI (참조전용) | Codex |
 |------|--------|--------|--------|-------|
-| `light` | haiku | gemini-2.5-flash-lite | gpt-4.1-mini | gpt-5-mini |
-| `standard` | sonnet | gemini-2.5-flash | gpt-4.1 | gpt-5-codex |
-| `advanced` | opus | gemini-2.5-pro | o3 | gpt-5.1-codex-max |
+| `light` | haiku | gemini-3.1-flash-lite | gpt-5.4-mini | gpt-5.4-mini |
+| `standard` | sonnet | gemini-flash-latest | gpt-5.5 | gpt-5.5 |
+| `advanced` | opus | gemini-pro-latest | gpt-5.3 | gpt-5.3-codex |
 
 > 플랫폼별 최신 모델이 출시되면 이 테이블을 갱신한다.
+
+> **OpenAI 컬럼 = 참조 전용(install 어댑터 미연동)** — `install-mac.sh` mapping dict에 `openai` 키 없음(호출처 전체에 `platform="openai"` 없음). Codex 경로가 OpenAI 모델을 ChatGPT-auth로 사용한다.
 
 ### 공식 모델 목록
 
@@ -73,6 +75,11 @@ model: standard
 - 소스(`opal/core/references/`)를 수정하고, `install-mac.sh`로 배포본(`~/.opal/references/`)에 동기화한다
 - Codex는 모델 ID 변경 빈도가 높다 — 분기마다 [Codex Config Reference](https://developers.openai.com/codex/config-reference) 점검.
 
+**최신 추종 운영 규칙 (2026-06-02 도입)**:
+- Claude(`haiku/sonnet/opus`)·Gemini standard/advanced(`gemini-flash-latest`/`gemini-pro-latest`)는 부동 별칭으로 자동 추종 → 갱신 불요.
+- **별칭이 없는 Gemini light(`gemini-3.1-flash-lite`)·Codex·OpenAI는 분기마다 [Gemini API Models](https://ai.google.dev/gemini-api/docs/models) / [Codex Models](https://developers.openai.com/codex/models) / [OpenAI All Models](https://developers.openai.com/api/docs/models/all) 점검 후 핀 갱신.**
+- `gemini-pro-latest`는 현 시점 preview 빌드를 가리킬 수 있다. preview 거동 변동 시 구체 ID 핀으로 임시 전환 가능.
+
 ---
 
 변경이력:
@@ -82,3 +89,4 @@ model: standard
 | v1.0 | 2026-03-29 | 초기 작성 — 3레벨 정의 + Claude/Gemini/OpenAI 매핑 |
 | v1.1 | 2026-05-09 18:30 | 개인 식별자 누설 정정 — frontmatter 작성자 필드 삭제 + 변경이력 작성자 컬럼 제거 (139) |
 | v1.2 | 2026-05-24 | Codex 컬럼 추가 + 플랫폼 감지/갱신 가이드 보강 (009) |
+| v1.3 | 2026-06-02 20:16 KST | Gemini 부동 별칭 전환 + Codex 최신화 + OpenAI 참조전용 명시 + 최신 추종 운영 규칙 보강 (011) |

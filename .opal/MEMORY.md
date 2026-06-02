@@ -1,7 +1,7 @@
 # opal Memory Index
 
-> 최종 갱신: 2026-05-24 22:41 (태스크 009 CLOSE 완료)
-> last_task_number: 9
+> 최종 갱신: 2026-06-02 (태스크 011 채번)
+> last_task_number: 11
 
 ## 메모리 카테고리
 
@@ -22,7 +22,6 @@
 
 | 등록일시 | 카테고리 | 상태 | 파일 | 설명 |
 |----------|----------|------|------|------|
-| 2026-05-09 | preferences | 유지 | [memory/preferences_default_semi_agentic.md](memory/preferences_default_semi_agentic.md) | 캡틴 기본 작업 패턴: PLAN 검토 + EXECUTE 자율 (semi-agentic 모드 기본 채택) |
 
 
 ## 작업 히스토리 (최대 10개, FIFO)
@@ -32,7 +31,6 @@
 
 | 등록일자 | 작업 | 단계 | 경로 | 시작일시 | 완료일시 |
 |----------|------|------|------|---------|---------|
-| 2026-05-12 | 001 카르파시 행동 원칙 흡수 — Coding Principles SSOT 신설 + TASK AC 보강 | CLOSE | tasks/001-260512-opp-coding-principles-ssot/ | 2026-05-12 10:48 | 2026-05-12 14:54 |
 | 2026-05-12 | 002 wtm-agent OPAL 표준화 + cmux 통합 + 사용자 surface 재사용 | CLOSE | tasks/002-260512-opp-wtm-opal-standardization/ | 2026-05-12 18:10 | 2026-05-12 22:15 |
 | 2026-05-13 | 003 보고 형식 양식 보강 — 결론/근거 번호화 + 이모티 prefix + 다음 블록 2갈래 | CLOSE | tasks/003-260513-opp-reporting-format-enhancement/ | 2026-05-13 17:21 | 2026-05-13 17:48 |
 | 2026-05-15 | 004 테스트 시나리오 양식·파이프라인 재설계 — 7섹션 양식(가설→데이터→L×M 매트릭스) + STEP 3.5 신설 + EXECUTE scenario_source + 5단계 직렬 + self-confirming 4분리 | CLOSE | tasks/004-260515-opp-test-scenario-pipeline-redesign/ | 2026-05-15 13:25 | 2026-05-19 17:59 |
@@ -41,3 +39,5 @@
 | 2026-05-20 | 007 cmux-tool 범용 확장 + wtm-agent fallback 체인 재배선 (원래 006 채번 → 다른 PC 006 install-linux와 충돌하여 007 재채번) | CLOSE | tasks/007-260520-opp-cmux-tool-generic-expansion/ | 2026-05-20 20:02 | 2026-05-23 00:02 |
 | 2026-05-24 | 008 opwt 산출물 체계 v4 — interview 통합 + PRD 8섹션 + 시나리오·화면 흐름도 + WBS 제거 (app-planning-presentation 자료 흡수) | CLOSE | tasks/008-260524-opp-opwt-v4-output-system/ | 2026-05-24 13:57 | 2026-05-24 15:35 |
 | 2026-05-24 | 009 Codex CLI OPAL 프레임워크 통합 — 4번째 플랫폼 편입 (부트스트래퍼 + sub-agent TOML 어댑터 + codex mcp add + 모델 매핑 gpt-5-mini/gpt-5-codex/gpt-5.1-codex-max) | CLOSE | tasks/009-260524-opp-codex-bootstrapper-integration/ | 2026-05-24 18:11 | 2026-05-24 22:41 |
+| 2026-05-26 | 010 code-scan PM 우선 무조건화 — PM 디스패치/대화에서 code-scan 1순위 강제 + scan.json 자동 생성 + 빈 결과 폴백 기준 + 사용자 오버라이드 보장 (Phase 1: PM-only) | TASK | tasks/010-260526-opp-code-scan-pm-mandate/ | 2026-05-26 15:24 | - |
+| 2026-06-02 | 011 모델 매핑 최신화 + 최신 추종 전략 — Gemini standard/advanced 부동 별칭(`-latest`) + light 핀(`gemini-3.1-flash-lite`) + Codex gpt-5.4-mini/gpt-5.5/gpt-5.3-codex + OpenAI 참조전용 + windows.ps1 4번째 동기지점 신규발견 (agentic) | 완료 | tasks/011-260602-opp-model-mapping-latest-tracking/ | 2026-06-02 19:57 | 2026-06-02 20:18 |

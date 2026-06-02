@@ -171,9 +171,9 @@ OPAL frontmatter → 플랫폼 frontmatter:
 |----------|------------|--------|-----------|
 | `name` | `name` (그대로) | `name` (그대로) | `name` (그대로) |
 | `description` | `description` (그대로) | `description` (그대로) | `description` (그대로) |
-| `model: light` | `model: haiku` | `model: inherit` | `model: gemini-2.5-flash-lite` |
-| `model: standard` | `model: sonnet` | `model: inherit` | `model: gemini-2.5-flash` |
-| `model: advanced` | `model: opus` | `model: inherit` | `model: gemini-2.5-pro` |
+| `model: light` | `model: haiku` | `model: inherit` | `model: gemini-3.1-flash-lite` |
+| `model: standard` | `model: sonnet` | `model: inherit` | `model: gemini-flash-latest` |
+| `model: advanced` | `model: opus` | `model: inherit` | `model: gemini-pro-latest` |
 | `icon` | (제거 — 미지원) | (제거 — 미지원) | (제거 — 미지원) |
 | (기타 OPAL 전용 필드) | (제거) | (제거) | (제거) |
 
@@ -315,3 +315,4 @@ project: mams
 | v1.2 | 2026-04-30 | emit_platform_agent_adapter description 평탄화 — Claude Code 파서 호환 (133) |
 | v1.3 | 2026-04-30 | AUTO-GENERATED 헤더 검사 범위를 전체 파일로 확장 — frontmatter 외 헤더 위치 오탐지 결함 수정 (133) |
 | v1.4 | 2026-05-12 21:35 KST | §wtm-agent → §opal-wtm-agent 갱신 — Phase 1(WebFetch)→Phase 2(cmux 조건부)→Phase 3(playwright-tool CLI) 폴백, 입력 `--surface` 3모드, 출력 JSON 8필드, 에이전트 경로 opal/agents/opal-wtm-agent/ (002) |
+| v1.5 | 2026-06-02 20:16 KST | Gemini 변환 표 부동 별칭 전환 — light=`gemini-3.1-flash-lite` 핀, standard=`gemini-flash-latest`, advanced=`gemini-pro-latest` (011) |
