@@ -26,7 +26,7 @@ from datetime import datetime
 # ─────────────────────────────────────────────────────────────────────────────
 
 STAGE_ENUM = [
-    "TASK", "ANALYSIS", "PLAN", "EXECUTE", "TEST",
+    "TASK", "ANALYSIS", "PLAN", "TEST-SCENARIO", "EXECUTE", "TEST",
     "WIREFRAME", "QA", "SPEC", "REVIEW", "DESIGN",
     "VERIFY", "SCAN", "CHECK", "REPORT", "WBS", "CLOSE"
 ]
@@ -34,7 +34,7 @@ STAGE_ENUM = [
 # semi-agentic 모드 경계 — 이 stage 집합에 속하는 행은 EXECUTE-equivalent 이전으로 간주
 # (PLAN-equivalent 단계까지 사용자 검토 강제) — D-DEC-5 (140)
 MODE_BOUNDARY_STAGES = {
-    "TASK", "ANALYSIS", "PLAN",
+    "TASK", "ANALYSIS", "PLAN", "TEST-SCENARIO",
     "SPEC", "REVIEW", "DESIGN",
     "WBS", "WIREFRAME",
 }
