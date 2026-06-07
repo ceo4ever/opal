@@ -1686,9 +1686,10 @@ class TestRowsFrom(BaseTestCase):
 # ═════════════════════════════════════════════════════════════════════════════
 
 class TestErrorCodesCompleteness(unittest.TestCase):
-    """PLAN §2.18 E-1: ERROR_CODES 23종 모두 등재 확인"""
+    """PLAN §2.18 E-1: ERROR_CODES 25종 기존 + PLAN 013 신규 2종 = 27종 모두 등재 확인"""
 
     EXPECTED_CODES = [
+        # 기존 25종 (PLAN §2.18 + 이전 추가분)
         "worker_scope_violation",
         "marker_missing",
         "already_initialized",
@@ -1705,6 +1706,8 @@ class TestErrorCodesCompleteness(unittest.TestCase):
         "auto_pass_in_interactive_mode",
         "close_gate_violation",
         "agentic_close_gate_requires_user",
+        "semi_agentic_pre_execute_auto_pass_denied",
+        "mode_flag_conflict",
         "note_required_for_force",
         "rows_spec_invalid_json",
         "skill_md_parse_error",
@@ -1712,16 +1715,236 @@ class TestErrorCodesCompleteness(unittest.TestCase):
         "worker_stage_required",
         "rows_input_conflict",
         "rows_acts_not_implemented",
+        # PLAN 013 신규 2종 (헌법 §4 동작 증거 강제 게이트)
+        "mock_in_scenario",
+        "evidence_missing",
     ]
 
     def test_error_codes_count(self):
-        """ERROR_CODES 상수가 23종 모두 포함 (PLAN §2.18 E-1)"""
-        self.assertEqual(len(ST.ERROR_CODES), 23)
+        """ERROR_CODES 상수가 27종 모두 포함 (PLAN §2.18 + PLAN 013)"""
+        self.assertEqual(len(ST.ERROR_CODES), 27)
 
-    def test_all_23_codes_registered(self):
-        """23종 코드 각각이 ERROR_CODES에 등재됨 (PLAN §2.18 E-1)"""
+    def test_all_27_codes_registered(self):
+        """27종 코드 각각이 ERROR_CODES에 등재됨"""
         for code in self.EXPECTED_CODES:
             self.assertIn(code, ST.ERROR_CODES, f"에러 코드 {code} 미등재")
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# I-0. verify 명령 — 헌법 §4 동작 증거 강제 게이트 (PLAN 013)
+# ═════════════════════════════════════════════════════════════════════════════
+
+class TestVerify(BaseTestCase):
+    """cmd_verify + mark TEST stage 자동 훅 테스트 (PLAN 013)
+
+    [MUST] TASK T-11: 표준 라이브러리만 사용.
+    [MUST] AGENT.md §확정 기준 #2: 임시 디렉토리 사용.
+    """
+
+    # ── 픽스처 헬퍼 ─────────────────────────────────────────────────────────
+
+    def _write_scenario(self, content):
+        """TEST-SCENARIO.md를 task_path 아래에 생성한다."""
+        p = self.task_path / "TEST-SCENARIO.md"
+        p.write_text(content, encoding="utf-8")
+        return p
+
+    def _call_verify(self, task_path=None, scenario=None):
+        """cmd_verify 호출 → (exit_code, result_dict)."""
+        import io
+        from contextlib import redirect_stdout
+        out = io.StringIO()
+        exit_code = 0
+        args = types.SimpleNamespace(
+            task_path=str(task_path or self.task_path),
+            scenario=scenario,
+        )
+        with redirect_stdout(out):
+            try:
+                ST.cmd_verify(args)
+            except SystemExit as e:
+                exit_code = e.code
+        output = out.getvalue().strip()
+        result = json.loads(output) if output else {}
+        return exit_code, result
+
+    # ── 케이스 1: happy path — 깨끗한 TEST-SCENARIO.md ─────────────────────
+
+    def test_verify_happy_path(self):
+        """verify: 정상 TEST-SCENARIO.md → ok=True, exit 0 (PLAN 013 AC-1)"""
+        self._write_scenario(
+            "# TEST-SCENARIO\n\n"
+            "| 시나리오 | 결과 | 실행 명령 | 출력 |\n"
+            "|---------|------|---------|------|\n"
+            "| S-1 정상 | Pass | python -m pytest | 1 passed |\n"
+        )
+        exit_code, result = self._call_verify()
+        self.assertEqual(exit_code, 0)
+        self.assertTrue(result.get("ok"))
+        self.assertEqual(result.get("checks", {}).get("mock_in_scenario"), "pass")
+        self.assertEqual(result.get("checks", {}).get("evidence_missing"), "pass")
+
+    # ── 케이스 2: mock 코드 패턴 검출 ───────────────────────────────────────
+
+    def test_verify_detects_magicmock(self):
+        """verify: MagicMock 코드 패턴 발견 → mock_in_scenario, exit 1 (PLAN 013 AC-2)"""
+        self._write_scenario(
+            "# TEST-SCENARIO\n\n"
+            "실행:\n"
+            "```python\n"
+            "svc = MagicMock()\n"
+            "```\n"
+        )
+        exit_code, result = self._call_verify()
+        self.assertEqual(exit_code, 1)
+        self.assertFalse(result.get("ok"))
+        self.assertEqual(result.get("error"), "mock_in_scenario")
+
+    def test_verify_detects_unittest_mock(self):
+        """verify: unittest.mock 패턴 → mock_in_scenario (PLAN 013 AC-2)"""
+        self._write_scenario(
+            "from unittest.mock import patch\n"
+        )
+        exit_code, result = self._call_verify()
+        self.assertEqual(exit_code, 1)
+        self.assertEqual(result.get("error"), "mock_in_scenario")
+
+    def test_verify_detects_at_patch(self):
+        """verify: @patch 데코레이터 → mock_in_scenario (PLAN 013 AC-2)"""
+        self._write_scenario(
+            "@patch('some.module.func')\n"
+            "def test_foo(): pass\n"
+        )
+        exit_code, result = self._call_verify()
+        self.assertEqual(exit_code, 1)
+        self.assertEqual(result.get("error"), "mock_in_scenario")
+
+    def test_verify_no_false_positive_on_plain_mock_word(self):
+        """verify: 설명 문구의 단순 'mock' 단어는 오탐 없음 (PLAN 013 M-2)"""
+        self._write_scenario(
+            "# 주의: mock 데이터 사용 금지\n"
+            "실 DB fixture를 사용한다.\n"
+            "| 시나리오 | 결과 | 실행 명령 | 출력 |\n"
+            "|---------|------|---------|------|\n"
+            "| S-1 | Pass | make test | OK |\n"
+        )
+        exit_code, result = self._call_verify()
+        self.assertEqual(exit_code, 0)
+        self.assertTrue(result.get("ok"))
+
+    # ── 케이스 3: 증거 누락 ──────────────────────────────────────────────────
+
+    def test_verify_detects_evidence_missing(self):
+        """verify: Pass 행에 실행 명령 빈칸 → evidence_missing, exit 1 (PLAN 013 AC-3)"""
+        self._write_scenario(
+            "# TEST-SCENARIO\n\n"
+            "| 시나리오 | 결과 | 실행 명령 | 출력 |\n"
+            "|---------|------|---------|------|\n"
+            "| S-1 정상 | Pass |  |  |\n"
+        )
+        exit_code, result = self._call_verify()
+        self.assertEqual(exit_code, 1)
+        self.assertFalse(result.get("ok"))
+        self.assertEqual(result.get("error"), "evidence_missing")
+
+    def test_verify_pass_with_checkmark(self):
+        """verify: ✅ 기호도 Pass로 인식, 증거 없으면 evidence_missing (PLAN 013 AC-3)"""
+        self._write_scenario(
+            "| 시나리오 | 결과 | 실행 명령 | 출력 |\n"
+            "|---------|------|---------|------|\n"
+            "| S-1 | ✅ |  |  |\n"
+        )
+        exit_code, result = self._call_verify()
+        self.assertEqual(exit_code, 1)
+        self.assertEqual(result.get("error"), "evidence_missing")
+
+    def test_verify_fail_row_not_checked(self):
+        """verify: 결과가 Fail인 행은 증거 검사 대상 아님 (PLAN 013 AC-3)"""
+        self._write_scenario(
+            "| 시나리오 | 결과 | 실행 명령 | 출력 |\n"
+            "|---------|------|---------|------|\n"
+            "| S-1 | Fail |  |  |\n"
+        )
+        exit_code, result = self._call_verify()
+        self.assertEqual(exit_code, 0)
+        self.assertTrue(result.get("ok"))
+
+    # ── 케이스 4: doc-only skip ──────────────────────────────────────────────
+
+    def test_verify_doc_only_skip_when_no_file(self):
+        """verify: TEST-SCENARIO.md 없으면 skip ok, exit 0 (PLAN 013 AC-4)"""
+        # task_path에 TEST-SCENARIO.md를 생성하지 않음
+        exit_code, result = self._call_verify()
+        self.assertEqual(exit_code, 0)
+        self.assertTrue(result.get("ok"))
+        self.assertTrue(result.get("skipped"))
+
+    def test_verify_scenario_arg_not_found_skip(self):
+        """verify: --scenario 경로 없어도 skip ok (PLAN 013 AC-4)"""
+        exit_code, result = self._call_verify(
+            scenario=str(self.task_path / "NONEXISTENT.md")
+        )
+        self.assertEqual(exit_code, 0)
+        self.assertTrue(result.get("skipped"))
+
+    # ── 케이스 5: mark TEST stage 자동 훅 ───────────────────────────────────
+
+    def _setup_with_test_stage(self):
+        """TEST stage 행을 포함한 state를 초기화한다."""
+        rows_spec = json.dumps([
+            {"stage": "TEST", "item": "작업"},
+            {"stage": "CLOSE", "item": "State Gate"},
+        ])
+        self._init(rows_spec=rows_spec)
+
+    def test_mark_test_stage_no_scenario_skip(self):
+        """mark TEST stage done + TEST-SCENARIO.md 없음 → 자동 훅 skip, mark 성공 (PLAN 013 AC-5)"""
+        self._setup_with_test_stage()
+        # TEST-SCENARIO.md 없음 → 자동 훅은 skip
+        exit_code = self._mark(row_id=1)
+        self.assertEqual(exit_code, 0)
+
+    def test_mark_test_stage_clean_scenario_succeeds(self):
+        """mark TEST stage done + 정상 TEST-SCENARIO.md → mark 성공 (PLAN 013 AC-5)"""
+        self._setup_with_test_stage()
+        self._write_scenario(
+            "| 시나리오 | 결과 | 실행 명령 | 출력 |\n"
+            "|---------|------|---------|------|\n"
+            "| S-1 | Pass | pytest | 1 passed |\n"
+        )
+        exit_code = self._mark(row_id=1)
+        self.assertEqual(exit_code, 0)
+
+    def test_mark_test_stage_mock_in_scenario_blocks(self):
+        """mark TEST stage done + mock 패턴 → mark 거부, exit 1 (PLAN 013 AC-5)"""
+        self._setup_with_test_stage()
+        self._write_scenario(
+            "svc = MagicMock()\n"
+        )
+        exit_code = self._mark(row_id=1)
+        self.assertEqual(exit_code, 1)
+
+    def test_mark_test_stage_evidence_missing_blocks(self):
+        """mark TEST stage done + 증거 누락 → mark 거부, exit 1 (PLAN 013 AC-5)"""
+        self._setup_with_test_stage()
+        self._write_scenario(
+            "| 시나리오 | 결과 | 실행 명령 | 출력 |\n"
+            "|---------|------|---------|------|\n"
+            "| S-1 | Pass |  |  |\n"
+        )
+        exit_code = self._mark(row_id=1)
+        self.assertEqual(exit_code, 1)
+
+    def test_mark_non_test_stage_not_affected(self):
+        """mark PLAN/EXECUTE stage done은 verify 훅 없음 (PLAN 013 AC-5)"""
+        rows_spec = json.dumps([
+            {"stage": "PLAN", "item": "작업"},
+            {"stage": "CLOSE", "item": "State Gate"},
+        ])
+        self._init(rows_spec=rows_spec)
+        # TEST-SCENARIO.md 없어도 PLAN stage mark는 성공
+        exit_code = self._mark(row_id=1)
+        self.assertEqual(exit_code, 0)
 
 
 # ═════════════════════════════════════════════════════════════════════════════

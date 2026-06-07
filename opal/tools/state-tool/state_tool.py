@@ -84,6 +84,8 @@ ERROR_CODES = {
     "worker_stage_required":          "--as-worker 사용 시 --worker-stage 필수",
     "rows_input_conflict":            "--rows-spec과 --rows-from은 동시 사용 불가",
     "rows_acts_not_implemented":      "--rows-acts는 본 태스크 범위 밖 (시그니처만 정의 — R-13)",
+    "mock_in_scenario":               "TEST-SCENARIO.md에 mock 코드 패턴 발견 — 헌법 §4 'Don't fake it' 위반: {lines}",
+    "evidence_missing":               "TEST-SCENARIO.md Pass 시나리오에 실행 증거 누락 — 헌법 §4 'Completion requires evidence' 위반: {lines}",
 }
 
 PIPELINE_MARKER_START = "<!-- pipeline:start -->"
@@ -886,6 +888,18 @@ def cmd_mark(args):
 
     save_state_json(task_path, state)
 
+    # TEST stage done 시 verify 자동 훅 (PLAN 013)
+    if row["stage"] == "TEST":
+        scenario_path = _find_scenario_file(task_path, None)
+        if scenario_path is not None:
+            lines = scenario_path.read_text(encoding="utf-8").splitlines()
+            mock_lines = _check_mock_patterns(lines)
+            if mock_lines:
+                err("mark", "mock_in_scenario", lines=mock_lines)
+            missing_lines = _check_evidence(lines)
+            if missing_lines:
+                err("mark", "evidence_missing", lines=missing_lines)
+
     decision = None
     reason_text = None
 
@@ -1168,6 +1182,141 @@ def cmd_gate_pass(args):
 
     ok(command, rows_passed=passed_ids, stage=stage, timestamp=now_str)
 
+# ── 10. verify ───────────────────────────────────────────────────────────────
+
+# 헌법 §4 "Don't fake it" — TEST-SCENARIO.md mock 코드 패턴 검출
+# M-2: 코드 사용 패턴만 정규식 매칭; 단순 "mock" 단어/설명 문구는 제외
+_MOCK_CODE_PATTERNS = re.compile(
+    r"MagicMock|unittest\.mock|@patch\b|mock\.patch|Mock\(|@mock\."
+)
+
+# Pass 행 결과 키워드
+_PASS_KEYWORDS = re.compile(r"^\s*(Pass|PASS|✅)\s*$")
+
+
+def _find_scenario_file(task_path, scenario_arg):
+    """TEST-SCENARIO.md 경로를 결정한다.
+    --scenario 인자가 있으면 그 경로를 사용, 없으면 <task_path>/TEST-SCENARIO.md 시도.
+    파일이 없으면 None 반환 (doc-only skip 처리).
+    """
+    if scenario_arg:
+        p = pathlib.Path(scenario_arg)
+    else:
+        p = pathlib.Path(task_path) / "TEST-SCENARIO.md"
+    return p if p.exists() else None
+
+
+def _check_mock_patterns(lines):
+    """코드 패턴 검출 — 위반 라인 번호 목록 반환."""
+    violations = []
+    for lineno, line in enumerate(lines, start=1):
+        if _MOCK_CODE_PATTERNS.search(line):
+            violations.append(lineno)
+    return violations
+
+
+def _check_evidence(lines):
+    """Pass 시나리오에 실행 증거 누락 검출 — 위반 라인 번호 목록 반환.
+
+    탐지 전략:
+    - 마크다운 표의 각 행(| ... |)을 파싱한다.
+    - 셀 중 하나가 Pass/PASS/✅인 행에서 "실행 명령" 또는 "결과/출력"에 해당하는
+      셀이 비어있으면 (empty or whitespace-only) 위반으로 간주한다.
+    - 열 헤더는 "결과", "출력", "실행 명령"을 포함하는 행으로 인식한다.
+    - 헤더를 찾기 전에 Pass 행이 나타나면 보수적 판정(위반 아님).
+    """
+    violations = []
+    header_indices = []   # 증거 관련 열 인덱스 (실행 명령/출력)
+    result_indices = []   # "결과" 열 인덱스 (Pass 판별용)
+    in_header = False
+
+    for lineno, line in enumerate(lines, start=1):
+        # 마크다운 표 행 판별
+        stripped = line.strip()
+        if not stripped.startswith("|"):
+            continue
+        # 구분선 행(|---|) 스킵
+        if re.match(r"^\|[\s\-:]+\|", stripped):
+            continue
+
+        cells = [c.strip() for c in stripped.split("|")]
+        # split 결과는 앞뒤 빈 문자열 포함 → [1:-1] 로 실제 셀만
+        cells = cells[1:-1] if len(cells) > 2 else cells
+
+        # 헤더 행 감지: "결과" 또는 "실행 명령" 또는 "출력" 셀 포함
+        is_header = any(
+            c in ("결과", "실행 명령", "출력", "결과/출력") for c in cells
+        )
+        if is_header:
+            header_indices = [
+                i for i, c in enumerate(cells)
+                if c in ("실행 명령", "출력", "결과/출력")
+            ]
+            # "결과" 열 인덱스를 별도로 기억 (Pass 판별용)
+            result_indices = [
+                i for i, c in enumerate(cells)
+                if c == "결과"
+            ]
+            in_header = True
+            continue
+
+        if not in_header:
+            continue
+
+        # 데이터 행: 결과 열이 Pass/PASS/✅인지 확인
+        is_pass_row = any(
+            i < len(cells) and _PASS_KEYWORDS.match(cells[i])
+            for i in result_indices
+        )
+        if not is_pass_row:
+            continue
+
+        # 증거 열(실행 명령/결과/출력)이 비어있으면 위반
+        for i in header_indices:
+            if i < len(cells) and cells[i] == "":
+                violations.append(lineno)
+                break
+
+    return violations
+
+
+def cmd_verify(args):
+    """PLAN 013 §verify — TEST-SCENARIO.md mock 코드 패턴 + 증거 누락 검사.
+    대상 파일 부재 시 doc-only skip (ok).
+    """
+    command = "verify"
+    task_path = args.task_path
+    scenario_arg = getattr(args, "scenario", None)
+
+    scenario_path = _find_scenario_file(task_path, scenario_arg)
+    if scenario_path is None:
+        # doc-only: TEST-SCENARIO.md 없음 → skip ok
+        print(json.dumps({
+            "ok": True, "command": command,
+            "skipped": True, "reason": "TEST-SCENARIO.md not found (doc-only skip)"
+        }, ensure_ascii=False))
+        sys.exit(0)
+
+    lines = scenario_path.read_text(encoding="utf-8").splitlines()
+
+    # 검사 1 — mock 코드 패턴
+    mock_lines = _check_mock_patterns(lines)
+    if mock_lines:
+        err(command, "mock_in_scenario", lines=mock_lines)
+
+    # 검사 2 — 증거 누락
+    missing_lines = _check_evidence(lines)
+    if missing_lines:
+        err(command, "evidence_missing", lines=missing_lines)
+
+    print(json.dumps({
+        "ok": True, "command": command,
+        "scenario": str(scenario_path),
+        "checks": {"mock_in_scenario": "pass", "evidence_missing": "pass"},
+    }, ensure_ascii=False))
+    sys.exit(0)
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # argparse 설정 (PLAN §2.19 E-2 매트릭스 그대로)
 # ─────────────────────────────────────────────────────────────────────────────
@@ -1282,6 +1431,16 @@ def build_parser():
     p_gp.add_argument("--start", type=int, required=True)
     p_gp.add_argument("--note")
     p_gp.set_defaults(func=cmd_gate_pass)
+
+    # ── verify ──
+    p_vfy = sub.add_parser(
+        "verify",
+        help="TEST-SCENARIO.md mock 코드 패턴 + 증거 누락 검사 (PLAN 013, 헌법 §4)"
+    )
+    p_vfy.add_argument("task_path", metavar="<task-path>")
+    p_vfy.add_argument("--scenario", metavar="<path>",
+                       help="TEST-SCENARIO.md 경로 명시 (기본: <task-path>/TEST-SCENARIO.md)")
+    p_vfy.set_defaults(func=cmd_verify)
 
     return parser
 
