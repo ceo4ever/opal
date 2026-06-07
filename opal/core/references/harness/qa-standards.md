@@ -54,3 +54,14 @@ PM Gate 자가 진단(interactive §3 / agentic §4)에서 확인하는 필수 �
 | opp | QA Gate (QA 에이전트) | QA 에이전트가 검증 시 갱신 → PM Gate에서 확인 |
 
 **갱신 의무**: DONE.md 생성 전에 QA 체크리스트의 모든 항목이 `[x]` 또는 "N/A + 사유"로 채워져야 한다. 미갱신 상태에서 DONE.md를 생성하지 않는다.
+
+### EXECUTE QA — 동작 증거 의무 (헌법 §4 집행)
+
+EXECUTE QA는 "글자 존재 여부(grep)"가 아니라 **실제 동작**으로 검증한다. 원칙 자체는 `PRINCIPLES.md` §4를 따른다.
+
+- [ ] 각 AC 충족이 실행 출력(stdout/exit code) 또는 실응답으로 입증되었는가 — 문자열 grep만으로 Pass 금지
+- [ ] 지시된 실연동(API/DB 등)을 목업으로 대체하지 않았는가 — 대체 시 Fail
+- [ ] 목업·스텁이 프로덕션 경로에 잔존하지 않는가
+- [ ] 증거가 없는 항목은 Pass가 아니라 미완으로 처리했는가 (헌법: "No evidence → not done")
+
+> 순수 문서 태스크(코드 변경 없음)는 본 의무에서 제외한다.

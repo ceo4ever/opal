@@ -85,6 +85,7 @@
         v1.7.0 2026-05-10 21:00  command 화이트리스트 + fork repo banner + OPAL_HOME 가드 (144)
         v1.8.0 2026-05-24        Codex CLI 통합 — Register-Bootstrapper 에 ~/.codex/AGENTS.md 추가 + Install-OpalMcp 에 'codex' 케이스 + Install-PlatformAgents 에 codex(TOML 직렬화) 추가 (009)
         v1.9.0 2026-06-02 20:16  모델 매핑 최신화 — ModelMap gemini(gemini-3.1-flash-lite/gemini-flash-latest/gemini-pro-latest) + codex(gpt-5.4-mini/gpt-5.5/gpt-5.3-codex) + toml 기본값 gpt-5.5 (install-mac.sh 동기, 011)
+        v1.10.0 2026-06-07       OPAL 헌법(PRINCIPLES.md) 배포 추가 — opal/core/PRINCIPLES.md → ~/.opal/PRINCIPLES.md (Strip 변경이력, always-on) (012)
 #>
 
 #Requires -Version 5.1
@@ -436,6 +437,15 @@ function Install-OpalCore {
         Copy-Item -Force -Path $coreAgent -Destination $opalAgentDst
         Remove-ChangelogSection -Path $opalAgentDst
         Write-OpalOk "OPAL AGENT.md → $opalAgentDst"
+    }
+
+    # ── OPAL 헌법: opal/core/PRINCIPLES.md → ~/.opal/PRINCIPLES.md (Strip 변경이력, always-on) ──
+    $corePrinciples = [IO.Path]::Combine($RepoRoot, 'opal', 'core', 'PRINCIPLES.md')
+    $opalPrinciplesDst = Join-Path $OpalHome 'PRINCIPLES.md'
+    if (Test-Path $corePrinciples) {
+        Copy-Item -Force -Path $corePrinciples -Destination $opalPrinciplesDst
+        Remove-ChangelogSection -Path $opalPrinciplesDst
+        Write-OpalOk "OPAL PRINCIPLES.md (헌법) → $opalPrinciplesDst"
     }
 
     # ── 스킬: skills/ + opal/skills/ 합쳐서 ~/.opal/skills/ ──

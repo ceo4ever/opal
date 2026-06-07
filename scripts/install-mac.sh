@@ -25,6 +25,7 @@
 #   v2.6.2 2026-05-24: print_summary에 ~/.codex/AGENTS.md OPAL 부트스트래퍼 행 추가 — 다른 플랫폼(Claude/Cursor/Gemini) 부트스트래퍼 행과 일관성 결손 결함 fix (009 EXECUTE 정정 #2 — PLAN §3.3 U-1 (7) 설계 누락)
 #   v2.7 2026-06-02 20:16 KST: 모델 매핑 최신화 — emit_platform_agent_adapter gemini(gemini-3.1-flash-lite/gemini-flash-latest/gemini-pro-latest) + codex(gpt-5.4-mini/gpt-5.5/gpt-5.3-codex) dict + codex_model_map + 기본값 gpt-5.5 (011)
 #   v2.7 2026-06-02 20:16 KST: 모델 매핑 최신화 — Gemini 부동 별칭 전환 + Codex 최신 ID 갱신 (011)
+#   v2.8 2026-06-07: OPAL 헌법(PRINCIPLES.md) 배포 추가 — strip_deploy_md로 opal/core/PRINCIPLES.md → ~/.opal/PRINCIPLES.md (always-on) (012)
 #
 
 set -euo pipefail
@@ -874,6 +875,10 @@ install_opal() {
     # ── OPAL 코어 ──
     strip_deploy_md "$opal_dir/core/AGENT.md" "$opal_home/AGENT.md"
     success "OPAL AGENT.md → $opal_home/AGENT.md"
+
+    # ── OPAL 헌법 (행동 원칙 SSOT, always-on) ──
+    strip_deploy_md "$opal_dir/core/PRINCIPLES.md" "$opal_home/PRINCIPLES.md"
+    success "OPAL PRINCIPLES.md (헌법) → $opal_home/PRINCIPLES.md"
 
     # ── 독립 스킬 (skills/ → ~/.opal/skills/) ──
     local fw_skill_count

@@ -4,7 +4,7 @@
 
 ## 부트스트랩
 
-> **[설계 원칙]** Eager 단계에서 identity.md + opal-harness.md + opal-pm.md + 프로젝트 PM 컨텍스트를 즉시 로드하여 정체성, Guards(구현 금지, 디스패치 의무), PM 행동 프로세스, 프로젝트별 금지사항을 세션 시작부터 활성화한다. 나머지 참조 문서는 실제 사용 시점(Lazy)에 로드한다. 각 스킬 Harness 폴백이 하네스 자가 로드를 보장하므로, 스킬 호출 시 하네스 미로드 리스크 없음.
+> **[설계 원칙]** Eager 단계에서 PRINCIPLES.md(헌법) + identity.md + opal-harness.md + opal-pm.md + 프로젝트 PM 컨텍스트를 즉시 로드하여 행동 원칙(헌법), 정체성, Guards(구현 금지, 디스패치 의무), PM 행동 프로세스, 프로젝트별 금지사항을 세션 시작부터 활성화한다. 모든 하위 문서는 헌법(PRINCIPLES.md)을 참조로 상속하며 원칙을 재서술하지 않는다. 나머지 참조 문서는 실제 사용 시점(Lazy)에 로드한다. 각 스킬 Harness 폴백이 하네스 자가 로드를 보장하므로, 스킬 호출 시 하네스 미로드 리스크 없음.
 
 > **[WORKER 규칙]** 디스패치 프롬프트의 첫 줄에 `[WORKER]`가 있으면 부트스트랩 전체를 건너뛰고 즉시 작업을 시작한다. PM이 디스패치 프롬프트에 필요 컨텍스트를 직접 주입하므로 워커가 독자적 부트스트랩을 수행할 필요 없다.
 
@@ -12,6 +12,7 @@
 
 1. `~/.opal/identity.md`를 Read로 읽어 에이전트 정체성을 로드한다.
 2. identity.md가 없으면 `~/.opal/skills/opal-onboarding/SKILL.md`를 Read로 읽어 온보딩을 시작한다.
+2.5. `~/.opal/PRINCIPLES.md`(OPAL 헌법)를 Read한다 → 행동 원칙 SSOT를 세션 시작부터 활성화한다. 이후 모든 하네스·PM·스킬·에이전트 문서는 이 헌법을 참조로 상속하며 원칙을 재서술하지 않는다.
 3. `~/.opal/references/opal-harness.md`를 Read한다 → Guards(구현 금지 원칙, 디스패치 의무)를 세션 시작부터 활성화한다.
 4. `~/.opal/references/opal-pm.md`를 Read한다 → PM 행동 프로세스(디스패치 전 프로세스, 검토 게이트, 학습 루프 등)를 세션 시작부터 활성화한다.
 5. 현재 프로젝트의 `{프로젝트}/.opal/AGENT.md`가 존재하면 Read한다 → 프로젝트별 금지사항·검토기준·업무지침을 세션 시작부터 활성화한다. 없으면 스킵.
@@ -51,7 +52,7 @@
 세션 첫 응답에 아래 형식의 두 줄을 포함한다:
 
 ```
-[부트스트랩] ✅ identity ✅ harness ✅ PM ✅ reporting ✅ PM모드 ⏳ registry ⏳ references ⏳ model-mapping
+[부트스트랩] ✅ principles ✅ identity ✅ harness ✅ PM ✅ reporting ✅ PM모드 ⏳ registry ⏳ references ⏳ model-mapping
 [안내] {next-action}
 ```
 
@@ -326,4 +327,5 @@ install-mac.sh가 `~/.codex/AGENTS.md`(글로벌)에 OPAL 마커를 자동 삽�
 | v2.6 | 2026-05-13 17:35 | 보고 형식 섹션 핵심 구조 라인 갱신 — 굵은 텍스트 → 이모티 prefix (`🎯` `🔍` `❓` `▶️`) (003) |
 | v2.7 | 2026-05-23 19:48 | 프로젝트 부트스트래퍼 자동 삽입 정책 정제 — Claude/Cursor는 글로벌 부트스트래퍼로 충분하므로 스킵, Antigravity(Gemini)만 자동 삽입. Step 6 문구 + "프로젝트 부트스트래퍼 자동 관리" 섹션 정합화 (hotfix, "그냥 해") |
 | v2.8 | 2026-05-24 | "프로젝트 부트스트래퍼 자동 관리" 절에 Codex 스킵 정책 추가 — Codex 글로벌 진입점이 자동 로드되므로 Claude/Cursor와 동일하게 프로젝트 마커 미삽입. 프로젝트 컨텍스트에 AGENTS.md(Codex) 추가 (009) |
+| v2.9 | 2026-06-07 | 헌법(PRINCIPLES.md) 신설 — Eager Step 2.5에 헌법 always-on 로드 추가 + 설계원칙 박스에 헌법 명시 + 부트스트랩 완료 보고에 `✅ principles` 추가. 모든 하위 문서는 헌법을 참조 상속 (012) |
 
