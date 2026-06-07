@@ -443,6 +443,9 @@ class TestMark(BaseTestCase):
 
     def test_mark_as_worker_happy_path(self):
         """mark --as-worker --worker-stage 정상 동작 (PLAN §2.4, T-10)"""
+        # prior_stage_only guard: EXECUTE 대상 행은 앞 단계(TASK·PLAN)가 완료여야 통과
+        self._mark(1)  # TASK 완료
+        self._mark(2)  # PLAN 완료
         code = self._mark(3, as_worker=True, worker_stage="EXECUTE")
         self.assertEqual(code, 0)
         state = self._state()
@@ -450,6 +453,9 @@ class TestMark(BaseTestCase):
 
     def test_mark_as_worker_with_step_progress(self):
         """G-6: mark --as-worker --step N/M → '- 진행: Step N/M 완료' (PLAN §2.11 G-6)"""
+        # prior_stage_only guard: EXECUTE 대상 행은 앞 단계(TASK·PLAN)가 완료여야 통과
+        self._mark(1)  # TASK 완료
+        self._mark(2)  # PLAN 완료
         self._mark(3, as_worker=True, worker_stage="EXECUTE", step="2/5")
         md = self._md()
         self.assertIn("- 진행: Step 2/5 완료", md)
@@ -843,6 +849,8 @@ class TestErrorCodes(BaseTestCase):
             {"stage": "CLOSE", "item": "State Gate"},
         ])
         self._init(rows_spec=rows)
+        # row1(TASK/작업) 먼저 done 처리 — stage_transition guard 통과 후 close_gate_violation 발생
+        self._mark(1)
         # 사용자 확인 행 없음 → close_gate_violation
         with _mock_now():
             args = make_args(task_path=str(self.task_path), row=2, done=True)
@@ -1196,6 +1204,8 @@ class TestG13CloseGate(BaseTestCase):
             {"stage": "CLOSE", "item": "State Gate"},
         ])
         self._init(rows_spec=rows)
+        # row1(TASK/작업) 먼저 done 처리 — stage_transition guard 통과 후 close_gate_violation 발생
+        self._mark(1)
         with _mock_now():
             args = make_args(task_path=str(self.task_path), row=2, done=True)
             exit_code, result = self._call_cmd(ST.cmd_mark, args)
@@ -1686,7 +1696,7 @@ class TestRowsFrom(BaseTestCase):
 # ═════════════════════════════════════════════════════════════════════════════
 
 class TestErrorCodesCompleteness(unittest.TestCase):
-    """PLAN §2.18 E-1: ERROR_CODES 25종 기존 + PLAN 013 신규 2종 = 27종 모두 등재 확인"""
+    """PLAN §2.18 E-1: ERROR_CODES 25종 기존 + PLAN 013 신규 2종 + PLAN 014 신규 1종 = 28종 모두 등재 확인"""
 
     EXPECTED_CODES = [
         # 기존 25종 (PLAN §2.18 + 이전 추가분)
@@ -1718,14 +1728,16 @@ class TestErrorCodesCompleteness(unittest.TestCase):
         # PLAN 013 신규 2종 (헌법 §4 동작 증거 강제 게이트)
         "mock_in_scenario",
         "evidence_missing",
+        # PLAN 014 신규 1종 (M-A stage-transition guard)
+        "stage_transition_violation",
     ]
 
     def test_error_codes_count(self):
-        """ERROR_CODES 상수가 27종 모두 포함 (PLAN §2.18 + PLAN 013)"""
-        self.assertEqual(len(ST.ERROR_CODES), 27)
+        """ERROR_CODES 상수가 28종 모두 포함 (PLAN §2.18 + PLAN 013 + PLAN 014)"""
+        self.assertEqual(len(ST.ERROR_CODES), 28)
 
-    def test_all_27_codes_registered(self):
-        """27종 코드 각각이 ERROR_CODES에 등재됨"""
+    def test_all_28_codes_registered(self):
+        """28종 코드 각각이 ERROR_CODES에 등재됨"""
         for code in self.EXPECTED_CODES:
             self.assertIn(code, ST.ERROR_CODES, f"에러 코드 {code} 미등재")
 
@@ -1972,6 +1984,252 @@ class TestAddRowSchemaValidate(BaseTestCase):
         self._add_row(after=1, stage="CLOSE", item="재추가 항목")
         state = self._state()
         self.assertEqual(state["current_status"], "additional_work")
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# J. Stage-Transition Guard (PLAN §M-A stage-transition guard)
+# ═════════════════════════════════════════════════════════════════════════════
+
+class TestStageTransitionGuard(BaseTestCase):
+    """PLAN §M-A stage-transition guard 단위 테스트.
+    규칙: mark/advance 시 대상 행보다 앞의 모든 행이 완료(done/additional_work_done/na)가
+    아니면 stage_transition_violation 에러로 거부.
+    예외: --force+--note 우회 / as_worker 스킵 / 이미 done 행 재mark(멱등).
+    """
+
+    ORDERED_ROWS = json.dumps([
+        {"stage": "TASK",    "item": "작업 A"},
+        {"stage": "PLAN",    "item": "작업 B"},
+        {"stage": "EXECUTE", "item": "작업 C"},
+        {"stage": "CLOSE",   "item": "사용자 확인"},
+    ])
+
+    def setUp(self):
+        super().setUp()
+        self._init(rows_spec=self.ORDERED_ROWS)
+
+    # ── 1. 정상 순차 통과 ─────────────────────────────────────────────────────
+
+    def test_sequential_mark_passes(self):
+        """순차 mark: 앞 행을 모두 done 처리 후 다음 행 mark → 성공 (PLAN §M-A)"""
+        code1 = self._mark(1)
+        self.assertEqual(code1, 0)
+        code2 = self._mark(2)
+        self.assertEqual(code2, 0)
+        code3 = self._mark(3)
+        self.assertEqual(code3, 0)
+
+    def test_sequential_advance_passes(self):
+        """순차 advance: 앞 행 done 처리 후 advance → 성공 (PLAN §M-A)"""
+        self._mark(1)
+        code = self._advance(2)
+        self.assertEqual(code, 0)
+
+    # ── 2. 건너뛰기 거부 (mark) ───────────────────────────────────────────────
+
+    def test_skip_mark_row2_without_row1_done_rejected(self):
+        """row1 미완인 상태에서 row2 mark → stage_transition_violation (PLAN §M-A)"""
+        import io
+        from contextlib import redirect_stdout
+        out = io.StringIO()
+        with redirect_stdout(out):
+            with _mock_now():
+                args = make_args(
+                    task_path=str(self.task_path),
+                    row=2, done=True,
+                )
+                try:
+                    ST.cmd_mark(args)
+                except SystemExit:
+                    pass
+        result = json.loads(out.getvalue())
+        self.assertEqual(result.get("error"), "stage_transition_violation")
+        self.assertIn(1, result.get("incomplete_rows", []))
+
+    def test_skip_mark_row3_without_row1_row2_done_rejected(self):
+        """row1·row2 미완인 상태에서 row3 mark → incomplete_rows에 두 행 모두 포함 (PLAN §M-A)"""
+        import io
+        from contextlib import redirect_stdout
+        out = io.StringIO()
+        with redirect_stdout(out):
+            with _mock_now():
+                args = make_args(
+                    task_path=str(self.task_path),
+                    row=3, done=True,
+                )
+                try:
+                    ST.cmd_mark(args)
+                except SystemExit:
+                    pass
+        result = json.loads(out.getvalue())
+        self.assertEqual(result.get("error"), "stage_transition_violation")
+        incomplete = result.get("incomplete_rows", [])
+        self.assertIn(1, incomplete)
+        self.assertIn(2, incomplete)
+
+    # ── 3. 건너뛰기 거부 (advance) ────────────────────────────────────────────
+
+    def test_skip_advance_row2_without_row1_done_rejected(self):
+        """row1 미완인 상태에서 row2 advance → stage_transition_violation (PLAN §M-A)"""
+        import io
+        from contextlib import redirect_stdout
+        out = io.StringIO()
+        with redirect_stdout(out):
+            with _mock_now():
+                args = make_args(
+                    task_path=str(self.task_path),
+                    row=2,
+                )
+                try:
+                    ST.cmd_advance(args)
+                except SystemExit:
+                    pass
+        result = json.loads(out.getvalue())
+        self.assertEqual(result.get("error"), "stage_transition_violation")
+
+    # ── 4. --force 우회 ───────────────────────────────────────────────────────
+
+    def test_force_with_note_bypasses_guard_mark(self):
+        """mark --force --note: 앞 행 미완이어도 guard 우회 → 성공 (PLAN §M-A)"""
+        code = self._mark(2, force=True, note="긴급 우회")
+        self.assertEqual(code, 0)
+
+    # ── 5. 멱등 (이미 done인 행 재mark) ──────────────────────────────────────
+
+    def test_idempotent_mark_already_done_row_bypasses_guard(self):
+        """이미 done인 행 재mark: 앞 행 미완이어도 guard 스킵 → 성공 (PLAN §M-A 멱등)"""
+        # row2를 강제로 done 상태로 직접 설정 (state.json 직접 수정)
+        state = self._state()
+        state["rows"][1]["status"]       = "done"
+        state["rows"][1]["status_label"] = "✅"
+        ST.save_state_json(self.task_path, state)
+        # row1이 미완인 상태에서 row2(이미 done) 재mark → guard 스킵
+        code = self._mark(2)
+        self.assertEqual(code, 0)
+
+    # ── 6. na 상태 행은 완료로 간주 ──────────────────────────────────────────
+
+    def test_na_status_rows_treated_as_complete(self):
+        """앞 행이 na(agentic auto-na)이면 완료로 간주, 건너뛰기 허용 (PLAN §M-A)"""
+        # row1을 na 상태로 직접 설정
+        state = self._state()
+        state["rows"][0]["status"]       = "na"
+        state["rows"][0]["status_label"] = "-"
+        state["rows"][0]["owner"]        = "auto"
+        ST.save_state_json(self.task_path, state)
+        # row1=na, row2=pending → row2 mark 시 row1은 완료로 간주 → 성공
+        code = self._mark(2)
+        self.assertEqual(code, 0)
+
+    # ── 7. as_worker prior_stage_only guard ──────────────────────────────────
+
+    def test_as_worker_prior_stage_complete_passes(self):
+        """mark --as-worker: 앞 단계(TASK·PLAN) 완료 + 같은 단계 내 앞 행 미완 → 통과 (prior_stage_only)"""
+        # ORDERED_ROWS: TASK(row1) / PLAN(row2) / EXECUTE(row3) / CLOSE(row4)
+        # row1(TASK), row2(PLAN) 완료 처리 후 row3(EXECUTE)를 as_worker로 mark → 성공
+        self._mark(1)                                    # TASK 완료
+        self._mark(2)                                    # PLAN 완료
+        code = self._mark(3, as_worker=True, worker_stage="EXECUTE")
+        self.assertEqual(code, 0)
+
+    def test_as_worker_prior_stage_incomplete_rejected(self):
+        """mark --as-worker: 앞 단계(TASK) 미완 → stage_transition_violation 거부 (prior_stage_only)"""
+        # row1(TASK) 미완인 상태에서 row3(EXECUTE)를 as_worker로 mark → 거부
+        import io
+        from contextlib import redirect_stdout
+        out = io.StringIO()
+        with redirect_stdout(out):
+            with _mock_now():
+                args = make_args(
+                    task_path=str(self.task_path),
+                    row=3, done=True,
+                    as_worker=True, worker_stage="EXECUTE",
+                )
+                try:
+                    ST.cmd_mark(args)
+                except SystemExit:
+                    pass
+        result = json.loads(out.getvalue())
+        self.assertEqual(result.get("error"), "stage_transition_violation")
+        # 앞 단계 행(TASK=row1, PLAN=row2)이 미완으로 포함돼야 함
+        self.assertIn(1, result.get("incomplete_rows", []))
+
+    def test_as_worker_same_stage_prior_row_incomplete_allowed(self):
+        """mark --as-worker: 앞 단계 완료 + 같은 stage 내 앞 행 미완이어도 통과 (prior_stage_only 자율)"""
+        # ORDERED_ROWS에 같은 stage 내 두 행을 가진 spec을 사용해야 하므로
+        # SAMPLE_ROWS_SPEC을 사용하는 별도 태스크 디렉토리 구성
+        import tempfile, shutil, pathlib
+        tmpdir2 = pathlib.Path(tempfile.mkdtemp())
+        task_path2 = tmpdir2 / "134-260501-worker-same-stage"
+        task_path2.mkdir()
+        try:
+            # PLAN 단계 내 두 행이 있는 spec: TASK(row1) / PLAN(row2·row3) / EXECUTE(row4)
+            rows_spec_2stage = json.dumps([
+                {"stage": "TASK",    "item": "작업 A"},
+                {"stage": "PLAN",    "item": "작업 B"},
+                {"stage": "PLAN",    "item": "작업 C"},
+                {"stage": "EXECUTE", "item": "작업 D"},
+            ])
+            with _mock_now():
+                init_args = make_args(
+                    task_path=str(task_path2),
+                    skill="opp", mode="interactive",
+                    rows_spec=rows_spec_2stage,
+                )
+                ST.cmd_init(init_args)
+
+            # TASK(row1) 완료 처리
+            with _mock_now():
+                mark_args = make_args(task_path=str(task_path2), row=1, done=True)
+                ST.cmd_mark(mark_args)
+
+            # PLAN row2 미완인 상태에서 PLAN row3을 as_worker로 mark → 통과해야 함
+            # (앞 단계=TASK 완료, 같은 PLAN 단계 내 row2 미완은 무시)
+            with _mock_now():
+                args = make_args(
+                    task_path=str(task_path2),
+                    row=3, done=True,
+                    as_worker=True, worker_stage="PLAN",
+                )
+                import io
+                from contextlib import redirect_stdout
+                out = io.StringIO()
+                exit_code = 0
+                with redirect_stdout(out):
+                    try:
+                        ST.cmd_mark(args)
+                    except SystemExit as e:
+                        exit_code = e.code
+            self.assertEqual(exit_code, 0,
+                             msg=f"같은 stage 내 앞 행 미완이어도 통과해야 함: {out.getvalue()}")
+        finally:
+            shutil.rmtree(tmpdir2, ignore_errors=True)
+
+    def test_pm_path_full_guard_unchanged(self):
+        """mark (PM 경로, as_worker=False): full guard 불변 — 앞 행 미완 시 거부 (PLAN §M-A)"""
+        # PM 경로에서 row2 미완인 상태로 row3 mark → stage_transition_violation
+        import io
+        from contextlib import redirect_stdout
+        out = io.StringIO()
+        with redirect_stdout(out):
+            with _mock_now():
+                args = make_args(
+                    task_path=str(self.task_path),
+                    row=3, done=True,
+                    as_worker=False,
+                )
+                try:
+                    ST.cmd_mark(args)
+                except SystemExit:
+                    pass
+        result = json.loads(out.getvalue())
+        self.assertEqual(result.get("error"), "stage_transition_violation")
+
+    # ── 8. error_code 등재 확인 ───────────────────────────────────────────────
+
+    def test_stage_transition_violation_in_error_codes(self):
+        """stage_transition_violation이 ERROR_CODES SSOT에 등재됨 (PLAN §M-A)"""
+        self.assertIn("stage_transition_violation", ST.ERROR_CODES)
 
 
 # ═════════════════════════════════════════════════════════════════════════════

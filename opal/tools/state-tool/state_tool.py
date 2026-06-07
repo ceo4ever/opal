@@ -86,6 +86,7 @@ ERROR_CODES = {
     "rows_acts_not_implemented":      "--rows-acts는 본 태스크 범위 밖 (시그니처만 정의 — R-13)",
     "mock_in_scenario":               "TEST-SCENARIO.md에 mock 코드 패턴 발견 — 헌법 §4 'Don't fake it' 위반: {lines}",
     "evidence_missing":               "TEST-SCENARIO.md Pass 시나리오에 실행 증거 누락 — 헌법 §4 'Completion requires evidence' 위반: {lines}",
+    "stage_transition_violation":     "단계 건너뛰기 차단: 행 {row_id} 갱신 전에 앞 행 {incomplete_rows}이(가) 완료되지 않았음 (PLAN §M-A stage-transition guard)",
 }
 
 PIPELINE_MARKER_START = "<!-- pipeline:start -->"
@@ -317,6 +318,61 @@ def find_row_index(state, row_id, command):
         if row["row_id"] == row_id:
             return i
     err(command, "row_not_found", row_id=row_id)
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 단계 건너뛰기 차단 (PLAN §M-A stage-transition guard)
+# ─────────────────────────────────────────────────────────────────────────────
+
+# 완료로 간주하는 상태값 — 이 상태의 앞 행은 건너뛰기 검증에서 제외
+_COMPLETE_STATUSES = {"done", "additional_work_done", "na"}
+
+
+def check_stage_transition_guard(state, row_index, command, force=False, scope="full"):
+    """대상 행(row_index) 앞의 행이 완료 상태인지 검증.
+    미완 행이 있으면 stage_transition_violation 에러 응답 후 exit 1.
+    force=True면 우회 (--note 필수는 호출자가 이미 보장).
+
+    완료로 간주: done / additional_work_done / na (agentic auto-na 포함).
+    이미 done인 행을 재 mark 하는 경우(멱등)도 앞 행 검증 통과 후 허용.
+
+    scope="full"         (PM 경로, 기본): 대상 행 앞의 모든 행이 완료여야 함.
+    scope="prior_stage_only" (워커 경로): 대상 행의 stage보다 앞 stage에 속한
+                             행만 검증. 같은 stage 내 앞 행은 검증 제외.
+    """
+    if force:
+        return
+
+    row = state["rows"][row_index]
+    # 이미 완료 상태인 행의 재 mark(멱등) — 앞 행이 미완이어도 허용
+    if row.get("status") in _COMPLETE_STATUSES:
+        return
+
+    target_stage = row["stage"]
+
+    # prior_stage_only: 대상 행의 stage가 처음 등장하는 인덱스를 경계로 삼는다.
+    # 그 인덱스 미만의 행(= 앞 단계 행)만 검증한다.
+    if scope == "prior_stage_only":
+        # 대상 stage가 처음 등장하는 위치를 찾는다
+        stage_start = 0
+        for i, r in enumerate(state["rows"]):
+            if r["stage"] == target_stage:
+                stage_start = i
+                break
+        check_up_to = stage_start  # [0, stage_start) 범위만 검증
+    else:
+        check_up_to = row_index    # [0, row_index) 전체 검증
+
+    incomplete = []
+    for i in range(check_up_to):
+        prev = state["rows"][i]
+        if prev.get("status") not in _COMPLETE_STATUSES:
+            incomplete.append(prev["row_id"])
+
+    if incomplete:
+        err(command, "stage_transition_violation",
+            row_id=row["row_id"],
+            incomplete_rows=incomplete)
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # CLOSE 진입 게이트 검증 (PLAN §2.16 G-13)
@@ -782,6 +838,12 @@ def cmd_advance(args):
             message=f"row {args.row} is already {row['status']}, advance only allows pending→in_progress",
             row_id=args.row)
 
+    # 단계 건너뛰기 차단 (PLAN §M-A)
+    # PM 경로: 앞 모든 행 검증 (full). 워커 경로: 앞 단계 행만 검증 (prior_stage_only).
+    _guard_scope = "prior_stage_only" if getattr(args, "as_worker", False) else "full"
+    check_stage_transition_guard(state, row_index, command, force=False,
+                                 scope=_guard_scope)
+
     # CLOSE 진입 게이트 (§2.16 G-13)
     check_close_gate(state, row_index, command)
 
@@ -835,6 +897,12 @@ def cmd_mark(args):
                     worker_stage=allowed_stage,
                     row_id=args.row,
                     stage=row["stage"])
+
+    # 단계 건너뛰기 차단 (PLAN §M-A)
+    # PM 경로: 앞 모든 행 검증 (full). 워커 경로: 앞 단계 행만 검증 (prior_stage_only).
+    _guard_scope = "prior_stage_only" if args.as_worker else "full"
+    check_stage_transition_guard(state, row_index, command, force=args.force,
+                                 scope=_guard_scope)
 
     # CLOSE 진입 게이트 (§2.16 G-13)
     check_close_gate(state, row_index, command,
