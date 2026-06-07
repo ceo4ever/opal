@@ -41,16 +41,13 @@ Harness "TASK 공통 프로세스"를 따르되, 아래를 추가:
 - 입력물 분류 + wireframe.md 경로 (기존/생성 필요)
 - 보고 시 입력물 분기 판별 결과 포함
 
-TASK 완료 → **State Gate** (state-tool 호출로 갱신 확인 — 아래 명령):
+TASK 완료 → 사용자 보고.
 
-```
-~/.opal/tools/state-tool/run.sh advance <task-path> --row 1   # 작업 행 🔄
-~/.opal/tools/state-tool/run.sh mark <task-path> --row 1 --done
-~/.opal/tools/state-tool/run.sh mark <task-path> --row 2 --done  # TASK.md 생성 행
-~/.opal/tools/state-tool/run.sh mark <task-path> --row 3 --done --owner user --note '소유자 확인: TASK 완료'
-```
-
-→ 사용자 보고.
+> **[MUST] 행 갱신**: `~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done` 호출. LLM이 STATE.md 마크다운 표를 직접 편집하는 것은 금지된다. 행을 mark하는 것 자체가 state 기록이며 별도의 State Gate 행은 존재하지 않는다.
+> **단계 시작 (P-3)**: `~/.opal/tools/state-tool/run.sh advance <task-path> --row <N>` 호출로 해당 단계 작업 행을 🔄로 전환.
+> **단계 건너뛰기 차단**: state-tool stage-transition guard가 단계 N의 필수 행이 완료되지 않으면 단계 N+1 진입(mark)을 자동 거부한다 (PLAN §M-A). 행에 의존하지 않는다.
+> **사용자 확인 (P-5)**: 사용자 발화 후 PM이 `~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done --owner user --note '소유자 확인: TASK 완료'` 호출.
+> 근거: `PLAN.md` §3 Step 8 P-1 / P-3 / P-5
 
 ---
 
@@ -61,19 +58,20 @@ TASK 완료 → **State Gate** (state-tool 호출로 갱신 확인 — 아래 �
 워커 디스패치로 wireframe.md 생성. **model**: standard.
 - 스킬: op-dev-wireframe, 입력: TASK.md + 정책서/이미지
 - 완료
-  → op-dev-qa 호출 (단계: WIREFRAME) → **State Gate** → **PM Gate** (TASK.md 요구사항 체크박스 갱신 포함) → **State Gate** → 사용자 보고
+  → **PM Gate** (TASK.md 요구사항 체크박스 갱신 + wireframe 직접 검증 — 점검 목록 참조):
+    1. `{wireframe.md 경로}` Read — 화면 목록·요구사항 커버 확인
+    2. 검증 체크리스트:
+       - [ ] TASK.md 요구사항 전체 커버 여부 (wireframe.md 화면 대조)
+       - [ ] 화면 구성 및 레이아웃의 완성도 (op-dev-qa/SKILL.md 와이어프레임 검증 기준 참조)
+       - [ ] 설계 피드백 섹션에 미해결 빈틈이 없는가
+       - [ ] TASK.md 요구사항 체크박스 갱신 완료
+  → PM Gate 통과 후 해당 행을 단일 mark. 사용자에게 WIREFRAME 결과 보고.
 
-State Gate / PM Gate 시 state-tool 호출:
+state-tool 호출:
 
 ```
-# QA Gate 완료 후 (4-row 일괄): WIREFRAME 행 #6~#9
-~/.opal/tools/state-tool/run.sh gate-pass <task-path> --start 6
-
-# PM Gate 후 State Gate
-~/.opal/tools/state-tool/run.sh mark <task-path> --row 10 --done
-
-# 사용자 확인
-~/.opal/tools/state-tool/run.sh mark <task-path> --row 11 --done --owner user --note '소유자 확인: WIREFRAME 완료'
+~/.opal/tools/state-tool/run.sh mark <task-path> --row 4 --done  # PM Gate
+~/.opal/tools/state-tool/run.sh mark <task-path> --row 5 --done --owner user --note '소유자 확인: WIREFRAME 완료'
 ```
 
 > **[PM 컨텍스트 주입]** 워커 디스패치 프롬프트의 첫 줄에 `[WORKER]`를 삽입한다. `[WORKER]` 마커가 있으면 워커는 부트스트랩을 생략한다. PM은 디스패치 시 다음을 프롬프트에 포함해야 한다:
@@ -115,27 +113,29 @@ op-dev-execute 스킬을 수행하라.
 
 ### 3-3. 완료 후
 
-1. op-dev-qa 호출 (단계: EXECUTE-UI) → 빌드/린트 + wireframe↔코드 대조 → **State Gate** → **PM Gate** (QA 결과 + 실행 결과 검토 + 체크리스트 갱신) → **State Gate**
+1. **PM Gate** (빌드/린트 결과 + wireframe↔코드 대조 직접 검증 + 체크리스트 갱신 — 점검 목록 참조):
+   1. `{wireframe.md 경로}` Read — wireframe.md 화면 목록 확인
+   2. 변경 파일 코드 리뷰 — 빌드/린트 결과 및 코드 품질 확인
+   3. 검증 체크리스트:
+      - [ ] 빌드/린트 오류 없음 (op-dev-qa/SKILL.md EXECUTE-UI 검증 기준 참조)
+      - [ ] wireframe.md 화면 목록 전체 구현 여부 (wireframe↔코드 대조)
+      - [ ] 컨벤션 자동 진단 PASS (changed_files 컨벤션 적용 대상 ≥1건 시 발동, GC-CONVENTION-*.md Critical/High 0건)
+      - [ ] TASK.md 요구사항 체크박스 갱신 완료
+   → PM Gate 통과 후 해당 행을 단일 mark.
 2. 사용자에게 완료 보고 후 CLOSE 단계 진입 승인 요청
 
-State Gate / PM Gate 시 state-tool 호출:
+state-tool 호출:
 
 ```
-# QA Gate 완료 후 (4-row 일괄): EXECUTE 행 #13~#16
-~/.opal/tools/state-tool/run.sh gate-pass <task-path> --start 13
-
-# PM Gate 후 State Gate
-~/.opal/tools/state-tool/run.sh mark <task-path> --row 17 --done
-
-# 사용자 확인
-~/.opal/tools/state-tool/run.sh mark <task-path> --row 18 --done --owner user --note '소유자 확인: EXECUTE 완료'
+~/.opal/tools/state-tool/run.sh mark <task-path> --row 7 --done  # PM Gate
+~/.opal/tools/state-tool/run.sh mark <task-path> --row 8 --done --owner user --note '소유자 확인: EXECUTE 완료'
 ```
 
 보고 형식:
 ```
 📋 [EXECUTE] 완료 보고
 📎 변경 파일: {changed_files}
-📎 산출물: {QA-EXECUTE.md 등}
+📎 산출물: {GC-CONVENTION-*.md 등}
 다음 단계(CLOSE)로 넘어갈까요?
 ```
 
@@ -145,19 +145,14 @@ State Gate / PM Gate 시 state-tool 호출:
 
 모든 체크리스트 갱신 완료 확인 후 태스크를 마감한다.
 
-1. DONE.md 생성
-2. State Gate:
+1. DONE.md 생성 후 행 9(CLOSE 행) mark (`~/.opal/tools/state-tool/run.sh mark <task-path> --row 9 --done` 호출 — P-1). 행을 mark하는 것 자체가 state 기록이다.
 
-```
-~/.opal/tools/state-tool/run.sh mark <task-path> --row 19 --done  # DONE.md 생성
-~/.opal/tools/state-tool/run.sh mark <task-path> --row 20 --done  # State Gate (CLOSE 완료)
-```
+> **CLOSE 진입 게이트 자동 검증 (§2.16 G-13)**: CLOSE 단계 첫 행 mark 시 도구가 직전 단계 사용자 확인 행의 `owner=user` 여부를 자동 검증한다. 미통과 시 `close_gate_violation` 에러 반환 — agentic 모드의 `--auto-pass`도 거부됨.
 
-> **CLOSE 게이트 제약 (§2.16 G-13)**: CLOSE 단계 최초 진입 행은 `--auto-pass` 적용 불가 (`close_gate_violation`). 반드시 위 `mark --row 19 --done` 명시 호출로 처리한다.
+> **추가작업 발생 시 (P-6)**: `~/.opal/tools/state-tool/run.sh add-row <task-path> --after 9 --stage CLOSE --item '추가 작업 항목'` 호출 → current_status 자동 `additional_work` 전환.
+> 근거: `PLAN.md` §3 Step 8 P-1 / P-6 / P-8 / §2.16 G-13
 
-> **추가작업 발생 시 (P-6)**: `add-row --after 20 --stage CLOSE --item '추가 작업 항목'` → 작업 완료 후 `status --set additional_work_done`
-
-3. 완료 보고
+2. 완료 보고
 
 보고 형식:
 ```
@@ -175,42 +170,29 @@ State Gate / PM Gate 시 state-tool 호출:
 Harness STATE.md 템플릿에 적용:
 - `{모드}`: Wireframe UI
 - `{단계 목록}`: TASK / WIREFRAME / EXECUTE / CLOSE
-- `{산출물 목록}`: TASK.md, wireframe.md(기존 존재 가능), QA-*.md, DONE.md
+- `{산출물 목록}`: TASK.md, wireframe.md(기존 존재 가능), GC-CONVENTION-*.md, DONE.md
 
-> **[SSOT]** `state-tool init` 호출 시 이 섹션의 행 테이블을 `--rows-from` 옵션으로 참조한다:
->
-> ```
-> ~/.opal/tools/state-tool/run.sh init <task-path> --skill opdw --rows-from opal/skills/opal-pilot-dev-wireframe/SKILL.md
-> ```
->
-> state-tool이 이 파일의 "진행 현황 행 예시" 테이블을 읽어 state.json을 초기화한다. 행 데이터를 직접 편집하지 않는다.
+**진행 현황 행 예시** (아래 표는 `state init --rows-from <SKILL.md>` 또는 `--rows-spec` 인자의 SSOT — LLM이 직접 작성하는 것은 금지된다):
 
-**진행 현황 행 예시** (STATE.md 초기 생성 시 이 구조로 작성):
+> **[MUST] STATE.md 초기 생성**: `~/.opal/tools/state-tool/run.sh init <task-path> --skill opdw --mode <interactive|semi-agentic|agentic> --rows-from opal/skills/opal-pilot-dev-wireframe/SKILL.md` 호출. 기본값: `semi-agentic`. `--rows-from`이 아래 표를 파싱하여 행 구성을 자동 추출한다. 행 데이터를 직접 편집하지 않는다.
+> 근거: `tasks/134-260501-opp-pipeline-state-tool/TASK.md` F-15 / `PLAN.md` §2.3 / §2.20.2 / §3 Step 8 (P-3 advance, P-1 mark)
 
+```markdown
 | # | 단계 | 항목 | 상태 | 시점 |
 |---|------|------|------|------|
 | 1 | TASK | 작업 | ⬜ | - |
-| 2 | TASK | TASK.md 생성 | ⬜ | - |
-| 3 | TASK | 사용자 확인 | ⬜ | - |
-| 4 | WIREFRAME | 작업 | ⬜ | - |
-| 5 | WIREFRAME | wireframe.md 생성 | ⬜ | - |
-| 6 | WIREFRAME | QA Gate | ⬜ | - |
-| 7 | WIREFRAME | QA-WIREFRAME.md 생성 | ⬜ | - |
-| 8 | WIREFRAME | State Gate | ⬜ | - |
-| 9 | WIREFRAME | PM Gate | ⬜ | - |
-| 10 | WIREFRAME | State Gate | ⬜ | - |
-| 11 | WIREFRAME | 사용자 확인 | ⬜ | - |
-| 12 | EXECUTE | 작업 | ⬜ | - |
-| 13 | EXECUTE | QA Gate | ⬜ | - |
-| 14 | EXECUTE | QA-EXECUTE.md 생성 | ⬜ | - |
-| 15 | EXECUTE | State Gate | ⬜ | - |
-| 16 | EXECUTE | PM Gate | ⬜ | - |
-| 17 | EXECUTE | State Gate | ⬜ | - |
-| 18 | EXECUTE | 사용자 확인 | ⬜ | - |
-| 19 | CLOSE   | DONE.md 생성 | ⬜ | - |
-| 20 | CLOSE   | State Gate | ⬜ | - |
+| 2 | TASK | 사용자 확인 | ⬜ | - |
+| 3 | WIREFRAME | 작업 | ⬜ | - |
+| 4 | WIREFRAME | PM Gate | ⬜ | - |
+| 5 | WIREFRAME | 사용자 확인 | ⬜ | - |
+| 6 | EXECUTE | 작업 | ⬜ | - |
+| 7 | EXECUTE | PM Gate | ⬜ | - |
+| 8 | EXECUTE | 사용자 확인 | ⬜ | - |
+| 9 | CLOSE | DONE.md 생성 | ⬜ | - |
+```
 
-> WIREFRAME 스킵 시 (wireframe.md 기존 존재): WIREFRAME 단계 행(#4-#11)을 `-`로 표기한다.
+> TASK.md 생성은 행 1(TASK 작업)에 흡수. wireframe.md 생성은 행 3(WIREFRAME 작업)에 흡수. State Gate 행은 state-tool stage-transition guard(PLAN §M-A)로 이전 완료 — 행으로 강제하지 않는다.
+> WIREFRAME 스킵 시 (wireframe.md 기존 존재): WIREFRAME 단계 행(#3-#5)을 `-`로 표기한다.
 
 ---
 
@@ -218,8 +200,8 @@ Harness STATE.md 템플릿에 적용:
 
 | Phase | 산출물 | 체크리스트 위치 |
 |-------|-------|----------------|
-| WIREFRAME | TASK.md, wireframe.md, QA-WIREFRAME.md | TASK.md 요구사항 |
-| EXECUTE | QA-EXECUTE.md, GC-CONVENTION-*.md | - |
+| WIREFRAME | TASK.md, wireframe.md | TASK.md 요구사항, wireframe.md 화면 목록; op-dev-qa/SKILL.md 와이어프레임 검증 기준 참조 |
+| EXECUTE | changed_files, GC-CONVENTION-*.md | 빌드/린트 결과, wireframe↔코드 대조, 컨벤션 자동 진단; op-dev-qa/SKILL.md EXECUTE-UI 검증 기준 참조 |
 
 ---
 
@@ -299,3 +281,4 @@ semi-agentic / agentic 모두 CLOSE 첫 행 `--auto-pass` 거부 (`agentic_close
 | v2.5 | 2026-05-08 | PM Gate 점검 목록 EXECUTE 행 산출물에 GC-CONVENTION-*.md 추가 — 컨벤션 자동 진단 EXECUTE PM Gate 발동 (136) |
 | v2.6 | 2026-05-09 11:22 | 3-way 모드 체계 도입 — semi-agentic 기본 채택 + Agentic/Semi-Agentic 모드 절 확장 + Harness 절 3-way 분기 + WIREFRAME 모드 경계 명시 (140) |
 | v2.7 | 2026-05-09 18:30 | 개인 식별자 "캡틴" → "소유자"/"사용자" 치환 — 배포 파일 정체성 누설 정정 (139) |
+| v2.8 | 2026-06-07 | STATE 행 20→9 재구성 — opds 패턴 적용 + op-dev-qa 디스패치→PM Gate 흡수: State Gate 행(#8/#10/#15/#17/#20) 제거(guard로 이전), QA Gate 행(#6/#13)+QA 산출물 행(#7/#14) 제거, 산출물 행 작업 행 흡수, gate-pass 제거, WIREFRAME·EXECUTE PM Gate에 빌드/린트·wireframe↔코드 대조 직접 검증 체크리스트 추가 (014) |

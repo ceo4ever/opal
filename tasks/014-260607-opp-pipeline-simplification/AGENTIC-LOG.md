@@ -24,14 +24,19 @@
 | 8 | EXECUTE | Phase3 | FIX | QA→PM Gate 통합을 하네스/표준 4문서+SKILL 2개에 반영 (opal-task-agent advanced). pm-review-gate: 공통 검증원칙 4종+요구사항 누락·오해+self-check 흡수 / qa-standards: QA Gate 전제→PM Gate 문서검증 전제 전환 / interactive: §2 QA Gate 제거+§3 자기모순(QA재소환↔자가진단) 일원화+§4 정합화 / op-dev-qa·op-task-qa: 검증기준 라이브러리로 역할한정(콘텐츠 보존) | 완료 |
 | 9 | EXECUTE | Phase3 | GATE | PM 직접 재검증(워커 신뢰 안 함) — 4항목 grep 검증: ①재소환 잔존=부정문/이력뿐 ②QA Gate 수행 시=부정문뿐 ③TEST/verify 토큰 전량 보존+불변영역 명시 강화 ④self-check+검증원칙4종 흡수. **SSOT 결함 발견**: opal-harness.md §1·§2 stub 4곳 옛방향 잔존 | Pass(보완 필요) |
 | 10 | EXECUTE | Phase3 | FIX | opal-harness.md SSOT stub 4곳 정합화 보완 디스패치(sonnet) — §1 Guards 허용항목/§2 모듈테이블 로드시점/§2 stub 적용주체·시점. 본문 잔존 0건, v5.0 변경이력 | Pass |
+| 11 | EXECUTE | Phase4-1 | FIX | state_tool.py를 "QA/State Gate 행 없는" 새 구조와 정합(opal-be-agent advanced). gate-pass deprecate(레거시 retain)+STANDARD/DEPRECATED_ITEMS 분리(하위호환)+cmd_mark CLOSE 판정 항목명 비의존화(잠재버그 수정). 158 passed(149+9) | 완료 |
+| 12 | EXECUTE | Phase4-3 | FIX | 7 pilot SKILL.md STATE 행 재구성 병렬 디스패치(opsdd만 opus). opd 28→15/opdw 20→9/opp 20→9/opsdd 35→24(ACT보존)/opwt(8행제거+10행예시)/gc 8→7/oppd(R-10정합). State/QA Gate 행 제거+gate-pass→단일mark+QA디스패치→PM Gate 흡수 | 완료 |
+| 13 | EXECUTE | Phase4-3 | FIX | opsdd `--rows-from` 파싱 버그(기존결함, 원본도 실패) 수정 — STATE 표를 인라인헤더 예시 앞으로 이동+예시 헤더 텍스트격하. init 실행 OK rows=24 입증(헌법§4). 캡틴 a 승인 | 완료 |
+| 14 | EXECUTE | Phase4-2 | FIX | 공유문서 18개 QA→PM Gate 정합화(opal-task-agent advanced)+gate-pass 서술 4파일 deprecated 정합(sonnet). state-template/state/agentic/semi/additional-work/agents/coding-principles/observability/plan·qa·verify 가이드 등 | 완료 |
+| 15 | EXECUTE | Phase4 | GATE | PM 직접 종합검증 — ①8 pilot 표 내 State/QA Gate 행 0 ②gate-pass 권장표현 0(실호출 0) ③신정책 위반 0 ④전 pilot init --rows-from 파싱 OK(opd15/opds10/opdw9/opp9/opwt10/opgc7/opsdd24) ⑤158 passed 회귀없음 | Pass |
 
 ## 진행 상황 (다음 세션 재개용)
 
 - ✅ **Phase 1** — stage-transition guard 신설 (state_tool.py, scope full/prior_stage_only, 149 passed) · 커밋 `29a3a09`
 - ✅ **Phase 2** — opds STATE 행 19→10 재구성 (파일럿, 검증 완료) · 커밋 `8c4267d`
 - ✅ **Phase 3** — QA→PM Gate 통합. 6개 파일: pm-review-gate(검증원칙4종+self-check 흡수)/qa-standards(PM Gate 문서검증 전제 전환)/opal-harness-interactive(§2 QA Gate 제거+§3 자기모순 일원화+§4)/op-dev-qa·op-task-qa(검증기준 라이브러리로 역할한정)/opal-harness.md(SSOT stub 4곳 정합화). PM 직접 재검증 Pass · **미커밋**
-- ⬜ **Phase 4** — STATE 행 재구성(opds=레퍼런스) **+ Phase 3 확산 잔존**(아래 phase4_notes). 나머지 7 pilot SKILL.md(opd 28/opdw 20/opp 20/opwt/oppd/opsdd 35/gc) + 주변 문서 정합화
-- ⬜ **Phase 5** — L2 경량 트랙 진입 기준 정의
+- ✅ **Phase 4** — 31파일(코드2+문서29). 4-1 state_tool.py 정합(gate-pass deprecate, 158 passed) / 4-3 7 pilot STATE 행 재구성(+opsdd 파싱버그 수정) / 4-2 공유문서 18 + gate-pass 서술 4 정합. PM 종합검증 Pass · **미커밋**
+- ⬜ **Phase 5** — L2 경량 트랙 진입 기준 정의 (작은 작업 풀파이프라인 우회)
 
 ### Phase 4 확산 잔존 (Phase 3 워커 phase4_notes — 의도적 이연)
 

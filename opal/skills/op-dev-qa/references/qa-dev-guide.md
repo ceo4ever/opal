@@ -1,7 +1,6 @@
-# Dev QA 가이드 (ANALYSIS / PLAN 검증)
+# Dev QA 가이드 (ANALYSIS / PLAN 검증 기준)
 
-> **실행 컨텍스트**: 이 가이드는 QA 전용 워커 에이전트의 컨텍스트에서 실행된다.
-> 산출물 작성자와 분리된 독립 컨텍스트에서 실행되어 객관적 검토를 보장한다.
+> **실행 컨텍스트**: 이 가이드는 **PM Gate 문서검증 시 PM(오케스트레이터)이 참조하는 검증 기준 라이브러리**다. 문서 QA(요구사항→설계 검토)는 별도 QA Gate 단계나 QA 에이전트 디스패치 없이 PM Gate가 직접 흡수하며, PM이 본 가이드의 검증 기준을 적용한다. (동작 검증(TEST / TEST-SCENARIO)은 본 가이드와 독립·불변.)
 
 > **[MUST]** 산출물 작성·검증 시 `opal/core/references/harness/citation-rules.md`를 Read하여 규칙(근거 제시 원칙 / 트랙별 매트릭스 / [MUST] 토큰 / 영역 간 용어 일관성 / decision_required 계약)을 준수한다.
 
@@ -9,7 +8,7 @@
 
 ## 목적
 
-오케스트레이터 파이프라인의 각 단계 산출물을 **사용자보다 먼저 1차 검토**하여:
+PM이 PM Gate에서 각 단계 산출물을 **사용자보다 먼저 문서검증**하여:
 1. 사용자가 전체 문서를 읽지 않아도 되는 수준의 **핵심 요약** 제공
 2. 품질 체크리스트 기반 **검증 결과** 제공
 3. 이전 단계 산출물과의 **정합성 검증**
@@ -17,20 +16,20 @@
 
 ---
 
-## 호출 시점
+## 적용 시점 (PM Gate 문서검증)
 
 ```
 Full Task:
-  [ANALYSIS.md 완료] → QA 호출 → QA-ANALYSIS.md → 사용자 검토
-  [PLAN.md 완료] → QA 호출 → QA-PLAN.md → 사용자 검토
+  [ANALYSIS.md 완료] → PM Gate 문서검증(본 기준 적용) → 사용자 검토
+  [PLAN.md 완료] → PM Gate 문서검증(본 기준 적용) → 사용자 검토
 
 Short Task:
-  [PLAN.md 완료] → QA 호출 → QA-PLAN.md → 사용자 검토
+  [PLAN.md 완료] → PM Gate 문서검증(본 기준 적용) → 사용자 검토
 
-호출되지 않는 단계:
+문서검증을 적용하지 않는 단계:
   TASK (Full/Short 모두) — 사용자 직접 검토
   TODO (Full Task) — 사용자 직접 검토
-  EXECUTE (Full/Short 모두) — op-dev-test-agent가 코드 동적 검증으로 대체
+  EXECUTE (Full/Short 모두) — opal-test-agent가 코드 동작 검증으로 대체 (독립·불변)
 ```
 
 ---
@@ -158,3 +157,4 @@ Short Task의 통합 PLAN은 코드 분석 + 구현 계획 + 실행 체크리스
 | v1.0 | - | 초기 작성 — ANALYSIS R-1~R-6, PLAN(Full) P-1~P-6, PLAN(Short) SP-1~SP-5 검증 기준 |
 | v1.1 | 2026-04-13 13:48 | PLAN (Full) 검증 기준 테이블에 P-7 기능-QA 커버리지 행 추가 — Multi-Feature 모드에서 모든 F-NNN이 §5.1에서 최소 1개 QA 항목 커버, Flat 모드 자동 Pass (114) |
 | v1.2 | 2026-04-24 | citation-rules 트리거 1줄 주입 — SSOT + Trigger 패턴 (130) |
+| v1.3 | 2026-06-07 | QA→PM Gate 통합 정합화 — 실행 컨텍스트를 "QA 전용 워커 에이전트" → "PM Gate 문서검증 시 PM이 참조하는 검증 기준 라이브러리"로 재정의. "호출 시점(→ QA 호출 → QA-X.md)" → "적용 시점(PM Gate 문서검증, 본 기준 적용)"으로 재구성. EXECUTE 동작 검증은 opal-test-agent의 독립·불변 영역으로 명시. 검증 기준 콘텐츠 보존 (014 Phase 4-2) |

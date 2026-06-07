@@ -114,7 +114,8 @@
   --set <in_progress|done|blocked|additional_work|additional_work_done> \
   [--note <text>]
 
-# Gate 4행 일괄 ✅ 처리 (QA Gate→State Gate→PM Gate→State Gate 패턴 한정)
+# [deprecated] gate-pass — 레거시 전용. 신규 태스크는 PM Gate 통과 후 단일 mark 사용
+# (State Gate/QA Gate 행이 제거되어 4행 패턴 성립 안 함 — Phase4 완료)
 ~/.opal/tools/state-tool/run.sh gate-pass <task-path> --start <N> [--note <text>]
 ```
 
@@ -160,7 +161,7 @@
 ~/.opal/tools/state-tool/run.sh mark tasks/134-.../ \
   --row 12 --done --as-worker --worker-stage EXECUTE --step 3/8
 
-# Gate 4행 일괄 처리 (PLAN Gate 행이 6번부터 시작할 때)
+# [deprecated] gate-pass — 레거시 전용 (PLAN Gate 행이 6번부터 시작하는 예시, 신규 사용 금지)
 ~/.opal/tools/state-tool/run.sh gate-pass tasks/134-.../ --start 6
 
 # PM Gate 전 정합성 검증
@@ -422,3 +423,4 @@ bash ~/.opal/tools/cmux-tool/examples/e2e-branch-auto.sh https://localhost:3000
 | v1.3 | 2026-05-01 | state-tool 섹션 신규 추가 — 파이프라인 현황판 JSON SSOT 관리 CLI 9개 서브 명령 등록 (134) |
 | v1.4 | 2026-05-09 18:30 | 개인 식별자 누설 정정 — note 예시 "캡틴 확인" → "{owner_name} 확인" placeholder 치환 (139) |
 | v1.5 | 2026-05-22 10:00 KST | cmux-tool 섹션 신규 추가 — 12+1종 서브명령 + 트리거 조건 5행 매트릭스 + 에러 코드 9종 + fallback 4종 (007) |
+| v1.6 | 2026-06-07 | state-tool gate-pass deprecated 표기 — 사용법 블록·예시 2곳에 [deprecated] 레거시 전용 안내 추가. 신규는 PM Gate 통과 후 단일 mark 사용. Phase4 완료 반영 (014 Phase 4) |

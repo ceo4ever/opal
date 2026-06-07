@@ -2233,6 +2233,181 @@ class TestStageTransitionGuard(BaseTestCase):
 
 
 # ═════════════════════════════════════════════════════════════════════════════
+# K. 014 Phase 4 — 새 표준 행 구조 (QA Gate/State Gate 행 없음) 정합
+# ═════════════════════════════════════════════════════════════════════════════
+
+# opds 새 10행 표준 구조 (Phase 2에서 확정 — QA Gate/State Gate 행 없음).
+# Gate는 "PM Gate"와 "사용자 확인"만 남고, State Gate는 stage-transition guard로 이전,
+# QA Gate는 PM Gate로 통합, CLOSE 마지막 행은 "DONE.md 생성".
+NEW_OPDS_ROWS_SPEC = json.dumps([
+    {"stage": "TASK",    "item": "작업"},
+    {"stage": "TASK",    "item": "사용자 확인"},
+    {"stage": "PLAN",    "item": "작업"},
+    {"stage": "PLAN",    "item": "PM Gate"},
+    {"stage": "PLAN",    "item": "사용자 확인"},
+    {"stage": "EXECUTE", "item": "작업"},
+    {"stage": "TEST",    "item": "작업"},
+    {"stage": "TEST",    "item": "PM Gate"},
+    {"stage": "TEST",    "item": "사용자 확인"},
+    {"stage": "CLOSE",   "item": "DONE.md 생성"},
+])
+
+
+class TestNewStandardRowStructure(BaseTestCase):
+    """014 Phase 4: 새 표준 행 구조(QA Gate/State Gate 행 없음)에서 도구가 정상 동작하는지 검증.
+    - guard가 새 구조에서 단계 건너뛰기를 정상 차단 (기능 약화 금지)
+    - CLOSE 마지막 행이 "DONE.md 생성"이어도 current_status=done 정상 전환
+    - QA Gate/State Gate 행이 없어도 전체 플로우가 끝까지 완주
+    """
+
+    def setUp(self):
+        super().setUp()
+        self._init(rows_spec=NEW_OPDS_ROWS_SPEC)
+
+    def test_new_structure_has_no_gate_rows(self):
+        """새 구조: 어떤 행에도 QA Gate / State Gate 항목이 없다 (Phase 2 확정)"""
+        state = self._state()
+        items = [r["item"] for r in state["rows"]]
+        self.assertNotIn("QA Gate", items)
+        self.assertNotIn("State Gate", items)
+        self.assertEqual(len(state["rows"]), 10)
+
+    def test_new_structure_full_sequential_flow_completes(self):
+        """새 10행 구조 전체 순차 완주: 모든 행 순서대로 mark → current_status=done.
+        guard가 정상 통과하고 CLOSE "DONE.md 생성" 행에서 완료 전환 (014 Phase 4)"""
+        # row1 TASK 작업
+        self.assertEqual(self._mark(1), 0)
+        # row2 TASK 사용자 확인 (owner=user — 사용자 발화)
+        self.assertEqual(self._mark(2, owner="user"), 0)
+        # row3 PLAN 작업
+        self.assertEqual(self._mark(3), 0)
+        # row4 PLAN PM Gate
+        self.assertEqual(self._mark(4), 0)
+        # row5 PLAN 사용자 확인 (CLOSE gate를 위해 owner=user)
+        self.assertEqual(self._mark(5, owner="user"), 0)
+        # row6 EXECUTE 작업
+        self.assertEqual(self._mark(6), 0)
+        # row7 TEST 작업
+        self.assertEqual(self._mark(7), 0)
+        # row8 TEST PM Gate
+        self.assertEqual(self._mark(8), 0)
+        # row9 TEST 사용자 확인 (CLOSE 직전 사용자 확인 — owner=user)
+        self.assertEqual(self._mark(9, owner="user"), 0)
+        # row10 CLOSE DONE.md 생성 (CLOSE 마지막 행)
+        self.assertEqual(self._mark(10), 0)
+
+        state = self._state()
+        self.assertEqual(state["current_status"], "done")
+        md = self._md()
+        self.assertIn("- 상태: 완료", md)
+
+    def test_new_structure_close_done_row_triggers_done_status(self):
+        """새 구조: CLOSE 마지막 행 항목이 'DONE.md 생성'이어도 current_status=done 전환.
+        (레거시는 'State Gate'였음 — 항목명 비의존 판정 검증) (014 Phase 4)"""
+        # 최소 구조: CLOSE 직전 사용자 확인 → CLOSE DONE.md 생성
+        rows = json.dumps([
+            {"stage": "TEST",  "item": "사용자 확인"},
+            {"stage": "CLOSE", "item": "DONE.md 생성"},
+        ])
+        self._init(rows_spec=rows, force=True, note="새 구조 재초기화")
+        self._mark(1, owner="user")  # 사용자 확인 → done/user (close gate 충족)
+        code = self._mark(2)         # CLOSE DONE.md 생성 → 마지막 행
+        self.assertEqual(code, 0)
+        state = self._state()
+        self.assertEqual(state["current_status"], "done")
+
+    def test_new_structure_guard_blocks_skip(self):
+        """새 구조에서도 guard가 단계 건너뛰기를 차단 (기능 약화 금지) (014 Phase 4 / §M-A).
+        row1 미완 상태에서 row3(PLAN 작업) mark → stage_transition_violation"""
+        import io
+        from contextlib import redirect_stdout
+        out = io.StringIO()
+        with redirect_stdout(out):
+            with _mock_now():
+                args = make_args(task_path=str(self.task_path), row=3, done=True)
+                try:
+                    ST.cmd_mark(args)
+                except SystemExit:
+                    pass
+        result = json.loads(out.getvalue())
+        self.assertEqual(result.get("error"), "stage_transition_violation")
+        self.assertIn(1, result.get("incomplete_rows", []))
+
+    def test_new_structure_close_gate_still_enforced(self):
+        """새 구조: CLOSE 진입 게이트가 여전히 직전 사용자 확인 행 owner=user를 요구.
+        TEST 사용자 확인(row9)이 owner=PM이면 CLOSE 첫 행에서 close_gate_violation (014 Phase 4)"""
+        for r in range(1, 9):
+            # row2 사용자 확인은 user, 나머지는 기본 mark
+            if r == 2:
+                self._mark(r, owner="user")
+            else:
+                self._mark(r)
+        # row9 TEST 사용자 확인을 owner=PM(미충족)으로 done 처리
+        self._mark(9, owner="PM")
+        # row10 CLOSE 첫 행 mark → close_gate_violation
+        import io
+        from contextlib import redirect_stdout
+        out = io.StringIO()
+        with redirect_stdout(out):
+            with _mock_now():
+                args = make_args(task_path=str(self.task_path), row=10, done=True)
+                try:
+                    ST.cmd_mark(args)
+                except SystemExit:
+                    pass
+        result = json.loads(out.getvalue())
+        self.assertEqual(result.get("error"), "close_gate_violation")
+
+
+class TestGatePassDeprecation(BaseTestCase):
+    """014 Phase 4: gate-pass deprecate — 레거시 state.json 하위호환 유지 + deprecated 플래그."""
+
+    def test_gate_pass_legacy_still_works_with_deprecated_flag(self):
+        """레거시 4행 Gate 구조 state.json에서 gate-pass는 여전히 동작하되 deprecated=True 반환.
+        (in-flight 레거시 태스크 하위호환 — 즉시 제거 금지) (014 Phase 4)"""
+        self._init(rows_spec=GATE_ROWS_SPEC)  # 레거시 QA/State/PM/State Gate 4행 포함
+        with _mock_now():
+            args = make_args(task_path=str(self.task_path), start=2)
+            exit_code, result = self._call_cmd(ST.cmd_gate_pass, args)
+        self.assertEqual(exit_code, 0, f"legacy gate-pass should still work: {result}")
+        self.assertTrue(result.get("deprecated"))
+        self.assertIn("deprecation_note", result)
+        # 4행 모두 done
+        state = self._state()
+        for row in state["rows"][1:5]:
+            self.assertEqual(row["status"], "done")
+
+    def test_gate_pass_on_new_structure_fails_pattern_mismatch(self):
+        """새 구조(QA Gate/State Gate 행 없음)에서 gate-pass는 패턴 불일치로 거부.
+        → 신규 태스크는 gate-pass를 쓸 수 없음을 명확히 (014 Phase 4)"""
+        self._init(rows_spec=NEW_OPDS_ROWS_SPEC, force=True, note="새 구조")
+        with _mock_now():
+            # row4 = PLAN PM Gate (QA Gate 아님) — 패턴 시작 불일치
+            args = make_args(task_path=str(self.task_path), start=4)
+            exit_code, result = self._call_cmd(ST.cmd_gate_pass, args)
+        self.assertEqual(exit_code, 1)
+        self.assertEqual(result.get("error"), "gate_pattern_mismatch")
+
+
+class TestStandardItemsConstants(unittest.TestCase):
+    """014 Phase 4: STANDARD_ITEMS / DEPRECATED_ITEMS 상수 정합 검증."""
+
+    def test_standard_items_no_gate_rows(self):
+        """STANDARD_ITEMS에서 QA Gate/State Gate 제거됨 (새 표준) (014 Phase 4)"""
+        self.assertNotIn("QA Gate", ST.STANDARD_ITEMS)
+        self.assertNotIn("State Gate", ST.STANDARD_ITEMS)
+        self.assertIn("작업", ST.STANDARD_ITEMS)
+        self.assertIn("PM Gate", ST.STANDARD_ITEMS)
+        self.assertIn("사용자 확인", ST.STANDARD_ITEMS)
+        self.assertIn("DONE.md 생성", ST.STANDARD_ITEMS)
+
+    def test_deprecated_items_retained_for_legacy(self):
+        """DEPRECATED_ITEMS에 QA Gate/State Gate 보존 (레거시 하위호환) (014 Phase 4)"""
+        self.assertIn("QA Gate", ST.DEPRECATED_ITEMS)
+        self.assertIn("State Gate", ST.DEPRECATED_ITEMS)
+
+
+# ═════════════════════════════════════════════════════════════════════════════
 # 진입점
 # ═════════════════════════════════════════════════════════════════════════════
 

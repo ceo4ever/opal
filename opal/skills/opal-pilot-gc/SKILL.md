@@ -335,16 +335,16 @@ CLOSE로 진행할까요? 수정이 필요하면 CLOSE 단계에서 //opds 체�
 ~/.opal/skills/opal-pilot-gc/references/done-template.md
 ```
 
-### 4.2 State Gate
+### 4.2 CLOSE 행 갱신
 
-state-tool 호출로 CLOSE 단계 행 갱신:
+DONE.md 생성 완료 후 state-tool로 행 갱신:
 
 ```
-~/.opal/tools/state-tool/run.sh mark <task-path> --row 7 --done  # DONE.md 생성
-~/.opal/tools/state-tool/run.sh mark <task-path> --row 8 --done  # State Gate (CLOSE 완료)
+~/.opal/tools/state-tool/run.sh mark <task-path> --row 7 --done  # DONE.md 생성 (CLOSE 완료)
 ```
 
-> **CLOSE 게이트 제약 (§2.16 G-13)**: CLOSE 단계 최초 진입 행(#7)은 `--auto-pass` 적용 불가 (`close_gate_violation`). 반드시 위 명시 호출로 처리한다.
+> **[MUST] 행 갱신**: mark하는 것 자체가 state 기록이며 별도의 State Gate 행은 존재하지 않는다. state-tool stage-transition guard가 이전 단계 필수 행 완료 여부를 자동 검증한다.
+> **CLOSE 진입 게이트 (§2.16 G-13)**: CLOSE 단계 첫 행(#7)은 `--auto-pass` 적용 불가 (`close_gate_violation`). 반드시 위 명시 호출로 처리한다.
 
 ### 4.3 수정이 필요한 경우 — opds 체인
 
@@ -423,7 +423,6 @@ opgc 실행 결과 {N}건 이슈 감지
 | 5 | REPORT | GC-CONVENTION-{ts}[-{element}].md 생성 | ⬜ | - |
 | 6 | REPORT | 실행 요약 테이블 갱신 | ⬜ | - |
 | 7 | CLOSE | DONE.md 생성 | ⬜ | - |
-| 8 | CLOSE | State Gate | ⬜ | - |
 ```
 
 **실행 요약 테이블 템플릿** (REPORT 단계에서 STATE.md에 추가):
@@ -452,7 +451,7 @@ Agentic 모드 특수 규칙:
   ```
   ~/.opal/tools/state-tool/run.sh mark <task-path> --row N --done --auto-pass --note '<근거>'
   ```
-- **CLOSE 단계 최초 진입 행은 `--auto-pass` 금지** (`close_gate_violation` — §2.16 G-13); 반드시 명시 호출
+- **CLOSE 단계 첫 행(#7)은 `--auto-pass` 금지** (`close_gate_violation` — §2.16 G-13); 반드시 명시 호출
 - init 시 `--mode agentic` 플래그 추가:
   ```
   ~/.opal/tools/state-tool/run.sh init <task-path> --skill opgc --mode agentic --rows-from opal/skills/opal-pilot-gc/SKILL.md
@@ -509,3 +508,4 @@ fingerprint = sha1(fingerprint_input).hex()[:16]
 | v1.2 | 2026-04-24 | citation-rules 트리거 1줄 주입 — SSOT + Trigger 패턴 (130) |
 | v1.3 | 2026-05-01 | state-tool 도입 — SCAN 1.4 init 호출 명시 + CLOSE State Gate를 state-tool mark 명시 호출로 교체 + `--rows-from` SSOT 지시 + agentic `--auto-pass` + CLOSE 진입 게이트 거부 정책 추가 (134) |
 | v1.4 | 2026-05-09 18:30 | 개인 식별자 "캡틴" → "소유자" 치환 — 배포 파일 정체성 누설 정정 (139) |
+| v1.5 | 2026-06-07 | STATE 행 8→7 재구성 — State Gate 행 제거(guard로 이전), §4.2 단일 mark 패턴으로 정합화 (014 Phase 4) |

@@ -34,7 +34,7 @@
 ## 4. PLAN-equivalent까지의 동작 (interactive 준용)
 
 - 단계 게이트마다 사용자 승인 필수
-- QA Gate / PM Gate는 interactive 동일 (`opal-harness-interactive.md` §2~§3 참조)
+- PM Gate는 interactive 동일 (`opal-harness-interactive.md` §3 참조) — 문서 QA(요구사항→설계 검토)는 별도 QA Gate 단계 없이 PM Gate가 흡수
 - AGENTIC-LOG.md 미생성 (이 시점까지)
 
 > **참조**: semi-agentic 모드의 PLAN-equivalent 종료 시점까지의 동작은 `opal-harness-interactive.md`를 준용한다.
@@ -114,3 +114,4 @@ CLOSE 진입 절차:
 | v1.0 | 2026-05-09 11:22 | 초기 작성 — semi-agentic 신규 모드 SSOT (140) |
 | v1.1 | 2026-05-09 18:30 | 개인 식별자 누설 정정 — "캡틴" → "소유자" / note 예시 "{owner_name} 확인" placeholder 치환 (139) |
 | v1.2 | 2026-05-15 16:40 | §3 opd 행 모드 경계 갱신 — PLAN 사용자 확인 행 → TEST-SCENARIO 사용자 확인 행. §8 차이 표에 TEST-SCENARIO 완료 행 추가(opd 전용) + 비고 컬럼 신설 (004) |
+| v1.3 | 2026-06-07 | §4 QA→PM Gate 통합 정합화 — "QA Gate / PM Gate" → "PM Gate"(문서 QA 흡수, 별도 QA Gate 단계 없음, interactive §3 참조). 동작 검증(TEST/verify) 영역 불변 (014 Phase 4-2) |

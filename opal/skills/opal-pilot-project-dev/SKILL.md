@@ -115,14 +115,11 @@ state-tool을 호출하여 초기화한다:
 ~/.opal/tools/state-tool/run.sh init <task-path> --skill oppd --mode <interactive|semi-agentic|agentic> --rows-from opal/skills/opal-pilot-project-dev/SKILL.md
 ```
 
-> **[R-10 비표준 행 구성]** oppd는 Phase 기반(1-PLAN/2-WBS/3-EXECUTE) 비표준 행 구조를 사용한다. `gate-pass`(4-row 일괄) 사용 불가 — `mark` 4회 개별 호출 필수. `gate-pass` 호출 시 `gate_pattern_mismatch` 에러가 반환된다.
+> **[R-10 비표준 행 구성]** oppd는 Phase 기반(1-PLAN/2-WBS/3-EXECUTE) 비표준 행 구조를 사용한다. `gate-pass` 명령은 deprecated — 사용 불가. State Gate/QA Gate 행은 존재하지 않으며(state-tool stage-transition guard로 이전), PM Gate 단일 mark만 사용한다.
 >
-> 각 Gate 전환 시:
+> 각 Gate 전환 시 PM Gate 행만 mark한다:
 > ```
-> ~/.opal/tools/state-tool/run.sh mark <task-path> --row <QA_Gate_N> --done
-> ~/.opal/tools/state-tool/run.sh mark <task-path> --row <State_Gate_N> --done
 > ~/.opal/tools/state-tool/run.sh mark <task-path> --row <PM_Gate_N> --done
-> ~/.opal/tools/state-tool/run.sh mark <task-path> --row <State_Gate_N+1> --done
 > ```
 
 아래 "STATE.md 관리" 섹션의 템플릿으로 STATE.md 본문을 작성한다.
@@ -734,3 +731,4 @@ opal-harness-agentic.md "에스컬레이션 조건" 공통 기준에 추가:
 | v4.2 | 2026-05-01 | state-tool 도입 — STATE.md 직접 편집 금지 + `state-tool` 호출 표현 교체 (P-1~P-8 패턴 적용). 태스크 생성 init 호출 + `--rows-from` SSOT. R-10 비표준 행 구성 `gate-pass` 금지 + mark 4회 개별 호출 필수 블록 추가. Phase 1~3 각 확정/완료 시 mark 호출 명시 (134) |
 | v4.3 | 2026-05-09 11:22 | 3-way 모드 체계 도입 — semi-agentic 기본 채택 + Agentic/Semi-Agentic 모드 절 확장 + Phase 2 WBS 모드 경계 명시(D-DEC-1) + Harness 절 3-way 분기 + state init --mode 추가 (140) |
 | v4.4 | 2026-05-09 18:30 | 개인 식별자 "캡틴" → "소유자"/"사용자" 치환 — 배포 파일 정체성 누설 정정 (139) |
+| v4.5 | 2026-06-07 | R-10 gate-pass deprecated 정합 — State Gate/QA Gate 행 미존재 명시 + PM Gate 단일 mark로 간소화 (014 Phase 4) |

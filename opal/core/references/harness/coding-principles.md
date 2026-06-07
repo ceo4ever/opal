@@ -8,7 +8,7 @@ module: coding-principles
 # Coding Principles — 헌법의 OPAL 단계별 적용
 
 > **행동 원칙 자체는 `opal/core/PRINCIPLES.md`(헌법)가 SSOT다.**
-> 이 문서는 헌법을 OPAL 4단계(TASK / PLAN / TEST-SCENARIO / EXECUTE)와 QA Gate에
+> 이 문서는 헌법을 OPAL 4단계(TASK / PLAN / TEST-SCENARIO / EXECUTE)와 PM Gate 사후 검증에
 > 적용하는 **단계별 체크리스트와 OPAL 고유 세부**만 정의한다. 원칙을 재서술하지 않는다.
 
 ---
@@ -42,7 +42,7 @@ module: coding-principles
 | 높음 | 낮음 | 시나리오 작성 |
 | 낮음 | 높음 | 시나리오 작성 + 정당화 명시 |
 | 낮음 | 낮음 | 시나리오 제외 또는 Known Issue 기록 |
-| 불가능 | — | 작성 금지 (위반 시 QA Fail) |
+| 불가능 | — | 작성 금지 (위반 시 PM Gate 문서검증 Fail) |
 
 체크:
 - [ ] 불가능한 케이스를 다루는 시나리오가 없는가
@@ -65,7 +65,9 @@ module: coding-principles
 
 ---
 
-## §5 QA Gate — 사후 검증
+## §5 PM Gate — 사후 검증
+
+> 문서 QA(요구사항→설계 검토)는 별도 QA Gate 단계 없이 PM Gate가 직접 흡수한다. 아래 체크리스트는 PM이 PM Gate 사후 검증에서 수행한다. 단, **동작 증거 항목(아래 마지막 3개)은 동작 검증(TEST / TEST-SCENARIO / state-tool verify, 독립·불변 영역)의 실행 결과로 입증되며 PM이 그 증거를 확인한다** — "글자 존재"로 대체 불가.
 
 - [ ] 불필요한 추상화 레이어가 추가되지 않았는가 (헌법 §2)
 - [ ] 현재 요구사항 범위를 초과한 구현이 없는가 (헌법 §2)
@@ -79,7 +81,7 @@ module: coding-principles
 
 ## §6 적용 매트릭스 — 헌법 축 ↔ OPAL 단계
 
-| 헌법 축 | TASK | PLAN | TEST-SCENARIO | EXECUTE | QA Gate |
+| 헌법 축 | TASK | PLAN | TEST-SCENARIO | EXECUTE | PM Gate |
 |------|:----:|:----:|:-------------:|:-------:|:-------:|
 | §1 Think Before Acting | ✅ 주 | ✅ 주 | — | — | — |
 | §2 Simplicity First | — | ✅ 설계 | ✅ 희박 케이스 | ✅ 구현 | ✅ 검증 |
@@ -96,3 +98,4 @@ module: coding-principles
 | v1.1 | 2026-05-12 14:49 | 영문 본문 + 외부 출처 표현 제거로 재작성 (001) |
 | v1.2 | 2026-05-12 14:59 | 한국어 본문으로 재작성 — OPAL 다른 SSOT와 일관성 회복 (001) |
 | v1.3 | 2026-06-07 | 헌법(PRINCIPLES.md) 신설에 따라 원칙 서술 제거 → 헌법 참조로 전환. 단계별 체크리스트만 유지(다이어트). §3·§4·§5에 헌법 §4 "목업 금지·동작 증거" 체크 추가 (012) |
+| v1.4 | 2026-06-07 | QA→PM Gate 통합 정합화 — §5 "QA Gate — 사후 검증" → "PM Gate — 사후 검증"(문서 QA를 PM Gate 흡수), §6 매트릭스 헤더 QA Gate → PM Gate, §3 "위반 시 QA Fail" → "PM Gate 문서검증 Fail", 본문 도입부 QA Gate → PM Gate 사후 검증. 동작 증거 항목은 동작 검증(TEST/verify, 불변)의 실행 결과로 입증됨을 §5에 명시 — 동작 검증 영역 불변 (014 Phase 4-2) |

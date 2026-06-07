@@ -44,12 +44,12 @@ PM이 사용자를 대행하는 만큼, interactive 모드보다 **책임과 의
 
 ## 4. PM 자율 검토 (사용자 게이트 대행)
 
-각 단계 완료 시 PM이 QA Gate + PM Gate를 **강화 검토**로 수행한다.
+각 단계 완료 시 PM이 PM Gate를 **강화 검토**로 수행한다. 문서 QA(요구사항→설계 검토)는 별도 QA Gate 단계를 두지 않고 PM Gate가 직접 흡수한다 (검증 기준 라이브러리: `op-dev-qa` / `op-task-qa` SKILL.md를 PM이 참조).
 
 **강화 검토 기준**:
 1. TASK.md 요구사항 100% 충족
-2. QA 결과 All Pass
-3. **Artifact Gate**: QA 산출물 파일이 실제로 존재하고 내용이 있는지 확인한다 (interactive 하네스 §3 PM Gate 자가 진단 참조). 파일 미존재 또는 빈 파일 시: PM이 QA 에이전트를 재소환하여 산출물을 생성한 후 재검증. agentic 모드에서는 자율 통과 시도 없이 반드시 산출물 파일을 Read하여 확인한다.
+2. 문서 QA 검증 결과 All Pass (요구사항 누락·오해·완전성·정합성·명확성·실행가능성 — PM이 직접 검토)
+3. **Artifact Gate**: 산출물 파일이 실제로 존재하고 내용이 있는지 확인한다 (interactive 하네스 §3 PM Gate 자가 진단 참조). 파일 미존재 또는 빈 파일 시: PM이 워커를 재지시하여 산출물을 생성한 후 재검증. agentic 모드에서는 자율 통과 시도 없이 반드시 산출물 파일을 Read하여 확인한다.
 4. PM 검토 기준 Pass
 5. 이전 단계 산출물과 일관성 유지
 6. 산출물 내용을 직접 Read하여 실질 검증
@@ -237,3 +237,4 @@ PM이 수행한 모든 활동을 시계열로 기록하여, 사용자가 사후�
 | v1.5 | 2026-05-01 | §4 Pass 시 state-tool `mark --done` / `--auto-pass` 호출 표기 추가 + CLOSE 진입 게이트 4단계 절차 신설 (agentic_close_gate_requires_user 거부 / --owner user 필수 / §2.16 G-13 R-12). §3 판단 기록 의무에 auto-pass note 자동 기재 설명 추가. §7 CLOSE 진입 게이트 행 보강 (134) |
 | v1.6 | 2026-05-09 11:22 | §1 모드 정의에 semi-agentic 행 추가 / §7 CLOSE 게이트 행 semi-agentic 공통 적용 명시 / §8 AGENTIC-LOG 생성 시점 분기 (140) |
 | v1.7 | 2026-05-09 18:30 | 개인 식별자 누설 정정 — "캡틴" → "소유자" / note 예시 "{owner_name} 확인" placeholder 치환 (139) |
+| v1.8 | 2026-06-07 | §4 QA→PM Gate 통합 정합화 — "QA Gate + PM Gate" → "PM Gate"(문서 QA 흡수), 강화 검토 기준 2번을 PM 직접 문서 QA 검증으로, Artifact Gate의 "QA 에이전트 재소환" → "워커 재지시"로 수정(QA 에이전트 디스패치 없음, op-dev-qa/op-task-qa는 검증 기준 라이브러리). 동작 검증(TEST/verify) 영역 불변 (014 Phase 4-2) |

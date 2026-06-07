@@ -133,7 +133,8 @@ Lazy 로드 모듈. 각 §의 stub이 로드 시점과 파일 경로를 지시�
 > - 단계 시작(⬜→🔄): `~/.opal/tools/state-tool/run.sh advance <task-path> --row <N>`
 > - 단계 완료(→✅): `~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done`
 > - 워커 완료(EXECUTE Step): `~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done --as-worker --worker-stage <stage>`
-> - Gate 직후 일괄 처리: `~/.opal/tools/state-tool/run.sh gate-pass <task-path> --start <N>`
+> - PM Gate 통과 후 단일 mark: `~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done`
+> - [deprecated] gate-pass — 레거시 전용. 신규는 위 단일 mark 사용 (Phase4 완료, State Gate/QA Gate 행 제거)
 > - 추가작업 행 삽입: `~/.opal/tools/state-tool/run.sh add-row <task-path> --after <N> --stage <단계> --item <항목>`
 >
 > 위반 시 도구가 거부하며 에러 코드를 반환한다. 주요 에러:
@@ -283,3 +284,4 @@ OPAL 도구는 모두 `~/.opal/tools/{tool-name}/run.sh` 래퍼를 통해 호출
 | v4.8 | 2026-05-10 19:36 | §2 하네스 모듈 테이블에 reporting-template 행 추가 — Eager 로드 (143) |
 | v4.9 | 2026-05-12 11:16 | §2 하네스 모듈 테이블에 coding-principles 행 추가 + §10 Coding Principles stub 신설 (001) |
 | v5.0 | 2026-06-07 | §1 Guards 허용 항목 "QA 에이전트 호출" → "PM Gate 문서검증" 치환. §2 하네스 모듈 테이블 QA 표준 로드 시점 "QA Gate 수행 시" → "PM Gate 문서검증 시" 치환. §2 QA 산출물 표준 stub 3곳 동일 정합화 — 별도 QA Gate/QA 에이전트 제거 (014 Phase 3 보완) |
+| v5.1 | 2026-06-07 | §3 state-tool [MUST] 블록 — "Gate 직후 일괄 처리 gate-pass" 줄을 "PM Gate 통과 후 단일 mark"로 교체 + [deprecated] gate-pass 레거시 안내 추가. Phase4 완료 반영 (014 Phase 4) |

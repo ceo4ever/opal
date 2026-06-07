@@ -98,17 +98,16 @@ PM Gate는 별도 QA Gate 단계를 두지 않고, 문서 QA(요구사항→설�
    - 누적 발생 시 별도 태스크로 우회 제한 정책 재설계 필요
    - 근거: PLAN §2.17 트리거 #1/#3/#8 / R-11
 
-### Gate 통과 일괄 처리 (gate-pass)
+### PM Gate 통과 후 단일 mark
 
-표준 단계 행 구성(QA Gate → State Gate → PM Gate → State Gate 4행 연속)에서 PM이 `gate-pass` 1회 호출로 4행 일괄 ✅ 처리한다.
+PM Gate 통과 후 해당 행을 state-tool로 단일 mark한다. State Gate 행·QA Gate 행은 Phase4 완료로 제거되어 4행 패턴이 성립하지 않는다.
 
 ```
-~/.opal/tools/state-tool/run.sh gate-pass tasks/{NNN}-.../ --start <QA Gate 행 번호>
+~/.opal/tools/state-tool/run.sh mark tasks/{NNN}-.../ --row <PM Gate 행 번호> --done
 ```
 
-- 적용 조건: 4행이 정확히 `["QA Gate", "State Gate", "PM Gate", "State Gate"]` 패턴이고 동일 stage인 경우
-- 비표준 행 구성(opsdd/oppd 등): `gate_pattern_mismatch` / `gate_stage_mixed` 거부 → `mark` 4회 개별 호출 사용
-- 근거: PLAN §2.13 G-10 / R-10
+> [deprecated] gate-pass — 레거시 전용. State Gate/QA Gate 행이 제거되어 4행 패턴이 성립하지 않음. 신규 태스크는 위 단일 mark 사용. (Phase4 완료)
+- 근거: PLAN §2.13 G-10 / R-10 (gate-pass deprecated, Phase4 완료)
 
 ### 판정
 
@@ -137,4 +136,5 @@ PM Gate는 별도 QA Gate 단계를 두지 않고, 문서 QA(요구사항→설�
 | v1.1 | 2026-05-01 | 검토 절차 12번 `state validate` 추가 + 자가 진단 섹션(force 사용 0건 확인 R-11 / CLOSE 게이트 close_gate_violation §2.16 G-13) + gate-pass 일괄 처리 절차 추가 §2.13 G-10 (134) |
 | v1.2 | 2026-05-08 | 검토 절차 13번 `컨벤션 자동 진단` 신설 — 트리거/영역 분할/호출/입력 명세/판정/스킵 3종/하위 호환 7개 소절 (136) |
 | v1.3 | 2026-05-09 18:30 | 개인 식별자 누설 정정 — "캡틴 에스컬레이션" / "캡틴에 보고" → "소유자 에스컬레이션" / "소유자에 보고" 치환 (139) |
+| v1.4 | 2026-06-07 | gate-pass deprecated 정합 — "Gate 통과 일괄 처리(gate-pass)" 절을 "PM Gate 통과 후 단일 mark"로 교체. 4행 패턴 권장 제거, [deprecated] gate-pass 레거시 안내 추가. Phase4 완료 반영 (014 Phase 4) |
 | v1.4 | 2026-06-07 | QA 문서검증을 PM Gate로 통합 — 공통 검증 원칙 4종 + 요구사항 누락·오해 검토 + self-check 흡수 (014) |

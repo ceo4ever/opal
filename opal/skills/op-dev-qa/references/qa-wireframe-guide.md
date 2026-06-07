@@ -1,7 +1,6 @@
-# Wireframe UI QA 가이드 (WIREFRAME / EXECUTE-UI 검증)
+# Wireframe UI QA 가이드 (WIREFRAME / EXECUTE-UI 검증 기준)
 
-> **실행 컨텍스트**: 이 가이드는 QA 전용 워커 에이전트의 컨텍스트에서 실행된다.
-> WIREFRAME 단계에서는 정적 문서 리뷰를, EXECUTE-UI 단계에서는 빌드/린트 실행 및 wireframe↔코드 대조를 수행한다.
+> **실행 컨텍스트**: 이 가이드는 **PM Gate 검증 시 PM(오케스트레이터)이 참조하는 검증 기준 라이브러리**다. WIREFRAME 단계의 문서 QA(정적 문서 리뷰)는 별도 QA Gate 단계나 QA 에이전트 디스패치 없이 PM Gate가 직접 흡수한다. EXECUTE-UI 단계의 **빌드/린트 실행은 동작 검증(독립·불변 영역)** 이며, PM은 그 실행 결과와 wireframe↔코드 대조를 본 기준으로 확인한다 — "글자 존재"로 대체 불가.
 
 ---
 
@@ -14,12 +13,12 @@ Wireframe UI 파이프라인의 품질을 **두 시점**에서 검증한다:
 
 ---
 
-## 호출 시점
+## 적용 시점 (PM Gate 검증)
 
 ```
 Wireframe UI 파이프라인:
-  [wireframe.md 완료] → QA 호출 (stage: WIREFRAME) → QA-WIREFRAME.md → 사용자 검토
-  [UI 코드 구현 완료] → QA 호출 (stage: EXECUTE-UI) → QA-EXECUTE-UI.md → 사용자 검토
+  [wireframe.md 완료] → PM Gate 문서검증 (stage: WIREFRAME, 본 기준 적용) → 사용자 검토
+  [UI 코드 구현 완료] → 동작 검증(빌드/린트 실행, 독립·불변) + PM Gate 검토 (stage: EXECUTE-UI, 본 기준으로 결과 확인) → 사용자 검토
 ```
 
 ---
@@ -181,3 +180,11 @@ UI 구현 결과를 검증한다. **빌드/린트 실행**과 **wireframe↔코�
 | **Needs Revision** | E-1 또는 E-2 Fail, 또는 E-3~E-6 80% 미만 |
 
 EXECUTE-UI 단계에서는 빌드(E-1) 또는 린트(E-2) 실패 시 자동으로 Critical 처리한다.
+
+---
+
+## 변경이력
+
+| 버전 | 날짜 | 변경내용 |
+|------|------|---------|
+| v1.1 | 2026-06-07 | QA→PM Gate 통합 정합화 — 실행 컨텍스트를 "QA 전용 워커 에이전트" → "PM Gate 검증 시 PM이 참조하는 검증 기준 라이브러리"로 재정의(WIREFRAME 문서 QA는 PM Gate 흡수). "호출 시점(→ QA 호출 → QA-X.md)" → "적용 시점(PM Gate 검증)". EXECUTE-UI 빌드/린트 실행은 동작 검증(독립·불변)으로 명시 — 동작 검증 영역 불변. 검증 기준 콘텐츠 보존 (014 Phase 4-2) |

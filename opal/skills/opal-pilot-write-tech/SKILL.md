@@ -192,13 +192,15 @@ interview 완료 후 결과를 TASK.md에 다음 섹션 양식으로 기록한�
   ```
   ~/.opal/tools/state-tool/run.sh init <task-path> --skill opwt --mode <interactive|semi-agentic|agentic> --rows-from opal/skills/opal-pilot-write-tech/SKILL.md
   ```
-- **State Gate** — state-tool 호출로 갱신 확인:
+- 행 갱신:
   ```
-  ~/.opal/tools/state-tool/run.sh advance <task-path> --row 1   # TASK 행 🔄
-  ~/.opal/tools/state-tool/run.sh mark <task-path> --row 1 --done
-  ~/.opal/tools/state-tool/run.sh mark <task-path> --row 2 --done  # TASK.md 생성 행
-  ~/.opal/tools/state-tool/run.sh mark <task-path> --row 3 --done --owner user --note '소유자 확인: TASK 완료'
+  ~/.opal/tools/state-tool/run.sh advance <task-path> --row 1   # TASK 작업 행 🔄
+  ~/.opal/tools/state-tool/run.sh mark <task-path> --row 1 --done  # TASK 작업 + TASK.md 생성
+  ~/.opal/tools/state-tool/run.sh mark <task-path> --row 2 --done --owner user --note '소유자 확인: TASK 완료'
   ```
+
+> **[MUST] 행 갱신**: `mark` 호출 자체가 state 기록이며 별도의 State Gate 행은 존재하지 않는다. state-tool stage-transition guard가 단계 완료 여부를 자동 검증한다.
+
 - 보고 후 다음 단계 승인 (interactive) / 자율 진행 (agentic)
 
 ---
@@ -242,10 +244,9 @@ ANALYSIS 완료 후 아래 절차를 순서대로 수행한다:
    - ANALYSIS.md 내용이 모든 워커 결과를 취합하고 있는지 확인한다
    - 문서별 요약 및 이슈 목록이 누락 없이 작성되었는지 확인한다
    - Artifact Gate: `ANALYSIS.md` 파일이 존재하고 내용이 있는지 확인한다
-2. **State Gate** — state-tool 호출로 갱신 확인:
+2. PM Gate 통과 후 해당 행을 단일 mark:
    ```
    ~/.opal/tools/state-tool/run.sh mark <task-path> --row <ANALYSIS_PM_Gate_N> --done
-   ~/.opal/tools/state-tool/run.sh mark <task-path> --row <ANALYSIS_State_Gate_N> --done
    ```
 3. 사용자 확인 (interactive) / PM 자율 승인 (agentic):
    ```
@@ -286,14 +287,17 @@ tasks/{NNN}-opwt-{name}/PLAN.md
 ### 공통
 
 - **STATE 갱신**: 단계 시작/완료 시 state-tool advance/mark 호출
-- **QA Gate** (op-task-qa) → **State Gate** → **PM Gate** (TASK.md 요구사항 체크박스 갱신 포함) → **State Gate**
-
-State Gate 시 state-tool 호출 (4-row 일괄):
-```
-~/.opal/tools/state-tool/run.sh gate-pass <task-path> --start <PLAN_QA_Gate_행N>
-~/.opal/tools/state-tool/run.sh mark <task-path> --row <PLAN_State_Gate_N+4> --done  # PM Gate 후 State Gate
-~/.opal/tools/state-tool/run.sh mark <task-path> --row <PLAN_사용자확인_N> --done --owner user --note '소유자 확인: PLAN 완료'
-```
+- **PM Gate** (PLAN.md + TASK.md 요구사항 체크박스 갱신 포함):
+  - PLAN.md 진단 근거·배치 편성·QA 체크리스트 완성도 확인
+  - TASK.md 요구사항 전체 커버 여부 확인
+  - PM Gate 통과 후 해당 행을 단일 mark:
+    ```
+    ~/.opal/tools/state-tool/run.sh mark <task-path> --row <PLAN_PM_Gate_N> --done
+    ```
+- 사용자 확인 (interactive) / PM 자율 승인 (agentic):
+  ```
+  ~/.opal/tools/state-tool/run.sh mark <task-path> --row <PLAN_사용자확인_N> --done --owner user --note '소유자 확인: PLAN 완료'
+  ```
 - **게이트**: PLAN.md + 배치 계획 사용자 확인 (interactive) / PM 자율 승인 (agentic)
 
 ---
@@ -320,16 +324,13 @@ State Gate 시 state-tool 호출 (4-row 일괄):
 ### 게이트 (배치별)
 
 배치 완료
-  → **QA Gate** (op-task-qa) → **State Gate** → **PM Gate** (배치 단위 간이 검토. 전체 PM Gate는 QA 단계 최종 판정에서 수행) → **State Gate**
-
-State Gate 시 state-tool 호출 (4-row 일괄):
-```
-~/.opal/tools/state-tool/run.sh gate-pass <task-path> --start <EXECUTE_Batch_QA_Gate_행N>
-```
+  → **PM Gate** (배치 단위 간이 검토 — 문서 내용 완성도·논리 일관성 확인. 전체 PM Gate는 QA 단계 최종 판정에서 수행):
+  ```
+  ~/.opal/tools/state-tool/run.sh mark <task-path> --row <EXECUTE_Batch_PM_Gate_N> --done
+  ```
 
   → 사용자 확인 (interactive) / PM 자율 승인 후 다음 배치 (agentic):
   ```
-  ~/.opal/tools/state-tool/run.sh mark <task-path> --row <EXECUTE_Batch_State_Gate_N+4> --done
   ~/.opal/tools/state-tool/run.sh mark <task-path> --row <EXECUTE_Batch_사용자확인_N> --done --owner user --note '소유자 확인: Batch N 완료'
   ```
 배치 완료 후 `docs/PROJECT.md` 등록 확인
@@ -353,11 +354,13 @@ PLAN.md의 QA 체크리스트를 검증 결과로 갱신한다 (하네스 §2 QA
 
 ### PM 최종 판정
 
-- **PM Gate** 진입 → **State Gate** — state-tool 호출:
-  ```
-  ~/.opal/tools/state-tool/run.sh mark <task-path> --row <QA_PM_Gate_N> --done
-  ~/.opal/tools/state-tool/run.sh mark <task-path> --row <QA_State_Gate_N> --done
-  ```
+- **PM Gate** — 전체 기획 문서 세트 최종 검증:
+  - `references/consistency-rules.md` 기반 유형 간/내 정합성 확인
+  - 모든 QA 체크리스트 항목이 `[x]` 또는 "N/A + 사유"로 채워졌는지 확인
+  - PM Gate 통과 후 해당 행을 단일 mark:
+    ```
+    ~/.opal/tools/state-tool/run.sh mark <task-path> --row <QA_PM_Gate_N> --done
+    ```
 - **Pass**: 사용자에게 완료 보고 후 CLOSE 단계 진입 승인 요청
 
   보고 형식:
@@ -375,14 +378,12 @@ PLAN.md의 QA 체크리스트를 검증 결과로 갱신한다 (하네스 §2 QA
 
 QA 최종 판정 Pass 후 태스크를 마감한다.
 
-1. DONE.md 생성
-2. State Gate:
+1. DONE.md 생성 후 행 mark:
    ```
    ~/.opal/tools/state-tool/run.sh mark <task-path> --row <CLOSE_DONE_행N> --done  # DONE.md 생성
-   ~/.opal/tools/state-tool/run.sh mark <task-path> --row <CLOSE_State_Gate_N> --done  # State Gate (CLOSE 완료)
    ```
    > **CLOSE 게이트 제약 (§2.16 G-13)**: CLOSE 단계 최초 진입 행은 `--auto-pass` 적용 불가 (`close_gate_violation`). 반드시 위 명시 호출로 처리한다.
-3. 완료 보고
+2. 완료 보고
 
 보고 형식:
 ```
@@ -392,7 +393,7 @@ QA 최종 판정 Pass 후 태스크를 마감한다.
 ```
 
 > **추가작업**: 태스크 완료 후 추가작업이 필요하면 하네스 §3 "추가작업 프로세스"를 따른다.
-> **추가작업 발생 시 (P-6)**: `add-row --after <CLOSE_State_Gate_N> --stage CLOSE --item '추가 작업 항목'` → 작업 완료 후 `status --set additional_work_done`
+> **추가작업 발생 시 (P-6)**: `add-row --after <CLOSE_DONE_행N> --stage CLOSE --item '추가 작업 항목'` → 작업 완료 후 `status --set additional_work_done`
 
 ---
 
@@ -415,6 +416,28 @@ QA 최종 판정 Pass 후 태스크를 마감한다.
 > ```
 > ~/.opal/tools/state-tool/run.sh add-row <task-path> --after <EXECUTE_행N> --stage EXECUTE --item 'Batch N: {문서 목록}'
 > ```
+
+**진행 현황 행 예시** (작성 모드 — `state init --rows-from <SKILL.md>`의 SSOT, LLM이 직접 작성 금지):
+
+> **[MUST] STATE.md 초기 생성**: `~/.opal/tools/state-tool/run.sh init <task-path> --skill opwt --mode <interactive|semi-agentic|agentic> --rows-from <SKILL.md 경로>` 호출.
+
+```markdown
+| # | 단계 | 항목 | 상태 | 시점 |
+|---|------|------|------|------|
+| 1 | TASK | 작업 | ⬜ | - |
+| 2 | TASK | 사용자 확인 | ⬜ | - |
+| 3 | PLAN | 작업 | ⬜ | - |
+| 4 | PLAN | PM Gate | ⬜ | - |
+| 5 | PLAN | 사용자 확인 | ⬜ | - |
+| 6 | EXECUTE | 작업 (Batch 동적 삽입) | ⬜ | - |
+| 7 | QA | 작업 | ⬜ | - |
+| 8 | QA | PM Gate | ⬜ | - |
+| 9 | QA | 사용자 확인 | ⬜ | - |
+| 10 | CLOSE | DONE.md 생성 | ⬜ | - |
+```
+
+> TASK.md 생성은 행 1(TASK 작업)에 흡수. ANALYSIS 모드에서는 ANALYSIS 행이 PLAN 앞에 삽입된다. State Gate 행은 state-tool stage-transition guard로 이전 — 행으로 강제하지 않는다.
+> EXECUTE 배치 행은 PLAN 완료 후 `add-row`로 동적 삽입한다. 배치별 PM Gate·사용자 확인 행도 함께 삽입한다.
 
 ---
 
@@ -509,3 +532,4 @@ semi-agentic / agentic 모두 CLOSE 첫 행 `--auto-pass` 거부 (`agentic_close
 | v3.4 | 2026-05-09 18:30 | 개인 식별자 "캡틴" → "소유자"/"사용자" 치환 — 배포 파일 정체성 누설 정정 (139) |
 | v4.0 | 2026-05-24 14:21 | 산출물 체계 v4 — interview 통합(TASK 절 재구성) + PRD 8섹션 표준 + 기능 시나리오 다이어그램 재정의(기존 '순서도' 재정의 — 사용자 수동 재분류) + 화면 흐름도 신설 + Mermaid 시각화 표준 절 신설 + PMO 그룹 및 개발 WBS 제거 (008) |
 | v4.1 | 2026-05-24 18:01 | 산출물 저장 경로 누락 보강 — v4 인터뷰 재구성 시 누락된 v3.4 "산출물 저장 경로" 확인 항목을 Round 2 Q6로 복원. Step 1 (d) 저장 경로 자동 감지 추가(PROJECT.md 등록 / 100.기획/ 존재 / 둘 다 없음 3분기). Step 4 TASK.md 양식에 "산출물 저장 경로" 섹션 추가. "산출물 저장 구조" 절에 default v4 7폴더 트리(100.기획/110.PRD~170.기능시나리오) 명시 + 한국어/kebab-case 컨벤션 충돌 안내. (008 추가작업) |
+| v4.2 | 2026-06-07 | State Gate 행 제거(guard 이전) + op-task-qa QA Gate 제거 → PM Gate 문서검증 흡수 + gate-pass 4-row 호출 제거 → PM Gate 단일 mark + CLOSE State Gate 행 제거(DONE.md 생성 단일 행) + STATE 행 예시 10행 구조 추가 + TASK 산출물 행 흡수. opds 패턴 정합 (014 Phase 4) |

@@ -15,12 +15,12 @@ opal-pilot 오케스트레이터(opal-pilot-dev, opal-pilot-dev-short, opal-pilo
 - **출력**: 산출물(.md) + 결과 반환 (artifact_path, summary, status, blockers, changed_files)
 - **참고**: opal-pilot-project에서는 op-task-plan(advanced), op-task-execute(standard)을 사용
 
-### opal-task-qa-agent
+### opal-task-qa-agent (역할 한정 — 디스패치되지 않음)
 
-- **역할**: 범용 QA 워커 — 오케스트레이터가 전달한 qa_skill(op-dev-qa 또는 op-task-qa)의 SKILL.md를 Read하고 산출물 품질 검증
-- **호출 시점**: 단계 완료 후 QA Gate에서 오케스트레이터가 디스패치
-- **입력**: qa_skill, 검증 대상 산출물 경로, 단계명, TASK.md 경로
-- **출력**: QA-{단계}.md 리뷰 문서
+- **역할**: 문서 QA 검증 기준 라이브러리 참조 정의. 문서 QA(요구사항→설계 검토)는 별도 QA Gate 단계를 두지 않고 **PM Gate가 직접 흡수**하므로, 이 에이전트는 디스패치되지 않는다. PM이 PM Gate 문서검증을 수행할 때 `op-dev-qa` / `op-task-qa` SKILL.md의 검증 기준(공통 검증 원칙·단계별 검증 ID·QA-{단계}.md 형식)을 **검증 기준 라이브러리로 참조**한다.
+- **호출 시점**: 없음 (QA 에이전트 디스패치/재소환 없음). 문서검증은 PM Gate에서 PM이 직접 수행한다 (`harness/pm-review-gate.md` §문서 QA 검증).
+- **참조 라이브러리**: `op-dev-qa`(코드 개발 문서 QA) / `op-task-qa`(범용 문서 QA) SKILL.md
+- **비고**: 동작 검증(TEST / TEST-SCENARIO / state-tool verify)은 본 정의와 독립이며, `opal-test-agent`가 별도로 수행한다 (불변).
 
 ### opal-test-agent
 
@@ -316,3 +316,4 @@ project: mams
 | v1.3 | 2026-04-30 | AUTO-GENERATED 헤더 검사 범위를 전체 파일로 확장 — frontmatter 외 헤더 위치 오탐지 결함 수정 (133) |
 | v1.4 | 2026-05-12 21:35 KST | §wtm-agent → §opal-wtm-agent 갱신 — Phase 1(WebFetch)→Phase 2(cmux 조건부)→Phase 3(playwright-tool CLI) 폴백, 입력 `--surface` 3모드, 출력 JSON 8필드, 에이전트 경로 opal/agents/opal-wtm-agent/ (002) |
 | v1.5 | 2026-06-02 20:16 KST | Gemini 변환 표 부동 별칭 전환 — light=`gemini-3.1-flash-lite` 핀, standard=`gemini-flash-latest`, advanced=`gemini-pro-latest` (011) |
+| v1.6 | 2026-06-07 | QA→PM Gate 통합 정합화 — opal-task-qa-agent를 "QA Gate에서 디스패치되는 범용 QA 워커"에서 "디스패치되지 않는 검증 기준 라이브러리 참조 정의"로 역할 한정(삭제하지 않음). 문서 QA는 PM Gate가 직접 흡수, op-dev-qa/op-task-qa는 PM이 참조하는 검증 기준 라이브러리. 동작 검증(opal-test-agent/TEST/verify) 영역 불변 (014 Phase 4-2) |

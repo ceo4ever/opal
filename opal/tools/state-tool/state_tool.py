@@ -3,7 +3,7 @@
   "module": "state_tool",
   "layer": "util",
   "domain": "opal-pipeline",
-  "description": "OPAL 파이프라인 현황판 JSON SSOT 관리 CLI — 9개 서브 명령(init/show/advance/mark/block/validate/add-row/status/gate-pass) + 3-way 모드(interactive/semi-agentic/agentic) 지원",
+  "description": "OPAL 파이프라인 현황판 JSON SSOT 관리 CLI — 9개 서브 명령(init/show/advance/mark/block/validate/add-row/status/gate-pass[deprecated]) + verify + 3-way 모드(interactive/semi-agentic/agentic) 지원. 014 Phase 4: 새 표준 행 구조(QA Gate/State Gate 행 없음)와 정합 — gate-pass deprecate, CLOSE 마지막 행 판정 항목명 비의존화.",
   "exports": [
     "cmd_init", "cmd_show", "cmd_advance", "cmd_mark",
     "cmd_block", "cmd_validate", "cmd_add_row", "cmd_status", "cmd_gate_pass"
@@ -49,9 +49,17 @@ STATUS_LABEL_MAP = {
 LABEL_STATUS_MAP = {v: k for k, v in STATUS_LABEL_MAP.items()}
 
 # PLAN §2.2 G-4 표준 항목 상수
+# 014 Phase 4: 새 표준 행 구조에서는 "작업 / PM Gate / 사용자 확인 / DONE.md 생성"만 사용한다.
+#   "QA Gate"/"State Gate"는 deprecated — State Gate는 stage-transition guard(§M-A)로 이전,
+#   QA Gate는 PM Gate로 통합됨. 단 in-flight 레거시 state.json 하위호환을 위해 enum에서 즉시
+#   제거하지 않고 deprecated 항목으로 남겨둔다(이 상수는 강제 검증에 쓰이지 않는 문서용 SSOT).
 STANDARD_ITEMS = {
-    "작업", "QA Gate", "State Gate", "PM Gate", "사용자 확인",
+    "작업", "PM Gate", "사용자 확인", "DONE.md 생성",
 }
+DEPRECATED_ITEMS = {
+    "QA Gate", "State Gate",  # 014 Phase 4 — 신규 생성 권장 안 함, 레거시 허용
+}
+# gate-pass(deprecated) 전용 4행 패턴 — 레거시 state.json에만 존재.
 GATE_PATTERN = ["QA Gate", "State Gate", "PM Gate", "State Gate"]
 
 # PLAN §2.18 에러 코드 카탈로그 23종 SSOT — 라인 53부터
@@ -937,12 +945,13 @@ def cmd_mark(args):
 
     state["updated_at"] = now_str
 
-    # CLOSE 마지막 State Gate → current_status = done (§2.11 G-6)
+    # CLOSE 단계 마지막 행 → current_status = done (§2.11 G-6)
+    # 014 Phase 4: 새 표준 구조의 CLOSE 마지막 행은 "DONE.md 생성"이고, 레거시 구조는
+    #   "State Gate"였다. 항목명에 의존하지 않고 "CLOSE 단계의 마지막 행" 여부로 판정한다.
     progress_text = None
     status_text   = None
     is_close_last = (
         row["stage"] == "CLOSE" and
-        row.get("item") == "State Gate" and
         (row_index == len(state["rows"]) - 1 or
          state["rows"][row_index + 1]["stage"] != "CLOSE")
     )
@@ -1181,7 +1190,14 @@ def cmd_status(args):
 # ── 9. gate-pass ──────────────────────────────────────────────────────────────
 
 def cmd_gate_pass(args):
-    """PLAN §2.13 G-10 — 4행 Gate 일괄 처리"""
+    """PLAN §2.13 G-10 — 4행 Gate 일괄 처리.
+
+    [DEPRECATED — 014 Phase 4] 새 표준 행 구조(opds 10행)에는 "QA Gate"/"State Gate"
+    행이 존재하지 않으므로 [QA Gate, State Gate, PM Gate, State Gate] 4행 패턴이 성립할 수
+    없다. 신규 태스크는 gate-pass를 사용하지 않으며, PM Gate는 단일 mark로 통과한다.
+    이 명령은 아직 옛 행 구조를 보유한 in-flight 레거시 state.json 하위호환을 위해서만
+    유지되며, 성공 응답에 deprecated=True를 포함한다. 후속 버전에서 제거 예정.
+    """
     command = "gate-pass"
     task_path = resolve_task_path(args.task_path, command)
     state     = load_state_json(task_path, command)
@@ -1248,7 +1264,9 @@ def cmd_gate_pass(args):
     sync_state_md(task_path, state, now_str, command,
                   decision=decision, reason=reason)
 
-    ok(command, rows_passed=passed_ids, stage=stage, timestamp=now_str)
+    ok(command, rows_passed=passed_ids, stage=stage, timestamp=now_str,
+       deprecated=True,
+       deprecation_note="gate-pass is deprecated (014 Phase 4): new standard rows have no QA/State Gate rows; use single mark for PM Gate.")
 
 # ── 10. verify ───────────────────────────────────────────────────────────────
 
@@ -1404,7 +1422,7 @@ def build_parser():
   validate    정합성 검증 → violations[]
   add-row     추가작업 행 삽입
   status      current_status 명시 전환
-  gate-pass   Gate 4행 일괄 ✅ 처리
+  gate-pass   [DEPRECATED] Gate 4행 일괄 ✅ 처리 (레거시 state.json 전용)
 
 호출 형식: ~/.opal/tools/state-tool/run.sh <command> <task-path> [options]
 종료 코드: 0=ok  1=violation/scope_error  2=internal_error
@@ -1494,7 +1512,8 @@ def build_parser():
     p_sts.set_defaults(func=cmd_status)
 
     # ── gate-pass ──
-    p_gp = sub.add_parser("gate-pass", help="Gate 4행 일괄 ✅ 처리 (§2.13 G-10)")
+    p_gp = sub.add_parser("gate-pass",
+                          help="[DEPRECATED] Gate 4행 일괄 ✅ 처리 — 레거시 state.json 전용 (§2.13 G-10, 014 Phase 4)")
     p_gp.add_argument("task_path", metavar="<task-path>")
     p_gp.add_argument("--start", type=int, required=True)
     p_gp.add_argument("--note")

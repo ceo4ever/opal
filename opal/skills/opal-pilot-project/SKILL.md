@@ -27,10 +27,12 @@ description: |
 
 harness "4. TASK 공통 프로세스" 참조. 다음 단계명: PLAN.
 
-TASK 완료 → **State Gate** (하네스 §3 참조 — `state-tool` 호출로 갱신 확인) → 사용자 보고.
+TASK 완료 → 사용자 보고.
 
-> **[MUST] State Gate 수행**: `~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done` 호출. LLM이 STATE.md 마크다운 표를 직접 편집하는 것은 금지된다.
-> 근거: `tasks/134-260501-opp-pipeline-state-tool/TASK.md` F-15 / `PLAN.md` §1.5 M-14 / §3 Step 6
+> **[MUST] 행 갱신**: `~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done` 호출. LLM이 STATE.md 마크다운 표를 직접 편집하는 것은 금지된다. 행을 mark하는 것 자체가 state 기록이며 별도의 State Gate 행은 존재하지 않는다.
+> **단계 시작 (P-3)**: `~/.opal/tools/state-tool/run.sh advance <task-path> --row <N>` 호출로 해당 단계 작업 행을 🔄로 전환.
+> **단계 건너뛰기 차단**: state-tool stage-transition guard가 단계 N의 필수 행이 완료되지 않으면 단계 N+1 진입(mark)을 자동 거부한다. 행에 의존하지 않는다.
+> 근거: `tasks/134-260501-opp-pipeline-state-tool/TASK.md` F-15 / `PLAN.md` §1.5 M-11 / §3 Step 8 P-1 / P-3
 
 ---
 
@@ -46,13 +48,17 @@ op-task-plan 워커 디스패치. **model**: advanced. 이전 산출물: TASK.md
 1. `{프로젝트}/.opal/skills/op-task-plan/SKILL.md`
 2. `~/.opal/skills/op-task-plan/SKILL.md`
 
-워커 완료
-  → **QA Gate** (op-task-qa — 체크리스트 갱신 포함) → **State Gate**
-  → **PM Gate** (체크리스트 갱신 상태 확인 — 하네스 interactive §3 참조. 미갱신 시 QA 재소환) → **State Gate** → 사용자에게 보고.
+PLAN 완료
+  → **PM Gate** (PLAN.md 직접 검증 — 점검 목록 참조):
+    1. `{PLAN.md 경로}` Read — §3 실행 체크리스트, §4 확인
+    2. 검증 체크리스트:
+       - [ ] TASK.md 요구사항 전체 커버 여부 (PLAN.md §1 기능 목록 대조)
+       - [ ] PLAN.md §3 실행 체크리스트 완성도 (완료 기준 명시)
+       - [ ] 설계 피드백 섹션에 미해결 빈틈이 없는가
+  → PM Gate 통과 후 해당 행(행 4, PLAN PM Gate)을 단일 mark. 사용자에게 PLAN 보고. 승인 = EXECUTE 시작 허가.
 
-> **Gate 일괄 처리 (P-2)**: QA Gate 행 N부터 시작하는 표준 4행(QA Gate / State Gate / PM Gate / State Gate)은 `~/.opal/tools/state-tool/run.sh gate-pass <task-path> --start <N>` 1회 호출로 일괄 ✅ 처리 가능 (§2.13 G-10 — opp 표준 행 구성).
 > **단계 시작 (P-3)**: `~/.opal/tools/state-tool/run.sh advance <task-path> --row <N>` 호출로 해당 단계 작업 행을 🔄로 전환.
-> 근거: `PLAN.md` §2.13 G-10 / §3 Step 8 P-2 / P-3
+> 근거: `PLAN.md` §3 Step 8 P-3
 
 > **[PM 컨텍스트 주입]** 워커 디스패치 프롬프트의 첫 줄에 `[WORKER]`를 삽입한다. `[WORKER]` 마커가 있으면 워커는 부트스트랩을 생략한다. PM은 디스패치 시 다음을 프롬프트에 포함해야 한다:
 > 1. 하네스 Guards 핵심 규칙 (구현 금지 원칙, 커밋 규칙)
@@ -83,22 +89,25 @@ op-task-execute 워커 디스패치. **model**: standard. checklist_source: PLAN
 ### EXECUTE 완료 후
 
 워커가 changed_files를 반환하면:
-1. **QA Gate** (op-task-qa) — QA 에이전트 호출 (체크리스트 갱신 포함) → **State Gate**
-2. **PM Gate** — QA 결과 + 실행 결과 검토 + **체크리스트 갱신 상태 확인** (하네스 interactive §3 참조). 미갱신 시 QA 에이전트 재소환 → **State Gate**
-3. 사용자에게 완료 보고 후 CLOSE 단계 진입 승인 요청
+1. **PM Gate** (EXECUTE 결과 직접 검증 — 점검 목록 참조):
+   - `{PLAN.md 경로}` Read — §3 실행 체크리스트 완료 여부 확인
+   - 검증 체크리스트:
+     - [ ] PLAN.md §3 실행 체크리스트 모든 항목 완료
+     - [ ] 컨벤션 자동 진단 PASS (changed_files 컨벤션 적용 대상 ≥1건 시 발동, GC-CONVENTION-*.md 보고서 Critical/High 0건)
+     - [ ] 설계 피드백 미해결 빈틈 없음
+   → PM Gate 통과 후 해당 행(EXECUTE PM Gate)을 단일 mark.
+2. 사용자에게 완료 보고 후 CLOSE 단계 진입 승인 요청
 
-> **Gate 일괄 처리 (P-2)**: QA Gate 행 N부터 시작하는 표준 4행은 `~/.opal/tools/state-tool/run.sh gate-pass <task-path> --start <N>` 1회 호출로 일괄 ✅ 처리 가능 (§2.13 G-10).
 > **EXECUTE Step 완료 (P-4)**: 워커가 `~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done --as-worker --worker-stage EXECUTE --step <N/M>` 호출 (T-10 워커 권한 게이트).
 > **사용자 확인 (P-5)**: 사용자 발화 후 PM이 `~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done --owner user --note '소유자 확인: ...'` 호출. CLOSE 진입 전 이 행의 `owner=user` 여부를 도구가 자동 검증한다 (§2.16 G-13).
 > **블로커 발생 (P-7)**: `~/.opal/tools/state-tool/run.sh block <task-path> --row <N> --reason '...'` 호출. STATE.md 블로커 섹션 자유 텍스트는 PM이 별도 작성.
 > **추가작업 진입 (P-6)**: `~/.opal/tools/state-tool/run.sh add-row <task-path> --after <N> --stage CLOSE --item '...'` 호출 → current_status 자동 `additional_work` 전환. 완료 시 `~/.opal/tools/state-tool/run.sh status <task-path> --set additional_work_done`.
-> 근거: `PLAN.md` §3 Step 8 P-2 / P-4 / P-5 / P-6 / P-7 / §2.15 G-12 / §2.16 G-13
+> 근거: `PLAN.md` §3 Step 8 P-1 / P-4 / P-5 / P-6 / P-7 / §2.16 G-13
 
 보고 형식:
 ```
 📋 [EXECUTE] 완료 보고
 📎 변경 파일: {changed_files}
-📎 산출물: {QA-EXECUTE.md 등}
 다음 단계(CLOSE)로 넘어갈까요?
 ```
 
@@ -110,12 +119,12 @@ op-task-execute 워커 디스패치. **model**: standard. checklist_source: PLAN
 
 모든 체크리스트 갱신 완료 확인 후 태스크를 마감한다.
 
-1. DONE.md 생성
-2. State Gate (하네스 §3 참조) — `~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done` 호출 (P-1)
-3. 완료 보고
+1. DONE.md 생성 후 행 9(CLOSE 행) mark (`~/.opal/tools/state-tool/run.sh mark <task-path> --row 9 --done` 호출 — P-1). 행을 mark하는 것 자체가 state 기록이다.
+2. 완료 보고
 
 > **CLOSE 진입 게이트 자동 검증**: CLOSE 단계 첫 행 mark 시 도구가 직전 단계 사용자 확인 행의 `owner=user` 여부를 자동 검증한다. 미통과 시 `close_gate_violation` 에러 반환 — agentic 모드의 `--auto-pass`도 거부됨 (§2.16 G-13 / PLAN §3 Step 8 P-8).
-> 근거: `tasks/134-260501-opp-pipeline-state-tool/TASK.md` F-15 / `PLAN.md` §1.5 M-14 / §2.16 G-13 / §3 Step 6
+> **추가작업 진입 (P-6)**: `~/.opal/tools/state-tool/run.sh add-row <task-path> --after <N> --stage CLOSE --item '...'` 호출 → current_status 자동 `additional_work` 전환.
+> 근거: `tasks/134-260501-opp-pipeline-state-tool/TASK.md` F-15 / `PLAN.md` §2.16 G-13 / §3 Step 8 P-1 / P-6 / P-8
 
 보고 형식:
 ```
@@ -138,32 +147,23 @@ op-task-execute 워커 디스패치. **model**: standard. checklist_source: PLAN
 **진행 현황 행 예시** (아래 표는 `state init --rows-from <SKILL.md>` 또는 `--rows-spec` 인자의 SSOT — LLM이 직접 작성하는 것은 금지된다):
 
 > **[MUST] STATE.md 초기 생성**: `~/.opal/tools/state-tool/run.sh init <task-path> --skill opp --mode <interactive|semi-agentic|agentic> --rows-from <SKILL.md 경로>` 호출. 기본값: `semi-agentic`. `--rows-from`이 아래 표를 파싱하여 행 구성을 자동 추출한다.
-> 근거: `tasks/134-260501-opp-pipeline-state-tool/TASK.md` F-15 / `PLAN.md` §2.3 / §2.20.2 / §3 Step 6 (P-3 advance, P-1 mark)
+> 근거: `tasks/134-260501-opp-pipeline-state-tool/TASK.md` F-15 / `PLAN.md` §2.3 / §2.20.2 / §3 Step 8 (P-3 advance, P-1 mark)
 
 ```markdown
 | # | 단계 | 항목 | 상태 | 시점 |
 |---|------|------|------|------|
 | 1 | TASK | 작업 | ⬜ | - |
-| 2 | TASK | TASK.md 생성 | ⬜ | - |
-| 3 | TASK | 사용자 확인 | ⬜ | - |
-| 4 | PLAN | 작업 | ⬜ | - |
-| 5 | PLAN | PLAN.md 생성 | ⬜ | - |
-| 6 | PLAN | QA Gate | ⬜ | - |
-| 7 | PLAN | QA-PLAN.md 생성 | ⬜ | - |
-| 8 | PLAN | State Gate | ⬜ | - |
-| 9 | PLAN | PM Gate | ⬜ | - |
-| 10 | PLAN | State Gate | ⬜ | - |
-| 11 | PLAN | 사용자 확인 | ⬜ | - |
-| 12 | EXECUTE | 작업 | ⬜ | - |
-| 13 | EXECUTE | QA Gate | ⬜ | - |
-| 14 | EXECUTE | QA-EXECUTE.md 생성 | ⬜ | - |
-| 15 | EXECUTE | State Gate | ⬜ | - |
-| 16 | EXECUTE | PM Gate | ⬜ | - |
-| 17 | EXECUTE | State Gate | ⬜ | - |
-| 18 | EXECUTE | 사용자 확인 | ⬜ | - |
-| 19 | CLOSE   | DONE.md 생성 | ⬜ | - |
-| 20 | CLOSE   | State Gate | ⬜ | - |
+| 2 | TASK | 사용자 확인 | ⬜ | - |
+| 3 | PLAN | 작업 | ⬜ | - |
+| 4 | PLAN | PM Gate | ⬜ | - |
+| 5 | PLAN | 사용자 확인 | ⬜ | - |
+| 6 | EXECUTE | 작업 | ⬜ | - |
+| 7 | EXECUTE | PM Gate | ⬜ | - |
+| 8 | EXECUTE | 사용자 확인 | ⬜ | - |
+| 9 | CLOSE | DONE.md 생성 | ⬜ | - |
 ```
+
+> TASK.md 생성은 행 1(TASK 작업)에 흡수, PLAN.md 생성은 행 3(PLAN 작업)에 흡수. State Gate 행 4개·QA Gate 행 2개·QA 산출물 행은 제거 — State Gate는 state-tool stage-transition guard(PLAN §M-A)로 이전 완료, QA Gate는 PM Gate에 흡수.
 
 ---
 
@@ -171,8 +171,8 @@ op-task-execute 워커 디스패치. **model**: standard. checklist_source: PLAN
 
 | Phase | 산출물 | 체크리스트 위치 |
 |-------|-------|----------------|
-| PLAN | TASK.md, PLAN.md, QA-PLAN.md | TASK.md 요구사항, PLAN.md §3, §4 |
-| EXECUTE | QA-EXECUTE.md, GC-CONVENTION-*.md | PLAN.md §3 |
+| PLAN | TASK.md, PLAN.md | TASK.md 요구사항, PLAN.md §3, §4 |
+| EXECUTE | GC-CONVENTION-*.md | PLAN.md §3 실행 체크리스트, 컨벤션 자동 진단 |
 
 ---
 
@@ -185,7 +185,7 @@ opal-harness-agentic.md / opal-harness-semi-agentic.md 참조. 본 절은 이 �
 기본 호출(`//opp {작업}`)은 semi-agentic 모드. PLAN-equivalent까지 사용자 검토, EXECUTE-equivalent 이후 PM 자율, CLOSE 진입은 사용자 승인 필수.
 
 **모드 경계** (이 시점부터 PM 자율):
-- PLAN 사용자 확인 행(행 11) 통과 후 → EXECUTE 작업 행(행 12)부터 PM 자율
+- PLAN 사용자 확인 행(행 5) 통과 후 → EXECUTE 작업 행(행 6)부터 PM 자율
 
 ### 명시 모드
 
@@ -201,9 +201,7 @@ opal-harness-agentic.md / opal-harness-semi-agentic.md 참조. 본 절은 이 �
 >
 > **[MUST] CLOSE 진입 게이트 거부 정책 (P-8 / §2.16 G-13)**: CLOSE 단계 첫 행은 `--auto-pass` 거부(`agentic_close_gate_requires_user` 에러). agentic/semi-agentic 모드라도 CLOSE 진입 직전 소유자에게 보고 후 사용자 발화("확인"/"승인")를 받아 직전 단계 사용자 확인 행을 `--owner user`로 mark한 뒤 CLOSE 첫 행을 진행한다.
 >
-> Gate 4행 일괄 처리(opp 표준 행 구성): `~/.opal/tools/state-tool/run.sh gate-pass <task-path> --start <N>` 1회 호출로 QA Gate / State Gate / PM Gate / State Gate를 일괄 ✅ 처리 가능 (§2.13 G-10 — opp 표준 행 구성 한정).
->
-> 근거: `tasks/134-260501-opp-pipeline-state-tool/TASK.md` F-15 / `PLAN.md` §2.13 G-10 / §2.15 G-12 / §2.16 G-13 / §3 Step 6 / §3 Step 8 P-8
+> 근거: `tasks/134-260501-opp-pipeline-state-tool/TASK.md` F-15 / `PLAN.md` §2.15 G-12 / §2.16 G-13 / §3 Step 8 P-8
 
 ### 자율 게이트 흐름 (semi-agentic)
 
@@ -255,3 +253,4 @@ semi-agentic / agentic 모두 CLOSE 첫 행 `--auto-pass` 거부 (`agentic_close
 | v2.8 | 2026-05-08 | PM Gate 점검 목록 EXECUTE 행 산출물에 GC-CONVENTION-*.md 추가 — 컨벤션 자동 진단 EXECUTE PM Gate 발동 (136) |
 | v2.9 | 2026-05-09 11:22 | 3-way 모드 체계 도입 — semi-agentic 기본 채택 + Agentic/Semi-Agentic 모드 절 확장 + Harness 절 3-way 분기 + state init choices 갱신 (140) |
 | v3.0 | 2026-05-09 18:30 | 개인 식별자 "캡틴" → "소유자"/"사용자" 치환 — 배포 파일 정체성 누설 정정 (139) |
+| v3.1 | 2026-06-07 | STATE 행 20→9 재구성 — State Gate 행 4개·QA Gate 행 2개·QA 산출물 행 제거(guard+PM Gate 흡수), 산출물 행 작업 행 흡수, gate-pass 제거, CLOSE 마지막 행 "DONE.md 생성"으로 통일, 행 번호 1~9 재정렬 (014) |

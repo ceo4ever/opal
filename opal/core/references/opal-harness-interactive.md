@@ -24,22 +24,17 @@
 
 > 동작 검증(TEST / TEST-SCENARIO / state-tool verify)은 본 통합과 무관한 독립·불변 영역이다. 이 통합은 "문서 QA"만 PM Gate로 흡수하는 것이다.
 
-**State Gate (gate-pass) 호환**:
-파이프라인 현황판의 표준 4행 패턴(`QA Gate → State Gate → PM Gate → State Gate`)에서 PM이 gate-pass 1회로 일괄 ✅ 처리한다. 이 4행 패턴은 현재 state-tool가 인식하는 행 구성이며, 행 자체(STATE 행에서 "QA Gate" 행)의 재구성은 후속 작업에서 처리한다.
+**PM Gate 통과 후 단일 mark**:
+PM Gate 통과 후 해당 행을 state-tool로 단일 mark한다. State Gate 행·QA Gate 행은 Phase4 완료로 더 이상 없음 — 4행 패턴이 성립하지 않는다.
 
 ```
-~/.opal/tools/state-tool/run.sh gate-pass tasks/{NNN}-.../ --start <QA Gate 행 N>
+~/.opal/tools/state-tool/run.sh mark tasks/{NNN}-.../ --row <PM Gate 행 N> --done
 ```
 
-또는 행 개별 갱신:
+> [deprecated] gate-pass — 레거시 전용. 신규는 위 단일 mark 사용. (Phase4 완료, State Gate/QA Gate 행 제거)
 
-```
-~/.opal/tools/state-tool/run.sh mark tasks/{NNN}-.../ --row <행 N> --done
-~/.opal/tools/state-tool/run.sh mark tasks/{NNN}-.../ --row <행 N+1> --done
-```
-
-미갱신 시 PM이 즉시 갱신한다. 갱신 확인 후 PM Gate로 진입한다.
-근거: TASK F-12 / PLAN §2.11 G-6 / §2.13 G-10
+미갱신 시 PM이 즉시 갱신한다. 갱신 확인 후 CLOSE로 진입한다.
+근거: TASK F-12 / PLAN §2.11 G-6
 Fail 시: §4 Gate Fail 공통 처리 참조.
 
 ---
@@ -187,3 +182,4 @@ Gate 통과 실패 시 아래 절차를 따른다. 각 Gate 섹션의 "Fail 시 
 | v2.5 | 2026-05-01 | §2 QA Gate 직후 / §3 PM Gate 직후 state-tool `mark` 호출 표기 추가 + gate-pass 일괄 처리 권장 (§2.13 G-10). §3 자가 진단 6번 항목 `state validate` 추가 (§2.6). §3 PM Gate 직후 CLOSE 진입 close_gate_violation 자동 검증 명시 (§2.16 G-13) (134) |
 | v2.6 | 2026-05-09 11:22 | 도입부 semi-agentic 모드의 PLAN까지 동작 준용 안내 추가 (140) |
 | v2.7 | 2026-06-07 | 문서 QA를 PM Gate로 통합 — §2 QA Gate를 "PM Gate 통합·별도 단계 없음"으로 재정의(QA 스킬/에이전트 디스패치 테이블 제거, State Gate gate-pass 호환 유지). §3 체크리스트 갱신 상태 확인을 PM 직접 확인·갱신으로 일원화(자가 진단 절차와 모순 해소). §3 모듈표 qa-standards 행을 "PM Gate 문서검증 시 / PM 직접 보완"으로 갱신. §4 QA Gate 행·PM Gate 재소환 행을 PM Gate 일원화로 통합. 동작 검증(TEST/verify) 영역은 불변 (014) |
+| v2.8 | 2026-06-07 | §2 gate-pass deprecated 정합 — "State Gate gate-pass 호환" 서술을 "PM Gate 단일 mark"로 교체. 4행 패턴 권장 제거, [deprecated] gate-pass 레거시 안내 추가. Phase4 완료 반영 (014 Phase 4) |

@@ -10,7 +10,7 @@ triggers:
   - "opsdd"
   - "SDD 개발"
   - "명세 기반 개발"
-version: 2.5.0
+version: 3.4.0
 ---
 
 # opal-pilot-sdd (SDD 오케스트레이터)
@@ -53,7 +53,6 @@ Phase 4: EXECUTE   ACT 루프   사용자 Gate → opal-sdd-action-agent 디스�
 Phase 5: VERIFY    PM 직접    Playwright E2E → TEST-SCENARIOS.md 추적 매트릭스 갱신
                               → 전체 TS Green 확인 → 사용자 Gate (= CLOSE 진입 게이트)
 Phase 6: CLOSE     PM 직접    최종 확인 → DONE.md 생성
-                              → State Gate
 ```
 
 ---
@@ -123,15 +122,13 @@ harness "4. TASK 공통 프로세스" 참조. 다음 단계명: SPEC.
 **에이전트**: opal-task-agent | **model**: advanced
 
 **Gate**:
-  → **State Gate** → **PM Gate** → 사용자 Gate (QA Gate 없음 — 다음 Phase에서 PM이 직접 검증)
+  → **PM Gate** → 사용자 Gate (QA Gate 없음 — 다음 Phase에서 PM이 직접 검증)
 
-State Gate 시 state-tool 호출 (R-10: gate-pass 금지 — mark 4회 개별 호출 필수):
+Gate 시 state-tool 호출 (R-10: gate-pass deprecated(014) — mark 개별 호출 필수):
 
 ```
-~/.opal/tools/state-tool/run.sh mark <task-path> --row 6 --done   # State Gate
-~/.opal/tools/state-tool/run.sh mark <task-path> --row 7 --done   # PM Gate
-~/.opal/tools/state-tool/run.sh mark <task-path> --row 8 --done   # State Gate
-~/.opal/tools/state-tool/run.sh mark <task-path> --row 9 --done --owner user --note '소유자 확인: SPEC 완료'
+~/.opal/tools/state-tool/run.sh mark <task-path> --row 6 --done   # PM Gate
+~/.opal/tools/state-tool/run.sh mark <task-path> --row 7 --done --owner user --note '소유자 확인: SPEC 완료'
 ```
 
 > SPEC.md 상세 구조: `references/spec-guide.md` 참조
@@ -185,15 +182,13 @@ PM이 직접 SPEC.md를 검증하고 TEST-SCENARIOS.md를 작성한다. **워커
 **에이전트**: opal-task-agent | **model**: advanced
 
 **Gate**:
-  → **State Gate** → **PM Gate** → 사용자 Gate (QA Gate 없음 — 설계 + ACT 분해는 PM 판단)
+  → **PM Gate** → 사용자 Gate (QA Gate 없음 — 설계 + ACT 분해는 PM 판단)
 
-State Gate 시 state-tool 호출 (R-10: gate-pass 금지 — mark 4회 개별 호출 필수):
+Gate 시 state-tool 호출 (R-10: gate-pass deprecated(014) — mark 개별 호출 필수):
 
 ```
-~/.opal/tools/state-tool/run.sh mark <task-path> --row 19 --done  # State Gate
-~/.opal/tools/state-tool/run.sh mark <task-path> --row 20 --done  # PM Gate
-~/.opal/tools/state-tool/run.sh mark <task-path> --row 21 --done  # State Gate
-~/.opal/tools/state-tool/run.sh mark <task-path> --row 22 --done --owner user --note '소유자 확인: DESIGN 완료'
+~/.opal/tools/state-tool/run.sh mark <task-path> --row 15 --done  # PM Gate
+~/.opal/tools/state-tool/run.sh mark <task-path> --row 16 --done --owner user --note '소유자 확인: DESIGN 완료'
 ```
 
 > SPEC-PLAN.md 상세 구조: `references/spec-plan-guide.md` 참조
@@ -237,20 +232,18 @@ L2 2회 초과 실패 → 소유자 에스컬레이션
 
 ### 상태 갱신
 
-ACT 완료마다 state-tool을 호출하여 STATE.md를 갱신한다 (R-10: gate-pass 금지 — mark 4회 개별 호출 필수):
+ACT 완료마다 state-tool을 호출하여 STATE.md를 갱신한다 (R-10: gate-pass deprecated(014) — mark 개별 호출 필수):
 - ACT 목록 행은 `add-row --after <N> --stage EXECUTE --item 'ACT-{N}: {이름}'` 로 동적 삽입
 - ACT 상태 갱신: `mark <task-path> --row <ACT_행N> --done`
 - TS 상태, L1/L2: ACT 완료 후 PM 직접 검증 → ACT 목록 내 해당 열 갱신
 
 > **[R-13] ACT 동적 행**: `--rows-acts` 옵션은 미구현. ACT 행은 EXECUTE Phase 진입 후 수동으로 `add-row`로 삽입한다.
 
-**State Gate** (ACT 루프 완료 후, EXECUTE 행 #24~#27 처리):
+**Gate** (ACT 루프 완료 후, EXECUTE 행 #18~#19 처리):
 
 ```
-~/.opal/tools/state-tool/run.sh mark <task-path> --row 24 --done  # State Gate
-~/.opal/tools/state-tool/run.sh mark <task-path> --row 25 --done  # PM Gate
-~/.opal/tools/state-tool/run.sh mark <task-path> --row 26 --done  # State Gate
-~/.opal/tools/state-tool/run.sh mark <task-path> --row 27 --done --owner user --note '소유자 확인: EXECUTE 완료'
+~/.opal/tools/state-tool/run.sh mark <task-path> --row 18 --done  # PM Gate
+~/.opal/tools/state-tool/run.sh mark <task-path> --row 19 --done --owner user --note '소유자 확인: EXECUTE 완료'
 ```
 
 ### Gate
@@ -267,7 +260,7 @@ ACT 완료마다 state-tool을 호출하여 STATE.md를 갱신한다 (R-10: gate
 ### 개요
 - 수행 주체: PM 직접 (워커 디스패치 없음)
 - 진입 조건: EXECUTE-LOOP 전체 ACT ✅ + 최종 L2 빌드 Pass
-- Gate: State Gate → PM Gate → State Gate → 사용자 Gate
+- Gate: PM Gate → 사용자 Gate
 
 ### 수행 절차
 1. TEST-SCENARIOS.md의 모든 시나리오를 Playwright E2E로 수행
@@ -276,7 +269,7 @@ ACT 완료마다 state-tool을 호출하여 STATE.md를 갱신한다 (R-10: gate
 
 ### 완료 조건
 - 전체 TS Green (또는 Skip + 사유 기록)
-- State Gate → PM Gate → State Gate → 사용자 확인 순으로 Gate 통과
+- PM Gate → 사용자 확인 순으로 Gate 통과
 
 ### Fail 처리
 - 해당 ACT 재지시 또는 코드 직접 수정 → 재검증
@@ -289,15 +282,13 @@ ACT 완료마다 state-tool을 호출하여 STATE.md를 갱신한다 (R-10: gate
 
 1. 전체 TS Green 확인 (STATE.md TS 현황)
 2. 전체 ACT DONE.md 존재 확인
-3. DONE.md 생성
-4. State Gate:
+3. DONE.md 생성 후 CLOSE 행 mark:
 
 ```
-~/.opal/tools/state-tool/run.sh mark <task-path> --row 34 --done  # DONE.md 생성
-~/.opal/tools/state-tool/run.sh mark <task-path> --row 35 --done  # State Gate (CLOSE 완료)
+~/.opal/tools/state-tool/run.sh mark <task-path> --row 24 --done  # DONE.md 생성 (CLOSE 완료)
 ```
 
-> **CLOSE 게이트 제약 (§2.16 G-13)**: CLOSE 단계 최초 진입 행(#34)은 `--auto-pass` 적용 불가 (`close_gate_violation`). 반드시 위 명시 호출로 처리한다.
+> **CLOSE 게이트 제약 (§2.16 G-13)**: CLOSE 단계 최초 진입 행(#24)은 `--auto-pass` 적용 불가 (`close_gate_violation`). 반드시 위 명시 호출로 처리한다.
 
 보고 형식:
 ```
@@ -325,28 +316,16 @@ ACT 완료마다 state-tool을 호출하여 STATE.md를 갱신한다 (R-10: gate
 > ~/.opal/tools/state-tool/run.sh init <task-path> --skill opsdd --rows-from opal/skills/opal-pilot-sdd/SKILL.md
 > ```
 >
-> state-tool이 이 파일의 "파이프라인 현황판" 테이블(35행)을 읽어 state.json을 초기화한다. 행 데이터를 직접 편집하지 않는다.
+> state-tool이 이 파일의 "파이프라인 현황판" 테이블(24행)을 읽어 state.json을 초기화한다. 행 데이터를 직접 편집하지 않는다.
 >
-> **[R-10 비표준 행 구성]** opsdd는 35행 + ACT 동적 행 비표준 구조를 사용한다. `gate-pass`(4-row 일괄) 사용 불가 — `mark` 4회 개별 호출 필수. `gate-pass` 호출 시 `gate_pattern_mismatch` 에러가 반환된다.
+> **[R-10 비표준 행 구성]** opsdd는 24행 + ACT 동적 행 비표준 구조를 사용한다(State Gate 행 제거 후). `gate-pass`는 deprecated(014) — `mark` 개별 호출 필수.
 >
-> **[R-13 ACT 동적 행]** `--rows-acts` 옵션은 미구현. EXECUTE Phase 진입 후 `add-row`로 ACT 행을 수동 삽입한다:
+> **[R-13 ACT 동적 행]** `--rows-acts` 옵션은 미구현. EXECUTE Phase 진입 후 `add-row`로 ACT 행을 수동 삽입한다 (EXECUTE ACT 실행 행 = #17):
 > ```
-> ~/.opal/tools/state-tool/run.sh add-row <task-path> --after 23 --stage EXECUTE --item 'ACT-001: {이름}'
+> ~/.opal/tools/state-tool/run.sh add-row <task-path> --after 17 --stage EXECUTE --item 'ACT-001: {이름}'
 > ```
 
-### STATE.md 구조
-
-```markdown
-# STATE: {기능명} SDD 개발
-
-> 최종 갱신: YYYY-MM-DD HH:mm
-
-## 현재 상태
-- 모드: SDD Task
-- Phase: {현재 Phase (TASK/SPEC/REVIEW/DESIGN/EXECUTE-LOOP/VERIFY/CLOSE)}
-- 상태: {진행 중 / 완료 / 블로커 / 추가작업중 / 추가작업완료}
-
-## 파이프라인 현황판
+**파이프라인 현황판** (`--rows-from` SSOT 표 — 이 표를 직접 편집하지 않는다):
 
 > 상태값: ⬜ 대기 / 🔄 진행 중 / ✅ 완료 / ❌ 실패 / - 해당 없음
 > **수행 원칙**: 위에서 아래로 순서대로 처리한다. 현재 행이 ✅가 아니면 다음 행으로 진행 불가.
@@ -358,75 +337,50 @@ ACT 완료마다 state-tool을 호출하여 STATE.md를 갱신한다 (R-10: gate
 | 3 | TASK | 사용자 확인 | ⬜ | |
 | 4 | SPEC | 워커 디스패치 | ⬜ | |
 | 5 | SPEC | SPEC.md 생성 | ⬜ | |
-| 6 | SPEC | State Gate | ⬜ | |
-| 7 | SPEC | PM Gate | ⬜ | |
-| 8 | SPEC | State Gate | ⬜ | |
-| 9 | SPEC | 사용자 확인 | ⬜ | |
-| 10 | REVIEW | 구조 검증 (S-1~S-6) | ⬜ | |
-| 11 | REVIEW | TEST-SCENARIOS.md 작성 | ⬜ | |
-| 12 | REVIEW | FR↔TS 커버리지 확인 | ⬜ | |
-| 13 | REVIEW | State Gate | ⬜ | |
-| 14 | REVIEW | PM Gate | ⬜ | |
-| 15 | REVIEW | State Gate | ⬜ | |
-| 16 | REVIEW | 사용자 확인 | ⬜ | |
-| 17 | DESIGN | 워커 디스패치 | ⬜ | |
-| 18 | DESIGN | SPEC-PLAN.md 생성 | ⬜ | |
-| 19 | DESIGN | State Gate | ⬜ | |
-| 20 | DESIGN | PM Gate | ⬜ | |
-| 21 | DESIGN | State Gate | ⬜ | |
-| 22 | DESIGN | 사용자 확인 | ⬜ | |
-| 23 | EXECUTE | ACT 실행 (상세: ACT 목록 참조) | ⬜ | |
-| 24 | EXECUTE | State Gate | ⬜ | |
-| 25 | EXECUTE | PM Gate | ⬜ | |
-| 26 | EXECUTE | State Gate | ⬜ | |
-| 27 | EXECUTE | 사용자 확인 | ⬜ | |
-| 28 | VERIFY | E2E 테스트 수행 | ⬜ | |
-| 29 | VERIFY | TS 전체 Green 확인 | ⬜ | |
-| 30 | VERIFY | State Gate | ⬜ | |
-| 31 | VERIFY | PM Gate | ⬜ | |
-| 32 | VERIFY | State Gate | ⬜ | |
-| 33 | VERIFY | 사용자 확인 | ⬜ | |
-| 34 | CLOSE | DONE.md 생성 | ⬜ | |
-| 35 | CLOSE | State Gate | ⬜ | |
+| 6 | SPEC | PM Gate | ⬜ | |
+| 7 | SPEC | 사용자 확인 | ⬜ | |
+| 8 | REVIEW | 구조 검증 (S-1~S-6) | ⬜ | |
+| 9 | REVIEW | TEST-SCENARIOS.md 작성 | ⬜ | |
+| 10 | REVIEW | FR↔TS 커버리지 확인 | ⬜ | |
+| 11 | REVIEW | PM Gate | ⬜ | |
+| 12 | REVIEW | 사용자 확인 | ⬜ | |
+| 13 | DESIGN | 워커 디스패치 | ⬜ | |
+| 14 | DESIGN | SPEC-PLAN.md 생성 | ⬜ | |
+| 15 | DESIGN | PM Gate | ⬜ | |
+| 16 | DESIGN | 사용자 확인 | ⬜ | |
+| 17 | EXECUTE | ACT 실행 (상세: ACT 목록 참조) | ⬜ | |
+| 18 | EXECUTE | PM Gate | ⬜ | |
+| 19 | EXECUTE | 사용자 확인 | ⬜ | |
+| 20 | VERIFY | E2E 테스트 수행 | ⬜ | |
+| 21 | VERIFY | TS 전체 Green 확인 | ⬜ | |
+| 22 | VERIFY | PM Gate | ⬜ | |
+| 23 | VERIFY | 사용자 확인 | ⬜ | |
+| 24 | CLOSE | DONE.md 생성 | ⬜ | |
 
-## ACT 목록 (SSOT — EXECUTE Phase 상세)
+### STATE.md 구조
 
-> DESIGN 완료 후 SPEC-PLAN.md의 ACT를 기반으로 동적 삽입.
-> ACT 완료 시 즉시 갱신. SPEC-PLAN.md에는 ACT 상태를 두지 않는다.
+STATE.md 전체 구조 예시 (파이프라인 현황판은 위 SSOT 표를 기준으로 state-tool이 생성):
 
-| ACT | 이름 | 그룹 | 의존 | 코드 | L1 lint | L2 build | 상태 | 시작 | 완료 |
-|-----|------|------|------|------|---------|----------|------|------|------|
+```
+STATE: {기능명} SDD 개발
 
-> 상태값: ⬜ 대기 / 🔄 진행 중 / ✅ 완료 / ❌ 실패
-> L1/L2: ACT 완료 후 PM이 검증 실행. ❌→✅ = 1차 실패 → 수정 → 재통과
+최종 갱신: YYYY-MM-DD HH:mm
 
-## TS 현황 (VERIFY Phase 요약)
+현재 상태
+- 모드: SDD Task
+- Phase: {현재 Phase (TASK/SPEC/REVIEW/DESIGN/EXECUTE-LOOP/VERIFY/CLOSE)}
+- 상태: {진행 중 / 완료 / 블로커 / 추가작업중 / 추가작업완료}
 
-> TEST-SCENARIOS.md 추적 매트릭스의 요약. 테스트 수행 시 즉시 갱신.
+파이프라인 현황판
+(위 SSOT 표 기준으로 state-tool이 자동 생성 — 직접 편집 금지)
 
-| 상태 | 건수 |
-|------|------|
-| Green | 0 |
-| Red | 0 |
-| Fail | 0 |
-| Skip | 0 |
-
-## SPEC 변경 이력
-
-> REVIEW 이후 SPEC.md가 변경된 경우 기록. 변경 추적이 안 되면 TS와 정합성이 깨진다.
-
-| # | 시점 | 변경 내용 | 사유 |
-|---|------|----------|------|
-
-## 의사결정 로그
-| # | 시점 | 결정 | 근거 |
-|---|------|------|------|
-
-## 블로커
-없음
-
-## 다음 액션
-{다음으로 수행할 작업}
+섹션 목록:
+- ACT 목록 (EXECUTE Phase 상세 — DESIGN 완료 후 state-tool add-row로 동적 삽입)
+- TS 현황 (VERIFY Phase 요약)
+- SPEC 변경 이력
+- 의사결정 로그
+- 블로커
+- 다음 액션
 ```
 
 ---
@@ -435,9 +389,9 @@ ACT 완료마다 state-tool을 호출하여 STATE.md를 갱신한다 (R-10: gate
 
 | Phase | 산출물 | 체크리스트 위치 |
 |-------|-------|----------------|
-| SPEC | TASK.md, SPEC.md, QA-SPEC.md | TASK.md 요구사항 |
-| DESIGN | SPEC-PLAN.md | - |
-| EXECUTE | QA-EXECUTE.md | PLAN.md §3 |
+| SPEC | TASK.md, SPEC.md | TASK.md 요구사항 (QA Gate 없음 — PM 직접 검증) |
+| DESIGN | SPEC-PLAN.md | SPEC.md FR↔ACT 분해 정합 |
+| EXECUTE | actions/ACT-{N}/DONE.md | SPEC-PLAN.md ACT 완료 기준 |
 
 ---
 
@@ -478,7 +432,7 @@ TASK (사용자 승인)
   → DESIGN Gate      -- 사용자 승인 (모드 경계)
   → EXECUTE-LOOP     -- PM 자율 관리 (ACT별 Gate + L1/L2 검증 포함)
   → VERIFY           -- PM 직접 수행 (Playwright E2E + TS 전체 Green 확인 + 사용자 Gate = CLOSE 진입 게이트)
-  → CLOSE            -- (사용자 승인 후) DONE.md 생성 + State Gate + 최종 보고
+  → CLOSE            -- (사용자 승인 후) DONE.md 생성 + 최종 보고
 ```
 
 ### 자율 게이트 흐름 (agentic)
@@ -490,7 +444,7 @@ TASK (PM 직접)
   → DESIGN Gate      -- PM 자율 검토
   → EXECUTE-LOOP     -- PM 자율 관리 (ACT별 Gate + L1/L2 검증 포함)
   → VERIFY           -- PM 직접 수행 (Playwright E2E + TS 전체 Green 확인 + 사용자 Gate = CLOSE 진입 게이트)
-  → CLOSE            -- (사용자 승인 후) DONE.md 생성 + State Gate + 최종 보고
+  → CLOSE            -- (사용자 승인 후) DONE.md 생성 + 최종 보고
 ```
 
 - agentic: 모든 Phase Gate를 PM이 자율 통과
@@ -499,8 +453,8 @@ TASK (PM 직접)
   ```
   ~/.opal/tools/state-tool/run.sh mark <task-path> --row N --done --auto-pass --note '<근거>'
   ```
-- **CLOSE 단계 최초 진입 행(#34)은 `--auto-pass` 금지** (`agentic_close_gate_requires_user` — §2.16 G-13); 반드시 명시 호출
-- R-10 비표준 행 구성: `gate-pass` 금지 — mark 4회 개별 호출 필수 (agentic/semi-agentic에서도 동일 적용)
+- **CLOSE 단계 최초 진입 행(#24)은 `--auto-pass` 금지** (`agentic_close_gate_requires_user` — §2.16 G-13); 반드시 명시 호출
+- R-10 비표준 행 구성: `gate-pass` deprecated(014) — mark 개별 호출 필수 (agentic/semi-agentic에서도 동일 적용)
 - AGENTIC-LOG.md에 모든 판단/오류/수정/의사결정 기록
 
 ### CLOSE 진입 게이트 (공통)
@@ -558,3 +512,5 @@ opal-harness-agentic.md §6 공통 기준에 추가:
 | v3.1.0 | 2026-05-01 | state-tool 도입 — STATE.md 직접 편집 금지 + `state-tool` 호출 표현 교체 (P-1~P-8 패턴 적용). `--rows-from` SSOT 지시 + R-10 비표준 행 gate-pass 금지 + mark 4회 개별 호출 필수 블록 추가. R-13 ACT 동적 행 `add-row` 임시 가이드. CLOSE State Gate mark 명시 + G-13 제약 추가. agentic `--auto-pass` + CLOSE 진입 게이트 거부 정책 추가 (134) |
 | v3.2.0 | 2026-05-09 11:22 | 3-way 모드 체계 도입 — semi-agentic 기본 채택 + Agentic/Semi-Agentic 모드 절 확장 + Phase 3 DESIGN 모드 경계 명시(D-DEC-2) + AGENTIC-LOG 생성 시점 분기 + Harness 절 3-way 분기 + state init --mode choices 갱신 (140) |
 | v3.3.0 | 2026-05-09 18:30 | 개인 식별자 "캡틴" → "소유자"/"사용자" 치환 — 배포 파일 정체성 누설 정정 (139) |
+| v3.4.0 | 2026-06-07 | STATE 행 35→24 재구성 — State Gate 행 11개 제거(stage-transition guard로 이전)+CLOSE State Gate→DONE.md 생성 단일화. gate-pass 금지 문구를 deprecated(014)로 정합 갱신(mark 개별 호출 유지). 본문 Gate 흐름 "State Gate → PM Gate → State Gate → 사용자 Gate" → "PM Gate → 사용자 Gate" 정합화. 각 Phase mark 행번호 재정렬. R-13 add-row `--after 23`→`--after 17`. PM Gate 점검 목록 산출물을 실제 opsdd 산출물로 정정. ACT 폴더 반복·R-10 비표준 구조 보존 (014 Phase 4) |
+| v3.4.1 | 2026-06-07 | `--rows-from` 파싱 수정 — STATE.md 구조 예시 인라인 마크다운 헤더(# STATE:, ## 현재 상태, ## 파이프라인 현황판)가 파서 섹션 경계 오인식 유발. SSOT 파이프라인 현황판 표를 `### STATE.md 구조` 앞으로 이동 + 구조 예시를 비-마크다운 헤더 형식으로 교체. `rows_count: 24` 파싱 정상 복구 (014 Phase 4) |
