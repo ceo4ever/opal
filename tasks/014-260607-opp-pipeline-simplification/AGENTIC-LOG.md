@@ -29,6 +29,8 @@
 | 13 | EXECUTE | Phase4-3 | FIX | opsdd `--rows-from` 파싱 버그(기존결함, 원본도 실패) 수정 — STATE 표를 인라인헤더 예시 앞으로 이동+예시 헤더 텍스트격하. init 실행 OK rows=24 입증(헌법§4). 캡틴 a 승인 | 완료 |
 | 14 | EXECUTE | Phase4-2 | FIX | 공유문서 18개 QA→PM Gate 정합화(opal-task-agent advanced)+gate-pass 서술 4파일 deprecated 정합(sonnet). state-template/state/agentic/semi/additional-work/agents/coding-principles/observability/plan·qa·verify 가이드 등 | 완료 |
 | 15 | EXECUTE | Phase4 | GATE | PM 직접 종합검증 — ①8 pilot 표 내 State/QA Gate 행 0 ②gate-pass 권장표현 0(실호출 0) ③신정책 위반 0 ④전 pilot init --rows-from 파싱 OK(opd15/opds10/opdw9/opp9/opwt10/opgc7/opsdd24) ⑤158 passed 회귀없음 | Pass |
+| 16 | EXECUTE | Phase5 | FIX | "그냥 해/직접 수행"을 L2 경량 트랙으로 공식화(opal/core/AGENT.md). L2 명칭 부여+진입 기준 표(적격/부적격)+동작검증 가드(TEST 필요시 L2 금지·헌법§4)+2진입 경로(발화/PM 자동제안)+주도성 규모 분기. 캡틴 a 승인 | 완료 |
+| 17 | EXECUTE | Phase5 | GATE | PM 직접 검증(AGENT.md 핵심문서) — L2 섹션·진입기준·동작검증 가드·자동제안·하네스 범위 보존·3-way 구분 전부 확인 | Pass |
 
 ## 진행 상황 (다음 세션 재개용)
 
@@ -36,7 +38,23 @@
 - ✅ **Phase 2** — opds STATE 행 19→10 재구성 (파일럿, 검증 완료) · 커밋 `8c4267d`
 - ✅ **Phase 3** — QA→PM Gate 통합. 6개 파일: pm-review-gate(검증원칙4종+self-check 흡수)/qa-standards(PM Gate 문서검증 전제 전환)/opal-harness-interactive(§2 QA Gate 제거+§3 자기모순 일원화+§4)/op-dev-qa·op-task-qa(검증기준 라이브러리로 역할한정)/opal-harness.md(SSOT stub 4곳 정합화). PM 직접 재검증 Pass · **미커밋**
 - ✅ **Phase 4** — 31파일(코드2+문서29). 4-1 state_tool.py 정합(gate-pass deprecate, 158 passed) / 4-3 7 pilot STATE 행 재구성(+opsdd 파싱버그 수정) / 4-2 공유문서 18 + gate-pass 서술 4 정합. PM 종합검증 Pass · **미커밋**
-- ⬜ **Phase 5** — L2 경량 트랙 진입 기준 정의 (작은 작업 풀파이프라인 우회)
+- ✅ **Phase 5** — L2 경량 트랙 공식화(opal/core/AGENT.md). "그냥 해"=L2 명명+진입 기준+동작검증 가드+PM 자동제안. PM 검증 Pass · **미커밋**
+
+---
+
+## 전체 완료 (Phase 1~5)
+
+| AC | 충족 | Phase |
+|----|------|-------|
+| QA Gate 단계 제거 + PM Gate 요구사항 누락·오해 검토 + self-check 흡수 | ✅ | P3 |
+| opds STATE 19→10 (산출물 행 흡수 + State Gate 중복 제거) | ✅ | P2 |
+| 모든 pilot 트랙 일관 적용 | ✅ | P4 (8 pilot) |
+| interactive 하네스 ↔ opds QA Gate 모순 해소 | ✅ | P3 |
+| L2 경량 트랙 진입 기준 정의 | ✅ | P5 |
+| TEST-SCENARIO·TEST·verify 불변 확인 | ✅ | 전 Phase 가드 |
+
+**커밋**: P1 `29a3a09` / P2 `8c4267d` / P3 `073c4c4` / P4 `1915535` / P5 미커밋
+**후속 후보**: install 재실행으로 `~/.opal/`에 배포 (CLOSE 후)
 
 ### Phase 4 확산 잔존 (Phase 3 워커 phase4_notes — 의도적 이연)
 
