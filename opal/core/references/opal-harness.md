@@ -11,7 +11,7 @@
 
 **사용자가 명시적으로 "승인", "진행해", "구현해" 등의 실행 허가를 내릴 때까지 코드를 작성하거나 파일을 생성/수정하지 않는다.**
 
-- 허용: 산출물 문서(.md) 작성, QA 에이전트 호출, 코드베이스 읽기/분석, 웹 검색
+- 허용: 산출물 문서(.md) 작성, PM Gate 문서검증, 코드베이스 읽기/분석, 웹 검색
 - 금지 (승인 전): 소스 코드 파일 생성/수정, 패키지 설치, DB 스키마 변경, 설정 파일 수정
 
 ### Git 사전 점검
@@ -88,7 +88,7 @@ Lazy 로드 모듈. 각 §의 stub이 로드 시점과 파일 경로를 지시�
 |------|------|----------|--------|
 | State 템플릿 | `harness/state-template.md` | TASK 단계에서 STATE.md 초기 생성 시 | §3 |
 | 추가작업 | `harness/additional-work.md` | 태스크 완료 후 추가 수정 필요 시 | §3 |
-| QA 표준 | `harness/qa-standards.md` | QA Gate 수행 시 | §2 |
+| QA 표준 | `harness/qa-standards.md` | PM Gate 문서검증 시 | §2 |
 | Observability | `harness/observability.md` | 워커 디스패치 직전 (매 디스패치마다) | §5 |
 | 병렬 처리 | `harness/parallel-execution.md` | 병렬 디스패치 시 | §7 |
 | @header 규칙 | `harness/header-rules.md` | EXECUTE 단계에서 코드 파일 생성/수정 시 | §8 |
@@ -102,11 +102,11 @@ Lazy 로드 모듈. 각 §의 stub이 로드 시점과 파일 경로를 지시�
 
 ### QA 산출물 표준 및 검증
 
-> **[필수 로드]** QA Gate 수행 시 로드한다.
+> **[필수 로드]** PM Gate 문서검증 시 로드한다.
 > 탐색: `harness/qa-standards.md`
 >
-> 적용 주체: PM + QA 에이전트
-> 적용 시점: QA Gate 수행 시
+> 적용 주체: PM
+> 적용 시점: PM Gate 문서검증 시
 > PM Gate 검증: QA 산출물 파일명이 표준을 따르는가, 체크리스트 갱신 규칙이 적용되었는가
 
 ### Citation Rules 적용 의무
@@ -282,3 +282,4 @@ OPAL 도구는 모두 `~/.opal/tools/{tool-name}/run.sh` 래퍼를 통해 호출
 | v4.7 | 2026-05-09 11:22 | §2 모듈 구조 표에 semi-agentic 행 추가 + 로딩 규칙 3-way 갱신 (140) |
 | v4.8 | 2026-05-10 19:36 | §2 하네스 모듈 테이블에 reporting-template 행 추가 — Eager 로드 (143) |
 | v4.9 | 2026-05-12 11:16 | §2 하네스 모듈 테이블에 coding-principles 행 추가 + §10 Coding Principles stub 신설 (001) |
+| v5.0 | 2026-06-07 | §1 Guards 허용 항목 "QA 에이전트 호출" → "PM Gate 문서검증" 치환. §2 하네스 모듈 테이블 QA 표준 로드 시점 "QA Gate 수행 시" → "PM Gate 문서검증 시" 치환. §2 QA 산출물 표준 stub 3곳 동일 정합화 — 별도 QA Gate/QA 에이전트 제거 (014 Phase 3 보완) |

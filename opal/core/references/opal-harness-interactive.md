@@ -20,30 +20,22 @@
 
 ## 2. QA Gate
 
-단계 완료 후 QA 에이전트를 호출하여 산출물을 검증한다.
+> **문서 QA는 PM Gate로 통합됨 — 별도 QA Gate 단계(QA 에이전트 디스패치)를 두지 않는다.** 요구사항→설계 누락·오해 검토와 공통 검증 원칙(완전성·정합성·명확성·실행가능성)은 §3 PM Gate에서 PM이 직접 수행한다 (`opal-pm.md` §4 / `harness/pm-review-gate.md` 검토 절차 §문서 QA 검증). 검증 기준 라이브러리(단계별 검증 ID·QA-{단계}.md 형식 등)는 `op-dev-qa` / `op-task-qa` SKILL.md를 PM이 참조한다.
 
-| 오케스트레이터 도메인 | QA 스킬 (qa_skill) | QA 에이전트 | 비고 |
-|---------------------|-------------------|------------|------|
-| dev (opd/opds/opdw) | op-dev-qa | opal-task-qa-agent | |
-| 범용 (opp) | op-task-qa | opal-task-qa-agent | |
-| SDD (opsdd) | op-task-qa (SPEC/REVIEW/DESIGN Phase) / op-dev-qa (EXECUTE-LOOP Phase) | opal-task-qa-agent | Phase별 QA 스킬이 다름 |
-| 기획 산출물 (opwt) | op-task-qa | opal-task-qa-agent | 기획 문서 검증 |
+> 동작 검증(TEST / TEST-SCENARIO / state-tool verify)은 본 통합과 무관한 독립·불변 영역이다. 이 통합은 "문서 QA"만 PM Gate로 흡수하는 것이다.
 
-각 오케스트레이터 SKILL.md에서 QA 스킬명을 명시한다.
-탐색 경로: `{프로젝트}/.opal/skills/{qa-skill}/SKILL.md` -> `~/.opal/skills/{qa-skill}/SKILL.md`
-
-**QA Gate 완료 즉시 — State Gate**:
-파이프라인 현황판에서 QA Gate 행과 바로 이어지는 State Gate 행을 state-tool로 갱신한다.
-
-```
-~/.opal/tools/state-tool/run.sh mark tasks/{NNN}-.../ --row <QA Gate 행 N> --done
-~/.opal/tools/state-tool/run.sh mark tasks/{NNN}-.../ --row <State Gate 행 N+1> --done
-```
-
-또는 표준 4행 패턴(QA Gate → State Gate → PM Gate → State Gate)인 경우 gate-pass 1회로 일괄 처리 권장:
+**State Gate (gate-pass) 호환**:
+파이프라인 현황판의 표준 4행 패턴(`QA Gate → State Gate → PM Gate → State Gate`)에서 PM이 gate-pass 1회로 일괄 ✅ 처리한다. 이 4행 패턴은 현재 state-tool가 인식하는 행 구성이며, 행 자체(STATE 행에서 "QA Gate" 행)의 재구성은 후속 작업에서 처리한다.
 
 ```
 ~/.opal/tools/state-tool/run.sh gate-pass tasks/{NNN}-.../ --start <QA Gate 행 N>
+```
+
+또는 행 개별 갱신:
+
+```
+~/.opal/tools/state-tool/run.sh mark tasks/{NNN}-.../ --row <행 N> --done
+~/.opal/tools/state-tool/run.sh mark tasks/{NNN}-.../ --row <행 N+1> --done
 ```
 
 미갱신 시 PM이 즉시 갱신한다. 갱신 확인 후 PM Gate로 진입한다.
@@ -88,7 +80,7 @@ PM Gate에서 해당 단계에 관련된 하네스 모듈이 적용되었는지 
 | 모듈 | 적용 조건 | 검증 항목 | Fail 시 |
 |------|---------|---------|---------|
 | state-template | 항상 | STATE.md가 공통 템플릿 구조를 따르는가 | 재작업 |
-| qa-standards | QA Gate 수행 시 | QA 산출물 파일명이 표준을 따르는가, 체크리스트 갱신 규칙이 적용되었는가 | QA 재소환 |
+| qa-standards | PM Gate 문서검증 시 | QA 산출물 파일명이 표준을 따르는가, 체크리스트 갱신 규칙이 적용되었는가 | PM 직접 보완 |
 | observability | 워커 디스패치 시 | 행위 주체 표시가 수행되었는가, 타임스탬프가 bash로 취득되었는가 | PM 즉시 보완 |
 | header-rules | EXECUTE 코드 변경 시 | changed_files 중 대상 확장자에 @header가 올바르게 작성되었는가 | 워커 재지시 |
 | parallel-execution | 병렬 디스패치 시 | 병렬/순차 판별이 올바른가, 리소스 제한이 준수되었는가 | 워커 재지시 |
@@ -115,20 +107,20 @@ Fail 시: §4 Gate Fail 공통 처리 참조.
 
 ### 체크리스트 갱신 상태 확인 (모든 PM Gate 공통)
 
-PM Gate에서 체크리스트 갱신 상태를 반드시 확인한다. QA 에이전트가 1차 갱신을 수행하므로, PM은 갱신 결과를 **확인**하는 역할이다.
+PM Gate에서 체크리스트 갱신 상태를 반드시 확인한다. 문서 QA가 PM Gate로 통합되었으므로, PM이 산출물 내용을 직접 읽고 판단하여 직접 갱신한다 (위 자가 진단 절차 4번과 동일 방향 — 에이전트 재호출 없음).
 
 **PLAN PM Gate 시**:
 1. TASK.md 요구사항 체크박스 갱신 상태를 확인한다
-2. 미갱신 항목이 있으면 QA 에이전트(op-task-qa 또는 op-dev-qa)를 재소환하여 갱신하게 한다
-3. PM이 직접 체크박스를 갱신하지 않는다
+2. 미갱신 항목이 있으면 PM이 관련 산출물을 Read하여 완료 여부를 판단하고 직접 갱신한다
+3. 실제 미완료로 판단되면 미완료 항목 목록에 사유와 함께 올린다
 
 **EXECUTE PM Gate 시**:
 1. PLAN.md §3 실행 체크리스트 갱신 상태를 확인한다
-2. PLAN.md §4 QA 체크리스트 갱신 상태를 확인한다
-3. 미갱신 항목이 있으면 QA 에이전트를 재소환하여 갱신하게 한다
+2. PLAN.md §4 QA 체크리스트 갱신 상태를 확인한다 (동작 증거 항목은 TEST/verify 산출 증거를 확인하여 갱신 — 동작 검증 영역은 불변)
+3. 미갱신 항목이 있으면 PM이 산출물·증거를 Read하여 직접 판단·갱신한다
 4. **모든 체크리스트가 갱신 완료된 후에만** DONE.md 생성으로 진행한다
 
-> **QA 에이전트 미발동 시**: PM Gate에서 미갱신을 감지하면 이 시점에서 QA 에이전트를 소환하여 갱신한다.
+> **일원화 원칙**: 미갱신 감지 시 에이전트를 재소환하지 않는다. PM이 직접 내용을 읽고 판단하여 갱신하거나, 진짜 미완료 항목만 사용자에게 올린다.
 
 ---
 
@@ -142,19 +134,23 @@ Gate 통과 실패 시 아래 절차를 따른다. 각 Gate 섹션의 "Fail 시 
 |------|----------|---------|
 | State Gate | 파이프라인 현황판 테이블 미갱신 | PM이 즉시 해당 행 갱신 → State Gate 재확인 |
 
-### 재소환·재지시 처리
+### 재지시·보완 처리
+
+문서 QA가 PM Gate로 통합되었으므로 Fail 처리는 PM Gate로 일원화한다 (별도 QA 에이전트 재소환 없음).
 
 | Gate | Fail 원인 | PM 처리 | 최대 재시도 |
 |------|----------|---------|-----------|
-| QA Gate | 산출물 품질 기준 미달 | 워커 재지시 | 1회 |
-| PM Gate | 체크리스트 미갱신 | QA 에이전트 재소환 | 1회 |
+| PM Gate | 산출물 품질 기준 미달(문서 QA — 완전성·정합성·명확성·실행가능성 미흡, 요구사항 누락·오해) | PM 직접 보완 또는 워커 재지시 | 1회 |
+| PM Gate | 체크리스트 미갱신 | PM 직접 확인·갱신 (미완료 항목은 워커 재지시) | 1회 |
+
+> 동작 검증(TEST / TEST-SCENARIO / verify) Fail은 본 표와 무관한 독립 영역의 처리 절차를 따른다.
 
 ### 사용자 에스컬레이션 조건
 
 재시도 한계 초과 또는 아래 조건에 해당하면 즉시 사용자에게 보고한다:
 
-- QA Gate 재지시 후 재실패
-- PM Gate 재소환 후 체크리스트 여전히 미갱신
+- PM Gate 워커 재지시 후 재실패
+- PM Gate 보완 후 체크리스트 여전히 미갱신(실제 미완료)
 - 설계/아키텍처 수준 문제 감지 (즉시 에스컬레이션, 재시도 없음)
 
 에스컬레이션 보고 형식:
@@ -190,3 +186,4 @@ Gate 통과 실패 시 아래 절차를 따른다. 각 Gate 섹션의 "Fail 시 
 | v2.4 | 2026-04-12 | §3 PM Gate에 하네스 모듈 적용 확인 서브섹션 추가 — 6개 모듈 체크포인트 테이블 (111) |
 | v2.5 | 2026-05-01 | §2 QA Gate 직후 / §3 PM Gate 직후 state-tool `mark` 호출 표기 추가 + gate-pass 일괄 처리 권장 (§2.13 G-10). §3 자가 진단 6번 항목 `state validate` 추가 (§2.6). §3 PM Gate 직후 CLOSE 진입 close_gate_violation 자동 검증 명시 (§2.16 G-13) (134) |
 | v2.6 | 2026-05-09 11:22 | 도입부 semi-agentic 모드의 PLAN까지 동작 준용 안내 추가 (140) |
+| v2.7 | 2026-06-07 | 문서 QA를 PM Gate로 통합 — §2 QA Gate를 "PM Gate 통합·별도 단계 없음"으로 재정의(QA 스킬/에이전트 디스패치 테이블 제거, State Gate gate-pass 호환 유지). §3 체크리스트 갱신 상태 확인을 PM 직접 확인·갱신으로 일원화(자가 진단 절차와 모순 해소). §3 모듈표 qa-standards 행을 "PM Gate 문서검증 시 / PM 직접 보완"으로 갱신. §4 QA Gate 행·PM Gate 재소환 행을 PM Gate 일원화로 통합. 동작 검증(TEST/verify) 영역은 불변 (014) |

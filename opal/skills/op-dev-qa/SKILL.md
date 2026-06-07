@@ -1,19 +1,19 @@
 ---
 name: op-dev-qa
 description: |
-  **QA 검증 단계 스킬**. 산출물의 품질을 검증하여 QA 리포트를 생성한다. 단계에 따라 qa-dev-guide 또는 qa-wireframe-guide를 참조한다.
-  반드시 이 스킬을 사용해야 하는 상황: 오케스트레이터가 QA 검증을 디스패치할 때.
-  필수 입력: 검증 대상 산출물 경로 + 단계명. 선택 입력: TASK.md. 보장 출력: QA-{단계}.md.
+  **Dev 문서 QA 검증 기준 라이브러리**. 문서 QA(요구사항→설계 검토)는 별도 QA Gate 단계를 두지 않고 PM Gate가 직접 수행하며, PM이 PM Gate 문서검증 시 이 스킬의 검증 기준(공통 검증 원칙·단계별 검증 ID·QA-{단계}.md 형식)을 참조한다.
+  참조 시점: PM Gate 문서검증 시. 단계에 따라 qa-dev-guide 또는 qa-wireframe-guide를 참조한다.
+  검증 대상 입력: 검증 대상 산출물 경로 + 단계명. 선택 입력: TASK.md. 산출 형식: QA-{단계}.md (PM이 검증 결과 기록 시 사용).
 ---
 
-# op-dev-qa — Dev QA 검증
+# op-dev-qa — Dev 문서 QA 검증 기준
 
 ## 실행 컨텍스트
 
-- **호출자**: 오케스트레이터가 QA 검증을 디스패치
-- **실행 주체**: QA 전용 워커 에이전트 (opal-task-qa-agent)
-- **입력**: 검증 대상 산출물 경로 + `stage` (단계명)
-- **출력**: `tasks/{NNN}-{태스크명}/QA-{단계}.md`
+- **참조 주체**: PM Gate 문서검증을 수행하는 PM (오케스트레이터). 별도 QA 에이전트 디스패치 없이 PM이 본 스킬의 검증 기준을 참조한다.
+- **역할**: 동작 검증(TEST / TEST-SCENARIO / verify, 독립·불변 영역)과 무관한 **문서 QA(요구사항→설계 검토)** 의 검증 기준을 제공한다.
+- **검증 입력**: 검증 대상 산출물 경로 + `stage` (단계명)
+- **검증 산출 형식**: `tasks/{NNN}-{태스크명}/QA-{단계}.md` (PM이 검증 결과를 기록할 때 사용)
 
 > **[MUST]** 산출물 작성·검증 시 `opal/core/references/harness/citation-rules.md`를 Read하여 규칙(근거 제시 원칙 / 트랙별 매트릭스 / [MUST] 토큰 / 영역 간 용어 일관성 / decision_required 계약)을 준수한다.
 
@@ -30,7 +30,7 @@ Read ~/.opal/skills/op-dev-qa/personas/qa-engineer.md
 
 ## 입력
 
-에이전트 호출 시 전달해야 하는 정보:
+PM Gate 문서검증 시 PM이 다루는 검증 대상 정보:
 
 | 입력 | 설명 |
 |------|------|
@@ -175,11 +175,11 @@ tasks/{NNN}-{태스크명}/QA-{단계}.md
 
 ## 완료 후 동작
 
-QA 리포트 생성이 완료되면 결과를 오케스트레이터에 반환한다.
+PM Gate 문서검증 결과를 QA-{단계}.md로 기록하면, PM은 PM Gate 판정으로 이를 반영한다.
 
-**반환 형식**:
+**기록 형식**:
 ```
-QA 완료: tasks/{NNN}-{태스크명}/QA-{단계}.md | 판정: {Pass / Needs Revision}
+QA: tasks/{NNN}-{태스크명}/QA-{단계}.md | 판정: {Pass / Needs Revision}
 ```
 
 ---
@@ -191,3 +191,4 @@ QA 완료: tasks/{NNN}-{태스크명}/QA-{단계}.md | 판정: {Pass / Needs Rev
 | v1.0 | - | 초기 작성 |
 | v1.1 | 2026-04-13 13:48 | PLAN (Full) 검증 기준에 P-7 기능-QA 커버리지 추가 — Multi-Feature 모드에서 모든 F-NNN이 §5 QA 체크리스트 최소 1개 항목 커버, 빈틈 발견 시 Fail (114) |
 | v1.2 | 2026-04-24 | citation-rules 트리거 1줄 주입 — SSOT + Trigger 패턴 (130) |
+| v1.3 | 2026-06-07 | 역할 한정 — "QA Gate 단계 워커"에서 "PM Gate 문서검증 시 PM이 참조하는 검증 기준 라이브러리"로 재정의(description/실행 컨텍스트/입력/반환). 검증 기준 콘텐츠(공통 검증 원칙·단계별 검증 ID·QA-{단계}.md 형식)는 보존. 동작 검증 영역은 불변 (014) |

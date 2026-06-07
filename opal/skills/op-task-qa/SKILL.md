@@ -1,20 +1,19 @@
 ---
 name: op-task-qa
 description: |
-  **범용 QA 검증 스킬**. 도메인 무관 산출물(TASK.md, PLAN.md 등)의 품질을 검증한다.
-  코드 개발 QA는 op-dev-qa, 범용 QA는 이 스킬을 사용한다.
-  반드시 이 스킬을 사용해야 하는 상황: 범용 오케스트레이터(opal-pilot-project)가 QA 검증을 디스패치할 때.
-  필수 입력: 검증 대상 산출물 경로 + 단계명. 보장 출력: QA-{단계}.md.
+  **범용 문서 QA 검증 기준 라이브러리**. 도메인 무관 산출물(TASK.md, PLAN.md 등)의 문서 QA 검증 기준을 제공한다. 코드 개발 문서 QA는 op-dev-qa, 범용 문서 QA는 이 스킬을 참조한다.
+  문서 QA(요구사항→설계 검토)는 별도 QA Gate 단계를 두지 않고 PM Gate가 직접 수행하며, PM이 PM Gate 문서검증 시 이 스킬의 검증 기준을 참조한다.
+  참조 시점: PM Gate 문서검증 시. 검증 대상 입력: 검증 대상 산출물 경로 + 단계명. 산출 형식: QA-{단계}.md (PM이 검증 결과 기록 시 사용).
 ---
 
-# op-task-qa — 범용 QA 검증
+# op-task-qa — 범용 문서 QA 검증 기준
 
 ## 실행 컨텍스트
 
-- **호출자**: 범용 오케스트레이터(opal-pilot-project)가 QA 검증을 디스패치
-- **실행 주체**: QA 전용 워커 에이전트 (opal-task-qa-agent)
-- **입력**: 검증 대상 산출물 경로 + `stage` (단계명)
-- **출력**: `tasks/{NNN}-{태스크명}/QA-{단계}.md`
+- **참조 주체**: PM Gate 문서검증을 수행하는 PM (오케스트레이터). 별도 QA 에이전트 디스패치 없이 PM이 본 스킬의 검증 기준을 참조한다.
+- **역할**: 동작 검증(TEST / TEST-SCENARIO / verify, 독립·불변 영역)과 무관한 **문서 QA(요구사항→설계 검토)** 의 범용 검증 기준을 제공한다. 코드 개발 문서 QA는 `op-dev-qa`를 참조한다.
+- **검증 입력**: 검증 대상 산출물 경로 + `stage` (단계명)
+- **검증 산출 형식**: `tasks/{NNN}-{태스크명}/QA-{단계}.md` (PM이 검증 결과를 기록할 때 사용)
 
 > **[MUST]** 산출물 작성·검증 시 `opal/core/references/harness/citation-rules.md`를 Read하여 규칙(근거 제시 원칙 / 트랙별 매트릭스 / [MUST] 토큰 / 영역 간 용어 일관성 / decision_required 계약)을 준수한다.
 
@@ -31,7 +30,7 @@ Read ~/.opal/skills/op-task-qa/personas/qa-engineer.md
 
 ## 입력
 
-에이전트 호출 시 전달해야 하는 정보:
+PM Gate 문서검증 시 PM이 다루는 검증 대상 정보:
 
 | 입력 | 설명 |
 |------|------|
@@ -154,11 +153,11 @@ tasks/{NNN}-{태스크명}/QA-{단계}.md
 
 ## 완료 후 동작
 
-QA 리포트 생성이 완료되면 결과를 오케스트레이터에 반환한다.
+PM Gate 문서검증 결과를 QA-{단계}.md로 기록하면, PM은 PM Gate 판정으로 이를 반영한다.
 
-**반환 형식**:
+**기록 형식**:
 ```
-QA 완료: tasks/{NNN}-{태스크명}/QA-{단계}.md | 판정: {Pass / Needs Revision}
+QA: tasks/{NNN}-{태스크명}/QA-{단계}.md | 판정: {Pass / Needs Revision}
 ```
 
 ## 변경이력
@@ -167,3 +166,4 @@ QA 완료: tasks/{NNN}-{태스크명}/QA-{단계}.md | 판정: {Pass / Needs Rev
 |------|------|---------|
 | v1.0 | - | 초기 작성 — 범용 QA 검증 스킬 (op-dev-qa 기반 도메인 무관화) |
 | v1.1 | 2026-04-24 | citation-rules 트리거 1줄 주입 — SSOT + Trigger 패턴 (130) |
+| v1.2 | 2026-06-07 | 역할 한정 — "QA Gate 단계 워커"에서 "PM Gate 문서검증 시 PM이 참조하는 검증 기준 라이브러리"로 재정의(description/실행 컨텍스트/입력/반환, op-dev-qa 참조 정합 유지). 검증 기준 콘텐츠 보존. 동작 검증 영역은 불변 (014) |
