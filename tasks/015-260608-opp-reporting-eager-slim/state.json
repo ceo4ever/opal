@@ -1,0 +1,101 @@
+{
+  "task_id": "015-260608-opp-reporting-eager-slim",
+  "skill": "opp",
+  "mode": "agentic",
+  "schema_version": "1.0",
+  "created_at": "2026-06-08 16:26",
+  "updated_at": "2026-06-08 17:07",
+  "current_status": "done",
+  "rows": [
+    {
+      "row_id": 1,
+      "stage": "TASK",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-08 16:26",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 2,
+      "stage": "TASK",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-08 16:26",
+      "owner": "auto",
+      "note": "agentic auto-pass: agentic: TASK 요구사항 R1~R6 검증가능 단위 정리, 대화 합의 방향 5개 반영 — 모호성 없어 자율 진행"
+    },
+    {
+      "row_id": 3,
+      "stage": "PLAN",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-08 16:35",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 4,
+      "stage": "PLAN",
+      "item": "PM Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-08 16:35",
+      "owner": "auto",
+      "note": "agentic auto-pass: agentic: PLAN.md 직접검증 Pass — R1~R6 커버, R1 헌법문체 인라인 초안 전문/R2 §10 이전위치/참조매핑 완비. 설계피드백 5건 PM 수용(R4/R6 범위 grep근거 보정 포함)"
+    },
+    {
+      "row_id": 5,
+      "stage": "PLAN",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-08 16:43",
+      "owner": "user",
+      "note": "캡틴 확인: EXECUTE 자율진행 승인(1번) + 적용범위 보강 동의(전 모드 적용/승인대기 조건부)"
+    },
+    {
+      "row_id": 6,
+      "stage": "EXECUTE",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-08 16:48",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 7,
+      "stage": "EXECUTE",
+      "item": "PM Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-08 16:49",
+      "owner": "auto",
+      "note": "agentic auto-pass: agentic: EXECUTE 직접Read검증 Pass — AGENT.md §보고형식 인라인(골격·원칙·작동하는가/적용범위2줄/AskUserQuestion·승인대기) + semi-agentic §10 양식3종(🔍근거 0건, 통합골격 정합) + reporting-template 삭제 + 활성참조 0건. Step6.6 본문제거(흐름 6.5→7 보존)"
+    },
+    {
+      "row_id": 8,
+      "stage": "EXECUTE",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-08 17:07",
+      "owner": "user",
+      "note": "캡틴 승인: CLOSE 진입 (보정 확인 후 확정)"
+    },
+    {
+      "row_id": 9,
+      "stage": "CLOSE",
+      "item": "DONE.md 생성",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-08 17:07",
+      "owner": "PM",
+      "note": null
+    }
+  ]
+}
