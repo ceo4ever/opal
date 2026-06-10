@@ -1696,7 +1696,7 @@ class TestRowsFrom(BaseTestCase):
 # ═════════════════════════════════════════════════════════════════════════════
 
 class TestErrorCodesCompleteness(unittest.TestCase):
-    """PLAN §2.18 E-1: ERROR_CODES 25종 기존 + PLAN 013 신규 2종 + PLAN 014 신규 1종 = 28종 모두 등재 확인"""
+    """PLAN §2.18 E-1: ERROR_CODES 25종 기존 + PLAN 013 신규 2종 + PLAN 014 신규 1종 + PLAN 016 신규 2종 = 30종 모두 등재 확인"""
 
     EXPECTED_CODES = [
         # 기존 25종 (PLAN §2.18 + 이전 추가분)
@@ -1730,11 +1730,14 @@ class TestErrorCodesCompleteness(unittest.TestCase):
         "evidence_missing",
         # PLAN 014 신규 1종 (M-A stage-transition guard)
         "stage_transition_violation",
+        # PLAN 016 신규 2종 (RED-first TDD 트랙 게이트)
+        "red_evidence_missing",
+        "test_modified_in_fix",
     ]
 
     def test_error_codes_count(self):
-        """ERROR_CODES 상수가 28종 모두 포함 (PLAN §2.18 + PLAN 013 + PLAN 014)"""
-        self.assertEqual(len(ST.ERROR_CODES), 28)
+        """ERROR_CODES 상수가 30종 모두 포함 (PLAN §2.18 + PLAN 013 + PLAN 014 + PLAN 016)"""
+        self.assertEqual(len(ST.ERROR_CODES), 30)
 
     def test_all_28_codes_registered(self):
         """28종 코드 각각이 ERROR_CODES에 등재됨"""
@@ -2405,6 +2408,432 @@ class TestStandardItemsConstants(unittest.TestCase):
         """DEPRECATED_ITEMS에 QA Gate/State Gate 보존 (레거시 하위호환) (014 Phase 4)"""
         self.assertIn("QA Gate", ST.DEPRECATED_ITEMS)
         self.assertIn("State Gate", ST.DEPRECATED_ITEMS)
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# K. RED-first TDD 트랙 — RED 게이트·테스트 불변성 단위 테스트 (PLAN 016)
+# ═════════════════════════════════════════════════════════════════════════════
+
+class TestRedFirst(BaseTestCase):
+    """RED-first TDD 트랙 — verify --red-check / --fix-mode 게이트 단위 테스트 [T016].
+
+    [MUST] TASK T-11: 표준 라이브러리만 사용 (unittest/re/fnmatch/tempfile/json).
+    [MUST] AGENT.md §확정 기준 #2: tempfile.mkdtemp() 사용, ~/.opal/ 수정 금지.
+    신규 인자: args.red_check (bool), args.changed_files (list),
+               args.test_globs (list), args.fix_mode (bool).
+    신규 에러: "red_evidence_missing", "test_modified_in_fix".
+    신규 헬퍼: _check_red_evidence, _match_test_files.
+    PLAN §3.2.2 기준 설계.
+    """
+
+    # ── 픽스처 헬퍼 ─────────────────────────────────────────────────────────
+
+    def _write_scenario(self, content):
+        """TEST-SCENARIO.md를 task_path 아래에 생성한다."""
+        p = self.task_path / "TEST-SCENARIO.md"
+        p.write_text(content, encoding="utf-8")
+        return p
+
+    def _call_verify_red(self, **kwargs):
+        """cmd_verify를 호출하여 (exit_code, result_dict)를 반환.
+
+        make_args에 red_check/fix_mode/changed_files/test_globs를 주입한다.
+        기존 TestVerify._call_verify 헬퍼와 동일한 try/except SystemExit 패턴.
+        """
+        import io
+        from contextlib import redirect_stdout
+
+        args = make_args(
+            task_path=str(self.task_path),
+            scenario=kwargs.pop("scenario", None),
+            red_check=kwargs.pop("red_check", False),
+            fix_mode=kwargs.pop("fix_mode", False),
+            changed_files=kwargs.pop("changed_files", None),
+            test_globs=kwargs.pop("test_globs", None),
+            **kwargs,
+        )
+        out = io.StringIO()
+        exit_code = 0
+        with redirect_stdout(out):
+            try:
+                ST.cmd_verify(args)
+            except SystemExit as e:
+                exit_code = e.code
+        output = out.getvalue().strip()
+        result = json.loads(output) if output else {}
+        return exit_code, result
+
+    # ── S-1: verify --red-check + RED 증거 존재 → 통과 ──────────────────────
+
+    def test_verify_red_check_pass(self):
+        """[T016/L1-S1] verify --red-check + RED 증거 있음 → exit 0, ok=True.
+
+        PLAN §3.2.5 TS-002. 시나리오 표에 "RED 증거" 헤더와 실패 출력 내용 포함.
+        구현될 _check_red_evidence가 "RED 증거" 헤더 + 내용 유무로 판정 (§3.2.2).
+        """
+        self._write_scenario(
+            "# TEST-SCENARIO\n\n"
+            "| 시나리오 | RED 증거 | 결과 | 실행 명령 | 출력 |\n"
+            "|---------|---------|------|---------|------|\n"
+            "| S-1 정상 | FAILED tests/test_state_tool.py::TestRedFirst (AssertionError) | Pass | python -m unittest | 1 passed |\n"
+        )
+        exit_code, result = self._call_verify_red(red_check=True)
+        self.assertEqual(exit_code, 0)
+        self.assertTrue(result.get("ok"))
+
+    # ── S-2: verify --red-check + RED 증거 누락 → red_evidence_missing ───────
+
+    def test_verify_red_check_missing(self):
+        """[T016/L1-S2] verify --red-check + RED 증거 빈 표 → exit 1, error==red_evidence_missing.
+
+        PLAN §3.2.5 TS-003. "RED 증거" 열이 비어있는 케이스.
+        """
+        self._write_scenario(
+            "# TEST-SCENARIO\n\n"
+            "| 시나리오 | RED 증거 | 결과 | 실행 명령 | 출력 |\n"
+            "|---------|---------|------|---------|------|\n"
+            "| S-1 정상 |  | Pass | python -m unittest | 1 passed |\n"
+        )
+        exit_code, result = self._call_verify_red(red_check=True)
+        self.assertEqual(exit_code, 1)
+        self.assertFalse(result.get("ok", True))
+        self.assertEqual(result.get("error"), "red_evidence_missing")
+
+    # ── S-3: verify --fix-mode + 테스트 파일 변경 → test_modified_in_fix ─────
+
+    def test_verify_fix_mode_test_modified(self):
+        """[T016/L1-S3] fix_mode=True + changed_files에 테스트 파일 → exit 1, error==test_modified_in_fix.
+
+        PLAN §3.2.5 TS-004. _match_test_files(changed_files, test_globs) 결과 비지 않음.
+        """
+        exit_code, result = self._call_verify_red(
+            fix_mode=True,
+            changed_files=["tests/test_state_tool.py"],
+            test_globs=["tests/**"],
+        )
+        self.assertEqual(exit_code, 1)
+        self.assertFalse(result.get("ok", True))
+        self.assertEqual(result.get("error"), "test_modified_in_fix")
+
+    # ── S-4: verify --fix-mode + 프로덕션 파일만 → 통과 ────────────────────
+
+    def test_verify_fix_mode_prod_ok(self):
+        """[T016/L1-S4] fix_mode=True + changed_files에 프로덕션 파일만 → exit 0, ok=True.
+
+        PLAN §3.2.5 TS-005. 테스트 파일 미매칭 → 불변성 위반 없음.
+        """
+        exit_code, result = self._call_verify_red(
+            fix_mode=True,
+            changed_files=["state_tool.py"],
+            test_globs=["tests/**", "*_test.py"],
+        )
+        self.assertEqual(exit_code, 0)
+        self.assertTrue(result.get("ok"))
+
+    # ── S-6: verify --red-check + 산출물(TEST-SCENARIO.md) 부재 → graceful skip ─
+
+    def test_verify_red_check_skip_no_file(self):
+        """[T016/L1-S6] TEST-SCENARIO.md 부재 + red_check=True → exit 0, skipped=True.
+
+        PLAN §3.2.5 TS-007. 기존 _find_scenario_file None 경로 재사용(graceful skip).
+        """
+        # TEST-SCENARIO.md를 생성하지 않음
+        exit_code, result = self._call_verify_red(red_check=True)
+        self.assertEqual(exit_code, 0)
+        self.assertTrue(result.get("ok"))
+        self.assertTrue(result.get("skipped"))
+
+    # ── S-7: RED 증거 없으면 GREEN 진입 차단 (통합) ─────────────────────────
+
+    def test_red_gate_blocks_green(self):
+        """[T016/L2-S7] init state.json + RED 증거 빈 TEST-SCENARIO.md → verify --red-check가 차단 입증.
+
+        PLAN §3.2.5 TS-007 통합 변형. 오케스트레이터 명시 verify --red-check 게이트.
+        RED 증거 누락 시 red_evidence_missing exit 1 → GREEN 진입 차단.
+        """
+        self._init()
+        self._write_scenario(
+            "# TEST-SCENARIO\n\n"
+            "| 시나리오 | RED 증거 | 결과 | 실행 명령 | 출력 |\n"
+            "|---------|---------|------|---------|------|\n"
+            "| S-1 | |  Pass | python -m unittest | 1 passed |\n"
+        )
+        exit_code, result = self._call_verify_red(red_check=True)
+        self.assertEqual(exit_code, 1)
+        self.assertEqual(result.get("error"), "red_evidence_missing",
+                         "RED 증거 누락 시 verify가 red_evidence_missing을 반환해야 GREEN 진입 차단됨")
+
+    # ── S-8: verify --fix-mode + test_globs 미지정 → 불변성 검사 skip ────────
+
+    def test_verify_fix_mode_no_globs(self):
+        """[T016/L1-S8] fix_mode=True + changed_files + test_globs 미지정 → exit 0, immutability skip.
+
+        PLAN §3.2.2: '--fix-mode' + '--test-globs' 미지정 → 불변성 검사 skip (deterministic 입력 없음).
+        result의 immutability_check == "skipped (no test-globs)".
+        """
+        exit_code, result = self._call_verify_red(
+            fix_mode=True,
+            changed_files=["tests/x.py"],
+            test_globs=None,
+        )
+        self.assertEqual(exit_code, 0)
+        self.assertTrue(result.get("ok"))
+        self.assertEqual(
+            result.get("immutability_check"),
+            "skipped (no test-globs)",
+            "test_globs 미지정 시 immutability_check가 'skipped (no test-globs)' 이어야 함",
+        )
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# [T017] 다중 Step EXECUTE 행 조기 done 가드
+# ═════════════════════════════════════════════════════════════════════════════
+
+class TestMultiStepDoneGuard(BaseTestCase):
+    """[T017] 다중 Step EXECUTE 행 조기 done 가드 테스트.
+
+    설계된 동작 (PLAN §3.2.2):
+    - mark --step N/M --done: N<M 이면 status=in_progress 유지 + step:"N/M" 저장
+    - mark --step N/M --done: N==M 이면 status=done + step:"N/M" 저장
+    - mark (--step 없음 / 비정형): 기존 즉시 done (하위 호환)
+    - N<M 행(in_progress)이 있으면 다음 단계 mark/advance → stage_transition_violation
+    """
+
+    # EXECUTE 행이 포함된 표준 순차 구조
+    MULTISTEP_ROWS = json.dumps([
+        {"stage": "TASK",    "item": "작업"},
+        {"stage": "PLAN",    "item": "작업"},
+        {"stage": "EXECUTE", "item": "다중 Step 작업"},
+        {"stage": "CLOSE",   "item": "사용자 확인"},
+    ])
+
+    def setUp(self):
+        super().setUp()
+        self._init(rows_spec=self.MULTISTEP_ROWS)
+
+    def _mark_and_get_row(self, row_id, step=None):
+        """mark 호출 후 state.json에서 해당 행을 반환 (공개 관측 기준)."""
+        code = self._mark(row_id, step=step, as_worker=True, worker_stage="EXECUTE")
+        state = self._state()
+        row = state["rows"][row_id - 1]
+        return code, row
+
+    # ── TS-001: N<M → in_progress 유지 + step 저장 ───────────────────────────
+
+    def test_step_n_lt_m_stays_in_progress(self):
+        """[T017/TS-001] mark --row R --done --step 1/7 → status=in_progress(done 아님), step=="1/7".
+
+        미구현 시: 현재 코드는 --done 무조건 done 처리하여 status=done → AssertionError(RED).
+        PLAN §3.2.2 R-1: N<M 이면 행을 done으로 닫지 않고 in_progress 유지.
+        """
+        # EXECUTE 행(row3)이 대상 — 앞 행(1,2) 먼저 완료
+        self._mark(1)
+        self._mark(2)
+
+        code, row = self._mark_and_get_row(3, step="1/7")
+
+        self.assertEqual(code, 0, "step 1/7 mark가 exit 0으로 성공해야 함")
+        self.assertEqual(
+            row["status"], "in_progress",
+            f"N<M(1<7)이면 status=in_progress이어야 함, 실제: {row['status']}"
+        )
+        self.assertNotEqual(row["status"], "done",
+                            "N<M이면 status가 done이면 안 됨 (조기 done 가드)")
+        self.assertEqual(
+            row.get("step"), "1/7",
+            f"state.json 행에 step=='1/7' 저장되어야 함, 실제: {row.get('step')}"
+        )
+
+    # ── TS-002: N==M → done + step 저장 ──────────────────────────────────────
+
+    def test_step_n_eq_m_done(self):
+        """[T017/TS-002] mark --row R --done --step 7/7 → status=done, step=="7/7".
+
+        N==M은 마지막 Step → 정상 done (PLAN §3.2.2 R-2).
+        현재 코드도 done 처리하므로 step 저장 검증이 핵심 — step 미저장이면 FAIL.
+        """
+        self._mark(1)
+        self._mark(2)
+
+        code, row = self._mark_and_get_row(3, step="7/7")
+
+        self.assertEqual(code, 0, "step 7/7 mark가 exit 0으로 성공해야 함")
+        self.assertEqual(
+            row["status"], "done",
+            f"N==M(7==7)이면 status=done이어야 함, 실제: {row['status']}"
+        )
+        self.assertEqual(
+            row.get("step"), "7/7",
+            f"state.json 행에 step=='7/7' 저장되어야 함, 실제: {row.get('step')}"
+        )
+
+    # ── TS-003: N<M 행이 in_progress이면 다음 단계 mark 차단 ─────────────────
+
+    def test_incomplete_step_blocks_next_stage(self):
+        """[T017/TS-003] EXECUTE 행을 --step 1/7 --done(in_progress 기대) 후 다음 단계 mark → stage_transition_violation.
+
+        미구현 시: EXECUTE가 done되어 다음 단계 mark가 통과됨 → AssertionError(RED).
+        PLAN §3.2.3: in_progress는 _COMPLETE_STATUSES에 없으므로 기존 guard가 자동 차단.
+        """
+        import io
+        from contextlib import redirect_stdout
+
+        self._mark(1)
+        self._mark(2)
+        # EXECUTE 행(row3)을 1/7로 mark → in_progress 기대 (미구현 시 done)
+        self._mark(3, step="1/7")
+
+        # 다음 단계 행(row4 = CLOSE) mark 시도 → stage_transition_violation 기대
+        out = io.StringIO()
+        with redirect_stdout(out):
+            with _mock_now():
+                args = make_args(
+                    task_path=str(self.task_path),
+                    row=4, done=True,
+                )
+                try:
+                    ST.cmd_mark(args)
+                except SystemExit:
+                    pass
+        raw = out.getvalue().strip()
+        result = json.loads(raw) if raw else {}
+
+        self.assertEqual(
+            result.get("error"), "stage_transition_violation",
+            f"EXECUTE 행이 in_progress이면 다음 단계 mark가 stage_transition_violation으로 거부되어야 함. 실제: {result}"
+        )
+        self.assertIn(3, result.get("incomplete_rows", []),
+                      f"incomplete_rows에 row3이 포함되어야 함, 실제: {result.get('incomplete_rows')}")
+
+    # ── TS-004: N<M 행이 in_progress이면 CLOSE 첫 행 mark 차단 ──────────────
+
+    def test_incomplete_step_blocks_close(self):
+        """[T017/TS-004] 선행 EXECUTE 행 --step 1/7 --done(in_progress) 후 CLOSE 첫 행 mark → 거부(stage_transition_violation).
+
+        미구현 시: EXECUTE가 done되어 CLOSE mark 통과 → AssertionError(RED).
+        PLAN §3.2.4: mark/advance는 stage-transition guard를 close gate보다 먼저 호출하므로 차단.
+        """
+        import io
+        from contextlib import redirect_stdout
+
+        self._mark(1)
+        self._mark(2)
+        # EXECUTE 행(row3)을 1/7로 mark → in_progress 기대
+        self._mark(3, step="1/7")
+
+        # CLOSE 첫 행(row4) mark → stage_transition_violation 기대
+        out = io.StringIO()
+        with redirect_stdout(out):
+            with _mock_now():
+                args = make_args(
+                    task_path=str(self.task_path),
+                    row=4, done=True,
+                    owner="user",
+                )
+                try:
+                    ST.cmd_mark(args)
+                except SystemExit:
+                    pass
+        raw = out.getvalue().strip()
+        result = json.loads(raw) if raw else {}
+
+        self.assertEqual(
+            result.get("error"), "stage_transition_violation",
+            f"EXECUTE 행이 in_progress이면 CLOSE mark가 stage_transition_violation으로 거부되어야 함. 실제: {result}"
+        )
+
+    # ── TS-005: --step 없는 mark → 즉시 done (하위 호환) ────────────────────
+
+    def test_no_step_backward_compat(self):
+        """[T017/TS-005] --step 없는 mark → 기존대로 즉시 done. step 키 없는 행 정상.
+
+        하위 호환 가드 (PLAN §3.2.2 C-4). 현재도 통과해야 함(GREEN에서 변경 없음).
+        """
+        self._mark(1)
+        self._mark(2)
+        # --step 없이 mark
+        code = self._mark(3)
+
+        self.assertEqual(code, 0, "--step 없는 mark가 exit 0이어야 함")
+        state = self._state()
+        row = state["rows"][2]  # row3 (0-indexed)
+        self.assertEqual(row["status"], "done",
+                         "--step 없으면 기존대로 즉시 done이어야 함")
+        # step 키 미저장 또는 None — 기존 state.json 하위 호환
+        self.assertIsNone(row.get("step"),
+                          f"--step 미지정 시 step 키가 없거나 None이어야 함, 실제: {row.get('step')}")
+
+    # ── TS-007: 비정형 --step → 기존 done 경로 (크래시 없음) ─────────────────
+
+    def test_malformed_step_falls_back(self):
+        """[T017/TS-007] --step "abc" / "3" / "0/0" → 기존 done 경로, 크래시 없음.
+
+        PLAN §3.2.1: _parse_step이 None 반환 → 기존 즉시 done 경로 (C-4 하위 호환).
+        현재도 통과 가능 (크래시 방어). step은 저장되지 않거나 무해해야 함.
+        """
+        malformed_cases = ["abc", "3", "0/0"]
+
+        for i, bad_step in enumerate(malformed_cases):
+            with self.subTest(step=bad_step):
+                # 새 tmpdir로 초기화 (subTest 간 독립)
+                import tempfile
+                old_task_path = self.task_path
+                self.task_path = self.tmpdir / f"subtest-{i}"
+                self.task_path.mkdir(exist_ok=True)
+                self._init(rows_spec=self.MULTISTEP_ROWS)
+
+                self._mark(1)
+                self._mark(2)
+                # 비정형 step으로 mark — 크래시 없이 done 처리 기대
+                code = self._mark(3, step=bad_step)
+
+                self.assertEqual(code, 0,
+                                 f"비정형 step='{bad_step}'이어도 exit 0이어야 함 (크래시 없음)")
+                state = self._state()
+                row = state["rows"][2]
+                self.assertEqual(row["status"], "done",
+                                 f"비정형 step='{bad_step}'이면 기존 done 경로로 즉시 done이어야 함")
+                # 복원
+                self.task_path = old_task_path
+
+    # ── TS-008: 순차 Step 진행률 갱신 ────────────────────────────────────────
+
+    def test_sequential_step_progress(self):
+        """[T017/TS-008] 같은 행 1/7 → 2/7 → 7/7 순차 mark: 1·2는 in_progress, 7에서 done, step 갱신.
+
+        미구현 시: 1/7 mark에서 done되어 2/7 mark 시 이미 done인 행 재mark(멱등) 또는
+        step 갱신 없음 → AssertionError(RED).
+        PLAN §3.2.2 R-1: 각 중간 Step mark마다 in_progress 유지 + step 갱신.
+        """
+        self._mark(1)
+        self._mark(2)
+
+        # Step 1/7 → in_progress, step="1/7"
+        code1 = self._mark(3, step="1/7")
+        self.assertEqual(code1, 0, "step 1/7 mark exit 0")
+        row1 = self._state()["rows"][2]
+        self.assertEqual(row1["status"], "in_progress",
+                         f"step 1/7 후 in_progress 기대, 실제: {row1['status']}")
+        self.assertEqual(row1.get("step"), "1/7",
+                         f"step 1/7 저장 기대, 실제: {row1.get('step')}")
+
+        # Step 2/7 → in_progress, step="2/7"
+        code2 = self._mark(3, step="2/7")
+        self.assertEqual(code2, 0, "step 2/7 mark exit 0")
+        row2 = self._state()["rows"][2]
+        self.assertEqual(row2["status"], "in_progress",
+                         f"step 2/7 후 in_progress 기대, 실제: {row2['status']}")
+        self.assertEqual(row2.get("step"), "2/7",
+                         f"step 2/7로 갱신 기대, 실제: {row2.get('step')}")
+
+        # Step 7/7 → done, step="7/7"
+        code7 = self._mark(3, step="7/7")
+        self.assertEqual(code7, 0, "step 7/7 mark exit 0")
+        row7 = self._state()["rows"][2]
+        self.assertEqual(row7["status"], "done",
+                         f"step 7/7 후 done 기대, 실제: {row7['status']}")
+        self.assertEqual(row7.get("step"), "7/7",
+                         f"step 7/7로 갱신 기대, 실제: {row7.get('step')}")
 
 
 # ═════════════════════════════════════════════════════════════════════════════

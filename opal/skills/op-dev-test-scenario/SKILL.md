@@ -56,6 +56,7 @@ Read ~/.opal/skills/op-dev-test-scenario/references/test-scenario-guide.md
 | 시나리오 본문 Given/When/Then (§3) | 알투(PM) + 캡틴 페어 | STEP 3.5 작성 시 |
 | 4열 매핑 표 (§4) | 알투(PM) + 캡틴 페어 | STEP 3.5 작성 시 |
 | 실행 명령 채움 (§3 내 각 시나리오) | op-dev-execute 워커 | EXECUTE 단계 |
+| RED 테스트 코드 작성 (M1 시나리오 → 실패 테스트 코드 변환·실행·RED 증거 기록) | opal-test-agent (mode: red) | EXECUTE 진입 전 (RED-first 트랙 한정) — 마크다운 시나리오는 PM 작성 유지, 실행 가능 테스트 코드 변환은 test-agent(red). SSOT: `opal/core/references/harness/red-first.md` |
 | 결과/상세 채움 (§3 내 각 시나리오) | opal-test-agent | TEST 단계 |
 | 코드 품질/보안/판정 (§5~§7) | opal-test-agent | TEST 단계 |
 
@@ -128,9 +129,9 @@ Read ~/.opal/skills/op-dev-test-scenario/references/test-scenario-guide.md
 
 ## 4. AC ↔ 가설 ↔ 계층 ↔ 시나리오 매핑 표
 
-| AC ID | 가설 ID | 검증 계층 | 시나리오 | 비고 |
-|-------|---------|---------|---------|------|
-| {F-N AC (a)} | H-N | L1/L2/L3 | S-N | {설명} |
+| AC ID | 가설 ID | 검증 계층 | 시나리오 | 테스트 파일:케이스 | 비고 |
+|-------|---------|---------|---------|-----------------|------|
+| {F-N AC (a)} | H-N | L1/L2/L3 | S-N | {테스트 파일 경로}:{케이스명 [T{NNN}/L{계층}-{AC}]} | {설명} |
 
 ## 5. 코드 품질
 
@@ -204,3 +205,4 @@ TEST-SCENARIO 완료: tasks/{NNN}-{태스크명}/TEST-SCENARIO.md
 | v1.3 | 2026-05-12 11:16 | 시나리오 작성 체크리스트에 AC↔verify check 매핑 표 의무 룰 + 형식 예시 추가 (001) |
 | v1.4 | 2026-05-15 16:40 | 통일 형식 7섹션 재편 — §1 리스크 가설 표 + §2 테스트 데이터 설계 + §3 L1/L2/L3 검증 시나리오 + §4 4열 매핑 표 + PM Gate 7대 룰. 실행 컨텍스트 PM 직접 작성 명시. 시나리오 작성 체크리스트 갱신 (004) |
 | v1.5 | 2026-05-19 17:05 | 시나리오 항목에 "실행 방식 (M1/M2/M3)" 필드 추가 + PM Gate 체크 8번째 항목 추가 (004 추가작업) |
+| v1.6 | 2026-06-10 10:13 | 역할 분배표 RED 작성주체(opal-test-agent mode:red) 행 + §4 매핑표 '테스트 파일:케이스' 열 (016) |

@@ -50,6 +50,7 @@ module: coding-principles
 - [ ] 낮음/높음 케이스에 정당화 근거가 명시되었는가
 - [ ] TASK.md의 각 AC가 어느 시나리오(S-N)에 대응하는지 매핑 표가 작성되었는가
 - [ ] 실데이터/실연동 검증 시나리오가 있는가 — 목업만으로 통과하지 않도록 (헌법 §4 "Don't fake it")
+- [ ] 공개 인터페이스 검증 — 테스트가 내부 구현/private 결합 없이 공개 인터페이스·관찰 가능 행위(반환값/exit code/관측 출력)로 검증하는가 (`opal/core/references/harness/red-first.md` §4)
 
 ---
 
@@ -99,3 +100,4 @@ module: coding-principles
 | v1.2 | 2026-05-12 14:59 | 한국어 본문으로 재작성 — OPAL 다른 SSOT와 일관성 회복 (001) |
 | v1.3 | 2026-06-07 | 헌법(PRINCIPLES.md) 신설에 따라 원칙 서술 제거 → 헌법 참조로 전환. 단계별 체크리스트만 유지(다이어트). §3·§4·§5에 헌법 §4 "목업 금지·동작 증거" 체크 추가 (012) |
 | v1.4 | 2026-06-07 | QA→PM Gate 통합 정합화 — §5 "QA Gate — 사후 검증" → "PM Gate — 사후 검증"(문서 QA를 PM Gate 흡수), §6 매트릭스 헤더 QA Gate → PM Gate, §3 "위반 시 QA Fail" → "PM Gate 문서검증 Fail", 본문 도입부 QA Gate → PM Gate 사후 검증. 동작 증거 항목은 동작 검증(TEST/verify, 불변)의 실행 결과로 입증됨을 §5에 명시 — 동작 검증 영역 불변 (014 Phase 4-2) |
+| v1.5 | 2026-06-10 10:13 | §3 TEST-SCENARIO 체크에 공개 인터페이스 검증 1행 추가 (016) |

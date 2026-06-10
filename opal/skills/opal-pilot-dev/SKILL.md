@@ -83,6 +83,8 @@ PLAN 완료
 
 ## STEP 3.5: TEST-SCENARIO
 
+> **[MUST] RED-first**: TEST-SCENARIO 작성 시 RED-first 트랙 적용 여부를 판단하고 기재한다. 규칙 SSOT: `opal/core/references/harness/red-first.md`.
+
 작성자: **알투(PM) + 캡틴 페어** — 오케스트레이터가 직접 작성 (워커 디스패치 없음).
 이 단계는 self-confirming 방지를 위해 PLAN 워커(opal-plan-agent)와 다른 작성자가 수행한다.
 
@@ -96,6 +98,9 @@ PLAN 완료
 > 근거: `PLAN.md` §3 Step 8 P-1 / P-5 / §2.16 G-13
 
 ## STEP 4: EXECUTE
+
+> **[MUST] RED-first**: EXECUTE 진입 전 RED 증거 확보, fix 루핑 중 테스트 불변. 규칙 SSOT: `opal/core/references/harness/red-first.md`.
+> RED-first 트랙인 경우, EXECUTE(GREEN) 진입 전 `~/.opal/tools/state-tool/run.sh verify <task> --red-check` 게이트를 호출하여 RED 증거를 확인한다. fix 루핑 시 `--fix-mode --changed-files ... --test-globs ...`로 테스트 불변성을 검사한다.
 
 워커를 디스패치하여 코드를 작성한다. **model**: standard.
 
@@ -373,3 +378,4 @@ semi-agentic / agentic 모두 CLOSE 첫 행 `--auto-pass` 거부 (`agentic_close
 | v3.8 | 2026-05-15 16:40 | 5단계 파이프라인 재편 — STEP 3.5 TEST-SCENARIO 신설(PM 직접 작성, self-confirming 방지) + PLAN에서 TEST-SCENARIO.md 생성 제거 + STATE.md 28행 구조 갱신 + 모드 경계 이동(PLAN→TEST-SCENARIO) + 자율 게이트 흐름도 갱신 + EXECUTE 디스패치 scenario_source·완료기준·자가점검 필드 추가 + PM Gate TEST-SCENARIO Phase 행 추가 + STEP 5 L3 협업 게이트 신설 (004) |
 | v3.9 | 2026-05-19 17:05 | PM Gate TEST-SCENARIO 행 체크리스트 7항목으로 확장 (⑦ 실행 방식 명시) + STEP 3.5 절차에 M1/M2/M3 결정 명시 (004 추가작업) |
 | v4.0 | 2026-06-07 | STATE 행 재구성 — State Gate 행 제거(guard 이전)+QA Gate 행 제거(PM Gate 통합)+산출물 행 흡수+gate-pass→단일 mark (014 Phase 4) |
+| v4.1 | 2026-06-10 10:13 | STEP 3.5/4에 RED-first 참조 + RED 게이트 절차 (016) |

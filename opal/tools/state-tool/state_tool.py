@@ -3,7 +3,7 @@
   "module": "state_tool",
   "layer": "util",
   "domain": "opal-pipeline",
-  "description": "OPAL 파이프라인 현황판 JSON SSOT 관리 CLI — 9개 서브 명령(init/show/advance/mark/block/validate/add-row/status/gate-pass[deprecated]) + verify + 3-way 모드(interactive/semi-agentic/agentic) 지원. 014 Phase 4: 새 표준 행 구조(QA Gate/State Gate 행 없음)와 정합 — gate-pass deprecate, CLOSE 마지막 행 판정 항목명 비의존화.",
+  "description": "OPAL 파이프라인 현황판 JSON SSOT 관리 CLI — 9개 서브 명령(init/show/advance/mark/block/validate/add-row/status/gate-pass[deprecated]) + verify + 3-way 모드(interactive/semi-agentic/agentic) 지원. 014 Phase 4: 새 표준 행 구조(QA Gate/State Gate 행 없음)와 정합 — gate-pass deprecate, CLOSE 마지막 행 판정 항목명 비의존화. 016: verify --red-check(RED 증거 게이트) + --fix-mode/--changed-files/--test-globs(테스트 불변성 게이트) 추가 — RED-first TDD 트랙 deterministic 집행. 017: mark --step N/M 다중 Step 조기 done 가드 — N<M이면 in_progress 유지(done 미처리) + 진행률(step) 영속화, N==M에서만 done; 미완 행은 기존 stage-transition guard가 단계전환·CLOSE 진입을 자동 차단.",
   "exports": [
     "cmd_init", "cmd_show", "cmd_advance", "cmd_mark",
     "cmd_block", "cmd_validate", "cmd_add_row", "cmd_status", "cmd_gate_pass"
@@ -13,6 +13,7 @@
 
 # PLAN §2.1 구현 명세 — TASK T-11: 표준 라이브러리만 import
 import argparse
+import fnmatch
 import json
 import os
 import pathlib
@@ -95,6 +96,8 @@ ERROR_CODES = {
     "mock_in_scenario":               "TEST-SCENARIO.md에 mock 코드 패턴 발견 — 헌법 §4 'Don't fake it' 위반: {lines}",
     "evidence_missing":               "TEST-SCENARIO.md Pass 시나리오에 실행 증거 누락 — 헌법 §4 'Completion requires evidence' 위반: {lines}",
     "stage_transition_violation":     "단계 건너뛰기 차단: 행 {row_id} 갱신 전에 앞 행 {incomplete_rows}이(가) 완료되지 않았음 (PLAN §M-A stage-transition guard)",
+    "red_evidence_missing":           "RED 증거(실패 출력) 누락 — GREEN/EXECUTE 진입 차단: {detail}",
+    "test_modified_in_fix":           "fix 루핑 중 RED 테스트 파일 수정 거부: {files}",
 }
 
 PIPELINE_MARKER_START = "<!-- pipeline:start -->"
@@ -872,6 +875,19 @@ def cmd_advance(args):
 
 # ── 4. mark ───────────────────────────────────────────────────────────────────
 
+def _parse_step(step_str):
+    """--step "N/M" → (N, M) 반환. 형식 위반/None이면 None 반환 (보수적 — 기존 done 동작 유지).
+    017: 다중 Step 조기 done 가드. 표준 라이브러리만(re) — T-11.
+    """
+    m = re.fullmatch(r"\s*(\d+)\s*/\s*(\d+)\s*", step_str or "")
+    if not m:
+        return None
+    n, total = int(m.group(1)), int(m.group(2))
+    if total < 1 or n < 0 or n > total:
+        return None
+    return (n, total)
+
+
 def cmd_mark(args):
     """PLAN §2.1, T-7, §2.4, §2.15 G-12, §2.16 G-13 — ⬜/🔄→✅"""
     command = "mark"
@@ -923,8 +939,25 @@ def cmd_mark(args):
                 row_id=row["row_id"], stage=row["stage"])
 
     now_str = get_kst_datetime(command)
-    row["status"]       = "done"
-    row["status_label"] = "✅"
+
+    # 017: 다중 Step 진행률 파싱 + 조기 done 가드 (R-1, C-1, C-5)
+    _step_str = getattr(args, "step", None)
+    _step_pair = _parse_step(_step_str) if _step_str else None
+    if _step_pair is not None:
+        _n, _total = _step_pair
+        row["step"] = f"{_n}/{_total}"           # 진행률 영속화
+        if _n < _total:
+            # 마지막 Step 아님 → done으로 닫지 않고 in_progress 유지 (조기 done 차단)
+            row["status"]       = "in_progress"
+            row["status_label"] = "🔄"
+        else:
+            # n == total → 마지막 Step → done (R-2)
+            row["status"]       = "done"
+            row["status_label"] = "✅"
+    else:
+        # --step 미지정/비정형 → 기존 즉시 done (C-4 하위 호환)
+        row["status"]       = "done"
+        row["status_label"] = "✅"
     row["timestamp"]    = now_str
 
     # owner 결정
@@ -955,7 +988,8 @@ def cmd_mark(args):
         (row_index == len(state["rows"]) - 1 or
          state["rows"][row_index + 1]["stage"] != "CLOSE")
     )
-    if is_close_last:
+    # 017: in_progress(N<M)로 남긴 행은 current_status=done 전환에서 제외 — 다중 Step CLOSE 마지막 행 오판 방지
+    if is_close_last and row["status"] == "done":
         state["current_status"] = "done"
         status_text = "완료"
 
@@ -997,7 +1031,7 @@ def cmd_mark(args):
                   decision=decision, reason=reason_text)
 
     ok(command, row_id=args.row, stage=row["stage"], item=row["item"],
-       status="done", timestamp=now_str, owner=row["owner"])
+       status=row["status"], timestamp=now_str, owner=row["owner"])
 
 # ── 5. block ──────────────────────────────────────────────────────────────────
 
@@ -1366,17 +1400,85 @@ def _check_evidence(lines):
     return violations
 
 
+def _check_red_evidence(lines):
+    """RED 증거 누락 검출 (016 RED-first) — 위반 라인 번호 목록 반환.
+
+    탐지 전략 (_check_evidence 패턴 미러):
+    - 마크다운 표에서 "RED 증거" 헤더 열을 찾는다.
+    - 데이터 행에서 "RED 증거" 셀이 비어있으면(empty/whitespace) 위반으로 간주한다.
+    - "RED 증거" 헤더가 없으면 보수적 판정(위반 아님 — RED 게이트 미적용 표).
+    근거: PLAN 016 §3.2.2 — RED 단계 실패 출력 증거 선확보. 헌법 §4.
+    """
+    violations = []
+    red_idx = None
+    for lineno, line in enumerate(lines, start=1):
+        stripped = line.strip()
+        if not stripped.startswith("|"):
+            continue
+        if re.match(r"^\|[\s\-:]+\|", stripped):  # 구분선 행 스킵
+            continue
+        cells = [c.strip() for c in stripped.split("|")]
+        cells = cells[1:-1] if len(cells) > 2 else cells
+        if red_idx is None:
+            # 헤더 행 탐지: "RED 증거" 셀 포함
+            if any(c == "RED 증거" for c in cells):
+                red_idx = next(i for i, c in enumerate(cells) if c == "RED 증거")
+            continue
+        # 데이터 행: RED 증거 셀이 비어있으면 위반
+        if red_idx < len(cells) and cells[red_idx] == "":
+            violations.append(lineno)
+    return violations
+
+
+def _match_test_files(changed_files, test_globs):
+    """changed_files 중 test_globs(fnmatch) 패턴에 매칭되는 파일 목록 반환 (016 테스트 불변성).
+
+    러너/언어/경로 하드코딩 금지 — 패턴은 호출자가 주입(--test-globs, C-2).
+    표준 라이브러리 fnmatch만 사용 (T-11).
+    """
+    matched = []
+    for f in (changed_files or []):
+        for pat in (test_globs or []):
+            if fnmatch.fnmatch(f, pat):
+                matched.append(f)
+                break
+    return matched
+
+
 def cmd_verify(args):
     """PLAN 013 §verify — TEST-SCENARIO.md mock 코드 패턴 + 증거 누락 검사.
+    016 확장: --red-check(RED 증거 게이트) / --fix-mode(테스트 불변성).
     대상 파일 부재 시 doc-only skip (ok).
     """
     command = "verify"
     task_path = args.task_path
     scenario_arg = getattr(args, "scenario", None)
+    red_check = getattr(args, "red_check", False)
+    fix_mode = getattr(args, "fix_mode", False)
+    changed_files = getattr(args, "changed_files", None) or []
+    test_globs = getattr(args, "test_globs", None)
+
+    # 016 — fix 루핑 테스트 불변성 검사 (산출물 무관, 명시 입력 기반 deterministic)
+    if fix_mode:
+        if not test_globs:
+            # deterministic 입력(test-globs) 없음 → 검사 skip (오탐 방지)
+            print(json.dumps({
+                "ok": True, "command": command,
+                "immutability_check": "skipped (no test-globs)",
+            }, ensure_ascii=False))
+            sys.exit(0)
+        matched = _match_test_files(changed_files, test_globs)
+        if matched:
+            err(command, "test_modified_in_fix", files=matched)
+        print(json.dumps({
+            "ok": True, "command": command,
+            "immutability_check": "pass", "matched_test_files": [],
+        }, ensure_ascii=False))
+        sys.exit(0)
 
     scenario_path = _find_scenario_file(task_path, scenario_arg)
     if scenario_path is None:
-        # doc-only: TEST-SCENARIO.md 없음 → skip ok
+        # doc-only / 인프라 부재: TEST-SCENARIO.md 없음 → skip ok (graceful skip)
         print(json.dumps({
             "ok": True, "command": command,
             "skipped": True, "reason": "TEST-SCENARIO.md not found (doc-only skip)"
@@ -1395,10 +1497,19 @@ def cmd_verify(args):
     if missing_lines:
         err(command, "evidence_missing", lines=missing_lines)
 
+    # 검사 3 (016) — RED 증거 게이트 (--red-check 시에만; 미지정 시 하위 호환)
+    checks = {"mock_in_scenario": "pass", "evidence_missing": "pass"}
+    if red_check:
+        red_lines = _check_red_evidence(lines)
+        if red_lines:
+            err(command, "red_evidence_missing",
+                detail="빈 RED 증거 행: {}".format(red_lines))
+        checks["red_evidence_missing"] = "pass"
+
     print(json.dumps({
         "ok": True, "command": command,
         "scenario": str(scenario_path),
-        "checks": {"mock_in_scenario": "pass", "evidence_missing": "pass"},
+        "checks": checks,
     }, ensure_ascii=False))
     sys.exit(0)
 
@@ -1527,6 +1638,15 @@ def build_parser():
     p_vfy.add_argument("task_path", metavar="<task-path>")
     p_vfy.add_argument("--scenario", metavar="<path>",
                        help="TEST-SCENARIO.md 경로 명시 (기본: <task-path>/TEST-SCENARIO.md)")
+    # 016 RED-first 게이트
+    p_vfy.add_argument("--red-check", action="store_true", dest="red_check",
+                       help="RED 증거(실패 출력) 게이트 — 누락 시 red_evidence_missing")
+    p_vfy.add_argument("--changed-files", nargs="*", default=[], dest="changed_files",
+                       help="fix 루핑 변경 파일 목록 (테스트 불변성 입력)")
+    p_vfy.add_argument("--test-globs", nargs="*", default=None, dest="test_globs",
+                       help="테스트 파일 식별 glob 패턴 (프로젝트 탐지값 주입 — 하드코딩 금지)")
+    p_vfy.add_argument("--fix-mode", action="store_true", dest="fix_mode",
+                       help="fix 루핑 컨텍스트 — 테스트 파일 수정 시 test_modified_in_fix")
     p_vfy.set_defaults(func=cmd_verify)
 
     return parser

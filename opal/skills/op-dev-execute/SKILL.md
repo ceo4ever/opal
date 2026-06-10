@@ -100,6 +100,7 @@ PLAN.md 실행 체크리스트의 `- [ ] 완료` → `- [x] 완료`
 | 3 | 다른 영역 침범 (FE 워커가 BE 파일 수정, 또는 그 반대) | 병렬 실행 시 충돌 발생 |
 | 4 | PLAN에 명시되지 않은 패키지 설치 | 의존성 변경은 사전 승인 필요 |
 | 5 | 환경변수/시크릿을 소스 코드에 하드코딩 | 보안 위반 |
+| 6 | RED 테스트 파일(opal-test-agent가 작성한 테스트)을 수정 | 프로덕션 코드만 변경. 테스트 파일 수정 필요 시 블로커 보고 (reward hacking 방어 — `opal/core/references/harness/red-first.md`) |
 
 ### 보안 가드레일
 
@@ -192,3 +193,4 @@ PLAN.md §4 실행 체크리스트를 기반으로:
 | v1.3 | 2026-04-15 | 실행 주체에 전문 에이전트 체계 안내 추가 — PM이 agents.md 매핑 기반 에이전트 선택 (117) |
 | v2.0 | 2026-04-23 11:39 | 3구획 구조 전환 — references/ 에 execute-specialist-guide.md / execute-generalist-guide.md 신설, SKILL.md에 에이전트 이름 매핑 테이블 삽입, 페르소나/FE 역할 분담/FE·BE MCP 테이블 섹션을 범용 가이드로 이관, 실행 컨텍스트·Step 1·PLAN.md 기반 실행 섹션 재작성 (129) |
 | v2.1 | 2026-05-15 16:40 | scenario_source 입력 파라미터 추가 + Step 3-S 자가 점검 절차(TDD red-green) 신설 + EXECUTE 품질 체크리스트에 L1/L2 시나리오 PASS 항목 + L3 TEST 위임 룰 추가 (004) |
+| v2.2 | 2026-06-10 10:13 | 가드레일 #6 RED 테스트 파일 수정 금지 (reward hacking 방어) (016) |

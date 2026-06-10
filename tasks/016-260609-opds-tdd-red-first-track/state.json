@@ -1,0 +1,111 @@
+{
+  "task_id": "016-260609-opds-tdd-red-first-track",
+  "skill": "opds",
+  "mode": "agentic",
+  "schema_version": "1.0",
+  "created_at": "2026-06-09 18:16",
+  "updated_at": "2026-06-10 14:11",
+  "current_status": "done",
+  "rows": [
+    {
+      "row_id": 1,
+      "stage": "TASK",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-09 18:17",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 2,
+      "stage": "TASK",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-09 18:17",
+      "owner": "auto",
+      "note": "agentic auto-pass: agentic auto-pass: 캡틴이 설계 대화에서 요구사항(C-1~C-4)·스코프(opds 유지)를 직접 확정. TASK.md가 합의 내용과 정합."
+    },
+    {
+      "row_id": 3,
+      "stage": "PLAN",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-09 18:30",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 4,
+      "stage": "PLAN",
+      "item": "PM Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-09 18:30",
+      "owner": "PM",
+      "note": "PLAN PM Gate Pass: R-1~R-7 전부 F-001~F-007 매핑, §4 체크리스트 7 Step 완성, TEST-SCENARIO S-1~S-11+산출물검사 커버, decision_required 0건."
+    },
+    {
+      "row_id": 5,
+      "stage": "PLAN",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-09 18:41",
+      "owner": "user",
+      "note": "캡틴 승인: 설계·정책(하이브리드 자동분기) 확정 후 EXECUTE 진입 승인"
+    },
+    {
+      "row_id": 6,
+      "stage": "EXECUTE",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-09 18:43",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 7,
+      "stage": "TEST",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-10 14:09",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 8,
+      "stage": "TEST",
+      "item": "PM Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-10 14:09",
+      "owner": "PM",
+      "note": "TEST PM Gate Pass: 동작검증 S-1~S-11 전수 통과(unittest 165 OK, SSOT grep, STATE 행). 코드품질·보안 Pass. 자기적용 RED→GREEN 실증."
+    },
+    {
+      "row_id": 9,
+      "stage": "TEST",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-10 14:11",
+      "owner": "user",
+      "note": "캡틴 확인: 'close 하고' — CLOSE 진입 승인"
+    },
+    {
+      "row_id": 10,
+      "stage": "CLOSE",
+      "item": "DONE.md 생성",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-10 14:11",
+      "owner": "PM",
+      "note": "DONE.md 생성. 016 RED-first 트랙 도입 완료 — 165 tests OK 실증."
+    }
+  ]
+}

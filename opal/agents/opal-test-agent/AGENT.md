@@ -68,6 +68,19 @@ icon: "🧪"
   - 크로스 도메인 경계 계약(Contract) 검증
   - 서비스 간 연동 및 외부 의존성 stub 검증
 
+### red mode
+
+- **목적**: RED-first TDD 트랙에서 M1 시나리오를 프로젝트 러너에 맞는 실패 테스트 코드로 변환·실행하여 RED(실패) 증거를 확보·기록한다. 구현(GREEN)은 하지 않는다(op-dev-execute 담당) — 작성자≠구현자.
+- **추가 로드 문서**: 테스트 스택 탐지를 위해 `docs/CONVENTIONS.md`, `docs/BACKEND.md`/`FRONTEND.md` (존재 시)
+- **수행 절차**:
+  1. TEST-SCENARIO.md에서 RED-first 트랙 M1 시나리오를 식별한다.
+  2. 테스트 스택 탐지 (`test-scenario-guide.md` 탐지 4단계 적용): `docs/CONVENTIONS.md` → 스택 문서 → 설정파일(`package.json`/`pyproject.toml`/`go.mod`) → 기존 테스트 관례(글로브 탐색). 러너 부재 시 사용자 에스컬레이션.
+  3. 시나리오를 실행 가능한 테스트 코드(RED 상태 — 미구현으로 실패)로 변환·작성한다. 공개 인터페이스·관찰 가능 행위(반환값/exit code/관측 출력)로만 검증한다 (내부 구현/private 결합 금지).
+  4. 작성된 테스트를 실행하여 실패(exit code≠0)를 확인하고 출력 증거를 TEST-SCENARIO.md에 기록한다.
+  5. RED 증거 없이 완료 선언 금지 (헌법 §4 "Completion requires evidence").
+- **스킵**: GREEN 구현, 프로덕션 코드 수정
+- **SSOT**: `opal/core/references/harness/red-first.md`
+
 ---
 
 ## 모드 결정
@@ -77,8 +90,9 @@ icon: "🧪"
 | `test_mode` | PM이 디스패치 시 명시적 지정 | `e2e` |
 
 - PM이 `test_mode`를 지정하지 않으면 자동으로 **E2E mode**로 실행한다.
-- `test_mode`는 `be`, `fe`, `e2e` 세 값만 허용한다.
+- `test_mode`는 `be`, `fe`, `e2e`, `red` 네 값만 허용한다.
 - `mode` 파라미터(full-simple / full-complex / short)와 `test_mode`는 독립적으로 동작한다.
+- `red` 모드는 RED-first 트랙 전용 — PM이 명시적으로 지정할 때만 활성화된다.
 
 ---
 
@@ -158,3 +172,4 @@ icon: "🧪"
 | v1.1 | 2026-05-15 16:40 | 행동 규칙에 L3 [SUPERVISOR] 마커 즉시 PM 반환 절차 추가 (004) |
 | v1.2 | 2026-05-19 17:05 | 실행 방식 M1/M2/M3 처리 절차 보강 — M2 도구 환경 확인·환경 미비 시 PM 반환·mock 우회 금지 추가 (004 추가작업) |
 | v1.3 | 2026-06-07 | 헌법 §4 집행 — "작성자 필드 신뢰" 폐기 → adversarial 시나리오 타당성 사전 검증 + 실행 출력 증거 의무 + 목업 대체 시 Fail + All Pass에 증거·목업미잔존 조건 추가 (012) |
+| v1.4 | 2026-06-10 10:13 | mode:red 추가 — M1 시나리오→실패 테스트코드 변환·RED 증거 확보 (작성자≠구현자) (016) |

@@ -96,6 +96,7 @@ Lazy 로드 모듈. 각 §의 stub이 로드 시점과 파일 경로를 지시�
 | State 관리 | `harness/state.md` | TASK 단계 시작 / Gate 직후 State Gate | §3 |
 | TASK 공통 프로세스 | `harness/task-process.md` | TASK 단계 진입 시 | §4 |
 | Coding Principles | `harness/coding-principles.md` | EXECUTE 단계 진입 시 (코드 변경 워커) / PM "그냥 해" 진입 시 | §10 |
+| RED-first 규칙 | `harness/red-first.md` | TEST-SCENARIO 작성·EXECUTE 진입 시 | §1.5 |
 
 > 탐색 경로: `{프로젝트}/.opal/references/harness/{file}` → `~/.opal/references/harness/{file}`
 
@@ -285,3 +286,4 @@ OPAL 도구는 모두 `~/.opal/tools/{tool-name}/run.sh` 래퍼를 통해 호출
 | v5.0 | 2026-06-07 | §1 Guards 허용 항목 "QA 에이전트 호출" → "PM Gate 문서검증" 치환. §2 하네스 모듈 테이블 QA 표준 로드 시점 "QA Gate 수행 시" → "PM Gate 문서검증 시" 치환. §2 QA 산출물 표준 stub 3곳 동일 정합화 — 별도 QA Gate/QA 에이전트 제거 (014 Phase 3 보완) |
 | v5.1 | 2026-06-07 | §3 state-tool [MUST] 블록 — "Gate 직후 일괄 처리 gate-pass" 줄을 "PM Gate 통과 후 단일 mark"로 교체 + [deprecated] gate-pass 레거시 안내 추가. Phase4 완료 반영 (014 Phase 4) |
 | v5.2 | 2026-06-08 | §2 하네스 모듈 테이블 reporting-template 행 제거 — 보고 형식 AGENT.md 인라인화 (015) |
+| v5.3 | 2026-06-09 18:42 | §2 하네스 모듈 테이블에 RED-first 규칙 행 추가 — red-first.md 등록, 로드 시점: TEST-SCENARIO 작성·EXECUTE 진입 시 (016) |

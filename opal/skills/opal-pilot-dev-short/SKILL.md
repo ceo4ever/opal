@@ -38,6 +38,8 @@ TASK 완료 → 사용자 보고.
 
 ## STEP 2: PLAN
 
+> **[MUST] RED-first**: PLAN 단계에서 RED-first 트랙 적용 여부를 판단하고 TEST-SCENARIO.md에 기재한다. 규칙 SSOT: `opal/core/references/harness/red-first.md`.
+
 ### PLAN 디스패치
 
 op-dev-plan 워커 디스패치. **model**: advanced. 이전 산출물: TASK.md만 (ANALYSIS.md 없음).
@@ -70,6 +72,9 @@ PLAN 완료
 ---
 
 ## STEP 3: EXECUTE
+
+> **[MUST] RED-first**: EXECUTE 진입 전 RED 증거 확보, fix 루핑 중 테스트 불변. 규칙 SSOT: `opal/core/references/harness/red-first.md`.
+> RED-first 트랙(하이브리드 분기상 self-confirming 위험 작업)인 경우, EXECUTE(GREEN) 진입 전 `~/.opal/tools/state-tool/run.sh verify <task> --red-check` 게이트를 호출하여 RED 증거를 확인한다. fix 루핑 시 `--fix-mode --changed-files ... --test-globs ...`로 테스트 불변성을 검사한다.
 
 ### 3-1. 분배 디스패치 절차 (v3.1 신설)
 
@@ -346,3 +351,4 @@ semi-agentic / agentic 모두 CLOSE 첫 행 `--auto-pass` 거부 (`agentic_close
 | v3.5 | 2026-05-09 11:22 | 3-way 모드 체계 도입 — semi-agentic 기본 채택 + Agentic/Semi-Agentic 모드 절 확장 + Harness 절 3-way 분기 + state init choices 갱신 (140) |
 | v3.6 | 2026-05-09 18:30 | 개인 식별자 "캡틴" → "소유자"/"사용자" 치환 — 배포 파일 정체성 누설 정정 (139) |
 | v3.7 | 2026-06-07 | STATE 행 19→10 재구성 — State Gate 행 제거(guard로 이전)+산출물 행 흡수, gate-pass 제거 (014) |
+| v3.8 | 2026-06-10 10:13 | STEP 2/3에 RED-first(red-first.md) 참조 + EXECUTE 진입 전 verify --red-check 게이트·fix 불변성 절차 (016) |
