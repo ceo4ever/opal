@@ -37,3 +37,7 @@
 - 신규: [[pages/concept/page-type-dynamic-schema.md]], [[pages/concept/three-layer-memory-architecture.md]], [[pages/concept/brain-search-on-demand.md]], [[pages/concept/wiki-intelligence-decisions-016.md]]
 - 출처: task:016
 
+## [2026-06-11] ingest | CLOSE ingest — 태스크 010 code-scan PM 우선 무조건화
+- 신규: [[pages/concept/code-scan-mandatory-policy.md]], [[pages/concept/brain-code-scan-role-division.md]]
+- 출처: task:010
+

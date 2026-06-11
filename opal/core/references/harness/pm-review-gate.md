@@ -86,6 +86,12 @@ PM Gate는 별도 QA Gate 단계를 두지 않고, 문서 QA(요구사항→설�
      3. `docs/CONVENTIONS.md` 부재 → 체커가 `check_enabled=false`로 자체 처리(`GC-CONVENTION-*.md` §5 "문서 작성 유도"만 작성) + PM Gate Pass
    - **하위 호환**: `.opal/AGENT.md` 미존재 시 PM Gate 자체 스킵(§판정 4번째 항목)이므로 본 §13도 동시 스킵 (→ D-1 §판정)
    - **근거**: TASK.md R-1~R-7 / `tasks/136-260508-opp-pm-gate-convention-auto-check/PLAN.md` §2 핵심 설계
+14. 코드 변경 태스크의 디스패치 컨텍스트에 code-scan 결과 인용 검증
+   - **트리거 조건**: `changed_files` 또는 `target`에 code-scan 지원 확장자(`.py .js .ts .vue .jsx .tsx .svelte .kt .kts .java .swift` 등) 포함 — §8/§13과 동형
+   - **검증 내용**: 워커에게 전달된 디스패치 컨텍스트(PLAN.md Step 본문 또는 PM 메시지)에 code-scan 결과(`domain`/`layer`/`depends`/`exports`)가 인용되었는가
+   - **적용 범위**: 코드 변경/탐색 태스크 한정. 순수 .md 문서·기획·정책만인 문서 작업은 **N/A(스킵)**.
+   - **판정**: 인용 부재 시 **Fail** → 재디스패치 1회 (code-scan 결과 인용 추가 후 재시작)
+   - **Pass 조건**: 디스패치 컨텍스트에 code-scan 결과 표(domain/layer/depends/exports 중 1개 이상) 또는 명시적 인용문 존재
 
 ### 자가 진단 (PM Gate 진입 전 체크)
 
@@ -138,3 +144,4 @@ PM Gate 통과 후 해당 행을 state-tool로 단일 mark한다. State Gate 행
 | v1.3 | 2026-05-09 18:30 | 개인 식별자 누설 정정 — "캡틴 에스컬레이션" / "캡틴에 보고" → "소유자 에스컬레이션" / "소유자에 보고" 치환 (139) |
 | v1.4 | 2026-06-07 | gate-pass deprecated 정합 — "Gate 통과 일괄 처리(gate-pass)" 절을 "PM Gate 통과 후 단일 mark"로 교체. 4행 패턴 권장 제거, [deprecated] gate-pass 레거시 안내 추가. Phase4 완료 반영 (014 Phase 4) |
 | v1.4 | 2026-06-07 | QA 문서검증을 PM Gate로 통합 — 공통 검증 원칙 4종 + 요구사항 누락·오해 검토 + self-check 흡수 (014) |
+| v1.5 | 2026-06-11 22:38 | 표준 검토 항목 14번 신설 — 코드 변경 태스크 디스패치 컨텍스트 code-scan 결과 인용 검증 (문서 작업 N/A) (010) |

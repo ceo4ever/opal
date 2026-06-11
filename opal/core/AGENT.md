@@ -175,7 +175,7 @@
 
 ### code-scan 활용 규칙
 
-`.opal/code-scan.json`이 존재하는 프로젝트에서, 아래 상황에 code-scan을 우선 활용한다.
+코드 변경·코드 탐색이 필요한 상황에서 code-scan을 우선 활용한다. `.opal/code-scan.json` 부재 시 PM이 즉석 자동 생성 후 활용한다(`pm/code-scan-management.md §생성 시점` — 아래 표 참조).
 
 | 상황 | 활용 방법 |
 |------|---------|
@@ -186,7 +186,20 @@
 | 의존 관계 파악 | `code-scan depends <module>` |
 
 **원칙**: 전체 파일 Read 전에 code-scan으로 범위를 좁혀 토큰 낭비를 줄인다.  
-`.opal/code-scan.json` 없으면 code-scan 사용 생략 → Glob/Grep으로 탐색한다.
+`.opal/code-scan.json` 부재 시 PM이 즉석 자동 생성(`code-scan-management.md §생성 시점`) 후 활용. 자동 생성으로도 빈 결과면 `header-rules.md §빈 결과 폴백`을 따른다.
+
+**사용자 오버라이드**: 사용자가 'grep으로 해'·'직접 찾아' 등 특정 도구를 명시하면, code-scan 우선 원칙을 보류하고 지정 도구로 즉시 전환한다 (소유자 주도성 원칙 — `opal-harness.md §1`).
+
+#### brain ↔ code-scan 역할 분담
+
+| 축 | code-scan | opal-brain |
+|----|-----------|------------|
+| 코드 정보 범위 | **전수** (전 파일 @header) | **선별** 핵심 모듈만 |
+| 신선도 | **실시간** (호출 시점 스캔) | **stale 가능** (ingest/sync 시점 스냅샷) |
+| 깊이/성격 | WHAT — 구조·exports·depends | WHY/HOW — 설계 배경 + @header 스냅샷 |
+| 원천 | 파일 @header (SSOT) | code-scan @header에서 파생 |
+
+> 코드 정보의 차이는 "포함 여부"가 아니라 **선별·신선도·깊이**다.
 
 ### opal-brain 활용 규칙
 
@@ -381,4 +394,5 @@ install-mac.sh가 `~/.codex/AGENTS.md`(글로벌)에 OPAL 마커를 자동 삽�
 | v3.0 | 2026-06-08 | L2 경량 트랙 공식화 — "그냥 해/직접 수행"에 L2 명칭 부여 + 진입 기준 표(동작검증 불요 가드 포함) + PM 자동 감지·제안 경로 + 주도성 규모 분기 (014 Phase 5) |
 | v3.1 | 2026-06-10 12:00 | PM brain 융합 — Lazy 트리거 테이블에 `.opal/brain/index.md` 행 추가 + "opal-brain 활용 규칙" 섹션 신설(code-scan 활용 규칙 동형, brain 부재 시 자연 스킵 명시) (015) |
 | v3.2 | 2026-06-11 19:21 | W5 index 비상주 정정 — Lazy 트리거 brain 행을 "존재 여부 경량 인지(index 전체 자동 로드 안 함), 지식은 search 후보→선택 주입으로 온디맨드 로드"로 변경. W4 PM 판단 ingest 트리거 — "opal-brain 활용 규칙"에 ingest 판단 기준(아키텍처 결정·반복 패턴·캡틴 합의·비자명 해결) + 모드별 동작(agentic 자율 / semi·interactive 제안) 명시. search 활용 행 후보→선택 주입 흐름으로 정합 (016) |
+| v3.3 | 2026-06-11 22:38 | §code-scan 활용 규칙에 brain↔code-scan 역할 분담 표(전수/실시간/WHAT vs 선별/stale/WHY) 신설 + "scan.json 없으면 생략"→즉석 자동 생성(code-scan-management.md §생성 시점) + 빈 결과 폴백(header-rules.md) 교체 + 사용자 오버라이드 명문화 (010) |
 

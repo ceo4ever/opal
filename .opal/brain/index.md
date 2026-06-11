@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-06-11 21:51
+> 갱신: 2026-06-11 22:59
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -9,8 +9,10 @@
 - [[state-tool]] — state-tool #tool #pipeline
 
 ## 개념
+- [[brain-code-scan-role-division]] — brain↔code-scan 역할 분담 — 선별·신선도·깊이 축 (010) #brain #code-scan #architecture #policy
 - [[brain-search-on-demand]] — brain search 선택 주입 — on-demand 비상주 정책 #architecture #brain #search #context #pm
 - [[cmux-tool-dispatcher-expansion]] — cmux-tool 범용 디스패처 확장 (12+1종 서브명령) #tool #cmux #dispatcher #task
+- [[code-scan-mandatory-policy]] — code-scan 무조건화 규약 — 코드 작업 한정 강제 (010) #code-scan #pm #policy #dispatch
 - [[codex-platform-integration]] — Codex CLI OPAL 4번째 플랫폼 통합 #codex #platform #bootstrap #mcp #task
 - [[coding-principles-ssot]] — OPAL Coding Principles SSOT 신설 #framework #principles #ssot #task
 - [[linux-install-script]] — Linux 설치 스크립트 신설 (단순 위임 전략) #install #linux #deploy #task

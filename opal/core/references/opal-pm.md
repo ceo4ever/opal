@@ -113,6 +113,8 @@ PM은 (1) 최소 보장 문서 주입, (2) 작업 영역 감지 기반 트리거
 
 `{프로젝트}/.opal/code-scan.json`의 생성/갱신은 PM이 담당한다. 생성 시점, 갱신 트리거, PM Gate 확인 절차, 최소 JSON 구조는 별도 문서에서 관리한다.
 
+**코드 변경·코드 탐색 작업의 디스패치 전 code-scan 호출은 무조건이며**(상세 `pm/dispatch-process.md §code-scan 사전 범위 파악`), scan.json 부재 시 PM이 즉석 자동 생성한다(`pm/code-scan-management.md §생성 시점`).
+
 > 상세: `opal/core/references/pm/code-scan-management.md` 참조.
 > Lazy 트리거: code-scan.json 갱신 필요 시.
 
@@ -142,3 +144,4 @@ PM은 프로젝트별 전문 에이전트를 생성하고 관리한다. 프레�
 |------|------|------|
 | v1.0 | 2026-04-21 | 다운사이징 — §4 PM 검토 게이트 → harness/pm-review-gate.md, §5 학습 루프 → harness/pm-learning-loop.md, §7 문서/코드 불일치 → harness/doc-code-mismatch.md 분리. §2에 PM 직접 작업 docs 프리로드 규칙 추가 (128) |
 | v1.1 | 2026-05-10 19:36 | §8 신설 — 보고 형식 트리거 안내 (Eager 자동 로드 + reporting-template.md 참조) (143) |
+| v1.2 | 2026-06-11 22:42 | §9 코드 작업 디스패치 전 code-scan 무조건 호출 정합 1줄 + scan.json 즉석 자동 생성 참조 추가 (010) |

@@ -102,11 +102,14 @@
 
 ## code-scan 사전 범위 파악
 
-`.opal/code-scan.json`이 존재하는 프로젝트에서, 디스패치 전에 code-scan으로 변경 대상의 범위를 파악한다:
+**코드/문서 작업 판별**: 변경·탐색 대상에 code-scan 지원 확장자(코드 파일) 또는 코드 구조 이해가 포함되면 **코드 작업**, 순수 .md 문서·기획·정책만이면 **문서 작업**.
+
+**코드 변경·코드 탐색이 필요한 작업이면 디스패치 전 code-scan을 무조건 호출한다.** 순수 문서 작업은 이 단계를 명시적으로 스킵할 수 있다.
 
 - `code-scan scan <scope>` 로 변경 대상 도메인/레이어 파악
 - 변경 대상 파일의 domain/layer/depends 파악 → 워커 컨텍스트 주입에 활용
-- `code-scan.json` 없으면 일반 파일 탐색(Glob/Grep) 사용
+- scan.json 부재면 `pm/code-scan-management.md §생성 시점`에 따라 즉석 자동 생성 후 진행 (Glob/Grep 직행 금지)
+- 결과 해석·폴백은 `harness/header-rules.md §code-scan 활용 가이드 §빈 결과 폴백`의 3분기를 따른다
 
 ## Step 1.5 brain 사전 지식 참조
 
@@ -129,6 +132,7 @@
    - 워커 프롬프트의 "brain 참조" 항목 또는 "참조 문서" 항목에 포함한다.
 
 > **원칙**: code-scan이 "무엇이 있나"를 파악하듯, brain은 "왜·어떻게 그렇게 되었나"를 파악한다. 두 단계는 독립이며 순서는 brain → code-scan (과거 맥락 먼저, 현재 구조 파악 후).
+> brain `analyze`(init 동적 제안 입력)는 code-scan @header 정량 집계에 의존하므로, code-scan 보급률이 brain 지식 품질의 상한이다 (brain → code-scan 순서 유지).
 
 ## 디스패치 전 선언
 
@@ -164,3 +168,4 @@ PLAN.md §4 실행 체크리스트의 agent 필드를 참조하여 에이전트�
 | v1.1 | 2026-05-08 | §Step 3 인용 의무 카탈로그에 컨벤션 [MUST]/금지/네이밍 규칙 명시 추가 + 워커 컨텍스트 주입 템플릿 "핵심 제약" 예시에 컨벤션 항목 추가 + 하위 호환 안내 추가 (137) |
 | v1.2 | 2026-06-10 12:00 | Step 1.5 brain 사전 지식 참조 신설 — `brain-tool search <작업 키워드>`로 과거 결정·맥락 조회 후 워커 컨텍스트 주입. code-scan 사전 범위 파악과 동형, brain 부재 시 자연 스킵 (015) |
 | v1.3 | 2026-06-11 19:21 | Step 1.5 search 3시점 명시(작업·분석·설계 전 / 워커 디스패치 시 / 사용자 질의) + 흐름 확장: brain-tool search → 후보 목록(page·title·score·snippet, 본문 미포함) → score 상위 선별(불확실 시 사용자 확인) → 선택 페이지만 Read 주입(RAG식 전량 로드·index 전체 자동 로드 금지) (016) |
+| v1.4 | 2026-06-11 22:41 | §code-scan 사전 범위 파악 전면 재작성 — 조건부 진입 제거, 코드/문서 판별 기준 신설, 무조건 호출 명문화, 부재 시 즉석 자동 생성(F-3), 결과 3분기 연결(F-4). §Step 1.5에 brain analyze → code-scan @header 의존 1줄 추가 (010) |
