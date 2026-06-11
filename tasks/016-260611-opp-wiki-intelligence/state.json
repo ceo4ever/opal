@@ -1,11 +1,11 @@
 {
   "task_id": "016-260611-opp-wiki-intelligence",
   "skill": "opp",
-  "mode": "semi-agentic",
+  "mode": "agentic",
   "schema_version": "1.0",
   "created_at": "2026-06-11 18:21",
-  "updated_at": "2026-06-11 18:21",
-  "current_status": "in_progress",
+  "updated_at": "2026-06-11 21:44",
+  "current_status": "done",
   "rows": [
     {
       "row_id": 1,
@@ -13,27 +13,27 @@
       "item": "작업",
       "status": "done",
       "status_label": "✅",
-      "timestamp": "2026-06-11 18:21",
+      "timestamp": "2026-06-11 18:59",
       "owner": "PM",
-      "note": null
+      "note": "TASK.md 기작성 완료분 복원 (원 완료 2026-06-11 18:21, agentic 재초기화로 재마킹)"
     },
     {
       "row_id": 2,
       "stage": "TASK",
       "item": "사용자 확인",
-      "status": "pending",
-      "status_label": "⬜",
+      "status": "na",
+      "status_label": "-",
       "timestamp": null,
-      "owner": "PM",
-      "note": null
+      "owner": "auto",
+      "note": "agentic auto-na at init"
     },
     {
       "row_id": 3,
       "stage": "PLAN",
       "item": "작업",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-11 19:07",
       "owner": "PM",
       "note": null
     },
@@ -41,29 +41,29 @@
       "row_id": 4,
       "stage": "PLAN",
       "item": "PM Gate",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-11 19:09",
       "owner": "PM",
-      "note": null
+      "note": "PM Gate Pass — W1~W7 커버, Minor 2건 PM 보정, M-1~5 확정 (AGENTIC-LOG #4~7)"
     },
     {
       "row_id": 5,
       "stage": "PLAN",
       "item": "사용자 확인",
-      "status": "pending",
-      "status_label": "⬜",
+      "status": "na",
+      "status_label": "-",
       "timestamp": null,
-      "owner": "PM",
-      "note": null
+      "owner": "auto",
+      "note": "agentic auto-na at init"
     },
     {
       "row_id": 6,
       "stage": "EXECUTE",
       "item": "작업",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-11 19:49",
       "owner": "PM",
       "note": null
     },
@@ -71,29 +71,39 @@
       "row_id": 7,
       "stage": "EXECUTE",
       "item": "PM Gate",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-11 19:50",
       "owner": "PM",
-      "note": null
+      "note": "EXECUTE PM Gate Pass — 18 Step 전체 완료, pytest 83 passed(독립 재실행), brain validate/lint 0, 컨벤션 진단 Critical/High 0, rows_count 불변 전건, @header 정합"
     },
     {
       "row_id": 8,
       "stage": "EXECUTE",
       "item": "사용자 확인",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
-      "owner": "PM",
-      "note": null
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-11 21:41",
+      "owner": "user",
+      "note": "캡틴 확인: Q1a(재발 방지 반영 후 CLOSE)·Q2a(backup 제외 유지) 선택 — CLOSE 진행 지시"
     },
     {
       "row_id": 9,
       "stage": "CLOSE",
+      "item": "추가작업: opal-brain SKILL source_ref 명세 + 재배포",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-11 21:43",
+      "owner": "PM",
+      "note": "SKILL v1.2 source_ref [MUST] 명세 2곳 + install 재배포 + 배포본 grep 증거"
+    },
+    {
+      "row_id": 10,
+      "stage": "CLOSE",
       "item": "DONE.md 생성",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-11 21:44",
       "owner": "PM",
       "note": null
     }

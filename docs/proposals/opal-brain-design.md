@@ -1,8 +1,8 @@
 # OPAL Project Brain 설계 제안서
 
-> 상태: **제안 (검토 대기)** | 작성: 알투(PM) | 작성일: 2026-06-09
+> 상태: **구현 완료 (015 코어 + 016 지능화)** | 작성: 알투(PM) | 작성일: 2026-06-09
 > 근거: Karpathy llm-wiki + OPAL 프레임워크 융합
-> 검토 후 `//opp` 또는 `//opd` 파이프라인으로 구현 진입
+> 015: brain-tool·opal-brain·op-brain-ingest 코어 완성 / 016: 지능화(init 분석·ingest --all 문서·3계층·index 비상주·이름 확정·git 추적)
 
 ---
 
@@ -93,16 +93,18 @@ brain은 기존 자산을 **대체하지 않고 보완**한다. 역할이 겹치
 
 ```yaml
 ---
-type: entity | concept | flow | synthesis   # 페이지 타입
+type: entity | concept | flow | synthesis   # 페이지 타입 (SCHEMA §1.5 동적 선언 — 기본 4종은 검토 후보)
 title: state-tool 설계
 tags: [tool, pipeline, state]
-sources: [code:opal/tools/state-tool/, task:013, task:014]   # 근거 출처
+sources: [code:opal/tools/state-tool/, task:013, task:014]   # 근거 출처 / task:NNN drill-down 지원
 related: [[opal-harness]], [[pipeline-state]]                 # 교차참조
 created: 2026-06-09
 updated: 2026-06-09
 status: active | stale | draft
 ---
 ```
+
+> **페이지 타입 동적화 (016 M-1 B안)**: `type` 값은 하드코딩이 아닌 SCHEMA.md §1.5 테이블에서 동적 로드한다. brain-tool은 `load_page_types(brain_root)` 함수로 타입 세트를 파싱하며, SCHEMA 부재 시 `DEFAULT_PAGE_TYPES = ["entity","concept","flow","synthesis"]`로 graceful 폴백한다. init이 origin 분석(analyze) 결과를 바탕으로 타입 세트를 채택/제외/추가/교체하여 SCHEMA에 확정한다.
 
 ### 5.1.1 entity 페이지 — @header 시드 매핑
 
@@ -206,10 +208,10 @@ opal-brain **스킬·도구의 설치**(글로벌)와 **프로젝트 brain 부�
 
 | 모드 | 커맨드 | 동작 | 워커/도구 |
 |------|--------|------|----------|
-| **init** | `//opbr init` | `.opal/brain/` 골격 생성 + SCHEMA.md 작성 + index 전체 맵 등록 + **핵심 엔티티만** @header 시드 (범위 정책 §6.1.1) | brain-tool init + code-scan 연동 |
-| **ingest** | `//opbr ingest <소스>` | 소스(코드/문서/외부 URL/파일) 읽기 → 요약 페이지 작성 → index·관련 페이지 갱신 → log 기록 | wtm-agent(외부) + 분석 워커 + brain-tool |
-| **ingest --all** | `//opbr ingest --all [--scope X]` | **전체 자산 자동 분석 ingest** — code-scan 대상 전체를 병렬 배치로 읽고 분석. 멱등 skip + 진행률 보고 | 병렬 워커 배치 + brain-tool |
-| **query** | `//opbr ask "질문"` | index→관련 페이지 검색→인용 합성 답변. 가치 있는 답은 `synthesis/` 페이지로 파일링 제안 | brain-tool search + 합성 워커 |
+| **init** | `//opbr init` | **[016 M-1 B안]** STEP 0: `brain-tool analyze` → origin 정량 집계(domain·layer·exports·피의존도) → LLM이 타입 세트·도메인·시드 대상 제안 → 사용자 확인 → `init --types` 로 SCHEMA 타입 확정 → 골격 생성 + 핵심 엔티티 @header 시드 (범위 정책 §6.1.1) | brain-tool analyze + init + code-scan 연동 |
+| **ingest** | `//opbr ingest <소스>` | 소스(코드/문서/외부 URL/파일/task:NNN) 읽기 → 요약 페이지 작성 → index·관련 페이지 갱신 → log 기록 | wtm-agent(외부) + 분석 워커 + brain-tool |
+| **ingest --all** | `//opbr ingest --all [--scope X]` | **[016 M-2 B안]** `brain-tool ingest-scan --source all` → docs·스킬·참조·tasks 목록 + 멱등 skip 판정 → 5자산/배치 순차 처리. docs/.md·스킬·참조는 **3~6줄 요약+포인터** concept, 코드 @header는 entity 시드. 진행률 보고 | brain-tool ingest-scan + 배치 워커 |
+| **query** | `//opbr ask "질문"` | `brain-tool search` → **후보 목록(title·score·snippet)** 반환 → 제시 → 선택 → **선택 페이지만 Read 주입** → 합성 답변. 가치 있는 답은 synthesis/ 페이지로 파일링 제안 | brain-tool search + 합성 워커 |
 | **lint** | `//opbr lint` | 모순·stale·고아 페이지·누락 링크·근거 없는 주장 탐지 후 정비 제안 | brain-tool lint |
 
 ### 6.1.1 init 등록 범위 정책 (★ 전체 미러 아님)
@@ -222,7 +224,10 @@ init은 프로젝트의 **모든 자산을 페이지화하지 않는다.** 전�
 | **핵심 엔티티 페이지** | **선별 시드만** — 주요 도구·오케스트레이터·핵심 모듈 | 선별 entity | 지식 가치 높은 것 우선 |
 | **나머지** | 등록 안 함 → ingest/query/CLOSE 시 **점진 생성** | lazy | 복리 누적 (llm-wiki 사상) |
 
-**선별 기준** (PLAN에서 확정): exports·의존도가 높은 모듈 / 도메인 대표 엔티티 / 오케스트레이터·도구. 세부 임계값은 구현 시 정의.
+**핵심 엔티티 선별 기준 (016 M-1 B안 — `SEED_THRESHOLDS` SSOT: `brain_tool.py` 상수)**:
+
+- `exports ≥ 3` OR `피의존도 ≥ 2` OR `layer ∈ {orchestrator, tool, pilot, core}` OR `domain 대표 1개`
+- 구체적 정량값은 `brain-tool analyze` 결과(domain별 모듈수·layer 분포) 위에서 LLM이 제안 → 사용자 확인으로 확정 (결정론적 집계 = brain-tool, 의미 판단 = LLM)
 
 **범위 조절 옵션**:
 
@@ -249,14 +254,16 @@ init은 프로젝트의 **모든 자산을 페이지화하지 않는다.** 전�
 
 | 커맨드 | 용도 |
 |--------|------|
-| `init <brain-path>` | brain 골격 디렉토리·SCHEMA·빈 index/log 생성 |
-| `add-page <path> --type <T> --title <..>` | 페이지 생성 + index 자동 등록 + frontmatter 검증 |
+| `init <brain-path>` | brain 골격 디렉토리·SCHEMA·빈 index/log 생성 (`--types <csv>` 옵션으로 확정 타입 세트 전달) |
+| `add-page <path> --type <T> --title <..>` | 페이지 생성 + index 자동 등록 + frontmatter 검증 (타입은 SCHEMA §1.5 동적 로드) |
 | `index` | pages/ 스캔 → index.md 재생성 (SSOT 동기화) |
 | `log <op> <summary>` | log.md append (타임스탬프 자동) |
-| `search <query>` | frontmatter tags·title·본문 검색 → 관련 페이지 경로 반환 (PM 참조용) |
-| `sync-header` | `code-scan.json`의 @header와 entity 페이지 frontmatter 비교 → drift 시 시드 갱신 + stale 표시 |
+| `search <query>` | frontmatter tags·title·본문 검색 → **후보 목록**(page·title·score·snippet) 반환. 본문 포함 안 함 — PM이 선택 후 선택 페이지만 Read 주입 |
+| `sync-header` | `code-scan.json`의 @header와 entity 페이지 frontmatter 비교 → drift 시 시드 갱신 + stale 표시 (단방향: code→brain) |
 | `lint` | 링크 무결성·고아·stale(updated/header drift)·근거 누락 페이지 탐지 → JSON 리포트 |
 | `validate` | 전체 brain 구조·frontmatter 표준 준수 검증 |
+| `analyze` | **[016 신설]** code-scan @header 정량 집계(domain별 모듈수·layer 분포·exports·피의존도·seed_candidates) → JSON 반환. init 타입 제안의 결정론적 입력. LLM 요약은 수행하지 않음 |
+| `ingest-scan` | **[016 신설]** `--source docs\|skills\|tasks\|all`로 .md 문서·tasks/NNN 목록 스캔 → 멱등 skip 판정 포함 JSON 목록 반환. 목록 산출은 도구, 본문 요약은 LLM |
 
 ### 7.2 집행 규칙
 
@@ -270,44 +277,52 @@ init은 프로젝트의 **모든 자산을 페이지화하지 않는다.** 전�
 
 ### 8.1 PM/분석/설계 시 brain 참조 (요구 ①)
 
-**code-scan PM 우선 규칙(태스크 010)과 동형 패턴으로 신설한다.**
+**code-scan PM 우선 규칙(태스크 010)과 동형 패턴으로 구현 완료 (016 W5).**
 
-(a) **부트스트랩 융합** — `AGENT.md` Lazy 트리거 테이블에 추가:
+(a) **부트스트랩 융합 — [016 정정]** `AGENT.md` Lazy 트리거 테이블:
 
 | 트리거 | 로드 대상 |
 |--------|----------|
-| PM 컨텍스트 로드 시 함께, 또는 분석/설계 작업 진입 시 | `.opal/brain/index.md` |
+| brain 검색 키워드 명시 요청 또는 `//opbr` 커맨드 시 | `.opal/brain/` — **존재 여부만 경량 인지** (PM 컨텍스트 로드 시 brain 디렉토리 존재 확인에 한정; index.md 전체 자동 로드 안 함). 지식은 `brain-tool search` 후보→선택 주입으로 온디맨드 로드 |
 
-(b) **PM 디스패치 전 프로세스 융합** — `pm/dispatch-process.md`에 단계 추가:
+> **정정 이유 (016 W5)**: 설계 초안이 "PM 컨텍스트 로드 시 함께 index.md 자동 로드"로 제안했으나, 이는 index 전체를 컨텍스트에 올리는 것으로 "전체 brain 로드 금지" 원칙 위반이다. 구현은 index 비상주(부트스트랩에서 존재 여부만 인지, 실제 지식은 search 후보→선택 주입으로 온디맨드)로 확정되었다.
+
+(b) **PM 디스패치 전 프로세스 융합 — [016 확장]** `pm/dispatch-process.md` Step 1.5:
 
 ```
-Step 1.5 (신설): brain 참조
-  - brain-tool search <작업 키워드> 로 관련 지식 페이지 조회
-  - 발견된 페이지를 워커 컨텍스트에 주입 (과거 결정·맥락 전달)
+Step 1.5 — brain 사전 지식 참조 (3시점)
+  ① 작업·분석·설계 전: PLAN 착수 전 / 구현 설계 시작 전 — 과거 아키텍처 결정·반복 패턴 확인
+  ② 워커 디스패치 시: 각 Step 프롬프트 작성 직전 — 해당 Step 키워드로 관련 페이지 조회 후 주입
+  ③ 사용자 질의: 구체적 질문 수신 즉시 — 과거 결정·맥락 근거로 답변 품질 향상
+
+  흐름 (공통): brain-tool search <키워드> → 후보 목록(page·title·score·snippet) 반환
+              → PM이 score 상위 선별(불확실 시 사용자 확인)
+              → 선택된 페이지만 Read하여 워커 컨텍스트 주입
+  [MUST] RAG식 전량 로드 금지 — index.md 전체 자동 로드 안 함, 선택된 페이지만 주입
 ```
 
-(c) **프로젝트 AGENT.md 규칙 신설** — "code-scan 활용 규칙" 옆에 "opal-brain 활용 규칙":
+(c) **프로젝트 AGENT.md 규칙** — "opal-brain 활용 규칙" (016 W4 PM 판단 ingest 포함):
 
 | 상황 | 활용 방법 |
 |------|----------|
-| 작업 시작·분석·설계 전 | `brain-tool search <키워드>` → 관련 지식 우선 참조 |
+| 작업 시작·분석·설계 전 | `brain-tool search <키워드>` → 후보 선별 → 선택 페이지만 주입 |
 | 과거 결정의 맥락 필요 | `//opbr ask` 또는 brain 페이지 직접 Read |
+| 작업 중 가치 지식 감지 | 아키텍처 결정·반복 패턴·캡틴 합의·비자명 해결 발생 시 ingest 실행 — **agentic=자율 ingest / semi·interactive=사용자 제안** |
 
 ### 8.2 CLOSE 시 자동 ingest (요구 ②)
 
-**모든 pilot의 CLOSE 단계에 brain ingest 훅을 추가한다.**
+**모든 pilot의 CLOSE 단계에 brain ingest 훅 구현 완료 (016 W6 — opp + 7 pilot 확산).**
 
 ```
 CLOSE 단계:
   1. DONE.md 생성
-  2. ★ brain ingest 훅 (신설):
-     - 태스크 의사결정(M-1~M-N) → concept 페이지 생성·갱신
-     - 신규/변경 엔티티(모듈·도구·스킬) → entity 페이지 갱신
-     - brain-tool log + index 자동 갱신
+  2. ★ brain ingest 훅:
+     DONE.md 생성 직후 → .opal/brain/ 존재 시 op-brain-ingest 디스패치(부재 시 no-op) → 완료 보고
+     (op-brain-ingest 탐색 경로 2단: 프로젝트 스킬 → 글로벌 스킬)
   3. 태스크 완료 보고
 ```
 
-**ingest 대상 / 제외 기준**:
+**ingest 대상 / 제외 기준** (op-brain-ingest §STEP 3 SSOT):
 
 | ingest | 제외 |
 |--------|------|
@@ -315,30 +330,47 @@ CLOSE 단계:
 
 - PM Gate 통과 후 실행 → 검증된 산출물만 누적
 - agentic 모드여도 .md 산출이므로 사후 검토 가능 (헌법 §4 정합)
-- 구현 방식: CLOSE에서 `op-brain-ingest` 경량 워커 디스패치 또는 brain-tool 직접 호출 (PLAN에서 확정)
+- 구현: CLOSE에서 `op-brain-ingest` 경량 워커 디스패치. 백필 기준은 동일 SSOT 재사용 (중복 로직 회피)
 
 ### 8.3 소스를 brain에 넣기 (요구 ③) — 하이브리드 권고
 
 | 소스 유형 | 처리 | 이유 |
 |----------|------|------|
-| **내부 코드** | **@header를 entity 페이지 시드로 흡수** + `file_path:line` 참조. 코드 본문 복제 금지 | @header는 경량 메타라 stale 위험 낮음, 코드가 SSOT (단방향 동기화) |
-| **내부 문서**(docs/) | 개념 페이지에서 `[[]]` 참조, 필요 시 요약 | docs가 SSOT |
+| **내부 코드** | **@header를 entity 페이지 시드로 흡수** + `source_ref` 참조. 코드 본문 복제 금지 | @header는 경량 메타라 stale 위험 낮음, 코드가 SSOT (단방향 동기화) |
+| **내부 문서** (docs/*.md / 스킬·참조) | **3~6줄 요약(목적·핵심 결정·적용 범위) + `file_path` 포인터**로 concept 페이지 생성. 본문 복제 금지 — 원본이 SSOT | docs/스킬이 SSOT (016 M-2 B안 확정) |
+| **태스크** (`tasks/NNN/`) | DONE.md·PLAN.md 읽기 → concept 1개(핵심 결정). `sources:[task:NNN]` — drill-down 지원 | 3계층 기억 §8.4 참조 |
 | **외부 소스**(웹·PDF·이미지·캡틴 제공) | `sources/`에 **원본 저장 + 요약 페이지** | git이 안 잡는 외부 지식 → 영속화 가치 |
 
 - 외부 소스 변환은 기존 OPAL 도구 재사용: **wtm-agent**(웹→md), **xlsx-tool**(엑셀), 이미지/PDF Read
 - `sources/<id>/meta.yaml`에 출처·수집일·라이선스 기록 (추적성)
 
+### 8.4 3계층 기억 모델 (016 M-3 B안 확정)
+
+OPAL의 기억은 3계층으로 분리된다:
+
+| 계층 | 자산 | 역할 | 수명 |
+|------|------|------|------|
+| **단기 기억** | `.opal/MEMORY.md` | PM 운영 기억 — 피드백·선호·작업이력 (FIFO 10) | 세션~단기 |
+| **장기 검색** | `.opal/brain/` | 프로젝트 WHY·HOW 지식 위키 — 요약·교차참조 | 영속 |
+| **장기 원본** | `tasks/NNN/` | 태스크별 원본 산출물(PLAN/DONE/TASK) | 영속 |
+
+- brain `sources:[task:NNN]`으로 장기 검색 → 장기 원본 drill-down 가능
+- 001~015 소급 백필: DONE.md 있는 태스크 중 아키텍처/신규 컴포넌트/인터페이스 변경 포함 태스크만 선별 백필 (op-brain-ingest §STEP 3 기준 재사용). 5자산/배치·멱등 skip 정책 동일하게 적용
+
 ---
 
-## 9. 부트스트랩 로딩 전략
+## 9. 부트스트랩 로딩 전략 (016 W5 정정 — index 비상주)
 
 | 시점 | 로드 대상 | 방식 |
 |------|----------|------|
-| PM 컨텍스트 로드 시 | `.opal/brain/index.md` | Lazy (brain 존재 시) |
-| 작업/분석/설계 진입 시 | `brain-tool search` 결과 | 동적 (키워드 기반) |
-| 개별 페이지 | 필요 시 Read | 온디맨드 |
+| PM 컨텍스트 로드 시 | `.opal/brain/` **존재 여부만** 확인 | Lazy 경량 인지 (디렉토리 존재 확인에 한정) |
+| 작업/분석/설계 진입 시 | `brain-tool search <키워드>` 후보 목록 | 동적 (키워드 기반) — 후보만 반환, 본문 없음 |
+| 후보 선별 후 | 선택된 페이지만 Read | 온디맨드 |
+| `//opbr` 커맨드 또는 검색 키워드 명시 요청 | brain-tool 호출 | Lazy 트리거 조건 충족 시에만 |
 
-> 전체 brain을 컨텍스트에 올리지 않는다 — index 우선, 페이지는 필요 시 (llm-wiki "index-driven discovery").
+> **[016 정정]** 설계 초안은 "PM 컨텍스트 로드 시 `.opal/brain/index.md` Lazy 로드"로 제안했으나, 이는 index 전체를 컨텍스트에 올려 "전체 brain 로드 금지" 원칙 위반이다. 구현 확정: index 비상주 — 부트스트랩에서 brain 존재 여부만 경량 인지하고, 실제 지식은 `brain-tool search` 후보 목록 → PM 선별 → 선택 페이지 온디맨드 주입으로 접근한다. (AGENT.md Lazy 트리거 테이블·dispatch-process.md Step 1.5 참조)
+>
+> **원칙 유지**: 전체 brain을 컨텍스트에 올리지 않는다 — "index-driven discovery"는 index 목차를 로드하는 것이 아닌 search 후보 목록을 통한 선택적 접근으로 구현된다.
 
 ---
 
@@ -371,21 +403,64 @@ CLOSE 단계:
 
 ---
 
-## 12. 미결 질문 / 리스크
+## 12. 리스크 및 결정 이력
 
-| # | 항목 | 검토 필요 |
-|---|------|----------|
-| R1 | CLOSE 자동 ingest가 모든 태스크에 적용 시 noise 누적 가능 | lint 주기 정책 + ingest 기준 엄격화로 완화 |
-| R2 | 멀티 PC/멀티 에이전트 동시 ingest 시 index 충돌 | brain-tool 원자적 갱신 + git merge 전략 (PLAN 검토) |
-| R3 | understand-anything 그래프 연동 깊이 | P1~P6 코어 완료 후 별도 태스크로 분리 권고 |
-| R4 | 기존 완료 태스크(001~014) 소급 ingest 여부 | 선택 — `//opbr ingest task:NNN` 수동 백필 가능 |
-| R5 | 코드 @header 변경 시 entity 페이지 시드 drift | `brain-tool sync-header`로 단방향 재동기화 + lint stale 표시 (코드가 SSOT) |
-| R6 | 전체 자산 ingest(`--ingest-all`) 토큰·시간 비용 | 명시 옵션화 + `--scope` 분할 + 병렬 배치 워커 + 멱등 skip + 진행률·재개 (PLAN에서 배치 정책 확정) |
+| # | 항목 | 상태 | 해결/현황 |
+|---|------|------|----------|
+| R1 | CLOSE 자동 ingest가 모든 태스크에 적용 시 noise 누적 가능 | 완화 | op-brain-ingest §STEP 3 포함/제외 기준 SSOT로 엄격화. 백필·CLOSE 훅이 동일 기준 재사용 |
+| R2 | 멀티 PC/멀티 에이전트 동시 ingest 시 index 충돌 | 진행 중 | brain-tool 원자적 index 재생성(전체 배치 완료 후 1회 write) 구현. git merge 전략은 사용자 책임 (016은 추적 전환 + 원자화까지, merge 전략은 후속 태스크) |
+| R3 | understand-anything 그래프 연동 깊이 | 후속 | P1~P6 코어 완료 후 별도 태스크로 분리 권고 — 016 범위 외 |
+| R4 | 기존 완료 태스크(001~015) 소급 ingest 여부 | **확정 (016 M-3 B안)** | **선별 백필** — DONE.md 있는 태스크 중 아키텍처/신규 컴포넌트/인터페이스 변경 포함 태스크만 concept 페이지화. `//opbr ingest --all` 시 또는 별도 명령으로 1회 실행. op-brain-ingest §STEP 3 기준 재사용. 5자산/배치·멱등 skip 동일 정책 |
+| R5 | 코드 @header 변경 시 entity 페이지 시드 drift | 완화 | `brain-tool sync-header`로 단방향 재동기화 + lint stale 표시 (코드가 SSOT) |
+| R6 | 전체 자산 ingest(`--all`) 토큰·시간 비용 | **확정 (016 M-2 B안)** | **5자산/배치 + 멱등 skip + 진행률 보고 + log.md 배치 완료 마커(재개용)**. 범위: docs·스킬·참조 → concept(3~6줄 요약+포인터), 코드 @header → entity. `ingest-scan` 도구가 결정론적 목록·skip 판정 담당 |
+| R7 | init analyze가 code-scan.json 부재 프로젝트에서 무력 | 완화 | code-scan 부재 시 docs/ 폴더 구조·파일명 기반 폴백 제안 + 사용자 확인 (기존 init 전제 확인 절차 계승) |
+| R8 | 이름 결정(M-4 A안)이 캡틴 "wiki" 비전과 표면 불일치 | **확정 (016 M-4 A안)** | §13 이름 결정 명문화 참조 |
 
 ---
 
-## 13. 다음 액션
+## 13. 이름 결정 명문화 (016 M-4 A안 — R8 대응)
 
-1. 캡틴이 이 제안서를 검토·수정
-2. 확정 시 `//opp` 또는 `//opd` 파이프라인 진입 → TASK 채번 → PLAN에서 Phase·인터페이스 확정
-3. EXECUTE 구현 → install 배포 → 현재 opal 프로젝트에 brain 시드 적용
+| 용어 | 유형 | 사용 맥락 |
+|------|------|----------|
+| `opal-wiki-pilot` | **비전·컨셉 명칭** | 캡틴 비전 문서·설계 제안서·고수준 설명에서만 사용. 구현 식별자가 아님 |
+| `opal-brain` | **구현 식별자 (스킬명)** | SKILL.md·레지스트리·디렉토리명·코드·문서 본문에서 사용 |
+| `opbr` | **구현 식별자 (alias)** | 쌍슬래시 커맨드(`//opbr`)·레지스트리 alias |
+| `brain-tool` | **구현 식별자 (도구명)** | CLI 실행(`brain-tool/run.sh`)·코드·스킬 내 도구 호출에서 사용 |
+| `.opal/brain/` | **구현 식별자 (디렉토리)** | git·파일 경로·스킬 내 경로 참조 |
+
+> **결정 근거**: 015에서 `brain-tool·opal-brain·opbr·op-brain-ingest·.opal/brain/`을 기준으로 구현된 30+ 참조·6 PM 문서·레지스트리가 모두 `brain` 기준이다. 리네임은 016 핵심(지능화) 대비 가치가 낮고 회귀 위험이 크다. "opal-wiki-pilot"은 비전 용어로 설계 SSOT(이 문서)에만 병기한다.
+
+---
+
+## 14. git 추적 정책 (016 M-5 B안 확정)
+
+| 자산 | git 추적 | 이유 |
+|------|---------|------|
+| `.opal/brain/` | **추적 (예외 허용)** | brain 페이지는 사람이 읽는 .md SSOT — 팀·멀티PC 공유 + 리뷰 가능 (헌법 "User sovereignty") |
+| `.opal/` 나머지 | 무시 유지 | identity·MEMORY·code-scan.json 등 로컬/민감 데이터 |
+| `.opal/code-scan.json` | 무시 유지 | 파생 캐시 — 재생성 가능 |
+
+`.gitignore` 패턴:
+```
+.opal/*
+!.opal/brain/
+!.opal/brain/**
+```
+
+> 구현 확인: 현재 `.gitignore:2-4`에 이 패턴이 적용됨. brain을 git 추적하면 멀티PC ingest 시 index 충돌이 발생할 수 있으나, brain-tool 원자적 index 재생성(전체 배치 후 1회 write)으로 완화. merge conflict 해소는 사용자 책임.
+
+---
+
+## 15. 다음 액션
+
+1. 015 코어 구현 완료 (brain-tool 10커맨드·opal-brain 4모드·op-brain-ingest·opp CLOSE 훅)
+2. 016 지능화 구현 완료 (init 분석 STEP 0·ingest --all 문서·3계층·index 비상주·7 pilot 훅 확산·git 추적)
+3. Step 18: 현 프로젝트 brain dogfooding — `//opbr ingest --all` + 001~015 선별 백필 실행 (016 install 후)
+
+---
+
+## 변경이력
+
+| 일시 (KST) | 버전 | 변경내용 |
+|-----------|------|---------|
+| 2026-06-11 19:28 | v2.0 | (016) 지능화 확정 반영 — init 동적 분석(brain-tool analyze + M-1 B), ingest --all 문서 범위(M-2 B 3~6줄+포인터), 3계층 기억(§8.4), index 비상주(§9 정정), 이름 결정 명문화(§13 M-4 A), git 추적 정책(§14 M-5 B), §12 R4/R6 확정, §7.1 analyze/ingest-scan 서브커맨드 추가, §8.1 dispatch-process 3시점+후보→선택 주입, 상태 구현 완료로 갱신 |

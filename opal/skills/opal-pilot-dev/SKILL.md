@@ -227,7 +227,16 @@ op-dev-test-agent 워커 디스패치. TEST-SCENARIO.md 실행 + 결과 기록 +
 모든 체크리스트 갱신 완료 확인 후 태스크를 마감한다.
 
 1. DONE.md 생성 후 행 mark (`~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done` 호출 — P-1). 행을 mark하는 것 자체가 state 기록이다.
-2. 완료 보고
+2. **op-brain-ingest 디스패치** (DONE.md 생성 직후 실행):
+   - `<프로젝트-루트>/.opal/brain/` 존재 여부를 확인한다.
+   - **brain이 존재하면**: op-brain-ingest 워커를 디스패치하여 태스크 산출물(DONE.md·PLAN 결정·신규 엔티티)을 brain에 누적한다.
+   - **brain이 없으면**: 자연 스킵(no-op). CLOSE가 막히지 않는다.
+   - op-brain-ingest 탐색 경로:
+     1. `{프로젝트}/.opal/skills/op-brain-ingest/SKILL.md`
+     2. `~/.opal/skills/op-brain-ingest/SKILL.md`
+   - 디스패치 입력: 태스크 폴더 경로
+   - 워커가 `status: skipped` 또는 `status: completed` 또는 `status: completed_with_errors` 반환 — 어떤 경우도 CLOSE를 중단시키지 않는다.
+3. 완료 보고
 
 > **CLOSE 진입 게이트 자동 검증**: CLOSE 단계 첫 행 mark 시 도구가 직전 단계 사용자 확인 행의 `owner=user` 여부를 자동 검증한다. 미통과 시 `close_gate_violation` 에러 반환 — agentic 모드의 `--auto-pass`도 거부됨 (§2.16 G-13 / PLAN §3 Step 8 P-8).
 > **추가작업 진입 (P-6)**: `~/.opal/tools/state-tool/run.sh add-row <task-path> --after <N> --stage CLOSE --item '...'` 호출 → current_status 자동 `additional_work` 전환. 완료 시 `~/.opal/tools/state-tool/run.sh status <task-path> --set additional_work_done`.
@@ -373,3 +382,4 @@ semi-agentic / agentic 모두 CLOSE 첫 행 `--auto-pass` 거부 (`agentic_close
 | v3.8 | 2026-05-15 16:40 | 5단계 파이프라인 재편 — STEP 3.5 TEST-SCENARIO 신설(PM 직접 작성, self-confirming 방지) + PLAN에서 TEST-SCENARIO.md 생성 제거 + STATE.md 28행 구조 갱신 + 모드 경계 이동(PLAN→TEST-SCENARIO) + 자율 게이트 흐름도 갱신 + EXECUTE 디스패치 scenario_source·완료기준·자가점검 필드 추가 + PM Gate TEST-SCENARIO Phase 행 추가 + STEP 5 L3 협업 게이트 신설 (004) |
 | v3.9 | 2026-05-19 17:05 | PM Gate TEST-SCENARIO 행 체크리스트 7항목으로 확장 (⑦ 실행 방식 명시) + STEP 3.5 절차에 M1/M2/M3 결정 명시 (004 추가작업) |
 | v4.0 | 2026-06-07 | STATE 행 재구성 — State Gate 행 제거(guard 이전)+QA Gate 행 제거(PM Gate 통합)+산출물 행 흡수+gate-pass→단일 mark (014 Phase 4) |
+| v4.1 | 2026-06-11 19:25 | STEP 6 CLOSE에 op-brain-ingest 디스패치 훅 삽입 — DONE.md 생성 직후 brain 존재 시 태스크 산출물 누적, brain 부재 시 no-op, 어떤 status도 CLOSE 비중단 (016) |

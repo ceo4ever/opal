@@ -1,6 +1,6 @@
 # opal Memory Index
 
-> 최종 갱신: 2026-06-11 (태스크 015 완료 — opal-brain 코어, 016 wiki 지능화 진행)
+> 최종 갱신: 2026-06-11 21:50 (태스크 016 완료 — wiki 지능화, brain 54페이지)
 > last_task_number: 16
 
 ## 메모리 카테고리
@@ -31,7 +31,7 @@
 
 | 등록일자 | 작업 | 단계 | 경로 | 시작일시 | 완료일시 |
 |----------|------|------|------|---------|---------|
-| 2026-06-11 | 016 wiki 지능화 (opal-wiki-pilot 완성) — init 동적 구조제안(페이지 타입 세트 완전 동적)+ingest --all 문서전체+tasks 장기기억 3계층(MEMORY단기/brain장기검색/tasks원본)+ingest PM판단 트리거+on-demand search 선택주입(index 비상주)+7 pilot 확산+install 배포. **다음 세션 PLAN 재개** (브랜치 feat/opal-brain-wiki) | TASK | tasks/016-260611-opp-wiki-intelligence/ | 2026-06-11 18:21 | - |
+| 2026-06-11 | 016 wiki 지능화 (opal-wiki-pilot 완성, agentic) — brain-tool 타입 동적화+analyze/ingest-scan(83 tests)+SKILL 4모드 지능화(v1.2 source_ref MUST)+W4/W5 PM 규칙+7 pilot CLOSE 훅(rows 불변)+install 배포+brain 54페이지(dogfooding+백필+synthesis+CLOSE ingest 실증). M-4 opal-brain 유지·M-5 brain git 추적. 캡틴 테스트로 멱등 결함 발견·해소. **미커밋** (브랜치 feat/opal-brain-wiki) | 완료 | tasks/016-260611-opp-wiki-intelligence/ | 2026-06-11 18:21 | 2026-06-11 21:50 |
 | 2026-06-10 | 015 OPAL Project Brain 코어 — llm-wiki 융합 지식 위키: brain-tool(Python 8커맨드 66test)+opal-brain 스킬(4모드)+PM융합+opp CLOSE 자동 ingest 파일럿+brain 시드(entity2/concept1). origin=SSOT/wiki=요약+참조 단방향. install·전체pilot확산·wiki지능화는 016 (agentic) | CLOSE | tasks/015-260610-opp-opal-brain/ | 2026-06-10 00:34 | 2026-06-11 18:19 |
 | 2026-05-20 | 007 cmux-tool 범용 확장 + wtm-agent fallback 체인 재배선 (원래 006 채번 → 다른 PC 006 install-linux와 충돌하여 007 재채번) | CLOSE | tasks/007-260520-opp-cmux-tool-generic-expansion/ | 2026-05-20 20:02 | 2026-05-23 00:02 |
 | 2026-05-24 | 008 opwt 산출물 체계 v4 — interview 통합 + PRD 8섹션 + 시나리오·화면 흐름도 + WBS 제거 (app-planning-presentation 자료 흡수) | CLOSE | tasks/008-260524-opp-opwt-v4-output-system/ | 2026-05-24 13:57 | 2026-05-24 15:35 |

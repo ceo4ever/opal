@@ -1,6 +1,6 @@
 # TASK: OPAL Project Brain 지능화 — opal-wiki-pilot 완성
 
-> 작성일: 2026-06-11 | 작업 유형: 개선 | 적용 스킬: opp | 모드: semi-agentic
+> 작성일: 2026-06-11 | 작업 유형: 개선 | 적용 스킬: opp | 모드: agentic (2026-06-11 18:59 캡틴 지시로 semi-agentic에서 전환)
 > 입력: 사용자 요청 (015 코어 위에 init 제안·ingest 전체·tasks 장기기억·트리거·검색 강화)
 > 출력: TASK.md
 
@@ -56,7 +56,7 @@
 - [ ] **W7. install 통합 배포 + 이름 정리 + brain git 추적 정책** — 016 코드 완료 후 install 실행(brain-tool·스킬 글로벌 배포). //opbr 레지스트리 매칭 활성화 검증. opal-brain vs opal-wiki 이름 결정·반영. **brain git 추적 정책 결정** — 현재 `.gitignore`가 `.opal/`을 무시해 `.opal/brain/`·`code-scan.json`이 커밋 제외됨. brain을 공유 자산으로 추적할지(`.gitignore` 예외 추가) vs 로컬 전용으로 둘지 결정.
   - 무엇을: install 실행 + 이름 정리 + brain git 정책 / 어디에: `scripts/install-mac.sh` 실행, 레지스트리/스킬 명, `.gitignore` / 왜: 확정 §10 + 커밋 시 발견 / AC: install 후 `~/.opal/tools/brain-tool`·`~/.opal/skills/opal-brain(또는 opal-wiki)` 존재 + `//opbr` 매칭 성공 + brain git 추적 여부 확정·반영.
 
-> 페이지 타입 4종은 고정(확정 §4). init 분석 로직의 정량 기준·ingest --all 문서 요약 깊이·소급 백필 범위·이름 최종안은 PLAN에서 확정한다.
+> 페이지 타입 세트는 완전 동적 — 기본 4종은 검토 후보(확정 §4, W1과 정합. 2026-06-11 18:59 PM 정정: 이전 초안의 "4종 고정" 잔재 문구 제거). init 분석 로직의 정량 기준·ingest --all 문서 요약 깊이·소급 백필 범위·이름 최종안은 PLAN에서 확정한다.
 
 ## 제약 조건
 

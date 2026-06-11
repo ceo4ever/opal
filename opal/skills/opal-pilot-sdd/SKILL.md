@@ -10,7 +10,7 @@ triggers:
   - "opsdd"
   - "SDD 개발"
   - "명세 기반 개발"
-version: 3.4.0
+version: 3.5.0
 ---
 
 # opal-pilot-sdd (SDD 오케스트레이터)
@@ -290,6 +290,17 @@ ACT 완료마다 state-tool을 호출하여 STATE.md를 갱신한다 (R-10: gate
 
 > **CLOSE 게이트 제약 (§2.16 G-13)**: CLOSE 단계 최초 진입 행(#24)은 `--auto-pass` 적용 불가 (`close_gate_violation`). 반드시 위 명시 호출로 처리한다.
 
+4. **op-brain-ingest 디스패치** (DONE.md 생성 직후 실행):
+   - `<프로젝트-루트>/.opal/brain/` 존재 여부를 확인한다.
+   - **brain이 존재하면**: op-brain-ingest 워커를 디스패치하여 태스크 산출물(DONE.md·SPEC·SPEC-PLAN 결정·신규 엔티티)을 brain에 누적한다.
+   - **brain이 없으면**: 자연 스킵(no-op). CLOSE가 막히지 않는다.
+   - op-brain-ingest 탐색 경로:
+     1. `{프로젝트}/.opal/skills/op-brain-ingest/SKILL.md`
+     2. `~/.opal/skills/op-brain-ingest/SKILL.md`
+   - 디스패치 입력: 태스크 폴더 경로
+   - 워커가 `status: skipped` 또는 `status: completed` 또는 `status: completed_with_errors` 반환 — 어떤 경우도 CLOSE를 중단시키지 않는다.
+5. 완료 보고
+
 보고 형식:
 ```
 ✅ [CLOSE] 태스크 완료
@@ -514,3 +525,4 @@ opal-harness-agentic.md §6 공통 기준에 추가:
 | v3.3.0 | 2026-05-09 18:30 | 개인 식별자 "캡틴" → "소유자"/"사용자" 치환 — 배포 파일 정체성 누설 정정 (139) |
 | v3.4.0 | 2026-06-07 | STATE 행 35→24 재구성 — State Gate 행 11개 제거(stage-transition guard로 이전)+CLOSE State Gate→DONE.md 생성 단일화. gate-pass 금지 문구를 deprecated(014)로 정합 갱신(mark 개별 호출 유지). 본문 Gate 흐름 "State Gate → PM Gate → State Gate → 사용자 Gate" → "PM Gate → 사용자 Gate" 정합화. 각 Phase mark 행번호 재정렬. R-13 add-row `--after 23`→`--after 17`. PM Gate 점검 목록 산출물을 실제 opsdd 산출물로 정정. ACT 폴더 반복·R-10 비표준 구조 보존 (014 Phase 4) |
 | v3.4.1 | 2026-06-07 | `--rows-from` 파싱 수정 — STATE.md 구조 예시 인라인 마크다운 헤더(# STATE:, ## 현재 상태, ## 파이프라인 현황판)가 파서 섹션 경계 오인식 유발. SSOT 파이프라인 현황판 표를 `### STATE.md 구조` 앞으로 이동 + 구조 예시를 비-마크다운 헤더 형식으로 교체. `rows_count: 24` 파싱 정상 복구 (014 Phase 4) |
+| v3.5.0 | 2026-06-11 19:25 | Phase 6 CLOSE에 op-brain-ingest 디스패치 훅 삽입 — DONE.md 생성 직후 brain 존재 시 워커 디스패치, 부재 시 no-op, CLOSE 비중단. STATE 행 24 불변 (016) |

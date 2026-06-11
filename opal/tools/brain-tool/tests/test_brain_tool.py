@@ -3,11 +3,11 @@
   "module": "test_brain_tool",
   "layer": "test",
   "domain": "opal-brain",
-  "description": "brain-tool 단위 테스트 — 8 서브커맨드 happy-path + ERROR_CODES 주요 14종. tmp_path 기반 격리 실행. mock 금지 — 실제 brain_tool.py를 import 호출하는 진짜 테스트.",
+  "description": "brain-tool 단위 테스트 — 10 서브커맨드 happy-path + ERROR_CODES 주요 14종 + 동적 타입 로드 + analyze/ingest-scan. tmp_path 기반 격리 실행. mock 금지 — 실제 brain_tool.py를 import 호출하는 진짜 테스트.",
   "exports": [
     "TestInit", "TestAddPage", "TestIndex", "TestLog",
     "TestSearch", "TestSyncHeader", "TestLint", "TestValidate",
-    "TestErrorCodes"
+    "TestErrorCodes", "TestDynamicPageTypes", "TestAnalyze", "TestIngestScan"
   ]
 }
 """
@@ -57,6 +57,7 @@ def make_args(**kwargs):
         # init
         "brain_path": ".",
         "force": False,
+        "types": None,
         # add-page / search type filter (None = 필터 없음)
         "path": "my-page",
         "type": None,
@@ -75,6 +76,8 @@ def make_args(**kwargs):
         # sync-header
         "scope": None,
         "page": None,
+        # ingest-scan
+        "source": "all",
     }
     defaults.update(kwargs)
     return types.SimpleNamespace(**defaults)
@@ -913,7 +916,325 @@ class TestErrorCodes(BrainTestCase):
 
 
 # ═════════════════════════════════════════════════════════════════════════════
-# 10. validate_frontmatter 단위 테스트 (내부 헬퍼)
+# 10. 동적 페이지 타입 로드 테스트
+# ═════════════════════════════════════════════════════════════════════════════
+
+class TestDynamicPageTypes(BrainTestCase):
+    """동적 타입 로드 — 커스텀 타입 선언 인식 / SCHEMA 부재 폴백 / --type 무효값."""
+
+    def _write_custom_schema(self, types_table):
+        """brain_root/SCHEMA.md에 커스텀 타입 테이블 작성."""
+        schema_text = (
+            "# Project Brain SCHEMA\n\n"
+            "## 1.5 페이지 타입 정의 (brain-tool 동적 로드 SSOT)\n\n"
+            "> brain-tool은 이 블록에서 타입 세트를 동적 로드한다.\n\n"
+            "| type | category | 설명 |\n"
+            "|------|----------|------|\n"
+        )
+        for ptype, category, desc in types_table:
+            schema_text += f"| {ptype} | {category} | {desc} |\n"
+        schema_text += "\n"
+        (self.brain_root / "SCHEMA.md").write_text(schema_text, encoding="utf-8")
+
+    def test_load_page_types_from_schema_custom_type(self):
+        """SCHEMA §1.5에 커스텀 타입 'decision' 선언 시 load_page_types가 인식."""
+        self._init()
+        self._write_custom_schema([
+            ("entity", "엔티티", "코드 모듈"),
+            ("decision", "결정", "아키텍처 결정"),
+        ])
+        types, type_to_cat = BT.load_page_types(self.brain_root)
+        self.assertIn("decision", types)
+        self.assertEqual(type_to_cat.get("decision"), "결정")
+        self.assertIn("entity", types)
+
+    def test_load_page_types_schema_absent_fallback(self):
+        """SCHEMA.md 부재 시 DEFAULT_PAGE_TYPES로 폴백."""
+        # brain_root가 없는 경로 사용 (SCHEMA 부재)
+        nonexistent = self.tmpdir / "no-brain"
+        types, type_to_cat = BT.load_page_types(nonexistent)
+        self.assertEqual(types, BT.DEFAULT_PAGE_TYPES)
+        self.assertEqual(type_to_cat, BT._DEFAULT_TYPE_TO_CATEGORY)
+
+    def test_load_page_types_schema_no_table_fallback(self):
+        """SCHEMA.md가 있으나 §1.5 테이블 없으면 DEFAULT_PAGE_TYPES 폴백."""
+        self._init()
+        (self.brain_root / "SCHEMA.md").write_text(
+            "# SCHEMA\n\n아무 테이블 없는 SCHEMA\n", encoding="utf-8"
+        )
+        types, type_to_cat = BT.load_page_types(self.brain_root)
+        self.assertEqual(types, BT.DEFAULT_PAGE_TYPES)
+
+    def test_add_page_with_custom_type_recognized(self):
+        """커스텀 타입 'decision'이 타입 검증을 통과함 (SCHEMA 동적 인식 확인).
+
+        커스텀 타입은 타입 검증(invalid_page_type)을 통과하되,
+        해당 템플릿(page-decision.md) 부재 시 template_missing 에러가 나는 것이
+        정상 동작이다. invalid_page_type이 아닌 다른 에러여야 한다.
+        """
+        self._init()
+        # SCHEMA에 decision 타입 추가
+        self._write_custom_schema([
+            ("entity", "엔티티", "코드 모듈"),
+            ("concept", "개념", "아키텍처"),
+            ("flow", "흐름", "파이프라인"),
+            ("synthesis", "합성", "분석"),
+            ("decision", "결정", "아키텍처 결정"),
+        ])
+        # decision 타입 디렉토리 수동 생성
+        (self.brain_root / "pages" / "decision").mkdir(parents=True, exist_ok=True)
+        # decision 타입 페이지 생성 시도 → 타입 검증은 통과, 템플릿 부재로 다른 에러
+        with _mock_kst():
+            args = make_args(
+                brain_path=str(self.brain_root),
+                path="arch-decision-001",
+                type="decision",
+                title="아키텍처 결정 001",
+            )
+            code = self._err_code(BT.cmd_add_page, args)
+        # invalid_page_type이 아닌 에러여야 함 (타입 자체는 유효하게 인식)
+        self.assertNotEqual(
+            code, "invalid_page_type",
+            "SCHEMA 동적 타입 'decision'이 invalid_page_type으로 거부됨 — 동적 로드 실패"
+        )
+
+    def test_add_page_invalid_type_returns_invalid_page_type(self):
+        """--type에 무효값 → invalid_page_type 에러 코드 (argparse choices 제거 후에도 유지)."""
+        self._init()
+        with _mock_kst():
+            args = make_args(
+                brain_path=str(self.brain_root),
+                path="bad-type-page",
+                type="nonexistent_type_xyz",
+                title="테스트",
+            )
+            code = self._err_code(BT.cmd_add_page, args)
+        self.assertEqual(code, "invalid_page_type")
+
+    def test_default_page_types_alias_preserved(self):
+        """BT.PAGE_TYPES alias가 DEFAULT_PAGE_TYPES와 동일 (기존 테스트 호환)."""
+        self.assertEqual(BT.PAGE_TYPES, BT.DEFAULT_PAGE_TYPES)
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# 11. analyze happy-path
+# ═════════════════════════════════════════════════════════════════════════════
+
+class TestAnalyze(BrainTestCase):
+    """analyze 서브커맨드 — code-scan @header 정량 집계."""
+
+    def test_analyze_no_code_scan_json_error(self):
+        """code-scan.json 없는 상태에서 analyze → code_scan_json_missing."""
+        with patch.object(pathlib.Path, "cwd", return_value=self.tmpdir):
+            args = make_args()
+            code = self._err_code(BT.cmd_analyze, args)
+        self.assertEqual(code, "code_scan_json_missing")
+
+    def test_analyze_happy_path_ok_true(self):
+        """analyze: stub code-scan.json 결과로 정량 집계 → ok=true + 집계 필드 포함."""
+        stub_headers = {
+            "opal/tools/brain-tool/brain_tool.py": {
+                "module": "brain_tool",
+                "layer": "util",
+                "domain": "opal-brain",
+                "exports": ["cmd_init", "cmd_add_page", "cmd_index"],
+            },
+            "opal/tools/state-tool/state_tool.py": {
+                "module": "state_tool",
+                "layer": "tool",
+                "domain": "opal-pipeline",
+                "exports": ["cmd_init", "cmd_mark"],
+            },
+            "opal/core/AGENT.md": {
+                "module": "agent",
+                "layer": "orchestrator",
+                "domain": "opal-pipeline",
+                "exports": [],
+            },
+        }
+        with patch.object(BT, "_load_code_scan_json", return_value=stub_headers):
+            args = make_args()
+            exit_code, result = self._call(BT.cmd_analyze, args)
+        self.assertEqual(exit_code, 0, f"analyze 실패: {result}")
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["command"], "analyze")
+        # 집계 필드 존재 확인
+        self.assertIn("total_files", result)
+        self.assertEqual(result["total_files"], 3)
+        self.assertIn("domain_counts", result)
+        self.assertIn("layer_counts", result)
+        self.assertIn("seed_candidates", result)
+        # opal-brain domain: 1개, opal-pipeline: 2개
+        self.assertEqual(result["domain_counts"].get("opal-brain"), 1)
+        self.assertEqual(result["domain_counts"].get("opal-pipeline"), 2)
+
+    def test_analyze_seed_candidates_threshold(self):
+        """analyze: exports >= 3 또는 seed_layers 해당 파일이 seed_candidates에 포함."""
+        stub_headers = {
+            "tool_a.py": {
+                "module": "tool_a",
+                "layer": "util",
+                "domain": "domain-x",
+                "exports": ["a", "b", "c"],  # exports_min=3 충족
+            },
+            "tool_b.py": {
+                "module": "tool_b",
+                "layer": "orchestrator",  # seed_layers 충족
+                "domain": "domain-x",
+                "exports": [],
+            },
+            "tool_c.py": {
+                "module": "tool_c",
+                "layer": "util",
+                "domain": "domain-x",
+                "exports": ["x"],  # 미충족
+            },
+        }
+        with patch.object(BT, "_load_code_scan_json", return_value=stub_headers):
+            args = make_args()
+            _, result = self._call(BT.cmd_analyze, args)
+        seed_modules = {s["module"] for s in result.get("seed_candidates", [])}
+        self.assertIn("tool_a", seed_modules)
+        self.assertIn("tool_b", seed_modules)
+        self.assertNotIn("tool_c", seed_modules)
+
+    def test_analyze_empty_headers_ok(self):
+        """analyze: 빈 code-scan 결과 → total_files=0 + ok=true."""
+        with patch.object(BT, "_load_code_scan_json", return_value={}):
+            args = make_args()
+            exit_code, result = self._call(BT.cmd_analyze, args)
+        self.assertEqual(exit_code, 0)
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["total_files"], 0)
+        self.assertEqual(result["seed_candidates"], [])
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# 12. ingest-scan happy-path
+# ═════════════════════════════════════════════════════════════════════════════
+
+class TestIngestScan(BrainTestCase):
+    """ingest-scan 서브커맨드 — docs/skills/tasks 스캔 목록 반환."""
+
+    def setUp(self):
+        super().setUp()
+        self._init()
+        # 테스트용 가짜 프로젝트 구조 생성
+        # docs/
+        (self.tmpdir / "docs").mkdir(exist_ok=True)
+        (self.tmpdir / "docs" / "ARCHITECTURE.md").write_text(
+            "# Architecture\n", encoding="utf-8")
+        (self.tmpdir / "docs" / "CONVENTIONS.md").write_text(
+            "# Conventions\n", encoding="utf-8")
+        # tasks/001-test-task/
+        task_dir = self.tmpdir / "tasks" / "001-test-task"
+        task_dir.mkdir(parents=True, exist_ok=True)
+        (task_dir / "DONE.md").write_text("# DONE\n", encoding="utf-8")
+        (task_dir / "PLAN.md").write_text("# PLAN\n", encoding="utf-8")
+        # tasks/002-another-task/
+        task_dir2 = self.tmpdir / "tasks" / "002-another-task"
+        task_dir2.mkdir(parents=True, exist_ok=True)
+        (task_dir2 / "PLAN.md").write_text("# PLAN\n", encoding="utf-8")
+        # opal/skills/test-skill/
+        skill_dir = self.tmpdir / "opal" / "skills" / "test-skill"
+        skill_dir.mkdir(parents=True, exist_ok=True)
+        (skill_dir / "SKILL.md").write_text("# SKILL\n", encoding="utf-8")
+
+    def test_ingest_scan_docs_ok(self):
+        """ingest-scan --source docs: docs/*.md 목록 반환 → ok=true."""
+        with patch.object(pathlib.Path, "cwd", return_value=self.tmpdir):
+            args = make_args(brain_path=str(self.brain_root), source="docs")
+            exit_code, result = self._call(BT.cmd_ingest_scan, args)
+        self.assertEqual(exit_code, 0, f"ingest-scan 실패: {result}")
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["command"], "ingest-scan")
+        self.assertIn("items", result)
+        kinds = {item["kind"] for item in result["items"]}
+        self.assertIn("doc", kinds)
+        self.assertEqual(result["total"], 2)
+
+    def test_ingest_scan_tasks_ok(self):
+        """ingest-scan --source tasks: tasks/NNN-xxx 목록 반환 → ok=true."""
+        with patch.object(pathlib.Path, "cwd", return_value=self.tmpdir):
+            args = make_args(brain_path=str(self.brain_root), source="tasks")
+            exit_code, result = self._call(BT.cmd_ingest_scan, args)
+        self.assertEqual(exit_code, 0)
+        self.assertTrue(result["ok"])
+        task_items = [i for i in result["items"] if i["kind"] == "task"]
+        self.assertEqual(len(task_items), 2)
+        task_nums = {i["task_num"] for i in task_items}
+        self.assertIn("001", task_nums)
+        self.assertIn("002", task_nums)
+
+    def test_ingest_scan_tasks_has_done_field(self):
+        """ingest-scan tasks: has_done 필드가 정확히 반영됨."""
+        with patch.object(pathlib.Path, "cwd", return_value=self.tmpdir):
+            args = make_args(brain_path=str(self.brain_root), source="tasks")
+            _, result = self._call(BT.cmd_ingest_scan, args)
+        items_by_num = {i["task_num"]: i for i in result["items"] if i["kind"] == "task"}
+        self.assertTrue(items_by_num["001"]["has_done"])
+        self.assertFalse(items_by_num["002"]["has_done"])
+
+    def test_ingest_scan_skills_ok(self):
+        """ingest-scan --source skills: SKILL.md 목록 반환 → ok=true."""
+        with patch.object(pathlib.Path, "cwd", return_value=self.tmpdir):
+            args = make_args(brain_path=str(self.brain_root), source="skills")
+            exit_code, result = self._call(BT.cmd_ingest_scan, args)
+        self.assertEqual(exit_code, 0)
+        self.assertTrue(result["ok"])
+        skill_items = [i for i in result["items"] if i["kind"] == "skill"]
+        self.assertEqual(len(skill_items), 1)
+
+    def test_ingest_scan_all_ok(self):
+        """ingest-scan --source all: 모든 소스 합산 반환 → ok=true."""
+        with patch.object(pathlib.Path, "cwd", return_value=self.tmpdir):
+            args = make_args(brain_path=str(self.brain_root), source="all")
+            exit_code, result = self._call(BT.cmd_ingest_scan, args)
+        self.assertEqual(exit_code, 0)
+        self.assertTrue(result["ok"])
+        self.assertGreater(result["total"], 0)
+        kinds = {item["kind"] for item in result["items"]}
+        self.assertIn("doc", kinds)
+        self.assertIn("task", kinds)
+        self.assertIn("skill", kinds)
+
+    def test_ingest_scan_skip_already_ingested(self):
+        """ingest-scan: 이미 ingest된 sources가 있는 항목은 skip=true."""
+        # task:001을 이미 ingest된 것으로 표시하는 페이지 추가
+        page_dir = self.brain_root / "pages" / "concept"
+        page_dir.mkdir(parents=True, exist_ok=True)
+        page_content = (
+            "---\n"
+            "type: concept\n"
+            "title: 태스크 001 결정\n"
+            "created: 2026-06-10\n"
+            "updated: 2026-06-10\n"
+            "status: active\n"
+            "sources: [task:001]\n"
+            "---\n\n내용\n"
+        )
+        (page_dir / "task-001-decision.md").write_text(page_content, encoding="utf-8")
+
+        with patch.object(pathlib.Path, "cwd", return_value=self.tmpdir):
+            args = make_args(brain_path=str(self.brain_root), source="tasks")
+            _, result = self._call(BT.cmd_ingest_scan, args)
+        items_by_num = {i["task_num"]: i for i in result["items"] if i["kind"] == "task"}
+        self.assertTrue(items_by_num["001"]["skip"])
+        self.assertFalse(items_by_num["002"]["skip"])
+        self.assertEqual(result["skip_count"], 1)
+        self.assertEqual(result["pending_count"], 1)
+
+    def test_ingest_scan_not_initialized_brain_error(self):
+        """미초기화 brain에 ingest-scan → brain_not_initialized."""
+        uninit_brain = self.tmpdir / "uninit" / ".opal" / "brain"
+        with patch.object(pathlib.Path, "cwd", return_value=self.tmpdir):
+            args = make_args(brain_path=str(uninit_brain), source="all")
+            code = self._err_code(BT.cmd_ingest_scan, args)
+        self.assertEqual(code, "brain_not_initialized")
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# 14. validate_frontmatter 단위 테스트 (내부 헬퍼)
 # ═════════════════════════════════════════════════════════════════════════════
 
 class TestValidateFrontmatter(unittest.TestCase):

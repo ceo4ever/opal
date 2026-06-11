@@ -3,10 +3,12 @@
   "module": "brain_tool",
   "layer": "util",
   "domain": "opal-brain",
-  "description": "OPAL Project Brain 지식 위키 결정론적 집행 CLI — 8개 서브 명령(init/add-page/index/log/search/sync-header/lint/validate). index/log/링크 무결성을 brain-tool이 집행(LLM 직접 편집 금지). frontmatter 파싱은 PyYAML, KST 타임스탬프는 date.js subprocess. sync-header는 code-scan @header → brain entity frontmatter 단방향 동기화만 수행.",
+  "description": "OPAL Project Brain 지식 위키 결정론적 집행 CLI — 10개 서브 명령(init/add-page/index/log/search/sync-header/lint/validate/analyze/ingest-scan). index/log/링크 무결성을 brain-tool이 집행(LLM 직접 편집 금지). 페이지 타입은 SCHEMA §1.5에서 동적 로드(하드코딩 없음). frontmatter 파싱은 PyYAML, KST 타임스탬프는 date.js subprocess. sync-header는 code-scan @header → brain entity frontmatter 단방향 동기화만 수행. analyze는 code-scan @header 정량 집계 → JSON. ingest-scan은 docs/skills/tasks 목록 반환.",
   "exports": [
     "cmd_init", "cmd_add_page", "cmd_index", "cmd_log",
-    "cmd_search", "cmd_sync_header", "cmd_lint", "cmd_validate"
+    "cmd_search", "cmd_sync_header", "cmd_lint", "cmd_validate",
+    "cmd_analyze", "cmd_ingest_scan",
+    "load_page_types", "DEFAULT_PAGE_TYPES"
   ]
 }
 """
@@ -25,17 +27,24 @@ import yaml
 # 상수
 # ─────────────────────────────────────────────────────────────────────────────
 
-# 페이지 타입 enum (llm-wiki 원전 용어)
-PAGE_TYPES = ["entity", "concept", "flow", "synthesis"]
+# 기본 페이지 타입 후보 (기존 테스트 호환 보존, SCHEMA 부재 시 폴백)
+DEFAULT_PAGE_TYPES = ["entity", "concept", "flow", "synthesis"]
 
-# index.md 카테고리 헤더 ↔ 페이지 타입 매핑 (한국어 본문 ↔ English type)
-TYPE_TO_CATEGORY = {
+# 하위 호환 alias — 기존 테스트(BT.PAGE_TYPES)가 그대로 통과
+PAGE_TYPES = DEFAULT_PAGE_TYPES
+
+# 기본 index.md 카테고리 헤더 ↔ 페이지 타입 매핑 (SCHEMA 부재 시 폴백)
+_DEFAULT_TYPE_TO_CATEGORY = {
     "entity":    "엔티티",
     "concept":   "개념",
     "flow":      "흐름",
     "synthesis": "합성",
 }
-CATEGORY_ORDER = ["도메인", "개념", "엔티티", "흐름", "합성"]
+_DEFAULT_CATEGORY_ORDER = ["도메인", "개념", "엔티티", "흐름", "합성"]
+
+# 모듈 수준 노출 상수 (기존 테스트 CATEGORY_ORDER 참조 호환)
+TYPE_TO_CATEGORY = _DEFAULT_TYPE_TO_CATEGORY
+CATEGORY_ORDER = _DEFAULT_CATEGORY_ORDER
 
 # frontmatter 필수/선택 키 (PLAN 결정7)
 REQUIRED_FRONTMATTER = ["type", "title", "created", "updated", "status"]
@@ -53,21 +62,89 @@ SEED_THRESHOLDS = {
     "seed_layers":     {"orchestrator", "tool", "pilot", "core"},  # 무조건 시드 레이어
 }
 
-# brain 골격 디렉토리
-BRAIN_DIRS = [
+# 기본 brain 골격 디렉토리 (SCHEMA 부재 시 폴백)
+_DEFAULT_BRAIN_DIRS = [
     "pages/entity", "pages/concept", "pages/flow", "pages/synthesis",
     "sources",
 ]
 
+# 모듈 수준 노출 상수 (기존 테스트 BRAIN_DIRS 참조 호환)
+BRAIN_DIRS = _DEFAULT_BRAIN_DIRS
+
 # 템플릿 디렉토리 (스크립트와 동일 위치)
 TEMPLATES_DIR = pathlib.Path(__file__).resolve().parent / "templates"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# SCHEMA 동적 타입 로드
+# ─────────────────────────────────────────────────────────────────────────────
+
+_SCHEMA_TABLE_RE = re.compile(
+    r"##\s+1\.5\s+페이지 타입 정의[^\n]*\n.*?\n"  # 절 헤더 + 설명 줄
+    r"\|[^\n]*\n\|[-| ]+\n"                       # 테이블 헤더 + 구분선
+    r"((?:\|[^\n]*\n)+)",                          # 테이블 데이터 행들
+    re.DOTALL,
+)
+
+
+def load_page_types(brain_root):
+    """SCHEMA.md §1.5 테이블에서 타입 세트를 동적 로드.
+
+    반환: (types: list[str], type_to_category: dict[str, str])
+    SCHEMA 부재·파싱 실패 시 DEFAULT_PAGE_TYPES로 graceful 폴백.
+    """
+    schema_path = pathlib.Path(brain_root) / "SCHEMA.md"
+    if not schema_path.exists():
+        return list(DEFAULT_PAGE_TYPES), dict(_DEFAULT_TYPE_TO_CATEGORY)
+
+    try:
+        text = schema_path.read_text(encoding="utf-8")
+        m = _SCHEMA_TABLE_RE.search(text)
+        if not m:
+            return list(DEFAULT_PAGE_TYPES), dict(_DEFAULT_TYPE_TO_CATEGORY)
+
+        rows_text = m.group(1)
+        types = []
+        type_to_cat = {}
+        for row in rows_text.strip().splitlines():
+            # 행 파싱: | type | category | 설명 |
+            cols = [c.strip() for c in row.strip().strip("|").split("|")]
+            if len(cols) >= 2:
+                ptype = cols[0].strip()
+                category = cols[1].strip()
+                if ptype and category:
+                    types.append(ptype)
+                    type_to_cat[ptype] = category
+
+        if not types:
+            return list(DEFAULT_PAGE_TYPES), dict(_DEFAULT_TYPE_TO_CATEGORY)
+
+        return types, type_to_cat
+
+    except Exception:
+        return list(DEFAULT_PAGE_TYPES), dict(_DEFAULT_TYPE_TO_CATEGORY)
+
+
+def _get_category_order(type_to_category):
+    """type_to_category에서 CATEGORY_ORDER를 파생 (도메인 선두 고정)."""
+    cats = list(dict.fromkeys(type_to_category.values()))  # 삽입 순서 보존·중복 제거
+    if "도메인" not in cats:
+        cats = ["도메인"] + cats
+    return cats
+
+
+def _get_brain_dirs(types):
+    """타입 목록에서 BRAIN_DIRS를 파생."""
+    dirs = [f"pages/{t}" for t in types]
+    dirs.append("sources")
+    return dirs
+
 
 # ERROR_CODES 카탈로그 SSOT — 모든 error 응답 값은 이 상수의 키를 참조한다. 임의 변형 금지.
 ERROR_CODES = {
     "brain_already_initialized":  "brain이 이미 초기화됨: {brain_path}. --force로만 재초기화 가능",
     "brain_path_invalid":         "brain-path가 유효하지 않음: {brain_path}",
     "brain_not_initialized":      "brain이 초기화되지 않음 (.opal/brain/SCHEMA.md 부재): {brain_path}",
-    "invalid_page_type":          "유효하지 않은 페이지 타입: {page_type} (허용: entity|concept|flow|synthesis)",
+    "invalid_page_type":          "유효하지 않은 페이지 타입: {page_type} (허용: {allowed})",
     "frontmatter_invalid":        "frontmatter 표준 위반: {detail}",
     "duplicate_page":             "동일 경로의 페이지가 이미 존재: {page}",
     "index_write_failed":         "index.md 쓰기 실패: {detail}",
@@ -194,8 +271,12 @@ def parse_frontmatter(text):
     return fm, m.group(2)
 
 
-def validate_frontmatter(fm):
-    """frontmatter 표준 검증 → 위반 detail 문자열 목록 반환 (빈 목록=정상)."""
+def validate_frontmatter(fm, page_types=None):
+    """frontmatter 표준 검증 → 위반 detail 문자열 목록 반환 (빈 목록=정상).
+
+    page_types: 동적 타입 목록 (None이면 모듈 상수 PAGE_TYPES 사용).
+    """
+    allowed_types = page_types if page_types is not None else PAGE_TYPES
     issues = []
     if fm is None:
         return ["frontmatter block missing or unparseable"]
@@ -203,7 +284,7 @@ def validate_frontmatter(fm):
         if key not in fm or fm.get(key) in (None, ""):
             issues.append(f"missing required key: {key}")
     ptype = fm.get("type")
-    if ptype is not None and ptype not in PAGE_TYPES:
+    if ptype is not None and ptype not in allowed_types:
         issues.append(f"invalid type: {ptype}")
     status = fm.get("status")
     if status is not None and status not in STATUS_ENUM:
@@ -236,14 +317,19 @@ def scan_pages(brain_root):
 # index.md 렌더 (brain-tool 전담 — LLM 직접 편집 금지)
 # ─────────────────────────────────────────────────────────────────────────────
 
-def render_index(pages, now_str):
-    """페이지 목록을 index.md 마크다운으로 렌더."""
+def render_index(pages, now_str, type_to_category=None, category_order=None):
+    """페이지 목록을 index.md 마크다운으로 렌더.
+
+    type_to_category, category_order: 동적 타입 매핑 (None이면 모듈 상수 사용).
+    """
+    ttc = type_to_category if type_to_category is not None else TYPE_TO_CATEGORY
+    cat_order = category_order if category_order is not None else CATEGORY_ORDER
     # 카테고리별 항목 수집
-    buckets = {cat: [] for cat in CATEGORY_ORDER}
+    buckets = {cat: [] for cat in cat_order}
     for pg in pages:
         fm = pg["fm"] or {}
         ptype = fm.get("type")
-        category = TYPE_TO_CATEGORY.get(ptype)
+        category = ttc.get(ptype)
         if category is None:
             continue
         title = fm.get("title", pg["rel"])
@@ -252,12 +338,12 @@ def render_index(pages, now_str):
         line = f"- [[{pg['rel']}]] — {title}"
         if tag_str:
             line += f" {tag_str}"
-        buckets[category].append(line)
+        buckets.setdefault(category, []).append(line)
 
     lines = ["# Project Brain Index", f"> 갱신: {now_str}", ""]
-    for cat in CATEGORY_ORDER:
+    for cat in cat_order:
         lines.append(f"## {cat}")
-        if buckets[cat]:
+        if buckets.get(cat):
             lines.extend(sorted(buckets[cat]))
         else:
             lines.append("(아직 등록된 페이지 없음)")
@@ -265,9 +351,13 @@ def render_index(pages, now_str):
     return "\n".join(lines).rstrip("\n") + "\n"
 
 
-def write_index(brain_root, pages, now_str, command):
-    """index.md 재생성. 실패 시 index_write_failed."""
-    content = render_index(pages, now_str)
+def write_index(brain_root, pages, now_str, command, type_to_category=None, category_order=None):
+    """index.md 재생성. 실패 시 index_write_failed.
+
+    type_to_category, category_order: 동적 타입 매핑 (None이면 모듈 상수 사용).
+    """
+    ttc = type_to_category if type_to_category is not None else TYPE_TO_CATEGORY
+    content = render_index(pages, now_str, ttc, category_order)
     try:
         (brain_root / "index.md").write_text(content, encoding="utf-8")
     except OSError as e:
@@ -276,7 +366,7 @@ def write_index(brain_root, pages, now_str, command):
     cats = {}
     for pg in pages:
         fm = pg["fm"] or {}
-        cat = TYPE_TO_CATEGORY.get(fm.get("type"))
+        cat = ttc.get(fm.get("type"))
         if cat:
             cats[cat] = cats.get(cat, 0) + 1
     return cats
@@ -286,7 +376,10 @@ def write_index(brain_root, pages, now_str, command):
 # ─────────────────────────────────────────────────────────────────────────────
 
 def cmd_init(args):
-    """brain 골격 디렉토리·SCHEMA·빈 index/log 생성."""
+    """brain 골격 디렉토리·SCHEMA·빈 index/log 생성.
+
+    --types <csv>: 사용자 확정 타입 세트(예: entity,concept,flow). 미지정 시 DEFAULT_PAGE_TYPES.
+    """
     command = "init"
     target = pathlib.Path(args.brain_path).resolve()
 
@@ -303,12 +396,19 @@ def cmd_init(args):
 
     now_date = get_kst_date(command)
 
-    # 골격 디렉토리 생성
+    # --types 파싱 (미지정 시 DEFAULT_PAGE_TYPES)
+    if getattr(args, "types", None):
+        init_types = [t.strip() for t in args.types.split(",") if t.strip()]
+    else:
+        init_types = list(DEFAULT_PAGE_TYPES)
+
+    # 골격 디렉토리 생성 (타입 기반 동적)
+    brain_dirs = _get_brain_dirs(init_types)
     created = []
     try:
         brain_root.mkdir(parents=True, exist_ok=True)
         created.append(str(brain_root))
-        for d in BRAIN_DIRS:
+        for d in brain_dirs:
             (brain_root / d).mkdir(parents=True, exist_ok=True)
             created.append(str(brain_root / d))
     except OSError as e:
@@ -328,6 +428,7 @@ def cmd_init(args):
        created=created,
        schema_written=True,
        force=args.force,
+       types=init_types,
        initialized_at=now_date)
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -339,9 +440,12 @@ def cmd_add_page(args):
     command = "add-page"
     brain_root = require_brain(command, args.brain_path)
 
+    # --type 검증: argparse choices 제거 후 명령 내부에서 동적 타입 목록으로 검증
     page_type = args.type
-    if page_type not in PAGE_TYPES:
-        err(command, "invalid_page_type", page_type=page_type)
+    dyn_types, type_to_cat = load_page_types(brain_root)
+    if page_type not in dyn_types:
+        err(command, "invalid_page_type", page_type=page_type,
+            allowed="|".join(dyn_types))
 
     # 페이지 경로 결정 — 인자가 절대/상대 경로면 그대로, 파일명만이면 pages/{type}/ 하위
     arg_path = pathlib.Path(args.path)
@@ -372,8 +476,8 @@ def cmd_add_page(args):
     if args.sources:
         fm_tpl["sources"] = [s.strip() for s in args.sources.split(",") if s.strip()]
 
-    # frontmatter 검증
-    issues = validate_frontmatter(fm_tpl)
+    # frontmatter 검증 (동적 타입 목록 사용)
+    issues = validate_frontmatter(fm_tpl, page_types=dyn_types)
     if issues:
         err(command, "frontmatter_invalid", detail="; ".join(issues))
 
@@ -381,10 +485,11 @@ def cmd_add_page(args):
     page_content = f"---\n{fm_yaml}\n---\n{body}"
     page_path.write_text(page_content, encoding="utf-8")
 
-    # index 재생성 (도구 집행)
+    # index 재생성 (도구 집행, 동적 타입 매핑 사용)
     pages = scan_pages(brain_root)
     now_str = get_kst_datetime(command)
-    write_index(brain_root, pages, now_str, command)
+    cat_order = _get_category_order(type_to_cat)
+    write_index(brain_root, pages, now_str, command, type_to_cat, cat_order)
 
     ok(command,
        page=str(page_path),
@@ -401,9 +506,11 @@ def cmd_index(args):
     command = "index"
     brain_root = require_brain(command, args.brain_path)
 
+    dyn_types, type_to_cat = load_page_types(brain_root)
+    cat_order = _get_category_order(type_to_cat)
     pages = scan_pages(brain_root)
     now_str = get_kst_datetime(command)
-    cats = write_index(brain_root, pages, now_str, command)
+    cats = write_index(brain_root, pages, now_str, command, type_to_cat, cat_order)
 
     ok(command,
        pages_scanned=len(pages),
@@ -693,6 +800,8 @@ def cmd_validate(args):
     command = "validate"
     brain_root = require_brain(command, args.brain_path)
 
+    dyn_types, type_to_cat = load_page_types(brain_root)
+    brain_dirs = _get_brain_dirs(dyn_types)
     violations = []
 
     # 구조 검증: 필수 파일·디렉토리
@@ -700,23 +809,23 @@ def cmd_validate(args):
         if not (brain_root / required).exists():
             violations.append({"page": None, "rule": "structure",
                                "detail": f"필수 파일 부재: {required}"})
-    for d in BRAIN_DIRS:
+    for d in brain_dirs:
         if not (brain_root / d).exists():
             violations.append({"page": None, "rule": "structure",
                                "detail": f"필수 디렉토리 부재: {d}"})
 
-    # 페이지별 frontmatter·배치 검증
+    # 페이지별 frontmatter·배치 검증 (동적 타입 목록 사용)
     pages = scan_pages(brain_root)
     for pg in pages:
         fm = pg["fm"]
         rel = pg["rel"]
-        issues = validate_frontmatter(fm)
+        issues = validate_frontmatter(fm, page_types=dyn_types)
         for iss in issues:
             violations.append({"page": rel, "rule": "frontmatter", "detail": iss})
         # 타입별 디렉토리 배치 검증
         if fm:
             ptype = fm.get("type")
-            if ptype in PAGE_TYPES:
+            if ptype in dyn_types:
                 expected_dir = brain_root / "pages" / ptype
                 try:
                     pg["path"].relative_to(expected_dir)
@@ -733,24 +842,202 @@ def cmd_validate(args):
     sys.exit(0 if valid else 1)
 
 # ─────────────────────────────────────────────────────────────────────────────
+# 9. analyze — code-scan @header 정량 집계 (결정론적, LLM 입력용)
+# ─────────────────────────────────────────────────────────────────────────────
+
+def cmd_analyze(args):
+    """code-scan @header에서 domain·layer·exports·피의존도를 정량 집계 → JSON.
+
+    결정론적 집계만 수행. 요약·제안은 LLM이 담당한다.
+    code-scan.json 부재 시 code_scan_json_missing 에러.
+    """
+    command = "analyze"
+
+    headers = _load_code_scan_json(command)  # {relpath: {module, layer, domain, exports, ...}}
+
+    # domain별 모듈 수 집계
+    domain_counts = {}
+    # layer별 모듈 수 집계
+    layer_counts = {}
+    # exports 수 분포 (exports_count)
+    exports_dist = {}
+    # 피의존도 집계: source_ref → 참조 수 (forward ref 파싱)
+    dependents = {}
+
+    for relpath, header in headers.items():
+        if not isinstance(header, dict):
+            continue
+
+        domain = header.get("domain") or "unknown"
+        domain_counts[domain] = domain_counts.get(domain, 0) + 1
+
+        layer = header.get("layer") or "unknown"
+        layer_counts[layer] = layer_counts.get(layer, 0) + 1
+
+        exports = header.get("exports") or []
+        if isinstance(exports, list):
+            n = len(exports)
+        else:
+            n = 0
+        bucket = str(n)
+        exports_dist[bucket] = exports_dist.get(bucket, 0) + 1
+
+        # 피의존도: 각 파일이 참조하는 모듈(imports)에 +1
+        imports = header.get("imports") or []
+        if isinstance(imports, list):
+            for imp in imports:
+                dependents[imp] = dependents.get(imp, 0) + 1
+
+    # SEED_THRESHOLDS 기준 시드 후보 목록
+    seed_candidates = []
+    for relpath, header in headers.items():
+        if not isinstance(header, dict):
+            continue
+        exports = header.get("exports") or []
+        exp_count = len(exports) if isinstance(exports, list) else 0
+        layer = header.get("layer") or ""
+        module = header.get("module") or relpath
+        dep_count = dependents.get(module, 0)
+        if (exp_count >= SEED_THRESHOLDS["exports_min"]
+                or dep_count >= SEED_THRESHOLDS["dependents_min"]
+                or layer in SEED_THRESHOLDS["seed_layers"]):
+            seed_candidates.append({
+                "path": relpath,
+                "module": module,
+                "layer": layer,
+                "domain": header.get("domain") or "unknown",
+                "exports_count": exp_count,
+                "dependents_count": dep_count,
+            })
+
+    ok(command,
+       total_files=len(headers),
+       domain_counts=domain_counts,
+       layer_counts=layer_counts,
+       exports_distribution=exports_dist,
+       seed_candidates=seed_candidates,
+       seed_thresholds=SEED_THRESHOLDS)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 10. ingest-scan — docs/skills/tasks 스캔 목록 반환 (멱등 skip 판정 포함)
+# ─────────────────────────────────────────────────────────────────────────────
+
+def cmd_ingest_scan(args):
+    """docs/.md·skills·tasks 스캔 → 멱등 skip 판정과 함께 목록 반환 (LLM 배치 대상).
+
+    --source docs|skills|tasks|all: 스캔 범위 지정
+    brain 이미 ingest된 항목(sources 참조 일치)은 skip=true로 표시.
+    본문 요약은 LLM이 담당. 이 명령은 목록(결정론)만 반환.
+    """
+    command = "ingest-scan"
+    brain_root = require_brain(command, args.brain_path)
+
+    source = getattr(args, "source", "all") or "all"
+    cwd = pathlib.Path.cwd()
+
+    # 이미 ingest된 sources 수집 (멱등 skip 판정용)
+    pages = scan_pages(brain_root)
+    ingested_sources = set()
+    for pg in pages:
+        fm = pg["fm"] or {}
+        for src in (fm.get("sources") or []):
+            ingested_sources.add(str(src).strip())
+
+    results = []
+
+    def _is_ingested(ref):
+        return ref in ingested_sources
+
+    # docs 스캔
+    if source in ("docs", "all"):
+        docs_dir = cwd / "docs"
+        if docs_dir.exists():
+            for md_file in sorted(docs_dir.rglob("*.md")):
+                rel = str(md_file.relative_to(cwd))
+                ref = f"doc:{rel}"
+                results.append({
+                    "kind": "doc",
+                    "path": rel,
+                    "source_ref": ref,
+                    "skip": _is_ingested(ref),
+                })
+
+    # skills 스캔
+    if source in ("skills", "all"):
+        for skills_root in [cwd / "opal" / "skills", cwd / "skills"]:
+            if skills_root.exists():
+                for skill_md in sorted(skills_root.rglob("SKILL.md")):
+                    rel = str(skill_md.relative_to(cwd))
+                    ref = f"skill:{skill_md.parent.name}"
+                    results.append({
+                        "kind": "skill",
+                        "path": rel,
+                        "source_ref": ref,
+                        "skip": _is_ingested(ref),
+                    })
+                break  # 첫 번째 존재 경로만 사용
+
+    # tasks 스캔
+    if source in ("tasks", "all"):
+        tasks_dir = cwd / "tasks"
+        if tasks_dir.exists():
+            for task_dir in sorted(tasks_dir.iterdir()):
+                if not task_dir.is_dir():
+                    continue
+                # tasks/NNN-xxx 형식 확인
+                name = task_dir.name
+                parts = name.split("-", 1)
+                if not parts[0].isdigit():
+                    continue
+                task_num = parts[0]
+                ref = f"task:{task_num}"
+                # DONE.md 또는 PLAN.md 존재 여부
+                done_exists = (task_dir / "DONE.md").exists()
+                plan_exists = (task_dir / "PLAN.md").exists()
+                results.append({
+                    "kind": "task",
+                    "path": str(task_dir.relative_to(cwd)),
+                    "task_num": task_num,
+                    "source_ref": ref,
+                    "has_done": done_exists,
+                    "has_plan": plan_exists,
+                    "skip": _is_ingested(ref),
+                })
+
+    total = len(results)
+    skip_count = sum(1 for r in results if r["skip"])
+    pending = [r for r in results if not r["skip"]]
+
+    ok(command,
+       source=source,
+       total=total,
+       skip_count=skip_count,
+       pending_count=len(pending),
+       items=results)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # argparse
 # ─────────────────────────────────────────────────────────────────────────────
 
 def build_parser():
     parser = argparse.ArgumentParser(
         prog="brain-tool",
-        description="OPAL Project Brain 지식 위키 결정론적 집행 CLI (8 서브 명령)",
+        description="OPAL Project Brain 지식 위키 결정론적 집행 CLI (10 서브 명령)",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
-서브 명령 (8종):
-  init         brain 골격·SCHEMA·빈 index/log 생성
-  add-page     페이지 생성 + frontmatter 검증 + index 자동 등록
-  index        pages/ 스캔 → index.md 재생성
-  log          log.md append (타임스탬프 자동)
-  search       tags·title·본문 검색 → 관련 페이지 반환
-  sync-header  code-scan @header → entity frontmatter 단방향 동기화
-  lint         링크 무결성·고아·stale·근거 누락 탐지
-  validate     brain 구조·frontmatter 표준 검증
+서브 명령 (10종):
+  init          brain 골격·SCHEMA·빈 index/log 생성
+  add-page      페이지 생성 + frontmatter 검증 + index 자동 등록
+  index         pages/ 스캔 → index.md 재생성
+  log           log.md append (타임스탬프 자동)
+  search        tags·title·본문 검색 → 관련 페이지 반환
+  sync-header   code-scan @header → entity frontmatter 단방향 동기화
+  lint          링크 무결성·고아·stale·근거 누락 탐지
+  validate      brain 구조·frontmatter 표준 검증
+  analyze       code-scan @header 정량 집계 → JSON (init 제안 입력용)
+  ingest-scan   docs/skills/tasks 스캔 → 멱등 skip 판정 목록 반환
 
 호출 형식: ~/.opal/tools/brain-tool/run.sh <command> [options]
 종료 코드: 0=ok  1=violation/error  2=internal_error
@@ -763,12 +1050,14 @@ def build_parser():
     p_init = sub.add_parser("init", help="brain 골격·SCHEMA·index/log 생성")
     p_init.add_argument("brain_path", metavar="<brain-path>")
     p_init.add_argument("--force", action="store_true")
+    p_init.add_argument("--types", default=None,
+                        help="사용자 확정 타입 세트 csv (예: entity,concept,flow). 미지정 시 기본 4종")
     p_init.set_defaults(func=cmd_init)
 
     # ── add-page ──
     p_add = sub.add_parser("add-page", help="페이지 생성 + index 자동 등록")
     p_add.add_argument("path", metavar="<path>")
-    p_add.add_argument("--type", required=True, choices=PAGE_TYPES)
+    p_add.add_argument("--type", required=True)   # choices 제거 → cmd_add_page 내부 검증
     p_add.add_argument("--title", required=True)
     p_add.add_argument("--tags")
     p_add.add_argument("--sources")
@@ -793,7 +1082,7 @@ def build_parser():
     # ── search ──
     p_srch = sub.add_parser("search", help="tags·title·본문 검색")
     p_srch.add_argument("query", metavar="<query>")
-    p_srch.add_argument("--type", choices=PAGE_TYPES)
+    p_srch.add_argument("--type")   # choices 제거 → 필터로만 동작 (유효하지 않으면 0 결과)
     p_srch.add_argument("--tag")
     p_srch.add_argument("--limit", type=int)
     p_srch.add_argument("--brain-path", dest="brain_path", default=".")
@@ -815,6 +1104,18 @@ def build_parser():
     p_val = sub.add_parser("validate", help="brain 구조·frontmatter 표준 검증")
     p_val.add_argument("--brain-path", dest="brain_path", default=".")
     p_val.set_defaults(func=cmd_validate)
+
+    # ── analyze ──
+    p_analyze = sub.add_parser("analyze", help="code-scan @header 정량 집계 → JSON (init 제안 입력용)")
+    p_analyze.set_defaults(func=cmd_analyze)
+
+    # ── ingest-scan ──
+    p_iscan = sub.add_parser("ingest-scan", help="docs/skills/tasks 스캔 → 멱등 skip 판정 목록 반환")
+    p_iscan.add_argument("--source", default="all",
+                         choices=["docs", "skills", "tasks", "all"],
+                         help="스캔 범위 (기본: all)")
+    p_iscan.add_argument("--brain-path", dest="brain_path", default=".")
+    p_iscan.set_defaults(func=cmd_ingest_scan)
 
     return parser
 

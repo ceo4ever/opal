@@ -1,12 +1,12 @@
 # STATE: OPAL Project Brain 지능화 — opal-wiki-pilot 완성
 
-> 최종 갱신: 2026-06-11 18:21
+> 최종 갱신: 2026-06-11 21:44
 
 ## 현재 상태
-- 모드: semi-agentic
+- 모드: agentic
 - 단계: TASK / PLAN / EXECUTE / CLOSE
-- 진행: TASK 단계
-- 상태: 진행 중
+- 진행: EXECUTE 단계
+- 상태: 완료
 
 <!-- pipeline:start -->
 ## 파이프라인 현황판
@@ -16,20 +16,23 @@
 
 | # | 단계 | 항목 | 상태 | 시점 |
 |---|------|------|------|------|
-| 1 | TASK | 작업 | ✅ | 2026-06-11 18:21 |
-| 2 | TASK | 사용자 확인 | ⬜ |  |
-| 3 | PLAN | 작업 | ⬜ |  |
-| 4 | PLAN | PM Gate | ⬜ |  |
-| 5 | PLAN | 사용자 확인 | ⬜ |  |
-| 6 | EXECUTE | 작업 | ⬜ |  |
-| 7 | EXECUTE | PM Gate | ⬜ |  |
-| 8 | EXECUTE | 사용자 확인 | ⬜ |  |
-| 9 | CLOSE | DONE.md 생성 | ⬜ |  |
+| 1 | TASK | 작업 | ✅ | 2026-06-11 18:59 |
+| 2 | TASK | 사용자 확인 | - |  |
+| 3 | PLAN | 작업 | ✅ | 2026-06-11 19:07 |
+| 4 | PLAN | PM Gate | ✅ | 2026-06-11 19:09 |
+| 5 | PLAN | 사용자 확인 | - |  |
+| 6 | EXECUTE | 작업 | ✅ | 2026-06-11 19:49 |
+| 7 | EXECUTE | PM Gate | ✅ | 2026-06-11 19:50 |
+| 8 | EXECUTE | 사용자 확인 | ✅ | 2026-06-11 21:41 |
+| 9 | CLOSE | 추가작업: opal-brain SKILL source_ref 명세 + 재배포 | ✅ | 2026-06-11 21:43 |
+| 10 | CLOSE | DONE.md 생성 | ✅ | 2026-06-11 21:44 |
 <!-- pipeline:end -->
 
 ## 의사결정 로그
 | # | 시점 | 결정 | 근거 |
 |---|------|------|------|
+| 1 | 2026-06-11 18:59 | force flag used at init | 캡틴 지시(//opp --agentic 016 PLAN 재개)로 semi-agentic→agentic 모드 전환 재초기화. 기존 진행: 행1 TASK 작업 완료(2026-06-11 18:21) |
+| 1 | 2026-06-11 21:41 | additional row inserted after row 8: stage=CLOSE, item=추가작업: opal-brain SKILL source_ref 명세 + 재배포, new_row_id=9 | additional work entry |
 
 ## 블로커
 없음

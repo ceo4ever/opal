@@ -1,0 +1,39 @@
+# Project Brain Log
+
+> append-only 연대기. brain-tool `log` 커맨드로만 기록한다. 직접 편집하지 않는다.
+> 형식: `## [날짜] op | 요약` + 하위 목록(신규/갱신/출처)
+
+## [2026-06-10] init | brain 부트스트랩 (task 015) — 핵심 엔티티 2 + 시스템 concept 1 시드
+- 신규: [[state-tool]], [[brain-tool]], [[opal-brain-system]]
+
+## [2026-06-11] ingest | 태스크 015 CLOSE — opal-brain 코어 신설
+- 신규: [[opal-brain-system]], [[brain-tool]], [[state-tool]]
+- 출처: task:015
+
+## [2026-06-11] ingest | 016 dogfooding docs 5건
+- 신규: [[opal-architecture]], [[opal-conventions]], [[opal-project-definition]], [[opal-security-model]], [[opal-brain-design-proposal]]
+- 출처: doc:docs/ARCHITECTURE.md, doc:docs/CONVENTIONS.md, doc:docs/PROJECT.md, doc:docs/SECURITY.md, doc:docs/proposals/opal-brain-design.md
+
+## [2026-06-11] ingest | 016 백필 — 선별 10건/후보 12건
+- 신규: [[coding-principles-ssot]], [[wtm-agent-cmux-integration]], [[test-scenario-pipeline-redesign]], [[linux-install-script]], [[cmux-tool-dispatcher-expansion]], [[opwt-v4-output-system]], [[codex-platform-integration]], [[model-mapping-latest-tracking]], [[opal-principles-constitution]]
+- 출처: task:001, task:002, task:004, task:006, task:007, task:008, task:009, task:011, task:012
+
+## [2026-06-11] ingest | 016 dogfooding skills 전반 16건
+- 신규: [[op-brain-ingest]], [[op-dev-analysis]], [[op-dev-execute]], [[op-dev-plan]], [[op-dev-qa]], [[op-dev-test-scenario]], [[op-dev-todo]], [[op-dev-wireframe]], [[op-sdd-action-plan]], [[op-sdd-plan]], [[op-sdd-spec]], [[op-sdd-verify]], [[op-spec-validator]], [[op-task]], [[op-task-execute]], [[op-task-plan]]
+- 출처: skill:opal/skills/op-brain-ingest, skill:opal/skills/op-dev-analysis, skill:opal/skills/op-dev-execute, skill:opal/skills/op-dev-plan, skill:opal/skills/op-dev-qa, skill:opal/skills/op-dev-test-scenario, skill:opal/skills/op-dev-todo, skill:opal/skills/op-dev-wireframe, skill:opal/skills/op-sdd-action-plan, skill:opal/skills/op-sdd-plan, skill:opal/skills/op-sdd-spec, skill:opal/skills/op-sdd-verify, skill:opal/skills/op-spec-validator, skill:opal/skills/op-task, skill:opal/skills/op-task-execute, skill:opal/skills/op-task-plan
+
+## [2026-06-11] ingest | 016 dogfooding skills 후반 16건
+- 신규: [[skill-op-task-qa]], [[skill-opal-agent-creator]], [[skill-opal-brain]], [[skill-opal-onboarding]], [[skill-opal-pilot-dev]], [[skill-opal-pilot-dev-short]], [[skill-opal-pilot-dev-wireframe]], [[skill-opal-pilot-gc]], [[skill-opal-pilot-project]], [[skill-opal-pilot-project-dev]], [[skill-opal-pilot-sdd]], [[skill-opal-pilot-write-tech]], [[skill-opal-project-init]], [[skill-opal-skill-creator]], [[skill-opal-skill-manager]], [[skill-opal-start]]
+- 출처: skill:opal/skills/op-task-qa, skill:opal/skills/opal-agent-creator, skill:opal/skills/opal-brain, skill:opal/skills/opal-onboarding, skill:opal/skills/opal-pilot-dev, skill:opal/skills/opal-pilot-dev-short, skill:opal/skills/opal-pilot-dev-wireframe, skill:opal/skills/opal-pilot-gc, skill:opal/skills/opal-pilot-project, skill:opal/skills/opal-pilot-project-dev, skill:opal/skills/opal-pilot-sdd, skill:opal/skills/opal-pilot-write-tech, skill:opal/skills/opal-project-init, skill:opal/skills/opal-skill-creator, skill:opal/skills/opal-skill-manager, skill:opal/skills/opal-start
+
+## [2026-06-11] lint | 016 테스트 중 source_ref 형식 정정 — skills 32페이지 sources를 ingest-scan 표준(skill:<폴더명>)으로 통일, 멱등 skip 32건 복구
+
+## [2026-06-11] query | 캡틴 질의: OPAL 첫 사용 순서·예시 — onboarding/start/project-init 3페이지 합성
+
+## [2026-06-11] query | synthesis 파일링 — OPAL 첫 사용 가이드 (캡틴 승인)
+- 신규: [[opal-first-use-guide]]
+
+## [2026-06-11] ingest | CLOSE ingest — 태스크 016 opal-wiki-pilot 지능화 (concept 4건 신규, brain-tool entity 갱신)
+- 신규: [[pages/concept/page-type-dynamic-schema.md]], [[pages/concept/three-layer-memory-architecture.md]], [[pages/concept/brain-search-on-demand.md]], [[pages/concept/wiki-intelligence-decisions-016.md]]
+- 출처: task:016
+
