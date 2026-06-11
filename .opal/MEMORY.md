@@ -1,7 +1,7 @@
 # opal Memory Index
 
-> 최종 갱신: 2026-06-08 (태스크 014 완료 — Phase 1~5)
-> last_task_number: 14
+> 최종 갱신: 2026-06-11 (태스크 015 완료 — opal-brain 코어, 016 wiki 지능화 진행)
+> last_task_number: 16
 
 ## 메모리 카테고리
 
@@ -31,8 +31,8 @@
 
 | 등록일자 | 작업 | 단계 | 경로 | 시작일시 | 완료일시 |
 |----------|------|------|------|---------|---------|
-| 2026-05-15 | 005 명확화 게이트 SSOT — 추정 진행 차단 + 소크라테스식 인터뷰 | TASK | tasks/005-260515-opp-clarification-gate-ssot/ | 2026-05-15 13:59 | - |
-| 2026-05-20 | 006 Linux 설치 스크립트 신설 — scripts/install/linux.sh (원래 001 채번 → divergent reconcile 후 006 재채번) | CLOSE | tasks/006-260520-opp-install-linux/ | 2026-05-20 08:35 | 2026-05-20 22:51 |
+| 2026-06-11 | 016 wiki 지능화 (opal-wiki-pilot 완성) — init 동적 구조제안(페이지 타입 세트 완전 동적)+ingest --all 문서전체+tasks 장기기억 3계층(MEMORY단기/brain장기검색/tasks원본)+ingest PM판단 트리거+on-demand search 선택주입(index 비상주)+7 pilot 확산+install 배포. **다음 세션 PLAN 재개** (브랜치 feat/opal-brain-wiki) | TASK | tasks/016-260611-opp-wiki-intelligence/ | 2026-06-11 18:21 | - |
+| 2026-06-10 | 015 OPAL Project Brain 코어 — llm-wiki 융합 지식 위키: brain-tool(Python 8커맨드 66test)+opal-brain 스킬(4모드)+PM융합+opp CLOSE 자동 ingest 파일럿+brain 시드(entity2/concept1). origin=SSOT/wiki=요약+참조 단방향. install·전체pilot확산·wiki지능화는 016 (agentic) | CLOSE | tasks/015-260610-opp-opal-brain/ | 2026-06-10 00:34 | 2026-06-11 18:19 |
 | 2026-05-20 | 007 cmux-tool 범용 확장 + wtm-agent fallback 체인 재배선 (원래 006 채번 → 다른 PC 006 install-linux와 충돌하여 007 재채번) | CLOSE | tasks/007-260520-opp-cmux-tool-generic-expansion/ | 2026-05-20 20:02 | 2026-05-23 00:02 |
 | 2026-05-24 | 008 opwt 산출물 체계 v4 — interview 통합 + PRD 8섹션 + 시나리오·화면 흐름도 + WBS 제거 (app-planning-presentation 자료 흡수) | CLOSE | tasks/008-260524-opp-opwt-v4-output-system/ | 2026-05-24 13:57 | 2026-05-24 15:35 |
 | 2026-05-24 | 009 Codex CLI OPAL 프레임워크 통합 — 4번째 플랫폼 편입 (부트스트래퍼 + sub-agent TOML 어댑터 + codex mcp add + 모델 매핑 gpt-5-mini/gpt-5-codex/gpt-5.1-codex-max) | CLOSE | tasks/009-260524-opp-codex-bootstrapper-integration/ | 2026-05-24 18:11 | 2026-05-24 22:41 |

@@ -1,0 +1,101 @@
+{
+  "task_id": "015-260610-opp-opal-brain",
+  "skill": "opp",
+  "mode": "agentic",
+  "schema_version": "1.0",
+  "created_at": "2026-06-10 00:34",
+  "updated_at": "2026-06-11 18:19",
+  "current_status": "done",
+  "rows": [
+    {
+      "row_id": 1,
+      "stage": "TASK",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-10 00:37",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 2,
+      "stage": "TASK",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-10 00:37",
+      "owner": "auto",
+      "note": "agentic auto-pass: agentic auto-pass: TASK 완료 보고 후 캡틴 opp --agentic 진행 승인. TASK.md R1~R7 검증 완료"
+    },
+    {
+      "row_id": 3,
+      "stage": "PLAN",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-10 00:46",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 4,
+      "stage": "PLAN",
+      "item": "PM Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-10 00:46",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 5,
+      "stage": "PLAN",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-10 00:46",
+      "owner": "auto",
+      "note": "agentic auto-pass: agentic auto-pass: PLAN 강화 PM Gate Pass, R1~R7 커버·8결정 근거 완비. EXECUTE 진입 대행 승인"
+    },
+    {
+      "row_id": 6,
+      "stage": "EXECUTE",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-10 01:15",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 7,
+      "stage": "EXECUTE",
+      "item": "PM Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-10 01:15",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 8,
+      "stage": "EXECUTE",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-11 18:19",
+      "owner": "user",
+      "note": "캡틴 확인: Q1-a 승인 (015 코어 CLOSE + 016 분리)"
+    },
+    {
+      "row_id": 9,
+      "stage": "CLOSE",
+      "item": "DONE.md 생성",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-11 18:19",
+      "owner": "PM",
+      "note": null
+    }
+  ]
+}

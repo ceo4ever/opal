@@ -599,6 +599,39 @@
         "paths": [
           "~/.opal/skills/opal-skill-manager/SKILL.md"
         ]
+      },
+      {
+        "name": "opal-brain",
+        "alias": "opbr",
+        "description": "프로젝트 브레인 — 영속 지식 위키 생성·누적·질의·정비",
+        "triggers": [
+          "^opbr$",
+          "^opal-brain$",
+          "(?i)(프로젝트\\s*브레인|지식\\s*위키)"
+        ],
+        "paths": [
+          "{project}/.opal/skills/opal-brain/SKILL.md",
+          "~/.opal/skills/opal-brain/SKILL.md"
+        ],
+        "domain": "knowledge",
+        "pipeline": "MODE: init | ingest | query | lint"
+      },
+      {
+        "name": "op-brain-ingest",
+        "alias": null,
+        "description": "CLOSE 경량 ingest 워커 — 태스크 산출물(의사결정·신규 컴포넌트·인터페이스 변경·도메인 지식)을 brain에 자동 누적. brain 미존재 시 no-op",
+        "triggers": [
+          "^op-brain-ingest$"
+        ],
+        "paths": [
+          "{project}/.opal/skills/op-brain-ingest/SKILL.md",
+          "~/.opal/skills/op-brain-ingest/SKILL.md"
+        ],
+        "stage": "CLOSE",
+        "domain": "knowledge",
+        "dispatched_by": [
+          "opal-pilot-project (CLOSE 단계 파일럿 — 이후 전 pilot으로 확산 예정)"
+        ]
       }
     ]
   }

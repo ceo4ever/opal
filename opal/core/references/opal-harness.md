@@ -233,6 +233,7 @@ OPAL 도구는 모두 `~/.opal/tools/{tool-name}/run.sh` 래퍼를 통해 호출
 |------|------|------------|
 | `xlsx-tool` | xlsx 읽기/쓰기/검색 | xlsx 파일 처리 요청 |
 | `state-tool` | 파이프라인 현황판 JSON SSOT 관리 (9개 서브 명령: `init`/`show`/`advance`/`mark`/`block`/`validate`/`add-row`/`status`/`gate-pass`) | TASK 단계 시작 / Gate 직후 / 추가작업 진입 |
+| `brain-tool` | 프로젝트 브레인 지식 위키 결정론적 집행 — 8 서브명령 `init`/`add-page`/`index`/`log`/`search`/`sync-header`/`lint`/`validate` | `//opbr` 또는 brain 참조 시 |
 
 > 전체 사용법: `~/.opal/references/tools.md`
 
@@ -285,3 +286,4 @@ OPAL 도구는 모두 `~/.opal/tools/{tool-name}/run.sh` 래퍼를 통해 호출
 | v4.9 | 2026-05-12 11:16 | §2 하네스 모듈 테이블에 coding-principles 행 추가 + §10 Coding Principles stub 신설 (001) |
 | v5.0 | 2026-06-07 | §1 Guards 허용 항목 "QA 에이전트 호출" → "PM Gate 문서검증" 치환. §2 하네스 모듈 테이블 QA 표준 로드 시점 "QA Gate 수행 시" → "PM Gate 문서검증 시" 치환. §2 QA 산출물 표준 stub 3곳 동일 정합화 — 별도 QA Gate/QA 에이전트 제거 (014 Phase 3 보완) |
 | v5.1 | 2026-06-07 | §3 state-tool [MUST] 블록 — "Gate 직후 일괄 처리 gate-pass" 줄을 "PM Gate 통과 후 단일 mark"로 교체 + [deprecated] gate-pass 레거시 안내 추가. Phase4 완료 반영 (014 Phase 4) |
+| v5.2 | 2026-06-10 01:04 | §9 등록 도구 표에 brain-tool 행 추가 — 프로젝트 브레인 지식 위키 도구 8 서브명령 (015) |

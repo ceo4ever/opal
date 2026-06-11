@@ -37,6 +37,7 @@
 | MCP 사용 요청 또는 MCP 의존 스킬 호출 | `mcps.md` | - | **금지** | 로드 중단, 트리거 발생 시 재로드 |
 | 프로젝트 작업 요청 또는 `//opp` 호출 | `docs/PROJECT.md` | PM 컨텍스트(Eager) 로드 완료 | **금지** | 로드 중단, 트리거 발생 시 재로드 |
 | PM 컨텍스트 로드 시 함께, 또는 소유자 요청 | `.opal/MEMORY.md` | PM 컨텍스트(Eager) 로드 완료 | **금지** | 로드 중단, 트리거 발생 시 재로드 |
+| PM 컨텍스트 로드 시 함께, 또는 분석/설계 작업 진입 시 | `.opal/brain/index.md` | PM 컨텍스트(Eager) 로드 완료 (`.opal/brain/` 부재 시 스킵) | **금지** | 로드 중단, 트리거 발생 시 재로드 |
 | 파일 처리(xlsx/pdf/이미지 등) 또는 데이터 변환 작업 요청 | `tools.md` | 하네스(Eager) 로드 완료 | **금지** | 로드 중단, 트리거 발생 시 재로드 |
 | 메모리 쓰기 요청 / "이거 기억해둬" 발화 시 | `harness/memory-learning.md` | PM 컨텍스트 로드 완료 | **금지** | 로드 중단, 트리거 발생 시 재로드 |
 
@@ -186,6 +187,20 @@
 
 **원칙**: 전체 파일 Read 전에 code-scan으로 범위를 좁혀 토큰 낭비를 줄인다.  
 `.opal/code-scan.json` 없으면 code-scan 사용 생략 → Glob/Grep으로 탐색한다.
+
+### opal-brain 활용 규칙
+
+`.opal/brain/`이 존재하는 프로젝트에서, 아래 상황에 brain을 우선 활용한다.
+
+| 상황 | 활용 방법 |
+|------|---------|
+| 작업 시작·분석·설계 전 | `brain-tool search <키워드>` → 관련 지식 페이지 우선 참조 |
+| 특정 도메인/컴포넌트 과거 결정 파악 | `brain-tool search <도메인>` → entity·concept 페이지 확인 |
+| 과거 결정의 맥락 필요 | `//opbr ask` 또는 brain 페이지 직접 Read |
+| 전체 brain 구조 조망 | `.opal/brain/index.md` Read (Lazy 트리거로 이미 로드됨) |
+
+**원칙**: 전체 brain을 컨텍스트에 올리지 않는다. index 우선, 페이지는 필요 시 온디맨드로 Read한다.  
+`.opal/brain/` 없으면 brain 참조 생략 → 기존 탐색 방식(code-scan / Glob / Grep)으로 진행한다.
 
 ### 주도성
 
@@ -347,4 +362,5 @@ install-mac.sh가 `~/.codex/AGENTS.md`(글로벌)에 OPAL 마커를 자동 삽�
 | v2.8 | 2026-05-24 | "프로젝트 부트스트래퍼 자동 관리" 절에 Codex 스킵 정책 추가 — Codex 글로벌 진입점이 자동 로드되므로 Claude/Cursor와 동일하게 프로젝트 마커 미삽입. 프로젝트 컨텍스트에 AGENTS.md(Codex) 추가 (009) |
 | v2.9 | 2026-06-07 | 헌법(PRINCIPLES.md) 신설 — Eager Step 2.5에 헌법 always-on 로드 추가 + 설계원칙 박스에 헌법 명시 + 부트스트랩 완료 보고에 `✅ principles` 추가. 모든 하위 문서는 헌법을 참조 상속 (012) |
 | v3.0 | 2026-06-08 | L2 경량 트랙 공식화 — "그냥 해/직접 수행"에 L2 명칭 부여 + 진입 기준 표(동작검증 불요 가드 포함) + PM 자동 감지·제안 경로 + 주도성 규모 분기 (014 Phase 5) |
+| v3.1 | 2026-06-10 12:00 | PM brain 융합 — Lazy 트리거 테이블에 `.opal/brain/index.md` 행 추가 + "opal-brain 활용 규칙" 섹션 신설(code-scan 활용 규칙 동형, brain 부재 시 자연 스킵 명시) (015) |
 
