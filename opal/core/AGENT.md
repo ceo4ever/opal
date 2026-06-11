@@ -36,6 +36,7 @@
 | MCP 사용 요청 또는 MCP 의존 스킬 호출 | `mcps.md` | - | **금지** | 로드 중단, 트리거 발생 시 재로드 |
 | 프로젝트 작업 요청 또는 `//opp` 호출 | `docs/PROJECT.md` | PM 컨텍스트(Eager) 로드 완료 | **금지** | 로드 중단, 트리거 발생 시 재로드 |
 | PM 컨텍스트 로드 시 함께, 또는 소유자 요청 | `.opal/MEMORY.md` | PM 컨텍스트(Eager) 로드 완료 | **금지** | 로드 중단, 트리거 발생 시 재로드 |
+| brain 검색 키워드 명시 요청 또는 `//opbr` 커맨드 시 | `.opal/brain/` — **존재 여부만 경량 인지** (PM 컨텍스트 로드 시 brain 디렉토리 존재 확인에 한정; index.md 전체 자동 로드 안 함). 지식은 `brain-tool search` 후보→선택 주입으로 온디맨드 로드 | PM 컨텍스트(Eager) 로드 완료 (`.opal/brain/` 부재 시 스킵) | **금지** | 로드 중단, 트리거 발생 시 재로드 |
 | 파일 처리(xlsx/pdf/이미지 등) 또는 데이터 변환 작업 요청 | `tools.md` | 하네스(Eager) 로드 완료 | **금지** | 로드 중단, 트리거 발생 시 재로드 |
 | 메모리 쓰기 요청 / "이거 기억해둬" 발화 시 | `harness/memory-learning.md` | PM 컨텍스트 로드 완료 | **금지** | 로드 중단, 트리거 발생 시 재로드 |
 
@@ -173,7 +174,7 @@
 
 ### code-scan 활용 규칙
 
-`.opal/code-scan.json`이 존재하는 프로젝트에서, 아래 상황에 code-scan을 우선 활용한다.
+코드 변경·코드 탐색이 필요한 상황에서 code-scan을 우선 활용한다. `.opal/code-scan.json` 부재 시 PM이 즉석 자동 생성 후 활용한다(`pm/code-scan-management.md §생성 시점` — 아래 표 참조).
 
 | 상황 | 활용 방법 |
 |------|---------|
@@ -184,7 +185,51 @@
 | 의존 관계 파악 | `code-scan depends <module>` |
 
 **원칙**: 전체 파일 Read 전에 code-scan으로 범위를 좁혀 토큰 낭비를 줄인다.  
-`.opal/code-scan.json` 없으면 code-scan 사용 생략 → Glob/Grep으로 탐색한다.
+`.opal/code-scan.json` 부재 시 PM이 즉석 자동 생성(`code-scan-management.md §생성 시점`) 후 활용. 자동 생성으로도 빈 결과면 `header-rules.md §빈 결과 폴백`을 따른다.
+
+**사용자 오버라이드**: 사용자가 'grep으로 해'·'직접 찾아' 등 특정 도구를 명시하면, code-scan 우선 원칙을 보류하고 지정 도구로 즉시 전환한다 (소유자 주도성 원칙 — `opal-harness.md §1`).
+
+#### brain ↔ code-scan 역할 분담
+
+| 축 | code-scan | opal-brain |
+|----|-----------|------------|
+| 코드 정보 범위 | **전수** (전 파일 @header) | **선별** 핵심 모듈만 |
+| 신선도 | **실시간** (호출 시점 스캔) | **stale 가능** (ingest/sync 시점 스냅샷) |
+| 깊이/성격 | WHAT — 구조·exports·depends | WHY/HOW — 설계 배경 + @header 스냅샷 |
+| 원천 | 파일 @header (SSOT) | code-scan @header에서 파생 |
+
+> 코드 정보의 차이는 "포함 여부"가 아니라 **선별·신선도·깊이**다.
+
+### opal-brain 활용 규칙
+
+`.opal/brain/`이 존재하는 프로젝트에서, 아래 상황에 brain을 우선 활용한다.
+
+#### search 활용 (온디맨드 조회)
+
+| 상황 | 활용 방법 |
+|------|---------|
+| 작업 시작·분석·설계 전 | `brain-tool search <키워드>` → **후보 목록(page·title·score·snippet)** 반환 → score 상위 선별 → 선택 페이지만 Read 주입 |
+| 특정 도메인/컴포넌트 과거 결정 파악 | `brain-tool search <도메인>` → entity·concept 후보 목록 확인 → 관련 페이지만 선택 주입 |
+| 과거 결정의 맥락 필요 | `//opbr ask` — 후보 목록 제시 후 사용자 또는 PM이 선택한 페이지만 Read |
+| 전체 brain 구조 조망 | `brain-tool search` 또는 `.opal/brain/index.md` 직접 Read (index를 세션 컨텍스트에 상주시키지 않음) |
+
+**원칙**: 전체 brain을 컨텍스트에 올리지 않는다. search 후보 목록 → 선택 페이지만 온디맨드 Read 주입. index.md 전체를 세션 시작 시 자동 로드하지 않는다.  
+`.opal/brain/` 없으면 brain 참조 생략 → 기존 탐색 방식(code-scan / Glob / Grep)으로 진행한다.
+
+#### PM 판단 ingest 트리거
+
+PM이 작업 중 아래 유형의 가치 있는 지식을 감지하면 brain ingest를 수행한다:
+
+| 지식 유형 | 예시 |
+|----------|------|
+| 아키텍처 결정 | "이 구조로 확정" · "이 방식은 안 되는 이유 → 대안" |
+| 반복 패턴 | 여러 태스크에 걸쳐 동일하게 적용된 해결 방식 |
+| 소유자(캡틴) 합의 | 소유자가 명시적으로 방향을 확정한 내용 |
+| 비자명 해결 | 비직관적이거나 시행착오 끝에 도달한 해법 |
+
+**모드 연동**:
+- `agentic` 모드: PM이 판단하여 **자율 ingest** (사용자 확인 없이 `//opbr ingest` 수행)
+- `semi-agentic` · `interactive` 모드: PM이 감지 후 **사용자에게 제안** → 수락 시 ingest 수행
 
 ### 주도성
 
@@ -374,4 +419,7 @@ install-mac.sh가 `~/.codex/AGENTS.md`(글로벌)에 OPAL 마커를 자동 삽�
 | v2.9 | 2026-06-07 | 헌법(PRINCIPLES.md) 신설 — Eager Step 2.5에 헌법 always-on 로드 추가 + 설계원칙 박스에 헌법 명시 + 부트스트랩 완료 보고에 `✅ principles` 추가. 모든 하위 문서는 헌법을 참조 상속 (012) |
 | v3.0 | 2026-06-08 | L2 경량 트랙 공식화 — "그냥 해/직접 수행"에 L2 명칭 부여 + 진입 기준 표(동작검증 불요 가드 포함) + PM 자동 감지·제안 경로 + 주도성 규모 분기 (014 Phase 5) |
 | v3.1 | 2026-06-08 | §보고 형식 reporting-template 참조 → 헌법 문체 인라인 대체(골격·원칙·작동하는가 ~35줄) + Eager Step 6.6 제거 + 부트스트랩 완료 보고 `✅ reporting` 칼럼 제거(인라인 흡수로 독립 로드 단계 소멸 — M-4-a 번복) (015) |
+| v3.2 | 2026-06-10 12:00 | PM brain 융합 — Lazy 트리거 테이블에 `.opal/brain/index.md` 행 추가 + "opal-brain 활용 규칙" 섹션 신설(code-scan 활용 규칙 동형, brain 부재 시 자연 스킵 명시) (015-brain, 별도 PC 015와 중복 채번) |
+| v3.3 | 2026-06-11 19:21 | W5 index 비상주 정정 — Lazy 트리거 brain 행을 "존재 여부 경량 인지(index 전체 자동 로드 안 함), 지식은 search 후보→선택 주입으로 온디맨드 로드"로 변경. W4 PM 판단 ingest 트리거 — "opal-brain 활용 규칙"에 ingest 판단 기준(아키텍처 결정·반복 패턴·캡틴 합의·비자명 해결) + 모드별 동작(agentic 자율 / semi·interactive 제안) 명시. search 활용 행 후보→선택 주입 흐름으로 정합 (016-brain) |
+| v3.4 | 2026-06-11 22:38 | §code-scan 활용 규칙에 brain↔code-scan 역할 분담 표(전수/실시간/WHAT vs 선별/stale/WHY) 신설 + "scan.json 없으면 생략"→즉석 자동 생성(code-scan-management.md §생성 시점) + 빈 결과 폴백(header-rules.md) 교체 + 사용자 오버라이드 명문화 (010) |
 

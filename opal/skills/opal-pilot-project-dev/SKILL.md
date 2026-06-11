@@ -604,6 +604,16 @@ PM 검수 로그에서 **반복 패턴**이 감지되면 PM 학습 루프로 승
 {전체 개발 과정 요약, 특이사항, 다음 단계}
 ```
 
+DONE.md 생성 직후 **op-brain-ingest 디스패치**를 수행한다:
+- `<프로젝트-루트>/.opal/brain/` 존재 여부를 확인한다.
+- **brain이 존재하면**: op-brain-ingest 워커를 디스패치하여 태스크 산출물(DONE.md·PLAN 결정·신규 엔티티)을 brain에 누적한다.
+- **brain이 없으면**: 자연 스킵(no-op). 종료가 막히지 않는다.
+- op-brain-ingest 탐색 경로:
+  1. `{프로젝트}/.opal/skills/op-brain-ingest/SKILL.md`
+  2. `~/.opal/skills/op-brain-ingest/SKILL.md`
+- 디스패치 입력: 태스크 폴더 경로
+- 워커가 `status: skipped` 또는 `status: completed` 또는 `status: completed_with_errors` 반환 — 어떤 경우도 종료를 중단시키지 않는다.
+
 ---
 
 ## 문서 등록 프로토콜
@@ -732,3 +742,4 @@ opal-harness-agentic.md "에스컬레이션 조건" 공통 기준에 추가:
 | v4.3 | 2026-05-09 11:22 | 3-way 모드 체계 도입 — semi-agentic 기본 채택 + Agentic/Semi-Agentic 모드 절 확장 + Phase 2 WBS 모드 경계 명시(D-DEC-1) + Harness 절 3-way 분기 + state init --mode 추가 (140) |
 | v4.4 | 2026-05-09 18:30 | 개인 식별자 "캡틴" → "소유자"/"사용자" 치환 — 배포 파일 정체성 누설 정정 (139) |
 | v4.5 | 2026-06-07 | R-10 gate-pass deprecated 정합 — State Gate/QA Gate 행 미존재 명시 + PM Gate 단일 mark로 간소화 (014 Phase 4) |
+| v4.6 | 2026-06-11 19:25 | DONE.md 생성 직후 op-brain-ingest 디스패치 훅 삽입 — brain 존재 시 워커 디스패치, 부재 시 no-op, 종료 비중단 (016) |

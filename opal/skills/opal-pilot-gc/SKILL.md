@@ -346,6 +346,17 @@ DONE.md 생성 완료 후 state-tool로 행 갱신:
 > **[MUST] 행 갱신**: mark하는 것 자체가 state 기록이며 별도의 State Gate 행은 존재하지 않는다. state-tool stage-transition guard가 이전 단계 필수 행 완료 여부를 자동 검증한다.
 > **CLOSE 진입 게이트 (§2.16 G-13)**: CLOSE 단계 첫 행(#7)은 `--auto-pass` 적용 불가 (`close_gate_violation`). 반드시 위 명시 호출로 처리한다.
 
+**op-brain-ingest 디스패치** (DONE.md 생성 + state-tool mark 완료 직후):
+
+- `<프로젝트-루트>/.opal/brain/` 존재 여부를 확인한다.
+- **brain이 존재하면**: op-brain-ingest 워커를 디스패치하여 GC 산출물(DONE.md·보고서 핵심 결정)을 brain에 누적한다.
+- **brain이 없으면**: 자연 스킵(no-op). CLOSE가 막히지 않는다.
+- op-brain-ingest 탐색 경로:
+  1. `{프로젝트}/.opal/skills/op-brain-ingest/SKILL.md`
+  2. `~/.opal/skills/op-brain-ingest/SKILL.md`
+- 디스패치 입력: GC 태스크 폴더 경로
+- 워커 status(skipped / completed / completed_with_errors) 무관 — CLOSE를 중단시키지 않는다.
+
 ### 4.3 수정이 필요한 경우 — opds 체인
 
 opgc는 **진단 전담**이다. 보고서에서 `auto_fixable=true` 이슈나 `[?] review` 항목이 있다면, opds(opal-pilot-dev-short)로 체인하여 수정을 반영한다:
@@ -509,3 +520,4 @@ fingerprint = sha1(fingerprint_input).hex()[:16]
 | v1.3 | 2026-05-01 | state-tool 도입 — SCAN 1.4 init 호출 명시 + CLOSE State Gate를 state-tool mark 명시 호출로 교체 + `--rows-from` SSOT 지시 + agentic `--auto-pass` + CLOSE 진입 게이트 거부 정책 추가 (134) |
 | v1.4 | 2026-05-09 18:30 | 개인 식별자 "캡틴" → "소유자" 치환 — 배포 파일 정체성 누설 정정 (139) |
 | v1.5 | 2026-06-07 | STATE 행 8→7 재구성 — State Gate 행 제거(guard로 이전), §4.2 단일 mark 패턴으로 정합화 (014 Phase 4) |
+| v1.6 | 2026-06-11 19:26 | §4.2 CLOSE에 op-brain-ingest 훅 삽입 — brain 존재 시 GC 산출물 누적, 부재 시 no-op, CLOSE 비중단 (016) |

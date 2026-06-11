@@ -955,6 +955,13 @@ install_opal() {
             success "state-tool run.sh 실행 권한 설정"
         fi
 
+        # ── brain-tool 실행 권한 (015 / PLAN §2.0 결정8 / §3 Step 9) ──
+        local brain_run="$opal_home/tools/brain-tool/run.sh"
+        if [[ -f "$brain_run" ]]; then
+            chmod +x "$brain_run"
+            success "brain-tool run.sh 실행 권한 설정"
+        fi
+
         # ── cmux-tool 실행 권한 ──
         local cmux_run="$opal_home/tools/cmux-tool/run.sh"
         if [[ -f "$cmux_run" ]]; then

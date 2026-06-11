@@ -1,7 +1,8 @@
 # opal Memory Index
 
-> 최종 갱신: 2026-06-10 (태스크 017 완료 — state-tool 조기 done 가드)
+> 최종 갱신: 2026-06-11 (feat/opal-brain-wiki ↔ main 병합 — 양 PC 작업 합류)
 > last_task_number: 17
+> ⚠️ 채번 충돌: 015·016이 양 PC에서 중복 사용됨 (main: 015 보고형식·016 TDD·017 가드 / brain 라인: 015 brain 코어·016 wiki 지능화). 다음 채번은 018부터.
 
 ## 메모리 카테고리
 
@@ -22,6 +23,9 @@
 
 | 등록일시 | 카테고리 | 상태 | 파일 | 설명 |
 |----------|----------|------|------|------|
+| 2026-06-11 22:43 | task | 대기 | `memory/follow-up-code-scan-phase2.md` | 010 Phase 2 후속 — 워커 자체 탐색 강제(code-scan 우선) 격상. 운영 데이터 축적 후 판단 |
+| 2026-06-11 22:43 | task | 대기 | `memory/follow-up-code-scan-phase2.md` | 010 후속 — OPAL 본 프로젝트 @header 커버리지 확충. brain analyze 품질의 원료 (현 2파일 수준, 016 세션 확인) |
+| 2026-06-11 22:43 | task | 폐기 기록 | `memory/follow-up-code-scan-phase2.md` | 010 v2 폐기 — Phase 3 .md @header 표준화. 사유: 문서 요약·검색은 brain ingest가 흡수(016 W2) |
 
 
 ## 작업 히스토리 (최대 10개, FIFO)
@@ -31,9 +35,9 @@
 
 | 등록일자 | 작업 | 단계 | 경로 | 시작일시 | 완료일시 |
 |----------|------|------|------|---------|---------|
-| 2026-05-24 | 008 opwt 산출물 체계 v4 — interview 통합 + PRD 8섹션 + 시나리오·화면 흐름도 + WBS 제거 (app-planning-presentation 자료 흡수) | CLOSE | tasks/008-260524-opp-opwt-v4-output-system/ | 2026-05-24 13:57 | 2026-05-24 15:35 |
-| 2026-05-24 | 009 Codex CLI OPAL 프레임워크 통합 — 4번째 플랫폼 편입 (부트스트래퍼 + sub-agent TOML 어댑터 + codex mcp add + 모델 매핑 gpt-5-mini/gpt-5-codex/gpt-5.1-codex-max) | CLOSE | tasks/009-260524-opp-codex-bootstrapper-integration/ | 2026-05-24 18:11 | 2026-05-24 22:41 |
-| 2026-05-26 | 010 code-scan PM 우선 무조건화 — PM 디스패치/대화에서 code-scan 1순위 강제 + scan.json 자동 생성 + 빈 결과 폴백 기준 + 사용자 오버라이드 보장 (Phase 1: PM-only) | TASK | tasks/010-260526-opp-code-scan-pm-mandate/ | 2026-05-26 15:24 | - |
+| 2026-06-11 | 016-brain wiki 지능화 (opal-wiki-pilot 완성, agentic — ⚠️중복 채번) — brain-tool 타입 동적화+analyze/ingest-scan(83 tests)+SKILL 4모드 지능화(v1.2 source_ref MUST)+W4/W5 PM 규칙+7 pilot CLOSE 훅(rows 불변)+install 배포+brain 54페이지(dogfooding+백필+synthesis+CLOSE ingest 실증). M-4 opal-brain 유지·M-5 brain git 추적. 커밋 6b29bb2 | 완료 | tasks/016-260611-opp-wiki-intelligence/ | 2026-06-11 18:21 | 2026-06-11 21:50 |
+| 2026-06-10 | 015-brain OPAL Project Brain 코어 (⚠️중복 채번) — llm-wiki 융합 지식 위키: brain-tool(Python 8커맨드 66test)+opal-brain 스킬(4모드)+PM융합+opp CLOSE 자동 ingest 파일럿+brain 시드. origin=SSOT/wiki=요약+참조 단방향 (agentic) | CLOSE | tasks/015-260610-opp-opal-brain/ | 2026-06-10 00:34 | 2026-06-11 18:19 |
+| 2026-05-26 | 010 code-scan PM 우선 무조건화 (v2 다이어트, semi-agentic) — 코드 작업 한정 디스패치 전 무조건화+scan.json 즉석 자동 생성+빈 결과 폴백 3분기+사용자 오버라이드+brain↔code-scan 역할 분담 4축(선별·신선도·깊이, analyze 의존 명문화)+PM Gate 14번. 규약 .md 7파일, install 2회 배포. 후속=Phase2 워커 강제·@header 커버리지 확충(메모리 기록). 커밋 완료(feat/opal-brain-wiki) | 완료 | tasks/010-260526-opp-code-scan-pm-mandate/ | 2026-05-26 15:24 | 2026-06-11 22:56 |
 | 2026-06-02 | 011 모델 매핑 최신화 + 최신 추종 전략 — Gemini standard/advanced 부동 별칭(`-latest`) + light 핀(`gemini-3.1-flash-lite`) + Codex gpt-5.4-mini/gpt-5.5/gpt-5.3-codex + OpenAI 참조전용 + windows.ps1 4번째 동기지점 신규발견 (agentic) | 완료 | tasks/011-260602-opp-model-mapping-latest-tracking/ | 2026-06-02 19:57 | 2026-06-02 20:18 |
 | 2026-06-07 | 012 OPAL 헌법(PRINCIPLES.md) 신설 — 카파시 스킬 철학 SSOT + always-on 등록(AGENT.md Eager 2.5) + 테스트 하네스 §4 집행(목업 금지·동작 증거: test-agent adversarial화·qa-standards·test-scenario-guide) + coding-principles 다이어트 + install 배포 (agentic) | CLOSE | tasks/012-260607-opp-opal-principles-constitution/ | 2026-06-07 17:44 | 2026-06-07 17:44 |
 | 2026-06-07 | 013 state-tool 동작 증거 강제 게이트 — 헌법 §4 deterministic 집행: verify 서브커맨드(mock 코드패턴 검출 + 증거 누락 검출) + cmd_mark TEST stage 자동 훅 + ERROR_CODES 2종 + TestVerify 13케이스(136 passed). 캡틴 사례(목업 API) 기계적 차단 (agentic) | CLOSE | tasks/013-260607-opds-state-tool-enforcement/ | 2026-06-07 | 2026-06-07 |
