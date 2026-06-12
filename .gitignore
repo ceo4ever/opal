@@ -20,3 +20,6 @@ venv/
 .venv/
 env/
 .env
+
+# MCP / tooling temp
+.playwright-mcp/
