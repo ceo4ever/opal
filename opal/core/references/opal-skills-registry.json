@@ -114,6 +114,22 @@
         ],
         "domain": "quality",
         "pipeline": "SCAN → CHECK → REPORT → APPLY → CLOSE"
+      },
+      {
+        "name": "opal-pilot-data-design",
+        "alias": "opdd",
+        "description": "데이터 설계 파이프라인 오케스트레이터 (DICT→MODEL→DDL→MIGRATION→QA→CLOSE)",
+        "triggers": [
+          "^opal-pilot-data-design$",
+          "^opdd$",
+          "(?i)(데이터\\s*설계|DB\\s*설계|데이터\\s*모델링\\s*파이프라인)"
+        ],
+        "paths": [
+          "{project}/.opal/skills/opal-pilot-data-design/SKILL.md",
+          "~/.opal/skills/opal-pilot-data-design/SKILL.md"
+        ],
+        "domain": "data-design",
+        "pipeline": "TASK → DICT → MODEL → DDL/MIGRATION → QA → CLOSE"
       }
     ],
     "op-dev": [
@@ -302,6 +318,56 @@
         ]
       }
     ],
+    "op-data": [
+      {
+        "name": "op-data-dictionary",
+        "alias": null,
+        "description": "데이터 사전 작성 — 용어사전·도메인사전·코드사전 산출물 생성",
+        "triggers": [
+          "^op-data-dictionary$"
+        ],
+        "paths": [
+          "{project}/.opal/skills/op-data-dictionary/SKILL.md",
+          "~/.opal/skills/op-data-dictionary/SKILL.md"
+        ],
+        "stage": "DICT",
+        "dispatched_by": [
+          "opal-pilot-data-design"
+        ]
+      },
+      {
+        "name": "op-data-model",
+        "alias": null,
+        "description": "데이터 모델링 — 개념(Mermaid) → 논리(Mermaid) → 물리(DBML) 3단계 ERD 산출물 생성",
+        "triggers": [
+          "^op-data-model$"
+        ],
+        "paths": [
+          "{project}/.opal/skills/op-data-model/SKILL.md",
+          "~/.opal/skills/op-data-model/SKILL.md"
+        ],
+        "stage": "MODEL",
+        "dispatched_by": [
+          "opal-pilot-data-design"
+        ]
+      },
+      {
+        "name": "op-data-ddl",
+        "alias": null,
+        "description": "DDL 생성 — DBML → DBMS별 CREATE TABLE 스크립트 생성",
+        "triggers": [
+          "^op-data-ddl$"
+        ],
+        "paths": [
+          "{project}/.opal/skills/op-data-ddl/SKILL.md",
+          "~/.opal/skills/op-data-ddl/SKILL.md"
+        ],
+        "stage": "DDL",
+        "dispatched_by": [
+          "opal-pilot-data-design"
+        ]
+      }
+    ],
     "op-task": [
       {
         "name": "op-task",
@@ -443,7 +509,7 @@
       {
         "name": "erd-modeler",
         "alias": "erm",
-        "description": "DB ERD 모델링 — 개념(Mermaid) → 논리(Mermaid) → 물리(DBML→DDL) 3단계",
+        "description": "[deprecated] → op-data-model — DB ERD 모델링 (개념→논리→물리). //erm은 op-data-model 단독 호출 alias로 하위호환",
         "triggers": [
           "^erd-modeler$",
           "^erm$",

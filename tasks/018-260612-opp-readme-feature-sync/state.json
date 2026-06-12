@@ -1,0 +1,102 @@
+{
+  "task_id": "018-260612-opp-readme-feature-sync",
+  "skill": "opp",
+  "mode": "agentic",
+  "schema_version": "1.0",
+  "created_at": "2026-06-12 11:00",
+  "updated_at": "2026-06-12 12:28",
+  "current_status": "done",
+  "rows": [
+    {
+      "row_id": 1,
+      "stage": "TASK",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-12 11:00",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 2,
+      "stage": "TASK",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-12 11:15",
+      "owner": "auto",
+      "note": "agentic auto-pass: agentic auto-pass: TASK 요구사항 검증가능 AC + 갭표 SSOT 근거 명시, 미확정 3건 PLAN 해소 예정"
+    },
+    {
+      "row_id": 3,
+      "stage": "PLAN",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-12 11:22",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 4,
+      "stage": "PLAN",
+      "item": "PM Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-12 11:22",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 5,
+      "stage": "PLAN",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-12 11:22",
+      "owner": "auto",
+      "note": "agentic auto-pass: agentic auto-pass: PM Gate Pass + opsdd 정본 교차확인 + ppt-builder 보류 안전처리"
+    },
+    {
+      "row_id": 6,
+      "stage": "EXECUTE",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-12 11:27",
+      "owner": "PM",
+      "note": null,
+      "step": "8/8"
+    },
+    {
+      "row_id": 7,
+      "stage": "EXECUTE",
+      "item": "PM Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-12 11:29",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 8,
+      "stage": "EXECUTE",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-12 12:28",
+      "owner": "user",
+      "note": "캡틴 확인: README 갱신 확정, ppt-builder 보류 유지"
+    },
+    {
+      "row_id": 9,
+      "stage": "CLOSE",
+      "item": "DONE.md 생성",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-12 12:28",
+      "owner": "PM",
+      "note": null
+    }
+  ]
+}

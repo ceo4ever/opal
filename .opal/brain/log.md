@@ -41,3 +41,11 @@
 - 신규: [[pages/concept/code-scan-mandatory-policy.md]], [[pages/concept/brain-code-scan-role-division.md]]
 - 출처: task:010
 
+## [2026-06-12] ingest | CLOSE ingest — 태스크 018 README 최신화
+- 신규: [[pages/concept/readme-ssot-principle.md]], [[pages/concept/opsdd-pipeline-ssot.md]], [[pages/concept/uncommitted-component-readme-policy.md]]
+- 출처: task:018
+
+## [2026-06-12] ingest | CLOSE ingest — 태스크 019 opal-pilot-data-design (DB 설계 OPAL 내재화)
+- 신규: [[pages/entity/skill-opal-pilot-data-design.md]], [[pages/entity/op-data-dictionary-skill.md]], [[pages/entity/op-data-model-skill.md]], [[pages/entity/op-data-ddl-skill.md]], [[pages/concept/dict-선행-model-ssot.md]], [[pages/concept/opdd-design-artifacts-path-pattern.md]], [[pages/concept/erd-modeler-deprecation.md]], [[pages/flow/opdd-pipeline-flow.md]]
+- 출처: task:019
+

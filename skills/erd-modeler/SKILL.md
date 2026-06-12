@@ -6,6 +6,8 @@ description: |
   표준사전(단어/도메인/용어/코드) 관리는 data-dictionary 스킬이 담당합니다. 이 스킬은 사전을 "참조"만 합니다.
 ---
 
+> **[DEPRECATED]** 이 스킬은 `op-data-model` / `op-data-ddl`로 분해 이관되었습니다. `//erm`은 `op-data-model` 단독 호출 alias로 하위호환됩니다. 신규 데이터 설계 파이프라인은 `//opdd` (opal-pilot-data-design)를 사용하세요.
+
 # ERD Modeler
 
 DB ERD 모델링 전용 스킬이다. 개념→논리→물리 3단계 모델링과 DDL 생성을 담당한다.
@@ -61,7 +63,7 @@ DB ERD 모델링 전용 스킬이다. 개념→논리→물리 3단계 모델링
 | 단계 | 조건 | 처리 |
 |------|------|------|
 | 1단계 | 사용자가 사전 파일 경로를 제공한 경우 | 해당 경로를 Read하여 사전 로드 |
-| 2단계 | 사전 없음 (소규모/신규 프로젝트) | 분류어 약어표(`references/naming-convention.md`)를 기반으로 내부 표준 적용 |
+| 2단계 | 사전 없음 (소규모/신규 프로젝트) | 분류어 약어표(`../../opal/skills/op-data-dictionary/references/naming-convention.md`)를 기반으로 내부 표준 적용 |
 | 3단계 | 외부 표준이 필요한 경우 | 웹 검색으로 해당 도메인 표준 약어/타입 참조 |
 
 > 2단계 적용 시 사용자에게 "표준사전 없이 내부 기본 규칙으로 진행합니다" 안내한다.
@@ -272,5 +274,13 @@ sql2dbml dump.sql --mysql -o schema.dbml
 |------|------|------|
 | Mermaid 가이드 | `references/mermaid-guide.md` | 개념/논리 모델링 문법 |
 | DBML 가이드 | `references/dbml-guide.md` | 물리 모델링 문법 |
-| 명명규칙 가이드 | `../data-dictionary/references/naming-convention.md` | 축약, 테이블/컬럼 이름 짓기 상세 |
-| DB 타입 매핑표 | `../data-dictionary/references/db-type-mapping.md` | DBMS별 물리 타입 상세 매핑 |
+| 명명규칙 가이드 | `../../opal/skills/op-data-dictionary/references/naming-convention.md` | 축약, 테이블/컬럼 이름 짓기 상세 |
+| DB 타입 매핑표 | `../../opal/skills/op-data-dictionary/references/db-type-mapping.md` | DBMS별 물리 타입 상세 매핑 |
+
+---
+
+## 변경이력
+
+| 날짜 | 변경 내용 |
+|------|----------|
+| 2026-06-12 | [DEPRECATED] op-data-model / op-data-ddl 로 분해 이관. //erm alias 하위호환 유지. 참조 경로 data-dictionary → opal/skills/op-data-dictionary 갱신 (Task 019) |

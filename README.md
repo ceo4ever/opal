@@ -24,10 +24,14 @@ AI 도구(Claude Code, Cursor 등)를 쓰다 보면 공통적인 한계에 부�
 | 원칙 | 설명 |
 |------|------|
 | **사용자 주권** | AI는 사용자 승인 없이 코드를 생성하거나 파일을 수정하지 않는다 |
+| **검증된 완료** | 완료는 생성된 문서가 아니라 검증된 동작을 의미한다 |
+| **강제 우선** | 항상 지켜야 하는 규칙은 조언이 아니라 도구로 강제한다 |
 | **단계적 실행** | 작업을 TASK → PLAN → EXECUTE 단계로 분해하여 각 단계를 검증한다 |
 | **문서화 우선** | 모든 작업은 문서(TASK.md, PLAN.md 등)로 추적되고 재현 가능하다 |
 | **플랫폼 독립** | Claude Code, Cursor 등 어떤 AI 환경에서도 동일하게 동작한다 |
 | **프로젝트 학습** | 프로젝트 컨텍스트를 축적하여 세션이 바뀌어도 일관된 품질을 유지한다 |
+
+> 이 철학의 행동 SSOT는 **OPAL 헌법(`PRINCIPLES.md`)**이다. 모든 하네스·스킬·에이전트의 행동은 헌법을 상속한다.
 
 ### 주요 특징
 
@@ -36,6 +40,8 @@ AI 도구(Claude Code, Cursor 등)를 쓰다 보면 공통적인 한계에 부�
 - **QA 내장** — 테스트 시나리오 작성 → 구현 → 자동 검증이 파이프라인 안에 포함
 - **3-way 실행 모드** — `interactive` / `semi-agentic`(기본) / `agentic` — 사용자 검토와 PM 자율의 균형을 작업별로 선택
 - **전문 에이전트(Specialist Agent)** — 도메인별 전문 워커가 FE/BE/DB/기획/테스트를 담당
+- **프로젝트 브레인(`//opbr`)** — 프로젝트 WHY·HOW 지식을 마크다운 위키로 누적·질의
+- **경량 품질 게이트(`//opgc`)** — 커밋 전 보안·컨벤션 진단 (OWASP/CWE/SANS 기반)
 - **커뮤니티 스킬** — [skills.sh](https://skills.sh/) 카탈로그를 통해 외부 조직 스킬을 온디맨드로 검색·설치 (`//skill-manager`)
 
 ---
@@ -55,6 +61,8 @@ AI 도구(Claude Code, Cursor 등)를 쓰다 보면 공통적인 한계에 부�
    - [opsdd — SDD 명세 기반 개발](#opsdd--sdd-명세-기반-개발)
    - [opwt — 서비스 기획 산출물](#opwt--서비스-기획-산출물)
    - [oppd — 프로젝트 개발 라이프사이클](#oppd--프로젝트-개발-라이프사이클)
+   - [opgc — 품질 게이트 (GC)](#opgc--품질-게이트-gc)
+   - [opbr — 프로젝트 브레인](#opbr--프로젝트-브레인)
 7. [독립 스킬 사용법](#독립-스킬-사용법)
 8. [Pilot 실행 모드 (3-way)](#pilot-실행-모드-3-way)
 9. [전문 에이전트 (Specialist Agent)](#전문-에이전트-specialist-agent)
@@ -71,7 +79,7 @@ AI 도구(Claude Code, Cursor 등)를 쓰다 보면 공통적인 한계에 부�
 |------|---------|
 | **OS** | macOS / Linux / Windows |
 | **필수 도구** | bash(또는 PowerShell), git, Node.js v18+, Python 3 |
-| **지원 AI 플랫폼** | Claude Code, Cursor, Gemini (Antigravity) |
+| **지원 AI 플랫폼** | Claude Code, Cursor, Gemini (Antigravity), Codex |
 
 > Node.js는 skill-registry, state-tool 등 CLI 도구 실행에 필요하다. Python은 MCP 서버 venv 구성에 필요하다.
 > Windows에서 Python이 설치되어 있지 않으면 install이 winget을 통해 Python 3.14를 자동으로 설치한다.
@@ -100,10 +108,10 @@ powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/ceo
 
 ### Step 3: 부트스트랩 체크리스트 확인
 
-AI 도구(Claude Code / Cursor / Gemini)를 재시작하면 첫 응답에 다음과 같이 표시된다.
+AI 도구(Claude Code / Cursor / Gemini / Codex)를 재시작하면 첫 응답에 다음과 같이 표시된다.
 
 ```
-[부트스트랩] ✅ identity ✅ harness ✅ PM ✅ PM모드 ⏳ registry ⏳ references ⏳ model-mapping
+[부트스트랩] ✅ principles ✅ identity ✅ harness ✅ PM ✅ PM모드 ⏳ registry ⏳ references ⏳ model-mapping
 [안내] 프로젝트 작업이라면 //opi 또는 //opp/opd/opds 로 진입하세요
 ```
 
@@ -250,6 +258,21 @@ OPAL 에이전트는 **비서**와 **PM** 두 가지 역할을 수행한다.
 
 프로젝트에 `.opal/AGENT.md`가 있으면 PM 모드로 자동 전환된다. PM 모드에서는 `//` 커맨드로 파이프라인을 실행할 때 워커(서브에이전트)를 지휘하고 각 단계의 품질을 검토한다. `.opal/AGENT.md`가 없는 환경에서는 비서 모드로 동작하여 일반적인 대화와 업무를 지원한다.
 
+### L2 경량 트랙
+
+"그냥 해" 또는 "직접 수행" 발화는 **L2 경량 트랙**의 진입 신호다. L2는 태스크 파이프라인(TASK→PLAN→EXECUTE)을 우회하고 PM이 직접 수정한다.
+
+> L2는 3-way 모드(interactive/semi-agentic/agentic)와는 **별개 축**이다. 3-way 모드는 파이프라인 내 게이트 수준을 다루며, L2는 파이프라인 자체를 우회한다.
+
+**L2 적격 기준**:
+
+| 구분 | 기준 |
+|------|------|
+| **L2 적격** | 파일 1~2개 + 단순 수정 + 동작검증(TEST) 불요 (문서·문구·오타·주석·설정값 등) |
+| **L2 부적격 → 풀 파이프라인** | 코드 로직 변경(동작검증 필요) / 파일 3개 이상 / 구조·스키마·인터페이스 변경 / 다중 영역 |
+
+> **핵심 가드**: L2 적격 = 파일 1~2개 + 단순 수정 + **동작검증(TEST) 불요**. 동작검증(TEST/TEST-SCENARIO/verify)이 필요한 작업은 L2 우회 금지 — 반드시 풀 파이프라인으로 처리한다.
+
 ---
 
 ## Pilot 비교 & 사용 사례
@@ -262,9 +285,10 @@ OPAL 에이전트는 **비서**와 **PM** 두 가지 역할을 수행한다.
 | `//opd` | Full Task Dev | 중~대 (멀티 모듈) | TASK → ANALYSIS → PLAN(+테스트 시나리오) → EXECUTE → TEST | + ANALYSIS |
 | `//opdw` | Wireframe UI | 소~중 (화면 단위) | TASK → WIREFRAME → EXECUTE | wireframe.md, UI 컴포넌트 |
 | `//opp` | 범용 Project | 제한 없음 | TASK → PLAN → EXECUTE | TASK, PLAN, DONE |
-| `//opsdd` | SDD 개발 | 중~대 (명세 복잡) | TASK → SPEC → VERIFY → REVIEW → DESIGN → EXECUTE-LOOP → DONE | SPEC, TEST-SCENARIOS, SPEC-PLAN, STATE |
+| `//opsdd` | SDD 개발 | 중~대 (명세 복잡) | TASK → SPEC → REVIEW → DESIGN → EXECUTE-LOOP → VERIFY → CLOSE | SPEC, TEST-SCENARIOS, SPEC-PLAN, STATE |
 | `//opwt` | 기획 산출물 | 제한 없음 | TASK → (ANALYSIS →) PLAN → EXECUTE → QA | PRD, TRD, IA, 정책서, WBS |
 | `//oppd` | 프로젝트 Dev | 대 (전체 라이프사이클) | PLAN(기획) → WBS → EXECUTE(코드) | 기획 산출물 전체 + 코드 |
+| `//opgc` | 품질 게이트 (GC) | 커밋 전 진단 | SCAN → CHECK → REPORT → CLOSE | GC-SECURITY/CONVENTION 보고서, DONE |
 
 ### 선택 가이드
 
@@ -278,7 +302,9 @@ OPAL 에이전트는 **비서**와 **PM** 두 가지 역할을 수행한다.
   └─ NO: 어떤 작업인가?
        ├─ 문서, 설정, 환경, 스크립트: //opp
        ├─ 기획 문서 (PRD, TRD, IA 등): //opwt
-       └─ 아이디어 → 기획 → 코드 전체: //oppd
+       ├─ 아이디어 → 기획 → 코드 전체: //oppd
+       ├─ 커밋 전 보안·컨벤션 진단: //opgc
+       └─ 프로젝트 지식 축적·질의: //opbr
 ```
 
 ---
@@ -454,6 +480,23 @@ PRD, TRD, 서비스 정책서, IA 등 **기획 문서를 작성하거나 최신�
             → DONE.md 생성 + 완료 보고
 ```
 
+#### RED-first 트랙
+
+코드 변경이 수반되는 작업에서 OPAL은 **RED→GREEN TDD** 순서를 적용한다.
+
+- **RED 단계**: 실패 테스트 코드를 작성·실행하여 실패(exit code≠0)를 증거로 기록. RED 증거 없이 구현(GREEN) 진입 금지.
+- **GREEN 단계**: 테스트를 통과하는 구현 진행.
+- **작성자≠구현자**: RED 테스트 코드 작성은 `opal-test-agent(mode: red)`, 구현은 `op-dev-execute`가 분리 담당.
+
+**하이브리드 자동분기** — PM이 변경 영역으로 판단:
+
+| 영역 | 트랙 |
+|------|------|
+| 비즈니스 로직, DB, API 계약, 인증, 버그 수정 | RED-first 강제 |
+| UI 화면, 탐색, 행위 불변 리팩터, 문서·설정 | 구현 후 검증 허용 |
+
+> 모호하면 RED-first가 기본(안전측). 어느 트랙이든 테스트 코드 산출물·TEST 단계 검증은 유지한다.
+
 #### Full Task 에스컬레이션
 
 PLAN 분석 결과 작업 규모가 크면 AI가 자동으로 제안한다.
@@ -530,7 +573,7 @@ Full Task(opd)로 전환할까요?
 
 **언제 쓰나**: "무엇을 만들지"를 먼저 엄밀하게 정의한 뒤 개발하고 싶을 때. 기능 명세(SPEC)를 SSOT로 삼아 테스트 시나리오 → 설계 → 구현까지 파이프라인을 관리한다.
 
-**파이프라인**: `TASK → SPEC → VERIFY → REVIEW → DESIGN → EXECUTE-LOOP → DONE`
+**파이프라인**: `TASK → SPEC → REVIEW → DESIGN → EXECUTE-LOOP → VERIFY → CLOSE`
 
 **산출물**:
 
@@ -594,6 +637,42 @@ tasks/{NNN}-{기능명}/
 **파이프라인**: `PLAN(기획 산출물) → WBS → EXECUTE(코드 구현)`
 
 > `docs/PROJECT.md`가 없으면 프로젝트 초기화(`opi`)를 자동 실행한 후 진행한다.
+
+---
+
+### opgc — 품질 게이트 (GC)
+
+**언제 쓰나**: 커밋 전 보안·컨벤션 진단이 필요할 때. 진단 전담(코드 수정 없음) — 이슈가 발견되면 CLOSE 단계에서 `//opds` 체인으로 수정을 안내한다.
+
+**파이프라인**: `SCAN → CHECK → REPORT → CLOSE`
+
+**호출 예**:
+
+```
+//opgc                         # 전체 진단 (staged 파일, 보안+컨벤션)
+//opgc --security              # 보안만
+//opgc --convention            # 컨벤션만
+//opgc --scope all             # 전체 범위 + 보안+컨벤션
+```
+
+**산출물**: `GC-SECURITY-{타임스탬프}.md`, `GC-CONVENTION-{타임스탬프}.md`, `DONE.md`
+
+---
+
+### opbr — 프로젝트 브레인
+
+**언제 쓰나**: 프로젝트의 WHY·HOW 지식을 마크다운 위키로 누적하고 질의할 때. code-scan(WHAT)·MEMORY(운영 기억)와 역할이 분리된다.
+
+**4가지 모드**:
+
+| 모드 | 명령 | 설명 |
+|------|------|------|
+| `init` | `//opbr init` | 브레인 위키 초기화 (프로젝트당 1회) |
+| `ingest` | `//opbr ingest --all` | 지식 누적 — 문서·코드를 위키로 흡수 |
+| `query` | `//opbr ask "질문"` | 위키 기반 질의 |
+| `lint` | `//opbr lint` | 위키 무결성 정비 |
+
+**저장 위치**: `.opal/brain/` (프로젝트 자산)
 
 ---
 
@@ -676,6 +755,28 @@ tasks/{NNN}-{기능명}/
 
 ---
 
+### html-mockup — HTML 화면 목업
+
+CDN 기반 정적 HTML 화면을 빠르게 생성한다. 태스크 컨텍스트를 자동으로 흡수하고 인터뷰를 통해 요건을 수집한다.
+
+```
+//mockup 로그인 화면 목업 만들어줘
+//html-mockup 주문 내역 페이지 정적 HTML로 빠르게 보여줘
+```
+
+---
+
+### system-architecture-html — 시스템 아키텍처 다이어그램
+
+다층 구조, 색상 코드, 빌드 우선순위 배지를 포함한 시스템 아키텍처 다이어그램을 HTML로 생성한다.
+
+```
+//html-sa 현재 마이크로서비스 구조 아키텍처 다이어그램으로 그려줘
+//system-architecture-html 신규 서비스 배포 구조 시각화
+```
+
+---
+
 ## Pilot 실행 모드 (3-way)
 
 OPAL Pilot은 **사용자 검토**와 **PM 자율** 사이의 균형을 작업별로 선택할 수 있는 3가지 실행 모드를 제공한다. 모드 플래그를 명시하지 않으면 기본 `semi-agentic`으로 동작한다.
@@ -728,7 +829,7 @@ PM은 PLAN.md의 각 Step에 명시된 **단계 + 영역** 조합을 보고 적�
 Global Layer (~/.opal/)          한 번 설치 → 모든 프로젝트에서 사용
 ┌─────────────────────────────────────────────────────────┐
 │  skills/        Pilot(오케스트레이터) + 단계 스킬        │
-│  agents/        서브에이전트 (전문 6 + 범용 5 + GC 2)    │
+│  agents/        서브에이전트 (전문 7 + 범용 4 + GC 2 = 13) │
 │  community-skills/ 사용자 fetch 시 채워짐 (skills.sh 카탈로그) │
 │  references/    레지스트리 + 모듈화된 하네스 (harness/)  │
 │  AGENT.md       AI 에이전트 코어                         │

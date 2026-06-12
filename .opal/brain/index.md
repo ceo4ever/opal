@@ -1,11 +1,15 @@
 # Project Brain Index
-> 갱신: 2026-06-11 22:59
+> 갱신: 2026-06-12 17:12
 
 ## 도메인
 (아직 등록된 페이지 없음)
 
 ## 엔티티
 - [[brain-tool]] — brain-tool #tool #knowledge
+- [[op-data-ddl-skill]] — op-data-ddl (DDL 단계 스킬) #skill #stage-skill #data-design #ddl #migration #dbml
+- [[op-data-dictionary-skill]] — op-data-dictionary (DICT 단계 스킬) #skill #stage-skill #data-design #dictionary #db
+- [[op-data-model-skill]] — op-data-model (MODEL 단계 스킬) #skill #stage-skill #data-design #modeling #erd #mermaid #dbml
+- [[skill-opal-pilot-data-design]] — opal-pilot-data-design (opdd) #pilot #orchestrator #data-design #db
 - [[state-tool]] — state-tool #tool #pipeline
 
 ## 개념
@@ -15,6 +19,8 @@
 - [[code-scan-mandatory-policy]] — code-scan 무조건화 규약 — 코드 작업 한정 강제 (010) #code-scan #pm #policy #dispatch
 - [[codex-platform-integration]] — Codex CLI OPAL 4번째 플랫폼 통합 #codex #platform #bootstrap #mcp #task
 - [[coding-principles-ssot]] — OPAL Coding Principles SSOT 신설 #framework #principles #ssot #task
+- [[dict-선행-model-ssot]] — DICT가 MODEL을 선행한다 — 사전이 속성명·타입 SSOT #architecture-decision #data-design #ssot #pipeline
+- [[erd-modeler-deprecation]] — erd-modeler deprecate — op-data-model/ddl로 분해, //erm 하위호환 #architecture-decision #deprecation #erd-modeler #migration
 - [[linux-install-script]] — Linux 설치 스크립트 신설 (단순 위임 전략) #install #linux #deploy #task
 - [[model-mapping-latest-tracking]] — OPAL 모델 매핑 최신화 + 최신 추종 전략 #model #mapping #gemini #codex #task
 - [[op-brain-ingest]] — op-brain-ingest — CLOSE 경량 ingest 워커 #knowledge #close #ingest #skill
@@ -40,8 +46,11 @@
 - [[opal-principles-constitution]] — OPAL Principles 헌법 신설 + 테스트 하네스 집행 강화 #principles #constitution #testing #framework #task
 - [[opal-project-definition]] — OPAL 프로젝트 정의 #project #overview #principle #component
 - [[opal-security-model]] — OPAL 보안 모델 #security #install #mcp #supply-chain #owasp
+- [[opdd-design-artifacts-path-pattern]] — opdd 설계 산출물 경로 패턴 — opwt 차용 + {설계} 변수 #architecture-decision #data-design #path #ssot #opwt
+- [[opsdd-pipeline-ssot]] — opsdd 파이프라인 정본 — SKILL.md SSOT (7단계) #opsdd #pipeline #ssot #workflow
 - [[opwt-v4-output-system]] — opwt v4 산출물 체계 재설계 (PRD 8섹션 + interview 통합) #opwt #planning #output #framework #task
 - [[page-type-dynamic-schema]] — 페이지 타입 동적화 — SCHEMA SSOT #architecture #brain #schema #dynamic-type
+- [[readme-ssot-principle]] — README는 SSOT를 따른다 — 문서·코드 불일치 시 SKILL.md가 정본 #readme #ssot #doc-code-mismatch #documentation
 - [[skill-op-task-qa]] — op-task-qa — 범용 문서 QA 검증 기준 #skill #qa #document
 - [[skill-opal-agent-creator]] — opal-agent-creator — OPAL 에이전트 생성 파이프라인 #skill #agent #creator
 - [[skill-opal-brain]] — opal-brain — 프로젝트 브레인 지식 위키 #skill #brain #knowledge #wiki
@@ -60,11 +69,12 @@
 - [[skill-opal-start]] — opal-start — OPAL 재진입 가이드 #skill #start #onboarding #guide
 - [[test-scenario-pipeline-redesign]] — 테스트 시나리오 파이프라인 재설계 (2차원 매트릭스 + self-confirming 4분리) #testing #pipeline #framework #flow #task
 - [[three-layer-memory-architecture]] — 3계층 기억 아키텍처 — MEMORY / brain / tasks #architecture #memory #brain #long-term #tasks
+- [[uncommitted-component-readme-policy]] — 미커밋 컴포넌트는 공개 README에 미노출 #readme #policy #git #documentation #ppt-builder
 - [[wiki-intelligence-decisions-016]] — opal-wiki-pilot 지능화 결정 — M-4/M-5 (016) #architecture #naming #git #brain #policy
 - [[wtm-agent-cmux-integration]] — wtm-agent OPAL 표준화 + cmux-tool 신설 #tool #agent #wtm #cmux #task
 
 ## 흐름
-(아직 등록된 페이지 없음)
+- [[opdd-pipeline-flow]] — opdd 파이프라인 흐름 — DB 설계 표준 3층 파이프라인 #pipeline #data-design #flow #opdd #db
 
 ## 합성
 - [[opal-first-use-guide]] — OPAL 첫 사용 가이드 — 설치부터 파이프라인까지 #guide #onboarding #first-use
