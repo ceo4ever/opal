@@ -49,3 +49,7 @@
 - 신규: [[pages/entity/skill-opal-pilot-data-design.md]], [[pages/entity/op-data-dictionary-skill.md]], [[pages/entity/op-data-model-skill.md]], [[pages/entity/op-data-ddl-skill.md]], [[pages/concept/dict-선행-model-ssot.md]], [[pages/concept/opdd-design-artifacts-path-pattern.md]], [[pages/concept/erd-modeler-deprecation.md]], [[pages/flow/opdd-pipeline-flow.md]]
 - 출처: task:019
 
+## [2026-06-14] ingest | CLOSE ingest — 태스크 020 opi 아키텍처 깊이 강화 (WHERE→HOW): concept 2건 누적
+- 신규: [[pages/concept/opi-impl-injectable-depth-standard.md]], [[pages/concept/opi-v42-architecture-decisions.md]]
+- 출처: task:020
+

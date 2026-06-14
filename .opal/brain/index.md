@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-06-12 17:12
+> 갱신: 2026-06-14 15:29
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -47,6 +47,7 @@
 - [[opal-project-definition]] — OPAL 프로젝트 정의 #project #overview #principle #component
 - [[opal-security-model]] — OPAL 보안 모델 #security #install #mcp #supply-chain #owasp
 - [[opdd-design-artifacts-path-pattern]] — opdd 설계 산출물 경로 패턴 — opwt 차용 + {설계} 변수 #architecture-decision #data-design #path #ssot #opwt
+- [[opi-impl-injectable-depth-standard]] — opi 문서 깊이 기준 — "구현 시 주입 가능 수준" #opi #opal-project-init #docs-quality #architecture-decision
 - [[opsdd-pipeline-ssot]] — opsdd 파이프라인 정본 — SKILL.md SSOT (7단계) #opsdd #pipeline #ssot #workflow
 - [[opwt-v4-output-system]] — opwt v4 산출물 체계 재설계 (PRD 8섹션 + interview 통합) #opwt #planning #output #framework #task
 - [[page-type-dynamic-schema]] — 페이지 타입 동적화 — SCHEMA SSOT #architecture #brain #schema #dynamic-type
