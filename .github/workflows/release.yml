@@ -25,7 +25,8 @@ jobs:
         run: |
           TAG="${GITHUB_REF_NAME}"
           ARCHIVE="opal-${TAG}.tar.gz"
-          tar --exclude='.git' --exclude='tasks' -czf "${ARCHIVE}" .
+          # self-inclusion 방지: 생성 중인 tarball/sha256sums를 압축 대상에서 제외 (file changed as we read it → exit 1 회피)
+          tar --exclude='.git' --exclude='tasks' --exclude="./${ARCHIVE}" --exclude='./sha256sums.txt' -czf "${ARCHIVE}" .
           sha256sum "${ARCHIVE}" > sha256sums.txt
           echo "ARCHIVE=${ARCHIVE}" >> "${GITHUB_ENV}"
 
