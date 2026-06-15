@@ -96,6 +96,18 @@ llm-wiki 사상을 융합한 프로젝트 지식 위키 — 프로젝트의 WHY�
 
 > `//erm` (erd-modeler) alias는 `op-data-model` 단독 호출로 하위호환됩니다. 신규 데이터 설계 작업은 `//opdd`를 사용하세요.
 
+## 주요 컴포넌트 (OPAL Console)
+
+로컬 OPAL 프로젝트를 한 웹 화면에서 조망하는 읽기 전용 관리 대시보드 (2026-06 신설, 태스크 021). 상세 구조: `docs/ARCHITECTURE.md §OPAL Console`.
+
+| 컴포넌트 | 유형 | 설명 |
+|----------|------|------|
+| `dashboard/frontend` | FE 앱 | React+TS+Vite+shadcn/ui — 5개 화면(대시보드/프로젝트/태스크 칸반/메모리/환경) |
+| `dashboard/backend` | BE 데몬 | FastAPI — `.opal/AGENT.md` 마커 스캐너 + read-only 도구 어댑터 + 마크다운 파서 (127.0.0.1:7823) |
+| `opal-cli console` | CLI | 데몬 기동/관리 서브커맨드 (start/stop/status/open) |
+
+> 소스는 `dashboard/`, 배포는 install 경유 `~/.opal/dashboard-server/`. 읽기 전용(쓰기/편집·브레인 화면은 2차). 시그니처 3색은 `:root` 전역 CSS 변수로 교체 용이.
+
 ## 프로젝트 구성
 
 > 프로젝트의 기술적 요소를 영역별로 정의한다. opgc SCAN/디스패치, PM 컨텍스트 주입 시 이 표를 기반으로 영역 매칭과 전문 에이전트 선정이 이루어진다. 부재 시 오케스트레이터는 단일 요소 기본값(프로젝트 전체 × 체커)으로 폴백한다.
@@ -103,6 +115,8 @@ llm-wiki 사상을 융합한 프로젝트 지식 위키 — 프로젝트의 WHY�
 | 요소 | 경로 | 기술 스택 | 전문 에이전트 |
 |------|------|-----------|--------------|
 | Framework | `opal/`, `skills/`, `agents/` | Markdown, YAML, Bash, Node.js | opal-task-agent (범용) |
+| Console FE | `dashboard/frontend/` | React, TypeScript, Vite, Tailwind, shadcn/ui | opal-fe-agent |
+| Console BE | `dashboard/backend/` | Python, FastAPI, uvicorn | opal-be-agent |
 
 ## 프로젝트 문서
 
@@ -122,3 +136,4 @@ llm-wiki 사상을 융합한 프로젝트 지식 위키 — 프로젝트의 WHY�
 | 날짜 | 변경 내용 |
 |------|----------|
 | 2026-06-12 | Data Design 파이프라인 섹션 추가 — opal-pilot-data-design(opdd), op-data-* 3종, opal-db-agent (Task 019) |
+| 2026-06-15 | OPAL Console 섹션 추가 — dashboard/frontend(React+shadcn)·backend(FastAPI)·opal-cli console + 프로젝트 구성 Console FE/BE 영역 (Task 021) |

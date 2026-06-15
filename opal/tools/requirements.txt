@@ -26,3 +26,6 @@ PyYAML>=6.0.0
 # --- Web Testing ---
 # 설치 후 별도 초기화 필요: ~/.opal/venv/bin/playwright install
 playwright>=1.40.0
+
+# --- OPAL Console Dashboard ---
+fastapi[standard]>=0.110.0

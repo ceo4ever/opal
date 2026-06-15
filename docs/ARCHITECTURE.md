@@ -215,6 +215,33 @@ opal/core/mcps/*    ──── install ─→  claude mcp add --scope user (Cl
 
 **source vs runtime 구분**: `~/.opal/agents/`는 OPAL 표준 형식의 source 캐시이며 LLM 이 직접 읽지 않는다. 런타임에 PM 디스패치가 `Task(subagent_type=…)`로 호출하면 각 플랫폼은 **자기 어댑터 디렉토리**(`~/.claude/agents/` 등)에서 매칭한다. `~/.opal/agents/` 는 install/update 시 어댑터 재생성을 위한 단일 진실 원본 역할을 한다.
 
+## OPAL Console (로컬 프로젝트 관리 대시보드)
+
+로컬에서 OPAL로 작업하는 모든 프로젝트를 한 웹 화면에서 조망하는 **읽기 전용 대시보드**(태스크 021 신설). 데이터 SSOT를 새로 만들지 않고, OPAL 도구의 read-only 커맨드 + 마크다운 파서로 각 프로젝트 데이터를 수집·렌더한다.
+
+```
+┌─ Web UI (React + shadcn/ui, 5개 화면) ──────────────────┐
+│  대시보드 · 프로젝트 · 태스크(칸반) · 메모리 · 환경(doctor)  │
+└───────────────┬──────────────────────────────────────────┘
+                │ HTTP (127.0.0.1:7823)
+┌───────────────▼──────────────────────────────────────────┐
+│  FastAPI 데몬 (~/.opal/dashboard-server/backend)          │
+│  • 프로젝트 스캐너 (.opal/AGENT.md 마커 디스크 스캔)        │
+│  • read-only 어댑터: state-tool/code-scan/skill-registry/doctor │
+│  • 마크다운 파서: MEMORY.md·memory/*·PROJECT/AGENT.md      │
+│  • TTL 캐시(mtime 무효화) · 쓰기 커맨드 미호출(읽기 전용)   │
+└───────────────────────────────────────────────────────────┘
+```
+
+| 항목 | 값 |
+|------|-----|
+| 소스 | `{프로젝트}/dashboard/` (frontend: React+TS+Vite+shadcn / backend: FastAPI) |
+| 배포 | `~/.opal/dashboard-server/` (install이 FE 빌드+BE 복사, venv는 `~/.opal/.venv` 공유) |
+| 기동 | `opal-cli console {start\|stop\|status\|open}` (127.0.0.1:7823) |
+| 프로젝트 식별 | `.opal/AGENT.md` 마커 디스크 스캔 (`~/.opal/console.config.json` scan_roots/depth/exclude) |
+| 원칙 | 읽기 전용(쓰기/편집은 2차) · 데이터 SSOT는 각 프로젝트 파일 · 데몬은 도구 오케스트레이터 |
+| 디자인 토큰 | 시그니처 3색(`--brand-primary/secondary/tertiary`)을 `:root` 1곳 전역 CSS 변수화 (교체 용이) |
+
 ## 외부 의존 서비스
 
 OPAL이 동작·배포 시 의존하는 외부 자원이다. 신규/변경 시 이 표를 SSOT로 사용하고, 설치 스크립트와 PROJECT.md "프로젝트 문서" 테이블의 정합성을 유지한다.
@@ -253,7 +280,7 @@ OPAL이 동작·배포 시 의존하는 외부 자원이다. 신규/변경 시 �
 | 채널 | 단계 | 상태 | 비고 |
 |------|------|------|------|
 | GitHub Releases | 1차 | **현행** | 태그 기반 tarball + sha256sums.txt + `actions/attest-build-provenance@v2` |
-| `opal-cli` CLI | 1차 | **현행** | `install`/`update`/`doctor`/`uninstall`/`mcp` 단일 진입점 (`~/.opal/bin/opal-cli`) |
+| `opal-cli` CLI | 1차 | **현행** | `install`/`update`/`doctor`/`uninstall`/`mcp`/`console` 단일 진입점 (`~/.opal/bin/opal-cli`) |
 | One-liner installer | 1차 | **현행** | `curl \| bash`(mac/linux) / `iex (irm)`(Windows) 진입점 (`scripts/install.sh`, `scripts/install.ps1`) |
 | Homebrew tap | 2차 | 예정 | macOS 사용자 대상 `brew install opal-cli` (명칭은 별도 결정) |
 | npm 패키지 | 후속 | 예정 | cross-platform 통합 |
@@ -313,6 +340,9 @@ opal/                                    ← 이 저장소
 │   │   ├── opal-sdd-action-agent/       SDD 액션 에이전트
 │   │   └── opal-wtm-agent/              웹→마크다운 워커 (Phase 1 WebFetch → Phase 2 cmux → Phase 3 playwright-tool CLI)
 │   └── templates/                       프로젝트 에이전트 템플릿
+├── dashboard/                           OPAL Console (로컬 프로젝트 관리 대시보드 — 태스크 021)
+│   ├── frontend/                        React + TS + Vite + shadcn/ui (5개 화면)
+│   └── backend/                         FastAPI 데몬 (스캐너 + read-only 어댑터 + 파서)
 ├── cursor-rules/                        Cursor 프로젝트 규칙 템플릿
 ├── scripts/                             설치 스크립트 (install-mac.sh)
 ├── tasks/                               태스크 산출물

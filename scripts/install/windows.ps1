@@ -86,6 +86,8 @@
         v1.8.0 2026-05-24        Codex CLI 통합 — Register-Bootstrapper 에 ~/.codex/AGENTS.md 추가 + Install-OpalMcp 에 'codex' 케이스 + Install-PlatformAgents 에 codex(TOML 직렬화) 추가 (009)
         v1.9.0 2026-06-02 20:16  모델 매핑 최신화 — ModelMap gemini(gemini-3.1-flash-lite/gemini-flash-latest/gemini-pro-latest) + codex(gpt-5.4-mini/gpt-5.5/gpt-5.3-codex) + toml 기본값 gpt-5.5 (install-mac.sh 동기, 011)
         v1.10.0 2026-06-07       OPAL 헌법(PRINCIPLES.md) 배포 추가 — opal/core/PRINCIPLES.md → ~/.opal/PRINCIPLES.md (Strip 변경이력, always-on) (012)
+        v1.11.0 2026-06-15       OPAL Console 설치 추가 — Install-Dashboard 신설 (FE npm.cmd 빌드·BE 복사·dashboard-server 배포) + cleanDirs에 dashboard-server 추가 (021)
+        v1.12.0 2026-06-15       메뉴 [5] OPAL Console 자동 기동 추가 — Start-OpalConsole 신설 (기존 프로세스 Stop-OpalConsole + Start-Process uvicorn 백그라운드 + /health 확인) (021 후속)
 #>
 
 #Requires -Version 5.1
@@ -422,7 +424,7 @@ function Install-OpalCore {
     # ── 클린: framework 디렉토리만 (사용자 데이터 보존) ──
     Write-OpalInfo '기존 프레임워크 파일 정리 (사용자 데이터 보존)...'
     # 사용자 데이터 보존: ~/.opal/community-skills/는 install이 절대 건드리지 않음 (TASK 142 D-4)
-    $cleanDirs = @('skills', 'agents', 'references', 'templates', 'tools')
+    $cleanDirs = @('skills', 'agents', 'references', 'templates', 'tools', 'dashboard-server')
     foreach ($d in $cleanDirs) {
         $p = Join-Path $OpalHome $d
         if (Test-Path $p) {
@@ -951,6 +953,214 @@ function Install-OpalVenv {
     }
 }
 
+# ─── Install-Dashboard (install-mac.sh install_dashboard 이식) ─────────────
+
+function Install-Dashboard {
+    <#
+    .SYNOPSIS
+        OPAL Console 대시보드를 ~/.opal/dashboard-server/ 에 배포한다.
+        install-mac.sh install_dashboard() 와 의미상 동등.
+        - dashboard/frontend: npm.cmd install && npm.cmd run build → dist/ 복사
+        - dashboard/backend:  BE를 dashboard/backend/ 패키지 구조로 복사
+          (dashboard/__init__.py 생성 → 'from dashboard.backend...' 절대 import 동작)
+        Node 미설치 또는 dashboard/ 소스 없으면 graceful skip.
+    #>
+    param([Parameter(Mandatory)][string]$RepoRoot)
+
+    $src = [IO.Path]::Combine($RepoRoot, 'dashboard')
+    $dst = Join-Path $OpalHome 'dashboard-server'
+
+    # dashboard/ 소스가 없으면 graceful skip
+    if (-not (Test-Path $src)) {
+        Write-OpalInfo 'dashboard/ 소스 미존재 — OPAL Console 설치 스킵'
+        return
+    }
+
+    Write-Host ''
+    Write-OpalInfo 'OPAL Console 설치 중...'
+
+    # ── FE 빌드 (Node 필요) ──
+    $node = Find-Node
+    $frontendSrc = [IO.Path]::Combine($src, 'frontend')
+    if ($node -and (Test-Path $frontendSrc)) {
+        Write-OpalInfo "Node 발견 ($node) — FE 빌드 시작..."
+        # npm.cmd 사용 (Windows .cmd shim — CVE-2024-27980 대응, v1.5.0과 동일 패턴)
+        $npmCmd = 'npm.cmd'
+        try {
+            $ErrorActionPreference = 'Continue'
+            Push-Location $frontendSrc
+            & $npmCmd install --silent 2>&1 | Out-Null
+            & $npmCmd run build 2>&1 | Out-Null
+            Pop-Location
+            $ErrorActionPreference = 'Stop'
+
+            # dist/ → ~/.opal/dashboard-server/dist/
+            $distSrc = [IO.Path]::Combine($frontendSrc, 'dist')
+            $distDst = Join-Path $dst 'dist'
+            if (Test-Path $distSrc) {
+                if (-not (Test-Path $distDst)) {
+                    New-Item -ItemType Directory -Path $distDst -Force | Out-Null
+                }
+                Copy-Item -Path "$distSrc\*" -Destination $distDst -Recurse -Force
+                Write-OpalOk "Console FE dist → $distDst"
+            } else {
+                Write-OpalWarn 'FE 빌드 후 dist/ 없음 — FE 배포 스킵'
+            }
+        } catch {
+            $ErrorActionPreference = 'Stop'
+            Write-OpalWarn "FE 빌드 실패 ($_) — Console FE 배포 스킵"
+        }
+    } else {
+        Write-OpalWarn 'Node 미설치 또는 dashboard/frontend 없음 — FE 빌드 스킵 (node 설치 후 재실행 권장)'
+    }
+
+    # ── BE 복사 (패키지 구조 유지: dashboard/backend/) ──
+    # main.py의 'from dashboard.backend.routers import ...' 절대 import가 동작하려면
+    # --app-dir ~/.opal/dashboard-server 기준으로 dashboard/ 패키지가 존재해야 함.
+    # → BE를 dashboard/backend/로 복사하고 dashboard/__init__.py 생성.
+    $backendSrc = [IO.Path]::Combine($src, 'backend')
+    $backendDst = Join-Path $dst 'dashboard\backend'
+    if (Test-Path $backendSrc) {
+        if (-not (Test-Path $backendDst)) {
+            New-Item -ItemType Directory -Path $backendDst -Force | Out-Null
+        }
+        Copy-Item -Path "$backendSrc\*" -Destination $backendDst -Recurse -Force
+        Write-OpalOk "Console BE → $backendDst"
+
+        # dashboard 패키지 루트 __init__.py 생성 (없으면)
+        $pkgInit = Join-Path $dst 'dashboard\__init__.py'
+        if (-not (Test-Path $pkgInit)) {
+            New-Item -ItemType File -Path $pkgInit -Force | Out-Null
+        }
+        Write-OpalOk "Console BE 패키지 구조 생성 → $pkgInit"
+    } else {
+        Write-OpalWarn 'dashboard/backend 없음 — BE 배포 스킵'
+    }
+
+    Write-Host ''
+    Write-OpalOk "OPAL Console 설치 완료 → $dst"
+    Write-OpalInfo '기동 (Git Bash): opal-cli console start'
+}
+
+# ─── Start-OpalConsole (install-mac.sh console_autostart 이식) ─────────────
+
+function Stop-OpalConsole {
+    <#
+    .SYNOPSIS
+        실행 중인 OPAL Console 데몬(uvicorn dashboard.backend.main:app)을 종료한다.
+    .NOTES
+        macOS: pkill -f "dashboard.backend.main:app" 이식.
+        Windows: WMI 또는 Get-Process + CommandLine 필터로 해당 프로세스를 종료.
+    #>
+    try {
+        $procs = Get-CimInstance Win32_Process -Filter "Name = 'python.exe' OR Name = 'uvicorn.exe'" -ErrorAction SilentlyContinue
+        $killed = 0
+        foreach ($proc in $procs) {
+            if ($proc.CommandLine -and $proc.CommandLine -match 'dashboard\.backend\.main:app') {
+                Stop-Process -Id $proc.ProcessId -Force -ErrorAction SilentlyContinue
+                $killed++
+            }
+        }
+        if ($killed -gt 0) {
+            Write-OpalOk "OPAL Console 데몬 ${killed}개 종료됨."
+        }
+    } catch {
+        Write-OpalWarn "프로세스 종료 중 오류 (무시): $_"
+    }
+}
+
+function Start-OpalConsole {
+    <#
+    .SYNOPSIS
+        Install-Dashboard 후 OPAL Console 데몬을 자동 기동한다.
+        기존 프로세스를 종료(Stop-OpalConsole)하고 Start-Process 로 백그라운드 기동.
+        기동 후 /health 를 최대 10초 폴링하여 확인하고 접속 안내를 출력한다.
+    .NOTES
+        macOS: scripts/install-mac.sh console_autostart() 와 의미상 동등.
+        Windows 플랫폼 분기 격리(CONVENTIONS) — Start-Process / WMI 는 이 함수에만 사용.
+    #>
+
+    $venvDir       = Join-Path $OpalHome '.venv'
+    $uvicorn       = [IO.Path]::Combine($venvDir, 'Scripts', 'uvicorn.exe')
+    $dashboardServer = Join-Path $OpalHome 'dashboard-server'
+    $dashboardPkg  = [IO.Path]::Combine($dashboardServer, 'dashboard', 'backend')
+    $opalCliBin    = Join-Path $OpalHome 'bin\opal-cli.cmd'
+    $host          = '127.0.0.1'
+    $port          = '7823'
+    $healthUrl     = "http://${host}:${port}/health"
+    $logFile       = [IO.Path]::Combine($env:TEMP, 'opal-console.log')
+
+    Write-Host ''
+    Write-OpalInfo 'OPAL Console 자동 재시작 중...'
+
+    # ── 전제 점검 ──
+    if (-not (Test-Path $dashboardPkg)) {
+        Write-OpalWarn "dashboard-server/dashboard/backend 없음 — 서버 기동 스킵"
+        Write-OpalInfo 'Install-Dashboard 가 정상 완료되었는지 확인하세요.'
+        return
+    }
+
+    if (-not (Test-Path $uvicorn)) {
+        Write-OpalWarn "uvicorn 미설치: $uvicorn"
+        Write-OpalInfo 'Python venv를 먼저 설치하세요 (Install-OpalVenv).'
+        return
+    }
+
+    # ── 기존 데몬 종료 ──
+    Stop-OpalConsole
+    # 종료 대기 (최대 3초)
+    $waited = 0
+    while ($waited -lt 3) {
+        try {
+            $resp = Invoke-WebRequest -Uri $healthUrl -TimeoutSec 1 -ErrorAction Stop
+            Start-Sleep -Seconds 1
+            $waited++
+        } catch { break }
+    }
+
+    # ── 신규 기동 ──
+    $startArgs = @(
+        '--app-dir', $dashboardServer,
+        'dashboard.backend.main:app',
+        '--host', $host,
+        '--port', $port
+    )
+    $proc = Start-Process -FilePath $uvicorn `
+        -ArgumentList $startArgs `
+        -RedirectStandardOutput $logFile `
+        -RedirectStandardError  $logFile `
+        -WindowStyle Hidden `
+        -PassThru `
+        -ErrorAction SilentlyContinue
+    if ($proc) {
+        Write-OpalOk "OPAL Console 기동됨 (PID: $($proc.Id), 로그: $logFile)"
+    }
+
+    # ── /health 확인 (최대 10초 대기) ──
+    $ok = $false
+    $healthBody = ''
+    for ($i = 1; $i -le 10; $i++) {
+        Start-Sleep -Seconds 1
+        try {
+            $resp = Invoke-WebRequest -Uri $healthUrl -TimeoutSec 2 -ErrorAction Stop
+            $ok = $true
+            $healthBody = $resp.Content
+            break
+        } catch {}
+    }
+
+    Write-Host ''
+    if ($ok) {
+        Write-OpalOk 'OPAL Console 기동 완료'
+        Write-Host "  접속: http://${host}:${port}" -ForegroundColor Cyan
+        Write-Host "  /health: $healthBody" -ForegroundColor Cyan
+    } else {
+        Write-OpalWarn "OPAL Console /health 응답 없음 (10초 초과)"
+        Write-OpalInfo "로그 확인: Get-Content '$logFile'"
+        Write-OpalInfo '수동 기동 (Git Bash): opal-cli console start'
+    }
+}
+
 # ─── Install-OpalMcp (install-mac.sh install_mcp 이식) ──────────────────────
 
 function Convert-McpConfigForWindows {
@@ -1416,6 +1626,8 @@ function Invoke-OpalWindowsInstall {
     Register-EnvPath
     Register-Bootstrapper  -RepoRoot $repoRoot
     Install-OpalVenv       -RepoRoot $repoRoot
+    Install-Dashboard      -RepoRoot $repoRoot
+    Start-OpalConsole
     Install-OpalMcp        -RepoRoot $repoRoot
     Install-PlatformAgents
 

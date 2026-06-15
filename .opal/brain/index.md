@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-06-14 15:29
+> 갱신: 2026-06-15 18:16
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -9,6 +9,7 @@
 - [[op-data-ddl-skill]] — op-data-ddl (DDL 단계 스킬) #skill #stage-skill #data-design #ddl #migration #dbml
 - [[op-data-dictionary-skill]] — op-data-dictionary (DICT 단계 스킬) #skill #stage-skill #data-design #dictionary #db
 - [[op-data-model-skill]] — op-data-model (MODEL 단계 스킬) #skill #stage-skill #data-design #modeling #erd #mermaid #dbml
+- [[opal-console]] — OPAL Console #tool #dashboard #frontend #backend
 - [[skill-opal-pilot-data-design]] — opal-pilot-data-design (opdd) #pilot #orchestrator #data-design #db
 - [[state-tool]] — state-tool #tool #pipeline
 
@@ -19,6 +20,8 @@
 - [[code-scan-mandatory-policy]] — code-scan 무조건화 규약 — 코드 작업 한정 강제 (010) #code-scan #pm #policy #dispatch
 - [[codex-platform-integration]] — Codex CLI OPAL 4번째 플랫폼 통합 #codex #platform #bootstrap #mcp #task
 - [[coding-principles-ssot]] — OPAL Coding Principles SSOT 신설 #framework #principles #ssot #task
+- [[daemon-as-tool-orchestrator]] — 데몬은 도구 오케스트레이터 — 데이터 SSOT는 프로젝트 파일 #architecture #dashboard #ssot
+- [[deploy-artifact-verification-lesson]] — 동작검증은 배포 산출물+실 브라우저 기준으로 수행해야 한다 #verification #qa #deployment #lesson
 - [[dict-선행-model-ssot]] — DICT가 MODEL을 선행한다 — 사전이 속성명·타입 SSOT #architecture-decision #data-design #ssot #pipeline
 - [[erd-modeler-deprecation]] — erd-modeler deprecate — op-data-model/ddl로 분해, //erm 하위호환 #architecture-decision #deprecation #erd-modeler #migration
 - [[linux-install-script]] — Linux 설치 스크립트 신설 (단순 위임 전략) #install #linux #deploy #task
@@ -51,6 +54,7 @@
 - [[opsdd-pipeline-ssot]] — opsdd 파이프라인 정본 — SKILL.md SSOT (7단계) #opsdd #pipeline #ssot #workflow
 - [[opwt-v4-output-system]] — opwt v4 산출물 체계 재설계 (PRD 8섹션 + interview 통합) #opwt #planning #output #framework #task
 - [[page-type-dynamic-schema]] — 페이지 타입 동적화 — SCHEMA SSOT #architecture #brain #schema #dynamic-type
+- [[project-id-query-param-pattern]] — 절대경로 프로젝트 식별자를 query param으로 전달 #api #routing #url-design
 - [[readme-ssot-principle]] — README는 SSOT를 따른다 — 문서·코드 불일치 시 SKILL.md가 정본 #readme #ssot #doc-code-mismatch #documentation
 - [[skill-op-task-qa]] — op-task-qa — 범용 문서 QA 검증 기준 #skill #qa #document
 - [[skill-opal-agent-creator]] — opal-agent-creator — OPAL 에이전트 생성 파이프라인 #skill #agent #creator

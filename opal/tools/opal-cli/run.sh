@@ -7,10 +7,11 @@
 #   opal-cli --version
 #   opal-cli --help
 #
-# Subcommands: install | update | doctor | uninstall | mcp
+# Subcommands: install | update | doctor | uninstall | mcp | console
 #
 # 변경이력:
 #   v1.0 2026-05-08 11:00 초기 구현 — install/update/doctor/uninstall/mcp 디스패처 (139)
+#   v1.1 2026-06-15 console 서브커맨드 추가 — OPAL Console 대시보드 start/stop/status/open (021)
 #   v1.0.1 2026-05-09 14:15 KST: BASH_SOURCE symlink chain 해석 보강 — ~/.opal/bin/opal-cli symlink 호출 시 lib/ 검색 실패 fix (139 추가작업)
 #   v1.0.2 2026-05-09 17:45 KST: 색상 변수 $'...' 패턴 적용 — cat heredoc usage()/lib에서 \033[1m 리터럴 노출 fix (139 추가작업)
 #   v1.0.3 2026-05-09 22:35 KST: --version이 ~/.opal/VERSION(framework 버전) 표시. OPAL_CLI_VERSION 하드코딩 폐기 — CLI 진입점 자체 버전과 framework 버전 통일 (139 추가작업)
@@ -64,6 +65,7 @@ ${BOLD}서브커맨드:${NC}
   doctor                환경 진단 (의존성·경로·MCP·부트스트래퍼)
   uninstall             OPAL 제거 (~/.opal + 부트스트래퍼 마커)
   mcp [add|list|remove] [name]  MCP 관리
+  console [start|stop|status|open]  OPAL Console 대시보드 관리 (포트 7823)
 
 ${BOLD}옵션:${NC}
   --version             버전 출력
@@ -77,6 +79,9 @@ ${BOLD}예시:${NC}
   opal-cli uninstall
   opal-cli mcp list
   opal-cli mcp add context7
+  opal-cli console start
+  opal-cli console status
+  opal-cli console open
 
 ${BOLD}설치 경로:${NC}
   ~/.opal/bin/opal-cli  →  ~/.opal/tools/opal-cli/run.sh (symlink)
@@ -106,7 +111,7 @@ dispatch() {
             usage
             exit 0
             ;;
-        install|update|doctor|uninstall|mcp)
+        install|update|doctor|uninstall|mcp|console)
             local lib_file="$LIB_DIR/${subcommand}.sh"
             if [[ ! -f "$lib_file" ]]; then
                 error "lib/${subcommand}.sh 파일을 찾을 수 없습니다: $lib_file"

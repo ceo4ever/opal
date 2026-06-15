@@ -53,3 +53,7 @@
 - 신규: [[pages/concept/opi-impl-injectable-depth-standard.md]], [[pages/concept/opi-v42-architecture-decisions.md]]
 - 출처: task:020
 
+## [2026-06-15] ingest | CLOSE ingest — 태스크 021 OPAL Console
+- 신규: [[pages/entity/opal-console.md]], [[pages/concept/daemon-as-tool-orchestrator.md]], [[pages/concept/project-id-query-param-pattern.md]], [[pages/concept/deploy-artifact-verification-lesson.md]]
+- 출처: task:021
+

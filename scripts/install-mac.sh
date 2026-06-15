@@ -26,6 +26,8 @@
 #   v2.7 2026-06-02 20:16 KST: 모델 매핑 최신화 — emit_platform_agent_adapter gemini(gemini-3.1-flash-lite/gemini-flash-latest/gemini-pro-latest) + codex(gpt-5.4-mini/gpt-5.5/gpt-5.3-codex) dict + codex_model_map + 기본값 gpt-5.5 (011)
 #   v2.7 2026-06-02 20:16 KST: 모델 매핑 최신화 — Gemini 부동 별칭 전환 + Codex 최신 ID 갱신 (011)
 #   v2.8 2026-06-07: OPAL 헌법(PRINCIPLES.md) 배포 추가 — strip_deploy_md로 opal/core/PRINCIPLES.md → ~/.opal/PRINCIPLES.md (always-on) (012)
+#   v2.9 2026-06-15: OPAL Console 설치 추가 — install_dashboard() 신설 (FE npm 빌드·BE 복사·dashboard-server 배포) + clean_dirs에 dashboard-server 추가 (021)
+#   v3.0 2026-06-15: 메뉴 [5] OPAL Console 추가 — install_dashboard 단독 + 자동 재시작(stop→start) + /health 확인 (021 후속)
 #
 
 set -euo pipefail
@@ -120,13 +122,14 @@ show_menu() {
     echo ""
     echo -e "${BOLD}설치 대상을 선택하세요:${NC}"
     echo ""
-    echo "  [1] OPAL 설치      (skills + agents + 부트스트래퍼 → ~/.opal/)"
+    echo "  [1] OPAL 설치      (skills + agents + 부트스트래퍼 + OPAL Console → ~/.opal/, 서버 자동 기동)"
     echo "  [2] MCP 서버 설정   (MCP 설정 → claude, cursor, gemini, antigravity, codex)"
     echo "  [3] 전체 설치       (OPAL + MCP 서버)"
     echo "  [4] Python 패키지   (requirements.txt → ~/.opal/.venv/ 업데이트)"
+    echo "  [5] OPAL Console   (dashboard 빌드+배포 → ~/.opal/dashboard-server/ + 서버 자동 기동)"
     echo "  [0] 종료"
     echo ""
-    read -rp "선택 (0-4): " MENU_CHOICE
+    read -rp "선택 (0-5): " MENU_CHOICE
 }
 
 # ─── Install Helpers ─────────────────────────────────────
@@ -863,7 +866,7 @@ install_opal() {
     # ── 프레임워크 디렉토리 클린 삭제 (사용자 데이터 보존) ──
     info "기존 프레임워크 파일 정리 (사용자 데이터 보존)..."
     # 사용자 데이터 보존: ~/.opal/community-skills/는 install이 절대 건드리지 않음 (TASK 142 D-4)
-    local clean_dirs=("skills" "agents" "references" "templates" "tools")
+    local clean_dirs=("skills" "agents" "references" "templates" "tools" "dashboard-server")
     for dir in "${clean_dirs[@]}"; do
         if [[ -d "$opal_home/$dir" ]]; then
             rm -rf "$opal_home/$dir"
@@ -1058,6 +1061,10 @@ install_opal() {
     # ── opal-cli bin symlink + PATH 등록 ──
     install_opal_bin
 
+    # ── OPAL Console 대시보드 배포 + 서버 자동 기동 ──
+    install_dashboard
+    console_autostart
+
     # ── 설치 버전 기록 (~/.opal/VERSION) ──
     # 우선순위: $OPAL_VERSION (one-liner installer 경로) → git describe (개발자 git clone 경로) → "main" 폴백
     # opal-cli update가 이 파일을 읽어 리모트 latest tag와 비교, 동일하면 갱신 스킵.
@@ -1152,6 +1159,139 @@ install_opal_references() {
     # 배포된 모든 .md 파일에서 변경이력 섹션 제거
     strip_deploy_md_recursive "$ref_dst"
     success "참조 레지스트리 → $ref_dst/"
+}
+
+# ─── OPAL Console Dashboard Installer ───────────────────
+
+install_dashboard() {
+    local src="$FRAMEWORK_ROOT/dashboard"
+    local dst="$USER_HOME/.opal/dashboard-server"
+
+    # dashboard/ 소스가 없으면 graceful skip (미빌드 환경 대응)
+    if [[ ! -d "$src" ]]; then
+        info "dashboard/ 소스 미존재 — OPAL Console 설치 스킵"
+        return
+    fi
+
+    echo ""
+    info "OPAL Console 설치 중..."
+
+    # ── FE 빌드 (Node 필요) ──
+    if command -v node &>/dev/null && [[ -d "$src/frontend" ]]; then
+        info "Node $(node --version) 발견 — FE 빌드 시작..."
+        if (cd "$src/frontend" && npm install --silent && npm run build); then
+            # dist/ → ~/.opal/dashboard-server/dist/
+            install_dir "$src/frontend/dist" "$dst/dist" "Console FE dist"
+        else
+            warn "FE 빌드 실패 — dashboard/frontend npm build 오류. Console FE 배포 스킵."
+        fi
+    else
+        warn "Node 미설치 또는 dashboard/frontend 없음 — FE 빌드 스킵 (node 설치 후 재실행 권장)"
+    fi
+
+    # ── BE 복사 (패키지 구조 유지: dashboard/backend/) ──
+    # main.py의 'from dashboard.backend.routers import ...' 절대 import가 동작하려면
+    # --app-dir ~/.opal/dashboard-server 기준으로 dashboard/ 패키지가 존재해야 함.
+    # → BE를 dashboard/backend/로 복사하고 dashboard/__init__.py 생성.
+    if [[ -d "$src/backend" ]]; then
+        install_dir "$src/backend" "$dst/dashboard/backend" "Console BE"
+        # dashboard 패키지 루트 __init__.py 생성 (없으면)
+        touch "$dst/dashboard/__init__.py"
+        success "Console BE 패키지 구조 생성 → $dst/dashboard/__init__.py"
+    else
+        warn "dashboard/backend 없음 — BE 배포 스킵"
+    fi
+
+    echo ""
+    info "OPAL Console 설치 완료 → $dst"
+    info "기동: opal-cli console start"
+}
+
+# ─── OPAL Console 자동 재시작 ────────────────────────────
+#
+# install_dashboard 후 호출. 기존 데몬을 종료하고 신규 기동한다.
+# opal-cli 가 존재하면 console stop/start 위임, 미존재 시 uvicorn 직접 폴백.
+# 기동 후 /health 확인 + 접속 안내 출력.
+
+console_autostart() {
+    local opal_home="$USER_HOME/.opal"
+    local venv_uvicorn="$opal_home/.venv/bin/uvicorn"
+    local dashboard_server="$opal_home/dashboard-server"
+    local dashboard_pkg="$dashboard_server/dashboard/backend"
+    local opal_cli="$opal_home/bin/opal-cli"
+    local host="127.0.0.1"
+    local port="7823"
+    local health_url="http://${host}:${port}/health"
+
+    echo ""
+    step "OPAL Console 자동 재시작 중..."
+
+    # ── 전제 점검 ──
+    if [[ ! -d "$dashboard_pkg" ]]; then
+        warn "dashboard-server/dashboard/backend 없음 — 서버 기동 스킵"
+        info "install_dashboard 가 정상 완료되었는지 확인하세요."
+        return
+    fi
+
+    if [[ ! -f "$venv_uvicorn" ]]; then
+        warn "uvicorn 미설치: $venv_uvicorn"
+        info "메뉴 [4] Python 패키지 업데이트 후 재시도하세요."
+        return
+    fi
+
+    # ── 기존 데몬 종료 ──
+    # opal-cli console stop 우선, 미존재 시 pkill 폴백
+    if [[ -x "$opal_cli" ]]; then
+        "$opal_cli" console stop 2>/dev/null || true
+    else
+        pkill -f "dashboard.backend.main:app" 2>/dev/null || true
+    fi
+    # 프로세스 종료 대기 (최대 3초)
+    local waited=0
+    while curl -s --max-time 1 "$health_url" >/dev/null 2>&1; do
+        sleep 1
+        ((waited++))
+        [[ $waited -ge 3 ]] && break
+    done
+
+    # ── 신규 기동 ──
+    if [[ -x "$opal_cli" ]]; then
+        # opal-cli console start 위임
+        "$opal_cli" console start 2>/dev/null &
+    else
+        # 직접 uvicorn 기동 (opal-cli 미배포 폴백)
+        nohup "$venv_uvicorn" \
+            --app-dir "$dashboard_server" \
+            dashboard.backend.main:app \
+            --host "$host" \
+            --port "$port" \
+            >/tmp/opal-console.log 2>&1 &
+        local pid=$!
+        success "OPAL Console 기동됨 (PID: $pid, 로그: /tmp/opal-console.log)"
+    fi
+
+    # ── /health 확인 (최대 10초 대기) ──
+    local ok=0
+    for i in $(seq 1 10); do
+        sleep 1
+        if curl -s --max-time 2 "$health_url" >/dev/null 2>&1; then
+            ok=1
+            break
+        fi
+    done
+
+    if [[ $ok -eq 1 ]]; then
+        local health_response
+        health_response="$(curl -s --max-time 3 "$health_url" 2>/dev/null)"
+        echo ""
+        echo -e "${GREEN}✓${NC} OPAL Console 기동 완료"
+        echo -e "  ${CYAN}접속:${NC} http://${host}:${port}"
+        echo -e "  ${CYAN}/health:${NC} $health_response"
+    else
+        warn "OPAL Console /health 응답 없음 (10초 초과)"
+        info "로그 확인: cat /tmp/opal-console.log"
+        info "수동 기동: opal-cli console start"
+    fi
 }
 
 # ─── Legacy Cleanup Notice ───────────────────────────────
@@ -1417,6 +1557,8 @@ print_summary() {
         echo "    ~/.opal/.venv/                Python 가상환경"
     [[ -d "$opal_home/templates" ]] && \
         echo "    ~/.opal/templates/           프로젝트 템플릿"
+    [[ -d "$opal_home/dashboard-server" ]] && \
+        echo "    ~/.opal/dashboard-server/    OPAL Console (http://127.0.0.1:7823)"
 
     [[ -f "$USER_HOME/.claude/CLAUDE.md" ]] && grep -qF "$OPAL_START" "$USER_HOME/.claude/CLAUDE.md" && \
         echo "    ~/.claude/CLAUDE.md          OPAL 부트스트래퍼"
@@ -1508,6 +1650,12 @@ main() {
                 info "Python 패키지 업데이트..."
                 install_opal_venv
                 installed+=("Python 패키지 (.venv)")
+                print_summary "${installed[@]}"
+                ;;
+            5)
+                install_dashboard
+                console_autostart
+                installed+=("OPAL Console (dashboard-server + 서버 기동)")
                 print_summary "${installed[@]}"
                 ;;
             0)

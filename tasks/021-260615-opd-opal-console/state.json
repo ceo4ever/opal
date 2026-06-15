@@ -1,0 +1,171 @@
+{
+  "task_id": "021-260615-opd-opal-console",
+  "skill": "opd",
+  "mode": "semi-agentic",
+  "schema_version": "1.0",
+  "created_at": "2026-06-15 10:21",
+  "updated_at": "2026-06-15 18:14",
+  "current_status": "done",
+  "rows": [
+    {
+      "row_id": 1,
+      "stage": "TASK",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-15 10:21",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 2,
+      "stage": "TASK",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-15 10:36",
+      "owner": "user",
+      "note": "캡틴 확인: TASK 승인, ANALYSIS 진입"
+    },
+    {
+      "row_id": 3,
+      "stage": "ANALYSIS",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-15 10:48",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 4,
+      "stage": "ANALYSIS",
+      "item": "PM Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-15 10:49",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 5,
+      "stage": "ANALYSIS",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-15 11:11",
+      "owner": "user",
+      "note": "캡틴 확인: ANALYSIS+와이어프레임 승인(브레인 제외 C-11·컬러 3색 전역화 C-12 반영), PLAN 진입"
+    },
+    {
+      "row_id": 6,
+      "stage": "PLAN",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-15 11:20",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 7,
+      "stage": "PLAN",
+      "item": "PM Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-15 11:20",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 8,
+      "stage": "PLAN",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-15 11:26",
+      "owner": "user",
+      "note": "캡틴 확인: PLAN 승인, TEST-SCENARIO 진입"
+    },
+    {
+      "row_id": 9,
+      "stage": "TEST-SCENARIO",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-15 11:29",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 10,
+      "stage": "TEST-SCENARIO",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-15 12:41",
+      "owner": "user",
+      "note": "캡틴 확인: TEST-SCENARIO 승인, EXECUTE 진입 (모드 경계 — 이후 PM 자율)"
+    },
+    {
+      "row_id": 11,
+      "stage": "EXECUTE",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-15 13:24",
+      "owner": "auto",
+      "note": "agentic auto-pass: semi-agentic auto-pass: EXECUTE 15 Step 전체 완료 (Phase1~4). BE pytest 54 passed, FE build 성공, 설치/CLI 정합성·docs 갱신 완료"
+    },
+    {
+      "row_id": 12,
+      "stage": "TEST",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-15 13:31",
+      "owner": "auto",
+      "note": "agentic auto-pass: semi-agentic auto-pass: TEST 자동 All Pass (pytest 54 passed). S-8·S-9 캡틴 협업 대기"
+    },
+    {
+      "row_id": 13,
+      "stage": "TEST",
+      "item": "PM Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-15 13:31",
+      "owner": "auto",
+      "note": "agentic auto-pass: semi-agentic auto-pass: PM Gate — 자동 PASS·보안 Pass·회귀0. WARN 2건 경미(후속)"
+    },
+    {
+      "row_id": 14,
+      "stage": "TEST",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-15 18:13",
+      "owner": "user",
+      "note": "캡틴 확정: 정식 배포 검증·전체 회귀 통과, CLOSE 승인"
+    },
+    {
+      "row_id": 15,
+      "stage": "TEST",
+      "item": "fix: 배포본 기동 결함 4종 (import 패키징·dist 정적서빙·config 기본값·배포본 smoke 보강)",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-15 18:13",
+      "owner": "auto",
+      "note": "agentic auto-pass: 다수 fix(배포패키징·레이아웃·resizable·scan·식별자·메모리·MarkdownView·@header·TOC·대시보드컨텍스트·아카이브·산출물추론·오른쪽패널) 완료, cmux/pytest 검증"
+    },
+    {
+      "row_id": 16,
+      "stage": "CLOSE",
+      "item": "DONE.md 생성",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-15 18:14",
+      "owner": "PM",
+      "note": null
+    }
+  ]
+}

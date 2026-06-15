@@ -1,0 +1,223 @@
+{
+  "task_id": "021-260615-opd-opal-console",
+  "title": "OPAL Console — 로컬 OPAL 프로젝트 통합 관리 대시보드 (1차 뷰어)",
+  "generated_at": "2026-06-15",
+  "source": "PLAN.md (SSOT) — FE/BE 분리 실행 계획",
+  "execution_mode": "complex",
+  "scope_constraints": {
+    "read_only": "state-tool/brain-tool 쓰기 커맨드 호출 금지 (TASK C-2)",
+    "brain_excluded": "brain 화면·어댑터·파서·lint 배지·stale 알림·ReactFlow 전면 제외 (TASK C-11)",
+    "color_tokens": ":root 3색(--primary/--secondary/--tertiary) 전역 + hex 하드코딩 금지 (TASK C-12)",
+    "deploy_boundary": "소스 dashboard/·scripts/·opal/tools/만 수정, 배포는 install 경유 ~/.opal/dashboard-server/ (CONVENTIONS 배포 경계)",
+    "security": "데몬 host=127.0.0.1, 기본 포트 7823",
+    "platform_isolation": "macOS/Windows 차이는 install 스크립트 어댑터에만"
+  },
+  "tech_stack": {
+    "frontend": ["React 18", "TypeScript 5", "Vite 5", "Tailwind 4", "shadcn/ui", "TanStack Query v5", "Zustand 4", "Recharts 2", "@dnd-kit 6 (비활성)", "react-router", "lucide-react", "react-markdown+remark-gfm"],
+    "backend": ["Python 3.14", "FastAPI 0.136 (fastapi[standard]>=0.110.0)", "uvicorn 0.42 (기설치)", "starlette 1.0.0 (기설치)", "pydantic 2.12 (기설치)"],
+    "install_cli": ["Bash install-mac.sh", "PowerShell windows.ps1", "opal-cli console"]
+  },
+  "features": [
+    { "id": "F-001", "name": "프로젝트 스캐너", "area": "BE", "requirements": ["R-1"] },
+    { "id": "F-002", "name": "도구 어댑터 계층 (read-only)", "area": "BE", "requirements": ["R-2"] },
+    { "id": "F-003", "name": "마크다운 파서", "area": "BE", "requirements": ["R-3"] },
+    { "id": "F-004", "name": "백엔드 API 데몬 (FastAPI)", "area": "BE", "requirements": ["R-4"] },
+    { "id": "F-005", "name": "FE 앱 셸 + 디자인 토큰 (3색 전역화)", "area": "FE", "requirements": ["R-5", "C-12"] },
+    { "id": "F-006", "name": "대시보드 화면", "area": "FE", "requirements": ["R-5"] },
+    { "id": "F-007", "name": "프로젝트 화면", "area": "FE", "requirements": ["R-5"] },
+    { "id": "F-008", "name": "태스크 칸반 (읽기 전용) + 산출물 뷰어", "area": "FE", "requirements": ["R-5", "R-6"] },
+    { "id": "F-009", "name": "메모리 화면", "area": "FE", "requirements": ["R-5"] },
+    { "id": "F-010", "name": "환경(doctor) 화면", "area": "FE", "requirements": ["R-5"] },
+    { "id": "F-011", "name": "자동 설치 + 기동 CLI", "area": "공통", "requirements": ["R-7"] }
+  ],
+  "phases": [
+    {
+      "phase": 1,
+      "name": "BE 데이터 계층 + FE 스캐폴딩",
+      "parallel": true,
+      "steps": [1, 2, 3, 4, 5],
+      "note": "Step 1(venv 호환)은 선행 게이트 — 통과 후 2/3/4/5 병렬"
+    },
+    {
+      "phase": 2,
+      "name": "데몬 통합 + 셸/토큰 (FE/BE 병렬)",
+      "parallel": true,
+      "steps": [6, 7]
+    },
+    {
+      "phase": 3,
+      "name": "5개 화면 구현 (FE 병렬)",
+      "parallel": true,
+      "steps": [8, 9, 10, 11, 12]
+    },
+    {
+      "phase": 4,
+      "name": "통합 설치 + CLI + 문서",
+      "parallel": false,
+      "steps": [13, 14, 15]
+    }
+  ],
+  "steps": [
+    {
+      "step": 1, "feature": "F-004", "area": "환경", "agent": "opal-be-agent", "phase": 1,
+      "title": "venv FastAPI 호환 선검증 + requirements.txt",
+      "files": ["opal/tools/requirements.txt"],
+      "work": "pip install fastapi[standard]>=0.110.0 --dry-run로 starlette 1.0.0 호환 검증 후 requirements.txt 반영. 충돌 시 블로커.",
+      "done_when": "dry-run 충돌 0건 + requirements.txt 반영",
+      "tests": ["TS-401"], "depends_on": [], "risk": "H-1"
+    },
+    {
+      "step": 2, "feature": "F-001", "area": "BE", "agent": "opal-be-agent", "phase": 1,
+      "title": "프로젝트 스캐너 (scanner.py + config.py)",
+      "files": ["dashboard/backend/scanner.py", "dashboard/backend/config.py"],
+      "work": "os.walk + maxdepth + exclude로 .opal/AGENT.md 마커 발견. console.config.json 로드(기본 $HOME/workspace, depth=2).",
+      "done_when": "OPAL/비OPAL 구분 목록 반환 + node_modules 미진입",
+      "tests": ["TS-101"], "depends_on": [], "risk": "H-4"
+    },
+    {
+      "step": 3, "feature": "F-002", "area": "BE", "agent": "opal-be-agent", "phase": 1,
+      "title": "도구 어댑터 계층 (base + 4 어댑터)",
+      "files": ["dashboard/backend/adapters/base.py", "dashboard/backend/adapters/state_adapter.py", "dashboard/backend/adapters/scan_adapter.py", "dashboard/backend/adapters/skill_adapter.py", "dashboard/backend/adapters/doctor_adapter.py"],
+      "work": "subprocess read-only 호출 + ok:false/exit≠0/timeout 3종 에러 정규화. doctor 정규식 파싱. 쓰기 커맨드 금지. brain_adapter 제외.",
+      "done_when": "4도구 JSON 파싱 + 에러 3종 구분",
+      "tests": ["TS-201", "TS-202"], "depends_on": [], "risk": "H-2, H-3"
+    },
+    {
+      "step": 4, "feature": "F-003", "area": "BE", "agent": "opal-be-agent", "phase": 1,
+      "title": "마크다운 파서 (4 파서)",
+      "files": ["dashboard/backend/parsers/memory_parser.py", "dashboard/backend/parsers/memory_file_parser.py", "dashboard/backend/parsers/project_parser.py", "dashboard/backend/parsers/markdown_reader.py"],
+      "work": "MEMORY.md 표·히스토리, memory/*.md 메타, PROJECT/AGENT.md, 산출물 원문 read. 읽기 전용. brain_parser 제외.",
+      "done_when": "구조화 JSON 반환 + 파일 mtime 불변",
+      "tests": ["TS-301"], "depends_on": [], "risk": "H-6"
+    },
+    {
+      "step": 5, "feature": "F-005", "area": "공통", "agent": "opal-task-agent", "phase": 1,
+      "title": "FE 스캐폴딩 (Vite+React+TS+Tailwind+shadcn init)",
+      "files": ["dashboard/frontend/"],
+      "work": "Vite 스캐폴딩 + Tailwind 4 + shadcn init + 의존성(TanStack Query/Zustand/Recharts/dnd-kit/router/lucide/react-markdown). ReactFlow 제외.",
+      "done_when": "npm run dev 기동 + shadcn add 가능",
+      "tests": ["build"], "depends_on": []
+    },
+    {
+      "step": 6, "feature": "F-004", "area": "BE", "agent": "opal-be-agent", "phase": 2,
+      "title": "FastAPI 데몬 통합 (main + 라우터 5 + 캐시 + 모델)",
+      "files": ["dashboard/backend/main.py", "dashboard/backend/cache.py", "dashboard/backend/models.py", "dashboard/backend/routers/dashboard.py", "dashboard/backend/routers/projects.py", "dashboard/backend/routers/tasks.py", "dashboard/backend/routers/memory.py", "dashboard/backend/routers/doctor.py"],
+      "work": "5 화면 GET 엔드포인트 + /health. host=127.0.0.1:7823. 칸반 4컬럼 정규화. TTL 캐시. CORS dev/prod. brain 엔드포인트 제외.",
+      "done_when": "5 엔드포인트 200 + 스키마 일치 + 127.0.0.1 바인딩",
+      "tests": ["TS-302", "TS-310"], "depends_on": [1, 2, 3, 4], "risk": "H-6, H-7"
+    },
+    {
+      "step": 7, "feature": "F-005", "area": "FE", "agent": "opal-fe-agent", "phase": 2,
+      "title": "FE 앱 셸 + 디자인 토큰 (3색 전역화)",
+      "files": ["dashboard/frontend/src/index.css", "dashboard/frontend/src/components/app-shell/", "dashboard/frontend/src/lib/api.ts", "dashboard/frontend/src/store/ui-store.ts", "dashboard/frontend/src/router.tsx"],
+      "work": ":root 3색+상태색 토큰(다크 기본/라이트), Tailwind 토큰 바인딩, 5 네비 셸, 스위처, 상단바, QueryClient, 테마 토글. hex 금지. Geist 폰트.",
+      "done_when": "셸 렌더 + 5 라우팅 + 다크/라이트 + 토큰 1곳 + hex 0건",
+      "tests": ["TS-501", "TS-502"], "depends_on": [5], "risk": "H-5"
+    },
+    {
+      "step": 8, "feature": "F-006", "area": "FE", "agent": "opal-fe-agent", "phase": 3,
+      "title": "대시보드 화면",
+      "files": ["dashboard/frontend/src/pages/dashboard/"],
+      "work": "section-cards 4메트릭 + Recharts 활동추이/단계분포 + 주의알림 + 최근활동 테이블. brain 위젯 제외.",
+      "done_when": "/api/dashboard 실 데이터 렌더 + brain 위젯 부재",
+      "tests": ["TS-601"], "depends_on": [6, 7], "screen_id": "FE-1"
+    },
+    {
+      "step": 9, "feature": "F-007", "area": "FE", "agent": "opal-fe-agent", "phase": 3,
+      "title": "프로젝트 화면 (도입 현황 맵)",
+      "files": ["dashboard/frontend/src/pages/projects/"],
+      "work": "목록+도입현황+상세(탭)+문서 Drawer. 미적용 회색 처리.",
+      "done_when": "OPAL/미적용 구분 + 상세 + 문서 마크다운",
+      "tests": ["TS-701"], "depends_on": [6, 7], "screen_id": "FE-2"
+    },
+    {
+      "step": 10, "feature": "F-008", "area": "FE", "agent": "opal-fe-agent", "phase": 3,
+      "title": "태스크 칸반 + 산출물 뷰어 (읽기 전용)",
+      "files": ["dashboard/frontend/src/pages/tasks/"],
+      "work": "상태 4컬럼 보드 + 카드 + Drawer(가로 스테퍼 + 산출물 탭 마크다운). dnd-kit 드래그 비활성 + 🔒 읽기 전용 badge.",
+      "done_when": "카드 컬럼 배치 + 드래그 불가 + Drawer 스테퍼/산출물",
+      "tests": ["TS-801"], "depends_on": [6, 7], "screen_id": "FE-3", "risk": "H-9"
+    },
+    {
+      "step": 11, "feature": "F-009", "area": "FE", "agent": "opal-fe-agent", "phase": 3,
+      "title": "메모리 화면",
+      "files": ["dashboard/frontend/src/pages/memory/"],
+      "work": "카테고리 리스트+태그 필터 + 히스토리 타임라인 + 상세 Drawer.",
+      "done_when": "필터 + 타임라인 + 마크다운",
+      "tests": ["TS-901"], "depends_on": [6, 7], "screen_id": "FE-4"
+    },
+    {
+      "step": 12, "feature": "F-010", "area": "FE", "agent": "opal-fe-agent", "phase": 3,
+      "title": "환경(doctor) 화면",
+      "files": ["dashboard/frontend/src/pages/doctor/"],
+      "work": "doctor 4섹션 accordion + 체크 아이콘 + MCP 카드 + 스킬 목록 + 실패 alert.",
+      "done_when": "doctor/MCP/스킬 렌더 + 실패 alert",
+      "tests": ["TS-1001"], "depends_on": [6, 7], "screen_id": "FE-5"
+    },
+    {
+      "step": 13, "feature": "F-011", "area": "공통", "agent": "opal-task-agent", "phase": 4,
+      "title": "opal-cli console 서브커맨드",
+      "files": ["opal/tools/opal-cli/run.sh", "opal/tools/opal-cli/lib/console.sh"],
+      "work": "dispatcher case(run.sh:109)에 console 추가 + usage + cmd_console(start/stop/status/open, 포트 7823, 127.0.0.1).",
+      "done_when": "opal-cli console status 동작",
+      "tests": ["TS-402"], "depends_on": [6]
+    },
+    {
+      "step": 14, "feature": "F-011", "area": "공통", "agent": "opal-task-agent", "phase": 4,
+      "title": "install 스크립트 (macOS install_dashboard + Windows 동기화)",
+      "files": ["scripts/install-mac.sh", "scripts/install/windows.ps1"],
+      "work": "install_dashboard() 신설 + install_opal_bin 근처 호출 + clean_dirs(install-mac.sh:866)에 dashboard-server 추가. windows.ps1 Install-Dashboard 동기화.",
+      "done_when": "install 시 ~/.opal/dashboard-server/{dist,backend} 배포 + console 기동",
+      "tests": ["TS-402", "TS-403"], "depends_on": [8, 9, 10, 11, 12, 13], "risk": "H-8"
+    },
+    {
+      "step": 15, "feature": "F-004,F-011", "area": "문서", "agent": "PM 직접", "phase": 4,
+      "title": "docs/ 갱신 (ARCHITECTURE/PROJECT)",
+      "files": ["docs/ARCHITECTURE.md", "docs/PROJECT.md"],
+      "work": "OPAL Console 레이어(dashboard/ 소스 + dashboard-server 배포) + opal-cli console 서브커맨드 반영.",
+      "done_when": "신규 컴포넌트가 docs 반영",
+      "tests": ["doc review"], "depends_on": [14]
+    }
+  ],
+  "test_scenarios": [
+    { "id": "TS-101", "feature": "F-001", "type": "통합", "expect": "OPAL N개 반환 + 비OPAL 구분 + node_modules 미진입" },
+    { "id": "TS-201", "feature": "F-002", "type": "통합", "expect": "4도구 정상 JSON 파싱 + doctor 4섹션 구조화" },
+    { "id": "TS-202", "feature": "F-002", "type": "통합", "expect": "exit≠0/ok:false/timeout → 503/504 구분" },
+    { "id": "TS-301", "feature": "F-003", "type": "통합", "expect": "MEMORY/memory 구조화 + mtime 불변" },
+    { "id": "TS-302", "feature": "F-004", "type": "보안", "expect": "127.0.0.1 바인딩, 외부 접근 거부" },
+    { "id": "TS-310", "feature": "F-004", "type": "통합", "expect": "5 엔드포인트 200 + 스키마 일치 + /health" },
+    { "id": "TS-401", "feature": "F-011", "type": "통합", "expect": "pip --dry-run starlette 충돌 없이 통과" },
+    { "id": "TS-402", "feature": "F-011", "type": "통합", "expect": "install 배포 + console start 7823 기동 + open 브라우저" },
+    { "id": "TS-403", "feature": "F-011", "type": "회귀", "expect": "windows.ps1 Install-Dashboard 동기화" },
+    { "id": "TS-501", "feature": "F-005", "type": "산출물검사", "expect": ":root 3색 1곳 + hex 0건 + 색 교체 일괄 반영" },
+    { "id": "TS-502", "feature": "F-005", "type": "기능", "expect": "셸 렌더 + 5 라우팅 + 다크/라이트 영속" },
+    { "id": "TS-601", "feature": "F-006", "type": "기능", "expect": "4메트릭·차트·알림 + brain 위젯 부재" },
+    { "id": "TS-701", "feature": "F-007", "type": "기능", "expect": "도입현황 + 상세 + 문서 마크다운" },
+    { "id": "TS-801", "feature": "F-008", "type": "기능", "expect": "컬럼 배치 + 드래그 불가 + Drawer 산출물" },
+    { "id": "TS-901", "feature": "F-009", "type": "기능", "expect": "필터 + 타임라인 + 마크다운" },
+    { "id": "TS-1001", "feature": "F-010", "type": "기능", "expect": "doctor/MCP/스킬 + 실패 alert" }
+  ],
+  "api_endpoints": [
+    { "method": "GET", "path": "/health", "screen": "-" },
+    { "method": "GET", "path": "/api/dashboard", "screen": "대시보드" },
+    { "method": "GET", "path": "/api/projects", "screen": "프로젝트" },
+    { "method": "GET", "path": "/api/projects/{id}", "screen": "프로젝트" },
+    { "method": "GET", "path": "/api/projects/{id}/doc", "screen": "프로젝트" },
+    { "method": "GET", "path": "/api/tasks", "screen": "태스크" },
+    { "method": "GET", "path": "/api/tasks/{project}/{taskId}", "screen": "태스크" },
+    { "method": "GET", "path": "/api/tasks/{project}/{taskId}/artifact", "screen": "태스크" },
+    { "method": "GET", "path": "/api/memory", "screen": "메모리" },
+    { "method": "GET", "path": "/api/doctor", "screen": "환경" }
+  ],
+  "risks": [
+    { "id": "H-1", "feature": "F-004", "impact": "P0", "mitigation": "Step 1 pip --dry-run 선검증" },
+    { "id": "H-2", "feature": "F-002", "impact": "P1", "mitigation": "버전 고정 정규식 + graceful 폴백" },
+    { "id": "H-3", "feature": "F-002", "impact": "P1", "mitigation": "base.py 3종 에러 정규화" },
+    { "id": "H-4", "feature": "F-001", "impact": "P1", "mitigation": "maxdepth + exclude 가드" },
+    { "id": "H-5", "feature": "F-005", "impact": "P0", "mitigation": ":root 1곳 토큰 + grep hex 0건" },
+    { "id": "H-6", "feature": "F-003,F-004", "impact": "P0", "mitigation": "read-only open + mtime 불변" },
+    { "id": "H-7", "feature": "F-004", "impact": "P0", "mitigation": "127.0.0.1 바인딩" },
+    { "id": "H-8", "feature": "F-011", "impact": "P2", "mitigation": "Step 14 windows.ps1 동기화" },
+    { "id": "H-9", "feature": "F-008", "impact": "P1", "mitigation": "dnd-kit sensors 비활성 + 읽기 전용 badge" }
+  ]
+}
