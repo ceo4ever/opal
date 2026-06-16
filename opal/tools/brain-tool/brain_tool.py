@@ -558,39 +558,71 @@ def cmd_log(args):
 # 5. search
 # ─────────────────────────────────────────────────────────────────────────────
 
-def _score_page(pg, query_lower, type_filter, tag_filter):
-    """페이지 검색 점수 산출 (단순 가중치). 필터 미통과 시 None."""
+def _norm(s):
+    """검색 시점 정규화 — 소문자화 + 모든 공백 제거 (휘발성 사본 전용).
+
+    str.split() (인자 없음)은 스페이스·탭·개행·전각 공백 등 공백류를 모두 분리한다.
+    stdlib만 사용. 결정론 보장 (동일 입력 → 동일 출력).
+    """
+    return "".join(str(s).lower().split())
+
+
+def _score_page(pg, query_norm, type_filter, tag_filter):
+    """페이지 검색 점수 산출 (단순 가중치). 필터 미통과 시 None.
+
+    query_norm: _norm() 적용된 정규화 쿼리 (공백 제거 + 소문자).
+    4필드(title/rel/tags/body) 비교는 _norm 사본 기준.
+    --tag 필터는 기존 소문자 정확 일치 유지(회귀 0, H-6).
+    tag 가중치(+2) 매칭만 _norm 적용.
+    """
     fm = pg["fm"] or {}
     if type_filter and fm.get("type") != type_filter:
         return None
-    tags = [str(t).lower() for t in (fm.get("tags") or [])]
-    if tag_filter and tag_filter.lower() not in tags:
+    # tag_filter: 정확 일치(정규화 미적용) — 기존 동작 보존
+    tags_raw = [str(t) for t in (fm.get("tags") or [])]
+    tags_lower = [t.lower() for t in tags_raw]
+    if tag_filter and tag_filter.lower() not in tags_lower:
         return None
 
     score = 0
-    title = str(fm.get("title", "")).lower()
-    if query_lower in title:
+    if query_norm in _norm(fm.get("title", "")):
         score += 5
-    if query_lower in pg["rel"].lower():
+    if query_norm in _norm(pg["rel"]):
         score += 3
-    if any(query_lower in t for t in tags):
+    # tag 가중치 매칭은 _norm 적용 (4필드 일괄 정규화 일관성)
+    if any(query_norm in _norm(t) for t in tags_raw):
         score += 2
-    body_lower = (pg["body"] or "").lower()
-    body_hits = body_lower.count(query_lower)
+    body_norm = _norm(pg["body"] or "")
+    body_hits = body_norm.count(query_norm) if query_norm else 0
     score += min(body_hits, 5)  # 본문 hit는 최대 5점 캡
     return score
 
 
-def _make_snippet(body, query_lower):
-    """본문에서 query 주변 스니펫 추출."""
-    body_lower = body.lower()
-    idx = body_lower.find(query_lower)
-    if idx == -1:
-        snippet = body.strip().split("\n")
-        snippet = next((ln.strip() for ln in snippet if ln.strip()), "")
-        return snippet[:120]
-    start = max(0, idx - 40)
-    end = min(len(body), idx + 80)
+def _make_snippet(body, query_norm):
+    """본문에서 query 주변 스니펫 추출 — 정규화 기준 매칭 + 원문(공백 포함) 반환.
+
+    query_norm: _norm() 적용된 정규화 쿼리.
+    정규화 인덱스 → 원문 인덱스 역매핑으로 공백 포함 원문 스니펫을 반환한다.
+    fallback(첫 비어있지 않은 라인 120자)은 기존 동작 보존.
+    """
+    # 원문 각 문자의 "공백 제거 후 정규화 인덱스" 매핑 테이블 구성
+    norm_chars = []   # 정규화된 문자열
+    orig_index = []   # norm_chars[i]가 원문에서 위치한 인덱스
+    for i, ch in enumerate(body):
+        if ch.isspace():
+            continue
+        norm_chars.append(ch.lower())
+        orig_index.append(i)
+    body_norm = "".join(norm_chars)
+
+    pos = body_norm.find(query_norm) if query_norm else -1
+    if pos == -1:
+        # fallback — 첫 비어있지 않은 라인 앞 120자 (기존 동작 보존)
+        first = next((ln.strip() for ln in body.split("\n") if ln.strip()), "")
+        return first[:120]
+    orig_start = orig_index[pos]           # 원문 매칭 시작 위치
+    start = max(0, orig_start - 40)
+    end = min(len(body), orig_start + 80)
     return body[start:end].replace("\n", " ").strip()
 
 
@@ -602,12 +634,12 @@ def cmd_search(args):
     query = (args.query or "").strip()
     if not query:
         err(command, "query_empty")
-    query_lower = query.lower()
+    query_norm = _norm(query)
 
     pages = scan_pages(brain_root)
     scored = []
     for pg in pages:
-        score = _score_page(pg, query_lower, args.type, args.tag)
+        score = _score_page(pg, query_norm, args.type, args.tag)
         if score is None or score <= 0:
             continue
         fm = pg["fm"] or {}
@@ -616,7 +648,7 @@ def cmd_search(args):
             "title":   fm.get("title", pg["rel"]),
             "type":    fm.get("type"),
             "score":   score,
-            "snippet": _make_snippet(pg["body"] or "", query_lower),
+            "snippet": _make_snippet(pg["body"] or "", query_norm),
         })
 
     scored.sort(key=lambda m: m["score"], reverse=True)

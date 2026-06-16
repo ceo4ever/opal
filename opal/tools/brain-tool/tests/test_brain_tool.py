@@ -470,6 +470,149 @@ class TestSearch(BrainTestCase):
             _, result = self._call(BT.cmd_search, args)
         self.assertLessEqual(len(result.get("matches", [])), 2)
 
+    # ── 025: 공백 무시 매칭 신규 테스트 ────────────────────────────────────────
+
+    def test_norm_unit(self):
+        """S-1: _norm 헬퍼 — 공백류 제거 + 소문자화 (TS-001, R1).
+        _norm 이 없으면 스킵 (구현 전 헬퍼 미존재 시 RED 의미).
+        """
+        norm = getattr(BT, "_norm", None)
+        if norm is None:
+            self.skipTest("_norm 헬퍼 미구현 — Step 2 구현 후 활성화")
+        self.assertEqual(norm("자동 취소"), "자동취소")
+        self.assertEqual(norm("자동\t취소"), "자동취소")
+        # 전각 공백 (U+3000) — Python str.split()이 공백류로 처리
+        self.assertEqual(norm("자동　취소"), "자동취소")
+        self.assertEqual(norm("자동취소"), "자동취소")
+        self.assertEqual(norm("Auto Cancel"), "autocancel")
+
+    def test_search_equiv_pair(self):
+        """S-3: 등가 쌍 — "자동 취소" ≡ "자동취소" 동일 page 집합 반환 (TS-004, R4, RED 대상).
+        픽스처: 제목에 등가 복합명사를 심은 페이지 2종.
+        """
+        # 등가 픽스처 추가 — 공백 포함 제목과 공백 없는 제목
+        self._add_page("auto-cancel-a", "concept", "선정 자동 취소 정책")
+        self._add_page("auto-cancel-b", "concept", "선정자동취소 정책")
+
+        with _mock_kst():
+            args_space = make_args(brain_path=str(self.brain_root),
+                                   query="자동 취소", type=None)
+            _, res_space = self._call(BT.cmd_search, args_space)
+            args_nospace = make_args(brain_path=str(self.brain_root),
+                                     query="자동취소", type=None)
+            _, res_nospace = self._call(BT.cmd_search, args_nospace)
+
+        pages_space = {m["page"] for m in res_space.get("matches", [])}
+        pages_nospace = {m["page"] for m in res_nospace.get("matches", [])}
+        self.assertEqual(
+            pages_space, pages_nospace,
+            f"등가 쌍 불일치:\n  '자동 취소' → {pages_space}\n  '자동취소'  → {pages_nospace}"
+        )
+
+    def test_search_equiv_triple(self):
+        """S-4: 3원 등가 — "선정 자동 취소" ≡ "선정자동취소" ≡ "선정자동 취소" (TS-005, R4, RED 대상)."""
+        self._add_page("auto-cancel-c", "concept", "선정 자동 취소 가이드라인")
+        self._add_page("auto-cancel-d", "concept", "선정자동취소 가이드라인")
+
+        with _mock_kst():
+            def search(q):
+                _, r = self._call(BT.cmd_search,
+                                  make_args(brain_path=str(self.brain_root),
+                                            query=q, type=None))
+                return {m["page"] for m in r.get("matches", [])}
+
+            pages_a = search("선정 자동 취소")
+            pages_b = search("선정자동취소")
+            pages_c = search("선정자동 취소")
+
+        self.assertEqual(pages_a, pages_b,
+                         f"3원 등가 불일치 a≠b: {pages_a} vs {pages_b}")
+        self.assertEqual(pages_b, pages_c,
+                         f"3원 등가 불일치 b≠c: {pages_b} vs {pages_c}")
+
+    def test_search_asymmetric(self):
+        """S-5: 비대칭 — 짧은 쿼리 넓게/긴 쿼리 좁게 (TS-006, R4 비대칭, RED 대상).
+        짧은복합어 페이지("자동취소")와 긴복합어 페이지("선정자동취소")가 존재할 때:
+          - "자동취소" → 두 페이지 모두 매칭
+          - "선정자동취소" → 긴 페이지만 매칭, 짧은 페이지 미매칭
+        """
+        _, res_short_pg = self._add_page("short-ac", "concept", "자동취소")
+        _, res_long_pg = self._add_page("long-ac", "concept", "선정자동취소")
+        short_page = res_short_pg.get("page", "")
+        long_page = res_long_pg.get("page", "")
+
+        with _mock_kst():
+            _, res_short_q = self._call(BT.cmd_search,
+                                        make_args(brain_path=str(self.brain_root),
+                                                  query="자동취소", type=None))
+            _, res_long_q = self._call(BT.cmd_search,
+                                       make_args(brain_path=str(self.brain_root),
+                                                 query="선정자동취소", type=None))
+
+        pages_short_q = {m["page"] for m in res_short_q.get("matches", [])}
+        pages_long_q = {m["page"] for m in res_long_q.get("matches", [])}
+
+        # 짧은 쿼리 → 두 페이지 모두 포함 (넓게)
+        self.assertIn(short_page, pages_short_q,
+                      "짧은 쿼리 '자동취소'가 짧은 페이지를 못 잡음")
+        self.assertIn(long_page, pages_short_q,
+                      "짧은 쿼리 '자동취소'가 긴 페이지를 못 잡음 (비대칭 넓은 방향)")
+        # 긴 쿼리 → 짧은 페이지 미매칭 (좁게)
+        self.assertNotIn(short_page, pages_long_q,
+                         "긴 쿼리 '선정자동취소'가 짧은 페이지를 잡음 (비대칭 좁은 방향 위반)")
+
+    def test_snippet_keeps_original_spacing(self):
+        """S-6: 스니펫 원문 노출 — 공백 포함 원문 그대로 반환 (TS-003, R3, RED 대상).
+        body에 "선정 자동 취소 가능" 원문 포함 페이지, "자동 취소" 쿼리로 검색 시
+        snippet에 원문(공백 포함) "자동 취소"가 포함되어야 한다.
+        """
+        _, res_pg = self._add_page("body-fixture", "concept", "본문 정규화 검증")
+        page_path = pathlib.Path(res_pg.get("page", ""))
+        # 본문에 원문 복합명사 삽입 (tmpdir 격리 — 프로덕션 .opal/brain/ 불변)
+        page_path.write_text(
+            page_path.read_text(encoding="utf-8").replace(
+                "\n\n",
+                "\n\n이 정책은 선정 자동 취소 가능 조건을 명시한다.\n\n",
+                1
+            ),
+            encoding="utf-8"
+        )
+
+        with _mock_kst():
+            _, result = self._call(BT.cmd_search,
+                                   make_args(brain_path=str(self.brain_root),
+                                             query="자동 취소", type=None))
+
+        matches = result.get("matches", [])
+        body_match = next(
+            (m for m in matches if "body-fixture" in m.get("page", "")), None
+        )
+        self.assertIsNotNone(body_match,
+                             "body-fixture 페이지가 '자동 취소' 검색에 매칭되지 않음")
+        snippet = body_match.get("snippet", "")
+        self.assertIn("자동 취소", snippet,
+                      f"스니펫에 원문 '자동 취소'(공백 포함)가 없음: '{snippet}'")
+
+    def test_search_schema_unchanged(self):
+        """S-9: JSON 출력 계약 불변 — matches[] 키 5종 + total + ok=true (TS-009, H-5)."""
+        self._add_page("schema-check", "concept", "스키마 검증 페이지")
+
+        with _mock_kst():
+            _, result = self._call(BT.cmd_search,
+                                   make_args(brain_path=str(self.brain_root),
+                                             query="스키마", type=None))
+
+        self.assertTrue(result.get("ok"), "ok=true 아님")
+        self.assertIn("total", result, "top-level 'total' 키 없음")
+        self.assertIn("query", result, "top-level 'query' 키 없음")
+        matches = result.get("matches", [])
+        self.assertGreater(len(matches), 0, "matches 비어 있음")
+        required_keys = {"page", "title", "type", "score", "snippet"}
+        for m in matches:
+            missing = required_keys - m.keys()
+            self.assertFalse(missing,
+                             f"match에 필수 키 누락: {missing}, match={m}")
+
 
 # ═════════════════════════════════════════════════════════════════════════════
 # 6. sync-header — happy-path (code_scan_json_missing 에러 포함)

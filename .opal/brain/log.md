@@ -69,3 +69,7 @@
 - 신규: [[pages/concept/clarification-gate.md]], [[pages/concept/clarification-gate-backward-compat.md]]
 - 출처: task:005
 
+## [2026-06-16] ingest | CLOSE ingest — 태스크 025 brain-tool search 공백 무시 매칭
+- 신규: [[pages/concept/brain-search-whitespace-insensitive.md]]
+- 출처: task:025
+
