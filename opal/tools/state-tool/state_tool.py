@@ -3,7 +3,7 @@
   "module": "state_tool",
   "layer": "util",
   "domain": "opal-pipeline",
-  "description": "OPAL 파이프라인 현황판 JSON SSOT 관리 CLI — 9개 서브 명령(init/show/advance/mark/block/validate/add-row/status/gate-pass[deprecated]) + verify + 3-way 모드(interactive/semi-agentic/agentic) 지원. 014 Phase 4: 새 표준 행 구조(QA Gate/State Gate 행 없음)와 정합 — gate-pass deprecate, CLOSE 마지막 행 판정 항목명 비의존화. 016: verify --red-check(RED 증거 게이트) + --fix-mode/--changed-files/--test-globs(테스트 불변성 게이트) 추가 — RED-first TDD 트랙 deterministic 집행. 017: mark --step N/M 다중 Step 조기 done 가드 — N<M이면 in_progress 유지(done 미처리) + 진행률(step) 영속화, N==M에서만 done; 미완 행은 기존 stage-transition guard가 단계전환·CLOSE 진입을 자동 차단.",
+  "description": "OPAL 파이프라인 현황판 JSON SSOT 관리 CLI — 9개 서브 명령(init/show/advance/mark/block/validate/add-row/status/gate-pass[deprecated]) + verify + 3-way 모드(interactive/semi-agentic/agentic) 지원. 014 Phase 4: 새 표준 행 구조(QA Gate/State Gate 행 없음)와 정합 — gate-pass deprecate, CLOSE 마지막 행 판정 항목명 비의존화. 016: verify --red-check(RED 증거 게이트) + --fix-mode/--changed-files/--test-globs(테스트 불변성 게이트) 추가 — RED-first TDD 트랙 deterministic 집행. 017: mark --step N/M 다중 Step 조기 done 가드 — N<M이면 in_progress 유지(done 미처리) + 진행률(step) 영속화, N==M에서만 done; 미완 행은 기존 stage-transition guard가 단계전환·CLOSE 진입을 자동 차단. 005: verify --clarification-check + TASK→다음단계 자동 훅 — TASK 4요소(목표/범위/제약/완료기준) 미잠금 시 다음 단계 진입 거부(PRINCIPLES §1 집행), 정책 A graceful skip(섹션/파일 부재 시 하위호환).",
   "exports": [
     "cmd_init", "cmd_show", "cmd_advance", "cmd_mark",
     "cmd_block", "cmd_validate", "cmd_add_row", "cmd_status", "cmd_gate_pass"
@@ -98,6 +98,8 @@ ERROR_CODES = {
     "stage_transition_violation":     "단계 건너뛰기 차단: 행 {row_id} 갱신 전에 앞 행 {incomplete_rows}이(가) 완료되지 않았음 (PLAN §M-A stage-transition guard)",
     "red_evidence_missing":           "RED 증거(실패 출력) 누락 — GREEN/EXECUTE 진입 차단: {detail}",
     "test_modified_in_fix":           "fix 루핑 중 RED 테스트 파일 수정 거부: {files}",
+    "clarification_gate_unmet":
+        "TASK 4요소(목표/범위/제약/완료기준) 미잠금 — 다음 단계 진입 거부 (PRINCIPLES §1 집행): {missing}",
 }
 
 PIPELINE_MARKER_START = "<!-- pipeline:start -->"
@@ -858,6 +860,11 @@ def cmd_advance(args):
     # CLOSE 진입 게이트 (§2.16 G-13)
     check_close_gate(state, row_index, command)
 
+    # 005 명확화 게이트 — TASK→다음 단계 첫 행 진입 차단 (상태 변경 전)
+    _run_clarification_hook(task_path, state, row_index, command,
+                            auto_pass=getattr(args, "auto_pass", False),
+                            force=getattr(args, "force", False))
+
     now_str = get_kst_datetime(command)
     row["status"]       = "in_progress"
     row["status_label"] = "🔄"
@@ -931,6 +938,10 @@ def cmd_mark(args):
     # CLOSE 진입 게이트 (§2.16 G-13)
     check_close_gate(state, row_index, command,
                      auto_pass=args.auto_pass, force=args.force)
+
+    # 005 명확화 게이트 — TASK→다음 단계 첫 행 진입 차단 (상태 변경 전)
+    _run_clarification_hook(task_path, state, row_index, command,
+                            auto_pass=args.auto_pass, force=args.force)
 
     # semi-agentic 모드에서 EXECUTE-equivalent 이전 행은 --auto-pass 거부 (D-DEC-5)
     if args.auto_pass and state.get("mode") == "semi-agentic":
@@ -1445,9 +1456,182 @@ def _match_test_files(changed_files, test_globs):
     return matched
 
 
+# ── 명확화 게이트 헬퍼 (005) ─────────────────────────────────────────────────
+
+# 명확화 4요소 — 행 라벨(첫 셀)에서 키워드로 식별. 순서/표기 변형 흡수.
+_CLARIFICATION_ELEMENTS = ["목표", "범위", "제약", "완료기준"]
+
+# "N/A: <사유>" 또는 "NA: <사유>" 는 PASS로 간주 (명시적 해당없음).
+_NA_PATTERN = re.compile(r"^N/?A\s*[:：]", re.IGNORECASE)
+# 공란 / "TBD"(대소문자 무관) / "-" 단독 → FAIL (미확정으로 간주).
+_TBD_PATTERN = re.compile(r"^\s*(TBD|-)?\s*$", re.IGNORECASE)
+
+
+def _run_clarification_hook(task_path, state, row_index, command, auto_pass=False, force=False):
+    """TASK→다음 단계 첫 행 진입 시 명확화 게이트 자동 훅 (005).
+
+    발동 조건:
+    - state에 TASK 단계가 존재해야 함 (TASK 행이 없는 파이프라인은 skip).
+    - 대상 행이 TASK 단계가 아니어야 함.
+    - 대상 행이 자기 stage의 첫 번째 행이어야 함 (is_first_of_stage).
+    - 직전 행의 stage == TASK 이어야 함 (= TASK 단계 바로 다음 첫 행).
+
+    정책 A(graceful skip): TASK.md/섹션 부재 시 pass (하위호환).
+    --auto-pass 우회 불가 (close_gate 동형, §2.16 G-13 정합).
+    --force 시 우회 허용 (긴급 탈출구, --note 필수는 호출자가 이미 보장).
+    """
+    rows = state["rows"]
+    row = rows[row_index]
+
+    # TASK 단계가 파이프라인에 존재하지 않으면 skip
+    task_stage_exists = any(r["stage"] == "TASK" for r in rows)
+    if not task_stage_exists:
+        return
+
+    # 대상 행이 TASK 단계면 skip (TASK 내부 전환은 게이트 대상 아님)
+    if row["stage"] == "TASK":
+        return
+
+    # 대상 행이 자기 stage의 첫 행인지 확인
+    is_first_of_stage = (row_index == 0 or rows[row_index - 1]["stage"] != row["stage"])
+    if not is_first_of_stage:
+        return
+
+    # 직전 행이 TASK 단계인지 확인 (= TASK 마지막 행 직후 첫 다음 단계 행)
+    prev_is_task = (row_index > 0 and rows[row_index - 1]["stage"] == "TASK")
+    if not prev_is_task:
+        return
+
+    # --auto-pass 우회 거부 (close_gate 동형)
+    if auto_pass:
+        err(command, "clarification_gate_unmet",
+            missing=["auto-pass cannot bypass clarification gate"])
+
+    # --force 시 우회 허용
+    if force:
+        return
+
+    # 하위호환: TASK.md 부재 → skip
+    task_md = _find_task_md(task_path, None)
+    if task_md is None:
+        return
+
+    # 명확화 게이트 검사
+    missing = _check_clarification_gate(task_md)
+    if missing is None:
+        return  # 하위호환: "## 명확화 결과" 섹션 부재 → skip
+
+    if missing:
+        err(command, "clarification_gate_unmet", missing=missing)
+
+
+def _find_task_md(task_path, task_md_arg):
+    """TASK.md 경로 결정. --task-md 우선, 없으면 <task_path>/TASK.md. 부재 시 None."""
+    p = pathlib.Path(task_md_arg) if task_md_arg else pathlib.Path(task_path) / "TASK.md"
+    return p if p.exists() else None
+
+
+def _parse_clarification_table(lines):
+    """TASK.md "## 명확화 결과" 섹션의 표를 파싱.
+
+    반환: {element_label: confirmed_value_cell_text} 딕셔너리.
+    섹션/표 부재 시 None 반환 (호출자가 graceful skip).
+    "확정값" 열을 헤더에서 식별; 없으면 라벨 다음(2번째) 셀을 확정값으로 폴백.
+    """
+    # 1) "## 명확화 결과" 헤더 위치 탐색
+    section_start = None
+    for i, line in enumerate(lines):
+        if re.match(r"^##\s+명확화\s*결과", line.strip()):
+            section_start = i
+            break
+    if section_start is None:
+        return None  # 섹션 부재
+
+    # 2) 다음 ## 헤더 직전까지 섹션 추출
+    section_lines = []
+    for line in lines[section_start + 1:]:
+        if re.match(r"^##\s+", line.strip()):
+            break
+        section_lines.append(line)
+
+    # 3) 표 헤더 행 탐색 — "|" 로 시작하고 구분선이 아닌 첫 행
+    header_cells = None
+    header_line_idx = None
+    confirmed_col_idx = None
+    for idx, line in enumerate(section_lines):
+        stripped = line.strip()
+        if not stripped.startswith("|"):
+            continue
+        if re.match(r"^\|[\s\-:]+\|", stripped):
+            continue  # 구분선 행 스킵
+        cells = [c.strip() for c in stripped.split("|")]
+        cells = cells[1:-1] if len(cells) > 2 else cells
+        if header_cells is None:
+            header_cells = cells
+            header_line_idx = idx
+            # "확정값" 열 인덱스 식별
+            for ci, cell in enumerate(cells):
+                if "확정값" in cell:
+                    confirmed_col_idx = ci
+                    break
+            # 미발견 시 폴백: 라벨 다음(인덱스 1) 셀
+            if confirmed_col_idx is None and len(cells) >= 2:
+                confirmed_col_idx = 1
+            break
+
+    if header_cells is None or confirmed_col_idx is None:
+        return None  # 표 부재
+
+    # 4) 데이터 행 파싱 — 첫 셀이 4요소 키워드를 포함하면 {라벨: 확정값셀}
+    result = {}
+    for line in section_lines[header_line_idx + 1:]:
+        stripped = line.strip()
+        if not stripped.startswith("|"):
+            continue
+        if re.match(r"^\|[\s\-:]+\|", stripped):
+            continue
+        cells = [c.strip() for c in stripped.split("|")]
+        cells = cells[1:-1] if len(cells) > 2 else cells
+        if not cells:
+            continue
+        label = cells[0]
+        # 4요소 중 하나와 매칭되는지 확인
+        for elem in _CLARIFICATION_ELEMENTS:
+            if elem in label:
+                confirmed_val = cells[confirmed_col_idx] if confirmed_col_idx < len(cells) else ""
+                result[elem] = confirmed_val
+                break
+
+    return result
+
+
+def _check_clarification_gate(task_md_path):
+    """4요소 잠금 검증. 반환: missing[] (빈 리스트면 PASS).
+
+    None 반환 = 섹션/표 부재 (호출자가 하위호환 정책 적용 — graceful skip).
+    각 요소: 확정값 셀이 공란/"TBD"/"-"이면 미충족. "N/A: <사유>"는 충족.
+    """
+    lines = task_md_path.read_text(encoding="utf-8").splitlines()
+    table = _parse_clarification_table(lines)
+    if table is None:
+        return None  # 섹션/표 부재 신호
+
+    missing = []
+    for elem in _CLARIFICATION_ELEMENTS:
+        cell = table.get(elem)
+        if cell is None:                        # 요소 행 자체가 표에 없음
+            missing.append(elem)
+        elif _NA_PATTERN.match(cell.strip()):
+            continue                             # N/A: <사유> → PASS
+        elif _TBD_PATTERN.match(cell):          # 공란 / TBD / "-" → FAIL
+            missing.append(elem)
+    return missing
+
+
 def cmd_verify(args):
     """PLAN 013 §verify — TEST-SCENARIO.md mock 코드 패턴 + 증거 누락 검사.
     016 확장: --red-check(RED 증거 게이트) / --fix-mode(테스트 불변성).
+    005 확장: --clarification-check(TASK 4요소 잠금 게이트).
     대상 파일 부재 시 doc-only skip (ok).
     """
     command = "verify"
@@ -1457,6 +1641,36 @@ def cmd_verify(args):
     fix_mode = getattr(args, "fix_mode", False)
     changed_files = getattr(args, "changed_files", None) or []
     test_globs = getattr(args, "test_globs", None)
+    clarification_check = getattr(args, "clarification_check", False)
+    task_md_arg = getattr(args, "task_md", None)
+
+    # 005 — TASK 4요소 잠금 게이트 (fix_mode와 같은 조기 반환 패턴 — 독립 분기)
+    if clarification_check:
+        task_md_path = _find_task_md(task_path, task_md_arg)
+        if task_md_path is None:
+            # 정책 A(graceful skip): TASK.md 파일 부재 → skip ok
+            print(json.dumps({
+                "ok": True, "command": command,
+                "clarification_check": "skipped",
+                "reason": "TASK.md not found (backward-compat skip)",
+            }, ensure_ascii=False))
+            sys.exit(0)
+        missing = _check_clarification_gate(task_md_path)
+        if missing is None:
+            # 정책 A(graceful skip): 섹션/표 부재 → skip ok
+            print(json.dumps({
+                "ok": True, "command": command,
+                "clarification_check": "skipped",
+                "reason": "no '## 명확화 결과' section (backward-compat skip)",
+            }, ensure_ascii=False))
+            sys.exit(0)
+        if missing:
+            err(command, "clarification_gate_unmet", missing=missing)
+        print(json.dumps({
+            "ok": True, "command": command,
+            "clarification_check": "pass",
+        }, ensure_ascii=False))
+        sys.exit(0)
 
     # 016 — fix 루핑 테스트 불변성 검사 (산출물 무관, 명시 입력 기반 deterministic)
     if fix_mode:
@@ -1647,6 +1861,11 @@ def build_parser():
                        help="테스트 파일 식별 glob 패턴 (프로젝트 탐지값 주입 — 하드코딩 금지)")
     p_vfy.add_argument("--fix-mode", action="store_true", dest="fix_mode",
                        help="fix 루핑 컨텍스트 — 테스트 파일 수정 시 test_modified_in_fix")
+    # 005 명확화 게이트
+    p_vfy.add_argument("--clarification-check", action="store_true", dest="clarification_check",
+                       help="TASK 4요소 잠금 게이트 — 미충족 시 clarification_gate_unmet (PRINCIPLES §1 집행)")
+    p_vfy.add_argument("--task-md", metavar="<path>", dest="task_md",
+                       help="TASK.md 경로 명시 (기본: <task-path>/TASK.md)")
     p_vfy.set_defaults(func=cmd_verify)
 
     return parser

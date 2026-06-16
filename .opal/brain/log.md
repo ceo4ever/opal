@@ -65,3 +65,7 @@
 - 신규: [[pages/concept/business-terminology-first-principle.md]]
 - 출처: task:024
 
+## [2026-06-16] ingest | CLOSE ingest — 태스크 005 명확화 게이트 TASK 4요소 잠금 기계 집행
+- 신규: [[pages/concept/clarification-gate.md]], [[pages/concept/clarification-gate-backward-compat.md]]
+- 출처: task:005
+

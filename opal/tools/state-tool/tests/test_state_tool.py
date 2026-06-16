@@ -3,11 +3,11 @@
   "module": "test_state_tool",
   "layer": "test",
   "domain": "opal-pipeline",
-  "description": "state-tool 단위 테스트 — 9개 명령 happy path + 23종 에러 코드 × 최소 1건 + G-5~G-15 시나리오",
+  "description": "state-tool 단위 테스트 — 9개 명령 happy path + 23종 에러 코드 × 최소 1건 + G-5~G-15 시나리오. 005: TestClarificationGate 신설 — verify --clarification-check + TASK→다음단계 자동 훅 RED-first 케이스 ①~⑨ + 회귀 보호.",
   "exports": [
     "TestInit", "TestShow", "TestAdvance", "TestMark",
     "TestBlock", "TestValidate", "TestAddRow", "TestStatus", "TestGatePass",
-    "TestErrorCodes", "TestFreeTextPreservation"
+    "TestErrorCodes", "TestFreeTextPreservation", "TestClarificationGate"
   ]
 }
 
@@ -114,6 +114,9 @@ def make_args(**kwargs):
         "item": None,
         "set": None,
         "start": None,
+        # 005: clarification-check 플래그 기본값 (AttributeError 방지)
+        "clarification_check": False,
+        "task_md": None,
     }
     defaults.update(kwargs)
     ns = types.SimpleNamespace(**defaults)
@@ -1696,7 +1699,7 @@ class TestRowsFrom(BaseTestCase):
 # ═════════════════════════════════════════════════════════════════════════════
 
 class TestErrorCodesCompleteness(unittest.TestCase):
-    """PLAN §2.18 E-1: ERROR_CODES 25종 기존 + PLAN 013 신규 2종 + PLAN 014 신규 1종 + PLAN 016 신규 2종 = 30종 모두 등재 확인"""
+    """PLAN §2.18 E-1: ERROR_CODES 25종 기존 + PLAN 013 신규 2종 + PLAN 014 신규 1종 + PLAN 016 신규 2종 + PLAN 005 신규 1종 = 31종 모두 등재 확인"""
 
     EXPECTED_CODES = [
         # 기존 25종 (PLAN §2.18 + 이전 추가분)
@@ -1733,14 +1736,16 @@ class TestErrorCodesCompleteness(unittest.TestCase):
         # PLAN 016 신규 2종 (RED-first TDD 트랙 게이트)
         "red_evidence_missing",
         "test_modified_in_fix",
+        # PLAN 005 신규 1종 (TASK 4요소 잠금 명확화 게이트)
+        "clarification_gate_unmet",
     ]
 
     def test_error_codes_count(self):
-        """ERROR_CODES 상수가 30종 모두 포함 (PLAN §2.18 + PLAN 013 + PLAN 014 + PLAN 016)"""
-        self.assertEqual(len(ST.ERROR_CODES), 30)
+        """ERROR_CODES 상수가 31종 모두 포함 (PLAN §2.18 + PLAN 013 + PLAN 014 + PLAN 016 + PLAN 005)"""
+        self.assertEqual(len(ST.ERROR_CODES), 31)
 
     def test_all_28_codes_registered(self):
-        """28종 코드 각각이 ERROR_CODES에 등재됨"""
+        """31종 코드 각각이 ERROR_CODES에 등재됨"""
         for code in self.EXPECTED_CODES:
             self.assertIn(code, ST.ERROR_CODES, f"에러 코드 {code} 미등재")
 
@@ -2834,6 +2839,385 @@ class TestMultiStepDoneGuard(BaseTestCase):
                          f"step 7/7 후 done 기대, 실제: {row7['status']}")
         self.assertEqual(row7.get("step"), "7/7",
                          f"step 7/7로 갱신 기대, 실제: {row7.get('step')}")
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# K. 명확화 게이트 (PLAN 005) — RED-first TDD 트랙
+#    verify --clarification-check 직접 호출 케이스 ①~⑥
+#    자동 훅(cmd_mark/cmd_advance) 케이스 ⑦~⑨
+#    회귀 보호 케이스 ⑩
+# ═════════════════════════════════════════════════════════════════════════════
+
+# ── TASK.md 픽스처 콘텐츠 상수 ───────────────────────────────────────────────
+
+_TASK_MD_ALL_FILLED = """\
+# TASK: 테스트 태스크
+
+## 명확화 결과
+
+| 요소 | 확정값 | 미확정 | 의존 사실 |
+|------|--------|--------|----------|
+| 목표 | 테스트 목표 확정 | - | - |
+| 범위 | 포함·제외 확정 | - | - |
+| 제약 | 기술 제약 확정 | - | - |
+| 완료기준 | 검증 가능 기준 확정 | - | - |
+"""
+
+_TASK_MD_ONE_BLANK = """\
+# TASK: 테스트 태스크
+
+## 명확화 결과
+
+| 요소 | 확정값 | 미확정 | 의존 사실 |
+|------|--------|--------|----------|
+| 목표 | 테스트 목표 확정 | - | - |
+| 범위 |  | - | - |
+| 제약 | 기술 제약 확정 | - | - |
+| 완료기준 | 검증 가능 기준 확정 | - | - |
+"""
+
+_TASK_MD_ONE_TBD = """\
+# TASK: 테스트 태스크
+
+## 명확화 결과
+
+| 요소 | 확정값 | 미확정 | 의존 사실 |
+|------|--------|--------|----------|
+| 목표 | 테스트 목표 확정 | - | - |
+| 범위 | TBD | - | - |
+| 제약 | 기술 제약 확정 | - | - |
+| 완료기준 | 검증 가능 기준 확정 | - | - |
+"""
+
+_TASK_MD_NO_SECTION = """\
+# TASK: 테스트 태스크
+
+## 요구사항
+
+내용 없음
+"""
+
+_TASK_MD_NA_VALUE = """\
+# TASK: 테스트 태스크
+
+## 명확화 결과
+
+| 요소 | 확정값 | 미확정 | 의존 사실 |
+|------|--------|--------|----------|
+| 목표 | 테스트 목표 확정 | - | - |
+| 범위 | N/A: 단일 파일 수정이므로 범위 제한 없음 | - | - |
+| 제약 | 기술 제약 확정 | - | - |
+| 완료기준 | 검증 가능 기준 확정 | - | - |
+"""
+
+_TASK_MD_ONE_MISSING_ELEMENT = """\
+# TASK: 테스트 태스크
+
+## 명확화 결과
+
+| 요소 | 확정값 | 미확정 | 의존 사실 |
+|------|--------|--------|----------|
+| 목표 | 테스트 목표 확정 | - | - |
+| 범위 | 포함·제외 확정 | - | - |
+| 제약 | 기술 제약 확정 | - | - |
+"""
+
+
+class TestClarificationGate(BaseTestCase):
+    """PLAN 005 — verify --clarification-check + 자동 훅 RED-first 테스트.
+
+    [MUST] mock/patch/MagicMock 금지 — 실제 TASK.md 파일 픽스처(tmp 디렉토리) + 실 state.json + 실 CLI 호출만.
+    [MUST] 구현 코드(state_tool.py 본체) 수정 금지 — RED 증거만 확보.
+    정책 A(graceful skip) 기준: "## 명확화 결과" 섹션/파일 부재 시 {ok:true, skipped} exit 0.
+    """
+
+    # ── 헬퍼 ──────────────────────────────────────────────────────────────────
+
+    def _write_task_md(self, content):
+        """TASK.md를 task_path 아래에 생성한다."""
+        p = self.task_path / "TASK.md"
+        p.write_text(content, encoding="utf-8")
+        return p
+
+    def _call_clarification_verify(self, task_path=None, task_md=None):
+        """cmd_verify --clarification-check 호출 → (exit_code, result_dict).
+
+        task_path 기본값: self.task_path
+        task_md: --task-md 경로 (None이면 <task_path>/TASK.md 자동)
+        """
+        import io
+        from contextlib import redirect_stdout
+        out = io.StringIO()
+        exit_code = 0
+        args = types.SimpleNamespace(
+            task_path=str(task_path or self.task_path),
+            scenario=None,
+            clarification_check=True,
+            task_md=task_md,
+            red_check=False,
+            fix_mode=False,
+            changed_files=None,
+            test_globs=None,
+        )
+        with redirect_stdout(out):
+            try:
+                ST.cmd_verify(args)
+            except SystemExit as e:
+                exit_code = e.code
+        output = out.getvalue().strip()
+        result = json.loads(output) if output else {}
+        return exit_code, result
+
+    def _mark_with_state(self, row_id, auto_pass=False, force=False, note=None):
+        """cmd_mark 헬퍼 — _mark보다 인자 명시적."""
+        return self._mark(row_id, auto_pass=auto_pass, force=force, note=note)
+
+    # ── 케이스 ①: 4요소 모두 채워진 TASK.md → PASS exit 0 ─────────────────────
+
+    def test_case1_all_filled_pass(self):
+        """① 4요소 확정값 채워진 TASK.md → {ok:true, clarification_check:"pass"} exit 0 (PLAN M-2 ①)"""
+        self._write_task_md(_TASK_MD_ALL_FILLED)
+        exit_code, result = self._call_clarification_verify()
+        self.assertEqual(exit_code, 0,
+                         f"[RED] exit_code 0 기대 (미구현이므로 비0 가능). result={result}")
+        self.assertTrue(result.get("ok"),
+                        f"[RED] ok=true 기대. result={result}")
+        self.assertEqual(result.get("clarification_check"), "pass",
+                         f"[RED] clarification_check='pass' 기대. result={result}")
+
+    # ── 케이스 ②: 1요소 공란 → FAIL exit 1 + missing 포함 ──────────────────────
+
+    def test_case2_one_blank_fail(self):
+        """② 1요소 공란 → {ok:false, error:'clarification_gate_unmet', missing:[...]} exit 1 (PLAN M-2 ②)"""
+        self._write_task_md(_TASK_MD_ONE_BLANK)
+        exit_code, result = self._call_clarification_verify()
+        self.assertEqual(exit_code, 1,
+                         f"[RED] exit_code 1 기대. result={result}")
+        self.assertFalse(result.get("ok"),
+                         f"[RED] ok=false 기대. result={result}")
+        self.assertEqual(result.get("error"), "clarification_gate_unmet",
+                         f"[RED] error='clarification_gate_unmet' 기대. result={result}")
+        missing = result.get("missing", [])
+        self.assertTrue(len(missing) >= 1,
+                        f"[RED] missing에 최소 1개 요소 기대. missing={missing}")
+        # "범위" 요소가 공란이므로 missing에 포함되어야 함
+        found_beom_wi = any("범위" in str(m) for m in missing)
+        self.assertTrue(found_beom_wi,
+                        f"[RED] missing에 '범위' 포함 기대. missing={missing}")
+
+    # ── 케이스 ③: 1요소 "TBD" → FAIL (missing 포함) ────────────────────────────
+
+    def test_case3_tbd_fail(self):
+        """③ 1요소 'TBD' → FAIL (PLAN M-2 ③ — TBD는 미확정으로 간주)"""
+        self._write_task_md(_TASK_MD_ONE_TBD)
+        exit_code, result = self._call_clarification_verify()
+        self.assertEqual(exit_code, 1,
+                         f"[RED] exit_code 1 기대 (TBD=미충족). result={result}")
+        self.assertFalse(result.get("ok"),
+                         f"[RED] ok=false 기대. result={result}")
+        self.assertEqual(result.get("error"), "clarification_gate_unmet",
+                         f"[RED] error='clarification_gate_unmet' 기대. result={result}")
+        missing = result.get("missing", [])
+        self.assertTrue(len(missing) >= 1,
+                        f"[RED] missing에 최소 1개 기대 (TBD=범위). missing={missing}")
+
+    # ── 케이스 ④: "## 명확화 결과" 섹션 부재 → 정책 A: skip ok exit 0 ──────────
+
+    def test_case4_no_section_skip_ok(self):
+        """④ '## 명확화 결과' 섹션 부재 → 정책 A: {ok:true, clarification_check:'skipped'} exit 0 (PLAN M-2 ④)"""
+        self._write_task_md(_TASK_MD_NO_SECTION)
+        exit_code, result = self._call_clarification_verify()
+        self.assertEqual(exit_code, 0,
+                         f"[RED] 섹션 부재 시 graceful skip(exit 0) 기대. result={result}")
+        self.assertTrue(result.get("ok"),
+                        f"[RED] ok=true 기대. result={result}")
+        clarification_check = result.get("clarification_check")
+        self.assertEqual(clarification_check, "skipped",
+                         f"[RED] clarification_check='skipped' 기대. result={result}")
+
+    # ── 케이스 ⑤: TASK.md 파일 부재 → 정책 A: skip ok exit 0 ──────────────────
+
+    def test_case5_no_task_md_skip_ok(self):
+        """⑤ TASK.md 파일 부재 → 정책 A: skip ok exit 0 (PLAN M-2 ⑤)"""
+        # TASK.md를 생성하지 않음 — task_path 자체는 존재
+        exit_code, result = self._call_clarification_verify()
+        self.assertEqual(exit_code, 0,
+                         f"[RED] TASK.md 부재 시 graceful skip(exit 0) 기대. result={result}")
+        self.assertTrue(result.get("ok"),
+                        f"[RED] ok=true 기대. result={result}")
+        clarification_check = result.get("clarification_check")
+        self.assertEqual(clarification_check, "skipped",
+                         f"[RED] clarification_check='skipped' 기대. result={result}")
+
+    # ── 케이스 ⑥: 1요소 "N/A: <사유>" → PASS (명시적 해당없음) ────────────────
+
+    def test_case6_na_value_pass(self):
+        """⑥ 1요소 'N/A: <사유>' → PASS (명시적 해당없음, PLAN M-2 ⑥)"""
+        self._write_task_md(_TASK_MD_NA_VALUE)
+        exit_code, result = self._call_clarification_verify()
+        self.assertEqual(exit_code, 0,
+                         f"[RED] N/A:<사유>는 PASS, exit 0 기대. result={result}")
+        self.assertTrue(result.get("ok"),
+                        f"[RED] ok=true 기대. result={result}")
+        self.assertEqual(result.get("clarification_check"), "pass",
+                         f"[RED] clarification_check='pass' 기대. result={result}")
+
+    # ── 케이스 ⑦: 자동 훅 — TASK 완료 후 다음 단계 첫 행 mark 시 미충족 → 거부 ──
+
+    def test_case7_auto_hook_mark_rejected_when_unmet(self):
+        """⑦ TASK 행 전부 done 후 다음 단계 첫 행 mark, 4요소 미충족 → clarification_gate_unmet 거부 (PLAN M-2 ⑦)"""
+        # TASK.md 생성 — 1요소 공란(미충족)
+        self._write_task_md(_TASK_MD_ONE_BLANK)
+
+        # TASK + PLAN 행 구성
+        rows_spec = json.dumps([
+            {"stage": "TASK", "item": "작업"},
+            {"stage": "PLAN", "item": "작업"},
+            {"stage": "CLOSE", "item": "State Gate"},
+        ])
+        self._init(rows_spec=rows_spec)
+
+        # TASK 행(row1) done
+        code = self._mark(1)
+        self.assertEqual(code, 0, "TASK 행 mark exit 0 기대")
+
+        # 다음 단계(PLAN) 첫 행(row2) mark 시도 → 미충족이므로 거부 기대
+        import io
+        from contextlib import redirect_stdout
+        out = io.StringIO()
+        with redirect_stdout(out):
+            with _mock_now():
+                args = make_args(
+                    task_path=str(self.task_path),
+                    row=2, done=True,
+                )
+                exit_code = 0
+                try:
+                    ST.cmd_mark(args)
+                except SystemExit as e:
+                    exit_code = e.code
+        result = json.loads(out.getvalue()) if out.getvalue().strip() else {}
+        self.assertEqual(exit_code, 1,
+                         f"[RED] 미충족 시 거부(exit 1) 기대. result={result}")
+        self.assertEqual(result.get("error"), "clarification_gate_unmet",
+                         f"[RED] error='clarification_gate_unmet' 기대. result={result}")
+
+    # ── 케이스 ⑧: 자동 훅 — 4요소 충족 시 다음 단계 첫 행 mark/advance 통과 ───
+
+    def test_case8_auto_hook_mark_passes_when_met(self):
+        """⑧ TASK 행 전부 done 후 다음 단계 첫 행 mark, 4요소 충족 → 정상 통과 (PLAN M-2 ⑧)"""
+        # TASK.md 생성 — 4요소 전부 채워짐(충족)
+        self._write_task_md(_TASK_MD_ALL_FILLED)
+
+        rows_spec = json.dumps([
+            {"stage": "TASK", "item": "작업"},
+            {"stage": "PLAN", "item": "작업"},
+            {"stage": "CLOSE", "item": "State Gate"},
+        ])
+        self._init(rows_spec=rows_spec)
+
+        # TASK 행(row1) done
+        code = self._mark(1)
+        self.assertEqual(code, 0, "TASK 행 mark exit 0 기대")
+
+        # 다음 단계(PLAN) 첫 행(row2) mark → 충족이므로 통과 기대
+        code2 = self._mark(2)
+        self.assertEqual(code2, 0,
+                         f"[RED] 4요소 충족 시 mark 통과(exit 0) 기대. 실제 exit_code={code2}")
+
+    def test_case8_auto_hook_advance_passes_when_met(self):
+        """⑧-b TASK 행 전부 done 후 다음 단계 첫 행 advance, 4요소 충족 → 통과 (PLAN M-2 ⑧)"""
+        self._write_task_md(_TASK_MD_ALL_FILLED)
+
+        rows_spec = json.dumps([
+            {"stage": "TASK", "item": "작업"},
+            {"stage": "PLAN", "item": "작업"},
+            {"stage": "CLOSE", "item": "State Gate"},
+        ])
+        self._init(rows_spec=rows_spec)
+
+        code = self._mark(1)
+        self.assertEqual(code, 0, "TASK 행 mark exit 0 기대")
+
+        code2 = self._advance(2)
+        self.assertEqual(code2, 0,
+                         f"[RED] 4요소 충족 시 advance 통과(exit 0) 기대. 실제 exit_code={code2}")
+
+    # ── 케이스 ⑨: 자동 훅 — --auto-pass 우회 불가 ──────────────────────────────
+
+    def test_case9_auto_pass_cannot_bypass(self):
+        """⑨ 미충족 상태에서 다음 단계 첫 행 mark --auto-pass 시도 → 거부(우회 불가) (PLAN M-2 ⑨)"""
+        # TASK.md — 미충족
+        self._write_task_md(_TASK_MD_ONE_BLANK)
+
+        rows_spec = json.dumps([
+            {"stage": "TASK", "item": "작업"},
+            {"stage": "PLAN", "item": "작업"},
+            {"stage": "CLOSE", "item": "State Gate"},
+        ])
+        self._init(rows_spec=rows_spec)
+
+        # TASK 행 done
+        code = self._mark(1)
+        self.assertEqual(code, 0)
+
+        # 다음 단계(PLAN) 첫 행에 --auto-pass 시도 → 거부 기대
+        import io
+        from contextlib import redirect_stdout
+        out = io.StringIO()
+        with redirect_stdout(out):
+            with _mock_now():
+                args = make_args(
+                    task_path=str(self.task_path),
+                    row=2, done=True,
+                    auto_pass=True,
+                )
+                exit_code = 0
+                try:
+                    ST.cmd_mark(args)
+                except SystemExit as e:
+                    exit_code = e.code
+        result = json.loads(out.getvalue()) if out.getvalue().strip() else {}
+        self.assertEqual(exit_code, 1,
+                         f"[RED] --auto-pass 우회 거부(exit 1) 기대. result={result}")
+        self.assertEqual(result.get("error"), "clarification_gate_unmet",
+                         f"[RED] error='clarification_gate_unmet' 기대 (auto-pass 우회 불가). result={result}")
+
+    # ── 케이스 ⑩: 회귀 보호 — 기존형 STATE(명확화 섹션 없음) 픽스처로 mark → 게이트 미발동 ──
+
+    def test_case10_regression_no_section_no_gate(self):
+        """⑩ '명확화 결과' 섹션 없는 기존형 STATE 픽스처로 단계 전환 mark → 게이트 미발동(정책 A skip) → 정상 진행 (PLAN M-2 ⑩)"""
+        # TASK.md 없음 (기존 태스크 — 명확화 섹션 없는 케이스)
+        # task_path에 TASK.md를 생성하지 않는다
+
+        rows_spec = json.dumps([
+            {"stage": "TASK", "item": "작업"},
+            {"stage": "PLAN", "item": "작업"},
+            {"stage": "CLOSE", "item": "State Gate"},
+        ])
+        self._init(rows_spec=rows_spec)
+
+        # TASK 행 done
+        code = self._mark(1)
+        self.assertEqual(code, 0, "TASK 행 mark exit 0 기대")
+
+        # 다음 단계(PLAN) 첫 행 mark → TASK.md 없으므로 게이트 발동 안 함 → 통과 기대
+        code2 = self._mark(2)
+        self.assertEqual(code2, 0,
+                         f"[RED] TASK.md 없는 기존형 픽스처는 게이트 미발동으로 통과(exit 0) 기대. 실제 exit_code={code2}")
+
+    def test_case10b_regression_simple_rows_spec_mark(self):
+        """⑩-b SIMPLE_ROWS_SPEC(명확화 섹션 없음) 픽스처로 mark 시 게이트 미발동 (PLAN M-2 ⑩)"""
+        # SIMPLE_ROWS_SPEC: TASK/PLAN/EXECUTE/CLOSE 4행 — 명확화 섹션 없음
+        self._init(rows_spec=SIMPLE_ROWS_SPEC)
+
+        # row1(TASK/작업) done → row2(PLAN/작업) mark
+        code1 = self._mark(1)
+        self.assertEqual(code1, 0)
+
+        code2 = self._mark(2)
+        self.assertEqual(code2, 0,
+                         f"[RED] 기존 SIMPLE_ROWS_SPEC 픽스처는 게이트 미발동, 정상 진행 기대. 실제 exit_code={code2}")
 
 
 # ═════════════════════════════════════════════════════════════════════════════

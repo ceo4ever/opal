@@ -27,6 +27,11 @@
 - 허용: TASK 단계(하네스에서 "직접 수행"으로 정의), 각 SKILL.md에서 "직접 수행"으로 명시된 경우
 - 금지: "워커 디스패치"로 정의된 단계를 PM이 직접 실행
 
+### 명확화 게이트 (PRINCIPLES §1 집행)
+
+TASK 4요소(목표·범위·제약·완료기준)가 TASK.md "## 명확화 결과" 섹션에 잠기지 않으면 다음 단계(PLAN 등) 진입 불가.
+state-tool `verify --clarification-check`가 집행하며, 미충족 시 ERROR_CODES `clarification_gate_unmet`로 거부한다(agentic `--auto-pass` 우회 불가).
+
 ### CLOSE 진입 게이트
 
 사용자의 확인된 지시(`승인`, `확인`, `확인완료` 등 명시적 표현)가 없으면 CLOSE 단계 진입 불가.
@@ -289,3 +294,4 @@ OPAL 도구는 모두 `~/.opal/tools/{tool-name}/run.sh` 래퍼를 통해 호출
 | v5.2 | 2026-06-08 | §2 하네스 모듈 테이블 reporting-template 행 제거 — 보고 형식 AGENT.md 인라인화 (015) |
 | v5.3 | 2026-06-09 18:42 | §2 하네스 모듈 테이블에 RED-first 규칙 행 추가 — red-first.md 등록, 로드 시점: TEST-SCENARIO 작성·EXECUTE 진입 시 (016) |
 | v5.4 | 2026-06-10 01:04 | §9 등록 도구 표에 brain-tool 행 추가 — 프로젝트 브레인 지식 위키 도구 8 서브명령 (015-brain, 별도 PC 015와 중복 채번) |
+| v5.5 | 2026-06-16 18:07 | §1 Guards에 "명확화 게이트" 절 추가 — TASK 4요소 미잠금 시 다음 단계 진입 차단, state-tool --clarification-check 집행 + clarification_gate_unmet 참조 (005) |

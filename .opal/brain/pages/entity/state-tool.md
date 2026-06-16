@@ -8,10 +8,10 @@ exports: [cmd_init, cmd_show, cmd_advance, cmd_mark, cmd_block, cmd_validate, cm
 source_ref: opal/tools/state-tool/state_tool.py
 header_synced: 2026-06-10
 tags: [tool, pipeline]
-sources: [code:opal/tools/state-tool/, task:013, task:014]
-related: [brain-tool, opal-brain-system]
+sources: [code:opal/tools/state-tool/, task:013, task:014, task:005]
+related: [brain-tool, opal-brain-system, clarification-gate]
 created: 2026-06-10
-updated: 2026-06-10
+updated: 2026-06-16
 status: active
 ---
 
@@ -30,9 +30,14 @@ OPAL 파이프라인 현황판(STATE.md)의 JSON SSOT를 결정론적으로 집�
 
 ## 인터페이스
 
-`~/.opal/tools/state-tool/run.sh <command> <task-path> [options]` — venv python 래퍼. 출력 JSON `{ok, ...}`, 에러는 ERROR_CODES 카탈로그(23종) 키.
+`~/.opal/tools/state-tool/run.sh <command> <task-path> [options]` — venv python 래퍼. 출력 JSON `{ok, ...}`, 에러는 ERROR_CODES 카탈로그(31종) 키.
+
+주요 서브커맨드 추가 (task:005):
+- `verify <task-path> --clarification-check [--task-md <path>]` — TASK.md "## 명확화 결과" 4요소 잠금 검사. 미충족 시 `clarification_gate_unmet` exit 1. 섹션/파일 부재 시 graceful skip exit 0 (`opal/tools/state-tool/state_tool.py`)
+- `mark`/`advance` — TASK→다음단계 첫 행 진입 시 명확화 게이트 자동 훅 발동. `--auto-pass` 우회 불가, `--force`만 긴급 탈출구.
 
 ## 관련 페이지
 
 - [[brain-tool]] — state-tool 패턴(run.sh+venv python, ERROR_CODES, KST date.js)을 복제한 동형 도구
 - [[opal-brain-system]] — brain의 집행 철학이 state-tool에서 유래
+- [[clarification-gate]] — task:005에서 추가된 verify --clarification-check 게이트 상세

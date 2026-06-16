@@ -1,0 +1,112 @@
+{
+  "task_id": "005-260616-opds-clarification-gate",
+  "skill": "opds",
+  "mode": "semi-agentic",
+  "schema_version": "1.0",
+  "created_at": "2026-06-16 17:38",
+  "updated_at": "2026-06-16 18:11",
+  "current_status": "done",
+  "rows": [
+    {
+      "row_id": 1,
+      "stage": "TASK",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-16 17:38",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 2,
+      "stage": "TASK",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-16 17:42",
+      "owner": "user",
+      "note": "캡틴 확인: PLAN 진입 승인"
+    },
+    {
+      "row_id": 3,
+      "stage": "PLAN",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-16 17:49",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 4,
+      "stage": "PLAN",
+      "item": "PM Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-16 17:49",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 5,
+      "stage": "PLAN",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-16 17:58",
+      "owner": "user",
+      "note": "캡틴 확인: PLAN 승인, 하위호환 정책 A(graceful skip), TASK 한 점 게이트 유지(옵션1)"
+    },
+    {
+      "row_id": 6,
+      "stage": "EXECUTE",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-16 18:10",
+      "owner": "PM",
+      "note": null,
+      "step": "7/7"
+    },
+    {
+      "row_id": 7,
+      "stage": "TEST",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-16 18:10",
+      "owner": "auto",
+      "note": "agentic auto-pass: semi-agentic auto-pass: TEST — pytest 184 passed(신규12 GREEN) + 배포본 실호출 3종(PASS/FAIL/skip)"
+    },
+    {
+      "row_id": 8,
+      "stage": "TEST",
+      "item": "PM Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-16 18:10",
+      "owner": "auto",
+      "note": "agentic auto-pass: semi-agentic auto-pass: TEST PM Gate — 회귀0·실호출 검증·라벨일치·재서술금지 확인"
+    },
+    {
+      "row_id": 9,
+      "stage": "TEST",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-16 18:11",
+      "owner": "user",
+      "note": "캡틴 확인: CLOSE 진입 승인"
+    },
+    {
+      "row_id": 10,
+      "stage": "CLOSE",
+      "item": "DONE.md 생성",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-16 18:11",
+      "owner": "PM",
+      "note": null
+    }
+  ]
+}
