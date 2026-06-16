@@ -84,6 +84,7 @@ ingest 대상별로 brain 페이지 본문을 작성한다.
 - **파일명**: `kebab-case.md`, `pages/{type}/` 하위에 저장
 - **sources**: `task:<태스크번호>` 형식으로 출처 명시 (예: `task:015`)
 - **코드 참조**: 코드 본문 복제 금지 — `` `file_path:line` `` 형식 참조만 허용
+- **비즈니스 용어 우선**: 본문은 비즈니스 용어/자연어로 서술한다. 코드 식별자를 본문 주어로 나열 금지 — 괄호+`file_path:line` 근거로만 병기한다 (상세: `opal/core/references/harness/citation-rules.md` §8)
 - **관련 링크**: `[[페이지파일명]]` 교차참조 사용
 
 #### 페이지 구조 예시 (concept 타입 — 아키텍처 결정)
@@ -239,3 +240,4 @@ brain 부재 시:
 |------|------|---------|
 | v1.0 | 2026-06-10 | 초기 작성 — CLOSE 경량 ingest 워커. brain 미존재 no-op, 포함/제외 기준, brain-tool add-page/index/log 절차, 에러 안전 처리 (015) |
 | v1.1 | 2026-06-11 19:20 | STEP 3에 백필 기준 SSOT 재사용 명시(M-3) + 동적 타입 로드(SCHEMA §1.5) 정합 안내 추가 (016) |
+| v1.2 | 2026-06-16 | STEP 4 작성 규칙에 비즈니스 용어 우선 불릿 추가 — citation-rules §8 참조 (024) |

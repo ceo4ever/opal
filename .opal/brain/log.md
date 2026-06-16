@@ -61,3 +61,7 @@
 - 신규: [[pages/concept/kanban-current-stage-derivation.md]], [[pages/concept/kanban-pipeline-stage-grouping.md]], [[pages/concept/test-real-data-validation-lesson.md]]
 - 출처: task:023
 
+## [2026-06-16] ingest | CLOSE ingest — 태스크 024 기획 산출물 비즈니스 용어 우선 원칙
+- 신규: [[pages/concept/business-terminology-first-principle.md]]
+- 출처: task:024
+

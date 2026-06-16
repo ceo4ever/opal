@@ -543,3 +543,4 @@ semi-agentic / agentic 모두 CLOSE 첫 행 `--auto-pass` 거부 (`agentic_close
 | v4.1 | 2026-05-24 18:01 | 산출물 저장 경로 누락 보강 — v4 인터뷰 재구성 시 누락된 v3.4 "산출물 저장 경로" 확인 항목을 Round 2 Q6로 복원. Step 1 (d) 저장 경로 자동 감지 추가(PROJECT.md 등록 / 100.기획/ 존재 / 둘 다 없음 3분기). Step 4 TASK.md 양식에 "산출물 저장 경로" 섹션 추가. "산출물 저장 구조" 절에 default v4 7폴더 트리(100.기획/110.PRD~170.기능시나리오) 명시 + 한국어/kebab-case 컨벤션 충돌 안내. (008 추가작업) |
 | v4.2 | 2026-06-07 | State Gate 행 제거(guard 이전) + op-task-qa QA Gate 제거 → PM Gate 문서검증 흡수 + gate-pass 4-row 호출 제거 → PM Gate 단일 mark + CLOSE State Gate 행 제거(DONE.md 생성 단일 행) + STATE 행 예시 10행 구조 추가 + TASK 산출물 행 흡수. opds 패턴 정합 (014 Phase 4) |
 | v4.3 | 2026-06-11 19:25 | CLOSE 단계에 op-brain-ingest 디스패치 훅 삽입 — DONE.md 생성 직후 brain 존재 시 ingest 워커 디스패치, 부재 시 no-op, CLOSE 비중단. 탐색 경로 2단. STATE 행 수 10 불변 (016) |
+| v4.4 | 2026-06-16 | references 비즈니스 용어 우선 주입 — network-guide §7-0 공통 작성 원칙 + consistency-rules §3.1 검증 절 신설, citation-rules §8 참조 (024) |
