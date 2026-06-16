@@ -83,6 +83,16 @@ function categoryClass(category: string): string {
   return CATEGORY_COLORS[category.toLowerCase()] ?? "bg-muted text-muted-foreground";
 }
 
+// 한 줄 요약(description)을 구조화: 원문자(①②③) 앞 + 'XX). ' 문장 경계 뒤에 단락 구분.
+// 본문 파일 없는 메모리의 인덱스 요약을 일목요연하게 렌더하기 위함.
+function structureMemoryText(text: string): string {
+  return text
+    .replace(/([①-⑳])/g, "\n\n$1 ") // ①~⑳ 앞 단락 구분
+    .replace(/\)\.\s+/g, ").\n\n") // '...). ' 문장 경계 뒤 단락 구분
+    .replace(/^\n+/, "") // 선두 빈 줄 제거
+    .trim();
+}
+
 function stageClass(stage: string): string {
   if (stage.toLowerCase().includes("done")) return "bg-status-done";
   if (stage.toLowerCase().includes("execute")) return "bg-status-running";
@@ -256,7 +266,7 @@ function MemoryDrawer({
               </div>
               <div>
                 <p className="text-xs font-medium text-muted-foreground mb-1">내용</p>
-                <p className="text-sm">{row.description}</p>
+                <MarkdownView content={structureMemoryText(row.description)} />
               </div>
             </div>
           )}
