@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-06-15 18:16
+> 갱신: 2026-06-16 17:16
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -24,6 +24,8 @@
 - [[deploy-artifact-verification-lesson]] — 동작검증은 배포 산출물+실 브라우저 기준으로 수행해야 한다 #verification #qa #deployment #lesson
 - [[dict-선행-model-ssot]] — DICT가 MODEL을 선행한다 — 사전이 속성명·타입 SSOT #architecture-decision #data-design #ssot #pipeline
 - [[erd-modeler-deprecation]] — erd-modeler deprecate — op-data-model/ddl로 분해, //erm 하위호환 #architecture-decision #deprecation #erd-modeler #migration
+- [[kanban-current-stage-derivation]] — 칸반 current_stage 파생 규칙 (도달 단계 기준) #opal-console #kanban #pipeline #be-single-source
+- [[kanban-pipeline-stage-grouping]] — 파이프라인 스테퍼 stage 그룹화 (BE 단일 소스, na/skipped 제외) #opal-console #pipeline #stage-grouping #be-single-source
 - [[linux-install-script]] — Linux 설치 스크립트 신설 (단순 위임 전략) #install #linux #deploy #task
 - [[model-mapping-latest-tracking]] — OPAL 모델 매핑 최신화 + 최신 추종 전략 #model #mapping #gemini #codex #task
 - [[op-brain-ingest]] — op-brain-ingest — CLOSE 경량 ingest 워커 #knowledge #close #ingest #skill
@@ -72,6 +74,7 @@
 - [[skill-opal-skill-creator]] — opal-skill-creator — OPAL 스킬 생성 파이프라인 #skill #creator #framework
 - [[skill-opal-skill-manager]] — opal-skill-manager — OPAL 커뮤니티 스킬 관리 #skill #manager #community
 - [[skill-opal-start]] — opal-start — OPAL 재진입 가이드 #skill #start #onboarding #guide
+- [[test-real-data-validation-lesson]] — TEST 실데이터 검증이 build-only 가 놓친 결함을 발견한다 #testing #lesson #test-strategy #real-data
 - [[test-scenario-pipeline-redesign]] — 테스트 시나리오 파이프라인 재설계 (2차원 매트릭스 + self-confirming 4분리) #testing #pipeline #framework #flow #task
 - [[three-layer-memory-architecture]] — 3계층 기억 아키텍처 — MEMORY / brain / tasks #architecture #memory #brain #long-term #tasks
 - [[uncommitted-component-readme-policy]] — 미커밋 컴포넌트는 공개 README에 미노출 #readme #policy #git #documentation #ppt-builder

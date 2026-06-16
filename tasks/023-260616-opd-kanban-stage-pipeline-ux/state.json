@@ -1,0 +1,162 @@
+{
+  "task_id": "023-260616-opd-kanban-stage-pipeline-ux",
+  "skill": "opd",
+  "mode": "semi-agentic",
+  "schema_version": "1.0",
+  "created_at": "2026-06-16 13:20",
+  "updated_at": "2026-06-16 17:14",
+  "current_status": "done",
+  "rows": [
+    {
+      "row_id": 1,
+      "stage": "TASK",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-16 13:21",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 2,
+      "stage": "TASK",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-16 13:47",
+      "owner": "user",
+      "note": "캡틴 확인: ANALYSIS 진입 승인"
+    },
+    {
+      "row_id": 3,
+      "stage": "ANALYSIS",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-16 13:51",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 4,
+      "stage": "ANALYSIS",
+      "item": "PM Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-16 13:51",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 5,
+      "stage": "ANALYSIS",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-16 13:54",
+      "owner": "user",
+      "note": "캡틴 확인: PLAN 진입 승인, R2 옵션 A 확정"
+    },
+    {
+      "row_id": 6,
+      "stage": "PLAN",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-16 13:59",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 7,
+      "stage": "PLAN",
+      "item": "PM Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-16 13:59",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 8,
+      "stage": "PLAN",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-16 16:01",
+      "owner": "user",
+      "note": "캡틴 확인: TEST-SCENARIO 진입 승인"
+    },
+    {
+      "row_id": 9,
+      "stage": "TEST-SCENARIO",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-16 16:03",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 10,
+      "stage": "TEST-SCENARIO",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-16 16:05",
+      "owner": "user",
+      "note": "캡틴 확인: EXECUTE 진입 승인 (UI 방향 합의)"
+    },
+    {
+      "row_id": 11,
+      "stage": "EXECUTE",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-16 16:15",
+      "owner": "PM",
+      "note": null,
+      "step": "5/5"
+    },
+    {
+      "row_id": 12,
+      "stage": "TEST",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-16 17:13",
+      "owner": "auto",
+      "note": "agentic auto-pass: semi-agentic auto-pass: TEST 작업 완료 (49 passed, L3 캡틴 확인, fix 1회)"
+    },
+    {
+      "row_id": 13,
+      "stage": "TEST",
+      "item": "PM Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-16 17:13",
+      "owner": "auto",
+      "note": "agentic auto-pass: semi-agentic auto-pass: TEST PM Gate — 시나리오/품질/보안/회귀 Pass"
+    },
+    {
+      "row_id": 14,
+      "stage": "TEST",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-16 17:13",
+      "owner": "user",
+      "note": "캡틴 확인: CLOSE 진입 승인"
+    },
+    {
+      "row_id": 15,
+      "stage": "CLOSE",
+      "item": "DONE.md 생성",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-16 17:14",
+      "owner": "PM",
+      "note": null
+    }
+  ]
+}

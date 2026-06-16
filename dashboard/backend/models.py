@@ -3,12 +3,14 @@
   "module": "models",
   "layer": "schema",
   "domain": "console",
-  "description": "Pydantic 응답 스키마. ProjectInfo·ProjectDetail·TaskCard·MemoryIndex·DoctorReport 등 5개 화면 계약 정의",
+  "description": "Pydantic 응답 스키마. ProjectInfo·ProjectDetail·TaskCard·MemoryIndex·DoctorReport 등 5개 화면 계약 정의. PipelineStageGroup: stage 단위 그룹 스키마(done_count/total/status/rows) — TaskDetailResponse.pipeline 타입.",
   "exports": [
     "HealthResponse",
     "ProjectInfoResponse",
     "ProjectDetailResponse",
     "TaskCardResponse",
+    "PipelineRow",
+    "PipelineStageGroup",
     "TaskDetailResponse",
     "MemoryIndexResponse",
     "DoctorReportResponse",
@@ -120,6 +122,14 @@ class PipelineRow(BaseModel):
     updated_at: str = ""
 
 
+class PipelineStageGroup(BaseModel):
+    stage: str                       # "TASK" | "PLAN" | "EXECUTE" | "TEST" | "CLOSE" 등
+    done_count: int                  # 단계 내 done 행 수
+    total: int                       # 단계 내 전체 행 수
+    status: str                      # 집계 status: done|in_progress|pending|blocked
+    rows: list[PipelineRow] = []     # 단계 내부 행 보존 (디버그/툴팁 확장 여지)
+
+
 class TaskDetailResponse(BaseModel):
     task_id: str
     title: str
@@ -128,7 +138,7 @@ class TaskDetailResponse(BaseModel):
     current_status: str = ""
     current_stage: str = ""
     progress: int = 0
-    pipeline: list[PipelineRow] = []
+    pipeline: list[PipelineStageGroup] = []
     artifacts: list[str] = []
     updated_at: str = ""
 

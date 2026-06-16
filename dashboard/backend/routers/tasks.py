@@ -3,12 +3,15 @@
   "module": "routers.tasks",
   "layer": "router",
   "domain": "console",
-  "description": "GET /api/tasks, /api/tasks/detail?project=&task_id=, /api/tasks/artifact?project=&task_id=&name= — 칸반 5컬럼 정규화(pending/in_progress/blocked/done/archive) + 산출물 뷰어. tasks/backup/ 하위 폴더 → archive 컬럼. state.json 없는 옛 형식 태스크는 산출물(DONE.md/PLAN.md 등)로 컬럼 추론. 완료·아카이브 최근순(task_id desc). 절대경로 식별자는 query param으로 전달(path segment 금지). 읽기 전용",
+  "description": "GET /api/tasks, /api/tasks/detail?project=&task_id=, /api/tasks/artifact?project=&task_id=&name= — 칸반 5컬럼 정규화(pending/in_progress/blocked/done/archive) + 산출물 뷰어. tasks/backup/ 하위 폴더 → archive 컬럼. state.json 없는 옛 형식 태스크는 산출물(DONE.md/PLAN.md 등)로 컬럼 추론. 완료·아카이브 최근순(task_id desc). 절대경로 식별자는 query param으로 전달(path segment 금지). 읽기 전용. _derive_current_stage: rows에서 도달 단계 파생(①in_progress→②마지막도달단계(done/na/skipped)→③전부pending이면첫행; pending 미시작 단계 제외). _group_pipeline_stages: rows를 stage 단위 PipelineStageGroup으로 그룹핑(total/done_count는 na/skipped 제외 active 기준). _aggregate_status: 단계 내 행 status 집계(na/skipped 제외→blocked우선→all_done→in_progress/혼재→pending; active없으면done).",
   "exports": [
     "GET /api/tasks",
     "GET /api/tasks/detail?project=&task_id=",
     "GET /api/tasks/artifact?project=&task_id=&name=",
-    "COLUMN_MAP"
+    "COLUMN_MAP",
+    "_derive_current_stage",
+    "_aggregate_status",
+    "_group_pipeline_stages"
   ],
   "depends": ["models", "scanner", "config", "cache", "adapters.state_adapter", "parsers.markdown_reader"]
 }
@@ -26,6 +29,7 @@ from dashboard.backend.cache import cache
 from dashboard.backend.config import load_config
 from dashboard.backend.models import (
     PipelineRow,
+    PipelineStageGroup,
     TaskCardResponse,
     TaskDetailResponse,
 )
@@ -167,6 +171,104 @@ def _mtime_to_kst_str(mtime: float) -> str:
     return dt.strftime("%Y-%m-%dT%H:%M:%S+09:00")
 
 
+def _derive_current_stage(rows: list[dict]) -> str:
+    """rows에서 현재 진행 단계명 파생 (BE 단일 소스).
+
+    규칙 (PM 확정, R2 파생 — 도달 단계 반환, pending 미시작 단계 제외):
+      ① in_progress 행이 있으면 그 행의 stage
+      ② 없으면 실제 도달한 마지막 단계
+         (status가 done/na/skipped/in_progress 중 하나인 마지막 행의 stage)
+      ③ 전부 pending이면 첫 행 stage
+      - pending(미시작) 단계는 절대 current_stage로 반환하지 않는다.
+      - rows 비어있으면 "" 반환
+    """
+    if not rows:
+        return ""
+    # ① 활성 진행
+    for r in rows:
+        if r.get("status") == "in_progress":
+            return r.get("stage", "")
+    # ② 실제 도달한 마지막 단계 (done/na/skipped/in_progress 중 마지막 행의 stage)
+    reached = ""
+    for r in rows:
+        if r.get("status") in ("done", "na", "skipped", "in_progress"):
+            reached = r.get("stage", "")
+    if reached:
+        return reached
+    # ③ 전부 pending → 첫 행 stage
+    return rows[0].get("stage", "")
+
+
+def _aggregate_status(grp_rows: list[dict]) -> str:
+    """단계 내 행들의 status를 집계하여 대표 status 반환 (D-2 집계 규칙).
+
+    na/skipped는 "해당없음"으로 집계에서 제외 (active = status not in (na, skipped)).
+    ① active 없으면(전부 해당없음) → "done"
+    ② active 중 하나라도 blocked  → "blocked"   (blocked 우선)
+    ③ active 중 하나라도 in_progress → "in_progress"
+    ④ active 전부 done             → "done"
+    ⑤ active 중 done+pending 혼재  → "in_progress"
+    ⑥ active 전부 pending          → "pending"
+    """
+    active = [r for r in grp_rows if r.get("status") not in ("na", "skipped")]
+    if not active:
+        return "done"                          # ① 전부 해당없음 → 완료로 간주
+    statuses = [r.get("status", "") for r in active]
+    if any(s == "blocked" for s in statuses):
+        return "blocked"                       # ②
+    if any(s == "in_progress" for s in statuses):
+        return "in_progress"                   # ③
+    if all(s == "done" for s in statuses):
+        return "done"                          # ④
+    if any(s == "done" for s in statuses):
+        return "in_progress"                   # ⑤ done+pending 혼재
+    return "pending"                           # ⑥ 전부 pending
+
+
+def _group_pipeline_stages(rows: list[dict]) -> list[PipelineStageGroup]:
+    """rows를 stage 단위로 그룹핑하여 PipelineStageGroup 배열 반환 (BE 단일 소스).
+
+    - stage 등장 순서 보존 (원본 rows 순서 = 파이프라인 진행 순서)
+    - 동일 stage의 연속/분산 행을 하나의 그룹으로 합침
+    - done_count/total/status 집계 (D-2 규칙)
+    - 빈 rows → [] 반환 (IndexError 없음)
+    """
+    if not rows:
+        return []
+
+    groups: list[tuple[str, list[dict]]] = []  # [(stage, [row, ...]), ...] 등장 순서
+    index: dict[str, int] = {}                  # stage -> groups 내 위치
+
+    for r in rows:
+        st = r.get("stage", "")
+        if st not in index:
+            index[st] = len(groups)
+            groups.append((st, []))
+        groups[index[st]][1].append(r)
+
+    result: list[PipelineStageGroup] = []
+    for stage, grp_rows in groups:
+        # na/skipped 제외한 active 행 기준 카운트 (표시 정합)
+        active_rows = [r for r in grp_rows if r.get("status") not in ("na", "skipped")]
+        done_count = sum(1 for r in active_rows if r.get("status") == "done")
+        result.append(PipelineStageGroup(
+            stage=stage,
+            done_count=done_count,
+            total=len(active_rows),
+            status=_aggregate_status(grp_rows),
+            rows=[
+                PipelineRow(
+                    row=r.get("row", i),
+                    stage=r.get("stage", ""),
+                    status=r.get("status", ""),
+                    updated_at=r.get("updated_at", ""),
+                )
+                for i, r in enumerate(grp_rows)
+            ],
+        ))
+    return result
+
+
 def _state_to_task_card(task_id: str, task_dir: str, state: dict | None) -> TaskCardResponse:
     """state dict → TaskCardResponse."""
     if state is None:
@@ -196,7 +298,7 @@ def _state_to_task_card(task_id: str, task_dir: str, state: dict | None) -> Task
         skill=state.get("skill", ""),
         mode=state.get("mode", ""),
         column=column,
-        current_stage=state.get("current_stage", ""),
+        current_stage=state.get("current_stage") or _derive_current_stage(rows),
         progress=progress,
         updated_at=state.get("updated_at", ""),
         artifact_count=len(_get_artifact_files(task_dir)),
@@ -310,15 +412,7 @@ def get_task_detail(
         return result
 
     rows = state.get("rows", [])
-    pipeline = [
-        PipelineRow(
-            row=r.get("row", i),
-            stage=r.get("stage", ""),
-            status=r.get("status", ""),
-            updated_at=r.get("updated_at", ""),
-        )
-        for i, r in enumerate(rows)
-    ]
+    pipeline = _group_pipeline_stages(rows)
 
     done_count = sum(1 for r in rows if r.get("status") == "done")
     total = len(rows) if rows else 1
@@ -330,7 +424,7 @@ def get_task_detail(
         skill=state.get("skill", ""),
         mode=state.get("mode", ""),
         current_status=state.get("current_status", ""),
-        current_stage=state.get("current_stage", ""),
+        current_stage=state.get("current_stage") or _derive_current_stage(rows),
         progress=progress,
         pipeline=pipeline,
         artifacts=_get_artifact_files(task_dir),

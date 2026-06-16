@@ -3,7 +3,7 @@
  *   "module": "tasks-page",
  *   "layer": "page",
  *   "domain": "tasks",
- *   "description": "태스크 칸반 화면 — 상태 5컬럼(대기/진행중/블로킹/완료/아카이브) + 카드(ID·제목·진행률·badge·단계) + 카드 클릭→Sheet(right 사이드 패널, 파이프라인 스테퍼+산출물 탭 마크다운 스크롤). 완료·아카이브 컬럼 최근순 정렬. [MUST] 읽기 전용: dnd-kit sensors 비활성·🔒 badge 상시·grab 커서 미사용. contextProject(ui-store) 전역 구독 — 스위처 연동.",
+ *   "description": "태스크 칸반 화면 — 상태 5컬럼(대기/진행중/블로킹/완료/아카이브) + 카드(ID·제목·진행률·badge·단계 뱃지 진행중 강조) + 카드 클릭→Sheet(right 사이드 패널, 파이프라인 스테퍼 stage 그룹 단계당 1스텝+done/total 카운트+산출물 탭 마크다운 스크롤). 완료·아카이브 컬럼 최근순 정렬. [MUST] 읽기 전용: dnd-kit sensors 비활성·🔒 badge 상시·grab 커서 미사용. contextProject(ui-store) 전역 구독 — 스위처 연동.",
  *   "exports": ["TasksPage"],
  *   "depends": ["api-client", "card", "badge", "progress", "sheet", "tabs", "scroll-area", "skeleton", "separator", "markdown-view", "ui-store"]
  * }
@@ -68,6 +68,14 @@ interface PipelineRow {
   updated_at: string;
 }
 
+interface PipelineStageGroup {
+  stage: string;
+  done_count: number;
+  total: number;
+  status: string; // done | in_progress | pending | blocked
+  rows: PipelineRow[];
+}
+
 interface TaskDetail {
   task_id: string;
   title: string;
@@ -76,7 +84,7 @@ interface TaskDetail {
   current_status: string;
   current_stage: string;
   progress: number;
-  pipeline: PipelineRow[];
+  pipeline: PipelineStageGroup[];
   artifacts: string[];
   updated_at: string;
 }
@@ -170,9 +178,17 @@ function KanbanCard({
             </Badge>
           )}
           {card.current_stage && (
-            <span className="text-[10px] text-muted-foreground ml-auto font-mono">
+            <Badge
+              variant="outline"
+              className={cn(
+                "text-[10px] px-1.5 py-0 h-5 ml-auto font-mono",
+                card.column === "in_progress"
+                  ? "border-status-running text-status-running"
+                  : "text-muted-foreground",
+              )}
+            >
               {card.current_stage}
-            </span>
+            </Badge>
           )}
         </div>
 
@@ -241,28 +257,28 @@ function KanbanColumnView({
 /* PipelineStepper — 가로 스테퍼                                        */
 /* ------------------------------------------------------------------ */
 
-function PipelineStepper({ pipeline }: { pipeline: PipelineRow[] }) {
+function PipelineStepper({ pipeline }: { pipeline: PipelineStageGroup[] }) {
   if (pipeline.length === 0) {
     return <p className="text-sm text-muted-foreground">파이프라인 데이터 없음</p>;
   }
 
   return (
     <div className="flex flex-wrap gap-2 items-center">
-      {pipeline.map((row, idx) => (
-        <React.Fragment key={row.row}>
+      {pipeline.map((g, idx) => (
+        <React.Fragment key={g.stage}>
           <div className="flex flex-col items-center gap-1">
             <div
               className={cn(
                 "h-2.5 w-2.5 rounded-full shrink-0",
-                stageStatusClass(row.status),
+                stageStatusClass(g.status),
               )}
             />
             <span className="text-[10px] font-mono text-center leading-tight max-w-[56px] break-words">
-              {row.stage}
+              {g.stage}
             </span>
-            {row.updated_at && (
-              <span className="text-[9px] text-muted-foreground">{row.updated_at}</span>
-            )}
+            <span className="text-[9px] text-muted-foreground tabular-nums">
+              {g.done_count}/{g.total}
+            </span>
           </div>
           {idx < pipeline.length - 1 && (
             <ChevronRight className="h-3 w-3 text-muted-foreground shrink-0 mb-4" />

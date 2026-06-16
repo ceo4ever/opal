@@ -57,3 +57,7 @@
 - 신규: [[pages/entity/opal-console.md]], [[pages/concept/daemon-as-tool-orchestrator.md]], [[pages/concept/project-id-query-param-pattern.md]], [[pages/concept/deploy-artifact-verification-lesson.md]]
 - 출처: task:021
 
+## [2026-06-16] ingest | CLOSE ingest — 태스크 023 OPAL Console 칸반 stage pipeline UX 개선
+- 신규: [[pages/concept/kanban-current-stage-derivation.md]], [[pages/concept/kanban-pipeline-stage-grouping.md]], [[pages/concept/test-real-data-validation-lesson.md]]
+- 출처: task:023
+
