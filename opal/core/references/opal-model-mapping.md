@@ -26,6 +26,10 @@
 
 > **OpenAI 컬럼 = 참조 전용(install 어댑터 미연동)** — `install-mac.sh` mapping dict에 `openai` 키 없음(호출처 전체에 `platform="openai"` 없음). Codex 경로가 OpenAI 모델을 ChatGPT-auth로 사용한다.
 
+> **Codex 정합 기록 (2026-06-17, 태스크 028)**: 이 테이블 Codex 컬럼(v1.4: `light=gpt-5.4-mini / standard=gpt-5.4 / advanced=gpt-5.5`)이 SSOT다. `install-mac.sh:562`·`:704-708` 및 `windows.ps1:1539`의 3개소가 v1.3 잔재(`standard=gpt-5.5 / advanced=gpt-5.3-codex`)로 stale했음을 확인하여 태스크 028에서 install 코드를 SSOT v1.4로 정정하였다.
+
+> **Codex tool-backed 인라인 주입 시 model 매핑**: PM이 Codex tool-backed 세션에서 워커를 디스패치할 때 OPAL model 레벨을 이 테이블 Codex 컬럼으로 매핑한다 (→ `agents.md §Codex tool-backed 인라인 주입`).
+
 ### 공식 모델 목록
 
 | 플랫폼 | URL |
@@ -93,3 +97,4 @@ model: standard
 | v1.2 | 2026-05-24 | Codex 컬럼 추가 + 플랫폼 감지/갱신 가이드 보강 (009) |
 | v1.3 | 2026-06-02 20:16 KST | Gemini 부동 별칭 전환 + Codex 최신화 + OpenAI 참조전용 명시 + 최신 추종 운영 규칙 보강 (011) |
 | v1.4 | 2026-06-17 10:21 KST | 최신 모델 재검토 — Codex/OpenAI standard `gpt-5.5`→`gpt-5.4`·advanced `gpt-5.3`/`gpt-5.3-codex`→`gpt-5.5`(gpt-5.3-codex 2026-06-30 일몰, gpt-5.5-codex 부재) + 운영 규칙에 Codex 특화 핀 폐지·Gemini 3.x 추종 확인·Fable 5 보류 명문화 + 헤더 버전 v1.0→v1.4 정합. Claude(haiku/sonnet/opus)·Gemini light(gemini-3.1-flash-lite GA) 현행 확인 |
+| v1.5 | 2026-06-17 | install 정합 기록 + 인라인 주입 model 매핑 참조 추가 — install 3개소(`install-mac.sh:562`·`:704-708`, `windows.ps1:1539`) v1.3 stale 확인·태스크 028에서 정정 완료. `agents.md §Codex tool-backed 인라인 주입` 참조 1줄 추가 (028) |

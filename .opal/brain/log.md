@@ -77,3 +77,7 @@
 - 신규: [[brain-business-term-layer]]
 - 출처: task:027
 
+## [2026-06-17] ingest | CLOSE ingest — 태스크 028 Codex 워커 디스패치 어댑터 정합
+- 신규: [[pages/concept/codex-dispatch-inline-injection.md]], [[pages/concept/opal-adapter-platform-isolation.md]]
+- 출처: task:028
+

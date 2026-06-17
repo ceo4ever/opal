@@ -24,6 +24,8 @@
 2. 매핑 테이블에 해당 단계/영역 없음 → 해당 단계는 기존 방식
 3. 매핑 있음 → 전문 에이전트 사용
 
+**Codex tool-backed 세션 특이사항**: Codex tool-backed 세션(모델이 도구로 자율 구동)에서 워커를 디스패치할 때는 `agents.md §Codex tool-backed 인라인 주입` 규칙에 따라 AGENT.md 본문을 `spawn_agent`의 message에 인라인 주입한다. tool-backed 세션에서는 커스텀 에이전트 이름호출이 노출되지 않으므로(이름호출 불가 — [#15250](https://github.com/openai/codex/issues/15250)) generic spawn을 사용하며, PM이 런타임에 AGENT.md 본문을 직접 주입하는 방식으로 워커를 구동한다.
+
 전문 에이전트가 선택된 경우, Step 1~5의 문서 선별/제약 추출 범위가 해당 에이전트의 도메인으로 한정된다.
 
 ## Step 1. 문서 테이블 확인
@@ -169,3 +171,4 @@ PLAN.md §4 실행 체크리스트의 agent 필드를 참조하여 에이전트�
 | v1.2 | 2026-06-10 12:00 | Step 1.5 brain 사전 지식 참조 신설 — `brain-tool search <작업 키워드>`로 과거 결정·맥락 조회 후 워커 컨텍스트 주입. code-scan 사전 범위 파악과 동형, brain 부재 시 자연 스킵 (015) |
 | v1.3 | 2026-06-11 19:21 | Step 1.5 search 3시점 명시(작업·분석·설계 전 / 워커 디스패치 시 / 사용자 질의) + 흐름 확장: brain-tool search → 후보 목록(page·title·score·snippet, 본문 미포함) → score 상위 선별(불확실 시 사용자 확인) → 선택 페이지만 Read 주입(RAG식 전량 로드·index 전체 자동 로드 금지) (016) |
 | v1.4 | 2026-06-11 22:41 | §code-scan 사전 범위 파악 전면 재작성 — 조건부 진입 제거, 코드/문서 판별 기준 신설, 무조건 호출 명문화, 부재 시 즉석 자동 생성(F-3), 결과 3분기 연결(F-4). §Step 1.5에 brain analyze → code-scan @header 의존 1줄 추가 (010) |
+| v1.5 | 2026-06-17 | Step 0 폴백 규칙 직후에 "Codex tool-backed 세션 특이사항" 포인터 추가 — Codex tool-backed 세션에서 이름호출 불가(#15250) + `agents.md §Codex tool-backed 인라인 주입` 규칙 참조 + PM 런타임 AGENT.md 인라인 주입 방식 명시 (028) |

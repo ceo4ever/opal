@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-06-17 13:57
+> 갱신: 2026-06-17 16:38
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -18,9 +18,11 @@
 - [[brain-code-scan-role-division]] — brain↔code-scan 역할 분담 — 선별·신선도·깊이 축 (010) #brain #code-scan #architecture #policy
 - [[brain-search-on-demand]] — brain search 선택 주입 — on-demand 비상주 정책 #architecture #brain #search #context #pm
 - [[brain-search-whitespace-insensitive]] — brain-tool search 공백 무시 매칭 — 한국어 복합명사 띄어쓰기 편차 흡수 #architecture #brain #search #korean #normalization
+- [[business-terminology-first-principle]] — 기획 산출물 비즈니스 용어 우선 원칙 #citation-rules #opal-writing #opwt #brain-ingest #document-standard
 - [[clarification-gate]] — 명확화 게이트 — TASK 4요소 잠금 기계 집행 #pipeline #enforcement #state-tool #clarification
 - [[cmux-tool-dispatcher-expansion]] — cmux-tool 범용 디스패처 확장 (12+1종 서브명령) #tool #cmux #dispatcher #task
 - [[code-scan-mandatory-policy]] — code-scan 무조건화 규약 — 코드 작업 한정 강제 (010) #code-scan #pm #policy #dispatch
+- [[codex-dispatch-inline-injection]] — Codex tool-backed 워커 디스패치 인라인 주입 규칙 #codex #dispatch #adapter #workaround #platform
 - [[codex-platform-integration]] — Codex CLI OPAL 4번째 플랫폼 통합 #codex #platform #bootstrap #mcp #task
 - [[coding-principles-ssot]] — OPAL Coding Principles SSOT 신설 #framework #principles #ssot #task
 - [[daemon-as-tool-orchestrator]] — 데몬은 도구 오케스트레이터 — 데이터 SSOT는 프로젝트 파일 #architecture #dashboard #ssot
@@ -47,6 +49,7 @@
 - [[op-task-execute]] — op-task-execute — 범용 실행 단계 스킬 #task #execute #skill
 - [[op-task-plan]] — op-task-plan — 범용 계획 수립 단계 스킬 #task #plan #skill
 - [[op-task]] — op-task — TASK.md 작성 단계 스킬 #task #skill
+- [[opal-adapter-platform-isolation]] — OPAL 어댑터 계층 플랫폼 분기 격리 원칙 #adapter #architecture #constitution #platform #codex
 - [[opal-architecture]] — OPAL 시스템 아키텍처 #architecture #framework #layer #deploy
 - [[opal-brain-design-proposal]] — OPAL Project Brain 설계 제안서 #brain #design #llm-wiki #ingest #index
 - [[opal-brain-system]] — OPAL Project Brain 시스템 #knowledge #architecture #wiki

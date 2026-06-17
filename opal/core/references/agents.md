@@ -152,9 +152,9 @@ PM이 단계+영역으로 에이전트를 선택하고, opal-plan-agent가 PLAN.
 ## 플랫폼 sub-agent 어댑터 변환 규칙
 
 OPAL 에이전트(`~/.opal/agents/{name}/AGENT.md`)를 각 AI 플랫폼의 sub-agent로 등록하기 위한 어댑터 변환 규칙이다.
-`scripts/install-mac.sh`의 `install_{claude,cursor,gemini}_agents` 함수가 이 규칙을 참조한다.
+`scripts/install-mac.sh`의 `install_{claude,cursor,gemini,codex}_agents` 함수가 이 규칙을 참조한다.
 
-### 플랫폼별 메커니즘 (2026-04 기준)
+### 플랫폼별 메커니즘 (2026-06 기준)
 
 | 플랫폼 | 메커니즘 | 등록 경로 | 공식 문서 |
 |--------|---------|----------|----------|
@@ -162,20 +162,25 @@ OPAL 에이전트(`~/.opal/agents/{name}/AGENT.md`)를 각 AI 플랫폼의 sub-a
 | Cursor | 지원 (v2.4+) | `~/.cursor/agents/{name}.md` | [Cursor Subagents](https://cursor.com/docs/subagents) |
 | Gemini CLI | 지원 | `~/.gemini/agents/{name}.md` | [Gemini CLI Subagents](https://geminicli.com/docs/core/subagents/) |
 | Antigravity | **미지원** | (없음) | [Sub-agents 기능 요청](https://discuss.ai.google.dev/t/antigravity-sub-agents/114381) — 내부 팀 검토 중 |
+| Codex CLI | tool-backed=인라인 주입 / TUI·대화형=이름호출 | `~/.codex/agents/{name}.toml` (자동 로드, 개별 등록 불요) | [Codex Subagents](https://developers.openai.com/codex/subagents) |
+
+> `.toml` 생성(`install_codex_agents`)은 스펙 정합 및 TUI 이름호출에 유효하므로 유지한다. tool-backed 세션에서의 이름호출 제약은 아래 §Codex tool-backed 인라인 주입을 참조.
 
 ### frontmatter 변환 규칙
 
 OPAL frontmatter → 플랫폼 frontmatter:
 
-| OPAL 필드 | Claude Code | Cursor | Gemini CLI |
-|----------|------------|--------|-----------|
-| `name` | `name` (그대로) | `name` (그대로) | `name` (그대로) |
-| `description` | `description` (그대로) | `description` (그대로) | `description` (그대로) |
-| `model: light` | `model: haiku` | `model: inherit` | `model: gemini-3.1-flash-lite` |
-| `model: standard` | `model: sonnet` | `model: inherit` | `model: gemini-flash-latest` |
-| `model: advanced` | `model: opus` | `model: inherit` | `model: gemini-pro-latest` |
-| `icon` | (제거 — 미지원) | (제거 — 미지원) | (제거 — 미지원) |
-| (기타 OPAL 전용 필드) | (제거) | (제거) | (제거) |
+| OPAL 필드 | Claude Code | Cursor | Gemini CLI | Codex CLI |
+|----------|------------|--------|-----------|-----------|
+| `name` | `name` (그대로) | `name` (그대로) | `name` (그대로) | `name` (그대로) |
+| `description` | `description` (그대로) | `description` (그대로) | `description` (그대로) | `description` (그대로) |
+| `model: light` | `model: haiku` | `model: inherit` | `model: gemini-3.1-flash-lite` | `model: gpt-5.4-mini` |
+| `model: standard` | `model: sonnet` | `model: inherit` | `model: gemini-flash-latest` | `model: gpt-5.4` |
+| `model: advanced` | `model: opus` | `model: inherit` | `model: gemini-pro-latest` | `model: gpt-5.5` |
+| `icon` | (제거 — 미지원) | (제거 — 미지원) | (제거 — 미지원) | (제거 — 미지원) |
+| (기타 OPAL 전용 필드) | (제거) | (제거) | (제거) | (제거) |
+
+> Codex 컬럼 모델값은 `opal/core/references/opal-model-mapping.md` §2 Codex 컬럼(SSOT v1.4)과 동일하게 유지한다. `gpt-5.3-codex`는 2026-06-30 일몰 예정이므로 사용하지 않는다.
 
 > Cursor는 사용자가 IDE에서 모델 제공자를 직접 설정하므로 `inherit`로 위임한다 (→ `opal/core/references/opal-model-mapping.md` §4 Cursor 특이사항).
 
@@ -193,6 +198,24 @@ Antigravity는 2026-04 기준 커스텀 sub-agent를 지원하지 않는다 ([�
 향후 Antigravity가 sub-agent를 출시하면 `install_antigravity_agents()`를 추가하고 이 표를 갱신한다.
 
 > 현재 Antigravity 사용 시 OPAL 부트스트래퍼는 `~/.gemini/GEMINI.md`(Antigravity가 Gemini CLI 호환 경로 사용)를 통해 동작하며, sub-agent 디스패치만 미지원이다.
+
+### Codex tool-backed 인라인 주입
+
+Codex CLI에서 tool-backed 세션(모델이 도구로 자율 구동되는 세션)에서는 **커스텀 에이전트 이름 기반 호출이 노출되지 않는다** ([Issue #15250](https://github.com/openai/codex/issues/15250) — OPEN). 이 제약으로 인해 generic `spawn_agent`(`default`/`explorer`/`no-apps`)만 사용 가능하다.
+
+**PM 런타임 행위**: PM이 Codex tool-backed 세션에서 OPAL 워커를 디스패치할 때는 다음 절차를 따른다:
+
+1. `~/.opal/agents/<name>/AGENT.md` 본문을 직접 Read하여 내용을 파악한다.
+2. `spawn_agent`의 message 파라미터에 해당 AGENT.md 본문을 **인라인**으로 주입한다.
+3. OPAL model 레벨을 이 문서 §frontmatter 변환 규칙 Codex 컬럼으로 매핑하여 적용한다 (→ `opal/core/references/opal-model-mapping.md` §2).
+
+이 인라인 주입은 **배포 시점이 아니라 디스패치 런타임 행위**다. `install-mac.sh`의 `install_codex_agents`는 원본 AGENT.md 배포 + `.toml` 생성 + config `[agents]` 작성만 수행하며, 인라인 주입은 PM이 런타임에서 직접 수행한다.
+
+공식 우회법 근거: [Issue #15250](https://github.com/openai/codex/issues/15250) 이슈 본문이 "각 TOML의 `developer_instructions`를 generic 워커에 수동 주입"을 우회책으로 명시하고 있다.
+
+> [MUST] `opal/core/PRINCIPLES.md` Core Stance: "Platform-independent: keep Claude/Cursor/Gemini branches in adapters, never in logic." — 이 규칙은 어댑터 문서(agents.md)에만 존재하며 `opal/core/AGENT.md`에 Codex 분기를 추가하지 않는다.
+
+> **#15250 OPEN 상태 단서**: 이 이슈가 수정되어 tool-backed 세션에서 이름호출이 지원되면, 이 인라인 주입 규칙을 재검토한다. `.toml` 생성 로직은 그 이후에도 TUI·대화형 이름호출에 유효하므로 폐기하지 않는다.
 
 ## 폴백 규칙
 
@@ -317,3 +340,4 @@ project: mams
 | v1.4 | 2026-05-12 21:35 KST | §wtm-agent → §opal-wtm-agent 갱신 — Phase 1(WebFetch)→Phase 2(cmux 조건부)→Phase 3(playwright-tool CLI) 폴백, 입력 `--surface` 3모드, 출력 JSON 8필드, 에이전트 경로 opal/agents/opal-wtm-agent/ (002) |
 | v1.5 | 2026-06-02 20:16 KST | Gemini 변환 표 부동 별칭 전환 — light=`gemini-3.1-flash-lite` 핀, standard=`gemini-flash-latest`, advanced=`gemini-pro-latest` (011) |
 | v1.6 | 2026-06-07 | QA→PM Gate 통합 정합화 — opal-task-qa-agent를 "QA Gate에서 디스패치되는 범용 QA 워커"에서 "디스패치되지 않는 검증 기준 라이브러리 참조 정의"로 역할 한정(삭제하지 않음). 문서 QA는 PM Gate가 직접 흡수, op-dev-qa/op-task-qa는 PM이 참조하는 검증 기준 라이브러리. 동작 검증(opal-test-agent/TEST/verify) 영역 불변 (014 Phase 4-2) |
+| v1.7 | 2026-06-17 | Codex CLI 어댑터 보강 — 메커니즘 표 Codex 행 추가(tool-backed=인라인 주입/TUI=이름호출, `~/.codex/agents/{name}.toml`) + frontmatter 변환 표 Codex 컬럼 추가(gpt-5.4-mini/gpt-5.4/gpt-5.5) + §Codex tool-backed 인라인 주입 규칙 §신설(PM 런타임 행위/spawn_agent message 주입/model 매핑/#15250 인용/배포 시점 아님/.toml 유지 명시) + 함수 참조에 codex 추가 (028) |
