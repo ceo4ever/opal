@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-06-16 18:25
+> 갱신: 2026-06-17 13:57
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -14,6 +14,7 @@
 - [[state-tool]] — state-tool #tool #pipeline
 
 ## 개념
+- [[brain-business-term-layer]] — Brain 업무 언어 번역 계층(term) #brain #citation-rules #term #knowledge
 - [[brain-code-scan-role-division]] — brain↔code-scan 역할 분담 — 선별·신선도·깊이 축 (010) #brain #code-scan #architecture #policy
 - [[brain-search-on-demand]] — brain search 선택 주입 — on-demand 비상주 정책 #architecture #brain #search #context #pm
 - [[brain-search-whitespace-insensitive]] — brain-tool search 공백 무시 매칭 — 한국어 복합명사 띄어쓰기 편차 흡수 #architecture #brain #search #korean #normalization

@@ -1,0 +1,101 @@
+{
+  "task_id": "027-260617-opp-브레인-비즈니스-용어집",
+  "skill": "opp",
+  "mode": "semi-agentic",
+  "schema_version": "1.0",
+  "created_at": "2026-06-17 11:03",
+  "updated_at": "2026-06-17 15:18",
+  "current_status": "done",
+  "rows": [
+    {
+      "row_id": 1,
+      "stage": "TASK",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-17 13:16",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 2,
+      "stage": "TASK",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-17 13:16",
+      "owner": "user",
+      "note": "캡틴 확인: TASK 4요소 잠금 + 설계방향 합의"
+    },
+    {
+      "row_id": 3,
+      "stage": "PLAN",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-17 13:24",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 4,
+      "stage": "PLAN",
+      "item": "PM Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-17 13:24",
+      "owner": "PM",
+      "note": "PM Gate PASS: TASK 요구사항 7개 전량 커버, ★1~★5+lint 골격 반영, §3 8-Step 완결, RED-first·인용 정합. R-6(draft 필터 범위)만 캡틴 확인 권장"
+    },
+    {
+      "row_id": 5,
+      "stage": "PLAN",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-17 13:41",
+      "owner": "user",
+      "note": "캡틴 승인: EXECUTE 진행 + 진입점③(query 용어발견) 추가 + R-6 term 한정"
+    },
+    {
+      "row_id": 6,
+      "stage": "EXECUTE",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-17 13:59",
+      "owner": "PM",
+      "note": "EXECUTE 8-Step 완료: 문서 SSOT 2 + 코드(lint2종·draft필터·term템플릿) + SKILL 2 + brain concept 1 + 검수"
+    },
+    {
+      "row_id": 7,
+      "stage": "EXECUTE",
+      "item": "PM Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-17 14:04",
+      "owner": "PM",
+      "note": "EXECUTE PM Gate PASS: 컨벤션 Critical/High 0(Medium GC-C002 DRY 즉시 정리), pytest 100 passed 회귀0, 027 산출물 validate clean(잔존 3건은 사전부채), 변경이력 027 행 4건"
+    },
+    {
+      "row_id": 8,
+      "stage": "EXECUTE",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-17 15:17",
+      "owner": "user",
+      "note": "캡틴 확인: CLOSE 진입 승인"
+    },
+    {
+      "row_id": 9,
+      "stage": "CLOSE",
+      "item": "DONE.md 생성",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-17 15:18",
+      "owner": "PM",
+      "note": "DONE.md 생성 — 태스크 마감"
+    }
+  ]
+}

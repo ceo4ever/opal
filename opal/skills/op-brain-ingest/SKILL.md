@@ -5,7 +5,7 @@ description: |
   CLOSE 파일럿(opp 등)이 DONE.md 생성 직후 디스패치한다.
   brain(.opal/brain/)이 없는 프로젝트에서는 즉시 no-op(status: skipped)를 반환한다.
   반드시 이 스킬을 사용해야 하는 상황: CLOSE 단계 파일럿이 DONE.md 생성 후 brain ingest를 디스패치할 때.
-version: "1.0"
+version: "1.3"
 domain: knowledge
 dispatched_by: "CLOSE 단계 파일럿 (opp — 이후 확산 예정)"
 ---
@@ -52,6 +52,8 @@ Read한 내용을 기준으로 아래 기준에 따라 ingest 대상·제외를 
 
 > **[동적 타입]**: 페이지 타입(`entity`, `concept`, `flow`, `synthesis` 등)은 `.opal/brain/templates/schema-template.md` §1.5 테이블에서 brain-tool이 동적 로드한다. 아래 테이블의 "페이지 타입" 열은 기본 4종 예시이며, brain이 커스텀 타입으로 초기화된 경우 해당 타입을 사용한다.
 
+> **[MUST] term 채택 게이트**: `term` 타입은 SCHEMA §1.5에 term이 채택된 프로젝트에서만 후보를 추출한다. term이 미채택된 프로젝트(순수 기술 레포 등)에서 term 추출을 시도하면 `invalid_page_type` SCHEMA 위반이 발생한다 — 미채택 시 term 추출을 수행하지 않는다. opal-brain `//opbr init` 채택 가이드와 연동한다.
+
 #### 포함 기준 (하나라도 충족 시 ingest)
 
 | 기준 | 설명 | 페이지 타입 |
@@ -61,6 +63,7 @@ Read한 내용을 기준으로 아래 기준에 따라 ingest 대상·제외를 
 | 인터페이스 변경 | 서브커맨드·API·입출력 스펙 변경 | `entity` 또는 `concept` |
 | 도메인 지식 | 프로젝트 WHY·HOW에 해당하는 인사이트·원칙 | `concept` |
 | 흐름 변경 | 파이프라인·프로세스·단계 구조의 유의미한 변경 | `flow` |
+| 신규 업무 용어·업무 표면 후보 | DONE.md·PLAN.md에 등장한 새 업무 용어·상태명·업무 접점 (term 타입 채택 프로젝트에서만) | `term` (status: draft) |
 
 #### 제외 기준 (ingest 불필요)
 
@@ -86,6 +89,46 @@ ingest 대상별로 brain 페이지 본문을 작성한다.
 - **코드 참조**: 코드 본문 복제 금지 — `` `file_path:line` `` 형식 참조만 허용
 - **비즈니스 용어 우선**: 본문은 비즈니스 용어/자연어로 서술한다. 코드 식별자를 본문 주어로 나열 금지 — 괄호+`file_path:line` 근거로만 병기한다 (상세: `opal/core/references/harness/citation-rules.md` §8)
 - **관련 링크**: `[[페이지파일명]]` 교차참조 사용
+
+#### term 페이지 작성 규칙 (term 타입 채택 프로젝트 전용)
+
+> **[MUST]**: term 페이지는 반드시 `status: draft`로 등록한다. draft 상태는 답변 검색에 노출되지 않으며, 캡틴/PM 확정 후 `active`로 승격한다.
+
+- **frontmatter 선택 키**: 아래 3종을 적절히 추가한다 (필수 키 type/title/created/updated/status/sources는 기존 §2.1 공통 규칙 준수).
+
+  | 키 | 타입 | 설명 |
+  |----|------|------|
+  | `aliases` | string[] | 별칭·동의 표현 (검색 보강 및 alias_collision lint 대상) |
+  | `actors` | string[] | 업무 행위자 (예: PM, 운영자, 구매자) |
+  | `surfaces` | string[] | 업무 표면 — 용어가 등장하는 화면·프로세스 |
+
+- **본문**: 업무 의미를 2~4문장으로 서술한다. 비즈니스 용어 우선(코드 식별자를 본문 주어로 나열 금지). 기존 §8 비즈니스 용어 우선 불릿과 정합 (→ `opal/core/references/harness/citation-rules.md` §8).
+- **다층 근거 `sources`**: 코드참조(`file_path:line`)만이 아닌 정책참조(`POL-{번호}`)·IA참조(`ia:{system}:{screen}`)를 병기하여 다층 근거를 구성한다 (형식은 brain SCHEMA §4 링크 규칙 참조).
+- **파일명·경로**: `pages/term/<kebab-term-name>.md`
+
+#### term 페이지 구조 예시
+
+```markdown
+---
+type: term
+title: <업무 용어명>
+aliases: [<별칭1>, <별칭2>]
+actors: [<행위자1>]
+surfaces: [<화면·프로세스1>]
+tags: [<관련 태그>]
+sources: [task:<번호>, POL-<번호>]
+related: [[<관련 페이지>]]
+created: <YYYY-MM-DD>
+updated: <YYYY-MM-DD>
+status: draft
+---
+
+<업무 의미 2~4문장. 비즈니스 언어로 서술. 코드 식별자는 `경로:줄번호` 근거로만 병기.>
+
+## 관련 페이지
+
+- [[<관련 페이지>]]
+```
 
 #### 페이지 구조 예시 (concept 타입 — 아키텍처 결정)
 
@@ -241,3 +284,4 @@ brain 부재 시:
 | v1.0 | 2026-06-10 | 초기 작성 — CLOSE 경량 ingest 워커. brain 미존재 no-op, 포함/제외 기준, brain-tool add-page/index/log 절차, 에러 안전 처리 (015) |
 | v1.1 | 2026-06-11 19:20 | STEP 3에 백필 기준 SSOT 재사용 명시(M-3) + 동적 타입 로드(SCHEMA §1.5) 정합 안내 추가 (016) |
 | v1.2 | 2026-06-16 | STEP 4 작성 규칙에 비즈니스 용어 우선 불릿 추가 — citation-rules §8 참조 (024) |
+| v1.3 | 2026-06-17 | CLOSE ingest term 추출 — STEP3 채택 게이트(채택 프로젝트만) + 포함 기준에 term draft 행 추가 + STEP4 term 작성 규칙(aliases/actors/surfaces·draft) (027) |

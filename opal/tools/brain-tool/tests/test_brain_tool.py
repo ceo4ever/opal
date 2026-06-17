@@ -3,11 +3,13 @@
   "module": "test_brain_tool",
   "layer": "test",
   "domain": "opal-brain",
-  "description": "brain-tool 단위 테스트 — 10 서브커맨드 happy-path + ERROR_CODES 주요 14종 + 동적 타입 로드 + analyze/ingest-scan. tmp_path 기반 격리 실행. mock 금지 — 실제 brain_tool.py를 import 호출하는 진짜 테스트.",
+  "description": "brain-tool 단위 테스트 — 10 서브커맨드 happy-path + ERROR_CODES 주요 14종 + 동적 타입 로드 + analyze/ingest-scan + 027(term 동적로드·draft search 필터·lint term_duplicate/alias_collision). tmp_path 기반 격리 실행. mock 금지 — 실제 brain_tool.py를 import 호출하는 진짜 테스트.",
+  "task": "027",
   "exports": [
     "TestInit", "TestAddPage", "TestIndex", "TestLog",
     "TestSearch", "TestSyncHeader", "TestLint", "TestValidate",
-    "TestErrorCodes", "TestDynamicPageTypes", "TestAnalyze", "TestIngestScan"
+    "TestErrorCodes", "TestDynamicPageTypes", "TestAnalyze", "TestIngestScan",
+    "TestTermDraft027", "TestTermLint027"
   ]
 }
 """
@@ -73,6 +75,7 @@ def make_args(**kwargs):
         "query": "",
         "tag": None,
         "limit": None,
+        "include_draft": False,
         # sync-header
         "scope": None,
         "page": None,
@@ -135,6 +138,30 @@ class BrainTestCase(unittest.TestCase):
             )
             exit_code, result = self._call(BT.cmd_add_page, args)
         return exit_code, result
+
+    def _write_term_page(self, name, title, status="active", aliases=None, sources="[task:027]"):
+        """term 페이지를 직접 파일로 생성한다 (add-page 우회 — status/sources 제어용). 027 공통 헬퍼."""
+        page_dir = self.brain_root / "pages" / "term"
+        page_dir.mkdir(parents=True, exist_ok=True)
+        aliases_yaml = ""
+        if aliases:
+            aliases_list = "\n".join(f"  - {a}" for a in aliases)
+            aliases_yaml = f"aliases:\n{aliases_list}\n"
+        content = (
+            f"---\n"
+            f"type: term\n"
+            f"title: {title}\n"
+            f"{aliases_yaml}"
+            f"tags: []\n"
+            f"sources: {sources}\n"
+            f"related: []\n"
+            f"created: 2026-06-17\n"
+            f"updated: 2026-06-17\n"
+            f"status: {status}\n"
+            f"---\n\n"
+            f"업무 의미 설명.\n"
+        )
+        (page_dir / f"{name}.md").write_text(content, encoding="utf-8")
 
     def _err_code(self, fn, args):
         """에러 응답의 error 코드 추출 헬퍼."""
@@ -1432,6 +1459,281 @@ class TestValidateFrontmatter(unittest.TestCase):
             issues = BT.validate_frontmatter(fm)
             type_issues = [i for i in issues if "invalid type" in i]
             self.assertEqual(type_issues, [], f"type={ptype}가 invalid로 판정됨")
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# 027: term 동적 로드 + draft search 필터 + lint term_duplicate/alias_collision
+# ═════════════════════════════════════════════════════════════════════════════
+
+class TestTermDraft027(BrainTestCase):
+    """027: term 동적 로드 + search draft 필터 (R-6 term 한정).
+
+    테스트 구조:
+    - term 타입이 SCHEMA §1.5에 있으면 load_page_types가 인식한다.
+    - add-page --type term이 통과한다 (page-term.md 템플릿 필요).
+    - type=term + status=draft 페이지는 기본 검색에서 제외, --include-draft로 포함.
+    - type=concept + status=draft 페이지는 기본 검색에 노출 (R-6 회귀 케이스).
+    - 기존 검색 동작 보존 회귀 케이스.
+    """
+
+    def _write_schema_with_term(self):
+        """brain_root/SCHEMA.md에 term 타입이 포함된 §1.5 테이블 작성."""
+        schema_text = (
+            "# Project Brain SCHEMA\n\n"
+            "## 1.5 페이지 타입 정의 (brain-tool 동적 로드 SSOT)\n\n"
+            "> brain-tool은 이 블록에서 타입 세트를 동적 로드한다.\n\n"
+            "| type | category | 설명 |\n"
+            "|------|----------|------|\n"
+            "| term | 도메인 | 프로젝트 비즈니스 표준 용어 (1페이지=1용어) |\n"
+            "| entity | 엔티티 | 코드 모듈·서비스·도구·스킬 |\n"
+            "| concept | 개념 | 아키텍처 결정·설계 배경 |\n"
+            "| flow | 흐름 | 파이프라인·프로세스 흐름 |\n"
+            "| synthesis | 합성 | 질의 파생 분석 |\n"
+        )
+        (self.brain_root / "SCHEMA.md").write_text(schema_text, encoding="utf-8")
+
+    # ── TestDynamicPageTypes 확장: term 동적 로드 ───────────────────────────
+
+    def test_load_page_types_includes_term(self):
+        """027-T1: SCHEMA §1.5에 term 행 → load_page_types가 term을 반환."""
+        self._init()
+        self._write_schema_with_term()
+        types, type_to_cat = BT.load_page_types(self.brain_root)
+        self.assertIn("term", types,
+                      f"load_page_types가 term을 반환하지 않음. 반환값: {types}")
+        self.assertEqual(type_to_cat.get("term"), "도메인",
+                         f"term의 category가 '도메인'이 아님: {type_to_cat.get('term')}")
+
+    def test_add_page_term_type_recognized(self):
+        """027-T2: add-page --type term이 타입 검증을 통과한다.
+
+        커스텀 타입은 타입 검증(invalid_page_type)을 통과하되,
+        page-term.md 템플릿이 있으면 성공해야 한다.
+        invalid_page_type 에러가 나면 동적 로드 실패.
+        """
+        self._init()
+        self._write_schema_with_term()
+        # term 타입 디렉토리 생성
+        (self.brain_root / "pages" / "term").mkdir(parents=True, exist_ok=True)
+        with _mock_kst():
+            args = make_args(
+                brain_path=str(self.brain_root),
+                path="test-term-page",
+                type="term",
+                title="테스트 용어",
+            )
+            code, result = self._call(BT.cmd_add_page, args)
+        # invalid_page_type이 나면 동적 로드 실패
+        if code != 0:
+            error = result.get("error", "")
+            self.assertNotEqual(
+                error, "invalid_page_type",
+                "SCHEMA 동적 타입 'term'이 invalid_page_type으로 거부됨 — 동적 로드 실패"
+            )
+        else:
+            # 성공 시 페이지가 생성됐는지 확인
+            page_path = self.brain_root / "pages" / "term" / "test-term-page.md"
+            self.assertTrue(page_path.exists(), "term 페이지 파일이 생성되지 않음")
+
+    # ── TestSearch 확장: draft 필터 (R-6 term 한정) ────────────────────────
+
+    def test_search_term_draft_excluded_by_default(self):
+        """027-S1: type=term + status=draft 페이지는 기본 검색에서 제외 (R-6 term 한정)."""
+        self._init()
+        self._write_schema_with_term()
+        # term 페이지를 draft 상태로 생성
+        self._write_term_page("draft-term", "초안용어", status="draft")
+
+        with _mock_kst():
+            # --include-draft 없음 (기본값 False)
+            args = make_args(
+                brain_path=str(self.brain_root),
+                query="초안용어",
+                type=None,
+                include_draft=False,
+            )
+            _, result = self._call(BT.cmd_search, args)
+
+        matches = result.get("matches", [])
+        term_draft_pages = [m for m in matches if "draft-term" in m.get("page", "")]
+        self.assertEqual(
+            term_draft_pages, [],
+            f"draft term 페이지가 기본 검색에 노출됨(R-6 위반): {term_draft_pages}"
+        )
+
+    def test_search_term_draft_included_with_flag(self):
+        """027-S2: type=term + status=draft 페이지는 --include-draft로 포함."""
+        self._init()
+        self._write_schema_with_term()
+        self._write_term_page("draft-term-b", "드래프트용어B", status="draft")
+
+        with _mock_kst():
+            args = make_args(
+                brain_path=str(self.brain_root),
+                query="드래프트용어B",
+                type=None,
+                include_draft=True,
+            )
+            _, result = self._call(BT.cmd_search, args)
+
+        matches = result.get("matches", [])
+        term_draft_pages = [m for m in matches if "draft-term-b" in m.get("page", "")]
+        self.assertGreater(
+            len(term_draft_pages), 0,
+            "--include-draft 지정 시 draft term 페이지가 검색 결과에 없음"
+        )
+
+    def test_search_concept_draft_still_visible(self):
+        """027-S3: type=concept + status=draft 페이지는 기본 검색에 노출 (R-6 회귀 케이스).
+
+        add-page가 전 타입을 draft로 생성하므로, concept draft는 기본 검색에 노출돼야 한다.
+        """
+        self._init()
+        # concept 페이지 추가 (add-page는 status=draft로 생성)
+        self._add_page("concept-draft-page", "concept", "개념페이지드래프트")
+
+        with _mock_kst():
+            args = make_args(
+                brain_path=str(self.brain_root),
+                query="개념페이지드래프트",
+                type=None,
+                include_draft=False,  # draft 필터 기본값
+            )
+            _, result = self._call(BT.cmd_search, args)
+
+        matches = result.get("matches", [])
+        concept_pages = [m for m in matches if "concept-draft-page" in m.get("page", "")]
+        self.assertGreater(
+            len(concept_pages), 0,
+            "concept draft 페이지가 기본 검색에서 제외됨 — R-6 회귀 발생 (concept은 draft여도 노출돼야 함)"
+        )
+
+    def test_search_term_active_always_visible(self):
+        """027-S4: type=term + status=active 페이지는 기본 검색에 노출 (회귀 케이스)."""
+        self._init()
+        self._write_schema_with_term()
+        self._write_term_page("active-term", "활성용어", status="active")
+
+        with _mock_kst():
+            args = make_args(
+                brain_path=str(self.brain_root),
+                query="활성용어",
+                type=None,
+                include_draft=False,
+            )
+            _, result = self._call(BT.cmd_search, args)
+
+        matches = result.get("matches", [])
+        active_term_pages = [m for m in matches if "active-term" in m.get("page", "")]
+        self.assertGreater(
+            len(active_term_pages), 0,
+            "status=active term 페이지가 기본 검색에서 제외됨 — draft 필터가 active도 제외함 (버그)"
+        )
+
+
+class TestTermLint027(BrainTestCase):
+    """027: lint term_duplicate + alias_collision 신규 검출 2종.
+
+    테스트 구조:
+    - 동일 정규화 표준명 term 2개 → term_duplicate 검출.
+    - term A의 alias가 term B의 title과 동일 정규화 → alias_collision 검출.
+    - term 미존재 brain → 신규 kind 0건 (회귀 0).
+    """
+
+    # ── ① term_duplicate 검출 ─────────────────────────────────────────────
+
+    def test_lint_detects_term_duplicate(self):
+        """027-L1: 동일 정규화 표준명 term 2개 → kind=term_duplicate 검출.
+
+        "자동취소" 와 "자동 취소" 는 _norm 기준 동일 정규화 → term_duplicate.
+        """
+        self._init()
+        self._write_term_page("term-a", "자동취소")
+        self._write_term_page("term-b", "자동 취소")  # 정규화 동일
+
+        with _mock_kst():
+            args = make_args(brain_path=str(self.brain_root))
+            _, result = self._call(BT.cmd_lint, args)
+
+        kinds = [i["kind"] for i in result.get("issues", [])]
+        self.assertIn(
+            "term_duplicate", kinds,
+            f"term_duplicate 미검출. 검출된 kind: {kinds}"
+        )
+
+    # ── ② alias_collision 검출 ────────────────────────────────────────────
+
+    def test_lint_detects_alias_collision_with_title(self):
+        """027-L2: term A의 alias가 term B의 title과 동일 정규화 → alias_collision 검출."""
+        self._init()
+        self._write_term_page("term-x", "주문취소")
+        self._write_term_page("term-y", "선정취소", aliases=["주문취소"])  # term-x title과 충돌
+
+        with _mock_kst():
+            args = make_args(brain_path=str(self.brain_root))
+            _, result = self._call(BT.cmd_lint, args)
+
+        kinds = [i["kind"] for i in result.get("issues", [])]
+        self.assertIn(
+            "alias_collision", kinds,
+            f"alias_collision 미검출. 검출된 kind: {kinds}"
+        )
+
+    def test_lint_detects_alias_collision_between_aliases(self):
+        """027-L2b: term A의 alias가 term B의 alias와 동일 정규화 → alias_collision 검출."""
+        self._init()
+        self._write_term_page("term-p", "구매취소", aliases=["purchase cancel"])
+        self._write_term_page("term-q", "결제취소", aliases=["purchase  cancel"])  # 정규화 동일 (공백 2개)
+
+        with _mock_kst():
+            args = make_args(brain_path=str(self.brain_root))
+            _, result = self._call(BT.cmd_lint, args)
+
+        kinds = [i["kind"] for i in result.get("issues", [])]
+        self.assertIn(
+            "alias_collision", kinds,
+            f"alias_collision 미검출 (alias↔alias). 검출된 kind: {kinds}"
+        )
+
+    # ── ③ term 미존재 brain → 신규 kind 0건 (회귀 0) ────────────────────
+
+    def test_lint_no_term_pages_zero_new_kinds(self):
+        """027-L3: term 페이지 없는 brain → term_duplicate/alias_collision 0건 (회귀 0).
+
+        concept/entity 등 비-term 페이지만 있는 brain에서 신규 kind가 나오면 회귀.
+        """
+        self._init()
+        # concept 페이지만 추가 (term 없음)
+        self._add_page("concept-only", "concept", "개념페이지")
+
+        with _mock_kst():
+            args = make_args(brain_path=str(self.brain_root))
+            _, result = self._call(BT.cmd_lint, args)
+
+        kinds = [i["kind"] for i in result.get("issues", [])]
+        self.assertNotIn(
+            "term_duplicate", kinds,
+            "term 페이지 없는 brain에서 term_duplicate 검출됨 — 회귀 발생"
+        )
+        self.assertNotIn(
+            "alias_collision", kinds,
+            "term 페이지 없는 brain에서 alias_collision 검출됨 — 회귀 발생"
+        )
+
+    def test_lint_issues_count_consistent_with_term_issues(self):
+        """027-L4: issues_count가 term 이슈 포함 후에도 len(issues)와 일치."""
+        self._init()
+        self._write_term_page("term-dup-1", "중복용어")
+        self._write_term_page("term-dup-2", "중복 용어")  # 정규화 동일 → term_duplicate
+
+        with _mock_kst():
+            args = make_args(brain_path=str(self.brain_root))
+            _, result = self._call(BT.cmd_lint, args)
+
+        self.assertEqual(
+            result["issues_count"], len(result["issues"]),
+            "issues_count가 issues 배열 길이와 불일치"
+        )
 
 
 if __name__ == "__main__":

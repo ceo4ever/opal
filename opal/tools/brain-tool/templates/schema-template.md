@@ -37,6 +37,7 @@
 
 | type | category | 설명 |
 |------|----------|------|
+| term | 도메인 | 프로젝트 비즈니스 표준 용어 (1페이지=1용어) |
 | entity | 엔티티 | 코드 모듈·서비스·도구·스킬 |
 | concept | 개념 | 아키텍처 결정·설계 배경 |
 | flow | 흐름 | 파이프라인·프로세스 흐름 |
@@ -44,6 +45,7 @@
 
 - brain-tool 파싱 규약: `## 1.5 페이지 타입 정의` 절의 마크다운 테이블에서 `type`·`category` 컬럼을 읽어 타입 세트·`TYPE_TO_CATEGORY`·`CATEGORY_ORDER`(앞에 `도메인` 추가)·`BRAIN_DIRS`(`pages/{type}`)를 파생한다.
 - `[MUST]` 페이지 타입 세트 완전 동적 — 기본 4종은 검토 후보일 뿐, init이 origin 분석으로 채택/제외/추가/전면 교체 가능. SCHEMA가 타입 SSOT, brain-tool은 하드코딩 없이 SCHEMA에서 타입 동적 로드.
+- term은 **채택 게이트가 있는 동적 타입** — 비즈니스 도메인 프로젝트(POL/IA/도메인 용어 존재)면 채택, 순수 기술 레포면 제외.
 
 ---
 
@@ -85,7 +87,21 @@ OPAL 에이전트는 3계층 기억을 활용한다:
 | `sources` | string[] | 근거 출처 (예: `[code:opal/tools/state-tool/, task:013]`) |
 | `related` | string[] | 교차참조 페이지 파일명 (예: `[opal-harness, pipeline-state]`) |
 
-### 2.3 entity 추가 키 (@header 시드)
+### 2.3 term 추가 키 (선택)
+
+term 페이지는 비즈니스 용어 1개를 정의하는 단위 페이지다. 필수 키는 기존 §2.1(type/title/created/updated/status)을 그대로 사용하며, 아래 선택 키를 추가할 수 있다.
+
+| 키 | 타입 | 설명 |
+|----|------|------|
+| `aliases` | string[] | 별칭·동의 표현 (검색·alias_collision lint 대상) |
+| `actors` | string[] | 업무 행위자 (예: PM, 운영자, 구매자) |
+| `surfaces` | string[] | 업무 표면 — 용어가 등장하는 화면·프로세스 (명명 규칙: `opal/core/references/harness/citation-rules.md` §8.7) |
+
+본문은 업무 의미를 2~4문장으로 서술한다. 다층 근거는 `sources` 키에 토큰 병기 (POL-{번호}, ia:{system}:{screen} 등 §4 링크 규칙 참조).
+
+---
+
+### 2.4 entity 추가 키 (@header 시드)
 
 entity 페이지는 빈 페이지로 시작하지 않는다. `code-scan.json`이 파싱한 **@header 메타블록을 frontmatter 시드로 흡수**한다.
 단방향 동기화: 코드 @header가 SSOT, brain은 스냅샷 + 누적 지식. brain→코드 역방향 갱신은 금지한다.
@@ -99,7 +115,7 @@ entity 페이지는 빈 페이지로 시작하지 않는다. `code-scan.json`이
 | `source_ref` | string | 코드 파일 경로 (예: `opal/tools/state-tool/state_tool.py`) |
 | `header_synced` | date | 마지막 @header 동기화 시각 `YYYY-MM-DD` |
 
-### 2.4 예시 (entity)
+### 2.5 예시 (entity)
 
 ```yaml
 ---
@@ -140,6 +156,8 @@ status: active
 | 교차참조 | `[[페이지파일명]]` | brain 페이지 간 연결 (Obsidian 호환) |
 | 코드참조 | `` `file_path:line` `` | 코드 SSOT 참조 (OPAL 클릭 가능 형식) |
 | 외부소스참조 | `[[source:source-id]]` | `sources/<id>/` 외부 원본 참조 |
+| 정책참조 | `POL-{번호}` | 정책서 조항 근거 |
+| IA참조 | `ia:{system}:{screen}` | 화면·정보구조 근거 |
 
 ---
 
@@ -198,3 +216,4 @@ status: active
 |------|------|---------|
 | v1.0 | 2026-06-10 00:00 | 초기 작성 (태스크 015) |
 | v1.1 | 2026-06-11 19:11 | §1.5 페이지 타입 정의 블록(brain-tool 동적 로드 SSOT) 추가, §1.6 3계층 기억 구조 추가, sources:[task:NNN] drill-down 형식 명시 (태스크 016) |
+| v1.2 | 2026-06-17 | §1.5 term 타입(도메인 카테고리·채택 게이트) + §2 term frontmatter 선택 키(aliases/actors/surfaces) + §4 다층 근거 토큰(POL-/ia:) 추가 (027) |

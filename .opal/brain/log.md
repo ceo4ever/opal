@@ -73,3 +73,7 @@
 - 신규: [[pages/concept/brain-search-whitespace-insensitive.md]]
 - 출처: task:025
 
+## [2026-06-17] ingest | task:027 — Brain 업무 언어 번역 계층(term) 설계 등록
+- 신규: [[brain-business-term-layer]]
+- 출처: task:027
+

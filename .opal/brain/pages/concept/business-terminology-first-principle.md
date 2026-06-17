@@ -3,7 +3,12 @@ type: concept
 title: 기획 산출물 비즈니스 용어 우선 원칙
 tags: [citation-rules, opal-writing, opwt, brain-ingest, document-standard]
 sources: [task:024]
-related: [[opwt-v4-output-system]], [[skill-opal-pilot-write-tech]], [[op-brain-ingest]], [[opal-principles-constitution]]
+related:
+- opwt-v4-output-system
+- skill-opal-pilot-write-tech
+- op-brain-ingest
+- opal-principles-constitution
+- brain-business-term-layer
 created: 2026-06-16
 updated: 2026-06-16
 status: active

@@ -9,7 +9,7 @@ triggers:
   - "^opbr$"
   - "^opal-brain$"
   - "(?i)(프로젝트\\s*브레인|지식\\s*위키)"
-version: "1.1"
+version: "1.3"
 domain: knowledge
 pipeline: "MODE: init | ingest | query | lint"
 ---
@@ -60,7 +60,7 @@ pipeline: "MODE: init | ingest | query | lint"
 
 | 제안 항목 | 근거 |
 |----------|------|
-| 타입 세트 | 기본 4종(entity/concept/flow/synthesis)을 검토 후보로 제시. origin에 `layer:pilot` 또는 `layer:orchestrator`가 존재하면 `flow` 채택 강제. `docs/proposals/` 또는 `docs/ARCHITECTURE.md`가 존재하면 `concept` 채택 강제. 그 외 신규 타입은 origin 특성 근거와 함께 제안 |
+| 타입 세트 | 기본 4종(entity/concept/flow/synthesis)을 검토 후보로 제시. origin에 `layer:pilot` 또는 `layer:orchestrator`가 존재하면 `flow` 채택 강제. `docs/proposals/` 또는 `docs/ARCHITECTURE.md`가 존재하면 `concept` 채택 강제. **`term` 타입**: 비즈니스 도메인 프로젝트(POL/IA/도메인 업무 용어가 존재하는 프로젝트)면 채택 제안, 순수 기술 레포면 제외. op-brain-ingest 채택 게이트와 연동 — term 미채택 시 CLOSE ingest에서 draft term 추출 안 함. 그 외 신규 타입은 origin 특성 근거와 함께 제안 |
 | index 카테고리 | analyze JSON의 domain 집계 → 모듈 ≥ 1개인 모든 domain을 index 카테고리 후보로 제시 |
 | 핵심 시드 대상 | `exports ≥ 3` OR `피의존도 ≥ 2` OR `layer ∈ {orchestrator, tool, pilot, core}` OR `domain 대표 1개` — analyze JSON의 `seed_candidates` 활용 |
 
@@ -217,6 +217,7 @@ index.md 전체 맵 등록 완료
 | `opal/skills/**` | concept | **3~6줄 요약 + `file_path` 포인터** |
 | `opal/*/references/**` | concept | **3~6줄 요약 + `file_path` 포인터** |
 | 코드 @header | entity | @header 필드 흡수 + `source_ref` 포인터 (본문 복제 금지) |
+| 신규 업무 용어·상태·업무 표면 후보 | term (`status: draft`) | **업무 의미 2~4문장 + `aliases`/`actors`/`surfaces` frontmatter 선택 키 + 다층 근거 `sources` 병기**. [MUST] term 타입이 채택된 프로젝트에서만 추출(미채택 프로젝트는 건너뜀). [MUST] draft 페이지는 답변에 쓰지 않으며, 캡틴/PM 확정 시 `active` 승격. |
 
 **배치 정책:**
 
@@ -279,6 +280,31 @@ brain에 축적된 지식으로 질문에 답한다.
 > `//opbr ask` = 사용자가 직접 페이지를 선택하는 대화형 모드.
 
 ### 질의 절차 (후보→선택→주입)
+
+**0. [term 우선] brain-tool search로 관련 term 페이지 탐색 (draft 제외 — 기본 동작):**
+```bash
+~/.opal/tools/brain-tool/run.sh search "<질문 키워드>" --type term [--limit 5]
+```
+- term 타입이 채택된 프로젝트에서만 수행. 미채택이면 건너뜀.
+- draft term은 기본 검색에서 제외된다(결정론적 필터, `--include-draft` 미사용). [MUST] 이 draft 제외는 brain-tool이 결정론적으로 집행한다.
+- 매칭된 term이 있으면 해당 업무 언어를 우선 참조하여 답변을 업무 언어로 합성한다. [MUST] "업무 언어 번역"은 brain-tool이 강제하지 못하는 **advisory LLM 행동**이다 — 규칙 준수는 LLM 스스로 판단하며 결정론적 집행 범위 밖이다.
+
+**[진입점 ③] 미등록 업무 용어 발견 시 draft term 등록 제안 (term 타입 채택 프로젝트 한정):**
+- 질의어 또는 질의 문맥에서 **미등록 업무 용어**(term 페이지 없음)가 발견되면(LLM 판단), `status: draft` term 등록을 **제안**한다.
+- [MUST] **자동 등록 금지** — 노이즈·오등록 방지를 위해 반드시 사용자 확정 게이트를 거친다.
+- 사용자 확정 시 해당 term 페이지 frontmatter의 `status`를 `active`로 전환하고 `brain-tool index`를 재실행한다 → draft→active 승격 흐름.
+- 이 흐름은 질의가 살아있는 업무 어휘의 자연스러운 발견 진입점임을 반영한다.
+
+```
+[brain query] 미등록 업무 용어 발견
+─────────────────────────────────────
+"<질의어>"에 대한 term 페이지가 없습니다.
+draft term으로 등록할까요?
+
+등록 시: pages/term/<kebab-name>.md (status: draft) 생성
+          사용자 확정 시 status: active 승격 + index 재생성
+확정 전 draft는 답변 검색에 쓰이지 않습니다.
+```
 
 **1. brain-tool search로 후보 목록 탐색 (본문 로드 없음):**
 ```bash
@@ -350,6 +376,8 @@ brain의 품질 문제를 탐지하고 정비 방안을 제안한다.
 | `missing_link` | 관련 페이지가 있으나 링크 누락 | `related` frontmatter 추가 |
 | `unsourced` | `sources` frontmatter 없이 주장하는 페이지 | 출처 추가 또는 draft 상태로 강등 |
 | `contradiction` | 서로 다른 페이지에서 모순되는 내용 | 검토 후 최신 정보 반영 |
+| `term_duplicate` | 서로 다른 term 페이지의 표준명(`title`)이 정규화 시 동일·중복 | 중복 표준명 병합 — 한 페이지에 통합하고 나머지 삭제 |
+| `alias_collision` | 한 term의 `aliases` 항목이 다른 term의 `title` 또는 `aliases`와 충돌 | 별칭 정리 — 충돌 별칭을 삭제하거나 term 통합 |
 
 3. 이슈 건수 요약 후 사용자에게 정비 제안:
    ```
@@ -395,3 +423,4 @@ brain의 품질 문제를 탐지하고 정비 방안을 제안한다.
 | v1.0 | 2026-06-10 | 초기 작성 — 단일 pilot + 4모드(init/ingest/query/lint), 결정4 임계값·결정5 배치정책·결정7 SCHEMA 기반 (015) |
 | v1.1 | 2026-06-11 19:20 | init STEP 0 신설(analyze→타입 제안→사용자 확인→`init --types` SCHEMA 확정), ingest --all 범위 확장(docs·스킬·참조 concept 요약+포인터, ingest-scan 활용), ingest task:NNN 모드+001~015 백필 절차 추가(op-brain-ingest 기준 재사용), query 후보 목록→선택→선택 페이지만 주입으로 정정(W5 RAG식 전량 로드 금지), [MUST] 단방향·전량로드금지 인용 명문화 (016) |
 | v1.2 | 2026-06-11 21:42 | [MUST] source_ref 형식 규칙 명시 — add-page `--sources` 값은 ingest-scan `source_ref` 그대로 사용, 임의 형식(전체 경로 등) 금지(멱등 skip 보호). 단일 소스 절차 5항 + 배치 정책 멱등 행 2곳 추가 (016) |
+| v1.3 | 2026-06-17 | term 타입 운영 — init 채택 가이드 / ingest draft term 추출 / query business-first+진입점③(미등록 용어 발견→draft 제안→확정 시 active) / lint term_duplicate·alias_collision (027) |

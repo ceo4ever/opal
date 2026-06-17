@@ -3,7 +3,7 @@
   "module": "brain_tool",
   "layer": "util",
   "domain": "opal-brain",
-  "description": "OPAL Project Brain 지식 위키 결정론적 집행 CLI — 10개 서브 명령(init/add-page/index/log/search/sync-header/lint/validate/analyze/ingest-scan). index/log/링크 무결성을 brain-tool이 집행(LLM 직접 편집 금지). 페이지 타입은 SCHEMA §1.5에서 동적 로드(하드코딩 없음). frontmatter 파싱은 PyYAML, KST 타임스탬프는 date.js subprocess. sync-header는 code-scan @header → brain entity frontmatter 단방향 동기화만 수행. analyze는 code-scan @header 정량 집계 → JSON. ingest-scan은 docs/skills/tasks 목록 반환.",
+  "description": "OPAL Project Brain 지식 위키 결정론적 집행 CLI — 10개 서브 명령(init/add-page/index/log/search/sync-header/lint/validate/analyze/ingest-scan). index/log/링크 무결성을 brain-tool이 집행(LLM 직접 편집 금지). 페이지 타입은 SCHEMA §1.5에서 동적 로드(하드코딩 없음). frontmatter 파싱은 PyYAML, KST 타임스탬프는 date.js subprocess. sync-header는 code-scan @header → brain entity frontmatter 단방향 동기화만 수행. analyze는 code-scan @header 정량 집계 → JSON. ingest-scan은 docs/skills/tasks 목록 반환. [027] lint에 term 일관성 2종(term_duplicate·alias_collision) 추가. search에 draft 필터(--include-draft, R-6 term 한정) 추가. init이 schema-template.md에서 타입 동적 로드.",
   "exports": [
     "cmd_init", "cmd_add_page", "cmd_index", "cmd_log",
     "cmd_search", "cmd_sync_header", "cmd_lint", "cmd_validate",
@@ -396,11 +396,30 @@ def cmd_init(args):
 
     now_date = get_kst_date(command)
 
-    # --types 파싱 (미지정 시 DEFAULT_PAGE_TYPES)
+    # --types 파싱 (미지정 시 schema-template.md에서 동적 로드 → 폴백 DEFAULT_PAGE_TYPES)
     if getattr(args, "types", None):
         init_types = [t.strip() for t in args.types.split(",") if t.strip()]
     else:
-        init_types = list(DEFAULT_PAGE_TYPES)
+        # schema-template.md를 먼저 파싱해 타입 목록을 추출한다.
+        # 이렇게 하면 init이 생성하는 dirs와 SCHEMA가 기록하는 타입 세트가 항상 일치한다.
+        try:
+            schema_tpl_path = TEMPLATES_DIR / "schema-template.md"
+            if schema_tpl_path.exists():
+                tpl_text = schema_tpl_path.read_text(encoding="utf-8")
+                m_tpl = _SCHEMA_TABLE_RE.search(tpl_text)
+                if m_tpl:
+                    tpl_types = []
+                    for row in m_tpl.group(1).strip().splitlines():
+                        cols = [c.strip() for c in row.strip().strip("|").split("|")]
+                        if len(cols) >= 1 and cols[0]:
+                            tpl_types.append(cols[0])
+                    init_types = tpl_types if tpl_types else list(DEFAULT_PAGE_TYPES)
+                else:
+                    init_types = list(DEFAULT_PAGE_TYPES)
+            else:
+                init_types = list(DEFAULT_PAGE_TYPES)
+        except Exception:
+            init_types = list(DEFAULT_PAGE_TYPES)
 
     # 골격 디렉토리 생성 (타입 기반 동적)
     brain_dirs = _get_brain_dirs(init_types)
@@ -567,16 +586,23 @@ def _norm(s):
     return "".join(str(s).lower().split())
 
 
-def _score_page(pg, query_norm, type_filter, tag_filter):
+def _score_page(pg, query_norm, type_filter, tag_filter, include_draft=False):
     """페이지 검색 점수 산출 (단순 가중치). 필터 미통과 시 None.
 
     query_norm: _norm() 적용된 정규화 쿼리 (공백 제거 + 소문자).
     4필드(title/rel/tags/body) 비교는 _norm 사본 기준.
     --tag 필터는 기존 소문자 정확 일치 유지(회귀 0, H-6).
     tag 가중치(+2) 매칭만 _norm 적용.
+    include_draft: True이면 draft term도 포함. False(기본)이면 type==term AND status==draft 제외.
+    [R-6 결정 2026-06-17]: draft 필터는 type=='term'에만 적용. 비-term 타입은 draft여도 노출.
     """
     fm = pg["fm"] or {}
     if type_filter and fm.get("type") != type_filter:
+        return None
+    # R-6 term 한정 draft 필터: type==term AND status==draft → include_draft=False 시 제외
+    if (not include_draft
+            and fm.get("type") == "term"
+            and fm.get("status") == "draft"):
         return None
     # tag_filter: 정확 일치(정규화 미적용) — 기존 동작 보존
     tags_raw = [str(t) for t in (fm.get("tags") or [])]
@@ -636,10 +662,11 @@ def cmd_search(args):
         err(command, "query_empty")
     query_norm = _norm(query)
 
+    include_draft = getattr(args, "include_draft", False)
     pages = scan_pages(brain_root)
     scored = []
     for pg in pages:
-        score = _score_page(pg, query_norm, args.type, args.tag)
+        score = _score_page(pg, query_norm, args.type, args.tag, include_draft=include_draft)
         if score is None or score <= 0:
             continue
         fm = pg["fm"] or {}
@@ -820,6 +847,68 @@ def cmd_lint(args):
         if fm.get("type") in ("concept", "synthesis") and not (fm.get("sources")):
             issues.append({"kind": "unsourced", "page": rel,
                            "detail": "concept/synthesis 페이지에 sources 근거 없음"})
+
+    # ── term 일관성 검출 2종 (027) ─────────────────────────────────────────
+    # term 페이지만 추출 — term 미채택 brain은 0건, 회귀 0 보장
+    term_pages = [pg for pg in pages if (pg["fm"] or {}).get("type") == "term"]
+
+    if term_pages:
+        # term_duplicate: 정규화된 title이 동일한 term 페이지 쌍 검출
+        # [MUST] 자동 동의어 해소·임베딩 금지 — _norm(소문자+공백제거) 정확 일치만
+        norm_to_terms = {}  # {norm_title: [rel, ...]}
+        for pg in term_pages:
+            fm = pg["fm"] or {}
+            title = fm.get("title", "")
+            nt = _norm(title)
+            if nt:
+                norm_to_terms.setdefault(nt, []).append(pg["rel"])
+        for nt, rels in norm_to_terms.items():
+            if len(rels) >= 2:
+                for rel in rels:
+                    issues.append({
+                        "kind": "term_duplicate",
+                        "page": rel,
+                        "detail": f"정규화 표준명 '{nt}' 중복 — {', '.join(rels)}",
+                    })
+
+        # alias_collision: 한 term의 alias가 다른 term의 title 또는 alias와 충돌 검출
+        # 충돌 = 동일 정규화 (_norm)
+        # 모든 term의 {norm: source_rel} 맵 구성 (title + aliases 모두 포함)
+        term_norm_map = {}  # {norm_value: rel} — title/alias 출처 페이지
+        for pg in term_pages:
+            fm = pg["fm"] or {}
+            rel = pg["rel"]
+            title = fm.get("title", "")
+            nt = _norm(title)
+            if nt:
+                term_norm_map.setdefault(nt, []).append(("title", rel))
+            for alias in (fm.get("aliases") or []):
+                na = _norm(str(alias))
+                if na:
+                    term_norm_map.setdefault(na, []).append(("alias", rel))
+
+        # alias_collision: 같은 norm 값이 서로 다른 페이지(alias 출처가 다른 페이지)에 존재
+        alias_collision_reported = set()
+        for pg in term_pages:
+            fm = pg["fm"] or {}
+            rel = pg["rel"]
+            for alias in (fm.get("aliases") or []):
+                na = _norm(str(alias))
+                if not na:
+                    continue
+                sources = term_norm_map.get(na, [])
+                # 이 alias의 norm값을 가진 title/alias가 다른 페이지에도 존재하면 충돌
+                other_sources = [(kind, src_rel) for kind, src_rel in sources if src_rel != rel]
+                if other_sources:
+                    collision_key = tuple(sorted([rel] + [s[1] for s in other_sources]))
+                    if collision_key not in alias_collision_reported:
+                        alias_collision_reported.add(collision_key)
+                        other_rels = ", ".join(f"{k}:{r}" for k, r in other_sources)
+                        issues.append({
+                            "kind": "alias_collision",
+                            "page": rel,
+                            "detail": f"alias '{alias}' 정규화 충돌 — {other_rels}",
+                        })
 
     ok(command, issues=issues, issues_count=len(issues))
 
@@ -1117,6 +1206,9 @@ def build_parser():
     p_srch.add_argument("--type")   # choices 제거 → 필터로만 동작 (유효하지 않으면 0 결과)
     p_srch.add_argument("--tag")
     p_srch.add_argument("--limit", type=int)
+    p_srch.add_argument("--include-draft", dest="include_draft", action="store_true",
+                        default=False,
+                        help="draft 상태 term 페이지도 검색 결과에 포함 (기본: term draft 제외)")
     p_srch.add_argument("--brain-path", dest="brain_path", default=".")
     p_srch.set_defaults(func=cmd_search)
 
