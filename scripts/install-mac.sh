@@ -28,6 +28,7 @@
 #   v2.8 2026-06-07: OPAL 헌법(PRINCIPLES.md) 배포 추가 — strip_deploy_md로 opal/core/PRINCIPLES.md → ~/.opal/PRINCIPLES.md (always-on) (012)
 #   v2.9 2026-06-15: OPAL Console 설치 추가 — install_dashboard() 신설 (FE npm 빌드·BE 복사·dashboard-server 배포) + clean_dirs에 dashboard-server 추가 (021)
 #   v3.0 2026-06-15: 메뉴 [5] OPAL Console 추가 — install_dashboard 단독 + 자동 재시작(stop→start) + /health 확인 (021 후속)
+#   v3.1 2026-06-17 10:24: install_opal()에 git core.quotepath=false 전역 설정 추가 — 한글 태스크 폴더명 허용에 따른 git 경로 표시 개선 (026 L2: 한글 폴더명 허용)
 #
 
 set -euo pipefail
@@ -1064,6 +1065,18 @@ install_opal() {
     # ── OPAL Console 대시보드 배포 + 서버 자동 기동 ──
     install_dashboard
     console_autostart
+
+    # ── git 한글 경로 표시 (core.quotepath=false) ──
+    # OPAL 태스크 폴더명은 한글/혼용을 허용한다(op-task SKILL.md §저장 경로).
+    # git 기본값(quotepath=true)은 한글 경로를 \355.. octal 이스케이프로 표시하므로,
+    # 사용자 git 전역 설정에 quotepath=false를 적용해 status/log에서 한글이 그대로 보이도록 한다.
+    if command -v git &>/dev/null; then
+        if git config --global core.quotepath false 2>/dev/null; then
+            success "git core.quotepath=false 설정 (한글 경로 표시)"
+        else
+            info "git core.quotepath 설정 실패 — 한글 경로가 octal로 표시될 수 있습니다"
+        fi
+    fi
 
     # ── 설치 버전 기록 (~/.opal/VERSION) ──
     # 우선순위: $OPAL_VERSION (one-liner installer 경로) → git describe (개발자 git clone 경로) → "main" 폴백

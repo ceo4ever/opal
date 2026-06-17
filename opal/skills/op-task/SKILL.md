@@ -171,7 +171,9 @@ tasks/{NNN}-{YYMMDD}-{스킬약어}-{태스크명}/TASK.md
 - `{NNN}`: 3자리 순번 — `.opal/MEMORY.md`의 `last_task_number` + 1로 채번 (harness §4 참조)
 - `{YYMMDD}`: TASK 단계 시작일 (KST) — `node ~/.opal/tools/date/date.js yymmdd` 실행하여 취득
 - `{스킬약어}`: STEP 5에서 결정된 오케스트레이터 약어 (예: `opp`, `opd`, `opds`, `opdw`, `opwt`)
-- `{태스크명}`: kebab-case (예: `user-auth-implementation`)
+- `{태스크명}`: 영문 kebab-case · 한글 · 한글+영문 혼용 모두 허용. **공백 금지**(셸 명령 안정성), 단어 구분은 하이픈(`-`). 예: `user-auth-implementation`, `한글-폴더명-허용`, `소셜-login-버그수정`
+  - 앞 3요소(`{NNN}-{YYMMDD}-{스킬약어}`)는 **ASCII 고정** — 파싱 안정성을 위해 한글·공백 사용 금지
+  - macOS는 파일명을 NFD(분해형)로 저장하므로 크로스플랫폼 git 협업 시 NFC 불일치를 줄이기 위해 태스크명은 짧게 유지한다
 - `tasks/` 폴더가 없으면 생성한다
 
 ### STEP 5. 오케스트레이터 선택
@@ -266,3 +268,4 @@ TASK.md 완성 전에 다음을 확인한다:
 | v1.7 | 2026-05-12 15:03 | AC 작성 가이드의 외부 출처 인용 제거 — Bad/Good 예시(2행)는 유지. SSOT 자립성 회복 (001) |
 | v1.8 | 2026-06-07 | QA→PM Gate 통합 정합화 — AC 정의·작성 가이드·작성 체크리스트의 "QA Gate에서 Pass/Fail 판정" → "PM Gate(문서검증)·TEST(동작 검증)에서 Pass/Fail 판정"(별도 QA Gate 단계 없음, 문서검증은 PM Gate가 흡수, 동작 검증은 TEST가 독립 수행) (014 Phase 4-2) |
 | v1.9 | 2026-06-16 18:07 | STEP 4 템플릿에 "명확화 결과" 4요소 섹션 추가 — verify --clarification-check 검증 대상 표준화 (005) |
+| v2.0 | 2026-06-17 10:24 | `{태스크명}` 규칙 완화 — 영문 kebab-case 외 한글·혼용 허용(공백 금지·하이픈 구분). 앞 3요소 ASCII 고정 명시 + macOS NFD 주의 추가 (026 L2: 한글 폴더명 허용) |

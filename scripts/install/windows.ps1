@@ -84,6 +84,7 @@
         v1.6.0 2026-05-10 17:00  community-skills 번들 → fetch 방식 전환 — community-skills 복사 블록 제거 + cleanDirs에서 community-skills 제거 (사용자 데이터 보존, D-4) + 종료 안내 추가 (142)
         v1.7.0 2026-05-10 21:00  command 화이트리스트 + fork repo banner + OPAL_HOME 가드 (144)
         v1.8.0 2026-05-24        Codex CLI 통합 — Register-Bootstrapper 에 ~/.codex/AGENTS.md 추가 + Install-OpalMcp 에 'codex' 케이스 + Install-PlatformAgents 에 codex(TOML 직렬화) 추가 (009)
+        v1.9.0 2026-06-17 10:24  Invoke-OpalWindowsInstall 에 git core.quotepath=false 전역 설정 추가 — 한글 태스크 폴더명 허용에 따른 git 경로 표시 개선 (install-mac.sh v3.1 정합) (026 L2: 한글 폴더명 허용)
         v1.9.0 2026-06-02 20:16  모델 매핑 최신화 — ModelMap gemini(gemini-3.1-flash-lite/gemini-flash-latest/gemini-pro-latest) + codex(gpt-5.4-mini/gpt-5.5/gpt-5.3-codex) + toml 기본값 gpt-5.5 (install-mac.sh 동기, 011)
         v1.10.0 2026-06-07       OPAL 헌법(PRINCIPLES.md) 배포 추가 — opal/core/PRINCIPLES.md → ~/.opal/PRINCIPLES.md (Strip 변경이력, always-on) (012)
         v1.11.0 2026-06-15       OPAL Console 설치 추가 — Install-Dashboard 신설 (FE npm.cmd 빌드·BE 복사·dashboard-server 배포) + cleanDirs에 dashboard-server 추가 (021)
@@ -1630,6 +1631,19 @@ function Invoke-OpalWindowsInstall {
     Start-OpalConsole
     Install-OpalMcp        -RepoRoot $repoRoot
     Install-PlatformAgents
+
+    # git 한글 경로 표시 (core.quotepath=false) — install-mac.sh v3.1 과 정합
+    # OPAL 태스크 폴더명은 한글/혼용을 허용한다(op-task SKILL.md §저장 경로).
+    # git 기본값(quotepath=true)은 한글 경로를 octal 이스케이프로 표시하므로,
+    # 전역 설정에 quotepath=false를 적용해 status/log에서 한글이 그대로 보이도록 한다.
+    if (Get-Command git -ErrorAction SilentlyContinue) {
+        git config --global core.quotepath false 2>$null
+        if ($LASTEXITCODE -eq 0) {
+            Write-OpalOk 'git core.quotepath=false 설정 (한글 경로 표시)'
+        } else {
+            Write-OpalInfo 'git core.quotepath 설정 실패 — 한글 경로가 octal로 표시될 수 있습니다'
+        }
+    }
 
     # ~/.opal/VERSION 기록 — opal-cli update 비교 기준 (install-mac.sh v1.8 과 정합)
     if (-not (Test-Path $OpalHome)) {
