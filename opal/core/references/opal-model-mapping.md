@@ -1,6 +1,6 @@
 # OPAL 모델 매핑 (opal-model-mapping)
 
-> 작성일: 2026-03-29 | 버전: v1.0
+> 작성일: 2026-03-29 | 버전: v1.4
 > 참조 전용 — 오케스트레이터/에이전트가 워커 디스패치 시 이 매핑을 따른다.
 > 탐색 경로: ~/.opal/references/opal-model-mapping.md
 
@@ -19,8 +19,8 @@
 | 레벨 | Claude | Gemini | OpenAI (참조전용) | Codex |
 |------|--------|--------|--------|-------|
 | `light` | haiku | gemini-3.1-flash-lite | gpt-5.4-mini | gpt-5.4-mini |
-| `standard` | sonnet | gemini-flash-latest | gpt-5.5 | gpt-5.5 |
-| `advanced` | opus | gemini-pro-latest | gpt-5.3 | gpt-5.3-codex |
+| `standard` | sonnet | gemini-flash-latest | gpt-5.4 | gpt-5.4 |
+| `advanced` | opus | gemini-pro-latest | gpt-5.5 | gpt-5.5 |
 
 > 플랫폼별 최신 모델이 출시되면 이 테이블을 갱신한다.
 
@@ -75,10 +75,12 @@ model: standard
 - 소스(`opal/core/references/`)를 수정하고, `install-mac.sh`로 배포본(`~/.opal/references/`)에 동기화한다
 - Codex는 모델 ID 변경 빈도가 높다 — 분기마다 [Codex Config Reference](https://developers.openai.com/codex/config-reference) 점검.
 
-**최신 추종 운영 규칙 (2026-06-02 도입)**:
+**최신 추종 운영 규칙 (2026-06-02 도입, 2026-06-17 점검)**:
 - Claude(`haiku/sonnet/opus`)·Gemini standard/advanced(`gemini-flash-latest`/`gemini-pro-latest`)는 부동 별칭으로 자동 추종 → 갱신 불요.
 - **별칭이 없는 Gemini light(`gemini-3.1-flash-lite`)·Codex·OpenAI는 분기마다 [Gemini API Models](https://ai.google.dev/gemini-api/docs/models) / [Codex Models](https://developers.openai.com/codex/models) / [OpenAI All Models](https://developers.openai.com/api/docs/models/all) 점검 후 핀 갱신.**
-- `gemini-pro-latest`는 현 시점 preview 빌드를 가리킬 수 있다. preview 거동 변동 시 구체 ID 핀으로 임시 전환 가능.
+- `gemini-pro-latest`는 현 시점 preview 빌드를 가리킬 수 있다. preview 거동 변동 시 구체 ID 핀으로 임시 전환 가능. `gemini-*-latest` 별칭이 Gemini 3.x(3 Flash·3.5 Flash·3 Pro)를 추종하는지는 런타임에서 확인한다.
+- **Codex 특화 핀 폐지 (2026-06-17)**: `gpt-5.3-codex`는 2026-06-30 일몰(신규 API 요청 중단)되며, 범용 대체 `gpt-5.5-codex`는 존재하지 않는다. Codex 특화 라인은 `gpt-5.3-codex-spark`(리서치 프리뷰·ChatGPT Pro·텍스트only)뿐이라 범용 advanced로 부적합 → Codex advanced는 프런티어 `gpt-5.5`로 통일한다.
+- Claude advanced는 `opus`(부동) 유지. 최상위 `claude-fable-5`는 비용 2배·thinking 상시·30일 보존 필수 등 거동 차이로 기본 핀에서 보류(필요 시 별도 검토).
 
 ---
 
@@ -90,3 +92,4 @@ model: standard
 | v1.1 | 2026-05-09 18:30 | 개인 식별자 누설 정정 — frontmatter 작성자 필드 삭제 + 변경이력 작성자 컬럼 제거 (139) |
 | v1.2 | 2026-05-24 | Codex 컬럼 추가 + 플랫폼 감지/갱신 가이드 보강 (009) |
 | v1.3 | 2026-06-02 20:16 KST | Gemini 부동 별칭 전환 + Codex 최신화 + OpenAI 참조전용 명시 + 최신 추종 운영 규칙 보강 (011) |
+| v1.4 | 2026-06-17 10:21 KST | 최신 모델 재검토 — Codex/OpenAI standard `gpt-5.5`→`gpt-5.4`·advanced `gpt-5.3`/`gpt-5.3-codex`→`gpt-5.5`(gpt-5.3-codex 2026-06-30 일몰, gpt-5.5-codex 부재) + 운영 규칙에 Codex 특화 핀 폐지·Gemini 3.x 추종 확인·Fable 5 보류 명문화 + 헤더 버전 v1.0→v1.4 정합. Claude(haiku/sonnet/opus)·Gemini light(gemini-3.1-flash-lite GA) 현행 확인 |
