@@ -19,6 +19,11 @@
 //                              - matchByTriggers() 입력 길이 제한 + ReDoS 사전 검사
 //                              - resolveFirstPath() path.resolve + homedir/cwd 하위 검증 (CWE-22)
 //                              - validate()에 ReDoS 분석 warning 추가 + v2.1 스키마 인식
+//   v1.2 2026-06-18 KST: validate 확장 — dangling error 격상 + unregistered 역방향 감지 (태스크 029):
+//                        - validate():379 no-SKILL.md warning → errors 격상 ("dangling" 레이블)
+//                        - validateUnregistered(cwd, registeredNames) 신규 — opal/skills/+skills/ 양쪽 스캔
+//                        - validate() 소스 환경 조건부 validateUnregistered 호출 (배포 환경 false positive 방지)
+//                        - validate() 반환 객체에 unregistered 키 추가
 //
 'use strict';
 
@@ -53,10 +58,14 @@ function flattenGroups(registry, source) {
 }
 
 function getReferencesDir() {
-  // 배포 후: ~/.opal/references/
+  // 1순위: cwd 기준 opal/core/references/ — fixture cwd 격리 지원 (테스트 환경)
+  //        cwd에 소스 레이아웃이 있으면 소스 환경으로 처리한다.
+  const cwdSource = path.resolve(process.cwd(), 'opal', 'core', 'references');
+  if (fs.existsSync(path.join(cwdSource, 'opal-skills-registry.json'))) return cwdSource;
+  // 2순위: ~/.opal/references/ — 배포 환경 (HOME 오버라이드로 테스트 격리 지원)
   const deployed = path.join(os.homedir(), '.opal', 'references');
   if (fs.existsSync(path.join(deployed, 'opal-skills-registry.json'))) return deployed;
-  // 소스: opal/core/references/ (개발 시)
+  // 3순위: opal/core/references/ — __dirname 기준 (개발 시 폴백)
   const source = path.resolve(__dirname, '..', '..', 'core', 'references');
   if (fs.existsSync(path.join(source, 'opal-skills-registry.json'))) return source;
   return deployed; // fallback
@@ -274,6 +283,35 @@ function listCommand(options) {
 
 // === Validate Command ===
 
+/**
+ * @function    validateUnregistered
+ * @layer       tools
+ * @domain      skill-management
+ * @description 소스 레포의 스킬 폴더(opal/skills/ + skills/)를 스캔하여
+ *              레지스트리에 미등록된 폴더명을 감지한다.
+ *              소스 환경 전용 — 배포 환경(~/.opal/)에서는 validate()가 호출하지 않는다.
+ *              fs 접근은 cwd 하위로 한정 (path traversal 없음, CWE-22).
+ * @param {string}      cwd             - 프로젝트 루트 경로
+ * @param {Set<string>} registeredNames - 레지스트리 등록 스킬명 집합
+ * @returns {string[]} 미등록 폴더명 목록
+ */
+function validateUnregistered(cwd, registeredNames) {
+  const srcDirs = [
+    path.resolve(cwd, 'opal', 'skills'),  // opal-pilot-*, op-*, opal-*
+    path.resolve(cwd, 'skills'),           // standalone (api-analyzer 등) — H-3 false positive 방지
+  ];
+  const unregistered = [];
+  for (const dir of srcDirs) {
+    if (!fs.existsSync(dir)) continue;
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      if (!entry.isDirectory()) continue;
+      if (!fs.existsSync(path.join(dir, entry.name, 'SKILL.md'))) continue;
+      if (!registeredNames.has(entry.name)) unregistered.push(entry.name);
+    }
+  }
+  return unregistered;
+}
+
 function validate() {
   const errors = [];
   const warnings = [];
@@ -376,7 +414,18 @@ function validate() {
         const resolved = p.replace(/^~/, os.homedir()).replace(/\{project\}/g, process.cwd());
         if (fs.existsSync(resolved)) { found = true; break; }
       }
-      if (!found) warnings.push(`${skill.name}: no SKILL.md found at any path`);
+      if (!found) errors.push(`${skill.name}: dangling — no SKILL.md found at any path`);
+    }
+  }
+
+  // (c) unregistered 역방향 감지 — 소스 환경 전용 (배포 환경 false positive 방지, H-4)
+  const refDirIsSource = refDir.includes(path.join('opal', 'core', 'references'));
+  const unregistered = [];
+  if (refDirIsSource) {
+    const unreg = validateUnregistered(process.cwd(), names);
+    for (const n of unreg) {
+      errors.push(`${n}: unregistered — folder exists but not in registry`);
+      unregistered.push(n);
     }
   }
 
@@ -387,7 +436,8 @@ function validate() {
     communityGroups: communityRegistry ? Object.keys(communityRegistry.groups) : [],
     communitySchema: communityRegistry ? communityRegistry['$schema'] : null,
     errors,
-    warnings
+    warnings,
+    unregistered
   };
 }
 

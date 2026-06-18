@@ -123,7 +123,6 @@ OPAL은 2-레이어 아키텍처로 동작한다.
 | | opal-agent-creator | 에이전트 생성 파이프라인 |
 | | opal-skill-creator | 스킬 생성 파이프라인 |
 | | opal-onboarding | 에이전트 온보딩 |
-| | opal-orchestrator | 오케스트레이션 모드 |
 | | opal-skill-manager | 스킬 관리 |
 
 ### 에이전트 (Agents)
@@ -325,7 +324,6 @@ opal/                                    ← 이 저장소
 │   │   ├── opal-agent-creator/          에이전트 생성
 │   │   ├── opal-skill-creator/          스킬 생성
 │   │   ├── opal-onboarding/             에이전트 온보딩
-│   │   ├── opal-orchestrator/           오케스트레이션 모드
 │   │   └── opal-skill-manager/          스킬 관리
 │   ├── agents/                          OPAL 에이전트 (11개: 전문 6 + 범용 4 + 도구성 1)
 │   │   ├── opal-plan-agent/             전문: PLAN 설계 (advanced)
@@ -348,3 +346,11 @@ opal/                                    ← 이 저장소
 ├── tasks/                               태스크 산출물
 ├── docs/                                프로젝트 문서
 └── .opal/                               이 프로젝트의 PM 프로필 + 메모리
+
+---
+
+## 변경이력
+
+| 날짜 | 변경 내용 |
+|------|----------|
+| 2026-06-18 | opal-orchestrator 잔존 행 2곳 삭제 (폴더·레지스트리 항목 부재 — dangling. Task 029) |

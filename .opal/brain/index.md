@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-06-17 16:38
+> 갱신: 2026-06-18 14:48
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -52,11 +52,13 @@
 - [[opal-adapter-platform-isolation]] — OPAL 어댑터 계층 플랫폼 분기 격리 원칙 #adapter #architecture #constitution #platform #codex
 - [[opal-architecture]] — OPAL 시스템 아키텍처 #architecture #framework #layer #deploy
 - [[opal-brain-design-proposal]] — OPAL Project Brain 설계 제안서 #brain #design #llm-wiki #ingest #index
+- [[opal-brain-not-pilot-decision]] — opal-brain은 pilot이 아니다 — 리네임 철회 결정 #opal-brain #skill-naming #pilot #operator #architecture
 - [[opal-brain-system]] — OPAL Project Brain 시스템 #knowledge #architecture #wiki
 - [[opal-conventions]] — OPAL 코드 컨벤션 #convention #naming #commit #guard #state
 - [[opal-principles-constitution]] — OPAL Principles 헌법 신설 + 테스트 하네스 집행 강화 #principles #constitution #testing #framework #task
 - [[opal-project-definition]] — OPAL 프로젝트 정의 #project #overview #principle #component
 - [[opal-security-model]] — OPAL 보안 모델 #security #install #mcp #supply-chain #owasp
+- [[opal-skill-classification-system]] — OPAL 스킬 분류 체계 — opal-pilot / op-* / opal-* 의미 계층 #skill-registry #classification #pilot #operator #architecture
 - [[opdd-design-artifacts-path-pattern]] — opdd 설계 산출물 경로 패턴 — opwt 차용 + {설계} 변수 #architecture-decision #data-design #path #ssot #opwt
 - [[opi-impl-injectable-depth-standard]] — opi 문서 깊이 기준 — "구현 시 주입 가능 수준" #opi #opal-project-init #docs-quality #architecture-decision
 - [[opsdd-pipeline-ssot]] — opsdd 파이프라인 정본 — SKILL.md SSOT (7단계) #opsdd #pipeline #ssot #workflow
@@ -80,6 +82,7 @@
 - [[skill-opal-skill-creator]] — opal-skill-creator — OPAL 스킬 생성 파이프라인 #skill #creator #framework
 - [[skill-opal-skill-manager]] — opal-skill-manager — OPAL 커뮤니티 스킬 관리 #skill #manager #community
 - [[skill-opal-start]] — opal-start — OPAL 재진입 가이드 #skill #start #onboarding #guide
+- [[skill-registry-validate-extension]] — skill-registry validate 확장 — dangling error 격상 + unregistered 역방향 감지 #skill-registry #validate #drift-detection #tooling
 - [[test-real-data-validation-lesson]] — TEST 실데이터 검증이 build-only 가 놓친 결함을 발견한다 #testing #lesson #test-strategy #real-data
 - [[test-scenario-pipeline-redesign]] — 테스트 시나리오 파이프라인 재설계 (2차원 매트릭스 + self-confirming 4분리) #testing #pipeline #framework #flow #task
 - [[three-layer-memory-architecture]] — 3계층 기억 아키텍처 — MEMORY / brain / tasks #architecture #memory #brain #long-term #tasks

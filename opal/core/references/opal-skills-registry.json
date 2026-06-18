@@ -1,7 +1,7 @@
 {
   "$schema": "opal-skills-registry-v1",
-  "version": "3.4.0",
-  "updated_at": "2026-05-09",
+  "version": "3.5.0",
+  "updated_at": "2026-06-18",
   "groups": {
     "opal-pilot": [
       {
@@ -130,6 +130,20 @@
         ],
         "domain": "data-design",
         "pipeline": "TASK → DICT → MODEL → DDL/MIGRATION → QA → CLOSE"
+      },
+      {
+        "name": "opal-pilot-project-dev",
+        "alias": "oppd",
+        "description": "프로젝트 개발 라이프사이클 (opwt→ROADMAP→opd/opds 순차 실행)",
+        "triggers": [
+          "^opal-pilot-project-dev$",
+          "^oppd$",
+          "(?i)(프로젝트\\s*개발\\s*시작|개발\\s*계획|개발\\s*파일럿)"
+        ],
+        "paths": [
+          "{project}/.opal/skills/opal-pilot-project-dev/SKILL.md",
+          "~/.opal/skills/opal-pilot-project-dev/SKILL.md"
+        ]
       }
     ],
     "op-dev": [
@@ -302,19 +316,31 @@
         ]
       },
       {
-        "name": "op-sdd-tasks",
+        "name": "op-sdd-action-plan",
         "alias": null,
-        "description": "TASKS 단계 — 태스크 분해",
+        "description": "SDD ACT 전용 경량 PLAN 스킬 — SPEC.md + SPEC-PLAN.md + TEST-SCENARIOS.md + ACT 정의 기반 구현 청사진 작성",
         "triggers": [
-          "^op-sdd-tasks$"
+          "^op-sdd-action-plan$"
         ],
         "paths": [
-          "{project}/.opal/skills/op-sdd-tasks/SKILL.md",
-          "~/.opal/skills/op-sdd-tasks/SKILL.md"
+          "{project}/.opal/skills/op-sdd-action-plan/SKILL.md",
+          "~/.opal/skills/op-sdd-action-plan/SKILL.md"
         ],
-        "stage": "TASKS",
+        "stage": "PLAN(ACT)",
         "dispatched_by": [
-          "opal-pilot-sdd"
+          "opal-sdd-action-agent"
+        ]
+      },
+      {
+        "name": "op-spec-validator",
+        "alias": null,
+        "description": "SDD 명세 검증 워커 (PRD/TRD 체크리스트 기반 판정, 오케스트레이터 디스패치 전용)",
+        "paths": [
+          "{project}/.opal/skills/op-spec-validator/SKILL.md",
+          "~/.opal/skills/op-spec-validator/SKILL.md"
+        ],
+        "dispatched_by": [
+          "opal-pilot-project-dev"
         ]
       }
     ],
@@ -545,7 +571,8 @@
           "(?i)(architecture\\s*diagram\\s*HTML|system\\s*architecture\\s*HTML)"
         ],
         "paths": [
-          "{project}/.opal/skills/system-architecture-html/SKILL.md"
+          "{project}/.opal/skills/system-architecture-html/SKILL.md",
+          "~/.opal/skills/system-architecture-html/SKILL.md"
         ]
       }
     ],
@@ -589,43 +616,6 @@
         "paths": [
           "~/.opal/skills/opal-project-init/SKILL.md"
         ]
-      },
-      {
-        "name": "opal-pilot-project-dev",
-        "alias": "oppd",
-        "description": "프로젝트 개발 라이프사이클 (opwt→ROADMAP→opd/opds 순차 실행)",
-        "triggers": [
-          "^opal-pilot-project-dev$",
-          "^oppd$",
-          "(?i)(프로젝트\\s*개발\\s*시작|개발\\s*계획|개발\\s*파일럿)"
-        ],
-        "paths": [
-          "{project}/.opal/skills/opal-pilot-project-dev/SKILL.md",
-          "~/.opal/skills/opal-pilot-project-dev/SKILL.md"
-        ]
-      },
-      {
-        "name": "op-spec-validator",
-        "description": "SDD 명세 검증 워커 (PRD/TRD 체크리스트 기반 판정, 오케스트레이터 디스패치 전용)",
-        "paths": [
-          "{project}/.opal/skills/op-spec-validator/SKILL.md",
-          "~/.opal/skills/op-spec-validator/SKILL.md"
-        ],
-        "dispatched_by": [
-          "opal-pilot-project-dev"
-        ]
-      },
-      {
-        "name": "opal-orchestrator",
-        "alias": null,
-        "description": "오케스트레이션 모드",
-        "triggers": [
-          "^opal-orchestrator$"
-        ],
-        "paths": [
-          "~/.opal/skills/opal-orchestrator/SKILL.md"
-        ],
-        "auto_trigger": ".opal/AGENT.md 있을 때"
       },
       {
         "name": "opal-skill-creator",
@@ -681,7 +671,9 @@
         ],
         "domain": "knowledge",
         "pipeline": "MODE: init | ingest | query | lint"
-      },
+      }
+    ],
+    "op-brain": [
       {
         "name": "op-brain-ingest",
         "alias": null,
@@ -700,5 +692,23 @@
         ]
       }
     ]
-  }
+  },
+  "changelog": [
+    {
+      "version": "3.5.0",
+      "date": "2026-06-18",
+      "task": "029",
+      "changes": [
+        "op-sdd-tasks dangling 항목 제거 (폴더 부재, op-sdd-plan으로 통합 — commit a940318)",
+        "opal-orchestrator dangling 항목 제거 (폴더 부재, opal-pm.md로 대체 — commit 45d2118)",
+        "op-sdd-action-plan 신규 등록 (폴더 존재·레지스트리 누락 해소)",
+        "op-brain 신규 그룹 생성 (op-data 패턴 대칭)",
+        "op-brain-ingest: opal 그룹 → op-brain 그룹 이동",
+        "op-spec-validator: opal 그룹 → op-sdd 그룹 이동",
+        "opal-pilot-project-dev: opal 그룹 → opal-pilot 그룹 이동",
+        "opal-brain: opal 그룹 잔류 (불변 — alias opbr·triggers·paths 동일)",
+        "system-architecture-html: paths에 '~/.opal/skills/...' 경로 보충 (다른 standalone 스킬과 달리 누락되어 있던 드리프트 — validate가 검출. 형제 항목 패턴과 정합)"
+      ]
+    }
+  ]
 }

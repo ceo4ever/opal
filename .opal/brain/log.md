@@ -81,3 +81,7 @@
 - 신규: [[pages/concept/codex-dispatch-inline-injection.md]], [[pages/concept/opal-adapter-platform-isolation.md]]
 - 출처: task:028
 
+## [2026-06-18] ingest | CLOSE ingest — 태스크 029 스킬레지스트리-정합-분류정리
+- 신규: [[pages/concept/opal-brain-not-pilot-decision.md]], [[pages/concept/skill-registry-validate-extension.md]], [[pages/concept/opal-skill-classification-system.md]]
+- 출처: task:029
+

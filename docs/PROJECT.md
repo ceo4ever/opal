@@ -58,7 +58,7 @@
 | `op-sdd-spec` | - | 단계 스킬 | SPEC 단계 — SDD 명세 작성 |
 | `op-sdd-verify` | - | 단계 스킬 | VERIFY 단계 — SDD 명세 검증 |
 | `op-sdd-plan` | - | 단계 스킬 | SPEC-PLAN 단계 — SDD 구현 계획 수립 |
-| `op-sdd-tasks` | - | 단계 스킬 | TASKS 단계 — SDD 태스크 분해 |
+| `op-sdd-action-plan` | - | 단계 스킬 | PLAN(ACT) 단계 — SDD ACT 전용 경량 구현 청사진 작성 (opal-sdd-action-agent 디스패치) |
 
 ## 주요 컴포넌트 (GC 파이프라인)
 
@@ -76,7 +76,7 @@ llm-wiki 사상을 융합한 프로젝트 지식 위키 — 프로젝트의 WHY�
 
 | 컴포넌트 | 약어 | 유형 | 설명 |
 |----------|------|------|------|
-| `opal-brain` | opbr | 오케스트레이터 | 브레인 4모드 Pilot: init → ingest → query → lint |
+| `opal-brain` | opbr | operator (멀티모드) | 브레인 4모드 라우터: init · ingest · query · lint (단계 파이프라인·워커 디스패치 없음, brain-tool 직접 호출) |
 | `op-brain-ingest` | - | 단계 스킬 | CLOSE 자동 ingest 워커 (pilot CLOSE 훅에서 디스패치, brain 부재 시 no-op) |
 | `brain-tool` | - | 도구 | 지식 위키 결정론적 집행 CLI (8 서브명령). index·log·링크 무결성 집행, @header 단방향 시드 |
 
@@ -137,3 +137,4 @@ llm-wiki 사상을 융합한 프로젝트 지식 위키 — 프로젝트의 WHY�
 |------|----------|
 | 2026-06-12 | Data Design 파이프라인 섹션 추가 — opal-pilot-data-design(opdd), op-data-* 3종, opal-db-agent (Task 019) |
 | 2026-06-15 | OPAL Console 섹션 추가 — dashboard/frontend(React+shadcn)·backend(FastAPI)·opal-cli console + 프로젝트 구성 Console FE/BE 영역 (Task 021) |
+| 2026-06-18 | SDD 컴포넌트 표 정합 — op-sdd-tasks dangling 제거 + op-sdd-action-plan 등록. opal-brain 유형 오기재 교정 (오케스트레이터/Pilot → operator 멀티모드 라우터, alias opbr 불변) (Task 029) |
