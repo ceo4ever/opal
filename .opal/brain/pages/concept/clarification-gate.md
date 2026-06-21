@@ -3,7 +3,7 @@ type: concept
 title: 명확화 게이트 — TASK 4요소 잠금 기계 집행
 tags: [pipeline, enforcement, state-tool, clarification]
 sources: [task:005]
-related: [[state-tool]]
+related: [state-tool]
 created: 2026-06-16
 updated: 2026-06-16
 status: active

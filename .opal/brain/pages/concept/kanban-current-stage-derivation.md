@@ -3,7 +3,7 @@ type: concept
 title: 칸반 current_stage 파생 규칙 (도달 단계 기준)
 tags: [opal-console, kanban, pipeline, be-single-source]
 sources: [task:023]
-related: [[opal-console, kanban-pipeline-stage-grouping, test-real-data-validation-lesson]]
+related: [opal-console, kanban-pipeline-stage-grouping, test-real-data-validation-lesson]
 created: 2026-06-16
 updated: 2026-06-16
 status: active

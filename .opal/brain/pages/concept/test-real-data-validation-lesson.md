@@ -3,7 +3,7 @@ type: concept
 title: TEST 실데이터 검증이 build-only 가 놓친 결함을 발견한다
 tags: [testing, lesson, test-strategy, real-data]
 sources: [task:023]
-related: [[deploy-artifact-verification-lesson, opal-console, kanban-current-stage-derivation]]
+related: [deploy-artifact-verification-lesson, opal-console, kanban-current-stage-derivation]
 created: 2026-06-16
 updated: 2026-06-16
 status: active

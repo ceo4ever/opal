@@ -9,7 +9,7 @@ tags:
 - worker-dispatch
 sources:
 - task:020
-related: [[skill-opal-project-init]], [[opi-impl-injectable-depth-standard]]
+related: [skill-opal-project-init, opi-impl-injectable-depth-standard]
 created: '2026-06-14'
 updated: '2026-06-14'
 status: active

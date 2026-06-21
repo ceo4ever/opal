@@ -3,7 +3,7 @@ type: concept
 title: 명확화 게이트 하위호환 정책 A — graceful skip
 tags: [pipeline, enforcement, backward-compat, state-tool]
 sources: [task:005]
-related: [[clarification-gate]], [[state-tool]]
+related: [clarification-gate, state-tool]
 created: 2026-06-16
 updated: 2026-06-16
 status: active

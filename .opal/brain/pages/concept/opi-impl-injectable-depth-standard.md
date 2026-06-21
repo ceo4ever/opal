@@ -8,7 +8,7 @@ tags:
 - architecture-decision
 sources:
 - task:020
-related: [[skill-opal-project-init]]
+related: [skill-opal-project-init]
 created: '2026-06-14'
 updated: '2026-06-14'
 status: active

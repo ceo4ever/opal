@@ -3,7 +3,7 @@ type: concept
 title: 파이프라인 스테퍼 stage 그룹화 (BE 단일 소스, na/skipped 제외)
 tags: [opal-console, pipeline, stage-grouping, be-single-source]
 sources: [task:023]
-related: [[opal-console, kanban-current-stage-derivation]]
+related: [opal-console, kanban-current-stage-derivation]
 created: 2026-06-16
 updated: 2026-06-16
 status: active
