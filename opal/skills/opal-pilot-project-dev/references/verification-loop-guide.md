@@ -34,7 +34,10 @@ EXECUTE 스텝마다 즉시 검증하여 오류를 조기 차단한다. 워커�
     → FAIL → 1회 재시도 (flaky 대응) → 2회 연속 FAIL → 에스컬레이션
     → PASS ↓
   → QA Gate (기존 QA 에이전트)
-    → 설계/아키텍처 이슈 → 즉시 에스컬레이션
+    → 설계 수준 실패 → scope별 분기
+        → scope: action → 에이전트 자율 재설계 루프(PLAN 재진입, harness §1 상한)
+        → scope: wbs   → PM 에스컬레이션 (WBS 2단 기준)
+        → scope: trd   → 즉시 사용자 에스컬레이션 (0회)
     → PASS → 다음 Step 또는 완료 보고
 ```
 
@@ -52,7 +55,7 @@ EXECUTE 스텝마다 즉시 검증하여 오류를 조기 차단한다. 워커�
 | L2: build/type | 컴파일 오류, 타입 불일치 | `npm run build`, `npx tsc --noEmit` | 수 초~수십 초 | 높음 |
 | L3a: unit/integration | 컴포넌트 단위, 함수, API 통합 테스트 | `npm run test:unit`, `npm run test:api` | 수십 초 | 중간 |
 | L3b: E2E | 브라우저 기반 시나리오 테스트 | `npm run test:e2e`, `npx playwright test` | 수 분 | 낮음 (flaky, 느림) |
-| L4: QA | 설계 원칙, 아키텍처 패턴, 보안 | QA 에이전트 호출 | 수 분 | 낮음 (사람 판단 필요) |
+| L4: QA | 설계 원칙, 아키텍처 패턴, 보안 | QA 에이전트 호출 | 수 분 | scope별 분기 (action→재PLAN / wbs→PM / trd→0회·즉시) |
 
 ### 실행 순서 원칙
 
@@ -78,6 +81,22 @@ EXECUTE 스텝마다 즉시 검증하여 오류를 조기 차단한다. 워커�
 ---
 
 ## 3. 실패 유형별 루핑 전략
+
+### 3-0. VERIFY 실패 triage (1차 분류)
+
+VERIFY 실패가 발생하면 오케스트레이터가 아래 3분류 기준으로 실패 성격을 먼저 판별한다.
+
+| 실패 성격 | 신호 | 라우팅 |
+|----------|------|--------|
+| 구현 수준 | PLAN 계약 안에서 발생·로컬 수정 가능 (로직·타입·경계조건·오타·assertion 값) | EXECUTE 재작업 (fix 루프, 기존 한도 L2:2/L3a:3/L3b:1) |
+| 설계 수준 | PLAN 가정/계약 자체를 부정 (인터페이스 불일치·컴포넌트/필드 누락·순환의존·요구사항↔설계 갭) | scope 3계층 라우팅 |
+| 회귀(regression) | 이전 통과 테스트가 수정 후 실패 | 즉시 중단 (재PLAN/재fix 안 함) |
+
+**적용 순서**: 실패 발생 시 이 표로 성격을 먼저 판별 → "구현 수준"이면 §3-1~§3-4 계층별 전략(fix 루프)으로 라우팅 → "설계 수준"이면 §3-5 scope 3계층 라우팅 → "회귀"이면 §4 회귀 방지 가드로 즉시 중단.
+
+> 기존 §3-1~§3-4 계층별 실패 전략(lint/build/test/E2E)은 **"구현 수준"** 실패의 처리 경로로 재사용된다.
+
+---
 
 ### 3-1. lint/format 실패
 
@@ -288,13 +307,21 @@ E2E 실패는 원인 특정이 어렵습니다. 다음 중 선택해주세요:
 - **병렬 그룹 머지 후**: 통합 시점에 E2E 일괄 실행
 - WBS.md에서 E2E 검증 시점을 `개별` 또는 `머지 후`로 지정 가능
 
-### 3-5. QA 설계/아키텍처 이슈
+### 3-5. 설계 수준 실패
 
-**재시도 한도**: 0회 — 즉시 사용자 에스컬레이션
+QA 에이전트 또는 VERIFY 루프에서 **설계 수준** 실패(PLAN 가정/계약 자체를 부정하는 이슈)가 감지되면, `failure_context.scope`에 따라 아래 3계층으로 라우팅한다.
 
-QA 에이전트가 보고한 설계/아키텍처 수준의 이슈는 자동 수정이 불가능하다. 코드 패턴, 보안 취약점, 성능 구조 등은 사람의 판단이 필요하므로 즉시 에스컬레이션한다.
+**감지**: QA 에이전트의 판정 결과에서 `Critical Fail` 또는 설계/아키텍처 관련 피드백, 혹은 §3-0 triage 판별에서 "설계 수준"으로 분류된 실패.
 
-**감지**: QA 에이전트의 판정 결과에서 `Critical Fail` 또는 설계/아키텍처 관련 피드백을 확인한다.
+#### scope별 분기
+
+| scope | 의미 | 처리 | 재시도 한도 |
+|-------|------|------|------------|
+| `action` | 액션-로컬 설계 결함 (PLAN.md 범위 내 재설계로 해결 가능) | 에이전트 자율 **재설계 루프(PLAN 재진입)** — 상한은 `opal/core/references/opal-harness.md` §1 'PLAN 재진입' 행 참조 (수치 복제 금지) | harness §1 참조 |
+| `wbs` | WBS scope·인터페이스 영향 (액션 경계를 벗어나는 설계 결함) | PM 에스컬레이션 (WBS 2단 기준) | PM 자율 처리 |
+| `trd` | TRD/PRD 변경 필요 (요구사항·아키텍처 계약 수준) | **즉시 사용자 에스컬레이션 (0회)** | 0회 즉시 |
+
+> [MUST] **"0회 즉시 에스컬레이션"은 `scope: trd`에만 적용**된다. `scope: action`은 harness §1 상한 내 에이전트 자율 재설계가 허용되며, `scope: wbs`는 PM이 WBS 2단 기준으로 처리한다.
 
 **에스컬레이션 형식**: 섹션 5 참조.
 
@@ -493,9 +520,12 @@ QA 피드백:
 | build/type | 2회 | 사용자 에스컬레이션 |
 | unit/integration test (L3a) | 3회 | 사용자 에스컬레이션 |
 | E2E test (L3b) | 1회 | 사용자 에스컬레이션 |
-| QA 설계/아키텍처 | 0회 | 즉시 사용자 에스컬레이션 |
+| 설계 수준 — scope별 분기 (action→재PLAN[harness 상한] / wbs→PM / trd→0회) | scope별 상이 | action: harness §1 참조 / wbs: PM 에스컬레이션 / trd: 즉시 사용자 에스컬레이션 |
+| PLAN 재진입(재설계 루프) | → `opal-harness.md` §1 참조 | scope별 에스컬레이션 (action 상한 초과→wbs PM / trd→사용자) |
 
-**참조 경로**: `~/.opal/references/opal-harness.md` > Guards > 자동 루핑 제약 (Verification Loop Guards)
+> **정합성 주석**: "0회 즉시 에스컬레이션"은 `scope: trd`에만 적용. `scope: action`은 harness §1 PLAN 재진입 행의 상한 내 에이전트 자율 재설계가 허용된다. §1 루프 흐름 요약 및 §2 L4 계층의 에스컬레이션 서술도 이 scope별 분기 기준을 따른다.
+
+**참조 경로**: `opal/core/references/opal-harness.md` §1 > Guards > 자동 루핑 제약 (Verification Loop Guards)
 
 ### 관련 문서
 
@@ -510,3 +540,4 @@ QA 피드백:
 | 날짜 | 버전 | 변경내용 |
 |------|------|---------|
 | 2026-05-01 | R-2 | state-tool 도입 — §6 PM 루프 모니터링에 `[MUST]` state-tool 호출 블록 추가. oppd 비표준 행 구성 R-10 명시(gate-pass 금지). EXECUTE Step 완료 시 `state mark --as-worker` 호출 표기. "STATE.md 검증 루프 로그" 섹션(§5/§6)은 자유 텍스트 영역으로 보존 — TASK F-18 / PLAN §1.5 M-30 / §3 Step 11 (134) |
+| 2026-06-21 16:05 | R-3 | B7 triage 3분류(구현/설계/회귀) 추가 + §3-5 "QA 0회"→"설계 수준" scope별 분기(action 재PLAN[harness 포인터]/wbs PM/trd 0회 유지) + §7 정합성 표 PLAN 재진입 행(harness §1 포인터, 수치 미복제) (031) |

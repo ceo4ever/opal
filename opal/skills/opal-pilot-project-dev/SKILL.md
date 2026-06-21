@@ -102,8 +102,8 @@ tasks/{NNN}-oppd-{프로젝트명}/
 
 | Phase | 방식 | 산출물 | 설명 |
 |-------|------|--------|------|
-| 1 | opwt 호출 | docs/PRD.md, docs/TRD.md | 기획 산출물 작성 (opwt "작성" 모드) |
-| 2 | PM 직접 | docs/WBS.md | 태스크 분할 + WBS 수립 |
+| 1 | opwt 호출 | tasks/{NNN}-oppd-…/PRD.md, tasks/{NNN}-oppd-…/TRD.md (작업본) | 기획 산출물 작성 (opwt "작성" 모드) — 사용자 확정 후 docs/ 승격 |
+| 2 | PM 직접 | tasks/{NNN}-oppd-…/WBS.md | 태스크 분할 + WBS 수립 (태스크 폴더 전용, docs/ 승격 없음) |
 | 3 | opal-task-action-agent 디스패치 | actions/A01~A{MM} | 액션 자율 실행 |
 ```
 
@@ -139,8 +139,8 @@ state-tool을 호출하여 초기화한다:
 
 ```
 사전 조건 체크 → 태스크 생성 (TASK.md + STATE.md)
-  → Phase 1: opwt "작성" 모드로 PRD/TRD 작성 → 사용자 확정
-  → Phase 2: PM 직접 WBS 수립 → PM 검수 → 사용자 확정
+  → Phase 1: opwt "작성" 모드로 PRD/TRD 작성(tasks/{NNN}-oppd-…/) → 사용자 확정 → docs/ 승격
+  → Phase 2: PM 직접 WBS 수립(tasks/{NNN}-oppd-…/) → PM 검수 → 사용자 확정
   → [--wbs 플래그 있음] → Phase 1~2 완료 후 종료 (Phase 3 실행 없음)
   → Phase 3: opal-task-action-agent로 액션 자율 실행 (순차 + 병렬) → 각 액션 PM 검수 → 전체 완료
   → DONE.md 작성
@@ -166,6 +166,7 @@ opwt를 "작성" 모드로 호출한다:
 ```
 //opwt 작성
 - 대상 문서: PRD, TRD
+- 출력 경로: tasks/{NNN}-oppd-{프로젝트명}/PRD.md, tasks/{NNN}-oppd-{프로젝트명}/TRD.md (작업본)
 - 프로젝트 컨텍스트: docs/PROJECT.md, docs/ARCHITECTURE.md
 - 사용자 요청: {원래 요청 텍스트}
 ```
@@ -184,8 +185,8 @@ op-spec-validator 에이전트에 아래 정보를 전달한다:
 
 ```
 검증 요청:
-- PRD 경로: docs/PRD.md
-- TRD 경로: docs/TRD.md
+- PRD 경로: tasks/{NNN}-oppd-{프로젝트명}/PRD.md (작업본)
+- TRD 경로: tasks/{NNN}-oppd-{프로젝트명}/TRD.md (작업본)
 - 검증 대상: ALL
 ```
 
@@ -222,13 +223,14 @@ opwt 완료 후, PM이 결과를 종합하여 사용자에게 보고한다:
 ---
 [Phase 1] 기획 산출물 완료 — 사용자 검토 요청
 
-산출물:
-- docs/PRD.md (제품 요구사항)
-- docs/TRD.md (기술 요구사항)
+산출물 (작업본):
+- tasks/{NNN}-oppd-{프로젝트명}/PRD.md (제품 요구사항)
+- tasks/{NNN}-oppd-{프로젝트명}/TRD.md (기술 요구사항)
 
 {PRD/TRD 핵심 요약}
 
 검토 후 확정 / 피드백을 알려주세요.
+확정 시 docs/ 승격 및 후속 조치를 수행합니다.
 ---
 ```
 
@@ -237,15 +239,30 @@ opwt 완료 후, PM이 결과를 종합하여 사용자에게 보고한다:
 | 확정 / 승인 | 후속 조치 수행 후 Phase 2 진행 |
 | 피드백 | opwt "수정" 모드로 재호출 → 재보고 |
 
-### 1-3. 사용자 확정 후 후속 조치 (필수)
+### 1-3. 사용자 확정 후 후속 조치 — docs/ 승격 단계 (필수)
 
-1. `docs/PROJECT.md`의 문서 테이블에 PRD.md, TRD.md를 등록한다
-2. `docs/ARCHITECTURE.md`를 업데이트한다 (TRD에서 확정된 기술 스택 버전 반영)
-3. STATE.md Phase 진행 현황 갱신 (Phase 1 → 확정) — state-tool을 호출한다:
+#### 승격 판단 (PM 자동)
+
+`docs/PRD.md`·`docs/TRD.md` 존재 여부로 승격 방식을 결정한다:
+
+| 조건 | 방식 | 동작 |
+|------|------|------|
+| `docs/PRD.md` 미존재 | **greenfield** | 작업본(tasks/{NNN}-oppd-…/PRD.md·TRD.md) 전체를 docs/로 복사 |
+| `docs/PRD.md` 존재 | **반복(델타 병합)** | 작업본의 변경 델타를 기존 docs/PRD.md·TRD.md에 병합 |
+
+#### 승격 대상
+
+1. **PRD/TRD 본문 승격**: 작업본(`tasks/{NNN}-oppd-…/PRD.md`, `TRD.md`) → `docs/PRD.md`, `docs/TRD.md` (greenfield: 전체 복사 / 반복: 델타 병합)
+2. **`docs/PROJECT.md` 문서 테이블 등록**: PRD.md, TRD.md를 등록한다
+3. **`docs/ARCHITECTURE.md` delta**: TRD에서 확정된 기술 스택 버전을 반영한다
+
+#### 세션/STATE 갱신 (유지)
+
+4. STATE.md Phase 진행 현황 갱신 (Phase 1 → 확정) — state-tool을 호출한다:
    ```
    ~/.opal/tools/state-tool/run.sh mark <task-path> --row <Phase1_확정_행N> --done --owner user --note '소유자 확인: Phase 1 확정'
    ```
-4. `.opal/MEMORY.md`의 작업 히스토리를 갱신한다
+5. `.opal/MEMORY.md`의 작업 히스토리를 갱신한다
 
 ---
 
@@ -272,7 +289,7 @@ PRD/TRD를 기반으로 태스크를 분할한다.
 1. 독립 실행 가능한 단위로 분할한다
 2. 의존성 방향: 하위 레이어 → 상위 레이어 (DB → API → UI)
 3. Must 우선순위부터 배치한다
-4. 하나의 태스크는 1~3일 분량이 적정하다
+4. 하나의 액션은 단일 책임 + 단일 수용 시나리오로 독립 검증 가능한 단위로 분할한다 (둘 이상 책임/수용 기준 섞이면 재분할, 관찰 동작 없는 헬퍼·타입 단독이면 흡수)
 5. 각 태스크에 적합한 스킬을 판단한다 (아래 스킬 판단 기준 참조)
 6. 각 태스크의 성공/실패를 lint/build/test로 기계적으로 판정할 수 있는 단위로 분할한다 (자동 테스트 가능성)
 
@@ -293,8 +310,13 @@ PRD/TRD를 기반으로 태스크를 분할한다.
 2. PRD의 모든 Must 기능이 태스크로 분할되었는지 확인한다
 3. 의존성 순서가 올바른지 확인한다 (하위 먼저)
 4. 각 태스크의 스킬 판단이 적절한지 확인한다
-5. **미달 시**: 자체 재작성 (최대 1회)
-6. **통과 시**: 사용자 검토 요청
+5. 아래 4종 기준을 각 액션에 대해 대조한다:
+   - [ ] 각 액션이 **단일 책임**인가 — 두 개 이상의 독립 책임이 섞이면 재분할
+   - [ ] 각 액션에 **구체 수용 시나리오**가 있는가 — generic 검증 명령(`npm test` 단독 등) 금지
+   - [ ] 병렬 그룹마다 **통합 액션**이 존재하는가 — 머지 후 E2E/계약 검증 담당
+   - [ ] **너무 큼/작음** 판정 신호에 걸리는 액션이 없는가 (wbs-guide 분할 원칙 참조)
+6. **미달 시**: 자체 재작성 (최대 1회)
+7. **통과 시**: 사용자 검토 요청
 
 ### 2-4. 사용자 확정
 
@@ -302,7 +324,7 @@ PRD/TRD를 기반으로 태스크를 분할한다.
 ---
 [WBS] PM 검수 통과 — 사용자 검토 요청
 
-산출물: docs/WBS.md (초안)
+산출물: tasks/{NNN}-oppd-{프로젝트명}/WBS.md (태스크 폴더 전용)
 
 {WBS 요약: 총 액션 수, Work Package 수, 마일스톤 등}
 
@@ -319,12 +341,13 @@ PRD/TRD를 기반으로 태스크를 분할한다.
 
 ### 2-5. 사용자 확정 후 후속 조치 (필수)
 
-1. `docs/PROJECT.md`의 문서 테이블에 WBS.md를 등록한다
-2. STATE.md Phase 진행 현황 갱신 (Phase 2 → 확정) — state-tool을 호출한다:
+> WBS.md는 태스크 폴더 전용(`tasks/{NNN}-oppd-…/WBS.md`) 실행 산출물이며 docs/ 승격 대상이 아니다.
+
+1. STATE.md Phase 진행 현황 갱신 (Phase 2 → 확정) — state-tool을 호출한다:
    ```
    ~/.opal/tools/state-tool/run.sh mark <task-path> --row <Phase2_확정_행N> --done --owner user --note '소유자 확인: Phase 2 확정'
    ```
-3. `.opal/MEMORY.md`의 작업 히스토리를 갱신한다
+2. `.opal/MEMORY.md`의 작업 히스토리를 갱신한다
 
 ---
 
@@ -351,7 +374,7 @@ Phase 3 시작 전:
 
 ### 3-1. 실행 루프
 
-확정된 `docs/WBS.md`의 의존성 그래프를 기반으로, 순차 + 병렬 혼합으로 진행한다:
+확정된 `tasks/{NNN}-oppd-…/WBS.md`의 의존성 그래프를 기반으로, 순차 + 병렬 혼합으로 진행한다:
 
 ```
 groups = buildParallelGroups(WBS.actions)  # 의존성 그래프 → 실행 그룹
@@ -399,10 +422,36 @@ opal-task-action-agent는 `status`와 `verdict`를 반환한다:
 |--------|---------|------|
 | `completed` | `All Pass` | PM 검수 → 다음 액션 |
 | `completed` | `Partial Fail` | PM 검수 → 사용자에게 Partial Fail 사실 보고 후 판단 |
-| `failed` | `Critical Fail` | 사용자에게 에스컬레이션 (`failure_context` 포함) |
-| `failed` | - | 사용자에게 에스컬레이션 (`failure_context` 포함) |
+| `failed` | `Critical Fail` | `failure_context.scope`로 분기 처리 (아래 참조) |
+| `failed` | - | `failure_context.scope`로 분기 처리 (아래 참조) |
 
 에이전트가 반환하는 `verification_log`는 STATE.md의 "검증 루프 로그" 섹션에 기록한다.
+
+#### failure_context.scope별 PM 처리 분기
+
+에이전트가 `status: failed`를 반환하면, `failure_context.scope` 값에 따라 PM이 분기 처리한다:
+
+| scope | 의미 | PM 처리 |
+|-------|------|---------|
+| `action` | 액션-로컬 설계 결함 — 에이전트가 자율 재PLAN 시도 완료 | 재PLAN 결과 확인 후 보고 (에이전트가 이미 처리) |
+| `wbs` | WBS scope·인터페이스에 영향 | **WBS 2단 기준** 적용 (아래 참조) |
+| `trd` | TRD·PRD 변경 필요 | **항상 사용자 에스컬레이션** — PM 자율 결정 불가 |
+
+**WBS 2단 기준** (`scope: wbs` 수신 시):
+
+| 변경 성격 | 판단 주체 | 처리 방법 |
+|---------|---------|---------|
+| scope·인터페이스 **불변** 조정 (구현 방식 조정, 순서 변경 등) | PM 자율 | WBS 직접 조정 + AGENTIC-LOG.md에 `GATE` 엔트리 기록 |
+| scope·기능 **변경** (새 액션 추가, 기능 범위 확대, 인터페이스 변경) | 사용자 | 사용자에게 에스컬레이션 (`failure_context` 포함) |
+
+**TRD/PRD 사용자 게이트** (`scope: trd` 수신 시):
+- [MUST] TRD·PRD 변경은 항상 사용자 게이트 — PM이 자율로 결정하지 않는다 (citation-rules §7.5)
+- 에스컬레이션 시 `failure_context` 전체를 포함하여 보고한다
+
+**소유권 규칙**:
+- `PLAN.md`: 액션 에이전트 소관 (재설계 루프 내 자율 수정 가능)
+- `WBS.md`: PM 소관 (에이전트가 직접 수정 불가)
+- `TRD.md`·`PRD.md`: 사용자 소관 (항상 사용자 게이트)
 
 ### 3-1a. 자동 검증 루핑
 
@@ -480,9 +529,9 @@ oppd 완료
 프로젝트: {프로젝트명}
 
 완료 산출물:
-- docs/PRD.md (Phase 1 - opwt)
-- docs/TRD.md (Phase 1 - opwt)
-- docs/WBS.md (Phase 2)
+- docs/PRD.md (Phase 1 - opwt, 승격)
+- docs/TRD.md (Phase 1 - opwt, 승격)
+- tasks/{NNN}-oppd-…/WBS.md (Phase 2, 태스크 폴더 전용)
 - {Phase 3 액션 목록 및 결과}
 
 전체 {M}개 액션 완료.
@@ -537,12 +586,12 @@ PM 검수 로그에서 **반복 패턴**이 감지되면 PM 학습 루프로 승
 ## Phase 진행 현황
 | Phase | 방식 | 산출물 | 상태 |
 |-------|------|--------|------|
-| 1-PLAN | opwt | docs/PRD.md, docs/TRD.md | {미시작 / opwt 진행 / 사용자 검토 / 확정} |
-| 2-WBS | PM 직접 | docs/WBS.md | {미시작 / 작성 중 / PM 검수 / 사용자 검토 / 확정} |
+| 1-PLAN | opwt | tasks/{NNN}-oppd-…/PRD.md·TRD.md (작업본) → 확정 후 docs/ 승격 | {미시작 / opwt 진행 / 사용자 검토 / 확정} |
+| 2-WBS | PM 직접 | tasks/{NNN}-oppd-…/WBS.md (태스크 폴더 전용) | {미시작 / 작성 중 / PM 검수 / 사용자 검토 / 확정} |
 | 3-EXECUTE | opal-task-action-agent | - | {미시작 / A{N}/{M} 진행 중 / 완료} |
 
 ## WBS 액션 (Phase 2 확정 후)
-> 액션별 상태/완료일시는 docs/WBS.md에서 관리한다.
+> 액션별 상태/완료일시는 tasks/{NNN}-oppd-…/WBS.md에서 관리한다.
 | # | WP | 액션 | 스킬 | actions/ 경로 |
 |---|-----|------|------|-------------|
 
@@ -563,6 +612,10 @@ PM 검수 로그에서 **반복 패턴**이 감지되면 PM 학습 루프로 승
 ## 검증 루프 로그
 | # | 액션 | 검증 유형 | 시도 | 결과 | 오류 요약 | 시점 |
 |---|------|----------|------|------|----------|------|
+
+## 재설계 루프 로그
+| # | 액션 | triage 결과 | 재PLAN 횟수 | scope | 시점 |
+|---|------|-----------|-----------|-------|------|
 
 ## PM 검수 로그
 | # | Phase | 검수 결과 | 지시 내용 | 반영 여부 |
@@ -588,9 +641,9 @@ PM 검수 로그에서 **반복 패턴**이 감지되면 PM 학습 루프로 승
 
 | 문서 | Phase | 방식 | 확정일 |
 |------|-------|------|--------|
-| docs/PRD.md | 1 | opwt | YYYY-MM-DD |
-| docs/TRD.md | 1 | opwt | YYYY-MM-DD |
-| docs/WBS.md | 2 | PM 직접 | YYYY-MM-DD |
+| docs/PRD.md | 1 | opwt (승격) | YYYY-MM-DD |
+| docs/TRD.md | 1 | opwt (승격) | YYYY-MM-DD |
+| tasks/{NNN}-oppd-…/WBS.md | 2 | PM 직접 (태스크 폴더 전용) | YYYY-MM-DD |
 
 ## 실행 액션
 
@@ -622,9 +675,10 @@ DONE.md 생성 직후 **op-brain-ingest 디스패치**를 수행한다:
 
 | Phase | 산출물 | 등록 설명 |
 |-------|--------|----------|
-| 1 | `docs/PRD.md` | 제품 요구사항 정의서 |
-| 1 | `docs/TRD.md` | 기술 요구사항 정의서 |
-| 2 | `docs/WBS.md` | 개발 WBS (Work Package 분할 및 실행 순서) |
+| 1 | `docs/PRD.md` | 제품 요구사항 정의서 (작업본 → 사용자 확정 후 docs/ 승격) |
+| 1 | `docs/TRD.md` | 기술 요구사항 정의서 (작업본 → 사용자 확정 후 docs/ 승격) |
+
+> WBS.md는 태스크 폴더 전용(`tasks/{NNN}-oppd-…/WBS.md`)으로 docs/ 등록 대상이 아니다.
 
 ---
 
@@ -743,3 +797,4 @@ opal-harness-agentic.md "에스컬레이션 조건" 공통 기준에 추가:
 | v4.4 | 2026-05-09 18:30 | 개인 식별자 "캡틴" → "소유자"/"사용자" 치환 — 배포 파일 정체성 누설 정정 (139) |
 | v4.5 | 2026-06-07 | R-10 gate-pass deprecated 정합 — State Gate/QA Gate 행 미존재 명시 + PM Gate 단일 mark로 간소화 (014 Phase 4) |
 | v4.6 | 2026-06-11 19:25 | DONE.md 생성 직후 op-brain-ingest 디스패치 훅 삽입 — brain 존재 시 워커 디스패치, 부재 시 no-op, 종료 비중단 (016) |
+| v4.7 | 2026-06-21 16:05 | oppd 개선 — PRD/TRD 태스크폴더 작성+확정 후 docs 승격(F-001/002), WBS 태스크폴더 전용화(F-003), sizing "1~3일"→단일책임+수용시나리오(F-010), §2-3 PM검수 4종 추가(F-015), Phase3 scope 3계층 분기+WBS 2단기준+TRD/PRD 사용자게이트(F-023/024), STATE 재설계 루프 로그 행(F-024) (031) |

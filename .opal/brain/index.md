@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-06-21 14:23
+> 갱신: 2026-06-21 16:36
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -14,6 +14,8 @@
 - [[state-tool]] — state-tool #tool #pipeline
 
 ## 개념
+- [[analysis-drift-pm-cross-verify-lesson]] — ANALYSIS 드리프트 분석 환각 → PM 강화검토 패턴 (학습) #analysis #hallucination #pm-gate #lesson-learned #drift
+- [[b7-action-completion-loop]] — B7 액션 완성도 루프 — triage 기반 경계 재설계 순환 구조 #oppd #action-loop #triage #verification #b7
 - [[brain-business-term-layer]] — Brain 업무 언어 번역 계층(term) #brain #citation-rules #term #knowledge
 - [[brain-code-scan-role-division]] — brain↔code-scan 역할 분담 — 선별·신선도·깊이 축 (010) #brain #code-scan #architecture #policy
 - [[brain-search-on-demand]] — brain search 선택 주입 — on-demand 비상주 정책 #architecture #brain #search #context #pm
@@ -32,6 +34,7 @@
 - [[kanban-current-stage-derivation]] — 칸반 current_stage 파생 규칙 (도달 단계 기준) #opal-console #kanban #pipeline #be-single-source
 - [[kanban-pipeline-stage-grouping]] — 파이프라인 스테퍼 stage 그룹화 (BE 단일 소스, na/skipped 제외) #opal-console #pipeline #stage-grouping #be-single-source
 - [[linux-install-script]] — Linux 설치 스크립트 신설 (단순 위임 전략) #install #linux #deploy #task
+- [[loop-upper-bound-ssot-pattern]] — 루프 상한 SSOT 단일 기재 패턴 — harness 포인터, 수치 복제 금지 #harness #ssot #loop-bound #anti-pattern
 - [[model-mapping-latest-tracking]] — OPAL 모델 매핑 최신화 + 최신 추종 전략 #model #mapping #gemini #codex #task
 - [[op-brain-ingest]] — op-brain-ingest — CLOSE 경량 ingest 워커 #knowledge #close #ingest #skill
 - [[op-dev-analysis]] — op-dev-analysis — 코드베이스 분석 및 기술 컨텍스트 수집 #dev #analysis #skill
@@ -61,6 +64,7 @@
 - [[opal-skill-classification-system]] — OPAL 스킬 분류 체계 — opal-pilot / op-* / opal-* 의미 계층 #skill-registry #classification #pilot #operator #architecture
 - [[opdd-design-artifacts-path-pattern]] — opdd 설계 산출물 경로 패턴 — opwt 차용 + {설계} 변수 #architecture-decision #data-design #path #ssot #opwt
 - [[opi-impl-injectable-depth-standard]] — opi 문서 깊이 기준 — "구현 시 주입 가능 수준" #opi #opal-project-init #docs-quality #architecture-decision
+- [[oppd-prd-trd-task-folder-promote]] — oppd PRD/TRD 태스크폴더 작성 → docs 승격 프로세스 #oppd #prd #trd #wbs #promote #docs-ssot
 - [[opsdd-pipeline-ssot]] — opsdd 파이프라인 정본 — SKILL.md SSOT (7단계) #opsdd #pipeline #ssot #workflow
 - [[opwt-v4-output-system]] — opwt v4 산출물 체계 재설계 (PRD 8섹션 + interview 통합) #opwt #planning #output #framework #task
 - [[page-type-dynamic-schema]] — 페이지 타입 동적화 — SCHEMA SSOT #architecture #brain #schema #dynamic-type
@@ -89,6 +93,7 @@
 - [[test-scenario-pipeline-redesign]] — 테스트 시나리오 파이프라인 재설계 (2차원 매트릭스 + self-confirming 4분리) #testing #pipeline #framework #flow #task
 - [[three-layer-memory-architecture]] — 3계층 기억 아키텍처 — MEMORY / brain / tasks #architecture #memory #brain #long-term #tasks
 - [[uncommitted-component-readme-policy]] — 미커밋 컴포넌트는 공개 README에 미노출 #readme #policy #git #documentation #ppt-builder
+- [[wbs-세분화-단일책임-수용시나리오]] — WBS 세분화 원칙 — 단일 책임 + 수용 시나리오 기준 #oppd #wbs #sizing #be #fe #acceptance-scenario
 - [[wiki-intelligence-decisions-016]] — opal-wiki-pilot 지능화 결정 — M-4/M-5 (016) #architecture #naming #git #brain #policy
 - [[wtm-agent-cmux-integration]] — wtm-agent OPAL 표준화 + cmux-tool 신설 #tool #agent #wtm #cmux #task
 

@@ -89,3 +89,7 @@
 - 신규: [[pages/concept/skill-opal-next.md]], [[pages/concept/skill-rename-validate-pattern.md]]
 - 출처: task:030
 
+## [2026-06-21] ingest | CLOSE ingest — 태스크 031 oppd 개선·세분화·B7 완성도루프
+- 신규: [[b7-action-completion-loop]], [[wbs-세분화-단일책임-수용시나리오]], [[oppd-prd-trd-task-folder-promote]], [[loop-upper-bound-ssot-pattern]], [[analysis-drift-pm-cross-verify-lesson]]
+- 출처: task:031
+

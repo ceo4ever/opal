@@ -53,6 +53,9 @@ state-tool `verify --clarification-check`가 집행하며, 미충족 시 ERROR_C
 | E2E test (L3b) | 1회 | 사용자 에스컬레이션 |
 | QA 설계/아키텍처 | 0회 | 즉시 사용자 에스컬레이션 |
 | 워커 폴백 반복 (동일 작업 내 동일 폴백 유형 재발) | 1회 | 즉시 에스컬레이션 |
+| PLAN 재진입 (재설계 루프) | 2회 | scope별 에스컬레이션 (action=상위 scope로 승격 / wbs=PM 에스컬레이션 / trd=사용자 에스컬레이션) |
+
+> **재설계 루프 = 액션 VERIFY 실패가 '설계 수준'으로 분류될 때 PLAN으로 재진입하는 횟수 상한. action-agent·verification-loop-guide는 이 수치를 복제하지 않고 본 표를 참조한다.**
 
 > **O1(§7.6)과 O3(이 행) 보완 관계**: O3은 단일 워커 수준(한 워커가 같은 폴백을 2번째 시도하면 중단), O1은 배치 집계 수준(배치 내 과반수 워커가 동일 폴백 패턴이면 다음 배치 중단). 두 규칙은 독립적으로 발동하며, 어느 쪽이든 먼저 트리거되면 즉시 적용한다.
 
@@ -295,3 +298,4 @@ OPAL 도구는 모두 `~/.opal/tools/{tool-name}/run.sh` 래퍼를 통해 호출
 | v5.3 | 2026-06-09 18:42 | §2 하네스 모듈 테이블에 RED-first 규칙 행 추가 — red-first.md 등록, 로드 시점: TEST-SCENARIO 작성·EXECUTE 진입 시 (016) |
 | v5.4 | 2026-06-10 01:04 | §9 등록 도구 표에 brain-tool 행 추가 — 프로젝트 브레인 지식 위키 도구 8 서브명령 (015-brain, 별도 PC 015와 중복 채번) |
 | v5.5 | 2026-06-16 18:07 | §1 Guards에 "명확화 게이트" 절 추가 — TASK 4요소 미잠금 시 다음 단계 진입 차단, state-tool --clarification-check 집행 + clarification_gate_unmet 참조 (005) |
+| v5.6 | 2026-06-21 16:05 | §1 자동 루핑 제약 표에 "PLAN 재진입(재설계 루프)" 행 추가 — B7 액션 완성도 루프 상한 SSOT(2회, 초과 시 scope별 에스컬레이션). action-agent·verification-loop-guide는 수치 복제 없이 본 표 참조 (031) |

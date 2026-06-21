@@ -30,7 +30,7 @@ icon: "⚡"
 
 ---
 
-## 실행 프로세스 (6단계 파이프라인)
+## 실행 프로세스 (재설계 루프 파이프라인)
 
 ```
 1. PLAN
@@ -40,7 +40,7 @@ icon: "⚡"
 2. QA
    → opal-task-qa-agent 디스패치 (op-dev-qa)
    → QA-PLAN.md 생성
-   → Needs Revision → opal-task-agent에 재지시 (최대 1회)
+   → Needs Revision → opal-task-agent에 PLAN 재지시 (최대 1회)
 
 3. TEST-SCENARIO
    → opal-task-agent 디스패치 (op-dev-test-scenario, model: light)
@@ -50,16 +50,19 @@ icon: "⚡"
    → opal-task-agent 디스패치 (op-dev-execute, model: standard)
    → 코드 변경 + changed_files 반환
 
-5. VERIFY — 검증 루핑 (L1~L3b)
+5. VERIFY — triage 기반 재설계 루프 (L1~L3b)
    → L1(lint) → L2(build) → L3a(unit/integration) → L3b(E2E)
-   → 실패 시 opal-task-agent에 수정 지시 (한도 내)
-   → 한도 초과/회귀 시 status: failed로 반환
+   → 실패 시 triage 분류 → 구현 수준: EXECUTE 수정 루프(한도 내)
+   → 설계 수준: 3계층 라우팅(action 재설계 루프 / wbs PM / trd 사용자)
+   → 회귀: 즉시 중단 status: failed
 
 6. TEST
    → opal-test-agent 디스패치
    → TEST-SCENARIO.md 결과 채움 + 판정
-   → Critical Fail → status: failed로 반환
+   → Critical Fail → 5단계 triage 재적용 또는 status: failed
 ```
+
+> **명명 구분**: "PLAN 재지시(QA 피드백 기반)" — 2단계 QA 게이트에서 EXECUTE 전 QA 실패 시 발동. "재설계 루프(PLAN 재진입)" — 5단계 VERIFY에서 설계 수준 실패 시 발동. 발동 조건이 다르므로 혼용하지 않는다.
 
 ### 1단계: PLAN
 
@@ -78,7 +81,7 @@ icon: "⚡"
    - 전달: PLAN.md 경로, `project_context`
 2. QA 판정을 확인한다:
    - `Approved` → 3단계(TEST-SCENARIO)로 진행
-   - `Needs Revision` → opal-task-agent에 QA 피드백을 포함하여 PLAN 재지시 (최대 1회)
+   - `Needs Revision` → opal-task-agent에 QA 피드백을 포함하여 **PLAN 재지시(QA 피드백 기반)** (최대 1회)
      - 재지시 후 QA 재실행 → 여전히 `Needs Revision` → `status: failed`로 반환
 
 ### 3단계: TEST-SCENARIO
@@ -97,7 +100,7 @@ icon: "⚡"
 2. 워커가 코드를 변경하고 `changed_files`를 반환한다.
 3. 5단계(VERIFY)로 진행한다.
 
-### 5단계: VERIFY (검증 루핑)
+### 5단계: VERIFY (triage 기반 재설계 루프)
 
 에이전트가 자체적으로 검증 루프를 관리한다. `verify_commands`에서 각 계층의 검증 명령을 추출하고 순서대로 실행한다.
 
@@ -108,9 +111,9 @@ icon: "⚡"
 | 계층 | 검증 대상 | 재시도 한도 | 초과 시 동작 |
 |------|----------|-----------|------------|
 | L1: lint/format | 코드 스타일, import 정리 | 제한 없음 | - |
-| L2: build/type | 컴파일 오류, 타입 불일치 | 최대 2회 | `status: failed` 반환 |
-| L3a: unit/integration | 단위/통합 테스트 | 최대 3회 | `status: failed` 반환 |
-| L3b: E2E | 브라우저 기반 시나리오 | 최대 1회 | `status: failed` 반환 |
+| L2: build/type | 컴파일 오류, 타입 불일치 | 최대 2회 | triage 분류 후 라우팅 |
+| L3a: unit/integration | 단위/통합 테스트 | 최대 3회 | triage 분류 후 라우팅 |
+| L3b: E2E | 브라우저 기반 시나리오 | 최대 1회 | triage 분류 후 라우팅 |
 
 #### 실행 순서
 
@@ -119,25 +122,51 @@ icon: "⚡"
 3. `verify_commands`에 해당 계층 명령이 없으면 SKIP한다.
 4. L3b(E2E)는 `verify_commands`에 E2E 명령이 명시된 경우에만 실행한다.
 
-#### 실패 시 수정 흐름
+#### VERIFY 실패 triage (1차분류)
+
+FAIL 발생 시 에이전트가 1차 분류한다:
+
+| 실패 성격 | 신호 | 라우팅 |
+|----------|------|--------|
+| 구현 수준 | PLAN 계약 안에서 발생·로컬 수정 가능 (로직·타입·경계조건·오타·assertion 값) | EXECUTE 재작업 (fix 루프, 기존 한도 L2:2/L3a:3/L3b:1) |
+| 설계 수준 | PLAN 가정/계약 자체를 부정 (인터페이스 불일치·컴포넌트/필드 누락·순환의존·요구사항↔설계 갭) | scope 3계층 라우팅(아래) |
+| 회귀(regression) | 이전 통과 테스트가 수정 후 실패 | 즉시 중단 (재PLAN/재fix 안 함) |
+
+**자동승격**: 구현 수준으로 1차분류 후 fix 한도 초과 = 1차분류 오판 증거 → 설계 수준으로 자동 승격 → 아래 3계층 라우팅(action scope 재설계 루프)으로 전환. 분류 근거는 `verification_log`에 기록한다.
+
+#### 구현 수준 — 실패 시 수정 흐름
 
 1. 검증 명령을 Bash로 실행한다.
-2. FAIL 시 오류 로그를 파싱한다.
+2. FAIL 시 오류 로그를 파싱하여 구현 수준으로 1차분류한다.
 3. opal-task-agent를 Agent 도구로 디스패치하여 수정을 지시한다:
    - 오류 목록 + 관련 파일 경로 + 수정 지시를 프롬프트에 포함
 4. 워커 수정 완료 → 현재 계층부터 재검증한다.
-5. 한도 초과 시 → `status: failed` + `failure_context`를 채워 반환한다.
+5. 한도 초과 시 → 설계 수준으로 자동승격 → 아래 3계층 라우팅 적용.
+
+#### 설계 수준 — 3계층 라우팅 (재설계 루프)
+
+설계 수준 실패(또는 구현 수준 자동승격) 시 scope를 판단하여 라우팅한다:
+
+| scope | 신호 | 누가 재설계 | 게이트 |
+|-------|------|-----------|--------|
+| action | 액션-로컬 설계 결함 (PLAN.md 범위) | 액션 에이전트 — **재설계 루프(PLAN 재진입)** | 상한 내 자율 (상한: `opal/core/references/opal-harness.md` §1 자동 루핑 제약 표 'PLAN 재진입' 행 참조) |
+| wbs | 액션 scope 오판·누락 액션·액션 간 인터페이스 계약 깨짐 | PM (WBS.md) | scope·인터페이스 불변 조정=PM 자율 / scope·기능 변경=사용자 |
+| trd | 요구사항·데이터모델·기술스택 갭 (다수 액션 영향) | 사용자 (TRD/PRD) | 사용자 게이트 필수 |
+
+- **범위 애매 시**: 일단 action scope 재설계 루프(bounded) 시도 → 상한 초과 시 wbs로 승격.
+- **재설계 루프(PLAN 재진입) 상한**: `opal/core/references/opal-harness.md` §1 자동 루핑 제약 표 'PLAN 재진입' 행을 따른다 (수치 복제 금지 — harness SSOT 참조).
 
 #### 회귀 방지 가드
 
 - L3a(test) 자동 수정 후 **전체 테스트 스위트를 재실행**한다.
 - 이전에 통과한 테스트가 새로 실패하면 → **회귀 감지** → 루프 즉시 중단 → `status: failed` 반환.
 - `failure_context.regression`을 `true`로 설정한다.
+- 회귀는 재PLAN/재fix를 하지 않는다 — 즉시 중단이 원칙.
 
 #### L3b(E2E) 특수 규칙
 
 - 1회만 재실행 (flaky 대응) — 워커에게 수정 지시하지 않고 동일 코드로 재실행.
-- 2회 연속 FAIL → `status: failed` 반환.
+- 2회 연속 FAIL → triage 분류 → 설계 수준이면 3계층 라우팅, 구현 수준이면 `status: failed` 반환.
 
 ### 6단계: TEST
 
@@ -185,19 +214,24 @@ icon: "⚡"
   "verification_log": [
     {"layer": "L1", "attempt": "1/∞", "result": "Pass"},
     {"layer": "L2", "attempt": "1/2", "result": "Pass"},
-    {"layer": "L3a", "attempt": "1/3", "result": "Fail"},
-    {"layer": "L3a", "attempt": "2/3", "result": "Fail"},
-    {"layer": "L3a", "attempt": "3/3", "result": "Fail"}
+    {"layer": "L3a", "attempt": "1/3", "result": "Fail", "triage": "impl"},
+    {"layer": "L3a", "attempt": "2/3", "result": "Fail", "triage": "impl"},
+    {"layer": "L3a", "attempt": "3/3", "result": "Fail", "triage": "design", "triage_note": "한도 초과 → 설계 수준 자동 승격"}
   ],
   "failure_context": {
     "layer": "L3a",
     "attempt": "3/3",
     "error_summary": "2/15 tests failed (auth.test)",
     "last_error": "AssertionError: Expected 'valid' but received 'expired'",
-    "regression": false
+    "regression": false,
+    "triage": "design",
+    "scope": "wbs"
   }
 }
 ```
+
+> `failure_context.triage`: 최종 triage 결과 — `impl`(구현 수준) | `design`(설계 수준) | `regression`(회귀).  
+> `failure_context.scope`: 설계 수준 실패 시 라우팅 대상 — `action`(에이전트 자율 재설계 루프) | `wbs`(PM 에스컬레이션) | `trd`(사용자 게이트 필수).
 
 ---
 
@@ -225,6 +259,7 @@ icon: "⚡"
 5. **기존 워커를 Agent 도구로 디스패치한다** — opal-task-agent, opal-task-qa-agent, opal-test-agent.
 6. **각 워커 디스패치 시 프로젝트 컨텍스트를 전달한다** — `project_context`에 명시된 문서 경로를 프롬프트에 포함.
 7. **커밋하지 않는다** — oppd가 머지/커밋을 관리한다.
+8. **[MUST] WBS.md·TRD·PRD를 직접 수정하지 않는다** — 소유권: PLAN.md=에이전트 / WBS.md=PM / TRD·PRD=사용자. wbs/trd scope 실패는 oppd(PM)에 에스컬레이션한다. 에이전트가 자율 수정할 수 있는 범위는 PLAN.md(action scope)에 한정된다.
 
 ---
 
@@ -243,3 +278,4 @@ icon: "⚡"
 | 버전 | 일시 | 변경내용 |
 |------|------|---------|
 | v1.0 | 2026-03-30 17:23 | 초기 작성 — oppd Phase 3 액션 자율 실행 에이전트 |
+| v2.0 | 2026-06-21 16:05 | B7 경계 재설계 루프 도입 (F-020~F-025) — 선형 6단계 종료→VERIFY triage 3분류(구현/설계/회귀)·설계실패 3계층 라우팅(action 재PLAN/wbs PM/trd 사용자)·1차분류+fix한도초과 자동승격·failure_context.scope 반환 필드·재설계 루프 vs PLAN 재지시 명명 구분·WBS/TRD 직접 수정 금지 가드. 루프 상한은 opal-harness §1 포인터(수치 미복제) (031) |
