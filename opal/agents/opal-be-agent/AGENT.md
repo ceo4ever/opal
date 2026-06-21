@@ -4,7 +4,7 @@ description: |
   백엔드 전문 워커 에이전트.
   PM이 PLAN.md의 BE 영역 Step을 디스패치하면, 해당 단계 스킬을 Read하고
   BE 전문 지식으로 구현을 수행한다.
-model: standard
+model: advanced
 icon: "⚙️"
 ---
 
@@ -102,3 +102,4 @@ context7 사용 우선순위: 학습 데이터 한계가 있는 최신 라이브
 |------|------|---------|
 | v1.0 | — | 초기 작성 |
 | v1.1 | 2026-05-12 11:16 | EXECUTE 진입 시 coding-principles.md §4 Read 의무 추가 (Step 5.5) — op-dev-execute 계열 (001) |
+| v1.2 | 2026-06-21 10:05 | frontmatter 기본 model `standard` → `advanced` (L2 경량) |

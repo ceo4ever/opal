@@ -3,7 +3,7 @@ name: opal-task-agent
 description: |
   op/op-dev 단계 스킬을 독립 컨텍스트에서 실행하는 범용 워커 에이전트.
   오케스트레이터가 단계 스킬 경로를 전달하면, 해당 SKILL.md를 Read하고 프로세스를 따른다.
-model: standard
+model: advanced
 icon: "✨"
 ---
 
@@ -68,3 +68,4 @@ icon: "✨"
 |------|------|---------|
 | v1.0 | — | 초기 작성 |
 | v1.1 | 2026-05-12 11:16 | 행동 규칙에 EXECUTE 진입 시 coding-principles.md §4 Read 의무 추가 — op-dev-execute / op-task-execute 계열 (001) |
+| v1.2 | 2026-06-21 10:05 | frontmatter 기본 model `standard` → `advanced` (L2 경량) |
