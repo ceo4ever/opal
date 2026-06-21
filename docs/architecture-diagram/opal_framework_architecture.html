@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OPAL — Framework Architecture</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Inter+Tight:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0E1014;--bg-elev:#15181F;--bg-soft:#1A1E27;--line:#2A2F3A;--line-soft:#1F232C;
+  --text:#E6E7EA;--text-mute:#8A8F99;--text-dim:#5A5F69;--accent:#FF5A1F;--accent-soft:#FF5A1F22;
+  --c-l1:#7CA9FF;--c-l2:#9C8CFF;--c-l3:#FF8FA3;--c-l4:#5BD3B0;--c-l5:#FFB454;
+  --c-l6:#F7C66B;--c-l7:#A8D86F;--c-l8:#5FCFE0;--c-l9:#CE92DB;
+  --m-bg:#F5F6F8;--m-panel:#FFFFFF;--m-ink:#1F2430;--m-ink-mute:#5B6472;--m-line:#E2E5EA;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);font-family:'Inter Tight',sans-serif;-webkit-font-smoothing:antialiased}
+
+/* ===================== TAB BAR ===================== */
+.tabbar{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:6px;background:#0B0D11;border-bottom:1px solid #20242E;padding:10px 22px}
+.tabbar .brand{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.18em;color:var(--accent);text-transform:uppercase;margin-right:18px}
+.tab{font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.04em;color:#7B828F;background:transparent;border:1px solid transparent;border-radius:6px;padding:7px 16px;cursor:pointer;transition:all .18s ease}
+.tab:hover{color:#C9CED7;background:#15181F}
+.tab.active{color:#0B0D11;background:var(--accent);border-color:var(--accent);font-weight:500}
+
+/* ===================== VIEW SWITCH ===================== */
+.view{display:none}
+.view.active{display:block}
+
+/* ===================================================================
+   VIEW 1 — MAP (light, ProcessOn-style)
+   =================================================================== */
+.view-map{background:var(--m-bg);min-height:100vh;padding:34px 28px 70px;color:var(--m-ink)}
+.map-head{max-width:1180px;margin:0 auto 24px;display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:16px}
+.map-head h1{font-size:30px;font-weight:800;letter-spacing:-.02em;line-height:1.1}
+.map-head h1 .em{color:#E8541C;font-style:italic;font-weight:600}
+.map-head p{color:var(--m-ink-mute);font-size:13.5px;margin-top:7px;max-width:560px;line-height:1.5}
+.map-hint{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--m-ink-mute);background:#fff;border:1px solid var(--m-line);border-radius:20px;padding:7px 14px;white-space:nowrap}
+.map-hint b{color:#E8541C}
+
+/* layout: main column (stacked rows) + right cross-cutting column */
+.map-body{max-width:1180px;margin:0 auto;display:flex;gap:9px;align-items:stretch}
+.map-col{flex:1;min-width:0;display:flex;flex-direction:column;gap:11px}
+.map-row{display:grid;grid-template-columns:120px minmax(0,1fr);gap:9px;align-items:stretch}
+.mlabel{display:flex;flex-direction:column;justify-content:center;gap:4px;font-size:13px;font-weight:600;color:var(--m-ink);line-height:1.25;padding-right:4px}
+.mlabel .num{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.12em;color:#A2A9B5}
+
+.band{position:relative;border-radius:10px;padding:14px;display:flex;flex-wrap:wrap;gap:9px;align-content:center}
+.band:not(.no-arrow)::after{content:"▼";position:absolute;bottom:-12px;left:54px;font-size:10px;color:#B9C0CB;z-index:2}
+.band-l1{background:#D6F7EC;box-shadow:inset 0 0 0 1px #A6E9D2}
+.band-l2{background:#FDE9D5;box-shadow:inset 0 0 0 1px #F6CFA3}
+.band-l3{background:#FCF1CD;box-shadow:inset 0 0 0 1px #F2DF94}
+.band-l4{background:#DCF6DD;box-shadow:inset 0 0 0 1px #ABE3AE}
+.band-l5{background:#EAF7CE;box-shadow:inset 0 0 0 1px #CDE89A}
+.band-l6{background:#D4F5EF;box-shadow:inset 0 0 0 1px #A4E5D9}
+.band-l7{background:#E2E4FB;box-shadow:inset 0 0 0 1px #BCC0F2}
+.band-direct{background:#ECEEF2;box-shadow:inset 0 0 0 1px #D3D8E0}
+
+/* harness wraps orchestrator → stage skills → workers */
+.harness-box{position:relative;border:1.6px dashed #E2998F;background:rgba(251,214,210,.20);border-radius:14px;padding:8px 13px 15px;display:flex;flex-direction:column;gap:11px;margin:3px 0}
+.harness-box::after{content:"▼";position:absolute;bottom:-13px;left:67px;font-size:10px;color:#B9C0CB;z-index:2}
+.harness-head{display:flex;align-items:center;gap:11px;flex-wrap:wrap;cursor:pointer;padding:6px 9px;border-radius:9px;transition:background .15s ease}
+.harness-head:hover{background:rgba(251,214,210,.55)}
+.hh-title{font-size:13px;font-weight:800;color:#B23B30;letter-spacing:.01em}
+.hh-sub{font-size:11px;color:#B17872}
+.hh-chips{font-family:'JetBrains Mono',monospace;font-size:9.5px;color:#A8463D;background:#FBE3E0;border:1px solid #F0B8B1;border-radius:5px;padding:3px 9px;margin-left:auto}
+
+.mnode{background:#fff;border:1px solid #fff;border-radius:7px;padding:10px 13px;font-size:12.5px;font-weight:500;color:var(--m-ink);cursor:pointer;transition:transform .15s ease,box-shadow .15s ease,border-color .15s ease;box-shadow:0 1px 2px rgba(20,30,50,.06);min-width:96px;display:flex;align-items:center;gap:7px}
+.mnode:hover,.mnode:focus{transform:translateY(-2px);box-shadow:0 5px 14px rgba(20,30,50,.13);outline:none}
+.mnode .mn-alias{font-family:'JetBrains Mono',monospace;font-size:10px;color:#8C93A0;font-weight:400}
+.mnode .mn-dot{width:6px;height:6px;border-radius:50%;background:#E8541C;flex-shrink:0}
+.mnode.is-core{border-color:#F4B59B}
+
+/* right cross-cutting vertical column */
+.cross{display:flex;align-items:center;justify-content:center;border-radius:10px;cursor:pointer;transition:transform .15s ease,box-shadow .15s ease;padding:10px 0;width:58px;flex-shrink:0}
+.cross:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(20,30,50,.14)}
+.cross span{writing-mode:vertical-rl;text-orientation:mixed;font-size:13px;font-weight:700;letter-spacing:.08em;line-height:1.2}
+.cross small{writing-mode:vertical-rl;text-orientation:mixed;font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:400;letter-spacing:.1em;margin-top:8px;opacity:.8}
+.cross-know{background:#E7DCFB;box-shadow:inset 0 0 0 1px #C9B6F2;color:#6B4BC2}
+
+.map-legend{max-width:1180px;margin:30px auto 0;display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--m-ink-mute);background:#fff;border:1px solid var(--m-line);border-radius:8px;padding:12px 16px}
+.map-legend .li{display:flex;align-items:center;gap:7px}
+.map-legend .sw{width:14px;height:10px;border-radius:3px}
+.map-legend .sw-dash{width:16px;height:11px;border-radius:3px;border:1.5px dashed #E2998F;background:rgba(251,214,210,.4)}
+
+/* ===================================================================
+   VIEW 2 — DETAIL (dark 9-layer) — scoped under .view-detail
+   =================================================================== */
+.view-detail{background:var(--bg);min-height:100vh;background-image:radial-gradient(circle at 20% 0%, rgba(255,90,31,.06), transparent 50%),radial-gradient(circle at 80% 100%, rgba(91,211,176,.04), transparent 50%);padding:44px 32px 80px}
+.view-detail .wrap{max-width:1280px;margin:0 auto;color:var(--text)}
+.view-detail .head{display:grid;grid-template-columns:1fr auto;gap:24px;align-items:end;border-bottom:1px solid var(--line);padding-bottom:28px;margin-bottom:36px}
+.view-detail .eyebrow{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.2em;color:var(--accent);text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:10px}
+.view-detail .eyebrow::before{content:"";width:24px;height:1px;background:var(--accent)}
+.view-detail h1{font-size:44px;line-height:1.05;font-weight:800;letter-spacing:-.02em;margin-bottom:12px}
+.view-detail h1 .em{color:var(--accent);font-style:italic;font-weight:500}
+.view-detail .subtitle{color:var(--text-mute);font-size:15px;max-width:660px;line-height:1.5}
+.view-detail .meta{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-dim);text-align:right;line-height:1.85}
+.view-detail .meta b{color:var(--text-mute);font-weight:500}
+.view-detail .legend{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-mute);margin-bottom:36px;padding:14px 18px;background:var(--bg-elev);border:1px solid var(--line-soft);border-radius:6px}
+.view-detail .legend-item{display:flex;align-items:center;gap:7px}
+.view-detail .dot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+.view-detail .legend-sep{width:1px;height:14px;background:var(--line);margin:0 2px}
+.view-detail .arch{display:flex;flex-direction:column;gap:0}
+.view-detail .layer{position:relative;display:grid;grid-template-columns:150px 1fr;gap:24px;padding:26px 0;border-bottom:1px dashed var(--line-soft)}
+.view-detail .layer:last-child{border-bottom:none}
+.view-detail .layer-label{font-family:'JetBrains Mono',monospace;display:flex;flex-direction:column;gap:6px;align-self:start;padding-top:4px}
+.view-detail .layer-num{font-size:10px;color:var(--text-dim);letter-spacing:.15em}
+.view-detail .layer-name{font-size:13px;color:var(--text);font-weight:500;line-height:1.3;font-family:'Inter Tight',sans-serif}
+.view-detail .layer-tag{font-size:10px;color:var(--text-mute);letter-spacing:.03em;border-left:2px solid var(--line);padding-left:8px;margin-top:8px;line-height:1.5}
+.view-detail .boxes{display:grid;gap:14px}
+.view-detail .boxes-3{grid-template-columns:repeat(3,1fr)}
+.view-detail .boxes-2{grid-template-columns:repeat(2,1fr)}
+.view-detail .node{background:var(--bg-elev);border:1px solid var(--line);border-radius:8px;padding:16px 18px;position:relative;transition:transform .2s ease,border-color .2s ease,background .2s ease}
+.view-detail .node:hover{transform:translateY(-2px);border-color:var(--text-mute);background:var(--bg-soft)}
+.view-detail .node-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:9px}
+.view-detail .node-title{font-size:14.5px;font-weight:600;letter-spacing:-.005em;display:flex;align-items:center;flex-wrap:wrap;gap:2px}
+.view-detail .node-tag{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.08em;color:var(--text-dim);padding:3px 7px;border:1px solid var(--line);border-radius:3px;text-transform:uppercase;white-space:nowrap;flex-shrink:0}
+.view-detail .node-desc{font-size:12.5px;color:var(--text-mute);line-height:1.55}
+.view-detail .node-tech{display:flex;flex-wrap:wrap;gap:5px;margin-top:11px}
+.view-detail .chip{font-family:'JetBrains Mono',monospace;font-size:9.5px;padding:3px 7px;background:rgba(255,255,255,.04);border:1px solid var(--line-soft);border-radius:3px;color:var(--text-mute)}
+.view-detail .layer-l1 .node{border-left:2px solid var(--c-l1)} .view-detail .layer-l1 .node-tag{color:var(--c-l1)}
+.view-detail .layer-l2 .node{border-left:2px solid var(--c-l2)} .view-detail .layer-l2 .node-tag{color:var(--c-l2)}
+.view-detail .layer-l3 .node{border-left:2px solid var(--c-l3)} .view-detail .layer-l3 .node-tag{color:var(--c-l3)}
+.view-detail .layer-l4 .node{border-left:2px solid var(--c-l4)} .view-detail .layer-l4 .node-tag{color:var(--c-l4)}
+.view-detail .layer-l5 .node{border-left:2px solid var(--c-l5)} .view-detail .layer-l5 .node-tag{color:var(--c-l5)}
+.view-detail .layer-l6 .node{border-left:2px solid var(--c-l6)} .view-detail .layer-l6 .node-tag{color:var(--c-l6)}
+.view-detail .layer-l7 .node{border-left:2px solid var(--c-l7)} .view-detail .layer-l7 .node-tag{color:var(--c-l7)}
+.view-detail .layer-l8 .node{border-left:2px solid var(--c-l8)} .view-detail .layer-l8 .node-tag{color:var(--c-l8)}
+.view-detail .layer-l9 .node{border-left:2px solid var(--c-l9)} .view-detail .layer-l9 .node-tag{color:var(--c-l9)}
+.view-detail .connector{display:flex;justify-content:center;align-items:center;height:22px;margin:-2px 0;position:relative}
+.view-detail .connector::before{content:"↓";font-family:'JetBrains Mono',monospace;font-size:14px;color:var(--text-dim);background:var(--bg);padding:0 12px;z-index:1}
+.view-detail .connector::after{content:"";position:absolute;top:50%;left:150px;right:0;height:1px;background:linear-gradient(to right,var(--line) 0%,var(--line) 50%,transparent 50%,transparent 100%);background-size:8px 1px;background-repeat:repeat-x;z-index:0}
+.view-detail .badge{display:inline-flex;align-items:center;gap:5px;font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.06em;padding:2px 7px;border-radius:3px;text-transform:uppercase;margin-left:7px;font-weight:400}
+.view-detail .badge-core{background:var(--accent-soft);color:var(--accent);border:1px solid var(--accent)}
+.view-detail .badge-later{background:rgba(255,255,255,.03);color:var(--text-dim);border:1px solid var(--line)}
+.view-detail .badge-stable{background:rgba(91,211,176,.12);color:var(--c-l4);border:1px solid var(--c-l4)}
+.view-detail .roadmap{margin-top:60px;padding-top:48px;border-top:1px solid var(--line)}
+.view-detail .section-head{margin-bottom:24px}
+.view-detail .section-head .eyebrow{margin-bottom:10px}
+.view-detail .section-head h2{font-size:28px;font-weight:700;letter-spacing:-.02em;line-height:1.1}
+.view-detail .section-head .sub{color:var(--text-mute);font-size:13.5px;margin-top:8px;max-width:620px;line-height:1.5}
+.view-detail .tracks{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:24px}
+.view-detail .track{background:var(--bg-elev);border:1px solid var(--line-soft);border-radius:8px;padding:20px}
+.view-detail .track-h{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.1em;color:var(--accent);margin-bottom:12px;text-transform:uppercase}
+.view-detail .track:nth-child(2) .track-h{color:var(--c-l2)}
+.view-detail .track:nth-child(3) .track-h{color:var(--text-dim)}
+.view-detail .track h3{font-size:15px;font-weight:600;margin-bottom:14px;letter-spacing:-.01em}
+.view-detail .track ul{list-style:none;display:flex;flex-direction:column;gap:8px}
+.view-detail .track li{font-size:12.5px;color:var(--text-mute);line-height:1.5;padding-left:14px;position:relative}
+.view-detail .track li::before{content:"";position:absolute;left:0;top:9px;width:6px;height:1px;background:var(--text-dim)}
+.view-detail .foot{margin-top:60px;padding-top:24px;border-top:1px solid var(--line);font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-dim);display:flex;justify-content:space-between;flex-wrap:wrap;gap:16px}
+
+/* ===================== MODAL ===================== */
+.modal-overlay{position:fixed;inset:0;z-index:100;background:rgba(8,10,14,.62);backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;padding:24px}
+.modal-overlay.open{display:flex}
+.modal-card{background:#fff;color:var(--m-ink);border-radius:14px;max-width:520px;width:100%;max-height:86vh;overflow-y:auto;padding:26px 28px 28px;position:relative;box-shadow:0 24px 60px rgba(0,0,0,.4);animation:pop .18s ease}
+@keyframes pop{from{transform:translateY(10px) scale(.98);opacity:0}to{transform:none;opacity:1}}
+.modal-close{position:absolute;top:16px;right:18px;background:none;border:none;font-size:24px;line-height:1;color:#9AA1AD;cursor:pointer}
+.modal-close:hover{color:var(--m-ink)}
+.m-layer{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.1em;color:#8C93A0;text-transform:uppercase}
+.m-title{font-size:22px;font-weight:800;letter-spacing:-.01em;margin-top:6px;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.m-badge{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.06em;padding:3px 9px;border-radius:4px;text-transform:uppercase;font-weight:500}
+.m-badge.core{background:#FDEAE1;color:#D8491C;border:1px solid #F3B49A}
+.m-badge.stable{background:#DBF5EC;color:#1C9B72;border:1px solid #A7E4CE}
+.m-badge.later{background:#EEF0F3;color:#7A828F;border:1px solid #D7DBE1}
+.m-tag{font-family:'JetBrains Mono',monospace;font-size:11px;color:#8C93A0;margin-top:8px;letter-spacing:.04em}
+.m-desc{font-size:14px;line-height:1.6;color:#3A4150;margin-top:16px}
+.m-detail{list-style:none;margin-top:16px;display:flex;flex-direction:column;gap:9px}
+.m-detail li{font-size:13px;line-height:1.5;color:#4A5160;padding-left:18px;position:relative}
+.m-detail li::before{content:"→";position:absolute;left:0;color:#E8541C;font-family:'JetBrains Mono',monospace;font-size:12px}
+.m-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:18px}
+.m-chips span{font-family:'JetBrains Mono',monospace;font-size:10.5px;padding:4px 9px;background:#F2F4F7;border:1px solid #E2E5EA;border-radius:4px;color:#5B6472}
+
+/* ===================== RESPONSIVE ===================== */
+@media (max-width:920px){
+  .view-map{padding:24px 14px 50px}
+  .map-body{flex-direction:column}
+  .map-row{grid-template-columns:1fr;gap:6px}
+  .mlabel{flex-direction:row;gap:8px;align-items:center}
+  .cross{width:auto;padding:12px}
+  .cross span,.cross small{writing-mode:horizontal-tb}
+  .band::after,.harness-box::after{display:none}
+  .hh-chips{margin-left:0}
+  .view-detail{padding:30px 14px 60px}
+  .view-detail h1{font-size:30px}
+  .view-detail .head{grid-template-columns:1fr}
+  .view-detail .meta{text-align:left}
+  .view-detail .layer{grid-template-columns:1fr;gap:14px}
+  .view-detail .boxes-3,.view-detail .boxes-2{grid-template-columns:1fr}
+  .view-detail .tracks{grid-template-columns:1fr}
+  .view-detail .connector::after{left:0}
+}
+</style>
+</head>
+<body>
+
+<!-- ===================== TAB BAR ===================== -->
+<div class="tabbar">
+  <span class="brand">OPAL</span>
+  <button class="tab active" data-view="map">구조도</button>
+  <button class="tab" data-view="detail">상세 9-레이어</button>
+</div>
+
+<!-- ===================================================================
+     VIEW 1 — MAP
+     =================================================================== -->
+<div class="view view-map active" id="view-map">
+  <div class="map-head">
+    <div>
+      <h1>OPAL 프레임워크 <span class="em">구조도</span></h1>
+      <p>AI 플랫폼 위에서 IT 프로젝트를 수행하는 범용 에이전트 프레임워크. 하네스가 오케스트레이터~워커 실행을 관할하고, 지식·도구 자산이 전 계층을 가로지른다.</p>
+    </div>
+    <div class="map-hint">박스를 <b>클릭</b>하면 상세가 열립니다</div>
+  </div>
+
+  <div class="map-body">
+    <div class="map-col">
+
+      <!-- L1 -->
+      <div class="map-row">
+        <div class="mlabel"><span class="num">LAYER 01</span>진입 · 부트스트랩</div>
+        <div class="band band-l1">
+          <div class="mnode" data-id="claude"><span class="mn-dot"></span>Claude Code</div>
+          <div class="mnode" data-id="cursor"><span class="mn-dot"></span>Cursor</div>
+          <div class="mnode" data-id="gemini"><span class="mn-dot"></span>Gemini / Antigravity</div>
+          <div class="mnode" data-id="codex"><span class="mn-dot"></span>Codex</div>
+        </div>
+      </div>
+
+      <!-- L2 -->
+      <div class="map-row">
+        <div class="mlabel"><span class="num">LAYER 02</span>거버넌스 · 정체성</div>
+        <div class="band band-l2">
+          <div class="mnode is-core" data-id="principles">PRINCIPLES <span class="mn-alias">헌법</span></div>
+          <div class="mnode" data-id="identity">identity <span class="mn-alias">알투/R2</span></div>
+          <div class="mnode is-core" data-id="roles">역할 체계 <span class="mn-alias">비서↔PM</span></div>
+        </div>
+      </div>
+
+      <!-- L3 -->
+      <div class="map-row">
+        <div class="mlabel"><span class="num">LAYER 03</span>라우팅</div>
+        <div class="band band-l3">
+          <div class="mnode is-core" data-id="cmd">// 커맨드</div>
+          <div class="mnode" data-id="nl">자연어 요청</div>
+          <div class="mnode" data-id="registry">skill-registry</div>
+        </div>
+      </div>
+
+      <!-- L4 직접 실행 스킬: 라우팅에서 직접 호출 (하네스/파이프라인 우회) -->
+      <div class="map-row">
+        <div class="mlabel"><span class="num">LAYER 04</span>직접 실행 스킬</div>
+        <div class="band band-direct no-arrow">
+          <div class="mnode" data-id="operator">operator 직접실행</div>
+          <div class="mnode" data-id="standalone">standalone 독립</div>
+          <div class="mnode" data-id="community">community 외부</div>
+          <span style="align-self:center;font-family:'JetBrains Mono',monospace;font-size:10px;color:#8C93A0;margin-left:4px">↜ 라우팅에서 직접 호출 · 하네스 우회</span>
+        </div>
+      </div>
+
+      <!-- ===== 하네스 박스: 오케스트레이터 → 단계 스킬 → 워커 에이전트 관할 ===== -->
+      <div class="harness-box">
+        <div class="harness-head" data-id="harness">
+          <span class="hh-title">⊟ 하네스 (Harness)</span>
+          <span class="hh-sub">오케스트레이터 → 단계 스킬 → 워커 에이전트 실행을 관할 · 클릭</span>
+          <span class="hh-chips">Guards · Gates · State · 3-way</span>
+        </div>
+
+        <!-- L5 오케스트레이터 -->
+        <div class="map-row">
+          <div class="mlabel"><span class="num">LAYER 05</span>오케스트레이터 / Pilot</div>
+          <div class="band band-l4">
+            <div class="mnode" data-id="opd">opd <span class="mn-alias">full</span></div>
+            <div class="mnode is-core" data-id="opds">opds <span class="mn-alias">기본</span></div>
+            <div class="mnode" data-id="opdw">opdw <span class="mn-alias">ui</span></div>
+            <div class="mnode" data-id="opp">opp <span class="mn-alias">범용</span></div>
+            <div class="mnode" data-id="opwt">opwt <span class="mn-alias">기획</span></div>
+            <div class="mnode" data-id="oppd">oppd <span class="mn-alias">lifecycle</span></div>
+            <div class="mnode" data-id="opsdd">opsdd <span class="mn-alias">sdd</span></div>
+            <div class="mnode" data-id="opdd">opdd <span class="mn-alias">data</span></div>
+            <div class="mnode" data-id="opgc">opgc <span class="mn-alias">품질</span></div>
+          </div>
+        </div>
+
+        <!-- L6 단계 스킬 -->
+        <div class="map-row">
+          <div class="mlabel"><span class="num">LAYER 06</span>단계 스킬 (op-*)</div>
+          <div class="band band-l5">
+            <div class="mnode" data-id="op-dev">op-dev <span class="mn-alias">7</span></div>
+            <div class="mnode" data-id="op-task">op-task <span class="mn-alias">4</span></div>
+            <div class="mnode" data-id="op-sdd">op-sdd <span class="mn-alias">5</span></div>
+            <div class="mnode" data-id="op-data">op-data <span class="mn-alias">3</span></div>
+            <div class="mnode" data-id="op-brain">op-brain <span class="mn-alias">1</span></div>
+          </div>
+        </div>
+
+        <!-- L7 워커 에이전트 -->
+        <div class="map-row">
+          <div class="mlabel"><span class="num">LAYER 07</span>워커 에이전트</div>
+          <div class="band band-l6 no-arrow">
+            <div class="mnode" data-id="ag-spec">전문 Specialist <span class="mn-alias">6</span></div>
+            <div class="mnode" data-id="ag-generic">범용 Generic <span class="mn-alias">4</span></div>
+            <div class="mnode" data-id="ag-checker">체커 Checker <span class="mn-alias">2</span></div>
+            <div class="mnode" data-id="ag-util">변환 Util <span class="mn-alias">1</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- L8 배포 -->
+      <div class="map-row">
+        <div class="mlabel"><span class="num">LAYER 08</span>배포 · 어댑터 · Console</div>
+        <div class="band band-l7 no-arrow">
+          <div class="mnode is-core" data-id="twolayer">2-Layer 모델</div>
+          <div class="mnode is-core" data-id="adapter">어댑터 계층</div>
+          <div class="mnode" data-id="channel">배포 채널</div>
+          <div class="mnode" data-id="console">OPAL Console</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- right cross-cutting column (전 계층 관통) -->
+    <div class="cross cross-know" data-id="knowledge"><span>지식 · 도구 자산</span><small>TOOLS · BRAIN · MEMORY</small></div>
+  </div>
+
+  <div class="map-legend">
+    <div class="li"><span class="sw" style="background:#D6F7EC;box-shadow:inset 0 0 0 1px #A6E9D2"></span>실행 계층 (위→아래 흐름)</div>
+    <div class="li"><span class="sw-dash"></span>하네스 — 오케스트레이터~워커 실행 관할</div>
+    <div class="li"><span class="sw" style="background:#E7DCFB;box-shadow:inset 0 0 0 1px #C9B6F2"></span>지식·도구 — 전 계층 참조 (횡단)</div>
+    <div class="li"><span class="mn-dot" style="display:inline-block"></span>= CORE 근간</div>
+  </div>
+</div>
+
+<!-- ===================================================================
+     VIEW 2 — DETAIL (9-layer dark)
+     =================================================================== -->
+<div class="view view-detail" id="view-detail">
+  <div class="wrap">
+    <header class="head">
+      <div>
+        <div class="eyebrow">Framework architecture / v0.5</div>
+        <h1>OPAL<br><span class="em">— Open Protocol for Agentic Links</span></h1>
+        <p class="subtitle">AI 플랫폼 위에서 IT 프로젝트를 수행하는 범용 에이전트 프레임워크. 플랫폼 부트스트랩 진입부터 멀티플랫폼 배포까지 9개 계층으로 동작한다. 위에서 아래로 읽으면 하나의 요청이 흐르는 경로다.</p>
+      </div>
+      <div class="meta">
+        <div><b>OWNER</b> &nbsp; 캡틴 · 알투(R2)</div>
+        <div><b>PLATFORM</b> &nbsp; Claude · Cursor · Gemini · Codex</div>
+        <div><b>STACK</b> &nbsp; Markdown · YAML · Bash · Node · Python</div>
+        <div><b>MODEL</b> &nbsp; 2-Layer · Global(~/.opal) + Project</div>
+      </div>
+    </header>
+
+    <div class="legend">
+      <div class="legend-item"><span class="dot" style="background:var(--c-l1)"></span>L1 진입</div>
+      <div class="legend-item"><span class="dot" style="background:var(--c-l2)"></span>L2 거버넌스</div>
+      <div class="legend-item"><span class="dot" style="background:var(--c-l3)"></span>L3 라우팅</div>
+      <div class="legend-item"><span class="dot" style="background:var(--c-l4)"></span>L4 오케스트레이터</div>
+      <div class="legend-item"><span class="dot" style="background:var(--c-l5)"></span>L5 하네스</div>
+      <div class="legend-item"><span class="dot" style="background:var(--c-l6)"></span>L6 단계 스킬</div>
+      <div class="legend-item"><span class="dot" style="background:var(--c-l7)"></span>L7 에이전트</div>
+      <div class="legend-item"><span class="dot" style="background:var(--c-l8)"></span>L8 도구·자산</div>
+      <div class="legend-item"><span class="dot" style="background:var(--c-l9)"></span>L9 배포</div>
+      <span class="legend-sep"></span>
+      <div class="legend-item"><span class="badge badge-core" style="margin-left:0">CORE</span> 근간</div>
+      <div class="legend-item"><span class="badge badge-stable" style="margin-left:0">안정</span> 구현 완료</div>
+      <div class="legend-item"><span class="badge badge-later" style="margin-left:0">예정</span> 후순위</div>
+    </div>
+
+    <section class="arch">
+      <div class="layer layer-l1">
+        <div class="layer-label"><div class="layer-num">LAYER 01</div><div class="layer-name">진입 · 부트스트랩</div><div class="layer-tag">AI 플랫폼이 알투를 로드하는 진입점. 마커 → <b style="color:var(--c-l1)">~/.opal/AGENT.md</b> Read → 에이전트 활성화</div></div>
+        <div class="boxes boxes-2">
+          <div class="node"><div class="node-head"><div class="node-title">Claude Code <span class="badge badge-stable">안정</span></div><div class="node-tag">primary</div></div><div class="node-desc">install이 글로벌 <code>~/.claude/CLAUDE.md</code>에 OPAL 마커를 멱등 삽입. 모든 세션이 부팅 시 알투를 로드.</div><div class="node-tech"><span class="chip">CLAUDE.md</span><span class="chip">Skill tool</span><span class="chip">~/.claude/agents</span></div></div>
+          <div class="node"><div class="node-head"><div class="node-title">Cursor <span class="badge badge-stable">안정</span></div><div class="node-tag">primary</div></div><div class="node-desc">규칙 파일 <code>~/.cursor/rules/000-opal-agent.mdc</code>가 alwaysApply=true로 전 폴더 자동 적용.</div><div class="node-tech"><span class="chip">.mdc rules</span><span class="chip">~/.cursor/agents</span></div></div>
+          <div class="node"><div class="node-head"><div class="node-title">Gemini / Antigravity <span class="badge badge-stable">안정</span></div><div class="node-tag">primary</div></div><div class="node-desc">글로벌 <code>~/.gemini/GEMINI.md</code> + 프로젝트 마커 자동 삽입(글로벌 진입점이 달라 유일하게 프로젝트 마커 필요).</div><div class="node-tech"><span class="chip">GEMINI.md</span><span class="chip">자동 삽입</span></div></div>
+          <div class="node"><div class="node-head"><div class="node-title">Codex <span class="badge badge-stable">안정</span></div><div class="node-tag">primary</div></div><div class="node-desc">글로벌 <code>~/.codex/AGENTS.md</code> 마커. tool-backed 세션은 커스텀 에이전트 인라인 주입으로 디스패치(task 028).</div><div class="node-tech"><span class="chip">AGENTS.md</span><span class="chip">config [agents]</span></div></div>
+        </div>
+      </div>
+      <div class="connector"></div>
+      <div class="layer layer-l2">
+        <div class="layer-label"><div class="layer-num">LAYER 02</div><div class="layer-name">거버넌스 · 정체성</div><div class="layer-tag">행동 헌법 + 정체성 — 모든 하위 문서가 참조로 상속</div></div>
+        <div class="boxes boxes-3">
+          <div class="node"><div class="node-head"><div class="node-title">PRINCIPLES.md <span class="badge badge-core">CORE</span></div><div class="node-tag">헌법</div></div><div class="node-desc">행동 SSOT. <b style="color:var(--accent)">사용자 주권 · Done=검증된 동작 · 조언 말고 집행 · 플랫폼 독립</b>. 하위 문서는 복제 없이 참조 상속.</div><div class="node-tech"><span class="chip">Core Stance</span><span class="chip">inherited-by-ref</span><span class="chip">eager-load</span></div></div>
+          <div class="node"><div class="node-head"><div class="node-title">identity.md <span class="badge badge-stable">안정</span></div><div class="node-tag">정체성</div></div><div class="node-desc">알투(R2) — 캡틴을 소유자로 호칭. 차분·꼼꼼·솔직·따뜻. YAML frontmatter로 톤/성격 주입.</div><div class="node-tech"><span class="chip">YAML frontmatter</span><span class="chip">알투 / R2</span></div></div>
+          <div class="node"><div class="node-head"><div class="node-title">역할 체계 <span class="badge badge-core">CORE</span></div><div class="node-tag">상태기계</div></div><div class="node-desc"><code>.opal/AGENT.md</code> 유무로 비서 ↔ PM 자동 전환. 파일 1~2개 단순 수정은 L2 경량 트랙으로 파이프라인 우회.</div><div class="node-tech"><span class="chip">비서 / PM</span><span class="chip">L2 경량트랙</span><span class="chip">PM 컨텍스트</span></div></div>
+        </div>
+      </div>
+      <div class="connector"></div>
+      <div class="layer layer-l3">
+        <div class="layer-label"><div class="layer-num">LAYER 03</div><div class="layer-name">라우팅</div><div class="layer-tag">요청을 스킬·파이프라인으로 분배하는 진입 분기</div></div>
+        <div class="boxes boxes-3">
+          <div class="node"><div class="node-head"><div class="node-title">// 커맨드 <span class="badge badge-core">CORE</span></div><div class="node-tag">task-mode</div></div><div class="node-desc"><code>//opp</code>·<code>//opd</code> 등 쌍슬래시 → PM(태스크) 강제 진입 + 하네스 전체 적용. 약어를 정식 스킬로 매칭.</div><div class="node-tech"><span class="chip">skill-commands.md</span><span class="chip">//opi · //opd</span></div></div>
+          <div class="node"><div class="node-head"><div class="node-title">자연어 요청 <span class="badge badge-stable">안정</span></div><div class="node-tag">dialog-mode</div></div><div class="node-desc">분석·읽기·설명·토론은 비서 / PM(대화)로 직접 수행. "그냥 해" 발화 시 L2 경량 트랙 진입.</div><div class="node-tech"><span class="chip">PM(대화)</span><span class="chip">읽기 선제</span></div></div>
+          <div class="node"><div class="node-head"><div class="node-title">skill-registry <span class="badge badge-stable">안정</span></div><div class="node-tag">resolver</div></div><div class="node-desc">트리거 정규식으로 입력 → 스킬 해소(match / get / list). Node.js 미설치 시 skills.md 폴백.</div><div class="node-tech"><span class="chip">Node.js</span><span class="chip">regex triggers</span><span class="chip">skill-registry.js</span></div></div>
+        </div>
+      </div>
+      <div class="connector"></div>
+      <div class="layer layer-l4">
+        <div class="layer-label"><div class="layer-num">LAYER 04</div><div class="layer-name">오케스트레이터 / Pilot</div><div class="layer-tag">작업을 단계 파이프라인으로 분해·지휘 (Pilot 9 = 하네스 적용 ↓ / 하단 3 = 하네스 우회 직접 실행)</div></div>
+        <div class="boxes boxes-3">
+          <div class="node"><div class="node-head"><div class="node-title">opd <span class="badge badge-stable">안정</span></div><div class="node-tag">dev · full</div></div><div class="node-desc">Full Task. 코드베이스 분석을 포함한 풀 개발 라이프사이클.</div><div class="node-tech"><span class="chip">TASK</span><span class="chip">ANALYSIS</span><span class="chip">PLAN</span><span class="chip">TEST</span><span class="chip">EXECUTE</span></div></div>
+          <div class="node"><div class="node-head"><div class="node-title">opds <span class="badge badge-core">기본</span></div><div class="node-tag">dev · short</div></div><div class="node-desc">Short Task — 프레임워크 기본 모드. ANALYSIS를 생략한 경량 개발 흐름.</div><div class="node-tech"><span class="chip">TASK</span><span class="chip">PLAN</span><span class="chip">TEST-SCENARIO</span><span class="chip">EXECUTE</span></div></div>
+          <div class="node"><div class="node-head"><div class="node-title">opdw <span class="badge badge-stable">안정</span></div><div class="node-tag">dev · ui</div></div><div class="node-desc">Wireframe UI. 와이어프레임을 먼저 확정하고 구현으로 잇는 화면 작업용.</div><div class="node-tech"><span class="chip">TASK</span><span class="chip">WIREFRAME</span><span class="chip">EXECUTE</span></div></div>
+          <div class="node"><div class="node-head"><div class="node-title">opp <span class="badge badge-stable">안정</span></div><div class="node-tag">generic</div></div><div class="node-desc">프로젝트 범용. 문서 작성 + 간단한 코드 수정을 포괄하는 일반 파이프라인.</div><div class="node-tech"><span class="chip">TASK</span><span class="chip">PLAN</span><span class="chip">EXECUTE</span></div></div>
+          <div class="node"><div class="node-head"><div class="node-title">opwt <span class="badge badge-stable">안정</span></div><div class="node-tag">write-tech</div></div><div class="node-desc">서비스 기획 산출물 — 정책서·IA·와이어프레임·WBS·API 분석. 단계가 아닌 네트워크형 오케스트레이션.</div><div class="node-tech"><span class="chip">정책서</span><span class="chip">IA</span><span class="chip">WBS</span><span class="chip">API 분석</span></div></div>
+          <div class="node"><div class="node-head"><div class="node-title">oppd <span class="badge badge-stable">안정</span></div><div class="node-tag">lifecycle</div></div><div class="node-desc">프로젝트 개발 라이프사이클. 기획 → WBS 세분화 → 개발 파이프라인을 순차 지휘.</div><div class="node-tech"><span class="chip">opwt</span><span class="chip">WBS</span><span class="chip">→ opd/opds</span></div></div>
+          <div class="node"><div class="node-head"><div class="node-title">opsdd <span class="badge badge-stable">안정</span></div><div class="node-tag">sdd</div></div><div class="node-desc">SDD(명세 주도) 오케스트레이터. 명세를 검증한 뒤 태스크로 분해, EXECUTE 루프로 완주.</div><div class="node-tech"><span class="chip">SPEC</span><span class="chip">VERIFY</span><span class="chip">TASKS</span><span class="chip">LOOP</span></div></div>
+          <div class="node"><div class="node-head"><div class="node-title">opdd <span class="badge badge-stable">안정</span></div><div class="node-tag">data-design</div></div><div class="node-desc">데이터 설계 파이프라인. 사전 정의를 선행하고 ERD·DDL·마이그레이션까지 일관 산출.</div><div class="node-tech"><span class="chip">DICT</span><span class="chip">MODEL</span><span class="chip">DDL</span><span class="chip">QA</span></div></div>
+          <div class="node"><div class="node-head"><div class="node-title">opgc <span class="badge badge-stable">안정</span></div><div class="node-tag">quality · 경량</div></div><div class="node-desc">커밋 전 보안·컨벤션 점검 경량 Pilot. 체커를 병렬 디스패치(GC = Garbage Collector).</div><div class="node-tech"><span class="chip">SCAN</span><span class="chip">CHECK</span><span class="chip">REPORT</span></div></div>
+          <div class="node"><div class="node-head"><div class="node-title">operator 직접실행 <span class="badge badge-stable">안정</span></div><div class="node-tag">no-harness</div></div><div class="node-desc">파이프라인 없이 알투가 직접 수행하는 운영 스킬. brain은 init·ingest·query·lint 4모드 라우터.</div><div class="node-tech"><span class="chip">opi</span><span class="chip">opbr</span><span class="chip">onb · next</span><span class="chip">osc · oac · osm</span></div></div>
+          <div class="node"><div class="node-head"><div class="node-title">standalone 독립 <span class="badge badge-stable">안정</span></div><div class="node-tag">no-harness</div></div><div class="node-desc">단독 호출 스킬. 이 다이어그램을 만든 html-sa도 여기 속한다.</div><div class="node-tech"><span class="chip">html-sa</span><span class="chip">api-analyzer</span><span class="chip">ui-designer</span><span class="chip">erm · wtm · mockup</span></div></div>
+          <div class="node"><div class="node-head"><div class="node-title">community 외부 <span class="badge badge-later">온디맨드</span></div><div class="node-tag">external</div></div><div class="node-desc">번들 배포 안 함. 첫 호출 시 동의 prompt 후 skills.sh 카탈로그에서 fetch.</div><div class="node-tech"><span class="chip">npx skills add</span><span class="chip">anthropics/*</span><span class="chip">vercel-labs/*</span></div></div>
+        </div>
+      </div>
+      <div class="connector"></div>
+      <div class="layer layer-l5">
+        <div class="layer-label"><div class="layer-num">LAYER 05</div><div class="layer-name">하네스</div><div class="layer-tag">오케스트레이터 공통 인프라 — 누가 실행해도 일정한 산출 품질</div></div>
+        <div class="boxes boxes-3">
+          <div class="node"><div class="node-head"><div class="node-title">모드 체계 (3-way) <span class="badge badge-core">CORE</span></div><div class="node-tag">mode</div></div><div class="node-desc">semi-agentic(기본)은 PLAN까지 캡틴 검토, EXECUTE 이후 PM 자율, CLOSE 진입은 항상 승인. interactive / agentic로 게이트 수위 조절.</div><div class="node-tech"><span class="chip">semi-agentic</span><span class="chip">interactive</span><span class="chip">agentic</span></div></div>
+          <div class="node"><div class="node-head"><div class="node-title">Guards <span class="badge badge-core">CORE</span></div><div class="node-tag">제약</div></div><div class="node-desc">승인 전 코드 작성 금지. 디스패치 의무, 명확화 게이트(TASK 4요소 잠금), CLOSE 진입 게이트, 커밋 규칙, 루핑 상한.</div><div class="node-tech"><span class="chip">구현 금지</span><span class="chip">명확화 게이트</span><span class="chip">CLOSE 게이트</span></div></div>
+          <div class="node"><div class="node-head"><div class="node-title">Gates · State · Observ. <span class="badge badge-core">CORE</span></div><div class="node-tag">집행</div></div><div class="node-desc">단계/QA/PM/State 게이트. STATE.md는 state-tool JSON SSOT로만 갱신(마크다운 직접 편집 금지). 행위 주체 선언.</div><div class="node-tech"><span class="chip">PM Gate</span><span class="chip">state-tool</span><span class="chip">Observability</span></div></div>
+        </div>
+      </div>
+      <div class="connector"></div>
+      <div class="layer layer-l6">
+        <div class="layer-label"><div class="layer-num">LAYER 06</div><div class="layer-name">단계 스킬 (op-*)</div><div class="layer-tag">Pilot이 워커에게 디스패치하는 단계 단위 스킬 그룹</div></div>
+        <div class="boxes boxes-3">
+          <div class="node"><div class="node-head"><div class="node-title">op-dev <span class="badge badge-stable">안정</span></div><div class="node-tag">7 skills</div></div><div class="node-desc">코드 개발 단계. analysis → plan → todo → test-scenario → execute, 그리고 wireframe·qa.</div><div class="node-tech"><span class="chip">analysis</span><span class="chip">plan</span><span class="chip">execute</span><span class="chip">qa</span></div></div>
+          <div class="node"><div class="node-head"><div class="node-title">op-task <span class="badge badge-stable">안정</span></div><div class="node-tag">4 skills</div></div><div class="node-desc">도메인 무관 범용 단계. TASK.md 작성은 오케스트레이터가 직접 수행하는 공통 진입점.</div><div class="node-tech"><span class="chip">op-task</span><span class="chip">plan</span><span class="chip">execute</span><span class="chip">qa</span></div></div>
+          <div class="node"><div class="node-head"><div class="node-title">op-sdd <span class="badge badge-stable">안정</span></div><div class="node-tag">5 skills</div></div><div class="node-desc">명세 주도 단계. spec·verify·plan·action-plan + 명세 정합 검증기.</div><div class="node-tech"><span class="chip">spec</span><span class="chip">verify</span><span class="chip">action-plan</span><span class="chip">validator</span></div></div>
+          <div class="node"><div class="node-head"><div class="node-title">op-data <span class="badge badge-stable">안정</span></div><div class="node-tag">3 skills</div></div><div class="node-desc">데이터 설계 단계. 사전(md SSOT) → ERD 모델 → DBMS별 DDL.</div><div class="node-tech"><span class="chip">dictionary</span><span class="chip">model</span><span class="chip">ddl</span></div></div>
+          <div class="node"><div class="node-head"><div class="node-title">op-brain <span class="badge badge-stable">안정</span></div><div class="node-tag">1 skill</div></div><div class="node-desc">CLOSE 자동 ingest 워커. Pilot의 CLOSE 훅에서 디스패치, brain 부재 시 no-op.</div><div class="node-tech"><span class="chip">ingest</span><span class="chip">CLOSE 훅</span></div></div>
+        </div>
+      </div>
+      <div class="connector"></div>
+      <div class="layer layer-l7">
+        <div class="layer-label"><div class="layer-num">LAYER 07</div><div class="layer-name">워커 에이전트</div><div class="layer-tag">독립 컨텍스트에서 자율 실행 — Agent 도구로 디스패치 (13)</div></div>
+        <div class="boxes boxes-2">
+          <div class="node"><div class="node-head"><div class="node-title">전문 Specialist <span class="badge badge-stable">안정 · 6</span></div><div class="node-tag">domain</div></div><div class="node-desc">도메인별 전문 워커. PLAN 설계·기획은 advanced, 구현·테스트는 standard 레벨로 모델 매핑.</div><div class="node-tech"><span class="chip">plan · adv</span><span class="chip">be · adv</span><span class="chip">planning · adv</span><span class="chip">fe · db · test · std</span></div></div>
+          <div class="node"><div class="node-head"><div class="node-title">범용 Generic <span class="badge badge-stable">안정 · 4</span></div><div class="node-tag">fallback · act</div></div><div class="node-desc">전문 매핑이 없을 때의 폴백 + 게이트 없이 파이프라인을 완주하는 액션 에이전트. QA는 light.</div><div class="node-tech"><span class="chip">task · adv</span><span class="chip">task-qa · light</span><span class="chip">action ×2 · adv</span></div></div>
+          <div class="node"><div class="node-head"><div class="node-title">체커 Checker <span class="badge badge-stable">안정 · 2</span></div><div class="node-tag">opgc</div></div><div class="node-desc">opgc가 병렬 디스패치. 보안은 OWASP/CWE/SANS Base + SECURITY.md, 컨벤션은 CONVENTIONS.md 단일 기준.</div><div class="node-tech"><span class="chip">security · adv</span><span class="chip">convention · std</span></div></div>
+          <div class="node"><div class="node-head"><div class="node-title">변환 Util <span class="badge badge-stable">안정 · 1</span></div><div class="node-tag">convert</div></div><div class="node-desc">웹 → 마크다운 변환 워커. WebFetch → cmux → playwright-tool 3단 폴백 전략.</div><div class="node-tech"><span class="chip">wtm · light</span><span class="chip">3단 폴백</span></div></div>
+        </div>
+      </div>
+      <div class="connector"></div>
+      <div class="layer layer-l8">
+        <div class="layer-label"><div class="layer-num">LAYER 08</div><div class="layer-name">도구 · 지식 자산</div><div class="layer-tag">결정론적 CLI 도구 + WHAT / WHY / HOW로 분리된 지식 자산</div></div>
+        <div class="boxes boxes-2">
+          <div class="node"><div class="node-head"><div class="node-title">파이프라인 도구 <span class="badge badge-core">CORE</span></div><div class="node-tag">deterministic</div></div><div class="node-desc">규칙을 prose가 아닌 도구로 집행. state-tool이 STATE 전이를 거부/허용하고, skill-registry가 스킬을 해소.</div><div class="node-tech"><span class="chip">state-tool · 9cmd</span><span class="chip">skill-registry</span><span class="chip">Node.js</span></div></div>
+          <div class="node"><div class="node-head"><div class="node-title">지식 도구 <span class="badge badge-stable">안정</span></div><div class="node-tag">knowledge</div></div><div class="node-desc">brain-tool은 위키 무결성(index·log·링크) 집행, code-scan은 전 파일 @header를 실시간 스캔.</div><div class="node-tech"><span class="chip">brain-tool · 8cmd</span><span class="chip">code-scan</span></div></div>
+          <div class="node"><div class="node-head"><div class="node-title">변환 · 환경 도구 <span class="badge badge-stable">안정</span></div><div class="node-tag">utility</div></div><div class="node-desc">파일 변환과 환경 운영. opal-cli가 install/update/doctor/console 단일 진입점.</div><div class="node-tech"><span class="chip">xlsx · cmux · playwright</span><span class="chip">doctor · date</span><span class="chip">opal-cli</span></div></div>
+          <div class="node"><div class="node-head"><div class="node-title">지식 자산 3종 <span class="badge badge-core">CORE</span></div><div class="node-tag">SSOT</div></div><div class="node-desc">역할 분리가 핵심. <b style="color:var(--c-l8)">code-scan=WHAT, brain=WHY/HOW, MEMORY=운영 기억</b>. brain은 search 후보→선택 주입.</div><div class="node-tech"><span class="chip">code-scan.json</span><span class="chip">.opal/brain</span><span class="chip">.opal/MEMORY</span></div></div>
+        </div>
+      </div>
+      <div class="connector"></div>
+      <div class="layer layer-l9">
+        <div class="layer-label"><div class="layer-num">LAYER 09</div><div class="layer-name">배포 · 어댑터 · Console</div><div class="layer-tag">소스 → ~/.opal 통합 배포 + 플랫폼 차이를 어댑터에 격리 (헌법: 플랫폼 독립)</div></div>
+        <div class="boxes boxes-2">
+          <div class="node"><div class="node-head"><div class="node-title">2-Layer 모델 <span class="badge badge-core">CORE</span></div><div class="node-tag">topology</div></div><div class="node-desc">Global(~/.opal)은 install로 1회 배포되는 공유 자산, Project는 opi로 생성되는 프로젝트 컨텍스트.</div><div class="node-tech"><span class="chip">Global ~/.opal</span><span class="chip">Project</span><span class="chip">install-mac.sh</span></div></div>
+          <div class="node"><div class="node-head"><div class="node-title">어댑터 계층 <span class="badge badge-core">CORE</span></div><div class="node-tag">isolation</div></div><div class="node-desc">플랫폼 분기는 오직 여기. emit이 source 캐시 → 플랫폼별 어댑터 생성. frontmatter + 본문 model 레벨을 실모델명으로 치환(task 032).</div><div class="node-tech"><span class="chip">Claude · Cursor</span><span class="chip">Gemini · Codex</span><span class="chip">model 매핑</span></div></div>
+          <div class="node"><div class="node-head"><div class="node-title">배포 채널 <span class="badge badge-later">1차/예정</span></div><div class="node-tag">distribution</div></div><div class="node-desc">1차 현행 — GitHub Releases · opal-cli · one-liner installer. Homebrew tap / npm은 후속 예정.</div><div class="node-tech"><span class="chip">opal-cli</span><span class="chip">curl | bash</span><span class="chip">Homebrew · npm (예정)</span></div></div>
+          <div class="node"><div class="node-head"><div class="node-title">OPAL Console <span class="badge badge-stable">안정 · 읽기</span></div><div class="node-tag">observability</div></div><div class="node-desc">로컬 프로젝트를 한 화면에 조망하는 read-only 대시보드. 데이터 SSOT는 각 프로젝트 파일, 데몬은 도구 오케스트레이터. 쓰기/편집은 2차.</div><div class="node-tech"><span class="chip">FastAPI :7823</span><span class="chip">React · shadcn</span><span class="chip">5 화면</span></div></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="roadmap">
+      <div class="section-head">
+        <div class="eyebrow">Status & roadmap</div>
+        <h2>현행 / 진행 / 후순위</h2>
+        <p class="sub">프레임워크 본체는 아키텍처 안정화 단계. 아래는 배포·관측 영역의 빌드 우선순위다 — 미루는 것을 명시하는 것도 초점의 일부.</p>
+      </div>
+      <div class="tracks">
+        <div class="track"><div class="track-h">▶ 현행 — 안정화</div><h3>코어 + 1차 배포</h3><ul><li>부트스트랩·하네스·Pilot 9·에이전트 13 동작 중</li><li>GitHub Releases · opal-cli · one-liner installer</li><li>멀티플랫폼 어댑터 (Claude · Cursor · Gemini · Codex)</li><li>Project Brain + Data Design 파이프라인 내재화</li></ul></div>
+        <div class="track"><div class="track-h">▶ 진행 — 확장 중</div><h3>관측 + 2차</h3><ul><li>OPAL Console 쓰기/편집 화면 (현재 read-only)</li><li>Console brain 화면</li><li>Homebrew tap — <code>brew install opal-cli</code></li><li>code-scan @header 커버리지 확충</li></ul></div>
+        <div class="track"><div class="track-h">▶ 후순위 — 미룰 것</div><h3>Defer</h3><ul><li>npm 패키지 cross-platform 통합</li><li>워커 자체 탐색 code-scan 우선 강제 격상</li><li>WBS 검증기 도구 게이트화</li><li>Windows(ps1) 배포 경로 실행 검증</li></ul></div>
+      </div>
+    </section>
+
+    <footer class="foot">
+      <div>opal / framework_architecture / v0.5</div>
+      <div>Open Protocol for Agentic Links — 캡틴 · 알투(R2) · 9-layer 구성도</div>
+    </footer>
+  </div>
+</div>
+
+<!-- ===================== MODAL ===================== -->
+<div class="modal-overlay" id="modal">
+  <div class="modal-card">
+    <button class="modal-close" id="modalClose" aria-label="닫기">&times;</button>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+const NODE_DATA = {
+  /* ---- L1 진입 ---- */
+  claude:{t:"Claude Code",badge:"stable",layer:"L1 · 진입·부트스트랩",tag:"primary entry",
+    desc:"install이 글로벌 ~/.claude/CLAUDE.md에 OPAL 마커를 멱등 삽입해, 모든 Claude Code 세션이 부팅 시 알투를 로드한다.",
+    detail:["부팅 → ~/.opal/AGENT.md Read → 정체성·헌법·하네스·PM 컨텍스트 활성화","워커는 Agent 도구로 ~/.claude/agents/{name}.md 어댑터를 매칭","Skill 도구로 // 커맨드 스킬 호출"],
+    chips:["CLAUDE.md","Skill tool","~/.claude/agents"]},
+  cursor:{t:"Cursor",badge:"stable",layer:"L1 · 진입·부트스트랩",tag:"primary entry",
+    desc:"~/.cursor/rules/000-opal-agent.mdc 규칙이 alwaysApply=true로 전 폴더에서 자동 적용된다.",
+    detail:["프로젝트 단위 마커 자동 삽입 불필요(글로벌 규칙이 상시 적용)","어댑터: ~/.cursor/agents/{name}.md"],
+    chips:[".mdc rules","alwaysApply","~/.cursor/agents"]},
+  gemini:{t:"Gemini / Antigravity",badge:"stable",layer:"L1 · 진입·부트스트랩",tag:"primary entry",
+    desc:"글로벌 ~/.gemini/GEMINI.md 마커. 글로벌 진입점이 타 플랫폼과 달라, 유일하게 프로젝트 단위 마커 자동 삽입을 수행한다.",
+    detail:["프로젝트 GEMINI.md 부재 시 부트스트래퍼 자동 생성","Antigravity(Gemini) 환경 전용 자동 삽입 분기"],
+    chips:["GEMINI.md","프로젝트 자동삽입"]},
+  codex:{t:"Codex",badge:"stable",layer:"L1 · 진입·부트스트랩",tag:"primary entry",
+    desc:"글로벌 ~/.codex/AGENTS.md 마커. tool-backed 세션은 커스텀 에이전트 이름 호출이 불가해, PM이 에이전트 본문을 인라인 주입해 디스패치한다(task 028).",
+    detail:["config [agents]로 글로벌 한계치 설정(max_threads/depth)","인라인 주입 = 배포가 아닌 디스패치 런타임 PM 행위"],
+    chips:["AGENTS.md","config [agents]","inline-inject"]},
+  /* ---- L2 거버넌스 ---- */
+  principles:{t:"PRINCIPLES.md",badge:"core",layer:"L2 · 거버넌스·정체성",tag:"헌법 · SSOT",
+    desc:"OPAL 행동의 단일 진실. 모든 하네스·PM·스킬·에이전트 문서가 이 헌법을 참조로 상속하며, 원칙을 재서술하지 않는다.",
+    detail:["사용자 주권 — 승인 전 코드 생성/수정 금지","Done = 생성된 문서가 아니라 검증된 동작","조언 말고 집행 — 반드시 지켜야 하면 prose 아닌 도구가 게이트","플랫폼 독립 — 분기는 어댑터에만, 로직엔 없음"],
+    chips:["Core Stance","inherited-by-ref","eager-load"]},
+  identity:{t:"identity.md",badge:"stable",layer:"L2 · 거버넌스·정체성",tag:"정체성",
+    desc:"알투(R2). 캡틴을 소유자로 호칭하고, 차분·꼼꼼·솔직·따뜻한 톤으로 행동한다. YAML frontmatter로 성격/역할 주입.",
+    detail:["부재 시 opal-onboarding 스킬로 온보딩 진입","비서 + 프로젝트 PM 이중 역할"],
+    chips:["YAML frontmatter","알투 / R2","존댓말+친근"]},
+  roles:{t:"역할 체계",badge:"core",layer:"L2 · 거버넌스·정체성",tag:"상태기계",
+    desc:".opal/AGENT.md 유무로 비서 ↔ PM이 자동 전환된다. PM은 다시 대화/태스크 모드로 나뉜다.",
+    detail:["비서 = 프로젝트 밖, PM = .opal/AGENT.md 존재","파일 1~2개 + 동작검증 불요 → L2 경량 트랙(파이프라인 우회)","동작검증 필요 작업은 L2 금지 → 풀 파이프라인"],
+    chips:["비서 / PM","L2 경량트랙","3-way 모드"]},
+  /* ---- L3 라우팅 ---- */
+  cmd:{t:"// 커맨드",badge:"core",layer:"L3 · 라우팅",tag:"task-mode",
+    desc:"//opp·//opd 등 쌍슬래시 입력은 PM(태스크) 모드를 강제 발동하고 하네스를 전체 적용한다.",
+    detail:["// 뒤 문자열에서 스킬명(정식/약식) 추출 → 레지스트리 매칭","뒤따르는 텍스트는 작업 설명(arguments)으로 전달","--interactive / --agentic 모드 플래그 지원"],
+    chips:["skill-commands.md","//opi · //opd","arguments"]},
+  nl:{t:"자연어 요청",badge:"stable",layer:"L3 · 라우팅",tag:"dialog-mode",
+    desc:"분석·읽기·설명·토론처럼 파일 수정이 없는 요청은 비서 / PM(대화)로 직접 처리한다.",
+    detail:["읽기·분석·탐색 도구는 사용자 요청 없이 선제 사용","'그냥 해' / '직접 수행' 발화 → L2 경량 트랙 진입"],
+    chips:["PM(대화)","읽기 선제","L2 진입"]},
+  registry:{t:"skill-registry",badge:"stable",layer:"L3 · 라우팅",tag:"resolver",
+    desc:"트리거 정규식으로 입력을 스킬로 해소한다(match / get / list). 결정론적 CLI라 환각 없이 매칭.",
+    detail:["Node.js 미설치 시 skills.md Read 폴백","스킬 그룹: opal-pilot / op-* / opal(operator) / standalone / community"],
+    chips:["Node.js","regex triggers","skill-registry.js"]},
+  /* ---- L4 Pilot ---- */
+  opd:{t:"opd — Full Dev",badge:"stable",layer:"L5 · 오케스트레이터",tag:"dev · full",
+    desc:"코드베이스 분석을 포함한 풀 개발 라이프사이클 오케스트레이터.",
+    detail:["TASK → ANALYSIS → PLAN → TEST-SCENARIO → EXECUTE","규모가 크거나 분석이 필요한 작업에 사용"],
+    chips:["TASK","ANALYSIS","PLAN","TEST","EXECUTE"]},
+  opds:{t:"opds — Short Dev",badge:"core",layer:"L5 · 오케스트레이터",tag:"dev · 기본 모드",
+    desc:"프레임워크 기본 모드. ANALYSIS를 생략한 경량 개발 흐름으로 대부분의 작업에 사용된다.",
+    detail:["TASK → PLAN → TEST-SCENARIO → EXECUTE","semi-agentic 기본 — PLAN까지 검토, EXECUTE 이후 자율"],
+    chips:["TASK","PLAN","TEST-SCENARIO","EXECUTE"]},
+  opdw:{t:"opdw — Wireframe UI",badge:"stable",layer:"L5 · 오케스트레이터",tag:"dev · ui",
+    desc:"와이어프레임을 먼저 확정하고 구현으로 잇는 화면 작업 전용 오케스트레이터.",
+    detail:["TASK → WIREFRAME → EXECUTE","화면 중심 작업에서 설계-구현 간극 축소"],
+    chips:["TASK","WIREFRAME","EXECUTE"]},
+  opp:{t:"opp — 범용",badge:"stable",layer:"L5 · 오케스트레이터",tag:"generic",
+    desc:"문서 작성 + 간단한 코드 수정을 포괄하는 프로젝트 범용 파이프라인.",
+    detail:["TASK → PLAN → EXECUTE","도메인 무관 작업의 기본 진입점"],
+    chips:["TASK","PLAN","EXECUTE"]},
+  opwt:{t:"opwt — Write-Tech",badge:"stable",layer:"L5 · 오케스트레이터",tag:"write-tech",
+    desc:"서비스 기획 산출물(정책서·IA·와이어프레임·WBS·API 분석)을 만드는 네트워크형 오케스트레이터.",
+    detail:["단계 선형이 아닌 산출물 간 네트워크 의존 오케스트레이션","opal-planning-agent를 워커로 투입"],
+    chips:["정책서","IA","WBS","API 분석"]},
+  oppd:{t:"oppd — Project Dev",badge:"stable",layer:"L5 · 오케스트레이터",tag:"lifecycle",
+    desc:"기획 → WBS 세분화 → 개발까지의 프로젝트 개발 라이프사이클을 순차 지휘한다.",
+    detail:["opwt → WBS → opd/opds 순차 실행","Phase 3 액션은 opal-task-action-agent가 자율 실행"],
+    chips:["opwt","WBS","→ opd/opds"]},
+  opsdd:{t:"opsdd — SDD",badge:"stable",layer:"L5 · 오케스트레이터",tag:"sdd",
+    desc:"명세 주도(Spec-Driven) 오케스트레이터. 명세를 검증한 뒤 태스크로 분해하고 EXECUTE 루프로 완주한다.",
+    detail:["SPEC → SPEC-VERIFY → SPEC-PLAN → TASKS → TASKS-VERIFY → EXECUTE-LOOP → DONE","ACT는 opal-sdd-action-agent가 자율 실행"],
+    chips:["SPEC","VERIFY","TASKS","LOOP"]},
+  opdd:{t:"opdd — Data Design",badge:"stable",layer:"L5 · 오케스트레이터",tag:"data-design",
+    desc:"데이터 설계 파이프라인. 사전 정의를 선행하고 ERD·DDL·마이그레이션까지 일관 산출한다.",
+    detail:["TASK → DICT → MODEL → DDL/MIGRATION → QA → CLOSE","//erm(erd-modeler)은 op-data-model 단독 호출로 하위호환"],
+    chips:["DICT","MODEL","DDL","QA"]},
+  opgc:{t:"opgc — GC 품질",badge:"stable",layer:"L5 · 오케스트레이터",tag:"quality · 경량",
+    desc:"커밋 전 보안·컨벤션을 점검하는 경량 Pilot. 체커 에이전트를 병렬 디스패치한다(GC = Garbage Collector).",
+    detail:["SCAN → CHECK → REPORT → CLOSE","opal-security-checker + opal-convention-checker 병렬"],
+    chips:["SCAN","CHECK","REPORT"]},
+  operator:{t:"operator 직접실행 스킬",badge:"stable",layer:"L4 · 직접 실행 (하네스 우회)",tag:"no-harness",
+    desc:"파이프라인 없이 알투가 직접 수행하는 운영 스킬군. 하네스를 거치지 않는다.",
+    detail:["opi(초기화) · onb(온보딩) · next(재진입 길잡이)","osc/oac(스킬·에이전트 생성) · osm(스킬 관리)","opbr — brain init·ingest·query·lint 4모드 라우터"],
+    chips:["opi","opbr","onb · next","osc · oac · osm"]},
+  standalone:{t:"standalone 독립 스킬",badge:"stable",layer:"L4 · 직접 실행 (하네스 우회)",tag:"no-harness",
+    desc:"파이프라인 없이 단독 호출하는 독립 스킬. 이 다이어그램을 만든 html-sa도 여기에 속한다.",
+    detail:["html-sa(아키텍처 HTML) · mockup(화면 목업)","api-analyzer · interview · ui-designer · wireframe-builder","web-to-markdown(wtm) · erd-modeler(erm)"],
+    chips:["html-sa","api-analyzer","ui-designer","erm · wtm · mockup"]},
+  community:{t:"community 외부 스킬",badge:"later",layer:"L4 · 직접 실행 (외부)",tag:"external · 온디맨드",
+    desc:"OPAL이 번들 배포하지 않는다. 첫 호출 시 동의 prompt 후 skills.sh 카탈로그(vercel-labs/skills)에서 fetch한다.",
+    detail:["npx skills add {owner/repo@skill}","라이선스 책임은 사용자 fetch 시점 발생","anthropics/* · google-labs-code/* · vercel-labs/* 등"],
+    chips:["npx skills add","anthropics/*","vercel-labs/*"]},
+  /* ---- L5 단계스킬 ---- */
+  "op-dev":{t:"op-dev (7 skills)",badge:"stable",layer:"L6 · 단계 스킬",tag:"코드 개발",
+    desc:"코드 개발 라이프사이클의 단계 스킬 묶음. Pilot이 워커에게 디스패치한다.",
+    detail:["analysis · plan · todo · test-scenario · execute","wireframe · qa","opd/opds 오케스트레이터가 단계별 호출"],
+    chips:["analysis","plan","execute","qa"]},
+  "op-task":{t:"op-task (4 skills)",badge:"stable",layer:"L6 · 단계 스킬",tag:"도메인 무관",
+    desc:"도메인에 무관한 범용 단계 스킬. TASK.md 작성은 오케스트레이터가 직접 수행하는 공통 진입점이다.",
+    detail:["op-task · op-task-plan · op-task-execute · op-task-qa","명확화 게이트(TASK 4요소 잠금)가 여기서 집행"],
+    chips:["op-task","plan","execute","qa"]},
+  "op-sdd":{t:"op-sdd (5 skills)",badge:"stable",layer:"L6 · 단계 스킬",tag:"명세 주도",
+    desc:"SDD 파이프라인의 단계 스킬. 명세 작성·검증·계획·액션 청사진 + 정합 검증기.",
+    detail:["spec · verify · plan · action-plan","op-spec-validator — 명세 정합 검증"],
+    chips:["spec","verify","action-plan","validator"]},
+  "op-data":{t:"op-data (3 skills)",badge:"stable",layer:"L6 · 단계 스킬",tag:"데이터 설계",
+    desc:"데이터 설계 단계 스킬. 사전(md SSOT)을 선행하고 ERD·DDL을 산출한다.",
+    detail:["dictionary — 용어·도메인·코드 사전(md SSOT + xlsx 단방향)","model — 개념→논리→물리 ERD","ddl — DBML → DBMS별 CREATE TABLE"],
+    chips:["dictionary","model","ddl"]},
+  "op-brain":{t:"op-brain (1 skill)",badge:"stable",layer:"L6 · 단계 스킬",tag:"지식 적재",
+    desc:"CLOSE 자동 ingest 워커. Pilot의 CLOSE 훅에서 디스패치되며, brain이 없으면 no-op.",
+    detail:["태스크 종료 시 가치 있는 지식을 brain에 적재","brain-tool로 index·log·링크 무결성 집행"],
+    chips:["ingest","CLOSE 훅","brain-tool"]},
+  /* ---- L6 에이전트 ---- */
+  "ag-spec":{t:"전문 Specialist (6)",badge:"stable",layer:"L7 · 워커 에이전트",tag:"domain",
+    desc:"도메인별 전문 워커. 설계·기획은 advanced, 구현·테스트는 standard 레벨로 모델 매핑된다.",
+    detail:["opal-plan-agent(adv) — PLAN 설계 + 에이전트 라우팅","opal-be-agent(adv) · opal-fe-agent(std) — 구현","opal-db-agent(std) · opal-planning-agent(adv) · opal-test-agent(std)"],
+    chips:["plan · adv","be · adv","planning · adv","fe · db · test · std"]},
+  "ag-generic":{t:"범용 Generic (4)",badge:"stable",layer:"L7 · 워커 에이전트",tag:"fallback · act",
+    desc:"전문 매핑이 없을 때의 폴백 + 게이트 없이 파이프라인을 완주하는 액션 에이전트.",
+    detail:["opal-task-agent(adv) — 범용 단계 워커(폴백)","opal-task-qa-agent(light) — QA 스킬 동적 실행","opal-task-action-agent · opal-sdd-action-agent(adv) — 자율 실행"],
+    chips:["task · adv","task-qa · light","action ×2 · adv"]},
+  "ag-checker":{t:"체커 Checker (2)",badge:"stable",layer:"L7 · 워커 에이전트",tag:"opgc",
+    desc:"opgc가 병렬 디스패치하는 품질 체커. 자기완결 보고서를 산출한다.",
+    detail:["opal-security-checker(adv) — OWASP/CWE/SANS Base + SECURITY.md","opal-convention-checker(std) — CONVENTIONS.md 단일 기준"],
+    chips:["security · adv","convention · std"]},
+  "ag-util":{t:"변환 Util (1)",badge:"stable",layer:"L7 · 워커 에이전트",tag:"convert",
+    desc:"웹 페이지를 마크다운으로 변환하는 워커. 3단 폴백 전략으로 견고하게 동작한다.",
+    detail:["opal-wtm-agent(light)","WebFetch → cmux → playwright-tool CLI 순 폴백"],
+    chips:["wtm · light","3단 폴백"]},
+  /* ---- L7 배포 ---- */
+  twolayer:{t:"2-Layer 모델",badge:"core",layer:"L8 · 배포·어댑터",tag:"topology",
+    desc:"OPAL의 핵심 토폴로지. Global은 모든 프로젝트가 공유하는 프레임워크 자산, Project는 프로젝트별 컨텍스트다.",
+    detail:["Global(~/.opal) — install로 1회 배포(스킬·에이전트·참조·도구)","Project({프로젝트}/) — opi로 생성(.opal/AGENT.md·docs·tasks)","글로벌은 직접 편집 금지 — 소스 수정 후 재배포"],
+    chips:["Global ~/.opal","Project","install-mac.sh"]},
+  adapter:{t:"어댑터 계층",badge:"core",layer:"L8 · 배포·어댑터",tag:"isolation",
+    desc:"플랫폼 분기를 격리하는 단일 지점(헌법: 플랫폼 독립). source 캐시에서 플랫폼별 어댑터를 생성한다.",
+    detail:["emit_platform_agent_adapter → ~/.claude·~/.cursor·~/.gemini agents","frontmatter + 본문 인라인 model 레벨을 실모델명으로 치환(task 032)","~/.opal/agents는 LLM이 직접 읽지 않는 source 캐시"],
+    chips:["Claude · Cursor","Gemini · Codex","model 매핑"]},
+  channel:{t:"배포 채널",badge:"later",layer:"L8 · 배포·어댑터",tag:"distribution",
+    desc:"OPAL을 배포하는 채널. 1차는 현행, Homebrew/npm은 후속 예정.",
+    detail:["1차(현행) — GitHub Releases · opal-cli · one-liner installer","opal-cli — install/update/doctor/uninstall/mcp/console 단일 진입점","2차/후속(예정) — Homebrew tap · npm 패키지"],
+    chips:["opal-cli","curl | bash","Homebrew · npm (예정)"]},
+  console:{t:"OPAL Console",badge:"stable",layer:"L8 · 배포·어댑터",tag:"observability",
+    desc:"로컬 OPAL 프로젝트를 한 화면에 조망하는 read-only 대시보드(태스크 021).",
+    detail:["FastAPI 데몬(127.0.0.1:7823) — 마커 스캐너 + read-only 도구 어댑터 + md 파서","React+TS+Vite+shadcn — 대시보드/프로젝트/태스크 칸반/메모리/환경 5화면","데이터 SSOT는 각 프로젝트 파일, 쓰기/편집은 2차"],
+    chips:["FastAPI :7823","React · shadcn","5 화면"]},
+  /* ---- cross-cutting ---- */
+  harness:{t:"하네스 (Harness)",badge:"core",layer:"실행 관할 · L5~L7 포함",tag:"품질 보증",
+    desc:"오케스트레이터(L5) → 단계 스킬(L6) → 워커 에이전트(L7) 실행 전체를 감싸는 공통 인프라. operator·standalone·community 직접 실행 스킬은 이 박스를 우회한다. 누가 실행해도 일정한 산출 품질을 보장한다.",
+    detail:["3-way 모드 — semi-agentic(기본)/interactive/agentic","Guards — 구현 금지·디스패치 의무·명확화 게이트·CLOSE 게이트·커밋 규칙·루핑 상한","Gates — 단계/QA/PM/State 게이트","State — STATE.md(state-tool JSON SSOT) · Observability 행위 주체 선언"],
+    chips:["3-way 모드","Guards","Gates","State · Observability"]},
+  knowledge:{t:"지식 · 도구 자산",badge:"core",layer:"횡단 · 전 계층 참조",tag:"tools + knowledge",
+    desc:"전 계층이 참조하는 횡단 자원. 결정론적 CLI 도구와 WHAT/WHY/HOW로 분리된 지식 자산으로 구성된다.",
+    detail:["도구 — state-tool · brain-tool · code-scan · skill-registry · xlsx · cmux · playwright · doctor · opal-cli","지식 자산 — code-scan.json(WHAT) · brain(WHY/HOW) · MEMORY(운영 기억)","규칙은 prose가 아닌 도구로 집행(헌법: 조언 말고 집행)"],
+    chips:["state-tool","brain-tool","code-scan","brain · MEMORY"]},
+};
+
+(function(){
+  const tabs = document.querySelectorAll('.tab');
+  const views = {map:document.getElementById('view-map'), detail:document.getElementById('view-detail')};
+  tabs.forEach(tab=>tab.addEventListener('click',()=>{
+    tabs.forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active');
+    Object.values(views).forEach(v=>v.classList.remove('active'));
+    views[tab.dataset.view].classList.add('active');
+    window.scrollTo(0,0);
+  }));
+
+  const modal = document.getElementById('modal');
+  const modalBody = document.getElementById('modalBody');
+  const badgeClass = {core:'core',stable:'stable',later:'later'};
+  const badgeText = {core:'CORE',stable:'안정',later:'예정'};
+  function openModal(id){
+    const d = NODE_DATA[id];
+    if(!d) return;
+    const detail = d.detail ? '<ul class="m-detail">'+d.detail.map(x=>'<li>'+x+'</li>').join('')+'</ul>' : '';
+    const chips = d.chips ? '<div class="m-chips">'+d.chips.map(c=>'<span>'+c+'</span>').join('')+'</div>' : '';
+    modalBody.innerHTML =
+      '<div class="m-layer">'+d.layer+'</div>'+
+      '<div class="m-title">'+d.t+' <span class="m-badge '+badgeClass[d.badge]+'">'+badgeText[d.badge]+'</span></div>'+
+      '<div class="m-tag">'+d.tag+'</div>'+
+      '<p class="m-desc">'+d.desc+'</p>'+detail+chips;
+    modal.classList.add('open');
+  }
+  function closeModal(){modal.classList.remove('open')}
+
+  document.querySelectorAll('[data-id]').forEach(el=>{
+    el.addEventListener('click',()=>openModal(el.dataset.id));
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openModal(el.dataset.id)}});
+  });
+  document.getElementById('modalClose').addEventListener('click',closeModal);
+  modal.addEventListener('click',e=>{if(e.target===modal)closeModal()});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
+})();
+</script>
+</body>
+</html>
