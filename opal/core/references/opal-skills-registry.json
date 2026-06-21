@@ -1,6 +1,6 @@
 {
   "$schema": "opal-skills-registry-v1",
-  "version": "3.6.0",
+  "version": "3.7.0",
   "updated_at": "2026-06-21",
   "groups": {
     "opal-pilot": [
@@ -605,6 +605,19 @@
         ]
       },
       {
+        "name": "opal-help",
+        "alias": "help",
+        "description": "스킬 카탈로그 & 사용법 안내 — 사용자 호출 가능 스킬 목록(Mode 1) + 특정 스킬 기능·사용법·예시(Mode 2). skill-registry list/get 조회 기반 read-only operator 스킬",
+        "triggers": [
+          "^opal-help$",
+          "^help$",
+          "(?i)(스킬\\s*목록|사용\\s*가능한\\s*스킬|어떤\\s*스킬|명령어\\s*도움말|스킬\\s*도움말)"
+        ],
+        "paths": [
+          "~/.opal/skills/opal-help/SKILL.md"
+        ]
+      },
+      {
         "name": "opal-project-init",
         "alias": "opi",
         "description": "프로젝트 초기화 + 최신화",
@@ -694,6 +707,17 @@
     ]
   },
   "changelog": [
+    {
+      "version": "3.7.0",
+      "date": "2026-06-21",
+      "task": "opal-help 신설",
+      "changes": [
+        "opal-help 신규 등록 (opal 그룹) — alias 'help', 스킬 카탈로그 & 사용법 안내 read-only operator 스킬",
+        "triggers: ^opal-help$ / ^help$ / 스킬 목록·사용 가능한 스킬·어떤 스킬·명령어 도움말·스킬 도움말 자연어",
+        "paths: ~/.opal/skills/opal-help/SKILL.md (글로벌 — opal-next/onboarding과 동일 프레임워크 스킬 패턴)",
+        "기능: Mode 1 카탈로그(사용자 호출 가능 스킬만 + --all로 내부 단계 스킬 노출) / Mode 2 특정 스킬 상세(skill-registry get 기반)"
+      ]
+    },
     {
       "version": "3.6.0",
       "date": "2026-06-21",
