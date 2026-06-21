@@ -3,7 +3,7 @@
   "module": "state_tool",
   "layer": "util",
   "domain": "opal-pipeline",
-  "description": "OPAL 파이프라인 현황판 JSON SSOT 관리 CLI — 9개 서브 명령(init/show/advance/mark/block/validate/add-row/status/gate-pass[deprecated]) + verify + 3-way 모드(interactive/semi-agentic/agentic) 지원. 014 Phase 4: 새 표준 행 구조(QA Gate/State Gate 행 없음)와 정합 — gate-pass deprecate, CLOSE 마지막 행 판정 항목명 비의존화. 016: verify --red-check(RED 증거 게이트) + --fix-mode/--changed-files/--test-globs(테스트 불변성 게이트) 추가 — RED-first TDD 트랙 deterministic 집행. 017: mark --step N/M 다중 Step 조기 done 가드 — N<M이면 in_progress 유지(done 미처리) + 진행률(step) 영속화, N==M에서만 done; 미완 행은 기존 stage-transition guard가 단계전환·CLOSE 진입을 자동 차단. 005: verify --clarification-check + TASK→다음단계 자동 훅 — TASK 4요소(목표/범위/제약/완료기준) 미잠금 시 다음 단계 진입 거부(PRINCIPLES §1 집행), 정책 A graceful skip(섹션/파일 부재 시 하위호환).",
+  "description": "OPAL 파이프라인 현황판 JSON SSOT 관리 CLI — 9개 서브 명령(init/show/advance/mark/block/validate/add-row/status/gate-pass[deprecated]) + verify + 3-way 모드(interactive/semi-agentic/agentic) 지원. 014 Phase 4: 새 표준 행 구조(QA Gate/State Gate 행 없음)와 정합 — gate-pass deprecate, CLOSE 마지막 행 판정 항목명 비의존화. 016: verify --red-check(RED 증거 게이트) + --fix-mode/--changed-files/--test-globs(테스트 불변성 게이트) 추가 — RED-first TDD 트랙 deterministic 집행. 017: mark --step N/M 다중 Step 조기 done 가드 — N<M이면 in_progress 유지(done 미처리) + 진행률(step) 영속화, N==M에서만 done; 미완 행은 기존 stage-transition guard가 단계전환·CLOSE 진입을 자동 차단. 005: verify --clarification-check + TASK→다음단계 자동 훅 — TASK 4요소(목표/범위/제약/완료기준) 미잠금 시 다음 단계 진입 거부(PRINCIPLES §1 집행), 정책 A graceful skip(섹션/파일 부재 시 하위호환). 034: mock 가드 false positive 수정 — _MOCK_CODE_PATTERNS 정규식 'MagicMock' 맨 단어 대안 제거(#1 산문 오탐) + _check_mock_patterns 인라인 백틱 제거 전처리 추가(#2 메타-순환 해소); 헌법 §4 정탐 유지.",
   "exports": [
     "cmd_init", "cmd_show", "cmd_advance", "cmd_mark",
     "cmd_block", "cmd_validate", "cmd_add_row", "cmd_status", "cmd_gate_pass"
@@ -1316,9 +1316,11 @@ def cmd_gate_pass(args):
 # ── 10. verify ───────────────────────────────────────────────────────────────
 
 # 헌법 §4 "Don't fake it" — TEST-SCENARIO.md mock 코드 패턴 검출
-# M-2: 코드 사용 패턴만 정규식 매칭; 단순 "mock" 단어/설명 문구는 제외
+# M-2 / (034): 코드 사용 패턴만 정규식 매칭; 단순 "mock" 단어/설명 문구는 제외.
+#   'MagicMock' 맨 단어 대안 제거 — 산문(예: PM Gate 표준 문구 "MagicMock 등 부재")을
+#   오탐하던 #1 원인. 실제 MagicMock() 호출은 'Mock\(' 대안이 이미 커버한다(잉여 입증: PLAN §2.1.2).
 _MOCK_CODE_PATTERNS = re.compile(
-    r"MagicMock|unittest\.mock|@patch\b|mock\.patch|Mock\(|@mock\."
+    r"unittest\.mock|@patch\b|mock\.patch|Mock\(|@mock\."
 )
 
 # Pass 행 결과 키워드
@@ -1338,10 +1340,25 @@ def _find_scenario_file(task_path, scenario_arg):
 
 
 def _check_mock_patterns(lines):
-    """코드 패턴 검출 — 위반 라인 번호 목록 반환."""
+    """코드 패턴 검출 — 위반 라인 번호 목록 반환.
+
+    034 #2: 인라인 백틱(`...`) 코드 예시는 문서화/설명 표기이므로 검사 전 제거한다.
+            코드펜스(```) 내부·백틱 밖 bare 라인의 실제 mock 코드는 그대로 검출(헌법 §4 유지).
+            코드펜스 경계선(```/~~~으로 시작하는 줄) 자체는 검사 제외.
+            백틱 미닫힘 시 해당 구간 미제거(fail-safe — 의심 시 검사 방향).
+    """
     violations = []
+    in_fence = False
     for lineno, line in enumerate(lines, start=1):
-        if _MOCK_CODE_PATTERNS.search(line):
+        stripped = line.lstrip()
+        if stripped.startswith("```") or stripped.startswith("~~~"):
+            in_fence = not in_fence
+            continue                          # 펜스 경계선 자체는 검사 제외
+        if in_fence:
+            target = line                     # 코드펜스 내부 = 실제 코드 → 원문 검사
+        else:
+            target = re.sub(r"`[^`]*`", "", line)   # 인라인 백틱 구간 제거 후 검사
+        if _MOCK_CODE_PATTERNS.search(target):
             violations.append(lineno)
     return violations
 

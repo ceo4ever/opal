@@ -1966,6 +1966,181 @@ class TestVerify(BaseTestCase):
         exit_code = self._mark(row_id=1)
         self.assertEqual(exit_code, 0)
 
+    # ── 034 RED-first 케이스 ─────────────────────────────────────────────────
+
+    def test_mock_guard_prose_magicmock_no_false_positive(self):
+        """034 TS-001 (RED→GREEN #1): 산문 'MagicMock' 단어는 비검출이어야 한다.
+        수정 전: _check_mock_patterns가 [1]을 반환 → 단언 FAIL(RED 증거).
+        수정 후: [] 반환 → PASS(GREEN).
+        """
+        # op-dev-test-scenario SKILL §7 PM Gate 표준 문구 — 산문 MagicMock 단어
+        result = ST._check_mock_patterns(
+            ["- [x] mock/patch/MagicMock 등 시나리오 본문에 부재"]
+        )
+        self.assertEqual(result, [], f"산문 MagicMock 단어가 오탐됨: {result}")
+
+    def test_mock_guard_inline_backtick_example_no_false_positive(self):
+        """034 TS-012 (RED→GREEN #2): 인라인 백틱 코드 예시는 비검출이어야 한다.
+        수정 전: _check_mock_patterns가 [1]을 반환 → 단언 FAIL(RED 증거 = 메타-순환 버그).
+        수정 후: [] 반환 → PASS(GREEN).
+        """
+        # 인라인 백틱으로 감싼 Mock() 예시 — 문서화 표기, 실제 코드 아님
+        line = "대상 `m = Mock()` 토큰을 문서화"
+        result = ST._check_mock_patterns([line])
+        self.assertEqual(result, [], f"인라인 백틱 예시가 오탐됨: {result}")
+
+    # ── 034 회귀: 정탐 유지 + 통합 케이스 ───────────────────────────────────
+
+    def test_mock_guard_real_magicmock_call_detected(self):
+        """034 TS-002: 실제 MagicMock() 코드(bare 라인)는 여전히 검출되어야 한다.
+        'Mock(' 대안이 MagicMock()의 끝부분 Mock(을 커버함을 단언으로 고정.
+        """
+        result = ST._check_mock_patterns(["x = MagicMock()"])
+        self.assertEqual(result, [1], f"실제 MagicMock() 코드가 미검출됨: {result}")
+
+    def test_mock_guard_pm_gate_standard_phrase(self):
+        """034 TS-003: PM Gate 표준 문구 전체 줄 → 비검출 (SKILL §7 :157 원문)."""
+        line = "- [ ] mock/patch/MagicMock 등 시나리오 본문에 부재"
+        result = ST._check_mock_patterns([line])
+        self.assertEqual(result, [], f"PM Gate 표준 문구가 오탐됨: {result}")
+
+    def test_mock_guard_unittest_mock_detected(self):
+        """034 TS-004 (회귀): bare 'from unittest.mock import patch' 검출 유지."""
+        result = ST._check_mock_patterns(["from unittest.mock import patch"])
+        self.assertEqual(result, [1], f"unittest.mock bare 라인 미검출: {result}")
+
+    def test_mock_guard_at_patch_detected(self):
+        """034 TS-005 (회귀): bare '@patch(...)' 검출 유지."""
+        result = ST._check_mock_patterns(["@patch('m.f')"])
+        self.assertEqual(result, [1], f"@patch bare 라인 미검출: {result}")
+
+    def test_mock_guard_mock_patch_detected(self):
+        """034 TS-006 (회귀): bare 'with mock.patch(...)' 검출 유지."""
+        result = ST._check_mock_patterns(["with mock.patch('x'):"])
+        self.assertEqual(result, [1], f"mock.patch bare 라인 미검출: {result}")
+
+    def test_mock_guard_mock_call_detected(self):
+        """034 TS-007 (회귀): bare 'm = Mock()' 검출 유지."""
+        result = ST._check_mock_patterns(["m = Mock()"])
+        self.assertEqual(result, [1], f"Mock() bare 라인 미검출: {result}")
+
+    def test_mock_guard_at_mock_dot_detected(self):
+        """034 TS-008 (회귀): bare '@mock.patch(...)' 검출 유지."""
+        result = ST._check_mock_patterns(["@mock.patch('x')"])
+        self.assertEqual(result, [1], f"@mock. bare 라인 미검출: {result}")
+
+    def test_verify_no_false_positive_doc_example(self):
+        """034 TS-009 (통합): verify — 산문+백틱 예시 TEST-SCENARIO.md → exit 0;
+        bare MagicMock() 포함 버전 → exit 1 mock_in_scenario.
+        """
+        # (a) 정당 텍스트(산문 + 인라인 백틱 예시) → exit 0
+        self._write_scenario(
+            "# TEST-SCENARIO\n\n"
+            "- [x] mock/patch/MagicMock 등 시나리오 본문에 부재\n"
+            "대상 `m = Mock()` 토큰을 문서화\n"
+            "| 시나리오 | 결과 | 실행 명령 | 출력 |\n"
+            "|---------|------|---------|------|\n"
+            "| S-1 | Pass | pytest | 1 passed |\n"
+        )
+        exit_code, result = self._call_verify()
+        self.assertEqual(exit_code, 0, f"정당 텍스트가 차단됨: {result}")
+        self.assertTrue(result.get("ok"))
+        self.assertEqual(result.get("checks", {}).get("mock_in_scenario"), "pass")
+
+        # (b) bare 코드 포함 버전 → exit 1 mock_in_scenario
+        self._write_scenario(
+            "# TEST-SCENARIO\n\n"
+            "svc = MagicMock()\n"
+        )
+        exit_code2, result2 = self._call_verify()
+        self.assertEqual(exit_code2, 1, f"bare MagicMock()가 차단 안 됨: {result2}")
+        self.assertEqual(result2.get("error"), "mock_in_scenario")
+
+    def test_mark_test_stage_doc_example_not_blocked(self):
+        """034 TS-010 (통합): mark TEST 훅 — 산문+백틱 예시 → 차단 안 됨(exit 0);
+        bare MagicMock() → exit 1 mock_in_scenario.
+        """
+        rows_spec = json.dumps([
+            {"stage": "TEST", "item": "작업"},
+            {"stage": "CLOSE", "item": "State Gate"},
+        ])
+
+        # (a) 정당 텍스트 → mark 성공
+        self._init(rows_spec=rows_spec)
+        self._write_scenario(
+            "# TEST-SCENARIO\n\n"
+            "- [x] mock/patch/MagicMock 등 시나리오 본문에 부재\n"
+            "대상 `m = Mock()` 토큰을 문서화\n"
+            "| 시나리오 | 결과 | 실행 명령 | 출력 |\n"
+            "|---------|------|---------|------|\n"
+            "| S-1 | Pass | pytest | 1 passed |\n"
+        )
+        exit_code = self._mark(row_id=1)
+        self.assertEqual(exit_code, 0, "정당 텍스트가 mark 훅에서 차단됨")
+
+        # (b) 새 state — force re-init 후 bare 코드 포함 → mark 거부
+        self._init(rows_spec=rows_spec, force=True, note="034 TS-010 (b) 재초기화")
+        self._write_scenario("svc = MagicMock()\n")
+        exit_code2 = self._mark(row_id=1)
+        self.assertEqual(exit_code2, 1, "bare MagicMock()가 mark 훅에서 차단 안 됨")
+
+    def test_mock_guard_codefence_and_mixed_line_detected(self):
+        """034 TS-014 (정탐 유지): 코드펜스 내부 bare mock + 백틱·bare 혼합 라인 → 검출 유지.
+        헌법 §4 'Don't fake it' — 전처리가 과도하지 않음을 단언.
+        """
+        # (a) 코드펜스 내부 bare mock 코드 → 검출
+        lines_fence = [
+            "```python",
+            "m = Mock()",
+            "```",
+        ]
+        result_fence = ST._check_mock_patterns(lines_fence)
+        self.assertEqual(result_fence, [2], f"코드펜스 내부 Mock() 미검출: {result_fence}")
+
+        # (b) 인라인 백틱 예시 + 백틱 밖 bare 코드가 같은 줄 → bare 검출
+        line_mixed = "예시 `foo` 이후에 실제 m = Mock() 코드"
+        result_mixed = ST._check_mock_patterns([line_mixed])
+        self.assertEqual(result_mixed, [1], f"백틱+bare 혼합 라인에서 bare 미검출: {result_mixed}")
+
+    def test_verify_passes_own_test_scenario_md(self):
+        """034 TS-013 (자기검증): 034 자신의 TEST-SCENARIO.md → _check_mock_patterns []
+        + verify exit 0. 메타-순환(가드 검증 문서가 가드에 막힘) 해소 증명.
+        TEST-SCENARIO.md를 통과 목적으로 수정 금지 — 본문은 PM이 #2 전제로 작성.
+        """
+        import io
+        from contextlib import redirect_stdout
+
+        scenario_path = pathlib.Path(
+            "/Volumes/Data/AiStudio/workspace/opal/tasks/"
+            "034-260621-opds-state-tool-mock-패턴-오탐수정/TEST-SCENARIO.md"
+        )
+        self.assertTrue(scenario_path.exists(), "034 TEST-SCENARIO.md 파일이 없음")
+
+        lines = scenario_path.read_text(encoding="utf-8").splitlines()
+        result = ST._check_mock_patterns(lines)
+        self.assertEqual(result, [], f"034 TEST-SCENARIO.md에서 오탐 발생: lines {result}")
+
+        # verify CLI로도 exit 0 확인 (scenario 파라미터로 직접 파일 지정)
+        out = io.StringIO()
+        exit_code = 0
+        args = types.SimpleNamespace(
+            task_path=str(self.task_path),
+            scenario=str(scenario_path),
+        )
+        with redirect_stdout(out):
+            try:
+                ST.cmd_verify(args)
+            except SystemExit as e:
+                exit_code = e.code
+        output = out.getvalue().strip()
+        verify_result = json.loads(output) if output else {}
+        self.assertEqual(exit_code, 0, f"034 TEST-SCENARIO.md verify exit 1: {verify_result}")
+        self.assertTrue(verify_result.get("ok"), f"verify ok=False: {verify_result}")
+        self.assertEqual(
+            verify_result.get("checks", {}).get("mock_in_scenario"), "pass",
+            f"mock_in_scenario 체크 실패: {verify_result}"
+        )
+
 
 # ═════════════════════════════════════════════════════════════════════════════
 # I. 추가 시나리오: add-row schema validate 통과 (PLAN §2.12 G-9 단계 6)
