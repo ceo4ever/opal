@@ -98,3 +98,7 @@
 - 갱신: [[analysis-drift-pm-cross-verify-lesson]]
 - 출처: task:032
 
+## [2026-06-21] ingest | CLOSE ingest — 태스크 033 검증명령-표준화-vitest
+- 신규: [[pages/concept/verification-command-4-standard.md]], [[pages/concept/analysis-version-hallucination-npm-view.md]], [[pages/concept/state-tool-mock-guard-skill-false-positive.md]]
+- 출처: task:033
+

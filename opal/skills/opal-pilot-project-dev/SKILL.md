@@ -331,8 +331,8 @@ PRD/TRD를 기반으로 태스크를 분할한다.
 액션 목록:
 | # | WP | 액션 | 스킬 | 의존성 | 우선순위 | 검증 명령 | 상태 |
 |---|-----|------|------|--------|---------|----------|------|
-| A01 | WP1 | DB 스키마 | //opds | - | Must | npm run lint && npm test | 미시작 |
-| A02 | WP2 | 인증 API | //opds | A01 | Must | npm run lint && npm test | 미시작 |
+| A01 | WP1 | DB 스키마 | //opds | - | Must | npm run lint:fix && npm test | 미시작 |
+| A02 | WP2 | 인증 API | //opds | A01 | Must | npm run lint:fix && npm test | 미시작 |
 | ... | ... | ... | ... | ... | ... | ... | ... |
 
 검토 후 확정 / 피드백을 알려주세요.
@@ -798,3 +798,4 @@ opal-harness-agentic.md "에스컬레이션 조건" 공통 기준에 추가:
 | v4.5 | 2026-06-07 | R-10 gate-pass deprecated 정합 — State Gate/QA Gate 행 미존재 명시 + PM Gate 단일 mark로 간소화 (014 Phase 4) |
 | v4.6 | 2026-06-11 19:25 | DONE.md 생성 직후 op-brain-ingest 디스패치 훅 삽입 — brain 존재 시 워커 디스패치, 부재 시 no-op, 종료 비중단 (016) |
 | v4.7 | 2026-06-21 16:05 | oppd 개선 — PRD/TRD 태스크폴더 작성+확정 후 docs 승격(F-001/002), WBS 태스크폴더 전용화(F-003), sizing "1~3일"→단일책임+수용시나리오(F-010), §2-3 PM검수 4종 추가(F-015), Phase3 scope 3계층 분기+WBS 2단기준+TRD/PRD 사용자게이트(F-023/024), STATE 재설계 루프 로그 행(F-024) (031) |
+| v4.8 | 2026-06-21 | `npm run lint` → `npm run lint:fix` 정합 — WBS 예시 표(A01·A02) generic `&&` 변형의 lint 명령을 L1 표준(`lint:fix`)으로 교체 (033) |

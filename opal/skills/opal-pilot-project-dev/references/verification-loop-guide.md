@@ -51,11 +51,13 @@ EXECUTE 스텝마다 즉시 검증하여 오류를 조기 차단한다. 워커�
 
 | 계층 | 검증 대상 | 실행 명령 (예시) | 소요 시간 | 자동 수정 가능성 |
 |------|----------|----------------|----------|----------------|
-| L1: lint/format | 코드 스타일, 미사용 변수, import 정리 | `npm run lint`, `npm run format:check` | 수 초 | 매우 높음 |
+| L1: lint/format | 코드 스타일, 미사용 변수, import 정리 | `npm run lint:fix`, `npm run format:check` | 수 초 | 매우 높음 |
 | L2: build/type | 컴파일 오류, 타입 불일치 | `npm run build`, `npx tsc --noEmit` | 수 초~수십 초 | 높음 |
-| L3a: unit/integration | 컴포넌트 단위, 함수, API 통합 테스트 | `npm run test:unit`, `npm run test:api` | 수십 초 | 중간 |
+| L3a: unit/integration | 컴포넌트 단위, 함수, API 통합 테스트 | `npm test -- --run` | 수십 초 | 중간 |
 | L3b: E2E | 브라우저 기반 시나리오 테스트 | `npm run test:e2e`, `npx playwright test` | 수 분 | 낮음 (flaky, 느림) |
 | L4: QA | 설계 원칙, 아키텍처 패턴, 보안 | QA 에이전트 호출 | 수 분 | scope별 분기 (action→재PLAN / wbs→PM / trd→0회·즉시) |
+
+> **[MUST] watch 모드 금지**: L3a/L3b 테스트는 watch 모드를 금지하고 단발(non-watch) 실행만 허용한다 — 자동 검증 루프가 무한 대기에 빠지지 않도록 한다. (러너별 단발 옵션 예: Vitest `-- --run`, Jest `--ci`/`--watchAll=false`)
 
 ### 실행 순서 원칙
 
@@ -217,7 +219,7 @@ lint 오류 {N}건을 수정하라:
   - {관련 타입 정의 파일} ({관련 타입명})
 
 지시: 위 실패 테스트를 분석하고 {소스 파일}의 {함수명} 로직을 수정하라.
-      수정 후 `{test 검증 명령} -- --testPathPattern={패턴}` 로 해당 테스트만 먼저 확인하라.
+      수정 후 `{test 검증 명령} -- --run <대상 파일/glob>` 으로 해당 테스트만 먼저 확인하라.
 ```
 
 **예시 — Jest 테스트 실패**:
@@ -235,7 +237,7 @@ lint 오류 {N}건을 수정하라:
   - src/auth/types.ts (TokenStatus 타입)
 
 지시: 위 실패 테스트를 분석하고 src/auth/service.ts의 validateToken 로직을 수정하라.
-      수정 후 `npm test -- --testPathPattern=auth` 로 해당 테스트만 먼저 확인하라.
+      수정 후 `npm test -- --run src/**/auth*` 로 해당 테스트만 먼저 확인하라.
 ```
 
 **관련 소스 결정 방법**:
@@ -541,3 +543,4 @@ QA 피드백:
 |------|------|---------|
 | 2026-05-01 | R-2 | state-tool 도입 — §6 PM 루프 모니터링에 `[MUST]` state-tool 호출 블록 추가. oppd 비표준 행 구성 R-10 명시(gate-pass 금지). EXECUTE Step 완료 시 `state mark --as-worker` 호출 표기. "STATE.md 검증 루프 로그" 섹션(§5/§6)은 자유 텍스트 영역으로 보존 — TASK F-18 / PLAN §1.5 M-30 / §3 Step 11 (134) |
 | 2026-06-21 16:05 | R-3 | B7 triage 3분류(구현/설계/회귀) 추가 + §3-5 "QA 0회"→"설계 수준" scope별 분기(action 재PLAN[harness 포인터]/wbs PM/trd 0회 유지) + §7 정합성 표 PLAN 재진입 행(harness §1 포인터, 수치 미복제) (031) |
+| 2026-06-21 | R-4 | 검증 명령 4종 표준 정합 — §2 L1 `lint`→`lint:fix`, L3a `test:unit`→`npm test -- --run`(watch 금지 단발 실행). watch 모드 금지 규칙 1문장 신규 추가(SSOT 단일 기재). `--testPathPattern` 2건 Vitest식 치환(L3a 템플릿·auth 예시). §검증 명령 결정 추론 키 구조 보존 (033) |

@@ -94,12 +94,12 @@ tasks/{NNN}-oppd-{프로젝트명}/
 
 | # | 액션 | 설명 | 스킬 | 의존성 | 실행 | 우선순위 | 검증 명령 | PRD 매핑 |
 |---|------|------|------|--------|------|---------|----------|----------|
-| A01 | 프로젝트 기본 구조 | 디렉토리, 설정, 의존성 | //opds | - | 순차 | Must | npm run lint | - |
-| A02 | DB 스키마 + 모델 | 데이터 모델 구현 | //opds | A01 | ▶ 병렬 A | Must | npm run lint && npm test | F-001~003 |
-| A03 | 인증/인가 | JWT + RBAC | //opds | A01 | ▶ 병렬 A | Must | npm run lint && npm test | F-010 |
-| A04 | 핵심 API | CRUD 엔드포인트 | //opds | A02 | 순차 | Must | npm run lint && npm test | F-001~003 |
-| A05 | 핵심 비즈니스 로직 | 도메인 서비스 | //opd | A02,A04 | ▶ 병렬 B | Must | npm run lint && npm run build && npm test | F-004~006 |
-| A06 | UI 메인 화면 | 와이어프레임 + 구현 | //opdw | A04 | ▶ 병렬 B | Must | npm run lint && npm run build | F-001 |
+| A01 | 프로젝트 기본 구조 | 디렉토리, 설정, 의존성 | //opds | - | 순차 | Must | npm run lint:fix | - |
+| A02 | DB 스키마 + 모델 | 데이터 모델 구현 | //opds | A01 | ▶ 병렬 A | Must | npm run lint:fix && npm test | F-001~003 |
+| A03 | 인증/인가 | JWT + RBAC | //opds | A01 | ▶ 병렬 A | Must | npm run lint:fix && npm test | F-010 |
+| A04 | 핵심 API | CRUD 엔드포인트 | //opds | A02 | 순차 | Must | npm run lint:fix && npm test | F-001~003 |
+| A05 | 핵심 비즈니스 로직 | 도메인 서비스 | //opd | A02,A04 | ▶ 병렬 B | Must | npm run lint:fix && npm run build && npm test | F-004~006 |
+| A06 | UI 메인 화면 | 와이어프레임 + 구현 | //opdw | A04 | ▶ 병렬 B | Must | npm run lint:fix && npm run build | F-001 |
 | ... | ... | ... | ... | ... | ... | ... | ... | ... |
 
 - **실행 컬럼**: `순차` = 앞 액션 완료 후 실행, `▶ 병렬 X` = 같은 그룹은 동시 실행 가능
@@ -204,3 +204,11 @@ A01 (기본 구조)
 - [ ] docs/PROJECT.md 문서 테이블에 ROADMAP.md 등록했는가 (설명, 용도, 참조 시점)
 - [ ] `state-tool` 호출로 갱신했는가 (3-ROADMAP → 확정, 로드맵 테이블 채움)
 - [ ] .opal/MEMORY.md 작업 히스토리를 갱신했는가
+
+---
+
+## 변경이력
+
+| 날짜 | 버전 | 변경내용 |
+|------|------|---------|
+| 2026-06-21 | R-1 | `npm run lint` → `npm run lint:fix` 정합 — 액션 예시표(A02~A05) generic `&&` 변형의 lint 명령을 L1 표준(`lint:fix`) 으로 교체. watch 금지 규칙은 SSOT(verification-loop-guide) 단일 기재 — 재서술 없음 (033) |
