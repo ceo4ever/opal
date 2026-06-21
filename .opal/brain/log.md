@@ -102,3 +102,7 @@
 - 신규: [[pages/concept/verification-command-4-standard.md]], [[pages/concept/analysis-version-hallucination-npm-view.md]], [[pages/concept/state-tool-mock-guard-skill-false-positive.md]]
 - 출처: task:033
 
+## [2026-06-22] ingest | CLOSE ingest — 태스크 035 brain-validate-flatness-check
+- 신규: [[pages/concept/brain-validate-flatness-enforcement.md]], [[pages/entity/brain-tool.md]]
+- 출처: task:035
+

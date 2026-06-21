@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-06-21 23:48
+> 갱신: 2026-06-22 07:39
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -23,6 +23,7 @@
 - [[brain-code-scan-role-division]] — brain↔code-scan 역할 분담 — 선별·신선도·깊이 축 (010) #brain #code-scan #architecture #policy
 - [[brain-search-on-demand]] — brain search 선택 주입 — on-demand 비상주 정책 #architecture #brain #search #context #pm
 - [[brain-search-whitespace-insensitive]] — brain-tool search 공백 무시 매칭 — 한국어 복합명사 띄어쓰기 편차 흡수 #architecture #brain #search #korean #normalization
+- [[brain-validate-flatness-enforcement]] — brain validate 선택 필드 평탄성 집행 (tags/sources/related flat string[]) #brain-tool #validate #enforce #flatness #frontmatter
 - [[business-terminology-first-principle]] — 기획 산출물 비즈니스 용어 우선 원칙 #citation-rules #opal-writing #opwt #brain-ingest #document-standard
 - [[clarification-gate-backward-compat]] — 명확화 게이트 하위호환 정책 A — graceful skip #pipeline #enforcement #backward-compat #state-tool
 - [[clarification-gate]] — 명확화 게이트 — TASK 4요소 잠금 기계 집행 #pipeline #enforcement #state-tool #clarification

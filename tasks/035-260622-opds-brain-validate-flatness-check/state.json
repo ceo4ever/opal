@@ -1,0 +1,111 @@
+{
+  "task_id": "035-260622-opds-brain-validate-flatness-check",
+  "skill": "opds",
+  "mode": "agentic",
+  "schema_version": "1.0",
+  "created_at": "2026-06-22 00:05",
+  "updated_at": "2026-06-22 07:41",
+  "current_status": "done",
+  "rows": [
+    {
+      "row_id": 1,
+      "stage": "TASK",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-22 00:05",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 2,
+      "stage": "TASK",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-22 00:05",
+      "owner": "auto",
+      "note": "agentic auto-pass: agentic auto-pass: 034 세션에서 캡틴과 사각지대·수정안 합의(평탄성 검사 추가), //opds --agentic 승인. 4요소 잠금(RED-first 강제)"
+    },
+    {
+      "row_id": 3,
+      "stage": "PLAN",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-22 00:11",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 4,
+      "stage": "PLAN",
+      "item": "PM Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-22 00:11",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 5,
+      "stage": "PLAN",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-22 00:11",
+      "owner": "auto",
+      "note": "agentic auto-pass: agentic auto-pass: PLAN 강화검토 Pass — R-1/R-2 100% 커버, 엣지케이스([]·None·bool) 전부 설계 반영, Surgical 1함수+테스트, 복잡도 단순. PM이 PLAN.md+TEST-SCENARIO.md 직접 Read 검증"
+    },
+    {
+      "row_id": 6,
+      "stage": "EXECUTE",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-22 00:16",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 7,
+      "stage": "TEST",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-22 00:18",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 8,
+      "stage": "TEST",
+      "item": "PM Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-22 00:18",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 9,
+      "stage": "TEST",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-22 07:36",
+      "owner": "user",
+      "note": "캡틴 확인: close 승인, 배포는 캡틴 직접 수행"
+    },
+    {
+      "row_id": 10,
+      "stage": "CLOSE",
+      "item": "DONE.md 생성",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-22 07:41",
+      "owner": "PM",
+      "note": null
+    }
+  ]
+}

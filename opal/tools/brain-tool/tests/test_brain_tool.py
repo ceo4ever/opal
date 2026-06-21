@@ -1460,6 +1460,147 @@ class TestValidateFrontmatter(unittest.TestCase):
             type_issues = [i for i in issues if "invalid type" in i]
             self.assertEqual(type_issues, [], f"type={ptype}가 invalid로 판정됨")
 
+    # ── 035: 평탄성 검사 RED-first 케이스 ──────────────────────────────────
+
+    # --- 검출 케이스 (RED 대상 — 수정 전 FAIL) ---
+
+    def test_flatness_nested_related_detected(self):
+        """TS-001: related=[['a','b']] (중첩 리스트) → 'related must be a flat list of strings' issue 포함."""
+        fm = self._valid_fm()
+        fm["related"] = [["a", "b"]]
+        issues = BT.validate_frontmatter(fm)
+        self.assertTrue(
+            any("related must be a flat list" in i for i in issues),
+            f"related 중첩 리스트가 violation으로 검출되지 않음. issues={issues}",
+        )
+
+    def test_flatness_nested_tags_detected(self):
+        """TS-004: tags=[['x']] (중첩 리스트) → 'tags must be a flat list of strings' issue 포함."""
+        fm = self._valid_fm()
+        fm["tags"] = [["x"]]
+        issues = BT.validate_frontmatter(fm)
+        self.assertTrue(
+            any("tags must be a flat list" in i for i in issues),
+            f"tags 중첩 리스트가 violation으로 검출되지 않음. issues={issues}",
+        )
+
+    def test_flatness_nonstring_sources_detected(self):
+        """TS-005: sources=[1, 2] (비문자열 int) → 'sources must be a flat list of strings' issue 포함."""
+        fm = self._valid_fm()
+        fm["sources"] = [1, 2]
+        issues = BT.validate_frontmatter(fm)
+        self.assertTrue(
+            any("sources must be a flat list" in i for i in issues),
+            f"sources 비문자열 요소가 violation으로 검출되지 않음. issues={issues}",
+        )
+
+    def test_flatness_nonstring_related_detected(self):
+        """TS-006: related=[1] (비문자열 int) → 'related must be a flat list of strings' issue 포함."""
+        fm = self._valid_fm()
+        fm["related"] = [1]
+        issues = BT.validate_frontmatter(fm)
+        self.assertTrue(
+            any("related must be a flat list" in i for i in issues),
+            f"related 비문자열 요소가 violation으로 검출되지 않음. issues={issues}",
+        )
+
+    def test_flatness_tags_not_a_list_detected(self):
+        """TS-004b: tags='notalist' (list 아님, 문자열) → 'tags must be a flat list of strings' issue 포함."""
+        fm = self._valid_fm()
+        fm["tags"] = "notalist"
+        issues = BT.validate_frontmatter(fm)
+        self.assertTrue(
+            any("tags must be a flat list" in i for i in issues),
+            f"tags가 list가 아닌 경우가 violation으로 검출되지 않음. issues={issues}",
+        )
+
+    # --- 통과 케이스 (수정 전·후 모두 PASS — 오탐 방지) ---
+
+    def test_flatness_valid_flat_lists_pass(self):
+        """TS-002: tags=['a','b'], sources=['code:x'], related=['page-y'] (정상 flat string[]) → 평탄성 issue 0."""
+        fm = self._valid_fm()
+        fm["tags"] = ["a", "b"]
+        fm["sources"] = ["code:x"]
+        fm["related"] = ["page-y"]
+        issues = BT.validate_frontmatter(fm)
+        flatness_issues = [i for i in issues if "must be a flat list" in i]
+        self.assertEqual(
+            flatness_issues,
+            [],
+            f"정상 flat string[] 값이 오탐으로 검출됨. flatness_issues={flatness_issues}",
+        )
+
+    def test_flatness_optional_fields_absent_pass(self):
+        """TS-003a: 선택 필드 전부 부재 (필수 5필드만) → issues=[]."""
+        fm = self._valid_fm()
+        # tags/sources/related 키 없음
+        issues = BT.validate_frontmatter(fm)
+        self.assertEqual(issues, [], f"선택 필드 부재 시 오탐 발생. issues={issues}")
+
+    def test_flatness_empty_lists_pass(self):
+        """TS-003b: tags=[], sources=[], related=[] (빈 리스트) → 평탄성 issue 0 (H-4 경계 검증)."""
+        fm = self._valid_fm()
+        fm["tags"] = []
+        fm["sources"] = []
+        fm["related"] = []
+        issues = BT.validate_frontmatter(fm)
+        flatness_issues = [i for i in issues if "must be a flat list" in i]
+        self.assertEqual(
+            flatness_issues,
+            [],
+            f"빈 리스트가 오탐으로 검출됨. flatness_issues={flatness_issues}",
+        )
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# 035: validate 평탄성 통합 테스트 (TS-008 — cmd_validate 종단)
+# ═════════════════════════════════════════════════════════════════════════════
+
+class TestValidateFlatness035(BrainTestCase):
+    """TS-008: cmd_validate 종단 통합 — 중첩 related 페이지가 frontmatter violation으로 표면화."""
+
+    def setUp(self):
+        super().setUp()
+        self._init()
+
+    def test_validate_detects_nested_related_violation(self):
+        """TS-008: pages/concept/에 related=[['a','b']] 페이지 작성 → cmd_validate가 rule=frontmatter violation 반환 + valid=False."""
+        # YAML에서 [[a, b]]는 중첩 시퀀스로 파싱됨
+        page_dir = self.brain_root / "pages" / "concept"
+        nested_page = page_dir / "nested-related.md"
+        nested_page.write_text(
+            "---\n"
+            "type: concept\n"
+            "title: 중첩 related 테스트\n"
+            "created: 2026-06-22\n"
+            "updated: 2026-06-22\n"
+            "status: active\n"
+            "related:\n"
+            "  - - a\n"
+            "    - b\n"
+            "---\n"
+            "본문 내용\n",
+            encoding="utf-8",
+        )
+        args = make_args(brain_path=str(self.brain_root))
+        out = io.StringIO()
+        with redirect_stdout(out):
+            try:
+                BT.cmd_validate(args)
+            except SystemExit:
+                pass
+        result = json.loads(out.getvalue().strip())
+        self.assertFalse(
+            result["valid"],
+            f"중첩 related 페이지가 valid=True로 통과됨 (종단 violation 누락). result={result}",
+        )
+        rules = [v["rule"] for v in result["violations"]]
+        self.assertIn(
+            "frontmatter",
+            rules,
+            f"violations에 rule='frontmatter'가 없음 (issue→violation 매핑 실패). violations={result['violations']}",
+        )
+
 
 # ═════════════════════════════════════════════════════════════════════════════
 # 027: term 동적 로드 + draft search 필터 + lint term_duplicate/alias_collision

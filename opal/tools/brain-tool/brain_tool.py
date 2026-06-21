@@ -3,7 +3,7 @@
   "module": "brain_tool",
   "layer": "util",
   "domain": "opal-brain",
-  "description": "OPAL Project Brain 지식 위키 결정론적 집행 CLI — 10개 서브 명령(init/add-page/index/log/search/sync-header/lint/validate/analyze/ingest-scan). index/log/링크 무결성을 brain-tool이 집행(LLM 직접 편집 금지). 페이지 타입은 SCHEMA §1.5에서 동적 로드(하드코딩 없음). frontmatter 파싱은 PyYAML, KST 타임스탬프는 date.js subprocess. sync-header는 code-scan @header → brain entity frontmatter 단방향 동기화만 수행. analyze는 code-scan @header 정량 집계 → JSON. ingest-scan은 docs/skills/tasks 목록 반환. [027] lint에 term 일관성 2종(term_duplicate·alias_collision) 추가. search에 draft 필터(--include-draft, R-6 term 한정) 추가. init이 schema-template.md에서 타입 동적 로드.",
+  "description": "OPAL Project Brain 지식 위키 결정론적 집행 CLI — 10개 서브 명령(init/add-page/index/log/search/sync-header/lint/validate/analyze/ingest-scan). index/log/링크 무결성을 brain-tool이 집행(LLM 직접 편집 금지). 페이지 타입은 SCHEMA §1.5에서 동적 로드(하드코딩 없음). frontmatter 파싱은 PyYAML, KST 타임스탬프는 date.js subprocess. sync-header는 code-scan @header → brain entity frontmatter 단방향 동기화만 수행. analyze는 code-scan @header 정량 집계 → JSON. ingest-scan은 docs/skills/tasks 목록 반환. [027] lint에 term 일관성 2종(term_duplicate·alias_collision) 추가. search에 draft 필터(--include-draft, R-6 term 한정) 추가. init이 schema-template.md에서 타입 동적 로드. [035] validate_frontmatter에 선택 필드(tags/sources/related) 평탄성 검사(flat string[]) 추가 — 중첩 리스트·비문자열 요소를 frontmatter_invalid violation으로 집행.",
   "exports": [
     "cmd_init", "cmd_add_page", "cmd_index", "cmd_log",
     "cmd_search", "cmd_sync_header", "cmd_lint", "cmd_validate",
@@ -289,6 +289,14 @@ def validate_frontmatter(fm, page_types=None):
     status = fm.get("status")
     if status is not None and status not in STATUS_ENUM:
         issues.append(f"invalid status: {status} (allowed: {'|'.join(STATUS_ENUM)})")
+    # 선택 필드 평탄성 검사 (035) — tags/sources/related = flat list[str]
+    # None(부재)·빈 리스트는 통과. 존재 시 list이고 모든 요소가 str이어야 통과.
+    for key in OPTIONAL_FRONTMATTER:
+        v = fm.get(key)
+        if v is None:
+            continue                       # 선택 필드 부재 → 통과
+        if not (isinstance(v, list) and all(isinstance(x, str) for x in v)):
+            issues.append(f"{key} must be a flat list of strings")
     # entity 페이지는 추가 키 일부 권장 (source_ref) — 누락은 경고가 아닌 정보용으로 생략
     return issues
 

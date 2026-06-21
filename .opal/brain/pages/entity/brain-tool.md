@@ -8,10 +8,10 @@ exports: [cmd_init, cmd_add_page, cmd_index, cmd_log, cmd_search, cmd_sync_heade
 source_ref: opal/tools/brain-tool/brain_tool.py
 header_synced: 2026-06-11
 tags: [tool, knowledge]
-sources: [code:opal/tools/brain-tool/, task:015, task:016]
-related: [state-tool, opal-brain-system]
+sources: [code:opal/tools/brain-tool/, task:015, task:016, task:035]
+related: [state-tool, opal-brain-system, brain-validate-flatness-enforcement]
 created: 2026-06-10
-updated: 2026-06-11
+updated: 2026-06-22
 status: active
 ---
 
@@ -36,7 +36,11 @@ OPAL Project Brain 지식 위키를 결정론적으로 집행하는 CLI 도구. 
 - `analyze` — code-scan @header 정량 집계(domain별 모듈수·layer 분포·exports·피의존도) → JSON 반환. init 타입 제안의 결정론적 입력.
 - `ingest-scan --source docs|skills|tasks|all` — .md 문서·tasks/ 목록을 멱등 skip 판정과 함께 반환. 본문 요약은 LLM, 목록 산출은 도구(결정론적 역할 분리).
 
+035 기능 추가:
+- `validate_frontmatter` 선택 필드 평탄성 검사 — `tags`/`sources`/`related`가 flat `string[]`인지 검증. 중첩 리스트·비문자열 요소를 `frontmatter_invalid` violation으로 집행. None·빈 리스트 통과, 기존 검증(필수 5필드·type·status) 불변. (`brain_tool.py:291-299`, 참조: [[brain-validate-flatness-enforcement]])
+
 ## 관련 페이지
 
 - [[state-tool]] — brain-tool이 복제한 원본 패턴
 - [[opal-brain-system]] — brain-tool이 집행하는 위키 시스템
+- [[brain-validate-flatness-enforcement]] — 035 선택 필드 평탄성 집행 설계 결정
