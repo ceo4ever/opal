@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-06-21 16:36
+> 갱신: 2026-06-21 16:46
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -14,6 +14,8 @@
 - [[state-tool]] — state-tool #tool #pipeline
 
 ## 개념
+- [[active-platform-dir-install-target-lesson]] — 활성 Claude 플랫폼 디렉토리가 ~/.claude 기본이 아닐 수 있다 — install 타겟 정합 교훈 (032 P2) #install #deploy #platform #dispatch #lesson-learned
+- [[adapter-body-model-level-substitution]] — 어댑터 본문 model 레벨 치환 — frontmatter 비대칭 해소 (032) #adapter #install #model #platform #sub-dispatch #constitution
 - [[analysis-drift-pm-cross-verify-lesson]] — ANALYSIS 드리프트 분석 환각 → PM 강화검토 패턴 (학습) #analysis #hallucination #pm-gate #lesson-learned #drift
 - [[b7-action-completion-loop]] — B7 액션 완성도 루프 — triage 기반 경계 재설계 순환 구조 #oppd #action-loop #triage #verification #b7
 - [[brain-business-term-layer]] — Brain 업무 언어 번역 계층(term) #brain #citation-rules #term #knowledge

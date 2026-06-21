@@ -93,3 +93,8 @@
 - 신규: [[b7-action-completion-loop]], [[wbs-세분화-단일책임-수용시나리오]], [[oppd-prd-trd-task-folder-promote]], [[loop-upper-bound-ssot-pattern]], [[analysis-drift-pm-cross-verify-lesson]]
 - 출처: task:031
 
+## [2026-06-21] ingest | CLOSE ingest — 태스크 032 install 어댑터 본문 model 레벨 치환
+- 신규: [[adapter-body-model-level-substitution]], [[active-platform-dir-install-target-lesson]]
+- 갱신: [[analysis-drift-pm-cross-verify-lesson]]
+- 출처: task:032
+
