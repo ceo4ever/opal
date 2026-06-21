@@ -1,7 +1,7 @@
 {
   "$schema": "opal-skills-registry-v1",
-  "version": "3.5.0",
-  "updated_at": "2026-06-18",
+  "version": "3.6.0",
+  "updated_at": "2026-06-21",
   "groups": {
     "opal-pilot": [
       {
@@ -592,16 +592,16 @@
         "auto_trigger": "identity.md 없을 때"
       },
       {
-        "name": "opal-start",
-        "alias": "start",
+        "name": "opal-next",
+        "alias": "next",
         "description": "OPAL 재진입 가이드 — 현재 상태 진단(identity / .opal/AGENT.md / docs/PROJECT.md / cwd 프로젝트 여부) + 다음 액션 권유",
         "triggers": [
-          "^opal-start$",
-          "^start$",
+          "^opal-next$",
+          "^next$",
           "(?i)(어디서부터\\s*시작|다음에\\s*뭐\\s*해야|온보딩\\s*다시\\s*보고싶어)"
         ],
         "paths": [
-          "~/.opal/skills/opal-start/SKILL.md"
+          "~/.opal/skills/opal-next/SKILL.md"
         ]
       },
       {
@@ -694,6 +694,16 @@
     ]
   },
   "changelog": [
+    {
+      "version": "3.6.0",
+      "date": "2026-06-21",
+      "task": "030",
+      "changes": [
+        "opal-start → opal-next 개명: name·alias(start→next)·triggers(^opal-start$/^start$ → ^opal-next$/^next$)·paths(opal-next/SKILL.md) 갱신",
+        "//start alias·트리거 완전 제거 (하위호환 미유지) — 자연어 트리거는 재진입 의미 항목만 유지",
+        "기능·진단 로직·라우팅 분기 불변 (순수 rename + 참조 정합)"
+      ]
+    },
     {
       "version": "3.5.0",
       "date": "2026-06-18",

@@ -8,10 +8,11 @@ tags:
 - guide
 sources:
 - skill:opal-start
-related: []
+related:
+- skill-opal-next
 created: '2026-06-11'
 updated: '2026-06-11'
-status: draft
+status: stale
 ---
 ## 개념 요약
 

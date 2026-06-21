@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-06-18 14:48
+> 갱신: 2026-06-21 14:23
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -69,6 +69,7 @@
 - [[skill-op-task-qa]] — op-task-qa — 범용 문서 QA 검증 기준 #skill #qa #document
 - [[skill-opal-agent-creator]] — opal-agent-creator — OPAL 에이전트 생성 파이프라인 #skill #agent #creator
 - [[skill-opal-brain]] — opal-brain — 프로젝트 브레인 지식 위키 #skill #brain #knowledge #wiki
+- [[skill-opal-next]] — opal-next — OPAL 재진입 가이드 (opal-start 개명) #skill #next #onboarding #guide #rename
 - [[skill-opal-onboarding]] — opal-onboarding — 에이전트 정체성 설정 #skill #onboarding #identity
 - [[skill-opal-pilot-dev-short]] — opal-pilot-dev-short — Short Task 오케스트레이터 #skill #pilot #orchestrator #dev-short
 - [[skill-opal-pilot-dev-wireframe]] — opal-pilot-dev-wireframe — Wireframe UI 오케스트레이터 #skill #pilot #orchestrator #wireframe #ui
@@ -83,6 +84,7 @@
 - [[skill-opal-skill-manager]] — opal-skill-manager — OPAL 커뮤니티 스킬 관리 #skill #manager #community
 - [[skill-opal-start]] — opal-start — OPAL 재진입 가이드 #skill #start #onboarding #guide
 - [[skill-registry-validate-extension]] — skill-registry validate 확장 — dangling error 격상 + unregistered 역방향 감지 #skill-registry #validate #drift-detection #tooling
+- [[skill-rename-validate-pattern]] — 스킬 rename 후 레지스트리 정합 검증 패턴 #skill-registry #validate #rename #drift-detection #lesson
 - [[test-real-data-validation-lesson]] — TEST 실데이터 검증이 build-only 가 놓친 결함을 발견한다 #testing #lesson #test-strategy #real-data
 - [[test-scenario-pipeline-redesign]] — 테스트 시나리오 파이프라인 재설계 (2차원 매트릭스 + self-confirming 4분리) #testing #pipeline #framework #flow #task
 - [[three-layer-memory-architecture]] — 3계층 기억 아키텍처 — MEMORY / brain / tasks #architecture #memory #brain #long-term #tasks

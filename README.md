@@ -122,7 +122,7 @@ AI 도구(Claude Code / Cursor / Gemini / Codex)를 재시작하면 첫 응답�
 | 명령 | 용도 |
 |------|------|
 | `//opi` | 프로젝트 환경 초기화 (`.opal/AGENT.md`, `docs/PROJECT.md` 등 생성) |
-| `//start` | 재진입 가이드 — 현재 상태 진단 + 다음 액션 권유 |
+| `//next` | 재진입 가이드 — 현재 상태 진단 + 다음 액션 권유 |
 | `opal-cli doctor` | 의존성·경로·MCP·부트스트래퍼 정합성 진단 |
 | `opal-cli update` | 최신 release 동기화 (사용자 데이터 보존) |
 | `opal-cli uninstall` | `~/.opal/` 제거 + 부트스트래퍼 마커 회수 |

@@ -85,3 +85,7 @@
 - 신규: [[pages/concept/opal-brain-not-pilot-decision.md]], [[pages/concept/skill-registry-validate-extension.md]], [[pages/concept/opal-skill-classification-system.md]]
 - 출처: task:029
 
+## [2026-06-21] ingest | CLOSE ingest — 태스크 030 opal-start→opal-next 개명
+- 신규: [[pages/concept/skill-opal-next.md]], [[pages/concept/skill-rename-validate-pattern.md]]
+- 출처: task:030
+
