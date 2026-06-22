@@ -11,7 +11,7 @@ triggers:
   - "사용 가능한 스킬"
   - "어떤 스킬"
   - "명령어 도움말"
-version: 1.0.0
+version: 1.1.0
 ---
 
 # opal-help — OPAL 스킬 카탈로그 & 사용법 안내
@@ -33,6 +33,8 @@ node ~/.opal/tools/skill-registry/skill-registry.js match "{사용자 입력}"
 
 Node.js 미설치 등으로 도구 호출이 실패하면 `~/.opal/references/skills.md`를 Read하여 폴백 안내한다.
 
+운영 CLI 도구(`opal-cli`)는 `//` 스킬이 아니므로 레지스트리에 없다. CLI 사용법의 SSOT는 `opal-cli --help` 출력이며, opal-help는 이를 복제하지 않고 실행 결과를 그대로 노출한다(Mode 2-CLI).
+
 ## 진입 분기 (Mode 판별)
 
 `//help` 뒤에 이어지는 인자(arguments)로 모드를 결정한다.
@@ -41,6 +43,7 @@ Node.js 미설치 등으로 도구 호출이 실패하면 `~/.opal/references/sk
 |------|------|
 | `//help` (인자 없음) | Mode 1 — 카탈로그 (사용자 호출 가능 스킬만) |
 | `//help --all` | Mode 1 — 카탈로그 (내부 단계 스킬까지 전부) |
+| `//help console` / `//help opal-cli` / `//help cli` | Mode 2-CLI — 운영 CLI 도구 상세 (`opal-cli --help` 실행) |
 | `//help {스킬명 또는 alias}` (예: `//help opd`) | Mode 2 — 특정 스킬 상세 |
 
 > 하네스 모드 플래그(`--interactive`/`--semi-agentic`/`--agentic`)는 read-only 카탈로그에 영향이 없으므로 무시한다. (`--all`은 opal-help 전용 플래그다.)
@@ -85,6 +88,11 @@ node ~/.opal/tools/skill-registry/skill-registry.js list --group=opal
 |------|------|------|
 | //opi | opal-project-init | 프로젝트 초기화 + 최신화 |
 | ... | ... | ... |
+
+🖥️ 운영 CLI 도구 (셸에서 직접 실행 — `//` 스킬 아님)
+| 명령 | 설명 |
+|------|------|
+| `opal-cli` | OPAL 프레임워크 CLI — install/update/doctor/uninstall/mcp/console 운영. 상세: //help opal-cli 또는 셸에서 opal-cli --help |
 ```
 
 ### Step 3: 하단 안내
@@ -93,6 +101,7 @@ node ~/.opal/tools/skill-registry/skill-registry.js list --group=opal
 
 ```
 특정 스킬 상세: //help {호출명}  (예: //help opd)
+운영 CLI 도구 상세: //help console   (opal-cli --help 실행 결과를 보여줍니다)
 내부 단계 스킬까지 보기: //help --all
 모드 플래그: 파일럿은 //{alias} [--interactive|--semi-agentic|--agentic] <작업설명> 형식 (기본 semi-agentic)
 ```
@@ -120,6 +129,16 @@ node ~/.opal/tools/skill-registry/skill-registry.js list --group=op-brain
 ---
 
 ## Mode 2 — 특정 스킬 상세
+
+### Step 0: 운영 CLI 인터셉트
+
+인자가 `console`·`opal-cli`·`cli` 중 하나면 스킬 조회(Step 1)로 가지 않고 운영 CLI 안내로 분기한다.
+
+1. Bash로 `opal-cli --help`를 실행한다 (read-only). 인자가 `console`이면 `opal-cli console --help`를 실행한다.
+2. 출력을 코드블록으로 그대로 보여주고, "이들은 셸 명령이며 `//` 스킬이 아닙니다"를 한 줄 덧붙인다.
+3. 실행 실패(미설치 등) 시: "opal-cli가 설치되어 있지 않습니다. `opal-cli install` 후 사용 가능합니다."로 안내한다.
+
+> `opal-cli --help` 출력이 CLI 사용법의 SSOT다. opal-help는 이를 복제하지 않고 실행 결과를 그대로 노출한다.
 
 ### Step 1: 스킬 조회
 
@@ -189,3 +208,4 @@ opal-help는 안내만 한다. 다음은 각 전용 스킬로 위임한다.
 | 버전 | 일시 | 변경내용 |
 |------|------|---------|
 | v1.0.0 | 2026-06-21 | 초기 작성 — Mode 1(카탈로그, 사용자 호출 가능 스킬만 + --all) / Mode 2(특정 스킬 상세). skill-registry list/get 조회 기반 read-only operator 스킬 |
+| v1.1.0 | 2026-06-22 11:10 KST | 운영 CLI 도구(opal-cli/console) 노출 추가 (L2 직접수정) — Mode 1 카탈로그에 `🖥️ 운영 CLI 도구` 요약 섹션 / Mode 2 Step 0 CLI 인터셉트(`console`·`opal-cli`·`cli` → `opal-cli --help` 실행). CLI 사용법 SSOT는 `opal-cli --help` |
