@@ -110,3 +110,7 @@
 - 신규: [[pages/concept/brain-query-async-job-polling.md]], [[pages/concept/red-test-determinism-abort-trap.md]], [[pages/concept/brain-query-latency-model.md]]
 - 출처: task:037
 
+## [2026-06-23] ingest | CLOSE ingest — 태스크 038 brain entity 작성 규율 표준화
+- 신규: [[brain-entity-discipline]]
+- 출처: task:038
+

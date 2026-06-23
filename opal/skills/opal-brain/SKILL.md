@@ -9,7 +9,7 @@ triggers:
   - "^opbr$"
   - "^opal-brain$"
   - "(?i)(프로젝트\\s*브레인|지식\\s*위키)"
-version: "1.4"
+version: "1.5"
 domain: knowledge
 pipeline: "MODE: init | ingest | query | lint"
 ---
@@ -124,8 +124,32 @@ pipeline: "MODE: init | ingest | query | lint"
      --tags "<layer>,<domain>" \
      --sources "code:<source_ref>"
    ```
-   - 페이지 본문에 @header 필드(module/layer/domain/exports/source_ref/header_synced) 시드.
-   - 본문 구조: `## 개요`, `## 설계 배경 (WHY)`, `## 인터페이스`, `## 관련 페이지`.
+
+   **[MUST] 입력 큐레이션 선행** (entity 본문 작성 전):
+   1. `docs/PROJECT.md` 문서 레지스트리에서 해당 모듈 관련 docs 확인.
+   2. 관련 태스크 `tasks/NNN/PLAN.md`(설계 결정) 확인 — git 커밋 메시지 태스크 번호로 역추적 가능.
+   3. 관련 기존 brain 페이지(concept/entity) 후보 확인.
+   4. 위 입력에서 WHY를 합성. 없으면 `(추론: 코드패턴)` 또는 `(WHY 미확보)`로 솔직 표기.
+
+   **[MUST] @header 전사 금지**: code-scan @header(module/layer/domain/exports)를 본문 1~4섹션에 기계 복사하지 않는다. @header 필드는 frontmatter와 §소스 커버리지(부록)에만 둔다. 본문은 사고하여 합성한다.
+
+   **entity 본문 5섹션 표준** (§8.9 비위반 — 주 헤딩은 도메인 의미 헤딩이며 괄호는 보조 레이블이므로 `## 누가/왜/어떻게` 형식 금지 대상이 아님):
+
+   | # | 섹션 헤딩 | 역할 | 작성 규율 |
+   |---|----------|------|----------|
+   | 1 | `## 개요` | 비즈니스 프레이밍 1~3문장 | 비즈니스 용어 우선. 코드 식별자 본문 주어 금지 (§8.2) |
+   | 2 | `## 책임 (WHAT)` | 노출 인터페이스·책임을 기능 단위로 서술 | 각 책임에 `` `file_path:line` `` 인용 병기 |
+   | 3 | `## 설계 배경 (WHY)` | 결정·기각된 대안·맥락 | **[MUST] provenance 3종 태깅** (아래). HOW 누수 금지. 5W1H는 사고틀로만 |
+   | 4 | `## 관계 (HOW)` | 의존·피의존·협력 엔티티 | wikilink `[[페이지명]]` 사용 |
+   | 5 | `## 소스 커버리지` | 코드 식별자·enum·exports 부록 분리 | line number 포함 `` `file_path:line` `` 표 (§8.8) |
+
+   **[MUST] provenance 3종** — `## 설계 배경 (WHY)` 각 주장 문장은 아래 3종 중 하나를 반드시 태그한다:
+
+   | 태그 | 의미 | 사용 조건 |
+   |------|------|----------|
+   | `(근거: <doc>/POL-N/task:NNN PLAN§X)` | 문서·정책·태스크에서 확인된 WHY | 큐레이션된 입력에 WHY 출처가 있을 때 |
+   | `(추론: 코드패턴)` | 코드 구조에서 추론한 WHY (직접 근거 없음) | 코드만으로 합리적 추론 시 — 단정 금지 |
+   | `(WHY 미확보)` | WHY 입력이 없어 미확보 | 솔직 표기 — 날조 금지 |
 
 6. 전체 맵 index 등록:
    ```bash
@@ -158,6 +182,20 @@ pipeline: "MODE: init | ingest | query | lint"
 핵심 엔티티 시드: <N>개 / 전체 모듈 <M>개
 index.md 전체 맵 등록 완료
 ```
+
+### 재생성 런북 (brain 전체 재시드)
+
+기존 entity 페이지 품질이 낮아 개선된 5섹션 규율로 전체 재생성이 필요할 때 사용한다.
+
+① 백업: `.opal/brain/pages/synthesis/` + 수기 편집 페이지를 별도 경로로 복사
+   (⚠️ synthesis는 query 파생물 — ingest-scan 미대상이라 init로 복구 불가 → 유실 방지 필수)
+
+② 삭제: `.opal/brain/pages/entity/` 직접 삭제 (entity만 재생성) 또는 `.opal/brain/` 전체 삭제
+   ⚠️ `//opbr init --force` 만으로는 `pages/`가 보존되어 재생성되지 않는다 (`brain_tool.py:436-440` `exist_ok=True`)
+
+③ 재생성: `//opbr init` (개선된 5섹션 규율 적용)  [+ 필요 시 `ingest --all`로 concept 재생성]
+
+④ 복원: 백업한 `synthesis/` + 수기 페이지를 `.opal/brain/pages/`로 복원
 
 ---
 
@@ -217,7 +255,7 @@ index.md 전체 맵 등록 완료
 | `docs/*.md` | concept | **3~6줄 요약(목적·핵심 결정·적용 범위) + `file_path` 포인터** |
 | `opal/skills/**` | concept | **3~6줄 요약 + `file_path` 포인터** |
 | `opal/*/references/**` | concept | **3~6줄 요약 + `file_path` 포인터** |
-| 코드 @header | entity | @header 필드 흡수 + `source_ref` 포인터 (본문 복제 금지) |
+| 코드 @header | — | **ingest --all 미해당** — entity는 `//opbr init` 시드 경로에서만 생성됨. ingest-scan은 docs/skills/tasks→concept만 스캔하며 코드→entity 분기가 없다 (`brain_tool.py:1082-1135`) |
 | 신규 업무 용어·상태·업무 표면 후보 | term (`status: draft`) | **업무 의미 2~4문장 + `aliases`/`actors`/`surfaces` frontmatter 선택 키 + 다층 근거 `sources` 병기**. [MUST] term 타입이 채택된 프로젝트에서만 추출(미채택 프로젝트는 건너뜀). [MUST] draft 페이지는 답변에 쓰지 않으며, 캡틴/PM 확정 시 `active` 승격. |
 
 **배치 정책:**
@@ -439,3 +477,4 @@ brain의 품질 문제를 탐지하고 정비 방안을 제안한다.
 | v1.2 | 2026-06-11 21:42 | [MUST] source_ref 형식 규칙 명시 — add-page `--sources` 값은 ingest-scan `source_ref` 그대로 사용, 임의 형식(전체 경로 등) 금지(멱등 skip 보호). 단일 소스 절차 5항 + 배치 정책 멱등 행 2곳 추가 (016) |
 | v1.3 | 2026-06-17 | term 타입 운영 — init 채택 가이드 / ingest draft term 추출 / query business-first+진입점③(미등록 용어 발견→draft 제안→확정 시 active) / lint term_duplicate·alias_collision (027) |
 | v1.4 | 2026-06-22 | 036: query --read-only 비대화형 계약 추가 — 모드 라우팅 표에 `//opbr query --read-only "<질의>"` 행 명시, §STEP query 하단에 "비대화형 read-only 모드" 절 신설(자동 선별·항상 합성·순수 read-only·JSON 출력 계약) |
+| v1.5 | 2026-06-23 | 038: entity 5섹션 표준화 + @header 전사 금지·provenance 3종·입력 큐레이션 선행 [MUST] + 재생성 런북 신설 + ingest --all drift 정정 (038) |

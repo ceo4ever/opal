@@ -167,6 +167,15 @@ status: active
 
 #### 페이지 구조 예시 (entity 타입 — 신규 컴포넌트)
 
+> **[MUST] @header 전사 금지**: code-scan @header(module/layer/domain/exports)를 본문 1~4섹션에 기계 복사하지 않는다. @header 필드는 frontmatter와 §소스 커버리지(부록)에만 둔다. 본문은 사고하여 합성한다.
+>
+> **[MUST] provenance 3종**: `## 설계 배경 (WHY)`의 각 주장 문장에 아래 3종 중 하나를 태깅한다.
+> - `(근거: <doc>/POL-N/task:NNN PLAN§X)` — 문서·정책·태스크에서 확인된 WHY
+> - `(추론: 코드패턴)` — 코드 구조에서 추론한 WHY (단정 금지)
+> - `(WHY 미확보)` — WHY 입력이 없어 미확보 (솔직 표기 — 날조 금지)
+>
+> **[MUST] §8.9 비위반**: 5섹션 헤딩은 `## 누가/왜/어떻게` 형식이 아닌 도메인 의미 헤딩 + 괄호 보조 레이블(WHAT/WHY/HOW) 형식이다 — citation-rules §8.9 비위반.
+
 ```markdown
 ---
 type: entity
@@ -181,19 +190,29 @@ status: active
 
 ## 개요
 
-<컴포넌트 역할 1-2문장>
+<비즈니스 프레이밍 — 이 엔티티가 무엇이고 왜 존재하는지 1~3문장. 비즈니스 용어 우선. 코드 식별자 본문 주어 금지 (citation-rules §8.2)>
+
+## 책임 (WHAT)
+
+<노출 인터페이스·책임을 기능 단위로 서술. 각 책임에 `file_path:line` 인용 병기 (citation-rules §8.4)>
 
 ## 설계 배경 (WHY)
 
-<왜 이 컴포넌트가 필요한지>
+<왜 이렇게 설계했는가 — 결정·기각된 대안·맥락. 각 주장에 provenance 3종 중 하나 태깅 [MUST]. HOW 누수 금지(관계 서술은 §관계로). 5W1H는 사고틀로만 (citation-rules §8.9)>
 
-## 인터페이스
+## 관계 (HOW)
 
-<주요 입출력·서브커맨드·API — 코드 참조: `file_path:line`>
-
-## 관련 페이지
+<의존·피의존·협력 엔티티. wikilink [[페이지명]] 사용>
 
 - [[<관련 페이지>]]
+
+## 소스 커버리지
+
+<코드 식별자·enum·exports를 부록으로 분리. line number 포함 `file_path:line` 표. 본문(1~4)에서 강등 배치 (citation-rules §8.8)>
+
+| 식별자 | 경로:줄번호 | 설명 |
+|--------|-----------|------|
+| `<식별자>` | `<file_path:line>` | <설명> |
 ```
 
 ### STEP 5 — brain-tool 호출
@@ -285,3 +304,4 @@ brain 부재 시:
 | v1.1 | 2026-06-11 19:20 | STEP 3에 백필 기준 SSOT 재사용 명시(M-3) + 동적 타입 로드(SCHEMA §1.5) 정합 안내 추가 (016) |
 | v1.2 | 2026-06-16 | STEP 4 작성 규칙에 비즈니스 용어 우선 불릿 추가 — citation-rules §8 참조 (024) |
 | v1.3 | 2026-06-17 | CLOSE ingest term 추출 — STEP3 채택 게이트(채택 프로젝트만) + 포함 기준에 term draft 행 추가 + STEP4 term 작성 규칙(aliases/actors/surfaces·draft) (027) |
+| v1.4 | 2026-06-23 | STEP 4 entity 예시 5섹션 표준화 + @header 전사 금지·provenance [MUST] (038) |

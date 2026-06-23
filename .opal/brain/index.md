@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-06-23 11:17
+> 갱신: 2026-06-23 17:12
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -21,6 +21,7 @@
 - [[b7-action-completion-loop]] — B7 액션 완성도 루프 — triage 기반 경계 재설계 순환 구조 #oppd #action-loop #triage #verification #b7
 - [[brain-business-term-layer]] — Brain 업무 언어 번역 계층(term) #brain #citation-rules #term #knowledge
 - [[brain-code-scan-role-division]] — brain↔code-scan 역할 분담 — 선별·신선도·깊이 축 (010) #brain #code-scan #architecture #policy
+- [[brain-entity-discipline]] — brain entity 작성 규율 표준화 #brain #knowledge #curation #provenance
 - [[brain-query-async-job-polling]] — 브레인 질의 비동기 잡+폴링 전환 — 동기 HTTP 블로킹 제거 패턴 #architecture #brain #async #polling #fetch-timeout
 - [[brain-query-latency-model]] — 브레인 질의 latency 모델 — 병목 위치와 경량화 방향 #brain #latency #architecture #optimization #async
 - [[brain-search-on-demand]] — brain search 선택 주입 — on-demand 비상주 정책 #architecture #brain #search #context #pm

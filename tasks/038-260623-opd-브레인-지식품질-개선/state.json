@@ -1,0 +1,161 @@
+{
+  "task_id": "038-260623-opd-브레인-지식품질-개선",
+  "skill": "opd",
+  "mode": "semi-agentic",
+  "schema_version": "1.0",
+  "created_at": "2026-06-23 14:20",
+  "updated_at": "2026-06-23 17:08",
+  "current_status": "done",
+  "rows": [
+    {
+      "row_id": 1,
+      "stage": "TASK",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-23 14:20",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 2,
+      "stage": "TASK",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-23 14:56",
+      "owner": "user",
+      "note": "캡틴 확인: 전체 삭제→재생성 방향 승인, ANALYSIS 진입 지시"
+    },
+    {
+      "row_id": 3,
+      "stage": "ANALYSIS",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-23 15:46",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 4,
+      "stage": "ANALYSIS",
+      "item": "PM Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-23 15:46",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 5,
+      "stage": "ANALYSIS",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-23 16:03",
+      "owner": "user",
+      "note": "캡틴 확인: 두 권고(provenance=SKILL [MUST] / ingest--all drift 정합 포함) 채택, PLAN 진입 지시"
+    },
+    {
+      "row_id": 6,
+      "stage": "PLAN",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-23 16:36",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 7,
+      "stage": "PLAN",
+      "item": "PM Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-23 16:36",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 8,
+      "stage": "PLAN",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-23 16:38",
+      "owner": "user",
+      "note": "캡틴 승인: PLAN 확정, TEST-SCENARIO 진입"
+    },
+    {
+      "row_id": 9,
+      "stage": "TEST-SCENARIO",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-23 16:41",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 10,
+      "stage": "TEST-SCENARIO",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-23 16:42",
+      "owner": "user",
+      "note": "캡틴 승인: TEST-SCENARIO 확정, EXECUTE 진입(모드 경계 — 이후 PM 자율)"
+    },
+    {
+      "row_id": 11,
+      "stage": "EXECUTE",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-23 16:51",
+      "owner": "auto",
+      "note": "agentic auto-pass: semi-agentic auto-pass: EXECUTE 소스 Steps 1-5 완료(3파일 5섹션+§8.5 cross-check PASS). Step6 배포·시연은 캡틴 직접"
+    },
+    {
+      "row_id": 12,
+      "stage": "TEST",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-23 17:07",
+      "owner": "auto",
+      "note": "agentic auto-pass: semi-agentic auto-pass: TEST L1 8/8 Pass + S-7 캡틴 Pass"
+    },
+    {
+      "row_id": 13,
+      "stage": "TEST",
+      "item": "PM Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-23 17:07",
+      "owner": "auto",
+      "note": "agentic auto-pass: semi-agentic auto-pass: PM Gate — 시나리오 전수 Pass, pytest 회귀0, 보안 Pass"
+    },
+    {
+      "row_id": 14,
+      "stage": "TEST",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-23 17:07",
+      "owner": "user",
+      "note": "캡틴: S-7 PASS, CLOSE 진입 승인"
+    },
+    {
+      "row_id": 15,
+      "stage": "CLOSE",
+      "item": "DONE.md 생성",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-23 17:08",
+      "owner": "PM",
+      "note": null
+    }
+  ]
+}
