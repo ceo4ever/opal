@@ -3,9 +3,9 @@
   "module": "main",
   "layer": "router",
   "domain": "console",
-  "description": "FastAPI app 진입점. uvicorn host=127.0.0.1:7823(외부 노출 금지, H-7/S-5). CORS dev=localhost:5173 / prod=동일 오리진. /health. 5개 라우터 등록. StaticFiles SPA 서빙(dist 존재 시): 알 수 없는 경로 → index.html fallback",
+  "description": "FastAPI app 진입점. uvicorn host=127.0.0.1:7823(외부 노출 금지, H-7/S-5). CORS dev=localhost:5173 / prod=동일 오리진. /health. 6개 라우터 등록(5개 read-only + brain POST). StaticFiles SPA 서빙(dist 존재 시): 알 수 없는 경로 → index.html fallback",
   "exports": ["app"],
-  "depends": ["routers.dashboard", "routers.projects", "routers.tasks", "routers.memory", "routers.doctor"]
+  "depends": ["routers.dashboard", "routers.projects", "routers.tasks", "routers.memory", "routers.doctor", "routers.brain"]
 }
 """
 from __future__ import annotations
@@ -18,7 +18,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from dashboard.backend.routers import dashboard, doctor, memory, projects, tasks
+from dashboard.backend.routers import brain, dashboard, doctor, memory, projects, tasks
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +42,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=CORS_ORIGINS,
     allow_credentials=False,
-    allow_methods=["GET"],     # 읽기 전용 — GET만 허용
+    allow_methods=["GET", "POST"],  # brain 라우터 POST 격리 허용 (기존 5라우터는 POST 핸들러 미등록 → 405 유지)
     allow_headers=["*"],
 )
 
@@ -53,6 +53,7 @@ app.include_router(projects.router)
 app.include_router(tasks.router)
 app.include_router(memory.router)
 app.include_router(doctor.router)
+app.include_router(brain.router)  # Phase 1 스파이크 — POST /api/brain/query + GET /api/brain/auth
 
 
 # ── /health ───────────────────────────────────────────────────────────────────

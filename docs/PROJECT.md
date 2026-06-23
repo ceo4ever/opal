@@ -102,7 +102,7 @@ llm-wiki 사상을 융합한 프로젝트 지식 위키 — 프로젝트의 WHY�
 
 | 컴포넌트 | 유형 | 설명 |
 |----------|------|------|
-| `dashboard/frontend` | FE 앱 | React+TS+Vite+shadcn/ui — 5개 화면(대시보드/프로젝트/태스크 칸반/메모리/환경) |
+| `dashboard/frontend` | FE 앱 | React+TS+Vite+shadcn/ui — 6개 화면(대시보드/프로젝트/태스크 칸반/메모리/환경/프로젝트 브레인) |
 | `dashboard/backend` | BE 데몬 | FastAPI — `.opal/AGENT.md` 마커 스캐너 + read-only 도구 어댑터 + 마크다운 파서 (127.0.0.1:7823) |
 | `opal-cli console` | CLI | 데몬 기동/관리 서브커맨드 (start/stop/status/open) |
 
@@ -138,3 +138,4 @@ llm-wiki 사상을 융합한 프로젝트 지식 위키 — 프로젝트의 WHY�
 | 2026-06-12 | Data Design 파이프라인 섹션 추가 — opal-pilot-data-design(opdd), op-data-* 3종, opal-db-agent (Task 019) |
 | 2026-06-15 | OPAL Console 섹션 추가 — dashboard/frontend(React+shadcn)·backend(FastAPI)·opal-cli console + 프로젝트 구성 Console FE/BE 영역 (Task 021) |
 | 2026-06-18 | SDD 컴포넌트 표 정합 — op-sdd-tasks dangling 제거 + op-sdd-action-plan 등록. opal-brain 유형 오기재 교정 (오케스트레이터/Pilot → operator 멀티모드 라우터, alias opbr 불변) (Task 029) |
+| 2026-06-22 | OPAL Console 6번째 메뉴 "프로젝트 브레인" 추가 — brain 질의(`//opbr query --read-only` 구독 합성·POST 격리·브라우저 localStorage 이력) + opbr SKILL v1.4 비대화형 read-only 계약 (Task 036) |

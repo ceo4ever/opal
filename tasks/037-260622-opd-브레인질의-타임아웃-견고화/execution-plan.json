@@ -1,0 +1,118 @@
+{
+  "task": "037-260622-opd-브레인질의-타임아웃-견고화",
+  "title": "OPAL Console 브레인 질의 — fetch 타임아웃·ready 사각지대 견고화",
+  "mode": "complex",
+  "red_first": true,
+  "note": "execution-plan.json은 op-dev-plan v2.6에서 deprecated이나 PM 디스패치 요청(FE/BE 영역 분배)에 따라 BE/FE 그룹핑 SSOT로 작성. PLAN.md §3.N.2/§4가 정본.",
+  "features": [
+    { "id": "F-001", "name": "BE 비동기 잡 계약", "requirements": ["R-1", "R-2"], "area": "BE", "priority": "P0", "depends": [] },
+    { "id": "F-002", "name": "FE 잡 폴링 전환", "requirements": ["R-1", "R-2"], "area": "FE", "priority": "P0", "depends": ["F-001"] },
+    { "id": "F-003", "name": "apiClient 타임아웃 가드", "requirements": ["R-3"], "area": "FE", "priority": "P1", "depends": [] },
+    { "id": "F-004", "name": "라이브 동작검증 L3", "requirements": ["R-4"], "area": "공통", "priority": "P0", "depends": ["F-001", "F-002", "F-003"] }
+  ],
+  "batches": [
+    {
+      "batch": 1,
+      "parallel": true,
+      "agents": [
+        {
+          "agent": "opal-be-agent",
+          "area": "BE",
+          "steps": [1, 2, 3],
+          "step_execution": "sequential",
+          "files": [
+            "dashboard/backend/models.py",
+            "dashboard/backend/adapters/brain_session.py",
+            "dashboard/backend/routers/brain.py"
+          ],
+          "summary": "잡 스키마(BrainJobSubmitResponse/BrainJobResponse) → ConversationBrainSession._current_job(옵션 A) submit_job/get_job → POST /query job_id 전환 + GET /job/{id} 신설. opbr_adapter·ask·_cold_and_ask 불변(콜드 흡수 재사용)."
+        },
+        {
+          "agent": "opal-fe-agent",
+          "area": "FE",
+          "steps": [5],
+          "step_execution": "single",
+          "files": ["dashboard/frontend/src/lib/api.ts"],
+          "summary": "apiClient에 선택적 timeoutMs + AbortController + AbortError→사용자 친화 메시지 변환(내부 catch). 미전달 시 동작 불변(회귀 0)."
+        }
+      ]
+    },
+    {
+      "batch": 2,
+      "parallel": true,
+      "agents": [
+        {
+          "agent": "opal-be-agent",
+          "area": "BE",
+          "steps": [4],
+          "files": [
+            "dashboard/backend/tests/test_brain.py",
+            "dashboard/backend/tests/test_routers.py"
+          ],
+          "summary": "RED-first: query 계약 파괴 테스트 재작성(job_id 제출+get_job 폴링) + 신규(즉시반환/전이/콜드priming/세션소실복구/동시idempotent/TTL/실claude 0회). 전부 mock."
+        },
+        {
+          "agent": "opal-fe-agent",
+          "area": "FE",
+          "steps": [6],
+          "depends_on_batch": 1,
+          "depends_reason": "GET /api/brain/job/{id} 계약 동결(Step 3) 의존",
+          "files": [
+            "dashboard/frontend/src/pages/brain/BrainPage.tsx",
+            "dashboard/frontend/src/pages/brain/brain-status.test.ts",
+            "dashboard/frontend/src/pages/brain/brain-new-conversation-prime.test.ts"
+          ],
+          "summary": "queryMutation→submitMutation(job_id) + 별도 잡 폴링 useQuery(['brain-job', project, sessionId, jobId]) + done/error resolvePendingTurn. isPending disable을 activeJobId 포함으로 확장. 잡/제출 호출 timeoutMs(30s)."
+        }
+      ]
+    },
+    {
+      "batch": 3,
+      "parallel": false,
+      "agents": [
+        {
+          "agent": "PM 직접",
+          "area": "문서",
+          "steps": [7],
+          "files": ["docs/ARCHITECTURE.md"],
+          "summary": "§OPAL Console 엔드포인트 표에 GET /api/brain/job/{id} 추가, POST /query 비동기 잡 설명 갱신. 변경이력."
+        }
+      ]
+    },
+    {
+      "batch": 4,
+      "parallel": false,
+      "agents": [
+        {
+          "agent": "검증(opal-test-agent E2E 또는 PM+캡틴 L3 협업)",
+          "area": "공통",
+          "steps": [8],
+          "depends_on_batch": [1, 2, 3],
+          "files": [],
+          "summary": "install 재배포(캡틴 직접, RI-7) 후 콜드 질의(≥69초)·세션소실 복구·타임아웃 표시 + Q1 빈답 재현 확인. [SUPERVISOR] 협업."
+        }
+      ]
+    }
+  ],
+  "screens": [
+    {
+      "id": "FE-1",
+      "name": "프로젝트 브레인 질의 (잡 폴링)",
+      "type": "detail",
+      "action": "modify",
+      "route": "/brain",
+      "files": ["dashboard/frontend/src/pages/brain/BrainPage.tsx"],
+      "shadcn_components": ["Skeleton", "Button", "Textarea"],
+      "ui_work": "queryMutation을 submitMutation(job_id 제출) + 잡 폴링 useQuery로 분리. pending Skeleton·error 표시는 기존 컴포넌트 재사용. 신규 컴포넌트 없음.",
+      "api_work": "POST /api/brain/query(job_id 수신) → GET /api/brain/job/{job_id} 2초 폴링 → done 시 answer/citations 렌더"
+    }
+  ],
+  "design_decisions": {
+    "D1_job_state_location": "옵션 A — ConversationBrainSession._current_job (단일 사용자 데몬·FE isPending disable로 동시질의 차단, 최소변경). RI-2는 진행 중 잡 있으면 기존 job_id 반환(idempotent)으로 방어.",
+    "D2_polling": "분리 — 별도 ['brain-job', job_id] useQuery (관심사 분리, status 폴링과 독립).",
+    "D3_endpoint_contract": "POST /query → BrainJobSubmitResponse{job_id} (계약 파괴: test_brain.py:1655-1659·test_routers.py 재작성). GET /job/{job_id} → BrainJobResponse{job_id,status,answer,citations,error_msg}.",
+    "D4_apiclient_timeout": "옵션 A — 선택적 timeoutMs. AbortError→메시지 변환은 apiClient 내부 catch.",
+    "D5_job_ttl": "done/error 폴링 수신 후 _current_job 제거. 세션당 1잡. 시간/개수 상한 별도 도입 안 함(과설계 금지).",
+    "D6_fastapi_threading": "prime 동일 패턴(brain.py:182-188) 재사용. submit 즉시 반환, lock은 blocking call 전 해제 → threadpool 소진 위험 없음."
+  }
+}

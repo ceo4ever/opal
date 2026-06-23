@@ -1,0 +1,161 @@
+{
+  "task_id": "036-260622-opd-브레인질의-콘솔연동",
+  "skill": "opd",
+  "mode": "agentic",
+  "schema_version": "1.0",
+  "created_at": "2026-06-22 14:20",
+  "updated_at": "2026-06-22 17:49",
+  "current_status": "in_progress",
+  "rows": [
+    {
+      "row_id": 1,
+      "stage": "TASK",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-22 14:20",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 2,
+      "stage": "TASK",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-22 14:20",
+      "owner": "auto",
+      "note": "agentic auto-pass: agentic auto-pass: TASK.md 명확화 4요소 잠금 완료(목표·범위·제약·완료기준), 캡틴 AskUserQuestion 3건 승인 반영. 요구사항 R1~R5 검증가능 AC 기재."
+    },
+    {
+      "row_id": 3,
+      "stage": "ANALYSIS",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-22 14:51",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 4,
+      "stage": "ANALYSIS",
+      "item": "PM Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-22 14:51",
+      "owner": "auto",
+      "note": "agentic auto-pass: agentic auto-pass: ANALYSIS.md 존재(353줄) 확인, 구조분석 Pass. 인증/LLM은 캡틴 구독 정정으로 대체→PLAN이 claude CLI 설계."
+    },
+    {
+      "row_id": 5,
+      "stage": "ANALYSIS",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-22 14:51",
+      "owner": "auto",
+      "note": "agentic auto-pass: agentic auto-pass: 캡틴의 구독 기반 정정 지시가 ANALYSIS 단계 사용자 검토를 구성(claude CLI 경유 확정)."
+    },
+    {
+      "row_id": 6,
+      "stage": "PLAN",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-22 15:04",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 7,
+      "stage": "PLAN",
+      "item": "PM Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-22 15:04",
+      "owner": "auto",
+      "note": "agentic auto-pass: agentic auto-pass: PLAN.md 직접검증·보강 재검증 PASS. R1~R5 커버, H-1~11, claude --safe-mode 구독경로(--bare 함정 차단), citations 결정론, mock 토큰보호, TS-001~019, 격리 grep 단언."
+    },
+    {
+      "row_id": 8,
+      "stage": "PLAN",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-22 15:45",
+      "owner": "user",
+      "note": "캡틴 확인: 재설계 PLAN(B 아키텍처·관리형 세션·단계화) 승인"
+    },
+    {
+      "row_id": 9,
+      "stage": "TEST-SCENARIO",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-22 15:48",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 10,
+      "stage": "TEST-SCENARIO",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-22 15:48",
+      "owner": "auto",
+      "note": "agentic auto-pass: agentic auto-pass: TEST-SCENARIO(스파이크) 작성 완료 — S-1~3 L1 스텁격리·S-4 L3 SUPERVISOR(캡틴 검증 게이트). 캡틴 PLAN 승인 직후 스파이크 EXECUTE 진입(--agentic)."
+    },
+    {
+      "row_id": 11,
+      "stage": "EXECUTE",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-22 17:44",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 12,
+      "stage": "TEST",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-22 17:49",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 13,
+      "stage": "TEST",
+      "item": "PM Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-22 17:49",
+      "owner": "auto",
+      "note": "agentic auto-pass: agentic auto-pass: TEST-SCENARIO All Pass(BE149·FE14·격리회귀2)·실claude0·ruff/tsc/보안 PASS. ESLint 신규4(빈인터페이스·fast-refresh)=런타임무영향. [정직 단서] Phase2 신규 //opbr query --read-only(v1.4)+콘솔UI는 mock 단위검증 완료, 실구독 라이브 E2E는 install 재배포 후 캡틴 확인 필요(스파이크 S-4는 구 ask 계약으로 핵심루프 PASS)."
+    },
+    {
+      "row_id": 14,
+      "stage": "TEST",
+      "item": "사용자 확인",
+      "status": "na",
+      "status_label": "-",
+      "timestamp": null,
+      "owner": "auto",
+      "note": "agentic auto-na at init"
+    },
+    {
+      "row_id": 15,
+      "stage": "CLOSE",
+      "item": "DONE.md 생성",
+      "status": "pending",
+      "status_label": "⬜",
+      "timestamp": null,
+      "owner": "PM",
+      "note": null
+    }
+  ]
+}

@@ -219,8 +219,8 @@ opal/core/mcps/*    ──── install ─→  claude mcp add --scope user (Cl
 로컬에서 OPAL로 작업하는 모든 프로젝트를 한 웹 화면에서 조망하는 **읽기 전용 대시보드**(태스크 021 신설). 데이터 SSOT를 새로 만들지 않고, OPAL 도구의 read-only 커맨드 + 마크다운 파서로 각 프로젝트 데이터를 수집·렌더한다.
 
 ```
-┌─ Web UI (React + shadcn/ui, 5개 화면) ──────────────────┐
-│  대시보드 · 프로젝트 · 태스크(칸반) · 메모리 · 환경(doctor)  │
+┌─ Web UI (React + shadcn/ui, 6개 화면) ──────────────────┐
+│  대시보드·프로젝트·태스크(칸반)·메모리·환경·프로젝트 브레인 │
 └───────────────┬──────────────────────────────────────────┘
                 │ HTTP (127.0.0.1:7823)
 ┌───────────────▼──────────────────────────────────────────┐
@@ -228,9 +228,22 @@ opal/core/mcps/*    ──── install ─→  claude mcp add --scope user (Cl
 │  • 프로젝트 스캐너 (.opal/AGENT.md 마커 디스크 스캔)        │
 │  • read-only 어댑터: state-tool/code-scan/skill-registry/doctor │
 │  • 마크다운 파서: MEMORY.md·memory/*·PROJECT/AGENT.md      │
-│  • TTL 캐시(mtime 무효화) · 쓰기 커맨드 미호출(읽기 전용)   │
+│  • TTL 캐시(mtime 무효화) · 읽기 전용                       │
+│  • [예외·격리] 브레인 질의 라우터만 POST + opbr CLI(태스크036)│
 └───────────────────────────────────────────────────────────┘
 ```
+
+### 프로젝트 브레인 질의 (태스크 036)
+
+콘솔에서 프로젝트 brain 지식을 질의·답변받는 6번째 메뉴. **읽기 전용 대시보드의 유일한 POST·LLM 경로**이며 brain 질의 라우터 하나에만 격리한다(기존 5라우터·어댑터는 GET·read-only 불변).
+
+| 항목 | 값 |
+|------|-----|
+| LLM 합성 | 로컬 `claude -p '//opbr query --read-only "<질의>"' --output-format json` 서브프로세스 → **각 사용자 Claude 구독**으로 실행(종량제 API·키 미사용). backend는 opbr 출력의 JSON 펜스만 추출하는 얇은 프록시(opbr이 brain 검색/인용 전담 — DRY) |
+| opbr 계약 | `opal-brain` SKILL.md `//opbr query --read-only`(v1.4): 자동 선별·항상 최종답변·순수 read-only(brain 무변경)·JSON 출력 |
+| 세션 | `BrainSession`(B1): 일회성 `claude -p` + 디스크 세션 `--session-id`(콜드 프라임)→`--resume`(웜). prime-on-intent(메뉴 진입 시 백그라운드 프라임) + 5트리거 리셋(서버재실행·컨텍스트임계·유휴·크래시·수동) + `threading.Lock` 직렬화. 실측 콜드~90s/웜~20s |
+| 엔드포인트 | `GET /api/brain/auth`(claude CLI 가용·인증) · `POST /api/brain/prime`(백그라운드 프라임) · `POST /api/brain/query`(질의→`{answer, citations}`) |
+| 이력 | **브라우저 localStorage**(backend·brain 무상태/무변경). FE가 Q&A 스레드 저장·표시·재질문·"새 대화" |
 
 | 항목 | 값 |
 |------|-----|
@@ -339,7 +352,7 @@ opal/                                    ← 이 저장소
 │   │   └── opal-wtm-agent/              웹→마크다운 워커 (Phase 1 WebFetch → Phase 2 cmux → Phase 3 playwright-tool CLI)
 │   └── templates/                       프로젝트 에이전트 템플릿
 ├── dashboard/                           OPAL Console (로컬 프로젝트 관리 대시보드 — 태스크 021)
-│   ├── frontend/                        React + TS + Vite + shadcn/ui (5개 화면)
+│   ├── frontend/                        React + TS + Vite + shadcn/ui (6개 화면 — 브레인 질의 포함, 태스크 036)
 │   └── backend/                         FastAPI 데몬 (스캐너 + read-only 어댑터 + 파서)
 ├── cursor-rules/                        Cursor 프로젝트 규칙 템플릿
 ├── scripts/                             설치 스크립트 (install-mac.sh)

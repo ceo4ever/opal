@@ -3,7 +3,7 @@
  *   "module": "app-shell",
  *   "layer": "component",
  *   "domain": "core",
- *   "description": "OPAL Console 글로벌 레이아웃 셸 — shadcn sidebar 기반 좌측 5개 네비 + 프로젝트 스위처 + 상단바(검색·테마토글·새로고침·연결상태·설정)",
+ *   "description": "OPAL Console 글로벌 레이아웃 셸 — shadcn sidebar 기반 좌측 6개 네비 + 프로젝트 스위처 + 상단바(검색·테마토글·새로고침·연결상태·설정)",
  *   "exports": ["AppShell"],
  *   "depends": ["ui-store", "api-client", "sidebar", "badge", "dropdown-menu", "tooltip"]
  * }
@@ -17,6 +17,7 @@ import {
   CheckSquare,
   Brain,
   Activity,
+  MessageCircleQuestion,
   RefreshCw,
   Settings,
   Search,
@@ -62,7 +63,7 @@ import { apiClient } from "@/lib/api";
 /* 상수                                                                  */
 /* ------------------------------------------------------------------ */
 
-/** 5개 네비 항목 (C-11: 브레인 제외) */
+/** 6개 네비 항목 */
 interface NavItem {
   to: string;
   label: string;
@@ -76,6 +77,7 @@ const NAV_ITEMS: NavItem[] = [
   { to: "/tasks", label: "태스크", icon: CheckSquare },
   { to: "/memory", label: "메모리", icon: Brain },
   { to: "/doctor", label: "환경", icon: Activity },
+  { to: "/brain", label: "프로젝트 브레인", icon: MessageCircleQuestion },
 ];
 
 const THEME_OPTIONS: { value: Theme; label: string; icon: typeof Sun }[] = [

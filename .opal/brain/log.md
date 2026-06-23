@@ -106,3 +106,7 @@
 - 신규: [[pages/concept/brain-validate-flatness-enforcement.md]], [[pages/entity/brain-tool.md]]
 - 출처: task:035
 
+## [2026-06-23] ingest | CLOSE ingest — 태스크 037 브레인질의-타임아웃-견고화
+- 신규: [[pages/concept/brain-query-async-job-polling.md]], [[pages/concept/red-test-determinism-abort-trap.md]], [[pages/concept/brain-query-latency-model.md]]
+- 출처: task:037
+

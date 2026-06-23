@@ -14,7 +14,8 @@
     "test_api_memory_200",
     "test_api_doctor_200",
     "test_kanban_column_normalization",
-    "test_no_brain_endpoints",
+    "test_brain_endpoints_exist",
+    "test_existing_routers_reject_post",
     "test_api_projects_detail_query_param",
     "test_api_tasks_detail_query_param",
     "test_infer_column_done",
@@ -253,15 +254,73 @@ def test_task_card_column_valid_values(client):
             assert card["column"] in valid_columns, f"Invalid column: {card['column']}"
 
 
-# ── brain 엔드포인트 부재 (C-11) ──────────────────────────────────────────────
+# ── brain 엔드포인트 존재 검증 (C-11) ─────────────────────────────────────────
 
-def test_no_brain_endpoints(client):
-    """/api/brain* 엔드포인트가 존재하지 않아야 한다 (C-11)."""
-    resp = client.get("/api/brain")
-    assert resp.status_code == 404
+def test_brain_endpoints_exist(client):
+    """GET /api/brain/auth·POST /api/brain/query·POST /api/brain/prime 가 등록되어 있음을 검증 (C-11).
 
-    resp2 = client.get("/api/brain/search")
-    assert resp2.status_code == 404
+    격리 전략:
+    - GET /api/brain/auth: shutil.which 호출만 하므로 실 claude 없이 200 반환.
+    - POST /api/brain/query: body 누락 POST → 422 — 엔드포인트 존재 증명.
+    - POST /api/brain/prime: project 빈 값 POST → 400 (project 필수) — 엔드포인트 존재 증명.
+      400/422 모두 핸들러 등록됨 증명 (5xx 아님). 실 claude 0회.
+    """
+    # auth: shutil.which 기반 — claude 설치 여부와 무관하게 200 반환
+    resp_auth = client.get("/api/brain/auth")
+    assert resp_auth.status_code == 200, (
+        f"GET /api/brain/auth 가 등록되지 않았거나 오류: {resp_auth.status_code}"
+    )
+    data = resp_auth.json()
+    assert "authenticated" in data
+    assert "cli_available" in data
+
+    # query: body 없는 POST → 422 (엔드포인트 존재 증명, claude 미호출)
+    resp_query = client.post("/api/brain/query")
+    assert resp_query.status_code == 422, (
+        f"POST /api/brain/query body 누락 시 422 예상, got {resp_query.status_code}"
+    )
+
+    # prime: project 빈 값 POST → 400 (project 필수 계약 — 엔드포인트 존재 증명)
+    # body가 Optional[dict]이므로 422는 아니지만, project 빈 값 → 400
+    resp_prime = client.post("/api/brain/prime", json={"project": ""})
+    assert resp_prime.status_code == 400, (
+        f"POST /api/brain/prime project 빈 값 시 400 예상, got {resp_prime.status_code}"
+    )
+    # 400 응답의 detail에 '필수' 키워드 포함 확인
+    assert "필수" in resp_prime.json().get("detail", ""), (
+        f"400 detail should mention '필수': {resp_prime.json()}"
+    )
+
+    # [RED S-2] GET /api/brain/job/{job_id}: project/session_id 누락 → 422 (엔드포인트 존재 증명)
+    # 구현 전 RED — 엔드포인트 미존재 시 404 반환 예상 (FAIL)
+    resp_job = client.get("/api/brain/job/nonexistent-job-id")
+    assert resp_job.status_code == 422, (
+        f"GET /api/brain/job/{{job_id}} query param 누락 시 422 예상(엔드포인트 등록 증명), "
+        f"got {resp_job.status_code} — 엔드포인트 미등록이면 404"
+    )
+
+
+# ── 기존 5라우터 read-only 보존 격리 회귀 (C-11) ──────────────────────────────
+
+def test_existing_routers_reject_post(client):
+    """기존 5라우터 대표 경로에 POST → 405 (read-only 보존).
+
+    dashboard/projects/tasks/memory/doctor 라우터는 GET 전용 핸들러만 등록.
+    POST 핸들러 미등록이므로 405 Method Not Allowed를 반환해야 한다.
+    CORS allow_methods에 POST가 있어도 핸들러 미등록이면 405임을 확인.
+    """
+    read_only_paths = [
+        "/api/dashboard",
+        "/api/projects",
+        "/api/tasks",
+        "/api/memory",
+        "/api/doctor",
+    ]
+    for path in read_only_paths:
+        resp = client.post(path)
+        assert resp.status_code == 405, (
+            f"POST {path} 가 405가 아님: {resp.status_code} — read-only 라우터에 POST 핸들러가 등록된 것으로 보임"
+        )
 
 
 # ── /api/projects/doc?path=&name= ─────────────────────────────────────────────

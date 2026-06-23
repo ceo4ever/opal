@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-06-22 07:39
+> 갱신: 2026-06-23 11:17
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -21,6 +21,8 @@
 - [[b7-action-completion-loop]] — B7 액션 완성도 루프 — triage 기반 경계 재설계 순환 구조 #oppd #action-loop #triage #verification #b7
 - [[brain-business-term-layer]] — Brain 업무 언어 번역 계층(term) #brain #citation-rules #term #knowledge
 - [[brain-code-scan-role-division]] — brain↔code-scan 역할 분담 — 선별·신선도·깊이 축 (010) #brain #code-scan #architecture #policy
+- [[brain-query-async-job-polling]] — 브레인 질의 비동기 잡+폴링 전환 — 동기 HTTP 블로킹 제거 패턴 #architecture #brain #async #polling #fetch-timeout
+- [[brain-query-latency-model]] — 브레인 질의 latency 모델 — 병목 위치와 경량화 방향 #brain #latency #architecture #optimization #async
 - [[brain-search-on-demand]] — brain search 선택 주입 — on-demand 비상주 정책 #architecture #brain #search #context #pm
 - [[brain-search-whitespace-insensitive]] — brain-tool search 공백 무시 매칭 — 한국어 복합명사 띄어쓰기 편차 흡수 #architecture #brain #search #korean #normalization
 - [[brain-validate-flatness-enforcement]] — brain validate 선택 필드 평탄성 집행 (tags/sources/related flat string[]) #brain-tool #validate #enforce #flatness #frontmatter
@@ -76,6 +78,7 @@
 - [[page-type-dynamic-schema]] — 페이지 타입 동적화 — SCHEMA SSOT #architecture #brain #schema #dynamic-type
 - [[project-id-query-param-pattern]] — 절대경로 프로젝트 식별자를 query param으로 전달 #api #routing #url-design
 - [[readme-ssot-principle]] — README는 SSOT를 따른다 — 문서·코드 불일치 시 SKILL.md가 정본 #readme #ssot #doc-code-mismatch #documentation
+- [[red-test-determinism-abort-trap]] — RED 테스트 결정론성 함정 — neverResolve fetch 대역의 abort 무반응 #testing #red-first #determinism #abort #fetch-mock
 - [[skill-op-task-qa]] — op-task-qa — 범용 문서 QA 검증 기준 #skill #qa #document
 - [[skill-opal-agent-creator]] — opal-agent-creator — OPAL 에이전트 생성 파이프라인 #skill #agent #creator
 - [[skill-opal-brain]] — opal-brain — 프로젝트 브레인 지식 위키 #skill #brain #knowledge #wiki

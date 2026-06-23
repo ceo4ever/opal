@@ -9,7 +9,7 @@ triggers:
   - "^opbr$"
   - "^opal-brain$"
   - "(?i)(프로젝트\\s*브레인|지식\\s*위키)"
-version: "1.3"
+version: "1.4"
 domain: knowledge
 pipeline: "MODE: init | ingest | query | lint"
 ---
@@ -35,6 +35,7 @@ pipeline: "MODE: init | ingest | query | lint"
 | `//opbr ingest <소스>` | [STEP: ingest](#step-ingest--지식-누적) |
 | `//opbr ingest --all` | [STEP: ingest](#step-ingest--지식-누적) — `--all` 배치 모드 |
 | `//opbr ask "질문"` / `//opbr query` | [STEP: query](#step-query--지식-질의) |
+| `//opbr query --read-only "<질의>"` | [STEP: query — 비대화형 read-only 모드](#비대화형-read-only-모드-opbr-query---read-only) — 기계 소비자(콘솔·자동화) 전용 |
 | `//opbr lint` | [STEP: lint](#step-lint--무결성-정비) |
 | 모드 미지정 | PM이 의도를 판별하여 가장 적합한 모드 제안 |
 
@@ -354,6 +355,19 @@ draft term으로 등록할까요?
   [--new "<synthesis 페이지명>"]
 ```
 
+### 비대화형 read-only 모드 (`//opbr query --read-only`)
+
+기계 소비자(OPAL Console·자동화)용. `//opbr ask` 대화형 절차를 다음으로 대체한다(`ask` 분기는 변경 없음):
+
+- **자동 선별**: term-우선 + search 후 score 상위 N(기본 3) 페이지를 **자동 선택**한다. "어떤 페이지를 참조할까요?" 등 사용자 확인을 **요청하지 않는다**.
+- **항상 최종 답변 합성**: 후보 목록만 제시하고 멈추지 않는다. 선택 페이지 본문을 근거로 최종 답변을 합성한다.
+- **순수 read-only**: 진입점③(미등록 term draft 등록 제안)·Step 5(synthesis 파일링 제안)·query log 기록(`brain-tool log`)을 **모두 생략**한다. brain에 어떤 쓰기·제안도 하지 않는다.
+- **출력 계약**: 응답은 아래 JSON 코드펜스 **하나만** 출력한다(보고형식·산문·후보목록 표 없이). 인용은 합성에 실제 사용한 페이지로 채운다.
+  ```json
+  {"answer":"<최종 답변 텍스트>","citations":[{"page":"<페이지 경로>","title":"<제목>","type":"<concept|entity|flow|synthesis|term>"}]}
+  ```
+- (헤드리스 호출 시 부트스트랩 완료 보고가 앞에 출력될 수 있으나, 소비자는 JSON 펜스만 발췌한다.)
+
 ---
 
 ## STEP: lint — 무결성 정비
@@ -424,3 +438,4 @@ brain의 품질 문제를 탐지하고 정비 방안을 제안한다.
 | v1.1 | 2026-06-11 19:20 | init STEP 0 신설(analyze→타입 제안→사용자 확인→`init --types` SCHEMA 확정), ingest --all 범위 확장(docs·스킬·참조 concept 요약+포인터, ingest-scan 활용), ingest task:NNN 모드+001~015 백필 절차 추가(op-brain-ingest 기준 재사용), query 후보 목록→선택→선택 페이지만 주입으로 정정(W5 RAG식 전량 로드 금지), [MUST] 단방향·전량로드금지 인용 명문화 (016) |
 | v1.2 | 2026-06-11 21:42 | [MUST] source_ref 형식 규칙 명시 — add-page `--sources` 값은 ingest-scan `source_ref` 그대로 사용, 임의 형식(전체 경로 등) 금지(멱등 skip 보호). 단일 소스 절차 5항 + 배치 정책 멱등 행 2곳 추가 (016) |
 | v1.3 | 2026-06-17 | term 타입 운영 — init 채택 가이드 / ingest draft term 추출 / query business-first+진입점③(미등록 용어 발견→draft 제안→확정 시 active) / lint term_duplicate·alias_collision (027) |
+| v1.4 | 2026-06-22 | 036: query --read-only 비대화형 계약 추가 — 모드 라우팅 표에 `//opbr query --read-only "<질의>"` 행 명시, §STEP query 하단에 "비대화형 read-only 모드" 절 신설(자동 선별·항상 합성·순수 read-only·JSON 출력 계약) |

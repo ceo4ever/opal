@@ -1,0 +1,112 @@
+{
+  "task": "036-260622-opd-브레인질의-콘솔연동",
+  "title": "OPAL Console 프로젝트 브레인 질의 메뉴 (아키텍처 B — 스파이크 학습·캡틴 확정 반영본)",
+  "architecture": "B",
+  "architecture_summary": "backend는 얇은 프록시. claude -p \"//opbr query --read-only <질의>\" --output-format json(+세션 플래그)을 구동 → OPAL 프레임워크·opbr 스킬이 로드되어 실제 brain query(term-우선·자동 top-N 선별·페이지 Read·항상 최종답변 합성·인용)를 전담(DRY/SSOT). opbr는 JSON 코드펜스 하나로 출력하고 backend는 result서 펜스만 발췌→{answer, citations}. backend·brain 완전 무상태/read-only(SQLite 폐기, 이력=FE localStorage).",
+  "mode": "Multi-Feature",
+  "execution_mode": "complex",
+  "captain_decisions": {
+    "DECISION#22": "B1 확정(B2 기각). 실측 콜드90.8s/웜20.2s(78%↓). prime-on-intent(메뉴 진입 시 백그라운드 콜드 선흡수). 웜 출력이 후보목록서 멈추는 경우 발견→opbr 항상 최종답변 합성 보강 필요.",
+    "DECISION#23": "opbr 호출=//opbr query --read-only(ask=대화형 폐기). --read-only=자동선별+항상최종답변+JSON펜스+brain 쓰기/제안/log 전면 금지. 원천 SKILL.md에 계약 추가.",
+    "DECISION#24": "이력=브라우저 localStorage(SQLite 폐기). backend·brain 완전 무상태/read-only.",
+    "DECISION#25": "이 레포가 OPAL 원천. opbr --read-only 수정은 036 안에서 소스(opal/skills/opal-brain/SKILL.md) 처리. dashboard+opbr 동시 수정, CLOSE install 재배포 1회(캡틴 L3)로 발효. 배포경계 유지(opal/ 소스만, ~/.opal 직접편집 0)."
+  },
+  "spike_measured": {
+    "cold_s": 90.8,
+    "warm_resume_s": 20.2,
+    "warm_reduction": "78%",
+    "session_decision": "B1 (일회성 -p + 디스크 세션 --session-id 콜드→--resume 웜)",
+    "s4_result": "PASS(핵심 루프) — 구독 작동·OPAL/opbr 실로딩·brain 근거 답변([[opal-first-use-guide]])·read-only PASS(brain 0변경, log.md조차 미기록)",
+    "learnings": ["콜드 100s 웹 과대→지속세션 필수", "출력오염(부트스트랩 preamble)→JSON펜스 추출 필요", "웜 출력 후보목록 멈춤→항상 합성 지시 보강(--read-only)"]
+  },
+  "forbidden": ["--safe-mode", "--bare", "anthropic SDK", "ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN", "ant auth login", "~/.config/anthropic"],
+  "session_model": {
+    "type": "managed-persistent",
+    "decision": "B1 확정 (DECISION#22, B2 기각)",
+    "B1": "claude -p \"//opbr query --read-only <질의>\" --session-id <uuid>(콜드 90.8s) + 이후 --resume <uuid>(웜 20.2s). 디스크 세션 resume가 부트스트랩 건너뜀(노이즈 제거·멀티턴 맥락 유지).",
+    "prime_on_intent": "브레인 메뉴 진입 시 백그라운드 콜드 프라임 선행(POST /api/brain/prime, 논블로킹) → 첫 질의 무렵 세션 웜 → 체감 질의 지연 20s.",
+    "reset_triggers": ["서버 재실행", "컨텍스트 임계(누적 턴/토큰 추정 초과)", "유휴 타임아웃", "크래시(resume/프로세스 실패)", "수동 새 대화(FE, session_id 리셋)"],
+    "concurrency": "단일 세션 → 동시 질의/prime threading.Lock 직렬화",
+    "crash_reprime": "resume 실패(exit≠0/만료)→reset 후 새 session-id 콜드 1회 재프라임 재시도",
+    "timeout": "콜드 180s / 웜 60s (스파이크 실측 기반)"
+  },
+  "read_only_guard": "//opbr query --read-only 계약(F-006)이 진입점③ draft 제안·STEP5 synthesis 파일링·query log 기록을 전부 생략(brain 쓰기·제안 0). 추가로 호출 프롬프트에 쓰기 금지 지시 + 질의 전후 .opal/brain 파일 불변 검증(S-4 PASS 실증).",
+  "output_parsing": "claude --output-format json → result. opbr가 result 안에 낸 JSON 코드펜스 하나({answer, citations:[{page,title,type}]})를 extract_json_fence로 발췌. 콜드 부트스트랩 preamble이 앞에 섞여도 JSON 펜스만 추출(견고). 펜스 부재/파싱 실패→answer 평문 폴백·citations 빈 배열.",
+  "history": "브라우저 localStorage(DECISION#24). opal.brain.threads=[{session_id, project, turns:[{q,a,citations}]}]. FE가 저장·표시·재질문(resume via session_id)·새 대화(새 세션). backend 영속 0.",
+  "features": [
+    {"id": "F-000", "name": "[완료] 스파이크: BrainSession 콜드프라임 + //opbr 질의→답변 E2E (콜드/웜 실측·B1 확정·read-only)", "requirements": ["R3", "R2"], "priority": "P0", "depends": [], "phase": 1, "area": "BE", "agent": "opal-be-agent", "status": "completed"},
+    {"id": "F-006", "name": "[원천 변경] opbr --read-only 계약 추가 (opal/skills/opal-brain/SKILL.md §STEP query — 자동 top-N·항상 최종답변 합성·순수 read-only·JSON펜스 출력 + 변경이력·version bump)", "requirements": ["R3"], "priority": "P0", "depends": [], "phase": 2, "area": "Framework", "agent": "opal-task-agent"},
+    {"id": "F-001", "name": "읽기전용 격리 경계 (CORS POST 완화 + 5라우터 GET-only 보존 + host 127.0.0.1)", "requirements": ["R5"], "priority": "P0", "depends": ["F-000"], "phase": 2, "area": "BE", "agent": "opal-be-agent"},
+    {"id": "F-002", "name": "BE 인증 상태 API (GET /api/brain/auth)", "requirements": ["R2"], "priority": "P0", "depends": ["F-000", "F-001"], "phase": 2, "area": "BE", "agent": "opal-be-agent"},
+    {"id": "F-003", "name": "BE 질의+프라임 API + 관리형 세션 (POST /api/brain/query·POST /api/brain/prime — BrainSession prime-on-intent·B1 resume·5트리거 리셋·Lock·크래시 재프라임·//opbr query --read-only 구동·JSON펜스 추출→answer+citations) + 읽기전용 가드", "requirements": ["R3"], "priority": "P0", "depends": ["F-000", "F-006", "F-001", "F-002"], "phase": 2, "area": "BE", "agent": "opal-be-agent"},
+    {"id": "F-004", "name": "FE 메뉴/라우트 (6번째 네비 + /brain 라우트)", "requirements": ["R1"], "priority": "P0", "depends": [], "phase": 2, "area": "FE", "agent": "opal-fe-agent"},
+    {"id": "F-005", "name": "FE 질의 UI (BrainPage — 인증 분기 + 진입 시 prime 호출 + 질의→답변+인용 + localStorage 이력 저장/표시/재질문·새 대화)", "requirements": ["R4"], "priority": "P0", "depends": ["F-002", "F-003", "F-004"], "phase": 2, "area": "FE", "agent": "opal-fe-agent"}
+  ],
+  "screens": [
+    {
+      "id": "FE-1",
+      "name": "프로젝트 브레인",
+      "type": "form",
+      "action": "new",
+      "route": "/brain",
+      "files": ["dashboard/frontend/src/pages/brain/BrainPage.tsx"],
+      "shadcn_components": ["Card", "Textarea", "Button", "Alert", "Badge", "Skeleton"],
+      "ui_work": "진입 시 useQuery(GET /api/brain/auth) + 인증 시 1회 POST /api/brain/prime(prime-on-intent). authenticated:false→Alert 안내(폼 비노출). authenticated:true→Textarea+제출 Button + 이력 패널(localStorage) + 새 대화 버튼. 제출 시 useMutation(POST /api/brain/query {question,project,session_id}). 콜드 로딩 안내. 성공 시 답변 Card + citations(Badge: page·title·type) → localStorage 스레드 append. 재질문=동일 session_id resume. 새 대화=새 세션(트리거ⓔ). 502/504 Alert.",
+      "api_work": "GET /api/brain/auth(useQuery) + POST /api/brain/prime(진입 1회) + POST /api/brain/query(useMutation, apiClient POST)",
+      "localStorage_schema": "opal.brain.threads = [{ session_id: string, project: string, turns: [{ q: string, a: string, citations: CitationItem[] }] }]"
+    }
+  ],
+  "phases": [
+    {"phase": 1, "name": "스파이크 — 캡틴 검증 게이트 [완료]", "features": ["F-000"], "steps": [1, 2], "gate": "캡틴 직접 E2E 검증(L3 SUPERVISOR) PASS — Phase 2+ 진입 완료. warm probe로 B1 확정.", "status": "completed"},
+    {"phase": 2, "name": "나머지 (opbr 원천·FE·세션 하드닝·격리·테스트·docs)", "features": ["F-006", "F-001", "F-002", "F-003", "F-004", "F-005"], "steps": [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]}
+  ],
+  "steps": [
+    {"step": 1, "title": "[스파이크·완료] BE opbr 어댑터 — //opbr 구동 + 세션 핸들 + 출력 파싱", "feature": "F-000", "area": "BE", "agent": "opal-be-agent", "files": ["dashboard/backend/adapters/opbr_adapter.py"], "tests": ["TS-003"], "method": "sub-agent", "depends": [], "status": "completed"},
+    {"step": 2, "title": "[스파이크·완료] BE 최소 query 라우터 + main.py 등록 + 캡틴 E2E 검증", "feature": "F-000", "area": "BE", "agent": "opal-be-agent", "files": ["dashboard/backend/routers/brain.py", "dashboard/backend/main.py", "dashboard/backend/tests/test_brain_spike.py"], "tests": ["TS-000", "TS-001", "TS-002"], "method": "sub-agent + 캡틴 직접", "depends": [1], "gate": true, "status": "completed"},
+    {"step": 3, "title": "[Phase 2] opbr 원천 --read-only 계약 추가 (SKILL.md)", "feature": "F-006", "area": "Framework", "agent": "opal-task-agent", "files": ["opal/skills/opal-brain/SKILL.md"], "tests": ["TS-060", "TS-061"], "method": "sub-agent", "depends": []},
+    {"step": 4, "title": "[Phase 2] BE 격리 경계 하드닝 — CORS·@header·host 단언", "feature": "F-001", "area": "BE", "agent": "opal-be-agent", "files": ["dashboard/backend/main.py"], "tests": ["TS-010", "TS-012"], "method": "sub-agent", "depends": [2]},
+    {"step": 5, "title": "[Phase 2] BE 인증 어댑터 + auth 엔드포인트 + 스키마", "feature": "F-002", "area": "BE", "agent": "opal-be-agent", "files": ["dashboard/backend/adapters/auth_adapter.py", "dashboard/backend/routers/brain.py", "dashboard/backend/models.py"], "tests": ["TS-020", "TS-021", "TS-022"], "method": "sub-agent", "depends": [4]},
+    {"step": 6, "title": "[Phase 2] RED — 인증 API 단위 테스트 작성", "feature": "F-002", "area": "BE", "agent": "opal-test-agent", "agent_mode": "red", "files": ["dashboard/backend/tests/test_brain.py"], "tests": ["TS-020", "TS-021", "TS-022"], "method": "sub-agent", "depends": [4]},
+    {"step": 7, "title": "[Phase 2] BE 질의+프라임 API + BrainSession 하드닝 (세션·JSON펜스·가드)", "feature": "F-003", "area": "BE", "agent": "opal-be-agent", "files": ["dashboard/backend/adapters/opbr_adapter.py", "dashboard/backend/routers/brain.py", "dashboard/backend/models.py"], "tests": ["TS-030", "TS-031", "TS-032", "TS-032b", "TS-033", "TS-034", "TS-035", "TS-035b", "TS-036", "TS-037", "TS-038", "TS-039", "TS-03A"], "method": "sub-agent", "depends": [4, 3, 2]},
+    {"step": 8, "title": "[Phase 2] RED — query+prime API + 세션·JSON펜스 단위 테스트 작성", "feature": "F-003", "area": "BE", "agent": "opal-test-agent", "agent_mode": "red", "files": ["dashboard/backend/tests/test_brain.py"], "tests": ["TS-030", "TS-031", "TS-032", "TS-032b", "TS-033", "TS-034", "TS-035", "TS-035b", "TS-038", "TS-039", "TS-03A"], "method": "sub-agent", "depends": [4]},
+    {"step": 9, "title": "[Phase 2] RED — 스파이크 어댑터 회귀 테스트 보강 (read-only·금지플래그)", "feature": "F-000", "area": "BE", "agent": "opal-test-agent", "agent_mode": "red", "files": ["dashboard/backend/tests/test_brain.py"], "tests": ["TS-003", "TS-036", "TS-037"], "method": "sub-agent", "depends": [2]},
+    {"step": 10, "title": "[Phase 2] FE /brain 라우트 + BrainPage 스텁", "feature": "F-004", "area": "FE", "agent": "opal-fe-agent", "files": ["dashboard/frontend/src/router.tsx", "dashboard/frontend/src/pages/brain/BrainPage.tsx"], "tests": ["TS-040"], "method": "sub-agent", "depends": []},
+    {"step": 11, "title": "[Phase 2] FE NAV_ITEMS 6번째 항목", "feature": "F-004", "area": "FE", "agent": "opal-fe-agent", "files": ["dashboard/frontend/src/components/app-shell/AppShell.tsx"], "tests": ["TS-040", "TS-041"], "method": "sub-agent", "depends": [10]},
+    {"step": 12, "title": "[Phase 2] FE BrainPage 본문 (인증 분기 + prime-on-intent + 질의 UI + localStorage 이력)", "feature": "F-005", "area": "FE", "agent": "opal-fe-agent", "files": ["dashboard/frontend/src/pages/brain/BrainPage.tsx"], "tests": ["TS-050", "TS-051", "TS-052", "TS-053", "TS-054"], "method": "sub-agent", "depends": [5, 7, 11]},
+    {"step": 13, "title": "[Phase 2] BE 격리 회귀 검증 테스트 갱신", "feature": "F-001", "area": "BE", "agent": "opal-be-agent", "files": ["dashboard/backend/tests/test_routers.py"], "tests": ["TS-010", "TS-011"], "method": "sub-agent", "depends": [7]},
+    {"step": 14, "title": "[Phase 2] docs/ 갱신 (ARCHITECTURE/PROJECT + opbr SKILL 변경이력)", "feature": "F-000~F-006", "area": "문서", "agent": "PM 직접", "files": ["docs/ARCHITECTURE.md", "docs/PROJECT.md", "docs/CONVENTIONS.md"], "tests": ["산출물 검사"], "method": "direct", "depends": [12, 13]}
+  ],
+  "risks": [
+    {"id": "H-1", "risk": "opbr 쓰기 누수(synthesis 파일링·draft term 등록·log)", "features": ["F-006", "F-003"], "impact": "P0", "verify": "--read-only 계약(F-006)이 원천 차단 + L1(프롬프트 쓰기금지) + L3(.opal/brain 불변, S-4 PASS)"},
+    {"id": "H-2", "risk": "세션 성장/리셋(컨텍스트 임계 초과)", "features": ["F-003"], "impact": "P1", "verify": "L1(임계·리셋 단위) + L3(연속 N회)"},
+    {"id": "H-3", "risk": "동시성(단일 세션 동시 질의/prime)", "features": ["F-003"], "impact": "P0", "verify": "L1(threading.Lock 직렬화)"},
+    {"id": "H-4", "risk": "크래시 재프라임(resume 실패)", "features": ["F-000", "F-003"], "impact": "P0", "verify": "L1(resume 실패 mock→콜드 재프라임) + L3"},
+    {"id": "H-5", "risk": "부트스트랩 지연(콜드 90.8s 실측)", "features": ["F-000", "F-003"], "impact": "P1(완화)", "verify": "prime-on-intent(콜드 선흡수→질의 웜 20.2s) + L1(timeout) + L3 실측 완료"},
+    {"id": "H-5b", "risk": "prime-on-intent 경합(prime 진행 중 질의)", "features": ["F-003"], "impact": "P1", "verify": "L1(priming 플래그 + 질의 대기, 중복 콜드 0)"},
+    {"id": "H-6", "risk": "출력 파싱(preamble 오염·JSON펜스)", "features": ["F-003"], "impact": "P0", "verify": "L1(subprocess mock 3분기 + preamble 섞인 result서 JSON펜스 발췌)"},
+    {"id": "H-7", "risk": "구독 keychain 인증 파탄(--bare/--safe-mode/API 키)", "features": ["F-002", "F-003"], "impact": "P0", "verify": "L1(커맨드 mock 캡처: 금지플래그 부재) + L3"},
+    {"id": "H-8", "risk": "자동 테스트 실 claude 호출(구독 토큰 소모)", "features": ["F-003"], "impact": "P1", "verify": "L1(전 서브프로세스 mock)"},
+    {"id": "H-9", "risk": "읽기전용 경계 누수(5라우터 POST 우발 등록)", "features": ["F-001"], "impact": "P0", "verify": "L1(5라우터 POST→405) + L3"},
+    {"id": "H-10", "risk": "claude 미설치/미인증 graceful 실패", "features": ["F-002"], "impact": "P1", "verify": "L1(which mock)"},
+    {"id": "H-11", "risk": "brain 미초기화/검색0건 미핸들", "features": ["F-003"], "impact": "P1", "verify": "L1(opbr 출력 mock)"},
+    {"id": "H-12", "risk": "데몬 외부 노출(127.0.0.1 위반)", "features": ["F-001", "F-003"], "impact": "P0", "verify": "L1(host 단위) + L3"},
+    {"id": "H-13", "risk": "셸 인젝션(question→//opbr query --read-only 인자)", "features": ["F-003"], "impact": "P1", "verify": "L1(shell=False 단언)"},
+    {"id": "H-14", "risk": "미인증 분기 렌더(폼 우발 노출)", "features": ["F-005"], "impact": "P2", "verify": "L3(시각·E2E)"},
+    {"id": "H-15", "risk": "localStorage 이력 정합/쿼터", "features": ["F-005"], "impact": "P2", "verify": "L3(질의→새로고침→이력 유지·재질문 resume·새 대화)"},
+    {"id": "H-16", "risk": "opbr --read-only 계약 누락/오정의", "features": ["F-006"], "impact": "P0", "verify": "L1 불가(마크다운)→문서 검증(4계약·ask 불변·v1.4)"},
+    {"id": "H-17", "risk": "원천-콘솔 동시변경 발효 누락(구버전 opbr 호출)", "features": ["F-006", "F-003"], "impact": "P1", "verify": "L1(콘솔 --read-only 호출 일관) + L3(CLOSE install 재배포 1회 동시 발효)"}
+  ],
+  "red_first": {
+    "F-000": "완화(스파이크 — 실측 목적, 완료). 커밋된 단위테스트 서브프로세스 mock 유지(토큰 0, 18 PASS). 검증 본체=캡틴 L3 SUPERVISOR(S-4 PASS)",
+    "F-006": "RED 불가(스킬 마크다운)→문서 검증(4계약·ask 분기 불변·version bump·변경이력 행) + 콘솔 호출 일관성(F-003 RED서 --read-only 플래그 단언)",
+    "F-001": "강제 (API 계약·인가 경계)",
+    "F-002": "강제 (인증 판별=인가, which mock RED)",
+    "F-003": "강제 (API 계약 + 세션 상태기계 + 비즈니스 로직, claude/brain-tool 전부 mock. prime-on-intent·B1 resume·5트리거·Lock·크래시 재프라임·JSON펜스 추출)",
+    "F-004": "구현 후 시나리오 검증 (UI)",
+    "F-005": "구현 후 시나리오 검증 (UI, 인증 분기·localStorage·재질문은 L3 시각)",
+    "live_e2e": "L3 SUPERVISOR (실 토큰 — 캡틴 수동). CLOSE install 재배포(dashboard+opbr 동시 발효) 후 통합",
+    "author_separation": "[MUST] RED 작성(opal-test-agent mode:red) ≠ GREEN 구현(opal-be-agent). GREEN 루핑 중 RED 수정 금지."
+  },
+  "deploy_boundary": "[MUST] dashboard/ + opal/skills/opal-brain/ 소스만 수정. ~/.opal 직접편집 0. CLOSE에서 install 재배포 1회(캡틴 L3)로 dashboard+opbr 동시 발효(DECISION#25).",
+  "note": "execution-plan.json은 op-dev-plan v2.0에서 deprecated이나 본 태스크 오케스트레이터 요청으로 산출. SSOT는 PLAN.md §2·§3(기능별 분석·설계) + §3.3.2(BrainSession·API) + §3.5.2(FE 화면·localStorage) + §3.6.2(opbr --read-only 계약). 본 json은 §4.2 실행 체크리스트·§1.2 기능·§리스크 가설 표의 기계가독 미러. 2026-06-22 스파이크 완료+캡틴 확정(DECISION#22~25) 반영 개정."
+}

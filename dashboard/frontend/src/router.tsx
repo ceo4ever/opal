@@ -3,9 +3,9 @@
  *   "module": "router",
  *   "layer": "config",
  *   "domain": "core",
- *   "description": "React Router 설정 — 5개 라우트(/ /projects /tasks /memory /doctor)를 AppShell로 래핑. 절대경로 식별자는 searchParams 방식(?project= ?task_id=) — path segment 라우트 제거(슬래시 포함 절대경로 매칭 실패 근본 수정)",
+ *   "description": "React Router 설정 — 6개 라우트(/ /projects /tasks /memory /doctor /brain)를 AppShell로 래핑. 절대경로 식별자는 searchParams 방식(?project= ?task_id=) — path segment 라우트 제거(슬래시 포함 절대경로 매칭 실패 근본 수정)",
  *   "exports": ["router"],
- *   "depends": ["app-shell", "dashboard-page", "projects-page", "tasks-page", "memory-page", "doctor-page"]
+ *   "depends": ["app-shell", "dashboard-page", "projects-page", "tasks-page", "memory-page", "doctor-page", "brain-page"]
  * }
  */
 
@@ -16,6 +16,7 @@ import { ProjectsPage } from "@/pages/projects/ProjectsPage";
 import { TasksPage } from "@/pages/tasks/TasksPage";
 import { MemoryPage } from "@/pages/memory/MemoryPage";
 import { DoctorPage } from "@/pages/doctor/DoctorPage";
+import { BrainPage } from "@/pages/brain/BrainPage";
 
 export const router = createBrowserRouter([
   {
@@ -29,6 +30,7 @@ export const router = createBrowserRouter([
       { path: "tasks", element: <TasksPage /> },
       { path: "memory", element: <MemoryPage /> },
       { path: "doctor", element: <DoctorPage /> },
+      { path: "brain", element: <BrainPage /> },
     ],
   },
 ]);

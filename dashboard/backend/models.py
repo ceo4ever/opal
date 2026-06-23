@@ -3,7 +3,7 @@
   "module": "models",
   "layer": "schema",
   "domain": "console",
-  "description": "Pydantic 응답 스키마. ProjectInfo·ProjectDetail·TaskCard·MemoryIndex·DoctorReport 등 5개 화면 계약 정의. PipelineStageGroup: stage 단위 그룹 스키마(done_count/total/status/rows) — TaskDetailResponse.pipeline 타입.",
+  "description": "Pydantic 응답 스키마. ProjectInfo·ProjectDetail·TaskCard·MemoryIndex·DoctorReport 등 5개 화면 계약 정의. PipelineStageGroup: stage 단위 그룹 스키마(done_count/total/status/rows) — TaskDetailResponse.pipeline 타입. Brain: BrainQueryRequest(project·session_id 필수·빈값→400)·BrainQueryResponse·BrainPrimeResponse·BrainStatusResponse·CitationItem (Phase 2 하드닝 + 대화별 session_id 격리). 비동기 잡 폴링: BrainJobSubmitResponse(job_id 즉시 반환)·BrainJobResponse(job_id·status·answer·citations·error_msg) — PLAN §3.1.2.",
   "exports": [
     "HealthResponse",
     "ProjectInfoResponse",
@@ -14,7 +14,15 @@
     "TaskDetailResponse",
     "MemoryIndexResponse",
     "DoctorReportResponse",
-    "DashboardSummaryResponse"
+    "DashboardSummaryResponse",
+    "BrainQueryRequest",
+    "BrainQueryResponse",
+    "BrainJobSubmitResponse",
+    "BrainJobResponse",
+    "BrainPrimeResponse",
+    "BrainStatusResponse",
+    "CitationItem",
+    "BrainAuthResponse"
   ],
   "depends": []
 }
@@ -166,6 +174,65 @@ class MemoryIndexResponse(BaseModel):
     rows: list[MemoryRowResponse] = []
     history: list[HistoryRowResponse] = []
     warning: str | None = None
+
+
+# ── Brain ─────────────────────────────────────────────────────────────────────
+
+class CitationItem(BaseModel):
+    """brain 인용 항목."""
+    page: str = ""
+    title: str = ""
+    type: str = ""
+    score: float | None = None
+
+
+class BrainQueryRequest(BaseModel):
+    """POST /api/brain/query 요청 스키마."""
+    question: str
+    project: str               # 절대경로. 필수 — 빈 값이면 400 반환
+    session_id: str            # FE가 생성·전달하는 대화 식별자(UUID). 필수 — 빈 값이면 400 반환
+    new_conversation: bool = False  # 호환 목적으로 수신하되 reset 트리거 안 함
+
+
+class BrainQueryResponse(BaseModel):
+    """POST /api/brain/query 응답 스키마 (하위 호환 보존)."""
+    answer: str
+    citations: list[CitationItem] = []
+    session_id: str = ""
+
+
+class BrainJobSubmitResponse(BaseModel):
+    """POST /api/brain/query 비동기 잡 제출 응답 — job_id 즉시 반환 (PLAN §3.1.2)."""
+    job_id: str
+
+
+class BrainJobResponse(BaseModel):
+    """GET /api/brain/job/{job_id} 폴링 응답 — 잡 상태 + 결과 (PLAN §3.1.2)."""
+    job_id: str
+    status: str = "pending"   # "pending" | "done" | "error"
+    answer: str = ""
+    citations: list[CitationItem] = []
+    error_msg: str = ""
+
+
+class BrainPrimeResponse(BaseModel):
+    """POST /api/brain/prime 응답 스키마."""
+    priming: bool = True
+
+
+class BrainAuthResponse(BaseModel):
+    """GET /api/brain/auth 응답 스키마."""
+    authenticated: bool
+    cli_available: bool
+    message: str = ""
+
+
+class BrainStatusResponse(BaseModel):
+    """GET /api/brain/status 응답 스키마."""
+    state: str           # "idle" | "priming" | "ready" | "error"
+    session_active: bool
+    message: str = ""    # error 시 사유, 그 외 ""
+    session_id: str = "" # 조회된 session_id (에코)
 
 
 # ── Doctor ────────────────────────────────────────────────────────────────────
