@@ -1,0 +1,112 @@
+{
+  "task_id": "040-260624-opds-부트스트랩-스킵",
+  "skill": "opds",
+  "mode": "agentic",
+  "schema_version": "1.0",
+  "created_at": "2026-06-24 07:35",
+  "updated_at": "2026-06-24 07:54",
+  "current_status": "done",
+  "rows": [
+    {
+      "row_id": 1,
+      "stage": "TASK",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-24 07:35",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 2,
+      "stage": "TASK",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-24 07:36",
+      "owner": "auto",
+      "note": "agentic auto-pass: agentic auto-pass: TASK.md 4요소 잠김 완료 — 대화에서 합의된 설계 방향(env토글/전부스킵/전플랫폼) + 요구사항 F-1~F-6 검증가능 AC 포함. 조기 에스컬레이션 조건 미해당(요구사항 6개, 단일 도메인 install+문서)"
+    },
+    {
+      "row_id": 3,
+      "stage": "PLAN",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-24 07:43",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 4,
+      "stage": "PLAN",
+      "item": "PM Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-24 07:43",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 5,
+      "stage": "PLAN",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-24 07:43",
+      "owner": "auto",
+      "note": "agentic auto-pass: agentic auto-pass: PLAN PM Gate Pass — TASK 전제 오류(emit→bootstrapper SSOT) 정정 채택, 5파일 3Step 명확, TS-001~012 L1/L2/L3 분리, 보안/회귀 항목 완비. TEST-SCENARIO.md PM 직접 생성(FIX-4) 포함 산출물 2종 확인."
+    },
+    {
+      "row_id": 6,
+      "stage": "EXECUTE",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-24 07:48",
+      "owner": "PM",
+      "note": "Step 2(AGENT.md step0 삽입) + Step 3(windows.ps1 미러 검증) PM 직접 완료. TS-011/012 Pass.",
+      "step": "1/2"
+    },
+    {
+      "row_id": 7,
+      "stage": "TEST",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-24 07:51",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 8,
+      "stage": "TEST",
+      "item": "PM Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-24 07:52",
+      "owner": "auto",
+      "note": "agentic auto-pass: agentic auto-pass: TEST PM Gate Pass — L1 TS-001~012 전체 Pass. 변경이력 4종 기록 확인. 코드 펜스 미사용. 문구 의미 5종 일치. [WORKER] 불변. 멱등 확인. L2/L3는 install 재배포 후 캡틴 직접 수행 대상으로 TEST-SCENARIO.md 기록."
+    },
+    {
+      "row_id": 9,
+      "stage": "TEST",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-24 07:53",
+      "owner": "user",
+      "note": "캡틴 확인: 승인"
+    },
+    {
+      "row_id": 10,
+      "stage": "CLOSE",
+      "item": "DONE.md 생성",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-24 07:54",
+      "owner": "PM",
+      "note": null
+    }
+  ]
+}

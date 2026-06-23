@@ -10,6 +10,8 @@
 
 ### Eager 단계 (세션 시작 시 즉시 수행)
 
+0. **[스킵 게이트]** 먼저 Bash 도구로 `echo $OPAL_BOOTSTRAP`를 1회 실행한다. 출력이 정확히 `off`이면 — 이하 step 1~7 전체(정체성·헌법·하네스·PM·PM 컨텍스트 포함 부트스트랩 전부)를 생략하고 OPAL 없이 순수 동작한다(부트스트랩 완료 보고도 생략). 출력이 `off`가 아니거나(미설정/`on`/기타) Bash를 쓸 수 없으면 게이트를 무시하고 step 1부터 정상 진행한다. 이 게이트는 세션/캡틴 전역 토글이며, 위 `[WORKER 규칙]`(디스패치 프롬프트 첫 줄 `[WORKER]`)과는 별개의 독립 스킵 경로다.
+
 1. `~/.opal/identity.md`를 Read로 읽어 에이전트 정체성을 로드한다.
 2. identity.md가 없으면 `~/.opal/skills/opal-onboarding/SKILL.md`를 Read로 읽어 온보딩을 시작한다.
 2.5. `~/.opal/PRINCIPLES.md`(OPAL 헌법)를 Read한다 → 행동 원칙 SSOT를 세션 시작부터 활성화한다. 이후 모든 하네스·PM·스킬·에이전트 문서는 이 헌법을 참조로 상속하며 원칙을 재서술하지 않는다.
@@ -447,4 +449,5 @@ install-mac.sh가 `~/.codex/AGENTS.md`(글로벌)에 OPAL 마커를 자동 삽�
 | v3.3 | 2026-06-11 19:21 | W5 index 비상주 정정 — Lazy 트리거 brain 행을 "존재 여부 경량 인지(index 전체 자동 로드 안 함), 지식은 search 후보→선택 주입으로 온디맨드 로드"로 변경. W4 PM 판단 ingest 트리거 — "opal-brain 활용 규칙"에 ingest 판단 기준(아키텍처 결정·반복 패턴·캡틴 합의·비자명 해결) + 모드별 동작(agentic 자율 / semi·interactive 제안) 명시. search 활용 행 후보→선택 주입 흐름으로 정합 (016-brain) |
 | v3.4 | 2026-06-11 22:38 | §code-scan 활용 규칙에 brain↔code-scan 역할 분담 표(전수/실시간/WHAT vs 선별/stale/WHY) 신설 + "scan.json 없으면 생략"→즉석 자동 생성(code-scan-management.md §생성 시점) + 빈 결과 폴백(header-rules.md) 교체 + 사용자 오버라이드 명문화 (010) |
 | v3.5 | 2026-06-17 10:05 | §도구·MCP 적극 활용 규칙 신설 — 도구 인지 맵(용도→첫 사용 시 Lazy 로드 대상) + 계열별 경계(읽기=선제 / 변경=승인 게이트) + §주도성에 "도구 선제 활용" 항목 + mcps.md Lazy 트리거에 에이전트 선제 활용 판단 추가. identity-template/identity에 "도구 활용 성향" 추가 (026, "그냥 해" 직접 수행) |
+| v3.6 | 2026-06-24 | `OPAL_BOOTSTRAP=off` 스킵 게이트 추가 — Eager step 0에 환경변수 체크 삽입. 정확히 `off`이면 전체 부트스트랩(정체성 포함) 스킵·순수 동작. `[WORKER]` 스킵과 구분된 세션/캡틴 전역 토글. Bash 불가 시 fail-safe 정상 진행 (040) |
 

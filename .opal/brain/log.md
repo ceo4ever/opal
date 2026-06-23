@@ -118,3 +118,7 @@
 - 신규: [[pages/entity/test-tool.md]], [[pages/concept/test-two-tier-system.md]], [[pages/concept/e2e-cmux-first-playwright-fallback.md]], [[pages/concept/external-tool-boundary-stub-insufficient-lesson.md]]
 - 출처: task:039
 
+## [2026-06-24] ingest | CLOSE ingest — 태스크 040 OPAL 부트스트랩 스킵 옵션(OPAL_BOOTSTRAP=off)
+- 신규: [[pages/concept/opal-bootstrap-skip-gate.md]], [[pages/concept/bootstrapper-marker-ssot-single-point.md]]
+- 출처: task:040
+

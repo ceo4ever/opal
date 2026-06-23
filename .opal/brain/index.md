@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-06-23 18:38
+> 갱신: 2026-06-24 07:56
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -20,6 +20,7 @@
 - [[analysis-drift-pm-cross-verify-lesson]] — ANALYSIS 드리프트 분석 환각 → PM 강화검토 패턴 (학습) #analysis #hallucination #pm-gate #lesson-learned #drift
 - [[analysis-version-hallucination-npm-view]] — ANALYSIS 라이브러리 버전 환각 → PM npm view 실측 차단 패턴 #analysis #hallucination #pm-gate #version #npm #lesson-learned
 - [[b7-action-completion-loop]] — B7 액션 완성도 루프 — triage 기반 경계 재설계 순환 구조 #oppd #action-loop #triage #verification #b7
+- [[bootstrapper-marker-ssot-single-point]] — 부트스트래퍼 마커 SSOT 단일 지점 수정 원칙 #bootstrap #adapter #platform #ssot #install
 - [[brain-business-term-layer]] — Brain 업무 언어 번역 계층(term) #brain #citation-rules #term #knowledge
 - [[brain-code-scan-role-division]] — brain↔code-scan 역할 분담 — 선별·신선도·깊이 축 (010) #brain #code-scan #architecture #policy
 - [[brain-entity-discipline]] — brain entity 작성 규율 표준화 #brain #knowledge #curation #provenance
@@ -65,6 +66,7 @@
 - [[op-task]] — op-task — TASK.md 작성 단계 스킬 #task #skill
 - [[opal-adapter-platform-isolation]] — OPAL 어댑터 계층 플랫폼 분기 격리 원칙 #adapter #architecture #constitution #platform #codex
 - [[opal-architecture]] — OPAL 시스템 아키텍처 #architecture #framework #layer #deploy
+- [[opal-bootstrap-skip-gate]] — OPAL_BOOTSTRAP=off 부트스트랩 스킵 게이트 #bootstrap #platform #adapter #session-toggle
 - [[opal-brain-design-proposal]] — OPAL Project Brain 설계 제안서 #brain #design #llm-wiki #ingest #index
 - [[opal-brain-not-pilot-decision]] — opal-brain은 pilot이 아니다 — 리네임 철회 결정 #opal-brain #skill-naming #pilot #operator #architecture
 - [[opal-brain-system]] — OPAL Project Brain 시스템 #knowledge #architecture #wiki
