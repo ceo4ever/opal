@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-06-23 17:12
+> 갱신: 2026-06-23 18:38
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -12,6 +12,7 @@
 - [[opal-console]] — OPAL Console #tool #dashboard #frontend #backend
 - [[skill-opal-pilot-data-design]] — opal-pilot-data-design (opdd) #pilot #orchestrator #data-design #db
 - [[state-tool]] — state-tool #tool #pipeline
+- [[test-tool]] — test-tool #tool #testing #pipeline
 
 ## 개념
 - [[active-platform-dir-install-target-lesson]] — 활성 Claude 플랫폼 디렉토리가 ~/.claude 기본이 아닐 수 있다 — install 타겟 정합 교훈 (032 P2) #install #deploy #platform #dispatch #lesson-learned
@@ -38,7 +39,9 @@
 - [[daemon-as-tool-orchestrator]] — 데몬은 도구 오케스트레이터 — 데이터 SSOT는 프로젝트 파일 #architecture #dashboard #ssot
 - [[deploy-artifact-verification-lesson]] — 동작검증은 배포 산출물+실 브라우저 기준으로 수행해야 한다 #verification #qa #deployment #lesson
 - [[dict-선행-model-ssot]] — DICT가 MODEL을 선행한다 — 사전이 속성명·타입 SSOT #architecture-decision #data-design #ssot #pipeline
+- [[e2e-cmux-first-playwright-fallback]] — E2E 도구 우선순위 — cmux 1순위 → playwright 폴백 (에러코드 소비) #testing #e2e #cmux #framework
 - [[erd-modeler-deprecation]] — erd-modeler deprecate — op-data-model/ddl로 분해, //erm 하위호환 #architecture-decision #deprecation #erd-modeler #migration
+- [[external-tool-boundary-stub-insufficient-lesson]] — 외부 도구 경계는 스텁만으로 불충분 — 실연동 검증이 통합 결함을 잡는다 #testing #lesson #integration #test-strategy
 - [[kanban-current-stage-derivation]] — 칸반 current_stage 파생 규칙 (도달 단계 기준) #opal-console #kanban #pipeline #be-single-source
 - [[kanban-pipeline-stage-grouping]] — 파이프라인 스테퍼 stage 그룹화 (BE 단일 소스, na/skipped 제외) #opal-console #pipeline #stage-grouping #be-single-source
 - [[linux-install-script]] — Linux 설치 스크립트 신설 (단순 위임 전략) #install #linux #deploy #task
@@ -102,6 +105,7 @@
 - [[state-tool-mock-guard-skill-false-positive]] — state-tool mock 가드 정규식 ↔ SKILL 표준 문구 false positive #state-tool #mock-guard #false-positive #skill #bug #framework
 - [[test-real-data-validation-lesson]] — TEST 실데이터 검증이 build-only 가 놓친 결함을 발견한다 #testing #lesson #test-strategy #real-data
 - [[test-scenario-pipeline-redesign]] — 테스트 시나리오 파이프라인 재설계 (2차원 매트릭스 + self-confirming 4분리) #testing #pipeline #framework #flow #task
+- [[test-two-tier-system]] — 테스트 2단계 체계 (단위=EXECUTE / 통합=TEST) #testing #pipeline #framework
 - [[three-layer-memory-architecture]] — 3계층 기억 아키텍처 — MEMORY / brain / tasks #architecture #memory #brain #long-term #tasks
 - [[uncommitted-component-readme-policy]] — 미커밋 컴포넌트는 공개 README에 미노출 #readme #policy #git #documentation #ppt-builder
 - [[verification-command-4-standard]] — 검증 명령 4종 표준 (SSOT — verification-loop-guide) #verification #lint #build #test #watch-mode #ssot #standard

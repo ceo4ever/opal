@@ -69,7 +69,7 @@ TEST-SCENARIO.md §2를 작성한다:
 | 코드 | 정의 | 실행 주체 | 자가 점검 가능 |
 |------|------|---------|-------------|
 | **M1. 테스트 도구** | pytest/vitest/jest 등 표준 단위·통합 테스트 도구 — Bash 단발 실행 | EXECUTE 워커 자가 + opal-test-agent 최종 | ✓ |
-| **M2. E2E 자동화** | cmux browser / playwright / cypress 등 브라우저·외부 시스템 자동화 도구 — 시나리오 스크립트 실행 | EXECUTE 워커 자가(가능 시) + opal-test-agent 최종 | △ (도구 환경 준비 필요) |
+| **M2. E2E 자동화** | **cmux 1순위 → playwright 폴백** (cmux 미가용 시 폴백; macOS 플랫폼 가드는 cmux-tool 에러코드가 자연 흡수) 등 브라우저·외부 시스템 자동화 도구 — 시나리오 스크립트 실행 | EXECUTE 워커 자가(가능 시) + opal-test-agent 최종 | △ (도구 환경 준비 필요) |
 | **M3. 사용자 협업** | 자동화 불가 또는 자동화 우회 의사결정 — PM 표준 양식으로 캡틴 요청 | [SUPERVISOR] 캡틴 수동 | ✗ |
 
 **변경 영역 7종 × M1/M2/M3 매핑 표:**
@@ -80,9 +80,9 @@ TEST-SCENARIO.md §2를 작성한다:
 | API 엔드포인트 | pytest + httpx | playwright API / cmux | (해당 없음) |
 | 비즈니스 로직 | pytest/vitest | (해당 없음) | (해당 없음) |
 | 병렬/동시성 | pytest + asyncio | 부하 도구(locust 등) | 캡틴 모니터 확인 |
-| FE 화면/컴포넌트 | vitest + RTL | **cmux browser / playwright** | **캡틴 화면 시각 확인** |
+| FE 화면/컴포넌트 | vitest + RTL | **cmux 1순위 → playwright 폴백** (cmux 미가용 시 폴백) | **캡틴 화면 시각 확인** |
 | 인증/인가 | pytest | playwright 로그인 흐름 | **캡틴 실 매체 로그인** |
-| 외부 API 연동 | pytest + stub | playwright/cmux 실 API | (해당 없음) |
+| 외부 API 연동 | pytest + stub | cmux 1순위 → playwright 폴백 실 API | (해당 없음) |
 
 **검증 깊이 × 실행 방식 가능 조합:**
 
@@ -95,6 +95,13 @@ L3 사용자 협업       —               (옵션)          ✓
 
 → 시나리오마다 (L, M) 두 코드 모두 명시한다 (예: `L2/M1` = 실 DB 통합 / `L2/M2` = cmux E2E / `L3/M3` = 캡틴 협업).
 
+**2단계 명명 매핑** (파이프라인 단계 ↔ 검증 묶음):
+
+| 단계 | 정의 | 수행 주체 | 도구셋 |
+|------|------|---------|-------|
+| **단위 테스트 = EXECUTE** | lint + build + unit (구현 워커 자가검증) | 구현 워커 | `test-tool unit` |
+| **통합 테스트 = TEST** | E2E + 실 DB + `[SUPERVISOR]` | opal-test-agent | `test-tool integration` |
+
 ### Step 4: 시나리오 본문 작성
 
 각 시나리오에 대해 TEST-SCENARIO.md 통일 형식 §3을 작성한다:
@@ -104,7 +111,7 @@ L3 사용자 협업       —               (옵션)          ✓
 - 가설 매핑: 연결된 H-N 명시
 - 조건: 입력값, 사전 상태, 환경 구체적으로 기재
 - 기대 결과: 검증 가능한 성공 기준 (예: "반환값 타입이 List[dict]이고 len >= 1")
-- 도구: `.opal/test-tools.yaml` 또는 프로젝트 설정에서 결정 (vitest/pytest 등)
+- 도구: `test-tool resolve` 출력의 해당 tier×scope 도구셋 (test-tools.yaml을 도구가 읽어 결정 — vitest/pytest 등)
 - 실행 명령/결과/상세: 비워둠 (EXECUTE 워커 / opal-test-agent가 채움)
 - 실행 방식: M1 (테스트 도구) — pytest/vitest 도구명 명시
 
@@ -130,16 +137,11 @@ L3 사용자 협업       —               (옵션)          ✓
 
 ### Step 4-a: 테스트 스택·위치 탐지 (F-005)
 
-[MUST] 시나리오 작성 전 테스트 러너·위치를 아래 4단계 우선순위로 탐지한다. 특정 프레임워크 하드코딩 금지 — 탐지·주입 방식을 따른다.
+[MUST] 시나리오 작성 전 `test-tool resolve`를 호출한다 → 도구가 resolution_order(project→global→추론)를 집행하여 해당 tier×scope 도구셋·위치를 결정한다. 단일 SSOT — 가이드는 도구 호출만 하고 결정 규칙을 중복 기재하지 않는다.
 
-| 우선순위 | 탐지 대상 | 내용 |
-|---------|---------|------|
-| ① | `docs/CONVENTIONS.md` | 테스트 위치 규칙·러너·글로브 패턴 명시 여부 확인 |
-| ② | 스택 문서(`docs/BACKEND.md`/`FRONTEND.md` 등) | 프레임워크별 테스트 도구 명시 여부 확인 |
-| ③ | 설정파일(`package.json`/`pyproject.toml`/`go.mod` 등) | 테스트 스크립트·의존성에서 러너 추론 |
-| ④ | 기존 테스트 관례 | 프로젝트 내 기존 테스트 파일 글로브 탐색으로 위치·패턴 파악 |
+기존 4단계 탐지(`docs/CONVENTIONS.md` → 스택 문서(`docs/BACKEND.md`/`FRONTEND.md`) → 설정파일(`package.json`/`pyproject.toml`/`go.mod`) → 기존 테스트 글로브)는 `test-tool resolve` **내부 추론 폴백**으로 흡수됨 — 가이드에서 별도 집행하지 않는다.
 
-[MUST] 테스트 러너 부재 시 자동 우회 금지 — 사용자 에스컬레이션. 탐지 결과를 TEST-SCENARIO.md 시나리오의 "도구" 필드에 명시한다.
+[MUST] 테스트 러너 부재 시 자동 우회 금지 — `test-tool resolve`가 `no_runner`를 반환하면 사용자 에스컬레이션. resolve 결과를 TEST-SCENARIO.md 시나리오의 "도구" 필드에 명시한다.
 
 ### Step 4-b: 모듈 미러링 배치·명명·추적 (F-006)
 
@@ -193,3 +195,4 @@ TEST-SCENARIO.md §4 매핑 표를 완성한다:
 | v2.1 | 2026-05-19 17:05 | M1/M2/M3 실행 방식 차원 추가 — Step 3-b 신설 + 변경 영역×M 매핑 표 + 검증 깊이×실행 방식 조합 표 + 시나리오 작성 요령 + 체크리스트 1행 (004 추가작업) |
 | v2.2 | 2026-06-07 | 헌법 §4 집행 — mock 금지 룰에 "구현을 목업으로 대체 금지(Don't fake it)" + 실연동 불가 시 BLOCKED 표면화 추가 (012) |
 | v2.3 | 2026-06-10 10:13 | 테스트 스택·위치 탐지 4단계 + 모듈 미러링·케이스명 프리픽스 + 공개 인터페이스 검증 규율 (016) |
+| v2.4 | 2026-06-23 | 도구 결정 SSOT를 test-tool resolve 단일 호출로 통합(4단계 탐지=도구 내부 폴백) + 2단계 명명(단위=EXECUTE/통합=TEST) + E2E cmux 1순위→playwright 폴백 명시 (039) |

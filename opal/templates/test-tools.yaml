@@ -1,21 +1,21 @@
 # .opal/test-tools.yaml
-# 테스트 도구 레지스트리 — 프로젝트 루트 기준
+# 테스트 도구 레지스트리 — 프로젝트 루트 기준 (2단계 tiers 구조)
 #
 # 사용법:
 #   1. 이 파일을 프로젝트 루트의 .opal/test-tools.yaml 에 복사한다.
 #   2. stack 섹션에 실제 프로젝트 스택을 선언한다.
-#   3. tools 섹션에서 불필요한 카테고리를 제거하거나 도구를 추가한다.
+#   3. tiers 섹션에서 불필요한 도구를 제거하거나 추가한다.
 #
 # 우선순위:
 #   {project}/.opal/test-tools.yaml  →  ~/.opal/templates/test-tools.yaml (글로벌 기본값)
-#   둘 다 없으면 dtp-test가 package.json / pyproject.toml 기반으로 추론 (fallback)
+#   둘 다 없으면 test-tool resolve가 package.json / pyproject.toml 기반으로 추론 (내부 폴백)
 #
 # 스키마 참조: opal/core/references/test-tools-schema.yaml
 
-version: "1.0"
+version: "2.0"
 
 # ─── 스택 선언 ────────────────────────────────────────────────────────────────
-# 도구 카테고리 자동 추론에 사용된다.
+# 도구 카테고리 자동 추론에 사용된다 (test-tool resolve의 스택 추론).
 # 유효값: typescript | python | go | java | rust | ...
 stack:
   language: typescript      # 주 언어
@@ -23,8 +23,8 @@ stack:
   runtime: node             # 런타임 (선택) — node | bun | deno | python | go | ...
 
 # ─── 전역 도구 ────────────────────────────────────────────────────────────────
-# 스택에 무관하게 모든 프로젝트에 적용되는 필수 도구.
-# dtp-test가 항상 실행한다.
+# 스택·단계에 무관하게 모든 프로젝트에 적용되는 필수 도구 (즉시 차단).
+# test-tool check가 게이트한다.
 global:
   - name: gitleaks
     purpose: 하드코딩 시크릿 스캔 (보안)
@@ -37,60 +37,107 @@ global:
     install_fallback: "https://github.com/gitleaks/gitleaks/releases"
     required: true
 
-# ─── 카테고리별 도구 ──────────────────────────────────────────────────────────
-# stack 선언에 따라 활성화된다.
-# 각 카테고리에 도구가 여러 개인 경우 첫 번째 항목이 기본값으로 사용된다.
-tools:
+# ─── 2단계 tiers ──────────────────────────────────────────────────────────────
+# unit       = 단계1 (EXECUTE 자가검증, 수행: 구현 워커) — lint/typecheck/unit/a11y
+# integration= 단계2 (TEST, 수행: opal-test-agent + [SUPERVISOR]) — api_db/e2e/supervisor
+# stack 선언에 따라 활성화된다. 각 카테고리에 도구가 여러 개인 경우 첫 번째 항목이 기본값.
+tiers:
 
-  # 단위 테스트
+  # ── 단계1: 단위 (EXECUTE 자가검증, 구현 워커) ──────────────────────────────
   unit:
-    - name: vitest
-      purpose: 단위 테스트 (Vite 기반)
-      check: "npx vitest --version"
-      install: "npm install -D vitest"
-      required: true
-    # - name: jest
-    #   purpose: 단위 테스트 (Jest)
-    #   check: "npx jest --version"
-    #   install: "npm install -D jest ts-jest @types/jest"
-    #   required: false
+    fe:
+      lint:
+        - name: eslint
+          purpose: JavaScript/TypeScript 정적 분석
+          check: "npx eslint --version"
+          install: "npm install -D eslint"
+          required: true
+      typecheck:
+        - name: tsc
+          purpose: TypeScript 타입 안전성 검사
+          check: "npx tsc --version"
+          install: "npm install -D typescript"
+          required: true
+      unit:
+        - name: vitest
+          purpose: 단위 테스트 (Vite 기반, RTL 컴포넌트 테스트 포함)
+          check: "npx vitest --version"
+          install: "npm install -D vitest @testing-library/react"
+          required: true
+      a11y:
+        - name: jest-axe
+          purpose: 접근성(WCAG) 단위 검증 — axe-core 래퍼, vitest+RTL 동일 러너 내 통합
+          check: "npm ls jest-axe"
+          install: "npm install -D jest-axe"
+          required: false
+    be:
+      lint:
+        - name: ruff
+          purpose: Python 빠른 린터 (py)
+          check: "ruff --version"
+          install: "pip install ruff"
+          required: true
+        - name: eslint
+          purpose: TypeScript/Node 정적 분석 (ts)
+          check: "npx eslint --version"
+          install: "npm install -D eslint"
+          required: true
+      typecheck:
+        - name: mypy
+          purpose: Python 타입 체크 (py)
+          check: "mypy --version"
+          install: "pip install mypy"
+          required: true
+        - name: pyright
+          purpose: Python 타입 체크 대안 (py)
+          check: "pyright --version"
+          install: "pip install pyright"
+          required: false
+        - name: tsc
+          purpose: TypeScript 타입 안전성 검사 (ts)
+          check: "npx tsc --version"
+          install: "npm install -D typescript"
+          required: true
+      unit:
+        - name: pytest
+          purpose: 단위 테스트 (py)
+          check: "pytest --version"
+          install: "pip install pytest"
+          required: true
+        - name: vitest
+          purpose: 단위 테스트 (ts)
+          check: "npx vitest --version"
+          install: "npm install -D vitest"
+          required: true
 
-  # E2E / 통합 테스트
-  e2e:
-    - name: playwright
-      purpose: E2E 브라우저 테스트
-      check: "npx playwright --version"
-      install: "npm install -D @playwright/test && npx playwright install"
-      required: false
-    # - name: cypress
-    #   purpose: E2E 브라우저 테스트 (Cypress)
-    #   check: "npx cypress --version"
-    #   install: "npm install -D cypress"
-    #   required: false
+  # ── 단계2: 통합 (TEST, opal-test-agent + [SUPERVISOR]) ─────────────────────
+  integration:
+    be:
+      # [MUST] 헌법 §4 mock 금지: 실 DB 대상 통합 — mock/스텁으로 DB를 대체하지 않는다.
+      api_db:
+        - name: pytest
+          purpose: API+DB 통합 테스트 (실 DB 대상, mock 금지)
+          deps: [httpx]
+          check: "pytest --version"
+          install: "pip install pytest httpx"
+          real_db: true        # [MUST] 실 DB — mock 금지 (헌법 §4)
+          required: true
+    fe: {}                     # FE 통합 단위는 E2E로 흡수
+    # E2E는 FE/BE 공통 — cmux 1순위 → playwright 폴백.
+    # cmux 미가용은 cmux-tool 에러코드 소비로 폴백 트리거(플랫폼 가드 자연 흡수).
+    e2e:
+      - { name: cmux, priority: 1, via: cmux-tool }
+      - { name: playwright, priority: 2, fallback: true }
+    # 캡틴 수동 검증 [SUPERVISOR]
+    supervisor:
+      - { name: captain-manual }
 
-  # 린트
-  lint:
-    - name: eslint
-      purpose: JavaScript/TypeScript 정적 분석
-      check: "npx eslint --version"
-      install: "npm install -D eslint"
-      required: true
-
-  # 타입 체크
-  typecheck:
-    - name: tsc
-      purpose: TypeScript 타입 안전성 검사
-      check: "npx tsc --version"
-      install: "npm install -D typescript"
-      required: true
-
-  # 포맷터
-  format:
-    - name: prettier
-      purpose: 코드 포맷 일관성 검사
-      check: "npx prettier --version"
-      install: "npm install -D prettier"
-      required: false
+# ─── 우선순위 및 Fallback 규칙 ────────────────────────────────────────────────
+# 소비자: test-tool resolve. 3단계 — project → global → 내부 추론 폴백.
+resolution_order:
+  1: "{project}/.opal/test-tools.yaml — 프로젝트별 오버라이드 (최우선)"
+  2: "~/.opal/templates/test-tools.yaml — 글로벌 기본값"
+  3: "package.json / pyproject.toml 추론 — test-tool resolve 내부 추론 폴백 (둘 다 없을 때)"
 
 # ─── Python 스택 예시 (주석 해제하여 사용) ────────────────────────────────────
 # stack:
@@ -98,28 +145,33 @@ tools:
 #   framework: fastapi
 #   runtime: python
 #
-# tools:
+# tiers:
 #   unit:
-#     - name: pytest
-#       purpose: 단위/통합 테스트
-#       check: "pytest --version"
-#       install: "pip install pytest"
-#       required: true
-#   lint:
-#     - name: ruff
-#       purpose: Python 빠른 린터
-#       check: "ruff --version"
-#       install: "pip install ruff"
-#       required: true
-#   typecheck:
-#     - name: mypy
-#       purpose: Python 타입 체크
-#       check: "mypy --version"
-#       install: "pip install mypy"
-#       required: true
-#   format:
-#     - name: black
-#       purpose: Python 코드 포맷터
-#       check: "black --version"
-#       install: "pip install black"
-#       required: false
+#     be:
+#       lint:
+#         - name: ruff
+#           check: "ruff --version"
+#           install: "pip install ruff"
+#           required: true
+#       typecheck:
+#         - name: mypy
+#           check: "mypy --version"
+#           install: "pip install mypy"
+#           required: true
+#       unit:
+#         - name: pytest
+#           check: "pytest --version"
+#           install: "pip install pytest"
+#           required: true
+#   integration:
+#     be:
+#       api_db:
+#         - name: pytest
+#           deps: [httpx]
+#           check: "pytest --version"
+#           install: "pip install pytest httpx"
+#           real_db: true        # [MUST] 실 DB — mock 금지 (헌법 §4)
+#           required: true
+
+# ─── 변경이력 ─────────────────────────────────────────────────────────────────
+# v2.0 (2026-06-23, T039): 2단계 tiers 구조 + FE/BE 매트릭스 + 고아 소비자 참조 현행화

@@ -1,5 +1,5 @@
 # test-tools-schema.yaml
-# .opal/test-tools.yaml 스키마 레퍼런스
+# .opal/test-tools.yaml 스키마 레퍼런스 (2단계 tiers 구조, v2.0)
 #
 # 이 파일은 test-tools.yaml의 모든 필드를 설명하는 레퍼런스다.
 # 실제 프로젝트 파일은 opal/templates/test-tools.yaml 을 복사하여 사용한다.
@@ -9,15 +9,15 @@
 version:
   type: string
   required: true
-  description: 스키마 버전. 현재 "1.0"
-  example: "1.0"
+  description: 스키마 버전. 현재 "2.0" (2단계 tiers 구조 도입)
+  example: "2.0"
 
 # ─── stack 섹션 ───────────────────────────────────────────────────────────────
 
 stack:
   description: |
-    프로젝트 스택 선언. dtp-agent의 Step 1-b 도구 추론과
-    dtp-test의 Step 1-a fallback 추론에 사용된다.
+    프로젝트 스택 선언. test-tool resolve의 스택 추론과
+    resolution_order 3단계(내부 추론 폴백)에 사용된다.
   required: false
   fields:
     language:
@@ -40,8 +40,8 @@ stack:
 
 global:
   description: |
-    스택에 무관하게 모든 프로젝트에 적용되는 도구 목록.
-    dtp-test가 항상 실행한다 (required: true 기본값).
+    스택·단계에 무관하게 모든 프로젝트에 적용되는 도구 목록 (즉시 차단).
+    test-tool check가 게이트한다 (required: true 기본값).
   required: false
   type: list
   item_fields:
@@ -57,7 +57,7 @@ global:
       type: string
       required: true
       description: 도구 카테고리
-      valid_values: [unit, e2e, lint, typecheck, format, security]
+      valid_values: [unit, e2e, lint, typecheck, format, security, a11y, api_db]
     check:
       type: string
       required: true
@@ -89,24 +89,58 @@ global:
               미승인 시 해당 시나리오 "환경 미준비 — Skip" 처리.
         false: 미설치 시 해당 시나리오 자동 Skip (사용자 승인 불필요).
 
-# ─── tools 섹션 ───────────────────────────────────────────────────────────────
+# ─── tiers 섹션 (2단계 구조) ──────────────────────────────────────────────────
 
-tools:
+tiers:
   description: |
-    카테고리별 테스트 도구 목록. stack 선언에 따라 활성화된다.
-    각 카테고리에 여러 도구가 있을 경우 첫 번째 항목이 기본값으로 사용된다.
+    테스트 도구를 2단계(단위/통합)로 구조화한 최상위 필드.
+    - unit        = 단계1 (EXECUTE 자가검증, 수행: 구현 워커)
+    - integration = 단계2 (TEST, 수행: opal-test-agent + [SUPERVISOR])
+    각 단계는 scope(fe/be) × 카테고리 매트릭스로 도구를 배치한다.
+    각 도구 항목은 global.item_fields(name/check/install/required ...)와 동일한 형식을 따른다.
   required: false
-  categories:
+  tiers_def:
     unit:
-      description: 단위 테스트 도구
-    e2e:
-      description: E2E / 통합 테스트 도구
-    lint:
-      description: 정적 분석 / 린터
-    typecheck:
-      description: 타입 체크 도구
-    format:
-      description: 코드 포맷터
+      description: |
+        단계1 — 단위 (EXECUTE 자가검증). 구현 워커가 코드 작성 직후 자가 실행.
+        scope = fe | be. 각 scope 아래 카테고리별 도구 리스트.
+      scope:
+        fe:
+          description: 프론트엔드 단위 도구 매트릭스
+          categories:
+            lint:      "정적 분석 / 린터 (예: eslint)"
+            typecheck: "타입 체크 (예: tsc)"
+            unit:      "단위 테스트 (예: vitest + RTL)"
+            a11y:      "접근성(WCAG) 단위 검증 (예: jest-axe, required:false)"
+        be:
+          description: 백엔드 단위 도구 매트릭스 (언어별 — py / ts)
+          categories:
+            lint:      "정적 분석 — ruff(py) / eslint(ts)"
+            typecheck: "타입 체크 — mypy·pyright(py) / tsc(ts)"
+            unit:      "단위 테스트 — pytest(py) / vitest(ts)"
+    integration:
+      description: |
+        단계2 — 통합 (TEST). opal-test-agent + [SUPERVISOR]가 수행.
+      scope:
+        be:
+          description: 백엔드 통합 — API+DB
+          categories:
+            api_db: |
+              API+DB 통합 테스트 (예: pytest + httpx).
+              [MUST] real_db: true — 실 DB 대상, mock 금지 (헌법 §4).
+        fe:
+          description: FE 통합 단위는 E2E로 흡수 (빈 맵)
+        e2e:
+          description: |
+            FE/BE 공통 E2E — cmux 1순위 → playwright 폴백.
+            cmux 미가용은 cmux-tool 에러코드 소비로 폴백 트리거(플랫폼 가드 자연 흡수).
+          item_fields:
+            name:     "도구 이름 (cmux | playwright)"
+            priority: "우선순위 (1=cmux, 2=playwright)"
+            via:      "호출 경로 (cmux-tool) — cmux 항목"
+            fallback: "폴백 여부 (playwright 항목 true)"
+        supervisor:
+          description: "캡틴 수동 검증 [SUPERVISOR] (예: captain-manual)"
   item_fields:
     name:
       type: string
@@ -114,15 +148,15 @@ tools:
       description: 도구 이름
     purpose:
       type: string
-      required: true
+      required: false
       description: 도구 역할 설명
     check:
       type: string
-      required: true
+      required: false
       description: 설치 여부 확인 명령 (global.item_fields.check 동일)
     install:
       type: string | object
-      required: true
+      required: false
       description: 설치 명령 (global.item_fields.install 동일)
     install_fallback:
       type: string
@@ -130,36 +164,59 @@ tools:
       description: 플랫폼 미지원 시 fallback URL
     required:
       type: boolean
-      required: true
+      required: false
       description: 필수 여부 (global.item_fields.required 동일)
+    deps:
+      type: list
+      required: false
+      description: "추가 의존 패키지 (예: api_db의 httpx)"
+    real_db:
+      type: boolean
+      required: false
+      description: |
+        true이면 실 DB 대상 통합 테스트.
+        [MUST] mock 금지 (헌법 §4) — DB를 mock/스텁으로 대체하지 않는다.
 
 # ─── 우선순위 및 Fallback 규칙 ────────────────────────────────────────────────
 
 resolution_order:
-  description: dtp-test의 레지스트리 탐색 순서
+  description: test-tool resolve의 레지스트리 탐색 순서 (3단계)
   steps:
     1: "{project}/.opal/test-tools.yaml — 프로젝트별 오버라이드 (최우선)"
     2: "~/.opal/templates/test-tools.yaml — 글로벌 기본값"
-    3: "package.json / pyproject.toml 추론 — 둘 다 없을 때 fallback"
+    3: "package.json / pyproject.toml 추론 — test-tool resolve 내부 추론 폴백 (둘 다 없을 때)"
 
-# ─── 시나리오 유형 → 카테고리 매핑 ────────────────────────────────────────────
+# ─── 시나리오 유형 → tier·카테고리 매핑 ───────────────────────────────────────
 
 scenario_type_mapping:
   description: |
-    시나리오 유형에 따라 어떤 카테고리의 도구를 사용할지 정의.
-    dtp-agent의 Step 1-b와 test-scenario-guide.md의 매핑 테이블에 사용된다.
+    시나리오 유형에 따라 어떤 tier·카테고리의 도구를 사용할지 정의.
+    test-tool resolve의 스택 추론과 test-scenario-guide.md의 매핑 테이블에 사용된다.
   mappings:
     - scenario_type: 함수/클래스 단위 검증
+      tier: unit
       category: unit
-    - scenario_type: API 엔드포인트 검증
-      category: [e2e, unit]
-      note: E2E(playwright) 또는 단위(supertest) 중 선택
-    - scenario_type: 브라우저 UI 검증
+    - scenario_type: API+DB 통합 검증
+      tier: integration
+      category: api_db
+      note: 실 DB 대상 (real_db, mock 금지 — 헌법 §4)
+    - scenario_type: 브라우저 UI / E2E 검증
+      tier: integration
       category: e2e
-    - scenario_type: 린트/포맷
-      category: [lint, format]
+      note: cmux 1순위 → playwright 폴백
+    - scenario_type: 린트
+      tier: unit
+      category: lint
     - scenario_type: 타입 안전성
+      tier: unit
       category: typecheck
+    - scenario_type: 접근성(WCAG)
+      tier: unit
+      category: a11y
+      note: jest-axe (required:false)
     - scenario_type: 시크릿/보안
       category: security
-      note: global.gitleaks 사용 (stack 무관)
+      note: global.gitleaks 사용 (stack·단계 무관)
+
+# ─── 변경이력 ─────────────────────────────────────────────────────────────────
+# v2.0 (2026-06-23, T039): 2단계 tiers 구조 + FE/BE 매트릭스 + 고아 소비자 참조 현행화

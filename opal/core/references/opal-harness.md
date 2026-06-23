@@ -242,6 +242,7 @@ OPAL 도구는 모두 `~/.opal/tools/{tool-name}/run.sh` 래퍼를 통해 호출
 | `xlsx-tool` | xlsx 읽기/쓰기/검색 | xlsx 파일 처리 요청 |
 | `state-tool` | 파이프라인 현황판 JSON SSOT 관리 (9개 서브 명령: `init`/`show`/`advance`/`mark`/`block`/`validate`/`add-row`/`status`/`gate-pass`) | TASK 단계 시작 / Gate 직후 / 추가작업 진입 |
 | `brain-tool` | 프로젝트 브레인 지식 위키 결정론적 집행 — 8 서브명령 `init`/`add-page`/`index`/`log`/`search`/`sync-header`/`lint`/`validate` | `//opbr` 또는 brain 참조 시 |
+| `test-tool` | 테스트 단계별 도구 결정론적 집행 — 4서브명령 resolve/check/unit/integration | EXECUTE/TEST 단계 진입 시 |
 
 > 전체 사용법: `~/.opal/references/tools.md`
 
@@ -299,3 +300,4 @@ OPAL 도구는 모두 `~/.opal/tools/{tool-name}/run.sh` 래퍼를 통해 호출
 | v5.4 | 2026-06-10 01:04 | §9 등록 도구 표에 brain-tool 행 추가 — 프로젝트 브레인 지식 위키 도구 8 서브명령 (015-brain, 별도 PC 015와 중복 채번) |
 | v5.5 | 2026-06-16 18:07 | §1 Guards에 "명확화 게이트" 절 추가 — TASK 4요소 미잠금 시 다음 단계 진입 차단, state-tool --clarification-check 집행 + clarification_gate_unmet 참조 (005) |
 | v5.6 | 2026-06-21 16:05 | §1 자동 루핑 제약 표에 "PLAN 재진입(재설계 루프)" 행 추가 — B7 액션 완성도 루프 상한 SSOT(2회, 초과 시 scope별 에스컬레이션). action-agent·verification-loop-guide는 수치 복제 없이 본 표 참조 (031) |
+| v5.7 | 2026-06-23 | §9 등록 도구 표에 test-tool 행 추가 — 테스트 단계별 도구 결정론적 집행 4서브명령 resolve/check/unit/integration, EXECUTE/TEST 단계 진입 시 (039) |

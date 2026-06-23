@@ -21,7 +21,7 @@
 
 ### BE mode 집중 영역
 
-- REST API / GraphQL 엔드포인트 응답 검증
+- REST API / GraphQL 엔드포인트 응답 검증 — 도구: **pytest + httpx + 실DB** (mock 금지, 헌법 §4)
 - 서비스 레이어 비즈니스 로직 단위 테스트
 - DB 쿼리 / 트랜잭션 / 마이그레이션 정합성
 - 인증·인가 미들웨어 동작 검증
@@ -31,7 +31,7 @@
 
 - 컴포넌트 렌더링 및 스냅샷 테스트
 - 사용자 인터랙션 시나리오 (클릭, 입력, 탐색)
-- 접근성(Accessibility) 검사 (WCAG 기준)
+- 접근성(Accessibility) 검사 (WCAG 기준) — 도구: **jest-axe** (vitest + RTL 동일 러너 통합, axe-core 래퍼)
 - 브라우저 기반 E2E (Playwright / Cypress)
 - 스킵: API 직접 호출, DB 레벨 검증
 
@@ -44,9 +44,11 @@
 
 ## 코드 품질 검사 기준
 
-- **린트**: 프로젝트 린터(ESLint, Pylint, Flake8 등) 설정 기준으로 경고·오류 확인
-- **타입 체크**: TypeScript(`tsc --noEmit`), mypy, pyright 등 타입 검사 도구 실행
-- **포맷터**: Prettier, Black, isort 등 포맷 일관성 확인
+> **위상**: lint / build / type 검사는 **단위 테스트(EXECUTE 단계 귀속)**다 — 구현 워커가 EXECUTE에서 통과시킨다. TEST 단계(opal-test-agent)는 EXECUTE 완료를 전제하므로, 아래 lint/type/포맷 검사는 **회귀 가드 용도로만** 수행한다(중복 독립 실행 아님).
+
+- **린트**: 프로젝트 린터(ESLint, Pylint, Flake8 등) 설정 기준으로 경고·오류 확인 (회귀 가드)
+- **타입 체크**: TypeScript(`tsc --noEmit`), mypy, pyright 등 타입 검사 도구 실행 (회귀 가드)
+- **포맷터**: Prettier, Black, isort 등 포맷 일관성 확인 (회귀 가드)
 - **보안 검사**:
   - 하드코딩된 시크릿(API 키, 패스워드, 토큰) 탐지
   - `.gitignore`에 민감 파일 포함 여부 확인
@@ -59,3 +61,7 @@
 | All Pass | 모든 시나리오 Pass + 코드 품질 Pass + 보안 Pass |
 | Partial Fail | 일부 시나리오 Fail이지만 핵심 기능은 Pass |
 | Critical Fail | 핵심 기능 Fail 또는 보안 Fail |
+
+---
+
+> v1.1 (2026-06-23, 039): FE 접근성=jest-axe 매핑 + BE 실DB=pytest+httpx 매핑 + lint=단위(EXECUTE) 위상 명시

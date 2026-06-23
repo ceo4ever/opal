@@ -114,3 +114,7 @@
 - 신규: [[brain-entity-discipline]]
 - 출처: task:038
 
+## [2026-06-23] ingest | CLOSE ingest — 태스크 039 테스트도구 FE/BE 2단계 재정의 + 신규 test-tool
+- 신규: [[pages/entity/test-tool.md]], [[pages/concept/test-two-tier-system.md]], [[pages/concept/e2e-cmux-first-playwright-fallback.md]], [[pages/concept/external-tool-boundary-stub-insufficient-lesson.md]]
+- 출처: task:039
+

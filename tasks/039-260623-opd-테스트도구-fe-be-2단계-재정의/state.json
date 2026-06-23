@@ -1,0 +1,161 @@
+{
+  "task_id": "039-260623-opd-테스트도구-fe-be-2단계-재정의",
+  "skill": "opd",
+  "mode": "semi-agentic",
+  "schema_version": "1.0",
+  "created_at": "2026-06-23 16:36",
+  "updated_at": "2026-06-23 18:35",
+  "current_status": "done",
+  "rows": [
+    {
+      "row_id": 1,
+      "stage": "TASK",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-23 16:36",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 2,
+      "stage": "TASK",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-23 16:37",
+      "owner": "user",
+      "note": "캡틴 확인: TASK 승인 → ANALYSIS 진입"
+    },
+    {
+      "row_id": 3,
+      "stage": "ANALYSIS",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-23 16:45",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 4,
+      "stage": "ANALYSIS",
+      "item": "PM Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-23 16:45",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 5,
+      "stage": "ANALYSIS",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-23 16:50",
+      "owner": "user",
+      "note": "캡틴 확인: 단일 test-tool 4서브명령 + 도구 빌드 포함 범위 확장 확정 → PLAN 진입"
+    },
+    {
+      "row_id": 6,
+      "stage": "PLAN",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-23 17:04",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 7,
+      "stage": "PLAN",
+      "item": "PM Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-23 17:04",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 8,
+      "stage": "PLAN",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-23 17:05",
+      "owner": "user",
+      "note": "캡틴 확인: PLAN 승인(SUT 경계·R-6 포인터 권고 수용) → TEST-SCENARIO 진입"
+    },
+    {
+      "row_id": 9,
+      "stage": "TEST-SCENARIO",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-23 17:08",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 10,
+      "stage": "TEST-SCENARIO",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-23 17:09",
+      "owner": "user",
+      "note": "캡틴 확인: TEST-SCENARIO 승인 → EXECUTE 진입 (모드 경계 — 이후 PM 자율)"
+    },
+    {
+      "row_id": 11,
+      "stage": "EXECUTE",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-23 17:32",
+      "owner": "auto",
+      "note": "agentic auto-pass: semi-agentic auto-pass: EXECUTE 8Step 완료 — F-001~F-007 + L85 정합. test-tool 11/11 GREEN(PM 독립 재현). docs/ 해당없음"
+    },
+    {
+      "row_id": 12,
+      "stage": "TEST",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-23 18:34",
+      "owner": "auto",
+      "note": "agentic auto-pass: semi-agentic auto-pass: TEST All Pass 15/15. S-15 실 cmux 검증 중 e2e_adapter 결함 포착→fix루프1회→naver/localhost:3000 driver=cmux PASS"
+    },
+    {
+      "row_id": 13,
+      "stage": "TEST",
+      "item": "PM Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-23 18:34",
+      "owner": "auto",
+      "note": "agentic auto-pass: semi-agentic auto-pass: PM Gate — 코드품질(ruff 경고2 비차단)·보안0·회귀(state-tool 1건 선행실패 039무관)"
+    },
+    {
+      "row_id": 14,
+      "stage": "TEST",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-23 18:35",
+      "owner": "user",
+      "note": "캡틴 확인: TEST 완료 승인 → CLOSE 진입"
+    },
+    {
+      "row_id": 15,
+      "stage": "CLOSE",
+      "item": "DONE.md 생성",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-23 18:35",
+      "owner": "PM",
+      "note": null
+    }
+  ]
+}

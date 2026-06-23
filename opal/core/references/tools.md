@@ -413,6 +413,54 @@ bash ~/.opal/tools/cmux-tool/examples/e2e-branch-auto.sh https://localhost:3000
 
 ---
 
+## test-tool
+
+**용도**: 테스트 단계별 도구 결정론적 집행 — 4서브명령(`resolve`/`check`/`unit`/`integration`)으로 `test-tools.yaml`을 읽어 단계(단위=EXECUTE / 통합=TEST)별 도구를 실행·판정하고 JSON 증거를 반환  
+**실행 경로**: `bash ~/.opal/tools/test-tool/run.sh`  
+**소스 경로**: `opal/tools/test-tool/`  
+**의존성**: `~/.opal/.venv/bin/python` + PyYAML + cmux-tool (E2E 어댑터)
+
+### 트리거 조건
+
+테스트 단계 진입 시 호출한다 — 단위(EXECUTE 자가검증) 또는 통합(TEST). test-tool은 1회 실행·판정만 수행하며, 재시도 루프 한도는 보유하지 않는다(SSOT: `opal-harness.md §1`).
+
+| 서브명령 | 용도 | 단계 |
+|---------|------|------|
+| `resolve` | `test-tools.yaml` resolution_order(project→global→추론) 해석 → tier×scope 도구셋 JSON 반환 | 단위/통합 공통 |
+| `check` | required/optional 게이트 — required 미설치 차단, optional 미설치 skip | 단위/통합 공통 |
+| `unit` | lint→build/type→unit 계층 stop-on-fail 단발 실행 | 단위 (EXECUTE) |
+| `integration` | cmux-tool 호출→에러코드 소비→playwright 폴백 결정 + 실DB API 통합 | 통합 (TEST) |
+
+### 커맨드
+
+```bash
+# test-tools.yaml 해석 → tier×scope 도구셋 JSON
+bash ~/.opal/tools/test-tool/run.sh resolve [--stack py|ts] [--project-root PATH]
+
+# required/optional 설치 게이트
+bash ~/.opal/tools/test-tool/run.sh check [--category C] [--tier unit|integration] [--project-root PATH]
+
+# 단위 계층 stop-on-fail 단발 실행 (lint→build→unit)
+bash ~/.opal/tools/test-tool/run.sh unit [--scope fe|be] [--changed-files ...] [--project-root PATH]
+
+# 통합 — cmux 1순위→playwright 폴백 (E2E) + 실DB API
+bash ~/.opal/tools/test-tool/run.sh integration [--scope fe|be] [--url URL] [--project-root PATH]
+```
+
+### 출력 형식
+
+모든 서브명령은 JSON으로 출력한다.
+
+```json
+// resolve 성공
+{ "ok": true, "command": "resolve", "tiers": { "unit": {...}, "integration": {...} }, "source": "...", "stack": "ts" }
+
+// 실패
+{ "ok": false, "command": "unit", "error": "layer_failed", "stopped_at": "lint" }
+```
+
+---
+
 ## 변경이력
 
 | 버전 | 날짜 | 내용 |
@@ -424,3 +472,4 @@ bash ~/.opal/tools/cmux-tool/examples/e2e-branch-auto.sh https://localhost:3000
 | v1.4 | 2026-05-09 18:30 | 개인 식별자 누설 정정 — note 예시 "캡틴 확인" → "{owner_name} 확인" placeholder 치환 (139) |
 | v1.5 | 2026-05-22 10:00 KST | cmux-tool 섹션 신규 추가 — 12+1종 서브명령 + 트리거 조건 5행 매트릭스 + 에러 코드 9종 + fallback 4종 (007) |
 | v1.6 | 2026-06-07 | state-tool gate-pass deprecated 표기 — 사용법 블록·예시 2곳에 [deprecated] 레거시 전용 안내 추가. 신규는 PM Gate 통과 후 단일 mark 사용. Phase4 완료 반영 (014 Phase 4) |
+| v1.7 | 2026-06-23 | test-tool 섹션 신규 추가 — 테스트 단계별 도구 결정론적 집행 4서브명령(resolve/check/unit/integration) + 트리거 조건 + 커맨드 + 출력 형식. cmux-tool 포맷 답습. 루프 한도 수치 비복제(harness §1 포인터) (039) |
