@@ -290,7 +290,11 @@ ACT 완료마다 state-tool을 호출하여 STATE.md를 갱신한다 (R-10: gate
 
 > **CLOSE 게이트 제약 (§2.16 G-13)**: CLOSE 단계 최초 진입 행(#24)은 `--auto-pass` 적용 불가 (`close_gate_violation`). 반드시 위 명시 호출로 처리한다.
 
-4. **op-brain-ingest 디스패치** (DONE.md 생성 직후 실행):
+4. **관련 문서 업데이트** (op-brain-ingest 디스패치 직전 실행):
+   - `<프로젝트-루트>/docs/PROJECT.md`의 "프로젝트 문서" 레지스트리와 이번 태스크의 `changed_files`(EXECUTE 산출)를 양쪽 종합하여, 태스크 결과로 내용이 달라진 관련 문서(ARCHITECTURE.md·SPEC·기획서 등)를 식별한다.
+   - 갱신 대상이 있으면 PM이 판단하여 직접 수정하거나 적합한 워커를 디스패치해 최신화한다. 갱신 대상이 없으면 자연 스킵(no-op) — CLOSE를 중단시키지 않는다.
+   - 목적: brain ingest 이전에 기획·설계 문서를 최신 상태로 만들어 ingest 품질을 보장한다.
+5. **op-brain-ingest 디스패치** (DONE.md 생성 직후 실행):
    - `<프로젝트-루트>/.opal/brain/` 존재 여부를 확인한다.
    - **brain이 존재하면**: op-brain-ingest 워커를 디스패치하여 태스크 산출물(DONE.md·SPEC·SPEC-PLAN 결정·신규 엔티티)을 brain에 누적한다.
    - **brain이 없으면**: 자연 스킵(no-op). CLOSE가 막히지 않는다.
@@ -299,7 +303,7 @@ ACT 완료마다 state-tool을 호출하여 STATE.md를 갱신한다 (R-10: gate
      2. `~/.opal/skills/op-brain-ingest/SKILL.md`
    - 디스패치 입력: 태스크 폴더 경로
    - 워커가 `status: skipped` 또는 `status: completed` 또는 `status: completed_with_errors` 반환 — 어떤 경우도 CLOSE를 중단시키지 않는다.
-5. 완료 보고
+6. 완료 보고
 
 보고 형식:
 ```
@@ -526,3 +530,4 @@ opal-harness-agentic.md §6 공통 기준에 추가:
 | v3.4.0 | 2026-06-07 | STATE 행 35→24 재구성 — State Gate 행 11개 제거(stage-transition guard로 이전)+CLOSE State Gate→DONE.md 생성 단일화. gate-pass 금지 문구를 deprecated(014)로 정합 갱신(mark 개별 호출 유지). 본문 Gate 흐름 "State Gate → PM Gate → State Gate → 사용자 Gate" → "PM Gate → 사용자 Gate" 정합화. 각 Phase mark 행번호 재정렬. R-13 add-row `--after 23`→`--after 17`. PM Gate 점검 목록 산출물을 실제 opsdd 산출물로 정정. ACT 폴더 반복·R-10 비표준 구조 보존 (014 Phase 4) |
 | v3.4.1 | 2026-06-07 | `--rows-from` 파싱 수정 — STATE.md 구조 예시 인라인 마크다운 헤더(# STATE:, ## 현재 상태, ## 파이프라인 현황판)가 파서 섹션 경계 오인식 유발. SSOT 파이프라인 현황판 표를 `### STATE.md 구조` 앞으로 이동 + 구조 예시를 비-마크다운 헤더 형식으로 교체. `rows_count: 24` 파싱 정상 복구 (014 Phase 4) |
 | v3.5.0 | 2026-06-11 19:25 | Phase 6 CLOSE에 op-brain-ingest 디스패치 훅 삽입 — DONE.md 생성 직후 brain 존재 시 워커 디스패치, 부재 시 no-op, CLOSE 비중단. STATE 행 24 불변 (016) |
+| v3.5.1 | 2026-06-24 | Phase 6 CLOSE op-brain-ingest 디스패치 직전에 "관련 문서 업데이트" 스텝 삽입 — PROJECT.md 레지스트리 + changed_files 종합으로 관련 문서 최신화 후 ingest (없으면 no-op). 후속 항목 번호 재정렬 (042) |

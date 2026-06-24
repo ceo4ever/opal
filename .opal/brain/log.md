@@ -122,3 +122,7 @@
 - 신규: [[pages/concept/opal-bootstrap-skip-gate.md]], [[pages/concept/bootstrapper-marker-ssot-single-point.md]]
 - 출처: task:040
 
+## [2026-06-24] ingest | CLOSE ingest — 태스크 042 CLOSE 단계 관련 문서 업데이트 스텝 추가
+- 신규: [[close-related-doc-update-before-ingest]]
+- 출처: task:042
+

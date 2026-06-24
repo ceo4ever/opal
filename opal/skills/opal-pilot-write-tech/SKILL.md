@@ -383,7 +383,11 @@ QA 최종 판정 Pass 후 태스크를 마감한다.
    ~/.opal/tools/state-tool/run.sh mark <task-path> --row <CLOSE_DONE_행N> --done  # DONE.md 생성
    ```
    > **CLOSE 게이트 제약 (§2.16 G-13)**: CLOSE 단계 최초 진입 행은 `--auto-pass` 적용 불가 (`close_gate_violation`). 반드시 위 명시 호출로 처리한다.
-2. **op-brain-ingest 디스패치** (DONE.md 생성 직후 실행):
+2. **관련 문서 업데이트** (op-brain-ingest 디스패치 직전 실행):
+   - `<프로젝트-루트>/docs/PROJECT.md`의 "프로젝트 문서" 레지스트리와 이번 태스크의 `changed_files`(EXECUTE 산출)를 양쪽 종합하여, 태스크 결과로 내용이 달라진 관련 문서(ARCHITECTURE.md·기획서 등)를 식별한다.
+   - 갱신 대상이 있으면 PM이 판단하여 직접 수정하거나 적합한 워커를 디스패치해 최신화한다. 갱신 대상이 없으면 자연 스킵(no-op) — CLOSE를 중단시키지 않는다.
+   - 목적: brain ingest 이전에 기획·설계 문서를 최신 상태로 만들어 ingest 품질을 보장한다.
+3. **op-brain-ingest 디스패치** (DONE.md 생성 직후 실행):
    - `<프로젝트-루트>/.opal/brain/` 존재 여부를 확인한다.
    - **brain이 존재하면**: op-brain-ingest 워커를 디스패치하여 태스크 산출물(DONE.md·PLAN 결정·신규 엔티티)을 brain에 누적한다.
    - **brain이 없으면**: 자연 스킵(no-op). CLOSE가 막히지 않는다.
@@ -392,7 +396,7 @@ QA 최종 판정 Pass 후 태스크를 마감한다.
      2. `~/.opal/skills/op-brain-ingest/SKILL.md`
    - 디스패치 입력: 태스크 폴더 경로
    - 워커가 `status: skipped` 또는 `status: completed` 또는 `status: completed_with_errors` 반환 — 어떤 경우도 CLOSE를 중단시키지 않는다.
-3. 완료 보고
+4. 완료 보고
 
 보고 형식:
 ```
@@ -544,3 +548,4 @@ semi-agentic / agentic 모두 CLOSE 첫 행 `--auto-pass` 거부 (`agentic_close
 | v4.2 | 2026-06-07 | State Gate 행 제거(guard 이전) + op-task-qa QA Gate 제거 → PM Gate 문서검증 흡수 + gate-pass 4-row 호출 제거 → PM Gate 단일 mark + CLOSE State Gate 행 제거(DONE.md 생성 단일 행) + STATE 행 예시 10행 구조 추가 + TASK 산출물 행 흡수. opds 패턴 정합 (014 Phase 4) |
 | v4.3 | 2026-06-11 19:25 | CLOSE 단계에 op-brain-ingest 디스패치 훅 삽입 — DONE.md 생성 직후 brain 존재 시 ingest 워커 디스패치, 부재 시 no-op, CLOSE 비중단. 탐색 경로 2단. STATE 행 수 10 불변 (016) |
 | v4.4 | 2026-06-16 | references 비즈니스 용어 우선 주입 — network-guide §7-0 공통 작성 원칙 + consistency-rules §3.1 검증 절 신설, citation-rules §8 참조 (024) |
+| v4.5 | 2026-06-24 | CLOSE 단계 op-brain-ingest 디스패치 직전에 "관련 문서 업데이트" 스텝 삽입 — PROJECT.md 레지스트리 + changed_files 종합으로 관련 문서 최신화 후 ingest (없으면 no-op). 후속 항목 번호 재정렬 (042) |

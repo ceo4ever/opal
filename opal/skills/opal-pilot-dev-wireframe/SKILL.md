@@ -146,7 +146,11 @@ state-tool 호출:
 모든 체크리스트 갱신 완료 확인 후 태스크를 마감한다.
 
 1. DONE.md 생성 후 행 9(CLOSE 행) mark (`~/.opal/tools/state-tool/run.sh mark <task-path> --row 9 --done` 호출 — P-1). 행을 mark하는 것 자체가 state 기록이다.
-2. **op-brain-ingest 디스패치** (PM Gate 통과 후, DONE.md 생성 직후 실행):
+2. **관련 문서 업데이트** (op-brain-ingest 디스패치 직전 실행):
+   - `<프로젝트-루트>/docs/PROJECT.md`의 "프로젝트 문서" 레지스트리와 이번 태스크의 `changed_files`(EXECUTE 산출)를 양쪽 종합하여, 태스크 결과로 내용이 달라진 관련 문서(ARCHITECTURE.md·기획서·와이어프레임 등)를 식별한다.
+   - 갱신 대상이 있으면 PM이 판단하여 직접 수정하거나 적합한 워커를 디스패치해 최신화한다. 갱신 대상이 없으면 자연 스킵(no-op) — CLOSE를 중단시키지 않는다.
+   - 목적: brain ingest 이전에 기획·설계 문서를 최신 상태로 만들어 ingest 품질을 보장한다.
+3. **op-brain-ingest 디스패치** (PM Gate 통과 후, DONE.md 생성 직후 실행):
    - `<프로젝트-루트>/.opal/brain/` 존재 여부를 확인한다.
    - **brain이 존재하면**: op-brain-ingest 워커를 디스패치하여 태스크 산출물(DONE.md·PLAN 결정·신규 엔티티)을 brain에 누적한다. PM Gate 통과 후 실행하므로 검증된 산출물만 누적된다.
    - **brain이 없으면**: 자연 스킵(no-op). CLOSE가 막히지 않는다.
@@ -161,7 +165,7 @@ state-tool 호출:
 > **추가작업 발생 시 (P-6)**: `~/.opal/tools/state-tool/run.sh add-row <task-path> --after 9 --stage CLOSE --item '추가 작업 항목'` 호출 → current_status 자동 `additional_work` 전환.
 > 근거: `PLAN.md` §3 Step 8 P-1 / P-6 / P-8 / §2.16 G-13
 
-3. 완료 보고
+4. 완료 보고
 
 보고 형식:
 ```
@@ -292,3 +296,4 @@ semi-agentic / agentic 모두 CLOSE 첫 행 `--auto-pass` 거부 (`agentic_close
 | v2.7 | 2026-05-09 18:30 | 개인 식별자 "캡틴" → "소유자"/"사용자" 치환 — 배포 파일 정체성 누설 정정 (139) |
 | v2.8 | 2026-06-07 | STATE 행 20→9 재구성 — opds 패턴 적용 + op-dev-qa 디스패치→PM Gate 흡수: State Gate 행(#8/#10/#15/#17/#20) 제거(guard로 이전), QA Gate 행(#6/#13)+QA 산출물 행(#7/#14) 제거, 산출물 행 작업 행 흡수, gate-pass 제거, WIREFRAME·EXECUTE PM Gate에 빌드/린트·wireframe↔코드 대조 직접 검증 체크리스트 추가 (014) |
 | v2.9 | 2026-06-11 19:25 | STEP 4 CLOSE에 op-brain-ingest 디스패치 훅 추가 — DONE.md 생성 직후 brain 존재 시 디스패치, 부재 시 no-op, CLOSE 비중단. STATE 행 9 불변 (016) |
+| v3.0 | 2026-06-24 | CLOSE 단계 op-brain-ingest 디스패치 직전에 "관련 문서 업데이트" 스텝 삽입 — PROJECT.md 레지스트리 + changed_files 종합으로 관련 문서 최신화 후 ingest (없으면 no-op). 후속 항목 번호 재정렬 (042) |

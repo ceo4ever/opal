@@ -311,15 +311,18 @@ Step 1.5 — brain 사전 지식 참조 (3시점)
 
 ### 8.2 CLOSE 시 자동 ingest (요구 ②)
 
-**모든 pilot의 CLOSE 단계에 brain ingest 훅 구현 완료 (016 W6 — opp + 7 pilot 확산).**
+**모든 pilot의 CLOSE 단계에 brain ingest 훅 구현 완료 (016 W6 — opp + 7 pilot 확산). 관련 문서 업데이트 스텝 추가 (042).**
 
 ```
 CLOSE 단계:
   1. DONE.md 생성
-  2. ★ brain ingest 훅:
-     DONE.md 생성 직후 → .opal/brain/ 존재 시 op-brain-ingest 디스패치(부재 시 no-op) → 완료 보고
+  2. ★ 관련 문서 업데이트 (brain ingest 직전):
+     PROJECT.md 레지스트리 + 태스크 changed_files 종합 → PM 판단 → 직접 수정 또는 워커 호출
+     (갱신 대상 없으면 no-op — CLOSE 비중단)
+  3. ★ brain ingest 훅:
+     관련 문서 최신화 직후 → .opal/brain/ 존재 시 op-brain-ingest 디스패치(부재 시 no-op)
      (op-brain-ingest 탐색 경로 2단: 프로젝트 스킬 → 글로벌 스킬)
-  3. 태스크 완료 보고
+  4. 태스크 완료 보고
 ```
 
 **ingest 대상 / 제외 기준** (op-brain-ingest §STEP 3 SSOT):

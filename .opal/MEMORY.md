@@ -1,7 +1,7 @@
 # opal Memory Index
 
-> 최종 갱신: 2026-06-24 (041 E2E 테스트 실행 개선 — CLOSE)
-> last_task_number: 41
+> 최종 갱신: 2026-06-24 (042 CLOSE 단계 관련 문서 업데이트 스텝 추가 — CLOSE)
+> last_task_number: 42
 > ⚠️ 채번 충돌: 015·016이 양 PC에서 중복 사용됨 (main: 015 보고형식·016 TDD·017 가드 / brain 라인: 015 brain 코어·016 wiki 지능화). 다음 채번은 018부터.
 
 ## 메모리 카테고리
@@ -38,6 +38,7 @@
 
 | 등록일자 | 작업 | 단계 | 경로 | 시작일시 | 완료일시 |
 |----------|------|------|------|---------|---------|
+| 2026-06-24 | 042 CLOSE 단계 관련 문서 업데이트 스텝 추가 (opds, agentic) — 8개 pilot CLOSE에 brain ingest 직전 "관련 문서 업데이트" 스텝 삽입(PROJECT.md 레지스트리+changed_files 기반, PM 판단+직접 수정/워커 호출, 없으면 no-op). 3패턴(A:6개/B:opsdd/C:opgc) 분류 적용. 변경이력 8파일 추가. opal-brain-design.md §8.2 CLOSE 흐름 갱신. brain concept 1건 ingest. 커밋 미수행 | 완료 | tasks/042-260624-opds-close-문서업데이트/ | 2026-06-24 09:30 | 2026-06-24 15:51 |
 | 2026-06-24 | 041 E2E 테스트 실행 개선 (opd, agentic) — E2E 미실행 3개 원인 해소. ①EXECUTE: op-dev-execute Step 3-S-1에 `test-tool unit --scope be/fe` 명시 호출 추가(v2.3). ②TEST FE: e2e_adapter.py playwright fallback에 `mcp_action:"browser_navigate"`/`mcp_url` 필드 추가 + opal-test-agent AGENT.md playwright MCP 4단계 분기 배선(v1.7). ③TEST BE: test-scenario-guide.md BE API M2 Swagger via cmux 의무 트리거 추가(v2.6) + AGENT.md 분기 1-b(Swagger URL 패턴 감지→Try it out 플로우). ④OPAL_TEST_TOOLS_GLOBAL: install-mac.sh `register_test_tools_global_in_shell_rc` 신설+shell rc 멱등 등록(v3.4). ⑤SKILL.md PM Gate FE→M2 의무 체크박스(v1.7). pytest 12/12 PASS. 커밋 미수행 | 완료 | tasks/041-260624-opd-e2e-테스트-실행-개선/ | 2026-06-24 08:30 | 2026-06-24 09:20 |
 | 2026-06-24 | 040 부트스트랩 스킵 옵션(OPAL_BOOTSTRAP=off) — opds agentic. bootstrapper 4종(claude/codex/gemini/cursor) + AGENT.md Eager step 0. 핵심발견: TASK 전제 정정(emit함수→bootstrapper SSOT). L1 10/10 All Pass. L2/L3 install 재배포 후 캡틴 직접 검증 대기. brain concept 2(opal-bootstrap-skip-gate+bootstrapper-marker-ssot). 커밋 미수행 | 완료 | tasks/040-260624-opds-부트스트랩-스킵/ | 2026-06-24 07:35 | 2026-06-24 07:54 |
 | 2026-06-23 | 039 테스트 수행도구 FE/BE 2단계 재정의 + 신규 test-tool (opd, semi-agentic) — 캡틴 지시: 테스트를 단위(EXECUTE)/통합(TEST) 2단계로 재정의, 산문지시→**결정론적 집행기 test-tool**로 대체. **신규 도구**(`opal/tools/test-tool/`): run.sh(state-tool 패턴)+4서브명령(resolve=test-tools.yaml 해석/check=설치게이트/unit=lint→build→unit stop-on-fail 단발/integration=E2E+실DB). test-tools.yaml/schema v2.0 `tiers`(unit:fe/be·integration:e2e/api_db/supervisor)+FE/BE 매트릭스+**dtp-* 고아참조 7줄 현행화**(R-2 해소=레지스트리에 실소비자 부여). E2E=**cmux 1순위→playwright 폴백**, cmux 가용성은 직접재구현 금지·**cmux-tool 4-gate 에러코드 소비**(폴백4종 not_in_cmux/cmux_not_installed/surface_parse_failed/open_failed vs 에스컬레이션5종). mode A(매 테스트 신규 surface open→close, 사용자 surface 재사용 금지). 6문서 배선(test-scenario-guide resolve 단일SSOT+4단계탐지=내부폴백/AGENT.md+persona E2E순서·jest-axe·lint=단위/verification-loop 3축명명표/tools.md·harness §9 등록). **RED-first**(test-tool=도구로직 고위험): 작성자(opal-test-agent red 11계약)≠구현자(opal-be-agent GREEN). **🐛 S-15 실 cmux 검증이 진짜 결함 포착**(캡틴 "대충 체크 금지"·실검증 고집 적중): e2e_adapter가 cmux-tool을 PATH명령 `"cmux-tool"`로 호출→항상 playwright 폴백, **스텁테스트(S-6~S-8)가 동일 오가정으로 가림**→fix루프1회(테스트 OPAL_CMUX_TOOL_CMD 교정→구현 경로교정 기본 ~/.opal/tools/cmux-tool/run.sh)→11/11 GREEN. **TEST All Pass 15/15**: pytest 11/11(PM 독립재현)·dtp 0건·S-15 naver(surface:39)·localhost:3000(HTTP200,surface:40) 양쪽 driver=cmux. 교훈=외부도구 경계는 스텁만으론 불충분·실연동 L3가 통합결함 포착. brain ingest(entity test-tool+concept 3). PM Gate: ruff경고2(비차단)·state-tool 선행실패1(039무관). 후속=[[follow-up-test-tool-deploy]](install 재배포·R-6 별건). 커밋 안 함 | 완료 | tasks/039-260623-opd-테스트도구-fe-be-2단계-재정의/ | 2026-06-23 16:36 | 2026-06-23 18:35 |

@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-06-24 07:56
+> 갱신: 2026-06-24 15:54
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -32,6 +32,7 @@
 - [[business-terminology-first-principle]] — 기획 산출물 비즈니스 용어 우선 원칙 #citation-rules #opal-writing #opwt #brain-ingest #document-standard
 - [[clarification-gate-backward-compat]] — 명확화 게이트 하위호환 정책 A — graceful skip #pipeline #enforcement #backward-compat #state-tool
 - [[clarification-gate]] — 명확화 게이트 — TASK 4요소 잠금 기계 집행 #pipeline #enforcement #state-tool #clarification
+- [[close-related-doc-update-before-ingest]] — CLOSE 관련 문서 업데이트 — brain ingest 직전 최신화 #close #pipeline #brain-ingest #document-standard
 - [[cmux-tool-dispatcher-expansion]] — cmux-tool 범용 디스패처 확장 (12+1종 서브명령) #tool #cmux #dispatcher #task
 - [[code-scan-mandatory-policy]] — code-scan 무조건화 규약 — 코드 작업 한정 강제 (010) #code-scan #pm #policy #dispatch
 - [[codex-dispatch-inline-injection]] — Codex tool-backed 워커 디스패치 인라인 주입 규칙 #codex #dispatch #adapter #workaround #platform

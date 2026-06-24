@@ -206,7 +206,11 @@ QA 통과 시:
    ```
    ~/.opal/tools/state-tool/run.sh mark <task-path> --row 15 --done
    ```
-2. **op-brain-ingest 디스패치** (DONE.md 생성 직후 실행):
+2. **관련 문서 업데이트** (op-brain-ingest 디스패치 직전 실행):
+   - `<프로젝트-루트>/docs/PROJECT.md`의 "프로젝트 문서" 레지스트리와 이번 태스크의 `changed_files`(EXECUTE 산출)를 양쪽 종합하여, 태스크 결과로 내용이 달라진 관련 문서(ARCHITECTURE.md·표준사전·ERD 등)를 식별한다.
+   - 갱신 대상이 있으면 PM이 판단하여 직접 수정하거나 적합한 워커를 디스패치해 최신화한다. 갱신 대상이 없으면 자연 스킵(no-op) — CLOSE를 중단시키지 않는다.
+   - 목적: brain ingest 이전에 기획·설계 문서를 최신 상태로 만들어 ingest 품질을 보장한다.
+3. **op-brain-ingest 디스패치** (DONE.md 생성 직후 실행):
    - `<프로젝트-루트>/.opal/brain/` 존재 여부를 확인한다.
    - **brain이 존재하면**: op-brain-ingest 워커를 디스패치하여 태스크 산출물(DONE.md·사전·ERD·DDL)을 brain에 누적한다.
    - **brain이 없으면**: 자연 스킵(no-op). CLOSE가 막히지 않는다.
@@ -214,7 +218,7 @@ QA 통과 시:
      1. `{프로젝트}/.opal/skills/op-brain-ingest/SKILL.md`
      2. `~/.opal/skills/op-brain-ingest/SKILL.md`
    - 어떤 status(skipped/completed/completed_with_errors)도 CLOSE를 중단시키지 않는다.
-3. 완료 보고:
+4. 완료 보고:
    ```
    [CLOSE] 태스크 완료
    산출물: tasks/{NNN}-{태스크명}/DONE.md
@@ -315,3 +319,4 @@ semi-agentic / agentic 모두 CLOSE 첫 행 `--auto-pass` 거부 (`agentic_close
 | 버전 | 날짜 | 변경 내용 |
 |------|------|---------|
 | v1.0 | 2026-06-12 | 초기 작성 — opal-pilot-data-design(opdd) 오케스트레이터 신설. 파이프라인 6단계(TASK/DICT/MODEL/DDL·MIGRATION/QA/CLOSE), STATE 15행, 모드경계 행 8, DDL 물리 의존, opal-db-agent 단일 디스패치 (019) |
+| v1.1 | 2026-06-24 | CLOSE 단계 op-brain-ingest 디스패치 직전에 "관련 문서 업데이트" 스텝 삽입 — PROJECT.md 레지스트리 + changed_files 종합으로 관련 문서 최신화 후 ingest (없으면 no-op). 후속 항목 번호 재정렬 (042) |

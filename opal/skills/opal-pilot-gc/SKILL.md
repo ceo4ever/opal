@@ -346,6 +346,12 @@ DONE.md 생성 완료 후 state-tool로 행 갱신:
 > **[MUST] 행 갱신**: mark하는 것 자체가 state 기록이며 별도의 State Gate 행은 존재하지 않는다. state-tool stage-transition guard가 이전 단계 필수 행 완료 여부를 자동 검증한다.
 > **CLOSE 진입 게이트 (§2.16 G-13)**: CLOSE 단계 첫 행(#7)은 `--auto-pass` 적용 불가 (`close_gate_violation`). 반드시 위 명시 호출로 처리한다.
 
+**관련 문서 업데이트** (op-brain-ingest 디스패치 직전 실행):
+
+- `<프로젝트-루트>/docs/PROJECT.md`의 "프로젝트 문서" 레지스트리와 이번 GC 태스크의 `changed_files`를 양쪽 종합하여, 결과로 내용이 달라진 관련 문서(ARCHITECTURE.md·기획서 등)를 식별한다.
+- 갱신 대상이 있으면 PM이 직접 수정하거나 적합한 워커를 디스패치해 최신화한다. 없으면 자연 스킵(no-op) — CLOSE를 중단시키지 않는다.
+- 목적: brain ingest 이전에 기획·설계 문서를 최신 상태로 만들어 ingest 품질을 보장한다.
+
 **op-brain-ingest 디스패치** (DONE.md 생성 + state-tool mark 완료 직후):
 
 - `<프로젝트-루트>/.opal/brain/` 존재 여부를 확인한다.
@@ -521,3 +527,4 @@ fingerprint = sha1(fingerprint_input).hex()[:16]
 | v1.4 | 2026-05-09 18:30 | 개인 식별자 "캡틴" → "소유자" 치환 — 배포 파일 정체성 누설 정정 (139) |
 | v1.5 | 2026-06-07 | STATE 행 8→7 재구성 — State Gate 행 제거(guard로 이전), §4.2 단일 mark 패턴으로 정합화 (014 Phase 4) |
 | v1.6 | 2026-06-11 19:26 | §4.2 CLOSE에 op-brain-ingest 훅 삽입 — brain 존재 시 GC 산출물 누적, 부재 시 no-op, CLOSE 비중단 (016) |
+| v1.7 | 2026-06-24 | §4.2 CLOSE op-brain-ingest 디스패치 직전에 "관련 문서 업데이트" 단락 삽입 — PROJECT.md 레지스트리 + changed_files 종합으로 관련 문서 최신화 후 ingest (없으면 no-op) (042) |
