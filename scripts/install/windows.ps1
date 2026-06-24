@@ -91,6 +91,7 @@
         v1.12.0 2026-06-15       메뉴 [5] OPAL Console 자동 기동 추가 — Start-OpalConsole 신설 (기존 프로세스 Stop-OpalConsole + Start-Process uvicorn 백그라운드 + /health 확인) (021 후속)
         v1.13.0 2026-06-17       Codex 어댑터 정합 — Install-CodexConfig 신설(config.toml [agents] 멱등 작성, max_threads=6/max_depth=1/job_max_runtime_seconds=1800) + 호출부 연결 + Install-PlatformAgents codex ModelMap stale(standard=gpt-5.5/advanced=gpt-5.3-codex) → SSOT v1.4 정정(standard=gpt-5.4/advanced=gpt-5.5) (028)
         v1.14.0 2026-06-21 16:18 Convert-BodyModelTokens 신규 — 본문 인라인 model 레벨 sub-dispatch 토큰('[,(]\s*model:\s*(light|standard|advanced)\b')을 ModelMap 실모델명으로 변환(cursor=inherit→토큰 제거+빈괄호 정리). Install-PlatformAgents Markdown 경로($convertedBody 직렬화)·Codex TOML 경로(escape 전) 양쪽 적용. install-mac.sh _sub_body_model 미러(문자 단위 동일 정규식) — 액션 에이전트 sub-dispatch model enum 위반 버그 fix (032)
+        v1.15.0 2026-06-24 17:26 KST: Install-OpalCore setting.json create-if-absent 배포 추가 (043)
 #>
 
 #Requires -Version 5.1
@@ -451,6 +452,16 @@ function Install-OpalCore {
         Copy-Item -Force -Path $corePrinciples -Destination $opalPrinciplesDst
         Remove-ChangelogSection -Path $opalPrinciplesDst
         Write-OpalOk "OPAL PRINCIPLES.md (헌법) → $opalPrinciplesDst"
+    }
+
+    # ── OPAL 기본 설정: opal/core/setting.default.json → ~/.opal/setting.json (create-if-absent) ──
+    $settingSrc = [IO.Path]::Combine($RepoRoot, 'opal', 'core', 'setting.default.json')
+    $settingDst = Join-Path $OpalHome 'setting.json'
+    if ((Test-Path $settingSrc) -and -not (Test-Path $settingDst)) {
+        Copy-Item -Path $settingSrc -Destination $settingDst
+        Write-OpalOk "OPAL setting.json (기본값) → $settingDst"
+    } elseif (Test-Path $settingDst) {
+        Write-OpalInfo 'setting.json 이미 존재 — 보존 (사용자 설정 유지)'
     }
 
     # ── 스킬: skills/ + opal/skills/ 합쳐서 ~/.opal/skills/ ──

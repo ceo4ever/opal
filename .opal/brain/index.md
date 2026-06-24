@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-06-24 15:54
+> 갱신: 2026-06-24 18:01
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -67,7 +67,7 @@
 - [[op-task]] — op-task — TASK.md 작성 단계 스킬 #task #skill
 - [[opal-adapter-platform-isolation]] — OPAL 어댑터 계층 플랫폼 분기 격리 원칙 #adapter #architecture #constitution #platform #codex
 - [[opal-architecture]] — OPAL 시스템 아키텍처 #architecture #framework #layer #deploy
-- [[opal-bootstrap-skip-gate]] — OPAL_BOOTSTRAP=off 부트스트랩 스킵 게이트 #bootstrap #platform #adapter #session-toggle
+- [[opal-bootstrap-skip-gate]] — OPAL 부트스트랩 스킵 게이트 (setting.json Read 기반) #bootstrap #platform #adapter #session-toggle #setting-json
 - [[opal-brain-design-proposal]] — OPAL Project Brain 설계 제안서 #brain #design #llm-wiki #ingest #index
 - [[opal-brain-not-pilot-decision]] — opal-brain은 pilot이 아니다 — 리네임 철회 결정 #opal-brain #skill-naming #pilot #operator #architecture
 - [[opal-brain-system]] — OPAL Project Brain 시스템 #knowledge #architecture #wiki
@@ -84,6 +84,7 @@
 - [[opwt-v4-output-system]] — opwt v4 산출물 체계 재설계 (PRD 8섹션 + interview 통합) #opwt #planning #output #framework #task
 - [[page-type-dynamic-schema]] — 페이지 타입 동적화 — SCHEMA SSOT #architecture #brain #schema #dynamic-type
 - [[project-id-query-param-pattern]] — 절대경로 프로젝트 식별자를 query param으로 전달 #api #routing #url-design
+- [[read-based-gate-pattern]] — Read 기반 설정파일 게이트 패턴 #bootstrap #permission #gate #read-pattern #session-toggle
 - [[readme-ssot-principle]] — README는 SSOT를 따른다 — 문서·코드 불일치 시 SKILL.md가 정본 #readme #ssot #doc-code-mismatch #documentation
 - [[red-test-determinism-abort-trap]] — RED 테스트 결정론성 함정 — neverResolve fetch 대역의 abort 무반응 #testing #red-first #determinism #abort #fetch-mock
 - [[skill-op-task-qa]] — op-task-qa — 범용 문서 QA 검증 기준 #skill #qa #document

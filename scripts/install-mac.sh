@@ -32,6 +32,8 @@
 #   v3.2 2026-06-17: Codex 어댑터 정합 — install_codex_config 신설(config.toml [agents] 멱등 작성, max_threads=6/max_depth=1/job_max_runtime_seconds=1800) + 호출부 연결 + emit_platform_agent_adapter·codex_model_map stale Codex 매핑(standard=gpt-5.5/advanced=gpt-5.3-codex) → SSOT v1.4 정정(standard=gpt-5.4/advanced=gpt-5.5) (028)
 #   v3.3 2026-06-21 16:18 KST: emit_platform_agent_adapter 본문 model 레벨 치환 추가 — f.write(body) 직전 _LEVEL_RE(`[,(]\s*model:\s*(light|standard|advanced)\b`)+_sub_body_model로 본문 인라인 sub-dispatch 토큰을 mapping[platform] 실모델명으로 변환(cursor=inherit→토큰 제거+빈괄호 정리). 액션 에이전트 sub-dispatch model 레벨명이 Agent 도구 model enum 위반하던 버그 fix. frontmatter 변환·prose 자기참조 불변 (032)
 #   v3.4 2026-06-24: OPAL_TEST_TOOLS_GLOBAL shell rc 자동 등록 추가 — register_test_tools_global_in_shell_rc 신설 + install_opal_bin 연결 (041)
+#   v3.5 2026-06-24: install_claude_permissions perm_entries에 'Bash(echo $OPAL_BOOTSTRAP)' 추가 — 부트스트랩 스킵 게이트 환경변수 점검 명령을 매 세션 무프롬프트 허용
+#   v3.6 2026-06-24 17:26 KST: install_opal_setting 신규 + perm_entries echo 권한 제거(v3.5 reconcile) — OPAL_BOOTSTRAP 환경변수 게이트를 setting.json Read 게이트로 전환 (043)
 #
 
 set -euo pipefail
@@ -926,6 +928,20 @@ register_test_tools_global_in_shell_rc() {
     done
 }
 
+# ─── OPAL Setting (create-if-absent) ────────────────────
+
+install_opal_setting() {
+    local src="$FRAMEWORK_ROOT/opal/core/setting.default.json"
+    local dst="$USER_HOME/.opal/setting.json"
+    if [[ -f "$dst" ]]; then
+        # 멱등: 존재 시 절대 덮어쓰지 않음 (사용자 토글 보존) — H-1
+        info "setting.json 이미 존재 — 보존 (사용자 설정 유지)"
+        return 0
+    fi
+    cp "$src" "$dst"
+    success "OPAL setting.json (기본값) → $dst"
+}
+
 # ─── OPAL Installer ─────────────────────────────────────
 
 install_opal() {
@@ -965,6 +981,9 @@ install_opal() {
     # ── OPAL 헌법 (행동 원칙 SSOT, always-on) ──
     strip_deploy_md "$opal_dir/core/PRINCIPLES.md" "$opal_home/PRINCIPLES.md"
     success "OPAL PRINCIPLES.md (헌법) → $opal_home/PRINCIPLES.md"
+
+    # ── OPAL 기본 설정 (create-if-absent — 사용자 토글 보존) ──
+    install_opal_setting
 
     # ── 독립 스킬 (skills/ → ~/.opal/skills/) ──
     local fw_skill_count

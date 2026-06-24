@@ -126,3 +126,7 @@
 - 신규: [[close-related-doc-update-before-ingest]]
 - 출처: task:042
 
+## [2026-06-24] ingest | CLOSE ingest — 태스크 043 부트스트랩 게이트 설정파일 전환: concept 1건 신규(read-based-gate-pattern), concept 1건 갱신(opal-bootstrap-skip-gate — 040 Bash echo 방식을 043 Read 기반으로 업데이트)
+- 신규: [[pages/concept/read-based-gate-pattern.md]]
+- 출처: task:043
+
