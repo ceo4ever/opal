@@ -54,16 +54,26 @@ version: 2.0
 
 실행 모드(단순/복잡)에 따라 execute-guide.md의 절차를 따른다.
 
-### Step 3-S. 자가 점검 절차 (TDD red-green)
+### Step 3-S. 자가 점검 절차 (구현 완료 즉시)
 
-각 Step 구현 완료 후:
+각 Step 구현 완료 직후:
+
+**3-S-1. test-tool unit 실행** (단위 테스트 도구 기반, 최우선)
+1. `test-tool resolve`로 도구셋 확인 (project → global → infer 순)
+2. `test-tool unit --scope be` (BE 변경 시) 또는 `test-tool unit --scope fe` (FE 변경 시) 실행
+   - lint → typecheck → unit 순서 stop-on-fail 실행
+   - PASS → 다음 Step 진행
+   - FAIL → 즉시 수정 후 재실행 (최대 3회, 3회 초과 시 블로커 보고)
+3. FE+BE 동시 변경 시: `--scope fe` + `--scope be` 순차 실행
+
+**3-S-2. TEST-SCENARIO.md 시나리오 실행** (L1/L2 — test-tool 외 추가 검증)
 1. `scenario_source` (TEST-SCENARIO.md)에서 담당 Step 매핑 L1/L2 시나리오 식별
 2. 각 시나리오의 "실행 명령" 추출 (없으면 도구·기대결과 기반으로 명령 구성) 후 TEST-SCENARIO.md 해당 칸에 기입
 3. Bash 실행 → 결과 확인
 4. PASS: 다음 Step 진행. FAIL: 즉시 수정 후 재실행 (최대 3회)
 5. L3 시나리오: TEST 단계로 위임 (이 단계에서 실행하지 않음)
 
-**완료 기준**: checklist 100% + 담당 Step 매핑 L1/L2 시나리오 PASS
+**완료 기준**: test-tool unit PASS + checklist 100% + 담당 Step 매핑 L1/L2 시나리오 PASS
 
 ### Step 3-H. @header 작성 (code-scan 대상 확장자 파일)
 
@@ -194,3 +204,4 @@ PLAN.md §4 실행 체크리스트를 기반으로:
 | v2.0 | 2026-04-23 11:39 | 3구획 구조 전환 — references/ 에 execute-specialist-guide.md / execute-generalist-guide.md 신설, SKILL.md에 에이전트 이름 매핑 테이블 삽입, 페르소나/FE 역할 분담/FE·BE MCP 테이블 섹션을 범용 가이드로 이관, 실행 컨텍스트·Step 1·PLAN.md 기반 실행 섹션 재작성 (129) |
 | v2.1 | 2026-05-15 16:40 | scenario_source 입력 파라미터 추가 + Step 3-S 자가 점검 절차(TDD red-green) 신설 + EXECUTE 품질 체크리스트에 L1/L2 시나리오 PASS 항목 + L3 TEST 위임 룰 추가 (004) |
 | v2.2 | 2026-06-10 10:13 | 가드레일 #6 RED 테스트 파일 수정 금지 (reward hacking 방어) (016) |
+| v2.3 | 2026-06-24 | Step 3-S에 test-tool unit 명시 호출 추가 — 구현 완료 즉시 단위 테스트 도구 기반 실행 (041) |

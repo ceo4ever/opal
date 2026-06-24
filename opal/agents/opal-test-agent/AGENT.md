@@ -167,7 +167,23 @@ icon: "🧪"
 - TEST-SCENARIO.md에서 `[SUPERVISOR]` 마커가 있는 시나리오를 만나면 해당 시나리오를 실행하지 않고 즉시 오케스트레이터(PM)에 반환한다. 반환 사유: "L3 [SUPERVISOR] 시나리오 감지 — PM에 위임". L1/L2 시나리오만 실행하고 L3 결과 칸은 비워둔다.
 - TEST-SCENARIO.md 시나리오의 "실행 방식" 필드를 확인하여 처리 방식을 분기한다:
   - **M1 (테스트 도구)**: 시나리오 "실행 명령" 필드를 Bash로 실행 → 결과 캡처 → "결과" 필드에 Pass/Fail/Skip + 출력 요약
-  - **M2 (E2E 자동화)**: `test_mode`가 e2e 또는 fe인 경우 `test-tool integration --scope fe|be`을 호출하여 **cmux 1순위 → 미가용 시 playwright 폴백**·실DB를 집행한다. 도구가 폴백/에스컬레이션을 JSON으로 반환한다. 에스컬레이션(URL·네트워크·명령 오류) 또는 도구 환경 미비 시 즉시 PM에 반환하여 환경 준비 요청 (자동 우회 금지). 환경 준비 후 재실행.
+  - **M2 (E2E 자동화)**: `test_mode`가 e2e 또는 fe인 경우 `test-tool integration --scope fe|be`을 호출하여 cmux 1순위 → 미가용 시 playwright MCP 폴백으로 E2E를 집행한다. 결과 JSON의 `e2e.driver`에 따라 다음 분기를 따른다:
+    1. `e2e.driver == "cmux"` + `status == "pass"` → cmux가 E2E 완료. 실행 출력을 증거로 시나리오 결과에 기록.
+    1-b. `e2e.driver == "cmux"` + `status == "pass"` + URL이 Swagger URL (`/docs`, `/swagger-ui.html`, `/api-docs` 등 패턴 포함) → **BE API Swagger 검증 모드**:
+       - `mcp__playwright__browser_snapshot`으로 Swagger UI 로드 확인
+       - 검증 시나리오의 When 필드에 명시된 API 엔드포인트를 Swagger에서 탐색·실행:
+         `mcp__playwright__browser_click` (endpoint 섹션 열기) →
+         `mcp__playwright__browser_click` ("Try it out" 버튼) →
+         `mcp__playwright__browser_fill_form` (파라미터 입력) →
+         `mcp__playwright__browser_click` ("Execute" 버튼)
+       - `mcp__playwright__browser_snapshot`으로 Response 섹션 확인 (status code, response body)
+       - 기대 결과와 일치 여부를 증거로 시나리오 "결과/상세"에 기록
+    2. `e2e.driver == "playwright"` + `status == "fallback"` → cmux 미가용. **환경 미비가 아님** — `e2e.mcp_action`(예: `"browser_navigate"`)과 `e2e.mcp_url`을 읽어 playwright MCP를 직접 호출하여 E2E를 수행한다:
+       - `mcp__playwright__browser_navigate` (url = `e2e.mcp_url`)
+       - `mcp__playwright__browser_snapshot` 또는 `mcp__playwright__browser_take_screenshot`으로 기대 결과 검증 증거 캡처
+       - 시나리오별 추가 인터랙션(`mcp__playwright__browser_click` / `mcp__playwright__browser_fill_form` / `mcp__playwright__browser_wait_for`)은 TEST-SCENARIO.md When/Then에 따라 수행
+       - 실행 출력(스냅샷/스크린샷)을 시나리오 "결과/상세"에 증거로 기록 (헌법 §4 "Completion requires evidence")
+    3. `escalate == true` 또는 `e2e.mcp_url`이 `null` → 즉시 PM 반환. 자동 우회·임시 mock 도입 금지.
   - **M3 (사용자 협업)**: [SUPERVISOR] 마커 시나리오는 실행하지 않고 즉시 PM에 반환. 반환 사유: "L3 [SUPERVISOR] 시나리오 감지 — PM에 위임".
 - M2 자동 실행이 환경·도구 미비로 불가 시 즉시 PM 반환. 강제 우회·임시 mock 도입 금지.
 
@@ -183,3 +199,5 @@ icon: "🧪"
 | v1.3 | 2026-06-07 | 헌법 §4 집행 — "작성자 필드 신뢰" 폐기 → adversarial 시나리오 타당성 사전 검증 + 실행 출력 증거 의무 + 목업 대체 시 Fail + All Pass에 증거·목업미잔존 조건 추가 (012) |
 | v1.4 | 2026-06-10 10:13 | mode:red 추가 — M1 시나리오→실패 테스트코드 변환·RED 증거 확보 (작성자≠구현자) (016) |
 | v1.5 | 2026-06-23 | E2E cmux 1순위→playwright 폴백 교정 + M2=test-tool integration 호출 배선 + 단위(EXECUTE)/통합(TEST) 2단계 체계 (039) |
+| v1.6 | 2026-06-24 | M2 playwright MCP 실행 절차 명시 — driver:playwright 폴백 수신 시 mcp_action/mcp_url 기반 browser_navigate/snapshot 직접 호출 배선 (041) |
+| v1.7 | 2026-06-24 | M2 BE Swagger via cmux 검증 모드 추가 — Swagger URL 패턴 감지 시 Try it out 플로우 수행 (041) |

@@ -575,6 +575,9 @@ tiers:
             error_code, str(e2e.get("fallback_reason", "")),
             f"fallback_reason에 {error_code} 미포함. data={data}"
         )
+        # opal-test-agent가 소비할 playwright MCP 액션 필드 검증
+        self.assertEqual(e2e.get("mcp_action"), "browser_navigate")
+        self.assertIn("mcp_url", e2e)
 
     def test_integration_cmux_fallback_4codes(self):
         """[T039/L1-integration] S-6 H-3: cmux-tool stub이 폴백 4종 반환 시 e2e.driver=playwright
@@ -592,6 +595,42 @@ tiers:
             self.fail(
                 f"폴백 4종 중 {len(failures)}건 실패:\n" + "\n".join(failures)
             )
+
+    def test_integration_cmux_not_configured_fallback(self):
+        """[T041/L1-fallback] cmux tier 미구성 시 playwright 직접 폴백 + mcp_action 동봉.
+        e2e config에 cmux가 없으면 e2e_adapter.run_integration은 has_cmux=False
+        경로(:170-179)로 _run_playwright_fallback을 호출 — cmux-tool 호출 없이
+        opal-test-agent가 소비할 mcp_action=browser_navigate를 반환해야 한다.
+        """
+        # cmux tier 없는 신규 project_root 구성 (기존 setUp 픽스처는 cmux 포함)
+        no_cmux_root = self.tmpdir / "project-no-cmux"
+        no_cmux_root.mkdir()
+        opal_dir = no_cmux_root / ".opal"
+        opal_dir.mkdir()
+        (opal_dir / "test-tools.yaml").write_text(
+            """
+version: "2.0"
+tiers:
+  integration:
+    e2e:
+      - name: playwright
+        priority: 1
+        fallback: true
+"""
+        )
+        code, stdout, data = _run(
+            ["integration", "--url", "http://localhost:3000",
+             "--project-root", str(no_cmux_root)],
+        )
+        e2e = data.get("e2e", {})
+        self.assertEqual(
+            e2e.get("driver"), "playwright",
+            f"cmux 미구성: e2e.driver should be playwright. data={data}"
+        )
+        self.assertEqual(
+            e2e.get("mcp_action"), "browser_navigate",
+            f"cmux 미구성: mcp_action should be browser_navigate. data={data}"
+        )
 
 
 # ─────────────────────────────────────────────────────────────────────────────

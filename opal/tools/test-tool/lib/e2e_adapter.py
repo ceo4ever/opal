@@ -121,14 +121,16 @@ def _run_playwright_fallback(
     fallback_reason: str,
 ) -> Dict[str, Any]:
     """
-    playwright 폴백 결과 반환 (phase2 — 실제 playwright 호출은 구현 범위 밖).
-    test-tool은 폴백 결정만 하고 실제 playwright 실행은 오케스트레이터/캡틴 책임.
+    폴백 결정 + opal-test-agent가 소비할 playwright MCP 액션(`mcp_action`/`mcp_url`)을 반환.
+    실제 MCP 실행은 opal-test-agent 책임(AGENT.md M2 절차).
     """
     return {
         "driver": "playwright",
         "fallback_reason": fallback_reason,
         "status": "fallback",
         "url": url,
+        "mcp_action": "browser_navigate",
+        "mcp_url": url,
     }
 
 

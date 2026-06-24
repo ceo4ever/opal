@@ -77,12 +77,16 @@ TEST-SCENARIO.md §2를 작성한다:
 | 변경 영역 | M1 도구 예 | M2 E2E 예 | M3 사용자 예 |
 |----------|----------|----------|------------|
 | DB 스키마/마이그레이션 | pytest + 실 DB | (해당 없음) | (해당 없음) |
-| API 엔드포인트 | pytest + httpx | playwright API / cmux | (해당 없음) |
+| API 엔드포인트 | pytest + httpx | **Swagger UI via cmux** (`test-tool integration --url <swagger_url>`) / playwright API | (해당 없음) |
 | 비즈니스 로직 | pytest/vitest | (해당 없음) | (해당 없음) |
 | 병렬/동시성 | pytest + asyncio | 부하 도구(locust 등) | 캡틴 모니터 확인 |
 | FE 화면/컴포넌트 | vitest + RTL | **cmux 1순위 → playwright 폴백** (cmux 미가용 시 폴백) | **캡틴 화면 시각 확인** |
 | 인증/인가 | pytest | playwright 로그인 흐름 | **캡틴 실 매체 로그인** |
 | 외부 API 연동 | pytest + stub | cmux 1순위 → playwright 폴백 실 API | (해당 없음) |
+
+> **[MUST] M2 의무 트리거**: 변경 영역에 FE 화면/컴포넌트·인증/인가·외부 API 연동 중 하나라도 포함되면 해당 시나리오에 **L2/M2(E2E 자동화)를 의무로 포함**한다. M2 누락 = PM Gate FAIL. (DB 스키마·비즈니스 로직 단독 변경은 M2 면제.)
+
+> **[MUST] BE API M2 트리거**: 변경 영역에 **API 엔드포인트**가 포함되면 L2/M2(Swagger via cmux) 시나리오를 의무로 포함한다. `test-tool integration --url <swagger_url>` 호출로 cmux browser가 Swagger UI를 열어 API를 검증한다. Swagger URL은 시나리오 "실행 명령" 필드에 명시 (`http://localhost:{port}/docs` 등). pytest api_db와 병행 가능.
 
 **검증 깊이 × 실행 방식 가능 조합:**
 
@@ -92,6 +96,8 @@ L1 기능 단위        ✓               —               —
 L2 프로세스 통합     ✓               ✓               —
 L3 사용자 협업       —               (옵션)          ✓
 ```
+
+> L1×M2가 불가(`—`)인 이유: L1(기능 단위)은 함수·컴포넌트 단위 격리 검증으로 브라우저·외부 시스템 자동화(M2)의 대상이 아니다. **FE 변경의 E2E 검증은 L2/M2로 작성**한다 (L1에 M2를 얹으려다 M2 자체를 누락하는 실수 방지).
 
 → 시나리오마다 (L, M) 두 코드 모두 명시한다 (예: `L2/M1` = 실 DB 통합 / `L2/M2` = cmux E2E / `L3/M3` = 캡틴 협업).
 
@@ -196,3 +202,5 @@ TEST-SCENARIO.md §4 매핑 표를 완성한다:
 | v2.2 | 2026-06-07 | 헌법 §4 집행 — mock 금지 룰에 "구현을 목업으로 대체 금지(Don't fake it)" + 실연동 불가 시 BLOCKED 표면화 추가 (012) |
 | v2.3 | 2026-06-10 10:13 | 테스트 스택·위치 탐지 4단계 + 모듈 미러링·케이스명 프리픽스 + 공개 인터페이스 검증 규율 (016) |
 | v2.4 | 2026-06-23 | 도구 결정 SSOT를 test-tool resolve 단일 호출로 통합(4단계 탐지=도구 내부 폴백) + 2단계 명명(단위=EXECUTE/통합=TEST) + E2E cmux 1순위→playwright 폴백 명시 (039) |
+| v2.5 | 2026-06-24 | M2 의무 트리거 규칙 추가 + L1×M2 불가 사유 주석 추가 (041) |
+| v2.6 | 2026-06-24 | BE API 변경 시 Swagger via cmux M2 의무 트리거 추가 (041) |

@@ -31,6 +31,7 @@
 #   v3.1 2026-06-17 10:24: install_opal()에 git core.quotepath=false 전역 설정 추가 — 한글 태스크 폴더명 허용에 따른 git 경로 표시 개선 (026 L2: 한글 폴더명 허용)
 #   v3.2 2026-06-17: Codex 어댑터 정합 — install_codex_config 신설(config.toml [agents] 멱등 작성, max_threads=6/max_depth=1/job_max_runtime_seconds=1800) + 호출부 연결 + emit_platform_agent_adapter·codex_model_map stale Codex 매핑(standard=gpt-5.5/advanced=gpt-5.3-codex) → SSOT v1.4 정정(standard=gpt-5.4/advanced=gpt-5.5) (028)
 #   v3.3 2026-06-21 16:18 KST: emit_platform_agent_adapter 본문 model 레벨 치환 추가 — f.write(body) 직전 _LEVEL_RE(`[,(]\s*model:\s*(light|standard|advanced)\b`)+_sub_body_model로 본문 인라인 sub-dispatch 토큰을 mapping[platform] 실모델명으로 변환(cursor=inherit→토큰 제거+빈괄호 정리). 액션 에이전트 sub-dispatch model 레벨명이 Agent 도구 model enum 위반하던 버그 fix. frontmatter 변환·prose 자기참조 불변 (032)
+#   v3.4 2026-06-24: OPAL_TEST_TOOLS_GLOBAL shell rc 자동 등록 추가 — register_test_tools_global_in_shell_rc 신설 + install_opal_bin 연결 (041)
 #
 
 set -euo pipefail
@@ -857,6 +858,7 @@ install_opal_bin() {
     success "opal-cli 심볼릭 링크 → $bin_dir/opal-cli"
 
     register_path_in_shell_rc "$bin_dir"
+    register_test_tools_global_in_shell_rc
 
     # 자세한 PATH 사용 안내는 OPAL_VERBOSE=1 때만. quiet 모드는 main()의 마무리 echo에 통합됨.
     if [[ "$OPAL_VERBOSE" == "1" ]]; then
@@ -903,6 +905,25 @@ register_path_in_shell_rc() {
         info "fish 사용자: ~/.config/fish/config.fish 에 다음 줄을 추가하세요:"
         info "  set -gx PATH \$HOME/.opal/bin \$PATH"
     fi
+}
+
+# 셸 rc 파일에 OPAL_TEST_TOOLS_GLOBAL 환경변수를 1회만 등록 (idempotent)
+# 기존 register_path_in_shell_rc 멱등 마커 패턴을 동일하게 적용.
+register_test_tools_global_in_shell_rc() {
+    local marker="# === OPAL TEST_TOOLS_GLOBAL ==="
+    local marker_end="# === OPAL TEST_TOOLS_GLOBAL END ==="
+    local rc_files=("$USER_HOME/.zshrc" "$USER_HOME/.bashrc" "$USER_HOME/.profile")
+    local export_line='export OPAL_TEST_TOOLS_GLOBAL="$HOME/.opal/templates/test-tools.yaml"'
+
+    for rc in "${rc_files[@]}"; do
+        [[ -f "$rc" ]] || continue
+        if grep -qF "$marker" "$rc"; then
+            success "OPAL_TEST_TOOLS_GLOBAL 이미 등록됨: $rc"
+            continue
+        fi
+        printf '\n%s\n%s\n%s\n' "$marker" "$export_line" "$marker_end" >> "$rc"
+        success "OPAL_TEST_TOOLS_GLOBAL 등록 → $rc"
+    done
 }
 
 # ─── OPAL Installer ─────────────────────────────────────
