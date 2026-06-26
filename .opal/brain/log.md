@@ -134,3 +134,7 @@
 - 신규: [[pages/entity/tool-scan.md]], [[pages/concept/usage-ssot-live-help-principle.md]], [[pages/concept/tool-scan-thin-manifest-federation.md]], [[pages/concept/tool-usage-precheck-error-diagnosis-rule.md]], [[pages/concept/agentic-output-direct-verification-lesson.md]]
 - 출처: task:044
 
+## [2026-06-26] ingest | CLOSE ingest — 태스크 045 메모리 관리 개선
+- 신규: [[pages/entity/memory-tool.md]], [[pages/concept/memory-lifecycle-graduation-workflow.md]], [[pages/concept/fixture-vs-real-blind-spot-lesson.md]]
+- 출처: task:045
+

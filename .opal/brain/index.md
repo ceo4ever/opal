@@ -1,11 +1,12 @@
 # Project Brain Index
-> 갱신: 2026-06-26 17:00
+> 갱신: 2026-06-26 23:48
 
 ## 도메인
 (아직 등록된 페이지 없음)
 
 ## 엔티티
 - [[brain-tool]] — brain-tool #tool #knowledge
+- [[memory-tool]] — memory-tool — 프로젝트 메모리 인덱스·히스토리 결정론적 집행 CLI #tool #memory #cli #lifecycle
 - [[op-data-ddl-skill]] — op-data-ddl (DDL 단계 스킬) #skill #stage-skill #data-design #ddl #migration #dbml
 - [[op-data-dictionary-skill]] — op-data-dictionary (DICT 단계 스킬) #skill #stage-skill #data-design #dictionary #db
 - [[op-data-model-skill]] — op-data-model (MODEL 단계 스킬) #skill #stage-skill #data-design #modeling #erd #mermaid #dbml
@@ -46,10 +47,12 @@
 - [[e2e-cmux-first-playwright-fallback]] — E2E 도구 우선순위 — cmux 1순위 → playwright 폴백 (에러코드 소비) #testing #e2e #cmux #framework
 - [[erd-modeler-deprecation]] — erd-modeler deprecate — op-data-model/ddl로 분해, //erm 하위호환 #architecture-decision #deprecation #erd-modeler #migration
 - [[external-tool-boundary-stub-insufficient-lesson]] — 외부 도구 경계는 스텁만으로 불충분 — 실연동 검증이 통합 결함을 잡는다 #testing #lesson #integration #test-strategy
+- [[fixture-vs-real-blind-spot-lesson]] — fixture-vs-real 맹점 — 테스트 픽스처 통과·실데이터 버그 반복 교훈 #lesson #testing #bug #fixture
 - [[kanban-current-stage-derivation]] — 칸반 current_stage 파생 규칙 (도달 단계 기준) #opal-console #kanban #pipeline #be-single-source
 - [[kanban-pipeline-stage-grouping]] — 파이프라인 스테퍼 stage 그룹화 (BE 단일 소스, na/skipped 제외) #opal-console #pipeline #stage-grouping #be-single-source
 - [[linux-install-script]] — Linux 설치 스크립트 신설 (단순 위임 전략) #install #linux #deploy #task
 - [[loop-upper-bound-ssot-pattern]] — 루프 상한 SSOT 단일 기재 패턴 — harness 포인터, 수치 복제 금지 #harness #ssot #loop-bound #anti-pattern
+- [[memory-lifecycle-graduation-workflow]] — 메모리 라이프사이클·졸업(promote) 워크플로우 #memory #lifecycle #architecture #promote
 - [[model-mapping-latest-tracking]] — OPAL 모델 매핑 최신화 + 최신 추종 전략 #model #mapping #gemini #codex #task
 - [[op-brain-ingest]] — op-brain-ingest — CLOSE 경량 ingest 워커 #knowledge #close #ingest #skill
 - [[op-dev-analysis]] — op-dev-analysis — 코드베이스 분석 및 기술 컨텍스트 수집 #dev #analysis #skill

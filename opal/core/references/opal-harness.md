@@ -246,6 +246,7 @@ OPAL 도구는 모두 `~/.opal/tools/{tool-name}/run.sh` 래퍼를 통해 호출
 | code-scan | 코드 `@header` 메타블록 스캔 — 도메인/레이어/exports/의존 조회 | 코드 구조·위치 파악 시 |
 | cmux-tool | cmux browser 자동화 래퍼 — 12+1 서브명령(웹 크롤링·스냅샷·스크린샷·E2E) | 브라우저/localhost 접근·웹 테스트 시 |
 | tool-scan | 도구·MCP·스킬 상황 검색 + live 사용법 확인 — 5서브명령 list/which/usage/resolve/check | 도구 선택·정확한 사용법 확인 시 |
+| memory-tool | 프로젝트 메모리 인덱스·히스토리 결정론적 집행 — 9서브명령 init/append/update/promote/prune/migrate/show/review/delete. 메모리→docs/brain 졸업 워크플로우·히스토리 FIFO5·요약 길이캡·라이프사이클·마커 직접편집 금지·매 변경 후 자가검토(review)·dead/superseded 정리(delete 무손실 가드) | 메모리 등록·정리·이관 시 |
 
 > 전체 사용법: `~/.opal/references/tools.md`
 
@@ -304,3 +305,4 @@ OPAL 도구는 모두 `~/.opal/tools/{tool-name}/run.sh` 래퍼를 통해 호출
 | v5.5 | 2026-06-16 18:07 | §1 Guards에 "명확화 게이트" 절 추가 — TASK 4요소 미잠금 시 다음 단계 진입 차단, state-tool --clarification-check 집행 + clarification_gate_unmet 참조 (005) |
 | v5.6 | 2026-06-21 16:05 | §1 자동 루핑 제약 표에 "PLAN 재진입(재설계 루프)" 행 추가 — B7 액션 완성도 루프 상한 SSOT(2회, 초과 시 scope별 에스컬레이션). action-agent·verification-loop-guide는 수치 복제 없이 본 표 참조 (031) |
 | v5.7 | 2026-06-23 | §9 등록 도구 표에 test-tool 행 추가 — 테스트 단계별 도구 결정론적 집행 4서브명령 resolve/check/unit/integration, EXECUTE/TEST 단계 진입 시 (039) |
+| v5.8 | 2026-06-26 | §9 등록 도구 표에 memory-tool 행 추가 — 프로젝트 메모리 인덱스·히스토리 결정론적 집행 9서브명령(init/append/update/promote/prune/migrate/show/review/delete). delete=dead/superseded 무손실 정리는 045 추가작업 (045) |

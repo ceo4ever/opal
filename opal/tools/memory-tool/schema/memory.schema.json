@@ -1,0 +1,75 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "OPAL Memory Index Row",
+  "description": "memory-learning.md 신포맷 기준 MEMORY.md 인덱스 행 스키마 (문서용 SSOT, 045)",
+  "type": "object",
+  "required": ["title", "date", "type", "status", "file", "summary"],
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "짧은 명사구(≤30자). 스캔 1순위 키.",
+      "maxLength": 30
+    },
+    "date": {
+      "type": "string",
+      "description": "등록일 YYYY-MM-DD (KST)",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+    },
+    "type": {
+      "type": "string",
+      "description": "메모리 유형 enum",
+      "enum": ["project", "architecture", "feedback", "preferences", "issues", "task"]
+    },
+    "status": {
+      "type": "string",
+      "description": "라이프사이클 상태 enum",
+      "enum": ["active", "promoted", "superseded", "dead"]
+    },
+    "file": {
+      "type": "string",
+      "description": "memory/<name>.md 상대경로 포인터",
+      "pattern": "^memory/.+\\.md$"
+    },
+    "summary": {
+      "type": "string",
+      "description": "요약 ≤80자 1줄 [MUST]. 상세는 개별 .md 본문 전용.",
+      "maxLength": 80
+    }
+  },
+  "additionalProperties": false,
+  "_history_row_schema": {
+    "description": "작업 히스토리 행 스키마 (FIFO=5)",
+    "type": "object",
+    "required": ["title", "date", "stage", "path", "result"],
+    "properties": {
+      "title": {
+        "type": "string",
+        "description": "태스크 명사구(맨 앞)"
+      },
+      "date": {
+        "type": "string",
+        "description": "등록일 YYYY-MM-DD (TASK 시작일, KST)",
+        "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+      },
+      "stage": {
+        "type": "string",
+        "description": "단계. 진행중: 'PLAN ✅ → TODO 대기' / 완료: '완료'"
+      },
+      "path": {
+        "type": "string",
+        "description": "tasks/<폴더>/ 상대경로"
+      },
+      "result": {
+        "type": "string",
+        "description": "핵심결과 ≤2줄 [MUST]. 무엇을 바꿨는지 + 결과."
+      }
+    }
+  },
+  "_constants": {
+    "HISTORY_FIFO_LIMIT": 5,
+    "SUMMARY_MAX_LENGTH": 80,
+    "PROMOTE_AGE_DAYS": 30,
+    "INDEX_MARKERS": ["<!-- memory:index:start -->", "<!-- memory:index:end -->"],
+    "HISTORY_MARKERS": ["<!-- memory:history:start -->", "<!-- memory:history:end -->"]
+  }
+}

@@ -65,7 +65,7 @@ OPAL은 2-레이어 아키텍처로 동작한다.
 | `agents/` | 서브에이전트 10개 (전문 6 + 범용 4) |
 | `community-skills/` | 커뮤니티 스킬 — `npx skills` (vercel-labs/skills)로 사용자가 온디맨드 fetch |
 | `references/` | 레지스트리 (skills.md, agents.md, mcps.md, opal-harness.md, opal-doc-standard.md, tools.md) |
-| `tools/` | CLI 도구 (skill-registry/, xlsx-tool/, tool-scan/ — capability 검색·live 사용법, check-env.js, requirements.txt) |
+| `tools/` | CLI 도구 (skill-registry/, xlsx-tool/, tool-scan/ — capability 검색·live 사용법, memory-tool/ — 메모리 인덱스·히스토리 결정론적 집행·docs/brain 졸업 워크플로우, check-env.js, requirements.txt) |
 | `.venv/` | Python 가상환경 (openpyxl, pandas, playwright 등 — requirements.txt로 관리) |
 | `templates/` | 프로젝트 에이전트 템플릿 |
 

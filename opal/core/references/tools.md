@@ -539,6 +539,108 @@ bash ~/.opal/tools/tool-scan/run.sh check <도구>               # 설치/실행
 
 ---
 
+## memory-tool
+
+**용도**: 프로젝트 메모리 인덱스·히스토리 결정론적 집행 — 9서브명령 init/append/update/promote/prune/migrate/show/review/delete. 메모리→docs/brain 졸업 워크플로우·히스토리 FIFO5·요약 길이캡·라이프사이클·마커 직접편집 금지·매 변경 후 자가검토(review)·dead/superseded 정리(delete 무손실 가드)  
+**실행 경로**: `~/.opal/tools/memory-tool/run.sh`  
+**소스 경로**: `opal/tools/memory-tool/`  
+**의존성**: `~/.opal/.venv/bin/python` (표준 라이브러리만 — json/argparse/pathlib/re/sys/datetime/os)
+
+### 트리거 조건
+
+메모리 등록·정리·이관 시 — append(신규 지식), update(상태 전이), promote(졸업), review(health 점검).
+
+### 커맨드 (9 서브명령)
+
+```bash
+# MEMORY.md 신포맷 마커·헤더·빈 표 삽입 (create-if-absent)
+~/.opal/tools/memory-tool/run.sh init --file <MEMORY.md 경로> [--force]
+
+# 메모리 행 추가 (kind=memory: 지식 인덱스 / kind=history: 작업 히스토리 FIFO5)
+~/.opal/tools/memory-tool/run.sh append --file <path> --kind {memory,history} --title <제목> \
+  [--type {project,architecture,feedback,preferences,issues,task}] \
+  [--status {active,promoted,superseded,dead}] \
+  [--summary <요약 ≤80자>] \
+  [--stage <단계>] [--path <경로>]  # history 전용
+
+# 메모리 상태/요약/제목 수정 (라이프사이클 전이: active→superseded/dead 등)
+~/.opal/tools/memory-tool/run.sh update --file <path> --title <제목> \
+  [--status <새 상태>] [--summary <새 요약 ≤80자>] [--new-title <새 제목>]  # --new-title: migrate crude 제목 보정
+
+# 메모리 → 영구 거처 졸업 (이전 확인 후 행+파일 삭제 + provenance 기록)
+~/.opal/tools/memory-tool/run.sh promote --file <path> --title <제목> \
+  [--to {docs,brain}] [--ref <영구 거처 위치 예: AGENT.md#금지사항>]
+
+# 히스토리 FIFO=5 결정론 정리 (이미 ≤5이면 no-op)
+~/.opal/tools/memory-tool/run.sh prune --file <path>
+
+# 구포맷 → 신포맷 변환 (제목 자동 추출 + [REVIEW] 플래그, 행수 보존)
+~/.opal/tools/memory-tool/run.sh migrate --file <path>
+
+# 인덱스/히스토리 현황 출력 (read-only)
+~/.opal/tools/memory-tool/run.sh show --file <path>
+
+# 자가검토 단독 health 명령 — violations[] + 라이프사이클 후보 반환
+~/.opal/tools/memory-tool/run.sh review --file <path>
+
+# dead/superseded 메모리 정리(인덱스 행 제거) — 무손실 가드(active/promoted 거부)
+~/.opal/tools/memory-tool/run.sh delete --file <path> --title <제목> [--with-file]  # --with-file: memory/<file>.md도 삭제
+```
+
+### 출력 형식
+
+모든 서브명령은 단일라인 JSON으로 출력한다.
+
+```json
+// 성공 (변경 명령은 review 블록 자동 첨부)
+{"ok": true, "command": "append", "kind": "memory", "title": "...", "active_count": 3,
+ "review": {"promote_candidates": [], "cleanup_candidates": [], "violations": [], "history_status": {...}}}
+
+// 실패
+{"ok": false, "command": "append", "error": "summary_too_long", "message": "요약 85자 > 80자 제한"}
+```
+
+### 주요 에러 코드 (SSOT: memory_tool.py ERROR_CODES)
+
+| 코드 | 의미 |
+|------|------|
+| `marker_missing` | MEMORY.md에 마커 누락 — init 먼저 실행 |
+| `summary_too_long` | 요약 >80자 제한 위반 |
+| `promote_ref_missing` | promote 시 --ref(영구 거처 위치) 미지정 — 무손실 가드 |
+| `row_not_found` | --title 에 해당하는 인덱스 행 없음 |
+| `memory_file_not_found` | 메모리 파일(memory/*.md) 없음 |
+| `already_initialized` | 마커 이미 존재 — --force로 재삽입 가능 |
+| `import_failed` | 구포맷 파싱 실패 (migrate 시) |
+| `delete_requires_dead_or_superseded` | active/promoted 행 delete 시도 — dead/superseded만 제거 가능(무손실 가드) |
+
+### 사용 예시
+
+```bash
+# 새 MEMORY.md 초기화
+~/.opal/tools/memory-tool/run.sh init --file .opal/MEMORY.md
+
+# 피드백 지식 등록
+~/.opal/tools/memory-tool/run.sh append --file .opal/MEMORY.md \
+  --kind memory --title "배포 경계 직접편집 금지" \
+  --type feedback --summary "~/.opal/ 배포 파일 직접편집 금지, 소스만 수정"
+
+# 작업 히스토리 등록 (6번째부터 자동 FIFO 정리)
+~/.opal/tools/memory-tool/run.sh append --file .opal/MEMORY.md \
+  --kind history --title "045 메모리 관리 개선" \
+  --stage "완료" --path "tasks/045-260626-opd-메모리-관리-개선/" \
+  --summary "memory-tool 신설 + SSOT 개정"
+
+# 메모리 → docs 졸업 (이전 완료 확인 후)
+~/.opal/tools/memory-tool/run.sh promote --file .opal/MEMORY.md \
+  --title "배포 경계 직접편집 금지" \
+  --to docs --ref "AGENT.md#금지사항"
+
+# health 점검
+~/.opal/tools/memory-tool/run.sh review --file .opal/MEMORY.md
+```
+
+---
+
 ## 변경이력
 
 | 버전 | 날짜 | 내용 |
@@ -552,3 +654,4 @@ bash ~/.opal/tools/tool-scan/run.sh check <도구>               # 설치/실행
 | v1.6 | 2026-06-07 | state-tool gate-pass deprecated 표기 — 사용법 블록·예시 2곳에 [deprecated] 레거시 전용 안내 추가. 신규는 PM Gate 통과 후 단일 mark 사용. Phase4 완료 반영 (014 Phase 4) |
 | v1.7 | 2026-06-23 | test-tool 섹션 신규 추가 — 테스트 단계별 도구 결정론적 집행 4서브명령(resolve/check/unit/integration) + 트리거 조건 + 커맨드 + 출력 형식. cmux-tool 포맷 답습. 루프 한도 수치 비복제(harness §1 포인터) (039) |
 | v1.8 | 2026-06-26 | brain-tool 섹션 신설(8 서브명령) + tool-scan 섹션 신설(5 서브명령 — capability 검색·live 사용법) + harness §9 drift 정합(code-scan·cmux-tool·tool-scan 행 추가). tools.md ↔ harness §9 도구 집합 7종 동일화 (044) |
+| v1.9 | 2026-06-26 | memory-tool 섹션 신설(9 서브명령 init/append/update/promote/prune/migrate/show/review/delete) — 프로젝트 메모리 인덱스·히스토리 결정론적 집행, 메모리→docs/brain 졸업 워크플로우·히스토리 FIFO5·요약 길이캡·마커 직접편집 금지·매 변경 후 자가검토·delete(dead/superseded 무손실 정리)·update --new-title(제목 보정). harness §9 drift 정합 (045) |
