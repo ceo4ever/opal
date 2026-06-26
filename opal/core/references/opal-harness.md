@@ -239,10 +239,13 @@ OPAL 도구는 모두 `~/.opal/tools/{tool-name}/run.sh` 래퍼를 통해 호출
 
 | 도구 | 용도 | 트리거 조건 |
 |------|------|------------|
-| `xlsx-tool` | xlsx 읽기/쓰기/검색 | xlsx 파일 처리 요청 |
-| `state-tool` | 파이프라인 현황판 JSON SSOT 관리 (9개 서브 명령: `init`/`show`/`advance`/`mark`/`block`/`validate`/`add-row`/`status`/`gate-pass`) | TASK 단계 시작 / Gate 직후 / 추가작업 진입 |
-| `brain-tool` | 프로젝트 브레인 지식 위키 결정론적 집행 — 8 서브명령 `init`/`add-page`/`index`/`log`/`search`/`sync-header`/`lint`/`validate` | `//opbr` 또는 brain 참조 시 |
-| `test-tool` | 테스트 단계별 도구 결정론적 집행 — 4서브명령 resolve/check/unit/integration | EXECUTE/TEST 단계 진입 시 |
+| xlsx-tool | xlsx 읽기/쓰기/검색 | xlsx 파일 처리 요청 |
+| state-tool | 파이프라인 현황판 JSON SSOT 관리 (9개 서브 명령: `init`/`show`/`advance`/`mark`/`block`/`validate`/`add-row`/`status`/`gate-pass`) | TASK 단계 시작 / Gate 직후 / 추가작업 진입 |
+| brain-tool | 프로젝트 브레인 지식 위키 결정론적 집행 — 8 서브명령 `init`/`add-page`/`index`/`log`/`search`/`sync-header`/`lint`/`validate` | `//opbr` 또는 brain 참조 시 |
+| test-tool | 테스트 단계별 도구 결정론적 집행 — 4서브명령 resolve/check/unit/integration | EXECUTE/TEST 단계 진입 시 |
+| code-scan | 코드 `@header` 메타블록 스캔 — 도메인/레이어/exports/의존 조회 | 코드 구조·위치 파악 시 |
+| cmux-tool | cmux browser 자동화 래퍼 — 12+1 서브명령(웹 크롤링·스냅샷·스크린샷·E2E) | 브라우저/localhost 접근·웹 테스트 시 |
+| tool-scan | 도구·MCP·스킬 상황 검색 + live 사용법 확인 — 5서브명령 list/which/usage/resolve/check | 도구 선택·정확한 사용법 확인 시 |
 
 > 전체 사용법: `~/.opal/references/tools.md`
 

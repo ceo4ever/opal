@@ -251,10 +251,19 @@ PM이 작업 중 아래 유형의 가치 있는 지식을 감지하면 brain ing
 | 복잡한 다단계 추론·아키텍처 설계·의사결정 구조화 | `sequential-thinking` MCP | 읽기(선제) | `references/mcps.md` |
 | 최신 정보·외부 사실 확인 | `WebSearch`·`WebFetch` | 읽기(선제) | - |
 | 파일·데이터 변환 (xlsx·pdf·이미지 등) | OPAL Tools | 변환(선제·산출 보고) | `references/tools.md` |
-| SPA·동적 렌더·localhost 페이지 접근 | `playwright` MCP | 읽기(선제) | `references/mcps.md` |
+| SPA·동적 렌더·localhost 페이지 접근 | `cmux-tool` 우선 / `playwright` MCP 폴백 | 읽기(선제) | `references/tools.md` |
+| 브라우저 자동화·웹 크롤링·스냅샷·스크린샷·E2E (cmux 환경) | `cmux-tool` | 읽기(선제) | `references/tools.md` |
+| 상황 기반 도구·MCP·스킬 검색 + 정확한 사용법(live) 확인 | `tool-scan` (resolve/usage/list/which) | 읽기(선제) | `references/tools.md` |
 | UI 컴포넌트 검색·예제·설치 명령 | `shadcn` MCP | 검색=선제 / 설치=승인 | `references/mcps.md` |
 
 > 이 맵은 "무엇을 언제 집을지"의 경량 인지용이다. 도구 상세·전체 인벤토리는 위 "첫 사용 시 로드" 문서를 트리거 시점에 Lazy 로드한다. 새 도구·MCP 추가 시 이 맵에 행을 추가한다.
+> **인벤토리·사용법 결정론 조회**: 어떤 capability(도구/MCP/스킬)가 있는지·정확한 사용법이 무엇인지는 `tool-scan`으로 묻는다 — `tool-scan list`(전체 1줄 용도), `tool-scan which <상황>`/`resolve <상황>`(상황→capability 라우팅), `tool-scan usage <도구>`(권위 출처 live 사용법). 인지 맵은 경량 1차 판단, tool-scan은 정확한 사용법 확인용이다.
+
+**도구 사용 규율** (변경/실행 계열 — 추측 호출·맹목 폴백 방지):
+
+- **사용법 선확인**: 도구를 처음 호출하기 전, 추측하지 말고 정확한 서브명령·인자를 확인한다 — `tool-scan usage <도구>` 또는 도구의 `--help`(live)로 확인한 뒤 호출한다. (잘못된 서브명령 추측 호출 금지.)
+- **에러 시 종류 기반 진단 후 폴백** (맹목 폴백 금지): 호출이 실패하면 다른 도구로 즉시 갈아타지 말고 에러 종류를 먼저 진단한다. 에러계약을 소비한다 — `usage`(잘못된 호출)·인자/URL 오류류 = **호출 수정**(폴백 금지), `cmux_not_installed` 등 환경 부재류 = **폴백 허용**.
+- **올바른 도구로 채널링**: 정식 OPAL 래퍼(예: `cmux-tool`)가 있으면 raw 외부 CLI(`cmux browser` 직접) 대신 래퍼를 사용한다 — 래퍼의 에러계약·폴백 규율을 그대로 얻는다.
 
 ### 주도성
 

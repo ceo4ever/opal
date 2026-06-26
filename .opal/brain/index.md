@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-06-24 18:01
+> 갱신: 2026-06-26 17:00
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -13,10 +13,12 @@
 - [[skill-opal-pilot-data-design]] — opal-pilot-data-design (opdd) #pilot #orchestrator #data-design #db
 - [[state-tool]] — state-tool #tool #pipeline
 - [[test-tool]] — test-tool #tool #testing #pipeline
+- [[tool-scan]] — tool-scan #tool #opal-tools #discovery #usage #capability
 
 ## 개념
 - [[active-platform-dir-install-target-lesson]] — 활성 Claude 플랫폼 디렉토리가 ~/.claude 기본이 아닐 수 있다 — install 타겟 정합 교훈 (032 P2) #install #deploy #platform #dispatch #lesson-learned
 - [[adapter-body-model-level-substitution]] — 어댑터 본문 model 레벨 치환 — frontmatter 비대칭 해소 (032) #adapter #install #model #platform #sub-dispatch #constitution
+- [[agentic-output-direct-verification-lesson]] — agentic 산출물 직접 검증 의무 — PM 직접 실행이 self-confirming을 포착 #lesson #verification #self-confirming #pm-discipline #red-first
 - [[analysis-drift-pm-cross-verify-lesson]] — ANALYSIS 드리프트 분석 환각 → PM 강화검토 패턴 (학습) #analysis #hallucination #pm-gate #lesson-learned #drift
 - [[analysis-version-hallucination-npm-view]] — ANALYSIS 라이브러리 버전 환각 → PM npm view 실측 차단 패턴 #analysis #hallucination #pm-gate #version #npm #lesson-learned
 - [[b7-action-completion-loop]] — B7 액션 완성도 루프 — triage 기반 경계 재설계 순환 구조 #oppd #action-loop #triage #verification #b7
@@ -111,7 +113,10 @@
 - [[test-scenario-pipeline-redesign]] — 테스트 시나리오 파이프라인 재설계 (2차원 매트릭스 + self-confirming 4분리) #testing #pipeline #framework #flow #task
 - [[test-two-tier-system]] — 테스트 2단계 체계 (단위=EXECUTE / 통합=TEST) #testing #pipeline #framework
 - [[three-layer-memory-architecture]] — 3계층 기억 아키텍처 — MEMORY / brain / tasks #architecture #memory #brain #long-term #tasks
+- [[tool-scan-thin-manifest-federation]] — tool-scan 매니페스트 thin 설계 + federation 불파괴 #design-principle #tool-scan #manifest #federation #ssot
+- [[tool-usage-precheck-error-diagnosis-rule]] — 도구 사용법 선확인·에러 종류 진단후 폴백 규율 #design-principle #tool-usage #mams-lesson #fallback #error-handling
 - [[uncommitted-component-readme-policy]] — 미커밋 컴포넌트는 공개 README에 미노출 #readme #policy #git #documentation #ppt-builder
+- [[usage-ssot-live-help-principle]] — 사용법 SSOT는 도구 자신의 live --help #design-principle #tool-scan #usage #drift #ssot
 - [[verification-command-4-standard]] — 검증 명령 4종 표준 (SSOT — verification-loop-guide) #verification #lint #build #test #watch-mode #ssot #standard
 - [[wbs-세분화-단일책임-수용시나리오]] — WBS 세분화 원칙 — 단일 책임 + 수용 시나리오 기준 #oppd #wbs #sizing #be #fe #acceptance-scenario
 - [[wiki-intelligence-decisions-016]] — opal-wiki-pilot 지능화 결정 — M-4/M-5 (016) #architecture #naming #git #brain #policy

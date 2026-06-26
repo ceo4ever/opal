@@ -130,3 +130,7 @@
 - 신규: [[pages/concept/read-based-gate-pattern.md]]
 - 출처: task:043
 
+## [2026-06-26] ingest | CLOSE ingest — 태스크 044 도구-검색-사용법-활용 (tool-scan)
+- 신규: [[pages/entity/tool-scan.md]], [[pages/concept/usage-ssot-live-help-principle.md]], [[pages/concept/tool-scan-thin-manifest-federation.md]], [[pages/concept/tool-usage-precheck-error-diagnosis-rule.md]], [[pages/concept/agentic-output-direct-verification-lesson.md]]
+- 출처: task:044
+

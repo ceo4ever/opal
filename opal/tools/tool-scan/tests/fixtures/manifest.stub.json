@@ -1,0 +1,115 @@
+{
+  "$schema": "tool-scan-manifest-v1",
+  "version": "1.0.0",
+  "updated_at": "2026-06-26",
+  "tools": [
+    {
+      "name": "tool-scan",
+      "kind": "tool",
+      "purpose": "도구·MCP·스킬 상황 검색·live 사용법 확인 (5서브명령)",
+      "when": ["tool", "scan", "search", "usage", "resolve"],
+      "exec": "run.sh list",
+      "usage_source": {
+        "type": "self-help",
+        "exec": "run.sh --help",
+        "ref": null,
+        "text": null,
+        "freshness": null
+      },
+      "fallback": null
+    },
+    {
+      "name": "xlsx-tool",
+      "kind": "tool",
+      "purpose": "엑셀·CSV 파일 읽기·변환 처리",
+      "when": ["xlsx", "excel", "csv", "spreadsheet"],
+      "exec": "run.sh --help",
+      "usage_source": {
+        "type": "self-help",
+        "exec": "run.sh --help",
+        "ref": null,
+        "text": null,
+        "freshness": null
+      },
+      "fallback": null
+    },
+    {
+      "name": "state-tool",
+      "kind": "tool",
+      "purpose": "OPAL 태스크 상태(STATE.md) 읽기·쓰기·검증",
+      "when": ["state", "task", "status", "verify"],
+      "exec": "run.sh --help",
+      "usage_source": {
+        "type": "self-help",
+        "exec": "run.sh --help",
+        "ref": null,
+        "text": null,
+        "freshness": null
+      },
+      "fallback": null
+    },
+    {
+      "name": "code-scan",
+      "kind": "tool",
+      "purpose": "코드 구조·exports·의존 탐색 (code-scan)",
+      "when": ["code", "scan", "exports", "depends", "search"],
+      "exec": "run.sh --help",
+      "usage_source": {
+        "type": "self-help",
+        "exec": "run.sh --help",
+        "ref": null,
+        "text": null,
+        "freshness": null
+      },
+      "fallback": null
+    },
+    {
+      "name": "cmux-tool",
+      "kind": "tool",
+      "purpose": "브라우저 자동화·웹 크롤링·E2E (12+1 서브명령)",
+      "when": ["browser", "localhost", "crawl", "e2e", "cmux", "navigate"],
+      "exec": "run.sh --help",
+      "usage_source": {
+        "type": "self-help",
+        "exec": "run.sh --help",
+        "ref": null,
+        "text": null,
+        "freshness": null
+      },
+      "fallback": [
+        {"on": "cmux_not_installed", "allow_fallback": true},
+        {"on": "usage", "allow_fallback": false}
+      ]
+    },
+    {
+      "name": "test-tool",
+      "kind": "tool",
+      "purpose": "테스트 실행·결과 검증 (resolve/check/unit/integration)",
+      "when": ["test", "unit", "integration", "lint", "typecheck"],
+      "exec": "run.sh --help",
+      "usage_source": {
+        "type": "self-help",
+        "exec": "run.sh --help",
+        "ref": null,
+        "text": null,
+        "freshness": null
+      },
+      "fallback": null
+    },
+    {
+      "name": "brain-tool",
+      "kind": "tool",
+      "purpose": "OPAL brain 지식 저장·검색·조회 (8서브명령)",
+      "when": ["brain", "knowledge", "memory", "search", "ingest"],
+      "exec": "run.sh --help",
+      "usage_source": {
+        "type": "self-help",
+        "exec": "run.sh --help",
+        "ref": null,
+        "text": null,
+        "freshness": null
+      },
+      "fallback": null
+    }
+  ]
+}

@@ -461,6 +461,84 @@ bash ~/.opal/tools/test-tool/run.sh integration [--scope fe|be] [--url URL] [--p
 
 ---
 
+## brain-tool
+
+**용도**: 프로젝트 브레인 지식 위키 결정론적 집행 — 8 서브명령으로 index·log·링크 무결성을 집행하고 `@header` 단방향 시드를 관리  
+**실행 경로**: `bash ~/.opal/tools/brain-tool/run.sh`  
+**소스 경로**: `opal/tools/brain-tool/`  
+**의존성**: `~/.opal/.venv/bin/python` (표준 라이브러리 우선)
+
+### 트리거 조건
+
+`//opbr` 호출 또는 brain 참조(과거 결정·설계 맥락 조회) 시. `.opal/brain/` 부재 프로젝트에서는 no-op.
+
+### 커맨드 (8 서브명령)
+
+```bash
+bash ~/.opal/tools/brain-tool/run.sh init <project-root>        # brain 디렉토리·index 초기화
+bash ~/.opal/tools/brain-tool/run.sh add-page <args>            # 신규 페이지(entity/concept/flow 등) 추가
+bash ~/.opal/tools/brain-tool/run.sh index                      # index.md 재생성(링크 그래프 갱신)
+bash ~/.opal/tools/brain-tool/run.sh log <args>                 # 변경 로그 기록
+bash ~/.opal/tools/brain-tool/run.sh search <키워드>            # 후보 목록(page·title·score·snippet) 반환
+bash ~/.opal/tools/brain-tool/run.sh sync-header <args>         # code-scan @header → entity 단방향 시드
+bash ~/.opal/tools/brain-tool/run.sh lint                       # 링크 무결성·구조 린트
+bash ~/.opal/tools/brain-tool/run.sh validate                   # frontmatter·평탄성 검증
+
+# 서브명령별 상세 플래그
+bash ~/.opal/tools/brain-tool/run.sh <subcommand> --help
+```
+
+### 출력 형식
+
+모든 커맨드는 JSON으로 출력한다 (`{"ok": true/false, ...}`). 상세 사용법은 `run.sh <subcommand> --help`(live)로 확인한다.
+
+---
+
+## tool-scan
+
+**용도**: capability(OPAL/외부 CLI 도구·MCP·스킬) 상황 검색 + 권위 출처(live) 사용법 확인 — PM이 "필요 시점에 도구를 꺼내 정확한 사용법으로 사용"하도록 결정론적으로 집행  
+**실행 경로**: `bash ~/.opal/tools/tool-scan/run.sh`  
+**소스 경로**: `opal/tools/tool-scan/`  
+**의존성**: `~/.opal/.venv/bin/python` (표준 라이브러리만 — json/argparse/pathlib/subprocess/re)
+
+### 설계 원칙
+
+- **사용법 텍스트를 저장하지 않는다** — `manifest.json`엔 `usage_source` 포인터만. `usage`는 매 호출 **live `--help`를 셸 실행**해 반환(drift 0).
+- **federation(읽기)** — MCP는 `mcps.md`, 스킬은 `opal-skills-registry.json`을 읽기 전용으로 조회(원본 불파괴). OPAL atomic 도구만 매니페스트 SSOT.
+- **2단 토큰** — `list`(전체 1줄 용도, 쌈) / `usage`(확정 1개의 live 사용법). 전체 사용법 일괄 주입 안 함.
+
+### 커맨드 (5 서브명령)
+
+```bash
+bash ~/.opal/tools/tool-scan/run.sh list                       # 전체 capability 1줄 용도 (kind별)
+bash ~/.opal/tools/tool-scan/run.sh which <상황>               # 상황→capability 후보 (가벼움)
+bash ~/.opal/tools/tool-scan/run.sh resolve <상황>             # top capability + kind별 invoke + live usage + fallback
+bash ~/.opal/tools/tool-scan/run.sh usage <도구> [서브명령]     # 권위 출처 live 사용법 (OPAL=exit0 판정 / 외부=stdout+stderr)
+bash ~/.opal/tools/tool-scan/run.sh check <도구>               # 설치/실행 가능 여부
+```
+
+### 출력 형식
+
+모든 서브명령은 JSON으로 출력한다.
+
+```json
+// resolve — kind별 invoke 형태
+{"ok":true,"command":"resolve","situation":"browser check localhost",
+ "resolved":{"name":"cmux-tool","kind":"tool","invoke":"shell","exec":"~/.opal/tools/cmux-tool/run.sh ...",
+   "usage":{...},"fallback":{...}}}
+
+// resolve — op-skill (워커 디스패치 형태)
+{"ok":true,"command":"resolve","resolved":{"name":"op-data-model","kind":"op-skill",
+   "invoke":"dispatch","skill_path":"~/.opal/skills/op-data-model/SKILL.md","dispatched_by":["opal-pilot-data-design"]}}
+
+// 실패
+{"ok":false,"command":"resolve","error":"no_match","detail":"..."}
+```
+
+> kind별 invoke: `tool`=셸 실행 / `mcp`=ToolSearch 포인터(파라미터 스키마는 런타임 ToolSearch) / `pilot-skill`=`//alias` 진입 / `op-skill`=워커 디스패치(SKILL.md 주입).
+
+---
+
 ## 변경이력
 
 | 버전 | 날짜 | 내용 |
@@ -473,3 +551,4 @@ bash ~/.opal/tools/test-tool/run.sh integration [--scope fe|be] [--url URL] [--p
 | v1.5 | 2026-05-22 10:00 KST | cmux-tool 섹션 신규 추가 — 12+1종 서브명령 + 트리거 조건 5행 매트릭스 + 에러 코드 9종 + fallback 4종 (007) |
 | v1.6 | 2026-06-07 | state-tool gate-pass deprecated 표기 — 사용법 블록·예시 2곳에 [deprecated] 레거시 전용 안내 추가. 신규는 PM Gate 통과 후 단일 mark 사용. Phase4 완료 반영 (014 Phase 4) |
 | v1.7 | 2026-06-23 | test-tool 섹션 신규 추가 — 테스트 단계별 도구 결정론적 집행 4서브명령(resolve/check/unit/integration) + 트리거 조건 + 커맨드 + 출력 형식. cmux-tool 포맷 답습. 루프 한도 수치 비복제(harness §1 포인터) (039) |
+| v1.8 | 2026-06-26 | brain-tool 섹션 신설(8 서브명령) + tool-scan 섹션 신설(5 서브명령 — capability 검색·live 사용법) + harness §9 drift 정합(code-scan·cmux-tool·tool-scan 행 추가). tools.md ↔ harness §9 도구 집합 7종 동일화 (044) |

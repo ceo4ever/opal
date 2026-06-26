@@ -1084,6 +1084,13 @@ install_opal() {
             success "cmux-tool lib/, examples/ 실행 권한 설정"
         fi
 
+        # ── tool-scan 실행 권한 (044) ──
+        local tool_scan_run="$opal_home/tools/tool-scan/run.sh"
+        if [[ -f "$tool_scan_run" ]]; then
+            chmod +x "$tool_scan_run"
+            success "tool-scan run.sh 실행 권한 설정"
+        fi
+
         # cmux 의존성 안내 (정보성 — 설치 강제 없음, silent fallback 정책)
         if ! command -v cmux &>/dev/null; then
             info "cmux 미감지 — cmux-tool 사용 시 https://cmux.com/ 또는 https://github.com/manaflow-ai/cmux 에서 설치 필요"
