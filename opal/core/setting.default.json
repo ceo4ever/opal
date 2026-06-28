@@ -1,1 +1,12 @@
-{"bootstrap": "on"}
+{
+  "bootstrap": "on",
+  "models": {
+    "_help": "레벨↔모델 매핑. OPAL이 워커 디스패치 시 이 값을 그대로 사용한다. 원하는 모델로 바꾸면 즉시 반영된다. 프로젝트별로 다르게 쓰려면 {프로젝트}/.opal/setting.local.json에 동일 구조로 바꿀 셀만 덮어쓴다(로컬 우선, 없는 셀은 전역). 최신 모델 참조: ~/.opal/references/opal-model-mapping.md §2 / 상세: §5",
+    "platform": "auto",
+    "claude": { "light": "haiku", "standard": "sonnet", "advanced": "opus" },
+    "gemini": { "light": "gemini-3.1-flash-lite", "standard": "gemini-flash-latest", "advanced": "gemini-pro-latest" },
+    "openai": { "light": "gpt-5.4-mini", "standard": "gpt-5.4", "advanced": "gpt-5.5" },
+    "codex":  { "light": "gpt-5.4-mini", "standard": "gpt-5.4", "advanced": "gpt-5.5" },
+    "cursor": { "light": "inherit", "standard": "inherit", "advanced": "inherit" }
+  }
+}

@@ -460,8 +460,21 @@ function Install-OpalCore {
     if ((Test-Path $settingSrc) -and -not (Test-Path $settingDst)) {
         Copy-Item -Path $settingSrc -Destination $settingDst
         Write-OpalOk "OPAL setting.json (기본값) → $settingDst"
-    } elseif (Test-Path $settingDst) {
-        Write-OpalInfo 'setting.json 이미 존재 — 보존 (사용자 설정 유지)'
+    } elseif ((Test-Path $settingSrc) -and (Test-Path $settingDst)) {
+        # 파일 존재: models 키 없으면 scaffold 병합 (멱등) — install-mac.sh install_opal_setting 패리티
+        try {
+            $existing = Get-Content -Raw -Path $settingDst | ConvertFrom-Json
+            if (-not $existing.PSObject.Properties['models']) {
+                $default = Get-Content -Raw -Path $settingSrc | ConvertFrom-Json
+                $existing | Add-Member -NotePropertyName 'models' -NotePropertyValue $default.models
+                ($existing | ConvertTo-Json -Depth 10) | Set-Content -Path $settingDst -Encoding UTF8
+                Write-OpalInfo 'setting.json에 models scaffold 병합 완료'
+            } else {
+                Write-OpalInfo 'setting.json 이미 존재 + models 보유 — 무변 (멱등)'
+            }
+        } catch {
+            Write-OpalInfo 'setting.json models 병합 실패 — 기존 파일 유지'
+        }
     }
 
     # ── 스킬: skills/ + opal/skills/ 합쳐서 ~/.opal/skills/ ──

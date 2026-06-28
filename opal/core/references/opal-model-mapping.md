@@ -1,6 +1,6 @@
 # OPAL 모델 매핑 (opal-model-mapping)
 
-> 작성일: 2026-03-29 | 버전: v1.4
+> 작성일: 2026-03-29 | 버전: v2.0
 > 참조 전용 — 오케스트레이터/에이전트가 워커 디스패치 시 이 매핑을 따른다.
 > 탐색 경로: ~/.opal/references/opal-model-mapping.md
 
@@ -16,13 +16,15 @@
 
 ## 2. 플랫폼별 매핑 테이블
 
+> 모델 SSOT = `opal/core/setting.default.json`. 본 표는 사람이 읽는 미러이며 setting.default.json과 값을 일치 유지한다.
+
 | 레벨 | Claude | Gemini | OpenAI (참조전용) | Codex |
 |------|--------|--------|--------|-------|
 | `light` | haiku | gemini-3.1-flash-lite | gpt-5.4-mini | gpt-5.4-mini |
 | `standard` | sonnet | gemini-flash-latest | gpt-5.4 | gpt-5.4 |
 | `advanced` | opus | gemini-pro-latest | gpt-5.5 | gpt-5.5 |
 
-> 플랫폼별 최신 모델이 출시되면 이 테이블을 갱신한다.
+> 플랫폼별 최신 모델이 출시되면 이 테이블과 setting.default.json을 함께 갱신한다.
 
 > **OpenAI 컬럼 = 참조 전용(install 어댑터 미연동)** — `install-mac.sh` mapping dict에 `openai` 키 없음(호출처 전체에 `platform="openai"` 없음). Codex 경로가 OpenAI 모델을 ChatGPT-auth로 사용한다.
 
@@ -71,7 +73,82 @@ model: standard
 
 > **Cursor 특이사항**: Cursor는 사용자가 설정한 모델 제공자(Claude/Gemini/OpenAI)에 따라 매핑이 달라진다. Cursor 감지 시 모델 제공자를 추가 확인하거나 사용자에게 질문한다.
 
-## 5. 갱신 가이드라인
+## 5. 사용자·프로젝트 오버라이드 (setting.json / setting.local.json)
+
+`setting.default.json`이 모델 SSOT(실모델 JSON)다. OPAL은 이 값을 그대로 사용하며, 사용자는 설정 파일로 레벨↔모델 매핑을 셀 단위로 덮어쓸 수 있다.
+
+### 5.1 파일 위치 및 우선순위
+
+**부트스트랩 step 0**에서 오케스트레이터는 **2-레이어 머지**로 effective setting을 구성하고, 그 `models`를 세션 컨텍스트에 로드한다(`AGENT.md` Eager step 0). 모델 매핑은 이 effective.models를 사용하며, 워커 디스패치 시 재확인한다:
+
+1. `~/.opal/setting.json` — **전역 base**. install이 `setting.default.json`의 실모델값으로 시드한다.
+2. `{프로젝트}/.opal/setting.local.json` — **프로젝트 오버라이드**. 로컬에 있는 셀만 base 위에 덮어쓴다(셀 단위). 사용자가 직접 생성했을 때만 존재한다(install은 생성하지 않음). 부트스트랩 step 0이 전역 위에 이 파일을 머지하므로, 프로젝트 진입 시점부터 적용된다.
+
+머지 규칙:
+- 로컬에 있는 셀 = 로컬 우선.
+- 로컬에 없는 셀 = 전역 유지.
+- **표 폴백 없음. `"default"` 토큰 없음.**
+
+미설정 오류 규칙:
+- 감지된 플랫폼의 해당 레벨 셀이 전역·로컬 **둘 다 없으면** 오류로 처리한다.
+- 디스패치를 중단하고 "setting.json models.{provider}.{level} 미설정" 안내를 출력한다.
+- 자동 폴백·추정 금지.
+
+### 5.2 스키마
+
+전역 `~/.opal/setting.json` 예시 (install 시드 형태, 실모델명):
+
+```json
+{
+  "bootstrap": "on",
+  "models": {
+    "_help": "레벨↔모델 매핑. OPAL이 워커 디스패치 시 이 값을 그대로 사용한다.",
+    "platform": "auto",
+    "claude": { "light": "haiku", "standard": "sonnet", "advanced": "opus" },
+    "gemini": { "light": "gemini-3.1-flash-lite", "standard": "gemini-flash-latest", "advanced": "gemini-pro-latest" },
+    "openai": { "light": "gpt-5.4-mini", "standard": "gpt-5.4", "advanced": "gpt-5.5" },
+    "codex":  { "light": "gpt-5.4-mini", "standard": "gpt-5.4", "advanced": "gpt-5.5" },
+    "cursor": { "light": "inherit", "standard": "inherit", "advanced": "inherit" }
+  }
+}
+```
+
+- `platform`: `"auto"`(기본 — §4 감지) 또는 `claude`·`gemini`·`openai`·`codex`·`cursor` 강제.
+- 각 provider 블록의 `light/standard/advanced`: 실모델명을 직접 기입한다.
+- `cursor`: IDE 위임(inherit) — 등급별 모델 핀 N/A.
+
+### 5.3 적용 경계
+
+- **모델 SSOT = `opal/core/setting.default.json`**. install이 이 파일의 실모델값을 `~/.opal/setting.json`에 시드한다.
+- **프로젝트 단위 베이킹 없음** — 런타임 머지(디스패치 직전)로만 적용된다.
+- `setting.local.json`은 사용자가 직접 만들 때만 존재한다(install 미생성). 개인 오버라이드 성격이므로 `.gitignore`에 추가 권장(팀 공유 목적이면 커밋).
+
+### 5.4 setting.local.json 사용 예
+
+파일 위치: `{프로젝트}/.opal/setting.local.json` (사용자가 직접 생성).
+
+일부 셀만 덮어쓰는 예 — `claude.advanced`만 로컬 지정, 나머지 셀은 전역(`~/.opal/setting.json`) 유지:
+
+```json
+{
+  "models": {
+    "claude": { "advanced": "opus" }
+  }
+}
+```
+
+머지 결과: `claude.advanced` = `"opus"` (로컬), `claude.light` = `"haiku"` (전역 유지), `claude.standard` = `"sonnet"` (전역 유지), 나머지 provider = 전역 유지.
+
+누락 셀 오류 예: 전역·로컬 모두 `claude.light`가 없으면 → 디스패치 중단, "setting.json models.claude.light 미설정" 안내.
+
+### 5.5 install 시드 및 멱등 병합 정책
+
+- install은 `opal/core/setting.default.json`(SSOT, 실모델명)을 `~/.opal/setting.json`에 시드한다.
+- 기존 `~/.opal/setting.json`에 `models` 키가 **없으면**: `setting.default.json`의 `models` 블록을 통째로 병합한다(실모델값 그대로).
+- 기존 `~/.opal/setting.json`에 `models` 키가 **있으면**: 사용자 선택 보존 — 무변.
+- `bootstrap` 등 기존 키·값은 병합 시 절대 변경하지 않는다(멱등).
+
+## 6. 갱신 가이드라인
 
 - 새 모델 출시 시 해당 플랫폼 컬럼만 갱신한다
 - 레벨 정의(light/standard/advanced)는 변경하지 않는다
@@ -98,3 +175,8 @@ model: standard
 | v1.3 | 2026-06-02 20:16 KST | Gemini 부동 별칭 전환 + Codex 최신화 + OpenAI 참조전용 명시 + 최신 추종 운영 규칙 보강 (011) |
 | v1.4 | 2026-06-17 10:21 KST | 최신 모델 재검토 — Codex/OpenAI standard `gpt-5.5`→`gpt-5.4`·advanced `gpt-5.3`/`gpt-5.3-codex`→`gpt-5.5`(gpt-5.3-codex 2026-06-30 일몰, gpt-5.5-codex 부재) + 운영 규칙에 Codex 특화 핀 폐지·Gemini 3.x 추종 확인·Fable 5 보류 명문화 + 헤더 버전 v1.0→v1.4 정합. Claude(haiku/sonnet/opus)·Gemini light(gemini-3.1-flash-lite GA) 현행 확인 |
 | v1.5 | 2026-06-17 | install 정합 기록 + 인라인 주입 model 매핑 참조 추가 — install 3개소(`install-mac.sh:562`·`:704-708`, `windows.ps1:1539`) v1.3 stale 확인·태스크 028에서 정정 완료. `agents.md §Codex tool-backed 인라인 주입` 참조 1줄 추가 (028) |
+| v1.6 | 2026-06-28 | §5 사용자·프로젝트 오버라이드 신설 — `setting.json`(유저)·`setting.local.json`(프로젝트) `models` 블록으로 provider×등급 매핑 오버라이드. 우선순위 프로젝트→유저→표(셀 단위 deep merge), 런타임 디스패치 직전 적용, install은 전역 베이킹만(프로젝트 미생성). 헤더 버전 v1.4→v1.6 정합 |
+| v1.7 | 2026-06-28 | §5.1 폴백 입도 정밀화(provider 블록 전체 누락→전 셀 폴백 / level 셀 누락·default→그 셀만 폴백) + §5.2 cursor IDE 위임(inherit)·등급핀 N/A 주석 추가 + §5.4 setting.local.json 사용 예 스니펫 신설 (046) |
+| v1.8 | 2026-06-28 | §5.5 신설 — setting.default.json inert scaffold 출고 및 install 멱등 병합 정책 문서화. 헤더 버전 v1.7→v1.8 정합 (046) |
+| v1.9 | 2026-06-28 | §5 전면 개정 — 2-레이어 머지(전역→로컬 셀 단위 덮어쓰기)로 단순화. "default" 폴백·표 폴백 제거. 미설정 셀=오류 규칙 명시. §5.2 스키마 concrete 실모델 예시로 교체. §5.3 모델 SSOT=setting.default.json 명시·베이킹 없음. §5.4 사용 예 concrete로 갱신. §5.5 install 시드/멱등 병합 concrete 기준으로 갱신. §2 표 위에 SSOT 주석 1줄 추가. 헤더 버전 v1.8→v1.9 정합 (046) |
+| v2.0 | 2026-06-28 | §5.1 머지 시점을 **부트스트랩 step 0**으로 이동 — 전역+로컬 머지로 effective setting 구성·models 세션 로드(프로젝트 진입 시점부터 적용). 디스패치 직전 읽기만 하던 구조에서 "프로젝트 setting.local.json 미적용" 문제 해소. AGENT.md step 0 + 4개 bootstrapper 게이트에 로컬 머지 추가와 연동. 헤더 v1.9→v2.0 (046) |

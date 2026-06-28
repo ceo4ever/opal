@@ -207,7 +207,7 @@ Codex CLI에서 tool-backed 세션(모델이 도구로 자율 구동되는 세�
 
 1. `~/.opal/agents/<name>/AGENT.md` 본문을 직접 Read하여 내용을 파악한다.
 2. `spawn_agent`의 message 파라미터에 해당 AGENT.md 본문을 **인라인**으로 주입한다.
-3. OPAL model 레벨을 이 문서 §frontmatter 변환 규칙 Codex 컬럼으로 매핑하여 적용한다 (→ `opal/core/references/opal-model-mapping.md` §2).
+3. OPAL model 레벨을 이 문서 §frontmatter 변환 규칙 Codex 컬럼으로 매핑하여 적용한다 (→ `opal/core/references/opal-model-mapping.md` §2). 오버라이드가 있으면 `setting.local.json` → `setting.json` → §2 표 우선순위(셀 단위)를 따른다 (→ `opal-model-mapping.md` §5).
 
 이 인라인 주입은 **배포 시점이 아니라 디스패치 런타임 행위**다. `install-mac.sh`의 `install_codex_agents`는 원본 AGENT.md 배포 + `.toml` 생성 + config `[agents]` 작성만 수행하며, 인라인 주입은 PM이 런타임에서 직접 수행한다.
 
@@ -342,3 +342,4 @@ project: mams
 | v1.6 | 2026-06-07 | QA→PM Gate 통합 정합화 — opal-task-qa-agent를 "QA Gate에서 디스패치되는 범용 QA 워커"에서 "디스패치되지 않는 검증 기준 라이브러리 참조 정의"로 역할 한정(삭제하지 않음). 문서 QA는 PM Gate가 직접 흡수, op-dev-qa/op-task-qa는 PM이 참조하는 검증 기준 라이브러리. 동작 검증(opal-test-agent/TEST/verify) 영역 불변 (014 Phase 4-2) |
 | v1.7 | 2026-06-17 | Codex CLI 어댑터 보강 — 메커니즘 표 Codex 행 추가(tool-backed=인라인 주입/TUI=이름호출, `~/.codex/agents/{name}.toml`) + frontmatter 변환 표 Codex 컬럼 추가(gpt-5.4-mini/gpt-5.4/gpt-5.5) + §Codex tool-backed 인라인 주입 규칙 §신설(PM 런타임 행위/spawn_agent message 주입/model 매핑/#15250 인용/배포 시점 아님/.toml 유지 명시) + 함수 참조에 codex 추가 (028) |
 | v1.8 | 2026-06-21 16:18 KST | §본문 처리 정정 — "본문은 변경 없이 그대로 복사된다" 무조건 진술 제거. 어댑터가 본문 인라인 `model: <레벨>` sub-dispatch 오버라이드 토큰(괄호 내 `, model:`/`(model:`)도 frontmatter와 동일하게 플랫폼 실모델명으로 변환(cursor=토큰 제거), prose 자기참조(백틱 내)는 비대상임을 명시 — frontmatter만 변환하고 본문 verbatim 복사하던 경계 비대칭 제거(install-mac.sh `_sub_body_model`·windows.ps1 `Convert-BodyModelTokens`) (032) |
+| v1.9 | 2026-06-28 | §Codex tool-backed 인라인 주입 Step 3에 오버라이드 우선순위 포인터 추가 — setting.local.json → setting.json → §2 표(셀 단위) 적용 + `opal-model-mapping.md` §5 참조. `opal-model-mapping.md` §5 오버라이드 도입과 정합 (046) |

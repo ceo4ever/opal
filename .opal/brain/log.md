@@ -138,3 +138,7 @@
 - 신규: [[pages/entity/memory-tool.md]], [[pages/concept/memory-lifecycle-graduation-workflow.md]], [[pages/concept/fixture-vs-real-blind-spot-lesson.md]]
 - 출처: task:045
 
+## [2026-06-28] ingest | CLOSE ingest — 태스크 046 모델매핑-프로젝트유저-오버라이드: 2-레이어 오버라이드 아키텍처 + 미설정 오류 정책
+- 신규: [[pages/concept/model-mapping-2layer-override.md]], [[pages/concept/model-mapping-missing-cell-error-policy.md]]
+- 출처: task:046
+

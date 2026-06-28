@@ -179,6 +179,7 @@ Lazy 로드 모듈. 각 §의 stub이 로드 시점과 파일 경로를 지시�
 
 오케스트레이터가 워커를 디스패치할 때, model 필드는 플랫폼 중립적인 레벨명을 사용한다.
 레벨별 플랫폼 매핑: `~/.opal/references/opal-model-mapping.md` 참조.
+오버라이드 우선순위: `{프로젝트}/.opal/setting.local.json` → `~/.opal/setting.json` → 표 (셀 단위). 상세: `opal-model-mapping.md` §5.
 
 | 레벨 | 용도 |
 |------|------|

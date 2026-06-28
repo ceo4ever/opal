@@ -934,8 +934,33 @@ install_opal_setting() {
     local src="$FRAMEWORK_ROOT/opal/core/setting.default.json"
     local dst="$USER_HOME/.opal/setting.json"
     if [[ -f "$dst" ]]; then
-        # 멱등: 존재 시 절대 덮어쓰지 않음 (사용자 토글 보존) — H-1
-        info "setting.json 이미 존재 — 보존 (사용자 설정 유지)"
+        # 파일이 존재하는 경우: models 키가 없으면 scaffold 병합 (멱등) — H-1
+        python3 - "$src" "$dst" <<'PYEOF' || warn "setting.json models 병합 실패 — 기존 파일 유지"
+import json, sys
+
+src_path, dst_path = sys.argv[1], sys.argv[2]
+
+try:
+    with open(src_path, 'r', encoding='utf-8') as f:
+        default = json.load(f)
+    with open(dst_path, 'r', encoding='utf-8') as f:
+        existing = json.load(f)
+except Exception as e:
+    sys.stderr.write(f"warn: setting.json 로드 실패 — {e}\n")
+    sys.exit(1)
+
+if 'models' in existing:
+    sys.stderr.write("info: setting.json에 models 키 존재 — 무변 (멱등)\n")
+    sys.exit(0)
+
+existing['models'] = default['models']
+
+with open(dst_path, 'w', encoding='utf-8') as f:
+    json.dump(existing, f, ensure_ascii=False, indent=2)
+    f.write('\n')
+
+sys.stderr.write("info: setting.json에 models scaffold 병합 완료\n")
+PYEOF
         return 0
     fi
     cp "$src" "$dst"

@@ -10,7 +10,10 @@
 
 ### Eager 단계 (세션 시작 시 즉시 수행)
 
-0. **[스킵 게이트]** 먼저 Read 도구로 `~/.opal/setting.json`을 읽는다. JSON의 `bootstrap` 필드 값이 정확히 `off`이면 — 이하 step 1~7 전체(정체성·헌법·하네스·PM·PM 컨텍스트 포함 부트스트랩 전부)를 생략하고 OPAL 없이 순수 동작한다(부트스트랩 완료 보고도 생략). 파일이 없거나·`bootstrap` 필드가 없거나·`off`가 아니거나(예: `on`)·JSON 파싱에 실패하면 게이트를 무시하고 step 1부터 정상 진행한다(fail-safe). 이 게이트는 세션/캡틴 전역 토글이며, 위 `[WORKER 규칙]`(디스패치 프롬프트 첫 줄 `[WORKER]`)과는 별개의 독립 스킵 경로다.
+0. **[스킵 게이트 + 프로젝트 설정 머지]** 먼저 Read 도구로 `~/.opal/setting.json`(전역)을 읽는다. 이어 현재 작업 디렉토리의 `.opal/setting.local.json`(프로젝트)이 존재하면 Read하여 전역 위에 **키/셀 단위로 덮어쓴다(로컬 우선, 로컬에 없는 키는 전역 유지)**. 이 병합 결과를 **effective setting**으로 삼고, 이후 bootstrap 판정·모델 매핑은 effective setting을 따른다.
+   - **bootstrap 판정**: effective setting의 `bootstrap` 값이 정확히 `off`이면 — 이하 step 1~7 전체(정체성·헌법·하네스·PM·PM 컨텍스트 포함 부트스트랩 전부)를 생략하고 OPAL 없이 순수 동작한다(부트스트랩 완료 보고도 생략). 전역·로컬 모두 파일이 없거나·`bootstrap` 필드가 없거나·`off`가 아니거나(예: `on`)·JSON 파싱에 실패하면 게이트를 무시하고 step 1부터 정상 진행한다(fail-safe).
+   - **models 로드**: effective setting의 `models`를 세션 컨텍스트에 로드한다(모델 매핑 SSOT — 워커 디스패치 시 이 값을 사용, 감지 플랫폼의 해당 레벨 셀이 없으면 오류. `~/.opal/references/opal-model-mapping.md` §5).
+   - 이 게이트는 세션/프로젝트 토글이며, 위 `[WORKER 규칙]`(디스패치 프롬프트 첫 줄 `[WORKER]`)과는 별개의 독립 스킵 경로다.
 
 1. `~/.opal/identity.md`를 Read로 읽어 에이전트 정체성을 로드한다.
 2. identity.md가 없으면 `~/.opal/skills/opal-onboarding/SKILL.md`를 Read로 읽어 온보딩을 시작한다.
@@ -367,8 +370,13 @@ PM 컨텍스트가 로드된 경우, 메모리 브리핑에 PM 역할 요약도 
 
 ## 모델 매핑 자동 적용
 
-> 상세(플랫폼 감지, 매핑 테이블 적용, Cursor 특이사항): `~/.opal/references/opal-model-mapping.md` 참조.
-> Lazy 트리거: 워커 디스패치 직전.
+> 상세(플랫폼 감지, 매핑 테이블, **사용자·프로젝트 오버라이드**): `~/.opal/references/opal-model-mapping.md` 참조.
+> **로드 시점**: **부트스트랩 step 0**에서 effective setting(전역+로컬 머지) 구성 시 `models`를 로드한다(프로젝트 진입 시점부터 적용 — 디스패치 때만 읽던 문제 해소). 워커 디스패치 직전 재확인한다.
+> **2-레이어 머지 (표 폴백 없음, "default" 없음)**:
+> 1. `~/.opal/setting.json` — **전역 base** (install이 실모델명으로 시드).
+> 2. `{프로젝트}/.opal/setting.local.json` — **프로젝트 오버라이드**. 로컬에 있는 셀만 base 위에 덮어쓴다(셀 단위). 사용자가 생성했을 때만 존재한다.
+>
+> 미설정 오류: 감지 플랫폼의 해당 레벨 셀이 전역·로컬 **둘 다 없으면** 디스패치 중단 + "setting.json models.{provider}.{level} 미설정" 안내. 자동 폴백·추정 금지.
 
 ---
 
@@ -460,4 +468,8 @@ install-mac.sh가 `~/.codex/AGENTS.md`(글로벌)에 OPAL 마커를 자동 삽�
 | v3.5 | 2026-06-17 10:05 | §도구·MCP 적극 활용 규칙 신설 — 도구 인지 맵(용도→첫 사용 시 Lazy 로드 대상) + 계열별 경계(읽기=선제 / 변경=승인 게이트) + §주도성에 "도구 선제 활용" 항목 + mcps.md Lazy 트리거에 에이전트 선제 활용 판단 추가. identity-template/identity에 "도구 활용 성향" 추가 (026, "그냥 해" 직접 수행) |
 | v3.6 | 2026-06-24 | `OPAL_BOOTSTRAP=off` 스킵 게이트 추가 — Eager step 0에 환경변수 체크 삽입. 정확히 `off`이면 전체 부트스트랩(정체성 포함) 스킵·순수 동작. `[WORKER]` 스킵과 구분된 세션/캡틴 전역 토글. Bash 불가 시 fail-safe 정상 진행 (040) |
 | v3.7 | 2026-06-24 17:24 | OPAL_BOOTSTRAP 환경변수 게이트 → `~/.opal/setting.json` Read 게이트 전환 (043) |
+| v3.8 | 2026-06-28 | §모델 매핑 자동 적용 — 사용자·프로젝트 오버라이드 머지 지시 추가. 디스패치 직전 `{프로젝트}/.opal/setting.local.json`→`~/.opal/setting.json`→매핑 표 순(셀 단위) `models` 머지. `opal-model-mapping.md` §5 신설과 연동 |
+| v3.9 | 2026-06-28 | §모델 매핑 자동 적용 머지 지시에 폴백 입도 정밀화 반영 — provider 블록 전체 누락 시 전 셀 폴백 / level 셀 누락·default 시 그 셀만 폴백. `opal-model-mapping.md` §5.1과 동일 의미로 정합 (046) |
+| v3.10 | 2026-06-28 | §모델 매핑 자동 적용 2-레이어 머지로 전면 교체 — 표 폴백·"default" 폴백 제거. 전역 setting.json base → 로컬 setting.local.json 셀 단위 덮어쓰기. 미설정 셀=오류(디스패치 중단+안내). 로드 시점 명시: PM 모드 진입 시 로드 + 디스패치 직전 재확인. (046) |
+| v3.11 | 2026-06-28 | **Eager step 0 게이트에 프로젝트 setting.local.json 머지 추가** — 전역 setting.json 읽은 뒤 `{cwd}/.opal/setting.local.json`을 키/셀 단위로 덮어써 effective setting 구성. bootstrap 판정·models 로드 모두 effective setting 사용(프로젝트 진입 시점부터 적용 — "로컬 안 읽힘" 근본 해소). §모델 매핑 로드 시점을 step 0으로 정합. 4개 bootstrapper 게이트와 동기. (046) |
 
