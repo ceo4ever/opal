@@ -92,6 +92,7 @@
         v1.13.0 2026-06-17       Codex 어댑터 정합 — Install-CodexConfig 신설(config.toml [agents] 멱등 작성, max_threads=6/max_depth=1/job_max_runtime_seconds=1800) + 호출부 연결 + Install-PlatformAgents codex ModelMap stale(standard=gpt-5.5/advanced=gpt-5.3-codex) → SSOT v1.4 정정(standard=gpt-5.4/advanced=gpt-5.5) (028)
         v1.14.0 2026-06-21 16:18 Convert-BodyModelTokens 신규 — 본문 인라인 model 레벨 sub-dispatch 토큰('[,(]\s*model:\s*(light|standard|advanced)\b')을 ModelMap 실모델명으로 변환(cursor=inherit→토큰 제거+빈괄호 정리). Install-PlatformAgents Markdown 경로($convertedBody 직렬화)·Codex TOML 경로(escape 전) 양쪽 적용. install-mac.sh _sub_body_model 미러(문자 단위 동일 정규식) — 액션 에이전트 sub-dispatch model enum 위반 버그 fix (032)
         v1.15.0 2026-06-24 17:26 KST: Install-OpalCore setting.json create-if-absent 배포 추가 (043)
+        v1.16.0 2026-06-29 15:24 KST: Invoke-OpalWindowsInstall에 $repoRoot/VERSION 각인값 최우선 읽기 추가 — install-mac.sh record_installed_version 대칭, -notlike '$Format:*' 판별 (048)
 #>
 
 #Requires -Version 5.1
@@ -1751,13 +1752,23 @@ function Invoke-OpalWindowsInstall {
         }
     }
 
-    # ~/.opal/VERSION 기록 — opal-cli update 비교 기준 (install-mac.sh v1.8 과 정합)
+    # ~/.opal/VERSION 기록 — opal-cli update 비교 기준 (install-mac.sh record_installed_version 대칭, 048)
+    # 우선순위: $repoRoot/VERSION 각인값(tarball 최우선) → $OpalVersion(전달값) → "main" 폴백
     if (-not (Test-Path $OpalHome)) {
         New-Item -ItemType Directory -Path $OpalHome -Force | Out-Null
     }
     $versionFile = Join-Path $OpalHome 'VERSION'
-    Set-Content -Path $versionFile -Value $OpalVersion -Encoding ASCII -NoNewline
-    Write-OpalOk "버전 기록 → $versionFile ($OpalVersion)"
+    $effectiveVersion = $OpalVersion
+    $srcVersionFile = [IO.Path]::Combine($repoRoot, 'VERSION')
+    if (Test-Path $srcVersionFile) {
+        $srcStamped = (Get-Content -Raw -LiteralPath $srcVersionFile -ErrorAction SilentlyContinue)
+        if ($srcStamped) { $srcStamped = $srcStamped.Trim() }
+        if ($srcStamped -and ($srcStamped -notlike '*$Format:*')) {
+            $effectiveVersion = $srcStamped
+        }
+    }
+    Set-Content -Path $versionFile -Value $effectiveVersion -Encoding ASCII -NoNewline
+    Write-OpalOk "버전 기록 → $versionFile ($effectiveVersion)"
 
     Write-Host ''
     Write-OpalOk '설치 흐름 완료.'

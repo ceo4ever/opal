@@ -34,6 +34,7 @@
 #   v3.4 2026-06-24: OPAL_TEST_TOOLS_GLOBAL shell rc 자동 등록 추가 — register_test_tools_global_in_shell_rc 신설 + install_opal_bin 연결 (041)
 #   v3.5 2026-06-24: install_claude_permissions perm_entries에 'Bash(echo $OPAL_BOOTSTRAP)' 추가 — 부트스트랩 스킵 게이트 환경변수 점검 명령을 매 세션 무프롬프트 허용
 #   v3.6 2026-06-24 17:26 KST: install_opal_setting 신규 + perm_entries echo 권한 제거(v3.5 reconcile) — OPAL_BOOTSTRAP 환경변수 게이트를 setting.json Read 게이트로 전환 (043)
+#   v3.7 2026-06-29 15:24 KST: record_installed_version 함수 분리 + VERSION 기록 우선순위 재배치 — FRAMEWORK_ROOT/VERSION 각인값 최우선, API/main 폴백 강등 (048)
 #
 
 set -euo pipefail
@@ -967,6 +968,44 @@ PYEOF
     success "OPAL setting.json (기본값) → $dst"
 }
 
+# ─── record_installed_version ────────────────────────────────────────────────
+# ~/.opal/VERSION 기록 함수 (테스트 용이성 — 단위 테스트에서 직접 호출 가능).
+# 우선순위:
+#   1) FRAMEWORK_ROOT/VERSION 각인값 (tarball 설치 — 최우선, placeholder면 스킵)
+#   2) $OPAL_VERSION (one-liner installer가 전달)
+#   3) git describe (개발자 git clone 경로, .git 존재 시)
+#   4) "main" 폴백
+# bash 3.2 호환: case 패턴 사용, 연관배열 미사용.
+record_installed_version() {
+    local opal_home="${1:-${OPAL_HOME:-$HOME/.opal}}"
+    local framework_root="${2:-${FRAMEWORK_ROOT:-}}"
+    local installed_version="${OPAL_VERSION:-}"
+    local _stamped=""
+
+    # 1) 추출된 소스 루트의 각인 VERSION (tarball 설치 경로 — 최우선)
+    if [[ -n "$framework_root" && -f "$framework_root/VERSION" ]]; then
+        _stamped="$(tr -d '[:space:]' < "$framework_root/VERSION" 2>/dev/null || true)"
+        case "$_stamped" in
+            ''|*'$Format:'*) : ;;              # 미치환/부재 → 다음 폴백
+            *) installed_version="$_stamped" ;; # 각인값 채택
+        esac
+    fi
+
+    # 2) $OPAL_VERSION (one-liner installer가 전달; 위에서 미채택 시)
+    # installed_version="${OPAL_VERSION:-}" 로 이미 초기화됨
+
+    # 3) git describe (개발자 git clone 경로)
+    if [[ -z "$installed_version" ]] && command -v git &>/dev/null && [[ -n "$framework_root" ]] && [[ -d "$framework_root/.git" ]]; then
+        installed_version="$(cd "$framework_root" && git describe --tags --always 2>/dev/null || echo "main")"
+    fi
+
+    # 4) main 폴백
+    installed_version="${installed_version:-main}"
+
+    echo "$installed_version" > "$opal_home/VERSION"
+    success "버전 기록 → $opal_home/VERSION ($installed_version)"
+}
+
 # ─── OPAL Installer ─────────────────────────────────────
 
 install_opal() {
@@ -1220,15 +1259,10 @@ install_opal() {
     fi
 
     # ── 설치 버전 기록 (~/.opal/VERSION) ──
-    # 우선순위: $OPAL_VERSION (one-liner installer 경로) → git describe (개발자 git clone 경로) → "main" 폴백
+    # 우선순위: FRAMEWORK_ROOT/VERSION 각인값(tarball 최우선) → $OPAL_VERSION → git describe → "main" 폴백
     # opal-cli update가 이 파일을 읽어 리모트 latest tag와 비교, 동일하면 갱신 스킵.
-    local installed_version="${OPAL_VERSION:-}"
-    if [[ -z "$installed_version" ]] && command -v git &>/dev/null && [[ -d "$FRAMEWORK_ROOT/.git" ]]; then
-        installed_version="$(cd "$FRAMEWORK_ROOT" && git describe --tags --always 2>/dev/null || echo "main")"
-    fi
-    installed_version="${installed_version:-main}"
-    echo "$installed_version" > "$opal_home/VERSION"
-    success "버전 기록 → $opal_home/VERSION ($installed_version)"
+    # record_installed_version 함수 분리 — 단위 테스트에서 직접 호출 가능 (048 D-피2).
+    record_installed_version "$opal_home" "${FRAMEWORK_ROOT:-}"
 
     # ── 레거시 정리 안내 ──
     # print_cleanup_notice

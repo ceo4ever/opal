@@ -19,3 +19,7 @@ docs/ export-ignore
 .github/ export-ignore
 .gitignore export-ignore
 .gitattributes export-ignore
+
+# 릴리스 버전 각인 — git archive 시 %(describe:tags) 치환 (task 048)
+# 2026-06-29 15:24 KST: VERSION export-subst 추가 — tarball 각인 인프라 구축 (048)
+VERSION export-subst

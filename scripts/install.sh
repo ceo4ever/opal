@@ -38,6 +38,7 @@
 #   v1.3 2026-05-10 21:00: verify_checksum 강화 — release tag + sha256sums.txt 부재 시 prompt/거부 +
 #                          main 브랜치 UNVERIFIED banner (GC-001, R-2) (144)
 #   v1.4 2026-05-20: Linux fallback 안내 블록 제거 — scripts/install/linux.sh 신설로 데드코드 (006)
+#   v1.5 2026-06-29 15:24 KST: adopt_stamped_version 추가 — tarball 내 VERSION 각인값 우선 채택, API/main 폴백 강등 (048)
 #
 
 # ─── [MUST] 부분 다운로드 실행 방지 ─────────────────────────────────────────
@@ -336,6 +337,25 @@ exec_platform_installer() {
     exec bash "${installer_path}" "$@"
 }
 
+# ─── adopt_stamped_version ───────────────────────────────────────────────────
+# 추출된 tarball의 VERSION이 치환되어 있으면(=$Format: 잔존 아님) 그 값을 채택.
+# 미치환/부재면 기존 OPAL_VERSION(resolve_default_version 결과) 유지 → 폴백.
+# bash 3.2 호환: case 패턴 사용, 연관배열 미사용.
+# DRY-RUN 시 OPAL_EXTRACT_DIR는 빈 디렉토리 → [[ -f ]] false → no-op (안전).
+adopt_stamped_version() {
+    local vf="${OPAL_EXTRACT_DIR}/VERSION"
+    [[ -f "$vf" ]] || return 0
+    local stamped
+    stamped="$(tr -d '[:space:]' < "$vf" 2>/dev/null || true)"
+    [[ -z "$stamped" ]] && return 0
+    case "$stamped" in
+        *'$Format:'*) return 0 ;;   # 미치환 placeholder → 폴백 유지
+    esac
+    OPAL_VERSION="$stamped"
+    export OPAL_VERSION
+    info "tarball VERSION 각인값 채택: ${OPAL_VERSION} (API 미사용)"
+}
+
 # ─── main ────────────────────────────────────────────────────────────────────
 # [MUST] PLAN §3.1.2: "main() 래핑 — 부분 다운로드 실행 방지"
 # 이 함수가 파일 최하단에서 호출되므로 모든 함수 정의 완료 후 실행된다.
@@ -356,6 +376,7 @@ main() {
     fetch_tarball
     verify_checksum
     extract_to_tmp
+    adopt_stamped_version
     exec_platform_installer "$@"
 }
 

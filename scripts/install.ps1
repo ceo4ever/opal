@@ -45,6 +45,7 @@ Set-StrictMode -Version 3.0
 #   v1.0.5 2026-05-10 15:30  Resolve-DefaultVersion 의 '최신 태그 자동 선택 ... (release 자산 없음 — archive tarball 사용)' 안내 라인 제거.
 #                            release 자산 부재는 정상 동작이며 사용자 노이즈 — '[OPAL] version :' 표시로 충분 (140 추가작업, v0.3.16)
 #   v1.0.6 2026-05-10 21:00  Verify-Checksum 강화 — release tag + sha256sums.txt 부재 시 prompt/거부 + main UNVERIFIED banner (GC-001, R-2) (144)
+#   v1.0.7 2026-06-29 15:24  Invoke-PlatformInstaller 추출 후 $extractDir/VERSION 각인값으로 $script:OpalVersion override — -notlike '*$Format:*' 판별 (048)
 $ErrorActionPreference = 'Stop'
 
 # ─── 환경 변수 오버라이드 ────────────────────────────────────────────────────
@@ -265,6 +266,19 @@ function Invoke-PlatformInstaller {
             Write-Warning "[OPAL] tar 일부 오류 (exit=$LASTEXITCODE) 발생했으나 핵심 자산은 풀렸습니다. 계속 진행."
         } else {
             throw "[OPAL] tarball 압축 해제 실패 (exit code: $LASTEXITCODE)"
+        }
+    }
+
+    # 각인 VERSION 우선 — 추출된 tarball의 VERSION이 치환되어 있으면 채택 (048)
+    # -notlike '*$Format:*' 판별 — placeholder 미치환 시 채택 안 함(폴백).
+    # PowerShell -like 는 와일드카드, '$Format:' 의 '$' 는 작은따옴표로 리터럴 매칭.
+    $versionFile = [IO.Path]::Combine($extractDir, 'VERSION')
+    if (Test-Path $versionFile) {
+        $stamped = (Get-Content -Raw -LiteralPath $versionFile -ErrorAction SilentlyContinue)
+        if ($stamped) { $stamped = $stamped.Trim() }
+        if ($stamped -and ($stamped -notlike '*$Format:*')) {
+            $script:OpalVersion = $stamped
+            Write-Host "[OPAL] tarball VERSION 각인값 채택: $stamped" -ForegroundColor DarkGray
         }
     }
 

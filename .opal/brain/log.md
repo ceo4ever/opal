@@ -142,3 +142,7 @@
 - 신규: [[pages/concept/model-mapping-2layer-override.md]], [[pages/concept/model-mapping-missing-cell-error-policy.md]]
 - 출처: task:046
 
+## [2026-06-29] ingest | CLOSE ingest — 태스크 048 버전-아카이브-각인: concept 3건 누적 (버전결정모델전환/설치기우선순위모델/RED테스트커밋강요교훈)
+- 신규: [[pages/concept/version-stamp-export-subst-decision.md]], [[pages/concept/installer-version-priority-model.md]], [[pages/concept/red-test-commit-coercion-guard-lesson.md]]
+- 출처: task:048
+

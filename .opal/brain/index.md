@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-06-28 19:47
+> 갱신: 2026-06-29 17:30
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -48,6 +48,7 @@
 - [[erd-modeler-deprecation]] — erd-modeler deprecate — op-data-model/ddl로 분해, //erm 하위호환 #architecture-decision #deprecation #erd-modeler #migration
 - [[external-tool-boundary-stub-insufficient-lesson]] — 외부 도구 경계는 스텁만으로 불충분 — 실연동 검증이 통합 결함을 잡는다 #testing #lesson #integration #test-strategy
 - [[fixture-vs-real-blind-spot-lesson]] — fixture-vs-real 맹점 — 테스트 픽스처 통과·실데이터 버그 반복 교훈 #lesson #testing #bug #fixture
+- [[installer-version-priority-model]] — 설치기 버전 결정 우선순위 모델 (4종 공통) #version #install #priority #architecture
 - [[kanban-current-stage-derivation]] — 칸반 current_stage 파생 규칙 (도달 단계 기준) #opal-console #kanban #pipeline #be-single-source
 - [[kanban-pipeline-stage-grouping]] — 파이프라인 스테퍼 stage 그룹화 (BE 단일 소스, na/skipped 제외) #opal-console #pipeline #stage-grouping #be-single-source
 - [[linux-install-script]] — Linux 설치 스크립트 신설 (단순 위임 전략) #install #linux #deploy #task
@@ -93,6 +94,7 @@
 - [[project-id-query-param-pattern]] — 절대경로 프로젝트 식별자를 query param으로 전달 #api #routing #url-design
 - [[read-based-gate-pattern]] — Read 기반 설정파일 게이트 패턴 #bootstrap #permission #gate #read-pattern #session-toggle
 - [[readme-ssot-principle]] — README는 SSOT를 따른다 — 문서·코드 불일치 시 SKILL.md가 정본 #readme #ssot #doc-code-mismatch #documentation
+- [[red-test-commit-coercion-guard-lesson]] — RED 테스트가 실저장소 git archive 검증 시 커밋을 구조적으로 강요하는 결함 #red-first #test #git #lesson #guard
 - [[red-test-determinism-abort-trap]] — RED 테스트 결정론성 함정 — neverResolve fetch 대역의 abort 무반응 #testing #red-first #determinism #abort #fetch-mock
 - [[skill-op-task-qa]] — op-task-qa — 범용 문서 QA 검증 기준 #skill #qa #document
 - [[skill-opal-agent-creator]] — opal-agent-creator — OPAL 에이전트 생성 파이프라인 #skill #agent #creator
@@ -123,6 +125,7 @@
 - [[uncommitted-component-readme-policy]] — 미커밋 컴포넌트는 공개 README에 미노출 #readme #policy #git #documentation #ppt-builder
 - [[usage-ssot-live-help-principle]] — 사용법 SSOT는 도구 자신의 live --help #design-principle #tool-scan #usage #drift #ssot
 - [[verification-command-4-standard]] — 검증 명령 4종 표준 (SSOT — verification-loop-guide) #verification #lint #build #test #watch-mode #ssot #standard
+- [[version-stamp-export-subst-decision]] — 버전 결정 모델 전환 — 설치 시점 API 조회 → 릴리스 시점 export-subst 각인 #version #install #git #export-subst #architecture
 - [[wbs-세분화-단일책임-수용시나리오]] — WBS 세분화 원칙 — 단일 책임 + 수용 시나리오 기준 #oppd #wbs #sizing #be #fe #acceptance-scenario
 - [[wiki-intelligence-decisions-016]] — opal-wiki-pilot 지능화 결정 — M-4/M-5 (016) #architecture #naming #git #brain #policy
 - [[wtm-agent-cmux-integration]] — wtm-agent OPAL 표준화 + cmux-tool 신설 #tool #agent #wtm #cmux #task

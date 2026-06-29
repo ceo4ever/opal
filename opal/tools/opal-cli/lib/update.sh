@@ -20,6 +20,7 @@
 #   v1.0.2 2026-05-09 21:05 KST: 로컬/리모트 버전 비교 + --force 옵션 — ~/.opal/VERSION 읽어 같은 release tag(v*)면 "이미 최신" 안내 후 종료. main/SHA/미기록은 항상 진행 (139 추가작업)
 #   v1.0.3 2026-05-09 22:00 KST: /releases/latest 실패 시 /tags?per_page=1 폴백 + tarball URL을 archive/refs/tags로 변경 (install.sh v1.2와 정합, release 자산 미생성 케이스 호환) (139 추가작업)
 #   v1.0.4 2026-05-10 21:00 KST: verify_checksum 강화 — release tag + sha256sums.txt 부재 시 prompt/거부 + main UNVERIFIED banner (GC-001, R-2) (144)
+#   v1.0.5 2026-06-29 15:24 KST: 추출 후 extract_dir/VERSION 각인값으로 version override — tarball VERSION 우선, API/main 폴백 강등 (048)
 #
 
 # ─── update 서브커맨드 ────────────────────────────────────────
@@ -208,6 +209,19 @@ cmd_update() {
     tar -xzf "$tarball_path" -C "$extract_dir" --strip-components=1 2>/dev/null || \
         tar -xzf "$tarball_path" -C "$extract_dir"
     success "압축 해제 완료"
+
+    # 각인 VERSION 우선 — install.sh adopt_stamped_version과 동일 원칙 (048)
+    # 추출된 tarball의 VERSION이 치환되어 있으면(=$Format: 잔존 아님) 그 값으로 version override.
+    # bash 3.2 호환: case 패턴 사용.
+    if [[ -f "$extract_dir/VERSION" ]]; then
+        local _stamped
+        _stamped="$(tr -d '[:space:]' < "$extract_dir/VERSION" 2>/dev/null || true)"
+        case "$_stamped" in
+            ''|*'$Format:'*) : ;;          # 부재/미치환 → version 유지(폴백)
+            *) version="$_stamped"
+               info "tarball VERSION 각인값 채택: ${version} (API 미사용)" ;;
+        esac
+    fi
 
     # 설치 스크립트 실행
     local installer=""
