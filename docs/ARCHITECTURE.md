@@ -51,6 +51,19 @@ OPAL은 2-레이어 아키텍처로 동작한다.
 └─────────────────────────────────────────────────────────┘
 ```
 
+### 부트스트랩 진입 모델 (2-tier)
+
+부트스트랩은 **2-tier**로 동작한다 — 전역 마커는 항상 **비서 tier**를 로드하고, **PM tier**는 OPAL 프로젝트(`.opal/AGENT.md` 존재)에서만 승격된다. SSOT는 `~/.opal/AGENT.md` Eager 단계(소스 `opal/core/AGENT.md`).
+
+| Tier | 트리거 | 로드 대상 | 모드 |
+|------|--------|----------|------|
+| **Phase A — 비서(Lite)** | 전역 마커(install이 `~/.claude/CLAUDE.md` 등에 1회 삽입) — 모든 세션 상시 | 스킵게이트(setting.json 머지) + identity + PRINCIPLES(헌법) + 보고형식·도구맵·`//` 레지스트리 해석 | 자비스 비서 |
+| **Phase B — PM(Full)** | cwd에 `.opal/AGENT.md` 존재 시에만 승격 | (Phase A에 더해) opal-harness(Guards/State) + opal-pm(PM 프로세스) + 프로젝트 `.opal/AGENT.md` + PROJECT/MEMORY 브리핑 | 프로젝트 PM |
+
+- **opt-in 모델**: `.opal/AGENT.md`가 없는 비-opi 디렉토리에서는 Phase B가 스킵되어 PM/파이프라인이 로드되지 않는다. `//opi`로 초기화하면 `.opal/AGENT.md`가 생성되어 다음 진입부터 PM tier로 승격된다.
+- **`//opi` 불변식**: `//` 커맨드 해석은 비서 tier에 속하므로(Lazy 트리거 전제조건 없음), 비-opi 폴더에서도 `//opi` 발동이 보장된다 — 새 프로젝트 OPAL화의 진입점.
+- **전역 비서 유지**: 전역 마커는 제거가 아니라 경량 비서 마커로 유지된다. `setting.json bootstrap:off`는 비서·PM 양쪽을 스킵하는 킬스위치(전역/프로젝트 공통).
+
 ## 2-레이어 모델
 
 ### Global Layer (`~/.opal/`)
@@ -367,3 +380,4 @@ opal/                                    ← 이 저장소
 | 날짜 | 변경 내용 |
 |------|----------|
 | 2026-06-18 | opal-orchestrator 잔존 행 2곳 삭제 (폴더·레지스트리 항목 부재 — dangling. Task 029) |
+| 2026-06-30 | 부트스트랩 진입 모델 2-tier 절 추가 — 비서(Lite·전역 상시)/PM(Full·`.opal/AGENT.md` 존재 시 승격) 분리. opt-in 모델·`//opi` 불변식·전역 비서 유지 (Task 049) |

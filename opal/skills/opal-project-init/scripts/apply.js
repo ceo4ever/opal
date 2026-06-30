@@ -22,6 +22,7 @@ const PLATFORM_FILES = [
   { src: "platform/CLAUDE.md", dest: "CLAUDE.md" },
   { src: "platform/GEMINI.md", dest: "GEMINI.md" },
   { src: "platform/.cursorrules", dest: ".cursorrules" },
+  { src: "platform/AGENTS.md", dest: "AGENTS.md" },
 ];
 
 // --- OPAL 마커 상수 ---

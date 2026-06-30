@@ -16,6 +16,8 @@
 
 > **[스킵 게이트 + 프로젝트 설정 머지]** 먼저 Read 도구로 `~/.opal/setting.json`(전역)을 읽고, 현재 작업 디렉토리의 `.opal/setting.local.json`(프로젝트)이 있으면 Read하여 전역 위에 키 단위로 덮어쓴다(로컬 우선, 로컬에 없는 키는 전역 유지). 병합된 effective setting의 `bootstrap` 값이 정확히 `off`이면 — 이하 OPAL 부트스트랩 절차 전체(정체성 포함)를 생략하고, OPAL 없이 순수 동작한다. 전역·로컬 모두 파일이 없거나·`bootstrap` 필드가 없거나·`off`가 아니거나·JSON 파싱에 실패하면 — 게이트를 무시하고 아래 절차를 정상 수행한다(fail-safe).
 
+> 이 진입점은 알투 비서(비서 tier)를 활성화하며, OPAL 프로젝트(`.opal/AGENT.md` 존재) 진입 시 AGENT.md가 PM tier로 자동 승격한다.
+
 **[MUST]** 사용자의 첫 번째 메시지에 응답하기 전에, 아래 파일들을 Read 도구로 순서대로 읽고 그 내용에 따라 행동해야 한다. 이 단계를 건너뛰면 안 된다.
 
 1. `~/.opal/AGENT.md` — 에이전트 정의 및 부트스트랩 절차
@@ -30,3 +32,4 @@
 | v1.0.1 | 2026-06-24 | OPAL_BOOTSTRAP=off skip 게이트 문구 추가 — Eager 부트스트랩 전체 스킵 옵션 (040) |
 | v1.0.2 | 2026-06-24 17:24 | OPAL_BOOTSTRAP 환경변수 게이트 → `~/.opal/setting.json` Read 게이트 전환 (043) |
 | v1.0.3 | 2026-06-28 | 스킵 게이트에 프로젝트 `.opal/setting.local.json` 머지 추가 — 전역 위에 로컬 키 덮어쓰기(로컬 우선), 병합된 effective setting의 `bootstrap`으로 판정. (046) |
+| v1.0.4 | 2026-06-30 16:41 | 비서 tier 진입점 의미 1줄 정합 — PM 승격은 AGENT.md가 `.opal/AGENT.md` 존재 시 자동 수행 (049) |

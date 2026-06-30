@@ -561,10 +561,12 @@ node ~/.opal/skills/opal-project-init/scripts/apply.js --project-root {프로젝
 | `templates/common/platform/CLAUDE.md` | `{프로젝트}/CLAUDE.md` | OPAL 부트스트래퍼 |
 | `templates/common/platform/GEMINI.md` | `{프로젝트}/GEMINI.md` | OPAL 부트스트래퍼 |
 | `templates/common/platform/.cursorrules` | `{프로젝트}/.cursorrules` | OPAL 부트스트래퍼 |
+| `templates/common/platform/AGENTS.md` | `{프로젝트}/AGENTS.md` | OPAL 부트스트래퍼 |
 
 기존 파일 처리:
 - `CLAUDE.md`: OPAL 마커(`# === OPAL START ===`) 기반 병합. 기존 사용자 내용 보존 + 부트스트래퍼 갱신
 - `GEMINI.md`, `.cursorrules`: 기존 파일 `.bak` 백업 후 부트스트래퍼 추가
+- `AGENTS.md`: 기존 파일 `.bak` 백업 후 마커 병합
 - 이미 OPAL 마커가 있으면 갱신만 수행
 
 Node.js가 없는 환경에서는 에이전트가 직접 부트스트래퍼를 삽입한다.
@@ -613,7 +615,7 @@ opi 완료
 - {생성된 문서 목록}
 
 플랫폼 파일:
-- CLAUDE.md, GEMINI.md, .cursorrules (부트스트래퍼)
+- CLAUDE.md, GEMINI.md, .cursorrules, AGENTS.md (부트스트래퍼)
 ---
 ```
 
@@ -1000,3 +1002,4 @@ opi 최신화 완료
 | v4.2 | 2026-06-14 00:27 | 아키텍처 문서 생성 깊이 강화 (WHERE → HOW) — code-analysis-guide.md 신규(블록 1~4), 초기화 Phase 3-1 심층 분석·재대조 이식, 최신화 Step C/D 가이드 참조 치환, 멀티레포·멀티서비스 판별·문서 세트 분기, 자체 docs 탐색·흡수 분기, 대형 코드베이스 전문 워커 디스패치 분기(임계: 영역 수 ≥ 2 또는 빌드 모듈 ≥ 10), docs-guide.md ARCHITECTURE/BACKEND/FRONTEND HOW 섹션 심화·"구현 시 주입 가능 수준" 기준 명문화 (020) |
 | v4.3 | 2026-06-26 | 045 메모리 관리 개선 — MEMORY.md 인라인 템플릿을 memory-tool 호환 신포맷으로 교체(헤더·마커 4개·FIFO5·직접편집 금지 안내) |
 | v4.4 | 2026-06-28 | 프로젝트 로컬 설정 보장 추가 — "공통: setting.local.json 보장" 섹션 신설(없으면 최소-상속 템플릿 생성·있으면 스킵·.gitignore 추가). 초기화 Phase 2 §2-1 산출물 행 추가 + 최신화 모드 진입부 연결로 **기존 프로젝트(최신화 모드)도 커버**. (047) |
+| v4.5 | 2026-06-30 16:42 | Codex AGENTS.md 템플릿 신규 + apply.js PLATFORM_FILES 4항목 — templates/common/platform/AGENTS.md 생성, apply.js 배열에 AGENTS.md 항목 추가(mergeOther 경로 재사용), SKILL.md Phase 4-1 표·기존파일처리·완료보고 반영 (049) |

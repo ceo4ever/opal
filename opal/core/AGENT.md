@@ -4,11 +4,15 @@
 
 ## 부트스트랩
 
-> **[설계 원칙]** Eager 단계에서 PRINCIPLES.md(헌법) + identity.md + opal-harness.md + opal-pm.md + 프로젝트 PM 컨텍스트를 즉시 로드하여 행동 원칙(헌법), 정체성, Guards(구현 금지, 디스패치 의무), PM 행동 프로세스, 프로젝트별 금지사항을 세션 시작부터 활성화한다. 모든 하위 문서는 헌법(PRINCIPLES.md)을 참조로 상속하며 원칙을 재서술하지 않는다. 나머지 참조 문서는 실제 사용 시점(Lazy)에 로드한다. 각 스킬 Harness 폴백이 하네스 자가 로드를 보장하므로, 스킬 호출 시 하네스 미로드 리스크 없음.
+> **[설계 원칙]** Eager 단계는 2-phase로 구성된다. **Phase A(비서·항상)**: PRINCIPLES.md(헌법) + identity.md를 모든 세션에서 즉시 로드하여 행동 원칙과 정체성을 활성화한다. 보고 형식·도구·MCP 인지맵·`//` 커맨드/스킬 레지스트리 해석 능력은 본 AGENT.md 본문이 보유하며, AGENT.md Read 자체로 활성화된다. **Phase B(PM·`.opal/AGENT.md` 존재 시 승격)**: opal-harness.md + opal-pm.md + 프로젝트 PM 컨텍스트를 로드하여 Guards(구현 금지, 디스패치 의무), PM 행동 프로세스, 프로젝트별 금지사항을 추가 활성화한다. cwd에 `.opal/AGENT.md`가 없으면 Phase B 전체를 스킵한다(harness·opal-pm·PM 컨텍스트 미로드). 모든 하위 문서는 헌법(PRINCIPLES.md)을 참조로 상속하며 원칙을 재서술하지 않는다. 나머지 참조 문서는 실제 사용 시점(Lazy)에 로드한다. 각 스킬 Harness 폴백이 하네스 자가 로드를 보장하므로, 스킬 호출 시 하네스 미로드 리스크 없음.
 
 > **[WORKER 규칙]** 디스패치 프롬프트의 첫 줄에 `[WORKER]`가 있으면 부트스트랩 전체를 건너뛰고 즉시 작업을 시작한다. PM이 디스패치 프롬프트에 필요 컨텍스트를 직접 주입하므로 워커가 독자적 부트스트랩을 수행할 필요 없다.
 
 ### Eager 단계 (세션 시작 시 즉시 수행)
+
+#### Phase A — 비서 tier (항상 로드, 모든 세션)
+
+> 비서 tier는 보고 형식·도구·MCP 인지맵·`//` 커맨드/스킬 레지스트리 해석 능력을 보유하며, 이는 본 AGENT.md Read 자체로 활성화된다. **`//`(opi 포함) 커맨드는 harness/PM tier 로드를 전제하지 않는다** — `//` Lazy 트리거의 전제 조건은 없음(아래 Lazy 트리거 테이블 참조). 비서 tier에서도 `//` 입력만으로 skill-commands.md가 Lazy 로드되어 `//opi` 발동 가능.
 
 0. **[스킵 게이트 + 프로젝트 설정 머지]** 먼저 Read 도구로 `~/.opal/setting.json`(전역)을 읽는다. 이어 현재 작업 디렉토리의 `.opal/setting.local.json`(프로젝트)이 존재하면 Read하여 전역 위에 **키/셀 단위로 덮어쓴다(로컬 우선, 로컬에 없는 키는 전역 유지)**. 이 병합 결과를 **effective setting**으로 삼고, 이후 bootstrap 판정·모델 매핑은 effective setting을 따른다.
    - **bootstrap 판정**: effective setting의 `bootstrap` 값이 정확히 `off`이면 — 이하 step 1~7 전체(정체성·헌법·하네스·PM·PM 컨텍스트 포함 부트스트랩 전부)를 생략하고 OPAL 없이 순수 동작한다(부트스트랩 완료 보고도 생략). 전역·로컬 모두 파일이 없거나·`bootstrap` 필드가 없거나·`off`가 아니거나(예: `on`)·JSON 파싱에 실패하면 게이트를 무시하고 step 1부터 정상 진행한다(fail-safe).
@@ -18,15 +22,24 @@
 1. `~/.opal/identity.md`를 Read로 읽어 에이전트 정체성을 로드한다.
 2. identity.md가 없으면 `~/.opal/skills/opal-onboarding/SKILL.md`를 Read로 읽어 온보딩을 시작한다.
 2.5. `~/.opal/PRINCIPLES.md`(OPAL 헌법)를 Read한다 → 행동 원칙 SSOT를 세션 시작부터 활성화한다. 이후 모든 하네스·PM·스킬·에이전트 문서는 이 헌법을 참조로 상속하며 원칙을 재서술하지 않는다.
+
+#### Phase B — PM tier (승격 게이트: 현재 cwd에 `.opal/AGENT.md` 존재 시에만)
+
+> **게이트**: cwd에 `.opal/AGENT.md`가 없으면 Phase B 전체를 스킵한다(harness·opal-pm·PM 컨텍스트 미로드). `.opal/AGENT.md` 존재가 PM tier 승격의 유일 신호다.
+
 3. `~/.opal/references/opal-harness.md`를 Read한다 → Guards(구현 금지 원칙, 디스패치 의무)를 세션 시작부터 활성화한다.
 4. `~/.opal/references/opal-pm.md`를 Read한다 → PM 행동 프로세스(디스패치 전 프로세스, 검토 게이트, 학습 루프 등)를 세션 시작부터 활성화한다.
 5. 현재 프로젝트의 `{프로젝트}/.opal/AGENT.md`가 존재하면 Read한다 → 프로젝트별 금지사항·검토기준·업무지침을 세션 시작부터 활성화한다. 없으면 스킵.
-6. **Antigravity(Gemini)** 환경에 한해, 현재 프로젝트에 OPAL 부트스트래퍼가 없으면 자동 삽입한다. Claude Code/Cursor는 install 단계에서 글로벌 부트스트래퍼가 자동 셋업되므로 프로젝트 마커는 불필요 (아래 "프로젝트 부트스트래퍼 자동 관리" 참조).
+   + MEMORY.md 브리핑(프로젝트 메모리 브리핑 절 연동).
+
+#### 공통 (Phase A 직후, Phase B 유무 무관)
+
+6. **Antigravity(Gemini)** 환경에 한해, 현재 프로젝트에 OPAL 부트스트래퍼가 없으면 자동 삽입한다. Claude Code/Cursor/Codex는 전역 마커가 비서 tier를 상시 활성화하므로 프로젝트 마커는 PM 진입에 불필요(중복·무해)이며 자동 삽입을 수행하지 않는다. Gemini는 전역 진입점이 달라 프로젝트 마커가 비서 tier 진입에 유효하므로 자동 삽입한다 (아래 "프로젝트 부트스트래퍼 자동 관리" 참조).
 6.5. 현재 작업 디렉토리(cwd)를 판별하여 next-action 라인을 결정한다:
    - `.opal/AGENT.md`가 존재 → 이 cwd는 OPAL 프로젝트 → next-action = "프로젝트 작업이라면 `//opi` 또는 `//opp/opd/opds` 등으로 진입하세요"
    - `.opal/AGENT.md` 미존재 → 이 cwd는 비프로젝트 → next-action = "프로젝트 초기화는 `//opi`, 일반 비서 작업은 자연어로 요청하세요"
    - PM 모드(`.opal/AGENT.md` 존재 + 정상 PM 모드 진입) → 분기 안내 생략
-7. 정체성 + 하네스 + PM 행동 프로세스 + PM 컨텍스트 기반으로 에이전트를 활성화한다.
+7. 정체성 + (Phase B 로드 시) 하네스 + PM 행동 프로세스 + PM 컨텍스트 기반으로 에이전트를 활성화한다.
 
 ### Lazy 트리거 테이블 (사용 시점에 로드)
 
@@ -63,6 +76,7 @@
 
 - ✅ Eager 완료 | ⏳ Lazy 대기 | ❌ 실패 | ⬜ 해당 없음
 - `PM모드`: `.opal/AGENT.md` 존재 시 ✅ PM, 미존재 시 ⬜ 비서
+- **비서 세션(`.opal/AGENT.md` 부재)**: Phase B가 스킵되므로 `harness`·`PM`·`PM모드`는 `⬜`(해당 없음)으로 표기한다. 예: `[부트스트랩] ✅ principles ✅ identity ⬜ harness ⬜ PM ⬜ PM모드 ⏳ registry ⏳ references ⏳ model-mapping`
 - `{next-action}`: Step 6.5에서 결정된 값 (cwd에 따라 a/b 분기)
 - 브리핑이 있을 경우 이 두 줄을 브리핑 상단에 삽입한다
 
@@ -382,16 +396,16 @@ PM 컨텍스트가 로드된 경우, 메모리 브리핑에 PM 역할 요약도 
 
 ## 프로젝트 부트스트래퍼 자동 관리
 
-부트스트랩 Eager 단계에서, **Antigravity(Gemini) 환경에 한해** 현재 프로젝트에 OPAL 부트스트래퍼가 없으면 자동으로 삽입한다. Claude Code/Cursor는 install이 글로벌 부트스트래퍼를 자동 셋업하므로 프로젝트 마커는 잉여이며 자동 삽입을 수행하지 않는다.
+2-tier 모델에서 **전역 마커는 비서 tier를 상시 활성화**하고, **프로젝트 마커는 (Claude/Cursor/Codex) PM 승격을 강화하는 보조 신호이자 (Gemini/Codex) 이식성·폴백 트리거**다. PM 승격 게이트는 `.opal/AGENT.md` 존재이므로, 프로젝트 마커 유무는 PM 진입에 필수가 아니다. 자동 삽입 정책은 아래와 같다: **Antigravity(Gemini) 환경에 한해** 자동 삽입을 수행하고, Claude Code/Cursor/Codex는 전역 마커가 비서 tier를 상시 활성화하므로 자동 삽입을 수행하지 않는다.
 
 ### Claude Code — 자동 삽입 스킵
 
-install-mac.sh가 `~/.claude/CLAUDE.md`(글로벌)에 OPAL 마커를 자동 삽입하여 모든 Claude Code 세션에서 알투가 활성화된다. 따라서 프로젝트 `CLAUDE.md` 자동 삽입은 **수행하지 않는다**.
+install-mac.sh가 `~/.claude/CLAUDE.md`(글로벌)에 OPAL 마커를 자동 삽입하여 모든 Claude Code 세션에서 비서 tier가 상시 활성화된다. PM 승격 게이트는 `.opal/AGENT.md` 존재이므로, 프로젝트 `CLAUDE.md` 마커는 PM 진입에 불필요(중복·무해)하다. 따라서 프로젝트 `CLAUDE.md` 자동 삽입은 **수행하지 않는다**.
 
 이유:
 - `~/.opal/` 미설치 환경에서는 마커가 있어도 무용 (Read 자체 실패)
-- `~/.opal/` 설치 환경에서는 install이 글로벌 마커를 함께 셋업
-- → 프로젝트 마커는 항상 잉여 (Gemini만 예외 — 글로벌 진입점이 다름)
+- `~/.opal/` 설치 환경에서는 전역 마커가 비서 tier를 상시 활성화하며, PM 승격은 `.opal/AGENT.md` 존재 신호로 AGENT.md가 자동 수행
+- → 프로젝트 `CLAUDE.md` 마커는 PM 진입에 불필요(중복·무해). 단 전역 마커가 임의 제거된 환경의 폴백 진입점으로 수동 삽입 가능
 
 수동 삽입이 필요한 경우(글로벌 마커를 임의 제거한 환경 등)에는 아래 마커를 프로젝트 `CLAUDE.md`에 직접 추가한다:
 
@@ -408,13 +422,16 @@ install-mac.sh가 `~/.claude/CLAUDE.md`(글로벌)에 OPAL 마커를 자동 삽�
 
 ### Cursor — 자동 삽입 스킵
 
-`~/.cursor/rules/000-opal-agent.mdc`가 `alwaysApply: true`로 설정되어 모든 폴더에서 자동 적용되므로 프로젝트 단위 자동 삽입은 수행하지 않는다.
+`~/.cursor/rules/000-opal-agent.mdc`가 `alwaysApply: true`로 설정되어 모든 폴더에서 전역 비서 tier가 자동 활성화된다. PM 승격 게이트는 `.opal/AGENT.md` 존재이므로, 프로젝트 단위 `.cursorrules` 마커는 PM 진입에 불필요(중복·무해)하다. 따라서 프로젝트 단위 자동 삽입은 수행하지 않는다. 단 전역 마커가 없는 환경의 폴백 진입점으로 수동 삽입 가능.
 
 ### Codex — 자동 삽입 스킵
 
-install-mac.sh가 `~/.codex/AGENTS.md`(글로벌)에 OPAL 마커를 자동 삽입하며, Codex CLI는 세션 시작 시 글로벌 → 프로젝트 순으로 AGENTS.md를 항상 자동 로드한다 ([Codex AGENTS.md 가이드](https://developers.openai.com/codex/guides/agents-md)). 따라서 프로젝트 단위 `AGENTS.md` 자동 삽입은 **수행하지 않는다**.
+install-mac.sh가 `~/.codex/AGENTS.md`(글로벌)에 OPAL 마커를 자동 삽입하며, Codex CLI는 세션 시작 시 글로벌 → 프로젝트 순으로 AGENTS.md를 항상 자동 로드한다 ([Codex AGENTS.md 가이드](https://developers.openai.com/codex/guides/agents-md)). PM 승격 게이트는 `.opal/AGENT.md` 존재이므로, 프로젝트 `AGENTS.md` 마커는 PM 진입에 불필요(중복·무해)하다. 따라서 프로젝트 단위 `AGENTS.md` 자동 삽입은 **수행하지 않는다**.
 
-이유: Claude/Cursor 절과 동일 — `~/.opal/` 미설치 환경에서는 마커가 있어도 무용이고, 설치 환경에서는 글로벌 마커가 함께 셋업된다.
+이유:
+- `~/.opal/` 미설치 환경에서는 마커가 있어도 무용
+- `~/.opal/` 설치 환경에서는 전역 마커가 비서 tier를 상시 활성화하며, PM 승격은 `.opal/AGENT.md` 존재 신호로 AGENT.md가 자동 수행
+- → 프로젝트 `AGENTS.md` 마커는 PM 진입에 불필요(중복·무해). 단 전역 마커가 없는 환경의 폴백 진입점 및 Codex 이식성 트리거로 수동 삽입 가능 (opi가 생성)
 
 ### Antigravity(Gemini) — 자동 삽입 수행
 
@@ -424,7 +441,7 @@ install-mac.sh가 `~/.codex/AGENTS.md`(글로벌)에 OPAL 마커를 자동 삽�
 - **파일 있음 + 마커 있음**: 이미 삽입됨, 스킵
 - **파일 없음**: 부트스트래퍼만 포함된 `GEMINI.md`를 새로 생성
 
-삽입 내용은 위 Claude Code 절의 마커 블록과 동일하다. (Gemini는 글로벌 진입점이 Claude/Cursor와 다르므로 프로젝트 단위 마커가 실제로 필요함)
+삽입 내용은 위 Claude Code 절의 마커 블록과 동일하다. 2-tier 관점에서, Gemini는 전역 진입점이 Claude/Cursor/Codex와 달라 프로젝트 `GEMINI.md` 마커가 비서 tier 진입에 유효하다. 따라서 프로젝트 마커가 비서 tier 활성화의 실제 진입점이 되며, 이식성·폴백 트리거 역할을 함께 수행한다.
 
 ## 프로젝트 컨텍스트
 
@@ -472,4 +489,5 @@ install-mac.sh가 `~/.codex/AGENTS.md`(글로벌)에 OPAL 마커를 자동 삽�
 | v3.9 | 2026-06-28 | §모델 매핑 자동 적용 머지 지시에 폴백 입도 정밀화 반영 — provider 블록 전체 누락 시 전 셀 폴백 / level 셀 누락·default 시 그 셀만 폴백. `opal-model-mapping.md` §5.1과 동일 의미로 정합 (046) |
 | v3.10 | 2026-06-28 | §모델 매핑 자동 적용 2-레이어 머지로 전면 교체 — 표 폴백·"default" 폴백 제거. 전역 setting.json base → 로컬 setting.local.json 셀 단위 덮어쓰기. 미설정 셀=오류(디스패치 중단+안내). 로드 시점 명시: PM 모드 진입 시 로드 + 디스패치 직전 재확인. (046) |
 | v3.11 | 2026-06-28 | **Eager step 0 게이트에 프로젝트 setting.local.json 머지 추가** — 전역 setting.json 읽은 뒤 `{cwd}/.opal/setting.local.json`을 키/셀 단위로 덮어써 effective setting 구성. bootstrap 판정·models 로드 모두 effective setting 사용(프로젝트 진입 시점부터 적용 — "로컬 안 읽힘" 근본 해소). §모델 매핑 로드 시점을 step 0으로 정합. 4개 bootstrapper 게이트와 동기. (046) |
+| v4.0 | 2026-06-30 16:37 | **Eager 단계 2-phase 재구성** — Phase A(비서 tier·항상 로드: step 0 스킵게이트 불변 + step 1 identity + step 2 onboarding + step 2.5 PRINCIPLES) / Phase B(PM tier·`.opal/AGENT.md` 존재 시 승격: step 3 harness + step 4 opal-pm + step 5 프로젝트 AGENT.md + MEMORY 브리핑) / 공통(step 6 Antigravity 자동삽입 + step 6.5 next-action + step 7 활성화). Phase A에 "비서 tier `//`(opi 포함) 발동 가능 — Lazy 트리거 전제조건 없음" 불변식 명문화. 설계원칙 박스 Phase A/B 서술로 정합. 부트스트랩 완료 보고에 비서 세션 `⬜ harness ⬜ PM ⬜ PM모드` 표기 규칙 추가. + '부트스트래퍼 자동 관리' 절 논리 2-tier 반전(전역=비서/프로젝트=PM·이식성) (049) |
 

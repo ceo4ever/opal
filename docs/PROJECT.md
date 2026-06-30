@@ -139,3 +139,4 @@ llm-wiki 사상을 융합한 프로젝트 지식 위키 — 프로젝트의 WHY�
 | 2026-06-15 | OPAL Console 섹션 추가 — dashboard/frontend(React+shadcn)·backend(FastAPI)·opal-cli console + 프로젝트 구성 Console FE/BE 영역 (Task 021) |
 | 2026-06-18 | SDD 컴포넌트 표 정합 — op-sdd-tasks dangling 제거 + op-sdd-action-plan 등록. opal-brain 유형 오기재 교정 (오케스트레이터/Pilot → operator 멀티모드 라우터, alias opbr 불변) (Task 029) |
 | 2026-06-22 | OPAL Console 6번째 메뉴 "프로젝트 브레인" 추가 — brain 질의(`//opbr query --read-only` 구독 합성·POST 격리·브라우저 localStorage 이력) + opbr SKILL v1.4 비대화형 read-only 계약 (Task 036) |
+| 2026-06-30 | 부트스트랩 2-tier 전환 — 비서(전역 상시)/PM(opi 프로젝트 opt-in) 분리. AGENT.md Eager 2-phase·부트스트래퍼 절 반전·opi Codex AGENTS.md 보강·ARCHITECTURE 2-tier 절 (Task 049) |
