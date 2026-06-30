@@ -146,3 +146,7 @@
 - 신규: [[pages/concept/version-stamp-export-subst-decision.md]], [[pages/concept/installer-version-priority-model.md]], [[pages/concept/red-test-commit-coercion-guard-lesson.md]]
 - 출처: task:048
 
+## [2026-06-30] ingest | CLOSE ingest — 태스크 049 부트스트랩 2-tier 전환
+- 신규: [[pages/concept/opal-bootstrap-2tier-model.md]], [[pages/concept/opal-pm-promotion-gate.md]]
+- 출처: task:049
+

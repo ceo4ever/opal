@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-06-29 17:30
+> 갱신: 2026-06-30 17:03
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -75,11 +75,13 @@
 - [[op-task]] — op-task — TASK.md 작성 단계 스킬 #task #skill
 - [[opal-adapter-platform-isolation]] — OPAL 어댑터 계층 플랫폼 분기 격리 원칙 #adapter #architecture #constitution #platform #codex
 - [[opal-architecture]] — OPAL 시스템 아키텍처 #architecture #framework #layer #deploy
+- [[opal-bootstrap-2tier-model]] — OPAL 부트스트랩 2-tier 모델 (비서/PM 분리) #bootstrap #2tier #architecture #pm-gate #assistant-tier
 - [[opal-bootstrap-skip-gate]] — OPAL 부트스트랩 스킵 게이트 (setting.json Read 기반) #bootstrap #platform #adapter #session-toggle #setting-json
 - [[opal-brain-design-proposal]] — OPAL Project Brain 설계 제안서 #brain #design #llm-wiki #ingest #index
 - [[opal-brain-not-pilot-decision]] — opal-brain은 pilot이 아니다 — 리네임 철회 결정 #opal-brain #skill-naming #pilot #operator #architecture
 - [[opal-brain-system]] — OPAL Project Brain 시스템 #knowledge #architecture #wiki
 - [[opal-conventions]] — OPAL 코드 컨벤션 #convention #naming #commit #guard #state
+- [[opal-pm-promotion-gate]] — PM 승격 게이트 — 프로젝트 초기화 신호 존재 조건 #bootstrap #pm-gate #opi #2tier #project-level
 - [[opal-principles-constitution]] — OPAL Principles 헌법 신설 + 테스트 하네스 집행 강화 #principles #constitution #testing #framework #task
 - [[opal-project-definition]] — OPAL 프로젝트 정의 #project #overview #principle #component
 - [[opal-security-model]] — OPAL 보안 모델 #security #install #mcp #supply-chain #owasp
