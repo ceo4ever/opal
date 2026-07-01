@@ -329,7 +329,7 @@ TASK / ANALYSIS / PLAN 3단계 산출물에 설계 결정·분석 결과의 **�
 
 ### 8.1 적용 대상
 
-기획/지식 산출물(비개발 트랙, §1.5) — 정책서, PRD, TRD, IA, 외부 API 명세서, 기능 시나리오/화면 흐름도, brain concept/entity 페이지.
+기획/지식 산출물(비개발 트랙, §1.5) — 정책서, PRD, TRD, IA, 외부 API 명세서, 기능 시나리오/화면 흐름도, brain concept/entity/synthesis 페이지.
 
 > ANALYSIS/PLAN/EXECUTE 등 개발 트랙 산출물은 코드 토큰을 [MUST] 포맷(§2.5)으로 직접 인용하는 것이 정상이므로 이 원칙의 강제 대상이 아니다.
 
@@ -364,6 +364,7 @@ TASK / ANALYSIS / PLAN 3단계 산출물에 설계 결정·분석 결과의 **�
 - opwt QA 워커: `opal/skills/opal-pilot-write-tech/references/consistency-rules.md` §3.1이 이 §8 위반을 검출한다.
 - brain ingest 워커: `opal/skills/op-brain-ingest/SKILL.md` STEP 4 entity 작성 규칙이 §8.2(코드 식별자 본문 주어 금지)·§8.8(부록 분리)을 명문화한다.
 - brain init 시드: `opal/skills/opal-brain/SKILL.md` 핵심 엔티티 시드 entity 작성 규칙이 §8.2·§8.8을 명문화한다 (소스 커버리지 부록 분리).
+- opal-brain 코드→브레인 저술 게이트: `opal/skills/opal-brain/SKILL.md` §공통 규칙 "코드→브레인 저술 자기검토 게이트"가 이 §8을 4항목 체크리스트(구체성·자연스러운 문장·소스 위치 근거)로 집행한다 — entity 시드·concept ingest·synthesis 파일링 add-page 직전 적용.
 - 공통 문서 표준: `opal/core/references/opal-doc-standard.md` §3 정책서 행이 이 §8을 가리킨다.
 
 ### 8.6 다층 근거 원칙
@@ -422,3 +423,4 @@ TASK / ANALYSIS / PLAN 3단계 산출물에 설계 결정·분석 결과의 **�
 | v2.1 | 2026-06-16 | §8 비즈니스 용어 우선 원칙(기획 산출물) 신설 — 코드 식별자 본문 주어 금지 / 자연어 변환 예시 / 조건·코드 근거 표 분리 (024) |
 | v2.2 | 2026-06-17 | §8.6 다층 근거 원칙 / §8.7 업무 표면 명명 / §8.8 개발자 부록 분리 / §8.9 5W1H 사고 프레임 추가 — 인용 형식은 brain SCHEMA §4 포인터 (027) |
 | v2.3 | 2026-06-23 | §8.5 brain ingest/init entity 연결 구체화 — brain ingest 워커 항목에 §8.2·§8.8 명문화 + brain init 시드 경로 항목 신규 추가 (038) |
+| v2.4 | 2026-07-01 22:34 KST | §8.1 적용 대상에 brain synthesis 페이지 추가(scope gap 해소) + §8.5에 opal-brain 코드→브레인 저술 게이트 연결 등록 (L2 경량) |

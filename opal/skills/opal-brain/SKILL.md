@@ -117,7 +117,7 @@ pipeline: "MODE: init | ingest | query | lint"
 
 > 4기준 **모두 미충족** → index.md 카탈로그에만 등록(페이지 미생성). lazy 전략.
 
-5. 선별된 각 모듈에 대해 entity 페이지 작성 후 brain-tool add-page 호출:
+5. 선별된 각 모듈에 대해 entity 페이지 작성 후 brain-tool add-page 호출 (add-page 직전 §공통 규칙 > **코드→브레인 저술 자기검토 게이트** 4항목 통과 확인):
    ```bash
    ~/.opal/tools/brain-tool/run.sh add-page pages/entity/<module-name>.md \
      --type entity --title "<모듈명>" \
@@ -223,7 +223,7 @@ index.md 전체 맵 등록 완료
 2. 외부 소스인 경우: `sources/<source-id>/raw.md` + `sources/<source-id>/meta.yaml` 저장.
    - `meta.yaml` 필수 필드: `url`, `collected_at`, `license`.
 3. 페이지 타입 결정: entity / concept / flow / synthesis (또는 SCHEMA에서 확정한 타입).
-4. 페이지 본문 작성 (LLM 담당) — frontmatter 포함.
+4. 페이지 본문 작성 (LLM 담당) — frontmatter 포함. **작성 후 §공통 규칙 > 코드→브레인 저술 자기검토 게이트 4항목 통과 확인** (위반 시 재작성).
 5. brain-tool add-page 호출:
    ```bash
    ~/.opal/tools/brain-tool/run.sh add-page pages/<type>/<name>.md \
@@ -286,6 +286,7 @@ index.md 전체 맵 등록 완료
 3. 포함 판정 시 concept 페이지 1개 작성:
    - 본문: 핵심 결정 요약 (3~6줄) + `sources: [task:NNN]`
    - 파일명: `pages/concept/<kebab-task-summary>.md`
+   - 작성 후 §공통 규칙 > 코드→브레인 저술 자기검토 게이트 4항목 통과 확인 (위반 시 재작성).
 4. brain-tool add-page + log 호출:
    ```bash
    ~/.opal/tools/brain-tool/run.sh add-page pages/concept/<name>.md \
@@ -377,6 +378,8 @@ draft term으로 등록할까요?
 
 ### synthesis 페이지 파일링 제안 형식
 
+> **[MUST]** 파일링(add-page) 직전 §공통 규칙 > 코드→브레인 저술 자기검토 게이트 4항목을 통과 확인한다. synthesis도 지식 산출물이므로 §8 비즈니스 용어 우선 원칙의 대상이다 (위반 시 본문 재작성 후 파일링).
+
 ```
 이 답변을 synthesis 페이지로 저장할까요?
 제안 파일명: pages/synthesis/<kebab-name>.md
@@ -466,6 +469,30 @@ brain의 품질 문제를 탐지하고 정비 방안을 제안한다.
 - frontmatter 키·파일명·디렉토리명: English
 - 파일명: kebab-case.md (`pages/entity/state-tool.md`)
 
+### 코드→브레인 저술 자기검토 (§8 비즈니스 용어 우선 게이트) [MUST]
+
+> 소스 코드/문서를 분석해 brain 페이지(entity/concept/synthesis)를 저술할 때, **add-page 직전** 작성 본문을 아래 4항목으로 자기검토하고 위반 시 재작성 후 파일링한다. 근거: `citation-rules.md` §8.
+
+| # | 체크 항목 | 확보 품질 | 근거 |
+|---|----------|----------|------|
+| 1 | 각 모듈/로직의 **비즈니스 의미를 구체적으로** 서술했는가 (모호한 일반 서술 "처리한다/관리한다" 금지) | 구체성 | §8.2 |
+| 2 | 본문 문장의 **주어가 비즈니스 용어/자연어**인가 (코드 식별자·변수명을 주어로 나열하지 않았는가) | 자연스러운 문장 | §8.2.1 |
+| 3 | 코드 식별자 언급 시 **`비즈니스 용어(코드 식별자)` 형식으로 병기**했고, **코드블록이 본문 서술을 대체하지 않았는가** | 자연스러운 문장 | §8.2.2·§8.8 |
+| 4 | 모든 서술에 **`` `경로:줄번호` `` 전체 경로**로 출처(근거)를 병기했는가 (파일명·약칭 단독 금지) | 소스 위치 근거 | §2.2 |
+
+**허용 / 금지 경계**
+
+| 구분 | 예시 |
+|------|------|
+| ❌ 금지 | "`autoSelCancelYn`가 N이 아니고 `basicPugCpMsnBscId`가 null이 아니면 자동 취소된다." (식별자가 주어) |
+| ❌ 금지 | "이 모듈은 데이터를 처리한다" (구체성 없음) |
+| ❌ 금지 | 본문 대신 코드블록만 붙여 의미 설명을 대체 |
+| ❌ 금지 | `brain_tool.py`처럼 파일명만 인용(줄번호·경로 누락) |
+| ✅ 허용 | "자동취소가 켜져 있고(`a.java:120`) 기본 미션이 지정되어 있으면(`b.java:88`) 자동으로 취소된다." |
+| ✅ 허용 | 코드 식별자·enum은 별도 "소스 커버리지/개발자 부록" 또는 `sources`로 강등 배치(§8.8) |
+
+> 개발 트랙 산출물(ANALYSIS/PLAN/EXECUTE)은 코드 토큰 직접 인용이 정상이므로 이 게이트 대상이 아니다(§8 서두 단서).
+
 ---
 
 ## 변경이력
@@ -478,3 +505,4 @@ brain의 품질 문제를 탐지하고 정비 방안을 제안한다.
 | v1.3 | 2026-06-17 | term 타입 운영 — init 채택 가이드 / ingest draft term 추출 / query business-first+진입점③(미등록 용어 발견→draft 제안→확정 시 active) / lint term_duplicate·alias_collision (027) |
 | v1.4 | 2026-06-22 | 036: query --read-only 비대화형 계약 추가 — 모드 라우팅 표에 `//opbr query --read-only "<질의>"` 행 명시, §STEP query 하단에 "비대화형 read-only 모드" 절 신설(자동 선별·항상 합성·순수 read-only·JSON 출력 계약) |
 | v1.5 | 2026-06-23 | 038: entity 5섹션 표준화 + @header 전사 금지·provenance 3종·입력 큐레이션 선행 [MUST] + 재생성 런북 신설 + ingest --all drift 정정 (038) |
+| v1.6 | 2026-07-01 22:34 KST | 코드→브레인 저술 자기검토 게이트(§8 비즈니스 용어 우선) 공통 규칙에 신설 — 3대 품질(구체성·자연스러운 문장·소스 위치 근거) 4항목 체크리스트 + 허용/금지 경계. entity 시드·concept ingest(단일/task:NNN)·synthesis 파일링 add-page 직전 참조. (L2 경량) |
