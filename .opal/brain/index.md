@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-06-30 17:03
+> 갱신: 2026-06-30 21:32
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -19,6 +19,7 @@
 ## 개념
 - [[active-platform-dir-install-target-lesson]] — 활성 Claude 플랫폼 디렉토리가 ~/.claude 기본이 아닐 수 있다 — install 타겟 정합 교훈 (032 P2) #install #deploy #platform #dispatch #lesson-learned
 - [[adapter-body-model-level-substitution]] — 어댑터 본문 model 레벨 치환 — frontmatter 비대칭 해소 (032) #adapter #install #model #platform #sub-dispatch #constitution
+- [[agent-md-digest-pattern]] — AGENT.md 다이제스트 패턴 — 비서 코어 lean 분리 #bootstrap #digest #lean-core #assistant-tier #pm-tier #architecture
 - [[agentic-output-direct-verification-lesson]] — agentic 산출물 직접 검증 의무 — PM 직접 실행이 self-confirming을 포착 #lesson #verification #self-confirming #pm-discipline #red-first
 - [[analysis-drift-pm-cross-verify-lesson]] — ANALYSIS 드리프트 분석 환각 → PM 강화검토 패턴 (학습) #analysis #hallucination #pm-gate #lesson-learned #drift
 - [[analysis-version-hallucination-npm-view]] — ANALYSIS 라이브러리 버전 환각 → PM npm view 실측 차단 패턴 #analysis #hallucination #pm-gate #version #npm #lesson-learned
@@ -42,6 +43,7 @@
 - [[codex-platform-integration]] — Codex CLI OPAL 4번째 플랫폼 통합 #codex #platform #bootstrap #mcp #task
 - [[coding-principles-ssot]] — OPAL Coding Principles SSOT 신설 #framework #principles #ssot #task
 - [[daemon-as-tool-orchestrator]] — 데몬은 도구 오케스트레이터 — 데이터 SSOT는 프로젝트 파일 #architecture #dashboard #ssot
+- [[dedup-pointer-over-copy]] — dedup 원칙 — 목적지 기존 존재 시 표 복사 금지·포인터 단일화 #dedup #ssot #pointer #architecture #principles
 - [[deploy-artifact-verification-lesson]] — 동작검증은 배포 산출물+실 브라우저 기준으로 수행해야 한다 #verification #qa #deployment #lesson
 - [[dict-선행-model-ssot]] — DICT가 MODEL을 선행한다 — 사전이 속성명·타입 SSOT #architecture-decision #data-design #ssot #pipeline
 - [[e2e-cmux-first-playwright-fallback]] — E2E 도구 우선순위 — cmux 1순위 → playwright 폴백 (에러코드 소비) #testing #e2e #cmux #framework
@@ -118,6 +120,7 @@
 - [[skill-registry-validate-extension]] — skill-registry validate 확장 — dangling error 격상 + unregistered 역방향 감지 #skill-registry #validate #drift-detection #tooling
 - [[skill-rename-validate-pattern]] — 스킬 rename 후 레지스트리 정합 검증 패턴 #skill-registry #validate #rename #drift-detection #lesson
 - [[state-tool-mock-guard-skill-false-positive]] — state-tool mock 가드 정규식 ↔ SKILL 표준 문구 false positive #state-tool #mock-guard #false-positive #skill #bug #framework
+- [[strip-deploy-runtime-token-neutral]] — strip_deploy_md 런타임 토큰 영향 0 — 변경이력 trim 측정 정정 교훈 #deploy-pipeline #token #install #measurement #lesson
 - [[test-real-data-validation-lesson]] — TEST 실데이터 검증이 build-only 가 놓친 결함을 발견한다 #testing #lesson #test-strategy #real-data
 - [[test-scenario-pipeline-redesign]] — 테스트 시나리오 파이프라인 재설계 (2차원 매트릭스 + self-confirming 4분리) #testing #pipeline #framework #flow #task
 - [[test-two-tier-system]] — 테스트 2단계 체계 (단위=EXECUTE / 통합=TEST) #testing #pipeline #framework

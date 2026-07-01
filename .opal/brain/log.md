@@ -150,3 +150,7 @@
 - 신규: [[pages/concept/opal-bootstrap-2tier-model.md]], [[pages/concept/opal-pm-promotion-gate.md]]
 - 출처: task:049
 
+## [2026-06-30] ingest | CLOSE ingest — 태스크 050 에이전트 다이제스트: concept 3건 누적 (agent-md-digest-pattern, dedup-pointer-over-copy, strip-deploy-runtime-token-neutral)
+- 신규: [[pages/concept/agent-md-digest-pattern.md]], [[pages/concept/dedup-pointer-over-copy.md]], [[pages/concept/strip-deploy-runtime-token-neutral.md]]
+- 출처: task:050
+
