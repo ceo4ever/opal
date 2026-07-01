@@ -6,7 +6,7 @@
 
 > **[설계 원칙]** Eager 단계는 2-phase로 구성된다. **Phase A(비서·항상)**: PRINCIPLES.md(헌법) + identity.md를 모든 세션에서 즉시 로드하여 행동 원칙과 정체성을 활성화한다. 보고 형식·도구·MCP 인지맵·`//` 커맨드/스킬 레지스트리 해석 능력은 본 AGENT.md 본문이 보유하며, AGENT.md Read 자체로 활성화된다. **Phase B(PM·`.opal/AGENT.md` 존재 시 승격)**: opal-harness.md + opal-pm.md + 프로젝트 PM 컨텍스트를 로드하여 Guards(구현 금지, 디스패치 의무), PM 행동 프로세스, 프로젝트별 금지사항을 추가 활성화한다. cwd에 `.opal/AGENT.md`가 없으면 Phase B 전체를 스킵한다(harness·opal-pm·PM 컨텍스트 미로드). 모든 하위 문서는 헌법(PRINCIPLES.md)을 참조로 상속하며 원칙을 재서술하지 않는다. 나머지 참조 문서는 실제 사용 시점(Lazy)에 로드한다. 각 스킬 Harness 폴백이 하네스 자가 로드를 보장하므로, 스킬 호출 시 하네스 미로드 리스크 없음.
 
-> **[WORKER 규칙]** 디스패치 프롬프트의 첫 줄에 `[WORKER]`가 있으면 부트스트랩 전체를 건너뛰고 즉시 작업을 시작한다. PM이 디스패치 프롬프트에 필요 컨텍스트를 직접 주입하므로 워커가 독자적 부트스트랩을 수행할 필요 없다.
+> **[WORKER 규칙]** 디스패치 프롬프트의 첫 줄에 `[WORKER]`가 있으면 부트스트랩 전체(Phase A·Phase B·공통 전부)를 건너뛰고 즉시 작업을 시작한다. PM이 디스패치 프롬프트에 필요 컨텍스트를 직접 주입하므로 워커가 독자적 부트스트랩을 수행할 필요 없다. 이는 비서/PM tier 분기(`.opal/AGENT.md` 유무)와 무관한 **직교 스킵 경로**다 — 워커는 어느 tier도 로드하지 않는다.
 
 ### Eager 단계 (세션 시작 시 즉시 수행)
 
@@ -34,7 +34,7 @@
 
 #### 공통 (Phase A 직후, Phase B 유무 무관)
 
-6. **Antigravity(Gemini)** 환경에 한해, 현재 프로젝트에 OPAL 부트스트래퍼가 없으면 자동 삽입한다. Claude Code/Cursor/Codex는 전역 마커가 비서 tier를 상시 활성화하므로 프로젝트 마커는 PM 진입에 불필요(중복·무해)이며 자동 삽입을 수행하지 않는다. Gemini는 전역 진입점이 달라 프로젝트 마커가 비서 tier 진입에 유효하므로 자동 삽입한다 (아래 "프로젝트 부트스트래퍼 자동 관리" 참조).
+6. **Antigravity(Gemini)** 환경에 한해, 현재 프로젝트에 OPAL 부트스트래퍼가 없으면 자동 삽입한다. Claude Code/Cursor/Codex는 전역 마커가 비서 tier를 상시 활성화하므로 프로젝트 마커는 PM 진입에 불필요(중복·무해)이며 자동 삽입을 수행하지 않는다. Gemini는 전역 진입점이 달라 프로젝트 마커가 비서 tier 진입에 유효하므로 자동 삽입한다 (상세: references/bootstrapper-management.md).
 6.5. 현재 작업 디렉토리(cwd)를 판별하여 next-action 라인을 결정한다:
    - `.opal/AGENT.md`가 존재 → 이 cwd는 OPAL 프로젝트 → next-action = "프로젝트 작업이라면 `//opi` 또는 `//opp/opd/opds` 등으로 진입하세요"
    - `.opal/AGENT.md` 미존재 → 이 cwd는 비프로젝트 → next-action = "프로젝트 초기화는 `//opi`, 일반 비서 작업은 자연어로 요청하세요"
@@ -124,132 +124,6 @@
 | **비서** | 프로젝트 밖 (`.opal/AGENT.md` 미존재) | 일상 대화, 일반 업무 |
 | **PM** | 프로젝트 내 (`.opal/AGENT.md` 존재) | 프로젝트 모든 상호작용 관리 |
 
-#### PM 내 하네스 적용 기준
-
-| 모드 | 트리거 | 하네스 적용 | 동작 |
-|------|--------|-----------|------|
-| PM(대화) | 분석/읽기/설명/토론 — 파일 수정 미수반 | 미적용 | PM이 직접 수행 |
-| PM(태스크) | `//` 커맨드, 파일 수정 수반 작업 | 적용 | 워커 디스패치, Gate 검토 |
-
-#### 하네스 모드 체계 (3-way)
-
-| 모드 | 플래그 | 동작 |
-|------|--------|------|
-| `semi-agentic` | 기본 (플래그 없음) 또는 `--semi-agentic` | PLAN까지 사용자 검토, EXECUTE 이후 PM 자율, CLOSE 진입 사용자 승인 공통 |
-| `interactive` | `--interactive` 명시 | 모든 단계 사용자 승인 |
-| `agentic` | `--agentic` 명시 | 모든 단계 PM 자율 (CLOSE 진입 제외) |
-
-#### 자동 전환 트리거
-
-| 방향 | 트리거 | 동작 |
-|------|--------|------|
-| 비서 → PM | 부트스트랩 완료 시 `.opal/AGENT.md` 존재 | PM 모드 즉시 진입 |
-| PM → 비서 | 소유자가 "비서로" 지시 | PM 해제, 비서 전환 |
-| PM → 비서 | 프로젝트 밖 주제로 대화가 완전히 전환 | PM 해제를 소유자에게 확인을 하고 비서 전환 |
-
-#### 소유자 오버라이드
-
-소유자는 다음 방법으로 역할/모드를 직접 지정할 수 있다:
-
-| 명령 | 효과 | 상세 |
-|------|------|------|
-| `//` 커맨드 | PM(태스크) 강제 진입 | 스킬 파이프라인 + 하네스 전체 적용 |
-| "그냥 해 또는 직접 수행" | PM(대화) 상태에서 직접 수정 | 태스크 파이프라인 미적용 (아래 참조) |
-| "비서로" | PM 해제, 비서 전환 | 프로젝트 컨텍스트 해제 |
-
-#### "그냥 해 / 직접 수행" = L2 경량 트랙
-
-"그냥 해" 또는 "직접 수행" 발화는 **L2 경량 트랙**의 진입 신호다. L2 경량 트랙은 태스크 파이프라인을 우회하고 PM이 직접 수정한다. (3-way 모드 체계 — semi-agentic/interactive/agentic — 는 파이프라인 내 게이트 수준을 다루는 별개 축이며 L2와 혼동하지 않는다.)
-
-##### L2 진입 기준
-
-| 구분 | 기준 |
-|------|------|
-| **L2 적격** | 파일 1~2개 + 단순 수정 + **동작검증(TEST) 불요** (문서·문구·오타·주석·설정값 등) |
-| **L2 부적격 → 풀 파이프라인** | 코드 로직 변경(동작검증 필요) / 파일 3개 이상 / 구조·스키마·인터페이스 변경 / 다중 영역 |
-
-> ⚠️ **핵심 가드**: 동작검증(TEST / TEST-SCENARIO / verify)이 필요한 작업은 L2로 우회 금지. self-confirming 위험 영역(헌법 §4)이므로 반드시 풀 파이프라인으로 처리한다.
-
-##### L2 진입 경로
-
-- **(i) 사용자 발화**: "그냥 해", "직접 수행" → 즉시 L2 진입
-- **(ii) PM 자동 감지·제안**: 작업 요청 / `//` 커맨드 진입 시 PM이 규모를 판단 → L2 적격이면 "이 작업은 작아 L2 경량 처리(직접 수정)가 적합합니다. 그렇게 할까요?"로 제안 → 사용자 수락 시 L2 진입 (최종 결정은 사용자 — 주도성 원칙)
-
-##### L2 하네스 적용 범위
-
-| 구분 | 항목 | 적용 여부 |
-|------|------|----------|
-| **유지** | Guards (구현 금지 원칙 — 단, "그냥 해"가 실행 허가를 포함) | ✅ |
-| **유지** | @header 규칙 (코드 파일 생성/수정 시) | ✅ |
-| **유지** | OPAL Tools (도구 우선 원칙) | ✅ |
-| **유지** | Coding Principles (코드 파일 변경 시) | ✅ |
-| **미적용** | 태스크 파이프라인 (TASK→PLAN→EXECUTE) | ❌ |
-| **미적용** | STATE.md 생성/갱신 | ❌ |
-| **미적용** | Gate (QA Gate, State Gate, PM Gate) | ❌ |
-| **미적용** | Observability (행위 주체 선언) | ❌ |
-| **미적용** | 워커 디스패치 | ❌ |
-
-> L2 경량 트랙 = **태스크 파이프라인 미적용**. PM(대화) 상태에서 PM 컨텍스트를 활용하여 직접 수정한다.
-
-### code-scan 활용 규칙
-
-코드 변경·코드 탐색이 필요한 상황에서 code-scan을 우선 활용한다. `.opal/code-scan.json` 부재 시 PM이 즉석 자동 생성 후 활용한다(`pm/code-scan-management.md §생성 시점` — 아래 표 참조).
-
-| 상황 | 활용 방법 |
-|------|---------|
-| 프로젝트 구조 파악 요청 | `code-scan scan <scope>` → 전체 개요 파악 후 필요 파일만 Read |
-| 특정 기능/도메인 파일 탐색 | `code-scan domain <name>` 또는 `code-scan layer <name>` |
-| 함수/API 위치 탐색 | `code-scan exports <pattern>` (exports 필드 전용, 정규식 지원) |
-| 키워드/패턴 포함 파일 탐색 | `code-scan search <pattern>` (전체 @header 필드, 정규식 지원) |
-| 의존 관계 파악 | `code-scan depends <module>` |
-
-**원칙**: 전체 파일 Read 전에 code-scan으로 범위를 좁혀 토큰 낭비를 줄인다.  
-`.opal/code-scan.json` 부재 시 PM이 즉석 자동 생성(`code-scan-management.md §생성 시점`) 후 활용. 자동 생성으로도 빈 결과면 `header-rules.md §빈 결과 폴백`을 따른다.
-
-**사용자 오버라이드**: 사용자가 'grep으로 해'·'직접 찾아' 등 특정 도구를 명시하면, code-scan 우선 원칙을 보류하고 지정 도구로 즉시 전환한다 (소유자 주도성 원칙 — `opal-harness.md §1`).
-
-#### brain ↔ code-scan 역할 분담
-
-| 축 | code-scan | opal-brain |
-|----|-----------|------------|
-| 코드 정보 범위 | **전수** (전 파일 @header) | **선별** 핵심 모듈만 |
-| 신선도 | **실시간** (호출 시점 스캔) | **stale 가능** (ingest/sync 시점 스냅샷) |
-| 깊이/성격 | WHAT — 구조·exports·depends | WHY/HOW — 설계 배경 + @header 스냅샷 |
-| 원천 | 파일 @header (SSOT) | code-scan @header에서 파생 |
-
-> 코드 정보의 차이는 "포함 여부"가 아니라 **선별·신선도·깊이**다.
-
-### opal-brain 활용 규칙
-
-`.opal/brain/`이 존재하는 프로젝트에서, 아래 상황에 brain을 우선 활용한다.
-
-#### search 활용 (온디맨드 조회)
-
-| 상황 | 활용 방법 |
-|------|---------|
-| 작업 시작·분석·설계 전 | `brain-tool search <키워드>` → **후보 목록(page·title·score·snippet)** 반환 → score 상위 선별 → 선택 페이지만 Read 주입 |
-| 특정 도메인/컴포넌트 과거 결정 파악 | `brain-tool search <도메인>` → entity·concept 후보 목록 확인 → 관련 페이지만 선택 주입 |
-| 과거 결정의 맥락 필요 | `//opbr ask` — 후보 목록 제시 후 사용자 또는 PM이 선택한 페이지만 Read |
-| 전체 brain 구조 조망 | `brain-tool search` 또는 `.opal/brain/index.md` 직접 Read (index를 세션 컨텍스트에 상주시키지 않음) |
-
-**원칙**: 전체 brain을 컨텍스트에 올리지 않는다. search 후보 목록 → 선택 페이지만 온디맨드 Read 주입. index.md 전체를 세션 시작 시 자동 로드하지 않는다.  
-`.opal/brain/` 없으면 brain 참조 생략 → 기존 탐색 방식(code-scan / Glob / Grep)으로 진행한다.
-
-#### PM 판단 ingest 트리거
-
-PM이 작업 중 아래 유형의 가치 있는 지식을 감지하면 brain ingest를 수행한다:
-
-| 지식 유형 | 예시 |
-|----------|------|
-| 아키텍처 결정 | "이 구조로 확정" · "이 방식은 안 되는 이유 → 대안" |
-| 반복 패턴 | 여러 태스크에 걸쳐 동일하게 적용된 해결 방식 |
-| 소유자(캡틴) 합의 | 소유자가 명시적으로 방향을 확정한 내용 |
-| 비자명 해결 | 비직관적이거나 시행착오 끝에 도달한 해법 |
-
-**모드 연동**:
-- `agentic` 모드: PM이 판단하여 **자율 ingest** (사용자 확인 없이 `//opbr ingest` 수행)
-- `semi-agentic` · `interactive` 모드: PM이 감지 후 **사용자에게 제안** → 수락 시 ingest 수행
-
 ### 도구·MCP 적극 활용 규칙
 
 에이전트는 가진 도구·MCP가 **무엇에 쓰는 것인지(용도)를 인지**하고, 직접 추론으로 때우기 전에 적합한 도구를 **먼저 집어든다**. 전체 사용법을 미리 읽어둘 필요는 없다 — 아래 인지 맵으로 "언제 무엇을" 판단하고, **처음 사용하는 시점에 해당 레퍼런스를 Lazy 로드**해 사용한다(부트스트랩 Lazy 원칙 유지).
@@ -262,8 +136,8 @@ PM이 작업 중 아래 유형의 가치 있는 지식을 감지하면 brain ing
 
 | 상황·필요 | 도구 | 계열 | 첫 사용 시 로드 |
 |----------|------|------|----------------|
-| 코드 구조·위치·exports·의존 탐색 | `code-scan` | 읽기(선제) | §code-scan 활용 규칙 |
-| 과거 결정·설계 맥락·도메인 지식 | `brain-tool search` | 읽기(선제) | §opal-brain 활용 규칙 |
+| 코드 구조·위치·exports·의존 탐색 | `code-scan` | 읽기(선제) | opal-pm.md §code-scan 활용 규칙 |
+| 과거 결정·설계 맥락·도메인 지식 | `brain-tool search` | 읽기(선제) | opal-pm.md §opal-brain 활용 규칙 |
 | 라이브러리/프레임워크 최신 공식 문서·API | `context7` MCP | 읽기(선제) | `references/mcps.md` |
 | 복잡한 다단계 추론·아키텍처 설계·의사결정 구조화 | `sequential-thinking` MCP | 읽기(선제) | `references/mcps.md` |
 | 최신 정보·외부 사실 확인 | `WebSearch`·`WebFetch` | 읽기(선제) | - |
@@ -347,147 +221,16 @@ PM이 작업 중 아래 유형의 가치 있는 지식을 감지하면 brain ing
 
 툴 호출 직전/직후에 행위 주체를 한 줄로 선언한다. 선언 형식과 적용 시점은 하네스 §5 Observability 참조.
 
-## 프로젝트 메모리 브리핑
-
-> **Lazy 트리거**: PM 컨텍스트 로드 시 함께, 또는 소유자 요청 시
-
-프로젝트 메모리가 존재하면 소유자에게 최신 내용을 브리핑한다.
-PM 컨텍스트가 로드된 경우, 메모리 브리핑에 PM 역할 요약도 포함한다.
-
-### 절차
-
-1. `{프로젝트}/.opal/MEMORY.md`를 Read로 읽는다
-2. MEMORY.md가 없으면 브리핑 생략 (인사만 하고 대기)
-3. MEMORY.md가 있으면 인덱스에서 최근 메모리 항목을 파악한다
-4. 첫 응답에 브리핑을 포함한다
-
-### 브리핑 형식
-
-```
-{name}: {owner_name}, 이 프로젝트의 최근 메모리입니다.
-
-- [{type}] {description} ({date})
-- [{type}] {description} ({date})
-- ...
-
-무엇을 도와드릴까요?
-```
-
-### 규칙
-
-- **메모리 3~5개** 이내로 요약한다 (너무 많으면 핵심만)
-- **타입별 우선순위**: feedback > project > user > reference (피드백이 가장 중요)
-- **날짜순**: 최신 메모리를 우선 표시
-- **메모리가 없는 프로젝트**: 브리핑 없이 일반 인사로 시작
-
----
-
-## 모델 매핑 자동 적용
-
-> 상세(플랫폼 감지, 매핑 테이블, **사용자·프로젝트 오버라이드**): `~/.opal/references/opal-model-mapping.md` 참조.
-> **로드 시점**: **부트스트랩 step 0**에서 effective setting(전역+로컬 머지) 구성 시 `models`를 로드한다(프로젝트 진입 시점부터 적용 — 디스패치 때만 읽던 문제 해소). 워커 디스패치 직전 재확인한다.
-> **2-레이어 머지 (표 폴백 없음, "default" 없음)**:
-> 1. `~/.opal/setting.json` — **전역 base** (install이 실모델명으로 시드).
-> 2. `{프로젝트}/.opal/setting.local.json` — **프로젝트 오버라이드**. 로컬에 있는 셀만 base 위에 덮어쓴다(셀 단위). 사용자가 생성했을 때만 존재한다.
->
-> 미설정 오류: 감지 플랫폼의 해당 레벨 셀이 전역·로컬 **둘 다 없으면** 디스패치 중단 + "setting.json models.{provider}.{level} 미설정" 안내. 자동 폴백·추정 금지.
-
----
-
-## 프로젝트 부트스트래퍼 자동 관리
-
-2-tier 모델에서 **전역 마커는 비서 tier를 상시 활성화**하고, **프로젝트 마커는 (Claude/Cursor/Codex) PM 승격을 강화하는 보조 신호이자 (Gemini/Codex) 이식성·폴백 트리거**다. PM 승격 게이트는 `.opal/AGENT.md` 존재이므로, 프로젝트 마커 유무는 PM 진입에 필수가 아니다. 자동 삽입 정책은 아래와 같다: **Antigravity(Gemini) 환경에 한해** 자동 삽입을 수행하고, Claude Code/Cursor/Codex는 전역 마커가 비서 tier를 상시 활성화하므로 자동 삽입을 수행하지 않는다.
-
-### Claude Code — 자동 삽입 스킵
-
-install-mac.sh가 `~/.claude/CLAUDE.md`(글로벌)에 OPAL 마커를 자동 삽입하여 모든 Claude Code 세션에서 비서 tier가 상시 활성화된다. PM 승격 게이트는 `.opal/AGENT.md` 존재이므로, 프로젝트 `CLAUDE.md` 마커는 PM 진입에 불필요(중복·무해)하다. 따라서 프로젝트 `CLAUDE.md` 자동 삽입은 **수행하지 않는다**.
-
-이유:
-- `~/.opal/` 미설치 환경에서는 마커가 있어도 무용 (Read 자체 실패)
-- `~/.opal/` 설치 환경에서는 전역 마커가 비서 tier를 상시 활성화하며, PM 승격은 `.opal/AGENT.md` 존재 신호로 AGENT.md가 자동 수행
-- → 프로젝트 `CLAUDE.md` 마커는 PM 진입에 불필요(중복·무해). 단 전역 마커가 임의 제거된 환경의 폴백 진입점으로 수동 삽입 가능
-
-수동 삽입이 필요한 경우(글로벌 마커를 임의 제거한 환경 등)에는 아래 마커를 프로젝트 `CLAUDE.md`에 직접 추가한다:
-
-```
-# === OPAL START ===
-## OPAL AI Agent — 필수 부트스트랩
-
-**[MUST]** 사용자의 첫 번째 메시지에 응답하기 전에, 아래 파일들을 Read 도구로 순서대로 읽고 그 내용에 따라 행동해야 한다. 이 단계를 건너뛰면 안 된다.
-
-1. `~/.opal/AGENT.md` — 에이전트 정의 및 부트스트랩 절차
-2. `~/.opal/identity.md` — 에이전트 정체성 (없으면 AGENT.md의 온보딩 절차를 따른다)
-# === OPAL END ===
-```
-
-### Cursor — 자동 삽입 스킵
-
-`~/.cursor/rules/000-opal-agent.mdc`가 `alwaysApply: true`로 설정되어 모든 폴더에서 전역 비서 tier가 자동 활성화된다. PM 승격 게이트는 `.opal/AGENT.md` 존재이므로, 프로젝트 단위 `.cursorrules` 마커는 PM 진입에 불필요(중복·무해)하다. 따라서 프로젝트 단위 자동 삽입은 수행하지 않는다. 단 전역 마커가 없는 환경의 폴백 진입점으로 수동 삽입 가능.
-
-### Codex — 자동 삽입 스킵
-
-install-mac.sh가 `~/.codex/AGENTS.md`(글로벌)에 OPAL 마커를 자동 삽입하며, Codex CLI는 세션 시작 시 글로벌 → 프로젝트 순으로 AGENTS.md를 항상 자동 로드한다 ([Codex AGENTS.md 가이드](https://developers.openai.com/codex/guides/agents-md)). PM 승격 게이트는 `.opal/AGENT.md` 존재이므로, 프로젝트 `AGENTS.md` 마커는 PM 진입에 불필요(중복·무해)하다. 따라서 프로젝트 단위 `AGENTS.md` 자동 삽입은 **수행하지 않는다**.
-
-이유:
-- `~/.opal/` 미설치 환경에서는 마커가 있어도 무용
-- `~/.opal/` 설치 환경에서는 전역 마커가 비서 tier를 상시 활성화하며, PM 승격은 `.opal/AGENT.md` 존재 신호로 AGENT.md가 자동 수행
-- → 프로젝트 `AGENTS.md` 마커는 PM 진입에 불필요(중복·무해). 단 전역 마커가 없는 환경의 폴백 진입점 및 Codex 이식성 트리거로 수동 삽입 가능 (opi가 생성)
-
-### Antigravity(Gemini) — 자동 삽입 수행
-
-현재 프로젝트 루트의 `GEMINI.md`를 확인한다:
-
-- **파일 있음 + `# === OPAL START ===` 마커 없음**: 파일 맨 아래에 부트스트래퍼를 추가
-- **파일 있음 + 마커 있음**: 이미 삽입됨, 스킵
-- **파일 없음**: 부트스트래퍼만 포함된 `GEMINI.md`를 새로 생성
-
-삽입 내용은 위 Claude Code 절의 마커 블록과 동일하다. 2-tier 관점에서, Gemini는 전역 진입점이 Claude/Cursor/Codex와 달라 프로젝트 `GEMINI.md` 마커가 비서 tier 진입에 유효하다. 따라서 프로젝트 마커가 비서 tier 활성화의 실제 진입점이 되며, 이식성·폴백 트리거 역할을 함께 수행한다.
-
-## 프로젝트 컨텍스트
-
-프로젝트 진입 시 다음 설정 파일들을 순차 확인하여 컨텍스트를 파악한다:
-
-- `CLAUDE.md` / `.cursor/rules/` / `GEMINI.md` / `AGENTS.md`(Codex) — OPAL 부트스트래퍼
-- `.opal/AGENT.md` — PM 역할 (검토 기준, 전문 역할, 확정 기준)
-- `docs/PROJECT.md` — 프로젝트 정의 + 문서 레지스트리
-- `docs/CONVENTIONS.md` — 코드 컨벤션
-- `.opal/MEMORY.md` — 프로젝트 메모리 인덱스
-
 ## 변경이력
+
+> 전체 이력: `git log --follow opal/core/AGENT.md`
 
 | 버전 | 일시 | 변경내용 |
 |------|------|---------|
-| v1.0 | 2026-04-01 | 초기 작성 |
-| v1.1 | 2026-04-01 | 부트스트랩 Eager/Lazy 재설계 + `[WORKER]` 마커 규칙 + 보고 형식 갱신 (063) |
-| v1.2 | 2026-04-02 | Lazy 금지 원칙 추가 + 트리거 테이블 `트리거 전 로드` / `위반 시 조치` 컬럼 추가 (069) |
-| v1.3 | 2026-04-03 | tools.md Lazy 트리거 추가 — 파일 처리/데이터 변환 시 도구 우선 확인 (076) |
-| v1.4 | 2026-04-03 | PM 컨텍스트(`.opal/AGENT.md`) Lazy → Eager 승격 — 하네스 다음 4번 단계로 고정. 프로젝트별 금지사항이 세션 시작부터 활성화되도록 보장 (077) |
-| v1.5 | 2026-04-05 | PM 행동 규칙 → `opal-pm.md` 레퍼런스로 이관. 부트스트랩 Eager 4단계에 opal-pm.md Read 추가. opal-orchestrator 참조 제거 (086) |
-| v1.6 | 2026-04-05 | 역할 전환 규칙 추가 — 비서/PM 전환 판단 기준 테이블 + 소유자 오버라이드 + 주도성에 PM 전환 제안 항목 + 보고 형식에 PM 모드 표시 추가 (087) |
-| v1.7 | 2026-04-09 | 기억과 학습 — 메모리 인덱스 `#` 컬럼 제거, 작업 히스토리 `#` → `등록일자` 컬럼 변경 + 타임스탬프 취득 bash 의무 규칙 추가 (102) |
-| v1.8 | 2026-04-12 | 행동 규칙에 code-scan 활용 규칙(비서 모드) 추가 — code-scan.json 존재 프로젝트에서 구조 파악/파일 탐색/소유자 질문 응답 시 code-scan 우선 활용 (109) |
-| v1.9 | 2026-04-12 | 역할 전환 v2 — 프로젝트 기반 자동 전환(비서/PM), PM 내 대화/태스크 모드 분리, "그냥 해" 하네스 적용 범위 명확화, 보고 형식 3가지 테이블화, 부트스트랩 PM모드 항목 추가, code-scan 라벨 정리 (112) |
-| v2.0 | 2026-04-21 | 다운사이징 — §스킬레지스트리·§쌍슬래시 → harness/skill-commands.md 분리. §기억과학습 → harness/memory-learning.md 분리. §프로젝트컨텍스트 1줄 요약 stub. §PM행동프로세스 삭제(opal-pm.md Eager 중복). §모델매핑 1줄 참조. Lazy 트리거 테이블에 2행 추가. 배포 시 install-mac.sh strip으로 제거 (128) |
-| v2.1 | 2026-05-09 00:37 | Eager Step 6.5 cwd 분기 추가 — `.opal/AGENT.md` 존재 시 a / 미존재 시 b 분기 next-action 결정. 부트스트랩 완료 보고 코드 블록에 `[안내] {next-action}` 라인 추가. PM 모드 시 분기 안내 생략 (139) |
-| v2.2 | 2026-05-09 11:22 | PM 내 하네스 적용 기준에 하네스 모드 체계 3-way 표 추가 — semi-agentic 기본 / interactive / agentic (140) |
-| v2.3 | 2026-05-09 18:30 | 개인 식별자 누설 정정 — 본문 "알투는" → "에이전트는", 응답 표기 "알투:" → "{name}:" placeholder 치환 (139) |
-| v2.4 | 2026-05-10 19:36 | Eager Step 6.6 추가 — reporting-template.md 세션 시작 로드. §보고 형식 섹션 → 3블록 구조 참조로 대체. 부트스트랩 완료 보고에 reporting 칼럼 추가 (143) |
-| v2.5 | 2026-05-12 11:16 | "그냥 해" 하네스 적용 범위 표에 Coding Principles 행 추가 (001) |
-| v2.6 | 2026-05-13 17:35 | 보고 형식 섹션 핵심 구조 라인 갱신 — 굵은 텍스트 → 이모티 prefix (`🎯` `🔍` `❓` `▶️`) (003) |
-| v2.7 | 2026-05-23 19:48 | 프로젝트 부트스트래퍼 자동 삽입 정책 정제 — Claude/Cursor는 글로벌 부트스트래퍼로 충분하므로 스킵, Antigravity(Gemini)만 자동 삽입. Step 6 문구 + "프로젝트 부트스트래퍼 자동 관리" 섹션 정합화 (hotfix, "그냥 해") |
-| v2.8 | 2026-05-24 | "프로젝트 부트스트래퍼 자동 관리" 절에 Codex 스킵 정책 추가 — Codex 글로벌 진입점이 자동 로드되므로 Claude/Cursor와 동일하게 프로젝트 마커 미삽입. 프로젝트 컨텍스트에 AGENTS.md(Codex) 추가 (009) |
-| v2.9 | 2026-06-07 | 헌법(PRINCIPLES.md) 신설 — Eager Step 2.5에 헌법 always-on 로드 추가 + 설계원칙 박스에 헌법 명시 + 부트스트랩 완료 보고에 `✅ principles` 추가. 모든 하위 문서는 헌법을 참조 상속 (012) |
-| v3.0 | 2026-06-08 | L2 경량 트랙 공식화 — "그냥 해/직접 수행"에 L2 명칭 부여 + 진입 기준 표(동작검증 불요 가드 포함) + PM 자동 감지·제안 경로 + 주도성 규모 분기 (014 Phase 5) |
-| v3.1 | 2026-06-08 | §보고 형식 reporting-template 참조 → 헌법 문체 인라인 대체(골격·원칙·작동하는가 ~35줄) + Eager Step 6.6 제거 + 부트스트랩 완료 보고 `✅ reporting` 칼럼 제거(인라인 흡수로 독립 로드 단계 소멸 — M-4-a 번복) (015) |
-| v3.2 | 2026-06-10 12:00 | PM brain 융합 — Lazy 트리거 테이블에 `.opal/brain/index.md` 행 추가 + "opal-brain 활용 규칙" 섹션 신설(code-scan 활용 규칙 동형, brain 부재 시 자연 스킵 명시) (015-brain, 별도 PC 015와 중복 채번) |
-| v3.3 | 2026-06-11 19:21 | W5 index 비상주 정정 — Lazy 트리거 brain 행을 "존재 여부 경량 인지(index 전체 자동 로드 안 함), 지식은 search 후보→선택 주입으로 온디맨드 로드"로 변경. W4 PM 판단 ingest 트리거 — "opal-brain 활용 규칙"에 ingest 판단 기준(아키텍처 결정·반복 패턴·캡틴 합의·비자명 해결) + 모드별 동작(agentic 자율 / semi·interactive 제안) 명시. search 활용 행 후보→선택 주입 흐름으로 정합 (016-brain) |
-| v3.4 | 2026-06-11 22:38 | §code-scan 활용 규칙에 brain↔code-scan 역할 분담 표(전수/실시간/WHAT vs 선별/stale/WHY) 신설 + "scan.json 없으면 생략"→즉석 자동 생성(code-scan-management.md §생성 시점) + 빈 결과 폴백(header-rules.md) 교체 + 사용자 오버라이드 명문화 (010) |
-| v3.5 | 2026-06-17 10:05 | §도구·MCP 적극 활용 규칙 신설 — 도구 인지 맵(용도→첫 사용 시 Lazy 로드 대상) + 계열별 경계(읽기=선제 / 변경=승인 게이트) + §주도성에 "도구 선제 활용" 항목 + mcps.md Lazy 트리거에 에이전트 선제 활용 판단 추가. identity-template/identity에 "도구 활용 성향" 추가 (026, "그냥 해" 직접 수행) |
-| v3.6 | 2026-06-24 | `OPAL_BOOTSTRAP=off` 스킵 게이트 추가 — Eager step 0에 환경변수 체크 삽입. 정확히 `off`이면 전체 부트스트랩(정체성 포함) 스킵·순수 동작. `[WORKER]` 스킵과 구분된 세션/캡틴 전역 토글. Bash 불가 시 fail-safe 정상 진행 (040) |
-| v3.7 | 2026-06-24 17:24 | OPAL_BOOTSTRAP 환경변수 게이트 → `~/.opal/setting.json` Read 게이트 전환 (043) |
 | v3.8 | 2026-06-28 | §모델 매핑 자동 적용 — 사용자·프로젝트 오버라이드 머지 지시 추가. 디스패치 직전 `{프로젝트}/.opal/setting.local.json`→`~/.opal/setting.json`→매핑 표 순(셀 단위) `models` 머지. `opal-model-mapping.md` §5 신설과 연동 |
 | v3.9 | 2026-06-28 | §모델 매핑 자동 적용 머지 지시에 폴백 입도 정밀화 반영 — provider 블록 전체 누락 시 전 셀 폴백 / level 셀 누락·default 시 그 셀만 폴백. `opal-model-mapping.md` §5.1과 동일 의미로 정합 (046) |
 | v3.10 | 2026-06-28 | §모델 매핑 자동 적용 2-레이어 머지로 전면 교체 — 표 폴백·"default" 폴백 제거. 전역 setting.json base → 로컬 setting.local.json 셀 단위 덮어쓰기. 미설정 셀=오류(디스패치 중단+안내). 로드 시점 명시: PM 모드 진입 시 로드 + 디스패치 직전 재확인. (046) |
 | v3.11 | 2026-06-28 | **Eager step 0 게이트에 프로젝트 setting.local.json 머지 추가** — 전역 setting.json 읽은 뒤 `{cwd}/.opal/setting.local.json`을 키/셀 단위로 덮어써 effective setting 구성. bootstrap 판정·models 로드 모두 effective setting 사용(프로젝트 진입 시점부터 적용 — "로컬 안 읽힘" 근본 해소). §모델 매핑 로드 시점을 step 0으로 정합. 4개 bootstrapper 게이트와 동기. (046) |
 | v4.0 | 2026-06-30 16:37 | **Eager 단계 2-phase 재구성** — Phase A(비서 tier·항상 로드: step 0 스킵게이트 불변 + step 1 identity + step 2 onboarding + step 2.5 PRINCIPLES) / Phase B(PM tier·`.opal/AGENT.md` 존재 시 승격: step 3 harness + step 4 opal-pm + step 5 프로젝트 AGENT.md + MEMORY 브리핑) / 공통(step 6 Antigravity 자동삽입 + step 6.5 next-action + step 7 활성화). Phase A에 "비서 tier `//`(opi 포함) 발동 가능 — Lazy 트리거 전제조건 없음" 불변식 명문화. 설계원칙 박스 Phase A/B 서술로 정합. 부트스트랩 완료 보고에 비서 세션 `⬜ harness ⬜ PM ⬜ PM모드` 표기 규칙 추가. + '부트스트래퍼 자동 관리' 절 논리 2-tier 반전(전역=비서/프로젝트=PM·이식성) (049) |
+| v4.1 | 2026-06-30 17:41 | 다이제스트 — PM 섹션(역할전환 상세·L2·code-scan/brain 활용·메모리브리핑·모델매핑 적용·프로젝트 컨텍스트) → opal-pm.md 이관(dedup: 3-way·모델매핑 우선순위 포인터 단일화). 부트스트래퍼 자동관리 → bootstrapper-management.md 신규 이관. 변경이력 trim. 교차참조 갱신(X-1~X-3). WORKER 규칙에 "Phase A·B·공통 전부 스킵 + 비서/PM tier와 직교" 명시 보강. (050) |
 

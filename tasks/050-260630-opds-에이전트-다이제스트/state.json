@@ -1,0 +1,111 @@
+{
+  "task_id": "050-260630-opds-에이전트-다이제스트",
+  "skill": "opds",
+  "mode": "agentic",
+  "schema_version": "1.0",
+  "created_at": "2026-06-30 17:25",
+  "updated_at": "2026-06-30 21:29",
+  "current_status": "done",
+  "rows": [
+    {
+      "row_id": 1,
+      "stage": "TASK",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-30 17:25",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 2,
+      "stage": "TASK",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-30 17:25",
+      "owner": "auto",
+      "note": "agentic auto-pass: agentic auto-pass: TASK 4요소 잠금, 접근=PM 이관+메타 정리(캡틴 선택), 동작 불변 제약 명시"
+    },
+    {
+      "row_id": 3,
+      "stage": "PLAN",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-30 17:35",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 4,
+      "stage": "PLAN",
+      "item": "PM Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-30 17:35",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 5,
+      "stage": "PLAN",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-30 17:35",
+      "owner": "auto",
+      "note": "agentic auto-pass: agentic auto-pass: PLAN 강화검토 PASS — line단위 진단·dedup 2건·교차참조 전수(외부 dangling 0)·049 회귀·493→455 자가정정. opds 유지 타당"
+    },
+    {
+      "row_id": 6,
+      "stage": "EXECUTE",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-30 17:46",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 7,
+      "stage": "TEST",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-30 18:00",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 8,
+      "stage": "TEST",
+      "item": "PM Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-30 18:00",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 9,
+      "stage": "TEST",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-30 21:28",
+      "owner": "user",
+      "note": "캡틴 확인: 050 CLOSE 진입 승인"
+    },
+    {
+      "row_id": 10,
+      "stage": "CLOSE",
+      "item": "DONE.md 생성",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-06-30 21:29",
+      "owner": "PM",
+      "note": null
+    }
+  ]
+}
