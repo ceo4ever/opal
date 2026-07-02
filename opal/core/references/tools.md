@@ -641,6 +641,43 @@ bash ~/.opal/tools/tool-scan/run.sh check <도구>               # 설치/실행
 
 ---
 
+## git-sync-tool
+
+**용도**: 워크스페이스 아래 여러 독립 git 저장소를 순회하며 안전 일괄 최신화 — 결정론적 집행. clean + fast-forward 가능한 저장소만 `git pull --ff-only`로 자동 최신화하고, 문제 저장소(dirty/diverged/detached/no-upstream/fetch-failed)는 건드리지 않고 skip 사유와 함께 보고한다. 자율 조치(stash/rebase/force/commit/push) 일절 없음 — 헌법 user sovereignty.  
+**실행 경로**: `~/.opal/tools/git-sync-tool/run.sh`  
+**소스 경로**: `opal/tools/git-sync-tool/`  
+**의존성**: `~/.opal/.venv/bin/python` (표준 라이브러리만 — json/argparse/pathlib/sys/subprocess) + 로컬 **git 2.22+** (`git rev-list --left-right --count` 사용)  
+**호출자**: `opal-workspace-sync` 스킬(alias `opws`) — 대상 결정·5섹션 보고서·승인 게이트는 스킬이 담당, 도구는 순회·판정·pull만 집행.
+
+### 트리거 조건
+
+워크스페이스(여러 저장소 컨테이너)의 여러 git을 한 번에 최신화할 때. opal-workspace-sync 스킬 STEP 2에서 호출.
+
+### 커맨드 (단일 서브명령)
+
+```bash
+# 지정 경로 순회 + 안전 최신화 → JSON 결과
+~/.opal/tools/git-sync-tool/run.sh sync <workspace_path>
+```
+
+- `<path>/.git` 존재 → 그 1개를 단일 저장소로 처리. 아니면 `<path>` 직속 자식 1단계만 순회(재귀 안 함).
+- 저장소별 판정 순서: detached → no-upstream → dirty → fetch → diverged/ff (detached HEAD에서 `@{u}` 조회가 fatal이라 no-upstream보다 선행).
+
+### 출력 형식 (JSON)
+
+```json
+{"ok": true, "command": "sync", "workspace": "<절대경로>",
+ "repositories": [{"name","branch","upstream","status","reason","ahead","behind","prev_head","new_head","pulled_commits"}],
+ "summary": {"total","updated","skipped","failed"}, "error": null}
+```
+
+- `status`: `updated` | `skipped` | `failed` | `already-current`
+- `reason`: `dirty` | `diverged` | `detached` | `no-upstream` | `fetch-failed` (정상이면 `null`)
+- `already-current`는 `total`에 포함되나 updated/skipped/failed 카운트에는 미포함.
+- `ok: false` + `error`(예: `PATH_NOT_FOUND`, `NOT_A_DIRECTORY`)는 치명 오류 시. exit 0(ok)/1(에러).
+
+---
+
 ## 변경이력
 
 | 버전 | 날짜 | 내용 |
@@ -655,3 +692,4 @@ bash ~/.opal/tools/tool-scan/run.sh check <도구>               # 설치/실행
 | v1.7 | 2026-06-23 | test-tool 섹션 신규 추가 — 테스트 단계별 도구 결정론적 집행 4서브명령(resolve/check/unit/integration) + 트리거 조건 + 커맨드 + 출력 형식. cmux-tool 포맷 답습. 루프 한도 수치 비복제(harness §1 포인터) (039) |
 | v1.8 | 2026-06-26 | brain-tool 섹션 신설(8 서브명령) + tool-scan 섹션 신설(5 서브명령 — capability 검색·live 사용법) + harness §9 drift 정합(code-scan·cmux-tool·tool-scan 행 추가). tools.md ↔ harness §9 도구 집합 7종 동일화 (044) |
 | v1.9 | 2026-06-26 | memory-tool 섹션 신설(9 서브명령 init/append/update/promote/prune/migrate/show/review/delete) — 프로젝트 메모리 인덱스·히스토리 결정론적 집행, 메모리→docs/brain 졸업 워크플로우·히스토리 FIFO5·요약 길이캡·마커 직접편집 금지·매 변경 후 자가검토·delete(dead/superseded 무손실 정리)·update --new-title(제목 보정). harness §9 drift 정합 (045) |
+| v2.0 | 2026-07-02 | git-sync-tool 섹션 신설(단일 서브명령 sync) — 워크스페이스 git 저장소 일괄 동기화, 직속 자식 순회 + ff-only pull + 5종 skip 판정 + JSON 출력. opal-workspace-sync 스킬이 호출. harness §9 drift 정합 (052) |

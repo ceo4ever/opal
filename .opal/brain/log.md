@@ -158,3 +158,7 @@
 - 신규: [[pages/concept/bootstrap-marker-skip-ladder.md]]
 - 출처: task:051
 
+## [2026-07-02] ingest | CLOSE ingest — 태스크 052 워크스페이스 Git 일괄 동기화 (git-sync-tool + opal-workspace-sync)
+- 신규: [[pages/entity/git-sync-tool.md]], [[pages/entity/opal-workspace-sync.md]], [[pages/concept/skill-registry-index-registration-required-for-discovery.md]], [[pages/concept/fallback-approval-detached-head-precedence.md]]
+- 출처: task:052
+

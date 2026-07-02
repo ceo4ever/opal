@@ -684,6 +684,21 @@
         ],
         "domain": "knowledge",
         "pipeline": "MODE: init | ingest | query | lint"
+      },
+      {
+        "name": "opal-workspace-sync",
+        "alias": "opws",
+        "description": "워크스페이스 Git 일괄 동기화 — 직속 자식 git 저장소 순회 + clean/ff-only pull, 문제 저장소(dirty/diverged/detached/no-upstream/fetch-failed)는 skip·보고·승인 후 조치",
+        "triggers": [
+          "^opws$",
+          "^opal-workspace-sync$",
+          "(?i)(워크스페이스\\s*동기화|저장소\\s*일괄|일괄\\s*pull)"
+        ],
+        "paths": [
+          "{project}/.opal/skills/opal-workspace-sync/SKILL.md",
+          "~/.opal/skills/opal-workspace-sync/SKILL.md"
+        ],
+        "domain": "workspace"
       }
     ],
     "op-brain": [

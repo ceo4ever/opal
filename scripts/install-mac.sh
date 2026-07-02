@@ -35,6 +35,7 @@
 #   v3.5 2026-06-24: install_claude_permissions perm_entries에 'Bash(echo $OPAL_BOOTSTRAP)' 추가 — 부트스트랩 스킵 게이트 환경변수 점검 명령을 매 세션 무프롬프트 허용
 #   v3.6 2026-06-24 17:26 KST: install_opal_setting 신규 + perm_entries echo 권한 제거(v3.5 reconcile) — OPAL_BOOTSTRAP 환경변수 게이트를 setting.json Read 게이트로 전환 (043)
 #   v3.7 2026-06-29 15:24 KST: record_installed_version 함수 분리 + VERSION 기록 우선순위 재배치 — FRAMEWORK_ROOT/VERSION 각인값 최우선, API/main 폴백 강등 (048)
+#   v3.8 2026-07-02 15:20 KST: git-sync-tool run.sh chmod +x 블록 추가 (memory-tool 블록 직후, state-tool 패턴) — 신규 워크스페이스 git 동기화 도구 배포 (052)
 #
 
 set -euo pipefail
@@ -1160,6 +1161,13 @@ install_opal() {
         if [[ -f "$memory_run" ]]; then
             chmod +x "$memory_run"
             success "memory-tool run.sh 실행 권한 설정"
+        fi
+
+        # ── git-sync-tool 실행 권한 (052) ──
+        local git_sync_run="$opal_home/tools/git-sync-tool/run.sh"
+        if [[ -f "$git_sync_run" ]]; then
+            chmod +x "$git_sync_run"
+            success "git-sync-tool run.sh 실행 권한 설정"
         fi
 
         # cmux 의존성 안내 (정보성 — 설치 강제 없음, silent fallback 정책)

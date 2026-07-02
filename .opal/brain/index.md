@@ -1,16 +1,18 @@
 # Project Brain Index
-> 갱신: 2026-07-02 11:10
+> 갱신: 2026-07-02 15:31
 
 ## 도메인
 (아직 등록된 페이지 없음)
 
 ## 엔티티
 - [[brain-tool]] — brain-tool #tool #knowledge
+- [[git-sync-tool]] — git-sync-tool #tool #git #workspace #safety
 - [[memory-tool]] — memory-tool — 프로젝트 메모리 인덱스·히스토리 결정론적 집행 CLI #tool #memory #cli #lifecycle
 - [[op-data-ddl-skill]] — op-data-ddl (DDL 단계 스킬) #skill #stage-skill #data-design #ddl #migration #dbml
 - [[op-data-dictionary-skill]] — op-data-dictionary (DICT 단계 스킬) #skill #stage-skill #data-design #dictionary #db
 - [[op-data-model-skill]] — op-data-model (MODEL 단계 스킬) #skill #stage-skill #data-design #modeling #erd #mermaid #dbml
 - [[opal-console]] — OPAL Console #tool #dashboard #frontend #backend
+- [[opal-workspace-sync]] — opal-workspace-sync (alias opws) #skill #workspace #git #operator
 - [[skill-opal-pilot-data-design]] — opal-pilot-data-design (opdd) #pilot #orchestrator #data-design #db
 - [[state-tool]] — state-tool #tool #pipeline
 - [[test-tool]] — test-tool #tool #testing #pipeline
@@ -50,6 +52,7 @@
 - [[e2e-cmux-first-playwright-fallback]] — E2E 도구 우선순위 — cmux 1순위 → playwright 폴백 (에러코드 소비) #testing #e2e #cmux #framework
 - [[erd-modeler-deprecation]] — erd-modeler deprecate — op-data-model/ddl로 분해, //erm 하위호환 #architecture-decision #deprecation #erd-modeler #migration
 - [[external-tool-boundary-stub-insufficient-lesson]] — 외부 도구 경계는 스텁만으로 불충분 — 실연동 검증이 통합 결함을 잡는다 #testing #lesson #integration #test-strategy
+- [[fallback-approval-detached-head-precedence]] — detached HEAD 판정은 no-upstream보다 먼저 검사해야 한다 #git #judgment-order #fallback-approval #lesson
 - [[fixture-vs-real-blind-spot-lesson]] — fixture-vs-real 맹점 — 테스트 픽스처 통과·실데이터 버그 반복 교훈 #lesson #testing #bug #fixture
 - [[installer-version-priority-model]] — 설치기 버전 결정 우선순위 모델 (4종 공통) #version #install #priority #architecture
 - [[kanban-current-stage-derivation]] — 칸반 current_stage 파생 규칙 (도달 단계 기준) #opal-console #kanban #pipeline #be-single-source
@@ -118,6 +121,7 @@
 - [[skill-opal-skill-creator]] — opal-skill-creator — OPAL 스킬 생성 파이프라인 #skill #creator #framework
 - [[skill-opal-skill-manager]] — opal-skill-manager — OPAL 커뮤니티 스킬 관리 #skill #manager #community
 - [[skill-opal-start]] — opal-start — OPAL 재진입 가이드 #skill #start #onboarding #guide
+- [[skill-registry-index-registration-required-for-discovery]] — 신규 스킬은 파일 배포만으로 부족하다 — 레지스트리 인덱스 등록이 발견의 전제조건 #skill-registry #deployment-gap #discovery #lesson
 - [[skill-registry-validate-extension]] — skill-registry validate 확장 — dangling error 격상 + unregistered 역방향 감지 #skill-registry #validate #drift-detection #tooling
 - [[skill-rename-validate-pattern]] — 스킬 rename 후 레지스트리 정합 검증 패턴 #skill-registry #validate #rename #drift-detection #lesson
 - [[state-tool-mock-guard-skill-false-positive]] — state-tool mock 가드 정규식 ↔ SKILL 표준 문구 false positive #state-tool #mock-guard #false-positive #skill #bug #framework
