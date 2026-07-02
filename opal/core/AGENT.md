@@ -5,8 +5,12 @@
 ## 부트스트랩
 
 > **[설계 원칙]** Eager 단계는 2-phase로 구성된다. **Phase A(비서·항상)**: PRINCIPLES.md(헌법) + identity.md를 모든 세션에서 즉시 로드하여 행동 원칙과 정체성을 활성화한다. 보고 형식·도구·MCP 인지맵·`//` 커맨드/스킬 레지스트리 해석 능력은 본 AGENT.md 본문이 보유하며, AGENT.md Read 자체로 활성화된다. **Phase B(PM·`.opal/AGENT.md` 존재 시 승격)**: opal-harness.md + opal-pm.md + 프로젝트 PM 컨텍스트를 로드하여 Guards(구현 금지, 디스패치 의무), PM 행동 프로세스, 프로젝트별 금지사항을 추가 활성화한다. cwd에 `.opal/AGENT.md`가 없으면 Phase B 전체를 스킵한다(harness·opal-pm·PM 컨텍스트 미로드). 모든 하위 문서는 헌법(PRINCIPLES.md)을 참조로 상속하며 원칙을 재서술하지 않는다. 나머지 참조 문서는 실제 사용 시점(Lazy)에 로드한다. 각 스킬 Harness 폴백이 하네스 자가 로드를 보장하므로, 스킬 호출 시 하네스 미로드 리스크 없음.
+>
+> 첫 줄 마커로 부트스트랩 로드 범위를 결정하는 **3단 스킵 사다리**가 있다: `[WORKER]` → 전부 스킵(Phase A·B·공통 전부) / `[ASSISTANT]` → 비서 tier만(Phase A) — `.opal/AGENT.md`가 있어도 Phase B 스킵 / (무마커) → 비서+PM(Phase A+B, 프로젝트면 승격).
 
 > **[WORKER 규칙]** 디스패치 프롬프트의 첫 줄에 `[WORKER]`가 있으면 부트스트랩 전체(Phase A·Phase B·공통 전부)를 건너뛰고 즉시 작업을 시작한다. PM이 디스패치 프롬프트에 필요 컨텍스트를 직접 주입하므로 워커가 독자적 부트스트랩을 수행할 필요 없다. 이는 비서/PM tier 분기(`.opal/AGENT.md` 유무)와 무관한 **직교 스킵 경로**다 — 워커는 어느 tier도 로드하지 않는다.
+
+> **[ASSISTANT 규칙]** 디스패치/프롬프트 첫 줄이 `[ASSISTANT]`이면 Phase A(비서 tier)까지만 로드하고 **Phase B(PM tier) 승격을 억제**한다 — cwd에 `.opal/AGENT.md`가 있어도 harness·opal-pm·프로젝트 PM 컨텍스트를 로드하지 않는다. `[WORKER]`(전부 스킵)와 직교하는 별도 스킵 경로다. **마커 첫 줄 이후의 라인은 실제 요청으로 정상 처리**되며, 비서 tier가 보유한 `//` 커맨드/스킬 레지스트리 해석 능력은 그대로 유효하므로 `//opbr` 등 `//` 커맨드가 정상 발동·완주된다.
 
 ### Eager 단계 (세션 시작 시 즉시 수행)
 
@@ -25,7 +29,7 @@
 
 #### Phase B — PM tier (승격 게이트: 현재 cwd에 `.opal/AGENT.md` 존재 시에만)
 
-> **게이트**: cwd에 `.opal/AGENT.md`가 없으면 Phase B 전체를 스킵한다(harness·opal-pm·PM 컨텍스트 미로드). `.opal/AGENT.md` 존재가 PM tier 승격의 유일 신호다.
+> **게이트**: cwd에 `.opal/AGENT.md`가 없으면 Phase B 전체를 스킵한다(harness·opal-pm·PM 컨텍스트 미로드). `.opal/AGENT.md`가 있으면 PM tier로 승격한다 — **단, 프롬프트/디스패치 첫 줄이 `[ASSISTANT]`이면 `.opal/AGENT.md`가 있어도 Phase B 전체를 스킵한다(`[ASSISTANT 규칙]` 참조)**. 즉 승격 신호는 "`.opal/AGENT.md` 존재 AND 첫 줄 `[ASSISTANT]` 아님"이다.
 
 3. `~/.opal/references/opal-harness.md`를 Read한다 → Guards(구현 금지 원칙, 디스패치 의무)를 세션 시작부터 활성화한다.
 4. `~/.opal/references/opal-pm.md`를 Read한다 → PM 행동 프로세스(디스패치 전 프로세스, 검토 게이트, 학습 루프 등)를 세션 시작부터 활성화한다.
@@ -77,6 +81,7 @@
 - ✅ Eager 완료 | ⏳ Lazy 대기 | ❌ 실패 | ⬜ 해당 없음
 - `PM모드`: `.opal/AGENT.md` 존재 시 ✅ PM, 미존재 시 ⬜ 비서
 - **비서 세션(`.opal/AGENT.md` 부재)**: Phase B가 스킵되므로 `harness`·`PM`·`PM모드`는 `⬜`(해당 없음)으로 표기한다. 예: `[부트스트랩] ✅ principles ✅ identity ⬜ harness ⬜ PM ⬜ PM모드 ⏳ registry ⏳ references ⏳ model-mapping`
+- **`[ASSISTANT]` 캡 세션(첫 줄 `[ASSISTANT]` — `.opal/AGENT.md` 존재 여부 무관)**: Phase B를 억제하므로 비서 세션과 동일하게 `harness`·`PM`·`PM모드`를 `⬜`로 표기한다. 예: `[부트스트랩] ✅ principles ✅ identity ⬜ harness ⬜ PM ⬜ PM모드 ⏳ registry ⏳ references ⏳ model-mapping`
 - `{next-action}`: Step 6.5에서 결정된 값 (cwd에 따라 a/b 분기)
 - 브리핑이 있을 경우 이 두 줄을 브리핑 상단에 삽입한다
 
@@ -233,4 +238,5 @@
 | v3.11 | 2026-06-28 | **Eager step 0 게이트에 프로젝트 setting.local.json 머지 추가** — 전역 setting.json 읽은 뒤 `{cwd}/.opal/setting.local.json`을 키/셀 단위로 덮어써 effective setting 구성. bootstrap 판정·models 로드 모두 effective setting 사용(프로젝트 진입 시점부터 적용 — "로컬 안 읽힘" 근본 해소). §모델 매핑 로드 시점을 step 0으로 정합. 4개 bootstrapper 게이트와 동기. (046) |
 | v4.0 | 2026-06-30 16:37 | **Eager 단계 2-phase 재구성** — Phase A(비서 tier·항상 로드: step 0 스킵게이트 불변 + step 1 identity + step 2 onboarding + step 2.5 PRINCIPLES) / Phase B(PM tier·`.opal/AGENT.md` 존재 시 승격: step 3 harness + step 4 opal-pm + step 5 프로젝트 AGENT.md + MEMORY 브리핑) / 공통(step 6 Antigravity 자동삽입 + step 6.5 next-action + step 7 활성화). Phase A에 "비서 tier `//`(opi 포함) 발동 가능 — Lazy 트리거 전제조건 없음" 불변식 명문화. 설계원칙 박스 Phase A/B 서술로 정합. 부트스트랩 완료 보고에 비서 세션 `⬜ harness ⬜ PM ⬜ PM모드` 표기 규칙 추가. + '부트스트래퍼 자동 관리' 절 논리 2-tier 반전(전역=비서/프로젝트=PM·이식성) (049) |
 | v4.1 | 2026-06-30 17:41 | 다이제스트 — PM 섹션(역할전환 상세·L2·code-scan/brain 활용·메모리브리핑·모델매핑 적용·프로젝트 컨텍스트) → opal-pm.md 이관(dedup: 3-way·모델매핑 우선순위 포인터 단일화). 부트스트래퍼 자동관리 → bootstrapper-management.md 신규 이관. 변경이력 trim. 교차참조 갱신(X-1~X-3). WORKER 규칙에 "Phase A·B·공통 전부 스킵 + 비서/PM tier와 직교" 명시 보강. (050) |
+| v4.2 | 2026-07-02 10:46 | **`[ASSISTANT]` 첫 줄 마커 신설 — headless(claude -p) 호출을 비서 tier(Phase A)로 캡.** Phase B 승격 게이트에 억제 절 추가(첫 줄 `[ASSISTANT]`이면 `.opal/AGENT.md` 있어도 Phase B 스킵). `[WORKER]`(전부)/`[ASSISTANT]`(Phase A만)/무마커(A+B) 3단 마커 사다리 명문화 + `[ASSISTANT 규칙]` 박스 신설. 완료보고에 캡 세션 `⬜ harness ⬜ PM ⬜ PM모드` 표기 추가. opbr_adapter.py -p 프롬프트 첫 줄 `[ASSISTANT]` 프리픽스 (첫 소비자). (051) |
 

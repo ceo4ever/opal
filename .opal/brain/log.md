@@ -154,3 +154,7 @@
 - 신규: [[pages/concept/agent-md-digest-pattern.md]], [[pages/concept/dedup-pointer-over-copy.md]], [[pages/concept/strip-deploy-runtime-token-neutral.md]]
 - 출처: task:050
 
+## [2026-07-02] ingest | CLOSE ingest — 태스크 051 [ASSISTANT] 마커로 headless(claude -p) 호출을 비서 tier로 캡
+- 신규: [[pages/concept/bootstrap-marker-skip-ladder.md]]
+- 출처: task:051
+

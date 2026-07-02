@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-06-30 21:32
+> 갱신: 2026-07-02 11:10
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -24,6 +24,7 @@
 - [[analysis-drift-pm-cross-verify-lesson]] — ANALYSIS 드리프트 분석 환각 → PM 강화검토 패턴 (학습) #analysis #hallucination #pm-gate #lesson-learned #drift
 - [[analysis-version-hallucination-npm-view]] — ANALYSIS 라이브러리 버전 환각 → PM npm view 실측 차단 패턴 #analysis #hallucination #pm-gate #version #npm #lesson-learned
 - [[b7-action-completion-loop]] — B7 액션 완성도 루프 — triage 기반 경계 재설계 순환 구조 #oppd #action-loop #triage #verification #b7
+- [[bootstrap-marker-skip-ladder]] — 부트스트랩 첫 줄 마커 3단 스킵 사다리 ([WORKER]/[ASSISTANT]/무마커) #bootstrap #2tier #assistant-tier #headless #pm-gate #architecture
 - [[bootstrapper-marker-ssot-single-point]] — 부트스트래퍼 마커 SSOT 단일 지점 수정 원칙 #bootstrap #adapter #platform #ssot #install
 - [[brain-business-term-layer]] — Brain 업무 언어 번역 계층(term) #brain #citation-rules #term #knowledge
 - [[brain-code-scan-role-division]] — brain↔code-scan 역할 분담 — 선별·신선도·깊이 축 (010) #brain #code-scan #architecture #policy

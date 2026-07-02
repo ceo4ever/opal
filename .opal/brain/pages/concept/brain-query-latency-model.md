@@ -3,9 +3,9 @@ type: concept
 title: 브레인 질의 latency 모델 — 병목 위치와 경량화 방향
 tags: [brain, latency, architecture, optimization, async]
 sources: [task:037]
-related: [brain-tool, opal-console, brain-search-on-demand]
+related: [brain-tool, opal-console, brain-search-on-demand, bootstrap-marker-skip-ladder]
 created: 2026-06-23
-updated: 2026-06-23
+updated: 2026-07-02
 status: active
 ---
 
@@ -43,3 +43,4 @@ status: active
 - [[brain-tool]]
 - [[opal-console]]
 - [[brain-search-on-demand]]
+- [[bootstrap-marker-skip-ladder]] — 이 지연 병목 분석을 근거로 "[ASSISTANT] 캡의 목적은 지연 단축이 아니라 tier 격리"임을 명확화한 후속 결정(task:051)

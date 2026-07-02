@@ -63,6 +63,7 @@ OPAL은 2-레이어 아키텍처로 동작한다.
 - **opt-in 모델**: `.opal/AGENT.md`가 없는 비-opi 디렉토리에서는 Phase B가 스킵되어 PM/파이프라인이 로드되지 않는다. `//opi`로 초기화하면 `.opal/AGENT.md`가 생성되어 다음 진입부터 PM tier로 승격된다.
 - **`//opi` 불변식**: `//` 커맨드 해석은 비서 tier에 속하므로(Lazy 트리거 전제조건 없음), 비-opi 폴더에서도 `//opi` 발동이 보장된다 — 새 프로젝트 OPAL화의 진입점.
 - **전역 비서 유지**: 전역 마커는 제거가 아니라 경량 비서 마커로 유지된다. `setting.json bootstrap:off`는 비서·PM 양쪽을 스킵하는 킬스위치(전역/프로젝트 공통).
+- **첫 줄 마커 3단 스킵 사다리**: 프롬프트/디스패치 첫 줄 마커로 로드 범위를 결정한다 — `[WORKER]`(전부 스킵: Phase A·B·공통) / `[ASSISTANT]`(비서 tier만: Phase A — `.opal/AGENT.md`가 있어도 Phase B 승격 억제) / 무마커(비서+PM: 프로젝트면 승격). `[ASSISTANT]`는 `claude -p` 등 headless 호출이 프로젝트 cwd에서도 PM tier 오염 없이 비서 tier로 동작하게 하는 캡이며, 첫 소비자는 대시보드 브레인 질의 어댑터(`dashboard/backend/adapters/opbr_adapter.py`)다. `//` 커맨드는 비서 tier 능력이므로 `[ASSISTANT]` 캡 상태에서도 `//opbr` 등이 정상 완주한다.
 
 ## 2-레이어 모델
 
@@ -381,3 +382,4 @@ opal/                                    ← 이 저장소
 |------|----------|
 | 2026-06-18 | opal-orchestrator 잔존 행 2곳 삭제 (폴더·레지스트리 항목 부재 — dangling. Task 029) |
 | 2026-06-30 | 부트스트랩 진입 모델 2-tier 절 추가 — 비서(Lite·전역 상시)/PM(Full·`.opal/AGENT.md` 존재 시 승격) 분리. opt-in 모델·`//opi` 불변식·전역 비서 유지 (Task 049) |
+| 2026-07-02 | 부트스트랩 진입 모델에 첫 줄 마커 3단 스킵 사다리 추가 — `[ASSISTANT]` 마커 신설로 headless(claude -p) 호출을 비서 tier(Phase A)로 캡(PM tier 승격 억제). 첫 소비자 opbr_adapter (Task 051) |

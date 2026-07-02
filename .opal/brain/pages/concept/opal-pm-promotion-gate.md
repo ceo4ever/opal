@@ -13,8 +13,9 @@ related:
 - opal-bootstrap-2tier-model
 - bootstrapper-marker-ssot-single-point
 - opal-bootstrap-skip-gate
+- bootstrap-marker-skip-ladder
 created: '2026-06-30'
-updated: '2026-06-30'
+updated: '2026-07-02'
 status: active
 ---
 
@@ -51,3 +52,4 @@ install 스크립트와 부트스트래퍼 마커는 이 게이트 로직을 담
 - [[opal-bootstrap-2tier-model]]
 - [[opal-bootstrap-skip-gate]]
 - [[bootstrapper-marker-ssot-single-point]]
+- [[bootstrap-marker-skip-ladder]] — 승격 신호에 "첫 줄 `[ASSISTANT]` 아님" 조건이 AND로 추가된 후속 결정(task:051)

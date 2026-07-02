@@ -3,7 +3,7 @@
   "module": "adapters.opbr_adapter",
   "layer": "service",
   "domain": "console",
-  "description": "Phase 2 하드닝 + cwd 격리 + 대화별 session_id: claude -p '//opbr query --read-only <질의>' --output-format json 서브프로세스 구동. subprocess.run에 cwd=project_path 설정 → opbr/brain-tool이 해당 프로젝트의 .opal/brain을 검색(격리 보장). project_path 존재 검증(NotADirectoryError). 세션 핸들(cold=True→--session-id FE제공session_id / cold=False→--resume session_id) + JSON 코드펜스 추출(preamble 견고). session_id는 항상 호출자(BE)가 전달 — opbr_adapter가 uuid를 생성하지 않음. [MUST] --safe-mode·--bare·anthropic SDK·API 키 절대 금지. --allowedTools Bash,Read,Grep,Glob 단일 콤마값으로 주입(단일 인자 → 뒤 플래그 삼킴 방지). read-only 가드는 opbr --read-only 계약으로 보장(접미사 제거). backend는 얇은 프록시 — opbr이 brain 검색/페이지 Read/인용 전담(DRY).",
+  "description": "Phase 2 하드닝 + cwd 격리 + 대화별 session_id: claude -p '[ASSISTANT]\\n//opbr query --read-only <질의>' --output-format json 서브프로세스 구동. 프롬프트 첫 줄 [ASSISTANT] 마커로 headless 호출을 비서 tier(Phase A)로 캡 — PM tier(Phase B) 승격을 억제해 읽기전용 브레인 워커의 tier 오염을 방지한다. subprocess.run에 cwd=project_path 설정 → opbr/brain-tool이 해당 프로젝트의 .opal/brain을 검색(격리 보장). project_path 존재 검증(NotADirectoryError). 세션 핸들(cold=True→--session-id FE제공session_id / cold=False→--resume session_id) + JSON 코드펜스 추출(preamble 견고). session_id는 항상 호출자(BE)가 전달 — opbr_adapter가 uuid를 생성하지 않음. [MUST] --safe-mode·--bare·anthropic SDK·API 키 절대 금지. --allowedTools Bash,Read,Grep,Glob 단일 콤마값으로 주입(단일 인자 → 뒤 플래그 삼킴 방지). read-only 가드는 opbr --read-only 계약으로 보장(접미사 제거). backend는 얇은 프록시 — opbr이 brain 검색/페이지 Read/인용 전담(DRY).",
   "exports": ["prime_and_ask", "extract_json_fence"],
   "depends": []
 }
@@ -99,6 +99,10 @@ def prime_and_ask(
        - cold=True: --session-id <session_id> 로 OPAL/opbr 최초 프라임 (FE 제공 session_id 사용)
        - cold=False: --resume <session_id> 로 기존 세션 재개
 
+    prompt 첫 줄 [ASSISTANT] 마커로 headless 호출을 비서 tier(Phase A)로 캡 — 읽기전용
+    브레인 워커가 PM tier(구현금지 가드·디스패치 의무·CLOSE 게이트)를 불필요 로드하는
+    tier 오염을 방지한다 (opal/core/AGENT.md [ASSISTANT 규칙]).
+
     session_id는 항상 호출자(BE BrainSessionRegistry)가 전달한다.
     opbr_adapter는 uuid를 자체 생성하지 않는다.
 
@@ -120,7 +124,10 @@ def prime_and_ask(
         RuntimeError: is_error:true / result 부재 / 비JSON / subprocess 실패
     """
     # //opbr query --read-only 계약 사용 (read-only 가드 프롬프트 접미사 불필요)
-    prompt = f'//opbr query --read-only "{question}"'
+    # [ASSISTANT] 첫 줄 마커: headless 호출을 비서 tier(Phase A)로 캡 —
+    # cwd(project_path)에 .opal/AGENT.md가 있어도 PM tier(Phase B) 승격 억제 (opal/core/AGENT.md [ASSISTANT 규칙])
+    # //opbr는 비서 tier `//` 능력으로 완주 (opal/core/AGENT.md:15)
+    prompt = f'[ASSISTANT]\n//opbr query --read-only "{question}"'
 
     # 커맨드 배열 구성 — shell=False 보장 (H-13 셸 인젝션 방지)
     # --allowedTools: 콤마 구분 단일 인자 → 뒤따르는 -p 플래그를 삼키지 않음

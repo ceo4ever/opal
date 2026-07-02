@@ -1,7 +1,7 @@
 # opal Memory Index
 
 > 최종 갱신: 2026-06-26 (044 도구·MCP·스킬 통합 검색·사용법·활용 체계 — TASK)
-> last_task_number: 50
+> last_task_number: 51
 > ⚠️ 채번 충돌: 015·016이 양 PC에서 중복 사용됨 (main: 015 보고형식·016 TDD·017 가드 / brain 라인: 015 brain 코어·016 wiki 지능화). 다음 채번은 018부터.
 
 
@@ -37,9 +37,9 @@
 <!-- memory:history:start -->
 | 제목 | 등록일 | 단계 | 경로 | 핵심결과 |
 |------|--------|------|------|----------|
+| 051 headless(claude -p) 비서티어 캡 | 2026-07-02 | 완료 | tasks/051-260702-opp-헤드리스-비서티어-캡/ | [ASSISTANT] 첫 줄 마커 신설 → 3단 스킵 사다리([WORKER]전부/[ASSISTANT]Phase A만/무마커 A+B). Phase B 승격 게이트에 억제 절 AND 추가(cwd에 .opal/AGENT.md 있어도 첫 줄 [ASSISTANT]면 PM tier 스킵). 첫 소비자=opbr_adapter.py -p 프롬프트 프리픽스(보안 계약 불변). 본질=tier 격리(정합성), 지연 아님. **실측 검증**: [ASSISTANT] 프로브 ⬜harness⬜PM + Phase B 미로드, 무마커 대조군 6파일=회귀0. ARCHITECTURE.md 반영, brain concept 1건. **후속=캡틴 canonical install(현재 ~/.opal는 dev-artifact)**·커밋·headless 소비자 인벤토리 스캔. opp/agentic |
 | 050 AGENT.md 다이제스트 (비서 코어 경량화) | 2026-06-30 | 완료 | tasks/050-260630-opds-에이전트-다이제스트/ | AGENT.md 493→236줄(런타임 ~51%↓). PM섹션→opal-pm.md 이동+dedup, 부트스트래퍼→신규 ref. TEST 17/17. 후속=install재배포·L3·커밋·051(PRINCIPLES 역할배치) |
 | 049 부트스트랩 프로젝트레벨 전환 (2-tier) | 2026-06-30 | 완료 | tasks/049-260630-opds-부트스트랩-프로젝트레벨-전환/ | 비서(전역)/PM(opi한정) 2-tier 분리. TEST 17/17 PASS. 후속=install재배포·L3·커밋 |
 | 045 메모리 관리 개선 + memory-tool 신설 | 2026-06-26 | 완료 | tasks/045-260626-opd-메모리-관리-개선/ | memory-tool 9서브명령 + memory-learning.md 개정(제목·길이캡·FIFO5·라이프사이클·docs/brain 졸업·자가검토). 88 GREEN, .opal/MEMORY.md 56%↓. 후속=install 재배포·커밋 |
 | 044 도구·MCP·스킬 통합 검색·사용법·활용 체계 | 2026-06-26 | 완료 | tasks/044-260626-opd-도구-검색-사용법-활용/ | [REVIEW] 044 도구·MCP·스킬 통합 검색·사용법·활용 체계 (opd, agentic) — 발단=MAMS cmux 사건(없는 `take-screenshot` 추측→무분별 playwright 폴백). **신규 `tool-scan` 도구**(`opal/tools/tool-scan/`, 5서브명령 list/which/usage/resolve/check): capability(도구/MCP/스킬) 상황검색+**권위출처 live `--help` 확인**. **thin manifest**(usage 텍스트 미저장·`usage_source` 포인터만=drift 표면≈0, OPAL 7도구만 SSOT) + **federation 읽기**(MCP=mcps.md/스킬=skills-registry.json 불파괴·MD5검증, MCP=ToolSearch 포인터·op-skill=dispatched_by). usage=대상도구 `--help` 셸실행(정적캐시 금지, OPAL=exit code 판정으로 cmux `ok:false+exit0` 함정 회피/외부=stdout+stderr 병합). 결정론 라우팅(`(-score,kind,name)`). **인지맵 정비**(AGENT.md localhost→cmux-tool 오라우팅 수정+cmux-tool·tool-scan 행+사용규율 사용법선확인·에러종류 진단후폴백) + **drift 정합**(tools.md↔harness §9 7도구 동일화) + install 등록 + ARCHITECTURE 반영. **RED-first**(작성자 test-agent≠구현자 be-agent, RED 25 FAIL→GREEN). **🐛핵심버그**=`usage`가 대상도구 아닌 tool-scan 자기 help 반환(`tool_scan.py:275` `_TOOL_DIR/run.sh`)→**PM 직접실행 검증이 테스트 맹점(stub env 주입으로 실제경로 미검증) 포착**(agentic 직접검증 가치)→fix1/3(`~/.opal/tools/<name>/run.sh`)+RED회귀 TS-024. TEST **22/22 GREEN**, 회귀0(state-tool·test-tool 2건=043 이전 pre-existing), 보안(shell=False·경로화이트리스트·ReDoS·시크릿0) Pass, 스모크6/6. 후속=**캡틴 install 재배포**(소스 SSOT, 워커 ~/.opal 사전배포는 dev아티팩트)·커밋·ruff2경고. 커밋 안 함 |
-| 042 CLOSE 단계 관련 문서 업데이트 스텝 추가 | 2026-06-24 | 완료 | tasks/042-260624-opds-close-문서업데이트/ | [REVIEW] 042 CLOSE 단계 관련 문서 업데이트 스텝 추가 (opds, agentic) — 8개 pilot CLOSE에 brain ingest 직전 "관련 문서 업데이트" 스텝 삽입(PROJECT.md 레지스트리+changed_files 기반, PM 판단+직접 수정/워커 호출, 없으면 no-op). 3패턴(A:6개/B:opsdd/C:opgc) 분류 적용. 변경이력 8파일 추가. opal-brain-design.md §8.2 CLOSE 흐름 갱신. brain concept 1건 ingest. 커밋 미수행 |
 <!-- memory:history:end -->
