@@ -3,7 +3,7 @@
   "module": "routers.dashboard",
   "layer": "router",
   "domain": "console",
-  "description": "GET /api/dashboard — 전 프로젝트 집계 또는 개별 프로젝트 집계(4메트릭·상태분포·활동추이·주의알림·최근활동). project 쿼리 파라미터로 개별/전체 구분. 읽기 전용",
+  "description": "GET /api/dashboard — 전 프로젝트 집계 또는 개별 프로젝트 집계(4메트릭·상태분포·활동추이·주의알림·최근활동). project 쿼리 파라미터로 개별/전체 구분. 읽기 전용. 최근활동·주의알림 title은 TASK.md H1에서 파생(_resolve_task_title: 'TASK NNN —'/'TASK:' 접두사 제거, 부재 시 폴더명 슬러그 폴백) — state.json에 title 필드가 없어 폴더명 중복 방지",
   "exports": ["GET /api/dashboard"],
   "depends": ["models", "scanner", "config", "cache", "adapters.state_adapter"]
 }
@@ -11,6 +11,7 @@
 from __future__ import annotations
 
 import os
+import re
 from datetime import datetime, timedelta
 
 from fastapi import APIRouter, HTTPException, Query
@@ -61,6 +62,48 @@ def _collect_all_tasks(project_path: str) -> list[dict]:
     except OSError:
         pass
     return tasks
+
+
+# task_id에서 설명 슬러그 추출 (NNN-YYMMDD-skill- 접두사 제거) — 폴백용
+_TASK_ID_SLUG_RE = re.compile(r"^\d+-\d+-[a-z0-9]+-(.+)$")
+# H1 선행 'TASK' 키워드 + 구분자(: — -)/공백 제거
+_TASK_KW_RE = re.compile(r"^TASK\b[\s:—\-]*(.*)$")
+# 남은 앞부분이 '숫자id 구분자 제목'이면 id+구분자 추가 제거 (콜론형 'TASK: 제목'은 미해당)
+_TASK_ID_HEAD_RE = re.compile(r"^\d\S*\s*[—:\-]\s*(.+)$")
+
+
+def _strip_task_heading(h1: str) -> str:
+    """TASK.md H1에서 'TASK NNN —' / 'TASK:' 등 관례 접두사를 제거해 제목부만 남긴다.
+
+    - 'TASK 028 — 데이터 구조 실측 자산화' → '데이터 구조 실측 자산화'
+    - 'TASK: 캠페인 리포트 상품 랭킹 API — 모바일 전환' → '캠페인 리포트 상품 랭킹 API — 모바일 전환'
+    - 'TASK' 접두사가 없으면 H1 원문 유지
+    """
+    m = _TASK_KW_RE.match(h1)
+    rest = m.group(1).strip() if m else h1
+    m2 = _TASK_ID_HEAD_RE.match(rest)
+    if m2:
+        rest = m2.group(1).strip()
+    return rest or h1
+
+
+def _resolve_task_title(task_dir: str, task_id: str) -> str:
+    """TASK.md H1에서 사람이 쓴 제목을 추출. 실패 시 폴더명 슬러그로 폴백.
+
+    - TASK.md 부재/파싱 실패 → task_id 슬러그(접두사 제거), 그것도 실패면 task_id 원본
+    """
+    task_md = os.path.join(task_dir, "TASK.md") if task_dir else ""
+    if task_md and os.path.isfile(task_md):
+        try:
+            with open(task_md, encoding="utf-8") as f:
+                for line in f:
+                    s = line.strip()
+                    if s.startswith("# "):
+                        return _strip_task_heading(s[2:].strip())
+        except OSError:
+            pass
+    m = _TASK_ID_SLUG_RE.match(task_id)
+    return m.group(1) if m else task_id
 
 
 @router.get("/api/dashboard", response_model=DashboardSummaryResponse)
@@ -137,7 +180,7 @@ def get_dashboard(project: str = Query(default="")) -> DashboardSummaryResponse:
         st = t.get("current_status", "")
         task_id = t.get("_task_id", "")
         proj_name = t.get("_project", "")
-        title = t.get("title", task_id)
+        title = _resolve_task_title(t.get("_task_dir", ""), task_id)
         if st == "blocked":
             alerts.append(AlertItem(
                 task_id=task_id,
@@ -157,7 +200,7 @@ def get_dashboard(project: str = Query(default="")) -> DashboardSummaryResponse:
         RecentActivity(
             date=t.get("updated_at", "")[:10],
             task_id=t.get("_task_id", ""),
-            title=t.get("title", t.get("_task_id", "")),
+            title=_resolve_task_title(t.get("_task_dir", ""), t.get("_task_id", "")),
             project=t.get("_project", ""),
             stage=t.get("current_stage", ""),
         )

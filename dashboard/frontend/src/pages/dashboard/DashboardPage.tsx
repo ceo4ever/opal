@@ -385,9 +385,9 @@ function RecentTable({ activities }: { activities: RecentActivity[] }) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="text-xs w-24">날짜</TableHead>
-              <TableHead className="text-xs w-24">프로젝트</TableHead>
-              <TableHead className="text-xs w-28">태스크 ID</TableHead>
+              <TableHead className="text-xs w-32 whitespace-nowrap">일자</TableHead>
+              <TableHead className="text-xs w-32">프로젝트</TableHead>
+              <TableHead className="text-xs w-72">태스크 ID</TableHead>
               <TableHead className="text-xs">제목</TableHead>
               <TableHead className="text-xs w-28">단계</TableHead>
             </TableRow>
@@ -402,10 +402,10 @@ function RecentTable({ activities }: { activities: RecentActivity[] }) {
             ) : (
               activities.slice(0, 20).map((act, i) => (
                 <TableRow key={i}>
-                  <TableCell className="text-xs text-muted-foreground font-mono">
+                  <TableCell className="text-xs text-muted-foreground font-mono whitespace-nowrap">
                     {act.date}
                   </TableCell>
-                  <TableCell className="text-xs text-muted-foreground truncate max-w-[6rem]">
+                  <TableCell className="text-xs text-muted-foreground truncate max-w-[8rem]">
                     {act.project}
                   </TableCell>
                   <TableCell className="text-xs font-mono text-brand-primary">
