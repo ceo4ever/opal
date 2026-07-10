@@ -128,7 +128,7 @@ Gate 시 state-tool 호출 (R-10: gate-pass deprecated(014) — mark 개별 호�
 
 ```
 ~/.opal/tools/state-tool/run.sh mark <task-path> --row 6 --done   # PM Gate
-~/.opal/tools/state-tool/run.sh mark <task-path> --row 7 --done --owner user --note '소유자 확인: SPEC 완료'
+~/.opal/tools/state-tool/run.sh mark <task-path> --row 7 --done --owner user --note '{owner_name} 확인: SPEC 완료'
 ```
 
 > SPEC.md 상세 구조: `references/spec-guide.md` 참조
@@ -188,7 +188,7 @@ Gate 시 state-tool 호출 (R-10: gate-pass deprecated(014) — mark 개별 호�
 
 ```
 ~/.opal/tools/state-tool/run.sh mark <task-path> --row 15 --done  # PM Gate
-~/.opal/tools/state-tool/run.sh mark <task-path> --row 16 --done --owner user --note '소유자 확인: DESIGN 완료'
+~/.opal/tools/state-tool/run.sh mark <task-path> --row 16 --done --owner user --note '{owner_name} 확인: DESIGN 완료'
 ```
 
 > SPEC-PLAN.md 상세 구조: `references/spec-plan-guide.md` 참조
@@ -243,7 +243,7 @@ ACT 완료마다 state-tool을 호출하여 STATE.md를 갱신한다 (R-10: gate
 
 ```
 ~/.opal/tools/state-tool/run.sh mark <task-path> --row 18 --done  # PM Gate
-~/.opal/tools/state-tool/run.sh mark <task-path> --row 19 --done --owner user --note '소유자 확인: EXECUTE 완료'
+~/.opal/tools/state-tool/run.sh mark <task-path> --row 19 --done --owner user --note '{owner_name} 확인: EXECUTE 완료'
 ```
 
 ### Gate
@@ -531,3 +531,4 @@ opal-harness-agentic.md §6 공통 기준에 추가:
 | v3.4.1 | 2026-06-07 | `--rows-from` 파싱 수정 — STATE.md 구조 예시 인라인 마크다운 헤더(# STATE:, ## 현재 상태, ## 파이프라인 현황판)가 파서 섹션 경계 오인식 유발. SSOT 파이프라인 현황판 표를 `### STATE.md 구조` 앞으로 이동 + 구조 예시를 비-마크다운 헤더 형식으로 교체. `rows_count: 24` 파싱 정상 복구 (014 Phase 4) |
 | v3.5.0 | 2026-06-11 19:25 | Phase 6 CLOSE에 op-brain-ingest 디스패치 훅 삽입 — DONE.md 생성 직후 brain 존재 시 워커 디스패치, 부재 시 no-op, CLOSE 비중단. STATE 행 24 불변 (016) |
 | v3.5.1 | 2026-06-24 | Phase 6 CLOSE op-brain-ingest 디스패치 직전에 "관련 문서 업데이트" 스텝 삽입 — PROJECT.md 레지스트리 + changed_files 종합으로 관련 문서 최신화 후 ingest (없으면 no-op). 후속 항목 번호 재정렬 (042) |
+| v3.5.2 | 2026-07-10 13:12 | note 예시의 소유자 확인 표기를 `{owner_name} 확인:` 형식으로 통일 — identity.md owner_name 재해석 규칙(AGENT.md §정체성 적용)과 정합, 오염 차단 (054) |

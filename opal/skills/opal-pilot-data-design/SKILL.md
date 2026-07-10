@@ -81,7 +81,7 @@ TASK 단계에서 다음을 자동 감지·주입한다:
   ```
 - 사용자 보고 → 사용자 확인 행 mark:
   ```
-  ~/.opal/tools/state-tool/run.sh mark <task-path> --row 2 --done --owner user --note '소유자 확인: TASK 완료'
+  ~/.opal/tools/state-tool/run.sh mark <task-path> --row 2 --done --owner user --note '{owner_name} 확인: TASK 완료'
   ```
 
 ---
@@ -111,7 +111,7 @@ op-data-dictionary 스킬을 수행하라.
   → 사용자 보고 후 사용자 확인:
   ```
   ~/.opal/tools/state-tool/run.sh mark <task-path> --row 4 --done   # DICT PM Gate
-  ~/.opal/tools/state-tool/run.sh mark <task-path> --row 5 --done --owner user --note '소유자 확인: 사전 확정'
+  ~/.opal/tools/state-tool/run.sh mark <task-path> --row 5 --done --owner user --note '{owner_name} 확인: 사전 확정'
   ```
 
 ---
@@ -141,7 +141,7 @@ op-data-model 스킬을 수행하라.
   → 사용자 보고 후 사용자 확인:
   ```
   ~/.opal/tools/state-tool/run.sh mark <task-path> --row 7 --done   # MODEL PM Gate
-  ~/.opal/tools/state-tool/run.sh mark <task-path> --row 8 --done --owner user --note '소유자 확인: 모델링 확정'
+  ~/.opal/tools/state-tool/run.sh mark <task-path> --row 8 --done --owner user --note '{owner_name} 확인: 모델링 확정'
   ```
 
 > **모드 경계 (U-5)**: MODEL 사용자 확인 행(행 8) 통과 후부터 DDL·QA·CLOSE 직전까지 PM 자율. DICT·MODEL은 설계 SSOT 확정 단계이므로 사용자 검토 필수. 행 8 이후는 기계적 추출 단계 — PM 자율 적합. (`opal/skills/opal-pilot-dev/SKILL.md:313-314` 모드 경계 패턴 계승)
@@ -174,7 +174,7 @@ op-data-ddl 스킬을 수행하라.
   ```
   ~/.opal/tools/state-tool/run.sh mark <task-path> --row 9 --done   # DDL 작업
   ~/.opal/tools/state-tool/run.sh mark <task-path> --row 10 --done  # DDL PM Gate
-  ~/.opal/tools/state-tool/run.sh mark <task-path> --row 11 --done --owner user --note '소유자 확인: DDL 확정'
+  ~/.opal/tools/state-tool/run.sh mark <task-path> --row 11 --done --owner user --note '{owner_name} 확인: DDL 확정'
   ```
 
 ---
@@ -193,7 +193,7 @@ QA 통과 시:
 ```
 ~/.opal/tools/state-tool/run.sh mark <task-path> --row 12 --done  # QA 작업
 ~/.opal/tools/state-tool/run.sh mark <task-path> --row 13 --done  # QA PM Gate
-~/.opal/tools/state-tool/run.sh mark <task-path> --row 14 --done --owner user --note '소유자 확인: QA 통과'
+~/.opal/tools/state-tool/run.sh mark <task-path> --row 14 --done --owner user --note '{owner_name} 확인: QA 통과'
 ```
 
 ---
@@ -320,3 +320,4 @@ semi-agentic / agentic 모두 CLOSE 첫 행 `--auto-pass` 거부 (`agentic_close
 |------|------|---------|
 | v1.0 | 2026-06-12 | 초기 작성 — opal-pilot-data-design(opdd) 오케스트레이터 신설. 파이프라인 6단계(TASK/DICT/MODEL/DDL·MIGRATION/QA/CLOSE), STATE 15행, 모드경계 행 8, DDL 물리 의존, opal-db-agent 단일 디스패치 (019) |
 | v1.1 | 2026-06-24 | CLOSE 단계 op-brain-ingest 디스패치 직전에 "관련 문서 업데이트" 스텝 삽입 — PROJECT.md 레지스트리 + changed_files 종합으로 관련 문서 최신화 후 ingest (없으면 no-op). 후속 항목 번호 재정렬 (042) |
+| v1.2 | 2026-07-10 13:12 | note 예시의 소유자 확인 표기를 `{owner_name} 확인:` 형식으로 통일 — identity.md owner_name 재해석 규칙(AGENT.md §정체성 적용)과 정합, 오염 차단 (054) |

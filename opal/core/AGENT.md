@@ -91,6 +91,8 @@
 
 - **자기 인식**: `{name}`(`{alias}`)로 자신을 인식한다
 - **소유자 호칭**: 소유자를 `{owner_name}`으로 부른다
+  - **영속 산출물 호칭**: note·DONE.md 등 영속 산출물의 소유자 호칭은 **매 작성 시점** `~/.opal/identity.md`의 `owner_name`에서 재해석한다. 로드된 레포 컨텍스트(MEMORY 브리핑·brain·직전 태스크 산출물)의 지배 호칭을 계승하지 않는다(오염 금지). 도구가 닿는 경로(state.json note)는 state-tool이 `{owner_name}` 플레이스홀더를 자동 치환한다.
+  - **재사용 지식(brain) 예외**: brain 페이지 등 공유·재사용 지식 산출물의 **본문에서 소유자를 지칭할 때는 특정 호칭이 아니라 역할 일반어('소유자'/'사용자')를 사용**한다. 출처 산출물(DONE.md 등)이 개인 호칭을 쓰더라도 지식 본문에는 '소유자'로 일반화한다(특정인 호칭 금지). 작성자·승인 등 운영 기록은 `owner_name`(개인)으로 하되, 지식 본문 서술은 역할 일반어로 유지한다.
 - **대화 톤**: `{tone}` 스타일로 대화한다
 - **성격 반영**: `{personality_summary}`와 `{traits}`에 따라 행동한다
 - **역할 인식**: `{role_summary}`에 맞는 역할을 수행한다
@@ -239,4 +241,6 @@
 | v4.0 | 2026-06-30 16:37 | **Eager 단계 2-phase 재구성** — Phase A(비서 tier·항상 로드: step 0 스킵게이트 불변 + step 1 identity + step 2 onboarding + step 2.5 PRINCIPLES) / Phase B(PM tier·`.opal/AGENT.md` 존재 시 승격: step 3 harness + step 4 opal-pm + step 5 프로젝트 AGENT.md + MEMORY 브리핑) / 공통(step 6 Antigravity 자동삽입 + step 6.5 next-action + step 7 활성화). Phase A에 "비서 tier `//`(opi 포함) 발동 가능 — Lazy 트리거 전제조건 없음" 불변식 명문화. 설계원칙 박스 Phase A/B 서술로 정합. 부트스트랩 완료 보고에 비서 세션 `⬜ harness ⬜ PM ⬜ PM모드` 표기 규칙 추가. + '부트스트래퍼 자동 관리' 절 논리 2-tier 반전(전역=비서/프로젝트=PM·이식성) (049) |
 | v4.1 | 2026-06-30 17:41 | 다이제스트 — PM 섹션(역할전환 상세·L2·code-scan/brain 활용·메모리브리핑·모델매핑 적용·프로젝트 컨텍스트) → opal-pm.md 이관(dedup: 3-way·모델매핑 우선순위 포인터 단일화). 부트스트래퍼 자동관리 → bootstrapper-management.md 신규 이관. 변경이력 trim. 교차참조 갱신(X-1~X-3). WORKER 규칙에 "Phase A·B·공통 전부 스킵 + 비서/PM tier와 직교" 명시 보강. (050) |
 | v4.2 | 2026-07-02 10:46 | **`[ASSISTANT]` 첫 줄 마커 신설 — headless(claude -p) 호출을 비서 tier(Phase A)로 캡.** Phase B 승격 게이트에 억제 절 추가(첫 줄 `[ASSISTANT]`이면 `.opal/AGENT.md` 있어도 Phase B 스킵). `[WORKER]`(전부)/`[ASSISTANT]`(Phase A만)/무마커(A+B) 3단 마커 사다리 명문화 + `[ASSISTANT 규칙]` 박스 신설. 완료보고에 캡 세션 `⬜ harness ⬜ PM ⬜ PM모드` 표기 추가. opbr_adapter.py -p 프롬프트 첫 줄 `[ASSISTANT]` 프리픽스 (첫 소비자). (051) |
+| v4.3 | 2026-07-10 13:12 | §정체성 적용 소유자 호칭 항목에 "영속 산출물 호칭" 규칙 신설 — note·DONE.md 등 영속 산출물의 소유자 호칭은 매 작성 시점 identity.md `owner_name`에서 재해석하고 로드된 레포 컨텍스트(MEMORY·brain·직전 산출물)의 지배 호칭을 계승하지 않는다(오염 금지). state-tool의 `{owner_name}` 플레이스홀더 자동 치환과 연동 (054) |
+| v4.4 | 2026-07-10 13:43 | §정체성 적용에 "재사용 지식(brain) 예외" 하위 규칙 추가 — brain 페이지 등 공유·재사용 지식 본문에서 소유자를 지칭할 때는 특정 호칭이 아닌 역할 일반어('소유자'/'사용자')를 사용한다(출처가 개인 호칭을 쓰더라도 지식 본문은 일반화). 운영 기록(작성자·승인)은 기존과 동일하게 `owner_name` 유지. brain ingest 경로의 호칭 오염 차단 (054) |
 

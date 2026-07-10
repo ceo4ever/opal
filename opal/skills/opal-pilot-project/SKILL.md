@@ -99,7 +99,7 @@ op-task-execute 워커 디스패치. **model**: standard. checklist_source: PLAN
 2. 사용자에게 완료 보고 후 CLOSE 단계 진입 승인 요청
 
 > **EXECUTE Step 완료 (P-4)**: 워커가 `~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done --as-worker --worker-stage EXECUTE --step <N/M>` 호출 (T-10 워커 권한 게이트).
-> **사용자 확인 (P-5)**: 사용자 발화 후 PM이 `~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done --owner user --note '소유자 확인: ...'` 호출. CLOSE 진입 전 이 행의 `owner=user` 여부를 도구가 자동 검증한다 (§2.16 G-13).
+> **사용자 확인 (P-5)**: 사용자 발화 후 PM이 `~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done --owner user --note '{owner_name} 확인: ...'` 호출. CLOSE 진입 전 이 행의 `owner=user` 여부를 도구가 자동 검증한다 (§2.16 G-13).
 > **블로커 발생 (P-7)**: `~/.opal/tools/state-tool/run.sh block <task-path> --row <N> --reason '...'` 호출. STATE.md 블로커 섹션 자유 텍스트는 PM이 별도 작성.
 > **추가작업 진입 (P-6)**: `~/.opal/tools/state-tool/run.sh add-row <task-path> --after <N> --stage CLOSE --item '...'` 호출 → current_status 자동 `additional_work` 전환. 완료 시 `~/.opal/tools/state-tool/run.sh status <task-path> --set additional_work_done`.
 > 근거: `PLAN.md` §3 Step 8 P-1 / P-4 / P-5 / P-6 / P-7 / §2.16 G-13
@@ -269,3 +269,4 @@ semi-agentic / agentic 모두 CLOSE 첫 행 `--auto-pass` 거부 (`agentic_close
 | v3.1 | 2026-06-07 | STATE 행 20→9 재구성 — State Gate 행 4개·QA Gate 행 2개·QA 산출물 행 제거(guard+PM Gate 흡수), 산출물 행 작업 행 흡수, gate-pass 제거, CLOSE 마지막 행 "DONE.md 생성"으로 통일, 행 번호 1~9 재정렬 (014) |
 | v3.2 | 2026-06-10 01:08 | STEP 4 CLOSE에 op-brain-ingest 자동 디스패치 훅 삽입 — ①DONE.md 생성 → ①.5 brain 존재 시 op-brain-ingest 디스패치(없으면 no-op) → ②완료 보고. STATE 9행 구조 불변 (015) |
 | v3.3 | 2026-06-24 | CLOSE 단계 op-brain-ingest 디스패치 직전에 "관련 문서 업데이트" 스텝 삽입 — PROJECT.md 레지스트리 + changed_files 종합으로 관련 문서 최신화 후 ingest (없으면 no-op). 후속 항목 번호 재정렬 (042) |
+| v3.4 | 2026-07-10 13:12 | note 예시(산문)의 소유자 확인 표기를 `{owner_name} 확인:` 형식으로 통일 — identity.md owner_name 재해석 규칙(AGENT.md §정체성 적용)과 정합, 오염 차단 (054) |

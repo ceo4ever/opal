@@ -46,7 +46,7 @@ TASK 완료 → 사용자 보고.
 > **[MUST] 행 갱신**: `~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done` 호출. LLM이 STATE.md 마크다운 표를 직접 편집하는 것은 금지된다. 행을 mark하는 것 자체가 state 기록이며 별도의 State Gate 행은 존재하지 않는다.
 > **단계 시작 (P-3)**: `~/.opal/tools/state-tool/run.sh advance <task-path> --row <N>` 호출로 해당 단계 작업 행을 🔄로 전환.
 > **단계 건너뛰기 차단**: state-tool stage-transition guard가 단계 N의 필수 행이 완료되지 않으면 단계 N+1 진입(mark)을 자동 거부한다 (PLAN §M-A). 행에 의존하지 않는다.
-> **사용자 확인 (P-5)**: 사용자 발화 후 PM이 `~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done --owner user --note '소유자 확인: TASK 완료'` 호출.
+> **사용자 확인 (P-5)**: 사용자 발화 후 PM이 `~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done --owner user --note '{owner_name} 확인: TASK 완료'` 호출.
 > 근거: `PLAN.md` §3 Step 8 P-1 / P-3 / P-5
 
 ---
@@ -71,7 +71,7 @@ state-tool 호출:
 
 ```
 ~/.opal/tools/state-tool/run.sh mark <task-path> --row 4 --done  # PM Gate
-~/.opal/tools/state-tool/run.sh mark <task-path> --row 5 --done --owner user --note '소유자 확인: WIREFRAME 완료'
+~/.opal/tools/state-tool/run.sh mark <task-path> --row 5 --done --owner user --note '{owner_name} 확인: WIREFRAME 완료'
 ```
 
 > **[PM 컨텍스트 주입]** 워커 디스패치 프롬프트의 첫 줄에 `[WORKER]`를 삽입한다. `[WORKER]` 마커가 있으면 워커는 부트스트랩을 생략한다. PM은 디스패치 시 다음을 프롬프트에 포함해야 한다:
@@ -128,7 +128,7 @@ state-tool 호출:
 
 ```
 ~/.opal/tools/state-tool/run.sh mark <task-path> --row 7 --done  # PM Gate
-~/.opal/tools/state-tool/run.sh mark <task-path> --row 8 --done --owner user --note '소유자 확인: EXECUTE 완료'
+~/.opal/tools/state-tool/run.sh mark <task-path> --row 8 --done --owner user --note '{owner_name} 확인: EXECUTE 완료'
 ```
 
 보고 형식:
@@ -297,3 +297,4 @@ semi-agentic / agentic 모두 CLOSE 첫 행 `--auto-pass` 거부 (`agentic_close
 | v2.8 | 2026-06-07 | STATE 행 20→9 재구성 — opds 패턴 적용 + op-dev-qa 디스패치→PM Gate 흡수: State Gate 행(#8/#10/#15/#17/#20) 제거(guard로 이전), QA Gate 행(#6/#13)+QA 산출물 행(#7/#14) 제거, 산출물 행 작업 행 흡수, gate-pass 제거, WIREFRAME·EXECUTE PM Gate에 빌드/린트·wireframe↔코드 대조 직접 검증 체크리스트 추가 (014) |
 | v2.9 | 2026-06-11 19:25 | STEP 4 CLOSE에 op-brain-ingest 디스패치 훅 추가 — DONE.md 생성 직후 brain 존재 시 디스패치, 부재 시 no-op, CLOSE 비중단. STATE 행 9 불변 (016) |
 | v3.0 | 2026-06-24 | CLOSE 단계 op-brain-ingest 디스패치 직전에 "관련 문서 업데이트" 스텝 삽입 — PROJECT.md 레지스트리 + changed_files 종합으로 관련 문서 최신화 후 ingest (없으면 no-op). 후속 항목 번호 재정렬 (042) |
+| v3.1 | 2026-07-10 13:12 | note 예시의 소유자 확인 표기를 `{owner_name} 확인:` 형식으로 통일 — identity.md owner_name 재해석 규칙(AGENT.md §정체성 적용)과 정합, 오염 차단 (054) |

@@ -260,7 +260,7 @@ opwt 완료 후, PM이 결과를 종합하여 사용자에게 보고한다:
 
 4. STATE.md Phase 진행 현황 갱신 (Phase 1 → 확정) — state-tool을 호출한다:
    ```
-   ~/.opal/tools/state-tool/run.sh mark <task-path> --row <Phase1_확정_행N> --done --owner user --note '소유자 확인: Phase 1 확정'
+   ~/.opal/tools/state-tool/run.sh mark <task-path> --row <Phase1_확정_행N> --done --owner user --note '{owner_name} 확인: Phase 1 확정'
    ```
 5. `.opal/MEMORY.md`의 작업 히스토리를 갱신한다
 
@@ -345,7 +345,7 @@ PRD/TRD를 기반으로 태스크를 분할한다.
 
 1. STATE.md Phase 진행 현황 갱신 (Phase 2 → 확정) — state-tool을 호출한다:
    ```
-   ~/.opal/tools/state-tool/run.sh mark <task-path> --row <Phase2_확정_행N> --done --owner user --note '소유자 확인: Phase 2 확정'
+   ~/.opal/tools/state-tool/run.sh mark <task-path> --row <Phase2_확정_행N> --done --owner user --note '{owner_name} 확인: Phase 2 확정'
    ```
 2. `.opal/MEMORY.md`의 작업 히스토리를 갱신한다
 
@@ -799,3 +799,4 @@ opal-harness-agentic.md "에스컬레이션 조건" 공통 기준에 추가:
 | v4.6 | 2026-06-11 19:25 | DONE.md 생성 직후 op-brain-ingest 디스패치 훅 삽입 — brain 존재 시 워커 디스패치, 부재 시 no-op, 종료 비중단 (016) |
 | v4.7 | 2026-06-21 16:05 | oppd 개선 — PRD/TRD 태스크폴더 작성+확정 후 docs 승격(F-001/002), WBS 태스크폴더 전용화(F-003), sizing "1~3일"→단일책임+수용시나리오(F-010), §2-3 PM검수 4종 추가(F-015), Phase3 scope 3계층 분기+WBS 2단기준+TRD/PRD 사용자게이트(F-023/024), STATE 재설계 루프 로그 행(F-024) (031) |
 | v4.8 | 2026-06-21 | `npm run lint` → `npm run lint:fix` 정합 — WBS 예시 표(A01·A02) generic `&&` 변형의 lint 명령을 L1 표준(`lint:fix`)으로 교체 (033) |
+| v4.9 | 2026-07-10 13:12 | note 예시의 소유자 확인 표기를 `{owner_name} 확인:` 형식으로 통일 — identity.md owner_name 재해석 규칙(AGENT.md §정체성 적용)과 정합, 오염 차단 (054) |

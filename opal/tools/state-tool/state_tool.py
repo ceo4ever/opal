@@ -3,7 +3,7 @@
   "module": "state_tool",
   "layer": "util",
   "domain": "opal-pipeline",
-  "description": "OPAL 파이프라인 현황판 JSON SSOT 관리 CLI — 9개 서브 명령(init/show/advance/mark/block/validate/add-row/status/gate-pass[deprecated]) + verify + 3-way 모드(interactive/semi-agentic/agentic) 지원. 014 Phase 4: 새 표준 행 구조(QA Gate/State Gate 행 없음)와 정합 — gate-pass deprecate, CLOSE 마지막 행 판정 항목명 비의존화. 016: verify --red-check(RED 증거 게이트) + --fix-mode/--changed-files/--test-globs(테스트 불변성 게이트) 추가 — RED-first TDD 트랙 deterministic 집행. 017: mark --step N/M 다중 Step 조기 done 가드 — N<M이면 in_progress 유지(done 미처리) + 진행률(step) 영속화, N==M에서만 done; 미완 행은 기존 stage-transition guard가 단계전환·CLOSE 진입을 자동 차단. 005: verify --clarification-check + TASK→다음단계 자동 훅 — TASK 4요소(목표/범위/제약/완료기준) 미잠금 시 다음 단계 진입 거부(PRINCIPLES §1 집행), 정책 A graceful skip(섹션/파일 부재 시 하위호환). 034: mock 가드 false positive 수정 — _MOCK_CODE_PATTERNS 정규식 'MagicMock' 맨 단어 대안 제거(#1 산문 오탐) + _check_mock_patterns 인라인 백틱 제거 전처리 추가(#2 메타-순환 해소); 헌법 §4 정탐 유지.",
+  "description": "OPAL 파이프라인 현황판 JSON SSOT 관리 CLI — 9개 서브 명령(init/show/advance/mark/block/validate/add-row/status/gate-pass[deprecated]) + verify + 3-way 모드(interactive/semi-agentic/agentic) 지원. 014 Phase 4: 새 표준 행 구조(QA Gate/State Gate 행 없음)와 정합 — gate-pass deprecate, CLOSE 마지막 행 판정 항목명 비의존화. 016: verify --red-check(RED 증거 게이트) + --fix-mode/--changed-files/--test-globs(테스트 불변성 게이트) 추가 — RED-first TDD 트랙 deterministic 집행. 017: mark --step N/M 다중 Step 조기 done 가드 — N<M이면 in_progress 유지(done 미처리) + 진행률(step) 영속화, N==M에서만 done; 미완 행은 기존 stage-transition guard가 단계전환·CLOSE 진입을 자동 차단. 005: verify --clarification-check + TASK→다음단계 자동 훅 — TASK 4요소(목표/범위/제약/완료기준) 미잠금 시 다음 단계 진입 거부(PRINCIPLES §1 집행), 정책 A graceful skip(섹션/파일 부재 시 하위호환). 034: mock 가드 false positive 수정 — _MOCK_CODE_PATTERNS 정규식 'MagicMock' 맨 단어 대안 제거(#1 산문 오탐) + _check_mock_patterns 인라인 백틱 제거 전처리 추가(#2 메타-순환 해소); 헌법 §4 정탐 유지. 054: resolve_owner_placeholder() 신설 — note-write 6경로(advance/mark/add-row/block/status/init)에서 '{owner_name}' 플레이스홀더를 identity.md owner_name으로 write-time 치환(fail-safe: 부재/공란/파싱실패 시 원문 유지).",
   "exports": [
     "cmd_init", "cmd_show", "cmd_advance", "cmd_mark",
     "cmd_block", "cmd_validate", "cmd_add_row", "cmd_status", "cmd_gate_pass"
@@ -199,6 +199,39 @@ def save_state_md(task_path, content):
     md_file = task_path / "STATE.md"
     with open(md_file, "w", encoding="utf-8") as f:
         f.write(content)
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 소유자 호칭 치환 (PLAN §3.1.2, TASK 054)
+# ─────────────────────────────────────────────────────────────────────────────
+
+def resolve_owner_placeholder(text: str) -> str:
+    """note 등 사용자 free text에 담긴 '{owner_name}' 플레이스홀더를 identity.md의
+    owner_name 값으로 write-time 치환한다.
+
+    fail-safe(원문 유지): 플레이스홀더 미포함, identity.md 부재, owner_name 공란/미발견,
+    또는 파일 읽기·파싱 중 예외 발생 시 모두 원문 text를 그대로 반환한다 — note 저장
+    자체를 실패시키지 않는다. 경로는 OPAL_HOME env 우선(플랫폼 독립, ~/.opal 하드코딩 분기 금지).
+    T-11: 표준 라이브러리(re/os/pathlib)만 사용 — PyYAML 등 신규 패키지 도입 금지.
+    """
+    if not text or "{owner_name}" not in text:
+        return text
+    try:
+        opal_home = os.environ.get("OPAL_HOME") or os.path.expanduser("~/.opal")
+        identity_path = pathlib.Path(opal_home) / "identity.md"
+        if not identity_path.exists():
+            return text
+        content = identity_path.read_text(encoding="utf-8")
+        fm_match = re.search(r"^---\s*$(.*?)^---\s*$", content, re.M | re.S)
+        block = fm_match.group(1) if fm_match else content
+        m = re.search(r"^owner_name:\s*(.*)$", block, re.M)
+        if not m:
+            return text
+        owner_name = m.group(1).strip().strip("\"'")
+        if not owner_name:
+            return text
+        return text.replace("{owner_name}", owner_name)
+    except Exception:
+        return text
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 마크다운 렌더 헬퍼
@@ -734,7 +767,7 @@ def cmd_init(args):
         updated_md = append_decision_log(
             updated_md, now_str,
             "force flag used at init",
-            args.note
+            resolve_owner_placeholder(args.note)
         )
         save_state_md(task_path, updated_md)
 
@@ -870,7 +903,7 @@ def cmd_advance(args):
     row["status_label"] = "🔄"
     row["timestamp"]    = now_str
     if args.note:
-        row["note"] = args.note
+        row["note"] = resolve_owner_placeholder(args.note)
 
     state["updated_at"] = now_str
     save_state_json(task_path, state)
@@ -971,21 +1004,24 @@ def cmd_mark(args):
         row["status_label"] = "✅"
     row["timestamp"]    = now_str
 
+    # note 소유자 호칭 치환 (PLAN §3.1.2, TASK 054) — 3분기 공용 1회 산출
+    note_text = resolve_owner_placeholder(args.note)
+
     # owner 결정
     if args.auto_pass:
         row["owner"] = "auto"
-        if args.note:
-            row["note"] = f"agentic auto-pass: {args.note}"
+        if note_text:
+            row["note"] = f"agentic auto-pass: {note_text}"
         else:
             row["note"] = "agentic auto-pass"
     elif args.owner:
         row["owner"] = args.owner
-        if args.note:
-            row["note"] = args.note
+        if note_text:
+            row["note"] = note_text
     else:
         row["owner"] = "PM"
-        if args.note:
-            row["note"] = args.note
+        if note_text:
+            row["note"] = note_text
 
     state["updated_at"] = now_str
 
@@ -1058,7 +1094,7 @@ def cmd_block(args):
     row["status"]       = "failed"
     row["status_label"] = "❌"
     row["timestamp"]    = now_str
-    row["note"]         = f"block: {args.reason}"
+    row["note"]         = f"block: {resolve_owner_placeholder(args.reason)}"
 
     # current_status → blocked 자동 전환 (§2.11 G-7)
     prev_status = state["current_status"]
@@ -1157,7 +1193,7 @@ def cmd_add_row(args):
         "status_label": "⬜",
         "timestamp":    None,
         "owner":        None,
-        "note":         args.note or None,
+        "note":         resolve_owner_placeholder(args.note) or None,
     }
 
     # 삽입 (G-9 단계 3)
@@ -1225,7 +1261,7 @@ def cmd_status(args):
 
     # §2.17 트리거 #4
     decision = f"current_status changed: {from_status} → {to_status}"
-    reason   = args.note or "(none)"
+    reason   = resolve_owner_placeholder(args.note) or "(none)"
 
     sync_state_md(task_path, state, now_str, command,
                   status_text=status_text, decision=decision, reason=reason)

@@ -66,7 +66,7 @@ PLAN 완료
        - [ ] 규모 기준 초과 시 Full Task 에스컬레이션 검토 여부
   → PM Gate 통과 후 해당 행(P-4, 행 4)을 단일 mark. 사용자에게 PLAN + TEST-SCENARIO 함께 보고. 승인 = EXECUTE 시작 허가.
 
-> **사용자 확인 (P-5)**: 사용자 발화 후 PM이 `~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done --owner user --note '소유자 확인: ...'` 호출. CLOSE 진입 전 이 행의 `owner=user` 여부를 도구가 자동 검증한다 (§2.16 G-13).
+> **사용자 확인 (P-5)**: 사용자 발화 후 PM이 `~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done --owner user --note '{owner_name} 확인: ...'` 호출. CLOSE 진입 전 이 행의 `owner=user` 여부를 도구가 자동 검증한다 (§2.16 G-13).
 > 근거: `PLAN.md` §3 Step 8 P-1 / P-5
 
 ---
@@ -135,7 +135,7 @@ op-dev-test-agent 워커 디스패치. TEST-SCENARIO.md 실행 + 결과 기록 +
      - [ ] 컨벤션 자동 진단 PASS (changed_files 컨벤션 적용 대상 ≥1건 시 발동, GC-CONVENTION-*.md 보고서 Critical/High 0건)
 → PM Gate 통과 후 해당 행(행 8)을 단일 mark. 사용자에게 완료 보고 후 CLOSE 단계 진입 승인 요청.
 
-> **사용자 확인 (P-5)**: 사용자 발화 후 PM이 `~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done --owner user --note '소유자 확인: ...'` 호출.
+> **사용자 확인 (P-5)**: 사용자 발화 후 PM이 `~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done --owner user --note '{owner_name} 확인: ...'` 호출.
 > 근거: `PLAN.md` §3 Step 8 P-1 / P-5
 
 보고 형식:
@@ -367,3 +367,4 @@ semi-agentic / agentic 모두 CLOSE 첫 행 `--auto-pass` 거부 (`agentic_close
 | v3.8 | 2026-06-10 10:13 | STEP 2/3에 RED-first(red-first.md) 참조 + EXECUTE 진입 전 verify --red-check 게이트·fix 불변성 절차 (016) |
 | v3.9 | 2026-06-11 19:25 | CLOSE 단계 DONE.md 생성 직후 op-brain-ingest 훅 삽입 — brain 존재 시 디스패치, 부재 시 no-op, CLOSE 비중단 (016-brain, 별도 PC 016과 중복 채번) |
 | v4.0 | 2026-06-24 | CLOSE 단계 op-brain-ingest 디스패치 직전에 "관련 문서 업데이트" 스텝 삽입 — PROJECT.md 레지스트리 + changed_files 종합으로 관련 문서 최신화 후 ingest (없으면 no-op). 후속 항목 번호 재정렬 (042) |
+| v4.1 | 2026-07-10 13:12 | note 예시(산문)의 소유자 확인 표기를 `{owner_name} 확인:` 형식으로 통일 — identity.md owner_name 재해석 규칙(AGENT.md §정체성 적용)과 정합, 오염 차단 (054) |

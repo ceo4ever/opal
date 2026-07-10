@@ -51,7 +51,7 @@ op-dev-analysis 스킬을 수행하라.
   → **PM Gate** (분석 방향 종합 검토)
   → 사용자 보고 (분석 방향 검토 후 PLAN 진입 승인).
 
-> **사용자 확인 (P-5)**: 사용자 발화 후 PM이 `~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done --owner user --note '소유자 확인: ...'` 호출.
+> **사용자 확인 (P-5)**: 사용자 발화 후 PM이 `~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done --owner user --note '{owner_name} 확인: ...'` 호출.
 > 근거: `PLAN.md` §3 Step 8 P-1 / P-5
 
 ## STEP 3: PLAN
@@ -94,7 +94,7 @@ PLAN 완료
 4. 해당 행을 단일 mark (`~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done` 호출 — P-1)
 5. 사용자에게 TEST-SCENARIO 보고 — 승인 = EXECUTE 시작 허가
 
-> **사용자 확인 (P-5)**: 사용자 발화 후 PM이 `~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done --owner user --note '소유자 확인: ...'` 호출. CLOSE 진입 전 이 행의 `owner=user` 여부를 도구가 자동 검증한다 (§2.16 G-13).
+> **사용자 확인 (P-5)**: 사용자 발화 후 PM이 `~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done --owner user --note '{owner_name} 확인: ...'` 호출. CLOSE 진입 전 이 행의 `owner=user` 여부를 도구가 자동 검증한다 (§2.16 G-13).
 > 근거: `PLAN.md` §3 Step 8 P-1 / P-5 / §2.16 G-13
 
 ## STEP 4: EXECUTE
@@ -195,7 +195,7 @@ op-dev-test-agent 워커 디스패치. TEST-SCENARIO.md 실행 + 결과 기록 +
      - [ ] 컨벤션 자동 진단 PASS (changed_files 컨벤션 적용 대상 ≥1건 시 발동, GC-CONVENTION-*.md 보고서 Critical/High 0건)
 → PM Gate 통과 후 해당 행을 단일 mark. 사용자에게 완료 보고 후 CLOSE 단계 진입 승인 요청.
 
-> **사용자 확인 (P-5)**: 사용자 발화 후 PM이 `~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done --owner user --note '소유자 확인: ...'` 호출.
+> **사용자 확인 (P-5)**: 사용자 발화 후 PM이 `~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done --owner user --note '{owner_name} 확인: ...'` 호출.
 > 근거: `PLAN.md` §3 Step 8 P-1 / P-5
 
 보고 형식:
@@ -394,3 +394,4 @@ semi-agentic / agentic 모두 CLOSE 첫 행 `--auto-pass` 거부 (`agentic_close
 | v4.1 | 2026-06-10 10:13 | STEP 3.5/4에 RED-first 참조 + RED 게이트 절차 (016) |
 | v4.2 | 2026-06-11 19:25 | STEP 6 CLOSE에 op-brain-ingest 디스패치 훅 삽입 — DONE.md 생성 직후 brain 존재 시 태스크 산출물 누적, brain 부재 시 no-op, 어떤 status도 CLOSE 비중단 (016-brain, 별도 PC 016과 중복 채번) |
 | v4.3 | 2026-06-24 | CLOSE 단계 op-brain-ingest 디스패치 직전에 "관련 문서 업데이트" 스텝 삽입 — PROJECT.md 레지스트리 + changed_files 종합으로 관련 문서 최신화 후 ingest (없으면 no-op). 후속 항목 번호 재정렬 (042) |
+| v4.4 | 2026-07-10 13:12 | note 예시(산문)의 소유자 확인 표기를 `{owner_name} 확인:` 형식으로 통일 — identity.md owner_name 재해석 규칙(AGENT.md §정체성 적용)과 정합, 오염 차단 (054) |

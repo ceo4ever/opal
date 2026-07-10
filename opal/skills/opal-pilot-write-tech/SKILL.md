@@ -196,7 +196,7 @@ interview 완료 후 결과를 TASK.md에 다음 섹션 양식으로 기록한�
   ```
   ~/.opal/tools/state-tool/run.sh advance <task-path> --row 1   # TASK 작업 행 🔄
   ~/.opal/tools/state-tool/run.sh mark <task-path> --row 1 --done  # TASK 작업 + TASK.md 생성
-  ~/.opal/tools/state-tool/run.sh mark <task-path> --row 2 --done --owner user --note '소유자 확인: TASK 완료'
+  ~/.opal/tools/state-tool/run.sh mark <task-path> --row 2 --done --owner user --note '{owner_name} 확인: TASK 완료'
   ```
 
 > **[MUST] 행 갱신**: `mark` 호출 자체가 state 기록이며 별도의 State Gate 행은 존재하지 않는다. state-tool stage-transition guard가 단계 완료 여부를 자동 검증한다.
@@ -250,7 +250,7 @@ ANALYSIS 완료 후 아래 절차를 순서대로 수행한다:
    ```
 3. 사용자 확인 (interactive) / PM 자율 승인 (agentic):
    ```
-   ~/.opal/tools/state-tool/run.sh mark <task-path> --row <ANALYSIS_사용자확인_N> --done --owner user --note '소유자 확인: ANALYSIS 완료'
+   ~/.opal/tools/state-tool/run.sh mark <task-path> --row <ANALYSIS_사용자확인_N> --done --owner user --note '{owner_name} 확인: ANALYSIS 완료'
    ```
 
 ---
@@ -296,7 +296,7 @@ tasks/{NNN}-opwt-{name}/PLAN.md
     ```
 - 사용자 확인 (interactive) / PM 자율 승인 (agentic):
   ```
-  ~/.opal/tools/state-tool/run.sh mark <task-path> --row <PLAN_사용자확인_N> --done --owner user --note '소유자 확인: PLAN 완료'
+  ~/.opal/tools/state-tool/run.sh mark <task-path> --row <PLAN_사용자확인_N> --done --owner user --note '{owner_name} 확인: PLAN 완료'
   ```
 - **게이트**: PLAN.md + 배치 계획 사용자 확인 (interactive) / PM 자율 승인 (agentic)
 
@@ -331,7 +331,7 @@ tasks/{NNN}-opwt-{name}/PLAN.md
 
   → 사용자 확인 (interactive) / PM 자율 승인 후 다음 배치 (agentic):
   ```
-  ~/.opal/tools/state-tool/run.sh mark <task-path> --row <EXECUTE_Batch_사용자확인_N> --done --owner user --note '소유자 확인: Batch N 완료'
+  ~/.opal/tools/state-tool/run.sh mark <task-path> --row <EXECUTE_Batch_사용자확인_N> --done --owner user --note '{owner_name} 확인: Batch N 완료'
   ```
 배치 완료 후 `docs/PROJECT.md` 등록 확인
 
@@ -549,3 +549,4 @@ semi-agentic / agentic 모두 CLOSE 첫 행 `--auto-pass` 거부 (`agentic_close
 | v4.3 | 2026-06-11 19:25 | CLOSE 단계에 op-brain-ingest 디스패치 훅 삽입 — DONE.md 생성 직후 brain 존재 시 ingest 워커 디스패치, 부재 시 no-op, CLOSE 비중단. 탐색 경로 2단. STATE 행 수 10 불변 (016) |
 | v4.4 | 2026-06-16 | references 비즈니스 용어 우선 주입 — network-guide §7-0 공통 작성 원칙 + consistency-rules §3.1 검증 절 신설, citation-rules §8 참조 (024) |
 | v4.5 | 2026-06-24 | CLOSE 단계 op-brain-ingest 디스패치 직전에 "관련 문서 업데이트" 스텝 삽입 — PROJECT.md 레지스트리 + changed_files 종합으로 관련 문서 최신화 후 ingest (없으면 no-op). 후속 항목 번호 재정렬 (042) |
+| v4.6 | 2026-07-10 13:12 | note 예시의 소유자 확인 표기를 `{owner_name} 확인:` 형식으로 통일 — identity.md owner_name 재해석 규칙(AGENT.md §정체성 적용)과 정합, 오염 차단 (054) |

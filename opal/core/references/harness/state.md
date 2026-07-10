@@ -37,6 +37,8 @@
 
 **갱신 모델**: 워커가 1차 갱신을 수행하고(best effort), PM이 PM Gate 직전 상태 자가 점검에서 확인하여 미갱신/오갱신 시 즉시 보완한다.
 
+**note 소유자 호칭**: note에 소유자 호칭이 필요하면 `{owner_name}` 플레이스홀더를 사용한다 — state-tool이 identity.md `owner_name`으로 치환한다. 규칙 상세: `opal/core/AGENT.md` §정체성 적용(오염 금지).
+
 **수행 순서 강제 원칙**: 파이프라인 현황판 테이블은 위에서 아래로 순서대로 처리한다. 현재 행이 ✅가 아니면 다음 행으로 진행 불가. 일반 단계 행은 `작업 / PM Gate / 사용자 확인`으로 구성된다(문서 QA는 PM Gate가 흡수, 별도 QA Gate·State Gate 행 없음). Gate가 없는 단계(TASK 등)는 PM Gate 행을 생략한다.
 
 **상태: 필드 전이 흐름**:
@@ -109,3 +111,4 @@
 | v1.0 | 2026-04-21 | 다운사이징 — opal-harness.md §3 분리. 레거시 호환 노트 3건 제외 (128) |
 | v1.1 | 2026-05-01 | 갱신 이벤트 표에 "갱신 명령" 컬럼 추가 + `[MUST] state-tool 호출만 허용` 블록 추가 — TASK F-7 / PLAN §2.11 G-6 / §1.5 M-1 (134) |
 | v1.2 | 2026-06-07 | QA→PM Gate 통합 + State Gate 행 제거 정합화 — 이벤트 표에서 QA Gate/State Gate/산출물 생성 행 제거(문서 QA는 PM Gate 흡수, 산출물 생성은 작업 행 흡수, state 기록은 행 mark 자체, 단계 건너뛰기는 stage-transition guard). `State Gate` 섹션을 `상태 자가 점검`(PM Gate 직전 PM 절차)으로 재정의. 표준 단계 순서 문구를 `작업→상태 자가 점검→PM Gate`로 갱신. 동작 검증(TEST/verify) 영역 불변 (014 Phase 4-2) |
+| v1.3 | 2026-07-10 13:12 | note 소유자 호칭 참조 1줄 추가 — `{owner_name}` 플레이스홀더 사용 안내 + `opal/core/AGENT.md` §정체성 적용(오염 금지) 참조(재서술 금지) (054) |

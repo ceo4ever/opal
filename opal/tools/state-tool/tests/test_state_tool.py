@@ -3,11 +3,12 @@
   "module": "test_state_tool",
   "layer": "test",
   "domain": "opal-pipeline",
-  "description": "state-tool 단위 테스트 — 9개 명령 happy path + 23종 에러 코드 × 최소 1건 + G-5~G-15 시나리오. 005: TestClarificationGate 신설 — verify --clarification-check + TASK→다음단계 자동 훅 RED-first 케이스 ①~⑨ + 회귀 보호.",
+  "description": "state-tool 단위 테스트 — 9개 명령 happy path + 23종 에러 코드 × 최소 1건 + G-5~G-15 시나리오. 005: TestClarificationGate 신설 — verify --clarification-check + TASK→다음단계 자동 훅 RED-first 케이스 ①~⑨ + 회귀 보호. 054: TestOwnerNamePlaceholder 신설 — note '{owner_name}' 플레이스홀더 identity.md write-time 치환 RED-first(S-1~S-7).",
   "exports": [
     "TestInit", "TestShow", "TestAdvance", "TestMark",
     "TestBlock", "TestValidate", "TestAddRow", "TestStatus", "TestGatePass",
-    "TestErrorCodes", "TestFreeTextPreservation", "TestClarificationGate"
+    "TestErrorCodes", "TestFreeTextPreservation", "TestClarificationGate",
+    "TestOwnerNamePlaceholder"
   ]
 }
 
@@ -3393,6 +3394,95 @@ class TestClarificationGate(BaseTestCase):
         code2 = self._mark(2)
         self.assertEqual(code2, 0,
                          f"[RED] 기존 SIMPLE_ROWS_SPEC 픽스처는 게이트 미발동, 정상 진행 기대. 실제 exit_code={code2}")
+
+
+class TestOwnerNamePlaceholder(BaseTestCase):
+    """note '{owner_name}' 플레이스홀더 → identity.md owner_name write-time 치환 (PLAN §3.1.2, TASK 054)
+    RED-first 트랙(H-1 self-confirming 방지) — TEST-SCENARIO.md §1 S-1~S-7.
+    OPAL_HOME은 임시 디렉토리로 주입한다 (~/.opal 직접 접근 금지 — AGENT.md §확정 기준 #2).
+    """
+
+    def setUp(self):
+        super().setUp()
+        self._init()
+        self.opal_home = self.tmpdir / "opal_home"
+        self.opal_home.mkdir()
+
+    def _write_identity(self, content):
+        (self.opal_home / "identity.md").write_text(content, encoding="utf-8")
+
+    def test_owner_name_substituted(self):
+        """S-1(RED)/S-2(GREEN): identity.md owner_name=루카스 주입 후 mark note의 '{owner_name}'이
+        실제 owner_name으로 치환 저장된다 (PLAN §3.1.2, TS-1/TS-2). 구현 전에는 미치환 원문이 저장되어
+        AssertionError로 FAIL — 이 실패 트레이스백이 RED 증거다.
+        """
+        self._write_identity(
+            "---\n"
+            "name: 알투\n"
+            "owner_name: 루카스\n"
+            "---\n"
+        )
+        with patch.dict(os.environ, {"OPAL_HOME": str(self.opal_home)}):
+            code = self._mark(1, owner="user", note="{owner_name} 확인: 검토 완료")
+        self.assertEqual(code, 0)
+        state = self._state()
+        self.assertEqual(state["rows"][0]["note"], "루카스 확인: 검토 완료")
+
+    def test_plain_note_unchanged(self):
+        """S-3(회귀): 플레이스홀더 없는 note는 fast-path로 byte-identical 불변 (PLAN §3.1.2 H-2, TS-3)"""
+        self._write_identity(
+            "---\nowner_name: 루카스\n---\n"
+        )
+        with patch.dict(os.environ, {"OPAL_HOME": str(self.opal_home)}):
+            code = self._mark(1, owner="user", note="검토 완료")
+        self.assertEqual(code, 0)
+        state = self._state()
+        self.assertEqual(state["rows"][0]["note"], "검토 완료")
+
+    def test_fallback_no_identity(self):
+        """S-4(폴백): identity.md 부재 → note '{owner_name}' 원문 유지, 에러 없음(exit 0) (TS-4)"""
+        # self.opal_home 디렉토리는 존재하나 identity.md는 작성하지 않음(부재)
+        with patch.dict(os.environ, {"OPAL_HOME": str(self.opal_home)}):
+            code = self._mark(1, owner="user", note="{owner_name} 확인: X")
+        self.assertEqual(code, 0)
+        state = self._state()
+        self.assertEqual(state["rows"][0]["note"], "{owner_name} 확인: X")
+
+    def test_fallback_blank_owner(self):
+        """S-5(폴백): identity.md 존재하나 owner_name 공란 → 원문 유지, 빈값 치환 금지 (TS-5)"""
+        self._write_identity(
+            "---\nowner_name:\n---\n"
+        )
+        with patch.dict(os.environ, {"OPAL_HOME": str(self.opal_home)}):
+            code = self._mark(1, owner="user", note="{owner_name} 확인: X")
+        self.assertEqual(code, 0)
+        state = self._state()
+        self.assertEqual(state["rows"][0]["note"], "{owner_name} 확인: X")
+
+    def test_fallback_no_frontmatter(self):
+        """S-6(폴백): frontmatter/owner_name 키 부재 → 원문 유지, 크래시 없음(exit 0) (TS-6)"""
+        self._write_identity("# identity\n\n특이사항 없음\n")
+        with patch.dict(os.environ, {"OPAL_HOME": str(self.opal_home)}):
+            code = self._mark(1, owner="user", note="{owner_name} 확인: X")
+        self.assertEqual(code, 0)
+        state = self._state()
+        self.assertEqual(state["rows"][0]["note"], "{owner_name} 확인: X")
+
+    def test_advance_and_autopass(self):
+        """S-7: advance 경로 치환 + mark --auto-pass 접두('agentic auto-pass: ') 보존 조합 (PLAN §3.1.2 H-5, TS-7)"""
+        self._write_identity(
+            "---\nowner_name: 루카스\n---\n"
+        )
+        with patch.dict(os.environ, {"OPAL_HOME": str(self.opal_home)}):
+            code_advance = self._advance(1, note="{owner_name} 확인")
+            self.assertEqual(code_advance, 0)
+            state = self._state()
+            self.assertEqual(state["rows"][0]["note"], "루카스 확인")
+
+            code_mark = self._mark(1, auto_pass=True, note="{owner_name} 승인")
+        self.assertEqual(code_mark, 0)
+        state = self._state()
+        self.assertEqual(state["rows"][0]["note"], "agentic auto-pass: 루카스 승인")
 
 
 # ═════════════════════════════════════════════════════════════════════════════

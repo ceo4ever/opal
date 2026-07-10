@@ -53,6 +53,7 @@
 - `--force` 사용 시 `--note` 필수 (`note_required_for_force`)
 - `--import-existing`: 기존 STATE.md 마크다운 표를 파싱하여 rows 초기화 + 자유 텍스트 영역 보존
 - agentic 모드에서 CLOSE 단계가 아닌 사용자 확인 행은 자동으로 `na`(-) 처리
+- `--note`(`--force` 시 기재)에 `{owner_name}` 플레이스홀더를 쓰면 `~/.opal/identity.md`의 `owner_name`으로 write-time 치환된다. identity.md 부재/`owner_name` 공란/파싱 실패 시 원문(`{owner_name}`) 그대로 유지(fail-safe) — 054
 
 **성공 응답 예시**:
 ```json
@@ -87,6 +88,7 @@
 - `pending` 상태인 행만 `in_progress`로 전환 (T-7)
 - CLOSE 단계 첫 행이면 직전 사용자 확인 게이트 자동 검증 (§2.16 G-13)
 - `## 현재 상태` 섹션 `- 진행:` 라인 자동 갱신
+- `--note`의 `{owner_name}` 플레이스홀더는 identity.md `owner_name`으로 write-time 치환된다. 부재/공란/파싱 실패 시 원문 유지(fail-safe) — 054
 
 ---
 
@@ -108,6 +110,7 @@
 - `--auto-pass` 사용 시 `owner = "auto"`, note에 "agentic auto-pass" 자동 기재
 - CLOSE 첫 행 + agentic/semi-agentic 모드 + `--auto-pass` 조합 거부 (`agentic_close_gate_requires_user`)
 - `--force` 사용 시 `--note` 필수 + 의사결정 로그 자동 기재
+- `--note`의 `{owner_name}` 플레이스홀더는 identity.md `owner_name`으로 write-time 치환된다(`--auto-pass` 접두 "agentic auto-pass: " 뒤에도 적용). 부재/공란/파싱 실패 시 원문 유지(fail-safe) — 054
 
 ---
 
@@ -122,6 +125,7 @@
 - 행 상태 `failed`(❌) + `current_status` → `blocked` 자동 전환
 - `STATE.md` `- 상태: 블로커` 자동 갱신
 - 의사결정 로그 자동 기재 안 함 (블로커 섹션은 PM 별도 작성)
+- `--reason`의 `{owner_name}` 플레이스홀더는 identity.md `owner_name`으로 write-time 치환된다(`note`는 `"block: {치환결과}"`). 부재/공란/파싱 실패 시 원문 유지(fail-safe) — 054
 
 ---
 
@@ -162,6 +166,7 @@
 - `current_status == "done"` → `additional_work` 자동 전환
 - `current_status == "additional_work_done"` → `additional_work` 자동 회귀
 - 의사결정 로그 자동 기재 (§2.17 트리거 #5)
+- `--note`의 `{owner_name}` 플레이스홀더는 identity.md `owner_name`으로 write-time 치환된다. 부재/공란/파싱 실패 시 원문 유지(fail-safe) — 054
 
 **성공 응답**:
 ```json
@@ -186,6 +191,8 @@
 - `additional_work_done` → `additional_work` / `blocked`
 
 위 그래프 외 전이 시도: `invalid_status_transition` + exit 1
+
+`--note`의 `{owner_name}` 플레이스홀더는 identity.md `owner_name`으로 write-time 치환된다(의사결정 로그 근거에 반영). 부재/공란/파싱 실패 시 원문 유지(fail-safe) — 054
 
 ---
 
@@ -284,4 +291,5 @@
 |------|-----------|--------|---------|
 | v1.0 | 2026-05-01 | (134) | 최초 작성 |
 | v1.1 | 2026-05-09 11:22 | (140) | 3-way 모드 지원: init --mode semi-agentic 추가, mark/validate semi-agentic 경계 게이트 문서화, 오류 #24/#25 추가 |
+| v1.2 | 2026-07-10 13:15 | (054) | `resolve_owner_placeholder()` 신설 — note/reason의 `{owner_name}` 플레이스홀더를 identity.md `owner_name`으로 write-time 치환(fail-safe: 부재/공란/파싱실패 시 원문 유지). init/advance/mark/block/add-row/status 6경로 적용 |
 | xlsx-tool 패턴 | `opal/tools/xlsx-tool/run.sh:1-12` | OPAL Tools 래퍼 패턴 |

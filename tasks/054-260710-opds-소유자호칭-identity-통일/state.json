@@ -1,0 +1,131 @@
+{
+  "task_id": "054-260710-opds-소유자호칭-identity-통일",
+  "skill": "opds",
+  "mode": "agentic",
+  "schema_version": "1.0",
+  "created_at": "2026-07-10 12:43",
+  "updated_at": "2026-07-10 13:50",
+  "current_status": "done",
+  "rows": [
+    {
+      "row_id": 1,
+      "stage": "TASK",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-10 12:44",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 2,
+      "stage": "TASK",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-10 12:44",
+      "owner": "auto",
+      "note": "agentic auto-pass: TASK 4요소·A+B 공조 방향이 대화에서 확정됨. 범위 명확, 에스컬레이션 불요 → PLAN 진입 승인"
+    },
+    {
+      "row_id": 3,
+      "stage": "PLAN",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-10 12:56",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 4,
+      "stage": "PLAN",
+      "item": "PM Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-10 12:56",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 5,
+      "stage": "PLAN",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-10 13:11",
+      "owner": "user",
+      "note": "캡틴 확인: Short Task 유지 승인 → EXECUTE 진입"
+    },
+    {
+      "row_id": 6,
+      "stage": "EXECUTE",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-10 13:19",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 7,
+      "stage": "TEST",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-10 13:32",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 8,
+      "stage": "TEST",
+      "item": "PM Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-10 13:32",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 9,
+      "stage": "EXECUTE",
+      "item": "brain ingest 오염 차단 확장 (AGENT.md + op-brain-ingest)",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-10 13:45",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 10,
+      "stage": "TEST",
+      "item": "brain 개인호칭 하드코딩 정적 검증",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-10 13:46",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 11,
+      "stage": "TEST",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-10 13:46",
+      "owner": "user",
+      "note": "캡틴 확인: CLOSE 승인 (brain ingest 확장 포함)"
+    },
+    {
+      "row_id": 12,
+      "stage": "CLOSE",
+      "item": "DONE.md 생성",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-10 13:50",
+      "owner": "PM",
+      "note": null
+    }
+  ]
+}
