@@ -33,8 +33,9 @@ class ConsoleConfig:
 def load_config() -> ConsoleConfig:
     """~/.opal/console.config.json 로드. 없으면 기본값 반환.
 
-    첫 기동 시 기본값 파일을 생성하지 않음 — PLAN §3.1.3: "런타임 생성/읽기"
-    (설정 파일 생성은 install 단계에서 수행)
+    설정 파일 생성/갱신은 `opal-cli console scan [기준경로...]`가 수행하며,
+    install(install_dashboard)이 신규 머신에서 1회 자동 실행한다.
+    백엔드는 이 파일을 읽기 전용으로 소비한다(쓰기 없음, 태스크 021 C-2).
     """
     if not CONFIG_PATH.exists():
         return ConsoleConfig()

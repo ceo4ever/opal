@@ -36,6 +36,7 @@
 #   v3.6 2026-06-24 17:26 KST: install_opal_setting 신규 + perm_entries echo 권한 제거(v3.5 reconcile) — OPAL_BOOTSTRAP 환경변수 게이트를 setting.json Read 게이트로 전환 (043)
 #   v3.7 2026-06-29 15:24 KST: record_installed_version 함수 분리 + VERSION 기록 우선순위 재배치 — FRAMEWORK_ROOT/VERSION 각인값 최우선, API/main 폴백 강등 (048)
 #   v3.8 2026-07-02 15:20 KST: git-sync-tool run.sh chmod +x 블록 추가 (memory-tool 블록 직후, state-tool 패턴) — 신규 워크스페이스 git 동기화 도구 배포 (052)
+#   v3.9 2026-07-10 18:07: install_dashboard() 말미에 opal-cli console scan 자동 1회 호출 추가 — console.config.json 자동 생성/머지로 신규 머신 프로젝트 미발견 문제 근본 해결, 실패해도 install 비중단(|| warn) (057)
 #
 
 set -euo pipefail
@@ -1403,6 +1404,13 @@ install_dashboard() {
         success "Console BE 패키지 구조 생성 → $dst/dashboard/__init__.py"
     else
         warn "dashboard/backend 없음 — BE 배포 스킵"
+    fi
+
+    # ── console.config.json 자동 생성/갱신 (신규 머신 프로젝트 자동 탐색, 057) ──
+    local opal_cli="$USER_HOME/.opal/bin/opal-cli"
+    if [[ -x "$opal_cli" ]]; then
+        "$opal_cli" console scan "$USER_HOME" >/dev/null 2>&1 || \
+            warn "console scan 실패 — 프로젝트 자동 탐색을 건너뜁니다 (수동: opal-cli console scan <경로>)"
     fi
 
     echo ""

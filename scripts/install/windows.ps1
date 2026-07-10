@@ -93,6 +93,7 @@
         v1.14.0 2026-06-21 16:18 Convert-BodyModelTokens 신규 — 본문 인라인 model 레벨 sub-dispatch 토큰('[,(]\s*model:\s*(light|standard|advanced)\b')을 ModelMap 실모델명으로 변환(cursor=inherit→토큰 제거+빈괄호 정리). Install-PlatformAgents Markdown 경로($convertedBody 직렬화)·Codex TOML 경로(escape 전) 양쪽 적용. install-mac.sh _sub_body_model 미러(문자 단위 동일 정규식) — 액션 에이전트 sub-dispatch model enum 위반 버그 fix (032)
         v1.15.0 2026-06-24 17:26 KST: Install-OpalCore setting.json create-if-absent 배포 추가 (043)
         v1.16.0 2026-06-29 15:24 KST: Invoke-OpalWindowsInstall에 $repoRoot/VERSION 각인값 최우선 읽기 추가 — install-mac.sh record_installed_version 대칭, -notlike '$Format:*' 판별 (048)
+        v1.17.0 2026-07-10 18:07  Install-Dashboard 말미에 console.config.json 자동 생성/머지 로직 추가 — .opal\AGENT.md 마커 탐색 + scan_roots 병합(보존+추가+dedup)의 PowerShell 네이티브 등가, opal-cli console scan(install-mac.sh v3.9) 과 의미상 동등, try/catch 격리로 install 비중단 (057)
 #>
 
 #Requires -Version 5.1
@@ -1063,6 +1064,74 @@ function Install-Dashboard {
         Write-OpalOk "Console BE 패키지 구조 생성 → $pkgInit"
     } else {
         Write-OpalWarn 'dashboard/backend 없음 — BE 배포 스킵'
+    }
+
+    # ── console.config.json 자동 생성/갱신 (install_dashboard() console scan 연동 이식, 057) ──
+    # mac: opal-cli console scan(bash find + python3 머지)의 PowerShell 네이티브 등가.
+    # .opal\AGENT.md 마커 탐색 → 프로젝트 부모 디렉터리를 scan_roots 로 병합(보존+추가+dedup, prune 없음).
+    # 실패해도 install 을 중단하지 않는다(try/catch 격리 — H-7 windows 등가, TS-011/TS-014).
+    try {
+        $scanConfigPath = Join-Path $OpalHome 'console.config.json'
+        $scanBase       = $env:USERPROFILE
+        $scanMaxDepth   = 5
+        $scanExclude    = @('node_modules', '.git', '.venv', '__pycache__', '.DS_Store')
+
+        # AGENT.md 마커 탐색 (console.sh scan 의 find '*/.opal/AGENT.md' 규칙과 동일 의미).
+        # Get-ChildItem 은 bash find -prune 처럼 사전 가지치기를 지원하지 않으므로,
+        # 탐색 후 경로 문자열 필터링으로 exclude 를 등가 적용한다(정확성 유지, 성능은 저하 — 코드 리뷰 수준).
+        $allMarkers = Get-ChildItem -Path $scanBase -Recurse -Depth $scanMaxDepth -Filter 'AGENT.md' -File -ErrorAction SilentlyContinue
+        $discoveredRoots = New-Object System.Collections.Generic.List[string]
+        foreach ($marker in $allMarkers) {
+            $opalDir = $marker.DirectoryName
+            if ((Split-Path $opalDir -Leaf) -ne '.opal') { continue }
+
+            $excluded = $false
+            foreach ($ex in $scanExclude) {
+                if ($opalDir -match [regex]::Escape("\$ex\")) { $excluded = $true; break }
+            }
+            if ($excluded) { continue }
+
+            # OPAL 홈 자체가 마커로 잡히면 discovery 에서 제외 (H-2 windows 등가 — $OpalHome\AGENT.md 오탐 방지)
+            if ($opalDir -eq $OpalHome) { continue }
+
+            $projectDir = Split-Path $opalDir -Parent
+            $scanRoot   = Split-Path $projectDir -Parent
+            if (-not $discoveredRoots.Contains($scanRoot)) {
+                [void]$discoveredRoots.Add($scanRoot)
+            }
+        }
+
+        # 기존 console.config.json 로드(있으면 ConvertFrom-Json) → scan_roots 머지 → ConvertTo-Json 재기록.
+        # 파싱 실패(손상 JSON) 시 예외가 catch 로 전파되어 write 하지 않는다.
+        $scanExisted = Test-Path $scanConfigPath
+        $scanData = [ordered]@{}
+        if ($scanExisted) {
+            $scanRaw = Get-Content -Path $scanConfigPath -Raw
+            if (-not [string]::IsNullOrWhiteSpace($scanRaw)) {
+                $scanParsed = $scanRaw | ConvertFrom-Json
+                foreach ($prop in $scanParsed.PSObject.Properties) { $scanData[$prop.Name] = $prop.Value }
+            }
+        }
+
+        $existingRoots = @()
+        if ($scanData.Contains('scan_roots')) { $existingRoots = @($scanData['scan_roots']) }
+
+        # 보존 + 추가 + dedup (--prune 미적용 — install 연동 기본, C-3 등가)
+        $mergedRoots = New-Object System.Collections.Generic.List[string]
+        foreach ($r in $existingRoots) { if (-not $mergedRoots.Contains($r)) { [void]$mergedRoots.Add($r) } }
+        foreach ($r in $discoveredRoots) { if (-not $mergedRoots.Contains($r)) { [void]$mergedRoots.Add($r) } }
+        $scanData['scan_roots'] = @($mergedRoots)
+
+        if (-not $scanExisted) {
+            # 신규 생성 시에만 기본값 기록 (config.py DEFAULT_SCAN_DEPTH/DEFAULT_EXCLUDE 와 동일)
+            if (-not $scanData.Contains('scan_depth')) { $scanData['scan_depth'] = 2 }
+            if (-not $scanData.Contains('exclude')) { $scanData['exclude'] = $scanExclude }
+        }
+
+        ($scanData | ConvertTo-Json -Depth 5) | Set-Content -Path $scanConfigPath -Encoding utf8
+        Write-OpalOk "console.config.json 갱신 완료 → $scanConfigPath"
+    } catch {
+        Write-OpalWarn "console scan 실패 — 프로젝트 자동 탐색을 건너뜁니다 (수동: opal-cli console scan <경로>): $_"
     }
 
     Write-Host ''
