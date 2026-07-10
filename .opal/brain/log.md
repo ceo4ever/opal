@@ -162,10 +162,15 @@
 - 신규: [[pages/entity/git-sync-tool.md]], [[pages/entity/opal-workspace-sync.md]], [[pages/concept/skill-registry-index-registration-required-for-discovery.md]], [[pages/concept/fallback-approval-detached-head-precedence.md]]
 - 출처: task:052
 
+## [2026-07-10] ingest | CLOSE ingest — 태스크 054 산출물 소유자 호칭 identity 통일: concept 2건 신규 (오염 차단 원칙 + state-tool write-time 치환 메커니즘)
 - 신규: [[owner-honorific-contamination-prevention]], [[state-tool-owner-name-write-time-substitution]]
 - 출처: task:054
 
 ## [2026-07-10] ingest | CLOSE ingest — 태스크 053 brain related 링크필드 정비 + validate 강화
 - 신규: [[pages/concept/enforce-rule-legacy-data-surfacing-lesson.md]]
 - 출처: task:053
+
+## [2026-07-10] ingest | CLOSE ingest — 태스크 055 opal-cli install 서브커맨드 완전 제거
+- 신규: [[pages/concept/opal-cli-install-subcommand-removal.md]]
+- 출처: task:055
 

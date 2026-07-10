@@ -7,7 +7,7 @@
 #   opal-cli --version
 #   opal-cli --help
 #
-# Subcommands: install | update | doctor | uninstall | mcp | console
+# Subcommands: update | doctor | uninstall | mcp | console
 #
 # 변경이력:
 #   v1.0 2026-05-08 11:00 초기 구현 — install/update/doctor/uninstall/mcp 디스패처 (139)
@@ -15,6 +15,7 @@
 #   v1.0.1 2026-05-09 14:15 KST: BASH_SOURCE symlink chain 해석 보강 — ~/.opal/bin/opal-cli symlink 호출 시 lib/ 검색 실패 fix (139 추가작업)
 #   v1.0.2 2026-05-09 17:45 KST: 색상 변수 $'...' 패턴 적용 — cat heredoc usage()/lib에서 \033[1m 리터럴 노출 fix (139 추가작업)
 #   v1.0.3 2026-05-09 22:35 KST: --version이 ~/.opal/VERSION(framework 버전) 표시. OPAL_CLI_VERSION 하드코딩 폐기 — CLI 진입점 자체 버전과 framework 버전 통일 (139 추가작업)
+#   v1.2 2026-07-10 install 서브커맨드 완전 제거 — dispatch/help/header/unknown 정리 + lib/install.sh 삭제 (055)
 #
 
 set -euo pipefail
@@ -60,7 +61,6 @@ ${BOLD}사용법:${NC}
   opal-cli --help
 
 ${BOLD}서브커맨드:${NC}
-  install               OPAL 설치 (one-liner 외 수동 진입점)
   update [--to vX.Y]    업데이트 (사용자 데이터 보존)
   doctor                환경 진단 (의존성·경로·MCP·부트스트래퍼)
   uninstall             OPAL 제거 (~/.opal + 부트스트래퍼 마커)
@@ -72,7 +72,6 @@ ${BOLD}옵션:${NC}
   --help, -h            이 도움말 출력
 
 ${BOLD}예시:${NC}
-  opal-cli install
   opal-cli update
   opal-cli update --to v0.2
   opal-cli doctor
@@ -103,7 +102,7 @@ dispatch() {
                 fw_version="$(tr -d '[:space:]' < "$opal_home/VERSION")"
                 echo "opal-cli $fw_version"
             else
-                echo "opal-cli (unknown — run install or update first)"
+                echo "opal-cli (미설치 — 원라이너로 설치: curl -fsSL https://raw.githubusercontent.com/ceo4ever/opal/main/scripts/install.sh | bash)"
             fi
             exit 0
             ;;
@@ -111,7 +110,7 @@ dispatch() {
             usage
             exit 0
             ;;
-        install|update|doctor|uninstall|mcp|console)
+        update|doctor|uninstall|mcp|console)
             local lib_file="$LIB_DIR/${subcommand}.sh"
             if [[ ! -f "$lib_file" ]]; then
                 error "lib/${subcommand}.sh 파일을 찾을 수 없습니다: $lib_file"

@@ -10,6 +10,7 @@
 #
 # 변경이력:
 #   v1.0 2026-05-08 11:00 초기 구현 — doctor/run.sh 위임 (139)
+#   v1.1 2026-07-10 doctor 도구 누락 안내를 opal-cli update(재배포)로 교체 — install 서브커맨드 제거에 정합 (055)
 #
 
 # ─── doctor 서브커맨드 ────────────────────────────────────────
@@ -48,8 +49,8 @@ EOF
 
     if [[ ! -f "$doctor_run" ]]; then
         error "doctor 도구를 찾을 수 없습니다: $doctor_run"
-        info "OPAL을 재설치하면 doctor 도구가 포함됩니다:"
-        info "  opal-cli install"
+        info "OPAL을 최신 배포본으로 갱신하면 doctor 도구가 포함됩니다:"
+        info "  opal-cli update"
         return 1
     fi
 

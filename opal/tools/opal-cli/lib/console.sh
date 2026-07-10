@@ -19,6 +19,7 @@
 # 변경이력:
 #   v1.0 2026-06-15 신규 구현 — console start/stop/status/open 서브커맨드 (021)
 #   v1.1 2026-06-15 [fix] --app-dir 를 dashboard-server 로 변경 + app 경로 dashboard.backend.main:app (021)
+#   v1.2 2026-07-10 컴포넌트 누락·전제 안내를 opal-cli update(재배포)로 교체 — install 서브커맨드 제거에 정합 (055)
 #
 
 # ─── console 서브커맨드 ───────────────────────────────────────
@@ -44,13 +45,13 @@ cmd_console() {
 
             if [[ ! -f "$venv_uvicorn" ]]; then
                 error "uvicorn을 찾을 수 없습니다: $venv_uvicorn"
-                error "opal-cli install 을 먼저 실행하세요."
+                error "opal-cli update 로 최신 배포본을 재배포하세요."
                 exit 1
             fi
 
             if [[ ! -d "$dashboard_pkg" ]]; then
                 error "dashboard-server/dashboard/backend 를 찾을 수 없습니다: $dashboard_pkg"
-                error "opal-cli install 을 먼저 실행하세요."
+                error "opal-cli update 로 최신 배포본을 재배포하세요."
                 exit 1
             fi
 
@@ -120,7 +121,7 @@ OPAL Console 대시보드 (포트 7823) 관리 명령어입니다.
   opal-cli console open
   opal-cli console stop
 
-전제: opal-cli install 실행 후 사용 가능합니다.
+전제: opal-cli update 로 대시보드 배포본(dashboard-server·venv) 반영 후 사용 가능합니다.
 EOF
             ;;
 

@@ -306,7 +306,7 @@ OPAL이 동작·배포 시 의존하는 외부 자원이다. 신규/변경 시 �
 | 채널 | 단계 | 상태 | 비고 |
 |------|------|------|------|
 | GitHub Releases | 1차 | **현행** | 태그 기반 tarball + sha256sums.txt + `actions/attest-build-provenance@v2` |
-| `opal-cli` CLI | 1차 | **현행** | `install`/`update`/`doctor`/`uninstall`/`mcp`/`console` 단일 진입점 (`~/.opal/bin/opal-cli`) |
+| `opal-cli` CLI | 1차 | **현행** | `update`/`doctor`/`uninstall`/`mcp`/`console` 단일 진입점 (`~/.opal/bin/opal-cli`) — 신규 설치는 One-liner installer |
 | One-liner installer | 1차 | **현행** | `curl \| bash`(mac/linux) / `iex (irm)`(Windows) 진입점 (`scripts/install.sh`, `scripts/install.ps1`) |
 | Homebrew tap | 2차 | 예정 | macOS 사용자 대상 `brew install opal-cli` (명칭은 별도 결정) |
 | npm 패키지 | 후속 | 예정 | cross-platform 통합 |
@@ -383,3 +383,4 @@ opal/                                    ← 이 저장소
 | 2026-06-18 | opal-orchestrator 잔존 행 2곳 삭제 (폴더·레지스트리 항목 부재 — dangling. Task 029) |
 | 2026-06-30 | 부트스트랩 진입 모델 2-tier 절 추가 — 비서(Lite·전역 상시)/PM(Full·`.opal/AGENT.md` 존재 시 승격) 분리. opt-in 모델·`//opi` 불변식·전역 비서 유지 (Task 049) |
 | 2026-07-02 | 부트스트랩 진입 모델에 첫 줄 마커 3단 스킵 사다리 추가 — `[ASSISTANT]` 마커 신설로 headless(claude -p) 호출을 비서 tier(Phase A)로 캡(PM tier 승격 억제). 첫 소비자 opbr_adapter (Task 051) |
+| 2026-07-10 | 배포 채널 표 `opal-cli` CLI 서브커맨드 목록에서 install 제거 — install 서브커맨드 완전 제거에 정합(신규 설치는 One-liner installer, 갱신은 update) (Task 055) |

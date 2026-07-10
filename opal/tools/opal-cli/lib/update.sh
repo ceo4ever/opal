@@ -21,6 +21,7 @@
 #   v1.0.3 2026-05-09 22:00 KST: /releases/latest 실패 시 /tags?per_page=1 폴백 + tarball URL을 archive/refs/tags로 변경 (install.sh v1.2와 정합, release 자산 미생성 케이스 호환) (139 추가작업)
 #   v1.0.4 2026-05-10 21:00 KST: verify_checksum 강화 — release tag + sha256sums.txt 부재 시 prompt/거부 + main UNVERIFIED banner (GC-001, R-2) (144)
 #   v1.0.5 2026-06-29 15:24 KST: 추출 후 extract_dir/VERSION 각인값으로 version override — tarball VERSION 우선, API/main 폴백 강등 (048)
+#   v1.0.6 2026-07-10 KST: 미설치 감지 시 안내를 신규 설치 원라이너로 교체 — install 서브커맨드 제거에 따른 순환 안내 방지 (055)
 #
 
 # ─── update 서브커맨드 ────────────────────────────────────────
@@ -144,7 +145,8 @@ cmd_update() {
     # 사전 점검
     if [[ ! -d "$opal_home" ]]; then
         error "OPAL이 설치되어 있지 않습니다: $opal_home"
-        info "먼저 opal-cli install 을 실행하세요."
+        info "신규 설치: curl -fsSL https://raw.githubusercontent.com/ceo4ever/opal/main/scripts/install.sh | bash"
+        info "  (Windows PowerShell) iex (irm https://raw.githubusercontent.com/ceo4ever/opal/main/scripts/install.ps1)"
         return 1
     fi
 

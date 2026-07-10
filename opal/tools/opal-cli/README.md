@@ -1,7 +1,7 @@
 # opal-cli — OPAL AI Framework CLI
 
 `opal-cli`는 OPAL AI Framework를 관리하는 단일 진입점 CLI 도구다.
-설치, 업데이트, 진단, 제거, MCP 관리를 서브커맨드로 제공한다.
+업데이트, 진단, 제거, MCP 관리를 서브커맨드로 제공한다.
 
 > **명칭**: `opal-cli` (Homebrew core `opal` = opalrb 충돌 회피 — TASK D1)
 > **레포**: `https://github.com/ceo4ever/opal` (TASK D2)
@@ -23,7 +23,6 @@ PATH에 `~/.opal/bin`이 등록되어야 `opal-cli` 명령이 동작한다.
 
 | 서브커맨드 | 설명 |
 |-----------|------|
-| `install` | OPAL 설치 또는 재설치 |
 | `update [--to vX.Y]` | 최신(또는 지정) 버전으로 업데이트 |
 | `doctor` | 환경 진단 (의존성·경로·MCP·부트스트래퍼) |
 | `uninstall [--yes]` | OPAL 완전 제거 |
@@ -43,9 +42,6 @@ PATH에 `~/.opal/bin`이 등록되어야 `opal-cli` 명령이 동작한다.
 ## 사용 예시
 
 ```bash
-# 설치 (레포 클론 후)
-opal-cli install
-
 # 최신 버전으로 업데이트
 opal-cli update
 
@@ -146,7 +142,6 @@ opal-cli --version
 opal/tools/opal-cli/
 ├── run.sh              진입점 디스패처
 ├── lib/
-│   ├── install.sh      install 서브커맨드
 │   ├── update.sh       update 서브커맨드 (--to vX.Y, 사용자 데이터 보존)
 │   ├── doctor.sh       doctor 서브커맨드 (~/.opal/tools/doctor/run.sh 위임)
 │   ├── uninstall.sh    uninstall 서브커맨드 (~/.opal 제거 + 마커 회수)
@@ -161,3 +156,4 @@ opal/tools/opal-cli/
 | 버전 | 일시 | 변경내용 |
 |------|------|---------|
 | v1.0 | 2026-05-08 11:00 | 초기 구현 — run.sh 디스패처 + 5개 서브커맨드 (install/update/doctor/uninstall/mcp) (139) |
+| v1.1 | 2026-07-10 10:00 | install 서브커맨드 제거 — dispatch/help/문서 정리 + lib/install.sh 삭제 (055) |

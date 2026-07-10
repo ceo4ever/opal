@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-07-10 14:11
+> 갱신: 2026-07-10 15:42
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -87,6 +87,7 @@
 - [[opal-brain-design-proposal]] — OPAL Project Brain 설계 제안서 #brain #design #llm-wiki #ingest #index
 - [[opal-brain-not-pilot-decision]] — opal-brain은 pilot이 아니다 — 리네임 철회 결정 #opal-brain #skill-naming #pilot #operator #architecture
 - [[opal-brain-system]] — OPAL Project Brain 시스템 #knowledge #architecture #wiki
+- [[opal-cli-install-subcommand-removal]] — opal-cli install 서브커맨드 완전 제거 — 컨텍스트별 리다이렉트 원칙 #install #opal-cli #deploy #ux
 - [[opal-conventions]] — OPAL 코드 컨벤션 #convention #naming #commit #guard #state
 - [[opal-pm-promotion-gate]] — PM 승격 게이트 — 프로젝트 초기화 신호 존재 조건 #bootstrap #pm-gate #opi #2tier #project-level
 - [[opal-principles-constitution]] — OPAL Principles 헌법 신설 + 테스트 하네스 집행 강화 #principles #constitution #testing #framework #task
@@ -99,6 +100,7 @@
 - [[oppd-prd-trd-task-folder-promote]] — oppd PRD/TRD 태스크폴더 작성 → docs 승격 프로세스 #oppd #prd #trd #wbs #promote #docs-ssot
 - [[opsdd-pipeline-ssot]] — opsdd 파이프라인 정본 — SKILL.md SSOT (7단계) #opsdd #pipeline #ssot #workflow
 - [[opwt-v4-output-system]] — opwt v4 산출물 체계 재설계 (PRD 8섹션 + interview 통합) #opwt #planning #output #framework #task
+- [[owner-honorific-contamination-prevention]] — 산출물 소유자 호칭 오염 차단 원칙 #state-tool #identity #harness #contamination #brain-ingest
 - [[page-type-dynamic-schema]] — 페이지 타입 동적화 — SCHEMA SSOT #architecture #brain #schema #dynamic-type
 - [[project-id-query-param-pattern]] — 절대경로 프로젝트 식별자를 query param으로 전달 #api #routing #url-design
 - [[read-based-gate-pattern]] — Read 기반 설정파일 게이트 패턴 #bootstrap #permission #gate #read-pattern #session-toggle
@@ -126,6 +128,7 @@
 - [[skill-registry-validate-extension]] — skill-registry validate 확장 — dangling error 격상 + unregistered 역방향 감지 #skill-registry #validate #drift-detection #tooling
 - [[skill-rename-validate-pattern]] — 스킬 rename 후 레지스트리 정합 검증 패턴 #skill-registry #validate #rename #drift-detection #lesson
 - [[state-tool-mock-guard-skill-false-positive]] — state-tool mock 가드 정규식 ↔ SKILL 표준 문구 false positive #state-tool #mock-guard #false-positive #skill #bug #framework
+- [[state-tool-owner-name-write-time-substitution]] — state-tool {owner_name} write-time 치환 메커니즘 #state-tool #identity #note #mechanism
 - [[strip-deploy-runtime-token-neutral]] — strip_deploy_md 런타임 토큰 영향 0 — 변경이력 trim 측정 정정 교훈 #deploy-pipeline #token #install #measurement #lesson
 - [[test-real-data-validation-lesson]] — TEST 실데이터 검증이 build-only 가 놓친 결함을 발견한다 #testing #lesson #test-strategy #real-data
 - [[test-scenario-pipeline-redesign]] — 테스트 시나리오 파이프라인 재설계 (2차원 매트릭스 + self-confirming 4분리) #testing #pipeline #framework #flow #task
