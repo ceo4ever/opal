@@ -36,7 +36,7 @@ OPAL은 2-레이어 아키텍처로 동작한다.
 │            │                                             │
 │            ▼                                             │
 │  ┌──────────────────────────────────────────────────┐   │
-│  │  서브에이전트 10개 (Agent 도구로 디스패치)           │   │
+│  │  서브에이전트 12개 (Agent 도구로 디스패치)           │   │
 │  │  ├─ opal-task-agent: 범용 워커 (폴백)              │   │
 │  │  ├─ opal-plan-agent: PLAN 단계 전문 (advanced)     │   │
 │  │  ├─ opal-fe-agent: FE EXECUTE 전문                 │   │
@@ -75,8 +75,8 @@ OPAL은 2-레이어 아키텍처로 동작한다.
 |----------|------|
 | `AGENT.md` | 에이전트 핵심 정의 (부트스트랩, 행동 규칙, PM 역할) |
 | `identity.md` | 에이전트 정체성 (이름, 성격, 톤) |
-| `skills/` | 독립 스킬 5개 + OPAL 스킬 24개 |
-| `agents/` | 서브에이전트 10개 (전문 6 + 범용 4) |
+| `skills/` | 독립 스킬 5개 + OPAL 스킬 25개 |
+| `agents/` | 서브에이전트 12개 (전문 7 + 범용 4 + 도구성 1) |
 | `community-skills/` | 커뮤니티 스킬 — `npx skills` (vercel-labs/skills)로 사용자가 온디맨드 fetch |
 | `references/` | 레지스트리 (skills.md, agents.md, mcps.md, opal-harness.md, opal-doc-standard.md, tools.md) |
 | `tools/` | CLI 도구 (skill-registry/, xlsx-tool/, tool-scan/ — capability 검색·live 사용법, memory-tool/ — 메모리 인덱스·히스토리 결정론적 집행·docs/brain 졸업 워크플로우, check-env.js, requirements.txt) |
@@ -112,6 +112,7 @@ OPAL은 2-레이어 아키텍처로 동작한다.
 | | opal-pilot-project (opp) | 프로젝트 범용: TASK → PLAN → EXECUTE |
 | | opal-pilot-project-dev (oppd) | 프로젝트 개발 라이프사이클: opwt → WBS → opd/opds |
 | | opal-pilot-sdd (opsdd) | SDD 기반 오케스트레이터: SPEC → SPEC-VERIFY → SPEC-PLAN → TASKS → TASKS-VERIFY → EXECUTE-LOOP → DONE |
+| | opal-pilot-project-loop (oppl) | 루프 기반 프로젝트 오케스트레이터: 설계 루프(인터뷰→PRD→TRD→CONTRACT→백로그) → 실행 루프(태스크 반복, 종료조건 5종·3-SSOT tool-gated) |
 | **dev 단계** | op-dev-analysis | 코드베이스 분석 + 기술 컨텍스트 수집 |
 | | op-dev-plan | 구현 계획 (PLAN+TODO 통합) |
 | | op-dev-todo | 실행 체크리스트 확장 (Full Task 전용) |
@@ -165,6 +166,7 @@ OPAL은 2-레이어 아키텍처로 동작한다.
 | opal-db-agent | standard | PLAN, EXECUTE | DB | DB 모델 설계 + 마이그레이션 구현 |
 | opal-planning-agent | advanced | EXECUTE | 기획 | 서비스 기획 산출물 작성/관리 |
 | opal-test-agent | standard | TEST | 공통 | 테스트 전문 (BE/FE/E2E 모드) |
+| opal-evaluator-agent | advanced | 명세 리뷰 (oppl G/D6) | 평가 | 계약·설계 루브릭 심판 — CONTRACT.md 루브릭절 기준 구현 전 판정 (verdict-only·readonly) |
 
 ### 커뮤니티 스킬 (Community Skills)
 
@@ -263,8 +265,8 @@ opal/core/mcps/*    ──── install ─→  claude mcp add --scope user (Cl
 |------|-----|
 | 소스 | `{프로젝트}/dashboard/` (frontend: React+TS+Vite+shadcn / backend: FastAPI) |
 | 배포 | `~/.opal/dashboard-server/` (install이 FE 빌드+BE 복사, venv는 `~/.opal/.venv` 공유) |
-| 기동 | `opal-cli console {start\|stop\|status\|open}` (127.0.0.1:7823) |
-| 프로젝트 식별 | `.opal/AGENT.md` 마커 디스크 스캔 (`~/.opal/console.config.json` scan_roots/depth/exclude) |
+| 기동 | `opal-cli console {start\|stop\|status\|open\|scan}` (127.0.0.1:7823) |
+| 프로젝트 식별 | `.opal/AGENT.md` 마커 디스크 스캔 (`~/.opal/console.config.json` scan_roots/depth/exclude) — config는 `opal-cli console scan [기준경로...]`이 생성·머지 갱신(기존 roots 보존, `--prune` 옵트인)하며 install(`install_dashboard`)이 1회 자동 실행. `start`는 config 부재 시 scan 안내 출력 |
 | 원칙 | 읽기 전용(쓰기/편집은 2차) · 데이터 SSOT는 각 프로젝트 파일 · 데몬은 도구 오케스트레이터 |
 | 디자인 토큰 | 시그니처 3색(`--brand-primary/secondary/tertiary`)을 `:root` 1곳 전역 CSS 변수화 (교체 용이) |
 
@@ -337,13 +339,14 @@ opal/                                    ← 이 저장소
 │   │   ├── cmux-tool/                   cmux browser 래퍼 (run.sh) — 3모드(A/B/C) + user_owned 시그널
 │   │   ├── check-env.js                 Node.js 환경 체크
 │   │   └── requirements.txt             Python 의존성 (venv 관리)
-│   ├── skills/                          OPAL 스킬 (24개)
+│   ├── skills/                          OPAL 스킬 (25개)
 │   │   ├── opal-pilot-dev/              오케스트레이터: Full Task (opd)
 │   │   ├── opal-pilot-dev-short/        오케스트레이터: Short Task (opds)
 │   │   ├── opal-pilot-dev-wireframe/    오케스트레이터: Wireframe UI (opdw)
 │   │   ├── opal-pilot-write-tech/       오케스트레이터: Write-Tech (opwt)
 │   │   ├── opal-pilot-project/          오케스트레이터: Project (opp)
 │   │   ├── opal-pilot-project-dev/      오케스트레이터: Project Dev (oppd)
+│   │   ├── opal-pilot-project-loop/     오케스트레이터: Project Loop (oppl)
 │   │   ├── op-dev-{analysis,plan,todo,execute,test-scenario,qa,wireframe}/
 │   │   │                                dev 단계 스킬 (7개)
 │   │   ├── op-task{,-plan,-execute,-qa}/ 범용 단계 스킬 (4개)
@@ -352,13 +355,14 @@ opal/                                    ← 이 저장소
 │   │   ├── opal-skill-creator/          스킬 생성
 │   │   ├── opal-onboarding/             에이전트 온보딩
 │   │   └── opal-skill-manager/          스킬 관리
-│   ├── agents/                          OPAL 에이전트 (11개: 전문 6 + 범용 4 + 도구성 1)
+│   ├── agents/                          OPAL 에이전트 (12개: 전문 7 + 범용 4 + 도구성 1)
 │   │   ├── opal-plan-agent/             전문: PLAN 설계 (advanced)
 │   │   ├── opal-fe-agent/               전문: FE 구현
 │   │   ├── opal-be-agent/               전문: BE 구현
 │   │   ├── opal-db-agent/               전문: DB 설계+구현
 │   │   ├── opal-planning-agent/         전문: 서비스 기획 (advanced)
 │   │   ├── opal-test-agent/             전문: 테스트 (도메인별 모드)
+│   │   ├── opal-evaluator-agent/        전문: 명세 심판 (advanced, verdict-only)
 │   │   ├── opal-task-agent/             범용 워커 (폴백)
 │   │   ├── opal-task-qa-agent/          범용 QA 워커
 │   │   ├── opal-task-action-agent/      액션 에이전트 (oppd)

@@ -1,7 +1,7 @@
 {
   "$schema": "opal-skills-registry-v1",
-  "version": "3.7.0",
-  "updated_at": "2026-06-21",
+  "version": "3.8.0",
+  "updated_at": "2026-07-10",
   "groups": {
     "opal-pilot": [
       {
@@ -144,6 +144,22 @@
           "{project}/.opal/skills/opal-pilot-project-dev/SKILL.md",
           "~/.opal/skills/opal-pilot-project-dev/SKILL.md"
         ]
+      },
+      {
+        "name": "opal-pilot-project-loop",
+        "alias": "oppl",
+        "description": "루프 기반 프로젝트 오케스트레이터 (2-루프 수렴: 설계 루프 → 실행 루프, 종료조건 제어)",
+        "triggers": [
+          "^opal-pilot-project-loop$",
+          "^oppl$",
+          "(?i)(루프\\s*오케스트레이터|수렴\\s*루프|프로젝트\\s*루프)"
+        ],
+        "paths": [
+          "{project}/.opal/skills/opal-pilot-project-loop/SKILL.md",
+          "~/.opal/skills/opal-pilot-project-loop/SKILL.md"
+        ],
+        "domain": "dev",
+        "pipeline": "설계 루프(인터뷰→PRD→TRD→CONTRACT→BACKLOG) → 실행 루프(태스크 반복)"
       }
     ],
     "op-dev": [
@@ -722,6 +738,17 @@
     ]
   },
   "changelog": [
+    {
+      "version": "3.8.0",
+      "date": "2026-07-10",
+      "task": "056",
+      "changes": [
+        "opal-pilot-project-loop 신규 등록 (opal-pilot 그룹) — alias 'oppl', 루프 기반 프로젝트 오케스트레이터 (2-루프 수렴: 설계 루프 → 실행 루프, 종료조건 제어)",
+        "triggers: ^opal-pilot-project-loop$ / ^oppl$ / (?i)(루프\\s*오케스트레이터|수렴\\s*루프|프로젝트\\s*루프)",
+        "paths: {project}/.opal/skills/opal-pilot-project-loop/SKILL.md, ~/.opal/skills/opal-pilot-project-loop/SKILL.md",
+        "기존 opp/opd/opds/oppd/opsdd alias·트리거 불변 (추가만, 회귀 없음)"
+      ]
+    },
     {
       "version": "3.7.0",
       "date": "2026-06-21",

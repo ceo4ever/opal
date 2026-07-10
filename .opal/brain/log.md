@@ -174,3 +174,7 @@
 - 신규: [[pages/concept/opal-cli-install-subcommand-removal.md]]
 - 출처: task:055
 
+## [2026-07-10] ingest | CLOSE ingest — 태스크 056 opal-pilot-project-loop(oppl) 루프 오케스트레이터 신설
+- 신규: [[pages/concept/oppl-two-loop-orchestrator.md]], [[pages/entity/opal-evaluator-agent.md]], [[pages/concept/oppl-3-ssot-tool-gated-separation.md]], [[pages/concept/oppl-scenario-red-confirmed-gap.md]]
+- 출처: task:056
+

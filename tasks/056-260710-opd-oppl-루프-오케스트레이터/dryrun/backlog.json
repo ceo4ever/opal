@@ -1,0 +1,25 @@
+{
+  "schema_version": "1.0",
+  "project_title": "hello-cli",
+  "mode": "agentic",
+  "created_at": "2026-07-10 17:01",
+  "updated_at": "2026-07-10 17:06",
+  "goal": "hello.sh 수용기준 전건 GREEN",
+  "tasks": [
+    {
+      "id": "T01",
+      "title": "hello.sh 구현",
+      "slice": "인사 출력 수직 슬라이스",
+      "acceptance_criteria": [
+        "bash src/hello.sh World가 'Hello, World!' 출력+exit 0"
+      ],
+      "area": "공통",
+      "priority": "P0",
+      "depends": [],
+      "status": "done",
+      "parallel_group": null,
+      "created_at": "2026-07-10 17:01",
+      "done_at": "2026-07-10 17:06"
+    }
+  ]
+}

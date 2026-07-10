@@ -243,10 +243,11 @@ OPAL 도구는 모두 `~/.opal/tools/{tool-name}/run.sh` 래퍼를 통해 호출
 | xlsx-tool | xlsx 읽기/쓰기/검색 | xlsx 파일 처리 요청 |
 | state-tool | 파이프라인 현황판 JSON SSOT 관리 (9개 서브 명령: `init`/`show`/`advance`/`mark`/`block`/`validate`/`add-row`/`status`/`gate-pass`) | TASK 단계 시작 / Gate 직후 / 추가작업 진입 |
 | brain-tool | 프로젝트 브레인 지식 위키 결정론적 집행 — 8 서브명령 `init`/`add-page`/`index`/`log`/`search`/`sync-header`/`lint`/`validate` | `//opbr` 또는 brain 참조 시 |
-| test-tool | 테스트 단계별 도구 결정론적 집행 — 4서브명령 resolve/check/unit/integration | EXECUTE/TEST 단계 진입 시 |
+| test-tool | 테스트 단계별 도구 결정론적 집행 — 9서브명령 resolve/check/unit/integration + scenario-init/lock/mark/status/red (+scenario-red — RED 증거 tool-gated red_confirmed 갱신) | EXECUTE/TEST 단계 진입 시 |
 | code-scan | 코드 `@header` 메타블록 스캔 — 도메인/레이어/exports/의존 조회 | 코드 구조·위치 파악 시 |
 | cmux-tool | cmux browser 자동화 래퍼 — 12+1 서브명령(웹 크롤링·스냅샷·스크린샷·E2E) | 브라우저/localhost 접근·웹 테스트 시 |
 | tool-scan | 도구·MCP·스킬 상황 검색 + live 사용법 확인 — 5서브명령 list/which/usage/resolve/check | 도구 선택·정확한 사용법 확인 시 |
+| backlog-tool | backlog.json SSOT 관리 — 7 서브명령 init/add-task/select-next/mark/update-task/done-check/show (oppl 백로그) | oppl 루프(백로그 생성·태스크 선택·종료 판정) 시 |
 | memory-tool | 프로젝트 메모리 인덱스·히스토리 결정론적 집행 — 9서브명령 init/append/update/promote/prune/migrate/show/review/delete. 메모리→docs/brain 졸업 워크플로우·히스토리 FIFO5·요약 길이캡·라이프사이클·마커 직접편집 금지·매 변경 후 자가검토(review)·dead/superseded 정리(delete 무손실 가드) | 메모리 등록·정리·이관 시 |
 | git-sync-tool | 워크스페이스 git 저장소 일괄 동기화 — `sync <경로>` 단일 서브명령. 직속 자식 1단계 순회 + clean/ff-only pull, 5종 skip 판정(dirty/diverged/detached/no-upstream/fetch-failed) 후 JSON 반환. 문제 저장소 자율 조치 없음(skip·보고). git 2.22+ | 워크스페이스 여러 저장소 최신화 시 (opal-workspace-sync 스킬이 호출) |
 
@@ -309,3 +310,6 @@ OPAL 도구는 모두 `~/.opal/tools/{tool-name}/run.sh` 래퍼를 통해 호출
 | v5.7 | 2026-06-23 | §9 등록 도구 표에 test-tool 행 추가 — 테스트 단계별 도구 결정론적 집행 4서브명령 resolve/check/unit/integration, EXECUTE/TEST 단계 진입 시 (039) |
 | v5.8 | 2026-06-26 | §9 등록 도구 표에 memory-tool 행 추가 — 프로젝트 메모리 인덱스·히스토리 결정론적 집행 9서브명령(init/append/update/promote/prune/migrate/show/review/delete). delete=dead/superseded 무손실 정리는 045 추가작업 (045) |
 | v5.9 | 2026-07-02 | §9 등록 도구 표에 git-sync-tool 행 추가 — 워크스페이스 git 저장소 일괄 동기화(sync 서브명령, 직속 자식 순회 + ff-only pull + 5종 skip 판정). opal-workspace-sync 스킬이 호출 (052) |
+| v6.0 | 2026-07-10 | §9 등록 도구 표에 backlog-tool 행 추가 — backlog.json SSOT 관리 6서브명령 init/add-task/select-next/mark/done-check/show, oppl 루프(백로그 생성·태스크 선택·종료 판정) 시. test-tool 행 설명 현행화 — 4서브명령 → 8서브명령 resolve/check/unit/integration + scenario-init/lock/mark/status (056) |
+| v6.1 | 2026-07-10 | §9 등록 도구 표 test-tool 행 현행화 — 8서브명령 → 9서브명령(+scenario-red: RED 증거 tool-gated red_confirmed 갱신, enforce-don't-advise 보강) (056/ADD-1) |
+| v6.2 | 2026-07-10 | §9 backlog-tool 행 현행화 — 6 → 7 서브명령(+update-task: Evaluator 지적 반영용 필드 갱신, status는 mark 전용 유지) (056/ADD-3) |

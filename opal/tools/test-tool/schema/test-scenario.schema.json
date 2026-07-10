@@ -1,0 +1,83 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "OPAL test-scenario.json Schema",
+  "description": "test-tool scenario-* 4서브명령이 관리하는 태스크별 테스트 시나리오 SSOT. spec존(RED-first 동결 대상)과 result존(구현 후 판정 기록)을 분리한다. PLAN.md §3.2.2 (056/F-002).",
+  "type": "object",
+  "required": ["schema_version", "task_id", "locked", "created_at", "locked_at", "scenarios"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "1.0",
+      "description": "스키마 버전"
+    },
+    "task_id": {
+      "type": "string",
+      "description": "태스크 폴더명"
+    },
+    "locked": {
+      "type": "boolean",
+      "description": "scenario-lock 통과 여부 — true가 되면 spec존(red_confirmed 등)이 동결되고 scenario-mark가 허용된다"
+    },
+    "created_at": {
+      "type": "string",
+      "description": "test-scenario.json 최초 생성 시점 (KST ISO 8601)"
+    },
+    "locked_at": {
+      "type": ["string", "null"],
+      "description": "scenario-lock 통과 시점 (KST ISO 8601). locked==false면 null"
+    },
+    "scenarios": {
+      "type": "array",
+      "description": "시나리오 목록",
+      "items": {
+        "type": "object",
+        "required": ["id", "acceptance_ref", "type", "expected", "red_confirmed", "red_evidence", "red_at", "result", "evidence", "marked_at"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^S[0-9A-Za-z-]*$",
+            "description": "시나리오 id (예: S001, S1)"
+          },
+          "acceptance_ref": {
+            "type": ["string", "null"],
+            "description": "수용기준/계약 참조"
+          },
+          "type": {
+            "enum": ["unit", "integration", "contract", "regression", "e2e"],
+            "description": "시나리오 유형"
+          },
+          "expected": {
+            "type": ["string", "null"],
+            "description": "기대 결과 서술"
+          },
+          "red_confirmed": {
+            "type": "boolean",
+            "description": "spec존 — 구현 전 실패(RED) 확인 여부. scenario-lock 게이트 판단 기준(H-2). scenario-init 시드 입력과 무관하게 항상 false로 생성되며, scenario-red(RED 증거 tool-gated 갱신) 서브명령으로만 true가 될 수 있다(056/ADD-1)"
+          },
+          "red_evidence": {
+            "type": ["string", "null"],
+            "description": "spec존 — scenario-red로 기록되는 RED 실패 증거(로그/명령 출력 요약). red_confirmed=false면 null(056/ADD-1)"
+          },
+          "red_at": {
+            "type": ["string", "null"],
+            "description": "spec존 — scenario-red 기록 시점 (KST ISO 8601). red_confirmed=false면 null(056/ADD-1)"
+          },
+          "result": {
+            "type": ["string", "null"],
+            "enum": ["pass", "fail", null],
+            "description": "result존 — scenario-mark로 기록되는 판정 결과. locked 전에는 null"
+          },
+          "evidence": {
+            "type": ["string", "null"],
+            "description": "result존 — 판정 근거(로그/명령 출력 요약 등)"
+          },
+          "marked_at": {
+            "type": ["string", "null"],
+            "description": "result존 — scenario-mark 기록 시점 (KST ISO 8601)"
+          }
+        }
+      }
+    }
+  }
+}

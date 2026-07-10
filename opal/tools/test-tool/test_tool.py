@@ -37,6 +37,7 @@ sys.path.insert(0, str(_TOOL_DIR))
 from lib.resolver import resolve_test_tools
 from lib.runner import run_check, run_unit_layers
 from lib.e2e_adapter import run_integration as _run_integration
+from lib.scenario import add_scenario_subparsers, SCENARIO_DISPATCH
 
 # ─────────────────────────────────────────────────────────────────────────────
 # ERROR_CODES 카탈로그 (SSOT) — 모든 error 응답 값은 이 키를 사용한다.
@@ -223,6 +224,9 @@ def _build_parser() -> argparse.ArgumentParser:
     p_integration.add_argument("--url", metavar="URL", help="SUT URL (dev서버/localhost)")
     p_integration.add_argument("--project-root", metavar="PATH", help="프로젝트 루트 경로")
 
+    # scenario-init / scenario-lock / scenario-mark / scenario-status (lib/scenario.py로 격리)
+    add_scenario_subparsers(subparsers)
+
     return parser
 
 
@@ -239,6 +243,7 @@ def main() -> None:
         "check": cmd_check,
         "unit": cmd_unit,
         "integration": cmd_integration,
+        **SCENARIO_DISPATCH,
     }
 
     handler = dispatch.get(args.subcommand)

@@ -1170,6 +1170,13 @@ install_opal() {
             success "git-sync-tool run.sh 실행 권한 설정"
         fi
 
+        # ── backlog-tool 실행 권한 (056) ──
+        local backlog_run="$opal_home/tools/backlog-tool/run.sh"
+        if [[ -f "$backlog_run" ]]; then
+            chmod +x "$backlog_run"
+            success "backlog-tool run.sh 실행 권한 설정"
+        fi
+
         # cmux 의존성 안내 (정보성 — 설치 강제 없음, silent fallback 정책)
         if ! command -v cmux &>/dev/null; then
             info "cmux 미감지 — cmux-tool 사용 시 https://cmux.com/ 또는 https://github.com/manaflow-ai/cmux 에서 설치 필요"

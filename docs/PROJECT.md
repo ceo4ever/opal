@@ -96,6 +96,19 @@ llm-wiki 사상을 융합한 프로젝트 지식 위키 — 프로젝트의 WHY�
 
 > `//erm` (erd-modeler) alias는 `op-data-model` 단독 호출로 하위호환됩니다. 신규 데이터 설계 작업은 `//opdd`를 사용하세요.
 
+## 주요 컴포넌트 (Project Loop 파이프라인)
+
+루프 기반 프로젝트 오케스트레이션 — 선형 Phase(oppd) 대신 종료조건 있는 2-루프 수렴 구조로 규모 있는 프로젝트를 완주 (2026-07 신설, 태스크 056. oppd 병행 유지, 검증 후 deprecate 검토).
+
+| 컴포넌트 | 약어 | 유형 | 설명 |
+|----------|------|------|------|
+| `opal-pilot-project-loop` | oppl | 오케스트레이터 | 2-루프 수렴: 설계 루프(인터뷰→PRD→TRD→CONTRACT→백로그) → 실행 루프(태스크 반복). 종료조건 5종(반복상한·예산·무진전·목표체크·사람게이트) |
+| `opal-evaluator-agent` | - | 서브에이전트 | 명세 심판 전담 — CONTRACT 루브릭절 기준 구현 전 판정(verdict-only·readonly). 검증 2원화의 전단(후단은 opal-test-agent) |
+| `backlog-tool` | - | 도구 | backlog.json SSOT 관리 CLI (6서브명령 init/add-task/select-next/mark/done-check/show, BACKLOG.md 자동 렌더) |
+| `test-tool scenario-*` | - | 도구 확장 | test-scenario.json SSOT — RED-first 동결 게이트 (scenario-init/lock/mark/status) |
+
+> 3-SSOT tool-gated: backlog.json(backlog-tool) · state.json(state-tool) · test-scenario.json(test-tool) — 사람 뷰는 자동 렌더, 손편집 금지.
+
 ## 주요 컴포넌트 (OPAL Console)
 
 로컬 OPAL 프로젝트를 한 웹 화면에서 조망하는 읽기 전용 관리 대시보드 (2026-06 신설, 태스크 021). 상세 구조: `docs/ARCHITECTURE.md §OPAL Console`.
@@ -104,7 +117,7 @@ llm-wiki 사상을 융합한 프로젝트 지식 위키 — 프로젝트의 WHY�
 |----------|------|------|
 | `dashboard/frontend` | FE 앱 | React+TS+Vite+shadcn/ui — 6개 화면(대시보드/프로젝트/태스크 칸반/메모리/환경/프로젝트 브레인) |
 | `dashboard/backend` | BE 데몬 | FastAPI — `.opal/AGENT.md` 마커 스캐너 + read-only 도구 어댑터 + 마크다운 파서 (127.0.0.1:7823) |
-| `opal-cli console` | CLI | 데몬 기동/관리 서브커맨드 (start/stop/status/open) |
+| `opal-cli console` | CLI | 데몬 기동/관리 서브커맨드 (start/stop/status/open/scan) — scan은 `console.config.json`(스캔 루트 설정)을 생성·머지 갱신하며 install이 1회 자동 실행 |
 
 > 소스는 `dashboard/`, 배포는 install 경유 `~/.opal/dashboard-server/`. 읽기 전용(쓰기/편집·브레인 화면은 2차). 시그니처 3색은 `:root` 전역 CSS 변수로 교체 용이.
 

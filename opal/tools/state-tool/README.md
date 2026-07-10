@@ -37,7 +37,7 @@
 
 ```bash
 ~/.opal/tools/state-tool/run.sh init <task-path> \
-  --skill <opp|opd|opds|opdw|opwt|opgc|oppd|opsdd> \
+  --skill <opp|opd|opds|opdw|opwt|opgc|oppd|opsdd|oppl> \
   --mode <interactive|semi-agentic|agentic> \
   [--task-title <text>] \
   [--next-action <text>] \
@@ -284,6 +284,7 @@
 | PLAN.md | `tasks/134-260501-opp-pipeline-state-tool/PLAN.md` | §2.1~§2.20 전체 설계 SSOT |
 | TASK.md | `tasks/134-260501-opp-pipeline-state-tool/TASK.md` | T-1~T-13 기술 결정 |
 | state.schema.json | `opal/tools/state-tool/schema/state.schema.json` | JSON Schema Draft-07 |
+| xlsx-tool 패턴 | `opal/tools/xlsx-tool/run.sh:1-12` | OPAL Tools 래퍼 패턴 |
 
 ## 변경이력
 
@@ -292,4 +293,5 @@
 | v1.0 | 2026-05-01 | (134) | 최초 작성 |
 | v1.1 | 2026-05-09 11:22 | (140) | 3-way 모드 지원: init --mode semi-agentic 추가, mark/validate semi-agentic 경계 게이트 문서화, 오류 #24/#25 추가 |
 | v1.2 | 2026-07-10 13:15 | (054) | `resolve_owner_placeholder()` 신설 — note/reason의 `{owner_name}` 플레이스홀더를 identity.md `owner_name`으로 write-time 치환(fail-safe: 부재/공란/파싱실패 시 원문 유지). init/advance/mark/block/add-row/status 6경로 적용 |
-| xlsx-tool 패턴 | `opal/tools/xlsx-tool/run.sh:1-12` | OPAL Tools 래퍼 패턴 |
+| v1.3 | 2026-07-10 16:33 | (056) | `init --skill` choices + state.schema.json `skill` enum에 `oppl` 추가 (opal-pilot-project-loop 등록, 스키마 신규 필드 없음) |
+| v1.4 | 2026-07-10 | (056 ADD-2) | 드리프트 정정 — state.schema.json `mode` enum에 `semi-agentic` 추가 (CLI `--mode` choices와 정합). 신규 필드 없음, `schema_version` 유지("1.0") |

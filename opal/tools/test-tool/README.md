@@ -1,6 +1,6 @@
 # test-tool
 
-> OPAL 테스트 단계별 도구 결정론적 집행기 — 4서브명령(resolve/check/unit/integration)
+> OPAL 테스트 단계별 도구 결정론적 집행기 — 4서브명령(resolve/check/unit/integration) + scenario-* 5서브명령(scenario-init/scenario-lock/scenario-mark/scenario-status/scenario-red)
 
 ## 개요
 
@@ -139,6 +139,103 @@ bash run.sh integration [--scope fe|be] [--url URL] [--project-root PATH]
 
 ---
 
+### `scenario-init`
+
+`test-scenario.json` 생성 (spec존, `locked=false`) — 태스크별 테스트 시나리오 SSOT.
+
+```bash
+bash run.sh scenario-init --task-path <PATH> [--scenarios <JSON배열>]
+```
+
+**출력 JSON**:
+```json
+{ "ok": true, "command": "scenario-init", "task_id": "056-dryrun", "scenarios_count": 2 }
+```
+
+**출력 JSON (red_confirmed 시드 입력 시)**:
+```json
+{ "ok": true, "command": "scenario-init", "task_id": "056-dryrun", "scenarios_count": 1, "warning": "red_confirmed seed ignored (forced false): ['S1'] — RED 증거는 scenario-red로만 기록할 수 있다(056/ADD-1)" }
+```
+
+**[MUST] red_confirmed 시드 무력화(056/ADD-1)**: `--scenarios` 입력에 `red_confirmed: true`가 있어도 항상 `false`로 강제 생성한다 — RED 미관찰 상태를 init 시드로 우회 선언하는 경로를 봉쇄한다. 시드 시도가 있었으면 응답에 `warning` 필드를 추가한다(무시하되 침묵하지 않음). `red_confirmed`는 오직 `scenario-red`로만 true가 될 수 있다.
+
+**exit code**: `0` / `scenario_spec_invalid_json(11)`
+
+---
+
+### `scenario-red`
+
+`red_confirmed`를 **RED 증거와 함께 tool-gated로 갱신**한다 — RED 실관찰 없이 `red_confirmed`를 선언하는 우회 경로를 봉쇄한다(enforce-don't-advise 보강, `.opal/brain/pages/concept/oppl-scenario-red-confirmed-gap.md`).
+
+```bash
+bash run.sh scenario-red --task-path <PATH> --id <S-ID> --evidence <RED 실패 출력 요약>
+```
+
+**출력 JSON**:
+```json
+{ "ok": true, "command": "scenario-red", "scenario_id": "S1", "red_confirmed": true, "red_at": "2026-07-10T17:09:00+09:00" }
+```
+
+**[MUST] `--evidence` 필수**: 인자 미전달 시 argparse가 즉시 거부한다(증거 없는 red_confirmed 갱신 자체를 불가능하게 만든다).  
+**[MUST] locked 이후 거부**: `locked==true`이면 `scenario_already_locked` 거부 — RED 확인은 항상 동결(`scenario-lock`) 이전에 완료되어야 한다.
+
+**exit code**: `0` / `scenario_not_initialized(10)` / `scenario_already_locked(12)`
+
+---
+
+### `scenario-lock`
+
+전 시나리오 `red_confirmed==true`일 때만 `locked=true` (RED-first 동결 게이트, self-confirming 방지).
+
+```bash
+bash run.sh scenario-lock --task-path <PATH>
+```
+
+**출력 JSON**:
+```json
+{ "ok": true, "command": "scenario-lock", "locked": true, "locked_at": "2026-07-10T16:36:00+09:00" }
+```
+
+**[MUST] RED-first 게이트**: 시나리오 중 하나라도 `red_confirmed==false`이면 거부한다 — 구현 전 실패 확인 없이 동결하면 self-confirming 테스트로 검증 게이트가 무력화된다.
+
+**exit code**: `0` / `scenario_not_initialized(10)` / `red_not_confirmed(8)`
+
+---
+
+### `scenario-mark`
+
+`locked==true` 이후에만 result존(`result`/`evidence`/`marked_at`) 기록을 허용한다.
+
+```bash
+bash run.sh scenario-mark --task-path <PATH> --id <S-ID> --result pass|fail [--evidence <문자열>]
+```
+
+**출력 JSON**:
+```json
+{ "ok": true, "command": "scenario-mark", "scenario_id": "S1", "result": "pass" }
+```
+
+**exit code**: `0` / `scenario_not_initialized(10)` / `scenario_not_locked(9)`
+
+---
+
+### `scenario-status`
+
+spec/result 요약 — RED 확인 수·통과율.
+
+```bash
+bash run.sh scenario-status --task-path <PATH>
+```
+
+**출력 JSON**:
+```json
+{ "ok": true, "command": "scenario-status", "locked": true, "total": 2, "red_confirmed": 2, "passed": 1, "failed": 0 }
+```
+
+**exit code**: `0` / `scenario_not_initialized(10)`
+
+---
+
 ## 에러 코드
 
 | 코드 | exit | 원인 | 처리 |
@@ -150,6 +247,13 @@ bash run.sh integration [--scope fe|be] [--url URL] [--project-root PATH]
 | `layer_failed` | 5 | unit 계층 stop-on-fail | 실패 계층 수정 후 재시도 |
 | `e2e_failed` | 6 | E2E 실패 (폴백도 실패) | SUT 상태·네트워크 확인 |
 | `escalation` | 7 | cmux 에스컬레이션 에러코드 (폴백 금지) | 에러코드별 원인 수정 |
+| `red_not_confirmed` | 8 | scenario-lock 시 red_confirmed 미충족 시나리오 존재 | 구현 전 실패(RED) 확인 후 재시도 |
+| `scenario_not_locked` | 9 | scenario-mark 호출 시점에 locked==false | scenario-lock 선행 후 재시도 |
+| `scenario_not_initialized` | 10 | test-scenario.json 부재 | scenario-init 선행 |
+| `scenario_spec_invalid_json` | 11 | scenario-init `--scenarios` JSON 파싱 실패 | JSON 문법 수정 후 재시도 |
+| `scenario_already_locked` | 12 | scenario-red 호출 시점에 locked==true (동결 후 spec존 변경 시도) | 잠금 전에 scenario-red 호출 필요 |
+
+> `scenario-*` 5서브명령 에러코드는 `lib/scenario.py`의 `SCENARIO_ERROR_CODES`(전용 SSOT)에서 관리하며, 위 5종은 기존 0~7 계열과 충돌 없이 8~12로 배정됐다(격리 원칙 — PLAN.md §3.2.2, 056/ADD-1).
 
 ### cmux-tool 에러코드 분류
 
@@ -197,3 +301,5 @@ bash run.sh integration [--scope fe|be] [--url URL] [--project-root PATH]
 | 버전 | 일시 | 변경내용 |
 |------|------|---------|
 | v1.0 | 2026-06-23 | 초기 구현 — 4서브명령(resolve/check/unit/integration) + cmux-tool 에러코드 소비 어댑터 + stop-on-fail 러너 (T039 Step3 GREEN) |
+| v1.1 | 2026-07-10 16:36 | scenario-* 4서브명령(scenario-init/scenario-lock/scenario-mark/scenario-status) 추가 — `lib/scenario.py`로 격리(기존 4서브명령 미간섭), test-scenario.json SSOT(spec존/result존), RED-first 동결 게이트(exit 8~11) (056) |
+| v1.2 | 2026-07-10 | `scenario-red` 서브명령 신설 — red_confirmed를 RED 증거와 함께 tool-gated로 갱신(--evidence 필수, locked 후 거부 scenario_already_locked exit 12), enforce-don't-advise 보강. scenario-init의 red_confirmed 시드 입력은 항상 무시(false 강제)+응답 warning으로 변경 — RED 미관찰 우회 선언 경로 봉쇄 (056/ADD-1) |

@@ -3,12 +3,12 @@
   "module": "test_state_tool",
   "layer": "test",
   "domain": "opal-pipeline",
-  "description": "state-tool 단위 테스트 — 9개 명령 happy path + 23종 에러 코드 × 최소 1건 + G-5~G-15 시나리오. 005: TestClarificationGate 신설 — verify --clarification-check + TASK→다음단계 자동 훅 RED-first 케이스 ①~⑨ + 회귀 보호. 054: TestOwnerNamePlaceholder 신설 — note '{owner_name}' 플레이스홀더 identity.md write-time 치환 RED-first(S-1~S-7).",
+  "description": "state-tool 단위 테스트 — 9개 명령 happy path + 23종 에러 코드 × 최소 1건 + G-5~G-15 시나리오. 005: TestClarificationGate 신설 — verify --clarification-check + TASK→다음단계 자동 훅 RED-first 케이스 ①~⑨ + 회귀 보호. 054: TestOwnerNamePlaceholder 신설 — note '{owner_name}' 플레이스홀더 identity.md write-time 치환 RED-first(S-1~S-7). 056: TestOpplSkillInit 신설 — `--skill oppl` enum 미등록 RED-first(S-020, H-1) — run.sh subprocess 실호출로 공개 인터페이스만 검증(mock 미사용).",
   "exports": [
     "TestInit", "TestShow", "TestAdvance", "TestMark",
     "TestBlock", "TestValidate", "TestAddRow", "TestStatus", "TestGatePass",
     "TestErrorCodes", "TestFreeTextPreservation", "TestClarificationGate",
-    "TestOwnerNamePlaceholder"
+    "TestOwnerNamePlaceholder", "TestOpplSkillInit"
   ]
 }
 
@@ -25,6 +25,7 @@ import json
 import os
 import pathlib
 import shutil
+import subprocess
 import sys
 import tempfile
 import types
@@ -35,6 +36,9 @@ from unittest.mock import patch, MagicMock
 _TOOL_DIR = pathlib.Path(__file__).parent.parent
 sys.path.insert(0, str(_TOOL_DIR))
 import state_tool as ST
+
+# 056: TestOpplSkillInit용 — run.sh 공개 인터페이스 subprocess 실호출 (mock 금지, red-first.md §4)
+_RUN_SH = _TOOL_DIR / "run.sh"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 테스트 공통 픽스처 / 헬퍼
@@ -3483,6 +3487,127 @@ class TestOwnerNamePlaceholder(BaseTestCase):
         self.assertEqual(code_mark, 0)
         state = self._state()
         self.assertEqual(state["rows"][0]["note"], "agentic auto-pass: 루카스 승인")
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# 056: TestOpplSkillInit — state-tool oppl init 실호출 RED-first (S-020, H-1)
+# ═════════════════════════════════════════════════════════════════════════════
+
+class TestOpplSkillInit(unittest.TestCase):
+    """`state-tool init --skill oppl` 실호출 계약 — TEST-SCENARIO.md S-020 (PLAN §3.3, H-1).
+
+    [MUST] red-first.md §4: 공개 인터페이스(run.sh subprocess, stdout JSON + exit code)로만
+    검증한다 — 내부 함수 직결(BaseTestCase._call_cmd류) 결합 및 mock/patch/MagicMock 금지.
+    현재 state_tool.py의 `--skill` choices=[..., "opsdd"]에 "oppl"이 없어 argparse 단계에서
+    거부(usage error, exit 2)된다 — 이 실패가 RED 증거다. GREEN 후에는 exit 0 + state.json
+    skill:"oppl" + STATE.md 생성으로 전환되어야 한다(F-003, PLAN §3.3.2).
+    """
+
+    def setUp(self):
+        self.tmpdir = pathlib.Path(tempfile.mkdtemp())
+        self.task_path = self.tmpdir / "056-dryrun"
+        self.task_path.mkdir()
+
+    def tearDown(self):
+        shutil.rmtree(self.tmpdir, ignore_errors=True)
+
+    def _run(self, args):
+        cmd = ["bash", str(_RUN_SH)] + args
+        result = subprocess.run(cmd, capture_output=True, text=True)
+        stdout = result.stdout.strip()
+        try:
+            data = json.loads(stdout) if stdout else {}
+        except json.JSONDecodeError:
+            data = {"_raw": stdout}
+        return result.returncode, stdout, data
+
+    def test_init_with_skill_oppl_succeeds(self):
+        """[T056/L2-F003] `init --skill oppl --mode semi-agentic` 성공 기대 —
+        현재는 argparse choices 미등록으로 거부되어 FAIL(RED). GREEN 후: exit 0,
+        ok:true, state.json skill=="oppl" 생성."""
+        code, stdout, data = self._run([
+            "init", str(self.task_path),
+            "--skill", "oppl",
+            "--mode", "semi-agentic",
+        ])
+        self.assertEqual(code, 0, f"init --skill oppl 은 exit 0 이어야 한다 (실제 stdout: {stdout!r})")
+        self.assertTrue(data.get("ok"))
+
+        state_file = self.task_path / "state.json"
+        self.assertTrue(state_file.exists(), "state.json이 생성되어야 한다")
+        with open(state_file, encoding="utf-8") as f:
+            state = json.load(f)
+        self.assertEqual(state.get("skill"), "oppl")
+        self.assertTrue((self.task_path / "STATE.md").exists(), "STATE.md가 생성되어야 한다")
+
+    def test_existing_eight_skills_regression_unaffected(self):
+        """[T056/L2-F003] 회귀 보호: oppl 추가가 기존 8개 스킬(opp) init 성공 경로를
+        깨뜨리지 않아야 한다 — enum 확장은 추가만이어야 한다(PLAN §3.3.3)."""
+        code, stdout, data = self._run([
+            "init", str(self.task_path),
+            "--skill", "opp",
+            "--mode", "interactive",
+        ])
+        self.assertEqual(code, 0, f"기존 스킬 opp init은 회귀 없이 exit 0 이어야 한다 (stdout: {stdout!r})")
+        self.assertTrue(data.get("ok"))
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# [T056/ADD2] TestSchemaModeEnumSemiAgentic — schema.json mode enum 드리프트 회귀 방지
+# ═════════════════════════════════════════════════════════════════════════════
+
+class TestSchemaModeEnumSemiAgentic(unittest.TestCase):
+    """[T056/ADD2] state.schema.json의 `mode` enum이 CLI `--mode` choices(3-way:
+    interactive/semi-agentic/agentic)와 정합해야 한다. 기존에는 스키마 enum이
+    ["interactive", "agentic"]만 포함해 semi-agentic이 누락되어 있었다(문서 드리프트).
+    이 테스트는 (1) 스키마 파일 자체의 enum에 semi-agentic이 존재하는지, (2) 실제
+    init --mode semi-agentic 이후 validate가 이를 거부 없이 수용하는지 두 각도로
+    회귀를 방지한다."""
+
+    def setUp(self):
+        self.tmpdir = pathlib.Path(tempfile.mkdtemp())
+        self.task_path = self.tmpdir / "056-add2-dryrun"
+        self.task_path.mkdir()
+
+    def tearDown(self):
+        shutil.rmtree(self.tmpdir, ignore_errors=True)
+
+    def _run(self, args):
+        cmd = ["bash", str(_RUN_SH)] + args
+        result = subprocess.run(cmd, capture_output=True, text=True)
+        stdout = result.stdout.strip()
+        try:
+            data = json.loads(stdout) if stdout else {}
+        except json.JSONDecodeError:
+            data = {"_raw": stdout}
+        return result.returncode, stdout, data
+
+    def test_schema_mode_enum_includes_semi_agentic(self):
+        """[T056/ADD2] state.schema.json properties.mode.enum에 "semi-agentic"이
+        포함되어야 한다 — CLI choices와의 드리프트 재발 방지."""
+        schema_path = _TOOL_DIR / "schema" / "state.schema.json"
+        with open(schema_path, encoding="utf-8") as f:
+            schema = json.load(f)
+        mode_enum = schema["properties"]["mode"]["enum"]
+        self.assertIn("semi-agentic", mode_enum,
+                      "schema.json mode enum에 semi-agentic이 없음 (드리프트 재발)")
+        self.assertEqual(set(mode_enum), {"interactive", "semi-agentic", "agentic"})
+
+    def test_validate_accepts_semi_agentic_mode(self):
+        """[T056/ADD2] init --mode semi-agentic 이후 validate가 violations 0으로
+        통과해야 한다 (mode 값 자체로 인한 거부가 없어야 함)."""
+        code, stdout, data = self._run([
+            "init", str(self.task_path),
+            "--skill", "oppl",
+            "--mode", "semi-agentic",
+        ])
+        self.assertEqual(code, 0, f"init 실패: {stdout!r}")
+        self.assertTrue(data.get("ok"))
+
+        code, stdout, data = self._run(["validate", str(self.task_path)])
+        self.assertEqual(code, 0, f"validate 실패: {stdout!r}")
+        self.assertTrue(data.get("ok"))
+        self.assertEqual(data.get("violations_count"), 0)
 
 
 # ═════════════════════════════════════════════════════════════════════════════

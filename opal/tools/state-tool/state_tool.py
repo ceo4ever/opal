@@ -1814,7 +1814,7 @@ def build_parser():
     p_init = sub.add_parser("init", help="state.json + STATE.md 생성 (§2.11 G-8)")
     p_init.add_argument("task_path", metavar="<task-path>")
     p_init.add_argument("--skill", required=True,
-                        choices=["opp","opd","opds","opdw","opwt","opgc","oppd","opsdd"])
+                        choices=["opp","opd","opds","opdw","opwt","opgc","oppd","opsdd","oppl"])
     p_init.add_argument("--mode", required=True,
                         choices=["interactive","semi-agentic","agentic"])
     p_init.add_argument("--task-title")

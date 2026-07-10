@@ -12,12 +12,12 @@
       "description": "태스크 폴더명 (예: 134-260501-opp-pipeline-state-tool)"
     },
     "skill": {
-      "enum": ["opp", "opd", "opds", "opdw", "opwt", "opgc", "oppd", "opsdd"],
-      "description": "오케스트레이터 스킬 약어 — opal-pilot-* 8종"
+      "enum": ["opp", "opd", "opds", "opdw", "opwt", "opgc", "oppd", "opsdd", "oppl"],
+      "description": "오케스트레이터 스킬 약어 — opal-pilot-* 9종"
     },
     "mode": {
-      "enum": ["interactive", "agentic"],
-      "description": "OPAL 실행 모드"
+      "enum": ["interactive", "semi-agentic", "agentic"],
+      "description": "OPAL 실행 모드 — 3-way (interactive/semi-agentic/agentic)"
     },
     "schema_version": {
       "const": "1.0",

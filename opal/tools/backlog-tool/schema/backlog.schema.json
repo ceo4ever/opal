@@ -1,0 +1,116 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "OPAL backlog.json Schema",
+  "description": "backlog-tool이 관리하는 oppl 2-루프 오케스트레이터의 백로그 JSON. PLAN 056 §3.1.2 SSOT. state.json/test-scenario.json과 축 분리 — 상호 참조 없음.",
+  "type": "object",
+  "required": ["schema_version", "project_title", "mode", "created_at", "updated_at", "goal", "tasks"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "1.0",
+      "description": "스키마 버전 — 신규 필드 추가 시 1.1로 올림"
+    },
+    "project_title": {
+      "type": "string",
+      "minLength": 1,
+      "description": "백로그가 속한 프로젝트/태스크 제목"
+    },
+    "mode": {
+      "enum": ["interactive", "semi-agentic", "agentic"],
+      "description": "OPAL 실행 모드"
+    },
+    "created_at": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}$",
+      "description": "backlog.json 최초 생성 시점 (KST YYYY-MM-DD HH:mm)"
+    },
+    "updated_at": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}$",
+      "description": "마지막 갱신 시점 (KST YYYY-MM-DD HH:mm)"
+    },
+    "goal": {
+      "oneOf": [
+        {"type": "string"},
+        {"type": "null"}
+      ],
+      "description": "목표 요약 — done-check 종료 판정의 참조 맥락"
+    },
+    "tasks": {
+      "type": "array",
+      "description": "백로그 태스크(얇은 수직 슬라이스) 목록",
+      "items": {
+        "type": "object",
+        "required": [
+          "id", "title", "slice", "acceptance_criteria", "area",
+          "priority", "depends", "status", "parallel_group",
+          "created_at", "done_at"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^T[0-9]+$",
+            "description": "태스크 식별자 (예: T01, T02)"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "slice": {
+            "type": "string",
+            "minLength": 1,
+            "description": "얇은 수직 슬라이스 설명"
+          },
+          "acceptance_criteria": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "수용 기준 목록"
+          },
+          "area": {
+            "enum": ["fe", "be", "db", "공통", "통합"]
+          },
+          "priority": {
+            "enum": ["P0", "P1", "P2"]
+          },
+          "depends": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "선행 task id 목록"
+          },
+          "status": {
+            "enum": ["pending", "in_progress", "done", "blocked"]
+          },
+          "parallel_group": {
+            "oneOf": [
+              {"type": "string"},
+              {"type": "null"}
+            ],
+            "description": "병렬 그룹 id (nullable)"
+          },
+          "created_at": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}$"
+          },
+          "done_at": {
+            "oneOf": [
+              {
+                "type": "string",
+                "pattern": "^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}$"
+              },
+              {"type": "null"}
+            ],
+            "description": "done 전환 시점. pending/in_progress/blocked이면 null"
+          },
+          "note": {
+            "oneOf": [
+              {"type": "string"},
+              {"type": "null"}
+            ],
+            "description": "선택 필드 — mark --note로 기재된 메모"
+          }
+        }
+      }
+    }
+  }
+}

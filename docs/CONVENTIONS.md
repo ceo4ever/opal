@@ -45,6 +45,7 @@
 | opwt | opal-pilot-write-tech |
 | opp | opal-pilot-project |
 | oppd | opal-pilot-project-dev |
+| oppl | opal-pilot-project-loop |
 | opi | opal-project-init |
 | opsdd | opal-pilot-sdd |
 

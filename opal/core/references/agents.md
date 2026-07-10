@@ -134,6 +134,18 @@ PM이 PLAN.md의 단계+영역 조합으로 직접 디스패치하는 전문 워
 - **출력**: 기획 산출물(.md 또는 .xlsx) + 결과 반환 (artifact_path, summary, status, blockers, changed_files)
 - **에이전트 경로**: `opal/agents/opal-planning-agent/`
 
+### opal-evaluator-agent
+
+- **역할**: 계약·설계 루브릭 심판 전담 — SPEC §4 루브릭 Base(계약 완전성·일관성·설계 정합·drift·컨벤션 정신·아키텍처 적합) + CONTRACT.md 루브릭절을 병합하여 구현 전 명세(PLAN/USER_FLOW/test-scenario+계약)를 판정한다. verdict-only·mutate 금지·readonly
+- **호출 시점**: oppl 설계 루프 D6(설계 산출물 검토), 태스크 파이프라인 G 게이트(구현 전 명세 리뷰), drift 재콜백(구현·테스트 중 계약 drift 발견 시)
+- **단계**: 명세 리뷰
+- **영역**: 평가
+- **model**: advanced
+- **자체 로드 문서**: SPEC §4 루브릭 Base(내장), CONTRACT.md 루브릭절(존재 시 병합, 부재 시 Base만 + 안내)
+- **입력**: task_folder, phase(design-review/spec-review/drift-recheck), target_artifacts, contract_path, timestamp, project_root
+- **출력**: `QA-SPEC.md`(spec-review) / `QA-SPEC-DESIGN-{timestamp}.md`(design-review) / `QA-SPEC-DRIFT-{timestamp}.md`(drift-recheck), 없으면 `VERIFICATION.md` + verdict(pass|fail) 반환
+- **에이전트 경로**: `opal/agents/opal-evaluator-agent/`
+
 ## 전문 에이전트 매핑 테이블
 
 PM이 단계+영역으로 에이전트를 선택하고, opal-plan-agent가 PLAN.md §4 실행 체크리스트의 agent 필드를 배정할 때 참조하는 테이블.
@@ -145,6 +157,7 @@ PM이 단계+영역으로 에이전트를 선택하고, opal-plan-agent가 PLAN.
 | opal-be-agent | EXECUTE | BE | standard | BACKEND.md, BE-FRAMEWORK.md, CONVENTIONS.md (BE) |
 | opal-db-agent | PLAN, EXECUTE | DB | standard | DB 설계 문서, 표준사전(엑셀) |
 | opal-planning-agent | EXECUTE | 기획 | advanced | 기획 산출물, 와이어프레임 등 |
+| opal-evaluator-agent | 명세 리뷰 (oppl G/D6) | 평가 | advanced | SPEC §4 루브릭 Base, CONTRACT.md 루브릭절 |
 | opal-test-agent | TEST | 공통 | standard | ARCHITECTURE.md (테스트 섹션) |
 | opal-security-checker | CHECK (opgc) | 보안 | advanced | base-security-checklist, SECURITY.md (허브+링크 체이닝 — conventions-hub-model.md 참조) |
 | opal-convention-checker | CHECK (opgc) | 컨벤션 | standard | CONVENTIONS.md, base-convention-checklist (허브+링크 체이닝 — conventions-hub-model.md 참조) |
@@ -343,3 +356,4 @@ project: mams
 | v1.7 | 2026-06-17 | Codex CLI 어댑터 보강 — 메커니즘 표 Codex 행 추가(tool-backed=인라인 주입/TUI=이름호출, `~/.codex/agents/{name}.toml`) + frontmatter 변환 표 Codex 컬럼 추가(gpt-5.4-mini/gpt-5.4/gpt-5.5) + §Codex tool-backed 인라인 주입 규칙 §신설(PM 런타임 행위/spawn_agent message 주입/model 매핑/#15250 인용/배포 시점 아님/.toml 유지 명시) + 함수 참조에 codex 추가 (028) |
 | v1.8 | 2026-06-21 16:18 KST | §본문 처리 정정 — "본문은 변경 없이 그대로 복사된다" 무조건 진술 제거. 어댑터가 본문 인라인 `model: <레벨>` sub-dispatch 오버라이드 토큰(괄호 내 `, model:`/`(model:`)도 frontmatter와 동일하게 플랫폼 실모델명으로 변환(cursor=토큰 제거), prose 자기참조(백틱 내)는 비대상임을 명시 — frontmatter만 변환하고 본문 verbatim 복사하던 경계 비대칭 제거(install-mac.sh `_sub_body_model`·windows.ps1 `Convert-BodyModelTokens`) (032) |
 | v1.9 | 2026-06-28 | §Codex tool-backed 인라인 주입 Step 3에 오버라이드 우선순위 포인터 추가 — setting.local.json → setting.json → §2 표(셀 단위) 적용 + `opal-model-mapping.md` §5 참조. `opal-model-mapping.md` §5 오버라이드 도입과 정합 (046) |
+| v2.0 | 2026-07-10 16:49 KST | opal-evaluator-agent 신규 등록 — `### opal-evaluator-agent` 섹션(전문 에이전트) + 매핑 테이블 행(단계: 명세 리뷰 oppl G/D6, 영역: 평가, model: advanced) 추가 (056) |
