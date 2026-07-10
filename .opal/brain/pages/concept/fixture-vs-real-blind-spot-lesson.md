@@ -11,8 +11,8 @@ sources:
   - task:039
   - task:044
 related:
-  - "[[memory-tool]]"
-  - "[[agentic-output-direct-verification-lesson]]"
+  - memory-tool
+  - agentic-output-direct-verification-lesson
 created: "2026-06-26"
 updated: "2026-06-26"
 status: active

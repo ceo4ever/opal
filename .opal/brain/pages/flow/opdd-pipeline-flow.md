@@ -3,7 +3,7 @@ type: flow
 title: opdd 파이프라인 흐름 — DB 설계 표준 3층 파이프라인
 tags: [pipeline, data-design, flow, opdd, db]
 sources: [task:019]
-related: [skill-opal-pilot-data-design.md, op-data-dictionary-skill.md, op-data-model-skill.md, op-data-ddl-skill.md, dict-선행-model-ssot.md]
+related: [skill-opal-pilot-data-design, op-data-dictionary-skill, op-data-model-skill, op-data-ddl-skill, dict-선행-model-ssot]
 created: 2026-06-12
 updated: 2026-06-12
 status: active

@@ -162,3 +162,10 @@
 - 신규: [[pages/entity/git-sync-tool.md]], [[pages/entity/opal-workspace-sync.md]], [[pages/concept/skill-registry-index-registration-required-for-discovery.md]], [[pages/concept/fallback-approval-detached-head-precedence.md]]
 - 출처: task:052
 
+- 신규: [[owner-honorific-contamination-prevention]], [[state-tool-owner-name-write-time-substitution]]
+- 출처: task:054
+
+## [2026-07-10] ingest | CLOSE ingest — 태스크 053 brain related 링크필드 정비 + validate 강화
+- 신규: [[pages/concept/enforce-rule-legacy-data-surfacing-lesson.md]]
+- 출처: task:053
+

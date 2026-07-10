@@ -11,7 +11,7 @@ tags: [tool, knowledge]
 sources: [code:opal/tools/brain-tool/, task:015, task:016, task:035]
 related: [state-tool, opal-brain-system, brain-validate-flatness-enforcement]
 created: 2026-06-10
-updated: 2026-06-22
+updated: 2026-07-10
 status: active
 ---
 
@@ -38,6 +38,10 @@ OPAL Project Brain 지식 위키를 결정론적으로 집행하는 CLI 도구. 
 
 035 기능 추가:
 - `validate_frontmatter` 선택 필드 평탄성 검사 — `tags`/`sources`/`related`가 flat `string[]`인지 검증. 중첩 리스트·비문자열 요소를 `frontmatter_invalid` violation으로 집행. None·빈 리스트 통과, 기존 검증(필수 5필드·type·status) 불변. (`brain_tool.py:291-299`, 참조: [[brain-validate-flatness-enforcement]])
+
+053 기능 추가:
+- `validate_frontmatter` 링크필드(`related`) 검사 — 요소가 위키링크 문법(`[[`/`]]`)이나 `.md` 접미사를 포함하면 `frontmatter_invalid`로 거부한다. 035 평탄성 검사가 놓친 quoted `"[[slug]]"` 사각지대를 닫는다. None·빈 리스트·정상 슬러그는 통과(기존 동작 불변). (`brain_tool.py`, 참조: [[brain-validate-flatness-enforcement]])
+- `add-page --related a,b` 플래그 신설 — `tags`/`sources`와 동일한 CSV→평탄 리스트 패턴으로 `related`를 생성한다. 손편집 유인을 줄인다.
 
 ## 관련 페이지
 

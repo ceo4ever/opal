@@ -3,7 +3,7 @@ type: entity
 title: op-data-model (MODEL 단계 스킬)
 tags: [skill, stage-skill, data-design, modeling, erd, mermaid, dbml]
 sources: [task:019]
-related: [skill-opal-pilot-data-design.md, op-data-dictionary-skill.md, op-data-ddl-skill.md, opdd-pipeline-flow.md]
+related: [skill-opal-pilot-data-design, op-data-dictionary-skill, op-data-ddl-skill, opdd-pipeline-flow]
 created: 2026-06-12
 updated: 2026-06-12
 status: active

@@ -3,7 +3,7 @@ type: concept
 title: erd-modeler deprecate — op-data-model/ddl로 분해, //erm 하위호환
 tags: [architecture-decision, deprecation, erd-modeler, migration]
 sources: [task:019]
-related: [op-data-model-skill.md, op-data-ddl-skill.md, opdd-pipeline-flow.md]
+related: [op-data-model-skill, op-data-ddl-skill, opdd-pipeline-flow]
 created: 2026-06-12
 updated: 2026-06-12
 status: active

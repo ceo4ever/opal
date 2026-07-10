@@ -9,8 +9,8 @@ tags:
 sources:
   - task:045
 related:
-  - "[[memory-tool]]"
-  - "[[three-layer-memory-architecture]]"
+  - memory-tool
+  - three-layer-memory-architecture
 created: "2026-06-26"
 updated: "2026-06-26"
 status: active

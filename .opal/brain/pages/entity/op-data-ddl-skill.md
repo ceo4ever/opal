@@ -3,7 +3,7 @@ type: entity
 title: op-data-ddl (DDL 단계 스킬)
 tags: [skill, stage-skill, data-design, ddl, migration, dbml]
 sources: [task:019]
-related: [skill-opal-pilot-data-design.md, op-data-model-skill.md, opdd-pipeline-flow.md]
+related: [skill-opal-pilot-data-design, op-data-model-skill, opdd-pipeline-flow]
 created: 2026-06-12
 updated: 2026-06-12
 status: active

@@ -476,13 +476,13 @@ bash ~/.opal/tools/test-tool/run.sh integration [--scope fe|be] [--url URL] [--p
 
 ```bash
 bash ~/.opal/tools/brain-tool/run.sh init <project-root>        # brain 디렉토리·index 초기화
-bash ~/.opal/tools/brain-tool/run.sh add-page <args>            # 신규 페이지(entity/concept/flow 등) 추가
+bash ~/.opal/tools/brain-tool/run.sh add-page <args>            # 신규 페이지(entity/concept/flow 등) 추가 — --related로 관련 페이지 슬러그 CSV 지정 가능
 bash ~/.opal/tools/brain-tool/run.sh index                      # index.md 재생성(링크 그래프 갱신)
 bash ~/.opal/tools/brain-tool/run.sh log <args>                 # 변경 로그 기록
 bash ~/.opal/tools/brain-tool/run.sh search <키워드>            # 후보 목록(page·title·score·snippet) 반환
 bash ~/.opal/tools/brain-tool/run.sh sync-header <args>         # code-scan @header → entity 단방향 시드
 bash ~/.opal/tools/brain-tool/run.sh lint                       # 링크 무결성·구조 린트
-bash ~/.opal/tools/brain-tool/run.sh validate                   # frontmatter·평탄성 검증
+bash ~/.opal/tools/brain-tool/run.sh validate                   # frontmatter·평탄성 검증 — 링크필드(related) 값이 '[[', ']]', '.md'를 포함하면 거부
 
 # 서브명령별 상세 플래그
 bash ~/.opal/tools/brain-tool/run.sh <subcommand> --help
@@ -693,3 +693,4 @@ bash ~/.opal/tools/tool-scan/run.sh check <도구>               # 설치/실행
 | v1.8 | 2026-06-26 | brain-tool 섹션 신설(8 서브명령) + tool-scan 섹션 신설(5 서브명령 — capability 검색·live 사용법) + harness §9 drift 정합(code-scan·cmux-tool·tool-scan 행 추가). tools.md ↔ harness §9 도구 집합 7종 동일화 (044) |
 | v1.9 | 2026-06-26 | memory-tool 섹션 신설(9 서브명령 init/append/update/promote/prune/migrate/show/review/delete) — 프로젝트 메모리 인덱스·히스토리 결정론적 집행, 메모리→docs/brain 졸업 워크플로우·히스토리 FIFO5·요약 길이캡·마커 직접편집 금지·매 변경 후 자가검토·delete(dead/superseded 무손실 정리)·update --new-title(제목 보정). harness §9 drift 정합 (045) |
 | v2.0 | 2026-07-02 | git-sync-tool 섹션 신설(단일 서브명령 sync) — 워크스페이스 git 저장소 일괄 동기화, 직속 자식 순회 + ff-only pull + 5종 skip 판정 + JSON 출력. opal-workspace-sync 스킬이 호출. harness §9 drift 정합 (052) |
+| v2.1 | 2026-07-10 13:11 | brain-tool validate 설명에 링크필드(related) 값 검사('[[', ']]', '.md' 거부) 반영 + add-page에 `--related` 플래그 설명 추가 (053) |

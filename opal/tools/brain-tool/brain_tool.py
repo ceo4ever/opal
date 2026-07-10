@@ -3,7 +3,7 @@
   "module": "brain_tool",
   "layer": "util",
   "domain": "opal-brain",
-  "description": "OPAL Project Brain 지식 위키 결정론적 집행 CLI — 10개 서브 명령(init/add-page/index/log/search/sync-header/lint/validate/analyze/ingest-scan). index/log/링크 무결성을 brain-tool이 집행(LLM 직접 편집 금지). 페이지 타입은 SCHEMA §1.5에서 동적 로드(하드코딩 없음). frontmatter 파싱은 PyYAML, KST 타임스탬프는 date.js subprocess. sync-header는 code-scan @header → brain entity frontmatter 단방향 동기화만 수행. analyze는 code-scan @header 정량 집계 → JSON. ingest-scan은 docs/skills/tasks 목록 반환. [027] lint에 term 일관성 2종(term_duplicate·alias_collision) 추가. search에 draft 필터(--include-draft, R-6 term 한정) 추가. init이 schema-template.md에서 타입 동적 로드. [035] validate_frontmatter에 선택 필드(tags/sources/related) 평탄성 검사(flat string[]) 추가 — 중첩 리스트·비문자열 요소를 frontmatter_invalid violation으로 집행.",
+  "description": "OPAL Project Brain 지식 위키 결정론적 집행 CLI — 10개 서브 명령(init/add-page/index/log/search/sync-header/lint/validate/analyze/ingest-scan). index/log/링크 무결성을 brain-tool이 집행(LLM 직접 편집 금지). 페이지 타입은 SCHEMA §1.5에서 동적 로드(하드코딩 없음). frontmatter 파싱은 PyYAML, KST 타임스탬프는 date.js subprocess. sync-header는 code-scan @header → brain entity frontmatter 단방향 동기화만 수행. analyze는 code-scan @header 정량 집계 → JSON. ingest-scan은 docs/skills/tasks 목록 반환. [027] lint에 term 일관성 2종(term_duplicate·alias_collision) 추가. search에 draft 필터(--include-draft, R-6 term 한정) 추가. init이 schema-template.md에서 타입 동적 로드. [035] validate_frontmatter에 선택 필드(tags/sources/related) 평탄성 검사(flat string[]) 추가 — 중첩 리스트·비문자열 요소를 frontmatter_invalid violation으로 집행. [053] validate_frontmatter 링크필드(related) 값 검사 추가 — '[[', ']]', '.md' 포함 슬러그를 frontmatter_invalid로 집행; add-page에 --related(CSV→평탄 리스트) 플래그 추가.",
   "exports": [
     "cmd_init", "cmd_add_page", "cmd_index", "cmd_log",
     "cmd_search", "cmd_sync_header", "cmd_lint", "cmd_validate",
@@ -49,6 +49,7 @@ CATEGORY_ORDER = _DEFAULT_CATEGORY_ORDER
 # frontmatter 필수/선택 키 (PLAN 결정7)
 REQUIRED_FRONTMATTER = ["type", "title", "created", "updated", "status"]
 OPTIONAL_FRONTMATTER = ["tags", "sources", "related"]
+LINK_FRONTMATTER = ["related"]
 ENTITY_EXTRA_KEYS = ["module", "layer", "domain", "exports", "source_ref", "header_synced"]
 STATUS_ENUM = ["active", "stale", "draft"]
 
@@ -297,6 +298,18 @@ def validate_frontmatter(fm, page_types=None):
             continue                       # 선택 필드 부재 → 통과
         if not (isinstance(v, list) and all(isinstance(x, str) for x in v)):
             issues.append(f"{key} must be a flat list of strings")
+    # 링크필드(related) 값 검사 (053) — 위키링크 문법('[[', ']]')·'.md' 접미사를 포함한
+    # 슬러그를 거부한다. 035 평탄성 루프가 이미 비-문자열/비-리스트를 걸러냈으므로
+    # 여기서는 str 요소만 검사한다.
+    for key in LINK_FRONTMATTER:
+        v = fm.get(key)
+        if not isinstance(v, list):
+            continue
+        for x in v:
+            if not isinstance(x, str):
+                continue
+            if "[[" in x or "]]" in x or x.endswith(".md"):
+                issues.append(f"{key} must be a plain page slug (no '[[', ']]', or '.md'): {x}")
     # entity 페이지는 추가 키 일부 권장 (source_ref) — 누락은 경고가 아닌 정보용으로 생략
     return issues
 
@@ -502,6 +515,8 @@ def cmd_add_page(args):
         fm_tpl["tags"] = [t.strip() for t in args.tags.split(",") if t.strip()]
     if args.sources:
         fm_tpl["sources"] = [s.strip() for s in args.sources.split(",") if s.strip()]
+    if args.related:
+        fm_tpl["related"] = [r.strip() for r in args.related.split(",") if r.strip()]
 
     # frontmatter 검증 (동적 타입 목록 사용)
     issues = validate_frontmatter(fm_tpl, page_types=dyn_types)
@@ -1190,6 +1205,7 @@ def build_parser():
     p_add.add_argument("--title", required=True)
     p_add.add_argument("--tags")
     p_add.add_argument("--sources")
+    p_add.add_argument("--related", help="관련 페이지 슬러그 CSV (예: state-tool,brain-tool)")
     p_add.add_argument("--brain-path", dest="brain_path", default=".")
     p_add.set_defaults(func=cmd_add_page)
 

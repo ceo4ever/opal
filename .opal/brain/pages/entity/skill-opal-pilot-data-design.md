@@ -3,7 +3,7 @@ type: entity
 title: opal-pilot-data-design (opdd)
 tags: [pilot, orchestrator, data-design, db]
 sources: [task:019]
-related: [op-data-dictionary-skill.md, op-data-model-skill.md, op-data-ddl-skill.md, opdd-pipeline-flow.md]
+related: [op-data-dictionary-skill, op-data-model-skill, op-data-ddl-skill, opdd-pipeline-flow]
 created: 2026-06-12
 updated: 2026-06-12
 status: active

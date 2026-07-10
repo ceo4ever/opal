@@ -3,7 +3,7 @@
   "module": "test_brain_tool",
   "layer": "test",
   "domain": "opal-brain",
-  "description": "brain-tool 단위 테스트 — 10 서브커맨드 happy-path + ERROR_CODES 주요 14종 + 동적 타입 로드 + analyze/ingest-scan + 027(term 동적로드·draft search 필터·lint term_duplicate/alias_collision). tmp_path 기반 격리 실행. mock 금지 — 실제 brain_tool.py를 import 호출하는 진짜 테스트.",
+  "description": "brain-tool 단위 테스트 — 10 서브커맨드 happy-path + ERROR_CODES 주요 14종 + 동적 타입 로드 + analyze/ingest-scan + 027(term 동적로드·draft search 필터·lint term_duplicate/alias_collision). tmp_path 기반 격리 실행. mock 금지 — 실제 brain_tool.py를 import 호출하는 진짜 테스트. [053] validate_frontmatter 링크필드(related) 거부/통과 케이스 + add-page --related 지정/미지정 케이스 추가.",
   "task": "027",
   "exports": [
     "TestInit", "TestAddPage", "TestIndex", "TestLog",
@@ -66,6 +66,7 @@ def make_args(**kwargs):
         "title": "테스트 페이지",
         "tags": None,
         "sources": None,
+        "related": None,
         # log
         "op": "init",
         "summary": "테스트 요약",
@@ -128,13 +129,13 @@ class BrainTestCase(unittest.TestCase):
         return result
 
     def _add_page(self, name="test-page", page_type="concept", title="테스트 개념",
-                  tags=None, sources=None):
+                  tags=None, sources=None, related=None):
         """add-page 헬퍼."""
         with _mock_kst():
             args = make_args(
                 brain_path=str(self.brain_root),
                 path=name, type=page_type, title=title,
-                tags=tags, sources=sources,
+                tags=tags, sources=sources, related=related,
             )
             exit_code, result = self._call(BT.cmd_add_page, args)
         return exit_code, result
@@ -289,6 +290,24 @@ class TestAddPage(BrainTestCase):
                                             title="흐름 페이지")
         self.assertEqual(exit_code, 0)
         self.assertTrue(result["ok"])
+
+    def test_add_page_with_related(self):
+        """053 R-4: add-page --related a,b: related frontmatter에 평탄 리스트로 반영 확인."""
+        exit_code, result = self._add_page(name="related-page", page_type="concept",
+                                            title="related 테스트", related="state-tool,brain-tool")
+        self.assertEqual(exit_code, 0, f"add-page 실패: {result}")
+        page_file = self.brain_root / "pages" / "concept" / "related-page.md"
+        text = page_file.read_text(encoding="utf-8")
+        fm, _ = BT.parse_frontmatter(text)
+        self.assertEqual(fm.get("related"), ["state-tool", "brain-tool"])
+
+    def test_add_page_without_related_keeps_default(self):
+        """053 R-4: --related 미지정 시 템플릿 기본값(related: []) 유지(기존 동작 불변)."""
+        self._add_page(name="no-related-page", page_type="concept", title="related 미지정 테스트")
+        page_file = self.brain_root / "pages" / "concept" / "no-related-page.md"
+        text = page_file.read_text(encoding="utf-8")
+        fm, _ = BT.parse_frontmatter(text)
+        self.assertEqual(fm.get("related"), [], f"related 미지정 시 템플릿 기본값이 변경됨: {fm.get('related')}")
 
     def test_add_synthesis_page(self):
         """add-page synthesis: 정상 생성 확인."""
@@ -1550,6 +1569,80 @@ class TestValidateFrontmatter(unittest.TestCase):
             [],
             f"빈 리스트가 오탐으로 검출됨. flatness_issues={flatness_issues}",
         )
+
+    # ── 053: 링크필드(related) 검사 RED-first 케이스 ──────────────────────
+
+    # --- 거부 케이스 (RED 대상 — 구현 전 FAIL) ---
+
+    def test_link_field_bracket_related_detected(self):
+        """053 R-2: related=["[[state-tool]]"] (wiki-link 문법) → 'must be a plain page slug' issue 포함."""
+        fm = self._valid_fm()
+        fm["related"] = ["[[state-tool]]"]
+        issues = BT.validate_frontmatter(fm)
+        self.assertTrue(
+            any("must be a plain page slug" in i for i in issues),
+            f"related '[[...]]' 값이 violation으로 검출되지 않음. issues={issues}",
+        )
+
+    def test_link_field_md_suffix_related_detected(self):
+        """053 R-2: related=["state-tool.md"] (.md 접미사) → 'must be a plain page slug' issue 포함."""
+        fm = self._valid_fm()
+        fm["related"] = ["state-tool.md"]
+        issues = BT.validate_frontmatter(fm)
+        self.assertTrue(
+            any("must be a plain page slug" in i for i in issues),
+            f"related '.md' 접미사 값이 violation으로 검출되지 않음. issues={issues}",
+        )
+
+    def test_link_field_partial_closing_bracket_detected(self):
+        """053 R-2: related=["a]]"] (부분 닫는 토큰) → 'must be a plain page slug' issue 포함."""
+        fm = self._valid_fm()
+        fm["related"] = ["a]]"]
+        issues = BT.validate_frontmatter(fm)
+        self.assertTrue(
+            any("must be a plain page slug" in i for i in issues),
+            f"related ']]' 부분 토큰이 violation으로 검출되지 않음. issues={issues}",
+        )
+
+    def test_link_field_partial_opening_bracket_detected(self):
+        """053 R-2: related=["[[a"] (부분 여는 토큰) → 'must be a plain page slug' issue 포함."""
+        fm = self._valid_fm()
+        fm["related"] = ["[[a"]
+        issues = BT.validate_frontmatter(fm)
+        self.assertTrue(
+            any("must be a plain page slug" in i for i in issues),
+            f"related '[[' 부분 토큰이 violation으로 검출되지 않음. issues={issues}",
+        )
+
+    # --- 통과 케이스 (구현 전·후 모두 PASS — 오탐 방지) ---
+
+    def test_link_field_valid_slugs_pass(self):
+        """053 R-2: related=["state-tool","brain-tool"] (정상 슬러그) → 링크필드 issue 0."""
+        fm = self._valid_fm()
+        fm["related"] = ["state-tool", "brain-tool"]
+        issues = BT.validate_frontmatter(fm)
+        link_issues = [i for i in issues if "must be a plain page slug" in i]
+        self.assertEqual(
+            link_issues,
+            [],
+            f"정상 슬러그가 오탐으로 검출됨. link_issues={link_issues}",
+        )
+
+    def test_link_field_none_pass(self):
+        """053 R-2: related=None (부재) → 링크필드 issue 0."""
+        fm = self._valid_fm()
+        fm["related"] = None
+        issues = BT.validate_frontmatter(fm)
+        link_issues = [i for i in issues if "must be a plain page slug" in i]
+        self.assertEqual(link_issues, [], f"related=None이 오탐으로 검출됨. link_issues={link_issues}")
+
+    def test_link_field_empty_list_pass(self):
+        """053 R-2: related=[] (빈 리스트) → 링크필드 issue 0."""
+        fm = self._valid_fm()
+        fm["related"] = []
+        issues = BT.validate_frontmatter(fm)
+        link_issues = [i for i in issues if "must be a plain page slug" in i]
+        self.assertEqual(link_issues, [], f"related=[]가 오탐으로 검출됨. link_issues={link_issues}")
 
 
 # ═════════════════════════════════════════════════════════════════════════════

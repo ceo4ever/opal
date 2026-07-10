@@ -3,7 +3,7 @@ type: concept
 title: opdd 설계 산출물 경로 패턴 — opwt 차용 + {설계} 변수
 tags: [architecture-decision, data-design, path, ssot, opwt]
 sources: [task:019]
-related: [opdd-pipeline-flow.md, op-data-dictionary-skill.md, skill-opal-pilot-write-tech.md]
+related: [opdd-pipeline-flow, op-data-dictionary-skill, skill-opal-pilot-write-tech]
 created: 2026-06-12
 updated: 2026-06-12
 status: active

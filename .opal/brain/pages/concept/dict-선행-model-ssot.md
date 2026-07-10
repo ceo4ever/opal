@@ -3,7 +3,7 @@ type: concept
 title: DICT가 MODEL을 선행한다 — 사전이 속성명·타입 SSOT
 tags: [architecture-decision, data-design, ssot, pipeline]
 sources: [task:019]
-related: [opdd-pipeline-flow.md, op-data-dictionary-skill.md, op-data-model-skill.md]
+related: [opdd-pipeline-flow, op-data-dictionary-skill, op-data-model-skill]
 created: 2026-06-12
 updated: 2026-06-12
 status: active

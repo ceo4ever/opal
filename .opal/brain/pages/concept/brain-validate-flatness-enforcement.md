@@ -2,10 +2,10 @@
 type: concept
 title: brain validate 선택 필드 평탄성 집행 (tags/sources/related flat string[])
 tags: [brain-tool, validate, enforce, flatness, frontmatter]
-sources: [task:035]
+sources: [task:035, task:053]
 related: [brain-tool, state-tool-mock-guard-skill-false-positive, opal-brain-system]
 created: 2026-06-22
-updated: 2026-06-22
+updated: 2026-07-10
 status: active
 ---
 
@@ -46,15 +46,23 @@ for key in OPTIONAL_FRONTMATTER:
 
 **RED-first 강제**: 검증 로직 변경은 self-confirming 위험이 높으므로 RED 테스트(opal-test-agent)와 GREEN 구현(opal-task-agent)을 분리 디스패치. 수정 전 6 FAIL 증거 확보 후 GREEN 진입.
 
+## 053 확장 — 링크필드(related) 값 검사로 남은 사각지대 닫기
+
+035 평탄성 집행은 `related`가 문자열의 평탄한 리스트인지만 확인했기 때문에, 값 자체가 위키링크 문법으로 잘못 기입된 경우(예: `"[[state-tool]]"`)는 정상 문자열이라 그대로 통과했다. 실제로 brain 페이지 3종에서 이 형태의 손편집이 발생했고, `validate`는 이를 놓쳤지만 `lint`의 링크 매칭 실패(missing_link)로만 뒤늦게 드러났다. (근거: task:053 TASK §배경 분석)
+
+053은 링크필드(`related`) 요소가 위키링크 문법(`[[`/`]]`)이나 `.md` 접미사를 포함하면 `frontmatter_invalid`로 거부하도록 `validate_frontmatter`를 확장했다. 검사 범위는 `related`로 한정한다 — `sources`는 `task:045`·`code:x` 같은 정당한 링크 토큰을 담으므로 이 규칙에서 제외된다. (근거: task:053 PLAN §2 M-5)
+
 ## 영향 범위
 
-- `opal/tools/brain-tool/brain_tool.py` — `validate_frontmatter` 9줄 추가 + @header 변경이력
-- `opal/tools/brain-tool/tests/test_brain_tool.py` — 평탄성 RED-first 케이스 9개 추가
+- `opal/tools/brain-tool/brain_tool.py` — `validate_frontmatter` 9줄 추가 + @header 변경이력 (035)
+- `opal/tools/brain-tool/tests/test_brain_tool.py` — 평탄성 RED-first 케이스 9개 추가 (035)
 - 페이지 생성(`cmd_add_page`) 및 brain 전체 검증(`cmd_validate`) 경로에서 자동 집행
+- `opal/tools/brain-tool/brain_tool.py` — 링크필드(`related`) 검사 추가 + `add-page --related` 플래그 신설 (053, 근거: task:053 PLAN §2 M-5/M-7)
+- `opal/tools/brain-tool/tests/test_brain_tool.py` — 링크필드 거부/통과 RED-first 케이스 + `--related` 지정/미지정 케이스 추가 (053)
 
 ## 유사 계열
 
-034의 `state-tool-mock-guard` 수정과 동일한 "도구 집행" 계열이다 — 조용한 누락을 도구가 구조적으로 막는 패턴.
+034의 `state-tool-mock-guard` 수정과 동일한 "도구 집행" 계열이다 — 조용한 누락을 도구가 구조적으로 막는 패턴. 053의 링크필드 검사도 같은 계열이다 — 035가 형태(평탄성)만 보고 값 자체를 보지 않아 남긴 사각지대를, 값 검사로 닫는다.
 
 ## 관련 페이지
 
