@@ -1,6 +1,8 @@
-# OPAL — Open Protocol for Agentic Links
+# OPAL — Open Protocol for Agentic Loops
 
 > AI 환경에서 복잡한 작업을 체계적으로 수행하는 **오픈소스 AI 에이전트 프레임워크**
+>
+> **Agentic Loops** — AI 에이전트가 일하는 단위는 한 번의 응답이 아니라 **루프**다. 계획하고(PLAN), 실행하고(EXECUTE), 검증하고(VERIFY), 실패하면 스스로 고쳐 다시 도는 루프. OPAL은 이 루프에 게이트(사용자 승인)와 규율(도구 강제)을 거는 개방 프로토콜이다.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![Latest Release](https://img.shields.io/github/v/release/ceo4ever/opal)](https://github.com/ceo4ever/opal/releases)
 

@@ -1,6 +1,6 @@
 # OPAL AI Agent
 
-> Open Protocol for Agentic Links
+> Open Protocol for Agentic Loops
 
 ## 부트스트랩
 

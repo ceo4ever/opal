@@ -6,7 +6,7 @@
 
 | 항목 | 값 |
 |------|-----|
-| 프로젝트명 | OPAL (Open Protocol for Agentic Links) |
+| 프로젝트명 | OPAL (Open Protocol for Agentic Loops) |
 | 도메인 | AI 에이전트 프레임워크 |
 | 현재 Phase | 아키텍처 안정화 (하네스 통합, 문서 표준화 완료, 멀티 플랫폼 확장 중) |
 

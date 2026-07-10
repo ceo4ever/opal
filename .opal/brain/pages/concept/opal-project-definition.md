@@ -15,7 +15,7 @@ status: draft
 ---
 ## 개념 요약
 
-OPAL(Open Protocol for Agentic Links)의 프로젝트 정의 SSOT — 개요·원칙·구조·주요 컴포넌트·문서 허브를 한 문서에서 관리한다.
+OPAL(Open Protocol for Agentic Loops)의 프로젝트 정의 SSOT — 개요·원칙·구조·주요 컴포넌트·문서 허브를 한 문서에서 관리한다.
 
 ## 핵심 결정
 

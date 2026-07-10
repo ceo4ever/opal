@@ -34,7 +34,7 @@ OPAL 에이전트의 정체성(이름, 성격, 호칭 등)을 소유자와의 �
 소유자에게 OPAL을 소개하고 온보딩을 시작한다:
 
 ```
-안녕하세요! OPAL(Open Protocol for Agentic Links) 에이전트 설정을 시작합니다.
+안녕하세요! OPAL(Open Protocol for Agentic Loops) 에이전트 설정을 시작합니다.
 
 빛의 각도에 따라 다채롭게 변하는 오팔 보석처럼, 어떤 환경에서든 유연하게 적응하는
 당신만의 AI 파트너를 만들어 보겠습니다.
