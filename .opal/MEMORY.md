@@ -37,9 +37,9 @@
 <!-- memory:history:start -->
 | 제목 | 등록일 | 단계 | 경로 | 핵심결과 |
 |------|--------|------|------|----------|
+| 057 opal-cli console scan 설정 자동생성 | 2026-07-13 | TEST 완료·CLOSE 대기 | tasks/057-260710-opds-콘솔스캔-설정자동생성/ | console scan 신설+install 자동호출(mac v3.9/win v1.17). 커밋 d9c9902·bed80ad. 후속=DONE.md |
 | 056 oppl 루프 오케스트레이터 신설 | 2026-07-10 | 완료 | tasks/056-260710-opd-oppl-루프-오케스트레이터/ | oppl 2-루프+evaluator+backlog-tool+scenario-* 신설. All Pass·드라이런 evidence. 후속=커밋·scenario-red |
 | 053 brain related 링크필드 정비 + validate 집행 강화 | 2026-07-10 | 완료 | tasks/053-260708-opp-related-링크필드-정비/ | validate 링크필드(related) 검사 신설+--related 플래그. 11페이지 34항목 정비. 118 GREEN. 후속=install 재배포·커밋 |
 | 052 워크스페이스 git 일괄 동기화 | 2026-07-02 | 완료 | tasks/052-260702-opd-워크스페이스-git-동기화/ | git-sync-tool(도구)+opal-workspace-sync(스킬 opws) 신설. ff-only pull·5종 skip·무손실. 교훈: 신규 스킬은 skills-registry.json 등록 필수. 13/13 GREEN. opd/agentic |
 | 051 headless(claude -p) 비서티어 캡 | 2026-07-02 | 완료 | tasks/051-260702-opp-헤드리스-비서티어-캡/ | [ASSISTANT] 첫 줄 마커 신설 → 3단 스킵 사다리([WORKER]전부/[ASSISTANT]Phase A만/무마커 A+B). Phase B 승격 게이트에 억제 절 AND 추가(cwd에 .opal/AGENT.md 있어도 첫 줄 [ASSISTANT]면 PM tier 스킵). 첫 소비자=opbr_adapter.py -p 프롬프트 프리픽스(보안 계약 불변). 본질=tier 격리(정합성), 지연 아님. **실측 검증**: [ASSISTANT] 프로브 ⬜harness⬜PM + Phase B 미로드, 무마커 대조군 6파일=회귀0. ARCHITECTURE.md 반영, brain concept 1건. **후속=캡틴 canonical install(현재 ~/.opal는 dev-artifact)**·커밋·headless 소비자 인벤토리 스캔. opp/agentic |
-| 050 AGENT.md 다이제스트 (비서 코어 경량화) | 2026-06-30 | 완료 | tasks/050-260630-opds-에이전트-다이제스트/ | AGENT.md 493→236줄(런타임 ~51%↓). PM섹션→opal-pm.md 이동+dedup, 부트스트래퍼→신규 ref. TEST 17/17. 후속=install재배포·L3·커밋·051(PRINCIPLES 역할배치) |
 <!-- memory:history:end -->
