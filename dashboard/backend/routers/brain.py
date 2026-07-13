@@ -13,6 +13,7 @@
 """
 from __future__ import annotations
 
+import logging
 import shutil
 import threading
 
@@ -32,6 +33,8 @@ from dashboard.backend.models import (
 from dashboard.backend.scanner import scan_projects
 
 router = APIRouter()
+
+logger = logging.getLogger(__name__)
 
 
 # ── project 경로 결정 헬퍼 ────────────────────────────────────────────────────────
@@ -181,6 +184,8 @@ def post_brain_prime(body: dict | None = None) -> BrainPrimeResponse:
     project_path = _require_project_path(project)
     sid = _require_session_id(session_id)
 
+    logger.info("[brain] POST /prime 접수 session=%s project=%s", sid[:8], project_path)
+
     # 백그라운드 스레드로 prime 트리거 (즉시 반환)
     t = threading.Thread(
         target=_prime_background,
@@ -223,6 +228,11 @@ def post_brain_query(body: BrainQueryRequest) -> BrainJobSubmitResponse:
     """
     project_path = _require_project_path(body.project)
     sid = _require_session_id(body.session_id)
+
+    logger.info(
+        "[brain] POST /query 접수 session=%s project=%s q=%r",
+        sid[:8], project_path, (body.question or "")[:60],
+    )
 
     # [NOTE] new_conversation에 의한 reset은 query에서 수행하지 않는다(폐기).
     # 대화별 session_id 설계에서 새 대화는 FE가 새 session_id를 생성·전달하는 것으로 처리.

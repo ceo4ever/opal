@@ -13,6 +13,7 @@
 """
 from __future__ import annotations
 
+import logging
 import threading
 import time
 import uuid
@@ -20,6 +21,8 @@ from datetime import datetime
 from typing import Any, Literal
 
 from dashboard.backend.adapters import opbr_adapter
+
+logger = logging.getLogger(__name__)
 
 # "already in use" 에러 판정 패턴
 _ALREADY_IN_USE_PHRASES = (
@@ -256,9 +259,17 @@ class ConversationBrainSession:
 
         if current_claude_sid is None:
             # 콜드 프라임 후 질의 (conversation_id로 --session-id 생성)
+            logger.info(
+                "[brain] ask COLD 경로 conv=%s (콜드 프라임 — 부트스트랩 로드, 최대 %.0fs)",
+                self.conversation_id[:8], COLD_TIMEOUT_S,
+            )
             return self._cold_and_ask(question)
         else:
             # 웜 resume 시도 → 실패 시 ⓓ 투명 재프라임
+            logger.info(
+                "[brain] ask WARM 경로 conv=%s (resume, 최대 %.0fs)",
+                self.conversation_id[:8], WARM_TIMEOUT_S,
+            )
             return self._warm_ask(question, current_claude_sid)
 
     def _cold_prime_with_retry(self, question: str, timeout: float) -> dict:
@@ -404,18 +415,30 @@ class ConversationBrainSession:
             job_id: 이 잡의 식별자
             question: 사용자 질문
         """
+        logger.info("[brain] job 실행 시작 job_id=%s", job_id[:8])
+        t0 = time.monotonic()
         try:
             result = self.ask(question)
+            elapsed = time.monotonic() - t0
             with self._lock:
                 if self._current_job is not None and self._current_job["job_id"] == job_id:
                     self._current_job["status"] = "done"
                     self._current_job["answer"] = result.get("answer", "")
                     self._current_job["citations"] = result.get("citations", [])
+            logger.info(
+                "[brain] job 완료 job_id=%s status=done elapsed=%.1fs answer_len=%d",
+                job_id[:8], elapsed, len(result.get("answer", "")),
+            )
         except Exception as exc:
+            elapsed = time.monotonic() - t0
             with self._lock:
                 if self._current_job is not None and self._current_job["job_id"] == job_id:
                     self._current_job["status"] = "error"
                     self._current_job["error_msg"] = str(exc)
+            logger.error(
+                "[brain] job 실패 job_id=%s elapsed=%.1fs error=%s",
+                job_id[:8], elapsed, exc,
+            )
 
     def get_job(self, job_id: str) -> dict | None:
         """잡 상태 스냅샷 반환. job_id 불일치/미존재 시 None.

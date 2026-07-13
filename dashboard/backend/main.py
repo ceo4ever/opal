@@ -20,6 +20,12 @@ from fastapi.staticfiles import StaticFiles
 
 from dashboard.backend.routers import brain, dashboard, doctor, memory, projects, tasks
 
+# 앱 로거 INFO를 로그 파일(/tmp/opal-console.log)로 내보낸다.
+# uvicorn은 root 로거에 핸들러를 두지 않아, basicConfig 없이는 앱 logger.info가 유실된다.
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+)
 logger = logging.getLogger(__name__)
 
 # ── FastAPI 앱 생성 ──────────────────────────────────────────────────────────

@@ -3,7 +3,7 @@
   "module": "adapters.opbr_adapter",
   "layer": "service",
   "domain": "console",
-  "description": "Phase 2 하드닝 + cwd 격리 + 대화별 session_id: claude -p '[ASSISTANT]\\n//opbr query --read-only <질의>' --output-format json 서브프로세스 구동. 프롬프트 첫 줄 [ASSISTANT] 마커로 headless 호출을 비서 tier(Phase A)로 캡 — PM tier(Phase B) 승격을 억제해 읽기전용 브레인 워커의 tier 오염을 방지한다. subprocess.run에 cwd=project_path 설정 → opbr/brain-tool이 해당 프로젝트의 .opal/brain을 검색(격리 보장). project_path 존재 검증(NotADirectoryError). 세션 핸들(cold=True→--session-id FE제공session_id / cold=False→--resume session_id) + JSON 코드펜스 추출(preamble 견고). session_id는 항상 호출자(BE)가 전달 — opbr_adapter가 uuid를 생성하지 않음. [MUST] --safe-mode·--bare·anthropic SDK·API 키 절대 금지. --allowedTools Bash,Read,Grep,Glob 단일 콤마값으로 주입(단일 인자 → 뒤 플래그 삼킴 방지). read-only 가드는 opbr --read-only 계약으로 보장(접미사 제거). backend는 얇은 프록시 — opbr이 brain 검색/페이지 Read/인용 전담(DRY).",
+  "description": "Phase 2 하드닝 + cwd 격리 + 대화별 session_id: claude --model sonnet --effort medium -p '[ASSISTANT]\\n//opbr query --read-only <질의>' --output-format json 서브프로세스 구동. 모델=sonnet+effort medium 고정 — haiku는 JSON 상자 안 마크다운 이스케이프를 지키지 못해 citations 유실(raw 마크다운 출력) → sonnet+medium이 JSON 계약 준수+적응형 마크다운 구조+haiku급 속도(콜드 ~56s) 3박자 충족(2026-07-13 실측). 프롬프트 첫 줄 [ASSISTANT] 마커로 headless 호출을 비서 tier(Phase A)로 캡 — PM tier(Phase B) 승격을 억제해 읽기전용 브레인 워커의 tier 오염을 방지한다. subprocess.run에 cwd=project_path 설정 → opbr/brain-tool이 해당 프로젝트의 .opal/brain을 검색(격리 보장). project_path 존재 검증(NotADirectoryError). 세션 핸들(cold=True→--session-id FE제공session_id / cold=False→--resume session_id) + JSON 코드펜스 추출(preamble 견고). session_id는 항상 호출자(BE)가 전달 — opbr_adapter가 uuid를 생성하지 않음. [MUST] --safe-mode·--bare·anthropic SDK·API 키 절대 금지. --allowedTools Bash,Read,Grep,Glob 단일 콤마값으로 주입(단일 인자 → 뒤 플래그 삼킴 방지). read-only 가드는 opbr --read-only 계약으로 보장(접미사 제거). backend는 얇은 프록시 — opbr이 brain 검색/페이지 Read/인용 전담(DRY).",
   "exports": ["prime_and_ask", "extract_json_fence"],
   "depends": []
 }
@@ -11,10 +11,13 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 import re
 import subprocess
 import time
+
+logger = logging.getLogger(__name__)
 
 
 # [MUST] --safe-mode·--bare·anthropic SDK·ANTHROPIC_API_KEY 절대 사용 금지
@@ -136,6 +139,8 @@ def prime_and_ask(
     cmd: list[str] = [
         CLAUDE_BIN,
         "--allowedTools", "Bash,Read,Grep,Glob",
+        "--model", "sonnet",
+        "--effort", "medium",
         "-p", prompt,
         "--output-format", "json",
     ]
@@ -154,6 +159,10 @@ def prime_and_ask(
             f"prime_and_ask: project_path가 존재하지 않거나 디렉토리가 아닙니다: {project_path!r}"
         )
 
+    logger.info(
+        "[brain] claude 호출 시작 cold=%s model=sonnet effort=medium sid=%s timeout=%.0fs q=%r",
+        cold, session_id[:8], timeout, question[:60],
+    )
     t0 = time.monotonic()
 
     try:
@@ -166,17 +175,26 @@ def prime_and_ask(
             cwd=project_path if project_path else None,  # 프로젝트 brain 격리
         )
     except subprocess.TimeoutExpired as exc:
+        logger.error("[brain] claude 타임아웃 %.0fs cold=%s sid=%s", timeout, cold, session_id[:8])
         raise RuntimeError(
             f"prime_and_ask timeout after {timeout}s"
         ) from exc
 
     elapsed_s = time.monotonic() - t0
+    logger.info(
+        "[brain] claude 호출 종료 elapsed=%.1fs rc=%s stdout_len=%d",
+        elapsed_s, proc.returncode, len(proc.stdout or ""),
+    )
 
     # 비JSON 출력 처리
     stdout = proc.stdout.strip()
     try:
         parsed = json.loads(stdout)
     except (json.JSONDecodeError, ValueError) as exc:
+        logger.error(
+            "[brain] claude non-JSON 출력 rc=%s stderr=%r stdout=%r",
+            proc.returncode, (proc.stderr or "")[:300], stdout[:300],
+        )
         raise RuntimeError(
             f"prime_and_ask: non-JSON output from claude. "
             f"returncode={proc.returncode}, stderr={proc.stderr[:200]!r}"
@@ -185,6 +203,7 @@ def prime_and_ask(
     # is_error 판정 (H-6)
     if parsed.get("is_error") is True:
         subtype = parsed.get("subtype", "unknown")
+        logger.error("[brain] claude is_error=true subtype=%s", subtype)
         raise RuntimeError(
             f"prime_and_ask: claude returned is_error=true, subtype={subtype}"
         )
