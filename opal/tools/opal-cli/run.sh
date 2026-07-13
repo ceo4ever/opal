@@ -17,6 +17,7 @@
 #   v1.0.3 2026-05-09 22:35 KST: --version이 ~/.opal/VERSION(framework 버전) 표시. OPAL_CLI_VERSION 하드코딩 폐기 — CLI 진입점 자체 버전과 framework 버전 통일 (139 추가작업)
 #   v1.2 2026-07-10 install 서브커맨드 완전 제거 — dispatch/help/header/unknown 정리 + lib/install.sh 삭제 (055)
 #   v1.3 2026-07-10 18:07 usage() console 액션 목록에 scan 추가 (057)
+#   v1.4 2026-07-13 17:43 usage() console 액션 목록에 log 추가 (L2)
 #
 
 set -euo pipefail
@@ -66,7 +67,7 @@ ${BOLD}서브커맨드:${NC}
   doctor                환경 진단 (의존성·경로·MCP·부트스트래퍼)
   uninstall             OPAL 제거 (~/.opal + 부트스트래퍼 마커)
   mcp [add|list|remove] [name]  MCP 관리
-  console [start|stop|status|open|scan]  OPAL Console 대시보드 관리 (포트 7823)
+  console [start|stop|status|open|scan|log]  OPAL Console 대시보드 관리 (포트 7823)
 
 ${BOLD}옵션:${NC}
   --version             버전 출력

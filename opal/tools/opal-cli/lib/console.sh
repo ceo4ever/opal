@@ -9,6 +9,7 @@
 #   opal-cli console open    — 브라우저에서 대시보드 열기
 #   opal-cli console scan [기준경로...] [--prune] [--depth N]
 #                             — console.config.json 자동 생성·머지 (기본 base=$HOME, depth=3)
+#   opal-cli console log [-n N] — 로그 실시간 팔로우 (기본 최근 50줄부터, Ctrl+C 종료)
 #
 # 전제:
 #   - ~/.opal/dashboard-server/dashboard/backend/ — install 후 BE 배포 경로 (패키지 구조)
@@ -23,6 +24,7 @@
 #   v1.1 2026-06-15 [fix] --app-dir 를 dashboard-server 로 변경 + app 경로 dashboard.backend.main:app (021)
 #   v1.2 2026-07-10 컴포넌트 누락·전제 안내를 opal-cli update(재배포)로 교체 — install 서브커맨드 제거에 정합 (055)
 #   v1.3 2026-07-10 18:07 scan 서브명령 신설 — console.config.json 자동 생성/머지 + start 가드 안내 (057)
+#   v1.4 2026-07-13 17:43 log 서브명령 신설 — tail -F 실시간 팔로우(-n N) + 로그 경로 변수 추출 (L2)
 #
 
 # ─── console 서브커맨드 ───────────────────────────────────────
@@ -37,6 +39,7 @@ cmd_console() {
     local host="127.0.0.1"
     local port="7823"
     local health_url="http://${host}:${port}/health"
+    local log_file="/tmp/opal-console.log"
 
     case "$action" in
         start)
@@ -74,9 +77,10 @@ cmd_console() {
                 dashboard.backend.main:app \
                 --host "$host" \
                 --port "$port" \
-                >/tmp/opal-console.log 2>&1 &
-            success "OPAL Console 기동됨 (PID: $!, 로그: /tmp/opal-console.log)"
+                >"$log_file" 2>&1 &
+            success "OPAL Console 기동됨 (PID: $!, 로그: $log_file)"
             info "상태 확인: opal-cli console status"
+            info "로그 팔로우: opal-cli console log"
             info "브라우저 열기: opal-cli console open"
             ;;
 
@@ -260,6 +264,30 @@ PYEOF
             success "console.config.json 갱신 완료: $scan_config_path" >&2
             ;;
 
+        log)
+            # 실시간 로그 팔로우 — tail -F: start가 >(truncate)로 재기동해도 이름 기준 재추적
+            shift
+            local tail_lines=50
+            while [[ $# -gt 0 ]]; do
+                if [[ "$1" == "-n" ]]; then
+                    tail_lines="${2:-50}"
+                    shift 2
+                else
+                    warn "알 수 없는 옵션 무시: $1"
+                    shift
+                fi
+            done
+
+            if [[ ! -f "$log_file" ]]; then
+                error "로그 파일이 없습니다: $log_file"
+                info "먼저 기동하세요: opal-cli console start"
+                exit 1
+            fi
+
+            info "로그 팔로우 시작 — 최근 ${tail_lines}줄부터 (Ctrl+C 종료): $log_file"
+            tail -n "$tail_lines" -F "$log_file"
+            ;;
+
         --help|-h|"")
             cat <<EOF
 사용법: opal-cli console <action>
@@ -272,6 +300,7 @@ OPAL Console 대시보드 (포트 7823) 관리 명령어입니다.
   status   기동 상태 확인 (/health)
   open     브라우저에서 대시보드 열기
   scan     console.config.json 자동 생성/머지 (기준경로 탐색)
+  log      로그 실시간 팔로우 (기본 최근 50줄부터, -n N 으로 조정, Ctrl+C 종료)
 
 예시:
   opal-cli console start
@@ -281,6 +310,8 @@ OPAL Console 대시보드 (포트 7823) 관리 명령어입니다.
   opal-cli console scan
   opal-cli console scan /Volumes/Data/workspace --depth 3
   opal-cli console scan --prune /Volumes/Data/workspace
+  opal-cli console log
+  opal-cli console log -n 200
 
 전제: opal-cli update 로 대시보드 배포본(dashboard-server·venv) 반영 후 사용 가능합니다.
 EOF
@@ -288,7 +319,7 @@ EOF
 
         *)
             error "알 수 없는 액션: $action"
-            error "사용 가능한 액션: start | stop | status | open | scan"
+            error "사용 가능한 액션: start | stop | status | open | scan | log"
             exit 1
             ;;
     esac

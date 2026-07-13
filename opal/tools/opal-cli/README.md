@@ -27,6 +27,7 @@ PATH에 `~/.opal/bin`이 등록되어야 `opal-cli` 명령이 동작한다.
 | `doctor` | 환경 진단 (의존성·경로·MCP·부트스트래퍼) |
 | `uninstall [--yes]` | OPAL 완전 제거 |
 | `mcp <list\|add\|remove\|install-all>` | MCP 서버 관리 |
+| `console <start\|stop\|status\|open\|scan\|log>` | OPAL Console 대시보드 관리 (포트 7823). `log`는 실시간 로그 팔로우(`-n N`, Ctrl+C 종료) |
 
 ---
 
@@ -145,7 +146,8 @@ opal/tools/opal-cli/
 │   ├── update.sh       update 서브커맨드 (--to vX.Y, 사용자 데이터 보존)
 │   ├── doctor.sh       doctor 서브커맨드 (~/.opal/tools/doctor/run.sh 위임)
 │   ├── uninstall.sh    uninstall 서브커맨드 (~/.opal 제거 + 마커 회수)
-│   └── mcp.sh          mcp 서브커맨드 (list/add/remove/install-all)
+│   ├── mcp.sh          mcp 서브커맨드 (list/add/remove/install-all)
+│   └── console.sh      console 서브커맨드 (start/stop/status/open/scan/log)
 └── README.md           이 문서
 ```
 
@@ -157,3 +159,4 @@ opal/tools/opal-cli/
 |------|------|---------|
 | v1.0 | 2026-05-08 11:00 | 초기 구현 — run.sh 디스패처 + 5개 서브커맨드 (install/update/doctor/uninstall/mcp) (139) |
 | v1.1 | 2026-07-10 10:00 | install 서브커맨드 제거 — dispatch/help/문서 정리 + lib/install.sh 삭제 (055) |
+| v1.2 | 2026-07-13 17:43 | console log 서브명령 신설 — tail -F 실시간 팔로우(-n N) + README console 항목 보강 (L2) |
