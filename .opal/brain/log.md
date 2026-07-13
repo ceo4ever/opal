@@ -178,3 +178,7 @@
 - 신규: [[pages/concept/oppl-two-loop-orchestrator.md]], [[pages/entity/opal-evaluator-agent.md]], [[pages/concept/oppl-3-ssot-tool-gated-separation.md]], [[pages/concept/oppl-scenario-red-confirmed-gap.md]]
 - 출처: task:056
 
+## [2026-07-13] ingest | CLOSE ingest — 태스크 059 opal-agent 부트스트랩 마커 3-way + cold session 지원
+- 신규: [[pages/concept/cold-warm-session-separation.md]]
+- 출처: task:059
+

@@ -30,7 +30,7 @@
 | 실행 | `claude -p` | `gemini -p` | `codex exec` | `grok -p` | `cursor-agent -p` |
 | 시스템 프롬프트 | `--append-system-prompt` (**추가**) | `GEMINI_SYSTEM_MD` env (**교체**) | `-c model_instructions_file` (**교체**) | `--system-prompt-override` (**교체**) | 플래그 없음 → 프롬프트에 **접붙임**(best-effort) |
 | JSON | `--output-format json` (단일) | `--output-format json` (단일) | `--json` (**JSONL 스트림**) | `--output-format json` (단일) | `--output-format json` (단일, claude와 유사 스키마) |
-| resume | `--resume <id>` | `--resume <id>` | `exec resume <id>` (**별도 서브커맨드**) | `--resume <id>` | `--resume <id>` |
+| resume | `--resume <id>` (신규 세션은 `--session-id <id>`로 caller-supplied cold 지정 가능) | `--resume <id>` | `exec resume <id>` (**별도 서브커맨드**) | `--resume <id>` | `--resume <id>` |
 | 자동 실행 | `--allowedTools` | `--approval-mode yolo` | `--sandbox workspace-write` | `--tools` | `--force` |
 | 모델 | `--model` | `-m` | `-m` | `-m grok-4.5` | `--model` (gpt-5, sonnet-4 …) |
 | effort | `--effort` (low/medium/high/xhigh/max) | ❌ | `-c model_reasoning_effort=` | `--effort` | ❌ (모델명 내장 `sonnet-4-thinking`, `model[effort=high]`) |
@@ -143,9 +143,10 @@ echo "긴 프롬프트..." | opal-agent --provider gemini --json
 | `--allowed-tools A,B` | 허용 도구 화이트리스트 (콤마 구분) |
 | `--cwd DIR` | 작업 디렉토리 |
 | `--timeout SEC` | 타임아웃(초, 기본 300) |
-| `--resume ID` | 이어갈 세션 ID |
+| `--resume ID` | 이어갈 세션 ID (warm resume, `--session-id`와 상호배타) |
+| `--session-id ID` | 신규(cold) 세션에 지정할 caller-supplied session id — **claude만** 지원(`--resume`과 상호배타) |
 | `--bin PATH` | CLI 바이너리 경로 오버라이드 |
-| `--opal-bootstrap on\|off` | 서브에이전트 OPAL 부트스트랩 (기본 `on`). `off`면 프롬프트 첫 줄에 `[WORKER]` 마커 주입 → 부트스트랩 전체 스킵(깨끗한 워커) |
+| `--opal-bootstrap on\|assistant\|off` | 서브에이전트 OPAL 부트스트랩 (기본 `on`). `assistant`면 프롬프트 첫 줄에 `[ASSISTANT]` 마커 주입 → 비서 tier(Phase A)만 로드(PM tier 승격 억제). `off`면 첫 줄에 `[WORKER]` 마커 주입 → 부트스트랩 전체 스킵(깨끗한 워커) |
 | `--json` / `--text` | 출력 형식 (기본 `--text`) |
 
 종료 코드: 정상 `0`, 에이전트 오류(`is_error`) `1`, 실행 오류 `2`.
@@ -181,11 +182,36 @@ echo "긴 프롬프트..." | opal-agent --provider gemini --json
 - v2.2 (2026-07-12) antigravity(agy) provider 추가 — 실측 기반 text-only 2급 어댑터
 - v2.3 (2026-07-12) `effort`(추론 강도) 지원 — claude/codex/grok, 미지원 provider 경고. `model`은 v1.0부터 지원
 - v2.4 (2026-07-12) `--opal-bootstrap on\|off` — `off`면 `[WORKER]` 첫 줄 마커로 OPAL 부트스트랩 스킵(부트스트래퍼 진입점 게이트 배선과 연동). claude/codex/agy 실측 검증
+- v2.5 (2026-07-13 15:25 KST, 059) `--opal-bootstrap`을 `on\|assistant\|off` 3-way로 확장(`assistant`=`[ASSISTANT]` 첫 줄, 비서 tier Phase A만) + claude 전용 caller-supplied cold `--session-id` 지원(`--resume`과 상호배타, 미지원 provider는 경고 후 무시)
 
-## OPAL 부트스트랩 스킵 (`--opal-bootstrap off`)
+## OPAL 부트스트랩 스킵 (`--opal-bootstrap on|assistant|off`)
 
-opal-agent가 띄우는 서브에이전트는 기본적으로 OPAL 부트스트랩(정체성 `알투`·PM tier 등)을 수행한다. 순수 워커로 쓰려면 `--opal-bootstrap off`를 주면 프롬프트 첫 줄에 `[WORKER]` 마커가 붙어 부트스트랩 전체가 스킵된다.
+opal-agent가 띄우는 서브에이전트는 기본적으로 OPAL 부트스트랩(정체성 `알투`·PM tier 등)을 수행한다. `--opal-bootstrap`은 프롬프트 첫 줄에 마커를 주입해 이 부트스트랩을 3단으로 스킵할 수 있는 사다리다:
 
-- **메커니즘**: `[WORKER]` 첫 줄 마커 → OPAL 부트스트래퍼 진입점 게이트(`~/.claude/CLAUDE.md`·`~/.codex/AGENTS.md`·`~/.gemini/GEMINI.md`)가 `[MUST]`보다 먼저 이를 감지해 스킵. env(`OPAL_BOOTSTRAP`) 방식이 아님 — 과거 env 게이트는 매 세션 권한 프롬프트 문제로 폐기됨(043).
+| 값 | 첫 줄 마커 | 로드 범위 |
+|---|-----------|----------|
+| `on` (기본) | 없음 | 비서 tier(Phase A) + PM tier(Phase B) 전부 |
+| `assistant` | `[ASSISTANT]` | 비서 tier(Phase A)만 — `.opal/AGENT.md`가 있어도 PM tier 승격 억제 |
+| `off` | `[WORKER]` | 전부 스킵 — 순수 워커(깨끗한 컨텍스트) |
+
+- **메커니즘**: 첫 줄 마커 → OPAL 부트스트래퍼 진입점 게이트(`~/.claude/CLAUDE.md`·`~/.codex/AGENTS.md`·`~/.gemini/GEMINI.md`)가 `[MUST]`보다 먼저 이를 감지해 스킵 범위를 결정. env(`OPAL_BOOTSTRAP`) 방식이 아님 — 과거 env 게이트는 매 세션 권한 프롬프트 문제로 폐기됨(043).
 - **검증**(off → on): claude `클로드`→`알투`, codex `Codex`→`알투`, antigravity `Antigravity`(chrome 없음)→`알투:`+부트스트랩 로그.
-- **전제**: 부트스트래퍼 진입점에 "첫 줄 마커 게이트"가 배포돼 있어야 함(bootstrapper v1.1+/gemini v1.3+).
+- **전제**: 부트스트래퍼 진입점에 "첫 줄 마커 게이트"가 배포돼 있어야 함(bootstrapper v1.1+/gemini v1.3+, 3-way는 v1.2+/059).
+
+## cold session id 지정 (`--session-id`, claude 전용)
+
+claude 서브에이전트를 처음(신규) 실행할 때, 호출자가 미리 만든 session id를 그 신규 세션에 지정하고 싶을 때 쓴다(브레인 등 상위 시스템이 세션 registry를 caller 쪽에서 관리하는 경우). `--resume`(warm, 기존 세션 이어가기)과는 반대 방향이며 둘은 상호배타다.
+
+```bash
+# 신규 세션을 caller-supplied UUID로 prime (cold)
+~/.opal/tools/opal-agent/run.sh \
+    --provider claude --session-id "3fa1c2e4-...-uuid" \
+    --json "새 작업을 시작해줘"
+
+# 이후 같은 세션을 이어가려면 warm resume(--resume)로 전환
+~/.opal/tools/opal-agent/run.sh \
+    --provider claude --resume "3fa1c2e4-...-uuid" \
+    --json "이어서 진행해줘"
+```
+
+claude 외 provider(gemini/codex/grok/cursor/antigravity)에 `--session-id`를 지정하면 무시되고 stderr에 경고가 출력된다(`--effort` 미지원 경고와 동일 패턴).

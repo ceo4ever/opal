@@ -1,0 +1,93 @@
+{
+  "schema_version": "1.0",
+  "task_id": "059-260713-opds-에이전트마커-3단-세션주입",
+  "locked": true,
+  "created_at": "2026-07-13T15:23:46+09:00",
+  "locked_at": "2026-07-13T15:24:01+09:00",
+  "scenarios": [
+    {
+      "id": "S-1",
+      "acceptance_ref": "TS-001/R-1",
+      "type": "unit",
+      "expected": "ClaudeAdapter.build_invocation 조립 프롬프트 첫 줄 == [ASSISTANT]",
+      "red_confirmed": true,
+      "red_evidence": "pytest test_ts001_claude_assistant_marker_first_line FAIL: AssertionError '[ASSISTANT]' != 'hello world' (_mark에 assistant 분기 없음, exit 1)",
+      "red_at": "2026-07-13T15:23:56+09:00",
+      "result": "pass",
+      "evidence": "pytest test_ts001_claude_assistant_marker_first_line PASS — build_invocation 조립 프롬프트 첫 줄 == [ASSISTANT] (GREEN, 17 passed exit0)",
+      "marked_at": "2026-07-13T15:33:45+09:00"
+    },
+    {
+      "id": "S-3",
+      "acceptance_ref": "TS-003/R-1",
+      "type": "unit",
+      "expected": "cursor/antigravity system_prompt 접붙임 후에도 조립 프롬프트 첫 줄 == [ASSISTANT] (최외곽 불변식)",
+      "red_confirmed": true,
+      "red_evidence": "pytest test_ts003_cursor/antigravity_outermost_marker FAIL: _mark assistant 분기 부재로 첫 줄이 [ASSISTANT] 아님 (exit 1)",
+      "red_at": "2026-07-13T15:23:56+09:00",
+      "result": "pass",
+      "evidence": "pytest test_ts003_cursor/antigravity_outermost_marker PASS — system_prompt 접붙임 후에도 첫 줄 == [ASSISTANT] (최외곽 불변식 확인)",
+      "marked_at": "2026-07-13T15:33:45+09:00"
+    },
+    {
+      "id": "S-4",
+      "acceptance_ref": "TS-004/R-1",
+      "type": "regression",
+      "expected": "CLI --opal-bootstrap assistant 파싱 통과, bad 값은 argparse 거부, 기본값 on",
+      "red_confirmed": true,
+      "red_evidence": "pytest test_ts004_assistant_choice_parses FAIL: SystemExit(2) 'invalid choice: assistant' — CLI choices=(on,off)에 assistant 부재 (exit 1)",
+      "red_at": "2026-07-13T15:23:56+09:00",
+      "result": "pass",
+      "evidence": "pytest test_ts004_assistant_choice_parses/bad_choice_rejected/default_choice_is_on 3건 PASS — choices=(on,assistant,off) 정상 파싱·거부·기본값 확인",
+      "marked_at": "2026-07-13T15:33:45+09:00"
+    },
+    {
+      "id": "S-5",
+      "acceptance_ref": "TS-005/R-3",
+      "type": "unit",
+      "expected": "new_session_id 지정 시 cmd에 --session-id 포함, --resume 부재",
+      "red_confirmed": true,
+      "red_evidence": "pytest test_ts005_claude_cold_session_id FAIL: TypeError AgentConfig.__init__() got unexpected keyword 'new_session_id' (필드 미구현, exit 1)",
+      "red_at": "2026-07-13T15:23:56+09:00",
+      "result": "pass",
+      "evidence": "pytest test_ts005_claude_cold_session_id PASS — new_session_id 지정 시 cmd에 --session-id 포함, --resume 부재 확인",
+      "marked_at": "2026-07-13T15:33:45+09:00"
+    },
+    {
+      "id": "S-7",
+      "acceptance_ref": "TS-007/R-3",
+      "type": "unit",
+      "expected": "new_session_id+session_id 동시 지정 시 OpalAgentError(비-ClaudeNotFoundError) raise, 디스패치 이전 검증",
+      "red_confirmed": true,
+      "red_evidence": "pytest test_ts007_cold_warm_both_set_raises_before_dispatch FAIL: TypeError AgentConfig.__init__() got unexpected keyword 'new_session_id' (상호배타 검증/필드 미구현, exit 1)",
+      "red_at": "2026-07-13T15:23:56+09:00",
+      "result": "pass",
+      "evidence": "pytest test_ts007_cold_warm_both_set_raises_before_dispatch PASS — new_session_id+session_id 동시 지정 시 OpalAgentError raise (디스패치 이전) 확인",
+      "marked_at": "2026-07-13T15:33:45+09:00"
+    },
+    {
+      "id": "S-8",
+      "acceptance_ref": "TS-008/R-3",
+      "type": "unit",
+      "expected": "ClaudeAdapter.supports_session_assign True, GeminiAdapter False, gemini build_invocation cmd에 --session-id 부재",
+      "red_confirmed": true,
+      "red_evidence": "pytest test_ts008_* 3건 FAIL: AttributeError 'ClaudeAdapter'/'GeminiAdapter' has no attribute 'supports_session_assign'; TypeError new_session_id 미구현 (exit 1)",
+      "red_at": "2026-07-13T15:23:56+09:00",
+      "result": "pass",
+      "evidence": "pytest test_ts008_* 3건 PASS — ClaudeAdapter.supports_session_assign True / GeminiAdapter False / gemini build_invocation cmd에 --session-id 부재 확인",
+      "marked_at": "2026-07-13T15:33:45+09:00"
+    },
+    {
+      "id": "S-9",
+      "acceptance_ref": "TS-009/R-3",
+      "type": "regression",
+      "expected": "CLI --resume/--session-id 동시 전달 시 argparse 거부(SystemExit)",
+      "red_confirmed": true,
+      "red_evidence": "pytest test_ts009_session_id_flag_parses_alone FAIL: SystemExit(2) 'unrecognized arguments: --session-id sid-b' — CLI --session-id 플래그 미구현 (exit 1)",
+      "red_at": "2026-07-13T15:23:57+09:00",
+      "result": "pass",
+      "evidence": "pytest test_ts009_* 2건 PASS — --resume/--session-id 동시 전달 시 argparse SystemExit(2) 거부, 단독 --session-id는 정상 파싱 확인",
+      "marked_at": "2026-07-13T15:33:46+09:00"
+    }
+  ]
+}

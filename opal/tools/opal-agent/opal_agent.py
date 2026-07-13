@@ -1,5 +1,13 @@
 #!/usr/bin/env python3
 """
+@header {
+  "module": "opal_agent",
+  "layer": "util",
+  "domain": "opal-workspace",
+  "description": "멀티 provider 서브에이전트 호출 라이브러리 + CLI — claude/gemini/codex/grok 등 여러 LLM CLI를 비대화형 서브에이전트로 호출하는 단일 모듈",
+  "exports": ["call_agent", "AgentConfig", "AgentResult", "PROVIDERS", "OpalAgentError", "ClaudeNotFoundError", "OpalAgentTimeout"]
+}
+
 opal/tools/opal-agent/opal_agent.py — 멀티 provider 서브에이전트 호출 라이브러리 + CLI
 
 OPAL 프레임워크의 스킬·오케스트레이터가 여러 LLM CLI(claude / gemini / codex /
@@ -32,6 +40,10 @@ grok)를 비대화형(headless) 서브에이전트로 프로그래밍적·CLI로
   - 시스템 프롬프트 의미: claude만 '추가(append)', 나머지는 '교체(replace)'.
   - codex는 JSONL 스트림 + resume가 별도 서브커맨드(`codex exec resume`)이며,
     resume와 --json 병용에 알려진 이슈가 있다.
+  - 부트스트랩 마커 3-way: on(마커 없음·풀 부트스트랩) / assistant([ASSISTANT]
+    첫 줄 — 비서 tier(Phase A)만, PM 승격 억제) / off([WORKER] 첫 줄 — 전부 스킵).
+  - cold session id(new_session_id → claude --session-id)는 claude 전용
+    (supports_session_assign). session_id(warm --resume)와 상호 배타 — _run이 검증.
 
 변경이력:
   v1.0 2026-07-12 초기 구현 — claude 전용 call_agent + AgentConfig/AgentResult + CLI
@@ -41,6 +53,8 @@ grok)를 비대화형(headless) 서브에이전트로 프로그래밍적·CLI로
   v2.3 2026-07-12 effort(추론 강도) 지원 — claude/codex/grok, 미지원 provider 경고
   v2.4 2026-07-12 --opal-bootstrap on|off — off면 [WORKER] 첫 줄 마커로 부트스트랩
                   스킵(진입점 게이트 배선과 연동). env 방식 폐기(043 회귀 회피)
+  v2.5 2026-07-13 15:25 --opal-bootstrap 3-way — assistant([ASSISTANT] 비서 tier 캡) 추가
+                  + caller-supplied cold session id(claude --session-id, new_session_id) (059)
 """
 
 from __future__ import annotations
@@ -85,10 +99,11 @@ class AgentConfig:
     effort: str | None = None                     # 추론 강도 (claude/codex/grok만 지원)
     cwd: str | None = None                        # subprocess 작업 디렉토리
     timeout: int = 300                            # 초, 초과 시 OpalAgentTimeout
-    session_id: str | None = None                 # resume 이어가기
+    session_id: str | None = None                 # resume 이어가기 (warm)
+    new_session_id: str | None = None             # cold 세션 지정(caller-supplied). claude만 지원(--session-id). session_id와 상호 배타
     output_format: str = "json"                   # "json" | "text"
     bin: str | None = None                        # CLI 바이너리 오버라이드 (기본: provider별)
-    opal_bootstrap: str = "on"                    # "on" | "off" — off면 프롬프트 첫 줄 [WORKER] 마커(부트스트랩 스킵)
+    opal_bootstrap: str = "on"                    # "on"(풀 부트스트랩) | "assistant"([ASSISTANT] Phase A만) | "off"([WORKER] 전부 스킵)
 
 
 @dataclass
@@ -115,6 +130,10 @@ class Invocation:
 
 # ─── provider 어댑터 ──────────────────────────────────────────
 
+# 부트스트랩 스킵 사다리 ↔ 첫 줄 마커 1:1 대응 (core AGENT.md:9 3단 사다리)
+_BOOTSTRAP_MARKERS = {"off": "[WORKER]", "assistant": "[ASSISTANT]"}
+
+
 class ProviderAdapter(ABC):
     """provider별 CLI 인자 조립 + 출력 파싱 인터페이스."""
 
@@ -122,6 +141,7 @@ class ProviderAdapter(ABC):
     default_bin: str = ""
     supports_resume: bool = False
     supports_effort: bool = False     # effort(추론 강도) 플래그 지원 여부
+    supports_session_assign: bool = False   # cold --session-id(caller-supplied) 지원 여부
 
     @abstractmethod
     def build_invocation(self, config: AgentConfig, resolved_bin: str) -> Invocation:
@@ -139,14 +159,13 @@ class ProviderAdapter(ABC):
             fh.write(text)
         return path
 
-    # 공통 헬퍼 — opal_bootstrap=off면 프롬프트 첫 줄에 [WORKER] 마커를 붙인다.
-    # OPAL 부트스트랩 게이트가 첫 줄 [WORKER]를 보면 부트스트랩 전체를 스킵한다.
-    # (반드시 최종 프롬프트의 최외곽에 적용 — 첫 줄이 [WORKER]여야 함)
+    # 공통 헬퍼 — opal_bootstrap 값에 따라 프롬프트 첫 줄에 부트스트랩 스킵 마커를
+    # 붙인다. OPAL 부트스트랩 게이트가 첫 줄 마커를 보고 스킵 범위를 판단한다.
+    # (반드시 최종 프롬프트의 최외곽에 적용 — 마커가 첫 줄이어야 함)
     @staticmethod
     def _mark(prompt: str, config: AgentConfig) -> str:
-        if config.opal_bootstrap == "off":
-            return f"[WORKER]\n{prompt}"
-        return prompt
+        marker = _BOOTSTRAP_MARKERS.get(config.opal_bootstrap)   # "on" → None
+        return f"{marker}\n{prompt}" if marker else prompt
 
 
 class ClaudeAdapter(ProviderAdapter):
@@ -156,6 +175,7 @@ class ClaudeAdapter(ProviderAdapter):
     default_bin = "claude"
     supports_resume = True
     supports_effort = True
+    supports_session_assign = True
 
     def build_invocation(self, config: AgentConfig, resolved_bin: str) -> Invocation:
         cmd = [resolved_bin, "-p", self._mark(config.prompt, config),
@@ -170,8 +190,10 @@ class ClaudeAdapter(ProviderAdapter):
             cmd += ["--append-system-prompt", config.system_prompt]
         if config.allowed_tools:
             cmd += ["--allowedTools", ",".join(config.allowed_tools)]
-        if config.session_id:
-            cmd += ["--resume", config.session_id]
+        if config.new_session_id:
+            cmd += ["--session-id", config.new_session_id]    # cold prime
+        elif config.session_id:
+            cmd += ["--resume", config.session_id]             # warm resume
         return Invocation(cmd=cmd)
 
     def parse_result(self, config: AgentConfig, stdout: str) -> AgentResult:
@@ -493,6 +515,7 @@ def call_agent(
     cwd: str | None = None,
     timeout: int = 300,
     session_id: str | None = None,
+    new_session_id: str | None = None,
     output_format: str = "json",
     bin: str | None = None,
     opal_bootstrap: str = "on",
@@ -524,6 +547,7 @@ def call_agent(
         cwd=cwd,
         timeout=timeout,
         session_id=session_id,
+        new_session_id=new_session_id,
         output_format=output_format,
         bin=bin,
         opal_bootstrap=opal_bootstrap,
@@ -534,6 +558,23 @@ def call_agent(
 def _run(config: AgentConfig) -> AgentResult:
     """AgentConfig로 subprocess를 실제 실행한다."""
     adapter = _ADAPTERS[config.provider]
+
+    # cold(new_session_id)·warm(session_id) 상호배타 + 미지원 provider 경고는
+    # adapter dispatch(및 shutil.which) 이전, 단일 chokepoint에서 검증한다.
+    # 경고 배치가 effort 경고(main()에만 위치)와 비대칭인 이유: cold 드롭은
+    # correctness-critical(호출자 registry에 미생성 세션 id가 남아 브레인 재개
+    # 실패)이라 라이브러리·CLI 양 표면을 모두 커버해야 한다(§9 R-2).
+    if config.new_session_id and config.session_id:
+        raise OpalAgentError(
+            "new_session_id(cold)와 session_id(warm resume)는 동시 지정할 수 없습니다."
+        )
+    if config.new_session_id and not adapter.supports_session_assign:
+        print(
+            f"[opal-agent 경고] provider '{config.provider}'는 caller-supplied "
+            f"session id(--session-id)를 지원하지 않아 무시됩니다.",
+            file=sys.stderr,
+        )
+
     bin_name = config.bin or adapter.default_bin
 
     resolved = shutil.which(bin_name)
@@ -605,12 +646,19 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--cwd", help="작업 디렉토리")
     parser.add_argument("--timeout", type=int, default=300, help="타임아웃(초), 기본 300")
-    parser.add_argument("--resume", dest="session_id", help="이어갈 session_id")
+    # --resume(dest=session_id)와 --session-id(dest=new_session_id)는 상호배타
+    # — argparse 그룹으로 CLI 레벨 방어(SSOT는 _run()의 검증, 이건 이중 방어).
+    sess = parser.add_mutually_exclusive_group()
+    sess.add_argument("--resume", dest="session_id", help="이어갈 session_id (warm resume)")
+    sess.add_argument(
+        "--session-id", dest="new_session_id",
+        help="신규(cold) 세션에 지정할 caller-supplied session id (claude만, 유효 UUID)",
+    )
     parser.add_argument("--bin", help="CLI 바이너리 경로 오버라이드")
     parser.add_argument(
-        "--opal-bootstrap", choices=("on", "off"), default="on",
-        help="서브에이전트의 OPAL 부트스트랩 스위치 (기본 on). "
-             "off면 프롬프트 첫 줄에 [WORKER] 마커 주입 → 게이트가 부트스트랩 스킵(깨끗한 워커)",
+        "--opal-bootstrap", choices=("on", "assistant", "off"), default="on",
+        help="서브에이전트 OPAL 부트스트랩 (기본 on). "
+             "assistant=[ASSISTANT] 첫 줄(비서 tier·Phase A만) / off=[WORKER] 첫 줄(전부 스킵)",
     )
 
     fmt = parser.add_mutually_exclusive_group()
@@ -662,6 +710,7 @@ def main(argv: list[str] | None = None) -> int:
             cwd=args.cwd,
             timeout=args.timeout,
             session_id=args.session_id,
+            new_session_id=args.new_session_id,
             output_format="json",
             bin=args.bin,
             opal_bootstrap=args.opal_bootstrap,

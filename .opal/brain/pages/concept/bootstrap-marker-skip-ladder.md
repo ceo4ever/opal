@@ -10,13 +10,14 @@ tags:
 - architecture
 sources:
 - task:051
+- task:059
 related:
 - opal-bootstrap-2tier-model
 - opal-pm-promotion-gate
 - opal-bootstrap-skip-gate
 - brain-query-latency-model
 created: '2026-07-02'
-updated: '2026-07-02'
+updated: '2026-07-13'
 status: active
 ---
 
@@ -50,10 +51,17 @@ OPAL 부트스트랩은 디스패치 프롬프트(또는 헤드리스 `-p` 프�
 
 프로젝트 cwd(`.opal/AGENT.md` 존재)에서 `[ASSISTANT]` 프리픽스 프로브를 실행한 결과, 완료 보고가 `⬜ harness ⬜ PM ⬜ PM모드`로 나타났고 Read 파일 목록에 harness·opal-pm·프로젝트 `.opal/AGENT.md`가 포함되지 않았다. 동일 조건의 무마커 대조군 프로브는 `✅ harness ✅ PM ✅ PM모드`로 Phase B가 정상 로드되어 회귀 0이 확인되었다(task:051 DONE.md §동작 검증 실측).
 
+## opal-agent 도구 표면 — 마커 프로그래밍 인터페이스
+
+부트스트랩 마커 계층은 task:051에서 인터랙티브 세션(`.opal/AGENT.md` 부재 및 `-p` 프롬프트 프리픽스)의 선택 없는 게이트로 설계되었으나, task:059에서 opal-agent 도구가 이를 프로그래머 제어 파라미터로 노출했다. 소유자는 `--opal-bootstrap on|assistant|off`로 부트스트랩 로드 범위를 명시적으로 지정할 수 있으며, 이를 통해 서브에이전트 호출·자동화·도구 체이닝에서 tier를 동적으로 선택할 수 있다(근거: `opal/tools/opal-agent/opal_agent.py` §AgentConfig, task:059 PLAN §3.1).
+
+동일 변경에서 opal-agent는 caller-supplied cold session id 지정(`--session-id <uuid>`)도 추가했다. 이는 부트스트랩 마커 설계(tier 격리)와는 직교하지만, 동일 워크플로에서 "비서 tier 진입 + 신규 세션 생성"을 함께 제어해야 하는 브레인 질의(opbr) 워커의 요구에 응한 것이다. cold=caller-supplied id, warm=resume 기존 세션의 상호배타 설계로 회귀 0이 달성되었다(근거: task:059 PLAN §M-3/M-4/M-5).
+
 ## 영향 범위
 
 - `opal/core/AGENT.md` — 설계원칙 박스 3단 사다리 명시, `[ASSISTANT 규칙]` 박스 신설, Phase B 게이트 억제 절, 완료보고 캡 세션 표기, 변경이력 v4.2
 - `dashboard/backend/adapters/opbr_adapter.py` — `-p` 프롬프트 첫 줄 프리픽스, @header/docstring 캡 의도 서술
+- `opal/tools/opal-agent/opal_agent.py` — task:059에서 `--opal-bootstrap` 3-way 노출 및 `--session-id` 파라미터 추가
 - 후속 액션: 캡틴의 canonical install 재배포 필요(`~/.opal/AGENT.md`는 검증용 dev-artifact 배포 상태), opbr_adapter 외 다른 headless `claude -p` 소비자 인벤토리 스캔은 범위 밖(task:051 DONE.md §후속 액션)
 
 ## 관련 페이지

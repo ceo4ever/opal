@@ -1,0 +1,111 @@
+{
+  "task_id": "059-260713-opds-에이전트마커-3단-세션주입",
+  "skill": "opds",
+  "mode": "semi-agentic",
+  "schema_version": "1.0",
+  "created_at": "2026-07-13 14:57",
+  "updated_at": "2026-07-13 15:59",
+  "current_status": "done",
+  "rows": [
+    {
+      "row_id": 1,
+      "stage": "TASK",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-13 14:57",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 2,
+      "stage": "TASK",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-13 15:03",
+      "owner": "user",
+      "note": "캡틴 확인: TASK 승인, PLAN 진입 허가"
+    },
+    {
+      "row_id": 3,
+      "stage": "PLAN",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-13 15:15",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 4,
+      "stage": "PLAN",
+      "item": "PM Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-13 15:15",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 5,
+      "stage": "PLAN",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-13 15:18",
+      "owner": "user",
+      "note": "캡틴 확인: PLAN 승인, EXECUTE 시작 허가"
+    },
+    {
+      "row_id": 6,
+      "stage": "EXECUTE",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-13 15:29",
+      "owner": "auto",
+      "note": "agentic auto-pass: semi-agentic auto-pass: Step1 RED(10F/7P)→게이트 pass→Step2~4 GREEN 17/17 PASS exit0, RED 테스트 불변, scope 2파일 준수"
+    },
+    {
+      "row_id": 7,
+      "stage": "TEST",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-13 15:50",
+      "owner": "auto",
+      "note": "agentic auto-pass: semi-agentic auto-pass: S-1~S-11 전량 PASS(17/17·실측 캡 관측), fix 2회(GC-C001 @header→docstring 복원), 재배포 반영"
+    },
+    {
+      "row_id": 8,
+      "stage": "TEST",
+      "item": "PM Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-13 15:50",
+      "owner": "auto",
+      "note": "agentic auto-pass: semi-agentic auto-pass: PM Gate 6항목 통과 — 시나리오 전량 PASS·코드품질·보안·회귀 0·설계빈틈 없음·컨벤션 Critical/High 0"
+    },
+    {
+      "row_id": 9,
+      "stage": "TEST",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-13 15:59",
+      "owner": "user",
+      "note": "캡틴 확인: TEST 결과 승인, CLOSE 진입 허가"
+    },
+    {
+      "row_id": 10,
+      "stage": "CLOSE",
+      "item": "DONE.md 생성",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-13 15:59",
+      "owner": "PM",
+      "note": null
+    }
+  ]
+}
