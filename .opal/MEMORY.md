@@ -1,8 +1,7 @@
 # opal Memory Index
 
 > 최종 갱신: 2026-06-26 (044 도구·MCP·스킬 통합 검색·사용법·활용 체계 — TASK)
-> last_task_number: 60
-> ⚠️ 채번 충돌: 015·016이 양 PC에서 중복 사용됨 (main: 015 보고형식·016 TDD·017 가드 / brain 라인: 015 brain 코어·016 wiki 지능화). 다음 채번은 018부터.
+> last_task_number: 62
 
 
 | 카테고리 | 설명 | 완료 시 |
@@ -38,9 +37,9 @@
 <!-- memory:history:start -->
 | 제목 | 등록일 | 단계 | 경로 | 핵심결과 |
 |------|--------|------|------|----------|
+| 062 브레인답변 content-driven 6단계 워크플로우 | 2026-07-14 | 완료·커밋대기 | tasks/062-260714-opds-브레인답변-레이아웃-워크플로우/ | opbr query 답변을 content-driven 6단계 워크플로우로 재구조화. 6축→5후보·가드3종·가독성규율. All Pass. 후속=커밋 |
 | 060 브레인 프라임 연결 풀 | 2026-07-14 | 완료 | tasks/060-260713-opd-브레인-프라임-연결풀/ | prewarm 선프라임+웜풀 신설, 웜9.6s vs 콜드26.7s. 13/13 Pass. 후속=커밋·배포·설정화면 |
 | 059 opal-agent 마커 3-way + cold session id | 2026-07-13 | 완료 | tasks/059-260713-opds-에이전트마커-3단-세션주입/ | assistant 캡+--session-id 신설, 17/17 GREEN·실측 캡 관측. 브레인 이관 선행조건 완비. 후속=커밋·opbr 이관 |
 | 057 opal-cli console scan 설정 자동생성 | 2026-07-13 | TEST 완료·CLOSE 대기 | tasks/057-260710-opds-콘솔스캔-설정자동생성/ | console scan 신설+install 자동호출(mac v3.9/win v1.17). 커밋 d9c9902·bed80ad. 후속=DONE.md |
 | 056 oppl 루프 오케스트레이터 신설 | 2026-07-10 | 완료 | tasks/056-260710-opd-oppl-루프-오케스트레이터/ | oppl 2-루프+evaluator+backlog-tool+scenario-* 신설. All Pass·드라이런 evidence. 후속=커밋·scenario-red |
-| 053 brain related 링크필드 정비 + validate 집행 강화 | 2026-07-10 | 완료 | tasks/053-260708-opp-related-링크필드-정비/ | validate 링크필드(related) 검사 신설+--related 플래그. 11페이지 34항목 정비. 118 GREEN. 후속=install 재배포·커밋 |
 <!-- memory:history:end -->

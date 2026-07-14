@@ -186,3 +186,7 @@
 - 신규: [[brain-prime-connection-pool-design]], [[pool-lock-idiom-contract]], [[warm-handle-single-entry-injection]]
 - 출처: task:060
 
+## [2026-07-14] ingest | CLOSE ingest — 태스크 062 브레인답변-레이아웃-워크플로우
+- 신규: [[pages/concept/brain-answer-layout-content-driven.md]]
+- 출처: task:062
+

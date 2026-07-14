@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-07-14 16:29
+> 갱신: 2026-07-14 17:44
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -29,6 +29,7 @@
 - [[b7-action-completion-loop]] — B7 액션 완성도 루프 — triage 기반 경계 재설계 순환 구조 #oppd #action-loop #triage #verification #b7
 - [[bootstrap-marker-skip-ladder]] — 부트스트랩 첫 줄 마커 3단 스킵 사다리 ([WORKER]/[ASSISTANT]/무마커) #bootstrap #2tier #assistant-tier #headless #pm-gate #architecture
 - [[bootstrapper-marker-ssot-single-point]] — 부트스트래퍼 마커 SSOT 단일 지점 수정 원칙 #bootstrap #adapter #platform #ssot #install
+- [[brain-answer-layout-content-driven]] — 브레인 질의 답변 레이아웃 — content-driven 6단계 워크플로우 #brain #query #answer #layout #workflow
 - [[brain-business-term-layer]] — Brain 업무 언어 번역 계층(term) #brain #citation-rules #term #knowledge
 - [[brain-code-scan-role-division]] — brain↔code-scan 역할 분담 — 선별·신선도·깊이 축 (010) #brain #code-scan #architecture #policy
 - [[brain-entity-discipline]] — brain entity 작성 규율 표준화 #brain #knowledge #curation #provenance
