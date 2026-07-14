@@ -182,3 +182,7 @@
 - 신규: [[pages/concept/cold-warm-session-separation.md]]
 - 출처: task:059
 
+## [2026-07-14] ingest | CLOSE ingest — 태스크 060 브레인 프라임 연결 풀
+- 신규: [[brain-prime-connection-pool-design]], [[pool-lock-idiom-contract]], [[warm-handle-single-entry-injection]]
+- 출처: task:060
+

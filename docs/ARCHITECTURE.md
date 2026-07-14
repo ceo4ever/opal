@@ -258,6 +258,7 @@ opal/core/mcps/*    ──── install ─→  claude mcp add --scope user (Cl
 | LLM 합성 | 로컬 `claude -p '//opbr query --read-only "<질의>"' --output-format json` 서브프로세스 → **각 사용자 Claude 구독**으로 실행(종량제 API·키 미사용). backend는 opbr 출력의 JSON 펜스만 추출하는 얇은 프록시(opbr이 brain 검색/인용 전담 — DRY) |
 | opbr 계약 | `opal-brain` SKILL.md `//opbr query --read-only`(v1.4): 자동 선별·항상 최종답변·순수 read-only(brain 무변경)·JSON 출력 |
 | 세션 | `BrainSession`(B1): 일회성 `claude -p` + 디스크 세션 `--session-id`(콜드 프라임)→`--resume`(웜). prime-on-intent(메뉴 진입 시 백그라운드 프라임) + 5트리거 리셋(서버재실행·컨텍스트임계·유휴·크래시·수동) + `threading.Lock` 직렬화. 실측 콜드~90s/웜~20s |
+| 프라임 연결 풀 (태스크 060) | `console.config.json`의 `prewarm_projects`(절대경로 배열, 기본 `[]`)에 지정한 프로젝트만 서버 기동 시(lifespan 훅) 백그라운드 선프라임하여 **프로젝트별 웜 핸들 풀**(크기 1)에 적재. 새 대화 첫 진입(`BrainSessionRegistry._get_or_create`) 시 풀에서 lock 하 체크아웃→세션에 이식(즉시 ready·첫 질의 `--resume` 웜)하고 백그라운드 리필. 동시 프라임은 `Semaphore(2)` 상한, 풀 비면 기존 콜드 폴백(API 5종 계약·FE 불변). 풀은 인메모리 전용(무상태 원칙) |
 | 엔드포인트 | `GET /api/brain/auth`(claude CLI 가용·인증) · `POST /api/brain/prime`(백그라운드 프라임) · `POST /api/brain/query`(질의→`{answer, citations}`) |
 | 이력 | **브라우저 localStorage**(backend·brain 무상태/무변경). FE가 Q&A 스레드 저장·표시·재질문·"새 대화" |
 
@@ -390,3 +391,4 @@ opal/                                    ← 이 저장소
 | 2026-07-10 | 배포 채널 표 `opal-cli` CLI 서브커맨드 목록에서 install 제거 — install 서브커맨드 완전 제거에 정합(신규 설치는 One-liner installer, 갱신은 update) (Task 055) |
 | 2026-07-10 | Project Loop 파이프라인 반영 — 오케스트레이터 표 oppl 행, 전문 에이전트 표 opal-evaluator-agent 행, 폴더 트리 oppl 스킬·evaluator 에이전트, 서브에이전트 수 12개(전문 7)로 정합 (Task 056) |
 | 2026-07-10 | OPAL Console 표 갱신 — `console scan` 서브명령 반영(기동 행 scan 추가, 프로젝트 식별 행에 config 생성·머지·install 자동 실행·start 안내 명기) (Task 057) |
+| 2026-07-14 | OPAL Console 브레인 질의 표에 "프라임 연결 풀" 행 신설 — prewarm_projects 선프라임·프로젝트별 웜 핸들 풀(크기 1)·체크아웃+백그라운드 리필·Semaphore(2) 상한·콜드 폴백·인메모리 전용 (Task 060) |

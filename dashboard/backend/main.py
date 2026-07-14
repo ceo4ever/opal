@@ -3,14 +3,20 @@
   "module": "main",
   "layer": "router",
   "domain": "console",
-  "description": "FastAPI app 진입점. uvicorn host=127.0.0.1:7823(외부 노출 금지, H-7/S-5). CORS dev=localhost:5173 / prod=동일 오리진. /health. 6개 라우터 등록(5개 read-only + brain POST). StaticFiles SPA 서빙(dist 존재 시): 알 수 없는 경로 → index.html fallback",
+  "description": "FastAPI app 진입점. uvicorn host=127.0.0.1:7823(외부 노출 금지, H-7/S-5). CORS dev=localhost:5173 / prod=동일 오리진. /health. 6개 라우터 등록(5개 read-only + brain POST). StaticFiles SPA 서빙(dist 존재 시): 알 수 없는 경로 → index.html fallback. [T060 F-3] lifespan asynccontextmanager 신설 — 기동 시 load_config().prewarm_projects를 순회하며 brain_session_registry.prewarm(project_path)를 호출(비블로킹, daemon 스레드 내부 분리 — lifespan 본문은 즉시 yield). prewarm_projects 미지정 시 생략 로그만 남긴다.",
   "exports": ["app"],
-  "depends": ["routers.dashboard", "routers.projects", "routers.tasks", "routers.memory", "routers.doctor", "routers.brain"]
+  "depends": ["routers.dashboard", "routers.projects", "routers.tasks", "routers.memory", "routers.doctor", "routers.brain", "config", "adapters.brain_session"],
+  "task": "060",
+  "changelog": [
+    "2026-07-14 T060 Step4: lifespan asynccontextmanager 신설 — 기동 선프라임 훅 연결 (F-3)"
+  ]
 }
 """
 from __future__ import annotations
 
 import logging
+import threading
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, Request
@@ -18,6 +24,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
+from dashboard.backend.adapters.brain_session import brain_session_registry
+from dashboard.backend.config import load_config
 from dashboard.backend.routers import brain, dashboard, doctor, memory, projects, tasks
 
 # 앱 로거 INFO를 로그 파일(/tmp/opal-console.log)로 내보낸다.
@@ -28,12 +36,41 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+
+# ── lifespan: 기동 선프라임 (T060 F-3) ────────────────────────────────────────
+
+def _prewarm_targets(targets: list[str]) -> None:
+    """지정된 프로젝트 목록을 순서대로 prewarm 호출 (daemon 스레드에서 실행)."""
+    for project_path in targets:
+        brain_session_registry.prewarm(project_path)   # 각 호출 자체도 내부에서 비블로킹
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """기동 시 prewarm_projects 지정 프로젝트를 백그라운드 선프라임한다.
+
+    [MUST] 프라임은 블로킹 호출 금지 — prewarm 호출 루프 자체를 daemon 스레드로 분리하여
+    (brain_session_registry.prewarm() 내부 구현과 무관하게 이중으로 방어) 이 본문은
+    즉시 yield한다(R2/H-6).
+    """
+    cfg = load_config()
+    targets = cfg.prewarm_projects            # F-1 필드
+    if targets:
+        logger.info("[brain] 기동 선프라임 대상 %d개: %s", len(targets), targets)
+        threading.Thread(target=_prewarm_targets, args=(targets,), daemon=True).start()
+    else:
+        logger.info("[brain] prewarm_projects 미지정 — 선프라임 생략")
+    yield
+    # shutdown: 인메모리 풀은 프로세스 종료와 함께 소멸(무상태 원칙) — 별도 정리 불요
+
+
 # ── FastAPI 앱 생성 ──────────────────────────────────────────────────────────
 
 app = FastAPI(
     title="OPAL Console API",
     description="OPAL 로컬 프로젝트 통합 관리 대시보드 — read-only API",
     version="0.1.0",
+    lifespan=lifespan,
 )
 
 # ── CORS 설정 ────────────────────────────────────────────────────────────────

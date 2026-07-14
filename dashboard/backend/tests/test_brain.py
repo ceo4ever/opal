@@ -3,7 +3,7 @@
   "module": "tests.test_brain",
   "layer": "test",
   "domain": "console",
-  "description": "대화별 session_id 격리 단위·통합 테스트. opbr_adapter(query --read-only 플래그·allowedTools·extract_json_fence·shell=False·cwd=project_path·cold 플래그 명시·session_id 호출자 제공), BrainSessionRegistry(session_id 키잉·대화별 독립 세션·세션A prime→A만 ready B idle·A ask B 미오염·reset(A) B 불변·같은 프로젝트 a/b 두 세션 공존), TestSessionIdHandleSeparation(conversation_id↔claude핸들 분리·콜드마다 새 uuid4·already-in-use 폴백·재시도 1회 한정·실 claude 0회), 라우터(prime 즉시반환·session_id 필수·query session_id 필수·GET /api/brain/status?project=&session_id= 미등록→idle). project·session_id 모두 필수: 빈값/무효→400. [MUST] 서브프로세스 전부 mock — 실 claude/brain-tool 호출 0회(H-8). 기존 backend 전체 회귀 0.",
+  "description": "대화별 session_id 격리 단위·통합 테스트. opbr_adapter(query --read-only 플래그·allowedTools·extract_json_fence·shell=False·cwd=project_path·cold 플래그 명시·session_id 호출자 제공), BrainSessionRegistry(session_id 키잉·대화별 독립 세션·세션A prime→A만 ready B idle·A ask B 미오염·reset(A) B 불변·같은 프로젝트 a/b 두 세션 공존), TestSessionIdHandleSeparation(conversation_id↔claude핸들 분리·콜드마다 새 uuid4·already-in-use 폴백·재시도 1회 한정·실 claude 0회), 라우터(prime 즉시반환·session_id 필수·query session_id 필수·GET /api/brain/status?project=&session_id= 미등록→idle). project·session_id 모두 필수: 빈값/무효→400. [MUST] 서브프로세스 전부 mock — 실 claude/brain-tool 호출 0회(H-8). 기존 backend 전체 회귀 0. TestBrainPrimePool(프라임 풀 적재·체크아웃+리필·동시 프라임 상한·락 무중첩)·TestBrainWarmInjection(새 대화 웜 핸들 주입→ready+resume·stale resume 투명 재프라임·빈 풀 콜드 폴백)·TestBrainLifespanPrewarm(main.py lifespan 기동 선프라임 트리거·비블로킹)·TestBrainPoolFixtureRegression(reset_brain_registry 픽스처의 풀 상태 클리어 회귀) — PLAN.md §3.2.2 설계 시그니처(prewarm/checkout_warm_handle/adopt_warm_handle) 대상, GREEN(구현 완료). 플레이키 동기화: 체크아웃 직후 풀 비움 확인·동시 체크아웃 무중복 판정은 백그라운드 리필 완료를 threading.Event로 게이트해 결정론화, 신규 세션 웜 주입 시 콜드 프라임 미호출·투명 재프라임 호출 순서 검증은 registry.prewarm을 인스턴스 no-op으로 대체해 리필 부수효과와 분리(리필 자체는 S-3이 별도 담보).",
   "exports": [
     "TestExtractJsonFence",
     "TestOpbrAdapterCmd",
@@ -19,21 +19,35 @@
     "TestBrainRouterPrime",
     "TestBrainRouterQuery",
     "TestBrainRouterErrors",
-    "TestBrainRouterStatus"
+    "TestBrainRouterStatus",
+    "TestBrainJobPolling",
+    "TestBrainPrimePool",
+    "TestBrainWarmInjection",
+    "TestBrainLifespanPrewarm",
+    "TestBrainPoolFixtureRegression"
   ],
   "depends": [
     "adapters.opbr_adapter",
     "adapters.brain_session",
     "routers.brain",
     "models",
-    "main"
+    "main",
+    "config"
+  ],
+  "task": "060",
+  "scenarios": ["S-1", "S-2", "S-3", "S-4", "S-5", "S-6", "S-7", "S-8", "S-9", "S-11"],
+  "changelog": [
+    "2026-07-14 T060 RED: 프라임 연결 풀(F-2)·웜 핸들 주입(F-4)·lifespan 선프라임(F-3)·픽스처 회귀(H-7) 실패 테스트 추가 — 구현 전 RED 트랙(red-first.md)",
+    "2026-07-14 13:31 KST T060 Step5: reset_brain_registry 픽스처에 _pool/_pool_inflight 클리어 추가(S-11 GREEN 전환) + 플레이키 4건 동기화 수리(체크아웃 직후 풀 비움·동시 체크아웃 무중복은 threading.Event로 리필 완료 게이트, 신규 세션 콜드 미호출·투명 재프라임 순서는 registry.prewarm no-op으로 리필 부수효과 분리) + TestOpbrAdapterAllowedTools stale 단언 갱신(커밋 400c03a --model/--effort 삽입 반영, 계약 의도 불변)"
   ]
 }
 """
 from __future__ import annotations
 
 import json
+import threading
 import time
+import uuid
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -76,13 +90,24 @@ def client():
 
 @pytest.fixture(autouse=True)
 def reset_brain_registry():
-    """각 테스트 전후로 brain_session_registry 전체 세션 클리어 — 테스트 간 상태 오염 방지."""
+    """각 테스트 전후로 brain_session_registry 전체 세션·풀 상태 클리어 — 테스트 간 상태 오염 방지.
+
+    [T060/S-11/H-7] _sessions뿐 아니라 프라임 연결 풀(_pool·_pool_inflight)도 함께
+    클리어한다. 전역 싱글턴 brain_session_registry에 직전 테스트가 남긴 풀 잔류 핸들이
+    후속 테스트로 누수되는 것을 방지(TestBrainPoolFixtureRegression 회귀 가드).
+    """
     from dashboard.backend.adapters.brain_session import brain_session_registry
     with brain_session_registry._lock:
         brain_session_registry._sessions.clear()
+    with brain_session_registry._pool_lock:
+        brain_session_registry._pool.clear()
+        brain_session_registry._pool_inflight.clear()
     yield
     with brain_session_registry._lock:
         brain_session_registry._sessions.clear()
+    with brain_session_registry._pool_lock:
+        brain_session_registry._pool.clear()
+        brain_session_registry._pool_inflight.clear()
 
 
 def _mock_proc(stdout: str, returncode: int = 0) -> MagicMock:
@@ -1267,9 +1292,24 @@ class TestOpbrAdapterAllowedTools:
         assert allowed_idx < p_idx
 
     def test_allowed_tools_value_is_single_comma_string(self):
+        """[T060 stale 단언 갱신] --allowedTools 값이 단일 콤마 인자이며 -p를 삼키지 않음.
+
+        커밋 400c03a로 `--model sonnet --effort medium`이 --allowedTools 값과 -p
+        사이에 삽입되어 위치 가정(idx+2 == '-p')이 깨짐(PM 승인 #11). 계약 의도는
+        불변: --allowedTools는 공백 없는 단일 콤마 문자열 값을 가지며(값이 여러 토큰으로
+        흩어져 -p를 삼키지 않음), -p는 cmd 내 독립된 플래그로 남아 있어야 한다.
+        """
         cmd = self._capture_cmd()
         idx = cmd.index("--allowedTools")
-        assert cmd[idx + 2] == "-p"
+        assert cmd[idx + 1] == "Bash,Read,Grep,Glob", (
+            f"--allowedTools 값은 단일 콤마 구분 문자열이어야 함: {cmd[idx + 1]!r}"
+        )
+        # --allowedTools 값 바로 다음은 별도 플래그(-- 접두)여야 함 —
+        # 값이 여러 인자로 흩어져 후속 플래그를 삼키지 않았다는 증거
+        assert cmd[idx + 2].startswith("--"), (
+            f"--allowedTools 값 다음은 별도 플래그여야 함(값이 여러 토큰으로 분산되면 안 됨): {cmd}"
+        )
+        assert "-p" in cmd, f"-p 플래그가 --allowedTools에 삼켜지지 않고 존재해야 함: {cmd}"
 
 
 # ── TestSessionIdHandleSeparation ────────────────────────────────────────────────
@@ -2375,3 +2415,557 @@ class TestBrainJobPolling:
                 assert data_requery.get("error_msg"), (
                     f"소멸 안내 error_msg 미포함: {data_requery}"
                 )
+
+
+# ── TestBrainPrimePool (S-2, S-3, S-4, S-8) — T060 RED ─────────────────────────
+#
+# 대상 인터페이스(미구현, PLAN §3.2.2):
+#   BrainSessionRegistry(pool_size, max_concurrent_prime) 생성자 확장
+#   BrainSessionRegistry.prewarm(project_path) / checkout_warm_handle(project_path)
+#   내부: _pool / _pool_inflight / _pool_lock / _prime_semaphore
+# [MUST] subprocess는 전부 mock — 실 claude 호출 0회(H-8). prime_and_ask 경계만 patch.
+# private(_pool 등) 직접 확인은 비동기 백그라운드 스레드 완료 관측을 위한 불가피한 최소
+# 접근이며, 공개 동작(checkout_warm_handle 반환값 등)과 병행 검증한다(red-first.md §4).
+
+class TestBrainPrimePool:
+    """프라임 풀 신설 — 적재·체크아웃+리필·동시 프라임 상한·락 무중첩 (F-2 AC, RED)."""
+
+    def _wait_until(self, cond, timeout: float = 2.0, interval: float = 0.01) -> None:
+        deadline = time.monotonic() + timeout
+        while time.monotonic() < deadline:
+            if cond():
+                return
+            time.sleep(interval)
+
+    # ── S-2: 풀 선프라임 적재 ────────────────────────────────────────────────────
+
+    def test_prewarm_loads_pool_then_avoids_overfill(self):
+        """[T060/L1-F2a] prewarm() 후 풀에 핸들 1개 적재. 이미 충족 상태 재호출 시 추가 프라임 0회.
+
+        H-1(정상 경로 전제), F-2 AC(a).
+        """
+        from dashboard.backend.adapters.brain_session import BrainSessionRegistry
+
+        registry = BrainSessionRegistry(pool_size=1, max_concurrent_prime=2)
+        project = "/fake/pool/basic"
+        call_count = [0]
+
+        def fake_prime(**kwargs):
+            call_count[0] += 1
+            return {
+                "answer": "", "citations": [],
+                "session_id": str(uuid.uuid4()), "elapsed_s": 0.05,
+            }
+
+        with patch(
+            "dashboard.backend.adapters.brain_session.opbr_adapter.prime_and_ask",
+            side_effect=fake_prime,
+        ):
+            registry.prewarm(project)
+            self._wait_until(lambda: len(registry._pool.get(project, [])) >= 1)
+
+            assert len(registry._pool.get(project, [])) == 1, (
+                "prewarm 후 풀에 핸들 1개가 적재되어야 함(F-2 AC(a))"
+            )
+            assert registry._pool_inflight.get(project, 0) == 0, (
+                "완료 후 inflight 카운터가 0으로 복귀해야 함"
+            )
+
+            calls_after_fill = call_count[0]
+            registry.prewarm(project)  # 이미 pool_size(1) 충족 — 과잉 프라임 방지
+            time.sleep(0.1)  # 스레드가 기동됐다면 관측할 여유 시간
+
+        assert call_count[0] == calls_after_fill, (
+            f"풀이 이미 충족된 상태에서 prewarm() 재호출 시 추가 프라임이 없어야 함"
+            f"(과잉 프라임 방지): before={calls_after_fill}, after={call_count[0]}"
+        )
+
+    # ── S-3: 체크아웃 pop + 리필 트리거 ──────────────────────────────────────────
+
+    def test_checkout_pops_handle_and_triggers_refill(self):
+        """[T060/L1-F2a] checkout_warm_handle() — 핸들 반환 + 풀 비워짐 + 백그라운드 리필 트리거.
+
+        H-1, F-2 AC(a). 리필(2번째 prime 호출)을 이벤트로 게이트하여, "체크아웃 직후
+        풀이 비어 있다"는 assert가 리필 완료(append)보다 먼저 결정론적으로 실행되도록
+        한다. mock이 지연 없이 즉시 반환되면 백그라운드 리필 스레드가 assert보다 먼저
+        새 핸들을 append해 버려 간헐 실패가 발생했다(reward-hacking 아님 — 동기화 수리).
+        """
+        from dashboard.backend.adapters.brain_session import BrainSessionRegistry
+
+        registry = BrainSessionRegistry(pool_size=1, max_concurrent_prime=2)
+        project = "/fake/pool/checkout"
+        handles = [str(uuid.uuid4()), str(uuid.uuid4())]
+        call_count = [0]
+        refill_started = threading.Event()
+        refill_can_finish = threading.Event()
+
+        def fake_prime(**kwargs):
+            idx = min(call_count[0], len(handles) - 1)
+            call_count[0] += 1
+            if call_count[0] == 2:
+                # 리필(2번째) 호출 — 풀 비움 확인이 끝날 때까지 append(완료)를 지연
+                refill_started.set()
+                assert refill_can_finish.wait(timeout=2.0), "리필 완료 신호 대기 타임아웃"
+            return {
+                "answer": "", "citations": [],
+                "session_id": handles[idx], "elapsed_s": 0.05,
+            }
+
+        with patch(
+            "dashboard.backend.adapters.brain_session.opbr_adapter.prime_and_ask",
+            side_effect=fake_prime,
+        ):
+            registry.prewarm(project)
+            self._wait_until(lambda: len(registry._pool.get(project, [])) >= 1)
+
+            sid = registry.checkout_warm_handle(project)
+            assert sid == handles[0], (
+                f"체크아웃 반환값이 적재된 핸들과 일치해야 함: sid={sid!r}"
+            )
+
+            assert refill_started.wait(timeout=2.0), (
+                "체크아웃 후 백그라운드 리필(prewarm 재호출)이 트리거되어야 함(F-2 AC(a))"
+            )
+            assert registry._pool.get(project, []) == [], (
+                "체크아웃 직후(리필 완료 전) 풀이 비어 있어야 함(F-2 AC(a))"
+            )
+
+            refill_can_finish.set()
+            self._wait_until(lambda: call_count[0] >= 2)
+
+        assert call_count[0] >= 2, (
+            "체크아웃 후 백그라운드 리필(prewarm 재호출)이 트리거되어야 함(F-2 AC(a))"
+        )
+
+    def test_checkout_empty_pool_returns_none(self):
+        """[T060/L1-F2a] 빈 풀에서 checkout_warm_handle() → None."""
+        from dashboard.backend.adapters.brain_session import BrainSessionRegistry
+
+        registry = BrainSessionRegistry(pool_size=1, max_concurrent_prime=2)
+        result = registry.checkout_warm_handle("/fake/pool/never-primed")
+        assert result is None, f"미적재 프로젝트 체크아웃은 None이어야 함: {result!r}"
+
+    # ── S-4: 동시 프라임 상한(세마포어) 강제 ─────────────────────────────────────
+
+    def test_prewarm_concurrent_limit_enforced(self):
+        """[T060/L2-F2c] 서로 다른 프로젝트 4건 동시 prewarm → 관측 최대 동시 실행 ≤ max_concurrent_prime(2).
+
+        H-3, F-2 AC(c).
+        """
+        from dashboard.backend.adapters.brain_session import BrainSessionRegistry
+
+        registry = BrainSessionRegistry(pool_size=1, max_concurrent_prime=2)
+        projects = [f"/fake/pool/concurrent{i}" for i in range(4)]
+
+        count_lock = threading.Lock()
+        current = [0]
+        max_observed = [0]
+
+        def slow_prime(**kwargs):
+            with count_lock:
+                current[0] += 1
+                max_observed[0] = max(max_observed[0], current[0])
+            time.sleep(0.15)
+            with count_lock:
+                current[0] -= 1
+            return {
+                "answer": "", "citations": [],
+                "session_id": str(uuid.uuid4()), "elapsed_s": 0.15,
+            }
+
+        with patch(
+            "dashboard.backend.adapters.brain_session.opbr_adapter.prime_and_ask",
+            side_effect=slow_prime,
+        ):
+            for p in projects:
+                registry.prewarm(p)
+
+            self._wait_until(
+                lambda: all(len(registry._pool.get(p, [])) >= 1 for p in projects),
+                timeout=4.0,
+            )
+
+        assert max_observed[0] <= 2, (
+            f"동시 프라임 상한(2) 위반 — 관측 최대 동시 실행={max_observed[0]}(H-3)"
+        )
+        for p in projects:
+            assert len(registry._pool.get(p, [])) == 1, f"{p} 풀이 최종 적재되지 않음"
+
+    # ── S-8: 락 무중첩 — 리필 중 비블로킹 + 동시 체크아웃 무중복 ────────────────
+
+    def test_checkout_non_blocking_during_refill(self):
+        """[T060/L2-F2b] 리필 프라임 진행 중(subprocess 대역 지연) checkout 호출이 즉시 반환(블로킹 없음).
+
+        H-1, H-2, F-2 AC(b).
+        """
+        from dashboard.backend.adapters.brain_session import BrainSessionRegistry
+
+        registry = BrainSessionRegistry(pool_size=1, max_concurrent_prime=2)
+        project = "/fake/pool/refill-block"
+
+        prime_started = threading.Event()
+        prime_can_finish = threading.Event()
+
+        def blocking_prime(**kwargs):
+            prime_started.set()
+            prime_can_finish.wait(timeout=5.0)
+            return {
+                "answer": "", "citations": [],
+                "session_id": str(uuid.uuid4()), "elapsed_s": 0.1,
+            }
+
+        with patch(
+            "dashboard.backend.adapters.brain_session.opbr_adapter.prime_and_ask",
+            side_effect=blocking_prime,
+        ):
+            registry.prewarm(project)  # 백그라운드 리필 시작
+            assert prime_started.wait(timeout=2.0), "백그라운드 prime이 시작되지 않음(사전조건 실패)"
+
+            t0 = time.monotonic()
+            result = registry.checkout_warm_handle(project)
+            elapsed = time.monotonic() - t0
+
+            prime_can_finish.set()
+
+        assert elapsed < 1.0, (
+            f"checkout_warm_handle이 리필 완료를 기다림(블로킹 발생, H-1 위반): {elapsed:.2f}s"
+        )
+        assert result is None, "프라임 미완료 상태에서는 풀이 비어 None을 반환해야 함"
+
+    def test_concurrent_checkout_no_duplicate_handle(self):
+        """[T060/L2-F2b] 풀 핸들 1개에 동시 체크아웃 2건 — 같은 핸들 중복 배정 0건.
+
+        H-2, F-2 AC(b). 체크아웃 성공 측이 트리거하는 백그라운드 리필이 mock 무지연
+        반환으로 동시 체크아웃 판정 창 내에 완료되면, 같은(고정) session_id 값이 풀에
+        재적재되어 두 스레드 모두 핸들을 받는 것처럼 보이는 간헐 실패가 발생했다.
+        초기 적재(1회차) 이후의 프라임 호출(리필)만 이벤트로 게이트하여 동시 체크아웃
+        판정이 끝날 때까지 풀 재적재를 지연시켜 결정론적으로 만든다.
+        """
+        from dashboard.backend.adapters.brain_session import BrainSessionRegistry
+
+        registry = BrainSessionRegistry(pool_size=1, max_concurrent_prime=2)
+        project = "/fake/pool/dup-checkout"
+        handle = str(uuid.uuid4())
+        call_count = [0]
+        refill_gate = threading.Event()
+
+        def fake_prime(**kwargs):
+            call_count[0] += 1
+            if call_count[0] > 1:
+                # 초기 적재 이후 호출(리필)은 정리 시점까지 대기 — 동시 체크아웃 창 보호
+                refill_gate.wait(timeout=2.0)
+            return {
+                "answer": "", "citations": [], "session_id": handle, "elapsed_s": 0.05,
+            }
+
+        with patch(
+            "dashboard.backend.adapters.brain_session.opbr_adapter.prime_and_ask",
+            side_effect=fake_prime,
+        ):
+            registry.prewarm(project)
+            self._wait_until(lambda: len(registry._pool.get(project, [])) >= 1)
+
+            results: list = [None, None]
+
+            def do_checkout(idx: int) -> None:
+                results[idx] = registry.checkout_warm_handle(project)
+
+            t1 = threading.Thread(target=do_checkout, args=(0,))
+            t2 = threading.Thread(target=do_checkout, args=(1,))
+            t1.start()
+            t2.start()
+            t1.join(timeout=2.0)
+            t2.join(timeout=2.0)
+
+            refill_gate.set()  # 정리 — 게이트에서 대기 중인 리필 스레드 해제
+
+        non_none = [r for r in results if r is not None]
+        assert len(non_none) <= 1, (
+            f"동시 체크아웃 2건 중 최대 1건만 핸들을 받아야 함(중복 배정 금지, H-2): {results}"
+        )
+
+
+# ── TestBrainWarmInjection (S-5, S-6, S-7) — T060 RED ───────────────────────────
+#
+# 대상: BrainSessionRegistry._get_or_create() 웜 주입 연결 (PLAN §3.4.2)
+# + ConversationBrainSession.adopt_warm_handle() (PLAN §3.2.2)
+# 공개 인터페이스(prime/ask/status)의 관찰 결과로 검증 — private _get_or_create 직접
+# 호출 없음(red-first.md §4).
+
+class TestBrainWarmInjection:
+    """새 대화 웜 핸들 배정 + 콜드 폴백 (F-4 AC, RED)."""
+
+    def _wait_until(self, cond, timeout: float = 2.0, interval: float = 0.01) -> None:
+        deadline = time.monotonic() + timeout
+        while time.monotonic() < deadline:
+            if cond():
+                return
+            time.sleep(interval)
+
+    def _prewarm_and_wait(self, registry, project: str, handle: str) -> None:
+        """지정 핸들로 풀을 채우고 적재를 대기(테스트 준비 공통 루틴)."""
+        with patch(
+            "dashboard.backend.adapters.brain_session.opbr_adapter.prime_and_ask",
+            return_value={
+                "answer": "", "citations": [], "session_id": handle, "elapsed_s": 0.05,
+            },
+        ):
+            registry.prewarm(project)
+            self._wait_until(lambda: len(registry._pool.get(project, [])) >= 1)
+
+    # ── S-5: 새 대화 웜 주입 → ready + resume 경로 ──────────────────────────────
+
+    def test_new_session_ready_without_cold_prime(self):
+        """[T060/L1-F4a] 풀에 핸들 존재 시 새 session_id가 콜드 프라임 없이 즉시 ready(F-4 AC(a)).
+
+        checkout_warm_handle()은 체크아웃 성공 시 백그라운드 리필(prewarm)을 트리거한다
+        (S-3에서 별도 검증). 리필도 동일 mock(prime_and_ask)을 호출하므로, 이 테스트의
+        관심사(신규 세션 자신의 콜드 프라임 미호출)와 경합해 mock_prime.assert_not_called()가
+        간헐적으로 깨졌다. 리필 트리거 여부는 이 테스트의 검증 대상이 아니므로(S-3이
+        담보) 인스턴스 registry.prewarm을 no-op으로 대체해 리필 백그라운드 스레드
+        자체를 제거한다 — 단언 약화 없이 관심사만 분리.
+        """
+        from dashboard.backend.adapters.brain_session import BrainSessionRegistry
+
+        registry = BrainSessionRegistry(pool_size=1, max_concurrent_prime=2)
+        project = _PROJ_A
+        warm_handle = str(uuid.uuid4())
+        self._prewarm_and_wait(registry, project, warm_handle)
+
+        # 리필 트리거(체크아웃 부수효과) 무력화 — S-3이 리필을 별도로 검증하므로
+        # 여기서는 신규 세션 자신의 콜드 프라임 미호출만 순수하게 관측한다.
+        registry.prewarm = lambda project_path: None
+
+        new_session_id = str(uuid.uuid4())
+
+        with patch(
+            "dashboard.backend.adapters.brain_session.opbr_adapter.prime_and_ask"
+        ) as mock_prime:
+            registry.prime(new_session_id, project)  # 신규 세션 생성 → 웜 주입 기대
+
+        assert registry.status(new_session_id)["state"] == "ready", (
+            "풀에 핸들이 있으면 새 세션이 콜드 프라임 없이 ready여야 함(F-4 AC(a))"
+        )
+        mock_prime.assert_not_called()
+
+    def test_new_session_first_ask_uses_resume_with_warm_handle(self):
+        """[T060/L1-F4a] 웜 주입 세션의 첫 ask() 호출이 cold=False + 체크아웃 핸들로 resume."""
+        from dashboard.backend.adapters.brain_session import BrainSessionRegistry
+
+        registry = BrainSessionRegistry(pool_size=1, max_concurrent_prime=2)
+        project = _PROJ_A
+        warm_handle = str(uuid.uuid4())
+        self._prewarm_and_wait(registry, project, warm_handle)
+
+        new_session_id = str(uuid.uuid4())
+        captured: dict = {}
+
+        def mock_ask(**kwargs):
+            captured.update(kwargs)
+            return {
+                "answer": "웜 답변", "citations": [],
+                "session_id": kwargs.get("session_id"), "elapsed_s": 1.0,
+            }
+
+        with patch(
+            "dashboard.backend.adapters.brain_session.opbr_adapter.prime_and_ask",
+            side_effect=mock_ask,
+        ):
+            result = registry.ask(new_session_id, "첫 질문", project)
+
+        assert captured.get("cold") is False, (
+            f"웜 주입 세션의 첫 ask는 cold=False(resume)여야 함: {captured}"
+        )
+        assert captured.get("session_id") == warm_handle, (
+            f"웜 주입 세션의 session_id가 체크아웃 핸들과 일치해야 함: {captured}"
+        )
+        assert result["answer"] == "웜 답변"
+
+    # ── S-6: stale 웜 핸들 resume 실패 → 투명 재프라임 ──────────────────────────
+
+    def test_warm_injected_resume_failure_transparent_reprime(self):
+        """[T060/L1-F4a] 이식된 웜 핸들 resume 실패 → 기존 ⓓ 투명 콜드 재프라임으로 answer 정상 반환.
+
+        H-5. checkout_warm_handle()의 백그라운드 리필 트리거가 동일 mock을 공유하므로,
+        리필 호출(cold=True)이 세션 자신의 resume 호출보다 먼저 call_cold_flags에
+        기록되면 call_cold_flags[0]이 어긋나는 간헐 실패가 발생했다. 리필 트리거는
+        이 테스트의 관심사가 아니므로(S-3이 담보) registry.prewarm을 no-op으로
+        대체해 call_cold_flags가 이 세션 자신의 resume→재프라임 순서만 기록하도록
+        한다 — 단언(투명 재프라임·호출 순서) 약화 없이 관심사만 분리.
+        """
+        from dashboard.backend.adapters.brain_session import BrainSessionRegistry
+
+        registry = BrainSessionRegistry(pool_size=1, max_concurrent_prime=2)
+        project = _PROJ_A
+        warm_handle = str(uuid.uuid4())
+        self._prewarm_and_wait(registry, project, warm_handle)
+
+        # 리필 트리거 무력화 — S-3이 리필을 별도로 검증하므로 여기서는 이 세션
+        # 자신의 resume 실패→콜드 재프라임 순서만 순수하게 관측한다.
+        registry.prewarm = lambda project_path: None
+
+        new_session_id = str(uuid.uuid4())
+        call_cold_flags: list = []
+
+        def mock_ask(**kwargs):
+            call_cold_flags.append(kwargs.get("cold"))
+            if kwargs.get("cold") is False:
+                raise RuntimeError("resume failed: stale session")
+            return {
+                "answer": "재프라임 답변", "citations": [],
+                "session_id": str(uuid.uuid4()), "elapsed_s": 1.0,
+            }
+
+        with patch(
+            "dashboard.backend.adapters.brain_session.opbr_adapter.prime_and_ask",
+            side_effect=mock_ask,
+        ):
+            result = registry.ask(new_session_id, "질문", project)
+
+        assert result["answer"] == "재프라임 답변", (
+            "resume 실패 후 투명 재프라임으로 answer가 정상 반환되어야 함(H-5)"
+        )
+        assert call_cold_flags[0] is False, "첫 호출은 웜 주입 핸들 resume(cold=False)이어야 함"
+        assert call_cold_flags[1] is True, "resume 실패 후 콜드 재프라임(cold=True)이어야 함"
+
+    # ── S-7: 풀 empty 콜드 폴백 (회귀) ──────────────────────────────────────────
+
+    def test_empty_pool_new_session_cold_fallback(self):
+        """[T060/L1-F4b] 빈 풀에서 새 대화 → 기존 콜드 경로 동일(F-4 AC(b), 회귀 없음)."""
+        from dashboard.backend.adapters.brain_session import BrainSessionRegistry
+
+        registry = BrainSessionRegistry(pool_size=1, max_concurrent_prime=2)
+        project = _PROJ_A  # 풀 미적재 상태
+        new_session_id = str(uuid.uuid4())
+
+        assert registry.status(new_session_id)["state"] == "idle"
+
+        captured: dict = {}
+
+        def mock_ask(**kwargs):
+            captured.update(kwargs)
+            return {
+                "answer": "콜드 답변", "citations": [],
+                "session_id": kwargs.get("session_id"), "elapsed_s": 1.0,
+            }
+
+        with patch(
+            "dashboard.backend.adapters.brain_session.opbr_adapter.prime_and_ask",
+            side_effect=mock_ask,
+        ):
+            result = registry.ask(new_session_id, "질문", project)
+
+        assert captured.get("cold") is True, (
+            f"풀이 비어 있으면 첫 ask는 콜드(cold=True)여야 함(F-4 AC(b)): {captured}"
+        )
+        assert result["answer"] == "콜드 답변"
+
+
+# ── TestBrainLifespanPrewarm (S-9) — T060 RED ───────────────────────────────────
+#
+# 대상: main.py lifespan asynccontextmanager 신설 (PLAN §3.3.2). 현재 main.py에는
+# lifespan이 부재하므로 이 부재 자체가 RED 증거가 된다 — TestClient 컨텍스트 진입 시
+# prewarm 미호출로 관측된다.
+
+class TestBrainLifespanPrewarm:
+    """main.py lifespan 기동 선프라임 — 트리거·비블로킹·미지정 0회 (F-3 AC, H-6, RED)."""
+
+    def test_lifespan_triggers_prewarm_per_project(self):
+        """[T060/L2-F3] prewarm_projects 2건 지정 시 TestClient 진입 즉시 프로젝트당 prewarm 1회 호출."""
+        from dashboard.backend.config import ConsoleConfig
+        from dashboard.backend.main import app
+
+        fake_cfg = ConsoleConfig(prewarm_projects=[_PROJ_A, _PROJ_B])
+        calls: list = []
+
+        with patch("dashboard.backend.main.load_config", return_value=fake_cfg), \
+             patch(
+                "dashboard.backend.main.brain_session_registry.prewarm",
+                side_effect=lambda p: calls.append(p),
+             ):
+            with TestClient(app) as lifespan_client:
+                resp = lifespan_client.get("/health")
+
+        assert resp.status_code == 200
+        assert calls == [_PROJ_A, _PROJ_B], (
+            f"prewarm_projects 2건 각각 1회 prewarm 호출을 기대: {calls}"
+        )
+
+    def test_lifespan_empty_prewarm_projects_zero_calls(self):
+        """[T060/L2-F3] prewarm_projects=[] → prewarm 0회 호출, 기동 정상 완료(200)."""
+        from dashboard.backend.config import ConsoleConfig
+        from dashboard.backend.main import app
+
+        fake_cfg = ConsoleConfig(prewarm_projects=[])
+        calls: list = []
+
+        with patch("dashboard.backend.main.load_config", return_value=fake_cfg), \
+             patch(
+                "dashboard.backend.main.brain_session_registry.prewarm",
+                side_effect=lambda p: calls.append(p),
+             ):
+            with TestClient(app) as lifespan_client:
+                resp = lifespan_client.get("/health")
+
+        assert resp.status_code == 200
+        assert calls == [], f"prewarm_projects 미지정 시 prewarm 0회 호출이어야 함: {calls}"
+
+    def test_lifespan_does_not_block_startup(self):
+        """[T060/L2-F3] lifespan 진입이 프라임 완료를 기다리지 않고 즉시 반환(비블로킹, H-6)."""
+        from dashboard.backend.config import ConsoleConfig
+        from dashboard.backend.main import app
+
+        fake_cfg = ConsoleConfig(prewarm_projects=[_PROJ_A])
+
+        def slow_prewarm(project_path):
+            time.sleep(2.0)
+
+        with patch("dashboard.backend.main.load_config", return_value=fake_cfg), \
+             patch(
+                "dashboard.backend.main.brain_session_registry.prewarm",
+                side_effect=slow_prewarm,
+             ):
+            t0 = time.monotonic()
+            with TestClient(app) as lifespan_client:
+                elapsed = time.monotonic() - t0
+                resp = lifespan_client.get("/health")
+
+        assert resp.status_code == 200
+        assert elapsed < 1.0, (
+            f"lifespan 진입이 prewarm 완료(2s 지연)를 기다림 — 블로킹 발생(H-6): {elapsed:.2f}s"
+        )
+
+
+# ── TestBrainPoolFixtureRegression (S-11) — T060 RED ────────────────────────────
+#
+# H-7: reset_brain_registry 픽스처가 아직 풀 상태(_pool/_pool_inflight)를 클리어하지
+# 않으므로(EXECUTE 단계 소관 — TASK 지시에 따라 이 RED 작성 단계에서는 확장하지 않음),
+# 직전 테스트가 남긴 잔류 상태가 다음 테스트로 누수되는지 검증한다.
+# 실행 순서 의존(클래스 내 정의 순서 — 이 프로젝트 pytest 설정에 랜덤 플러그인 없음).
+
+class TestBrainPoolFixtureRegression:
+    """reset_brain_registry 픽스처의 풀 상태 클리어 회귀 (H-7, RED)."""
+
+    def test_step1_pollute_global_pool_state(self):
+        """[T060/L2-H7] (1/2) 전역 brain_session_registry 풀에 잔류 상태를 인위 주입."""
+        from dashboard.backend.adapters.brain_session import brain_session_registry
+
+        with brain_session_registry._pool_lock:
+            brain_session_registry._pool[_PROJ_A] = ["stale-handle"]
+            brain_session_registry._pool_inflight[_PROJ_A] = 1
+
+        assert brain_session_registry._pool.get(_PROJ_A) == ["stale-handle"], (
+            "사전조건 실패 — 잔류 상태 주입 확인 불가"
+        )
+
+    def test_step2_fixture_must_clear_pool_before_next_test(self):
+        """[T060/L2-H7] (2/2) 직전 테스트의 풀 잔류 상태가 autouse 픽스처로 클리어됨(H-7)."""
+        from dashboard.backend.adapters.brain_session import brain_session_registry
+
+        assert brain_session_registry._pool.get(_PROJ_A, []) == [], (
+            "reset_brain_registry 픽스처가 _pool을 클리어하지 않음(H-7 위반) — "
+            "직전 테스트가 주입한 잔류 핸들이 남아있음"
+        )
+        assert brain_session_registry._pool_inflight.get(_PROJ_A, 0) == 0, (
+            "reset_brain_registry 픽스처가 _pool_inflight를 클리어하지 않음(H-7 위반)"
+        )

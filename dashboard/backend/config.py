@@ -3,9 +3,13 @@
   "module": "config",
   "layer": "config",
   "domain": "console",
-  "description": "~/.opal/console.config.json 로드 및 기본값 추론. scan_roots/scan_depth/exclude 관리",
+  "description": "~/.opal/console.config.json 로드 및 기본값 추론. scan_roots/scan_depth/exclude/prewarm_projects 관리. prewarm_projects는 기동 선프라임 대상 프로젝트 절대경로 목록(T060 F-1) — _coerce_str_list()로 비-list 값을 안전하게 []로 폴백한다.",
   "exports": ["load_config", "ConsoleConfig"],
-  "depends": []
+  "depends": [],
+  "task": "060",
+  "changelog": [
+    "2026-07-14 T060 Step1: prewarm_projects 필드 + _coerce_str_list 타입 가드 추가 (F-1, H-4)"
+  ]
 }
 """
 from __future__ import annotations
@@ -28,6 +32,14 @@ class ConsoleConfig:
     scan_roots: list[str] = field(default_factory=lambda: list(DEFAULT_SCAN_ROOTS))
     scan_depth: int = DEFAULT_SCAN_DEPTH
     exclude: list[str] = field(default_factory=lambda: list(DEFAULT_EXCLUDE))
+    prewarm_projects: list[str] = field(default_factory=list)
+
+
+def _coerce_str_list(value: object) -> list[str]:
+    """list[str]이 아니면 빈 리스트로 폴백. 원소 중 str만 취해 안전 순회 보장(H-4)."""
+    if not isinstance(value, list):
+        return []
+    return [v for v in value if isinstance(v, str)]
 
 
 def load_config() -> ConsoleConfig:
@@ -50,4 +62,5 @@ def load_config() -> ConsoleConfig:
         scan_roots=data.get("scan_roots", DEFAULT_SCAN_ROOTS),
         scan_depth=int(data.get("scan_depth", DEFAULT_SCAN_DEPTH)),
         exclude=data.get("exclude", DEFAULT_EXCLUDE),
+        prewarm_projects=_coerce_str_list(data.get("prewarm_projects", [])),
     )

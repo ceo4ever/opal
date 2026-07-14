@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-07-13 16:02
+> 갱신: 2026-07-14 16:29
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -32,6 +32,7 @@
 - [[brain-business-term-layer]] — Brain 업무 언어 번역 계층(term) #brain #citation-rules #term #knowledge
 - [[brain-code-scan-role-division]] — brain↔code-scan 역할 분담 — 선별·신선도·깊이 축 (010) #brain #code-scan #architecture #policy
 - [[brain-entity-discipline]] — brain entity 작성 규율 표준화 #brain #knowledge #curation #provenance
+- [[brain-prime-connection-pool-design]] — 브레인 프라임 연결 풀 아키텍처 결정 #brain #latency #architecture #pool #prewarm #fastapi
 - [[brain-query-async-job-polling]] — 브레인 질의 비동기 잡+폴링 전환 — 동기 HTTP 블로킹 제거 패턴 #architecture #brain #async #polling #fetch-timeout
 - [[brain-query-latency-model]] — 브레인 질의 latency 모델 — 병목 위치와 경량화 방향 #brain #latency #architecture #optimization #async
 - [[brain-search-on-demand]] — brain search 선택 주입 — on-demand 비상주 정책 #architecture #brain #search #context #pm
@@ -107,6 +108,7 @@
 - [[opwt-v4-output-system]] — opwt v4 산출물 체계 재설계 (PRD 8섹션 + interview 통합) #opwt #planning #output #framework #task
 - [[owner-honorific-contamination-prevention]] — 산출물 소유자 호칭 오염 차단 원칙 #state-tool #identity #harness #contamination #brain-ingest
 - [[page-type-dynamic-schema]] — 페이지 타입 동적화 — SCHEMA SSOT #architecture #brain #schema #dynamic-type
+- [[pool-lock-idiom-contract]] — 프라임 풀 락 관용구 계약 #brain #concurrency #locking #pattern
 - [[project-id-query-param-pattern]] — 절대경로 프로젝트 식별자를 query param으로 전달 #api #routing #url-design
 - [[read-based-gate-pattern]] — Read 기반 설정파일 게이트 패턴 #bootstrap #permission #gate #read-pattern #session-toggle
 - [[readme-ssot-principle]] — README는 SSOT를 따른다 — 문서·코드 불일치 시 SKILL.md가 정본 #readme #ssot #doc-code-mismatch #documentation
@@ -145,6 +147,7 @@
 - [[usage-ssot-live-help-principle]] — 사용법 SSOT는 도구 자신의 live --help #design-principle #tool-scan #usage #drift #ssot
 - [[verification-command-4-standard]] — 검증 명령 4종 표준 (SSOT — verification-loop-guide) #verification #lint #build #test #watch-mode #ssot #standard
 - [[version-stamp-export-subst-decision]] — 버전 결정 모델 전환 — 설치 시점 API 조회 → 릴리스 시점 export-subst 각인 #version #install #git #export-subst #architecture
+- [[warm-handle-single-entry-injection]] — 웜 핸들 단일 진입점 주입 결정 #brain #session #api-compat #dependency-injection
 - [[wbs-세분화-단일책임-수용시나리오]] — WBS 세분화 원칙 — 단일 책임 + 수용 시나리오 기준 #oppd #wbs #sizing #be #fe #acceptance-scenario
 - [[wiki-intelligence-decisions-016]] — opal-wiki-pilot 지능화 결정 — M-4/M-5 (016) #architecture #naming #git #brain #policy
 - [[wtm-agent-cmux-integration]] — wtm-agent OPAL 표준화 + cmux-tool 신설 #tool #agent #wtm #cmux #task
