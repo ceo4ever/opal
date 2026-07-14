@@ -31,6 +31,7 @@
 |------|--------|------|------|------|------|
 | Console 브레인 구독 인증 | 2026-06-22 | project | active | `memory/console-brain-subscription-auth.md` | Console 브레인 질의는 종량제 API 아닌 사용자 Claude 구독(로컬 claude -p). API키·SDK 금지 |
 | 브레인 질의 콜드 경량화(037후속) | 2026-06-23 | task | active | `memory/follow-up-brain-query-lite.md` | 브레인 질의 콜드 latency 경량화 — 검색을 LLM 밖 brain-tool로. opbr --lite 권고 |
+| 061 콘솔 설정 화면 예약 | 2026-07-14 | task | active | memory/061_콘솔_설정_화면_예약.md | 프로젝트별 설정 화면 — 풀 토글+console.config+로컬 설정. //opd --agentic 착수 대기 |
 <!-- memory:index:end -->
 
 ## 작업 히스토리 (최대 5개, FIFO)
