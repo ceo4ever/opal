@@ -3,9 +3,11 @@
  *   "module": "app-shell",
  *   "layer": "component",
  *   "domain": "core",
- *   "description": "OPAL Console 글로벌 레이아웃 셸 — shadcn sidebar 기반 좌측 6개 네비 + 프로젝트 스위처 + 상단바(검색·테마토글·새로고침·연결상태·설정)",
+ *   "description": "OPAL Console 글로벌 레이아웃 셸 — shadcn sidebar 기반 좌측 7개 네비 + 프로젝트 스위처 + 상단바(검색·테마토글·새로고침·연결상태·설정). [T061] NAV_ITEMS에 '설정' 추가 + TopBar 설정 버튼을 /settings NavLink로 연결(기존 no-op 제거).",
  *   "exports": ["AppShell"],
- *   "depends": ["ui-store", "api-client", "sidebar", "badge", "dropdown-menu", "tooltip"]
+ *   "depends": ["ui-store", "api-client", "sidebar", "badge", "dropdown-menu", "tooltip"],
+ *   "task": "061",
+ *   "changelog": ["2026-07-14 T061 Step10: NAV_ITEMS '설정' 추가 + TopBar 설정 버튼 /settings 연결 (F-005)"]
  * }
  */
 
@@ -78,6 +80,7 @@ const NAV_ITEMS: NavItem[] = [
   { to: "/memory", label: "메모리", icon: Brain },
   { to: "/doctor", label: "환경", icon: Activity },
   { to: "/brain", label: "프로젝트 브레인", icon: MessageCircleQuestion },
+  { to: "/settings", label: "설정", icon: Settings },
 ];
 
 const THEME_OPTIONS: { value: Theme; label: string; icon: typeof Sun }[] = [
@@ -262,11 +265,13 @@ function TopBar() {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {/* 설정 */}
+        {/* 설정 — /settings 이동 (T061) */}
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-8 w-8">
-              <Settings className="h-4 w-4" />
+            <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
+              <NavLink to="/settings">
+                <Settings className="h-4 w-4" />
+              </NavLink>
             </Button>
           </TooltipTrigger>
           <TooltipContent>설정</TooltipContent>

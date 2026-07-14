@@ -3,7 +3,7 @@
   "module": "tests.test_routers",
   "layer": "test",
   "domain": "console",
-  "description": "S-6: 5개 엔드포인트 200 + Pydantic 응답 스키마 계약 검증. httpx TestClient. RED-first. [T021/L2-R4api] query param 방식 엔드포인트 검증 (path segment 절대경로 버그 근본 수정). [T021-fix] dashboard project 쿼리 파라미터 케이스 추가. [T021-fix2] state.json 없는 태스크 산출물 추론 케이스 추가. [T023/RED] _derive_current_stage / _group_pipeline_stages / _aggregate_status 신규 헬퍼 + get_task_detail pipeline 그룹 스키마 RED-first (S-001~S-012). [T023/RED-fix] _derive_current_stage na/skipped 도달 단계 파악 + _aggregate_status na/skipped 제외 집계 RED-first (S-013~S-016).",
+  "description": "S-6: 5개 엔드포인트 200 + Pydantic 응답 스키마 계약 검증. httpx TestClient. RED-first. [T021/L2-R4api] query param 방식 엔드포인트 검증 (path segment 절대경로 버그 근본 수정). [T021-fix] dashboard project 쿼리 파라미터 케이스 추가. [T021-fix2] state.json 없는 태스크 산출물 추론 케이스 추가. [T023/RED] _derive_current_stage / _group_pipeline_stages / _aggregate_status 신규 헬퍼 + get_task_detail pipeline 그룹 스키마 RED-first (S-001~S-012). [T023/RED-fix] _derive_current_stage na/skipped 도달 단계 파악 + _aggregate_status na/skipped 제외 집계 RED-first (S-013~S-016). [T061] 설정 라우터 계약 — 경로검증·화이트리스트(S-1, prewarm 대상 빈/비스캔 400만) · console.config GET 스냅샷(S-3 router측, GET만) · 프라임 풀 토글 멱등+prewarm 트리거 관측(S-5). S-5는 brain_session_registry.prewarm을 MagicMock으로 대체 관측 — 실 claude 서브프로세스 호출 0회(test_brain.py 격리 패턴 재사용). T061 범위 축소(캡틴 지시)로 console.config POST(S-3 쓰기측)·프로젝트 로컬 설정(S-4) 계약은 미사용 쓰기 API 제거에 따라 삭제됨.",
   "exports": [
     "test_api_dashboard_200",
     "test_api_dashboard_schema",
@@ -40,12 +40,26 @@
     "test_derive_stage_reached_not_pending",
     "test_derive_stage_reached_skips_na_tail",
     "test_aggregate_na_excluded_done",
-    "test_aggregate_all_skipped_done"
+    "test_aggregate_all_skipped_done",
+    "TestConfigPathWhitelist",
+    "TestPrewarmToggle",
+    "TestConsoleConfigEndpoints"
   ],
-  "depends": ["main", "models", "routers"]
+  "depends": ["main", "models", "routers", "config", "adapters.brain_session"],
+  "task": "061",
+  "scenarios": ["S-1", "S-3", "S-5"],
+  "changelog": [
+    "2026-07-14 T061 RED: 설정 라우터(routers/config.py, 미구현) 경로검증/화이트리스트(S-1)·console.config GET/POST(S-3)·프로젝트 로컬 설정 3경로+재조회(S-4)·프라임 풀 토글 멱등(S-5) 실패 테스트 추가 — 구현 전 RED 트랙(red-first.md), 작성자(opal-test-agent)≠구현자(opal-be-agent)",
+    "2026-07-14 T061 범위 축소: TestProjectLocalSettings 클래스 삭제 + TestConfigPathWhitelist 중 project-local 대상 3건(traversal·symlink·화이트리스트 외 무변경) 삭제(prewarm 대상 빈/비스캔 400 2건은 유지) + TestConsoleConfigEndpoints의 console POST 2건 삭제(GET 스냅샷 1건은 유지) — 프로젝트 로컬 설정·console.config 전반 편집 미반영에 따른 계약 삭제, scenarios에서 S-4 제거"
+  ]
 }
 """
 from __future__ import annotations
+
+import json
+import os
+from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 from fastapi.testclient import TestClient
@@ -758,3 +772,170 @@ def test_aggregate_all_skipped_done():
     ]
     result = _aggregate_status(grp_rows)
     assert result == "done", f"expected 'done', got {result!r}"
+
+
+# ── T061 RED-first: 설정 쓰기 라우터(routers/config.py, 미구현) ──────────────
+# 아래 테스트는 구현 전 RED(실패) 상태여야 정상이다. 라우터가 등록되지 않은 현재
+# 상태에서는 모든 신규 엔드포인트 호출이 404(Not Found)를 반환하므로, 400/422/200을
+# 기대하는 아래 단언은 전부 실패한다(RED). GREEN 전환은 opal-be-agent(EXECUTE 단계)가
+# 담당한다. PLAN.md §3.1.2~§3.4.2 설계 시그니처 대상.
+
+
+def _isolate_console_config(monkeypatch: pytest.MonkeyPatch, config_path: Path, data: dict) -> None:
+    """dashboard.backend.config.CONFIG_PATH를 tmp 경로로 격리 + console.config.json 시드 작성."""
+    import dashboard.backend.config as config_module
+
+    config_path.write_text(json.dumps(data), encoding="utf-8")
+    monkeypatch.setattr(config_module, "CONFIG_PATH", config_path)
+
+
+def _make_scanned_project(root: Path, name: str) -> str:
+    """root 하위에 .opal/AGENT.md 마커를 가진 OPAL 프로젝트를 생성하고 절대경로 문자열 반환."""
+    proj_dir = root / name
+    (proj_dir / ".opal").mkdir(parents=True)
+    (proj_dir / ".opal" / "AGENT.md").write_text("# test project", encoding="utf-8")
+    return str(proj_dir)
+
+
+def _make_unscanned_dir(root: Path, name: str) -> str:
+    """.opal 마커 없는(스캔 화이트리스트 밖) 디렉토리 생성, 절대경로 문자열 반환."""
+    d = root / name
+    d.mkdir(parents=True)
+    return str(d)
+
+
+# ── TestConfigPathWhitelist ──────────────────────────────────────────────────
+
+class TestConfigPathWhitelist:
+    """[T061/L1-R1] 경로 검증·화이트리스트 — path traversal 차단 (H-1, S-1).
+
+    대상: routers/config.py `_require_project_path` + POST /api/config/prewarm의
+    400 게이트(빈 project·비스캔 project). project-local 대상 케이스(traversal·
+    symlink·화이트리스트 외 무변경)는 T061 범위 축소로 GET|POST /api/config/project-local
+    자체가 제거되어 삭제됨.
+    """
+
+    def test_empty_project_rejected_on_prewarm(self, client, tmp_path, monkeypatch):
+        """[T061/L1-R1] 빈 project → POST /api/config/prewarm 400."""
+        ws = tmp_path / "ws"
+        ws.mkdir()
+        _make_scanned_project(ws, "proj-a")
+        _isolate_console_config(
+            monkeypatch, tmp_path / "console.config.json",
+            {"scan_roots": [str(ws)], "scan_depth": 2, "exclude": [], "prewarm_projects": []},
+        )
+        resp = client.post("/api/config/prewarm", json={"project": "", "enabled": True})
+        assert resp.status_code == 400, f"빈 project 기대 400, got {resp.status_code}"
+
+    def test_unscanned_project_rejected_on_prewarm(self, client, tmp_path, monkeypatch):
+        """[T061/L1-R1] 비스캔 프로젝트 경로 → POST /api/config/prewarm 400."""
+        ws = tmp_path / "ws"
+        ws.mkdir()
+        _make_scanned_project(ws, "proj-a")
+        outside = _make_unscanned_dir(tmp_path / "outside", "evil")
+        _isolate_console_config(
+            monkeypatch, tmp_path / "console.config.json",
+            {"scan_roots": [str(ws)], "scan_depth": 2, "exclude": [], "prewarm_projects": []},
+        )
+        resp = client.post("/api/config/prewarm", json={"project": outside, "enabled": True})
+        assert resp.status_code == 400, f"비스캔 경로 기대 400, got {resp.status_code}"
+
+
+# ── TestPrewarmToggle ─────────────────────────────────────────────────────────
+
+class TestPrewarmToggle:
+    """[T061/L1-R2] 프라임 풀 토글 — config 반영 + 즉시 선프라임 + 멱등 (H-5, RED, S-5).
+
+    대상: POST /api/config/prewarm + BrainSessionRegistry.prewarm 연동 (미구현 — PLAN §3.2.2 대상).
+
+    [MUST] 실 claude 서브프로세스 호출 0회 — brain_session_registry.prewarm 자체를
+    MagicMock으로 대체하여 트리거 여부만 관측한다(test_brain.py 서브프로세스 격리 패턴
+    재사용, 구독 소모 0). opbr_adapter.prime_and_ask까지 내려가지 않으므로 실 claude 미호출.
+    """
+
+    def _seed(self, monkeypatch, tmp_path) -> str:
+        ws = tmp_path / "ws"
+        ws.mkdir()
+        proj_a = _make_scanned_project(ws, "proj-a")
+        _isolate_console_config(
+            monkeypatch, tmp_path / "console.config.json",
+            {"scan_roots": [str(ws)], "scan_depth": 2, "exclude": [], "prewarm_projects": []},
+        )
+        return proj_a
+
+    def test_toggle_on_twice_idempotent_and_single_prewarm_trigger(self, client, tmp_path, monkeypatch):
+        """[T061/L1-R2] ON ×2 → config prewarm_projects에 1회만 등재 + prewarm 트리거 1회 관측."""
+        from dashboard.backend.adapters.brain_session import brain_session_registry
+
+        proj_a = self._seed(monkeypatch, tmp_path)
+        config_path = tmp_path / "console.config.json"
+
+        with patch.object(brain_session_registry, "prewarm") as mock_prewarm:
+            resp1 = client.post("/api/config/prewarm", json={"project": proj_a, "enabled": True})
+            resp2 = client.post("/api/config/prewarm", json={"project": proj_a, "enabled": True})
+
+        assert resp1.status_code == 200, f"1차 ON 기대 200, got {resp1.status_code}: {resp1.text[:200]}"
+        assert resp2.status_code == 200, f"2차 ON 기대 200, got {resp2.status_code}: {resp2.text[:200]}"
+
+        assert mock_prewarm.call_count == 1, (
+            f"멱등 ON 2회에도 prewarm 트리거는 1회여야 함, got {mock_prewarm.call_count}"
+        )
+
+        reloaded = json.loads(config_path.read_text(encoding="utf-8"))
+        assert reloaded["prewarm_projects"].count(proj_a) == 1, (
+            f"prewarm_projects에 중복 등재됨: {reloaded['prewarm_projects']}"
+        )
+
+    def test_toggle_off_removes_from_list(self, client, tmp_path, monkeypatch):
+        """[T061/L1-R2] OFF → prewarm_projects 목록에서 제거."""
+        from dashboard.backend.adapters.brain_session import brain_session_registry
+
+        proj_a = self._seed(monkeypatch, tmp_path)
+        config_path = tmp_path / "console.config.json"
+
+        with patch.object(brain_session_registry, "prewarm"):
+            client.post("/api/config/prewarm", json={"project": proj_a, "enabled": True})
+            resp_off = client.post("/api/config/prewarm", json={"project": proj_a, "enabled": False})
+
+        assert resp_off.status_code == 200, f"OFF 기대 200, got {resp_off.status_code}: {resp_off.text[:200]}"
+        reloaded = json.loads(config_path.read_text(encoding="utf-8"))
+        assert proj_a not in reloaded["prewarm_projects"], (
+            f"OFF 후에도 목록에 잔존: {reloaded['prewarm_projects']}"
+        )
+
+
+# ── TestConsoleConfigEndpoints ────────────────────────────────────────────────
+
+class TestConsoleConfigEndpoints:
+    """[T061/L1-R3] GET /api/config — 스냅샷 반환 (S-3 router측).
+
+    대상: GET /api/config. POST /api/config/console + models.ConsoleConfigUpdate는
+    T061 범위 축소(캡틴 지시)로 제거되어 관련 케이스(미지 필드 거부·부분 갱신 HTTP 계약)는
+    삭제됨. 머지 보존 자체(부분 갱신·future_key 보존)는 test_config.py의
+    TestSaveConfigMergePreservation이 config.save_config를 직접 호출해 검증한다.
+    """
+
+    def _isolate(self, monkeypatch, tmp_path) -> Path:
+        config_path = tmp_path / "console.config.json"
+        _isolate_console_config(
+            monkeypatch, config_path,
+            {
+                "scan_roots": ["/tmp/ws"],
+                "scan_depth": 2,
+                "exclude": ["backup"],
+                "prewarm_projects": [],
+                "future_key": "keep-me",
+            },
+        )
+        return config_path
+
+    def test_get_config_returns_snapshot(self, client, tmp_path, monkeypatch):
+        """GET /api/config → 4필드 스냅샷 반환."""
+        self._isolate(monkeypatch, tmp_path)
+        resp = client.get("/api/config")
+        assert resp.status_code == 200, f"기대 200, got {resp.status_code}: {resp.text[:200]}"
+        data = resp.json()
+        assert data.get("scan_roots") == ["/tmp/ws"]
+        assert data.get("scan_depth") == 2
+        assert data.get("exclude") == ["backup"]
+        assert data.get("prewarm_projects") == []

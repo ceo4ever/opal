@@ -3,7 +3,7 @@
   "module": "models",
   "layer": "schema",
   "domain": "console",
-  "description": "Pydantic 응답 스키마. ProjectInfo·ProjectDetail·TaskCard·MemoryIndex·DoctorReport 등 5개 화면 계약 정의. PipelineStageGroup: stage 단위 그룹 스키마(done_count/total/status/rows) — TaskDetailResponse.pipeline 타입. Brain: BrainQueryRequest(project·session_id 필수·빈값→400)·BrainQueryResponse·BrainPrimeResponse·BrainStatusResponse·CitationItem (Phase 2 하드닝 + 대화별 session_id 격리). 비동기 잡 폴링: BrainJobSubmitResponse(job_id 즉시 반환)·BrainJobResponse(job_id·status·answer·citations·error_msg) — PLAN §3.1.2.",
+  "description": "Pydantic 응답 스키마. ProjectInfo·ProjectDetail·TaskCard·MemoryIndex·DoctorReport 등 5개 화면 계약 정의. PipelineStageGroup: stage 단위 그룹 스키마(done_count/total/status/rows) — TaskDetailResponse.pipeline 타입. Brain: BrainQueryRequest(project·session_id 필수·빈값→400)·BrainQueryResponse·BrainPrimeResponse·BrainStatusResponse·CitationItem (Phase 2 하드닝 + 대화별 session_id 격리). 비동기 잡 폴링: BrainJobSubmitResponse(job_id 즉시 반환)·BrainJobResponse(job_id·status·answer·citations·error_msg) — PLAN §3.1.2. [T061] 설정 쓰기 스키마(범위 축소, 프라임 풀 스위칭 한정): ConsoleConfigResponse(GET /api/config 스냅샷)·ConfigWriteResponse(쓰기 응답 공통)·PrewarmToggleRequest. console.config 전반 편집(ConsoleConfigUpdate)·프로젝트 로컬 설정 편집(SettingLocalUpdate) 스키마는 캡틴 지시로 제거(T061 범위 축소).",
   "exports": [
     "HealthResponse",
     "ProjectInfoResponse",
@@ -22,9 +22,17 @@
     "BrainPrimeResponse",
     "BrainStatusResponse",
     "CitationItem",
-    "BrainAuthResponse"
+    "BrainAuthResponse",
+    "ConsoleConfigResponse",
+    "ConfigWriteResponse",
+    "PrewarmToggleRequest"
   ],
-  "depends": []
+  "depends": [],
+  "task": "061",
+  "changelog": [
+    "2026-07-14 T061 Step3: 설정 쓰기 스키마 5종 추가 (ConsoleConfigResponse/ConfigWriteResponse/PrewarmToggleRequest/ConsoleConfigUpdate/SettingLocalUpdate) — F-001~F-004",
+    "2026-07-14 T061 범위 축소: ConsoleConfigUpdate·SettingLocalUpdate 제거(console.config 전반·프로젝트 로컬 설정 편집 미반영) — ConfigDict import도 함께 제거"
+  ]
 }
 """
 from __future__ import annotations
@@ -262,3 +270,25 @@ class DoctorReportResponse(BaseModel):
     verdict: str = ""
     skills: list[dict[str, Any]] = []
     warning: str | None = None
+
+
+# ── Config (설정 쓰기, T061) ──────────────────────────────────────────────────
+
+class ConsoleConfigResponse(BaseModel):
+    """GET /api/config 응답 — console.config.json 4필드 스냅샷."""
+    scan_roots: list[str]
+    scan_depth: int
+    exclude: list[str]
+    prewarm_projects: list[str]
+
+
+class ConfigWriteResponse(BaseModel):
+    """설정 쓰기 엔드포인트 공통 응답 — 갱신 후 스냅샷."""
+    ok: bool = True
+    config: dict = {}
+
+
+class PrewarmToggleRequest(BaseModel):
+    """POST /api/config/prewarm 요청 스키마."""
+    project: str          # 절대경로. 필수 — 빈값/비스캔 400
+    enabled: bool

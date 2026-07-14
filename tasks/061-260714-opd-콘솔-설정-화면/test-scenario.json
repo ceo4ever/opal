@@ -1,0 +1,69 @@
+{
+  "schema_version": "1.0",
+  "task_id": "061-260714-opd-콘솔-설정-화면",
+  "locked": true,
+  "created_at": "2026-07-14T17:18:07+09:00",
+  "locked_at": "2026-07-14T17:18:19+09:00",
+  "scenarios": [
+    {
+      "id": "S-1",
+      "acceptance_ref": null,
+      "type": null,
+      "expected": null,
+      "red_confirmed": true,
+      "red_evidence": "5 failed - 404 Not Found(라우터 미등록): empty/unscanned/traversal/symlink project 400 기대 불일치 + whitelist 무변경 케이스 (워커 실측 2026-07-14 17:16)",
+      "red_at": "2026-07-14T17:18:19+09:00",
+      "result": "pass",
+      "evidence": "TestConfigPathWhitelist 5/5 GREEN, 화이트리스트 외 파일생성 0, 5회 반복 0 flaky",
+      "marked_at": "2026-07-14T17:29:25+09:00"
+    },
+    {
+      "id": "S-2",
+      "acceptance_ref": null,
+      "type": null,
+      "expected": null,
+      "red_confirmed": true,
+      "red_evidence": "2 failed - AttributeError: config._atomic_write_json/save_config 미구현 (워커 실측 2026-07-14 17:16)",
+      "red_at": "2026-07-14T17:18:19+09:00",
+      "result": "pass",
+      "evidence": "TestAtomicWriteJson 2/2 GREEN, 10회 반복 무손실, temp잔존 0, 동시쓰기 키유실 0",
+      "marked_at": "2026-07-14T17:29:26+09:00"
+    },
+    {
+      "id": "S-3",
+      "acceptance_ref": null,
+      "type": null,
+      "expected": null,
+      "red_confirmed": true,
+      "red_evidence": "6 failed - AttributeError save_config(3) + 404 GET/POST /api/config·console(3) (워커 실측 2026-07-14 17:16)",
+      "red_at": "2026-07-14T17:18:19+09:00",
+      "result": "pass",
+      "evidence": "TestSaveConfigMergePreservation+TestConsoleConfigEndpoints 6/6 GREEN, future_key 보존, 미지필드 422",
+      "marked_at": "2026-07-14T17:29:26+09:00"
+    },
+    {
+      "id": "S-4",
+      "acceptance_ref": null,
+      "type": null,
+      "expected": null,
+      "red_confirmed": true,
+      "red_evidence": "7 failed - 404 project-local 미등록 (워커 실측 2026-07-14 17:16)",
+      "red_at": "2026-07-14T17:18:19+09:00",
+      "result": "pass",
+      "evidence": "TestSaveProjectLocal+TestProjectLocalSettings 9/9 GREEN, 생성/갱신/422/400/재조회 전건 확인",
+      "marked_at": "2026-07-14T17:29:26+09:00"
+    },
+    {
+      "id": "S-5",
+      "acceptance_ref": null,
+      "type": null,
+      "expected": null,
+      "red_confirmed": true,
+      "red_evidence": "2 failed - 404 prewarm 미등록 (워커 실측 2026-07-14 17:16)",
+      "red_at": "2026-07-14T17:18:19+09:00",
+      "result": "pass",
+      "evidence": "TestPrewarmToggle 2/2 GREEN, 10회 반복 무손실, mock prewarm call_count==1 멱등",
+      "marked_at": "2026-07-14T17:29:26+09:00"
+    }
+  ]
+}

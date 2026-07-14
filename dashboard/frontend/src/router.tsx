@@ -3,9 +3,11 @@
  *   "module": "router",
  *   "layer": "config",
  *   "domain": "core",
- *   "description": "React Router 설정 — 6개 라우트(/ /projects /tasks /memory /doctor /brain)를 AppShell로 래핑. 절대경로 식별자는 searchParams 방식(?project= ?task_id=) — path segment 라우트 제거(슬래시 포함 절대경로 매칭 실패 근본 수정)",
+ *   "description": "React Router 설정 — 7개 라우트(/ /projects /tasks /memory /doctor /brain /settings)를 AppShell로 래핑. 절대경로 식별자는 searchParams 방식(?project= ?task_id=) — path segment 라우트 제거(슬래시 포함 절대경로 매칭 실패 근본 수정). [T061] /settings 추가 — 프로젝트별 환경 설정 화면(프라임 풀 토글·console.config·프로젝트 로컬 설정), 대상 프로젝트는 contextProject(ui-store) 스위처 연동.",
  *   "exports": ["router"],
- *   "depends": ["app-shell", "dashboard-page", "projects-page", "tasks-page", "memory-page", "doctor-page", "brain-page"]
+ *   "depends": ["app-shell", "dashboard-page", "projects-page", "tasks-page", "memory-page", "doctor-page", "brain-page", "settings-page"],
+ *   "task": "061",
+ *   "changelog": ["2026-07-14 T061 Step10: /settings 라우트 추가 (F-005)"]
  * }
  */
 
@@ -17,6 +19,7 @@ import { TasksPage } from "@/pages/tasks/TasksPage";
 import { MemoryPage } from "@/pages/memory/MemoryPage";
 import { DoctorPage } from "@/pages/doctor/DoctorPage";
 import { BrainPage } from "@/pages/brain/BrainPage";
+import { SettingsPage } from "@/pages/settings/SettingsPage";
 
 export const router = createBrowserRouter([
   {
@@ -31,6 +34,7 @@ export const router = createBrowserRouter([
       { path: "memory", element: <MemoryPage /> },
       { path: "doctor", element: <DoctorPage /> },
       { path: "brain", element: <BrainPage /> },
+      { path: "settings", element: <SettingsPage /> },
     ],
   },
 ]);

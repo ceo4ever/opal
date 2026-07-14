@@ -235,8 +235,8 @@ opal/core/mcps/*    ──── install ─→  claude mcp add --scope user (Cl
 로컬에서 OPAL로 작업하는 모든 프로젝트를 한 웹 화면에서 조망하는 **읽기 전용 대시보드**(태스크 021 신설). 데이터 SSOT를 새로 만들지 않고, OPAL 도구의 read-only 커맨드 + 마크다운 파서로 각 프로젝트 데이터를 수집·렌더한다.
 
 ```
-┌─ Web UI (React + shadcn/ui, 6개 화면) ──────────────────┐
-│  대시보드·프로젝트·태스크(칸반)·메모리·환경·프로젝트 브레인 │
+┌─ Web UI (React + shadcn/ui, 7개 화면) ──────────────────┐
+│  대시보드·프로젝트·태스크(칸반)·메모리·환경·프로젝트 브레인·설정 │
 └───────────────┬──────────────────────────────────────────┘
                 │ HTTP (127.0.0.1:7823)
 ┌───────────────▼──────────────────────────────────────────┐
@@ -246,6 +246,7 @@ opal/core/mcps/*    ──── install ─→  claude mcp add --scope user (Cl
 │  • 마크다운 파서: MEMORY.md·memory/*·PROJECT/AGENT.md      │
 │  • TTL 캐시(mtime 무효화) · 읽기 전용                       │
 │  • [예외·격리] 브레인 질의 라우터만 POST + opbr CLI(태스크036)│
+│  • [예외·격리] 설정 라우터만 파일 쓰기 — 화이트리스트 2종(태스크061)│
 └───────────────────────────────────────────────────────────┘
 ```
 
@@ -261,6 +262,18 @@ opal/core/mcps/*    ──── install ─→  claude mcp add --scope user (Cl
 | 프라임 연결 풀 (태스크 060) | `console.config.json`의 `prewarm_projects`(절대경로 배열, 기본 `[]`)에 지정한 프로젝트만 서버 기동 시(lifespan 훅) 백그라운드 선프라임하여 **프로젝트별 웜 핸들 풀**(크기 1)에 적재. 새 대화 첫 진입(`BrainSessionRegistry._get_or_create`) 시 풀에서 lock 하 체크아웃→세션에 이식(즉시 ready·첫 질의 `--resume` 웜)하고 백그라운드 리필. 동시 프라임은 `Semaphore(2)` 상한, 풀 비면 기존 콜드 폴백(API 5종 계약·FE 불변). 풀은 인메모리 전용(무상태 원칙) |
 | 엔드포인트 | `GET /api/brain/auth`(claude CLI 가용·인증) · `POST /api/brain/prime`(백그라운드 프라임) · `POST /api/brain/query`(질의→`{answer, citations}`) |
 | 이력 | **브라우저 localStorage**(backend·brain 무상태/무변경). FE가 Q&A 스레드 저장·표시·재질문·"새 대화" |
+
+### 프로젝트별 환경 설정 화면 (태스크 061)
+
+콘솔 7번째 메뉴 `/settings`. 읽기 전용 원칙의 두 번째 예외로, 브레인 POST 격리 선례를 따라 **설정 라우터(`routers/config.py`) 1곳에만 파일 쓰기를 허용**한다. 이번 범위는 **프라임 풀 토글 단일 기능**(캡틴 확정 — 화면 기능은 필요 시 하나씩 추가, JSON 설정은 파일 수동 편집 유지).
+
+| 항목 | 값 |
+|------|-----|
+| 쓰기 화이트리스트 | `~/.opal/console.config.json` **1종만**(prewarm_projects 갱신 한정). project는 스캔 프로젝트 매칭(400 게이트)으로 검증 — FE 경로 문자열 불신뢰 |
+| 기능 | 프라임 풀(사전 예열) 토글 — `GET /api/config`(상태 조회) + `POST /api/config/prewarm` {project, enabled}: ON 시 `prewarm_projects` 머지 반영(멱등) + 목록 신규 추가 시 `BrainSessionRegistry.prewarm()` 즉시 호출(재기동 불요), OFF 시 목록 제거. 화면은 토글 + prewarm_projects 읽기 전용 표시 |
+| 동시 쓰기 방어 | 모듈 `threading.Lock`(read-modify-write 직렬화) + temp 파일 후 `os.replace`(atomic rename) — 머지 보존(미지 키 유지) |
+| 범위 제외(후속) | console.config 전반 편집·프로젝트 로컬 `.opal/setting.local.json` 편집 — 파일 수동 편집으로 관리, 미사용 쓰기 API는 표면 최소화 위해 미노출 |
+| 불변 | LLM 호출 0회(브레인 라우터 격리 유지) · 기존 read-only 5종 + 브레인 POST 계약 불변 · 127.0.0.1 바인딩 |
 
 | 항목 | 값 |
 |------|-----|
@@ -392,3 +405,4 @@ opal/                                    ← 이 저장소
 | 2026-07-10 | Project Loop 파이프라인 반영 — 오케스트레이터 표 oppl 행, 전문 에이전트 표 opal-evaluator-agent 행, 폴더 트리 oppl 스킬·evaluator 에이전트, 서브에이전트 수 12개(전문 7)로 정합 (Task 056) |
 | 2026-07-10 | OPAL Console 표 갱신 — `console scan` 서브명령 반영(기동 행 scan 추가, 프로젝트 식별 행에 config 생성·머지·install 자동 실행·start 안내 명기) (Task 057) |
 | 2026-07-14 | OPAL Console 브레인 질의 표에 "프라임 연결 풀" 행 신설 — prewarm_projects 선프라임·프로젝트별 웜 핸들 풀(크기 1)·체크아웃+백그라운드 리필·Semaphore(2) 상한·콜드 폴백·인메모리 전용 (Task 060) |
+| 2026-07-14 | OPAL Console 7번째 화면 "설정" 신설 절 추가 — 설정 라우터 쓰기 격리(화이트리스트)·프라임 풀 토글 단일 기능(캡틴 범위 확정: console.config·로컬 설정 편집은 수동 유지, 후속 단위 추가)·Lock+atomic rename·다이어그램 7화면 갱신 (Task 061) |
