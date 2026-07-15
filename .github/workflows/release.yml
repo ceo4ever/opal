@@ -1,6 +1,8 @@
 # 변경이력: (139) 2026-05-09 — GitHub Release Workflow 신규 (J 영역)
 #   태그 push 트리거 / tarball / sha256sums / attest-build-provenance v2 / softprops/action-gh-release@v2
 # 근거: PLAN.md §3.3.2 골격 (D-12) + D2 fork 호환 (${{ github.repository }})
+# 변경이력: (L2) 2026-07-15 — annotated 태그 메시지 본문을 릴리즈 노트로 발행 (body_path)
+#   태그 재-fetch(peel 이슈 회피) + %(contents:body) 추출 / generate_release_notes 유지(Full Changelog 병기)
 
 name: release
 
@@ -37,9 +39,18 @@ jobs:
         with:
           subject-checksums: sha256sums.txt
 
+      - name: Extract release notes from tag message
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          # actions/checkout이 annotated 태그를 커밋으로 peel하는 이슈(actions/checkout#290) 회피 — 태그 객체 재-fetch
+          git fetch --force origin "refs/tags/${TAG}:refs/tags/${TAG}"
+          # 태그 메시지 본문(제목 제외)을 릴리즈 노트로 추출. 한 줄 태그 메시지면 빈 파일 → 기존 동작(자동 노트만)과 동일
+          git tag -l --format='%(contents:body)' "${TAG}" > release_notes.md
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
+          body_path: release_notes.md
           files: |
             opal-*.tar.gz
             sha256sums.txt
