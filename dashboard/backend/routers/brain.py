@@ -7,7 +7,8 @@
   "exports": ["GET /api/brain/auth", "GET /api/brain/status", "POST /api/brain/prime", "POST /api/brain/query", "GET /api/brain/job/{job_id}"],
   "depends": ["adapters.brain_session", "adapters.opbr_adapter", "models", "scanner", "config"],
   "changelog": [
-    "2026-06-23 Step3: POST /query → submit_job 비동기(BrainJobSubmitResponse), GET /api/brain/job/{job_id} 신설(PLAN §3.1.2)"
+    "2026-06-23 Step3: POST /query → submit_job 비동기(BrainJobSubmitResponse), GET /api/brain/job/{job_id} 신설(PLAN §3.1.2)",
+    "2026-07-15 T063 Step5(F-004): new_conversation 폐기 필드 정리 — POST /query docstring·[NOTE] 주석에서 잔재 제거(BrainQueryRequest에서도 필드 삭제, models.py)"
   ]
 }
 """
@@ -215,10 +216,9 @@ def post_brain_query(body: BrainQueryRequest) -> BrainJobSubmitResponse:
     잡 결과는 GET /api/brain/job/{job_id}?project=<>&session_id=<> 폴링으로 수신.
 
     Args:
-        body: {question, project, session_id, new_conversation?}
+        body: {question, project, session_id}
             project: 필수. 빈 값이면 400.
             session_id: 필수. 빈 값이면 400.
-            new_conversation: 호환 목적으로 수신하되 reset 트리거하지 않음(폐기).
 
     Returns:
         {job_id}: 즉시 반환 — 블로킹 없음
@@ -234,8 +234,7 @@ def post_brain_query(body: BrainQueryRequest) -> BrainJobSubmitResponse:
         sid[:8], project_path, (body.question or "")[:60],
     )
 
-    # [NOTE] new_conversation에 의한 reset은 query에서 수행하지 않는다(폐기).
-    # 대화별 session_id 설계에서 새 대화는 FE가 새 session_id를 생성·전달하는 것으로 처리.
+    # 새 대화는 FE가 새 session_id를 생성·전달하는 것으로 처리(대화별 session_id 설계).
 
     try:
         job_id = brain_session_registry.submit_job(

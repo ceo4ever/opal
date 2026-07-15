@@ -3,15 +3,18 @@
  *   "module": "app-shell",
  *   "layer": "component",
  *   "domain": "core",
- *   "description": "OPAL Console 글로벌 레이아웃 셸 — shadcn sidebar 기반 좌측 7개 네비 + 프로젝트 스위처 + 상단바(검색·테마토글·새로고침·연결상태·설정). [T061] NAV_ITEMS에 '설정' 추가 + TopBar 설정 버튼을 /settings NavLink로 연결(기존 no-op 제거).",
+ *   "description": "OPAL Console 글로벌 레이아웃 셸 — shadcn sidebar 기반 좌측 7개 네비 + 프로젝트 스위처 + 상단바(검색·테마토글·새로고침·연결상태·설정). [T061] NAV_ITEMS에 '설정' 추가 + TopBar 설정 버튼을 /settings NavLink로 연결(기존 no-op 제거). [T063 R-8] 프로젝트 스위처가 ui-store brainDirty(브레인 화면 turns.length>0)를 확인해, dirty 상태에서 다른 프로젝트로 전환 시 AlertDialog로 확인 후 진행(취소 시 잔류) — 브레인 화면이 아니면(brainDirty=false) 기존과 동일하게 즉시 전환.",
  *   "exports": ["AppShell"],
- *   "depends": ["ui-store", "api-client", "sidebar", "badge", "dropdown-menu", "tooltip"],
- *   "task": "061",
- *   "changelog": ["2026-07-14 T061 Step10: NAV_ITEMS '설정' 추가 + TopBar 설정 버튼 /settings 연결 (F-005)"]
+ *   "depends": ["ui-store", "api-client", "sidebar", "badge", "dropdown-menu", "tooltip", "alert-dialog"],
+ *   "task": "063",
+ *   "changelog": [
+ *     "2026-07-14 T061 Step10: NAV_ITEMS '설정' 추가 + TopBar 설정 버튼 /settings 연결 (F-005)",
+ *     "2026-07-15 T063 R-8: ProjectSwitcher에 brainDirty 가드 추가 — dirty 시 AlertDialog 확인 후 setContextProject 진행"
+ *   ]
  * }
  */
 
-import React from "react";
+import React, { useState } from "react";
 import { Outlet, NavLink, useSearchParams } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -58,8 +61,22 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useUiStore, type Theme } from "@/store/ui-store";
 import { apiClient } from "@/lib/api";
+
+/** 3경로 공통 이탈 확인 문구 (R-8) — BrainPage 이탈 가드와 동일 문구 유지 */
+const BRAIN_LEAVE_GUARD_TITLE = "화면을 나가면 이 대화 세션이 사라집니다";
+const BRAIN_LEAVE_GUARD_DESCRIPTION = "나가시겠어요?";
 
 /* ------------------------------------------------------------------ */
 /* 상수                                                                  */
@@ -101,7 +118,10 @@ interface ProjectInfo {
 
 function ProjectSwitcher() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const { contextProject, setContextProject } = useUiStore();
+  const { contextProject, setContextProject, brainDirty } = useUiStore();
+  // 브레인 화면에서 turns>0 상태로 전환 시도 시 확인 대기 중인 전환 대상 (R-8 ③).
+  // undefined = 확인 대기 없음. path 자체가 null(전체 프로젝트)일 수 있어 별도 sentinel로 구분.
+  const [pendingSwitch, setPendingSwitch] = useState<{ path: string | null } | undefined>(undefined);
 
   const { data: projects } = useQuery<ProjectInfo[]>({
     queryKey: ["projects"],
@@ -113,7 +133,7 @@ function ProjectSwitcher() {
   const selectedProject = projects?.find((p) => p.path === selectedPath);
   const displayName = selectedProject?.name ?? "전체 프로젝트";
 
-  const handleSelect = (path: string | null) => {
+  const applySelect = (path: string | null) => {
     setContextProject(path);
     if (path) {
       setSearchParams({ project: path });
@@ -122,30 +142,67 @@ function ProjectSwitcher() {
     }
   };
 
+  const handleSelect = (path: string | null) => {
+    if (path === selectedPath) return; // 동일 선택 — 전환 아님, 가드 불필요
+    if (brainDirty) {
+      setPendingSwitch({ path });
+      return;
+    }
+    applySelect(path);
+  };
+
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <button className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors">
-          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-sm bg-primary text-primary-foreground text-xs font-bold">
-            O
-          </span>
-          <span className="truncate flex-1 text-left">{displayName}</span>
-          <ChevronDown className="ml-auto h-4 w-4 shrink-0 opacity-50" />
-        </button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56" align="start">
-        <DropdownMenuItem onClick={() => handleSelect(null)}>
-          <span className="font-medium">★ 전체 프로젝트</span>
-        </DropdownMenuItem>
-        {projects
-          ?.filter((p) => p.is_opal)
-          .map((p) => (
-            <DropdownMenuItem key={p.path} onClick={() => handleSelect(p.path)}>
-              {p.name}
-            </DropdownMenuItem>
-          ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors">
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-sm bg-primary text-primary-foreground text-xs font-bold">
+              O
+            </span>
+            <span className="truncate flex-1 text-left">{displayName}</span>
+            <ChevronDown className="ml-auto h-4 w-4 shrink-0 opacity-50" />
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent className="w-56" align="start">
+          <DropdownMenuItem onClick={() => handleSelect(null)}>
+            <span className="font-medium">★ 전체 프로젝트</span>
+          </DropdownMenuItem>
+          {projects
+            ?.filter((p) => p.is_opal)
+            .map((p) => (
+              <DropdownMenuItem key={p.path} onClick={() => handleSelect(p.path)}>
+                {p.name}
+              </DropdownMenuItem>
+            ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {/* 이탈 확인 다이얼로그 (R-8 ③) — 브레인 화면 dirty(turns>0) 중 프로젝트 전환 시도 시 노출 */}
+      <AlertDialog
+        open={pendingSwitch !== undefined}
+        onOpenChange={(open) => {
+          if (!open) setPendingSwitch(undefined);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{BRAIN_LEAVE_GUARD_TITLE}</AlertDialogTitle>
+            <AlertDialogDescription>{BRAIN_LEAVE_GUARD_DESCRIPTION}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setPendingSwitch(undefined)}>취소</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (pendingSwitch !== undefined) applySelect(pendingSwitch.path);
+                setPendingSwitch(undefined);
+              }}
+            >
+              나가기
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
 

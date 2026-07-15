@@ -3,13 +3,15 @@
   "module": "adapters.brain_session",
   "layer": "service",
   "domain": "console",
-  "description": "대화별 BrainSession 상태기계 (B2). ConversationBrainSession: 단일 대화(conversation_id)의 인메모리 세션 핸들 + threading.Lock 직렬화. BrainSessionRegistry: dict[conversation_id → ConversationBrainSession] 전역 레지스트리 — 대화별 독립 세션 격리. 한 프로젝트에 복수 대화 공존 가능. state 필드: idle|priming|ready|error. prime(session_id, project_path)·ask(session_id, question, project_path)·status(session_id)·reset(session_id) — 모두 해당 session_id 세션에만 작용. project_path는 cwd 격리에만 사용(brain 검색 격리 유지). 5트리거 리셋은 대화(session_id)별 적용: ⓐ서버재실행(인메모리 소멸) ⓑturn_count≥임계(20) ⓒ유휴(30분) ⓓ크래시(resume 실패→새 uuid 콜드 재시도, 투명) ⓔ수동(reset(session_id)). [KEY] conversation_id(FE uuid)와 claude 세션 핸들(_claude_session_id)을 분리 — 콜드마다 새 uuid4 발급 → 'already in use' 충돌 근본 차단. conversation_id는 레지스트리 키·FE 계약 전용(opbr_adapter에 절대 전달 안 함). [MUST] backend 무상태 원칙 — Q&A 내용 저장 안 함. 세션 핸들만(휘발성 프로세스 상태) 보유, DB·파일 영속 금지. 동시성: dict 접근은 전역 _registry_lock으로 보호, 개별 세션 내부는 ConversationBrainSession._lock으로 보호. 비동기 잡 폴링(PLAN §3.1.2): submit_job(question)→job_id 즉시 반환·백그라운드 ask 실행, get_job(job_id)→스냅샷(done/error 수신 시 _current_job 제거=TTL). BrainSessionRegistry 위임: submit_job(session_id,question,project_path)·get_job(session_id,job_id). [T060 F-2/F-4] 프라임 연결 풀: BrainSessionRegistry._pool(project_path→[claude_session_id])·_pool_inflight·_prime_semaphore(동시 프라임 상한, DEFAULT_MAX_CONCURRENT_PRIME=2)를 `_pool_lock`(레지스트리 `_lock`과 분리)으로 보호. prewarm(project_path)→목표치 미달 시 daemon 스레드로 `_prime_into_pool` 기동(비블로킹, 락 없이 subprocess 실행 후 재획득 append). checkout_warm_handle(project_path)→pop 후 백그라운드 리필 트리거, None이면 풀 empty. `_get_or_create`가 신규 세션 생성 시 레지스트리 락 해제 후 checkout_warm_handle→adopt_warm_handle로 웜 핸들 이식(락 순서 계약: `_lock`→`_pool_lock` 방향만 허용, 역순·세션 `_lock` 중첩 금지). ConversationBrainSession.adopt_warm_handle(claude_session_id)—풀 핸들 이식, 이미 웜/priming 중이면 방어 가드로 no-op(핸들 폐기).",
-  "exports": ["BrainSessionRegistry", "brain_session_registry"],
+  "description": "대화별 BrainSession 상태기계 (B2). ConversationBrainSession: 단일 대화(conversation_id)의 인메모리 세션 핸들 + threading.Lock 직렬화. BrainSessionRegistry: dict[conversation_id → ConversationBrainSession] 전역 레지스트리 — 대화별 독립 세션 격리. 한 프로젝트에 복수 대화 공존 가능. state 필드: idle|priming|ready|error. prime(session_id, project_path)·ask(session_id, question, project_path)·status(session_id)·reset(session_id) — 모두 해당 session_id 세션에만 작용. project_path는 cwd 격리에만 사용(brain 검색 격리 유지). 5트리거 리셋은 대화(session_id)별 적용: ⓐ서버재실행(인메모리 소멸) ⓑturn_count≥임계(20) ⓒ유휴(30분) ⓓ크래시(resume 실패→새 uuid 콜드 재시도, 투명) ⓔ수동(reset(session_id)). [KEY] conversation_id(FE uuid)와 claude 세션 핸들(_claude_session_id)을 분리 — 콜드마다 새 uuid4 발급 → 'already in use' 충돌 근본 차단. conversation_id는 레지스트리 키·FE 계약 전용(opbr_adapter에 절대 전달 안 함). [MUST] backend 무상태 원칙 — Q&A 내용 저장 안 함. 세션 핸들만(휘발성 프로세스 상태) 보유, DB·파일 영속 금지. 동시성: dict 접근은 전역 _registry_lock으로 보호, 개별 세션 내부는 ConversationBrainSession._lock으로 보호. 비동기 잡 폴링(PLAN §3.1.2): submit_job(question)→job_id 즉시 반환·백그라운드 ask 실행, get_job(job_id)→스냅샷(done/error 수신 시 _current_job 제거=TTL). BrainSessionRegistry 위임: submit_job(session_id,question,project_path)·get_job(session_id,job_id). [T060 F-2/F-4, T063 F-003 need-기반 충전] 프라임 연결 풀: BrainSessionRegistry._pool(project_path→[claude_session_id])·_pool_inflight·_prime_semaphore(동시 프라임 상한, DEFAULT_MAX_CONCURRENT_PRIME=2)를 `_pool_lock`(레지스트리 `_lock`과 분리)으로 보호. DEFAULT_POOL_SIZE=2(T063, 연속 새대화 콜드 폴백 방지). prewarm(project_path)→need=pool_size-have 만큼 daemon 스레드를 need개 기동(비블로킹, 락은 `_pool_inflight` 갱신 구간만 보유, subprocess는 각 스레드에서 락 밖 실행 후 재획득 append) — 단일 트리거로 풀이 pool_size까지 충전됨(T063 H-1). checkout_warm_handle(project_path)→pop 후 백그라운드 리필 트리거, None이면 풀 empty. `_get_or_create`가 신규 세션 생성 시 레지스트리 락 해제 후 checkout_warm_handle→adopt_warm_handle로 웜 핸들 이식(락 순서 계약: `_lock`→`_pool_lock` 방향만 허용, 역순·세션 `_lock` 중첩 금지 — need-기반 다중 스레드 기동에도 불변, T063 H-2). ConversationBrainSession.adopt_warm_handle(claude_session_id)—풀 핸들 이식, 이미 웜/priming 중이면 방어 가드로 no-op(핸들 폐기).",
+  "exports": ["ConversationBrainSession", "BrainSessionRegistry", "brain_session_registry"],
   "depends": ["adapters.opbr_adapter"],
   "task": "060",
   "changelog": [
     "2026-06-23 Step2: submit_job/_run_job_background/get_job/_current_job 추가 — 비동기 잡 폴링 지원(PLAN §3.1.2)",
-    "2026-07-14 T060 Step2/3: 프라임 연결 풀(prewarm/_prime_into_pool/checkout_warm_handle) + ConversationBrainSession.adopt_warm_handle(방어 가드 포함) 신설, _get_or_create 신규 세션 웜 핸들 주입 연결 (F-2/F-4)"
+    "2026-07-14 T060 Step2/3: 프라임 연결 풀(prewarm/_prime_into_pool/checkout_warm_handle) + ConversationBrainSession.adopt_warm_handle(방어 가드 포함) 신설, _get_or_create 신규 세션 웜 핸들 주입 연결 (F-2/F-4)",
+    "2026-07-15 14:16 T063 Step1(F-003): DEFAULT_POOL_SIZE 1→2 상향 + prewarm()을 need=pool_size-have 만큼 충전 스레드를 기동하도록 수정 — 단일 트리거로 풀이 pool_size까지 충전되어 연속 새대화 콜드 폴백 제거(H-1/R-6). 락 순서·세마포어 계약 불변(H-2/H-3)",
+    "2026-07-15 T063 CLOSE: @header exports 정합 — 테스트가 직접 import하는 ConversationBrainSession 누락분 반영(코드 변경 없음)"
   ]
 }
 """
@@ -42,8 +44,8 @@ DEFAULT_IDLE_TIMEOUT_S: float = 1800.0  # ⓒ 유휴 타임아웃 (30분)
 COLD_TIMEOUT_S: float = 180.0
 WARM_TIMEOUT_S: float = 60.0
 
-# 프라임 연결 풀 기본값 (T060 F-2)
-DEFAULT_POOL_SIZE: int = 1                 # 프로젝트당 웜 핸들 목표 개수
+# 프라임 연결 풀 기본값 (T060 F-2, T063 F-003: 1→2 상향)
+DEFAULT_POOL_SIZE: int = 2                 # 프로젝트당 웜 핸들 목표 개수
 DEFAULT_MAX_CONCURRENT_PRIME: int = 2      # 동시 프라임 상한 (R3/H-3)
 PREWARM_QUESTION: str = "프로젝트 브레인 세션을 초기화합니다."  # 기존 prime() 프라임 질의 재사용
 
@@ -556,19 +558,26 @@ class BrainSessionRegistry:
     # ── 프라임 연결 풀 (T060 F-2) ────────────────────────────────────────────────
 
     def prewarm(self, project_path: str) -> None:
-        """풀 목표치(pool_size) 미달 시 백그라운드 리필 스레드 1개 기동 (비블로킹).
+        """풀 목표치(pool_size) 미달 시 부족분(need)만큼 백그라운드 리필 스레드를 기동한다
+        (비블로킹, T063 F-003).
 
-        이미 채워졌거나 채우는 중이면 과잉 프라임 방지를 위해 즉시 반환한다.
+        need = pool_size - have 만큼 스레드를 기동한다 — 단일 트리거로 풀이 pool_size까지
+        충전된다(H-1/R-6). 이미 채워졌거나 충분히 채우는 중이면 즉시 반환한다. 락은
+        `_pool_inflight` 갱신 구간만 짧게 보유하며, subprocess는 각 리필 스레드
+        (`_prime_into_pool`)에서 락 밖에 실행된다 — 락 순서 계약(H-2)·세마포어 상한(H-3)
+        불변.
 
         Args:
             project_path: 선프라임할 OPAL 프로젝트 절대경로
         """
         with self._pool_lock:                     # 비블로킹 구간만 락 보유
             have = len(self._pool.get(project_path, [])) + self._pool_inflight.get(project_path, 0)
-            if have >= self.pool_size:
-                return                            # 이미 채워짐/채우는 중 — 과잉 프라임 방지(size 1)
-            self._pool_inflight[project_path] = self._pool_inflight.get(project_path, 0) + 1
-        threading.Thread(target=self._prime_into_pool, args=(project_path,), daemon=True).start()
+            need = self.pool_size - have           # 부족분 계산 (T063 F-003, H-1)
+            if need <= 0:
+                return                            # 이미 채워짐/채우는 중 — 과잉 프라임 방지
+            self._pool_inflight[project_path] = self._pool_inflight.get(project_path, 0) + need
+        for _ in range(need):                     # 부족분만큼 리필 스레드 기동
+            threading.Thread(target=self._prime_into_pool, args=(project_path,), daemon=True).start()
 
     def _prime_into_pool(self, project_path: str) -> None:
         """풀 리필 워커: 락 없이 subprocess 실행 후 락 재획득하여 append (R1 관용구).

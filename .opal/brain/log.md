@@ -195,3 +195,7 @@
 - 갱신: [[pages/concept/oppl-scenario-red-confirmed-gap.md]]
 - 출처: task:061
 
+## [2026-07-15] ingest | CLOSE ingest — 태스크 063 콘솔 브레인 세션 단순화
+- 신규: [[console-brain-volatile-single-session]], [[brain-prime-pool-need-based-refill]], [[console-brain-exit-guard-pattern]]
+- 출처: task:063
+

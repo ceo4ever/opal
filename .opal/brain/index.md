@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-07-14 18:47
+> 갱신: 2026-07-15 18:28
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -34,6 +34,7 @@
 - [[brain-code-scan-role-division]] — brain↔code-scan 역할 분담 — 선별·신선도·깊이 축 (010) #brain #code-scan #architecture #policy
 - [[brain-entity-discipline]] — brain entity 작성 규율 표준화 #brain #knowledge #curation #provenance
 - [[brain-prime-connection-pool-design]] — 브레인 프라임 연결 풀 아키텍처 결정 #brain #latency #architecture #pool #prewarm #fastapi
+- [[brain-prime-pool-need-based-refill]] — 프라임 풀 need 기반 충전 결함 수정 #brain #pool #prewarm #concurrency #bugfix
 - [[brain-query-async-job-polling]] — 브레인 질의 비동기 잡+폴링 전환 — 동기 HTTP 블로킹 제거 패턴 #architecture #brain #async #polling #fetch-timeout
 - [[brain-query-latency-model]] — 브레인 질의 latency 모델 — 병목 위치와 경량화 방향 #brain #latency #architecture #optimization #async
 - [[brain-search-on-demand]] — brain search 선택 주입 — on-demand 비상주 정책 #architecture #brain #search #context #pm
@@ -50,6 +51,8 @@
 - [[coding-principles-ssot]] — OPAL Coding Principles SSOT 신설 #framework #principles #ssot #task
 - [[cold-warm-session-separation]] — Cold-Warm Session 분리 설계 (Caller-Supplied Session ID) #session-management #architecture #caller-supplied #capability-flags #api-design
 - [[config-file-concurrent-write-defense-standard]] — 설정 파일 동시 쓰기 방어 표준 #architecture #concurrency #backend #pattern #file-io
+- [[console-brain-exit-guard-pattern]] — 콘솔 브레인 이탈 가드 4경로 패턴 #brain #ux #guard #console #session-management
+- [[console-brain-volatile-single-session]] — 콘솔 브레인 휘발성 단일 세션 설계 전환 #brain #session-management #architecture #console #ux
 - [[console-settings-incremental-scope-policy]] — 콘솔 설정 화면 점진 확장 방침 #product-decision #console #scope #security
 - [[console-write-exception-router-isolation]] — 콘솔 쓰기 예외 라우터 격리 패턴 #architecture #console #security #pattern #write-isolation
 - [[daemon-as-tool-orchestrator]] — 데몬은 도구 오케스트레이터 — 데이터 SSOT는 프로젝트 파일 #architecture #dashboard #ssot

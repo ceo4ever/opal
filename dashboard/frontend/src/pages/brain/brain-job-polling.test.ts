@@ -3,24 +3,21 @@
  *   "module": "brain-job-polling-test",
  *   "layer": "test",
  *   "domain": "brain",
- *   "description": "잡 폴링 순수 헬퍼 단위 테스트 — S-7(폴링 done 수신 → resolvePendingTurn done 전이), S-10(폴링 error 수신 → resolvePendingTurn error graceful). jobResponseToResolution·jobPollingInterval 헬퍼 import 실패로 RED(GREEN 워커가 BrainPage.tsx에 구현·export 예정).",
- *   "task": "037-260622-opd-브레인질의-타임아웃-견고화",
- *   "scenarios": ["S-7", "S-10"]
+ *   "description": "잡 폴링 순수 헬퍼 단위 테스트 — S-7(폴링 done 수신 → resolvePendingTurn done 전이), S-10(폴링 error 수신 → resolvePendingTurn error graceful). jobResponseToResolution·jobPollingInterval은 시그니처 불변(H-8 회귀 가드). [T063] resolvePendingTurn/addPendingTurn 호출부를 turns[] 기반 2-인자 신규 시그니처로 갱신 — 대화 배열(BrainConversation) 전제의 교차대화 귀속 케이스는 단일 세션 리팩터로 개념이 소멸해 제거(세션 오귀속 가드는 컴포넌트의 capturedSessionIdRef로 이동).",
+ *   "exports": [],
+ *   "task": "037-260622-opd-브레인질의-타임아웃-견고화 / 063-260715-opd-콘솔-브레인-세션-단순화",
+ *   "scenarios": ["S-7", "S-10"],
+ *   "changelog": ["2026-07-15 T063 CLOSE: @header exports 필드 추가(누락, 코드 변경 없음)"]
  * }
  */
 
 import { describe, it, expect } from "vitest";
 
-// [RED 이유]
-// jobResponseToResolution 과 jobPollingInterval 은 아직 BrainPage.tsx에 구현·export 되지 않았다.
-// 아래 import가 실패하거나(모듈 미존재) named export 미노출로 undefined가 되어 테스트가 FAIL된다.
-// GREEN 워커가 BrainPage.tsx(또는 동일 폴더 모듈)에 두 함수를 export하면 PASS로 전환된다.
 import {
   jobResponseToResolution,
   jobPollingInterval,
   resolvePendingTurn,
-  addPendingTurn,
-  type BrainConversation,
+  type BrainTurn,
 } from "./BrainPage";
 
 /* ------------------------------------------------------------------ */
@@ -40,22 +37,16 @@ interface BrainJobResponse {
 /* 유틸                                                                  */
 /* ------------------------------------------------------------------ */
 
-function makeConvWithPending(id: string, question: string): BrainConversation {
-  return {
-    id,
-    session_id: "sess-1",
-    project: "/proj",
-    turns: [
-      {
-        q: question,
-        a: "",
-        citations: [],
-        ts: Date.now(),
-        status: "pending",
-      },
-    ],
-    created_at: Date.now(),
-  };
+function makeTurnsWithPending(question: string): BrainTurn[] {
+  return [
+    {
+      q: question,
+      a: "",
+      citations: [],
+      ts: Date.now(),
+      status: "pending",
+    },
+  ];
 }
 
 /* ------------------------------------------------------------------ */
@@ -95,7 +86,7 @@ describe("S-7: jobResponseToResolution — done 전이", () => {
   });
 
   it("done 변환 결과를 resolvePendingTurn에 적용하면 턴이 done으로 갱신된다", () => {
-    const conv = makeConvWithPending("conv-1", "질문1");
+    const turns = makeTurnsWithPending("질문1");
     const job: BrainJobResponse = {
       job_id: "job-abc",
       status: "done",
@@ -107,12 +98,12 @@ describe("S-7: jobResponseToResolution — done 전이", () => {
     const resolution = jobResponseToResolution(job);
     expect(resolution).not.toBeNull();
 
-    const updated = resolvePendingTurn([conv], "conv-1", resolution!);
+    const updated = resolvePendingTurn(turns, resolution!);
 
-    expect(updated[0].turns[0].status).toBe("done");
-    expect(updated[0].turns[0].a).toBe("최종 답변");
-    expect(updated[0].turns[0].citations[0].title).toBe("T2");
-    expect(updated[0].turns[0].q).toBe("질문1"); // 질문 보존
+    expect(updated[0].status).toBe("done");
+    expect(updated[0].a).toBe("최종 답변");
+    expect(updated[0].citations[0].title).toBe("T2");
+    expect(updated[0].q).toBe("질문1"); // 질문 보존
   });
 
   it("status=pending 잡 응답은 null을 반환한다 (아직 완료 아님)", () => {
@@ -156,33 +147,6 @@ describe("S-7: jobResponseToResolution — done 전이", () => {
       expect(resolution.citations).toEqual([]);
     }
   });
-
-  it("대화 전환 중에도 capturedConvId 기준으로 done 귀속이 정확하다", () => {
-    // conv-A에서 질문 → 대기 중 conv-B로 이동 → conv-A에만 done 귀속
-    let state = addPendingTurn([], "conv-A", "sess-A", "A 질문", "/proj");
-    state = addPendingTurn(state, "conv-B", "sess-B", "B 질문", "/proj");
-
-    const job: BrainJobResponse = {
-      job_id: "job-A",
-      status: "done",
-      answer: "A 답변",
-      citations: [],
-      error_msg: "",
-    };
-
-    const resolution = jobResponseToResolution(job);
-    expect(resolution).not.toBeNull();
-
-    // capturedConvId = "conv-A" 로 귀속
-    state = resolvePendingTurn(state, "conv-A", resolution!);
-
-    const convA = state.find((c) => c.id === "conv-A")!;
-    const convB = state.find((c) => c.id === "conv-B")!;
-
-    expect(convA.turns[0].status).toBe("done");
-    expect(convA.turns[0].a).toBe("A 답변");
-    expect(convB.turns[0].status).toBe("pending"); // conv-B 불변
-  });
 });
 
 /* ------------------------------------------------------------------ */
@@ -216,7 +180,7 @@ describe("S-10: jobResponseToResolution — error(잡 소멸) graceful", () => {
   });
 
   it("error 변환 결과를 resolvePendingTurn에 적용하면 턴이 error로 graceful 갱신된다 (빈 답 아님)", () => {
-    const conv = makeConvWithPending("conv-err", "에러 질문");
+    const turns = makeTurnsWithPending("에러 질문");
     const job: BrainJobResponse = {
       job_id: "job-dead",
       status: "error",
@@ -228,9 +192,9 @@ describe("S-10: jobResponseToResolution — error(잡 소멸) graceful", () => {
     const resolution = jobResponseToResolution(job);
     expect(resolution).not.toBeNull();
 
-    const updated = resolvePendingTurn([conv], "conv-err", resolution!);
+    const updated = resolvePendingTurn(turns, resolution!);
 
-    const turn = updated[0].turns[0];
+    const turn = updated[0];
     // 빈 답(pending 잔존)이 아니라 error 상태로 graceful 전이되어야 한다
     expect(turn.status).toBe("error");
     // errorMsg는 빈 문자열이 아니어야 한다 — graceful 메시지 포함
@@ -261,30 +225,6 @@ describe("S-10: jobResponseToResolution — error(잡 소멸) graceful", () => {
       // 구현 시: error_msg || "요청 처리 중 오류가 발생했습니다" 류 기본값
       expect(resolution.errorMsg).toBeTruthy();
     }
-  });
-
-  it("error 턴 적용 후 다른 대화는 변경되지 않는다", () => {
-    let state = addPendingTurn([], "conv-err", "sess-err", "에러 질문", "/proj");
-    state = addPendingTurn(state, "conv-ok", "sess-ok", "정상 질문", "/proj");
-
-    const job: BrainJobResponse = {
-      job_id: "job-dead",
-      status: "error",
-      answer: "",
-      citations: [],
-      error_msg: "세션 소멸",
-    };
-
-    const resolution = jobResponseToResolution(job);
-    expect(resolution).not.toBeNull();
-
-    state = resolvePendingTurn(state, "conv-err", resolution!);
-
-    const convErr = state.find((c) => c.id === "conv-err")!;
-    const convOk = state.find((c) => c.id === "conv-ok")!;
-
-    expect(convErr.turns[0].status).toBe("error");
-    expect(convOk.turns[0].status).toBe("pending"); // 다른 대화 불변
   });
 });
 

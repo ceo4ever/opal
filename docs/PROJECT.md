@@ -156,3 +156,4 @@ llm-wiki 사상을 융합한 프로젝트 지식 위키 — 프로젝트의 WHY�
 | 2026-07-10 | Project Loop 파이프라인 섹션 추가 — opal-pilot-project-loop(oppl)·opal-evaluator-agent·backlog-tool·test-tool scenario-* 확장 (Task 056) |
 | 2026-07-10 | OPAL Console `opal-cli console` 설명에 scan 서브명령 반영 — console.config.json 생성·머지 + install 1회 자동 실행 (Task 057) |
 | 2026-07-14 | OPAL Console 7번째 화면 "설정" 반영 — 프라임 풀 토글 단일 기능, 설정 라우터 쓰기 격리(화이트리스트), 쓰기 예외 2종 명시 (Task 061) |
+| 2026-07-15 | OPAL Console 프로젝트 브레인 세션 단순화 — 휘발성 단일 세션(localStorage 이력·멀티대화 관리 제거, 진입/새대화마다 새 세션·세션 내 멀티턴 유지), 프라임 풀 크기 1→2 + need 충전(연속 새대화 즉시 웜), 이탈 가드 4경로(메뉴·새로고침·프로젝트 스위처·새 대화 시 세션 소멸 확인) (Task 063) |

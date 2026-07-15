@@ -31,7 +31,8 @@
   "task": "061",
   "changelog": [
     "2026-07-14 T061 Step3: 설정 쓰기 스키마 5종 추가 (ConsoleConfigResponse/ConfigWriteResponse/PrewarmToggleRequest/ConsoleConfigUpdate/SettingLocalUpdate) — F-001~F-004",
-    "2026-07-14 T061 범위 축소: ConsoleConfigUpdate·SettingLocalUpdate 제거(console.config 전반·프로젝트 로컬 설정 편집 미반영) — ConfigDict import도 함께 제거"
+    "2026-07-14 T061 범위 축소: ConsoleConfigUpdate·SettingLocalUpdate 제거(console.config 전반·프로젝트 로컬 설정 편집 미반영) — ConfigDict import도 함께 제거",
+    "2026-07-15 T063 Step5(F-004): BrainQueryRequest.new_conversation 폐기 필드 제거 — FE가 더 이상 전송하지 않음(휘발성 단일 세션 전환, 새 대화는 새 session_id로 처리). pydantic extra 필드 무시 규칙상 하위호환 영향 없음"
   ]
 }
 """
@@ -199,7 +200,6 @@ class BrainQueryRequest(BaseModel):
     question: str
     project: str               # 절대경로. 필수 — 빈 값이면 400 반환
     session_id: str            # FE가 생성·전달하는 대화 식별자(UUID). 필수 — 빈 값이면 400 반환
-    new_conversation: bool = False  # 호환 목적으로 수신하되 reset 트리거 안 함
 
 
 class BrainQueryResponse(BaseModel):

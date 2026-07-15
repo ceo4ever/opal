@@ -10,11 +10,11 @@
     "TestOpbrAdapterCwd",
     "TestOpbrAdapterColdWarm",
     "TestConversationBrainSessionCold",
-    "TestConversationBrainSessionWarm",
     "TestConversationBrainSessionReset",
     "TestConversationBrainSessionCrash",
     "TestConversationBrainSessionState",
     "TestBrainSessionRegistry",
+    "TestOpbrAdapterAllowedTools",
     "TestSessionIdHandleSeparation",
     "TestBrainRouterPrime",
     "TestBrainRouterQuery",
@@ -22,6 +22,7 @@
     "TestBrainRouterStatus",
     "TestBrainJobPolling",
     "TestBrainPrimePool",
+    "TestBrainPoolT063NeedBasedFill",
     "TestBrainWarmInjection",
     "TestBrainLifespanPrewarm",
     "TestBrainPoolFixtureRegression"
@@ -38,7 +39,10 @@
   "scenarios": ["S-1", "S-2", "S-3", "S-4", "S-5", "S-6", "S-7", "S-8", "S-9", "S-11"],
   "changelog": [
     "2026-07-14 T060 RED: 프라임 연결 풀(F-2)·웜 핸들 주입(F-4)·lifespan 선프라임(F-3)·픽스처 회귀(H-7) 실패 테스트 추가 — 구현 전 RED 트랙(red-first.md)",
-    "2026-07-14 13:31 KST T060 Step5: reset_brain_registry 픽스처에 _pool/_pool_inflight 클리어 추가(S-11 GREEN 전환) + 플레이키 4건 동기화 수리(체크아웃 직후 풀 비움·동시 체크아웃 무중복은 threading.Event로 리필 완료 게이트, 신규 세션 콜드 미호출·투명 재프라임 순서는 registry.prewarm no-op으로 리필 부수효과 분리) + TestOpbrAdapterAllowedTools stale 단언 갱신(커밋 400c03a --model/--effort 삽입 반영, 계약 의도 불변)"
+    "2026-07-14 13:31 KST T060 Step5: reset_brain_registry 픽스처에 _pool/_pool_inflight 클리어 추가(S-11 GREEN 전환) + 플레이키 4건 동기화 수리(체크아웃 직후 풀 비움·동시 체크아웃 무중복은 threading.Event로 리필 완료 게이트, 신규 세션 콜드 미호출·투명 재프라임 순서는 registry.prewarm no-op으로 리필 부수효과 분리) + TestOpbrAdapterAllowedTools stale 단언 갱신(커밋 400c03a --model/--effort 삽입 반영, 계약 의도 불변)",
+    "2026-07-15 T063 RED(opal-test-agent mode:red): TestBrainPoolT063NeedBasedFill 추가 — prewarm() need=pool_size-have 충전 로직(F-003, H-1) RED 노출(S-1/S-2) + 락순서·세마포어 회귀 가드(H-2/H-3, S-3/S-4). opbr_adapter.prime_and_ask는 mock/patch 미사용, 모듈 속성 직접 대입 스텁으로 대체(red-first.md §4 공개 인터페이스 검증)",
+    "2026-07-15 T063 Step5(GREEN 후 정비): test_consecutive_checkout_both_return_distinct_warm_handles(S-2) flaky 결정론화 — need-기반 동시 충전(GREEN)에서 무효화된 stub call-index 게이트(idx==2 대기)를 풀 상태 폴링(`_pool` 길이==pool_size)으로 교체. 기대값(2회 모두 non-None·서로 다른 웜 핸들) 불변, 동기화 메커니즘만 교체 — 10회 반복 무결함 확인",
+    "2026-07-15 T063 CLOSE: @header exports 정합 — 존재하지 않는 TestConversationBrainSessionWarm 제거, 누락된 TestOpbrAdapterAllowedTools 반영(코드 변경 없음)"
   ]
 }
 """
@@ -2682,6 +2686,249 @@ class TestBrainPrimePool:
         non_none = [r for r in results if r is not None]
         assert len(non_none) <= 1, (
             f"동시 체크아웃 2건 중 최대 1건만 핸들을 받아야 함(중복 배정 금지, H-2): {results}"
+        )
+
+
+# ── TestBrainPoolT063NeedBasedFill (S-1, S-2, S-3, S-4) — T063 RED ──────────────
+#
+# 작성자: opal-test-agent(mode: red) — 구현자(op-dev-execute)와 분리 (red-first.md §2).
+# 대상: BrainSessionRegistry.prewarm() need=pool_size-have 충전 로직 (PLAN.md §3 F-003,
+# H-1). 현재 구현(brain_session.py:558-571)은 단일 트리거당 핸들을 정확히 1개만 충전한다
+# — pool_size를 2로 올려도 단일 prewarm() 호출로는 풀이 1까지만 차므로 R-6(연속 새대화
+# 웜 배정)을 충족하지 못한다. S-1/S-2는 이 결함을 RED로 직접 노출한다. S-3/S-4는 H-2
+# (락 순서)·H-3(세마포어 상한) 회귀 가드 — 구현 수정이 이 기존 안전 불변을 깨지 않아야
+# 함을 검증한다(수정과 무관하게 이미 만족될 수 있음 — 그 경우도 유효한 RED-first 산출물).
+#
+# opbr_adapter.prime_and_ask는 결정론적 스텁(직접 속성 대입)으로 대체한다 — mock/patch/
+# MagicMock 라이브러리 미사용(헌법 §4), 실 claude subprocess 호출 없음. 공개 인터페이스
+# (prewarm/checkout_warm_handle)의 관찰 결과로만 검증 — private 메서드 직접 결합 없음
+# (red-first.md §4).
+
+class TestBrainPoolT063NeedBasedFill:
+    """[T063] prewarm() need=pool_size-have 충전 로직 — 단일 트리거 충전·연속 체크아웃·
+    동시성 안전·세마포어 상한 (H-1/H-2/H-3, RED)."""
+
+    def _wait_until(self, cond, timeout: float = 2.0, interval: float = 0.01) -> None:
+        deadline = time.monotonic() + timeout
+        while time.monotonic() < deadline:
+            if cond():
+                return
+            time.sleep(interval)
+
+    # ── S-1: 단일 prewarm() 트리거로 pool_size까지 충전 ──────────────────────────
+
+    def test_prewarm_single_trigger_fills_to_pool_size(self):
+        """[T063/L1-R6] pool_size=2에서 prewarm(project) 1회 호출 + 충전 완료 대기 후
+        `_pool[project]` 길이 == 2 기대.
+
+        현재 prewarm()은 `_pool_inflight[project_path] += 1` 후 스레드를 정확히 1개만
+        기동한다(brain_session.py:570-571) — need=pool_size-have 계산이 없다. 따라서
+        단일 트리거 후 풀은 1까지만 차고 이 단언은 실패해야 정상(RED, H-1).
+        """
+        from dashboard.backend.adapters.brain_session import BrainSessionRegistry
+        import dashboard.backend.adapters.brain_session as registry_module
+
+        registry = BrainSessionRegistry(pool_size=2, max_concurrent_prime=2)
+        project = "/fake/pool/t063-s1"
+
+        call_count = [0]
+
+        def fake_prime_and_ask(**kwargs):
+            call_count[0] += 1
+            return {
+                "answer": "", "citations": [],
+                "session_id": f"warm-handle-{call_count[0]}", "elapsed_s": 0.01,
+            }
+
+        original = registry_module.opbr_adapter.prime_and_ask
+        registry_module.opbr_adapter.prime_and_ask = fake_prime_and_ask
+        try:
+            registry.prewarm(project)  # 단일 트리거 1회
+            self._wait_until(
+                lambda: registry._pool_inflight.get(project, 0) == 0
+                and len(registry._pool.get(project, [])) >= 1
+            )
+            time.sleep(0.1)  # 안정화 여유(추가 충전 스레드가 있다면 완료될 시간)
+        finally:
+            registry_module.opbr_adapter.prime_and_ask = original
+
+        assert len(registry._pool.get(project, [])) == 2, (
+            "[T063/L1-R6] 단일 prewarm() 트리거로 pool_size(2)까지 충전되어야 함(R-6) — "
+            f"현재는 트리거당 핸들 1개만 충전(H-1, brain_session.py:558-571): "
+            f"pool={registry._pool.get(project, [])!r}"
+        )
+
+    # ── S-2: 연속 checkout 2회 모두 웜 핸들 반환 ─────────────────────────────────
+
+    def test_consecutive_checkout_both_return_distinct_warm_handles(self):
+        """[T063/L1-R6] pool_size=2 충전 후 checkout_warm_handle 연속 2회 모두 non-None·
+        서로 다른 핸들 기대.
+
+        [T063 Step5 결정론화] prewarm() 1회 트리거는 need=pool_size-have 만큼 백그라운드
+        스레드를 동시 기동한다(H-1, GREEN) — 두 스레드가 stub을 호출하는 순서는 OS
+        스케줄링에 좌우되므로 call-index로 "몇 번째 호출인지" 타이밍을 가정하지 않는다
+        (구 버전은 idx==2 게이트로 옛 단일-스레드 충전 가정에 결합되어 need-기반 동시
+        충전 하에서 레이스가 발생했다). 대신 풀 상태(`_pool` 길이 == pool_size)를
+        폴링해 충전 완료를 관측한 뒤 연속 체크아웃을 수행 — 기대값(2회 모두 non-None·
+        서로 다른 웜 핸들)은 불변, 동기화 메커니즘만 폴링으로 교체.
+        """
+        from dashboard.backend.adapters.brain_session import BrainSessionRegistry
+        import dashboard.backend.adapters.brain_session as registry_module
+
+        registry = BrainSessionRegistry(pool_size=2, max_concurrent_prime=2)
+        project = "/fake/pool/t063-s2"
+
+        call_count = [0]
+
+        def fake_prime_and_ask(**kwargs):
+            call_count[0] += 1
+            return {
+                "answer": "", "citations": [],
+                "session_id": f"warm-handle-{call_count[0]}", "elapsed_s": 0.01,
+            }
+
+        original = registry_module.opbr_adapter.prime_and_ask
+        registry_module.opbr_adapter.prime_and_ask = fake_prime_and_ask
+        try:
+            registry.prewarm(project)  # 단일 트리거 — need-기반 충전(H-1)
+            self._wait_until(
+                lambda: registry._pool_inflight.get(project, 0) == 0
+                and len(registry._pool.get(project, [])) >= 2
+            )
+
+            sid1 = registry.checkout_warm_handle(project)
+            sid2 = registry.checkout_warm_handle(project)
+        finally:
+            registry_module.opbr_adapter.prime_and_ask = original
+
+        assert sid1 is not None, "첫 체크아웃은 non-None 웜 핸들이어야 함(사전조건)"
+        assert sid2 is not None, (
+            "[T063/L1-R6] 두 번째 체크아웃도 non-None 웜 핸들이어야 함(R-6 핵심 AC) — "
+            f"sid2={sid2!r}"
+        )
+        assert sid1 != sid2, (
+            f"두 체크아웃은 서로 다른 핸들이어야 함(중복 배정 금지): sid1={sid1!r}, sid2={sid2!r}"
+        )
+
+    # ── S-3: 동시 prewarm+checkout 반복 — 데드락 없음·중복 배정 0 (H-2 회귀 가드) ──
+
+    def test_concurrent_prewarm_checkout_no_deadlock_no_duplicate(self):
+        """[T063/L2-R6c] pool_size=2에서 다중 스레드가 prewarm()+checkout_warm_handle()을
+        반복 호출해도 데드락이 없고, 동일 핸들이 중복 배정되지 않아야 한다(H-2).
+
+        락 순서 계약(`_lock`→`_pool_lock`, 역순·중첩 금지)이 need-기반 충전으로 바뀌어도
+        유지되어야 하는 회귀 가드 — 현재 구현에서도 유지될 수 있다(그 경우도 유효한
+        RED-first 산출물: GREEN 구현이 이 불변을 깨지 않는지 지속 검증).
+        """
+        from dashboard.backend.adapters.brain_session import BrainSessionRegistry
+        import dashboard.backend.adapters.brain_session as registry_module
+
+        registry = BrainSessionRegistry(pool_size=2, max_concurrent_prime=2)
+        project = "/fake/pool/t063-s3"
+
+        handle_seq = [0]
+        handle_seq_lock = threading.Lock()
+
+        def fake_prime_and_ask(**kwargs):
+            with handle_seq_lock:
+                handle_seq[0] += 1
+                n = handle_seq[0]
+            return {
+                "answer": "", "citations": [],
+                "session_id": f"warm-handle-{n}", "elapsed_s": 0.01,
+            }
+
+        checked_out: list[str] = []
+        checked_out_lock = threading.Lock()
+
+        def worker(iterations: int) -> None:
+            for _ in range(iterations):
+                registry.prewarm(project)
+                sid = registry.checkout_warm_handle(project)
+                if sid is not None:
+                    with checked_out_lock:
+                        checked_out.append(sid)
+                time.sleep(0.005)
+
+        original = registry_module.opbr_adapter.prime_and_ask
+        registry_module.opbr_adapter.prime_and_ask = fake_prime_and_ask
+        try:
+            threads = [threading.Thread(target=worker, args=(5,)) for _ in range(8)]
+            t0 = time.monotonic()
+            for t in threads:
+                t.start()
+            for t in threads:
+                t.join(timeout=5.0)
+            elapsed = time.monotonic() - t0
+        finally:
+            registry_module.opbr_adapter.prime_and_ask = original
+
+        alive = [t for t in threads if t.is_alive()]
+        assert not alive, (
+            f"[T063/L2-R6c] 동시 prewarm+checkout 반복 중 데드락 의심 — "
+            f"{len(alive)}개 스레드가 {elapsed:.1f}s 내 완료되지 않음(H-2)"
+        )
+
+        dup_count = len(checked_out) - len(set(checked_out))
+        assert dup_count == 0, (
+            f"[T063/L2-R6c] 동일 핸들 중복 배정 발생(H-2 위반): "
+            f"checked_out={checked_out!r}, dup_count={dup_count}"
+        )
+
+    # ── S-4: 동시 충전 스레드 실행 수 ≤ DEFAULT_MAX_CONCURRENT_PRIME (H-3 회귀 가드) ─
+
+    def test_concurrent_priming_threads_capped_by_semaphore(self):
+        """[T063/L2-R6d] 다중 프로젝트 동시 prewarm() 기동 시 관측 최대 동시 스텁 실행 수
+        ≤ DEFAULT_MAX_CONCURRENT_PRIME(2) 기대(H-3).
+
+        need-기반 충전으로 단일 호출이 다중 스레드를 기동하게 되어도 `_prime_semaphore`
+        상한은 유지되어야 하는 회귀 가드 — 현재 구현에서도 유지될 수 있다.
+        """
+        from dashboard.backend.adapters.brain_session import (
+            BrainSessionRegistry,
+            DEFAULT_MAX_CONCURRENT_PRIME,
+        )
+        import dashboard.backend.adapters.brain_session as registry_module
+
+        registry = BrainSessionRegistry(
+            pool_size=2, max_concurrent_prime=DEFAULT_MAX_CONCURRENT_PRIME
+        )
+        projects = [f"/fake/pool/t063-s4-{i}" for i in range(6)]
+
+        count_lock = threading.Lock()
+        current = [0]
+        max_observed = [0]
+
+        def slow_prime(**kwargs):
+            with count_lock:
+                current[0] += 1
+                max_observed[0] = max(max_observed[0], current[0])
+            time.sleep(0.15)
+            with count_lock:
+                current[0] -= 1
+            return {
+                "answer": "", "citations": [],
+                "session_id": f"warm-handle-{kwargs.get('project_path')}-{time.monotonic()}",
+                "elapsed_s": 0.15,
+            }
+
+        original = registry_module.opbr_adapter.prime_and_ask
+        registry_module.opbr_adapter.prime_and_ask = slow_prime
+        try:
+            for p in projects:
+                registry.prewarm(p)  # 각 프로젝트 다중 충전 스레드 동시 기동
+
+            deadline = time.monotonic() + 4.0
+            while time.monotonic() < deadline:
+                if all(registry._pool_inflight.get(p, 0) == 0 for p in projects):
+                    break
+                time.sleep(0.02)
+        finally:
+            registry_module.opbr_adapter.prime_and_ask = original
+
+        assert max_observed[0] <= DEFAULT_MAX_CONCURRENT_PRIME, (
+            f"[T063/L2-R6d] 동시 충전 스레드 실행 수가 상한({DEFAULT_MAX_CONCURRENT_PRIME})을 "
+            f"초과함(H-3): max_observed={max_observed[0]}"
         )
 
 

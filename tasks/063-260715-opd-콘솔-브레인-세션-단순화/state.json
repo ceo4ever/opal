@@ -1,0 +1,171 @@
+{
+  "task_id": "063-260715-opd-콘솔-브레인-세션-단순화",
+  "skill": "opd",
+  "mode": "agentic",
+  "schema_version": "1.0",
+  "created_at": "2026-07-15 10:56",
+  "updated_at": "2026-07-15 18:23",
+  "current_status": "done",
+  "rows": [
+    {
+      "row_id": 1,
+      "stage": "TASK",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-15 10:57",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 2,
+      "stage": "TASK",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-15 10:57",
+      "owner": "user",
+      "note": "캡틴 확인: 명확화 4요소 대화 승인 + //opd --agentic 착수 지시"
+    },
+    {
+      "row_id": 3,
+      "stage": "ANALYSIS",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-15 11:03",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 4,
+      "stage": "ANALYSIS",
+      "item": "PM Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-15 11:03",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 5,
+      "stage": "ANALYSIS",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-15 11:03",
+      "owner": "auto",
+      "note": "agentic auto-pass: agentic auto-pass: ANALYSIS 대행 승인 — R-1~R-7 코드위치 특정·유지/제거 구분·회귀위험 목록화 확인. 핵심발견(BE 이미 단일세션격리→변경최소) 타당"
+    },
+    {
+      "row_id": 6,
+      "stage": "PLAN",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-15 11:18",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 7,
+      "stage": "PLAN",
+      "item": "PM Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-15 11:18",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 8,
+      "stage": "PLAN",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-15 13:56",
+      "owner": "user",
+      "note": "캡틴 확인: R-63 확정(프라임풀 토글 ON 프로젝트만 즉시 웜, opt-in 유지) + PLAN 방향 승인"
+    },
+    {
+      "row_id": 9,
+      "stage": "TEST-SCENARIO",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-15 14:03",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 10,
+      "stage": "TEST-SCENARIO",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-15 14:03",
+      "owner": "auto",
+      "note": "agentic auto-pass: agentic auto-pass: TEST-SCENARIO 대행 승인 — H-1~H-12+UI 18시나리오, mock 본문 부재(grep), M2 E2E(S-7/S-9)·SUPERVISOR(S-15/S-18) 포함. RED-first 혼합 트랙. EXECUTE 자율 진입"
+    },
+    {
+      "row_id": 11,
+      "stage": "EXECUTE",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-15 14:47",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 12,
+      "stage": "EXECUTE",
+      "item": "R-8 이탈 가드(navigation guard) 구현",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-15 16:48",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 13,
+      "stage": "TEST",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-15 18:04",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 14,
+      "stage": "TEST",
+      "item": "PM Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-15 18:13",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 15,
+      "stage": "TEST",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-15 18:17",
+      "owner": "user",
+      "note": "캡틴 확인: TEST 통합검증 PASS + CLOSE 진입 승인"
+    },
+    {
+      "row_id": 16,
+      "stage": "CLOSE",
+      "item": "DONE.md 생성",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-15 18:23",
+      "owner": "PM",
+      "note": null
+    }
+  ]
+}
