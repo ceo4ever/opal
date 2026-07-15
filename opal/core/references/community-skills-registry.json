@@ -1,7 +1,7 @@
 {
   "$schema": "opal-community-skills-registry-v2.1",
   "version": "2.1.0",
-  "updated_at": "2026-05-10",
+  "updated_at": "2026-07-14",
   "schema_notes": "v2: paths 폐기 (skill-registry.js가 ~/.opal/community-skills/{name}/SKILL.md 동적 계산). source_repo/license 신설. v2.1 (144): commit_sha 옵션 필드 신설 — 검증 가능한 스킬만 채움. v2 호환 유지 (commit_sha 미작성 시 null로 간주).",
   "groups": {
     "anthropics": [
@@ -46,6 +46,9 @@
     ],
     "openai": [
       { "name": "openai/security-best-practices", "alias": null, "description": "보안 리뷰, 취약점 분석", "triggers": ["(?i)(보안\\s*리뷰|보안\\s*취약점|security\\s*review)"], "source_repo": "openai/skills@security-best-practices", "license": "Apache-2.0" }
+    ],
+    "obra": [
+      { "name": "obra/brainstorming", "alias": null, "description": "아이디어→설계/스펙 브레인스토밍 (구현 전 의도·요구사항 탐색 대화)", "triggers": ["(?i)(brainstorm|브레인스토밍|아이디어\\s*정리)"], "source_repo": "obra/superpowers@brainstorming", "commit_sha": "d884ae04edebef577e82ff7c4e143debd0bbec99", "license": "MIT" }
     ]
   }
 }
