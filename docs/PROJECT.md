@@ -115,8 +115,8 @@ llm-wiki 사상을 융합한 프로젝트 지식 위키 — 프로젝트의 WHY�
 
 | 컴포넌트 | 유형 | 설명 |
 |----------|------|------|
-| `dashboard/frontend` | FE 앱 | React+TS+Vite+shadcn/ui — 6개 화면(대시보드/프로젝트/태스크 칸반/메모리/환경/프로젝트 브레인) |
-| `dashboard/backend` | BE 데몬 | FastAPI — `.opal/AGENT.md` 마커 스캐너 + read-only 도구 어댑터 + 마크다운 파서 (127.0.0.1:7823) |
+| `dashboard/frontend` | FE 앱 | React+TS+Vite+shadcn/ui — 7개 화면(대시보드/프로젝트/태스크 칸반/메모리/환경/프로젝트 브레인/설정) |
+| `dashboard/backend` | BE 데몬 | FastAPI — `.opal/AGENT.md` 마커 스캐너 + read-only 도구 어댑터 + 마크다운 파서 + 쓰기 예외 2종 격리(브레인 POST·설정 라우터) (127.0.0.1:7823) |
 | `opal-cli console` | CLI | 데몬 기동/관리 서브커맨드 (start/stop/status/open/scan) — scan은 `console.config.json`(스캔 루트 설정)을 생성·머지 갱신하며 install이 1회 자동 실행 |
 
 > 소스는 `dashboard/`, 배포는 install 경유 `~/.opal/dashboard-server/`. 읽기 전용(쓰기/편집·브레인 화면은 2차). 시그니처 3색은 `:root` 전역 CSS 변수로 교체 용이.
@@ -155,3 +155,4 @@ llm-wiki 사상을 융합한 프로젝트 지식 위키 — 프로젝트의 WHY�
 | 2026-06-30 | 부트스트랩 2-tier 전환 — 비서(전역 상시)/PM(opi 프로젝트 opt-in) 분리. AGENT.md Eager 2-phase·부트스트래퍼 절 반전·opi Codex AGENTS.md 보강·ARCHITECTURE 2-tier 절 (Task 049) |
 | 2026-07-10 | Project Loop 파이프라인 섹션 추가 — opal-pilot-project-loop(oppl)·opal-evaluator-agent·backlog-tool·test-tool scenario-* 확장 (Task 056) |
 | 2026-07-10 | OPAL Console `opal-cli console` 설명에 scan 서브명령 반영 — console.config.json 생성·머지 + install 1회 자동 실행 (Task 057) |
+| 2026-07-14 | OPAL Console 7번째 화면 "설정" 반영 — 프라임 풀 토글 단일 기능, 설정 라우터 쓰기 격리(화이트리스트), 쓰기 예외 2종 명시 (Task 061) |

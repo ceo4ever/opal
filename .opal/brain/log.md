@@ -190,3 +190,8 @@
 - 신규: [[pages/concept/brain-answer-layout-content-driven.md]]
 - 출처: task:062
 
+## [2026-07-14] ingest | CLOSE ingest — 태스크 061 콘솔 설정 화면(프라임 풀 토글) — 쓰기 예외 격리 패턴 2호 적용·동시쓰기 방어 표준·설정화면 점진확장 방침 신규 + scenario-lock 혼합트랙 갭 재발 갱신
+- 신규: [[pages/concept/console-write-exception-router-isolation.md]], [[pages/concept/config-file-concurrent-write-defense-standard.md]], [[pages/concept/console-settings-incremental-scope-policy.md]]
+- 갱신: [[pages/concept/oppl-scenario-red-confirmed-gap.md]]
+- 출처: task:061
+

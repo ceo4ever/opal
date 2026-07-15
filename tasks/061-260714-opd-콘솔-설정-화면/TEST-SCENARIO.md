@@ -222,8 +222,8 @@
 | 조건 | S-9 통과 후 동일 화면. 의도적 422 유발(bootstrap 잘못된 값) 1회 포함 |
 | 기대 결과 | 3섹션 가독성·기존 콘솔 디자인 톤 일치·저장 실패 시 Alert 사유 표시·프로젝트 미선택 시 안내 문구 |
 | 실행자 | [SUPERVISOR] — 캡틴 수동 확인 필요 |
-| 결과 | _{캡틴 확인 후 기록}_ |
-| 상세 | _{캡틴 확인 후 기록}_ |
+| 결과 | Pass (캡틴 승인) |
+| 상세 | 2026-07-14 18:37 캡틴 발화 "승인. 배포는 내가 했어." — install 재배포를 캡틴이 직접 수행하고 CLOSE 진입을 승인. 상세 레이아웃 코멘트는 없었음(이의 없음 = 승인 판정). 조건의 "3섹션"·"의도적 422"는 범위 축소로 토글 단일 카드 기준으로 대체 적용(상단 [범위 축소] 블록 참조) — UI 개선 요청 발생 시 후속 태스크로 처리 |
 
 **PM 표준 요청 양식** (TEST 단계에서 사용):
 ```
@@ -267,7 +267,7 @@
 
 ## 7. 판정
 
-**All Pass (자동, 축소 반영 기준) — S-1~S-9(S-8'/S-9' 축소 재검증 포함) 전건 Pass, S-10 [SUPERVISOR] 캡틴 수동 확인 대기**
+**All Pass (최종, 축소 반영 기준) — S-1~S-9(S-8'/S-9' 축소 재검증 포함) 전건 Pass + S-10 캡틴 승인 Pass (2026-07-14 18:37)**
 
 판정 근거: L1(S-1,S-3,S-4,S-5,S-7) + L2(S-2,S-6,S-8,S-9) 전 자동 시나리오 Pass(원 검증, 축소 전 표면 기준). 코드 품질(§5) 린트 Pass(변경 범위 기준)·타입체크 Skip(mypy 미설치, 지시대로 미설치 유지)·포맷터 기존 baseline 미정렬(이번 태스크 도입 회귀 아님). 보안(§6) 4항목 전건 Pass. **[범위 축소 후 최종 재검증 — 2026-07-14 18:2x, opal-test-agent, mode=e2e, L3(S-10) 제외]**: 전체 pytest 스위트 재실행 245 passed·1 skipped·0 failed(축소 반영 — 원 259건에서 회수된 console.config POST/project-local 계약 테스트 삭제분 반영, 회귀 0)·FE `npm run build` 성공 재확인. S-8' 재검증: `/openapi.json`에 `GET /api/config`·`POST /api/config/prewarm` 2건만 노출, `POST /api/config/console`·`GET|POST /api/config/project-local`는 스키마 부재 + 실호출 시 실제 API 계약이 아님(POST 405/SPA catch-all, GET 200이나 바디는 index.html) 확인 — 축소된 API 표면 재확인. S-9' 재검증: `/settings` 단일 카드(프라임 풀 토글) 렌더 + console.config 편집 폼·로컬 설정 섹션 부재 확인, prewarm_projects 읽기 전용 목록 + 파일 수동 편집 안내 문구 표시, 본 레포 선택→토글 ON(config 즉시 반영)→즉시 OFF(제거 반영, 프라임 트리거 1회 이내) 확인, 스크린샷(`evidence-s9r-settings-reduced.png`) 저장. 환경 조치는 이번 재검증도 전 과정 원상복구 완료: 소스 daemon 종료·임시 `dist` 심볼릭 제거·`~/.opal/console.config.json` 원복(재검증 시작 전 백업본과 바이트 동일)·배포 데몬 재기동 `/health` 200 확인. S-9 ⑥(의도적 422 유발, bootstrap 컨트롤 UI 구조상 도달 불가)은 원 검증과 동일하게 생략 유지 — 해당 Alert 표시 여부는 S-10 캡틴 시각 확인으로 이관. S-10(사용자 협업, 시각·UX·Alert 판정)은 이번 재검증에서도 손대지 않았으며 캡틴 수동 확인 대기 상태 유지.
 

@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-07-14 17:44
+> 갱신: 2026-07-14 18:47
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -49,6 +49,9 @@
 - [[codex-platform-integration]] — Codex CLI OPAL 4번째 플랫폼 통합 #codex #platform #bootstrap #mcp #task
 - [[coding-principles-ssot]] — OPAL Coding Principles SSOT 신설 #framework #principles #ssot #task
 - [[cold-warm-session-separation]] — Cold-Warm Session 분리 설계 (Caller-Supplied Session ID) #session-management #architecture #caller-supplied #capability-flags #api-design
+- [[config-file-concurrent-write-defense-standard]] — 설정 파일 동시 쓰기 방어 표준 #architecture #concurrency #backend #pattern #file-io
+- [[console-settings-incremental-scope-policy]] — 콘솔 설정 화면 점진 확장 방침 #product-decision #console #scope #security
+- [[console-write-exception-router-isolation]] — 콘솔 쓰기 예외 라우터 격리 패턴 #architecture #console #security #pattern #write-isolation
 - [[daemon-as-tool-orchestrator]] — 데몬은 도구 오케스트레이터 — 데이터 SSOT는 프로젝트 파일 #architecture #dashboard #ssot
 - [[dedup-pointer-over-copy]] — dedup 원칙 — 목적지 기존 존재 시 표 복사 금지·포인터 단일화 #dedup #ssot #pointer #architecture #principles
 - [[deploy-artifact-verification-lesson]] — 동작검증은 배포 산출물+실 브라우저 기준으로 수행해야 한다 #verification #qa #deployment #lesson
