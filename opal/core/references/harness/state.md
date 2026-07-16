@@ -49,6 +49,28 @@
 ↑________________________추가작업 반복 시___↓
 ```
 
+### 파이프라인 todo 미러 (네이티브 할일 패널)
+
+> **소유자**: PM(오케스트레이터). 모든 opal-pilot이 상속한다 — pilot SKILL.md는 이 규칙을 재서술하지 않는다.
+> **적용 시점**: state-tool 이벤트(`init`/`advance`/`mark`/`block`) 호출 직후.
+
+파이프라인 현황판을 **단계(stage) 단위로 네이티브 할일 패널에 비춘다**. 소유자는 STATE.md 파일을 열지 않고도 하단 패널에서 진행 상황을 한눈에 본다.
+
+> **[게이트 — 능력 감지]** 네이티브 할일 도구(`TaskCreate`/`TaskUpdate` 등)가 노출된 세션(현재 Claude Code)에서만 수행한다. 도구가 없는 플랫폼(Cursor/Gemini/Codex 등)은 이 절 전체를 건너뛴다. 이는 하드코딩 플랫폼 분기가 아니라 **능력 감지**이므로 플랫폼 독립성을 보존한다(헌법 Core Stance).
+>
+> **[SSOT 불변]** STATE.md/state-tool이 진행 현황의 유일한 SSOT다. todo 패널은 STATE.md 파이프라인 현황판을 비추는 **읽기 전용 거울**이며, 충돌 시 STATE.md가 이긴다. todo를 진행·게이트 판단의 근거로 삼지 않는다.
+
+**미러 규칙**:
+- **대상**: 파이프라인 현황판 행을 `단계`로 그룹핑하여 **단계당 todo 1개**를 만든다 (TASK/PLAN/EXECUTE/TEST/CLOSE 등). 항목(`작업`/`PM Gate`/`사용자 확인`) 단위가 아니다.
+- **상태 파생**(해당 단계 행들의 집계):
+  - 전부 ✅ → `completed`
+  - 하나라도 🔄 있거나 일부만 ✅ → `in_progress`
+  - 전부 ⬜ → `open` (pending)
+- **갱신**: `init` 직후 STATE.md의 distinct 단계 목록으로 todo를 일괄 생성한다. 이후 `advance`/`mark`/`block` 호출 직후, 영향받은 단계의 todo를 위 파생 규칙으로 재계산하여 갱신한다. state-tool 호출과 1:1로 동반하며 별도 트리거를 만들지 않는다.
+- **블로커**: `block`(행 ❌) 시 해당 단계 todo는 `in_progress`를 유지한다(todo에 실패 상태 없음). 블로커 자체는 STATE.md·보고로 표면화한다.
+
+> L2 경량 트랙은 파이프라인·state-tool을 쓰지 않으므로 이 절이 적용되지 않는다(todo 미러 없음).
+
 ### STATE.md 공통 템플릿
 
 > **[필수 로드]** TASK 단계에서 STATE.md 초기 생성 시 로드한다.
@@ -112,3 +134,4 @@
 | v1.1 | 2026-05-01 | 갱신 이벤트 표에 "갱신 명령" 컬럼 추가 + `[MUST] state-tool 호출만 허용` 블록 추가 — TASK F-7 / PLAN §2.11 G-6 / §1.5 M-1 (134) |
 | v1.2 | 2026-06-07 | QA→PM Gate 통합 + State Gate 행 제거 정합화 — 이벤트 표에서 QA Gate/State Gate/산출물 생성 행 제거(문서 QA는 PM Gate 흡수, 산출물 생성은 작업 행 흡수, state 기록은 행 mark 자체, 단계 건너뛰기는 stage-transition guard). `State Gate` 섹션을 `상태 자가 점검`(PM Gate 직전 PM 절차)으로 재정의. 표준 단계 순서 문구를 `작업→상태 자가 점검→PM Gate`로 갱신. 동작 검증(TEST/verify) 영역 불변 (014 Phase 4-2) |
 | v1.3 | 2026-07-10 13:12 | note 소유자 호칭 참조 1줄 추가 — `{owner_name}` 플레이스홀더 사용 안내 + `opal/core/AGENT.md` §정체성 적용(오염 금지) 참조(재서술 금지) (054) |
+| v1.4 | 2026-07-16 16:04 | 파이프라인 todo 미러 절 추가 — STATE.md 단계를 네이티브 할일 패널에 단계 단위로 미러(능력 감지 게이트, SSOT 불변 읽기 전용 거울). 전 pilot 상속, state-tool 이벤트와 1:1 동반. L2 미적용 (064) |
