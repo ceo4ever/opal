@@ -124,32 +124,35 @@ OPAL 에이전트는 `~/.opal/references/community-skills-registry.json`을 통�
 - 설치 위치: `~/.opal/community-skills/{owner}/{skill}/SKILL.md`
 - 레지스트리: `~/.opal/references/community-skills-registry.json` (v2 메타데이터 카탈로그 — 트리거 + source_repo + license)
 
-### 6. `// 커맨드` 미설치 매칭 시 자동 fetch
+### 6. `// 커맨드` 미설치 매칭 시 자동 설치·실행
 
-알투가 `//pdf` 같은 community 트리거를 매칭했는데 skill-registry가 `installed: false`로 응답하면:
+알투가 `//pdf` 같은 community 트리거를 매칭했는데 skill-registry가 `installed: false`로 응답하면,
+**라이선스가 확인된 스킬은 동의 대기 없이 자동 설치·실행**한다. 문제 있는 라이선스(미확인, Unknown)만 게이트한다.
 
-1. 사용자에게 동의 prompt 표시:
-   ```
-   이 스킬은 외부 스킬입니다.
-   - 출처: {source_repo}
-   - 라이선스: {license}{license == "Unknown" ? "  ⚠️ 라이선스 미확인 (Unknown License) — proceed at your own risk" : ""}
-   - commit SHA: {commit_sha || "미고정 (HEAD 가변)"}
+> 근거: 소유자(캡틴) 확정 — "문제 있는 라이선스만 아니면 무조건 설치·실행" (064).
 
-   다운로드해서 설치할까요? (Y/n)
-   ```
-   - `license == "Unknown"` 시 **두 번째 확인** 추가:
+**분기 판정** (skill-registry `match` 응답의 `license`·`source_repo` 기준):
+
+1. `license ≠ "Unknown"` (라이선스 확인됨) + `source_repo` 있음 → **자동 설치·실행** (동의 prompt 없음):
+   - 비차단 통지 1줄만 표시:
      ```
-     라이선스가 확인되지 않은 스킬입니다. 정말로 설치하시겠습니까?
-     This skill has an unverified license. Are you sure you want to install? (y/N)
+     [자동 설치] {source_repo} · {license} · commit {commit_sha || "미고정(HEAD)"}
      ```
-     디폴트는 `N` (입력 없이 Enter 시 거부)
-   - §1 스킬 검색 결과에서도 Unknown 라이선스 항목에는 "⚠️ 라이선스 미확인" 경고를 표시한다.
-2. 수락(`Y`):
    - `npx skills add {source_repo}` 호출
    - 설치 완료 후 `~/.opal/community-skills/{owner}/{skill}/SKILL.md`를 Read하여 즉시 절차 실행
-3. 거부(`n` 또는 두 번째 확인에서 `N`):
-   - "수동 설치는 `//skill-manager`로 — `npx skills find {keyword}`로 검색 후 설치하세요" 안내 후 종료
-4. `source_repo`가 `null` (registry에 미등재):
+2. `license == "Unknown"` (라이선스 미확인) → **설치 전 확인 게이트 유지** (자동 우회 금지):
+   ```
+   이 스킬은 라이선스가 확인되지 않았습니다 (Unknown License) — proceed at your own risk.
+   - 출처: {source_repo}
+   - commit SHA: {commit_sha || "미고정 (HEAD 가변)"}
+
+   정말로 설치하시겠습니까? (y/N)
+   ```
+   - 디폴트는 `N` (입력 없이 Enter 시 거부)
+   - 수락(`y`): `npx skills add {source_repo}` 호출 → SKILL.md Read → 즉시 절차 실행
+   - 거부(`N`): "수동 설치는 `//skill-manager`로 — `npx skills find {keyword}`로 검색 후 설치하세요" 안내 후 종료
+   - §1 스킬 검색 결과에서도 Unknown 라이선스 항목에는 "⚠️ 라이선스 미확인" 경고를 표시한다.
+3. `source_repo`가 `null` (registry에 미등재):
    - "이 스킬은 vercel-labs/skills 카탈로그에 미등재. 수동 설치는 `//skill-manager`로" 안내
 
 ## 변경이력
@@ -158,3 +161,4 @@ OPAL 에이전트는 `~/.opal/references/community-skills-registry.json`을 통�
 |------|------|---------|
 | v1.1 | 2026-05-10 17:00 KST | "기본 번들 31개" 표현 제거 + fetch 흐름 SSOT 강조 + `// 커맨드` 미설치 매칭 시 자동 fetch 흐름 추가 (142) |
 | v1.2 | 2026-05-10 21:00 KST | Unknown 라이선스 두 번째 확인 + commit_sha 노출 + 빨간 경고 메시지 추가 (144) |
+| v1.3 | 2026-07-16 14:59 KST | §6 미설치 매칭 → 자동 설치·실행 (라이선스 확인 스킬 동의 게이트 제거, Unknown만 게이트 유지) (064) |
