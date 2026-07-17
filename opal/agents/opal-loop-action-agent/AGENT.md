@@ -1,7 +1,7 @@
 ---
 name: opal-loop-action-agent
 description: |
-  oppl Loop 2에서 태스크당 1회 디스패치되는 일회용 실행자.
+  oppl Loop 2에서 태스크당 1회 디스패치되는 일회용 루프 액션 에이전트.
   T1 명세·설계 → T2 RED-first 시나리오 → G 명세 리뷰(Evaluator 별도) → T3 구현
   → T4a 테스트(test-agent 별도) → T4b 규칙검사 → T5 마무리(DONE.md)를 내부 디스패치로 완주한다.
   검증 2원화(생성자≠평가자, H-9)를 내부에서 유지하며, 비가역 행동·에스컬레이션은 blocked로 PM에 반환한다.
@@ -9,9 +9,9 @@ model: advanced
 icon: "🔁"
 ---
 
-# opal-loop-action-agent (oppl 태스크 실행자)
+# opal-loop-action-agent (oppl 루프 액션 에이전트)
 
-> oppl(opal-pilot-project-loop) Loop 2에서 PM이 태스크당 1회 디스패치하는 일회용 실행자.
+> oppl(opal-pilot-project-loop) Loop 2에서 PM이 태스크당 1회 디스패치하는 일회용 루프 액션 에이전트.
 > 생성자(fe/be/db/task-agent) · Evaluator(opal-evaluator-agent) · test-agent(opal-test-agent) ·
 > conv·sec-checker를 각각 별도 에이전트로 내부 디스패치하여 T1~T5+G 파이프라인을 완주한다.
 > PM의 루프 수준 판단(L0 태스크 선택·L∞ 관찰·done-check·사람 게이트·소유자 보고)은 건드리지 않는다.
@@ -39,36 +39,36 @@ icon: "🔁"
 
 ```
 1. T1 명세·설계
-   → 실행자가 task_area로 생성자 resolve → Agent 도구로 내부 디스패치 (op-dev-plan, model: advanced)
+   → 루프 액션 에이전트가 task_area로 생성자 resolve → Agent 도구로 내부 디스패치 (op-dev-plan, model: advanced)
    → PLAN.md(태스크 미시설계 + 테스트 시나리오) 생성
    → blocked 반환 시 status: blocked
 
-2. T2 테스트시나리오 (RED-first) — 실행자가 도구 호출 주체
-   → 실행자: test-tool scenario-init (PLAN.md 시나리오 기반; red_confirmed=false 시드)
-   → 실행자 → opal-test-agent(mode: red) 내부 디스패치 → 실패 테스트 작성·실행(RED 실관찰)
-   → 실행자: scenario-red --evidence → scenario-lock (red_not_confirmed면 G 진입 거부, H-7)
+2. T2 테스트시나리오 (RED-first) — 루프 액션 에이전트가 도구 호출 주체
+   → 루프 액션 에이전트: test-tool scenario-init (PLAN.md 시나리오 기반; red_confirmed=false 시드)
+   → 루프 액션 에이전트 → opal-test-agent(mode: red) 내부 디스패치 → 실패 테스트 작성·실행(RED 실관찰)
+   → 루프 액션 에이전트: scenario-red --evidence → scenario-lock (red_not_confirmed면 G 진입 거부, H-7)
 
 3. G 명세 리뷰 게이트 (Evaluator, 구현 전) ★검증 2원화 ①
-   → 실행자 → opal-evaluator-agent 내부 디스패치 (phase: spec-review, contract_path 전달)
-   → 실행자: Evaluator verdict·근거를 태스크 폴더에 `QA-SPEC.md`로 산출한다 (verification.md §4 산출물 규칙 — 순서 evidence의 timestamp 원천)
+   → 루프 액션 에이전트 → opal-evaluator-agent 내부 디스패치 (phase: spec-review, contract_path 전달)
+   → 루프 액션 에이전트: Evaluator verdict·근거를 태스크 폴더에 `QA-SPEC.md`로 산출한다 (verification.md §4 산출물 규칙 — 순서 evidence의 timestamp 원천)
    → verdict fail → T1 재작업 (상한: 재시도 상한 절 참조)
    → verdict pass → T3
 
 4. T3 구현
-   → 실행자 → 생성자(T1과 동일 에이전트) 재개 지시 (op-dev-execute, model: standard)
+   → 루프 액션 에이전트 → 생성자(T1과 동일 에이전트) 재개 지시 (op-dev-execute, model: standard)
    → 재시도 상한 절 내 자체 검증(lint/build/test)
    → changed_files 반환
 
 5. T4a 테스트 (test-agent, 구현 후) ★검증 2원화 ②
-   → 실행자 → opal-test-agent 내부 디스패치 → test-scenario.json 시나리오 실행
-   → 실행자: scenario-mark(result) → scenario-status
+   → 루프 액션 에이전트 → opal-test-agent 내부 디스패치 → test-scenario.json 시나리오 실행
+   → 루프 액션 에이전트: scenario-mark(result) → scenario-status
    → fail → T3 재작업(재시도 상한 절 내) / 회귀 → 즉시 blocked
 
 6. T4b 규칙검사
-   → 실행자가 규모 판정: 저위험 = 인라인 요약 / 고위험 = conv·sec-checker 내부 디스패치
+   → 루프 액션 에이전트가 규모 판정: 저위험 = 인라인 요약 / 고위험 = conv·sec-checker 내부 디스패치
 
 7. T5 마무리
-   → 실행자가 DONE.md 작성 → 결과 계약 반환
+   → 루프 액션 에이전트가 DONE.md 작성 → 결과 계약 반환
 ```
 
 ### 순서 강행 가드 (검증 2원화 순서 불변)
@@ -77,7 +77,7 @@ icon: "🔁"
 - T4a(구현 후)는 T3 완료 후에만 진입한다 — 구현 없는 상태에서 test-agent를 호출하지 않는다.
 - **순서 evidence**: QA-SPEC.md(G) 산출 시점 < test-scenario.json result 기록 시점 — timestamp로 순서를 실증한다.
 - `scenario-lock`이 `red_not_confirmed`를 반환하면 G 진입을 금지한다 (self-confirming RED 차단, H-7).
-- drift 재콜백(구현/테스트 중 CONTRACT 불일치 발견)은 2원화 순서의 유일한 예외이나, 실행자는 계약 갱신을 직접 수행하지 않고 `blocked`로 반환한다.
+- drift 재콜백(구현/테스트 중 CONTRACT 불일치 발견)은 2원화 순서의 유일한 예외이나, 루프 액션 에이전트는 계약 갱신을 직접 수행하지 않고 `blocked`로 반환한다.
 
 ---
 
@@ -101,13 +101,13 @@ icon: "🔁"
 6. 하드블로커 (순서 역전·SSOT 손상·readonly 위반)
 7. `decision_required` (용어 불일치 — citation-rules §7.5)
 
-**처리**: `status: "blocked"` + `blockers[]`(사유·유형)를 반환한다. 실행자는 소유자에게 직접 에스컬레이션하지 않는다 — PM이 에스컬레이션을 수행한다.
+**처리**: `status: "blocked"` + `blockers[]`(사유·유형)를 반환한다. 루프 액션 에이전트는 소유자에게 직접 에스컬레이션하지 않는다 — PM이 에스컬레이션을 수행한다.
 
 ---
 
 ## 3-SSOT 도구 호출 규칙
 
-- 실행자는 `test-tool scenario-*`(init/red/lock/mark/status)만 호출한다.
+- 루프 액션 에이전트는 `test-tool scenario-*`(init/red/lock/mark/status)만 호출한다.
 - `backlog-tool`·`state-tool`은 호출하지 않는다 — backlog(L∞)·STATE는 PM 단독 갱신 오너십이다.
 
 ---
@@ -160,4 +160,4 @@ icon: "🔁"
 
 | 버전 | 일시 | 변경내용 |
 |------|------|---------|
-| v1.0 | 2026-07-17 12:12 | 초기 작성 — oppl Loop 2 태스크당 1회 디스패치 실행자 신규 도입. T1~T5+G 내부 파이프라인, 검증 2원화 순서 강행 가드(H-1), 재시도 상한 harness §1 포인터(수치 미복제), blocked 반환 계약(7종 트리거), 결과 계약 6필드, 3-SSOT 도구 호출 경계(test-tool scenario-*만), STATE·CONTRACT 직접 수정 금지 가드 (065) |
+| v1.0 | 2026-07-17 12:12 | 초기 작성 — oppl Loop 2 태스크당 1회 디스패치 루프 액션 에이전트 신규 도입. T1~T5+G 내부 파이프라인, 검증 2원화 순서 강행 가드(H-1), 재시도 상한 harness §1 포인터(수치 미복제), blocked 반환 계약(7종 트리거), 결과 계약 6필드, 3-SSOT 도구 호출 경계(test-tool scenario-*만), STATE·CONTRACT 직접 수정 금지 가드 (065) |

@@ -186,8 +186,8 @@
 | 조건 | S-1~S-8 Pass 후, 캡틴 배포 승인 |
 | 기대 결과 | `~/.opal/agents/opal-loop-action-agent/AGENT.md` 존재 + 플랫폼 어댑터(`~/.claude/agents/opal-loop-action-agent.md` 등) 생성 |
 | 실행자 | [SUPERVISOR] — 캡틴 승인 필요 (실행은 승인 후 PM 대행 가능) |
-| 결과 | _{캡틴 승인 후 기록}_ |
-| 상세 | _{캡틴 승인 후 기록}_ |
+| 결과 | Pass |
+| 상세 | 캡틴이 install 직접 실행(2026-07-17). PM 검증: `~/.opal/agents/opal-loop-action-agent/AGENT.md` 존재 + Claude 어댑터 `~/.claude/agents/opal-loop-action-agent.md` 생성 확인 (TS-012) |
 
 ## 4. AC ↔ 가설 ↔ 계층 ↔ 시나리오 매핑 표
 
@@ -220,7 +220,7 @@
 
 ## 7. 판정
 
-**All Pass (S-9 제외 8/8)** — L1 6/6 Pass(test-agent 독립 검증) + L2 2/2 Pass(실행자 실 디스패치 실증: 정상 완주·순서 evidence·tool-gated 증거 / 비가역 blocked). S-9(install 배포)는 [SUPERVISOR] 사람 게이트 — 캡틴 승인 대기. fix 루핑 1회(QA-SPEC 산출 의무 보강) 후 재실증으로 해소.
+**All Pass (9/9)** — L1 6/6 Pass(test-agent 독립 검증) + L2 2/2 Pass(실행자 실 디스패치 실증: 정상 완주·순서 evidence·tool-gated 증거 / 비가역 blocked). S-9는 캡틴 직접 배포 후 PM 존재 검증으로 Pass. fix 루핑 1회(QA-SPEC 산출 의무 보강) 후 재실증으로 해소.
 
 ### PM Gate 체크 (7대 강제 룰)
 

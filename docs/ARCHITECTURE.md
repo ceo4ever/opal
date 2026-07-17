@@ -167,7 +167,7 @@ OPAL은 2-레이어 아키텍처로 동작한다.
 | opal-planning-agent | advanced | EXECUTE | 기획 | 서비스 기획 산출물 작성/관리 |
 | opal-test-agent | standard | TEST | 공통 | 테스트 전문 (BE/FE/E2E 모드) |
 | opal-evaluator-agent | advanced | 명세 리뷰 (oppl G/D6) | 평가 | 계약·설계 루브릭 심판 — CONTRACT.md 루브릭절 기준 구현 전 판정 (verdict-only·readonly) |
-| opal-loop-action-agent | advanced | 태스크 실행 (oppl Loop 2) | 공통 | 태스크 실행자 — PM→실행자→워커 계층에서 T1~T5+G를 태스크당 1회 디스패치로 완주 (내부 4축 디스패치, 3-SSOT 중 test-tool만 호출) |
+| opal-loop-action-agent | advanced | 태스크 실행 (oppl Loop 2) | 공통 | 루프 액션 에이전트 — PM→루프 액션 에이전트→워커 계층에서 T1~T5+G를 태스크당 1회 디스패치로 완주 (내부 4축 디스패치, 3-SSOT 중 test-tool만 호출) |
 
 ### 커뮤니티 스킬 (Community Skills)
 
@@ -399,7 +399,7 @@ opal/                                    ← 이 저장소
 
 | 날짜 | 변경 내용 |
 |------|----------|
-| 2026-07-17 | 전문 에이전트 표에 opal-loop-action-agent 행 추가 — oppl Loop 2 태스크 실행자, PM→실행자→워커 계층 반영 (Task 065) |
+| 2026-07-17 | 전문 에이전트 표에 opal-loop-action-agent 행 추가 — oppl Loop 2 루프 액션 에이전트, PM→루프 액션 에이전트→워커 계층 반영 (Task 065) |
 | 2026-06-18 | opal-orchestrator 잔존 행 2곳 삭제 (폴더·레지스트리 항목 부재 — dangling. Task 029) |
 | 2026-06-30 | 부트스트랩 진입 모델 2-tier 절 추가 — 비서(Lite·전역 상시)/PM(Full·`.opal/AGENT.md` 존재 시 승격) 분리. opt-in 모델·`//opi` 불변식·전역 비서 유지 (Task 049) |
 | 2026-07-02 | 부트스트랩 진입 모델에 첫 줄 마커 3단 스킵 사다리 추가 — `[ASSISTANT]` 마커 신설로 headless(claude -p) 호출을 비서 tier(Phase A)로 캡(PM tier 승격 억제). 첫 소비자 opbr_adapter (Task 051) |
