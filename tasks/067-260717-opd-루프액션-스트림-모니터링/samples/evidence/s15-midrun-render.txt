@@ -1,0 +1,17 @@
+(eval):2: no matches found: tasks/067-260717-opd-루프액션-스트림-모니터링/samples/T01-정상슬라이스/.oppl-run/*.events.jsonl
+=== 실행 중 렌더 (S-15) ===
+oppl-monitor — /Volumes/Data/AiStudio/workspace/opal/tasks/067-260717-opd-루프액션-스트림-모니터링/samples/T01-정상슬라이스
+generated_at: 2026-07-17T11:02:23Z
+
+축      상태       경과       최근 이벤트 요약                        비용/세션
+---------------------------------------------------------------
+t1     running  15s      rate_limit_event                 -
+t2     pending  -        -                                -
+g      pending  -        -                                -
+t3     pending  -        -                                -
+t4a    pending  -        -                                -
+t4b    pending  -        -                                -
+
+journal tail (last 8):
+  2026-07-17T11:01:49Z | task | start | T01 status 문서 슬라이스 디스패치 수신 — 인프라(opal-agent·test-tool·model-mapping·skills·agents) 검증 완료, .oppl-run 스캐폴딩 생성
+  2026-07-17T11:02:16Z | t1 | start | 생성자(공통→opal-task-agent) op-dev-plan 비동기 디스패치 — cold prime session-id=dec1f381-2f0e-42a8-87cb-6181c3580c54, model=opus, --stream

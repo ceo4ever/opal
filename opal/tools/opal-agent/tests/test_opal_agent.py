@@ -3,14 +3,16 @@
   "module": "test_opal_agent",
   "layer": "test",
   "domain": "opal-tools",
-  "description": "opal_agent.py 단위 테스트 — 059(부트스트랩 마커 3-way 확장 + caller-supplied cold session id) RED-first TS-001~TS-009. subprocess 미사용 — ClaudeAdapter/GeminiAdapter/CursorAdapter/AntigravityAdapter.build_invocation()의 공개 조립 출력(cmd 배열)과 _mark()/_run()/_build_parser()의 관찰 가능한 예외·경고·SystemExit만 검증한다. TS-002(on/off 하위호환)·TS-006(warm resume 유지)은 RED 시점에도 PASS해야 하는 회귀 baseline(§4 표)이다.",
+  "description": "opal_agent.py 단위 테스트 — 059(부트스트랩 마커 3-way 확장 + caller-supplied cold session id) RED-first TS-001~TS-009 + 067(stream-json 실행 경로) RED-first S-1/S-2/S-3(`[T067/L1-R1]`). subprocess 미사용 — ClaudeAdapter/GeminiAdapter/CursorAdapter/AntigravityAdapter.build_invocation()의 공개 조립 출력(cmd 배열)과 _mark()/_run()/_build_parser()의 관찰 가능한 예외·경고·SystemExit만 검증한다. TS-002(on/off 하위호환)·TS-006(warm resume 유지)은 RED 시점에도 PASS해야 하는 회귀 baseline(§4 표)이다.",
   "exports": [
     "TestBootstrapMarkerAssembly", "TestBootstrapBackCompatBaseline",
     "TestBootstrapCliChoices", "TestColdSessionIdAssembly",
     "TestWarmResumeBaseline", "TestSessionIdMutualExclusion",
-    "TestUnsupportedProviderWarning", "TestCliSessionIdMutualExclusion"
+    "TestUnsupportedProviderWarning", "TestCliSessionIdMutualExclusion",
+    "TestStreamBuildInvocation", "TestStreamParseResult",
+    "TestStreamUnsupportedProviderError"
   ],
-  "task": "059",
+  "task": "059, 067",
   "scenarios": ["S-1", "S-2", "S-3", "S-4", "S-5", "S-6", "S-7", "S-8", "S-9"]
 }
 
@@ -22,10 +24,22 @@
 # - subprocess 미사용: TS-007(상호배타)은 config.bin에 존재하지 않는 바이너리명을 강제로 지정해
 #   shutil.which를 항상 실패시킴으로써, 상호배타 검증이 실제로 _run() 진입부(디스패치 이전)에 있는지
 #   결정론적으로 관측한다 (ClaudeNotFoundError가 아니라 순수 OpalAgentError여야 순서가 맞음).
+#
+# 067(RED-first, S-1/S-2/S-3, prefix [T067/L1-R1]):
+# - TEST-SCENARIO.md(067) §3 S-1~S-3 ↔ PLAN.md(067) §3.1.2 함수 시그니처 설계
+#   (AgentConfig.output_format="stream-json" / ClaudeAdapter.supports_stream /
+#   build_invocation stream 분기+--verbose / parse_result 마지막 result 줄 5필드 /
+#   비-claude stream → OpalAgentError) 기준.
+# - fixture는 ANALYSIS.md(067) §2.2/§2.4 실측 stream-json 스키마(system/init →
+#   assistant → 마지막 줄 type:result, 5필드 result/session_id/is_error/
+#   total_cost_usd/duration_ms)를 준거로 작성 — mock/patch 없이 실 JSONL 문자열만 사용.
+# - [MUST] red-first.md §2/§3: 이 3건은 opal-test-agent(RED)가 작성하며 GREEN(Step 1)
+#   구현 전까지 opal_agent.py를 수정하지 않는다. fix 루핑 중 이 3건 수정 금지(테스트 불변성).
 """
 
 import contextlib
 import io
+import json
 import pathlib
 import sys
 import unittest
@@ -179,6 +193,116 @@ class TestCliSessionIdMutualExclusion(unittest.TestCase):
         with contextlib.redirect_stderr(io.StringIO()):
             with self.assertRaises(SystemExit):
                 parser.parse_args(["hi", "--resume", "sid-a", "--session-id", "sid-b"])
+
+
+# ─── 067 RED-first: stream-json 실행 경로 (S-1/S-2/S-3, prefix [T067/L1-R1]) ───
+#
+# ANALYSIS.md(067) §2.2/§2.4 실측 준거 fixture — claude -p --output-format
+# stream-json --verbose 실측 33줄 중 범용 최소 보장 집합(system/init(1회) →
+# 0회 이상 assistant/user → result(정확히 1회, 마지막 줄))으로 좁힌 것.
+
+_STREAM_FIXTURE_OK = "\n".join([
+    json.dumps({
+        "type": "system", "subtype": "init",
+        "session_id": "2005e50d-abcd-4c11-9a11-000000000000",
+        "tools": ["Bash", "Read"], "model": "claude-haiku",
+        "cwd": "/tmp",
+    }),
+    json.dumps({
+        "type": "assistant",
+        "message": {"role": "assistant", "content": [
+            {"type": "text", "text": "2"},
+        ]},
+    }),
+    json.dumps({
+        "type": "result", "subtype": "success",
+        "result": "2",
+        "session_id": "2005e50d-abcd-4c11-9a11-000000000000",
+        "is_error": False,
+        "total_cost_usd": 0.0252952,
+        "duration_ms": 7947,
+    }),
+])
+
+# 마지막 줄이 result가 아닌 fixture(assistant 이벤트로 종료) — 명시 에러 기대.
+_STREAM_FIXTURE_NO_RESULT_TAIL = "\n".join([
+    json.dumps({
+        "type": "system", "subtype": "init",
+        "session_id": "2005e50d-abcd-4c11-9a11-000000000000",
+        "tools": [], "model": "claude-haiku", "cwd": "/tmp",
+    }),
+    json.dumps({
+        "type": "assistant",
+        "message": {"role": "assistant", "content": [
+            {"type": "text", "text": "still thinking"},
+        ]},
+    }),
+])
+
+
+class TestStreamBuildInvocation(unittest.TestCase):
+    """[T067/L1-R1] 스트림 조립 — S-1/TS-001(H-2): output_format="stream-json"이면
+    cmd에 `--output-format stream-json`과 `--verbose`가 동시 포함되어야 한다
+    (ANALYSIS.md(067) §2.5 실측 — `--verbose` 누락 시 claude CLI exit 1)."""
+
+    def test_t067_l1_r1_stream_build_invocation_includes_output_format_and_verbose(self):
+        config = OA.AgentConfig(prompt="1+1 결과만 답해", output_format="stream-json")
+        inv = OA.ClaudeAdapter().build_invocation(config, "claude")
+        self.assertIn("--output-format", inv.cmd)
+        self.assertEqual(
+            inv.cmd[inv.cmd.index("--output-format") + 1], "stream-json"
+        )
+        self.assertIn(
+            "--verbose", inv.cmd,
+            "stream-json 분기는 --verbose를 항상 자동 부착해야 한다(H-2, 미구현 상태에서 RED)",
+        )
+
+
+class TestStreamParseResult(unittest.TestCase):
+    """[T067/L1-R1] 스트림 파싱 — S-2/TS-002(H-1): stream JSONL의 마지막
+    비어있지 않은 줄(type:result)에서 5필드(result/session_id/is_error/
+    total_cost_usd/duration_ms)를 정확 추출해야 한다. 마지막 줄이 result가
+    아니면 명시 에러(OpalAgentError)여야 한다."""
+
+    def test_t067_l1_r1_stream_parse_result_extracts_five_fields(self):
+        config = OA.AgentConfig(prompt="p", output_format="stream-json")
+        result = OA.ClaudeAdapter().parse_result(config, _STREAM_FIXTURE_OK)
+        self.assertEqual(result.text, "2")
+        self.assertEqual(
+            result.session_id, "2005e50d-abcd-4c11-9a11-000000000000"
+        )
+        self.assertFalse(result.is_error)
+        self.assertAlmostEqual(result.cost_usd, 0.0252952)
+        self.assertEqual(result.duration_ms, 7947)
+
+    def test_t067_l1_r1_stream_parse_result_non_result_tail_raises(self):
+        config = OA.AgentConfig(prompt="p", output_format="stream-json")
+        with self.assertRaises(OA.OpalAgentError):
+            OA.ClaudeAdapter().parse_result(config, _STREAM_FIXTURE_NO_RESULT_TAIL)
+
+
+class TestStreamUnsupportedProviderError(unittest.TestCase):
+    """[T067/L1-R1] 비지원 provider — S-3/TS-004(H-3): provider=codex +
+    output_format="stream-json" 조합은 (ClaudeNotFoundError가 아니라) 명시적
+    OpalAgentError를 던져야 한다(침묵 폴백 금지). bin에 존재하지 않는 바이너리명을
+    지정해 shutil.which를 항상 실패시킴으로써, supports_stream 검증이 디스패치
+    이전 chokepoint에 있는지 결정론적으로 관측한다(TestSessionIdMutualExclusion과
+    동일 관측 기법)."""
+
+    def test_t067_l1_r1_codex_stream_json_raises_explicit_opal_agent_error(self):
+        config = OA.AgentConfig(
+            prompt="p",
+            provider="codex",
+            output_format="stream-json",
+            bin="___opal_agent_test_nonexistent_binary___",
+        )
+        with self.assertRaises(OA.OpalAgentError) as ctx:
+            OA._run(config)
+        self.assertNotIsInstance(
+            ctx.exception, OA.ClaudeNotFoundError,
+            "supports_stream 미보유 provider 에러는 shutil.which 실패보다 "
+            "먼저 검증되어야 한다(명시 에러, 미구현 상태에서 RED)",
+        )
 
 
 if __name__ == "__main__":

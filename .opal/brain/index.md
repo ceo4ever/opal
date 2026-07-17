@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-07-17 18:32
+> 갱신: 2026-07-18 00:21
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -11,6 +11,8 @@
 - [[op-data-ddl-skill]] — op-data-ddl (DDL 단계 스킬) #skill #stage-skill #data-design #ddl #migration #dbml
 - [[op-data-dictionary-skill]] — op-data-dictionary (DICT 단계 스킬) #skill #stage-skill #data-design #dictionary #db
 - [[op-data-model-skill]] — op-data-model (MODEL 단계 스킬) #skill #stage-skill #data-design #modeling #erd #mermaid #dbml
+- [[opal-action-monitor]] — opal-action-monitor #tool #oppl #observability-boundary #monitor
+- [[opal-action-status]] — opal-action-status #skill #oppl #observability-boundary #operator
 - [[opal-console]] — OPAL Console #tool #dashboard #frontend #backend
 - [[opal-evaluator-agent]] — opal-evaluator-agent #agent #checker #verification #oppl
 - [[opal-loop-action-agent]] — opal-loop-action-agent #agent #oppl #executor #action-agent
@@ -78,6 +80,7 @@
 - [[model-mapping-2layer-override]] — 모델 매핑 2-레이어 오버라이드 (setting.json SSOT + 부트스트랩 step 0 머지) #model #mapping #setting #override #bootstrap
 - [[model-mapping-latest-tracking]] — OPAL 모델 매핑 최신화 + 최신 추종 전략 #model #mapping #gemini #codex #task
 - [[model-mapping-missing-cell-error-policy]] — 모델 매핑 미설정 셀 오류 정책 (폴백 없음 · "default" 폐기) #model #mapping #error #policy #setting
+- [[observability-3layer-protocol-renderer-trigger-separation]] — 관측 3층 구조 완성 — 데이터 규약·렌더러·발동층 역할 분리 #oppl #observability-boundary #architecture
 - [[op-brain-ingest]] — op-brain-ingest — CLOSE 경량 ingest 워커 #knowledge #close #ingest #skill
 - [[op-dev-analysis]] — op-dev-analysis — 코드베이스 분석 및 기술 컨텍스트 수집 #dev #analysis #skill
 - [[op-dev-execute]] — op-dev-execute — 코드 실행 단계 스킬 #dev #execute #skill
@@ -95,6 +98,7 @@
 - [[op-task-plan]] — op-task-plan — 범용 계획 수립 단계 스킬 #task #plan #skill
 - [[op-task]] — op-task — TASK.md 작성 단계 스킬 #task #skill
 - [[opal-adapter-platform-isolation]] — OPAL 어댑터 계층 플랫폼 분기 격리 원칙 #adapter #architecture #constitution #platform #codex
+- [[opal-agent-stream-json-passthrough]] — opal-agent stream-json 실행 경로 — 원본 이벤트 passthrough 결정 #opal-agent #stream-json #observability-boundary #headless-channel
 - [[opal-architecture]] — OPAL 시스템 아키텍처 #architecture #framework #layer #deploy
 - [[opal-bootstrap-2tier-model]] — OPAL 부트스트랩 2-tier 모델 (비서/PM 분리) #bootstrap #2tier #architecture #pm-gate #assistant-tier
 - [[opal-bootstrap-skip-gate]] — OPAL 부트스트랩 스킵 게이트 (setting.json Read 기반) #bootstrap #platform #adapter #session-toggle #setting-json
@@ -115,6 +119,7 @@
 - [[oppl-3-ssot-tool-gated-separation]] — 3-SSOT tool-gated 축 분리 — backlog/state/test-scenario #ssot #tool-gated #oppl #architecture
 - [[oppl-executor-delegation-architecture]] — oppl 루프 액션 에이전트 위임 구조 — 태스크 단위 컨텍스트 격리 #oppl #executor #delegation #context-isolation #ssot-boundary #blocked-contract
 - [[oppl-internal-channel-opal-agent]] — oppl 루프 액션 에이전트 내부 채널 opal-agent 전환 — 축×호출모드 이원화 #oppl #executor #opal-agent #headless-channel #session-continuity #observability-boundary
+- [[oppl-run-record-journal-dual-observability]] — 결과 파일 규약 v2 + 운행 일지 — 이원 관측 구조 #oppl #observability-boundary #executor #journal
 - [[oppl-scenario-red-confirmed-gap]] — 드라이런 발견 갭 — test-scenario red_confirmed tool-gated 갱신 경로 부재 #lesson #test-tool #oppl #gap #enforce-dont-advise
 - [[oppl-two-loop-orchestrator]] — opal-pilot-project-loop(oppl) — 2-루프 수렴 오케스트레이터 #skill #pilot #orchestrator #loop #oppl
 - [[opsdd-pipeline-ssot]] — opsdd 파이프라인 정본 — SKILL.md SSOT (7단계) #opsdd #pipeline #ssot #workflow
@@ -125,6 +130,7 @@
 - [[project-id-query-param-pattern]] — 절대경로 프로젝트 식별자를 query param으로 전달 #api #routing #url-design
 - [[read-based-gate-pattern]] — Read 기반 설정파일 게이트 패턴 #bootstrap #permission #gate #read-pattern #session-toggle
 - [[readme-ssot-principle]] — README는 SSOT를 따른다 — 문서·코드 불일치 시 SKILL.md가 정본 #readme #ssot #doc-code-mismatch #documentation
+- [[red-first-hybrid-verification-track]] — RED-first 하이브리드 검증 트랙 — 도구 계약 변경 한정 적용 #verification #red-first #opal-agent #testing
 - [[red-test-commit-coercion-guard-lesson]] — RED 테스트가 실저장소 git archive 검증 시 커밋을 구조적으로 강요하는 결함 #red-first #test #git #lesson #guard
 - [[red-test-determinism-abort-trap]] — RED 테스트 결정론성 함정 — neverResolve fetch 대역의 abort 무반응 #testing #red-first #determinism #abort #fetch-mock
 - [[skill-op-task-qa]] — op-task-qa — 범용 문서 QA 검증 기준 #skill #qa #document

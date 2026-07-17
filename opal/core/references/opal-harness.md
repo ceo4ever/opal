@@ -253,6 +253,7 @@ OPAL 도구는 모두 `~/.opal/tools/{tool-name}/run.sh` 래퍼를 통해 호출
 | backlog-tool | backlog.json SSOT 관리 — 7 서브명령 init/add-task/select-next/mark/update-task/done-check/show (oppl 백로그) | oppl 루프(백로그 생성·태스크 선택·종료 판정) 시 |
 | memory-tool | 프로젝트 메모리 인덱스·히스토리 결정론적 집행 — 9서브명령 init/append/update/promote/prune/migrate/show/review/delete. 메모리→docs/brain 졸업 워크플로우·히스토리 FIFO5·요약 길이캡·라이프사이클·마커 직접편집 금지·매 변경 후 자가검토(review)·dead/superseded 정리(delete 무손실 가드) | 메모리 등록·정리·이관 시 |
 | git-sync-tool | 워크스페이스 git 저장소 일괄 동기화 — `sync <경로>` 단일 서브명령. 직속 자식 1단계 순회 + clean/ff-only pull, 5종 skip 판정(dirty/diverged/detached/no-upstream/fetch-failed) 후 JSON 반환. 문제 저장소 자율 조치 없음(skip·보고). git 2.22+ | 워크스페이스 여러 저장소 최신화 시 (opal-workspace-sync 스킬이 호출) |
+| opal-action-monitor | oppl 태스크 진행 현황판 렌더 — `<task_folder>/.oppl-run/` 산출물(events.jsonl/result.json/exitcode/journal.md 등) 파싱, 텍스트/`--json`/`--watch` 3모드, 읽기 전용 | oppl 태스크 진행 현황 관측 / 루프 액션 에이전트 실행 관측 시 |
 
 > 전체 사용법: `~/.opal/references/tools.md`
 
@@ -317,3 +318,5 @@ OPAL 도구는 모두 `~/.opal/tools/{tool-name}/run.sh` 래퍼를 통해 호출
 | v6.1 | 2026-07-10 | §9 등록 도구 표 test-tool 행 현행화 — 8서브명령 → 9서브명령(+scenario-red: RED 증거 tool-gated red_confirmed 갱신, enforce-don't-advise 보강) (056/ADD-1) |
 | v6.2 | 2026-07-10 | §9 backlog-tool 행 현행화 — 6 → 7 서브명령(+update-task: Evaluator 지적 반영용 필드 갱신, status는 mark 전용 유지) (056/ADD-3) |
 | v6.3 | 2026-07-17 14:24 | §5·§6에 opal-agent 채널 내부 디스패치 관측·모델 매핑 SSOT 포인터 1줄씩 추가(비복제) — 상세는 `opal/agents/opal-loop-action-agent/AGENT.md`·`harness/observability.md`·`opal-model-mapping.md` 참조 (066) |
+| v6.4 | 2026-07-17 19:58 KST | §9 등록 도구 표에 oppl-monitor 행 추가 — oppl 태스크 진행 현황판 렌더(`.oppl-run/` 파싱), 트리거: oppl 태스크 진행 관측·루프 액션 에이전트 실행 관측 시 (067) |
+| v6.5 | 2026-07-17 23:04 KST | §9 도구명 리네임 — `oppl-monitor` → `opal-action-monitor`(향후 oppd·opsdd 액션 에이전트 공통 관측 도구로 확장 예정이라 이름 중립화). 로직 무변경 (067) |

@@ -1,0 +1,33 @@
+{
+  "schema_version": "1.0",
+  "task_id": "T01-정상슬라이스",
+  "locked": true,
+  "created_at": "2026-07-17T20:06:49+09:00",
+  "locked_at": "2026-07-17T20:06:49+09:00",
+  "scenarios": [
+    {
+      "id": "S-1",
+      "acceptance_ref": "AC-1/MV-1",
+      "type": "L1",
+      "expected": "test -f out/status.md → exit 0",
+      "red_confirmed": true,
+      "red_evidence": "out/status.md 부재 → test -f exit 1 (verify.sh 실행, RED 실관찰)",
+      "red_at": "2026-07-17T20:06:49+09:00",
+      "result": "pass",
+      "evidence": "test -f out/status.md → exit 0 (T4a verify.sh + 직접실행)",
+      "marked_at": "2026-07-17T20:10:28+09:00"
+    },
+    {
+      "id": "S-2",
+      "acceptance_ref": "AC-2/MV-2",
+      "type": "L1",
+      "expected": "grep -c '^# ' out/status.md → ≥1",
+      "red_confirmed": true,
+      "red_evidence": "대상 파일 부재로 grep -c '^# ' 실행 불가/0 → MV-2 미충족 (verify.sh 실행, RED 실관찰)",
+      "red_at": "2026-07-17T20:06:49+09:00",
+      "result": "pass",
+      "evidence": "grep -c '^# ' out/status.md → 1 (≥1), exit 0 (T4a)",
+      "marked_at": "2026-07-17T20:10:28+09:00"
+    }
+  ]
+}

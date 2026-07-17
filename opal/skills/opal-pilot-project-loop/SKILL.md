@@ -376,6 +376,8 @@ PM은 **태스크당 `opal-loop-action-agent`를 1회 디스패치**하며, 루�
 
 **blocked 반환 시**: 루프 액션 에이전트가 `status: blocked`를 반환하면 PM은 즉시 자율 재시도를 중단하고 `blockers[]` 사유를 확인하여 사용자에게 에스컬레이션한다(`references/loop-control.md` §7·§9). 루프 액션 에이전트는 소유자에게 직접 에스컬레이션하지 않는다.
 
+**진행 현황 모니터링**: 루프 액션 에이전트 실행 중/완료 후에는 `~/.opal/tools/opal-action-monitor/run.sh <task_folder> [--watch]`로 단계×축 현황판을 관측할 수 있다. 결과 파일 규약 v2·운행 일지(journal) 상세는 `opal/agents/opal-loop-action-agent/AGENT.md` 참조. 스킬 발동: `//opas [태스크폴더]` — 자동 탐지 + 해석 보고(읽기 전용).
+
 ---
 
 ## 검증 2원화
@@ -581,3 +583,6 @@ Loop 1 재회전 {N}회 · Loop 2 태스크 {M}개 완주.
 | v1.1 | 2026-07-10 | T2 테스트시나리오 절에 `scenario-red` 단계 반영 — RED 실관찰 → `scenario-red`(증거 tool-gated 갱신) → `scenario-lock` 순서로 변경, red_confirmed 시드 무력화 안내 추가 (056/ADD-1) |
 | v1.2 | 2026-07-17 12:12 | 태스크 내부 파이프라인(T1~T5+G)을 `opal-loop-action-agent`(태스크당 1회 디스패치 루프 액션 에이전트)에 위임하는 구조로 개편 — ASCII 마커·T1/G/T3/T4a/T4b 서술·검증 2원화 주체를 루프 액션 에이전트로 명시, §디스패치를 "하이브리드 C(~3회)"에서 "루프 액션 에이전트 1회 디스패치(내부 4축)"로 재구성, 루프 액션 에이전트 디스패치 idiom(입력 10필드)·blocked 에스컬레이션 경로 추가, 스킬 탐색 경로·자율 게이트 흐름 문구 정합. PM의 L0/L∞/done-check/사람 게이트 소유는 불변 (065) |
 | v1.3 | 2026-07-17 14:24 | 내부 디스패치 서술을 opal-agent 채널로 정합(T1~T4b 각 단계에 "[opal-agent 채널 — 동기/비동기]" 표기) + §디스패치 표 ①T2를 ①a(생성자)/①b(test-agent mode:red)로 분리하여 T2=test-agent(mode:red) 귀속 정정(H-10) (066) |
+| v1.4 | 2026-07-17 16:20 | §디스패치 절에 진행 현황 모니터링 안내 추가 — `oppl-monitor` 도구 포인터 + 결과 파일 규약 v2/운행 일지는 `opal-loop-action-agent/AGENT.md` 참조로 위임 (067) |
+| v1.5 | 2026-07-17 23:04 KST | 진행 현황 모니터링 도구 포인터 리네임 — `oppl-monitor` → `opal-action-monitor` (067) |
+| v1.6 | 2026-07-17 KST | 진행 현황 모니터링 안내에 스킬 발동 `//opas [태스크폴더]`(opal-action-status) 1줄 추가 — 자동 탐지 + 해석 보고(읽기 전용) (068) |

@@ -211,3 +211,11 @@
 - 신규: [[oppl-internal-channel-opal-agent]]
 - 출처: task:066
 
+## [2026-07-17] ingest | CLOSE ingest — 태스크 067 루프 액션 에이전트 투명 모니터링
+- 신규: [[pages/concept/opal-agent-stream-json-passthrough.md]], [[pages/concept/oppl-run-record-journal-dual-observability.md]], [[pages/entity/opal-action-monitor.md]], [[pages/concept/red-first-hybrid-verification-track.md]]
+- 출처: task:067
+
+## [2026-07-18] ingest | CLOSE ingest — 태스크 068 opal-action-status(opas) 발동층 스킬 신설
+- 신규: [[pages/entity/opal-action-status.md]], [[pages/concept/observability-3layer-protocol-renderer-trigger-separation.md]]
+- 출처: task:068
+

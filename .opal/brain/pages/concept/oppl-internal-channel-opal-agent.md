@@ -13,6 +13,8 @@ sources:
 related:
 - opal-loop-action-agent
 - oppl-executor-delegation-architecture
+- opal-agent-stream-json-passthrough
+- oppl-run-record-journal-dual-observability
 created: '2026-07-17'
 updated: '2026-07-17'
 status: active

@@ -678,6 +678,56 @@ bash ~/.opal/tools/tool-scan/run.sh check <도구>               # 설치/실행
 
 ---
 
+## opal-action-monitor
+
+**용도**: 루프 액션 에이전트(opal-agent 채널)의 `<task_folder>/.oppl-run/` 산출물을 파싱해 단계(phase) × 축(axis) 진행 현황판을 렌더하는 읽기 전용 CLI  
+**실행 경로**: `~/.opal/tools/opal-action-monitor/run.sh`  
+**소스 경로**: `opal/tools/opal-action-monitor/`  
+**의존성**: `~/.opal/.venv/bin/python` (표준 라이브러리만 — `json`/`argparse`/`pathlib`/`os`/`time`/`datetime`/`sys`)
+
+> 관련 도구: opal-agent(비동기 축 stream-json 실행 경로)는 도구 레지스트리에 등록되어 있지 않다 — 소스 경로 `opal/tools/opal-agent/`로만 참조한다. opal-action-monitor는 `.oppl-run/` 산출물만 읽는 독립 리더이며 opal-agent와 직접 import/호출 관계가 없다(파일 계약으로만 연결).
+
+### 커맨드
+
+```bash
+# 텍스트 현황판 (1회성)
+~/.opal/tools/opal-action-monitor/run.sh <task_folder>
+
+# JSON 출력 (스킬/도구 파싱용)
+~/.opal/tools/opal-action-monitor/run.sh <task_folder> --json
+
+# 주기적 재렌더 (기본 2초 폴링, 상한 --watch-timeout 기본 1800초)
+~/.opal/tools/opal-action-monitor/run.sh <task_folder> --watch
+~/.opal/tools/opal-action-monitor/run.sh <task_folder> --watch 5 --watch-timeout 600
+```
+
+### 출력 형식
+
+텍스트 현황판(`축(phase) | 상태 | 경과 | 최근 이벤트 요약 | 비용/세션` + journal tail + blocked 배너) 또는 `--json`으로 구조화 JSON 출력. 상태 판정(6종)·`--json` 스키마·에러 계약(`{"ok":false,"error":"<메시지>"}` + exit 1) 등 상세는 도구 README가 SSOT — 수치·규칙을 여기에 복제하지 않는다.
+
+```json
+// --json 성공 (요약 발췌)
+{ "ok": true, "task_folder": "<abs>", "blocked": false,
+  "phases": [{"phase":"t1","axis":"stream","status":"done", "...":"..."}] }
+
+// 에러
+{ "ok": false, "error": "<메시지>" }
+```
+
+### 사용 예시
+
+```bash
+# 태스크 진행 현황 1회 확인
+~/.opal/tools/opal-action-monitor/run.sh tasks/067-260717-opd-루프액션-스트림-모니터링/
+
+# 루프 액션 에이전트 실행 중 실시간 관측
+~/.opal/tools/opal-action-monitor/run.sh tasks/067-260717-opd-루프액션-스트림-모니터링/ --watch
+```
+
+> 상세 사용법·입력 계약·상태 판정 표·`--json` 전체 스키마: `opal/tools/opal-action-monitor/README.md`
+
+---
+
 ## 변경이력
 
 | 버전 | 날짜 | 내용 |
@@ -694,3 +744,5 @@ bash ~/.opal/tools/tool-scan/run.sh check <도구>               # 설치/실행
 | v1.9 | 2026-06-26 | memory-tool 섹션 신설(9 서브명령 init/append/update/promote/prune/migrate/show/review/delete) — 프로젝트 메모리 인덱스·히스토리 결정론적 집행, 메모리→docs/brain 졸업 워크플로우·히스토리 FIFO5·요약 길이캡·마커 직접편집 금지·매 변경 후 자가검토·delete(dead/superseded 무손실 정리)·update --new-title(제목 보정). harness §9 drift 정합 (045) |
 | v2.0 | 2026-07-02 | git-sync-tool 섹션 신설(단일 서브명령 sync) — 워크스페이스 git 저장소 일괄 동기화, 직속 자식 순회 + ff-only pull + 5종 skip 판정 + JSON 출력. opal-workspace-sync 스킬이 호출. harness §9 drift 정합 (052) |
 | v2.1 | 2026-07-10 13:11 | brain-tool validate 설명에 링크필드(related) 값 검사('[[', ']]', '.md' 거부) 반영 + add-page에 `--related` 플래그 설명 추가 (053) |
+| v2.2 | 2026-07-17 19:58 KST | oppl-monitor 섹션 신규 추가 — `.oppl-run/` 파싱·단계×축 현황판 렌더(텍스트/`--json`/`--watch`), 상세 수치·규칙은 도구 README 포인터. opal-agent는 레지스트리 항목이 아니라 소스 경로로만 표기(R-REG) (067) |
+| v2.3 | 2026-07-17 23:04 KST | 도구명 리네임 — `oppl-monitor` → `opal-action-monitor`(향후 oppd·opsdd 액션 에이전트 공통 관측 도구로 확장 예정이라 이름 중립화). 섹션 제목·경로·본문 명칭 전체 갱신, 로직 무변경 (067) |

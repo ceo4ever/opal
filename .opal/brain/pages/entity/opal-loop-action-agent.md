@@ -12,6 +12,8 @@ related:
 - oppl-two-loop-orchestrator
 - oppl-executor-delegation-architecture
 - oppl-3-ssot-tool-gated-separation
+- opal-action-monitor
+- oppl-run-record-journal-dual-observability
 created: '2026-07-17'
 updated: '2026-07-17'
 status: active
