@@ -203,3 +203,7 @@
 - 신규: [[community-skill-installation-architecture.md]], [[community-skill-basename-matching.md]], [[community-skill-user-registry.md]]
 - 출처: task:064
 
+## [2026-07-17] ingest | CLOSE ingest — 태스크 065 oppl 태스크 실행자(opal-loop-action-agent) 도입
+- 신규: [[pages/entity/opal-loop-action-agent.md]], [[pages/concept/oppl-executor-delegation-architecture.md]]
+- 출처: task:065
+

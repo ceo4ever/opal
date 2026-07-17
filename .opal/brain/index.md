@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-07-17 09:49
+> 갱신: 2026-07-17 12:58
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -13,6 +13,7 @@
 - [[op-data-model-skill]] — op-data-model (MODEL 단계 스킬) #skill #stage-skill #data-design #modeling #erd #mermaid #dbml
 - [[opal-console]] — OPAL Console #tool #dashboard #frontend #backend
 - [[opal-evaluator-agent]] — opal-evaluator-agent #agent #checker #verification #oppl
+- [[opal-loop-action-agent]] — opal-loop-action-agent #agent #oppl #executor #action-agent
 - [[opal-workspace-sync]] — opal-workspace-sync (alias opws) #skill #workspace #git #operator
 - [[skill-opal-pilot-data-design]] — opal-pilot-data-design (opdd) #pilot #orchestrator #data-design #db
 - [[state-tool]] — state-tool #tool #pipeline
@@ -112,6 +113,7 @@
 - [[opi-v42-architecture-decisions]] — opi v4.2 아키텍처 결정 — 심층 분석·멀티서비스·워커 디스패치 #opi #opal-project-init #architecture-decision #multi-service #worker-dispatch
 - [[oppd-prd-trd-task-folder-promote]] — oppd PRD/TRD 태스크폴더 작성 → docs 승격 프로세스 #oppd #prd #trd #wbs #promote #docs-ssot
 - [[oppl-3-ssot-tool-gated-separation]] — 3-SSOT tool-gated 축 분리 — backlog/state/test-scenario #ssot #tool-gated #oppl #architecture
+- [[oppl-executor-delegation-architecture]] — oppl 실행자 위임 구조 — 태스크 단위 컨텍스트 격리 #oppl #executor #delegation #context-isolation #ssot-boundary #blocked-contract
 - [[oppl-scenario-red-confirmed-gap]] — 드라이런 발견 갭 — test-scenario red_confirmed tool-gated 갱신 경로 부재 #lesson #test-tool #oppl #gap #enforce-dont-advise
 - [[oppl-two-loop-orchestrator]] — opal-pilot-project-loop(oppl) — 2-루프 수렴 오케스트레이터 #skill #pilot #orchestrator #loop #oppl
 - [[opsdd-pipeline-ssot]] — opsdd 파이프라인 정본 — SKILL.md SSOT (7단계) #opsdd #pipeline #ssot #workflow
