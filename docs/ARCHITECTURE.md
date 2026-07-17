@@ -77,7 +77,7 @@ OPAL은 2-레이어 아키텍처로 동작한다.
 | `identity.md` | 에이전트 정체성 (이름, 성격, 톤) |
 | `skills/` | 독립 스킬 5개 + OPAL 스킬 25개 |
 | `agents/` | 서브에이전트 12개 (전문 7 + 범용 4 + 도구성 1) |
-| `community-skills/` | 커뮤니티 스킬 — `npx skills` (vercel-labs/skills)로 사용자가 온디맨드 fetch |
+| `community-skills/` | 커뮤니티 스킬 — clone-copy(git)로 사용자가 온디맨드 설치 (검색은 `npx skills find`). 사용자 등록분 `user-registry.json` 포함, install 불가침 |
 | `references/` | 레지스트리 (skills.md, agents.md, mcps.md, opal-harness.md, opal-doc-standard.md, tools.md) |
 | `tools/` | CLI 도구 (skill-registry/, xlsx-tool/, tool-scan/ — capability 검색·live 사용법, memory-tool/ — 메모리 인덱스·히스토리 결정론적 집행·docs/brain 졸업 워크플로우, check-env.js, requirements.txt) |
 | `.venv/` | Python 가상환경 (openpyxl, pandas, playwright 등 — requirements.txt로 관리) |
@@ -170,15 +170,15 @@ OPAL은 2-레이어 아키텍처로 동작한다.
 
 ### 커뮤니티 스킬 (Community Skills)
 
-외부 조직이 제공하는 스킬. OPAL은 번들로 배포하지 않으며, 사용자가 `//skill-manager` 또는 `// 커맨드` 첫 호출 시 동의 prompt를 거쳐 [skills.sh](https://skills.sh/) 카탈로그(vercel-labs/skills)에서 fetch한다.
+외부 조직이 제공하는 스킬. OPAL은 번들로 배포하지 않으며, 사용자가 `//skill-manager` 또는 `// 커맨드` 첫 호출 시 upstream 저장소에서 **clone-copy**(git clone → vendor 중첩 경로 복사)로 설치한다. 라이선스가 확인된 스킬은 자동 설치, Unknown 라이선스만 확인 게이트를 거친다.
 
 | 항목 | 값 |
 |------|-----|
-| 카탈로그 SSOT | [skills.sh](https://skills.sh/) — `npx skills find` |
-| 설치 명령 | `npx skills add {owner/repo@skill}` (알투 자동 호출 또는 `//skill-manager`) |
-| 설치 위치 | `~/.opal/community-skills/{owner}/{skill}/SKILL.md` |
-| 레지스트리 | `~/.opal/references/community-skills-registry.json` (v2 메타데이터 카탈로그 — 트리거/source_repo/license) |
-| 라이선스 책임 | 사용자 fetch 시점 발생 (OPAL repo는 third-party 코드 재배포 안 함) |
+| 카탈로그 SSOT | [skills.sh](https://skills.sh/) — `npx skills find` (검색·업데이트 확인 전용) |
+| 설치 방식 | clone-copy — `git clone --depth 1` → `{vendor}/{skill}/` 복사 + clone 시점 commit_sha 기록 (opal-skill-manager §설치, 알투 자동 호출 또는 `//skill-manager`) |
+| 설치 위치 | `~/.opal/community-skills/{vendor}/{skill}/SKILL.md` (vendor 중첩 SSOT — flat 잔재는 `skill-registry.js migrate`로 정규화) |
+| 레지스트리 (이원) | 프레임워크 카탈로그 `~/.opal/references/community-skills-registry.json` (install이 덮어써 갱신 전파) + 사용자 등록분 `~/.opal/community-skills/user-registry.json` (install 불가침 — 142 D-4, skill-registry가 병합 로드) |
+| 라이선스 책임 | 사용자 설치 시점 발생 (OPAL repo는 third-party 코드 재배포 안 함) |
 
 ### 하네스 (Harness)
 
@@ -222,8 +222,8 @@ opal/core/mcps/*    ──── install ─→  claude mcp add --scope user (Cl
                                         ~/.cursor/agents/{name}.md   (Cursor 형식)
                                         ~/.gemini/agents/{name}.md   (Gemini 형식)
 
-# 커뮤니티 스킬은 install이 배포하지 않음. 사용자가 //skill-manager로 fetch:
-~/.opal/community-skills/  ←  npx skills add {owner/repo@skill}  ←  사용자 동의 prompt
+# 커뮤니티 스킬은 install이 배포하지 않음. 사용자가 //skill-manager 또는 // 첫 호출로 설치:
+~/.opal/community-skills/{vendor}/{skill}/  ←  clone-copy (git clone → 복사 + commit_sha)  ←  라이선스 확인 시 자동 / Unknown만 동의 게이트
 ```
 
 `install-mac.sh`가 소스에서 `~/.opal/`로 통합 배포한다. 플랫폼별 디렉토리(`~/.claude/`, `~/.cursor/`, `~/.gemini/`)에는 부트스트래퍼·MCP 설정과 함께 **에이전트 어댑터**가 배치된다.
@@ -407,3 +407,4 @@ opal/                                    ← 이 저장소
 | 2026-07-14 | OPAL Console 브레인 질의 표에 "프라임 연결 풀" 행 신설 — prewarm_projects 선프라임·프로젝트별 웜 핸들 풀(크기 1)·체크아웃+백그라운드 리필·Semaphore(2) 상한·콜드 폴백·인메모리 전용 (Task 060) |
 | 2026-07-14 | OPAL Console 7번째 화면 "설정" 신설 절 추가 — 설정 라우터 쓰기 격리(화이트리스트)·프라임 풀 토글 단일 기능(캡틴 범위 확정: console.config·로컬 설정 편집은 수동 유지, 후속 단위 추가)·Lock+atomic rename·다이어그램 7화면 갱신 (Task 061) |
 | 2026-07-15 | OPAL Console 브레인 세션 단순화 — "이력" 행을 **휘발성 단일 세션(미영속)**으로 전환(localStorage 이력·멀티대화 관리 제거, mount·새 대화마다 새 session_id, 단일 대화창 멀티턴 유지), 프라임 연결 풀 크기 1→2 + `prewarm()` need-based 충전(연속 새대화 즉시 웜, 상수만 상향 시 풀 1까지만 차던 결함 수정) (Task 063) |
+| 2026-07-17 | 커뮤니티 스킬 설치 방식 clone-copy 전환 — `npx skills add` 제거(경로 지정 불가 실측·D4), vendor 중첩 SSOT + migrate 정규화, 레지스트리 이원화(카탈로그=references / 사용자 등록분=community-skills/user-registry.json·install 불가침), npx는 find/check 전용 (Task 064) |

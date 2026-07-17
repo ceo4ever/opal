@@ -21,7 +21,8 @@
 - `//` 뒤의 문자열에서 스킬명(정식 또는 약식)을 추출한다
 - `~/.opal/references/skills.md` 레지스트리에서 해당 스킬을 찾는다
 - 스킬의 SKILL.md를 Read하고 프로세스를 따른다
-- 단, `match` 응답이 `installed: false`(미설치 community 스킬)이면 — SKILL.md Read 전에 **`opal-skill-manager/SKILL.md §6`(미설치 매칭 시 자동 설치·실행) 절차를 먼저 따른다**. 라이선스 확인된 스킬은 동의 대기 없이 자동 설치·실행하고, 미확인(Unknown) 라이선스만 확인 게이트를 거친다.
+- 단, `match` 응답이 `installed: false`(미설치 community 스킬)이면 — SKILL.md Read 전에 **`opal-skill-manager/SKILL.md §6`(미설치 매칭 시 자동 설치·실행) 절차를 먼저 따른다**. 라이선스 확인된 스킬은 동의 대기 없이 자동 설치·실행하고, 미확인(Unknown) 라이선스만 확인 게이트를 거친다. 설치 방식은 clone-copy(git clone → 복사, `opal-skill-manager/SKILL.md §2`)이며 `npx skills add`는 사용하지 않는다.
+- `match` 응답이 `ambiguous: true`(basename이 여러 vendor와 충돌)이면 후보 목록(`candidates`)을 표시하고 정식명(`vendor/skill`)으로 재호출을 유도한다.
 - `//` 뒤에 이어지는 텍스트는 작업 설명(arguments)으로 전달한다
 
 ```
@@ -45,3 +46,4 @@
 | v1.0 | 2026-04-21 | 다운사이징 — AGENT.md §스킬레지스트리·§쌍슬래시커맨드 분리 (128) |
 | v1.1 | 2026-05-09 11:22 | 쌍슬래시 커맨드 예시에 모드 플래그 3-way 추가 (140) |
 | v1.2 | 2026-07-16 14:59 KST | 미설치(`installed:false`) community 스킬 매칭 시 skill-manager §6 자동 설치·실행 라우팅 추가 — `//` 흐름 라우팅 공백 봉합 (064) |
+| v1.3 | 2026-07-17 09:17 KST | 설치 방식이 clone-copy(§2)임을 명시하는 문구 정합 + `ambiguous:true`(basename 충돌) 응답 시 후보 목록 표시·정식명 재호출 유도 분기 추가 (064) |

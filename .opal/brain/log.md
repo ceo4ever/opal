@@ -199,3 +199,7 @@
 - 신규: [[console-brain-volatile-single-session]], [[brain-prime-pool-need-based-refill]], [[console-brain-exit-guard-pattern]]
 - 출처: task:063
 
+## [2026-07-17] ingest | CLOSE ingest — 태스크 064 커뮤니티 스킬 관리 워크플로우 통일
+- 신규: [[community-skill-installation-architecture.md]], [[community-skill-basename-matching.md]], [[community-skill-user-registry.md]]
+- 출처: task:064
+

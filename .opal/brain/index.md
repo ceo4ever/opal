@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-07-15 18:28
+> 갱신: 2026-07-17 09:49
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -50,6 +50,9 @@
 - [[codex-platform-integration]] — Codex CLI OPAL 4번째 플랫폼 통합 #codex #platform #bootstrap #mcp #task
 - [[coding-principles-ssot]] — OPAL Coding Principles SSOT 신설 #framework #principles #ssot #task
 - [[cold-warm-session-separation]] — Cold-Warm Session 분리 설계 (Caller-Supplied Session ID) #session-management #architecture #caller-supplied #capability-flags #api-design
+- [[community-skill-basename-matching]] — 커뮤니티 스킬 basename alias 매칭 — 벤더 무관 호출 #architecture #community-skills #ux #routing
+- [[community-skill-installation-architecture]] — 커뮤니티 스킬 설치 아키텍처 — vendor 중첩 + clone-copy #architecture #community-skills #install #deploy
+- [[community-skill-user-registry]] — 커뮤니티 스킬 사용자 레지스트리 — install 배포 경계 격리 #architecture #community-skills #deploy #registry
 - [[config-file-concurrent-write-defense-standard]] — 설정 파일 동시 쓰기 방어 표준 #architecture #concurrency #backend #pattern #file-io
 - [[console-brain-exit-guard-pattern]] — 콘솔 브레인 이탈 가드 4경로 패턴 #brain #ux #guard #console #session-management
 - [[console-brain-volatile-single-session]] — 콘솔 브레인 휘발성 단일 세션 설계 전환 #brain #session-management #architecture #console #ux
