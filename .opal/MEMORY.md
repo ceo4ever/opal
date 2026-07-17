@@ -1,7 +1,7 @@
 # opal Memory Index
 
 > 최종 갱신: 2026-06-26 (044 도구·MCP·스킬 통합 검색·사용법·활용 체계 — TASK)
-> last_task_number: 65
+> last_task_number: 66
 
 
 | 카테고리 | 설명 | 완료 시 |
@@ -30,15 +30,16 @@
 |------|--------|------|------|------|------|
 | Console 브레인 구독 인증 | 2026-06-22 | project | active | `memory/console-brain-subscription-auth.md` | Console 브레인 질의는 종량제 API 아닌 사용자 Claude 구독(로컬 claude -p). API키·SDK 금지 |
 | 브레인 질의 콜드 경량화(037후속) | 2026-06-23 | task | active | `memory/follow-up-brain-query-lite.md` | 브레인 질의 콜드 latency 경량화 — 검색을 LLM 밖 brain-tool로. opbr --lite 권고 |
+| 후속 067 stream-json+journal | 2026-07-17 | task | active | memory/후속_067_stream_json_journal.md | opal-agent stream 개조+규약v2+journal — 캡틴 확정(066 CLOSE). 상세는 메모리 파일 |
 <!-- memory:index:end -->
 
 ## 작업 히스토리 (최대 5개, FIFO)
 <!-- memory:history:start -->
 | 제목 | 등록일 | 단계 | 경로 | 핵심결과 |
 |------|--------|------|------|----------|
+| 066 루프액션 내부 디스패치 opal-agent 채널 전환 | 2026-07-17 | 완료·커밋대기 | tasks/066-260717-opd-루프액션-opal-agent-채널/ | 4축 opal-agent 채널·동기/비동기 이원화·3-분리 캡처·resume 실증 All Pass. 후속=067 stream+journal·커밋 |
 | 065 oppl 태스크 실행자 도입 | 2026-07-17 | 완료·커밋대기 | tasks/065-260717-opd-oppl-태스크-실행자/ | opal-loop-action-agent 신설, 태스크당 1회 디스패치 위임. All Pass·실증 완주. 후속=install 배포·커밋 |
 | 064 커뮤니티 스킬 관리 워크플로우 통일 | 2026-07-17 | 완료·커밋대기 | tasks/064-260717-opd-스킬-관리-워크플로우-통일/ | clone-copy 통일+vendor중첩 migrate+user-registry 격리+basename매칭. All Pass(S10 캡틴확인). 후속=커밋 |
 | 063 콘솔 브레인 휘발성 단일 세션 | 2026-07-15 | 완료·커밋 | tasks/063-260715-opd-콘솔-브레인-세션-단순화/ | 멀티대화·이력 제거→휘발 단일세션, 풀2+need충전, 이탈가드4경로. FE85·BE249 Pass |
 | 061 콘솔 설정 화면 — 프라임 풀 토글 | 2026-07-14 | 완료 | tasks/061-260714-opd-콘솔-설정-화면/ | 설정 라우터 격리+토글 단일 반영(캡틴 축소 확정). 245 GREEN·E2E Pass. 커밋 9443606·배포 완료 |
-| 062 브레인답변 content-driven 6단계 워크플로우 | 2026-07-14 | 완료·커밋대기 | tasks/062-260714-opds-브레인답변-레이아웃-워크플로우/ | opbr query 답변을 content-driven 6단계 워크플로우로 재구조화. 6축→5후보·가드3종·가독성규율. All Pass. 후속=커밋 |
 <!-- memory:history:end -->

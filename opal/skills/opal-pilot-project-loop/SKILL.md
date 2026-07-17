@@ -288,19 +288,19 @@ Gate 시 state-tool 호출:
 > [MUST] PM은 L0 태스크 선택 후 **태스크당 `opal-loop-action-agent`를 1회 디스패치**하며, T1~T5+G 전체를 루프 액션 에이전트가 내부 디스패치로 완주한다. PM의 L0/L∞/done-check/사람 게이트 소유는 불변이다.
 
 ```
-T1 명세·설계 — PLAN.md (+ USER_FLOW.md*, 인터랙션 슬라이스만) [루프 액션 에이전트→생성자 내부 디스패치]
+T1 명세·설계 — PLAN.md (+ USER_FLOW.md*, 인터랙션 슬라이스만) [opal-agent 채널 — 동기/비동기]
   ↓
-T2 테스트시나리오 — test-tool scenario-init, RED-first [생성자 디스패치 연속]
+T2 테스트시나리오 — test-tool scenario-init, RED-first [opal-agent 채널 — 동기/비동기]
   ↓
-G 명세 리뷰 게이트 — Evaluator, 구현 전 (phase: spec-review) [루프 액션 에이전트→Evaluator 내부 디스패치] ★검증 2원화 ①
+G 명세 리뷰 게이트 — Evaluator, 구현 전 (phase: spec-review) [opal-agent 채널 — 동기/비동기] ★검증 2원화 ①
   ↓ (verdict: fail) → T1 재작업 (반복상한 — loop-control.md §2)
   ↓ (verdict: pass)
-T3 구현 [루프 액션 에이전트→생성자 재개 지시]
+T3 구현 [opal-agent 채널 — 동기/비동기]
   ↓
-T4a 테스트 — test-agent, 구현 후 [루프 액션 에이전트→test-agent 내부 디스패치] ★검증 2원화 ②
+T4a 테스트 — test-agent, 구현 후 [opal-agent 채널 — 동기/비동기] ★검증 2원화 ②
   ↓ (fail) → T3 재작업 (하네스 §1 재시도 한도)
   ↓ (pass)
-T4b 규칙검사 — conv/sec-checker, 변경 파일 대상 [저위험 인라인 경량화 / 고위험 디스패치]
+T4b 규칙검사 — conv/sec-checker, 변경 파일 대상 [저위험 인라인 경량화 / 고위험 디스패치 — opal-agent 채널 — 동기/비동기]
   ↓
 T5 마무리 — DONE.md
 ```
@@ -354,9 +354,10 @@ PM은 **태스크당 `opal-loop-action-agent`를 1회 디스패치**하며, 루�
 
 | # | 시점 | 대상 | 역할 |
 |---|------|------|------|
-| ① | T1+T2 | 생성자 (도메인 resolve) | 명세·설계 + RED-first 시나리오 작성 |
+| ①a | T1 | 생성자 (도메인 resolve) | 명세·설계 |
+| ①b | T2 | test-agent(mode:red) | RED-first 시나리오 작성 |
 | ② | G | opal-evaluator-agent | 명세 리뷰 (구현 전) |
-| ③ | T3 (verdict pass 후 재개) | 생성자 (①과 동일 에이전트) | 구현 |
+| ③ | T3 (verdict pass 후 재개) | 생성자 (①a와 동일 에이전트) | 구현 |
 
 루프 액션 에이전트 내부에서 T4a(test-agent, 구현 후)는 검증 2원화의 두 번째 축으로 별도 디스패치되며, T4b(conv/sec-checker)는 **저위험 슬라이스에서 인라인 경량화**(디스패치 생략, 결과만 요약)하여 내부 디스패치 수를 절약한다. **drift 재콜백**(구현/테스트 중 CONTRACT.md와의 불일치 발견 시에만) 외에는 Evaluator를 재호출하지 않는다(`references/contract.md` §4).
 
@@ -371,7 +372,7 @@ PM은 **태스크당 `opal-loop-action-agent`를 1회 디스패치**하며, 루�
 
 **디스패치 idiom (PM → 루프 액션 에이전트)**: PM은 프롬프트 첫 줄에 `[WORKER]` 마커(부트스트랩 생략)를 넣고, `opal-loop-action-agent`의 입력 명세 10필드(`task_id, task_goal, task_scope, task_area, acceptance, task_folder, verify_commands, contract_path, project_root, project_context` — `opal/agents/opal-loop-action-agent/AGENT.md` §입력 명세 참조)를 전달한다.
 
-**디스패치 idiom (루프 액션 에이전트 → 생성자/Evaluator/test-agent)**: opsdd EXECUTE-LOOP의 서술형 디스패치를 준용한다 — 루프 액션 에이전트가 area로 생성자 도메인을 resolve한 후 내부 디스패치하며, T1~T5+G 전체가 루프 액션 에이전트 위임 범위다(G 게이트가 루프 액션 에이전트 내부에서 T2와 T3 사이를 끊는다).
+**디스패치 idiom (루프 액션 에이전트 → 생성자/Evaluator/test-agent)**: opal-agent 채널 호출(동기/비동기 이원화·`[WORKER]` 마커 — `opal/agents/opal-loop-action-agent/AGENT.md` §실행 프로세스 참조)을 따른다 — 루프 액션 에이전트가 area로 생성자 도메인을 resolve한 후 내부 디스패치하며, T1~T5+G 전체가 루프 액션 에이전트 위임 범위다(G 게이트가 루프 액션 에이전트 내부에서 T2와 T3 사이를 끊는다).
 
 **blocked 반환 시**: 루프 액션 에이전트가 `status: blocked`를 반환하면 PM은 즉시 자율 재시도를 중단하고 `blockers[]` 사유를 확인하여 사용자에게 에스컬레이션한다(`references/loop-control.md` §7·§9). 루프 액션 에이전트는 소유자에게 직접 에스컬레이션하지 않는다.
 
@@ -579,3 +580,4 @@ Loop 1 재회전 {N}회 · Loop 2 태스크 {M}개 완주.
 | v1.0 | 2026-07-10 16:44 | 초기 작성 (056) |
 | v1.1 | 2026-07-10 | T2 테스트시나리오 절에 `scenario-red` 단계 반영 — RED 실관찰 → `scenario-red`(증거 tool-gated 갱신) → `scenario-lock` 순서로 변경, red_confirmed 시드 무력화 안내 추가 (056/ADD-1) |
 | v1.2 | 2026-07-17 12:12 | 태스크 내부 파이프라인(T1~T5+G)을 `opal-loop-action-agent`(태스크당 1회 디스패치 루프 액션 에이전트)에 위임하는 구조로 개편 — ASCII 마커·T1/G/T3/T4a/T4b 서술·검증 2원화 주체를 루프 액션 에이전트로 명시, §디스패치를 "하이브리드 C(~3회)"에서 "루프 액션 에이전트 1회 디스패치(내부 4축)"로 재구성, 루프 액션 에이전트 디스패치 idiom(입력 10필드)·blocked 에스컬레이션 경로 추가, 스킬 탐색 경로·자율 게이트 흐름 문구 정합. PM의 L0/L∞/done-check/사람 게이트 소유는 불변 (065) |
+| v1.3 | 2026-07-17 14:24 | 내부 디스패치 서술을 opal-agent 채널로 정합(T1~T4b 각 단계에 "[opal-agent 채널 — 동기/비동기]" 표기) + §디스패치 표 ①T2를 ①a(생성자)/①b(test-agent mode:red)로 분리하여 T2=test-agent(mode:red) 귀속 정정(H-10) (066) |

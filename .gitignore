@@ -23,3 +23,6 @@ env/
 
 # MCP / tooling temp
 .playwright-mcp/
+
+# oppl 루프 액션 에이전트 실행 캡처 (전송 산출물 — AGENT.md §결과 파일 규약)
+.oppl-run/

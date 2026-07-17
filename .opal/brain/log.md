@@ -207,3 +207,7 @@
 - 신규: [[pages/entity/opal-loop-action-agent.md]], [[pages/concept/oppl-executor-delegation-architecture.md]]
 - 출처: task:065
 
+## [2026-07-17] ingest | CLOSE ingest — 태스크 066 루프 액션 에이전트 opal-agent 채널 전환
+- 신규: [[oppl-internal-channel-opal-agent]]
+- 출처: task:066
+
