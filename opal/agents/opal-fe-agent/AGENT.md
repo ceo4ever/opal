@@ -110,7 +110,7 @@ BE 계층 문서(`docs/BACKEND.md`, `docs/ARCHITECTURE.md` 등)는 로드 대상
 | op-dev-wireframe | standard |
 | op-dev-execute (FE) | standard |
 | op-dev-plan (FE) | advanced |
-| op-dev-analysis | light |
+| op-dev-analysis | standard |
 | op-dev-todo | light |
 | op-dev-test-scenario | light |
 
@@ -121,3 +121,4 @@ BE 계층 문서(`docs/BACKEND.md`, `docs/ARCHITECTURE.md` 등)는 로드 대상
 | v1.0 | — | 초기 작성 |
 | v1.1 | 2026-05-12 11:16 | EXECUTE 진입 시 coding-principles.md §4 Read 의무 추가 (Step 5.5) — op-dev-execute / op-dev-wireframe 계열 (001) |
 | v1.2 | 2026-06-21 16:05 | FE 액션 3계층 구현 역할 추가 — T0 컴포넌트 설계/T1 공통 컴포넌트(병렬)/T2 화면 모듈(병렬) + 컴포넌트 API 계약(액션 간 인터페이스, 결함 시 WBS 재조정) (031) |
+| v1.3 | 2026-07-17 13:11 | 권장 model 표 op-dev-analysis light → standard — opal-pilot-dev v4.5 ANALYSIS 상향과 정합 (소유자 지시, L2) |
