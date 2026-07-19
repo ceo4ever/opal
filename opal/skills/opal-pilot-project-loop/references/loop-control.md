@@ -101,7 +101,7 @@ run(설계 루프 1회 진입 ~ 실행 루프 종료까지) 단위로 비용 예
 
 | 구분 | 정의 | 예 | 처리 |
 |------|------|-----|------|
-| 복구가능 (recoverable) | 재작업으로 해결 가능, 계약/설계를 부정하지 않음 | lint/format, build/type, unit/integration test FAIL, RED 미확인(`red_not_confirmed`) | 하네스 §1 재시도 한도 내 자동 fix 루프 |
+| 복구가능 (recoverable) | 재작업으로 해결 가능, 계약/설계를 부정하지 않음 | lint/format, build/type, unit/integration test FAIL, RED 미확인(`red_not_confirmed`), `surface_uncovered`·`integration_task_missing`·`fidelity_unmet`·`surface_unverified`(069 — 완결성·충실도 갭. 재작업(add-task/더 높은 충실도 재검증)으로 해결, 계약/설계 부정 아님. blocked 전환은 §4 무진전·§2 상한 경로로만) | 하네스 §1 재시도 한도 내 자동 fix 루프 |
 | 하드블로커 (hard blocker) | 재작업 불가, 계약/설계 자체가 부정되거나 헌법 위반 | Evaluator readonly 계약 위반(H-4), 검증 2원화 순서 역전(H-9), backlog.json/test-scenario.json 손상, 사람 게이트 대상 행동을 승인 없이 진행 시도 | 즉시 중단 + 사용자 에스컬레이션 (0회 재시도) |
 
 - 도구 결과 계약 위반(H-5 — 단일라인 JSON·exit code 불일치)은 도구 자체 버그로 간주해 **하드블로커**로 취급한다 — 파싱 실패를 추측으로 넘기지 않는다.
@@ -152,3 +152,4 @@ run(설계 루프 1회 진입 ~ 실행 루프 종료까지) 단위로 비용 예
 |------|------|---------|
 | v1.0 | 2026-07-10 16:33 | 초기 작성 — 종료조건 8요소(반복상한·예산·무진전·목표체크·경로분리·에러처리·컨텍스트관리·사람게이트) 정의, harness §1 참조·비복제 원칙 반영 (056) |
 | v1.1 | 2026-07-17 KST | §3 예산 관찰 단위를 "디스패치 하이브리드 C(~2~3회)"에서 "태스크당 루프 액션 에이전트(opal-loop-action-agent) 1회 디스패치, 내부 재디스패치는 루프 액션 에이전트 자체 예산"으로 정합 — §2 상한 참조 원칙(수치 비복제)은 불변 (065) |
+| v1.2 | 2026-07-18 22:49 | §7 복구가능(recoverable) 분류에 신규 게이트 에러 4종(`surface_uncovered`·`integration_task_missing`·`fidelity_unmet`·`surface_unverified`) 추가 — 완결성·충실도 갭은 재작업으로 해결, 계약/설계 부정 아님. blocked 전환은 §4 무진전·§2 상한 경로로만 (069) |

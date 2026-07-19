@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-07-18 00:21
+> 갱신: 2026-07-19 12:44
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -117,10 +117,13 @@
 - [[opi-v42-architecture-decisions]] — opi v4.2 아키텍처 결정 — 심층 분석·멀티서비스·워커 디스패치 #opi #opal-project-init #architecture-decision #multi-service #worker-dispatch
 - [[oppd-prd-trd-task-folder-promote]] — oppd PRD/TRD 태스크폴더 작성 → docs 승격 프로세스 #oppd #prd #trd #wbs #promote #docs-ssot
 - [[oppl-3-ssot-tool-gated-separation]] — 3-SSOT tool-gated 축 분리 — backlog/state/test-scenario #ssot #tool-gated #oppl #architecture
+- [[oppl-coverage-conformance-axis-split]] — 커버리지·conformance 판정의 축별 분리 — backlog-tool/test-tool 외부 집계 #oppl #coverage #conformance #ssot #tool-gated
+- [[oppl-evidence-fidelity-principle]] — 증거 충실도(Evidence Fidelity) 원칙 — mock/real-http/real-usage 사다리 #oppl #verification #evidence-fidelity #enforce-dont-advise
 - [[oppl-executor-delegation-architecture]] — oppl 루프 액션 에이전트 위임 구조 — 태스크 단위 컨텍스트 격리 #oppl #executor #delegation #context-isolation #ssot-boundary #blocked-contract
 - [[oppl-internal-channel-opal-agent]] — oppl 루프 액션 에이전트 내부 채널 opal-agent 전환 — 축×호출모드 이원화 #oppl #executor #opal-agent #headless-channel #session-continuity #observability-boundary
 - [[oppl-run-record-journal-dual-observability]] — 결과 파일 규약 v2 + 운행 일지 — 이원 관측 구조 #oppl #observability-boundary #executor #journal
 - [[oppl-scenario-red-confirmed-gap]] — 드라이런 발견 갭 — test-scenario red_confirmed tool-gated 갱신 경로 부재 #lesson #test-tool #oppl #gap #enforce-dont-advise
+- [[oppl-surface-inventory-contract]] — 계약 표면 인벤토리 — surfaces.json 단일 IR #oppl #contract #surfaces-json #schema
 - [[oppl-two-loop-orchestrator]] — opal-pilot-project-loop(oppl) — 2-루프 수렴 오케스트레이터 #skill #pilot #orchestrator #loop #oppl
 - [[opsdd-pipeline-ssot]] — opsdd 파이프라인 정본 — SKILL.md SSOT (7단계) #opsdd #pipeline #ssot #workflow
 - [[opwt-v4-output-system]] — opwt v4 산출물 체계 재설계 (PRD 8섹션 + interview 통합) #opwt #planning #output #framework #task

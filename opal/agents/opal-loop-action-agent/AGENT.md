@@ -32,6 +32,8 @@ icon: "🔁"
 | contract_path | O | `CONTRACT.md` 경로 — G 게이트·기계검증절 기준 |
 | project_root | O | 프로젝트 루트 |
 | project_context | O | 참조 문서 목록 (docs/PROJECT.md, ARCHITECTURE.md, CONVENTIONS.md, CONTRACT.md) |
+| 요구 충실도 | O | task_area 매핑 — `be`\|`공통` 표면 태스크=`real-http` 이상, `fe`\|인터랙션\|여정 태스크=`real-usage` (근거: `references/verification.md` §1.5 사다리) — T1·T2 시나리오 작성에 `required_fidelity` 문턱으로 주입(069/R-G) |
+| surfaces_path | X | `tasks/{NNN}-oppl-*/surfaces.json` 경로(존재 시) — T1·T2 시나리오 작성에 `surface_ref` 채움 지시로 주입, T4a conformance 게이트 입력(069/F-006) |
 
 ---
 
@@ -116,18 +118,21 @@ opal-agent 서브에이전트는 fresh 프로세스라 세션을 공유하지 �
 | contract_path(CONTRACT.md) | — | G·T3·T4b |
 | verify_commands | — | T3·T4a |
 | 전문 에이전트 매핑(생성자 area) | — | T1 |
+| 요구 충실도(`required_fidelity` 문턱) | — | T1·T2(RED) — 시나리오 작성 시 `required_fidelity` 필드를 채우도록 지시(069/R-G, H-11 사각지대 봉쇄) |
+| surfaces_path | — | T1·T2(RED) — 존재 시 시나리오 작성 시 `surface_ref` 필드를 채우도록 지시(069/F-006) |
 
 ### 파이프라인 흐름
 
 ```
 1. T1 명세·설계 (생성자, 비동기, cold prime)
    → 루프 액션 에이전트가 task_area로 생성자 resolve → opal-agent 채널로 비동기 디스패치 (op-dev-plan)
+   → 디스패치 프롬프트에 요구 충실도(`required_fidelity` 문턱)·surfaces_path를 주입 — 시나리오 설계 시 `required_fidelity`·`surface_ref` 필드를 채우도록 지시(069/R-G, H-11)
    → PLAN.md(태스크 미시설계 + 테스트 시나리오) 생성
    → blocked 반환 시 status: blocked
 
 2. T2 테스트시나리오 (RED-first, test-agent축, 비동기) — 루프 액션 에이전트가 도구 호출 주체
    → 루프 액션 에이전트: test-tool scenario-init (PLAN.md 시나리오 기반; red_confirmed=false 시드)
-   → 루프 액션 에이전트 → opal-test-agent(mode: red) opal-agent 채널 비동기 디스패치 → 실패 테스트 작성·실행(RED 실관찰)
+   → 루프 액션 에이전트 → opal-test-agent(mode: red) opal-agent 채널 비동기 디스패치 → 디스패치 프롬프트에 요구 충실도·surfaces_path를 주입 — 실패 테스트 작성·실행(RED 실관찰) 시 `required_fidelity`·`surface_ref` 필드를 채우도록 지시(069/R-G, H-11)
    → 루프 액션 에이전트: scenario-red --evidence → scenario-lock (red_not_confirmed면 G 진입 거부, H-7)
 
 3. G 명세 리뷰 게이트 (Evaluator, 동기, 구현 전) ★검증 2원화 ①
@@ -145,6 +150,8 @@ opal-agent 서브에이전트는 fresh 프로세스라 세션을 공유하지 �
    → 루프 액션 에이전트 → opal-test-agent opal-agent 채널 동기 디스패치 → test-scenario.json 시나리오 실행
    → 루프 액션 에이전트: scenario-mark(result) → scenario-status
    → fail → T3 재작업(재시도 상한 절 내) / 회귀 → 즉시 blocked
+   → 테스트 통과 후 충실도·표면 게이트 호출(069/F-005·F-006, test-tool scenario-* 계열 — 3-SSOT 경계 불변): `test-tool scenario-fidelity-check` 실행 → `fidelity_unmet`(exit 13) 반환 시 T2/T3 재작업 트리거(재시도 상한 절 내). surfaces_path 존재 시 `test-tool scenario-conformance --surfaces <surfaces_path>` 추가 실행 → `surface_unverified`(exit 14) 반환 시 동일 재작업 트리거. surfaces.json 부재 시 `surfaces_file_not_found`로 스킵(applicable:false, 기존 프로젝트 무영향, M-5).
+   → 두 게이트 모두 loop-control.md §7 복구가능(recoverable) 분류를 따른다 — 재작업으로 해소되면 다음 단계 진행, 재시도 상한 초과 시 `blocked`(§blocked 반환 계약 트리거 5)
 
 6. T4b 규칙검사 (checker축, 동기)
    → 루프 액션 에이전트가 규모 판정: 저위험 = 인라인 요약 / 고위험 = conv·sec-checker opal-agent 채널 동기 디스패치
@@ -302,7 +309,7 @@ allowlist는 **프로젝트 스코프 한정**이다 — `--cwd <project_root>`�
 2. 에스컬레이션 대상 상황
 3. 계약 갱신이 필요한 CONTRACT drift (#2 내부조정~#4 외부노출)
 4. 무진전(no-progress) 감지
-5. 반복 상한 초과 (재시도 상한 절)
+5. 반복 상한 초과 (재시도 상한 절) — T4a 충실도·표면 게이트(`fidelity_unmet`/`surface_unverified`) 재작업이 이 상한을 초과한 경우를 포함한다(069/F-005·F-006, loop-control.md §7 복구가능 분류)
 6. 하드블로커 (순서 역전·SSOT 손상·readonly 위반)
 7. `decision_required` (용어 불일치 — citation-rules §7.5)
 
@@ -314,6 +321,7 @@ allowlist는 **프로젝트 스코프 한정**이다 — `--cwd <project_root>`�
 
 - 루프 액션 에이전트는 `test-tool scenario-*`(init/red/lock/mark/status)만 호출한다.
 - `backlog-tool`·`state-tool`은 호출하지 않는다 — backlog(L∞)·STATE는 PM 단독 갱신 오너십이다.
+- `scenario-fidelity-check`·`scenario-conformance`(069/F-005·F-006)도 `test-tool scenario-*` 계열이므로 본 규칙은 변경 없이 그대로 적용된다.
 
 ---
 
@@ -368,3 +376,4 @@ allowlist는 **프로젝트 스코프 한정**이다 — `--cwd <project_root>`�
 | v1.0 | 2026-07-17 12:12 | 초기 작성 — oppl Loop 2 태스크당 1회 디스패치 루프 액션 에이전트 신규 도입. T1~T5+G 내부 파이프라인, 검증 2원화 순서 강행 가드(H-1), 재시도 상한 harness §1 포인터(수치 미복제), blocked 반환 계약(7종 트리거), 결과 계약 6필드, 3-SSOT 도구 호출 경계(test-tool scenario-*만), STATE·CONTRACT 직접 수정 금지 가드 (065) |
 | v1.1 | 2026-07-17 14:24 | 내부 4축(생성자/Evaluator/test-agent/conv·sec-checker) 디스패치를 opal-agent 채널로 전환 — 단계×축×호출모드 매트릭스, 동기/비동기 명령 형태, 축별 timeout 배분 신설. §결과 파일 규약(3-분리·완료 마커), §생성자 resume 절차(cold prime), §allowedTools 표준(skip-permissions 금지), §플랫폼 가용성(claude 1차) 신설 (066) |
 | v1.2 | 2026-07-17 19:50 | 비동기 축(T1/T2/T3) 명령 형태를 `--json`→`--stream`으로 전환(동기 축 `--json`/`.result.json`은 불변) — 실행 중 관측(live window) 확보. §결과 파일 규약 v2 개정(events.jsonl 편입·prompt.txt 규약화·완료 마커=exitcode 불변·v1→v2 변경점 표 신설). §운행 일지(journal) 신설 — `.oppl-run/journal.md`, `시각\|단계\|이벤트\|근거` 4컬럼, append-only, 재시도 수치는 harness §1 포인터로 비복제 (067) |
+| v1.3 | 2026-07-18 22:47 | 증거 충실도 사각지대(R-G/H-11) 봉쇄 — 입력 명세·컨텍스트 재주입 표에 `요구 충실도`(area 매핑: be·공통=real-http↑, fe·인터랙션·여정=real-usage)·`surfaces_path` 추가하여 T1 생성자·T2 test-agent(mode:red) 디스패치 프롬프트에 주입(시나리오의 `required_fidelity`·`surface_ref` 필드 작성 지시). T4a 절에 테스트 통과 후 `test-tool scenario-fidelity-check`(+surfaces.json 존재 시 `scenario-conformance --surfaces`) 게이트 호출 신설 — `fidelity_unmet`(exit 13)/`surface_unverified`(exit 14)는 재시도 상한 내 재작업 트리거, 상한 초과 시 blocked(트리거 5, loop-control.md §7 복구가능 분류). 3-SSOT 호출 규칙에 신규 서브명령이 test-tool scenario-* 계열임을 1줄 명시(규칙 자체 불변) (069) |

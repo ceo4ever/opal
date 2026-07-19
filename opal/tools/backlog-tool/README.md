@@ -30,7 +30,7 @@
 | `1` | 검증 위반 / not_found / 상태 전이 위반 |
 | `2` | 내부 오류 (date.js subprocess 실패) |
 
-## 7개 서브 명령
+## 8개 서브 명령
 
 ### 1. `init` — backlog.json + BACKLOG.md 생성
 
@@ -63,10 +63,12 @@
   --area <fe|be|db|공통|통합> \
   --priority <P0|P1|P2> \
   [--depends <T01,T02>] \
-  [--parallel-group <group-id>]
+  [--parallel-group <group-id>] \
+  [--covers '["surface-id-1", "surface-id-2"]']
 ```
 
 - `--acceptance`는 JSON 배열 문자열 — 파싱 실패 시 `acceptance_invalid_json`
+- `--covers`는 JSON 배열 문자열(이 태스크가 커버하는 표면 id 목록, `surfaces.json` surfaces[].id 참조) — 파싱 실패 시 `covers_invalid_json`. **미지정 시 `covers: []`로 기록**(하위 호환, 069 H-5)
 - 중복 `--id` → `task_id_exists`
 - `--depends`에 존재하지 않는 task id → `dependency_not_found`
 - 신규 태스크는 `status: "pending"`, `done_at: null`로 생성
@@ -130,7 +132,8 @@
   [--area <fe|be|db|공통|통합>] \
   [--priority <P0|P1|P2>] \
   [--depends <T01,T02>] \
-  [--parallel-group <group-id>]
+  [--parallel-group <group-id>] \
+  [--covers '["surface-id-1", "surface-id-2"]']
 ```
 
 - **배경**: Evaluator(명세 심판)가 구현 전 태스크 속성(수용기준 등)에 지적을 남겼을 때, 기존에는 `backlog.json`을 직접 손편집하거나 `add-task`로 재등록하는 수밖에 없었다. `update-task`는 tool-gated로 지정 필드만 안전하게 수정하는 경로를 제공한다.
@@ -141,6 +144,7 @@
   - 대상 태스크가 이미 `done` 상태면 수정 거부 — `task_already_done` (재작업이 필요하면 `add-task`로 새 슬라이스 생성)
   - `--id`에 해당하는 태스크가 없으면 `task_not_found`
   - `--acceptance` JSON 파싱 실패 시 `acceptance_invalid_json`
+  - `--covers` JSON 파싱 실패 시 `covers_invalid_json`(069)
   - `--depends`에 존재하지 않는 태스크 id → `dependency_not_found` (add-task와 동일 에러코드 재사용)
   - `mark`와 동일하게 `fcntl` 배타 락으로 read-modify-write 직렬화(H-3)
 
@@ -182,9 +186,35 @@
 
 ---
 
+### 8. `coverage-check` — 표면 커버리지 게이트 (읽기 전용, 069 F-004)
+
+```bash
+~/.opal/tools/backlog-tool/run.sh coverage-check <task-path> \
+  --surfaces <surfaces.json 경로>
+```
+
+- **읽기 전용**(fcntl 락 없음) — backlog.json(자기 SSOT)과 `--surfaces` 인자로 지정된 surfaces.json(CONTRACT 도메인 산출물, 읽기 전용)만 읽는다. `test-scenario.json`은 접촉하지 않는다(축 분리, PLAN 069 M-2).
+- 판정 순서:
+  1. surfaces.json 부재 → `surfaces_file_not_found` + exit 1
+  2. `커버 집합(∪ tasks[].covers)` vs `표면 집합(surfaces[].id)` 비교 → 미커버 표면 존재 시 `surface_uncovered` + `uncovered:[...]` + exit 1
+  3. `parallel_group`이 하나라도 존재하는데 `area:"통합"` 태스크가 없으면 `integration_task_missing` + `groups:[...]` + exit 1
+  4. 전 표면 커버 + (통합 필요 시) 통합 태스크 존재 → `ok:true, all_covered:true, surface_count:N` + exit 0
+
+**성공 응답**:
+```json
+{"ok": true, "command": "coverage-check", "all_covered": true, "surface_count": 3}
+```
+
+**거부 응답 예시**:
+```json
+{"ok": false, "command": "coverage-check", "error": "surface_uncovered", "message": "미커버 표면 존재: ['agents', 'budgets']", "uncovered": ["agents", "budgets"]}
+```
+
+---
+
 ## BACKLOG.md — 손편집 금지 미러
 
-`BACKLOG.md`는 `backlog.json`을 도구가 렌더한 미러다. `<!-- backlog:start -->` ~ `<!-- backlog:end -->` 마커 구간만 `add-task`/`mark`/`update-task` 실행 시 재렌더되며, 마커 구간 밖의 자유 텍스트(메모, 설명 등)는 보존된다. 마커 구간 내부를 손으로 편집하면 다음 CUD 명령 실행 시 덮어써진다.
+`BACKLOG.md`는 `backlog.json`을 도구가 렌더한 미러다. `<!-- backlog:start -->` ~ `<!-- backlog:end -->` 마커 구간만 `add-task`/`mark`/`update-task` 실행 시 재렌더되며, 마커 구간 밖의 자유 텍스트(메모, 설명 등)는 보존된다. 마커 구간 내부를 손으로 편집하면 다음 CUD 명령 실행 시 덮어써진다. 표에는 "커버 표면" 컬럼(`covers[]`을 `, `로 join, 빈 배열이면 `-`)이 포함된다(069).
 
 ## 에러 코드 표 (ERROR_CODES SSOT)
 
@@ -201,6 +231,10 @@
 | `task_path_not_found` | 전체 | `<task-path>` 디렉토리가 존재하지 않음 |
 | `no_fields_to_update` | update-task | 갱신할 필드를 1개도 지정하지 않음(056 ADD-3 신규) |
 | `task_already_done` | update-task | 대상 태스크가 이미 `done` — 수정 거부(056 ADD-3 신규, 재작업은 add-task로) |
+| `covers_invalid_json` | add-task/update-task | `--covers`가 유효한 JSON 배열이 아님(069 신규) |
+| `surfaces_file_not_found` | coverage-check | `--surfaces`로 지정된 surfaces.json 파일이 존재하지 않음(069 신규) |
+| `surface_uncovered` | coverage-check | 미커버 표면 존재 — `uncovered[]`에 목록 포함(069 신규) |
+| `integration_task_missing` | coverage-check | `parallel_group` 존재하나 `area:"통합"` 태스크 부재 — `groups[]`에 목록 포함(069 신규) |
 
 ## 의존성
 
@@ -222,3 +256,4 @@
 |------|-----------|--------|---------|
 | v1.0 | 2026-07-10 16:34 | (056) | 최초 작성 — 6서브명령(init/add-task/select-next/mark/done-check/show), state-tool 패턴 복제 |
 | v1.1 | 2026-07-10 18:34 | (056 ADD-3) | `update-task` 서브명령 신설(7서브명령 체제) — Evaluator 지적 반영 시 손편집 없이 tool-gated로 태스크 속성 수정. 신규 에러코드 `no_fields_to_update`/`task_already_done` 추가. status는 인자 자체를 두지 않아 mark 전용 상태 전이 원칙 유지. 에러 코드 표 신설 |
+| v1.2 | 2026-07-18 22:40 | (069) | tasks[]에 `covers`(표면 커버 배열, additive optional) 필드 추가 — `add-task`/`update-task` `--covers` 옵션, 미지정 시 `[]` 기록(하위 호환). 신규 읽기 전용 서브명령 `coverage-check`(8서브명령 체제) — backlog.json+surfaces.json(CONTRACT 도메인, 읽기 전용)만 읽어 미커버 표면(`surface_uncovered`)·통합 태스크 부재(`integration_task_missing`)를 거부한다(test-scenario.json 미접촉, 축 분리 유지). 신규 에러코드 `covers_invalid_json`/`surfaces_file_not_found`/`surface_uncovered`/`integration_task_missing` 추가. `render_backlog_table`에 "커버 표면" 컬럼 추가. schema_version "1.0"→"1.1"(신규 init) |

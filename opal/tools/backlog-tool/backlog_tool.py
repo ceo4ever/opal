@@ -3,10 +3,11 @@
   "module": "backlog_tool",
   "layer": "util",
   "domain": "opal-pipeline",
-  "description": "oppl 2-루프 오케스트레이터의 백로그(backlog.json) SSOT 관리 CLI — 7개 서브 명령(init/add-task/select-next/mark/done-check/show/update-task). state-tool 패턴(ok/err 헬퍼, date.js KST 시점, 마크다운 마커 렌더/치환, ERROR_CODES SSOT)을 복제한다. backlog.json은 state.json/test-scenario.json과 축 분리되어 상호 참조하지 않는다 (PLAN 056 §3.1.2 [MUST] D-2). BACKLOG.md는 도구가 렌더한 미러이며 손편집 금지 구조(마커 <!-- backlog:start/end -->)로 구현한다. mark/add-task/update-task는 fcntl 배타 락으로 read-modify-write를 직렬화해 동시 쓰기 무손상(H-3)을 보장한다. update-task는 056 ADD-3 — Evaluator 지적 반영 시 손편집 없이 tool-gated로 태스크 속성을 수정하는 경로(status는 갱신 불가 — mark 전용, done 태스크는 수정 거부).",
+  "description": "oppl 2-루프 오케스트레이터의 백로그(backlog.json) SSOT 관리 CLI — 8개 서브 명령(init/add-task/select-next/mark/done-check/show/update-task/coverage-check). state-tool 패턴(ok/err 헬퍼, date.js KST 시점, 마크다운 마커 렌더/치환, ERROR_CODES SSOT)을 복제한다. backlog.json은 state.json/test-scenario.json과 축 분리되어 상호 참조하지 않는다 (PLAN 056 §3.1.2 [MUST] D-2). BACKLOG.md는 도구가 렌더한 미러이며 손편집 금지 구조(마커 <!-- backlog:start/end -->)로 구현한다. mark/add-task/update-task는 fcntl 배타 락으로 read-modify-write를 직렬화해 동시 쓰기 무손상(H-3)을 보장한다. update-task는 056 ADD-3 — Evaluator 지적 반영 시 손편집 없이 tool-gated로 태스크 속성을 수정하는 경로(status는 갱신 불가 — mark 전용, done 태스크는 수정 거부). 069: tasks[]에 `covers`(표면 id 배열, additive optional) 필드 추가, 신규 읽기 전용 서브명령 `coverage-check`가 backlog.json(자기 SSOT)+surfaces.json(CONTRACT 도메인, 읽기 전용)만 읽어 미커버 표면·통합 태스크 부재를 거부한다 — test-scenario.json 미접촉으로 축 분리 유지.",
   "exports": [
     "cmd_init", "cmd_add_task", "cmd_select_next",
-    "cmd_mark", "cmd_done_check", "cmd_show", "cmd_update_task"
+    "cmd_mark", "cmd_done_check", "cmd_show", "cmd_update_task",
+    "cmd_coverage_check"
   ]
 }
 """
@@ -49,8 +50,12 @@ ERROR_CODES = {
     "acceptance_invalid_json": "--acceptance 인자가 유효한 JSON 배열이 아님",
     "date_tool_failed":      "node ~/.opal/tools/date/date.js datetime 호출 실패 — 파일 변경 없음(원자성)",
     "task_path_not_found":   "<task-path> 디렉토리가 존재하지 않음: {path}",
-    "no_fields_to_update":   "update-task: 갱신할 필드가 최소 1개 필요합니다 (--title/--slice/--acceptance/--area/--priority/--depends/--parallel-group 중 하나 이상)",
+    "no_fields_to_update":   "update-task: 갱신할 필드가 최소 1개 필요합니다 (--title/--slice/--acceptance/--area/--priority/--depends/--parallel-group/--covers 중 하나 이상)",
     "task_already_done":    "--id {task_id}는 이미 done 상태 — 수정 거부(재작업은 add-task로 새 슬라이스 생성)",
+    "covers_invalid_json":  "--covers 인자가 유효한 JSON 배열이 아님",
+    "surfaces_file_not_found": "surfaces.json 부재: {path}",
+    "surface_uncovered":    "미커버 표면 존재: {uncovered}",
+    "integration_task_missing": "parallel-group 존재하나 통합 태스크(area=통합) 부재: {groups}",
 }
 
 BACKLOG_MARKER_START = "<!-- backlog:start -->"
@@ -204,13 +209,14 @@ def render_backlog_table(tasks):
         "",
         "> 상태값: pending / in_progress / done / blocked",
         "",
-        "| ID | 제목 | 영역 | 우선순위 | 상태 | 의존 |",
-        "|----|------|------|--------|------|------|",
+        "| ID | 제목 | 영역 | 우선순위 | 상태 | 의존 | 커버 표면 |",
+        "|----|------|------|--------|------|------|----------|",
     ]
     for t in tasks:
         depends = ", ".join(t.get("depends") or []) or "-"
+        covers = ", ".join(t.get("covers") or []) or "-"
         lines.append(
-            f"| {t['id']} | {t['title']} | {t['area']} | {t['priority']} | {t['status']} | {depends} |"
+            f"| {t['id']} | {t['title']} | {t['area']} | {t['priority']} | {t['status']} | {depends} | {covers} |"
         )
     return "\n".join(lines)
 
@@ -277,7 +283,7 @@ def cmd_init(args):
     now_str = get_kst_datetime(command)
 
     backlog = {
-        "schema_version": "1.0",
+        "schema_version": "1.1",
         "project_title": args.project_title,
         "mode": args.mode,
         "created_at": now_str,
@@ -319,6 +325,15 @@ def cmd_add_task(args):
 
     depends = [d.strip() for d in args.depends.split(",") if d.strip()] if args.depends else []
 
+    covers = []
+    if args.covers is not None:
+        try:
+            covers = json.loads(args.covers)
+        except json.JSONDecodeError:
+            err(command, "covers_invalid_json")
+        if not isinstance(covers, list):
+            err(command, "covers_invalid_json")
+
     task_path = resolve_task_path(args.task_path, command)
     fh, backlog = load_backlog_json_locked(task_path, command)
 
@@ -344,6 +359,7 @@ def cmd_add_task(args):
         "parallel_group": args.parallel_group,
         "created_at": now_str,
         "done_at": None,
+        "covers": covers,
     }
 
     backlog["tasks"].append(new_task)
@@ -429,7 +445,7 @@ def cmd_mark(args):
 # ── 5b. update-task (056 ADD-3) ───────────────────────────────────────────────
 
 # update-task가 받는 필드 이름 (status는 의도적으로 제외 — 상태 전이는 mark 전용, PLAN 056 ADD-3)
-_UPDATE_TASK_FIELDS = ("title", "slice", "acceptance", "area", "priority", "depends", "parallel_group")
+_UPDATE_TASK_FIELDS = ("title", "slice", "acceptance", "area", "priority", "depends", "parallel_group", "covers")
 
 
 def cmd_update_task(args):
@@ -455,6 +471,15 @@ def cmd_update_task(args):
     depends = None
     if "depends" in provided:
         depends = [d.strip() for d in args.depends.split(",") if d.strip()]
+
+    covers = None
+    if "covers" in provided:
+        try:
+            covers = json.loads(args.covers)
+        except json.JSONDecodeError:
+            err(command, "covers_invalid_json")
+        if not isinstance(covers, list):
+            err(command, "covers_invalid_json")
 
     task_path = resolve_task_path(args.task_path, command)
     fh, backlog = load_backlog_json_locked(task_path, command)
@@ -498,6 +523,8 @@ def cmd_update_task(args):
         task["depends"] = depends
     if "parallel_group" in provided:
         task["parallel_group"] = args.parallel_group
+    if covers is not None:
+        task["covers"] = covers
 
     backlog["updated_at"] = now_str
 
@@ -557,6 +584,42 @@ def cmd_show(args):
     ok(command, format="md", marker_present=True, content=section)
 
 
+# ── 8. coverage-check (069 F-004) ────────────────────────────────────────────
+
+def cmd_coverage_check(args):
+    """읽기 전용 커버리지 게이트 — backlog.json(자기 SSOT)+surfaces.json(CONTRACT
+    도메인, 읽기 전용)만 읽는다. test-scenario.json 미접촉(축 분리, PLAN 069 §3.4.2 M-2).
+    미커버 표면 존재 → surface_uncovered exit 1. parallel_group 존재+area=통합
+    태스크 부재 → integration_task_missing exit 1. 전 표면 커버(+통합 충족) → ok."""
+    command = "coverage-check"
+    task_path = resolve_task_path(args.task_path, command)
+    backlog = load_backlog_json(task_path, command)
+
+    surfaces_path = pathlib.Path(args.surfaces)
+    if not surfaces_path.exists():
+        err(command, "surfaces_file_not_found", path=str(surfaces_path))
+    with open(surfaces_path, encoding="utf-8") as fh:
+        surfaces_data = json.load(fh)
+
+    surface_ids = [s["id"] for s in surfaces_data.get("surfaces", [])]
+
+    covered = set()
+    for t in backlog["tasks"]:
+        covered.update(t.get("covers") or [])
+
+    uncovered = sorted(set(surface_ids) - covered)
+    if uncovered:
+        err(command, "surface_uncovered", uncovered=uncovered)
+
+    groups = {t.get("parallel_group") for t in backlog["tasks"] if t.get("parallel_group")}
+    if groups:
+        has_integration = any(t.get("area") == "통합" for t in backlog["tasks"])
+        if not has_integration:
+            err(command, "integration_task_missing", groups=sorted(groups))
+
+    ok(command, all_covered=True, surface_count=len(surface_ids))
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # argparse 설정
 # ─────────────────────────────────────────────────────────────────────────────
@@ -567,14 +630,15 @@ def build_parser():
         description="oppl 백로그(backlog.json) SSOT 관리 CLI (PLAN 056 §3.1)",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
-서브 명령 (7종):
-  init          backlog.json + BACKLOG.md 생성 (멱등)
-  add-task      tasks[] 추가 + BACKLOG.md 재렌더
-  select-next   depends 충족 + priority 최상위 pending 태스크 반환
-  mark          상태 전이 (pending/in_progress/done/blocked)
-  update-task   지정 필드만 tool-gated 수정 (status 불가 — mark 전용, done 태스크 거부)
-  done-check    전 태스크 done 여부 → 종료조건 판정
-  show          BACKLOG.md 렌더 또는 backlog.json raw 출력
+서브 명령 (8종):
+  init            backlog.json + BACKLOG.md 생성 (멱등)
+  add-task        tasks[] 추가 + BACKLOG.md 재렌더 (--covers로 표면 커버 지정 가능)
+  select-next     depends 충족 + priority 최상위 pending 태스크 반환
+  mark            상태 전이 (pending/in_progress/done/blocked)
+  update-task     지정 필드만 tool-gated 수정 (status 불가 — mark 전용, done 태스크 거부)
+  done-check      전 태스크 done 여부 → 종료조건 판정
+  show            BACKLOG.md 렌더 또는 backlog.json raw 출력
+  coverage-check  표면 커버리지 게이트 (읽기 전용, surfaces.json 대비 미커버/통합부재 거부)
 
 호출 형식: ~/.opal/tools/backlog-tool/run.sh <command> <task-path> [options]
 종료 코드: 0=ok  1=violation/not_found  2=internal_error
@@ -604,6 +668,7 @@ def build_parser():
     p_add.add_argument("--priority", required=True, choices=PRIORITY_ENUM)
     p_add.add_argument("--depends", metavar="<id1,id2,...>")
     p_add.add_argument("--parallel-group", dest="parallel_group")
+    p_add.add_argument("--covers", metavar="<json-array>")
     p_add.set_defaults(func=cmd_add_task)
 
     # ── select-next ──
@@ -630,6 +695,7 @@ def build_parser():
     p_upd.add_argument("--priority", choices=PRIORITY_ENUM)
     p_upd.add_argument("--depends", metavar="<id1,id2,...>")
     p_upd.add_argument("--parallel-group", dest="parallel_group")
+    p_upd.add_argument("--covers", metavar="<json-array>")
     p_upd.set_defaults(func=cmd_update_task)
 
     # ── done-check ──
@@ -642,6 +708,12 @@ def build_parser():
     p_show.add_argument("task_path", metavar="<task-path>")
     p_show.add_argument("--format", dest="format", choices=["md", "json"], default="md")
     p_show.set_defaults(func=cmd_show)
+
+    # ── coverage-check ──
+    p_cov = sub.add_parser("coverage-check", help="표면 커버리지 게이트 (읽기 전용)")
+    p_cov.add_argument("task_path", metavar="<task-path>")
+    p_cov.add_argument("--surfaces", required=True, metavar="<surfaces.json 경로>")
+    p_cov.set_defaults(func=cmd_coverage_check)
 
     return parser
 

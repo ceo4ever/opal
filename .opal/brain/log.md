@@ -219,3 +219,7 @@
 - 신규: [[pages/entity/opal-action-status.md]], [[pages/concept/observability-3layer-protocol-renderer-trigger-separation.md]]
 - 출처: task:068
 
+## [2026-07-19] ingest | CLOSE ingest — 태스크 069 oppl 계약 접합면 검증 강화
+- 신규: [[pages/concept/oppl-evidence-fidelity-principle.md]], [[pages/concept/oppl-surface-inventory-contract.md]], [[pages/concept/oppl-coverage-conformance-axis-split.md]]
+- 출처: task:069
+

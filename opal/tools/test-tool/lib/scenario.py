@@ -3,16 +3,19 @@
   "module": "scenario",
   "layer": "util",
   "domain": "opal-tools",
-  "description": "test-tool scenario-* 4서브명령(scenario-init/scenario-lock/scenario-mark/scenario-status) 핸들러. test-scenario.json SSOT(spec존/result존) 관리 — RED-first 동결 게이트(scenario-lock은 전 시나리오 red_confirmed==true일 때만 통과, self-confirming 방지) + scenario-mark는 locked==true 이후에만 허용. resolver/runner/e2e_adapter와 완전 격리되어 기존 4서브명령(resolve/check/unit/integration) 로직에 간섭하지 않는다(056/F-002).",
+  "description": "test-tool scenario-* 서브명령(scenario-init/scenario-lock/scenario-mark/scenario-status/scenario-red/scenario-fidelity-check/scenario-conformance) 핸들러. test-scenario.json SSOT(spec존/result존) 관리 — RED-first 동결 게이트(scenario-lock은 전 시나리오 red_confirmed==true일 때만 통과, self-confirming 방지) + scenario-mark는 locked==true 이후에만 허용. 069: 증거 충실도 사다리(mock<real-http<real-usage) 필드(required_fidelity/fidelity)와 시나리오별 부분 게이트(scenario-fidelity-check) + 표면(surface) 전수 conformance 판정(scenario-conformance, surfaces.json 분모)을 추가한다. resolver/runner/e2e_adapter와 완전 격리되어 기존 4서브명령(resolve/check/unit/integration) 로직에 간섭하지 않는다(056/F-002). 타 도구의 SSOT는 일절 미접촉(축 분리, 069/H-7).",
   "exports": [
     "SCENARIO_ERROR_CODES",
+    "FIDELITY_ORDER",
     "add_scenario_subparsers",
     "SCENARIO_DISPATCH",
     "cmd_scenario_init",
     "cmd_scenario_lock",
     "cmd_scenario_mark",
     "cmd_scenario_status",
-    "cmd_scenario_red"
+    "cmd_scenario_red",
+    "cmd_scenario_fidelity_check",
+    "cmd_scenario_conformance"
   ],
   "depends": []
 }
@@ -34,6 +37,17 @@ test-tool scenario-* 핸들러 — test-scenario.json SSOT (spec존/result존 �
   거부(scenario_already_locked exit 12, 8~11과 충돌 없는 신규 배정) — enforce-don't-advise
   보강(oppl-scenario-red-confirmed-gap.md). scenario-init의 red_confirmed 시드 입력은
   항상 무시(false 강제)한다 — RED 미관찰 상태를 시드로 우회 선언하는 경로 봉쇄.
+[MUST] (069/F-005) required_fidelity(spec존, `.get(...,"mock")` 방어)/fidelity(result존,
+  scenario-mark --fidelity로 기록, 미지정 mock) 사다리 필드. scenario-fidelity-check는
+  전부-게이트가 아닌 **시나리오별 부분 게이트** — result==pass AND
+  FIDELITY_ORDER[fidelity] >= FIDELITY_ORDER[required_fidelity] 미충족 시나리오만
+  거부(fidelity_unmet exit 13, task:061 전부-게이트 붕괴 재발 방지).
+[MUST] (069/F-006) surface_ref(spec존, nullable)로 시나리오-표면 연결. scenario-conformance는
+  surfaces.json(표면 분모, 읽기 전용)을 소비하되 타 도구의 SSOT는 일절 미접촉(축 분리, H-7).
+  surfaces.json 부재 시 applicable:false exit 0으로 스킵(M-5, 기존 프로젝트 무영향).
+  auth:required 표면은 fidelity>=real-http 강제, 그 외는 시나리오 자신의
+  required_fidelity(기본 mock)를 문턱으로 사용. 미충족 표면 존재 시 surface_unverified
+  exit 14.
 """
 
 import argparse
@@ -56,7 +70,17 @@ SCENARIO_ERROR_CODES: Dict[str, str] = {
     "scenario_not_initialized": "test-scenario.json 부재 — scenario-init 선행 필요",
     "scenario_spec_invalid_json": "--scenarios 인자 JSON 파싱 실패",
     "scenario_already_locked":  "test-scenario.json locked==true — scenario-red 거부(locked 후 spec존 변경 금지, 056/ADD-1)",
+    "fidelity_unmet":           "요구 충실도 미달 시나리오 존재 — scenario-fidelity-check 거부(069/H-3)",
+    "surface_unverified":       "conformance 미검증 표면 존재 — scenario-conformance 거부(069/H-4)",
+    "surfaces_file_not_found":  "surfaces.json 부재(명시적 --surfaces 경로 포함) — applicable:false로 스킵(069/M-5, 정보용 배정)",
 }
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 증거 충실도 사다리 (069/F-005·M-3) — mock < real-http < real-usage.
+# verification.md §1 "증거 충실도" 규범(F-001)의 게이트 구현.
+# ─────────────────────────────────────────────────────────────────────────────
+
+FIDELITY_ORDER: Dict[str, int] = {"mock": 0, "real-http": 1, "real-usage": 2}
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -113,7 +137,16 @@ def _normalize_scenario(raw: Dict[str, Any]) -> Dict[str, Any]:
     scenario-init 시드로 "RED 미관찰 상태를 우회 선언"하는 경로를 봉쇄한다.
     red_confirmed는 오직 scenario-red(RED 증거 tool-gated 갱신)로만 true가 될 수
     있다. 시드 입력에 true가 있었는지 여부는 cmd_scenario_init이 별도로 감지해
-    응답 warning으로 알린다(무시하되 침묵하지 않음)."""
+    응답 warning으로 알린다(무시하되 침묵하지 않음).
+
+    [MUST] (069/M-5) required_fidelity(spec존): `raw.get("required_fidelity","mock")`
+    방어 접근 — 미지원 값(FIDELITY_ORDER 밖)은 "mock"으로 강등한다(관대한 기본값,
+    R-E/H-6 회귀 0). fidelity(result존)는 scenario-mark --fidelity로만 갱신되며
+    미지정 시 "mock" 기본값(M-5)."""
+    required_fidelity = raw.get("required_fidelity", "mock")
+    if required_fidelity not in FIDELITY_ORDER:
+        required_fidelity = "mock"
+
     return {
         "id": raw.get("id"),
         "acceptance_ref": raw.get("acceptance_ref"),
@@ -124,10 +157,16 @@ def _normalize_scenario(raw: Dict[str, Any]) -> Dict[str, Any]:
         "red_confirmed": False,
         "red_evidence": None,
         "red_at": None,
+        # spec존 — 증거 충실도 사다리 (069/F-005)
+        "required_fidelity": required_fidelity,
+        # spec존 — 검증 대상 표면 id (069/F-006, nullable)
+        "surface_ref": raw.get("surface_ref"),
         # result존
         "result": raw.get("result"),
         "evidence": raw.get("evidence"),
         "marked_at": raw.get("marked_at"),
+        # result존 — 실제 관찰된 충실도 (069/F-005, scenario-mark --fidelity로 기록)
+        "fidelity": raw.get("fidelity", "mock"),
     }
 
 
@@ -236,6 +275,9 @@ def cmd_scenario_mark(args: argparse.Namespace) -> None:
     target["result"] = args.result
     target["evidence"] = getattr(args, "evidence", None)
     target["marked_at"] = now
+    # (069/M-5) --fidelity 미지정 시 "mock" 기본값(관대한 기본값, 실제 충실도 미기록 결과는
+    # 목 수준으로 간주).
+    target["fidelity"] = getattr(args, "fidelity", None) or "mock"
     _save_spec(task_path, spec)
 
     _respond({
@@ -307,6 +349,112 @@ def cmd_scenario_status(args: argparse.Namespace) -> None:
     }, 0)
 
 
+def cmd_scenario_fidelity_check(args: argparse.Namespace) -> None:
+    """scenario-fidelity-check — 시나리오별 부분 게이트(069/F-005).
+
+    [MUST] 전부-게이트가 아니다(task:061 재발 방지, M-3) — 각 시나리오를 독립 판정하여
+    `result==pass AND FIDELITY_ORDER[fidelity] >= FIDELITY_ORDER[required_fidelity]`를
+    만족하지 못하는 시나리오만 `unmet`에 모은다."""
+    task_path = pathlib.Path(args.task_path)
+    spec = _load_spec(task_path)
+    if spec is None:
+        _error("scenario_not_initialized", "scenario-fidelity-check", 10)
+        return
+
+    scenarios = spec.get("scenarios", [])
+    unmet: List[str] = []
+    for s in scenarios:
+        required = s.get("required_fidelity", "mock")
+        actual = s.get("fidelity", "mock")
+        result = s.get("result")
+        met = (
+            result == "pass"
+            and FIDELITY_ORDER.get(actual, 0) >= FIDELITY_ORDER.get(required, 0)
+        )
+        if not met:
+            unmet.append(s.get("id"))
+
+    if unmet:
+        _error("fidelity_unmet", "scenario-fidelity-check", 13, detail=unmet)
+        return
+
+    _respond({
+        "ok": True,
+        "command": "scenario-fidelity-check",
+        "all_met": True,
+        "total": len(scenarios),
+        "met": len(scenarios),
+    }, 0)
+
+
+def cmd_scenario_conformance(args: argparse.Namespace) -> None:
+    """scenario-conformance — 표면(surface) 전수 conformance 판정(069/F-006).
+
+    [MUST] surfaces.json(표면 분모, 읽기 전용)만 소비하며 타 도구의 SSOT는 일절
+    미접촉한다(축 분리, H-7). surfaces.json 부재 시 `applicable:false`로 스킵한다
+    (M-5 — 기존 프로젝트·비-API 프로젝트 무영향). auth:required 표면은
+    fidelity>=real-http를 강제하고, 그 외 표면은 매칭 시나리오 자신의
+    required_fidelity(기본 mock)를 문턱으로 사용한다."""
+    task_path = pathlib.Path(args.task_path)
+    surfaces_arg = getattr(args, "surfaces", None)
+    surfaces_path = pathlib.Path(surfaces_arg) if surfaces_arg else (task_path / "surfaces.json")
+
+    if not surfaces_path.exists():
+        _respond({
+            "ok": True,
+            "command": "scenario-conformance",
+            "applicable": False,
+        }, 0)
+        return
+
+    with open(surfaces_path, encoding="utf-8") as f:
+        surfaces_doc = json.load(f)
+
+    spec = _load_spec(task_path)
+    if spec is None:
+        _error("scenario_not_initialized", "scenario-conformance", 10)
+        return
+
+    scenarios = spec.get("scenarios", [])
+    surfaces = surfaces_doc.get("surfaces", [])
+
+    unverified: List[str] = []
+    for surface in surfaces:
+        surface_id = surface.get("id")
+        auth = surface.get("auth", "none")
+        verified = False
+        for s in scenarios:
+            if s.get("surface_ref") != surface_id or s.get("result") != "pass":
+                continue
+            actual = FIDELITY_ORDER.get(s.get("fidelity", "mock"), 0)
+            if auth == "required":
+                threshold = FIDELITY_ORDER["real-http"]
+            else:
+                threshold = FIDELITY_ORDER.get(s.get("required_fidelity", "mock"), 0)
+            if actual >= threshold:
+                verified = True
+                break
+        if not verified:
+            unverified.append(surface_id)
+
+    if unverified:
+        _respond({
+            "ok": False,
+            "command": "scenario-conformance",
+            "error": "surface_unverified",
+            "detail": unverified,
+            "all_surfaces_green": False,
+        }, 14)
+        return
+
+    _respond({
+        "ok": True,
+        "command": "scenario-conformance",
+        "all_surfaces_green": True,
+        "surface_count": len(surfaces),
+    }, 0)
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # argparse 서브파서 등록 + dispatch 테이블
 # ─────────────────────────────────────────────────────────────────────────────
@@ -327,6 +475,10 @@ def add_scenario_subparsers(subparsers: "argparse._SubParsersAction") -> None:
     p_mark.add_argument("--id", required=True, metavar="S", help="시나리오 id")
     p_mark.add_argument("--result", required=True, choices=["pass", "fail"], help="판정 결과")
     p_mark.add_argument("--evidence", metavar="E", help="증거 문자열 (선택)")
+    p_mark.add_argument(
+        "--fidelity", choices=["mock", "real-http", "real-usage"],
+        help="실제 관찰된 증거 충실도 (선택, 미지정 시 mock — 069/M-5)",
+    )
 
     p_status = subparsers.add_parser("scenario-status", help="spec/result 요약 (RED 확인·통과율)")
     p_status.add_argument("--task-path", required=True, metavar="PATH", help="태스크 폴더 경로")
@@ -339,6 +491,22 @@ def add_scenario_subparsers(subparsers: "argparse._SubParsersAction") -> None:
     p_red.add_argument("--id", required=True, metavar="S", help="시나리오 id")
     p_red.add_argument("--evidence", required=True, metavar="E", help="RED 실패 출력 요약 (필수)")
 
+    p_fidelity = subparsers.add_parser(
+        "scenario-fidelity-check",
+        help="시나리오별 요구 충실도 부분 게이트(069/F-005 — 전부-게이트 아님, task:061 재발 방지)",
+    )
+    p_fidelity.add_argument("--task-path", required=True, metavar="PATH", help="태스크 폴더 경로")
+
+    p_conformance = subparsers.add_parser(
+        "scenario-conformance",
+        help="표면(surface) 전수 conformance 판정(069/F-006 — surfaces.json 분모, 부재 시 스킵)",
+    )
+    p_conformance.add_argument("--task-path", required=True, metavar="PATH", help="태스크 폴더 경로")
+    p_conformance.add_argument(
+        "--surfaces", metavar="PATH",
+        help="surfaces.json 경로 (선택, 기본 <task-path>/surfaces.json — 부재 시 applicable:false)",
+    )
+
 
 SCENARIO_DISPATCH: Dict[str, Any] = {
     "scenario-init": cmd_scenario_init,
@@ -346,4 +514,6 @@ SCENARIO_DISPATCH: Dict[str, Any] = {
     "scenario-mark": cmd_scenario_mark,
     "scenario-status": cmd_scenario_status,
     "scenario-red": cmd_scenario_red,
+    "scenario-fidelity-check": cmd_scenario_fidelity_check,
+    "scenario-conformance": cmd_scenario_conformance,
 }

@@ -201,14 +201,18 @@ D7 사용자 확정 게이트 — 4요소 잠김 확인 → docs/ 승격
 - 하네스 Guards: 구현 금지. 지정 산출물 외 파일 생성 금지.
 ```
 
-**D4 CONTRACT 작성 [워커 디스패치]**: TRD 확정 후, 동일 Planner에게 CONTRACT.md를 디스패치한다 — 구조는 `references/contract.md` §2(스키마·시그니처·경계 + 기계검증절 + 루브릭절)를 따른다.
+**D4 CONTRACT 작성 [워커 디스패치]**: TRD 확정 후, 동일 Planner에게 CONTRACT.md를 디스패치한다 — 구조는 `references/contract.md` §2(스키마·시그니처·경계 + 기계검증절 + 루브릭절)를 따른다. [MUST] 디스패치 프롬프트는 `surfaces.json` 생성(표면 전수 나열·각 표면 `auth` 필드 선언·인증 표면 자체도 등재)과, 웹 클라이언트가 존재하는 프로젝트의 경우 `origins` 선언을 요구한다 — 구조 스펙은 `references/contract.md` §2.2.1로 위임한다.
 
 **D5 백로그 생성**: PM이 PRD/TRD/CONTRACT을 얇은 수직 슬라이스로 분해하여 backlog-tool로 등록한다 (USER_JOURNEY.md가 있으면 "여정 단계 → 슬라이스" 매핑을 분해 기준으로 사용).
 
+[MUST] D5 백로그의 의존 루트(P0) 태스크로 "실행 스켈레톤" 슬라이스를 의무화한다 — 구성: (a) BE 서버 기동+스웨거(OpenAPI) UI 노출(surfaces.json 연동), (b) FE dev 서버 기동, (c) 실 브라우저(cmux browser)에서 FE→BE 실 호출 1개 관통, (d) auth 표면 존재 시 로그인 관통. 이후 전 태스크의 real-http/real-usage 검증이 이 환경 위에서 실행된다(목 개발의 "실 BE 부재" 사유 원천 제거).
+
 ```
 ~/.opal/tools/backlog-tool/run.sh init <task-path> --project-title "{프로젝트명}" --mode <m> --goal "{목표 요약}"
-~/.opal/tools/backlog-tool/run.sh add-task <task-path> --id T01 --title "{제목}" --slice "{슬라이스 설명}" --acceptance '["AC1","AC2"]' --area <fe|be|db|공통|통합> --priority <P0|P1|P2> [--depends <T00>] [--parallel-group <g>]
+~/.opal/tools/backlog-tool/run.sh add-task <task-path> --id T01 --title "{제목}" --slice "{슬라이스 설명}" --acceptance '["AC1","AC2"]' --area <fe|be|db|공통|통합> --priority <P0|P1|P2> [--depends <T00>] [--parallel-group <g>] [--covers '["<surface-id>", ...]']
 ```
+
+`--covers`에는 해당 태스크가 커버하는 `surfaces.json`의 표면 id 배열을 지정한다 — 실행 스켈레톤·표면별 구현 태스크 모두 대응 표면 id를 `--covers`로 선언해야 D7 이전 `coverage-check`가 통과한다.
 
 **D6 Evaluator 설계 검토 [워커 디스패치]**: opal-evaluator-agent를 `phase: design-review`로 디스패치한다.
 
@@ -225,6 +229,8 @@ project_root: {프로젝트 루트}
 verdict가 `fail`이거나 미해결 이슈가 있으면 D2~D5로 재회전한다(재회전 상한은 `references/loop-control.md` §2). verdict `pass` + 미해결 0이면 D7로 진행한다.
 
 **D7 사용자 확정 게이트**: 4요소(PRD/TRD/CONTRACT/BACKLOG)가 잠겼음을 사용자에게 보고하고 승인을 받는다. 승인 시 PRD/TRD/CONTRACT을 `docs/`에 승격(oppd 1-3 승격 판단 로직 준용 — greenfield/반복 델타 병합)하고 Loop 2로 진입한다. 이 게이트는 loop-control.md §9 "사람 게이트" 대상이다(TRD/PRD 확정 = 비가역 행동).
+
+[MUST] D7 진입 전 PM은 `~/.opal/tools/backlog-tool/run.sh coverage-check <task-path> --surfaces <surfaces.json>`을 호출한다. `surface_uncovered`(미커버 표면 존재) 또는 `integration_task_missing`(병렬 그룹 존재+통합 태스크 부재) 거부 시 D7에 진입하지 않고 D5로 되돌려 백로그를 재작업한다.
 
 Gate 시 state-tool 호출:
 ```
@@ -270,8 +276,9 @@ L✓ 종료 판정 — backlog-tool done-check
 **L✓ 종료 판정**:
 ```
 ~/.opal/tools/backlog-tool/run.sh done-check <task-path>
+~/.opal/tools/test-tool/run.sh scenario-conformance --task-path <task-path> --surfaces <surfaces.json>
 ```
-`all_done:true`이면 회귀 스위트(변경 영향 슬라이스 재검증)를 마지막으로 1회 확인한 뒤 Loop 2를 종료한다. `all_done:false`이면 `remaining[]`을 L0에 다시 투입한다. 이 판정은 무진전 감지(`references/loop-control.md` §4 "백로그 정체" 신호)의 관찰 대상이기도 하다.
+[MUST] Loop 2 종료는 3중 불리언 AND로 판정한다 — `done-check.all_done`(태스크 축) ∧ `scenario-conformance.all_surfaces_green`(표면 축) ∧ 회귀 0. 세 조건 중 하나라도 미충족이면 종료하지 않는다: `all_done:false`이면 `remaining[]`을 L0에 다시 투입하고, `all_surfaces_green:false`(`surface_unverified`)이면 해당 표면을 커버하는 태스크를 L0에 재투입한다. user-facing 프로젝트는 여기에 여정 스모크 1회(`references/journey-flow.md` §6)를 더한다. 이 판정은 무진전 감지(`references/loop-control.md` §4 "백로그 정체" 신호)의 관찰 대상이기도 하다.
 
 Gate 시 state-tool 호출:
 ```
@@ -335,6 +342,7 @@ verdict `fail` → T3에 진입하지 않고 T1로 되돌린다. verdict `pass` 
 ~/.opal/tools/test-tool/run.sh scenario-mark --task-path <T{NN}-path> --id S1 --result pass --evidence "{근거}"
 ~/.opal/tools/test-tool/run.sh scenario-status --task-path <T{NN}-path>
 ```
+[MUST] T4a는 `test-tool scenario-fidelity-check` 통과(요구 충실도 충족)를 완료 요건으로 삼는다 — 요구 충실도 주입·게이트 호출 상세는 `opal/agents/opal-loop-action-agent/AGENT.md`로 위임한다.
 
 **T4b 규칙검사**: 루프 액션 에이전트가 규모 판정 후 인라인 또는 내부 디스패치한다 — 변경 파일이 저위험(소규모·단일 파일)이면 opal-convention-checker/opal-security-checker를 인라인으로 결과만 요약하거나 생략 판단하고, 고위험(다중 파일·계약 영향)이면 내부 디스패치한다.
 
@@ -384,7 +392,7 @@ PM은 **태스크당 `opal-loop-action-agent`를 1회 디스패치**하며, 루�
 
 **루프 액션 에이전트 내부에서 Evaluator(명세 심판, 구현 전) → test-agent(동작 검증, 구현 후)** 순서로 진행하며, 순서가 뒤바뀌면 G 게이트가 무력화된다(H-9). 상세 규칙(순서 불변 4항목, drift 재콜백 예외, 순서 evidence 확인 방법)은 `references/verification.md` §3을 따른다.
 
-검증 3-tier(① 결정론 code-based → ② 루브릭 LLM-judge → ③ 사람)와의 교차점: G 게이트 = "Evaluator" × "② 루브릭", T4a = "test-agent" × "① 결정론". 전체 tier 표·실패 시 되돌림 규칙은 `references/verification.md` §2를 따른다.
+검증 3-tier(① 결정론 code-based → ② 루브릭 LLM-judge → ③ 사람)와의 교차점: G 게이트 = "Evaluator" × "② 루브릭", T4a = "test-agent" × "① 결정론". 전체 tier 표·실패 시 되돌림 규칙은 `references/verification.md` §2를 따른다. 충실도 사다리·done 규범: `references/verification.md` §1.5.
 
 ---
 
@@ -491,7 +499,7 @@ opal-harness-agentic.md 공통 기준에 추가:
 
 - **태스크 간 병렬**: 기본은 worktree 격리(`.worktrees/{task-id}/`) — 의존관계 없는 태스크는 병렬 디스패치한다.
 - **태스크 내 FE/BE 병렬**: CONTRACT.md가 이미 고정(잠김)되어 있을 때만 허용한다 — 계약이 확정되지 않은 상태에서 FE/BE를 병렬로 진행하면 인터페이스 drift 위험이 커진다.
-- **통합 태스크 필수**: 병렬 그룹마다 머지 후 통합 검증(계약 conformance + 회귀)을 담당하는 통합 태스크를 백로그에 별도로 둔다.
+- **통합 태스크 필수**: 병렬 그룹마다 머지 후 통합 검증(계약 conformance + 회귀)을 담당하는 통합 태스크를 백로그에 별도로 둔다. 이 규칙은 prose 권고에 그치지 않는다 — `backlog-tool coverage-check`가 parallel_group 존재 + area=통합 태스크 부재를 `integration_task_missing`으로 거부하여 도구가 집행한다(D7 진입 게이트).
 - **STATE.md는 PM 단독 갱신**: 병렬 실행 중에도 STATE.md는 오케스트레이터(PM)만 갱신한다(동시 쓰기 충돌 방지). backlog.json은 `backlog-tool mark`의 파일 락(H-3, README §4)으로 동시 쓰기 안전성을 보장하므로 태스크별 상태 반영은 각 태스크 완료 시점에 즉시 반영해도 된다.
 
 ---
@@ -586,3 +594,4 @@ Loop 1 재회전 {N}회 · Loop 2 태스크 {M}개 완주.
 | v1.4 | 2026-07-17 16:20 | §디스패치 절에 진행 현황 모니터링 안내 추가 — `oppl-monitor` 도구 포인터 + 결과 파일 규약 v2/운행 일지는 `opal-loop-action-agent/AGENT.md` 참조로 위임 (067) |
 | v1.5 | 2026-07-17 23:04 KST | 진행 현황 모니터링 도구 포인터 리네임 — `oppl-monitor` → `opal-action-monitor` (067) |
 | v1.6 | 2026-07-17 KST | 진행 현황 모니터링 안내에 스킬 발동 `//opas [태스크폴더]`(opal-action-status) 1줄 추가 — 자동 탐지 + 해석 보고(읽기 전용) (068) |
+| v1.7 | 2026-07-18 22:46 KST | D4에 surfaces.json(표면 전수·auth·인증표면 등재)+origins 선언 요구 추가(contract.md §2.2.1 참조 위임) / D5에 실행 스켈레톤 P0 태스크 의무(구성 4항)+`add-task --covers` 안내 추가 / D7 진입 전 `coverage-check` 게이트 호출 의무화 / L✓ 종료 판정을 `done-check.all_done` ∧ `scenario-conformance.all_surfaces_green` ∧ 회귀 0 3중 AND로 확장(user-facing 여정 스모크 포함) + T4a에 `scenario-fidelity-check` 통과 요건 1줄 / 병렬 실행 절 "통합 태스크 필수"를 `coverage-check`(`integration_task_missing`) 게이트와 연결 / 검증 2원화 절에 충실도 규범 참조(`verification.md` §1.5) 추가 (069) |
