@@ -1,18 +1,21 @@
 # Project Brain Index
-> 갱신: 2026-07-15 18:28
+> 갱신: 2026-07-20 11:05
 
 ## 도메인
 (아직 등록된 페이지 없음)
 
 ## 엔티티
 - [[brain-tool]] — brain-tool #tool #knowledge
+- [[fw-inbox-collection]] — fw-inbox (프레임워크 개선 수집소) #runtime-directory #improvement #collection #deployment
 - [[git-sync-tool]] — git-sync-tool #tool #git #workspace #safety
+- [[improve-tool]] — improve-tool #tool #improvement #cli #decision-making
 - [[memory-tool]] — memory-tool — 프로젝트 메모리 인덱스·히스토리 결정론적 집행 CLI #tool #memory #cli #lifecycle
 - [[op-data-ddl-skill]] — op-data-ddl (DDL 단계 스킬) #skill #stage-skill #data-design #ddl #migration #dbml
 - [[op-data-dictionary-skill]] — op-data-dictionary (DICT 단계 스킬) #skill #stage-skill #data-design #dictionary #db
 - [[op-data-model-skill]] — op-data-model (MODEL 단계 스킬) #skill #stage-skill #data-design #modeling #erd #mermaid #dbml
 - [[opal-console]] — OPAL Console #tool #dashboard #frontend #backend
 - [[opal-evaluator-agent]] — opal-evaluator-agent #agent #checker #verification #oppl
+- [[opal-improve]] — opal-improve (//opim) #skill #operator #improvement #pm-loop #tool-gated
 - [[opal-workspace-sync]] — opal-workspace-sync (alias opws) #skill #workspace #git #operator
 - [[skill-opal-pilot-data-design]] — opal-pilot-data-design (opdd) #pilot #orchestrator #data-design #db
 - [[state-tool]] — state-tool #tool #pipeline
@@ -69,6 +72,7 @@
 - [[kanban-current-stage-derivation]] — 칸반 current_stage 파생 규칙 (도달 단계 기준) #opal-console #kanban #pipeline #be-single-source
 - [[kanban-pipeline-stage-grouping]] — 파이프라인 스테퍼 stage 그룹화 (BE 단일 소스, na/skipped 제외) #opal-console #pipeline #stage-grouping #be-single-source
 - [[linux-install-script]] — Linux 설치 스크립트 신설 (단순 위임 전략) #install #linux #deploy #task
+- [[local-fw-improvement-classification]] — 로컬/FW 2원화 개선 분류 판단 #pm-loop #classification #decision-making #scope-determination
 - [[loop-upper-bound-ssot-pattern]] — 루프 상한 SSOT 단일 기재 패턴 — harness 포인터, 수치 복제 금지 #harness #ssot #loop-bound #anti-pattern
 - [[memory-lifecycle-graduation-workflow]] — 메모리 라이프사이클·졸업(promote) 워크플로우 #memory #lifecycle #architecture #promote
 - [[model-mapping-2layer-override]] — 모델 매핑 2-레이어 오버라이드 (setting.json SSOT + 부트스트랩 step 0 머지) #model #mapping #setting #override #bootstrap
@@ -115,6 +119,7 @@
 - [[opwt-v4-output-system]] — opwt v4 산출물 체계 재설계 (PRD 8섹션 + interview 통합) #opwt #planning #output #framework #task
 - [[owner-honorific-contamination-prevention]] — 산출물 소유자 호칭 오염 차단 원칙 #state-tool #identity #harness #contamination #brain-ingest
 - [[page-type-dynamic-schema]] — 페이지 타입 동적화 — SCHEMA SSOT #architecture #brain #schema #dynamic-type
+- [[pm-improvement-loop-two-tracks]] — PM 개선 루프 2트랙 구조 (회고/온디맨드) #pm-loop #architecture-decision #improvement #process
 - [[pool-lock-idiom-contract]] — 프라임 풀 락 관용구 계약 #brain #concurrency #locking #pattern
 - [[project-id-query-param-pattern]] — 절대경로 프로젝트 식별자를 query param으로 전달 #api #routing #url-design
 - [[read-based-gate-pattern]] — Read 기반 설정파일 게이트 패턴 #bootstrap #permission #gate #read-pattern #session-toggle
@@ -160,6 +165,7 @@
 - [[wtm-agent-cmux-integration]] — wtm-agent OPAL 표준화 + cmux-tool 신설 #tool #agent #wtm #cmux #task
 
 ## 흐름
+- [[close-retrospective-hardstep]] — CLOSE 회고 하드스텝 (개선 루프 자동 enforce) #flow #close-pipeline #improvement #tool-gated #architecture-decision
 - [[opdd-pipeline-flow]] — opdd 파이프라인 흐름 — DB 설계 표준 3층 파이프라인 #pipeline #data-design #flow #opdd #db
 
 ## 합성

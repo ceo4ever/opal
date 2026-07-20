@@ -199,3 +199,7 @@
 - 신규: [[console-brain-volatile-single-session]], [[brain-prime-pool-need-based-refill]], [[console-brain-exit-guard-pattern]]
 - 출처: task:063
 
+## [2026-07-20] ingest | 태스크 058 CLOSE ingest — PM 개선 루프 tool-gated 재설계
+- 신규: [[pages/entity/opal-improve.md]], [[pages/entity/improve-tool.md]], [[pages/entity/fw-inbox-collection.md]], [[pages/concept/pm-improvement-loop-two-tracks.md]], [[pages/concept/local-fw-improvement-classification.md]], [[pages/flow/close-retrospective-hardstep.md]]
+- 출처: task:058
+

@@ -121,6 +121,18 @@ llm-wiki 사상을 융합한 프로젝트 지식 위키 — 프로젝트의 WHY�
 
 > 소스는 `dashboard/`, 배포는 install 경유 `~/.opal/dashboard-server/`. 읽기 전용(쓰기/편집·브레인 화면은 2차). 시그니처 3색은 `:root` 전역 CSS 변수로 교체 용이.
 
+## 주요 컴포넌트 (PM 개선 루프)
+
+PM의 학습·자기개선을 tool-gated로 집행하는 서브시스템 — 정의만 있고 호출 0건이던 학습 루프를 op-brain-ingest 패턴(CLOSE 하드연결 + 도구 집행 + 증거 산출)으로 재설계 (2026-07 신설, 태스크 058).
+
+| 컴포넌트 | 약어 | 유형 | 설명 |
+|----------|------|------|------|
+| `opal-improve` | opim | 스킬 | PM 개선 루프 — 관찰→분류→기록→보고→승인 5단계. scope 2원화(결정론 게이트→루브릭→동점 에스컬레이션)로 로컬 PM 개선 / FW 개선 분류 |
+| `improve-tool` | - | 도구 | 개선 산출 결정론 집행 CLI (record/list/show, scope local/fw 분기). local=memory-tool 위임, fw=fw-inbox write, JSON `"ok"` 계약 |
+| 회고 하드스텝 | - | pilot CLOSE 훅 | opd·opwt·opgc·oppd CLOSE에 삽입 — 태스크/세션 궤적 신호로 개선후보 도출→기록, 개선후보 0건 시 no-op(CLOSE 비차단) |
+
+> 학습 2분류: 로컬 PM 개선 → 프로젝트 `.opal/`(memory) / FW 개선 → 전역 `~/.opal/fw-inbox/`(출처메타 자기완결 항목, install 배포 경유 반영). SSOT: `opal/core/references/harness/pm-improvement-loop.md` — 정의 3문서(구 `pm-learning-loop.md`·`self-improvement.md`·opal-pm §5 stub)를 단일 SSOT로 통합. hook 미채택(플랫폼 독립).
+
 ## 프로젝트 구성
 
 > 프로젝트의 기술적 요소를 영역별로 정의한다. opgc SCAN/디스패치, PM 컨텍스트 주입 시 이 표를 기반으로 영역 매칭과 전문 에이전트 선정이 이루어진다. 부재 시 오케스트레이터는 단일 요소 기본값(프로젝트 전체 × 체커)으로 폴백한다.
@@ -157,3 +169,4 @@ llm-wiki 사상을 융합한 프로젝트 지식 위키 — 프로젝트의 WHY�
 | 2026-07-10 | OPAL Console `opal-cli console` 설명에 scan 서브명령 반영 — console.config.json 생성·머지 + install 1회 자동 실행 (Task 057) |
 | 2026-07-14 | OPAL Console 7번째 화면 "설정" 반영 — 프라임 풀 토글 단일 기능, 설정 라우터 쓰기 격리(화이트리스트), 쓰기 예외 2종 명시 (Task 061) |
 | 2026-07-15 | OPAL Console 프로젝트 브레인 세션 단순화 — 휘발성 단일 세션(localStorage 이력·멀티대화 관리 제거, 진입/새대화마다 새 세션·세션 내 멀티턴 유지), 프라임 풀 크기 1→2 + need 충전(연속 새대화 즉시 웜), 이탈 가드 4경로(메뉴·새로고침·프로젝트 스위처·새 대화 시 세션 소멸 확인) (Task 063) |
+| 2026-07-17 | PM 개선 루프 서브시스템 신설 — opal-improve(opim) 스킬·improve-tool 도구·fw-inbox 수집소·4 pilot CLOSE 회고 하드스텝. 정의 3문서를 단일 SSOT(pm-improvement-loop.md)로 통합, memory-tool enum 확장(improvement/candidate), 로컬/FW 학습 분리 (Task 058) |

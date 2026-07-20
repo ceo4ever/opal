@@ -678,6 +678,65 @@ bash ~/.opal/tools/tool-scan/run.sh check <도구>               # 설치/실행
 
 ---
 
+## improve-tool
+
+**용도**: PM 개선 루프 결정론 집행 도구 — 3서브명령(`record`/`list`/`show`)으로 개선 후보를 로컬(프로젝트 `.opal/`)/FW(`~/.opal/fw-inbox/`) 2원 분기로 기록. 분류(로컬/FW 판단)는 호출자(opal-improve 스킬·CLOSE 회고 하드스텝)가 수행하고, 이 도구는 확정된 scope를 결정론적으로 집행만 한다  
+**실행 경로**: `~/.opal/tools/improve-tool/run.sh`  
+**소스 경로**: `opal/tools/improve-tool/`  
+**의존성**: `~/.opal/.venv/bin/python` (표준 라이브러리만 — json/argparse/pathlib/re/socket/subprocess/sys/datetime/os) + 형제 도구 `memory-tool`(local scope 위임)
+
+### 트리거 조건
+
+개선 후보(로컬 PM 개선 또는 프레임워크 개선)를 기록할 때 — `//opim`(opal-improve 스킬) 온디맨드 호출 또는 태스크 CLOSE 회고 하드스텝(4 pilot)에서 호출.
+
+### 커맨드 (3 서브명령)
+
+```bash
+# 개선 후보 기록 — scope local: <project-root>/.opal/MEMORY.md 존재 시 memory-tool append 위임
+#                  (--type improvement --status candidate). 부재 시 graceful no-op.
+#                  scope fw: ~/.opal/fw-inbox/{YYYYMMDD-HHmmss}-{host}-{slug}.md 결정론 write.
+~/.opal/tools/improve-tool/run.sh record --scope {local|fw} --title <제목> \
+  [--body <제안 본문>] [--situation <retrospective|feedback|conversation>] \
+  [--source-task <NNN|task-path>] [--project-root <경로>]
+
+# 개선 후보 목록 조회 (read-only)
+~/.opal/tools/improve-tool/run.sh list --scope {local|fw} [--project-root <경로>]
+
+# 단일 개선 후보 조회 (read-only)
+~/.opal/tools/improve-tool/run.sh show --scope {local|fw} [--id <id>] [--path <경로>] [--project-root <경로>]
+```
+
+- 환경변수 `IMPROVE_FW_INBOX`: 설정 시 fw scope의 기본 write 목적지(`~/.opal/fw-inbox/`) 대신 그 경로를 최우선 사용 — 테스트 격리 훅.
+
+### 출력 형식
+
+모든 서브명령은 단일라인 JSON으로 출력한다 (`{"ok": true/false, ...}`).
+
+```json
+// record 성공 — scope fw
+{"ok": true, "scope": "fw", "path": "/Users/.../fw-inbox/20260717-095231-host-slug.md", "id": "20260717-095231-host-slug.md"}
+
+// record 성공 — scope local (memory-tool 위임)
+{"ok": true, "scope": "local", "delegated": "memory-tool", "file": "/path/.opal/MEMORY.md", "title": "..."}
+
+// record no-op — scope local, MEMORY.md 부재
+{"ok": true, "scope": "local", "skipped": true, "reason": "no MEMORY.md"}
+
+// 실패 (인자 오류 — 크래시·traceback 없이 graceful)
+{"ok": false, "error": "--scope must be one of ('local', 'fw'), got 'wrong'"}
+```
+
+### 종료 코드
+
+| 코드 | 의미 |
+|------|------|
+| `0` | 성공 (no-op 포함) |
+| `1` | 인자 오류 / write 실패 / memory-tool 위임 실패 |
+
+> 근거: `tasks/058-260713-opd-학습루프-도구화-개선수집/PLAN.md` §3.1.2(F-001 서브명령 스펙) / §3.2.2(F-002 fw-inbox 항목 스키마)
+
+---
+
 ## 변경이력
 
 | 버전 | 날짜 | 내용 |
@@ -694,3 +753,4 @@ bash ~/.opal/tools/tool-scan/run.sh check <도구>               # 설치/실행
 | v1.9 | 2026-06-26 | memory-tool 섹션 신설(9 서브명령 init/append/update/promote/prune/migrate/show/review/delete) — 프로젝트 메모리 인덱스·히스토리 결정론적 집행, 메모리→docs/brain 졸업 워크플로우·히스토리 FIFO5·요약 길이캡·마커 직접편집 금지·매 변경 후 자가검토·delete(dead/superseded 무손실 정리)·update --new-title(제목 보정). harness §9 drift 정합 (045) |
 | v2.0 | 2026-07-02 | git-sync-tool 섹션 신설(단일 서브명령 sync) — 워크스페이스 git 저장소 일괄 동기화, 직속 자식 순회 + ff-only pull + 5종 skip 판정 + JSON 출력. opal-workspace-sync 스킬이 호출. harness §9 drift 정합 (052) |
 | v2.1 | 2026-07-10 13:11 | brain-tool validate 설명에 링크필드(related) 값 검사('[[', ']]', '.md' 거부) 반영 + add-page에 `--related` 플래그 설명 추가 (053) |
+| v2.2 | 2026-07-17 | improve-tool 섹션 신설(3 서브명령 record/list/show) — PM 개선 루프 결정론 집행, 로컬(memory-tool 위임)/FW(fw-inbox write) scope 분기, IMPROVE_FW_INBOX 테스트 격리 훅. memory-tool VALID_TYPES/VALID_STATUSES에 improvement/candidate additive 확장 반영 (058) |

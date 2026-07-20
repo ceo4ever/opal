@@ -558,9 +558,9 @@ PM 검수
               └─ 사용자 확정 → 다음 Phase
 ```
 
-### PM 검수 → 학습 루프 연결
+### PM 검수 → 개선 루프 연결
 
-PM 검수 로그에서 **반복 패턴**이 감지되면 PM 학습 루프로 승격:
+PM 검수 로그에서 **반복 패턴**이 감지되면 PM 개선 루프로 승격(SSOT: `opal/core/references/harness/pm-improvement-loop.md`):
 - 동일 유형의 Fail이 2회 이상 반복
 - 사용자 피드백에서 새로운 원칙 도출
 - 사용자 승인 시 `.opal/AGENT.md` "확정 기준"에 추가
@@ -666,6 +666,13 @@ DONE.md 생성 직후 **op-brain-ingest 디스패치**를 수행한다:
   2. `~/.opal/skills/op-brain-ingest/SKILL.md`
 - 디스패치 입력: 태스크 폴더 경로
 - 워커가 `status: skipped` 또는 `status: completed` 또는 `status: completed_with_errors` 반환 — 어떤 경우도 종료를 중단시키지 않는다.
+
+**회고(개선 루프) 하드스텝** (op-brain-ingest 직후 실행):
+- 입력: 태스크/세션 궤적 신호 — 워커 재시도·폴백, 소유자 재지시·피드백, PM Gate 반복 이슈, PLAN 재진입, 검증/재설계 루프 로그(STATE.md). ※ 산출물 재독이 아님(그건 PM Gate/QA 담당). 산출 = 프로세스·규칙 개선점.
+- 관찰→분류(로컬 PM 개선 / FW 개선)→기록: 개선 후보별로 `~/.opal/tools/improve-tool/run.sh record --scope <local|fw> --title ... --body ... --situation retrospective --source-task <NNN> --project-root <루트>` 호출.
+- 산출 결정론 기록: 개선 후보 N건은 improve-tool이 결정론적으로 기록(로컬→.opal / FW→fw-inbox).
+- **no-op 안전 [MUST]**: 궤적 신호에서 개선 후보가 **없으면** 기록 없이 "개선후보 0건" 보고 — op-brain-ingest의 skipped와 동일하게 **CLOSE를 중단시키지 않는다**.
+- 개선 루프 프로세스 SSOT: `opal/core/references/harness/pm-improvement-loop.md`.
 
 ---
 
@@ -800,3 +807,5 @@ opal-harness-agentic.md "에스컬레이션 조건" 공통 기준에 추가:
 | v4.7 | 2026-06-21 16:05 | oppd 개선 — PRD/TRD 태스크폴더 작성+확정 후 docs 승격(F-001/002), WBS 태스크폴더 전용화(F-003), sizing "1~3일"→단일책임+수용시나리오(F-010), §2-3 PM검수 4종 추가(F-015), Phase3 scope 3계층 분기+WBS 2단기준+TRD/PRD 사용자게이트(F-023/024), STATE 재설계 루프 로그 행(F-024) (031) |
 | v4.8 | 2026-06-21 | `npm run lint` → `npm run lint:fix` 정합 — WBS 예시 표(A01·A02) generic `&&` 변형의 lint 명령을 L1 표준(`lint:fix`)으로 교체 (033) |
 | v4.9 | 2026-07-10 13:12 | note 예시의 소유자 확인 표기를 `{owner_name} 확인:` 형식으로 통일 — identity.md owner_name 재해석 규칙(AGENT.md §정체성 적용)과 정합, 오염 차단 (054) |
+| v5.0 | 2026-07-17 | §561-566 "PM 검수 → 학습 루프 연결" 명명 정리 — "학습 루프" → "개선 루프" + SSOT 지칭 추가(`harness/pm-improvement-loop.md`) (058) |
+| v5.1 | 2026-07-17 | DONE.md 생성 직후 op-brain-ingest 디스패치 다음에 "회고(개선 루프) 하드스텝" 삽입 — 궤적 신호→관찰/분류/기록(improve-tool record --scope local\|fw), 개선후보 0건 시 no-op 비차단(brain-ingest 패턴 답습) (058) |

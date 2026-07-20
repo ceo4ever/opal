@@ -1,7 +1,7 @@
 {
   "$schema": "opal-skills-registry-v1",
-  "version": "3.8.0",
-  "updated_at": "2026-07-10",
+  "version": "3.9.0",
+  "updated_at": "2026-07-17",
   "groups": {
     "opal-pilot": [
       {
@@ -715,6 +715,21 @@
           "~/.opal/skills/opal-workspace-sync/SKILL.md"
         ],
         "domain": "workspace"
+      },
+      {
+        "name": "opal-improve",
+        "alias": "opim",
+        "description": "PM 개선 루프 — 관찰→분류→기록→보고→승인. 로컬 PM 개선 / FW 개선 분류 기록",
+        "triggers": [
+          "^opal-improve$",
+          "^opim$",
+          "(?i)(개선\\s*제안|프레임워크\\s*개선|개선\\s*기록|회고)"
+        ],
+        "paths": [
+          "{project}/.opal/skills/opal-improve/SKILL.md",
+          "~/.opal/skills/opal-improve/SKILL.md"
+        ],
+        "domain": "improvement"
       }
     ],
     "op-brain": [
@@ -738,6 +753,18 @@
     ]
   },
   "changelog": [
+    {
+      "version": "3.9.0",
+      "date": "2026-07-17",
+      "task": "058",
+      "changes": [
+        "opal-improve 신규 등록 (opal 그룹) — alias 'opim', PM 개선 루프 온디맨드 스킬(관찰→분류→기록→보고→승인)",
+        "triggers: ^opal-improve$ / ^opim$ / (?i)(개선\\s*제안|프레임워크\\s*개선|개선\\s*기록|회고)",
+        "paths: {project}/.opal/skills/opal-improve/SKILL.md, ~/.opal/skills/opal-improve/SKILL.md",
+        "domain: improvement — 기존 25개 alias와 충돌 없음, opim 신규 1건 추가",
+        "F-001 improve-tool(record --scope <local|fw>)과 연결, SSOT `opal/core/references/harness/pm-improvement-loop.md` 참조"
+      ]
+    },
     {
       "version": "3.8.0",
       "date": "2026-07-10",

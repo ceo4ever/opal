@@ -37,6 +37,7 @@
 #   v3.7 2026-06-29 15:24 KST: record_installed_version 함수 분리 + VERSION 기록 우선순위 재배치 — FRAMEWORK_ROOT/VERSION 각인값 최우선, API/main 폴백 강등 (048)
 #   v3.8 2026-07-02 15:20 KST: git-sync-tool run.sh chmod +x 블록 추가 (memory-tool 블록 직후, state-tool 패턴) — 신규 워크스페이스 git 동기화 도구 배포 (052)
 #   v3.9 2026-07-10 18:07: install_dashboard() 말미에 opal-cli console scan 자동 1회 호출 추가 — console.config.json 자동 생성/머지로 신규 머신 프로젝트 미발견 문제 근본 해결, 실패해도 install 비중단(|| warn) (057)
+#   v4.0 2026-07-17: improve-tool run.sh 실행 권한 chmod 블록(backlog-tool 패턴 답습) + fw-inbox 런타임 디렉토리 초기화 블록(mkdir -p + README seed, create-if-absent) 추가 — opal-improve 스킬·improve-tool 도구는 기존 skills/tools 자동 복사 루프가 처리, fw-inbox는 clean_dirs 미포함으로 재설치 시 기존 수집 항목 보존(H-5 멱등) (058)
 #
 
 set -euo pipefail
@@ -1178,6 +1179,13 @@ install_opal() {
             success "backlog-tool run.sh 실행 권한 설정"
         fi
 
+        # ── improve-tool 실행 권한 (058) ──
+        local improve_run="$opal_home/tools/improve-tool/run.sh"
+        if [[ -f "$improve_run" ]]; then
+            chmod +x "$improve_run"
+            success "improve-tool run.sh 실행 권한 설정"
+        fi
+
         # cmux 의존성 안내 (정보성 — 설치 강제 없음, silent fallback 정책)
         if ! command -v cmux &>/dev/null; then
             info "cmux 미감지 — cmux-tool 사용 시 https://cmux.com/ 또는 https://github.com/manaflow-ai/cmux 에서 설치 필요"
@@ -1197,6 +1205,14 @@ install_opal() {
             info "  설치: https://nodejs.org/ 또는 brew install node"
         fi
     fi
+
+    # ── fw-inbox 런타임 디렉토리 초기화 (058, create-if-absent — 사용자 데이터 보존, H-5 멱등) ──
+    # [MUST] fw-inbox는 clean_dirs(:1034)에 포함하지 않는다 — 재설치 시 기존 수집 항목(FW 개선 후보) 삭제 금지.
+    mkdir -p "$opal_home/fw-inbox"
+    if [[ ! -f "$opal_home/fw-inbox/README.md" ]]; then
+        cp "$opal_dir/tools/improve-tool/fw-inbox-README.md" "$opal_home/fw-inbox/README.md"
+    fi
+    success "fw-inbox 초기화 → $opal_home/fw-inbox/ (기존 항목 보존)"
 
     # ── Python venv ──
     install_opal_venv

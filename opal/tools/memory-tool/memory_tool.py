@@ -10,6 +10,10 @@
     "build_review_block"
   ]
 }
+
+변경이력:
+  v1.1 2026-07-17 VALID_TYPES에 "improvement", VALID_STATUSES에 "candidate" 추가(additive) —
+                  improve-tool record --scope local의 memory-tool append 위임 대상 (058)
 """
 
 # 표준 라이브러리만 (state-tool 동형)
@@ -38,8 +42,9 @@ HISTORY_MARKER_START = "<!-- memory:history:start -->"
 HISTORY_MARKER_END   = "<!-- memory:history:end -->"
 
 # enum 정의
-VALID_TYPES = {"project", "architecture", "feedback", "preferences", "issues", "task"}
-VALID_STATUSES = {"active", "promoted", "superseded", "dead"}
+# improvement/candidate: 058 improve-tool record --scope local 위임 대상(PM 개선 루프 후보 기록)
+VALID_TYPES = {"project", "architecture", "feedback", "preferences", "issues", "task", "improvement"}
+VALID_STATUSES = {"active", "promoted", "superseded", "dead", "candidate"}
 
 # 상태 매핑 (migrate용 — 구포맷 자유 상태값 → 신 enum)
 LEGACY_STATUS_MAP = {

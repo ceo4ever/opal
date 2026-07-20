@@ -94,6 +94,7 @@
         v1.15.0 2026-06-24 17:26 KST: Install-OpalCore setting.json create-if-absent 배포 추가 (043)
         v1.16.0 2026-06-29 15:24 KST: Invoke-OpalWindowsInstall에 $repoRoot/VERSION 각인값 최우선 읽기 추가 — install-mac.sh record_installed_version 대칭, -notlike '$Format:*' 판별 (048)
         v1.17.0 2026-07-10 18:07  Install-Dashboard 말미에 console.config.json 자동 생성/머지 로직 추가 — .opal\AGENT.md 마커 탐색 + scan_roots 병합(보존+추가+dedup)의 PowerShell 네이티브 등가, opal-cli console scan(install-mac.sh v3.9) 과 의미상 동등, try/catch 격리로 install 비중단 (057)
+        v1.18.0 2026-07-17       Install-OpalCore 도구 복사 직후 fw-inbox 런타임 디렉토리 초기화 블록 추가 — New-Item -Force(멱등) + fw-inbox-README.md create-if-absent seed, cleanDirs(:433) 미포함으로 재설치 시 기존 수집 항목 보존(H-5 멱등, install-mac.sh v4.0 대칭). 스킬(opal-improve)·도구(improve-tool)는 기존 skills/tools 자동 복사 블록이 처리 (058)
 #>
 
 #Requires -Version 5.1
@@ -547,6 +548,17 @@ function Install-OpalCore {
         Remove-ChangelogRecursive -Root $toolsDst
         Write-OpalOk "tools → $toolsDst"
     }
+
+    # ── fw-inbox 런타임 디렉토리 초기화 (058, create-if-absent — 사용자 데이터 보존, H-5 멱등) ──
+    # [MUST] fw-inbox는 cleanDirs(:433)에 포함하지 않는다 — 재설치 시 기존 수집 항목(FW 개선 후보) 삭제 금지.
+    $fwInbox = Join-Path $OpalHome 'fw-inbox'
+    New-Item -ItemType Directory -Path $fwInbox -Force | Out-Null   # -Force = 존재 시 no-op(멱등)
+    $fwInboxReadmeSrc = [IO.Path]::Combine($RepoRoot, 'opal', 'tools', 'improve-tool', 'fw-inbox-README.md')
+    $fwInboxReadmeDst = Join-Path $fwInbox 'README.md'
+    if ((Test-Path $fwInboxReadmeSrc) -and -not (Test-Path $fwInboxReadmeDst)) {
+        Copy-Item -Path $fwInboxReadmeSrc -Destination $fwInboxReadmeDst
+    }
+    Write-OpalOk "fw-inbox 초기화 → $fwInbox (기존 항목 보존)"
 
     # ── 참조 레지스트리: opal/core/references/ → ~/.opal/references/ ──
     $refSrc = [IO.Path]::Combine($RepoRoot, 'opal', 'core', 'references')

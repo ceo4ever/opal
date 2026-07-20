@@ -363,6 +363,14 @@ DONE.md 생성 완료 후 state-tool로 행 갱신:
 - 디스패치 입력: GC 태스크 폴더 경로
 - 워커 status(skipped / completed / completed_with_errors) 무관 — CLOSE를 중단시키지 않는다.
 
+**회고(개선 루프) 하드스텝** (op-brain-ingest 직후 실행):
+
+- 입력: 태스크/세션 궤적 신호 — 워커 재시도·폴백, 소유자 재지시·피드백, PM Gate 반복 이슈, PLAN 재진입, 검증/재설계 루프 로그(STATE.md). ※ 산출물 재독이 아님(그건 PM Gate/QA 담당). 산출 = 프로세스·규칙 개선점.
+- 관찰→분류(로컬 PM 개선 / FW 개선)→기록: 개선 후보별로 `~/.opal/tools/improve-tool/run.sh record --scope <local|fw> --title ... --body ... --situation retrospective --source-task <NNN> --project-root <루트>` 호출.
+- 산출 결정론 기록: 개선 후보 N건은 improve-tool이 결정론적으로 기록(로컬→.opal / FW→fw-inbox).
+- **no-op 안전 [MUST]**: 궤적 신호에서 개선 후보가 **없으면** 기록 없이 "개선후보 0건" 보고 — op-brain-ingest의 skipped와 동일하게 **CLOSE를 중단시키지 않는다**.
+- 개선 루프 프로세스 SSOT: `opal/core/references/harness/pm-improvement-loop.md`.
+
 ### 4.3 수정이 필요한 경우 — opds 체인
 
 opgc는 **진단 전담**이다. 보고서에서 `auto_fixable=true` 이슈나 `[?] review` 항목이 있다면, opds(opal-pilot-dev-short)로 체인하여 수정을 반영한다:
@@ -528,3 +536,4 @@ fingerprint = sha1(fingerprint_input).hex()[:16]
 | v1.5 | 2026-06-07 | STATE 행 8→7 재구성 — State Gate 행 제거(guard로 이전), §4.2 단일 mark 패턴으로 정합화 (014 Phase 4) |
 | v1.6 | 2026-06-11 19:26 | §4.2 CLOSE에 op-brain-ingest 훅 삽입 — brain 존재 시 GC 산출물 누적, 부재 시 no-op, CLOSE 비중단 (016) |
 | v1.7 | 2026-06-24 | §4.2 CLOSE op-brain-ingest 디스패치 직전에 "관련 문서 업데이트" 단락 삽입 — PROJECT.md 레지스트리 + changed_files 종합으로 관련 문서 최신화 후 ingest (없으면 no-op) (042) |
+| v1.8 | 2026-07-17 | §4.2 CLOSE op-brain-ingest 직후에 "회고(개선 루프) 하드스텝" 삽입 — 궤적 신호→관찰/분류/기록(improve-tool record --scope local\|fw), 개선후보 0건 시 no-op 비차단(brain-ingest 패턴 답습) (058) |
