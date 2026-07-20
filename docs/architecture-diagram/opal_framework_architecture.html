@@ -411,7 +411,7 @@ html,body{background:var(--bg);font-family:'Inter Tight',sans-serif;-webkit-font
           <div class="node"><div class="node-head"><div class="node-title">opgc <span class="badge badge-stable">안정</span></div><div class="node-tag">quality · 경량</div></div><div class="node-desc">커밋 전 보안·컨벤션 점검 경량 Pilot. 체커를 병렬 디스패치(GC = Garbage Collector).</div><div class="node-tech"><span class="chip">SCAN</span><span class="chip">CHECK</span><span class="chip">REPORT</span></div></div>
           <div class="node"><div class="node-head"><div class="node-title">operator 직접실행 <span class="badge badge-stable">안정</span></div><div class="node-tag">no-harness</div></div><div class="node-desc">파이프라인 없이 알투가 직접 수행하는 운영 스킬. brain은 init·ingest·query·lint 4모드 라우터.</div><div class="node-tech"><span class="chip">opi</span><span class="chip">opbr</span><span class="chip">onb · next</span><span class="chip">osc · oac · osm</span></div></div>
           <div class="node"><div class="node-head"><div class="node-title">standalone 독립 <span class="badge badge-stable">안정</span></div><div class="node-tag">no-harness</div></div><div class="node-desc">단독 호출 스킬. 이 다이어그램을 만든 html-sa도 여기 속한다.</div><div class="node-tech"><span class="chip">html-sa</span><span class="chip">api-analyzer</span><span class="chip">ui-designer</span><span class="chip">erm · wtm · mockup</span></div></div>
-          <div class="node"><div class="node-head"><div class="node-title">community 외부 <span class="badge badge-later">온디맨드</span></div><div class="node-tag">external</div></div><div class="node-desc">번들 배포 안 함. 첫 호출 시 동의 prompt 후 skills.sh 카탈로그에서 fetch.</div><div class="node-tech"><span class="chip">npx skills add</span><span class="chip">anthropics/*</span><span class="chip">vercel-labs/*</span></div></div>
+          <div class="node"><div class="node-head"><div class="node-title">community 외부 <span class="badge badge-later">온디맨드</span></div><div class="node-tag">external</div></div><div class="node-desc">번들 배포 안 함. 첫 호출 시 clone-copy 자동 설치 (Unknown 라이선스만 동의 게이트).</div><div class="node-tech"><span class="chip">clone-copy</span><span class="chip">anthropics/*</span><span class="chip">vercel-labs/*</span></div></div>
         </div>
       </div>
       <div class="connector"></div>
@@ -585,9 +585,9 @@ const NODE_DATA = {
     detail:["html-sa(아키텍처 HTML) · mockup(화면 목업)","api-analyzer · interview · ui-designer · wireframe-builder","web-to-markdown(wtm) · erd-modeler(erm)"],
     chips:["html-sa","api-analyzer","ui-designer","erm · wtm · mockup"]},
   community:{t:"community 외부 스킬",badge:"later",layer:"L4 · 직접 실행 (외부)",tag:"external · 온디맨드",
-    desc:"OPAL이 번들 배포하지 않는다. 첫 호출 시 동의 prompt 후 skills.sh 카탈로그(vercel-labs/skills)에서 fetch한다.",
-    detail:["npx skills add {owner/repo@skill}","라이선스 책임은 사용자 fetch 시점 발생","anthropics/* · google-labs-code/* · vercel-labs/* 등"],
-    chips:["npx skills add","anthropics/*","vercel-labs/*"]},
+    desc:"OPAL이 번들 배포하지 않는다. 첫 호출 시 clone-copy(git clone → vendor 중첩 복사 + commit_sha)로 자동 설치한다 (Unknown 라이선스만 동의 게이트, 검색은 npx skills find).",
+    detail:["clone-copy: git clone → ~/.opal/community-skills/{vendor}/{skill}/","라이선스 책임은 사용자 설치 시점 발생","anthropics/* · google-labs-code/* · vercel-labs/* 등"],
+    chips:["clone-copy","anthropics/*","vercel-labs/*"]},
   /* ---- L5 단계스킬 ---- */
   "op-dev":{t:"op-dev (7 skills)",badge:"stable",layer:"L6 · 단계 스킬",tag:"코드 개발",
     desc:"코드 개발 라이프사이클의 단계 스킬 묶음. Pilot이 워커에게 디스패치한다.",

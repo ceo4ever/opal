@@ -17,6 +17,41 @@ oppl의 검증은 두 개의 서로 직교하는 축으로 구성된다.
 
 ---
 
+## 1.5 증거 충실도 사다리 (Evidence Fidelity Ladder)
+
+> 검증 3-tier(§2)·2원화(§3)가 "무엇을·언제·누가" 판정하는지를 규정한다면, 본 절은 "어떤 실행 환경에서 관찰된 결과라야 인정하는가"를 규정한다 — 목(mock) 상대 GREEN과 실 서버·실 브라우저 GREEN을 동일한 "verified"로 집계하는 갭을 봉쇄한다(069).
+
+### 1.5.1 충실도 3단계 정의
+
+| 단계 | 정의 |
+|------|------|
+| `mock` | 목(mock) 상대 테스트 코드 — 단위(unit) 수준. 실 네트워크·실 서버·실 브라우저 미개입. |
+| `real-http` | 실 서버 기동 + 계약 spec(예: OpenAPI/스웨거) 기반 실 HTTP 전수 conformance. auth 표면은 실 로그인 토큰 체인(로그인 → 토큰 → Authorization 헤더)을 포함해야 한다. |
+| `real-usage` | 실 브라우저(cmux browser 우선 / playwright 폴백) E2E — 실 진입점(entry point)·실 데이터 흐름을 통해 사용자와 동일한 경로로 관찰한다. |
+
+사다리 순서는 `mock(0) < real-http(1) < real-usage(2)`이며, 상위 단계가 하위 단계를 포함(subsume)한다.
+
+### 1.5.2 BE/FE 매핑
+
+| 영역 | 단위 | 통합 |
+|------|------|------|
+| BE | 테스트 코드(`mock`) | spec 기반 실 HTTP(`real-http`) |
+| FE | 목 허용 컴포넌트 테스트(`mock`) | 실 브라우저 × 실 BE(`real-usage`) |
+
+### 1.5.3 [MUST] done 규범
+
+완료(done)의 최종 증거는 사용자가 실제 접촉하는 방식과 같은 충실도에서 관찰된 것만 인정한다. 사용자 접촉 표면·여정은 real-usage PASS ≥1 없이 done을 인정하지 않는다.
+
+### 1.5.4 [MUST] 실행 주체
+
+oppl 프레임워크 도구는 규범·게이트만 정의하며, 실 HTTP 호출·브라우저 E2E 실행의 주체는 대상 프로젝트의 test-agent다.
+
+## 1.6 워킹 스켈레톤 게이트 메커니즘
+
+워킹 스켈레톤(실행 스켈레톤, `SKILL.md` D5 의무 — 069) 태스크의 존재·구성 판정은 backlog-tool 전용 게이트를 두지 않는다 — 어느 태스크가 스켈레톤인지 구조적으로 탐지하기 취약하기 때문이다. 대신 **D6 Evaluator 판정 항목**(스켈레톤 존재·구성 4항, binary — `opal-evaluator-agent/AGENT.md` Base 루브릭)으로 집행하며, 커버리지 게이트(`backlog-tool coverage-check`)가 스켈레톤 표면의 커버 여부를 간접 보강한다.
+
+---
+
 ## 2. 검증 3-tier 위계
 
 **결정론 → 루브릭 → 사람** 순서로, **하위 tier를 통과해야 상위 tier로 진행**한다 (Anthropic 등급 체계와 정합 — SPEC §09 근거).
@@ -34,10 +69,14 @@ oppl의 검증은 두 개의 서로 직교하는 축으로 구성된다.
 | Lint/Format | binary — 오류 0 | L1 · test-tool |
 | Build/Type | binary — pass | L2 |
 | Unit/Integration | binary — 100% green | L3a · test-tool |
-| E2E | binary — pass | L3b |
-| 계약 conformance | binary — 스키마·시그니처 일치, 계약테스트 pass | test-agent + 계약테스트 (`contract.md` §2.2 기계검증절) |
+| E2E(L3b) | binary — pass, 실행 환경=실 브라우저(cmux-tool 우선/playwright 폴백) | L3b |
+| 계약 conformance | binary — 표면 인벤토리 전수(분모=surfaces.json) 실 서버·실 HTTP 대조, `surface_unverified` exit 시 fail (상세 §2.1.1) | test-agent + `test-tool scenario-conformance` (`contract.md` §2.2 기계검증절) |
 | 커버리지 | threshold — ≥ N% | test-tool |
 | 보안·정적분석 | threshold — critical 0 | security-checker |
+
+#### 2.1.1 [MUST] 계약 conformance 실행 규범 (원문)
+
+분모=표면 인벤토리(surfaces.json) 전수. 실행 방식=실 서버 기동+실 HTTP로 응답 형태를 계약과 대조하며, `auth:required` 표면은 실 로그인 토큰 체인(로그인→토큰→Authorization 헤더)으로 호출해야 결과 인정(목·핸들러 단위 테스트 대체 불인정). origin 선언 시 표면 전수에 Origin 헤더 요청 + preflight(OPTIONS)를 보내 `Access-Control-Allow-*`를 계약과 대조(CORS 결정론 검사).
 
 ### 2.2 ② 루브릭 기준 항목
 
@@ -165,3 +204,5 @@ T5 마무리
 |------|------|---------|
 | v1.0 | 2026-07-10 16:33 | 초기 작성 — 검증 3-tier(결정론/루브릭/사람) 기준 항목 표, 검증 2원화 순서 불변 규칙 + drift 재콜백 예외, 산출물 자동 생성·GC-*/QA-* 기록 규칙·VERIFICATION.md 폴백, 결과 계약 스키마 정의 (056) |
 | v1.1 | 2026-07-10 | §3 검증 2원화 절에 "T2 테스트시나리오(RED-first) 세부 순서" 추가 — scenario-init(시드 무력화) → RED 실관찰 → scenario-red(증거 tool-gated 갱신) → scenario-lock 순서 명시 (056/ADD-1) |
+| v1.2 | 2026-07-18 22:33 | §1.5 신설 "증거 충실도 사다리" — mock/real-http/real-usage 3단계 정의·BE/FE 매핑·real-usage done 규범([MUST])·oppl 도구 vs 대상 프로젝트 test-agent 실행 주체 분리([MUST]) 명문화. 기존 §2~§5 절 번호 불변 (069) |
+| v1.3 | 2026-07-18 22:45 | §2.1 "계약 conformance" 행 갱신([MUST] 분모=surfaces.json 전수·실 서버+실 HTTP·auth 토큰 체인·CORS preflight 결정론 검사, 원문은 §2.1.1로 분리) + `test-tool scenario-conformance` 도구 반영, "E2E(L3b)" 행에 실행 환경(실 브라우저, cmux-tool 우선/playwright 폴백) 명시. §1.6 신설 "워킹 스켈레톤 게이트 메커니즘"(D6 Evaluator 판정 항목 집행 + 커버리지 게이트 간접 보강) (069) |

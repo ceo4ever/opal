@@ -201,14 +201,18 @@ D7 사용자 확정 게이트 — 4요소 잠김 확인 → docs/ 승격
 - 하네스 Guards: 구현 금지. 지정 산출물 외 파일 생성 금지.
 ```
 
-**D4 CONTRACT 작성 [워커 디스패치]**: TRD 확정 후, 동일 Planner에게 CONTRACT.md를 디스패치한다 — 구조는 `references/contract.md` §2(스키마·시그니처·경계 + 기계검증절 + 루브릭절)를 따른다.
+**D4 CONTRACT 작성 [워커 디스패치]**: TRD 확정 후, 동일 Planner에게 CONTRACT.md를 디스패치한다 — 구조는 `references/contract.md` §2(스키마·시그니처·경계 + 기계검증절 + 루브릭절)를 따른다. [MUST] 디스패치 프롬프트는 `surfaces.json` 생성(표면 전수 나열·각 표면 `auth` 필드 선언·인증 표면 자체도 등재)과, 웹 클라이언트가 존재하는 프로젝트의 경우 `origins` 선언을 요구한다 — 구조 스펙은 `references/contract.md` §2.2.1로 위임한다.
 
 **D5 백로그 생성**: PM이 PRD/TRD/CONTRACT을 얇은 수직 슬라이스로 분해하여 backlog-tool로 등록한다 (USER_JOURNEY.md가 있으면 "여정 단계 → 슬라이스" 매핑을 분해 기준으로 사용).
 
+[MUST] D5 백로그의 의존 루트(P0) 태스크로 "실행 스켈레톤" 슬라이스를 의무화한다 — 구성: (a) BE 서버 기동+스웨거(OpenAPI) UI 노출(surfaces.json 연동), (b) FE dev 서버 기동, (c) 실 브라우저(cmux browser)에서 FE→BE 실 호출 1개 관통, (d) auth 표면 존재 시 로그인 관통. 이후 전 태스크의 real-http/real-usage 검증이 이 환경 위에서 실행된다(목 개발의 "실 BE 부재" 사유 원천 제거).
+
 ```
 ~/.opal/tools/backlog-tool/run.sh init <task-path> --project-title "{프로젝트명}" --mode <m> --goal "{목표 요약}"
-~/.opal/tools/backlog-tool/run.sh add-task <task-path> --id T01 --title "{제목}" --slice "{슬라이스 설명}" --acceptance '["AC1","AC2"]' --area <fe|be|db|공통|통합> --priority <P0|P1|P2> [--depends <T00>] [--parallel-group <g>]
+~/.opal/tools/backlog-tool/run.sh add-task <task-path> --id T01 --title "{제목}" --slice "{슬라이스 설명}" --acceptance '["AC1","AC2"]' --area <fe|be|db|공통|통합> --priority <P0|P1|P2> [--depends <T00>] [--parallel-group <g>] [--covers '["<surface-id>", ...]']
 ```
+
+`--covers`에는 해당 태스크가 커버하는 `surfaces.json`의 표면 id 배열을 지정한다 — 실행 스켈레톤·표면별 구현 태스크 모두 대응 표면 id를 `--covers`로 선언해야 D7 이전 `coverage-check`가 통과한다.
 
 **D6 Evaluator 설계 검토 [워커 디스패치]**: opal-evaluator-agent를 `phase: design-review`로 디스패치한다.
 
@@ -225,6 +229,8 @@ project_root: {프로젝트 루트}
 verdict가 `fail`이거나 미해결 이슈가 있으면 D2~D5로 재회전한다(재회전 상한은 `references/loop-control.md` §2). verdict `pass` + 미해결 0이면 D7로 진행한다.
 
 **D7 사용자 확정 게이트**: 4요소(PRD/TRD/CONTRACT/BACKLOG)가 잠겼음을 사용자에게 보고하고 승인을 받는다. 승인 시 PRD/TRD/CONTRACT을 `docs/`에 승격(oppd 1-3 승격 판단 로직 준용 — greenfield/반복 델타 병합)하고 Loop 2로 진입한다. 이 게이트는 loop-control.md §9 "사람 게이트" 대상이다(TRD/PRD 확정 = 비가역 행동).
+
+[MUST] D7 진입 전 PM은 `~/.opal/tools/backlog-tool/run.sh coverage-check <task-path> --surfaces <surfaces.json>`을 호출한다. `surface_uncovered`(미커버 표면 존재) 또는 `integration_task_missing`(병렬 그룹 존재+통합 태스크 부재) 거부 시 D7에 진입하지 않고 D5로 되돌려 백로그를 재작업한다.
 
 Gate 시 state-tool 호출:
 ```
@@ -270,8 +276,9 @@ L✓ 종료 판정 — backlog-tool done-check
 **L✓ 종료 판정**:
 ```
 ~/.opal/tools/backlog-tool/run.sh done-check <task-path>
+~/.opal/tools/test-tool/run.sh scenario-conformance --task-path <task-path> --surfaces <surfaces.json>
 ```
-`all_done:true`이면 회귀 스위트(변경 영향 슬라이스 재검증)를 마지막으로 1회 확인한 뒤 Loop 2를 종료한다. `all_done:false`이면 `remaining[]`을 L0에 다시 투입한다. 이 판정은 무진전 감지(`references/loop-control.md` §4 "백로그 정체" 신호)의 관찰 대상이기도 하다.
+[MUST] Loop 2 종료는 3중 불리언 AND로 판정한다 — `done-check.all_done`(태스크 축) ∧ `scenario-conformance.all_surfaces_green`(표면 축) ∧ 회귀 0. 세 조건 중 하나라도 미충족이면 종료하지 않는다: `all_done:false`이면 `remaining[]`을 L0에 다시 투입하고, `all_surfaces_green:false`(`surface_unverified`)이면 해당 표면을 커버하는 태스크를 L0에 재투입한다. user-facing 프로젝트는 여기에 여정 스모크 1회(`references/journey-flow.md` §6)를 더한다. 이 판정은 무진전 감지(`references/loop-control.md` §4 "백로그 정체" 신호)의 관찰 대상이기도 하다.
 
 Gate 시 state-tool 호출:
 ```
@@ -285,27 +292,29 @@ Gate 시 state-tool 호출:
 
 백로그의 태스크 하나가 거치는 파이프라인. **검증 2원화**(Evaluator 구현 전 / test-agent 구현 후)가 이 안에서 발생한다 — 상세는 "검증 2원화" 절과 `references/verification.md` 참조.
 
+> [MUST] PM은 L0 태스크 선택 후 **태스크당 `opal-loop-action-agent`를 1회 디스패치**하며, T1~T5+G 전체를 루프 액션 에이전트가 내부 디스패치로 완주한다. PM의 L0/L∞/done-check/사람 게이트 소유는 불변이다.
+
 ```
-T1 명세·설계 — PLAN.md (+ USER_FLOW.md*, 인터랙션 슬라이스만) [생성자 디스패치]
+T1 명세·설계 — PLAN.md (+ USER_FLOW.md*, 인터랙션 슬라이스만) [opal-agent 채널 — 동기/비동기]
   ↓
-T2 테스트시나리오 — test-tool scenario-init, RED-first [생성자 디스패치 연속]
+T2 테스트시나리오 — test-tool scenario-init, RED-first [opal-agent 채널 — 동기/비동기]
   ↓
-G 명세 리뷰 게이트 — Evaluator, 구현 전 (phase: spec-review) [워커 디스패치] ★검증 2원화 ①
+G 명세 리뷰 게이트 — Evaluator, 구현 전 (phase: spec-review) [opal-agent 채널 — 동기/비동기] ★검증 2원화 ①
   ↓ (verdict: fail) → T1 재작업 (반복상한 — loop-control.md §2)
   ↓ (verdict: pass)
-T3 구현 [생성자 디스패치 재개]
+T3 구현 [opal-agent 채널 — 동기/비동기]
   ↓
-T4a 테스트 — test-agent, 구현 후 [워커 디스패치] ★검증 2원화 ②
+T4a 테스트 — test-agent, 구현 후 [opal-agent 채널 — 동기/비동기] ★검증 2원화 ②
   ↓ (fail) → T3 재작업 (하네스 §1 재시도 한도)
   ↓ (pass)
-T4b 규칙검사 — conv/sec-checker, 변경 파일 대상 [저위험 인라인 경량화 / 고위험 디스패치]
+T4b 규칙검사 — conv/sec-checker, 변경 파일 대상 [저위험 인라인 경량화 / 고위험 디스패치 — opal-agent 채널 — 동기/비동기]
   ↓
 T5 마무리 — DONE.md
 ```
 
-**T1 명세·설계**: 태스크의 `area`(fe|be|db|공통|통합)로 생성자를 resolve하여 디스패치한다(아래 "디스패치" 절). PLAN.md(태스크 미시 설계)를 작성한다. 인터랙션 슬라이스면 `USER_FLOW.md`를 함께 작성한다(`references/journey-flow.md` §4). 순수 API/BE 슬라이스는 USER_FLOW.md 없이 CONTRACT.md 기계검증절의 계약 테스트로 대체한다.
+**T1 명세·설계**: 태스크의 `area`(fe|be|db|공통|통합)로 루프 액션 에이전트가 생성자를 resolve하여 내부 디스패치한다(아래 "디스패치" 절). PLAN.md(태스크 미시 설계)를 작성한다. 인터랙션 슬라이스면 `USER_FLOW.md`를 함께 작성한다(`references/journey-flow.md` §4). 순수 API/BE 슬라이스는 USER_FLOW.md 없이 CONTRACT.md 기계검증절의 계약 테스트로 대체한다.
 
-**T2 테스트시나리오 (RED-first)**: 동일 생성자 디스패치 내에서(또는 연속 호출로) test-tool `scenario-init`을 호출하고, opal-test-agent(mode: red)가 실패 테스트를 작성·실행해 RED를 실관찰한 후 `scenario-red`로 `red_confirmed`를 증거와 함께 tool-gated로 갱신한다.
+**T2 테스트시나리오 (RED-first)**: 루프 액션 에이전트가 scenario-* 도구를 호출하고 test-agent(red)를 내부 디스패치한다 — test-tool `scenario-init`을 호출하고, opal-test-agent(mode: red)가 실패 테스트를 작성·실행해 RED를 실관찰한 후 `scenario-red`로 `red_confirmed`를 증거와 함께 tool-gated로 갱신한다.
 ```
 ~/.opal/tools/test-tool/run.sh scenario-init --task-path <T{NN}-path> --scenarios '[{...}]'
 # opal-test-agent(mode: red) — 실패 테스트 작성·실행(RED 실관찰)
@@ -314,7 +323,7 @@ T5 마무리 — DONE.md
 ```
 `scenario-init`은 `red_confirmed`를 항상 `false`로 생성한다(시드 입력 무시) — RED 미관찰 상태를 시드로 우회 선언하는 경로를 봉쇄한다. `red_confirmed`는 오직 `scenario-red`(RED 증거 tool-gated 갱신)로만 true가 될 수 있으며, `locked==true` 이후에는 `scenario-red`도 거부된다. `scenario-lock`이 `red_not_confirmed`를 반환하면 G 게이트에 진입하지 않는다 — self-confirming 테스트를 원천 차단한다(H-2, enforce-don't-advise 보강 — 056/ADD-1).
 
-**G 명세 리뷰 게이트 [워커 디스패치, 구현 전]**: opal-evaluator-agent를 `phase: spec-review`로 디스패치한다.
+**G 명세 리뷰 게이트 [루프 액션 에이전트→Evaluator 내부 디스패치, 구현 전]**: 루프 액션 에이전트가 opal-evaluator-agent를 `phase: spec-review`로 내부 디스패치한다.
 ```
 [WORKER]
 task_folder: tasks/{NNN}-oppl-{프로젝트명}/tasks/T{NN}-{태스크명}/
@@ -326,33 +335,41 @@ project_root: {프로젝트 루트}
 ```
 verdict `fail` → T3에 진입하지 않고 T1로 되돌린다. verdict `pass` → T3 진입.
 
-**T3 구현 [생성자 디스패치 재개]**: G verdict pass 후에만 생성자에게 구현을 지시한다. 하네스 §1 자동 루핑 제약(lint/build/test 재시도 한도)을 따른다.
+**T3 구현 [루프 액션 에이전트→생성자 재개 지시]**: G verdict pass 후에만 루프 액션 에이전트가 생성자에게 구현 재개를 지시한다. 하네스 §1 자동 루핑 제약(lint/build/test 재시도 한도)을 따른다.
 
-**T4a 테스트 [워커 디스패치, 구현 후]**: opal-test-agent를 디스패치하여 test-scenario.json의 시나리오를 실행하고 result존을 기록한다.
+**T4a 테스트 [루프 액션 에이전트→test-agent 내부 디스패치, 구현 후]**: 루프 액션 에이전트가 opal-test-agent를 내부 디스패치하여 test-scenario.json의 시나리오를 실행하고 result존을 기록한다.
 ```
 ~/.opal/tools/test-tool/run.sh scenario-mark --task-path <T{NN}-path> --id S1 --result pass --evidence "{근거}"
 ~/.opal/tools/test-tool/run.sh scenario-status --task-path <T{NN}-path>
 ```
+[MUST] T4a는 `test-tool scenario-fidelity-check` 통과(요구 충실도 충족)를 완료 요건으로 삼는다 — 요구 충실도 주입·게이트 호출 상세는 `opal/agents/opal-loop-action-agent/AGENT.md`로 위임한다.
 
-**T4b 규칙검사**: 변경 파일이 저위험(소규모·단일 파일)이면 opal-convention-checker/opal-security-checker를 PM이 인라인으로 결과만 요약 요청하거나 생략 판단하고, 고위험(다중 파일·계약 영향)이면 정식 디스패치한다.
+**T4b 규칙검사**: 루프 액션 에이전트가 규모 판정 후 인라인 또는 내부 디스패치한다 — 변경 파일이 저위험(소규모·단일 파일)이면 opal-convention-checker/opal-security-checker를 인라인으로 결과만 요약하거나 생략 판단하고, 고위험(다중 파일·계약 영향)이면 내부 디스패치한다.
 
 **T5 마무리**: DONE.md를 작성하고 L∞ 관찰로 복귀한다.
 
 ---
 
-## 디스패치 (하이브리드 C)
+## 디스패치 (루프 액션 에이전트)
 
-oppl은 **생성자(constructor)** 와 **Evaluator**를 별도 축으로 디스패치한다 — 태스크당 노미널 **~3회** 디스패치.
+PM은 **태스크당 `opal-loop-action-agent`를 1회 디스패치**하며, 루프 액션 에이전트가 내부에서 생성자(constructor)·Evaluator·test-agent를 각각 별도 축으로 디스패치하여 T1~T5+G 전체를 완주한다.
 
 | # | 시점 | 대상 | 역할 |
 |---|------|------|------|
-| ① | T1+T2 | 생성자 (도메인 resolve) | 명세·설계 + RED-first 시나리오 작성 |
+| PM 디스패치 | L0 태스크 선택 후 | `opal-loop-action-agent` | 태스크당 1회 — T1~T5+G 전체 위임 |
+
+**루프 액션 에이전트 내부 디스패치** (루프 액션 에이전트가 내부에서 수행 — PM 디스패치 횟수에 포함되지 않음):
+
+| # | 시점 | 대상 | 역할 |
+|---|------|------|------|
+| ①a | T1 | 생성자 (도메인 resolve) | 명세·설계 |
+| ①b | T2 | test-agent(mode:red) | RED-first 시나리오 작성 |
 | ② | G | opal-evaluator-agent | 명세 리뷰 (구현 전) |
-| ③ | T3 (verdict pass 후 재개) | 생성자 (①과 동일 에이전트) | 구현 |
+| ③ | T3 (verdict pass 후 재개) | 생성자 (①a와 동일 에이전트) | 구현 |
 
-T4a(test-agent, 구현 후)는 검증 2원화의 두 번째 축으로 별도 카운트되며, T4b(conv/sec-checker)는 **저위험 슬라이스에서 인라인 경량화**(디스패치 생략, PM이 결과만 확인)하여 전체 디스패치 수를 절약한다. **drift 재콜백**(구현/테스트 중 CONTRACT.md와의 불일치 발견 시에만) 외에는 Evaluator를 재호출하지 않는다(`references/contract.md` §4).
+루프 액션 에이전트 내부에서 T4a(test-agent, 구현 후)는 검증 2원화의 두 번째 축으로 별도 디스패치되며, T4b(conv/sec-checker)는 **저위험 슬라이스에서 인라인 경량화**(디스패치 생략, 결과만 요약)하여 내부 디스패치 수를 절약한다. **drift 재콜백**(구현/테스트 중 CONTRACT.md와의 불일치 발견 시에만) 외에는 Evaluator를 재호출하지 않는다(`references/contract.md` §4).
 
-**생성자 도메인 resolve** — 태스크의 `area` 필드로 결정한다:
+**생성자 도메인 resolve** — 루프 액션 에이전트가 태스크의 `area` 필드로 결정한다:
 
 | area | 생성자 |
 |------|--------|
@@ -361,15 +378,21 @@ T4a(test-agent, 구현 후)는 검증 2원화의 두 번째 축으로 별도 카
 | `db` | opal-db-agent |
 | `공통` / `통합` | opal-task-agent (범용) |
 
-**디스패치 idiom**: opsdd EXECUTE-LOOP의 서술형 디스패치를 준용한다 — 프롬프트 첫 줄에 `[WORKER]` 마커(부트스트랩 생략)를 넣고, `task_folder`·`phase`(Evaluator 한정)·`project_root`·참조 문서 경로를 명시한다. 생성자 디스패치는 opal-task-action-agent류의 자율 완주(PLAN→EXECUTE→VERIFY)가 아니라 T1~T3 범위로 한정된 지시임에 유의한다(G 게이트가 T2와 T3 사이를 끊는다).
+**디스패치 idiom (PM → 루프 액션 에이전트)**: PM은 프롬프트 첫 줄에 `[WORKER]` 마커(부트스트랩 생략)를 넣고, `opal-loop-action-agent`의 입력 명세 10필드(`task_id, task_goal, task_scope, task_area, acceptance, task_folder, verify_commands, contract_path, project_root, project_context` — `opal/agents/opal-loop-action-agent/AGENT.md` §입력 명세 참조)를 전달한다.
+
+**디스패치 idiom (루프 액션 에이전트 → 생성자/Evaluator/test-agent)**: opal-agent 채널 호출(동기/비동기 이원화·`[WORKER]` 마커 — `opal/agents/opal-loop-action-agent/AGENT.md` §실행 프로세스 참조)을 따른다 — 루프 액션 에이전트가 area로 생성자 도메인을 resolve한 후 내부 디스패치하며, T1~T5+G 전체가 루프 액션 에이전트 위임 범위다(G 게이트가 루프 액션 에이전트 내부에서 T2와 T3 사이를 끊는다).
+
+**blocked 반환 시**: 루프 액션 에이전트가 `status: blocked`를 반환하면 PM은 즉시 자율 재시도를 중단하고 `blockers[]` 사유를 확인하여 사용자에게 에스컬레이션한다(`references/loop-control.md` §7·§9). 루프 액션 에이전트는 소유자에게 직접 에스컬레이션하지 않는다.
+
+**진행 현황 모니터링**: 루프 액션 에이전트 실행 중/완료 후에는 `~/.opal/tools/opal-action-monitor/run.sh <task_folder> [--watch]`로 단계×축 현황판을 관측할 수 있다. 결과 파일 규약 v2·운행 일지(journal) 상세는 `opal/agents/opal-loop-action-agent/AGENT.md` 참조. 스킬 발동: `//opas [태스크폴더]` — 자동 탐지 + 해석 보고(읽기 전용).
 
 ---
 
 ## 검증 2원화
 
-**Evaluator(명세 심판, 구현 전) / test-agent(동작 검증, 구현 후)** — 순서가 뒤바뀌면 G 게이트가 무력화된다(H-9). 상세 규칙(순서 불변 4항목, drift 재콜백 예외, 순서 evidence 확인 방법)은 `references/verification.md` §3을 따른다.
+**루프 액션 에이전트 내부에서 Evaluator(명세 심판, 구현 전) → test-agent(동작 검증, 구현 후)** 순서로 진행하며, 순서가 뒤바뀌면 G 게이트가 무력화된다(H-9). 상세 규칙(순서 불변 4항목, drift 재콜백 예외, 순서 evidence 확인 방법)은 `references/verification.md` §3을 따른다.
 
-검증 3-tier(① 결정론 code-based → ② 루브릭 LLM-judge → ③ 사람)와의 교차점: G 게이트 = "Evaluator" × "② 루브릭", T4a = "test-agent" × "① 결정론". 전체 tier 표·실패 시 되돌림 규칙은 `references/verification.md` §2를 따른다.
+검증 3-tier(① 결정론 code-based → ② 루브릭 LLM-judge → ③ 사람)와의 교차점: G 게이트 = "Evaluator" × "② 루브릭", T4a = "test-agent" × "① 결정론". 전체 tier 표·실패 시 되돌림 규칙은 `references/verification.md` §2를 따른다. 충실도 사다리·done 규범: `references/verification.md` §1.5.
 
 ---
 
@@ -378,7 +401,7 @@ T4a(test-agent, 구현 후)는 검증 2원화의 두 번째 축으로 별도 카
 Loop 1·Loop 2·태스크 내부 파이프라인 모두 아래 **5종 종료조건**을 갖는다 — 상세는 `references/loop-control.md`를 참조한다.
 
 1. **반복 상한** — 루프별 hard iteration cap (`references/loop-control.md` §2; 수치는 `opal/core/references/opal-harness.md` §1 자동 루핑 제약 표를 참조하며 복제하지 않는다)
-2. **예산** — 토큰/비용 예산, 디스패치 하이브리드 C 초과 재디스패치를 소진 신호로 관찰 (`references/loop-control.md` §3)
+2. **예산** — 토큰/비용 예산, 태스크당 루프 액션 에이전트 1회 디스패치를 초과하는 재디스패치를 소진 신호로 관찰 (`references/loop-control.md` §3)
 3. **무진전 감지** — 백로그 정체·동일 실패 반복·drift 반복 재콜백 등 신호 (`references/loop-control.md` §4)
 4. **목표 달성 체크** — 도구 결과(`backlog-tool done-check`, `test-tool scenario-status`)로만 판정, 주관적 판단 배제 (`references/loop-control.md` §5)
 5. **사람 게이트** — 배포·DB·TRD/PRD 확정·외부 계약 등 비가역 행동 전 항상 사용자 승인 (`references/loop-control.md` §9)
@@ -425,7 +448,7 @@ opal-harness-agentic.md / opal-harness-semi-agentic.md 참조. 본 절은 이 �
 TASK (사용자 승인)
   → Loop 1 D1~D6      -- 사용자 검토 (인터뷰/PRD/TRD/CONTRACT/백로그/D6 Evaluator 검토 축적)
   → D7 사용자 확정 게이트  -- 사용자 승인 (모드 경계)
-  → Loop 2 L0~L✓       -- PM 자율 관리 (태스크별 G 게이트 + T4a/T4b 포함)
+  → Loop 2 L0~L✓       -- PM 자율 관리 (태스크별 루프 액션 에이전트 디스패치, G 게이트 + T4a/T4b 포함)
   → VERIFY (L✓ 종료 판정) -- PM 직접 확인 → 사용자 Gate (= CLOSE 진입 게이트)
   → CLOSE              -- (사용자 승인 후) DONE.md 생성 + 최종 보고
 ```
@@ -476,7 +499,7 @@ opal-harness-agentic.md 공통 기준에 추가:
 
 - **태스크 간 병렬**: 기본은 worktree 격리(`.worktrees/{task-id}/`) — 의존관계 없는 태스크는 병렬 디스패치한다.
 - **태스크 내 FE/BE 병렬**: CONTRACT.md가 이미 고정(잠김)되어 있을 때만 허용한다 — 계약이 확정되지 않은 상태에서 FE/BE를 병렬로 진행하면 인터페이스 drift 위험이 커진다.
-- **통합 태스크 필수**: 병렬 그룹마다 머지 후 통합 검증(계약 conformance + 회귀)을 담당하는 통합 태스크를 백로그에 별도로 둔다.
+- **통합 태스크 필수**: 병렬 그룹마다 머지 후 통합 검증(계약 conformance + 회귀)을 담당하는 통합 태스크를 백로그에 별도로 둔다. 이 규칙은 prose 권고에 그치지 않는다 — `backlog-tool coverage-check`가 parallel_group 존재 + area=통합 태스크 부재를 `integration_task_missing`으로 거부하여 도구가 집행한다(D7 진입 게이트).
 - **STATE.md는 PM 단독 갱신**: 병렬 실행 중에도 STATE.md는 오케스트레이터(PM)만 갱신한다(동시 쓰기 충돌 방지). backlog.json은 `backlog-tool mark`의 파일 락(H-3, README §4)으로 동시 쓰기 안전성을 보장하므로 태스크별 상태 반영은 각 태스크 완료 시점에 즉시 반영해도 된다.
 
 ---
@@ -528,6 +551,10 @@ Loop 1 재회전 {N}회 · Loop 2 태스크 {M}개 완주.
 1. `{프로젝트}/.opal/skills/opal-project-init/SKILL.md`
 2. `~/.opal/skills/opal-project-init/SKILL.md`
 
+**opal-loop-action-agent (Loop 2 루프 액션 에이전트, PM이 태스크당 1회 디스패치)**:
+1. `{프로젝트}/.opal/agents/opal-loop-action-agent/AGENT.md`
+2. `~/.opal/agents/opal-loop-action-agent/AGENT.md`
+
 **opal-planning-agent / opal-plan-agent (Loop 1 D2~D4 생성자)**:
 1. `{프로젝트}/.opal/agents/opal-planning-agent/AGENT.md`, `opal-plan-agent/AGENT.md`
 2. `~/.opal/agents/opal-planning-agent/AGENT.md`, `opal-plan-agent/AGENT.md`
@@ -562,3 +589,9 @@ Loop 1 재회전 {N}회 · Loop 2 태스크 {M}개 완주.
 |------|------|---------|
 | v1.0 | 2026-07-10 16:44 | 초기 작성 (056) |
 | v1.1 | 2026-07-10 | T2 테스트시나리오 절에 `scenario-red` 단계 반영 — RED 실관찰 → `scenario-red`(증거 tool-gated 갱신) → `scenario-lock` 순서로 변경, red_confirmed 시드 무력화 안내 추가 (056/ADD-1) |
+| v1.2 | 2026-07-17 12:12 | 태스크 내부 파이프라인(T1~T5+G)을 `opal-loop-action-agent`(태스크당 1회 디스패치 루프 액션 에이전트)에 위임하는 구조로 개편 — ASCII 마커·T1/G/T3/T4a/T4b 서술·검증 2원화 주체를 루프 액션 에이전트로 명시, §디스패치를 "하이브리드 C(~3회)"에서 "루프 액션 에이전트 1회 디스패치(내부 4축)"로 재구성, 루프 액션 에이전트 디스패치 idiom(입력 10필드)·blocked 에스컬레이션 경로 추가, 스킬 탐색 경로·자율 게이트 흐름 문구 정합. PM의 L0/L∞/done-check/사람 게이트 소유는 불변 (065) |
+| v1.3 | 2026-07-17 14:24 | 내부 디스패치 서술을 opal-agent 채널로 정합(T1~T4b 각 단계에 "[opal-agent 채널 — 동기/비동기]" 표기) + §디스패치 표 ①T2를 ①a(생성자)/①b(test-agent mode:red)로 분리하여 T2=test-agent(mode:red) 귀속 정정(H-10) (066) |
+| v1.4 | 2026-07-17 16:20 | §디스패치 절에 진행 현황 모니터링 안내 추가 — `oppl-monitor` 도구 포인터 + 결과 파일 규약 v2/운행 일지는 `opal-loop-action-agent/AGENT.md` 참조로 위임 (067) |
+| v1.5 | 2026-07-17 23:04 KST | 진행 현황 모니터링 도구 포인터 리네임 — `oppl-monitor` → `opal-action-monitor` (067) |
+| v1.6 | 2026-07-17 KST | 진행 현황 모니터링 안내에 스킬 발동 `//opas [태스크폴더]`(opal-action-status) 1줄 추가 — 자동 탐지 + 해석 보고(읽기 전용) (068) |
+| v1.7 | 2026-07-18 22:46 KST | D4에 surfaces.json(표면 전수·auth·인증표면 등재)+origins 선언 요구 추가(contract.md §2.2.1 참조 위임) / D5에 실행 스켈레톤 P0 태스크 의무(구성 4항)+`add-task --covers` 안내 추가 / D7 진입 전 `coverage-check` 게이트 호출 의무화 / L✓ 종료 판정을 `done-check.all_done` ∧ `scenario-conformance.all_surfaces_green` ∧ 회귀 0 3중 AND로 확장(user-facing 여정 스모크 포함) + T4a에 `scenario-fidelity-check` 통과 요건 1줄 / 병렬 실행 절 "통합 태스크 필수"를 `coverage-check`(`integration_task_missing`) 게이트와 연결 / 검증 2원화 절에 충실도 규범 참조(`verification.md` §1.5) 추가 (069) |

@@ -7,8 +7,8 @@
   "additionalProperties": false,
   "properties": {
     "schema_version": {
-      "const": "1.0",
-      "description": "스키마 버전 — 신규 필드 추가 시 1.1로 올림"
+      "enum": ["1.0", "1.1"],
+      "description": "스키마 버전 — 1.1(069): tasks[].covers(표면 커버리지) 필드 추가. 기존 1.0 파일은 covers 없이도 무파손 로드(런타임 미검증, additive)"
     },
     "project_title": {
       "type": "string",
@@ -108,6 +108,11 @@
               {"type": "null"}
             ],
             "description": "선택 필드 — mark --note로 기재된 메모"
+          },
+          "covers": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "선택 필드(069, optional additive) — 이 태스크가 커버하는 표면(surfaces.json surfaces[].id) 목록. 미지정 시 빈 배열([])로 기록"
           }
         }
       }

@@ -90,7 +90,7 @@ context7 사용 우선순위: 학습 데이터 한계가 있는 최신 라이브
 
 | 단계 스킬 | 권장 model |
 |----------|-----------|
-| op-dev-analysis | light |
+| op-dev-analysis | standard |
 | op-dev-plan | advanced |
 | op-dev-todo | light |
 | op-dev-test-scenario | light |
@@ -103,3 +103,4 @@ context7 사용 우선순위: 학습 데이터 한계가 있는 최신 라이브
 | v1.0 | — | 초기 작성 |
 | v1.1 | 2026-05-12 11:16 | EXECUTE 진입 시 coding-principles.md §4 Read 의무 추가 (Step 5.5) — op-dev-execute 계열 (001) |
 | v1.2 | 2026-06-21 10:05 | frontmatter 기본 model `standard` → `advanced` (L2 경량) |
+| v1.3 | 2026-07-17 13:11 | 권장 model 표 op-dev-analysis light → standard — opal-pilot-dev v4.5 ANALYSIS 상향과 정합 (소유자 지시, L2) |

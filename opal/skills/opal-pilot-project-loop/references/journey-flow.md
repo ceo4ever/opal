@@ -84,6 +84,14 @@ flowchart LR
 
 ---
 
+## 6. 여정 스모크 게이트
+
+**[MUST]** user-facing 프로젝트는 L✓ 회귀에 USER_JOURNEY 첫 접촉 경로(예: 로그인→핵심 1기능)를 실 브라우저(cmux-tool 우선/playwright 폴백)로 실환경 E2E 1회 실행한다 — CORS·쿠키·리다이렉트 등 브라우저 계층 결함의 최종 안전망. 비 user-facing(인프라/라이브러리/CLI 내부)은 스킵하고 근거를 STATE.md/VERIFICATION.md에 1줄 기록. 결과는 VERIFICATION.md에 결과 계약(대상/결과/사유/시점)으로 기록한다.
+
+**적용 대상·스킵 조건**: §2 트리거 조건(user-facing 여부 판단)을 그대로 재사용한다 — 별도 기준을 두지 않는다.
+
+---
+
 ## 관련 문서
 
 - `opal/skills/opal-pilot-project-loop/SKILL.md` — 본 가이드를 인라인 참조하는 오케스트레이터 본문 (계층·핵심 개념 / Loop 1 D1.5 / 태스크 파이프라인 T1 절)
@@ -97,3 +105,4 @@ flowchart LR
 | 버전 | 일시 | 변경내용 |
 |------|------|---------|
 | v1.0 | 2026-07-10 16:33 | 초기 작성 — USER_JOURNEY(거시)/USER_FLOW(미시) 구분, Mermaid 작성 규칙, user-facing 프로젝트만 트리거, 인터랙션 슬라이스만 Flow 적용 정의 (056) |
+| v1.1 | 2026-07-18 22:34 | §6 여정 스모크 게이트 신설 — L✓ 회귀 첫 접촉 경로 실 브라우저 E2E 1회 의무·스킵 조건(§2 재사용)·기록 위치(VERIFICATION.md) (069) |

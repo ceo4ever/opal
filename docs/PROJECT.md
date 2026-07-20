@@ -104,8 +104,11 @@ llm-wiki 사상을 융합한 프로젝트 지식 위키 — 프로젝트의 WHY�
 |----------|------|------|------|
 | `opal-pilot-project-loop` | oppl | 오케스트레이터 | 2-루프 수렴: 설계 루프(인터뷰→PRD→TRD→CONTRACT→백로그) → 실행 루프(태스크 반복). 종료조건 5종(반복상한·예산·무진전·목표체크·사람게이트) |
 | `opal-evaluator-agent` | - | 서브에이전트 | 명세 심판 전담 — CONTRACT 루브릭절 기준 구현 전 판정(verdict-only·readonly). 검증 2원화의 전단(후단은 opal-test-agent) |
-| `backlog-tool` | - | 도구 | backlog.json SSOT 관리 CLI (6서브명령 init/add-task/select-next/mark/done-check/show, BACKLOG.md 자동 렌더) |
-| `test-tool scenario-*` | - | 도구 확장 | test-scenario.json SSOT — RED-first 동결 게이트 (scenario-init/lock/mark/status) |
+| `opal-loop-action-agent` | - | 서브에이전트 | Loop 2 루프 액션 에이전트 — PM이 태스크당 1회 디스패치, T1~T5+G를 내부 디스패치(생성자·Evaluator·test-agent·checker 4축)로 완주 후 소멸. 결과 계약 6필드 반환, 비가역·계약갱신 drift는 blocked 반환(PM 에스컬레이션) |
+| `backlog-tool` | - | 도구 | backlog.json SSOT 관리 CLI (8서브명령 init/add-task/select-next/mark/update-task/done-check/coverage-check/show, BACKLOG.md 자동 렌더). `covers` 필드 + `coverage-check`(표면 커버리지·통합 태스크 게이트 — surfaces.json 소비) |
+| `test-tool scenario-*` | - | 도구 확장 | test-scenario.json SSOT — RED-first 동결 게이트(scenario-init/red/lock/mark/status) + 충실도·표면 게이트(scenario-fidelity-check/scenario-conformance — required_fidelity·fidelity·surface_ref 필드, 증거 충실도 사다리 mock<real-http<real-usage) |
+| `opal-action-monitor` | - | 도구 | 루프 액션 에이전트 진행 현황판 — `.oppl-run/`(events.jsonl·journal.md·exitcode) 파싱, 단계×축 상태 렌더 + `--json`/`--watch` (읽기 전용) |
+| `opal-action-status` | opas | operator | 액션 에이전트 현황 발동층 — `//opas [태스크폴더]` 자동 탐지 + opal-action-monitor/backlog-tool 소비 + 해석 보고 (읽기 전용). 커버리지 oppl 한정, 069/070 전환 시 무변경 확장 |
 
 > 3-SSOT tool-gated: backlog.json(backlog-tool) · state.json(state-tool) · test-scenario.json(test-tool) — 사람 뷰는 자동 렌더, 손편집 금지.
 
@@ -160,6 +163,11 @@ PM의 학습·자기개선을 tool-gated로 집행하는 서브시스템 — 정
 
 | 날짜 | 변경 내용 |
 |------|----------|
+| 2026-07-18 | Project Loop 표 backlog-tool(8서브명령 — covers·coverage-check)·test-tool scenario-*(fidelity·conformance 게이트) 정합 — oppl 계약 접합면 검증 강화: 표면 인벤토리(surfaces.json)·증거 충실도 사다리·여정 스모크·워킹 스켈레톤 의무 도입 (Task 069) |
+| 2026-07-17 | Project Loop 표에 opal-loop-action-agent(루프 액션 에이전트) 행 추가 — 태스크당 1회 디스패치·내부 4축·blocked 계약 (Task 065) |
+| 2026-07-17 | Project Loop 표에 oppl-monitor 행 추가 — `.oppl-run/` 파싱 진행 현황판(--json/--watch, 읽기 전용). 내부 채널 stream-json 전환·journal 규약과 함께 도입 (Task 067) |
+| 2026-07-17 | 도구명 리네임 — `oppl-monitor` → `opal-action-monitor`(향후 oppd·opsdd 액션 에이전트 공통 관측 도구로 확장 예정이라 이름 중립화). Project Loop 표 행 갱신, 로직 무변경 (Task 067) |
+| 2026-07-17 | Project Loop 표에 opal-action-status(opas) operator 행 추가 — 액션 에이전트 현황 발동층(자동 탐지+해석 보고, 읽기 전용) (Task 068) |
 | 2026-06-12 | Data Design 파이프라인 섹션 추가 — opal-pilot-data-design(opdd), op-data-* 3종, opal-db-agent (Task 019) |
 | 2026-06-15 | OPAL Console 섹션 추가 — dashboard/frontend(React+shadcn)·backend(FastAPI)·opal-cli console + 프로젝트 구성 Console FE/BE 영역 (Task 021) |
 | 2026-06-18 | SDD 컴포넌트 표 정합 — op-sdd-tasks dangling 제거 + op-sdd-action-plan 등록. opal-brain 유형 오기재 교정 (오케스트레이터/Pilot → operator 멀티모드 라우터, alias opbr 불변) (Task 029) |

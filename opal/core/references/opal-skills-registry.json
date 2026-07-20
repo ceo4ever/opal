@@ -702,6 +702,21 @@
         "pipeline": "MODE: init | ingest | query | lint"
       },
       {
+        "name": "opal-action-status",
+        "alias": "opas",
+        "description": "루프 액션 에이전트 진행 현황 발동층 — 자동 탐지 + opal-action-monitor/backlog-tool 소비 + 해석 보고 (읽기 전용)",
+        "triggers": [
+          "^opas$",
+          "^opal-action-status$",
+          "(?i)(액션\\s*에이전트\\s*현황|루프\\s*진행\\s*상황)"
+        ],
+        "paths": [
+          "{project}/.opal/skills/opal-action-status/SKILL.md",
+          "~/.opal/skills/opal-action-status/SKILL.md"
+        ],
+        "domain": "dev"
+      },
+      {
         "name": "opal-workspace-sync",
         "alias": "opws",
         "description": "워크스페이스 Git 일괄 동기화 — 직속 자식 git 저장소 순회 + clean/ff-only pull, 문제 저장소(dirty/diverged/detached/no-upstream/fetch-failed)는 skip·보고·승인 후 조치",

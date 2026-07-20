@@ -33,6 +33,7 @@
         "type": "object",
         "required": ["id", "acceptance_ref", "type", "expected", "red_confirmed", "red_evidence", "red_at", "result", "evidence", "marked_at"],
         "additionalProperties": false,
+        "description": "069: required_fidelity/fidelity/surface_ref는 optional additive 필드(required 배열 미포함) — 기존 파일 무파손(H-6). 런타임 미검증(스키마는 참조용, scenario.py 게이트 로직이 `.get(...,\"mock\")` 방어 접근으로 실질 기본값을 부여한다).",
         "properties": {
           "id": {
             "type": "string",
@@ -75,6 +76,18 @@
           "marked_at": {
             "type": ["string", "null"],
             "description": "result존 — scenario-mark 기록 시점 (KST ISO 8601)"
+          },
+          "required_fidelity": {
+            "enum": ["mock", "real-http", "real-usage"],
+            "description": "spec존(069) — 시나리오가 반드시 검증돼야 할 증거 충실도(사다리: mock<real-http<real-usage). 미지정 시 mock(H-6, 관대한 기본값). scenario-fidelity-check 부분 게이트의 요구값"
+          },
+          "fidelity": {
+            "enum": ["mock", "real-http", "real-usage"],
+            "description": "result존(069) — scenario-mark --fidelity로 기록되는 실제 관찰된 증거 충실도. 미지정 시 mock(M-5, 목 수준으로 간주)"
+          },
+          "surface_ref": {
+            "type": ["string", "null"],
+            "description": "spec존(069, nullable) — 시나리오가 검증하는 표면(surface) id. scenario-conformance가 surfaces.json 표면과 대조하는 라벨"
           }
         }
       }

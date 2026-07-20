@@ -199,6 +199,30 @@
 - 신규: [[console-brain-volatile-single-session]], [[brain-prime-pool-need-based-refill]], [[console-brain-exit-guard-pattern]]
 - 출처: task:063
 
+## [2026-07-17] ingest | CLOSE ingest — 태스크 064 커뮤니티 스킬 관리 워크플로우 통일
+- 신규: [[community-skill-installation-architecture.md]], [[community-skill-basename-matching.md]], [[community-skill-user-registry.md]]
+- 출처: task:064
+
+## [2026-07-17] ingest | CLOSE ingest — 태스크 065 oppl 태스크 실행자(opal-loop-action-agent) 도입
+- 신규: [[pages/entity/opal-loop-action-agent.md]], [[pages/concept/oppl-executor-delegation-architecture.md]]
+- 출처: task:065
+
+## [2026-07-17] ingest | CLOSE ingest — 태스크 066 루프 액션 에이전트 opal-agent 채널 전환
+- 신규: [[oppl-internal-channel-opal-agent]]
+- 출처: task:066
+
+## [2026-07-17] ingest | CLOSE ingest — 태스크 067 루프 액션 에이전트 투명 모니터링
+- 신규: [[pages/concept/opal-agent-stream-json-passthrough.md]], [[pages/concept/oppl-run-record-journal-dual-observability.md]], [[pages/entity/opal-action-monitor.md]], [[pages/concept/red-first-hybrid-verification-track.md]]
+- 출처: task:067
+
+## [2026-07-18] ingest | CLOSE ingest — 태스크 068 opal-action-status(opas) 발동층 스킬 신설
+- 신규: [[pages/entity/opal-action-status.md]], [[pages/concept/observability-3layer-protocol-renderer-trigger-separation.md]]
+- 출처: task:068
+
+## [2026-07-19] ingest | CLOSE ingest — 태스크 069 oppl 계약 접합면 검증 강화
+- 신규: [[pages/concept/oppl-evidence-fidelity-principle.md]], [[pages/concept/oppl-surface-inventory-contract.md]], [[pages/concept/oppl-coverage-conformance-axis-split.md]]
+- 출처: task:069
+
 ## [2026-07-20] ingest | 태스크 058 CLOSE ingest — PM 개선 루프 tool-gated 재설계
 - 신규: [[pages/entity/opal-improve.md]], [[pages/entity/improve-tool.md]], [[pages/entity/fw-inbox-collection.md]], [[pages/concept/pm-improvement-loop-two-tracks.md]], [[pages/concept/local-fw-improvement-classification.md]], [[pages/flow/close-retrospective-hardstep.md]]
 - 출처: task:058

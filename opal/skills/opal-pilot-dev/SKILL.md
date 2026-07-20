@@ -45,7 +45,7 @@ op-dev-analysis 스킬을 수행하라.
 **참조 문서**: {docs/PROJECT.md 문서 테이블 기반 관련 문서 경로}
 **핵심 제약**: {[MUST] <문서명> §N: <인용문> 형식으로 원문 인용 필수 항목. 요약 허용 항목은 일반 목록}
 ```
-**model**: light
+**model**: standard
 
 워커 완료
   → **PM Gate** (분석 방향 종합 검토)
@@ -401,4 +401,5 @@ semi-agentic / agentic 모두 CLOSE 첫 행 `--auto-pass` 거부 (`agentic_close
 | v4.2 | 2026-06-11 19:25 | STEP 6 CLOSE에 op-brain-ingest 디스패치 훅 삽입 — DONE.md 생성 직후 brain 존재 시 태스크 산출물 누적, brain 부재 시 no-op, 어떤 status도 CLOSE 비중단 (016-brain, 별도 PC 016과 중복 채번) |
 | v4.3 | 2026-06-24 | CLOSE 단계 op-brain-ingest 디스패치 직전에 "관련 문서 업데이트" 스텝 삽입 — PROJECT.md 레지스트리 + changed_files 종합으로 관련 문서 최신화 후 ingest (없으면 no-op). 후속 항목 번호 재정렬 (042) |
 | v4.4 | 2026-07-10 13:12 | note 예시(산문)의 소유자 확인 표기를 `{owner_name} 확인:` 형식으로 통일 — identity.md owner_name 재해석 규칙(AGENT.md §정체성 적용)과 정합, 오염 차단 (054) |
-| v4.5 | 2026-07-17 | STEP 6 CLOSE에 "회고(개선 루프) 하드스텝" 삽입 — op-brain-ingest 직후·완료보고 직전, 궤적 신호→관찰/분류/기록(improve-tool record --scope local\|fw), 개선후보 0건 시 no-op 비차단(brain-ingest 패턴 답습) (058) |
+| v4.5 | 2026-07-17 13:05 | STEP 2 ANALYSIS 워커 model 레벨 상향 — light → standard (소유자 지시, L2) |
+| v4.6 | 2026-07-17 | STEP 6 CLOSE에 "회고(개선 루프) 하드스텝" 삽입 — op-brain-ingest 직후·완료보고 직전, 궤적 신호→관찰/분류/기록(improve-tool record --scope local\|fw), 개선후보 0건 시 no-op 비차단(brain-ingest 패턴 답습) (058) |

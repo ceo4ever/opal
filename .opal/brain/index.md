@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-07-20 11:05
+> 갱신: 2026-07-20 11:10
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -13,9 +13,12 @@
 - [[op-data-ddl-skill]] — op-data-ddl (DDL 단계 스킬) #skill #stage-skill #data-design #ddl #migration #dbml
 - [[op-data-dictionary-skill]] — op-data-dictionary (DICT 단계 스킬) #skill #stage-skill #data-design #dictionary #db
 - [[op-data-model-skill]] — op-data-model (MODEL 단계 스킬) #skill #stage-skill #data-design #modeling #erd #mermaid #dbml
+- [[opal-action-monitor]] — opal-action-monitor #tool #oppl #observability-boundary #monitor
+- [[opal-action-status]] — opal-action-status #skill #oppl #observability-boundary #operator
 - [[opal-console]] — OPAL Console #tool #dashboard #frontend #backend
 - [[opal-evaluator-agent]] — opal-evaluator-agent #agent #checker #verification #oppl
 - [[opal-improve]] — opal-improve (//opim) #skill #operator #improvement #pm-loop #tool-gated
+- [[opal-loop-action-agent]] — opal-loop-action-agent #agent #oppl #executor #action-agent
 - [[opal-workspace-sync]] — opal-workspace-sync (alias opws) #skill #workspace #git #operator
 - [[skill-opal-pilot-data-design]] — opal-pilot-data-design (opdd) #pilot #orchestrator #data-design #db
 - [[state-tool]] — state-tool #tool #pipeline
@@ -53,6 +56,9 @@
 - [[codex-platform-integration]] — Codex CLI OPAL 4번째 플랫폼 통합 #codex #platform #bootstrap #mcp #task
 - [[coding-principles-ssot]] — OPAL Coding Principles SSOT 신설 #framework #principles #ssot #task
 - [[cold-warm-session-separation]] — Cold-Warm Session 분리 설계 (Caller-Supplied Session ID) #session-management #architecture #caller-supplied #capability-flags #api-design
+- [[community-skill-basename-matching]] — 커뮤니티 스킬 basename alias 매칭 — 벤더 무관 호출 #architecture #community-skills #ux #routing
+- [[community-skill-installation-architecture]] — 커뮤니티 스킬 설치 아키텍처 — vendor 중첩 + clone-copy #architecture #community-skills #install #deploy
+- [[community-skill-user-registry]] — 커뮤니티 스킬 사용자 레지스트리 — install 배포 경계 격리 #architecture #community-skills #deploy #registry
 - [[config-file-concurrent-write-defense-standard]] — 설정 파일 동시 쓰기 방어 표준 #architecture #concurrency #backend #pattern #file-io
 - [[console-brain-exit-guard-pattern]] — 콘솔 브레인 이탈 가드 4경로 패턴 #brain #ux #guard #console #session-management
 - [[console-brain-volatile-single-session]] — 콘솔 브레인 휘발성 단일 세션 설계 전환 #brain #session-management #architecture #console #ux
@@ -78,6 +84,7 @@
 - [[model-mapping-2layer-override]] — 모델 매핑 2-레이어 오버라이드 (setting.json SSOT + 부트스트랩 step 0 머지) #model #mapping #setting #override #bootstrap
 - [[model-mapping-latest-tracking]] — OPAL 모델 매핑 최신화 + 최신 추종 전략 #model #mapping #gemini #codex #task
 - [[model-mapping-missing-cell-error-policy]] — 모델 매핑 미설정 셀 오류 정책 (폴백 없음 · "default" 폐기) #model #mapping #error #policy #setting
+- [[observability-3layer-protocol-renderer-trigger-separation]] — 관측 3층 구조 완성 — 데이터 규약·렌더러·발동층 역할 분리 #oppl #observability-boundary #architecture
 - [[op-brain-ingest]] — op-brain-ingest — CLOSE 경량 ingest 워커 #knowledge #close #ingest #skill
 - [[op-dev-analysis]] — op-dev-analysis — 코드베이스 분석 및 기술 컨텍스트 수집 #dev #analysis #skill
 - [[op-dev-execute]] — op-dev-execute — 코드 실행 단계 스킬 #dev #execute #skill
@@ -95,6 +102,7 @@
 - [[op-task-plan]] — op-task-plan — 범용 계획 수립 단계 스킬 #task #plan #skill
 - [[op-task]] — op-task — TASK.md 작성 단계 스킬 #task #skill
 - [[opal-adapter-platform-isolation]] — OPAL 어댑터 계층 플랫폼 분기 격리 원칙 #adapter #architecture #constitution #platform #codex
+- [[opal-agent-stream-json-passthrough]] — opal-agent stream-json 실행 경로 — 원본 이벤트 passthrough 결정 #opal-agent #stream-json #observability-boundary #headless-channel
 - [[opal-architecture]] — OPAL 시스템 아키텍처 #architecture #framework #layer #deploy
 - [[opal-bootstrap-2tier-model]] — OPAL 부트스트랩 2-tier 모델 (비서/PM 분리) #bootstrap #2tier #architecture #pm-gate #assistant-tier
 - [[opal-bootstrap-skip-gate]] — OPAL 부트스트랩 스킵 게이트 (setting.json Read 기반) #bootstrap #platform #adapter #session-toggle #setting-json
@@ -113,7 +121,13 @@
 - [[opi-v42-architecture-decisions]] — opi v4.2 아키텍처 결정 — 심층 분석·멀티서비스·워커 디스패치 #opi #opal-project-init #architecture-decision #multi-service #worker-dispatch
 - [[oppd-prd-trd-task-folder-promote]] — oppd PRD/TRD 태스크폴더 작성 → docs 승격 프로세스 #oppd #prd #trd #wbs #promote #docs-ssot
 - [[oppl-3-ssot-tool-gated-separation]] — 3-SSOT tool-gated 축 분리 — backlog/state/test-scenario #ssot #tool-gated #oppl #architecture
+- [[oppl-coverage-conformance-axis-split]] — 커버리지·conformance 판정의 축별 분리 — backlog-tool/test-tool 외부 집계 #oppl #coverage #conformance #ssot #tool-gated
+- [[oppl-evidence-fidelity-principle]] — 증거 충실도(Evidence Fidelity) 원칙 — mock/real-http/real-usage 사다리 #oppl #verification #evidence-fidelity #enforce-dont-advise
+- [[oppl-executor-delegation-architecture]] — oppl 루프 액션 에이전트 위임 구조 — 태스크 단위 컨텍스트 격리 #oppl #executor #delegation #context-isolation #ssot-boundary #blocked-contract
+- [[oppl-internal-channel-opal-agent]] — oppl 루프 액션 에이전트 내부 채널 opal-agent 전환 — 축×호출모드 이원화 #oppl #executor #opal-agent #headless-channel #session-continuity #observability-boundary
+- [[oppl-run-record-journal-dual-observability]] — 결과 파일 규약 v2 + 운행 일지 — 이원 관측 구조 #oppl #observability-boundary #executor #journal
 - [[oppl-scenario-red-confirmed-gap]] — 드라이런 발견 갭 — test-scenario red_confirmed tool-gated 갱신 경로 부재 #lesson #test-tool #oppl #gap #enforce-dont-advise
+- [[oppl-surface-inventory-contract]] — 계약 표면 인벤토리 — surfaces.json 단일 IR #oppl #contract #surfaces-json #schema
 - [[oppl-two-loop-orchestrator]] — opal-pilot-project-loop(oppl) — 2-루프 수렴 오케스트레이터 #skill #pilot #orchestrator #loop #oppl
 - [[opsdd-pipeline-ssot]] — opsdd 파이프라인 정본 — SKILL.md SSOT (7단계) #opsdd #pipeline #ssot #workflow
 - [[opwt-v4-output-system]] — opwt v4 산출물 체계 재설계 (PRD 8섹션 + interview 통합) #opwt #planning #output #framework #task
@@ -124,6 +138,7 @@
 - [[project-id-query-param-pattern]] — 절대경로 프로젝트 식별자를 query param으로 전달 #api #routing #url-design
 - [[read-based-gate-pattern]] — Read 기반 설정파일 게이트 패턴 #bootstrap #permission #gate #read-pattern #session-toggle
 - [[readme-ssot-principle]] — README는 SSOT를 따른다 — 문서·코드 불일치 시 SKILL.md가 정본 #readme #ssot #doc-code-mismatch #documentation
+- [[red-first-hybrid-verification-track]] — RED-first 하이브리드 검증 트랙 — 도구 계약 변경 한정 적용 #verification #red-first #opal-agent #testing
 - [[red-test-commit-coercion-guard-lesson]] — RED 테스트가 실저장소 git archive 검증 시 커밋을 구조적으로 강요하는 결함 #red-first #test #git #lesson #guard
 - [[red-test-determinism-abort-trap]] — RED 테스트 결정론성 함정 — neverResolve fetch 대역의 abort 무반응 #testing #red-first #determinism #abort #fetch-mock
 - [[skill-op-task-qa]] — op-task-qa — 범용 문서 QA 검증 기준 #skill #qa #document

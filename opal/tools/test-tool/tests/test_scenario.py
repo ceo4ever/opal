@@ -5,16 +5,24 @@
   "layer": "test",
   "domain": "opal-tools",
   "description": "test-tool scenario-* 4서브명령(scenario-init/scenario-lock/scenario-mark/scenario-status) 행위 계약 RED-first 테스트. RED 상태(미구현 — lib/scenario.py 부재, test_tool.py에 서브명령 미등록) — 전부 FAIL 예상. GREEN 전환은 EXECUTE 구현 워커 담당(작성자≠구현자, red-first.md §2). S-014는 기존 4서브명령 스위트 존재 확인만 수행(기존 test_test_tool.py 미수정).",
-  "scenarios": ["S-011", "S-012", "S-007", "S-014"],
+  "scenarios": ["S-011", "S-012", "S-007", "S-014", "T069/S-5", "T069/S-6", "T069/S-7"],
   "exports": [
     "TestScenarioLockRedGate",
     "TestScenarioMarkLockGate",
     "TestScenarioResultContract",
     "TestExistingSuiteRegressionPresence",
     "TestScenarioRedToolGated",
-    "TestScenarioInitSeedNeutralized"
+    "TestScenarioInitSeedNeutralized",
+    "TestScenarioFidelityCheckUnmet",
+    "TestScenarioFidelityCheckMixedAndLegacy",
+    "TestScenarioConformance"
   ]
 }
+
+[T069] 069 태스크 추가분: scenario-fidelity-check(fidelity_unmet exit 13) + scenario-conformance
+(surface_unverified exit 14 / surfaces_file_not_found exit 15) 신규 서브명령 RED-first 테스트.
+두 서브명령은 lib/scenario.py에 미구현 — 자연 RED 예상. GREEN 전환은 EXECUTE 구현 워커 담당
+(작성자≠구현자, red-first.md §2). 기존 클래스는 불변.
 
 [T056/ADD1] scenario-red 서브명령 신설 RED-first 추가 테스트 — RED 상태(미구현, lib/scenario.py에
   scenario-red 부재) 전부 FAIL 예상. GREEN 전환은 EXECUTE 구현 워커 담당. 기존 케이스(S-011/S-012/
@@ -374,6 +382,176 @@ class TestScenarioInitSeedNeutralized(BaseScenarioTestCase):
         s2 = next(s for s in spec["scenarios"] if s["id"] == "S2")
         self.assertFalse(s1.get("red_confirmed"), "true 시드도 무시되어 false로 생성되어야 한다")
         self.assertFalse(s2.get("red_confirmed"))
+
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# [T069] scenario-fidelity-check / scenario-conformance 신규 서브명령 RED-first 테스트
+# 검증 대상: opal/tools/test-tool/run.sh 공개 인터페이스(exit code + stdout JSON)만
+# 단언 — 내부 함수 직접 import 금지(red-first.md §4). PLAN.md §3.5.2/§3.6.2 근거.
+# 두 서브명령은 현재 lib/scenario.py에 미구현 — 자연 RED 예상.
+# 기존 클래스(TestScenarioLockRedGate ~ TestScenarioInitSeedNeutralized)는 수정하지 않았다.
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _scenario_fidelity_check(task_path):
+    """scenario-fidelity-check 신규 서브명령 호출 헬퍼 [T069] (PLAN §3.5.2)."""
+    return _run(["scenario-fidelity-check", "--task-path", str(task_path)])
+
+
+def _scenario_conformance(task_path, surfaces_path=None):
+    """scenario-conformance 신규 서브명령 호출 헬퍼 [T069] (PLAN §3.6.2)."""
+    args = ["scenario-conformance", "--task-path", str(task_path)]
+    if surfaces_path is not None:
+        args += ["--surfaces", str(surfaces_path)]
+    return _run(args)
+
+
+def _patch_scenario_fields(task_path, scenario_id, **fields):
+    """test-scenario.json을 직접 read→patch→write [T069] — `_set_red_confirmed`와 동일한
+    fixture 조작 패턴(외부 기록 프로세스 모사). scenario-fidelity-check/scenario-conformance
+    공개 인터페이스 결합과는 무관하다(red-first.md §4)."""
+    spec_path = task_path / "test-scenario.json"
+    with open(spec_path, encoding="utf-8") as f:
+        spec = json.load(f)
+    for sc in spec["scenarios"]:
+        if sc["id"] == scenario_id:
+            sc.update(fields)
+    with open(spec_path, "w", encoding="utf-8") as f:
+        json.dump(spec, f, ensure_ascii=False, indent=2)
+
+
+def _write_surfaces_fixture_for_scenario(dest_dir):
+    """fixture-A(test-tool 몫): 표면 3종(auth-login:auth none, agents/budgets:auth required) +
+    origins.dev 선언 — TEST-SCENARIO.md §2.1 fixture-A 재현 (backlog-tool 몫과 동일 데이터,
+    축 분리 원칙상 파일은 별도로 이 테스트 모듈 안에서 자체 생성한다)."""
+    surfaces = {
+        "origins": ["https://app.dev"],
+        "surfaces": [
+            {"id": "auth-login", "auth": "none"},
+            {"id": "agents", "auth": "required"},
+            {"id": "budgets", "auth": "required"},
+        ],
+    }
+    path = pathlib.Path(dest_dir) / "surfaces.json"
+    path.write_text(json.dumps(surfaces, ensure_ascii=False, indent=2), encoding="utf-8")
+    return path
+
+
+class TestScenarioFidelityCheckUnmet(BaseScenarioTestCase):
+    """[T069/S-5] scenario-fidelity-check 요구 충실도 미달 거부 (H-3).
+    fixture-C1: S1(required_fidelity=real-usage, fidelity=mock, result=pass)."""
+
+    def test_fidelity_check_rejects_unmet_scenario(self):
+        code, _, _ = _scenario_init(self.task_path, SAMPLE_SCENARIOS)
+        self.assertEqual(code, 0)
+        _patch_scenario_fields(
+            self.task_path, "S1",
+            required_fidelity="real-usage", fidelity="mock", result="pass",
+        )
+
+        code, stdout, data = _scenario_fidelity_check(self.task_path)
+        self.assertEqual(code, 13)
+        self.assertFalse(data.get("ok"))
+        self.assertEqual(data.get("error"), "fidelity_unmet")
+        self.assertIn("S1", data.get("detail", []))
+
+
+class TestScenarioFidelityCheckMixedAndLegacy(BaseScenarioTestCase):
+    """[T069/S-6] fidelity 혼합 트랙 부분 게이트 + 구형식 하위 호환 (H-6, task:061 재발 방지)."""
+
+    def test_mixed_track_all_met_passes(self):
+        """fixture-C2: S1(req=mock 충족)+S2(req=real-usage, fid=real-usage 충족) 혼합.
+        Then: 전체-게이트가 아니라 각자 충족 시 all_met exit 0(부분 게이트, R-B)."""
+        code, _, _ = _scenario_init(self.task_path, SAMPLE_SCENARIOS)
+        self.assertEqual(code, 0)
+        _patch_scenario_fields(
+            self.task_path, "S1",
+            required_fidelity="mock", fidelity="mock", result="pass",
+        )
+        _patch_scenario_fields(
+            self.task_path, "S2",
+            required_fidelity="real-usage", fidelity="real-usage", result="pass",
+        )
+
+        code, stdout, data = _scenario_fidelity_check(self.task_path)
+        self.assertEqual(code, 0)
+        self.assertTrue(data.get("ok"))
+        self.assertTrue(data.get("all_met"))
+
+    def test_legacy_format_without_fidelity_fields_passes(self):
+        """fixture-C3: required_fidelity/fidelity 필드 자체 부재(구버전 형식).
+        Then: 기본값 mock>=mock으로 통과 exit 0(회귀 0, H-6)."""
+        code, _, _ = _scenario_init(self.task_path, SAMPLE_SCENARIOS)
+        self.assertEqual(code, 0)
+        # 구형식 재현: required_fidelity/fidelity 키 자체를 제거(수기 JSON)
+        spec_path = self.task_path / "test-scenario.json"
+        with open(spec_path, encoding="utf-8") as f:
+            spec = json.load(f)
+        for sc in spec["scenarios"]:
+            sc.pop("required_fidelity", None)
+            sc.pop("fidelity", None)
+            sc["result"] = "pass"
+        with open(spec_path, "w", encoding="utf-8") as f:
+            json.dump(spec, f, ensure_ascii=False, indent=2)
+
+        code, stdout, data = _scenario_fidelity_check(self.task_path)
+        self.assertEqual(code, 0)
+        self.assertTrue(data.get("ok"))
+        self.assertTrue(data.get("all_met"))
+
+
+class TestScenarioConformance(BaseScenarioTestCase):
+    """[T069/S-7] scenario-conformance 전수 판정 + surfaces 부재 스킵 (H-4)."""
+
+    def test_conformance_rejects_unverified_surfaces(self):
+        """fixture-A + fixture-C4: surface_ref로 auth-login만 pass — agents·budgets 미검증.
+        Then: surface_unverified + detail=[agents,budgets] exit 14."""
+        surfaces_path = _write_surfaces_fixture_for_scenario(self.tmpdir)
+        code, _, _ = _scenario_init(self.task_path, SAMPLE_SCENARIOS)
+        self.assertEqual(code, 0)
+        _patch_scenario_fields(
+            self.task_path, "S1",
+            surface_ref="auth-login", result="pass", fidelity="real-http",
+        )
+        # S2는 surface_ref 미지정 상태로 남겨 agents/budgets 미검증 상태 유지
+
+        code, stdout, data = _scenario_conformance(self.task_path, surfaces_path)
+        self.assertEqual(code, 14)
+        self.assertFalse(data.get("ok"))
+        self.assertEqual(data.get("error"), "surface_unverified")
+        self.assertEqual(sorted(data.get("detail", [])), ["agents", "budgets"])
+        self.assertFalse(data.get("all_surfaces_green", True))
+
+    def test_conformance_all_surfaces_green(self):
+        """전 표면 pass 상태(auth 표면은 fidelity>=real-http) → all_surfaces_green:true exit 0."""
+        surfaces_path = _write_surfaces_fixture_for_scenario(self.tmpdir)
+        scenarios = [
+            {"id": "S1", "acceptance_ref": "AC1", "type": "unit", "expected": "e1", "red_confirmed": False},
+            {"id": "S2", "acceptance_ref": "AC2", "type": "unit", "expected": "e2", "red_confirmed": False},
+            {"id": "S3", "acceptance_ref": "AC3", "type": "unit", "expected": "e3", "red_confirmed": False},
+        ]
+        code, _, _ = _scenario_init(self.task_path, scenarios)
+        self.assertEqual(code, 0)
+        _patch_scenario_fields(self.task_path, "S1", surface_ref="auth-login", result="pass", fidelity="mock")
+        _patch_scenario_fields(self.task_path, "S2", surface_ref="agents", result="pass", fidelity="real-http")
+        _patch_scenario_fields(self.task_path, "S3", surface_ref="budgets", result="pass", fidelity="real-http")
+
+        code, stdout, data = _scenario_conformance(self.task_path, surfaces_path)
+        self.assertEqual(code, 0)
+        self.assertTrue(data.get("ok"))
+        self.assertTrue(data.get("all_surfaces_green"))
+        self.assertEqual(data.get("surface_count"), 3)
+
+    def test_conformance_skips_when_surfaces_absent(self):
+        """surfaces.json 부재 → applicable:false 스킵(기존 프로젝트·비-API 무영향, M-5) exit 0."""
+        code, _, _ = _scenario_init(self.task_path, SAMPLE_SCENARIOS)
+        self.assertEqual(code, 0)
+        missing_surfaces_path = self.tmpdir / "surfaces.json"  # 의도적으로 생성하지 않음
+
+        code, stdout, data = _scenario_conformance(self.task_path, missing_surfaces_path)
+        self.assertEqual(code, 0)
+        self.assertTrue(data.get("ok"))
+        self.assertFalse(data.get("applicable"))
 
 
 if __name__ == "__main__":

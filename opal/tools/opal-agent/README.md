@@ -147,9 +147,33 @@ echo "긴 프롬프트..." | opal-agent --provider gemini --json
 | `--session-id ID` | 신규(cold) 세션에 지정할 caller-supplied session id — **claude만** 지원(`--resume`과 상호배타) |
 | `--bin PATH` | CLI 바이너리 경로 오버라이드 |
 | `--opal-bootstrap on\|assistant\|off` | 서브에이전트 OPAL 부트스트랩 (기본 `on`). `assistant`면 프롬프트 첫 줄에 `[ASSISTANT]` 마커 주입 → 비서 tier(Phase A)만 로드(PM tier 승격 억제). `off`면 첫 줄에 `[WORKER]` 마커 주입 → 부트스트랩 전체 스킵(깨끗한 워커) |
-| `--json` / `--text` | 출력 형식 (기본 `--text`) |
+| `--json` / `--text` / `--stream` | 출력 형식 (기본 `--text`). `--json`/`--text`/`--stream`은 상호배타. `--stream`은 claude 전용(§stream 모드 참조) |
 
 종료 코드: 정상 `0`, 에이전트 오류(`is_error`) `1`, 실행 오류 `2`.
+
+## stream 모드 (`--stream`, claude 전용, opt-in)
+
+기본 `--json`/`--text` 경로는 프로세스 종료까지 블로킹(`subprocess.run`)한 뒤 결과를 일괄 반환한다 — 장시간 실행 중에는 진행 상황을 볼 수 없다. `--stream`은 claude CLI의 `--output-format stream-json`을 이용해 **실행 중에도** 이벤트를 흘려보내는 opt-in 경로다. 기존 `--json` 경로(단일 JSON 일괄 반환)는 **불변** — `--stream`을 지정하지 않으면 동작이 전혀 바뀌지 않는다.
+
+### 사용법
+
+```bash
+# 표준출력을 파일로 리다이렉트 — 실행 중에도 파일이 증분 성장한다(JSONL)
+~/.opal/tools/opal-agent/run.sh --provider claude --stream "긴 리팩터링 작업을 수행해줘" \
+    > events.jsonl 2> events.err.log
+echo $? > events.exitcode
+```
+
+- opal-agent 자신은 `events.jsonl` 같은 내부 파일을 열지 않는다 — claude stream-json 각 줄을 opal-agent의 **자기 stdout으로 그대로(line-buffered) passthrough**할 뿐이다. 파일 증분 기록은 호출측 셸의 `>` 리다이렉트가 담당한다(단일 writer).
+- `--stream`을 지정하면 내부적으로 `--output-format stream-json --verbose`가 **항상 자동 부착**된다. claude CLI는 `--verbose` 없이 `--output-format stream-json`을 쓰면 exit 1(사용법 에러)로 항상 실패하므로, 호출자가 별도로 `--verbose`를 챙길 필요가 없다.
+- `--stream`은 **claude 전용**이다(`ClaudeAdapter.supports_stream = True`, 타 어댑터는 미지원). `--provider`가 claude가 아닌 상태로 `--stream`을 쓰면 즉시 `OpalAgentError`("provider '...'는 stream-json 실행 경로를 지원하지 않습니다")로 명시 실패한다 — 조용한 폴백은 없다.
+- 실행이 끝나면 리다이렉트된 파일의 **마지막 비어있지 않은 줄**이 claude stream-json의 `type: "result"` 이벤트다. 이 줄에서 기존 `--json` 경로와 동일한 5필드(`result`, `session_id`, `is_error`, `total_cost_usd`, `duration_ms`)를 그대로 추출할 수 있다 — 마지막 줄이 `result` 타입이 아니면 파싱 실패로 간주해 `OpalAgentError`를 던진다.
+- CLI에서 `--stream`을 쓰면 실행 중 passthrough로 이미 전량 출력이 끝난 상태이므로, `main()`은 별도 dump 없이 `result.is_error` 기준 종료 코드(0/1)만 반환한다. 실행 오류는 기존과 동일하게 `2`.
+- 라이브러리로 쓸 때는 `call_agent(..., output_format="stream-json")` — 호출측이 `sys.stdout`을 파일로 리다이렉트하거나 자체적으로 캡처해야 증분 기록이 이뤄진다.
+
+### `--json`과의 관계
+
+`--stream`은 `--json`을 대체하지 않는 **opt-in 별도 경로**다. 실행 중 진행 상황 관측이 필요한 장시간 비동기 작업에만 `--stream`을 쓰고, 그 외 일반 호출은 기존 `--json`/`--text`를 그대로 쓴다. 두 경로는 `_run()` 디스패치 단계에서 분기되며 서로의 동작에 영향을 주지 않는다.
 
 ## 스킬에서 호출
 
@@ -183,6 +207,7 @@ echo "긴 프롬프트..." | opal-agent --provider gemini --json
 - v2.3 (2026-07-12) `effort`(추론 강도) 지원 — claude/codex/grok, 미지원 provider 경고. `model`은 v1.0부터 지원
 - v2.4 (2026-07-12) `--opal-bootstrap on\|off` — `off`면 `[WORKER]` 첫 줄 마커로 OPAL 부트스트랩 스킵(부트스트래퍼 진입점 게이트 배선과 연동). claude/codex/agy 실측 검증
 - v2.5 (2026-07-13 15:25 KST, 059) `--opal-bootstrap`을 `on\|assistant\|off` 3-way로 확장(`assistant`=`[ASSISTANT]` 첫 줄, 비서 tier Phase A만) + claude 전용 caller-supplied cold `--session-id` 지원(`--resume`과 상호배타, 미지원 provider는 경고 후 무시)
+- v2.6 (2026-07-17 19:49 KST, 067) `--stream` opt-in 실행 경로 추가(claude 전용) — `--output-format stream-json --verbose` 자동 조립, stdout line-buffered passthrough(호출측 리다이렉트로 증분 기록), 마지막 `type:result` 줄에서 기존과 동일한 5필드 추출. 기존 `--json`/`--text` 경로·5필드 계약·종료 코드 0/1/2는 불변
 
 ## OPAL 부트스트랩 스킵 (`--opal-bootstrap on|assistant|off`)
 

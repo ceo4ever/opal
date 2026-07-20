@@ -202,6 +202,8 @@ OPAL 본체(스킬·에이전트·도구·하네스)를 작성할 때 따라야 
 
 - `~/.opal/` 배포 파일을 직접 편집하지 않는다. 변경은 항상 프로젝트 소스(`opal/`, `skills/`, `agents/`, `community-skills/`, `scripts/`)에서 수행한다.
 - 변경 후 `./scripts/install-mac.sh`(또는 후속 `opal install`)로 재배포하여 검증한다.
+- **런타임 사용자 데이터 쓰기는 이 금지의 대상이 아니다** — skill-manager가 스킬 설치/제거 시 `~/.opal/community-skills/`(스킬 본체·`user-registry.json`)를 갱신하는 것은 사용자 요청 기반 런타임 데이터 조작이며, 프레임워크 파일 직접 편집과 구분된다.
+- **커뮤니티 스킬 레지스트리 이원 경계**: 프레임워크 카탈로그(`~/.opal/references/community-skills-registry.json`)는 install이 덮어써 갱신을 전파하고, 사용자 설치 등록분은 `~/.opal/community-skills/user-registry.json`(install 불가침 — 142 D-4)에 기록한다. 사용자 등록분을 references 쪽에 기록하지 않는다 (Task 064).
 
 ### 플랫폼 분기 격리
 

@@ -1179,6 +1179,13 @@ install_opal() {
             success "backlog-tool run.sh 실행 권한 설정"
         fi
 
+        # ── opal-action-monitor 실행 권한 (067) ──
+        local opal_action_monitor_run="$opal_home/tools/opal-action-monitor/run.sh"
+        if [[ -f "$opal_action_monitor_run" ]]; then
+            chmod +x "$opal_action_monitor_run"
+            success "opal-action-monitor run.sh 실행 권한 설정"
+        fi
+
         # ── improve-tool 실행 권한 (058) ──
         local improve_run="$opal_home/tools/improve-tool/run.sh"
         if [[ -f "$improve_run" ]]; then

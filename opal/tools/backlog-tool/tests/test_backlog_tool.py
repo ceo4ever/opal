@@ -5,7 +5,7 @@
   "layer": "test",
   "domain": "opal-tools",
   "description": "backlog-tool 6서브명령(init/add-task/select-next/mark/done-check/show) 행위 계약 RED-first 테스트. RED 상태(미구현, run.sh/backlog_tool.py 부재) — 전부 FAIL 예상. GREEN 전환은 EXECUTE 구현 워커 담당(작성자≠구현자, red-first.md §2).",
-  "scenarios": ["S-001", "S-002", "S-003", "S-004", "S-007", "S-006", "S-001b"],
+  "scenarios": ["S-001", "S-002", "S-003", "S-004", "S-007", "S-006", "S-001b", "T069/S-1", "T069/S-2", "T069/S-3", "T069/S-4"],
   "exports": [
     "TestInit",
     "TestSelectNext",
@@ -13,9 +13,18 @@
     "TestDoneCheck",
     "TestResultContract",
     "TestBacklogMdMirror",
-    "TestConcurrentMark"
+    "TestConcurrentMark",
+    "TestUpdateTask",
+    "TestCoverageCheckUncovered",
+    "TestCoverageCheckIntegrationMissing",
+    "TestCoverageCheckAllCovered",
+    "TestCoversFieldRecordRenderCompat"
   ]
 }
+
+[T069] 069 태스크 추가분: covers 필드(add-task/update-task) + coverage-check 신규 서브명령
+RED-first 테스트. `--covers`/`coverage-check`는 backlog_tool.py에 미구현 — 자연 RED 예상.
+GREEN 전환은 EXECUTE 구현 워커 담당(작성자≠구현자, red-first.md §2). 기존 클래스는 불변.
 
 [T056] backlog-tool 6서브명령 행위 계약 — RED-first TDD
 검증 대상: opal/tools/backlog-tool/run.sh 의 공개 인터페이스(exit code + stdout JSON)만 단언.
@@ -531,6 +540,187 @@ class TestUpdateTask(BaseBacklogTestCase):
 
         task = next(t for t in self._backlog_json()["tasks"] if t["id"] == "T02")
         self.assertEqual(task.get("depends") or [], [])
+
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# [T069] covers 필드 + coverage-check 게이트 신규 서브명령 RED-first 테스트
+# 검증 대상: opal/tools/backlog-tool/run.sh 공개 인터페이스(exit code + stdout JSON)만
+# 단언 — 내부 함수 직접 import 금지(red-first.md §4). PLAN.md §3.3.2/§3.4.2 근거.
+# `--covers`/`coverage-check`는 현재 backlog_tool.py에 미구현 — 자연 RED 예상.
+# 기존 클래스(TestInit~TestUpdateTask)는 수정하지 않았다 — 아래 클래스만 신규 추가.
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _add_task_covers(task_path, task_id, title, slice_desc, acceptance, area, priority,
+                      covers=None, depends=None, parallel_group=None):
+    """add-task 호출 헬퍼(covers 포함) [T069] — 기존 `_add_task`는 불변, 신규 헬퍼로 분리."""
+    args = [
+        "add-task", str(task_path),
+        "--id", task_id,
+        "--title", title,
+        "--slice", slice_desc,
+        "--acceptance", json.dumps(acceptance, ensure_ascii=False),
+        "--area", area,
+        "--priority", priority,
+    ]
+    if covers is not None:
+        args += ["--covers", covers if isinstance(covers, str) else json.dumps(covers, ensure_ascii=False)]
+    if depends:
+        args += ["--depends", ",".join(depends)]
+    if parallel_group:
+        args += ["--parallel-group", parallel_group]
+    return _run(args)
+
+
+def _update_task_covers(task_path, task_id, covers):
+    """update-task 호출 헬퍼(covers 갱신) [T069]."""
+    args = [
+        "update-task", str(task_path), "--id", task_id,
+        "--covers", covers if isinstance(covers, str) else json.dumps(covers, ensure_ascii=False),
+    ]
+    return _run(args)
+
+
+def _coverage_check(task_path, surfaces_path):
+    """coverage-check 신규 서브명령 호출 헬퍼 [T069] (PLAN §3.4.2)."""
+    return _run(["coverage-check", str(task_path), "--surfaces", str(surfaces_path)])
+
+
+def _write_surfaces_fixture(dest_dir):
+    """fixture-A: 표면 3종(auth-login:auth none, agents/budgets:auth required) +
+    origins.dev 선언 — TEST-SCENARIO.md §2.1 fixture-A 재현."""
+    surfaces = {
+        "origins": ["https://app.dev"],
+        "surfaces": [
+            {"id": "auth-login", "auth": "none"},
+            {"id": "agents", "auth": "required"},
+            {"id": "budgets", "auth": "required"},
+        ],
+    }
+    path = pathlib.Path(dest_dir) / "surfaces.json"
+    path.write_text(json.dumps(surfaces, ensure_ascii=False, indent=2), encoding="utf-8")
+    return path
+
+
+class TestCoverageCheckUncovered(BaseBacklogTestCase):
+    """[T069/S-1] coverage-check 미커버 표면 거부 (H-1). fixture-A + fixture-B1
+    (T01만 auth-login 커버, agents·budgets 미커버)."""
+
+    def test_coverage_check_rejects_uncovered_surfaces(self):
+        surfaces_path = _write_surfaces_fixture(self.tmpdir)
+        _init(self.task_path)
+        code, _, _ = _add_task_covers(
+            self.task_path, "T01", "T01 제목", "T01 슬라이스", ["AC1"], "be", "P0",
+            covers=["auth-login"],
+        )
+        self.assertEqual(code, 0, "fixture-B1 준비 단계(add-task --covers)부터 실패 — RED 증거")
+
+        code, stdout, data = _coverage_check(self.task_path, surfaces_path)
+        self.assertEqual(code, 1)
+        self.assertFalse(data.get("ok"))
+        self.assertEqual(data.get("error"), "surface_uncovered")
+        self.assertEqual(sorted(data.get("uncovered", [])), ["agents", "budgets"])
+
+
+class TestCoverageCheckIntegrationMissing(BaseBacklogTestCase):
+    """[T069/S-2] coverage-check 통합 태스크 부재 거부 (H-2). fixture-B2:
+    T01~T03(covers 전수)+parallel_group=g1, area=통합 태스크 부재."""
+
+    def test_coverage_check_rejects_missing_integration_task(self):
+        surfaces_path = _write_surfaces_fixture(self.tmpdir)
+        _init(self.task_path)
+        _add_task_covers(self.task_path, "T01", "T01", "S1", ["AC1"], "be", "P0",
+                          covers=["auth-login"], parallel_group="g1")
+        _add_task_covers(self.task_path, "T02", "T02", "S2", ["AC2"], "be", "P1",
+                          covers=["agents"], parallel_group="g1")
+        _add_task_covers(self.task_path, "T03", "T03", "S3", ["AC3"], "be", "P1",
+                          covers=["budgets"], parallel_group="g1")
+
+        code, stdout, data = _coverage_check(self.task_path, surfaces_path)
+        self.assertEqual(code, 1)
+        self.assertFalse(data.get("ok"))
+        self.assertEqual(data.get("error"), "integration_task_missing")
+
+
+class TestCoverageCheckAllCovered(BaseBacklogTestCase):
+    """[T069/S-3] coverage-check 전 표면 커버 + 통합 태스크 존재 → 통과 (H-1 통과 경로).
+    fixture-B3: fixture-B2 + T04(area:통합)."""
+
+    def test_coverage_check_passes_when_all_covered_and_integration_present(self):
+        surfaces_path = _write_surfaces_fixture(self.tmpdir)
+        _init(self.task_path)
+        _add_task_covers(self.task_path, "T01", "T01", "S1", ["AC1"], "be", "P0",
+                          covers=["auth-login"], parallel_group="g1")
+        _add_task_covers(self.task_path, "T02", "T02", "S2", ["AC2"], "be", "P1",
+                          covers=["agents"], parallel_group="g1")
+        _add_task_covers(self.task_path, "T03", "T03", "S3", ["AC3"], "be", "P1",
+                          covers=["budgets"], parallel_group="g1")
+        _add_task_covers(self.task_path, "T04", "T04 통합", "통합 슬라이스", ["AC4"], "통합", "P1")
+
+        code, stdout, data = _coverage_check(self.task_path, surfaces_path)
+        self.assertEqual(code, 0)
+        self.assertTrue(data.get("ok"))
+        self.assertTrue(data.get("all_covered"))
+        self.assertEqual(data.get("surface_count"), 3)
+
+
+class TestCoversFieldRecordRenderCompat(BaseBacklogTestCase):
+    """[T069/S-4] covers 필드 기록·BACKLOG.md 렌더·update-task 갱신·하위 호환(H-5)."""
+
+    def test_add_task_covers_recorded_and_rendered(self):
+        """① add-task --covers 기록 → backlog.json covers[] + BACKLOG.md 렌더."""
+        _init(self.task_path)
+        code, stdout, data = _add_task_covers(
+            self.task_path, "T01", "T01 제목", "T01 슬라이스", ["AC1"], "be", "P0",
+            covers=["auth-login"],
+        )
+        self.assertEqual(code, 0)
+        self.assertTrue(data.get("ok"))
+
+        backlog = self._backlog_json()
+        task = next(t for t in backlog["tasks"] if t["id"] == "T01")
+        self.assertEqual(task.get("covers"), ["auth-login"])
+
+        md = (self.task_path / "BACKLOG.md").read_text(encoding="utf-8")
+        self.assertIn("auth-login", md)
+
+    def test_add_task_without_covers_defaults_empty_list(self):
+        """② --covers 미지정 시 covers==[] 정상 동작(하위 호환, H-5)."""
+        _init(self.task_path)
+        code, stdout, data = _add_task_covers(
+            self.task_path, "T02", "T02 제목", "T02 슬라이스", ["AC2"], "be", "P1",
+        )
+        self.assertEqual(code, 0)
+        self.assertTrue(data.get("ok"))
+
+        backlog = self._backlog_json()
+        task = next(t for t in backlog["tasks"] if t["id"] == "T02")
+        self.assertEqual(task.get("covers"), [])
+
+    def test_update_task_covers_updates_existing(self):
+        """③ update-task --covers로 covers 갱신."""
+        _init(self.task_path)
+        _add_task_covers(self.task_path, "T03", "T03 제목", "T03 슬라이스", ["AC3"], "be", "P1",
+                          covers=["auth-login"])
+
+        code, stdout, data = _update_task_covers(self.task_path, "T03", ["agents", "budgets"])
+        self.assertEqual(code, 0)
+        self.assertTrue(data.get("ok"))
+
+        backlog = self._backlog_json()
+        task = next(t for t in backlog["tasks"] if t["id"] == "T03")
+        self.assertEqual(sorted(task.get("covers", [])), ["agents", "budgets"])
+
+    def test_add_task_covers_invalid_json_rejected(self):
+        """④ covers 잘못된 JSON → covers_invalid_json exit 1."""
+        _init(self.task_path)
+        code, stdout, data = _add_task_covers(
+            self.task_path, "T04", "T04 제목", "T04 슬라이스", ["AC4"], "be", "P1",
+            covers="{not-valid-json",
+        )
+        self.assertEqual(code, 1)
+        self.assertFalse(data.get("ok"))
+        self.assertEqual(data.get("error"), "covers_invalid_json")
 
 
 if __name__ == "__main__":

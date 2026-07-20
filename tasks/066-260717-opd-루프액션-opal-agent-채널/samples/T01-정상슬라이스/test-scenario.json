@@ -1,0 +1,33 @@
+{
+  "schema_version": "1.0",
+  "task_id": "T01-정상슬라이스",
+  "locked": true,
+  "created_at": "2026-07-17T14:31:00+09:00",
+  "locked_at": "2026-07-17T14:32:05+09:00",
+  "scenarios": [
+    {
+      "id": "S1",
+      "acceptance_ref": "AC-1 / MV-1",
+      "type": "contract",
+      "expected": "test -f out/greeting.md → exit 0",
+      "red_confirmed": true,
+      "red_evidence": "cd task_folder && test -f out/greeting.md → exit 1 (파일 없음, 구현 전 RED 확인)",
+      "red_at": "2026-07-17T00:00:00+09:00",
+      "result": "pass",
+      "evidence": "test -f out/greeting.md → exit 0 (T4a GREEN)",
+      "marked_at": "2026-07-17T14:35:31+09:00"
+    },
+    {
+      "id": "S2",
+      "acceptance_ref": "AC-2 / MV-2",
+      "type": "contract",
+      "expected": "grep -c \"^# \" out/greeting.md → ≥1",
+      "red_confirmed": true,
+      "red_evidence": "cd task_folder && grep -c '^# ' out/greeting.md → exit 2 (grep: out/greeting.md: No such file or directory)",
+      "red_at": "2026-07-17T00:00:00+09:00",
+      "result": "pass",
+      "evidence": "grep -c '^# ' out/greeting.md → 1 (≥1, T4a GREEN)",
+      "marked_at": "2026-07-17T14:35:31+09:00"
+    }
+  ]
+}

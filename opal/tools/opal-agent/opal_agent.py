@@ -55,6 +55,12 @@ grok)를 비대화형(headless) 서브에이전트로 프로그래밍적·CLI로
                   스킵(진입점 게이트 배선과 연동). env 방식 폐기(043 회귀 회피)
   v2.5 2026-07-13 15:25 --opal-bootstrap 3-way — assistant([ASSISTANT] 비서 tier 캡) 추가
                   + caller-supplied cold session id(claude --session-id, new_session_id) (059)
+  v2.6 2026-07-17 output_format="stream-json" opt-in 실행 경로 추가(claude 전용,
+                  supports_stream) — build_invocation --verbose 자동 부착(H-2),
+                  parse_result 마지막 result 줄 5필드 추출(H-1), _run_stream()
+                  Popen 증분 passthrough(H-4), 비지원 provider 명시 에러(H-3),
+                  CLI --stream 옵션. 기존 json/text 경로·5필드 계약·종료코드
+                  0/1/2 불변(H-3) (067)
 """
 
 from __future__ import annotations
@@ -66,6 +72,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Any
@@ -101,7 +108,7 @@ class AgentConfig:
     timeout: int = 300                            # 초, 초과 시 OpalAgentTimeout
     session_id: str | None = None                 # resume 이어가기 (warm)
     new_session_id: str | None = None             # cold 세션 지정(caller-supplied). claude만 지원(--session-id). session_id와 상호 배타
-    output_format: str = "json"                   # "json" | "text"
+    output_format: str = "json"                   # "json" | "text" | "stream-json"
     bin: str | None = None                        # CLI 바이너리 오버라이드 (기본: provider별)
     opal_bootstrap: str = "on"                    # "on"(풀 부트스트랩) | "assistant"([ASSISTANT] Phase A만) | "off"([WORKER] 전부 스킵)
 
@@ -142,6 +149,7 @@ class ProviderAdapter(ABC):
     supports_resume: bool = False
     supports_effort: bool = False     # effort(추론 강도) 플래그 지원 여부
     supports_session_assign: bool = False   # cold --session-id(caller-supplied) 지원 여부
+    supports_stream: bool = False     # output_format="stream-json" 지원 여부(claude만 True)
 
     @abstractmethod
     def build_invocation(self, config: AgentConfig, resolved_bin: str) -> Invocation:
@@ -176,10 +184,14 @@ class ClaudeAdapter(ProviderAdapter):
     supports_resume = True
     supports_effort = True
     supports_session_assign = True
+    supports_stream = True
 
     def build_invocation(self, config: AgentConfig, resolved_bin: str) -> Invocation:
         cmd = [resolved_bin, "-p", self._mark(config.prompt, config),
                "--output-format", config.output_format]
+        if config.output_format == "stream-json":
+            # --verbose 누락 시 claude CLI가 exit 1(사용법 에러) — 항상 자동 부착(H-2).
+            cmd += ["--verbose"]
         if config.model:
             cmd += ["--model", config.model]
         if config.effort:
@@ -199,6 +211,17 @@ class ClaudeAdapter(ProviderAdapter):
     def parse_result(self, config: AgentConfig, stdout: str) -> AgentResult:
         if config.output_format == "text":
             return AgentResult(text=stdout.strip(), provider=self.name)
+        if config.output_format == "stream-json":
+            data = _last_stream_result(stdout, self.name)
+            return AgentResult(
+                text=data.get("result", ""),
+                provider=self.name,
+                session_id=data.get("session_id"),
+                is_error=bool(data.get("is_error", False)),
+                cost_usd=data.get("total_cost_usd"),
+                duration_ms=data.get("duration_ms"),
+                raw=data,
+            )
         data = _loads(stdout, self.name)
         return AgentResult(
             text=data.get("result", ""),
@@ -502,6 +525,29 @@ def _loads(stdout: str, provider: str) -> dict[str, Any]:
     return data
 
 
+def _last_stream_result(stdout: str, provider: str) -> dict[str, Any]:
+    """stream-json(JSONL) 출력에서 마지막 비어있지 않은 줄을 파싱하고
+    `type == "result"`인지 검증한다(최소 보장 집합, R-H). 실패 시 명시 에러."""
+    last_line = ""
+    for line in stdout.splitlines():
+        line = line.strip()
+        if line:
+            last_line = line
+    if not last_line:
+        raise OpalAgentError(f"{provider} stream-json 출력이 비어 있습니다.")
+    try:
+        data = json.loads(last_line)
+    except json.JSONDecodeError as exc:
+        raise OpalAgentError(
+            f"{provider} stream-json 마지막 줄 파싱 실패: {exc}\n원본: {last_line[:500]}"
+        ) from exc
+    if not isinstance(data, dict) or data.get("type") != "result":
+        raise OpalAgentError(
+            f"{provider} stream-json 마지막 줄이 result 이벤트가 아닙니다: {last_line[:500]}"
+        )
+    return data
+
+
 # ─── 공개 API ─────────────────────────────────────────────────
 
 def call_agent(
@@ -575,6 +621,13 @@ def _run(config: AgentConfig) -> AgentResult:
             file=sys.stderr,
         )
 
+    # stream-json 미지원 provider는 shutil.which(존재 여부)보다 먼저 명시 에러로
+    # 차단한다 — 침묵 폴백 금지(H-3, S-3).
+    if config.output_format == "stream-json" and not adapter.supports_stream:
+        raise OpalAgentError(
+            f"provider '{config.provider}'는 stream-json 실행 경로를 지원하지 않습니다."
+        )
+
     bin_name = config.bin or adapter.default_bin
 
     resolved = shutil.which(bin_name)
@@ -588,6 +641,16 @@ def _run(config: AgentConfig) -> AgentResult:
     # opal_bootstrap=off면 각 어댑터가 프롬프트 첫 줄에 [WORKER] 마커를 붙여
     # OPAL 부트스트랩을 스킵한다(env가 아니라 진입점 게이트가 마커를 읽음).
     env = {**os.environ, **inv.env} if inv.env else None
+
+    if config.output_format == "stream-json":
+        try:
+            return _run_stream(config, adapter, inv, env)
+        finally:
+            for path in inv.tempfiles:
+                try:
+                    os.unlink(path)
+                except OSError:
+                    pass
 
     try:
         proc = subprocess.run(
@@ -616,6 +679,47 @@ def _run(config: AgentConfig) -> AgentResult:
         )
 
     return adapter.parse_result(config, proc.stdout)
+
+
+def _run_stream(
+    config: AgentConfig, adapter: ProviderAdapter, inv: Invocation,
+    env: dict[str, str] | None,
+) -> AgentResult:
+    """stream-json 전용 실행 경로 — Popen으로 증분 소비하며 자기 stdout으로
+    line-buffered passthrough한다(H-4). stderr는 상속(호출측 셸 `2>` 캡처)."""
+    proc = subprocess.Popen(
+        inv.cmd,
+        stdout=subprocess.PIPE,
+        stderr=None,
+        text=True,
+        bufsize=1,
+        cwd=config.cwd,
+        env=env,
+    )
+    deadline = time.monotonic() + config.timeout
+    lines: list[str] = []
+    try:
+        for line in proc.stdout:
+            sys.stdout.write(line)
+            sys.stdout.flush()
+            lines.append(line)
+            if time.monotonic() > deadline:
+                proc.kill()
+                proc.wait()
+                raise OpalAgentTimeout(
+                    f"{config.provider} stream 실행이 {config.timeout}초를 초과했습니다."
+                )
+        proc.wait()
+    finally:
+        if proc.stdout:
+            proc.stdout.close()
+
+    if proc.returncode != 0:
+        raise OpalAgentError(
+            f"{config.provider} stream 비정상 종료 (exit {proc.returncode})"
+        )
+
+    return adapter.parse_result(config, "".join(lines))
 
 
 # ─── CLI 진입점 ───────────────────────────────────────────────
@@ -670,6 +774,12 @@ def _build_parser() -> argparse.ArgumentParser:
         "--text", action="store_const", const="text", dest="display",
         help="응답 텍스트만 stdout에 출력 (기본, 사람용)",
     )
+    fmt.add_argument(
+        "--stream", action="store_const", const="stream", dest="display",
+        help="stream-json 실행 — claude CLI가 각 줄을 실행 중 stdout에 그대로 "
+             "passthrough(파일로 리다이렉트하면 증분 기록). --verbose 자동 부착. "
+             "claude 전용(비지원 provider는 명시 에러)",
+    )
     parser.set_defaults(display="text")
     return parser
 
@@ -697,9 +807,11 @@ def main(argv: list[str] | None = None) -> int:
             file=sys.stderr,
         )
 
+    # 라이브러리는 기본 JSON으로 실행해 session_id·메타를 확보한다.
+    # display=="stream"만 stream-json 실행 경로(실행 중 passthrough)를 쓴다.
+    output_format = "stream-json" if args.display == "stream" else "json"
+
     try:
-        # 라이브러리는 항상 JSON으로 실행해 session_id·메타를 확보한다.
-        # CLI 표시(display)는 그 결과를 어떻게 보여줄지의 별개 선택.
         result = call_agent(
             prompt,
             provider=args.provider,
@@ -711,7 +823,7 @@ def main(argv: list[str] | None = None) -> int:
             timeout=args.timeout,
             session_id=args.session_id,
             new_session_id=args.new_session_id,
-            output_format="json",
+            output_format=output_format,
             bin=args.bin,
             opal_bootstrap=args.opal_bootstrap,
         )
@@ -722,6 +834,8 @@ def main(argv: list[str] | None = None) -> int:
     if args.display == "json":
         json.dump(result.raw, sys.stdout, ensure_ascii=False, indent=2, default=str)
         sys.stdout.write("\n")
+    elif args.display == "stream":
+        pass    # 실행 중 passthrough로 이미 출력 완료 — 별도 dump 없음
     else:
         print(result.text)
 

@@ -25,7 +25,7 @@ tools: [Read, Grep, Glob, Bash]
 |---------|------|------|
 | task_folder | O | 태스크 폴더 경로 (예: `tasks/NNN-oppl-{프로젝트명}/tasks/T{NN}-{태스크명}/`) |
 | phase | O | 판정 시점 — `design-review`(설계 루프 D6) / `spec-review`(태스크 파이프라인 G, 구현 전) / `drift-recheck`(구현·테스트 중 계약 drift 발견 시 재콜백) |
-| target_artifacts | O | 판정 대상 산출물 목록 (예: `PLAN.md`, `USER_FLOW.md`, `test-scenario.json`, `PRD.md`, `TRD.md`, `CONTRACT.md`) |
+| target_artifacts | O | 판정 대상 산출물 목록 (예: `PLAN.md`, `USER_FLOW.md`, `test-scenario.json`, `PRD.md`, `TRD.md`, `CONTRACT.md`, `surfaces.json`) |
 | contract_path | O | `CONTRACT.md` 경로 — 루브릭절 기준 원천 (convention-checker가 `docs/CONVENTIONS.md`를 읽듯, 본 에이전트는 `CONTRACT.md` 루브릭절을 읽는다) |
 | timestamp | O | 보고서 파일명용 타임스탬프 (예: `2026-07-10T16-33-00`) |
 | project_root | O | 프로젝트 루트 경로 |
@@ -47,6 +47,10 @@ tools: [Read, Grep, Glob, Bash]
 | drift 필요성 | binary yes/no | — | 계약 변경 필요? → yes면 "## CONTRACT 거버넌스" 절 거버넌스 에스컬레이션 |
 | 컨벤션 정신 (가독성·네이밍) | Likert 1–5 | ≥4 | 기계 규칙 너머의 품질 — `docs/CONVENTIONS.md` 기계검증절은 convention-checker 소관, 본 에이전트는 정신만 판정 |
 | 아키텍처 적합 (레이어·의존) | Likert 1–5 | ≥4 | 경계·의존 역전 여부 |
+| 표면 완전성 | Likert 1–5 | ≥4 | `surfaces.json` ↔ PRD/TRD/USER_JOURNEY 대비 표면 누락 여부 — 1: 다수 표면 누락 / 5: 전 표면 대비 누락 없음 |
+| auth 필드 완전성 | binary yes/no | — | 전 표면이 `auth` 필드를 선언하고 인증 표면(로그인 등) 자체도 등재되어 있는가 |
+| origin 선언 | binary yes/no · N/A | — | 웹 클라이언트가 존재하는 프로젝트는 `surfaces.json` `origins`(개발·운영)를 선언했는가 — 비-웹 프로젝트는 N/A |
+| 워킹 스켈레톤 태스크 | binary yes/no | — | 백로그 의존 루트(P0)에 실행 스켈레톤 태스크가 존재하고 구성 4항(BE 기동+스웨거 노출, FE dev 서버 기동, 실 브라우저 FE→BE 관통, auth 표면 존재 시 로그인 관통)을 충족하는가 — 상세는 oppl SKILL.md D5 참조 |
 
 > **[MUST] 기준 원천 우선순위**: 기계로 검증 가능한 절(스키마·시그니처·binary 규칙)은 test-tool/convention-checker/security-checker 소관이며 본 에이전트는 판정하지 않는다. 본 에이전트는 **루브릭절(주관적 판단이 필요한 차원)만** 판정한다.
 
@@ -138,3 +142,4 @@ Phase 3의 판정 레코드를 결과 계약 형식으로 정리한다:
 | 버전 | 날짜 | 변경내용 |
 |------|------|---------|
 | v1.0 | 2026-07-10 16:33 | 초기 작성 — 패턴 B(readonly·[WORKER] 부트스트랩 스킵·자기완결 보고서) 준용, 루브릭 Base 6차원 내장, CONTRACT.md 루브릭절 병합, verdict-only·drift binary·거버넌스 에스컬레이션 안내 (056) |
+| v1.1 | 2026-07-18 22:46 | Phase 1 Base 루브릭에 판정 항목 4종 추가 — ⑦표면 완전성(surfaces.json ↔ PRD/TRD/USER_JOURNEY, Likert≥4) ⑧auth 필드 완전성(binary) ⑨origin 선언(binary, 비웹 N/A) ⑩워킹 스켈레톤 태스크(binary, oppl SKILL.md D5 참조). target_artifacts 예시에 surfaces.json 추가 (069) |

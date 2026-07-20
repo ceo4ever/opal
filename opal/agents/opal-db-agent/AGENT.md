@@ -131,7 +131,7 @@ context7 사용 우선순위: ORM API, 마이그레이션 도구 버전별 변�
 
 | 단계 스킬 | 권장 model |
 |----------|-----------|
-| op-dev-analysis | light |
+| op-dev-analysis | standard |
 | op-dev-plan (DB 설계) | advanced |
 | op-dev-todo | light |
 | op-dev-execute (마이그레이션 구현) | standard |
@@ -144,4 +144,5 @@ context7 사용 우선순위: ORM API, 마이그레이션 도구 버전별 변�
 | 버전 | 날짜 | 변경 내용 | 참조 |
 |------|------|----------|------|
 | v1.1 | 2026-06-12 | F-005: description에 표준사전·표준코드 관리(CRUD) 추가; 실행 프로세스 DICT 단계 인지·사전 경로 관리 확장; 자체 로드 문서에 md SSOT 3종+xlsx export 항목 추가; MCP/도구 표에 xlsx-tool export 용도 명시; "인지 스킬 경로" 섹션 신설(op-data-dictionary/model/ddl); "단계별 스킬 디스패치 인식" 섹션 신설; model 오버라이드 표에 op-data-* 3종 추가; docs/db/ 토큰을 {설계} 변수 참조로 통일(R-T1 해소) | TASK 019 / PLAN §3.5 / ANALYSIS §3 |
+| v1.2 | 2026-07-17 13:11 | model 오버라이드 표 op-dev-analysis light → standard — opal-pilot-dev v4.5 ANALYSIS 상향과 정합 | 소유자 지시 (L2) |
 

@@ -1,6 +1,6 @@
 # test-tool
 
-> OPAL 테스트 단계별 도구 결정론적 집행기 — 4서브명령(resolve/check/unit/integration) + scenario-* 5서브명령(scenario-init/scenario-lock/scenario-mark/scenario-status/scenario-red)
+> OPAL 테스트 단계별 도구 결정론적 집행기 — 4서브명령(resolve/check/unit/integration) + scenario-* 7서브명령(scenario-init/scenario-lock/scenario-mark/scenario-status/scenario-red/scenario-fidelity-check/scenario-conformance)
 
 ## 개요
 
@@ -207,13 +207,15 @@ bash run.sh scenario-lock --task-path <PATH>
 `locked==true` 이후에만 result존(`result`/`evidence`/`marked_at`) 기록을 허용한다.
 
 ```bash
-bash run.sh scenario-mark --task-path <PATH> --id <S-ID> --result pass|fail [--evidence <문자열>]
+bash run.sh scenario-mark --task-path <PATH> --id <S-ID> --result pass|fail [--evidence <문자열>] [--fidelity mock|real-http|real-usage]
 ```
 
 **출력 JSON**:
 ```json
 { "ok": true, "command": "scenario-mark", "scenario_id": "S1", "result": "pass" }
 ```
+
+**[MUST] `--fidelity` 미지정 시 `mock` 기본값(069/M-5)**: 실제 관찰된 증거 충실도를 기록하는 result존 필드. 실제 충실도를 기록하지 않은 결과는 목(mock) 수준으로 간주한다(보수적 기본값).
 
 **exit code**: `0` / `scenario_not_initialized(10)` / `scenario_not_locked(9)`
 
@@ -236,6 +238,63 @@ bash run.sh scenario-status --task-path <PATH>
 
 ---
 
+### `scenario-fidelity-check` (069)
+
+시나리오별 **요구 충실도 부분 게이트** — `required_fidelity`(spec존, 미지정 시 `mock`)와 `fidelity`(result존, 미지정 시 `mock`)의 증거 충실도 사다리(`mock`(0) < `real-http`(1) < `real-usage`(2))를 비교한다.
+
+```bash
+bash run.sh scenario-fidelity-check --task-path <PATH>
+```
+
+**판정**: 각 시나리오에 대해 `result=="pass" AND FIDELITY_ORDER[fidelity] >= FIDELITY_ORDER[required_fidelity]`를 만족하지 못하면 `unmet`에 편입한다.
+
+**출력 JSON (통과)**:
+```json
+{ "ok": true, "command": "scenario-fidelity-check", "all_met": true, "total": 2, "met": 2 }
+```
+
+**출력 JSON (거부)**:
+```json
+{ "ok": false, "command": "scenario-fidelity-check", "error": "fidelity_unmet", "detail": ["S1"] }
+```
+
+**[MUST] 전부-게이트가 아닌 시나리오별 부분 게이트(M-3)**: `scenario-lock`(RED-first 전부-게이트)과 독립적으로 동작한다 — 혼합 트랙(mock 요구 시나리오와 real-usage 요구 시나리오가 하나의 test-scenario.json에 공존)에서 각자 충족하면 통과한다(task:061 전부-게이트 붕괴 재발 방지).
+
+**exit code**: `0` / `scenario_not_initialized(10)` / `fidelity_unmet(13)`
+
+---
+
+### `scenario-conformance` (069)
+
+계약 표면(surface) **전수 conformance 판정** — `surfaces.json`(표면 분모, 읽기 전용)을 소비하며 `backlog.json`은 일절 미접촉한다(축 분리, H-7).
+
+```bash
+bash run.sh scenario-conformance --task-path <PATH> [--surfaces <surfaces.json 경로>]
+```
+
+**판정**: surfaces.json의 각 표면 `id`에 대해, `surface_ref==id AND result=="pass"`인 시나리오가 존재하고 그 `fidelity`가 문턱(`auth=="required"`면 `real-http` 강제, 그 외는 해당 시나리오의 `required_fidelity` 기본 `mock`) 이상이어야 검증된 것으로 인정한다.
+
+**출력 JSON (통과)**:
+```json
+{ "ok": true, "command": "scenario-conformance", "all_surfaces_green": true, "surface_count": 3 }
+```
+
+**출력 JSON (거부)**:
+```json
+{ "ok": false, "command": "scenario-conformance", "error": "surface_unverified", "detail": ["agents", "budgets"], "all_surfaces_green": false }
+```
+
+**출력 JSON (surfaces.json 부재 — 스킵)**:
+```json
+{ "ok": true, "command": "scenario-conformance", "applicable": false }
+```
+
+**[MUST] surfaces.json 부재 시 스킵(M-5)**: `--surfaces` 미지정 시 기본 경로(`<task-path>/surfaces.json`)를 사용하며, 지정 여부와 무관하게 파일이 없으면 `applicable:false` exit 0으로 스킵한다 — 기존 프로젝트·비-API 프로젝트 무영향.
+
+**exit code**: `0` / `scenario_not_initialized(10)` / `surface_unverified(14)`
+
+---
+
 ## 에러 코드
 
 | 코드 | exit | 원인 | 처리 |
@@ -252,8 +311,11 @@ bash run.sh scenario-status --task-path <PATH>
 | `scenario_not_initialized` | 10 | test-scenario.json 부재 | scenario-init 선행 |
 | `scenario_spec_invalid_json` | 11 | scenario-init `--scenarios` JSON 파싱 실패 | JSON 문법 수정 후 재시도 |
 | `scenario_already_locked` | 12 | scenario-red 호출 시점에 locked==true (동결 후 spec존 변경 시도) | 잠금 전에 scenario-red 호출 필요 |
+| `fidelity_unmet` | 13 | scenario-fidelity-check 시 `fidelity < required_fidelity`(또는 result!=pass)인 시나리오 존재 | 요구 충실도 이상으로 재검증 후 scenario-mark --fidelity 재기록 |
+| `surface_unverified` | 14 | scenario-conformance 시 조건(대상 fidelity 이상 pass) 충족 시나리오가 없는 표면 존재 | 해당 표면의 surface_ref 시나리오를 요구 충실도 이상으로 재검증 |
+| `surfaces_file_not_found` | 15 | (정보용 배정) surfaces.json 부재 — 069/M-5 결정에 따라 실제로는 오류가 아닌 `applicable:false` 스킵으로 처리됨 | 해당 없음(스킵 정상 동작) |
 
-> `scenario-*` 5서브명령 에러코드는 `lib/scenario.py`의 `SCENARIO_ERROR_CODES`(전용 SSOT)에서 관리하며, 위 5종은 기존 0~7 계열과 충돌 없이 8~12로 배정됐다(격리 원칙 — PLAN.md §3.2.2, 056/ADD-1).
+> `scenario-*` 7서브명령 에러코드는 `lib/scenario.py`의 `SCENARIO_ERROR_CODES`(전용 SSOT)에서 관리하며, 5~12는 기존 0~7 계열과 충돌 없이 배정됐고(격리 원칙 — PLAN.md §3.2.2, 056/ADD-1), 069는 13~15를 이어서 배정한다(격리 원칙 불변, `scenario.py:29-31`).
 
 ### cmux-tool 에러코드 분류
 
@@ -303,3 +365,4 @@ bash run.sh scenario-status --task-path <PATH>
 | v1.0 | 2026-06-23 | 초기 구현 — 4서브명령(resolve/check/unit/integration) + cmux-tool 에러코드 소비 어댑터 + stop-on-fail 러너 (T039 Step3 GREEN) |
 | v1.1 | 2026-07-10 16:36 | scenario-* 4서브명령(scenario-init/scenario-lock/scenario-mark/scenario-status) 추가 — `lib/scenario.py`로 격리(기존 4서브명령 미간섭), test-scenario.json SSOT(spec존/result존), RED-first 동결 게이트(exit 8~11) (056) |
 | v1.2 | 2026-07-10 | `scenario-red` 서브명령 신설 — red_confirmed를 RED 증거와 함께 tool-gated로 갱신(--evidence 필수, locked 후 거부 scenario_already_locked exit 12), enforce-don't-advise 보강. scenario-init의 red_confirmed 시드 입력은 항상 무시(false 강제)+응답 warning으로 변경 — RED 미관찰 우회 선언 경로 봉쇄 (056/ADD-1) |
+| v1.3 | 2026-07-18 22:42 | 증거 충실도 사다리(`FIDELITY_ORDER`: mock<real-http<real-usage) 도입 — `required_fidelity`/`fidelity`/`surface_ref` 필드(optional additive, 미지정 시 mock 기본값) + `scenario-fidelity-check`(시나리오별 부분 게이트, fidelity_unmet exit 13) + `scenario-conformance`(표면 전수 conformance, surfaces.json 분모·읽기 전용, surface_unverified exit 14, surfaces.json 부재 시 applicable:false 스킵) 신규 서브명령. backlog.json 미접촉(축 분리 불변) (069) |

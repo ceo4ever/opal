@@ -26,9 +26,36 @@ CONTRACT.md는 **인터페이스 계약**을 기술한다 — "무엇을 만들�
 | 시그니처 (Signature) | 함수/API/CLI 서브명령의 호출 형태 — 파라미터·반환값·에러 형태 |
 | 경계 (Boundary) | 모듈/서비스 간 책임 분리선 — 누가 무엇을 소유하는지, 어디까지가 이 계약의 관할인지 |
 
+[MUST] 웹 클라이언트가 존재하는 프로젝트는 허용 origin(개발·운영)을 경계절에 선언한다(`surfaces.json` `origins`) — CORS 결정론 검사의 계약 근거.
+
 ### 2.2 기계검증절 (Machine-Verifiable Section)
 
 계약 중 **결정론적으로(코드로) 검증 가능한 항목**을 모아 별도 절로 명시한다. 이 절의 항목은 test-tool의 계약 conformance 테스트(스키마 일치·시그니처 일치)로 T4a에서 자동 검증된다 (SPEC §04 결정론 표 "계약 conformance" 행). Evaluator는 이 절을 판정하지 않는다 — 기계검증절은 test-agent/checker 소관이다.
+
+[MUST] CONTRACT.md 기계검증절은 기계가독 표면 인벤토리(`surfaces.json`)를 필수 포함한다 — 각 표면은 `id`·`resource`·`auth(required|none)`·요청/응답 형태를 선언하며, 인증 표면(로그인) 자체도 표면으로 등재한다.
+
+#### 2.2.1 surfaces.json 구조 스펙
+
+`surfaces.json`은 표면 인벤토리를 표현하는 유일한 기계가독 중간 표현(IR)이다. 구조는 다음과 같다:
+
+```json
+{
+  "schema_version": "1.0",
+  "origins": { "dev": ["http://localhost:5173"], "prod": ["https://app.example.com"] },
+  "surfaces": [
+    { "id": "auth-login", "resource": "POST /auth/login", "auth": "none",
+      "request_shape": "{email,password}", "response_shape": "{token,user}", "kind": "http" }
+  ]
+}
+```
+
+- `schema_version`: IR 버전 문자열.
+- `origins`: 웹 클라이언트가 존재하는 프로젝트에서만 선언(nullable) — `dev`/`prod` 배열, CORS 결정론 검사의 계약 근거(§2.1 경계 참조).
+- `surfaces[]`: 표면 배열. 각 항목은 `id`(표면 식별자) · `resource`(호출 형태) · `auth`(`required|none` — 인증 표면 자체도 등재) · `request_shape`/`response_shape`(요청/응답 형태) · `kind`(표면 종류, 예: `http`)를 선언한다.
+
+**작성 SSOT(조건부 이원화)**: API 프로젝트는 OpenAPI(YAML) spec을 1순위 작성 원천으로 삼아 `surfaces.json`을 파생하고(securitySchemes→auth 포함), 비-API 프로젝트(CLI/라이브러리/배치)는 표면 목록을 직접 작성한다. 이 분기는 CONTRACT 작성 단계(D4, Planner)에 격리되며, 어느 경로든 결과는 `surfaces.json`으로 수렴한다.
+
+**게이트 소비 인터페이스(단일·파서 분기 없음)**: 커버리지·conformance 게이트 도구는 오직 `surfaces.json`(구조화 JSON) 하나만 소비한다. 게이트 도구는 OpenAPI(YAML)나 마크다운 표를 직접 파싱하지 않는다 — YAML/markdown 파싱은 금지.
 
 ### 2.3 루브릭절 (Rubric Section)
 
@@ -73,6 +100,8 @@ CONTRACT.md는 실행 루프 중에도 변경될 수 있다(drift). 변경의 **
 
 > **판단 기준의 원칙**: "타 슬라이스에 영향을 주는가"가 #2와 #3의 분기선이고, "프로젝트 경계 밖(외부 API·사용자 노출 사양)으로 나가는가"가 #3과 #4의 분기선이다. 애매한 경우 상위 계층(더 보수적인 판단 주체)으로 승격한다.
 
+**루프 액션 에이전트 경계**: `opal-loop-action-agent`는 태스크 파이프라인 중 CONTRACT.md를 직접 수정하지 않는다. 계약 미접촉 내부 구현(#1)은 정상 진행하고, 계약 갱신이 필요한 drift(#2 내부조정~#4 외부노출)를 감지하면 `status: blocked`로 PM에 반환한다. drift binary 판정·오너십 계층 분류·CONTRACT.md 반영은 PM(또는 거버넌스가 지정한 처리 주체)의 소관이다 — 생성자≠평가자, CONTRACT 반영=PM 헌법(§3) 유지.
+
 ---
 
 ## 5. 태스크 파이프라인에서의 재참조
@@ -98,3 +127,5 @@ CONTRACT.md는 실행 루프 중에도 변경될 수 있다(drift). 변경의 **
 | 버전 | 일시 | 변경내용 |
 |------|------|---------|
 | v1.0 | 2026-07-10 16:33 | 초기 작성 — CONTRACT.md 1급 산출물 구조(스키마·시그니처·경계+기계검증절+루브릭절), 작성/리뷰/반영 역할 분리, 변경 거버넌스 오너십 4계층 정의 (056) |
+| v1.1 | 2026-07-17 12:12 | §4 말미에 "루프 액션 에이전트 경계" 문단 추가 — `opal-loop-action-agent`는 CONTRACT.md를 직접 수정하지 않고, 계약 갱신 필요 drift는 blocked 반환하며 판정·오너십 분류·반영은 PM 소관 (065) |
+| v1.2 | 2026-07-18 22:34 | §2.2 기계검증절에 표면 인벤토리(`surfaces.json`) 필수 규칙 + 구조 스펙(id·resource·auth·request/response_shape·origins) 명문화, §2.1 경계절에 허용 origin 선언 의무(CORS 결정론 근거) 추가 (069) |

@@ -1,7 +1,7 @@
 # opal Memory Index
 
 > 최종 갱신: 2026-06-26 (044 도구·MCP·스킬 통합 검색·사용법·활용 체계 — TASK)
-> last_task_number: 63
+> last_task_number: 69
 
 
 | 카테고리 | 설명 | 완료 시 |
@@ -30,15 +30,16 @@
 |------|--------|------|------|------|------|
 | Console 브레인 구독 인증 | 2026-06-22 | project | active | `memory/console-brain-subscription-auth.md` | Console 브레인 질의는 종량제 API 아닌 사용자 Claude 구독(로컬 claude -p). API키·SDK 금지 |
 | 브레인 질의 콜드 경량화(037후속) | 2026-06-23 | task | active | `memory/follow-up-brain-query-lite.md` | 브레인 질의 콜드 latency 경량화 — 검색을 LLM 밖 brain-tool로. opbr --lite 권고 |
+| 후속 069·070 액션에이전트 관측 확장 | 2026-07-17 | task | active | memory/후속_069_070_액션에이전트_관측_확장.md | oppd·opsdd를 opal-agent 채널+규약 전환→action-monitor 공용화. phase 동적발견 필수 |
 <!-- memory:index:end -->
 
 ## 작업 히스토리 (최대 5개, FIFO)
 <!-- memory:history:start -->
 | 제목 | 등록일 | 단계 | 경로 | 핵심결과 |
 |------|--------|------|------|----------|
-| 058 PM 개선 루프 tool-gated 재설계 | 2026-07-20 | 완료·커밋대기 | tasks/058-260713-opd-학습루프-도구화-개선수집/ | opal-improve(//opim)·improve-tool·fw-inbox·4pilot 회고 하드스텝·SSOT 통합. 14+88 Pass |
-| 063 콘솔 브레인 휘발성 단일 세션 | 2026-07-15 | 완료·커밋 | tasks/063-260715-opd-콘솔-브레인-세션-단순화/ | 멀티대화·이력 제거→휘발 단일세션, 풀2+need충전, 이탈가드4경로. FE85·BE249 Pass |
-| 061 콘솔 설정 화면 — 프라임 풀 토글 | 2026-07-14 | 완료 | tasks/061-260714-opd-콘솔-설정-화면/ | 설정 라우터 격리+토글 단일 반영(캡틴 축소 확정). 245 GREEN·E2E Pass. 커밋 9443606·배포 완료 |
-| 062 브레인답변 content-driven 6단계 워크플로우 | 2026-07-14 | 완료·커밋대기 | tasks/062-260714-opds-브레인답변-레이아웃-워크플로우/ | opbr query 답변을 content-driven 6단계 워크플로우로 재구조화. 6축→5후보·가드3종·가독성규율. All Pass. 후속=커밋 |
-| 060 브레인 프라임 연결 풀 | 2026-07-14 | 완료 | tasks/060-260713-opd-브레인-프라임-연결풀/ | prewarm 선프라임+웜풀 신설, 웜9.6s vs 콜드26.7s. 13/13 Pass. 후속=커밋·배포·설정화면 |
+| 058 PM 개선 루프 tool-gated 재설계 | 2026-07-20 | 완료·커밋 | tasks/058-260713-opd-학습루프-도구화-개선수집/ | opal-improve(//opim)·improve-tool·fw-inbox·4pilot 회고 하드스텝·SSOT 통합. 14+88 Pass |
+| 069 oppl 계약 접합면 검증 강화 | 2026-07-19 | 완료·커밋 | tasks/069-260718-opd-oppl-계약검증강화/ | 표면 인벤토리(surfaces.json)+coverage-check+충실도 게이트(fidelity/conformance)+여정 스모크+워킹 스켈레톤 tool-gated. All Pass·회귀 0. 후속=install 배포·커밋·oppd/opsdd 확산 |
+| 068 opal-action-status(opas) 발동 스킬 신설 | 2026-07-18 | 완료·커밋 | tasks/068-260717-opds-opm-모니터-스킬/ | //opas 자동 탐지+해석 보고 operator. All Pass·라이브 실증. 후속=069/070 확장 |
+| 067 루프액션 투명 모니터링 stream+journal+monitor | 2026-07-17 | 완료·커밋대기 | tasks/067-260717-opd-루프액션-스트림-모니터링/ | stream 모드·규약v2·journal·opal-action-monitor(리네임). All Pass. 후속=068 opm·커밋 |
+| 066 루프액션 내부 디스패치 opal-agent 채널 전환 | 2026-07-17 | 완료·커밋대기 | tasks/066-260717-opd-루프액션-opal-agent-채널/ | 4축 opal-agent 채널·동기/비동기 이원화·3-분리 캡처·resume 실증 All Pass. 후속=067 stream+journal·커밋 |
 <!-- memory:history:end -->
