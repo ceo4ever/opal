@@ -3,7 +3,7 @@
   "module": "test_state_tool",
   "layer": "test",
   "domain": "opal-pipeline",
-  "description": "state-tool 단위 테스트 — 9개 명령 happy path + 23종 에러 코드 × 최소 1건 + G-5~G-15 시나리오. 005: TestClarificationGate 신설 — verify --clarification-check + TASK→다음단계 자동 훅 RED-first 케이스 ①~⑨ + 회귀 보호. 054: TestOwnerNamePlaceholder 신설 — note '{owner_name}' 플레이스홀더 identity.md write-time 치환 RED-first(S-1~S-7). 056: TestOpplSkillInit 신설 — `--skill oppl` enum 미등록 RED-first(S-020, H-1) — run.sh subprocess 실호출로 공개 인터페이스만 검증(mock 미사용). 070: task-step 키 주소 체계 도입 1차 RED-first — TestPipelineSpecValidate/TestPipelineJsonInit/TestStateSchema11Compat/TestTaskStepAddressing/TestActionStepRename/TestAddRowKey/TestOpddEnumDrift/TestGroupAPipelineSpecs/TestBackwardCompatAliases 9종 신설(TEST-SCENARIO.md S-1~S-14, PLAN §3.7.2) — 미구현 기능이므로 전부 FAIL 기대(RED 증거). 072: TestNextActionAutoDerive 신설 — STATE.md '다음 액션' 자동 파생 RED-first(TEST-SCENARIO.md S-1~S-4,S-6,S-7) — init next_action 영속화+schema optional 등록, advance/mark 프론티어 파생(pending '진입'/in_progress '진행 중'/전체완료 '태스크 완료'), 첫 줄만 치환(하위 자유기재 보존), --next-action 오버라이드 우선+비지속 복귀 — 공개 CLI 경로(직접 호출+run.sh subprocess)로만 검증, 미구현이므로 실패 기대(RED 증거). 074: TestImportPreservesKeys 신설 — `--import-existing` task-step key 유실 결함 RED-first(TEST-SCENARIO.md S-a~S-e) — force+import-existing 후 rows[].key 100% 보존, pipeline.json 폴백 복원, key 원천 전무 시 keyless+stderr 경고(하위호환), schema_version 1.1 유지, 동일 (stage,item) 중복 순서 소비 — 공개 cmd_init 호출 + 실 파일 I/O로만 검증, 수정 전 코드에서 FAIL 기대(RED 증거).",
+  "description": "state-tool 단위 테스트 — 9개 명령 happy path + 23종 에러 코드 × 최소 1건 + G-5~G-15 시나리오. 005: TestClarificationGate 신설 — verify --clarification-check + TASK→다음단계 자동 훅 RED-first 케이스 ①~⑨ + 회귀 보호. 054: TestOwnerNamePlaceholder 신설 — note '{owner_name}' 플레이스홀더 identity.md write-time 치환 RED-first(S-1~S-7). 056: TestOpplSkillInit 신설 — `--skill oppl` enum 미등록 RED-first(S-020, H-1) — run.sh subprocess 실호출로 공개 인터페이스만 검증(mock 미사용). 070: task-step 키 주소 체계 도입 1차 RED-first — TestPipelineSpecValidate/TestPipelineJsonInit/TestStateSchema11Compat/TestTaskStepAddressing/TestActionStepRename/TestAddRowKey/TestOpddEnumDrift/TestGroupAPipelineSpecs/TestBackwardCompatAliases 9종 신설(TEST-SCENARIO.md S-1~S-14, PLAN §3.7.2) — 미구현 기능이므로 전부 FAIL 기대(RED 증거). 072: TestNextActionAutoDerive 신설 — STATE.md '다음 액션' 자동 파생 RED-first(TEST-SCENARIO.md S-1~S-4,S-6,S-7) — init next_action 영속화+schema optional 등록, advance/mark 프론티어 파생(pending '진입'/in_progress '진행 중'/전체완료 '태스크 완료'), 첫 줄만 치환(하위 자유기재 보존), --next-action 오버라이드 우선+비지속 복귀 — 공개 CLI 경로(직접 호출+run.sh subprocess)로만 검증, 미구현이므로 실패 기대(RED 증거). 074: TestImportPreservesKeys 신설 — `--import-existing` task-step key 유실 결함 RED-first(TEST-SCENARIO.md S-a~S-e) — force+import-existing 후 rows[].key 100% 보존, pipeline.json 폴백 복원, key 원천 전무 시 keyless+stderr 경고(하위호환), schema_version 1.1 유지, 동일 (stage,item) 중복 순서 소비 — 공개 cmd_init 호출 + 실 파일 I/O로만 검증, 수정 전 코드에서 FAIL 기대(RED 증거). 076: TestTodoMirror 신설 — build_todo_mirror 파생 규칙(TS-001~007): init create 페이로드·전부pending→pending·전부done→completed·advance/부분→in_progress·na 중립·블로커 in_progress 유지·영속 경계(state.json 미영속+schema validate 통과) — 공개 cmd_init/advance/mark/block ok() stdout 페이로드 캡처로만 검증.",
   "exports": [
     "TestInit", "TestShow", "TestAdvance", "TestMark",
     "TestBlock", "TestValidate", "TestAddRow", "TestStatus", "TestGatePass",
@@ -12,7 +12,7 @@
     "TestPipelineSpecValidate", "TestPipelineJsonInit", "TestStateSchema11Compat",
     "TestTaskStepAddressing", "TestActionStepRename", "TestAddRowKey",
     "TestOpddEnumDrift", "TestGroupAPipelineSpecs", "TestBackwardCompatAliases",
-    "TestNextActionAutoDerive", "TestImportPreservesKeys"
+    "TestNextActionAutoDerive", "TestImportPreservesKeys", "TestTodoMirror"
   ]
 }
 
@@ -5157,6 +5157,138 @@ class TestBackwardCompatAliases(BaseTestCase):
             code, 0,
             f"--action-step이 argparse에서 인식되어야 함 (exit={code}, stdout={stdout!r}, stderr={stderr!r})"
         )
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# 076: TestTodoMirror — build_todo_mirror 파생 규칙 + ok() 페이로드 + 영속 경계
+# (PLAN §3.1.5 TS-001~TS-007). 표준 라이브러리만, 실 파일 I/O + date.js 모킹.
+# ═════════════════════════════════════════════════════════════════════════════
+
+class TestTodoMirror(BaseTestCase):
+    """076 F-001: init/advance/mark/block ok() stdout 페이로드의 todo_mirror 검증.
+    파생 4규칙(na 중립·전부pending→pending·전부done→completed·부분/failed→in_progress)
+    + 영속 경계(state.json 미영속, schema 무위반). 공개 cmd_* 호출로만 검증."""
+
+    # 단계당 다중 행 스펙 — 파생 경계(부분완료/블로커)를 재현하기 위한 픽스처
+    MULTI_SPEC = json.dumps([
+        {"stage": "TASK",    "item": "작업"},
+        {"stage": "TASK",    "item": "PM Gate"},
+        {"stage": "PLAN",    "item": "작업"},
+        {"stage": "PLAN",    "item": "PM Gate"},
+        {"stage": "EXECUTE", "item": "작업"},
+    ])
+
+    def _init_capture(self, rows_spec=None, mode="interactive"):
+        with _mock_now():
+            args = make_args(
+                task_path=str(self.task_path),
+                skill="opp", mode=mode,
+                rows_spec=rows_spec or SIMPLE_ROWS_SPEC,
+            )
+            return self._call_cmd(ST.cmd_init, args)
+
+    def _advance_capture(self, row_id):
+        with _mock_now():
+            args = make_args(task_path=str(self.task_path), row=row_id)
+            return self._call_cmd(ST.cmd_advance, args)
+
+    def _mark_capture(self, row_id, **kw):
+        with _mock_now():
+            args = make_args(task_path=str(self.task_path), row=row_id, done=True, **kw)
+            return self._call_cmd(ST.cmd_mark, args)
+
+    def _block_capture(self, row_id, reason="테스트 블로커"):
+        with _mock_now():
+            args = make_args(task_path=str(self.task_path), row=row_id, reason=reason)
+            return self._call_cmd(ST.cmd_block, args)
+
+    @staticmethod
+    def _by_stage(todo_mirror):
+        return {t["id"]: t for t in todo_mirror["todos"]}
+
+    def test_ts001_init_payload_all_pending(self):
+        """TS-001: init ok() → todo_mirror.action==create + 단계별 todo(전부 pending).
+        content/activeForm/id 필드 포함(native todo 스키마)."""
+        code, result = self._init_capture(rows_spec=SIMPLE_ROWS_SPEC)
+        self.assertEqual(code, 0, f"init 실패: {result}")
+        tm = result["todo_mirror"]
+        self.assertEqual(tm["action"], "create")
+        ids = [t["id"] for t in tm["todos"]]
+        self.assertEqual(ids, ["stage:TASK", "stage:PLAN", "stage:EXECUTE", "stage:CLOSE"])
+        for t in tm["todos"]:
+            self.assertEqual(t["status"], "pending")
+        first = tm["todos"][0]
+        self.assertEqual(first["content"], "TASK 단계")
+        self.assertEqual(first["activeForm"], "TASK 단계 진행 중")
+
+    def test_ts002_stage_all_done_completed(self):
+        """TS-002: 한 단계 전 행 done → 해당 단계 todo status=completed."""
+        self._init_capture(rows_spec=self.MULTI_SPEC)
+        self._mark_capture(1)              # TASK/작업 → done
+        code, result = self._mark_capture(2)  # TASK/PM Gate → done
+        self.assertEqual(code, 0, f"mark 실패: {result}")
+        by = self._by_stage(result["todo_mirror"])
+        self.assertEqual(by["stage:TASK"]["status"], "completed")
+        self.assertEqual(by["stage:PLAN"]["status"], "pending")  # 미착수 유지
+
+    def test_ts003_advance_and_partial_in_progress(self):
+        """TS-003: advance로 한 행 🔄 → 단계 in_progress; 일부만 done인 단계도 in_progress.
+        action==update 동반."""
+        self._init_capture(rows_spec=self.MULTI_SPEC)
+        code, result = self._advance_capture(1)  # TASK/작업 → in_progress
+        self.assertEqual(result["todo_mirror"]["action"], "update")
+        by = self._by_stage(result["todo_mirror"])
+        self.assertEqual(by["stage:TASK"]["status"], "in_progress")
+        # 일부만 done(작업 done, PM Gate pending) → in_progress
+        code, result = self._mark_capture(1)
+        by = self._by_stage(result["todo_mirror"])
+        self.assertEqual(by["stage:TASK"]["status"], "in_progress")
+
+    def test_ts004_untouched_stage_pending(self):
+        """TS-004: 미착수 단계 todo status=pending (전부 ⬜)."""
+        self._init_capture(rows_spec=self.MULTI_SPEC)
+        code, result = self._advance_capture(1)  # TASK만 접촉
+        by = self._by_stage(result["todo_mirror"])
+        self.assertEqual(by["stage:PLAN"]["status"], "pending")
+        self.assertEqual(by["stage:EXECUTE"]["status"], "pending")
+
+    def test_ts005_na_neutral(self):
+        """TS-005: agentic init 시 사용자 확인(na)+작업(pending) 단계 → pending(na 미반영).
+        na를 완료로 셌다면 in_progress로 오판되므로 pending 검증이 na 중립을 확증."""
+        rows = json.dumps([
+            {"stage": "TASK",  "item": "작업"},
+            {"stage": "TASK",  "item": "사용자 확인"},
+            {"stage": "CLOSE", "item": "사용자 확인"},
+        ])
+        code, result = self._init_capture(rows_spec=rows, mode="agentic")
+        self.assertEqual(code, 0, f"agentic init 실패: {result}")
+        by = self._by_stage(result["todo_mirror"])
+        self.assertEqual(by["stage:TASK"]["status"], "pending")
+
+    def test_ts006_block_keeps_in_progress(self):
+        """TS-006: block 후 대상 단계 todo status=in_progress 유지 + action==update."""
+        self._init_capture(rows_spec=self.MULTI_SPEC)
+        code, result = self._block_capture(1)  # TASK/작업 → failed
+        self.assertEqual(code, 0, f"block 실패: {result}")
+        tm = result["todo_mirror"]
+        self.assertEqual(tm["action"], "update")
+        by = self._by_stage(tm)
+        self.assertEqual(by["stage:TASK"]["status"], "in_progress")
+
+    def test_ts007_not_persisted_schema_passes(self):
+        """TS-007(H-3 영속 경계): 4개 명령 실행 후 state.json에 todo_mirror 부재 +
+        save_state_json 결과가 schema validate 통과."""
+        self._init_capture(rows_spec=self.MULTI_SPEC)
+        self._advance_capture(1)
+        self._mark_capture(1)
+        self._block_capture(2)
+        state = self._state()
+        self.assertNotIn("todo_mirror", state)
+        for row in state["rows"]:
+            self.assertNotIn("todo_mirror", row)
+        result = self._validate()
+        self.assertTrue(result["ok"], f"validate 실패: {result}")
+        self.assertEqual(result["violations_count"], 0)
 
 
 # ═════════════════════════════════════════════════════════════════════════════

@@ -3,11 +3,11 @@
   "module": "state_tool",
   "layer": "util",
   "domain": "opal-pipeline",
-  "description": "OPAL 파이프라인 현황판 JSON SSOT 관리 CLI — 10개 서브 명령(init/show/advance/mark/block/validate/add-row/status/spec-validate/gate-pass[deprecated]) + verify + 3-way 모드(interactive/semi-agentic/agentic) 지원. 014 Phase 4: 새 표준 행 구조(QA Gate/State Gate 행 없음)와 정합 — gate-pass deprecate, CLOSE 마지막 행 판정 항목명 비의존화. 016: verify --red-check(RED 증거 게이트) + --fix-mode/--changed-files/--test-globs(테스트 불변성 게이트) 추가 — RED-first TDD 트랙 deterministic 집행. 017: mark --step N/M 다중 Step 조기 done 가드 — N<M이면 in_progress 유지(done 미처리) + 진행률(step) 영속화, N==M에서만 done; 미완 행은 기존 stage-transition guard가 단계전환·CLOSE 진입을 자동 차단. 005: verify --clarification-check + TASK→다음단계 자동 훅 — TASK 4요소(목표/범위/제약/완료기준) 미잠금 시 다음 단계 진입 거부(PRINCIPLES §1 집행), 정책 A graceful skip(섹션/파일 부재 시 하위호환). 034: mock 가드 false positive 수정 — _MOCK_CODE_PATTERNS 정규식 'MagicMock' 맨 단어 대안 제거(#1 산문 오탐) + _check_mock_patterns 인라인 백틱 제거 전처리 추가(#2 메타-순환 해소); 헌법 §4 정탐 유지. 054: resolve_owner_placeholder() 신설 — note-write 6경로(advance/mark/add-row/block/status/init)에서 '{owner_name}' 플레이스홀더를 identity.md owner_name으로 write-time 치환(fail-safe: 부재/공란/파싱실패 시 원문 유지). 070: task-step 키 주소 체계 도입 1차 — spec-validate 서브명령(pipeline.json 스펙 검증) + KEY_PATTERN/stage_to_slug/resolve_row_index 신설, build_rows_from_pipeline_json(init --rows-from .json 확장자 분기, .md는 deprecation 경고 유지), advance/mark/block에 --task-step/--task-step-id/--row(deprecated) 3주소·add-row에 --after-task-step/--after-task-step-id/--key(자동 생성) 추가, --step→--action-step 별칭(dest 공유), opdd skill·DICT/MODEL/DDL·MIGRATION stage enum 등록, ERROR_CODES 8종 추가. 072: STATE.md '다음 액션' 자동 파생 — state.json next_action 필드 신설(init 영속화·schema optional 등록), _derive_next_action(파이프라인 프론티어=첫 미완료 행 기준 파생)·update_next_action_section(첫 줄만 치환, 하위 자유기재 보존) 신규, advance/mark가 상태 반영 후 next_action 계산·저장·렌더(block/add-row/status는 미접촉), advance/mark --next-action per-transition 오버라이드(비지속 — 다음 전이 자동 파생 복귀). 074: --import-existing key-보존 재접합 — cmd_init import 분기가 파싱 후 기존 state.json→pipeline.json (stage,item) 순서 매칭으로 key 재접합(schema_version 1.1 유지), 원천 전무 시 keyless+경고(하위호환); _key_source_index/_reattach_import_keys 신규.",
+  "description": "OPAL 파이프라인 현황판 JSON SSOT 관리 CLI — 10개 서브 명령(init/show/advance/mark/block/validate/add-row/status/spec-validate/gate-pass[deprecated]) + verify + 3-way 모드(interactive/semi-agentic/agentic) 지원. 014 Phase 4: 새 표준 행 구조(QA Gate/State Gate 행 없음)와 정합 — gate-pass deprecate, CLOSE 마지막 행 판정 항목명 비의존화. 016: verify --red-check(RED 증거 게이트) + --fix-mode/--changed-files/--test-globs(테스트 불변성 게이트) 추가 — RED-first TDD 트랙 deterministic 집행. 017: mark --step N/M 다중 Step 조기 done 가드 — N<M이면 in_progress 유지(done 미처리) + 진행률(step) 영속화, N==M에서만 done; 미완 행은 기존 stage-transition guard가 단계전환·CLOSE 진입을 자동 차단. 005: verify --clarification-check + TASK→다음단계 자동 훅 — TASK 4요소(목표/범위/제약/완료기준) 미잠금 시 다음 단계 진입 거부(PRINCIPLES §1 집행), 정책 A graceful skip(섹션/파일 부재 시 하위호환). 034: mock 가드 false positive 수정 — _MOCK_CODE_PATTERNS 정규식 'MagicMock' 맨 단어 대안 제거(#1 산문 오탐) + _check_mock_patterns 인라인 백틱 제거 전처리 추가(#2 메타-순환 해소); 헌법 §4 정탐 유지. 054: resolve_owner_placeholder() 신설 — note-write 6경로(advance/mark/add-row/block/status/init)에서 '{owner_name}' 플레이스홀더를 identity.md owner_name으로 write-time 치환(fail-safe: 부재/공란/파싱실패 시 원문 유지). 070: task-step 키 주소 체계 도입 1차 — spec-validate 서브명령(pipeline.json 스펙 검증) + KEY_PATTERN/stage_to_slug/resolve_row_index 신설, build_rows_from_pipeline_json(init --rows-from .json 확장자 분기, .md는 deprecation 경고 유지), advance/mark/block에 --task-step/--task-step-id/--row(deprecated) 3주소·add-row에 --after-task-step/--after-task-step-id/--key(자동 생성) 추가, --step→--action-step 별칭(dest 공유), opdd skill·DICT/MODEL/DDL·MIGRATION stage enum 등록, ERROR_CODES 8종 추가. 072: STATE.md '다음 액션' 자동 파생 — state.json next_action 필드 신설(init 영속화·schema optional 등록), _derive_next_action(파이프라인 프론티어=첫 미완료 행 기준 파생)·update_next_action_section(첫 줄만 치환, 하위 자유기재 보존) 신규, advance/mark가 상태 반영 후 next_action 계산·저장·렌더(block/add-row/status는 미접촉), advance/mark --next-action per-transition 오버라이드(비지속 — 다음 전이 자동 파생 복귀). 074: --import-existing key-보존 재접합 — cmd_init import 분기가 파싱 후 기존 state.json→pipeline.json (stage,item) 순서 매칭으로 key 재접합(schema_version 1.1 유지), 원천 전무 시 keyless+경고(하위호환); _key_source_index/_reattach_import_keys 신규. 076: build_todo_mirror() 신설 — init/advance/mark/block ok() stdout 페이로드에 단계 단위 todo 미러(파생: na 중립·전부pending→pending·전부done→completed·부분/failed→in_progress) 추가, PostToolUse hook이 이를 세션에 결정론 주입(파이프라인 todo 미러 hook 강제); todo_mirror는 stdout 전용 비영속(state.json 미접촉 — schema additionalProperties:false 보존).",
   "exports": [
     "cmd_init", "cmd_show", "cmd_advance", "cmd_mark",
     "cmd_block", "cmd_validate", "cmd_add_row", "cmd_status",
-    "cmd_spec_validate", "cmd_gate_pass"
+    "cmd_spec_validate", "cmd_gate_pass", "build_todo_mirror"
   ]
 }
 """
@@ -447,6 +447,44 @@ def resolve_row_index(state, command, key_val=None, id_val=None, row_val=None,
 
 # 완료로 간주하는 상태값 — 이 상태의 앞 행은 건너뛰기 검증에서 제외
 _COMPLETE_STATUSES = {"done", "additional_work_done", "na"}
+
+
+def build_todo_mirror(state, action):
+    """076 R-1: state.json rows[] → 단계(stage) 단위 todo 미러 페이로드.
+
+    action: "create"(init) | "update"(advance/mark/block).
+    비영속 — ok() stdout 페이로드에만 사용하며 save_state_json 미접촉
+    (H-3, state.schema.json §root additionalProperties:false 위반 회피).
+
+    파생 규칙(state.md §파이프라인 todo 미러 정합):
+      - na 행은 집계에서 중립(제외) — agentic auto-na 오판 방지(DEC-2).
+      - effective 없음 or 전부 done/additional_work_done → completed.
+      - 전부 pending → pending.
+      - 그 외(in_progress·failed·부분완료 혼합) → in_progress
+        — 블로커(failed)는 in_progress 유지(DEC-3, todo에 실패 상태 없음).
+
+    단계 순서는 rows 등장 순서를 보존한다(dict.fromkeys 패턴, _build_new_state_md 선례).
+    status 열거값(pending/in_progress/completed)은 네이티브 할일 도구 status와 직접 매핑되어
+    소유자(PM)가 그대로 릴레이한다(DEC-1)."""
+    rows = state.get("rows", [])
+    stages = list(dict.fromkeys(r["stage"] for r in rows))
+    todos = []
+    for stage in stages:
+        statuses = [r.get("status") for r in rows if r["stage"] == stage]
+        effective = [s for s in statuses if s != "na"]  # na 중립(DEC-2)
+        if not effective or all(s in ("done", "additional_work_done") for s in effective):
+            st = "completed"
+        elif all(s == "pending" for s in effective):
+            st = "pending"
+        else:  # in_progress / failed / 부분완료 혼합 → in_progress(블로커 유지 DEC-3)
+            st = "in_progress"
+        todos.append({
+            "id":         f"stage:{stage}",       # 세션 내 안정 키
+            "content":    f"{stage} 단계",         # TaskCreate/TaskUpdate content
+            "activeForm": f"{stage} 단계 진행 중",  # 진행형 표현(native todo 스키마)
+            "status":     st,                      # pending | in_progress | completed
+        })
+    return {"action": action, "todos": todos}
 
 
 def _derive_next_action(state):
@@ -1060,7 +1098,8 @@ def cmd_init(args):
        task_id=task_id,
        rows_count=len(rows),
        created_at=now_str,
-       import_existing=import_mode)
+       import_existing=import_mode,
+       todo_mirror=build_todo_mirror(state, "create"))
 
 
 def _build_new_state_md(task_title, now_str, mode, first_stage,
@@ -1202,7 +1241,8 @@ def cmd_advance(args):
     sync_state_md(task_path, state, now_str, command, progress=progress,
                   next_action=state["next_action"])
     ok(command, row_id=row["row_id"], stage=row["stage"], item=row["item"],
-       status="in_progress", timestamp=now_str)
+       status="in_progress", timestamp=now_str,
+       todo_mirror=build_todo_mirror(state, "update"))
 
 # ── 4. mark ───────────────────────────────────────────────────────────────────
 
@@ -1378,7 +1418,8 @@ def cmd_mark(args):
                   next_action=state["next_action"])
 
     ok(command, row_id=row["row_id"], stage=row["stage"], item=row["item"],
-       status=row["status"], timestamp=now_str, owner=row["owner"])
+       status=row["status"], timestamp=now_str, owner=row["owner"],
+       todo_mirror=build_todo_mirror(state, "update"))
 
 # ── 5. block ──────────────────────────────────────────────────────────────────
 
@@ -1408,7 +1449,8 @@ def cmd_block(args):
     sync_state_md(task_path, state, now_str, command, status_text="블로커")
 
     ok(command, row_id=row["row_id"], stage=row["stage"], item=row["item"],
-       status="failed", current_status="blocked", timestamp=now_str)
+       status="failed", current_status="blocked", timestamp=now_str,
+       todo_mirror=build_todo_mirror(state, "update"))
 
 # ── 6. validate ───────────────────────────────────────────────────────────────
 

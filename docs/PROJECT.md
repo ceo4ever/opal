@@ -176,6 +176,7 @@ TEST-SCENARIO 단계를 "목표 달성 검증"으로 재정의 — 루브릭 채
 
 | 날짜 | 변경 내용 |
 |------|----------|
+| 2026-07-23 | 파이프라인 todo 미러 hook 강제 자동화 — state-tool todo_mirror 페이로드 출력(init/advance/mark/block, stdout 전용·비영속) + PostToolUse hook 결정론 트리거(claude-hooks.json) + install merge_hooks 소유권-마커 멱등 upsert(외부 hook clobber 해소) + state.md 정합. prose 의존 → tool 강제(헌법 Enforce). S-9 L3(새 세션 todo 패널 실증) 후속 (Task 076) |
 | 2026-07-23 | 목표-커버 게이트 opds·opsdd 확산 — op-scenario-gate Step 2 pilot 변환기(opds=opd동형/opsdd=SPEC.md FR·AC·EC 소스) + opds STEP 2(producer 확립·op-dev-plan 미접촉)·opsdd Phase 2 REVIEW(수동 커버리지→도구 게이트·self-confirming 해소) 배선. oppl 제외·oppd 2차. 신규 컴포넌트 0(배선만) (Task 075) |
 | 2026-07-23 | TEST-SCENARIO 목표-커버 게이트 섹션 신설 — scenario-gate.md(규칙 SSOT)·op-scenario-gate(단계 스킬)·test-tool scenario-coverage-check(도구 확장)·opal-evaluator-agent scenario-rubric(phase). opd STEP 3.5 pipeline.json 게이트 행 접합(EXECUTE 진입 구조적 차단). 070 목표 미검증 완료 재발 방지, 1차 opd 선적용 (Task 073) |
 | 2026-07-18 | Project Loop 표 backlog-tool(8서브명령 — covers·coverage-check)·test-tool scenario-*(fidelity·conformance 게이트) 정합 — oppl 계약 접합면 검증 강화: 표면 인벤토리(surfaces.json)·증거 충실도 사다리·여정 스모크·워킹 스켈레톤 의무 도입 (Task 069) |

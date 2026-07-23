@@ -1,4 +1,15 @@
 {
+  "PostToolUse": [
+    {
+      "matcher": "Bash",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "\"$HOME/.opal/.venv/bin/python\" \"$HOME/.opal/tools/state-tool/todo_mirror_hook.py\""
+        }
+      ]
+    }
+  ],
   "SubagentStop": [
     {
       "matcher": "",

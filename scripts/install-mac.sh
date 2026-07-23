@@ -38,6 +38,7 @@
 #   v3.8 2026-07-02 15:20 KST: git-sync-tool run.sh chmod +x 블록 추가 (memory-tool 블록 직후, state-tool 패턴) — 신규 워크스페이스 git 동기화 도구 배포 (052)
 #   v3.9 2026-07-10 18:07: install_dashboard() 말미에 opal-cli console scan 자동 1회 호출 추가 — console.config.json 자동 생성/머지로 신규 머신 프로젝트 미발견 문제 근본 해결, 실패해도 install 비중단(|| warn) (057)
 #   v4.0 2026-07-17: improve-tool run.sh 실행 권한 chmod 블록(backlog-tool 패턴 답습) + fw-inbox 런타임 디렉토리 초기화 블록(mkdir -p + README seed, create-if-absent) 추가 — opal-improve 스킬·improve-tool 도구는 기존 skills/tools 자동 복사 루프가 처리, fw-inbox는 clean_dirs 미포함으로 재설치 시 기존 수집 항목 보존(H-5 멱등) (058)
+#   v4.1 2026-07-23: merge_hooks_config 인라인 python(이벤트 통째 교체=clobber) 제거 → scripts/merge-hooks.py 위임 — 소유권-마커(_opal_managed) 기반 멱등 upsert로 외부 hook(orca PostToolUse 등) 보존 + N회 재배포 바이트 동일, 로직 테스트 seam 분리 (076)
 #
 
 set -euo pipefail
@@ -180,30 +181,9 @@ merge_hooks_config() {
     local target="$1"
     local hooks_json="$2"
 
-    /usr/bin/python3 -c "
-import json, os, sys
-
-target = sys.argv[1]
-hooks_file = sys.argv[2]
-
-with open(hooks_file) as f:
-    source_hooks = json.load(f)
-
-if os.path.exists(target):
-    with open(target) as f:
-        content = f.read().strip()
-    data = json.loads(content) if content else {}
-else:
-    data = {}
-
-data.setdefault('hooks', {})
-for event, rules in source_hooks.items():
-    data['hooks'][event] = rules
-
-with open(target, 'w') as f:
-    json.dump(data, f, indent=2)
-    f.write('\n')
-" "$target" "$hooks_json"
+    # 소유권-마커(_opal_managed) 기반 멱등 upsert에 위임 — 외부 hook(orca 등) 보존 + OPAL 항목 재삽입,
+    # N회 재배포 시 결과 바이트 동일. 로직은 테스트 가능한 seam(scripts/merge-hooks.py)으로 분리 (task 076)
+    /usr/bin/python3 "$FRAMEWORK_ROOT/scripts/merge-hooks.py" "$target" "$hooks_json"
 }
 
 install_dir() {
