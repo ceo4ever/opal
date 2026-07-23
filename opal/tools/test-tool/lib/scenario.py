@@ -3,7 +3,7 @@
   "module": "scenario",
   "layer": "util",
   "domain": "opal-tools",
-  "description": "test-tool scenario-* 서브명령(scenario-init/scenario-lock/scenario-mark/scenario-status/scenario-red/scenario-fidelity-check/scenario-conformance) 핸들러. test-scenario.json SSOT(spec존/result존) 관리 — RED-first 동결 게이트(scenario-lock은 전 시나리오 red_confirmed==true일 때만 통과, self-confirming 방지) + scenario-mark는 locked==true 이후에만 허용. 069: 증거 충실도 사다리(mock<real-http<real-usage) 필드(required_fidelity/fidelity)와 시나리오별 부분 게이트(scenario-fidelity-check) + 표면(surface) 전수 conformance 판정(scenario-conformance, surfaces.json 분모)을 추가한다. resolver/runner/e2e_adapter와 완전 격리되어 기존 4서브명령(resolve/check/unit/integration) 로직에 간섭하지 않는다(056/F-002). 타 도구의 SSOT는 일절 미접촉(축 분리, 069/H-7).",
+  "description": "test-tool scenario-* 서브명령(scenario-init/scenario-lock/scenario-mark/scenario-status/scenario-red/scenario-fidelity-check/scenario-conformance/scenario-coverage-check) 핸들러. test-scenario.json SSOT(spec존/result존) 관리 — RED-first 동결 게이트(scenario-lock은 전 시나리오 red_confirmed==true일 때만 통과, self-confirming 방지) + scenario-mark는 locked==true 이후에만 허용. 069: 증거 충실도 사다리(mock<real-http<real-usage) 필드(required_fidelity/fidelity)와 시나리오별 부분 게이트(scenario-fidelity-check) + 표면(surface) 전수 conformance 판정(scenario-conformance, surfaces.json 분모)을 추가한다. 073: scenario-coverage-check — scenario-gate.md §3 정규화 페이로드(pilot-중립, test-scenario.json SSOT 미접촉)의 R/F/H↔시나리오 매핑 커버리지(루브릭 ②③④)를 결정론 판정한다(070 거짓 초록불 재발 방지). resolver/runner/e2e_adapter와 완전 격리되어 기존 4서브명령(resolve/check/unit/integration) 로직에 간섭하지 않는다(056/F-002). 타 도구의 SSOT는 일절 미접촉(축 분리, 069/H-7).",
   "exports": [
     "SCENARIO_ERROR_CODES",
     "FIDELITY_ORDER",
@@ -15,7 +15,8 @@
     "cmd_scenario_status",
     "cmd_scenario_red",
     "cmd_scenario_fidelity_check",
-    "cmd_scenario_conformance"
+    "cmd_scenario_conformance",
+    "cmd_scenario_coverage_check"
   ],
   "depends": []
 }
@@ -48,6 +49,16 @@ test-tool scenario-* 핸들러 — test-scenario.json SSOT (spec존/result존 �
   auth:required 표면은 fidelity>=real-http 강제, 그 외는 시나리오 자신의
   required_fidelity(기본 mock)를 문턱으로 사용. 미충족 표면 존재 시 surface_unverified
   exit 14.
+[MUST] (073/F-002) scenario-coverage-check — scenario-gate.md §3 정규화 페이로드
+  (`{goal, requirements[], features[], hypotheses[], scenarios[]}`)를 --coverage-input
+  <path>로 받아 R/F/H↔시나리오 매핑 커버리지(루브릭 ②③④, 결정론)를 판정한다.
+  test-scenario.json SSOT는 미접촉(축 분리) — pilot-중립 transient 페이로드만 소비한다.
+  missing.requirements/features/hypotheses 중 하나라도 non-empty면 coverage_unmet
+  exit 16(070 거짓 초록불 재발 방지 — 미커버가 있는데 ok 반환 금지). 모두 empty면
+  exit 0 + all_covered:true. 파일 부재/JSON 파손/필수 키 누락은 coverage_input_invalid
+  exit 17. ①⑤⑥ 판단축(목표달성/채택잔존/경계부정)은 판정하지 않는다
+  (opal-evaluator-agent scenario-rubric phase 소관). 기존 7서브명령·exit 8~14는 무변경
+  (additive, H-2 회귀 보호).
 """
 
 import argparse
@@ -73,6 +84,8 @@ SCENARIO_ERROR_CODES: Dict[str, str] = {
     "fidelity_unmet":           "요구 충실도 미달 시나리오 존재 — scenario-fidelity-check 거부(069/H-3)",
     "surface_unverified":       "conformance 미검증 표면 존재 — scenario-conformance 거부(069/H-4)",
     "surfaces_file_not_found":  "surfaces.json 부재(명시적 --surfaces 경로 포함) — applicable:false로 스킵(069/M-5, 정보용 배정)",
+    "coverage_unmet":           "요구/기능/가설 미커버 존재 — scenario-coverage-check 거부(073/R-2)",
+    "coverage_input_invalid":   "--coverage-input JSON 파싱/스키마 실패 — scenario-coverage-check 거부(073)",
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -455,13 +468,97 @@ def cmd_scenario_conformance(args: argparse.Namespace) -> None:
     }, 0)
 
 
+_COVERAGE_REQUIRED_KEYS = ("goal", "requirements", "features", "hypotheses", "scenarios")
+
+
+def cmd_scenario_coverage_check(args: argparse.Namespace) -> None:
+    """scenario-coverage-check — 정규화 페이로드(scenario-gate.md §3)의 R/F/H ↔ 시나리오
+    매핑 커버리지를 결정론 판정한다(루브릭 ②③④, 073/F-002). test-scenario.json SSOT
+    미접촉 — pilot-중립 transient 페이로드(--coverage-input <path>)만 소비한다(축 분리,
+    ANALYSIS.md 073 §4 발견①). ①⑤⑥ 판단축(목표달성/채택잔존/경계부정)은 판정하지
+    않는다(opal-evaluator-agent scenario-rubric phase 소관)."""
+    coverage_input_path = pathlib.Path(args.coverage_input)
+
+    if not coverage_input_path.exists():
+        _error(
+            "coverage_input_invalid", "scenario-coverage-check", 17,
+            detail=f"--coverage-input 파일 부재: {coverage_input_path}",
+        )
+        return
+
+    try:
+        with open(coverage_input_path, encoding="utf-8") as f:
+            payload = json.load(f)
+    except json.JSONDecodeError as e:
+        _error(
+            "coverage_input_invalid", "scenario-coverage-check", 17,
+            detail=f"--coverage-input JSON 파싱 실패: {e}",
+        )
+        return
+
+    if not isinstance(payload, dict):
+        _error(
+            "coverage_input_invalid", "scenario-coverage-check", 17,
+            detail="--coverage-input 페이로드는 JSON object여야 한다",
+        )
+        return
+
+    missing_keys = [k for k in _COVERAGE_REQUIRED_KEYS if k not in payload]
+    if missing_keys:
+        _error(
+            "coverage_input_invalid", "scenario-coverage-check", 17,
+            detail=f"필수 키 누락: {missing_keys}",
+        )
+        return
+
+    requirements = payload.get("requirements") or []
+    features = payload.get("features") or []
+    hypotheses = payload.get("hypotheses") or []
+    scenarios = payload.get("scenarios") or []
+
+    covered_requirements: set = set()
+    covered_features: set = set()
+    covered_hypotheses: set = set()
+    for s in scenarios:
+        covered_requirements.update(s.get("covers_requirements") or [])
+        covered_features.update(s.get("covers_features") or [])
+        covered_hypotheses.update(s.get("covers_hypotheses") or [])
+
+    missing = {
+        "requirements": [r for r in requirements if r not in covered_requirements],
+        "features": [f for f in features if f not in covered_features],
+        "hypotheses": [h for h in hypotheses if h not in covered_hypotheses],
+    }
+
+    if missing["requirements"] or missing["features"] or missing["hypotheses"]:
+        _error(
+            "coverage_unmet", "scenario-coverage-check", 16,
+            detail={"missing": missing},
+        )
+        return
+
+    _respond({
+        "ok": True,
+        "command": "scenario-coverage-check",
+        "goal": payload.get("goal"),
+        "all_covered": True,
+        "counts": {
+            "requirements": len(requirements),
+            "features": len(features),
+            "hypotheses": len(hypotheses),
+            "scenarios": len(scenarios),
+        },
+    }, 0)
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # argparse 서브파서 등록 + dispatch 테이블
 # ─────────────────────────────────────────────────────────────────────────────
 
 def add_scenario_subparsers(subparsers: "argparse._SubParsersAction") -> None:
     """test_tool.py `_build_parser`의 top-level subparsers 객체에
-    scenario-init/scenario-lock/scenario-mark/scenario-status/scenario-red 5종을 추가한다."""
+    scenario-init/scenario-lock/scenario-mark/scenario-status/scenario-red/
+    scenario-fidelity-check/scenario-conformance/scenario-coverage-check 8종을 추가한다."""
 
     p_init = subparsers.add_parser("scenario-init", help="test-scenario.json 생성 (spec존, locked=false)")
     p_init.add_argument("--task-path", required=True, metavar="PATH", help="태스크 폴더 경로")
@@ -507,6 +604,15 @@ def add_scenario_subparsers(subparsers: "argparse._SubParsersAction") -> None:
         help="surfaces.json 경로 (선택, 기본 <task-path>/surfaces.json — 부재 시 applicable:false)",
     )
 
+    p_coverage = subparsers.add_parser(
+        "scenario-coverage-check",
+        help="정규화 페이로드(scenario-gate.md §3)의 R/F/H↔시나리오 매핑 커버리지 결정론 판정(073/F-002)",
+    )
+    p_coverage.add_argument(
+        "--coverage-input", required=True, metavar="PATH",
+        help="정규화 페이로드 JSON 경로 (goal/requirements/features/hypotheses/scenarios, test-scenario.json과 무관)",
+    )
+
 
 SCENARIO_DISPATCH: Dict[str, Any] = {
     "scenario-init": cmd_scenario_init,
@@ -516,4 +622,5 @@ SCENARIO_DISPATCH: Dict[str, Any] = {
     "scenario-red": cmd_scenario_red,
     "scenario-fidelity-check": cmd_scenario_fidelity_check,
     "scenario-conformance": cmd_scenario_conformance,
+    "scenario-coverage-check": cmd_scenario_coverage_check,
 }

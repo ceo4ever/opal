@@ -14,6 +14,7 @@ description: |
 - **작성자**: 알투(PM) + 캡틴 페어 — self-confirming 방지를 위해 PLAN 워커(opal-plan-agent)와 다른 작성자가 수행한다
 - **입력**: `tasks/{NNN}-{태스크명}/TASK.md` + `PLAN.md` (§ 리스크 가설 표 필수)
 - **출력**: `tasks/{NNN}-{태스크명}/TEST-SCENARIO.md`
+- **목표-커버리지 게이트 규칙 SSOT**: `opal/core/references/harness/scenario-gate.md` — 루브릭 6축(①목표달성~⑥경계/부정)·판정 주체 분리·정규화 계약·종료조건 3종은 이 문서가 SSOT다.
 
 ## 페르소나
 
@@ -163,6 +164,7 @@ Read ~/.opal/skills/op-dev-test-scenario/references/test-scenario-guide.md
 - [ ] 리스크 가설 표(§1) H-N ID와 시나리오 S-N 1:N 매핑 완전
 - [ ] 모든 시나리오에 실행 방식(M1/M2/M3) 명시 (계층 L과 함께 양식 §3에 기재)
 - [ ] **FE 변경 시 M2 시나리오 포함** — 변경 영역에 FE 화면/컴포넌트·인증/인가·외부 API 연동이 포함되면 L2/M2(E2E 자동화) 시나리오가 §3에 최소 1건 존재 (없으면 PM Gate FAIL — `test-scenario-guide.md` §Step 3-b M2 의무 트리거)
+- [ ] **목표 커버** — TASK.md 요구사항(R) 전체가 §4 매핑 표에 커버되고, 사용자/운영 계층에서 태스크 목표를 검증하는 시나리오(목표달성 시나리오)가 §3에 최소 1건 존재 (기준: `opal/core/references/harness/scenario-gate.md` §2 ①축)
 ```
 
 ## 저장 경로
@@ -209,3 +211,4 @@ TEST-SCENARIO 완료: tasks/{NNN}-{태스크명}/TEST-SCENARIO.md
 | v1.5 | 2026-05-19 17:05 | 시나리오 항목에 "실행 방식 (M1/M2/M3)" 필드 추가 + PM Gate 체크 8번째 항목 추가 (004 추가작업) |
 | v1.6 | 2026-06-10 10:13 | 역할 분배표 RED 작성주체(opal-test-agent mode:red) 행 + §4 매핑표 '테스트 파일:케이스' 열 (016) |
 | v1.7 | 2026-06-24 | PM Gate FE→M2 체크 항목 추가 + 시나리오 작성 체크리스트 보강 (041) |
+| v1.8 | 2026-07-23 | scenario-gate.md SSOT 참조 추가(실행 컨텍스트) + PM Gate에 "목표 커버(TASK R·목표달성 시나리오 존재)" 항목 추가 (073) |

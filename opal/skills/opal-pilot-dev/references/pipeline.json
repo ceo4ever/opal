@@ -12,12 +12,13 @@
     { "id": 7,  "key": "plan.pm_gate",                 "stage": "PLAN",          "item": "PM Gate" },
     { "id": 8,  "key": "plan.user_confirm",            "stage": "PLAN",          "item": "사용자 확인" },
     { "id": 9,  "key": "test_scenario.test_scenario_md","stage": "TEST-SCENARIO","item": "작업" },
-    { "id": 10, "key": "test_scenario.user_confirm",   "stage": "TEST-SCENARIO", "item": "사용자 확인" },
-    { "id": 11, "key": "execute.implement",            "stage": "EXECUTE",       "item": "작업" },
-    { "id": 12, "key": "test.run_tests",               "stage": "TEST",          "item": "작업" },
-    { "id": 13, "key": "test.pm_gate",                 "stage": "TEST",          "item": "PM Gate" },
-    { "id": 14, "key": "test.user_confirm",            "stage": "TEST",          "item": "사용자 확인" },
-    { "id": 15, "key": "close.done_md",                "stage": "CLOSE",         "item": "DONE.md 생성" }
+    { "id": 10, "key": "test_scenario.scenario_gate",  "stage": "TEST-SCENARIO", "item": "목표-커버 게이트" },
+    { "id": 11, "key": "test_scenario.user_confirm",   "stage": "TEST-SCENARIO", "item": "사용자 확인" },
+    { "id": 12, "key": "execute.implement",            "stage": "EXECUTE",       "item": "작업" },
+    { "id": 13, "key": "test.run_tests",               "stage": "TEST",          "item": "작업" },
+    { "id": 14, "key": "test.pm_gate",                 "stage": "TEST",          "item": "PM Gate" },
+    { "id": 15, "key": "test.user_confirm",            "stage": "TEST",          "item": "사용자 확인" },
+    { "id": 16, "key": "close.done_md",                "stage": "CLOSE",         "item": "DONE.md 생성" }
   ],
   "pm_gate": [
     { "stage": "ANALYSIS",      "artifacts": ["ANALYSIS.md"], "checklist": ["-"] },

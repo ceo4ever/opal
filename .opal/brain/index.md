@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-07-23 13:34
+> 갱신: 2026-07-23 14:19
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -13,6 +13,7 @@
 - [[op-data-ddl-skill]] — op-data-ddl (DDL 단계 스킬) #skill #stage-skill #data-design #ddl #migration #dbml
 - [[op-data-dictionary-skill]] — op-data-dictionary (DICT 단계 스킬) #skill #stage-skill #data-design #dictionary #db
 - [[op-data-model-skill]] — op-data-model (MODEL 단계 스킬) #skill #stage-skill #data-design #modeling #erd #mermaid #dbml
+- [[op-scenario-gate-skill]] — op-scenario-gate (단계 스킬) #skill #stage-skill #testing #scenario-gate #tool-gated
 - [[opal-action-monitor]] — opal-action-monitor #tool #oppl #observability-boundary #monitor
 - [[opal-action-status]] — opal-action-status #skill #oppl #observability-boundary #operator
 - [[opal-console]] — OPAL Console #tool #dashboard #frontend #backend
@@ -27,6 +28,7 @@
 - [[tool-scan]] — tool-scan #tool #opal-tools #discovery #usage #capability
 
 ## 개념
+- [[070-derivation-engine-perspective-bias-lesson]] — 070 사건 근본원인 — 도출 엔진 관점 편향과 게이트 집행 #lesson-learned #testing #scenario-gate #root-cause #task-073
 - [[active-platform-dir-install-target-lesson]] — 활성 Claude 플랫폼 디렉토리가 ~/.claude 기본이 아닐 수 있다 — install 타겟 정합 교훈 (032 P2) #install #deploy #platform #dispatch #lesson-learned
 - [[adapter-body-model-level-substitution]] — 어댑터 본문 model 레벨 치환 — frontmatter 비대칭 해소 (032) #adapter #install #model #platform #sub-dispatch #constitution
 - [[agent-md-digest-pattern]] — AGENT.md 다이제스트 패턴 — 비서 코어 lean 분리 #bootstrap #digest #lean-core #assistant-tier #pm-tier #architecture
@@ -142,6 +144,8 @@
 - [[red-first-hybrid-verification-track]] — RED-first 하이브리드 검증 트랙 — 도구 계약 변경 한정 적용 #verification #red-first #opal-agent #testing
 - [[red-test-commit-coercion-guard-lesson]] — RED 테스트가 실저장소 git archive 검증 시 커밋을 구조적으로 강요하는 결함 #red-first #test #git #lesson #guard
 - [[red-test-determinism-abort-trap]] — RED 테스트 결정론성 함정 — neverResolve fetch 대역의 abort 무반응 #testing #red-first #determinism #abort #fetch-mock
+- [[scenario-goal-coverage-gate-loop]] — TEST-SCENARIO 목표-커버리지 루브릭 게이트 루프 — 결정론+판단 분리 #testing #scenario-gate #tool-gated #rubric #opd #task-073
+- [[scenario-normalized-contract-pilot-neutral]] — 시나리오 정규화 계약 — pilot-중립 페이로드 설계 #contract #scenario-gate #normalization #multi-pilot #task-073
 - [[skill-op-task-qa]] — op-task-qa — 범용 문서 QA 검증 기준 #skill #qa #document
 - [[skill-opal-agent-creator]] — opal-agent-creator — OPAL 에이전트 생성 파이프라인 #skill #agent #creator
 - [[skill-opal-brain]] — opal-brain — 프로젝트 브레인 지식 위키 #skill #brain #knowledge #wiki

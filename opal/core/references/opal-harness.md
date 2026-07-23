@@ -54,6 +54,7 @@ state-tool `verify --clarification-check`가 집행하며, 미충족 시 ERROR_C
 | QA 설계/아키텍처 | 0회 | 즉시 사용자 에스컬레이션 |
 | 워커 폴백 반복 (동일 작업 내 동일 폴백 유형 재발) | 1회 | 즉시 에스컬레이션 |
 | PLAN 재진입 (재설계 루프) | 2회 | scope별 에스컬레이션 (action=상위 scope로 승격 / wbs=PM 에스컬레이션 / trd=사용자 에스컬레이션) |
+| 시나리오 목표-커버 게이트 (루브릭 미달) | 3회 | 캡틴(사용자) 에스컬레이션 |
 
 > **재설계 루프 = 액션 VERIFY 실패가 '설계 수준'으로 분류될 때 PLAN으로 재진입하는 횟수 상한. action-agent·verification-loop-guide는 이 수치를 복제하지 않고 본 표를 참조한다.**
 
@@ -320,3 +321,4 @@ OPAL 도구는 모두 `~/.opal/tools/{tool-name}/run.sh` 래퍼를 통해 호출
 | v6.3 | 2026-07-17 14:24 | §5·§6에 opal-agent 채널 내부 디스패치 관측·모델 매핑 SSOT 포인터 1줄씩 추가(비복제) — 상세는 `opal/agents/opal-loop-action-agent/AGENT.md`·`harness/observability.md`·`opal-model-mapping.md` 참조 (066) |
 | v6.4 | 2026-07-17 19:58 KST | §9 등록 도구 표에 oppl-monitor 행 추가 — oppl 태스크 진행 현황판 렌더(`.oppl-run/` 파싱), 트리거: oppl 태스크 진행 관측·루프 액션 에이전트 실행 관측 시 (067) |
 | v6.5 | 2026-07-17 23:04 KST | §9 도구명 리네임 — `oppl-monitor` → `opal-action-monitor`(향후 oppd·opsdd 액션 에이전트 공통 관측 도구로 확장 예정이라 이름 중립화). 로직 무변경 (067) |
+| v6.6 | 2026-07-23 | §1 자동 루핑 제약 표에 "시나리오 목표-커버 게이트 (루브릭 미달)" 행 추가 — MAX 3회, 초과 시 캡틴(사용자) 에스컬레이션. `harness/scenario-gate.md` 신규 SSOT가 이 수치를 복제하지 않고 참조 (073) |

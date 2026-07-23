@@ -5,7 +5,7 @@
   "layer": "test",
   "domain": "opal-tools",
   "description": "test-tool scenario-* 4서브명령(scenario-init/scenario-lock/scenario-mark/scenario-status) 행위 계약 RED-first 테스트. RED 상태(미구현 — lib/scenario.py 부재, test_tool.py에 서브명령 미등록) — 전부 FAIL 예상. GREEN 전환은 EXECUTE 구현 워커 담당(작성자≠구현자, red-first.md §2). S-014는 기존 4서브명령 스위트 존재 확인만 수행(기존 test_test_tool.py 미수정).",
-  "scenarios": ["S-011", "S-012", "S-007", "S-014", "T069/S-5", "T069/S-6", "T069/S-7"],
+  "scenarios": ["S-011", "S-012", "S-007", "S-014", "T069/S-5", "T069/S-6", "T069/S-7", "T073/S-1", "T073/S-2"],
   "exports": [
     "TestScenarioLockRedGate",
     "TestScenarioMarkLockGate",
@@ -15,9 +15,23 @@
     "TestScenarioInitSeedNeutralized",
     "TestScenarioFidelityCheckUnmet",
     "TestScenarioFidelityCheckMixedAndLegacy",
-    "TestScenarioConformance"
+    "TestScenarioConformance",
+    "TestScenarioCoverageCheckUnmet",
+    "TestScenarioCoverageCheckComplete",
+    "TestScenarioCoverageInputInvalid",
+    "TestScenarioCoverageCheckRegression"
   ]
 }
+
+[T073] scenario-coverage-check 신규 서브명령 RED-first 테스트 (opd 시나리오 목표-커버리지 루브릭
+게이트 루프, F-007). test-tool `scenario-coverage-check --coverage-input <path>`는 scenario-gate.md
+§3 정규화 페이로드({goal, requirements[], features[], hypotheses[], scenarios[]})의 R/F/H↔시나리오
+매핑 누락을 결정론 판정한다(루브릭 ②③④, ①⑤⑥은 opal-evaluator-agent 소관 — 본 서브명령 미판정).
+현재 lib/scenario.py에 미구현(SCENARIO_DISPATCH에 키 부재) — 신규 케이스 전부 자연 RED 예상.
+GREEN 전환은 EXECUTE 구현 워커(opal-be-agent, F-002)가 담당한다(작성자≠구현자, red-first.md §2).
+기존 클래스(TestScenarioLockRedGate ~ TestScenarioConformance)는 수정하지 않았다 — 아래 4개 클래스만
+신규 추가. exit 16(coverage_unmet)/17(coverage_input_invalid)은 기존 8~14와 충돌 없이 배정
+(PLAN.md §3.2.2, 15는 정보용 예약이라 회피).
 
 [T069] 069 태스크 추가분: scenario-fidelity-check(fidelity_unmet exit 13) + scenario-conformance
 (surface_unverified exit 14 / surfaces_file_not_found exit 15) 신규 서브명령 RED-first 테스트.
@@ -552,6 +566,188 @@ class TestScenarioConformance(BaseScenarioTestCase):
         self.assertEqual(code, 0)
         self.assertTrue(data.get("ok"))
         self.assertFalse(data.get("applicable"))
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# [T073] scenario-coverage-check 신규 서브명령 RED-first 테스트
+# 검증 대상: run.sh 공개 인터페이스(exit code + stdout JSON)만 단언 — 내부 함수 직접
+# import 금지(red-first.md §4). PLAN.md §3.2.2 / scenario-gate.md §3 정규화 계약 근거.
+# 현재 lib/scenario.py에 미구현 — 신규 케이스 전부 자연 RED 예상.
+# 기존 클래스(TestScenarioLockRedGate ~ TestScenarioConformance)는 수정하지 않았다.
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _write_coverage_fixture(dest_dir, payload):
+    """scenario-gate.md §3 정규화 페이로드를 임시 JSON 파일로 기록 — coverage-input fixture."""
+    path = pathlib.Path(dest_dir) / "coverage-input.json"
+    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    return path
+
+
+def _scenario_coverage_check(coverage_input_path):
+    """scenario-coverage-check 신규 서브명령 호출 헬퍼 [T073] (PLAN §3.2.2)."""
+    return _run(["scenario-coverage-check", "--coverage-input", str(coverage_input_path)])
+
+
+# fixture-cov-missing: requirements=[R-1,R-2], hypotheses=[H-1] 중 R-2·H-1이 어떤 시나리오에도
+# 매핑되지 않은 페이로드 (S-1 조건, TEST-SCENARIO.md §3 S-1).
+FX_COV_MISSING = {
+    "goal": "T073 시나리오 목표-커버리지 게이트가 R/F/H 매핑 누락을 결정론 판정한다",
+    "requirements": ["R-1", "R-2"],
+    "features": ["F-001"],
+    "hypotheses": ["H-1"],
+    "scenarios": [
+        {
+            "id": "S-1",
+            "covers_requirements": ["R-1"],
+            "covers_features": ["F-001"],
+            "covers_hypotheses": [],
+            "is_goal_scenario": True,
+            "is_adoption_scenario": False,
+            "is_boundary_scenario": False,
+        }
+    ],
+}
+
+# fixture-cov-complete: 전 R/F/H가 시나리오에 매핑된 페이로드 (S-1 보완 케이스, exit0 기대).
+FX_COV_COMPLETE = {
+    "goal": "T073 시나리오 목표-커버리지 게이트가 R/F/H 매핑 누락을 결정론 판정한다",
+    "requirements": ["R-1", "R-2"],
+    "features": ["F-001"],
+    "hypotheses": ["H-1"],
+    "scenarios": [
+        {
+            "id": "S-1",
+            "covers_requirements": ["R-1", "R-2"],
+            "covers_features": ["F-001"],
+            "covers_hypotheses": ["H-1"],
+            "is_goal_scenario": True,
+            "is_adoption_scenario": False,
+            "is_boundary_scenario": False,
+        }
+    ],
+}
+
+
+class TestScenarioCoverageCheckUnmet(BaseScenarioTestCase):
+    """[T073/L1-R2a] scenario-coverage-check 미커버 R/H 결정론 거부 — S-1 (H-1).
+    거짓 초록불 차단: 미커버가 있는데 ok 반환하면 안 된다(070 재발 방지)."""
+
+    def test_missing_requirement_and_hypothesis_rejected(self):
+        """Given: fx-cov-missing.json(R-2·H-1 미매핑). When: scenario-coverage-check.
+        Then: exit 16(coverage_unmet) + detail.missing.requirements=["R-2"],
+        detail.missing.hypotheses=["H-1"], detail.missing.features=[]."""
+        fx_path = _write_coverage_fixture(self.tmpdir, FX_COV_MISSING)
+        code, stdout, data = _scenario_coverage_check(fx_path)
+
+        self.assertEqual(code, 16, f"기대 exit 16(coverage_unmet), 실제 stdout={stdout!r}")
+        self.assertFalse(data.get("ok"))
+        self.assertEqual(data.get("error"), "coverage_unmet")
+        missing = data.get("detail", {}).get("missing", {})
+        self.assertEqual(missing.get("requirements"), ["R-2"])
+        self.assertEqual(missing.get("hypotheses"), ["H-1"])
+        self.assertEqual(missing.get("features"), [])
+        self.assertFalse(data.get("all_covered"), "미커버 존재 시 all_covered는 참이면 안 된다")
+
+
+class TestScenarioCoverageCheckComplete(BaseScenarioTestCase):
+    """[T073/L1-R2b] scenario-coverage-check 전 R/F/H 커버 시 exit 0 통과 — S-1 보완 (H-1)."""
+
+    def test_all_requirements_features_hypotheses_covered(self):
+        """Given: fx-cov-complete.json(전 R/F/H 매핑). When: scenario-coverage-check.
+        Then: exit 0 + all_covered:true."""
+        fx_path = _write_coverage_fixture(self.tmpdir, FX_COV_COMPLETE)
+        code, stdout, data = _scenario_coverage_check(fx_path)
+
+        self.assertEqual(code, 0, f"기대 exit 0, 실제 stdout={stdout!r}")
+        self.assertTrue(data.get("ok"))
+        self.assertTrue(data.get("all_covered"))
+
+
+class TestScenarioCoverageInputInvalid(BaseScenarioTestCase):
+    """[T073/L1-R2c] scenario-coverage-check --coverage-input 부재/파손/필수키누락 시 exit 17 거부."""
+
+    def test_rejects_when_file_absent(self):
+        """Given: --coverage-input 경로가 존재하지 않음. Then: coverage_input_invalid exit 17."""
+        missing_path = pathlib.Path(self.tmpdir) / "does-not-exist.json"
+        code, stdout, data = _scenario_coverage_check(missing_path)
+
+        self.assertEqual(code, 17, f"기대 exit 17(coverage_input_invalid), 실제 stdout={stdout!r}")
+        self.assertFalse(data.get("ok"))
+        self.assertEqual(data.get("error"), "coverage_input_invalid")
+
+    def test_rejects_when_json_malformed(self):
+        """Given: fx-cov-broken.json(JSON 파손). Then: coverage_input_invalid exit 17."""
+        broken_path = pathlib.Path(self.tmpdir) / "fx-cov-broken.json"
+        broken_path.write_text("{not-valid-json", encoding="utf-8")
+        code, stdout, data = _scenario_coverage_check(broken_path)
+
+        self.assertEqual(code, 17, f"기대 exit 17(coverage_input_invalid), 실제 stdout={stdout!r}")
+        self.assertFalse(data.get("ok"))
+        self.assertEqual(data.get("error"), "coverage_input_invalid")
+
+    def test_rejects_when_required_keys_missing(self):
+        """Given: 정규화 페이로드 필수 키(features/hypotheses/scenarios) 누락.
+        Then: coverage_input_invalid exit 17."""
+        incomplete = {"goal": "T073 필수키 누락 케이스", "requirements": ["R-1"]}
+        incomplete_path = _write_coverage_fixture(self.tmpdir, incomplete)
+        code, stdout, data = _scenario_coverage_check(incomplete_path)
+
+        self.assertEqual(code, 17, f"기대 exit 17(coverage_input_invalid), 실제 stdout={stdout!r}")
+        self.assertFalse(data.get("ok"))
+        self.assertEqual(data.get("error"), "coverage_input_invalid")
+
+
+class TestScenarioCoverageCheckRegression(unittest.TestCase):
+    """[T073/L1-REG] 기존 scenario-* 7서브명령 dispatch 키·exit 8~14 불변 확인 — S-2 (H-2,
+    additive 보장). scenario-coverage-check 신규 배정이 기존 계약을 깨지 않는지 회귀 확인."""
+
+    _SCENARIO_PY = _TOOL_DIR / "lib" / "scenario.py"
+
+    def test_existing_seven_dispatch_keys_present(self):
+        content = self._SCENARIO_PY.read_text(encoding="utf-8")
+        for key in (
+            "scenario-init", "scenario-lock", "scenario-mark", "scenario-status",
+            "scenario-red", "scenario-fidelity-check", "scenario-conformance",
+        ):
+            self.assertIn(
+                f'"{key}"', content,
+                f"SCENARIO_DISPATCH에 기존 키 '{key}'가 유지되어야 한다(회귀 0)",
+            )
+
+    def test_dispatch_dict_grows_additively(self):
+        """SCENARIO_DISPATCH 정의 블록에 기존 7개 이상(신규 추가 후 8개)의 cmd_scenario_* 매핑이
+        존재해야 한다 — 삭제 없는 additive 확장만 허용."""
+        content = self._SCENARIO_PY.read_text(encoding="utf-8")
+        parts = content.split("SCENARIO_DISPATCH: Dict[str, Any] = {", 1)
+        self.assertEqual(len(parts), 2, "SCENARIO_DISPATCH 정의를 찾을 수 없다")
+        body = parts[1].split("}", 1)[0]
+        key_count = body.count(": cmd_scenario")
+        self.assertGreaterEqual(key_count, 7, "기존 7개 dispatch 키가 유지되어야 한다")
+
+    def test_existing_error_codes_still_functional(self):
+        """exit 8~10을 유발하는 기존 계약이 실 CLI 호출로도 여전히 성립하는지 회귀 확인
+        (subprocess 실호출, mock 금지)."""
+        tmpdir = pathlib.Path(tempfile.mkdtemp())
+        try:
+            task_path = tmpdir / "073-regression-check"
+            task_path.mkdir()
+
+            code, stdout, data = _scenario_status(task_path)
+            self.assertEqual(code, 10, f"scenario_not_initialized 회귀, stdout={stdout!r}")
+            self.assertEqual(data.get("error"), "scenario_not_initialized")
+
+            init_code, _, _ = _scenario_init(task_path, SAMPLE_SCENARIOS)
+            self.assertEqual(init_code, 0)
+
+            code, stdout, data = _scenario_lock(task_path)
+            self.assertEqual(code, 8, f"red_not_confirmed 회귀, stdout={stdout!r}")
+            self.assertEqual(data.get("error"), "red_not_confirmed")
+
+            code, stdout, data = _scenario_mark(task_path, "S1", "pass")
+            self.assertEqual(code, 9, f"scenario_not_locked 회귀, stdout={stdout!r}")
+            self.assertEqual(data.get("error"), "scenario_not_locked")
+        finally:
+            shutil.rmtree(tmpdir, ignore_errors=True)
 
 
 if __name__ == "__main__":

@@ -239,3 +239,7 @@
 - 신규: [[pages/concept/state-tool-import-existing-key-reattachment.md]]
 - 출처: task:074
 
+## [2026-07-23] ingest | CLOSE ingest — 태스크 073 TEST-SCENARIO 목표-커버리지 루브릭 게이트 루프
+- 신규: [[pages/concept/scenario-goal-coverage-gate-loop.md]], [[pages/concept/070-derivation-engine-perspective-bias-lesson.md]], [[pages/concept/scenario-normalized-contract-pilot-neutral.md]], [[pages/entity/op-scenario-gate-skill.md]]
+- 출처: task:073
+
