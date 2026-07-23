@@ -247,3 +247,7 @@
 - 신규: [[scenario-gate-pilot-fit-criteria]], [[opds-testscenario-producer-establishment]], [[legacy-row-address-gate-insertion-regression]]
 - 출처: task:075
 
+## [2026-07-23] ingest | CLOSE ingest — 태스크 076 파이프라인 todo 미러 hook 강제 자동화
+- 신규: [[pipeline-todo-mirror-hook-enforcement]], [[install-hook-ownership-marker-idempotent-upsert]], [[native-todo-panel-llm-only-hook-boundary]]
+- 출처: task:076
+
