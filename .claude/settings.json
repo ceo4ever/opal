@@ -19,7 +19,9 @@
       "Bash(node opal/tools/skill-registry/skill-registry.js match \"코드 리뷰해줘\")",
       "Bash(node opal/tools/skill-registry/skill-registry.js match \"Excel 파일 만들어줘\")",
       "Bash(node opal/tools/skill-registry/skill-registry.js list --group=anthropics)",
-      "Bash(node opal/tools/skill-registry/skill-registry.js list --group=opal)"
+      "Bash(node opal/tools/skill-registry/skill-registry.js list --group=opal)",
+      "Write(tasks/**)",
+      "Edit(tasks/**)"
     ]
   }
 }
