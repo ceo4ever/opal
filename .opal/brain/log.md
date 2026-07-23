@@ -243,3 +243,7 @@
 - 신규: [[pages/concept/scenario-goal-coverage-gate-loop.md]], [[pages/concept/070-derivation-engine-perspective-bias-lesson.md]], [[pages/concept/scenario-normalized-contract-pilot-neutral.md]], [[pages/entity/op-scenario-gate-skill.md]]
 - 출처: task:073
 
+## [2026-07-23] ingest | CLOSE ingest — 태스크 075 시나리오게이트 확산 1차 (opds·opsdd)
+- 신규: [[scenario-gate-pilot-fit-criteria]], [[opds-testscenario-producer-establishment]], [[legacy-row-address-gate-insertion-regression]]
+- 출처: task:075
+

@@ -15,10 +15,12 @@ tags:
 - tool-gated
 sources:
 - task:073
+- task:075
 related:
 - scenario-goal-coverage-gate-loop
 - opal-evaluator-agent
 - test-tool
+- scenario-gate-pilot-fit-criteria
 created: '2026-07-23'
 updated: '2026-07-23'
 status: draft
@@ -38,14 +40,15 @@ op-scenario-gate는 TEST-SCENARIO 단계에서 목표-커버리지 루브릭 게
 
 - test-tool은 결정론 판정만 수행하고 루프를 보유하지 않는다는 기존 원칙(`opal/tools/test-tool/test_tool.py:18-20`)을 유지하기 위해, 재작성 루프 컨트롤을 별도 스킬로 분리했다(근거: task:073 ANALYSIS §1.2 분리형 SSOT+얇은 CLI 래퍼 원칙).
 - Producer(작성자)와 Evaluator(채점자)를 매 반복 분리해 self-confirming(자체 확인 재발)을 구조적으로 차단한다(근거: task:073 PLAN §3.4.2 [MUST] Producer≠Evaluator).
-- 1차는 opd에만 접합했다 — 단일 호출 지점 설계 덕분에 후속 pilot 확산 시 정규화 변환기만 추가하면 재사용 가능하다(근거: task:073 DONE.md §6 확산 후속).
+- 단일 호출 지점 설계 덕분에 후속 pilot 확산 시 정규화 변환기만 추가하면 재사용 가능하다는 예측이 세워졌고(근거: task:073 DONE.md §6), task:075에서 opds·opsdd로 확산하며 실증됐다 — 세 pilot이 동일 스킬을 공유하고 pilot 분기는 Step 2 변환기에 국한된다(근거: task:075 DONE.md §1).
 
 ## 관계 (HOW)
 
 - [[test-tool]] — `scenario-coverage-check` 서브명령을 결정론 게이트로 호출한다.
 - [[opal-evaluator-agent]] — `scenario-rubric` phase로 판단축 채점을 디스패치한다.
 - [[scenario-goal-coverage-gate-loop]] — 이 스킬이 집행하는 루프 설계 결정.
-- opd(opal-pilot-dev) STEP 3.5에서 1차로 호출된다(`opal/skills/opal-pilot-dev/SKILL.md`).
+- [[scenario-gate-pilot-fit-criteria]] — 어느 pilot에 접합하는지 판정한 기준.
+- 접합 지점: opd(opal-pilot-dev) STEP 3.5, opds(opal-pilot-dev-short) STEP 2 PLAN, opsdd(opal-pilot-sdd) Phase 2 REVIEW 3종(근거: task:075 DONE.md §2).
 
 ## 소스 커버리지
 

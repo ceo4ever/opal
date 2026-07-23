@@ -10,7 +10,7 @@ triggers:
   - "opsdd"
   - "SDD 개발"
   - "명세 기반 개발"
-version: 3.5.0
+version: 3.6.0
 ---
 
 # opal-pilot-sdd (SDD 오케스트레이터)
@@ -42,7 +42,7 @@ Phase 0: TASK      PM 직접    TASK.md 생성 (메타데이터)
 Phase 1: SPEC      워커       op-sdd-spec → SPEC.md
                               PM Gate → 사용자 Gate
 Phase 2: REVIEW    PM 직접    구조 검증 (S-1~S-6) → TEST-SCENARIOS.md 작성
-                              → FR↔TS 커버리지 확인 → 사용자 Gate
+                              → 목표-커버 게이트(coverage-check + 독립 evaluator) → 사용자 Gate
 ── WHAT 완료 / 기준 확정 ──────────────────────────────────
 HOW 단계
 ─────────────────────────────────────────────────────────
@@ -143,23 +143,31 @@ PM이 직접 SPEC.md를 검증하고 TEST-SCENARIOS.md를 작성한다. **워커
 
 ```
 1. 구조 검증 (PM 직접, 빠르게)
-   verify-guide.md 참조 — S-1~S-6 항목 체크
+   verify-guide.md §2 참조 — S-1~S-6 항목 체크 (무변경 존치)
 
-2. TEST-SCENARIOS.md 작성 (PM 직접)
+2. TEST-SCENARIOS.md 작성 (PM+캡틴 페어, producer)
    SPEC.md의 각 FR → AC → TS 도출
    이 과정에서 의미적/도메인 검증(M-1~M-6, D-1~D-2) 자연스럽게 수행
 
-3. FR↔TS 커버리지 확인 (PM 직접)
-   커버 안 된 FR → SPEC.md 보완 또는 TS 추가
+3. 목표-커버 게이트: op-scenario-gate 호출 (pilot: opsdd)
+   - 입력: task_folder, producer_artifact={task_folder}/TEST-SCENARIOS.md, pilot: opsdd, iteration(최초=1)
+   - Step 3 coverage-check exit 0 → 행 10 mark (커버리지 게이트 = 구 수동 FR↔TS 대체)
+   - Step 4 evaluator verdict pass → 행 11 mark (독립 evaluator = self-confirming 해소, Producer≠Evaluator)
+   - verdict: rewrite → TEST-SCENARIOS.md 재작성 후 iteration+1로 재호출
+   - verdict: escalate → 사용자 에스컬레이션, 자율 재시도 금지
+
+4. PM Gate → 사용자 Gate (게이트 두 증거 위에서 검증)
 ```
 
 **산출물**: `tasks/{NNN}-{feature}/TEST-SCENARIOS.md`
 
-**REVIEW Fail 처리**: 구조 검증 Fail 또는 커버리지 갭 해소 불가 → Phase 1(SPEC)을 재실행한다.
+**REVIEW Fail 처리**: 구조 검증 Fail 또는 게이트 verdict:escalate → Phase 1(SPEC)을 재실행한다.
 
-**Gate**: 사용자 Gate
+**Gate**: PM Gate → 사용자 Gate
 
-> REVIEW 상세: `references/verify-guide.md` 참조
+> **[MUST] `opal/core/PRINCIPLES.md` §15 (Enforce, don't just advise)**: REVIEW self-confirming 해소는 산문 지침이 아니라 독립 evaluator 서브에이전트 디스패치로 **구조 집행**한다 — PM은 두 도구 증거(coverage-check exit 0 AND evaluator verdict pass) 없이 게이트 통과를 선언할 수 없다.
+
+> REVIEW 상세: `references/verify-guide.md` 참조 · 게이트 규칙 SSOT: `opal/core/references/harness/scenario-gate.md`
 
 ---
 
@@ -187,8 +195,8 @@ PM이 직접 SPEC.md를 검증하고 TEST-SCENARIOS.md를 작성한다. **워커
 Gate 시 state-tool 호출 (R-10: gate-pass deprecated(014) — mark 개별 호출 필수):
 
 ```
-~/.opal/tools/state-tool/run.sh mark <task-path> --row 15 --done  # PM Gate
-~/.opal/tools/state-tool/run.sh mark <task-path> --row 16 --done --owner user --note '{owner_name} 확인: DESIGN 완료'
+~/.opal/tools/state-tool/run.sh mark <task-path> --row 16 --done  # PM Gate
+~/.opal/tools/state-tool/run.sh mark <task-path> --row 17 --done --owner user --note '{owner_name} 확인: DESIGN 완료'
 ```
 
 > SPEC-PLAN.md 상세 구조: `references/spec-plan-guide.md` 참조
@@ -239,11 +247,11 @@ ACT 완료마다 state-tool을 호출하여 STATE.md를 갱신한다 (R-10: gate
 
 > **[R-13] ACT 동적 행**: `--rows-acts` 옵션은 미구현. ACT 행은 EXECUTE Phase 진입 후 수동으로 `add-row`로 삽입한다.
 
-**Gate** (ACT 루프 완료 후, EXECUTE 행 #18~#19 처리):
+**Gate** (ACT 루프 완료 후, EXECUTE 행 #19~#20 처리):
 
 ```
-~/.opal/tools/state-tool/run.sh mark <task-path> --row 18 --done  # PM Gate
-~/.opal/tools/state-tool/run.sh mark <task-path> --row 19 --done --owner user --note '{owner_name} 확인: EXECUTE 완료'
+~/.opal/tools/state-tool/run.sh mark <task-path> --row 19 --done  # PM Gate
+~/.opal/tools/state-tool/run.sh mark <task-path> --row 20 --done --owner user --note '{owner_name} 확인: EXECUTE 완료'
 ```
 
 ### Gate
@@ -285,10 +293,10 @@ ACT 완료마다 state-tool을 호출하여 STATE.md를 갱신한다 (R-10: gate
 3. DONE.md 생성 후 CLOSE 행 mark:
 
 ```
-~/.opal/tools/state-tool/run.sh mark <task-path> --row 24 --done  # DONE.md 생성 (CLOSE 완료)
+~/.opal/tools/state-tool/run.sh mark <task-path> --row 25 --done  # DONE.md 생성 (CLOSE 완료)
 ```
 
-> **CLOSE 게이트 제약 (§2.16 G-13)**: CLOSE 단계 최초 진입 행(#24)은 `--auto-pass` 적용 불가 (`close_gate_violation`). 반드시 위 명시 호출로 처리한다.
+> **CLOSE 게이트 제약 (§2.16 G-13)**: CLOSE 단계 최초 진입 행(#25)은 `--auto-pass` 적용 불가 (`close_gate_violation`). 반드시 위 명시 호출로 처리한다.
 
 4. **관련 문서 업데이트** (op-brain-ingest 디스패치 직전 실행):
    - `<프로젝트-루트>/docs/PROJECT.md`의 "프로젝트 문서" 레지스트리와 이번 태스크의 `changed_files`(EXECUTE 산출)를 양쪽 종합하여, 태스크 결과로 내용이 달라진 관련 문서(ARCHITECTURE.md·SPEC·기획서 등)를 식별한다.
@@ -331,13 +339,13 @@ ACT 완료마다 state-tool을 호출하여 STATE.md를 갱신한다 (R-10: gate
 > ~/.opal/tools/state-tool/run.sh init <task-path> --skill opsdd --rows-from opal/skills/opal-pilot-sdd/SKILL.md
 > ```
 >
-> state-tool이 이 파일의 "파이프라인 현황판" 테이블(24행)을 읽어 state.json을 초기화한다. 행 데이터를 직접 편집하지 않는다.
+> state-tool이 이 파일의 "파이프라인 현황판" 테이블(25행)을 읽어 state.json을 초기화한다. 행 데이터를 직접 편집하지 않는다.
 >
-> **[R-10 비표준 행 구성]** opsdd는 24행 + ACT 동적 행 비표준 구조를 사용한다(State Gate 행 제거 후). `gate-pass`는 deprecated(014) — `mark` 개별 호출 필수.
+> **[R-10 비표준 행 구성]** opsdd는 25행 + ACT 동적 행 비표준 구조를 사용한다(State Gate 행 제거 후). `gate-pass`는 deprecated(014) — `mark` 개별 호출 필수.
 >
-> **[R-13 ACT 동적 행]** `--rows-acts` 옵션은 미구현. EXECUTE Phase 진입 후 `add-row`로 ACT 행을 수동 삽입한다 (EXECUTE ACT 실행 행 = #17):
+> **[R-13 ACT 동적 행]** `--rows-acts` 옵션은 미구현. EXECUTE Phase 진입 후 `add-row`로 ACT 행을 수동 삽입한다 (EXECUTE ACT 실행 행 = #18):
 > ```
-> ~/.opal/tools/state-tool/run.sh add-row <task-path> --after 17 --stage EXECUTE --item 'ACT-001: {이름}'
+> ~/.opal/tools/state-tool/run.sh add-row <task-path> --after 18 --stage EXECUTE --item 'ACT-001: {이름}'
 > ```
 
 **파이프라인 현황판** (`--rows-from` SSOT 표 — 이 표를 직접 편집하지 않는다):
@@ -356,21 +364,22 @@ ACT 완료마다 state-tool을 호출하여 STATE.md를 갱신한다 (R-10: gate
 | 7 | SPEC | 사용자 확인 | ⬜ | |
 | 8 | REVIEW | 구조 검증 (S-1~S-6) | ⬜ | |
 | 9 | REVIEW | TEST-SCENARIOS.md 작성 | ⬜ | |
-| 10 | REVIEW | FR↔TS 커버리지 확인 | ⬜ | |
-| 11 | REVIEW | PM Gate | ⬜ | |
-| 12 | REVIEW | 사용자 확인 | ⬜ | |
-| 13 | DESIGN | 워커 디스패치 | ⬜ | |
-| 14 | DESIGN | SPEC-PLAN.md 생성 | ⬜ | |
-| 15 | DESIGN | PM Gate | ⬜ | |
-| 16 | DESIGN | 사용자 확인 | ⬜ | |
-| 17 | EXECUTE | ACT 실행 (상세: ACT 목록 참조) | ⬜ | |
-| 18 | EXECUTE | PM Gate | ⬜ | |
-| 19 | EXECUTE | 사용자 확인 | ⬜ | |
-| 20 | VERIFY | E2E 테스트 수행 | ⬜ | |
-| 21 | VERIFY | TS 전체 Green 확인 | ⬜ | |
-| 22 | VERIFY | PM Gate | ⬜ | |
-| 23 | VERIFY | 사용자 확인 | ⬜ | |
-| 24 | CLOSE | DONE.md 생성 | ⬜ | |
+| 10 | REVIEW | 커버리지 게이트 (scenario-coverage-check) | ⬜ | |
+| 11 | REVIEW | 목표-커버 게이트 (op-scenario-gate evaluator) | ⬜ | |
+| 12 | REVIEW | PM Gate | ⬜ | |
+| 13 | REVIEW | 사용자 확인 | ⬜ | |
+| 14 | DESIGN | 워커 디스패치 | ⬜ | |
+| 15 | DESIGN | SPEC-PLAN.md 생성 | ⬜ | |
+| 16 | DESIGN | PM Gate | ⬜ | |
+| 17 | DESIGN | 사용자 확인 | ⬜ | |
+| 18 | EXECUTE | ACT 실행 (상세: ACT 목록 참조) | ⬜ | |
+| 19 | EXECUTE | PM Gate | ⬜ | |
+| 20 | EXECUTE | 사용자 확인 | ⬜ | |
+| 21 | VERIFY | E2E 테스트 수행 | ⬜ | |
+| 22 | VERIFY | TS 전체 Green 확인 | ⬜ | |
+| 23 | VERIFY | PM Gate | ⬜ | |
+| 24 | VERIFY | 사용자 확인 | ⬜ | |
+| 25 | CLOSE | DONE.md 생성 | ⬜ | |
 
 ### STATE.md 구조
 
@@ -468,7 +477,7 @@ TASK (PM 직접)
   ```
   ~/.opal/tools/state-tool/run.sh mark <task-path> --row N --done --auto-pass --note '<근거>'
   ```
-- **CLOSE 단계 최초 진입 행(#24)은 `--auto-pass` 금지** (`agentic_close_gate_requires_user` — §2.16 G-13); 반드시 명시 호출
+- **CLOSE 단계 최초 진입 행(#25)은 `--auto-pass` 금지** (`agentic_close_gate_requires_user` — §2.16 G-13); 반드시 명시 호출
 - R-10 비표준 행 구성: `gate-pass` deprecated(014) — mark 개별 호출 필수 (agentic/semi-agentic에서도 동일 적용)
 - AGENTIC-LOG.md에 모든 판단/오류/수정/의사결정 기록
 
@@ -532,3 +541,4 @@ opal-harness-agentic.md §6 공통 기준에 추가:
 | v3.5.0 | 2026-06-11 19:25 | Phase 6 CLOSE에 op-brain-ingest 디스패치 훅 삽입 — DONE.md 생성 직후 brain 존재 시 워커 디스패치, 부재 시 no-op, CLOSE 비중단. STATE 행 24 불변 (016) |
 | v3.5.1 | 2026-06-24 | Phase 6 CLOSE op-brain-ingest 디스패치 직전에 "관련 문서 업데이트" 스텝 삽입 — PROJECT.md 레지스트리 + changed_files 종합으로 관련 문서 최신화 후 ingest (없으면 no-op). 후속 항목 번호 재정렬 (042) |
 | v3.5.2 | 2026-07-10 13:12 | note 예시의 소유자 확인 표기를 `{owner_name} 확인:` 형식으로 통일 — identity.md owner_name 재해석 규칙(AGENT.md §정체성 적용)과 정합, 오염 차단 (054) |
+| v3.6.0 | 2026-07-23 | Phase 2 REVIEW 목표-커버 게이트 배선 — 행 10 "FR↔TS 커버리지 확인"을 "커버리지 게이트(scenario-coverage-check)"로 교체 + 행 11 "목표-커버 게이트(op-scenario-gate evaluator)" 신설, 이후 행 전부 +1(24→25행). REVIEW 흐름 3→4단계 재작성(구조 검증 → TEST-SCENARIOS.md 작성 → 목표-커버 게이트 → PM Gate/사용자 Gate) — 독립 evaluator 디스패치로 self-confirming 해소(PRINCIPLES §15). 6단계 요약 REVIEW 행 갱신. `--row N`/`#N`/`--after N` 본문 리터럴 전수 재정렬(rows≥11 +1, 070 pipeline.json 전환은 범위 밖) (075) |

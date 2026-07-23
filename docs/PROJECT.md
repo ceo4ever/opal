@@ -138,12 +138,12 @@ PM의 학습·자기개선을 tool-gated로 집행하는 서브시스템 — 정
 
 ## 주요 컴포넌트 (TEST-SCENARIO 목표-커버 게이트)
 
-TEST-SCENARIO 단계를 "목표 달성 검증"으로 재정의 — 루브릭 채점 기반 작은 수렴 루프(작성→커버리지 도구 게이트→독립 평가자 루브릭 채점→종료조건→재작성)를 공유 컴포넌트로 구현. 070 사건(핵심 목표 미검증 완료)의 근본 대응. 1차 opd 선적용 (2026-07 신설, 태스크 073).
+TEST-SCENARIO 단계를 "목표 달성 검증"으로 재정의 — 루브릭 채점 기반 작은 수렴 루프(작성→커버리지 도구 게이트→독립 평가자 루브릭 채점→종료조건→재작성)를 공유 컴포넌트로 구현. 070 사건(핵심 목표 미검증 완료)의 근본 대응. **opd·opds·opsdd 3종 접합**(oppl 제외 확정 — 자체 표면-게이트+독립평가 보유 / oppd 2차 유예). (2026-07 신설 태스크 073, opds·opsdd 확산 태스크 075).
 
 | 컴포넌트 | 약어 | 유형 | 설명 |
 |----------|------|------|------|
 | `scenario-gate.md` | - | 규칙 SSOT | 루브릭 6축(①목표달성~⑥경계/부정)·판정주체 분리(②③④ 결정론/①⑤⑥ 판단)·정규화 계약·종료조건 3종(수렴/반복상한/무진전)·tool-gated 집행. `opal/core/references/harness/` |
-| `op-scenario-gate` | - | 단계 스킬 | 목표-커버 루프 컨트롤 — 정규화 페이로드 빌드→coverage-check→evaluator→종료조건 판정→verdict 반환. 5 pilot 재사용 단일 호출 지점(1차 opd) |
+| `op-scenario-gate` | - | 단계 스킬 | 목표-커버 루프 컨트롤 — 정규화 페이로드 빌드→coverage-check→evaluator→종료조건 판정→verdict 반환. Step 2 pilot 변환기로 재사용(opd/opds/opsdd 3종 접합, oppl 제외·oppd 2차) |
 | `test-tool scenario-coverage-check` | - | 도구 확장 | R/F/H↔시나리오 매핑 누락 결정론 판정(②③④). exit 0(전커버)/16(coverage_unmet)/17(입력오류). pilot-중립 정규화 페이로드 소비 |
 | `opal-evaluator-agent scenario-rubric` | - | 서브에이전트 phase | 판단축 ①목표달성·⑤채택/잔존·⑥경계/부정 2점 척도 채점(각≥1 AND 평균≥1.5→pass). SCENARIO-GATE-{N}.md 산출. 기존 3 phase additive |
 
@@ -176,6 +176,7 @@ TEST-SCENARIO 단계를 "목표 달성 검증"으로 재정의 — 루브릭 채
 
 | 날짜 | 변경 내용 |
 |------|----------|
+| 2026-07-23 | 목표-커버 게이트 opds·opsdd 확산 — op-scenario-gate Step 2 pilot 변환기(opds=opd동형/opsdd=SPEC.md FR·AC·EC 소스) + opds STEP 2(producer 확립·op-dev-plan 미접촉)·opsdd Phase 2 REVIEW(수동 커버리지→도구 게이트·self-confirming 해소) 배선. oppl 제외·oppd 2차. 신규 컴포넌트 0(배선만) (Task 075) |
 | 2026-07-23 | TEST-SCENARIO 목표-커버 게이트 섹션 신설 — scenario-gate.md(규칙 SSOT)·op-scenario-gate(단계 스킬)·test-tool scenario-coverage-check(도구 확장)·opal-evaluator-agent scenario-rubric(phase). opd STEP 3.5 pipeline.json 게이트 행 접합(EXECUTE 진입 구조적 차단). 070 목표 미검증 완료 재발 방지, 1차 opd 선적용 (Task 073) |
 | 2026-07-18 | Project Loop 표 backlog-tool(8서브명령 — covers·coverage-check)·test-tool scenario-*(fidelity·conformance 게이트) 정합 — oppl 계약 접합면 검증 강화: 표면 인벤토리(surfaces.json)·증거 충실도 사다리·여정 스모크·워킹 스켈레톤 의무 도입 (Task 069) |
 | 2026-07-17 | Project Loop 표에 opal-loop-action-agent(루프 액션 에이전트) 행 추가 — 태스크당 1회 디스패치·내부 4축·blocked 계약 (Task 065) |

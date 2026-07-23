@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-07-23 14:19
+> 갱신: 2026-07-23 17:15
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -80,6 +80,7 @@
 - [[installer-version-priority-model]] — 설치기 버전 결정 우선순위 모델 (4종 공통) #version #install #priority #architecture
 - [[kanban-current-stage-derivation]] — 칸반 current_stage 파생 규칙 (도달 단계 기준) #opal-console #kanban #pipeline #be-single-source
 - [[kanban-pipeline-stage-grouping]] — 파이프라인 스테퍼 stage 그룹화 (BE 단일 소스, na/skipped 제외) #opal-console #pipeline #stage-grouping #be-single-source
+- [[legacy-row-address-gate-insertion-regression]] — 레거시 행번호 파이프라인에 게이트 행 삽입 시 전수 수정 결합 회귀 #state-tool #pipeline #legacy-row #regression #scenario-gate #task-075
 - [[linux-install-script]] — Linux 설치 스크립트 신설 (단순 위임 전략) #install #linux #deploy #task
 - [[local-fw-improvement-classification]] — 로컬/FW 2원화 개선 분류 판단 #pm-loop #classification #decision-making #scope-determination
 - [[loop-upper-bound-ssot-pattern]] — 루프 상한 SSOT 단일 기재 패턴 — harness 포인터, 수치 복제 금지 #harness #ssot #loop-bound #anti-pattern
@@ -120,6 +121,7 @@
 - [[opal-security-model]] — OPAL 보안 모델 #security #install #mcp #supply-chain #owasp
 - [[opal-skill-classification-system]] — OPAL 스킬 분류 체계 — opal-pilot / op-* / opal-* 의미 계층 #skill-registry #classification #pilot #operator #architecture
 - [[opdd-design-artifacts-path-pattern]] — opdd 설계 산출물 경로 패턴 — opwt 차용 + {설계} 변수 #architecture-decision #data-design #path #ssot #opwt
+- [[opds-testscenario-producer-establishment]] — opds 시나리오 producer 확립 — 공용 스킬 미접촉 SSOT 상충 해소 #opds #ssot-conflict #producer #shared-skill #task-075
 - [[opi-impl-injectable-depth-standard]] — opi 문서 깊이 기준 — "구현 시 주입 가능 수준" #opi #opal-project-init #docs-quality #architecture-decision
 - [[opi-v42-architecture-decisions]] — opi v4.2 아키텍처 결정 — 심층 분석·멀티서비스·워커 디스패치 #opi #opal-project-init #architecture-decision #multi-service #worker-dispatch
 - [[oppd-prd-trd-task-folder-promote]] — oppd PRD/TRD 태스크폴더 작성 → docs 승격 프로세스 #oppd #prd #trd #wbs #promote #docs-ssot
@@ -144,8 +146,9 @@
 - [[red-first-hybrid-verification-track]] — RED-first 하이브리드 검증 트랙 — 도구 계약 변경 한정 적용 #verification #red-first #opal-agent #testing
 - [[red-test-commit-coercion-guard-lesson]] — RED 테스트가 실저장소 git archive 검증 시 커밋을 구조적으로 강요하는 결함 #red-first #test #git #lesson #guard
 - [[red-test-determinism-abort-trap]] — RED 테스트 결정론성 함정 — neverResolve fetch 대역의 abort 무반응 #testing #red-first #determinism #abort #fetch-mock
-- [[scenario-goal-coverage-gate-loop]] — TEST-SCENARIO 목표-커버리지 루브릭 게이트 루프 — 결정론+판단 분리 #testing #scenario-gate #tool-gated #rubric #opd #task-073
-- [[scenario-normalized-contract-pilot-neutral]] — 시나리오 정규화 계약 — pilot-중립 페이로드 설계 #contract #scenario-gate #normalization #multi-pilot #task-073
+- [[scenario-gate-pilot-fit-criteria]] — 목표-커버 게이트 pilot 접합 판정 기준 #scenario-gate #pilot-fit #tool-gated #self-confirming #task-075
+- [[scenario-goal-coverage-gate-loop]] — TEST-SCENARIO 목표-커버리지 루브릭 게이트 루프 — 결정론+판단 분리 #testing #scenario-gate #tool-gated #rubric #opd #task-073 #task-075
+- [[scenario-normalized-contract-pilot-neutral]] — 시나리오 정규화 계약 — pilot-중립 페이로드 설계 #contract #scenario-gate #normalization #multi-pilot #task-073 #task-075
 - [[skill-op-task-qa]] — op-task-qa — 범용 문서 QA 검증 기준 #skill #qa #document
 - [[skill-opal-agent-creator]] — opal-agent-creator — OPAL 에이전트 생성 파이프라인 #skill #agent #creator
 - [[skill-opal-brain]] — opal-brain — 프로젝트 브레인 지식 위키 #skill #brain #knowledge #wiki

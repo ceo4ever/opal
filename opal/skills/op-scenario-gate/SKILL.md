@@ -16,7 +16,7 @@ description: |
 - **입력**:
   - `task_folder` — 태스크 폴더 경로 (예: `tasks/{NNN}-{태스크명}/`)
   - `producer_artifact` — Producer가 작성한 시나리오 산출물 경로 (1차 opd = `{task_folder}/TEST-SCENARIO.md`)
-  - `pilot` — 정규화 변환기 선택 키 (1차 = `opd` 고정. 후속 확산 시 `oppl`/`opds`/`opsdd`/`oppd`)
+  - `pilot` — 정규화 변환기 선택 키. 지원 pilot: `opd`/`opds`/`opsdd` (oppl 제외 확정·oppd 2차 유예)
   - `iteration` — 루프 회차 N (최초 호출 = 1)
 - **출력**: `{verdict: pass|rewrite|escalate, missing, scores, gaps[], report_path, iteration}`
 
@@ -47,7 +47,41 @@ description: |
 
 산출: `{task_folder}/.scenario-coverage-input.json` (task_folder 하위 전용 파일).
 
-> **확장성 근거**: 후속 pilot(oppl/opds/opsdd/oppd) 확산 시, 위 표의 소스 열(TASK.md/PLAN.md/producer_artifact)만 해당 pilot의 등가 문서로 교체하는 변환기를 추가하면 §3 정규화 계약과 Step 3~6은 그대로 재사용된다. 1차 적용은 opd 단일 호출로 한정한다.
+`pilot=opds`의 변환 규칙 (opd 동형 — 소스 문서만 opds 산출물로 동일 매핑):
+
+| 정규화 필드 | 소스 |
+|------------|------|
+| `goal` | `TASK.md` 목표/배경 절의 목표 문장 |
+| `requirements` | `TASK.md`의 R-ID 목록 |
+| `features` | `PLAN.md`의 F-ID 목록 |
+| `hypotheses` | `PLAN.md` 리스크 가설 표 및/또는 `producer_artifact` §1 H-ID 목록 |
+| `scenarios[]` | `producer_artifact` §4(AC↔가설↔계층↔시나리오 매핑 표) 각 행 |
+
+- `producer_artifact` = `{task_folder}/TEST-SCENARIO.md` (opd와 동일 형식).
+- 플래그(`is_goal_scenario`/`is_adoption_scenario`/`is_boundary_scenario`) 산정 기준은 opd와 동일(위 산정 기준 참조).
+- 산출: `{task_folder}/.scenario-coverage-input.json` (opd와 동일 파일, Step 3~6 무변경 소비).
+
+`pilot=opsdd`의 변환 규칙 (SPEC.md 소스 — REVIEW 시점 PLAN.md 부재):
+
+| 정규화 필드 | 소스 |
+|------------|------|
+| `goal` | `TASK.md` 목표 문장 |
+| `requirements` | `SPEC.md` `[FR-NN]` 목록 |
+| `features` | `SPEC.md` `AC-NN` 목록 (opsdd에는 PLAN F 계층이 없어 AC를 기능 단위로 대체) |
+| `hypotheses` | `SPEC.md` `[EC-NN]` 목록 |
+| `scenarios[]` | `producer_artifact`(TEST-SCENARIOS.md) 추적 매트릭스 각 행(`AC \| 시나리오 ID \| 유형 \| 설명 \| 상태`) → 아래 매핑 |
+
+- `producer_artifact` = `{task_folder}/TEST-SCENARIOS.md`. **추가 Read**: `{task_folder}/SPEC.md`(FR/AC/EC 소스) — task_folder 하위이므로 [MUST] 규율 #5 경로 이탈 방지 준수.
+- `scenarios[]` 행별 매핑:
+  - `covers_requirements` ← 해당 AC 상단 "대응 FR: FR-NN" 역참조
+  - `covers_features` ← 해당 행의 AC-ID 자신
+  - `covers_hypotheses` ← 해당 행이 EC 기원(AC 컬럼 값이 `EC-NN`)일 때만 EC-ID, 아니면 빈 배열
+  - `is_goal_scenario` ← 유형 `e2e` 또는 사용자/운영 계층 목표 검증 시 `true`
+  - `is_adoption_scenario` ← 대응 AC가 교체형 목표 검증이면 `true`
+  - `is_boundary_scenario` ← EC 기원 행 또는 경계/예외 케이스면 `true`
+- 산출: `{task_folder}/.scenario-coverage-input.json` (opd/opds와 동일 파일, Step 3~6 무변경 소비).
+
+> **확장성 근거**: opds·opsdd 확산 완료(3종 지원). oppl은 자체 표면-게이트+독립평가자 보유로 제외 확정, oppd는 2차 유예. 후속 확산 시에도 위 표의 소스 열만 해당 pilot의 등가 문서로 교체하는 변환기를 추가하면 §3 정규화 계약과 Step 3~6은 그대로 재사용된다.
 
 ### Step 3. 결정론 커버리지 게이트 (결정론, ②③④)
 
@@ -117,7 +151,7 @@ scenario_source: {producer_artifact}
 | 1 | **tool-gated**: `verdict: pass`는 오직 (Step 3) test-tool exit 0 **AND** (Step 4) evaluator `verdict: pass` 두 증거가 모두 존재할 때만 성립한다. 호출자가 산문 판단만으로 pass를 생성할 수 없다. | `scenario-gate.md` §6, `opal/core/PRINCIPLES.md:15` |
 | 2 | **Producer≠Evaluator**: 작성자(PM+캡틴)와 채점자(opal-evaluator-agent 서브에이전트 디스패치)를 매 반복 분리 유지한다. | `scenario-gate.md` §4, TASK.md §확정된 설계 방향 3 |
 | 3 | **수치 비복제**: 반복 상한/무진전 임계 수치는 `scenario-gate.md` §5(→ `opal-harness.md` §1)를 참조만 하고 본 SKILL 본문에 리터럴로 복제하지 않는다. | `scenario-gate.md` §5, `loop-control.md:41,143` |
-| 4 | **1차 opd 단일 호출**: 1차 적용은 opd STEP 3.5의 단일 호출로 한정한다. 후속 확산(oppl/opds/opsdd/oppd)은 Step 2의 pilot별 정규화 변환기만 추가하면 재사용된다(정규화 계약이 확장성 근거). | TASK.md §범위, `scenario-gate.md` §3 |
+| 4 | **다중 pilot 지원**: opd(STEP 3.5)·opds(STEP 2)·opsdd(Phase 2 REVIEW) 3종 접합. 확산은 Step 2 pilot 변환기 추가만으로 재사용(정규화 계약이 확장성 근거). oppl 제외·oppd 2차. | TASK.md §범위, `scenario-gate.md` §3 |
 | 5 | **경로 이탈 방지**: Step 2 페이로드 빌드는 `task_folder` 하위 파일만 Read/Write한다. | PLAN §5.4 보안 |
 
 ## 결과 반환 형식
@@ -138,3 +172,4 @@ scenario_source: {producer_artifact}
 | 버전 | 날짜 | 변경내용 |
 |------|------|---------|
 | v1.0 | 2026-07-23 | 최초 작성 — 루프 프로세스 6단계(정규화 빌드→coverage-check→evaluator→종료조건→반환) 배선, tool-gated·Producer≠Evaluator·수치 비복제·1차 opd 단일 호출 [MUST] 명문화 (073/F-004) |
+| v1.1 | 2026-07-23 15:28 KST | Step 2에 `pilot=opds`(opd 동형)·`pilot=opsdd`(SPEC.md FR/AC/EC 소스) 변환기 표 additive 추가, 입력 설명 pilot enum·확장성 산문·[MUST] 규율 #4를 opd/opds/opsdd 3종 지원 사실로 정합 갱신 — opd 변환기 행 diff 0 (075/F-001) |

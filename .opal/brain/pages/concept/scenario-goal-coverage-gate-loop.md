@@ -8,20 +8,23 @@ tags:
 - rubric
 - opd
 - task-073
+- task-075
 sources:
 - task:073
+- task:075
 related:
 - test-scenario-pipeline-redesign
 - op-dev-test-scenario
 - oppl-coverage-conformance-axis-split
 - loop-upper-bound-ssot-pattern
+- scenario-gate-pilot-fit-criteria
 created: '2026-07-23'
 updated: '2026-07-23'
 status: draft
 ---
 ## 개요
 
-TEST-SCENARIO 단계를 "목표 달성 검증"으로 재정의하는 작은 수렴 루프다. Producer(작성) → 결정론 커버리지 게이트(도구) → 독립 평가자 루브릭 채점(판단) → 종료조건 판정 → 재작성 순으로 돌며, 1차로 opd 파이프라인에 접합했다.
+TEST-SCENARIO 단계를 "목표 달성 검증"으로 재정의하는 작은 수렴 루프다. Producer(작성) → 결정론 커버리지 게이트(도구) → 독립 평가자 루브릭 채점(판단) → 종료조건 판정 → 재작성 순으로 돌며, 1차로 opd 파이프라인에 접합한 뒤 task:075에서 opds·opsdd로 확산했다.
 
 ## 결정 배경 (WHY)
 
@@ -42,7 +45,9 @@ TEST-SCENARIO 단계를 "목표 달성 검증"으로 재정의하는 작은 수�
 - `opal/tools/test-tool/lib/scenario.py:474` — 결정론 커버리지 판정 서브명령(`scenario-coverage-check`, exit 16/17).
 - `opal/agents/opal-evaluator-agent/AGENT.md:59` — 판단축 채점 phase(`scenario-rubric`) 추가.
 - `opal/skills/op-scenario-gate/SKILL.md` — 루프 컨트롤 스킬(신규, → [[op-scenario-gate-skill]]).
-- `opal/skills/opal-pilot-dev/SKILL.md` — opd STEP 3.5 접합(1차 적용 범위).
+- `opal/skills/opal-pilot-dev/SKILL.md` — opd STEP 3.5 접합(1차 적용).
+- `opal/skills/opal-pilot-dev-short/SKILL.md` — opds STEP 2 PLAN 접합(task:075 확산).
+- `opal/skills/opal-pilot-sdd/SKILL.md` — opsdd Phase 2 REVIEW 접합(task:075 확산, self-confirming 해소).
 
 ## 관련 페이지
 
@@ -52,3 +57,4 @@ TEST-SCENARIO 단계를 "목표 달성 검증"으로 재정의하는 작은 수�
 - [[loop-upper-bound-ssot-pattern]]
 - [[070-derivation-engine-perspective-bias-lesson]]
 - [[op-scenario-gate-skill]]
+- [[scenario-gate-pilot-fit-criteria]]

@@ -19,9 +19,9 @@ REVIEW Phase는 SPEC.md를 SSOT(단일 진실 원천)로 확정하는 단계다.
 **3단계 흐름**:
 
 ```
-1. 구조 검증 (PM 직접, 빠르게)     — S-1~S-6 항목 체크
-2. TEST-SCENARIOS.md 작성 (PM 직접) — FR → TS 도출, 의미적/도메인 검증 자연 수행
-3. FR↔TS 커버리지 확인 (PM 직접)   — 커버 안 된 FR → SPEC.md 보완 후 재작성
+1. 구조 검증 (PM 직접, 빠르게)       — S-1~S-6 항목 체크
+2. TEST-SCENARIOS.md 작성 (PM 직접)  — FR → TS 도출, 의미적/도메인 검증 자연 수행
+3. 목표-커버 게이트 (op-scenario-gate) — scenario-coverage-check 결정론 판정 + 독립 evaluator 채점, 미달 시 재작성
 ```
 
 ---
@@ -134,32 +134,15 @@ AC에서 테스트 시나리오를 도출할 수 없으면 AC 자체의 품질 �
 
 ---
 
-## 4. FR↔TS 커버리지 확인
+## 4. 목표-커버 게이트 (scenario-coverage-check + 독립 evaluator)
 
-TEST-SCENARIOS.md 작성 완료 후 커버리지를 점검한다.
+TEST-SCENARIOS.md 작성 완료 후, 수동 FR↔TS 커버리지 확인 대신 op-scenario-gate(pilot: opsdd)를 호출한다. 커버리지 판정은 test-tool `scenario-coverage-check`가 결정론으로 수행한다:
 
-### 4-1. 확인 절차
+- `requirements`(SPEC FR) / `features`(SPEC AC) / `hypotheses`(SPEC EC) ↔ 시나리오 매핑 누락을 exit 0(전커버)/16(coverage_unmet)로 판정 — 기존 §4-2 커버리지 기준(AC/FR/EC 100%)과 동형이나 도구 집행.
+- exit 16이면 `detail.missing`을 gaps로 반영해 TEST-SCENARIOS.md 재작성 또는 SPEC.md 보완 후 재호출.
+- 목표 달성 관점(①⑤⑥)은 opal-evaluator-agent가 별도 채점(수동 확인이 놓치던 관점 편향 보강, `scenario-gate.md` §1 070 사건 근거).
 
-1. SPEC.md의 FR 목록을 나열한다.
-2. 각 FR에 대응하는 AC를 확인한다.
-3. 각 AC에 도출된 TS가 있는지 확인한다.
-4. 커버 안 된 FR/AC가 있으면 SPEC.md 보완 또는 TS 추가.
-
-### 4-2. 커버리지 기준
-
-| 항목 | 기준 |
-|------|------|
-| AC 커버리지 | 모든 AC에서 최소 1개 TS |
-| FR 커버리지 | 모든 FR이 최소 1개 AC → 1개 TS에 연결 |
-| EC 커버리지 | 모든 EC에서 최소 1개 TS |
-
-### 4-3. 커버리지 갭 처리
-
-| 갭 유형 | 원인 | 대응 |
-|---------|------|------|
-| AC에 TS 없음 | AC 모호 또는 TS 도출 누락 | TS 추가 또는 SPEC.md AC 재작성 |
-| FR에 AC 없음 | SPEC.md 불완전 | SPEC.md 보완 → op-sdd-spec 재디스패치 |
-| EC에 TS 없음 | TS 도출 누락 | TS 추가 |
+규칙 SSOT: `opal/core/references/harness/scenario-gate.md`.
 
 ---
 
@@ -167,9 +150,9 @@ TEST-SCENARIOS.md 작성 완료 후 커버리지를 점검한다.
 
 | 판정 | 조건 | 후속 조치 |
 |------|------|----------|
-| **Pass** | S-1~S-4 모두 Pass + AC/FR/EC 커버리지 100% | 사용자 Gate → Phase 3: DESIGN 진행 |
-| **Pass with Warnings** | Fail 없음 + Warning(S-5/S-6) 있음 + 커버리지 100% | Warning을 STATE.md 의사결정 로그에 기록 → 사용자 Gate → Phase 3 진행 |
-| **Fail** | S-1~S-4 Fail 1개 이상 또는 커버리지 갭 해소 불가 | op-sdd-spec 재디스패치 → SPEC.md 보완 → REVIEW 재수행 |
+| **Pass** | S-1~S-4 모두 Pass + 목표-커버 게이트 verdict:pass(coverage exit 0 AND evaluator pass) | 사용자 Gate → Phase 3: DESIGN 진행 |
+| **Pass with Warnings** | Fail 없음 + Warning(S-5/S-6) 있음 + 목표-커버 게이트 verdict:pass | Warning을 STATE.md 의사결정 로그에 기록 → 사용자 Gate → Phase 3 진행 |
+| **Fail** | S-1~S-4 Fail 1개 이상 또는 목표-커버 게이트 verdict:rewrite/escalate 미해소 | op-sdd-spec 재디스패치 → SPEC.md 보완 → REVIEW 재수행 |
 
 ---
 
@@ -202,3 +185,11 @@ PM이 TS 작성 과정에서 자연스럽게 수행하게 되는 검증. 별도 
 - `op-sdd-verify/SKILL.md` — 구조 검증 항목 참조 (S-1~S-6 상세)
 - `execute-loop-guide.md` — EXECUTE-LOOP ACT 루프 구조
 - `spec-guide.md` — SPEC.md 구조 (REVIEW 검증 대상)
+
+---
+
+## 변경이력
+
+| 버전 | 일자 | 변경 내용 |
+|------|------|----------|
+| v1.1 | 2026-07-23 | §4 수동 FR↔TS 커버리지 → scenario-coverage-check 게이트 대체, §2 S-1~S-6 존치 (075) |

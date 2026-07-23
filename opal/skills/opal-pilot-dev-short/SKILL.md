@@ -51,7 +51,15 @@ op-dev-plan 워커 디스패치. **model**: advanced. 이전 산출물: TASK.md�
 > 2. 관련 참조 문서 경로 (docs/PROJECT.md 문서 테이블 기반)
 > 3. 기술 스택 연동 지시 (기존 "참조 문서 전달 의무" 통합)
 
-> op-dev-plan 워커가 PLAN.md와 TEST-SCENARIO.md를 통합 작성한다. (문서 전용 작업 시 TEST-SCENARIO.md 스킵 — 워커가 자체 판별)
+> op-dev-plan 워커는 PLAN.md만 작성한다(op-dev-plan/SKILL.md가 TEST-SCENARIO.md를 출력 범위에서 제외). PLAN.md 수신 후, **알투(PM) + 캡틴 페어**가 `op-dev-test-scenario/SKILL.md`의 "TEST-SCENARIO.md 통일 형식"(§1 리스크 가설 표 / §4 AC↔가설↔계층↔시나리오 매핑 표)을 명시 참조하여 TEST-SCENARIO.md를 직접 작성한다(self-confirming 방지 — PLAN 워커와 다른 작성자, opd STEP 3.5 동형). 문서 전용 작업 시 스킵(게이트도 자연 스킵).
+
+PLAN.md + TEST-SCENARIO.md 작성 완료 → **목표-커버 게이트**: `~/.opal/tools/state-tool/run.sh advance <task-path> --task-step plan.scenario_gate` 호출 후 `op-scenario-gate` 스킬을 호출한다.
+  - 탐색 경로: `{프로젝트}/.opal/skills/op-scenario-gate/SKILL.md` → `~/.opal/skills/op-scenario-gate/SKILL.md`
+  - 입력: `task_folder`(태스크 폴더 경로), `producer_artifact`(`{task_folder}/TEST-SCENARIO.md`), `pilot: opds`, `iteration`(최초 호출 = 1)
+  - 수신 `verdict: pass` → 게이트 행 mark (`~/.opal/tools/state-tool/run.sh mark <task-path> --task-step plan.scenario_gate --done` 호출 — Step 3 coverage-check exit 0 AND Step 4 evaluator verdict pass 두 증거 근거로만 mark, 산문 판단으로 mark 금지)
+  - 수신 `verdict: rewrite` → PM+캡틴이 `gaps`를 반영해 TEST-SCENARIO.md 재작성 후 `iteration+1`로 op-scenario-gate 재호출 (루프, 게이트 행은 아직 mark하지 않음)
+  - 수신 `verdict: escalate` → 사용자에게 에스컬레이션하고 자율 재시도하지 않음
+  - 문서 전용 작업 시(TEST-SCENARIO.md 스킵) 게이트도 자연 스킵
 
 PLAN 완료
   → **PM Gate** (PLAN.md + TEST-SCENARIO.md 직접 검증 — 점검 목록 참조):
@@ -62,9 +70,10 @@ PLAN 완료
        - [ ] PLAN.md §4.2 실행 체크리스트 완성도 (소속 F-ID, 완료 기준 명시)
        - [ ] TEST-SCENARIO.md 시나리오가 TASK.md 요구사항 전체를 커버하는가
        - [ ] TEST-SCENARIO.md 보안 항목(시크릿 스캔, .gitignore) 포함 여부
+       - [ ] 목표-커버 게이트 verdict: pass (스킵 시 해당 없음)
        - [ ] 설계 피드백 섹션에 미해결 빈틈이 없는가
        - [ ] 규모 기준 초과 시 Full Task 에스컬레이션 검토 여부
-  → PM Gate 통과 후 해당 행(P-4, 행 4)을 단일 mark. 사용자에게 PLAN + TEST-SCENARIO 함께 보고. 승인 = EXECUTE 시작 허가.
+  → PM Gate 통과 후 해당 행(P-4, 행 5)을 단일 mark. 사용자에게 PLAN + TEST-SCENARIO 함께 보고. 승인 = EXECUTE 시작 허가.
 
 > **사용자 확인 (P-5)**: 사용자 발화 후 PM이 `~/.opal/tools/state-tool/run.sh mark <task-path> --task-step plan.user_confirm --done --owner user --note '{owner_name} 확인: ...'` 호출. CLOSE 진입 전 이 행의 `owner=user` 여부를 도구가 자동 검증한다 (§2.16 G-13).
 > 근거: `PLAN.md` §3 Step 8 P-1 / P-5
@@ -106,7 +115,7 @@ op-dev-execute 스킬을 수행하라.
 
 ### 3-3. EXECUTE 완료 후
 
-모든 배치 완료 → changed_files 병합 → 행 6 mark → **TEST 단계 진입**.
+모든 배치 완료 → changed_files 병합 → 행 7 mark → **TEST 단계 진입**.
 
 > **EXECUTE Step 완료 (P-4)**: 워커가 `~/.opal/tools/state-tool/run.sh mark <task-path> --task-step execute.implement --done --as-worker --worker-stage EXECUTE --action-step <N/M>` 호출 (T-10 워커 권한 게이트).
 > **블로커 발생 (P-7)**: `~/.opal/tools/state-tool/run.sh block <task-path> --task-step <task-step-key> --reason '...'` 호출.
@@ -120,7 +129,7 @@ op-dev-test-agent 워커 디스패치. TEST-SCENARIO.md 실행 + 결과 기록 +
 
 > **[PM 컨텍스트 주입]** 디스패치 프롬프트 첫 줄에 `[WORKER]` 삽입. 하네스 Guards 핵심 규칙 + TEST-SCENARIO.md 경로 + changed_files 전달.
 
-워커 완료 → 행 7 mark.
+워커 완료 → 행 8 mark.
 
 ### PASS 시
 
@@ -133,7 +142,7 @@ op-dev-test-agent 워커 디스패치. TEST-SCENARIO.md 실행 + 결과 기록 +
      - [ ] 회귀 테스트 항목 Pass
      - [ ] 설계 피드백 미해결 빈틈 없음
      - [ ] 컨벤션 자동 진단 PASS (changed_files 컨벤션 적용 대상 ≥1건 시 발동, GC-CONVENTION-*.md 보고서 Critical/High 0건)
-→ PM Gate 통과 후 해당 행(행 8)을 단일 mark. 사용자에게 완료 보고 후 CLOSE 단계 진입 승인 요청.
+→ PM Gate 통과 후 해당 행(행 9)을 단일 mark. 사용자에게 완료 보고 후 CLOSE 단계 진입 승인 요청.
 
 > **사용자 확인 (P-5)**: 사용자 발화 후 PM이 `~/.opal/tools/state-tool/run.sh mark <task-path> --task-step test.user_confirm --done --owner user --note '{owner_name} 확인: ...'` 호출.
 > 근거: `PLAN.md` §3 Step 8 P-1 / P-5
@@ -171,7 +180,7 @@ op-dev-test-agent 워커 디스패치. TEST-SCENARIO.md 실행 + 결과 기록 +
 
 모든 체크리스트 갱신 완료 확인 후 태스크를 마감한다.
 
-1. DONE.md 생성 후 행 10(CLOSE 행) mark (`~/.opal/tools/state-tool/run.sh mark <task-path> --task-step close.done_md --done` 호출 — P-1). 행을 mark하는 것 자체가 state 기록이다.
+1. DONE.md 생성 후 행 11(CLOSE 행) mark (`~/.opal/tools/state-tool/run.sh mark <task-path> --task-step close.done_md --done` 호출 — P-1). 행을 mark하는 것 자체가 state 기록이다.
 2. **관련 문서 업데이트** (op-brain-ingest 디스패치 직전 실행):
    - `<프로젝트-루트>/docs/PROJECT.md`의 "프로젝트 문서" 레지스트리와 이번 태스크의 `changed_files`(EXECUTE 산출)를 양쪽 종합하여, 태스크 결과로 내용이 달라진 관련 문서(ARCHITECTURE.md·기획서 등)를 식별한다.
    - 갱신 대상이 있으면 PM이 판단하여 직접 수정하거나 적합한 워커를 디스패치해 최신화한다. 갱신 대상이 없으면 자연 스킵(no-op) — CLOSE를 중단시키지 않는다.
@@ -253,17 +262,18 @@ Full Task(opal-pilot-dev)로 전환할까요?
 | 1 | TASK | 작업 | ⬜ | - |
 | 2 | TASK | 사용자 확인 | ⬜ | - |
 | 3 | PLAN | 작업 | ⬜ | - |
-| 4 | PLAN | PM Gate | ⬜ | - |
-| 5 | PLAN | 사용자 확인 | ⬜ | - |
-| 6 | EXECUTE | 작업 | ⬜ | - |
-| 7 | TEST | 작업 | ⬜ | - |
-| 8 | TEST | PM Gate | ⬜ | - |
-| 9 | TEST | 사용자 확인 | ⬜ | - |
-| 10 | CLOSE | DONE.md 생성 | ⬜ | - |
+| 4 | PLAN | 목표-커버 게이트 | ⬜ | - |
+| 5 | PLAN | PM Gate | ⬜ | - |
+| 6 | PLAN | 사용자 확인 | ⬜ | - |
+| 7 | EXECUTE | 작업 | ⬜ | - |
+| 8 | TEST | 작업 | ⬜ | - |
+| 9 | TEST | PM Gate | ⬜ | - |
+| 10 | TEST | 사용자 확인 | ⬜ | - |
+| 11 | CLOSE | DONE.md 생성 | ⬜ | - |
 ```
 
-> TASK.md 생성은 행 1(TASK 작업)에 흡수, PLAN.md·TEST-SCENARIO.md 생성은 행 3(PLAN 작업)에 흡수. State Gate 행 6개는 state-tool stage-transition guard(PLAN §M-A)로 이전 완료 — 행으로 강제하지 않는다.
-> TEST 루핑 발생 시: `~/.opal/tools/state-tool/run.sh add-row <task-path> --after 9 --stage TEST --item 'fix 작업 (N/3)'` 호출로 동적 추가한다 (P-6 추가작업 행 추가 패턴).
+> TASK.md 생성은 행 1(TASK 작업)에 흡수, PLAN.md·TEST-SCENARIO.md 생성은 행 3(PLAN 작업)에 흡수. State Gate 행 6개는 state-tool stage-transition guard(PLAN §M-A)로 이전 완료 — 행으로 강제하지 않는다. 행 4(목표-커버 게이트)는 **[MUST]** `verdict: pass` tool-gated 증거로만 mark — 문서 전용 작업으로 TEST-SCENARIO.md가 스킵된 경우에만 자연 스킵, 그 외 산문 판단으로 mark 금지(guard가 미완 시 EXECUTE 진입을 구조적으로 차단).
+> TEST 루핑 발생 시: `~/.opal/tools/state-tool/run.sh add-row <task-path> --after 10 --stage TEST --item 'fix 작업 (N/3)'` 호출로 동적 추가한다 (P-6 추가작업 행 추가 패턴).
 
 ---
 
@@ -370,3 +380,4 @@ semi-agentic / agentic 모두 CLOSE 첫 행 `--auto-pass` 거부 (`agentic_close
 | v4.1 | 2026-07-10 13:12 | note 예시(산문)의 소유자 확인 표기를 `{owner_name} 확인:` 형식으로 통일 — identity.md owner_name 재해석 규칙(AGENT.md §정체성 적용)과 정합, 오염 차단 (054) |
 | v4.2 | 2026-07-20 15:45 | task-step 키 주소 체계 도입 — `references/pipeline.json` 신설(10 task-step, SSOT), `--rows-from` 호출 경로를 SKILL.md에서 pipeline.json으로 교체(`.md` 파싱은 하위호환 폴백으로 존치), 표는 사람 열람용 미러로 축소 (070) |
 | v4.3 | 2026-07-23 09:56 | 본문 state-tool 명령 예시를 task-step key 주소로 전환(--row→--task-step, --step→--action-step). pipeline.json key 기준. (070 후속) |
+| v4.4 | 2026-07-23 15:26 | STEP 2 producer를 op-dev-plan(PLAN.md만) → 알투(PM)+캡틴 페어 직접 작성(TEST-SCENARIO.md, opd STEP 3.5 동형)으로 확립 — op-dev-plan/SKILL.md 미접촉; PLAN 절차에 목표-커버 게이트(op-scenario-gate, pilot:opds) 호출 삽입; pipeline.json `plan.scenario_gate` 행 추가(10→11행) + STATE 미러 표·산문 "행 N" 전수 +1 재정렬; PM Gate checklist에 게이트 항목 추가 (075) |

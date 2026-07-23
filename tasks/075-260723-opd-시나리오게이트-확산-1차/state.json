@@ -1,0 +1,188 @@
+{
+  "task_id": "075-260723-opd-시나리오게이트-확산-1차",
+  "skill": "opd",
+  "mode": "agentic",
+  "schema_version": "1.1",
+  "created_at": "2026-07-23 14:49",
+  "updated_at": "2026-07-23 17:09",
+  "current_status": "done",
+  "rows": [
+    {
+      "row_id": 1,
+      "stage": "TASK",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-23 14:49",
+      "owner": "PM",
+      "note": null,
+      "key": "task.task_md"
+    },
+    {
+      "row_id": 2,
+      "stage": "TASK",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-23 14:50",
+      "owner": "auto",
+      "note": "agentic auto-pass: agentic auto-pass: 4요소 확정+opsdd 커버리지 대체 잠금, 명확화 게이트 pass. 캡틴 agentic 위임",
+      "key": "task.user_confirm"
+    },
+    {
+      "row_id": 3,
+      "stage": "ANALYSIS",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-23 15:04",
+      "owner": "PM",
+      "note": "ANALYSIS.md 저장: 접합점 실사, 발견5건·리스크6건",
+      "key": "analysis.analysis_md"
+    },
+    {
+      "row_id": 4,
+      "stage": "ANALYSIS",
+      "item": "PM Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-23 15:05",
+      "owner": "PM",
+      "note": "PM Gate Pass: 접합점 경로:줄번호 정밀. 단 발견①(opds producer 불확실) 캡틴 에스컬레이션 — PLAN 자율진행 보류",
+      "key": "analysis.pm_gate"
+    },
+    {
+      "row_id": 5,
+      "stage": "ANALYSIS",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-23 15:08",
+      "owner": "auto",
+      "note": "agentic auto-pass: agentic auto-pass: 발견① 캡틴 해소(옵션1), ANALYSIS All Pass. PLAN 진입",
+      "key": "analysis.user_confirm"
+    },
+    {
+      "row_id": 6,
+      "stage": "PLAN",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-23 15:21",
+      "owner": "PM",
+      "note": "PLAN.md: F-001~F-006, 8Step, 4결정·발견5건 반영",
+      "key": "plan.plan_md"
+    },
+    {
+      "row_id": 7,
+      "stage": "PLAN",
+      "item": "PM Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-23 15:21",
+      "owner": "PM",
+      "note": "PM Gate Pass: op-dev-plan 미접촉·opsdd DD-1 전수수정표·SPEC.md소스·S-1~S-6존치 정확. tool-gated 계승",
+      "key": "plan.pm_gate"
+    },
+    {
+      "row_id": 8,
+      "stage": "PLAN",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-23 15:21",
+      "owner": "auto",
+      "note": "agentic auto-pass: agentic auto-pass: PLAN 강화검토 All Pass",
+      "key": "plan.user_confirm"
+    },
+    {
+      "row_id": 9,
+      "stage": "TEST-SCENARIO",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-23 15:24",
+      "owner": "PM",
+      "note": "TEST-SCENARIO.md: H-1~H-6↔S-1~S-10, 구현후검증 트랙, 자기적용 S-10",
+      "key": "test_scenario.test_scenario_md"
+    },
+    {
+      "row_id": 10,
+      "stage": "TEST-SCENARIO",
+      "item": "목표-커버 게이트",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-23 15:26",
+      "owner": "PM",
+      "note": "op-scenario-gate 자기적용 pass: coverage exit0 AND evaluator verdict pass(2.0). tool-gated 2증거",
+      "key": "test_scenario.scenario_gate"
+    },
+    {
+      "row_id": 11,
+      "stage": "TEST-SCENARIO",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-23 15:26",
+      "owner": "auto",
+      "note": "agentic auto-pass: agentic auto-pass: 자기 게이트 통과, TEST-SCENARIO 확정",
+      "key": "test_scenario.user_confirm"
+    },
+    {
+      "row_id": 12,
+      "stage": "EXECUTE",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-23 15:41",
+      "owner": "PM",
+      "note": "EXECUTE 배선 완료: Step1(변환기 3종)·Step2(opds)·Step3(opsdd)·Step4(verify-guide)·Step6(PROJECT.md). 검증 완료",
+      "key": "execute.implement"
+    },
+    {
+      "row_id": 13,
+      "stage": "TEST",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-23 15:49",
+      "owner": "PM",
+      "note": "TEST All Pass: S-1~S-10 실증(opds/opsdd 게이트 차단·회귀31·자기적용 exit16/0). 임시폴더만",
+      "key": "test.run_tests"
+    },
+    {
+      "row_id": 14,
+      "stage": "TEST",
+      "item": "PM Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-23 15:49",
+      "owner": "PM",
+      "note": "PM Gate Pass: 최종 변경셋 6파일(opd/op-dev-plan diff0 확인), 회귀0, self-confirming 해소 실증",
+      "key": "test.pm_gate"
+    },
+    {
+      "row_id": 15,
+      "stage": "TEST",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-23 17:08",
+      "owner": "user",
+      "note": "캡틴 확인: 승인 (TEST All Pass 검토 후 CLOSE 승인)",
+      "key": "test.user_confirm"
+    },
+    {
+      "row_id": 16,
+      "stage": "CLOSE",
+      "item": "DONE.md 생성",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-23 17:09",
+      "owner": "PM",
+      "note": "DONE.md 생성. R-1~R-6 이행, opds·opsdd 확산 완료",
+      "key": "close.done_md"
+    }
+  ],
+  "next_action": "태스크 완료"
+}
