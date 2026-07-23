@@ -231,3 +231,7 @@
 - 신규: [[pages/concept/state-tool-task-step-key-address.md]], [[pages/entity/pipeline-json-spec.md]]
 - 출처: task:070
 
+## [2026-07-23] ingest | CLOSE ingest — 태스크 072 state-tool STATE.md 다음 액션 자동 파생
+- 신규: [[pages/concept/state-tool-next-action-auto-derivation.md]]
+- 출처: task:072
+

@@ -3,7 +3,7 @@
   "module": "test_state_tool",
   "layer": "test",
   "domain": "opal-pipeline",
-  "description": "state-tool 단위 테스트 — 9개 명령 happy path + 23종 에러 코드 × 최소 1건 + G-5~G-15 시나리오. 005: TestClarificationGate 신설 — verify --clarification-check + TASK→다음단계 자동 훅 RED-first 케이스 ①~⑨ + 회귀 보호. 054: TestOwnerNamePlaceholder 신설 — note '{owner_name}' 플레이스홀더 identity.md write-time 치환 RED-first(S-1~S-7). 056: TestOpplSkillInit 신설 — `--skill oppl` enum 미등록 RED-first(S-020, H-1) — run.sh subprocess 실호출로 공개 인터페이스만 검증(mock 미사용). 070: task-step 키 주소 체계 도입 1차 RED-first — TestPipelineSpecValidate/TestPipelineJsonInit/TestStateSchema11Compat/TestTaskStepAddressing/TestActionStepRename/TestAddRowKey/TestOpddEnumDrift/TestGroupAPipelineSpecs/TestBackwardCompatAliases 9종 신설(TEST-SCENARIO.md S-1~S-14, PLAN §3.7.2) — 미구현 기능이므로 전부 FAIL 기대(RED 증거).",
+  "description": "state-tool 단위 테스트 — 9개 명령 happy path + 23종 에러 코드 × 최소 1건 + G-5~G-15 시나리오. 005: TestClarificationGate 신설 — verify --clarification-check + TASK→다음단계 자동 훅 RED-first 케이스 ①~⑨ + 회귀 보호. 054: TestOwnerNamePlaceholder 신설 — note '{owner_name}' 플레이스홀더 identity.md write-time 치환 RED-first(S-1~S-7). 056: TestOpplSkillInit 신설 — `--skill oppl` enum 미등록 RED-first(S-020, H-1) — run.sh subprocess 실호출로 공개 인터페이스만 검증(mock 미사용). 070: task-step 키 주소 체계 도입 1차 RED-first — TestPipelineSpecValidate/TestPipelineJsonInit/TestStateSchema11Compat/TestTaskStepAddressing/TestActionStepRename/TestAddRowKey/TestOpddEnumDrift/TestGroupAPipelineSpecs/TestBackwardCompatAliases 9종 신설(TEST-SCENARIO.md S-1~S-14, PLAN §3.7.2) — 미구현 기능이므로 전부 FAIL 기대(RED 증거). 072: TestNextActionAutoDerive 신설 — STATE.md '다음 액션' 자동 파생 RED-first(TEST-SCENARIO.md S-1~S-4,S-6,S-7) — init next_action 영속화+schema optional 등록, advance/mark 프론티어 파생(pending '진입'/in_progress '진행 중'/전체완료 '태스크 완료'), 첫 줄만 치환(하위 자유기재 보존), --next-action 오버라이드 우선+비지속 복귀 — 공개 CLI 경로(직접 호출+run.sh subprocess)로만 검증, 미구현이므로 실패 기대(RED 증거).",
   "exports": [
     "TestInit", "TestShow", "TestAdvance", "TestMark",
     "TestBlock", "TestValidate", "TestAddRow", "TestStatus", "TestGatePass",
@@ -11,7 +11,8 @@
     "TestOwnerNamePlaceholder", "TestOpplSkillInit",
     "TestPipelineSpecValidate", "TestPipelineJsonInit", "TestStateSchema11Compat",
     "TestTaskStepAddressing", "TestActionStepRename", "TestAddRowKey",
-    "TestOpddEnumDrift", "TestGroupAPipelineSpecs", "TestBackwardCompatAliases"
+    "TestOpddEnumDrift", "TestGroupAPipelineSpecs", "TestBackwardCompatAliases",
+    "TestNextActionAutoDerive"
   ]
 }
 
@@ -1482,9 +1483,10 @@ PLAN 단계 진입
 # ═════════════════════════════════════════════════════════════════════════════
 
 class TestFreeTextPreservation(BaseTestCase):
-    """[MUST] 자유 텍스트 영역 보존: mark/advance/block/add-row 호출 시
-    의사결정 로그(§2.17 자동 기재 외)/블로커/다음 액션 본문 변경 0건
-    (PLAN §3 Step 2 마지막 항목)
+    """[MUST] 자유 텍스트 영역 보존: 블로커는 전 명령(mark/advance/block/add-row) 보존.
+    '다음 액션'은 mark/advance 시 파생 갱신(첫 줄), block/add-row 시 보존.
+    하위 자유 기재 라인(- 세부 액션 N)은 전 명령 보존.
+    (PLAN 072 F-002/F-004)
     """
 
     def setUp(self):
@@ -1513,19 +1515,43 @@ class TestFreeTextPreservation(BaseTestCase):
         self.assertEqual(b_before, b_after, "블로커 섹션이 변경됨!")
         self.assertEqual(n_before, n_after, "다음 액션 섹션이 변경됨!")
 
-    def test_mark_preserves_free_text(self):
-        """mark 후 블로커/다음 액션 섹션 보존 (PLAN §3 Step 2)"""
+    def test_mark_derives_next_action_preserves_others(self):
+        """mark 후: 블로커 섹션 보존 + '다음 액션' 첫 줄 파생 갱신 + 하위 자유기재 보존
+        (PLAN 072 F-002/F-004 — 의도된 설계 반전, 회귀 아님)"""
         md_before = self._md()
-        self._mark(1)
-        md_after = self._md()
-        self._assert_free_text_preserved(md_before, md_after)
+        blocker_before, _ = self._free_text_sections(md_before)
 
-    def test_advance_preserves_free_text(self):
-        """advance 후 블로커/다음 액션 섹션 보존 (PLAN §3 Step 2)"""
-        md_before = self._md()
-        self._advance(1)
+        self._mark(1)  # SIMPLE_ROWS_SPEC row1 = TASK/작업 → done, 프론티어 = row2(PLAN/작업)
+
         md_after = self._md()
-        self._assert_free_text_preserved(md_before, md_after)
+        blocker_after, _ = self._free_text_sections(md_after)
+        self.assertEqual(blocker_before, blocker_after, "블로커 섹션이 변경됨!")
+
+        next_start = md_after.find("## 다음 액션")
+        lines = md_after[next_start:].splitlines()
+        self.assertEqual(lines[1], "PLAN 작업 진입",
+                         f"'다음 액션' 첫 줄이 파생값으로 갱신되지 않음: {lines[1]!r}")
+        self.assertEqual(lines[2:], ["- 세부 액션 1", "- 세부 액션 2"],
+                         "하위 자유 기재 라인이 보존되지 않음")
+
+    def test_advance_derives_next_action_preserves_others(self):
+        """advance 후: 블로커 섹션 보존 + '다음 액션' 첫 줄 파생 갱신 + 하위 자유기재 보존
+        (PLAN 072 F-002/F-004 — 의도된 설계 반전, 회귀 아님)"""
+        md_before = self._md()
+        blocker_before, _ = self._free_text_sections(md_before)
+
+        self._advance(1)  # SIMPLE_ROWS_SPEC row1 = TASK/작업 → in_progress, 프론티어 = row1 자신
+
+        md_after = self._md()
+        blocker_after, _ = self._free_text_sections(md_after)
+        self.assertEqual(blocker_before, blocker_after, "블로커 섹션이 변경됨!")
+
+        next_start = md_after.find("## 다음 액션")
+        lines = md_after[next_start:].splitlines()
+        self.assertEqual(lines[1], "TASK 작업 진행 중",
+                         f"'다음 액션' 첫 줄이 파생값으로 갱신되지 않음: {lines[1]!r}")
+        self.assertEqual(lines[2:], ["- 세부 액션 1", "- 세부 액션 2"],
+                         "하위 자유 기재 라인이 보존되지 않음")
 
     def test_block_preserves_free_text(self):
         """block 후 블로커/다음 액션 섹션 보존 (PLAN §3 Step 2)"""
@@ -1551,6 +1577,264 @@ class TestFreeTextPreservation(BaseTestCase):
         blocker_before = md_before[md_before.find("## 블로커"):md_before.find("## 다음 액션")]
         blocker_after = md_after[md_after.find("## 블로커"):md_after.find("## 다음 액션")]
         self.assertEqual(blocker_before, blocker_after)
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# 072: TestNextActionAutoDerive — STATE.md "다음 액션" 자동 파생 RED-first
+# (TEST-SCENARIO.md S-1~S-4, S-6, S-7 / red-first.md §2,§4 — 작성자≠구현자,
+#  공개 인터페이스(CLI 서브명령 호출 → state.json/STATE.md 관측)로만 검증)
+# ═════════════════════════════════════════════════════════════════════════════
+
+class TestNextActionAutoDerive(BaseTestCase):
+    """072: `next_action` 자동 파생 — TEST-SCENARIO.md S-1~S-4, S-6, S-7 (RED-first).
+
+    [MUST] red-first.md §4: 내부 private 함수(`_derive_next_action` 등)를 직접 import·
+    호출하지 않는다. 오직 공개 CLI 경로(cmd_init/cmd_advance/cmd_mark 직접 호출 또는
+    run.sh subprocess 실호출)와 그 관측 가능 산출물(state.json, STATE.md)만으로 검증한다.
+
+    파생 로직 구현 **전** 현재 코드에서 이 클래스는 실패(RED)해야 한다 —
+    GREEN 구현은 op-dev-execute가 담당한다(red-first.md §2, 작성자≠구현자).
+    """
+
+    # S-2/S-3 프론티어 파생 검증용 — CLOSE 게이트 없이 순수 전이 순서만 확인
+    _NEXT_ACTION_ROWS_SPEC = json.dumps([
+        {"stage": "TASK", "item": "작업"},
+        {"stage": "PLAN", "item": "작업"},
+        {"stage": "PLAN", "item": "QA Gate"},
+    ])
+
+    # S-3 전체 완료 경계 검증용 — CLOSE 게이트 통과 조건(직전 "사용자 확인" 행 done/user)
+    _NEXT_ACTION_CLOSE_ROWS_SPEC = json.dumps([
+        {"stage": "TASK",  "item": "사용자 확인"},
+        {"stage": "CLOSE", "item": "State Gate"},
+    ])
+
+    # S-6/S-7 오버라이드 검증용 — 최소 2행
+    _NEXT_ACTION_OVERRIDE_ROWS_SPEC = json.dumps([
+        {"stage": "TASK", "item": "작업"},
+        {"stage": "PLAN", "item": "작업"},
+    ])
+
+    def _next_action_lines(self, md):
+        """STATE.md '## 다음 액션' 섹션에서 (첫 줄, 하위 잔여 라인 리스트) 반환."""
+        idx = md.find("## 다음 액션")
+        self.assertNotEqual(idx, -1, "STATE.md에 '## 다음 액션' 섹션이 없음")
+        section_lines = md[idx:].splitlines()
+        first_line = section_lines[1] if len(section_lines) > 1 else ""
+        rest_lines = section_lines[2:]
+        return first_line, rest_lines
+
+    # ── S-1 (R-1/H-4): init next_action 영속화 + schema optional 등록 + 하위호환 ──
+
+    def test_r1_init_default_next_action_persisted_to_state_json(self):
+        """[T072/L1-R1] S-1 ①: init(기본값, --next-action 미지정) 후 state.json에
+        `next_action` 키가 존재하고 기존 STATE.md 기본 문구("PLAN 단계 진입")와 일치해야 한다.
+        현재 cmd_init은 state.json에 next_action을 기록하지 않으므로 실패한다(RED)."""
+        self._init(rows_spec=SIMPLE_ROWS_SPEC)
+        state = self._state()
+        self.assertIn("next_action", state,
+                      "state.json에 'next_action' 키가 없음 — R-1 미구현(RED 증거)")
+        self.assertEqual(state.get("next_action"), "PLAN 단계 진입")
+
+    def test_r1_init_custom_next_action_persisted_to_state_json(self):
+        """[T072/L1-R1] S-1 ①: init --next-action "커스텀 초기 액션" 지정 시 state.json
+        `next_action` 값이 그대로 영속화되어야 한다. 현재 미저장이므로 실패한다(RED)."""
+        self._init(rows_spec=SIMPLE_ROWS_SPEC, next_action="커스텀 초기 액션")
+        state = self._state()
+        self.assertEqual(state.get("next_action"), "커스텀 초기 액션",
+                         f"state.json next_action 불일치: {state.get('next_action')!r}")
+
+    def test_r1_schema_next_action_optional_registered_not_required(self):
+        """[T072/L1-R1] S-1 ②: state.schema.json `properties`에 `next_action`(optional)이
+        등록되고, `required` 배열에는 포함되지 않아야 한다(H-4 하위호환 — 구버전 state.json이
+        향후 validate 시 위반되지 않도록). 현재 properties 미등록이므로 실패한다(RED)."""
+        schema_path = _SCHEMA_DIR / "state.schema.json"
+        schema = json.loads(schema_path.read_text(encoding="utf-8"))
+        self.assertNotIn("next_action", schema.get("required", []),
+                         "next_action이 required에 추가됨 — 구버전 state.json 하위호환 파괴(H-4)")
+        self.assertIn("next_action", schema.get("properties", {}),
+                      "next_action이 schema properties에 미등록 — RED 증거")
+
+    def test_r1_legacy_state_json_without_next_action_advance_no_keyerror(self):
+        """[T072/L1-R1] S-1 ③: `next_action` 키가 없는 구버전 state.json으로 advance 호출 시
+        KeyError 없이 정상 동작(exit 0)해야 한다. 하위호환 회귀 방지 가드."""
+        self._init(rows_spec=SIMPLE_ROWS_SPEC)
+        state = self._state()
+        state.pop("next_action", None)  # 구버전 시뮬레이션
+        (self.task_path / "state.json").write_text(
+            json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
+        code = self._advance(1)
+        self.assertEqual(code, 0,
+                         "next_action 키 없는 구버전 state.json으로 advance 실패(하위호환 위반)")
+
+    # ── S-2 (R-2/R-3): advance/mark 순차 전이 프론티어 파생 + 렌더 정합 ──
+
+    def test_r2_r3_sequential_frontier_derivation_advance_mark(self):
+        """[T072/L1-R2,R3] S-2 — 여러 행을 순차로 advance(→in_progress)/mark(→done)하며
+        각 시점 state.json `next_action`과 STATE.md '## 다음 액션' 첫 줄이 프론티어
+        (첫 미완료 행) 기반 값과 일치해야 한다: pending → "{stage} {item} 진입",
+        in_progress → "{stage} {item} 진행 중". 현재 미구현이므로 매 단계 실패한다(RED)."""
+        self._init(rows_spec=self._NEXT_ACTION_ROWS_SPEC)
+
+        steps = [
+            ("advance", 1, "TASK 작업 진행 중"),
+            ("mark",    1, "PLAN 작업 진입"),
+            ("advance", 2, "PLAN 작업 진행 중"),
+            ("mark",    2, "PLAN QA Gate 진입"),
+        ]
+        for action, row_id, expected in steps:
+            with self.subTest(action=action, row=row_id, expected=expected):
+                code = self._advance(row_id) if action == "advance" else self._mark(row_id)
+                self.assertEqual(code, 0, f"{action}(row={row_id}) 실패")
+
+                state = self._state()
+                self.assertEqual(
+                    state.get("next_action"), expected,
+                    f"{action}(row={row_id}) 후 state.json next_action 불일치: "
+                    f"{state.get('next_action')!r} (기대: {expected!r})"
+                )
+                first_line, _ = self._next_action_lines(self._md())
+                self.assertEqual(
+                    first_line, expected,
+                    f"{action}(row={row_id}) 후 STATE.md '## 다음 액션' 첫 줄 불일치: "
+                    f"{first_line!r} (기대: {expected!r})"
+                )
+
+    # ── S-3 (R-2/M-2): 전체 완료 시 "태스크 완료" 경계 ──
+
+    def test_r2_m2_all_rows_complete_next_action_task_complete(self):
+        """[T072/L1-R2,M-2] S-3 — 마지막 행까지 모두 완료(current_status=done)되면
+        프론티어(다음 대기 행)가 부재하므로 `next_action == "태스크 완료"`여야 한다.
+        현재 미구현이므로 실패한다(RED)."""
+        self._init(rows_spec=self._NEXT_ACTION_CLOSE_ROWS_SPEC)
+
+        code1 = self._mark(1, owner="user")  # TASK 사용자 확인 → done/user (CLOSE 게이트 통과)
+        self.assertEqual(code1, 0, "row1(사용자 확인) mark 실패")
+
+        # 마지막 행(CLOSE State Gate) mark 전 — 프론티어 = row2(pending)
+        state_mid = self._state()
+        self.assertEqual(
+            state_mid.get("next_action"), "CLOSE State Gate 진입",
+            f"row2 mark 전 프론티어 파생값 불일치: {state_mid.get('next_action')!r}"
+        )
+
+        code2 = self._mark(2)  # CLOSE State Gate → done, current_status=done
+        self.assertEqual(code2, 0, "row2(CLOSE State Gate) mark 실패")
+
+        state_final = self._state()
+        self.assertEqual(state_final.get("current_status"), "done")
+        self.assertEqual(
+            state_final.get("next_action"), "태스크 완료",
+            f"전체 완료 후 next_action 불일치: {state_final.get('next_action')!r}"
+        )
+        first_line, _ = self._next_action_lines(self._md())
+        self.assertEqual(
+            first_line, "태스크 완료",
+            f"전체 완료 후 STATE.md 첫 줄 불일치: {first_line!r}"
+        )
+
+    # ── S-4 (R-2/M-1): 첫 줄만 치환 — 하위 자유 기재 보존 ──
+
+    def test_m1_first_line_replaced_subordinate_free_text_preserved(self):
+        """[T072/L1-M1] S-4 — '## 다음 액션' 헤더 + 첫 줄 + 하위 자유 기재
+        ("- 세부 액션 1"/"- 세부 액션 2") 상태에서 mark/advance 시 첫 줄만 파생값으로
+        치환되고 하위 2줄은 잔존해야 하며, 다른 섹션(블로커 등)은 오염되지 않아야 한다.
+        현재 첫 줄이 갱신되지 않으므로 실패한다(RED)."""
+        self._init(rows_spec=SIMPLE_ROWS_SPEC, next_action="초기 다음 액션")
+        md = self._md()
+        md = md.replace(
+            "## 다음 액션\n초기 다음 액션",
+            "## 다음 액션\n초기 다음 액션\n- 세부 액션 1\n- 세부 액션 2",
+        )
+        self.assertIn("- 세부 액션 2", md, "픽스처 조립 실패 — 하위 자유 기재 삽입 확인 필요")
+        blocker_before = md[md.find("## 블로커"):md.find("## 다음 액션")]
+        (self.task_path / "STATE.md").write_text(md, encoding="utf-8")
+
+        code = self._advance(1)  # SIMPLE_ROWS_SPEC row1 = TASK/작업 → in_progress
+        self.assertEqual(code, 0, "advance(1) 실패")
+
+        new_md = self._md()
+        first_line, rest_lines = self._next_action_lines(new_md)
+        self.assertEqual(
+            first_line, "TASK 작업 진행 중",
+            f"'## 다음 액션' 첫 줄이 파생값으로 치환되지 않음: {first_line!r}"
+        )
+        self.assertEqual(
+            rest_lines, ["- 세부 액션 1", "- 세부 액션 2"],
+            f"하위 자유 기재가 보존되지 않음: {rest_lines!r}"
+        )
+        blocker_after = new_md[new_md.find("## 블로커"):new_md.find("## 다음 액션")]
+        self.assertEqual(blocker_before, blocker_after, "블로커 섹션이 오염됨")
+
+    # ── S-6 (R-4): advance/mark --next-action 오버라이드 우선 ──
+
+    def test_r4_override_next_action_takes_priority_over_derivation(self):
+        """[T072/L1-R4] S-6 — `advance --next-action "커스텀 안내"` 지정 시 자동 파생값보다
+        오버라이드가 우선해야 한다. 공개 CLI 실호출(run.sh subprocess, red-first.md §4) —
+        현재 advance 파서에 `--next-action`이 없어 argparse 단계에서 거부(usage error,
+        exit 2)되므로 실패한다(RED)."""
+        self._init(rows_spec=self._NEXT_ACTION_OVERRIDE_ROWS_SPEC)
+
+        code, stdout, stderr, data = _run070([
+            "advance", str(self.task_path),
+            "--row", "1",
+            "--next-action", "커스텀 안내",
+        ])
+        self.assertEqual(
+            code, 0,
+            f"advance --next-action 실호출 실패(exit={code}): stdout={stdout!r} stderr={stderr!r}"
+        )
+        self.assertTrue(data.get("ok"), f"advance --next-action 응답 ok 아님: {data}")
+
+        state = self._state()
+        self.assertEqual(
+            state.get("next_action"), "커스텀 안내",
+            f"오버라이드가 파생값보다 우선하지 않음: {state.get('next_action')!r}"
+        )
+        first_line, _ = self._next_action_lines(self._md())
+        self.assertEqual(
+            first_line, "커스텀 안내",
+            f"STATE.md 오버라이드 반영 불일치: {first_line!r}"
+        )
+
+    # ── S-7 (R-4/M-3): 오버라이드 비지속 — 다음 전이 자동 파생 복귀 ──
+
+    def test_m3_override_non_persistent_reverts_to_derived_on_next_transition(self):
+        """[T072/L1-R4,M-3] S-7 — S-6과 동일한 오버라이드 전이 직후, `--next-action` 없는
+        후속 mark 시 자동 파생값으로 복귀해야 한다(오버라이드 비지속 — stale 값 재도입 금지).
+        현재 오버라이드 자체가 미구현이라 사전 단계(advance --next-action)에서부터
+        실패한다(RED)."""
+        self._init(rows_spec=self._NEXT_ACTION_OVERRIDE_ROWS_SPEC)
+
+        code, stdout, stderr, data = _run070([
+            "advance", str(self.task_path),
+            "--row", "1",
+            "--next-action", "커스텀 안내",
+        ])
+        self.assertEqual(
+            code, 0,
+            f"S-6 사전 오버라이드 전이 실패(exit={code}): stdout={stdout!r} stderr={stderr!r}"
+        )
+
+        # --next-action 없는 후속 mark(row1 완료) → 프론티어 = row2(PLAN 작업, pending)
+        mark_code = self._mark(1)
+        self.assertEqual(mark_code, 0, "후속 mark(row1) 실패")
+
+        state = self._state()
+        self.assertNotEqual(
+            state.get("next_action"), "커스텀 안내",
+            "오버라이드 값이 후속 전이에서도 stale하게 재도입됨(비지속 위반)"
+        )
+        self.assertEqual(
+            state.get("next_action"), "PLAN 작업 진입",
+            f"후속 전이 후 자동 파생값 복귀 실패: {state.get('next_action')!r}"
+        )
+        first_line, _ = self._next_action_lines(self._md())
+        self.assertEqual(
+            first_line, "PLAN 작업 진입",
+            f"STATE.md 첫 줄 복귀 실패: {first_line!r}"
+        )
 
 
 # ═════════════════════════════════════════════════════════════════════════════

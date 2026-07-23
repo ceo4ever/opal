@@ -3,7 +3,7 @@
   "module": "state_tool",
   "layer": "util",
   "domain": "opal-pipeline",
-  "description": "OPAL 파이프라인 현황판 JSON SSOT 관리 CLI — 10개 서브 명령(init/show/advance/mark/block/validate/add-row/status/spec-validate/gate-pass[deprecated]) + verify + 3-way 모드(interactive/semi-agentic/agentic) 지원. 014 Phase 4: 새 표준 행 구조(QA Gate/State Gate 행 없음)와 정합 — gate-pass deprecate, CLOSE 마지막 행 판정 항목명 비의존화. 016: verify --red-check(RED 증거 게이트) + --fix-mode/--changed-files/--test-globs(테스트 불변성 게이트) 추가 — RED-first TDD 트랙 deterministic 집행. 017: mark --step N/M 다중 Step 조기 done 가드 — N<M이면 in_progress 유지(done 미처리) + 진행률(step) 영속화, N==M에서만 done; 미완 행은 기존 stage-transition guard가 단계전환·CLOSE 진입을 자동 차단. 005: verify --clarification-check + TASK→다음단계 자동 훅 — TASK 4요소(목표/범위/제약/완료기준) 미잠금 시 다음 단계 진입 거부(PRINCIPLES §1 집행), 정책 A graceful skip(섹션/파일 부재 시 하위호환). 034: mock 가드 false positive 수정 — _MOCK_CODE_PATTERNS 정규식 'MagicMock' 맨 단어 대안 제거(#1 산문 오탐) + _check_mock_patterns 인라인 백틱 제거 전처리 추가(#2 메타-순환 해소); 헌법 §4 정탐 유지. 054: resolve_owner_placeholder() 신설 — note-write 6경로(advance/mark/add-row/block/status/init)에서 '{owner_name}' 플레이스홀더를 identity.md owner_name으로 write-time 치환(fail-safe: 부재/공란/파싱실패 시 원문 유지). 070: task-step 키 주소 체계 도입 1차 — spec-validate 서브명령(pipeline.json 스펙 검증) + KEY_PATTERN/stage_to_slug/resolve_row_index 신설, build_rows_from_pipeline_json(init --rows-from .json 확장자 분기, .md는 deprecation 경고 유지), advance/mark/block에 --task-step/--task-step-id/--row(deprecated) 3주소·add-row에 --after-task-step/--after-task-step-id/--key(자동 생성) 추가, --step→--action-step 별칭(dest 공유), opdd skill·DICT/MODEL/DDL·MIGRATION stage enum 등록, ERROR_CODES 8종 추가.",
+  "description": "OPAL 파이프라인 현황판 JSON SSOT 관리 CLI — 10개 서브 명령(init/show/advance/mark/block/validate/add-row/status/spec-validate/gate-pass[deprecated]) + verify + 3-way 모드(interactive/semi-agentic/agentic) 지원. 014 Phase 4: 새 표준 행 구조(QA Gate/State Gate 행 없음)와 정합 — gate-pass deprecate, CLOSE 마지막 행 판정 항목명 비의존화. 016: verify --red-check(RED 증거 게이트) + --fix-mode/--changed-files/--test-globs(테스트 불변성 게이트) 추가 — RED-first TDD 트랙 deterministic 집행. 017: mark --step N/M 다중 Step 조기 done 가드 — N<M이면 in_progress 유지(done 미처리) + 진행률(step) 영속화, N==M에서만 done; 미완 행은 기존 stage-transition guard가 단계전환·CLOSE 진입을 자동 차단. 005: verify --clarification-check + TASK→다음단계 자동 훅 — TASK 4요소(목표/범위/제약/완료기준) 미잠금 시 다음 단계 진입 거부(PRINCIPLES §1 집행), 정책 A graceful skip(섹션/파일 부재 시 하위호환). 034: mock 가드 false positive 수정 — _MOCK_CODE_PATTERNS 정규식 'MagicMock' 맨 단어 대안 제거(#1 산문 오탐) + _check_mock_patterns 인라인 백틱 제거 전처리 추가(#2 메타-순환 해소); 헌법 §4 정탐 유지. 054: resolve_owner_placeholder() 신설 — note-write 6경로(advance/mark/add-row/block/status/init)에서 '{owner_name}' 플레이스홀더를 identity.md owner_name으로 write-time 치환(fail-safe: 부재/공란/파싱실패 시 원문 유지). 070: task-step 키 주소 체계 도입 1차 — spec-validate 서브명령(pipeline.json 스펙 검증) + KEY_PATTERN/stage_to_slug/resolve_row_index 신설, build_rows_from_pipeline_json(init --rows-from .json 확장자 분기, .md는 deprecation 경고 유지), advance/mark/block에 --task-step/--task-step-id/--row(deprecated) 3주소·add-row에 --after-task-step/--after-task-step-id/--key(자동 생성) 추가, --step→--action-step 별칭(dest 공유), opdd skill·DICT/MODEL/DDL·MIGRATION stage enum 등록, ERROR_CODES 8종 추가. 072: STATE.md '다음 액션' 자동 파생 — state.json next_action 필드 신설(init 영속화·schema optional 등록), _derive_next_action(파이프라인 프론티어=첫 미완료 행 기준 파생)·update_next_action_section(첫 줄만 치환, 하위 자유기재 보존) 신규, advance/mark가 상태 반영 후 next_action 계산·저장·렌더(block/add-row/status는 미접촉), advance/mark --next-action per-transition 오버라이드(비지속 — 다음 전이 자동 파생 복귀).",
   "exports": [
     "cmd_init", "cmd_show", "cmd_advance", "cmd_mark",
     "cmd_block", "cmd_validate", "cmd_add_row", "cmd_status",
@@ -314,6 +314,18 @@ def update_current_status_section(md_content, progress=None, status_text=None):
         )
     return md_content
 
+def update_next_action_section(md_content, next_action):
+    """072 G-16: '## 다음 액션' 섹션의 첫 줄(파생값)만 치환. 하위 자유 기재 라인 보존.
+    next_action=None이면 미변경(block/add-row/status 등 미접촉 계약, H-5).
+    섹션 부재 시 미변경(fail-safe, 레거시 STATE.md 호환)."""
+    if next_action is None:
+        return md_content
+    pattern = re.compile(r"(^## 다음 액션\n)([^\n]*)", re.MULTILINE)
+    m = pattern.search(md_content)
+    if not m:
+        return md_content
+    return md_content[:m.start()] + m.group(1) + next_action + md_content[m.end():]
+
 # ─────────────────────────────────────────────────────────────────────────────
 # 의사결정 로그 자동 기재 (PLAN §2.17 G-14/G-15)
 # ─────────────────────────────────────────────────────────────────────────────
@@ -345,12 +357,13 @@ def append_decision_log(md_content, now_str, decision, reason):
 
 def sync_state_md(task_path, state, now_str, command,
                   progress=None, status_text=None,
-                  decision=None, reason=None):
+                  decision=None, reason=None, next_action=None):
     """갱신 명령 공통 후처리:
     1. STATE.md 마커 영역 교체 (marker_missing 시 err)
     2. G-5 최종 갱신 헤더 교체
     3. G-6 현재 상태 섹션 갱신
-    4. G-14/G-15 의사결정 로그 기재 (decision/reason이 None이면 생략)
+    4. 072 G-16: '## 다음 액션' 첫 줄 파생 갱신 (next_action=None이면 미접촉, H-5)
+    5. G-14/G-15 의사결정 로그 기재 (decision/reason이 None이면 생략)
     """
     md = load_state_md(task_path)
     if md is None:
@@ -364,6 +377,7 @@ def sync_state_md(task_path, state, now_str, command,
 
     replaced = update_state_md_header(replaced, now_str)
     replaced = update_current_status_section(replaced, progress=progress, status_text=status_text)
+    replaced = update_next_action_section(replaced, next_action)
 
     if decision is not None:
         replaced = append_decision_log(replaced, now_str, decision, reason or "(none)")
@@ -433,6 +447,23 @@ def resolve_row_index(state, command, key_val=None, id_val=None, row_val=None,
 
 # 완료로 간주하는 상태값 — 이 상태의 앞 행은 건너뛰기 검증에서 제외
 _COMPLETE_STATUSES = {"done", "additional_work_done", "na"}
+
+
+def _derive_next_action(state):
+    """072 G-16: 파이프라인 프론티어(첫 미완료 행)에서 '다음 액션' 문자열 파생.
+    전체 완료 시 '태스크 완료'(M-2). 070 정합: row 순서 스캔 + _COMPLETE_STATUSES 재사용
+    (resolve_row_index/task-step key 체계 무접촉)."""
+    for row in state.get("rows", []):
+        st = row.get("status")
+        if st in _COMPLETE_STATUSES:
+            continue
+        stage, item = row.get("stage", ""), row.get("item", "")
+        if st == "in_progress":
+            return f"{stage} {item} 진행 중"
+        if st == "failed":
+            return f"{stage} {item} 블로커 해소"
+        return f"{stage} {item} 진입"   # pending
+    return "태스크 완료"
 
 
 def check_stage_transition_guard(state, row_index, command, force=False, scope="full"):
@@ -900,6 +931,9 @@ def cmd_init(args):
     # 단순·결정론 규칙(PLAN §3.2.2 diff, task 070 후속 Part B).
     schema_version = "1.1" if any(r.get("key") for r in rows) else "1.0"
 
+    # 072 F-001: '다음 액션' state.json 영속화 (R-1) — 계산식은 기존 관례 그대로 재사용
+    next_action = args.next_action or "PLAN 단계 진입"
+
     state = {
         "task_id":        task_id,
         "skill":          args.skill,
@@ -909,6 +943,7 @@ def cmd_init(args):
         "updated_at":     now_str,
         "current_status": "in_progress",
         "rows":           rows,
+        "next_action":    next_action,
     }
 
     # force 사용 시 기존 state.json의 created_at 보존
@@ -924,7 +959,6 @@ def cmd_init(args):
     # STATE.md 생성 or 갱신
     first_stage = rows[0]["stage"] if rows else "TASK"
     task_title  = args.task_title or task_id
-    next_action = args.next_action or "PLAN 단계 진입"
     table_str   = render_pipeline_table(rows)
 
     if import_mode:
@@ -1106,10 +1140,14 @@ def cmd_advance(args):
         row["note"] = resolve_owner_placeholder(args.note)
 
     state["updated_at"] = now_str
+
+    # 072 F-002/F-003: '다음 액션' 자동 파생(프론티어) + --next-action 오버라이드(비지속, M-3)
+    state["next_action"] = getattr(args, "next_action", None) or _derive_next_action(state)
     save_state_json(task_path, state)
 
     progress = f"{row['stage']} 단계"
-    sync_state_md(task_path, state, now_str, command, progress=progress)
+    sync_state_md(task_path, state, now_str, command, progress=progress,
+                  next_action=state["next_action"])
     ok(command, row_id=row["row_id"], stage=row["stage"], item=row["item"],
        status="in_progress", timestamp=now_str)
 
@@ -1249,6 +1287,9 @@ def cmd_mark(args):
     if args.as_worker and _step_str:
         progress_text = f"Step {_step_str} 완료"
 
+    # 072 F-002/F-003: '다음 액션' 자동 파생(프론티어) + --next-action 오버라이드(비지속, M-3)
+    state["next_action"] = getattr(args, "next_action", None) or _derive_next_action(state)
+
     save_state_json(task_path, state)
 
     # TEST stage done 시 verify 자동 훅 (PLAN 013)
@@ -1280,7 +1321,8 @@ def cmd_mark(args):
 
     sync_state_md(task_path, state, now_str, command,
                   progress=progress_text, status_text=status_text,
-                  decision=decision, reason=reason_text)
+                  decision=decision, reason=reason_text,
+                  next_action=state["next_action"])
 
     ok(command, row_id=row["row_id"], stage=row["stage"], item=row["item"],
        status=row["status"], timestamp=now_str, owner=row["owner"])
@@ -2111,6 +2153,9 @@ def build_parser():
     p_adv.add_argument("--row", type=int, metavar="<n>",
                        help="[deprecated] --task-step / --task-step-id 사용 권장")
     p_adv.add_argument("--note")
+    p_adv.add_argument("--next-action",
+                       help="072: '다음 액션' per-transition 오버라이드(비지속, M-3) — "
+                            "미지정 시 프론티어에서 자동 파생")
     p_adv.set_defaults(func=cmd_advance)
 
     # ── mark ──
@@ -2136,6 +2181,9 @@ def build_parser():
     owner_group.add_argument("--owner", choices=["PM","worker","user","auto"])
     owner_group.add_argument("--auto-pass", action="store_true", dest="auto_pass")
     p_mark.add_argument("--force", action="store_true")
+    p_mark.add_argument("--next-action",
+                        help="072: '다음 액션' per-transition 오버라이드(비지속, M-3) — "
+                             "미지정 시 프론티어에서 자동 파생")
     p_mark.set_defaults(func=cmd_mark)
 
     # ── block ──

@@ -1,0 +1,177 @@
+{
+  "task_id": "072-260723-opd-다음액션-자동파생",
+  "skill": "opd",
+  "mode": "agentic",
+  "schema_version": "1.1",
+  "created_at": "2026-07-23 11:26",
+  "updated_at": "2026-07-23 12:36",
+  "current_status": "done",
+  "rows": [
+    {
+      "row_id": 1,
+      "stage": "TASK",
+      "item": "작업",
+      "key": "task.task_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-23 11:26",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 2,
+      "stage": "TASK",
+      "item": "사용자 확인",
+      "key": "task.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-23 11:32",
+      "owner": "auto",
+      "note": "agentic auto-pass: agentic auto-pass: 캡틴이 //opd --agentic 재개로 TASK 진행 지시, TASK.md 명확화 4요소 잠금 확인"
+    },
+    {
+      "row_id": 3,
+      "stage": "ANALYSIS",
+      "item": "작업",
+      "key": "analysis.analysis_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-23 11:41",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 4,
+      "stage": "ANALYSIS",
+      "item": "PM Gate",
+      "key": "analysis.pm_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-23 11:41",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 5,
+      "stage": "ANALYSIS",
+      "item": "사용자 확인",
+      "key": "analysis.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-23 11:41",
+      "owner": "auto",
+      "note": "agentic auto-pass: agentic auto-pass: ANALYSIS.md PM Gate Pass — R1~R6 코드 라인 인용 검증, TASK 정합. 설계 반전 발견은 캡틴 보고 후 PLAN에 반영 지시"
+    },
+    {
+      "row_id": 6,
+      "stage": "PLAN",
+      "item": "작업",
+      "key": "plan.plan_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-23 11:51",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 7,
+      "stage": "PLAN",
+      "item": "PM Gate",
+      "key": "plan.pm_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-23 11:51",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 8,
+      "stage": "PLAN",
+      "item": "사용자 확인",
+      "key": "plan.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-23 11:51",
+      "owner": "auto",
+      "note": "agentic auto-pass: agentic auto-pass: PLAN.md PM Gate Pass — R1~R6 커버, 8결정사항 확정(M1 첫줄치환/M2 태스크완료/M3 비지속), TestFreeTextPreservation 반전계획·H1~H6 완비"
+    },
+    {
+      "row_id": 9,
+      "stage": "TEST-SCENARIO",
+      "item": "작업",
+      "key": "test_scenario.test_scenario_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-23 11:54",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 10,
+      "stage": "TEST-SCENARIO",
+      "item": "사용자 확인",
+      "key": "test_scenario.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-23 11:54",
+      "owner": "auto",
+      "note": "agentic auto-pass: agentic auto-pass: TEST-SCENARIO PM Gate Pass — H1~H6 전부 시나리오 매핑, L1/M1, mock 부재, RED-first 명시. 모드 경계 통과=EXECUTE PM 자율"
+    },
+    {
+      "row_id": 11,
+      "stage": "EXECUTE",
+      "item": "작업",
+      "key": "execute.implement",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-23 12:15",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 12,
+      "stage": "TEST",
+      "item": "작업",
+      "key": "test.run_tests",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-23 12:25",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 13,
+      "stage": "TEST",
+      "item": "PM Gate",
+      "key": "test.pm_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-23 12:25",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 14,
+      "stage": "TEST",
+      "item": "사용자 확인",
+      "key": "test.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-23 12:35",
+      "owner": "user",
+      "note": "캡틴 확인: TEST 완료 검토 후 CLOSE 진입 승인('확인')"
+    },
+    {
+      "row_id": 15,
+      "stage": "CLOSE",
+      "item": "DONE.md 생성",
+      "key": "close.done_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-23 12:36",
+      "owner": "PM",
+      "note": null
+    }
+  ],
+  "next_action": "태스크 완료"
+}

@@ -8,8 +8,8 @@ exports: [cmd_init, cmd_show, cmd_advance, cmd_mark, cmd_block, cmd_validate, cm
 source_ref: opal/tools/state-tool/state_tool.py
 header_synced: 2026-06-10
 tags: [tool, pipeline]
-sources: [code:opal/tools/state-tool/, task:013, task:014, task:005, task:070]
-related: [brain-tool, opal-brain-system, clarification-gate, state-tool-task-step-key-address, pipeline-json-spec]
+sources: [code:opal/tools/state-tool/, task:013, task:014, task:005, task:070, task:072]
+related: [brain-tool, opal-brain-system, clarification-gate, state-tool-task-step-key-address, pipeline-json-spec, state-tool-next-action-auto-derivation]
 created: 2026-06-10
 updated: 2026-07-23
 status: active
@@ -43,6 +43,11 @@ OPAL 파이프라인 현황판(STATE.md)의 JSON SSOT를 결정론적으로 집�
 - `init --rows-from <path>` — `.json`이면 pipeline.json 스펙 로딩(key 영속화, schema_version 1.1), `.md`면 기존 SKILL.md 표 파싱(레거시, stderr deprecation 경고).
 - `add-row --key <key>` — 동적 행 삽입 시 key 지정, 미지정 시 `{stage_slug}.{item_slug}_{n}` 자동 생성(유일성 보장).
 
+STATE.md "다음 액션" 자동 파생 (task:072 — 설계 반전 상세는 [[state-tool-next-action-auto-derivation]]):
+- `advance`/`mark`는 행 상태 반영 후 파이프라인 프론티어(첫 미완료 행)에서 "다음 액션" 문구를 자동 계산해 `state.json` `next_action` 필드에 기록하고 STATE.md "## 다음 액션" 첫 줄만 치환한다(`_derive_next_action`·`update_next_action_section` — `opal/tools/state-tool/state_tool.py`). 하위 자유 기재 라인은 보존된다.
+- `advance`/`mark`의 `--next-action <text>`는 해당 전이 1회 한정 오버라이드(비지속) — 다음 전이부터 자동 파생으로 복귀한다.
+- `block`/`add-row`/`status` 등 나머지 명령은 "다음 액션" 섹션을 접촉하지 않는다(`sync_state_md(next_action=None)` 기본값 유지).
+
 ## 관련 페이지
 
 - [[brain-tool]] — state-tool 패턴(run.sh+venv python, ERROR_CODES, KST date.js)을 복제한 동형 도구
@@ -50,3 +55,4 @@ OPAL 파이프라인 현황판(STATE.md)의 JSON SSOT를 결정론적으로 집�
 - [[clarification-gate]] — task:005에서 추가된 verify --clarification-check 게이트 상세
 - [[state-tool-task-step-key-address]] — task:070 task-step 키 주소 체계 아키텍처 결정
 - [[pipeline-json-spec]] — task:070 pilot 파이프라인 정의 SSOT(pipeline.json)
+- [[state-tool-next-action-auto-derivation]] — task:072 "다음 액션" 자동 파생 설계 반전

@@ -53,6 +53,7 @@
 
 - `--rows-spec`과 `--rows-from`은 배타적 (동시 사용 불가 — `rows_input_conflict`)
 - `--rows-from`은 확장자로 분기한다(070 R-2): `.json`이면 `pipeline.json` 스펙 검증 후 로딩(rows에 task-step `key` 영속, `conditional` 메타데이터 저장), `.md`이면 기존 SKILL.md 표 파싱(레거시) + stderr에 deprecation 경고 1줄 출력. 두 경로 모두 stdout 응답 계약은 동일.
+- `--next-action`: `state.json` `next_action` 필드로 영속화되고 `## 다음 액션` 첫 줄로 렌더된다(기본값 `"PLAN 단계 진입"`). 이후 `advance`/`mark` 시 파이프라인 프론티어(첫 미완료 행)에서 자동 파생·갱신된다 — PM 수동 갱신 불필요(072)
 - `--force` 사용 시 `--note` 필수 (`note_required_for_force`)
 - `--import-existing`: 기존 STATE.md 마크다운 표를 파싱하여 rows 초기화 + 자유 텍스트 영역 보존
 - agentic 모드에서 CLOSE 단계가 아닌 사용자 확인 행은 자동으로 `na`(-) 처리 (`.json`/`.md`/`--rows-spec` 공통)
@@ -87,13 +88,15 @@
 ```bash
 ~/.opal/tools/state-tool/run.sh advance <task-path> \
   (--task-step <key> | --task-step-id <n> | --row <n>) \
-  [--note <text>]
+  [--note <text>] \
+  [--next-action <text>]                    # per-transition 오버라이드, 비지속 (072)
 ```
 
 - 행 주소는 `--task-step`(key) / `--task-step-id`(숫자) / `--row`(숫자, deprecated 별칭) 중 정확히 하나 (070 R-4)
 - `pending` 상태인 행만 `in_progress`로 전환 (T-7)
 - CLOSE 단계 첫 행이면 직전 사용자 확인 게이트 자동 검증 (§2.16 G-13)
 - `## 현재 상태` 섹션 `- 진행:` 라인 자동 갱신
+- `## 다음 액션` 첫 줄이 파이프라인 프론티어(첫 미완료 행)에서 자동 파생·갱신된다(하위 자유 기재 보존). `--next-action <text>` 지정 시 해당 값이 파생값보다 우선하며, 이 오버라이드는 **해당 전이 1회에만** 적용된다 — 다음 전이가 `--next-action` 없이 실행되면 자동 파생으로 복귀한다(072)
 - `--note`의 `{owner_name}` 플레이스홀더는 identity.md `owner_name`으로 write-time 치환된다. 부재/공란/파싱 실패 시 원문 유지(fail-safe) — 054
 
 ---
@@ -108,7 +111,8 @@
   [--step <N/M> | --action-step <N/M>] \    # EXECUTE Step 진행 표기 (동일 dest, 070 R-5)
   [--owner <PM|worker|user|auto>] \
   [--auto-pass] \                           # agentic 자율 통과 (T-9)
-  [--force]                                 # --note 필수
+  [--force] \                               # --note 필수
+  [--next-action <text>]                    # per-transition 오버라이드, 비지속 (072)
 ```
 
 - 행 주소는 `--task-step`(key) / `--task-step-id`(숫자) / `--row`(숫자, deprecated 별칭) 중 정확히 하나 (070 R-4). 미지정 시 `task_step_addr_required`, 2개 이상 지정 시 `task_step_addr_conflict`, key 미매칭 시 `task_step_not_found`(응답에 `candidates` 후보 목록 포함)
@@ -118,6 +122,7 @@
 - `--auto-pass` 사용 시 `owner = "auto"`, note에 "agentic auto-pass" 자동 기재
 - CLOSE 첫 행 + agentic/semi-agentic 모드 + `--auto-pass` 조합 거부 (`agentic_close_gate_requires_user`)
 - `--force` 사용 시 `--note` 필수 + 의사결정 로그 자동 기재
+- `## 다음 액션` 첫 줄이 파이프라인 프론티어(첫 미완료 행)에서 자동 파생·갱신된다(하위 자유 기재 보존). `--next-action <text>` 지정 시 해당 값이 파생값보다 우선하며, 이 오버라이드는 **해당 전이 1회에만** 적용된다 — 다음 전이가 `--next-action` 없이 실행되면 자동 파생으로 복귀한다(072)
 - `--note`의 `{owner_name}` 플레이스홀더는 identity.md `owner_name`으로 write-time 치환된다(`--auto-pass` 접두 "agentic auto-pass: " 뒤에도 적용). 부재/공란/파싱 실패 시 원문 유지(fail-safe) — 054
 
 ---
@@ -345,3 +350,4 @@
 | v1.3 | 2026-07-10 16:33 | (056) | `init --skill` choices + state.schema.json `skill` enum에 `oppl` 추가 (opal-pilot-project-loop 등록, 스키마 신규 필드 없음) |
 | v1.4 | 2026-07-10 | (056 ADD-2) | 드리프트 정정 — state.schema.json `mode` enum에 `semi-agentic` 추가 (CLI `--mode` choices와 정합). 신규 필드 없음, `schema_version` 유지("1.0") |
 | v1.5 | 2026-07-20 15:45 | (070) | task-step 키 주소 체계 도입 1차 — `spec-validate` 서브명령 신설(10종), `pipeline-spec.schema.json` 신설, `init --rows-from` `.json`/`.md` 확장자 분기(json 스펙 로딩 시 rows[].key·conditional 영속, md는 deprecation 경고), `state.schema.json` 1.1 병행(rows[].key·conditional 선택 필드, schema_version enum), `--task-step`/`--task-step-id`/`--row`(deprecated)/`--action-step`(구 `--step` 별칭) 신설(advance/mark/block), `--after-task-step`/`--after-task-step-id`/`--key`(add-row), opdd skill·DICT/MODEL/DDL·MIGRATION stage enum 등록, ERROR_CODES 8종 추가(39종) |
+| v1.6 | 2026-07-23 12:09 | (072) | STATE.md "다음 액션" 자동 파생 — `state.json` `next_action` 필드 신설(init 영속화, `state.schema.json` optional 등록), `advance`/`mark` 프론티어(첫 미완료 행) 자동 파생·`update_next_action_section`(첫 줄만 치환, 하위 자유기재 보존), `advance`/`mark` `--next-action` per-transition 오버라이드(비지속 — 다음 전이 자동 파생 복귀). `## 블로커`는 기존대로 PM 수동 갱신 |
