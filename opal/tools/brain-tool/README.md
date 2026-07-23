@@ -48,13 +48,17 @@ run.sh init <brain-path> [--force]
 ### 2. `add-page` — 페이지 생성 + index 등록
 
 ```bash
-run.sh add-page <path> --type <entity|concept|flow|synthesis> --title <..> [--tags a,b] [--sources x,y] [--brain-path .]
+run.sh add-page <path> --type <entity|concept|flow|synthesis> --title <..> [--tags a,b] [--sources x,y] [--related a,b] [--body-file <file>] [--force] [--note <사유>] [--brain-path .]
 ```
 
 타입별 템플릿을 기반으로 페이지를 `pages/{type}/<name>.md`에 생성하고, frontmatter를 검증한 뒤 index.md를 재생성한다.
 
-- 출력: `{ok, page, type, title, indexed:true}`
-- 에러: `invalid_page_type`, `frontmatter_invalid`, `duplicate_page`
+- `--body-file <file>`: 지정 시 템플릿 본문 대신 이 파일의 본문으로 페이지를 생성한다 — 미실체 게이트가 실제 본문(제목 + `#` 섹션 헤딩)을 스캔하는 대상이 된다. 미지정 시 기존 템플릿 본문 경로 그대로(하위호환).
+- **미실체 지식 거부 게이트**: 본문(제목 + `#` 헤딩)에 미실체 마커(`미착수`·`미확정`·`향후계획`·`개선사항`·`todo` 등 — 아직 실재하지 않는 지식 신호)가 감지되면 등록을 거부한다(`speculative_content`). 산문은 스캔하지 않아 오검출을 최소화한다.
+- `--force`: 미실체 거부를 우회한다. **`--note <사유>` 없이는 우회 불가**(백도어 차단) — `--force --note`를 함께 지정해야 통과한다.
+- `--force --note` 통과 시: frontmatter에 `speculative_override: true`·`override_note: <사유>`를 영속 기재하고, 응답에 `warning:"speculative_content_overridden"`·`speculative_markers`·`override_note`를 포함한다.
+- 출력: `{ok, page, type, title, indexed:true}` (override 통과 시 `warning`·`speculative_markers`·`override_note` 추가)
+- 에러: `invalid_page_type`, `frontmatter_invalid`, `duplicate_page`, `speculative_content`
 
 ### 3. `index` — index.md 재생성
 
@@ -105,9 +109,10 @@ run.sh sync-header [--scope X] [--page P] [--brain-path .]
 run.sh lint [--brain-path .]
 ```
 
-고아·stale·끊어진 링크·누락 링크·근거 없는 페이지를 탐지한다.
+고아·stale·끊어진 링크·누락 링크·근거 없는 페이지·미실체 지식을 탐지한다.
 
-- 출력: `{ok, issues:[{kind, page, detail}]}` (kind ∈ orphan/stale/broken_link/missing_link/unsourced/contradiction)
+- 출력: `{ok, issues:[{kind, page, detail}]}` (kind ∈ orphan/stale/broken_link/missing_link/unsourced/contradiction/speculative)
+- `speculative`: 미실체 마커(섹션 헤딩) 소급 검출 — `add-page` 경로와 무관하게 이미 등록된 페이지의 본문을 스캔한다. 검출까지만 수행하며 자동 삭제·수정은 하지 않는다(`speculative_override` 기재 페이지도 계속 리포트).
 
 ### 8. `validate` — 표준 검증
 
@@ -131,3 +136,4 @@ brain 구조(필수 파일·디렉토리)와 페이지 frontmatter 표준 준수
 |------|------|---------|
 | v1.0 | 2026-06-10 | 초기 구현 — 8 서브 명령(init/add-page/index/log/search/sync-header/lint/validate) (015) |
 | v1.1 | 2026-06-16 18:15 | search 공백 무시 매칭 — 한국어 복합명사 띄어쓰기 편차 흡수(검색 시점 정규화, 저장 문서 불변, 스니펫 원문 노출) (025) |
+| v1.2 | 2026-07-23 10:15 | 미실체 지식 등록 차단 게이트 — add-page에 `--body-file`(실제 본문 스캔)·`--force`·`--note`(우회, note 필수) 추가 + `speculative_content` 에러(거부/우회 시 frontmatter `speculative_override`·`override_note` 기재) + lint에 `speculative` kind 추가(소급 검출, 비파괴) (071) |

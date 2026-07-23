@@ -3,13 +3,13 @@
   "module": "test_brain_tool",
   "layer": "test",
   "domain": "opal-brain",
-  "description": "brain-tool 단위 테스트 — 10 서브커맨드 happy-path + ERROR_CODES 주요 14종 + 동적 타입 로드 + analyze/ingest-scan + 027(term 동적로드·draft search 필터·lint term_duplicate/alias_collision). tmp_path 기반 격리 실행. mock 금지 — 실제 brain_tool.py를 import 호출하는 진짜 테스트. [053] validate_frontmatter 링크필드(related) 거부/통과 케이스 + add-page --related 지정/미지정 케이스 추가.",
+  "description": "brain-tool 단위 테스트 — 10 서브커맨드 happy-path + ERROR_CODES 주요 14종 + 동적 타입 로드 + analyze/ingest-scan + 027(term 동적로드·draft search 필터·lint term_duplicate/alias_collision). tmp_path 기반 격리 실행. mock 금지 — 실제 brain_tool.py를 import 호출하는 진짜 테스트. [053] validate_frontmatter 링크필드(related) 거부/통과 케이스 + add-page --related 지정/미지정 케이스 추가. [071] RED-first — add-page 미실체 마커 거부 게이트(--body-file/--force/--note, speculative_content)·lint speculative kind·draft-term 불변(M-3) 계약 테스트(TestSpeculativeGate071, TS-201~209). 구현(brain_tool.py) 없이 작성된 RED 테스트 — GREEN은 op-dev-execute 담당.",
   "task": "027",
   "exports": [
     "TestInit", "TestAddPage", "TestIndex", "TestLog",
     "TestSearch", "TestSyncHeader", "TestLint", "TestValidate",
     "TestErrorCodes", "TestDynamicPageTypes", "TestAnalyze", "TestIngestScan",
-    "TestTermDraft027", "TestTermLint027"
+    "TestTermDraft027", "TestTermLint027", "TestSpeculativeGate071"
   ]
 }
 """
@@ -67,6 +67,9 @@ def make_args(**kwargs):
         "tags": None,
         "sources": None,
         "related": None,
+        # add-page 미실체 게이트 (071) — body_file 미지정 시 기존 템플릿 본문 경로(하위호환)
+        "note": None,
+        "body_file": None,
         # log
         "op": "init",
         "summary": "테스트 요약",
@@ -1967,6 +1970,326 @@ class TestTermLint027(BrainTestCase):
         self.assertEqual(
             result["issues_count"], len(result["issues"]),
             "issues_count가 issues 배열 길이와 불일치"
+        )
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# 15. 071 RED — 미실체 지식 등록 차단 게이트 (add-page 거부 + lint 소급)
+# ═════════════════════════════════════════════════════════════════════════════
+#
+# [MUST] RED-first (opal/core/references/harness/red-first.md §1.5/§2/§3):
+#   본 클래스는 opal-test-agent(mode: red)가 작성한 실패 우선 테스트다.
+#   brain_tool.py의 SPECULATIVE_MARKERS·detect_speculative_markers·
+#   ERROR_CODES["speculative_content"]·add-page --body-file/--force/--note 게이트·
+#   lint speculative kind는 아직 구현되지 않았다(GREEN = op-dev-execute 담당,
+#   opal-be-agent). 작성자≠구현자 — 이 클래스를 GREEN 작업 중 수정하지 말 것.
+#   검증은 공개 인터페이스(CLI JSON ok/error/markers/issues/warning/override_note)
+#   + frontmatter 파일 내용만 사용한다(private 결합 금지).
+#
+# PLAN.md §3.2.5 / TEST-SCENARIO.md §3 L1 S-1~S-9 (TS-201~209) 계약을 그대로 옮김.
+
+# pointail 등가 미실체 본문 — 헤딩에 구조적 마커("아직 미착수, 설계 기록 단계"/"미확정 이슈")
+# 포함. 산문이 아닌 '#' 헤딩 라인에 마커가 있어야 detect_speculative_markers가 검출한다(M-1).
+_SPECULATIVE_BODY_071 = (
+    "## 개요\n\n"
+    "이 개념은 향후 브레인 게이트 강화를 위한 검토 초안이다.\n\n"
+    "## 구현 영향 범위 (HOW) — 아직 미착수, 설계 기록 단계\n\n"
+    "구현은 이후 진행 예정이며 세부 사항은 아직 미정이다.\n\n"
+    "## 미확정 이슈\n\n"
+    "- 세부 정책 미확정\n"
+    "- 우회 조건 미확정\n"
+)
+
+# 정상 정착 본문 — 헤딩은 page-concept 템플릿 정착 구조(개요/결정 내용/영향·관계)만 사용해
+# 마커 0이어야 한다. 산문(비헤딩)에 "향후"를 단순 언급해도 오검출되지 않아야 한다(H-1 방어).
+_NORMAL_BODY_071 = (
+    "## 개요\n\n"
+    "이 개념은 파이프라인 재시도 정책을 정의한다.\n\n"
+    "## 결정 내용 (HOW)\n\n"
+    "재시도는 최대 3회, 지수 백오프를 적용한다. "
+    "향후 모니터링 강화도 고려하나 이 결정 자체는 확정 사항이다.\n\n"
+    "## 영향·관계\n\n"
+    "이 결정은 브레인 파이프라인 안정성에 영향을 준다.\n"
+)
+
+
+class TestSpeculativeGate071(BrainTestCase):
+    """071 RED — add-page 미실체 마커 거부 게이트 + lint speculative 소급 검출.
+
+    TS-201~209 (PLAN.md §3.2.5, TEST-SCENARIO.md §3 S-1~S-9) 계약:
+    - add-page: --body-file 미실체 거부 / --force만 거부(note 필수) /
+      --force+--note 우회+경고 기재 / 정상 본문 통과 / body_file 미지정 하위호환.
+    - lint: speculative kind 정탐(pointail 등가) / 오탐 없음(정상 active) /
+      override 페이지 비파괴(리포트 유지 + 파일 불변).
+    - M-3 회귀: draft term 기본 search 제외 유지(_score_page term 한정 필터 불변).
+
+    [MUST] mock 금지 — 실제 BT.cmd_add_page/BT.cmd_lint/BT.cmd_search를 tmpdir
+    격리 상에서 직접 호출한다. KST만 _mock_kst()로 격리(기존 정책과 동형).
+    """
+
+    def setUp(self):
+        super().setUp()
+        self._init()
+
+    # ── 071 fixture 헬퍼 (신규 클래스 내부 전용 — 기존 BrainTestCase 무변경) ──────
+
+    def _write_concept_page(self, name, title, status="active", body="", sources=None):
+        """concept 페이지를 직접 파일로 생성한다 (add-page 우회 — status/본문/sources 제어용).
+
+        _write_term_page(BrainTestCase:143-165) 패턴 준용. add-page 경로를 타지 않으므로
+        add-page 게이트(GREEN 구현)와 독립적으로 lint의 소급 검출(backstop)을 검증할 수 있다.
+        """
+        page_dir = self.brain_root / "pages" / "concept"
+        page_dir.mkdir(parents=True, exist_ok=True)
+        sources_yaml = BT.yaml.safe_dump(
+            sources if sources is not None else [],
+            allow_unicode=True, default_flow_style=True,
+        ).strip()
+        content = (
+            f"---\n"
+            f"type: concept\n"
+            f"title: {title}\n"
+            f"tags: []\n"
+            f"sources: {sources_yaml}\n"
+            f"related: []\n"
+            f"created: 2026-06-17\n"
+            f"updated: 2026-06-17\n"
+            f"status: {status}\n"
+            f"---\n\n"
+            f"{body}\n"
+        )
+        page_path = page_dir / f"{name}.md"
+        page_path.write_text(content, encoding="utf-8")
+        return page_path
+
+    def _write_body_file(self, filename, body):
+        """--body-file 입력용 tmpdir 스크래치 .md 작성 (frontmatter 없음 — 본문만)."""
+        body_path = self.tmpdir / filename
+        body_path.write_text(body, encoding="utf-8")
+        return body_path
+
+    # ── add-page 거부 게이트 (TS-201~205 / S-1~S-5) ─────────────────────────
+
+    def test_add_page_rejects_speculative_body_file(self):
+        """TS-201/S-1: 미실체 본문(--body-file) add-page → ok:false + error=speculative_content
+        + markers 비어있지 않음 + 페이지 파일 미생성."""
+        body_file = self._write_body_file("spec-body.md", _SPECULATIVE_BODY_071)
+        with _mock_kst():
+            args = make_args(
+                brain_path=str(self.brain_root),
+                path="spec-reject-page", type="concept", title="미실체 개념",
+                body_file=str(body_file),
+            )
+            exit_code, result = self._call(BT.cmd_add_page, args)
+
+        self.assertNotEqual(exit_code, 0, f"미실체 본문이 거부되지 않음(exit=0): {result}")
+        self.assertFalse(result.get("ok"), f"ok=true — 미실체 본문 거부 실패: {result}")
+        self.assertEqual(
+            result.get("error"), "speculative_content",
+            f"error 코드가 speculative_content가 아님: {result}"
+        )
+        self.assertTrue(result.get("markers"), f"markers 필드가 비어있음: {result}")
+
+        page_file = self.brain_root / "pages" / "concept" / "spec-reject-page.md"
+        self.assertFalse(page_file.exists(), "거부됐어야 할 미실체 페이지 파일이 생성됨")
+
+    def test_add_page_force_without_note_still_rejected(self):
+        """TS-202/S-2: --force만(note 없음) → 여전히 ok:false (note 필수, 백도어 차단)."""
+        body_file = self._write_body_file("spec-body-force-only.md", _SPECULATIVE_BODY_071)
+        with _mock_kst():
+            args = make_args(
+                brain_path=str(self.brain_root),
+                path="spec-force-only-page", type="concept", title="미실체 개념 force만",
+                body_file=str(body_file), force=True, note=None,
+            )
+            exit_code, result = self._call(BT.cmd_add_page, args)
+
+        self.assertNotEqual(
+            exit_code, 0,
+            f"--force만으로(note 없이) 통과됨 — 백도어 우회 발생: {result}"
+        )
+        self.assertFalse(
+            result.get("ok"),
+            f"ok=true — --force만으로 note 없이 우회됨(백도어): {result}"
+        )
+
+        page_file = self.brain_root / "pages" / "concept" / "spec-force-only-page.md"
+        self.assertFalse(page_file.exists(), "note 없는 force 우회로 페이지가 생성됨(백도어)")
+
+    def test_add_page_force_with_note_overrides_and_records(self):
+        """TS-203/S-3: --force --note '<사유>' → ok:true + warning/speculative_markers/
+        override_note 응답 + 생성 페이지 frontmatter에 speculative_override:true·override_note 기록."""
+        body_file = self._write_body_file("spec-body-override.md", _SPECULATIVE_BODY_071)
+        override_note = "캡틴 승인 — 설계 기록 목적 사전 등록"
+        with _mock_kst():
+            args = make_args(
+                brain_path=str(self.brain_root),
+                path="spec-override-page", type="concept", title="미실체 개념 override",
+                body_file=str(body_file), force=True, note=override_note,
+            )
+            exit_code, result = self._call(BT.cmd_add_page, args)
+
+        self.assertEqual(exit_code, 0, f"--force --note 우회가 실패함: {result}")
+        self.assertTrue(result.get("ok"), f"ok=false — --force --note 우회 실패: {result}")
+        self.assertIn("warning", result, f"응답에 warning 필드 없음: {result}")
+        self.assertIn("speculative_markers", result, f"응답에 speculative_markers 필드 없음: {result}")
+        self.assertEqual(
+            result.get("override_note"), override_note,
+            f"응답 override_note 불일치: {result}"
+        )
+
+        page_file = self.brain_root / "pages" / "concept" / "spec-override-page.md"
+        self.assertTrue(page_file.exists(), "override 통과했는데 페이지 파일이 생성되지 않음")
+        fm, _ = BT.parse_frontmatter(page_file.read_text(encoding="utf-8"))
+        self.assertIsNotNone(fm, "override 페이지 frontmatter 파싱 실패")
+        self.assertTrue(
+            fm.get("speculative_override"),
+            f"frontmatter에 speculative_override:true 기록 안 됨: {fm}"
+        )
+        self.assertEqual(
+            fm.get("override_note"), override_note,
+            f"frontmatter override_note 불일치: {fm}"
+        )
+
+    def test_add_page_normal_body_file_passes(self):
+        """TS-204/S-4: 정상 concept 본문(마커 0, 산문 '향후' 단순 언급 포함) --body-file
+        → ok:true, 거부 없음 (H-1 오탐 방어 회귀)."""
+        body_file = self._write_body_file("clean-body.md", _NORMAL_BODY_071)
+        with _mock_kst():
+            args = make_args(
+                brain_path=str(self.brain_root),
+                path="normal-body-page", type="concept", title="정상 개념",
+                body_file=str(body_file),
+            )
+            exit_code, result = self._call(BT.cmd_add_page, args)
+
+        self.assertEqual(exit_code, 0, f"정상 본문이 거부됨(오검출 발생): {result}")
+        self.assertTrue(result.get("ok"), f"ok=false — 정상 본문 오검출: {result}")
+
+        page_file = self.brain_root / "pages" / "concept" / "normal-body-page.md"
+        self.assertTrue(page_file.exists(), "정상 본문 페이지가 생성되지 않음")
+
+    def test_add_page_without_body_file_backward_compat(self):
+        """TS-205/S-5: body_file=None(기존 호출) → 템플릿 본문으로 정상 생성 ok:true
+        (하위호환 — 마커 스캔이 템플릿에 미발동)."""
+        with _mock_kst():
+            args = make_args(
+                brain_path=str(self.brain_root),
+                path="legacy-page", type="concept", title="레거시 호출",
+            )
+            exit_code, result = self._call(BT.cmd_add_page, args)
+
+        self.assertEqual(exit_code, 0, f"body_file 미지정 기존 호출이 회귀됨: {result}")
+        self.assertTrue(result.get("ok"), f"ok=false — 하위호환 회귀: {result}")
+        page_file = self.brain_root / "pages" / "concept" / "legacy-page.md"
+        self.assertTrue(page_file.exists(), "하위호환 경로에서 페이지가 생성되지 않음")
+
+    # ── lint 소급 검출 (TS-206~208 / S-6~S-8) ────────────────────────────────
+
+    def test_lint_detects_speculative_concept_page(self):
+        """TS-206/S-6: pointail 등가 fixture(concept/active + 미실체 헤딩) 직접 write
+        → lint issues에 {"kind":"speculative","page":...,"markers":[...]} 포함."""
+        self._write_concept_page(
+            "pointail-equiv", "포인테일 등가 개념", status="active",
+            body=_SPECULATIVE_BODY_071, sources=["task:071"],
+        )
+        with _mock_kst():
+            args = make_args(brain_path=str(self.brain_root))
+            exit_code, result = self._call(BT.cmd_lint, args)
+
+        self.assertEqual(exit_code, 0, f"lint 실행 실패: {result}")
+        speculative_issues = [
+            i for i in result.get("issues", []) if i.get("kind") == "speculative"
+        ]
+        self.assertTrue(
+            speculative_issues,
+            f"미실체 fixture에서 speculative kind가 검출되지 않음: {result.get('issues')}"
+        )
+        matching = [i for i in speculative_issues if i.get("page") == "pointail-equiv"]
+        self.assertTrue(
+            matching,
+            f"pointail-equiv 페이지에 대한 speculative 이슈가 없음: {speculative_issues}"
+        )
+        self.assertTrue(matching[0].get("markers"), f"speculative 이슈 markers 필드 비어있음: {matching[0]}")
+
+    def test_lint_no_false_positive_on_normal_concept(self):
+        """TS-207/S-7: 정상 active concept(마커 0) → lint issues에 speculative 미출현
+        (기존 kind는 정상 동작 — H-4 오탐측 회귀)."""
+        self._write_concept_page(
+            "normal-active-concept", "정상 활성 개념", status="active",
+            body=_NORMAL_BODY_071, sources=["task:071"],
+        )
+        with _mock_kst():
+            args = make_args(brain_path=str(self.brain_root))
+            exit_code, result = self._call(BT.cmd_lint, args)
+
+        self.assertEqual(exit_code, 0, f"lint 실행 실패: {result}")
+        page_issues = [
+            i for i in result.get("issues", []) if i.get("page") == "normal-active-concept"
+        ]
+        kinds = [i.get("kind") for i in page_issues]
+        self.assertNotIn(
+            "speculative", kinds,
+            f"정상 active concept에서 speculative가 오검출됨: {page_issues}"
+        )
+
+    def test_lint_override_page_still_reported_and_unchanged(self):
+        """TS-208/S-8: speculative_override:true 페이지 → lint가 여전히 리포트하되
+        페이지 파일 내용은 lint 실행 전후 불변(자동 삭제·수정 0 — 비파괴 제약)."""
+        page_path = self._write_concept_page(
+            "override-existing", "override 기재된 개념", status="active",
+            body=_SPECULATIVE_BODY_071, sources=["task:071"],
+        )
+        # override 플래그를 frontmatter에 직접 주입 (add-page override 경로와 독립적으로
+        # lint의 비파괴·리포트 유지 계약만 검증하기 위한 fixture 조작)
+        text = page_path.read_text(encoding="utf-8")
+        fm, body = BT.parse_frontmatter(text)
+        fm["speculative_override"] = True
+        fm["override_note"] = "캡틴 승인 — 사전 기재"
+        fm_yaml = BT.yaml.safe_dump(
+            fm, allow_unicode=True, sort_keys=False, default_flow_style=False
+        ).strip()
+        page_path.write_text(f"---\n{fm_yaml}\n---\n{body}", encoding="utf-8")
+
+        before_bytes = page_path.read_bytes()
+        with _mock_kst():
+            args = make_args(brain_path=str(self.brain_root))
+            exit_code, result = self._call(BT.cmd_lint, args)
+        after_bytes = page_path.read_bytes()
+
+        self.assertEqual(exit_code, 0, f"lint 실행 실패: {result}")
+        speculative_issues = [
+            i for i in result.get("issues", [])
+            if i.get("kind") == "speculative" and i.get("page") == "override-existing"
+        ]
+        self.assertTrue(
+            speculative_issues,
+            f"override 페이지가 lint에서 여전히 리포트돼야 하는데 누락됨: {result.get('issues')}"
+        )
+        self.assertEqual(
+            before_bytes, after_bytes,
+            "lint 실행 후 override 페이지 파일 내용이 변경됨 — 비파괴 제약 위반(자동 삭제·수정 금지)"
+        )
+
+    # ── M-3 draft-term 불변 회귀 (TS-209 / S-9) ──────────────────────────────
+
+    def test_search_draft_term_excluded_default_m3_regression(self):
+        """TS-209/S-9: status:draft term 페이지가 기본 search(include_draft=False)에서
+        제외 유지 — _score_page term 한정 draft 필터([R-6] 2026-06-17 결정) 불변 회귀."""
+        self._write_term_page("m3-draft-term", "M3불변용어", status="draft")
+        with _mock_kst():
+            args = make_args(
+                brain_path=str(self.brain_root), query="M3불변용어",
+                type=None, include_draft=False,
+            )
+            exit_code, result = self._call(BT.cmd_search, args)
+
+        self.assertEqual(exit_code, 0, f"search 실행 실패: {result}")
+        matches = result.get("matches", [])
+        draft_term_matches = [m for m in matches if "m3-draft-term" in m.get("page", "")]
+        self.assertEqual(
+            draft_term_matches, [],
+            f"draft term 페이지가 기본 search에 노출됨 — M-3 회귀 발생: {draft_term_matches}"
         )
 
 

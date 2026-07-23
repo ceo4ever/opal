@@ -206,6 +206,8 @@ index.md 전체 맵 등록 완료
 > **[MUST] 단방향 동기화 — origin→wiki 읽기만. wiki→origin 역수정 금지.** (TASK §제약 인용)
 >
 > **[MUST] 복사 아닌 요약+참조 — 내부 문서/코드는 포인터, 외부 소스만 sources/ 원본.** (TASK §제약 인용)
+>
+> **[MUST] 미실체 제외**: 개선·오류·향후·미확정 설계 등 아직 실재하지 않는 지식은 등록하지 않는다 — 판별 기준은 `op-brain-ingest` §STEP3 제외 기준을 SSOT로 재사용한다(별도 정의하지 않음). 도구는 add-page `--body-file`·lint `speculative`로 집행한다.
 
 ### 소스 유형별 처리
 
@@ -224,12 +226,14 @@ index.md 전체 맵 등록 완료
    - `meta.yaml` 필수 필드: `url`, `collected_at`, `license`.
 3. 페이지 타입 결정: entity / concept / flow / synthesis (또는 SCHEMA에서 확정한 타입).
 4. 페이지 본문 작성 (LLM 담당) — frontmatter 포함. **작성 후 §공통 규칙 > 코드→브레인 저술 자기검토 게이트 4항목 통과 확인** (위반 시 재작성).
-5. brain-tool add-page 호출:
+5. brain-tool add-page 호출. **작성한 본문을 스크래치 파일로 저장하고 `--body-file`로 넘겨야 도구가 실제 본문을 스캔해 미실체 게이트를 적용한다** (미지정 시 템플릿 본문만 기록되어 게이트 미발동):
    ```bash
    ~/.opal/tools/brain-tool/run.sh add-page pages/<type>/<name>.md \
      --type <type> --title "<제목>" \
-     --tags "<태그>" --sources "<출처>"
+     --tags "<태그>" --sources "<출처>" \
+     --body-file <본문 파일 경로 — 작성한 페이지 본문을 저장한 스크래치 .md>
    ```
+   - `ok: false`이고 `speculative_content`이면 미실체 마커 감지 거부(정상 동작) — 해당 페이지는 등록하지 않는다(§공통 규칙 미실체 제외).
    > **[MUST] source_ref 형식**: add-page `--sources` 값은 `brain-tool ingest-scan`이 반환한 `source_ref` 필드 값을 **그대로** 사용한다 (예: `doc:docs/ARCHITECTURE.md`, `skill:op-task-plan`, `task:016`). 임의 형식(전체 경로 등)으로 기재하면 멱등 skip 판정이 깨진다.
 6. log 기록:
    ```bash
@@ -287,11 +291,12 @@ index.md 전체 맵 등록 완료
    - 본문: 핵심 결정 요약 (3~6줄) + `sources: [task:NNN]`
    - 파일명: `pages/concept/<kebab-task-summary>.md`
    - 작성 후 §공통 규칙 > 코드→브레인 저술 자기검토 게이트 4항목 통과 확인 (위반 시 재작성).
-4. brain-tool add-page + log 호출:
+4. brain-tool add-page + log 호출 (`--body-file`로 작성한 본문을 넘겨야 미실체 게이트가 실제 본문을 스캔한다):
    ```bash
    ~/.opal/tools/brain-tool/run.sh add-page pages/concept/<name>.md \
      --type concept --title "<태스크 핵심 결정 제목>" \
-     --tags "task" --sources "task:<NNN>"
+     --tags "task" --sources "task:<NNN>" \
+     --body-file <본문 파일 경로 — 작성한 페이지 본문을 저장한 스크래치 .md>
    ~/.opal/tools/brain-tool/run.sh log \
      --op ingest --summary "task:<NNN> 백필" \
      --new "<페이지명>" --sources "task:<NNN>"
@@ -492,6 +497,7 @@ brain의 품질 문제를 탐지하고 정비 방안을 제안한다.
 | `missing_link` | 관련 페이지가 있으나 링크 누락 | `related` frontmatter 추가 |
 | `unsourced` | `sources` frontmatter 없이 주장하는 페이지 | 출처 추가 또는 draft 상태로 강등 |
 | `contradiction` | 서로 다른 페이지에서 모순되는 내용 | 검토 후 최신 정보 반영 |
+| `speculative` | 미실체 마커(섹션 헤딩) 검출 — 아직 실재하지 않는 지식(개선·오류·향후·미확정 설계)이 등록된 정황. 검출까지만 — 자동 삭제·수정 없음 | 내용 실체화 후 재작성하거나 memory로 이관, 또는 `--force --note`로 등록한 사유 검토 |
 | `term_duplicate` | 서로 다른 term 페이지의 표준명(`title`)이 정규화 시 동일·중복 | 중복 표준명 병합 — 한 페이지에 통합하고 나머지 삭제 |
 | `alias_collision` | 한 term의 `aliases` 항목이 다른 term의 `title` 또는 `aliases`와 충돌 | 별칭 정리 — 충돌 별칭을 삭제하거나 term 통합 |
 
@@ -569,3 +575,4 @@ brain의 품질 문제를 탐지하고 정비 방안을 제안한다.
 | v1.6 | 2026-07-01 22:34 KST | 코드→브레인 저술 자기검토 게이트(§8 비즈니스 용어 우선) 공통 규칙에 신설 — 3대 품질(구체성·자연스러운 문장·소스 위치 근거) 4항목 체크리스트 + 허용/금지 경계. entity 시드·concept ingest(단일/task:NNN)·synthesis 파일링 add-page 직전 참조. (L2 경량) |
 | v1.7 | 2026-07-13 16:40 KST | query 답변에 적응형 마크다운 계층 규칙 신설(대화형·read-only **공통 승격**) — 리드 문단 필수 + 내용 성격별 깊이(단순=볼드 / 나열=헤딩+불릿 2단 / 그룹핑=헤딩+번호+불릿 3단 / 비교=표), 짧은 답 과한 헤딩 금지. read-only에 [MUST] JSON 이스케이프 제약 추가(마크다운 raw 출력 시 citations 유실 방지). 콘솔 답변 포맷 비결정성 해소(FE는 이미 react-markdown 렌더). (L2 경량) |
 | v1.8 | 2026-07-14 16:59 KST | query 답변을 content-driven 6단계 내부 워크플로우로 재구조화 — 고정 질의유형 택소노미 폐기, 관측 축 6종·후보 레이아웃 5종·판정 규칙(축→후보 매핑 1차 + 동점 시 단순한 쪽 tie-break), 불변 가드 3종(비출력 내부사고/호출 1회/read-only JSON 이스케이프), 두 예시(캠페인=Flow / 미션유형+정책=복합) + 표현·가독성 규율(항목 내부 다문장 분해·1라인 1내용, 전 후보 공통) 추가. 대화형·read-only 공통. (062) |
+| v1.9 | 2026-07-23 10:15 | 미실체 지식 등록 차단 게이트 정합 — STEP ingest 절에 "미실체 제외" [MUST] 1문장 추가(`op-brain-ingest` §STEP3 SSOT 재사용, 별도 정의 없음), lint issue kind 표에 `speculative` 행 추가, 단일 소스·task:NNN ingest add-page 예시에 `--body-file` 인자 반영(실제 본문 스캔). query 진입점③·synthesis 흐름·search draft 필터는 불변(M-3). (071) |

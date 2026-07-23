@@ -3,12 +3,12 @@
   "module": "brain_tool",
   "layer": "util",
   "domain": "opal-brain",
-  "description": "OPAL Project Brain 지식 위키 결정론적 집행 CLI — 10개 서브 명령(init/add-page/index/log/search/sync-header/lint/validate/analyze/ingest-scan). index/log/링크 무결성을 brain-tool이 집행(LLM 직접 편집 금지). 페이지 타입은 SCHEMA §1.5에서 동적 로드(하드코딩 없음). frontmatter 파싱은 PyYAML, KST 타임스탬프는 date.js subprocess. sync-header는 code-scan @header → brain entity frontmatter 단방향 동기화만 수행. analyze는 code-scan @header 정량 집계 → JSON. ingest-scan은 docs/skills/tasks 목록 반환. [027] lint에 term 일관성 2종(term_duplicate·alias_collision) 추가. search에 draft 필터(--include-draft, R-6 term 한정) 추가. init이 schema-template.md에서 타입 동적 로드. [035] validate_frontmatter에 선택 필드(tags/sources/related) 평탄성 검사(flat string[]) 추가 — 중첩 리스트·비문자열 요소를 frontmatter_invalid violation으로 집행. [053] validate_frontmatter 링크필드(related) 값 검사 추가 — '[[', ']]', '.md' 포함 슬러그를 frontmatter_invalid로 집행; add-page에 --related(CSV→평탄 리스트) 플래그 추가.",
+  "description": "OPAL Project Brain 지식 위키 결정론적 집행 CLI — 10개 서브 명령(init/add-page/index/log/search/sync-header/lint/validate/analyze/ingest-scan). index/log/링크 무결성을 brain-tool이 집행(LLM 직접 편집 금지). 페이지 타입은 SCHEMA §1.5에서 동적 로드(하드코딩 없음). frontmatter 파싱은 PyYAML, KST 타임스탬프는 date.js subprocess. sync-header는 code-scan @header → brain entity frontmatter 단방향 동기화만 수행. analyze는 code-scan @header 정량 집계 → JSON. ingest-scan은 docs/skills/tasks 목록 반환. [027] lint에 term 일관성 2종(term_duplicate·alias_collision) 추가. search에 draft 필터(--include-draft, R-6 term 한정) 추가. init이 schema-template.md에서 타입 동적 로드. [035] validate_frontmatter에 선택 필드(tags/sources/related) 평탄성 검사(flat string[]) 추가 — 중첩 리스트·비문자열 요소를 frontmatter_invalid violation으로 집행. [053] validate_frontmatter 링크필드(related) 값 검사 추가 — '[[', ']]', '.md' 포함 슬러그를 frontmatter_invalid로 집행; add-page에 --related(CSV→평탄 리스트) 플래그 추가. [071] add-page 미실체 거부 게이트(--body-file/--force/--note, speculative_content) + lint speculative kind + SPECULATIVE_MARKERS 구조적 헤딩 탐지.",
   "exports": [
     "cmd_init", "cmd_add_page", "cmd_index", "cmd_log",
     "cmd_search", "cmd_sync_header", "cmd_lint", "cmd_validate",
     "cmd_analyze", "cmd_ingest_scan",
-    "load_page_types", "DEFAULT_PAGE_TYPES"
+    "load_page_types", "DEFAULT_PAGE_TYPES", "detect_speculative_markers"
   ]
 }
 """
@@ -52,6 +52,14 @@ OPTIONAL_FRONTMATTER = ["tags", "sources", "related"]
 LINK_FRONTMATTER = ["related"]
 ENTITY_EXTRA_KEYS = ["module", "layer", "domain", "exports", "source_ref", "header_synced"]
 STATUS_ENUM = ["active", "stale", "draft"]
+
+# 미실체(아직 실재하지 않는) 지식 판별 마커 (071) — _norm(소문자+공백제거) 정규화 토큰.
+# [MUST] 보수적 사전 — 오검출 최소화. 정상 정착 지식 헤딩에 부분문자열로 끼기 어려운
+# 복합 토큰만 채택. 단독 "향후"/"예정"/"이슈"는 FP 위험으로 제외(복합형만 사용).
+SPECULATIVE_MARKERS = [
+    "미착수", "미확정", "향후계획", "개선필요", "개선사항", "todo",
+    "미해결", "착수전", "설계기록단계", "작성예정", "초안단계", "추후작성",
+]
 
 # log op enum (PLAN 결정3)
 LOG_OPS = ["ingest", "init", "lint", "query"]
@@ -156,6 +164,7 @@ ERROR_CODES = {
     "header_parse_failed":        "code-scan @header 파싱 실패: {detail}",
     "invalid_log_op":             "유효하지 않은 log op: {op} (허용: ingest|init|lint|query)",
     "template_missing":           "템플릿 파일 부재: {path}",
+    "speculative_content":        "미실체 지식으로 판정되어 등록을 거부: {detail}. 확정·실재 지식만 brain에 등록합니다. 우회는 --force --note '<사유>'.",
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -505,6 +514,13 @@ def cmd_add_page(args):
     if fm_tpl is None:
         err(command, "template_missing", path=f"page-{page_type}.md (frontmatter unparseable)", exit_code=2)
 
+    # --body-file (071): 지정 시 실제 본문으로 템플릿 본문을 대체(스캔 대상이 됨).
+    # 미지정 시 기존 템플릿 본문 경로 그대로(하위호환, H-6).
+    body_file = getattr(args, "body_file", None)
+    if body_file:
+        body_file_text = pathlib.Path(body_file).read_text(encoding="utf-8")
+        _, body = parse_frontmatter(body_file_text)
+
     # 인자 반영
     fm_tpl["type"] = page_type
     fm_tpl["title"] = args.title
@@ -523,6 +539,19 @@ def cmd_add_page(args):
     if issues:
         err(command, "frontmatter_invalid", detail="; ".join(issues))
 
+    # 미실체 지식 거부 게이트 (071) — validate_frontmatter 통과 직후.
+    markers = detect_speculative_markers(args.title, body)
+    if markers:
+        if not args.force:
+            err(command, "speculative_content", detail=", ".join(markers), markers=markers)
+        if not getattr(args, "note", None):
+            err(command, "speculative_content",
+                message="미실체 마커 감지 — --force 우회 시 --note '<사유>' 필수",
+                markers=markers)
+        # --force --note 우회 통과 — frontmatter에 영속 기재(H-3 백도어 차단 후 통과 경로)
+        fm_tpl["speculative_override"] = True
+        fm_tpl["override_note"] = args.note
+
     fm_yaml = yaml.safe_dump(fm_tpl, allow_unicode=True, sort_keys=False, default_flow_style=False).strip()
     page_content = f"---\n{fm_yaml}\n---\n{body}"
     page_path.write_text(page_content, encoding="utf-8")
@@ -533,11 +562,12 @@ def cmd_add_page(args):
     cat_order = _get_category_order(type_to_cat)
     write_index(brain_root, pages, now_str, command, type_to_cat, cat_order)
 
-    ok(command,
-       page=str(page_path),
-       type=page_type,
-       title=args.title,
-       indexed=True)
+    ok_kwargs = dict(page=str(page_path), type=page_type, title=args.title, indexed=True)
+    if markers:
+        ok_kwargs["warning"] = "speculative_content_overridden"
+        ok_kwargs["speculative_markers"] = markers
+        ok_kwargs["override_note"] = args.note
+    ok(command, **ok_kwargs)
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 3. index
@@ -607,6 +637,28 @@ def _norm(s):
     stdlib만 사용. 결정론 보장 (동일 입력 → 동일 출력).
     """
     return "".join(str(s).lower().split())
+
+
+def detect_speculative_markers(title, body):
+    """미실체 마커 탐지 (071) — 구조적 신호(제목 + '#' 헤딩 라인)만 스캔한다(M-1).
+
+    스캔 대상: title 1줄 + body에서 '#'로 시작하는 헤딩 라인만. 산문(비헤딩) 본문은
+    스캔하지 않아 정당 지식이 산문에서 "향후" 등을 단순 언급하는 경우를 방어한다(H-1).
+    각 대상을 _norm으로 정규화 후 SPECULATIVE_MARKERS 부분문자열 매칭.
+
+    반환: 매칭된 마커 목록(중복 제거, 최초 등장 순서 유지). 빈 목록 = 정상(미실체 아님).
+    """
+    targets = [title or ""]
+    for ln in (body or "").splitlines():
+        if ln.lstrip().startswith("#"):
+            targets.append(ln)
+    matched = []
+    for target in targets:
+        norm_target = _norm(target)
+        for marker in SPECULATIVE_MARKERS:
+            if marker in norm_target and marker not in matched:
+                matched.append(marker)
+    return matched
 
 
 def _score_page(pg, query_norm, type_filter, tag_filter, include_draft=False):
@@ -817,7 +869,7 @@ _WIKILINK_RE = re.compile(r"\[\[([^\]:]+)\]\]")  # [[page]] (source: 제외)
 
 def cmd_lint(args):
     """링크 무결성·고아·stale·근거 누락 페이지 탐지 → JSON 리포트.
-    kind ∈ {orphan, stale, broken_link, missing_link, unsourced, contradiction}
+    kind ∈ {orphan, stale, broken_link, missing_link, unsourced, contradiction, speculative}
     """
     command = "lint"
     brain_root = require_brain(command, args.brain_path)
@@ -870,6 +922,17 @@ def cmd_lint(args):
         if fm.get("type") in ("concept", "synthesis") and not (fm.get("sources")):
             issues.append({"kind": "unsourced", "page": rel,
                            "detail": "concept/synthesis 페이지에 sources 근거 없음"})
+
+        # speculative: 미실체 마커 소급 검출 (071) — 모든 타입(concept/entity/flow/
+        # synthesis/term) 대상. 검출까지만 — 자동 삭제·수정 없음(비파괴, H-7).
+        title = fm.get("title", "")
+        markers = detect_speculative_markers(title, body)
+        if markers:
+            detail = "미실체 마커 검출(섹션 헤딩): " + ", ".join(markers)
+            if fm.get("speculative_override"):
+                detail += f" (override 기재됨: {fm.get('override_note', '')})"
+            issues.append({"kind": "speculative", "page": rel,
+                           "detail": detail, "markers": markers})
 
     # ── term 일관성 검출 2종 (027) ─────────────────────────────────────────
     # term 페이지만 추출 — term 미채택 brain은 0건, 회귀 0 보장
@@ -1206,6 +1269,11 @@ def build_parser():
     p_add.add_argument("--tags")
     p_add.add_argument("--sources")
     p_add.add_argument("--related", help="관련 페이지 슬러그 CSV (예: state-tool,brain-tool)")
+    p_add.add_argument("--force", action="store_true",
+                        help="미실체 마커 감지 거부를 우회 (--note 필수, 071)")
+    p_add.add_argument("--note", help="--force 우회 사유 (미실체 게이트 우회 시 필수, 071)")
+    p_add.add_argument("--body-file", dest="body_file",
+                        help="본문 파일 경로 — 지정 시 템플릿 본문 대신 이 파일 본문으로 페이지 생성 (071)")
     p_add.add_argument("--brain-path", dest="brain_path", default=".")
     p_add.set_defaults(func=cmd_add_page)
 

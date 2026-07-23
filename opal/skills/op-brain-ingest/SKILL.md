@@ -73,7 +73,10 @@ Read한 내용을 기준으로 아래 기준에 따라 ingest 대상·제외를 
 | trivial 설정값 변경 | 버전 숫자 bump, 파일명 변경 |
 | 이미 brain에 동일 내용이 존재 | 기존 페이지와 중복 (멱등 skip) |
 | 임시·실험적 변경 | 되돌려진 변경, 파일럿 테스트 |
+| 미실체 지식 — 아직 실재하지 않는 것 | 개선사항·오류·향후 계획·미확정 설계, 착수 전 설계 기록, 미해결 이슈 → brain 아니라 memory로 (활용은 memory에서) |
 
+> **판별 신호**: 구조적 신호(섹션 헤딩·전용 섹션)에 미실체 마커가 있으면 제외한다. 정상 지식이 산문에서 "향후"를 단순 언급하는 경우는 제외하지 않는다(오검출 최소화). brain-tool `add-page`(`--body-file`)·`lint`(`speculative` kind)가 이를 결정론적으로 집행한다.
+>
 > 판별이 불확실한 경우 ingest하지 않고 STEP 6에서 이유를 명시한다.
 
 ### STEP 4 — concept/entity 페이지 작성
@@ -220,17 +223,18 @@ status: active
 
 #### 5-1. 페이지별 add-page
 
-작성한 각 페이지에 대해 brain-tool add-page를 호출한다:
+작성한 각 페이지에 대해 brain-tool add-page를 호출한다. **STEP 4에서 작성한 본문을 스크래치 파일로 저장하고 `--body-file`로 넘겨야 도구가 실제 본문을 스캔한다** (미지정 시 템플릿 본문만 기록되어 미실체 게이트가 발동하지 않는다):
 
 ```bash
 ~/.opal/tools/brain-tool/run.sh add-page pages/<type>/<kebab-name>.md \
   --type <entity|concept|flow|synthesis> \
   --title "<제목>" \
   --tags "<태그>" \
-  --sources "task:<태스크번호>"
+  --sources "task:<태스크번호>" \
+  --body-file <본문 파일 경로 — STEP4에서 작성한 페이지 본문을 저장한 스크래치 .md>
 ```
 
-- `ok: false` → 에러 코드 확인. `duplicate_page`이면 멱등 skip(정상). 그 외는 에스컬레이션.
+- `ok: false` → 에러 코드 확인. `duplicate_page`이면 멱등 skip(정상). `speculative_content`이면 §brain-tool 에러 대응 표에 따라 skip-and-continue. 그 외는 에스컬레이션.
 
 #### 5-2. index 갱신
 
@@ -291,6 +295,7 @@ brain 부재 시:
 | `duplicate_page` | 멱등 skip — 정상. 해당 페이지를 `ingested_pages`에서 제외하고 계속 진행 |
 | `invalid_page_type` | 타입 재검토 후 재시도. 실패 시 해당 페이지 건너뛰고 나머지 계속 진행 |
 | `frontmatter_invalid` | 해당 페이지 frontmatter 수정 후 재시도. 실패 시 건너뛰기 |
+| `speculative_content` | 미실체 마커 감지 거부. 해당 페이지를 건너뛰고 나머지 계속 진행(skip-and-continue). **CLOSE 비차단** |
 | 그 외 `ok: false` | 에러 코드·detail을 summary에 기록하고 `status: completed_with_errors` 반환 |
 
 > 어떤 에러도 CLOSE를 중단시키지 않는다.
@@ -307,3 +312,4 @@ brain 부재 시:
 | v1.3 | 2026-06-17 | CLOSE ingest term 추출 — STEP3 채택 게이트(채택 프로젝트만) + 포함 기준에 term draft 행 추가 + STEP4 term 작성 규칙(aliases/actors/surfaces·draft) (027) |
 | v1.4 | 2026-06-23 | STEP 4 entity 예시 5섹션 표준화 + @header 전사 금지·provenance [MUST] (038) |
 | v1.5 | 2026-07-10 13:43 | 소유자 호칭 오염 차단 — term 페이지 승격 문구의 특정인 호칭을 "소유자/PM"으로 역할 일반어화 + 페이지 작성 규칙에 "소유자 지칭 일반화(오염 금지)" 불릿 신설(지식 본문은 항상 '소유자'로 일반화, 출처의 개인 호칭 계승 금지) (054) |
+| v1.6 | 2026-07-23 10:15 | 미실체 지식 등록 차단 게이트 SSOT — §STEP3 제외 기준 표에 "미실체 지식" 행 + 판별 신호(구조적 헤딩 우선, 오검출 최소화) 추가, brain-tool 에러 대응 표에 `speculative_content`(skip-and-continue, CLOSE 비차단) 행 추가, STEP5-1 add-page 예시에 `--body-file` 인자 반영(실제 본문 스캔) (071) |
