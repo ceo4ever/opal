@@ -37,9 +37,9 @@
 <!-- memory:history:start -->
 | 제목 | 등록일 | 단계 | 경로 | 핵심결과 |
 |------|--------|------|------|----------|
+| 073 TEST-SCENARIO 목표-커버 게이트 루프 | 2026-07-23 | 완료·커밋(c8cb0b6)·배포 | tasks/073-260723-opd-시나리오-목표커버리지-루프/ | 목표-커버 루브릭 게이트 공유컴포넌트 신설·opd 선적용. dogfooding 실증(음성통제FAIL+수렴PASS) |
 | 074 import-existing key 유실 수정 | 2026-07-23 | 완료·미배포·미커밋 | tasks/074-260723-opds-import-existing-키유실/ | --import-existing가 lossy STATE.md 재파싱으로 key 유실 → (stage,item) 순서매칭 재접합(state.json→pipeline.json→keyless경고). RED→GREEN 신규5·전량254. 후속=배포·커밋 |
 | 072 다음 액션 자동 파생 | 2026-07-23 | 완료·커밋(f6ec48b) | tasks/072-260723-opd-다음액션-자동파생/ | advance/mark 프론티어 자동파생+next_action SSOT·설계반전. 회귀249·RED-first |
 | 071 브레인 미실체 지식 등록 차단 게이트 | 2026-07-23 | 완료·미커밋·미배포(캡틴 배포) | tasks/071-260722-opds-브레인-미실체지식-차단/ | 미실체 지식 차단 2층(기준 명문화+add-page 거부·lint speculative). 127 Pass. 후속=배포·state-tool |
 | 070 state-tool task-step 키 주소 1차 | 2026-07-23 | 완료·미커밋·미배포 | tasks/070-260720-opd-태스크스텝-키주소-1차/ | pipeline.json 스펙 표준화+`--task-step`/`--task-step-id` key 주소+`--action-step` 개명+그룹A 4종 전환(본문 포함)+opdd enum+schema 1.1 stamp. 240 PASS+선재1. 후속=install 재배포(라이브 --row 잔존)·커밋(071 제외)·2차/3차 |
-| 058 PM 개선 루프 tool-gated 재설계 | 2026-07-20 | 완료·커밋 | tasks/058-260713-opd-학습루프-도구화-개선수집/ | opal-improve(//opim)·improve-tool·fw-inbox·4pilot 회고 하드스텝·SSOT 통합. 14+88 Pass |
 <!-- memory:history:end -->
