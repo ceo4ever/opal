@@ -1,0 +1,172 @@
+{
+  "task_id": "070-260720-opd-태스크스텝-키주소-1차",
+  "skill": "opd",
+  "mode": "agentic",
+  "schema_version": "1.0",
+  "created_at": "2026-07-20 14:45",
+  "updated_at": "2026-07-23 10:11",
+  "current_status": "done",
+  "rows": [
+    {
+      "row_id": 1,
+      "stage": "TASK",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-20 14:45",
+      "owner": "PM",
+      "note": "TASK.md 작성 완료 (명확화 4요소 잠금)"
+    },
+    {
+      "row_id": 2,
+      "stage": "TASK",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-20 14:46",
+      "owner": "auto",
+      "note": "agentic auto-pass: agentic 대행: TASK 4요소는 소유자와의 사전 대화에서 전부 확정됨(플래그명·slug 체계·1차 범위·3단계 분할 모두 소유자 발화로 잠금). 신규 해석 없음"
+    },
+    {
+      "row_id": 3,
+      "stage": "ANALYSIS",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-20 14:56",
+      "owner": "PM",
+      "note": "ANALYSIS.md 생성 (158줄, 리스크 7종)"
+    },
+    {
+      "row_id": 4,
+      "stage": "ANALYSIS",
+      "item": "PM Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-20 14:56",
+      "owner": "PM",
+      "note": "PM Gate Pass: R-1~R-10 전수 분석·인용 완전·행수 정합"
+    },
+    {
+      "row_id": 5,
+      "stage": "ANALYSIS",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-20 14:56",
+      "owner": "auto",
+      "note": "agentic auto-pass: agentic 대행: 분석 방향이 TASK 확정 설계와 일치, 미해결 빈틈 없음(PLAN 결정 3건은 PLAN 워커에 위임)"
+    },
+    {
+      "row_id": 6,
+      "stage": "PLAN",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-20 15:08",
+      "owner": "PM",
+      "note": "PLAN.md 생성 (1,076줄, F-001~007/12Step/H-1~8)"
+    },
+    {
+      "row_id": 7,
+      "stage": "PLAN",
+      "item": "PM Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-20 15:08",
+      "owner": "PM",
+      "note": "PM Gate Pass: R-1~R-10 전량 매핑·위임 3결정 확정·slug 규칙 준수(work 0건·key 43개 정합)·리스크 가설 8종"
+    },
+    {
+      "row_id": 8,
+      "stage": "PLAN",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-20 15:08",
+      "owner": "auto",
+      "note": "agentic auto-pass: agentic 대행: 설계가 TASK 확정 방향 7항목과 전량 일치, 하위호환 방어(H-1~H-3) 설계 확인"
+    },
+    {
+      "row_id": 9,
+      "stage": "TEST-SCENARIO",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-20 15:10",
+      "owner": "PM",
+      "note": "TEST-SCENARIO.md 작성 (S-1~S-14, RED-first 강제 트랙, L3 없음)"
+    },
+    {
+      "row_id": 10,
+      "stage": "TEST-SCENARIO",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-20 15:10",
+      "owner": "auto",
+      "note": "agentic auto-pass: agentic 대행: 7항목 자가점검 통과 — mock 부재·가설 H-1~H-8 전량 매핑·L1/L2 계층 명시·M2 실행 방식·SUPERVISOR 불요 확인"
+    },
+    {
+      "row_id": 11,
+      "stage": "EXECUTE",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-20 15:54",
+      "owner": "PM",
+      "note": "GREEN 완료: Step1~12 전체, 238 PASS+선재1(기준선), fix루핑 1회(RED 저작결함 정정)"
+    },
+    {
+      "row_id": 12,
+      "stage": "EXECUTE",
+      "item": "그룹A 본문 --row→key 전환 + schema_version 1.1 stamp + 검증",
+      "key": "execute.item_1",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-23 10:04",
+      "owner": "PM",
+      "note": "그룹A 4종 본문 key 전환(--row 잔존 0)+schema_version 1.1 stamp(소스 검증). 240 PASS+선재1"
+    },
+    {
+      "row_id": 13,
+      "stage": "TEST",
+      "item": "작업",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-20 17:25",
+      "owner": "PM",
+      "note": "시나리오 All Pass(S-1~14) + fix루프1회(Medium 정정). 238 PASS+선재1"
+    },
+    {
+      "row_id": 14,
+      "stage": "TEST",
+      "item": "PM Gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-20 17:25",
+      "owner": "PM",
+      "note": "PM Gate Pass: 시나리오 All Pass·컨벤션 Critical/High 0·Medium 정정완료·보안 clean·PM 독립 스위트 재확인 238 PASS"
+    },
+    {
+      "row_id": 15,
+      "stage": "TEST",
+      "item": "사용자 확인",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-23 10:10",
+      "owner": "user",
+      "note": "캡틴 확인: CLOSE 진입 승인 (1안 후속 전환 검증 완료 보고 후 '확인' 발화)"
+    },
+    {
+      "row_id": 16,
+      "stage": "CLOSE",
+      "item": "DONE.md 생성",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-23 10:11",
+      "owner": "PM",
+      "note": "DONE.md 생성 — CLOSE 진입(직전 사용자확인 owner=user 검증 통과)"
+    }
+  ]
+}

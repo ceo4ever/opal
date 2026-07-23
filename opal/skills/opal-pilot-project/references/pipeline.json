@@ -1,0 +1,20 @@
+{
+  "spec_version": "1.0",
+  "skill": "opp",
+  "meta": { "mode_label": "Project Task", "stages": ["TASK", "PLAN", "EXECUTE", "CLOSE"] },
+  "task_steps": [
+    { "id": 1, "key": "task.task_md",        "stage": "TASK",    "item": "작업" },
+    { "id": 2, "key": "task.user_confirm",   "stage": "TASK",    "item": "사용자 확인" },
+    { "id": 3, "key": "plan.plan_md",        "stage": "PLAN",    "item": "작업" },
+    { "id": 4, "key": "plan.pm_gate",        "stage": "PLAN",    "item": "PM Gate" },
+    { "id": 5, "key": "plan.user_confirm",   "stage": "PLAN",    "item": "사용자 확인" },
+    { "id": 6, "key": "execute.implement",   "stage": "EXECUTE", "item": "작업" },
+    { "id": 7, "key": "execute.pm_gate",     "stage": "EXECUTE", "item": "PM Gate" },
+    { "id": 8, "key": "execute.user_confirm","stage": "EXECUTE", "item": "사용자 확인" },
+    { "id": 9, "key": "close.done_md",       "stage": "CLOSE",   "item": "DONE.md 생성" }
+  ],
+  "pm_gate": [
+    { "stage": "PLAN",    "artifacts": ["TASK.md", "PLAN.md"], "checklist": ["TASK.md 요구사항", "PLAN.md §3", "PLAN.md §4"] },
+    { "stage": "EXECUTE", "artifacts": ["GC-CONVENTION-*.md"], "checklist": ["PLAN.md §3 실행 체크리스트", "컨벤션 자동 진단"] }
+  ]
+}

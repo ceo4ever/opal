@@ -12,16 +12,16 @@
       "description": "태스크 폴더명 (예: 134-260501-opp-pipeline-state-tool)"
     },
     "skill": {
-      "enum": ["opp", "opd", "opds", "opdw", "opwt", "opgc", "oppd", "opsdd", "oppl"],
-      "description": "오케스트레이터 스킬 약어 — opal-pilot-* 9종"
+      "enum": ["opp", "opd", "opds", "opdw", "opwt", "opgc", "oppd", "opsdd", "oppl", "opdd"],
+      "description": "오케스트레이터 스킬 약어 — opal-pilot-* 10종 (070 R-8: opdd 드리프트 정정)"
     },
     "mode": {
       "enum": ["interactive", "semi-agentic", "agentic"],
       "description": "OPAL 실행 모드 — 3-way (interactive/semi-agentic/agentic)"
     },
     "schema_version": {
-      "const": "1.0",
-      "description": "스키마 버전 — 신규 enum 추가 시 1.1로 올림"
+      "enum": ["1.0", "1.1"],
+      "description": "스키마 버전 — 1.0(레거시·key 없음) / 1.1(key·conditional 지원) 병행 허용 (070 R-3)"
     },
     "created_at": {
       "type": "string",
@@ -55,9 +55,10 @@
             "enum": [
               "TASK", "ANALYSIS", "PLAN", "EXECUTE", "TEST",
               "WIREFRAME", "QA", "SPEC", "REVIEW", "DESIGN",
-              "VERIFY", "SCAN", "CHECK", "REPORT", "WBS", "CLOSE"
+              "VERIFY", "SCAN", "CHECK", "REPORT", "WBS", "CLOSE",
+              "DICT", "MODEL", "DDL/MIGRATION"
             ],
-            "description": "단계명 — 8개 opal-pilot SKILL.md 합집합 16종 (G-3)"
+            "description": "단계명 — opal-pilot SKILL.md 합집합 19종 (G-3, 070 R-8: opdd DICT/MODEL/DDL·MIGRATION 추가)"
           },
           "item": {
             "type": "string",
@@ -97,6 +98,15 @@
               {"type": "null"}
             ],
             "description": "행 메모 — auto-pass / force / block 이유 등"
+          },
+          "key": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*\\.[a-z][a-z0-9_]*(_[0-9]+)?$",
+            "description": "task-step key (문자 주소) — {stage_slug}.{item_slug} (1.1 신규, 선택 — 070 R-3)"
+          },
+          "conditional": {
+            "type": "boolean",
+            "description": "조건부 task-step (예: opdw WIREFRAME 스킵 대상). 순수 메타데이터 — 자동 na 없음 (070 DEC-1)"
           }
         }
       }

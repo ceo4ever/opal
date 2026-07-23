@@ -1,7 +1,7 @@
 # opal Memory Index
 
 > 최종 갱신: 2026-06-26 (044 도구·MCP·스킬 통합 검색·사용법·활용 체계 — TASK)
-> last_task_number: 69
+> last_task_number: 71
 
 
 | 카테고리 | 설명 | 완료 시 |
@@ -37,9 +37,9 @@
 <!-- memory:history:start -->
 | 제목 | 등록일 | 단계 | 경로 | 핵심결과 |
 |------|--------|------|------|----------|
+| 070 state-tool task-step 키 주소 1차 | 2026-07-23 | 완료·미커밋·미배포 | tasks/070-260720-opd-태스크스텝-키주소-1차/ | pipeline.json 스펙 표준화+`--task-step`/`--task-step-id` key 주소+`--action-step` 개명+그룹A 4종 전환(본문 포함)+opdd enum+schema 1.1 stamp. 240 PASS+선재1. 후속=install 재배포(라이브 --row 잔존)·커밋(071 제외)·2차/3차 |
 | 058 PM 개선 루프 tool-gated 재설계 | 2026-07-20 | 완료·커밋 | tasks/058-260713-opd-학습루프-도구화-개선수집/ | opal-improve(//opim)·improve-tool·fw-inbox·4pilot 회고 하드스텝·SSOT 통합. 14+88 Pass |
 | 069 oppl 계약 접합면 검증 강화 | 2026-07-19 | 완료·커밋 | tasks/069-260718-opd-oppl-계약검증강화/ | 표면 인벤토리(surfaces.json)+coverage-check+충실도 게이트(fidelity/conformance)+여정 스모크+워킹 스켈레톤 tool-gated. All Pass·회귀 0. 후속=install 배포·커밋·oppd/opsdd 확산 |
 | 068 opal-action-status(opas) 발동 스킬 신설 | 2026-07-18 | 완료·커밋 | tasks/068-260717-opds-opm-모니터-스킬/ | //opas 자동 탐지+해석 보고 operator. All Pass·라이브 실증. 후속=069/070 확장 |
 | 067 루프액션 투명 모니터링 stream+journal+monitor | 2026-07-17 | 완료·커밋대기 | tasks/067-260717-opd-루프액션-스트림-모니터링/ | stream 모드·규약v2·journal·opal-action-monitor(리네임). All Pass. 후속=068 opm·커밋 |
-| 066 루프액션 내부 디스패치 opal-agent 채널 전환 | 2026-07-17 | 완료·커밋대기 | tasks/066-260717-opd-루프액션-opal-agent-채널/ | 4축 opal-agent 채널·동기/비동기 이원화·3-분리 캡처·resume 실증 All Pass. 후속=067 stream+journal·커밋 |
 <!-- memory:history:end -->

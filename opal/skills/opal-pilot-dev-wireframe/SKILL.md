@@ -43,10 +43,10 @@ Harness "TASK 공통 프로세스"를 따르되, 아래를 추가:
 
 TASK 완료 → 사용자 보고.
 
-> **[MUST] 행 갱신**: `~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done` 호출. LLM이 STATE.md 마크다운 표를 직접 편집하는 것은 금지된다. 행을 mark하는 것 자체가 state 기록이며 별도의 State Gate 행은 존재하지 않는다.
-> **단계 시작 (P-3)**: `~/.opal/tools/state-tool/run.sh advance <task-path> --row <N>` 호출로 해당 단계 작업 행을 🔄로 전환.
+> **[MUST] 행 갱신**: `~/.opal/tools/state-tool/run.sh mark <task-path> --task-step <task-step-key> --done` 호출. LLM이 STATE.md 마크다운 표를 직접 편집하는 것은 금지된다. 행을 mark하는 것 자체가 state 기록이며 별도의 State Gate 행은 존재하지 않는다.
+> **단계 시작 (P-3)**: `~/.opal/tools/state-tool/run.sh advance <task-path> --task-step <task-step-key>` 호출로 해당 단계 작업 행을 🔄로 전환.
 > **단계 건너뛰기 차단**: state-tool stage-transition guard가 단계 N의 필수 행이 완료되지 않으면 단계 N+1 진입(mark)을 자동 거부한다 (PLAN §M-A). 행에 의존하지 않는다.
-> **사용자 확인 (P-5)**: 사용자 발화 후 PM이 `~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done --owner user --note '{owner_name} 확인: TASK 완료'` 호출.
+> **사용자 확인 (P-5)**: 사용자 발화 후 PM이 `~/.opal/tools/state-tool/run.sh mark <task-path> --task-step task.user_confirm --done --owner user --note '{owner_name} 확인: TASK 완료'` 호출.
 > 근거: `PLAN.md` §3 Step 8 P-1 / P-3 / P-5
 
 ---
@@ -70,8 +70,8 @@ TASK 완료 → 사용자 보고.
 state-tool 호출:
 
 ```
-~/.opal/tools/state-tool/run.sh mark <task-path> --row 4 --done  # PM Gate
-~/.opal/tools/state-tool/run.sh mark <task-path> --row 5 --done --owner user --note '{owner_name} 확인: WIREFRAME 완료'
+~/.opal/tools/state-tool/run.sh mark <task-path> --task-step wireframe.pm_gate --done  # PM Gate
+~/.opal/tools/state-tool/run.sh mark <task-path> --task-step wireframe.user_confirm --done --owner user --note '{owner_name} 확인: WIREFRAME 완료'
 ```
 
 > **[PM 컨텍스트 주입]** 워커 디스패치 프롬프트의 첫 줄에 `[WORKER]`를 삽입한다. `[WORKER]` 마커가 있으면 워커는 부트스트랩을 생략한다. PM은 디스패치 시 다음을 프롬프트에 포함해야 한다:
@@ -127,8 +127,8 @@ op-dev-execute 스킬을 수행하라.
 state-tool 호출:
 
 ```
-~/.opal/tools/state-tool/run.sh mark <task-path> --row 7 --done  # PM Gate
-~/.opal/tools/state-tool/run.sh mark <task-path> --row 8 --done --owner user --note '{owner_name} 확인: EXECUTE 완료'
+~/.opal/tools/state-tool/run.sh mark <task-path> --task-step execute.pm_gate --done  # PM Gate
+~/.opal/tools/state-tool/run.sh mark <task-path> --task-step execute.user_confirm --done --owner user --note '{owner_name} 확인: EXECUTE 완료'
 ```
 
 보고 형식:
@@ -145,7 +145,7 @@ state-tool 호출:
 
 모든 체크리스트 갱신 완료 확인 후 태스크를 마감한다.
 
-1. DONE.md 생성 후 행 9(CLOSE 행) mark (`~/.opal/tools/state-tool/run.sh mark <task-path> --row 9 --done` 호출 — P-1). 행을 mark하는 것 자체가 state 기록이다.
+1. DONE.md 생성 후 행 9(CLOSE 행) mark (`~/.opal/tools/state-tool/run.sh mark <task-path> --task-step close.done_md --done` 호출 — P-1). 행을 mark하는 것 자체가 state 기록이다.
 2. **관련 문서 업데이트** (op-brain-ingest 디스패치 직전 실행):
    - `<프로젝트-루트>/docs/PROJECT.md`의 "프로젝트 문서" 레지스트리와 이번 태스크의 `changed_files`(EXECUTE 산출)를 양쪽 종합하여, 태스크 결과로 내용이 달라진 관련 문서(ARCHITECTURE.md·기획서·와이어프레임 등)를 식별한다.
    - 갱신 대상이 있으면 PM이 판단하여 직접 수정하거나 적합한 워커를 디스패치해 최신화한다. 갱신 대상이 없으면 자연 스킵(no-op) — CLOSE를 중단시키지 않는다.
@@ -185,10 +185,10 @@ Harness STATE.md 템플릿에 적용:
 - `{단계 목록}`: TASK / WIREFRAME / EXECUTE / CLOSE
 - `{산출물 목록}`: TASK.md, wireframe.md(기존 존재 가능), GC-CONVENTION-*.md, DONE.md
 
-**진행 현황 행 예시** (아래 표는 `state init --rows-from <SKILL.md>` 또는 `--rows-spec` 인자의 SSOT — LLM이 직접 작성하는 것은 금지된다):
+**진행 현황 행 예시** (아래 표는 사람 열람용 미러 — SSOT는 `references/pipeline.json`. `.md` 파싱은 하위호환 폴백으로만 존치, 편집 금지):
 
-> **[MUST] STATE.md 초기 생성**: `~/.opal/tools/state-tool/run.sh init <task-path> --skill opdw --mode <interactive|semi-agentic|agentic> --rows-from opal/skills/opal-pilot-dev-wireframe/SKILL.md` 호출. 기본값: `semi-agentic`. `--rows-from`이 아래 표를 파싱하여 행 구성을 자동 추출한다. 행 데이터를 직접 편집하지 않는다.
-> 근거: `tasks/134-260501-opp-pipeline-state-tool/TASK.md` F-15 / `PLAN.md` §2.3 / §2.20.2 / §3 Step 8 (P-3 advance, P-1 mark)
+> **[MUST] STATE.md 초기 생성**: `~/.opal/tools/state-tool/run.sh init <task-path> --skill opdw --mode <interactive|semi-agentic|agentic> --rows-from opal/skills/opal-pilot-dev-wireframe/references/pipeline.json` 호출. 기본값: `semi-agentic`. 행 구성 SSOT는 `references/pipeline.json`(task-step key 포함, WIREFRAME 3~5행 `conditional:true`) — `--rows-from`이 확장자로 분기해 파싱한다(070). 행 데이터를 직접 편집하지 않는다.
+> 근거: `tasks/134-260501-opp-pipeline-state-tool/TASK.md` F-15 / `PLAN.md` §2.3 / §2.20.2 / §3 Step 8 (P-3 advance, P-1 mark) / `tasks/070-260720-opd-태스크스텝-키주소-1차/PLAN.md` §3.6.2 (pipeline.json 전환)
 
 ```markdown
 | # | 단계 | 항목 | 상태 | 시점 |
@@ -242,7 +242,7 @@ opal-harness-agentic.md / opal-harness-semi-agentic.md 참조. 본 절은 이 �
 STATE.md 모드 필드를 지정하여 기록한다 (기본: `semi-agentic`):
 
 ```
-~/.opal/tools/state-tool/run.sh init <task-path> --skill opdw --mode <interactive|semi-agentic|agentic> --rows-from opal/skills/opal-pilot-dev-wireframe/SKILL.md
+~/.opal/tools/state-tool/run.sh init <task-path> --skill opdw --mode <interactive|semi-agentic|agentic> --rows-from opal/skills/opal-pilot-dev-wireframe/references/pipeline.json
 ```
 
 ### 자율 게이트 흐름 (semi-agentic)
@@ -257,7 +257,7 @@ TASK → WIREFRAME Gate → EXECUTE Gate → CLOSE
 - WIREFRAME 사용자 확인 행 통과 후 EXECUTE Gate는 PM 자율 통과
 - CLOSE 진입은 사용자 승인 필수 (공통 게이트)
 - 각 게이트에서 opal-harness-agentic.md "Gate 루핑 규칙" 적용
-- 자율 통과 시 `mark --row N --done --auto-pass --note '<근거>'` 호출 (P-8)
+- 자율 통과 시 `mark --task-step <task-step-key> --done --auto-pass --note '<근거>'` 호출 (P-8)
 - **CLOSE 단계 최초 진입 행은 `--auto-pass` 금지** (`agentic_close_gate_requires_user` — §2.16 G-13)
 - AGENTIC-LOG.md 생성: EXECUTE 등가 첫 행 advance/mark 시점
 
@@ -298,3 +298,5 @@ semi-agentic / agentic 모두 CLOSE 첫 행 `--auto-pass` 거부 (`agentic_close
 | v2.9 | 2026-06-11 19:25 | STEP 4 CLOSE에 op-brain-ingest 디스패치 훅 추가 — DONE.md 생성 직후 brain 존재 시 디스패치, 부재 시 no-op, CLOSE 비중단. STATE 행 9 불변 (016) |
 | v3.0 | 2026-06-24 | CLOSE 단계 op-brain-ingest 디스패치 직전에 "관련 문서 업데이트" 스텝 삽입 — PROJECT.md 레지스트리 + changed_files 종합으로 관련 문서 최신화 후 ingest (없으면 no-op). 후속 항목 번호 재정렬 (042) |
 | v3.1 | 2026-07-10 13:12 | note 예시의 소유자 확인 표기를 `{owner_name} 확인:` 형식으로 통일 — identity.md owner_name 재해석 규칙(AGENT.md §정체성 적용)과 정합, 오염 차단 (054) |
+| v3.2 | 2026-07-20 15:45 | task-step 키 주소 체계 도입 — `references/pipeline.json` 신설(9 task-step, WIREFRAME 3~5행 `conditional:true`, SSOT), `--rows-from` 호출 경로를 SKILL.md에서 pipeline.json으로 교체(`.md` 파싱은 하위호환 폴백으로 존치), 표는 사람 열람용 미러로 축소 (070) |
+| v3.3 | 2026-07-23 09:56 | 본문 state-tool 명령 예시를 task-step key 주소로 전환(--row→--task-step, --step→--action-step). pipeline.json key 기준. (070 후속) |

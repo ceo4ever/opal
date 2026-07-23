@@ -24,8 +24,8 @@ opal-harness.md "TASK 공통 프로세스" 참조.
 
 TASK 완료 → 사용자 보고.
 
-> **[MUST] 행 갱신**: `~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done` 호출. LLM이 STATE.md 마크다운 표를 직접 편집하는 것은 금지된다. 행을 mark하는 것 자체가 state 기록이며 별도의 State Gate 행은 존재하지 않는다.
-> **단계 시작 (P-3)**: `~/.opal/tools/state-tool/run.sh advance <task-path> --row <N>` 호출로 해당 단계 작업 행을 🔄로 전환.
+> **[MUST] 행 갱신**: `~/.opal/tools/state-tool/run.sh mark <task-path> --task-step <task-step-key> --done` 호출. LLM이 STATE.md 마크다운 표를 직접 편집하는 것은 금지된다. 행을 mark하는 것 자체가 state 기록이며 별도의 State Gate 행은 존재하지 않는다.
+> **단계 시작 (P-3)**: `~/.opal/tools/state-tool/run.sh advance <task-path> --task-step <task-step-key>` 호출로 해당 단계 작업 행을 🔄로 전환.
 > **단계 건너뛰기 차단**: state-tool stage-transition guard가 단계 N의 필수 행이 완료되지 않으면 단계 N+1 진입(mark)을 자동 거부한다 (PLAN §M-A). 행에 의존하지 않는다.
 > 근거: `tasks/134-260501-opp-pipeline-state-tool/TASK.md` F-15 / `PLAN.md` §1.5 M-11 / §3 Step 8 P-1 / P-3
 
@@ -51,7 +51,7 @@ op-dev-analysis 스킬을 수행하라.
   → **PM Gate** (분석 방향 종합 검토)
   → 사용자 보고 (분석 방향 검토 후 PLAN 진입 승인).
 
-> **사용자 확인 (P-5)**: 사용자 발화 후 PM이 `~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done --owner user --note '{owner_name} 확인: ...'` 호출.
+> **사용자 확인 (P-5)**: 사용자 발화 후 PM이 `~/.opal/tools/state-tool/run.sh mark <task-path> --task-step analysis.user_confirm --done --owner user --note '{owner_name} 확인: ...'` 호출.
 > 근거: `PLAN.md` §3 Step 8 P-1 / P-5
 
 ## STEP 3: PLAN
@@ -91,10 +91,10 @@ PLAN 완료
 1. PLAN.md §리스크 가설 표 Read
 2. `op-dev-test-scenario/SKILL.md`의 "TEST-SCENARIO.md 통일 형식"을 따라 TEST-SCENARIO.md 작성
 3. `test-scenario-guide.md`의 5단계 프로세스 적용 (Step 3 계층 결정 + Step 3-b 실행 방식 M1/M2/M3 결정)
-4. 해당 행을 단일 mark (`~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done` 호출 — P-1)
+4. 해당 행을 단일 mark (`~/.opal/tools/state-tool/run.sh mark <task-path> --task-step test_scenario.test_scenario_md --done` 호출 — P-1)
 5. 사용자에게 TEST-SCENARIO 보고 — 승인 = EXECUTE 시작 허가
 
-> **사용자 확인 (P-5)**: 사용자 발화 후 PM이 `~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done --owner user --note '{owner_name} 확인: ...'` 호출. CLOSE 진입 전 이 행의 `owner=user` 여부를 도구가 자동 검증한다 (§2.16 G-13).
+> **사용자 확인 (P-5)**: 사용자 발화 후 PM이 `~/.opal/tools/state-tool/run.sh mark <task-path> --task-step test_scenario.user_confirm --done --owner user --note '{owner_name} 확인: ...'` 호출. CLOSE 진입 전 이 행의 `owner=user` 여부를 도구가 자동 검증한다 (§2.16 G-13).
 > 근거: `PLAN.md` §3 Step 8 P-1 / P-5 / §2.16 G-13
 
 ## STEP 4: EXECUTE
@@ -150,8 +150,8 @@ PLAN.md §4.2의 agent 필드에 따라 FE/BE 배치를 구성한다:
 
 모든 배치 완료 → changed_files 병합 → 행 mark → **TEST 단계 진입**.
 
-> **EXECUTE Step 완료 (P-4)**: 워커가 `~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done --as-worker --worker-stage EXECUTE --step <N/M>` 호출 (T-10 워커 권한 게이트).
-> **블로커 발생 (P-7)**: `~/.opal/tools/state-tool/run.sh block <task-path> --row <N> --reason '...'` 호출. STATE.md 블로커 섹션 자유 텍스트는 PM이 별도 작성.
+> **EXECUTE Step 완료 (P-4)**: 워커가 `~/.opal/tools/state-tool/run.sh mark <task-path> --task-step execute.implement --done --as-worker --worker-stage EXECUTE --action-step <N/M>` 호출 (T-10 워커 권한 게이트).
+> **블로커 발생 (P-7)**: `~/.opal/tools/state-tool/run.sh block <task-path> --task-step <task-step-key> --reason '...'` 호출. STATE.md 블로커 섹션 자유 텍스트는 PM이 별도 작성.
 > 근거: `PLAN.md` §3 Step 8 P-1 / P-4 / P-7 / §2.11 G-6
 
 ---
@@ -195,7 +195,7 @@ op-dev-test-agent 워커 디스패치. TEST-SCENARIO.md 실행 + 결과 기록 +
      - [ ] 컨벤션 자동 진단 PASS (changed_files 컨벤션 적용 대상 ≥1건 시 발동, GC-CONVENTION-*.md 보고서 Critical/High 0건)
 → PM Gate 통과 후 해당 행을 단일 mark. 사용자에게 완료 보고 후 CLOSE 단계 진입 승인 요청.
 
-> **사용자 확인 (P-5)**: 사용자 발화 후 PM이 `~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done --owner user --note '{owner_name} 확인: ...'` 호출.
+> **사용자 확인 (P-5)**: 사용자 발화 후 PM이 `~/.opal/tools/state-tool/run.sh mark <task-path> --task-step test.user_confirm --done --owner user --note '{owner_name} 확인: ...'` 호출.
 > 근거: `PLAN.md` §3 Step 8 P-1 / P-5
 
 보고 형식:
@@ -231,7 +231,7 @@ op-dev-test-agent 워커 디스패치. TEST-SCENARIO.md 실행 + 결과 기록 +
 
 모든 체크리스트 갱신 완료 확인 후 태스크를 마감한다.
 
-1. DONE.md 생성 후 행 mark (`~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done` 호출 — P-1). 행을 mark하는 것 자체가 state 기록이다.
+1. DONE.md 생성 후 행 mark (`~/.opal/tools/state-tool/run.sh mark <task-path> --task-step close.done_md --done` 호출 — P-1). 행을 mark하는 것 자체가 state 기록이다.
 2. **관련 문서 업데이트** (op-brain-ingest 디스패치 직전 실행):
    - `<프로젝트-루트>/docs/PROJECT.md`의 "프로젝트 문서" 레지스트리와 이번 태스크의 `changed_files`(EXECUTE 산출)를 양쪽 종합하여, 태스크 결과로 내용이 달라진 관련 문서(ARCHITECTURE.md·기획서 등)를 식별한다.
    - 갱신 대상이 있으면 PM이 판단하여 직접 수정하거나 적합한 워커를 디스패치해 최신화한다. 갱신 대상이 없으면 자연 스킵(no-op) — CLOSE를 중단시키지 않는다.
@@ -273,10 +273,10 @@ op-dev-test-agent 워커 디스패치. TEST-SCENARIO.md 실행 + 결과 기록 +
 | 모드 | Full Task |
 | 단계 목록 | TASK / ANALYSIS / PLAN / TEST-SCENARIO / EXECUTE / TEST / CLOSE |
 
-**진행 현황 행 예시** (아래 표는 `state init --rows-from <SKILL.md>` 또는 `--rows-spec` 인자의 SSOT — LLM이 직접 작성하는 것은 금지된다):
+**진행 현황 행 예시** (아래 표는 사람 열람용 미러 — SSOT는 `references/pipeline.json`. `.md` 파싱은 하위호환 폴백으로만 존치, 편집 금지):
 
-> **[MUST] STATE.md 초기 생성**: `~/.opal/tools/state-tool/run.sh init <task-path> --skill opd --mode <interactive|semi-agentic|agentic> --rows-from <SKILL.md 경로>` 호출. 기본값: `semi-agentic`. `--rows-from`이 아래 표를 파싱하여 행 구성을 자동 추출한다.
-> 근거: `tasks/134-260501-opp-pipeline-state-tool/TASK.md` F-15 / `PLAN.md` §2.3 / §2.20.2 / §3 Step 8 (P-3 advance, P-1 mark)
+> **[MUST] STATE.md 초기 생성**: `~/.opal/tools/state-tool/run.sh init <task-path> --skill opd --mode <interactive|semi-agentic|agentic> --rows-from opal/skills/opal-pilot-dev/references/pipeline.json` 호출. 기본값: `semi-agentic`. 행 구성 SSOT는 `references/pipeline.json`(task-step key 포함) — `--rows-from`이 확장자로 분기해 파싱한다(070).
+> 근거: `tasks/134-260501-opp-pipeline-state-tool/TASK.md` F-15 / `PLAN.md` §2.3 / §2.20.2 / §3 Step 8 (P-3 advance, P-1 mark) / `tasks/070-260720-opd-태스크스텝-키주소-1차/PLAN.md` §3.6.2 (pipeline.json 전환)
 
 ```markdown
 | # | 단계 | 항목 | 상태 | 시점 |
@@ -333,7 +333,7 @@ opal-harness-agentic.md / opal-harness-semi-agentic.md 참조. 본 절은 이 �
 
 ### 활성화
 
-> **[MUST] agentic 모드 STATE 갱신**: 게이트 자율 통과 시 `~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done --auto-pass --note '<PM 판단 근거>'` 호출 (P-8). `--auto-pass` 명시 시 `state.json rows[N].note`에 "agentic auto-pass: <근거>"가 자동 기재된다.
+> **[MUST] agentic 모드 STATE 갱신**: 게이트 자율 통과 시 `~/.opal/tools/state-tool/run.sh mark <task-path> --task-step <task-step-key> --done --auto-pass --note '<PM 판단 근거>'` 호출 (P-8). `--auto-pass` 명시 시 `state.json rows[N].note`에 "agentic auto-pass: <근거>"가 자동 기재된다.
 >
 > **[MUST] CLOSE 진입 게이트 거부 정책 (P-8 / §2.16 G-13)**: CLOSE 단계 첫 행은 `--auto-pass` 거부(`agentic_close_gate_requires_user` 에러). agentic/semi-agentic 모드라도 CLOSE 진입 직전 소유자에게 보고 후 사용자 발화("확인"/"승인")를 받아 직전 단계 사용자 확인 행을 `--owner user`로 mark한 뒤 CLOSE 첫 행을 진행한다.
 >
@@ -403,3 +403,5 @@ semi-agentic / agentic 모두 CLOSE 첫 행 `--auto-pass` 거부 (`agentic_close
 | v4.4 | 2026-07-10 13:12 | note 예시(산문)의 소유자 확인 표기를 `{owner_name} 확인:` 형식으로 통일 — identity.md owner_name 재해석 규칙(AGENT.md §정체성 적용)과 정합, 오염 차단 (054) |
 | v4.5 | 2026-07-17 13:05 | STEP 2 ANALYSIS 워커 model 레벨 상향 — light → standard (소유자 지시, L2) |
 | v4.6 | 2026-07-17 | STEP 6 CLOSE에 "회고(개선 루프) 하드스텝" 삽입 — op-brain-ingest 직후·완료보고 직전, 궤적 신호→관찰/분류/기록(improve-tool record --scope local\|fw), 개선후보 0건 시 no-op 비차단(brain-ingest 패턴 답습) (058) |
+| v4.7 | 2026-07-20 15:45 | task-step 키 주소 체계 도입 — `references/pipeline.json` 신설(15 task-step, SSOT), `--rows-from` 호출 경로를 SKILL.md에서 pipeline.json으로 교체(`.md` 파싱은 하위호환 폴백으로 존치), 표는 사람 열람용 미러로 축소 (070) |
+| v4.8 | 2026-07-23 09:56 | 본문 state-tool 명령 예시를 task-step key 주소로 전환(--row→--task-step, --step→--action-step). pipeline.json key 기준. (070 후속) |

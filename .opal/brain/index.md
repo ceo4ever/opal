@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-07-20 11:10
+> 갱신: 2026-07-23 10:17
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -20,6 +20,7 @@
 - [[opal-improve]] — opal-improve (//opim) #skill #operator #improvement #pm-loop #tool-gated
 - [[opal-loop-action-agent]] — opal-loop-action-agent #agent #oppl #executor #action-agent
 - [[opal-workspace-sync]] — opal-workspace-sync (alias opws) #skill #workspace #git #operator
+- [[pipeline-json-spec]] — pipeline.json (pilot 파이프라인 정의 SSOT) #state-tool #pipeline #schema #task-070
 - [[skill-opal-pilot-data-design]] — opal-pilot-data-design (opdd) #pilot #orchestrator #data-design #db
 - [[state-tool]] — state-tool #tool #pipeline
 - [[test-tool]] — test-tool #tool #testing #pipeline
@@ -163,6 +164,7 @@
 - [[skill-rename-validate-pattern]] — 스킬 rename 후 레지스트리 정합 검증 패턴 #skill-registry #validate #rename #drift-detection #lesson
 - [[state-tool-mock-guard-skill-false-positive]] — state-tool mock 가드 정규식 ↔ SKILL 표준 문구 false positive #state-tool #mock-guard #false-positive #skill #bug #framework
 - [[state-tool-owner-name-write-time-substitution]] — state-tool {owner_name} write-time 치환 메커니즘 #state-tool #identity #note #mechanism
+- [[state-tool-task-step-key-address]] — state-tool task-step 키 주소 체계 #state-tool #pipeline #key-address #task-070
 - [[strip-deploy-runtime-token-neutral]] — strip_deploy_md 런타임 토큰 영향 0 — 변경이력 trim 측정 정정 교훈 #deploy-pipeline #token #install #measurement #lesson
 - [[test-real-data-validation-lesson]] — TEST 실데이터 검증이 build-only 가 놓친 결함을 발견한다 #testing #lesson #test-strategy #real-data
 - [[test-scenario-pipeline-redesign]] — 테스트 시나리오 파이프라인 재설계 (2차원 매트릭스 + self-confirming 4분리) #testing #pipeline #framework #flow #task

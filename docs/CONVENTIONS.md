@@ -184,6 +184,7 @@ OPAL 본체(스킬·에이전트·도구·하네스)를 작성할 때 따라야 
 
 - 파이프라인 STATE.md 행 상태(⬜/🔄/✅) 변경은 `~/.opal/tools/state-tool/run.sh`로만 수행한다. 마크다운 표 직접 편집 금지.
 - 단계 진입/완료/Gate 통과/추가작업 행 삽입 모두 state-tool 서브 명령(`init`/`advance`/`mark`/`gate-pass`/`add-row` 등)으로 처리한다.
+- 행 주소는 `--task-step <key>`(예: `plan.pm_gate`) 우선 사용, `--task-step-id <N>`은 숫자 폴백 — `--row`는 deprecated 별칭(신규 문서·프롬프트에 사용 금지). key 정의는 pilot `references/pipeline.json`이 SSOT.
 - 근거: `opal/core/references/opal-harness.md` §3 State
 
 ### 도구 우선 원칙

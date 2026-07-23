@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "OPAL pipeline.json Spec Schema",
+  "description": "opal-pilot-* 스킬의 references/pipeline.json 구조 SSOT (문서 참조용 — 실제 검증은 state_tool.py validate_pipeline_spec()가 수행, PLAN 070 §3.1.2 DEC-2).",
+  "type": "object",
+  "required": ["spec_version", "skill", "meta", "task_steps"],
+  "additionalProperties": false,
+  "properties": {
+    "spec_version": { "const": "1.0" },
+    "skill":        { "enum": ["opp","opd","opds","opdw","opwt","opgc","oppd","opsdd","oppl","opdd"] },
+    "meta": {
+      "type": "object",
+      "required": ["mode_label", "stages"],
+      "additionalProperties": false,
+      "properties": {
+        "mode_label": { "type": "string" },
+        "stages":     { "type": "array", "items": {"type": "string"}, "minItems": 1 }
+      }
+    },
+    "task_steps": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "key", "stage", "item"],
+        "additionalProperties": false,
+        "properties": {
+          "id":          { "type": "integer", "minimum": 1 },
+          "key":         { "type": "string", "pattern": "^[a-z][a-z0-9_]*\\.[a-z][a-z0-9_]*(_[0-9]+)?$" },
+          "stage":       { "type": "string" },
+          "item":        { "type": "string", "minLength": 1 },
+          "conditional": { "type": "boolean" }
+        }
+      }
+    },
+    "pm_gate": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["stage", "artifacts", "checklist"],
+        "additionalProperties": false,
+        "properties": {
+          "stage":     { "type": "string" },
+          "artifacts": { "type": "array", "items": {"type": "string"} },
+          "checklist": { "type": "array", "items": {"type": "string"} }
+        }
+      }
+    }
+  }
+}

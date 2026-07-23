@@ -227,3 +227,7 @@
 - 신규: [[pages/entity/opal-improve.md]], [[pages/entity/improve-tool.md]], [[pages/entity/fw-inbox-collection.md]], [[pages/concept/pm-improvement-loop-two-tracks.md]], [[pages/concept/local-fw-improvement-classification.md]], [[pages/flow/close-retrospective-hardstep.md]]
 - 출처: task:058
 
+## [2026-07-23] ingest | CLOSE ingest — 태스크 070 state-tool task-step 키 주소 체계 도입 1차
+- 신규: [[pages/concept/state-tool-task-step-key-address.md]], [[pages/entity/pipeline-json-spec.md]]
+- 출처: task:070
+

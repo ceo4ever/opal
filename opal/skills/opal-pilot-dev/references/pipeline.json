@@ -1,0 +1,28 @@
+{
+  "spec_version": "1.0",
+  "skill": "opd",
+  "meta": { "mode_label": "Full Task", "stages": ["TASK", "ANALYSIS", "PLAN", "TEST-SCENARIO", "EXECUTE", "TEST", "CLOSE"] },
+  "task_steps": [
+    { "id": 1,  "key": "task.task_md",                 "stage": "TASK",          "item": "작업" },
+    { "id": 2,  "key": "task.user_confirm",            "stage": "TASK",          "item": "사용자 확인" },
+    { "id": 3,  "key": "analysis.analysis_md",         "stage": "ANALYSIS",      "item": "작업" },
+    { "id": 4,  "key": "analysis.pm_gate",             "stage": "ANALYSIS",      "item": "PM Gate" },
+    { "id": 5,  "key": "analysis.user_confirm",        "stage": "ANALYSIS",      "item": "사용자 확인" },
+    { "id": 6,  "key": "plan.plan_md",                 "stage": "PLAN",          "item": "작업" },
+    { "id": 7,  "key": "plan.pm_gate",                 "stage": "PLAN",          "item": "PM Gate" },
+    { "id": 8,  "key": "plan.user_confirm",            "stage": "PLAN",          "item": "사용자 확인" },
+    { "id": 9,  "key": "test_scenario.test_scenario_md","stage": "TEST-SCENARIO","item": "작업" },
+    { "id": 10, "key": "test_scenario.user_confirm",   "stage": "TEST-SCENARIO", "item": "사용자 확인" },
+    { "id": 11, "key": "execute.implement",            "stage": "EXECUTE",       "item": "작업" },
+    { "id": 12, "key": "test.run_tests",               "stage": "TEST",          "item": "작업" },
+    { "id": 13, "key": "test.pm_gate",                 "stage": "TEST",          "item": "PM Gate" },
+    { "id": 14, "key": "test.user_confirm",            "stage": "TEST",          "item": "사용자 확인" },
+    { "id": 15, "key": "close.done_md",                "stage": "CLOSE",         "item": "DONE.md 생성" }
+  ],
+  "pm_gate": [
+    { "stage": "ANALYSIS",      "artifacts": ["ANALYSIS.md"], "checklist": ["-"] },
+    { "stage": "PLAN",          "artifacts": ["TASK.md", "PLAN.md"], "checklist": ["TASK.md 요구사항", "PLAN.md §4.2", "PLAN.md §5", "PLAN.md §리스크 가설 표"] },
+    { "stage": "TEST-SCENARIO", "artifacts": ["TEST-SCENARIO.md"], "checklist": ["mock 부재(grep)", "사전 조건 데이터 채워짐", "Given/When/Then 3필드", "가설↔시나리오 매핑 완전", "L1/L2/L3 계층 명시", "L3 [SUPERVISOR] 마커", "실행 방식(M1/M2/M3) 명시"] },
+    { "stage": "TEST",          "artifacts": ["TEST-SCENARIO.md", "GC-CONVENTION-*.md"], "checklist": ["시나리오 결과/코드품질/보안/회귀", "컨벤션 자동 진단 PASS"] }
+  ]
+}

@@ -3,10 +3,11 @@
   "module": "state_tool",
   "layer": "util",
   "domain": "opal-pipeline",
-  "description": "OPAL 파이프라인 현황판 JSON SSOT 관리 CLI — 9개 서브 명령(init/show/advance/mark/block/validate/add-row/status/gate-pass[deprecated]) + verify + 3-way 모드(interactive/semi-agentic/agentic) 지원. 014 Phase 4: 새 표준 행 구조(QA Gate/State Gate 행 없음)와 정합 — gate-pass deprecate, CLOSE 마지막 행 판정 항목명 비의존화. 016: verify --red-check(RED 증거 게이트) + --fix-mode/--changed-files/--test-globs(테스트 불변성 게이트) 추가 — RED-first TDD 트랙 deterministic 집행. 017: mark --step N/M 다중 Step 조기 done 가드 — N<M이면 in_progress 유지(done 미처리) + 진행률(step) 영속화, N==M에서만 done; 미완 행은 기존 stage-transition guard가 단계전환·CLOSE 진입을 자동 차단. 005: verify --clarification-check + TASK→다음단계 자동 훅 — TASK 4요소(목표/범위/제약/완료기준) 미잠금 시 다음 단계 진입 거부(PRINCIPLES §1 집행), 정책 A graceful skip(섹션/파일 부재 시 하위호환). 034: mock 가드 false positive 수정 — _MOCK_CODE_PATTERNS 정규식 'MagicMock' 맨 단어 대안 제거(#1 산문 오탐) + _check_mock_patterns 인라인 백틱 제거 전처리 추가(#2 메타-순환 해소); 헌법 §4 정탐 유지. 054: resolve_owner_placeholder() 신설 — note-write 6경로(advance/mark/add-row/block/status/init)에서 '{owner_name}' 플레이스홀더를 identity.md owner_name으로 write-time 치환(fail-safe: 부재/공란/파싱실패 시 원문 유지).",
+  "description": "OPAL 파이프라인 현황판 JSON SSOT 관리 CLI — 10개 서브 명령(init/show/advance/mark/block/validate/add-row/status/spec-validate/gate-pass[deprecated]) + verify + 3-way 모드(interactive/semi-agentic/agentic) 지원. 014 Phase 4: 새 표준 행 구조(QA Gate/State Gate 행 없음)와 정합 — gate-pass deprecate, CLOSE 마지막 행 판정 항목명 비의존화. 016: verify --red-check(RED 증거 게이트) + --fix-mode/--changed-files/--test-globs(테스트 불변성 게이트) 추가 — RED-first TDD 트랙 deterministic 집행. 017: mark --step N/M 다중 Step 조기 done 가드 — N<M이면 in_progress 유지(done 미처리) + 진행률(step) 영속화, N==M에서만 done; 미완 행은 기존 stage-transition guard가 단계전환·CLOSE 진입을 자동 차단. 005: verify --clarification-check + TASK→다음단계 자동 훅 — TASK 4요소(목표/범위/제약/완료기준) 미잠금 시 다음 단계 진입 거부(PRINCIPLES §1 집행), 정책 A graceful skip(섹션/파일 부재 시 하위호환). 034: mock 가드 false positive 수정 — _MOCK_CODE_PATTERNS 정규식 'MagicMock' 맨 단어 대안 제거(#1 산문 오탐) + _check_mock_patterns 인라인 백틱 제거 전처리 추가(#2 메타-순환 해소); 헌법 §4 정탐 유지. 054: resolve_owner_placeholder() 신설 — note-write 6경로(advance/mark/add-row/block/status/init)에서 '{owner_name}' 플레이스홀더를 identity.md owner_name으로 write-time 치환(fail-safe: 부재/공란/파싱실패 시 원문 유지). 070: task-step 키 주소 체계 도입 1차 — spec-validate 서브명령(pipeline.json 스펙 검증) + KEY_PATTERN/stage_to_slug/resolve_row_index 신설, build_rows_from_pipeline_json(init --rows-from .json 확장자 분기, .md는 deprecation 경고 유지), advance/mark/block에 --task-step/--task-step-id/--row(deprecated) 3주소·add-row에 --after-task-step/--after-task-step-id/--key(자동 생성) 추가, --step→--action-step 별칭(dest 공유), opdd skill·DICT/MODEL/DDL·MIGRATION stage enum 등록, ERROR_CODES 8종 추가.",
   "exports": [
     "cmd_init", "cmd_show", "cmd_advance", "cmd_mark",
-    "cmd_block", "cmd_validate", "cmd_add_row", "cmd_status", "cmd_gate_pass"
+    "cmd_block", "cmd_validate", "cmd_add_row", "cmd_status",
+    "cmd_spec_validate", "cmd_gate_pass"
   ]
 }
 """
@@ -29,8 +30,19 @@ from datetime import datetime
 STAGE_ENUM = [
     "TASK", "ANALYSIS", "PLAN", "TEST-SCENARIO", "EXECUTE", "TEST",
     "WIREFRAME", "QA", "SPEC", "REVIEW", "DESIGN",
-    "VERIFY", "SCAN", "CHECK", "REPORT", "WBS", "CLOSE"
+    "VERIFY", "SCAN", "CHECK", "REPORT", "WBS", "CLOSE",
+    # 070 R-8: opdd 드리프트 정정 — opal-pilot-data-design 단계 enum 등록(enum 문자열 추가만, pipeline.json은 2차)
+    "DICT", "MODEL", "DDL/MIGRATION",
 ]
+
+# 070 F-001 R-1/R-6: pipeline.json 스펙 key 형식 — {stage_slug}.{item_slug}(_N)?
+# (TASK.md §확정 방향 §6, PLAN §3.1.2)
+KEY_PATTERN = re.compile(r"^[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*(_[0-9]+)?$")
+
+
+def stage_to_slug(stage: str) -> str:
+    """stage enum → slug. 소문자화 + '-'·'/' → '_'. (TASK §6, PLAN §3.1.2)"""
+    return stage.lower().replace("-", "_").replace("/", "_")
 
 # semi-agentic 모드 경계 — 이 stage 집합에 속하는 행은 EXECUTE-equivalent 이전으로 간주
 # (PLAN-equivalent 단계까지 사용자 검토 강제) — D-DEC-5 (140)
@@ -100,6 +112,17 @@ ERROR_CODES = {
     "test_modified_in_fix":           "fix 루핑 중 RED 테스트 파일 수정 거부: {files}",
     "clarification_gate_unmet":
         "TASK 4요소(목표/범위/제약/완료기준) 미잠금 — 다음 단계 진입 거부 (PRINCIPLES §1 집행): {missing}",
+    # 070 F-001 R-1/R-6: pipeline.json 스펙 로딩/검증 (PLAN §3.1.2)
+    "spec_file_not_found":            "pipeline.json 스펙 파일 없음: {path}",
+    "spec_invalid_json":              "pipeline.json JSON 파싱 실패: {detail}",
+    "spec_validation_failed":         "pipeline.json 스펙 검증 실패: {detail}",
+    # 070 F-003 R-4: task-step 주소 해석 (PLAN §3.3.2)
+    "task_step_addr_required":        "행 주소 미지정 — {flags} 중 하나 필요",
+    "task_step_addr_conflict":        "행 주소 플래그 2개 이상 동시 사용 — {flags} 중 하나만 사용",
+    "task_step_not_found":            "{flag} {key}에 해당하는 행이 state.json에 없음",
+    # 070 F-004 R-9: add-row --key (PLAN §3.4.2)
+    "task_step_key_invalid":          r"key {key} 형식 위반 — 패턴 ^[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*(_[0-9]+)?$",
+    "task_step_key_duplicate":        "key {key} 중복 — 파일 내 유일해야 함",
 }
 
 PIPELINE_MARKER_START = "<!-- pipeline:start -->"
@@ -365,6 +388,45 @@ def find_row_index(state, row_id, command):
             return i
     err(command, "row_not_found", row_id=row_id)
 
+
+def resolve_row_index(state, command, key_val=None, id_val=None, row_val=None,
+                      addr_label="task-step"):
+    """key/id/deprecated-row 3주소를 row_index로 통일 해석 (070 F-003 R-4, PLAN §3.3.2).
+
+    - addr_label로 에러 메시지에 노출할 실제 플래그명을 결정한다:
+        "after"    → add-row 컨텍스트: --after-task-step/--after-task-step-id/--after
+        그 외(기본) → advance/mark/block 컨텍스트: --task-step/--task-step-id/--row(deprecated)
+    - 제공된 주소 개수 집계(None 아닌 것):
+        0개  → err(command, 'task_step_addr_required', flags=...)
+        2개+ → err(command, 'task_step_addr_conflict', flags=...)
+    - key_val: rows[]에서 row['key']==key_val 탐색. 미매칭 시 'task_step_not_found'
+      (flag=키 주소 플래그명, candidates=존재하는 key 목록).
+    - id_val / row_val: row_id 동등비교(find_row_index 로직 재사용). 미매칭 시 'row_not_found'.
+    반환: row_index(int).
+    """
+    if addr_label == "after":
+        flags = "--after-task-step/--after-task-step-id/--after"
+        key_flag = "--after-task-step"
+    else:
+        flags = "--task-step/--task-step-id/--row(deprecated)"
+        key_flag = "--task-step"
+
+    provided = [v for v in (key_val, id_val, row_val) if v is not None]
+    if len(provided) == 0:
+        err(command, "task_step_addr_required", flags=flags)
+    if len(provided) >= 2:
+        err(command, "task_step_addr_conflict", flags=flags)
+
+    if key_val is not None:
+        for i, row in enumerate(state["rows"]):
+            if row.get("key") == key_val:
+                return i
+        candidates = [r.get("key") for r in state["rows"] if r.get("key")]
+        err(command, "task_step_not_found", key=key_val, flag=key_flag, candidates=candidates)
+
+    row_id = id_val if id_val is not None else row_val
+    return find_row_index(state, row_id, command)
+
 # ─────────────────────────────────────────────────────────────────────────────
 # 단계 건너뛰기 차단 (PLAN §M-A stage-transition guard)
 # ─────────────────────────────────────────────────────────────────────────────
@@ -606,6 +668,120 @@ def build_rows_from_skill_md(skill_md_path, command, mode):
     return rows
 
 # ─────────────────────────────────────────────────────────────────────────────
+# pipeline.json 스펙 로딩·검증 (070 F-001/F-002, PLAN §3.1.2/§3.2.2)
+# ─────────────────────────────────────────────────────────────────────────────
+
+def load_pipeline_spec(spec_path, command):
+    """pipeline.json 로드. 없으면 spec_file_not_found, 파싱 실패 시 spec_invalid_json."""
+    p = pathlib.Path(spec_path)
+    if not p.exists():
+        err(command, "spec_file_not_found", path=str(p))
+    try:
+        return json.loads(p.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as e:
+        err(command, "spec_invalid_json", detail=str(e))
+
+
+def validate_pipeline_spec(spec):
+    """pipeline.json 스펙 검증 → violations[] (070 F-001 R-1/R-6, PLAN §3.1.2 DEC-2).
+
+    검사 항목:
+    ① 필수 필드(spec_version/skill/meta/task_steps) 존재       → spec_missing_field
+    ② skill enum 정합                                          → spec_skill_invalid
+    ③ task_steps[].stage ∈ STAGE_ENUM                          → spec_stage_invalid
+    ④ key 형식(KEY_PATTERN)                                    → spec_key_format_invalid
+    ⑤ key 유일성(스펙 내)                                       → spec_key_duplicate
+    ⑥ id 1..N 순차                                              → spec_id_sequence_invalid
+    ⑦ key의 stage_slug가 실제 stage와 정합                     → spec_key_stage_mismatch
+    반환: [{code, id?, key?, detail}] (cmd_validate violations 포맷 차용)
+    """
+    violations = []
+
+    required_top = ["spec_version", "skill", "meta", "task_steps"]
+    for f in required_top:
+        if f not in spec:
+            violations.append({"code": "spec_missing_field", "detail": f"missing field: {f}"})
+    if violations:
+        # 최상위 필수 필드가 없으면 하위 검사(task_steps 순회 등)는 의미가 없다
+        return violations
+
+    skill_enum = ["opp", "opd", "opds", "opdw", "opwt", "opgc", "oppd", "opsdd", "oppl", "opdd"]
+    if spec.get("skill") not in skill_enum:
+        violations.append({"code": "spec_skill_invalid", "detail": f"skill '{spec.get('skill')}' not in enum"})
+
+    task_steps = spec.get("task_steps") or []
+    seen_keys = {}
+    for idx, ts in enumerate(task_steps):
+        ts_id = ts.get("id")
+        ts_key = ts.get("key")
+        ts_stage = ts.get("stage")
+
+        if ts_stage not in STAGE_ENUM:
+            violations.append({"code": "spec_stage_invalid", "id": ts_id, "key": ts_key,
+                                "detail": f"stage '{ts_stage}' not in STAGE_ENUM"})
+
+        if ts_key is not None:
+            if not KEY_PATTERN.match(ts_key):
+                violations.append({"code": "spec_key_format_invalid", "id": ts_id, "key": ts_key,
+                                    "detail": f"key '{ts_key}' does not match pattern"})
+            if ts_key in seen_keys:
+                violations.append({"code": "spec_key_duplicate", "id": ts_id, "key": ts_key,
+                                    "detail": f"key '{ts_key}' duplicated (also id {seen_keys[ts_key]})"})
+            else:
+                seen_keys[ts_key] = ts_id
+
+            if ts_stage in STAGE_ENUM and "." in ts_key:
+                expected_slug = stage_to_slug(ts_stage)
+                actual_slug = ts_key.split(".", 1)[0]
+                if actual_slug != expected_slug:
+                    violations.append({"code": "spec_key_stage_mismatch", "id": ts_id, "key": ts_key,
+                                        "detail": f"key stage_slug '{actual_slug}' != stage_to_slug('{ts_stage}')='{expected_slug}'"})
+
+        if ts_id != idx + 1:
+            violations.append({"code": "spec_id_sequence_invalid", "id": ts_id, "key": ts_key,
+                                "detail": f"expected id {idx + 1}, got {ts_id}"})
+
+    return violations
+
+
+def build_rows_from_pipeline_json(spec_path, command, mode):
+    """.json 스펙 → rows[] (070 F-002 R-2, PLAN §3.2.2). 절차:
+    1. spec = load_pipeline_spec(spec_path, command)
+    2. violations = validate_pipeline_spec(spec); 있으면 spec_validation_failed
+    3. task_steps[] 순회하며 row 구성(key·conditional 영속, agentic 자동 na 규칙 재사용)
+    """
+    spec = load_pipeline_spec(spec_path, command)
+    violations = validate_pipeline_spec(spec)
+    if violations:
+        err(command, "spec_validation_failed", detail=violations[0])
+
+    rows = []
+    for i, ts in enumerate(spec["task_steps"]):
+        row = {
+            "row_id":       i + 1,
+            "stage":        ts["stage"],
+            "item":         ts["item"],
+            "key":          ts["key"],
+            "status":       "pending",
+            "status_label": "⬜",
+            "timestamp":    None,
+            "owner":        "PM",
+            "note":         None,
+        }
+        if ts.get("conditional"):
+            row["conditional"] = True  # DEC-1 — 순수 메타데이터, 자동 na 없음
+
+        # agentic 자동 마킹 (§2.20.1 동일 규칙 — CLOSE 사용자 확인 행 제외)
+        if mode == "agentic" and ts["item"] == "사용자 확인" and ts["stage"] != "CLOSE":
+            row["status"]       = "na"
+            row["status_label"] = "-"
+            row["owner"]        = "auto"
+            row["note"]         = "agentic auto-na at init"
+
+        rows.append(row)
+    return rows
+
+# ─────────────────────────────────────────────────────────────────────────────
 # 기존 STATE.md import 파싱 (PLAN §2.5, T-13)
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -652,6 +828,15 @@ def parse_existing_state_md(md_content, command):
 def cmd_init(args):
     """PLAN §2.11 G-8 — state.json + STATE.md 생성"""
     command = "init"
+    # init은 신규 태스크 폴더를 최초 초기화하는 명령이므로, 상위 디렉토리가 쓰기
+    # 가능하면 리프 디렉토리를 자동 생성한다(하위호환: 기존 디렉토리 존재 시 무해,
+    # 생성 불가 시 기존과 동일하게 task_path_not_found).
+    _p = pathlib.Path(args.task_path)
+    if not _p.is_dir():
+        try:
+            _p.mkdir(parents=True, exist_ok=True)
+        except OSError:
+            pass  # 아래 resolve_task_path가 동일하게 task_path_not_found 처리
     task_path = resolve_task_path(args.task_path, command)
 
     # --rows-acts 시그니처 정의만 (§2.20.3, R-13)
@@ -695,7 +880,14 @@ def cmd_init(args):
         if args.rows_spec:
             rows = build_rows_from_spec(args.rows_spec, command, args.mode)
         elif args.rows_from:
-            rows = build_rows_from_skill_md(args.rows_from, command, args.mode)
+            # 070 R-2: --rows-from 확장자 분기 — .json(신규 pipeline.json 스펙) vs
+            # .md(레거시 SKILL.md 파싱, deprecated stderr 경고 1줄).
+            if args.rows_from.endswith(".json"):
+                rows = build_rows_from_pipeline_json(args.rows_from, command, args.mode)
+            else:
+                print('{"warning":"--rows-from <SKILL.md> markdown 파싱은 deprecated. '
+                      'references/pipeline.json으로 이관하세요 (task 070)."}', file=sys.stderr)
+                rows = build_rows_from_skill_md(args.rows_from, command, args.mode)
         else:
             # 행 없이 init — 최소 1행 빈 구조는 허용 안 함, 경고 없이 빈 rows로 진행
             rows = []
@@ -703,11 +895,16 @@ def cmd_init(args):
     # task_id = 마지막 디렉토리명
     task_id = task_path.name
 
+    # 070 후속 R-3: rows[]에 key가 하나라도 있으면(pipeline.json 경로) schema_version
+    # "1.1" 승격. .md 파싱/--rows-spec/--import-existing(key 없음) 경로는 "1.0" 유지.
+    # 단순·결정론 규칙(PLAN §3.2.2 diff, task 070 후속 Part B).
+    schema_version = "1.1" if any(r.get("key") for r in rows) else "1.0"
+
     state = {
         "task_id":        task_id,
         "skill":          args.skill,
         "mode":           args.mode,
-        "schema_version": "1.0",
+        "schema_version": schema_version,
         "created_at":     now_str,
         "updated_at":     now_str,
         "current_status": "in_progress",
@@ -876,13 +1073,16 @@ def cmd_advance(args):
     command = "advance"
     task_path = resolve_task_path(args.task_path, command)
     state     = load_state_json(task_path, command)
-    row_index = find_row_index(state, args.row, command)
+    row_index = resolve_row_index(state, command,
+                                  getattr(args, "task_step", None),
+                                  getattr(args, "task_step_id", None),
+                                  args.row)
     row       = state["rows"][row_index]
 
     if row["status"] not in ("pending",):
         err(command, "row_not_found",
-            message=f"row {args.row} is already {row['status']}, advance only allows pending→in_progress",
-            row_id=args.row)
+            message=f"row {row['row_id']} is already {row['status']}, advance only allows pending→in_progress",
+            row_id=row["row_id"])
 
     # 단계 건너뛰기 차단 (PLAN §M-A)
     # PM 경로: 앞 모든 행 검증 (full). 워커 경로: 앞 단계 행만 검증 (prior_stage_only).
@@ -910,7 +1110,7 @@ def cmd_advance(args):
 
     progress = f"{row['stage']} 단계"
     sync_state_md(task_path, state, now_str, command, progress=progress)
-    ok(command, row_id=args.row, stage=row["stage"], item=row["item"],
+    ok(command, row_id=row["row_id"], stage=row["stage"], item=row["item"],
        status="in_progress", timestamp=now_str)
 
 # ── 4. mark ───────────────────────────────────────────────────────────────────
@@ -946,7 +1146,10 @@ def cmd_mark(args):
     if args.force and not args.note:
         err(command, "note_required_for_force")
 
-    row_index = find_row_index(state, args.row, command)
+    row_index = resolve_row_index(state, command,
+                                  getattr(args, "task_step", None),
+                                  getattr(args, "task_step_id", None),
+                                  args.row)
     row       = state["rows"][row_index]
 
     # 워커 권한 게이트 (§2.4, T-10)
@@ -959,7 +1162,7 @@ def cmd_mark(args):
             else:
                 err(command, "worker_scope_violation",
                     worker_stage=allowed_stage,
-                    row_id=args.row,
+                    row_id=row["row_id"],
                     stage=row["stage"])
 
     # 단계 건너뛰기 차단 (PLAN §M-A)
@@ -985,7 +1188,9 @@ def cmd_mark(args):
     now_str = get_kst_datetime(command)
 
     # 017: 다중 Step 진행률 파싱 + 조기 done 가드 (R-1, C-1, C-5)
-    _step_str = getattr(args, "step", None)
+    # 070 R-5: --action-step은 dest="step" 공유 별칭(argparse) — 직접 호출(테스트)
+    #   경로에서는 args.step/args.action_step이 분리된 속성일 수 있으므로 폴백 병합한다.
+    _step_str = getattr(args, "step", None) or getattr(args, "action_step", None)
     _step_pair = _parse_step(_step_str) if _step_str else None
     if _step_pair is not None:
         _n, _total = _step_pair
@@ -1041,8 +1246,8 @@ def cmd_mark(args):
         status_text = "완료"
 
     # EXECUTE Step 진행 표기 (§2.11 G-6)
-    if args.as_worker and getattr(args, "step", None):
-        progress_text = f"Step {args.step} 완료"
+    if args.as_worker and _step_str:
+        progress_text = f"Step {_step_str} 완료"
 
     save_state_json(task_path, state)
 
@@ -1063,21 +1268,21 @@ def cmd_mark(args):
 
     # §2.17 트리거 #2 auto-pass 로그
     if args.auto_pass:
-        decision = f"agentic auto-pass at row {args.row}, item={row['item']}"
+        decision = f"agentic auto-pass at row {row['row_id']}, item={row['item']}"
         reason_text = (args.note or "agentic mode")
 
     # §2.17 트리거 #3 worker force 로그
     if args.as_worker and args.force:
         requested = args.worker_stage
         actual = row["stage"]
-        decision = f"worker_scope_force at row {args.row}, requested_stage={requested}, actual_stage={actual}"
+        decision = f"worker_scope_force at row {row['row_id']}, requested_stage={requested}, actual_stage={actual}"
         reason_text = args.note
 
     sync_state_md(task_path, state, now_str, command,
                   progress=progress_text, status_text=status_text,
                   decision=decision, reason=reason_text)
 
-    ok(command, row_id=args.row, stage=row["stage"], item=row["item"],
+    ok(command, row_id=row["row_id"], stage=row["stage"], item=row["item"],
        status=row["status"], timestamp=now_str, owner=row["owner"])
 
 # ── 5. block ──────────────────────────────────────────────────────────────────
@@ -1087,7 +1292,10 @@ def cmd_block(args):
     command = "block"
     task_path = resolve_task_path(args.task_path, command)
     state     = load_state_json(task_path, command)
-    row_index = find_row_index(state, args.row, command)
+    row_index = resolve_row_index(state, command,
+                                  getattr(args, "task_step", None),
+                                  getattr(args, "task_step_id", None),
+                                  args.row)
     row       = state["rows"][row_index]
 
     now_str = get_kst_datetime(command)
@@ -1104,7 +1312,7 @@ def cmd_block(args):
     save_state_json(task_path, state)
     sync_state_md(task_path, state, now_str, command, status_text="블로커")
 
-    ok(command, row_id=args.row, stage=row["stage"], item=row["item"],
+    ok(command, row_id=row["row_id"], stage=row["stage"], item=row["item"],
        status="failed", current_status="blocked", timestamp=now_str)
 
 # ── 6. validate ───────────────────────────────────────────────────────────────
@@ -1168,7 +1376,44 @@ def cmd_validate(args):
     }, ensure_ascii=False))
     sys.exit(0 if is_ok else 1)
 
+# ── 6b. spec-validate (070 F-001 R-6) ───────────────────────────────────────
+
+def cmd_spec_validate(args):
+    """spec-validate <pipeline.json> — 단일 라인 JSON (070 R-6, DEC-2).
+    {ok, command:'spec-validate', violations:[...], violations_count:N}, exit 0/1.
+    (cmd_validate 출력 계약과 동일)
+    """
+    command = "spec-validate"
+    spec = load_pipeline_spec(args.spec_path, command)
+    violations = validate_pipeline_spec(spec)
+    count = len(violations)
+    is_ok = count == 0
+    print(json.dumps({
+        "ok": is_ok, "command": command,
+        "violations": violations, "violations_count": count
+    }, ensure_ascii=False))
+    sys.exit(0 if is_ok else 1)
+
 # ── 7. add-row ────────────────────────────────────────────────────────────────
+
+def _auto_row_key(state, stage, item):
+    """{stage_slug}.{item_slug}_{n} 자동 생성 (070 F-004 R-9, PLAN §3.4.2).
+    전체 rows[] 스캔 유일성 — 동일 base로 이미 존재하는 key 개수 +1부터 증가,
+    충돌 없을 때까지 증가.
+    """
+    stage_slug = stage_to_slug(stage)
+    m = re.match(r"[a-zA-Z][a-zA-Z0-9]*", item or "")
+    item_slug = m.group(0).lower() if m else "item"
+    base = f"{stage_slug}.{item_slug}"
+
+    existing_keys = {r.get("key") for r in state["rows"] if r.get("key")}
+    n = 1
+    candidate = f"{base}_{n}"
+    while candidate in existing_keys:
+        n += 1
+        candidate = f"{base}_{n}"
+    return candidate
+
 
 def cmd_add_row(args):
     """PLAN §2.12 G-9 — 추가작업 행 삽입"""
@@ -1180,15 +1425,32 @@ def cmd_add_row(args):
     if args.stage not in STAGE_ENUM:
         err(command, "invalid_stage_enum", value=args.stage)
 
-    # 기존 행 식별
-    after_index = find_row_index(state, args.after, command)
+    # 기존 행 식별 (070 F-003 R-4: --after-task-step/--after-task-step-id/--after(deprecated))
+    after_index = resolve_row_index(state, command,
+                                    getattr(args, "after_task_step", None),
+                                    getattr(args, "after_task_step_id", None),
+                                    args.after,
+                                    addr_label="after")
+
+    # 070 F-004 R-9: --key 명시 지정 또는 자동 생성 (전체 스캔 유일성)
+    existing_keys = {r.get("key") for r in state["rows"] if r.get("key")}
+    explicit_key = getattr(args, "key", None)
+    if explicit_key:
+        if not KEY_PATTERN.match(explicit_key):
+            err(command, "task_step_key_invalid", key=explicit_key)
+        if explicit_key in existing_keys:
+            err(command, "task_step_key_duplicate", key=explicit_key)
+        new_key = explicit_key
+    else:
+        new_key = _auto_row_key(state, args.stage, args.item)
 
     now_str = get_kst_datetime(command)
 
     new_row = {
-        "row_id":       args.after + 1,  # 임시 — 아래서 재정렬
+        "row_id":       after_index + 2,  # 임시 — 아래서 재정렬
         "stage":        args.stage,
         "item":         args.item,
+        "key":          new_key,
         "status":       "pending",
         "status_label": "⬜",
         "timestamp":    None,
@@ -1199,7 +1461,7 @@ def cmd_add_row(args):
     # 삽입 (G-9 단계 3)
     state["rows"].insert(after_index + 1, new_row)
 
-    # row_id 재정렬 (G-9 단계 4) — 삽입 후 전체 재번호
+    # row_id 재정렬 (G-9 단계 4) — 삽입 후 전체 재번호 (기존 key는 불변)
     for i, row in enumerate(state["rows"]):
         row["row_id"] = i + 1
 
@@ -1214,7 +1476,7 @@ def cmd_add_row(args):
     save_state_json(task_path, state)
 
     # §2.17 트리거 #5 의사결정 로그
-    decision = f"additional row inserted after row {args.after}: stage={args.stage}, item={args.item}, new_row_id={after_index + 2}"
+    decision = f"additional row inserted after row {after_index + 1}: stage={args.stage}, item={args.item}, key={new_key}, new_row_id={after_index + 2}"
     reason   = args.note or "additional work entry"
 
     sync_state_md(task_path, state, now_str, command,
@@ -1223,6 +1485,7 @@ def cmd_add_row(args):
 
     ok(command,
        row_id=after_index + 2,
+       key=new_key,
        rows_count=len(state["rows"]),
        current_status=state["current_status"])
 
@@ -1791,17 +2054,19 @@ def build_parser():
         description="OPAL 파이프라인 현황판 JSON SSOT 관리 CLI (PLAN §2.19 E-2)",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
-서브 명령 (9종):
-  init        state.json + STATE.md 생성
-  show        현황판 출력 (md/json/full)
-  advance     ⬜→🔄 전환
-  mark        ⬜/🔄→✅ 전환 (--done 필수)
-  block       any→❌ 전환 + current_status=blocked
-  validate    정합성 검증 → violations[]
-  add-row     추가작업 행 삽입
-  status      current_status 명시 전환
-  gate-pass   [DEPRECATED] Gate 4행 일괄 ✅ 처리 (레거시 state.json 전용)
+서브 명령 (10종):
+  init          state.json + STATE.md 생성
+  show          현황판 출력 (md/json/full)
+  advance       ⬜→🔄 전환
+  mark          ⬜/🔄→✅ 전환 (--done 필수)
+  block         any→❌ 전환 + current_status=blocked
+  validate      정합성 검증 → violations[]
+  add-row       추가작업 행 삽입
+  status        current_status 명시 전환
+  spec-validate pipeline.json 스펙 검증 (070 R-6)
+  gate-pass     [DEPRECATED] Gate 4행 일괄 ✅ 처리 (레거시 state.json 전용)
 
+행 주소(070): --task-step <key> / --task-step-id <n> / --row <n>[deprecated] 중 하나만 지정.
 호출 형식: ~/.opal/tools/state-tool/run.sh <command> <task-path> [options]
 종료 코드: 0=ok  1=violation/scope_error  2=internal_error
 """
@@ -1814,14 +2079,15 @@ def build_parser():
     p_init = sub.add_parser("init", help="state.json + STATE.md 생성 (§2.11 G-8)")
     p_init.add_argument("task_path", metavar="<task-path>")
     p_init.add_argument("--skill", required=True,
-                        choices=["opp","opd","opds","opdw","opwt","opgc","oppd","opsdd","oppl"])
+                        choices=["opp","opd","opds","opdw","opwt","opgc","oppd","opsdd","oppl","opdd"])
     p_init.add_argument("--mode", required=True,
                         choices=["interactive","semi-agentic","agentic"])
     p_init.add_argument("--task-title")
     p_init.add_argument("--next-action")
     rows_group = p_init.add_mutually_exclusive_group()  # C-1
     rows_group.add_argument("--rows-spec", metavar="<inline-json>")
-    rows_group.add_argument("--rows-from", metavar="<path>")
+    rows_group.add_argument("--rows-from", metavar="<path>",
+                        help="SKILL.md(레거시, deprecated 경고) 또는 pipeline.json(070 신규, 확장자로 분기)")
     p_init.add_argument("--rows-acts", metavar="<inline-json>",
                         help="opsdd ACT 동적 주입 (시그니처만, 미구현 — R-13)")
     p_init.add_argument("--force", action="store_true")
@@ -1838,21 +2104,34 @@ def build_parser():
     # ── advance ──
     p_adv = sub.add_parser("advance", help="⬜→🔄 전환 (T-7)")
     p_adv.add_argument("task_path", metavar="<task-path>")
-    p_adv.add_argument("--row", type=int, required=True)
+    p_adv.add_argument("--task-step", dest="task_step", metavar="<key>",
+                       help="070: task-step key 주소 (예: plan.pm_gate)")
+    p_adv.add_argument("--task-step-id", dest="task_step_id", type=int, metavar="<n>",
+                       help="070: task-step 숫자 주소(신규, row_id와 동일 의미)")
+    p_adv.add_argument("--row", type=int, metavar="<n>",
+                       help="[deprecated] --task-step / --task-step-id 사용 권장")
     p_adv.add_argument("--note")
     p_adv.set_defaults(func=cmd_advance)
 
     # ── mark ──
     p_mark = sub.add_parser("mark", help="⬜/🔄→✅ 전환 (T-7, §2.4, §2.15)")
     p_mark.add_argument("task_path", metavar="<task-path>")
-    p_mark.add_argument("--row", type=int, required=True)
+    p_mark.add_argument("--task-step", dest="task_step", metavar="<key>",
+                       help="070: task-step key 주소 (예: plan.pm_gate)")
+    p_mark.add_argument("--task-step-id", dest="task_step_id", type=int, metavar="<n>",
+                       help="070: task-step 숫자 주소(신규, row_id와 동일 의미)")
+    p_mark.add_argument("--row", type=int, metavar="<n>",
+                       help="[deprecated] --task-step / --task-step-id 사용 권장")
     p_mark.add_argument("--done", action="store_true", required=True)
     p_mark.add_argument("--note")
     p_mark.add_argument("--as-worker", action="store_true", dest="as_worker")
     p_mark.add_argument("--worker-stage",
                         choices=STAGE_ENUM,
                         dest="worker_stage")
-    p_mark.add_argument("--step", metavar="N/M")
+    # 070 R-5: --action-step은 --step의 신규 별칭 — dest 공유로 _parse_step/row["step"] 로직 무변경
+    p_mark.add_argument("--step", dest="step", metavar="N/M")
+    p_mark.add_argument("--action-step", dest="step", metavar="N/M",
+                        help="EXECUTE 액션 진행률 (구 --step 별칭, 070 R-5)")
     owner_group = p_mark.add_mutually_exclusive_group()  # C-2
     owner_group.add_argument("--owner", choices=["PM","worker","user","auto"])
     owner_group.add_argument("--auto-pass", action="store_true", dest="auto_pass")
@@ -1862,7 +2141,12 @@ def build_parser():
     # ── block ──
     p_blk = sub.add_parser("block", help="any→❌ 전환 + current_status=blocked (§2.17 트리거 #7)")
     p_blk.add_argument("task_path", metavar="<task-path>")
-    p_blk.add_argument("--row", type=int, required=True)
+    p_blk.add_argument("--task-step", dest="task_step", metavar="<key>",
+                       help="070: task-step key 주소 (예: plan.pm_gate)")
+    p_blk.add_argument("--task-step-id", dest="task_step_id", type=int, metavar="<n>",
+                       help="070: task-step 숫자 주소(신규, row_id와 동일 의미)")
+    p_blk.add_argument("--row", type=int, metavar="<n>",
+                       help="[deprecated] --task-step / --task-step-id 사용 권장")
     p_blk.add_argument("--reason", required=True)
     p_blk.set_defaults(func=cmd_block)
 
@@ -1874,9 +2158,16 @@ def build_parser():
     # ── add-row ──
     p_add = sub.add_parser("add-row", help="추가작업 행 삽입 (§2.12 G-9)")
     p_add.add_argument("task_path", metavar="<task-path>")
-    p_add.add_argument("--after", type=int, required=True)
+    p_add.add_argument("--after-task-step", dest="after_task_step", metavar="<key>",
+                       help="070: 앵커 행 key 주소")
+    p_add.add_argument("--after-task-step-id", dest="after_task_step_id", type=int, metavar="<n>",
+                       help="070: 앵커 행 숫자 주소(신규, row_id와 동일 의미)")
+    p_add.add_argument("--after", type=int, metavar="<n>",
+                       help="[deprecated] --after-task-step / --after-task-step-id 사용 권장")
     p_add.add_argument("--stage", required=True, choices=STAGE_ENUM)
     p_add.add_argument("--item", required=True)
+    p_add.add_argument("--key", metavar="<key>",
+                       help="070 R-9: 신규 행 key 명시 지정 (미지정 시 자동 생성)")
     p_add.add_argument("--note")
     p_add.set_defaults(func=cmd_add_row)
 
@@ -1896,6 +2187,11 @@ def build_parser():
     p_gp.add_argument("--start", type=int, required=True)
     p_gp.add_argument("--note")
     p_gp.set_defaults(func=cmd_gate_pass)
+
+    # ── spec-validate (070 R-6) ──
+    p_spec = sub.add_parser("spec-validate", help="pipeline.json 스펙 검증 (070 R-6, DEC-2)")
+    p_spec.add_argument("spec_path", metavar="<pipeline.json>")
+    p_spec.set_defaults(func=cmd_spec_validate)
 
     # ── verify ──
     p_vfy = sub.add_parser(

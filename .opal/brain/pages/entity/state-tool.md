@@ -4,14 +4,14 @@ title: state-tool
 module: state_tool
 layer: util
 domain: opal-pipeline
-exports: [cmd_init, cmd_show, cmd_advance, cmd_mark, cmd_block, cmd_validate, cmd_add_row, cmd_status, cmd_gate_pass]
+exports: [cmd_init, cmd_show, cmd_advance, cmd_mark, cmd_block, cmd_validate, cmd_add_row, cmd_status, cmd_gate_pass, cmd_spec_validate]
 source_ref: opal/tools/state-tool/state_tool.py
 header_synced: 2026-06-10
 tags: [tool, pipeline]
-sources: [code:opal/tools/state-tool/, task:013, task:014, task:005]
-related: [brain-tool, opal-brain-system, clarification-gate]
+sources: [code:opal/tools/state-tool/, task:013, task:014, task:005, task:070]
+related: [brain-tool, opal-brain-system, clarification-gate, state-tool-task-step-key-address, pipeline-json-spec]
 created: 2026-06-10
-updated: 2026-06-16
+updated: 2026-07-23
 status: active
 ---
 
@@ -36,8 +36,17 @@ OPAL 파이프라인 현황판(STATE.md)의 JSON SSOT를 결정론적으로 집�
 - `verify <task-path> --clarification-check [--task-md <path>]` — TASK.md "## 명확화 결과" 4요소 잠금 검사. 미충족 시 `clarification_gate_unmet` exit 1. 섹션/파일 부재 시 graceful skip exit 0 (`opal/tools/state-tool/state_tool.py`)
 - `mark`/`advance` — TASK→다음단계 첫 행 진입 시 명확화 게이트 자동 훅 발동. `--auto-pass` 우회 불가, `--force`만 긴급 탈출구.
 
+행 주소 체계 확장 (task:070 — 상세는 [[state-tool-task-step-key-address]]):
+- `--task-step <key>`·`--task-step-id <n>` — pilot이 선언한 task-step key(`{stage_slug}.{item_slug}`, 예: `plan.pm_gate`) 또는 1-based 숫자로 행 주소 지정. 기존 `--row N`은 deprecated 별칭으로 유지되며 3방식 모두 동일 행을 산출한다. 주소 플래그 0개는 `task_step_addr_required`, 2개 이상 동시 지정은 `task_step_addr_conflict`로 거부.
+- `--action-step N/M` — 기존 `--step N/M`(액션 진행률) 개명. `--step` 별칭 유지.
+- `spec-validate <pipeline.json>` — pilot `references/pipeline.json` 스펙(→ [[pipeline-json-spec]])을 검증하는 신규 서브명령. 파일 경로를 받는 유일한 서브명령이다.
+- `init --rows-from <path>` — `.json`이면 pipeline.json 스펙 로딩(key 영속화, schema_version 1.1), `.md`면 기존 SKILL.md 표 파싱(레거시, stderr deprecation 경고).
+- `add-row --key <key>` — 동적 행 삽입 시 key 지정, 미지정 시 `{stage_slug}.{item_slug}_{n}` 자동 생성(유일성 보장).
+
 ## 관련 페이지
 
 - [[brain-tool]] — state-tool 패턴(run.sh+venv python, ERROR_CODES, KST date.js)을 복제한 동형 도구
 - [[opal-brain-system]] — brain의 집행 철학이 state-tool에서 유래
 - [[clarification-gate]] — task:005에서 추가된 verify --clarification-check 게이트 상세
+- [[state-tool-task-step-key-address]] — task:070 task-step 키 주소 체계 아키텍처 결정
+- [[pipeline-json-spec]] — task:070 pilot 파이프라인 정의 SSOT(pipeline.json)
