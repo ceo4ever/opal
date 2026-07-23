@@ -235,3 +235,7 @@
 - 신규: [[pages/concept/state-tool-next-action-auto-derivation.md]]
 - 출처: task:072
 
+## [2026-07-23] ingest | CLOSE ingest — 태스크 074 state-tool import-existing key 유실 결함 수정
+- 신규: [[pages/concept/state-tool-import-existing-key-reattachment.md]]
+- 출처: task:074
+

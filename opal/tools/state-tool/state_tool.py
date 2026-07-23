@@ -3,7 +3,7 @@
   "module": "state_tool",
   "layer": "util",
   "domain": "opal-pipeline",
-  "description": "OPAL 파이프라인 현황판 JSON SSOT 관리 CLI — 10개 서브 명령(init/show/advance/mark/block/validate/add-row/status/spec-validate/gate-pass[deprecated]) + verify + 3-way 모드(interactive/semi-agentic/agentic) 지원. 014 Phase 4: 새 표준 행 구조(QA Gate/State Gate 행 없음)와 정합 — gate-pass deprecate, CLOSE 마지막 행 판정 항목명 비의존화. 016: verify --red-check(RED 증거 게이트) + --fix-mode/--changed-files/--test-globs(테스트 불변성 게이트) 추가 — RED-first TDD 트랙 deterministic 집행. 017: mark --step N/M 다중 Step 조기 done 가드 — N<M이면 in_progress 유지(done 미처리) + 진행률(step) 영속화, N==M에서만 done; 미완 행은 기존 stage-transition guard가 단계전환·CLOSE 진입을 자동 차단. 005: verify --clarification-check + TASK→다음단계 자동 훅 — TASK 4요소(목표/범위/제약/완료기준) 미잠금 시 다음 단계 진입 거부(PRINCIPLES §1 집행), 정책 A graceful skip(섹션/파일 부재 시 하위호환). 034: mock 가드 false positive 수정 — _MOCK_CODE_PATTERNS 정규식 'MagicMock' 맨 단어 대안 제거(#1 산문 오탐) + _check_mock_patterns 인라인 백틱 제거 전처리 추가(#2 메타-순환 해소); 헌법 §4 정탐 유지. 054: resolve_owner_placeholder() 신설 — note-write 6경로(advance/mark/add-row/block/status/init)에서 '{owner_name}' 플레이스홀더를 identity.md owner_name으로 write-time 치환(fail-safe: 부재/공란/파싱실패 시 원문 유지). 070: task-step 키 주소 체계 도입 1차 — spec-validate 서브명령(pipeline.json 스펙 검증) + KEY_PATTERN/stage_to_slug/resolve_row_index 신설, build_rows_from_pipeline_json(init --rows-from .json 확장자 분기, .md는 deprecation 경고 유지), advance/mark/block에 --task-step/--task-step-id/--row(deprecated) 3주소·add-row에 --after-task-step/--after-task-step-id/--key(자동 생성) 추가, --step→--action-step 별칭(dest 공유), opdd skill·DICT/MODEL/DDL·MIGRATION stage enum 등록, ERROR_CODES 8종 추가. 072: STATE.md '다음 액션' 자동 파생 — state.json next_action 필드 신설(init 영속화·schema optional 등록), _derive_next_action(파이프라인 프론티어=첫 미완료 행 기준 파생)·update_next_action_section(첫 줄만 치환, 하위 자유기재 보존) 신규, advance/mark가 상태 반영 후 next_action 계산·저장·렌더(block/add-row/status는 미접촉), advance/mark --next-action per-transition 오버라이드(비지속 — 다음 전이 자동 파생 복귀).",
+  "description": "OPAL 파이프라인 현황판 JSON SSOT 관리 CLI — 10개 서브 명령(init/show/advance/mark/block/validate/add-row/status/spec-validate/gate-pass[deprecated]) + verify + 3-way 모드(interactive/semi-agentic/agentic) 지원. 014 Phase 4: 새 표준 행 구조(QA Gate/State Gate 행 없음)와 정합 — gate-pass deprecate, CLOSE 마지막 행 판정 항목명 비의존화. 016: verify --red-check(RED 증거 게이트) + --fix-mode/--changed-files/--test-globs(테스트 불변성 게이트) 추가 — RED-first TDD 트랙 deterministic 집행. 017: mark --step N/M 다중 Step 조기 done 가드 — N<M이면 in_progress 유지(done 미처리) + 진행률(step) 영속화, N==M에서만 done; 미완 행은 기존 stage-transition guard가 단계전환·CLOSE 진입을 자동 차단. 005: verify --clarification-check + TASK→다음단계 자동 훅 — TASK 4요소(목표/범위/제약/완료기준) 미잠금 시 다음 단계 진입 거부(PRINCIPLES §1 집행), 정책 A graceful skip(섹션/파일 부재 시 하위호환). 034: mock 가드 false positive 수정 — _MOCK_CODE_PATTERNS 정규식 'MagicMock' 맨 단어 대안 제거(#1 산문 오탐) + _check_mock_patterns 인라인 백틱 제거 전처리 추가(#2 메타-순환 해소); 헌법 §4 정탐 유지. 054: resolve_owner_placeholder() 신설 — note-write 6경로(advance/mark/add-row/block/status/init)에서 '{owner_name}' 플레이스홀더를 identity.md owner_name으로 write-time 치환(fail-safe: 부재/공란/파싱실패 시 원문 유지). 070: task-step 키 주소 체계 도입 1차 — spec-validate 서브명령(pipeline.json 스펙 검증) + KEY_PATTERN/stage_to_slug/resolve_row_index 신설, build_rows_from_pipeline_json(init --rows-from .json 확장자 분기, .md는 deprecation 경고 유지), advance/mark/block에 --task-step/--task-step-id/--row(deprecated) 3주소·add-row에 --after-task-step/--after-task-step-id/--key(자동 생성) 추가, --step→--action-step 별칭(dest 공유), opdd skill·DICT/MODEL/DDL·MIGRATION stage enum 등록, ERROR_CODES 8종 추가. 072: STATE.md '다음 액션' 자동 파생 — state.json next_action 필드 신설(init 영속화·schema optional 등록), _derive_next_action(파이프라인 프론티어=첫 미완료 행 기준 파생)·update_next_action_section(첫 줄만 치환, 하위 자유기재 보존) 신규, advance/mark가 상태 반영 후 next_action 계산·저장·렌더(block/add-row/status는 미접촉), advance/mark --next-action per-transition 오버라이드(비지속 — 다음 전이 자동 파생 복귀). 074: --import-existing key-보존 재접합 — cmd_init import 분기가 파싱 후 기존 state.json→pipeline.json (stage,item) 순서 매칭으로 key 재접합(schema_version 1.1 유지), 원천 전무 시 keyless+경고(하위호환); _key_source_index/_reattach_import_keys 신규.",
   "exports": [
     "cmd_init", "cmd_show", "cmd_advance", "cmd_mark",
     "cmd_block", "cmd_validate", "cmd_add_row", "cmd_status",
@@ -851,6 +851,40 @@ def parse_existing_state_md(md_content, command):
     return rows
 
 # ─────────────────────────────────────────────────────────────────────────────
+# 074: --import-existing key-보존 재접합 헬퍼 (PLAN §3.2.2)
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _key_source_index(source_rows):
+    """원천 rows에서 (stage,item) -> [key,...] 순서 큐 구성. key 없는 행은 제외.
+    반환: dict[tuple[str,str], list[str]]"""
+    index = {}
+    for row in source_rows:
+        key = row.get("key")
+        if not key:
+            continue
+        idx_key = (row.get("stage"), row.get("item"))
+        index.setdefault(idx_key, []).append(key)
+    return index
+
+
+def _reattach_import_keys(imported_rows, source_rows):
+    """imported_rows의 keyless 행에 source_rows의 key를 (stage,item) 순서 소비로 재접합.
+    imported_rows를 in-place 수정. 반환: 재접합된 행 수(int).
+    - 이미 key 있는 행은 건너뜀(체이닝 안전)
+    - 동일 (stage,item) 큐에서 앞에서부터 pop → 중복 순서 정렬"""
+    index = _key_source_index(source_rows)
+    matched = 0
+    for row in imported_rows:
+        if row.get("key"):
+            continue
+        idx_key = (row.get("stage"), row.get("item"))
+        queue = index.get(idx_key)
+        if queue:
+            row["key"] = queue.pop(0)
+            matched += 1
+    return matched
+
+# ─────────────────────────────────────────────────────────────────────────────
 # 9개 서브 명령 구현
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -906,6 +940,25 @@ def cmd_init(args):
                 if not (args.rows_spec or args.rows_from):
                     raise  # rows_spec/from fallback 없으면 그대로 실패
                 rows = []  # fallback으로 아래에서 처리
+
+        # 074: keyless import rows에 key 재접합 (우선순위: 기존 state.json → pipeline.json)
+        if rows:
+            # (1) 기존 state.json (DEC-4: 덮어쓰기 전 soft-load)
+            if state_file.exists():
+                try:
+                    _old_rows = json.loads(state_file.read_text(encoding="utf-8")).get("rows", [])
+                except Exception:
+                    _old_rows = []
+                if any(r.get("key") for r in _old_rows):
+                    _reattach_import_keys(rows, _old_rows)
+            # (2) pipeline.json 폴백 (DEC-2: 아직 keyless 행이 남고 .json 스펙이 있을 때만)
+            if any(not r.get("key") for r in rows) and \
+               getattr(args, "rows_from", None) and args.rows_from.endswith(".json"):
+                _reattach_import_keys(rows, build_rows_from_pipeline_json(args.rows_from, command, args.mode))
+            # (3) 원천 전무 → 경고 (DEC-5: 하위호환)
+            if not any(r.get("key") for r in rows):
+                print('{"warning":"--import-existing: key 원천(기존 state.json/pipeline.json) 부재 — '
+                      'keyless 유지(하위호환). --task-step 주소 불가 (task 074)."}', file=sys.stderr)
 
     if not rows:
         if args.rows_spec:

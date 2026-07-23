@@ -8,8 +8,8 @@ exports: [cmd_init, cmd_show, cmd_advance, cmd_mark, cmd_block, cmd_validate, cm
 source_ref: opal/tools/state-tool/state_tool.py
 header_synced: 2026-06-10
 tags: [tool, pipeline]
-sources: [code:opal/tools/state-tool/, task:013, task:014, task:005, task:070, task:072]
-related: [brain-tool, opal-brain-system, clarification-gate, state-tool-task-step-key-address, pipeline-json-spec, state-tool-next-action-auto-derivation]
+sources: [code:opal/tools/state-tool/, task:013, task:014, task:005, task:070, task:072, task:074]
+related: [brain-tool, opal-brain-system, clarification-gate, state-tool-task-step-key-address, pipeline-json-spec, state-tool-next-action-auto-derivation, state-tool-import-existing-key-reattachment]
 created: 2026-06-10
 updated: 2026-07-23
 status: active
@@ -48,6 +48,10 @@ STATE.md "다음 액션" 자동 파생 (task:072 — 설계 반전 상세는 [[s
 - `advance`/`mark`의 `--next-action <text>`는 해당 전이 1회 한정 오버라이드(비지속) — 다음 전이부터 자동 파생으로 복귀한다.
 - `block`/`add-row`/`status` 등 나머지 명령은 "다음 액션" 섹션을 접촉하지 않는다(`sync_state_md(next_action=None)` 기본값 유지).
 
+`--import-existing` key 재접합 결함 수정 (task:074 — 설계 상세는 [[state-tool-import-existing-key-reattachment]]):
+- `cmd_init` import 분기(`parse_existing_state_md`)가 STATE.md 렌더 표(key 컬럼 없음)만 원천으로 삼아 keyless rows를 생성하던 결함을 수정했다. `--force`가 이 keyless rows로 기존 state.json(key 보유)을 덮어써 schema_version이 "1.1"→"1.0"으로 강등되고 `--task-step`/`--task-step-id` 주소가 전면 불능이 되는 2차 파급이 있었다.
+- 신규 헬퍼 `_key_source_index`·`_reattach_import_keys`가 (stage,item) 순서 소비 매칭으로 keyless import 행에 기존 state.json(1순위) → `--rows-from` pipeline.json(2순위, 폴백) 순으로 key를 재접합한다. 두 원천 모두 없으면 keyless 유지 + stderr 경고(하위호환, stdout 불변).
+
 ## 관련 페이지
 
 - [[brain-tool]] — state-tool 패턴(run.sh+venv python, ERROR_CODES, KST date.js)을 복제한 동형 도구
@@ -56,3 +60,4 @@ STATE.md "다음 액션" 자동 파생 (task:072 — 설계 반전 상세는 [[s
 - [[state-tool-task-step-key-address]] — task:070 task-step 키 주소 체계 아키텍처 결정
 - [[pipeline-json-spec]] — task:070 pilot 파이프라인 정의 SSOT(pipeline.json)
 - [[state-tool-next-action-auto-derivation]] — task:072 "다음 액션" 자동 파생 설계 반전
+- [[state-tool-import-existing-key-reattachment]] — task:074 import-existing key 재접합 결함 수정 설계

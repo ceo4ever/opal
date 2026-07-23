@@ -3,7 +3,7 @@
   "module": "test_state_tool",
   "layer": "test",
   "domain": "opal-pipeline",
-  "description": "state-tool 단위 테스트 — 9개 명령 happy path + 23종 에러 코드 × 최소 1건 + G-5~G-15 시나리오. 005: TestClarificationGate 신설 — verify --clarification-check + TASK→다음단계 자동 훅 RED-first 케이스 ①~⑨ + 회귀 보호. 054: TestOwnerNamePlaceholder 신설 — note '{owner_name}' 플레이스홀더 identity.md write-time 치환 RED-first(S-1~S-7). 056: TestOpplSkillInit 신설 — `--skill oppl` enum 미등록 RED-first(S-020, H-1) — run.sh subprocess 실호출로 공개 인터페이스만 검증(mock 미사용). 070: task-step 키 주소 체계 도입 1차 RED-first — TestPipelineSpecValidate/TestPipelineJsonInit/TestStateSchema11Compat/TestTaskStepAddressing/TestActionStepRename/TestAddRowKey/TestOpddEnumDrift/TestGroupAPipelineSpecs/TestBackwardCompatAliases 9종 신설(TEST-SCENARIO.md S-1~S-14, PLAN §3.7.2) — 미구현 기능이므로 전부 FAIL 기대(RED 증거). 072: TestNextActionAutoDerive 신설 — STATE.md '다음 액션' 자동 파생 RED-first(TEST-SCENARIO.md S-1~S-4,S-6,S-7) — init next_action 영속화+schema optional 등록, advance/mark 프론티어 파생(pending '진입'/in_progress '진행 중'/전체완료 '태스크 완료'), 첫 줄만 치환(하위 자유기재 보존), --next-action 오버라이드 우선+비지속 복귀 — 공개 CLI 경로(직접 호출+run.sh subprocess)로만 검증, 미구현이므로 실패 기대(RED 증거).",
+  "description": "state-tool 단위 테스트 — 9개 명령 happy path + 23종 에러 코드 × 최소 1건 + G-5~G-15 시나리오. 005: TestClarificationGate 신설 — verify --clarification-check + TASK→다음단계 자동 훅 RED-first 케이스 ①~⑨ + 회귀 보호. 054: TestOwnerNamePlaceholder 신설 — note '{owner_name}' 플레이스홀더 identity.md write-time 치환 RED-first(S-1~S-7). 056: TestOpplSkillInit 신설 — `--skill oppl` enum 미등록 RED-first(S-020, H-1) — run.sh subprocess 실호출로 공개 인터페이스만 검증(mock 미사용). 070: task-step 키 주소 체계 도입 1차 RED-first — TestPipelineSpecValidate/TestPipelineJsonInit/TestStateSchema11Compat/TestTaskStepAddressing/TestActionStepRename/TestAddRowKey/TestOpddEnumDrift/TestGroupAPipelineSpecs/TestBackwardCompatAliases 9종 신설(TEST-SCENARIO.md S-1~S-14, PLAN §3.7.2) — 미구현 기능이므로 전부 FAIL 기대(RED 증거). 072: TestNextActionAutoDerive 신설 — STATE.md '다음 액션' 자동 파생 RED-first(TEST-SCENARIO.md S-1~S-4,S-6,S-7) — init next_action 영속화+schema optional 등록, advance/mark 프론티어 파생(pending '진입'/in_progress '진행 중'/전체완료 '태스크 완료'), 첫 줄만 치환(하위 자유기재 보존), --next-action 오버라이드 우선+비지속 복귀 — 공개 CLI 경로(직접 호출+run.sh subprocess)로만 검증, 미구현이므로 실패 기대(RED 증거). 074: TestImportPreservesKeys 신설 — `--import-existing` task-step key 유실 결함 RED-first(TEST-SCENARIO.md S-a~S-e) — force+import-existing 후 rows[].key 100% 보존, pipeline.json 폴백 복원, key 원천 전무 시 keyless+stderr 경고(하위호환), schema_version 1.1 유지, 동일 (stage,item) 중복 순서 소비 — 공개 cmd_init 호출 + 실 파일 I/O로만 검증, 수정 전 코드에서 FAIL 기대(RED 증거).",
   "exports": [
     "TestInit", "TestShow", "TestAdvance", "TestMark",
     "TestBlock", "TestValidate", "TestAddRow", "TestStatus", "TestGatePass",
@@ -12,7 +12,7 @@
     "TestPipelineSpecValidate", "TestPipelineJsonInit", "TestStateSchema11Compat",
     "TestTaskStepAddressing", "TestActionStepRename", "TestAddRowKey",
     "TestOpddEnumDrift", "TestGroupAPipelineSpecs", "TestBackwardCompatAliases",
-    "TestNextActionAutoDerive"
+    "TestNextActionAutoDerive", "TestImportPreservesKeys"
   ]
 }
 
@@ -1476,6 +1476,230 @@ PLAN 단계 진입
             exit_code, result = self._call_cmd(ST.cmd_init, args)
         self.assertEqual(exit_code, 1)
         self.assertEqual(result.get("error"), "import_failed")
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# D-2. TestImportPreservesKeys — 074 `--import-existing` task-step key 유실 결함
+#      (TEST-SCENARIO.md S-a~S-e, RED-first — 작성자≠구현자, mock/patch 금지)
+# ═════════════════════════════════════════════════════════════════════════════
+
+class TestImportPreservesKeys(BaseTestCase):
+    """`cmd_init` import 분기가 기존 state.json/pipeline.json의 rows[].key를
+    (stage,item) 순서 매칭으로 재접합하는지 검증 — PLAN 074 §3.2 DEC-1~DEC-5.
+
+    RED 근거: 현재 `cmd_init` import 분기(state_tool.py:900-908)는
+    `parse_existing_state_md`가 만든 keyless rows를 그대로 사용하고, line 932
+    schema_version 계산도 그 결과에 의존한다 — key 재접합 로직이 없으므로
+    S-a/S-b/S-d/S-e는 GREEN(구현) 이전에는 FAIL한다(key 부재/None,
+    schema_version "1.0" 강등). S-c는 keyless 자체는 이미 성립하나 stderr 경고
+    단언이 없어 FAIL한다.
+
+    검증 방식: mock/patch/MagicMock 금지 — 실 `cmd_init` 호출(직접 함수 호출,
+    `BaseTestCase._call_cmd` 패턴) + 실 파일 I/O(state.json/STATE.md)만 사용한다
+    (red-first.md §4).
+    """
+
+    # S-a/S-d/S-e 공용 — key 보유 상태 fixture 생성용 pipeline.json 스펙
+    # (TestPipelineJsonInit._MINI_SPEC과 동형 구조, task_steps 4행)
+    _KEY_SPEC = {
+        "spec_version": "1.0",
+        "skill": "opp",
+        "meta": {"mode_label": "Mini", "stages": ["TASK", "PLAN", "CLOSE"]},
+        "task_steps": [
+            {"id": 1, "key": "task.task_md",      "stage": "TASK",  "item": "작업"},
+            {"id": 2, "key": "task.user_confirm", "stage": "TASK",  "item": "사용자 확인"},
+            {"id": 3, "key": "plan.plan_md",       "stage": "PLAN",  "item": "작업"},
+            {"id": 4, "key": "close.done_md",      "stage": "CLOSE", "item": "DONE.md 생성"},
+        ],
+    }
+
+    # S-e 전용 — 동일 (stage,item)("EXECUTE","작업")이 2회 중복 등장하는 스펙
+    _DUP_SPEC = {
+        "spec_version": "1.0",
+        "skill": "opp",
+        "meta": {"mode_label": "Dup", "stages": ["TASK", "EXECUTE", "CLOSE"]},
+        "task_steps": [
+            {"id": 1, "key": "task.task_md",   "stage": "TASK",    "item": "작업"},
+            {"id": 2, "key": "execute.step_a", "stage": "EXECUTE", "item": "작업"},
+            {"id": 3, "key": "execute.step_b", "stage": "EXECUTE", "item": "작업"},
+            {"id": 4, "key": "close.done_md",  "stage": "CLOSE",   "item": "DONE.md 생성"},
+        ],
+    }
+
+    def _write_spec_file(self, name, spec_dict):
+        p = self.tmpdir / name
+        p.write_text(json.dumps(spec_dict, ensure_ascii=False), encoding="utf-8")
+        return p
+
+    def _write_state_md_table(self, stage_item_pairs):
+        """key 컬럼이 없는 실제 렌더 형식 STATE.md를 직접 작성한다
+        (`render_pipeline_table` state_tool.py:271 산출 형식과 동일한
+        `| # | 단계 | 항목 | 상태 | 시점 |` 5컬럼 표 — key 원천이 STATE.md뿐인
+        결함 재현 조건)."""
+        header = (
+            "# STATE: 테스트\n\n"
+            "> 최종 갱신: 2026-05-01 22:00\n\n"
+            "## 현재 상태\n- 모드: interactive\n- 단계: TASK\n"
+            "- 진행: TASK 단계\n- 상태: 진행 중\n\n"
+            "## 파이프라인 현황판\n\n"
+            "| # | 단계 | 항목 | 상태 | 시점 |\n"
+            "|---|------|------|------|------|\n"
+        )
+        body = "".join(
+            f"| {i + 1} | {stage} | {item} | ⬜ |  |\n"
+            for i, (stage, item) in enumerate(stage_item_pairs)
+        )
+        footer = (
+            "\n## 의사결정 로그\n| # | 시점 | 결정 | 근거 |\n|---|------|------|------|\n\n"
+            "## 블로커\n없음\n\n## 다음 액션\nPLAN 단계 진입\n"
+        )
+        (self.task_path / "STATE.md").write_text(header + body + footer, encoding="utf-8")
+
+    def _run_init(self, **kwargs):
+        """cmd_init 직접 호출 — stdout+stderr 동시 캡처.
+        반환: (exit_code, result_dict, stderr_text)."""
+        import io
+        from contextlib import redirect_stdout, redirect_stderr
+        kwargs.setdefault("skill", "opp")
+        kwargs.setdefault("mode", "interactive")
+        args = make_args(task_path=str(self.task_path), **kwargs)
+        out, err_buf = io.StringIO(), io.StringIO()
+        exit_code = 0
+        with redirect_stdout(out), redirect_stderr(err_buf):
+            with _mock_now():
+                try:
+                    ST.cmd_init(args)
+                except SystemExit as e:
+                    exit_code = e.code
+        output = out.getvalue().strip()
+        result = json.loads(output) if output else {}
+        return exit_code, result, err_buf.getvalue()
+
+    def _make_key_bearing_fixture(self, spec_dict, name="key_spec.json"):
+        """spec_dict로 실제 init을 1회 실행해 key 보유 state.json + 렌더된
+        STATE.md(key 컬럼 없음) fixture를 생성한다. 반환: 원본 state dict."""
+        spec_path = self._write_spec_file(name, spec_dict)
+        exit_code, result, _ = self._run_init(rows_from=str(spec_path))
+        self.assertEqual(exit_code, 0, f"fixture 생성용 init 실패: {result}")
+        return self._state()
+
+    # ── S-a ──────────────────────────────────────────────────────────────
+    def test_force_import_preserves_all_keys(self):
+        """S-a (H-1): key 보유 state.json + STATE.md 존재 상태에서
+        `init --force --import-existing` 후 rows[].key가 원본과 순서·값
+        100% 일치해야 한다 (070 --task-step 주소 계약)."""
+        original = self._make_key_bearing_fixture(self._KEY_SPEC)
+        original_keys = [r.get("key") for r in original["rows"]]
+        original_stage_item = [(r["stage"], r["item"]) for r in original["rows"]]
+        self.assertTrue(all(original_keys), "fixture 자체에 key 없음 — 사전조건 오류")
+
+        exit_code, result, _ = self._run_init(
+            force=True, import_existing=True, note="recovery"
+        )
+        self.assertEqual(exit_code, 0, f"force+import_existing 실패: {result}")
+
+        restored = self._state()
+        restored_keys = [r.get("key") for r in restored["rows"]]
+        restored_stage_item = [(r["stage"], r["item"]) for r in restored["rows"]]
+        self.assertEqual(
+            restored_keys, original_keys,
+            f"key 유실 — 원본 {original_keys} vs 복구 후 {restored_keys}"
+        )
+        self.assertEqual(restored_stage_item, original_stage_item)
+
+    # ── S-b ──────────────────────────────────────────────────────────────
+    def test_import_with_pipeline_json_restores_keys(self):
+        """S-b (H-2): state.json 없음 + STATE.md + pipeline.json 스펙 상태에서
+        `--import-existing --rows-from mini.json` 후 rows[].key가 스펙 기준
+        (stage,item) 매칭으로 복원되어야 한다."""
+        pairs = [(ts["stage"], ts["item"]) for ts in self._KEY_SPEC["task_steps"]]
+        self._write_state_md_table(pairs)
+        spec_path = self._write_spec_file("mini.json", self._KEY_SPEC)
+        self.assertFalse((self.task_path / "state.json").exists())
+
+        exit_code, result, _ = self._run_init(
+            import_existing=True, rows_from=str(spec_path)
+        )
+        self.assertEqual(exit_code, 0, f"pipeline.json 폴백 import 실패: {result}")
+
+        state = self._state()
+        expected_keys = [ts["key"] for ts in self._KEY_SPEC["task_steps"]]
+        actual_keys = [r.get("key") for r in state["rows"]]
+        self.assertEqual(actual_keys, expected_keys)
+
+    # ── S-c ──────────────────────────────────────────────────────────────
+    def test_import_no_key_source_keyless_with_warning(self):
+        """S-c (H-3): key 원천(기존 state.json/pipeline.json)이 전무한 상태에서
+        `--import-existing`만 호출 시 ①rows keyless 유지 ②stderr 경고 JSON
+        1줄 ③stdout ok 페이로드·rows_count 불변(하위호환) ④schema_version
+        "1.0" 유지를 만족해야 한다."""
+        self._write_state_md_table([
+            ("TASK", "작업"), ("TASK", "TASK.md 생성"), ("CLOSE", "State Gate"),
+        ])
+        self.assertFalse((self.task_path / "state.json").exists())
+
+        exit_code, result, stderr_text = self._run_init(import_existing=True)
+
+        self.assertEqual(exit_code, 0, f"key 원천 전무 import 실패: {result}")
+        self.assertTrue(result.get("ok"), f"ok 페이로드 불변 위반: {result}")
+        self.assertEqual(result.get("rows_count"), 3, "rows_count 불변(하위호환) 위반")
+
+        state = self._state()
+        self.assertEqual(len(state["rows"]), 3)
+        for row in state["rows"]:
+            self.assertFalse(row.get("key"), f"key 원천 전무인데 key 부여됨: {row}")
+        self.assertEqual(state["schema_version"], "1.0")
+
+        self.assertIn(
+            "warning", stderr_text,
+            f"key 원천 전무 시 stderr 경고 1줄이 있어야 함 — 실제 stderr: {stderr_text!r}"
+        )
+
+    # ── S-d ──────────────────────────────────────────────────────────────
+    def test_preserved_keys_keep_schema_version_1_1(self):
+        """S-d (H-4): key 보유 state.json + STATE.md 상태에서
+        `init --force --import-existing` 후 결과 state.json의 schema_version이
+        "1.1"로 유지되어야 한다 (재접합이 schema_version 계산 이전에 배치되어
+        any(key) 조건이 True가 되는 정합, state_tool.py:932 무변경 전제)."""
+        self._make_key_bearing_fixture(self._KEY_SPEC)
+
+        exit_code, result, _ = self._run_init(
+            force=True, import_existing=True, note="recovery"
+        )
+        self.assertEqual(exit_code, 0, f"force+import_existing 실패: {result}")
+
+        restored = self._state()
+        self.assertEqual(
+            restored["schema_version"], "1.1",
+            f"key 보존 import인데 schema_version 강등: {restored['schema_version']}"
+        )
+
+    # ── S-e ──────────────────────────────────────────────────────────────
+    def test_duplicate_stage_item_ordered_consumption(self):
+        """S-e (H-2, H-5): 동일 (stage,item)("EXECUTE","작업")이 복수 행으로
+        존재하는 key 보유 state.json + STATE.md 상태에서
+        `init --force --import-existing` 후 각 중복 행이 원본 순서대로
+        대응 key를 부여받아 key 오배정 0건, 원본과 100% 일치해야 한다."""
+        original = self._make_key_bearing_fixture(self._DUP_SPEC, name="dup_spec.json")
+        original_keys = [r.get("key") for r in original["rows"]]
+        # 사전조건: 실제로 중복 (stage,item) 쌍이 존재하는지 확인
+        stage_items = [(r["stage"], r["item"]) for r in original["rows"]]
+        self.assertEqual(
+            stage_items.count(("EXECUTE", "작업")), 2,
+            "fixture에 중복 (stage,item) 쌍이 없음 — 사전조건 오류"
+        )
+
+        exit_code, result, _ = self._run_init(
+            force=True, import_existing=True, note="recovery duplicate order"
+        )
+        self.assertEqual(exit_code, 0, f"force+import_existing 실패: {result}")
+
+        restored = self._state()
+        restored_keys = [r.get("key") for r in restored["rows"]]
+        self.assertEqual(
+            restored_keys, original_keys,
+            f"중복 (stage,item) 순서 소비 오배정 — 원본 {original_keys} vs 복구 후 {restored_keys}"
+        )
 
 
 # ═════════════════════════════════════════════════════════════════════════════

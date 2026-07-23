@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-07-23 12:38
+> 갱신: 2026-07-23 13:34
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -162,6 +162,7 @@
 - [[skill-registry-index-registration-required-for-discovery]] — 신규 스킬은 파일 배포만으로 부족하다 — 레지스트리 인덱스 등록이 발견의 전제조건 #skill-registry #deployment-gap #discovery #lesson
 - [[skill-registry-validate-extension]] — skill-registry validate 확장 — dangling error 격상 + unregistered 역방향 감지 #skill-registry #validate #drift-detection #tooling
 - [[skill-rename-validate-pattern]] — 스킬 rename 후 레지스트리 정합 검증 패턴 #skill-registry #validate #rename #drift-detection #lesson
+- [[state-tool-import-existing-key-reattachment]] — state-tool import-existing key 재접합 #state-tool #import #key-address #task-074
 - [[state-tool-mock-guard-skill-false-positive]] — state-tool mock 가드 정규식 ↔ SKILL 표준 문구 false positive #state-tool #mock-guard #false-positive #skill #bug #framework
 - [[state-tool-next-action-auto-derivation]] — STATE.md 다음 액션 자동 파생 — 설계 반전 (state-tool) #state-tool #pipeline #architecture-decision #enforce-dont-advise
 - [[state-tool-owner-name-write-time-substitution]] — state-tool {owner_name} write-time 치환 메커니즘 #state-tool #identity #note #mechanism
