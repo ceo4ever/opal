@@ -2680,11 +2680,19 @@ class TestVerify(BaseTestCase):
         import io
         from contextlib import redirect_stdout
 
-        scenario_path = pathlib.Path(
-            "/Volumes/Data/AiStudio/workspace/opal/tasks/"
-            "034-260621-opds-state-tool-mock-패턴-오탐수정/TEST-SCENARIO.md"
+        # 레포 루트 기준 상대 해석 — 절대경로 하드코딩은 레포 개명(opal→ai-framework)으로
+        # 이미 한 차례 끊겼다. 034는 tasks/backup/으로 이관됐으므로 두 위치를 모두 탐색한다.
+        repo_root = _TOOL_DIR.parents[2]
+        task_dir = "034-260621-opds-state-tool-mock-패턴-오탐수정"
+        candidates = [
+            repo_root / "tasks" / task_dir / "TEST-SCENARIO.md",
+            repo_root / "tasks" / "backup" / task_dir / "TEST-SCENARIO.md",
+        ]
+        scenario_path = next((p for p in candidates if p.exists()), None)
+        self.assertIsNotNone(
+            scenario_path,
+            f"034 TEST-SCENARIO.md 파일이 없음 (탐색: {[str(p) for p in candidates]})",
         )
-        self.assertTrue(scenario_path.exists(), "034 TEST-SCENARIO.md 파일이 없음")
 
         lines = scenario_path.read_text(encoding="utf-8").splitlines()
         result = ST._check_mock_patterns(lines)
@@ -4330,11 +4338,16 @@ _OPDW_PIPELINE_SPEC = json.loads("""
 }
 """)
 
+# (skill, 픽스처 스펙, 픽스처 행 수, 실파일 행 수, 실파일 스킬 디렉토리)
+# - 픽스처 행 수: PLAN 070 §3.6.2 전문 인용 시점의 고정값. 실파일이 진화해도 바꾸지 않는다.
+# - 실파일 행 수: 현행 pipeline.json 기준. 파이프라인 행 추가/삭제 시 함께 갱신한다.
+#   073(opd `test_scenario.scenario_gate`)·075(opds `plan.scenario_gate`) 목표-커버 게이트 행
+#   추가로 두 값이 분기했다.
 _GROUP_A_SPECS = [
-    ("opp",  _OPP_PIPELINE_SPEC,  9,  "opal-pilot-project"),
-    ("opd",  _OPD_PIPELINE_SPEC,  15, "opal-pilot-dev"),
-    ("opds", _OPDS_PIPELINE_SPEC, 10, "opal-pilot-dev-short"),
-    ("opdw", _OPDW_PIPELINE_SPEC, 9,  "opal-pilot-dev-wireframe"),
+    ("opp",  _OPP_PIPELINE_SPEC,  9,  9,  "opal-pilot-project"),
+    ("opd",  _OPD_PIPELINE_SPEC,  15, 16, "opal-pilot-dev"),
+    ("opds", _OPDS_PIPELINE_SPEC, 10, 11, "opal-pilot-dev-short"),
+    ("opdw", _OPDW_PIPELINE_SPEC, 9,  9,  "opal-pilot-dev-wireframe"),
 ]
 
 
@@ -4990,7 +5003,7 @@ class TestGroupAPipelineSpecs(unittest.TestCase):
     def test_all_four_fixtures_row_counts_and_keys(self):
         """[T070/S-1] opp/opd/opds/opdw 임시 픽스처 json init → 행 수 9/15/10/9 + 전 행 key
         존재·유일 (직접 호출, PLAN §3.6.2 전문 인용)."""
-        for skill, spec, expected_count, _skill_dir in _GROUP_A_SPECS:
+        for skill, spec, expected_count, _real_count, _skill_dir in _GROUP_A_SPECS:
             with self.subTest(skill=skill):
                 spec_path = self.tmpdir / f"{skill}.pipeline.json"
                 spec_path.write_text(json.dumps(spec, ensure_ascii=False), encoding="utf-8")
@@ -5012,7 +5025,7 @@ class TestGroupAPipelineSpecs(unittest.TestCase):
 
     def test_all_four_fixtures_spec_validate_ok(self):
         """[T070/S-1] 그룹 A 4종 임시 픽스처 모두 spec-validate ok:true (직접 호출)."""
-        for skill, spec, _count, _skill_dir in _GROUP_A_SPECS:
+        for skill, spec, _count, _real_count, _skill_dir in _GROUP_A_SPECS:
             with self.subTest(skill=skill):
                 violations = ST.validate_pipeline_spec(_deepcopy_json(spec))
                 self.assertEqual(violations, [], f"{skill} 스펙 위반 발견: {violations}")
@@ -5028,7 +5041,7 @@ class TestGroupAPipelineSpecs(unittest.TestCase):
         활성화된다(skip에서 실행으로 전환).
         """
         skills_root = _TOOL_DIR.parent.parent / "skills"
-        for skill, _spec, expected_count, skill_dir in _GROUP_A_SPECS:
+        for skill, _spec, _fixture_count, real_count, skill_dir in _GROUP_A_SPECS:
             real_path = skills_root / skill_dir / "references" / "pipeline.json"
             if not real_path.exists():
                 self.skipTest(
@@ -5048,7 +5061,9 @@ class TestGroupAPipelineSpecs(unittest.TestCase):
                     "--rows-from", str(real_path),
                 ])
                 self.assertEqual(code, 0, f"{skill} 실파일 init 실패: {stdout!r}")
-                self.assertEqual(data.get("rows_count"), expected_count)
+                self.assertEqual(data.get("rows_count"), real_count,
+                                 f"{skill} 실파일 행 수 불일치 — pipeline.json 변경 시 "
+                                 f"_GROUP_A_SPECS 실파일 행 수도 갱신해야 한다")
 
 
 # ═════════════════════════════════════════════════════════════════════════════
