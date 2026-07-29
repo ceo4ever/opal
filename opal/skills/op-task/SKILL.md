@@ -171,7 +171,7 @@ description: |
 tasks/{NNN}-{YYMMDD}-{스킬약어}-{태스크명}/TASK.md
 ```
 
-- `{NNN}`: 3자리 순번 — `.opal/MEMORY.md`의 `last_task_number` + 1로 채번 (harness §4 참조)
+- `{NNN}`: 3자리 순번 — `memory-tool task-number --bump` 응답의 `last_task_number` (절차: `harness/task-process.md` §태스크 번호 채번 규칙)
 - `{YYMMDD}`: TASK 단계 시작일 (KST) — `node ~/.opal/tools/date/date.js yymmdd` 실행하여 취득
 - `{스킬약어}`: STEP 5에서 결정된 오케스트레이터 약어 (예: `opp`, `opd`, `opds`, `opdw`, `opwt`)
 - `{태스크명}`: **[기본] 한글로 작성한다.** 영문 kebab-case·한글+영문 혼용은 소유자가 명시 요청할 때만 사용한다. **공백 금지**(셸 명령 안정성), 단어 구분은 하이픈(`-`). 예(한글 기본): `로그인-버그수정`, `회원가입-구현`, `소셜-login-혼용가능` / (영문은 명시 요청 시) `user-auth-implementation`
@@ -275,3 +275,4 @@ TASK.md 완성 전에 다음을 확인한다:
 | v2.1 | 2026-06-17 15:50 | `{태스크명}` 기본값을 **한글**로 변경 — 영문·혼용은 소유자 명시 요청 시. 예시 한글 우선 재배치 (026 후속 L2: 한글 기본) |
 | v2.2 | 2026-07-23 12:09 | `--next-action` 계약 보강 — advance/mark가 파이프라인 프론티어에서 자동 파생·갱신하며, 전이 시 1회성 오버라이드 가능함을 명시 (072) |
 | v2.3 | 2026-07-23 13:18 | AC 작성 가이드에 "교체형 목표(구형→신형 전환·대체·마이그레이션) → 잔존0·채택 검증 기준 의무" 규칙 + Bad/Good 예시 1행 추가 — 루브릭 ①목표달성·⑤채택/잔존 축 채점 가능성 보장 (073) |
+| v2.4 | 2026-07-28 | `{NNN}` 채번 서술을 `.opal/MEMORY.md` 헤더 직접 참조에서 `memory-tool task-number --bump` 포인터 참조로 전환 (절차 SSOT: `harness/task-process.md`) (078) |

@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "last_task_number": 5,
+  "memories": [
+    {
+      "title": "날짜 형식 위반 행",
+      "date": "26-7-28",
+      "type": "project",
+      "status": "active",
+      "file": "memory/bad_date.md",
+      "summary": "date가 YYYY-MM-DD pattern을 위반한다 (첫 번째 위반 행)"
+    },
+    {
+      "title": "유형 enum 위반 행",
+      "date": "2026-07-28",
+      "type": "bogus",
+      "status": "active",
+      "file": "memory/bad_type.md",
+      "summary": "type이 enum에 없는 값이다"
+    },
+    {
+      "title": "요약 길이 위반 행",
+      "date": "2026-07-28",
+      "type": "issues",
+      "status": "active",
+      "file": "memory/bad_summary.md",
+      "summary": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    }
+  ],
+  "history": []
+}

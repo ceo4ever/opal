@@ -281,9 +281,9 @@ PM 컨텍스트가 로드된 경우, 메모리 브리핑에 PM 역할 요약도 
 
 ### 절차
 
-1. `{프로젝트}/.opal/MEMORY.md`를 Read로 읽는다
-2. MEMORY.md가 없으면 브리핑 생략 (인사만 하고 대기)
-3. MEMORY.md가 있으면 인덱스에서 최근 메모리 항목을 파악한다
+1. `~/.opal/tools/memory-tool/run.sh show --file {프로젝트}/.opal/MEMORY.json --brief`를 호출한다
+2. 도구 응답이 파일 부재를 반환하거나 메모리 항목이 0건이면 브리핑 생략 (인사만 하고 대기)
+3. 응답이 있으면 `index_rows`에서 최근 메모리 항목을 파악한다
 4. 첫 응답에 브리핑을 포함한다
 
 ### 브리핑 형식
@@ -301,7 +301,7 @@ PM 컨텍스트가 로드된 경우, 메모리 브리핑에 PM 역할 요약도 
 ### 규칙
 
 - **메모리 3~5개** 이내로 요약한다 (너무 많으면 핵심만)
-- **타입별 우선순위**: feedback > project > user > reference (피드백이 가장 중요)
+- **타입별 우선순위**: feedback > preferences > project > architecture > issues > task (피드백이 가장 중요)
 - **날짜순**: 최신 메모리를 우선 표시
 - **메모리가 없는 프로젝트**: 브리핑 없이 일반 인사로 시작
 
@@ -333,7 +333,7 @@ PM 컨텍스트가 로드된 경우, 메모리 브리핑에 PM 역할 요약도 
 - `.opal/AGENT.md` — PM 역할 (검토 기준, 전문 역할, 확정 기준)
 - `docs/PROJECT.md` — 프로젝트 정의 + 문서 레지스트리
 - `docs/CONVENTIONS.md` — 코드 컨벤션
-- `.opal/MEMORY.md` — 프로젝트 메모리 인덱스
+- `.opal/MEMORY.json` — 프로젝트 메모리 인덱스
 
 ---
 
@@ -347,3 +347,4 @@ PM 컨텍스트가 로드된 경우, 메모리 브리핑에 PM 역할 요약도 
 | v1.3 | 2026-06-11 22:42 | §9 코드 작업 디스패치 전 code-scan 무조건 호출 정합 1줄 + scan.json 즉석 자동 생성 참조 추가 (010) |
 | v1.4 | 2026-06-30 17:37 | §12~§17 신설 — PM 섹션(역할전환 상세·L2·code-scan 활용·opal-brain 활용·프로젝트 메모리 브리핑·모델매핑 적용·프로젝트 컨텍스트) AGENT.md에서 이관. dedup: 하네스 3-way → opal-harness.md §2 포인터, 모델매핑 우선순위 → opal-harness.md §6 + opal-model-mapping.md §5 포인터로 단일화. (050) |
 | v1.5 | 2026-07-17 | §1 역할 분리 원칙·§5 명명 정리 — "학습 루프" → "개선 루프". §5 stub이 신규 SSOT `harness/pm-improvement-loop.md`(rename+통합본, 구 pm-learning-loop.md)를 지칭하도록 갱신 (058) |
+| v1.6 | 2026-07-28 | §15 브리핑 절차를 `MEMORY.md` Read → `memory-tool show --brief` 호출로 전환, 부재 판정을 도구 응답 기준으로 변경 + 타입 우선순위 drift 정정(`user`/`reference` 제거 → 실 enum 6종). §17 프로젝트 컨텍스트 `.opal/MEMORY.md` → `.opal/MEMORY.json` (078) |

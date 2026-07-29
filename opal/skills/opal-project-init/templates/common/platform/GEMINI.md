@@ -64,7 +64,7 @@
 | `{프로젝트}/.opal/AGENT.md` (PM) | 프로젝트 작업 요청 또는 `//opp` |
 | `agents.md` + `opal-model-mapping.md` | 워커 디스패치 직전 |
 | `skills.md` / skill-registry | `//` 커맨드 입력 |
-| `.opal/MEMORY.md` | PM 컨텍스트 로드 이후 |
+| `.opal/MEMORY.json` | PM 컨텍스트 로드 이후 |
 
 "미리 읽어두면 도움이 될 것 같다"는 판단으로 선행 로드하지 않는다.
 GUARD-1 + GUARD-2가 함께 부트스트랩 전체를 정의한다.

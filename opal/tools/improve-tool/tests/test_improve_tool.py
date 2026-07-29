@@ -4,41 +4,36 @@
   "task": "058",
   "layer": "test",
   "domain": "opal-tools",
-  "description": "improve-tool record 서브명령 행위 계약 RED-first 테스트 (058 TEST-SCENARIO.md S-1~S-5 대응). RED 상태(미구현, run.sh/improve_tool.py 부재) — 전부 FAIL 예상. GREEN 전환은 EXECUTE 구현 워커(op-dev-execute) 담당(작성자≠구현자, red-first.md §2).",
-  "scenarios": ["S-1", "S-2", "S-3", "S-4", "S-5"],
+  "description": "improve-tool record 서브명령 행위 계약 테스트 (058 TEST-SCENARIO.md S-1~S-5 + 078 F-008 TS-024/025/026 대응). scope local 위임 대상이 MEMORY.json 단독 SSOT로 전환됨에 따라 fixture와 단언을 json 문서 기준으로 갱신(078).",
+  "scenarios": ["S-1", "S-2", "S-3", "S-4", "S-5", "TS-024", "TS-025", "TS-026"],
   "exports": [
     "TestJsonContractThreePaths",
     "TestFwInboxSelfContainedEntry",
     "TestLocalScopeMemoryDelegation",
     "TestLocalScopeGracefulSkip",
-    "TestRecordArgumentValidation"
+    "TestRecordArgumentValidation",
+    "TestDelegation"
   ]
 }
 
-[T058/L1] improve-tool `record` 서브명령 행위 계약 — RED-first TDD
+[T058/L1][T078/L2-R7] improve-tool `record`/`list` 서브명령 행위 계약
 검증 대상: opal/tools/improve-tool/run.sh 의 공개 인터페이스(exit code + stdout JSON)만 단언.
 내부 함수/private 결합 금지(red-first.md §4) — subprocess 실호출만 사용, mock/patch/MagicMock 금지.
-실 fixture만 사용: tmp 임시 프로젝트(.opal/MEMORY.md 유무) + 임시 fw-inbox 디렉토리.
-실제 `~/.opal/fw-inbox`·소유자 프로젝트 MEMORY.md 오염 금지 — 모든 fw 경로 테스트는
+실 fixture만 사용: tmp 임시 프로젝트(.opal/MEMORY.json·MEMORY.md 유무 3케이스) + 임시 fw-inbox 디렉토리.
+실제 `~/.opal/fw-inbox`·소유자 프로젝트 MEMORY.json/.md 오염 금지 — 모든 fw 경로 테스트는
 환경변수 `IMPROVE_FW_INBOX` 로 임시 디렉토리를 주입한다(GREEN 구현이 이 env를 최우선
 목적지로 사용해야 하는 계약 — 미설정 시에만 기본값 `~/.opal/fw-inbox` 사용).
 
-PLAN.md §3.1.2 근거 (F-001 improve_tool.py 서브명령 스펙):
+PLAN.md §3.1.2 (F-001) + §3.8.2 (F-008, 078) 근거:
   - record --scope {local|fw}(req) --title(req) --body --situation --source-task --project-root
-  - scope local: <project-root>/.opal/MEMORY.md 존재 시 memory-tool append 위임
-    (--kind memory --type improvement --status candidate), 부재 시
-    {"ok":true,"scope":"local","skipped":true,"reason":"no MEMORY.md"} no-op.
+  - scope local: `_resolve_memory_target()`(improve_tool.py) — <project-root>/.opal/MEMORY.json
+    존재 시(또는 MEMORY.md만 있어도 json 경로로 위임해 memory-tool의 lazy 변환을 유도) memory-tool
+    append 위임(--kind memory --type improvement --status candidate). 둘 다 부재 시
+    {"ok":true,"scope":"local","skipped":true,"reason":"no MEMORY.json"} no-op.
   - scope fw: ~/.opal/fw-inbox/{YYYYMMDD-HHmmss}-{host}-{slug}.md 결정론적 write.
     frontmatter 필수키(H-8): host/project/situation/created.
   - JSON 계약(H-4): 모든 경로 stdout에 "ok" 키 보장. 실패는 크래시/스택트레이스 없이
     {"ok":false,"error":"..."}.
-
-주의(GREEN 구현자에게): PLAN이 지정한 memory-tool 위임 인자는 `--type improvement
---status candidate` 이나, 현재 opal/tools/memory-tool/memory_tool.py의
-VALID_TYPES={project,architecture,feedback,preferences,issues,task} /
-VALID_STATUSES={active,promoted,superseded,dead} 에는 improvement/candidate가
-없다. GREEN은 memory_tool.py enum 확장 여부를 PM에 확인해야 할 수 있다(본 RED
-테스트는 PLAN 명세를 있는 그대로 인코딩한다 — enum 불일치는 GREEN 단계 리스크로 별도 보고).
 """
 
 import json
@@ -54,7 +49,14 @@ import unittest
 _TOOL_DIR = pathlib.Path(__file__).resolve().parent.parent
 _RUN_SH = _TOOL_DIR / "run.sh"
 
-_VALID_MEMORY_MD = """# 테스트 프로젝트 Memory Index
+def _empty_memory_json_doc() -> dict:
+    """MEMORY.json 단독 SSOT 빈 문서(078) — memory-tool schema/memory.schema.json 준수."""
+    return {"version": 1, "last_task_number": 0, "memories": [], "history": []}
+
+
+# 과도기(TS-025) 전용 — MEMORY.md만 있는 프로젝트에서 memory-tool의 lazy 변환이
+# 발동하는지 검증하기 위한 구포맷 fixture(marker 기반, 빈 표).
+_LEGACY_MEMORY_MD = """# 테스트 프로젝트 Memory Index
 
 > 최종 갱신: 2026-07-17
 > last_task_number: 0
@@ -114,18 +116,30 @@ def _record(scope=None, title=None, body=None, situation=None, source_task=None,
 
 
 def _make_project_with_memory(root: pathlib.Path) -> pathlib.Path:
-    """proj-A 유형 — .opal/MEMORY.md가 유효 마커를 갖춘 상태로 존재."""
+    """proj-A 유형 — .opal/MEMORY.json이 유효 스키마 문서로 존재(TS-024)."""
     opal_dir = root / ".opal"
     opal_dir.mkdir(parents=True, exist_ok=True)
-    memory_md = opal_dir / "MEMORY.md"
-    memory_md.write_text(_VALID_MEMORY_MD, encoding="utf-8")
-    return memory_md
+    memory_json = opal_dir / "MEMORY.json"
+    memory_json.write_text(
+        json.dumps(_empty_memory_json_doc(), ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+    return memory_json
 
 
 def _make_project_without_memory(root: pathlib.Path) -> pathlib.Path:
-    """proj-B 유형 — 빈 디렉토리, .opal/MEMORY.md 부재."""
+    """proj-B 유형 — 빈 디렉토리, .opal/ 자체 부재(TS-026)."""
     root.mkdir(parents=True, exist_ok=True)
     return root
+
+
+def _make_project_with_legacy_md(root: pathlib.Path) -> pathlib.Path:
+    """proj-C 유형 — .opal/MEMORY.md만 존재(과도기, TS-025) — memory-tool의 lazy 변환 유도용."""
+    opal_dir = root / ".opal"
+    opal_dir.mkdir(parents=True, exist_ok=True)
+    memory_md = opal_dir / "MEMORY.md"
+    memory_md.write_text(_LEGACY_MEMORY_MD, encoding="utf-8")
+    return memory_md
 
 
 def _parse_frontmatter(text: str) -> dict:
@@ -155,12 +169,15 @@ class BaseImproveTestCase(unittest.TestCase):
         _make_project_with_memory(self.proj_a)
         self.proj_b = self.tmpdir / "proj-B"
         _make_project_without_memory(self.proj_b)
+        self.proj_c = self.tmpdir / "proj-C"
+        _make_project_with_legacy_md(self.proj_c)
 
     def tearDown(self):
         shutil.rmtree(self.tmpdir, ignore_errors=True)
 
-    def _memory_md_text(self) -> str:
-        return (self.proj_a / ".opal" / "MEMORY.md").read_text(encoding="utf-8")
+    def _memory_doc(self) -> dict:
+        """proj-A의 .opal/MEMORY.json을 파싱해 반환(구 `_memory_md_text()` 대체, 078)."""
+        return json.loads((self.proj_a / ".opal" / "MEMORY.json").read_text(encoding="utf-8"))
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -191,7 +208,7 @@ class TestJsonContractThreePaths(BaseImproveTestCase):
         self.assertFalse(data.get("ok"))
 
     def test_record_local_noop_has_ok_true_and_skipped(self):
-        """no-op 경로: record --scope local (proj-B, MEMORY.md 부재).
+        """no-op 경로: record --scope local (proj-B, .opal/ 자체 부재).
         Then: stdout JSON 파싱 성공 + "ok":true + "skipped":true."""
         code, stdout, stderr, data = _record(
             scope="local", title="T", project_root=self.proj_b, fw_inbox_dir=self.fw_inbox,
@@ -263,17 +280,18 @@ class TestFwInboxSelfContainedEntry(BaseImproveTestCase):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# S-3: record --scope local → memory-tool 위임 (MEMORY.md 존재) [T058/L1-R3b]
+# S-3: record --scope local → memory-tool 위임 (MEMORY.json 존재) [T058/L1-R3b]
 # ─────────────────────────────────────────────────────────────────────────────
 
 class TestLocalScopeMemoryDelegation(BaseImproveTestCase):
-    """[T058/L1-R3b] record --scope local → memory-tool 위임 (MEMORY.md 존재) — S-3 (H-2)"""
+    """[T058/L1-R3b] record --scope local → memory-tool 위임 (MEMORY.json 존재) — S-3 (H-2)"""
 
     def test_record_local_appends_improvement_candidate_row(self):
-        """Given: proj-A/.opal/MEMORY.md 존재. When: record --scope local.
-        Then: MEMORY.md에 type=improvement,status=candidate 항목 1건 append(실 memory-tool 위임)."""
-        before = self._memory_md_text()
-        self.assertNotIn("improvement", before)
+        """Given: proj-A/.opal/MEMORY.json 존재. When: record --scope local.
+        Then: MEMORY.json의 memories[]에 type=improvement,status=candidate 항목 1건
+        append(실 memory-tool 위임)."""
+        before = self._memory_doc()
+        self.assertEqual(before["memories"], [])
 
         code, stdout, stderr, data = _record(
             scope="local", title="로컬 개선 후보 T", body="80자 이내 요약 텍스트",
@@ -282,10 +300,12 @@ class TestLocalScopeMemoryDelegation(BaseImproveTestCase):
         self.assertEqual(code, 0, f"stderr={stderr}")
         self.assertTrue(data.get("ok"))
 
-        after = self._memory_md_text()
-        self.assertIn("로컬 개선 후보 T", after, "MEMORY.md에 제목 행이 append되어야 한다")
-        self.assertIn("improvement", after, "type=improvement 컬럼 값이 존재해야 한다")
-        self.assertIn("candidate", after, "status=candidate 컬럼 값이 존재해야 한다")
+        after = self._memory_doc()
+        self.assertEqual(len(after["memories"]), 1, "MEMORY.json에 memories 행이 append되어야 한다")
+        row = after["memories"][0]
+        self.assertEqual(row.get("title"), "로컬 개선 후보 T", "제목 필드가 일치해야 한다")
+        self.assertEqual(row.get("type"), "improvement", "type=improvement 필드값이 존재해야 한다")
+        self.assertEqual(row.get("status"), "candidate", "status=candidate 필드값이 존재해야 한다")
 
     def test_record_local_ok_contract_scope_local(self):
         """Then: {"ok":true,"scope":"local"} 반환."""
@@ -313,15 +333,16 @@ class TestLocalScopeMemoryDelegation(BaseImproveTestCase):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# S-4: record --scope local graceful skip (MEMORY.md 부재) [T058/L1-R4b]
+# S-4: record --scope local graceful skip (.opal/ 자체 부재) [T058/L1-R4b]
 # ─────────────────────────────────────────────────────────────────────────────
 
 class TestLocalScopeGracefulSkip(BaseImproveTestCase):
-    """[T058/L1-R4b] record --scope local graceful skip (MEMORY.md 부재) — S-4 (H-6)"""
+    """[T058/L1-R4b] record --scope local graceful skip (.opal/ 자체 부재) — S-4 (H-6)"""
 
-    def test_record_local_skip_when_memory_md_absent(self):
-        """Given: proj-B(.opal/MEMORY.md 부재). When: record --scope local.
-        Then: 예외 전파 없이 {"ok":true,"scope":"local","skipped":true,"reason":"no MEMORY.md"}."""
+    def test_record_local_skip_when_memory_json_absent(self):
+        """Given: proj-B(.opal/ 자체 부재 — MEMORY.json/MEMORY.md 둘 다 없음). When: record --scope local.
+        Then: 예외 전파 없이 {"ok":true,"scope":"local","skipped":true,"reason":"no MEMORY.json"}."""
+        self.assertFalse((self.proj_b / ".opal" / "MEMORY.json").exists())
         self.assertFalse((self.proj_b / ".opal" / "MEMORY.md").exists())
 
         code, stdout, stderr, data = _record(
@@ -332,12 +353,10 @@ class TestLocalScopeGracefulSkip(BaseImproveTestCase):
         self.assertTrue(data.get("ok"))
         self.assertEqual(data.get("scope"), "local")
         self.assertTrue(data.get("skipped"))
-        self.assertEqual(data.get("reason"), "no MEMORY.md")
+        self.assertEqual(data.get("reason"), "no MEMORY.json")
 
     def test_record_local_skip_writes_zero_files(self):
-        """Then: write 0건 — MEMORY.md 신규 생성 없음 + fw-inbox write 없음.
-        (no-op 호출 자체가 ok:true로 성공 응답해야 검증 의미가 있다 — 미구현 상태에서
-        공허하게 통과하지 않도록 ok==True 선행 검증으로 RED 증거를 확보한다.)"""
+        """Then: write 0건 — MEMORY.json/MEMORY.md 신규 생성 없음 + fw-inbox write 없음."""
         code, stdout, stderr, data = _record(
             scope="local", title="T", project_root=self.proj_b, fw_inbox_dir=self.fw_inbox,
         )
@@ -345,10 +364,87 @@ class TestLocalScopeGracefulSkip(BaseImproveTestCase):
         self.assertTrue(data.get("ok"), f"no-op 호출은 ok:true여야 한다. data={data}")
 
         self.assertFalse(
+            (self.proj_b / ".opal" / "MEMORY.json").exists(),
+            "no-op 경로는 MEMORY.json을 새로 생성해서는 안 된다",
+        )
+        self.assertFalse(
             (self.proj_b / ".opal" / "MEMORY.md").exists(),
             "no-op 경로는 MEMORY.md를 새로 생성해서는 안 된다",
         )
         self.assertEqual(len(list(self.fw_inbox.glob("*.md"))), 0)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# TS-024/025/026: improve-tool 위임 3케이스 (json/과도기 md/부재) [T078/L2-R7]
+# PLAN.md 078 §3.8.4 — F-008 R-7 AC
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestDelegation(BaseImproveTestCase):
+    """[T078/L2-R7] improve-tool record --scope local 위임 3케이스 — TS-024/025/026 (F-008)"""
+
+    def test_ts024_json_only_delegates_and_appends(self):
+        """TS-024: MEMORY.json만 있는 프로젝트(proj-A) → record --scope local이 no-op이
+        아니고 type=improvement/status=candidate 행이 json에 실제 기록된다(스키마 검증 통과)."""
+        code, stdout, stderr, data = _record(
+            scope="local", title="TS-024 개선 후보", body="스키마 검증 통과 확인용 요약",
+            project_root=self.proj_a, fw_inbox_dir=self.fw_inbox,
+        )
+        self.assertEqual(code, 0, f"stderr={stderr}")
+        self.assertTrue(data.get("ok"))
+        self.assertFalse(data.get("skipped"), "MEMORY.json이 존재하면 no-op이면 안 된다")
+
+        doc = self._memory_doc()
+        rows = [r for r in doc["memories"] if r.get("title") == "TS-024 개선 후보"]
+        self.assertEqual(len(rows), 1, "json memories[]에 신규 행이 기록되어야 한다")
+        self.assertEqual(rows[0].get("type"), "improvement")
+        self.assertEqual(rows[0].get("status"), "candidate")
+
+    def test_ts025_md_only_lazy_converts_and_delegates(self):
+        """TS-025: MEMORY.md만 있는 프로젝트(proj-C) → record가 memory-tool의 lazy 변환을
+        발동시켜 MEMORY.json을 생성하고 append까지 성공하며 .bak이 남는다. 이어서
+        list --scope local이 해당 1건을 반환한다(index_rows 키 계약 보존)."""
+        memory_md = self.proj_c / ".opal" / "MEMORY.md"
+        memory_json = self.proj_c / ".opal" / "MEMORY.json"
+        memory_bak = self.proj_c / ".opal" / "MEMORY.md.bak"
+        self.assertTrue(memory_md.exists())
+        self.assertFalse(memory_json.exists())
+
+        code, stdout, stderr, data = _record(
+            scope="local", title="TS-025 과도기 후보", body="lazy 변환 유도 확인용 요약",
+            project_root=self.proj_c, fw_inbox_dir=self.fw_inbox,
+        )
+        self.assertEqual(code, 0, f"stderr={stderr}")
+        self.assertTrue(data.get("ok"))
+        self.assertFalse(data.get("skipped"), "MEMORY.md만 있어도 no-op이면 안 된다(lazy 변환 유도)")
+
+        self.assertTrue(memory_json.exists(), "lazy 변환이 MEMORY.json을 생성해야 한다")
+        self.assertTrue(memory_bak.exists(), "lazy 변환이 원본 MEMORY.md를 .bak으로 보존해야 한다")
+
+        doc = json.loads(memory_json.read_text(encoding="utf-8"))
+        rows = [r for r in doc["memories"] if r.get("title") == "TS-025 과도기 후보"]
+        self.assertEqual(len(rows), 1, "lazy 변환 이후 append 행이 json에 존재해야 한다")
+
+        list_code, list_stdout, list_stderr, list_data = _run(
+            ["list", "--scope", "local", "--project-root", str(self.proj_c)],
+        )
+        self.assertEqual(list_code, 0, f"stderr={list_stderr}")
+        self.assertTrue(list_data.get("ok"))
+        list_titles = [item.get("title") for item in list_data.get("items", [])]
+        self.assertIn("TS-025 과도기 후보", list_titles, "list --scope local이 해당 1건을 반환해야 한다")
+
+    def test_ts026_opal_absent_graceful_noop(self):
+        """TS-026: `.opal/` 자체가 없는 프로젝트(proj-B) → record --scope local이 예외 없이
+        {"ok":true,"skipped":true,"reason":"no MEMORY.json"}로 graceful no-op한다."""
+        self.assertFalse((self.proj_b / ".opal").exists())
+
+        code, stdout, stderr, data = _record(
+            scope="local", title="T", project_root=self.proj_b, fw_inbox_dir=self.fw_inbox,
+        )
+        self.assertEqual(code, 0, f"stderr={stderr}")
+        self.assertNotIn("Traceback", stderr, "예외 전파가 없어야 한다")
+        self.assertTrue(data.get("ok"))
+        self.assertTrue(data.get("skipped"))
+        self.assertEqual(data.get("reason"), "no MEMORY.json")
 
 
 # ─────────────────────────────────────────────────────────────────────────────

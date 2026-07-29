@@ -3,9 +3,9 @@
   "module": "routers.memory",
   "layer": "router",
   "domain": "console",
-  "description": "GET /api/memory — MEMORY.md 메모리+히스토리 구조화 반환. project 파라미터 지원. 읽기 전용",
+  "description": "GET /api/memory — MEMORY.json 메모리+히스토리 구조화 반환 (078 F-009 JSON 전환). project 파라미터 지원. 읽기 전용",
   "exports": ["GET /api/memory"],
-  "depends": ["models", "scanner", "config", "cache", "parsers.memory_parser", "parsers.memory_file_parser"]
+  "depends": ["models", "scanner", "config", "cache", "parsers.memory_parser"]
 }
 """
 from __future__ import annotations
@@ -38,8 +38,8 @@ def _find_project_path(project_path_arg: str) -> str | None:
 
 
 def _parse_memory_for_project(project_path: str) -> MemoryIndexResponse:
-    """프로젝트의 MEMORY.md 파싱 → MemoryIndexResponse."""
-    memory_path = os.path.join(project_path, ".opal", "MEMORY.md")
+    """프로젝트의 MEMORY.json 파싱 → MemoryIndexResponse."""
+    memory_path = os.path.join(project_path, ".opal", "MEMORY.json")
     if not os.path.isfile(memory_path):
         return MemoryIndexResponse()
 
@@ -57,6 +57,7 @@ def _parse_memory_for_project(project_path: str) -> MemoryIndexResponse:
             status=r.get("status", ""),
             file=r.get("file", ""),
             description=r.get("description", ""),
+            title=r.get("title", ""),
         )
         for r in raw.get("rows", [])
     ]
@@ -68,6 +69,7 @@ def _parse_memory_for_project(project_path: str) -> MemoryIndexResponse:
             path=h.get("path", ""),
             start=h.get("start"),
             end=h.get("end"),
+            result=h.get("result", ""),
         )
         for h in raw.get("history", [])
     ]

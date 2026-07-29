@@ -4,7 +4,7 @@
   "module": "improve_tool",
   "layer": "util",
   "domain": "opal-pipeline",
-  "description": "PM 개선 루프 결정론 집행 CLI — record/list/show 3서브명령. scope local(<project-root>/.opal/MEMORY.md 존재 시 memory-tool append 위임, 부재 시 graceful no-op) / scope fw(~/.opal/fw-inbox 자기완결 항목 write) 2원 분기. 판단(로컬/FW 분류)은 호출자(opal-improve 스킬·CLOSE 회고 하드스텝)가 수행하고, 이 도구는 확정된 scope를 결정론적으로 집행만 한다. 모든 경로 JSON \"ok\" 계약 보장 — argparse choices/required 미사용, 수동 검증으로 graceful 에러 반환(크래시·traceback 금지).",
+  "description": "PM 개선 루프 결정론 집행 CLI — record/list/show 3서브명령. scope local(<project-root>/.opal/MEMORY.json 또는 과도기 MEMORY.md 존재 시 memory-tool append 위임 — md만 있어도 json 경로로 위임해 lazy 변환을 유도, 둘 다 부재 시 graceful no-op) / scope fw(~/.opal/fw-inbox 자기완결 항목 write) 2원 분기. 판단(로컬/FW 분류)은 호출자(opal-improve 스킬·CLOSE 회고 하드스텝)가 수행하고, 이 도구는 확정된 scope를 결정론적으로 집행만 한다. 모든 경로 JSON \"ok\" 계약 보장 — argparse choices/required 미사용, 수동 검증으로 graceful 에러 반환(크래시·traceback 금지).",
   "exports": ["cmd_record", "cmd_list", "cmd_show"],
   "depends": ["memory_tool"]
 }
@@ -17,9 +17,11 @@ PLAN.md §3.1.2 (F-001) 서브명령 스펙 근거로 구현:
   show   --scope {local|fw} --id/--path
 
 scope 분기 (H-2 — 분기 격리):
-  - local: <project-root>/.opal/MEMORY.md 존재 시 memory-tool(sibling 소스 경로) append 위임
-           (--type improvement --status candidate). 부재 시 예외 없이
-           {"ok":true,"scope":"local","skipped":true,"reason":"no MEMORY.md"} no-op.
+  - local: <project-root>/.opal/MEMORY.json 존재 시(과도기: MEMORY.md만 있어도 json 경로로
+           위임 — memory-tool의 lazy 변환이 발동) memory-tool(sibling 소스 경로) append 위임
+           (--type improvement --status candidate). 둘 다 부재 시 예외 없이
+           {"ok":true,"scope":"local","skipped":true,"reason":"no MEMORY.json"} no-op.
+           존재 판정은 `_resolve_memory_target()`(PLAN.md 078 F-008 §3.8.2)로 통합.
   - fw:    ~/.opal/fw-inbox/{YYYYMMDD-HHmmss}-{host}-{slug}.md 결정론적 write.
            환경변수 IMPROVE_FW_INBOX가 설정되어 있으면 그 경로를 최우선 사용(테스트 격리).
            frontmatter 필수키(H-8): host/project/situation/created — 전부 비어있지 않게 보장.
@@ -36,6 +38,10 @@ error()를 가로채고 각 커맨드 핸들러가 수동 검증하여 graceful 
 변경이력:
   v1.0 2026-07-17 초기 구현 — record/list/show 3서브명령, local(memory-tool 위임)/fw
                   (fw-inbox write) scope 분기, IMPROVE_FW_INBOX 테스트 격리 훅 (058)
+  v1.1 2026-07-28 scope local 위임 경로를 MEMORY.json 단독 SSOT로 전환 — 존재 판정 3곳
+                  (_record_local/cmd_list/cmd_show)을 `_resolve_memory_target()` 헬퍼로
+                  통합, md만 있어도 json 경로로 위임해 memory-tool lazy 변환 유도(과도기),
+                  no-op 사유 문자열 "no MEMORY.md" → "no MEMORY.json" (078)
 """
 
 import argparse
@@ -132,6 +138,21 @@ def _resolve_project_root(project_root):
     return pathlib.Path.cwd()
 
 
+def _resolve_memory_target(proj_root_path):
+    """scope local 위임 대상 결정 (PLAN.md F-008 §3.8.2 과도기 폴백).
+
+    반환 (memory-tool --file 인자, reason):
+      1) .opal/MEMORY.json 존재       → (json_path, "")
+      2) .opal/MEMORY.md 존재(미변환)  → (json_path, "")  # memory-tool의 lazy 변환 유도
+      3) 둘 다 부재                   → (None, "no MEMORY.json")
+    """
+    memory_json = proj_root_path / ".opal" / "MEMORY.json"
+    memory_md = proj_root_path / ".opal" / "MEMORY.md"
+    if memory_json.exists() or memory_md.exists():
+        return memory_json, ""
+    return None, "no MEMORY.json"
+
+
 def _call_memory_tool(*args):
     """memory-tool run.sh를 subprocess로 호출 후 (ok:bool, data:dict, raw_stderr:str) 반환."""
     cmd = ["bash", str(MEMORY_TOOL_RUN)] + list(args)
@@ -210,11 +231,11 @@ def _record_fw(title, body, situation, source_task, project_root):
 
 def _record_local(title, body, situation, source_task, project_root):
     proj_root_path = _resolve_project_root(project_root)
-    memory_md = proj_root_path / ".opal" / "MEMORY.md"
+    memory_target, reason = _resolve_memory_target(proj_root_path)
 
-    if not memory_md.exists():
+    if memory_target is None:
         # H-6 — 예외 전파 없는 graceful no-op. write 0건.
-        ok(scope="local", skipped=True, reason="no MEMORY.md")
+        ok(scope="local", skipped=True, reason=reason)
         return
 
     summary = _truncate_summary(body or title)
@@ -222,7 +243,7 @@ def _record_local(title, body, situation, source_task, project_root):
     try:
         success, data, raw_stderr = _call_memory_tool(
             "append",
-            "--file", str(memory_md),
+            "--file", str(memory_target),
             "--kind", "memory",
             "--title", title,
             "--type", "improvement",
@@ -238,7 +259,7 @@ def _record_local(title, body, situation, source_task, project_root):
         err(f"memory-tool delegation failed: {message}")
         return
 
-    ok(scope="local", delegated="memory-tool", file=str(memory_md), title=title)
+    ok(scope="local", delegated="memory-tool", file=str(memory_target), title=title)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -288,13 +309,13 @@ def cmd_list(args):
 
     # scope == local
     proj_root_path = _resolve_project_root(args.project_root)
-    memory_md = proj_root_path / ".opal" / "MEMORY.md"
-    if not memory_md.exists():
-        ok(scope="local", items=[], skipped=True, reason="no MEMORY.md")
+    memory_target, reason = _resolve_memory_target(proj_root_path)
+    if memory_target is None:
+        ok(scope="local", items=[], skipped=True, reason=reason)
         return
 
     try:
-        success, data, raw_stderr = _call_memory_tool("show", "--file", str(memory_md))
+        success, data, raw_stderr = _call_memory_tool("show", "--file", str(memory_target))
     except Exception as e:
         err(f"memory-tool show failed: {e}")
         return
@@ -334,9 +355,9 @@ def cmd_show(args):
 
     # scope == local
     proj_root_path = _resolve_project_root(args.project_root)
-    memory_md = proj_root_path / ".opal" / "MEMORY.md"
-    if not memory_md.exists():
-        ok(scope="local", skipped=True, reason="no MEMORY.md")
+    memory_target, reason = _resolve_memory_target(proj_root_path)
+    if memory_target is None:
+        ok(scope="local", skipped=True, reason=reason)
         return
 
     if not args.id:
@@ -344,7 +365,7 @@ def cmd_show(args):
         return
 
     try:
-        success, data, raw_stderr = _call_memory_tool("show", "--file", str(memory_md))
+        success, data, raw_stderr = _call_memory_tool("show", "--file", str(memory_target))
     except Exception as e:
         err(f"memory-tool show failed: {e}")
         return

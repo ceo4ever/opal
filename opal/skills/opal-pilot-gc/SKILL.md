@@ -76,7 +76,7 @@ tasks/{NNN}-{YYMMDD}-opgc-{short-summary}/
 - 둘 다 또는 둘 다 생략: `{scope}` (접미사 없음)
 - 예: `tasks/NNN-260417-opgc-staged/`, `tasks/NNN-260417-opgc-all-conv-only/`
 
-`NNN`: `.opal/MEMORY.md`의 `last_task_number` + 1로 채번. SCAN 단계에서 즉시 갱신.
+`NNN`: `memory-tool task-number --bump` 응답의 `last_task_number`. SCAN 단계에서 호출한다 (절차: `harness/task-process.md` §태스크 번호 채번 규칙).
 
 ---
 
@@ -537,3 +537,4 @@ fingerprint = sha1(fingerprint_input).hex()[:16]
 | v1.6 | 2026-06-11 19:26 | §4.2 CLOSE에 op-brain-ingest 훅 삽입 — brain 존재 시 GC 산출물 누적, 부재 시 no-op, CLOSE 비중단 (016) |
 | v1.7 | 2026-06-24 | §4.2 CLOSE op-brain-ingest 디스패치 직전에 "관련 문서 업데이트" 단락 삽입 — PROJECT.md 레지스트리 + changed_files 종합으로 관련 문서 최신화 후 ingest (없으면 no-op) (042) |
 | v1.8 | 2026-07-17 | §4.2 CLOSE op-brain-ingest 직후에 "회고(개선 루프) 하드스텝" 삽입 — 궤적 신호→관찰/분류/기록(improve-tool record --scope local\|fw), 개선후보 0건 시 no-op 비차단(brain-ingest 패턴 답습) (058) |
+| v1.9 | 2026-07-28 | `NNN` 채번 서술을 `.opal/MEMORY.md` 헤더 직접 참조에서 `memory-tool task-number --bump` 포인터 참조로 전환 (절차 SSOT: `harness/task-process.md`) (078) |

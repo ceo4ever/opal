@@ -32,7 +32,8 @@
   "changelog": [
     "2026-07-14 T061 Step3: 설정 쓰기 스키마 5종 추가 (ConsoleConfigResponse/ConfigWriteResponse/PrewarmToggleRequest/ConsoleConfigUpdate/SettingLocalUpdate) — F-001~F-004",
     "2026-07-14 T061 범위 축소: ConsoleConfigUpdate·SettingLocalUpdate 제거(console.config 전반·프로젝트 로컬 설정 편집 미반영) — ConfigDict import도 함께 제거",
-    "2026-07-15 T063 Step5(F-004): BrainQueryRequest.new_conversation 폐기 필드 제거 — FE가 더 이상 전송하지 않음(휘발성 단일 세션 전환, 새 대화는 새 session_id로 처리). pydantic extra 필드 무시 규칙상 하위호환 영향 없음"
+    "2026-07-15 T063 Step5(F-004): BrainQueryRequest.new_conversation 폐기 필드 제거 — FE가 더 이상 전송하지 않음(휘발성 단일 세션 전환, 새 대화는 새 session_id로 처리). pydantic extra 필드 무시 규칙상 하위호환 영향 없음",
+    "2026-07-28 T078 F-009: MemoryRowResponse.title / HistoryRowResponse.result additive 추가 — MEMORY.json 전환 신필드, 기존 필드 무변경(H-6)"
   ]
 }
 """
@@ -168,6 +169,7 @@ class MemoryRowResponse(BaseModel):
     status: str = ""
     file: str = ""
     description: str = ""
+    title: str = ""  # additive (078 F-009) — MEMORY.json memories[].title, FE 미사용
 
 
 class HistoryRowResponse(BaseModel):
@@ -177,6 +179,7 @@ class HistoryRowResponse(BaseModel):
     path: str = ""
     start: str | None = None
     end: str | None = None
+    result: str = ""  # additive (078 F-009) — MEMORY.json history[].result, FE 미사용
 
 
 class MemoryIndexResponse(BaseModel):

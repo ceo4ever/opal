@@ -575,11 +575,17 @@ Loop 1 재회전 {N}회 · Loop 2 태스크 {M}개 완주.
 
 ## 프로젝트 메모리 동기화
 
-`{프로젝트}/.opal/MEMORY.md`가 존재하면, 루프 전환 시 작업 히스토리를 갱신한다:
+`{프로젝트}/.opal/MEMORY.json`이 존재하면, 루프 전환 시 작업 히스토리를 memory-tool로 갱신한다:
 
-- Loop 1 확정: `단계` 컬럼 → `Loop 1 확정 → Loop 2 진행`
-- Loop 2 태스크 완료마다: `단계` 컬럼 → `Loop 2 — T{NN} 완료 ({M}/{전체})`
-- 전체 완료: `단계` 컬럼 → `완료`
+```
+~/.opal/tools/memory-tool/run.sh append --file .opal/MEMORY.json --kind history \
+  --title "<태스크명>" --stage "<단계>" --path "tasks/<폴더>/" --summary "<핵심결과>"
+```
+
+- Loop 1 확정: `--stage "Loop 1 확정 → Loop 2 진행"`
+- Loop 2 태스크 완료마다: `--stage "Loop 2 — T{NN} 완료 ({M}/{전체})"`
+- 전체 완료: `--stage "완료"`
+- [MUST] 표·파일 직접 편집 금지 — 도구 호출만 사용한다. FIFO 5(도구 결정론 집행)는 상세: `opal/core/references/harness/observability.md` §프로젝트 메모리 동기화 참조.
 
 ---
 
@@ -595,3 +601,4 @@ Loop 1 재회전 {N}회 · Loop 2 태스크 {M}개 완주.
 | v1.5 | 2026-07-17 23:04 KST | 진행 현황 모니터링 도구 포인터 리네임 — `oppl-monitor` → `opal-action-monitor` (067) |
 | v1.6 | 2026-07-17 KST | 진행 현황 모니터링 안내에 스킬 발동 `//opas [태스크폴더]`(opal-action-status) 1줄 추가 — 자동 탐지 + 해석 보고(읽기 전용) (068) |
 | v1.7 | 2026-07-18 22:46 KST | D4에 surfaces.json(표면 전수·auth·인증표면 등재)+origins 선언 요구 추가(contract.md §2.2.1 참조 위임) / D5에 실행 스켈레톤 P0 태스크 의무(구성 4항)+`add-task --covers` 안내 추가 / D7 진입 전 `coverage-check` 게이트 호출 의무화 / L✓ 종료 판정을 `done-check.all_done` ∧ `scenario-conformance.all_surfaces_green` ∧ 회귀 0 3중 AND로 확장(user-facing 여정 스모크 포함) + T4a에 `scenario-fidelity-check` 통과 요건 1줄 / 병렬 실행 절 "통합 태스크 필수"를 `coverage-check`(`integration_task_missing`) 게이트와 연결 / 검증 2원화 절에 충실도 규범 참조(`verification.md` §1.5) 추가 (069) |
+| v1.8 | 2026-07-28 22:47 KST | 프로젝트 메모리 동기화 절 정정(기존 결함 교정, memory-tool 도입(045) 이전 관행의 표 편집 서술 잔존분) — `MEMORY.json` + `append --kind history` 도구 호출로 교체, 직접 편집 금지 명시 (078) |

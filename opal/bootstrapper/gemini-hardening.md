@@ -68,7 +68,7 @@
 | `{프로젝트}/.opal/AGENT.md` (PM) | 프로젝트 작업 요청 또는 `//opp` |
 | `agents.md` + `opal-model-mapping.md` | 워커 디스패치 직전 |
 | `skills.md` / skill-registry | `//` 커맨드 입력 |
-| `.opal/MEMORY.md` | PM 컨텍스트 로드 이후 |
+| `.opal/MEMORY.json` | PM 컨텍스트 로드 이후 |
 
 "미리 읽어두면 도움이 될 것 같다"는 판단으로 선행 로드하지 않는다.
 GUARD-1 + GUARD-2가 함께 부트스트랩 전체를 정의한다.
@@ -189,3 +189,4 @@ PLAN.md 읽었습니다. 진행하겠습니다.  ← Step/제약 인용 없음
 | 버전 | 날짜 | 변경내용 |
 |------|------|---------|
 | v1.0 | 2026-04-09 | 최초 작성 — TASK-103 글로벌 배포 (HARDENING SSOT는 프로젝트 루트 GEMINI.md) |
+| v1.1 | 2026-07-28 | Lazy 트리거 표 `.opal/MEMORY.md` → `.opal/MEMORY.json` (078) |

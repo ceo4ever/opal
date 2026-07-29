@@ -1,0 +1,75 @@
+{
+  "version": 1,
+  "last_task_number": 78,
+  "memories": [
+    {
+      "title": "Console 브레인 구독 인증",
+      "date": "2026-06-22",
+      "type": "project",
+      "status": "active",
+      "file": "memory/console-brain-subscription-auth.md",
+      "summary": "Console 브레인 질의는 종량제 API 아닌 사용자 Claude 구독(로컬 claude -p). API키·SDK 금지"
+    },
+    {
+      "title": "브레인 질의 콜드 경량화(037후속)",
+      "date": "2026-06-23",
+      "type": "task",
+      "status": "active",
+      "file": "memory/follow-up-brain-query-lite.md",
+      "summary": "브레인 질의 콜드 latency 경량화 — 검색을 LLM 밖 brain-tool로. opbr --lite 권고"
+    },
+    {
+      "title": "후속 069·070 액션에이전트 관측 확장",
+      "date": "2026-07-17",
+      "type": "task",
+      "status": "active",
+      "file": "memory/후속_069_070_액션에이전트_관측_확장.md",
+      "summary": "oppd·opsdd를 opal-agent 채널+규약 전환→action-monitor 공용화. phase 동적발견 필수"
+    },
+    {
+      "title": "워커 보고는 실측 대조 없이 신뢰 불가",
+      "date": "2026-07-29",
+      "type": "improvement",
+      "status": "candidate",
+      "file": "memory/워커_보고는_실측_대조_없이_신뢰_불가.md",
+      "summary": "078 PM Gate에서 워커 자기보고 오류 2건을 적발했다. (1) Step 14가 '에러코드 표를 실제 ERROR_CODES와 일치하도록…"
+    }
+  ],
+  "history": [
+    {
+      "title": "078 메모리 SSOT JSON 전환",
+      "date": "2026-07-29",
+      "stage": "완료·미커밋",
+      "path": "tasks/078-260728-opd-메모리-json전환/",
+      "result": "MEMORY.md→MEMORY.json 단독 SSOT. 브리핑 show --brief(-49% 실측)·lazy 마이그레이션(행회계 불변식)·task-number tool-gated. 132+17+249 GREEN"
+    },
+    {
+      "title": "076 파이프라인 todo 미러 hook 강제",
+      "date": "2026-07-23",
+      "stage": "완료·커밋(148e95c)",
+      "path": "tasks/076-260723-opds-todo미러-hook자동화/",
+      "result": "prose→hook강제(state-tool todo_mirror+PostToolUse). clobber해소 실증·회귀0. S-9 L3후속"
+    },
+    {
+      "title": "075 목표-커버 게이트 opds·opsdd 확산 1차",
+      "date": "2026-07-23",
+      "stage": "완료·커밋(6b1eafb)·미배포(캡틴 배포)",
+      "path": "tasks/075-260723-opd-시나리오게이트-확산-1차/",
+      "result": "op-scenario-gate opds·opsdd 확산(신규0·pilot 변환기+배선). opd 무영향·opsdd self-confirming 해소. oppl제외·oppd2차"
+    },
+    {
+      "title": "073 TEST-SCENARIO 목표-커버 게이트 루프",
+      "date": "2026-07-23",
+      "stage": "완료·커밋(c8cb0b6)·배포",
+      "path": "tasks/073-260723-opd-시나리오-목표커버리지-루프/",
+      "result": "목표-커버 루브릭 게이트 공유컴포넌트 신설·opd 선적용. dogfooding 실증(음성통제FAIL+수렴PASS)"
+    },
+    {
+      "title": "074 import-existing key 유실 수정",
+      "date": "2026-07-23",
+      "stage": "완료·미배포·미커밋",
+      "path": "tasks/074-260723-opds-import-existing-키유실/",
+      "result": "--import-existing가 lossy STATE.md 재파싱으로 key 유실 → (stage,item) 순서매칭 재접합(state.json→pipeline.json→keyless경고). RED→GREEN 신규5·전량254. 후속=배포·커밋"
+    }
+  ]
+}

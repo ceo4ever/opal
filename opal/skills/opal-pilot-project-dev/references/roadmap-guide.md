@@ -203,7 +203,7 @@ A01 (기본 구조)
 
 - [ ] docs/PROJECT.md 문서 테이블에 ROADMAP.md 등록했는가 (설명, 용도, 참조 시점)
 - [ ] `state-tool` 호출로 갱신했는가 (3-ROADMAP → 확정, 로드맵 테이블 채움)
-- [ ] .opal/MEMORY.md 작업 히스토리를 갱신했는가
+- [ ] 메모리 작업 히스토리를 memory-tool로 갱신했는가
 
 ---
 
@@ -212,3 +212,4 @@ A01 (기본 구조)
 | 날짜 | 버전 | 변경내용 |
 |------|------|---------|
 | 2026-06-21 | R-1 | `npm run lint` → `npm run lint:fix` 정합 — 액션 예시표(A02~A05) generic `&&` 변형의 lint 명령을 L1 표준(`lint:fix`) 으로 교체. watch 금지 규칙은 SSOT(verification-loop-guide) 단일 기재 — 재서술 없음 (033) |
+| 2026-07-28 | R-2 | 체크리스트 문구를 구 마커 포맷 파일 갱신 → 메모리 작업 히스토리를 memory-tool로 갱신 표현으로 일반화 (078) |

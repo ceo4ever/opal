@@ -1,0 +1,91 @@
+{
+  "version": 1,
+  "last_task_number": 78,
+  "memories": [
+    {
+      "title": "메인 직접 커밋 선호",
+      "date": "2026-07-18",
+      "type": "feedback",
+      "status": "active",
+      "file": "memory/prefs_commit.md",
+      "summary": "작업 브랜치 분리 없이 main에 직접 커밋한다"
+    },
+    {
+      "title": "완료된 태스크 기록",
+      "date": "2026-07-10",
+      "type": "task",
+      "status": "dead",
+      "file": "memory/task_done.md",
+      "summary": "종료된 일회성 태스크 — 인덱스 노출 대상 아님"
+    },
+    {
+      "title": "콘솔 브레인 구독 인증",
+      "date": "2026-07-20",
+      "type": "project",
+      "status": "active",
+      "file": "memory/console-brain-subscription-auth.md",
+      "summary": "브레인 질의는 종량제 API가 아니라 사용자 구독(로컬 claude -p)을 쓴다"
+    },
+    {
+      "title": "대체된 아키텍처 결정",
+      "date": "2026-06-30",
+      "type": "architecture",
+      "status": "superseded",
+      "file": "memory/arch_old.md",
+      "summary": "구 도구 패턴 결정 — 신 결정으로 대체됨"
+    },
+    {
+      "title": "졸업한 선호 규칙",
+      "date": "2026-06-15",
+      "type": "preferences",
+      "status": "promoted",
+      "file": "memory/prefs_graduated.md",
+      "summary": "AGENT.md 금지사항으로 이관 완료"
+    },
+    {
+      "title": "개선 후보 기록",
+      "date": "2026-07-22",
+      "type": "improvement",
+      "status": "candidate",
+      "file": "memory/improve_candidate.md",
+      "summary": "improve-tool record --scope local이 기록한 개선 후보"
+    }
+  ],
+  "history": [
+    {
+      "title": "076 파이프라인 todo 미러 hook",
+      "date": "2026-07-21",
+      "stage": "완료",
+      "path": "tasks/076-260723-opds-todo미러-hook자동화/",
+      "result": "prose 규범을 hook 강제로 전환. clobber 해소 실증, 회귀 0건"
+    },
+    {
+      "title": "077 코드맵 헤더 작성층",
+      "date": "2026-07-23",
+      "stage": "PLAN ✅ → TODO 대기",
+      "path": "tasks/077-260727-opd-코드맵-헤더작성층/",
+      "result": "code-scan 헤더 작성층 설계 확정. EXECUTE 진입 대기"
+    },
+    {
+      "title": "075 목표-커버 게이트 확산",
+      "date": "2026-07-19",
+      "stage": "완료",
+      "path": "tasks/075-260723-opd-시나리오게이트-확산-1차/",
+      "result": "op-scenario-gate를 opds·opsdd로 확산. opd 무영향 확인"
+    },
+    {
+      "title": "074 import-existing key 유실",
+      "date": "2026-07-17",
+      "stage": "완료",
+      "path": "tasks/074-260723-opds-import-existing-키유실/",
+      "result": "lossy 재파싱으로 인한 key 유실을 순서매칭 재접합으로 수정"
+    },
+    {
+      "title": "073 목표-커버리지 루프",
+      "date": "2026-07-15",
+      "stage": "완료",
+      "path": "tasks/073-260723-opd-시나리오-목표커버리지-루프/",
+      "result": "목표-커버 루브릭 게이트 공유컴포넌트 신설 후 opd 선적용"
+    }
+  ]
+}

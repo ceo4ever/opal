@@ -66,7 +66,7 @@ Follow these steps in order. Steps 1–2 are new OPAL context absorption steps.
 |------|------|------|
 | 1 | cwd에 `.opal/AGENT.md` 존재? | Yes → OPAL 프로젝트 |
 | 2 | cwd 또는 상위에 `tasks/{NNN}-*/TASK.md` 패턴 존재? | Yes → 태스크 폴더 |
-| 3 | STATE.md 또는 MEMORY.md 존재? | Yes → 세션 컨텍스트 폴백 |
+| 3 | STATE.md 또는 MEMORY.json 존재? | Yes → 세션 컨텍스트 폴백 |
 | 4 | 위 모두 없음 | 비-OPAL / 컨텍스트 없음 |
 
 ### 2. 컨텍스트 흡수 (Context absorption)
@@ -78,7 +78,7 @@ Follow these steps in order. Steps 1–2 are new OPAL context absorption steps.
 | 환경 | 흡수 자원 | 추출 내용 |
 |------|---------|---------|
 | OPAL 프로젝트 + 태스크 폴더 | `TASK.md`, `ANALYSIS.md` (있으면), `PLAN.md` (있으면), `docs/PROJECT.md`, `docs/ARCHITECTURE.md` | 시스템 명칭, 레이어 후보, 노드 후보, MVP/LATER 분류 힌트, 기술 스택 |
-| OPAL 프로젝트 (태스크 폴더 없음) | `docs/PROJECT.md`, `docs/ARCHITECTURE.md`, `STATE.md`, `MEMORY.md` | 프로젝트 개요 + 컴포넌트 관계 |
+| OPAL 프로젝트 (태스크 폴더 없음) | `docs/PROJECT.md`, `docs/ARCHITECTURE.md`, `STATE.md`, `MEMORY.json` | 프로젝트 개요 + 컴포넌트 관계 |
 | 비-OPAL | (없음) | 흡수 스킵 → 인터뷰(Step 3)에서 전체 수집 |
 
 #### 2-2. 코드베이스 흡수 (모든 환경 — 존재하는 자원만)

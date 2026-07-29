@@ -2,7 +2,7 @@
 name: opal-project-init
 description: |
   프로젝트 환경 초기화 및 최신화 스킬. 프로젝트를 분석하고 사용자과 대화하여
-  docs/(PROJECT.md, ARCHITECTURE.md 등)와 .opal/(AGENT.md, MEMORY.md)를 직접 작성한다.
+  docs/(PROJECT.md, ARCHITECTURE.md 등)와 .opal/(AGENT.md 등)를 직접 작성하고, .opal/MEMORY.json은 memory-tool로 생성한다.
   기존 프로젝트 문서가 있으면 코드와 비교하여 최신화를 제안한다.
 triggers:
   - "프로젝트 초기화"
@@ -391,7 +391,7 @@ Q2/2. 분석 결과 외에 문서에 추가로 담아야 할 내용이 있나요
 |------|------|------|------------|
 | 1 | `docs/PROJECT.md` | 프로젝트 정의 (SSOT) | docs-guide.md |
 | 2 | `.opal/AGENT.md` | PM 프로필 (역할, 검토 기준, 업무 지침) | agent-guide.md |
-| 3 | `.opal/MEMORY.md` | 메모리 인덱스 (빈 상태로 생성) | - |
+| 3 | `.opal/MEMORY.json` | 메모리 인덱스 (`memory-tool init`으로 생성) | - |
 | 4 | `.opal/setting.local.json` | 프로젝트 로컬 설정 (없으면 생성·있으면 스킵) | 공통: 프로젝트 로컬 설정 보장 |
 | 5 | 사용자 요청 문서 | PRD, 기획서 등 사용자이 추가 요청한 문서 | docs-guide.md |
 
@@ -424,28 +424,14 @@ Q2/2. 분석 결과 외에 문서에 추가로 담아야 할 내용이 있나요
 3. 사용자 승인 시 `docs/PROJECT.md`의 프로젝트 문서 테이블에 등록
 4. 등록되지 않은 문서는 다른 스킬이 참조하지 않는다
 
-**2-4. MEMORY.md 형식** (memory-tool 호환 신포맷 — 045)
+**2-4. 메모리 인덱스 생성** (memory-tool 위임 — 인라인 템플릿 금지)
 
-```markdown
-# {프로젝트명} 프로젝트 Memory Index
-
-> 최종 갱신: {YYYY-MM-DD}
-> last_task_number: 0
-
-## 메모리
-<!-- memory:index:start -->
-| 제목 | 등록일 | 유형 | 상태 | 파일 | 요약 |
-|------|--------|------|------|------|------|
-<!-- memory:index:end -->
-
-## 작업 히스토리 (최대 5개, FIFO)
-<!-- memory:history:start -->
-| 제목 | 등록일 | 단계 | 경로 | 핵심결과 |
-|------|--------|------|------|----------|
-<!-- memory:history:end -->
+```
+~/.opal/tools/memory-tool/run.sh init --file .opal/MEMORY.json
 ```
 
-> 메모리 행 추가·정리·이관은 **memory-tool로만** 수행한다(직접 편집 금지). 상세 형식·라이프사이클: `memory-learning.md`.
+- 도구가 `{"version":1,"last_task_number":0,"memories":[],"history":[]}` 골격을 생성한다.
+- [MUST] `.opal/MEMORY.json`을 손으로 작성하지 않는다. 형식·라이프사이클: `harness/memory-learning.md`.
 
 ---
 
@@ -573,18 +559,15 @@ Node.js가 없는 환경에서는 에이전트가 직접 부트스트래퍼를 �
 
 **4-2. 프로젝트 메모리 갱신**
 
-`.opal/MEMORY.md`가 존재하면 (초기화 모드에서 방금 생성했으면) 작업 히스토리에 opi 완료를 기록한다.
+`.opal/MEMORY.json`이 존재하면 (초기화 모드에서 방금 생성했으면) 작업 히스토리에 opi 완료를 기록한다.
 
-```markdown
-| # | 작업 | 단계 | 경로 | 시작일시 | 완료일시 |
-|---|------|------|------|---------|---------|
-| {N} | opi 프로젝트 초기화 | 완료 | docs/, .opal/ | YYYY-MM-DD HH:mm | YYYY-MM-DD HH:mm |
+```
+~/.opal/tools/memory-tool/run.sh append --file .opal/MEMORY.json --kind history \
+  --title "opi 프로젝트 초기화" --stage "완료" --path "docs/, .opal/" \
+  --summary "docs 4종 + AGENT/MEMORY/setting 생성"
 ```
 
-최신화 모드에서도 동일하게 기록한다:
-```markdown
-| {N} | opi 프로젝트 최신화 | 완료 | docs/, .opal/ | YYYY-MM-DD HH:mm | YYYY-MM-DD HH:mm |
-```
+최신화 모드는 `--title "opi 프로젝트 최신화"`로 동일하게 기록한다.
 
 **4-3. tasks/ DONE.md 기록**
 
@@ -678,9 +661,8 @@ opi는 프로젝트 셋업 수단이지 목적이 아니다. 사용자의 원래
 
 최근 프로젝트에서 어떤 변화가 있었는지 선제 파악한다.
 
-1. `.opal/MEMORY.md` 작업 히스토리를 읽는다 — 최근 태스크 목록과 완료 상태 확인
-2. `.opal/MEMORY.md` 메모리 인덱스를 확인한다 — 최근 등록/변경된 메모리 항목 파악
-3. 작업 히스토리에서 opi 이후 완료된 태스크의 DONE.md를 선택적으로 읽는다 (최대 5개)
+1. `~/.opal/tools/memory-tool/run.sh show --file .opal/MEMORY.json --brief` 1회 호출로 최근 작업 히스토리(최대 3건)와 active 메모리 인덱스를 함께 확인한다
+2. 작업 히스토리에서 opi 이후 완료된 태스크의 DONE.md를 선택적으로 읽는다 (최대 5개)
    — 어떤 기능이 추가/변경되었는지, 문서에 반영해야 할 사항이 있는지 파악
 
 > 수집 결과를 내부 참조용으로 정리한다:
@@ -949,10 +931,12 @@ Phase 2.5에서 확정된 방향에 따라, 해당 범위의 변경 사항을 **
 
 **4-2. 프로젝트 메모리 갱신**
 
-`.opal/MEMORY.md` 작업 히스토리에 opi 최신화 완료를 기록한다.
+`.opal/MEMORY.json` 작업 히스토리에 opi 최신화 완료를 기록한다.
 
-```markdown
-| {N} | opi 프로젝트 최신화 | 완료 | docs/, .opal/ | YYYY-MM-DD HH:mm | YYYY-MM-DD HH:mm |
+```
+~/.opal/tools/memory-tool/run.sh append --file .opal/MEMORY.json --kind history \
+  --title "opi 프로젝트 최신화" --stage "완료" --path "docs/, .opal/" \
+  --summary "{변경 요약}"
 ```
 
 **4-3. tasks/ DONE.md 기록**
@@ -1003,3 +987,4 @@ opi 최신화 완료
 | v4.3 | 2026-06-26 | 045 메모리 관리 개선 — MEMORY.md 인라인 템플릿을 memory-tool 호환 신포맷으로 교체(헤더·마커 4개·FIFO5·직접편집 금지 안내) |
 | v4.4 | 2026-06-28 | 프로젝트 로컬 설정 보장 추가 — "공통: setting.local.json 보장" 섹션 신설(없으면 최소-상속 템플릿 생성·있으면 스킵·.gitignore 추가). 초기화 Phase 2 §2-1 산출물 행 추가 + 최신화 모드 진입부 연결로 **기존 프로젝트(최신화 모드)도 커버**. (047) |
 | v4.5 | 2026-06-30 16:42 | Codex AGENTS.md 템플릿 신규 + apply.js PLATFORM_FILES 4항목 — templates/common/platform/AGENTS.md 생성, apply.js 배열에 AGENTS.md 항목 추가(mergeOther 경로 재사용), SKILL.md Phase 4-1 표·기존파일처리·완료보고 반영 (049) |
+| v4.6 | 2026-07-28 | MEMORY.json 단독 SSOT 전환 — 산출물 3행 `.opal/MEMORY.md` → `.opal/MEMORY.json`, §2-4 인라인 md 템플릿(마커 4개 포함) 삭제 → `memory-tool init` 호출, 초기화·최신화 4-2 히스토리 기록을 `append --kind history` 호출로 대체(구 6컬럼 스니펫 소멸), 최신화 1-0 변경 맥락 수집을 `show --brief` 1회 호출로 통합 (078) |

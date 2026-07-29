@@ -167,7 +167,7 @@ TEST-SCENARIO 단계를 "목표 달성 검증"으로 재정의 — 루브릭 채
 | `docs/PROJECT.md` | 프로젝트 정의 (SSOT) | 프로젝트 개요, 원칙, 문서 허브 | Framework | 부트스트랩 시 자동 |
 | `docs/ARCHITECTURE.md` | 시스템 아키텍처 | 구조, 컴포넌트 관계, 배포 모델 | Framework | 개발 작업 시 항상 |
 | `docs/CONVENTIONS.md` | 코드 및 문서 컨벤션 | 네이밍, 파일 구조, 커밋 규칙, 구현 규칙(Guards/디스패치/@header/Citation/State/도구·배포 경계·플랫폼 분기) | Framework | 개발 작업 시 항상 |
-| `.opal/MEMORY.md` | 프로젝트 메모리 인덱스 | 메모리·작업 히스토리·피드백 추적 (`memory/` 하위 메모리 파일 인덱스) | Framework | 부트스트랩 시 자동 (메모리 브리핑) |
+| `.opal/MEMORY.json` | 프로젝트 메모리 인덱스 (JSON SSOT) | 메모리·작업 히스토리·피드백 추적 (`memory/` 하위 메모리 파일 인덱스). 변경은 `memory-tool`만 수행 | Framework | 부트스트랩 시 자동 (`memory-tool show --brief` 브리핑) |
 | `README.md` | 프레임워크 공개 소개 문서 | Pilot 개념, 사용 사례, 프레임워크 철학 정의 | Framework | Pilot 추가/변경 시, 사용자 대면 문서 작업 시, 프레임워크 철학/방향 관련 작업 시 |
 
 ---
@@ -194,3 +194,5 @@ TEST-SCENARIO 단계를 "목표 달성 검증"으로 재정의 — 루브릭 채
 | 2026-07-14 | OPAL Console 7번째 화면 "설정" 반영 — 프라임 풀 토글 단일 기능, 설정 라우터 쓰기 격리(화이트리스트), 쓰기 예외 2종 명시 (Task 061) |
 | 2026-07-15 | OPAL Console 프로젝트 브레인 세션 단순화 — 휘발성 단일 세션(localStorage 이력·멀티대화 관리 제거, 진입/새대화마다 새 세션·세션 내 멀티턴 유지), 프라임 풀 크기 1→2 + need 충전(연속 새대화 즉시 웜), 이탈 가드 4경로(메뉴·새로고침·프로젝트 스위처·새 대화 시 세션 소멸 확인) (Task 063) |
 | 2026-07-17 | PM 개선 루프 서브시스템 신설 — opal-improve(opim) 스킬·improve-tool 도구·fw-inbox 수집소·4 pilot CLOSE 회고 하드스텝. 정의 3문서를 단일 SSOT(pm-improvement-loop.md)로 통합, memory-tool enum 확장(improvement/candidate), 로컬/FW 학습 분리 (Task 058) |
+| 2026-07-28 | 코드 헤더 작성층 신설 — code-scan v1.3.2에 discover/scaffold/target/validate/feature 5서브명령 + 인라인·외부 소스 코드 지도(`.opal/code-map/`) 2소스 5단 상속 해석. 기록 위치 4단 자동 판정·워커 권한 경계·PostToolUse hook·`run.sh` 래퍼 신설. CLOSE 게이트는 회귀(`newly_uncovered`)만 차단하고 레거시 미커버는 비차단 보고 (Task 077) |
+| 2026-07-28 | 프로젝트 메모리 SSOT 전환 — 문서 레지스트리 행 `.opal/MEMORY.md` → `.opal/MEMORY.json`(JSON SSOT, 변경은 memory-tool 전용), 참조 시점을 `memory-tool show --brief` 조회로 명시 (Task 078) |

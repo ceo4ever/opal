@@ -55,7 +55,7 @@ OPAL 에이전트는 3계층 기억을 활용한다:
 
 | 계층 | 위치 | 역할 | 용량·정책 |
 |------|------|------|----------|
-| 단기 | `~/.opal/identity.md` + `MEMORY.md` | 빠른 컨텍스트 로드 — 현재 작업·패턴·피드백 | FIFO 10항목 (자동 rotate) |
+| 단기 | `~/.opal/identity.md` + `MEMORY.json` | 빠른 컨텍스트 로드 — 현재 작업·패턴·피드백 | FIFO 5항목 (memory-tool 결정론 집행, 직접 편집 금지) |
 | 장기 검색 | `.opal/brain/` | 누적 지식 위키 — 아키텍처 결정·엔티티·흐름 | 무제한, search로 온디맨드 로드 |
 | 장기 원본 | `tasks/NNN/` | 원본 태스크 결정 문서 — PLAN·DONE·ANALYSIS | git 추적, brain `sources:[task:NNN]`으로 drill-down |
 
@@ -217,3 +217,4 @@ status: active
 | v1.0 | 2026-06-10 00:00 | 초기 작성 (태스크 015) |
 | v1.1 | 2026-06-11 19:11 | §1.5 페이지 타입 정의 블록(brain-tool 동적 로드 SSOT) 추가, §1.6 3계층 기억 구조 추가, sources:[task:NNN] drill-down 형식 명시 (태스크 016) |
 | v1.2 | 2026-06-17 | §1.5 term 타입(도메인 카테고리·채택 게이트) + §2 term frontmatter 선택 키(aliases/actors/surfaces) + §4 다층 근거 토큰(POL-/ia:) 추가 (027) |
+| v1.3 | 2026-07-28 22:47 | §1.6 3계층 기억 구조 표 정정(기존 결함 교정, memory-tool 도입(045) 이전 관행의 구건수·자동회전 서술 잔존분) — `MEMORY.md` → `MEMORY.json`, FIFO 5항목(memory-tool 결정론 집행, 직접 편집 금지)로 교체 (078) |

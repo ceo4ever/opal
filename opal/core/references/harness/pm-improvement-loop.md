@@ -82,7 +82,7 @@ PM의 학습·개선은 입력 경로에 따라 **두 트랙**으로 나뉜다. 
 |----------|----------|------|
 | CLOSE 회고 하드스텝(트랙 A) | `~/.opal/tools/improve-tool/run.sh record --scope <local\|fw> ...` | 4-pilot(opd/opwt/opgc/oppd) CLOSE에서 직접 호출 |
 | `//opim` 온디맨드(트랙 B) | `opal/skills/opal-improve/SKILL.md` | 관찰→분류→기록(improve-tool 호출)→보고→승인 |
-| local scope 기록 | improve-tool → memory-tool 위임(`append --file <root>/.opal/MEMORY.md`) | `.opal/MEMORY.md` 부재 시 graceful skip(no-op) |
+| local scope 기록 | improve-tool → memory-tool 위임(`append --file <root>/.opal/MEMORY.json`) | `.opal/MEMORY.json` 부재 시 graceful skip(no-op) |
 | fw scope 기록 | improve-tool → `~/.opal/fw-inbox/{YYYYMMDD-HHmmss}-{host}-{slug}.md` write | 출처메타(host·project·situation·created) 포함 자기완결 |
 
 모든 출력은 `{"ok":true/false, ...}` JSON 계약을 따른다(성공/실패/no-op 3경로 공통, `"ok"` 필드 항상 보장).
@@ -109,3 +109,4 @@ Claude Code의 UserPromptSubmit(매 발화)·Stop(매 턴)·PostToolUse·git pos
 |------|------|------|
 | v1.0 | 2026-04-21 | 다운사이징 — opal-pm.md §5 분리 (128) |
 | v2.0 | 2026-07-17 | **rename**(`pm-learning-loop.md` → `pm-improvement-loop.md`) + `pm/self-improvement.md` 내용 흡수(5단계 프로세스·기록위치 테이블·자기 개선 제한) + 6섹션 재구성(두 트랙 개요/트리거 테이블/5단계 프로세스/학습 2분류+기록위치/도구 집행/hook 미채택 근거) — 정의 3문서(opal-pm.md §5 stub·pm-learning-loop.md·self-improvement.md)를 단일 SSOT로 통합. `self-improvement.md`는 이 통합으로 삭제. 트리거 테이블 지칭 오류(§2) 소멸. improve-tool/opal-improve(`//opim`) 연결(§5 신설) (058)
+| v2.1 | 2026-07-28 | §5 local scope 기록 경로를 `MEMORY.json` 단독 SSOT로 갱신 — memory-tool의 구 마커 포맷 소멸에 따른 잔여 구형 참조 정리 (078)

@@ -3,7 +3,7 @@
   "module": "routers.doctor",
   "layer": "router",
   "domain": "console",
-  "description": "GET /api/doctor — doctor 4섹션+MCP+스킬 구조화 반환. project 파라미터 지원(캐시 키 분리 + 프로젝트 OPAL 구조 섹션 추가). 읽기 전용",
+  "description": "GET /api/doctor — doctor 4섹션+MCP+스킬 구조화 반환. project 파라미터 지원(캐시 키 분리 + 프로젝트 OPAL 구조 섹션 추가). 핵심 파일 체크 대상 MEMORY.json 전환 + MEMORY.md 잔존 시 warn 노출 (078 F-009). 읽기 전용",
   "exports": ["GET /api/doctor"],
   "depends": ["models", "cache", "adapters.doctor_adapter", "adapters.skill_adapter"]
 }
@@ -60,7 +60,7 @@ def _build_project_section(project_path: str) -> DoctorSection:
     # 핵심 파일 체크
     key_files = [
         (".opal/AGENT.md", "AGENT.md (PM 정의)"),
-        (".opal/MEMORY.md", "MEMORY.md (메모리 인덱스)"),
+        (".opal/MEMORY.json", "MEMORY.json (메모리 인덱스)"),
         (".opal/code-scan.json", "code-scan.json (코드 스캔)"),
         (".opal/brain", "brain/ (지식 베이스)"),
     ]
@@ -70,6 +70,16 @@ def _build_project_section(project_path: str) -> DoctorSection:
             items.append(CheckItem(status="ok", message=f"{label}"))
         else:
             items.append(CheckItem(status="warn", message=f"{label} — 없음"))
+
+    # 구형 MEMORY.md 잔존 체크 (078 F-009 — 미변환 관측성)
+    legacy_memory_md = p / ".opal" / "MEMORY.md"
+    if legacy_memory_md.exists():
+        items.append(
+            CheckItem(
+                status="warn",
+                message="MEMORY.md 잔존 — 미변환 (memory-tool 첫 호출 시 자동 변환)",
+            )
+        )
 
     # tasks/ 디렉토리 + 태스크 수
     tasks_dir = p / "tasks"

@@ -96,7 +96,7 @@ PM의 학습·개선 신호를 **관찰→분류→기록→보고→승인** 5�
 
 | scope | 집행 동작 |
 |-------|----------|
-| `local` | `<project-root>/.opal/MEMORY.md` 존재 시 memory-tool `append`로 위임(`--type improvement --status candidate`). MEMORY.md 부재 시 `{"ok":true,"scope":"local","skipped":true,"reason":"no MEMORY.md"}` no-op 반환 — 예외 전파 없음 |
+| `local` | `<project-root>/.opal/MEMORY.json` 존재 시 memory-tool `append`로 위임(`--type improvement --status candidate`). MEMORY.json 부재 시 `{"ok":true,"scope":"local","skipped":true,"reason":"no MEMORY.json"}` no-op 반환 — 예외 전파 없음 |
 | `fw` | `~/.opal/fw-inbox/{YYYYMMDD-HHmmss}-{host}-{slug}.md`를 결정론적으로 write. frontmatter에 출처 메타 4종(`host`·`project`·`situation`·`created`) 전부 포함 |
 
 모든 응답은 JSON `"ok"` 계약을 따른다(성공 `{"ok":true,...}` / 실패 `{"ok":false,"error":"..."}` / no-op `{"ok":true,"skipped":true,...}`). `ok:false` 응답이면 에러 메시지를 확인해 소유자에게 에스컬레이션한다.
@@ -132,3 +132,4 @@ PM의 학습·개선 신호를 **관찰→분류→기록→보고→승인** 5�
 | 버전 | 일시 | 변경내용 |
 |------|------|---------|
 | v1.0 | 2026-07-17 14:20 | 최초 작성 — 관찰→분류→기록→보고→승인 5단계, 분류 2원화(1차 결정론 게이트표 + 2차 루브릭표 + 동점 소유자 에스컬레이션 + 역할일반어 `PM` 결정 테스트), improve-tool record 호출 계약, `pm-improvement-loop.md` SSOT 참조 (058)
+| v1.1 | 2026-07-28 | local scope 표의 구 마커 포맷 참조를 `MEMORY.json`(memory-tool 단독 SSOT)으로 갱신 (078)

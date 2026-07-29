@@ -8,25 +8,13 @@
 
 프로젝트 경험을 `{프로젝트}/.opal/` 하위에 축적한다:
 
-- **저장소**: `{프로젝트}/.opal/MEMORY.md` (인덱스) + `{프로젝트}/.opal/memory/*.md` (개별 파일)
+- **저장소**: `{프로젝트}/.opal/MEMORY.json` (인덱스) + `{프로젝트}/.opal/memory/*.md` (개별 파일)
 - **저장하는 것**: 프로젝트 패턴, 소유자 선호, 반복되는 이슈와 해결법, 아키텍처 결정 근거
 - **저장하지 않는 것**: 일회성 작업 내용, 임시 상태, 검증되지 않은 추측
-- **활용 방법**: 새 작업을 시작할 때 MEMORY.md를 읽고, 관련 메모리를 선택적으로 로드
+- **활용 방법**: 새 작업을 시작할 때 `show --brief`로 조회하고, 관련 메모리를 선택적으로 로드
 - **소유자 요청 시**: "이거 기억해둬" → 즉시 해당 유형의 메모리 파일에 기록 (없으면 생성)
 - **갱신 트리거**: 태스크 단계 전환, 태스크 완료, 아키텍처 결정, 소유자 명시 요청, 반복 이슈, 패턴 인식
-- **메모리 인덱스 형식**: `| 제목 | 등록일 | 유형 | 상태 | 파일 | 요약 |`
-  - `제목`: 짧은 명사구(≤30자). 스캔 1순위 키.
-  - `등록일`: `YYYY-MM-DD` (KST).
-  - `유형`: project / architecture / feedback / preferences / issues / task.
-  - `상태`: active / promoted / superseded / dead (§메모리 라이프사이클).
-  - `파일`: `memory/<name>.md` 상대경로(포인터).
-  - `요약`: **≤80자, 1줄** [MUST]. 상세는 개별 `.md` 본문 전용. 인덱스는 포인터이지 본문이 아니다.
-- **작업 히스토리 형식**: `| 제목 | 등록일 | 단계 | 경로 | 핵심결과 |`
-  - `제목`: 태스크 명사구(맨 앞). 예: "045 메모리 관리 개선".
-  - `등록일`: `YYYY-MM-DD` (TASK 시작일, KST).
-  - `단계`: 진행중 `PLAN ✅ → TODO 대기` / 완료 `완료`.
-  - `경로`: `tasks/<폴더>/`.
-  - `핵심결과`: **≤2줄** [MUST]. 무엇을 바꿨는지 + 결과(테스트/회귀). 설계 전문·버그 서사는 금지(개별 메모리 또는 brain으로).
+- **인덱스·히스토리 형식**: SSOT는 `opal/tools/memory-tool/schema/memory.schema.json`의 `$defs.memoryRow` / `$defs.historyRow` (필드·길이캡은 스키마 참조).
 - **타임스탬프 취득**: 시작일시/완료일시 기록 시 `node ~/.opal/tools/date/date.js datetime` 실행 필수 (bash 생략 금지).
 - **타임존**: 모든 일시는 **KST(한국 표준시, UTC+9)** 기준으로 기록한다. 시스템 시간이 UTC인 경우 소유자에게 현재 시간을 확인한다.
 - **일회성 프로세스 변경**: QA 생략, 테스트 생략 등 소유자의 일회성 지시는 해당 태스크에만 적용. 다음 태스크는 기본 프로세스로 복귀
@@ -34,19 +22,6 @@
   - 작업 히스토리는 **최대 5개 FIFO** [MUST] — 6번째 추가 시 가장 오래된 1개를 memory-tool이 결정론적으로 제거. 이전 히스토리는 git log + tasks/ 폴더에서 추적.
   - 메모리(지식)는 **blind 삭제 금지** [MUST] — 갯수 상한을 두지 않는 대신, 성숙한 지식은 `promote`로 영구 거처(docs/brain)로 졸업한 뒤 삭제하고, 진부화는 `dead`/`superseded` 전이 후 자가검토(`review`)로 정리한다(데이터 무손실).
 - **독립 생성**: 프로젝트 에이전트 없이도 소유자 요청 시 메모리 생성 가능
-
----
-
-## 마커 규약
-
-MEMORY.md에는 아래 HTML 주석 마커가 반드시 존재해야 한다:
-
-```
-<!-- memory:index:start -->   ... 메모리 인덱스 표 ...   <!-- memory:index:end -->
-<!-- memory:history:start --> ... 작업 히스토리 표 ...   <!-- memory:history:end -->
-```
-
-**[MUST] memory-tool이 이 마커로만 테이블을 변경한다 — LLM 직접 편집 금지.** 마커가 없으면 모든 변경 명령(append/update/promote/prune/migrate)이 `marker_missing` 오류로 거부된다.
 
 ---
 
@@ -93,7 +68,7 @@ MEMORY.md에는 아래 HTML 주석 마커가 반드시 존재해야 한다:
 
 ### 자가검토 트리거
 
-memory-tool의 모든 변경 명령(`init`/`append`/`update`/`promote`/`prune`/`migrate`/`delete`) 응답 JSON에는 `review` 블록이 자동 첨부된다 → "호출할 때마다 기존 메모리·히스토리를 검토"가 ambient하게 강제된다. 단독 `review` 명령으로도 같은 health 점검을 수행한다.
+memory-tool의 모든 변경 명령(`init`/`append`/`update`/`promote`/`prune`/`delete`/`task-number`) 응답 JSON에는 `review` 블록이 자동 첨부된다 → "호출할 때마다 기존 메모리·히스토리를 검토"가 ambient하게 강제된다. 단독 `review` 명령으로도 같은 health 점검을 수행한다.
 
 ---
 
@@ -103,3 +78,4 @@ memory-tool의 모든 변경 명령(`init`/`append`/`update`/`promote`/`prune`/`
 |------|------|------|
 | v1.0 | 2026-04-21 | 다운사이징 — AGENT.md §기억과학습 분리 (128) |
 | v1.1 | 2026-06-26 | 045 메모리 관리 개선 — 제목 컬럼·길이캡·FIFO5·라이프사이클·이관 워크플로우 + memory-tool 집행 |
+| v1.2 | 2026-07-28 | 078 메모리 JSON 전환 — 구 HTML 주석 규약 절 삭제, 인덱스·히스토리 형식 서술을 스키마 참조 1줄로 대체, 저장소 경로 MEMORY.json, 자가검토 명령 목록 migrate 제거·task-number 추가 |

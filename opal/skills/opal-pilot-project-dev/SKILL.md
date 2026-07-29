@@ -262,7 +262,7 @@ opwt 완료 후, PM이 결과를 종합하여 사용자에게 보고한다:
    ```
    ~/.opal/tools/state-tool/run.sh mark <task-path> --row <Phase1_확정_행N> --done --owner user --note '{owner_name} 확인: Phase 1 확정'
    ```
-5. `.opal/MEMORY.md`의 작업 히스토리를 갱신한다
+5. 작업 히스토리를 `memory-tool append --kind history`로 갱신한다 (직접 편집 금지)
 
 ---
 
@@ -347,7 +347,7 @@ PRD/TRD를 기반으로 태스크를 분할한다.
    ```
    ~/.opal/tools/state-tool/run.sh mark <task-path> --row <Phase2_확정_행N> --done --owner user --note '{owner_name} 확인: Phase 2 확정'
    ```
-2. `.opal/MEMORY.md`의 작업 히스토리를 갱신한다
+2. 작업 히스토리를 `memory-tool append --kind history`로 갱신한다 (직접 편집 금지)
 
 ---
 
@@ -715,10 +715,16 @@ DONE.md 생성 직후 **op-brain-ingest 디스패치**를 수행한다:
 
 ## 프로젝트 메모리 동기화
 
-`{프로젝트}/.opal/MEMORY.md`가 존재하면, Phase 전환 시 작업 히스토리를 갱신한다:
+`{프로젝트}/.opal/MEMORY.json`이 존재하면, Phase 전환 시 작업 히스토리를 memory-tool로 갱신한다:
 
-- Phase 완료: `단계` 컬럼 → `Phase {N} 확정 → Phase {N+1} 대기`
-- 전체 완료: `단계` 컬럼 → `완료`
+```
+~/.opal/tools/memory-tool/run.sh append --file .opal/MEMORY.json --kind history \
+  --title "<태스크명>" --stage "Phase {N} 확정" --path "tasks/<폴더>/" --summary "<핵심결과>"
+```
+
+- Phase 완료: `--stage "Phase {N} 확정 → Phase {N+1} 대기"`
+- 전체 완료: `--stage "완료"`
+- [MUST] 표·파일 직접 편집 금지 — 도구 호출만 사용한다. FIFO 5(도구 결정론 집행)는 상세: `opal/core/references/harness/observability.md` §프로젝트 메모리 동기화 참조.
 
 ---
 
@@ -809,3 +815,4 @@ opal-harness-agentic.md "에스컬레이션 조건" 공통 기준에 추가:
 | v4.9 | 2026-07-10 13:12 | note 예시의 소유자 확인 표기를 `{owner_name} 확인:` 형식으로 통일 — identity.md owner_name 재해석 규칙(AGENT.md §정체성 적용)과 정합, 오염 차단 (054) |
 | v5.0 | 2026-07-17 | §561-566 "PM 검수 → 학습 루프 연결" 명명 정리 — "학습 루프" → "개선 루프" + SSOT 지칭 추가(`harness/pm-improvement-loop.md`) (058) |
 | v5.1 | 2026-07-17 | DONE.md 생성 직후 op-brain-ingest 디스패치 다음에 "회고(개선 루프) 하드스텝" 삽입 — 궤적 신호→관찰/분류/기록(improve-tool record --scope local\|fw), 개선후보 0건 시 no-op 비차단(brain-ingest 패턴 답습) (058) |
+| v5.2 | 2026-07-28 22:47 | 프로젝트 메모리 동기화 절 정정(기존 결함 교정, memory-tool 도입(045) 이전 관행의 표 편집 서술 잔존분) — `MEMORY.json` + `append --kind history` 도구 호출로 교체, 직접 편집 금지 명시 (078) |

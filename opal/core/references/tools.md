@@ -201,8 +201,8 @@
 
 ## code-scan
 
-**용도**: 코드 파일의 `@header` 메타블록 스캔 — 도메인/레이어/의존 관계 조회  
-**실행 경로**: `node ~/.opal/tools/code-scan/code-scan.js <command>`  
+**용도**: 코드 파일의 `@header` 메타블록 스캔 — 도메인/레이어/의존 관계 조회 + `.opal/code-map/` 외부 매니페스트 기반 헤더 작성층(discover/scaffold/target/validate/feature)  
+**실행 경로**: `~/.opal/tools/code-scan/run.sh <command>` (권장) · `node ~/.opal/tools/code-scan/code-scan.js <command>` (하위호환)  
 **소스 경로**: `opal/tools/code-scan/`  
 **의존성**: Node.js (외부 패키지 없음)
 
@@ -230,6 +230,22 @@ node ~/.opal/tools/code-scan/code-scan.js depends <module>
 
 # @header 없는 파일 목록
 node ~/.opal/tools/code-scan/code-scan.js missing
+
+# .opal/code-map/index.json 초안 추론 (헤더 작성층)
+node ~/.opal/tools/code-scan/code-scan.js discover [--out <path>] [--dry-run]
+
+# 패키지 매니페스트 생성/갱신 (멱등 보존 merge, 기존 워커 기입값 유지)
+node ~/.opal/tools/code-scan/code-scan.js scaffold [--dry-run]
+
+# 파일의 @header 기록 위치 판정 (4단: inline_exists/readonly_repo/legacy_no_header/manifest)
+node ~/.opal/tools/code-scan/code-scan.js target <file>
+
+# code-map 무결성 검증 (5종 위반 + 합산 커버리지, --changed로 영향 범위 한정)
+# uncovered 위반은 git 기준 2분류: newly_uncovered(신규/회귀 — 차단) / pre_existing(레거시 — 비차단, counts만 노출)
+node ~/.opal/tools/code-scan/code-scan.js validate [--changed <csv|->]
+
+# 기능(feature) 태그 기준 cross-scope 조회 (기본 전체 스코프 순회, --scope로 단일 스코프 제한)
+node ~/.opal/tools/code-scan/code-scan.js feature <id> [--scope <name>]
 ```
 
 ### 주요 옵션
@@ -240,9 +256,31 @@ node ~/.opal/tools/code-scan/code-scan.js missing
 | `--domain <name>` | 도메인 필터 |
 | `--layer <name>` | 레이어 필터 |
 | `--exclude <patterns>` | 제외 패턴 (쉼표 구분, 와일드카드 지원) |
+| `--out <path>` | `discover`: 초안 출력 경로 (기본 `.opal/code-map/index.json`) |
+| `--dry-run` | `discover`/`scaffold`: 파일 쓰기 없이 결과만 계산 |
+| `--changed <csv|->` | `validate`: 쉼표 목록 또는 stdin 개행 목록으로 검증 범위 한정 |
 | `--brief` | 한 줄 요약 출력 (기본값) |
 | `--full` | 전체 헤더 JSON 출력 |
 | `--json` | 파이프용 raw JSON 출력 |
+
+### 종료 코드 (`validate`)
+
+| 코드 | 의미 |
+|------|------|
+| `0` | 차단 위반 없음 (정상 — `uncovered:pre_existing`만 있는 경우도 포함) |
+| `1` | 사용법 오류 / 스키마 오류 |
+| `2` | 차단 위반 발견 |
+
+### `uncovered` 2분류 (git 기준)
+
+`@header`가 인라인·code-map 어디에도 없는 파일(`code:'uncovered'`)은 매니페스트가 관리하지 않는 디렉토리에 한해 git 상태로 재분류된다. 매니페스트가 해당 디렉토리를 관리(scaffold) 중인데 파일이 `files{}` 키에서 빠진 경우는 git과 무관하게 항상 `sub:'no_entry'`(차단)로 유지된다.
+
+| `sub` | 조건 | 차단 여부 |
+|-------|------|----------|
+| `newly_uncovered` | git 기준 신규 파일(untracked/added) 또는 HEAD 버전엔 `@header`가 있었으나 현재 없음(회귀) | 차단(exit 2) |
+| `pre_existing` | HEAD 버전에도 `@header`가 없던 기존 파일 | 비차단(exit 0) — `counts.pre_existing`·`violations[]`에 목록만 노출 |
+
+git을 쓸 수 없는 환경(git 미설치·비git 트리)에서는 전량 `pre_existing`으로 처리하고 stderr에 경고 1줄을 출력한다(비차단). `counts.newly_uncovered`/`counts.pre_existing`으로 각각 집계되며, 다른 5종 위반(`orphan`/`conflict`/`draft`/`exports_not_found`/`worker_scope_violation`)의 차단 성격은 이 재분류와 무관하게 그대로 유지된다.
 
 ### 프로젝트 설정
 
@@ -541,31 +579,31 @@ bash ~/.opal/tools/tool-scan/run.sh check <도구>               # 설치/실행
 
 ## memory-tool
 
-**용도**: 프로젝트 메모리 인덱스·히스토리 결정론적 집행 — 9서브명령 init/append/update/promote/prune/migrate/show/review/delete. 메모리→docs/brain 졸업 워크플로우·히스토리 FIFO5·요약 길이캡·라이프사이클·마커 직접편집 금지·매 변경 후 자가검토(review)·dead/superseded 정리(delete 무손실 가드)  
+**용도**: 프로젝트 메모리 인덱스·히스토리 결정론적 집행 — MEMORY.json 단독 SSOT, 9서브명령 init/append/update/promote/prune/show/review/delete/task-number. 메모리→docs/brain 졸업 워크플로우·히스토리 FIFO5·요약 길이캡·라이프사이클·lazy 자동 마이그레이션(md→json, `.bak` 보존)·매 변경 후 자가검토(review)·dead/superseded 정리(delete 무손실 가드)·task-number(태스크 번호 채번 SSOT)  
 **실행 경로**: `~/.opal/tools/memory-tool/run.sh`  
 **소스 경로**: `opal/tools/memory-tool/`  
 **의존성**: `~/.opal/.venv/bin/python` (표준 라이브러리만 — json/argparse/pathlib/re/sys/datetime/os)
 
 ### 트리거 조건
 
-메모리 등록·정리·이관 시 — append(신규 지식), update(상태 전이), promote(졸업), review(health 점검).
+메모리 등록·정리·이관 시 — append(신규 지식), update(상태 전이), promote(졸업), review(health 점검), task-number(태스크 번호 발급).
 
 ### 커맨드 (9 서브명령)
 
 ```bash
-# MEMORY.md 신포맷 마커·헤더·빈 표 삽입 (create-if-absent)
-~/.opal/tools/memory-tool/run.sh init --file <MEMORY.md 경로> [--force]
+# MEMORY.json 생성 (create-if-absent)
+~/.opal/tools/memory-tool/run.sh init --file <MEMORY.json 경로> [--force]
 
 # 메모리 행 추가 (kind=memory: 지식 인덱스 / kind=history: 작업 히스토리 FIFO5)
 ~/.opal/tools/memory-tool/run.sh append --file <path> --kind {memory,history} --title <제목> \
-  [--type {project,architecture,feedback,preferences,issues,task}] \
-  [--status {active,promoted,superseded,dead}] \
+  [--type {project,architecture,feedback,preferences,issues,task,improvement}] \
+  [--status {active,promoted,superseded,dead,candidate}] \
   [--summary <요약 ≤80자>] \
   [--stage <단계>] [--path <경로>]  # history 전용
 
 # 메모리 상태/요약/제목 수정 (라이프사이클 전이: active→superseded/dead 등)
 ~/.opal/tools/memory-tool/run.sh update --file <path> --title <제목> \
-  [--status <새 상태>] [--summary <새 요약 ≤80자>] [--new-title <새 제목>]  # --new-title: migrate crude 제목 보정
+  [--status <새 상태>] [--summary <새 요약 ≤80자>] [--new-title <새 제목>]
 
 # 메모리 → 영구 거처 졸업 (이전 확인 후 행+파일 삭제 + provenance 기록)
 ~/.opal/tools/memory-tool/run.sh promote --file <path> --title <제목> \
@@ -574,18 +612,24 @@ bash ~/.opal/tools/tool-scan/run.sh check <도구>               # 설치/실행
 # 히스토리 FIFO=5 결정론 정리 (이미 ≤5이면 no-op)
 ~/.opal/tools/memory-tool/run.sh prune --file <path>
 
-# 구포맷 → 신포맷 변환 (제목 자동 추출 + [REVIEW] 플래그, 행수 보존)
-~/.opal/tools/memory-tool/run.sh migrate --file <path>
-
 # 인덱스/히스토리 현황 출력 (read-only)
 ~/.opal/tools/memory-tool/run.sh show --file <path>
+~/.opal/tools/memory-tool/run.sh show --file <path> --brief          # active 메모리만 5필드 축약 + 히스토리 최신 3건
+~/.opal/tools/memory-tool/run.sh show --file <path> --history <N>   # 히스토리 반환 건수 재정의(단독 지정 가능)
 
 # 자가검토 단독 health 명령 — violations[] + 라이프사이클 후보 반환
 ~/.opal/tools/memory-tool/run.sh review --file <path>
 
 # dead/superseded 메모리 정리(인덱스 행 제거) — 무손실 가드(active/promoted 거부)
 ~/.opal/tools/memory-tool/run.sh delete --file <path> --title <제목> [--with-file]  # --with-file: memory/<file>.md도 삭제
+
+# last_task_number 조회·원자적 채번 (태스크 번호 발급 SSOT)
+~/.opal/tools/memory-tool/run.sh task-number --file <path>            # 조회(파일 무변경)
+~/.opal/tools/memory-tool/run.sh task-number --file <path> --bump     # 원자적 +1
+~/.opal/tools/memory-tool/run.sh task-number --file <path> --set <N>  # 복구·보정 (현재값보다 작으면 역행 거부)
 ```
+
+`<file>`이 없고 동일 이름 `.md`만 있으면 `init` 없이도 최초 호출에서 **lazy 자동 마이그레이션**(md→json)이 발동한다 — 상세는 `opal/tools/memory-tool/README.md` §lazy 마이그레이션 참조.
 
 ### 출력 형식
 
@@ -598,45 +642,70 @@ bash ~/.opal/tools/tool-scan/run.sh check <도구>               # 설치/실행
 
 // 실패
 {"ok": false, "command": "append", "error": "summary_too_long", "message": "요약 85자 > 80자 제한"}
+
+// lazy 마이그레이션 발동 시 (성공 응답의 migration 키, 미발동 시 migration: null)
+{"ok": true, "command": "show", ...,
+ "migration": {"performed": true, "source": ".opal/MEMORY.md", "backup": ".opal/MEMORY.md.bak",
+   "memories": 12, "history": 5, "review_flagged": 0,
+   "unmapped_statuses": [], "last_task_number": 78, "last_task_number_source": "MEMORY.md 파싱",
+   "empty_source_regions": [], "dropped_history": [], "backup_failed": false}}
 ```
 
 ### 주요 에러 코드 (SSOT: memory_tool.py ERROR_CODES)
 
 | 코드 | 의미 |
 |------|------|
-| `marker_missing` | MEMORY.md에 마커 누락 — init 먼저 실행 |
+| `memory_json_not_found` | MEMORY.json도 MEMORY.md도 없음 — init 먼저 실행 |
+| `invalid_json` | MEMORY.json 파싱 실패 (손상된 JSON) |
+| `schema_validation_failed` | 문서가 스키마 위반(파일 변경 없음, violations[] 참조) |
+| `migration_failed` | md→json 변환 실패 — 원본 .md 무변경, .json 미생성 |
+| `lock_timeout` | 메모리 락 획득 시간 초과 — 다른 프로세스 점유 중 |
 | `summary_too_long` | 요약 >80자 제한 위반 |
 | `promote_ref_missing` | promote 시 --ref(영구 거처 위치) 미지정 — 무손실 가드 |
 | `row_not_found` | --title 에 해당하는 인덱스 행 없음 |
 | `memory_file_not_found` | 메모리 파일(memory/*.md) 없음 |
-| `already_initialized` | 마커 이미 존재 — --force로 재삽입 가능 |
-| `import_failed` | 구포맷 파싱 실패 (migrate 시) |
+| `already_initialized` | MEMORY.json 이미 존재 — --force로 재초기화 |
 | `delete_requires_dead_or_superseded` | active/promoted 행 delete 시도 — dead/superseded만 제거 가능(무손실 가드) |
+| `task_number_regression` | --set이 현재값보다 작음 — 채번 역행 거부(무손실) |
+| `invalid_args` | 인자 조합이 올바르지 않음 (예: --bump와 --set 동시 지정) |
+| `invalid_kind` | --kind가 memory 또는 history 중 하나가 아님 |
+| `invalid_type` | --type이 유형 enum(project/architecture/feedback/preferences/issues/task)에 없음 |
+| `invalid_status` | --status가 라이프사이클 enum(active/promoted/superseded/dead)에 없음 |
+| `title_required` | --title은 필수 비공백 문자열 |
+| `invalid_promote_target` | --to가 docs 또는 brain 중 하나가 아님 |
+| `date_tool_failed` | node date.js 호출 실패 — MEMORY.md 변경 없음(원자성) |
+| `unsupported_version` | 지원하지 않는 문서 version — 지원 상한 초과 |
+| `schema_load_failed` | 스키마 파일을 로드할 수 없음(부재·파손) — 전 서브명령 결정론 거부 (H-13 관측 지점) |
+| `schema_unsupported_keyword` | 검증기가 지원하지 않는 스키마 키워드 |
+| `invalid_date` | 날짜 형식 오류 — YYYY-MM-DD가 아님 |
 
 ### 사용 예시
 
 ```bash
-# 새 MEMORY.md 초기화
-~/.opal/tools/memory-tool/run.sh init --file .opal/MEMORY.md
+# 새 MEMORY.json 초기화
+~/.opal/tools/memory-tool/run.sh init --file .opal/MEMORY.json
 
 # 피드백 지식 등록
-~/.opal/tools/memory-tool/run.sh append --file .opal/MEMORY.md \
+~/.opal/tools/memory-tool/run.sh append --file .opal/MEMORY.json \
   --kind memory --title "배포 경계 직접편집 금지" \
   --type feedback --summary "~/.opal/ 배포 파일 직접편집 금지, 소스만 수정"
 
 # 작업 히스토리 등록 (6번째부터 자동 FIFO 정리)
-~/.opal/tools/memory-tool/run.sh append --file .opal/MEMORY.md \
+~/.opal/tools/memory-tool/run.sh append --file .opal/MEMORY.json \
   --kind history --title "045 메모리 관리 개선" \
   --stage "완료" --path "tasks/045-260626-opd-메모리-관리-개선/" \
   --summary "memory-tool 신설 + SSOT 개정"
 
 # 메모리 → docs 졸업 (이전 완료 확인 후)
-~/.opal/tools/memory-tool/run.sh promote --file .opal/MEMORY.md \
+~/.opal/tools/memory-tool/run.sh promote --file .opal/MEMORY.json \
   --title "배포 경계 직접편집 금지" \
   --to docs --ref "AGENT.md#금지사항"
 
 # health 점검
-~/.opal/tools/memory-tool/run.sh review --file .opal/MEMORY.md
+~/.opal/tools/memory-tool/run.sh review --file .opal/MEMORY.json
+
+# 신규 태스크 번호 채번
+~/.opal/tools/memory-tool/run.sh task-number --file .opal/MEMORY.json --bump
 ```
 
 ---
@@ -692,7 +761,8 @@ bash ~/.opal/tools/tool-scan/run.sh check <도구>               # 설치/실행
 ### 커맨드 (3 서브명령)
 
 ```bash
-# 개선 후보 기록 — scope local: <project-root>/.opal/MEMORY.md 존재 시 memory-tool append 위임
+# 개선 후보 기록 — scope local: <project-root>/.opal/MEMORY.json 존재 시 memory-tool append 위임
+#                  (구 MEMORY.md만 있으면 memory-tool이 lazy 변환 후 위임)
 #                  (--type improvement --status candidate). 부재 시 graceful no-op.
 #                  scope fw: ~/.opal/fw-inbox/{YYYYMMDD-HHmmss}-{host}-{slug}.md 결정론 write.
 ~/.opal/tools/improve-tool/run.sh record --scope {local|fw} --title <제목> \
@@ -717,10 +787,10 @@ bash ~/.opal/tools/tool-scan/run.sh check <도구>               # 설치/실행
 {"ok": true, "scope": "fw", "path": "/Users/.../fw-inbox/20260717-095231-host-slug.md", "id": "20260717-095231-host-slug.md"}
 
 // record 성공 — scope local (memory-tool 위임)
-{"ok": true, "scope": "local", "delegated": "memory-tool", "file": "/path/.opal/MEMORY.md", "title": "..."}
+{"ok": true, "scope": "local", "delegated": "memory-tool", "file": "/path/.opal/MEMORY.json", "title": "..."}
 
-// record no-op — scope local, MEMORY.md 부재
-{"ok": true, "scope": "local", "skipped": true, "reason": "no MEMORY.md"}
+// record no-op — scope local, 메모리 인덱스 부재
+{"ok": true, "scope": "local", "skipped": true, "reason": "no MEMORY.json"}
 
 // 실패 (인자 오류 — 크래시·traceback 없이 graceful)
 {"ok": false, "error": "--scope must be one of ('local', 'fw'), got 'wrong'"}
@@ -806,3 +876,6 @@ bash ~/.opal/tools/tool-scan/run.sh check <도구>               # 설치/실행
 | v2.2 | 2026-07-17 19:58 KST | oppl-monitor 섹션 신규 추가 — `.oppl-run/` 파싱·단계×축 현황판 렌더(텍스트/`--json`/`--watch`), 상세 수치·규칙은 도구 README 포인터. opal-agent는 레지스트리 항목이 아니라 소스 경로로만 표기(R-REG) (067) |
 | v2.3 | 2026-07-17 23:04 KST | 도구명 리네임 — `oppl-monitor` → `opal-action-monitor`(향후 oppd·opsdd 액션 에이전트 공통 관측 도구로 확장 예정이라 이름 중립화). 섹션 제목·경로·본문 명칭 전체 갱신, 로직 무변경 (067) |
 | v2.4 | 2026-07-17 | improve-tool 섹션 신설(3 서브명령 record/list/show) — PM 개선 루프 결정론 집행, 로컬(memory-tool 위임)/FW(fw-inbox write) scope 분기, IMPROVE_FW_INBOX 테스트 격리 훅. memory-tool VALID_TYPES/VALID_STATUSES에 improvement/candidate additive 확장 반영 (058) |
+| v2.5 | 2026-07-28 21:40 | code-scan 섹션 — 실행 경로를 `run.sh`(권장)·`node code-scan.js`(하위호환) 병기로 갱신, 헤더 작성층 신규 5서브명령(discover/scaffold/target/validate/feature) + 신규 옵션(`--out`/`--dry-run`/`--changed`) + `validate` 종료 코드 표 추가 (077) |
+| v2.6 | 2026-07-28 | memory-tool 섹션 — MEMORY.json 단독 SSOT 전환 반영: `migrate` 서브명령 삭제 + `task-number` 서브명령 신설, `show --brief`/`--history N` 추가, lazy 자동 마이그레이션(md→json) 안내, 에러 코드 표를 현행 ERROR_CODES(`memory_json_not_found`/`schema_validation_failed`/`migration_failed`/`lock_timeout`/`task_number_regression`/`invalid_args` 등)로 정정, `marker_missing`·`import_failed` 제거, 모든 사용 예시 `--file`을 `.opal/MEMORY.json`으로 갱신 (078) |
+| v2.7 | 2026-07-28 23:28 | code-scan `validate` — `uncovered` 위반 git 기준 2분류(`newly_uncovered` 차단 / `pre_existing` 비차단) 절 신설 + 종료 코드 표에 `pre_existing`-only 시 exit 0 명시 — Step 19에서 CLOSE 게이트가 레거시 파일에 막히던 결함 재작업 (077) |

@@ -3,11 +3,16 @@
   "module": "test_parsers",
   "layer": "test",
   "domain": "console",
-  "description": "마크다운 파서 RED-first 테스트 — S-4 시나리오 (L2/M1). 실 파일 + mtime 불변 검증",
+  "description": "파서 RED-first 테스트 — S-4 시나리오 (L2/M1). memory_parser는 078 F-009 JSON 전환 — fixture_doc_populated.json 원본 대조로 재작성(H-5: 현행 오프바이원 출력을 기준선으로 잡지 않음). 그 외 파서는 실 파일 + mtime 불변 검증",
   "exports": ["[T021/L2-R3] test_memory_parser_returns_structure", "[T021/L2-R3] test_memory_parser_mtime_invariant", "[T021/L2-R3] test_memory_file_parser", "[T021/L2-R3] test_project_parser", "[T021/L2-R3] test_markdown_reader"],
-  "depends": ["parsers.memory_parser", "parsers.memory_file_parser", "parsers.project_parser", "parsers.markdown_reader"]
+  "depends": ["parsers.memory_parser", "parsers.memory_file_parser", "parsers.project_parser", "parsers.markdown_reader"],
+  "task": "078",
+  "changelog": [
+    "2026-07-28 T078 F-009: memory_parser 관련 4건(returns_structure/rows_have_fields/history_have_fields/mtime_invariant)을 MEMORY.json 원본(fixture_doc_populated.json) 1:1 대조 기준으로 재작성 — H-5 오프바이원 해소 검증"
+  ]
 }
 """
+import json
 import os
 import pytest
 from pathlib import Path
@@ -20,16 +25,28 @@ MEMORY_DIR = AI_FRAMEWORK_ROOT / ".opal" / "memory"
 PROJECT_MD = AI_FRAMEWORK_ROOT / "docs" / "PROJECT.md"
 AGENT_MD = AI_FRAMEWORK_ROOT / ".opal" / "AGENT.md"
 
+# memory_parser 테스트 전용 — MEMORY.json 원본 대조 픽스처 (읽기 전용, 수정 금지)
+MEMORY_JSON_FIXTURE = (
+    AI_FRAMEWORK_ROOT
+    / "opal"
+    / "tools"
+    / "memory-tool"
+    / "tests"
+    / "fixtures"
+    / "fixture_doc_populated.json"
+)
 
-# ─── memory_parser ────────────────────────────────────────────
+
+# ─── memory_parser (078 F-009 — JSON 원본 대조, H-5) ──────────
 def test_memory_parser_returns_structure() -> None:
-    """[T021/L2-R3] MEMORY.md → rows/history 구조화 dict 반환"""
-    if not MEMORY_MD.exists():
-        pytest.skip("MEMORY.md 없음")
+    """[T021/L2-R3][078 F-009] MEMORY.json → rows/history 구조화 dict 반환. 헤더 행 유입 없음(H-5)"""
+    if not MEMORY_JSON_FIXTURE.exists():
+        pytest.skip("fixture_doc_populated.json 없음")
 
     from dashboard.backend.parsers.memory_parser import parse_memory_index
 
-    content = MEMORY_MD.read_text(encoding="utf-8")
+    content = MEMORY_JSON_FIXTURE.read_text(encoding="utf-8")
+    source = json.loads(content)
     result = parse_memory_index(content)
 
     assert isinstance(result, dict), "dict 반환 필요"
@@ -37,53 +54,67 @@ def test_memory_parser_returns_structure() -> None:
     assert "history" in result, "'history' 키 필요"
     assert isinstance(result["rows"], list)
     assert isinstance(result["history"], list)
+    # 오프바이원 해소 확인: 행 수가 원본 memories/history 개수와 정확히 일치(헤더 행 유입 0건)
+    assert len(result["rows"]) == len(source["memories"])
+    assert len(result["history"]) == len(source["history"])
 
 
 def test_memory_parser_rows_have_fields() -> None:
-    """[T021/L2-R3] rows 항목이 date/category/status/file/description 필드 보유"""
-    if not MEMORY_MD.exists():
-        pytest.skip("MEMORY.md 없음")
+    """[T021/L2-R3][078 F-009] rows 항목이 MEMORY.json memories[] 원본과 1:1 일치(date/category/status/file/description/title)"""
+    if not MEMORY_JSON_FIXTURE.exists():
+        pytest.skip("fixture_doc_populated.json 없음")
 
     from dashboard.backend.parsers.memory_parser import parse_memory_index
 
-    content = MEMORY_MD.read_text(encoding="utf-8")
+    content = MEMORY_JSON_FIXTURE.read_text(encoding="utf-8")
+    source = json.loads(content)
     result = parse_memory_index(content)
 
-    if result["rows"]:
-        row = result["rows"][0]
-        for field in ("date", "category", "status", "file", "description"):
-            assert field in row, f"rows 항목에 '{field}' 필드 없음"
+    assert result["rows"], "rows가 비어있으면 안 됨(fixture에 6건 존재)"
+    for row, mem in zip(result["rows"], source["memories"]):
+        assert row["date"] == mem["date"]
+        assert row["category"] == mem["type"], "category는 memories[].type 매핑"
+        assert row["status"] == mem["status"]
+        assert row["file"] == mem["file"], "오프바이원 해소 — file이 밀리지 않음"
+        assert row["description"] == mem["summary"], "description은 memories[].summary 매핑"
+        assert row["title"] == mem["title"], "title은 additive 신필드"
 
 
 def test_memory_parser_history_have_fields() -> None:
-    """[T021/L2-R3] history 항목이 date/task/stage/path 필드 보유"""
-    if not MEMORY_MD.exists():
-        pytest.skip("MEMORY.md 없음")
+    """[T021/L2-R3][078 F-009] history 항목이 MEMORY.json history[] 원본과 1:1 일치(date/task/stage/path/result)"""
+    if not MEMORY_JSON_FIXTURE.exists():
+        pytest.skip("fixture_doc_populated.json 없음")
 
     from dashboard.backend.parsers.memory_parser import parse_memory_index
 
-    content = MEMORY_MD.read_text(encoding="utf-8")
+    content = MEMORY_JSON_FIXTURE.read_text(encoding="utf-8")
+    source = json.loads(content)
     result = parse_memory_index(content)
 
-    if result["history"]:
-        hist = result["history"][0]
-        for field in ("date", "task", "stage", "path"):
-            assert field in hist, f"history 항목에 '{field}' 필드 없음"
+    assert result["history"], "history가 비어있으면 안 됨(fixture에 항목 존재)"
+    for hist, h in zip(result["history"], source["history"]):
+        assert hist["date"] == h["date"]
+        assert hist["task"] == h["title"], "task는 history[].title 매핑"
+        assert hist["stage"] == h["stage"]
+        assert hist["path"] == h["path"]
+        assert hist["result"] == h["result"], "result는 additive 신필드"
+        assert hist["start"] is None, "구 6컬럼 유물 — 대응 필드 없어 항상 None"
+        assert hist["end"] is None
 
 
 def test_memory_parser_mtime_invariant() -> None:
-    """[T021/L2-R3] MEMORY.md 파서 호출 전후 mtime 불변 (읽기 전용)"""
-    if not MEMORY_MD.exists():
-        pytest.skip("MEMORY.md 없음")
+    """[T021/L2-R3][078 F-009] MEMORY.json 파서 호출 전후 mtime 불변 (읽기 전용, json.loads만 사용)"""
+    if not MEMORY_JSON_FIXTURE.exists():
+        pytest.skip("fixture_doc_populated.json 없음")
 
     from dashboard.backend.parsers.memory_parser import parse_memory_index
 
-    mtime_before = os.path.getmtime(str(MEMORY_MD))
-    content = MEMORY_MD.read_text(encoding="utf-8")
+    mtime_before = os.path.getmtime(str(MEMORY_JSON_FIXTURE))
+    content = MEMORY_JSON_FIXTURE.read_text(encoding="utf-8")
     parse_memory_index(content)
-    mtime_after = os.path.getmtime(str(MEMORY_MD))
+    mtime_after = os.path.getmtime(str(MEMORY_JSON_FIXTURE))
 
-    assert mtime_before == mtime_after, "MEMORY.md mtime이 변경됨 (읽기 전용 위반)"
+    assert mtime_before == mtime_after, "MEMORY.json mtime이 변경됨 (읽기 전용 위반)"
 
 
 # ─── memory_file_parser ───────────────────────────────────────

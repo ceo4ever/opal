@@ -1,7 +1,7 @@
 # opal Memory Index
 
 > 최종 갱신: 2026-06-26 (044 도구·MCP·스킬 통합 검색·사용법·활용 체계 — TASK)
-> last_task_number: 76
+> last_task_number: 78
 
 
 | 카테고리 | 설명 | 완료 시 |
@@ -31,7 +31,6 @@
 | Console 브레인 구독 인증 | 2026-06-22 | project | active | `memory/console-brain-subscription-auth.md` | Console 브레인 질의는 종량제 API 아닌 사용자 Claude 구독(로컬 claude -p). API키·SDK 금지 |
 | 브레인 질의 콜드 경량화(037후속) | 2026-06-23 | task | active | `memory/follow-up-brain-query-lite.md` | 브레인 질의 콜드 latency 경량화 — 검색을 LLM 밖 brain-tool로. opbr --lite 권고 |
 | 후속 069·070 액션에이전트 관측 확장 | 2026-07-17 | task | active | memory/후속_069_070_액션에이전트_관측_확장.md | oppd·opsdd를 opal-agent 채널+규약 전환→action-monitor 공용화. phase 동적발견 필수 |
-| 073/075 _GROUP_A_SPECS 회귀 | 2026-07-23 | task | active | memory/073_075_GROUP_A_SPECS_회귀.md | test_state_tool _GROUP_A_SPECS stale(opd15→16·opds10→11) 3건FAIL. 2줄수정 필요 |
 <!-- memory:index:end -->
 
 ## 작업 히스토리 (최대 5개, FIFO)

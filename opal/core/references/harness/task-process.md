@@ -17,12 +17,18 @@
 #### 태스크 번호 채번 규칙
 
 신규 태스크 생성 시:
-1. `.opal/MEMORY.md` 헤더의 `last_task_number` 필드를 읽는다
-2. `last_task_number + 1`을 계산한다
-3. **즉시 `.opal/MEMORY.md`의 `last_task_number`를 갱신한다** — 폴더 생성 전에 수행하여 동시 실행 인스턴스 간 번호 중복을 방지한다
-4. 태스크 폴더를 생성한다 (`tasks/{NNN}-{YYMMDD}-{스킬약어}-{태스크명}/`)
+1. 아래를 호출한다 — 도구가 원자적으로 증가·저장한다. **LLM 직접 편집 금지.**
+   ```bash
+   ~/.opal/tools/memory-tool/run.sh task-number --file .opal/MEMORY.json --bump
+   ```
+2. 응답 JSON의 `last_task_number` 값이 이번 태스크 번호다 (계산하지 않는다).
+3. 태스크 폴더를 생성한다 (`tasks/{NNN}-{YYMMDD}-{스킬약어}-{태스크명}/`)
    - `{YYMMDD}`: `node ~/.opal/tools/date/date.js yymmdd` 실행하여 KST 기준 취득
-5. TASK.md를 작성한다
+4. TASK.md를 작성한다
+
+> `.opal/MEMORY.json`이 없고 `.opal/MEMORY.md`만 있으면 도구가 자동 변환 후 처리한다.
+> 둘 다 없으면 `memory_json_not_found` — `memory-tool init`을 먼저 실행한다.
+> 동시 실행 인스턴스 간 번호 중복 방지는 (LLM이 아닌) `task-number --bump`의 원자적 증가(파일 락 + 임시파일 rename)가 책임진다.
 
 #### 오케스트레이터 공통 영역 (스킬 완료 후 후처리)
 
@@ -78,3 +84,4 @@
 | v1.3 | 2026-06-17 10:24 | 저장 경로 규칙에 `{태스크명}` 문자 규칙 주석 추가 — 한글·혼용 허용(공백 금지·하이픈·앞 3요소 ASCII 고정) (026 L2: 한글 폴더명 허용) |
 | v1.4 | 2026-06-17 15:50 | `{태스크명}` 기본값을 **한글**로 변경 — 영문 kebab-case·혼용은 소유자 명시 요청 시. 허용→기본 강화 (026 후속 L2: 한글 기본) |
 | v1.5 | 2026-07-23 12:09 | `--next-action` 계약 보강 — advance/mark에서도 파이프라인 프론티어 기준 자동 갱신 + 전이 시 1회성 오버라이드 가능 명시 (072) |
+| v1.6 | 2026-07-28 | 태스크 채번 규칙을 `.opal/MEMORY.md` 헤더 직접 Read+Edit에서 `memory-tool task-number --bump` 도구 호출로 전환 — 동시성 중복 방지 책임을 도구로 이전 (078) |

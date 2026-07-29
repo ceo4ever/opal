@@ -187,4 +187,4 @@ TRD 작성 후 사용자에게 넘기기 전, 아래를 1:1 대조한다:
 - [ ] docs/ARCHITECTURE.md를 업데이트했는가 (TRD에서 확정된 기술 스택 버전 반영)
 - [ ] docs/PROJECT.md 문서 테이블에 TRD.md 등록했는가 (설명, 용도, 참조 시점)
 - [ ] `state-tool` 호출로 갱신했는가 (2-TRD → 확정)
-- [ ] .opal/MEMORY.md 작업 히스토리를 갱신했는가
+- [ ] 메모리 작업 히스토리를 memory-tool로 갱신했는가

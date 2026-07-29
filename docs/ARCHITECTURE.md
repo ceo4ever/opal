@@ -79,7 +79,7 @@ OPAL은 2-레이어 아키텍처로 동작한다.
 | `agents/` | 서브에이전트 12개 (전문 7 + 범용 4 + 도구성 1) |
 | `community-skills/` | 커뮤니티 스킬 — clone-copy(git)로 사용자가 온디맨드 설치 (검색은 `npx skills find`). 사용자 등록분 `user-registry.json` 포함, install 불가침 |
 | `references/` | 레지스트리 (skills.md, agents.md, mcps.md, opal-harness.md, opal-doc-standard.md, tools.md) |
-| `tools/` | CLI 도구 (skill-registry/, xlsx-tool/, tool-scan/ — capability 검색·live 사용법, memory-tool/ — 메모리 인덱스·히스토리 결정론적 집행·docs/brain 졸업 워크플로우, check-env.js, requirements.txt) |
+| `tools/` | CLI 도구 (skill-registry/, xlsx-tool/, tool-scan/ — capability 검색·live 사용법, memory-tool/ — 메모리 인덱스·히스토리 결정론적 집행·docs/brain 졸업 워크플로우, code-scan/ — @header 조회 + **헤더 작성층**(discover/scaffold/target/validate·인라인 및 `.opal/code-map/` 2소스), check-env.js, requirements.txt) |
 | `.venv/` | Python 가상환경 (openpyxl, pandas, playwright 등 — requirements.txt로 관리) |
 | `templates/` | 프로젝트 에이전트 템플릿 |
 
@@ -91,7 +91,7 @@ OPAL은 2-레이어 아키텍처로 동작한다.
 |--------------|------|
 | `CLAUDE.md` / `.cursorrules` / `GEMINI.md` | 플랫폼 부트스트래퍼 (에이전트 로드 트리거) |
 | `.opal/AGENT.md` | PM 프로필 (역할, 검토 기준, 금지사항) |
-| `.opal/MEMORY.md` + `memory/` | 프로젝트 메모리 (히스토리, 피드백, 아키텍처 결정) |
+| `.opal/MEMORY.json` + `memory/` | 프로젝트 메모리 (히스토리, 피드백, 아키텍처 결정). 인덱스는 JSON SSOT, 본문은 `memory/*.md` |
 | `docs/PROJECT.md` | 프로젝트 정의 SSOT + 문서 허브 |
 | `docs/ARCHITECTURE.md` | 아키텍처 (개발 프로젝트) |
 | `docs/CONVENTIONS.md` | 컨벤션 (개발 프로젝트) |
@@ -244,7 +244,7 @@ opal/core/mcps/*    ──── install ─→  claude mcp add --scope user (Cl
 │  FastAPI 데몬 (~/.opal/dashboard-server/backend)          │
 │  • 프로젝트 스캐너 (.opal/AGENT.md 마커 디스크 스캔)        │
 │  • read-only 어댑터: state-tool/code-scan/skill-registry/doctor │
-│  • 마크다운 파서: MEMORY.md·memory/*·PROJECT/AGENT.md      │
+│  • 파서: MEMORY.json(JSON)·memory/*·PROJECT/AGENT.md      │
 │  • TTL 캐시(mtime 무효화) · 읽기 전용                       │
 │  • [예외·격리] 브레인 질의 라우터만 POST + opbr CLI(태스크036)│
 │  • [예외·격리] 설정 라우터만 파일 쓰기 — 화이트리스트 2종(태스크061)│
@@ -409,4 +409,6 @@ opal/                                    ← 이 저장소
 | 2026-07-14 | OPAL Console 브레인 질의 표에 "프라임 연결 풀" 행 신설 — prewarm_projects 선프라임·프로젝트별 웜 핸들 풀(크기 1)·체크아웃+백그라운드 리필·Semaphore(2) 상한·콜드 폴백·인메모리 전용 (Task 060) |
 | 2026-07-14 | OPAL Console 7번째 화면 "설정" 신설 절 추가 — 설정 라우터 쓰기 격리(화이트리스트)·프라임 풀 토글 단일 기능(캡틴 범위 확정: console.config·로컬 설정 편집은 수동 유지, 후속 단위 추가)·Lock+atomic rename·다이어그램 7화면 갱신 (Task 061) |
 | 2026-07-15 | OPAL Console 브레인 세션 단순화 — "이력" 행을 **휘발성 단일 세션(미영속)**으로 전환(localStorage 이력·멀티대화 관리 제거, mount·새 대화마다 새 session_id, 단일 대화창 멀티턴 유지), 프라임 연결 풀 크기 1→2 + `prewarm()` need-based 충전(연속 새대화 즉시 웜, 상수만 상향 시 풀 1까지만 차던 결함 수정) (Task 063) |
+| 2026-07-28 | `tools/` 표 code-scan 행 현행화 — @header 조회에 더해 **헤더 작성층**(discover/scaffold/target/validate) 및 인라인·외부 소스 코드 지도(`.opal/code-map/`) 2소스 해석 반영 (Task 077) |
 | 2026-07-17 | 커뮤니티 스킬 설치 방식 clone-copy 전환 — `npx skills add` 제거(경로 지정 불가 실측·D4), vendor 중첩 SSOT + migrate 정규화, 레지스트리 이원화(카탈로그=references / 사용자 등록분=community-skills/user-registry.json·install 불가침), npx는 find/check 전용 (Task 064) |
+| 2026-07-28 | 프로젝트 메모리 SSOT 전환 — Project Layer 표 `.opal/MEMORY.md` → `.opal/MEMORY.json`(인덱스는 JSON SSOT·본문은 `memory/*.md`), Console 파서 서술을 마크다운 파서에서 `MEMORY.json`(JSON) 파싱으로 정정 (Task 078) |
