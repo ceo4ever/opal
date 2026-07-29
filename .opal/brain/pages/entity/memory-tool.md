@@ -8,35 +8,38 @@ tags:
   - lifecycle
 sources:
   - task:045
+  - task:078
 related:
   - state-tool
   - three-layer-memory-architecture
 created: "2026-06-26"
-updated: "2026-06-26"
+updated: "2026-07-29"
 status: active
 ---
 
 ## 개요
 
-`memory-tool`은 OPAL 프로젝트의 `MEMORY.md` 인덱스·히스토리를 결정론적으로 집행하는 CLI 도구다. "반드시"를 산문이 아니라 도구가 강제한다(PRINCIPLES.md Core Stance: "Enforce, don't just advise")는 원칙에 따라, 길이캡·마커 가드·히스토리 FIFO·졸업 워크플로우를 자동화한다. `state-tool`의 구조(run.sh + Python, ok/err/ERROR_CODES, 마커 가드 패턴)를 재사용하여 표준 라이브러리만으로 구현했다. (근거: task:045 PLAN §3.2.2)
+`memory-tool`은 OPAL 프로젝트의 메모리 인덱스·히스토리를 결정론적으로 집행하는 CLI 도구다. "반드시"를 산문이 아니라 도구가 강제한다(PRINCIPLES.md Core Stance: "Enforce, don't just advise")는 원칙에 따라, 길이캡·히스토리 FIFO·졸업 워크플로우를 자동화한다. `state-tool`의 구조(run.sh + Python, ok/err/ERROR_CODES)를 재사용하여 표준 라이브러리만으로 구현했다. (근거: task:045 PLAN §3.2.2)
+
+SSOT는 2026-07-29(task:078)부터 `.opal/MEMORY.md`(HTML 주석 마커 + 마크다운 표)에서 `.opal/MEMORY.json`(문서 스키마 런타임 검증)으로 전환됐다 — 마커·표 파싱이라는 변형에 취약한 계층을 소멸시키는 것이 1순위 정당화이며, 토큰 절약은 부수 효과다(상세: [[json-not-token-saving-format]]). (근거: task:078 DONE §1)
 
 ## 책임 (WHAT)
 
-9개 서브명령으로 메모리 전 생애주기를 집행한다.
+8개 서브명령으로 메모리 전 생애주기를 집행한다. 구 `migrate` 서브명령은 삭제되고, md만 있는 프로젝트를 만나면 **모든 서브명령이 최초 진입 시 자동으로(lazy) JSON으로 변환**한다.
 
 | 서브명령 | 역할 |
 |---------|------|
-| `init` | MEMORY.md에 신포맷 마커·헤더 삽입 (없으면 신규 생성) |
+| `init` | `MEMORY.json` 골격 생성 (없으면 신규 생성) |
 | `append` | 메모리(`--kind memory`) 또는 히스토리(`--kind history`) 행 추가. 요약 ≤80자 검증, 히스토리는 FIFO=5 자동 적용 |
 | `update` | 메모리 상태(`active/promoted/superseded/dead`)·요약 갱신 |
 | `promote` | 메모리를 영구 거처(`--to docs\|brain`)로 졸업 — `--ref`(위치) 필수, 이전 확인 후 행+파일 삭제 + provenance 기록 |
 | `prune` | 히스토리 FIFO=5 결정론 정리 (멱등) |
-| `migrate` | 구포맷 MEMORY.md → 신포맷 변환 (제목 추출 + `[REVIEW]` 플래그, 무손실) |
-| `show` | 인덱스·히스토리 현황 출력 (read-only) |
+| `show` | 인덱스·히스토리 현황 출력 (read-only). `--brief`(dead/superseded/promoted/candidate 제외 필터, PM 브리핑 전용, task:078) / `--history` 옵션 |
 | `review` | 자가검토 단독 health 명령 — violations[] + 라이프사이클 후보 반환 |
 | `delete` | `dead`/`superseded` 상태 메모리만 삭제 허용 (`delete_requires_dead_or_superseded` 가드) |
+| `task-number` | (task:078 신설) 태스크 채번을 락으로 직렬화해 원자적으로 발급 — 종전에는 LLM이 헤더를 직접 Read+Edit하던 유일한 비게이트 쓰기 경로였다(상세: [[non-gated-write-path-audit-before-ssot-conversion]]) |
 
-모든 변경 명령(`init/append/update/promote/prune/migrate`) 응답 JSON에 `review` 블록이 자동 첨부된다 — 호출할 때마다 메모리 정리·졸업을 ambient하게 강제한다. (`opal/tools/memory-tool/memory_tool.py`)
+md만 있는 프로젝트에서 임의 서브명령을 호출하면 `_migrate_md_to_json`이 락 하에서 자동 변환하고 `.bak`을 보존한다(상세: [[silent-loss-prevention-row-accounting-invariant]]). 모든 변경 명령(`init/append/update/promote/prune`) 응답 JSON에 `review` 블록이 자동 첨부된다 — 호출할 때마다 메모리 정리·졸업을 ambient하게 강제한다. (`opal/tools/memory-tool/memory_tool.py`)
 
 ## 설계 배경 (WHY)
 
@@ -46,19 +49,24 @@ status: active
 
 `delete` 서브명령은 캡틴 지시에 의해 태스크 중반에 추가됐다. 무손실 가드(`delete_requires_dead_or_superseded`)로 살아있는(active) 메모리를 blind 삭제하지 못하도록 차단한다. (근거: task:045 DONE 추가작업 #1)
 
+md→JSON 전환(task:078)은 마커·표 파싱의 변형 취약성(헤더 컬럼 순서 변화, 자유텍스트 상태값 등)을 근본 해소하기 위한 결정이었다 — 문서 스키마가 코드 enum 상수의 단일 출처가 되어 두 계층이 구조적으로 어긋날 수 없게 됐다. 원자적 쓰기(`tmp→fsync→os.replace`)와 O_EXCL+stale 60s 크로스프로세스 락(`memory_lock`)이 신설되어, 검증 실패나 동시 진입 상황에서도 SSOT 파손 없이 실패한다. (근거: task:078 PLAN §3.1.2, §3.2.2)
+
 ## 관계 (HOW)
 
-- [[state-tool]] — 구조·패턴의 원형. `ok/err/ERROR_CODES/마커가드/run.sh` 를 직접 재사용
-- [[three-layer-memory-architecture]] — memory-tool이 집행하는 단기 기억(MEMORY.md) 계층을 담당
+- [[state-tool]] — 구조·패턴의 원형. `ok/err/ERROR_CODES/run.sh` 를 직접 재사용
+- [[three-layer-memory-architecture]] — memory-tool이 집행하는 단기 기억(MEMORY.json) 계층을 담당
 - `brain-tool` — promote `--to brain` 경로는 brain-tool add-page / `//opbr ingest`를 재사용. memory-tool이 brain 쓰기를 재발명하지 않는다 (Simplicity)
+- [[json-not-token-saving-format]] / [[silent-loss-prevention-row-accounting-invariant]] / [[non-gated-write-path-audit-before-ssot-conversion]] / [[parser-drift-silent-longevity-lesson]] — task:078 전환에서 도출된 설계 판단·교훈
 
 ## 소스 커버리지
 
 | 식별자 | 경로:줄번호 | 설명 |
 |--------|-----------|------|
-| `memory_tool.py` | `opal/tools/memory-tool/memory_tool.py` | 서브명령 디스패처 + ok/err/ERROR_CODES |
+| `memory_tool.py` | `opal/tools/memory-tool/memory_tool.py` | 서브명령 디스패처 + ok/err/ERROR_CODES + `_migrate_md_to_json` |
 | `run.sh` | `opal/tools/memory-tool/run.sh` | venv Python 래퍼 |
-| `memory.schema.json` | `opal/tools/memory-tool/schema/memory.schema.json` | 행 스키마 문서용 SSOT |
-| `test_memory_tool.py` | `opal/tools/memory-tool/tests/test_memory_tool.py` | pytest 단위 테스트 88건 |
-| `ERROR_CODES` | `opal/tools/memory-tool/memory_tool.py` | 에러 코드 SSOT dict |
+| `memory.schema.json` | `opal/tools/memory-tool/schema/memory.schema.json` | 문서 스키마 SSOT (task:078 — 행 스키마에서 재설계) |
+| `test_memory_tool.py` | `opal/tools/memory-tool/tests/test_memory_tool.py` | pytest 단위 테스트 132건 (task:078 — RED 61건 신규 + 이관/재작성) |
+| `ERROR_CODES` | `opal/tools/memory-tool/memory_tool.py` | 에러 코드 SSOT dict (`migration_failed`/`invalid_json`/`schema_load_failed`/`lock_timeout`/`task_number_regression` 등 task:078 신설) |
 | `HISTORY_FIFO_LIMIT` | `opal/tools/memory-tool/memory_tool.py` | 히스토리 FIFO 상수 = 5 |
+| `memory_lock` | `opal/tools/memory-tool/memory_tool.py` | O_EXCL + stale 60s 크로스프로세스 락 (task:078) |
+| `atomic_write_json` | `opal/tools/memory-tool/memory_tool.py` | tmp→fsync→os.replace 원자적 쓰기 (task:078) |

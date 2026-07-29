@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-07-23 18:02
+> 갱신: 2026-07-29 17:39
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -62,6 +62,7 @@
 - [[community-skill-basename-matching]] — 커뮤니티 스킬 basename alias 매칭 — 벤더 무관 호출 #architecture #community-skills #ux #routing
 - [[community-skill-installation-architecture]] — 커뮤니티 스킬 설치 아키텍처 — vendor 중첩 + clone-copy #architecture #community-skills #install #deploy
 - [[community-skill-user-registry]] — 커뮤니티 스킬 사용자 레지스트리 — install 배포 경계 격리 #architecture #community-skills #deploy #registry
+- [[concurrent-task-shared-file-discipline]] — 동시 태스크 공유 파일 편집 규율 — Edit 전용 + 헤딩 앵커 + 상대영역 diff 검증 #concurrency #worktree #edit-discipline #pipeline #pattern
 - [[config-file-concurrent-write-defense-standard]] — 설정 파일 동시 쓰기 방어 표준 #architecture #concurrency #backend #pattern #file-io
 - [[console-brain-exit-guard-pattern]] — 콘솔 브레인 이탈 가드 4경로 패턴 #brain #ux #guard #console #session-management
 - [[console-brain-volatile-single-session]] — 콘솔 브레인 휘발성 단일 세션 설계 전환 #brain #session-management #architecture #console #ux
@@ -79,17 +80,20 @@
 - [[fixture-vs-real-blind-spot-lesson]] — fixture-vs-real 맹점 — 테스트 픽스처 통과·실데이터 버그 반복 교훈 #lesson #testing #bug #fixture
 - [[install-hook-ownership-marker-idempotent-upsert]] — install hook 소유권-마커 멱등 upsert (외부 hook clobber 해소) #install #deploy #hook #idempotent #ownership-marker
 - [[installer-version-priority-model]] — 설치기 버전 결정 우선순위 모델 (4종 공통) #version #install #priority #architecture
+- [[json-not-token-saving-format]] — JSON은 토큰 절약 포맷이 아니다 — 절약 원천의 정직한 귀속 #json #token #ssot #measurement #memory
 - [[kanban-current-stage-derivation]] — 칸반 current_stage 파생 규칙 (도달 단계 기준) #opal-console #kanban #pipeline #be-single-source
 - [[kanban-pipeline-stage-grouping]] — 파이프라인 스테퍼 stage 그룹화 (BE 단일 소스, na/skipped 제외) #opal-console #pipeline #stage-grouping #be-single-source
 - [[legacy-row-address-gate-insertion-regression]] — 레거시 행번호 파이프라인에 게이트 행 삽입 시 전수 수정 결합 회귀 #state-tool #pipeline #legacy-row #regression #scenario-gate #task-075
 - [[linux-install-script]] — Linux 설치 스크립트 신설 (단순 위임 전략) #install #linux #deploy #task
 - [[local-fw-improvement-classification]] — 로컬/FW 2원화 개선 분류 판단 #pm-loop #classification #decision-making #scope-determination
+- [[long-running-worker-infra-failure-mitigation]] — 장시간 워커 인프라 실패 대응 — 배치분할+모델하향+함수단위저장 #agentic #execute #infra-failure #worker #resilience
 - [[loop-upper-bound-ssot-pattern]] — 루프 상한 SSOT 단일 기재 패턴 — harness 포인터, 수치 복제 금지 #harness #ssot #loop-bound #anti-pattern
 - [[memory-lifecycle-graduation-workflow]] — 메모리 라이프사이클·졸업(promote) 워크플로우 #memory #lifecycle #architecture #promote
 - [[model-mapping-2layer-override]] — 모델 매핑 2-레이어 오버라이드 (setting.json SSOT + 부트스트랩 step 0 머지) #model #mapping #setting #override #bootstrap
 - [[model-mapping-latest-tracking]] — OPAL 모델 매핑 최신화 + 최신 추종 전략 #model #mapping #gemini #codex #task
 - [[model-mapping-missing-cell-error-policy]] — 모델 매핑 미설정 셀 오류 정책 (폴백 없음 · "default" 폐기) #model #mapping #error #policy #setting
 - [[native-todo-panel-llm-only-hook-boundary]] — 네이티브 todo 패널 LLM 전용 기록 한계 (hook은 트리거·페이로드까지) #opal-pipeline #todo-mirror #hook #platform-constraint #honest-limit
+- [[non-gated-write-path-audit-before-ssot-conversion]] — 비게이트 쓰기 경로는 SSOT 전환 전에 먼저 감사해야 한다 #ssot #tool-gated #migration #architecture #memory
 - [[observability-3layer-protocol-renderer-trigger-separation]] — 관측 3층 구조 완성 — 데이터 규약·렌더러·발동층 역할 분리 #oppl #observability-boundary #architecture
 - [[op-brain-ingest]] — op-brain-ingest — CLOSE 경량 ingest 워커 #knowledge #close #ingest #skill
 - [[op-dev-analysis]] — op-dev-analysis — 코드베이스 분석 및 기술 컨텍스트 수집 #dev #analysis #skill
@@ -140,6 +144,7 @@
 - [[opwt-v4-output-system]] — opwt v4 산출물 체계 재설계 (PRD 8섹션 + interview 통합) #opwt #planning #output #framework #task
 - [[owner-honorific-contamination-prevention]] — 산출물 소유자 호칭 오염 차단 원칙 #state-tool #identity #harness #contamination #brain-ingest
 - [[page-type-dynamic-schema]] — 페이지 타입 동적화 — SCHEMA SSOT #architecture #brain #schema #dynamic-type
+- [[parser-drift-silent-longevity-lesson]] — 파서 drift는 조용히 오래 산다 — '회귀 없음' 기준선의 함정 #lesson-learned #parser #drift #dashboard #test-strategy
 - [[pipeline-todo-mirror-hook-enforcement]] — 파이프라인 todo 미러 hook 강제 전환 (prose 지시 → 결정론 트리거) #opal-pipeline #todo-mirror #hook #enforce-not-advise #state-tool
 - [[pm-improvement-loop-two-tracks]] — PM 개선 루프 2트랙 구조 (회고/온디맨드) #pm-loop #architecture-decision #improvement #process
 - [[pool-lock-idiom-contract]] — 프라임 풀 락 관용구 계약 #brain #concurrency #locking #pattern
@@ -152,6 +157,7 @@
 - [[scenario-gate-pilot-fit-criteria]] — 목표-커버 게이트 pilot 접합 판정 기준 #scenario-gate #pilot-fit #tool-gated #self-confirming #task-075
 - [[scenario-goal-coverage-gate-loop]] — TEST-SCENARIO 목표-커버리지 루브릭 게이트 루프 — 결정론+판단 분리 #testing #scenario-gate #tool-gated #rubric #opd #task-073 #task-075
 - [[scenario-normalized-contract-pilot-neutral]] — 시나리오 정규화 계약 — pilot-중립 페이로드 설계 #contract #scenario-gate #normalization #multi-pilot #task-073 #task-075
+- [[silent-loss-prevention-row-accounting-invariant]] — 무성 유실 차단 — 행 회계 불변식 설계 패턴 #migration #data-integrity #invariant #design-pattern #memory
 - [[skill-op-task-qa]] — op-task-qa — 범용 문서 QA 검증 기준 #skill #qa #document
 - [[skill-opal-agent-creator]] — opal-agent-creator — OPAL 에이전트 생성 파이프라인 #skill #agent #creator
 - [[skill-opal-brain]] — opal-brain — 프로젝트 브레인 지식 위키 #skill #brain #knowledge #wiki

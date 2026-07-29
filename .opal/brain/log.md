@@ -251,3 +251,7 @@
 - 신규: [[pipeline-todo-mirror-hook-enforcement]], [[install-hook-ownership-marker-idempotent-upsert]], [[native-todo-panel-llm-only-hook-boundary]]
 - 출처: task:076
 
+## [2026-07-29] ingest | CLOSE ingest — 태스크 078 프로젝트 메모리 SSOT MEMORY.md→MEMORY.json 전환
+- 신규: [[pages/concept/json-not-token-saving-format.md]], [[pages/concept/silent-loss-prevention-row-accounting-invariant.md]], [[pages/concept/non-gated-write-path-audit-before-ssot-conversion.md]], [[pages/concept/parser-drift-silent-longevity-lesson.md]], [[pages/concept/long-running-worker-infra-failure-mitigation.md]], [[pages/concept/concurrent-task-shared-file-discipline.md]]
+- 출처: task:078
+
