@@ -3,7 +3,7 @@
   "module": "memory_tool",
   "layer": "util",
   "domain": "opal-pipeline",
-  "description": "OPAL 메모리 관리 CLI — MEMORY.json SSOT + 9서브명령 init/append/update/promote/prune/show/review/delete/task-number. lazy 자동 마이그레이션(MEMORY.md→MEMORY.json, .bak 보존)·표준 라이브러리 전용 스키마 런타임 검증기(validate_document)·파일 락 기반 원자적 쓰기(memory_lock/atomic_write_json)·요약 길이캡(≤80)·히스토리 FIFO=5·promote 무손실 이전(--to docs|brain --ref 필수)·자가검토(review) 매 변경 명령 자동 첨부. state-tool ok/err/ERROR_CODES 패턴 재사용. 표준 라이브러리만.",
+  "description": "OPAL 메모리 관리 CLI — MEMORY.json SSOT + 9서브명령 init/append/update/promote/prune/show/review/delete/task-number. lazy 자동 마이그레이션(MEMORY.md→MEMORY.json, .bak 보존)·표준 라이브러리 전용 스키마 런타임 검증기(validate_document)·파일 락 기반 원자적 쓰기(memory_lock/atomic_write_json)·요약 길이캡(≤80)·히스토리 FIFO=5·promote 무손실 이전(--to docs|brain --ref 필수)·자가검토(review) 매 변경 명령 자동 첨부. update --kind history로 작업 히스토리 행 정정(무손실·행수 불변, FIFO 미적용). state-tool ok/err/ERROR_CODES 패턴 재사용. 표준 라이브러리만.",
   "exports": [
     "cmd_init", "cmd_append", "cmd_update", "cmd_promote",
     "cmd_prune", "cmd_show", "cmd_review", "cmd_delete", "cmd_task_number",
@@ -19,6 +19,9 @@
                   lazy 자동 마이그레이션(_migrate_md_to_json) 신설, task-number 서브명령 추가,
                   (fix) argparse help/description 잔존 MEMORY.md 표기 8건 → MEMORY.json 정정,
                   init description을 실제 동작(JSON 문서 create-if-absent)에 맞게 재서술
+  v2.1 2026-07-30 update --kind history 정정 명령 추가(079) — --kind/--stage/--result/--path
+                  인자 신설, _check_update_kind_args(락 밖 조합 게이트)·_apply_history_correction
+                  (무손실 in-place 정정, FIFO 미적용) 신설. --kind memory(기본) 기존 동작 무변경.
 """
 
 # 표준 라이브러리만 (state-tool 동형)
@@ -992,11 +995,73 @@ def cmd_append(args):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# cmd_update (F-005)
+# cmd_update (F-005, 079: --kind history 정정 분기)
 # ─────────────────────────────────────────────────────────────────────────────
 
+_UPDATE_HISTORY_ONLY_ARGS = ("stage", "result", "path")
+_UPDATE_MEMORY_ONLY_ARGS = ("status", "summary")
+_HISTORY_CORRECTABLE_FIELDS = ("stage", "result", "path")  # argparse dest == historyRow 필드명
+
+
+def _check_update_kind_args(kind, args):
+    """--kind ↔ 필드 인자 조합 사전 검증. 락 획득·파일 접근 이전에 호출한다 (R-4 AC a).
+    위반 시 err()가 단일라인 JSON을 출력하고 exit 1로 종료한다.
+    """
+    if kind not in ("memory", "history"):
+        err("update", "invalid_kind", kind=kind)
+
+    if kind == "memory":
+        for dest in _UPDATE_HISTORY_ONLY_ARGS:
+            if getattr(args, dest, None) is not None:
+                err("update", "invalid_args",
+                    detail="--stage/--result/--path는 --kind history 전용")
+    else:  # kind == "history"
+        if getattr(args, "status", None) is not None:
+            err("update", "invalid_args",
+                detail="--status는 히스토리 행에 없는 필드 — --kind memory 전용")
+        if getattr(args, "summary", None) is not None:
+            err("update", "invalid_args",
+                detail="--summary는 --kind memory 전용 — 히스토리 핵심결과는 --result")
+
+        correction_fields = _HISTORY_CORRECTABLE_FIELDS + ("new_title",)
+        if all(getattr(args, dest, None) is None for dest in correction_fields):
+            err("update", "invalid_args",
+                detail="정정 필드(--stage/--result/--path/--new-title) 중 최소 1개 필요")
+
+        path_value = getattr(args, "path", None)
+        if path_value is not None and _path_has_traversal(path_value):
+            err("update", "invalid_args",
+                detail="--path에 상위 경로 탈출(..) 문자열 금지")
+
+
+def _apply_history_correction(doc, title, args):
+    """히스토리 행 정정 — (target, matched_index, match_count, changed[]) 반환.
+    행 추가·삭제 없음. 미지정 필드는 불변. 새 키 삽입 금지.
+    """
+    rows = doc["history"]
+    matches = [i for i, r in enumerate(rows) if r.get("title") == title]
+    if not matches:
+        err("update", "row_not_found", title=title)
+    idx = matches[0]  # 배열 선행 = 가장 최근 append (P-4)
+    target = rows[idx]
+    changed = []
+    if args.new_title is not None:
+        new_title = args.new_title.strip()
+        if not new_title:
+            err("update", "title_required")
+        target["title"] = new_title
+        changed.append("title")
+    for field in _HISTORY_CORRECTABLE_FIELDS:
+        value = getattr(args, field, None)
+        if value is not None:
+            target[field] = value.strip()
+            changed.append(field)
+    return target, idx, len(matches), changed
+
+
 def cmd_update(args):
-    """메모리 상태/요약 수정(라이프사이클 전이) — MEMORY.json.
+    """메모리 인덱스 행(--kind memory, 기본) 또는 작업 히스토리 행(--kind history) 수정.
+    history 분기는 정정 전용 — 행 추가·삭제 없음(행 수 불변, FIFO 미적용).
     dead/superseded 전이 = 행 보존(추적), 로드 제외.
     """
     json_path = pathlib.Path(args.file)
@@ -1004,45 +1069,54 @@ def cmd_update(args):
     if not title:
         err("update", "title_required")
 
+    kind = getattr(args, "kind", "memory")
+    _check_update_kind_args(kind, args)  # 락 밖 사전 게이트 — 위반 시 err()로 종료 (R-4 AC a)
+
     with memory_lock(json_path, "update"):
         doc = load_document(json_path, "update", already_locked=True)
         migration = _pop_migration_report()
 
-        target = None
-        for row in doc["memories"]:
-            if row["title"] == title:
-                target = row
-                break
-        if target is None:
-            err("update", "row_not_found", title=title)
+        if kind == "memory":
+            target = None
+            for row in doc["memories"]:
+                if row["title"] == title:
+                    target = row
+                    break
+            if target is None:
+                err("update", "row_not_found", title=title)
 
-        if getattr(args, "new_title", None) is not None:
-            new_title = args.new_title.strip()
-            if not new_title:
-                err("update", "title_required")
-            target["title"] = new_title
+            if getattr(args, "new_title", None) is not None:
+                new_title = args.new_title.strip()
+                if not new_title:
+                    err("update", "title_required")
+                target["title"] = new_title
 
-        if args.status is not None:
-            new_status = args.status.strip()
-            if new_status not in VALID_STATUSES:
-                err("update", "invalid_status", value=new_status)
-            target["status"] = new_status
+            if args.status is not None:
+                new_status = args.status.strip()
+                if new_status not in VALID_STATUSES:
+                    err("update", "invalid_status", value=new_status)
+                target["status"] = new_status
 
-        if args.summary is not None:
-            new_summary = args.summary.strip()
-            if len(new_summary) > SUMMARY_MAX_LENGTH:
-                err("update", "summary_too_long", length=len(new_summary))
-            target["summary"] = new_summary
+            if args.summary is not None:
+                new_summary = args.summary.strip()
+                if len(new_summary) > SUMMARY_MAX_LENGTH:
+                    err("update", "summary_too_long", length=len(new_summary))
+                target["summary"] = new_summary
+
+            result_kwargs = {"status": target.get("status")}
+        else:  # kind == "history"
+            target, matched_index, match_count, changed = _apply_history_correction(doc, title, args)
+            result_kwargs = {"matched_index": matched_index, "match_count": match_count,
+                             "changed": changed, "history_count": len(doc["history"])}
 
         violations = validate_document(doc)
         if violations:
             err("update", "schema_validation_failed", violations=violations)
 
         atomic_write_json(json_path, doc)
-        new_status_value = target.get("status")
 
     review = build_review_block(doc)
-    ok("update", title=title, status=new_status_value, review=review, migration=migration)
+    ok("update", kind=kind, title=title, review=review, migration=migration, **result_kwargs)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -1406,9 +1480,14 @@ def main():
     p_update = sub.add_parser("update", help="메모리 상태/요약 수정")
     p_update.add_argument("--file", required=True, help="MEMORY.json 경로")
     p_update.add_argument("--title", required=True, help="대상 행 제목")
+    p_update.add_argument("--kind", default="memory", metavar="{memory,history}",
+                          help="정정 대상 — memory(기본: 메모리 인덱스 행) | history(작업 히스토리 행)")
     p_update.add_argument("--status", default=None, help="새 상태값")
     p_update.add_argument("--summary", default=None, help="새 요약 (≤80자)")
     p_update.add_argument("--new-title", default=None, dest="new_title", help="새 제목 (제목 변경 시 사용)")
+    p_update.add_argument("--stage", default=None, help="새 단계 (history 전용)")
+    p_update.add_argument("--result", default=None, help="새 핵심결과 (history 전용)")
+    p_update.add_argument("--path", default=None, help="새 tasks/<폴더>/ 경로 (history 전용)")
     p_update.set_defaults(func=cmd_update)
 
     # ── promote ──

@@ -3,7 +3,7 @@
   "module": "test_memory_tool",
   "layer": "test",
   "domain": "opal-pipeline",
-  "description": "memory-tool RED-first 테스트 — 045 트랙(S-1~S-17, S-24, 프리픽스 [T045/L1-...]) + 078 MEMORY.json 전환 트랙(TS-001~TS-021·TS-037~TS-041, 프리픽스 [T078/...]). mock/patch/MagicMock 금지(헌법 §4) — 실 fixture·실 프로세스(subprocess)만. 078 블록은 구현 전 작성된 RED이므로 전량 FAIL이 정상.",
+  "description": "memory-tool RED-first 테스트 — 045 트랙(S-1~S-17, S-24, 프리픽스 [T045/L1-...]) + 078 MEMORY.json 전환 트랙(TS-001~TS-021·TS-037~TS-041, 프리픽스 [T078/...]) + 079 `update --kind history` 작업 히스토리 정정 트랙(TS-001~TS-020·TS-025·TS-027·TS-028, 프리픽스 [T079/...]). mock/patch/MagicMock 금지(헌법 §4) — 실 fixture·실 프로세스(subprocess)만. 078·079 블록은 구현 전 작성된 RED이므로 신규 기능 케이스는 전량 FAIL이 정상(단, 하위호환·불변식 가드 케이스는 구현 전에도 통과할 수 있다).",
   "exports": [
     "TestSkeleton", "TestMarkerGuard", "TestSummaryLengthCap",
     "TestCountUnlimited", "TestHistoryFIFO", "TestPruneIdempotent",
@@ -15,13 +15,19 @@
     "TestErrorCodesJson", "TestAtomicWrite", "TestShowBrief",
     "TestLazyMigration", "TestMigrationLossless", "TestMigrationFailure",
     "TestConcurrentMigration", "TestTaskNumber", "TestSuiteMigration",
-    "TestTaskNumberDocs"
+    "TestTaskNumberDocs",
+    "TestUpdateBackCompat", "TestUpdateKindHistory",
+    "TestUpdateKindArgGuard", "TestUpdateHistoryLossless"
   ]
 }
 
 변경이력:
   v1.1 2026-07-28 078 RED-first 블록 추가 — MEMORY.json 전환 계약(TS-001~TS-021, TS-037~TS-041)
                   61케이스 + 픽스처 5종 신설. 구현(GREEN)은 별도 워커 담당 (red-first.md §2) (078)
+  v1.2 2026-07-30 079 RED-first 블록 추가 — `update --kind history` 정정 명령 계약
+                  (TS-001~TS-020, TS-025, TS-027, TS-028) 신규 클래스 4종 32케이스.
+                  신규 픽스처 신설 없음(기존 fixture_doc_populated.json in-test 가공).
+                  구현(GREEN)은 opal-be-agent 별도 담당 (red-first.md §2) (079)
 """
 
 # [MUST] 표준 라이브러리만 import
@@ -2553,6 +2559,541 @@ class TestTaskNumberDocs(unittest.TestCase):
         text = self._text(self._SSOT)
         self.assertTrue("run.sh task-number" in text, "SSOT에 실행 커맨드가 없다")
         self.assertTrue("memory-tool init" in text, "SSOT에 `init` 선행 안내가 없다 (PLAN §3.5.3)")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# T079: `update --kind history` 작업 히스토리 오기재 정정 명령 신설 (RED-first)
+# 구현(GREEN)은 opal-be-agent(Step 2) 담당 — 이 파일에는 구현 코드를 넣지 않는다.
+# 신규 픽스처 파일 신설 없음 — fixture_doc_populated.json을 in-test로만 가공한다.
+# ─────────────────────────────────────────────────────────────────────────────
+
+_T079_TARGET_TITLE = "076 파이프라인 todo 미러 hook"
+
+
+def _t079_extra_history_row(idx=0):
+    """FIFO 미적용(TS-009) 검증 전용 — 픽스처에 in-test로 덧붙일 6번째 히스토리 행."""
+    return {
+        "title": f"T079 in-test 추가 이력 {idx}",
+        "date": "2026-07-05",
+        "stage": "완료",
+        "path": f"tasks/900-t079-extra-{idx}/",
+        "result": "6행 초과 FIFO 미적용 검증 전용 in-test 추가 행 — 실 태스크 아님",
+    }
+
+
+class TestUpdateBackCompat(unittest.TestCase):
+    """[T079/L1-R1a, T079/L1-R1c] TS-001, TS-002, TS-019 — `--kind` 미지정 하위호환
+    + `--help` 노출. TS-025(기존 132건 전량 GREEN)는 이 클래스에 전용 메서드를 두지 않고
+    전 스위트 `unittest discover` 실행 로그로 별도 확인한다(PLAN §4.2 Step 1 완료 기준)."""
+
+    def test_ts001_status_only_no_kind_changes_only_memory_row(self):
+        """TS-001: `--kind` 미지정 + `--status` 단독 → ok:true, 히스토리 무변경."""
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_dir = pathlib.Path(tmp)
+            md = _setup_populated(tmp_dir)
+            history_before = _read_doc(md)["history"]
+
+            result = _run(["update", "--file", str(md),
+                           "--title", "메인 직접 커밋 선호", "--status", "superseded"])
+            self.assertTrue(result.get("ok"), f"--kind 미지정 --status 단독 회귀: {result}")
+
+            doc = _read_doc(md)
+            row = next(r for r in doc["memories"] if r["title"] == "메인 직접 커밋 선호")
+            self.assertEqual(row["status"], "superseded")
+            self.assertEqual(doc["history"], history_before, "히스토리가 변경됨 — memory 경로가 history에 영향")
+
+    def test_ts001_summary_only_no_kind_changes_only_memory_row(self):
+        """TS-001: `--summary` 단독 → ok:true, 히스토리 무변경."""
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_dir = pathlib.Path(tmp)
+            md = _setup_populated(tmp_dir)
+            history_before = _read_doc(md)["history"]
+
+            result = _run(["update", "--file", str(md),
+                           "--title", "메인 직접 커밋 선호", "--summary", "회귀 검증용 요약"])
+            self.assertTrue(result.get("ok"), f"--kind 미지정 --summary 단독 회귀: {result}")
+            self.assertEqual(_read_doc(md)["history"], history_before)
+
+    def test_ts001_new_title_only_no_kind_changes_only_memory_row(self):
+        """TS-001: `--new-title` 단독 → ok:true, 히스토리 무변경."""
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_dir = pathlib.Path(tmp)
+            md = _setup_populated(tmp_dir)
+            history_before = _read_doc(md)["history"]
+
+            result = _run(["update", "--file", str(md),
+                           "--title", "메인 직접 커밋 선호", "--new-title", "메인 직접 커밋 선호 v2"])
+            self.assertTrue(result.get("ok"), f"--kind 미지정 --new-title 단독 회귀: {result}")
+            self.assertEqual(_read_doc(md)["history"], history_before)
+
+    def test_ts001_combined_fields_no_kind_changes_only_memory_row(self):
+        """TS-001: `--status`+`--summary`+`--new-title` 복합 → ok:true, 히스토리 무변경."""
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_dir = pathlib.Path(tmp)
+            md = _setup_populated(tmp_dir)
+            history_before = _read_doc(md)["history"]
+
+            result = _run(["update", "--file", str(md),
+                           "--title", "메인 직접 커밋 선호",
+                           "--status", "dead", "--summary", "복합 회귀 요약",
+                           "--new-title", "메인 직접 커밋 선호 복합"])
+            self.assertTrue(result.get("ok"), f"--kind 미지정 복합 필드 회귀: {result}")
+
+            doc = _read_doc(md)
+            row = next(r for r in doc["memories"] if r["title"] == "메인 직접 커밋 선호 복합")
+            self.assertEqual(row["status"], "dead")
+            self.assertEqual(row["summary"], "복합 회귀 요약")
+            self.assertEqual(doc["history"], history_before)
+
+    def test_ts002_zero_fields_no_kind_is_permissive(self):
+        """TS-002: 정정 필드 0개 + `--kind` 미지정 → ok:true (invalid_args 아님 — R-3(d)는 history 한정)."""
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_dir = pathlib.Path(tmp)
+            md = _setup_populated(tmp_dir)
+
+            result = _run(["update", "--file", str(md), "--title", "메인 직접 커밋 선호"])
+            self.assertTrue(result.get("ok"),
+                           f"필드 0개 + --kind 미지정은 ok:true여야 한다(기존 관대 동작 보존): {result}")
+            self.assertNotEqual(result.get("error"), "invalid_args")
+
+    def test_ts019_help_exposes_kind_stage_result_path(self):
+        """TS-019: `update --help`에 `--kind`·`--stage`·`--result`·`--path`와 `{memory,history}` 노출."""
+        proc = _run_raw(["update", "--help"])
+        self.assertEqual(proc.returncode, 0, f"--help 비정상 종료: {proc.stderr}")
+        help_text = proc.stdout
+        for token in ("--kind", "--stage", "--result", "--path", "{memory,history}"):
+            self.assertIn(token, help_text, f"--help 출력에 '{token}' 누락:\n{help_text}")
+
+
+class TestUpdateKindHistory(unittest.TestCase):
+    """[T079/L1-R1b, L1-R2a~d, L2-R2c] TS-003, TS-005~TS-010, TS-018, TS-020 —
+    `--kind history` 정정 성공 경로: 필드 적용·미지정 불변·재로드 유효성·행수 불변(FIFO 미적용)·
+    복수매치 관측·review 블록 유지."""
+
+    def test_ts003_stage_only_changes_target_stage_only(self):
+        """TS-003: `--kind history --stage` → ok:true, kind:"history", 대상 행 stage만 변경."""
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_dir = pathlib.Path(tmp)
+            md = _setup_populated(tmp_dir)
+            before = next(r for r in _read_doc(md)["history"] if r["title"] == _T079_TARGET_TITLE)
+
+            result = _run(["update", "--file", str(md), "--kind", "history",
+                           "--title", _T079_TARGET_TITLE, "--stage", "완료·커밋(abc1234)"])
+            self.assertTrue(result.get("ok"), f"history stage 정정 실패: {result}")
+            self.assertEqual(result.get("kind"), "history")
+
+            after = next(r for r in _read_doc(md)["history"] if r["title"] == _T079_TARGET_TITLE)
+            self.assertEqual(after["stage"], "완료·커밋(abc1234)")
+            self.assertEqual(after["date"], before["date"])
+            self.assertEqual(after["path"], before["path"])
+            self.assertEqual(after["result"], before["result"])
+
+    def test_ts005_stage_field_changed_reported(self):
+        """TS-005: `--stage` 개별 지정 → changed[]가 정확히 ["stage"]."""
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_dir = pathlib.Path(tmp)
+            md = _setup_populated(tmp_dir)
+            result = _run(["update", "--file", str(md), "--kind", "history",
+                           "--title", _T079_TARGET_TITLE, "--stage", "새 단계"])
+            self.assertTrue(result.get("ok"), f"stage 개별 정정 실패: {result}")
+            self.assertEqual(sorted(result.get("changed", [])), ["stage"])
+
+    def test_ts005_result_field_changed_reported(self):
+        """TS-005: `--result` 개별 지정 → changed[]가 정확히 ["result"]."""
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_dir = pathlib.Path(tmp)
+            md = _setup_populated(tmp_dir)
+            result = _run(["update", "--file", str(md), "--kind", "history",
+                           "--title", _T079_TARGET_TITLE, "--result", "새 핵심결과"])
+            self.assertTrue(result.get("ok"), f"result 개별 정정 실패: {result}")
+            self.assertEqual(sorted(result.get("changed", [])), ["result"])
+
+    def test_ts005_path_field_changed_reported(self):
+        """TS-005: `--path` 개별 지정 → changed[]가 정확히 ["path"]."""
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_dir = pathlib.Path(tmp)
+            md = _setup_populated(tmp_dir)
+            result = _run(["update", "--file", str(md), "--kind", "history",
+                           "--title", _T079_TARGET_TITLE, "--path", "tasks/999-새경로/"])
+            self.assertTrue(result.get("ok"), f"path 개별 정정 실패: {result}")
+            self.assertEqual(sorted(result.get("changed", [])), ["path"])
+
+    def test_ts005_new_title_field_changed_reported(self):
+        """TS-005: `--new-title` 개별 지정 → changed[]가 정확히 ["title"]."""
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_dir = pathlib.Path(tmp)
+            md = _setup_populated(tmp_dir)
+            result = _run(["update", "--file", str(md), "--kind", "history",
+                           "--title", _T079_TARGET_TITLE, "--new-title", "새 제목"])
+            self.assertTrue(result.get("ok"), f"new-title 개별 정정 실패: {result}")
+            self.assertEqual(sorted(result.get("changed", [])), ["title"])
+
+    def test_ts005_compound_four_fields_changed_reported_exactly(self):
+        """TS-005: 4필드 복합 지정 → changed[]가 정확히 4개(잉여·누락 0)."""
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_dir = pathlib.Path(tmp)
+            md = _setup_populated(tmp_dir)
+            result = _run(["update", "--file", str(md), "--kind", "history",
+                           "--title", _T079_TARGET_TITLE,
+                           "--stage", "복합 단계", "--result", "복합 결과",
+                           "--path", "tasks/999-복합/", "--new-title", "복합 제목"])
+            self.assertTrue(result.get("ok"), f"4필드 복합 정정 실패: {result}")
+            self.assertEqual(sorted(result.get("changed", [])), ["path", "result", "stage", "title"])
+
+    def test_ts006_unspecified_fields_and_other_rows_unchanged(self):
+        """TS-006: `--stage`만 지정 → 대상 행의 나머지 필드 + 다른 히스토리 4행 전체 불변."""
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_dir = pathlib.Path(tmp)
+            md = _setup_populated(tmp_dir)
+            doc_before = _read_doc(md)
+            others_before = [r for r in doc_before["history"] if r["title"] != _T079_TARGET_TITLE]
+            target_before = next(r for r in doc_before["history"] if r["title"] == _T079_TARGET_TITLE)
+
+            result = _run(["update", "--file", str(md), "--kind", "history",
+                           "--title", _T079_TARGET_TITLE, "--stage", "단독 지정 단계"])
+            self.assertTrue(result.get("ok"), f"단독 stage 정정 실패: {result}")
+
+            doc_after = _read_doc(md)
+            target_after = next(r for r in doc_after["history"] if r["title"] == _T079_TARGET_TITLE)
+            self.assertEqual(target_after["title"], target_before["title"])
+            self.assertEqual(target_after["date"], target_before["date"])
+            self.assertEqual(target_after["path"], target_before["path"])
+            self.assertEqual(target_after["result"], target_before["result"])
+            self.assertEqual(target_after["stage"], "단독 지정 단계")
+
+            others_after = [r for r in doc_after["history"] if r["title"] != _T079_TARGET_TITLE]
+            self.assertEqual(others_after, others_before, "지정하지 않은 다른 히스토리 행이 변경됨")
+            self.assertEqual(len(others_after), 4)
+
+    def test_ts007_reload_after_correction_passes_validation(self):
+        """TS-007(L2): 정정 후 `show --file X` 재로드 → ok:true(=validate_document 통과)."""
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_dir = pathlib.Path(tmp)
+            md = _setup_populated(tmp_dir)
+            result = _run(["update", "--file", str(md), "--kind", "history",
+                           "--title", _T079_TARGET_TITLE, "--stage", "재로드 검증 단계"])
+            self.assertTrue(result.get("ok"), f"정정 실패(선행조건): {result}")
+
+            show_result = _run(["show", "--file", str(md)])
+            self.assertTrue(show_result.get("ok"),
+                           f"정정 후 재로드 실패 — 스키마 위반 가능성(load_document가 schema_validation_failed): {show_result}")
+            row = next((r for r in show_result.get("history_rows", [])
+                        if r.get("title") == _T079_TARGET_TITLE), None)
+            self.assertIsNotNone(row, "정정 대상 행이 재로드된 show 출력에 없음")
+            self.assertEqual(row.get("stage"), "재로드 검증 단계")
+
+    def test_ts008_five_row_history_count_unchanged(self):
+        """TS-008: 5행 히스토리 문서 정정 → `history_count:5` + 파일 history 길이 5."""
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_dir = pathlib.Path(tmp)
+            md = _setup_populated(tmp_dir)
+            self.assertEqual(len(_read_doc(md)["history"]), 5, "픽스처 전제 불일치(5행 아님)")
+
+            result = _run(["update", "--file", str(md), "--kind", "history",
+                           "--title", _T079_TARGET_TITLE, "--stage", "5행 검증"])
+            self.assertTrue(result.get("ok"), f"5행 문서 정정 실패: {result}")
+            self.assertEqual(result.get("history_count"), 5)
+            self.assertEqual(len(_read_doc(md)["history"]), 5)
+
+    def test_ts009_six_row_history_no_silent_deletion(self):
+        """TS-009 ★P0: 6행 히스토리 문서 정정 → 6행 유지(삭제 0),
+        `review.history_status.fifo_trimmed:true`로 초과만 표면화(FIFO 미호출)."""
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_dir = pathlib.Path(tmp)
+            md = _setup_populated(tmp_dir)
+            doc = _read_doc(md)
+            doc["history"].append(_t079_extra_history_row())
+            md.write_text(json.dumps(doc, ensure_ascii=False, indent=2), encoding="utf-8")
+            self.assertEqual(len(_read_doc(md)["history"]), 6, "6행 전제 준비 실패")
+
+            result = _run(["update", "--file", str(md), "--kind", "history",
+                           "--title", _T079_TARGET_TITLE, "--stage", "6행 검증"])
+            self.assertTrue(result.get("ok"), f"6행 문서 정정 실패: {result}")
+            self.assertEqual(result.get("history_count"), 6,
+                             "6행 문서인데 history_count가 FIFO 절단된 값으로 보고됨(FIFO 오적용 의심)")
+
+            after_history = _read_doc(md)["history"]
+            self.assertEqual(len(after_history), 6, "정정 명령이 히스토리 행을 조용히 삭제함(FIFO 오적용, H-6)")
+
+            review = result.get("review", {})
+            history_status = review.get("history_status", {})
+            self.assertTrue(history_status.get("fifo_trimmed"),
+                           f"6행 초과가 review.history_status.fifo_trimmed로 표면화되지 않음: {review}")
+            self.assertEqual(history_status.get("count"), 6)
+
+    def test_ts010_corrected_row_key_set_exact(self):
+        """TS-010: 정정 후 대상 행 키 집합이 정확히 {title,date,stage,path,result}(부가 키 0)."""
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_dir = pathlib.Path(tmp)
+            md = _setup_populated(tmp_dir)
+            result = _run(["update", "--file", str(md), "--kind", "history",
+                           "--title", _T079_TARGET_TITLE, "--stage", "키 집합 검증"])
+            self.assertTrue(result.get("ok"), f"정정 실패: {result}")
+            row = next(r for r in _read_doc(md)["history"] if r["stage"] == "키 집합 검증")
+            self.assertEqual(set(row.keys()), {"title", "date", "stage", "path", "result"},
+                             f"부가 키 삽입 감지(additionalProperties:false 위반 위험, H-7): {sorted(row.keys())}")
+
+    def test_ts018_duplicate_title_corrects_leading_row_only(self):
+        """TS-018: 동일 title 2행 → 배열 선행 행만 변경, 후행 불변,
+        응답 matched_index·match_count:2(복수 매치 관측 신호)."""
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_dir = pathlib.Path(tmp)
+            md = _setup_populated(tmp_dir)
+            doc = _read_doc(md)
+            dup_title = doc["history"][0]["title"]
+            trailing_before = dict(doc["history"][1])
+            doc["history"][1]["title"] = dup_title  # 후행 행에 동일 title 부여 — 나머지 필드는 상이
+            trailing_before["title"] = dup_title
+            md.write_text(json.dumps(doc, ensure_ascii=False, indent=2), encoding="utf-8")
+
+            result = _run(["update", "--file", str(md), "--kind", "history",
+                           "--title", dup_title, "--stage", "중복 title 정정"])
+            self.assertTrue(result.get("ok"), f"중복 title 정정 실패: {result}")
+            self.assertEqual(result.get("matched_index"), 0, f"선행 행(index0)이 대상이어야 한다: {result}")
+            self.assertEqual(result.get("match_count"), 2, f"복수 매치 신호 누락: {result}")
+
+            after_history = _read_doc(md)["history"]
+            self.assertEqual(after_history[0]["stage"], "중복 title 정정", "선행 행이 정정되지 않음")
+            self.assertEqual(after_history[1], trailing_before, "후행 행이 변경됨(의도와 다른 행 정정, H-3)")
+
+    def test_ts020_history_success_response_includes_review_block(self):
+        """TS-020: `--kind history` 성공 → 응답에 `review` 블록 첨부(ambient 자가검토 계약 유지)."""
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_dir = pathlib.Path(tmp)
+            md = _setup_populated(tmp_dir)
+            result = _run(["update", "--file", str(md), "--kind", "history",
+                           "--title", _T079_TARGET_TITLE, "--stage", "review 확인"])
+            self.assertTrue(result.get("ok"), f"정정 실패: {result}")
+            self.assertIn("review", result, "history 경로 응답에 review 블록이 없음")
+            self.assertIn("history_status", result.get("review", {}), "review 블록에 history_status 없음")
+
+
+class TestUpdateKindArgGuard(unittest.TestCase):
+    """[T079/L1-R1c, L1-R3a~d] TS-004, TS-011~TS-015, TS-027, TS-028 —
+    `--kind` 오용 결정론 거부(silent no-op 금지) + JSON 계약(exit 1, argparse exit 2 아님)
+    + 에러코드 신설 0(ERROR_CODES 23종 그대로)."""
+
+    def test_ts004_invalid_kind_rejected_as_json_not_argparse_exit2(self):
+        """TS-004 ★H-8: `--kind bogus` → stdout 단일라인 JSON invalid_kind,
+        exit 1(argparse의 2 아님), stderr에 usage·traceback 0, 파일 불변."""
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_dir = pathlib.Path(tmp)
+            md = _setup_populated(tmp_dir)
+            before = _snapshot(md)
+
+            proc = _run_raw(["update", "--file", str(md), "--title", _T079_TARGET_TITLE,
+                             "--kind", "bogus", "--stage", "x"])
+
+            self.assertEqual(proc.returncode, 1,
+                             f"exit code가 1이 아님(argparse choices= 회귀 의심, 실제={proc.returncode})\n"
+                             f"stdout={proc.stdout!r}\nstderr={proc.stderr!r}")
+            lines = [ln for ln in proc.stdout.splitlines() if ln.strip()]
+            self.assertEqual(len(lines), 1, f"stdout이 단일라인 JSON이 아님: {proc.stdout!r}")
+            payload = json.loads(lines[0])
+            self.assertFalse(payload.get("ok"))
+            self.assertEqual(payload.get("error"), "invalid_kind")
+
+            self.assertNotIn("usage:", proc.stderr, f"stderr에 argparse usage 잔존: {proc.stderr!r}")
+            self.assertNotIn("Traceback", proc.stderr, f"stderr에 traceback 잔존: {proc.stderr!r}")
+
+            self.assertEqual(_snapshot(md), before, "invalid_kind 거부 후 파일이 변경됨")
+
+    def test_ts011_history_status_rejected(self):
+        """TS-011: `--kind history --status dead` → invalid_args, message에 --status 사유, 파일 불변."""
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_dir = pathlib.Path(tmp)
+            md = _setup_populated(tmp_dir)
+            before = _snapshot(md)
+
+            result = _run(["update", "--file", str(md), "--kind", "history",
+                           "--title", _T079_TARGET_TITLE, "--status", "dead"])
+            self.assertFalse(result.get("ok"), f"history+--status 오용이 silent no-op으로 수용됨: {result}")
+            self.assertEqual(result.get("error"), "invalid_args")
+            self.assertIn("--status", result.get("message", ""), f"거부 사유에 --status 안내 없음: {result}")
+            self.assertEqual(_snapshot(md), before)
+
+    def test_ts012_history_summary_rejected_with_result_guidance(self):
+        """TS-012: `--kind history --summary`(별칭 불허) → invalid_args, message가 --result 안내, 파일 불변."""
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_dir = pathlib.Path(tmp)
+            md = _setup_populated(tmp_dir)
+            before = _snapshot(md)
+
+            result = _run(["update", "--file", str(md), "--kind", "history",
+                           "--title", _T079_TARGET_TITLE, "--summary", "x"])
+            self.assertFalse(result.get("ok"), f"history+--summary 별칭이 허용됨(비결정적 검증 표면 위험): {result}")
+            self.assertEqual(result.get("error"), "invalid_args")
+            self.assertIn("--result", result.get("message", ""), f"거부 사유가 --result를 안내하지 않음: {result}")
+            self.assertEqual(_snapshot(md), before)
+
+    def test_ts013_memory_kind_rejects_stage(self):
+        """TS-013: `--kind memory --stage` → invalid_args, 파일 불변."""
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_dir = pathlib.Path(tmp)
+            md = _setup_populated(tmp_dir)
+            before = _snapshot(md)
+            result = _run(["update", "--file", str(md), "--kind", "memory",
+                           "--title", "메인 직접 커밋 선호", "--stage", "x"])
+            self.assertFalse(result.get("ok"), f"memory+--stage 오용이 수용됨: {result}")
+            self.assertEqual(result.get("error"), "invalid_args")
+            self.assertEqual(_snapshot(md), before)
+
+    def test_ts013_memory_kind_rejects_result(self):
+        """TS-013: `--kind memory --result` → invalid_args, 파일 불변."""
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_dir = pathlib.Path(tmp)
+            md = _setup_populated(tmp_dir)
+            before = _snapshot(md)
+            result = _run(["update", "--file", str(md), "--kind", "memory",
+                           "--title", "메인 직접 커밋 선호", "--result", "x"])
+            self.assertFalse(result.get("ok"), f"memory+--result 오용이 수용됨: {result}")
+            self.assertEqual(result.get("error"), "invalid_args")
+            self.assertEqual(_snapshot(md), before)
+
+    def test_ts013_memory_kind_rejects_path(self):
+        """TS-013: `--kind memory --path` → invalid_args, 파일 불변."""
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_dir = pathlib.Path(tmp)
+            md = _setup_populated(tmp_dir)
+            before = _snapshot(md)
+            result = _run(["update", "--file", str(md), "--kind", "memory",
+                           "--title", "메인 직접 커밋 선호", "--path", "x"])
+            self.assertFalse(result.get("ok"), f"memory+--path 오용이 수용됨: {result}")
+            self.assertEqual(result.get("error"), "invalid_args")
+            self.assertEqual(_snapshot(md), before)
+
+    def test_ts014_row_not_found_no_lock_residue(self):
+        """TS-014: 없는 히스토리 제목 → row_not_found, 파일 불변, .lock 잔여 0."""
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_dir = pathlib.Path(tmp)
+            md = _setup_populated(tmp_dir)
+            before = _snapshot(md)
+
+            result = _run(["update", "--file", str(md), "--kind", "history",
+                           "--title", "존재하지 않는 히스토리 제목 T079", "--stage", "x"])
+            self.assertFalse(result.get("ok"), f"없는 제목이 수용됨: {result}")
+            self.assertEqual(result.get("error"), "row_not_found")
+            self.assertEqual(_snapshot(md), before)
+            self.assertEqual(_residue(tmp_dir), [], f".lock/.tmp 잔여: {_residue(tmp_dir)}")
+
+    def test_ts015_history_zero_fields_rejected(self):
+        """TS-015: `--kind history` + 정정 필드 0개 → invalid_args, 파일 불변
+        (`--kind memory` 필드 0개는 TS-002대로 계속 허용 — history 한정 거부)."""
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_dir = pathlib.Path(tmp)
+            md = _setup_populated(tmp_dir)
+            before = _snapshot(md)
+
+            result = _run(["update", "--file", str(md), "--kind", "history",
+                           "--title", _T079_TARGET_TITLE])
+            self.assertFalse(result.get("ok"),
+                            f"history+필드 0개가 수용됨(memory 관대 동작이 history로 누수): {result}")
+            self.assertEqual(result.get("error"), "invalid_args")
+            self.assertEqual(_snapshot(md), before)
+
+    def test_ts027_path_traversal_rejected(self):
+        """TS-027: `--path`에 `..` 탈출 문자열 → invalid_args, 파일 불변(보안)."""
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_dir = pathlib.Path(tmp)
+            md = _setup_populated(tmp_dir)
+            before = _snapshot(md)
+
+            result = _run(["update", "--file", str(md), "--kind", "history",
+                           "--title", _T079_TARGET_TITLE, "--path", "../../etc/"])
+            self.assertFalse(result.get("ok"), f"경로 탈출 --path가 수용됨: {result}")
+            self.assertEqual(result.get("error"), "invalid_args")
+            self.assertEqual(_snapshot(md), before)
+
+    def test_ts028_error_codes_unchanged_no_new_codes(self):
+        """TS-028: ERROR_CODES 키 23종 그대로(신규 0) + invalid_kind/invalid_args 템플릿 무변경.
+        (계약상 신규 코드가 없어야 하는 불변식이므로 구현 전에도 참일 수 있다 — 회귀 가드.)"""
+        module = _load_tool_module(_TOOL_PY, "memory_tool_t079_errcodes")
+        codes = module.ERROR_CODES
+        self.assertEqual(len(codes), 23, f"ERROR_CODES 개수가 23이 아님(신규 코드 유입 의심): {sorted(codes)}")
+        self.assertEqual(codes["invalid_kind"],
+                         "--kind는 memory 또는 history 중 하나여야 함: {kind}",
+                         "invalid_kind 템플릿이 변경됨")
+        self.assertEqual(codes["invalid_args"],
+                         "인자 조합이 올바르지 않음: {detail}",
+                         "invalid_args 템플릿이 변경됨")
+
+
+class TestUpdateHistoryLossless(unittest.TestCase):
+    """[T079/L1-R4a, L2-R4b] TS-016, TS-017 — 거부 경로 무손실(파일·잔여물) +
+    동시 정정 클로버 0(subprocess.Popen 실 병렬 — 스레드·가짜 대역 금지)."""
+
+    def test_ts016_rejection_paths_leave_no_residue(self):
+        """TS-016: 거부 경로 전수(TS-004·TS-011~TS-015·TS-027) 실행 후
+        MEMORY.json 바이트·mtime 동일 + *.tmp* 0건 + MEMORY.json.lock 0건."""
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_dir = pathlib.Path(tmp)
+            md = _setup_populated(tmp_dir)
+            before = _snapshot(md)
+
+            rejection_argv = [
+                ["--kind", "bogus", "--title", _T079_TARGET_TITLE, "--stage", "x"],
+                ["--kind", "history", "--title", _T079_TARGET_TITLE, "--status", "dead"],
+                ["--kind", "history", "--title", _T079_TARGET_TITLE, "--summary", "x"],
+                ["--kind", "memory", "--title", "메인 직접 커밋 선호", "--stage", "x"],
+                ["--kind", "memory", "--title", "메인 직접 커밋 선호", "--result", "x"],
+                ["--kind", "memory", "--title", "메인 직접 커밋 선호", "--path", "x"],
+                ["--kind", "history", "--title", "존재하지 않는 히스토리 제목 T079", "--stage", "x"],
+                ["--kind", "history", "--title", _T079_TARGET_TITLE],
+                ["--kind", "history", "--title", _T079_TARGET_TITLE, "--path", "../../etc/"],
+            ]
+            for extra_args in rejection_argv:
+                proc = _run_raw(["update", "--file", str(md)] + extra_args)
+                self.assertNotEqual(proc.returncode, 0,
+                                   f"거부 대상 조합이 성공(exit 0)으로 통과됨: {extra_args}\n{proc.stdout}")
+
+            self.assertEqual(_snapshot(md), before,
+                             "거부 경로 전수 실행 후 MEMORY.json이 변경됨(부분 기록 의심, H-4)")
+            residue = _residue(tmp_dir)
+            self.assertEqual(residue, [], f"거부 경로 후 락/tmp 잔여: {residue}")
+            self.assertFalse((tmp_dir / "MEMORY.json.lock").exists(), "MEMORY.json.lock 잔여")
+
+    def test_ts017_concurrent_different_field_corrections_no_clobber(self):
+        """TS-017: 2프로세스가 서로 다른 필드를 동시 정정 →
+        클로버 0(둘 다 반영) 또는 한쪽 lock_timeout 결정론 실패. 문서는 항상 스키마 유효."""
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_dir = pathlib.Path(tmp)
+            md = _setup_populated(tmp_dir)
+            title = _T079_TARGET_TITLE
+
+            def _spawn(field, value):
+                return subprocess.Popen(
+                    [str(_PYTHON), str(_TOOL_PY), "update", "--file", str(md),
+                     "--kind", "history", "--title", title, field, value],
+                    stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+                )
+
+            procs = [_spawn("--stage", "동시 정정 stage"), _spawn("--result", "동시 정정 result")]
+            outs = [p.communicate() for p in procs]
+
+            payloads = []
+            for proc, (stdout, stderr) in zip(procs, outs):
+                line = stdout.strip().split("\n")[-1] if stdout.strip() else ""
+                self.assertTrue(line, f"동시 update 출력 없음(exit={proc.returncode})\nstderr={stderr!r}")
+                payloads.append(json.loads(line))
+
+            oks = [p for p in payloads if p.get("ok")]
+            fails = [p for p in payloads if not p.get("ok")]
+            self.assertGreaterEqual(len(oks), 1, f"두 프로세스 모두 실패(클로버 회피 실패): {payloads}")
+            for f in fails:
+                self.assertEqual(f.get("error"), "lock_timeout",
+                                 f"클로버 없는 실패는 반드시 lock_timeout이어야 한다: {f}")
+
+            if len(oks) == 2:
+                doc = _read_doc(md)
+                row = next(r for r in doc["history"] if r["title"] == title)
+                self.assertEqual(row["stage"], "동시 정정 stage", "stage 변경이 클로버됨")
+                self.assertEqual(row["result"], "동시 정정 result", "result 변경이 클로버됨")
+
+            # 문서는 항상 스키마 유효(어느 결과 조합이든) — show 재검증으로 확인
+            show_result = _run(["show", "--file", str(md)])
+            self.assertTrue(show_result.get("ok"), f"동시 정정 후 문서가 스키마 유효하지 않음: {show_result}")
+
+            self.assertEqual(_residue(tmp_dir), [], f"동시 정정 후 락/tmp 잔여: {_residue(tmp_dir)}")
 
 
 if __name__ == "__main__":

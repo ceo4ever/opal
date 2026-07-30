@@ -86,17 +86,34 @@ run.sh append --file MEMORY.json --kind history \
 
 ---
 
-### `update` — 상태/요약 수정
+### `update` — 메모리 상태/요약 수정 + 히스토리 정정
 
 ```bash
-run.sh update --file MEMORY.json --title "제목" \
+# 메모리 인덱스 행 정정 (--kind 생략 시 기본값)
+run.sh update --file MEMORY.json --title "제목" [--kind memory] \
   [--status dead|superseded|active|promoted|candidate] \
   [--summary "새 요약(≤80자)"] \
   [--new-title "새 제목"]
+
+# 히스토리 행 정정
+run.sh update --file MEMORY.json --title "제목" --kind history \
+  [--stage "새 단계"] [--result "새 핵심결과"] \
+  [--path "tasks/<폴더>/"] [--new-title "새 제목"]
 ```
 
-에러: `title_required` | `row_not_found` | `invalid_status` | `summary_too_long` | `schema_validation_failed`
-dead/superseded 전이: 행 보존(삭제 아님), `show`(비-brief) 로드에는 포함되지만 `--brief`는 active만 반환.
+**조합 규칙**
+
+| `--kind` | 허용 필드 | 거부(→ 에러코드) |
+|------|----------|--------|
+| `memory`(기본) | `--status` `--summary` `--new-title` | `--stage`/`--result`/`--path` 지정 → `invalid_args` |
+| `history` | `--stage` `--result` `--path` `--new-title` | `--status` → `invalid_args`, `--summary` → `invalid_args`(`--result` 사용 안내) |
+| 공통 | — | 정정 필드 0개 → `invalid_args`, `--kind`가 `memory`/`history` 외 값 → `invalid_kind` |
+
+대상 판별: 동일 `--title` 복수 매치 시 배열 선행 1건(=가장 최근 `append`)이 대상 — 응답에 `matched_index`/`match_count` 노출. `show --brief`는 `date`로 재정렬한 화면이므로 판별 기준이 아니며, 기준은 비-brief `show`의 배열 순서다.
+FIFO 미적용·행 수 불변: 정정은 추가·삭제가 아니므로 히스토리 FIFO=5 집행과 무관하다.
+
+에러: `title_required` | `row_not_found` | `invalid_kind` | `invalid_status` | `invalid_args` | `summary_too_long` | `schema_validation_failed`
+dead/superseded 전이(`--kind memory`): 행 보존(삭제 아님), `show`(비-brief) 로드에는 포함되지만 `--brief`는 active만 반환.
 
 ---
 
@@ -267,7 +284,7 @@ run.sh task-number --file MEMORY.json --set 80    # 복구·보정 (역행 거�
 | `lock_timeout` | 메모리 락 획득 시간 초과(다른 프로세스 점유 중) |
 | `row_not_found` | `--title`에 해당하는 인덱스 행이 없음 |
 | `already_initialized` | `MEMORY.json`이 이미 존재(`--force` 없이 `init`) |
-| `invalid_kind` | `--kind`가 `memory`/`history` 외 값 |
+| `invalid_kind` | `--kind`가 `memory`/`history` 외 값 (`append`/`update` 공용) |
 | `invalid_type` | `--type`이 유형 enum에 없음 |
 | `invalid_status` | `--status`가 라이프사이클 enum에 없음 |
 | `invalid_date` | 날짜 형식이 `YYYY-MM-DD`가 아님 |
@@ -289,3 +306,4 @@ run.sh task-number --file MEMORY.json --set 80    # 복구·보정 (역행 거�
 | v1.0 | 045 | memory-tool 신설 — 8서브명령, 마커 가드, FIFO=5, promote 무손실+provenance, 자가검토 |
 | v1.1 | 058 | VALID_TYPES에 `improvement`, VALID_STATUSES에 `candidate` 추가(additive) |
 | v2.0 | 078 | MEMORY.json 단독 SSOT 전환 — 구 마커·표 파싱 계층 및 `migrate` 서브명령 소멸, lazy 자동 마이그레이션(md→json, `.bak` 보존) 신설, `task-number` 서브명령 신설, `show --brief`/`--history N` 추가, 스키마 런타임 검증(`schema/memory.schema.json`)·파일 락 기반 원자적 쓰기 도입 |
+| v2.1 | 079 | `update`에 `--kind {memory,history}` 신설 — 히스토리 행 정정(`--stage`/`--result`/`--path`) 지원, kind별 필드 조합 검증(`invalid_args`) 및 대상 판별(배열 선행 매치) 정책 문서화 |

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_task_number": 78,
+  "last_task_number": 79,
   "memories": [
     {
       "title": "Console 브레인 구독 인증",
@@ -33,13 +33,28 @@
       "status": "candidate",
       "file": "memory/워커_보고는_실측_대조_없이_신뢰_불가.md",
       "summary": "078 PM Gate에서 워커 자기보고 오류 2건을 적발했다. (1) Step 14가 '에러코드 표를 실제 ERROR_CODES와 일치하도록…"
+    },
+    {
+      "title": "078 워커 실패 완화책이 079에서 인프라 실패 0건으로 재현됨",
+      "date": "2026-07-30",
+      "type": "improvement",
+      "status": "candidate",
+      "file": "memory/078_워커_실패_완화책이_079에서_인프라_실패_0건으로_재현됨.md",
+      "summary": "078에서 워커 3연속 인프라 실패(API 종료 2·스톨 1) 후 도출한 완화 조합을 079 전 워커 프롬프트에 선제 적용했다: (1) 배치…"
     }
   ],
   "history": [
     {
+      "title": "079 히스토리 정정명령 신설",
+      "date": "2026-07-30",
+      "stage": "완료·미커밋",
+      "path": "tasks/079-260730-opds-히스토리-정정명령/",
+      "result": "update --kind history 신설 — 오기재 삭제 없이 정정. FIFO 미적용·행수불변, 에러코드 신설0. 163 GREEN"
+    },
+    {
       "title": "078 메모리 SSOT JSON 전환",
       "date": "2026-07-29",
-      "stage": "완료·미커밋",
+      "stage": "완료·커밋(d7a8ce0, 447ff09)",
       "path": "tasks/078-260728-opd-메모리-json전환/",
       "result": "MEMORY.md→MEMORY.json 단독 SSOT. 브리핑 show --brief(-49% 실측)·lazy 마이그레이션(행회계 불변식)·task-number tool-gated. 132+17+249 GREEN"
     },
@@ -63,13 +78,6 @@
       "stage": "완료·커밋(c8cb0b6)·배포",
       "path": "tasks/073-260723-opd-시나리오-목표커버리지-루프/",
       "result": "목표-커버 루브릭 게이트 공유컴포넌트 신설·opd 선적용. dogfooding 실증(음성통제FAIL+수렴PASS)"
-    },
-    {
-      "title": "074 import-existing key 유실 수정",
-      "date": "2026-07-23",
-      "stage": "완료·미배포·미커밋",
-      "path": "tasks/074-260723-opds-import-existing-키유실/",
-      "result": "--import-existing가 lossy STATE.md 재파싱으로 key 유실 → (stage,item) 순서매칭 재접합(state.json→pipeline.json→keyless경고). RED→GREEN 신규5·전량254. 후속=배포·커밋"
     }
   ]
 }

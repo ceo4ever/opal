@@ -9,11 +9,12 @@ tags:
 sources:
   - task:045
   - task:078
+  - task:079
 related:
   - state-tool
   - three-layer-memory-architecture
 created: "2026-06-26"
-updated: "2026-07-29"
+updated: "2026-07-30"
 status: active
 ---
 
@@ -31,7 +32,7 @@ SSOT는 2026-07-29(task:078)부터 `.opal/MEMORY.md`(HTML 주석 마커 + 마크
 |---------|------|
 | `init` | `MEMORY.json` 골격 생성 (없으면 신규 생성) |
 | `append` | 메모리(`--kind memory`) 또는 히스토리(`--kind history`) 행 추가. 요약 ≤80자 검증, 히스토리는 FIFO=5 자동 적용 |
-| `update` | 메모리 상태(`active/promoted/superseded/dead`)·요약 갱신 |
+| `update` | `--kind memory`(기본): 메모리 상태(`active/promoted/superseded/dead`)·요약 갱신. `--kind history`(task:079 신설): 작업 히스토리 행을 **삭제 없이 정정**(`stage`/`result`/`path`/`title`, 행 수 불변, FIFO 미적용) |
 | `promote` | 메모리를 영구 거처(`--to docs\|brain`)로 졸업 — `--ref`(위치) 필수, 이전 확인 후 행+파일 삭제 + provenance 기록 |
 | `prune` | 히스토리 FIFO=5 결정론 정리 (멱등) |
 | `show` | 인덱스·히스토리 현황 출력 (read-only). `--brief`(dead/superseded/promoted/candidate 제외 필터, PM 브리핑 전용, task:078) / `--history` 옵션 |
@@ -51,12 +52,15 @@ md만 있는 프로젝트에서 임의 서브명령을 호출하면 `_migrate_md
 
 md→JSON 전환(task:078)은 마커·표 파싱의 변형 취약성(헤더 컬럼 순서 변화, 자유텍스트 상태값 등)을 근본 해소하기 위한 결정이었다 — 문서 스키마가 코드 enum 상수의 단일 출처가 되어 두 계층이 구조적으로 어긋날 수 없게 됐다. 원자적 쓰기(`tmp→fsync→os.replace`)와 O_EXCL+stale 60s 크로스프로세스 락(`memory_lock`)이 신설되어, 검증 실패나 동시 진입 상황에서도 SSOT 파손 없이 실패한다. (근거: task:078 PLAN §3.1.2, §3.2.2)
 
+078의 전환으로 히스토리 관리가 전량 tool-gated되며 오기재를 되돌릴 경로가 사라진 부작용이 발생했다(task:079). `delete --kind history`는 신설하지 않았다 — 무손실 삭제 가드를 걸 `status` 필드가 히스토리 행에 없고, 히스토리는 FIFO=5 회전 로그라 지목 삭제가 애초에 불필요하기 때문이다. 대신 `update --kind history`로 행 추가·삭제 없이 4필드(`stage`/`result`/`path`/`title`)만 in-place 정정한다. 이 정정 경로는 FIFO 절단 함수(`_enforce_history_fifo`)를 호출하지 않는다 — 상한 초과 문서에서 행을 조용히 버리게 되어 "삭제 없는 정정" 전제를 깨기 때문이다(상세: [[rotating-log-correction-over-deletion]]). `--kind` 인자는 기본값을 `memory`로 두어 기존 132건 테스트가 무변경 통과했고(상세: [[backward-compat-default-value-discipline]]), 값 검증은 `choices=`가 아니라 코드에서 수행해 단일라인 JSON 응답 계약을 지켰다(상세: [[argparse-choices-breaks-json-contract]]). (근거: task:079 DONE §1, §5, §6)
+
 ## 관계 (HOW)
 
 - [[state-tool]] — 구조·패턴의 원형. `ok/err/ERROR_CODES/run.sh` 를 직접 재사용
 - [[three-layer-memory-architecture]] — memory-tool이 집행하는 단기 기억(MEMORY.json) 계층을 담당
 - `brain-tool` — promote `--to brain` 경로는 brain-tool add-page / `//opbr ingest`를 재사용. memory-tool이 brain 쓰기를 재발명하지 않는다 (Simplicity)
 - [[json-not-token-saving-format]] / [[silent-loss-prevention-row-accounting-invariant]] / [[non-gated-write-path-audit-before-ssot-conversion]] / [[parser-drift-silent-longevity-lesson]] — task:078 전환에서 도출된 설계 판단·교훈
+- [[rotating-log-correction-over-deletion]] / [[backward-compat-default-value-discipline]] / [[argparse-choices-breaks-json-contract]] — task:079 `update --kind history` 신설에서 도출된 설계 판단
 
 ## 소스 커버리지
 
@@ -70,3 +74,5 @@ md→JSON 전환(task:078)은 마커·표 파싱의 변형 취약성(헤더 컬�
 | `HISTORY_FIFO_LIMIT` | `opal/tools/memory-tool/memory_tool.py` | 히스토리 FIFO 상수 = 5 |
 | `memory_lock` | `opal/tools/memory-tool/memory_tool.py` | O_EXCL + stale 60s 크로스프로세스 락 (task:078) |
 | `atomic_write_json` | `opal/tools/memory-tool/memory_tool.py` | tmp→fsync→os.replace 원자적 쓰기 (task:078) |
+| `_apply_history_correction` | `opal/tools/memory-tool/memory_tool.py` | `update --kind history` 대상 행 식별 + in-place 필드 치환 (task:079 신설) |
+| `_check_update_kind_args` | `opal/tools/memory-tool/memory_tool.py` | `--kind` ↔ 필드 인자 조합 사전 검증, 락 밖 게이트 (task:079 신설) |

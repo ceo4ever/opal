@@ -579,7 +579,7 @@ bash ~/.opal/tools/tool-scan/run.sh check <도구>               # 설치/실행
 
 ## memory-tool
 
-**용도**: 프로젝트 메모리 인덱스·히스토리 결정론적 집행 — MEMORY.json 단독 SSOT, 9서브명령 init/append/update/promote/prune/show/review/delete/task-number. 메모리→docs/brain 졸업 워크플로우·히스토리 FIFO5·요약 길이캡·라이프사이클·lazy 자동 마이그레이션(md→json, `.bak` 보존)·매 변경 후 자가검토(review)·dead/superseded 정리(delete 무손실 가드)·task-number(태스크 번호 채번 SSOT)  
+**용도**: 프로젝트 메모리 인덱스·히스토리 결정론적 집행 — MEMORY.json 단독 SSOT, 9서브명령 init/append/update/promote/prune/show/review/delete/task-number. 메모리→docs/brain 졸업 워크플로우·히스토리 FIFO5·요약 길이캡·라이프사이클·lazy 자동 마이그레이션(md→json, `.bak` 보존)·매 변경 후 자가검토(review)·dead/superseded 정리(delete 무손실 가드)·히스토리 오기재 정정(update --kind history)·task-number(태스크 번호 채번 SSOT)  
 **실행 경로**: `~/.opal/tools/memory-tool/run.sh`  
 **소스 경로**: `opal/tools/memory-tool/`  
 **의존성**: `~/.opal/.venv/bin/python` (표준 라이브러리만 — json/argparse/pathlib/re/sys/datetime/os)
@@ -602,8 +602,11 @@ bash ~/.opal/tools/tool-scan/run.sh check <도구>               # 설치/실행
   [--stage <단계>] [--path <경로>]  # history 전용
 
 # 메모리 상태/요약/제목 수정 (라이프사이클 전이: active→superseded/dead 등)
+# --kind history: 작업 히스토리 행 오기재 정정(FIFO 미적용·행 수 불변) — --stage/--result/--path/--new-title 사용
 ~/.opal/tools/memory-tool/run.sh update --file <path> --title <제목> \
-  [--status <새 상태>] [--summary <새 요약 ≤80자>] [--new-title <새 제목>]
+  [--kind {memory,history}] \
+  [--status <새 상태>] [--summary <새 요약 ≤80자>] [--new-title <새 제목>] \
+  [--stage <새 단계>] [--result <새 핵심결과>] [--path <새 경로>]  # 뒤 3개는 --kind history 전용
 
 # 메모리 → 영구 거처 졸업 (이전 확인 후 행+파일 삭제 + provenance 기록)
 ~/.opal/tools/memory-tool/run.sh promote --file <path> --title <제목> \
@@ -879,3 +882,4 @@ bash ~/.opal/tools/tool-scan/run.sh check <도구>               # 설치/실행
 | v2.5 | 2026-07-28 21:40 | code-scan 섹션 — 실행 경로를 `run.sh`(권장)·`node code-scan.js`(하위호환) 병기로 갱신, 헤더 작성층 신규 5서브명령(discover/scaffold/target/validate/feature) + 신규 옵션(`--out`/`--dry-run`/`--changed`) + `validate` 종료 코드 표 추가 (077) |
 | v2.6 | 2026-07-28 | memory-tool 섹션 — MEMORY.json 단독 SSOT 전환 반영: `migrate` 서브명령 삭제 + `task-number` 서브명령 신설, `show --brief`/`--history N` 추가, lazy 자동 마이그레이션(md→json) 안내, 에러 코드 표를 현행 ERROR_CODES(`memory_json_not_found`/`schema_validation_failed`/`migration_failed`/`lock_timeout`/`task_number_regression`/`invalid_args` 등)로 정정, `marker_missing`·`import_failed` 제거, 모든 사용 예시 `--file`을 `.opal/MEMORY.json`으로 갱신 (078) |
 | v2.7 | 2026-07-28 23:28 | code-scan `validate` — `uncovered` 위반 git 기준 2분류(`newly_uncovered` 차단 / `pre_existing` 비차단) 절 신설 + 종료 코드 표에 `pre_existing`-only 시 exit 0 명시 — Step 19에서 CLOSE 게이트가 레거시 파일에 막히던 결함 재작업 (077) |
+| v2.8 | 2026-07-30 | memory-tool `update`에 `--kind history` 정정 경로 반영 — `--stage`/`--result`/`--path` 옵션 추가, 용도 1줄에 히스토리 오기재 정정 명시(FIFO 미적용·행 수 불변, 삭제 아님) (079) |

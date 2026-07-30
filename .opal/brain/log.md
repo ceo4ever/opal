@@ -255,3 +255,7 @@
 - 신규: [[pages/concept/json-not-token-saving-format.md]], [[pages/concept/silent-loss-prevention-row-accounting-invariant.md]], [[pages/concept/non-gated-write-path-audit-before-ssot-conversion.md]], [[pages/concept/parser-drift-silent-longevity-lesson.md]], [[pages/concept/long-running-worker-infra-failure-mitigation.md]], [[pages/concept/concurrent-task-shared-file-discipline.md]]
 - 출처: task:078
 
+## [2026-07-30] ingest | CLOSE ingest — 태스크 079 히스토리 정정명령 신설
+- 신규: [[pages/concept/rotating-log-correction-over-deletion.md]], [[pages/concept/backward-compat-default-value-discipline.md]], [[pages/concept/argparse-choices-breaks-json-contract.md]], [[pages/concept/literal-version-test-expectation-fragility.md]], [[pages/concept/manual-scenario-verbatim-output-evidence.md]]
+- 출처: task:079
+
