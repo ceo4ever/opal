@@ -1,0 +1,4 @@
+{
+  "version": 1, "scope": "svc", "dir": "svc/WRONG_DIR",
+  "files": { "Real.java": { "description": "dir 필드가 재계산값과 불일치 (worker_scope_violation:dir_mismatch)", "exports": ["Real"] } }
+}

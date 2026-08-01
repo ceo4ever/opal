@@ -53,6 +53,12 @@ PM Gate는 별도 QA Gate 단계를 두지 않고, 문서 QA(요구사항→설�
    - 확인 방법: `code-scan scan <file> --json` 실행
    - 결과 없음: @header 누락 → Fail
    - 결과 있음: module/layer/domain/description/exports 필드 존재 여부 확인 → 누락 시 Fail
+   - **2소스 판정**: JSON 결과의 `_source` 필드로 유래를 구분한다 — `inline`(파일 내 인라인 @header) vs `file`/`package`/`rule`/`domain`(code-map 매니페스트 유래, 이하 통칭 "code-map 유래"). `readonly` 스코프에 속한 파일은 인라인 기록이 금지되므로 `_source`가 code-map 유래로 나오는 것이 정상이며, 이 경우를 인라인 누락으로 오판하지 않는다.
+   - **합산 커버리지**: 커버리지 판정은 인라인 단독이 아니라 `code-scan validate --json` 결과의 `coverage.covered`(= `coverage.inline` + `coverage.manifest`) / `coverage.total`을 합산 기준으로 삼는다. `coverage.percent`가 목표치에 미달하면 Fail.
+   - **CLOSE 진입 전 게이트**: CLOSE 단계 진입 전 `code-scan validate --changed <EXECUTE changed_files 목록> --json`을 실행해 `ok: true`(exit 0)를 확인한다. `ok: false`(exit 2, violations 존재) 시 CLOSE 진입을 보류하고 워커에게 위반 목록을 전달해 재지시한다.
+     - **게이트 기준 = `newly_uncovered` 0건**: `counts.newly_uncovered`(git 기준 신규 파일 또는 HEAD 대비 헤더 회귀)가 1건이라도 있으면 `ok:false`(exit 2)로 차단한다.
+     - **`pre_existing`은 비차단 보고 항목**: `counts.pre_existing`(HEAD 버전에도 애초에 헤더가 없던 기존 파일)은 `ok:true`(exit 0)에 포함되며 CLOSE 진입을 막지 않는다. 다만 `violations[]`에 `code:'uncovered', sub:'pre_existing'`으로 노출되므로 PM은 그 수·목록을 소유자 보고에 참고 정보로 남길 수 있다.
+     - **근거**: 레거시 파일 소급 헤더 부여는 이 게이트의 책임 범위가 아니다 — `discover`/`scaffold`가 담당하는 별도 작업이다(본 게이트는 "이번 변경이 새 결손을 만들었는가"만 판정).
    - EXECUTE 결과에 새 domain/scope 추가 시 code-scan.json 갱신 여부도 함께 확인 (§9 참조)
 9. 전문 에이전트 영역 침범 여부
    - FE 에이전트가 BE 파일을 수정하지 않았는가
@@ -89,9 +95,10 @@ PM Gate는 별도 QA Gate 단계를 두지 않고, 문서 QA(요구사항→설�
 14. 코드 변경 태스크의 디스패치 컨텍스트에 code-scan 결과 인용 검증
    - **트리거 조건**: `changed_files` 또는 `target`에 code-scan 지원 확장자(`.py .js .ts .vue .jsx .tsx .svelte .kt .kts .java .swift` 등) 포함 — §8/§13과 동형
    - **검증 내용**: 워커에게 전달된 디스패치 컨텍스트(PLAN.md Step 본문 또는 PM 메시지)에 code-scan 결과(`domain`/`layer`/`depends`/`exports`)가 인용되었는가
+   - **신규 서브명령 인용도 대상**: `discover`/`scaffold`/`target`/`validate`/`feature` 서브명령의 결과(예: `target` 결과의 `write_to`/`reason`, `validate` 결과의 `coverage`/`counts`, `feature` 결과의 교차 스코프 목록)도 인용 대상에 포함한다 — `domain`/`layer`/`depends`/`exports` 인용과 동등하게 취급.
    - **적용 범위**: 코드 변경/탐색 태스크 한정. 순수 .md 문서·기획·정책만인 문서 작업은 **N/A(스킵)**.
    - **판정**: 인용 부재 시 **Fail** → 재디스패치 1회 (code-scan 결과 인용 추가 후 재시작)
-   - **Pass 조건**: 디스패치 컨텍스트에 code-scan 결과 표(domain/layer/depends/exports 중 1개 이상) 또는 명시적 인용문 존재
+   - **Pass 조건**: 디스패치 컨텍스트에 code-scan 결과 표(domain/layer/depends/exports 중 1개 이상, 또는 신규 서브명령 결과 필드 1개 이상) 또는 명시적 인용문 존재
 
 ### 자가 진단 (PM Gate 진입 전 체크)
 
@@ -145,3 +152,5 @@ PM Gate 통과 후 해당 행을 state-tool로 단일 mark한다. State Gate 행
 | v1.4 | 2026-06-07 | gate-pass deprecated 정합 — "Gate 통과 일괄 처리(gate-pass)" 절을 "PM Gate 통과 후 단일 mark"로 교체. 4행 패턴 권장 제거, [deprecated] gate-pass 레거시 안내 추가. Phase4 완료 반영 (014 Phase 4) |
 | v1.4 | 2026-06-07 | QA 문서검증을 PM Gate로 통합 — 공통 검증 원칙 4종 + 요구사항 누락·오해 검토 + self-check 흡수 (014) |
 | v1.5 | 2026-06-11 22:38 | 표준 검토 항목 14번 신설 — 코드 변경 태스크 디스패치 컨텍스트 code-scan 결과 인용 검증 (문서 작업 N/A) (010) |
+| v1.6 | 2026-07-28 15:10 | 표준 검토 항목 8번 — 2소스 판정(`_source` inline vs code-map 유래, readonly 스코프 예외) + 합산 커버리지(`coverage.covered`/`coverage.percent`) + CLOSE 진입 전 `validate --changed` 게이트 절차 추가. 14번 — `discover`/`scaffold`/`target`/`validate`/`feature` 신규 서브명령 결과도 인용 대상임을 반영 (077) |
+| v1.7 | 2026-07-28 23:28 | 표준 검토 항목 8번 CLOSE 게이트 — `uncovered` 2분류(`newly_uncovered`/`pre_existing`) 반영: 게이트 기준을 "violations 0건"에서 "`counts.newly_uncovered` 0건"으로 명확화, `pre_existing`은 비차단 보고 항목(레거시 소급 부여는 discover/scaffold 몫)임을 명시 — Step 19 검증에서 자체 저장소 레거시 파일이 게이트를 막던 결함 재작업 (077) |

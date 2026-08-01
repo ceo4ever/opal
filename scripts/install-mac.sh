@@ -39,6 +39,7 @@
 #   v3.9 2026-07-10 18:07: install_dashboard() 말미에 opal-cli console scan 자동 1회 호출 추가 — console.config.json 자동 생성/머지로 신규 머신 프로젝트 미발견 문제 근본 해결, 실패해도 install 비중단(|| warn) (057)
 #   v4.0 2026-07-17: improve-tool run.sh 실행 권한 chmod 블록(backlog-tool 패턴 답습) + fw-inbox 런타임 디렉토리 초기화 블록(mkdir -p + README seed, create-if-absent) 추가 — opal-improve 스킬·improve-tool 도구는 기존 skills/tools 자동 복사 루프가 처리, fw-inbox는 clean_dirs 미포함으로 재설치 시 기존 수집 항목 보존(H-5 멱등) (058)
 #   v4.1 2026-07-23: merge_hooks_config 인라인 python(이벤트 통째 교체=clobber) 제거 → scripts/merge-hooks.py 위임 — 소유권-마커(_opal_managed) 기반 멱등 upsert로 외부 hook(orca PostToolUse 등) 보존 + N회 재배포 바이트 동일, 로직 테스트 seam 분리 (076)
+#   v4.2 2026-07-28: code-scan run.sh 실행 권한 chmod 블록 추가(improve-tool 블록 직후, state-tool 패턴) — code-map 헤더 작성층 도구 배포·tool-scan usage 정상화 (077)
 #
 
 set -euo pipefail
@@ -1171,6 +1172,13 @@ install_opal() {
         if [[ -f "$improve_run" ]]; then
             chmod +x "$improve_run"
             success "improve-tool run.sh 실행 권한 설정"
+        fi
+
+        # ── code-scan 실행 권한 (077) ──
+        local code_scan_run="$opal_home/tools/code-scan/run.sh"
+        if [[ -f "$code_scan_run" ]]; then
+            chmod +x "$code_scan_run"
+            success "code-scan run.sh 실행 권한 설정"
         fi
 
         # cmux 의존성 안내 (정보성 — 설치 강제 없음, silent fallback 정책)

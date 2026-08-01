@@ -1,0 +1,5 @@
+
+[auth]
+  [repository]  user_repo.py     — 사용자 조회/저장 리포지토리 (legacy-repo golden fixture)
+  [service   ]  auth_service.py  — JWT 발급 및 검증 처리 (legacy-repo golden fixture)
+  [page      ]  Login.ts         — 로그인 화면 (legacy-repo golden fixture)

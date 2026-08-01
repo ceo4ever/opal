@@ -1,0 +1,7 @@
+{
+  "version": 1, "scope": "svc", "dir": "svc/mod",
+  "files": {
+    "OnDisk.java":      { "description": "실재 파일 — 정상 엔트리", "exports": ["OnDisk"] },
+    "Phantom.java":      { "description": "디스크에 없는 키를 워커가 임의 추가 (files_key_added)", "exports": [] }
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "version": 1, "status": "reviewed",
+  "note": "violation fixture: exports_not_found — 3 sub-cases (exists/missing/comment-only), text-substring contract (PM-4, H-14)",
+  "scopes": { "svc": { "root": "svc/", "anchors": [], "stripPrefix": [], "readonly": false } },
+  "domains": { "demo": { "paths": ["svc/**"] } },
+  "layerRules": [ { "match": "**/mod/**", "layer": "util" } ],
+  "exclude": []
+}

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- fixture anchor marker (build manifest based anchor detection) -->
+<project>
+  <artifactId>ship-api</artifactId>
+</project>

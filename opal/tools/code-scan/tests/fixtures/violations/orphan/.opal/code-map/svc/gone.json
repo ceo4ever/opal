@@ -1,0 +1,4 @@
+{
+  "version": 1, "scope": "svc", "dir": "svc/gone",
+  "files": { "Anything.java": { "description": "디렉토리 자체가 디스크에 없음 (orphan:dir_missing)", "exports": [] } }
+}

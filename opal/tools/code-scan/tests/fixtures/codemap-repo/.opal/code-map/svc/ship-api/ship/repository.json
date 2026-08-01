@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "scope": "svc",
+  "dir": "svc/ship-api/src/main/java/com/acme/ship/repository",
+  "package": {
+    "description": "배송 리포지토리 패키지 (package tier 단독 예시 + H-2 depends 상속 스냅샷용)",
+    "depends": ["ship-common"]
+  },
+  "files": {
+    "ShipRepo.java": {},
+    "ShipValidator.java": {}
+  }
+}

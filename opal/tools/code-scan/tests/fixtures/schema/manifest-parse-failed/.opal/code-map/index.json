@@ -1,0 +1,6 @@
+{
+  "version": 1, "status": "reviewed",
+  "note": "schema fixture: manifest JSON itself is malformed -> scan must fail-fast with manifest_parse_failed exit 1 (no silent partial result)",
+  "scopes": { "svc": { "root": "svc/", "anchors": [], "stripPrefix": [], "readonly": false } },
+  "domains": {}, "layerRules": [], "exclude": []
+}

@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "scope": "svc",
+  "dir": "svc/order-api/src/main/java/com/acme/order/service",
+  "files": {
+    "OrderService.java": {
+      "description": "주문 생성/조회 처리 서비스 (file tier 단독 예시)",
+      "exports": ["OrderService", "createOrder"],
+      "depends": ["order-repository"],
+      "note": "file tier 단독 승리 검증용",
+      "feature": "order-create"
+    },
+    "PriceCalc.java": {
+      "description": "주문 가격 계산 유틸",
+      "exports": ["PriceCalc", "calculate"],
+      "depends": []
+    }
+  }
+}

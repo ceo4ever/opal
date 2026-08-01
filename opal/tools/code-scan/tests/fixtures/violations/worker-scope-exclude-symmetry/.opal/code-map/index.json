@@ -1,0 +1,8 @@
+{
+  "version": 1, "status": "reviewed",
+  "note": "fixture (task 077, RED-EVIDENCE-5): scaffold enumeration filter (config.exclude ∪ index.exclude ∪ excludePatterns) vs validate structure-pass listCodeFilesInDir(extension-only, 0 filters) 비대칭 검증. svc/mod = excludePatterns 격리(req1), svc/thirdparty = config.exclude 전용 격리(req2), svc/vendor = index.exclude 전용 격리(req3, config.exclude에는 없음 — union 여부를 정확히 가른다).",
+  "scopes": { "svc": { "root": "svc/", "anchors": [], "stripPrefix": [], "readonly": false } },
+  "domains": { "demo": { "paths": ["svc/**"] } },
+  "layerRules": [ { "match": "**/mod/**", "layer": "util" } ],
+  "exclude": ["vendor"]
+}

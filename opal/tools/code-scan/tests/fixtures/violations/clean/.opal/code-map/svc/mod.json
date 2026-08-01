@@ -1,0 +1,6 @@
+{
+  "version": 1, "scope": "svc", "dir": "svc/mod",
+  "files": {
+    "Clean.java": { "description": "위반 0 통제 픽스처 — 모든 필수 필드 충족", "exports": ["Clean", "run"] }
+  }
+}

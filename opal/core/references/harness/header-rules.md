@@ -9,7 +9,50 @@
 ## 8. EXECUTE @header 규칙
 
 > **트리거**: 코드 파일 생성/수정 시. code-scan 지원 확장자 파일에만 적용.
-> **작성 주체**: 워커(LLM)가 직접 작성. 별도 도구 없음.
+> **작성 주체**: 워커(LLM)가 값을 기입한다. `code-scan`(`discover`/`scaffold`/`target`/`validate`)이 초안 생성·기록 위치 판정·기입 검증을 보조한다 — 도구는 구조를 만들고 워커는 내용을 채운다.
+
+### 기록 위치 판정 (4단)
+
+파일을 생성·수정할 때 어디에 @header를 기록할지는 `code-scan target <file>`이 판정한다. 판정 순서는 아래 표를 따르며, 조건 ①→②→③→④ 순으로 첫 매칭이 승리한다.
+
+| # | 조건 | `write_to` | `reason` |
+|---|------|-----------|----------|
+| ① | 소속 스코프의 `readonly === true` (`.opal/code-map/index.json` 스코프 정의) | `manifest` | `readonly_repo` |
+| ② | 인라인 `@header`가 이미 존재 | `inline` | `inline_exists` |
+| ③ | 파일이 디스크에 없음 (= 신규 파일) | `inline` | `new_file` |
+| ④ | 그 외 (기존 파일 + 인라인 없음) | `manifest` | `legacy_no_header` |
+
+- `reason`은 이 4값 외를 반환하지 않는다: `readonly_repo` \| `inline_exists` \| `new_file` \| `legacy_no_header`.
+- code-map이 없는 프로젝트(`.opal/code-map/index.json` 부재)는 ①이 성립하지 않으므로 결과는 항상 `inline`이다 — 즉 code-map 미도입 시 현행 규칙(파일 인라인 작성)과 동일하게 동작한다.
+- `write_to: manifest`이면 워커는 판정된 `scope`/`manifest` 경로의 `files[basename]` 항목에 값을 기입한다.
+
+### 갱신 시점 (3단)
+
+@header는 "작업 완료 후 일괄 갱신"하지 않는다 — 아래 3개 시점에서만 갱신한다.
+
+| # | 시점 | 주체 | 수단 |
+|---|------|------|------|
+| (a) | 파일 변경과 **같은 자리에서** | 워커 | `target` 판정 결과에 따라 인라인 또는 매니페스트를 즉시 기록 |
+| (b) | **CLOSE 진입 전** 게이트 | PM | `validate --changed <changed_files>` — exit≠0(`counts.newly_uncovered` ≥1건 또는 다른 위반 존재)이면 CLOSE 진입을 차단. `uncovered:pre_existing`(HEAD 버전에도 원래 헤더가 없던 레거시 파일)만 있으면 비차단(exit 0) — 레거시 소급 부여는 이 게이트가 아니라 `discover`/`scaffold`의 몫이다 |
+| (c) | **PostToolUse hook** | 도구 | 파일 변경 감지 시 기록 위치 미갱신을 경고로 감지 |
+
+**[MUST] 작업 완료 후 일괄 갱신 금지** — 여러 Step을 몰아서 마지막에 한 번에 @header를 채우는 방식은 금지한다. 각 Step에서 파일을 바꾸는 즉시 (a)를 수행한다.
+
+### 워커 권한 경계
+
+| 구분 | 필드 | 집행 |
+|------|------|------|
+| 허용 (워커 기입) | `description` · `exports` · `depends` · `note` · `feature` | - |
+| 금지 (도구 관할) | `dir` · `files` 키 목록(추가/삭제) · `layer` · `domain` · `scope` · `module` · `version` | `code-scan validate`가 `worker_scope_violation`으로 거부 |
+| 금지 (파일 단위) | `.opal/code-map/index.json` 전체 | 소유자·PM 관할 — 워커 직접 편집 금지 |
+
+워커가 금지 필드를 침범하면 `validate`가 `worker_scope_violation` 위반으로 exit 2를 반환한다. 인라인 `@header`의 `module`/`layer`/`domain`은 기존 규칙대로 워커가 작성하되(파일 단독 소스이므로 도구 관할 개념이 없음), 이 표는 **code-map 매니페스트**에 값을 기입할 때만 적용된다.
+
+### 커버리지 합산
+
+@header 커버리지는 인라인 작성분과 code-map 매니페스트 작성분을 **합산**하여 계산한다: `covered = inline + manifest`. 동일 파일이 인라인·매니페스트 양쪽에 기재되어도 1건으로만 계상한다(이중 계상 금지).
+
+`coverage.percent`(커버리지 %)는 `uncovered`의 `newly_uncovered`/`pre_existing` 2분류(§(b) CLOSE 게이트 참조)와 독립적인 지표다 — 두 서브 모두 "미작성"이므로 `covered`에 포함되지 않으며, 분류는 오직 CLOSE 게이트의 차단 여부에만 영향을 준다.
 
 ### 적용 대상 확장자
 
@@ -85,7 +128,7 @@ code-scan 결과가 충분하지 않을 때 아래 3분기 기준으로 대응�
 | 분기 | 조건 | 대응 |
 |------|------|------|
 | ① 매칭 0건 | `search`/`exports` 결과 0건 | Glob/Grep **보강** (code-scan 결과 + 추가 탐색 병행) |
-| ② 저커버리지 | `scan`/`domain`/`layer` @header 커버리지 30% 미만 | code-scan **+ Glob/Grep 동시** 활용 |
+| ② 저커버리지 | 합산 커버리지(`covered = inline + manifest`, §커버리지 합산) 30% 미만 | code-scan **+ Glob/Grep 동시** 활용 |
 | ③ 정상 | 그 외 | code-scan 결과만 사용 |
 
 **STATE 기록 규약**: 폴백(①②) 발동 시 STATE.md **자유 텍스트 영역**(블로커/다음 액션 — **현황판 표 행 아님, state-tool 비경유**)에 `code-scan 폴백: {사유}` 1줄을 기록한다.
@@ -105,3 +148,5 @@ code-scan 결과가 충분하지 않을 때 아래 3분기 기준으로 대응�
 | v1.0 | 2026-05-09 18:30 | 개인 식별자 누설 정정 — "알투(비서)" → "에이전트(비서)" 치환 (139) |
 | v1.1 | 2026-06-10 10:13 | 테스트 파일 선택 필드 task/scenarios 정의 추가 (016) |
 | v1.2 | 2026-06-11 22:36 | §code-scan 활용 가이드 — 빈 결과 폴백 3분기 표 신설 + STATE 자유 텍스트 기록 규약 + §적용 조건 자동 생성 정합 (010) |
+| v1.3 | 2026-07-28 14:20 | §8 작성 주체 문구를 도구 보조 + 워커 기입 구조로 교체 + 4단 기록 위치 판정 표·3단 갱신 시점 표(일괄 갱신 금지 명문화)·워커 권한 경계 표·커버리지 합산 정의 신설 + 빈 결과 폴백 저커버리지 기준을 합산 커버리지로 재정의 (077) |
+| v1.4 | 2026-07-28 23:28 | 3단 갱신 시점 표 (b) CLOSE 게이트 항목 — `uncovered` 2분류(`newly_uncovered` 차단/`pre_existing` 비차단) 반영, 레거시 소급 부여는 discover/scaffold 몫임을 명시. §커버리지 합산에 `coverage.percent`가 2분류와 독립 지표임을 명시하는 문단 추가 — Step 19 CLOSE 게이트 레거시 파일 차단 결함 재작업 (077) |

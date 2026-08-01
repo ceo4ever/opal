@@ -1,0 +1,6 @@
+{
+  "version": 1, "status": "reviewed",
+  "note": "violation fixture: orphan (file_missing + dir_missing)",
+  "scopes": { "svc": { "root": "svc/", "anchors": [], "stripPrefix": [], "readonly": false } },
+  "domains": {}, "layerRules": [], "exclude": []
+}

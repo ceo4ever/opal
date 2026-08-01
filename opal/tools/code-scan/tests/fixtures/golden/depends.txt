@@ -1,0 +1,8 @@
+
+auth_service [service]
+
+  depended by:
+    ← Login.ts [page]
+
+  depends on:
+    → user_repo.py [repository]

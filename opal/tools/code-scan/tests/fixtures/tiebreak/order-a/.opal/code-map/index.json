@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "status": "reviewed",
+  "note": "H-12 tiebreak fixture — order A ([foo, goo]). Both patterns have identical specificity score (literal chars=3, wildcard tokens=2, pattern length=9) so array order must not affect the winner (alphabetical tie-break: foo < goo).",
+  "scopes": {
+    "app": { "root": "app/", "anchors": [], "stripPrefix": [], "readonly": false }
+  },
+  "domains": {},
+  "layerRules": [
+    { "match": "**/foo/**", "layer": "layer-foo" },
+    { "match": "**/goo/**", "layer": "layer-goo" }
+  ],
+  "exclude": []
+}

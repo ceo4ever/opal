@@ -1,0 +1,6 @@
+{
+  "version": 1, "scope": "svc", "dir": "svc/mod",
+  "files": {
+    "Draft.java": { "description": "", "exports": [], "draft": true }
+  }
+}

@@ -100,6 +100,8 @@ run.sh sync-header [--scope X] [--page P] [--brain-path .]
 
 `.opal/code-scan.json` 기반으로 code-scan을 실행해 @header를 얻고, entity 페이지 frontmatter(module/layer/domain/exports)와 비교해 drift 시 **단방향**(코드→brain)으로 갱신한다. 코드가 사라진 entity는 stale 표시한다.
 
+이때 참조하는 "code-scan @header"는 이제 소스 파일 인라인 주석과 `.opal/code-map/` 외부 매니페스트 2소스를 함께 의미한다.
+
 - 출력: `{ok, synced:[], drift:[{page, field, old, new}], stale_marked:[]}`
 - 에러: `code_scan_json_missing`, `header_parse_failed`
 
@@ -137,3 +139,4 @@ brain 구조(필수 파일·디렉토리)와 페이지 frontmatter 표준 준수
 | v1.0 | 2026-06-10 | 초기 구현 — 8 서브 명령(init/add-page/index/log/search/sync-header/lint/validate) (015) |
 | v1.1 | 2026-06-16 18:15 | search 공백 무시 매칭 — 한국어 복합명사 띄어쓰기 편차 흡수(검색 시점 정규화, 저장 문서 불변, 스니펫 원문 노출) (025) |
 | v1.2 | 2026-07-23 10:15 | 미실체 지식 등록 차단 게이트 — add-page에 `--body-file`(실제 본문 스캔)·`--force`·`--note`(우회, note 필수) 추가 + `speculative_content` 에러(거부/우회 시 frontmatter `speculative_override`·`override_note` 기재) + lint에 `speculative` kind 추가(소급 검출, 비파괴) (071) |
+| v1.3 | 2026-07-28 23:28 | `sync-header` 절에 "code-scan @header"가 인라인 주석 + `.opal/code-map/` 외부 매니페스트 2소스를 함께 의미한다는 1문장 추가. 단방향 동기화 계약 문언은 불변 (077) |

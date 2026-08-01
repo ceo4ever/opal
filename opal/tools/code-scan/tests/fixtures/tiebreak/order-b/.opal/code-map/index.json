@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "status": "reviewed",
+  "note": "H-12 tiebreak fixture — order B ([goo, foo], reversed). Same rule set as order-a, array order swapped. Expected layer output must be identical to order-a (layer-foo) — proves array order is irrelevant.",
+  "scopes": {
+    "app": { "root": "app/", "anchors": [], "stripPrefix": [], "readonly": false }
+  },
+  "domains": {},
+  "layerRules": [
+    { "match": "**/goo/**", "layer": "layer-goo" },
+    { "match": "**/foo/**", "layer": "layer-foo" }
+  ],
+  "exclude": []
+}

@@ -1,0 +1,8 @@
+{
+  "version": 1, "status": "reviewed",
+  "note": "control fixture: 0 violations expected (S-13/TS-028 exit 0 baseline)",
+  "scopes": { "svc": { "root": "svc/", "anchors": [], "stripPrefix": [], "readonly": false } },
+  "domains": { "demo": { "paths": ["svc/**"] } },
+  "layerRules": [ { "match": "**/mod/**", "layer": "util" } ],
+  "exclude": []
+}

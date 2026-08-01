@@ -1,0 +1,10 @@
+{
+  "scopes": {
+    "svc": "svc/",
+    "web": "web/",
+    "legacy": "legacy/"
+  },
+  "extensions": [".java", ".ts", ".tsx", ".py"],
+  "exclude": ["node_modules", "__pycache__", ".git", "target", "dist", "build"],
+  "excludePatterns": []
+}

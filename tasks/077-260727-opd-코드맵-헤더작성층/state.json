@@ -1,0 +1,200 @@
+{
+  "task_id": "077-260727-opd-코드맵-헤더작성층",
+  "skill": "opd",
+  "mode": "semi-agentic",
+  "schema_version": "1.1",
+  "created_at": "2026-07-27 17:16",
+  "updated_at": "2026-08-01 17:42",
+  "current_status": "done",
+  "rows": [
+    {
+      "row_id": 1,
+      "stage": "TASK",
+      "item": "작업",
+      "key": "task.task_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-27 17:16",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 2,
+      "stage": "TASK",
+      "item": "사용자 확인",
+      "key": "task.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-28 11:11",
+      "owner": "user",
+      "note": "캡틴 확인: ANALYSIS 진입 승인"
+    },
+    {
+      "row_id": 3,
+      "stage": "ANALYSIS",
+      "item": "작업",
+      "key": "analysis.analysis_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-28 12:24",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 4,
+      "stage": "ANALYSIS",
+      "item": "PM Gate",
+      "key": "analysis.pm_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-28 12:24",
+      "owner": "PM",
+      "note": "PM Gate 통과 — 핵심 주장 6종 직접 재검증. 추가 발견: code-scan run.sh 부재(tool-scan usage 실패) → PLAN 범위 편입"
+    },
+    {
+      "row_id": 5,
+      "stage": "ANALYSIS",
+      "item": "사용자 확인",
+      "key": "analysis.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-28 12:52",
+      "owner": "user",
+      "note": "캡틴 확인: scaffold --inline 제외 + 3건 반영 후 PLAN 진행 승인"
+    },
+    {
+      "row_id": 6,
+      "stage": "PLAN",
+      "item": "작업",
+      "key": "plan.plan_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-28 13:26",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 7,
+      "stage": "PLAN",
+      "item": "PM Gate",
+      "key": "plan.pm_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-28 13:26",
+      "owner": "PM",
+      "note": "PM Gate 통과 — F-001~F-013 1:1 커버, 20 Step 완료기준·의존 명시, H-1~H-18, RED-first 강제. 인용 표본 재검증(install-mac.sh:1170-1174 chmod 선례·red-first.md:23) 일치"
+    },
+    {
+      "row_id": 8,
+      "stage": "PLAN",
+      "item": "사용자 확인",
+      "key": "plan.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-28 14:10",
+      "owner": "user",
+      "note": "캡틴 확인: PLAN 승인, TEST-SCENARIO 진입"
+    },
+    {
+      "row_id": 9,
+      "stage": "TEST-SCENARIO",
+      "item": "작업",
+      "key": "test_scenario.test_scenario_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-28 14:15",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 10,
+      "stage": "TEST-SCENARIO",
+      "item": "목표-커버 게이트",
+      "key": "test_scenario.scenario_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-28 14:21",
+      "owner": "PM",
+      "note": "게이트 통과 — tool-gated 2증거: coverage-check exit 0(all_covered) + evaluator verdict pass(goal 2/adoption 1/boundary 2, avg 1.67). SCENARIO-GATE-1.md"
+    },
+    {
+      "row_id": 11,
+      "stage": "TEST-SCENARIO",
+      "item": "사용자 확인",
+      "key": "test_scenario.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-28 14:31",
+      "owner": "user",
+      "note": "캡틴 확인: 계속 진행 — EXECUTE 시작 승인 (모드 경계 통과)"
+    },
+    {
+      "row_id": 12,
+      "stage": "EXECUTE",
+      "item": "작업",
+      "key": "execute.implement",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-28 23:13",
+      "owner": "PM",
+      "note": "Step 1~20 완료 + 재작업 3결함 해소(2분류·exclude·근접성). 97/97 테스트, 자기 게이트 exit 0",
+      "step": "20/20"
+    },
+    {
+      "row_id": 13,
+      "stage": "TEST",
+      "item": "작업",
+      "key": "test.run_tests",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-28 23:29",
+      "owner": "PM",
+      "note": "재검증 All Pass (S-25 [SUPERVISOR] 제외 24 시나리오). dogfooding ④ FAIL→PASS: validate --changed exit 0 / newly_uncovered 0"
+    },
+    {
+      "row_id": 14,
+      "stage": "TEST",
+      "item": "PM Gate",
+      "key": "test.pm_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-28 23:29",
+      "owner": "PM",
+      "note": "PM Gate 통과 — 97/97 테스트·골든 회귀 유지·자기 게이트 exit 0·컨벤션 진단 Critical 0/High 0(Low 3건 PM 직접 정리 완료)·시나리오 미채움 0. S-25는 캡틴 확인 대기"
+    },
+    {
+      "row_id": 15,
+      "stage": "TEST",
+      "item": "추가작업: listCodeFilesInDir 필터 대칭(files_key_removed 오탐)",
+      "key": "test.item_1",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-07-29 17:53",
+      "owner": "PM",
+      "note": "결함 D 해소 — listCodeFilesInDir 필터 대칭(config.exclude ∪ index.exclude + excludePatterns 재사용), v1.3.3. 100/100 테스트·골든 18/18·자기 게이트 exit 0"
+    },
+    {
+      "row_id": 16,
+      "stage": "TEST",
+      "item": "사용자 확인",
+      "key": "test.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-01 17:41",
+      "owner": "user",
+      "note": "캡틴 확인: 077 마감 승인, 후속 결정(D-1~D-5 + 개선 A)은 079로 이관"
+    },
+    {
+      "row_id": 17,
+      "stage": "CLOSE",
+      "item": "DONE.md 생성",
+      "key": "close.done_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-01 17:42",
+      "owner": "PM",
+      "note": "DONE.md 생성 — 후속 D-1~D-5 + 개선 A는 079 이관 명시"
+    }
+  ],
+  "next_action": "태스크 완료"
+}

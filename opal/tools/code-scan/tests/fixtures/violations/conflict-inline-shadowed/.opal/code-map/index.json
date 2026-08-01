@@ -1,0 +1,6 @@
+{
+  "version": 1, "status": "reviewed",
+  "note": "violation fixture: conflict:inline_shadowed",
+  "scopes": { "svc": { "root": "svc/", "anchors": [], "stripPrefix": [], "readonly": false } },
+  "domains": {}, "layerRules": [], "exclude": []
+}

@@ -1,0 +1,7 @@
+{
+  "version": 1, "scope": "svc", "dir": "svc/mod",
+  "files": {
+    "Real.java": { "description": "실재 파일 (정상 엔트리)", "exports": ["Real"] },
+    "Ghost.java": { "description": "디스크에 없는 유령 엔트리 (orphan:file_missing)", "exports": ["Ghost"] }
+  }
+}

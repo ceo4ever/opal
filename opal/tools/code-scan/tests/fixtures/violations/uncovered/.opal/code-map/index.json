@@ -1,0 +1,8 @@
+{
+  "version": 1, "status": "reviewed",
+  "note": "violation fixture: uncovered (no_entry + incomplete)",
+  "scopes": { "svc": { "root": "svc/", "anchors": [], "stripPrefix": [], "readonly": false } },
+  "domains": { "demo": { "paths": ["svc/**"] } },
+  "layerRules": [ { "match": "**/mod/**", "layer": "util" } ],
+  "exclude": []
+}

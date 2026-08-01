@@ -1,0 +1,6 @@
+{
+  "version": 1, "status": "reviewed",
+  "note": "violation fixture: conflict:mirror_collision — svc/a/src/main/shared strips 'src/main/' and svc/a/old/shared strips 'old/'; both resolve to the SAME mirrorRel 'a/shared' under anchor 'a'. scaffold must reject with exit 1 and write NOTHING (2-pass pre-check, H-11).",
+  "scopes": { "svc": { "root": "svc/", "anchors": ["a"], "stripPrefix": ["src/main/", "old/"], "readonly": false } },
+  "domains": {}, "layerRules": [], "exclude": []
+}

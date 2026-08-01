@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "scope": "legacy",
+  "dir": "legacy/lib",
+  "files": {
+    "legacy_util.py": {
+      "description": "레거시 유틸리티 헬퍼 (readonly 스코프 file tier 단독 예시 — S-8 PM Gate 8 보호)",
+      "exports": ["helper"],
+      "depends": []
+    }
+  }
+}

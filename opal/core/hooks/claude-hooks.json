@@ -8,6 +8,15 @@
           "command": "\"$HOME/.opal/.venv/bin/python\" \"$HOME/.opal/tools/state-tool/todo_mirror_hook.py\""
         }
       ]
+    },
+    {
+      "matcher": "Edit|Write|MultiEdit",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "node \"$HOME/.opal/tools/code-scan/code-map-hook.js\""
+        }
+      ]
     }
   ],
   "SubagentStop": [

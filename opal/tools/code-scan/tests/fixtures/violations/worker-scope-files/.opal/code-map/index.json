@@ -1,0 +1,6 @@
+{
+  "version": 1, "status": "reviewed",
+  "note": "violation fixture: worker_scope_violation:files_key_added / files_key_removed",
+  "scopes": { "svc": { "root": "svc/", "anchors": [], "stripPrefix": [], "readonly": false } },
+  "domains": {}, "layerRules": [], "exclude": []
+}

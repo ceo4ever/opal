@@ -1,0 +1,6 @@
+{
+  "version": 1, "status": "reviewed",
+  "note": "violation fixture: worker_scope_violation:layer_in_manifest / domain_in_manifest / module_override",
+  "scopes": { "svc": { "root": "svc/", "anchors": [], "stripPrefix": [], "readonly": false } },
+  "domains": {}, "layerRules": [ { "match": "**/mod/**", "layer": "util" } ], "exclude": []
+}

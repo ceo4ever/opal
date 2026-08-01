@@ -1,11 +1,12 @@
 # Project Brain Index
-> 갱신: 2026-07-30 12:59
+> 갱신: 2026-08-01 17:47
 
 ## 도메인
 (아직 등록된 페이지 없음)
 
 ## 엔티티
 - [[brain-tool]] — brain-tool #tool #knowledge
+- [[code-scan-tool]] — code-scan #tool #util #code-scan
 - [[fw-inbox-collection]] — fw-inbox (프레임워크 개선 수집소) #runtime-directory #improvement #collection #deployment
 - [[git-sync-tool]] — git-sync-tool #tool #git #workspace #safety
 - [[improve-tool]] — improve-tool #tool #improvement #cli #decision-making
@@ -56,6 +57,8 @@
 - [[clarification-gate]] — 명확화 게이트 — TASK 4요소 잠금 기계 집행 #pipeline #enforcement #state-tool #clarification
 - [[close-related-doc-update-before-ingest]] — CLOSE 관련 문서 업데이트 — brain ingest 직전 최신화 #close #pipeline #brain-ingest #document-standard
 - [[cmux-tool-dispatcher-expansion]] — cmux-tool 범용 디스패처 확장 (12+1종 서브명령) #tool #cmux #dispatcher #task
+- [[code-header-dual-source-inheritance]] — 코드 헤더 이중 소스와 5단 상속 — 인라인 단독 승리 #code-scan #header #architecture
+- [[code-map-write-location-decision]] — 헤더 기록 위치 자동 판정 — 사람이 고르지 않는다 #code-scan #header #architecture
 - [[code-scan-mandatory-policy]] — code-scan 무조건화 규약 — 코드 작업 한정 강제 (010) #code-scan #pm #policy #dispatch
 - [[codex-dispatch-inline-injection]] — Codex tool-backed 워커 디스패치 인라인 주입 규칙 #codex #dispatch #adapter #workaround #platform
 - [[codex-platform-integration]] — Codex CLI OPAL 4번째 플랫폼 통합 #codex #platform #bootstrap #mcp #task
@@ -77,6 +80,7 @@
 - [[e2e-cmux-first-playwright-fallback]] — E2E 도구 우선순위 — cmux 1순위 → playwright 폴백 (에러코드 소비) #testing #e2e #cmux #framework
 - [[enforce-rule-legacy-data-surfacing-lesson]] — enforce 규칙 신설 시 잔존 데이터 표면화 — 배포 전 실 데이터 스캔 필요 교훈 #lesson #enforce #validate #brain-tool
 - [[erd-modeler-deprecation]] — erd-modeler deprecate — op-data-model/ddl로 분해, //erm 하위호환 #architecture-decision #deprecation #erd-modeler #migration
+- [[exports-generation-tool-verification-division]] — 생성은 워커, 검증은 도구 — 비대칭을 이용한 분업 #code-scan #header #architecture
 - [[external-tool-boundary-stub-insufficient-lesson]] — 외부 도구 경계는 스텁만으로 불충분 — 실연동 검증이 통합 결함을 잡는다 #testing #lesson #integration #test-strategy
 - [[fallback-approval-detached-head-precedence]] — detached HEAD 판정은 no-upstream보다 먼저 검사해야 한다 #git #judgment-order #fallback-approval #lesson
 - [[fixture-vs-real-blind-spot-lesson]] — fixture-vs-real 맹점 — 테스트 픽스처 통과·실데이터 버그 반복 교훈 #lesson #testing #bug #fixture
@@ -158,6 +162,7 @@
 - [[red-first-hybrid-verification-track]] — RED-first 하이브리드 검증 트랙 — 도구 계약 변경 한정 적용 #verification #red-first #opal-agent #testing
 - [[red-test-commit-coercion-guard-lesson]] — RED 테스트가 실저장소 git archive 검증 시 커밋을 구조적으로 강요하는 결함 #red-first #test #git #lesson #guard
 - [[red-test-determinism-abort-trap]] — RED 테스트 결정론성 함정 — neverResolve fetch 대역의 abort 무반응 #testing #red-first #determinism #abort #fetch-mock
+- [[regression-only-coverage-gate]] — 회귀만 차단하는 커버리지 게이트 — 레거시 소급 부여는 게이트의 몫이 아니다 #code-scan #gate #close
 - [[rotating-log-correction-over-deletion]] — 회전 로그는 삭제 대신 정정 — FIFO 히스토리 무손실 가드 설계 #memory #fifo #data-integrity #design-pattern
 - [[scenario-gate-pilot-fit-criteria]] — 목표-커버 게이트 pilot 접합 판정 기준 #scenario-gate #pilot-fit #tool-gated #self-confirming #task-075
 - [[scenario-goal-coverage-gate-loop]] — TEST-SCENARIO 목표-커버리지 루브릭 게이트 루프 — 결정론+판단 분리 #testing #scenario-gate #tool-gated #rubric #opd #task-073 #task-075

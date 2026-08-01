@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "origin": "manual",
+  "status": "reviewed",
+  "note": "codemap-repo fixture — 6조건 정상 트리 (task 077)",
+  "scopes": {
+    "svc": {
+      "root": "svc/",
+      "anchors": ["order-api", "ship-api"],
+      "stripPrefix": ["src/main/java/com/acme/", "src/main/java/"],
+      "readonly": false
+    },
+    "web": {
+      "root": "web/",
+      "anchors": ["admin"],
+      "stripPrefix": [],
+      "readonly": false
+    },
+    "legacy": {
+      "root": "legacy/",
+      "anchors": [],
+      "stripPrefix": [],
+      "readonly": true
+    }
+  },
+  "domains": {
+    "order": { "paths": ["svc/order-api/**"] },
+    "ship": { "paths": ["svc/ship-api/**"] },
+    "admin": { "paths": ["web/admin/pages/**"] },
+    "legacy": { "paths": ["legacy/**"] }
+  },
+  "layerRules": [
+    { "match": "**/service/**", "layer": "service" },
+    { "match": "**/repository/**", "layer": "repository" },
+    { "match": "**/pages/**", "layer": "page" },
+    { "match": "**/lib/**", "layer": "util" }
+  ],
+  "exclude": ["target"]
+}

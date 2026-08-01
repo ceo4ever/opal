@@ -1,0 +1,6 @@
+{
+  "version": 2,
+  "note": "schema fixture: version:2 (unsupported) — every code-map subcommand must exit 1 with unsupported_version",
+  "scopes": { "svc": { "root": "svc/", "anchors": [], "stripPrefix": [], "readonly": false } },
+  "domains": {}, "layerRules": [], "exclude": []
+}

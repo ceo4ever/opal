@@ -1,0 +1,38 @@
+{
+  "be/repository/user_repo.py": {
+    "module": "user_repo",
+    "layer": "repository",
+    "domain": "auth",
+    "description": "사용자 조회/저장 리포지토리 (legacy-repo golden fixture)",
+    "exports": [
+      "find_user",
+      "save_user"
+    ],
+    "depends": []
+  },
+  "be/service/auth_service.py": {
+    "module": "auth_service",
+    "layer": "service",
+    "domain": "auth",
+    "description": "JWT 발급 및 검증 처리 (legacy-repo golden fixture)",
+    "exports": [
+      "issue_token",
+      "verify_token"
+    ],
+    "depends": [
+      "user_repo"
+    ]
+  },
+  "fe/pages/Login.ts": {
+    "module": "LoginPage",
+    "layer": "page",
+    "domain": "auth",
+    "description": "로그인 화면 (legacy-repo golden fixture)",
+    "exports": [
+      "LoginPage"
+    ],
+    "depends": [
+      "auth_service"
+    ]
+  }
+}

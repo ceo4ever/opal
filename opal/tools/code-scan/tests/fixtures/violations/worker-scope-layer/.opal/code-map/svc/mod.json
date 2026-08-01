@@ -1,0 +1,11 @@
+{
+  "version": 1, "scope": "svc", "dir": "svc/mod",
+  "package": { "layer": "service", "domain": "illegal-domain" },
+  "files": {
+    "Tampered.java": {
+      "description": "layer/domain/module 침범 매니페스트 — 각 전용 detail로 거부 기대",
+      "exports": ["Tampered"],
+      "module": "NotTheRealStem"
+    }
+  }
+}

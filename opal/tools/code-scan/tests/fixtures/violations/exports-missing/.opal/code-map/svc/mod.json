@@ -1,0 +1,8 @@
+{
+  "version": 1, "scope": "svc", "dir": "svc/mod",
+  "files": {
+    "Exists.java":       { "description": "실제 선언 존재 — 통과 기대", "exports": ["realExport"] },
+    "Missing.java":      { "description": "선언 부재 — exports_not_found 기대", "exports": ["ghostExport"] },
+    "CommentOnly.java":  { "description": "주석 안에만 존재 — 계약된 한계로 통과 기대(H-14)", "exports": ["commentedExport"] }
+  }
+}

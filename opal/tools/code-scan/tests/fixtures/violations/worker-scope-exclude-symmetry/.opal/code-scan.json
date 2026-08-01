@@ -1,0 +1,6 @@
+{
+  "scopes": { "svc": "svc/" },
+  "extensions": [".java"],
+  "exclude": ["node_modules", ".git", "thirdparty"],
+  "excludePatterns": ["*.generated.java"]
+}

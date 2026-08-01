@@ -171,8 +171,9 @@ OPAL 본체(스킬·에이전트·도구·하네스)를 작성할 때 따라야 
 ### @header 규칙
 
 - 코드 파일을 생성·수정할 때 파일 상단에 @header 블록을 작성한다 (해당 확장자에 한해).
+- **기록 위치는 `code-scan target <file>` 판정을 따른다** — 인라인 주석 또는 외부 소스 코드 지도(`.opal/code-map/`) 2소스 중 하나이며, 사람·워커가 임의 선택하지 않는다(읽기 전용 스코프는 code-map 강제).
 - 변경이력은 별도 표(스킬·에이전트·참조 문서) 또는 헤더 내 변경이력 라인으로 갱신한다.
-- 근거: `opal/core/references/harness/header-rules.md`
+- 근거: `opal/core/references/harness/header-rules.md`, `opal/core/references/header-standard.md` §7(2소스 표현)
 
 ### Citation Rules (인용)
 

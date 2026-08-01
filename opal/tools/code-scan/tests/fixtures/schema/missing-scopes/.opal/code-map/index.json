@@ -1,0 +1,4 @@
+{
+  "version": 1,
+  "note": "schema fixture: index missing required 'scopes' key entirely -> invalid_index exit 1"
+}

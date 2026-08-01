@@ -2,6 +2,8 @@
 .opal/*
 !.opal/brain/
 !.opal/brain/**
+!.opal/code-map/
+!.opal/code-map/**
 
 # Python
 __pycache__/

@@ -1,0 +1,9 @@
+{
+  "version": 1, "scope": "svc", "dir": "svc/mod",
+  "files": {
+    "Shadowed.java": {
+      "description": "매니페스트 실질 필드 — 인라인이 이미 존재하는 파일에 대한 모순 엔트리 (conflict:inline_shadowed)",
+      "exports": ["ManifestGhostExport"]
+    }
+  }
+}

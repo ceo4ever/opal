@@ -1,0 +1,6 @@
+{
+  "version": 1, "scope": "svc", "dir": "svc/mod",
+  "files": {
+    "Normal.java": { "description": "정상 코드 파일 — files 키에 정상 존재(대조 대상)", "exports": ["Normal"] }
+  }
+}

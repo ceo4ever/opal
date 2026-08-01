@@ -248,7 +248,7 @@ OPAL 도구는 모두 `~/.opal/tools/{tool-name}/run.sh` 래퍼를 통해 호출
 | state-tool | 파이프라인 현황판 JSON SSOT 관리 (9개 서브 명령: `init`/`show`/`advance`/`mark`/`block`/`validate`/`add-row`/`status`/`gate-pass`) | TASK 단계 시작 / Gate 직후 / 추가작업 진입 |
 | brain-tool | 프로젝트 브레인 지식 위키 결정론적 집행 — 8 서브명령 `init`/`add-page`/`index`/`log`/`search`/`sync-header`/`lint`/`validate` | `//opbr` 또는 brain 참조 시 |
 | test-tool | 테스트 단계별 도구 결정론적 집행 — 9서브명령 resolve/check/unit/integration + scenario-init/lock/mark/status/red (+scenario-red — RED 증거 tool-gated red_confirmed 갱신) | EXECUTE/TEST 단계 진입 시 |
-| code-scan | 코드 `@header` 메타블록 스캔 — 도메인/레이어/exports/의존 조회 | 코드 구조·위치 파악 시 |
+| code-scan | 코드 `@header` 메타블록 스캔 + `.opal/code-map/` 헤더 작성층 결정론적 집행 — 13서브명령 `scan`/`domain`/`layer`/`search`/`exports`/`summary`/`depends`/`missing`/`discover`/`scaffold`/`target`/`validate`/`feature` | 코드 구조·위치 파악 시 / 헤더 작성 위치 판정·code-map 무결성 검증 시 |
 | cmux-tool | cmux browser 자동화 래퍼 — 12+1 서브명령(웹 크롤링·스냅샷·스크린샷·E2E) | 브라우저/localhost 접근·웹 테스트 시 |
 | tool-scan | 도구·MCP·스킬 상황 검색 + live 사용법 확인 — 5서브명령 list/which/usage/resolve/check | 도구 선택·정확한 사용법 확인 시 |
 | backlog-tool | backlog.json SSOT 관리 — 7 서브명령 init/add-task/select-next/mark/update-task/done-check/show (oppl 백로그) | oppl 루프(백로그 생성·태스크 선택·종료 판정) 시 |
@@ -322,3 +322,4 @@ OPAL 도구는 모두 `~/.opal/tools/{tool-name}/run.sh` 래퍼를 통해 호출
 | v6.4 | 2026-07-17 19:58 KST | §9 등록 도구 표에 oppl-monitor 행 추가 — oppl 태스크 진행 현황판 렌더(`.oppl-run/` 파싱), 트리거: oppl 태스크 진행 관측·루프 액션 에이전트 실행 관측 시 (067) |
 | v6.5 | 2026-07-17 23:04 KST | §9 도구명 리네임 — `oppl-monitor` → `opal-action-monitor`(향후 oppd·opsdd 액션 에이전트 공통 관측 도구로 확장 예정이라 이름 중립화). 로직 무변경 (067) |
 | v6.6 | 2026-07-23 | §1 자동 루핑 제약 표에 "시나리오 목표-커버 게이트 (루브릭 미달)" 행 추가 — MAX 3회, 초과 시 캡틴(사용자) 에스컬레이션. `harness/scenario-gate.md` 신규 SSOT가 이 수치를 복제하지 않고 참조 (073) |
+| v6.7 | 2026-07-28 23:28 | §9 등록 도구 표 code-scan 행 현행화 — `.opal/code-map/` 헤더 작성층 신규 5서브명령(discover/scaffold/target/validate/feature) 반영, 타 행과 동일 서식(서브명령 열거)으로 정합 (077) |

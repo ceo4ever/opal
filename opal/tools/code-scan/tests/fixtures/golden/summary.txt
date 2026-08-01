@@ -1,0 +1,6 @@
+
+Code Header Summary
+───────────────────────────────────────────────────────
+auth            :   3 files  (page×1, repository×1, service×1)
+───────────────────────────────────────────────────────
+Total: 3 files across 1 domains

@@ -1,0 +1,9 @@
+{
+  "scopes": {
+    "be": "be/",
+    "fe": "fe/"
+  },
+  "extensions": [".py", ".ts"],
+  "exclude": ["node_modules", "__pycache__", ".git"],
+  "excludePatterns": []
+}

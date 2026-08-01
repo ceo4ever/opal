@@ -52,7 +52,7 @@
       "name": "code-scan",
       "kind": "tool",
       "purpose": "코드 구조·exports·의존 탐색 (code-scan)",
-      "when": ["code", "scan", "exports", "depends", "search", "module"],
+      "when": ["code", "scan", "exports", "depends", "search", "module", "discover", "scaffold", "target", "validate", "feature", "header", "code-map"],
       "exec": "run.sh --help",
       "usage_source": {
         "type": "self-help",
