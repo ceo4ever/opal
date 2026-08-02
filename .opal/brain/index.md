@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-08-01 17:47
+> 갱신: 2026-08-02 18:09
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -36,9 +36,11 @@
 - [[agentic-output-direct-verification-lesson]] — agentic 산출물 직접 검증 의무 — PM 직접 실행이 self-confirming을 포착 #lesson #verification #self-confirming #pm-discipline #red-first
 - [[analysis-drift-pm-cross-verify-lesson]] — ANALYSIS 드리프트 분석 환각 → PM 강화검토 패턴 (학습) #analysis #hallucination #pm-gate #lesson-learned #drift
 - [[analysis-version-hallucination-npm-view]] — ANALYSIS 라이브러리 버전 환각 → PM npm view 실측 차단 패턴 #analysis #hallucination #pm-gate #version #npm #lesson-learned
+- [[anchor-load-condition-must-match-target]] — SSOT 앵커는 대상 문서의 로드 조건과 일치해야 한다 #ssot #governance #anchor #dispatch #harness
 - [[argparse-choices-breaks-json-contract]] — argparse choices=가 단일라인 JSON 응답 계약을 깬다 #cli #argparse #json-contract #pitfall
 - [[b7-action-completion-loop]] — B7 액션 완성도 루프 — triage 기반 경계 재설계 순환 구조 #oppd #action-loop #triage #verification #b7
 - [[backward-compat-default-value-discipline]] — 하위호환 확장의 기본값 규율 — 분기 인자 기본값을 기존 동작으로 #backward-compat #api-design #cli #pattern
+- [[blind-reproduction-verification-test]] — 블라인드 재현 테스트 — 작성자 자기검증 배제 검증법 #verification #testing #scenario #ssot #evaluator
 - [[bootstrap-marker-skip-ladder]] — 부트스트랩 첫 줄 마커 3단 스킵 사다리 ([WORKER]/[ASSISTANT]/무마커) #bootstrap #2tier #assistant-tier #headless #pm-gate #architecture
 - [[bootstrapper-marker-ssot-single-point]] — 부트스트래퍼 마커 SSOT 단일 지점 수정 원칙 #bootstrap #adapter #platform #ssot #install
 - [[brain-answer-layout-content-driven]] — 브레인 질의 답변 레이아웃 — content-driven 6단계 워크플로우 #brain #query #answer #layout #workflow
@@ -84,6 +86,7 @@
 - [[external-tool-boundary-stub-insufficient-lesson]] — 외부 도구 경계는 스텁만으로 불충분 — 실연동 검증이 통합 결함을 잡는다 #testing #lesson #integration #test-strategy
 - [[fallback-approval-detached-head-precedence]] — detached HEAD 판정은 no-upstream보다 먼저 검사해야 한다 #git #judgment-order #fallback-approval #lesson
 - [[fixture-vs-real-blind-spot-lesson]] — fixture-vs-real 맹점 — 테스트 픽스처 통과·실데이터 버그 반복 교훈 #lesson #testing #bug #fixture
+- [[governance-single-owner-rule-mapping]] — 규칙 1소유자 매핑 — Governance 중복 기재 방지 설계 #governance #ssot #design-pattern #dispatch
 - [[install-hook-ownership-marker-idempotent-upsert]] — install hook 소유권-마커 멱등 upsert (외부 hook clobber 해소) #install #deploy #hook #idempotent #ownership-marker
 - [[installer-version-priority-model]] — 설치기 버전 결정 우선순위 모델 (4종 공통) #version #install #priority #architecture
 - [[json-not-token-saving-format]] — JSON은 토큰 절약 포맷이 아니다 — 절약 원천의 정직한 귀속 #json #token #ssot #measurement #memory
@@ -97,6 +100,7 @@
 - [[loop-upper-bound-ssot-pattern]] — 루프 상한 SSOT 단일 기재 패턴 — harness 포인터, 수치 복제 금지 #harness #ssot #loop-bound #anti-pattern
 - [[manual-scenario-verbatim-output-evidence]] — M3 수동 시나리오는 출력 원문을 증거로 남긴다 #testing #verification #evidence #manual-scenario
 - [[memory-lifecycle-graduation-workflow]] — 메모리 라이프사이클·졸업(promote) 워크플로우 #memory #lifecycle #architecture #promote
+- [[mitigation-recurs-without-ssot-registration]] — 완화책은 SSOT 미등재 시 재발한다 #governance #worker #infra-failure #ssot #resilience
 - [[model-mapping-2layer-override]] — 모델 매핑 2-레이어 오버라이드 (setting.json SSOT + 부트스트랩 step 0 머지) #model #mapping #setting #override #bootstrap
 - [[model-mapping-latest-tracking]] — OPAL 모델 매핑 최신화 + 최신 추종 전략 #model #mapping #gemini #codex #task
 - [[model-mapping-missing-cell-error-policy]] — 모델 매핑 미설정 셀 오류 정책 (폴백 없음 · "default" 폐기) #model #mapping #error #policy #setting
@@ -167,6 +171,7 @@
 - [[scenario-gate-pilot-fit-criteria]] — 목표-커버 게이트 pilot 접합 판정 기준 #scenario-gate #pilot-fit #tool-gated #self-confirming #task-075
 - [[scenario-goal-coverage-gate-loop]] — TEST-SCENARIO 목표-커버리지 루브릭 게이트 루프 — 결정론+판단 분리 #testing #scenario-gate #tool-gated #rubric #opd #task-073 #task-075
 - [[scenario-normalized-contract-pilot-neutral]] — 시나리오 정규화 계약 — pilot-중립 페이로드 설계 #contract #scenario-gate #normalization #multi-pilot #task-073 #task-075
+- [[self-edit-line-anchor-drift]] — 자기 편집 파일의 행번호 앵커는 드리프트한다 #verification #anchor #test-scenario #regression
 - [[silent-loss-prevention-row-accounting-invariant]] — 무성 유실 차단 — 행 회계 불변식 설계 패턴 #migration #data-integrity #invariant #design-pattern #memory
 - [[skill-op-task-qa]] — op-task-qa — 범용 문서 QA 검증 기준 #skill #qa #document
 - [[skill-opal-agent-creator]] — opal-agent-creator — OPAL 에이전트 생성 파이프라인 #skill #agent #creator

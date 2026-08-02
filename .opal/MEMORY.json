@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_task_number": 79,
+  "last_task_number": 81,
   "memories": [
     {
       "title": "Console 브레인 구독 인증",
@@ -30,7 +30,7 @@
       "title": "워커 보고는 실측 대조 없이 신뢰 불가",
       "date": "2026-07-29",
       "type": "improvement",
-      "status": "candidate",
+      "status": "promoted",
       "file": "memory/워커_보고는_실측_대조_없이_신뢰_불가.md",
       "summary": "078 PM Gate에서 워커 자기보고 오류 2건을 적발했다. (1) Step 14가 '에러코드 표를 실제 ERROR_CODES와 일치하도록…"
     },
@@ -38,7 +38,7 @@
       "title": "078 워커 실패 완화책이 079에서 인프라 실패 0건으로 재현됨",
       "date": "2026-07-30",
       "type": "improvement",
-      "status": "candidate",
+      "status": "promoted",
       "file": "memory/078_워커_실패_완화책이_079에서_인프라_실패_0건으로_재현됨.md",
       "summary": "078에서 워커 3연속 인프라 실패(API 종료 2·스톨 1) 후 도출한 완화 조합을 079 전 워커 프롬프트에 선제 적용했다: (1) 배치…"
     },
@@ -53,9 +53,23 @@
   ],
   "history": [
     {
+      "title": "080 헤더 소스 단일화(headerSource 전역 단일 키)",
+      "date": "2026-08-02",
+      "stage": "완료·미커밋",
+      "path": "tasks/080-260801-opd-헤더소스-단일화/",
+      "result": "auto·readonly·스코프오버라이드 3종 폐기, inline|manifest 2택 전역단일키+미설정 전명령차단. code-scan v1.4.0. 194 GREEN·골든차이0. revup manifest 전환완료"
+    },
+    {
+      "title": "081 워커중단 복구 프로토콜 SSOT화",
+      "date": "2026-08-02",
+      "stage": "EXECUTE 완료·검증중",
+      "path": "tasks/081-260802-opds-워커중단-복구프로토콜/",
+      "result": "078·079 완화책을 SSOT 3곳 등재(재시도1회/판정3단계/산출3개). 게이트 2회차 pass"
+    },
+    {
       "title": "077 코드 헤더 작성층 신설(인라인+code-map 2소스)",
       "date": "2026-08-01",
-      "stage": "완료·미커밋",
+      "stage": "완료·커밋(2cbae38)",
       "path": "tasks/077-260727-opd-코드맵-헤더작성층/",
       "result": "code-scan v1.3.3 작성층 5서브명령+hook+run.sh. 100/100·골든불변. 후속 D-1~D-5는 079"
     },
@@ -72,20 +86,6 @@
       "stage": "완료·커밋(d7a8ce0, 447ff09)",
       "path": "tasks/078-260728-opd-메모리-json전환/",
       "result": "MEMORY.md→MEMORY.json 단독 SSOT. 브리핑 show --brief(-49% 실측)·lazy 마이그레이션(행회계 불변식)·task-number tool-gated. 132+17+249 GREEN"
-    },
-    {
-      "title": "076 파이프라인 todo 미러 hook 강제",
-      "date": "2026-07-23",
-      "stage": "완료·커밋(148e95c)",
-      "path": "tasks/076-260723-opds-todo미러-hook자동화/",
-      "result": "prose→hook강제(state-tool todo_mirror+PostToolUse). clobber해소 실증·회귀0. S-9 L3후속"
-    },
-    {
-      "title": "075 목표-커버 게이트 opds·opsdd 확산 1차",
-      "date": "2026-07-23",
-      "stage": "완료·커밋(6b1eafb)·미배포(캡틴 배포)",
-      "path": "tasks/075-260723-opd-시나리오게이트-확산-1차/",
-      "result": "op-scenario-gate opds·opsdd 확산(신규0·pilot 변환기+배선). opd 무영향·opsdd self-confirming 해소. oppl제외·oppd2차"
     }
   ]
 }

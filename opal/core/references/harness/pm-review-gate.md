@@ -2,7 +2,7 @@
 
 > 출처: opal/core/references/opal-pm.md §4
 > 로드 시점: PM Gate 수행 시 / 워커 완료 수신 직후
-> 역할: 워커 완료 선언 / 검토 11항목 / Pass·Fail 판정 / 문서 등록 확인 / 하네스와의 관계
+> 역할: 워커 완료 선언 / 워커 중단 시 산출물 실측 판정 / 검토 절차(문서 QA · 표준 검토 항목) / Pass·Fail 판정 / 문서 등록 확인 / 하네스와의 관계
 
 ---
 
@@ -13,6 +13,16 @@
 워커 결과 수신 직후, Observability 선언을 수행한다 (하네스 §5 참조):
 
 > `⚙️ 워커 완료:` {단계명} — {결과 한 줄 요약}
+
+### 워커 중단 시 산출물 실측 판정
+
+워커가 정상 반환 없이 중단된 경우(600초대 스톨 · 응답 중 연결 종료 등)에도 산출물은 워킹트리에 남아 있을 수 있다. **[MUST] 워커 자기보고의 부재를 산출물의 부재로 간주하지 않는다.** 아래 3단계를 순서대로 수행하여 입력을 확정한 뒤 §검토 절차로 진입한다.
+
+1. **산출물 확정** — `git status --short`와 `git diff --stat`으로 실제 생성·수정된 파일을 확정한다. 판정 근거는 워커 반환 텍스트가 아니라 워킹트리다.
+2. **완료/잔여 판정** — 확정된 파일 집합을 `PLAN.md` §4.2 실행 체크리스트와 대조하여 Step 단위로 완료분과 잔여분을 가른다. 부분 산출된 파일은 내용을 열어 해당 Step의 **완료 기준** 충족 여부로 판정하고, 판정 불가면 잔여로 분류한다.
+3. **잔여만 재배치** — 잔여 Step만 새 디스패치로 재배치한다. **[MUST] 완료분 파일을 재작업 대상에 포함하거나 덮어쓰지 않는다** — 재디스패치 프롬프트의 대상 파일 목록에서 완료분을 명시적으로 제외하고, 워커에게 `Write`(전체 덮어쓰기) 대신 `Edit`(부분 치환) 사용을 지시한다.
+
+> 동일 컨텍스트 재개 횟수 상한은 `opal-harness.md` §1 자동 루핑 제약 표(워커 프로세스 비정상 종료 행)를, 재배치 시 산출 파일 수 상한은 `pm/dispatch-process.md` Step 6 실행 라우팅을 따른다. 본 절은 판정 절차만 소유하며 두 수치를 재서술하지 않는다.
 
 ### 검토 절차
 
@@ -53,12 +63,17 @@ PM Gate는 별도 QA Gate 단계를 두지 않고, 문서 QA(요구사항→설�
    - 확인 방법: `code-scan scan <file> --json` 실행
    - 결과 없음: @header 누락 → Fail
    - 결과 있음: module/layer/domain/description/exports 필드 존재 여부 확인 → 누락 시 Fail
-   - **2소스 판정**: JSON 결과의 `_source` 필드로 유래를 구분한다 — `inline`(파일 내 인라인 @header) vs `file`/`package`/`rule`/`domain`(code-map 매니페스트 유래, 이하 통칭 "code-map 유래"). `readonly` 스코프에 속한 파일은 인라인 기록이 금지되므로 `_source`가 code-map 유래로 나오는 것이 정상이며, 이 경우를 인라인 누락으로 오판하지 않는다.
-   - **합산 커버리지**: 커버리지 판정은 인라인 단독이 아니라 `code-scan validate --json` 결과의 `coverage.covered`(= `coverage.inline` + `coverage.manifest`) / `coverage.total`을 합산 기준으로 삼는다. `coverage.percent`가 목표치에 미달하면 Fail.
+   - **2소스 판정**: JSON 결과의 `_source` 필드로 유래를 구분한다 — `inline`(파일 내 인라인 @header) vs `file`/`package`/`rule`/`domain`(code-map 매니페스트 유래, 이하 통칭 "code-map 유래"). 기록 소스를 결정하는 것은 **프로젝트 전역** `headerSource` 한 개뿐이다. 전역값이 `manifest`이면 전 파일의 `_source`가 code-map 유래로 나오는 것이 정상이고, `inline`이면 `_source` 키가 아예 붙지 않는다 — 둘 중 어느 쪽도 인라인 누락으로 오판하지 않는다. 스코프 단위 예외 판정은 존재하지 않으므로 파일별로 기록 위치를 따로 따지지 않는다.
+   - **모드별 단일 소스 커버리지**: 커버리지 판정은 `code-scan validate --json` 결과의 `coverage.covered`(설정된 `headerSource` 소스 기준) / `coverage.total`을 쓴다. `inline` 모드는 인라인 작성분만, `manifest` 모드는 매니페스트 작성분만 계상한다 — 두 소스를 더하던 합산 커버리지는 폐기되었다(Task 080). `coverage.percent`가 목표치에 미달하면 Fail.
    - **CLOSE 진입 전 게이트**: CLOSE 단계 진입 전 `code-scan validate --changed <EXECUTE changed_files 목록> --json`을 실행해 `ok: true`(exit 0)를 확인한다. `ok: false`(exit 2, violations 존재) 시 CLOSE 진입을 보류하고 워커에게 위반 목록을 전달해 재지시한다.
      - **게이트 기준 = `newly_uncovered` 0건**: `counts.newly_uncovered`(git 기준 신규 파일 또는 HEAD 대비 헤더 회귀)가 1건이라도 있으면 `ok:false`(exit 2)로 차단한다.
      - **`pre_existing`은 비차단 보고 항목**: `counts.pre_existing`(HEAD 버전에도 애초에 헤더가 없던 기존 파일)은 `ok:true`(exit 0)에 포함되며 CLOSE 진입을 막지 않는다. 다만 `violations[]`에 `code:'uncovered', sub:'pre_existing'`으로 노출되므로 PM은 그 수·목록을 소유자 보고에 참고 정보로 남길 수 있다.
      - **근거**: 레거시 파일 소급 헤더 부여는 이 게이트의 책임 범위가 아니다 — `discover`/`scaffold`가 담당하는 별도 작업이다(본 게이트는 "이번 변경이 새 결손을 만들었는가"만 판정).
+   - **헤더 소스 미설정 대응**: `code-scan` 호출이 `header_source_unset`(exit 1)으로 거부되면 이는 **프로젝트 설정 결손**이지 워커 결함이 아니다 — 워커에게 재지시하지 않고 Fail로도 판정하지 않는다.
+     1. PM이 `pm/code-scan-management.md §headerSource 필드 관리`의 최초 설정 절차를 수행해 소유자에게 2택(`inline`/`manifest`)을 확인받는다.
+     2. 확인된 값을 `.opal/code-scan.json`의 최상위 `headerSource`에 기재한다 — 프로젝트당 전역 1회 설정이며 스코프별로 다시 묻지 않는다.
+     3. 같은 명령을 재실행한 뒤 8번 검토를 그대로 이어간다.
+     - `header_source_invalid`(무효값)·`code_scan_config_invalid`(설정 파일 자체 파손)도 같은 경로로 처리한다 — 설정을 교정한 뒤 재실행한다. 어느 경우든 게이트 통과 여부는 **재실행 결과**로만 판정한다.
    - EXECUTE 결과에 새 domain/scope 추가 시 code-scan.json 갱신 여부도 함께 확인 (§9 참조)
 9. 전문 에이전트 영역 침범 여부
    - FE 에이전트가 BE 파일을 수정하지 않았는가
@@ -154,3 +169,5 @@ PM Gate 통과 후 해당 행을 state-tool로 단일 mark한다. State Gate 행
 | v1.5 | 2026-06-11 22:38 | 표준 검토 항목 14번 신설 — 코드 변경 태스크 디스패치 컨텍스트 code-scan 결과 인용 검증 (문서 작업 N/A) (010) |
 | v1.6 | 2026-07-28 15:10 | 표준 검토 항목 8번 — 2소스 판정(`_source` inline vs code-map 유래, readonly 스코프 예외) + 합산 커버리지(`coverage.covered`/`coverage.percent`) + CLOSE 진입 전 `validate --changed` 게이트 절차 추가. 14번 — `discover`/`scaffold`/`target`/`validate`/`feature` 신규 서브명령 결과도 인용 대상임을 반영 (077) |
 | v1.7 | 2026-07-28 23:28 | 표준 검토 항목 8번 CLOSE 게이트 — `uncovered` 2분류(`newly_uncovered`/`pre_existing`) 반영: 게이트 기준을 "violations 0건"에서 "`counts.newly_uncovered` 0건"으로 명확화, `pre_existing`은 비차단 보고 항목(레거시 소급 부여는 discover/scaffold 몫)임을 명시 — Step 19 검증에서 자체 저장소 레거시 파일이 게이트를 막던 결함 재작업 (077) |
+| v1.8 | 2026-08-02 14:50 | 표준 검토 항목 8번 — 헤더 소스 단일화 반영: 2소스 판정을 전역 `headerSource` 1개 기준으로 재서술(스코프 단위 예외 서술 제거), 합산 커버리지 → 모드별 단일 소스 커버리지(`inline`은 인라인분만·`manifest`는 매니페스트분만), `header_source_unset` 거부 시 PM 최초 설정 후 재실행하는 미설정 대응 소절 신설(워커 결함으로 판정하지 않음) (080) |
+| v1.9 | 2026-08-02 16:03 | §워커 중단 시 산출물 실측 판정 절 신설 — ①`git status`로 산출물 확정 → ②PLAN §4.2 체크리스트 대조로 완료/잔여 판정 → ③잔여만 재배치([MUST] 완료분 덮어쓰기 금지) 3단계. 재시도 상한(`opal-harness.md` §1)·산출량 상한(`pm/dispatch-process.md` Step 6)은 참조만. 역할 라인에 신규 절 반영 및 고정 항목수 표기 제거 (081) |

@@ -259,3 +259,11 @@
 - 신규: [[pages/concept/rotating-log-correction-over-deletion.md]], [[pages/concept/backward-compat-default-value-discipline.md]], [[pages/concept/argparse-choices-breaks-json-contract.md]], [[pages/concept/literal-version-test-expectation-fragility.md]], [[pages/concept/manual-scenario-verbatim-output-evidence.md]]
 - 출처: task:079
 
+## [2026-08-01] ingest | CLOSE ingest — 태스크 077 코드맵 헤더 작성층
+- 신규: [[code-header-dual-source-inheritance]], [[code-map-write-location-decision]], [[exports-generation-tool-verification-division]], [[regression-only-coverage-gate]], [[code-scan-tool]]
+- 출처: task:077
+
+## [2026-08-02] ingest | CLOSE ingest — 태스크 081 opds 워커중단-복구프로토콜
+- 신규: [[pages/concept/mitigation-recurs-without-ssot-registration.md]], [[pages/concept/governance-single-owner-rule-mapping.md]], [[pages/concept/anchor-load-condition-must-match-target.md]], [[pages/concept/blind-reproduction-verification-test.md]], [[pages/concept/self-edit-line-anchor-drift.md]]
+- 출처: task:081
+

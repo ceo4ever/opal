@@ -1,12 +1,22 @@
 ---
 type: entity
 title: code-scan
-module: <code-scan @header module>
-layer: <code-scan @header layer>
-domain: <code-scan @header domain>
-exports: []
+module: code-scan
+layer: util
+domain: code-scan
+exports:
+- mirrorPathForDir
+- decideTarget
+- loadCodeMap
+- loadConfig
+- findProjectRoot
+- resolveScope
+- matchLayerRule
+- matchDomain
+- resolveHeader
+- extractHeader
 source_ref: opal/tools/code-scan/code-scan.js
-header_synced: <YYYY-MM-DD>
+header_synced: '2026-08-01'
 tags:
 - tool
 - util

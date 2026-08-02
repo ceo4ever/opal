@@ -1,0 +1,19 @@
+[
+  {
+    "iteration": 1,
+    "missing": { "requirements": [], "features": [], "hypotheses": [] },
+    "scores": { "goal": 1, "adoption": 1, "boundary": 2 },
+    "average": 1.33,
+    "gaps": ["G-1 목표 시나리오가 탐색가능성만 검증(정답 고지+저자 자가수행)", "G-2 새 SSOT의 단일 디스패치 로드 조건 미검증", "G-3 주입 템플릿의 프롬프트 도달 미검증", "G-4 자기적용 준수 실측 부재", "G-5 임계값 off-by-one 경계 미검사(비차단)"],
+    "verdict": "fail"
+  },
+  {
+    "iteration": 2,
+    "missing": { "requirements": [], "features": [], "hypotheses": [] },
+    "scores": { "goal": 2, "adoption": 2, "boundary": 2 },
+    "average": 2.0,
+    "gaps": [],
+    "verdict": "pass",
+    "note": "G-1~G-5 전건 해소. 평가자 잔여 결함 N-1~N-4(비차단)는 게이트 통과 후 PM이 정정 완료"
+  }
+]

@@ -1,0 +1,134 @@
+{
+  "task_id": "081-260802-opds-워커중단-복구프로토콜",
+  "skill": "opds",
+  "mode": "semi-agentic",
+  "schema_version": "1.1",
+  "created_at": "2026-08-02 15:19",
+  "updated_at": "2026-08-02 18:05",
+  "current_status": "done",
+  "rows": [
+    {
+      "row_id": 1,
+      "stage": "TASK",
+      "item": "작업",
+      "key": "task.task_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-02 15:19",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 2,
+      "stage": "TASK",
+      "item": "사용자 확인",
+      "key": "task.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-02 15:20",
+      "owner": "user",
+      "note": "캡틴 확인: PLAN 진행 승인"
+    },
+    {
+      "row_id": 3,
+      "stage": "PLAN",
+      "item": "작업",
+      "key": "plan.plan_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-02 15:36",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 4,
+      "stage": "PLAN",
+      "item": "목표-커버 게이트",
+      "key": "plan.scenario_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-02 15:55",
+      "owner": "PM",
+      "note": "coverage-check exit 0 + evaluator verdict pass(2.00, iteration 2)"
+    },
+    {
+      "row_id": 5,
+      "stage": "PLAN",
+      "item": "PM Gate",
+      "key": "plan.pm_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-02 15:55",
+      "owner": "PM",
+      "note": "PLAN+TEST-SCENARIO 직접 검증 통과: 워커 주장 7건 실측 대조, M-8 반려, 게이트 tool-gated 2증거 확보"
+    },
+    {
+      "row_id": 6,
+      "stage": "PLAN",
+      "item": "사용자 확인",
+      "key": "plan.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-02 16:01",
+      "owner": "user",
+      "note": "캡틴 확인: EXECUTE 진입 승인 (080 커밋은 생략 지시)"
+    },
+    {
+      "row_id": 7,
+      "stage": "EXECUTE",
+      "item": "작업",
+      "key": "execute.implement",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-02 16:34",
+      "owner": "auto",
+      "note": "agentic auto-pass: semi-agentic auto-pass: Step 1~8 완료. 5파일 편집·install 배포(5/5 OK)·메모리 졸업·검증 4종 통과, 회귀 36/36",
+      "step": "4/5"
+    },
+    {
+      "row_id": 8,
+      "stage": "TEST",
+      "item": "작업",
+      "key": "test.run_tests",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-02 16:59",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 9,
+      "stage": "TEST",
+      "item": "PM Gate",
+      "key": "test.pm_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-02 17:17",
+      "owner": "PM",
+      "note": "TEST PM Gate 통과: 18 Pass/0 Fail. S-15 캡틴 판정 Pass, S-10 캡틴 결정 (a) AC 충족 처리. 컨벤션 진단 스킵(md만)"
+    },
+    {
+      "row_id": 10,
+      "stage": "TEST",
+      "item": "사용자 확인",
+      "key": "test.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-02 17:17",
+      "owner": "user",
+      "note": "캡틴 확인: S-15 통과, S-10 (a) AC 충족 처리, install은 캡틴 직접 실행"
+    },
+    {
+      "row_id": 11,
+      "stage": "CLOSE",
+      "item": "DONE.md 생성",
+      "key": "close.done_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-02 18:05",
+      "owner": "PM",
+      "note": "DONE.md 생성 완료"
+    }
+  ],
+  "next_action": "태스크 완료"
+}
