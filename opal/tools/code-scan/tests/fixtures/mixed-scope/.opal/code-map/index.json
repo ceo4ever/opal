@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "status": "reviewed",
+  "note": "mixed-scope fixture — 한 디렉토리(svc/shared/)에 생존 스코프 2개(root 동률 + include만 다름) + out_of_scope 1건 공존 (task 080, §3.7.2)",
+  "scopes": {
+    "order-svc": { "root": "svc/shared/", "anchors": [], "stripPrefix": [], "include": ["Order*.java"] },
+    "ship-svc": { "root": "svc/shared/", "anchors": [], "stripPrefix": [], "include": ["Ship*.java"] }
+  },
+  "layerRules": [
+    { "match": "**/shared/**", "layer": "service" }
+  ],
+  "domains": {
+    "shared": { "paths": ["svc/shared/**"] }
+  }
+}

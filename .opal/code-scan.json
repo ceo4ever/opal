@@ -1,0 +1,12 @@
+{
+  "headerSource": "inline",
+  "scopes": {
+    "framework": "opal/",
+    "console-fe": "dashboard/frontend/src/",
+    "console-be": "dashboard/backend/"
+  },
+  "extensions": [".py", ".js", ".ts", ".jsx", ".tsx", ".vue", ".svelte", ".kt", ".kts", ".java", ".swift", ".md"],
+  "exclude": ["node_modules", "__pycache__", ".git", "dist", "build", ".venv", "env", ".next", ".nuxt", ".output",
+              "fixtures", "backup", ".pytest_cache", "tasks", "specs"],
+  "excludePatterns": []
+}

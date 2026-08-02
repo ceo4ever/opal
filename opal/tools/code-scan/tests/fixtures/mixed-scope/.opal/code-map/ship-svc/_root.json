@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "scope": "ship-svc",
+  "dir": "svc/shared",
+  "files": {
+    "ShipRepo.java": {
+      "description": "배송 저장소",
+      "exports": ["ShipRepo"]
+    },
+    "ShipService.java": {
+      "description": "배송 서비스",
+      "exports": ["ShipService"]
+    }
+  }
+}

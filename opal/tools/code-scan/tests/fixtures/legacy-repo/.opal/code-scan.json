@@ -1,4 +1,5 @@
 {
+  "headerSource": "inline",
   "scopes": {
     "be": "be/",
     "fe": "fe/"

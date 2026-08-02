@@ -1,0 +1,10 @@
+{
+  "headerSource": "inline",
+  "extensions": [".java"],
+  "exclude": ["node_modules", ".git"],
+  "excludePatterns": [],
+  "scopes": {
+    "order-svc": { "path": "svc/shared/", "include": ["Order*.java"] },
+    "ship-svc": { "path": "svc/shared/", "include": ["Ship*.java"] }
+  }
+}

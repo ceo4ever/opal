@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "scope": "order-svc",
+  "dir": "svc/shared",
+  "files": {
+    "OrderRepo.java": {
+      "description": "주문 저장소",
+      "exports": ["OrderRepo"]
+    },
+    "OrderService.java": {
+      "description": "주문 서비스",
+      "exports": ["OrderService"]
+    }
+  }
+}

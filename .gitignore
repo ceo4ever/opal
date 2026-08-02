@@ -4,6 +4,7 @@
 !.opal/brain/**
 !.opal/code-map/
 !.opal/code-map/**
+!.opal/code-scan.json
 
 # Python
 __pycache__/

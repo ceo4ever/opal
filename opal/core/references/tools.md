@@ -235,12 +235,19 @@ node ~/.opal/tools/code-scan/code-scan.js missing
 node ~/.opal/tools/code-scan/code-scan.js discover [--out <path>] [--dry-run]
 
 # 패키지 매니페스트 생성/갱신 (멱등 보존 merge, 기존 워커 기입값 유지)
+# inline 모드에서는 no-op — 매니페스트를 만들지 않고 skipped 사유만 보고하며 exit 0이다
 node ~/.opal/tools/code-scan/code-scan.js scaffold [--dry-run]
 
-# 파일의 @header 기록 위치 판정 (4단: inline_exists/readonly_repo/legacy_no_header/manifest)
+# 파일의 @header 기록 위치 판정 (전역 headerSource 직결 — 파일 상태·인라인 보유 여부를 보지 않는다)
+#   write_to (기록 위치 축) : `inline` / `manifest` / `none`
+#   reason   (판정 사유 축) : `header_source_inline` / `header_source_manifest` / `out_of_scope`
+#   두 필드는 서로 다른 축이며 한 목록으로 섞어 나열하지 않는다. 실제 조합은 아래 3쌍으로 닫힌다.
+#     write_to=inline   일 때 reason=header_source_inline
+#     write_to=manifest 일 때 reason=header_source_manifest (이 조합에서만 scope·manifest·key 부가 필드 동반)
+#     write_to=none     일 때 reason=out_of_scope (스코프 include/exclude 필터 탈락, 모드 판정보다 먼저)
 node ~/.opal/tools/code-scan/code-scan.js target <file>
 
-# code-map 무결성 검증 (5종 위반 + 합산 커버리지, --changed로 영향 범위 한정)
+# code-map 무결성 검증 (5종 위반 + 모드별 단일 소스 커버리지, --changed로 영향 범위 한정)
 # uncovered 위반은 git 기준 2분류: newly_uncovered(신규/회귀 — 차단) / pre_existing(레거시 — 비차단, counts만 노출)
 node ~/.opal/tools/code-scan/code-scan.js validate [--changed <csv|->]
 
@@ -252,6 +259,7 @@ node ~/.opal/tools/code-scan/code-scan.js feature <id> [--scope <name>]
 
 | 옵션 | 설명 |
 |------|------|
+| `--header-source <inline\|manifest>` | 이 실행의 **전역 모드**를 지정한다. 설정 파일의 전역값보다 우선한다. 전 명령 공통이며, 설정 파일에도 없고 이 옵션도 없으면 명령이 거부된다(`header_source_unset`) |
 | `--scope <name>` | 스코프 필터 (`.opal/code-scan.json`의 `scopes` 키) |
 | `--domain <name>` | 도메인 필터 |
 | `--layer <name>` | 레이어 필터 |
@@ -263,13 +271,22 @@ node ~/.opal/tools/code-scan/code-scan.js feature <id> [--scope <name>]
 | `--full` | 전체 헤더 JSON 출력 |
 | `--json` | 파이프용 raw JSON 출력 |
 
-### 종료 코드 (`validate`)
+### 종료 코드 (전 명령 공통)
 
 | 코드 | 의미 |
 |------|------|
-| `0` | 차단 위반 없음 (정상 — `uncovered:pre_existing`만 있는 경우도 포함) |
-| `1` | 사용법 오류 / 스키마 오류 |
-| `2` | 차단 위반 발견 |
+| `0` | 정상 종료 (`validate`는 차단 위반 없음 — `uncovered:pre_existing`만 있는 경우도 포함) |
+| `1` | 사용법 오류 / 스키마 오류 / **헤더 소스 미해결** — 아래 에러 코드 4종 |
+| `2` | `validate` 전용 — 차단 위반 발견 |
+
+헤더 소스는 전 명령의 선행 조건이므로, 미해결이면 조회 명령까지 포함해 **전 명령이 exit 1로 거부**된다. 실패 시 stdout에는 기계 판독용 JSON(`error` 필드), stderr에는 사람용 안내가 함께 출력된다.
+
+| 에러 코드 | 조건 |
+|----------|------|
+| `header_source_unset` | `.opal/code-scan.json`에 `headerSource`가 없고 `--header-source`도 주어지지 않음 |
+| `header_source_invalid` | `headerSource` 값이 유효 도메인(`inline`, `manifest`) 밖 — 설정 파일에 폐기된 `auto`가 남아 있으면 `migration` 힌트가 함께 출력된다(자동 변환은 하지 않는다) |
+| `code_scan_config_invalid` | `.opal/code-scan.json` 자체가 파손(파싱 실패·스키마 위반) |
+| `scope_ambiguous` | 스코프 귀속 판정이 모호 — 동률 root에서 둘 이상의 스코프 `include`가 동시에 매칭 |
 
 ### `uncovered` 2분류 (git 기준)
 
@@ -284,16 +301,45 @@ git을 쓸 수 없는 환경(git 미설치·비git 트리)에서는 전량 `pre_
 
 ### 프로젝트 설정
 
-프로젝트 루트의 `.opal/code-scan.json`으로 스코프와 필터를 정의한다.
+프로젝트 루트의 `.opal/code-scan.json`으로 헤더 소스·스코프·필터를 정의한다.
 
 ```json
 {
+  "headerSource": "inline",
   "scopes": { "be": "workspace/backend/", "fe": "workspace/frontend/src/" },
   "extensions": [".py", ".js", ".ts", ".vue"],
   "exclude": ["node_modules", "__pycache__"],
   "excludePatterns": ["__init__.py", "test_*", "*.spec.ts"]
 }
 ```
+
+`scopes`의 각 값은 경로 문자열 축약형 또는 `{path, include, exclude}` 객체형으로 쓴다. 객체형은 스코프가 관리하는 **파일 집합**을 좁힐 때 사용한다.
+
+```json
+{
+  "headerSource": "manifest",
+  "scopes": {
+    "be": { "path": "workspace/backend/", "include": ["app/**"], "exclude": ["app/legacy/**"] },
+    "fe": "workspace/frontend/src/"
+  },
+  "extensions": [".py", ".ts"],
+  "exclude": ["node_modules"]
+}
+```
+
+- **`headerSource`는 전역 단일 키다** — 유효값은 `inline`과 `manifest` 2택이며, 프로젝트당 한 번만 정한다. 미설정이면 전 명령이 `header_source_unset`으로 거부된다.
+- **스코프별 재선언은 없다** — `scopes` 객체 안에 헤더 소스 키를 넣어도 무시되며 stderr 안내 1줄만 출력된다. 같은 이유로 `.opal/code-map/index.json`의 스코프에도 헤더 소스 키를 두지 않는다. `include`/`exclude`는 파일 집합 필터일 뿐 기록 소스와 무관하다.
+- 세 번째 값 `auto`는 제거되었다(Task 080). 설정에 남아 있으면 `header_source_invalid`로 거부되며 마이그레이션 힌트가 출력된다.
+- 실행 단위로 다르게 쓰려면 설정을 고치지 말고 `--header-source`로 그 실행만 덮어쓴다.
+
+**모드별 동작 요약**
+
+| 모드 | 조회(`scan`/`domain`/`layer` 등) | `scaffold` | `validate` |
+|------|-----------------------------------|-----------|-----------|
+| `inline` | 파일 내 인라인 @header 단독 | no-op (매니페스트 미생성, exit 0 + skipped 사유) | 인라인 커버리지만 계상. 매니페스트 구조 검사 스킵 — `.opal/code-map/` 자산이 있으면 stderr 안내 1줄 |
+| `manifest` | `.opal/code-map/` 매니페스트 4단 상속 (`files` → `package` → `layerRules` → `domains`) | 매니페스트 생성/갱신 | 매니페스트 커버리지만 계상 + 구조 검사 수행. `index.json` 부재 시 결과가 비고 stderr 안내 1줄(비차단) |
+
+두 모드는 상호 배타이므로 인라인·매니페스트를 더한 합산 커버리지는 존재하지 않는다.
 
 ### PM 관리 방안
 
@@ -883,3 +929,4 @@ bash ~/.opal/tools/tool-scan/run.sh check <도구>               # 설치/실행
 | v2.6 | 2026-07-28 | memory-tool 섹션 — MEMORY.json 단독 SSOT 전환 반영: `migrate` 서브명령 삭제 + `task-number` 서브명령 신설, `show --brief`/`--history N` 추가, lazy 자동 마이그레이션(md→json) 안내, 에러 코드 표를 현행 ERROR_CODES(`memory_json_not_found`/`schema_validation_failed`/`migration_failed`/`lock_timeout`/`task_number_regression`/`invalid_args` 등)로 정정, `marker_missing`·`import_failed` 제거, 모든 사용 예시 `--file`을 `.opal/MEMORY.json`으로 갱신 (078) |
 | v2.7 | 2026-07-28 23:28 | code-scan `validate` — `uncovered` 위반 git 기준 2분류(`newly_uncovered` 차단 / `pre_existing` 비차단) 절 신설 + 종료 코드 표에 `pre_existing`-only 시 exit 0 명시 — Step 19에서 CLOSE 게이트가 레거시 파일에 막히던 결함 재작업 (077) |
 | v2.8 | 2026-07-30 | memory-tool `update`에 `--kind history` 정정 경로 반영 — `--stage`/`--result`/`--path` 옵션 추가, 용도 1줄에 히스토리 오기재 정정 명시(FIFO 미적용·행 수 불변, 삭제 아님) (079) |
+| v2.9 | 2026-08-02 14:50 | code-scan 섹션 헤더 소스 단일화 반영 — `target` 판정 주석의 구 4단 표기를 전역 `headerSource` 직결로 교체하고 `write_to` 3값과 `reason` 3값을 축별로 분리 서술(M-2 교정), `--header-source` 옵션 행 추가, 종료 코드 표를 `validate` 전용에서 전 명령 공통으로 확장 + 에러 코드 4종(`header_source_unset`/`header_source_invalid`/`code_scan_config_invalid`/`scope_ambiguous`) 등재, 프로젝트 설정 예시에 `headerSource` + `scopes` 객체형 추가 및 모드별 동작 요약 신설, `scaffold` inline no-op 1줄 추가, `auto` 유효값 서술 제거(폐기 표기만 유지) (080) |

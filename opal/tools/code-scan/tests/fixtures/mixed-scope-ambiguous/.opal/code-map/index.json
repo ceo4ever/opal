@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "status": "reviewed",
+  "note": "mixed-scope-ambiguous fixture — mixed-scope와 동일 구조이나 두 스코프의 include가 모두 [\"*.java\"]라 같은 파일이 양쪽에 매칭 → scope_ambiguous(exit 1) 전용 (task 080, §3.7.2 — TS-017). 정상 트리(mixed-scope)와 분리해 exit 1이 다른 TS를 마비시키지 않도록 한다.",
+  "scopes": {
+    "order-svc": { "root": "svc/shared/", "anchors": [], "stripPrefix": [], "include": ["*.java"] },
+    "ship-svc": { "root": "svc/shared/", "anchors": [], "stripPrefix": [], "include": ["*.java"] }
+  },
+  "layerRules": [
+    { "match": "**/shared/**", "layer": "service" }
+  ],
+  "domains": {
+    "shared": { "paths": ["svc/shared/**"] }
+  }
+}

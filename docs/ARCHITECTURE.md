@@ -79,7 +79,7 @@ OPAL은 2-레이어 아키텍처로 동작한다.
 | `agents/` | 서브에이전트 12개 (전문 7 + 범용 4 + 도구성 1) |
 | `community-skills/` | 커뮤니티 스킬 — clone-copy(git)로 사용자가 온디맨드 설치 (검색은 `npx skills find`). 사용자 등록분 `user-registry.json` 포함, install 불가침 |
 | `references/` | 레지스트리 (skills.md, agents.md, mcps.md, opal-harness.md, opal-doc-standard.md, tools.md) |
-| `tools/` | CLI 도구 (skill-registry/, xlsx-tool/, tool-scan/ — capability 검색·live 사용법, memory-tool/ — 메모리 인덱스·히스토리 결정론적 집행·docs/brain 졸업 워크플로우, code-scan/ — @header 조회 + **헤더 작성층**(discover/scaffold/target/validate·인라인 및 `.opal/code-map/` 2소스), check-env.js, requirements.txt) |
+| `tools/` | CLI 도구 (skill-registry/, xlsx-tool/, tool-scan/ — capability 검색·live 사용법, memory-tool/ — 메모리 인덱스·히스토리 결정론적 집행·docs/brain 졸업 워크플로우, code-scan/ — @header 조회 + **헤더 작성층**(discover/scaffold/target/validate·인라인 및 `.opal/code-map/` 2소스). 기록 소스는 `.opal/code-scan.json`의 전역 `headerSource`(`inline`\|`manifest`) 단일 키가 결정하며 미설정 시 전 명령 차단, check-env.js, requirements.txt) |
 | `.venv/` | Python 가상환경 (openpyxl, pandas, playwright 등 — requirements.txt로 관리) |
 | `templates/` | 프로젝트 에이전트 템플릿 |
 
@@ -399,6 +399,7 @@ opal/                                    ← 이 저장소
 
 | 날짜 | 변경 내용 |
 |------|----------|
+| 2026-08-02 | tools/ 표 code-scan 행에 헤더 소스 단일화 반영 — 기록 소스를 `.opal/code-scan.json` 전역 `headerSource`(`inline`\|`manifest`) 단일 키가 결정하고 스코프별 오버라이드를 제거, 미설정·무효값 시 전 명령 차단. `readonly` 스코프 플래그 폐기 (Task 080) |
 | 2026-07-17 | 전문 에이전트 표에 opal-loop-action-agent 행 추가 — oppl Loop 2 루프 액션 에이전트, PM→루프 액션 에이전트→워커 계층 반영 (Task 065) |
 | 2026-06-18 | opal-orchestrator 잔존 행 2곳 삭제 (폴더·레지스트리 항목 부재 — dangling. Task 029) |
 | 2026-06-30 | 부트스트랩 진입 모델 2-tier 절 추가 — 비서(Lite·전역 상시)/PM(Full·`.opal/AGENT.md` 존재 시 승격) 분리. opt-in 모델·`//opi` 불변식·전역 비서 유지 (Task 049) |

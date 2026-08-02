@@ -1,4 +1,5 @@
 {
+  "headerSource": "inline",
   "scopes": { "root": "./" },
   "extensions": [".py", ".js", ".ts", ".vue", ".jsx", ".tsx", ".svelte", ".kt", ".kts", ".java", ".swift", ".md"],
   "exclude": ["node_modules", "__pycache__", ".git", "dist", "build", ".venv", "env", ".next", ".nuxt", ".output"],

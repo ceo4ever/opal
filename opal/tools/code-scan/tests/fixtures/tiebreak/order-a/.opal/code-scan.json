@@ -1,4 +1,5 @@
 {
+  "headerSource": "manifest",
   "scopes": { "app": "app/" },
   "extensions": [".ts"],
   "exclude": ["node_modules", ".git"],
