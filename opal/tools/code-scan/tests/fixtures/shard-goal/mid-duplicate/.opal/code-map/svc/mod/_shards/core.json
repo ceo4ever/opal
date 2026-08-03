@@ -1,0 +1,7 @@
+{
+  "version": 1, "scope": "svc", "dir": "svc/mod",
+  "files": {
+    "CoreA.ts": { "description": "core 그룹 파일 A — 샤드 소유 (베이스와 중복)", "exports": ["CoreA"] },
+    "CoreB.ts": { "description": "core 그룹 파일 B — 샤드 소유 (베이스와 중복)", "exports": ["CoreB"] }
+  }
+}

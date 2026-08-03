@@ -176,6 +176,7 @@ TEST-SCENARIO 단계를 "목표 달성 검증"으로 재정의 — 루브릭 채
 
 | 날짜 | 변경 내용 |
 |------|----------|
+| 2026-08-03 | 코드맵 매니페스트 샤딩 — 한 소스 디렉토리의 매니페스트를 예약 폴더 `_shards/` 아래 **의미 단위 샤드로 분산**할 수 있게 하고(베이스 매니페스트가 `shards` 라벨 배열로 선언), 샤드 해석·`byKey` 합집합·중복 판정을 `resolveShards` **1곳에 봉인**. `index.json` 최상위 `manifestMaxBytes`(기본 20480바이트)로 **파일당 크기 상한을 비차단 감지·열거** — 초과가 있어도 다른 위반이 없으면 exit 0이라 CLOSE 게이트를 봉쇄하지 않는다. 샤드 미선언 자산은 조회 8커맨드·`target`·`scaffold` stdout이 **바이트 동일**(옵트인). `_shards` 예약어 충돌·라벨 path traversal 차단. code-scan v1.5.0 (Task 082) |
 | 2026-08-02 | 코드 헤더 소스 단일화 — 기록 소스를 전역 `headerSource`(`inline`\|`manifest`) 2택 단일 키로 통일하고 `auto`·`readonly`·스코프별 오버라이드 3종을 폐기. 미설정·무효값은 전 명령 차단(암묵 기본값 금지), CLI `--header-source` > 전역 config 2층 우선순위. `scopes` 객체 형식(`include`/`exclude`) 파일 집합 필터 도입 — 판정 지점을 `resolveHeaderSource`·`isInScope` 각 1곳으로 봉인. code-scan v1.4.0 (Task 080) |
 | 2026-07-23 | 파이프라인 todo 미러 hook 강제 자동화 — state-tool todo_mirror 페이로드 출력(init/advance/mark/block, stdout 전용·비영속) + PostToolUse hook 결정론 트리거(claude-hooks.json) + install merge_hooks 소유권-마커 멱등 upsert(외부 hook clobber 해소) + state.md 정합. prose 의존 → tool 강제(헌법 Enforce). S-9 L3(새 세션 todo 패널 실증) 후속 (Task 076) |
 | 2026-07-23 | 목표-커버 게이트 opds·opsdd 확산 — op-scenario-gate Step 2 pilot 변환기(opds=opd동형/opsdd=SPEC.md FR·AC·EC 소스) + opds STEP 2(producer 확립·op-dev-plan 미접촉)·opsdd Phase 2 REVIEW(수동 커버리지→도구 게이트·self-confirming 해소) 배선. oppl 제외·oppd 2차. 신규 컴포넌트 0(배선만) (Task 075) |

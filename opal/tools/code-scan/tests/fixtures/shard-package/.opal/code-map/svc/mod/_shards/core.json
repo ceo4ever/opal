@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "scope": "svc",
+  "dir": "svc/mod",
+  "package": {
+    "description": "core 샤드 패키지 설명 (package 3단 상속 검증용)"
+  },
+  "files": {
+    "A.ts": {
+      "exports": [
+        "A"
+      ],
+      "draft": true
+    },
+    "B.ts": {
+      "exports": [
+        "B"
+      ],
+      "draft": true
+    }
+  }
+}

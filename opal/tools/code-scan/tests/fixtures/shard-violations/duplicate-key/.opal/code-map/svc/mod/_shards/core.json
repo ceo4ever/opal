@@ -1,0 +1,6 @@
+{
+  "version": 1, "scope": "svc", "dir": "svc/mod",
+  "files": {
+    "A.ts": { "description": "샤드에도 등재된 동일 키 (중복)", "exports": ["A"] }
+  }
+}

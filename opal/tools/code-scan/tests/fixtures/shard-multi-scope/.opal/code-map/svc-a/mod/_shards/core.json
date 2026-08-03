@@ -1,0 +1,6 @@
+{
+  "version": 1, "scope": "svc-a", "dir": "svc-a/mod",
+  "files": {
+    "A.ts": { "description": "svc-a core 샤드 소유 파일", "exports": ["A"] }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "version": 1, "status": "reviewed",
+  "note": "shard-violations/dir-mismatch fixture — 샤드 dir이 베이스와 다른 값 (task 082, S-8)",
+  "scopes": { "svc": { "root": "svc/", "anchors": [], "stripPrefix": [] } },
+  "domains": {}, "layerRules": [], "exclude": []
+}

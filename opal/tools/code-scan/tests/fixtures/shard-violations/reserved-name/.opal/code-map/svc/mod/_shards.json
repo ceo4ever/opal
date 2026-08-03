@@ -1,0 +1,6 @@
+{
+  "version": 1, "scope": "svc", "dir": "svc/mod/_shards",
+  "files": {
+    "Rogue.ts": { "description": "예약어 디렉토리 충돌 소스 파일", "exports": ["Rogue"] }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "version": 1, "scope": "svc", "dir": "svc/mod",
+  "shards": ["core"],
+  "files": {
+    "CoreA.ts": { "description": "core 그룹 파일 A — 샤드로 옮겼으나 베이스에서 미제거 (중복)", "exports": ["CoreA"] },
+    "CoreB.ts": { "description": "core 그룹 파일 B — 샤드로 옮겼으나 베이스에서 미제거 (중복)", "exports": ["CoreB"] },
+    "PricingA.ts": { "description": "pricing 그룹 파일 A — 베이스 잔류", "exports": ["PricingA"] },
+    "PricingB.ts": { "description": "pricing 그룹 파일 B — 베이스 잔류", "exports": ["PricingB"] },
+    "ShippingA.ts": { "description": "shipping 그룹 파일 A — 베이스 잔류", "exports": ["ShippingA"] },
+    "ShippingB.ts": { "description": "shipping 그룹 파일 B — 베이스 잔류", "exports": ["ShippingB"] }
+  }
+}

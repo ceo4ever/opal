@@ -180,8 +180,8 @@ test('[T080/L1-F7] TS-010 (S-4): 문자열 scopes 픽스처 20종이 무수정�
     return values.length > 0 && values.every(v => typeof v === 'string');
   });
 
-  assert.strictEqual(stringScoped.length, 20,
-    `[전제] 기존 문자열 scopes 픽스처는 20종이어야 함(Step 1 계약), got ${stringScoped.length}:\n  ${stringScoped.join('\n  ')}`);
+  assert.strictEqual(stringScoped.length, 37,
+    `[전제] 기존 문자열 scopes 픽스처는 37종이어야 함(082 shard-package 추가 반영), got ${stringScoped.length}:\n  ${stringScoped.join('\n  ')}`);
 
   const failures = [];
   for (const cfgAbs of stringScoped) {
@@ -196,6 +196,10 @@ test('[T080/L1-F7] TS-010 (S-4): 문자열 scopes 픽스처 20종이 무수정�
     }
     // schema/* 4종은 index.json 자체가 고의로 깨진 자산이므로 exit 1이 정상이다(077 TS-002/TS-003).
     if (rel.startsWith('schema' + path.sep) || rel.startsWith('schema/')) continue;
+    // shard-violations/broken-base(매니페스트 파손 → manifest_parse_failed)·shard-violations/bad-label(샤드 라벨
+    // 스키마 위반 → shard_declaration_invalid)는 고의로 파손된 자산이므로 exit 1이 정상이다 (082 S-3/S-6).
+    if (rel.startsWith('shard-violations' + path.sep + 'broken-base') || rel.startsWith('shard-violations/broken-base')
+      || rel.startsWith('shard-violations' + path.sep + 'bad-label') || rel.startsWith('shard-violations/bad-label')) continue;
     if (exitCode !== 0) failures.push(`${rel}: exit=${exitCode} (기대 0)`);
   }
 

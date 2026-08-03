@@ -1,0 +1,8 @@
+{
+  "version": 1, "status": "reviewed",
+  "note": "shard-repo fixture — 정상 샤드 구성 (베이스 1 + 샤드 2 + 소스 4파일) (task 082, S-1/S-2/S-5/S-7/S-9~S-14/S-19~S-20)",
+  "scopes": { "svc": { "root": "svc/", "anchors": [], "stripPrefix": [] } },
+  "domains": { "mod": { "paths": ["svc/mod/**"] } },
+  "layerRules": [ { "match": "**/mod/**", "layer": "util" } ],
+  "exclude": []
+}

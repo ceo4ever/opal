@@ -1,0 +1,7 @@
+{
+  "version": 1, "scope": "svc", "dir": "svc/mod",
+  "shards": ["core"],
+  "files": {
+    "A.ts": { "description": "베이스에도 등재된 키 (중복)", "exports": ["A"] }
+  }
+}

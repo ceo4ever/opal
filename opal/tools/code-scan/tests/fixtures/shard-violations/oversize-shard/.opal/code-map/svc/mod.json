@@ -1,0 +1,5 @@
+{
+  "version": 1, "scope": "svc", "dir": "svc/mod",
+  "shards": ["core"],
+  "files": {}
+}

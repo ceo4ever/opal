@@ -1,0 +1,11 @@
+{
+  "version": 1, "status": "reviewed",
+  "note": "shard-multi-scope fixture — 스코프 2개가 각각 샤드 보유, svc-b에만 미선언 샤드 1개 (task 082, S-26 — 게이트 gaps G-4)",
+  "scopes": {
+    "svc-a": { "root": "svc-a/", "anchors": [], "stripPrefix": [] },
+    "svc-b": { "root": "svc-b/", "anchors": [], "stripPrefix": [] }
+  },
+  "domains": { "mod": { "paths": ["svc-a/mod/**", "svc-b/mod/**"] } },
+  "layerRules": [ { "match": "**/mod/**", "layer": "util" } ],
+  "exclude": []
+}

@@ -26,6 +26,7 @@
 - 기록 소스를 결정하는 키는 `.opal/code-scan.json`의 **전역 `headerSource`** 하나뿐이다. 스코프 단위 모드 선언 키는 존재하지 않으며(설정 시 무시 + stderr 안내 1줄), 스코프 단위 쓰기금지 플래그도 제거되었다.
 - code-map이 없는 프로젝트는 `headerSource: inline`으로 설정하며, 결과는 항상 `inline`이다 — 현행 규칙(파일 인라인 작성)과 동일하게 동작한다. `manifest` 모드인데 `.opal/code-map/index.json`이 없으면 조회 결과가 비고 stderr에 사유 1줄이 나온다(비차단).
 - `write_to`가 `manifest`인 경우에만 `scope`·`manifest`·`key` 부가 필드가 함께 실린다 — 워커는 그 매니페스트의 `files[key]` 항목에 값을 기입한다.
+- 베이스 매니페스트가 `shards`를 선언한 파일은 `manifest`가 보유 샤드 경로를 가리킨다(부가 필드 `shard`에 라벨 동반) — 보유 샤드가 없으면 베이스로 라우팅된다("보유 샤드 → 없으면 베이스").
 - 전역 `headerSource`가 미설정이거나 유효 2택(`inline` 또는 `manifest`) 밖의 값이면 `target`을 포함한 **전 명령이 exit 1로 거부**된다(`header_source_unset` \| `header_source_invalid` \| `code_scan_config_invalid`). 판정 이전 단계이므로 이때는 기록 위치가 반환되지 않는다.
 
 ### 갱신 시점 (3단)
@@ -45,7 +46,7 @@
 | 구분 | 필드 | 집행 |
 |------|------|------|
 | 허용 (워커 기입) | `description` · `exports` · `depends` · `note` · `feature` | - |
-| 금지 (도구 관할) | `dir` · `files` 키 목록(추가/삭제) · `layer` · `domain` · `scope` · `module` · `version` | `code-scan validate`가 `worker_scope_violation`으로 거부 |
+| 금지 (도구 관할) | `dir` · `files` 키 목록(추가/삭제) · `layer` · `domain` · `scope` · `module` · `version` · `shards` | `code-scan validate`가 `worker_scope_violation`으로 거부 |
 | 금지 (파일 단위) | `.opal/code-map/index.json` 전체 | 소유자·PM 관할 — 워커 직접 편집 금지 |
 
 워커가 금지 필드를 침범하면 `validate`가 `worker_scope_violation` 위반으로 exit 2를 반환한다. 인라인 `@header`의 `module`/`layer`/`domain`은 기존 규칙대로 워커가 작성하되(파일 단독 소스이므로 도구 관할 개념이 없음), 이 표는 **code-map 매니페스트**에 값을 기입할 때만 적용된다.
@@ -153,3 +154,4 @@ code-scan 결과가 충분하지 않을 때 아래 3분기 기준으로 대응�
 | v1.3 | 2026-07-28 14:20 | §8 작성 주체 문구를 도구 보조 + 워커 기입 구조로 교체 + 4단 기록 위치 판정 표·3단 갱신 시점 표(일괄 갱신 금지 명문화)·워커 권한 경계 표·커버리지 합산 정의 신설 + 빈 결과 폴백 저커버리지 기준을 합산 커버리지로 재정의 (077) |
 | v1.5 | 2026-08-02 14:47 | 기록 위치 판정 4단 → **3단**으로 재정의 — `write_to` 3값(`none`/`inline`/`manifest`) × `reason` 3값(`out_of_scope`/`header_source_inline`/`header_source_manifest`) 폐쇄 도메인, 스코프 필터가 모드 판정보다 선행, 미설정·무효값 전 명령 거부 명시. `readonly` 판정 근거 서술 제거. §커버리지 합산 → §커버리지 산정(모드별 단일 소스)로 교체 + 빈 결과 폴백 ② 기준을 `coverage.percent`로 교정 (080) |
 | v1.4 | 2026-07-28 23:28 | 3단 갱신 시점 표 (b) CLOSE 게이트 항목 — `uncovered` 2분류(`newly_uncovered` 차단/`pre_existing` 비차단) 반영, 레거시 소급 부여는 discover/scaffold 몫임을 명시. §커버리지 합산에 `coverage.percent`가 2분류와 독립 지표임을 명시하는 문단 추가 — Step 19 CLOSE 게이트 레거시 파일 차단 결함 재작업 (077) |
+| v1.6 | 2026-08-03 13:20 | 매니페스트 샤딩 반영 — §워커 권한 경계 금지 필드에 `shards` 추가(도구·소유자 관할), §기록 위치 판정에 보유 샤드 경로 라우팅 1줄 추가("보유 샤드 → 없으면 베이스") (082) |

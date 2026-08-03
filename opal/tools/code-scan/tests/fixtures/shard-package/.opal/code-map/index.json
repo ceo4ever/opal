@@ -1,0 +1,8 @@
+{
+  "version": 1, "status": "reviewed",
+  "note": "shard-package fixture — package 3단 상속 검증 전용 (shard-repo에서 분리, S-2/S-7 요구 충돌 해소, 캡틴 승인 2026-08-03) (task 082, S-2)",
+  "scopes": { "svc": { "root": "svc/", "anchors": [], "stripPrefix": [] } },
+  "domains": { "mod": { "paths": ["svc/mod/**"] } },
+  "layerRules": [ { "match": "**/mod/**", "layer": "util" } ],
+  "exclude": []
+}

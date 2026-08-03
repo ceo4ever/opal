@@ -1,0 +1,9 @@
+{
+  "version": 1, "status": "reviewed",
+  "note": "shard-goal/mid-undeclared fixture — 엔트리를 샤드로 옮겼으나 베이스 shards 선언 누락 (task 082, S-23 중간 상태 (a) — 게이트 gaps G-3)",
+  "manifestMaxBytes": 400,
+  "scopes": { "svc": { "root": "svc/", "anchors": [], "stripPrefix": [] } },
+  "domains": { "mod": { "paths": ["svc/mod/**"] } },
+  "layerRules": [ { "match": "**/mod/**", "layer": "util" } ],
+  "exclude": []
+}

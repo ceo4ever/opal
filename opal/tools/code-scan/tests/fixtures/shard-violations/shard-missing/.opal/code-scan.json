@@ -1,0 +1,7 @@
+{
+  "headerSource": "manifest",
+  "scopes": { "svc": "svc/" },
+  "extensions": [".ts"],
+  "exclude": ["node_modules", ".git"],
+  "excludePatterns": []
+}

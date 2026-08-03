@@ -1,0 +1,6 @@
+{
+  "version": 1, "scope": "svc-b", "dir": "svc-b/mod",
+  "files": {
+    "E.ts": { "description": "svc-b에만 존재하는 미선언 샤드 파일", "exports": ["E"] }
+  }
+}

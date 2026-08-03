@@ -1,0 +1,11 @@
+{
+  "version": 1, "scope": "svc", "dir": "svc/mod",
+  "files": {
+    "CoreA.ts": { "description": "core 그룹 파일 A — 분산 전 베이스에 전량 집중", "exports": ["CoreA"] },
+    "CoreB.ts": { "description": "core 그룹 파일 B — 분산 전 베이스에 전량 집중", "exports": ["CoreB"] },
+    "PricingA.ts": { "description": "pricing 그룹 파일 A — 분산 전 베이스에 전량 집중", "exports": ["PricingA"] },
+    "PricingB.ts": { "description": "pricing 그룹 파일 B — 분산 전 베이스에 전량 집중", "exports": ["PricingB"] },
+    "ShippingA.ts": { "description": "shipping 그룹 파일 A — 분산 전 베이스에 전량 집중", "exports": ["ShippingA"] },
+    "ShippingB.ts": { "description": "shipping 그룹 파일 B — 분산 전 베이스에 전량 집중", "exports": ["ShippingB"] }
+  }
+}

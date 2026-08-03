@@ -1,0 +1,6 @@
+{
+  "version": 1, "scope": "svc", "dir": "svc/mod",
+  "files": {
+    "A.ts": { "description": "베이스 shards에 미선언된 고아 샤드 파일", "exports": ["A"] }
+  }
+}

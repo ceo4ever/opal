@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_task_number": 81,
+  "last_task_number": 82,
   "memories": [
     {
       "title": "Console 브레인 구독 인증",
@@ -53,6 +53,13 @@
   ],
   "history": [
     {
+      "title": "082 코드맵 매니페스트 샤딩",
+      "date": "2026-08-03",
+      "stage": "완료·미커밋",
+      "path": "tasks/082-260803-opds-코드맵-매니페스트-샤딩/",
+      "result": "_shards/ 의미 단위 분산 + manifestMaxBytes 비차단 상한. resolveShards 1곳 봉인·옵트인. code-scan v1.5.0. 249/249 GREEN·골든diff0. git stash 사고 424줄 유실→복구, FW개선 등재"
+    },
+    {
       "title": "080 헤더 소스 단일화(headerSource 전역 단일 키)",
       "date": "2026-08-02",
       "stage": "완료·미커밋",
@@ -79,13 +86,6 @@
       "stage": "완료·커밋(e0a87a1)",
       "path": "tasks/079-260730-opds-히스토리-정정명령/",
       "result": "update --kind history 신설 — 오기재 삭제 없이 정정. FIFO 미적용·행수불변, 에러코드 신설0. 163 GREEN"
-    },
-    {
-      "title": "078 메모리 SSOT JSON 전환",
-      "date": "2026-07-29",
-      "stage": "완료·커밋(d7a8ce0, 447ff09)",
-      "path": "tasks/078-260728-opd-메모리-json전환/",
-      "result": "MEMORY.md→MEMORY.json 단독 SSOT. 브리핑 show --brief(-49% 실측)·lazy 마이그레이션(행회계 불변식)·task-number tool-gated. 132+17+249 GREEN"
     }
   ]
 }

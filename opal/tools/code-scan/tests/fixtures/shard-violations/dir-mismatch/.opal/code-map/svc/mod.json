@@ -1,0 +1,7 @@
+{
+  "version": 1, "scope": "svc", "dir": "svc/mod",
+  "shards": ["core"],
+  "files": {
+    "D.ts": { "description": "베이스 소유 파일", "exports": ["D"] }
+  }
+}

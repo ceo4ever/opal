@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "scope": "svc",
+  "dir": "svc/mod",
+  "shards": [
+    "core",
+    "pricing"
+  ],
+  "package": {
+    "depends": [
+      "shared-utils"
+    ]
+  },
+  "files": {
+    "D.ts": {
+      "description": "베이스 소유 파일 (샤드 미배정)",
+      "exports": [
+        "D"
+      ]
+    }
+  }
+}

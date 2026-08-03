@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "scope": "svc",
+  "dir": "svc/mod",
+  "files": {
+    "C.ts": {
+      "description": "pricing 샤드 소유 파일",
+      "exports": [
+        "C"
+      ]
+    }
+  }
+}

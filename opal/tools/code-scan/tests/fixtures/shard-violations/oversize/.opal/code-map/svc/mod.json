@@ -1,0 +1,7 @@
+{
+  "version": 1, "scope": "svc", "dir": "svc/mod",
+  "files": {
+    "A.ts": { "description": "상한 초과를 유발하기 위한 충분히 긴 설명 문자열 필드", "exports": ["A", "helperA"], "note": "oversize 트리거용 부가 서술" },
+    "B.ts": { "description": "두 번째 파일의 설명도 길게 채워 바이트 수를 상한 200 이상으로 늘린다", "exports": ["B", "helperB"] }
+  }
+}

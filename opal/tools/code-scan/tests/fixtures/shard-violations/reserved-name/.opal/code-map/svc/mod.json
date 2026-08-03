@@ -1,0 +1,6 @@
+{
+  "version": 1, "scope": "svc", "dir": "svc/mod",
+  "files": {
+    "Real.ts": { "description": "정상 베이스 소유 파일", "exports": ["Real"] }
+  }
+}

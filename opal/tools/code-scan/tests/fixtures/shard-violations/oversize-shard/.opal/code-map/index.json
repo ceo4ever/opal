@@ -1,0 +1,9 @@
+{
+  "version": 1, "status": "reviewed",
+  "note": "shard-violations/oversize-shard fixture — manifestMaxBytes:200, 베이스는 상한 이하이고 샤드 1개만 초과 (task 082, S-25 — 게이트 gaps G-1)",
+  "manifestMaxBytes": 200,
+  "scopes": { "svc": { "root": "svc/", "anchors": [], "stripPrefix": [] } },
+  "domains": { "mod": { "paths": ["svc/mod/**"] } },
+  "layerRules": [ { "match": "**/mod/**", "layer": "util" } ],
+  "exclude": []
+}

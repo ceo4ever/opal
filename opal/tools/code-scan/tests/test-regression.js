@@ -905,7 +905,7 @@ test('077 TS-057: tests/ 전 테스트 파일이 @header를 보유하고 code-sc
     const key = Object.keys(json).find(p => p.endsWith(`tests/${f}`));
     if (!key) { problems.push(`${f}: scan 결과 미검출`); continue; }
     if (json[key].layer !== 'test') problems.push(`${f}: layer=${json[key].layer}`);
-    if (!['077', '080'].includes(String(json[key].task))) problems.push(`${f}: task=${json[key].task}`);
+    if (!['077', '080', '082'].includes(String(json[key].task))) problems.push(`${f}: task=${json[key].task}`);
     if (!Array.isArray(json[key].scenarios) || json[key].scenarios.length === 0) problems.push(`${f}: scenarios 없음`);
   }
   assert.deepStrictEqual(problems, [], '테스트 파일도 @header 자산이다 (header-standard.md §3)');

@@ -4,9 +4,9 @@
  *   "module": "code-scan",
  *   "layer": "util",
  *   "domain": "code-scan",
- *   "description": "OPAL @header 메타블록 스캐너 CLI — 코드 파일의 인라인/code-map @header를 파싱해 도메인·레이어·의존관계를 조회하고, discover/scaffold/target/validate/feature 5서브명령으로 code-map 헤더 작성층(외부 매니페스트 기반 상속·워커 권한 경계 집행·uncovered 2분류)을 관리한다. headerSource는 inline|manifest 2택 전역 단일 키이며, resolveHeaderSource가 CLI --header-source > 전역 config 2층으로 실행당 1회 판정해 미설정·무효값이면 전 명령을 차단한다. 확정된 모드는 조회·작성·검증 전 경로를 직접 지배한다 — resolveHeader는 inline이면 인라인 단독, manifest면 files>package>layerRules>domains 4단만 보고(index.json 부재는 stderr 1줄 비차단), decideTarget은 파일 상태를 보지 않고 모드에서 write_to/reason을 직결하며, scaffold는 inline에서 매니페스트를 만들지 않고 skipped 사유만 보고하고, validate는 모드별 단일 소스 커버리지(합산 폐기)와 구조 패스 분기를 적용해 결과에 모드를 실어 보낸다. 두 스코프 레지스트리(code-scan.json의 path 축약·객체형 / code-map index.json의 root)는 normalizeConfigScope·normalizeIndexScope가 {root, include, exclude} 단일 내부 형태로 정규화하고, 파일 집합 필터 판정은 isInScope 1곳에, 소속 스코프 판정은 resolveScopeIn(최장 root > include 매칭 > 사전순, 동률 include 경합은 scope_ambiguous) 1곳에 봉인한다. 그 필터는 열거(discoverFiles)·scaffold 열거(collectDirsWithCodeFiles)·validate 구조 패스(listCodeFilesInDir)·validate --changed·target(decideTarget) 5지점에 배선되며, target은 isFilteredOutOfScope를 경유해 필터 탈락 파일에 {write_to:'none', reason:'out_of_scope'}를 exit 0으로 돌려준다. scan <file> 명시 경로만 필터 면제다",
+ *   "description": "OPAL @header 메타블록 스캐너 CLI — 코드 파일의 인라인/code-map @header를 파싱해 도메인·레이어·의존관계를 조회하고, discover/scaffold/target/validate/feature 5서브명령으로 code-map 헤더 작성층(외부 매니페스트 기반 상속·워커 권한 경계 집행·uncovered 2분류)을 관리한다. headerSource는 inline|manifest 2택 전역 단일 키이며, resolveHeaderSource가 CLI --header-source > 전역 config 2층으로 실행당 1회 판정해 미설정·무효값이면 전 명령을 차단한다. 확정된 모드는 조회·작성·검증 전 경로를 직접 지배한다 — resolveHeader는 inline이면 인라인 단독, manifest면 files>package>layerRules>domains 4단만 보고(index.json 부재는 stderr 1줄 비차단), decideTarget은 파일 상태를 보지 않고 모드에서 write_to/reason을 직결하며, scaffold는 inline에서 매니페스트를 만들지 않고 skipped 사유만 보고하고, validate는 모드별 단일 소스 커버리지(합산 폐기)와 구조 패스 분기를 적용해 결과에 모드를 실어 보낸다. 두 스코프 레지스트리(code-scan.json의 path 축약·객체형 / code-map index.json의 root)는 normalizeConfigScope·normalizeIndexScope가 {root, include, exclude} 단일 내부 형태로 정규화하고, 파일 집합 필터 판정은 isInScope 1곳에, 소속 스코프 판정은 resolveScopeIn(최장 root > include 매칭 > 사전순, 동률 include 경합은 scope_ambiguous) 1곳에 봉인한다. 그 필터는 열거(discoverFiles)·scaffold 열거(collectDirsWithCodeFiles)·validate 구조 패스(listCodeFilesInDir)·validate --changed·target(decideTarget) 5지점에 배선되며, target은 isFilteredOutOfScope를 경유해 필터 탈락 파일에 {write_to:'none', reason:'out_of_scope'}를 exit 0으로 돌려준다. scan <file> 명시 경로만 필터 면제다. 베이스 매니페스트는 예약 폴더 _shards/ 아래에 의미 단위 샤드로 분산될 수 있다 — 베이스가 shards 배열로 라벨을 선언하면 resolveShards 1곳이 조회·기록 위치·구조 검증 경로 전체의 샤드 해석(로딩·byKey 합집합·중복 판정)을 봉인하고, 미선언 자산에서는 null을 돌려 오늘과 동일하게 동작한다(하위호환). index.json 최상위 manifestMaxBytes(기본 20480바이트)로 매니페스트 바이트 상한을 비차단 감지·열거한다",
  *   "exports": ["mirrorPathForDir", "decideTarget", "loadCodeMap", "loadConfig", "findProjectRoot", "resolveScope", "matchLayerRule", "matchDomain", "resolveHeader", "extractHeader"],
- *   "note": "code-scan.js 자신은 프로젝트 .opal/code-map/index.json 부재로 인라인 전용 모드로 스캔됨 (태스크 077). 모드 판정 지점은 resolveHeaderSource 1곳으로 봉인되며, 허용 3구간(resolveHeaderSource/loadConfig/parseArgs) 밖에서는 확정값을 ctx.headerSource 읽기·buildCtx 파라미터 전달 형태로만 다룬다 — 중간 전달 변수명은 mode다 (태스크 080 TS-070). 스코프 단위 모드 선언 키는 존재하지 않는다 — 두 레지스트리 모두 해당 키를 무시하고 deprecationOnce로 키별 실행당 1회만 stderr 안내한다 (태스크 080 F-002). index.json에서 폐기된 스코프 단위 쓰기금지 플래그도 같은 방식으로 무시 + 안내되며 다른 모드로 흡수하지 않는다 — 기록 소스는 오직 전역 headerSource가 결정하므로 스코프 단위 예외 판정 분기는 존재하지 않는다 (태스크 080 F-004). 두 소스는 모드에 의해 상호 배타이므로 '인라인 단독 승리' 같은 병합 규칙이 존재하지 않으며, decideTarget의 reason 도메인은 header_source_inline / header_source_manifest / out_of_scope 3값으로 닫힌다 — 파일 존재 여부·인라인 보유 여부는 판정에 관여하지 않는다 (태스크 080 F-003)"
+ *   "note": "code-scan.js 자신은 프로젝트 .opal/code-map/index.json 부재로 인라인 전용 모드로 스캔됨 (태스크 077). 모드 판정 지점은 resolveHeaderSource 1곳으로 봉인되며, 허용 3구간(resolveHeaderSource/loadConfig/parseArgs) 밖에서는 확정값을 ctx.headerSource 읽기·buildCtx 파라미터 전달 형태로만 다룬다 — 중간 전달 변수명은 mode다 (태스크 080 TS-070). 스코프 단위 모드 선언 키는 존재하지 않는다 — 두 레지스트리 모두 해당 키를 무시하고 deprecationOnce로 키별 실행당 1회만 stderr 안내한다 (태스크 080 F-002). index.json에서 폐기된 스코프 단위 쓰기금지 플래그도 같은 방식으로 무시 + 안내되며 다른 모드로 흡수하지 않는다 — 기록 소스는 오직 전역 headerSource가 결정하므로 스코프 단위 예외 판정 분기는 존재하지 않는다 (태스크 080 F-004). 두 소스는 모드에 의해 상호 배타이므로 '인라인 단독 승리' 같은 병합 규칙이 존재하지 않으며, decideTarget의 reason 도메인은 header_source_inline / header_source_manifest / out_of_scope 3값으로 닫힌다 — 파일 존재 여부·인라인 보유 여부는 판정에 관여하지 않는다 (태스크 080 F-003). 매니페스트 샤딩(태스크 082): 샤드 로딩·byKey 구성·중복 판정은 resolveShards 밖에 복제하지 않는다. CODE_MAP_VERSION은 1로 고정 유지되며(샤드 미선언 매니페스트 포맷 불변, 상향 시 기존 전 자산이 unsupported_version으로 차단됨), 샤드 라벨은 kebab 정규식으로 집행되어 경로 이탈을 차단한다(shard_declaration_invalid). 예약 폴더명과 겹치는 소스 디렉토리는 scaffold가 reserved_name_collision으로 거부한다. 크기 상한 초과는 validate/scaffold 모두 전면 비차단(열거·경고 1단)이다"
  * }
  */
 // code-scan — OPAL @header metadata scanner
@@ -34,7 +34,7 @@ const { spawnSync } = require('child_process');
 // Constants
 // ═══════════════════════════════════════════
 
-const VERSION = '1.4.0';
+const VERSION = '1.5.0';
 const HEADER_READ_BYTES = 8192;
 
 const DEFAULT_CONFIG = {
@@ -63,6 +63,11 @@ const WORKER_FIELDS = ['description', 'exports', 'depends', 'note', 'feature'];
 const BUILD_MANIFESTS = ['package.json', 'pom.xml', 'build.gradle', 'build.gradle.kts', 'pyproject.toml', 'setup.py', 'go.mod', 'Cargo.toml'];
 const STRIP_CANDIDATES = ['src/main/java/', 'src/main/kotlin/', 'src/test/java/', 'app/src/main/java/', 'src/'];
 const CODE_LAYER_STANDARD = ['router', 'controller', 'service', 'repository', 'model', 'schema', 'middleware', 'util', 'config', 'page', 'component', 'composable', 'store', 'hook', 'api-client', 'test'];
+
+// ── shard constants (082) ────────────────────────────────────────────────
+const SHARDS_DIR = '_shards';                              // 예약 폴더명 (확정 방향 #2)
+const SHARD_LABEL_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;       // 사람이 읽는 kebab 라벨 (확정 방향 #8)
+const DEFAULT_MANIFEST_MAX_BYTES = 20480;                  // 20 KiB (U-1)
 
 const USAGE = `
 code-scan v${VERSION} — OPAL @header metadata scanner
@@ -861,7 +866,21 @@ function loadCodeMap(projectRoot) {
     normalizedScopes[name] = n.scope;
   }
   index.scopes = normalizedScopes;
-  return { present: true, index, manifests: new Map() };
+  // manifestMaxBytes 스키마 게이트 (082 F-005) — 선택 필드, 있으면 양수 유한수여야 한다.
+  // 신규 에러 코드를 만들지 않고 기존 invalid_index로 합류한다 (PLAN §3.5.2 (A)).
+  if (hasOwn(index, 'manifestMaxBytes')) {
+    const v = index.manifestMaxBytes;
+    if (typeof v !== 'number' || !Number.isFinite(v) || v <= 0) {
+      return { present: true, error: 'invalid_index', index, manifests: new Map() };
+    }
+  }
+  return { present: true, index, manifests: new Map(), shardViews: new Map() };
+}
+
+// manifestMaxBytes 값 읽기 — 1곳 (082 F-005, PLAN §3.5.2 (A))
+function manifestMaxBytes(ctx) {
+  const v = ctx.codeMap.index && ctx.codeMap.index.manifestMaxBytes;
+  return typeof v === 'number' ? v : DEFAULT_MANIFEST_MAX_BYTES;
 }
 
 // 확정된 모드(resolveHeaderSource의 1회 판정 결과)를 ctx에 실어 전 소비자에게 전달한다.
@@ -947,12 +966,111 @@ function resolveManifestContext(relPath, ctx) {
   const dirRel = posixDirname(relPath);
   const mp = mirrorPathForDir(dirRel, scoped.name, scoped.scope);
   if (mp.skipped) {
-    return { scopeName: scoped.name, scope: scoped.scope, dirRel, mp: null, manifest: null, manifestRel: null, manifestAbs: null };
+    return { scopeName: scoped.name, scope: scoped.scope, dirRel, mp: null, manifest: null, manifestRel: null, manifestAbs: null, shardView: null };
   }
   const manifestRel = `${CODE_MAP_DIR}/${scoped.name}/${mp.mirrorRel}.json`;
   const manifestAbs = path.join(ctx.projectRoot, manifestRel);
   const manifest = loadManifest(manifestAbs, ctx);
-  return { scopeName: scoped.name, scope: scoped.scope, dirRel, mp, manifestRel, manifestAbs, manifest };
+  const shardView = resolveShards(manifestAbs, manifestRel, manifest, ctx);
+  return { scopeName: scoped.name, scope: scoped.scope, dirRel, mp, manifestRel, manifestAbs, manifest, shardView };
+}
+
+// ── Shard resolution (082 F-001) — 봉인 지점 1곳 ─────────────────────────
+//
+// 샤드 경로 조립·로딩·byKey 구성·중복 판정은 이 함수 밖에 존재하지 않는다
+// (080 resolveHeaderSource/isInScope 선례 — PLAN §3.1.2 (D)).
+
+// 샤드 파일 := 직속 부모 디렉토리 이름이 SHARDS_DIR인 .json
+function isShardManifestPath(manifestAbs) {
+  return path.basename(path.dirname(manifestAbs)) === SHARDS_DIR;
+}
+
+// 샤드 → 소유 베이스 매니페스트 절대 경로 (…/{stem}/_shards/{label}.json → …/{stem}.json)
+function baseManifestAbsForShard(shardAbs) {
+  return path.dirname(path.dirname(shardAbs)) + '.json';
+}
+
+/**
+ * 샤드 해석의 **유일한** 지점. 샤드 로딩·byKey 구성·중복 판정은 이 함수 밖에 존재하지 않는다.
+ * @param {string} baseManifestAbs  베이스 매니페스트 절대 경로 (mirrorPathForDir 산출 경로)
+ * @param {string} baseManifestRel  프로젝트 루트 기준 POSIX 상대 경로
+ * @param {object|null} baseManifest
+ * @param {object} ctx  {projectRoot, config, codeMap, headerSource}
+ * @returns {object|null} ShardView { baseRel, shards, byKey, duplicates }
+ * @throws {CodeMapFatalError} 'shard_declaration_invalid'
+ */
+function resolveShards(baseManifestAbs, baseManifestRel, baseManifest, ctx) {
+  // null 반환 4조건 (= 옵트인·바이트 동일성의 구조적 보증)
+  if (ctx.headerSource !== 'manifest') return null;      // ① inline 모드 무영향 게이트
+  if (!baseManifest) return null;                          // ②
+  if (!hasOwn(baseManifest, 'shards')) return null;         // ③
+  if (Array.isArray(baseManifest.shards) && baseManifest.shards.length === 0) return null; // ④
+
+  const cache = ctx.codeMap.shardViews || (ctx.codeMap.shardViews = new Map());
+  if (cache.has(baseManifestAbs)) return cache.get(baseManifestAbs);
+
+  if (!Array.isArray(baseManifest.shards)) {
+    throw new CodeMapFatalError('shard_declaration_invalid', `${baseManifestRel}: shards must be an array`);
+  }
+
+  const seenLabels = new Set();
+  const shards = [];
+  for (const label of baseManifest.shards) {
+    if (typeof label !== 'string' || !SHARD_LABEL_RE.test(label)) {
+      throw new CodeMapFatalError('shard_declaration_invalid', `${baseManifestRel}: invalid shard label "${label}"`);
+    }
+    if (seenLabels.has(label)) {
+      throw new CodeMapFatalError('shard_declaration_invalid', `${baseManifestRel}: duplicate shard label "${label}"`);
+    }
+    seenLabels.add(label);
+
+    const dir = path.dirname(baseManifestAbs);
+    const stem = path.basename(baseManifestAbs, '.json');
+    const manifestAbs = path.join(dir, stem, SHARDS_DIR, label + '.json');
+    const manifestRel = toPosixRel(ctx.projectRoot, manifestAbs);
+    const manifest = loadManifest(manifestAbs, ctx);
+    shards.push({ label, manifestRel, manifestAbs, manifest });
+  }
+
+  // 합집합 구성 순서 (U-4: 선언 순서 우선 + 첫 승리)
+  const byKey = new Map();
+  const duplicates = [];
+
+  if (baseManifest.files) {
+    for (const key of Object.keys(baseManifest.files)) {
+      byKey.set(key, {
+        owner: 'base',
+        label: null,
+        manifestRel: baseManifestRel,
+        entry: baseManifest.files[key],
+        shardPackage: null
+      });
+    }
+  }
+
+  for (const s of shards) {
+    if (!s.manifest || !s.manifest.files) continue;
+    for (const key of Object.keys(s.manifest.files)) {
+      if (byKey.has(key)) {
+        const winner = byKey.get(key);
+        let dup = duplicates.find(d => d.key === key);
+        if (!dup) { dup = { key, winner: winner.manifestRel, losers: [] }; duplicates.push(dup); }
+        dup.losers.push(s.manifestRel);
+        continue;
+      }
+      byKey.set(key, {
+        owner: 'shard',
+        label: s.label,
+        manifestRel: s.manifestRel,
+        entry: s.manifest.files[key],
+        shardPackage: s.manifest.package || null
+      });
+    }
+  }
+
+  const view = { baseRel: baseManifestRel, shards, byKey, duplicates };
+  cache.set(baseManifestAbs, view);
+  return view;
 }
 
 // ── layerRules / domains matching (F) — decisive specificity + tie-break ─
@@ -1034,8 +1152,17 @@ function resolveHeader(filePath, ctx) {
   if (!mctx) return null;
 
   const basename = path.basename(filePath);
-  const fe = (mctx.manifest && mctx.manifest.files && mctx.manifest.files[basename]) || null;
-  const pkg = (mctx.manifest && mctx.manifest.package) || null;
+  const basePkg = (mctx.manifest && mctx.manifest.package) || null;
+  const owned = mctx.shardView ? mctx.shardView.byKey.get(basename) : null;
+
+  const fe = owned
+    ? owned.entry
+    : ((mctx.manifest && mctx.manifest.files && mctx.manifest.files[basename]) || null);
+
+  // package 3단: files > 소유 샤드 package > 베이스 package (082 F-001, PLAN §3.1.2 (G))
+  // 샤드 미선언 시 pkgChain === [basePkg]이므로 아래 루프는 기존 else-if와 의미상 동일하다.
+  const pkgChain = (owned && owned.shardPackage) ? [owned.shardPackage, basePkg] : [basePkg];
+
   const layerMatch = matchLayerRule(relPath, ctx.codeMap.index.layerRules || []);
   const domainMatch = matchDomain(relPath, ctx.codeMap.index.domains || {});
 
@@ -1043,9 +1170,11 @@ function resolveHeader(filePath, ctx) {
   const sources = {};
   let contributed = false;
 
-  for (const field of ['description', 'exports', 'depends', 'note', 'feature']) {
-    if (hasOwn(fe, field)) { result[field] = fe[field]; sources[field] = 'file'; contributed = true; }
-    else if (hasOwn(pkg, field)) { result[field] = pkg[field]; sources[field] = 'package'; contributed = true; }
+  for (const field of WORKER_FIELDS) {
+    if (hasOwn(fe, field)) { result[field] = fe[field]; sources[field] = 'file'; contributed = true; continue; }
+    for (const p of pkgChain) {
+      if (hasOwn(p, field)) { result[field] = p[field]; sources[field] = 'package'; contributed = true; break; }
+    }
   }
   if (hasOwn(fe, 'module')) { result.module = fe.module; sources.module = 'file'; contributed = true; }
   if (layerMatch) { result.layer = layerMatch.layer; sources.layer = 'rule'; contributed = true; }
@@ -1102,9 +1231,22 @@ function decideTarget(fileRel, ctx) {
   if (scoped) {
     const mp = mirrorPathForDir(posixDirname(relPath), scoped.name, scoped.scope);
     if (!mp.skipped) {
+      const baseRel = `${CODE_MAP_DIR}/${scoped.name}/${mp.mirrorRel}.json`;
+      const baseAbs = path.join(ctx.projectRoot, baseRel);
+      const key     = path.basename(relPath);
+
       out.scope = scoped.name;
-      out.manifest = `${CODE_MAP_DIR}/${scoped.name}/${mp.mirrorRel}.json`;
-      out.key = path.basename(relPath);
+      out.key   = key;
+
+      // 샤드 라우팅 2단 (U-3: 글롭 미채택) — 보유 샤드 → 없으면 베이스 (082 F-002, PLAN §3.2.2)
+      const view  = resolveShards(baseAbs, baseRel, loadManifest(baseAbs, ctx), ctx);
+      const owned = view ? view.byKey.get(key) : null;
+      if (owned && owned.owner === 'shard') {
+        out.manifest = owned.manifestRel;   // ① 보유 샤드
+        out.shard    = owned.label;         // 샤드 라우팅 시에만 부여
+      } else {
+        out.manifest = baseRel;             // ② 베이스 보유 · ③ 미보유 신규 파일
+      }
     }
   }
   return out;
@@ -1620,6 +1762,7 @@ function mergeManifest(existing, entry) {
   }
 
   const manifest = { version: CODE_MAP_VERSION, scope: entry.scopeName, dir: entry.dirRel };
+  if (existing && hasOwn(existing, 'shards')) manifest.shards = existing.shards;
   if (existing && hasOwn(existing, 'package')) manifest.package = existing.package;
   manifest.files = orderFilesObject(files);
 
@@ -1672,6 +1815,7 @@ function cmdScaffold(projectRoot, config, opts, mode) {
   const perDir = [];
   const manifestOwner = new Map(); // manifestAbs -> dirRel (collision detection)
   const collisions = [];
+  const reserved = [];             // 소스 디렉토리가 _shards 예약어와 충돌 (082 F-006)
 
   for (const scopeName of scopeNames) {
     const scope = index.scopes[scopeName];
@@ -1681,6 +1825,10 @@ function cmdScaffold(projectRoot, config, opts, mode) {
       const mp = mirrorPathForDir(d.dirRel, scopeName, scope);
       if (mp.skipped) continue;
       const manifestRel = `${CODE_MAP_DIR}/${scopeName}/${mp.mirrorRel}.json`;
+      if (mp.mirrorRel.split('/').includes(SHARDS_DIR)) {
+        reserved.push({ dir: d.dirRel, manifest: manifestRel });
+        continue;
+      }
       const manifestAbs = path.join(projectRoot, manifestRel);
       if (manifestOwner.has(manifestAbs)) {
         collisions.push({ manifest: manifestRel, a: manifestOwner.get(manifestAbs), b: d.dirRel });
@@ -1691,37 +1839,96 @@ function cmdScaffold(projectRoot, config, opts, mode) {
     }
   }
 
+  if (reserved.length > 0) {
+    return errorExit('reserved_name_collision', { reserved });
+  }
+
   if (collisions.length > 0) {
     return errorExit('mirror_collision', { collisions });
   }
 
-  const created = [], updated = [], unchanged = [], addedAll = [], prunedAll = [];
+  const created = [], updated = [], unchanged = [], addedAll = [], prunedAll = [], skippedAll = [];
   const dryRun = !!opts.dryRun;
+  const limit = manifestMaxBytes(ctx);
 
   for (const entry of perDir) {
-    let existing = null;
+    let existingBase = null;
     if (fs.existsSync(entry.manifestAbs)) {
-      try { existing = JSON.parse(fs.readFileSync(entry.manifestAbs, 'utf8')); } catch { existing = null; }
+      try { existingBase = JSON.parse(fs.readFileSync(entry.manifestAbs, 'utf8')); } catch { existingBase = null; }
     }
-    const { manifest, pruned, added } = mergeManifest(existing, entry);
-    const serialized = JSON.stringify(manifest, null, 2) + '\n';
-    const isNew = !fs.existsSync(entry.manifestAbs);
-    const prevContent = isNew ? null : fs.readFileSync(entry.manifestAbs, 'utf8');
-    const changed = isNew || prevContent !== serialized;
+    const view = resolveShards(entry.manifestAbs, entry.manifestRel, existingBase, ctx);
+    entry.view = view; // stale 집합 계산에서 재사용 (082 F-004 §3.4.2 (C))
 
-    if (changed && !dryRun) {
-      fs.mkdirSync(path.dirname(entry.manifestAbs), { recursive: true });
-      fs.writeFileSync(entry.manifestAbs, serialized);
+    // 가드 1: 중복 키 (U-4 파생 결정) — 자동 해소 금지, 디렉토리 전체를 쓰지 않는다
+    if (view && view.duplicates.length > 0) {
+      skippedAll.push({
+        reason: 'shard_duplicate_key', manifest: entry.manifestRel,
+        detail: view.duplicates.map(d => d.key).join(','),
+      });
+      continue;
     }
 
-    if (isNew) created.push(entry.manifestRel);
-    else if (changed) updated.push(entry.manifestRel);
-    else unchanged.push(entry.manifestRel);
-    addedAll.push(...added.map(f => `${entry.manifestRel}:${f}`));
-    prunedAll.push(...pruned.map(f => `${entry.manifestRel}:${f}`));
+    // 가드 2: 선언됐으나 파일 없는 샤드 — skipped 기록, 빈 샤드 파일을 새로 만들지 않는다
+    for (const s of (view ? view.shards : [])) {
+      if (!s.manifest) {
+        skippedAll.push({ reason: 'shard_missing', manifest: s.manifestRel, detail: s.label });
+      }
+    }
+
+    // 버킷 분배 (U-3: 보유 샤드 → 없으면 베이스) — manifestRel 기준(byKey 엔트리가 abs를 싣지 않는다)
+    const buckets = new Map();
+    buckets.set(entry.manifestRel, { manifestAbs: entry.manifestAbs, existing: existingBase, files: [] });
+    for (const s of (view ? view.shards : [])) {
+      if (s.manifest) buckets.set(s.manifestRel, { manifestAbs: s.manifestAbs, existing: s.manifest, files: [] });
+    }
+    for (const bn of entry.files) {
+      const o = view ? view.byKey.get(bn) : null;
+      if (o && o.owner === 'shard' && buckets.has(o.manifestRel)) {
+        buckets.get(o.manifestRel).files.push(bn);
+      } else {
+        buckets.get(entry.manifestRel).files.push(bn);
+      }
+    }
+
+    for (const [manifestRel, bucket] of buckets) {
+      const manifestAbs = bucket.manifestAbs;
+      const bucketEntry = { scopeName: entry.scopeName, dirRel: entry.dirRel, files: bucket.files };
+      const { manifest, pruned, added } = mergeManifest(bucket.existing, bucketEntry);
+      const serialized = JSON.stringify(manifest, null, 2) + '\n';
+      const isNew = !fs.existsSync(manifestAbs);
+      const prevContent = isNew ? null : fs.readFileSync(manifestAbs, 'utf8');
+      const changed = isNew || prevContent !== serialized;
+
+      if (changed && !dryRun) {
+        fs.mkdirSync(path.dirname(manifestAbs), { recursive: true });
+        fs.writeFileSync(manifestAbs, serialized);
+      }
+
+      if (isNew) created.push(manifestRel);
+      else if (changed) updated.push(manifestRel);
+      else unchanged.push(manifestRel);
+      addedAll.push(...added.map(f => `${manifestRel}:${f}`));
+      prunedAll.push(...pruned.map(f => `${manifestRel}:${f}`));
+
+      // 크기 상한 알림 — stdout JSON은 건드리지 않는다 (082 F-005 §3.5.2 (C), TS-023/S-17)
+      const bytes = Buffer.byteLength(serialized);
+      if (bytes > limit) {
+        process.stderr.write(
+          `code-scan: [oversize] ${manifestRel} — ${bytes} bytes > ${limit} 상한. ` +
+          `_shards/ 의미 단위 분할을 검토하세요\n`);
+      }
+    }
   }
 
-  const validManifestPaths = new Set(perDir.map(e => e.manifestAbs));
+  // stale 집합 — 선언된 샤드(파일 존재 여부 무관)를 포함해 오탐을 없앤다.
+  // 미선언 샤드는 그대로 stale로 남는다 — validate의 shard_undeclared와 신호가 일치한다 (082 §9 R-2/H-2).
+  const validManifestPaths = new Set();
+  for (const e of perDir) {
+    validManifestPaths.add(e.manifestAbs);
+    for (const s of (e.view ? e.view.shards : [])) {
+      validManifestPaths.add(s.manifestAbs);
+    }
+  }
   const staleList = [];
   for (const scopeName of scopeNames) {
     const scopeMapDir = path.join(projectRoot, CODE_MAP_DIR, scopeName);
@@ -1734,7 +1941,7 @@ function cmdScaffold(projectRoot, config, opts, mode) {
   const result = {
     ok: true,
     created: created.length, updated: updated.length, unchanged: unchanged.length,
-    added: addedAll, pruned: prunedAll, stale: staleList, skipped: [],
+    added: addedAll, pruned: prunedAll, stale: staleList, skipped: skippedAll,
   };
   if (opts.output === 'json') console.log(JSON.stringify(result));
   else console.log(`scaffold: created=${result.created} updated=${result.updated} unchanged=${result.unchanged} added=${addedAll.length} pruned=${prunedAll.length} stale=${staleList.length}`);
@@ -1847,8 +2054,12 @@ function cmdValidate(projectRoot, config, opts, mode) {
     const relPath = toPosixRel(projectRoot, fileAbs);
     const basename = path.basename(fileAbs);
     const inlineHeader = extractHeader(fileAbs);
-    const mctx = ctx.codeMap.present ? resolveManifestContext(relPath, ctx) : null;
-    const fe = (mctx && mctx.manifest && mctx.manifest.files && mctx.manifest.files[basename]) || null;
+    const mctx  = ctx.codeMap.present ? resolveManifestContext(relPath, ctx) : null;
+    const owned = (mctx && mctx.shardView) ? mctx.shardView.byKey.get(basename) : null;
+    const fe = owned ? owned.entry
+                     : ((mctx && mctx.manifest && mctx.manifest.files && mctx.manifest.files[basename]) || null);
+    // 위반의 manifest 필드가 "고치러 갈 파일"을 가리키게 한다 (082 F-003, PLAN §3.3.2 (A))
+    const ownerRel = owned ? owned.manifestRel : (mctx ? mctx.manifestRel : undefined);
 
     // 커버 판정은 **해당 모드의 소스만** 본다 — 반대 소스는 계상하지 않는다 (080 §3.3.2 (D)).
     const covered = isInlineMode ? inlineHeader !== null : fe !== null;
@@ -1872,14 +2083,14 @@ function cmdValidate(projectRoot, config, opts, mode) {
     }
 
     if (inlineHeader !== null && fe !== null && hasSubstantiveContent(fe)) {
-      violations.push({ code: 'conflict', sub: 'inline_shadowed', file: relPath, manifest: mctx.manifestRel, key: basename, detail: '' });
+      violations.push({ code: 'conflict', sub: 'inline_shadowed', file: relPath, manifest: ownerRel, key: basename, detail: '' });
     }
 
     // draft는 매니페스트 전용 개념이므로 inline 모드에서는 적용하지 않는다 (080 §3.3.2 (D)).
     if (!isInlineMode && inlineHeader === null && fe !== null) {
       const blank = typeof fe.description === 'string' && fe.description.trim() === '';
       if (fe.draft === true || blank) {
-        violations.push({ code: 'draft', file: relPath, manifest: mctx.manifestRel, key: basename, detail: '' });
+        violations.push({ code: 'draft', file: relPath, manifest: ownerRel, key: basename, detail: '' });
       }
     }
 
@@ -1890,7 +2101,7 @@ function cmdValidate(projectRoot, config, opts, mode) {
         if (!id) continue;
         if (text === null) { try { text = fs.readFileSync(fileAbs, 'utf8'); } catch { text = ''; } }
         if (!text.includes(id)) {
-          violations.push({ code: 'exports_not_found', file: relPath, manifest: mctx ? mctx.manifestRel : undefined, key: basename, detail: idRaw });
+          violations.push({ code: 'exports_not_found', file: relPath, manifest: ownerRel, key: basename, detail: idRaw });
         }
       }
     }
@@ -1905,6 +2116,41 @@ function cmdValidate(projectRoot, config, opts, mode) {
     noticeOnce('inline_mode_structural_skip',
       'inline 모드이므로 매니페스트 구조 검사를 건너뜁니다 — .opal/code-map/ 자산이 존재하지만 이 실행에서는 사용되지 않습니다');
   }
+  // 매니페스트 엔트리(package/files)의 layer·domain·module 침범 검사 — 베이스·샤드 공통 (082 F-003 §3.3.2 (C) 검사 11)
+  function checkEntryViolations(manifest, manifestRel) {
+    const manifestFiles = manifest.files || {};
+    const pkg = manifest.package || null;
+    if (pkg && hasOwn(pkg, 'layer')) {
+      violations.push({ code: 'worker_scope_violation', sub: 'layer_in_manifest', manifest: manifestRel, detail: '' });
+    }
+    if (pkg && hasOwn(pkg, 'domain')) {
+      violations.push({ code: 'worker_scope_violation', sub: 'domain_in_manifest', manifest: manifestRel, detail: '' });
+    }
+    for (const [key, entryFe] of Object.entries(manifestFiles)) {
+      if (entryFe && hasOwn(entryFe, 'layer')) {
+        violations.push({ code: 'worker_scope_violation', sub: 'layer_in_manifest', manifest: manifestRel, key, detail: '' });
+      }
+      if (entryFe && hasOwn(entryFe, 'domain')) {
+        violations.push({ code: 'worker_scope_violation', sub: 'domain_in_manifest', manifest: manifestRel, key, detail: '' });
+      }
+      if (entryFe && hasOwn(entryFe, 'module')) {
+        const stem = deriveStem(key);
+        if (entryFe.module !== stem) {
+          violations.push({ code: 'worker_scope_violation', sub: 'module_override', manifest: manifestRel, key, detail: String(entryFe.module) });
+        }
+      }
+    }
+  }
+
+  // 크기 상한 열거 — 비차단 (082 F-005 §3.5.2 (B)). 베이스·샤드 양쪽에서 호출된다 (S-25).
+  function checkOversize(manifestAbs, manifestRel) {
+    const size = fs.statSync(manifestAbs).size;
+    const limit = manifestMaxBytes(ctx);
+    if (size > limit) {
+      violations.push({ code: 'manifest_oversize', manifest: manifestRel, detail: `${size}/${limit}` });
+    }
+  }
+
   if (!isInlineMode && ctx.codeMap.present) {
     const index = ctx.codeMap.index;
     const scopeNames = opts.scope ? [opts.scope] : Object.keys(index.scopes || {});
@@ -1914,7 +2160,17 @@ function cmdValidate(projectRoot, config, opts, mode) {
       const scopeMapDir = path.join(projectRoot, CODE_MAP_DIR, scopeName);
       if (!fs.existsSync(scopeMapDir)) continue;
 
-      for (const manifestAbs of listManifestFiles(scopeMapDir)) {
+      // Phase A — 분류 (082 F-003 §3.3.2 (B))
+      const allManifests = listManifestFiles(scopeMapDir);
+      const bases = allManifests.filter(p => !isShardManifestPath(p));
+      const shardPaths = allManifests.filter(p => isShardManifestPath(p));
+      const visitedShards = new Set();
+
+      const structExcludeDirs = [...(config.exclude || []), ...((index && index.exclude) || [])];
+      const structExcludePatterns = mergeExcludePatterns(config, opts);
+
+      // Phase B — 베이스 그룹 단위 검사 (082 F-003 §3.3.2 (C))
+      for (const manifestAbs of bases) {
         const manifest = loadManifest(manifestAbs, ctx);
         if (!manifest) continue;
         const manifestRel = toPosixRel(projectRoot, manifestAbs);
@@ -1932,61 +2188,87 @@ function cmdValidate(projectRoot, config, opts, mode) {
           const expected = mp.skipped ? null : mp.mirrorRel;
           if (expected === null || expected !== actualMirrorRel) {
             violations.push({ code: 'worker_scope_violation', sub: 'dir_mismatch', manifest: manifestRel, detail: String(manifest.dir) });
+          } else if (expected.split('/').includes(SHARDS_DIR)) {
+            // 3b: 실제 미러 경로에 _shards 세그먼트 포함 — 소스 디렉토리 예약어 충돌 (082 F-006)
+            violations.push({ code: 'worker_scope_violation', sub: 'reserved_name', manifest: manifestRel, detail: String(manifest.dir) });
           }
         }
 
         const dirAbs = path.resolve(projectRoot, manifest.dir || '');
         const dirExists = fs.existsSync(dirAbs) && fs.statSync(dirAbs).isDirectory();
         if (!dirExists) {
+          // 베이스에서 1회만 — 샤드마다 반복하면 1건이 1+N건으로 부푼다 (082 §9 R-2, S-9)
           violations.push({ code: 'orphan', sub: 'dir_missing', manifest: manifestRel, file: manifest.dir, detail: '' });
         }
 
-        const manifestFiles = manifest.files || {};
-        const manifestKeys = Object.keys(manifestFiles);
-        // scaffold 열거(collectDirsWithCodeFiles)와 동일한 필터(config.exclude ∪ index.exclude
-        // 세그먼트 + excludePatterns + 스코프 필터)를 적용해 정당히 제외된 파일이
-        // files_key_removed로 오탐되지 않도록 한다(077 결함 D · 080 §3.2.2 (C) ③, TS-014/TS-015).
-        const structExcludeDirs = [...(config.exclude || []), ...((index && index.exclude) || [])];
-        const structExcludePatterns = mergeExcludePatterns(config, opts);
+        checkOversize(manifestAbs, manifestRel);
+
+        const view = resolveShards(manifestAbs, manifestRel, manifest, ctx);
+
+        for (const s of (view ? view.shards : [])) {
+          visitedShards.add(s.manifestAbs);
+          if (!s.manifest) {
+            violations.push({ code: 'orphan', sub: 'shard_missing', manifest: manifestRel, detail: s.label });
+            continue;
+          }
+          if (typeof s.manifest.version !== 'number' || s.manifest.version !== CODE_MAP_VERSION) {
+            throw new CodeMapFatalError('unsupported_version');
+          }
+          if (s.manifest.scope !== scopeName) {
+            violations.push({ code: 'worker_scope_violation', sub: 'scope_mismatch', manifest: s.manifestRel, detail: String(s.manifest.scope) });
+          }
+          if (s.manifest.dir !== manifest.dir) {
+            // 기존 dir_mismatch를 재사용하지 않는다 — 그 판정은 미러 경로를 역산하는데 샤드는
+            // 미러 경로가 베이스이므로 항상 위반이 된다 (082 §9 H-1, S-8/S-15)
+            violations.push({ code: 'worker_scope_violation', sub: 'shard_dir_mismatch', manifest: s.manifestRel, detail: String(s.manifest.dir) });
+          }
+          checkOversize(s.manifestAbs, s.manifestRel);
+        }
+
+        for (const dup of (view ? view.duplicates : [])) {
+          violations.push({
+            code: 'worker_scope_violation', sub: 'shard_duplicate_key',
+            manifest: dup.winner, key: dup.key, detail: `${dup.winner} → ${dup.losers.join(',')}`,
+          });
+        }
+
+        // (D) 합집합 ↔ 디스크 대조 — 그룹당 1회 (082 §9 R-2, H-1 해소)
         const diskBasenames = dirExists
           ? listCodeFilesInDir(dirAbs, manifest.dir || '', config, structExcludeDirs, structExcludePatterns, scopeObj)
           : [];
         const diskSet = new Set(diskBasenames);
-        const keySet = new Set(manifestKeys);
+        const unionKeys = view ? view.byKey
+          : new Map(Object.keys(manifest.files || {}).map(k => [k, { manifestRel, entry: manifest.files[k] }]));
 
-        for (const key of manifestKeys) {
+        for (const [key, o] of unionKeys) {
           if (!diskSet.has(key)) {
-            violations.push({ code: 'orphan', sub: 'file_missing', manifest: manifestRel, key, file: `${manifest.dir}/${key}`, detail: '' });
-            violations.push({ code: 'worker_scope_violation', sub: 'files_key_added', manifest: manifestRel, key, detail: '' });
+            violations.push({ code: 'orphan', sub: 'file_missing', manifest: o.manifestRel, key, file: `${manifest.dir}/${key}`, detail: '' });
+            violations.push({ code: 'worker_scope_violation', sub: 'files_key_added', manifest: o.manifestRel, key, detail: '' });
           }
         }
         for (const bn of diskBasenames) {
-          if (!keySet.has(bn)) {
+          if (!unionKeys.has(bn)) {
+            // 미보유 파일의 라우팅 대상은 베이스다 (U-3) → 베이스에 귀속
             violations.push({ code: 'worker_scope_violation', sub: 'files_key_removed', manifest: manifestRel, key: bn, detail: '' });
           }
         }
 
-        const pkg = manifest.package || null;
-        if (pkg && hasOwn(pkg, 'layer')) {
-          violations.push({ code: 'worker_scope_violation', sub: 'layer_in_manifest', manifest: manifestRel, detail: '' });
+        // 침범 검사 — 베이스 + 각 샤드에 반복 적용
+        checkEntryViolations(manifest, manifestRel);
+        for (const s of (view ? view.shards : [])) {
+          if (s.manifest) checkEntryViolations(s.manifest, s.manifestRel);
         }
-        if (pkg && hasOwn(pkg, 'domain')) {
-          violations.push({ code: 'worker_scope_violation', sub: 'domain_in_manifest', manifest: manifestRel, detail: '' });
-        }
-        for (const [key, fe] of Object.entries(manifestFiles)) {
-          if (fe && hasOwn(fe, 'layer')) {
-            violations.push({ code: 'worker_scope_violation', sub: 'layer_in_manifest', manifest: manifestRel, key, detail: '' });
-          }
-          if (fe && hasOwn(fe, 'domain')) {
-            violations.push({ code: 'worker_scope_violation', sub: 'domain_in_manifest', manifest: manifestRel, key, detail: '' });
-          }
-          if (fe && hasOwn(fe, 'module')) {
-            const stem = deriveStem(key);
-            if (fe.module !== stem) {
-              violations.push({ code: 'worker_scope_violation', sub: 'module_override', manifest: manifestRel, key, detail: String(fe.module) });
-            }
-          }
-        }
+      }
+
+      // Phase C — 미방문 샤드 스윕 (082 F-003 §3.3.2 (E))
+      // 베이스 부재 / shards 미선언 / 라벨 누락 / 중첩 _shards 4상황을 이 1개 규칙이 전부 덮는다.
+      for (const shardAbs of shardPaths) {
+        if (visitedShards.has(shardAbs)) continue;
+        violations.push({
+          code: 'worker_scope_violation', sub: 'shard_undeclared',
+          manifest: toPosixRel(projectRoot, shardAbs),
+          detail: toPosixRel(projectRoot, baseManifestAbsForShard(shardAbs)),
+        });
       }
     }
   }
@@ -2000,12 +2282,14 @@ function cmdValidate(projectRoot, config, opts, mode) {
     worker_scope_violation: violations.filter(v => v.code === 'worker_scope_violation').length,
     newly_uncovered: violations.filter(v => v.code === 'uncovered' && v.sub === 'newly_uncovered').length,
     pre_existing: violations.filter(v => v.code === 'uncovered' && v.sub === 'pre_existing').length,
+    manifest_oversize: violations.filter(v => v.code === 'manifest_oversize').length,
   };
   const covered = inlineCount + manifestCount;
   const percent = totalCount === 0 ? 100 : Math.round((covered / totalCount) * 1000) / 10;
-  // 'uncovered:pre_existing'만 비차단 — 나머지 5종(orphan/conflict/draft/exports_not_found/
-  // worker_scope_violation) + 'uncovered'의 no_entry/incomplete/newly_uncovered 서브는 차단 불변.
-  const blockingViolations = violations.filter(v => !(v.code === 'uncovered' && v.sub === 'pre_existing'));
+  // 'uncovered:pre_existing'과 'manifest_oversize'는 비차단(U-2) — 나머지는 차단 불변.
+  const blockingViolations = violations.filter(v =>
+    !(v.code === 'uncovered' && v.sub === 'pre_existing') &&
+    v.code !== 'manifest_oversize');
   const ok = blockingViolations.length === 0;
 
   const result = {
@@ -2178,3 +2462,14 @@ module.exports = {
 //                       실행당 1회 안내이며, 스코프 include/exclude 파일 집합 필터가 열거·scaffold·
 //                       validate 구조 패스·--changed·target 5지점에 배선됐다. 차단 정책
 //                       (uncovered:pre_existing만 비차단, 그 외 exit 2)은 불변 (080)
+// v1.5.0 — 2026-08-03 13:20 (082) — 매니페스트 샤딩 도입: 베이스 매니페스트가 shards 배열로 예약
+//                       폴더 _shards/ 하위 샤드를 선언하면 resolveShards 1곳이 로딩·byKey 합집합(첫
+//                       승리)·중복 판정을 봉인하고, 미선언 자산은 null을 돌려받아 전 경로가 오늘과
+//                       바이트 동일하게 동작한다(하위호환). decideTarget은 보유 샤드로 라우팅하고
+//                       (reason 3값 도메인 불변, 신규 선택 필드 shard만 추가), validate는 베이스+샤드
+//                       합집합 기준 구조 패스로 재구성되어 orphan:shard_missing·worker_scope_violation:
+//                       shard_dir_mismatch|shard_duplicate_key|reserved_name 서브를 신설했으며,
+//                       scaffold는 샤드 보존·버킷 분배·예약어 충돌(reserved_name_collision, exit 1)을
+//                       집행한다. index.json 최상위 manifestMaxBytes(기본 20480바이트)로 매니페스트
+//                       바이트 상한을 감지하며 전면 비차단(counts.manifest_oversize 열거)이다.
+//                       CODE_MAP_VERSION은 1로 고정 유지 (082)

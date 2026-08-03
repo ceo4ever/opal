@@ -1,0 +1,6 @@
+{
+  "version": 1, "status": "reviewed",
+  "note": "shard-violations/bad-label/uppercase fixture — shards:['Core'] 대문자(kebab 위반) (task 082, S-3/H-9)",
+  "scopes": { "svc": { "root": "svc/", "anchors": [], "stripPrefix": [] } },
+  "domains": {}, "layerRules": [], "exclude": []
+}

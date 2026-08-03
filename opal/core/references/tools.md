@@ -236,6 +236,9 @@ node ~/.opal/tools/code-scan/code-scan.js discover [--out <path>] [--dry-run]
 
 # 패키지 매니페스트 생성/갱신 (멱등 보존 merge, 기존 워커 기입값 유지)
 # inline 모드에서는 no-op — 매니페스트를 만들지 않고 skipped 사유만 보고하며 exit 0이다
+# 베이스가 선언한 샤드(_shards/{label}.json)는 보존·버킷 분배되고, 소스 디렉토리명이 예약 폴더
+# _shards와 겹치면 reserved_name_collision으로 exit 1한다. 매니페스트가 상한(manifestMaxBytes)을
+# 넘으면 stderr 1줄로 알린다(비차단)
 node ~/.opal/tools/code-scan/code-scan.js scaffold [--dry-run]
 
 # 파일의 @header 기록 위치 판정 (전역 headerSource 직결 — 파일 상태·인라인 보유 여부를 보지 않는다)
@@ -243,12 +246,18 @@ node ~/.opal/tools/code-scan/code-scan.js scaffold [--dry-run]
 #   reason   (판정 사유 축) : `header_source_inline` / `header_source_manifest` / `out_of_scope`
 #   두 필드는 서로 다른 축이며 한 목록으로 섞어 나열하지 않는다. 실제 조합은 아래 3쌍으로 닫힌다.
 #     write_to=inline   일 때 reason=header_source_inline
-#     write_to=manifest 일 때 reason=header_source_manifest (이 조합에서만 scope·manifest·key 부가 필드 동반)
+#     write_to=manifest 일 때 reason=header_source_manifest (이 조합에서만 scope·manifest·key 부가 필드 동반,
+#                        보유 샤드가 있으면 manifest가 그 샤드 경로를 가리키고 shard 필드에 라벨이 실린다 —
+#                        보유 샤드가 없으면 베이스로 라우팅되어 shard 필드가 없다)
 #     write_to=none     일 때 reason=out_of_scope (스코프 include/exclude 필터 탈락, 모드 판정보다 먼저)
+#   베이스 매니페스트가 파손돼 있으면 manifest_parse_failed로 exit 1한다(신규 노출 — 이전에는 target이
+#   매니페스트를 읽지 않았다)
 node ~/.opal/tools/code-scan/code-scan.js target <file>
 
 # code-map 무결성 검증 (5종 위반 + 모드별 단일 소스 커버리지, --changed로 영향 범위 한정)
 # uncovered 위반은 git 기준 2분류: newly_uncovered(신규/회귀 — 차단) / pre_existing(레거시 — 비차단, counts만 노출)
+# 샤드 선언 시 구조 검사는 베이스+전 샤드 합집합 기준으로 수행되며, 매니페스트 바이트 상한 초과는
+# counts.manifest_oversize로 열거만 하고 차단하지 않는다(비차단)
 node ~/.opal/tools/code-scan/code-scan.js validate [--changed <csv|->]
 
 # 기능(feature) 태그 기준 cross-scope 조회 (기본 전체 스코프 순회, --scope로 단일 스코프 제한)
@@ -287,6 +296,13 @@ node ~/.opal/tools/code-scan/code-scan.js feature <id> [--scope <name>]
 | `header_source_invalid` | `headerSource` 값이 유효 도메인(`inline`, `manifest`) 밖 — 설정 파일에 폐기된 `auto`가 남아 있으면 `migration` 힌트가 함께 출력된다(자동 변환은 하지 않는다) |
 | `code_scan_config_invalid` | `.opal/code-scan.json` 자체가 파손(파싱 실패·스키마 위반) |
 | `scope_ambiguous` | 스코프 귀속 판정이 모호 — 동률 root에서 둘 이상의 스코프 `include`가 동시에 매칭 |
+
+매니페스트 샤딩(`shards`) 관련 exit 1 에러 코드는 아래 2종이며, 헤더 소스 미해결과 무관하게 매니페스트를 읽는 명령(`scaffold`/`validate`/`target`/조회 8커맨드)에서 개별 발생한다.
+
+| 에러 코드 | 조건 |
+|----------|------|
+| `shard_declaration_invalid` | 베이스 매니페스트의 `shards`가 배열이 아니거나, 라벨이 kebab 정규식 불일치·중복 선언 |
+| `reserved_name_collision` | `scaffold` 대상 소스 디렉토리 이름이 예약 폴더 `_shards`와 충돌 |
 
 ### `uncovered` 2분류 (git 기준)
 
@@ -340,6 +356,32 @@ git을 쓸 수 없는 환경(git 미설치·비git 트리)에서는 전량 `pre_
 | `manifest` | `.opal/code-map/` 매니페스트 4단 상속 (`files` → `package` → `layerRules` → `domains`) | 매니페스트 생성/갱신 | 매니페스트 커버리지만 계상 + 구조 검사 수행. `index.json` 부재 시 결과가 비고 stderr 안내 1줄(비차단) |
 
 두 모드는 상호 배타이므로 인라인·매니페스트를 더한 합산 커버리지는 존재하지 않는다.
+
+**매니페스트 샤딩** (`manifest` 모드 전용)
+
+베이스 매니페스트(`mirrorPathForDir` 산출 경로, 진입점 무변경)가 `shards` 배열로 라벨을 선언하면, 예약 폴더 `_shards/`(`{베이스 경로 stem}/_shards/{label}.json`) 아래로 파일 엔트리를 의미 단위로 분산할 수 있다. 조회·기록 위치·구조 검증은 베이스+전 샤드 합집합을 단일 소스로 취급하며(첫 선언 우선·중복은 위반), `shards`를 선언하지 않은 매니페스트는 오늘과 완전히 동일하게 동작한다(하위호환, 옵트인).
+
+`.opal/code-map/index.json` 최상위 `manifestMaxBytes`(기본 20480바이트)로 매니페스트 파일당 바이트 상한을 프로젝트별로 조정할 수 있다. 상한 초과는 `validate`/`scaffold` 모두 **전면 비차단**(감지·열거·경고만) — `validate`는 `counts.manifest_oversize`에 집계하고 차단 위반에서 제외한다.
+
+```jsonc
+// .opal/code-map/index.json
+{
+  "version": 1,
+  "manifestMaxBytes": 20480,
+  "scopes": { "...": "..." }
+}
+```
+
+```jsonc
+// 베이스 매니페스트 — shards 키 1개만 추가
+{
+  "version": 1,
+  "scope": "svc",
+  "dir": "svc/order-api/src/...",
+  "shards": ["order-core", "order-pricing"],
+  "files": { "...": "..." }
+}
+```
 
 ### PM 관리 방안
 
@@ -930,3 +972,4 @@ bash ~/.opal/tools/tool-scan/run.sh check <도구>               # 설치/실행
 | v2.7 | 2026-07-28 23:28 | code-scan `validate` — `uncovered` 위반 git 기준 2분류(`newly_uncovered` 차단 / `pre_existing` 비차단) 절 신설 + 종료 코드 표에 `pre_existing`-only 시 exit 0 명시 — Step 19에서 CLOSE 게이트가 레거시 파일에 막히던 결함 재작업 (077) |
 | v2.8 | 2026-07-30 | memory-tool `update`에 `--kind history` 정정 경로 반영 — `--stage`/`--result`/`--path` 옵션 추가, 용도 1줄에 히스토리 오기재 정정 명시(FIFO 미적용·행 수 불변, 삭제 아님) (079) |
 | v2.9 | 2026-08-02 14:50 | code-scan 섹션 헤더 소스 단일화 반영 — `target` 판정 주석의 구 4단 표기를 전역 `headerSource` 직결로 교체하고 `write_to` 3값과 `reason` 3값을 축별로 분리 서술(M-2 교정), `--header-source` 옵션 행 추가, 종료 코드 표를 `validate` 전용에서 전 명령 공통으로 확장 + 에러 코드 4종(`header_source_unset`/`header_source_invalid`/`code_scan_config_invalid`/`scope_ambiguous`) 등재, 프로젝트 설정 예시에 `headerSource` + `scopes` 객체형 추가 및 모드별 동작 요약 신설, `scaffold` inline no-op 1줄 추가, `auto` 유효값 서술 제거(폐기 표기만 유지) (080) |
+| v2.10 | 2026-08-03 13:20 | code-scan 섹션 — 매니페스트 샤딩 반영: `scaffold`/`target`/`validate` 커맨드 주석에 `_shards/` 예약 폴더·샤드 라우팅·`manifestMaxBytes` 비차단 상한 서술 추가, 신규 에러 코드 2종(`shard_declaration_invalid`/`reserved_name_collision`) 표 신설, `target`의 신규 실패 표면 `manifest_parse_failed` 명시, §매니페스트 샤딩 서브섹션(`shards` 스키마 + `manifestMaxBytes` 설정 예시) 신설 (082) |

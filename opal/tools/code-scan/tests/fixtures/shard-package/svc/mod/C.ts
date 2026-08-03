@@ -1,0 +1,2 @@
+// fixture: shard-package — pricing 샤드 소유 파일 (task 082)
+export const C = 3;

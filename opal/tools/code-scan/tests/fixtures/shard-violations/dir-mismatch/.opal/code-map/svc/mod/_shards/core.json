@@ -1,0 +1,6 @@
+{
+  "version": 1, "scope": "svc", "dir": "svc/OTHER_DIR",
+  "files": {
+    "A.ts": { "description": "core 샤드 소유 파일 (dir 불일치)", "exports": ["A"] }
+  }
+}

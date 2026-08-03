@@ -1,0 +1,7 @@
+{
+  "version": 1, "scope": "svc", "dir": "svc/mod",
+  "shards": ["../escape"],
+  "files": {
+    "A.ts": { "description": "베이스 소유 파일", "exports": ["A"] }
+  }
+}

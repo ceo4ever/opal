@@ -1,0 +1,6 @@
+{
+  "version": 1, "status": "reviewed",
+  "note": "shard-violations/bad-label/escape fixture — shards:['../escape'] path traversal 시도 (task 082, S-3/H-9)",
+  "scopes": { "svc": { "root": "svc/", "anchors": [], "stripPrefix": [] } },
+  "domains": {}, "layerRules": [], "exclude": []
+}
