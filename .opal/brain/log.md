@@ -267,3 +267,7 @@
 - 신규: [[pages/concept/mitigation-recurs-without-ssot-registration.md]], [[pages/concept/governance-single-owner-rule-mapping.md]], [[pages/concept/anchor-load-condition-must-match-target.md]], [[pages/concept/blind-reproduction-verification-test.md]], [[pages/concept/self-edit-line-anchor-drift.md]]
 - 출처: task:081
 
+## [2026-08-03] ingest | CLOSE ingest — 태스크 082 opds 코드맵 매니페스트 샤딩
+- 신규: [[code-scan-manifest-sharding-design]], [[code-scan-sealed-decision-point-pattern]], [[code-scan-nonblocking-limit-rollout]], [[code-scan-version-constant-freeze]], [[fixture-conflicting-requirements-lesson]]
+- 출처: task:082
+

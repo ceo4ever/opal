@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-08-02 18:09
+> 갱신: 2026-08-03 16:29
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -62,6 +62,10 @@
 - [[code-header-dual-source-inheritance]] — 코드 헤더 이중 소스와 5단 상속 — 인라인 단독 승리 #code-scan #header #architecture
 - [[code-map-write-location-decision]] — 헤더 기록 위치 자동 판정 — 사람이 고르지 않는다 #code-scan #header #architecture
 - [[code-scan-mandatory-policy]] — code-scan 무조건화 규약 — 코드 작업 한정 강제 (010) #code-scan #pm #policy #dispatch
+- [[code-scan-manifest-sharding-design]] — code-scan 매니페스트 샤딩 — 예약 폴더 경로 파생과 옵트인 하위호환 #code-scan #sharding #architecture #task-082
+- [[code-scan-nonblocking-limit-rollout]] — 비차단 상한 도입 원칙 — 새 규칙이 기존 자산을 인질로 잡지 않는다 #code-scan #rollout #backward-compat #task-082
+- [[code-scan-sealed-decision-point-pattern]] — 판정 지점 단일 봉인 패턴 — resolveShards로 3번째 적용 #code-scan #architecture #pattern #task-082
+- [[code-scan-version-constant-freeze]] — 형식 버전 상수 동결 — 형식이 안 바뀌면 올리지 않는다 #code-scan #versioning #backward-compat #task-082
 - [[codex-dispatch-inline-injection]] — Codex tool-backed 워커 디스패치 인라인 주입 규칙 #codex #dispatch #adapter #workaround #platform
 - [[codex-platform-integration]] — Codex CLI OPAL 4번째 플랫폼 통합 #codex #platform #bootstrap #mcp #task
 - [[coding-principles-ssot]] — OPAL Coding Principles SSOT 신설 #framework #principles #ssot #task
@@ -85,6 +89,7 @@
 - [[exports-generation-tool-verification-division]] — 생성은 워커, 검증은 도구 — 비대칭을 이용한 분업 #code-scan #header #architecture
 - [[external-tool-boundary-stub-insufficient-lesson]] — 외부 도구 경계는 스텁만으로 불충분 — 실연동 검증이 통합 결함을 잡는다 #testing #lesson #integration #test-strategy
 - [[fallback-approval-detached-head-precedence]] — detached HEAD 판정은 no-upstream보다 먼저 검사해야 한다 #git #judgment-order #fallback-approval #lesson
+- [[fixture-conflicting-requirements-lesson]] — 픽스처 요구 충돌 — RED 작성 시점 시나리오 간 요구 대조 필요 #lesson #testing #fixture #red-first #task-082
 - [[fixture-vs-real-blind-spot-lesson]] — fixture-vs-real 맹점 — 테스트 픽스처 통과·실데이터 버그 반복 교훈 #lesson #testing #bug #fixture
 - [[governance-single-owner-rule-mapping]] — 규칙 1소유자 매핑 — Governance 중복 기재 방지 설계 #governance #ssot #design-pattern #dispatch
 - [[install-hook-ownership-marker-idempotent-upsert]] — install hook 소유권-마커 멱등 upsert (외부 hook clobber 해소) #install #deploy #hook #idempotent #ownership-marker
