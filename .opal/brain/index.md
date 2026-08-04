@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-08-03 16:29
+> 갱신: 2026-08-04 22:48
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -61,10 +61,16 @@
 - [[cmux-tool-dispatcher-expansion]] — cmux-tool 범용 디스패처 확장 (12+1종 서브명령) #tool #cmux #dispatcher #task
 - [[code-header-dual-source-inheritance]] — 코드 헤더 이중 소스와 5단 상속 — 인라인 단독 승리 #code-scan #header #architecture
 - [[code-map-write-location-decision]] — 헤더 기록 위치 자동 판정 — 사람이 고르지 않는다 #code-scan #header #architecture
+- [[code-scan-classification-ladder-design]] — 자동 분류 5단 사다리 설계 — 임의 배분 금지, 잔여는 unassigned로 #code-scan #classification #pattern #task-083
+- [[code-scan-fixture-policy-override-absorption]] — 기본값 변경의 기존 픽스처 무력화 — 정책 오버라이드로 흡수 #code-scan #testing #pattern #task-082 #task-083
+- [[code-scan-gate-deadlock-init-placement]] — 게이트 순환 안티패턴과 복구 명령 앞배치 해법 #code-scan #architecture #pattern #task-080 #task-083
 - [[code-scan-mandatory-policy]] — code-scan 무조건화 규약 — 코드 작업 한정 강제 (010) #code-scan #pm #policy #dispatch
-- [[code-scan-manifest-sharding-design]] — code-scan 매니페스트 샤딩 — 예약 폴더 경로 파생과 옵트인 하위호환 #code-scan #sharding #architecture #task-082
-- [[code-scan-nonblocking-limit-rollout]] — 비차단 상한 도입 원칙 — 새 규칙이 기존 자산을 인질로 잡지 않는다 #code-scan #rollout #backward-compat #task-082
-- [[code-scan-sealed-decision-point-pattern]] — 판정 지점 단일 봉인 패턴 — resolveShards로 3번째 적용 #code-scan #architecture #pattern #task-082
+- [[code-scan-manifest-sharding-design]] — code-scan 매니페스트 샤딩 — 예약 폴더 경로 파생과 옵트인 하위호환 #code-scan #sharding #architecture #task-082 #task-083
+- [[code-scan-nonblocking-limit-rollout]] — 비차단 상한 도입 원칙 — 새 규칙이 기존 자산을 인질로 잡지 않는다 #code-scan #rollout #backward-compat #task-082 #task-083
+- [[code-scan-opal-home-test-isolation]] — 전역 홈 파일 읽기 테스트 격리 — OPAL_HOME 주입 + 가짜 홈 5종 #code-scan #testing #pattern #task-083
+- [[code-scan-sealed-decision-point-pattern]] — 판정 지점 단일 봉인 패턴 — 080→082→083 3연속 적용 #code-scan #architecture #pattern #task-082 #task-083
+- [[code-scan-split-execution-precedes-block]] — 탐지-집행 격차 원칙 — 해결 경로 없는 강제력은 무의미하다 #code-scan #rollout #pattern #task-082 #task-083
+- [[code-scan-two-axis-threshold-design]] — 2축 임계값 설계 — 바이트+엔트리 수로 오탐 제거 #code-scan #threshold #pattern #task-083
 - [[code-scan-version-constant-freeze]] — 형식 버전 상수 동결 — 형식이 안 바뀌면 올리지 않는다 #code-scan #versioning #backward-compat #task-082
 - [[codex-dispatch-inline-injection]] — Codex tool-backed 워커 디스패치 인라인 주입 규칙 #codex #dispatch #adapter #workaround #platform
 - [[codex-platform-integration]] — Codex CLI OPAL 4번째 플랫폼 통합 #codex #platform #bootstrap #mcp #task
@@ -93,6 +99,7 @@
 - [[fixture-vs-real-blind-spot-lesson]] — fixture-vs-real 맹점 — 테스트 픽스처 통과·실데이터 버그 반복 교훈 #lesson #testing #bug #fixture
 - [[governance-single-owner-rule-mapping]] — 규칙 1소유자 매핑 — Governance 중복 기재 방지 설계 #governance #ssot #design-pattern #dispatch
 - [[install-hook-ownership-marker-idempotent-upsert]] — install hook 소유권-마커 멱등 upsert (외부 hook clobber 해소) #install #deploy #hook #idempotent #ownership-marker
+- [[install-mac-seed-key-loop-generalization]] — install 시드 키별 루프 일반화 — 조기 종료 시드 함정 #install #configuration #pattern #task-083
 - [[installer-version-priority-model]] — 설치기 버전 결정 우선순위 모델 (4종 공통) #version #install #priority #architecture
 - [[json-not-token-saving-format]] — JSON은 토큰 절약 포맷이 아니다 — 절약 원천의 정직한 귀속 #json #token #ssot #measurement #memory
 - [[kanban-current-stage-derivation]] — 칸반 current_stage 파생 규칙 (도달 단계 기준) #opal-console #kanban #pipeline #be-single-source
@@ -173,10 +180,12 @@
 - [[red-test-determinism-abort-trap]] — RED 테스트 결정론성 함정 — neverResolve fetch 대역의 abort 무반응 #testing #red-first #determinism #abort #fetch-mock
 - [[regression-only-coverage-gate]] — 회귀만 차단하는 커버리지 게이트 — 레거시 소급 부여는 게이트의 몫이 아니다 #code-scan #gate #close
 - [[rotating-log-correction-over-deletion]] — 회전 로그는 삭제 대신 정정 — FIFO 히스토리 무손실 가드 설계 #memory #fifo #data-integrity #design-pattern
+- [[round-trip-pre-state-assertion-false-green-guard]] — 왕복 검증 사전 상태 단언 — false green 차단 장치 #testing #pattern #task-083
 - [[scenario-gate-pilot-fit-criteria]] — 목표-커버 게이트 pilot 접합 판정 기준 #scenario-gate #pilot-fit #tool-gated #self-confirming #task-075
 - [[scenario-goal-coverage-gate-loop]] — TEST-SCENARIO 목표-커버리지 루브릭 게이트 루프 — 결정론+판단 분리 #testing #scenario-gate #tool-gated #rubric #opd #task-073 #task-075
 - [[scenario-normalized-contract-pilot-neutral]] — 시나리오 정규화 계약 — pilot-중립 페이로드 설계 #contract #scenario-gate #normalization #multi-pilot #task-073 #task-075
 - [[self-edit-line-anchor-drift]] — 자기 편집 파일의 행번호 앵커는 드리프트한다 #verification #anchor #test-scenario #regression
+- [[shard-policy-block-vs-nonblock-fallback-criterion]] — 미설정 시 차단 vs 비차단 폴백 판정 기준 #code-scan #configuration #backward-compat #task-080 #task-083
 - [[silent-loss-prevention-row-accounting-invariant]] — 무성 유실 차단 — 행 회계 불변식 설계 패턴 #migration #data-integrity #invariant #design-pattern #memory
 - [[skill-op-task-qa]] — op-task-qa — 범용 문서 QA 검증 기준 #skill #qa #document
 - [[skill-opal-agent-creator]] — opal-agent-creator — OPAL 에이전트 생성 파이프라인 #skill #agent #creator

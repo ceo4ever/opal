@@ -43,6 +43,8 @@
 //   v2.0 2026-08-02 KST: 태스크 080 RED 재작성 — 산출물 readonly 0건(TS-032)·headerSource 0건
 //     (TS-071)·include 무추론(보강⑤) 부정 단언 신설, note 문구 갱신 검증 추가, 077 자산 전량 승계
 //     (opal-test-agent mode:red)
+//   v2.1 2026-08-04 KST: run() 헬퍼에 OPAL_HOME 격리 주입 — 실제 홈 setting.json에 결과가 좌우되던
+//     구멍을 닫는다(H-4) (083, opal-task-agent)
 //
 
 'use strict';
@@ -56,9 +58,15 @@ const { spawnSync } = require('node:child_process');
 
 const CODE_SCAN_JS = path.resolve(__dirname, '..', 'code-scan.js');
 const FIX = path.resolve(__dirname, 'fixtures');
+// [MUST] 083부터 code-scan이 ~/.opal/setting.json의 shardPolicy를 읽는다 — OPAL_HOME을 주입하지
+// 않으면 개발자의 실제 홈 설정에 결과가 좌우된다(H-4). HOME_ABSENT는 setting.json이 없는 가짜
+// 홈이라 code-scan이 코드 상수로 폴백해 결정론적 기준선이 된다.
+const HOME_ABSENT = path.join(FIX, 'shard-policy', 'homes', 'absent');
 
 function run(cwd, args) {
-  const result = spawnSync(process.execPath, [CODE_SCAN_JS, ...args], { cwd, encoding: 'utf8', timeout: 10000 });
+  const result = spawnSync(process.execPath, [CODE_SCAN_JS, ...args], {
+    cwd, encoding: 'utf8', timeout: 10000, env: Object.assign({}, process.env, { OPAL_HOME: HOME_ABSENT }),
+  });
   const stdout = result.stdout || '';
   const stderr = result.stderr || '';
   let json = null;

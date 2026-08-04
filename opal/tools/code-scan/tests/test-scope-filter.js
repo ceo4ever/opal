@@ -35,6 +35,7 @@
 //
 // 변경이력:
 //   v1.0 2026-08-02 KST: RED-first 최초 작성 (태스크 080, opal-test-agent mode:red)
+//   v1.1 2026-08-04 KST: run()·runHook() 하네스에 OPAL_HOME 주입(가짜 홈 격리, H-4) (083)
 //
 
 'use strict';
@@ -49,6 +50,10 @@ const { spawnSync } = require('node:child_process');
 const CODE_SCAN_JS = path.resolve(__dirname, '..', 'code-scan.js');
 const HOOK_JS = path.resolve(__dirname, '..', 'code-map-hook.js');
 const FIX = path.resolve(__dirname, 'fixtures');
+
+// [MUST] 083부터 code-scan이 ~/.opal/setting.json의 shardPolicy를 읽는다 — OPAL_HOME을
+// 주입하지 않으면 개발자 실제 홈이 결과에 유입된다(H-4). 기본 격리는 homes/absent(빈 트리).
+const HOME_ABSENT = path.join(FIX, 'shard-policy', 'homes', 'absent');
 
 // mixed-scope 픽스처 계약 (PLAN §3.7.2 확정 구조)
 const SURVIVORS = [
@@ -100,7 +105,7 @@ function setGlobalHeaderSource(dir, value) {
 
 function run(cwd, args) {
   const r = spawnSync(process.execPath, [CODE_SCAN_JS, ...args], {
-    cwd, encoding: 'utf8', timeout: 20000, env: { ...process.env },
+    cwd, encoding: 'utf8', timeout: 20000, env: { ...process.env, OPAL_HOME: HOME_ABSENT },
   });
   const stdout = r.stdout || '';
   const stderr = r.stderr || '';
@@ -112,6 +117,7 @@ function run(cwd, args) {
 function runHook(cwd, payload) {
   const r = spawnSync(process.execPath, [HOOK_JS], {
     cwd, input: JSON.stringify(payload), encoding: 'utf8', timeout: 20000,
+    env: { ...process.env, OPAL_HOME: HOME_ABSENT },
   });
   return { exitCode: r.status, stdout: r.stdout || '', stderr: r.stderr || '' };
 }
@@ -180,8 +186,11 @@ test('[T080/L1-F7] TS-010 (S-4): 문자열 scopes 픽스처 20종이 무수정�
     return values.length > 0 && values.every(v => typeof v === 'string');
   });
 
-  assert.strictEqual(stringScoped.length, 37,
-    `[전제] 기존 문자열 scopes 픽스처는 37종이어야 함(082 shard-package 추가 반영), got ${stringScoped.length}:\n  ${stringScoped.join('\n  ')}`);
+  // 083 신규 픽스처 추가분 2종: shard-policy/base · shard-policy/split-target
+  // (shard-policy/homes/* 4종은 setting.json만 두는 가짜 홈이라 code-scan.json이 없어 계수에 들지 않는다.
+  //  axis-*·precedence·legacy-index 변형은 테스트가 base/를 복사해 런타임에 파생하므로 정적 픽스처가 없다.)
+  assert.strictEqual(stringScoped.length, 39,
+    `[전제] 기존 문자열 scopes 픽스처는 39종이어야 함(082 shard-package + 083 shard-policy 2종 추가 반영), got ${stringScoped.length}:\n  ${stringScoped.join('\n  ')}`);
 
   const failures = [];
   for (const cfgAbs of stringScoped) {

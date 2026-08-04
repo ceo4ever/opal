@@ -53,12 +53,32 @@
 // mock 금지 — 어떤 케이스도 code-scan/brain-tool의 내부 함수를 스텁하지 않는다.
 // 픽스처·골든은 수정하지 않는다(읽기 전용). TS-045만 임시 트리를 만들고 종료 시 파기한다.
 //
+// ─────────────────────────────────────────────────────────────────────────────
+// [메타테스트 재귀 가드 규약 — 3파일 공통, 동일 문구] (083)
+//   가드 환경변수: `CODE_SCAN_META_CHILD` — 유일한 규약이다. 새 이름을 만들지 않는다.
+//   대상: 전 스위트를 재실행하는 "메타테스트" 3종
+//         test-shard-policy.js TS-080 · test-regression.js TS-062 · test-shard.js S-19
+//   ① 각 메타테스트는 함수 진입부에서 `process.env.CODE_SCAN_META_CHILD === '1'`이면 본문을
+//      수행하지 않고 즉시 `return`한다(= 통과 처리). 자식 프로세스에서는 메타테스트를 돌리지 않는다.
+//   ② 각 메타테스트가 자식 스위트를 `spawnSync`할 때 `env`에 `CODE_SCAN_META_CHILD='1'`을 주입한다.
+//      기존 `NODE_TEST_CONTEXT`/`NODE_TEST_WORKER_ID` 제거와 `OPAL_HOME` 관련 주입은 그대로 보존한다.
+//   ③ 근거: 가드가 세 메타테스트 중 하나에만 걸려 있으면 서로를 재실행해 타임아웃 예산이 곱해져
+//      발산한다(083 Step 11 실측 — TS-080 370,651ms/상한 60초, TS-062·S-19 상한 정각 초과).
+//      상한 상향은 처방이 아니다 — 가드를 한 종으로 통일해 곱셈을 끊는 것이 처방이다.
+//   ④ 네 번째 메타테스트를 추가할 때도 이 규약을 그대로 따른다. 가드 경로에 `skip`·`todo` 마킹을
+//      쓰지 않는다(TS-085의 "skip·todo 0건" 감사와 충돌하며, 단언 완화로 오인된다).
+// ─────────────────────────────────────────────────────────────────────────────
+//
 // 변경이력:
 //   v1.0 2026-07-28 KST: RED-first 최초 작성 (태스크 077, opal-test-agent mode:red)
 //   v2.0 2026-08-02 KST: 태스크 080 RED 재작성 — 077 TS-055 gitignore 단언 반전(TS-046/047),
 //     문서 산출물 검사를 신 3값 도메인 기준으로 재고정(TS-050~055/067/068), `auto` 자산 잔존
 //     0건(TS-066), 모드 판정 지점 화이트리스트 봉인(TS-070) 신설, brain-tool 무수정 전달(TS-045),
 //     골든 바이트 동일·픽스처 계약(TS-060~064) 이전 (opal-test-agent mode:red)
+//   v2.1 2026-08-04 KST: 공용 `run()` 헬퍼에 `OPAL_HOME` 주입(가짜 홈 격리, H-4, 태스크 083)
+//   v2.2 2026-08-04 18:06 KST: TS-062 재귀 가드를 공통 규약 `CODE_SCAN_META_CHILD`로 일원화 (083)
+//     — 구 `T080_SUITE_CHILD`(이 파일 단독 규약)를 폐기하고 위 규약 ①②를 적용. `skip:` 옵션 →
+//     함수 진입부 조기 return으로 교체(규약 ④, 스킵 표기 증가 방지). 단언 삭제·완화 0건
 //
 
 'use strict';
@@ -79,9 +99,15 @@ const REPO_ROOT = path.resolve(TOOL_DIR, '..', '..', '..'); // opal/tools/code-s
 const CORE_REF = path.join(REPO_ROOT, 'opal', 'core', 'references');
 const DOCS = path.join(REPO_ROOT, 'docs');
 const BRAIN_TOOL_PY = path.join(REPO_ROOT, 'opal', 'tools', 'brain-tool', 'brain_tool.py');
+// [MUST] 083부터 code-scan이 ~/.opal/setting.json(샤드 정책)을 읽는다 — OPAL_HOME을 주입하지
+// 않으면 개발자 실제 홈이 결과에 유입된다(H-4). 기본 격리는 homes/absent(setting.json 없음 → 코드 상수 폴백).
+const HOME_ABSENT = path.join(FIX, 'shard-policy', 'homes', 'absent');
 
 function run(cwd, args) {
-  const result = spawnSync(process.execPath, [CODE_SCAN_JS, ...args], { cwd, encoding: 'utf8', timeout: 20000 });
+  const result = spawnSync(process.execPath, [CODE_SCAN_JS, ...args], {
+    cwd, encoding: 'utf8', timeout: 20000,
+    env: Object.assign({}, process.env, { OPAL_HOME: HOME_ABSENT }),
+  });
   return { exitCode: result.status, stdout: result.stdout || '', stderr: result.stderr || '' };
 }
 
@@ -570,9 +596,10 @@ test('[T080/L2-완료기준] TS-063 (S-16): 픽스처 전량(20종 이상)이 he
   assert.deepStrictEqual(invalid, [], 'auto 제거 후 픽스처 값은 inline|manifest 2택뿐이다');
 });
 
-test('[T080/L2-완료기준] TS-062 (S-16): 전체 테스트 스위트가 전량 pass하고 exit 0', {
-  skip: process.env.T080_SUITE_CHILD === '1' ? '자기 재귀 방지 — 자식 스위트 실행에서는 건너뛴다' : false,
-}, () => {
+test('[T080/L2-완료기준] TS-062 (S-16): 전체 테스트 스위트가 전량 pass하고 exit 0', () => {
+  // 재귀 가드 규약 ① (파일 상단 규약 참조) — 이 프로세스 자체가 다른 메타테스트의 자식이면
+  // 본 메타테스트를 수행하지 않고 통과 처리한다. skip/todo 마킹 대신 조기 return을 쓴다(규약 ④).
+  if (process.env.CODE_SCAN_META_CHILD === '1') return;
   const files = fs.readdirSync(__dirname)
     .filter(f => f.startsWith('test-') && f.endsWith('.js'))
     .map(f => path.join(__dirname, f))
@@ -580,7 +607,8 @@ test('[T080/L2-완료기준] TS-062 (S-16): 전체 테스트 스위트가 전량
   assert.ok(files.length >= 10, `테스트 파일이 10종 이상이어야 함, got ${files.length}`);
   // node --test는 테스트 파일을 자식 프로세스로 돌리며 NODE_TEST_CONTEXT를 심는다. 이 값을 물려주면
   // 손자 러너가 "테스트 자식"으로 오인해 즉시 exit 0으로 빠져나가 검사가 무력화된다 — 반드시 제거한다.
-  const childEnv = Object.assign({}, process.env, { T080_SUITE_CHILD: '1' });
+  // 재귀 가드 규약 ② — 자식 스위트의 메타테스트(TS-080·S-19)를 무동작시킨다.
+  const childEnv = Object.assign({}, process.env, { CODE_SCAN_META_CHILD: '1' });
   delete childEnv.NODE_TEST_CONTEXT;
   const r = spawnSync(process.execPath, ['--test', ...files], {
     cwd: REPO_ROOT, encoding: 'utf8', timeout: 300000, env: childEnv,
@@ -905,7 +933,8 @@ test('077 TS-057: tests/ 전 테스트 파일이 @header를 보유하고 code-sc
     const key = Object.keys(json).find(p => p.endsWith(`tests/${f}`));
     if (!key) { problems.push(`${f}: scan 결과 미검출`); continue; }
     if (json[key].layer !== 'test') problems.push(`${f}: layer=${json[key].layer}`);
-    if (!['077', '080', '082'].includes(String(json[key].task))) problems.push(`${f}: task=${json[key].task}`);
+    // 허용 태스크 번호는 테스트 자산을 신설한 태스크만 누적한다 (083: test-shard-policy.js 신설).
+    if (!['077', '080', '082', '083'].includes(String(json[key].task))) problems.push(`${f}: task=${json[key].task}`);
     if (!Array.isArray(json[key].scenarios) || json[key].scenarios.length === 0) problems.push(`${f}: scenarios 없음`);
   }
   assert.deepStrictEqual(problems, [], '테스트 파일도 @header 자산이다 (header-standard.md §3)');

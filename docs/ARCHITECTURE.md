@@ -79,7 +79,7 @@ OPAL은 2-레이어 아키텍처로 동작한다.
 | `agents/` | 서브에이전트 12개 (전문 7 + 범용 4 + 도구성 1) |
 | `community-skills/` | 커뮤니티 스킬 — clone-copy(git)로 사용자가 온디맨드 설치 (검색은 `npx skills find`). 사용자 등록분 `user-registry.json` 포함, install 불가침 |
 | `references/` | 레지스트리 (skills.md, agents.md, mcps.md, opal-harness.md, opal-doc-standard.md, tools.md) |
-| `tools/` | CLI 도구 (skill-registry/, xlsx-tool/, tool-scan/ — capability 검색·live 사용법, memory-tool/ — 메모리 인덱스·히스토리 결정론적 집행·docs/brain 졸업 워크플로우, code-scan/ — @header 조회 + **헤더 작성층**(discover/scaffold/target/validate·인라인 및 `.opal/code-map/` 2소스). 기록 소스는 `.opal/code-scan.json`의 전역 `headerSource`(`inline`\|`manifest`) 단일 키가 결정하며 미설정 시 전 명령 차단. 매니페스트는 예약 폴더 `_shards/` 아래 **의미 단위 샤드로 분산** 가능하며(베이스가 `shards` 라벨 배열로 선언, 미선언 자산은 무변경), `index.json` 최상위 `manifestMaxBytes`(기본 20480)로 **파일당 크기 상한을 비차단 열거**한다, check-env.js, requirements.txt) |
+| `tools/` | CLI 도구 (skill-registry/, xlsx-tool/, tool-scan/ — capability 검색·live 사용법, memory-tool/ — 메모리 인덱스·히스토리 결정론적 집행·docs/brain 졸업 워크플로우, code-scan/ — @header 조회 + **헤더 작성층**(discover/scaffold/target/validate·인라인 및 `.opal/code-map/` 2소스) + **샤드 분할층**(`split --plan`/`--groups`, `init`). 기록 소스는 `.opal/code-scan.json`의 전역 `headerSource`(`inline`\|`manifest`) 단일 키가 결정하며 미설정 시 전 명령 차단(`init`으로 초안 생성). 매니페스트는 예약 폴더 `_shards/` 아래 **의미 단위 샤드로 분산** 가능하며(베이스가 `shards` 라벨 배열로 선언, 미선언 자산은 무변경), 과대 매니페스트는 `shardPolicy`(프로젝트 `.opal/code-scan.json` > 전역 `~/.opal/setting.json` > 코드 상수 3단 우선순위, 셀 단위 머지)의 **바이트 초과 AND 엔트리 수 이상 2축**으로 비차단 열거되며 `split --plan`(5단계 제안 사다리) → `--groups`(원자적 집행)로 분할하며, `--plan`은 `op-data-dictionary` 산출물(표준단어사전.md)을 **읽기 전용·옵셔널**로 대조한다(부재 시 건너뜀 — code-scan이 `.opal/` 밖 문서를 읽는 첫 사례). 구 위치 `index.json`의 `manifestMaxBytes`는 값을 읽지 않고 안내만 한다, check-env.js, requirements.txt) |
 | `.venv/` | Python 가상환경 (openpyxl, pandas, playwright 등 — requirements.txt로 관리) |
 | `templates/` | 프로젝트 에이전트 템플릿 |
 
@@ -399,6 +399,7 @@ opal/                                    ← 이 저장소
 
 | 날짜 | 변경 내용 |
 |------|----------|
+| 2026-08-04 | tools/ 표 code-scan 행에 샤드 정책 확장 반영 — `split`(제안 `--plan`/집행 `--groups`)·`init`(비대화형 설정 초안) 서브명령 신설(13→15), 과대 매니페스트 판정을 `shardPolicy` 3단 우선순위(프로젝트 > 전역 `~/.opal/setting.json` > 코드 상수, 셀 단위 머지) 기반 **바이트 초과 AND 엔트리 수 이상 2축**(비차단)으로 정교화, `split --plan`의 5단계 제안 사다리 + `op-data-dictionary` 표준단어사전.md 옵셔널·읽기 전용 대조(code-scan이 `.opal/` 밖 문서를 읽는 첫 사례) 반영, 구 위치 `manifestMaxBytes` 폐기 안내. code-scan v1.6.0 (Task 083) |
 | 2026-08-03 | tools/ 표 code-scan 행에 매니페스트 샤딩 반영 — 예약 폴더 `_shards/` 의미 단위 분산(베이스 `shards` 라벨 배열 선언, `resolveShards` 1곳 봉인, 미선언 자산 바이트 동일 하위호환) + `index.json` 최상위 `manifestMaxBytes` 파일당 크기 상한 비차단 열거. code-scan v1.5.0 (Task 082) |
 | 2026-08-02 | tools/ 표 code-scan 행에 헤더 소스 단일화 반영 — 기록 소스를 `.opal/code-scan.json` 전역 `headerSource`(`inline`\|`manifest`) 단일 키가 결정하고 스코프별 오버라이드를 제거, 미설정·무효값 시 전 명령 차단. `readonly` 스코프 플래그 폐기 (Task 080) |
 | 2026-07-17 | 전문 에이전트 표에 opal-loop-action-agent 행 추가 — oppl Loop 2 루프 액션 에이전트, PM→루프 액션 에이전트→워커 계층 반영 (Task 065) |

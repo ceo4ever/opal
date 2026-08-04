@@ -4,9 +4,9 @@
  *   "module": "code-scan",
  *   "layer": "util",
  *   "domain": "code-scan",
- *   "description": "OPAL @header 메타블록 스캐너 CLI — 코드 파일의 인라인/code-map @header를 파싱해 도메인·레이어·의존관계를 조회하고, discover/scaffold/target/validate/feature 5서브명령으로 code-map 헤더 작성층(외부 매니페스트 기반 상속·워커 권한 경계 집행·uncovered 2분류)을 관리한다. headerSource는 inline|manifest 2택 전역 단일 키이며, resolveHeaderSource가 CLI --header-source > 전역 config 2층으로 실행당 1회 판정해 미설정·무효값이면 전 명령을 차단한다. 확정된 모드는 조회·작성·검증 전 경로를 직접 지배한다 — resolveHeader는 inline이면 인라인 단독, manifest면 files>package>layerRules>domains 4단만 보고(index.json 부재는 stderr 1줄 비차단), decideTarget은 파일 상태를 보지 않고 모드에서 write_to/reason을 직결하며, scaffold는 inline에서 매니페스트를 만들지 않고 skipped 사유만 보고하고, validate는 모드별 단일 소스 커버리지(합산 폐기)와 구조 패스 분기를 적용해 결과에 모드를 실어 보낸다. 두 스코프 레지스트리(code-scan.json의 path 축약·객체형 / code-map index.json의 root)는 normalizeConfigScope·normalizeIndexScope가 {root, include, exclude} 단일 내부 형태로 정규화하고, 파일 집합 필터 판정은 isInScope 1곳에, 소속 스코프 판정은 resolveScopeIn(최장 root > include 매칭 > 사전순, 동률 include 경합은 scope_ambiguous) 1곳에 봉인한다. 그 필터는 열거(discoverFiles)·scaffold 열거(collectDirsWithCodeFiles)·validate 구조 패스(listCodeFilesInDir)·validate --changed·target(decideTarget) 5지점에 배선되며, target은 isFilteredOutOfScope를 경유해 필터 탈락 파일에 {write_to:'none', reason:'out_of_scope'}를 exit 0으로 돌려준다. scan <file> 명시 경로만 필터 면제다. 베이스 매니페스트는 예약 폴더 _shards/ 아래에 의미 단위 샤드로 분산될 수 있다 — 베이스가 shards 배열로 라벨을 선언하면 resolveShards 1곳이 조회·기록 위치·구조 검증 경로 전체의 샤드 해석(로딩·byKey 합집합·중복 판정)을 봉인하고, 미선언 자산에서는 null을 돌려 오늘과 동일하게 동작한다(하위호환). index.json 최상위 manifestMaxBytes(기본 20480바이트)로 매니페스트 바이트 상한을 비차단 감지·열거한다",
+ *   "description": "OPAL @header 메타블록 스캐너 CLI — 코드 파일의 인라인/code-map @header를 파싱해 도메인·레이어·의존관계를 조회하고, discover/scaffold/target/validate/feature 5서브명령으로 code-map 헤더 작성층(외부 매니페스트 기반 상속·워커 권한 경계 집행·uncovered 2분류)을 관리한다. headerSource는 inline|manifest 2택 전역 단일 키이며, resolveHeaderSource가 CLI --header-source > 전역 config 2층으로 실행당 1회 판정해 미설정·무효값이면 전 명령을 차단한다. 확정된 모드는 조회·작성·검증 전 경로를 직접 지배한다 — resolveHeader는 inline이면 인라인 단독, manifest면 files>package>layerRules>domains 4단만 보고(index.json 부재는 stderr 1줄 비차단), decideTarget은 파일 상태를 보지 않고 모드에서 write_to/reason을 직결하며, scaffold는 inline에서 매니페스트를 만들지 않고 skipped 사유만 보고하고, validate는 모드별 단일 소스 커버리지(합산 폐기)와 구조 패스 분기를 적용해 결과에 모드를 실어 보낸다. 두 스코프 레지스트리(code-scan.json의 path 축약·객체형 / code-map index.json의 root)는 normalizeConfigScope·normalizeIndexScope가 {root, include, exclude} 단일 내부 형태로 정규화하고, 파일 집합 필터 판정은 isInScope 1곳에, 소속 스코프 판정은 resolveScopeIn(최장 root > include 매칭 > 사전순, 동률 include 경합은 scope_ambiguous) 1곳에 봉인한다. 그 필터는 열거(discoverFiles)·scaffold 열거(collectDirsWithCodeFiles)·validate 구조 패스(listCodeFilesInDir)·validate --changed·target(decideTarget) 5지점에 배선되며, target은 isFilteredOutOfScope를 경유해 필터 탈락 파일에 {write_to:'none', reason:'out_of_scope'}를 exit 0으로 돌려준다. scan <file> 명시 경로만 필터 면제다. 베이스 매니페스트는 예약 폴더 _shards/ 아래에 의미 단위 샤드로 분산될 수 있다 — 베이스가 shards 배열로 라벨을 선언하면 resolveShards 1곳이 조회·기록 위치·구조 검증 경로 전체의 샤드 해석(로딩·byKey 합집합·중복 판정)을 봉인하고, 미선언 자산에서는 null을 돌려 오늘과 동일하게 동작한다(하위호환). 분할 판정은 shardPolicy 2축(바이트 초과 AND 엔트리 수 이상)이며 resolveShardPolicy 1곳이 프로젝트 code-scan.json > 전역 setting.json > 코드 상수(10240/40) 3단을 셀 단위로 병합해 실행당 1회 확정한다 — 전면 비차단이고 초과 열거에 권고 조각 수·다음 명령을 실어 보낸다. split 서브명령이 분할을 제안(--plan: 5단 사다리 S1~S5 + 표준단어사전 대조, 무쓰기)하고 집행(--groups: 사전 불변식 → tmp 전량 작성 → rename 커밋 → 사후 재검증, 엔트리 유실 0건)하며, init 서브명령은 headerSource 미설정 순환을 끊는 비대화형 설정 초안 창구다",
  *   "exports": ["mirrorPathForDir", "decideTarget", "loadCodeMap", "loadConfig", "findProjectRoot", "resolveScope", "matchLayerRule", "matchDomain", "resolveHeader", "extractHeader"],
- *   "note": "code-scan.js 자신은 프로젝트 .opal/code-map/index.json 부재로 인라인 전용 모드로 스캔됨 (태스크 077). 모드 판정 지점은 resolveHeaderSource 1곳으로 봉인되며, 허용 3구간(resolveHeaderSource/loadConfig/parseArgs) 밖에서는 확정값을 ctx.headerSource 읽기·buildCtx 파라미터 전달 형태로만 다룬다 — 중간 전달 변수명은 mode다 (태스크 080 TS-070). 스코프 단위 모드 선언 키는 존재하지 않는다 — 두 레지스트리 모두 해당 키를 무시하고 deprecationOnce로 키별 실행당 1회만 stderr 안내한다 (태스크 080 F-002). index.json에서 폐기된 스코프 단위 쓰기금지 플래그도 같은 방식으로 무시 + 안내되며 다른 모드로 흡수하지 않는다 — 기록 소스는 오직 전역 headerSource가 결정하므로 스코프 단위 예외 판정 분기는 존재하지 않는다 (태스크 080 F-004). 두 소스는 모드에 의해 상호 배타이므로 '인라인 단독 승리' 같은 병합 규칙이 존재하지 않으며, decideTarget의 reason 도메인은 header_source_inline / header_source_manifest / out_of_scope 3값으로 닫힌다 — 파일 존재 여부·인라인 보유 여부는 판정에 관여하지 않는다 (태스크 080 F-003). 매니페스트 샤딩(태스크 082): 샤드 로딩·byKey 구성·중복 판정은 resolveShards 밖에 복제하지 않는다. CODE_MAP_VERSION은 1로 고정 유지되며(샤드 미선언 매니페스트 포맷 불변, 상향 시 기존 전 자산이 unsupported_version으로 차단됨), 샤드 라벨은 kebab 정규식으로 집행되어 경로 이탈을 차단한다(shard_declaration_invalid). 예약 폴더명과 겹치는 소스 디렉토리는 scaffold가 reserved_name_collision으로 거부한다. 크기 상한 초과는 validate/scaffold 모두 전면 비차단(열거·경고 1단)이다"
+ *   "note": "code-scan.js 자신은 프로젝트 .opal/code-map/index.json 부재로 인라인 전용 모드로 스캔됨 (태스크 077). 모드 판정 지점은 resolveHeaderSource 1곳으로 봉인되며, 허용 3구간(resolveHeaderSource/loadConfig/parseArgs) 밖에서는 확정값을 ctx.headerSource 읽기·buildCtx 파라미터 전달 형태로만 다룬다 — 중간 전달 변수명은 mode다 (태스크 080 TS-070). 스코프 단위 모드 선언 키는 존재하지 않는다 — 두 레지스트리 모두 해당 키를 무시하고 deprecationOnce로 키별 실행당 1회만 stderr 안내한다 (태스크 080 F-002). index.json에서 폐기된 스코프 단위 쓰기금지 플래그도 같은 방식으로 무시 + 안내되며 다른 모드로 흡수하지 않는다 — 기록 소스는 오직 전역 headerSource가 결정하므로 스코프 단위 예외 판정 분기는 존재하지 않는다 (태스크 080 F-004). 두 소스는 모드에 의해 상호 배타이므로 '인라인 단독 승리' 같은 병합 규칙이 존재하지 않으며, decideTarget의 reason 도메인은 header_source_inline / header_source_manifest / out_of_scope 3값으로 닫힌다 — 파일 존재 여부·인라인 보유 여부는 판정에 관여하지 않는다 (태스크 080 F-003). 매니페스트 샤딩(태스크 082): 샤드 로딩·byKey 구성·중복 판정은 resolveShards 밖에 복제하지 않는다. CODE_MAP_VERSION은 1로 고정 유지되며(샤드 미선언 매니페스트 포맷 불변, 상향 시 기존 전 자산이 unsupported_version으로 차단됨), 샤드 라벨은 kebab 정규식으로 집행되어 경로 이탈을 차단한다(shard_declaration_invalid). 예약 폴더명과 겹치는 소스 디렉토리는 scaffold가 reserved_name_collision으로 거부한다. 크기 상한 초과는 validate/scaffold 모두 전면 비차단(열거·경고 1단)이다. 샤드 정책 확장(태스크 083): 정책 판정은 resolveShardPolicy 밖에 복제하지 않으며 DEFAULT_SHARD_POLICY·loadGlobalSetting도 그 함수 본문 밖에서 참조하지 않는다. 구 위치 index.json manifestMaxBytes는 폐기되어 값을 읽지 않고 deprecationOnce 안내만 한다(자동 변환 없음). 표준단어사전은 옵셔널이며 부재·파싱 실패·매칭 0건 3분기가 전부 비차단이다 — 부재는 침묵, 파손은 noticeOnce 1줄이고, loadWordDictionary 호출은 split --plan 경로 1곳뿐이라 조회 8커맨드의 출력 바이트가 흔들리지 않는다. split은 자산을 쓰는 유일한 명령이므로 실패 지점별로 쓰기 상태가 다른 에러 코드 7종(split_usage_invalid/split_inline_mode/split_target_invalid/split_groups_invalid/split_write_failed/split_rollback/split_verify_failed)을 갖고, 사후 재검증은 resolveShards를 비운 캐시로 다시 호출해 해석 로직을 복제하지 않는다. 의미 경계(그룹 라벨·파일 배분) 확정은 사람/워커의 몫이며 도구는 미분류를 임의 배분하거나 '기타' 그룹을 만들지 않는다"
  * }
  */
 // code-scan — OPAL @header metadata scanner
@@ -28,13 +28,14 @@
 
 const fs = require('fs');
 const path = require('path');
+const os = require('os');
 const { spawnSync } = require('child_process');
 
 // ═══════════════════════════════════════════
 // Constants
 // ═══════════════════════════════════════════
 
-const VERSION = '1.5.0';
+const VERSION = '1.6.0';
 const HEADER_READ_BYTES = 8192;
 
 const DEFAULT_CONFIG = {
@@ -42,7 +43,8 @@ const DEFAULT_CONFIG = {
   extensions: ['.py', '.js', '.ts', '.vue', '.jsx', '.tsx', '.svelte', '.kt', '.kts', '.java', '.swift'],
   exclude: ['node_modules', '__pycache__', '.git', 'dist', 'build', '.venv', 'env', '.next', '.nuxt', '.output'],
   excludePatterns: [],
-  headerSource: null
+  headerSource: null,
+  shardPolicy: {}
 };
 
 // headerSource 값 도메인 — 2택. 구형 값은 남기지 않는다 (080 D-3).
@@ -50,6 +52,11 @@ const HEADER_SOURCE_VALUES = ['inline', 'manifest'];
 const HEADER_SOURCE_DOC = '~/.opal/references/header-standard.md §7';
 // 제거된 구형 값. 마이그레이션 안내를 위해 **이 1개소에서만** 식별한다 (080 D-3 / TS-066).
 const HEADER_SOURCE_LEGACY = 'auto';
+
+// 복구 경로 안내 (083 F-012 (I)) — 차단 동작은 불변이고 문구만 보강한다.
+// 도구는 명령 문자열을 제시할 뿐 자동 복구·자동 재실행을 하지 않는다.
+const INIT_CREATE_FIX = ' 또는 code-scan init --header-source <inline|manifest> --write 로 설정 파일을 생성하세요';
+const INIT_RECOVERY_FIX = ' 설정을 새로 만들려면: code-scan init --header-source <inline|manifest> --write --force';
 
 // ─────────────────────────────────────────────────────────────────────────
 // code-map constants (F-001) — external @header source (2소스 중 두번째)
@@ -67,7 +74,43 @@ const CODE_LAYER_STANDARD = ['router', 'controller', 'service', 'repository', 'm
 // ── shard constants (082) ────────────────────────────────────────────────
 const SHARDS_DIR = '_shards';                              // 예약 폴더명 (확정 방향 #2)
 const SHARD_LABEL_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;       // 사람이 읽는 kebab 라벨 (확정 방향 #8)
-const DEFAULT_MANIFEST_MAX_BYTES = 20480;                  // 20 KiB (U-1)
+
+// ── shard policy constants (083) ─────────────────────────────────────────
+// [MUST] 이 상수는 resolveShardPolicy 본문 밖에서 참조하지 않는다 — 정책 판정 1곳 봉인(제약 ③).
+const DEFAULT_SHARD_POLICY = Object.freeze({ maxBytes: 10240, minFiles: 40, dictPath: null });
+// 키별 타입 — 값 타입이 섞이므로(정수 2 + 경로 1) 키 배열이 아니라 스키마 표로 둔다
+const SHARD_POLICY_SCHEMA = Object.freeze({
+  maxBytes: 'positiveInt',      // 바이트 상한
+  minFiles: 'positiveInt',      // 엔트리 수 하한
+  dictPath: 'nonEmptyString',   // 표준단어사전 명시 경로 (선택, 탐색 3단의 1순위)
+});
+const SHARD_POLICY_KEYS = Object.keys(SHARD_POLICY_SCHEMA);   // 알 수 없는 키는 무시
+const SHARD_TARGET_RATIO = 0.75;                      // 조각 목표 = 상한 × 비율 (확정 방향 #9)
+const OPAL_HOME_ENV = 'OPAL_HOME';                    // 홈 경로 주입 창구 (U-7)
+
+// ── 용어사전 상수 (083 F-011) ─────────────────────────────────────────────
+const DICT_FILENAME = '표준단어사전.md';
+// [주의] op-data-dictionary/SKILL.md가 자기모순이다(H-19):
+//   :21  → default `200.설계/210.사전/`
+//   :72·:172 → `{설계}/사전/` (= `200.설계/사전/`)
+// 어느 쪽이든 발견되도록 **두 후보를 순서대로** 본다. 새 규칙을 만드는 것이 아니라
+// 문서가 말하는 두 경로를 모두 존중하는 것이다.
+const DICT_DEFAULT_RELS = Object.freeze([
+  `200.설계/사전/${DICT_FILENAME}`,
+  `200.설계/210.사전/${DICT_FILENAME}`,
+]);
+const DICT_MAX_BYTES = 2 * 1024 * 1024;               // 거대 파일로 도구가 멈추지 않게 하는 상한 (H-17)
+
+// ── 분할 제안 사다리 (083 F-004, U-2 (3)) — 내장 고정. 설정 노출은 후속 이관 ──
+const SHARD_PLAN_LADDER = Object.freeze([
+  Object.freeze({ id: 'S1', signal: 'first-token', dict: true,  accept: 2 }),
+  Object.freeze({ id: 'S2', signal: 'first-two',   dict: true,  accept: 2 }),
+  Object.freeze({ id: 'S3', signal: 'any-token',   dict: true,  accept: 2 }),
+  Object.freeze({ id: 'S4', signal: 'last-token',  dict: false, accept: 3 }),
+  Object.freeze({ id: 'S5', signal: 'depends',     dict: false, accept: 3 }),
+]);
+const SHARD_PLAN_STAGE_IDS = SHARD_PLAN_LADDER.map(s => s.id);
+const SPLIT_TMP_SUFFIX = '.tmp-split';   // [MUST] '.json'으로 끝나지 않는다 — listManifestFiles 오인 방지
 
 const USAGE = `
 code-scan v${VERSION} — OPAL @header metadata scanner
@@ -83,10 +126,12 @@ Commands:
   summary               Project overview by domain/layer
   depends <module>      Show dependency relationships
   missing               List files without @header
+  init                   Draft .opal/code-scan.json (--header-source required; --write, --force)
   discover               Infer a draft .opal/code-map/index.json (--out, --dry-run)
   scaffold               Create/update package manifests under .opal/code-map/
   target <file>          Decide where a file's @header should be written
   validate               Check code-map integrity (5 violation kinds, coverage)
+  split <manifest>       Propose (--plan) or apply (--groups) a manifest split
   feature <id>            Cross-scope lookup by feature tag
 
 Options:
@@ -99,8 +144,25 @@ Options:
   --exclude <patterns>  Exclude file patterns (comma-separated)
                         e.g., --exclude "__init__.py,test_*,*.spec.ts"
   --out <path>          discover: draft output path (default: .opal/code-map/index.json)
-  --dry-run             discover/scaffold: compute without writing
+                        split --plan: groups document output path
+  --dry-run             discover/scaffold/split: compute without writing
+  --write               init: write .opal/code-scan.json (default: stdout draft only)
+  --force               init: overwrite an existing config (backs it up to *.json.bak)
   --changed <csv|->     validate: limit to a comma list or stdin newline list
+  --plan                split: propose shard groups (writes nothing but --out)
+  --groups <path|->     split: apply a groups document (file path or stdin)
+  --trace               split --plan: per-stage ladder table
+  --stop-after <Sn>     split --plan: stop the ladder after S1..S5
+
+Split (manifest mode only):
+  code-scan split <manifest> --plan --out <groups.json>     1) propose
+  (edit groups.json — labels/files are the owner's call)    2) decide
+  code-scan split <manifest> --groups <groups.json> --dry-run   3) rehearse
+  code-scan split <manifest> --groups <groups.json>             4) apply
+
+  Shard policy (2-axis: bytes AND entry count) is read from
+  {project}/.opal/code-scan.json "shardPolicy" > ~/.opal/setting.json > built-in
+  defaults (maxBytes 10240, minFiles 40).
   --brief               One-line summary (default)
   --full                Full header JSON
   --json                Raw JSON for piping
@@ -161,9 +223,16 @@ function parseArgs(argv) {
     headerSource: null,   // CLI 원문 그대로 담기만 한다 — 유효성 판정은 resolveHeaderSource가 한다
   };
 
-  opts.discoverOut = null;
+  // discover 초안 출력 경로이자 split --plan groups 문서 출력 경로 — 플래그를 새로 만들지 않는다 (083 F-004)
+  opts.out = null;
   opts.dryRun = false;
   opts.changed = null;
+  opts.write = false;    // init: 기본은 쓰기 0건 (안전 기본값)
+  opts.force = false;    // init: 기존 파일 덮어쓰기 (1세대 .bak 백업)
+  opts.plan = false;     // split: 제안 모드 (--groups와 배타)
+  opts.groups = null;    // split: 집행 모드 groups 문서 경로 ('-'면 stdin)
+  opts.trace = false;    // split --plan: 단계별 검토 표 (검토 장치 1)
+  opts.stopAfter = null; // split --plan: 사다리 중단 지점 (검토 장치 2)
 
   let i = 0;
   while (i < args.length) {
@@ -175,8 +244,14 @@ function parseArgs(argv) {
       opts.excludePatterns.push(...args[++i].split(',').map(s => s.trim()).filter(Boolean));
     }
     else if (a === '--header-source' && i + 1 < args.length) { opts.headerSource = args[++i]; }
-    else if (a === '--out' && i + 1 < args.length) { opts.discoverOut = args[++i]; }
+    else if (a === '--out' && i + 1 < args.length) { opts.out = args[++i]; }
     else if (a === '--dry-run') { opts.dryRun = true; }
+    else if (a === '--write') { opts.write = true; }
+    else if (a === '--force') { opts.force = true; }
+    else if (a === '--plan') { opts.plan = true; }
+    else if (a === '--groups' && i + 1 < args.length) { opts.groups = args[++i]; }
+    else if (a === '--trace') { opts.trace = true; }
+    else if (a === '--stop-after' && i + 1 < args.length) { opts.stopAfter = args[++i]; }
     else if (a === '--changed' && i + 1 < args.length) { opts.changed = args[++i]; }
     else if (a === '--brief') { opts.output = 'brief'; }
     else if (a === '--full')  { opts.output = 'full';  }
@@ -211,6 +286,35 @@ function findProjectRoot() {
   return process.cwd();
 }
 
+/**
+ * shardPolicy 객체 정규화 — 두 소스(code-scan.json · setting.json)가 같은 함수를 공유한다.
+ * 알 수 없는 키는 무시한다. 알려진 키는 존재하면 스키마 타입을 만족해야 한다 (083 F-001).
+ * @param {*} raw
+ * @returns {{ok:true, value:object} | {ok:false, detail:string}}
+ */
+function normalizeShardPolicy(raw) {
+  if (raw === undefined || raw === null) return { ok: true, value: {} };
+  if (typeof raw !== 'object' || Array.isArray(raw)) {
+    return { ok: false, detail: 'shardPolicy must be an object' };
+  }
+  const value = {};
+  for (const k of SHARD_POLICY_KEYS) {
+    if (!hasOwn(raw, k) || raw[k] === undefined || raw[k] === null) continue;
+    const v = raw[k];
+    if (SHARD_POLICY_SCHEMA[k] === 'positiveInt') {
+      if (typeof v !== 'number' || !Number.isFinite(v) || !Number.isInteger(v) || v <= 0) {
+        return { ok: false, detail: `shardPolicy.${k} must be a positive integer, got ${JSON.stringify(v)}` };
+      }
+    } else {   // 'nonEmptyString'
+      if (typeof v !== 'string' || v.trim() === '') {
+        return { ok: false, detail: `shardPolicy.${k} must be a non-empty string, got ${JSON.stringify(v)}` };
+      }
+    }
+    value[k] = v;
+  }
+  return { ok: true, value };
+}
+
 // 설정을 **싣기만** 한다 — headerSource 유효성은 판정하지 않고 원문 그대로 통과시킨다.
 // [MUST] 이 함수는 process.exit / throw 하지 않는다: code-map-hook.js가 main()을 거치지 않고
 // 직접 호출하므로 여기서 종료하면 PostToolUse fail-safe가 붕괴한다 (080 §3.1.2 (B), H-2).
@@ -240,16 +344,223 @@ function loadConfig(projectRoot) {
     scopes[name] = n.scope;
   }
 
+  // shardPolicy 정규화 (083 F-001) — 위반은 configError로만 표면화하고 종료는 main()이 한다.
+  const sp = normalizeShardPolicy(user.shardPolicy);
+
   return {
     extensions: user.extensions || DEFAULT_CONFIG.extensions,
     exclude: user.exclude || DEFAULT_CONFIG.exclude,
     excludePatterns: user.excludePatterns || [],
     scopes,
     headerSource: user.headerSource === undefined ? null : user.headerSource,
+    shardPolicy: sp.ok ? sp.value : {},                      // 위반 시 빈 객체 → 하위 단계 폴백
     configPresent: true,
-    configError: scopeErrorDetail ? 'config_scope_invalid' : null,
-    configErrorDetail: scopeErrorDetail,
+    configError: scopeErrorDetail ? 'config_scope_invalid'
+               : (sp.ok ? null : 'shard_policy_invalid'),
+    configErrorDetail: scopeErrorDetail || (sp.ok ? null : sp.detail),
   };
+}
+
+// [MUST] `opal/tools/state-tool/state_tool.py:236`: 경로는 OPAL_HOME env 우선(플랫폼 독립,
+// ~/.opal 하드코딩 분기 금지). 같은 규칙을 code-scan에 적용한다 — 플랫폼 분기를 만들지 않는다.
+function resolveOpalHome() {
+  return process.env[OPAL_HOME_ENV] || path.join(os.homedir(), '.opal');
+}
+
+/**
+ * ~/.opal/setting.json에서 **샤드 정책 키만** 읽는다 (083 F-002).
+ * [MUST] 전역 설정 파일 부재·파싱 실패·키 부재는 모두 하위 단계로 폴백한다 —
+ * headerSource식 전 명령 차단으로 승격하지 않는다. 이 함수는 throw/exit 하지 않는다.
+ * 다른 키(bootstrap·models)는 읽지도 쓰지도 않는다.
+ *
+ * [MUST] 봉인 정적 검사는 소스 전체에서 이 이름 뒤에 여는 괄호가 붙은 등장 횟수를 1로 셈한다 —
+ * 함수 선언문은 그 자체가 1회로 잡히므로 **함수 표현식**으로 정의해 호출 지점 1곳만 남긴다.
+ *
+ * @param {string} opalHome  주입 가능 — 테스트 격리 창구
+ * @returns {{present:boolean, shardPolicy:object|null, error:string|null}}
+ */
+const loadGlobalSetting = function (opalHome) {
+  const p = path.join(opalHome, 'setting.json');
+  const miss = (error) => ({ present: true, shardPolicy: null, error });
+
+  if (!fs.existsSync(p)) return { present: false, shardPolicy: null, error: null };   // 정상 — 침묵
+
+  let parsed;
+  try { parsed = JSON.parse(fs.readFileSync(p, 'utf8')); }
+  catch {
+    noticeOnce('global_setting_unreadable',
+      `${p}을 읽거나 파싱할 수 없습니다 — 샤드 정책은 하위 단계(코드 상수)로 폴백합니다`);
+    return miss('global_setting_unreadable');
+  }
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    noticeOnce('global_setting_unreadable',
+      `${p}이 JSON 객체가 아닙니다 — 샤드 정책은 하위 단계로 폴백합니다`);
+    return miss('global_setting_unreadable');
+  }
+  if (!hasOwn(parsed, 'shardPolicy')) return { present: true, shardPolicy: null, error: null };  // 키 부재 — 침묵
+
+  const n = normalizeShardPolicy(parsed.shardPolicy);
+  if (!n.ok) {
+    noticeOnce('global_shard_policy_invalid',
+      `${p}의 shardPolicy가 무효입니다(${n.detail}) — 하위 단계로 폴백합니다. ` +
+      `프로젝트 단위로 덮어쓰려면 {프로젝트}/.opal/code-scan.json의 shardPolicy를 사용하세요`);
+    return miss('global_shard_policy_invalid');
+  }
+  return { present: true, shardPolicy: n.value, error: null };
+};
+
+// ── 용어사전 로더 (083 F-011) — 어떤 실패도 throw/exit 하지 않는다 ────────────
+
+/**
+ * docs/PROJECT.md에서 `{설계}` 변수(설계 산출물 루트) 등록을 찾는다.
+ * [MUST] `opal/skills/op-data-dictionary/SKILL.md:21`: "사전 저장 경로는 하드코딩하지 않는다.
+ * docs/PROJECT.md에 등록된 {설계} 변수(설계 산출물 루트)를 읽어 {설계}/사전/으로 해소한다."
+ * 등록 포맷이 프로젝트마다 다르므로 관대하게 탐색하고, 못 찾으면 **null을 조용히** 돌려준다.
+ * md 표 파싱은 parseMdTable 1곳에 봉인돼 있다 — 두 번째 표 파서를 만들지 않는다.
+ * @returns {string|null} 후행 슬래시를 벗긴 상대 경로
+ */
+function readDesignRootFromProjectMd(projectRoot) {
+  const p = path.join(projectRoot, 'docs', 'PROJECT.md');
+  let md;
+  try { md = fs.readFileSync(p, 'utf8'); } catch { return null; }
+
+  const clean = (raw) => {
+    const s = String(raw || '').split(',')[0].replace(/`/g, '').trim();
+    if (!s || s === '-') return null;
+    return s.replace(/\/+$/, '') || null;
+  };
+
+  // ① `| 요소 | 경로 |` 규약 표 (parseMdTable 공용 파서)
+  for (const row of parseMdTable(md, ['요소', '경로'])) {
+    if (String(row.cells['요소'] || '').replace(/`/g, '').trim() !== '{설계}') continue;
+    const v = clean(row.cells['경로']);
+    if (v) return v;
+  }
+  // ② `- {설계} = <경로>` / `{설계}: <경로>` 서술형
+  const m1 = md.match(/^\s*[-*]\s*\{설계\}\s*=\s*(.+)$/m);
+  if (m1) { const v = clean(m1[1]); if (v) return v; }
+  const m2 = md.match(/\{설계\}\s*:\s*([^\s|]+)/);
+  if (m2) { const v = clean(m2[1]); if (v) return v; }
+  return null;
+}
+
+/**
+ * 표준단어사전 경로를 해소한다 — 탐색 3단, 앞이 성공하면 뒤를 보지 않는다.
+ * **어떤 실패도 throw하지 않는다.**
+ * @returns {{abs:string|null, rel:string|null, source:'policy'|'project-var'|'default'|null, searched:string[]}}
+ */
+function resolveDictPath(ctx, policy) {
+  const searched = [];
+  const tryPath = (rel, source) => {
+    if (!rel) return null;
+    const norm = String(rel).split(path.sep).join('/').replace(/^\.\//, '');
+    const abs = path.resolve(ctx.projectRoot, norm);
+    // 경로 제한 (H-17) — 프로젝트 루트 밖은 읽지 않고 다음 후보로 넘어간다
+    if (abs !== ctx.projectRoot && !abs.startsWith(ctx.projectRoot + path.sep)) {
+      searched.push(`${norm}(프로젝트 밖 — 거부)`);
+      return null;
+    }
+    searched.push(norm);
+    let st;
+    try { st = fs.statSync(abs); } catch { return null; }
+    if (!st.isFile()) return null;
+    if (st.size > DICT_MAX_BYTES) {
+      noticeOnce('shard_dict_too_large',
+        `${norm}이 사전 크기 상한(${DICT_MAX_BYTES} bytes)을 초과합니다 — "사전 없음"으로 취급하고 ` +
+        `사전 대조 단계(S1~S3)를 건너뜁니다 (비차단)`);
+      return null;
+    }
+    return { abs, rel: norm, source, searched };
+  };
+
+  // ① shardPolicy.dictPath 명시값 (3단 해석을 이미 거친 값)
+  if (policy && policy.dictPath) { const r = tryPath(policy.dictPath, 'policy'); if (r) return r; }
+  else searched.push('shardPolicy.dictPath(미설정)');
+
+  // ② docs/PROJECT.md의 {설계} 변수 해소 → {설계}/사전/표준단어사전.md
+  const designRoot = readDesignRootFromProjectMd(ctx.projectRoot);
+  if (designRoot) { const r = tryPath(`${designRoot}/사전/${DICT_FILENAME}`, 'project-var'); if (r) return r; }
+  else searched.push('docs/PROJECT.md {설계}(미등록)');
+
+  // ③ 기본 경로 — SKILL.md 자기모순(H-19) 흡수: 두 후보를 순서대로 본다
+  for (const rel of DICT_DEFAULT_RELS) { const r = tryPath(rel, 'default'); if (r) return r; }
+
+  return { abs: null, rel: null, source: null, searched };
+}
+
+/**
+ * 표준단어사전.md를 파싱한다. **컬럼 위치를 가정하지 않는다** (H-15).
+ * 같은 문서 안에 컬럼 수가 다른 표 2개(수식어 6열 · 분류어 5열)가 존재하므로 위치 기반 파서는
+ * 분류어 표에서 `약어` 자리에 `도메인` 값을 읽어 조용히 오분류한다.
+ * md 표 훑기 자체는 공용 parseMdTable에 위임한다 — 이 함수는 헤더 이름 → 필드 사상만 한다.
+ * @returns {{ok:true, rows:Array<{ko,en,abbr,index}>} | {ok:false, detail:string}}
+ */
+function parseWordDictionary(md) {
+  const cell = (v) => {
+    const s = v === null || v === undefined ? '' : String(v).replace(/`/g, '').trim();
+    return (s === '' || s === '-') ? null : s;
+  };
+  const rows = [];
+  for (const r of parseMdTable(md, ['한글', '영문', '약어'])) {
+    const en = cell(r.cells['영문']);
+    const abbr = cell(r.cells['약어']);
+    if (!en && !abbr) continue;              // 매칭에 쓸 수 없는 행은 채택하지 않는다
+    rows.push({ ko: cell(r.cells['한글']), en, abbr, index: rows.length });
+  }
+  if (rows.length === 0) return { ok: false, detail: 'no table with 한글/영문/약어 header' };
+  return { ok: true, rows };
+}
+
+/**
+ * 사전 폴백 3분기 (U-2 (4)) — 부재는 침묵, 파손은 noticeOnce 1줄, 둘 다 비차단이다.
+ * [MUST] throw도 process.exit도 하지 않는다.
+ * [MUST] 지연 로딩 — split --plan 경로에서만 호출된다. 조회 8커맨드에 새 I/O를 만들지 않는다(H-13).
+ * @returns {{found:boolean, path:string|null, source:string|null, rows:Array|null, searched:string[]}}
+ */
+function loadWordDictionary(ctx, policy) {
+  if (ctx._wordDict) return ctx._wordDict;                     // 실행당 1회
+  const p = resolveDictPath(ctx, policy);
+  let out;
+  if (!p.abs) {
+    out = { found: false, path: null, source: null, rows: null, searched: p.searched };   // 침묵
+  } else {
+    let md = null;
+    try { md = fs.readFileSync(p.abs, 'utf8'); } catch { md = null; }
+    const parsed = md === null ? { ok: false, detail: 'unreadable' } : parseWordDictionary(md);
+    if (!parsed.ok) {
+      noticeOnce('shard_dict_unparsable',
+        `${p.rel}을 표준단어사전으로 읽을 수 없습니다(${parsed.detail}) — 사전 대조 단계(S1~S3)를 건너뜁니다 (비차단). ` +
+        `형식: | 한글 | 영문 | 약어 | … (opal/skills/op-data-dictionary/SKILL.md Step 3)`);
+      out = { found: false, path: p.rel, source: p.source, rows: null, searched: p.searched };
+    } else {
+      out = { found: true, path: p.rel, source: p.source, rows: parsed.rows, searched: p.searched };
+    }
+  }
+  ctx._wordDict = out;
+  return out;
+}
+
+/**
+ * 이 실행의 샤드 정책을 확정한다 — 도구 전체에서 **유일한** 정책 판정 지점이다 (083 F-001).
+ * 우선순위(셀 단위): {프로젝트}/.opal/code-scan.json > ~/.opal/setting.json > DEFAULT_SHARD_POLICY
+ * 파생값 targetBytes는 설정 키가 아니다 — 여기서만 만든다.
+ * [MUST] 이 함수 밖에서 DEFAULT_SHARD_POLICY / loadGlobalSetting을 참조하지 않는다.
+ * @param {object} ctx {projectRoot, config, codeMap, headerSource}
+ * @returns {{maxBytes:number, minFiles:number, dictPath:string|null, targetBytes:number}}
+ */
+function resolveShardPolicy(ctx) {
+  if (ctx._shardPolicy) return ctx._shardPolicy;                  // 실행당 1회
+  const project = (ctx.config && ctx.config.shardPolicy) || {};
+  const global_ = loadGlobalSetting(resolveOpalHome()).shardPolicy || {};   // 지연 로딩 (F-002)
+  const out = {};
+  for (const k of SHARD_POLICY_KEYS) {
+    out[k] = hasOwn(project, k) ? project[k]
+           : hasOwn(global_, k) ? global_[k]
+           : DEFAULT_SHARD_POLICY[k];
+  }
+  out.targetBytes = Math.max(1, Math.floor(out.maxBytes * SHARD_TARGET_RATIO));
+  ctx._shardPolicy = out;
+  return out;
 }
 
 /**
@@ -295,7 +606,8 @@ function resolveHeaderSource(config, opts) {
       error: 'header_source_unset',
       detail: '.opal/code-scan.json에 headerSource가 없습니다',
       where: 'config',
-      fix: '"headerSource": "inline" 또는 "manifest"를 .opal/code-scan.json에 추가하거나 --header-source <inline|manifest>로 실행하세요',
+      fix: '"headerSource": "inline" 또는 "manifest"를 .opal/code-scan.json에 추가하거나 --header-source <inline|manifest>로 실행하세요' +
+        INIT_CREATE_FIX,
     };
   }
 
@@ -306,7 +618,8 @@ function resolveHeaderSource(config, opts) {
       error: 'header_source_invalid',
       detail: String(value),
       where: 'config',
-      fix: '.opal/code-scan.json의 headerSource는 ' + HEADER_SOURCE_VALUES.join(' 또는 ') + ' 중 하나여야 합니다',
+      fix: '.opal/code-scan.json의 headerSource는 ' + HEADER_SOURCE_VALUES.join(' 또는 ') + ' 중 하나여야 합니다' +
+        INIT_CREATE_FIX,
     };
     if (value === HEADER_SOURCE_LEGACY) {
       out.migration = '구형 값 "' + HEADER_SOURCE_LEGACY + '"는 제거되었습니다 — 프로젝트 전체를 ' +
@@ -866,21 +1179,34 @@ function loadCodeMap(projectRoot) {
     normalizedScopes[name] = n.scope;
   }
   index.scopes = normalizedScopes;
-  // manifestMaxBytes 스키마 게이트 (082 F-005) — 선택 필드, 있으면 양수 유한수여야 한다.
-  // 신규 에러 코드를 만들지 않고 기존 invalid_index로 합류한다 (PLAN §3.5.2 (A)).
+  // 구 위치 manifestMaxBytes는 폐기됐다 (083 F-007). 값을 읽지 않고 실행당 1회 안내만 한다 —
+  // 무시할 키를 타입 검증해 차단하는 것은 "무시한다"와 모순이다 (080 F-002 선례).
   if (hasOwn(index, 'manifestMaxBytes')) {
-    const v = index.manifestMaxBytes;
-    if (typeof v !== 'number' || !Number.isFinite(v) || v <= 0) {
-      return { present: true, error: 'invalid_index', index, manifests: new Map() };
-    }
+    deprecationOnce('index_manifest_max_bytes',
+      '.opal/code-map/index.json의 manifestMaxBytes는 폐기되었습니다 — ' +
+      '{프로젝트}/.opal/code-scan.json의 "shardPolicy": {"maxBytes": <바이트>} 로 이전하세요 ' +
+      '(자동 변환하지 않습니다)');
   }
   return { present: true, index, manifests: new Map(), shardViews: new Map() };
 }
 
-// manifestMaxBytes 값 읽기 — 1곳 (082 F-005, PLAN §3.5.2 (A))
-function manifestMaxBytes(ctx) {
-  const v = ctx.codeMap.index && ctx.codeMap.index.manifestMaxBytes;
-  return typeof v === 'number' ? v : DEFAULT_MANIFEST_MAX_BYTES;
+// ── 2축 판정식 (083 F-003) — 판정 로직을 소비 지점에 복제하지 않는다 ─────────
+
+// 해당 매니페스트 **자신의** 엔트리 수. 합집합이 아니다 — 판정 대상은 "이 파일이 쪼갤 만한가"이므로
+// 베이스는 베이스의 files만, 샤드는 샤드의 files만 센다.
+function manifestEntryCount(manifest) {
+  return manifest && manifest.files ? Object.keys(manifest.files).length : 0;
+}
+
+// 2축 판정 — 바이트 초과 **AND** 엔트리 수 이상. 경계: size===maxBytes는 초과 아님
+// (082 off-by-one 계약 보존), entries===minFiles는 **대상**(하한은 "이상").
+function isOversizeManifest(bytes, entryCount, policy) {
+  return bytes > policy.maxBytes && entryCount >= policy.minFiles;
+}
+
+// 권고 조각 수 — 트리거가 아니라 targetBytes로 나눈다 (확정 방향 #9). 최소 2조각.
+function recommendedShardCount(bytes, policy) {
+  return Math.max(2, Math.ceil(bytes / policy.targetBytes));
 }
 
 // 확정된 모드(resolveHeaderSource의 1회 판정 결과)를 ctx에 실어 전 소비자에게 전달한다.
@@ -1631,7 +1957,7 @@ function inferExclude(projectRoot, scopes) {
 function cmdDiscover(projectRoot, config, opts, mode) {
   buildCtx(projectRoot, config, mode); // surfaces schema errors on an existing (invalid) index
 
-  const outPath = opts.discoverOut ? path.resolve(projectRoot, opts.discoverOut) : path.join(projectRoot, CODE_MAP_DIR, 'index.json');
+  const outPath = opts.out ? path.resolve(projectRoot, opts.out) : path.join(projectRoot, CODE_MAP_DIR, 'index.json');
   const dryRun = !!opts.dryRun;
 
   if (!dryRun && fs.existsSync(outPath)) {
@@ -1686,6 +2012,191 @@ function cmdDiscover(projectRoot, config, opts, mode) {
   const summary = { ok: true, out: path.relative(projectRoot, outPath), scopes: Object.keys(scopes).length, counts: { scopes: Object.keys(scopes).length, layerRules: layerRules.length, exclude: exclude.length } };
   if (opts.output === 'json') console.log(JSON.stringify(summary));
   else console.log(`Created ${summary.out} — scopes=${summary.counts.scopes} layerRules=${summary.counts.layerRules} exclude=${summary.counts.exclude}`);
+}
+
+// ── init (083 F-012) ─────────────────────────────────────────────────────
+
+// 규약 예시(`pm/code-scan-management.md`)의 exclude 10종 — init 초안과 init의 디렉토리 스캔
+// 필터가 공유한다. config.exclude를 쓰지 않는다 — init은 깨진 config에서도 동작해야 한다.
+// init 초안이 **쓰는** 설정 키 이름 — 모드 판정이 아니라 산출물의 필드명이다.
+// 판정은 전적으로 resolveHeaderSource 1곳에 있고, 여기서는 값을 그대로 실어 나르기만 한다.
+const CONFIG_KEY_HEADER_SOURCE = 'headerSource';
+
+const INIT_EXCLUDE = Object.freeze([
+  'node_modules', '__pycache__', '.git', 'dist', 'build', '.venv',
+  'backup', '.pytest_cache', '.next', '.nuxt',
+]);
+
+/**
+ * md 본문에서 required 헤더를 **모두** 가진 표를 찾아 행을 뽑는다. 위치를 가정하지 않는다.
+ * 표준단어사전 파서와 PROJECT.md 프로젝트 구성 파서가 공유한다 — md 표 파서는 이것 1개뿐이다.
+ * @param {string} md
+ * @param {string[]} requiredHeaders  예: ['한글','영문','약어'] / ['요소','경로']
+ * @returns {Array<{cells:Object<string,string|null>, index:number}>}  매칭 표가 없으면 []
+ */
+function parseMdTable(md, requiredHeaders) {
+  const lines = String(md || '').split(/\r?\n/);
+  const cellsOf = (line) => {
+    let s = line.trim();
+    if (s.startsWith('|')) s = s.slice(1);
+    if (s.endsWith('|')) s = s.slice(0, -1);
+    return s.split('|').map(c => c.trim());
+  };
+  const rows = [];
+  let index = 0;
+  for (let i = 0; i + 1 < lines.length; i++) {
+    if (!/^\s*\|/.test(lines[i])) continue;
+    if (!/^\s*\|[\s:|-]+\|?\s*$/.test(lines[i + 1])) continue;   // 헤더 다음 줄이 구분행인가
+    const headers = cellsOf(lines[i]);
+    if (!requiredHeaders.every(h => headers.includes(h))) continue;
+    for (let j = i + 2; j < lines.length && /^\s*\|/.test(lines[j]); j++) {
+      const cells = cellsOf(lines[j]);
+      const obj = {};
+      headers.forEach((h, k) => { obj[h] = cells[k] === undefined ? null : cells[k]; });
+      rows.push({ cells: obj, index: index++ });
+    }
+  }
+  return rows;
+}
+
+// docs/PROJECT.md의 `## 프로젝트 구성` 절 아래 표에서 행을 읽는다 — 컬럼은 이름으로 찾는다.
+function readProjectStructureTable(projectRoot) {
+  const p = path.join(projectRoot, 'docs', 'PROJECT.md');
+  if (!fs.existsSync(p)) return [];
+  let md;
+  try { md = fs.readFileSync(p, 'utf8'); } catch { return []; }
+  const lines = md.split(/\r?\n/);
+  let start = -1;
+  for (let i = 0; i < lines.length; i++) {
+    if (/^#{1,6}\s+.*프로젝트 구성/.test(lines[i])) { start = i + 1; break; }
+  }
+  if (start === -1) return [];
+  let end = lines.length;
+  for (let i = start; i < lines.length; i++) {
+    if (/^#{1,6}\s/.test(lines[i])) { end = i; break; }
+  }
+  return parseMdTable(lines.slice(start, end).join('\n'), ['요소', '경로']);
+}
+
+function toScopeName(raw) {
+  return String(raw || '').trim().toLowerCase()
+    .replace(/[_\s]+/g, '-').replace(/[^a-z0-9-]/g, '')
+    .replace(/-+/g, '-').replace(/^-|-$/g, '');
+}
+
+// 경로 컬럼: 백틱을 벗기고 **첫 경로만** 채택하며 끝에 `/`를 보정한다.
+function toScopeRoot(raw) {
+  const first = String(raw || '').split(',')[0].replace(/`/g, '').trim();
+  if (!first) return null;
+  return first.endsWith('/') ? first : first + '/';
+}
+
+// scopes 추론 — 규약 소스는 PROJECT.md 표, 부재 시 루트 1-depth 디렉토리 스캔으로 대체한다.
+function inferProjectScopes(projectRoot) {
+  const scopes = {};
+  for (const row of readProjectStructureTable(projectRoot)) {
+    const name = toScopeName(row.cells['요소']);
+    const root = toScopeRoot(row.cells['경로']);
+    if (!name || !root) continue;
+    scopes[name] = root;
+  }
+  if (Object.keys(scopes).length > 0) return scopes;
+  // 폴백 — inferScopes의 디렉토리 스캔 경로를 재사용한다(두 번째 스캐너를 만들지 않는다).
+  const scanned = inferScopes(projectRoot, { scopes: {}, exclude: INIT_EXCLUDE });
+  const out = {};
+  for (const [name, def] of Object.entries(scanned)) out[name] = def.root;
+  return out;
+}
+
+// 스코프 루트를 순회해 **실재하는** 코드 확장자만 수집한다. `.md`는 감지와 무관하게 항상 포함한다.
+function detectExtensions(projectRoot, scopes) {
+  const candidates = DEFAULT_CONFIG.extensions.concat(['.md']);
+  const candSet = new Set(candidates);
+  const found = new Set();
+  const walk = (dirAbs, depth) => {
+    if (depth > 8 || found.size === candSet.size) return;
+    let entries;
+    try { entries = fs.readdirSync(dirAbs, { withFileTypes: true }); } catch { return; }
+    for (const e of entries) {
+      if (found.size === candSet.size) return;
+      if (e.name.startsWith('.') || INIT_EXCLUDE.includes(e.name)) continue;
+      if (e.isDirectory()) walk(path.join(dirAbs, e.name), depth + 1);
+      else { const ext = path.extname(e.name); if (candSet.has(ext)) found.add(ext); }
+    }
+  };
+  for (const root of Object.values(scopes)) walk(path.resolve(projectRoot, root), 0);
+  const out = candidates.filter(x => found.has(x));
+  if (!out.includes('.md')) out.push('.md');
+  return out;
+}
+
+/**
+ * `.opal/code-scan.json` 초안을 만든다 — 대화형 프롬프트는 없다(비대화형 계약).
+ * headerSource는 **추론하지 않는다**: 2택은 소유자가 확인해 확정하는 값이므로 CLI 인자로 강제한다.
+ * 깨진 config에서도 동작해야 하는 복구 창구이므로 config의 어떤 필드도 참조하지 않는다.
+ */
+function cmdInit(projectRoot, config, opts) {
+  // 인자 유무 판정도 값 도메인 판정도 resolveHeaderSource 1곳에 봉인돼 있다 — 빈 config를 주면
+  // CLI 인자만 보는 경로가 되며, 미지정은 unset으로 돌아온다. 재검증 로직을 새로 쓰지 않는다.
+  const hs = resolveHeaderSource({ configError: null }, opts);
+  if (!hs.ok) {
+    if (hs.error === 'header_source_unset') {
+      return errorExit('init_header_source_required', {
+        detail: '--header-source가 필요합니다',
+        where: 'cli',
+        fix: 'code-scan init --header-source <inline|manifest> [--write] — 도구는 이 2택을 추론하지 않습니다',
+        doc: HEADER_SOURCE_DOC,
+      });
+    }
+    const extra = { detail: hs.detail, where: hs.where, fix: hs.fix, doc: HEADER_SOURCE_DOC };
+    if (hs.migration) extra.migration = hs.migration;
+    return errorExit(hs.error, extra);
+  }
+
+  const scopes = inferProjectScopes(projectRoot);
+  // 키 순서는 규약 예시와 동일하다. shardPolicy는 **넣지 않는다** — 넣으면 3단 폴백의
+  // 2·3단(전역 설정·코드 상수)이 영원히 도달 불가가 된다 (083 F-012 (E)).
+  const draft = {
+    [CONFIG_KEY_HEADER_SOURCE]: hs.value,
+    scopes,
+    extensions: detectExtensions(projectRoot, scopes),
+    exclude: INIT_EXCLUDE.slice(),
+    excludePatterns: [],
+  };
+
+  const cfgPath = path.join(projectRoot, '.opal', 'code-scan.json');
+  const cfgRel = toPosixRel(projectRoot, cfgPath);
+
+  const emit = (written, backup) => {
+    if (opts.output === 'json') {
+      console.log(JSON.stringify({ ok: true, command: 'init', written, path: cfgRel, backup, draft }));
+    } else {
+      console.log(JSON.stringify(draft, null, 2));   // 파이프 친화 — 초안 JSON 그대로
+    }
+  };
+
+  if (!opts.write) { emit(false, null); return; }
+
+  if (fs.existsSync(cfgPath) && !opts.force) {
+    return errorExit('config_exists', {
+      detail: `${cfgRel}이 이미 존재합니다`,
+      where: 'config',
+      fix: '덮어쓰려면 --force를 함께 주세요: code-scan init --header-source <inline|manifest> --write --force ' +
+           `(기존 파일은 ${cfgRel}.bak으로 백업됩니다)`,
+    });
+  }
+
+  let backup = null;
+  fs.mkdirSync(path.dirname(cfgPath), { recursive: true });
+  if (fs.existsSync(cfgPath)) { fs.copyFileSync(cfgPath, cfgPath + '.bak'); backup = cfgRel + '.bak'; }
+  fs.writeFileSync(cfgPath, JSON.stringify(draft, null, 2) + '\n');
+
+  // 생성 보고 — stdout JSON을 오염시키지 않는다.
+  process.stderr.write(
+    `📂 code-scan.json 자동 생성: headerSource=${hs.value} · ` +
+    `scopes=${Object.keys(scopes).length}종 · extensions=[${draft.extensions.join(', ')}] · ` +
+    `exclude=[${draft.exclude.join(', ')}]\n`);
+  emit(true, backup);
 }
 
 // ── scaffold (F-004) ─────────────────────────────────────────────────────
@@ -1849,7 +2360,7 @@ function cmdScaffold(projectRoot, config, opts, mode) {
 
   const created = [], updated = [], unchanged = [], addedAll = [], prunedAll = [], skippedAll = [];
   const dryRun = !!opts.dryRun;
-  const limit = manifestMaxBytes(ctx);
+  const policy = resolveShardPolicy(ctx);
 
   for (const entry of perDir) {
     let existingBase = null;
@@ -1912,10 +2423,12 @@ function cmdScaffold(projectRoot, config, opts, mode) {
 
       // 크기 상한 알림 — stdout JSON은 건드리지 않는다 (082 F-005 §3.5.2 (C), TS-023/S-17)
       const bytes = Buffer.byteLength(serialized);
-      if (bytes > limit) {
+      const entries = manifestEntryCount(manifest);
+      if (isOversizeManifest(bytes, entries, policy)) {
         process.stderr.write(
-          `code-scan: [oversize] ${manifestRel} — ${bytes} bytes > ${limit} 상한. ` +
-          `_shards/ 의미 단위 분할을 검토하세요\n`);
+          `code-scan: [oversize] ${manifestRel} — ${bytes} bytes > ${policy.maxBytes} 상한, ` +
+          `엔트리 ${entries}개(하한 ${policy.minFiles}). 권고 ${recommendedShardCount(bytes, policy)}조각 — ` +
+          `code-scan split ${manifestRel} --plan\n`);
       }
     }
   }
@@ -1945,6 +2458,628 @@ function cmdScaffold(projectRoot, config, opts, mode) {
   };
   if (opts.output === 'json') console.log(JSON.stringify(result));
   else console.log(`scaffold: created=${result.created} updated=${result.updated} unchanged=${result.unchanged} added=${addedAll.length} pruned=${prunedAll.length} stale=${staleList.length}`);
+}
+
+// ═══════════════════════════════════════════
+// split — 분할 제안(사다리 엔진) + 분할 집행 (083 F-004/F-005)
+// ═══════════════════════════════════════════
+
+// 엔트리 1건이 매니페스트에서 차지하는 대략 바이트 (직렬화 후 키 + 값 + 구두점)
+function entryBytes(key, entry) {
+  return Buffer.byteLength(JSON.stringify({ [key]: entry }, null, 2)) + 2;
+}
+
+// 파일명 → 소문자 토큰 배열. 확장자 제거 → camel/Pascal 경계 + `_`·`-`·`.` 분해 → 소문자.
+// 'PricingCalculator.ts' → ['pricing','calculator'] / 'order_repo.py' → ['order','repo']
+function splitTokens(key) {
+  return String(key).replace(/\.[^.]+$/, '')
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+    .replace(/[_\-.]+/g, ' ')
+    .split(/\s+/)
+    .map(t => t.toLowerCase().replace(/[^a-z0-9]/g, ''))
+    .filter(Boolean);
+}
+
+// 라벨 정규형 — SHARD_LABEL_RE(kebab)를 만족하는 형태로 깎는다. 경로 이탈 문자는 여기서 소멸한다.
+function toShardLabel(raw) {
+  return String(raw || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+}
+
+// 사전 대조용 정규형 — 토큰 스팬(공백 없이 이어붙인 소문자)과 같은 축으로 맞춘다.
+function normalizeDictForm(raw) {
+  return String(raw || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
+// 기존 라벨과 충돌하면 `-2`, `-3`… 접미. usedLabels 갱신은 호출자가 한다.
+function uniqueShardLabel(base, usedLabels) {
+  let label = toShardLabel(base);
+  if (!label || !SHARD_LABEL_RE.test(label)) label = 'group';
+  if (!usedLabels.has(label)) return label;
+  let n = 2;
+  while (usedLabels.has(`${label}-${n}`)) n++;
+  return `${label}-${n}`;
+}
+
+/**
+ * 토큰 스팬 ↔ 사전 매칭. 대소문자 무시, 영문·약어 두 컬럼 후보.
+ * 다중 매칭 시 ① 스팬 토큰 수 내림차순 → ② 사전 등재 순서(row.index) 오름차순 (U-2 (3)).
+ * @returns {{canonical:string, from:number, to:number, index:number, span:number}|null}
+ */
+function dictMatchSpan(tokens, dict, fromIdx, maxSpanTokens) {
+  if (!dict || !Array.isArray(dict.rows) || dict.rows.length === 0) return null;
+  const max = Math.min(maxSpanTokens, tokens.length - fromIdx);
+  for (let span = max; span >= 1; span--) {           // 긴 스팬 우선 (longest-match)
+    const joined = tokens.slice(fromIdx, fromIdx + span).join('');
+    if (!joined) continue;
+    let cand = null;
+    for (const row of dict.rows) {
+      const forms = [];
+      if (row.en) forms.push(normalizeDictForm(row.en));
+      if (row.abbr) forms.push(normalizeDictForm(row.abbr));
+      if (!forms.includes(joined)) continue;
+      if (cand === null || row.index < cand.index) cand = row;   // 동률이면 등재 순서
+    }
+    if (cand) {
+      return {
+        canonical: toShardLabel(cand.en || cand.abbr),
+        from: fromIdx, to: fromIdx + span - 1, index: cand.index, span,
+      };
+    }
+  }
+  return null;
+}
+
+/**
+ * 한 단계의 그룹핑 키를 돌려준다. null이면 이 단계에서 배정하지 않는다.
+ * @returns {string|null} 그룹핑 키 (= 라벨 후보)
+ */
+function stageKeyFor(stage, key, entry, dict, freq) {
+  const tokens = splitTokens(key);
+  if (tokens.length === 0) return null;
+  switch (stage.signal) {
+    case 'first-token': {
+      const m = dictMatchSpan(tokens, dict, 0, 1);
+      return m ? m.canonical : null;
+    }
+    case 'first-two': {
+      const m = dictMatchSpan(tokens, dict, 0, 2);
+      if (m && m.span >= 2) return m.canonical;        // 사전 행 1개가 2토큰을 통째로 덮은 경우
+      // 두 토큰이 각각 다른 행에 매칭되면 `{c0}-{c1}` 결합. 첫 토큰 단독 매칭은 S1의 신호이므로 제외.
+      const a = dictMatchSpan(tokens, dict, 0, 1);
+      const b = tokens.length > 1 ? dictMatchSpan(tokens, dict, 1, 1) : null;
+      if (a && b) return toShardLabel(`${a.canonical}-${b.canonical}`);
+      return null;
+    }
+    case 'any-token': {
+      let best = null;
+      for (let i = 0; i < tokens.length; i++) {
+        const m = dictMatchSpan(tokens, dict, i, tokens.length - i);
+        if (!m) continue;
+        if (best === null || m.span > best.span || (m.span === best.span && m.index < best.index)) best = m;
+      }
+      return best ? best.canonical : null;
+    }
+    case 'last-token': {
+      // 토큰이 1개뿐이면 null — S1과 같은 신호를 두 번 세지 않는다
+      if (tokens.length < 2) return null;
+      return toShardLabel(tokens[tokens.length - 1]) || null;
+    }
+    case 'depends': {
+      const d = entry && Array.isArray(entry.depends) ? entry.depends : null;
+      if (!d || d.length === 0) return null;
+      let bestKey = null;
+      let bestFreq = -1;
+      for (const raw of d) {
+        const lab = toShardLabel(raw);
+        if (!lab) continue;
+        const f = (freq && freq.get(lab)) || 0;
+        if (f > bestFreq || (f === bestFreq && bestKey !== null && lab < bestKey)) { bestFreq = f; bestKey = lab; }
+      }
+      return bestKey;
+    }
+    default:
+      return null;
+  }
+}
+
+/**
+ * 그룹 후보를 산출한다 — **파일을 쓰지 않는다**. 결정론적이다(H-10).
+ * @param {Map<string,object>} baseEntries  베이스에 남아 있는 엔트리만 (샤드 보유분 제외)
+ * @param {Set<string>} usedLabels          기존 샤드 라벨 (충돌 회피) — 호출자 소유, 여기서 갱신된다
+ * @param {{maxBytes,minFiles,targetBytes}} policy
+ * @param {{rows:Array}|null} dict          rows가 없으면 dict:true 단계 자동 skip (U-2 (4))
+ * @param {{stopAfter:string|null, shardOverheadBytes:number}} opts
+ * @returns {{groups, unassigned, coverage, assignments, trace, ladder}}
+ */
+function planShardGroups(baseEntries, usedLabels, policy, dict, opts) {
+  const stopAfter = (opts && opts.stopAfter) || null;
+  const overhead = (opts && opts.shardOverheadBytes) || 0;
+  const total = baseEntries.size;
+  const remaining = new Map(baseEntries);
+  const groups = [];
+  const assignments = {};
+  const trace = [];
+  const ladder = [];
+  const byStage = {};
+  let stopped = false;
+
+  for (const stage of SHARD_PLAN_LADDER) {
+    const input = remaining.size;
+    let skipped = false;
+    let reason = null;
+    if (stopped) { skipped = true; reason = 'stopped'; }
+    else if (stage.dict && !(dict && Array.isArray(dict.rows) && dict.rows.length > 0)) {
+      skipped = true; reason = 'dict_absent';
+    }
+
+    let assigned = 0;
+    let groupCount = 0;
+    if (!skipped) {
+      // S5의 freq는 **그 단계 진입 시점의 remaining** 기준으로 1회 계산한다 — 배정 중 빈도가 변하면
+      // 순서 의존이 생겨 결정론이 깨진다.
+      let freq = null;
+      if (stage.signal === 'depends') {
+        freq = new Map();
+        for (const entry of remaining.values()) {
+          const d = entry && Array.isArray(entry.depends) ? entry.depends : [];
+          const seen = new Set();
+          for (const raw of d) {
+            const lab = toShardLabel(raw);
+            if (!lab || seen.has(lab)) continue;
+            seen.add(lab);
+            freq.set(lab, (freq.get(lab) || 0) + 1);
+          }
+        }
+      }
+
+      const buckets = new Map();
+      for (const [key, entry] of remaining) {
+        const k = stageKeyFor(stage, key, entry, dict, freq);
+        if (!k) continue;                              // 이 단계에서 손대지 않는다
+        if (!buckets.has(k)) buckets.set(k, []);
+        buckets.get(k).push(key);
+      }
+      // 채택: 버킷 크기 >= accept. 미달 버킷은 remaining에 그대로 남아 **다음 단계로 흘러간다**.
+      const adopted = [...buckets.entries()]
+        .filter(([, files]) => files.length >= stage.accept)
+        .sort((a, b) => (b[1].length - a[1].length) || (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));
+      for (const [bucketKey, files] of adopted) {
+        const label = uniqueShardLabel(bucketKey, usedLabels);
+        usedLabels.add(label);
+        const sorted = files.slice().sort();
+        for (const f of sorted) { assignments[f] = stage.id; remaining.delete(f); }
+        assigned += sorted.length;
+        groupCount++;
+        groups.push({ label, stage: stage.id, files: sorted, estimatedBytes: 0, oversizeGroup: false });
+      }
+    }
+
+    byStage[stage.id] = assigned;
+    ladder.push({ id: stage.id, signal: stage.signal, dict: stage.dict, accept: stage.accept, skipped });
+    trace.push({ stage: stage.id, dict: stage.dict, input, assigned, groups: groupCount, remaining: remaining.size, skipped, reason });
+    if (!stopped && stopAfter === stage.id) stopped = true;
+  }
+
+  // 크기 목표 점검 — 초과는 **표시만** 한다. 도구가 강제 재분할하지 않는다 (U-2 (6) 규칙 2).
+  for (const g of groups) {
+    let b = overhead;
+    for (const f of g.files) b += entryBytes(f, baseEntries.get(f));
+    g.estimatedBytes = b;
+    g.oversizeGroup = b > policy.targetBytes;
+  }
+
+  // 결정론 정렬 — 단계 순서 우선 → 엔트리 수 내림차순 → 라벨 사전순
+  const stageOrder = {};
+  SHARD_PLAN_STAGE_IDS.forEach((id, i) => { stageOrder[id] = i; });
+  groups.sort((a, b) =>
+    (stageOrder[a.stage] - stageOrder[b.stage]) ||
+    (b.files.length - a.files.length) ||
+    (a.label < b.label ? -1 : a.label > b.label ? 1 : 0));
+
+  // 잔여 확정 — 임의 배분·"기타" 그룹 생성 금지 (brain 승계 #3)
+  const unassigned = [...remaining.keys()].sort();
+  return {
+    groups, unassigned, assignments, trace, ladder,
+    coverage: { assigned: total - unassigned.length, unassigned: unassigned.length, total, byStage },
+  };
+}
+
+// ── split 집행 (F-005) — 자산을 쓰는 유일한 명령. 원자성이 계약이다 ────────
+
+function shardDirForBase(baseManifestAbs) {
+  return path.join(path.dirname(baseManifestAbs), path.basename(baseManifestAbs, '.json'), SHARDS_DIR);
+}
+
+/**
+ * 디스크 기준 총 엔트리 수 — 베이스 + `_shards/` 아래 **실재하는 모든** 샤드 파일.
+ * 미선언 샤드 파일의 내용도 자산이므로 유실 판정(사후 검증)에 포함한다.
+ * @returns {number} 읽기·파싱 실패 시 -1 (= 검증 실패로 취급)
+ */
+function diskTotalEntries(baseManifestAbs) {
+  let total;
+  try { total = manifestEntryCount(JSON.parse(fs.readFileSync(baseManifestAbs, 'utf8'))); } catch { return -1; }
+  const sd = shardDirForBase(baseManifestAbs);
+  let names;
+  try { names = fs.readdirSync(sd); } catch { return total; }
+  for (const n of names.sort()) {
+    if (!n.endsWith('.json')) continue;
+    try { total += manifestEntryCount(JSON.parse(fs.readFileSync(path.join(sd, n), 'utf8'))); } catch { return -1; }
+  }
+  return total;
+}
+
+/**
+ * 분할 대상을 검증한다 — 대상은 항상 **베이스** 매니페스트다.
+ * @returns {{abs:string, rel:string, manifest:object}}
+ * @throws {CodeMapFatalError} 'split_target_invalid' | 'manifest_parse_failed' | 'unsupported_version'
+ */
+function resolveSplitTarget(manifestArg, ctx) {
+  const codeMapRoot = path.join(ctx.projectRoot, ...CODE_MAP_DIR.split('/'));
+  const abs = path.resolve(ctx.projectRoot, manifestArg);
+  const bad = (detail) => { throw new CodeMapFatalError('split_target_invalid', detail); };
+
+  if (abs !== codeMapRoot && !abs.startsWith(codeMapRoot + path.sep)) bad(`${manifestArg}은 ${CODE_MAP_DIR}/ 하위 경로가 아닙니다`);
+  if (!abs.endsWith('.json')) bad(`${manifestArg}은 매니페스트(.json)가 아닙니다`);
+  // 샤드의 샤드는 존재하지 않는다 — 재분할도 베이스에서 시작한다 (082 shard_undeclared 계약)
+  if (isShardManifestPath(abs)) bad(`${manifestArg}은 샤드입니다 — 분할 대상은 언제나 베이스 매니페스트입니다`);
+  if (!fs.existsSync(abs)) bad(`${manifestArg}이 존재하지 않습니다`);
+
+  const manifest = loadManifest(abs, ctx);   // 파싱 실패는 기존 manifest_parse_failed로 흐른다
+  if (!manifest || typeof manifest !== 'object' || Array.isArray(manifest)) bad(`${manifestArg}이 매니페스트 객체가 아닙니다`);
+  if (manifest.version !== CODE_MAP_VERSION) {
+    throw new CodeMapFatalError('unsupported_version', `${manifestArg}: version=${manifest.version}`);
+  }
+  return { abs, rel: toPosixRel(ctx.projectRoot, abs), manifest };
+}
+
+/**
+ * groups 문서를 검증·정규화한다 — 스키마 검증은 이 함수 1곳에만 존재한다 (U-1).
+ * [MUST] 왕복 불변식(H-18): `groups[].label`·`groups[].files` 2필드만 읽는다. 그 외 키는
+ * 최상위·그룹 내를 막론하고 존재를 허용하고 무시한다 — 검토 장치가 늘어도 왕복 계약은 확장되지 않는다.
+ * @returns {{ok:true, groups:Array<{label,files:string[]}>} | {ok:false, detail:string}}
+ */
+function parseGroupsDoc(raw, targetRel, base) {
+  let doc;
+  try { doc = JSON.parse(raw); } catch { return { ok: false, detail: 'groups document is not valid JSON' }; }
+  if (!doc || typeof doc !== 'object' || Array.isArray(doc)) return { ok: false, detail: 'groups document must be a JSON object' };
+  if (!Array.isArray(doc.groups) || doc.groups.length === 0) return { ok: false, detail: 'groups must be a non-empty array' };
+
+  if (hasOwn(doc, 'manifest') && doc.manifest !== null && doc.manifest !== undefined) {
+    const docRel = String(doc.manifest).split(path.sep).join('/').replace(/^\.\//, '');
+    if (docRel !== targetRel) return { ok: false, detail: `manifest mismatch: doc=${docRel} arg=${targetRel}` };
+  }
+
+  const baseFiles = (base && base.files) || {};
+  const seenLabels = new Set();
+  const seenKeys = new Set();
+  const out = [];
+  for (let i = 0; i < doc.groups.length; i++) {
+    const g = doc.groups[i];
+    if (!g || typeof g !== 'object' || Array.isArray(g)) return { ok: false, detail: `groups[${i}] must be an object` };
+    if (typeof g.label !== 'string') return { ok: false, detail: `groups[${i}].label must be a string` };
+    if (!Array.isArray(g.files) || g.files.length === 0) return { ok: false, detail: `groups[${i}].files must be a non-empty array` };
+    if (!SHARD_LABEL_RE.test(g.label)) return { ok: false, detail: `invalid shard label "${g.label}"` };
+    // 기존 샤드와 같은 라벨은 허용한다 — 그 샤드에 엔트리를 추가하는 정당한 조작이다. 문서 내 중복만 거부.
+    if (seenLabels.has(g.label)) return { ok: false, detail: `duplicate label "${g.label}"` };
+    seenLabels.add(g.label);
+
+    const files = [];
+    for (const f of g.files) {
+      if (typeof f !== 'string') return { ok: false, detail: `groups[${i}].files must contain strings only` };
+      if (!hasOwn(baseFiles, f)) return { ok: false, detail: `unknown entry key(s): ${f}` };
+      if (seenKeys.has(f)) return { ok: false, detail: `entry assigned to multiple groups: ${f}` };
+      seenKeys.add(f);
+      files.push(f);
+    }
+    out.push({ label: g.label, files });
+  }
+  return { ok: true, groups: out };
+}
+
+/**
+ * 쓰기 전에 최종 상태 전부를 메모리에서 만들고 불변식을 검증한다 (U-4 ①).
+ * [MUST] `TASK.md` §제약 조건: "엔트리 유실 0건 — 실행 전후 엔트리 총합이 반드시 같아야 하며,
+ * 실패 시 부분 상태를 남기지 않는다."
+ * 키 순서는 mergeManifest와 동일하게 고정한다 — 다르면 scaffold가 no-op이 되지 않는다(F-3 AC).
+ * @returns {{ok:true, writes, base, shards, before} | {ok:false, detail:string}}
+ */
+function composeSplitPlan(baseAbs, baseRel, base, groups, ctx) {
+  const view = resolveShards(baseAbs, baseRel, base, ctx);
+  const declared = new Map();
+  for (const s of (view ? view.shards : [])) declared.set(s.label, s);
+
+  let composedBefore = manifestEntryCount(base);
+  for (const s of declared.values()) composedBefore += manifestEntryCount(s.manifest);
+
+  const remainingBase = Object.assign({}, base.files || {});
+  const shardDir = shardDirForBase(baseAbs);
+  const shardLabels = (Array.isArray(base.shards) ? base.shards.slice() : []);   // 기존 선언 순서 불변
+  const writes = [];
+  const shardSummary = [];
+  const allKeys = new Set();
+  let composedAfter = 0;
+  let duplicateKey = null;
+  const takeKeys = (obj) => {
+    for (const k of Object.keys(obj)) {
+      if (allKeys.has(k)) { duplicateKey = duplicateKey || k; continue; }
+      allKeys.add(k);
+    }
+  };
+
+  for (const g of groups) {
+    const s = declared.get(g.label) || null;
+    const shardAbs = s ? s.manifestAbs : path.join(shardDir, g.label + '.json');
+    const existing = s ? s.manifest : null;
+    const files = Object.assign({}, (existing && existing.files) || {});
+    for (const key of g.files) {
+      files[key] = remainingBase[key];
+      delete remainingBase[key];
+    }
+    const m = { version: CODE_MAP_VERSION, scope: base.scope, dir: base.dir };
+    if (existing && hasOwn(existing, 'package')) m.package = existing.package;   // 3단 상속 입력 보존
+    m.files = orderFilesObject(files);
+
+    const content = JSON.stringify(m, null, 2) + '\n';
+    const isNew = !fs.existsSync(shardAbs);
+    writes.push({ abs: shardAbs, rel: toPosixRel(ctx.projectRoot, shardAbs), content, isNew });
+    if (!shardLabels.includes(g.label)) shardLabels.push(g.label);   // 신규 라벨은 선언 순서 말미에
+    composedAfter += Object.keys(m.files).length;
+    takeKeys(m.files);
+    shardSummary.push({
+      label: g.label, manifest: toPosixRel(ctx.projectRoot, shardAbs),
+      entries: Object.keys(m.files).length, bytes: Buffer.byteLength(content), created: isNew,
+    });
+  }
+
+  // 이번 문서가 손대지 않은 기존 샤드도 총합에 산입한다 (무변경 — writes에 넣지 않는다)
+  const touched = new Set(groups.map(g => g.label));
+  for (const [label, s] of declared) {
+    if (touched.has(label)) continue;
+    composedAfter += manifestEntryCount(s.manifest);
+    takeKeys((s.manifest && s.manifest.files) || {});
+  }
+
+  const nb = { version: CODE_MAP_VERSION, scope: base.scope, dir: base.dir };
+  if (shardLabels.length > 0) nb.shards = shardLabels;
+  if (hasOwn(base, 'package')) nb.package = base.package;
+  nb.files = orderFilesObject(remainingBase);
+  composedAfter += Object.keys(nb.files).length;
+  takeKeys(nb.files);
+  const baseContent = JSON.stringify(nb, null, 2) + '\n';
+  writes.push({ abs: baseAbs, rel: baseRel, content: baseContent, isNew: false });
+
+  if (duplicateKey) return { ok: false, detail: `entry key would exist in two manifests: ${duplicateKey}` };
+  if (composedAfter !== composedBefore) {
+    return { ok: false, detail: `entry total mismatch: ${composedBefore} → ${composedAfter}` };
+  }
+  return {
+    ok: true, writes,
+    base: { entries: Object.keys(nb.files).length, bytes: Buffer.byteLength(baseContent) },
+    shards: shardSummary,
+    before: { entries: composedBefore },
+  };
+}
+
+/**
+ * 2-phase commit + 롤백 (U-4 ②③). 실패 시 부분 상태를 남기지 않는다.
+ * @param {Array<{abs, rel, content, isNew}>} writes
+ * @returns {Array<{abs, prev:string|null}>} 사후 검증 실패 시 복원용 백업 (U-4 ④)
+ * @throws {CodeMapFatalError} 'split_write_failed' | 'split_rollback'
+ */
+function commitSplit(writes) {
+  const tmps = [];
+  // Phase 1 — tmp 전량 작성. 여기서 실패하면 원본은 한 바이트도 변하지 않는다.
+  try {
+    for (const w of writes) {
+      fs.mkdirSync(path.dirname(w.abs), { recursive: true });
+      const tmp = w.abs + SPLIT_TMP_SUFFIX;
+      fs.writeFileSync(tmp, w.content);
+      tmps.push(tmp);
+    }
+  } catch (e) {
+    for (const t of tmps) { try { fs.unlinkSync(t); } catch { /* best effort */ } }
+    throw new CodeMapFatalError('split_write_failed', String(e && e.message));
+  }
+  // Phase 2 — 백업 확보 후 rename 커밋 (동일 디렉토리 rename은 POSIX 원자적)
+  const backups = writes.map(w => ({ abs: w.abs, prev: w.isNew ? null : fs.readFileSync(w.abs, 'utf8') }));
+  const done = new Set();
+  try {
+    for (const w of writes) { fs.renameSync(w.abs + SPLIT_TMP_SUFFIX, w.abs); done.add(w.abs); }
+  } catch (e) {
+    for (const b of backups) {
+      if (!done.has(b.abs)) continue;
+      try { if (b.prev === null) fs.unlinkSync(b.abs); else fs.writeFileSync(b.abs, b.prev); } catch { /* best effort */ }
+    }
+    for (const t of tmps) { try { if (fs.existsSync(t)) fs.unlinkSync(t); } catch { /* best effort */ } }
+    throw new CodeMapFatalError('split_rollback', String(e && e.message));
+  }
+  return backups;
+}
+
+function restoreSplitBackups(backups) {
+  for (const b of backups) {
+    try { if (b.prev === null) fs.unlinkSync(b.abs); else fs.writeFileSync(b.abs, b.prev); }
+    catch { /* best effort — 실패해도 사유는 이미 split_verify_failed로 보고된다 */ }
+  }
+}
+
+// ── split 사람용 출력 (U-3: 다음 2단 명령을 그대로 싣는다) ─────────────────
+
+function renderSplitPlanHuman(doc, opts) {
+  const lines = [];
+  lines.push(`split --plan: ${doc.manifest} (${doc.current.bytes} bytes, ${doc.current.entries} entries)`);
+  lines.push(`  policy: maxBytes=${doc.policy.maxBytes} minFiles=${doc.policy.minFiles} targetBytes=${doc.policy.targetBytes} → 권고 ${doc.recommendedShards}조각`);
+  if (doc.dict.found) lines.push(`  dict:   ${doc.dict.path} (${doc.dict.rows}행, ${doc.dict.source})`);
+  else {
+    lines.push('  dict:   사전 미발견 — S1~S3 건너뜀');
+    lines.push(`          탐색: ${doc.dict.searched.join(' → ')}`);
+  }
+  lines.push(`  groups (${doc.groups.length}):`);
+  for (const g of doc.groups) {
+    lines.push(`    ${g.label.padEnd(14)}[${g.stage}] ${String(g.files.length).padStart(4)} entries  ~${g.estimatedBytes} bytes${g.oversizeGroup ? '  (목표 초과)' : ''}`);
+  }
+  lines.push(`  unassigned: ${doc.unassigned.length} entries — 라벨을 직접 지정하거나 베이스에 남깁니다`);
+  if (opts.trace && Array.isArray(doc.trace)) {
+    lines.push('  trace:');
+    lines.push('    stage  dict  입력   걷음   그룹   잔여   비고');
+    for (const t of doc.trace) {
+      const cell = (v) => (t.skipped ? '-' : String(v));
+      lines.push(`    ${t.stage.padEnd(6)} ${(t.dict ? 'yes' : 'no').padEnd(4)} ${cell(t.input).padStart(5)} ${cell(t.assigned).padStart(6)} ${cell(t.groups).padStart(6)} ${cell(t.remaining).padStart(6)}   ${t.reason ? (t.reason === 'dict_absent' ? 'skipped (사전 미발견)' : 'skipped (stopped)') : ''}`);
+    }
+  }
+  lines.push(`  다음: code-scan split ${doc.manifest} --plan --out /tmp/groups.json`);
+  lines.push(`        (파일을 편집한 뒤) code-scan split ${doc.manifest} --groups /tmp/groups.json --dry-run`);
+  console.log(lines.join('\n'));
+}
+
+function cmdSplit(projectRoot, config, opts, mode) {
+  const isJson = opts.output === 'json';
+  const hasPlan = !!opts.plan;
+  const hasGroups = opts.groups !== null && opts.groups !== undefined;
+  const usageFix = 'Usage: code-scan split <manifest-path> --plan [--out <path>] [--trace] [--stop-after <S1..S5>]' +
+                   ' | code-scan split <manifest-path> --groups <path|-> [--dry-run]';
+
+  // ① CLI 계약 — 모호한 기본 동작을 만들지 않는다
+  if (hasPlan && hasGroups) return errorExit('split_usage_invalid', { detail: '--plan and --groups are mutually exclusive', fix: usageFix });
+  if (!hasPlan && !hasGroups) return errorExit('split_usage_invalid', { detail: 'one of --plan or --groups is required', fix: usageFix });
+  if (!opts.commandArg) return errorExit('split_usage_invalid', { detail: 'manifest path argument is required', fix: usageFix });
+  if (opts.stopAfter !== null && opts.stopAfter !== undefined) {
+    const norm = String(opts.stopAfter).toUpperCase();
+    if (!SHARD_PLAN_STAGE_IDS.includes(norm)) {
+      return errorExit('split_usage_invalid', {
+        detail: `unknown ladder stage "${opts.stopAfter}"`,
+        fix: `--stop-after 값은 ${SHARD_PLAN_STAGE_IDS.join(' | ')} 중 하나여야 합니다`,
+      });
+    }
+    opts.stopAfter = norm;
+  }
+
+  // ② 모드 게이트 — inline에는 매니페스트가 없어 대상이 존재하지 않는다. "성공적으로 아무것도
+  //    안 함"은 거짓 신호다(H-14). scaffold와 달리 split은 소유자가 특정 파일을 지목한 명령이다.
+  if (mode !== 'manifest') {
+    return errorExit('split_inline_mode', {
+      detail: `headerSource=${mode}`,
+      fix: 'split은 매니페스트 자산을 분할하는 명령입니다 — headerSource가 manifest인 프로젝트에서 실행하세요',
+      doc: HEADER_SOURCE_DOC,
+    });
+  }
+
+  const ctx = buildCtx(projectRoot, config, mode);
+  const target = resolveSplitTarget(opts.commandArg, ctx);
+  const policy = resolveShardPolicy(ctx);
+
+  if (hasPlan) {
+    // [MUST] 사전 로딩은 이 경로 1곳뿐이다 — 조회 8커맨드에 새 I/O를 만들지 않는다 (H-13/H-17)
+    const dict = loadWordDictionary(ctx, policy);
+    const base = target.manifest;
+    const baseEntries = new Map(Object.entries(base.files || {}));
+    const usedLabels = new Set(Array.isArray(base.shards) ? base.shards.filter(l => typeof l === 'string') : []);
+    const shardOverheadBytes = Buffer.byteLength(
+      JSON.stringify({ version: CODE_MAP_VERSION, scope: base.scope, dir: base.dir, files: {} }, null, 2) + '\n');
+    const planned = planShardGroups(
+      baseEntries, usedLabels, policy,
+      (dict.found && dict.rows) ? dict : null,
+      { stopAfter: opts.stopAfter, shardOverheadBytes });
+
+    const bytes = fs.statSync(target.abs).size;
+    const doc = {
+      ok: true, command: 'split', mode: 'plan',
+      manifest: target.rel,
+      policy: { maxBytes: policy.maxBytes, minFiles: policy.minFiles, targetBytes: policy.targetBytes },
+      current: { bytes, entries: manifestEntryCount(base) },
+      recommendedShards: recommendedShardCount(bytes, policy),
+      // 사전 미발견을 침묵하지 않는다 — 탐색 경로가 항상 출력에 실린다 (H-16)
+      dict: {
+        found: dict.found, path: dict.path, source: dict.source,
+        rows: dict.rows ? dict.rows.length : 0, searched: dict.searched,
+      },
+      ladder: planned.ladder,
+      groups: planned.groups,
+      unassigned: planned.unassigned,
+      assignments: planned.assignments,
+      coverage: planned.coverage,
+    };
+    if (opts.trace) doc.trace = planned.trace;
+
+    // 쓰기 경계 — --plan은 매니페스트를 쓰지 않는다. --out이 있으면 groups 문서 1개만 쓴다.
+    if (opts.out) {
+      const outAbs = path.resolve(projectRoot, opts.out);
+      fs.mkdirSync(path.dirname(outAbs), { recursive: true });
+      fs.writeFileSync(outAbs, JSON.stringify(doc, null, 2) + '\n');
+    }
+    if (isJson) console.log(JSON.stringify(doc));
+    else renderSplitPlanHuman(doc, opts);
+    return;
+  }
+
+  // ── 집행 모드 ──────────────────────────────────────────────────────────
+  let raw;
+  if (opts.groups === '-') {
+    try { raw = fs.readFileSync(0, 'utf8'); }
+    catch (e) { return errorExit('split_groups_invalid', { detail: `stdin을 읽을 수 없습니다: ${e && e.message}` }); }
+  } else {
+    const p = path.resolve(projectRoot, opts.groups);
+    try { raw = fs.readFileSync(p, 'utf8'); }
+    catch { return errorExit('split_groups_invalid', { detail: `${opts.groups}을 읽을 수 없습니다` }); }
+  }
+
+  const groupsFix = 'groups 문서는 {"manifest": "<대상 경로>", "groups": [{"label": "<kebab>", "files": ["<엔트리 키>"]}]} 형식이어야 합니다 ' +
+                    `(code-scan split ${target.rel} --plan --out <path> 로 초안을 만드세요)`;
+  const parsed = parseGroupsDoc(raw, target.rel, target.manifest);
+  if (!parsed.ok) return errorExit('split_groups_invalid', { detail: parsed.detail, fix: groupsFix });
+
+  const beforeEntries = diskTotalEntries(target.abs);
+  const beforeBytes = fs.statSync(target.abs).size;
+  const composed = composeSplitPlan(target.abs, target.rel, target.manifest, parsed.groups, ctx);
+  if (!composed.ok) return errorExit('split_groups_invalid', { detail: composed.detail, fix: groupsFix });
+
+  const result = {
+    ok: true, command: 'split', mode: 'apply', dryRun: !!opts.dryRun,
+    manifest: target.rel,
+    moved: parsed.groups.reduce((n, g) => n + g.files.length, 0),
+    base: composed.base,
+    shards: composed.shards,
+    before: { entries: beforeEntries, bytes: beforeBytes },
+    after: { totalEntries: beforeEntries },
+  };
+
+  const emit = () => {
+    if (isJson) console.log(JSON.stringify(result));
+    else {
+      console.log(`split${result.dryRun ? ' --dry-run' : ''}: ${result.manifest} — moved=${result.moved} ` +
+                  `base=${result.base.entries} shards=${result.shards.length} ` +
+                  `entries ${result.before.entries} → ${result.after.totalEntries}`);
+    }
+  };
+
+  if (opts.dryRun) { emit(); return; }
+
+  const backups = commitSplit(composed.writes);
+
+  // 사후 재검증 (U-4 ④) — 캐시를 비우고 **같은 resolveShards로** 다시 읽는다.
+  // 해석 로직을 복제하지 않는다 (082 봉인 제약).
+  ctx.codeMap.manifests.clear();
+  if (ctx.codeMap.shardViews) ctx.codeMap.shardViews.clear();
+  let afterEntries = -1;
+  let duplicates = 0;
+  try {
+    const after = loadManifest(target.abs, ctx);
+    const view = resolveShards(target.abs, target.rel, after, ctx);
+    duplicates = view ? view.duplicates.length : 0;
+    afterEntries = diskTotalEntries(target.abs);
+  } catch { afterEntries = -1; }
+
+  if (afterEntries !== beforeEntries || duplicates > 0) {
+    restoreSplitBackups(backups);
+    return errorExit('split_verify_failed', {
+      detail: `entries ${beforeEntries} → ${afterEntries}${duplicates > 0 ? `, duplicates=${duplicates}` : ''}`,
+      fix: '자산은 실행 전 상태로 복원했습니다 — code-scan validate 로 현재 상태를 확인한 뒤 groups 문서를 조정하세요',
+    });
+  }
+
+  result.after = { totalEntries: afterEntries };
+  process.stderr.write('code-scan: split 완료 — code-scan validate 로 확인하세요\n');
+  emit();
 }
 
 // ── target (F-005) ───────────────────────────────────────────────────────
@@ -2142,13 +3277,22 @@ function cmdValidate(projectRoot, config, opts, mode) {
     }
   }
 
-  // 크기 상한 열거 — 비차단 (082 F-005 §3.5.2 (B)). 베이스·샤드 양쪽에서 호출된다 (S-25).
-  function checkOversize(manifestAbs, manifestRel) {
+  // 크기 상한 열거 — 비차단 (082 F-005 유지). 2축 판정 + 유도 페이로드 (083 F-003).
+  // 베이스·샤드 양쪽에서 호출된다 (082 S-25).
+  function checkOversize(manifestAbs, manifestRel, manifest) {
     const size = fs.statSync(manifestAbs).size;
-    const limit = manifestMaxBytes(ctx);
-    if (size > limit) {
-      violations.push({ code: 'manifest_oversize', manifest: manifestRel, detail: `${size}/${limit}` });
-    }
+    const policy = resolveShardPolicy(ctx);
+    const entries = manifestEntryCount(manifest);
+    if (!isOversizeManifest(size, entries, policy)) return;
+    violations.push({
+      code: 'manifest_oversize',
+      manifest: manifestRel,
+      detail: `${size}/${policy.maxBytes}`,          // [MUST] 포맷 불변 — 082 S-15가 정확 단언
+      entries,
+      minFiles: policy.minFiles,
+      recommendedShards: recommendedShardCount(size, policy),
+      next: `code-scan split ${manifestRel} --plan`,
+    });
   }
 
   if (!isInlineMode && ctx.codeMap.present) {
@@ -2201,7 +3345,7 @@ function cmdValidate(projectRoot, config, opts, mode) {
           violations.push({ code: 'orphan', sub: 'dir_missing', manifest: manifestRel, file: manifest.dir, detail: '' });
         }
 
-        checkOversize(manifestAbs, manifestRel);
+        checkOversize(manifestAbs, manifestRel, manifest);
 
         const view = resolveShards(manifestAbs, manifestRel, manifest, ctx);
 
@@ -2222,7 +3366,7 @@ function cmdValidate(projectRoot, config, opts, mode) {
             // 미러 경로가 베이스이므로 항상 위반이 된다 (082 §9 H-1, S-8/S-15)
             violations.push({ code: 'worker_scope_violation', sub: 'shard_dir_mismatch', manifest: s.manifestRel, detail: String(s.manifest.dir) });
           }
-          checkOversize(s.manifestAbs, s.manifestRel);
+          checkOversize(s.manifestAbs, s.manifestRel, s.manifest);
         }
 
         for (const dup of (view ? view.duplicates : [])) {
@@ -2357,6 +3501,14 @@ function main() {
   const projectRoot = findProjectRoot();
   const config = loadConfig(projectRoot);
 
+  // ── init 게이트 예외 (083 F-012) ───────────────────────────────────────
+  // [MUST] init은 headerSource가 **없는 상태를 고치는** 명령이다. 아래 전 명령 차단 게이트
+  // 뒤에 두면 "설정이 없어서 init이 거부되고, init을 못 돌려 설정을 못 만드는" 순환이 생겨
+  // 기능이 통째로 무용지물이 된다. 게이트를 무력화하는 것이 아니라, **게이트가 요구하는 값을
+  // CLI 인자로 직접 받는다** — 나머지 명령의 차단 동작은 조금도 완화되지 않는다.
+  if (opts.command === 'init') { return cmdInit(projectRoot, config, opts); }
+  // ──────────────────────────────────────────────────────────────────────
+
   // ── 전 명령 차단 게이트 (080 D-5) ─────────────────────────────────────
   // help/version은 커맨드가 아니라 메타 출력이므로 위에서 이미 반환되었다.
   const hs = resolveHeaderSource(config, opts);
@@ -2368,14 +3520,17 @@ function main() {
   const mode = hs.value;   // 이 실행의 모드 — 이후 변하지 않는다 (ctx로 전파)
   // ──────────────────────────────────────────────────────────────────────
 
-  // ── scopes 스키마 게이트 (080 §3.2.2 (E), TS-075) ─────────────────────
+  // ── config 스키마 게이트 (080 scopes + 083 shardPolicy) ────────────────
   // loadConfig는 종료하지 않으므로(hook fail-safe) 여기서 exit 1로 표면화한다.
-  if (config.configError === 'config_scope_invalid') {
+  // 신규 에러 코드를 만들지 않고 기존 code_scan_config_invalid 창구에 합류한다.
+  if (config.configError === 'config_scope_invalid' || config.configError === 'shard_policy_invalid') {
     return errorExit('code_scan_config_invalid', {
       detail: config.configErrorDetail,
       where: 'config',
-      fix: '.opal/code-scan.json의 scopes 항목은 문자열 또는 {path, include, exclude} 형식이어야 합니다 ' +
-           '(include/exclude는 문자열 배열)',
+      fix: (config.configError === 'shard_policy_invalid'
+        ? '.opal/code-scan.json의 shardPolicy는 {"maxBytes": <양의 정수>, "minFiles": <양의 정수>} 형식이어야 합니다'
+        : '.opal/code-scan.json의 scopes 항목은 문자열 또는 {path, include, exclude} 형식이어야 합니다 ' +
+          '(include/exclude는 문자열 배열)') + INIT_RECOVERY_FIX,
     });
   }
 
@@ -2388,10 +3543,12 @@ function main() {
     summary:  cmdSummary,
     depends:  cmdDepends,
     missing:  cmdMissing,
+    init:     cmdInit,      // 실제 진입은 위 게이트 예외 분기 — 여기 등재는 명령 목록의 SSOT 유지용
     discover: cmdDiscover,
     scaffold: cmdScaffold,
     target:   cmdTarget,
     validate: cmdValidate,
+    split:    cmdSplit,
     feature:  cmdFeature,
   };
 
@@ -2473,3 +3630,22 @@ module.exports = {
 //                       집행한다. index.json 최상위 manifestMaxBytes(기본 20480바이트)로 매니페스트
 //                       바이트 상한을 감지하며 전면 비차단(counts.manifest_oversize 열거)이다.
 //                       CODE_MAP_VERSION은 1로 고정 유지 (082)
+// v1.6.0 — 2026-08-04 (083) — 샤드 정책 2축화 + split 서브명령 신설. 분할 판정이 "바이트 초과 AND
+//                       엔트리 수 이상"의 2축이 되고, resolveShardPolicy 1곳이 프로젝트 code-scan.json
+//                       shardPolicy > 전역 ~/.opal/setting.json > 코드 상수(maxBytes 10240 / minFiles 40)
+//                       3단을 셀 단위로 병합해 실행당 1회 확정한다(전역 설정 부재·파손·타입 위반은
+//                       전부 비차단 폴백). 구 위치 index.json manifestMaxBytes는 폐기되어 값을 읽지
+//                       않고 deprecationOnce 안내만 한다(자동 변환 없음). manifest_oversize 위반에
+//                       entries·minFiles·recommendedShards·next 4필드가 추가되고 scaffold 경고에도
+//                       다음 명령이 병기되나 detail의 {bytes}/{maxBytes} 포맷은 불변이다. split은
+//                       --plan(제안)과 --groups(집행) 2모드로, 제안은 5단 사다리(S1 첫토큰·S2 첫2토큰·
+//                       S3 임의토큰 = 표준단어사전 대조 / S4 마지막토큰·S5 depends 빈도)를 잔여만
+//                       흘려보내며 돌리고 --trace·--stop-after·stage 3종 검토 장치와 함께 결정론적
+//                       groups 문서를 낸다(무쓰기, --out 사용 시 문서 1개만). 표준단어사전은 옵셔널로
+//                       shardPolicy.dictPath > docs/PROJECT.md {설계} 변수 > 기본 2후보 순으로 탐색하며
+//                       부재는 침묵·파손은 noticeOnce 1줄이고 사전 없으면 S1~S3을 건너뛴다. 집행은
+//                       사전 불변식 검증 → *.tmp-split 전량 작성 → renameSync 커밋 → 캐시를 비우고
+//                       resolveShards로 재검증하는 4단이며, 총합 불일치·중복 발생 시 백업으로 원복해
+//                       엔트리 유실 0건을 보증한다(신규 에러 코드 7종). init 서브명령이 headerSource
+//                       미설정 순환을 끊는 비대화형 설정 초안 창구로 추가됐고, discover 전용이던
+//                       opts.discoverOut은 opts.out으로 개명되어 split --plan과 공유한다 (083)

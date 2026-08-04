@@ -39,6 +39,7 @@
 //   v1.0 2026-07-28 KST: RED-first 최초 작성 (태스크 077, opal-test-agent mode:red)
 //   v2.0 2026-08-02 KST: 태스크 080 RED 재작성 — inline 모드 no-op 계약(TS-023) 추가, 077 자산은
 //     manifest 모드 회귀로 승계 (opal-test-agent mode:red)
+//   v2.1 2026-08-04 KST: `run()` 헬퍼에 `OPAL_HOME` 주입(가짜 홈 격리, H-4, 태스크 083)
 //
 
 'use strict';
@@ -52,9 +53,15 @@ const { spawnSync } = require('node:child_process');
 
 const CODE_SCAN_JS = path.resolve(__dirname, '..', 'code-scan.js');
 const FIX = path.resolve(__dirname, 'fixtures');
+// [MUST] 083부터 code-scan이 ~/.opal/setting.json(샤드 정책)을 읽는다 — OPAL_HOME을 주입하지
+// 않으면 개발자 실제 홈이 결과에 유입된다(H-4). 기본 격리는 homes/absent(setting.json 없음 → 코드 상수 폴백).
+const HOME_ABSENT = path.join(FIX, 'shard-policy', 'homes', 'absent');
 
 function run(cwd, args) {
-  const result = spawnSync(process.execPath, [CODE_SCAN_JS, ...args], { cwd, encoding: 'utf8', timeout: 10000 });
+  const result = spawnSync(process.execPath, [CODE_SCAN_JS, ...args], {
+    cwd, encoding: 'utf8', timeout: 10000,
+    env: Object.assign({}, process.env, { OPAL_HOME: HOME_ABSENT }),
+  });
   const stdout = result.stdout || '';
   let json = null;
   try { json = JSON.parse(stdout.trim()); } catch { /* not JSON */ }

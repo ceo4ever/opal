@@ -1,0 +1,8 @@
+{
+  "version": 1, "status": "reviewed",
+  "note": "shard-policy/split-target fixture — split --plan 5단 사다리(S1~S5) 검증용 미분할 매니페스트 (task 083, TS-030~TS-039/TS-100~TS-116/TS-120~TS-132/TS-040~TS-054)",
+  "scopes": { "svc": { "root": "svc/", "anchors": [], "stripPrefix": [] } },
+  "domains": { "mod": { "paths": ["svc/mod/**"] } },
+  "layerRules": [ { "match": "**/mod/**", "layer": "util" } ],
+  "exclude": []
+}

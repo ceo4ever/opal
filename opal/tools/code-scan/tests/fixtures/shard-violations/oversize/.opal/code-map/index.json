@@ -1,7 +1,6 @@
 {
   "version": 1, "status": "reviewed",
-  "note": "shard-violations/oversize fixture — manifestMaxBytes:200, 베이스가 200바이트 초과 (task 082, S-15/S-16/S-17)",
-  "manifestMaxBytes": 200,
+  "note": "shard-violations/oversize fixture — shardPolicy.maxBytes:200, 베이스가 200바이트 초과 (task 082, S-15/S-16/S-17) (task 083 정책 이전)",
   "scopes": { "svc": { "root": "svc/", "anchors": [], "stripPrefix": [] } },
   "domains": { "mod": { "paths": ["svc/mod/**"] } },
   "layerRules": [ { "match": "**/mod/**", "layer": "util" } ],

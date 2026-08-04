@@ -46,6 +46,7 @@
 //   v2.0 2026-08-02 KST: 태스크 080 RED 재작성 — 합산 커버리지 폐기 → 모드별 단일 소스(TS-024),
 //     구조 패스 모드 분기(TS-026), headerSource 결과 필드(TS-029), 스코프 필터 존중 양방향
 //     (TS-014/TS-015), 차단 정책 불변 회귀(TS-027). 077 자산은 전량 승계 (opal-test-agent mode:red)
+//   v2.1 2026-08-04 KST: run() 하네스에 OPAL_HOME 주입(가짜 홈 격리, H-4) (083)
 //
 
 'use strict';
@@ -60,9 +61,14 @@ const { spawnSync } = require('node:child_process');
 const CODE_SCAN_JS = path.resolve(__dirname, '..', 'code-scan.js');
 const FIX = path.resolve(__dirname, 'fixtures');
 
+// [MUST] 083부터 code-scan이 ~/.opal/setting.json의 shardPolicy를 읽는다 — OPAL_HOME을
+// 주입하지 않으면 개발자 실제 홈이 결과에 유입된다(H-4). 기본 격리는 homes/absent(빈 트리).
+const HOME_ABSENT = path.join(FIX, 'shard-policy', 'homes', 'absent');
+
 function run(cwd, args, input) {
   const result = spawnSync(process.execPath, [CODE_SCAN_JS, ...args], {
     cwd, encoding: 'utf8', timeout: 10000, input,
+    env: { ...process.env, OPAL_HOME: HOME_ABSENT },
   });
   const stdout = result.stdout || '';
   let json = null;

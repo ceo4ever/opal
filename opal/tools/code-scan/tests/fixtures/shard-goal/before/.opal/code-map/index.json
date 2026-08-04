@@ -1,7 +1,6 @@
 {
   "version": 1, "status": "reviewed",
-  "note": "shard-goal/before fixture — 상한 초과 베이스 1개에 전 엔트리 집중, 분산 전 상태 (task 082, S-23 목표달성 검증)",
-  "manifestMaxBytes": 400,
+  "note": "shard-goal/before fixture — 상한 초과 베이스 1개에 전 엔트리 집중, 분산 전 상태 (task 082, S-23 목표달성 검증) (task 083 정책 이전)",
   "scopes": { "svc": { "root": "svc/", "anchors": [], "stripPrefix": [] } },
   "domains": { "mod": { "paths": ["svc/mod/**"] } },
   "layerRules": [ { "match": "**/mod/**", "layer": "util" } ],

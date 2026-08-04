@@ -40,6 +40,7 @@
 #   v4.0 2026-07-17: improve-tool run.sh 실행 권한 chmod 블록(backlog-tool 패턴 답습) + fw-inbox 런타임 디렉토리 초기화 블록(mkdir -p + README seed, create-if-absent) 추가 — opal-improve 스킬·improve-tool 도구는 기존 skills/tools 자동 복사 루프가 처리, fw-inbox는 clean_dirs 미포함으로 재설치 시 기존 수집 항목 보존(H-5 멱등) (058)
 #   v4.1 2026-07-23: merge_hooks_config 인라인 python(이벤트 통째 교체=clobber) 제거 → scripts/merge-hooks.py 위임 — 소유권-마커(_opal_managed) 기반 멱등 upsert로 외부 hook(orca PostToolUse 등) 보존 + N회 재배포 바이트 동일, 로직 테스트 seam 분리 (076)
 #   v4.2 2026-07-28: code-scan run.sh 실행 권한 chmod 블록 추가(improve-tool 블록 직후, state-tool 패턴) — code-map 헤더 작성층 도구 배포·tool-scan usage 정상화 (077)
+#   v4.3 2026-08-04 15:24 KST: install_opal_setting 병합 로직을 SEED_KEYS 목록 루프로 재작성 — models 키 존재 시 조기 sys.exit(0)으로 shardPolicy가 영구 미시드되던 구조 제거, 키별 독립 판정으로 전환(H-11) (083)
 #
 
 set -euo pipefail
@@ -919,11 +920,13 @@ install_opal_setting() {
     local src="$FRAMEWORK_ROOT/opal/core/setting.default.json"
     local dst="$USER_HOME/.opal/setting.json"
     if [[ -f "$dst" ]]; then
-        # 파일이 존재하는 경우: models 키가 없으면 scaffold 병합 (멱등) — H-1
-        python3 - "$src" "$dst" <<'PYEOF' || warn "setting.json models 병합 실패 — 기존 파일 유지"
+        # 파일이 존재하는 경우: SEED_KEYS 중 existing에 없는 키만 scaffold 병합 (멱등) — H-1, H-11
+        # 한 키가 이미 있다고 나머지 키 시드를 막지 않는다 — 키별로 독립 판정한다.
+        python3 - "$src" "$dst" <<'PYEOF' || warn "setting.json scaffold 병합 실패 — 기존 파일 유지"
 import json, sys
 
 src_path, dst_path = sys.argv[1], sys.argv[2]
+SEED_KEYS = ['models', 'shardPolicy']
 
 try:
     with open(src_path, 'r', encoding='utf-8') as f:
@@ -934,17 +937,24 @@ except Exception as e:
     sys.stderr.write(f"warn: setting.json 로드 실패 — {e}\n")
     sys.exit(1)
 
-if 'models' in existing:
-    sys.stderr.write("info: setting.json에 models 키 존재 — 무변 (멱등)\n")
-    sys.exit(0)
+added = []
+for key in SEED_KEYS:
+    if key in existing:
+        continue
+    if key not in default:
+        continue
+    existing[key] = default[key]
+    added.append(key)
 
-existing['models'] = default['models']
+if not added:
+    sys.stderr.write(f"info: setting.json에 {SEED_KEYS} 모두 존재 — 무변 (멱등)\n")
+    sys.exit(0)
 
 with open(dst_path, 'w', encoding='utf-8') as f:
     json.dump(existing, f, ensure_ascii=False, indent=2)
     f.write('\n')
 
-sys.stderr.write("info: setting.json에 models scaffold 병합 완료\n")
+sys.stderr.write(f"info: setting.json에 {added} scaffold 병합 완료\n")
 PYEOF
         return 0
     fi

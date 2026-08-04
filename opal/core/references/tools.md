@@ -201,7 +201,7 @@
 
 ## code-scan
 
-**용도**: 코드 파일의 `@header` 메타블록 스캔 — 도메인/레이어/의존 관계 조회 + `.opal/code-map/` 외부 매니페스트 기반 헤더 작성층(discover/scaffold/target/validate/feature)  
+**용도**: 코드 파일의 `@header` 메타블록 스캔 — 15서브명령. 도메인/레이어/의존 관계 조회 8종 + `.opal/code-map/` 외부 매니페스트 기반 헤더 작성층(discover/scaffold/target/validate/feature) + 매니페스트 분할층(split) + 설정 초안 창구(init)  
 **실행 경로**: `~/.opal/tools/code-scan/run.sh <command>` (권장) · `node ~/.opal/tools/code-scan/code-scan.js <command>` (하위호환)  
 **소스 경로**: `opal/tools/code-scan/`  
 **의존성**: Node.js (외부 패키지 없음)
@@ -230,6 +230,11 @@ node ~/.opal/tools/code-scan/code-scan.js depends <module>
 
 # @header 없는 파일 목록
 node ~/.opal/tools/code-scan/code-scan.js missing
+
+# .opal/code-scan.json 설정 초안 생성 (비대화형 — 프롬프트·TTY 의존 0건)
+# headerSource는 추론하지 않고 인자로 받는다 — 누락 시 init_header_source_required로 거부하며
+# 파일을 만들지 않는다. 차단 게이트 앞에 배치되므로 설정이 없거나 깨진 트리에서도 동작한다
+node ~/.opal/tools/code-scan/code-scan.js init --header-source <inline|manifest> [--write] [--force] [--json]
 
 # .opal/code-map/index.json 초안 추론 (헤더 작성층)
 node ~/.opal/tools/code-scan/code-scan.js discover [--out <path>] [--dry-run]
@@ -260,6 +265,12 @@ node ~/.opal/tools/code-scan/code-scan.js target <file>
 # counts.manifest_oversize로 열거만 하고 차단하지 않는다(비차단)
 node ~/.opal/tools/code-scan/code-scan.js validate [--changed <csv|->]
 
+# 매니페스트 분할 — 제안(--plan) / 집행(--groups) 2모드 (manifest 모드 전용, inline은 거부)
+# --plan은 매니페스트를 한 바이트도 쓰지 않는다(--out을 주면 groups 문서 1개만 쓴다)
+# --groups는 4단 원자적 처리(사전 불변식 → tmp 전량 작성 → rename 커밋 → 캐시 비우고 재검증)
+node ~/.opal/tools/code-scan/code-scan.js split <manifest> --plan [--out <path>] [--trace] [--stop-after <S1..S5>]
+node ~/.opal/tools/code-scan/code-scan.js split <manifest> --groups <path|-> [--dry-run]
+
 # 기능(feature) 태그 기준 cross-scope 조회 (기본 전체 스코프 순회, --scope로 단일 스코프 제한)
 node ~/.opal/tools/code-scan/code-scan.js feature <id> [--scope <name>]
 ```
@@ -273,9 +284,15 @@ node ~/.opal/tools/code-scan/code-scan.js feature <id> [--scope <name>]
 | `--domain <name>` | 도메인 필터 |
 | `--layer <name>` | 레이어 필터 |
 | `--exclude <patterns>` | 제외 패턴 (쉼표 구분, 와일드카드 지원) |
-| `--out <path>` | `discover`: 초안 출력 경로 (기본 `.opal/code-map/index.json`) |
-| `--dry-run` | `discover`/`scaffold`: 파일 쓰기 없이 결과만 계산 |
+| `--out <path>` | `discover`: 초안 출력 경로 (기본 `.opal/code-map/index.json`) · `split --plan`: groups 문서 출력 경로 (플래그를 새로 만들지 않고 공유) |
+| `--dry-run` | `discover`/`scaffold`/`split --groups`: 파일 쓰기 없이 결과만 계산 |
+| `--write` | `init`: `.opal/code-scan.json`을 실제로 쓴다 (기본은 stdout 초안만) |
+| `--force` | `init`: 기존 설정을 덮어쓴다 (`*.json.bak` 백업 후) |
 | `--changed <csv|->` | `validate`: 쉼표 목록 또는 stdin 개행 목록으로 검증 범위 한정 |
+| `--plan` | `split`: 분할 그룹 제안 (`--groups`와 배타) |
+| `--groups <path|->` | `split`: groups 문서(파일 경로 또는 stdin)로 분할 집행 |
+| `--trace` | `split --plan`: 사다리 단계별 표(입력 → 걷음 → 잔여) 출력 |
+| `--stop-after <Sn>` | `split --plan`: 사다리를 `S1`~`S5` 중 지정 단계에서 중단 |
 | `--brief` | 한 줄 요약 출력 (기본값) |
 | `--full` | 전체 헤더 JSON 출력 |
 | `--json` | 파이프용 raw JSON 출력 |
@@ -294,8 +311,17 @@ node ~/.opal/tools/code-scan/code-scan.js feature <id> [--scope <name>]
 |----------|------|
 | `header_source_unset` | `.opal/code-scan.json`에 `headerSource`가 없고 `--header-source`도 주어지지 않음 |
 | `header_source_invalid` | `headerSource` 값이 유효 도메인(`inline`, `manifest`) 밖 — 설정 파일에 폐기된 `auto`가 남아 있으면 `migration` 힌트가 함께 출력된다(자동 변환은 하지 않는다) |
-| `code_scan_config_invalid` | `.opal/code-scan.json` 자체가 파손(파싱 실패·스키마 위반) |
+| `code_scan_config_invalid` | `.opal/code-scan.json` 자체가 파손(파싱 실패·스키마 위반) — 프로젝트 `shardPolicy`의 타입 위반도 여기에 포함된다 |
 | `scope_ambiguous` | 스코프 귀속 판정이 모호 — 동률 root에서 둘 이상의 스코프 `include`가 동시에 매칭 |
+
+`header_source_unset`·`header_source_invalid`·`code_scan_config_invalid` 3종의 `fix` 안내에는 `code-scan init` 복구 경로가 함께 실린다(차단 동작 자체는 완화하지 않는다).
+
+`init` 전용 에러 코드는 아래 2종이다. `init`은 **차단 게이트 앞에 배치**되므로 설정이 없거나 깨진 트리에서도 실행된다 — 게이트 뒤에 두면 "설정이 없어 `init`이 거부되고 `init`을 못 돌려 설정을 못 만드는" 순환이 생기기 때문이다. 나머지 명령의 차단 동작은 불변이다.
+
+| 에러 코드 | 조건 |
+|----------|------|
+| `init_header_source_required` | `--header-source`가 없음 — 도구는 이 2택을 추론하지 않으며 **파일을 만들지 않는다** |
+| `config_exists` | `.opal/code-scan.json`이 이미 있고 `--force`가 없음 — 원본은 불변이다 |
 
 매니페스트 샤딩(`shards`) 관련 exit 1 에러 코드는 아래 2종이며, 헤더 소스 미해결과 무관하게 매니페스트를 읽는 명령(`scaffold`/`validate`/`target`/조회 8커맨드)에서 개별 발생한다.
 
@@ -303,6 +329,20 @@ node ~/.opal/tools/code-scan/code-scan.js feature <id> [--scope <name>]
 |----------|------|
 | `shard_declaration_invalid` | 베이스 매니페스트의 `shards`가 배열이 아니거나, 라벨이 kebab 정규식 불일치·중복 선언 |
 | `reserved_name_collision` | `scaffold` 대상 소스 디렉토리 이름이 예약 폴더 `_shards`와 충돌 |
+
+`split`은 자산을 쓰는 유일한 명령이므로 실패 지점별로 쓰기 상태가 다른 에러 코드 **7종**을 갖는다(전부 exit 1).
+
+| 에러 코드 | 조건 | 쓰기 상태 |
+|----------|------|----------|
+| `split_usage_invalid` | `--plan`/`--groups` 동시 지정·둘 다 없음·매니페스트 인자 누락·`--stop-after` 값 오류 | 무쓰기 |
+| `split_inline_mode` | `inline` 모드에서 호출 — 조용한 성공 없이 거부한다 | 무쓰기 |
+| `split_target_invalid` | 대상 매니페스트가 부재·파손·샤드 파일 자체를 지목 | 무쓰기 |
+| `split_groups_invalid` | groups 문서가 파손·라벨 규칙 위반·중복·베이스에 없는 파일 지목 | 무쓰기 |
+| `split_write_failed` | tmp 전량 작성 단계 실패 | 원본 불변(tmp만 정리) |
+| `split_rollback` | rename 커밋 단계 실패 → 원상 복구 수행 | 원본 복구 완료 |
+| `split_verify_failed` | 커밋 후 재검증에서 정합 붕괴 감지 | 커밋된 상태 + 진단 노출 |
+
+집행의 계약은 **엔트리 유실 0건**이다 — 4단 원자적 처리(사전 불변식 검사 → tmp 전량 작성 → rename 커밋 → 캐시를 비우고 재검증)를 거치며, 재검증은 `resolveShards`를 다시 호출해 해석 로직을 복제하지 않는다.
 
 ### `uncovered` 2분류 (git 기준)
 
@@ -361,17 +401,6 @@ git을 쓸 수 없는 환경(git 미설치·비git 트리)에서는 전량 `pre_
 
 베이스 매니페스트(`mirrorPathForDir` 산출 경로, 진입점 무변경)가 `shards` 배열로 라벨을 선언하면, 예약 폴더 `_shards/`(`{베이스 경로 stem}/_shards/{label}.json`) 아래로 파일 엔트리를 의미 단위로 분산할 수 있다. 조회·기록 위치·구조 검증은 베이스+전 샤드 합집합을 단일 소스로 취급하며(첫 선언 우선·중복은 위반), `shards`를 선언하지 않은 매니페스트는 오늘과 완전히 동일하게 동작한다(하위호환, 옵트인).
 
-`.opal/code-map/index.json` 최상위 `manifestMaxBytes`(기본 20480바이트)로 매니페스트 파일당 바이트 상한을 프로젝트별로 조정할 수 있다. 상한 초과는 `validate`/`scaffold` 모두 **전면 비차단**(감지·열거·경고만) — `validate`는 `counts.manifest_oversize`에 집계하고 차단 위반에서 제외한다.
-
-```jsonc
-// .opal/code-map/index.json
-{
-  "version": 1,
-  "manifestMaxBytes": 20480,
-  "scopes": { "...": "..." }
-}
-```
-
 ```jsonc
 // 베이스 매니페스트 — shards 키 1개만 추가
 {
@@ -383,12 +412,79 @@ git을 쓸 수 없는 환경(git 미설치·비git 트리)에서는 전량 `pre_
 }
 ```
 
+**샤드 정책 (`shardPolicy`) — 설정 3단 우선순위**
+
+분할 판정 값은 아래 순서로 해석되며, 읽는 지점은 코드에 `resolveShardPolicy` **1곳**으로 봉인돼 있다(실행당 1회 확정).
+
+```
+{프로젝트}/.opal/code-scan.json 최상위 shardPolicy
+  > ~/.opal/setting.json 전역 shardPolicy
+  > 코드 내장 상수 (maxBytes 10240 / minFiles 40)
+```
+
+```jsonc
+// {프로젝트}/.opal/code-scan.json — 최상위에 둔다 (code-map/index.json이 아니다)
+{
+  "headerSource": "manifest",
+  "shardPolicy": { "maxBytes": 10240, "minFiles": 40 }
+}
+```
+
+- 키는 `maxBytes`(기본 10240) · `minFiles`(기본 40)이며 **셀 단위 머지**다 — 프로젝트에 한 키만 적으면 나머지 키는 하위 단계(전역 → 코드 상수)에서 온다.
+- 전역 설정 부재·파싱 실패·키 부재·타입 위반은 **전부 비차단 폴백**(무시 + stderr 안내 후 하위 단계 값 사용)이다. **프로젝트** 설정의 타입 위반만 `code_scan_config_invalid`로 exit 1한다.
+- code-scan은 `~/.opal/setting.json`을 읽는 **첫 도구**다. 홈 경로는 `OPAL_HOME` 환경변수로 주입할 수 있다(테스트 격리용).
+- `shardPolicy.dictPath`(선택)는 표준단어사전 경로 명시값이다. **`shardPolicy.ladder` 설정 노출은 이번 범위에서 제외했고 후속 태스크로 이관했다** — 사다리 임계값은 현재 코드 상수다.
+
+**폐기 안내** — 구 위치 `.opal/code-map/index.json`의 `manifestMaxBytes`는 폐기됐다. 도구는 그 **값을 읽지 않고** 실행당 1회 안내만 하며(비차단, exit 승격 없음), **자동 변환도 하지 않는다** — 새 주소 `shardPolicy`로 직접 옮겨 적어야 한다.
+
+**2축 판정** — `manifest_oversize` 열거 조건은 **바이트 초과 AND 엔트리 수 이상**이다. 경계 규칙이 비대칭이다: 바이트는 `>`(초과), 엔트리는 `>=`(이상).
+
+- 상한 초과는 `validate`/`scaffold` 모두 **전면 비차단**(감지·열거·경고만) — `validate`는 `counts.manifest_oversize`에 집계하고 차단 위반에서 제외한다. 초과가 있어도 다른 위반이 없으면 exit 0이다.
+- 위반 페이로드에는 `entries`·`minFiles`·`recommendedShards`·`next`(다음에 실행할 `split --plan` 명령) 4필드가 실린다. `detail` 포맷(`{bytes}/{maxBytes}`)은 불변이다.
+
+**분할 절차 4단** (`split`)
+
+| 단계 | 명령 | 수행자 |
+|------|------|--------|
+| ① 탐지 | `code-scan validate` → `counts.manifest_oversize` + 위반의 `next` 확인 | 도구 |
+| ② 제안 | `code-scan split <manifest> --plan --out <groups.json>` | 도구 |
+| ③ 편집 | `groups.json`의 라벨·파일 배분을 확정한다 (의미 경계는 사람의 몫) | 사람/워커 |
+| ④ 집행 | `code-scan split <manifest> --groups <groups.json>` (선행 `--dry-run` 권장) | 도구 |
+| ⑤ 재검증 | `code-scan validate` — 집행 직후 도구가 자동 재검증하며, 절차상 한 번 더 확인한다 | 도구 |
+
+`--plan`의 출력 스키마 = `--groups`의 입력 스키마다(왕복 성립) — 제안 문서를 편집만 하고 그대로 집행에 넣을 수 있다.
+
+**제안 사다리 5단계** (`split --plan`)
+
+각 단계는 **직전 단계의 미분류분만** 입력으로 받으며, 앞 단계의 배정은 재배정되지 않는다.
+
+| 단계 | 신호 | 사전 대조 | 채택 임계 |
+|------|------|----------|----------|
+| S1 | 파일명 첫 토큰 | 표준단어사전 | 2건 이상 |
+| S2 | 1~2번째 토큰 결합 | 표준단어사전 | 2건 이상 |
+| S3 | 전체 토큰 중 매칭 | 표준단어사전 | 2건 이상 |
+| S4 | 마지막 토큰(역할축) | 없음(빈도) | 3건 이상 |
+| S5 | `depends` 공유 | 없음 | 3건 이상 |
+
+- 잔여는 `unassigned`로 남긴다 — 도구는 **임의 배분도, "기타" 그룹 생성도 하지 않는다.** 의미 경계 확정은 사람의 몫이다.
+- 검토 장치 3종: `--trace`(단계별 입력 → 걷음 → 잔여 표) · `--stop-after <S1..S5>`(사다리 중단) · 엔트리별 `stage` 필드(어느 단계가 걷었는지).
+
+**표준단어사전 연동** (옵셔널, `split --plan` 전용)
+
+S1~S3이 표준단어사전(`표준단어사전.md`)을 대조한다. **있으면 참고하고 없으면 건너뛴다** — 사전은 분할의 전제조건이 아니다.
+
+- 탐색 3단: ① `shardPolicy.dictPath` 명시값 → ② `docs/PROJECT.md`의 `{설계}` 변수 해소(`{설계}/사전/표준단어사전.md`) → ③ 기본 경로.
+- 폴백 3분기가 전부 **비차단**이다: **부재는 침묵**(S1~S3 skip) · **파싱 실패는 안내 1줄** · **매칭 0건은 정상 통과**. 프로젝트 루트 밖 경로와 크기 상한 초과 사전은 "사전 없음"으로 취급한다.
+- 사전 md는 `## 수식어`(6열) · `## 분류어`(5열) 두 표를 **헤더 이름 기반**으로 읽는다(컬럼 위치를 가정하지 않는다 — 열 수가 다른 두 표를 위치로 읽으면 조용히 오분류된다).
+- **읽기 전용**이며 호출 지점은 `split --plan` 경로 **1곳**뿐이다 — 조회 8커맨드의 출력이 사전 유무로 흔들리지 않는다.
+
 ### PM 관리 방안
 
 `{프로젝트}/.opal/code-scan.json`은 PM이 생성하고 관리한다.
 
-- **생성 시점**: code-scan 도구를 처음 사용하려 할 때 파일이 없으면 PM이 생성
+- **생성 시점**: code-scan 도구를 처음 사용하려 할 때 파일이 없으면 PM이 생성 — 산문 추론 대신 `code-scan init --header-source <inline|manifest> --write`가 결정론적으로 집행한다. `headerSource` 2택은 도구가 추론하지 않으므로 PM이 소유자에게 확인해 **인자로 넘긴다**.
 - **갱신 트리거**: 신규 도메인/폴더 추가, 대규모 리팩토링, 신규 언어 도입
+- **복구**: 설정이 깨졌으면 `code-scan init --header-source <...> --write --force` (원본은 `.bak`로 백업된다)
 - **PM Gate 확인**: EXECUTE 완료 후 PM Gate에서 신규 scope/domain 반영 여부 확인
 
 상세 관리 절차: `~/.opal/references/opal-pm.md` §9 참조
@@ -973,3 +1069,4 @@ bash ~/.opal/tools/tool-scan/run.sh check <도구>               # 설치/실행
 | v2.8 | 2026-07-30 | memory-tool `update`에 `--kind history` 정정 경로 반영 — `--stage`/`--result`/`--path` 옵션 추가, 용도 1줄에 히스토리 오기재 정정 명시(FIFO 미적용·행 수 불변, 삭제 아님) (079) |
 | v2.9 | 2026-08-02 14:50 | code-scan 섹션 헤더 소스 단일화 반영 — `target` 판정 주석의 구 4단 표기를 전역 `headerSource` 직결로 교체하고 `write_to` 3값과 `reason` 3값을 축별로 분리 서술(M-2 교정), `--header-source` 옵션 행 추가, 종료 코드 표를 `validate` 전용에서 전 명령 공통으로 확장 + 에러 코드 4종(`header_source_unset`/`header_source_invalid`/`code_scan_config_invalid`/`scope_ambiguous`) 등재, 프로젝트 설정 예시에 `headerSource` + `scopes` 객체형 추가 및 모드별 동작 요약 신설, `scaffold` inline no-op 1줄 추가, `auto` 유효값 서술 제거(폐기 표기만 유지) (080) |
 | v2.10 | 2026-08-03 13:20 | code-scan 섹션 — 매니페스트 샤딩 반영: `scaffold`/`target`/`validate` 커맨드 주석에 `_shards/` 예약 폴더·샤드 라우팅·`manifestMaxBytes` 비차단 상한 서술 추가, 신규 에러 코드 2종(`shard_declaration_invalid`/`reserved_name_collision`) 표 신설, `target`의 신규 실패 표면 `manifest_parse_failed` 명시, §매니페스트 샤딩 서브섹션(`shards` 스키마 + `manifestMaxBytes` 설정 예시) 신설 (082) |
+| v2.11 | 2026-08-04 17:18 | code-scan 섹션 — 샤드 정책 확장 반영(v1.6.0 / 13→15서브명령): `split`(제안 `--plan`·집행 `--groups`)·`init`(비대화형 설정 초안, 차단 게이트 앞 배치) 커맨드 등재, 옵션 표에 `--write`/`--force`/`--plan`/`--groups`/`--trace`/`--stop-after` 6행 추가 및 `--out`/`--dry-run` 설명 확장, 에러 코드 `init` 2종(`init_header_source_required`/`config_exists`)·`split` 7종(쓰기 상태 열 포함) 표 신설, §샤드 정책 신설 — `shardPolicy` 설정 3단 우선순위(프로젝트 > 전역 `~/.opal/setting.json` > 코드 상수 10240/40, 셀 단위 머지)·구 위치 `manifestMaxBytes` 폐기 안내(값 미독·자동 변환 없음)·2축 판정(바이트 `>` AND 엔트리 `>=`, 비차단 + 페이로드 4필드)·분할 절차 4단·제안 사다리 S1~S5 표·표준단어사전 탐색 3단/폴백 3분기(부재 침묵·파손 안내 1줄·매칭 0건 통과) 서술, `ladder` 설정 노출 후속 이관 명시, PM 관리 방안에 `init` 생성·`init --force` 복구 경로 반영 (083) |

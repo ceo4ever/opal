@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "scope": "svc",
+  "dir": "svc/mod",
+  "files": {
+    "OrderRepository.ts": {
+      "description": "주문 엔티티 조회/저장 리포지토리 (S1: 첫 토큰 order 사전매칭, 2건 그룹)",
+      "exports": ["OrderRepository"],
+      "depends": ["shared-lib"]
+    },
+    "OrderService.ts": {
+      "description": "주문 도메인 서비스 (S1: 첫 토큰 order 사전매칭, 2건 그룹)",
+      "exports": ["OrderService"]
+    },
+    "TaxRuleAlpha.ts": {
+      "description": "세율규칙 정책 A안 (S2: 첫 토큰 tax 단독 미등재 → 첫 2토큰 결합 TaxRule 사전매칭)",
+      "exports": ["TaxRuleAlpha"],
+      "depends": ["shared-lib"]
+    },
+    "TaxRuleBeta.ts": {
+      "description": "세율규칙 정책 B안 (S2: 첫 2토큰 결합 TaxRule 사전매칭)",
+      "exports": ["TaxRuleBeta"]
+    },
+    "LegacyOrderTable.ts": {
+      "description": "구 버전 주문 테이블 뷰 (S3: 첫 토큰/2토큰 결합 모두 미달 → 전체 토큰 중 order 사전매칭)",
+      "exports": ["LegacyOrderTable"],
+      "depends": ["shared-lib"]
+    },
+    "TempOrderView.ts": {
+      "description": "임시 주문 뷰 (S3: 전체 토큰 중 order 사전매칭)",
+      "exports": ["TempOrderView"]
+    },
+    "AlphaHandler.ts": {
+      "description": "알파 이벤트 핸들러 (S4: 사전 미등재, 마지막 토큰 handler 빈도 3건)",
+      "exports": ["AlphaHandler"]
+    },
+    "BetaHandler.ts": {
+      "description": "베타 이벤트 핸들러 (S4: 마지막 토큰 handler 빈도 3건)",
+      "exports": ["BetaHandler"]
+    },
+    "GammaHandler.ts": {
+      "description": "감마 이벤트 핸들러 (S4: 마지막 토큰 handler 빈도 3건)",
+      "exports": ["GammaHandler"]
+    },
+    "QuirkyLoneModule.ts": {
+      "description": "사전·빈도·depends 어디에도 걸리지 않는 고유 모듈 (unassigned 검증용)",
+      "exports": ["QuirkyLoneModule"]
+    }
+  }
+}

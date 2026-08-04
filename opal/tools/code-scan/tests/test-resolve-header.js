@@ -56,6 +56,7 @@
 //     077 TS-005 폐기(불변식은 077 TS-044/045로 분할 승계), 077 TS-046 폐기(auto 폴백 소멸 →
 //     test-header-source.js TS-003이 승계), 077 TS-004/007/S-20을 모드 오버레이 위로 이전
 //     (그룹 A/B, PLAN §3.7.2) (opal-test-agent mode:red)
+//   v2.1 2026-08-04 KST: `run()` 헬퍼에 `OPAL_HOME` 기본 주입(가짜 홈 격리, H-4, 태스크 083)
 //
 
 'use strict';
@@ -69,6 +70,9 @@ const { spawnSync } = require('node:child_process');
 
 const CODE_SCAN_JS = path.resolve(__dirname, '..', 'code-scan.js');
 const FIX = path.resolve(__dirname, 'fixtures');
+// [MUST] 083부터 code-scan이 ~/.opal/setting.json(샤드 정책)을 읽는다 — OPAL_HOME을 주입하지
+// 않으면 개발자 실제 홈이 결과에 유입된다(H-4). 기본 격리는 homes/absent(setting.json 없음 → 코드 상수 폴백).
+const HOME_ABSENT = path.join(FIX, 'shard-policy', 'homes', 'absent');
 
 function copyDirRecursive(src, dst) {
   fs.mkdirSync(dst, { recursive: true });
@@ -114,7 +118,7 @@ function makeHeaderSourceFixture(value) {
 function run(cwd, args, envOverride = {}) {
   const result = spawnSync(process.execPath, [CODE_SCAN_JS, ...args], {
     cwd,
-    env: { ...process.env, ...envOverride },
+    env: { ...process.env, OPAL_HOME: HOME_ABSENT, ...envOverride },
     encoding: 'utf8',
     timeout: 10000,
   });

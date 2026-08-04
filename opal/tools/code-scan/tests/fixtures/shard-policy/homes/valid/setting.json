@@ -1,0 +1,8 @@
+{
+  "bootstrap": "on",
+  "models": {
+    "platform": "auto",
+    "claude": { "light": "haiku", "standard": "sonnet", "advanced": "opus" }
+  },
+  "shardPolicy": { "maxBytes": 20480, "minFiles": 20 }
+}

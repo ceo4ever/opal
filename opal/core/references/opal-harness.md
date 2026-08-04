@@ -251,7 +251,7 @@ OPAL 도구는 모두 `~/.opal/tools/{tool-name}/run.sh` 래퍼를 통해 호출
 | state-tool | 파이프라인 현황판 JSON SSOT 관리 (9개 서브 명령: `init`/`show`/`advance`/`mark`/`block`/`validate`/`add-row`/`status`/`gate-pass`) | TASK 단계 시작 / Gate 직후 / 추가작업 진입 |
 | brain-tool | 프로젝트 브레인 지식 위키 결정론적 집행 — 8 서브명령 `init`/`add-page`/`index`/`log`/`search`/`sync-header`/`lint`/`validate` | `//opbr` 또는 brain 참조 시 |
 | test-tool | 테스트 단계별 도구 결정론적 집행 — 9서브명령 resolve/check/unit/integration + scenario-init/lock/mark/status/red (+scenario-red — RED 증거 tool-gated red_confirmed 갱신) | EXECUTE/TEST 단계 진입 시 |
-| code-scan | 코드 `@header` 메타블록 스캔 + `.opal/code-map/` 헤더 작성층 결정론적 집행 — 13서브명령 `scan`/`domain`/`layer`/`search`/`exports`/`summary`/`depends`/`missing`/`discover`/`scaffold`/`target`/`validate`/`feature` | 코드 구조·위치 파악 시 / 헤더 작성 위치 판정·code-map 무결성 검증 시 |
+| code-scan | 코드 `@header` 메타블록 스캔 + `.opal/code-map/` 헤더 작성층 결정론적 집행 — 15서브명령 `scan`/`domain`/`layer`/`search`/`exports`/`summary`/`depends`/`missing`/`discover`/`scaffold`/`target`/`validate`/`feature`/`split`/`init`. 과대 매니페스트를 `shardPolicy`(프로젝트 > 전역 `~/.opal/setting.json` > 코드 상수 3단 우선순위) 기반 바이트·엔트리 2축으로 비차단 열거하고 `split`으로 분할(표준단어사전 옵셔널 참조), `init`으로 설정 초안 생성 | 코드 구조·위치 파악 시 / 헤더 작성 위치 판정·code-map 무결성 검증 시 / 매니페스트 분할·설정 초기화 시 |
 | cmux-tool | cmux browser 자동화 래퍼 — 12+1 서브명령(웹 크롤링·스냅샷·스크린샷·E2E) | 브라우저/localhost 접근·웹 테스트 시 |
 | tool-scan | 도구·MCP·스킬 상황 검색 + live 사용법 확인 — 5서브명령 list/which/usage/resolve/check | 도구 선택·정확한 사용법 확인 시 |
 | backlog-tool | backlog.json SSOT 관리 — 7 서브명령 init/add-task/select-next/mark/update-task/done-check/show (oppl 백로그) | oppl 루프(백로그 생성·태스크 선택·종료 판정) 시 |
@@ -327,3 +327,4 @@ OPAL 도구는 모두 `~/.opal/tools/{tool-name}/run.sh` 래퍼를 통해 호출
 | v6.6 | 2026-07-23 | §1 자동 루핑 제약 표에 "시나리오 목표-커버 게이트 (루브릭 미달)" 행 추가 — MAX 3회, 초과 시 캡틴(사용자) 에스컬레이션. `harness/scenario-gate.md` 신규 SSOT가 이 수치를 복제하지 않고 참조 (073) |
 | v6.7 | 2026-07-28 23:28 | §9 등록 도구 표 code-scan 행 현행화 — `.opal/code-map/` 헤더 작성층 신규 5서브명령(discover/scaffold/target/validate/feature) 반영, 타 행과 동일 서식(서브명령 열거)으로 정합 (077) |
 | v6.8 | 2026-08-02 16:03 | §1 자동 루핑 제약 표에 "워커 프로세스 비정상 종료(스톨·응답 중 연결 종료)" 행 추가 — 재시도 1회(동일 컨텍스트 재개), 초과 시 새 컨텍스트 분할 재배치. 판정 절차는 `harness/pm-review-gate.md`, 분할 기준은 `pm/dispatch-process.md` Step 6가 소유하고 본 표는 수치만 소유(중복 기재 금지) (081) |
+| v6.9 | 2026-08-04 17:30 | §9 등록 도구 표 code-scan 행 현행화 — 13→15서브명령(+`split`/`init`), 과대 매니페스트 판정을 `shardPolicy` 3단 우선순위(프로젝트 > 전역 `~/.opal/setting.json` > 코드 상수) 기반 바이트·엔트리 2축 비차단 열거로, 분할은 `split`(표준단어사전 옵셔널 참조)로, 설정 초안은 `init`으로 반영 (083) |

@@ -3,7 +3,7 @@
  *   "module": "test-shard",
  *   "layer": "test",
  *   "domain": "code-scan",
- *   "description": "RED-first — code-scan 매니페스트 샤딩(_shards/ 의미 단위 분산 + manifestMaxBytes 파일당 크기 상한) 계약 CLI 블랙박스 테스트. 샤드 합집합 해석·package 3단 상속·라벨 경로 안전·CODE_MAP_VERSION 불변·target 라우팅·validate 위반 4종·오탐 증폭 차단·scaffold 보존/멱등/중복가드/stale·크기 상한 열거+비차단·예약어 가드·하위호환 회귀·다중 스코프 격리·목표달성(분산 후 크기 하강+조회 무손실)을 검증한다 (F-1~F-8, 태스크 082)",
+ *   "description": "RED-first — code-scan 매니페스트 샤딩(_shards/ 의미 단위 분산 + 파일당 크기 상한) 계약 CLI 블랙박스 테스트. 크기 상한 설정 창구는 083에서 .opal/code-scan.json의 shardPolicy로 이전됐고(구 index.json manifestMaxBytes는 폐기·비차단) 판정은 바이트 초과 AND 엔트리 수 이상 2축이다. 샤드 합집합 해석·package 3단 상속·라벨 경로 안전·CODE_MAP_VERSION 불변·target 라우팅·validate 위반 4종·오탐 증폭 차단·scaffold 보존/멱등/중복가드/stale·크기 상한 열거+비차단·예약어 가드·하위호환 회귀·다중 스코프 격리·목표달성(분산 후 크기 하강+조회 무손실)을 검증한다 (F-1~F-8, 태스크 082)",
  *   "exports": [],
  *   "depends": ["node:test", "node:assert/strict", "node:child_process", "node:fs", "node:os", "node:path"],
  *   "task": "082",
@@ -39,7 +39,9 @@
 // | [T082/L2-F4] 신규삭제    | S-13 | L2   | 신규→베이스 added / 삭제→샤드 pruned                |
 // | [T082/L2-F4] 중복 skip   | S-14 | L2   | 중복 키 디렉토리 skip + 샤드 무쓰기                 |
 // | [T082/L1-F5] oversize    | S-15 | L1   | manifest_oversize 열거 + exit 0(비차단)             |
-// | [T082/L1-F5] maxBytes    | S-16 | L1   | manifestMaxBytes 오버라이드 + 경계값                |
+// | [T082/L1-F5] maxBytes    | S-16 | L1   | shardPolicy.maxBytes 오버라이드 + 경계값 (083 주소 이전) |
+// | [T083/L1-F7] 구위치 비차단| S-16 | L1   | 폐기된 index.json manifestMaxBytes = 무시 + 안내 1줄  |
+// | [T083/L1-F2] 전역 무효   | S-16 | L1   | ~/.opal/setting.json shardPolicy 무효 = 무시 + 폴백   |
 // | [T082/L1-F5] scaffold경고| S-17 | L1   | stderr 1줄 + stdout 무변경                          |
 // | [T082/L1-F5] 샤드oversize| S-25 | L1   | 샤드 자신도 상한 측정 (게이트 G-1)                  |
 // | [T082/L2-F6] 예약어      | S-18 | L2   | reserved_name_collision / reserved_name             |
@@ -51,9 +53,36 @@
 // | [T082/L2-F3] 다중 스코프 | S-26 | L2   | visitedShards/shardViews 스코프 격리                |
 // | (S-24는 L3 [SUPERVISOR] — 본 파일에 작성하지 않는다. TEST-SCENARIO.md §3 S-24 참조, 수동 검증 대상) |
 //
+// ─────────────────────────────────────────────────────────────────────────────
+// [메타테스트 재귀 가드 규약 — 3파일 공통, 동일 문구] (083)
+//   가드 환경변수: `CODE_SCAN_META_CHILD` — 유일한 규약이다. 새 이름을 만들지 않는다.
+//   대상: 전 스위트를 재실행하는 "메타테스트" 3종
+//         test-shard-policy.js TS-080 · test-regression.js TS-062 · test-shard.js S-19
+//   ① 각 메타테스트는 함수 진입부에서 `process.env.CODE_SCAN_META_CHILD === '1'`이면 본문을
+//      수행하지 않고 즉시 `return`한다(= 통과 처리). 자식 프로세스에서는 메타테스트를 돌리지 않는다.
+//   ② 각 메타테스트가 자식 스위트를 `spawnSync`할 때 `env`에 `CODE_SCAN_META_CHILD='1'`을 주입한다.
+//      기존 `NODE_TEST_CONTEXT`/`NODE_TEST_WORKER_ID` 제거와 `OPAL_HOME` 관련 주입은 그대로 보존한다.
+//   ③ 근거: 가드가 세 메타테스트 중 하나에만 걸려 있으면 서로를 재실행해 타임아웃 예산이 곱해져
+//      발산한다(083 Step 11 실측 — TS-080 370,651ms/상한 60초, TS-062·S-19 상한 정각 초과).
+//      상한 상향은 처방이 아니다 — 가드를 한 종으로 통일해 곱셈을 끊는 것이 처방이다.
+//   ④ 네 번째 메타테스트를 추가할 때도 이 규약을 그대로 따른다. 가드 경로에 `skip`·`todo` 마킹을
+//      쓰지 않는다(TS-085의 "skip·todo 0건" 감사와 충돌하며, 단언 완화로 오인된다).
+// ─────────────────────────────────────────────────────────────────────────────
+//
 // 변경이력:
 //   v1.0 2026-08-03 KST: RED-first 최초 작성 — S-1~S-23, S-25, S-26 전량 (S-24는 L3 수동, 미작성)
 //     (Task 082, opal-test-agent mode:red)
+//   v1.1 2026-08-04 16:54 KST: 단언 주소 이전 (Task 083, PLAN §3.7.2 (C)) — 삭제·skip·완화 0건.
+//     크기 상한 창구가 `.opal/code-map/index.json manifestMaxBytes`(폐기) → `.opal/code-scan.json`
+//     최상위 `shardPolicy: {maxBytes, minFiles}`로 이전됨에 따라: 헬퍼 `setManifestMaxBytes` →
+//     `setShardPolicy(dir, patch)`(셀 병합) 교체 / S-16 (c) 기대 기본값 20480 → 10240 + 2축
+//     엔트리 사전조건 1건 추가 / S-16 (e) `invalid_index` → `code_scan_config_invalid` 이전 +
+//     (e2) 구 위치 비차단·(e3) 전역 무효 폴백 2케이스 추가 / S-17 대조군을 `maxBytes: 999999`로
+//     교체 / S-22 `shardPolicy` 정규식 1건 추가 + 기대 버전 v1.5.0 → v1.6.0 이전 /
+//     `run()`·`runHook()` 하네스에 `OPAL_HOME` 주입(가짜 홈 격리, H-4)
+//   v1.2 2026-08-04 18:06 KST: S-19에 공통 재귀 가드 `CODE_SCAN_META_CHILD` 적용 (083) — 위 규약
+//     ①②(자식이면 조기 return + 자식 스위트에 가드 주입). 구 `T080_SUITE_CHILD` 단독 규약을 본
+//     이름으로 일원화. 단언 삭제·skip/todo 도입·비교 완화 0건
 //
 
 'use strict';
@@ -70,11 +99,19 @@ const HOOK_JS = path.resolve(__dirname, '..', 'code-map-hook.js');
 const SRC = fs.readFileSync(CODE_SCAN_JS, 'utf8');
 const FIX = path.resolve(__dirname, 'fixtures');
 
+// ── 가짜 홈 (083 F-008 주소 이전) ───────────────────────────────────────────
+// [MUST] 083부터 code-scan이 `~/.opal/setting.json`의 shardPolicy를 읽는다 — OPAL_HOME을 주입하지
+// 않으면 개발자 실제 홈이 판정에 유입된다(H-4). 기본 격리는 homes/absent(빈 트리)이며,
+// 주입 형태는 `tests/test-shard-policy.js:104-117`의 `run(cwd, args, input, homeOverride)`와 동일하다.
+const HOME_ABSENT = path.join(FIX, 'shard-policy', 'homes', 'absent');
+const HOME_BADTYPE = path.join(FIX, 'shard-policy', 'homes', 'badtype');
+
 // ── 공통 헬퍼 (tests/test-validate.js:56-80 패턴 재사용) ────────────────────
 
-function run(cwd, args, input) {
+function run(cwd, args, input, homeOverride) {
   const result = spawnSync(process.execPath, [CODE_SCAN_JS, ...args], {
     cwd, encoding: 'utf8', timeout: 10000, input,
+    env: Object.assign({}, process.env, { OPAL_HOME: homeOverride || HOME_ABSENT }),
   });
   const stdout = result.stdout || '';
   let json = null;
@@ -87,6 +124,7 @@ function runHook(cwd, stdinPayload) {
     cwd,
     input: typeof stdinPayload === 'string' ? stdinPayload : JSON.stringify(stdinPayload),
     encoding: 'utf8', timeout: 10000,
+    env: Object.assign({}, process.env, { OPAL_HOME: HOME_ABSENT }),   // 083 F-008 — 홈 격리
   });
   return { exitCode: result.status, stdout: result.stdout || '', stderr: result.stderr || '' };
 }
@@ -161,7 +199,7 @@ function toKebabLabel(stem) {
  * `shard-goal/before`(상한 초과 베이스 1개, 6엔트리)에서 **스크립트로** 분산 후 트리를 파생한다
  * (게이트 gaps G-3 — 수작성 2벌 금지: ②의 동일성 단언이 도구가 아니라 픽스처 작성자를 시험하는
  * 것을 막기 위해, 분산 후 트리를 손으로 따로 만들지 않고 `before`에서 프로그램적으로 만든다).
- * 각 소스 파일을 **개별 샤드 1개**로 분리한다(라벨 = kebab(stem)) — manifestMaxBytes:400 아래에서
+ * 각 소스 파일을 **개별 샤드 1개**로 분리한다(라벨 = kebab(stem)) — shardPolicy.maxBytes:400 아래에서
  * 2파일 묶음(예: pricing 2파일 402바이트)은 여전히 상한을 넘기므로, 상한을 실제로 만족시키는
  * 가장 단순한 분산은 파일당 샤드다. 베이스는 `shards` 선언만 남기고 `files`는 빈 객체가 된다.
  * @returns {{dir: string, labels: string[], base: object}}
@@ -423,26 +461,41 @@ test('[T082/L1-F5] S-15: manifest_oversize 열거 + exit 0(비차단)', () => {
 // L1 — S-16: 크기 상한 설정 오버라이드 + 경계값 (H-6, 게이트 gaps G-5)
 // ═════════════════════════════════════════════════════════════════════════
 
-function setManifestMaxBytes(dir, value) {
+/**
+ * 크기 상한 설정 창구 — 083 F-007로 주소가 이전됐다 (PLAN §3.7.2 (C)).
+ *   구: `.opal/code-map/index.json`의 `manifestMaxBytes`   (폐기 — 값을 읽지 않는다)
+ *   신: `.opal/code-scan.json` 최상위 `shardPolicy: {maxBytes, minFiles}`
+ * `patch`는 셀 단위로 병합한다 — 픽스처가 명시한 `minFiles`를 보존해야 2축 판정에서
+ * 바이트 축만 검증하는 케이스(a·b·d·d2)의 의도가 유지된다. `undefined`면 키 전체를 지운다.
+ */
+function setShardPolicy(dir, patch) {
+  const cfgPath = path.join(dir, '.opal', 'code-scan.json');
+  const cfg = readJSON(cfgPath);
+  if (patch === undefined) delete cfg.shardPolicy;
+  else cfg.shardPolicy = Object.assign({}, cfg.shardPolicy, patch);
+  writeJSON(cfgPath, cfg);
+}
+
+/** 폐기된 구 위치 키를 일부러 심는 창구 — 비차단(무시 + 안내)임을 단언하는 데만 쓴다 (S-16 (e2)). */
+function setLegacyIndexManifestMaxBytes(dir, value) {
   const idxPath = path.join(dir, '.opal', 'code-map', 'index.json');
   const idx = readJSON(idxPath);
-  if (value === undefined) delete idx.manifestMaxBytes;
-  else idx.manifestMaxBytes = value;
+  idx.manifestMaxBytes = value;
   writeJSON(idxPath, idx);
 }
 
-test('[T082/L1-F5] S-16 (a) 작은 값): manifestMaxBytes를 더 작게 설정하면 검출된다', () => {
+test('[T082/L1-F5] S-16 (a) 작은 값): shardPolicy.maxBytes를 더 작게 설정하면 검출된다', () => {
   const dir = copyFixture(path.join('shard-violations', 'oversize'), 's16-small');
-  setManifestMaxBytes(dir, 50);
+  setShardPolicy(dir, { maxBytes: 50 });
   const { json, stdout } = run(dir, ['validate', '--json']);
   assert.ok(json, `--json 출력이 유효 JSON이어야 함, raw="${stdout}"`);
   assert.ok(countViolations(json, 'manifest_oversize') >= 1,
     `[RED expect] 더 작은 상한에서도 초과가 검출되어야 함, got ${JSON.stringify(json.violations)}`);
 });
 
-test('[T082/L1-F5] S-16 (b) 큰 값): manifestMaxBytes를 크게 설정하면 0건', () => {
+test('[T082/L1-F5] S-16 (b) 큰 값): shardPolicy.maxBytes를 크게 설정하면 0건', () => {
   const dir = copyFixture(path.join('shard-violations', 'oversize'), 's16-large');
-  setManifestMaxBytes(dir, 999999);
+  setShardPolicy(dir, { maxBytes: 999999 });
   const { json, stdout } = run(dir, ['validate', '--json']);
   assert.ok(json, `--json 출력이 유효 JSON이어야 함, raw="${stdout}"`);
   assert.strictEqual(countViolations(json, 'manifest_oversize'), 0,
@@ -451,15 +504,20 @@ test('[T082/L1-F5] S-16 (b) 큰 값): manifestMaxBytes를 크게 설정하면 0�
     `[RED expect] counts 스키마에 manifest_oversize 키가 숫자 0으로 존재해야 함, got ${JSON.stringify(json.counts)}`);
 });
 
-test('[T082/L1-F5] S-16 (c) 미지정): manifestMaxBytes 미설정 시 내장 기본값 20480 적용', () => {
+test('[T082/L1-F5] S-16 (c) 미지정): shardPolicy 미설정 시 내장 기본값 maxBytes 10240 / minFiles 40 적용', () => {
   const dir = copyFixture(path.join('shard-violations', 'oversize'), 's16-default');
-  setManifestMaxBytes(dir, undefined);
-  const size = fs.statSync(path.join(dir, '.opal', 'code-map', 'svc', 'mod.json')).size;
-  assert.ok(size < 20480, '사전 조건: 픽스처 크기가 기본 상한보다 작아야 검증이 유의미함');
+  setShardPolicy(dir, undefined);            // 프로젝트 키 제거 → 전역(격리 홈: 부재) → 코드 상수
+  const basePath = path.join(dir, '.opal', 'code-map', 'svc', 'mod.json');
+  const size = fs.statSync(basePath).size;
+  const entries = Object.keys(readJSON(basePath).files || {}).length;
+  assert.ok(size < 10240, `사전 조건(바이트 축): 픽스처 크기가 기본 상한 10240보다 작아야 검증이 유의미함, got ${size}`);
+  // 083 F-003 2축 판정 — 엔트리는 "minFiles 이상"일 때만 초과로 열거된다. 기본 하한 40에 미달함을
+  // 명시해 0건이 두 축 모두에서 결정론적임을 고정한다 (PLAN §3.7.2 (C) — 강화 1건 추가).
+  assert.ok(entries < 40, `사전 조건(엔트리 축): 픽스처 엔트리 수가 기본 하한 40 미달이어야 함, got ${entries}`);
   const { json, stdout } = run(dir, ['validate', '--json']);
   assert.ok(json, `--json 출력이 유효 JSON이어야 함, raw="${stdout}"`);
   assert.strictEqual(countViolations(json, 'manifest_oversize'), 0,
-    `[RED expect] 기본값(20480) 적용 시 0건이어야 함, got ${JSON.stringify(json.violations)}`);
+    `[RED expect] 기본값(maxBytes 10240 / minFiles 40) 적용 시 0건이어야 함, got ${JSON.stringify(json.violations)}`);
   assert.strictEqual(json.counts && json.counts.manifest_oversize, 0,
     `[RED expect] counts 스키마에 manifest_oversize 키가 숫자 0으로 존재해야 함, got ${JSON.stringify(json.counts)}`);
 });
@@ -467,7 +525,7 @@ test('[T082/L1-F5] S-16 (c) 미지정): manifestMaxBytes 미설정 시 내장 �
 test('[T082/L1-F5] S-16 (d) 경계값 size==limit): 상한과 정확히 같은 크기는 초과가 아니다(off-by-one)', () => {
   const dir = copyFixture(path.join('shard-violations', 'oversize'), 's16-boundary-eq');
   const size = fs.statSync(path.join(dir, '.opal', 'code-map', 'svc', 'mod.json')).size;
-  setManifestMaxBytes(dir, size);
+  setShardPolicy(dir, { maxBytes: size });
   const { json, stdout } = run(dir, ['validate', '--json']);
   assert.ok(json, `--json 출력이 유효 JSON이어야 함, raw="${stdout}"`);
   assert.strictEqual(countViolations(json, 'manifest_oversize'), 0,
@@ -479,25 +537,70 @@ test('[T082/L1-F5] S-16 (d) 경계값 size==limit): 상한과 정확히 같은 �
 test('[T082/L1-F5] S-16 (d2) 경계값 size==limit+1): 상한보다 1바이트라도 크면 검출된다', () => {
   const dir = copyFixture(path.join('shard-violations', 'oversize'), 's16-boundary-over');
   const size = fs.statSync(path.join(dir, '.opal', 'code-map', 'svc', 'mod.json')).size;
-  setManifestMaxBytes(dir, size - 1);
+  setShardPolicy(dir, { maxBytes: size - 1 });   // 픽스처의 minFiles:1은 병합으로 보존된다
   const { json, stdout } = run(dir, ['validate', '--json']);
   assert.ok(json, `--json 출력이 유효 JSON이어야 함, raw="${stdout}"`);
   assert.strictEqual(countViolations(json, 'manifest_oversize'), 1,
     `[RED expect] size===limit+1은 초과여야 함, got ${JSON.stringify(json.violations)}`);
 });
 
-test('[T082/L1-F5] S-16 (e) 타입 위반): manifestMaxBytes가 문자열/음수면 invalid_index 처리', () => {
+// S-16 (e): 082는 이 단언을 구 위치(`index.json manifestMaxBytes`) + `invalid_index`로 걸었다.
+// 083 F-007이 상한을 `.opal/code-scan.json`의 `shardPolicy`로 이전했으므로 **에러 코드도 함께
+// 이전한다** — 타입 위반은 여전히 exit 1 차단이며 창구만 `code_scan_config_invalid`로 바뀐다
+// (PLAN §3.7.2 (C) — 강화 1→3, 리스크 H-9).
+test('[T082/L1-F5] S-16 (e) 타입 위반): shardPolicy.maxBytes가 문자열/음수면 code_scan_config_invalid 처리', () => {
   const dirStr = copyFixture(path.join('shard-violations', 'oversize'), 's16-badtype-str');
-  setManifestMaxBytes(dirStr, 'not-a-number');
+  setShardPolicy(dirStr, { maxBytes: 'not-a-number' });
   const r1 = run(dirStr, ['validate', '--json']);
-  assert.strictEqual(r1.exitCode, 1, `[RED expect] 문자열 manifestMaxBytes는 exit 1, got ${r1.exitCode} (${r1.stdout})`);
-  assert.strictEqual(r1.json && r1.json.error, 'invalid_index', `[RED expect] error==='invalid_index', got ${r1.stdout}`);
+  assert.strictEqual(r1.exitCode, 1, `[RED expect] 문자열 shardPolicy.maxBytes는 exit 1, got ${r1.exitCode} (${r1.stdout})`);
+  assert.strictEqual(r1.json && r1.json.error, 'code_scan_config_invalid',
+    `[RED expect] error==='code_scan_config_invalid', got ${r1.stdout}`);
 
   const dirNeg = copyFixture(path.join('shard-violations', 'oversize'), 's16-badtype-neg');
-  setManifestMaxBytes(dirNeg, -1);
+  setShardPolicy(dirNeg, { maxBytes: -1 });
   const r2 = run(dirNeg, ['validate', '--json']);
-  assert.strictEqual(r2.exitCode, 1, `[RED expect] 음수 manifestMaxBytes는 exit 1, got ${r2.exitCode} (${r2.stdout})`);
-  assert.strictEqual(r2.json && r2.json.error, 'invalid_index', `[RED expect] error==='invalid_index', got ${r2.stdout}`);
+  assert.strictEqual(r2.exitCode, 1, `[RED expect] 음수 shardPolicy.maxBytes는 exit 1, got ${r2.exitCode} (${r2.stdout})`);
+  assert.strictEqual(r2.json && r2.json.error, 'code_scan_config_invalid',
+    `[RED expect] error==='code_scan_config_invalid', got ${r2.stdout}`);
+});
+
+// S-16 (e2) 신규 — 구 위치는 폐기됐다. "무시한다"는 계약은 곧 **차단하지 않는다**는 뜻이므로,
+// 타입 위반 값을 심어도 exit이 1로 승격되지 않고 폐기 안내 1줄만 나와야 한다 (083 F-007 AC).
+test('[T083/L1-F7] S-16 (e2) 구 위치 비차단): index.json manifestMaxBytes 타입 위반은 exit 승격 없이 폐기 안내 1줄', () => {
+  const dir = copyFixture(path.join('shard-violations', 'oversize'), 's16-legacy-badtype');
+  setLegacyIndexManifestMaxBytes(dir, 'not-a-number');
+  const r = run(dir, ['validate', '--json']);
+  assert.strictEqual(r.exitCode, 0,
+    `구 위치 타입 위반은 차단하지 않는다(manifest_oversize만 있으므로 exit 0), got ${r.exitCode} (${r.stdout})`);
+  assert.notStrictEqual(r.json && r.json.error, 'invalid_index',
+    `구 위치 타입 위반이 invalid_index로 승격되면 안 된다, got ${r.stdout}`);
+  assert.notStrictEqual(r.json && r.json.error, 'code_scan_config_invalid',
+    `구 위치 타입 위반이 신 위치 에러로 새어나가면 안 된다, got ${r.stdout}`);
+  assert.match(r.stderr, /manifestMaxBytes/,
+    `폐기 안내에 구 키 이름이 있어야 함, got stderr="${r.stderr}"`);
+  assert.match(r.stderr, /shardPolicy/,
+    `폐기 안내에 새 주소(shardPolicy)가 있어야 함, got stderr="${r.stderr}"`);
+  assert.strictEqual((r.stderr.match(/manifestMaxBytes는 폐기/g) || []).length, 1,
+    `폐기 안내는 실행당 정확히 1줄이어야 함, got stderr="${r.stderr}"`);
+  // 값을 읽지 않으므로 판정은 신 위치(픽스처 shardPolicy 200/1) 그대로다 — 무시가 결과로도 확인된다.
+  assert.strictEqual(countViolations(r.json, 'manifest_oversize'), 1,
+    `구 위치 값이 판정에 유입되면 안 된다(신 위치 200 기준 1건 유지), got ${JSON.stringify(r.json && r.json.violations)}`);
+});
+
+// S-16 (e3) 신규 — 전역(`~/.opal/setting.json`) 타입 위반은 **무시 + 하위 단계 폴백**이다.
+// 전역 파손이 프로젝트 실행을 차단하면 홈 하나가 전 프로젝트를 세운다 (083 F-002 AC).
+test('[T083/L1-F2] S-16 (e3) 전역 타입 위반): ~/.opal/setting.json shardPolicy 무효는 무시 + 기본값 폴백', () => {
+  const dir = copyFixture(path.join('shard-violations', 'oversize'), 's16-global-badtype');
+  setShardPolicy(dir, undefined);                        // 프로젝트 미설정 → 전역(무효) → 코드 상수
+  const r = run(dir, ['validate', '--json'], undefined, HOME_BADTYPE);
+  assert.strictEqual(r.exitCode, 0,
+    `전역 shardPolicy 타입 위반은 차단하지 않는다, got ${r.exitCode} (${r.stdout})`);
+  assert.notStrictEqual(r.json && r.json.error, 'code_scan_config_invalid',
+    `전역 파손이 프로젝트 config 에러로 승격되면 안 된다, got ${r.stdout}`);
+  assert.match(r.stderr, /shardPolicy/,
+    `무효 사유가 stderr에 1줄 노출되어야 함(조용한 폴백 금지), got stderr="${r.stderr}"`);
+  assert.strictEqual(countViolations(r.json, 'manifest_oversize'), 0,
+    `기본값(10240/40)으로 폴백하므로 이 픽스처는 0건이어야 함, got ${JSON.stringify(r.json && r.json.violations)}`);
 });
 
 // ═════════════════════════════════════════════════════════════════════════
@@ -507,7 +610,9 @@ test('[T082/L1-F5] S-16 (e) 타입 위반): manifestMaxBytes가 문자열/음수
 test('[T082/L1-F5] S-17: scaffold — stderr 1줄 경고, stdout JSON은 초과 없을 때와 바이트 동일', () => {
   const withLimit = copyFixture(path.join('shard-violations', 'oversize'), 's17-with');
   const withoutLimit = copyFixture(path.join('shard-violations', 'oversize'), 's17-without');
-  setManifestMaxBytes(withoutLimit, undefined); // 기본값 20480 — 이 픽스처 크기로는 초과 없음
+  // 083 F-007 주소 이전 — 대조군은 "상한 미설정"이 아니라 "충분히 큰 상한"으로 만든다.
+  // 구 위치 키를 지우는 방식은 신 위치(픽스처 shardPolicy 200/1)를 건드리지 못해 대조가 성립하지 않는다.
+  setShardPolicy(withoutLimit, { maxBytes: 999999 });
 
   const withRes = run(withLimit, ['scaffold', '--json']);
   const withoutRes = run(withoutLimit, ['scaffold', '--json']);
@@ -586,22 +691,28 @@ test('[T082/L1-F1] S-21: resolveShards 봉인 — _shards 경로 조립·byKey �
 // L1 — S-22: 버전·문서 산출물 검사 (H-12, 문서-코드 정합) — 구현·문서 전 RED가 정상
 // ═════════════════════════════════════════════════════════════════════════
 
-test('[T082/L1-F8] S-22 (version): code-scan version === v1.5.0, 변경이력에 (082) 행 존재', () => {
+// 082는 이 케이스에 v1.5.0을 고정했다. 083이 `VERSION`을 v1.6.0으로 올렸으므로(PLAN §3.9.2 (A))
+// **기대 버전만 이전**한다 — `strictEqual` 강도는 유지하고, 082 변경이력 단언도 그대로 남긴다.
+test('[T082/L1-F8] S-22 (version): code-scan version === v1.6.0, 변경이력에 (082)·(083) 행 존재', () => {
   const dir = copyFixture('shard-repo', 's22-version');
   const { exitCode, stdout } = run(dir, ['--version']);
   assert.strictEqual(exitCode, 0, `--version은 exit 0이어야 함, got ${exitCode}`);
-  assert.strictEqual(stdout.trim(), 'code-scan v1.5.0',
-    `[RED expect] 버전이 v1.5.0으로 상향되어야 함, got "${stdout.trim()}"`);
+  assert.strictEqual(stdout.trim(), 'code-scan v1.6.0',
+    `버전이 v1.6.0으로 상향되어야 함(082 v1.5.0 → 083 v1.6.0), got "${stdout.trim()}"`);
 
   assert.match(SRC, /\(082\)/, `[RED expect] 소스 하단 변경이력에 (082) 표기가 있어야 함`);
   assert.match(SRC, /\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}.*\(082\)|\(082\).*\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}/,
     `[RED expect] 변경이력이 YYYY-MM-DD HH:mm (KST) + (082) 포맷이어야 함`);
+  assert.match(SRC, /\(083\)/, `083 변경이력 행도 남아 있어야 함(버전 상향 근거)`);
 });
 
-test('[T082/L1-F8] S-22 (tools.md): _shards·manifestMaxBytes·신규 에러 코드 2종 반영', () => {
+test('[T082/L1-F8] S-22 (tools.md): _shards·manifestMaxBytes·shardPolicy·신규 에러 코드 2종 반영', () => {
   const toolsMd = fs.readFileSync(path.resolve(__dirname, '..', '..', '..', 'core', 'references', 'tools.md'), 'utf8');
   assert.match(toolsMd, /_shards/, `[RED expect] tools.md에 _shards 반영 필요`);
+  // 폐기 안내 절에 구 키 이름이 남으므로 082 정규식은 그대로 GREEN이다 (PLAN §3.7.2 (C)).
   assert.match(toolsMd, /manifestMaxBytes/, `[RED expect] tools.md에 manifestMaxBytes 반영 필요`);
+  // 083 신설 — 상한의 새 주소도 문서에 기재되어야 한다 (PLAN §3.7.2 (C) 강화 1→2, §3.9.2 (D)).
+  assert.match(toolsMd, /shardPolicy/, `tools.md에 신 주소 shardPolicy 반영 필요 (083 F-009)`);
   assert.match(toolsMd, /shard_declaration_invalid/, `[RED expect] tools.md 에러 코드 표에 shard_declaration_invalid 반영 필요`);
   assert.match(toolsMd, /reserved_name_collision/, `[RED expect] tools.md 에러 코드 표에 reserved_name_collision 반영 필요`);
 });
@@ -865,12 +976,16 @@ test('[T082/L2-F7] S-19: 샤드 미선언 매니페스트 자산 — 빈 shards:
 });
 
 test('[T082/L2-F7] S-19: 기존 테스트 10종 전량 GREEN(무수정)', () => {
+  // 재귀 가드 규약 ① (파일 상단 규약 참조) — 이 프로세스 자체가 다른 메타테스트의 자식이면
+  // 본 메타테스트를 수행하지 않고 통과 처리한다. skip/todo 마킹 대신 조기 return을 쓴다(규약 ④).
+  if (process.env.CODE_SCAN_META_CHILD === '1') return;
   const otherFiles = fs.readdirSync(__dirname)
     .filter(f => f.startsWith('test-') && f.endsWith('.js') && f !== 'test-shard.js');
   assert.ok(otherFiles.length >= 10, `기존 테스트 파일이 최소 10종 있어야 함, got ${otherFiles.length}: ${JSON.stringify(otherFiles)}`);
   // 082 Step 9e: NODE_TEST_CONTEXT를 자식에 그대로 물려주면 재귀 가드로 자식이 no-op(fail=-1)한다.
   // test-regression.js:581-584와 동일하게 제거해 자식이 실제로 테스트를 돌리게 한다.
-  const childEnv = { ...process.env };
+  // 재귀 가드 규약 ② — 자식 스위트의 메타테스트(TS-080·TS-062)를 무동작시킨다.
+  const childEnv = { ...process.env, CODE_SCAN_META_CHILD: '1' };
   delete childEnv.NODE_TEST_CONTEXT;
   const result = spawnSync(process.execPath, ['--test', ...otherFiles.map(f => path.join(__dirname, f))],
     { encoding: 'utf8', timeout: 120000, env: childEnv });

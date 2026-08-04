@@ -35,6 +35,8 @@
 //
 // 변경이력:
 //   v1.0 2026-08-02 KST: RED-first 최초 작성 (태스크 080, opal-test-agent mode:red)
+//   v1.1 2026-08-04 KST: run() 헬퍼에 OPAL_HOME 격리 주입 — 실제 홈 setting.json에 결과가 좌우되던
+//     구멍을 닫는다(H-4) (083, opal-task-agent)
 //
 
 'use strict';
@@ -48,6 +50,10 @@ const { spawnSync } = require('node:child_process');
 
 const CODE_SCAN_JS = path.resolve(__dirname, '..', 'code-scan.js');
 const FIX = path.resolve(__dirname, 'fixtures');
+// [MUST] 083부터 code-scan이 ~/.opal/setting.json의 shardPolicy를 읽는다 — OPAL_HOME을 주입하지
+// 않으면 개발자의 실제 홈 설정에 결과가 좌우된다(H-4). HOME_ABSENT는 setting.json이 없는 가짜
+// 홈이라 code-scan이 코드 상수로 폴백해 결정론적 기준선이 된다.
+const HOME_ABSENT = path.join(FIX, 'shard-policy', 'homes', 'absent');
 
 // ─────────────────────────────────────────────────────────────────────────
 // 공통 헬퍼 — 실 subprocess + 실 파일시스템만 사용(mock/monkeypatch 없음)
@@ -90,7 +96,7 @@ function indexPath(dir) { return path.join(dir, '.opal', 'code-map', 'index.json
 /** code-scan.js CLI 블랙박스 실행. */
 function run(cwd, args) {
   const r = spawnSync(process.execPath, [CODE_SCAN_JS, ...args], {
-    cwd, encoding: 'utf8', timeout: 20000, env: { ...process.env },
+    cwd, encoding: 'utf8', timeout: 20000, env: { ...process.env, OPAL_HOME: HOME_ABSENT },
   });
   const stdout = r.stdout || '';
   const stderr = r.stderr || '';

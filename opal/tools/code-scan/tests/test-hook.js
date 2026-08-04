@@ -53,6 +53,8 @@
 //     loadConfig 무종료 산출물 검사 추가 (opal-test-agent mode:red)
 //   v2.1 2026-08-02 KST: 태스크 080 추가 RED — TS-076 신설. 조기 이탈 3종의 **stderr 0바이트**를
 //     단언한다(TS-040/041/043은 stdout만 봤다). 기존 단언 무수정·무삭제 (opal-test-agent mode:red)
+//   v2.2 2026-08-04 KST: runHook() 헬퍼에 OPAL_HOME 격리 주입 — 실제 홈 setting.json에 결과가
+//     좌우되던 구멍을 닫는다(H-4) (083, opal-task-agent)
 //
 
 'use strict';
@@ -68,6 +70,11 @@ const HOOK_JS = path.resolve(__dirname, '..', 'code-map-hook.js');
 const CODE_SCAN_JS = path.resolve(__dirname, '..', 'code-scan.js');
 const FIX = path.resolve(__dirname, 'fixtures');
 const CLAUDE_HOOKS_JSON = path.resolve(__dirname, '..', '..', '..', 'core', 'hooks', 'claude-hooks.json');
+// [MUST] 083부터 code-scan이 ~/.opal/setting.json의 shardPolicy를 읽는다 — OPAL_HOME을 주입하지
+// 않으면 개발자의 실제 홈 설정에 결과가 좌우된다(H-4). HOME_ABSENT는 setting.json이 없는 가짜
+// 홈이라 code-scan이 코드 상수로 폴백해 결정론적 기준선이 된다. hook은 code-scan.js를 직접
+// spawn하지 않지만 code-map-hook.js가 내부적으로 config를 로드하므로 동일하게 격리한다.
+const HOME_ABSENT = path.join(FIX, 'shard-policy', 'homes', 'absent');
 
 function copyDirRecursive(src, dst) {
   fs.mkdirSync(dst, { recursive: true });
@@ -113,6 +120,7 @@ function runHook(cwd, stdinPayload) {
     input: typeof stdinPayload === 'string' ? stdinPayload : JSON.stringify(stdinPayload),
     encoding: 'utf8',
     timeout: 10000,
+    env: Object.assign({}, process.env, { OPAL_HOME: HOME_ABSENT }),
   });
   return { exitCode: result.status, stdout: result.stdout || '', stderr: result.stderr || '', error: result.error };
 }

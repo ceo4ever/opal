@@ -1,0 +1,8 @@
+{
+  "headerSource": "manifest",
+  "scopes": { "svc": "svc/" },
+  "extensions": [".ts"],
+  "exclude": ["node_modules", ".git"],
+  "excludePatterns": [],
+  "shardPolicy": { "maxBytes": 512, "minFiles": 8 }
+}

@@ -6,13 +6,17 @@ tags:
 - sharding
 - architecture
 - task-082
+- task-083
 sources:
 - task:082
+- task:083
 related:
 - code-scan-tool
 - code-header-dual-source-inheritance
+- code-scan-classification-ladder-design
+- code-scan-split-execution-precedes-block
 created: '2026-08-03'
-updated: '2026-08-03'
+updated: '2026-08-04'
 status: draft
 ---
 ## 개요
@@ -34,9 +38,13 @@ code-scan은 소스 디렉토리 하나마다 매니페스트 파일을 정확�
 
 `opal/tools/code-scan/code-scan.js`의 조회 8커맨드·`target`·`scaffold` 경로 전체(`resolveShards`, `opal/tools/code-scan/code-scan.js:1002`). 샤드를 선언하지 않은 스코프는 바이트 단위로 무변화가 보증된다.
 
+이 페이지의 "의미상 분할 경계를 정하는 것은 소유자의 몫으로 남긴다"는 결정은 082 시점에는 분할을 실제로 수행하는 명령이 없었다는 뜻이기도 했다 — 083이 `code-scan split`(집행)·`split --plan`(제안 사다리)으로 그 실행 수단을 채워, "경계는 사람이 정하고 이동은 도구가 한다"는 역할 분담을 완성했다(근거: task:083 DONE.md §1, §3.3~3.4). → [[code-scan-classification-ladder-design]] · [[code-scan-split-execution-precedes-block]]
+
 ## 관련 페이지
 
 - [[code-scan-tool]]
 - [[code-header-dual-source-inheritance]]
 - [[code-scan-sealed-decision-point-pattern]]
 - [[code-scan-nonblocking-limit-rollout]]
+- [[code-scan-classification-ladder-design]]
+- [[code-scan-split-execution-precedes-block]]

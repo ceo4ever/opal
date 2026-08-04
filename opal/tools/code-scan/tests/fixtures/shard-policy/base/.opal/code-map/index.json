@@ -1,0 +1,8 @@
+{
+  "version": 1, "status": "reviewed",
+  "note": "shard-policy/base fixture — 정책 3단 해석·전역 폴백 검증용 기준 트리 (task 083, TS-001~TS-016/TS-020~TS-024/TS-070~TS-073)",
+  "scopes": { "svc": { "root": "svc/", "anchors": [], "stripPrefix": [] } },
+  "domains": { "mod": { "paths": ["svc/mod/**"] } },
+  "layerRules": [ { "match": "**/mod/**", "layer": "util" } ],
+  "exclude": []
+}

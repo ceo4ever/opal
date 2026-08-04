@@ -271,3 +271,7 @@
 - 신규: [[code-scan-manifest-sharding-design]], [[code-scan-sealed-decision-point-pattern]], [[code-scan-nonblocking-limit-rollout]], [[code-scan-version-constant-freeze]], [[fixture-conflicting-requirements-lesson]]
 - 출처: task:082
 
+## [2026-08-04] ingest | CLOSE ingest — 태스크 083 샤드 분할 파이프라인(2축 판정+split 집행+init 온보딩)
+- 신규: [[pages/concept/shard-policy-block-vs-nonblock-fallback-criterion.md]], [[pages/concept/code-scan-gate-deadlock-init-placement.md]], [[pages/concept/code-scan-split-execution-precedes-block.md]], [[pages/concept/code-scan-classification-ladder-design.md]], [[pages/concept/code-scan-two-axis-threshold-design.md]], [[pages/concept/code-scan-fixture-policy-override-absorption.md]], [[pages/concept/install-mac-seed-key-loop-generalization.md]], [[pages/concept/code-scan-opal-home-test-isolation.md]], [[pages/concept/round-trip-pre-state-assertion-false-green-guard.md]]
+- 출처: task:083
+

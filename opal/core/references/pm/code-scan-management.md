@@ -11,14 +11,28 @@ PM이 이 파일의 생성과 갱신을 담당한다.
 
 **PM이 code-scan을 첫 호출하는 시점에 `.opal/code-scan.json`이 부재하면, 즉석 추론으로 생성한 뒤 호출을 진행한다.** 단 `headerSource`만은 추론 대상이 아니다 — 이 한 값은 소유자에게 2택을 확인하고(§headerSource 필드 관리 — 최초 설정 절차), 나머지 필드는 종전대로 인터럽트 없이 추론한다.
 
+**추론·생성의 집행 주체는 `code-scan init`이다.** PM이 산문으로 추론해 손으로 쓰던 것을 이제 도구가 결정론적으로 집행한다 — 추론 규약은 아래 §추론 소스 규약을 그대로 따른다.
+
+```bash
+# 초안만 확인 (파일을 쓰지 않는다)
+code-scan init --header-source <inline|manifest> [--json]
+# 실제 생성
+code-scan init --header-source <inline|manifest> --write
+```
+
+- `init`은 **비대화형**이다 — 프롬프트·TTY 의존이 0건이다. 따라서 `headerSource` 2택 확인은 여전히 **PM이 소유자에게 묻고 그 값을 `--header-source` 인자로 넘기는** 형태로 실현된다. 인자가 없으면 `init_header_source_required`로 거부하고 **파일을 만들지 않는다**.
+- `init`은 차단 게이트 앞에 배치되므로 설정이 없거나 깨진 트리에서도 실행된다(설정이 없어 `init`까지 거부되는 순환을 끊는다).
+- 쓰기 3분기: 파일 없음 + `--write` 미부여 → stdout 초안만 / 파일 있음 + `--force` 미부여 → `config_exists` 거부(원본 불변) / 파일 있음 + `--force` → `.bak` 백업 후 덮어쓰기.
+
 ### 추론 소스 규약
 
 | 필드 | 추론 소스 | 규칙 |
 |------|----------|------|
 | `scopes` | `docs/PROJECT.md §프로젝트 구성` 표의 요소·경로 컬럼 | 부재 시 프로젝트 루트 1-depth 디렉토리 스캔으로 대체 |
 | `extensions` | 프로젝트에 실재하는 코드 확장자 자동 감지 | `.md` **기본 포함** — brain·문서 @header 자산화 목적 |
-| `exclude` | 기본값(`node_modules`, `__pycache__`, `.git`, `dist`, `build`, `.venv`) | `backup`, `.pytest_cache`, `.next`, `.nuxt`, `tests` 등 보강 |
-| `headerSource` | **추론 금지** | PM이 소유자에게 2택을 확인해 확정한다 (§headerSource 필드 관리 참조). 확인 전에는 파일을 생성하지 않는다 |
+| `exclude` | 기본값(`node_modules`, `__pycache__`, `.git`, `dist`, `build`, `.venv`) | `backup`, `.pytest_cache`, `.next`, `.nuxt` 등 보강. 테스트 코드 디렉토리는 **제외하지 않는다** — 테스트 코드도 구조 파악 대상이다 |
+| `headerSource` | **추론 금지** | PM이 소유자에게 2택을 확인해 확정한다 (§headerSource 필드 관리 참조). 확인 전에는 파일을 생성하지 않는다. `init`에서는 `--header-source` 인자로 넘긴다 |
+| `shardPolicy` | **추론 금지** | 초안에 **넣지 않는다** — 넣으면 3단 폴백(프로젝트 > 전역 `~/.opal/setting.json` > 코드 상수)이 무력화된다. 프로젝트별 조정이 실제로 필요할 때만 소유자가 명시 기재한다 |
 
 최소 구조 예시:
 
@@ -89,6 +103,8 @@ PM이 이 파일의 생성과 갱신을 담당한다.
 
 PM은 유효성 검증을 사전에 대신할 필요가 없다 — 도구가 실행 시작 시 스스로 판정해 거부한다.
 
+**복구 경로**: 설정이 파손됐거나 무효값이 남아 전 명령이 거부되면 `code-scan init --header-source <inline|manifest> --write --force`로 초안을 다시 만든다(원본은 `.bak`로 백업된다). 에러 출력의 `fix` 필드에도 이 명령이 함께 실린다.
+
 ## .opal/code-map/index.json PM·소유자 관리 의무
 
 `code-scan discover [--out <path>] [--dry-run]`는 프로젝트 구조를 스캔해 `.opal/code-map/index.json` **초안**을 생성한다(`status: "draft"`, `origin: "discover"`). 이 초안은 자동 추론 결과이므로 그대로 확정 채택하지 않고 다음 흐름을 따른다.
@@ -108,4 +124,5 @@ PM Gate 검토 절차 8번(`pm-review-gate.md`)에서 `status`가 `"draft"`인 �
 | 2026-06-11 22:36 | v1.1 | §생성 시점 재작성 — 즉석 추론 자동 생성 문구, 추론 소스 3종 규약(scopes/extensions/exclude), 생성 보고 1줄 형식, brain 품질 회복 근거 추가 (010) |
 | 2026-07-28 15:10 | v1.2 | §headerSource 필드 관리(auto/inline/manifest, 기본값 auto, 잘못된 값 stderr 경고 + auto 폴백) 신설. §`.opal/code-map/index.json` PM·소유자 관리 의무 신설 — discover 초안 → 소유자 리뷰 → `status: reviewed` 전환 흐름, 도메인 경계·readonly 정책은 소유자가 확정함을 명시 (077) |
 | 2026-08-02 14:47 | v1.4 | §headerSource 필드 관리 재작성 — `inline`/`manifest` 2택·기본값 없음·미설정/무효값 전 명령 거부(`header_source_unset`/`header_source_invalid`/`code_scan_config_invalid`)·CLI > 전역 2층 우선순위·전역 1회 설정(스코프별 재선언 없음) + **최초 설정 절차(PM 중개·소유자 확정) 신설**. §추론 소스 규약에 `headerSource` 추론 금지 행 추가 + 최소 구조 예시·생성 보고에 `headerSource` 포함. §index.json 관리 의무의 `readonly` 정책 서술을 `include`/`exclude` 파일 집합 필터로 교체 + `note` 문자열 인용 갱신. 행 번호 인용(`code-scan.js:187-190`)을 동작 서술로 대체 (080) |
+| 2026-08-04 17:18 | v1.5 | §생성 시점에 `code-scan init` 등재 — 산문 추론 → 도구 결정론 집행으로 전환, 비대화형 실현 형태(`headerSource` 2택은 PM이 소유자에게 묻고 `--header-source` 인자로 전달)·차단 게이트 앞 배치·쓰기 3분기 명시. §추론 소스 규약에 `shardPolicy` 행 추가(추론 금지 — 초안에 넣지 않음, 3단 폴백 보존). `exclude` 표↔예시 불일치 해소 — 예시 기준으로 확정하고 표 보강 목록에서 `tests` 제거(테스트 코드도 구조 파악 대상). §headerSource 필드 관리에 `init --force` 복구 경로 1줄 추가 (083) |
 | 2026-07-29 | v1.3 | §갱신 트리거에 `exclude`/`excludePatterns` 변경 후 `scaffold` 재실행 안내 1줄 추가 — 변경 전 등재 파일이 `orphan`으로 남는 문제 예방 (077 결함 D) |

@@ -49,6 +49,8 @@
 | 금지 (도구 관할) | `dir` · `files` 키 목록(추가/삭제) · `layer` · `domain` · `scope` · `module` · `version` · `shards` | `code-scan validate`가 `worker_scope_violation`으로 거부 |
 | 금지 (파일 단위) | `.opal/code-map/index.json` 전체 | 소유자·PM 관할 — 워커 직접 편집 금지 |
 
+**엔트리 이동(분할)은 `code-scan split`의 관할이다** — `split --groups`가 `files` 엔트리를 베이스↔샤드 간에 이동시키며, 그때 함께 쓰이는 관리 필드(`dir`·`scope`·`version`·`shards`)는 위 표대로 도구가 소유한다. 워커는 그룹 문서(라벨·파일 배분)의 의미 경계만 확정하고, 매니페스트 파일을 손으로 옮기지 않는다.
+
 워커가 금지 필드를 침범하면 `validate`가 `worker_scope_violation` 위반으로 exit 2를 반환한다. 인라인 `@header`의 `module`/`layer`/`domain`은 기존 규칙대로 워커가 작성하되(파일 단독 소스이므로 도구 관할 개념이 없음), 이 표는 **code-map 매니페스트**에 값을 기입할 때만 적용된다.
 
 ### 커버리지 산정 (모드별 단일 소스)
@@ -155,3 +157,4 @@ code-scan 결과가 충분하지 않을 때 아래 3분기 기준으로 대응�
 | v1.5 | 2026-08-02 14:47 | 기록 위치 판정 4단 → **3단**으로 재정의 — `write_to` 3값(`none`/`inline`/`manifest`) × `reason` 3값(`out_of_scope`/`header_source_inline`/`header_source_manifest`) 폐쇄 도메인, 스코프 필터가 모드 판정보다 선행, 미설정·무효값 전 명령 거부 명시. `readonly` 판정 근거 서술 제거. §커버리지 합산 → §커버리지 산정(모드별 단일 소스)로 교체 + 빈 결과 폴백 ② 기준을 `coverage.percent`로 교정 (080) |
 | v1.4 | 2026-07-28 23:28 | 3단 갱신 시점 표 (b) CLOSE 게이트 항목 — `uncovered` 2분류(`newly_uncovered` 차단/`pre_existing` 비차단) 반영, 레거시 소급 부여는 discover/scaffold 몫임을 명시. §커버리지 합산에 `coverage.percent`가 2분류와 독립 지표임을 명시하는 문단 추가 — Step 19 CLOSE 게이트 레거시 파일 차단 결함 재작업 (077) |
 | v1.6 | 2026-08-03 13:20 | 매니페스트 샤딩 반영 — §워커 권한 경계 금지 필드에 `shards` 추가(도구·소유자 관할), §기록 위치 판정에 보유 샤드 경로 라우팅 1줄 추가("보유 샤드 → 없으면 베이스") (082) |
+| v1.7 | 2026-08-04 17:18 | §워커 권한 경계 — 엔트리 이동(분할) 관할 1줄 추가: `code-scan split --groups`가 `files` 엔트리를 베이스↔샤드 간 이동시키며 관리 필드(`dir`·`scope`·`version`·`shards`)는 도구 소유, 워커는 그룹 문서의 의미 경계만 확정하고 매니페스트를 손으로 옮기지 않음 (083) |

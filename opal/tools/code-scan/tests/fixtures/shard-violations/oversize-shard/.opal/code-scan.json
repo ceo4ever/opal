@@ -3,5 +3,6 @@
   "scopes": { "svc": "svc/" },
   "extensions": [".ts"],
   "exclude": ["node_modules", ".git"],
-  "excludePatterns": []
+  "excludePatterns": [],
+  "shardPolicy": { "maxBytes": 200, "minFiles": 1 }
 }

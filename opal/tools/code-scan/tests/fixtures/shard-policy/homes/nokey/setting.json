@@ -1,0 +1,7 @@
+{
+  "bootstrap": "on",
+  "models": {
+    "platform": "auto",
+    "claude": { "light": "haiku", "standard": "sonnet", "advanced": "opus" }
+  }
+}

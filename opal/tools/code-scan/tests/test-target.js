@@ -46,6 +46,7 @@
 //   v2.0 2026-08-02 KST: 태스크 080 RED 재작성 — 4단 판정 → 모드 직결 3값 도메인, out_of_scope 신규
 //     배선(TS-035/037), readonly 무시 + 전역값 적용 양방향 고정(TS-030 반전 / TS-033 재정의),
 //     판정 근거 잔존 0 산출물 검사(TS-034) (opal-test-agent mode:red)
+//   v2.1 2026-08-04 KST: run() 하네스에 OPAL_HOME 주입(가짜 홈 격리, H-4) (083)
 //
 
 'use strict';
@@ -60,8 +61,14 @@ const { spawnSync } = require('node:child_process');
 const CODE_SCAN_JS = path.resolve(__dirname, '..', 'code-scan.js');
 const FIX = path.resolve(__dirname, 'fixtures');
 
+// [MUST] 083부터 code-scan이 ~/.opal/setting.json의 shardPolicy를 읽는다 — OPAL_HOME을
+// 주입하지 않으면 개발자 실제 홈이 결과에 유입된다(H-4). 기본 격리는 homes/absent(빈 트리).
+const HOME_ABSENT = path.join(FIX, 'shard-policy', 'homes', 'absent');
+
 function run(cwd, args) {
-  const result = spawnSync(process.execPath, [CODE_SCAN_JS, ...args], { cwd, encoding: 'utf8', timeout: 10000 });
+  const result = spawnSync(process.execPath, [CODE_SCAN_JS, ...args], {
+    cwd, encoding: 'utf8', timeout: 10000, env: { ...process.env, OPAL_HOME: HOME_ABSENT },
+  });
   const stdout = result.stdout || '';
   let json = null;
   try { json = JSON.parse(stdout.trim()); } catch { /* not JSON */ }
