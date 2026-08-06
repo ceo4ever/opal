@@ -275,3 +275,7 @@
 - 신규: [[pages/concept/shard-policy-block-vs-nonblock-fallback-criterion.md]], [[pages/concept/code-scan-gate-deadlock-init-placement.md]], [[pages/concept/code-scan-split-execution-precedes-block.md]], [[pages/concept/code-scan-classification-ladder-design.md]], [[pages/concept/code-scan-two-axis-threshold-design.md]], [[pages/concept/code-scan-fixture-policy-override-absorption.md]], [[pages/concept/install-mac-seed-key-loop-generalization.md]], [[pages/concept/code-scan-opal-home-test-isolation.md]], [[pages/concept/round-trip-pre-state-assertion-false-green-guard.md]]
 - 출처: task:083
 
+## [2026-08-06] ingest | CLOSE ingest — 태스크 084 PM 대화형 AS-IS 분석 워크플로우
+- 신규: [[asis-analysis-five-stage-workflow]], [[asis-workflow-order-over-new-skill]], [[inherit-new-boundary-fixed-before-writing]], [[pm-conversation-readonly-collection-exception]], [[degraded-execution-with-explicit-gap]], [[section-append-at-tail-preserves-backrefs]]
+- 출처: task:084
+

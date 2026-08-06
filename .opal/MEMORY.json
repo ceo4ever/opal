@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_task_number": 83,
+  "last_task_number": 84,
   "memories": [
     {
       "title": "Console 브레인 구독 인증",
@@ -53,6 +53,13 @@
   ],
   "history": [
     {
+      "title": "084 AS-IS 분석 워크플로우 SSOT",
+      "date": "2026-08-06",
+      "stage": "완료·미커밋",
+      "path": "tasks/084-260806-opp-현황분석-워크플로우/",
+      "result": "5단계 워크플로우 신설. 스킬 무신설·상속12/신규9. 읽기전용 수집워커 예외. 폴백5종 무중단"
+    },
+    {
       "title": "083 샤드 분할 파이프라인 — 2축 판정 + split 집행",
       "date": "2026-08-04",
       "stage": "완료·미커밋",
@@ -79,13 +86,6 @@
       "stage": "EXECUTE 완료·검증중",
       "path": "tasks/081-260802-opds-워커중단-복구프로토콜/",
       "result": "078·079 완화책을 SSOT 3곳 등재(재시도1회/판정3단계/산출3개). 게이트 2회차 pass"
-    },
-    {
-      "title": "077 코드 헤더 작성층 신설(인라인+code-map 2소스)",
-      "date": "2026-08-01",
-      "stage": "완료·커밋(2cbae38)",
-      "path": "tasks/077-260727-opd-코드맵-헤더작성층/",
-      "result": "code-scan v1.3.3 작성층 5서브명령+hook+run.sh. 100/100·골든불변. 후속 D-1~D-5는 079"
     }
   ]
 }
