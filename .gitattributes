@@ -2,23 +2,33 @@
 # install.sh / install.ps1 이 다운로드하는 archive 에는 아래 경로가 포함되지 않는다.
 # 효과: tasks/backup 한글 파일명으로 인한 Windows tar.exe 인코딩 결함 회피, 일반 사용자 install 자산 정제.
 # 적용 시점: 이 파일이 commit 된 시점 이후의 tag/branch archive 부터.
+#
+# [MUST] 디렉토리 제외 패턴은 반드시 선행 슬래시로 루트에 고정한다(`/tasks/`, `docs/` 아님).
+#   gitattributes 패턴은 선행 슬래시가 없으면 **모든 depth의 동명 디렉토리**에 매칭된다.
+#   앵커 없이 두면 dashboard/frontend/src/pages/tasks/ · opal/tools/cmux-tool/docs/ ·
+#   opal/tools/code-scan/tests/fixtures/**/.opal/ 이 함께 사라져 배포본이 깨진다.
+#   회귀 방지: scripts/tests/test_archive_contents.sh 가 아카이브 내용물을 검증한다.
+# 2026-08-08: tasks/·docs/·.opal/ 3종을 루트 고정으로 정정 — 릴리스 tarball에서
+#   dashboard/frontend/src/pages/tasks/TasksPage.tsx 가 누락되어 Console FE 빌드가
+#   실패하던 결함 해소(2026-05-09 도입 이후 계속 발현).
 
 # 개발자 작업 산출물 (사용자 install 대상 아님)
-tasks/ export-ignore
+/tasks/ export-ignore
 
 # 프로젝트 문서 (install 자산 아님 — GitHub UI 에서 직접 열람 가능)
-docs/ export-ignore
+/docs/ export-ignore
 
 # 스킬·에이전트 내부 백업 디렉토리 (있을 경우)
+# 의도적 광범위 매칭 — 어느 depth의 backup/ 이든 제외한다.
 */backup/ export-ignore
 
 # 본 framework 자체 PM 프로필·메모리 (install 대상 아님)
-.opal/ export-ignore
+/.opal/ export-ignore
 
 # git 메타·CI 설정 (사용자 install 대상 아님)
-.github/ export-ignore
-.gitignore export-ignore
-.gitattributes export-ignore
+/.github/ export-ignore
+/.gitignore export-ignore
+/.gitattributes export-ignore
 
 # 릴리스 버전 각인 — git archive 시 %(describe:tags) 치환 (task 048)
 # 2026-06-29 15:24 KST: VERSION export-subst 추가 — tarball 각인 인프라 구축 (048)
