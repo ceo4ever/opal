@@ -279,3 +279,7 @@
 - 신규: [[asis-analysis-five-stage-workflow]], [[asis-workflow-order-over-new-skill]], [[inherit-new-boundary-fixed-before-writing]], [[pm-conversation-readonly-collection-exception]], [[degraded-execution-with-explicit-gap]], [[section-append-at-tail-preserves-backrefs]]
 - 출처: task:084
 
+## [2026-08-07] ingest | CLOSE ingest — 태스크 085 릴리즈 체크섬 검증 경로 정합
+- 신규: [[dl-contract-download-verify-target-identity]], [[release-asset-presence-single-signal]], [[silent-success-defect-class]], [[green-tests-do-not-imply-contract-conformance]], [[fix-validity-requires-failure-mode-reproduction]], [[installer-verification-path-stub-boundary-sealing]]
+- 출처: task:085
+

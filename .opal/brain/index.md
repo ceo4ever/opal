@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-08-06 11:17
+> 갱신: 2026-08-07 13:01
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -91,18 +91,22 @@
 - [[degraded-execution-with-explicit-gap]] — 자산 부재에도 중단하지 않는다 — 축소 실행 + 결측 명시 불변 규칙 #fallback #workflow #reporting #task-084
 - [[deploy-artifact-verification-lesson]] — 동작검증은 배포 산출물+실 브라우저 기준으로 수행해야 한다 #verification #qa #deployment #lesson
 - [[dict-선행-model-ssot]] — DICT가 MODEL을 선행한다 — 사전이 속성명·타입 SSOT #architecture-decision #data-design #ssot #pipeline
+- [[dl-contract-download-verify-target-identity]] — DL-CONTRACT — 검증 대상과 다운로드 대상은 같은 파일이어야 한다 #deploy #release #install #checksum #contract
 - [[e2e-cmux-first-playwright-fallback]] — E2E 도구 우선순위 — cmux 1순위 → playwright 폴백 (에러코드 소비) #testing #e2e #cmux #framework
 - [[enforce-rule-legacy-data-surfacing-lesson]] — enforce 규칙 신설 시 잔존 데이터 표면화 — 배포 전 실 데이터 스캔 필요 교훈 #lesson #enforce #validate #brain-tool
 - [[erd-modeler-deprecation]] — erd-modeler deprecate — op-data-model/ddl로 분해, //erm 하위호환 #architecture-decision #deprecation #erd-modeler #migration
 - [[exports-generation-tool-verification-division]] — 생성은 워커, 검증은 도구 — 비대칭을 이용한 분업 #code-scan #header #architecture
 - [[external-tool-boundary-stub-insufficient-lesson]] — 외부 도구 경계는 스텁만으로 불충분 — 실연동 검증이 통합 결함을 잡는다 #testing #lesson #integration #test-strategy
 - [[fallback-approval-detached-head-precedence]] — detached HEAD 판정은 no-upstream보다 먼저 검사해야 한다 #git #judgment-order #fallback-approval #lesson
+- [[fix-validity-requires-failure-mode-reproduction]] — 수정의 유효성은 실패 모드를 재현해서 확인한다 #lesson #verification #pm-discipline #worker-report
 - [[fixture-conflicting-requirements-lesson]] — 픽스처 요구 충돌 — RED 작성 시점 시나리오 간 요구 대조 필요 #lesson #testing #fixture #red-first #task-082
 - [[fixture-vs-real-blind-spot-lesson]] — fixture-vs-real 맹점 — 테스트 픽스처 통과·실데이터 버그 반복 교훈 #lesson #testing #bug #fixture
 - [[governance-single-owner-rule-mapping]] — 규칙 1소유자 매핑 — Governance 중복 기재 방지 설계 #governance #ssot #design-pattern #dispatch
+- [[green-tests-do-not-imply-contract-conformance]] — 테스트 GREEN은 규약 정합을 뜻하지 않는다 — 정적 대조를 별도 게이트로 둔다 #lesson #test-strategy #verification #contract
 - [[inherit-new-boundary-fixed-before-writing]] — 상속·신규 경계를 집필 전에 표로 고정한다 #documentation #ssot #dedup #task-084
 - [[install-hook-ownership-marker-idempotent-upsert]] — install hook 소유권-마커 멱등 upsert (외부 hook clobber 해소) #install #deploy #hook #idempotent #ownership-marker
 - [[install-mac-seed-key-loop-generalization]] — install 시드 키별 루프 일반화 — 조기 종료 시드 함정 #install #configuration #pattern #task-083
+- [[installer-verification-path-stub-boundary-sealing]] — 설치 스크립트 실측 검증 — 경계 두 지점만 봉인하고 나머지는 실물로 #testing #isolation #install #verification #pattern
 - [[installer-version-priority-model]] — 설치기 버전 결정 우선순위 모델 (4종 공통) #version #install #priority #architecture
 - [[json-not-token-saving-format]] — JSON은 토큰 절약 포맷이 아니다 — 절약 원천의 정직한 귀속 #json #token #ssot #measurement #memory
 - [[kanban-current-stage-derivation]] — 칸반 current_stage 파생 규칙 (도달 단계 기준) #opal-console #kanban #pipeline #be-single-source
@@ -183,6 +187,7 @@
 - [[red-test-commit-coercion-guard-lesson]] — RED 테스트가 실저장소 git archive 검증 시 커밋을 구조적으로 강요하는 결함 #red-first #test #git #lesson #guard
 - [[red-test-determinism-abort-trap]] — RED 테스트 결정론성 함정 — neverResolve fetch 대역의 abort 무반응 #testing #red-first #determinism #abort #fetch-mock
 - [[regression-only-coverage-gate]] — 회귀만 차단하는 커버리지 게이트 — 레거시 소급 부여는 게이트의 몫이 아니다 #code-scan #gate #close
+- [[release-asset-presence-single-signal]] — 릴리즈 자산 존재 판정 — 체크섬 목록 수신 성공을 단일 신호로 쓴다 #deploy #release #install #checksum #decision
 - [[rotating-log-correction-over-deletion]] — 회전 로그는 삭제 대신 정정 — FIFO 히스토리 무손실 가드 설계 #memory #fifo #data-integrity #design-pattern
 - [[round-trip-pre-state-assertion-false-green-guard]] — 왕복 검증 사전 상태 단언 — false green 차단 장치 #testing #pattern #task-083
 - [[scenario-gate-pilot-fit-criteria]] — 목표-커버 게이트 pilot 접합 판정 기준 #scenario-gate #pilot-fit #tool-gated #self-confirming #task-075
@@ -192,6 +197,7 @@
 - [[self-edit-line-anchor-drift]] — 자기 편집 파일의 행번호 앵커는 드리프트한다 #verification #anchor #test-scenario #regression
 - [[shard-policy-block-vs-nonblock-fallback-criterion]] — 미설정 시 차단 vs 비차단 폴백 판정 기준 #code-scan #configuration #backward-compat #task-080 #task-083
 - [[silent-loss-prevention-row-accounting-invariant]] — 무성 유실 차단 — 행 회계 불변식 설계 패턴 #migration #data-integrity #invariant #design-pattern #memory
+- [[silent-success-defect-class]] — '조용한 성공' 결함 클래스 — 실패가 정상 종료로 위장된다 #lesson #defect-class #verification #fail-closed
 - [[skill-op-task-qa]] — op-task-qa — 범용 문서 QA 검증 기준 #skill #qa #document
 - [[skill-opal-agent-creator]] — opal-agent-creator — OPAL 에이전트 생성 파이프라인 #skill #agent #creator
 - [[skill-opal-brain]] — opal-brain — 프로젝트 브레인 지식 위키 #skill #brain #knowledge #wiki
