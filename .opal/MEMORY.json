@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_task_number": 84,
+  "last_task_number": 85,
   "memories": [
     {
       "title": "Console 브레인 구독 인증",
@@ -53,6 +53,13 @@
   ],
   "history": [
     {
+      "title": "085 릴리즈 체크섬 검증경로 정합",
+      "date": "2026-08-07",
+      "stage": "완료·커밋",
+      "path": "tasks/085-260807-opds-릴리즈-체크섬-검증경로-정합/",
+      "result": "발행자산≠다운로드자산 결함 3경로 해소. DL-CONTRACT 규약화·RED 26케이스·9칸 실측. ps1 런타임 미검증"
+    },
+    {
       "title": "084 AS-IS 분석 워크플로우 SSOT",
       "date": "2026-08-06",
       "stage": "완료·커밋",
@@ -79,13 +86,6 @@
       "stage": "완료·미커밋",
       "path": "tasks/080-260801-opd-헤더소스-단일화/",
       "result": "auto·readonly·스코프오버라이드 3종 폐기, inline|manifest 2택 전역단일키+미설정 전명령차단. code-scan v1.4.0. 194 GREEN·골든차이0. revup manifest 전환완료"
-    },
-    {
-      "title": "081 워커중단 복구 프로토콜 SSOT화",
-      "date": "2026-08-02",
-      "stage": "EXECUTE 완료·검증중",
-      "path": "tasks/081-260802-opds-워커중단-복구프로토콜/",
-      "result": "078·079 완화책을 SSOT 3곳 등재(재시도1회/판정3단계/산출3개). 게이트 2회차 pass"
     }
   ]
 }
