@@ -39,6 +39,15 @@
 #                          main 브랜치 UNVERIFIED banner (GC-001, R-2) (144)
 #   v1.4 2026-05-20: Linux fallback 안내 블록 제거 — scripts/install/linux.sh 신설로 데드코드 (006)
 #   v1.5 2026-06-29 15:24 KST: adopt_stamped_version 추가 — tarball 내 VERSION 각인값 우선 채택, API/main 폴백 강등 (048)
+#   v1.6 2026-08-07 12:04 KST: DL-CONTRACT (085) 적용 — 다운로드 대상을 릴리즈 자산으로 전환, 로컬명=자산명,
+#                          체크섬 3분기(verify/unverified/branch) 하드닝(고정문자열 매칭 + 항목 부재 하드 실패),
+#                          추출 strip 자동 판정 + 사후조건 검사.
+#                          정합 fix: sha 항목 선택을 파일명 컬럼 정확 일치로 교정(상위문자열 오채택 차단, D-2)
+#                          + 체크섬 case에 `*)` 하드 실패 분기 추가(모드값 이상 fail-closed, D-6).
+#                          TEST fix: DRY-RUN 조기 반환을 버전 종류로 분기(태그=릴리즈 자산 1순위 안내, 브랜치=아카이브)
+#                          — 네트워크 0회 유지(RG-7, O-1) + strip 판정값 검증(빈 값·비수치 거부, 무음 강등 차단, O-5) (085)
+#
+# DL-CONTRACT (085): 릴리즈 태그는 릴리즈 자산 우선 + sha256sums.txt 부재 시 자동 아카이브 폴백(UNVERIFIED) + strip 자동 판정
 #
 
 # ─── [MUST] 부분 다운로드 실행 방지 ─────────────────────────────────────────
@@ -108,17 +117,18 @@ resolve_default_version
 # install-mac.sh가 ~/.opal/VERSION에 정확한 버전을 기록할 수 있도록 export
 export OPAL_VERSION
 
-# ─── URL 구성 ─────────────────────────────────────────────────────────────────
-# release tag(v*): GitHub archive(/refs/tags) 사용 — release.yml 자산이 없어도 항상 동작.
-#                  release 자산이 있는 경우 sha256sums.txt가 동시에 존재 → verify_checksum이 검증.
-# branch (main 등): /refs/heads 사용.
-if [[ "${OPAL_VERSION}" == v* ]]; then
-    TARBALL_URL="https://github.com/${OPAL_REPO}/archive/refs/tags/${OPAL_VERSION}.tar.gz"
-else
-    TARBALL_URL="https://github.com/${OPAL_REPO}/archive/refs/heads/${OPAL_VERSION}.tar.gz"
-fi
-# sha256sums.txt는 release 자산. release.yml이 정상이면 존재, 아니면 verify_checksum이 graceful skip.
-SHA_URL="https://github.com/${OPAL_REPO}/releases/download/${OPAL_VERSION}/sha256sums.txt"
+# ─── 다운로드 계획 전역 (DL-CONTRACT 085) ────────────────────────────────────
+# 값은 resolve_download_plan() / _dl_fallback() 이 설정한다 (§3.0 D-C).
+#   TARBALL_URL         다운로드 URL
+#   OPAL_TARBALL_NAME   로컬 저장 파일명 — [MUST] verify 모드에서는 발행 자산명과 동일
+#   OPAL_CHECKSUM_MODE  verify | unverified | branch
+#   OPAL_SHA_FILE       sha256sums.txt 로컬 경로 (verify 모드에서만 유효)
+#   OPAL_TARBALL        ${OPAL_TMP}/${OPAL_TARBALL_NAME} (fetch_tarball이 설정)
+TARBALL_URL=""
+OPAL_TARBALL_NAME=""
+OPAL_CHECKSUM_MODE=""
+OPAL_SHA_FILE=""
+OPAL_TARBALL=""
 
 # ─── 임시 디렉토리 + 자동 정리 ───────────────────────────────────────────────
 # [MUST] PLAN §3.1.2: "임시 디렉토리는 mktemp -d로 생성, trap EXIT로 정리"
@@ -172,12 +182,122 @@ check_deps() {
     info "의존성 확인 완료: curl, tar, git"
 }
 
+# ─── DL-CONTRACT (085) 공통 헬퍼 ──────────────────────────────
+#
+# [MUST] _dl_asset_name / _dl_detect_strip 의 본문은 `opal/tools/opal-cli/lib/update.sh` 와
+#        **문자 단위로 동일**하게 유지한다 (PLAN §3.0 D-A 정합 수단 (a)). 한쪽만 수정하면 규약이 드리프트한다.
+#        두 헬퍼는 외부 전역·로그 헬퍼에 의존하지 않는다 — tar / awk 만 사용한다.
+
+# sha256sums.txt에서 첫 .tar.gz 파일명 컬럼을 파생 (binary mode '*' 접두 제거).
+# 항목이 없으면 공백을 출력하고 exit 0 — 폴백 여부는 호출자가 판단한다.
+_dl_asset_name() {
+    awk '{ n = $2; sub(/^\*/, "", n); if (n ~ /\.tar\.gz$/) { print n; exit } }' "$1"
+}
+
+# tar 최상위 구조 판정 → 0(루트 직속 항목 있음) | 1(단일 prefix 디렉토리) (§3.0 D-D).
+# 목록 1회 스캔, awk 단일 패스.
+_dl_detect_strip() {
+    tar -tzf "$1" | awk -F/ '
+        NF == 0 { next }
+        { if ($0 !~ /\//) root++; tops[$1] = 1 }
+        END { n = 0; for (t in tops) n++; print (root == 0 && n == 1) ? 1 : 0 }
+    '
+}
+
+# 자동 아카이브 폴백으로 강등 — $1=사유
+# [MUST] 폴백 경로에서는 sha256sums.txt를 어떤 경우에도 비교에 사용하지 않는다 (H-3).
+_dl_fallback() {
+    if [[ -n "${OPAL_SHA_FILE}" ]]; then
+        rm -f "${OPAL_SHA_FILE}" 2>/dev/null || true
+    fi
+    OPAL_SHA_FILE=""
+    TARBALL_URL="https://github.com/${OPAL_REPO}/archive/refs/tags/${OPAL_VERSION}.tar.gz"
+    OPAL_TARBALL_NAME="opal-${OPAL_VERSION}-archive.tar.gz"
+    OPAL_CHECKSUM_MODE="unverified"
+    warn "릴리즈 자산 미사용 폴백: $1"
+}
+
+# ─── prepare_tmp ─────────────────────────────────────────────────────────────
+# [MUST] PLAN §3.1.2: "임시 디렉토리는 mktemp -d로 생성, trap EXIT로 정리"
+# sha256sums.txt를 tarball보다 먼저 받아야 하므로 생성 시점을 fetch_tarball보다 앞에 둔다 (§2.2.3).
+prepare_tmp() {
+    OPAL_TMP="$(mktemp -d)"
+}
+
+# ─── resolve_download_plan ───────────────────────────────────────────────────
+# 다운로드 소스를 확정한다 (§3.0 D-B·D-C).
+#   릴리즈 태그(v*) : sha256sums.txt 선조회 성공 = 릴리즈 자산 존재 → 자산명 파생 후 verify
+#                     조회 실패/형식 이상 → 자동 아카이브 폴백(unverified)
+#   브랜치          : archive/refs/heads (기존 URL 무변경, RG-1)
+# [MUST] RG-7: OPAL_DRY_RUN=1 이면 네트워크에 접근하지 않고 조기 반환한다.
+#              조기 반환도 버전 종류(태그/브랜치)로 분기해 실제 1순위 경로를 안내한다 — 조회는 하지 않는다.
+resolve_download_plan() {
+    OPAL_SHA_FILE=""
+
+    if [[ "${OPAL_DRY_RUN}" == "1" ]]; then
+        warn "[DRY-RUN] resolve_download_plan 생략 — 네트워크 조회 없음"
+        if [[ "${OPAL_VERSION}" == v* ]]; then
+            # 릴리즈 태그: 릴리즈 자산이 1순위 경로다. 자산명은 sha256sums.txt 조회로만 확정되므로
+            # (자산명 하드코딩 금지, §3.0 D-B) DRY-RUN에서는 자리표시자로 안내한다.
+            TARBALL_URL="https://github.com/${OPAL_REPO}/releases/download/${OPAL_VERSION}/<sha256sums.txt 파생 자산명>"
+            OPAL_TARBALL_NAME="opal-${OPAL_VERSION}-dryrun.tar.gz"
+            OPAL_CHECKSUM_MODE="verify"
+            info "[DRY-RUN] 1순위: 릴리즈 자산 — 자산명은 sha256sums.txt 조회로만 확정된다 (조회 생략)"
+            info "[DRY-RUN] 자산 부재 시: 자동 아카이브 폴백 (UNVERIFIED)"
+        else
+            TARBALL_URL="https://github.com/${OPAL_REPO}/archive/refs/heads/${OPAL_VERSION}.tar.gz"
+            OPAL_TARBALL_NAME="opal-${OPAL_VERSION}.tar.gz"
+            OPAL_CHECKSUM_MODE="branch"
+            info "[DRY-RUN] 브랜치 아카이브 — SHA-256 무결성 검증 대상 아님 (UNVERIFIED)"
+        fi
+        return 0
+    fi
+
+    if [[ "${OPAL_VERSION}" != v* ]]; then
+        TARBALL_URL="https://github.com/${OPAL_REPO}/archive/refs/heads/${OPAL_VERSION}.tar.gz"
+        OPAL_TARBALL_NAME="opal-${OPAL_VERSION}.tar.gz"
+        OPAL_CHECKSUM_MODE="branch"
+        return 0
+    fi
+
+    # 릴리즈 자산 존재 판정: sha256sums.txt 다운로드 성공 여부가 단일 신호 (§3.0 D-B)
+    local sha_url="https://github.com/${OPAL_REPO}/releases/download/${OPAL_VERSION}/sha256sums.txt"
+    OPAL_SHA_FILE="${OPAL_TMP}/sha256sums.txt"
+    info "체크섬 파일 확인 중: ${sha_url}"
+    # HTTP 404 시 --fail에 의해 curl이 실패한다 — 자산 부재로 판정하고 폴백한다.
+    if ! curl \
+            --fail \
+            --silent \
+            --show-error \
+            --location \
+            --proto '=https' \
+            --tlsv1.2 \
+            --output "${OPAL_SHA_FILE}" \
+            "${sha_url}" 2>/dev/null; then
+        _dl_fallback "릴리즈 자산 없음 (sha256sums.txt 조회 실패)"
+        return 0
+    fi
+
+    # [MUST] 자산명은 하드코딩하지 않고 검증 대상 목록에서 파생한다 — 다운로드 대상 = 검증 대상
+    local asset
+    asset="$(_dl_asset_name "${OPAL_SHA_FILE}")"
+    if [[ -z "${asset}" ]]; then
+        _dl_fallback "sha256sums.txt 형식 이상 (.tar.gz 항목 없음)"
+        return 0
+    fi
+
+    TARBALL_URL="https://github.com/${OPAL_REPO}/releases/download/${OPAL_VERSION}/${asset}"
+    OPAL_TARBALL_NAME="${asset}"
+    OPAL_CHECKSUM_MODE="verify"
+    return 0
+}
+
 # ─── fetch_tarball ───────────────────────────────────────────────────────────
 # [MUST] curl 플래그: -fsSL --proto '=https' --tlsv1.2
 # OPAL_DRY_RUN=1 시 실제 download를 생략하고 흐름만 출력한다.
+# 릴리즈 자산 다운로드 실패 시 자동 아카이브로 1회 강등 후 재시도한다 (§3.0 D-C).
 fetch_tarball() {
-    OPAL_TMP="$(mktemp -d)"
-    OPAL_TARBALL="${OPAL_TMP}/opal.tar.gz"
+    OPAL_TARBALL="${OPAL_TMP}/${OPAL_TARBALL_NAME}"
 
     info "tarball URL: ${TARBALL_URL}"
 
@@ -190,35 +310,6 @@ fetch_tarball() {
 
     info "tarball 다운로드 중..."
     # [MUST] PLAN §3.1.2: "curl 플래그 -fsSL --proto '=https' --tlsv1.2"
-    curl \
-        --fail \
-        --silent \
-        --show-error \
-        --location \
-        --proto '=https' \
-        --tlsv1.2 \
-        --output "${OPAL_TARBALL}" \
-        "${TARBALL_URL}" || error "tarball 다운로드 실패: ${TARBALL_URL}"
-
-    success "tarball 다운로드 완료: ${OPAL_TARBALL}"
-}
-
-# ─── verify_checksum ─────────────────────────────────────────────────────────
-# sha256sums.txt를 다운로드하여 tarball SHA-256을 검증한다.
-# sha256sums.txt가 없는 경우(main 브랜치 등) 경고 후 건너뛴다.
-# [MUST] PLAN §3.1.2: "sha256sums.txt 다운로드 후 shasum -a 256 -c (mac) / sha256sum -c (linux) 분기"
-verify_checksum() {
-    if [[ "${OPAL_DRY_RUN}" == "1" ]]; then
-        warn "[DRY-RUN] verify_checksum 생략"
-        return 0
-    fi
-
-    local sha_file="${OPAL_TMP}/sha256sums.txt"
-
-    info "체크섬 파일 확인 중: ${SHA_URL}"
-
-    # sha256sums.txt는 릴리스 태그 시에만 존재한다.
-    # HTTP 404 시 -f 플래그에 의해 curl이 실패하므로 || true 로 처리.
     if ! curl \
             --fail \
             --silent \
@@ -226,74 +317,146 @@ verify_checksum() {
             --location \
             --proto '=https' \
             --tlsv1.2 \
-            --output "${sha_file}" \
-            "${SHA_URL}" 2>/dev/null; then
-        # sha256sums.txt 없음 — release tag(v*) 인 경우 prompt/거부 적용
-        if [[ "${OPAL_VERSION}" == v* ]]; then
-            # release tag지만 sha256sums.txt 부재 — 무결성 검증 불가
+            --output "${OPAL_TARBALL}" \
+            "${TARBALL_URL}"; then
+        if [[ "${OPAL_CHECKSUM_MODE}" != "verify" ]]; then
+            error "tarball 다운로드 실패: ${TARBALL_URL}"
+        fi
+        # 릴리즈 자산 다운로드 실패 — 폴백 1회 강등 후 재시도
+        _dl_fallback "릴리즈 자산 다운로드 실패"
+        OPAL_TARBALL="${OPAL_TMP}/${OPAL_TARBALL_NAME}"
+        info "폴백 tarball URL: ${TARBALL_URL}"
+        curl \
+            --fail \
+            --silent \
+            --show-error \
+            --location \
+            --proto '=https' \
+            --tlsv1.2 \
+            --output "${OPAL_TARBALL}" \
+            "${TARBALL_URL}" || error "tarball 다운로드 실패: ${TARBALL_URL}"
+    fi
+
+    success "tarball 다운로드 완료: ${OPAL_TARBALL}"
+}
+
+# ─── verify_checksum ─────────────────────────────────────────────────────────
+# resolve_download_plan이 확정한 OPAL_CHECKSUM_MODE에 따라 무결성을 판정한다 (§3.0 D-C).
+#   verify     : sha256sums.txt 항목과 대조 — 무음 스킵 금지, 어긋나면 전부 하드 실패
+#   unverified : 릴리즈 자산 미사용 — 옵트인 / 비대화형 거부 / 프롬프트 3분기 (R-2, GC-001, RG-4)
+#   branch     : 브랜치 설치 — 배너는 main()에서 이미 출력 (RG-3)
+# [MUST] PLAN §3.1.2: "shasum -a 256 -c (mac) / sha256sum -c (linux) 분기"
+# 이 함수는 네트워크에 접근하지 않는다 — 다운로드는 resolve_download_plan / fetch_tarball의 책임이다.
+verify_checksum() {
+    if [[ "${OPAL_DRY_RUN}" == "1" ]]; then
+        warn "[DRY-RUN] verify_checksum 생략"
+        return 0
+    fi
+
+    case "${OPAL_CHECKSUM_MODE}" in
+        verify)
+            local sha_entry expected_hash
+            # [MUST] 고정 문자열 매칭 — 파일명의 '.'이 정규식 와일드카드로 해석되는 오매칭 차단 (H-9)
+            # [MUST] grep -F 는 부분문자열 매칭이므로 전(前)필터로만 쓰고, 파일명 컬럼($2, binary mode '*' 제거)
+            #        정확 일치로 항목을 확정한다 — 상위문자열 항목(예: {자산}.tar.gz.sig)이 먼저 와도
+            #        그 행을 채택하지 않는다 (D-2). install.ps1 의 컬럼 정확 일치와 동형.
+            sha_entry="$(grep -F -- "${OPAL_TARBALL_NAME}" "${OPAL_SHA_FILE}" \
+                | awk -v want="${OPAL_TARBALL_NAME}" '{ n = $2; sub(/^\*/, "", n); if (n == want) { print; exit } }' || true)"
+            # [MUST] 항목 부재는 무음 스킵이 아니라 규약 위반이다 — 설치를 거부한다
+            if [[ -z "${sha_entry}" ]]; then
+                error "sha256sums.txt에 ${OPAL_TARBALL_NAME} 항목 없음 — DL-CONTRACT 위반. 설치를 중단합니다."
+            fi
+            # [MUST] 기대값 파싱 실패도 무음 통과가 아니라 하드 실패다 (H-10)
+            expected_hash="$(printf '%s\n' "${sha_entry}" | awk 'NF >= 2 { print $1; exit }')"
+            if [[ -z "${expected_hash}" ]]; then
+                error "체크섬 기대값 파싱 실패 — sha256sums.txt 형식 이상. 설치를 중단합니다."
+            fi
+
+            info "SHA-256 검증 중..."
+            # 플랫폼별 체크섬 명령 분기 (detect_platform 선행 전제)
+            # 실패 사유를 사용자에게 보여야 하므로 stderr를 억제하지 않는다.
+            if [[ "${OPAL_PLATFORM}" == "macos" ]]; then
+                if ! (cd "${OPAL_TMP}" && shasum -a 256 -c "${OPAL_SHA_FILE}" --ignore-missing); then
+                    error "SHA-256 체크섬 검증 실패 — 다운로드가 손상되었을 수 있습니다."
+                fi
+            else
+                if ! (cd "${OPAL_TMP}" && sha256sum -c "${OPAL_SHA_FILE}" --ignore-missing); then
+                    error "SHA-256 체크섬 검증 실패 — 다운로드가 손상되었을 수 있습니다."
+                fi
+            fi
+
+            success "SHA-256 체크섬 검증 완료"
+            ;;
+        unverified)
+            # 릴리즈 자산 미사용 — 무결성 검증 불가 (R-2, GC-001, RG-4)
             if [[ "${OPAL_ALLOW_UNVERIFIED:-}" == "1" ]]; then
-                warn "[UNVERIFIED] sha256sums.txt 없음 — OPAL_ALLOW_UNVERIFIED=1로 무결성 검증 없이 진행"
+                warn "[UNVERIFIED] 릴리즈 자산 없음 — OPAL_ALLOW_UNVERIFIED=1로 무결성 검증 없이 진행"
                 return 0
             fi
             # 비대화형 모드 (stdin pipe 또는 OPAL_AUTO_INSTALL=1): 기본 거부
             if [[ ! -t 0 ]] || [[ "${OPAL_AUTO_INSTALL:-}" == "1" ]]; then
-                error "sha256sums.txt 없음 — 비대화형 모드에서 무결성 검증 없는 설치를 거부합니다. 옵트인: OPAL_ALLOW_UNVERIFIED=1"
+                error "릴리즈 자산 없음 — 비대화형 모드에서 무결성 검증 없는 설치를 거부합니다. 옵트인: OPAL_ALLOW_UNVERIFIED=1"
             fi
             # 대화형 모드: prompt (디폴트 N)
-            read -r -p "sha256sums.txt 없음 — 무결성 검증 없이 진행하시겠습니까? [y/N] " unverified_confirm
+            read -r -p "릴리즈 자산 없음 — 무결성 검증 없이 진행하시겠습니까? [y/N] " unverified_confirm
             if [[ "$unverified_confirm" != "y" && "$unverified_confirm" != "Y" ]]; then
                 error "사용자가 취소했습니다. 옵트인: OPAL_ALLOW_UNVERIFIED=1"
             fi
             warn "[UNVERIFIED] 사용자 동의로 무결성 검증 없이 진행"
-        else
-            warn "sha256sums.txt 없음 (브랜치 설치 또는 릴리스 미배포) — 체크섬 검증 건너뜀"
-        fi
-        return 0
-    fi
-
-    # tarball 파일명을 sha256sums.txt 내 항목과 매핑하기 위해 같은 디렉토리에서 검증
-    local tarball_name
-    tarball_name="$(basename "${OPAL_TARBALL}")"
-    local sha_entry
-    sha_entry="$(grep "${tarball_name}" "${sha_file}" 2>/dev/null || true)"
-
-    if [[ -z "${sha_entry}" ]]; then
-        warn "sha256sums.txt에 ${tarball_name} 항목 없음 — 체크섬 검증 건너뜀"
-        return 0
-    fi
-
-    info "SHA-256 검증 중..."
-    # 플랫폼별 체크섬 명령 분기
-    # [MUST] PLAN §3.1.2: "shasum -a 256 -c (mac) 또는 sha256sum -c (linux) 분기"
-    if [[ "${OPAL_PLATFORM}" == "macos" ]]; then
-        if ! (cd "${OPAL_TMP}" && shasum -a 256 -c "${sha_file}" --ignore-missing 2>/dev/null); then
-            error "SHA-256 체크섬 검증 실패 — 다운로드가 손상되었을 수 있습니다."
-        fi
-    else
-        if ! (cd "${OPAL_TMP}" && sha256sum -c "${sha_file}" --ignore-missing 2>/dev/null); then
-            error "SHA-256 체크섬 검증 실패 — 다운로드가 손상되었을 수 있습니다."
-        fi
-    fi
-
-    success "SHA-256 체크섬 검증 완료"
+            ;;
+        branch)
+            # 브랜치 설치 — UNVERIFIED 배너는 main()에서 이미 출력했다 (RG-3). 중복 출력하지 않는다.
+            info "브랜치 설치 — SHA-256 무결성 검증 대상 아님"
+            ;;
+        *)
+            # [MUST] 계약 3종(verify/unverified/branch) 밖의 값은 무음 통과가 아니라 하드 실패다 (D-6, fail-closed)
+            error "체크섬 모드 값 이상: '${OPAL_CHECKSUM_MODE}' — DL-CONTRACT 위반. 설치를 중단합니다."
+            ;;
+    esac
 }
 
 # ─── extract_to_tmp ──────────────────────────────────────────────────────────
 # tarball을 임시 디렉토리에 추출한다.
+# 상위 디렉토리(prefix) 유무를 판정하여 strip을 적용한다 (§3.0 D-D) —
+# 발행 자산은 prefix 없음(strip 0), 자동/브랜치 아카이브는 prefix 있음(strip 1).
 extract_to_tmp() {
-    if [[ "${OPAL_DRY_RUN}" == "1" ]]; then
-        warn "[DRY-RUN] extract_to_tmp 생략"
-        OPAL_EXTRACT_DIR="${OPAL_TMP}/opal-extracted"
-        mkdir -p "${OPAL_EXTRACT_DIR}"
-        return 0
-    fi
-
-    info "tarball 추출 중..."
     OPAL_EXTRACT_DIR="${OPAL_TMP}/opal-extracted"
     mkdir -p "${OPAL_EXTRACT_DIR}"
 
-    tar -xzf "${OPAL_TARBALL}" -C "${OPAL_EXTRACT_DIR}" --strip-components=1 \
-        || error "tarball 추출 실패"
+    if [[ "${OPAL_DRY_RUN}" == "1" ]]; then
+        warn "[DRY-RUN] extract_to_tmp 생략"
+        return 0
+    fi
+
+    # [MUST] 목록 조회 가능 여부를 먼저 확정한다 (§3.0 D-D, O-5).
+    #        _dl_detect_strip은 조회 실패 시에도 '0'을 출력하므로(입력 0줄 → root=0·tops=0 → 0),
+    #        판정값만으로는 "prefix 없는 정상 자산"과 "손상 tarball"을 구분할 수 없다.
+    #        선검사 없이는 손상 tarball이 무음으로 strip=0 경로를 타고, 뒤이은 사후조건 오류가 진짜 원인을 가린다.
+    if ! tar -tzf "${OPAL_TARBALL}" >/dev/null 2>&1; then
+        error "tarball 목록 조회 실패 — 손상되었거나 tar.gz 형식이 아닙니다: ${OPAL_TARBALL}"
+    fi
+
+    local strip_n
+    strip_n="$(_dl_detect_strip "${OPAL_TARBALL}" || true)"
+    # 판정값 자체도 검증한다 — awk 산출이 비거나 예상 밖 값이면 하드 실패 (무음 강등 차단).
+    case "${strip_n}" in
+        0|1) ;;
+        *) error "tarball 구조 판정 실패 (strip 판정값: '${strip_n}') — 설치를 중단합니다." ;;
+    esac
+    info "tarball 추출 중... (strip-components=${strip_n})"
+
+    if [[ "${strip_n}" -eq 1 ]]; then
+        tar -xzf "${OPAL_TARBALL}" -C "${OPAL_EXTRACT_DIR}" --strip-components=1 \
+            || error "tarball 추출 실패"
+    else
+        tar -xzf "${OPAL_TARBALL}" -C "${OPAL_EXTRACT_DIR}" \
+            || error "tarball 추출 실패"
+    fi
+
+    # [MUST] 추출 사후조건 — 조용한 진행 금지 (§3.0 D-D)
+    if [[ ! -f "${OPAL_EXTRACT_DIR}/VERSION" || ! -d "${OPAL_EXTRACT_DIR}/opal" ]]; then
+        error "추출 결과 구조 이상 — VERSION 또는 opal/ 이 루트에 없습니다 (strip=${strip_n})"
+    fi
 
     success "추출 완료: ${OPAL_EXTRACT_DIR}"
 }
@@ -371,8 +534,11 @@ main() {
         warn "[UNVERIFIED] '${OPAL_VERSION}' 브랜치 설치 — SHA-256 무결성 검증 없음. 공식 릴리스(v*)를 권장합니다."
     fi
 
+    # detect_platform은 verify_checksum의 shasum/sha256sum 분기 전제 — 순서 유지 (§3.2.2)
     detect_platform
     check_deps
+    prepare_tmp
+    resolve_download_plan
     fetch_tarball
     verify_checksum
     extract_to_tmp

@@ -22,7 +22,97 @@
 #   v1.0.4 2026-05-10 21:00 KST: verify_checksum 강화 — release tag + sha256sums.txt 부재 시 prompt/거부 + main UNVERIFIED banner (GC-001, R-2) (144)
 #   v1.0.5 2026-06-29 15:24 KST: 추출 후 extract_dir/VERSION 각인값으로 version override — tarball VERSION 우선, API/main 폴백 강등 (048)
 #   v1.0.6 2026-07-10 KST: 미설치 감지 시 안내를 신규 설치 원라이너로 교체 — install 서브커맨드 제거에 따른 순환 안내 방지 (055)
+#   v1.1 2026-08-07 12:04 KST: DL-CONTRACT (085) 적용 — 다운로드 대상을 릴리즈 자산으로 전환, 체크섬 3분기(verify/unverified/branch) 하드닝(무음 통과·해시 도구 하드의존 제거), 추출 strip 자동 판정 + 사후조건 검사. 정합 fix: sha 항목 선택을 파일명 컬럼 정확 일치로 교정(상위문자열 오채택 차단, D-2) + 체크섬 case에 `*)` 하드 실패 분기 추가(모드값 이상 fail-closed, D-6). TEST fix: strip 판정값 검증 추가 — 빈 값·비수치 값을 그 지점에서 하드 실패로 거부(무음 강등 차단, O-5) (085)
 #
+# DL-CONTRACT (085): 릴리즈 태그는 릴리즈 자산 우선 + sha256sums.txt 부재 시 자동 아카이브 폴백(UNVERIFIED) + strip 자동 판정
+#
+
+# ─── DL-CONTRACT (085) 공통 헬퍼 ──────────────────────────────
+#
+# [MUST] _dl_asset_name / _dl_detect_strip 의 본문은 `scripts/install.sh` 와 **문자 단위로 동일**하게
+#        유지한다 (PLAN §3.0 D-A 정합 수단 (a)). 한쪽만 수정하면 규약이 드리프트한다.
+#        두 헬퍼는 외부 전역·로그 헬퍼에 의존하지 않는다 — tar / awk 만 사용한다.
+
+# 다운로드 계획 전역 (_dl_resolve_plan / _dl_fallback 이 설정)
+_DL_URL=""
+_DL_NAME=""
+_DL_MODE=""
+_DL_SHA_FILE=""
+
+# sha256 해시 계산 — 도구 이식성 흡수 (H-6). 둘 다 없으면 exit≠0 + 표준출력 공백.
+_dl_sha256() {
+    if command -v sha256sum >/dev/null 2>&1; then
+        sha256sum "$1" | awk '{print $1}'
+    elif command -v shasum >/dev/null 2>&1; then
+        shasum -a 256 "$1" | awk '{print $1}'
+    else
+        return 1
+    fi
+}
+
+# sha256sums.txt에서 첫 .tar.gz 파일명 컬럼을 파생 (binary mode '*' 접두 제거).
+# 항목이 없으면 공백을 출력하고 exit 0 — 폴백 여부는 호출자가 판단한다.
+_dl_asset_name() {
+    awk '{ n = $2; sub(/^\*/, "", n); if (n ~ /\.tar\.gz$/) { print n; exit } }' "$1"
+}
+
+# tar 최상위 구조 판정 → 0(루트 직속 항목 있음) | 1(단일 prefix 디렉토리) (§3.0 D-D).
+# 목록 1회 스캔, awk 단일 패스.
+_dl_detect_strip() {
+    tar -tzf "$1" | awk -F/ '
+        NF == 0 { next }
+        { if ($0 !~ /\//) root++; tops[$1] = 1 }
+        END { n = 0; for (t in tops) n++; print (root == 0 && n == 1) ? 1 : 0 }
+    '
+}
+
+# 자동 아카이브 폴백으로 강등 — $1=repo $2=version $3=사유
+# [MUST] 폴백 경로에서는 sha256sums.txt를 어떤 경우에도 비교에 사용하지 않는다 (H-3).
+_dl_fallback() {
+    if [[ -n "${_DL_SHA_FILE:-}" ]]; then
+        rm -f "$_DL_SHA_FILE" 2>/dev/null || true
+    fi
+    _DL_SHA_FILE=""
+    _DL_URL="https://github.com/${1}/archive/refs/tags/${2}.tar.gz"
+    _DL_NAME="opal-${2}-archive.tar.gz"
+    _DL_MODE="unverified"
+    warn "릴리즈 자산 미사용 폴백: ${3}"
+}
+
+# 다운로드 계획 수립 — $1=repo $2=version $3=tmp_dir (§3.0 D-C)
+# 산출 전역: _DL_URL / _DL_NAME / _DL_MODE(verify|unverified|branch) / _DL_SHA_FILE
+_dl_resolve_plan() {
+    local repo="$1" version="$2" tmp_dir="$3"
+    _DL_SHA_FILE=""
+
+    if [[ "$version" != v* ]]; then
+        _DL_URL="https://github.com/${repo}/archive/refs/heads/${version}.tar.gz"
+        _DL_NAME="opal-${version}.tar.gz"
+        _DL_MODE="branch"
+        return 0
+    fi
+
+    # 릴리즈 자산 존재 판정: sha256sums.txt 다운로드 성공 여부가 단일 신호 (§3.0 D-B)
+    local sha_url="https://github.com/${repo}/releases/download/${version}/sha256sums.txt"
+    _DL_SHA_FILE="$tmp_dir/sha256sums.txt"
+    if ! curl -fsSL --proto '=https' --tlsv1.2 -o "$_DL_SHA_FILE" "$sha_url" 2>/dev/null; then
+        _dl_fallback "$repo" "$version" "릴리즈 자산 없음 (sha256sums.txt 조회 실패)"
+        return 0
+    fi
+
+    # [MUST] 자산명은 하드코딩하지 않고 검증 대상 목록에서 파생한다 — 다운로드 대상 = 검증 대상
+    local asset
+    asset="$(_dl_asset_name "$_DL_SHA_FILE")"
+    if [[ -z "$asset" ]]; then
+        _dl_fallback "$repo" "$version" "sha256sums.txt 형식 이상 (.tar.gz 항목 없음)"
+        return 0
+    fi
+
+    _DL_URL="https://github.com/${repo}/releases/download/${version}/${asset}"
+    _DL_NAME="$asset"
+    _DL_MODE="verify"
+    return 0
+}
 
 # ─── update 서브커맨드 ────────────────────────────────────────
 
@@ -96,7 +186,7 @@ cmd_update() {
                 "https://api.github.com/repos/${opal_repo}/tags?per_page=1" \
                 2>/dev/null | grep '"name"' | head -1 | sed 's/.*"name": "\([^"]*\)".*/\1/') || true
             if [[ -n "$latest" ]]; then
-                info "리모트 최신 태그: $latest (release 자산 없음 — archive tarball 사용)"
+                info "리모트 최신 태그: $latest"
             fi
         else
             info "리모트 최신 release: $latest"
@@ -124,18 +214,15 @@ cmd_update() {
         info "업데이트: $local_version → $version"
     fi
 
-    # Tarball URL 결정 — install.sh v1.2와 정합 (archive 사용으로 release 자산 의존 제거)
-    local tarball_url
-    if [[ "$version" == "main" ]]; then
-        tarball_url="https://github.com/${opal_repo}/archive/refs/heads/main.tar.gz"
-    else
-        tarball_url="https://github.com/${opal_repo}/archive/refs/tags/${version}.tar.gz"
-    fi
-
     info "업데이트 버전: $version"
-    info "다운로드 URL: $tarball_url"
 
+    # [MUST] dry-run은 네트워크에 접근하지 않는다 (RG-8) — 계획 수립(_dl_resolve_plan) 이전에 종료한다.
     if [[ -n "$dry_run" ]]; then
+        if [[ "$version" == v* ]]; then
+            info "[dry-run] 다운로드 소스: releases/download/${version}/<sha256sums.txt 파생 자산명> (자산 부재 시 자동 아카이브 폴백)"
+        else
+            info "[dry-run] 다운로드 소스: ${version} 브랜치 아카이브 (UNVERIFIED)"
+        fi
         info "[dry-run] 실제 다운로드 및 설치를 수행하지 않습니다."
         info "[dry-run] 보존 대상: identity.md, projects/, community-skills/, .venv/"
         info "[dry-run] 클린 대상: skills/, agents/, tools/"
@@ -156,60 +243,129 @@ cmd_update() {
     # shellcheck disable=SC2064
     trap "rm -rf '$tmp_dir'" EXIT
 
+    # 다운로드 계획 수립 (§3.0 D-C) — 릴리즈 자산 우선, 자산 부재 시 자동 아카이브 폴백
+    _dl_resolve_plan "$opal_repo" "$version" "$tmp_dir"
+    info "다운로드 URL: $_DL_URL"
+
     info "tarball 다운로드 중..."
-    local tarball_path="$tmp_dir/opal.tar.gz"
-    if ! curl -fsSL --proto '=https' --tlsv1.2 -o "$tarball_path" "$tarball_url"; then
-        error "tarball 다운로드 실패: $tarball_url"
-        return 1
+    local tarball_path="$tmp_dir/$_DL_NAME"
+    if ! curl -fsSL --proto '=https' --tlsv1.2 -o "$tarball_path" "$_DL_URL"; then
+        if [[ "$_DL_MODE" == "verify" ]]; then
+            # 릴리즈 자산 다운로드 실패 — 폴백 1회 강등 후 재시도
+            _dl_fallback "$opal_repo" "$version" "릴리즈 자산 다운로드 실패"
+            tarball_path="$tmp_dir/$_DL_NAME"
+            info "폴백 다운로드 URL: $_DL_URL"
+            if ! curl -fsSL --proto '=https' --tlsv1.2 -o "$tarball_path" "$_DL_URL"; then
+                error "tarball 다운로드 실패: $_DL_URL"
+                return 1
+            fi
+        else
+            error "tarball 다운로드 실패: $_DL_URL"
+            return 1
+        fi
     fi
     success "다운로드 완료"
 
-    # main 브랜치 UNVERIFIED banner (release tag 외 모든 버전) (R-2, GC-001)
-    if [[ "$version" != v* ]]; then
-        warn "[UNVERIFIED] '${version}' 브랜치 업데이트 — SHA-256 무결성 검증 없음. 공식 릴리스(v*)를 권장합니다."
-    fi
-
-    # 체크섬 검증 (release tarball인 경우)
-    if [[ "$version" == v* ]]; then
-        local sha_url="https://github.com/${opal_repo}/releases/download/${version}/sha256sums.txt"
-        local sha_file="$tmp_dir/sha256sums.txt"
-        if curl -fsSL --proto '=https' --tlsv1.2 -o "$sha_file" "$sha_url" 2>/dev/null; then
+    # 체크섬 정책 (§3.0 D-C) — verify / unverified / branch 3분기
+    case "$_DL_MODE" in
+        branch)
+            # main 브랜치 UNVERIFIED banner (release tag 외 모든 버전) (R-2, GC-001, RG-3)
+            warn "[UNVERIFIED] '${version}' 브랜치 업데이트 — SHA-256 무결성 검증 없음. 공식 릴리스(v*)를 권장합니다."
+            ;;
+        verify)
             info "체크섬 검증 중..."
-            local actual_sha
-            actual_sha=$(sha256sum "$tarball_path" | awk '{print $1}')
-            local expected_sha
-            expected_sha=$(grep "opal-${version}.tar.gz" "$sha_file" 2>/dev/null | awk '{print $1}') || true
-            if [[ -n "$expected_sha" && "$actual_sha" != "$expected_sha" ]]; then
+            # [MUST] 고정 문자열 매칭 — 파일명의 '.'이 정규식 와일드카드로 해석되는 오매칭 차단 (H-9)
+            # [MUST] grep -F 는 부분문자열 매칭이므로 전(前)필터로만 쓰고, 파일명 컬럼($2, binary mode '*' 제거)
+            #        정확 일치로 항목을 확정한다 — 상위문자열 항목(예: {자산}.tar.gz.sig)이 먼저 와도
+            #        그 행을 채택하지 않는다 (D-2). install.sh·install.ps1 과 동형.
+            local sha_entry expected_hash actual_hash
+            sha_entry="$(grep -F -- "$_DL_NAME" "$_DL_SHA_FILE" \
+                | awk -v want="$_DL_NAME" '{ n = $2; sub(/^\*/, "", n); if (n == want) { print; exit } }' || true)"
+            if [[ -z "$sha_entry" ]]; then
+                error "sha256sums.txt에 ${_DL_NAME} 항목 없음 — DL-CONTRACT 위반. 업데이트를 중단합니다."
+                return 1
+            fi
+            expected_hash="$(printf '%s\n' "$sha_entry" | awk '{print $1}')"
+            # [MUST] 기대값 공백은 무음 통과가 아니라 하드 실패다 (H-10)
+            if [[ -z "$expected_hash" ]]; then
+                error "체크섬 기대값 파싱 실패 — sha256sums.txt 형식 이상. 업데이트를 중단합니다."
+                return 1
+            fi
+            actual_hash="$(_dl_sha256 "$tarball_path" || true)"
+            if [[ -z "$actual_hash" ]]; then
+                error "sha256 계산 도구(sha256sum/shasum)를 찾을 수 없습니다. 업데이트를 중단합니다."
+                return 1
+            fi
+            if [[ "$actual_hash" != "$expected_hash" ]]; then
                 error "체크섬 불일치! 다운로드가 손상되었을 수 있습니다."
-                error "  기대값: $expected_sha"
-                error "  실제값: $actual_sha"
+                error "  기대값: $expected_hash"
+                error "  실제값: $actual_hash"
                 return 1
             fi
             success "체크섬 검증 완료"
-        else
-            # release tag지만 sha256sums.txt 부재 — 무결성 검증 불가 (R-2)
+            ;;
+        unverified)
+            # 릴리즈 자산 미사용 — 무결성 검증 불가 (R-2, RG-4: 옵트인 / 비대화형 거부 / 프롬프트)
             if [[ "${OPAL_ALLOW_UNVERIFIED:-}" == "1" ]]; then
-                warn "[UNVERIFIED] sha256sums.txt 없음 — OPAL_ALLOW_UNVERIFIED=1로 무결성 검증 없이 진행"
+                warn "[UNVERIFIED] 릴리즈 자산 없음 — OPAL_ALLOW_UNVERIFIED=1로 무결성 검증 없이 진행"
             elif [[ ! -t 0 ]] || [[ "${OPAL_AUTO_INSTALL:-}" == "1" ]]; then
-                error "sha256sums.txt 없음 — 비대화형 모드에서 무결성 검증 없는 업데이트를 거부합니다. 옵트인: OPAL_ALLOW_UNVERIFIED=1"
+                error "릴리즈 자산 없음 — 비대화형 모드에서 무결성 검증 없는 업데이트를 거부합니다. 옵트인: OPAL_ALLOW_UNVERIFIED=1"
                 return 1
             else
-                read -r -p "sha256sums.txt 없음 — 무결성 검증 없이 진행하시겠습니까? [y/N] " unverified_confirm
+                read -r -p "릴리즈 자산 없음 — 무결성 검증 없이 진행하시겠습니까? [y/N] " unverified_confirm
                 if [[ "$unverified_confirm" != "y" && "$unverified_confirm" != "Y" ]]; then
                     error "사용자가 취소했습니다. 옵트인: OPAL_ALLOW_UNVERIFIED=1"
                     return 1
                 fi
                 warn "[UNVERIFIED] 사용자 동의로 무결성 검증 없이 진행"
             fi
-        fi
-    fi
+            ;;
+        *)
+            # [MUST] 계약 3종(verify/unverified/branch) 밖의 값은 무음 통과가 아니라 하드 실패다 (D-6, fail-closed)
+            error "체크섬 모드 값 이상: '${_DL_MODE}' — DL-CONTRACT 위반. 업데이트를 중단합니다."
+            return 1
+            ;;
+    esac
 
-    # tarball 압축 해제
+    # tarball 압축 해제 — 상위 디렉토리 유무를 판정하여 strip 적용 (§3.0 D-D)
     local extract_dir="$tmp_dir/opal-src"
     mkdir -p "$extract_dir"
-    info "압축 해제 중..."
-    tar -xzf "$tarball_path" -C "$extract_dir" --strip-components=1 2>/dev/null || \
-        tar -xzf "$tarball_path" -C "$extract_dir"
+    # [MUST] 목록 조회 가능 여부를 먼저 확정한다 (§3.0 D-D, O-5).
+    #        _dl_detect_strip은 조회 실패 시에도 '0'을 출력하므로(입력 0줄 → root=0·tops=0 → 0),
+    #        판정값만으로는 "prefix 없는 정상 자산"과 "손상 tarball"을 구분할 수 없다.
+    #        선검사 없이는 손상 tarball이 무음으로 strip=0 경로를 타고, 뒤이은 사후조건 오류가 진짜 원인을 가린다.
+    if ! tar -tzf "$tarball_path" >/dev/null 2>&1; then
+        error "tarball 목록 조회 실패 — 손상되었거나 tar.gz 형식이 아닙니다: $tarball_path"
+        return 1
+    fi
+
+    local strip_n
+    strip_n="$(_dl_detect_strip "$tarball_path" || true)"
+    # 판정값 자체도 검증한다 — awk 산출이 비거나 예상 밖 값이면 하드 실패 (무음 강등 차단).
+    case "$strip_n" in
+        0|1) ;;
+        *)
+            error "tarball 구조 판정 실패 (strip 판정값: '${strip_n}') — 업데이트를 중단합니다."
+            return 1
+            ;;
+    esac
+    info "압축 해제 중... (strip-components=${strip_n})"
+    if [[ "$strip_n" -eq 1 ]]; then
+        tar -xzf "$tarball_path" -C "$extract_dir" --strip-components=1 || {
+            error "tarball 추출 실패: $tarball_path"
+            return 1
+        }
+    else
+        tar -xzf "$tarball_path" -C "$extract_dir" || {
+            error "tarball 추출 실패: $tarball_path"
+            return 1
+        }
+    fi
+    # [MUST] 추출 사후조건 — 조용한 진행 금지 (§3.0 D-D)
+    if [[ ! -f "$extract_dir/VERSION" || ! -d "$extract_dir/opal" ]]; then
+        error "추출 결과 구조 이상 — VERSION 또는 opal/ 이 루트에 없습니다 (strip=${strip_n})"
+        return 1
+    fi
     success "압축 해제 완료"
 
     # 각인 VERSION 우선 — install.sh adopt_stamped_version과 동일 원칙 (048)

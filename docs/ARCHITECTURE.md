@@ -322,9 +322,9 @@ OPAL이 동작·배포 시 의존하는 외부 자원이다. 신규/변경 시 �
 
 | 채널 | 단계 | 상태 | 비고 |
 |------|------|------|------|
-| GitHub Releases | 1차 | **현행** | 태그 기반 tarball + sha256sums.txt + `actions/attest-build-provenance@v2` |
-| `opal-cli` CLI | 1차 | **현행** | `update`/`doctor`/`uninstall`/`mcp`/`console` 단일 진입점 (`~/.opal/bin/opal-cli`) — 신규 설치는 One-liner installer |
-| One-liner installer | 1차 | **현행** | `curl \| bash`(mac/linux) / `iex (irm)`(Windows) 진입점 (`scripts/install.sh`, `scripts/install.ps1`) |
+| GitHub Releases | 1차 | **현행** | 태그 기반 tarball + sha256sums.txt + `actions/attest-build-provenance@v2`. **소비 규약(DL-CONTRACT)**: 설치·업데이트는 릴리즈 자산(`opal-{tag}.tar.gz`)을 1순위로 내려받아 같은 파일의 체크섬으로 검증한다 — 다운로드 대상과 검증 대상이 동일해야 하며, 자산이 없으면 자동 아카이브(`archive/refs/tags`)로 폴백하고 이때는 UNVERIFIED 정책(옵트인·대화형 프롬프트·비대화형 거부)을 적용한다. 자산명은 하드코딩하지 않고 `sha256sums.txt`의 파일명 컬럼에서 파생한다 |
+| `opal-cli` CLI | 1차 | **현행** | `update`/`doctor`/`uninstall`/`mcp`/`console` 단일 진입점 (`~/.opal/bin/opal-cli`) — 신규 설치는 One-liner installer. 다운로드 소스 규약은 `GitHub Releases` 행 참조 |
+| One-liner installer | 1차 | **현행** | `curl \| bash`(mac/linux) / `iex (irm)`(Windows) 진입점 (`scripts/install.sh`, `scripts/install.ps1`). 다운로드 소스 규약은 `GitHub Releases` 행 참조 |
 | Homebrew tap | 2차 | 예정 | macOS 사용자 대상 `brew install opal-cli` (명칭은 별도 결정) |
 | npm 패키지 | 후속 | 예정 | cross-platform 통합 |
 
@@ -399,6 +399,7 @@ opal/                                    ← 이 저장소
 
 | 날짜 | 변경 내용 |
 |------|----------|
+| 2026-08-07 | 배포 채널 표에 **다운로드 소스 규약(DL-CONTRACT)** 명시 — 설치·업데이트 3경로(`install.sh`·`install.ps1`·`opal-cli update`)가 릴리즈 자산을 1순위로 소비하고 같은 파일의 체크섬으로 검증하도록 정합. 종전에는 체크섬이 `git archive` 산출 자산에 대해 발행되는데 스크립트는 GitHub 자동 아카이브를 받아 검증이 구조적으로 불가능했다(`opal-cli update` 하드 실패 / `install.ps1` 예외 중단 / `install.sh` 무결성 검증 무음 스킵). 자산명은 `sha256sums.txt` 파일명 컬럼에서 파생하고, 자산 부재 시 자동 아카이브 폴백 + UNVERIFIED 정책(옵트인·프롬프트·비대화형 거부)을 유지하며, 아카이브 상위 디렉토리 유무에 따라 `--strip-components`를 자동 판정한다 (Task 085) |
 | 2026-08-04 | tools/ 표 code-scan 행에 샤드 정책 확장 반영 — `split`(제안 `--plan`/집행 `--groups`)·`init`(비대화형 설정 초안) 서브명령 신설(13→15), 과대 매니페스트 판정을 `shardPolicy` 3단 우선순위(프로젝트 > 전역 `~/.opal/setting.json` > 코드 상수, 셀 단위 머지) 기반 **바이트 초과 AND 엔트리 수 이상 2축**(비차단)으로 정교화, `split --plan`의 5단계 제안 사다리 + `op-data-dictionary` 표준단어사전.md 옵셔널·읽기 전용 대조(code-scan이 `.opal/` 밖 문서를 읽는 첫 사례) 반영, 구 위치 `manifestMaxBytes` 폐기 안내. code-scan v1.6.0 (Task 083) |
 | 2026-08-03 | tools/ 표 code-scan 행에 매니페스트 샤딩 반영 — 예약 폴더 `_shards/` 의미 단위 분산(베이스 `shards` 라벨 배열 선언, `resolveShards` 1곳 봉인, 미선언 자산 바이트 동일 하위호환) + `index.json` 최상위 `manifestMaxBytes` 파일당 크기 상한 비차단 열거. code-scan v1.5.0 (Task 082) |
 | 2026-08-02 | tools/ 표 code-scan 행에 헤더 소스 단일화 반영 — 기록 소스를 `.opal/code-scan.json` 전역 `headerSource`(`inline`\|`manifest`) 단일 키가 결정하고 스코프별 오버라이드를 제거, 미설정·무효값 시 전 명령 차단. `readonly` 스코프 플래그 폐기 (Task 080) |
