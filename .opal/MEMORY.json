@@ -1,56 +1,7 @@
 {
   "version": 1,
   "last_task_number": 87,
-  "memories": [
-    {
-      "title": "Console 브레인 구독 인증",
-      "date": "2026-06-22",
-      "type": "project",
-      "status": "active",
-      "file": "memory/console-brain-subscription-auth.md",
-      "summary": "Console 브레인 질의는 종량제 API 아닌 사용자 Claude 구독(로컬 claude -p). API키·SDK 금지"
-    },
-    {
-      "title": "브레인 질의 콜드 경량화(037후속)",
-      "date": "2026-06-23",
-      "type": "task",
-      "status": "active",
-      "file": "memory/follow-up-brain-query-lite.md",
-      "summary": "브레인 질의 콜드 latency 경량화 — 검색을 LLM 밖 brain-tool로. opbr --lite 권고"
-    },
-    {
-      "title": "후속 069·070 액션에이전트 관측 확장",
-      "date": "2026-07-17",
-      "type": "task",
-      "status": "active",
-      "file": "memory/후속_069_070_액션에이전트_관측_확장.md",
-      "summary": "oppd·opsdd를 opal-agent 채널+규약 전환→action-monitor 공용화. phase 동적발견 필수"
-    },
-    {
-      "title": "워커 보고는 실측 대조 없이 신뢰 불가",
-      "date": "2026-07-29",
-      "type": "improvement",
-      "status": "promoted",
-      "file": "memory/워커_보고는_실측_대조_없이_신뢰_불가.md",
-      "summary": "078 PM Gate에서 워커 자기보고 오류 2건을 적발했다. (1) Step 14가 '에러코드 표를 실제 ERROR_CODES와 일치하도록…"
-    },
-    {
-      "title": "078 워커 실패 완화책이 079에서 인프라 실패 0건으로 재현됨",
-      "date": "2026-07-30",
-      "type": "improvement",
-      "status": "promoted",
-      "file": "memory/078_워커_실패_완화책이_079에서_인프라_실패_0건으로_재현됨.md",
-      "summary": "078에서 워커 3연속 인프라 실패(API 종료 2·스톨 1) 후 도출한 완화 조합을 079 전 워커 프롬프트에 선제 적용했다: (1) 배치…"
-    },
-    {
-      "title": "080 이관 결정 — headerSource 단일화(D-1~D-5)+개선 A",
-      "date": "2026-08-01",
-      "type": "task",
-      "status": "active",
-      "file": "memory/079_이관_결정_headerSource_단일화_D_1_D_5_개선_A.md",
-      "summary": "auto제거·미설정에러·전명령차단·readonly제거·스코프별 override + scopes include/exclude"
-    }
-  ],
+  "memories": [],
   "history": [
     {
       "title": "087 P1 하네스 압축·Opus5 정합",
