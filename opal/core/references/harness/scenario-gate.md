@@ -30,25 +30,11 @@ TEST-SCENARIO 단계는 두 가지 역할(① 리스크 가설 기반 시나리�
 
 게이트 입출력은 5 pilot(opd/opds/opsdd/oppl/oppd) 어디에서 호출되든 동일한 형태를 따른다. pilot별 문서 형식(TEST-SCENARIO.md, PLAN.md 등)에서 이 계약으로의 변환 책임은 **호출 스킬**(op-scenario-gate)이 지며, test-tool·evaluator는 pilot-중립 페이로드만 소비한다.
 
-**입력 (정규화 JSON 페이로드)**:
+**입력 (정규화 JSON 페이로드)** — 전체 필드는 보존, 표기만 압축:
 ```
-{
-  "goal": "<태스크 목표 문장>",
-  "requirements": ["R-1", ...],
-  "features": ["F-001", ...],
-  "hypotheses": ["H-1", ...],
-  "scenarios": [
-    {
-      "id": "S-1",
-      "covers_requirements": ["R-1"],
-      "covers_features": ["F-001"],
-      "covers_hypotheses": ["H-1"],
-      "is_goal_scenario": true,
-      "is_adoption_scenario": false,
-      "is_boundary_scenario": false
-    }
-  ]
-}
+{ "goal": "<태스크 목표 문장>", "requirements": ["R-1", ...], "features": ["F-001", ...], "hypotheses": ["H-1", ...],
+  "scenarios": [{ "id": "S-1", "covers_requirements": ["R-1"], "covers_features": ["F-001"], "covers_hypotheses": ["H-1"],
+                  "is_goal_scenario": true, "is_adoption_scenario": false, "is_boundary_scenario": false }] }
 ```
 
 **출력 — 결정론 파트** (test-tool `scenario-coverage-check`):
@@ -89,11 +75,11 @@ Producer(작성) → scenario-coverage-check(결정론 게이트) → opal-evalu
 게이트 PASS는 다음 두 증거가 **모두** 존재할 때만 성립한다:
 - test-tool `scenario-coverage-check` exit 0 (누락 = 0)
 - opal-evaluator-agent `scenario-rubric` verdict pass (§5-1 판단축 임계 충족)
-
-PM은 위 두 도구 출력 없이 게이트 통과를 산문으로 선언할 수 없다 (`opal/core/PRINCIPLES.md:15` "Enforce, don't just advise: if a rule must always hold, a tool gates it — not prose.").
+- PM은 위 두 도구 출력 없이 게이트 통과를 산문으로 선언할 수 없다 (`opal/core/PRINCIPLES.md:15` "Enforce, don't just advise: if a rule must always hold, a tool gates it — not prose.")
 
 ## 변경이력
 
 | 버전 | 날짜 | 변경내용 |
 |------|------|---------|
 | v1.0 | 2026-07-23 | 최초 작성 — 루브릭 6축·판정주체분리·정규화계약·루프 프로세스·종료조건 3종·tool-gated 집행 SSOT 신설 (073) |
+| v1.1 | 2026-08-09 21:08 | 서술 중복 압축 — 정규화 JSON 페이로드 표기 압축(전체 필드 보존), tool-gated 집행 절 문단 통합. 규칙·판정식·`test-tool` 언급 8건 전건 보존 (087) |

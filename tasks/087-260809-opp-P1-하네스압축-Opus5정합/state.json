@@ -1,0 +1,112 @@
+{
+  "task_id": "087-260809-opp-P1-하네스압축-Opus5정합",
+  "skill": "opp",
+  "mode": "semi-agentic",
+  "schema_version": "1.1",
+  "created_at": "2026-08-09 18:23",
+  "updated_at": "2026-08-09 23:41",
+  "current_status": "done",
+  "rows": [
+    {
+      "row_id": 1,
+      "stage": "TASK",
+      "item": "작업",
+      "key": "task.task_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-09 18:23",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 2,
+      "stage": "TASK",
+      "item": "사용자 확인",
+      "key": "task.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-09 18:27",
+      "owner": "user",
+      "note": "캡틴 확인: TASK.md 승인 — PLAN 진입"
+    },
+    {
+      "row_id": 3,
+      "stage": "PLAN",
+      "item": "작업",
+      "key": "plan.plan_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-09 18:53",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 4,
+      "stage": "PLAN",
+      "item": "PM Gate",
+      "key": "plan.pm_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-09 18:53",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 5,
+      "stage": "PLAN",
+      "item": "사용자 확인",
+      "key": "plan.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-09 20:32",
+      "owner": "user",
+      "note": "캡틴 확인: PLAN 승인 — EXECUTE 진입"
+    },
+    {
+      "row_id": 6,
+      "stage": "EXECUTE",
+      "item": "작업",
+      "key": "execute.implement",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-09 21:36",
+      "owner": "PM",
+      "note": null,
+      "step": "12/12"
+    },
+    {
+      "row_id": 7,
+      "stage": "EXECUTE",
+      "item": "PM Gate",
+      "key": "execute.pm_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-09 21:37",
+      "owner": "auto",
+      "note": "agentic auto-pass: semi-agentic auto-pass: 12 Step 전건 완료·산출물 5건 확인. C1·C2·C3·C5 Pass(PM 재검증 G1=26/G3=72/표A=12행), C4 Fail은 캡틴 결정으로 미달 인정·이월. 불변 제약 3종 준수 확인(AGENT.md·모드 서브하네스·tools·pipeline.json 변경 0건)"
+    },
+    {
+      "row_id": 8,
+      "stage": "EXECUTE",
+      "item": "사용자 확인",
+      "key": "execute.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-09 23:40",
+      "owner": "user",
+      "note": "캡틴 확인: EXECUTE 승인 — CLOSE 진입"
+    },
+    {
+      "row_id": 9,
+      "stage": "CLOSE",
+      "item": "DONE.md 생성",
+      "key": "close.done_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-09 23:41",
+      "owner": "PM",
+      "note": null
+    }
+  ],
+  "next_action": "태스크 완료"
+}

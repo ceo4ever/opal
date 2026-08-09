@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_task_number": 86,
+  "last_task_number": 87,
   "memories": [
     {
       "title": "Console 브레인 구독 인증",
@@ -53,6 +53,13 @@
   ],
   "history": [
     {
+      "title": "087 P1 하네스 압축·Opus5 정합",
+      "date": "2026-08-10",
+      "stage": "완료",
+      "path": "tasks/087-260809-opp-P1-하네스압축-Opus5정합/",
+      "result": "C1·C2·C3·C5 Pass(로드 2176→1990·3홉 0건). C4 Fail 인정·이월 — 산출량상한↔배치크기 충돌"
+    },
+    {
       "title": "086 FW 구조개선 청사진 P0",
       "date": "2026-08-09",
       "stage": "완료",
@@ -79,13 +86,6 @@
       "stage": "완료·미커밋",
       "path": "tasks/083-260803-opds-샤드정책-확장/",
       "result": "탐지→제안→집행 경로 완성. shardPolicy 3단 우선순위(셀 머지)·바이트 AND 엔트리 2축·split(--plan 5단 사다리/--groups 집행)·init(게이트 앞 배치로 순환 차단). code-scan v1.6.0, 13→15서브명령. 340/340 GREEN(PM 독립 실측)·골든 diff 0·P0 8종 GREEN. K-1 split_rollback 커버리지 갭 후속 이관"
-    },
-    {
-      "title": "082 코드맵 매니페스트 샤딩",
-      "date": "2026-08-03",
-      "stage": "완료·미커밋",
-      "path": "tasks/082-260803-opds-코드맵-매니페스트-샤딩/",
-      "result": "_shards/ 의미 단위 분산 + manifestMaxBytes 비차단 상한. resolveShards 1곳 봉인·옵트인. code-scan v1.5.0. 249/249 GREEN·골든diff0. git stash 사고 424줄 유실→복구, FW개선 등재"
     }
   ]
 }

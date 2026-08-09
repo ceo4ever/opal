@@ -10,6 +10,8 @@ description: |
 
 ## 실행 컨텍스트
 
+**진입 경로(2홉)**: `opal-harness.md` §2 규칙 인덱스(직접 참조) 표 B → 이 파일. `harness/task-process.md`는 이 경로를 포인터로만 가리키며 직접 Read하지 않는다.
+
 이 스킬은 **오케스트레이터가 직접 수행**한다. 서브에이전트를 생성하지 않는다.
 사용자와 대화하며 요구사항을 확인하고, 결과물(TASK.md)을 작성한다.
 
@@ -175,8 +177,7 @@ tasks/{NNN}-{YYMMDD}-{스킬약어}-{태스크명}/TASK.md
 - `{YYMMDD}`: TASK 단계 시작일 (KST) — `node ~/.opal/tools/date/date.js yymmdd` 실행하여 취득
 - `{스킬약어}`: STEP 5에서 결정된 오케스트레이터 약어 (예: `opp`, `opd`, `opds`, `opdw`, `opwt`)
 - `{태스크명}`: **[기본] 한글로 작성한다.** 영문 kebab-case·한글+영문 혼용은 소유자가 명시 요청할 때만 사용한다. **공백 금지**(셸 명령 안정성), 단어 구분은 하이픈(`-`). 예(한글 기본): `로그인-버그수정`, `회원가입-구현`, `소셜-login-혼용가능` / (영문은 명시 요청 시) `user-auth-implementation`
-  - 앞 3요소(`{NNN}-{YYMMDD}-{스킬약어}`)는 **ASCII 고정** — 파싱 안정성을 위해 한글·공백 사용 금지
-  - macOS는 파일명을 NFD(분해형)로 저장하므로 크로스플랫폼 git 협업 시 NFC 불일치를 줄이기 위해 태스크명은 짧게 유지한다
+  - 앞 3요소(`{NNN}-{YYMMDD}-{스킬약어}`)는 **ASCII 고정**(파싱 안정성) — macOS NFD 저장 특성상 크로스플랫폼 NFC 불일치를 줄이려면 태스크명을 짧게 유지한다
 - `tasks/` 폴더가 없으면 생성한다
 
 ### STEP 5. 오케스트레이터 선택
@@ -203,11 +204,7 @@ tasks/{NNN}-{YYMMDD}-{스킬약어}-{태스크명}/TASK.md
 
 #### STATE.md 리마인더
 
-> **[오케스트레이터 후처리]** op-task 프로세스 완료 후, 오케스트레이터는 하네스 §4 "오케스트레이터 공통 영역"을 수행해야 한다. 특히 **STATE.md 생성**을 잊지 않는다.
->
-> **[MUST] STATE.md는 `state-tool`로만 생성한다. LLM이 직접 작성하는 것은 금지된다.** (`harness/state-template.md` §[MUST] 블록 — TASK F-16 / PLAN §1.5 M-18)
->
-> `state init`을 호출하여 STATE.md를 생성한다 (PLAN §3 Step 5 / §2.11 G-8):
+> **[오케스트레이터 후처리]** op-task 완료 후 오케스트레이터는 `harness/task-process.md` §오케스트레이터 공통 영역을 수행한다. **[MUST] STATE.md는 `state-tool`로만 생성**한다(LLM 직접 작성 금지 — `harness/state-template.md` §[MUST] 블록, TASK F-16 / PLAN §1.5 M-18).
 >
 > ```bash
 > ~/.opal/tools/state-tool/run.sh init <task-path> \
@@ -217,19 +214,11 @@ tasks/{NNN}-{YYMMDD}-{스킬약어}-{태스크명}/TASK.md
 >   [--next-action <첫 액션 텍스트>]
 > ```
 >
-> - `--mode`: 기본값 `semi-agentic`. `--interactive` 또는 `--agentic` 명시 호출 시 해당 모드.
-> - `--task-title`: STATE.md 1행 제목 (생략 시 `<task-path>` 마지막 디렉토리명 — PLAN §2.19.1)
-> - `--next-action`: `## 다음 액션` 초기값 (생략 시 `"PLAN 단계 진입"` — PLAN §2.11 G-8). 이후 `advance`/`mark`가 파이프라인 프론티어에서 자동 파생·갱신하며, 전이 시 동일 플래그로 1회성 오버라이드 가능(태스크 072)
-> - 행 구성(`--rows-spec`/`--rows-from`)은 오케스트레이터 SKILL.md "STATE.md 도메인 치환값" 참조 (PLAN §2.3)
+> `--mode` 기본값 `semi-agentic` / `--task-title` 생략 시 `<task-path>` 마지막 디렉토리명 / `--next-action` 생략 시 `"PLAN 단계 진입"`(이후 `advance`/`mark`가 파이프라인 프론티어에서 자동 갱신, 전이 시 1회성 오버라이드 가능 — 072) / 행 구성(`--rows-spec`/`--rows-from`)은 오케스트레이터 SKILL.md "STATE.md 도메인 치환값" 참조 (PLAN §2.3/§2.11 G-8/§2.19.1)
 
 #### 완료 보고 형식
 
-```
-📋 [TASK] 완료 보고
-📎 산출물: tasks/{NNN}-{스킬약어}-{태스크명}/TASK.md
-적용 스킬: {약어}
-다음 단계({다음 단계명})로 넘어갈까요?
-```
+`harness/task-process.md`의 완료 보고 코드블록과 동일(산출물 경로만 `tasks/{NNN}-{YYMMDD}-{스킬약어}-{태스크명}/TASK.md`로 대입).
 
 ---
 
@@ -276,3 +265,4 @@ TASK.md 완성 전에 다음을 확인한다:
 | v2.2 | 2026-07-23 12:09 | `--next-action` 계약 보강 — advance/mark가 파이프라인 프론티어에서 자동 파생·갱신하며, 전이 시 1회성 오버라이드 가능함을 명시 (072) |
 | v2.3 | 2026-07-23 13:18 | AC 작성 가이드에 "교체형 목표(구형→신형 전환·대체·마이그레이션) → 잔존0·채택 검증 기준 의무" 규칙 + Bad/Good 예시 1행 추가 — 루브릭 ①목표달성·⑤채택/잔존 축 채점 가능성 보장 (073) |
 | v2.4 | 2026-07-28 | `{NNN}` 채번 서술을 `.opal/MEMORY.md` 헤더 직접 참조에서 `memory-tool task-number --bump` 포인터 참조로 전환 (절차 SSOT: `harness/task-process.md`) (078) |
+| v2.5 | 2026-08-09 21:00 | 실행 컨텍스트에 2홉 진입 경로(`opal-harness.md` §2 표 B → 이 파일) 명시 + STATE.md 리마인더·완료 보고 형식·저장 경로 중복 서술 압축(state-tool 호출 지시 행 보존) (087) |

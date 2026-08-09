@@ -287,3 +287,7 @@
 - 신규: [[fw-structure-p0-blueprint]], [[dynamic-loop-add-row-not-schema-extension]], [[observability-field-design-at-record-time]]
 - 출처: task:086
 
+## [2026-08-09] ingest | CLOSE ingest — 태스크 087 P1 하네스압축+Opus5정합
+- 신규: [[harness-rule-index-two-table-split]], [[conditional-batch-output-cap-tradeoff]], [[doc-line-count-source-vs-deploy-duality]], [[harness-gate-already-tool-enforced]], [[completion-criteria-change-boundary]]
+- 출처: task:087
+

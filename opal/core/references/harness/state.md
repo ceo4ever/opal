@@ -35,9 +35,7 @@
 | 추가작업 진입 | 오케스트레이터 | - | 추가작업중 (CLOSE 단계 재진입) | **필수** | `~/.opal/tools/state-tool/run.sh add-row <task-path> --after <N> --stage <단계> --item <항목>` |
 | 추가작업 완료 | 오케스트레이터 | - | 추가작업완료 (CLOSE 재진입 완료) | **필수** | `~/.opal/tools/state-tool/run.sh status <task-path> --set additional_work_done` |
 
-**갱신 모델**: 워커가 1차 갱신을 수행하고(best effort), PM이 PM Gate 직전 상태 자가 점검에서 확인하여 미갱신/오갱신 시 즉시 보완한다.
-
-**note 소유자 호칭**: note에 소유자 호칭이 필요하면 `{owner_name}` 플레이스홀더를 사용한다 — state-tool이 identity.md `owner_name`으로 치환한다. 규칙 상세: `opal/core/AGENT.md` §정체성 적용(오염 금지).
+**갱신 모델**: 워커가 1차 갱신을 수행하고(best effort), PM이 PM Gate 직전 상태 자가 점검에서 확인하여 미갱신/오갱신 시 즉시 보완한다. **note 소유자 호칭**: `{owner_name}` 플레이스홀더 사용 시 state-tool이 identity.md `owner_name`으로 치환한다(규칙 상세: `opal/core/AGENT.md` §정체성 적용).
 
 **수행 순서 강제 원칙**: 파이프라인 현황판 테이블은 위에서 아래로 순서대로 처리한다. 현재 행이 ✅가 아니면 다음 행으로 진행 불가. 일반 단계 행은 `작업 / PM Gate / 사용자 확인`으로 구성된다(문서 QA는 PM Gate가 흡수, 별도 QA Gate·State Gate 행 없음). Gate가 없는 단계(TASK 등)는 PM Gate 행을 생략한다.
 
@@ -51,29 +49,16 @@
 
 ### 파이프라인 todo 미러 (네이티브 할일 패널)
 
-> **소유자**: PM(오케스트레이터). 모든 opal-pilot이 상속한다 — pilot SKILL.md는 이 규칙을 재서술하지 않는다.
-> **적용 시점**: state-tool 이벤트(`init`/`advance`/`mark`/`block`) 호출 **직후, PostToolUse hook이 결정론 트리거**한다.
+> **소유자**: PM. 전 pilot 상속(pilot SKILL.md는 재서술하지 않음). **적용 시점**: state-tool 이벤트(`init`/`advance`/`mark`/`block`) 호출 직후 PostToolUse hook이 결정론 트리거한다.
 
-파이프라인 현황판을 **단계(stage) 단위로 네이티브 할일 패널에 비춘다**. 소유자는 STATE.md 파일을 열지 않고도 하단 패널에서 진행 상황을 한눈에 본다.
+파이프라인 현황판을 **단계(stage) 단위로**(항목 단위 아님) 네이티브 할일 패널에 비춘다 — 소유자는 STATE.md를 열지 않고도 하단 패널에서 진행 상황을 확인한다.
 
-**강제 메커니즘 (hook 트리거)**: 갱신은 산문 지시가 아니라 도구·hook로 집행된다(헌법 Core Stance "Enforce, don't just advise").
-1. state-tool이 `init`/`advance`/`mark`/`block` 응답(`ok()` stdout)에 단계별 파생 상태를 담은 `todo_mirror` 페이로드(`{action, todos[]}`)를 함께 출력한다 — 파생은 도구가 결정론 산출한다(PM 재계산 아님).
-2. PostToolUse hook(`todo_mirror_hook.py`, Bash matcher)이 그 호출을 감지해 `todo_mirror` 페이로드와 갱신 지시를 세션에 주입한다 — 트리거·타이밍·페이로드가 결정론화된다.
-3. PM(소유자)은 주입된 페이로드를 `action=create`면 `TaskCreate`로 단계별 todo 생성, `action=update`면 각 단계 todo를 `status`로 `TaskUpdate`하여 **기계적으로 릴레이**한다. (정직한 한계: 네이티브 할일 패널은 오직 LLM의 도구 호출로만 기록되므로 최종 릴레이 1스텝은 LLM 몫이다.)
+**메커니즘 (hook 트리거, 산문 지시가 아닌 도구 집행)**: ① state-tool이 이벤트 응답에 단계별 파생 상태 `todo_mirror` 페이로드(`{action, todos[]}`)를 함께 출력(도구가 결정론 산출, PM 재계산 아님) → ② PostToolUse hook(`todo_mirror_hook.py`)이 세션에 주입 → ③ PM이 `action=create`면 `TaskCreate`, `action=update`면 `TaskUpdate`로 기계적으로 릴레이(네이티브 패널은 LLM 도구 호출로만 기록되므로 최종 1스텝은 LLM 몫).
 
-> **[게이트 — 능력 감지]** 네이티브 할일 도구(`TaskCreate`/`TaskUpdate` 등)가 노출된 세션(현재 Claude Code)에서만 수행한다. 도구가 없는 플랫폼(Cursor/Gemini/Codex 등)은 이 절 전체를 건너뛴다. 이는 하드코딩 플랫폼 분기가 아니라 **능력 감지**이므로 플랫폼 독립성을 보존한다(헌법 Core Stance). hook은 어댑터 계층(`claude-hooks.json`)에만 격리되고 비Claude는 애초에 이 능력이 없어 기존 no-op이 유지된다.
->
-> **[SSOT 불변]** STATE.md/state-tool이 진행 현황의 유일한 SSOT다. todo 패널은 STATE.md 파이프라인 현황판을 비추는 **읽기 전용 거울**이며, 충돌 시 STATE.md가 이긴다. todo를 진행·게이트 판단의 근거로 삼지 않는다.
+> **[게이트 — 능력 감지]** `TaskCreate`/`TaskUpdate` 등이 노출된 세션(현재 Claude Code)에서만 수행 — 없는 플랫폼(Cursor/Gemini/Codex 등)은 절 전체 스킵. 하드코딩 분기가 아닌 **능력 감지**이며(헌법 Core Stance), hook은 어댑터 계층(`claude-hooks.json`)에만 격리되어 비Claude는 기존 no-op 유지.
+> **[SSOT 불변]** STATE.md/state-tool이 유일 SSOT. todo 패널은 읽기 전용 거울이며 충돌 시 STATE.md가 이긴다 — 진행·게이트 판단 근거로 쓰지 않는다.
 
-**미러 규칙**:
-- **대상**: 파이프라인 현황판 행을 `단계`로 그룹핑하여 **단계당 todo 1개**를 만든다 (TASK/PLAN/EXECUTE/TEST/CLOSE 등). 항목(`작업`/`PM Gate`/`사용자 확인`) 단위가 아니다.
-- **상태 파생**(state-tool이 해당 단계 행들을 집계하여 `todo_mirror`로 출력):
-  - 전부 ✅ → `completed`
-  - 하나라도 🔄 있거나 일부만 ✅ → `in_progress`
-  - 전부 ⬜ → `pending`
-  - `na`(agentic auto-na 등) 행은 집계에서 **중립**(제외)으로 처리한다.
-- **갱신**: `init` 직후 state-tool이 distinct 단계 목록으로 `todo_mirror`(`action=create`)를 출력하고 hook이 주입 → PM이 일괄 생성한다. 이후 `advance`/`mark`/`block` 호출 직후 state-tool이 재파생한 `todo_mirror`(`action=update`)를 출력하고 hook이 주입 → PM이 갱신한다. state-tool 호출과 1:1로 동반하며 별도 트리거를 만들지 않는다.
-- **블로커**: `block`(행 ❌) 시 해당 단계 todo는 `in_progress`를 유지한다(todo에 실패 상태 없음 — `failed`는 파생에서 `in_progress`로 귀결). 블로커 자체는 STATE.md·보고로 표면화한다.
+**미러 규칙**: 대상 = 현황판 행을 `단계`로 그룹핑한 단계당 todo 1개(TASK/PLAN/EXECUTE/TEST/CLOSE 등). 상태 파생(state-tool 집계) = 전부 ✅→`completed` / 하나라도 🔄·일부 ✅→`in_progress` / 전부 ⬜→`pending` / `na` 행은 중립 제외. 갱신은 `init` 직후 state-tool이 출력하는 `todo_mirror`(create)로 시작하고, `advance`/`mark`/`block` 직후 state-tool이 재파생하는 `todo_mirror`(update)마다 state-tool 호출과 1:1 동반한다. 블로커(`block`, ❌)는 `in_progress` 유지(실패 상태 없음, 블로커 자체는 STATE.md·보고로 표면화).
 
 > L2 경량 트랙은 파이프라인·state-tool을 쓰지 않으므로 이 절이 적용되지 않는다(todo 미러 없음).
 
@@ -103,32 +88,20 @@
 
 ### 상태 자가 점검
 
-> **소유자**: PM(오케스트레이터). 단계 작업 완료 후 PM Gate 직전에 수행한다. 별도 `State Gate` 행은 두지 않는다 — state 기록은 행 mark 자체이며, 단계 건너뛰기·순서 위반은 state-tool stage-transition guard가 차단한다. 본 자가 점검은 PM이 PM Gate 검토에 앞서 STATE.md 갱신 정합성을 확인하는 절차다.
+> **소유자**: PM. 단계 작업 완료 후 PM Gate 직전 수행 — 별도 `State Gate` 행은 두지 않는다(기록은 행 mark 자체, 순서 위반은 state-tool stage-transition guard가 차단). PM Gate 검토에 앞서 STATE.md 갱신 정합성을 확인하는 절차다.
 
 **점검 위치**: 작업(산출물 생성 포함) → **상태 자가 점검** → PM Gate
 
-**자가 점검 프롬프트**:
-
-> 1. `tasks/{NNN}-{name}/STATE.md`의 `최종 갱신` 타임스탬프가 현재 단계 완료 시점 이후인가?
-> 2. `단계` 필드가 현재 완료된 단계를 반영하는가?
-> 3. 파이프라인 현황판 테이블에서 현재 단계의 행이 올바른 상태값인가? (완료 행: ✅ / 진행 중 행: 🔄 / 미착수 행: ⬜) `상태:` 필드가 적절한 값인가? (진행 중 / 완료 / 추가작업중 / 추가작업완료)
+**자가 점검 프롬프트**: ① `최종 갱신` 타임스탬프가 현재 단계 완료 시점 이후인가 ② `단계` 필드가 현재 완료 단계를 반영하는가 ③ 파이프라인 현황판 테이블의 현재 단계 행 상태값(✅/🔄/⬜)과 `상태:` 필드(진행 중/완료/추가작업중/추가작업완료)가 적절한가
 
 | 확인 결과 | 동작 |
 |----------|------|
 | 3개 항목 모두 충족 | PM Gate 진입 허용 |
 | 1개 이상 미충족 | STATE.md를 즉시 갱신(행 mark) 후 재점검 → PM Gate 진입 |
 
-**이전 단계 차단 규칙**: 이전 단계의 상태가 `완료`가 아니면 다음 단계 진입을 금지한다(state-tool stage-transition guard로 강제). 자가 점검은 현재 단계의 STATE.md 갱신 여부와 함께, 이전 단계 상태가 `완료`인지도 확인한다.
+**차단 규칙**: 이전 단계 상태가 `완료`가 아니면 다음 단계 진입 금지(state-tool stage-transition guard로 강제). 자가 점검 미통과 상태에서 PM Gate·DONE.md 생성 단계로 진입하지 않는다.
 
-**차단 원칙**: 상태 자가 점검 미통과 상태에서 PM Gate 및 DONE.md 생성 단계로 진입하지 않는다.
-
-**표준 단계 순서 문구** (각 SKILL.md 단계에 적용):
-
-```
-워커 완료 (산출물 생성 포함)
-  → 상태 자가 점검 (하네스 §3 참조 — STATE.md 갱신 확인)
-  → PM Gate (종합 검토 — 문서 QA(요구사항→설계 검토) 흡수)
-```
+**표준 단계 순서**: `워커 완료(산출물 포함) → 상태 자가 점검(하네스 §3, STATE.md 갱신 확인) → PM Gate(문서 QA 흡수)`
 
 ---
 
@@ -142,3 +115,5 @@
 | v1.3 | 2026-07-10 13:12 | note 소유자 호칭 참조 1줄 추가 — `{owner_name}` 플레이스홀더 사용 안내 + `opal/core/AGENT.md` §정체성 적용(오염 금지) 참조(재서술 금지) (054) |
 | v1.4 | 2026-07-16 16:04 | 파이프라인 todo 미러 절 추가 — STATE.md 단계를 네이티브 할일 패널에 단계 단위로 미러(능력 감지 게이트, SSOT 불변 읽기 전용 거울). 전 pilot 상속, state-tool 이벤트와 1:1 동반. L2 미적용 (064) |
 | v1.5 | 2026-07-23 17:43 | 파이프라인 todo 미러 hook 강제 정합 — prose 지시 → PostToolUse hook 트리거+state-tool `todo_mirror` 페이로드 방식으로 재서술(SSOT 불변·능력감지 게이트 보존, hook 어댑터 격리 명시), na 중립 파생 명문화, `open`→`pending` 용어 통일, "PM이 직접 재계산" 의존 제거(도구가 결정론 파생) (076) |
+| v1.6 | 2026-08-09 21:07 | 중복 서술 압축 — §파이프라인 todo 미러·§상태 자가 점검 산문을 표/불릿 축약 + §갱신 모델/§note 소유자 호칭 병합. `state-tool` 명령 행 전건(11) 보존. 144→118줄 (C1) (087) |
+| v1.7 | 2026-08-09 21:24 | Step 10 재측정 C5 Fail 원복 — §파이프라인 todo 미러 §미러 규칙 "갱신" 서술에서 압축 중 누락된 `state-tool` 명시 언급 2건 복원(3→1로 과압축된 것을 되돌림), G3 본문 언급 수를 Step 1 기준선(72) 이상으로 회복. 줄수 증가 없음(118줄 유지), `run.sh` 명령 행 11건 무영향 (087) |

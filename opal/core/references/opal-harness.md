@@ -96,30 +96,39 @@ state-tool `verify --clarification-check`가 집행하며, 미충족 시 ERROR_C
 
 Lazy 로드 모듈. 각 §의 stub이 로드 시점과 파일 경로를 지시한다.
 
-| 모듈 | 파일 | 로드 시점 | 해당 § |
-|------|------|----------|--------|
-| State 템플릿 | `harness/state-template.md` | TASK 단계에서 STATE.md 초기 생성 시 | §3 |
-| 추가작업 | `harness/additional-work.md` | 태스크 완료 후 추가 수정 필요 시 | §3 |
-| QA 표준 | `harness/qa-standards.md` | PM Gate 문서검증 시 | §2 |
-| Observability | `harness/observability.md` | 워커 디스패치 직전 (매 디스패치마다) | §5 |
-| 병렬 처리 | `harness/parallel-execution.md` | 병렬 디스패치 시 | §7 |
-| @header 규칙 | `harness/header-rules.md` | EXECUTE 단계에서 코드 파일 생성/수정 시 | §8 |
-| 인용 규칙 | `harness/citation-rules.md` | TASK/ANALYSIS/PLAN 산출물 작성 시 | §2 |
-| State 관리 | `harness/state.md` | TASK 단계 시작 / Gate 직후 State Gate | §3 |
-| TASK 공통 프로세스 | `harness/task-process.md` | TASK 단계 진입 시 | §4 |
-| Coding Principles | `harness/coding-principles.md` | EXECUTE 단계 진입 시 (코드 변경 워커) / PM "그냥 해" 진입 시 | §10 |
-| RED-first 규칙 | `harness/red-first.md` | TEST-SCENARIO 작성·EXECUTE 진입 시 | §1.5 |
+| 모듈 | 파일 | 로드 시점 | 적용 주체 | PM Gate 검증 | 해당 § |
+|------|------|----------|----------|-------------|--------|
+| State 템플릿 | `harness/state-template.md` | TASK 단계에서 STATE.md 초기 생성 시 | PM | STATE.md 초기 필드 정합 | §3 |
+| 추가작업 | `harness/additional-work.md` | 태스크 완료 후 추가 수정 필요 시 | PM | 추가작업 상태 전이·행 갱신 정합 | §3 |
+| QA 표준 | `harness/qa-standards.md` | PM Gate 문서검증 시 | PM | QA 산출물 파일명·체크리스트 갱신 규칙 준수 | §2 |
+| Observability | `harness/observability.md` | 워커 디스패치 직전 (매 디스패치마다) | PM | 행위 주체 표시·타임스탬프 bash 취득 여부 | §5 |
+| 병렬 처리 | `harness/parallel-execution.md` | 병렬 디스패치 시 | PM | 병렬/순차 판별·리소스 제한 준수 | §7 |
+| @header 규칙 | `harness/header-rules.md` | EXECUTE 단계에서 코드 파일 생성/수정 시 | PM → 워커 프롬프트 주입 | changed_files 대상 확장자 @header 작성 여부 | §8 |
+| 인용 규칙 | `harness/citation-rules.md` | TASK/ANALYSIS/PLAN 산출물 작성 시 | pilot·PLAN/TASK/ANALYSIS/QA 스킬 | 근거 인용·[MUST] 토큰 준수 | §2 |
+| State 관리 | `harness/state.md` | TASK 단계 시작 / Gate 직후 State Gate | PM, 워커(EXECUTE Step 갱신) | STATE.md 갱신·현황판 상태 정합 | §3 |
+| TASK 공통 프로세스 | `harness/task-process.md` | TASK 단계 진입 시 | PM | TASK.md 헤더·STATE.md 생성·저장 경로 준수 | §4 |
+| Coding Principles | `harness/coding-principles.md` | EXECUTE 단계 진입 시 (코드 변경 워커) / PM "그냥 해" 진입 시 | 코드 변경 워커 + PM | 사변적 추가·불가능 시나리오 방어 코드 없음 | §10 |
+| RED-first 규칙 | `harness/red-first.md` | TEST-SCENARIO 작성·EXECUTE 진입 시 | 워커 | RED 증거 tool-gated 확인 | §1.5 |
+| PM 검토 게이트 | `harness/pm-review-gate.md` | PM Gate 수행 시 / 워커 완료 수신 직후 | PM | 워커 완료 선언·Pass/Fail 판정 절차 준수 | §1 |
 
 > 탐색 경로: `{프로젝트}/.opal/references/harness/{file}` → `~/.opal/references/harness/{file}`
 
+### 규칙 인덱스(직접 참조)
+| 문서 | 로드 시점 |
+|------|----------|
+| `op-task/SKILL.md` | TASK 단계 진입 시 |
+| `op-task-qa/SKILL.md` | PM Gate 문서검증 시 (범용 트랙 검증 기준 라이브러리) |
+| `op-dev-qa/SKILL.md` | PM Gate 문서검증 시 (개발 트랙 검증 기준 라이브러리) |
+| `pm/context-injection.md` | 워커 컨텍스트 주입 상세 판단 시 |
+| `pm/dispatch-process.md` | 워커 디스패치 직전 / 재배치 판정 시 |
+| `pm/code-scan-management.md` | `.opal/code-scan.json` 생성·갱신 판단 시 |
+| `header-standard.md` | @header 포맷·언어별 주석 규격 확인 시 |
+| `opal-convention-checker/AGENT.md` | 컨벤션 체커 디스패치 파라미터 구성 시 |
+> 탐색: `{프로젝트}/.opal/…` → `~/.opal/…` (하위 경로는 각 문서 소속 디렉토리 기준)
+
 ### QA 산출물 표준 및 검증
 
-> **[필수 로드]** PM Gate 문서검증 시 로드한다.
-> 탐색: `harness/qa-standards.md`
->
-> 적용 주체: PM
-> 적용 시점: PM Gate 문서검증 시
-> PM Gate 검증: QA 산출물 파일명이 표준을 따르는가, 체크리스트 갱신 규칙이 적용되었는가
+> **[필수 로드]** PM Gate 문서검증 시 로드한다. 탐색: `harness/qa-standards.md` (적용 주체·PM Gate 검증 기준은 표 A 참조)
 
 ### Citation Rules 적용 의무
 
@@ -132,12 +141,7 @@ Lazy 로드 모듈. 각 §의 stub이 로드 시점과 파일 경로를 지시�
 
 ## 3. State (상태 관리)
 
-> **[필수 로드]** TASK 단계 시작 / EXECUTE Step 진행 / Gate 직후 State Gate 수행 시 로드한다.
-> 탐색: `harness/state.md`
->
-> 적용 주체: PM(오케스트레이터), 워커(EXECUTE Step 갱신)
-> 적용 시점: TASK/EXECUTE/Gate 단계 전반
-> PM Gate 검증: STATE.md 갱신 여부, 파이프라인 현황판 행 상태 정합성
+> **[필수 로드]** TASK 단계 시작 / EXECUTE Step 진행 / Gate 직후 State Gate 수행 시 로드한다. 탐색: `harness/state.md` (적용 주체·PM Gate 검증 기준은 표 A 참조)
 
 > **[MUST]** 파이프라인 현황판 행 상태 변경은 `state-tool`로만 수행한다. LLM이 STATE.md 마크다운 표를 직접 편집하는 것은 금지된다.
 >
@@ -159,23 +163,13 @@ Lazy 로드 모듈. 각 §의 stub이 로드 시점과 파일 경로를 지시�
 
 ## 4. TASK 공통 프로세스
 
-> **[필수 로드]** TASK 단계 진입 시 로드한다.
-> 탐색: `harness/task-process.md`
->
-> 적용 주체: PM(오케스트레이터)
-> 적용 시점: TASK 단계 진입 / 태스크 채번 / 저장 경로 판단 시
-> PM Gate 검증: TASK.md 헤더 필드 준수, STATE.md 생성 완료, 저장 경로 규칙 준수
+> **[필수 로드]** TASK 단계 진입 시 로드한다. 탐색: `harness/task-process.md` (적용 주체·PM Gate 검증 기준은 표 A 참조)
 
 ---
 
 ## 5. Observability (관측)
 
-> **[필수 로드]** 워커 디스패치 직전 로드한다 (매 디스패치마다).
-> 탐색: `harness/observability.md`
->
-> 적용 주체: PM(오케스트레이터)
-> 적용 시점: 워커 디스패치 직전 (매 디스패치마다)
-> PM Gate 검증: 행위 주체 표시 수행 여부, 타임스탬프 bash 취득 여부
+> **[필수 로드]** 워커 디스패치 직전 로드한다 (매 디스패치마다). 탐색: `harness/observability.md` (적용 주체·PM Gate 검증 기준은 표 A 참조)
 > 서브에이전트의 opal-agent 채널 내부 디스패치(아이콘 룩업 비대상, 결과 파일 관측)는 `harness/observability.md` 해당 절 참조.
 
 ---
@@ -198,23 +192,14 @@ opal-agent 채널 디스패치 시 레벨→실모델 치환은 호출 주체 �
 
 ## 7. 병렬 처리 원칙
 
-> **[필수 로드]** 병렬 디스패치 시 로드한다.
-> 탐색: `harness/parallel-execution.md`
->
-> 적용 주체: PM(오케스트레이터)
-> 적용 시점: 병렬 디스패치 시
-> PM Gate 검증: 병렬/순차 판별이 올바른가, 리소스 제한이 준수되었는가
+> **[필수 로드]** 병렬 디스패치 시 로드한다. 탐색: `harness/parallel-execution.md` (적용 주체·PM Gate 검증 기준은 표 A 참조)
+> StepCount ≥ 10 구간의 조건부 분할 배치 규칙은 `harness/parallel-execution.md`가 소유한다.
 
 ---
 
 ## 8. EXECUTE @header 규칙
 
-> **[필수 로드]** EXECUTE 단계에서 코드 파일 생성/수정 시 로드한다.
-> 탐색: `harness/header-rules.md`
->
-> 적용 주체: PM → 워커 프롬프트에 주입
-> 적용 시점: EXECUTE 단계에서 코드 파일 변경 시
-> PM Gate 검증: changed_files 중 대상 확장자에 @header가 올바르게 작성되었는가
+> **[필수 로드]** EXECUTE 단계에서 코드 파일 생성/수정 시 로드한다. 탐색: `harness/header-rules.md` (적용 주체·PM Gate 검증 기준은 표 A 참조)
 
 ---
 
@@ -265,12 +250,7 @@ OPAL 도구는 모두 `~/.opal/tools/{tool-name}/run.sh` 래퍼를 통해 호출
 
 ## 10. Coding Principles
 
-> **[필수 로드]** EXECUTE 단계에서 코드 파일 변경 시, 또는 PM "그냥 해" 직접 수행 시 로드한다.
-> 탐색: `harness/coding-principles.md`
->
-> 적용 주체: 코드 변경하는 모든 워커 + PM("그냥 해")
-> 적용 시점: EXECUTE 단계 진입 직후 / PM 직접 수행 시
-> PM Gate 검증: 산출물에 사변적 추가·인접 코드 개선·불가능 시나리오 방어 코드가 없는가
+> **[필수 로드]** EXECUTE 단계에서 코드 파일 변경 시, 또는 PM "그냥 해" 직접 수행 시 로드한다. 탐색: `harness/coding-principles.md` (적용 주체·PM Gate 검증 기준은 표 A 참조)
 
 ---
 
@@ -328,3 +308,4 @@ OPAL 도구는 모두 `~/.opal/tools/{tool-name}/run.sh` 래퍼를 통해 호출
 | v6.7 | 2026-07-28 23:28 | §9 등록 도구 표 code-scan 행 현행화 — `.opal/code-map/` 헤더 작성층 신규 5서브명령(discover/scaffold/target/validate/feature) 반영, 타 행과 동일 서식(서브명령 열거)으로 정합 (077) |
 | v6.8 | 2026-08-02 16:03 | §1 자동 루핑 제약 표에 "워커 프로세스 비정상 종료(스톨·응답 중 연결 종료)" 행 추가 — 재시도 1회(동일 컨텍스트 재개), 초과 시 새 컨텍스트 분할 재배치. 판정 절차는 `harness/pm-review-gate.md`, 분할 기준은 `pm/dispatch-process.md` Step 6가 소유하고 본 표는 수치만 소유(중복 기재 금지) (081) |
 | v6.9 | 2026-08-04 17:30 | §9 등록 도구 표 code-scan 행 현행화 — 13→15서브명령(+`split`/`init`), 과대 매니페스트 판정을 `shardPolicy` 3단 우선순위(프로젝트 > 전역 `~/.opal/setting.json` > 코드 상수) 기반 바이트·엔트리 2축 비차단 열거로, 분할은 `split`(표준단어사전 옵셔널 참조)로, 설정 초안은 `init`으로 반영 (083) |
+| v7.0 | 2026-08-09 20:46 | §2 규칙 인덱스 재편 — 하네스 모듈 표에 pm-review-gate 행 추가(11→12), 표에 적용 주체·PM Gate 검증 열 추가, 규칙 인덱스(직접 참조) 표 신설로 3홉 노드 2홉화, §2~§10 stub 중복(적용 주체/적용 시점/PM Gate 검증 반복 서술) 흡수, §7 조건부 분할 배치 포인터 추가 (087) |

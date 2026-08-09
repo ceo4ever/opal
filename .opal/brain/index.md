@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-08-09 17:54
+> 갱신: 2026-08-09 23:45
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -80,7 +80,9 @@
 - [[community-skill-basename-matching]] — 커뮤니티 스킬 basename alias 매칭 — 벤더 무관 호출 #architecture #community-skills #ux #routing
 - [[community-skill-installation-architecture]] — 커뮤니티 스킬 설치 아키텍처 — vendor 중첩 + clone-copy #architecture #community-skills #install #deploy
 - [[community-skill-user-registry]] — 커뮤니티 스킬 사용자 레지스트리 — install 배포 경계 격리 #architecture #community-skills #deploy #registry
+- [[completion-criteria-change-boundary]] — 완료기준 변경의 허용 경계 — 정정과 완화의 구분 #fw-structure #governance #task-087
 - [[concurrent-task-shared-file-discipline]] — 동시 태스크 공유 파일 편집 규율 — Edit 전용 + 헤딩 앵커 + 상대영역 diff 검증 #concurrency #worktree #edit-discipline #pipeline #pattern
+- [[conditional-batch-output-cap-tradeoff]] — 조건부 분할 배치와 산출량 상한의 트레이드오프 #fw-structure #harness #dispatch #task-087
 - [[config-file-concurrent-write-defense-standard]] — 설정 파일 동시 쓰기 방어 표준 #architecture #concurrency #backend #pattern #file-io
 - [[console-brain-exit-guard-pattern]] — 콘솔 브레인 이탈 가드 4경로 패턴 #brain #ux #guard #console #session-management
 - [[console-brain-volatile-single-session]] — 콘솔 브레인 휘발성 단일 세션 설계 전환 #brain #session-management #architecture #console #ux
@@ -92,6 +94,7 @@
 - [[deploy-artifact-verification-lesson]] — 동작검증은 배포 산출물+실 브라우저 기준으로 수행해야 한다 #verification #qa #deployment #lesson
 - [[dict-선행-model-ssot]] — DICT가 MODEL을 선행한다 — 사전이 속성명·타입 SSOT #architecture-decision #data-design #ssot #pipeline
 - [[dl-contract-download-verify-target-identity]] — DL-CONTRACT — 검증 대상과 다운로드 대상은 같은 파일이어야 한다 #deploy #release #install #checksum #contract
+- [[doc-line-count-source-vs-deploy-duality]] — 문서 줄수 측정의 소스/배포본 이원성 #fw-structure #harness #measurement #task-087
 - [[dynamic-loop-add-row-not-schema-extension]] — 동적 반복 구조는 add-row 런타임 규약으로 해결되는 패턴 #state-tool #pipeline #schema #pattern #task-086
 - [[e2e-cmux-first-playwright-fallback]] — E2E 도구 우선순위 — cmux 1순위 → playwright 폴백 (에러코드 소비) #testing #e2e #cmux #framework
 - [[enforce-rule-legacy-data-surfacing-lesson]] — enforce 규칙 신설 시 잔존 데이터 표면화 — 배포 전 실 데이터 스캔 필요 교훈 #lesson #enforce #validate #brain-tool
@@ -105,6 +108,8 @@
 - [[fw-structure-p0-blueprint]] — FW 구조개선 P0 실측 결론 — BLUEPRINT SSOT 확정 #fw-structure #architecture-decision #pipeline #task-086
 - [[governance-single-owner-rule-mapping]] — 규칙 1소유자 매핑 — Governance 중복 기재 방지 설계 #governance #ssot #design-pattern #dispatch
 - [[green-tests-do-not-imply-contract-conformance]] — 테스트 GREEN은 규약 정합을 뜻하지 않는다 — 정적 대조를 별도 게이트로 둔다 #lesson #test-strategy #verification #contract
+- [[harness-gate-already-tool-enforced]] — 하네스 비EXECUTE 게이트는 이미 도구로 집행됨 #fw-structure #harness #governance #task-087
+- [[harness-rule-index-two-table-split]] — 하네스 규칙 인덱스 표 A/B 이원화 #fw-structure #harness #task-087
 - [[inherit-new-boundary-fixed-before-writing]] — 상속·신규 경계를 집필 전에 표로 고정한다 #documentation #ssot #dedup #task-084
 - [[install-hook-ownership-marker-idempotent-upsert]] — install hook 소유권-마커 멱등 upsert (외부 hook clobber 해소) #install #deploy #hook #idempotent #ownership-marker
 - [[install-mac-seed-key-loop-generalization]] — install 시드 키별 루프 일반화 — 조기 종료 시드 함정 #install #configuration #pattern #task-083

@@ -22,13 +22,13 @@
 2. **완료/잔여 판정** — 확정된 파일 집합을 `PLAN.md` §4.2 실행 체크리스트와 대조하여 Step 단위로 완료분과 잔여분을 가른다. 부분 산출된 파일은 내용을 열어 해당 Step의 **완료 기준** 충족 여부로 판정하고, 판정 불가면 잔여로 분류한다.
 3. **잔여만 재배치** — 잔여 Step만 새 디스패치로 재배치한다. **[MUST] 완료분 파일을 재작업 대상에 포함하거나 덮어쓰지 않는다** — 재디스패치 프롬프트의 대상 파일 목록에서 완료분을 명시적으로 제외하고, 워커에게 `Write`(전체 덮어쓰기) 대신 `Edit`(부분 치환) 사용을 지시한다.
 
-> 동일 컨텍스트 재개 횟수 상한은 `opal-harness.md` §1 자동 루핑 제약 표(워커 프로세스 비정상 종료 행)를, 재배치 시 산출 파일 수 상한은 `pm/dispatch-process.md` Step 6 실행 라우팅을 따른다. 본 절은 판정 절차만 소유하며 두 수치를 재서술하지 않는다.
+> 동일 컨텍스트 재개 횟수 상한은 `opal-harness.md` §1 자동 루핑 제약 표(워커 프로세스 비정상 종료 행)를, 재배치 시 산출 파일 수 상한은 `pm/dispatch-process.md`(표 B 규칙 인덱스 경유 — 2홉) Step 6 실행 라우팅을 따른다. 본 절은 판정 절차만 소유하며 두 수치를 재서술하지 않는다.
 
 ### 검토 절차
 
 #### 문서 QA 검증 (PM 직접 검토)
 
-PM Gate는 별도 QA Gate 단계를 두지 않고, 문서 QA(요구사항→설계 검토)를 PM이 직접 흡수하여 수행한다. 각 단계 산출물에 대해 아래 공통 검증 원칙 4종으로 검토한다. (검증 기준 라이브러리: `opal/skills/op-dev-qa/SKILL.md` / `opal/skills/op-task-qa/SKILL.md` — 단계별 검증 ID·QA-{단계}.md 형식 등 참조)
+PM Gate는 별도 QA Gate 단계를 두지 않고, 문서 QA(요구사항→설계 검토)를 PM이 직접 흡수하여 수행한다. 각 단계 산출물에 대해 아래 공통 검증 원칙 4종으로 검토한다. (검증 기준 라이브러리: `opal/skills/op-dev-qa/SKILL.md` / `opal/skills/op-task-qa/SKILL.md` — 단계별 검증 ID·QA-{단계}.md 형식 등 참조. 둘 다 표 B 규칙 인덱스 경유로 2홉)
 
 | 원칙 | 검토 내용 |
 |------|----------|
@@ -93,8 +93,8 @@ PM Gate는 별도 QA Gate 단계를 두지 않고, 문서 QA(요구사항→설�
    - 근거: TASK F-10 / PLAN §2.6
 13. 컨벤션 자동 진단
    - **트리거 조건**: 단계 = EXECUTE이고 워커 반환 `changed_files` 중 docs/, .opal/, *.md, tasks/ 외 파일이 ≥1건 (R-6 스킵 조건의 역)
-   - **영역 분할 절차**: `docs/PROJECT.md` "## 프로젝트 구성" 섹션 prefix 매칭으로 영역별 분할 — 의사코드는 `opal/core/references/pm/context-injection.md` §PROJECT.md 프로젝트 구성 기반 라우팅을 그대로 적용 (→ D-3). 매칭 실패 시 단일 호출(`scope=all`)로 폴백 (→ D-4 예시 B)
-   - **호출**: 영역별로 opal-convention-checker 워커 디스패치 — 파라미터 매핑은 `opal/agents/opal-convention-checker/AGENT.md` §입력 명세 §PM Gate 호출 시나리오 표 참조 (→ D-2)
+   - **영역 분할 절차**: `docs/PROJECT.md` "## 프로젝트 구성" 섹션 prefix 매칭으로 영역별 분할 — 의사코드는 `opal/core/references/pm/context-injection.md`(표 B 규칙 인덱스 경유 — 2홉) §PROJECT.md 프로젝트 구성 기반 라우팅을 그대로 적용 (→ D-3). 매칭 실패 시 단일 호출(`scope=all`)로 폴백 (→ D-4 예시 B)
+   - **호출**: 영역별로 opal-convention-checker 워커 디스패치 — 파라미터 매핑은 `opal/agents/opal-convention-checker/AGENT.md`(표 B 규칙 인덱스 경유 — 2홉) §입력 명세 §PM Gate 호출 시나리오 표 참조 (→ D-2)
    - **호출 입력 명세**: `target_files = changed_files ∩ 영역 prefix`, `scope = 영역명` (단일 호출 시 `scope=all`), `task_folder = 현재 태스크 폴더`, `timestamp` = 영역별 분리 (병렬 호출별 고유 ts)
    - **판정 기준**:
      | 발견 이슈 심각도 | 결과 |
@@ -171,3 +171,4 @@ PM Gate 통과 후 해당 행을 state-tool로 단일 mark한다. State Gate 행
 | v1.7 | 2026-07-28 23:28 | 표준 검토 항목 8번 CLOSE 게이트 — `uncovered` 2분류(`newly_uncovered`/`pre_existing`) 반영: 게이트 기준을 "violations 0건"에서 "`counts.newly_uncovered` 0건"으로 명확화, `pre_existing`은 비차단 보고 항목(레거시 소급 부여는 discover/scaffold 몫)임을 명시 — Step 19 검증에서 자체 저장소 레거시 파일이 게이트를 막던 결함 재작업 (077) |
 | v1.8 | 2026-08-02 14:50 | 표준 검토 항목 8번 — 헤더 소스 단일화 반영: 2소스 판정을 전역 `headerSource` 1개 기준으로 재서술(스코프 단위 예외 서술 제거), 합산 커버리지 → 모드별 단일 소스 커버리지(`inline`은 인라인분만·`manifest`는 매니페스트분만), `header_source_unset` 거부 시 PM 최초 설정 후 재실행하는 미설정 대응 소절 신설(워커 결함으로 판정하지 않음) (080) |
 | v1.9 | 2026-08-02 16:03 | §워커 중단 시 산출물 실측 판정 절 신설 — ①`git status`로 산출물 확정 → ②PLAN §4.2 체크리스트 대조로 완료/잔여 판정 → ③잔여만 재배치([MUST] 완료분 덮어쓰기 금지) 3단계. 재시도 상한(`opal-harness.md` §1)·산출량 상한(`pm/dispatch-process.md` Step 6)은 참조만. 역할 라인에 신규 절 반영 및 고정 항목수 표기 제거 (081) |
+| v1.10 | 2026-08-09 21:07 | 3홉 하위 참조 5건(`op-dev-qa/SKILL.md`·`op-task-qa/SKILL.md`·`pm/context-injection.md`·`pm/dispatch-process.md`·`opal-convention-checker/AGENT.md`) 문구에 "표 B 규칙 인덱스 경유 — 2홉" 정합 표기 추가 — `opal-harness.md` §2 표 B 신설(Step 4)에 따른 최단 경로 안내, 참조 내용은 유지 (087) |
