@@ -283,3 +283,7 @@
 - 신규: [[dl-contract-download-verify-target-identity]], [[release-asset-presence-single-signal]], [[silent-success-defect-class]], [[green-tests-do-not-imply-contract-conformance]], [[fix-validity-requires-failure-mode-reproduction]], [[installer-verification-path-stub-boundary-sealing]]
 - 출처: task:085
 
+## [2026-08-09] ingest | CLOSE ingest — 태스크 086 OPAL FW 구조개선 청사진 정식화 + 잔여 실측 (P0)
+- 신규: [[fw-structure-p0-blueprint]], [[dynamic-loop-add-row-not-schema-extension]], [[observability-field-design-at-record-time]]
+- 출처: task:086
+

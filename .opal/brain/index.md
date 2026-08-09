@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-08-07 13:01
+> 갱신: 2026-08-09 17:54
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -92,6 +92,7 @@
 - [[deploy-artifact-verification-lesson]] — 동작검증은 배포 산출물+실 브라우저 기준으로 수행해야 한다 #verification #qa #deployment #lesson
 - [[dict-선행-model-ssot]] — DICT가 MODEL을 선행한다 — 사전이 속성명·타입 SSOT #architecture-decision #data-design #ssot #pipeline
 - [[dl-contract-download-verify-target-identity]] — DL-CONTRACT — 검증 대상과 다운로드 대상은 같은 파일이어야 한다 #deploy #release #install #checksum #contract
+- [[dynamic-loop-add-row-not-schema-extension]] — 동적 반복 구조는 add-row 런타임 규약으로 해결되는 패턴 #state-tool #pipeline #schema #pattern #task-086
 - [[e2e-cmux-first-playwright-fallback]] — E2E 도구 우선순위 — cmux 1순위 → playwright 폴백 (에러코드 소비) #testing #e2e #cmux #framework
 - [[enforce-rule-legacy-data-surfacing-lesson]] — enforce 규칙 신설 시 잔존 데이터 표면화 — 배포 전 실 데이터 스캔 필요 교훈 #lesson #enforce #validate #brain-tool
 - [[erd-modeler-deprecation]] — erd-modeler deprecate — op-data-model/ddl로 분해, //erm 하위호환 #architecture-decision #deprecation #erd-modeler #migration
@@ -101,6 +102,7 @@
 - [[fix-validity-requires-failure-mode-reproduction]] — 수정의 유효성은 실패 모드를 재현해서 확인한다 #lesson #verification #pm-discipline #worker-report
 - [[fixture-conflicting-requirements-lesson]] — 픽스처 요구 충돌 — RED 작성 시점 시나리오 간 요구 대조 필요 #lesson #testing #fixture #red-first #task-082
 - [[fixture-vs-real-blind-spot-lesson]] — fixture-vs-real 맹점 — 테스트 픽스처 통과·실데이터 버그 반복 교훈 #lesson #testing #bug #fixture
+- [[fw-structure-p0-blueprint]] — FW 구조개선 P0 실측 결론 — BLUEPRINT SSOT 확정 #fw-structure #architecture-decision #pipeline #task-086
 - [[governance-single-owner-rule-mapping]] — 규칙 1소유자 매핑 — Governance 중복 기재 방지 설계 #governance #ssot #design-pattern #dispatch
 - [[green-tests-do-not-imply-contract-conformance]] — 테스트 GREEN은 규약 정합을 뜻하지 않는다 — 정적 대조를 별도 게이트로 둔다 #lesson #test-strategy #verification #contract
 - [[inherit-new-boundary-fixed-before-writing]] — 상속·신규 경계를 집필 전에 표로 고정한다 #documentation #ssot #dedup #task-084
@@ -126,6 +128,7 @@
 - [[native-todo-panel-llm-only-hook-boundary]] — 네이티브 todo 패널 LLM 전용 기록 한계 (hook은 트리거·페이로드까지) #opal-pipeline #todo-mirror #hook #platform-constraint #honest-limit
 - [[non-gated-write-path-audit-before-ssot-conversion]] — 비게이트 쓰기 경로는 SSOT 전환 전에 먼저 감사해야 한다 #ssot #tool-gated #migration #architecture #memory
 - [[observability-3layer-protocol-renderer-trigger-separation]] — 관측 3층 구조 완성 — 데이터 규약·렌더러·발동층 역할 분리 #oppl #observability-boundary #architecture
+- [[observability-field-design-at-record-time]] — 관측 필드는 기록 시점에 설계돼야 사후 실측 가능 — state.json 워커 식별 부재 교훈 #observability #state-tool #lesson-learned #task-086
 - [[op-brain-ingest]] — op-brain-ingest — CLOSE 경량 ingest 워커 #knowledge #close #ingest #skill
 - [[op-dev-analysis]] — op-dev-analysis — 코드베이스 분석 및 기술 컨텍스트 수집 #dev #analysis #skill
 - [[op-dev-execute]] — op-dev-execute — 코드 실행 단계 스킬 #dev #execute #skill
