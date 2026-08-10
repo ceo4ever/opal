@@ -55,7 +55,7 @@
     {
       "title": "087 Python 버전게이트·설치유도 플랫폼 대칭화",
       "date": "2026-08-10",
-      "stage": "완료·미커밋",
+      "stage": "완료·커밋",
       "path": "tasks/087-260810-opp-파이썬-버전게이트-설치유도/",
       "result": "3.9 venv 무검증 생성·재사용 결함 fix. Windows winget 규약을 macOS brew로 미러링, Linux 안내만. 실물 3.9.6·3.9 venv로 게이트 거부 실증, 실 venv mtime 불변. Windows 런타임 미검증"
     },
