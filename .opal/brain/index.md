@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-08-07 13:01
+> 갱신: 2026-08-10 22:55
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -95,6 +95,7 @@
 - [[e2e-cmux-first-playwright-fallback]] — E2E 도구 우선순위 — cmux 1순위 → playwright 폴백 (에러코드 소비) #testing #e2e #cmux #framework
 - [[enforce-rule-legacy-data-surfacing-lesson]] — enforce 규칙 신설 시 잔존 데이터 표면화 — 배포 전 실 데이터 스캔 필요 교훈 #lesson #enforce #validate #brain-tool
 - [[erd-modeler-deprecation]] — erd-modeler deprecate — op-data-model/ddl로 분해, //erm 하위호환 #architecture-decision #deprecation #erd-modeler #migration
+- [[expected-total-as-reference-not-gate-criterion]] — 하드코딩된 기대 총계는 게이트를 흉기로 만든다 — 판정은 집합 일치로 #lesson #gate-design #verification #plan-discipline #worker-instruction
 - [[exports-generation-tool-verification-division]] — 생성은 워커, 검증은 도구 — 비대칭을 이용한 분업 #code-scan #header #architecture
 - [[external-tool-boundary-stub-insufficient-lesson]] — 외부 도구 경계는 스텁만으로 불충분 — 실연동 검증이 통합 결함을 잡는다 #testing #lesson #integration #test-strategy
 - [[fallback-approval-detached-head-precedence]] — detached HEAD 판정은 no-upstream보다 먼저 검사해야 한다 #git #judgment-order #fallback-approval #lesson
@@ -111,6 +112,7 @@
 - [[json-not-token-saving-format]] — JSON은 토큰 절약 포맷이 아니다 — 절약 원천의 정직한 귀속 #json #token #ssot #measurement #memory
 - [[kanban-current-stage-derivation]] — 칸반 current_stage 파생 규칙 (도달 단계 기준) #opal-console #kanban #pipeline #be-single-source
 - [[kanban-pipeline-stage-grouping]] — 파이프라인 스테퍼 stage 그룹화 (BE 단일 소스, na/skipped 제외) #opal-console #pipeline #stage-grouping #be-single-source
+- [[knowledge-assets-as-flow-entrypoint]] — 지식 자산은 흐름의 끝이 아니라 시작점이다 — 참조 순서 기준 계층 배치 + 도구·자산 범주 분리 #architecture #knowledge-asset #layering #diagram #decision
 - [[legacy-row-address-gate-insertion-regression]] — 레거시 행번호 파이프라인에 게이트 행 삽입 시 전수 수정 결합 회귀 #state-tool #pipeline #legacy-row #regression #scenario-gate #task-075
 - [[linux-install-script]] — Linux 설치 스크립트 신설 (단순 위임 전략) #install #linux #deploy #task
 - [[literal-version-test-expectation-fragility]] — 리터럴 버전번호를 테스트 기대값으로 쓰면 동시 작업이 깨뜨린다 #testing #concurrency #test-scenario #lesson
@@ -124,6 +126,7 @@
 - [[model-mapping-latest-tracking]] — OPAL 모델 매핑 최신화 + 최신 추종 전략 #model #mapping #gemini #codex #task
 - [[model-mapping-missing-cell-error-policy]] — 모델 매핑 미설정 셀 오류 정책 (폴백 없음 · "default" 폐기) #model #mapping #error #policy #setting
 - [[native-todo-panel-llm-only-hook-boundary]] — 네이티브 todo 패널 LLM 전용 기록 한계 (hook은 트리거·페이로드까지) #opal-pipeline #todo-mirror #hook #platform-constraint #honest-limit
+- [[nojs-flex-rail-over-inline-svg-overlay]] — 자기완결 HTML의 연결선은 레이아웃으로 만든다 — 좌표 측정 오버레이 기각 #html #visual-artifact #design-decision #no-js #responsive
 - [[non-gated-write-path-audit-before-ssot-conversion]] — 비게이트 쓰기 경로는 SSOT 전환 전에 먼저 감사해야 한다 #ssot #tool-gated #migration #architecture #memory
 - [[observability-3layer-protocol-renderer-trigger-separation]] — 관측 3층 구조 완성 — 데이터 규약·렌더러·발동층 역할 분리 #oppl #observability-boundary #architecture
 - [[op-brain-ingest]] — op-brain-ingest — CLOSE 경량 ingest 워커 #knowledge #close #ingest #skill
@@ -197,6 +200,7 @@
 - [[self-edit-line-anchor-drift]] — 자기 편집 파일의 행번호 앵커는 드리프트한다 #verification #anchor #test-scenario #regression
 - [[shard-policy-block-vs-nonblock-fallback-criterion]] — 미설정 시 차단 vs 비차단 폴백 판정 기준 #code-scan #configuration #backward-compat #task-080 #task-083
 - [[silent-loss-prevention-row-accounting-invariant]] — 무성 유실 차단 — 행 회계 불변식 설계 패턴 #migration #data-integrity #invariant #design-pattern #memory
+- [[silent-render-failure-deterministic-gate]] — 조용히 실패하는 코드는 브라우저 검증을 무력화한다 — 결정론 대조를 차단 게이트로 #lesson #verification #render-verification #gate-design #silent-failure
 - [[silent-success-defect-class]] — '조용한 성공' 결함 클래스 — 실패가 정상 종료로 위장된다 #lesson #defect-class #verification #fail-closed
 - [[skill-op-task-qa]] — op-task-qa — 범용 문서 QA 검증 기준 #skill #qa #document
 - [[skill-opal-agent-creator]] — opal-agent-creator — OPAL 에이전트 생성 파이프라인 #skill #agent #creator
@@ -218,6 +222,7 @@
 - [[skill-registry-index-registration-required-for-discovery]] — 신규 스킬은 파일 배포만으로 부족하다 — 레지스트리 인덱스 등록이 발견의 전제조건 #skill-registry #deployment-gap #discovery #lesson
 - [[skill-registry-validate-extension]] — skill-registry validate 확장 — dangling error 격상 + unregistered 역방향 감지 #skill-registry #validate #drift-detection #tooling
 - [[skill-rename-validate-pattern]] — 스킬 rename 후 레지스트리 정합 검증 패턴 #skill-registry #validate #rename #drift-detection #lesson
+- [[source-measured-figures-over-stale-docs]] — 규모 수치의 SSOT는 문서가 아니라 소스 실측이다 #ssot #documentation #drift #measurement #discipline
 - [[state-tool-import-existing-key-reattachment]] — state-tool import-existing key 재접합 #state-tool #import #key-address #task-074
 - [[state-tool-mock-guard-skill-false-positive]] — state-tool mock 가드 정규식 ↔ SKILL 표준 문구 false positive #state-tool #mock-guard #false-positive #skill #bug #framework
 - [[state-tool-next-action-auto-derivation]] — STATE.md 다음 액션 자동 파생 — 설계 반전 (state-tool) #state-tool #pipeline #architecture-decision #enforce-dont-advise
@@ -234,6 +239,7 @@
 - [[usage-ssot-live-help-principle]] — 사용법 SSOT는 도구 자신의 live --help #design-principle #tool-scan #usage #drift #ssot
 - [[verification-command-4-standard]] — 검증 명령 4종 표준 (SSOT — verification-loop-guide) #verification #lint #build #test #watch-mode #ssot #standard
 - [[version-stamp-export-subst-decision]] — 버전 결정 모델 전환 — 설치 시점 API 조회 → 릴리스 시점 export-subst 각인 #version #install #git #export-subst #architecture
+- [[vertical-writing-rotation-glyph-flip]] — 세로쓰기에 회전을 겹치면 글리프가 뒤집힌다 — grep도 축소 캡처도 못 잡는 결함 #lesson #css #render-verification #visual-artifact #verification-blind-spot
 - [[warm-handle-single-entry-injection]] — 웜 핸들 단일 진입점 주입 결정 #brain #session #api-compat #dependency-injection
 - [[wbs-세분화-단일책임-수용시나리오]] — WBS 세분화 원칙 — 단일 책임 + 수용 시나리오 기준 #oppd #wbs #sizing #be #fe #acceptance-scenario
 - [[wiki-intelligence-decisions-016]] — opal-wiki-pilot 지능화 결정 — M-4/M-5 (016) #architecture #naming #git #brain #policy

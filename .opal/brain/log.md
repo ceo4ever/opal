@@ -283,3 +283,7 @@
 - 신규: [[dl-contract-download-verify-target-identity]], [[release-asset-presence-single-signal]], [[silent-success-defect-class]], [[green-tests-do-not-imply-contract-conformance]], [[fix-validity-requires-failure-mode-reproduction]], [[installer-verification-path-stub-boundary-sealing]]
 - 출처: task:085
 
+## [2026-08-10] ingest | CLOSE ingest — 태스크 086 아키텍처 다이어그램 재작성 (지식 자산 1급 승격·환류 시각화·사실 정합)
+- 신규: [[vertical-writing-rotation-glyph-flip]], [[silent-render-failure-deterministic-gate]], [[expected-total-as-reference-not-gate-criterion]], [[knowledge-assets-as-flow-entrypoint]], [[source-measured-figures-over-stale-docs]], [[nojs-flex-rail-over-inline-svg-overlay]]
+- 출처: task:086
+
