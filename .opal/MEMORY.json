@@ -53,6 +53,13 @@
   ],
   "history": [
     {
+      "title": "087 Python 버전게이트·설치유도 플랫폼 대칭화",
+      "date": "2026-08-10",
+      "stage": "완료·미커밋",
+      "path": "tasks/087-260810-opp-파이썬-버전게이트-설치유도/",
+      "result": "3.9 venv 무검증 생성·재사용 결함 fix. Windows winget 규약을 macOS brew로 미러링, Linux 안내만. 실물 3.9.6·3.9 venv로 게이트 거부 실증, 실 venv mtime 불변. Windows 런타임 미검증"
+    },
+    {
       "title": "086 아키텍처 다이어그램 재작성",
       "date": "2026-08-10",
       "stage": "완료·커밋",
@@ -79,13 +86,6 @@
       "stage": "완료·미커밋",
       "path": "tasks/083-260803-opds-샤드정책-확장/",
       "result": "탐지→제안→집행 경로 완성. shardPolicy 3단 우선순위(셀 머지)·바이트 AND 엔트리 2축·split(--plan 5단 사다리/--groups 집행)·init(게이트 앞 배치로 순환 차단). code-scan v1.6.0, 13→15서브명령. 340/340 GREEN(PM 독립 실측)·골든 diff 0·P0 8종 GREEN. K-1 split_rollback 커버리지 갭 후속 이관"
-    },
-    {
-      "title": "082 코드맵 매니페스트 샤딩",
-      "date": "2026-08-03",
-      "stage": "완료·미커밋",
-      "path": "tasks/082-260803-opds-코드맵-매니페스트-샤딩/",
-      "result": "_shards/ 의미 단위 분산 + manifestMaxBytes 비차단 상한. resolveShards 1곳 봉인·옵트인. code-scan v1.5.0. 249/249 GREEN·골든diff0. git stash 사고 424줄 유실→복구, FW개선 등재"
     }
   ]
 }

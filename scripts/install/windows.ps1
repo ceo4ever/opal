@@ -95,6 +95,7 @@
         v1.16.0 2026-06-29 15:24 KST: Invoke-OpalWindowsInstall에 $repoRoot/VERSION 각인값 최우선 읽기 추가 — install-mac.sh record_installed_version 대칭, -notlike '$Format:*' 판별 (048)
         v1.17.0 2026-07-10 18:07  Install-Dashboard 말미에 console.config.json 자동 생성/머지 로직 추가 — .opal\AGENT.md 마커 탐색 + scan_roots 병합(보존+추가+dedup)의 PowerShell 네이티브 등가, opal-cli console scan(install-mac.sh v3.9) 과 의미상 동등, try/catch 격리로 install 비중단 (057)
         v1.18.0 2026-07-17       Install-OpalCore 도구 복사 직후 fw-inbox 런타임 디렉토리 초기화 블록 추가 — New-Item -Force(멱등) + fw-inbox-README.md create-if-absent seed, cleanDirs(:433) 미포함으로 재설치 시 기존 수집 항목 보존(H-5 멱등, install-mac.sh v4.0 대칭). 스킬(opal-improve)·도구(improve-tool)는 기존 skills/tools 자동 복사 블록이 처리 (058)
+        v1.19.0 2026-08-10 23:24 KST: Test-PythonMinVersion 신설 + Find-Python 하한 판정 추가(미달 인터프리터 비채택 → 자동 설치 트리거를 "미설치 또는 하한 미달"로 확대) + Install-WindowsPython 의 3.14 리터럴을 $OpalPythonTarget 상수 파생으로 전환, install-mac.sh v4.4 대칭 (087)
 #>
 
 #Requires -Version 5.1
@@ -125,6 +126,10 @@ $R2Start        = '# === R2 START ==='
 $R2End          = '# === R2 END ==='
 $HardeningStart = '# === GEMINI HARDENING START ==='
 $HardeningEnd   = '# === GEMINI HARDENING END ==='
+
+# Python 버전 계약 — install-mac.sh OPAL_PYTHON_MIN/OPAL_PYTHON_TARGET 미러 (087)
+$OpalPythonMin    = '3.11'
+$OpalPythonTarget = '3.14'
 
 # ─── 유틸리티 ─────────────────────────────────────────────────────────────────
 
@@ -357,8 +362,8 @@ function Test-WindowsDeps {
     if ($py) {
         Write-OpalInfo "Python: $py"
     } else {
-        Write-OpalWarn 'Python 미설치 — Python venv / xlsx-tool / Playwright 동작 제한'
-        Write-OpalInfo '  설치: winget install Python.Python.3.14  또는  https://www.python.org/downloads/windows/'
+        Write-OpalWarn "Python ${OpalPythonMin} 이상 미확보 — Python venv / xlsx-tool / Playwright 동작 제한"
+        Write-OpalInfo "  설치: winget install Python.Python.$OpalPythonTarget  또는  https://www.python.org/downloads/windows/"
         Write-OpalInfo '  (자동 설치 옵트아웃: $env:OPAL_AUTO_INSTALL_PYTHON=0)'
     }
     $nodeInfo = Find-Node
@@ -574,22 +579,67 @@ function Install-OpalCore {
     Write-OpalOk '핵심 자산 복사 완료.'
 }
 
+function Test-PythonMinVersion {
+    <#
+    .SYNOPSIS
+        지정된 Python 인터프리터가 $OpalPythonMin 이상인지 판정한다.
+    .NOTES
+        판정 규칙(major/minor 정수 비교)은 install-mac.sh python_meets_min 과
+        문자 그대로 동일한 계약이다 (087).
+    .OUTPUTS
+        하한 충족 시 $true, 미달·해석 실패 시 $false.
+    #>
+    param([Parameter(Mandatory)][string]$PythonPath)
+
+    try {
+        $verOut = & $PythonPath -c 'import sys; print("%d.%d" % sys.version_info[:2])' 2>&1
+        if ($LASTEXITCODE -ne 0) { return $false }
+        $parts = "$verOut".Trim() -split '\.'
+        if ($parts.Count -lt 2) { return $false }
+        $major = [int]$parts[0]
+        $minor = [int]$parts[1]
+
+        $minParts = $OpalPythonMin -split '\.'
+        $minMajor = [int]$minParts[0]
+        $minMinor = [int]$minParts[1]
+
+        if ($major -gt $minMajor) { return $true }
+        if ($major -eq $minMajor -and $minor -ge $minMinor) { return $true }
+        return $false
+    } catch {
+        return $false
+    }
+}
+
 function Find-Python {
     <#
     .SYNOPSIS
         실 Python 3 인터프리터를 검출한다 (Microsoft Store stub 회피).
+        $OpalPythonMin 이상인 후보만 채택 — 미달 후보는 건너뛰고 다음 후보로 계속 순회한다.
     .NOTES
         Windows 의 python.exe 가 Microsoft Store stub 일 경우 실행 시 stub 안내 후 종료.
-        --version 호출 결과로 진짜 Python 인지 검증.
+        --version 호출 결과로 진짜 Python 인지 검증 + Test-PythonMinVersion 으로 하한 판정.
+        후보 목록은 $OpalPythonTarget~$OpalPythonMin 마이너 버전에서 파생한 versioned 이름을
+        먼저 시도하고(내림차순), 이후 기존 PATH 기본 이름(python3/python/py)을 순회한다 (087).
     .OUTPUTS
-        Python 절대 경로 또는 $null
+        하한을 충족하는 첫 후보의 절대 경로, 모든 후보 순회 후 미발견이면 $null
     #>
-    foreach ($name in @('python3', 'python', 'py')) {
+    $targetParts = $OpalPythonTarget -split '\.'
+    $minParts    = $OpalPythonMin -split '\.'
+    $major       = [int]$targetParts[0]
+
+    $versionedNames = @()
+    for ($minor = [int]$targetParts[1]; $minor -ge [int]$minParts[1]; $minor--) {
+        $versionedNames += "python$major.$minor"
+    }
+    $candidateNames = $versionedNames + @('python3', 'python', 'py')
+
+    foreach ($name in $candidateNames) {
         $cmd = Get-Command $name -ErrorAction SilentlyContinue
         if (-not $cmd) { continue }
         try {
             $output = & $name --version 2>&1
-            if ($LASTEXITCODE -eq 0 -and "$output" -match '^Python\s+\d+\.\d+') {
+            if ($LASTEXITCODE -eq 0 -and "$output" -match '^Python\s+\d+\.\d+' -and (Test-PythonMinVersion $cmd.Source)) {
                 return $cmd.Source
             }
         } catch {}
@@ -621,19 +671,19 @@ function Install-WindowsPython {
         return $false
     }
 
-    Write-OpalInfo 'Python 미설치 감지 — winget 으로 Python 3.14 자동 설치 시도 중...'
+    Write-OpalInfo "Python 미설치 또는 최소 버전 미달 감지 — winget 으로 Python $OpalPythonTarget 자동 설치 시도 중..."
     $prevErrPref = $ErrorActionPreference
     $ErrorActionPreference = 'Continue'
     $exit = 1
     try {
-        & winget install --id Python.Python.3.14 --silent --accept-package-agreements --accept-source-agreements --scope user 2>&1 | Out-Host
+        & winget install --id "Python.Python.$OpalPythonTarget" --silent --accept-package-agreements --accept-source-agreements --scope user 2>&1 | Out-Host
         $exit = $LASTEXITCODE
     } finally {
         $ErrorActionPreference = $prevErrPref
     }
 
     if ($exit -ne 0) {
-        Write-OpalWarn "winget Python 3.14 설치 실패 (exit=$exit) — 수동 설치 권장."
+        Write-OpalWarn "winget Python $OpalPythonTarget 설치 실패 (exit=$exit) — 수동 설치 권장."
         Write-OpalInfo '  수동 설치: https://www.python.org/downloads/windows/'
         return $false
     }
@@ -647,25 +697,26 @@ function Install-WindowsPython {
 
     $py = Find-Python
     if ($py) {
-        Write-OpalOk "Python 3.14 자동 설치 완료: $py"
+        Write-OpalOk "Python $OpalPythonTarget 자동 설치 완료: $py"
         return $true
     }
 
     # PATH 갱신 후에도 미발견 시 winget 표준 user-scope 설치 경로 직접 탐색.
+    $pyFolderName = "Python$($OpalPythonTarget -replace '\.', '')"
     $candidates = @(
-        (Join-Path $env:LOCALAPPDATA 'Programs\Python\Python314\python.exe'),
-        (Join-Path ${env:ProgramFiles} 'Python314\python.exe')
+        (Join-Path $env:LOCALAPPDATA "Programs\Python\$pyFolderName\python.exe"),
+        (Join-Path ${env:ProgramFiles} "$pyFolderName\python.exe")
     )
     foreach ($c in $candidates) {
         if ($c -and (Test-Path $c)) {
             $dir = Split-Path -Parent $c
             $env:Path = "$dir;$($env:Path)"
-            Write-OpalOk "Python 3.14 자동 설치 완료(직접 탐색): $c"
+            Write-OpalOk "Python $OpalPythonTarget 자동 설치 완료(직접 탐색): $c"
             return $true
         }
     }
 
-    Write-OpalWarn 'Python 3.14 설치는 끝났으나 현재 세션에서 탐색 실패 — 새 PowerShell 세션에서 재설치 시도 권장.'
+    Write-OpalWarn "Python $OpalPythonTarget 설치는 끝났으나 현재 세션에서 탐색 실패 — 새 PowerShell 세션에서 재설치 시도 권장."
     return $false
 }
 
@@ -902,9 +953,9 @@ function Install-OpalVenv {
 
     $py = Find-Python
     if (-not $py) {
-        Write-OpalWarn 'Python 미설치 — Python venv 스킵 (xlsx-tool / Playwright / 일부 MCP 도구 동작 제한)'
+        Write-OpalWarn "Python ${OpalPythonMin} 이상 미확보 — Python venv 스킵 (xlsx-tool / Playwright / 일부 MCP 도구 동작 제한)"
         Write-OpalInfo '설치 옵션:'
-        Write-OpalInfo '  winget install Python.Python.3.14'
+        Write-OpalInfo "  winget install Python.Python.$OpalPythonTarget"
         Write-OpalInfo '  또는 https://www.python.org/downloads/windows/ (PATH 추가 옵션 체크)'
         Write-OpalInfo '  (자동 설치 옵트아웃: $env:OPAL_AUTO_INSTALL_PYTHON=0)'
         return
@@ -1854,7 +1905,7 @@ function Invoke-OpalWindowsInstall {
     Write-Host ''
     Write-OpalOk '설치 흐름 완료.'
     if (-not (Find-Python)) {
-        Write-OpalInfo 'Python 미설치 — 일부 도구 제한. 수동 설치 후 재실행 권장: winget install Python.Python.3.14'
+        Write-OpalInfo "Python ${OpalPythonMin} 이상 미확보 — 일부 도구 제한. 수동 설치 후 재실행 권장: winget install Python.Python.$OpalPythonTarget"
     }
     Write-OpalInfo '커뮤니티 스킬은 //skill-manager로 검색·설치하세요 (예: //skill-manager pdf)'
     Write-Host ''

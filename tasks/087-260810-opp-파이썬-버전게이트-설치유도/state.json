@@ -1,0 +1,111 @@
+{
+  "task_id": "087-260810-opp-파이썬-버전게이트-설치유도",
+  "skill": "opp",
+  "mode": "agentic",
+  "schema_version": "1.1",
+  "created_at": "2026-08-10 22:54",
+  "updated_at": "2026-08-10 23:41",
+  "current_status": "done",
+  "rows": [
+    {
+      "row_id": 1,
+      "stage": "TASK",
+      "item": "작업",
+      "key": "task.task_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-10 22:55",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 2,
+      "stage": "TASK",
+      "item": "사용자 확인",
+      "key": "task.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-10 22:55",
+      "owner": "auto",
+      "note": "agentic auto-pass: agentic auto-pass: 4요소 확정값 잠금 + R-1~R-9 AC 판정가능 확인"
+    },
+    {
+      "row_id": 3,
+      "stage": "PLAN",
+      "item": "작업",
+      "key": "plan.plan_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-10 23:13",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 4,
+      "stage": "PLAN",
+      "item": "PM Gate",
+      "key": "plan.pm_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-10 23:13",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 5,
+      "stage": "PLAN",
+      "item": "사용자 확인",
+      "key": "plan.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-10 23:13",
+      "owner": "auto",
+      "note": "agentic auto-pass: agentic auto-pass: 근거 5건 PM 직접 실측 일치, DD-1 이탈 승인, H-1 과대평가 기록"
+    },
+    {
+      "row_id": 6,
+      "stage": "EXECUTE",
+      "item": "작업",
+      "key": "execute.implement",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-10 23:31",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 7,
+      "stage": "EXECUTE",
+      "item": "PM Gate",
+      "key": "execute.pm_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-10 23:31",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 8,
+      "stage": "EXECUTE",
+      "item": "사용자 확인",
+      "key": "execute.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-10 23:40",
+      "owner": "user",
+      "note": "캡틴 확인: 승인 (미검증 2건 보고 후 CLOSE 진입 승인)"
+    },
+    {
+      "row_id": 9,
+      "stage": "CLOSE",
+      "item": "DONE.md 생성",
+      "key": "close.done_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-10 23:41",
+      "owner": "PM",
+      "note": null
+    }
+  ],
+  "next_action": "태스크 완료"
+}

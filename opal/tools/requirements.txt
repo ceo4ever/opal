@@ -1,5 +1,6 @@
 # OPAL Python 의존성 — 통합 관리
-# 설치: ~/.opal/venv/bin/pip install -r requirements.txt
+# 요구: Python 3.11 이상 (권장 3.14) — mcp>=1.1.0(하단)이 Python 3.10+ 를 요구하므로 3.11을 하한으로 둔다
+# 설치: ~/.opal/.venv/bin/pip install -r requirements.txt
 
 # --- Office XML (docx / pptx / xlsx 공통) ---
 openpyxl>=3.1.0
@@ -24,7 +25,7 @@ mcp>=1.1.0
 PyYAML>=6.0.0
 
 # --- Web Testing ---
-# 설치 후 별도 초기화 필요: ~/.opal/venv/bin/playwright install
+# 설치 후 별도 초기화 필요: ~/.opal/.venv/bin/playwright install
 playwright>=1.40.0
 
 # --- OPAL Console Dashboard ---

@@ -6,6 +6,8 @@
 #       현행 scripts/install-mac.sh 를 exec 로 위임한다.
 #       install-mac.sh 내부는 OS 감지를 통해 Linux 호환 분기(Playwright 캐시 경로)를
 #       처리하므로 동일 스크립트를 안전하게 재사용 가능하다.
+#       Python 하한 게이트는 위임 대상 install-mac.sh 의 ensure_python() 에 있다.
+#       Linux는 자동 설치를 수행하지 않고 안내만 출력한다(install_platform_python() Linux 분기).
 #       후속: install-core.sh로 리네이밍 검토 (v0.6 로드맵).
 #
 # Usage:
@@ -18,6 +20,7 @@
 # 변경이력:
 #   v1.0 2026-05-20: 신규 작성 — Linux one-liner 진입점 (006)
 #   v1.1 2026-05-24: Codex CLI 통합은 install-mac.sh 위임 경로로 자동 상속 (별도 코드 변경 없음) (009)
+#   v1.2 2026-08-10: Python 하한 게이트 소재 명시 주석 추가 — 게이트는 위임 대상 install-mac.sh 의 ensure_python() 에 있으며 Linux는 자동 설치 없이 안내만 수행(동작 무변경, 주석 전용) (087)
 #
 
 set -euo pipefail

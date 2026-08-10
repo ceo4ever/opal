@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-08-10 22:55
+> 갱신: 2026-08-10 23:47
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -89,15 +89,18 @@
 - [[daemon-as-tool-orchestrator]] — 데몬은 도구 오케스트레이터 — 데이터 SSOT는 프로젝트 파일 #architecture #dashboard #ssot
 - [[dedup-pointer-over-copy]] — dedup 원칙 — 목적지 기존 존재 시 표 복사 금지·포인터 단일화 #dedup #ssot #pointer #architecture #principles
 - [[degraded-execution-with-explicit-gap]] — 자산 부재에도 중단하지 않는다 — 축소 실행 + 결측 명시 불변 규칙 #fallback #workflow #reporting #task-084
+- [[delegation-only-file-gate-bypass]] — 위임 전용 파일에 게이트를 두면 우회된다 — 진입경로 역추적 #gate #architecture #lesson #call-graph
 - [[deploy-artifact-verification-lesson]] — 동작검증은 배포 산출물+실 브라우저 기준으로 수행해야 한다 #verification #qa #deployment #lesson
 - [[dict-선행-model-ssot]] — DICT가 MODEL을 선행한다 — 사전이 속성명·타입 SSOT #architecture-decision #data-design #ssot #pipeline
 - [[dl-contract-download-verify-target-identity]] — DL-CONTRACT — 검증 대상과 다운로드 대상은 같은 파일이어야 한다 #deploy #release #install #checksum #contract
 - [[e2e-cmux-first-playwright-fallback]] — E2E 도구 우선순위 — cmux 1순위 → playwright 폴백 (에러코드 소비) #testing #e2e #cmux #framework
 - [[enforce-rule-legacy-data-surfacing-lesson]] — enforce 규칙 신설 시 잔존 데이터 표면화 — 배포 전 실 데이터 스캔 필요 교훈 #lesson #enforce #validate #brain-tool
 - [[erd-modeler-deprecation]] — erd-modeler deprecate — op-data-model/ddl로 분해, //erm 하위호환 #architecture-decision #deprecation #erd-modeler #migration
+- [[existence-check-not-version-check]] — 존재 검사와 버전 검사는 다른 게이트다 #gate #lesson #version #defect-class
 - [[expected-total-as-reference-not-gate-criterion]] — 하드코딩된 기대 총계는 게이트를 흉기로 만든다 — 판정은 집합 일치로 #lesson #gate-design #verification #plan-discipline #worker-instruction
 - [[exports-generation-tool-verification-division]] — 생성은 워커, 검증은 도구 — 비대칭을 이용한 분업 #code-scan #header #architecture
 - [[external-tool-boundary-stub-insufficient-lesson]] — 외부 도구 경계는 스텁만으로 불충분 — 실연동 검증이 통합 결함을 잡는다 #testing #lesson #integration #test-strategy
+- [[fail-fast-earliest-legible-point]] — 실패는 늦추기보다 앞당긴다 — 가장 이른 지점에서 읽기 쉽게 #gate #ux #lesson #fail-fast
 - [[fallback-approval-detached-head-precedence]] — detached HEAD 판정은 no-upstream보다 먼저 검사해야 한다 #git #judgment-order #fallback-approval #lesson
 - [[fix-validity-requires-failure-mode-reproduction]] — 수정의 유효성은 실패 모드를 재현해서 확인한다 #lesson #verification #pm-discipline #worker-report
 - [[fixture-conflicting-requirements-lesson]] — 픽스처 요구 충돌 — RED 작성 시점 시나리오 간 요구 대조 필요 #lesson #testing #fixture #red-first #task-082
@@ -180,10 +183,12 @@
 - [[page-type-dynamic-schema]] — 페이지 타입 동적화 — SCHEMA SSOT #architecture #brain #schema #dynamic-type
 - [[parser-drift-silent-longevity-lesson]] — 파서 drift는 조용히 오래 산다 — '회귀 없음' 기준선의 함정 #lesson-learned #parser #drift #dashboard #test-strategy
 - [[pipeline-todo-mirror-hook-enforcement]] — 파이프라인 todo 미러 hook 강제 전환 (prose 지시 → 결정론 트리거) #opal-pipeline #todo-mirror #hook #enforce-not-advise #state-tool
+- [[platform-parity-mirror-before-design]] — 플랫폼 규약 편측 존재 — 새 설계보다 미러링 우선 #install #platform #lesson #mirroring
 - [[pm-conversation-readonly-collection-exception]] — PM(대화) 읽기 전용 수집 워커 예외 — 수집만 나누고 판단은 단일 주체 #pm #dispatch #boundary #task-084
 - [[pm-improvement-loop-two-tracks]] — PM 개선 루프 2트랙 구조 (회고/온디맨드) #pm-loop #architecture-decision #improvement #process
 - [[pool-lock-idiom-contract]] — 프라임 풀 락 관용구 계약 #brain #concurrency #locking #pattern
 - [[project-id-query-param-pattern]] — 절대경로 프로젝트 식별자를 query param으로 전달 #api #routing #url-design
+- [[pure-function-enables-nondestructive-verification]] — 판정부·실행부 분리가 파괴적 검증을 비파괴 검증으로 바꾼다 #verification #architecture #lesson #pure-function
 - [[read-based-gate-pattern]] — Read 기반 설정파일 게이트 패턴 #bootstrap #permission #gate #read-pattern #session-toggle
 - [[readme-ssot-principle]] — README는 SSOT를 따른다 — 문서·코드 불일치 시 SKILL.md가 정본 #readme #ssot #doc-code-mismatch #documentation
 - [[red-first-hybrid-verification-track]] — RED-first 하이브리드 검증 트랙 — 도구 계약 변경 한정 적용 #verification #red-first #opal-agent #testing

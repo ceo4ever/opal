@@ -41,6 +41,7 @@
 #   v4.1 2026-07-23: merge_hooks_config 인라인 python(이벤트 통째 교체=clobber) 제거 → scripts/merge-hooks.py 위임 — 소유권-마커(_opal_managed) 기반 멱등 upsert로 외부 hook(orca PostToolUse 등) 보존 + N회 재배포 바이트 동일, 로직 테스트 seam 분리 (076)
 #   v4.2 2026-07-28: code-scan run.sh 실행 권한 chmod 블록 추가(improve-tool 블록 직후, state-tool 패턴) — code-map 헤더 작성층 도구 배포·tool-scan usage 정상화 (077)
 #   v4.3 2026-08-04 15:24 KST: install_opal_setting 병합 로직을 SEED_KEYS 목록 루프로 재작성 — models 키 존재 시 조기 sys.exit(0)으로 shardPolicy가 영구 미시드되던 구조 제거, 키별 독립 판정으로 전환(H-11) (083)
+#   v4.4 2026-08-10 23:24 KST: Python 버전 계약 상수 + 게이트 함수군 8종 신설(python_candidates/python_meets_min/find_python/venv_meets_min/python_autoinstall_enabled/install_platform_python/ensure_python) + install_opal_venv fail-fast·기존 venv 하한 재검증 재생성 — macOS brew 자동설치·Linux 안내 어댑터 분기, 구버전 Python으로 venv가 조용히 생성·재사용되던 결함 fix (087)
 #
 
 set -euo pipefail
@@ -63,6 +64,15 @@ R2_START="# === R2 START ==="
 R2_END="# === R2 END ==="
 HARDENING_START="# === GEMINI HARDENING START ==="
 HARDENING_END="# === GEMINI HARDENING END ==="
+
+# ─── Python Version Contract (087) ────────────────────────
+# BEGIN opal-python-contract
+OPAL_PYTHON_MIN="3.11"          # 하한 — 미달 시 설치 중단
+OPAL_PYTHON_TARGET="3.14"       # 자동 설치/권장 대상
+OPAL_PYTHON_DOWNLOAD_URL="https://www.python.org/downloads/"
+# 동일 계약 미러: scripts/install/windows.ps1 $OpalPythonMin/$OpalPythonTarget,
+#                opal/tools/doctor/lib/checks.sh OPAL_PYTHON_MIN/OPAL_PYTHON_TARGET
+# END opal-python-contract
 
 # ─── Logging ─────────────────────────────────────────────
 # OPAL_VERBOSE=1 시 info/success 자세한 출력. default(미설정/0)는 quiet — 단계 진행만 표시.
@@ -1308,6 +1318,172 @@ install_opal() {
     info "커뮤니티 스킬은 //skill-manager로 검색·설치하세요 (예: //skill-manager pdf)"
 }
 
+# ─── Python Version Gate (087) ─────────────────────────────────────────────
+# BEGIN opal-python-gate
+# 순수 함수(F-a~F-f): 로그 출력·파일쓰기 없음, 상수/인자만 참조.
+# 비순수 함수(F-g~F-h): 로그 출력 허용, 설치 수단·판정 결과 종합 담당.
+# 대응 Windows SSOT: scripts/install/windows.ps1 Find-Python / Install-WindowsPython.
+
+# python_candidates: OPAL_PYTHON_TARGET~OPAL_PYTHON_MIN 마이너를 내림차순 파생한
+# 후보 명령명 + python3(PATH 기본)을 개행 구분으로 stdout에 출력한다.
+python_candidates() {
+    local target_minor min_minor minor
+    target_minor="${OPAL_PYTHON_TARGET##*.}"
+    min_minor="${OPAL_PYTHON_MIN##*.}"
+
+    minor="$target_minor"
+    while [[ "$minor" -ge "$min_minor" ]]; do
+        echo "python3.${minor}"
+        minor=$((minor - 1))
+    done
+    echo "python3"
+}
+
+# python_version_of <py>: 인터프리터의 "MAJ.MIN" 을 stdout에 출력하고 rc 0.
+# 실행 불가·파싱 실패 시 출력 없이 rc 1.
+python_version_of() {
+    local py="$1"
+    local ver
+    ver="$("$py" -c 'import sys; print("%d.%d" % sys.version_info[:2])' 2>/dev/null)" || return 1
+    [[ -n "$ver" ]] || return 1
+    echo "$ver"
+}
+
+# python_meets_min <py>: 해당 인터프리터가 OPAL_PYTHON_MIN 이상이면 rc 0, 미달·해석 실패면 rc 1.
+python_meets_min() {
+    local py="$1"
+    local ver maj min min_maj min_min
+    ver="$(python_version_of "$py")" || return 1
+    maj="${ver%%.*}"
+    min="${ver##*.}"
+    min_maj="${OPAL_PYTHON_MIN%%.*}"
+    min_min="${OPAL_PYTHON_MIN##*.}"
+
+    (( maj > min_maj )) && return 0
+    (( maj == min_maj )) && (( min >= min_min )) && return 0
+    return 1
+}
+
+# find_python: python_candidates 순회 중 command -v 로 해석되고 python_meets_min 을
+# 통과하는 첫 후보의 절대경로를 stdout에 출력하고 rc 0. 모든 후보가 미달·부재면
+# 출력 없이 rc 1.
+find_python() {
+    local candidate resolved
+    while IFS= read -r candidate; do
+        resolved="$(command -v "$candidate" 2>/dev/null)" || continue
+        if python_meets_min "$resolved"; then
+            echo "$resolved"
+            return 0
+        fi
+    done < <(python_candidates)
+    return 1
+}
+
+# venv_meets_min <venv_dir>: <venv_dir>/pyvenv.cfg 의 "version = X.Y.Z" 를 읽어
+# OPAL_PYTHON_MIN 이상이면 rc 0. 파일 부재·키 부재·파싱 실패·미달은 rc 1.
+# 읽기만 한다 — 어떤 파일도 쓰거나 지우지 않는다.
+venv_meets_min() {
+    local venv_dir="$1"
+    local cfg ver
+    cfg="$venv_dir/pyvenv.cfg"
+    [[ -f "$cfg" ]] || return 1
+
+    ver="$(grep -E '^version[[:space:]]*=' "$cfg" 2>/dev/null | head -n1 | sed -E 's/^version[[:space:]]*=[[:space:]]*//')" || return 1
+    [[ -n "$ver" ]] || return 1
+
+    local maj min min_maj min_min
+    maj="${ver%%.*}"
+    min="${ver#*.}"
+    min="${min%%.*}"
+    min_maj="${OPAL_PYTHON_MIN%%.*}"
+    min_min="${OPAL_PYTHON_MIN##*.}"
+
+    (( maj > min_maj )) && return 0
+    (( maj == min_maj )) && (( min >= min_min )) && return 0
+    return 1
+}
+
+# python_autoinstall_enabled: 자동 설치 옵트아웃 환경변수가 "0"이면 rc 1(옵트아웃), 그 외 rc 0(활성).
+python_autoinstall_enabled() {
+    [[ "${OPAL_AUTO_INSTALL_PYTHON:-1}" != "0" ]]
+}
+
+# install_platform_python: 플랫폼별 설치 수단으로 OPAL_PYTHON_TARGET 확보를 시도한다.
+# rc 0(설치 후 하한 충족 인터프리터 확보) / rc 1(스킵·실패).
+# 첫 분기는 반드시 옵트아웃 검사 — windows.ps1:613 배치를 그대로 미러링한다.
+install_platform_python() {
+    if ! python_autoinstall_enabled; then
+        info "자동 설치 옵트아웃 — 스킵"
+        return 1
+    fi
+
+    case "$(uname -s)" in
+        Darwin)
+            if ! command -v brew &>/dev/null; then
+                warn "Homebrew 미보유 — Python 자동 설치 불가"
+                info "  Homebrew 설치: https://brew.sh/"
+                info "  수동 설치: $OPAL_PYTHON_DOWNLOAD_URL"
+                return 1
+            fi
+
+            info "Python ${OPAL_PYTHON_MIN} 미만 또는 미설치 감지 — brew로 python@${OPAL_PYTHON_TARGET} 자동 설치 시도 중..."
+            if ! brew install "python@${OPAL_PYTHON_TARGET}"; then
+                warn "brew install python@${OPAL_PYTHON_TARGET} 실패 — 수동 설치 권장"
+                info "  수동 설치: $OPAL_PYTHON_DOWNLOAD_URL"
+                return 1
+            fi
+
+            local found
+            if found="$(find_python)"; then
+                success "Python ${OPAL_PYTHON_TARGET} 자동 설치 완료: $found"
+                return 0
+            fi
+
+            local brew_prefix direct
+            brew_prefix="$(brew --prefix 2>/dev/null)" || true
+            direct="$brew_prefix/opt/python@${OPAL_PYTHON_TARGET}/bin/python${OPAL_PYTHON_TARGET}"
+            if [[ -n "$brew_prefix" ]] && [[ -x "$direct" ]] && python_meets_min "$direct"; then
+                success "Python ${OPAL_PYTHON_TARGET} 자동 설치 완료(직접 탐색): $direct"
+                return 0
+            fi
+
+            warn "Python ${OPAL_PYTHON_TARGET} 설치는 끝났으나 현재 세션에서 탐색 실패 — 새 터미널에서 재시도 권장"
+            return 1
+            ;;
+        Linux)
+            info "Linux는 자동 설치를 수행하지 않습니다"
+            info "  설치: 배포판 패키지 관리자 또는 $OPAL_PYTHON_DOWNLOAD_URL"
+            return 1
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+}
+
+# ensure_python: 전역 OPAL_PYTHON_BIN 에 하한 충족 인터프리터의 절대경로를 설정하고 rc 0.
+# 실패 시 원인·해결 안내를 출력하고 rc 1. exit는 직접 호출하지 않는다 — 종료 결정은 호출자 몫.
+ensure_python() {
+    local py
+    if py="$(find_python)"; then
+        OPAL_PYTHON_BIN="$py"
+        return 0
+    fi
+
+    if install_platform_python; then
+        if py="$(find_python)"; then
+            OPAL_PYTHON_BIN="$py"
+            return 0
+        fi
+    fi
+
+    error "Python ${OPAL_PYTHON_MIN} 이상을 찾지 못했습니다."
+    info "  현재 PATH의 python3: $(command -v python3 2>/dev/null || echo '없음')"
+    info "  수동 설치: $OPAL_PYTHON_DOWNLOAD_URL"
+    return 1
+}
+# END opal-python-gate
+
 install_opal_venv() {
     local venv_dir="$USER_HOME/.opal/.venv"
     local req_src="$FRAMEWORK_ROOT/opal/tools/requirements.txt"
@@ -1320,9 +1496,19 @@ install_opal_venv() {
     echo ""
     info "Python 가상환경 설정..."
 
+    if ! ensure_python; then
+        error "Python ${OPAL_PYTHON_MIN} 이상을 확보하지 못해 설치를 중단합니다."
+        exit 1
+    fi
+
+    if [[ -d "$venv_dir" ]] && ! venv_meets_min "$venv_dir"; then
+        warn "기존 venv가 Python ${OPAL_PYTHON_MIN} 미만입니다 — 폐기 후 재생성합니다: $venv_dir"
+        rm -rf "$venv_dir"
+    fi
+
     if [[ ! -d "$venv_dir" ]]; then
-        python3 -m venv "$venv_dir"
-        success "venv 생성: $venv_dir"
+        "$OPAL_PYTHON_BIN" -m venv "$venv_dir"
+        success "venv 생성: $venv_dir ($("$OPAL_PYTHON_BIN" -V 2>&1))"
     else
         success "venv 기존 사용: $venv_dir"
     fi

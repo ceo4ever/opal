@@ -18,11 +18,16 @@
 #   v1.3 2026-05-10 14:50 KST: check_paths 에 플랫폼별 어댑터 디렉토리 검출 추가 —
 #                              ~/.claude/agents/ / ~/.cursor/agents/ / ~/.gemini/agents/ 의 어댑터 카운트 표기.
 #                              ~/.opal/agents/ 는 'source 캐시' 로 재정의 (LLM 직접 사용 X, 어댑터 재생성용) (140 추가작업, v0.3.15)
+#   v1.4 2026-08-10 23:24 KST: _version_ge 신설 + _resolve_python3 후보에 versioned 이름 추가·하한 우선 채택 + check_deps python 항목이 하한 미달 시 _fail 로 표시(요구 하한 메시지 포함) — 3.9 환경이 "정상" 통과하던 진단 갭 fix (087)
 #
 
 # ─── 공통 상수 ──────────────────────────────────────────────
 
 OPAL_HOME="${OPAL_HOME:-$HOME/.opal}"
+
+# Python 버전 계약 — scripts/install-mac.sh OPAL_PYTHON_MIN/OPAL_PYTHON_TARGET 미러 (087)
+OPAL_PYTHON_MIN="3.11"
+OPAL_PYTHON_TARGET="3.14"
 
 # ─── 카운터 (run.sh에서 초기화) ─────────────────────────────
 # PASS_COUNT, WARN_COUNT, FAIL_COUNT 는 run.sh에서 선언하여 공유
@@ -45,22 +50,71 @@ _fail() { echo "${SYM_FAIL} $1"; ((FAIL_COUNT++)) || true; }
 #   ⚠       옵션 — playwright (npx @playwright/mcp@latest)
 # ─────────────────────────────────────────────────────────────
 
+# 버전 하한 비교 — major.minor 만 비교한다.
+# "3.9.6" 같은 3자리와 "3.11" 같은 2자리를 모두 받는다.
+# $1=ver $2=min → ver >= min 이면 rc 0, 미달이면 rc 1.
+_version_ge() {
+    local ver="$1" min="$2"
+    local ver_major ver_rest ver_minor min_major min_rest min_minor
+    ver_major="${ver%%.*}"
+    ver_rest="${ver#*.}"
+    ver_minor="${ver_rest%%.*}"
+    min_major="${min%%.*}"
+    min_rest="${min#*.}"
+    min_minor="${min_rest%%.*}"
+
+    if [[ "$ver_major" -gt "$min_major" ]]; then
+        return 0
+    elif [[ "$ver_major" -eq "$min_major" && "$ver_minor" -ge "$min_minor" ]]; then
+        return 0
+    fi
+    return 1
+}
+
 # Python 인터프리터 해석 — Microsoft Store stub 회피.
-# python3 → python → py 순으로 시도하여 --version 출력이 Python 3.X.Y 인 첫 후보를 채택한다.
+# OPAL_PYTHON_TARGET~OPAL_PYTHON_MIN 파생 versioned 이름(python3.14…python3.11)을
+# python3 → python → py 앞에 덧붙여 순회하며, 하한(OPAL_PYTHON_MIN)을 충족하는
+# 첫 후보를 우선 채택한다. 하한 충족 후보가 하나도 없으면 기존처럼 "3.x 인 첫 후보"를
+# 반환하여 check_deps 가 실제 버전을 표시할 수 있게 한다(진단 정보 보존).
 # 매치 실패 시 1 반환 (set -e 미발동).
 # 출력: "<cmd>|<version>" (성공 시), 실패 시 빈 문자열.
 _resolve_python3() {
     local cmd raw ver
-    for cmd in python3 python py; do
+    local target_minor min_minor mn versioned_candidates
+    local first_found_cmd first_found_ver
+
+    target_minor="${OPAL_PYTHON_TARGET#*.}"
+    min_minor="${OPAL_PYTHON_MIN#*.}"
+    versioned_candidates=""
+    mn="$target_minor"
+    while [[ "$mn" -ge "$min_minor" ]]; do
+        versioned_candidates="$versioned_candidates python3.$mn"
+        mn=$((mn - 1))
+    done
+
+    first_found_cmd=""
+    first_found_ver=""
+    for cmd in $versioned_candidates python3 python py; do
         if command -v "$cmd" &>/dev/null; then
             raw=$("$cmd" --version 2>&1 || true)
             ver=$(echo "$raw" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1 || true)
             if [[ "$ver" =~ ^3\.[0-9]+\.[0-9]+$ ]]; then
-                echo "${cmd}|${ver}"
-                return 0
+                if [[ -z "$first_found_cmd" ]]; then
+                    first_found_cmd="$cmd"
+                    first_found_ver="$ver"
+                fi
+                if _version_ge "$ver" "$OPAL_PYTHON_MIN"; then
+                    echo "${cmd}|${ver}"
+                    return 0
+                fi
             fi
         fi
     done
+
+    if [[ -n "$first_found_cmd" ]]; then
+        echo "${first_found_cmd}|${first_found_ver}"
+        return 0
+    fi
     return 1
 }
 
@@ -104,7 +158,11 @@ check_deps() {
     if py_info=$(_resolve_python3); then
         py_cmd="${py_info%|*}"
         py_ver="${py_info#*|}"
-        _pass "${py_cmd} ${py_ver}"
+        if _version_ge "$py_ver" "$OPAL_PYTHON_MIN"; then
+            _pass "${py_cmd} ${py_ver}"
+        else
+            _fail "${py_cmd} ${py_ver} — Python ${OPAL_PYTHON_MIN}+ 필요 (권장 ${OPAL_PYTHON_TARGET})"
+        fi
     else
         _fail "python3 — 미설치 또는 Microsoft Store stub (실제 Python 3 필요)"
     fi

@@ -287,3 +287,7 @@
 - 신규: [[vertical-writing-rotation-glyph-flip]], [[silent-render-failure-deterministic-gate]], [[expected-total-as-reference-not-gate-criterion]], [[knowledge-assets-as-flow-entrypoint]], [[source-measured-figures-over-stale-docs]], [[nojs-flex-rail-over-inline-svg-overlay]]
 - 출처: task:086
 
+## [2026-08-10] ingest | CLOSE ingest — 태스크 087 설치 스크립트 Python 최소버전 게이트 + 3.14 설치 유도 (플랫폼 대칭화)
+- 신규: [[pages/concept/platform-parity-mirror-before-design.md]], [[pages/concept/delegation-only-file-gate-bypass.md]], [[pages/concept/existence-check-not-version-check.md]], [[pages/concept/pure-function-enables-nondestructive-verification.md]], [[pages/concept/fail-fast-earliest-legible-point.md]]
+- 출처: task:087
+
