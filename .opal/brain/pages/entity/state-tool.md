@@ -4,14 +4,14 @@ title: state-tool
 module: state_tool
 layer: util
 domain: opal-pipeline
-exports: [cmd_init, cmd_show, cmd_advance, cmd_mark, cmd_block, cmd_validate, cmd_add_row, cmd_status, cmd_gate_pass, cmd_spec_validate]
+exports: [cmd_init, cmd_show, cmd_advance, cmd_mark, cmd_block, cmd_validate, cmd_add_row, cmd_status, cmd_gate_pass, cmd_spec_validate, link_memory_history]
 source_ref: opal/tools/state-tool/state_tool.py
 header_synced: 2026-06-10
 tags: [tool, pipeline]
-sources: [code:opal/tools/state-tool/, task:013, task:014, task:005, task:070, task:072, task:074]
-related: [brain-tool, opal-brain-system, clarification-gate, state-tool-task-step-key-address, pipeline-json-spec, state-tool-next-action-auto-derivation, state-tool-import-existing-key-reattachment]
+sources: [code:opal/tools/state-tool/, task:013, task:014, task:005, task:070, task:072, task:074, task:088]
+related: [brain-tool, opal-brain-system, clarification-gate, state-tool-task-step-key-address, pipeline-json-spec, state-tool-next-action-auto-derivation, state-tool-import-existing-key-reattachment, close-history-auto-link-enforce-conversion, memory-tool]
 created: 2026-06-10
-updated: 2026-07-23
+updated: 2026-08-11
 status: active
 ---
 
@@ -52,6 +52,12 @@ STATE.md "다음 액션" 자동 파생 (task:072 — 설계 반전 상세는 [[s
 - `cmd_init` import 분기(`parse_existing_state_md`)가 STATE.md 렌더 표(key 컬럼 없음)만 원천으로 삼아 keyless rows를 생성하던 결함을 수정했다. `--force`가 이 keyless rows로 기존 state.json(key 보유)을 덮어써 schema_version이 "1.1"→"1.0"으로 강등되고 `--task-step`/`--task-step-id` 주소가 전면 불능이 되는 2차 파급이 있었다.
 - 신규 헬퍼 `_key_source_index`·`_reattach_import_keys`가 (stage,item) 순서 소비 매칭으로 keyless import 행에 기존 state.json(1순위) → `--rows-from` pipeline.json(2순위, 폴백) 순으로 key를 재접합한다. 두 원천 모두 없으면 keyless 유지 + stderr 경고(하위호환, stdout 불변).
 
+완료 단계 히스토리 자동 연결 (task:088 — 아키텍처 결정 상세는 [[close-history-auto-link-enforce-conversion]]):
+- 완료 단계의 마지막 행이 완료로 확정되는 순간(`is_close_last and row["status"] == "done"`, `cmd_mark` 기존 판정 재사용), `link_memory_history(task_path, state)`가 형제 도구인 memory-tool을 별도 프로세스로 호출해 작업 히스토리 행을 생성한다. 이 접합은 state.json·STATE.md 영속화가 끝난 뒤에 실행되어, 연동 실패가 진행 상태 기록 자체를 되돌리는 일이 없다(`opal/tools/state-tool/state_tool.py`).
+- 제목·경로는 `find_project_root()`(조상 디렉토리에서 `.opal/MEMORY.json` 앵커 탐색)와 `derive_history_title()`(task_id 분해)로 결정론적으로 파생하고, 핵심결과는 소유자 보강 대기 플레이스홀더로 채운 뒤 그대로 실행 가능한 보강 명령을 `build_history_reminder()`로 함께 반환한다.
+- 연동 결과·경고는 `ok()` stdout 페이로드의 `history_link` 필드에만 실리며 state.json에는 영속하지 않는다(스키마 `additionalProperties:false` 위반 회피 — 076 진행 미러 선례 답습). 프로젝트 미탐지·히스토리 저장소 손상·타임아웃 등 어떤 실패도 완료 처리 자체(`ok: true`)를 막지 않는다.
+- 훅(`todo_mirror_hook.py`)의 `build_additional_context`가 기존 진행 미러 안내에 히스토리 보강 안내를 병존 추가하도록 확장됐다 — 훅 미설정 환경에서도 동일한 보강 명령이 stdout에 남아 있어 안내가 유실되지 않는다.
+
 ## 관련 페이지
 
 - [[brain-tool]] — state-tool 패턴(run.sh+venv python, ERROR_CODES, KST date.js)을 복제한 동형 도구
@@ -61,3 +67,5 @@ STATE.md "다음 액션" 자동 파생 (task:072 — 설계 반전 상세는 [[s
 - [[pipeline-json-spec]] — task:070 pilot 파이프라인 정의 SSOT(pipeline.json)
 - [[state-tool-next-action-auto-derivation]] — task:072 "다음 액션" 자동 파생 설계 반전
 - [[state-tool-import-existing-key-reattachment]] — task:074 import-existing key 재접합 결함 수정 설계
+- [[close-history-auto-link-enforce-conversion]] — task:088 완료 단계 히스토리 자동 연결 아키텍처 결정
+- [[memory-tool]] — task:088에서 state-tool이 형제 프로세스로 호출하기 시작한 히스토리 도구

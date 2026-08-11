@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_task_number": 87,
+  "last_task_number": 88,
   "memories": [
     {
       "title": "Console 브레인 구독 인증",
@@ -53,6 +53,13 @@
   ],
   "history": [
     {
+      "title": "088 클로즈 메모리히스토리 자동연결",
+      "date": "2026-08-11",
+      "stage": "완료",
+      "path": "tasks/088-260811-opp-클로즈-메모리히스토리-자동연결/",
+      "result": "CLOSE 마지막 행 mark 시 state-tool이 memory-tool을 직접 호출해 히스토리 행 자동 생성(생성=도구/result 보강=PM). pilot 10종 무수정, 회귀 284건·E2E 4종 실증. 히스토리 전용 후속 커밋 제거"
+    },
+    {
       "title": "087 Python 버전게이트·설치유도 플랫폼 대칭화",
       "date": "2026-08-10",
       "stage": "완료·커밋",
@@ -79,13 +86,6 @@
       "stage": "완료·커밋",
       "path": "tasks/084-260806-opp-현황분석-워크플로우/",
       "result": "5단계 워크플로우 신설. 스킬 무신설·상속12/신규9. 읽기전용 수집워커 예외. 폴백5종 무중단"
-    },
-    {
-      "title": "083 샤드 분할 파이프라인 — 2축 판정 + split 집행",
-      "date": "2026-08-04",
-      "stage": "완료·미커밋",
-      "path": "tasks/083-260803-opds-샤드정책-확장/",
-      "result": "탐지→제안→집행 경로 완성. shardPolicy 3단 우선순위(셀 머지)·바이트 AND 엔트리 2축·split(--plan 5단 사다리/--groups 집행)·init(게이트 앞 배치로 순환 차단). code-scan v1.6.0, 13→15서브명령. 340/340 GREEN(PM 독립 실측)·골든 diff 0·P0 8종 GREEN. K-1 split_rollback 커버리지 갭 후속 이관"
     }
   ]
 }

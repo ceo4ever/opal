@@ -13,7 +13,7 @@
 - **저장하지 않는 것**: 일회성 작업 내용, 임시 상태, 검증되지 않은 추측
 - **활용 방법**: 새 작업을 시작할 때 `show --brief`로 조회하고, 관련 메모리를 선택적으로 로드
 - **소유자 요청 시**: "이거 기억해둬" → 즉시 해당 유형의 메모리 파일에 기록 (없으면 생성)
-- **갱신 트리거**: 태스크 단계 전환, 태스크 완료, 아키텍처 결정, 소유자 명시 요청, 반복 이슈, 패턴 인식
+- **갱신 트리거**: 태스크 단계 전환, 태스크 완료(CLOSE 마지막 행 mark 시 state-tool이 히스토리 행을 도구 집행으로 자동 생성 — 아래 §CLOSE 자동 연결 참조. PM의 수동 append가 아니다), 아키텍처 결정, 소유자 명시 요청, 반복 이슈, 패턴 인식
 - **인덱스·히스토리 형식**: SSOT는 `opal/tools/memory-tool/schema/memory.schema.json`의 `$defs.memoryRow` / `$defs.historyRow` (필드·길이캡은 스키마 참조).
 - **타임스탬프 취득**: 시작일시/완료일시 기록 시 `node ~/.opal/tools/date/date.js datetime` 실행 필수 (bash 생략 금지).
 - **타임존**: 모든 일시는 **KST(한국 표준시, UTC+9)** 기준으로 기록한다. 시스템 시간이 UTC인 경우 소유자에게 현재 시간을 확인한다.
@@ -73,6 +73,25 @@ memory-tool의 모든 변경 명령(`init`/`append`/`update`/`promote`/`prune`/`
 
 ---
 
+## CLOSE 자동 연결
+
+CLOSE 마지막 행 mark 시점에 작업 히스토리 행이 **도구에 의해 결정론적으로 생성**된다(088 확정 방향 D-1). PM이 별도 히스토리 커밋으로 갱신하던 흐름은 폐지되었다.
+
+① **트리거**: CLOSE 단계의 마지막 행을 `state-tool mark`로 완료(`done`) 처리하는 순간. 판정·집행 모두 `state-tool`(`opal/tools/state-tool/state_tool.py` `link_memory_history()`)이 수행하며, PM이 별도 명령을 실행할 필요가 없다.
+
+② **역할 분담 — 생성=도구 / result 보강=PM**: title·date·stage·path는 판단이 개입하지 않는 필드이므로 state-tool이 state.json에서 확정적으로 파생해 채운다. `result`(핵심결과)는 LLM 판단의 산출물이라 도구가 대신 채울 수 없으므로 `"(PM 보강 대기)"` 플레이스홀더로 생성되고, PM이 이어서 보강한다.
+
+③ **단계값 `완료` 규약**: 히스토리 기록 시점이 커밋 이전으로 당겨졌으므로 `stage`는 항상 `"완료"`로 기재된다. 하네스 커밋 규칙상 커밋은 CLOSE 밖의 행위이므로, 과거에 쓰던 `"완료·커밋"` 표기는 폐기되었다 — 신규 행에는 더 이상 등장하지 않는다.
+
+④ **보강 명령**: PM은 mark 응답(stdout `history_link.reminder`) 또는 PostToolUse 훅 리마인더에 안내된 명령을 그대로 실행해 `result`를 보강한다.
+```
+"$HOME/.opal/tools/memory-tool/run.sh" update --file <MEMORY.json 경로> --kind history --title "<title>" --result "<무엇을 바꿨는지 + 결과>"
+```
+
+⑤ **실패는 비차단**: `.opal/MEMORY.json` 미탐지·손상·memory-tool 실패·타임아웃 등 어떤 이유로 히스토리 생성이 실패해도 `mark` 명령 자체는 항상 성공(`ok:true`)한다. 실패 사유는 mark 응답의 `history_link.warning`으로만 표면화되며, state.json에는 영속되지 않는다(비영속·stdout 전용 페이로드).
+
+---
+
 ## 변경이력
 
 | 버전 | 날짜 | 내용 |
@@ -81,3 +100,4 @@ memory-tool의 모든 변경 명령(`init`/`append`/`update`/`promote`/`prune`/`
 | v1.1 | 2026-06-26 | 045 메모리 관리 개선 — 제목 컬럼·길이캡·FIFO5·라이프사이클·이관 워크플로우 + memory-tool 집행 |
 | v1.2 | 2026-07-28 | 078 메모리 JSON 전환 — 구 HTML 주석 규약 절 삭제, 인덱스·히스토리 형식 서술을 스키마 참조 1줄로 대체, 저장소 경로 MEMORY.json, 자가검토 명령 목록 migrate 제거·task-number 추가 |
 | v1.3 | 2026-07-30 | 079 히스토리 정정 경로 안내 — FIFO 불릿 아래 `update --kind history` 정정 1줄 추가(삭제 없음, 행 수 불변) |
+| v1.4 | 2026-08-11 | 088 CLOSE 자동 연결 절 신설 — CLOSE 마지막 행 mark 시 state-tool이 히스토리 행을 결정론적으로 자동 생성(생성=도구/result 보강=PM), 단계값 `완료` 규약 명문화(`완료·커밋` 표기 폐기), 갱신 트리거 "태스크 완료" 문구를 도구 집행으로 정정 |

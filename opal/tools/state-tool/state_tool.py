@@ -3,11 +3,12 @@
   "module": "state_tool",
   "layer": "util",
   "domain": "opal-pipeline",
-  "description": "OPAL 파이프라인 현황판 JSON SSOT 관리 CLI — 10개 서브 명령(init/show/advance/mark/block/validate/add-row/status/spec-validate/gate-pass[deprecated]) + verify + 3-way 모드(interactive/semi-agentic/agentic) 지원. 014 Phase 4: 새 표준 행 구조(QA Gate/State Gate 행 없음)와 정합 — gate-pass deprecate, CLOSE 마지막 행 판정 항목명 비의존화. 016: verify --red-check(RED 증거 게이트) + --fix-mode/--changed-files/--test-globs(테스트 불변성 게이트) 추가 — RED-first TDD 트랙 deterministic 집행. 017: mark --step N/M 다중 Step 조기 done 가드 — N<M이면 in_progress 유지(done 미처리) + 진행률(step) 영속화, N==M에서만 done; 미완 행은 기존 stage-transition guard가 단계전환·CLOSE 진입을 자동 차단. 005: verify --clarification-check + TASK→다음단계 자동 훅 — TASK 4요소(목표/범위/제약/완료기준) 미잠금 시 다음 단계 진입 거부(PRINCIPLES §1 집행), 정책 A graceful skip(섹션/파일 부재 시 하위호환). 034: mock 가드 false positive 수정 — _MOCK_CODE_PATTERNS 정규식 'MagicMock' 맨 단어 대안 제거(#1 산문 오탐) + _check_mock_patterns 인라인 백틱 제거 전처리 추가(#2 메타-순환 해소); 헌법 §4 정탐 유지. 054: resolve_owner_placeholder() 신설 — note-write 6경로(advance/mark/add-row/block/status/init)에서 '{owner_name}' 플레이스홀더를 identity.md owner_name으로 write-time 치환(fail-safe: 부재/공란/파싱실패 시 원문 유지). 070: task-step 키 주소 체계 도입 1차 — spec-validate 서브명령(pipeline.json 스펙 검증) + KEY_PATTERN/stage_to_slug/resolve_row_index 신설, build_rows_from_pipeline_json(init --rows-from .json 확장자 분기, .md는 deprecation 경고 유지), advance/mark/block에 --task-step/--task-step-id/--row(deprecated) 3주소·add-row에 --after-task-step/--after-task-step-id/--key(자동 생성) 추가, --step→--action-step 별칭(dest 공유), opdd skill·DICT/MODEL/DDL·MIGRATION stage enum 등록, ERROR_CODES 8종 추가. 072: STATE.md '다음 액션' 자동 파생 — state.json next_action 필드 신설(init 영속화·schema optional 등록), _derive_next_action(파이프라인 프론티어=첫 미완료 행 기준 파생)·update_next_action_section(첫 줄만 치환, 하위 자유기재 보존) 신규, advance/mark가 상태 반영 후 next_action 계산·저장·렌더(block/add-row/status는 미접촉), advance/mark --next-action per-transition 오버라이드(비지속 — 다음 전이 자동 파생 복귀). 074: --import-existing key-보존 재접합 — cmd_init import 분기가 파싱 후 기존 state.json→pipeline.json (stage,item) 순서 매칭으로 key 재접합(schema_version 1.1 유지), 원천 전무 시 keyless+경고(하위호환); _key_source_index/_reattach_import_keys 신규. 076: build_todo_mirror() 신설 — init/advance/mark/block ok() stdout 페이로드에 단계 단위 todo 미러(파생: na 중립·전부pending→pending·전부done→completed·부분/failed→in_progress) 추가, PostToolUse hook이 이를 세션에 결정론 주입(파이프라인 todo 미러 hook 강제); todo_mirror는 stdout 전용 비영속(state.json 미접촉 — schema additionalProperties:false 보존).",
+  "description": "OPAL 파이프라인 현황판 JSON SSOT 관리 CLI — 10개 서브 명령(init/show/advance/mark/block/validate/add-row/status/spec-validate/gate-pass[deprecated]) + verify + 3-way 모드(interactive/semi-agentic/agentic) 지원. 014 Phase 4: 새 표준 행 구조(QA Gate/State Gate 행 없음)와 정합 — gate-pass deprecate, CLOSE 마지막 행 판정 항목명 비의존화. 016: verify --red-check(RED 증거 게이트) + --fix-mode/--changed-files/--test-globs(테스트 불변성 게이트) 추가 — RED-first TDD 트랙 deterministic 집행. 017: mark --step N/M 다중 Step 조기 done 가드 — N<M이면 in_progress 유지(done 미처리) + 진행률(step) 영속화, N==M에서만 done; 미완 행은 기존 stage-transition guard가 단계전환·CLOSE 진입을 자동 차단. 005: verify --clarification-check + TASK→다음단계 자동 훅 — TASK 4요소(목표/범위/제약/완료기준) 미잠금 시 다음 단계 진입 거부(PRINCIPLES §1 집행), 정책 A graceful skip(섹션/파일 부재 시 하위호환). 034: mock 가드 false positive 수정 — _MOCK_CODE_PATTERNS 정규식 'MagicMock' 맨 단어 대안 제거(#1 산문 오탐) + _check_mock_patterns 인라인 백틱 제거 전처리 추가(#2 메타-순환 해소); 헌법 §4 정탐 유지. 054: resolve_owner_placeholder() 신설 — note-write 6경로(advance/mark/add-row/block/status/init)에서 '{owner_name}' 플레이스홀더를 identity.md owner_name으로 write-time 치환(fail-safe: 부재/공란/파싱실패 시 원문 유지). 070: task-step 키 주소 체계 도입 1차 — spec-validate 서브명령(pipeline.json 스펙 검증) + KEY_PATTERN/stage_to_slug/resolve_row_index 신설, build_rows_from_pipeline_json(init --rows-from .json 확장자 분기, .md는 deprecation 경고 유지), advance/mark/block에 --task-step/--task-step-id/--row(deprecated) 3주소·add-row에 --after-task-step/--after-task-step-id/--key(자동 생성) 추가, --step→--action-step 별칭(dest 공유), opdd skill·DICT/MODEL/DDL·MIGRATION stage enum 등록, ERROR_CODES 8종 추가. 072: STATE.md '다음 액션' 자동 파생 — state.json next_action 필드 신설(init 영속화·schema optional 등록), _derive_next_action(파이프라인 프론티어=첫 미완료 행 기준 파생)·update_next_action_section(첫 줄만 치환, 하위 자유기재 보존) 신규, advance/mark가 상태 반영 후 next_action 계산·저장·렌더(block/add-row/status는 미접촉), advance/mark --next-action per-transition 오버라이드(비지속 — 다음 전이 자동 파생 복귀). 074: --import-existing key-보존 재접합 — cmd_init import 분기가 파싱 후 기존 state.json→pipeline.json (stage,item) 순서 매칭으로 key 재접합(schema_version 1.1 유지), 원천 전무 시 keyless+경고(하위호환); _key_source_index/_reattach_import_keys 신규. 076: build_todo_mirror() 신설 — init/advance/mark/block ok() stdout 페이로드에 단계 단위 todo 미러(파생: na 중립·전부pending→pending·전부done→completed·부분/failed→in_progress) 추가, PostToolUse hook이 이를 세션에 결정론 주입(파이프라인 todo 미러 hook 강제); todo_mirror는 stdout 전용 비영속(state.json 미접촉 — schema additionalProperties:false 보존). 088: CLOSE 마지막 행 mark 시 메모리 히스토리 자동 연결 — link_memory_history()가 형제 memory_tool.py를 sys.executable subprocess로 호출해 `<프로젝트루트>/.opal/MEMORY.json` history에 행을 자동 생성(find_project_root 조상 탐색·derive_history_title·build_history_reminder·_run_memory_tool 신설), path 사전 조회로 멱등 보장, 예외/실패 전부 흡수해 mark는 항상 ok:true 유지(cmd_mark ok() stdout에 history_link 필드 조건부 추가, state.json 미접촉).",
   "exports": [
     "cmd_init", "cmd_show", "cmd_advance", "cmd_mark",
     "cmd_block", "cmd_validate", "cmd_add_row", "cmd_status",
-    "cmd_spec_validate", "cmd_gate_pass", "build_todo_mirror"
+    "cmd_spec_validate", "cmd_gate_pass", "build_todo_mirror",
+    "link_memory_history"
   ]
 }
 """
@@ -502,6 +503,126 @@ def _derive_next_action(state):
             return f"{stage} {item} 블로커 해소"
         return f"{stage} {item} 진입"   # pending
     return "태스크 완료"
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# CLOSE 완료 시 메모리 히스토리 자동 연결 (PLAN 088 §2.1~§2.7, §2.9)
+# ─────────────────────────────────────────────────────────────────────────────
+
+# historyRow stage 값 — D-6 확정(2026-08-11부로 "완료·커밋" 표기 폐기)
+HISTORY_STAGE_DONE = "완료"
+# result(핵심결과) 초기값 — 빈 문자열 대신 PM 보강 대기를 식별 가능하게 표면화(§2.6)
+HISTORY_RESULT_PLACEHOLDER = "(PM 보강 대기)"
+# task_id("{NNN}-{yymmdd}-{skill}-{설명}") → title 파생 패턴(§2.6). 불일치 시 원문 폴백.
+HISTORY_TITLE_PATTERN = re.compile(r"^(\d{3})-\d{6}-[a-z]+-(.+)$")
+
+# 형제 memory-tool CLI 경로 — state-tool/memory-tool은 항상 같은 tools/ 부모를 공유한다(§2.2)
+_MEMORY_TOOL = pathlib.Path(__file__).resolve().parent.parent / "memory-tool" / "memory_tool.py"
+
+
+def find_project_root(task_path):
+    """task_path의 조상 중 .opal/MEMORY.json을 파일로 가진 첫 디렉토리를 반환한다(§2.3).
+    없으면 None — 호출자는 subprocess를 아예 띄우지 말고 조기 반환해야 한다."""
+    p = pathlib.Path(task_path).resolve()
+    for cand in (p, *p.parents):
+        if (cand / ".opal" / "MEMORY.json").is_file():
+            return cand
+    return None
+
+
+def derive_history_title(task_id):
+    """task_id(태스크 폴더명)에서 히스토리 title을 파생한다(§2.6).
+    '{NNN}-{yymmdd}-{skill}-{설명}' 패턴이면 '{NNN} {설명(하이픈→공백)}',
+    패턴 불일치 시 task_id 원문으로 폴백(state.json에 별도 제목 필드가 없음)."""
+    m = HISTORY_TITLE_PATTERN.match(task_id or "")
+    if not m:
+        return task_id
+    number, rest = m.group(1), m.group(2)
+    return f"{number} {rest.replace('-', ' ')}"
+
+
+def build_history_reminder(title, memory_file):
+    """result(핵심결과) 보강을 즉시 실행 가능한 명령 문자열로 안내한다(§2.7).
+    PM 실행 경로는 사용자 대면 표준인 run.sh로 안내한다."""
+    return (
+        "[메모리 히스토리] 작업 히스토리 행이 자동 생성되었다(핵심결과 미기재). 지금 보강하라:\n"
+        f'"$HOME/.opal/tools/memory-tool/run.sh" update --file {memory_file} '
+        f'--kind history --title "{title}" --result "<무엇을 바꿨는지 + 결과>"'
+    )
+
+
+def _run_memory_tool(argv):
+    """형제 memory_tool.py를 sys.executable subprocess로 실행한다(§2.2 — import·run.sh 경유 배제).
+    반환: (returncode, dict|None) — stdout 중 마지막으로 파싱되는 JSON 라인. 파싱 실패 시 None."""
+    result = subprocess.run(
+        [sys.executable, str(_MEMORY_TOOL), *argv],
+        capture_output=True, text=True, timeout=10,
+    )
+    parsed = None
+    for line in result.stdout.splitlines():
+        line = line.strip()
+        if not line.startswith("{"):
+            continue
+        try:
+            obj = json.loads(line)
+        except (ValueError, TypeError):
+            continue
+        if isinstance(obj, dict):
+            parsed = obj
+    return result.returncode, parsed
+
+
+def link_memory_history(task_path, state):
+    """CLOSE 마지막 행 mark 성공 시 memory-tool history 행을 자동 생성한다(§2.1/§2.4/§2.5).
+
+    항상 payload dict를 반환하고 예외를 전파하지 않는다 — err()를 호출하지 않으며,
+    memory-tool 부재/실패/타임아웃이 있어도 mark 자체를 실패시키지 않는다(R-4).
+    판정 키는 path(§2.4) — show로 사전 조회해 동일 path 행이 있으면 append를 건너뛴다.
+    """
+    try:
+        project_root = find_project_root(task_path)
+        if project_root is None:
+            return {"status": "skipped",
+                    "warning": f"프로젝트 루트(.opal/MEMORY.json)를 찾지 못함: {task_path}"}
+        if not _MEMORY_TOOL.is_file():
+            return {"status": "skipped",
+                    "warning": f"memory_tool.py를 찾지 못함: {_MEMORY_TOOL}"}
+
+        memory_file = project_root / ".opal" / "MEMORY.json"
+        rel_path = pathlib.Path(task_path).resolve().relative_to(project_root).as_posix() + "/"
+        title = derive_history_title(state.get("task_id", ""))
+
+        rc, show_result = _run_memory_tool(["show", "--file", str(memory_file)])
+        if rc != 0 or show_result is None:
+            warning = (show_result or {}).get("message") or f"memory-tool show 실패 (rc={rc})"
+            return {"status": "failed", "warning": str(warning)}
+
+        history_rows = show_result.get("history_rows") or []
+        if any(r.get("path") == rel_path for r in history_rows):
+            return {
+                "status": "duplicate_skipped",
+                "title": title, "path": rel_path, "stage": HISTORY_STAGE_DONE,
+                "memory_file": str(memory_file),
+                "reminder": build_history_reminder(title, memory_file),
+            }
+
+        rc, append_result = _run_memory_tool([
+            "append", "--file", str(memory_file), "--kind", "history",
+            "--title", title, "--stage", HISTORY_STAGE_DONE,
+            "--path", rel_path, "--summary", HISTORY_RESULT_PLACEHOLDER,
+        ])
+        if rc != 0 or append_result is None:
+            warning = (append_result or {}).get("message") or f"memory-tool append 실패 (rc={rc})"
+            return {"status": "failed", "warning": str(warning)}
+
+        return {
+            "status": "created",
+            "title": title, "path": rel_path, "stage": HISTORY_STAGE_DONE,
+            "memory_file": str(memory_file),
+            "reminder": build_history_reminder(title, memory_file),
+        }
+    except Exception as e:
+        return {"status": "failed", "warning": str(e)}
 
 
 def check_stage_transition_guard(state, row_index, command, force=False, scope="full"):
@@ -1417,9 +1538,19 @@ def cmd_mark(args):
                   decision=decision, reason=reason_text,
                   next_action=state["next_action"])
 
-    ok(command, row_id=row["row_id"], stage=row["stage"], item=row["item"],
-       status=row["status"], timestamp=now_str, owner=row["owner"],
-       todo_mirror=build_todo_mirror(state, "update"))
+    # 088 §2.1: CLOSE 마지막 행 완료 시 메모리 히스토리 자동 연결 (R-1~R-5)
+    # state.json·STATE.md 영속화가 완전히 끝난 뒤에만 실행 — 실패해도 mark 응답은
+    # 항상 ok:true를 유지한다(비영속·stdout 전용 페이로드, §2.5/§2.9).
+    history_link = None
+    if is_close_last and row["status"] == "done":
+        history_link = link_memory_history(task_path, state)
+
+    _ok_kwargs = dict(row_id=row["row_id"], stage=row["stage"], item=row["item"],
+                      status=row["status"], timestamp=now_str, owner=row["owner"],
+                      todo_mirror=build_todo_mirror(state, "update"))
+    if history_link is not None:
+        _ok_kwargs["history_link"] = history_link
+    ok(command, **_ok_kwargs)
 
 # ── 5. block ──────────────────────────────────────────────────────────────────
 

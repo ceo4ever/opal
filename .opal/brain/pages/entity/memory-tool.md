@@ -10,11 +10,13 @@ sources:
   - task:045
   - task:078
   - task:079
+  - task:088
 related:
   - state-tool
   - three-layer-memory-architecture
+  - close-history-auto-link-enforce-conversion
 created: "2026-06-26"
-updated: "2026-07-30"
+updated: "2026-08-11"
 status: active
 ---
 
@@ -56,7 +58,7 @@ md→JSON 전환(task:078)은 마커·표 파싱의 변형 취약성(헤더 컬�
 
 ## 관계 (HOW)
 
-- [[state-tool]] — 구조·패턴의 원형. `ok/err/ERROR_CODES/run.sh` 를 직접 재사용
+- [[state-tool]] — 구조·패턴의 원형. `ok/err/ERROR_CODES/run.sh` 를 직접 재사용. task:088부터는 완료 단계의 히스토리 자동 연결에서 state-tool이 memory-tool을 별도 프로세스로 호출하는 소비자 관계도 추가됐다(상세: [[close-history-auto-link-enforce-conversion]]) — memory-tool 자체에는 신규 서브명령이나 옵션이 추가되지 않았다
 - [[three-layer-memory-architecture]] — memory-tool이 집행하는 단기 기억(MEMORY.json) 계층을 담당
 - `brain-tool` — promote `--to brain` 경로는 brain-tool add-page / `//opbr ingest`를 재사용. memory-tool이 brain 쓰기를 재발명하지 않는다 (Simplicity)
 - [[json-not-token-saving-format]] / [[silent-loss-prevention-row-accounting-invariant]] / [[non-gated-write-path-audit-before-ssot-conversion]] / [[parser-drift-silent-longevity-lesson]] — task:078 전환에서 도출된 설계 판단·교훈

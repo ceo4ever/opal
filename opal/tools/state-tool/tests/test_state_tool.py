@@ -3,7 +3,7 @@
   "module": "test_state_tool",
   "layer": "test",
   "domain": "opal-pipeline",
-  "description": "state-tool 단위 테스트 — 9개 명령 happy path + 23종 에러 코드 × 최소 1건 + G-5~G-15 시나리오. 005: TestClarificationGate 신설 — verify --clarification-check + TASK→다음단계 자동 훅 RED-first 케이스 ①~⑨ + 회귀 보호. 054: TestOwnerNamePlaceholder 신설 — note '{owner_name}' 플레이스홀더 identity.md write-time 치환 RED-first(S-1~S-7). 056: TestOpplSkillInit 신설 — `--skill oppl` enum 미등록 RED-first(S-020, H-1) — run.sh subprocess 실호출로 공개 인터페이스만 검증(mock 미사용). 070: task-step 키 주소 체계 도입 1차 RED-first — TestPipelineSpecValidate/TestPipelineJsonInit/TestStateSchema11Compat/TestTaskStepAddressing/TestActionStepRename/TestAddRowKey/TestOpddEnumDrift/TestGroupAPipelineSpecs/TestBackwardCompatAliases 9종 신설(TEST-SCENARIO.md S-1~S-14, PLAN §3.7.2) — 미구현 기능이므로 전부 FAIL 기대(RED 증거). 072: TestNextActionAutoDerive 신설 — STATE.md '다음 액션' 자동 파생 RED-first(TEST-SCENARIO.md S-1~S-4,S-6,S-7) — init next_action 영속화+schema optional 등록, advance/mark 프론티어 파생(pending '진입'/in_progress '진행 중'/전체완료 '태스크 완료'), 첫 줄만 치환(하위 자유기재 보존), --next-action 오버라이드 우선+비지속 복귀 — 공개 CLI 경로(직접 호출+run.sh subprocess)로만 검증, 미구현이므로 실패 기대(RED 증거). 074: TestImportPreservesKeys 신설 — `--import-existing` task-step key 유실 결함 RED-first(TEST-SCENARIO.md S-a~S-e) — force+import-existing 후 rows[].key 100% 보존, pipeline.json 폴백 복원, key 원천 전무 시 keyless+stderr 경고(하위호환), schema_version 1.1 유지, 동일 (stage,item) 중복 순서 소비 — 공개 cmd_init 호출 + 실 파일 I/O로만 검증, 수정 전 코드에서 FAIL 기대(RED 증거). 076: TestTodoMirror 신설 — build_todo_mirror 파생 규칙(TS-001~007): init create 페이로드·전부pending→pending·전부done→completed·advance/부분→in_progress·na 중립·블로커 in_progress 유지·영속 경계(state.json 미영속+schema validate 통과) — 공개 cmd_init/advance/mark/block ok() stdout 페이로드 캡처로만 검증.",
+  "description": "state-tool 단위 테스트 — 9개 명령 happy path + 23종 에러 코드 × 최소 1건 + G-5~G-15 시나리오. 005: TestClarificationGate 신설 — verify --clarification-check + TASK→다음단계 자동 훅 RED-first 케이스 ①~⑨ + 회귀 보호. 054: TestOwnerNamePlaceholder 신설 — note '{owner_name}' 플레이스홀더 identity.md write-time 치환 RED-first(S-1~S-7). 056: TestOpplSkillInit 신설 — `--skill oppl` enum 미등록 RED-first(S-020, H-1) — run.sh subprocess 실호출로 공개 인터페이스만 검증(mock 미사용). 070: task-step 키 주소 체계 도입 1차 RED-first — TestPipelineSpecValidate/TestPipelineJsonInit/TestStateSchema11Compat/TestTaskStepAddressing/TestActionStepRename/TestAddRowKey/TestOpddEnumDrift/TestGroupAPipelineSpecs/TestBackwardCompatAliases 9종 신설(TEST-SCENARIO.md S-1~S-14, PLAN §3.7.2) — 미구현 기능이므로 전부 FAIL 기대(RED 증거). 072: TestNextActionAutoDerive 신설 — STATE.md '다음 액션' 자동 파생 RED-first(TEST-SCENARIO.md S-1~S-4,S-6,S-7) — init next_action 영속화+schema optional 등록, advance/mark 프론티어 파생(pending '진입'/in_progress '진행 중'/전체완료 '태스크 완료'), 첫 줄만 치환(하위 자유기재 보존), --next-action 오버라이드 우선+비지속 복귀 — 공개 CLI 경로(직접 호출+run.sh subprocess)로만 검증, 미구현이므로 실패 기대(RED 증거). 074: TestImportPreservesKeys 신설 — `--import-existing` task-step key 유실 결함 RED-first(TEST-SCENARIO.md S-a~S-e) — force+import-existing 후 rows[].key 100% 보존, pipeline.json 폴백 복원, key 원천 전무 시 keyless+stderr 경고(하위호환), schema_version 1.1 유지, 동일 (stage,item) 중복 순서 소비 — 공개 cmd_init 호출 + 실 파일 I/O로만 검증, 수정 전 코드에서 FAIL 기대(RED 증거). 076: TestTodoMirror 신설 — build_todo_mirror 파생 규칙(TS-001~007): init create 페이로드·전부pending→pending·전부done→completed·advance/부분→in_progress·na 중립·블로커 in_progress 유지·영속 경계(state.json 미영속+schema validate 통과) — 공개 cmd_init/advance/mark/block ok() stdout 페이로드 캡처로만 검증. 088: TestCloseHistoryLink 신설(TS-1~TS-7) — CLOSE 마지막 행 mark 시 link_memory_history()가 <프로젝트루트>/.opal/MEMORY.json history에 행을 자동 생성(title/path/stage/result 파생값, date는 memory-tool KST 충전)·재mark 멱등(duplicate_skipped)·MEMORY.json 부재/손상 시 비차단(ok:true + skipped/failed)·비CLOSE 행 무발동 대조군·result 보강 리마인더 구성요소·state.json 영속 경계(schema validate 통과) — 공개 cmd_mark 호출 + 실 MEMORY.json 파일 내용으로만 검증(내부 함수 mock 없음, 블랙박스 결함 주입).",
   "exports": [
     "TestInit", "TestShow", "TestAdvance", "TestMark",
     "TestBlock", "TestValidate", "TestAddRow", "TestStatus", "TestGatePass",
@@ -12,7 +12,8 @@
     "TestPipelineSpecValidate", "TestPipelineJsonInit", "TestStateSchema11Compat",
     "TestTaskStepAddressing", "TestActionStepRename", "TestAddRowKey",
     "TestOpddEnumDrift", "TestGroupAPipelineSpecs", "TestBackwardCompatAliases",
-    "TestNextActionAutoDerive", "TestImportPreservesKeys", "TestTodoMirror"
+    "TestNextActionAutoDerive", "TestImportPreservesKeys", "TestTodoMirror",
+    "TestCloseHistoryLink"
   ]
 }
 
@@ -5304,6 +5305,251 @@ class TestTodoMirror(BaseTestCase):
         result = self._validate()
         self.assertTrue(result["ok"], f"validate 실패: {result}")
         self.assertEqual(result["violations_count"], 0)
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# 088: TestCloseHistoryLink — CLOSE 마지막 행 mark → 메모리 히스토리 자동 연결
+# (PLAN 088 §3 Step 1 TS-1~TS-7 / TASK R-1~R-5).
+# [MUST] red-first.md §4: 공개 인터페이스(cmd_mark 호출 + ok() stdout 페이로드 +
+#   실 MEMORY.json 파일 내용)로만 검증한다. 내부 함수 mock 금지 — 실패 주입은
+#   파일 시스템 레벨 블랙박스 결함 주입으로만 수행한다.
+# ═════════════════════════════════════════════════════════════════════════════
+
+# 태스크 폴더명 → title 파생 규칙 검증용 고정 픽스처 (PLAN 088 §2.6)
+#   088-260811-opp-테스트-태스크 → "088 테스트 태스크"
+_HL_TASK_DIR       = "088-260811-opp-테스트-태스크"
+_HL_EXPECTED_TITLE = "088 테스트 태스크"
+_HL_EXPECTED_PATH  = f"tasks/{_HL_TASK_DIR}/"
+_HL_STAGE_DONE     = "완료"
+_HL_RESULT_PLACEHOLDER = "(PM 보강 대기)"
+
+# memory.schema.json 유효 최소 문서 (version/last_task_number/memories/history 필수)
+_HL_EMPTY_MEMORY_DOC = {
+    "version": 1,
+    "last_task_number": 0,
+    "memories": [],
+    "history": [],
+}
+
+
+class TestCloseHistoryLink(BaseTestCase):
+    """088 R-1~R-5: CLOSE 마지막 행 mark 시 state-tool이 memory-tool을 호출해
+    `<프로젝트루트>/.opal/MEMORY.json` history[0]에 작업 히스토리 행을 자동 생성한다.
+
+    픽스처는 BaseTestCase의 평면 tmpdir 대신 **프로젝트 루트 형태**를 구성한다:
+        <tmpdir>/.opal/MEMORY.json    ← 앵커 (조상 탐색 대상, PLAN §2.3)
+        <tmpdir>/tasks/<태스크폴더>/  ← task_path
+    기존 262건은 앵커 없는 평면 tmpdir에서 돌아 무발동이며(PLAN §2.8),
+    이 클래스만 실제 연동 경로를 탄다.
+
+    CLOSE 진입 게이트(check_close_gate, state_tool.py:558-595)는 직전 '사용자 확인'
+    행이 status=done/owner=user일 것을 요구하므로, 기존 픽스처 패턴
+    (test_state_tool.py:433-447)을 그대로 재사용한다.
+    """
+
+    CLOSE_ROWS_SPEC = json.dumps([
+        {"stage": "TASK",  "item": "사용자 확인"},
+        {"stage": "CLOSE", "item": "DONE.md 생성"},
+    ])
+
+    def setUp(self):
+        super().setUp()
+        # BaseTestCase가 만든 평면 task_path는 사용하지 않는다 — 프로젝트 루트 구조로 교체
+        self.project_root = self.tmpdir
+        self.memory_file  = self.project_root / ".opal" / "MEMORY.json"
+        self.memory_file.parent.mkdir(parents=True, exist_ok=True)
+        self._write_memory(_HL_EMPTY_MEMORY_DOC)
+        self.task_path = self.project_root / "tasks" / _HL_TASK_DIR
+        self.task_path.mkdir(parents=True)
+
+    # ── 픽스처 헬퍼 ──────────────────────────────────────────────────────────
+
+    def _write_memory(self, doc):
+        self.memory_file.write_text(
+            json.dumps(doc, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    def _history(self):
+        return json.loads(self.memory_file.read_text(encoding="utf-8"))["history"]
+
+    def _mark_capture(self, row_id, **kw):
+        """mark 호출 → (exit_code, ok() 페이로드 dict). 공개 경로만 사용."""
+        with _mock_now():
+            args = make_args(task_path=str(self.task_path), row=row_id, done=True, **kw)
+            return self._call_cmd(ST.cmd_mark, args)
+
+    def _mark_close_last(self):
+        """사용자 확인(row1, owner=user) 선행 → CLOSE 마지막 행(row2) mark 결과 반환."""
+        code, result = self._mark_capture(1, owner="user")
+        self.assertEqual(code, 0, f"픽스처 오류 — 사용자 확인 행 mark 실패: {result}")
+        return self._mark_capture(2)
+
+    # ── TS-1 (R-1/R-2) ──────────────────────────────────────────────────────
+
+    def test_ts1_close_last_mark_creates_history_row(self):
+        """TS-1 (R-1/R-2): CLOSE 마지막 행 mark → MEMORY.json history[0]에 1건 생성.
+        title/path/stage/result는 도구 파생값, date는 memory-tool이 채운 KST 당일."""
+        self._init(rows_spec=self.CLOSE_ROWS_SPEC)
+        code, result = self._mark_close_last()
+
+        self.assertEqual(code, 0, f"CLOSE 마지막 행 mark 실패: {result}")
+        self.assertTrue(result.get("ok"), f"mark 응답이 ok:true여야 함: {result}")
+
+        history = self._history()
+        self.assertEqual(len(history), 1,
+                         f"history에 정확히 1건이 생성되어야 함, 실제: {history}")
+        row = history[0]
+        self.assertEqual(row.get("title"), _HL_EXPECTED_TITLE,
+                         f"title은 task_id에서 파생되어야 함(§2.6), 실제: {row.get('title')!r}")
+        self.assertEqual(row.get("path"), _HL_EXPECTED_PATH,
+                         f"path는 프로젝트 루트 상대경로여야 함, 실제: {row.get('path')!r}")
+        self.assertEqual(row.get("stage"), _HL_STAGE_DONE,
+                         f"stage는 '완료'여야 함(D-6), 실제: {row.get('stage')!r}")
+        self.assertRegex(str(row.get("date")), r"^\d{4}-\d{2}-\d{2}$",
+                         f"date는 KST YYYY-MM-DD여야 함, 실제: {row.get('date')!r}")
+        self.assertEqual(row.get("result"), _HL_RESULT_PLACEHOLDER,
+                         f"result는 플레이스홀더여야 함(§2.6), 실제: {row.get('result')!r}")
+
+        link = result.get("history_link")
+        self.assertIsInstance(link, dict,
+                              f"mark 응답에 history_link 객체가 있어야 함: {result}")
+        self.assertEqual(link.get("status"), "created",
+                         f"최초 생성은 status=created여야 함, 실제: {link.get('status')!r}")
+
+    # ── TS-2 (R-3 멱등) ─────────────────────────────────────────────────────
+
+    def test_ts2_duplicate_mark_is_idempotent(self):
+        """TS-2 (R-3): 동일 CLOSE 마지막 행을 2회 mark해도 해당 path 행은 정확히 1건.
+        2회차 응답은 status=duplicate_skipped."""
+        self._init(rows_spec=self.CLOSE_ROWS_SPEC)
+        code1, result1 = self._mark_close_last()
+        self.assertEqual(code1, 0, f"1회차 mark 실패: {result1}")
+
+        code2, result2 = self._mark_capture(2)
+        self.assertEqual(code2, 0, f"2회차 mark 실패: {result2}")
+        self.assertTrue(result2.get("ok"), f"2회차 mark도 ok:true여야 함: {result2}")
+
+        history = self._history()
+        same_path = [r for r in history if r.get("path") == _HL_EXPECTED_PATH]
+        self.assertEqual(len(same_path), 1,
+                         f"동일 path 행이 정확히 1건이어야 함(멱등), 실제 history: {history}")
+
+        link = result2.get("history_link")
+        self.assertIsInstance(link, dict,
+                              f"2회차 mark 응답에도 history_link가 있어야 함: {result2}")
+        self.assertEqual(link.get("status"), "duplicate_skipped",
+                         f"2회차는 duplicate_skipped여야 함, 실제: {link.get('status')!r}")
+
+    # ── TS-3 (R-4a 부재 → 비차단 skipped) ───────────────────────────────────
+
+    def test_ts3_missing_memory_json_is_non_blocking_skip(self):
+        """TS-3 (R-4a): MEMORY.json 부재 상태로 mark → mark는 ok:true를 유지하고
+        history_link.status=skipped + 비공백 warning으로 표면화된다."""
+        self._init(rows_spec=self.CLOSE_ROWS_SPEC)
+        self.memory_file.unlink()   # 블랙박스 결함 주입 — 앵커 제거
+
+        code, result = self._mark_close_last()
+        self.assertEqual(code, 0, f"MEMORY.json 부재가 mark를 실패시키면 안 됨: {result}")
+        self.assertTrue(result.get("ok"),
+                        f"MEMORY.json 부재에도 ok:true여야 함(R-4): {result}")
+
+        link = result.get("history_link")
+        self.assertIsInstance(link, dict,
+                              f"부재 상황도 history_link로 표면화되어야 함: {result}")
+        self.assertEqual(link.get("status"), "skipped",
+                         f"앵커 미탐지는 skipped여야 함, 실제: {link.get('status')!r}")
+        self.assertTrue(str(link.get("warning", "")).strip(),
+                        f"warning이 비공백이어야 함, 실제: {link.get('warning')!r}")
+        self.assertFalse(self.memory_file.exists(), "MEMORY.json이 새로 생성되면 안 됨")
+
+    # ── TS-4 (R-4b 손상 → 비차단 failed) ────────────────────────────────────
+
+    def test_ts4_corrupt_memory_json_is_non_blocking_failure(self):
+        """TS-4 (R-4b): MEMORY.json이 손상 JSON일 때 mark → ok:true 유지 +
+        history_link.status=failed + 비공백 warning. 결함 주입은 파일 덮어쓰기(블랙박스)."""
+        self._init(rows_spec=self.CLOSE_ROWS_SPEC)
+        self.memory_file.write_text("{ this is not valid json ", encoding="utf-8")
+
+        code, result = self._mark_close_last()
+        self.assertEqual(code, 0, f"손상 MEMORY.json이 mark를 실패시키면 안 됨: {result}")
+        self.assertTrue(result.get("ok"),
+                        f"손상 MEMORY.json에도 ok:true여야 함(R-4): {result}")
+
+        link = result.get("history_link")
+        self.assertIsInstance(link, dict,
+                              f"손상 상황도 history_link로 표면화되어야 함: {result}")
+        self.assertEqual(link.get("status"), "failed",
+                         f"손상 JSON은 failed여야 함, 실제: {link.get('status')!r}")
+        self.assertTrue(str(link.get("warning", "")).strip(),
+                        f"warning이 비공백이어야 함, 실제: {link.get('warning')!r}")
+
+    # ── TS-5 (회귀: 비CLOSE 행 무발동) ──────────────────────────────────────
+
+    def test_ts5_non_close_row_mark_does_not_link(self):
+        """TS-5 (회귀/선택성): 비CLOSE 행 mark는 무발동이고, **같은 태스크의** CLOSE
+        마지막 행 mark는 발동한다.
+
+        무발동만 단언하면 기능이 아예 없어도 통과하는 공허한 가드가 되므로,
+        동일 픽스처 안에서 발동/무발동을 대조해 '무발동이 선택적임'을 확증한다.
+        """
+        self._init(rows_spec=self.CLOSE_ROWS_SPEC)
+        before = self._history()
+
+        # (1) 비CLOSE 행 → 무발동
+        code, result = self._mark_capture(1, owner="user")   # TASK/사용자 확인 (비CLOSE)
+        self.assertEqual(code, 0, f"비CLOSE 행 mark 실패: {result}")
+        self.assertNotIn("history_link", result,
+                         f"비CLOSE mark 응답에는 history_link 키가 없어야 함: {result}")
+        self.assertEqual(len(self._history()), len(before),
+                         "비CLOSE mark는 history를 변경하면 안 됨")
+
+        # (2) 대조군 — CLOSE 마지막 행 → 발동 (무발동이 선택적임을 확증)
+        code, close_result = self._mark_capture(2)
+        self.assertEqual(code, 0, f"CLOSE 마지막 행 mark 실패: {close_result}")
+        self.assertIn("history_link", close_result,
+                      f"CLOSE 마지막 행 mark는 발동해야 함(대조군): {close_result}")
+        self.assertEqual(len(self._history()), len(before) + 1,
+                         "CLOSE 마지막 행 mark는 history를 1건 늘려야 함(대조군)")
+
+    # ── TS-6 (R-5 리마인더) ─────────────────────────────────────────────────
+
+    def test_ts6_reminder_contains_actionable_update_command(self):
+        """TS-6 (R-5): history_link.reminder에 보강 명령의 구성요소가 모두 포함된다 —
+        `update`, `--kind history`, `--result`, 그리고 실제 사용된 title."""
+        self._init(rows_spec=self.CLOSE_ROWS_SPEC)
+        code, result = self._mark_close_last()
+        self.assertEqual(code, 0, f"CLOSE 마지막 행 mark 실패: {result}")
+
+        link = result.get("history_link")
+        self.assertIsInstance(link, dict, f"history_link가 있어야 함: {result}")
+        reminder = link.get("reminder")
+        self.assertIsInstance(reminder, str,
+                              f"reminder는 문자열이어야 함, 실제: {reminder!r}")
+        for token in ("update", "--kind history", "--result", _HL_EXPECTED_TITLE):
+            self.assertIn(token, reminder,
+                          f"reminder에 {token!r}가 포함되어야 함(R-5), 실제: {reminder!r}")
+
+    # ── TS-7 (H-3 영속 경계) ────────────────────────────────────────────────
+
+    def test_ts7_history_link_not_persisted_schema_passes(self):
+        """TS-7 (H-3 영속 경계, 076 TS-007 패턴): mark 후 state.json 어디에도
+        history_link 키가 없고 state.schema.json 검증을 통과한다."""
+        self._init(rows_spec=self.CLOSE_ROWS_SPEC)
+        code, result = self._mark_close_last()
+        self.assertEqual(code, 0, f"CLOSE 마지막 행 mark 실패: {result}")
+        # 선행 조건 — 발동 자체는 일어나야 한다(무발동으로 인한 위양성 통과 차단)
+        self.assertIn("history_link", result,
+                      f"CLOSE 마지막 행 mark 응답에 history_link가 있어야 함: {result}")
+
+        state = self._state()
+        self.assertNotIn("history_link", state,
+                         "history_link는 state.json에 영속되면 안 됨")
+        for row in state["rows"]:
+            self.assertNotIn("history_link", row,
+                             "history_link는 rows[]에도 영속되면 안 됨")
+
+        validated = self._validate()
+        self.assertTrue(validated["ok"], f"state.schema.json 검증 실패: {validated}")
+        self.assertEqual(validated["violations_count"], 0)
 
 
 # ═════════════════════════════════════════════════════════════════════════════

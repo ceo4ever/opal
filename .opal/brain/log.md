@@ -291,3 +291,7 @@
 - 신규: [[pages/concept/platform-parity-mirror-before-design.md]], [[pages/concept/delegation-only-file-gate-bypass.md]], [[pages/concept/existence-check-not-version-check.md]], [[pages/concept/pure-function-enables-nondestructive-verification.md]], [[pages/concept/fail-fast-earliest-legible-point.md]]
 - 출처: task:087
 
+## [2026-08-11] ingest | CLOSE ingest — 태스크 088 클로즈 메모리히스토리 자동연결
+- 신규: [[close-history-auto-link-enforce-conversion]]
+- 출처: task:088
+
