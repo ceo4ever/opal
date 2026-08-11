@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_task_number": 88,
+  "last_task_number": 89,
   "memories": [
     {
       "title": "Console 브레인 구독 인증",
@@ -53,6 +53,13 @@
   ],
   "history": [
     {
+      "title": "089 opi 프로젝트 최신화",
+      "date": "2026-08-11",
+      "stage": "완료·커밋",
+      "path": "docs/, tasks/089-260811-opi-opal/",
+      "result": "docs 3종 실측 정합 64건+신규섹션2. Codex 비가시·없는경로 6지점 해소. 다이어그램 opsdd 정정"
+    },
+    {
       "title": "088 클로즈 메모리히스토리 자동연결",
       "date": "2026-08-11",
       "stage": "완료",
@@ -79,13 +86,6 @@
       "stage": "완료·커밋",
       "path": "tasks/085-260807-opds-릴리즈-체크섬-검증경로-정합/",
       "result": "발행자산≠다운로드자산 결함 3경로 해소. DL-CONTRACT 규약화·RED 26케이스·9칸 실측. ps1 런타임 미검증"
-    },
-    {
-      "title": "084 AS-IS 분석 워크플로우 SSOT",
-      "date": "2026-08-06",
-      "stage": "완료·커밋",
-      "path": "tasks/084-260806-opp-현황분석-워크플로우/",
-      "result": "5단계 워크플로우 신설. 스킬 무신설·상속12/신규9. 읽기전용 수집워커 예외. 폴백5종 무중단"
     }
   ]
 }
