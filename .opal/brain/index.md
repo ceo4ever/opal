@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-08-11 12:57
+> 갱신: 2026-08-13 18:12
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -124,11 +124,13 @@
 - [[long-running-worker-infra-failure-mitigation]] — 장시간 워커 인프라 실패 대응 — 배치분할+모델하향+함수단위저장 #agentic #execute #infra-failure #worker #resilience
 - [[loop-upper-bound-ssot-pattern]] — 루프 상한 SSOT 단일 기재 패턴 — harness 포인터, 수치 복제 금지 #harness #ssot #loop-bound #anti-pattern
 - [[manual-scenario-verbatim-output-evidence]] — M3 수동 시나리오는 출력 원문을 증거로 남긴다 #testing #verification #evidence #manual-scenario
+- [[mark-force-decision-log-scope]] — 강제 처리의 실제 거동 — 사유는 필수지만 의사결정 로그에는 자동 기재되지 않는다 #state-tool #pipeline #decision-log #doc-correction #task-090
 - [[memory-lifecycle-graduation-workflow]] — 메모리 라이프사이클·졸업(promote) 워크플로우 #memory #lifecycle #architecture #promote
 - [[mitigation-recurs-without-ssot-registration]] — 완화책은 SSOT 미등재 시 재발한다 #governance #worker #infra-failure #ssot #resilience
 - [[model-mapping-2layer-override]] — 모델 매핑 2-레이어 오버라이드 (setting.json SSOT + 부트스트랩 step 0 머지) #model #mapping #setting #override #bootstrap
 - [[model-mapping-latest-tracking]] — OPAL 모델 매핑 최신화 + 최신 추종 전략 #model #mapping #gemini #codex #task
 - [[model-mapping-missing-cell-error-policy]] — 모델 매핑 미설정 셀 오류 정책 (폴백 없음 · "default" 폐기) #model #mapping #error #policy #setting
+- [[na-status-contract-agentic-init-only]] — state-tool na 상태의 실제 계약 — 부여 시점은 초기화 하나뿐 #state-tool #pipeline #na-status #task-090
 - [[native-todo-panel-llm-only-hook-boundary]] — 네이티브 todo 패널 LLM 전용 기록 한계 (hook은 트리거·페이로드까지) #opal-pipeline #todo-mirror #hook #platform-constraint #honest-limit
 - [[nojs-flex-rail-over-inline-svg-overlay]] — 자기완결 HTML의 연결선은 레이아웃으로 만든다 — 좌표 측정 오버레이 기각 #html #visual-artifact #design-decision #no-js #responsive
 - [[non-gated-write-path-audit-before-ssot-conversion]] — 비게이트 쓰기 경로는 SSOT 전환 전에 먼저 감사해야 한다 #ssot #tool-gated #migration #architecture #memory
@@ -183,6 +185,8 @@
 - [[owner-honorific-contamination-prevention]] — 산출물 소유자 호칭 오염 차단 원칙 #state-tool #identity #harness #contamination #brain-ingest
 - [[page-type-dynamic-schema]] — 페이지 타입 동적화 — SCHEMA SSOT #architecture #brain #schema #dynamic-type
 - [[parser-drift-silent-longevity-lesson]] — 파서 drift는 조용히 오래 산다 — '회귀 없음' 기준선의 함정 #lesson-learned #parser #drift #dashboard #test-strategy
+- [[phase-name-stage-value-homonym-boundary]] — 프로세스 표시명과 파이프라인 단계값의 동명이의 경계 — 개명 파급 판단 원칙 #pipeline #naming #state-tool #lesson #task-090
+- [[pipeline-json-full-adoption-migration]] — pilot 파이프라인 행 정의 SSOT 전면 단일화 — pipeline.json 10/10 전환 #pipeline #state-tool #ssot #migration #task-090
 - [[pipeline-todo-mirror-hook-enforcement]] — 파이프라인 todo 미러 hook 강제 전환 (prose 지시 → 결정론 트리거) #opal-pipeline #todo-mirror #hook #enforce-not-advise #state-tool
 - [[platform-parity-mirror-before-design]] — 플랫폼 규약 편측 존재 — 새 설계보다 미러링 우선 #install #platform #lesson #mirroring
 - [[pm-conversation-readonly-collection-exception]] — PM(대화) 읽기 전용 수집 워커 예외 — 수집만 나누고 판단은 단일 주체 #pm #dispatch #boundary #task-084
@@ -197,6 +201,7 @@
 - [[red-test-determinism-abort-trap]] — RED 테스트 결정론성 함정 — neverResolve fetch 대역의 abort 무반응 #testing #red-first #determinism #abort #fetch-mock
 - [[regression-only-coverage-gate]] — 회귀만 차단하는 커버리지 게이트 — 레거시 소급 부여는 게이트의 몫이 아니다 #code-scan #gate #close
 - [[release-asset-presence-single-signal]] — 릴리즈 자산 존재 판정 — 체크섬 목록 수신 성공을 단일 신호로 쓴다 #deploy #release #install #checksum #decision
+- [[replacement-goal-verification-scope-gap]] — 교체형 목표의 검증 범위 함정 — 주장의 범위와 검증의 범위를 맞춰야 한다 #lesson #verification #gate-design #scenario-gate #task-090
 - [[rotating-log-correction-over-deletion]] — 회전 로그는 삭제 대신 정정 — FIFO 히스토리 무손실 가드 설계 #memory #fifo #data-integrity #design-pattern
 - [[round-trip-pre-state-assertion-false-green-guard]] — 왕복 검증 사전 상태 단언 — false green 차단 장치 #testing #pattern #task-083
 - [[scenario-gate-pilot-fit-criteria]] — 목표-커버 게이트 pilot 접합 판정 기준 #scenario-gate #pilot-fit #tool-gated #self-confirming #task-075

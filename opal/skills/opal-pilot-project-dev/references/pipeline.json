@@ -1,0 +1,20 @@
+{
+  "spec_version": "1.0",
+  "skill": "oppd",
+  "meta": { "mode_label": "Project Dev", "stages": ["TASK", "PLAN", "WBS", "EXECUTE", "CLOSE"] },
+  "task_steps": [
+    { "id": 1,  "key": "task.task_md",         "stage": "TASK",    "item": "작업" },
+    { "id": 2,  "key": "task.user_confirm",    "stage": "TASK",    "item": "사용자 확인" },
+    { "id": 3,  "key": "plan.prd_trd",         "stage": "PLAN",    "item": "Phase1 PRD/TRD 작성 (opwt)" },
+    { "id": 4,  "key": "plan.spec_validate",   "stage": "PLAN",    "item": "Phase1 명세 검증 (op-spec-validator)" },
+    { "id": 5,  "key": "plan.pm_gate",         "stage": "PLAN",    "item": "PM Gate" },
+    { "id": 6,  "key": "plan.user_confirm",    "stage": "PLAN",    "item": "Phase1 사용자 확정" },
+    { "id": 7,  "key": "wbs.wbs_md",           "stage": "WBS",     "item": "Phase2 WBS 작성" },
+    { "id": 8,  "key": "wbs.pm_gate",          "stage": "WBS",     "item": "PM Gate" },
+    { "id": 9,  "key": "wbs.user_confirm",     "stage": "WBS",     "item": "Phase2 사용자 확정" },
+    { "id": 10, "key": "execute.actions",      "stage": "EXECUTE", "item": "Phase3 액션 실행 (동적 추가)" },
+    { "id": 11, "key": "execute.pm_gate",      "stage": "EXECUTE", "item": "PM Gate" },
+    { "id": 12, "key": "execute.user_confirm", "stage": "EXECUTE", "item": "사용자 확인" },
+    { "id": 13, "key": "close.done_md",        "stage": "CLOSE",   "item": "DONE.md 생성" }
+  ]
+}

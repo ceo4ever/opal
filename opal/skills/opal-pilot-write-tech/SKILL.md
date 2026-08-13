@@ -190,7 +190,7 @@ interview 완료 후 결과를 TASK.md에 다음 섹션 양식으로 기록한�
 - TASK.md 작성 (interview 결과 — 산출물 결정 표 + 외부 참조 산출물 + PRD 입력 컨텍스트 포함)
 - STATE.md 초기화 — state-tool을 호출한다:
   ```
-  ~/.opal/tools/state-tool/run.sh init <task-path> --skill opwt --mode <interactive|semi-agentic|agentic> --rows-from opal/skills/opal-pilot-write-tech/SKILL.md
+  ~/.opal/tools/state-tool/run.sh init <task-path> --skill opwt --mode <interactive|semi-agentic|agentic> --rows-from opal/skills/opal-pilot-write-tech/references/pipeline.json
   ```
 - 행 갱신:
   ```
@@ -425,20 +425,20 @@ QA 최종 판정 Pass 후 태스크를 마감한다.
 - **네트워크 상태**: 산출물 | 유형 | 상태 | 버전 | 경로
 - **배치 계획**: Batch | 문서 | 의존 | 상태
 
-> **[SSOT]** `state-tool init` 호출 시 이 스킬을 `--rows-from` 옵션으로 참조한다:
+> **[SSOT]** SSOT는 `references/pipeline.json`이며, `state-tool init` 호출 시 이를 `--rows-from` 옵션으로 참조한다:
 >
 > ```
-> ~/.opal/tools/state-tool/run.sh init <task-path> --skill opwt --rows-from opal/skills/opal-pilot-write-tech/SKILL.md
+> ~/.opal/tools/state-tool/run.sh init <task-path> --skill opwt --rows-from opal/skills/opal-pilot-write-tech/references/pipeline.json
 > ```
 >
-> opwt는 모드(작성/수정/분석)에 따라 단계 구성이 가변적이다. state-tool은 이 섹션의 `{단계 목록}`을 파싱하여 초기 행을 생성한다. EXECUTE 단계의 배치 행은 PLAN 완료 후 `add-row`로 동적 삽입한다:
+> opwt는 모드(작성/수정/분석)에 따라 단계 구성이 가변적이다. state-tool은 `references/pipeline.json`을 읽어 초기 행을 생성한다. EXECUTE 단계의 배치 행은 PLAN 완료 후 `add-row`로 동적 삽입한다:
 > ```
 > ~/.opal/tools/state-tool/run.sh add-row <task-path> --after <EXECUTE_행N> --stage EXECUTE --item 'Batch N: {문서 목록}'
 > ```
 
-**진행 현황 행 예시** (작성 모드 — `state init --rows-from <SKILL.md>`의 SSOT, LLM이 직접 작성 금지):
+**진행 현황 행 예시** (아래 표는 사람 열람용 미러 — SSOT는 `references/pipeline.json`. `.md` 파싱은 하위호환 폴백으로만 존치, 편집 금지):
 
-> **[MUST] STATE.md 초기 생성**: `~/.opal/tools/state-tool/run.sh init <task-path> --skill opwt --mode <interactive|semi-agentic|agentic> --rows-from <SKILL.md 경로>` 호출.
+> **[MUST] STATE.md 초기 생성**: `~/.opal/tools/state-tool/run.sh init <task-path> --skill opwt --mode <interactive|semi-agentic|agentic> --rows-from opal/skills/opal-pilot-write-tech/references/pipeline.json` 호출.
 
 ```markdown
 | # | 단계 | 항목 | 상태 | 시점 |
@@ -557,3 +557,4 @@ semi-agentic / agentic 모두 CLOSE 첫 행 `--auto-pass` 거부 (`agentic_close
 | v4.5 | 2026-06-24 | CLOSE 단계 op-brain-ingest 디스패치 직전에 "관련 문서 업데이트" 스텝 삽입 — PROJECT.md 레지스트리 + changed_files 종합으로 관련 문서 최신화 후 ingest (없으면 no-op). 후속 항목 번호 재정렬 (042) |
 | v4.6 | 2026-07-10 13:12 | note 예시의 소유자 확인 표기를 `{owner_name} 확인:` 형식으로 통일 — identity.md owner_name 재해석 규칙(AGENT.md §정체성 적용)과 정합, 오염 차단 (054) |
 | v4.7 | 2026-07-17 | CLOSE 단계에 "회고(개선 루프) 하드스텝" 삽입 — op-brain-ingest 직후·완료보고 직전, 궤적 신호→관찰/분류/기록(improve-tool record --scope local\|fw), 개선후보 0건 시 no-op 비차단(brain-ingest 패턴 답습) (058) |
+| v4.8 | 2026-08-13 16:56 | pipeline.json 전환 — references/pipeline.json 신설(10 task-step, SSOT), --rows-from 호출 경로를 SKILL.md에서 pipeline.json으로 교체, 표는 사람 열람용 미러로 명시 (090) |

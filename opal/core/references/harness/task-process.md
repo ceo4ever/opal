@@ -46,7 +46,7 @@
 
    - `--task-title`: STATE.md 1행 제목 (생략 시 task-path 마지막 디렉토리명)
    - `--next-action`: `## 다음 액션` 초기값 (생략 시 `"PLAN 단계 진입"`) — 이후 `advance`/`mark`에서도 파이프라인 프론티어 기준으로 자동 갱신되며, 전이 시 동일 플래그로 1회성 오버라이드 가능하다(072)
-   - 행 구성(`--rows-spec`/`--rows-from`)은 오케스트레이터 SKILL.md "STATE.md 도메인 치환값" 참조
+   - 행 구성의 SSOT는 오케스트레이터 `references/pipeline.json`이며 `--rows-from`으로 지정한다(`--rows-spec`은 인라인 JSON 직접 지정용). SKILL.md 행 표는 사람 열람용 미러이며 `.md` 파싱은 deprecated(090)
 
    근거: `tasks/134-260501-opp-pipeline-state-tool/TASK.md` F-9 / `PLAN.md` §2.11 G-8 / §2.19.1 / §1.5 M-3
 
@@ -85,3 +85,4 @@
 | v1.4 | 2026-06-17 15:50 | `{태스크명}` 기본값을 **한글**로 변경 — 영문 kebab-case·혼용은 소유자 명시 요청 시. 허용→기본 강화 (026 후속 L2: 한글 기본) |
 | v1.5 | 2026-07-23 12:09 | `--next-action` 계약 보강 — advance/mark에서도 파이프라인 프론티어 기준 자동 갱신 + 전이 시 1회성 오버라이드 가능 명시 (072) |
 | v1.6 | 2026-07-28 | 태스크 채번 규칙을 `.opal/MEMORY.md` 헤더 직접 Read+Edit에서 `memory-tool task-number --bump` 도구 호출로 전환 — 동시성 중복 방지 책임을 도구로 이전 (078) |
+| v1.7 | 2026-08-13 16:57 | state-tool 행 원천 지시 정정 — `--rows-from` 서술을 오케스트레이터 `references/pipeline.json` SSOT 기준으로 교체(구형 `.md` 파싱 지시 제거). 10/10 pilot 전환에 맞춘 pilot 밖 정합 (090) |

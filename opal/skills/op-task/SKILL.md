@@ -220,7 +220,7 @@ tasks/{NNN}-{YYMMDD}-{스킬약어}-{태스크명}/TASK.md
 > - `--mode`: 기본값 `semi-agentic`. `--interactive` 또는 `--agentic` 명시 호출 시 해당 모드.
 > - `--task-title`: STATE.md 1행 제목 (생략 시 `<task-path>` 마지막 디렉토리명 — PLAN §2.19.1)
 > - `--next-action`: `## 다음 액션` 초기값 (생략 시 `"PLAN 단계 진입"` — PLAN §2.11 G-8). 이후 `advance`/`mark`가 파이프라인 프론티어에서 자동 파생·갱신하며, 전이 시 동일 플래그로 1회성 오버라이드 가능(태스크 072)
-> - 행 구성(`--rows-spec`/`--rows-from`)은 오케스트레이터 SKILL.md "STATE.md 도메인 치환값" 참조 (PLAN §2.3)
+> - 행 구성의 SSOT는 오케스트레이터 `references/pipeline.json`이며 `--rows-from`으로 지정한다(`--rows-spec`은 인라인 JSON 직접 지정용). SKILL.md 행 표는 사람 열람용 미러이며 `.md` 파싱은 deprecated(090) (PLAN §2.3)
 
 #### 완료 보고 형식
 
@@ -276,3 +276,4 @@ TASK.md 완성 전에 다음을 확인한다:
 | v2.2 | 2026-07-23 12:09 | `--next-action` 계약 보강 — advance/mark가 파이프라인 프론티어에서 자동 파생·갱신하며, 전이 시 1회성 오버라이드 가능함을 명시 (072) |
 | v2.3 | 2026-07-23 13:18 | AC 작성 가이드에 "교체형 목표(구형→신형 전환·대체·마이그레이션) → 잔존0·채택 검증 기준 의무" 규칙 + Bad/Good 예시 1행 추가 — 루브릭 ①목표달성·⑤채택/잔존 축 채점 가능성 보장 (073) |
 | v2.4 | 2026-07-28 | `{NNN}` 채번 서술을 `.opal/MEMORY.md` 헤더 직접 참조에서 `memory-tool task-number --bump` 포인터 참조로 전환 (절차 SSOT: `harness/task-process.md`) (078) |
+| v2.5 | 2026-08-13 16:57 | state-tool 행 원천 지시 정정 — `--rows-from` 서술을 오케스트레이터 `references/pipeline.json` SSOT 기준으로 교체(구형 `.md` 파싱 지시 제거). 10/10 pilot 전환에 맞춘 pilot 밖 정합 (090) |

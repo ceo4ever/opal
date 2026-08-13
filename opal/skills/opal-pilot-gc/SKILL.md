@@ -113,7 +113,7 @@ git ls-files
 태스크 폴더 생성 + STATE.md 초기화:
 
 ```
-~/.opal/tools/state-tool/run.sh init <task-path> --skill opgc --rows-from opal/skills/opal-pilot-gc/SKILL.md
+~/.opal/tools/state-tool/run.sh init <task-path> --skill opgc --rows-from opal/skills/opal-pilot-gc/references/pipeline.json
 ```
 
 ### 1.5 PROJECT.md 프로젝트 구성 기반 분할
@@ -428,15 +428,15 @@ opgc 실행 결과 {N}건 이슈 감지
 | 모드 | GC |
 | 단계 목록 | SCAN / CHECK / REPORT / CLOSE |
 
-> **[SSOT]** `state-tool init` 호출 시 이 섹션의 행 테이블을 `--rows-from` 옵션으로 참조한다:
+> **[SSOT]** SSOT는 `references/pipeline.json`이며, `state-tool init` 호출 시 이를 `--rows-from` 옵션으로 참조한다:
 >
 > ```
-> ~/.opal/tools/state-tool/run.sh init <task-path> --skill opgc --rows-from opal/skills/opal-pilot-gc/SKILL.md
+> ~/.opal/tools/state-tool/run.sh init <task-path> --skill opgc --rows-from opal/skills/opal-pilot-gc/references/pipeline.json
 > ```
 >
-> state-tool이 이 파일의 "파이프라인 현황판 행 구조" 테이블을 읽어 state.json을 초기화한다. 행 데이터를 직접 편집하지 않는다.
+> state-tool이 `references/pipeline.json`을 읽어 state.json을 초기화한다. 아래 표는 사람 열람용 미러이며 행 데이터를 직접 편집하지 않는다.
 
-**파이프라인 현황판 행 구조** (STATE.md 초기 생성 시):
+**파이프라인 현황판 행 구조** (아래 표는 사람 열람용 미러 — SSOT는 `references/pipeline.json`. `.md` 파싱은 하위호환 폴백으로만 존치, 편집 금지):
 
 ```markdown
 | # | 단계 | 항목 | 상태 | 시점 |
@@ -479,7 +479,7 @@ Agentic 모드 특수 규칙:
 - **CLOSE 단계 첫 행(#7)은 `--auto-pass` 금지** (`close_gate_violation` — §2.16 G-13); 반드시 명시 호출
 - init 시 `--mode agentic` 플래그 추가:
   ```
-  ~/.opal/tools/state-tool/run.sh init <task-path> --skill opgc --mode agentic --rows-from opal/skills/opal-pilot-gc/SKILL.md
+  ~/.opal/tools/state-tool/run.sh init <task-path> --skill opgc --mode agentic --rows-from opal/skills/opal-pilot-gc/references/pipeline.json
   ```
 - CLOSE 진입 전 소유자 확인 메시지 표시:
   ```
@@ -538,3 +538,4 @@ fingerprint = sha1(fingerprint_input).hex()[:16]
 | v1.7 | 2026-06-24 | §4.2 CLOSE op-brain-ingest 디스패치 직전에 "관련 문서 업데이트" 단락 삽입 — PROJECT.md 레지스트리 + changed_files 종합으로 관련 문서 최신화 후 ingest (없으면 no-op) (042) |
 | v1.8 | 2026-07-17 | §4.2 CLOSE op-brain-ingest 직후에 "회고(개선 루프) 하드스텝" 삽입 — 궤적 신호→관찰/분류/기록(improve-tool record --scope local\|fw), 개선후보 0건 시 no-op 비차단(brain-ingest 패턴 답습) (058) |
 | v1.9 | 2026-07-28 | `NNN` 채번 서술을 `.opal/MEMORY.md` 헤더 직접 참조에서 `memory-tool task-number --bump` 포인터 참조로 전환 (절차 SSOT: `harness/task-process.md`) (078) |
+| v1.10 | 2026-08-13 16:56 | pipeline.json 전환 — references/pipeline.json 신설(7 task-step, SSOT), --rows-from 호출 경로를 SKILL.md에서 pipeline.json으로 교체, 표는 사람 열람용 미러로 명시 (090) |

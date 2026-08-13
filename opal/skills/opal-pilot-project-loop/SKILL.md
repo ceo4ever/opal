@@ -123,14 +123,14 @@ tasks/{NNN}-oppl-{프로젝트명}/
 state-tool을 호출하여 초기화한다:
 
 ```
-~/.opal/tools/state-tool/run.sh init <task-path> --skill oppl --mode <interactive|semi-agentic|agentic> --rows-from opal/skills/opal-pilot-project-loop/SKILL.md
+~/.opal/tools/state-tool/run.sh init <task-path> --skill oppl --mode <interactive|semi-agentic|agentic> --rows-from opal/skills/opal-pilot-project-loop/references/pipeline.json
 ```
 
-> state-tool의 `--skill` choices·schema enum에 `oppl`이 등록되어 있다(F-003). `state-tool`이 아래 SSOT 표를 읽어 state.json을 초기화한다. 행 데이터를 직접 편집하지 않는다.
+> state-tool의 `--skill` choices·schema enum에 `oppl`이 등록되어 있다(F-003). `state-tool`이 `references/pipeline.json`을 읽어 state.json을 초기화한다. 아래 표는 사람 열람용 미러다.
 
-**[R-10 비표준 행 구성]** oppl은 Loop 기반 비표준 행 구조를 사용한다 — Loop 1(D1~D7)은 고정 행, Loop 2(태스크 파이프라인)는 `[R-13]` 동적 `add-row`로 태스크 행을 삽입한다. `gate-pass`는 deprecated — PM Gate/사용자 확인은 `mark` 개별 호출로 처리한다.
+**[R-10 비표준 행 구성]** oppl은 Loop 기반 비표준 행 구조를 사용한다 — Loop 1(D1~D7)은 고정 행, Loop 2(태스크 파이프라인)는 `[R-13]` 동적 `add-row`로 태스크 행을 삽입한다. `gate-pass`는 deprecated — PM Gate/사용자 확인은 `mark` 개별 호출로 처리한다. 행 SSOT는 `references/pipeline.json`이다.
 
-**파이프라인 현황판** (`--rows-from` SSOT 표 — 이 표를 직접 편집하지 않는다):
+**파이프라인 현황판** (아래 표는 사람 열람용 미러 — SSOT는 `references/pipeline.json`. `.md` 파싱은 하위호환 폴백으로만 존치, 편집 금지):
 
 > 상태값: ⬜ 대기 / 🔄 진행 중 / ✅ 완료 / ❌ 실패 / - 해당 없음
 
@@ -439,7 +439,7 @@ opal-harness-agentic.md / opal-harness-semi-agentic.md 참조. 본 절은 이 �
 ### 활성화
 
 ```
-~/.opal/tools/state-tool/run.sh init <task-path> --skill oppl --mode <interactive|semi-agentic|agentic> --rows-from opal/skills/opal-pilot-project-loop/SKILL.md
+~/.opal/tools/state-tool/run.sh init <task-path> --skill oppl --mode <interactive|semi-agentic|agentic> --rows-from opal/skills/opal-pilot-project-loop/references/pipeline.json
 ```
 
 ### 자율 게이트 흐름 (semi-agentic)
@@ -602,3 +602,4 @@ Loop 1 재회전 {N}회 · Loop 2 태스크 {M}개 완주.
 | v1.6 | 2026-07-17 KST | 진행 현황 모니터링 안내에 스킬 발동 `//opas [태스크폴더]`(opal-action-status) 1줄 추가 — 자동 탐지 + 해석 보고(읽기 전용) (068) |
 | v1.7 | 2026-07-18 22:46 KST | D4에 surfaces.json(표면 전수·auth·인증표면 등재)+origins 선언 요구 추가(contract.md §2.2.1 참조 위임) / D5에 실행 스켈레톤 P0 태스크 의무(구성 4항)+`add-task --covers` 안내 추가 / D7 진입 전 `coverage-check` 게이트 호출 의무화 / L✓ 종료 판정을 `done-check.all_done` ∧ `scenario-conformance.all_surfaces_green` ∧ 회귀 0 3중 AND로 확장(user-facing 여정 스모크 포함) + T4a에 `scenario-fidelity-check` 통과 요건 1줄 / 병렬 실행 절 "통합 태스크 필수"를 `coverage-check`(`integration_task_missing`) 게이트와 연결 / 검증 2원화 절에 충실도 규범 참조(`verification.md` §1.5) 추가 (069) |
 | v1.8 | 2026-07-28 22:47 KST | 프로젝트 메모리 동기화 절 정정(기존 결함 교정, memory-tool 도입(045) 이전 관행의 표 편집 서술 잔존분) — `MEMORY.json` + `append --kind history` 도구 호출로 교체, 직접 편집 금지 명시 (078) |
+| v1.9 | 2026-08-13 16:57 KST | pipeline.json 전환 + init 하드 실패 해소 — references/pipeline.json 신설(19 task-step, SSOT), --rows-from를 pipeline.json으로 교체하여 기존 skill_md_parse_error(header not found) 해소, 표는 사람 열람용 미러로 명시(헤더·표 헤더 개명 없음) (090) |

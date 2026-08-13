@@ -333,22 +333,22 @@ ACT 완료마다 state-tool을 호출하여 STATE.md를 갱신한다 (R-10: gate
 | 산출물 목록 | TASK.md, SPEC.md, TEST-SCENARIOS.md, SPEC-PLAN.md, actions/ACT-{N}/, DONE.md |
 | 태스크 경로 | tasks/{NNN}-{feature}/ |
 
-> **[SSOT]** `state-tool init` 호출 시 이 섹션의 파이프라인 현황판 행 테이블을 `--rows-from` 옵션으로 참조한다:
+> **[SSOT]** SSOT는 `references/pipeline.json`이며, `state-tool init` 호출 시 이를 `--rows-from` 옵션으로 참조한다:
 >
 > ```
-> ~/.opal/tools/state-tool/run.sh init <task-path> --skill opsdd --rows-from opal/skills/opal-pilot-sdd/SKILL.md
+> ~/.opal/tools/state-tool/run.sh init <task-path> --skill opsdd --rows-from opal/skills/opal-pilot-sdd/references/pipeline.json
 > ```
 >
-> state-tool이 이 파일의 "파이프라인 현황판" 테이블(25행)을 읽어 state.json을 초기화한다. 행 데이터를 직접 편집하지 않는다.
+> state-tool이 `references/pipeline.json`을 읽어 state.json을 초기화한다. 행 데이터를 직접 편집하지 않는다.
 >
-> **[R-10 비표준 행 구성]** opsdd는 25행 + ACT 동적 행 비표준 구조를 사용한다(State Gate 행 제거 후). `gate-pass`는 deprecated(014) — `mark` 개별 호출 필수.
+> **[R-10 비표준 행 구성]** 행 SSOT는 `references/pipeline.json`이다. opsdd는 25행 + ACT 동적 행 비표준 구조를 사용한다(State Gate 행 제거 후). `gate-pass`는 deprecated(014) — `mark` 개별 호출 필수.
 >
 > **[R-13 ACT 동적 행]** `--rows-acts` 옵션은 미구현. EXECUTE Phase 진입 후 `add-row`로 ACT 행을 수동 삽입한다 (EXECUTE ACT 실행 행 = #18):
 > ```
 > ~/.opal/tools/state-tool/run.sh add-row <task-path> --after 18 --stage EXECUTE --item 'ACT-001: {이름}'
 > ```
 
-**파이프라인 현황판** (`--rows-from` SSOT 표 — 이 표를 직접 편집하지 않는다):
+**파이프라인 현황판** (아래 표는 사람 열람용 미러 — SSOT는 `references/pipeline.json`. `.md` 파싱은 하위호환 폴백으로만 존치, 편집 금지):
 
 > 상태값: ⬜ 대기 / 🔄 진행 중 / ✅ 완료 / ❌ 실패 / - 해당 없음
 > **수행 원칙**: 위에서 아래로 순서대로 처리한다. 현재 행이 ✅가 아니면 다음 행으로 진행 불가.
@@ -444,7 +444,7 @@ opal-harness-agentic.md / opal-harness-semi-agentic.md 참조. 본 절은 이 �
 STATE.md 모드 필드를 지정하여 기록한다 (기본: `semi-agentic`):
 
 ```
-~/.opal/tools/state-tool/run.sh init <task-path> --skill opsdd --mode <interactive|semi-agentic|agentic> --rows-from opal/skills/opal-pilot-sdd/SKILL.md
+~/.opal/tools/state-tool/run.sh init <task-path> --skill opsdd --mode <interactive|semi-agentic|agentic> --rows-from opal/skills/opal-pilot-sdd/references/pipeline.json
 ```
 
 ### 자율 게이트 흐름 (semi-agentic)
@@ -542,3 +542,4 @@ opal-harness-agentic.md §6 공통 기준에 추가:
 | v3.5.1 | 2026-06-24 | Phase 6 CLOSE op-brain-ingest 디스패치 직전에 "관련 문서 업데이트" 스텝 삽입 — PROJECT.md 레지스트리 + changed_files 종합으로 관련 문서 최신화 후 ingest (없으면 no-op). 후속 항목 번호 재정렬 (042) |
 | v3.5.2 | 2026-07-10 13:12 | note 예시의 소유자 확인 표기를 `{owner_name} 확인:` 형식으로 통일 — identity.md owner_name 재해석 규칙(AGENT.md §정체성 적용)과 정합, 오염 차단 (054) |
 | v3.6.0 | 2026-07-23 | Phase 2 REVIEW 목표-커버 게이트 배선 — 행 10 "FR↔TS 커버리지 확인"을 "커버리지 게이트(scenario-coverage-check)"로 교체 + 행 11 "목표-커버 게이트(op-scenario-gate evaluator)" 신설, 이후 행 전부 +1(24→25행). REVIEW 흐름 3→4단계 재작성(구조 검증 → TEST-SCENARIOS.md 작성 → 목표-커버 게이트 → PM Gate/사용자 Gate) — 독립 evaluator 디스패치로 self-confirming 해소(PRINCIPLES §15). 6단계 요약 REVIEW 행 갱신. `--row N`/`#N`/`--after N` 본문 리터럴 전수 재정렬(rows≥11 +1, 070 pipeline.json 전환은 범위 밖) (075) |
+| v3.7.0 | 2026-08-13 16:58 | pipeline.json 전환 — references/pipeline.json 신설(25 task-step, SSOT), --rows-from 호출 경로를 SKILL.md에서 pipeline.json으로 교체, 표는 사람 열람용 미러로 명시. meta.stages는 stage 값 EXECUTE 사용(산문의 Phase 4 명칭 표기는 불변) (090) |

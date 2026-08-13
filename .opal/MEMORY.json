@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_task_number": 89,
+  "last_task_number": 90,
   "memories": [
     {
       "title": "Console 브레인 구독 인증",
@@ -53,6 +53,13 @@
   ],
   "history": [
     {
+      "title": "090 파이프라인 스펙 마이그레이션",
+      "date": "2026-08-13",
+      "stage": "완료",
+      "path": "tasks/090-260813-opds-파이프라인-스펙-마이그레이션/",
+      "result": "미전환 6 pilot(opdd·opgc·opwt·opsdd·oppl·oppd) pipeline.json 이관 — 10/10 단일 SSOT 달성, deprecated .md 파싱 호출자 0건. 전후 동등 8/8·spec-validate 10/10·registry 파생 10/10. oppl·oppd init 하드실패 해소(19/13). opsdd EXECUTE-LOOP 17 불변. TEST 18 Pass, S-17만 캡틴 대기"
+    },
+    {
       "title": "089 opi 프로젝트 최신화",
       "date": "2026-08-11",
       "stage": "완료·커밋",
@@ -79,13 +86,6 @@
       "stage": "완료·커밋",
       "path": "tasks/086-260810-opp-아키텍처-다이어그램-재작성/",
       "result": "지식자산 L3 승격+환류루프 시각화, 사실 11건 교정. 세로쓰기 회전 결함=grep 미검출"
-    },
-    {
-      "title": "085 릴리즈 체크섬 검증경로 정합",
-      "date": "2026-08-07",
-      "stage": "완료·커밋",
-      "path": "tasks/085-260807-opds-릴리즈-체크섬-검증경로-정합/",
-      "result": "발행자산≠다운로드자산 결함 3경로 해소. DL-CONTRACT 규약화·RED 26케이스·9칸 실측. ps1 런타임 미검증"
     }
   ]
 }

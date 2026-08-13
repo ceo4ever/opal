@@ -295,3 +295,7 @@
 - 신규: [[close-history-auto-link-enforce-conversion]]
 - 출처: task:088
 
+## [2026-08-13] ingest | CLOSE ingest — 태스크 090 미전환 6 pilot 파이프라인 스펙 마이그레이션
+- 신규: [[pipeline-json-full-adoption-migration]], [[phase-name-stage-value-homonym-boundary]], [[na-status-contract-agentic-init-only]], [[mark-force-decision-log-scope]], [[replacement-goal-verification-scope-gap]]
+- 출처: task:090
+

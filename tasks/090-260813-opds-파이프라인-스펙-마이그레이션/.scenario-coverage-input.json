@@ -1,0 +1,327 @@
+{
+  "goal": "미전환 6 pilot(opdd·opgc·opwt·oppl·oppd·opsdd)의 파이프라인 행 구성을 references/pipeline.json으로 이관해 10/10 pilot이 단일 파싱 경로를 쓰게 하고, oppl·oppd의 init 하드 실패를 해소하며, registry pipeline 필드 드리프트를 정합화한다",
+  "requirements": [
+    "R-1",
+    "R-2",
+    "R-3",
+    "R-4",
+    "R-5",
+    "R-6",
+    "R-7",
+    "R-8",
+    "R-9"
+  ],
+  "features": [
+    "F-001",
+    "F-003",
+    "F-004",
+    "F-005",
+    "F-006",
+    "F-007",
+    "F-008"
+  ],
+  "hypotheses": [
+    "H-1",
+    "H-2",
+    "H-3",
+    "H-4",
+    "H-5",
+    "H-6",
+    "H-7",
+    "H-8",
+    "H-9",
+    "H-10",
+    "H-11",
+    "H-12",
+    "H-13",
+    "H-14",
+    "H-15",
+    "H-16",
+    "H-17",
+    "H-18"
+  ],
+  "scenarios": [
+    {
+      "id": "S-1",
+      "covers_requirements": [
+        "R-1",
+        "R-5"
+      ],
+      "covers_features": [
+        "F-001",
+        "F-005"
+      ],
+      "covers_hypotheses": [
+        "H-1"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-2",
+      "covers_requirements": [
+        "R-1"
+      ],
+      "covers_features": [
+        "F-001"
+      ],
+      "covers_hypotheses": [
+        "H-2"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-3",
+      "covers_requirements": [
+        "R-7"
+      ],
+      "covers_features": [
+        "F-006"
+      ],
+      "covers_hypotheses": [
+        "H-3"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": true
+    },
+    {
+      "id": "S-4",
+      "covers_requirements": [
+        "R-1",
+        "R-6"
+      ],
+      "covers_features": [
+        "F-001",
+        "F-005"
+      ],
+      "covers_hypotheses": [
+        "H-4",
+        "H-9",
+        "H-10"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-5",
+      "covers_requirements": [
+        "R-1",
+        "R-5"
+      ],
+      "covers_features": [
+        "F-001"
+      ],
+      "covers_hypotheses": [
+        "H-5",
+        "H-6"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-6",
+      "covers_requirements": [
+        "R-1"
+      ],
+      "covers_features": [
+        "F-001"
+      ],
+      "covers_hypotheses": [
+        "H-7"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-7",
+      "covers_requirements": [
+        "R-3"
+      ],
+      "covers_features": [
+        "F-003"
+      ],
+      "covers_hypotheses": [
+        "H-8"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-8",
+      "covers_requirements": [
+        "R-1"
+      ],
+      "covers_features": [
+        "F-001"
+      ],
+      "covers_hypotheses": [
+        "H-2",
+        "H-11"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-9",
+      "covers_requirements": [
+        "R-4"
+      ],
+      "covers_features": [
+        "F-004"
+      ],
+      "covers_hypotheses": [
+        "H-12"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-10",
+      "covers_requirements": [
+        "R-2",
+        "R-5",
+        "R-9"
+      ],
+      "covers_features": [
+        "F-003",
+        "F-005",
+        "F-008"
+      ],
+      "covers_hypotheses": [
+        "H-13",
+        "H-18"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": true,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-11",
+      "covers_requirements": [],
+      "covers_features": [
+        "F-001",
+        "F-003"
+      ],
+      "covers_hypotheses": [
+        "H-15"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": true
+    },
+    {
+      "id": "S-12",
+      "covers_requirements": [],
+      "covers_features": [
+        "F-003"
+      ],
+      "covers_hypotheses": [
+        "H-16"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": true
+    },
+    {
+      "id": "S-13",
+      "covers_requirements": [
+        "R-5"
+      ],
+      "covers_features": [
+        "F-005"
+      ],
+      "covers_hypotheses": [
+        "H-1"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": true,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-14",
+      "covers_requirements": [
+        "R-8"
+      ],
+      "covers_features": [
+        "F-007"
+      ],
+      "covers_hypotheses": [
+        "H-5"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-15",
+      "covers_requirements": [
+        "R-5"
+      ],
+      "covers_features": [
+        "F-005"
+      ],
+      "covers_hypotheses": [
+        "H-14"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": true
+    },
+    {
+      "id": "S-16",
+      "covers_requirements": [],
+      "covers_features": [
+        "F-001"
+      ],
+      "covers_hypotheses": [
+        "H-17"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": true
+    },
+    {
+      "id": "S-17",
+      "covers_requirements": [
+        "R-5",
+        "R-8"
+      ],
+      "covers_features": [
+        "F-005",
+        "F-007"
+      ],
+      "covers_hypotheses": [
+        "H-1",
+        "H-5"
+      ],
+      "is_goal_scenario": true,
+      "is_adoption_scenario": true,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-18",
+      "covers_requirements": [
+        "R-9"
+      ],
+      "covers_features": [
+        "F-008"
+      ],
+      "covers_hypotheses": [
+        "H-18"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": true,
+      "is_boundary_scenario": true
+    }
+  ]
+}

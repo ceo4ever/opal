@@ -226,6 +226,7 @@ OPAL 본체(스킬·에이전트·도구·하네스)를 작성할 때 따라야 
 - 파이프라인 STATE.md 행 상태(⬜/🔄/✅) 변경은 `~/.opal/tools/state-tool/run.sh`로만 수행한다. 마크다운 표 직접 편집 금지.
 - 단계 진입/완료/차단/추가작업 행 삽입 모두 state-tool 서브 명령(`init`/`advance`/`mark`/`block`/`add-row`/`spec-validate` 등)으로 처리한다.
 - 행 주소는 `--task-step <key>`(예: `plan.pm_gate`) 우선 사용, `--task-step-id <N>`은 숫자 폴백 — `--row`는 deprecated 별칭(신규 문서·프롬프트에 사용 금지). key 정의는 pilot `references/pipeline.json`이 SSOT.
+- `state-tool init --rows-from`은 pilot `references/pipeline.json`을 지정한다. SKILL.md 마크다운 파싱(`build_rows_from_skill_md`)은 deprecated이며 신규 지시에 사용 금지 — **10/10 pilot 전환 완료(090)**.
 - 근거: `opal/core/references/opal-harness.md` §3 State
 
 ### 도구 우선 원칙
@@ -268,3 +269,4 @@ OPAL 본체(스킬·에이전트·도구·하네스)를 작성할 때 따라야 
 | 버전 | 일시 | 변경내용 |
 |------|------|---------|
 | v1.1.0 | 2026-08-11 13:26 | 실측 대조 기반 전면 최신화 — 태스크 폴더·에이전트 경로 네이밍 정정, 에이전트 15종·alias 27종·도구 18종 인벤토리 반영, 브랜치·커밋·State·배포 경계를 현행 관행에 정합, 변경이력 절 신설 (089) |
+| v1.2.0 | 2026-08-13 17:19 | §State 관리에 행 원천 규칙 1줄 추가 — `init --rows-from`은 pilot `references/pipeline.json`을 지정하며 SKILL.md 마크다운 파싱(`build_rows_from_skill_md`)은 deprecated·신규 지시 사용 금지. 미전환 6 pilot(opdd·opgc·opwt·opsdd·oppl·oppd) 이관으로 10/10 전환 완료, deprecated 경로 호출자 0건 (090) |

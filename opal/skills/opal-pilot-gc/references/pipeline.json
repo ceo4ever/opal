@@ -1,0 +1,14 @@
+{
+  "spec_version": "1.0",
+  "skill": "opgc",
+  "meta": { "mode_label": "GC", "stages": ["SCAN", "CHECK", "REPORT", "CLOSE"] },
+  "task_steps": [
+    { "id": 1, "key": "scan.select_targets",       "stage": "SCAN",   "item": "대상 파일 선별 + 스택 감지 + 프로젝트 구성 파싱" },
+    { "id": 2, "key": "check.dispatch_agents",     "stage": "CHECK",  "item": "에이전트 (요소×체커) 병렬 디스패치" },
+    { "id": 3, "key": "check.await_agents",        "stage": "CHECK",  "item": "에이전트 완료 확인" },
+    { "id": 4, "key": "report.security_report",    "stage": "REPORT", "item": "GC-SECURITY-{ts}[-{element}].md 생성" },
+    { "id": 5, "key": "report.convention_report",  "stage": "REPORT", "item": "GC-CONVENTION-{ts}[-{element}].md 생성" },
+    { "id": 6, "key": "report.summary_table",      "stage": "REPORT", "item": "실행 요약 테이블 갱신" },
+    { "id": 7, "key": "close.done_md",             "stage": "CLOSE",  "item": "DONE.md 생성" }
+  ]
+}

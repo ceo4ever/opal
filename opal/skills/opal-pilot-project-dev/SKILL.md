@@ -112,10 +112,28 @@ tasks/{NNN}-oppd-{프로젝트명}/
 state-tool을 호출하여 초기화한다:
 
 ```
-~/.opal/tools/state-tool/run.sh init <task-path> --skill oppd --mode <interactive|semi-agentic|agentic> --rows-from opal/skills/opal-pilot-project-dev/SKILL.md
+~/.opal/tools/state-tool/run.sh init <task-path> --skill oppd --mode <interactive|semi-agentic|agentic> --rows-from opal/skills/opal-pilot-project-dev/references/pipeline.json
 ```
 
-> **[R-10 비표준 행 구성]** oppd는 Phase 기반(1-PLAN/2-WBS/3-EXECUTE) 비표준 행 구조를 사용한다. `gate-pass` 명령은 deprecated — 사용 불가. State Gate/QA Gate 행은 존재하지 않으며(state-tool stage-transition guard로 이전), PM Gate 단일 mark만 사용한다.
+**진행 현황 행 예시** (아래 표는 사람 열람용 미러 — SSOT는 `references/pipeline.json`. `.md` 파싱은 하위호환 폴백으로만 존치, 편집 금지):
+
+| # | 단계 | 항목 | 상태 | 시점 |
+|---|------|------|------|------|
+| 1 | TASK | 작업 | ⬜ | - |
+| 2 | TASK | 사용자 확인 | ⬜ | - |
+| 3 | PLAN | Phase1 PRD/TRD 작성 (opwt) | ⬜ | - |
+| 4 | PLAN | Phase1 명세 검증 (op-spec-validator) | ⬜ | - |
+| 5 | PLAN | PM Gate | ⬜ | - |
+| 6 | PLAN | Phase1 사용자 확정 | ⬜ | - |
+| 7 | WBS | Phase2 WBS 작성 | ⬜ | - |
+| 8 | WBS | PM Gate | ⬜ | - |
+| 9 | WBS | Phase2 사용자 확정 | ⬜ | - |
+| 10 | EXECUTE | Phase3 액션 실행 (동적 추가) | ⬜ | - |
+| 11 | EXECUTE | PM Gate | ⬜ | - |
+| 12 | EXECUTE | 사용자 확인 | ⬜ | - |
+| 13 | CLOSE | DONE.md 생성 | ⬜ | - |
+
+> **[R-10 비표준 행 구성]** oppd는 Phase 기반(1-PLAN/2-WBS/3-EXECUTE) 비표준 행 구조를 사용한다. `gate-pass` 명령은 deprecated — 사용 불가. State Gate/QA Gate 행은 존재하지 않으며(state-tool stage-transition guard로 이전), PM Gate 단일 mark만 사용한다. PM Gate 단일 mark 규정은 Phase별 PM Gate 행(id 5·8·11)과 정합한다.
 >
 > 각 Gate 전환 시 PM Gate 행만 mark한다:
 > ```
@@ -150,7 +168,7 @@ state-tool을 호출하여 초기화한다:
 
 | 플래그 | 설명 |
 |--------|------|
-| `--wbs` | Phase 1(PRD/TRD) + Phase 2(WBS) 완료 후 파이프라인 종료. Phase 3 액션 실행을 건너뛴다. WBS 산출물만 확정하고 종료할 때 사용. `--agentic`과 조합 가능 (`//oppd --wbs --agentic`). |
+| `--wbs` | Phase 1(PRD/TRD) + Phase 2(WBS) 완료 후 파이프라인 종료. Phase 3 액션 실행을 건너뛴다. WBS 산출물만 확정하고 종료할 때 사용. `--agentic`과 조합 가능 (`//oppd --wbs --agentic`). 이 경로에서는 EXECUTE 행(id 10~12)이 미완으로 남는다. CLOSE 행(id 13)은 `mark --task-step close.done_md --done --force --note "oppd --wbs: Phase 3 미실행"`으로 진행한다 — `--force`가 단계 건너뛰기 가드를 통과시키며 `--note`는 필수다(미제공 시 `note_required_for_force` 거부). 사유는 `state.json` 해당 행 `note` 필드에 기록된다(STATE.md 의사결정 로그 표 자동 기재는 `--auto-pass`·`--as-worker --force` 전용이라 이 경로는 대상이 아니다). (조건부 행 자동 `na` 처리는 미구현이며 후속 과제다 — `na`는 현재 `init` 시점 agentic 사용자 확인 행에만 부여된다.) |
 | `--agentic` | 전 Phase 사용자 게이트를 PM이 대행. opal-harness-agentic.md 참조. |
 
 ---
@@ -816,3 +834,4 @@ opal-harness-agentic.md "에스컬레이션 조건" 공통 기준에 추가:
 | v5.0 | 2026-07-17 | §561-566 "PM 검수 → 학습 루프 연결" 명명 정리 — "학습 루프" → "개선 루프" + SSOT 지칭 추가(`harness/pm-improvement-loop.md`) (058) |
 | v5.1 | 2026-07-17 | DONE.md 생성 직후 op-brain-ingest 디스패치 다음에 "회고(개선 루프) 하드스텝" 삽입 — 궤적 신호→관찰/분류/기록(improve-tool record --scope local\|fw), 개선후보 0건 시 no-op 비차단(brain-ingest 패턴 답습) (058) |
 | v5.2 | 2026-07-28 22:47 | 프로젝트 메모리 동기화 절 정정(기존 결함 교정, memory-tool 도입(045) 이전 관행의 표 편집 서술 잔존분) — `MEMORY.json` + `append --kind history` 도구 호출로 교체, 직접 편집 금지 명시 (078) |
+| v5.3 | 2026-08-13 16:56 | pipeline.json 전환 + init 하드 실패 해소 — references/pipeline.json 신설(13 task-step, SSOT), 파이프라인 현황판 미러 표 13행 신설, --rows-from를 pipeline.json으로 교체하여 기존 skill_md_parse_error(header not found) 해소. `--wbs` 경로 서술을 실동작(`--force --note`) 기준으로 정정 — `mark --na`는 CLI에 미구현이며 TEST S-16에서 검출 (090) |

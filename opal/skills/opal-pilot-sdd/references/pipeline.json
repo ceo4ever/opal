@@ -1,0 +1,32 @@
+{
+  "spec_version": "1.0",
+  "skill": "opsdd",
+  "meta": { "mode_label": "SDD Task", "stages": ["TASK", "SPEC", "REVIEW", "DESIGN", "EXECUTE", "VERIFY", "CLOSE"] },
+  "task_steps": [
+    { "id": 1,  "key": "task.task_md",                 "stage": "TASK",    "item": "TASK.md 작성" },
+    { "id": 2,  "key": "task.state_md",                "stage": "TASK",    "item": "STATE.md 생성" },
+    { "id": 3,  "key": "task.user_confirm",             "stage": "TASK",    "item": "사용자 확인" },
+    { "id": 4,  "key": "spec.dispatch_worker",          "stage": "SPEC",    "item": "워커 디스패치" },
+    { "id": 5,  "key": "spec.spec_md",                  "stage": "SPEC",    "item": "SPEC.md 생성" },
+    { "id": 6,  "key": "spec.pm_gate",                  "stage": "SPEC",    "item": "PM Gate" },
+    { "id": 7,  "key": "spec.user_confirm",             "stage": "SPEC",    "item": "사용자 확인" },
+    { "id": 8,  "key": "review.structure_check",        "stage": "REVIEW",  "item": "구조 검증 (S-1~S-6)" },
+    { "id": 9,  "key": "review.test_scenarios_md",      "stage": "REVIEW",  "item": "TEST-SCENARIOS.md 작성" },
+    { "id": 10, "key": "review.coverage_gate",          "stage": "REVIEW",  "item": "커버리지 게이트 (scenario-coverage-check)" },
+    { "id": 11, "key": "review.scenario_gate",          "stage": "REVIEW",  "item": "목표-커버 게이트 (op-scenario-gate evaluator)" },
+    { "id": 12, "key": "review.pm_gate",                "stage": "REVIEW",  "item": "PM Gate" },
+    { "id": 13, "key": "review.user_confirm",           "stage": "REVIEW",  "item": "사용자 확인" },
+    { "id": 14, "key": "design.dispatch_worker",        "stage": "DESIGN",  "item": "워커 디스패치" },
+    { "id": 15, "key": "design.spec_plan_md",           "stage": "DESIGN",  "item": "SPEC-PLAN.md 생성" },
+    { "id": 16, "key": "design.pm_gate",                "stage": "DESIGN",  "item": "PM Gate" },
+    { "id": 17, "key": "design.user_confirm",           "stage": "DESIGN",  "item": "사용자 확인" },
+    { "id": 18, "key": "execute.act_run",               "stage": "EXECUTE", "item": "ACT 실행 (상세: ACT 목록 참조)" },
+    { "id": 19, "key": "execute.pm_gate",                "stage": "EXECUTE", "item": "PM Gate" },
+    { "id": 20, "key": "execute.user_confirm",           "stage": "EXECUTE", "item": "사용자 확인" },
+    { "id": 21, "key": "verify.e2e_tests",               "stage": "VERIFY",  "item": "E2E 테스트 수행" },
+    { "id": 22, "key": "verify.ts_green",                "stage": "VERIFY",  "item": "TS 전체 Green 확인" },
+    { "id": 23, "key": "verify.pm_gate",                 "stage": "VERIFY",  "item": "PM Gate" },
+    { "id": 24, "key": "verify.user_confirm",            "stage": "VERIFY",  "item": "사용자 확인" },
+    { "id": 25, "key": "close.done_md",                  "stage": "CLOSE",   "item": "DONE.md 생성" }
+  ]
+}

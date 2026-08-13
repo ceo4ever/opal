@@ -1,7 +1,7 @@
 {
   "$schema": "opal-skills-registry-v1",
-  "version": "3.9.0",
-  "updated_at": "2026-07-17",
+  "version": "3.10.0",
+  "updated_at": "2026-08-13",
   "groups": {
     "opal-pilot": [
       {
@@ -18,7 +18,7 @@
           "~/.opal/skills/opal-pilot-project/SKILL.md"
         ],
         "domain": "generic",
-        "pipeline": "TASK → PLAN → EXECUTE"
+        "pipeline": "TASK → PLAN → EXECUTE → CLOSE"
       },
       {
         "name": "opal-pilot-dev",
@@ -34,7 +34,7 @@
           "~/.opal/skills/opal-pilot-dev/SKILL.md"
         ],
         "domain": "dev",
-        "pipeline": "TASK → ANALYSIS → PLAN+TEST-SCENARIO → EXECUTE"
+        "pipeline": "TASK → ANALYSIS → PLAN → TEST-SCENARIO → EXECUTE → TEST → CLOSE"
       },
       {
         "name": "opal-pilot-dev-short",
@@ -49,7 +49,7 @@
           "~/.opal/skills/opal-pilot-dev-short/SKILL.md"
         ],
         "domain": "dev",
-        "pipeline": "TASK → PLAN+TEST-SCENARIO → EXECUTE"
+        "pipeline": "TASK → PLAN → EXECUTE → TEST → CLOSE"
       },
       {
         "name": "opal-pilot-dev-wireframe",
@@ -64,7 +64,7 @@
           "~/.opal/skills/opal-pilot-dev-wireframe/SKILL.md"
         ],
         "domain": "dev",
-        "pipeline": "TASK → WIREFRAME → EXECUTE"
+        "pipeline": "TASK → WIREFRAME → EXECUTE → CLOSE"
       },
       {
         "name": "opal-pilot-write-tech",
@@ -80,7 +80,7 @@
           "~/.opal/skills/opal-pilot-write-tech/SKILL.md"
         ],
         "domain": "write-tech",
-        "pipeline": "Phase 1~4 (병렬 분석 → PM 진단 → 병렬 작성 → 정합성 검증)"
+        "pipeline": "TASK → PLAN → EXECUTE → QA → CLOSE"
       },
       {
         "name": "opal-pilot-sdd",
@@ -96,7 +96,7 @@
           "~/.opal/skills/opal-pilot-sdd/SKILL.md"
         ],
         "domain": "sdd",
-        "pipeline": "SPEC → VERIFY → PLAN → TASKS → VERIFY → LOOP → DONE"
+        "pipeline": "TASK → SPEC → REVIEW → DESIGN → EXECUTE → VERIFY → CLOSE"
       },
       {
         "name": "opal-pilot-gc",
@@ -113,7 +113,7 @@
           "~/.opal/skills/opal-pilot-gc/SKILL.md"
         ],
         "domain": "quality",
-        "pipeline": "SCAN → CHECK → REPORT → APPLY → CLOSE"
+        "pipeline": "SCAN → CHECK → REPORT → CLOSE"
       },
       {
         "name": "opal-pilot-data-design",
@@ -143,7 +143,9 @@
         "paths": [
           "{project}/.opal/skills/opal-pilot-project-dev/SKILL.md",
           "~/.opal/skills/opal-pilot-project-dev/SKILL.md"
-        ]
+        ],
+        "domain": "dev",
+        "pipeline": "TASK → PLAN → WBS → EXECUTE → CLOSE"
       },
       {
         "name": "opal-pilot-project-loop",
@@ -159,7 +161,7 @@
           "~/.opal/skills/opal-pilot-project-loop/SKILL.md"
         ],
         "domain": "dev",
-        "pipeline": "설계 루프(인터뷰→PRD→TRD→CONTRACT→BACKLOG) → 실행 루프(태스크 반복)"
+        "pipeline": "TASK → ANALYSIS → PLAN → WBS → REVIEW → EXECUTE → VERIFY → CLOSE"
       }
     ],
     "op-dev": [
@@ -768,6 +770,16 @@
     ]
   },
   "changelog": [
+    {
+      "version": "3.10.0",
+      "date": "2026-08-13",
+      "task": "090",
+      "changes": [
+        "10/10 pilot pipeline.json 전환 완료 — opal-pilot-{project,dev,dev-short,dev-wireframe,write-tech,sdd,gc,data-design,project-dev,project-loop} `pipeline` 필드를 각 references/pipeline.json의 `meta.stages` 파생값으로 교체/신설 (opdd는 기존 값이 이미 정합하여 무변경)",
+        "opal-pilot-sdd `pipeline`을 'TASK → SPEC → REVIEW → DESIGN → EXECUTE → VERIFY → CLOSE'로 정정 — Phase 이름 EXECUTE-LOOP은 registry에 반영하지 않음 (stage 값 EXECUTE와 별개 개념 계층)",
+        "opal-pilot-project-dev(oppd)에 `domain: \"dev\"` + `pipeline` 신설 (기존 누락 항목 보강)"
+      ]
+    },
     {
       "version": "3.9.0",
       "date": "2026-07-17",

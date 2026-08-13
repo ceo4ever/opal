@@ -1,0 +1,26 @@
+{
+  "spec_version": "1.0",
+  "skill": "oppl",
+  "meta": { "mode_label": "Project Loop", "stages": ["TASK", "ANALYSIS", "PLAN", "WBS", "REVIEW", "EXECUTE", "VERIFY", "CLOSE"] },
+  "task_steps": [
+    { "id": 1,  "key": "task.task_md",          "stage": "TASK",     "item": "TASK.md 작성" },
+    { "id": 2,  "key": "task.state_md",         "stage": "TASK",     "item": "STATE.md 생성" },
+    { "id": 3,  "key": "task.user_confirm",     "stage": "TASK",     "item": "사용자 확인" },
+    { "id": 4,  "key": "analysis.d1_interview", "stage": "ANALYSIS", "item": "D1 인터뷰 — 명확화 4요소(목표/범위/제약/완료기준)" },
+    { "id": 5,  "key": "analysis.d1_5_journey", "stage": "ANALYSIS", "item": "D1.5 여정 매핑 (조건부 — user-facing 프로젝트만, `references/journey-flow.md`)" },
+    { "id": 6,  "key": "plan.d2_prd",           "stage": "PLAN",     "item": "D2 PRD 작성" },
+    { "id": 7,  "key": "plan.d3_trd",           "stage": "PLAN",     "item": "D3 TRD 작성" },
+    { "id": 8,  "key": "plan.d4_contract",      "stage": "PLAN",     "item": "D4 CONTRACT 작성 (`references/contract.md`)" },
+    { "id": 9,  "key": "wbs.d5_backlog",        "stage": "WBS",      "item": "D5 백로그 생성 (`backlog-tool init`+`add-task`)" },
+    { "id": 10, "key": "review.d6_evaluator",   "stage": "REVIEW",   "item": "D6 Evaluator 설계 검토 (phase: design-review)" },
+    { "id": 11, "key": "review.pm_gate",        "stage": "REVIEW",   "item": "PM Gate" },
+    { "id": 12, "key": "review.d7_user_gate",   "stage": "REVIEW",   "item": "D7 사용자 확정 게이트 (4요소 잠김 확인)" },
+    { "id": 13, "key": "execute.l0_select",     "stage": "EXECUTE",  "item": "L0 태스크 선택 (상세: 태스크 목록 참조 — `add-row`로 T{NN} 행 동적 삽입)" },
+    { "id": 14, "key": "execute.pm_gate",       "stage": "EXECUTE",  "item": "PM Gate" },
+    { "id": 15, "key": "execute.user_confirm",  "stage": "EXECUTE",  "item": "사용자 확인" },
+    { "id": 16, "key": "verify.done_check",     "stage": "VERIFY",   "item": "L✓ 종료 판정 (`backlog-tool done-check` all_done + 회귀 0)" },
+    { "id": 17, "key": "verify.pm_gate",        "stage": "VERIFY",   "item": "PM Gate" },
+    { "id": 18, "key": "verify.user_confirm",   "stage": "VERIFY",   "item": "사용자 확인" },
+    { "id": 19, "key": "close.done_md",         "stage": "CLOSE",    "item": "DONE.md 생성" }
+  ]
+}

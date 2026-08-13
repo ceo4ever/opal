@@ -81,7 +81,7 @@
   --skill <opp|opd|opds|opdw|opwt|opgc|oppd|opsdd> \
   --mode <interactive|agentic> \
   [--task-title <text>] [--next-action <text>] \
-  [--rows-spec <inline-json>] [--rows-from <path-to-skill.md>] \
+  [--rows-spec <inline-json>] [--rows-from <path-to-pipeline.json>] \
   [--force] [--note <text>] [--import-existing]
 
 # 파이프라인 현황판 출력 (md/json/full)
@@ -146,10 +146,10 @@
   --task-title "파이프라인 state-tool 도입" \
   --rows-spec '[{"stage":"TASK","item":"작업"},{"stage":"TASK","item":"사용자 확인"},...]'
 
-# SKILL.md에서 행 구성 자동 파싱
+# pipeline.json에서 행 구성 자동 파싱
 ~/.opal/tools/state-tool/run.sh init tasks/134-.../ \
   --skill opp --mode interactive \
-  --rows-from ~/.opal/skills/opal-pilot-project/SKILL.md
+  --rows-from ~/.opal/skills/opal-pilot-project/references/pipeline.json
 
 # 단계 시작 (⬜→🔄)
 ~/.opal/tools/state-tool/run.sh advance tasks/134-.../ --row 4
@@ -1070,3 +1070,4 @@ bash ~/.opal/tools/tool-scan/run.sh check <도구>               # 설치/실행
 | v2.9 | 2026-08-02 14:50 | code-scan 섹션 헤더 소스 단일화 반영 — `target` 판정 주석의 구 4단 표기를 전역 `headerSource` 직결로 교체하고 `write_to` 3값과 `reason` 3값을 축별로 분리 서술(M-2 교정), `--header-source` 옵션 행 추가, 종료 코드 표를 `validate` 전용에서 전 명령 공통으로 확장 + 에러 코드 4종(`header_source_unset`/`header_source_invalid`/`code_scan_config_invalid`/`scope_ambiguous`) 등재, 프로젝트 설정 예시에 `headerSource` + `scopes` 객체형 추가 및 모드별 동작 요약 신설, `scaffold` inline no-op 1줄 추가, `auto` 유효값 서술 제거(폐기 표기만 유지) (080) |
 | v2.10 | 2026-08-03 13:20 | code-scan 섹션 — 매니페스트 샤딩 반영: `scaffold`/`target`/`validate` 커맨드 주석에 `_shards/` 예약 폴더·샤드 라우팅·`manifestMaxBytes` 비차단 상한 서술 추가, 신규 에러 코드 2종(`shard_declaration_invalid`/`reserved_name_collision`) 표 신설, `target`의 신규 실패 표면 `manifest_parse_failed` 명시, §매니페스트 샤딩 서브섹션(`shards` 스키마 + `manifestMaxBytes` 설정 예시) 신설 (082) |
 | v2.11 | 2026-08-04 17:18 | code-scan 섹션 — 샤드 정책 확장 반영(v1.6.0 / 13→15서브명령): `split`(제안 `--plan`·집행 `--groups`)·`init`(비대화형 설정 초안, 차단 게이트 앞 배치) 커맨드 등재, 옵션 표에 `--write`/`--force`/`--plan`/`--groups`/`--trace`/`--stop-after` 6행 추가 및 `--out`/`--dry-run` 설명 확장, 에러 코드 `init` 2종(`init_header_source_required`/`config_exists`)·`split` 7종(쓰기 상태 열 포함) 표 신설, §샤드 정책 신설 — `shardPolicy` 설정 3단 우선순위(프로젝트 > 전역 `~/.opal/setting.json` > 코드 상수 10240/40, 셀 단위 머지)·구 위치 `manifestMaxBytes` 폐기 안내(값 미독·자동 변환 없음)·2축 판정(바이트 `>` AND 엔트리 `>=`, 비차단 + 페이로드 4필드)·분할 절차 4단·제안 사다리 S1~S5 표·표준단어사전 탐색 3단/폴백 3분기(부재 침묵·파손 안내 1줄·매칭 0건 통과) 서술, `ladder` 설정 노출 후속 이관 명시, PM 관리 방안에 `init` 생성·`init --force` 복구 경로 반영 (083) |
+| v2.12 | 2026-08-13 16:57 | state-tool 행 원천 지시 정정 — `--rows-from` 시놉시스·실행 예시를 `references/pipeline.json` 기준으로 교체(구형 `.md` 파싱 지시 제거). 10/10 pilot 전환에 맞춘 pilot 밖 정합 (090) |
