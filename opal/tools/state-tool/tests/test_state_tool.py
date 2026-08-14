@@ -3,7 +3,7 @@
   "module": "test_state_tool",
   "layer": "test",
   "domain": "opal-pipeline",
-  "description": "state-tool 단위 테스트 — 9개 명령 happy path + 23종 에러 코드 × 최소 1건 + G-5~G-15 시나리오. 005: TestClarificationGate 신설 — verify --clarification-check + TASK→다음단계 자동 훅 RED-first 케이스 ①~⑨ + 회귀 보호. 054: TestOwnerNamePlaceholder 신설 — note '{owner_name}' 플레이스홀더 identity.md write-time 치환 RED-first(S-1~S-7). 056: TestOpplSkillInit 신설 — `--skill oppl` enum 미등록 RED-first(S-020, H-1) — run.sh subprocess 실호출로 공개 인터페이스만 검증(mock 미사용). 070: task-step 키 주소 체계 도입 1차 RED-first — TestPipelineSpecValidate/TestPipelineJsonInit/TestStateSchema11Compat/TestTaskStepAddressing/TestActionStepRename/TestAddRowKey/TestOpddEnumDrift/TestGroupAPipelineSpecs/TestBackwardCompatAliases 9종 신설(TEST-SCENARIO.md S-1~S-14, PLAN §3.7.2) — 미구현 기능이므로 전부 FAIL 기대(RED 증거). 072: TestNextActionAutoDerive 신설 — STATE.md '다음 액션' 자동 파생 RED-first(TEST-SCENARIO.md S-1~S-4,S-6,S-7) — init next_action 영속화+schema optional 등록, advance/mark 프론티어 파생(pending '진입'/in_progress '진행 중'/전체완료 '태스크 완료'), 첫 줄만 치환(하위 자유기재 보존), --next-action 오버라이드 우선+비지속 복귀 — 공개 CLI 경로(직접 호출+run.sh subprocess)로만 검증, 미구현이므로 실패 기대(RED 증거). 074: TestImportPreservesKeys 신설 — `--import-existing` task-step key 유실 결함 RED-first(TEST-SCENARIO.md S-a~S-e) — force+import-existing 후 rows[].key 100% 보존, pipeline.json 폴백 복원, key 원천 전무 시 keyless+stderr 경고(하위호환), schema_version 1.1 유지, 동일 (stage,item) 중복 순서 소비 — 공개 cmd_init 호출 + 실 파일 I/O로만 검증, 수정 전 코드에서 FAIL 기대(RED 증거). 076: TestTodoMirror 신설 — build_todo_mirror 파생 규칙(TS-001~007): init create 페이로드·전부pending→pending·전부done→completed·advance/부분→in_progress·na 중립·블로커 in_progress 유지·영속 경계(state.json 미영속+schema validate 통과) — 공개 cmd_init/advance/mark/block ok() stdout 페이로드 캡처로만 검증. 088: TestCloseHistoryLink 신설(TS-1~TS-7) — CLOSE 마지막 행 mark 시 link_memory_history()가 <프로젝트루트>/.opal/MEMORY.json history에 행을 자동 생성(title/path/stage/result 파생값, date는 memory-tool KST 충전)·재mark 멱등(duplicate_skipped)·MEMORY.json 부재/손상 시 비차단(ok:true + skipped/failed)·비CLOSE 행 무발동 대조군·result 보강 리마인더 구성요소·state.json 영속 경계(schema validate 통과) — 공개 cmd_mark 호출 + 실 MEMORY.json 파일 내용으로만 검증(내부 함수 mock 없음, 블랙박스 결함 주입).",
+  "description": "state-tool 단위 테스트 — 9개 명령 happy path + 23종 에러 코드 × 최소 1건 + G-5~G-15 시나리오. 005: TestClarificationGate 신설 — verify --clarification-check + TASK→다음단계 자동 훅 RED-first 케이스 ①~⑨ + 회귀 보호. 054: TestOwnerNamePlaceholder 신설 — note '{owner_name}' 플레이스홀더 identity.md write-time 치환 RED-first(S-1~S-7). 056: TestOpplSkillInit 신설 — `--skill oppl` enum 미등록 RED-first(S-020, H-1) — run.sh subprocess 실호출로 공개 인터페이스만 검증(mock 미사용). 070: task-step 키 주소 체계 도입 1차 RED-first — TestPipelineSpecValidate/TestPipelineJsonInit/TestStateSchema11Compat/TestTaskStepAddressing/TestActionStepRename/TestAddRowKey/TestOpddEnumDrift/TestGroupAPipelineSpecs/TestBackwardCompatAliases 9종 신설(TEST-SCENARIO.md S-1~S-14, PLAN §3.7.2) — 미구현 기능이므로 전부 FAIL 기대(RED 증거). 072: TestNextActionAutoDerive 신설 — STATE.md '다음 액션' 자동 파생 RED-first(TEST-SCENARIO.md S-1~S-4,S-6,S-7) — init next_action 영속화+schema optional 등록, advance/mark 프론티어 파생(pending '진입'/in_progress '진행 중'/전체완료 '태스크 완료'), 첫 줄만 치환(하위 자유기재 보존), --next-action 오버라이드 우선+비지속 복귀 — 공개 CLI 경로(직접 호출+run.sh subprocess)로만 검증, 미구현이므로 실패 기대(RED 증거). 074: TestImportPreservesKeys 신설 — `--import-existing` task-step key 유실 결함 RED-first(TEST-SCENARIO.md S-a~S-e) — force+import-existing 후 rows[].key 100% 보존, pipeline.json 폴백 복원, key 원천 전무 시 keyless+stderr 경고(하위호환), schema_version 1.1 유지, 동일 (stage,item) 중복 순서 소비 — 공개 cmd_init 호출 + 실 파일 I/O로만 검증, 수정 전 코드에서 FAIL 기대(RED 증거). 076: TestTodoMirror 신설 — build_todo_mirror 파생 규칙(TS-001~007): init create 페이로드·전부pending→pending·전부done→completed·advance/부분→in_progress·na 중립·블로커 in_progress 유지·영속 경계(state.json 미영속+schema validate 통과) — 공개 cmd_init/advance/mark/block ok() stdout 페이로드 캡처로만 검증. 088: TestCloseHistoryLink 신설(TS-1~TS-7) — CLOSE 마지막 행 mark 시 link_memory_history()가 <프로젝트루트>/.opal/MEMORY.json history에 행을 자동 생성(title/path/stage/result 파생값, date는 memory-tool KST 충전)·재mark 멱등(duplicate_skipped)·MEMORY.json 부재/손상 시 비차단(ok:true + skipped/failed)·비CLOSE 행 무발동 대조군·result 보강 리마인더 구성요소·state.json 영속 경계(schema validate 통과) — 공개 cmd_mark 호출 + 실 MEMORY.json 파일 내용으로만 검증(내부 함수 mock 없음, 블랙박스 결함 주입). 091(RED-first, mode:red, F-004 게이트 집행 배선): TestTaskStepGate 신설(TEST-SCENARIO S-10~S-17) — check_gate_artifacts()/build_gate_payload()가 아직 없어(Step 8 GREEN 이전) 실 pipeline.json(opd/opdw/opsdd) 기반 gate 정의를 state.json 행에 직접 주입하는 픽스처로 산출물 부재 차단(H-1)·부분 상태 변경 부재·checklist dict 페이로드(H-6)·gate 없는 행 무영향(H-2/H-3)·빈 artifacts 비차단(opdw 실사례)·--force --note 우회 의사결정 로그(H-5)·경로 이탈 토큰 거부(H-4)·glob 토큰 매칭(opsdd 실사례)을 검증(공개 cmd_mark 호출 + 실 state.json/STATE.md 파일 내용, mock 없음). TestPipelineSpecValidate에 gate violation 4종(spec_gate_type_invalid/spec_gate_missing_field/spec_gate_field_type_invalid/spec_gate_checklist_empty, S-9) 케이스 + 실 pipeline.json 10종 유효성 케이스 추가. TestErrorCodesCompleteness에 091 신규 5종 반영(39→44).",
   "exports": [
     "TestInit", "TestShow", "TestAdvance", "TestMark",
     "TestBlock", "TestValidate", "TestAddRow", "TestStatus", "TestGatePass",
@@ -13,7 +13,7 @@
     "TestTaskStepAddressing", "TestActionStepRename", "TestAddRowKey",
     "TestOpddEnumDrift", "TestGroupAPipelineSpecs", "TestBackwardCompatAliases",
     "TestNextActionAutoDerive", "TestImportPreservesKeys", "TestTodoMirror",
-    "TestCloseHistoryLink"
+    "TestCloseHistoryLink", "TestTaskStepGate"
   ]
 }
 
@@ -2257,10 +2257,14 @@ class TestRowsFrom(BaseTestCase):
 # ═════════════════════════════════════════════════════════════════════════════
 
 class TestErrorCodesCompleteness(unittest.TestCase):
-    """PLAN §2.18 E-1: ERROR_CODES 25종 기존 + PLAN 013 신규 2종 + PLAN 014 신규 1종 + PLAN 016 신규 2종 + PLAN 005 신규 1종 + 070 신규 8종 = 39종 모두 등재 확인.
+    """PLAN §2.18 E-1: ERROR_CODES 25종 기존 + PLAN 013 신규 2종 + PLAN 014 신규 1종 + PLAN 016 신규 2종 + PLAN 005 신규 1종 + 070 신규 8종 + 091 신규 5종 = 44종 모두 등재 확인.
 
     [PM 승인 예외 — 070 GREEN 후속 정정] 31→39 계약 갱신은 테스트 약화가 아니라
     카탈로그 정합 보존을 위한 승인된 갱신이다(AGENTIC-LOG #16 승인 근거).
+    091(RED-first, F-004): 게이트 집행 배선 신규 5종(gate_artifact_missing +
+    spec_gate_type_invalid/spec_gate_missing_field/spec_gate_field_type_invalid/
+    spec_gate_checklist_empty) 반영 — Step 8 GREEN 이전에는 ST.ERROR_CODES에
+    미등재이므로 FAIL이 정상(RED 증거).
     """
 
     EXPECTED_CODES = [
@@ -2309,14 +2313,20 @@ class TestErrorCodesCompleteness(unittest.TestCase):
         "task_step_not_found",
         "task_step_key_invalid",
         "task_step_key_duplicate",
+        # 091 신규 5종 (F-004 게이트 집행 배선 — PLAN §3.4.2 (2)/(6))
+        "gate_artifact_missing",
+        "spec_gate_type_invalid",
+        "spec_gate_missing_field",
+        "spec_gate_field_type_invalid",
+        "spec_gate_checklist_empty",
     ]
 
     def test_error_codes_count(self):
-        """ERROR_CODES 상수가 39종 모두 포함 (PLAN §2.18 + PLAN 013 + PLAN 014 + PLAN 016 + PLAN 005 + 070 F-001/F-003/F-004 8종)"""
-        self.assertEqual(len(ST.ERROR_CODES), 39)
+        """ERROR_CODES 상수가 44종 모두 포함 (PLAN §2.18 + PLAN 013 + PLAN 014 + PLAN 016 + PLAN 005 + 070 F-001/F-003/F-004 8종 + 091 F-004 5종)"""
+        self.assertEqual(len(ST.ERROR_CODES), 44)
 
     def test_all_28_codes_registered(self):
-        """39종 코드 각각이 ERROR_CODES에 등재됨(070 신규 8종 포함)"""
+        """44종 코드 각각이 ERROR_CODES에 등재됨(070 신규 8종 + 091 신규 5종 포함)"""
         for code in self.EXPECTED_CODES:
             self.assertIn(code, ST.ERROR_CODES, f"에러 코드 {code} 미등재")
 
@@ -4432,6 +4442,81 @@ class TestPipelineSpecValidate(unittest.TestCase):
         self.assertEqual(code, 1, f"위반 스펙 spec-validate가 exit 1이어야 함 (stdout={stdout!r})")
         self.assertFalse(data.get("ok"))
 
+    # ── 091 F-004 R-10: task_steps[].gate 검사 4종 (TEST-SCENARIO S-9) ──────────
+    # [MUST] red-first.md §4: validate_pipeline_spec()에 gate 검사가 아직 없다
+    # (Step 8 GREEN 이전) — 아래 4건은 codes가 항상 빈 리스트라 FAIL이 정상(RED 증거).
+
+    def test_gate_type_invalid_violation(self):
+        """[T091/L1-S9] task_steps[].gate가 object가 아님 → spec_gate_type_invalid."""
+        spec = _deepcopy_json(_OPP_PIPELINE_SPEC)
+        spec["task_steps"][3]["gate"] = ["not", "a", "dict"]  # id4 plan.pm_gate
+        violations = ST.validate_pipeline_spec(spec)
+        codes = [v.get("code") for v in violations]
+        self.assertIn("spec_gate_type_invalid", codes,
+                      f"gate가 배열인데 spec_gate_type_invalid 없음: {violations}")
+
+    def test_gate_missing_field_violation(self):
+        """[T091/L1-S9] gate.checklist 키 누락 → spec_gate_missing_field."""
+        spec = _deepcopy_json(_OPP_PIPELINE_SPEC)
+        spec["task_steps"][3]["gate"] = {"artifacts": ["TASK.md"]}  # checklist 누락
+        violations = ST.validate_pipeline_spec(spec)
+        codes = [v.get("code") for v in violations]
+        self.assertIn("spec_gate_missing_field", codes,
+                      f"gate.checklist 누락인데 spec_gate_missing_field 없음: {violations}")
+
+    def test_gate_field_type_invalid_violation(self):
+        """[T091/L1-S9] gate.artifacts 요소가 문자열이 아님 → spec_gate_field_type_invalid."""
+        spec = _deepcopy_json(_OPP_PIPELINE_SPEC)
+        spec["task_steps"][3]["gate"] = {"artifacts": [1, 2], "checklist": ["ok"]}
+        violations = ST.validate_pipeline_spec(spec)
+        codes = [v.get("code") for v in violations]
+        self.assertIn("spec_gate_field_type_invalid", codes,
+                      f"gate.artifacts 요소가 문자열이 아닌데 spec_gate_field_type_invalid 없음: {violations}")
+
+    def test_gate_checklist_empty_violation(self):
+        """[T091/L1-S9] gate.checklist:[] → spec_gate_checklist_empty
+        (artifacts:[]는 그 자체로는 위반이 아님 — §3.4.2 (1) MUST)."""
+        spec = _deepcopy_json(_OPP_PIPELINE_SPEC)
+        spec["task_steps"][3]["gate"] = {"artifacts": [], "checklist": []}
+        violations = ST.validate_pipeline_spec(spec)
+        codes = [v.get("code") for v in violations]
+        self.assertIn("spec_gate_checklist_empty", codes,
+                      f"checklist:[] 인데 spec_gate_checklist_empty 없음: {violations}")
+        self.assertNotIn("spec_gate_missing_field", codes,
+                         "artifacts:[]/checklist:[] 필드 자체 존재는 missing_field가 아니어야 함")
+
+    def test_gate_empty_artifacts_alone_is_not_a_violation(self):
+        """[T091/L1-S9] artifacts:[]만 있고 checklist가 채워져 있으면 위반 0건
+        (opdw/opp EXECUTE 게이트의 정당성 확인, R-10 AC 해석 확정)."""
+        spec = _deepcopy_json(_OPP_PIPELINE_SPEC)
+        spec["task_steps"][3]["gate"] = {"artifacts": [], "checklist": ["ok"]}
+        violations = ST.validate_pipeline_spec(spec)
+        self.assertEqual(violations, [], f"artifacts:[] 단독인데 violations 발생: {violations}")
+
+    def test_real_pipeline_json_gate_specs_valid_zero_violations(self):
+        """[T091/L1-S9] 실 pipeline.json 10종(gate 보유 9종 + opgc) — 정상 스펙
+        validate_pipeline_spec violations 0건 + spec-validate CLI ok:true (실측 10/10).
+        gate 검사가 없는 현재도 우연히 통과할 수 있으나(비검사=무해), Step 8 GREEN 이후에도
+        계속 참이어야 하는 회귀 앵커다."""
+        repo_root = _TOOL_DIR.parent.parent.parent
+        real_skill_dirs = [
+            "opal-pilot-project", "opal-pilot-dev", "opal-pilot-dev-short",
+            "opal-pilot-dev-wireframe", "opal-pilot-write-tech", "opal-pilot-sdd",
+            "opal-pilot-data-design", "opal-pilot-project-dev", "opal-pilot-project-loop",
+            "opal-pilot-gc",
+        ]
+        for skill_dir in real_skill_dirs:
+            spec_path = repo_root / "opal" / "skills" / skill_dir / "references" / "pipeline.json"
+            with self.subTest(skill=skill_dir):
+                self.assertTrue(spec_path.exists(), f"실 pipeline.json 부재: {spec_path}")
+                spec = json.loads(spec_path.read_text(encoding="utf-8"))
+                violations = ST.validate_pipeline_spec(spec)
+                self.assertEqual(violations, [],
+                                  f"{skill_dir} pipeline.json이 유효해야 하는데 violations: {violations}")
+                code, stdout, stderr, data = _run070(["spec-validate", str(spec_path)])
+                self.assertEqual(code, 0, f"{skill_dir} spec-validate exit!=0 (stdout={stdout!r})")
+                self.assertTrue(data.get("ok"), f"{skill_dir} spec-validate ok:false: {data}")
+
 
 # ═════════════════════════════════════════════════════════════════════════════
 # 2. TestPipelineJsonInit — F-002 json 로딩·key 영속 (TEST-SCENARIO S-1)
@@ -5550,6 +5635,316 @@ class TestCloseHistoryLink(BaseTestCase):
         validated = self._validate()
         self.assertTrue(validated["ok"], f"state.schema.json 검증 실패: {validated}")
         self.assertEqual(validated["violations_count"], 0)
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# 091 F-004: TestTaskStepGate — 게이트 집행 배선 (TEST-SCENARIO S-10~S-17)
+# [MUST] red-first.md §2/§4: 작성자(opal-test-agent mode:red) ≠ 구현자(opal-be-agent,
+# Step 8). check_gate_artifacts()/build_gate_payload()/_is_safe_artifact_token()은
+# 아직 state_tool.py에 없고, build_rows_from_pipeline_json()도 아직 gate를 rows[]로
+# 전파하지 않는다(§3.4.2 (5) 1줄 미착수). 따라서 real pipeline.json으로 init해도
+# row에 "gate" 키가 실리지 않는다 — 아래 _inject_gate()는 Step 8 GREEN이 만들 결과
+# ("전파된 뒤의 row 모습")를 실 pipeline.json의 실제 gate 정의값 그대로 미리
+# state.json에 반영하는 fixture 준비 절차다(비mock — 실 JSON 파일 read/write일 뿐,
+# state_tool.py의 어떤 함수도 patch하지 않는다). 현재 cmd_mark에는 가드 자체가 없으므로
+# artifacts 미충족에도 ok:true가 나오는 것이 RED 증거다.
+# ═════════════════════════════════════════════════════════════════════════════
+
+class TestTaskStepGate(unittest.TestCase):
+    """F-004 게이트 집행 배선 — PLAN §3.4.2 / TEST-SCENARIO S-10~S-17.
+
+    실 pipeline.json 3종(opd/opdw/opsdd, Step 4~6에서 27건 gate 배치 완료·
+    spec-validate 10/10 통과 확인됨)을 fixture로 사용한다:
+      - opd `plan.pm_gate`      artifacts=["TASK.md","PLAN.md"]  (S-10/S-11/S-12/S-13/S-15/S-16)
+      - opdw `execute.pm_gate`  artifacts=[] (전치 완료 실사례, S-14)
+      - opsdd `execute.pm_gate` artifacts=["actions/ACT-*/DONE.md"] (glob 실사례, S-17)
+    """
+
+    _REPO_ROOT     = _TOOL_DIR.parent.parent.parent
+    _OPD_PIPELINE  = _REPO_ROOT / "opal/skills/opal-pilot-dev/references/pipeline.json"
+    _OPDW_PIPELINE = _REPO_ROOT / "opal/skills/opal-pilot-dev-wireframe/references/pipeline.json"
+    _OPSDD_PIPELINE = _REPO_ROOT / "opal/skills/opal-pilot-sdd/references/pipeline.json"
+
+    def setUp(self):
+        self.tmpdir = pathlib.Path(tempfile.mkdtemp())
+        self.task_path = self.tmpdir / "091-260814-gate-test"
+        self.task_path.mkdir()
+
+    def tearDown(self):
+        shutil.rmtree(self.tmpdir, ignore_errors=True)
+
+    # ── 내부 헬퍼 (fixture 준비 전용 — state_tool.py 함수는 공개 경로로만 호출) ────
+
+    def _init(self, pipeline_path, skill):
+        self.assertTrue(pipeline_path.exists(), f"실 pipeline.json 부재: {pipeline_path}")
+        args = make_args(task_path=str(self.task_path), skill=skill, mode="interactive",
+                          rows_from=str(pipeline_path))
+        exit_code, result = _call070(ST.cmd_init, args)
+        self.assertEqual(exit_code, 0, f"init 실패: {result}")
+
+    def _state(self):
+        return json.loads((self.task_path / "state.json").read_text(encoding="utf-8"))
+
+    def _write_state(self, state):
+        (self.task_path / "state.json").write_text(
+            json.dumps(state, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+    def _inject_gate(self, key, gate):
+        """실 pipeline.json의 gate 정의를 state.json 행에 직접 주입 — Step 8 GREEN의
+        rows 전파 배선(§3.4.2 (5))이 아직 없어 수동으로 재현한다. mock/patch 아님(실 파일 조작)."""
+        state = self._state()
+        for row in state["rows"]:
+            if row.get("key") == key:
+                row["gate"] = gate
+                break
+        else:
+            self.fail(f"key {key} 행을 state.json rows[]에서 찾을 수 없음")
+        self._write_state(state)
+
+    def _force_done_before(self, key):
+        """target 행 앞의 모든 행을 done으로 강제 설정 — stage-transition guard(기존
+        구현, 본 시나리오의 검증 대상 아님) 충족만을 위한 fixture 준비."""
+        state = self._state()
+        for row in state["rows"]:
+            if row.get("key") == key:
+                break
+            if row.get("status") not in ("done", "na", "additional_work_done"):
+                row["status"] = "done"
+                row["status_label"] = "✅"
+                row["owner"] = "PM"
+                row["timestamp"] = "2026-05-01 23:00"
+        self._write_state(state)
+
+    def _mark_by_key(self, key, force=False, note=None):
+        """cmd_mark 공개 경로 — --task-step 주소 지정(070 R-4 addressing)."""
+        args = make_args(task_path=str(self.task_path), task_step=key, done=True,
+                          force=force, note=note)
+        return _call070(ST.cmd_mark, args)
+
+    # ── S-10: 산출물 부재 시 게이트 차단 (H-1) ──────────────────────────────────
+
+    def test_s10_missing_artifact_blocks_mark(self):
+        """[T091/L1-S10] opd plan.pm_gate artifacts(TASK.md/PLAN.md) 부재 → ok:false +
+        error=gate_artifact_missing + missing[]에 둘 다 포함."""
+        self._init(self._OPD_PIPELINE, "opd")
+        gate = {"artifacts": ["TASK.md", "PLAN.md"],
+                "checklist": ["TASK.md 요구사항", "PLAN.md §4.2"]}
+        self._inject_gate("plan.pm_gate", gate)
+        self._force_done_before("plan.pm_gate")
+
+        exit_code, result = self._mark_by_key("plan.pm_gate")
+        self.assertFalse(result.get("ok"),
+                         f"artifacts 부재인데 ok:true — 게이트 차단 미구현(RED 목표): {result}")
+        self.assertEqual(result.get("error"), "gate_artifact_missing")
+        missing = result.get("missing", [])
+        self.assertIn("TASK.md", missing)
+        self.assertIn("PLAN.md", missing)
+
+    # ── S-11: 차단 시 부분 상태 변경 부재 (H-1, save_state_json() 이전 가드) ────
+
+    def test_s11_no_partial_state_change_on_block(self):
+        """[T091/L2-S11] S-10 차단 후 state.json 내용·mtime 무변화, STATE.md 무변화
+        — 검증이 save_state_json() 이전에 수행되어야 함."""
+        self._init(self._OPD_PIPELINE, "opd")
+        gate = {"artifacts": ["TASK.md", "PLAN.md"], "checklist": ["TASK.md 요구사항"]}
+        self._inject_gate("plan.pm_gate", gate)
+        self._force_done_before("plan.pm_gate")
+
+        state_file = self.task_path / "state.json"
+        md_file = self.task_path / "STATE.md"
+        before_state_bytes = state_file.read_bytes()
+        before_md_text = md_file.read_text(encoding="utf-8")
+        before_mtime = state_file.stat().st_mtime_ns
+
+        exit_code, result = self._mark_by_key("plan.pm_gate")
+        self.assertFalse(result.get("ok"),
+                         f"artifacts 부재인데 ok:true — 게이트 차단 미구현(RED 목표): {result}")
+
+        after_state_bytes = state_file.read_bytes()
+        after_md_text = md_file.read_text(encoding="utf-8")
+        after_mtime = state_file.stat().st_mtime_ns
+
+        self.assertEqual(before_state_bytes, after_state_bytes,
+                         "차단 후 state.json 내용이 변경됨 — 부분 상태 변경 발생(H-1 위반)")
+        self.assertEqual(before_mtime, after_mtime,
+                         "차단 후 state.json mtime이 변경됨 — save_state_json()이 가드보다 먼저 호출됨")
+        self.assertEqual(before_md_text, after_md_text, "차단 후 STATE.md가 변경됨")
+
+    # ── S-12: checklist dict 페이로드 반환 (H-6) ────────────────────────────────
+
+    def test_s12_gate_checklist_dict_payload_on_pass(self):
+        """[T091/L1-S12] artifacts 충족 시 ok:true + gate_checklist가 dict로 반환
+        (list면 todo_mirror_hook._extract_payload가 조용히 무시함, H-6)."""
+        self._init(self._OPD_PIPELINE, "opd")
+        gate = {"artifacts": ["TASK.md", "PLAN.md"],
+                "checklist": ["TASK.md 요구사항", "PLAN.md §4.2"]}
+        self._inject_gate("plan.pm_gate", gate)
+        self._force_done_before("plan.pm_gate")
+        (self.task_path / "TASK.md").write_text("# TASK\n", encoding="utf-8")
+        (self.task_path / "PLAN.md").write_text("# PLAN\n", encoding="utf-8")
+
+        exit_code, result = self._mark_by_key("plan.pm_gate")
+        self.assertTrue(result.get("ok"), f"artifacts 충족인데 ok:false: {result}")
+        payload = result.get("gate_checklist")
+        self.assertIsInstance(payload, dict,
+                              f"gate_checklist가 dict가 아님(list면 hook이 무시함, H-6): {payload!r}")
+        self.assertEqual(payload.get("artifacts"), gate["artifacts"])
+        self.assertEqual(payload.get("checklist"), gate["checklist"])
+
+    # ── S-13: gate 미보유 행 무영향 (회귀, H-2/H-3) ─────────────────────────────
+
+    def test_s13_new_style_row_without_gate_response_unaffected(self):
+        """[T091/L1-S13] gate 필드가 없는 행(신형 키는 있으나 gate 미보유, 예: opd
+        task.task_md)의 mark 응답 키 집합이 변경 전과 동일 — gate_checklist가 섞이지
+        않는다(H-2/H-3 회귀 앵커)."""
+        self._init(self._OPD_PIPELINE, "opd")
+
+        exit_code, result = self._mark_by_key("task.task_md")
+        self.assertEqual(exit_code, 0)
+        self.assertTrue(result.get("ok"))
+        expected_keys = {"ok", "command", "row_id", "stage", "item", "status",
+                         "timestamp", "owner", "todo_mirror"}
+        self.assertEqual(set(result.keys()), expected_keys,
+                         f"gate 없는 행인데 응답 키 집합이 변경됨: {sorted(result.keys())}")
+        self.assertNotIn("gate_checklist", result)
+
+    def test_s13_legacy_keyless_state_json_mark_still_passes(self):
+        """[T091/L1-S13] key/gate 필드가 전무한 구형(schema_version 1.0, --rows-spec
+        경로) state.json도 mark가 정상 통과(ok:true) — 소급 마이그레이션 불필요
+        (TASK.md 제약 d, §3.4.4)."""
+        args = make_args(task_path=str(self.task_path), skill="opp", mode="interactive",
+                         rows_spec=SIMPLE_ROWS_SPEC)
+        exit_code, result = _call070(ST.cmd_init, args)
+        self.assertEqual(exit_code, 0, f"legacy init 실패: {result}")
+
+        state = self._state()
+        self.assertEqual(state.get("schema_version"), "1.0")
+        for row in state["rows"]:
+            self.assertNotIn("key", row)
+            self.assertNotIn("gate", row)
+
+        exit_code, result = _call070(ST.cmd_mark, make_args(
+            task_path=str(self.task_path), row=1, done=True))
+        self.assertEqual(exit_code, 0, f"구 state.json에서 mark 실패: {result}")
+        self.assertTrue(result.get("ok"), f"구 state.json인데 ok:false: {result}")
+
+    # ── S-14: 빈 artifacts는 차단하지 않음 (opdw 실사례, 영구 차단 부재) ────────
+
+    def test_s14_empty_artifacts_never_blocks(self):
+        """[T091/L1-S14] opdw execute.pm_gate(artifacts:[]) — 산출물 없이도 ok:true
+        (캡틴 확정 실패 모드 배제) + gate_checklist payload가 여전히 반환됨."""
+        self._init(self._OPDW_PIPELINE, "opdw")
+        opdw_spec = json.loads(self._OPDW_PIPELINE.read_text(encoding="utf-8"))
+        gate = next(ts["gate"] for ts in opdw_spec["task_steps"] if ts["key"] == "execute.pm_gate")
+        self.assertEqual(gate["artifacts"], [],
+                         "픽스처 전제 위반 — 실 opdw execute.pm_gate.artifacts가 더 이상 빈 배열이 아님")
+        self._inject_gate("execute.pm_gate", gate)
+        self._force_done_before("execute.pm_gate")
+
+        exit_code, result = self._mark_by_key("execute.pm_gate")
+        self.assertTrue(result.get("ok"), f"artifacts:[] 인데 ok:false — 영구 차단 발생: {result}")
+        payload = result.get("gate_checklist")
+        self.assertIsInstance(payload, dict, f"gate_checklist dict 페이로드 없음: {payload!r}")
+        self.assertEqual(payload.get("checklist"), gate["checklist"])
+
+    # ── S-15: --force 우회 시 의사결정 로그 강제 (H-5, 미결-4) ──────────────────
+
+    def test_s15_force_note_bypass_records_decision_log(self):
+        """[T091/L1-S15] artifacts 부재 + --force --note → ok:true + STATE.md
+        의사결정 로그에 gate_artifact_force와 missing 목록이 기재됨."""
+        self._init(self._OPD_PIPELINE, "opd")
+        gate = {"artifacts": ["TASK.md", "PLAN.md"], "checklist": ["TASK.md 요구사항"]}
+        self._inject_gate("plan.pm_gate", gate)
+        self._force_done_before("plan.pm_gate")
+
+        exit_code, result = self._mark_by_key("plan.pm_gate", force=True, note="긴급 우회 사유")
+        self.assertTrue(result.get("ok"), f"--force --note인데 ok:false: {result}")
+
+        md = (self.task_path / "STATE.md").read_text(encoding="utf-8")
+        self.assertIn("gate_artifact_force", md, "STATE.md 의사결정 로그에 gate_artifact_force 미기재")
+        self.assertIn("TASK.md", md, "의사결정 로그에 missing 목록(TASK.md)이 없음")
+        self.assertIn("PLAN.md", md, "의사결정 로그에 missing 목록(PLAN.md)이 없음")
+
+    def test_s15_force_without_note_rejected(self):
+        """[T091/L1-S15] --force만 있고 --note가 없으면 note_required_for_force로
+        거부(기존 §2.17 규칙 — 게이트 우회 경로도 예외 없음, 회귀 앵커)."""
+        self._init(self._OPD_PIPELINE, "opd")
+        gate = {"artifacts": ["TASK.md", "PLAN.md"], "checklist": ["TASK.md 요구사항"]}
+        self._inject_gate("plan.pm_gate", gate)
+        self._force_done_before("plan.pm_gate")
+
+        exit_code, result = self._mark_by_key("plan.pm_gate", force=True, note=None)
+        self.assertFalse(result.get("ok"))
+        self.assertEqual(result.get("error"), "note_required_for_force")
+
+    # ── S-16: 경로 이탈 토큰 거부 (보안·경계, H-4) ──────────────────────────────
+
+    def test_s16_path_traversal_tokens_rejected_as_missing(self):
+        """[T091/L1-S16] artifacts 토큰 /etc/passwd·../outside.md → 태스크 폴더 밖
+        매칭 0건, missing 처리, 크래시 없음. 상위 경로 토큰은 **실제로 존재하는**
+        파일(outside.md)이어도 경로 이탈이므로 거부되어야 한다(단순 부재 케이스가 아님)."""
+        self._init(self._OPD_PIPELINE, "opd")
+        gate = {"artifacts": ["/etc/passwd", "../outside.md"], "checklist": ["보안 경계 확인"]}
+        self._inject_gate("plan.pm_gate", gate)
+        self._force_done_before("plan.pm_gate")
+        # 태스크 폴더 밖(tmpdir 최상위)에 실제로 파일을 만들어 둔다 — 존재해도 거부되어야 함
+        (self.tmpdir / "outside.md").write_text("outside", encoding="utf-8")
+
+        exit_code, result = self._mark_by_key("plan.pm_gate")
+        self.assertFalse(result.get("ok"),
+                         f"경로 이탈 토큰인데 ok:true — 보안 경계 위반(H-4): {result}")
+        self.assertEqual(result.get("error"), "gate_artifact_missing")
+        missing = result.get("missing", [])
+        self.assertIn("/etc/passwd", missing)
+        self.assertIn("../outside.md", missing)
+
+    # ── S-17: glob 토큰 매칭 (opsdd 실사례, H-4) ────────────────────────────────
+
+    def test_s17_glob_token_matches_when_file_exists(self):
+        """[T091/L1-S17] actions/ACT-*/DONE.md 글롭(opsdd execute.pm_gate 실사용처)
+        — 실 파일 존재 시 통과."""
+        self._init(self._OPSDD_PIPELINE, "opsdd")
+        opsdd_spec = json.loads(self._OPSDD_PIPELINE.read_text(encoding="utf-8"))
+        gate = next(ts["gate"] for ts in opsdd_spec["task_steps"] if ts["key"] == "execute.pm_gate")
+        self.assertEqual(gate["artifacts"], ["actions/ACT-*/DONE.md"],
+                         "픽스처 전제 위반 — opsdd execute.pm_gate.artifacts 실측값 변경됨")
+        self._inject_gate("execute.pm_gate", gate)
+        self._force_done_before("execute.pm_gate")
+
+        act_dir = self.task_path / "actions" / "ACT-1"
+        act_dir.mkdir(parents=True)
+        (act_dir / "DONE.md").write_text("done", encoding="utf-8")
+
+        exit_code, result = self._mark_by_key("execute.pm_gate")
+        self.assertTrue(result.get("ok"), f"글롭 파일 존재인데 ok:false: {result}")
+
+    def test_s17_glob_token_missing_when_no_file(self):
+        """[T091/L1-S17] actions/ACT-*/DONE.md 글롭 — 부재 시 missing 처리
+        (opsdd execute.pm_gate)."""
+        self._init(self._OPSDD_PIPELINE, "opsdd")
+        opsdd_spec = json.loads(self._OPSDD_PIPELINE.read_text(encoding="utf-8"))
+        gate = next(ts["gate"] for ts in opsdd_spec["task_steps"] if ts["key"] == "execute.pm_gate")
+        self._inject_gate("execute.pm_gate", gate)
+        self._force_done_before("execute.pm_gate")
+
+        exit_code, result = self._mark_by_key("execute.pm_gate")
+        self.assertFalse(result.get("ok"), f"글롭 파일 부재인데 ok:true: {result}")
+        self.assertEqual(result.get("error"), "gate_artifact_missing")
+        self.assertIn("actions/ACT-*/DONE.md", result.get("missing", []))
+
+    def test_s17_non_glob_token_not_misclassified_as_glob(self):
+        """[T091/L1-S17] `*` 미포함 정적 토큰(PLAN.md)은 glob()이 아니라 존재 검사로
+        처리된다 — opd plan.pm_gate로 확인(정적 경로 존재 시 통과)."""
+        self._init(self._OPD_PIPELINE, "opd")
+        gate = {"artifacts": ["TASK.md", "PLAN.md"], "checklist": ["TASK.md 요구사항"]}
+        self._inject_gate("plan.pm_gate", gate)
+        self._force_done_before("plan.pm_gate")
+        (self.task_path / "TASK.md").write_text("# TASK\n", encoding="utf-8")
+        (self.task_path / "PLAN.md").write_text("# PLAN\n", encoding="utf-8")
+
+        exit_code, result = self._mark_by_key("plan.pm_gate")
+        self.assertTrue(result.get("ok"),
+                        f"'*' 미포함 정적 토큰 존재 시 통과해야 함(오분류 없음): {result}")
 
 
 # ═════════════════════════════════════════════════════════════════════════════

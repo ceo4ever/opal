@@ -1,0 +1,137 @@
+[
+  {
+    "row_id": 1,
+    "stage": "TASK",
+    "item": "작업",
+    "key": "task.task_md",
+    "status": "pending",
+    "status_label": "⬜",
+    "owner": "PM"
+  },
+  {
+    "row_id": 2,
+    "stage": "TASK",
+    "item": "사용자 확인",
+    "key": "task.user_confirm",
+    "status": "na",
+    "status_label": "-",
+    "owner": "auto"
+  },
+  {
+    "row_id": 3,
+    "stage": "DICT",
+    "item": "작업",
+    "key": "dict.dictionaries",
+    "status": "pending",
+    "status_label": "⬜",
+    "owner": "PM"
+  },
+  {
+    "row_id": 4,
+    "stage": "DICT",
+    "item": "PM Gate",
+    "key": "dict.pm_gate",
+    "status": "pending",
+    "status_label": "⬜",
+    "owner": "PM"
+  },
+  {
+    "row_id": 5,
+    "stage": "DICT",
+    "item": "사용자 확인",
+    "key": "dict.user_confirm",
+    "status": "na",
+    "status_label": "-",
+    "owner": "auto"
+  },
+  {
+    "row_id": 6,
+    "stage": "MODEL",
+    "item": "작업",
+    "key": "model.modeling",
+    "status": "pending",
+    "status_label": "⬜",
+    "owner": "PM"
+  },
+  {
+    "row_id": 7,
+    "stage": "MODEL",
+    "item": "PM Gate",
+    "key": "model.pm_gate",
+    "status": "pending",
+    "status_label": "⬜",
+    "owner": "PM"
+  },
+  {
+    "row_id": 8,
+    "stage": "MODEL",
+    "item": "사용자 확인",
+    "key": "model.user_confirm",
+    "status": "na",
+    "status_label": "-",
+    "owner": "auto"
+  },
+  {
+    "row_id": 9,
+    "stage": "DDL/MIGRATION",
+    "item": "작업",
+    "key": "ddl_migration.ddl_scripts",
+    "status": "pending",
+    "status_label": "⬜",
+    "owner": "PM"
+  },
+  {
+    "row_id": 10,
+    "stage": "DDL/MIGRATION",
+    "item": "PM Gate",
+    "key": "ddl_migration.pm_gate",
+    "status": "pending",
+    "status_label": "⬜",
+    "owner": "PM"
+  },
+  {
+    "row_id": 11,
+    "stage": "DDL/MIGRATION",
+    "item": "사용자 확인",
+    "key": "ddl_migration.user_confirm",
+    "status": "na",
+    "status_label": "-",
+    "owner": "auto"
+  },
+  {
+    "row_id": 12,
+    "stage": "QA",
+    "item": "작업",
+    "key": "qa.review",
+    "status": "pending",
+    "status_label": "⬜",
+    "owner": "PM"
+  },
+  {
+    "row_id": 13,
+    "stage": "QA",
+    "item": "PM Gate",
+    "key": "qa.pm_gate",
+    "status": "pending",
+    "status_label": "⬜",
+    "owner": "PM"
+  },
+  {
+    "row_id": 14,
+    "stage": "QA",
+    "item": "사용자 확인",
+    "key": "qa.user_confirm",
+    "status": "na",
+    "status_label": "-",
+    "owner": "auto"
+  },
+  {
+    "row_id": 15,
+    "stage": "CLOSE",
+    "item": "DONE.md 생성",
+    "key": "close.done_md",
+    "status": "pending",
+    "status_label": "⬜",
+    "owner": "PM"
+  }
+]

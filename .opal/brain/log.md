@@ -299,3 +299,8 @@
 - 신규: [[pipeline-json-full-adoption-migration]], [[phase-name-stage-value-homonym-boundary]], [[na-status-contract-agentic-init-only]], [[mark-force-decision-log-scope]], [[replacement-goal-verification-scope-gap]]
 - 출처: task:090
 
+## [2026-08-14] ingest | CLOSE ingest — 태스크 091 파이프라인 스펙 중복정리(PM Gate SSOT 승격)
+- 신규: [[pm-gate-artifact-tool-enforcement]], [[conditional-artifact-gate-ineligibility]], [[pre-edit-baseline-single-capture-invariant]]
+- 갱신: [[replacement-goal-verification-scope-gap]]
+- 출처: task:091
+

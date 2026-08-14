@@ -274,49 +274,22 @@ op-dev-test-agent 워커 디스패치. TEST-SCENARIO.md 실행 + 결과 기록 +
 
 ## STATE.md 도메인 치환값
 
-| 필드 | 값 |
-|------|------|
-| 모드 | Full Task |
-| 단계 목록 | TASK / ANALYSIS / PLAN / TEST-SCENARIO / EXECUTE / TEST / CLOSE |
-
-**진행 현황 행 예시** (아래 표는 사람 열람용 미러 — SSOT는 `references/pipeline.json`. `.md` 파싱은 하위호환 폴백으로만 존치, 편집 금지):
-
 > **[MUST] STATE.md 초기 생성**: `~/.opal/tools/state-tool/run.sh init <task-path> --skill opd --mode <interactive|semi-agentic|agentic> --rows-from opal/skills/opal-pilot-dev/references/pipeline.json` 호출. 기본값: `semi-agentic`. 행 구성 SSOT는 `references/pipeline.json`(task-step key 포함) — `--rows-from`이 확장자로 분기해 파싱한다(070).
 > 근거: `tasks/134-260501-opp-pipeline-state-tool/TASK.md` F-15 / `PLAN.md` §2.3 / §2.20.2 / §3 Step 8 (P-3 advance, P-1 mark) / `tasks/070-260720-opd-태스크스텝-키주소-1차/PLAN.md` §3.6.2 (pipeline.json 전환)
 
-```markdown
-| # | 단계 | 항목 | 상태 | 시점 |
-|---|------|------|------|------|
-| 1 | TASK | 작업 | ⬜ | - |
-| 2 | TASK | 사용자 확인 | ⬜ | - |
-| 3 | ANALYSIS | 작업 | ⬜ | - |
-| 4 | ANALYSIS | PM Gate | ⬜ | - |
-| 5 | ANALYSIS | 사용자 확인 | ⬜ | - |
-| 6 | PLAN | 작업 | ⬜ | - |
-| 7 | PLAN | PM Gate | ⬜ | - |
-| 8 | PLAN | 사용자 확인 | ⬜ | - |
-| 9 | TEST-SCENARIO | 작업 | ⬜ | - |
-| 10 | TEST-SCENARIO | 목표-커버 게이트 | ⬜ | - |
-| 11 | TEST-SCENARIO | 사용자 확인 | ⬜ | - |
-| 12 | EXECUTE | 작업 | ⬜ | - |
-| 13 | TEST | 작업 | ⬜ | - |
-| 14 | TEST | PM Gate | ⬜ | - |
-| 15 | TEST | 사용자 확인 | ⬜ | - |
-| 16 | CLOSE | DONE.md 생성 | ⬜ | - |
-```
+> **행 구성 SSOT**: `references/pipeline.json` `task_steps[]`. 현재 행 목록은
+> `~/.opal/tools/state-tool/run.sh show <task-path>` 또는 pipeline.json을 직접 조회한다.
 
-> TASK.md 생성은 행 1(TASK 작업)에 흡수, ANALYSIS.md 생성은 행 3(ANALYSIS 작업)에 흡수, PLAN.md 생성은 행 6(PLAN 작업)에 흡수, TEST-SCENARIO.md 생성은 행 9(TEST-SCENARIO 작업)에 흡수. State Gate 행 9개는 state-tool stage-transition guard(PLAN §M-A)로 이전 완료 — 행으로 강제하지 않는다.
-> **[MUST] 행 10(목표-커버 게이트)은 `op-scenario-gate` 스킬 반환 `verdict: pass`일 때만 mark한다** — PM이 산문 판단만으로 mark할 수 없으며, 이 행이 미완이면 stage-transition guard가 EXECUTE(`execute.implement`) 진입을 구조적으로 거부한다(073/F-005, R-5).
+> TASK.md 생성은 `task.task_md` 행에 흡수, ANALYSIS.md 생성은 `analysis.analysis_md` 행에 흡수, PLAN.md 생성은 `plan.plan_md` 행에 흡수, TEST-SCENARIO.md 생성은 `test_scenario.test_scenario_md` 행에 흡수. State Gate 성격의 판정은 개별 행이 아니라 state-tool stage-transition guard(PLAN §M-A)가 자동 수행한다 — 행으로 강제하지 않는다.
+> **[MUST] `test_scenario.scenario_gate` 행(목표-커버 게이트)은 `op-scenario-gate` 스킬 반환 `verdict: pass`일 때만 mark한다** — PM이 산문 판단만으로 mark할 수 없으며, 이 행이 미완이면 stage-transition guard가 EXECUTE(`execute.implement`) 진입을 구조적으로 거부한다(073/F-005, R-5).
 > TEST 루핑 발생 시: `~/.opal/tools/state-tool/run.sh add-row <task-path> --after 15 --stage TEST --item 'fix 작업 (N/3)'` 호출로 동적 추가한다 (P-6 추가작업 행 추가 패턴).
 
 ## PM Gate 점검 목록
 
-| Phase | 산출물 | 체크리스트 위치 |
-|-------|-------|----------------|
-| ANALYSIS | ANALYSIS.md | - |
-| PLAN | TASK.md, PLAN.md | TASK.md 요구사항, PLAN.md §4.2, §5, §리스크 가설 표 |
-| TEST-SCENARIO | TEST-SCENARIO.md | 7항목: ① mock 부재(grep) ② 사전 조건 데이터 채워짐 ③ Given/When/Then 3필드 ④ 가설↔시나리오 매핑 완전 ⑤ L1/L2/L3 계층 명시 ⑥ L3 [SUPERVISOR] 마커 + PM 요청 양식 ⑦ 실행 방식(M1/M2/M3) 명시 |
-| TEST | TEST-SCENARIO.md, GC-CONVENTION-*.md | TEST-SCENARIO.md 시나리오 결과/코드품질/보안/회귀, 컨벤션 자동 진단 PASS |
+> **게이트 정의 SSOT**: `references/pipeline.json` `task_steps[].gate` — 산출물(`artifacts`)과
+> 체크리스트(`checklist`)는 이곳에만 정의한다. `state-tool mark --task-step <게이트 key>` 호출 시
+> artifacts 존재를 도구가 검증하고(미충족 시 `gate_artifact_missing`으로 거부) checklist를
+> stdout `gate_checklist` 페이로드로 반환한다. 각 Phase의 판정 절차·기준은 STEP 2(ANALYSIS)/STEP 3(PLAN)/STEP 3.5(TEST-SCENARIO)/STEP 5(TEST)의 "PM Gate" 절을 따른다.
 
 ---
 
@@ -414,3 +387,4 @@ semi-agentic / agentic 모두 CLOSE 첫 행 `--auto-pass` 거부 (`agentic_close
 | v4.7 | 2026-07-20 15:45 | task-step 키 주소 체계 도입 — `references/pipeline.json` 신설(15 task-step, SSOT), `--rows-from` 호출 경로를 SKILL.md에서 pipeline.json으로 교체(`.md` 파싱은 하위호환 폴백으로 존치), 표는 사람 열람용 미러로 축소 (070) |
 | v4.8 | 2026-07-23 | STEP 3.5 목표-커버 게이트 접합 — `references/pipeline.json`에 `test_scenario.scenario_gate` 행 신설(id 10, 이후 11~16 재부여, 15→16 task-step), TEST-SCENARIO.md 작성 mark 후 `op-scenario-gate` 스킬 호출 절차 배선(verdict pass만 게이트 행 mark, rewrite=재작성 루프, escalate=사용자 에스컬레이션), 사람 열람 미러 표 16행 갱신 + 게이트 mark 조건 주석 추가. state-tool 소스 무변경(pipeline.json만 편집) (073) |
 | v4.8 | 2026-07-23 09:56 | 본문 state-tool 명령 예시를 task-step key 주소로 전환(--row→--task-step, --step→--action-step). pipeline.json key 기준. (070 후속) |
+| v4.9 | 2026-08-14 09:23 | pipeline.json 중복 정리 — STATE.md 진행 현황 미러 표 삭제 + 산문 `행 N` 참조를 task-step key로 전환, 모드·단계 목록 표 제거(meta 중복), PM Gate 점검 목록 표를 `references/pipeline.json` `task_steps[].gate` SSOT 포인터로 교체 (091) |

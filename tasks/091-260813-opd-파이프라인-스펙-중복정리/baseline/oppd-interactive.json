@@ -1,0 +1,119 @@
+[
+  {
+    "row_id": 1,
+    "stage": "TASK",
+    "item": "작업",
+    "key": "task.task_md",
+    "status": "pending",
+    "status_label": "⬜",
+    "owner": "PM"
+  },
+  {
+    "row_id": 2,
+    "stage": "TASK",
+    "item": "사용자 확인",
+    "key": "task.user_confirm",
+    "status": "pending",
+    "status_label": "⬜",
+    "owner": "PM"
+  },
+  {
+    "row_id": 3,
+    "stage": "PLAN",
+    "item": "Phase1 PRD/TRD 작성 (opwt)",
+    "key": "plan.prd_trd",
+    "status": "pending",
+    "status_label": "⬜",
+    "owner": "PM"
+  },
+  {
+    "row_id": 4,
+    "stage": "PLAN",
+    "item": "Phase1 명세 검증 (op-spec-validator)",
+    "key": "plan.spec_validate",
+    "status": "pending",
+    "status_label": "⬜",
+    "owner": "PM"
+  },
+  {
+    "row_id": 5,
+    "stage": "PLAN",
+    "item": "PM Gate",
+    "key": "plan.pm_gate",
+    "status": "pending",
+    "status_label": "⬜",
+    "owner": "PM"
+  },
+  {
+    "row_id": 6,
+    "stage": "PLAN",
+    "item": "Phase1 사용자 확정",
+    "key": "plan.user_confirm",
+    "status": "pending",
+    "status_label": "⬜",
+    "owner": "PM"
+  },
+  {
+    "row_id": 7,
+    "stage": "WBS",
+    "item": "Phase2 WBS 작성",
+    "key": "wbs.wbs_md",
+    "status": "pending",
+    "status_label": "⬜",
+    "owner": "PM"
+  },
+  {
+    "row_id": 8,
+    "stage": "WBS",
+    "item": "PM Gate",
+    "key": "wbs.pm_gate",
+    "status": "pending",
+    "status_label": "⬜",
+    "owner": "PM"
+  },
+  {
+    "row_id": 9,
+    "stage": "WBS",
+    "item": "Phase2 사용자 확정",
+    "key": "wbs.user_confirm",
+    "status": "pending",
+    "status_label": "⬜",
+    "owner": "PM"
+  },
+  {
+    "row_id": 10,
+    "stage": "EXECUTE",
+    "item": "Phase3 액션 실행 (동적 추가)",
+    "key": "execute.actions",
+    "status": "pending",
+    "status_label": "⬜",
+    "owner": "PM"
+  },
+  {
+    "row_id": 11,
+    "stage": "EXECUTE",
+    "item": "PM Gate",
+    "key": "execute.pm_gate",
+    "status": "pending",
+    "status_label": "⬜",
+    "owner": "PM"
+  },
+  {
+    "row_id": 12,
+    "stage": "EXECUTE",
+    "item": "사용자 확인",
+    "key": "execute.user_confirm",
+    "status": "pending",
+    "status_label": "⬜",
+    "owner": "PM"
+  },
+  {
+    "row_id": 13,
+    "stage": "CLOSE",
+    "item": "DONE.md 생성",
+    "key": "close.done_md",
+    "status": "pending",
+    "status_label": "⬜",
+    "owner": "PM"
+  }
+]

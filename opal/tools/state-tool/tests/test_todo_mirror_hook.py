@@ -3,8 +3,8 @@
   "module": "test_todo_mirror_hook",
   "layer": "test",
   "domain": "opal-pipeline",
-  "description": "076 F-002: todo_mirror_hook.py 단위 테스트 (TS-010~013). 합성 stdin JSON으로 (1)state-tool advance+payload→additionalContext 주입 (2)비state-tool/비Bash Bash 명령→무출력 exit0(H-6) (3)stderr 경고 혼입 stdout에서 마지막 JSON 라인 payload 추출(H-5) (4)payload 부재·깨진 JSON(stdin/stdout)→무출력 exit0 fail-safe(DEC-9) 를 검증한다. 스크립트 subprocess 실행(exit0 실증) + 순수 함수 직접 호출 병행. 표준 라이브러리만. 088: TestHistoryLinkRelay 신설(TS-8~TS-10) — stdout의 todo_mirror+history_link 동시 존재 시 reminder 원문이 기존 todo 미러 지시문과 병존 릴레이·history_link 부재 시 기존 동작 불변(대조군으로 미주입의 선택성 확증)·history_link 단독일 때도 exit0+reminder 주입을 스크립트 subprocess 실행으로만 검증(mock 없음).",
-  "exports": ["TestTodoMirrorHook", "TestHookPureFunctions", "TestHistoryLinkRelay"]
+  "description": "076 F-002: todo_mirror_hook.py 단위 테스트 (TS-010~013). 합성 stdin JSON으로 (1)state-tool advance+payload→additionalContext 주입 (2)비state-tool/비Bash Bash 명령→무출력 exit0(H-6) (3)stderr 경고 혼입 stdout에서 마지막 JSON 라인 payload 추출(H-5) (4)payload 부재·깨진 JSON(stdin/stdout)→무출력 exit0 fail-safe(DEC-9) 를 검증한다. 스크립트 subprocess 실행(exit0 실증) + 순수 함수 직접 호출 병행. 표준 라이브러리만. 088: TestHistoryLinkRelay 신설(TS-8~TS-10) — stdout의 todo_mirror+history_link 동시 존재 시 reminder 원문이 기존 todo 미러 지시문과 병존 릴레이·history_link 부재 시 기존 동작 불변(대조군으로 미주입의 선택성 확증)·history_link 단독일 때도 exit0+reminder 주입을 스크립트 subprocess 실행으로만 검증(mock 없음). 091(RED-first, mode:red, F-004 §3.4.2 (7)): TestGateChecklistRelay 신설(TEST-SCENARIO S-18~S-19) — extract_gate_checklist()/build_additional_context()의 gate_checklist 인자가 아직 없어(Step 9 GREEN 이전) stdout의 gate_checklist가 릴레이되지 않는 것이 RED 증거. gate_checklist 단독 주입(S-18)과 076 todo_mirror·088 history_link·091 gate_checklist 3종 병존(S-19)을 스크립트 subprocess 실행으로만 검증(mock 없음).",
+  "exports": ["TestTodoMirrorHook", "TestHookPureFunctions", "TestHistoryLinkRelay", "TestGateChecklistRelay"]
 }
 """
 
@@ -283,6 +283,91 @@ class TestHistoryLinkRelay(unittest.TestCase):
         ctx = json.loads(out)["hookSpecificOutput"]["additionalContext"]
         self.assertIn(_HL_REMINDER, ctx,
                       f"reminder 원문이 포함되어야 함, 실제 ctx={ctx!r}")
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# 091 F-004 §3.4.2 (7): TestGateChecklistRelay — gate_checklist 릴레이 (S-18~S-19)
+# [MUST] red-first.md §4: extract_gate_checklist()/build_additional_context()의
+# gate_checklist 인자는 아직 todo_mirror_hook.py에 없다(Step 9 GREEN 이전) — 아래는
+# additionalContext에 게이트 리마인더/checklist가 섞이지 않는 것이 RED 증거다.
+# 스크립트 subprocess 실행(공개 경계)만 사용 — 내부 함수 mock 없음.
+# ═════════════════════════════════════════════════════════════════════════════
+
+_GATE_REMINDER = (
+    "[PM Gate 점검] 아래 checklist 전 항목을 확인한 뒤 다음 단계로 진행하라. "
+    "SSOT는 해당 pilot references/pipeline.json task_steps[].gate 이다."
+)
+
+
+def _gate_checklist_payload(key="plan.pm_gate", stage="PLAN", item="PM Gate",
+                            artifacts=None, checklist=None, reminder=_GATE_REMINDER):
+    return {
+        "key":       key,
+        "stage":     stage,
+        "item":      item,
+        "artifacts": artifacts if artifacts is not None else ["TASK.md", "PLAN.md"],
+        "checklist": checklist if checklist is not None else ["TASK.md 요구사항", "PLAN.md §4.2"],
+        "reminder":  reminder,
+    }
+
+
+class TestGateChecklistRelay(unittest.TestCase):
+    """091 R-11(b)/R-12: state-tool mark stdout의 gate_checklist가 PostToolUse
+    additionalContext로 릴레이되는지 검증한다(스크립트 subprocess, mock 없음).
+
+    R-12가 SKILL.md의 PM Gate 체크리스트 표를 삭제하는 짝으로, mark stdout이
+    유일한 checklist 노출 경로가 된다 — 이 릴레이가 없으면 정보 손실이 발생한다
+    (§3.4.2 (7) 확대 근거 1).
+    """
+
+    _MARK_CMD = '"$HOME/.opal/tools/state-tool/run.sh" mark /tmp/proj/tasks/t --task-step plan.pm_gate --done'
+
+    def _run_hook(self, stdin_obj):
+        raw = stdin_obj if isinstance(stdin_obj, str) else json.dumps(stdin_obj)
+        proc = subprocess.run(
+            [sys.executable, str(_HOOK)],
+            input=raw, capture_output=True, text=True,
+        )
+        return proc.returncode, proc.stdout.strip()
+
+    def _stdin_for(self, stdout_obj):
+        return {
+            "tool_name": "Bash",
+            "tool_input": {"command": self._MARK_CMD},
+            "tool_response": {"stdout": json.dumps(stdout_obj, ensure_ascii=False)},
+        }
+
+    def test_s18_gate_checklist_alone_injects_additional_context(self):
+        """[T091/L2-S18] stdout에 gate_checklist만 존재 → hook exit 0 +
+        additionalContext에 게이트 리마인더 + checklist 항목 포함(S-12 실제 stdout을
+        stdin으로 주입하는 시나리오의 최소 재현)."""
+        payload = _gate_checklist_payload()
+        stdin = self._stdin_for({"ok": True, "command": "mark", "gate_checklist": payload})
+        code, out = self._run_hook(stdin)
+        self.assertEqual(code, 0)
+        self.assertTrue(out, "gate_checklist 단독일 때도 additionalContext가 출력되어야 함")
+        ctx = json.loads(out)["hookSpecificOutput"]["additionalContext"]
+        self.assertIn(_GATE_REMINDER, ctx, f"게이트 리마인더가 포함되어야 함: {ctx!r}")
+        self.assertIn("TASK.md 요구사항", ctx, f"checklist 항목이 포함되어야 함: {ctx!r}")
+
+    def test_s19_three_payloads_coexist(self):
+        """[T091/L2-S19] 076 todo_mirror · 088 history_link · 091 gate_checklist
+        3종이 동시에 있을 때 additionalContext에 셋 다 병존 출력(교체 아님, 기존
+        2-페이로드 병존 계약의 회귀 보호 + 신규 페이로드 추가)."""
+        stdin = self._stdin_for({
+            "ok": True, "command": "mark",
+            "todo_mirror":    _mirror_payload("update", "PLAN", "in_progress"),
+            "history_link":   _history_link_payload(),
+            "gate_checklist": _gate_checklist_payload(),
+        })
+        code, out = self._run_hook(stdin)
+        self.assertEqual(code, 0)
+        self.assertTrue(out, "3종 병존 시 출력이 있어야 함")
+        ctx = json.loads(out)["hookSpecificOutput"]["additionalContext"]
+        self.assertIn("파이프라인 todo 미러", ctx, "076 todo_mirror 지시문이 보존되어야 함")
+        self.assertIn("stage:PLAN", ctx, "076 todo_mirror payload가 보존되어야 함")
+        self.assertIn(_HL_REMINDER, ctx, "088 history_link reminder가 보존되어야 함")
+        self.assertIn(_GATE_REMINDER, ctx, "091 gate_checklist reminder가 추가되어야 함")
 
 
 if __name__ == "__main__":

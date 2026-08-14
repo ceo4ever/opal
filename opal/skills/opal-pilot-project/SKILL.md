@@ -55,7 +55,7 @@ PLAN 완료
        - [ ] TASK.md 요구사항 전체 커버 여부 (PLAN.md §1 기능 목록 대조)
        - [ ] PLAN.md §3 실행 체크리스트 완성도 (완료 기준 명시)
        - [ ] 설계 피드백 섹션에 미해결 빈틈이 없는가
-  → PM Gate 통과 후 해당 행(행 4, PLAN PM Gate)을 단일 mark. 사용자에게 PLAN 보고. 승인 = EXECUTE 시작 허가.
+  → PM Gate 통과 후 해당 행(`plan.pm_gate`)을 단일 mark. 사용자에게 PLAN 보고. 승인 = EXECUTE 시작 허가.
 
 > **단계 시작 (P-3)**: `~/.opal/tools/state-tool/run.sh advance <task-path> --task-step <task-step-key>` 호출로 해당 단계 작업 행을 🔄로 전환.
 > 근거: `PLAN.md` §3 Step 8 P-3
@@ -119,7 +119,7 @@ op-task-execute 워커 디스패치. **model**: standard. checklist_source: PLAN
 
 모든 체크리스트 갱신 완료 확인 후 태스크를 마감한다.
 
-1. DONE.md 생성 후 행 9(CLOSE 행) mark (`~/.opal/tools/state-tool/run.sh mark <task-path> --task-step close.done_md --done` 호출 — P-1). 행을 mark하는 것 자체가 state 기록이다.
+1. DONE.md 생성 후 `close.done_md` 행 mark (`~/.opal/tools/state-tool/run.sh mark <task-path> --task-step close.done_md --done` 호출 — P-1). 행을 mark하는 것 자체가 state 기록이다.
 2. **관련 문서 업데이트** (op-brain-ingest 디스패치 직전 실행):
    - `<프로젝트-루트>/docs/PROJECT.md`의 "프로젝트 문서" 레지스트리와 이번 태스크의 `changed_files`(EXECUTE 산출)를 양쪽 종합하여, 태스크 결과로 내용이 달라진 관련 문서(ARCHITECTURE.md·기획서 등)를 식별한다.
    - 갱신 대상이 있으면 PM이 판단하여 직접 수정하거나 적합한 워커를 디스패치해 최신화한다. 갱신 대상이 없으면 자연 스킵(no-op) — CLOSE를 중단시키지 않는다.
@@ -152,40 +152,22 @@ op-task-execute 워커 디스패치. **model**: standard. checklist_source: PLAN
 
 ## STATE.md 도메인 치환값
 
-| 필드 | 값 |
-|------|------|
-| 모드 | Project Task |
-| 단계 목록 | TASK / PLAN / EXECUTE / CLOSE |
-
-**진행 현황 행 예시** (아래 표는 사람 열람용 미러 — SSOT는 `references/pipeline.json`. `.md` 파싱은 하위호환 폴백으로만 존치, 편집 금지):
-
 > **[MUST] STATE.md 초기 생성**: `~/.opal/tools/state-tool/run.sh init <task-path> --skill opp --mode <interactive|semi-agentic|agentic> --rows-from opal/skills/opal-pilot-project/references/pipeline.json` 호출. 기본값: `semi-agentic`. 행 구성 SSOT는 `references/pipeline.json`(task-step key 포함) — `--rows-from`이 확장자로 분기해 파싱한다(070).
 > 근거: `tasks/134-260501-opp-pipeline-state-tool/TASK.md` F-15 / `PLAN.md` §2.3 / §2.20.2 / §3 Step 8 (P-3 advance, P-1 mark) / `tasks/070-260720-opd-태스크스텝-키주소-1차/PLAN.md` §3.6.2 (pipeline.json 전환)
 
-```markdown
-| # | 단계 | 항목 | 상태 | 시점 |
-|---|------|------|------|------|
-| 1 | TASK | 작업 | ⬜ | - |
-| 2 | TASK | 사용자 확인 | ⬜ | - |
-| 3 | PLAN | 작업 | ⬜ | - |
-| 4 | PLAN | PM Gate | ⬜ | - |
-| 5 | PLAN | 사용자 확인 | ⬜ | - |
-| 6 | EXECUTE | 작업 | ⬜ | - |
-| 7 | EXECUTE | PM Gate | ⬜ | - |
-| 8 | EXECUTE | 사용자 확인 | ⬜ | - |
-| 9 | CLOSE | DONE.md 생성 | ⬜ | - |
-```
+> **행 구성 SSOT**: `references/pipeline.json` `task_steps[]`. 현재 행 목록은
+> `~/.opal/tools/state-tool/run.sh show <task-path>` 또는 pipeline.json을 직접 조회한다.
 
-> TASK.md 생성은 행 1(TASK 작업)에 흡수, PLAN.md 생성은 행 3(PLAN 작업)에 흡수. State Gate 행 4개·QA Gate 행 2개·QA 산출물 행은 제거 — State Gate는 state-tool stage-transition guard(PLAN §M-A)로 이전 완료, QA Gate는 PM Gate에 흡수.
+> TASK.md 생성은 `task.task_md` 행에 흡수, PLAN.md 생성은 `plan.plan_md` 행에 흡수. State Gate 행·QA Gate 행·QA 산출물 행은 제거 — State Gate는 state-tool stage-transition guard(PLAN §M-A)로 이전 완료, QA Gate는 PM Gate에 흡수.
 
 ---
 
 ## PM Gate 점검 목록
 
-| Phase | 산출물 | 체크리스트 위치 |
-|-------|-------|----------------|
-| PLAN | TASK.md, PLAN.md | TASK.md 요구사항, PLAN.md §3, §4 |
-| EXECUTE | GC-CONVENTION-*.md | PLAN.md §3 실행 체크리스트, 컨벤션 자동 진단 |
+> **게이트 정의 SSOT**: `references/pipeline.json` `task_steps[].gate` — 산출물(`artifacts`)과
+> 체크리스트(`checklist`)는 이곳에만 정의한다. `state-tool mark --task-step <게이트 key>` 호출 시
+> artifacts 존재를 도구가 검증하고(미충족 시 `gate_artifact_missing`으로 거부) checklist를
+> stdout `gate_checklist` 페이로드로 반환한다. 각 Phase의 판정 절차·기준은 STEP 2(PLAN)/STEP 3(EXECUTE)의 "PM Gate" 절을 따른다.
 
 ---
 
@@ -198,7 +180,7 @@ opal-harness-agentic.md / opal-harness-semi-agentic.md 참조. 본 절은 이 �
 기본 호출(`//opp {작업}`)은 semi-agentic 모드. PLAN-equivalent까지 사용자 검토, EXECUTE-equivalent 이후 PM 자율, CLOSE 진입은 사용자 승인 필수.
 
 **모드 경계** (이 시점부터 PM 자율):
-- PLAN 사용자 확인 행(행 5) 통과 후 → EXECUTE 작업 행(행 6)부터 PM 자율
+- PLAN 사용자 확인 행(`plan.user_confirm`) 통과 후 → EXECUTE 작업 행(`execute.implement`)부터 PM 자율
 
 ### 명시 모드
 
@@ -272,3 +254,4 @@ semi-agentic / agentic 모두 CLOSE 첫 행 `--auto-pass` 거부 (`agentic_close
 | v3.4 | 2026-07-10 13:12 | note 예시(산문)의 소유자 확인 표기를 `{owner_name} 확인:` 형식으로 통일 — identity.md owner_name 재해석 규칙(AGENT.md §정체성 적용)과 정합, 오염 차단 (054) |
 | v3.5 | 2026-07-20 15:45 | task-step 키 주소 체계 도입 — `references/pipeline.json` 신설(9 task-step, SSOT), `--rows-from` 호출 경로를 SKILL.md에서 pipeline.json으로 교체(`.md` 파싱은 하위호환 폴백으로 존치), 표는 사람 열람용 미러로 축소 (070) |
 | v3.6 | 2026-07-23 09:56 | 본문 state-tool 명령 예시를 task-step key 주소로 전환(--row→--task-step, --step→--action-step). pipeline.json key 기준. (070 후속) |
+| v3.7 | 2026-08-14 09:23 | pipeline.json 중복 정리 — STATE.md 진행 현황 미러 표 삭제 + 산문 `행 N` 참조를 task-step key로 전환, 모드·단계 목록 표 제거(meta 중복), PM Gate 점검 목록 표를 `references/pipeline.json` `task_steps[].gate` SSOT 포인터로 교체 (091) |

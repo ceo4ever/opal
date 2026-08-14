@@ -145,7 +145,7 @@ state-tool 호출:
 
 모든 체크리스트 갱신 완료 확인 후 태스크를 마감한다.
 
-1. DONE.md 생성 후 행 9(CLOSE 행) mark (`~/.opal/tools/state-tool/run.sh mark <task-path> --task-step close.done_md --done` 호출 — P-1). 행을 mark하는 것 자체가 state 기록이다.
+1. DONE.md 생성 후 close.done_md 행 mark (`~/.opal/tools/state-tool/run.sh mark <task-path> --task-step close.done_md --done` 호출 — P-1). 행을 mark하는 것 자체가 state 기록이다.
 2. **관련 문서 업데이트** (op-brain-ingest 디스패치 직전 실행):
    - `<프로젝트-루트>/docs/PROJECT.md`의 "프로젝트 문서" 레지스트리와 이번 태스크의 `changed_files`(EXECUTE 산출)를 양쪽 종합하여, 태스크 결과로 내용이 달라진 관련 문서(ARCHITECTURE.md·기획서·와이어프레임 등)를 식별한다.
    - 갱신 대상이 있으면 PM이 판단하여 직접 수정하거나 적합한 워커를 디스패치해 최신화한다. 갱신 대상이 없으면 자연 스킵(no-op) — CLOSE를 중단시키지 않는다.
@@ -181,8 +181,6 @@ state-tool 호출:
 ## STATE.md 도메인 치환값
 
 Harness STATE.md 템플릿에 적용:
-- `{모드}`: Wireframe UI
-- `{단계 목록}`: TASK / WIREFRAME / EXECUTE / CLOSE
 - `{산출물 목록}`: TASK.md, wireframe.md(기존 존재 가능), GC-CONVENTION-*.md, DONE.md
 
 **진행 현황 행 예시** (아래 표는 사람 열람용 미러 — SSOT는 `references/pipeline.json`. `.md` 파싱은 하위호환 폴백으로만 존치, 편집 금지):
@@ -190,31 +188,20 @@ Harness STATE.md 템플릿에 적용:
 > **[MUST] STATE.md 초기 생성**: `~/.opal/tools/state-tool/run.sh init <task-path> --skill opdw --mode <interactive|semi-agentic|agentic> --rows-from opal/skills/opal-pilot-dev-wireframe/references/pipeline.json` 호출. 기본값: `semi-agentic`. 행 구성 SSOT는 `references/pipeline.json`(task-step key 포함, WIREFRAME 3~5행 `conditional:true`) — `--rows-from`이 확장자로 분기해 파싱한다(070). 행 데이터를 직접 편집하지 않는다.
 > 근거: `tasks/134-260501-opp-pipeline-state-tool/TASK.md` F-15 / `PLAN.md` §2.3 / §2.20.2 / §3 Step 8 (P-3 advance, P-1 mark) / `tasks/070-260720-opd-태스크스텝-키주소-1차/PLAN.md` §3.6.2 (pipeline.json 전환)
 
-```markdown
-| # | 단계 | 항목 | 상태 | 시점 |
-|---|------|------|------|------|
-| 1 | TASK | 작업 | ⬜ | - |
-| 2 | TASK | 사용자 확인 | ⬜ | - |
-| 3 | WIREFRAME | 작업 | ⬜ | - |
-| 4 | WIREFRAME | PM Gate | ⬜ | - |
-| 5 | WIREFRAME | 사용자 확인 | ⬜ | - |
-| 6 | EXECUTE | 작업 | ⬜ | - |
-| 7 | EXECUTE | PM Gate | ⬜ | - |
-| 8 | EXECUTE | 사용자 확인 | ⬜ | - |
-| 9 | CLOSE | DONE.md 생성 | ⬜ | - |
-```
+> **행 구성 SSOT**: `references/pipeline.json` `task_steps[]`. 현재 행 목록은
+> `~/.opal/tools/state-tool/run.sh show <task-path>` 또는 pipeline.json을 직접 조회한다.
 
-> TASK.md 생성은 행 1(TASK 작업)에 흡수. wireframe.md 생성은 행 3(WIREFRAME 작업)에 흡수. State Gate 행은 state-tool stage-transition guard(PLAN §M-A)로 이전 완료 — 행으로 강제하지 않는다.
+> TASK.md 생성은 task.task_md 행에 흡수. wireframe.md 생성은 wireframe.wireframe_md 행에 흡수. State Gate 행은 state-tool stage-transition guard(PLAN §M-A)로 이전 완료 — 행으로 강제하지 않는다.
 > WIREFRAME 스킵 시 (wireframe.md 기존 존재): WIREFRAME 단계 행(#3-#5)을 `-`로 표기한다.
 
 ---
 
 ## PM Gate 점검 목록
 
-| Phase | 산출물 | 체크리스트 위치 |
-|-------|-------|----------------|
-| WIREFRAME | TASK.md, wireframe.md | TASK.md 요구사항, wireframe.md 화면 목록; op-dev-qa/SKILL.md 와이어프레임 검증 기준 참조 |
-| EXECUTE | changed_files, GC-CONVENTION-*.md | 빌드/린트 결과, wireframe↔코드 대조, 컨벤션 자동 진단; op-dev-qa/SKILL.md EXECUTE-UI 검증 기준 참조 |
+> **게이트 정의 SSOT**: `references/pipeline.json` `task_steps[].gate` — 산출물(`artifacts`)과
+> 체크리스트(`checklist`)는 이곳에만 정의한다. `state-tool mark --task-step <게이트 key>` 호출 시
+> artifacts 존재를 도구가 검증하고(미충족 시 `gate_artifact_missing`으로 거부) checklist를
+> stdout `gate_checklist` 페이로드로 반환한다.
 
 ---
 
@@ -241,9 +228,7 @@ opal-harness-agentic.md / opal-harness-semi-agentic.md 참조. 본 절은 이 �
 
 STATE.md 모드 필드를 지정하여 기록한다 (기본: `semi-agentic`):
 
-```
-~/.opal/tools/state-tool/run.sh init <task-path> --skill opdw --mode <interactive|semi-agentic|agentic> --rows-from opal/skills/opal-pilot-dev-wireframe/references/pipeline.json
-```
+> STATE.md 초기 생성은 §STATE.md 도메인 치환값 참조.
 
 ### 자율 게이트 흐름 (semi-agentic)
 
@@ -300,3 +285,4 @@ semi-agentic / agentic 모두 CLOSE 첫 행 `--auto-pass` 거부 (`agentic_close
 | v3.1 | 2026-07-10 13:12 | note 예시의 소유자 확인 표기를 `{owner_name} 확인:` 형식으로 통일 — identity.md owner_name 재해석 규칙(AGENT.md §정체성 적용)과 정합, 오염 차단 (054) |
 | v3.2 | 2026-07-20 15:45 | task-step 키 주소 체계 도입 — `references/pipeline.json` 신설(9 task-step, WIREFRAME 3~5행 `conditional:true`, SSOT), `--rows-from` 호출 경로를 SKILL.md에서 pipeline.json으로 교체(`.md` 파싱은 하위호환 폴백으로 존치), 표는 사람 열람용 미러로 축소 (070) |
 | v3.3 | 2026-07-23 09:56 | 본문 state-tool 명령 예시를 task-step key 주소로 전환(--row→--task-step, --step→--action-step). pipeline.json key 기준. (070 후속) |
+| v3.4 | 2026-08-14 09:23 | 산문 `행 N` 참조 3건을 task-step key 참조로 전환 + STATE.md 진행 현황 미러 표/PM Gate 점검 표를 `references/pipeline.json` SSOT 포인터로 교체 + 치환값 절 `{모드}`/`{단계 목록}` 중복 기재 제거(meta.mode_label/stages와 중복) + init 완전 명령 1지점화(§STATE.md 도메인 치환값 정본, §활성화는 포인터) (091) |

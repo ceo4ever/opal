@@ -73,7 +73,7 @@ PLAN 완료
        - [ ] 목표-커버 게이트 verdict: pass (스킵 시 해당 없음)
        - [ ] 설계 피드백 섹션에 미해결 빈틈이 없는가
        - [ ] 규모 기준 초과 시 Full Task 에스컬레이션 검토 여부
-  → PM Gate 통과 후 해당 행(P-4, 행 5)을 단일 mark. 사용자에게 PLAN + TEST-SCENARIO 함께 보고. 승인 = EXECUTE 시작 허가.
+  → PM Gate 통과 후 해당 행(P-4, `plan.pm_gate`)을 단일 mark. 사용자에게 PLAN + TEST-SCENARIO 함께 보고. 승인 = EXECUTE 시작 허가.
 
 > **사용자 확인 (P-5)**: 사용자 발화 후 PM이 `~/.opal/tools/state-tool/run.sh mark <task-path> --task-step plan.user_confirm --done --owner user --note '{owner_name} 확인: ...'` 호출. CLOSE 진입 전 이 행의 `owner=user` 여부를 도구가 자동 검증한다 (§2.16 G-13).
 > 근거: `PLAN.md` §3 Step 8 P-1 / P-5
@@ -115,7 +115,7 @@ op-dev-execute 스킬을 수행하라.
 
 ### 3-3. EXECUTE 완료 후
 
-모든 배치 완료 → changed_files 병합 → 행 7 mark → **TEST 단계 진입**.
+모든 배치 완료 → changed_files 병합 → `execute.implement` 행 mark → **TEST 단계 진입**.
 
 > **EXECUTE Step 완료 (P-4)**: 워커가 `~/.opal/tools/state-tool/run.sh mark <task-path> --task-step execute.implement --done --as-worker --worker-stage EXECUTE --action-step <N/M>` 호출 (T-10 워커 권한 게이트).
 > **블로커 발생 (P-7)**: `~/.opal/tools/state-tool/run.sh block <task-path> --task-step <task-step-key> --reason '...'` 호출.
@@ -129,7 +129,7 @@ op-dev-test-agent 워커 디스패치. TEST-SCENARIO.md 실행 + 결과 기록 +
 
 > **[PM 컨텍스트 주입]** 디스패치 프롬프트 첫 줄에 `[WORKER]` 삽입. 하네스 Guards 핵심 규칙 + TEST-SCENARIO.md 경로 + changed_files 전달.
 
-워커 완료 → 행 8 mark.
+워커 완료 → `test.run_tests` 행 mark.
 
 ### PASS 시
 
@@ -142,7 +142,7 @@ op-dev-test-agent 워커 디스패치. TEST-SCENARIO.md 실행 + 결과 기록 +
      - [ ] 회귀 테스트 항목 Pass
      - [ ] 설계 피드백 미해결 빈틈 없음
      - [ ] 컨벤션 자동 진단 PASS (changed_files 컨벤션 적용 대상 ≥1건 시 발동, GC-CONVENTION-*.md 보고서 Critical/High 0건)
-→ PM Gate 통과 후 해당 행(행 9)을 단일 mark. 사용자에게 완료 보고 후 CLOSE 단계 진입 승인 요청.
+→ PM Gate 통과 후 해당 행(`test.pm_gate`)을 단일 mark. 사용자에게 완료 보고 후 CLOSE 단계 진입 승인 요청.
 
 > **사용자 확인 (P-5)**: 사용자 발화 후 PM이 `~/.opal/tools/state-tool/run.sh mark <task-path> --task-step test.user_confirm --done --owner user --note '{owner_name} 확인: ...'` 호출.
 > 근거: `PLAN.md` §3 Step 8 P-1 / P-5
@@ -180,7 +180,7 @@ op-dev-test-agent 워커 디스패치. TEST-SCENARIO.md 실행 + 결과 기록 +
 
 모든 체크리스트 갱신 완료 확인 후 태스크를 마감한다.
 
-1. DONE.md 생성 후 행 11(CLOSE 행) mark (`~/.opal/tools/state-tool/run.sh mark <task-path> --task-step close.done_md --done` 호출 — P-1). 행을 mark하는 것 자체가 state 기록이다.
+1. DONE.md 생성 후 `close.done_md` 행 mark (`~/.opal/tools/state-tool/run.sh mark <task-path> --task-step close.done_md --done` 호출 — P-1). 행을 mark하는 것 자체가 state 기록이다.
 2. **관련 문서 업데이트** (op-brain-ingest 디스패치 직전 실행):
    - `<프로젝트-루트>/docs/PROJECT.md`의 "프로젝트 문서" 레지스트리와 이번 태스크의 `changed_files`(EXECUTE 산출)를 양쪽 종합하여, 태스크 결과로 내용이 달라진 관련 문서(ARCHITECTURE.md·기획서 등)를 식별한다.
    - 갱신 대상이 있으면 PM이 판단하여 직접 수정하거나 적합한 워커를 디스패치해 최신화한다. 갱신 대상이 없으면 자연 스킵(no-op) — CLOSE를 중단시키지 않는다.
@@ -246,43 +246,23 @@ Full Task(opal-pilot-dev)로 전환할까요?
 
 ## STATE.md 도메인 치환값
 
-| 필드 | 값 |
-|------|------|
-| 모드 | Short Task |
-| 단계 목록 | TASK / PLAN / EXECUTE / TEST / CLOSE |
-
-**진행 현황 행 예시** (아래 표는 사람 열람용 미러 — SSOT는 `references/pipeline.json`. `.md` 파싱은 하위호환 폴백으로만 존치, 편집 금지):
-
 > **[MUST] STATE.md 초기 생성**: `~/.opal/tools/state-tool/run.sh init <task-path> --skill opds --mode <interactive|semi-agentic|agentic> --rows-from opal/skills/opal-pilot-dev-short/references/pipeline.json` 호출. 기본값: `semi-agentic`. 행 구성 SSOT는 `references/pipeline.json`(task-step key 포함) — `--rows-from`이 확장자로 분기해 파싱한다(070).
 > 근거: `tasks/134-260501-opp-pipeline-state-tool/TASK.md` F-15 / `PLAN.md` §2.3 / §2.20.2 / §3 Step 8 (P-3 advance, P-1 mark) / `tasks/070-260720-opd-태스크스텝-키주소-1차/PLAN.md` §3.6.2 (pipeline.json 전환)
 
-```markdown
-| # | 단계 | 항목 | 상태 | 시점 |
-|---|------|------|------|------|
-| 1 | TASK | 작업 | ⬜ | - |
-| 2 | TASK | 사용자 확인 | ⬜ | - |
-| 3 | PLAN | 작업 | ⬜ | - |
-| 4 | PLAN | 목표-커버 게이트 | ⬜ | - |
-| 5 | PLAN | PM Gate | ⬜ | - |
-| 6 | PLAN | 사용자 확인 | ⬜ | - |
-| 7 | EXECUTE | 작업 | ⬜ | - |
-| 8 | TEST | 작업 | ⬜ | - |
-| 9 | TEST | PM Gate | ⬜ | - |
-| 10 | TEST | 사용자 확인 | ⬜ | - |
-| 11 | CLOSE | DONE.md 생성 | ⬜ | - |
-```
+> **행 구성 SSOT**: `references/pipeline.json` `task_steps[]`. 현재 행 목록은
+> `~/.opal/tools/state-tool/run.sh show <task-path>` 또는 pipeline.json을 직접 조회한다.
 
-> TASK.md 생성은 행 1(TASK 작업)에 흡수, PLAN.md·TEST-SCENARIO.md 생성은 행 3(PLAN 작업)에 흡수. State Gate 행 6개는 state-tool stage-transition guard(PLAN §M-A)로 이전 완료 — 행으로 강제하지 않는다. 행 4(목표-커버 게이트)는 **[MUST]** `verdict: pass` tool-gated 증거로만 mark — 문서 전용 작업으로 TEST-SCENARIO.md가 스킵된 경우에만 자연 스킵, 그 외 산문 판단으로 mark 금지(guard가 미완 시 EXECUTE 진입을 구조적으로 차단).
+> TASK.md 생성은 `task.task_md` 행에 흡수, PLAN.md·TEST-SCENARIO.md 생성은 `plan.plan_md` 행에 흡수. State Gate 성격의 판정은 개별 행이 아니라 state-tool stage-transition guard(PLAN §M-A)가 자동 수행한다 — 행으로 강제하지 않는다. `plan.scenario_gate` 행(목표-커버 게이트)은 **[MUST]** `verdict: pass` tool-gated 증거로만 mark — 문서 전용 작업으로 TEST-SCENARIO.md가 스킵된 경우에만 자연 스킵, 그 외 산문 판단으로 mark 금지(guard가 미완 시 EXECUTE 진입을 구조적으로 차단).
 > TEST 루핑 발생 시: `~/.opal/tools/state-tool/run.sh add-row <task-path> --after 10 --stage TEST --item 'fix 작업 (N/3)'` 호출로 동적 추가한다 (P-6 추가작업 행 추가 패턴).
 
 ---
 
 ## PM Gate 점검 목록
 
-| Phase | 산출물 | 체크리스트 위치 |
-|-------|-------|----------------|
-| PLAN | TASK.md, PLAN.md, TEST-SCENARIO.md | TASK.md 요구사항, PLAN.md §4.2, §5; TEST-SCENARIO.md 시나리오 목록/보안/설계 피드백 |
-| TEST | TEST-SCENARIO.md, GC-CONVENTION-*.md | TEST-SCENARIO.md 시나리오 결과/코드품질/보안/회귀, 컨벤션 자동 진단 PASS |
+> **게이트 정의 SSOT**: `references/pipeline.json` `task_steps[].gate` — 산출물(`artifacts`)과
+> 체크리스트(`checklist`)는 이곳에만 정의한다. `state-tool mark --task-step <게이트 key>` 호출 시
+> artifacts 존재를 도구가 검증하고(미충족 시 `gate_artifact_missing`으로 거부) checklist를
+> stdout `gate_checklist` 페이로드로 반환한다. 각 Phase의 판정 절차·기준은 STEP 2(PLAN)/STEP 4(TEST)의 "PM Gate" 절을 따른다.
 
 ---
 
@@ -381,3 +361,4 @@ semi-agentic / agentic 모두 CLOSE 첫 행 `--auto-pass` 거부 (`agentic_close
 | v4.2 | 2026-07-20 15:45 | task-step 키 주소 체계 도입 — `references/pipeline.json` 신설(10 task-step, SSOT), `--rows-from` 호출 경로를 SKILL.md에서 pipeline.json으로 교체(`.md` 파싱은 하위호환 폴백으로 존치), 표는 사람 열람용 미러로 축소 (070) |
 | v4.3 | 2026-07-23 09:56 | 본문 state-tool 명령 예시를 task-step key 주소로 전환(--row→--task-step, --step→--action-step). pipeline.json key 기준. (070 후속) |
 | v4.4 | 2026-07-23 15:26 | STEP 2 producer를 op-dev-plan(PLAN.md만) → 알투(PM)+캡틴 페어 직접 작성(TEST-SCENARIO.md, opd STEP 3.5 동형)으로 확립 — op-dev-plan/SKILL.md 미접촉; PLAN 절차에 목표-커버 게이트(op-scenario-gate, pilot:opds) 호출 삽입; pipeline.json `plan.scenario_gate` 행 추가(10→11행) + STATE 미러 표·산문 "행 N" 전수 +1 재정렬; PM Gate checklist에 게이트 항목 추가 (075) |
+| v4.5 | 2026-08-14 09:23 | pipeline.json 중복 정리 — STATE.md 진행 현황 미러 표 삭제 + 산문 `행 N` 참조를 task-step key로 전환, 모드·단계 목록 표 제거(meta 중복), PM Gate 점검 목록 표를 `references/pipeline.json` `task_steps[].gate` SSOT 포인터로 교체 (091) |

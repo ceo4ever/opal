@@ -7,14 +7,17 @@ tags:
 - gate-design
 - scenario-gate
 - task-090
+- task-091
 sources:
 - task:090
+- task:091
 related:
 - scenario-goal-coverage-gate-loop
 - 070-derivation-engine-perspective-bias-lesson
 - pipeline-json-full-adoption-migration
+- pm-gate-artifact-tool-enforcement
 created: '2026-08-13'
-updated: '2026-08-13'
+updated: '2026-08-14'
 status: draft
 ---
 ## 개요
@@ -25,14 +28,17 @@ status: draft
 
 - (근거: task:090 DONE.md §3, D-10) 이번 태스크의 목표 중 하나는 "예전 방식(SKILL.md 표 파싱)을 부르는 곳이 레포 전체에 0건"이라는, 범위가 레포 전체인 주장이었다. 그런데 1차 검증은 새로 전환한 10개 pilot 안에서만 예전 방식을 부르는 곳이 없는지를 확인했다 — 주장은 "전체"인데 검증은 "새로 만든 부분"으로 좁았다.
 - (근거: task:090 DONE.md D-10) 이 틈은 목표 달성 여부를 점검하는 루브릭의 "채택/잔존" 판단축이 1차 점검에서 잡아냈다. 검증 범위를 pilot 내부에서 레포 전역으로 넓히면서 격차가 해소됐다.
+- (근거: task:091 DONE.md §5) 같은 함정이 다른 태스크에서 다시 나타났다. 이번 목표-커버 게이트 1차 판정에서 지적한 요지는 "예전 방식의 호출이 0건이 되는 것만 검증하고, 새 방식이 실제로 그 자리에 들어섰는지는 아무 시나리오도 보지 않는다"는 것이었다 — 이 조건은 예전 호출을 새 방식으로 바꾸지 않고 그냥 통째로 지워도 똑같이 참이 되는 구조였다.
 
 ## 결정 내용
 
 - 목표 문장이 "전부/전체/하나도 남지 않게" 같은 전수(exhaustive) 표현을 담고 있으면, 검증 계획을 세울 때 "그 전수 범위와 실제로 확인하는 범위가 같은가"를 별도로 확인한다. 새로 만든 대상 안에서만 확인하는 것은 "새로 만든 것이 잘 됐다"는 것만 보여줄 뿐, "예전 것이 전부 사라졌다"는 것은 보여주지 못한다.
 - 이런 틈은 결과물을 만든 쪽이 스스로 알아차리기 어렵다 — 자기가 만든 부분만 눈에 들어오기 때문이다. 그래서 검증 범위가 목표 범위를 실제로 덮는지는 별도의 축(독립적인 커버리지 점검)으로 확인하는 편이 안전하다.
+- **수량 대응 앵커** (근거: task:091 DONE.md §5): "잔존이 0건"만 보지 않고 "채택이 정확히 그만큼 늘었는가"까지 같은 시나리오 안에서 함께 확인하면 이 함정을 구조적으로 막을 수 있다. 감소분과 증가분의 합이 원래 총량과 들어맞아야만(예: 옛 방식 45건 감소 = 새 방식 45건 증가) 통과시킨다. 이렇게 하면 삭제만 하고 새 방식으로 바꾸지 않은 경우를 "0건이 됐다"는 결과만으로는 통과시킬 수 없게 된다.
 
 ## 관련 페이지
 
 - [[scenario-goal-coverage-gate-loop]]
 - [[070-derivation-engine-perspective-bias-lesson]]
 - [[pipeline-json-full-adoption-migration]]
+- [[pm-gate-artifact-tool-enforcement]]

@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-08-13 18:12
+> 갱신: 2026-08-14 11:52
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -82,6 +82,7 @@
 - [[community-skill-installation-architecture]] — 커뮤니티 스킬 설치 아키텍처 — vendor 중첩 + clone-copy #architecture #community-skills #install #deploy
 - [[community-skill-user-registry]] — 커뮤니티 스킬 사용자 레지스트리 — install 배포 경계 격리 #architecture #community-skills #deploy #registry
 - [[concurrent-task-shared-file-discipline]] — 동시 태스크 공유 파일 편집 규율 — Edit 전용 + 헤딩 앵커 + 상대영역 diff 검증 #concurrency #worktree #edit-discipline #pipeline #pattern
+- [[conditional-artifact-gate-ineligibility]] — 조건부 산출물은 존재 게이트 대상이 아니다 #gate-design #verification #artifact #task-091
 - [[config-file-concurrent-write-defense-standard]] — 설정 파일 동시 쓰기 방어 표준 #architecture #concurrency #backend #pattern #file-io
 - [[console-brain-exit-guard-pattern]] — 콘솔 브레인 이탈 가드 4경로 패턴 #brain #ux #guard #console #session-management
 - [[console-brain-volatile-single-session]] — 콘솔 브레인 휘발성 단일 세션 설계 전환 #brain #session-management #architecture #console #ux
@@ -190,8 +191,10 @@
 - [[pipeline-todo-mirror-hook-enforcement]] — 파이프라인 todo 미러 hook 강제 전환 (prose 지시 → 결정론 트리거) #opal-pipeline #todo-mirror #hook #enforce-not-advise #state-tool
 - [[platform-parity-mirror-before-design]] — 플랫폼 규약 편측 존재 — 새 설계보다 미러링 우선 #install #platform #lesson #mirroring
 - [[pm-conversation-readonly-collection-exception]] — PM(대화) 읽기 전용 수집 워커 예외 — 수집만 나누고 판단은 단일 주체 #pm #dispatch #boundary #task-084
+- [[pm-gate-artifact-tool-enforcement]] — PM Gate 정의 단일화와 산출물 존재 게이트 집행 #gate-design #state-tool #pm-gate #ssot #enforce-not-advise #task-091
 - [[pm-improvement-loop-two-tracks]] — PM 개선 루프 2트랙 구조 (회고/온디맨드) #pm-loop #architecture-decision #improvement #process
 - [[pool-lock-idiom-contract]] — 프라임 풀 락 관용구 계약 #brain #concurrency #locking #pattern
+- [[pre-edit-baseline-single-capture-invariant]] — 전후 동등 검증의 기준선은 편집 전 단 한 번만 유효하다 #verification #migration #baseline #gate-design #task-091
 - [[project-id-query-param-pattern]] — 절대경로 프로젝트 식별자를 query param으로 전달 #api #routing #url-design
 - [[pure-function-enables-nondestructive-verification]] — 판정부·실행부 분리가 파괴적 검증을 비파괴 검증으로 바꾼다 #verification #architecture #lesson #pure-function
 - [[read-based-gate-pattern]] — Read 기반 설정파일 게이트 패턴 #bootstrap #permission #gate #read-pattern #session-toggle
@@ -201,7 +204,7 @@
 - [[red-test-determinism-abort-trap]] — RED 테스트 결정론성 함정 — neverResolve fetch 대역의 abort 무반응 #testing #red-first #determinism #abort #fetch-mock
 - [[regression-only-coverage-gate]] — 회귀만 차단하는 커버리지 게이트 — 레거시 소급 부여는 게이트의 몫이 아니다 #code-scan #gate #close
 - [[release-asset-presence-single-signal]] — 릴리즈 자산 존재 판정 — 체크섬 목록 수신 성공을 단일 신호로 쓴다 #deploy #release #install #checksum #decision
-- [[replacement-goal-verification-scope-gap]] — 교체형 목표의 검증 범위 함정 — 주장의 범위와 검증의 범위를 맞춰야 한다 #lesson #verification #gate-design #scenario-gate #task-090
+- [[replacement-goal-verification-scope-gap]] — 교체형 목표의 검증 범위 함정 — 주장의 범위와 검증의 범위를 맞춰야 한다 #lesson #verification #gate-design #scenario-gate #task-090 #task-091
 - [[rotating-log-correction-over-deletion]] — 회전 로그는 삭제 대신 정정 — FIFO 히스토리 무손실 가드 설계 #memory #fifo #data-integrity #design-pattern
 - [[round-trip-pre-state-assertion-false-green-guard]] — 왕복 검증 사전 상태 단언 — false green 차단 장치 #testing #pattern #task-083
 - [[scenario-gate-pilot-fit-criteria]] — 목표-커버 게이트 pilot 접합 판정 기준 #scenario-gate #pilot-fit #tool-gated #self-confirming #task-075

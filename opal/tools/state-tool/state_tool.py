@@ -3,7 +3,7 @@
   "module": "state_tool",
   "layer": "util",
   "domain": "opal-pipeline",
-  "description": "OPAL 파이프라인 현황판 JSON SSOT 관리 CLI — 10개 서브 명령(init/show/advance/mark/block/validate/add-row/status/spec-validate/gate-pass[deprecated]) + verify + 3-way 모드(interactive/semi-agentic/agentic) 지원. 014 Phase 4: 새 표준 행 구조(QA Gate/State Gate 행 없음)와 정합 — gate-pass deprecate, CLOSE 마지막 행 판정 항목명 비의존화. 016: verify --red-check(RED 증거 게이트) + --fix-mode/--changed-files/--test-globs(테스트 불변성 게이트) 추가 — RED-first TDD 트랙 deterministic 집행. 017: mark --step N/M 다중 Step 조기 done 가드 — N<M이면 in_progress 유지(done 미처리) + 진행률(step) 영속화, N==M에서만 done; 미완 행은 기존 stage-transition guard가 단계전환·CLOSE 진입을 자동 차단. 005: verify --clarification-check + TASK→다음단계 자동 훅 — TASK 4요소(목표/범위/제약/완료기준) 미잠금 시 다음 단계 진입 거부(PRINCIPLES §1 집행), 정책 A graceful skip(섹션/파일 부재 시 하위호환). 034: mock 가드 false positive 수정 — _MOCK_CODE_PATTERNS 정규식 'MagicMock' 맨 단어 대안 제거(#1 산문 오탐) + _check_mock_patterns 인라인 백틱 제거 전처리 추가(#2 메타-순환 해소); 헌법 §4 정탐 유지. 054: resolve_owner_placeholder() 신설 — note-write 6경로(advance/mark/add-row/block/status/init)에서 '{owner_name}' 플레이스홀더를 identity.md owner_name으로 write-time 치환(fail-safe: 부재/공란/파싱실패 시 원문 유지). 070: task-step 키 주소 체계 도입 1차 — spec-validate 서브명령(pipeline.json 스펙 검증) + KEY_PATTERN/stage_to_slug/resolve_row_index 신설, build_rows_from_pipeline_json(init --rows-from .json 확장자 분기, .md는 deprecation 경고 유지), advance/mark/block에 --task-step/--task-step-id/--row(deprecated) 3주소·add-row에 --after-task-step/--after-task-step-id/--key(자동 생성) 추가, --step→--action-step 별칭(dest 공유), opdd skill·DICT/MODEL/DDL·MIGRATION stage enum 등록, ERROR_CODES 8종 추가. 072: STATE.md '다음 액션' 자동 파생 — state.json next_action 필드 신설(init 영속화·schema optional 등록), _derive_next_action(파이프라인 프론티어=첫 미완료 행 기준 파생)·update_next_action_section(첫 줄만 치환, 하위 자유기재 보존) 신규, advance/mark가 상태 반영 후 next_action 계산·저장·렌더(block/add-row/status는 미접촉), advance/mark --next-action per-transition 오버라이드(비지속 — 다음 전이 자동 파생 복귀). 074: --import-existing key-보존 재접합 — cmd_init import 분기가 파싱 후 기존 state.json→pipeline.json (stage,item) 순서 매칭으로 key 재접합(schema_version 1.1 유지), 원천 전무 시 keyless+경고(하위호환); _key_source_index/_reattach_import_keys 신규. 076: build_todo_mirror() 신설 — init/advance/mark/block ok() stdout 페이로드에 단계 단위 todo 미러(파생: na 중립·전부pending→pending·전부done→completed·부분/failed→in_progress) 추가, PostToolUse hook이 이를 세션에 결정론 주입(파이프라인 todo 미러 hook 강제); todo_mirror는 stdout 전용 비영속(state.json 미접촉 — schema additionalProperties:false 보존). 088: CLOSE 마지막 행 mark 시 메모리 히스토리 자동 연결 — link_memory_history()가 형제 memory_tool.py를 sys.executable subprocess로 호출해 `<프로젝트루트>/.opal/MEMORY.json` history에 행을 자동 생성(find_project_root 조상 탐색·derive_history_title·build_history_reminder·_run_memory_tool 신설), path 사전 조회로 멱등 보장, 예외/실패 전부 흡수해 mark는 항상 ok:true 유지(cmd_mark ok() stdout에 history_link 필드 조건부 추가, state.json 미접촉).",
+  "description": "OPAL 파이프라인 현황판 JSON SSOT 관리 CLI — 10개 서브 명령(init/show/advance/mark/block/validate/add-row/status/spec-validate/gate-pass[deprecated]) + verify + 3-way 모드(interactive/semi-agentic/agentic) 지원. 014 Phase 4: 새 표준 행 구조(QA Gate/State Gate 행 없음)와 정합 — gate-pass deprecate, CLOSE 마지막 행 판정 항목명 비의존화. 016: verify --red-check(RED 증거 게이트) + --fix-mode/--changed-files/--test-globs(테스트 불변성 게이트) 추가 — RED-first TDD 트랙 deterministic 집행. 017: mark --step N/M 다중 Step 조기 done 가드 — N<M이면 in_progress 유지(done 미처리) + 진행률(step) 영속화, N==M에서만 done; 미완 행은 기존 stage-transition guard가 단계전환·CLOSE 진입을 자동 차단. 005: verify --clarification-check + TASK→다음단계 자동 훅 — TASK 4요소(목표/범위/제약/완료기준) 미잠금 시 다음 단계 진입 거부(PRINCIPLES §1 집행), 정책 A graceful skip(섹션/파일 부재 시 하위호환). 034: mock 가드 false positive 수정 — _MOCK_CODE_PATTERNS 정규식 'MagicMock' 맨 단어 대안 제거(#1 산문 오탐) + _check_mock_patterns 인라인 백틱 제거 전처리 추가(#2 메타-순환 해소); 헌법 §4 정탐 유지. 054: resolve_owner_placeholder() 신설 — note-write 6경로(advance/mark/add-row/block/status/init)에서 '{owner_name}' 플레이스홀더를 identity.md owner_name으로 write-time 치환(fail-safe: 부재/공란/파싱실패 시 원문 유지). 070: task-step 키 주소 체계 도입 1차 — spec-validate 서브명령(pipeline.json 스펙 검증) + KEY_PATTERN/stage_to_slug/resolve_row_index 신설, build_rows_from_pipeline_json(init --rows-from .json 확장자 분기, .md는 deprecation 경고 유지), advance/mark/block에 --task-step/--task-step-id/--row(deprecated) 3주소·add-row에 --after-task-step/--after-task-step-id/--key(자동 생성) 추가, --step→--action-step 별칭(dest 공유), opdd skill·DICT/MODEL/DDL·MIGRATION stage enum 등록, ERROR_CODES 8종 추가. 072: STATE.md '다음 액션' 자동 파생 — state.json next_action 필드 신설(init 영속화·schema optional 등록), _derive_next_action(파이프라인 프론티어=첫 미완료 행 기준 파생)·update_next_action_section(첫 줄만 치환, 하위 자유기재 보존) 신규, advance/mark가 상태 반영 후 next_action 계산·저장·렌더(block/add-row/status는 미접촉), advance/mark --next-action per-transition 오버라이드(비지속 — 다음 전이 자동 파생 복귀). 074: --import-existing key-보존 재접합 — cmd_init import 분기가 파싱 후 기존 state.json→pipeline.json (stage,item) 순서 매칭으로 key 재접합(schema_version 1.1 유지), 원천 전무 시 keyless+경고(하위호환); _key_source_index/_reattach_import_keys 신규. 076: build_todo_mirror() 신설 — init/advance/mark/block ok() stdout 페이로드에 단계 단위 todo 미러(파생: na 중립·전부pending→pending·전부done→completed·부분/failed→in_progress) 추가, PostToolUse hook이 이를 세션에 결정론 주입(파이프라인 todo 미러 hook 강제); todo_mirror는 stdout 전용 비영속(state.json 미접촉 — schema additionalProperties:false 보존). 088: CLOSE 마지막 행 mark 시 메모리 히스토리 자동 연결 — link_memory_history()가 형제 memory_tool.py를 sys.executable subprocess로 호출해 `<프로젝트루트>/.opal/MEMORY.json` history에 행을 자동 생성(find_project_root 조상 탐색·derive_history_title·build_history_reminder·_run_memory_tool 신설), path 사전 조회로 멱등 보장, 예외/실패 전부 흡수해 mark는 항상 ok:true 유지(cmd_mark ok() stdout에 history_link 필드 조건부 추가, state.json 미접촉). 091: PM Gate 집행 배선(F-004) — validate_pipeline_spec()에 task_steps[].gate 검사 4건 추가(spec_gate_type_invalid/spec_gate_missing_field/spec_gate_field_type_invalid/spec_gate_checklist_empty, artifacts:[] 단독은 위반 아님); _is_safe_artifact_token()·check_gate_artifacts() 신설 — gate.artifacts 존재 검증(정적 경로/글롭 지원, 절대경로·'..' 토큰 태스크 폴더 밖 이탈 차단), gate 미보유 행·artifacts:[] 행은 즉시 통과(기존 동작 불변), 미충족 시 gate_artifact_missing 거부(--force+--note로만 우회 가능, 우회 시 decision 로그 gate_artifact_force 강제 기록); build_gate_payload() 신설 — 통과 시 checklist를 dict로 stdout 반환(todo_mirror_hook 릴레이용); build_rows_from_pipeline_json()/build_rows_from_spec()에 gate 필드 init-time 영속화 각 1줄 추가; cmd_mark가 save_state_json() 이전 검증 구간에서 가드를 호출하여 부분 상태 변경을 배제하고 _ok_kwargs에 gate_checklist 조건부 추가; ERROR_CODES 5종 신규(gate_artifact_missing 포함).",
   "exports": [
     "cmd_init", "cmd_show", "cmd_advance", "cmd_mark",
     "cmd_block", "cmd_validate", "cmd_add_row", "cmd_status",
@@ -124,6 +124,12 @@ ERROR_CODES = {
     # 070 F-004 R-9: add-row --key (PLAN §3.4.2)
     "task_step_key_invalid":          r"key {key} 형식 위반 — 패턴 ^[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*(_[0-9]+)?$",
     "task_step_key_duplicate":        "key {key} 중복 — 파일 내 유일해야 함",
+    # 091 F-004 R-10/R-11: task_steps[].gate 스펙 검사 + mark 게이트 집행 (PLAN §3.4.2)
+    "gate_artifact_missing":          "PM Gate 산출물 미충족 — 행 {row_id}({key}) 게이트 아티팩트 부재: {missing}",
+    "spec_gate_type_invalid":         "task_steps[].gate가 object가 아님: {detail}",
+    "spec_gate_missing_field":        "task_steps[].gate 필수 필드 누락: {detail}",
+    "spec_gate_field_type_invalid":   "task_steps[].gate 필드 타입 오류(문자열 배열 필요): {detail}",
+    "spec_gate_checklist_empty":      "task_steps[].gate.checklist가 비어 있음: {detail}",
 }
 
 PIPELINE_MARKER_START = "<!-- pipeline:start -->"
@@ -716,6 +722,63 @@ def check_close_gate(state, row_index, command, auto_pass=False, force=False):
             ))
 
 # ─────────────────────────────────────────────────────────────────────────────
+# PM Gate 아티팩트 검증 (091 F-004 R-11, PLAN §3.4.2 (2))
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _is_safe_artifact_token(t):
+    """gate.artifacts 토큰의 태스크 폴더 밖 이탈 여부 검사 (H-4).
+    절대경로이거나 '..' 파트를 포함하면 안전하지 않음 → False."""
+    pp = pathlib.PurePosixPath(t)
+    if pp.is_absolute():
+        return False
+    if ".." in pp.parts:
+        return False
+    return True
+
+def check_gate_artifacts(task_path, row, command, force=False):
+    """091 R-11: gate.artifacts 존재 검증. 미충족 시 gate_artifact_missing으로 mark 거부.
+    gate 미보유 행 또는 artifacts가 빈 배열이면 즉시 return — 기존 동작 불변(H-3)."""
+    gate = row.get("gate")
+    if not isinstance(gate, dict):
+        return None
+    tokens = gate.get("artifacts") or []
+    if not tokens:
+        return None
+    base = pathlib.Path(task_path)
+    missing = []
+    for t in tokens:
+        if not _is_safe_artifact_token(t):        # 절대경로·상위경로 토큰 거부 (H-4)
+            missing.append(t)
+            continue
+        if any(c in t for c in "*?["):
+            if not any(base.glob(t)):
+                missing.append(t)
+        elif not (base / t).exists():
+            missing.append(t)
+    if not missing:
+        return None
+    if force:
+        return missing                            # 우회 — 호출자가 의사결정 로그에 기재
+    err(command, "gate_artifact_missing",
+        row_id=row["row_id"], key=row.get("key"), missing=missing)
+
+def build_gate_payload(row):
+    """091 R-11(b): 게이트 통과 시 stdout으로 반환할 checklist 페이로드.
+    dict로 감싼다 — todo_mirror_hook._extract_payload가 dict만 통과시킨다(H-6)."""
+    gate = row.get("gate")
+    if not isinstance(gate, dict):
+        return None
+    return {
+        "key":       row.get("key"),
+        "stage":     row["stage"],
+        "item":      row["item"],
+        "artifacts": gate.get("artifacts") or [],
+        "checklist": gate.get("checklist") or [],
+        "reminder":  "[PM Gate 점검] 아래 checklist 전 항목을 확인한 뒤 다음 단계로 진행하라. "
+                     "SSOT는 해당 pilot references/pipeline.json task_steps[].gate 이다.",
+    }
+
+# ─────────────────────────────────────────────────────────────────────────────
 # 행 주입 공통 처리 (PLAN §2.20)
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -755,6 +818,9 @@ def build_rows_from_spec(spec_json_str, command, mode):
             "owner":        owner_default,
             "note":         None,
         }
+        if item.get("gate"):
+            row["gate"] = item["gate"]  # 091 F-004 R-9(a): --rows-spec 인라인 경로도 동형 지원
+
         # agentic 자동 마킹 (§2.20.1 — CLOSE 사용자 확인 행 제외)
         if mode == "agentic" and name == "사용자 확인" and stage != "CLOSE":
             row["status"]       = "na"
@@ -931,6 +997,24 @@ def validate_pipeline_spec(spec):
             violations.append({"code": "spec_id_sequence_invalid", "id": ts_id, "key": ts_key,
                                 "detail": f"expected id {idx + 1}, got {ts_id}"})
 
+        # 091 F-004 R-10: task_steps[].gate 검사 4건 (PLAN §3.4.2 (1))
+        gate = ts.get("gate")
+        if gate is not None:
+            if not isinstance(gate, dict):
+                violations.append({"code": "spec_gate_type_invalid", "id": ts_id, "key": ts_key,
+                                   "detail": f"gate must be object, got {type(gate).__name__}"})
+            else:
+                for f in ("artifacts", "checklist"):
+                    if f not in gate:
+                        violations.append({"code": "spec_gate_missing_field", "id": ts_id, "key": ts_key,
+                                           "detail": f"gate missing field: {f}"})
+                    elif not isinstance(gate[f], list) or any(not isinstance(x, str) for x in gate[f]):
+                        violations.append({"code": "spec_gate_field_type_invalid", "id": ts_id, "key": ts_key,
+                                           "detail": f"gate.{f} must be array of string"})
+                if isinstance(gate.get("checklist"), list) and len(gate["checklist"]) == 0:
+                    violations.append({"code": "spec_gate_checklist_empty", "id": ts_id, "key": ts_key,
+                                       "detail": "gate.checklist must not be empty"})
+
     return violations
 
 
@@ -960,6 +1044,8 @@ def build_rows_from_pipeline_json(spec_path, command, mode):
         }
         if ts.get("conditional"):
             row["conditional"] = True  # DEC-1 — 순수 메타데이터, 자동 na 없음
+        if ts.get("gate"):
+            row["gate"] = ts["gate"]  # 091 F-004 R-9(a): init-time 정적 스냅샷 영속화
 
         # agentic 자동 마킹 (§2.20.1 동일 규칙 — CLOSE 사용자 확인 행 제외)
         if mode == "agentic" and ts["item"] == "사용자 확인" and ts["stage"] != "CLOSE":
@@ -1437,6 +1523,9 @@ def cmd_mark(args):
             err(command, "semi_agentic_pre_execute_auto_pass_denied",
                 row_id=row["row_id"], stage=row["stage"])
 
+    # 091 F-004 R-11: PM Gate 산출물 검증 (H-1 — save_state_json() 이전 검증 구간에 위치)
+    _gate_forced_missing = check_gate_artifacts(task_path, row, command, force=args.force)
+
     now_str = get_kst_datetime(command)
 
     # 017: 다중 Step 진행률 파싱 + 조기 done 가드 (R-1, C-1, C-5)
@@ -1533,6 +1622,12 @@ def cmd_mark(args):
         decision = f"worker_scope_force at row {row['row_id']}, requested_stage={requested}, actual_stage={actual}"
         reason_text = args.note
 
+    # 091 F-004 R-11(H-5): --force로 게이트 아티팩트 미충족을 우회한 경우 강제 기록
+    if _gate_forced_missing:
+        decision = (f"gate_artifact_force at row {row['row_id']}, key={row.get('key')}, "
+                    f"missing={_gate_forced_missing}")
+        reason_text = args.note
+
     sync_state_md(task_path, state, now_str, command,
                   progress=progress_text, status_text=status_text,
                   decision=decision, reason=reason_text,
@@ -1550,6 +1645,9 @@ def cmd_mark(args):
                       todo_mirror=build_todo_mirror(state, "update"))
     if history_link is not None:
         _ok_kwargs["history_link"] = history_link
+    _gate_payload = build_gate_payload(row)
+    if _gate_payload is not None:
+        _ok_kwargs["gate_checklist"] = _gate_payload
     ok(command, **_ok_kwargs)
 
 # ── 5. block ──────────────────────────────────────────────────────────────────

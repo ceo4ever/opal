@@ -6,15 +6,13 @@
     { "id": 1, "key": "task.task_md",           "stage": "TASK",      "item": "작업" },
     { "id": 2, "key": "task.user_confirm",      "stage": "TASK",      "item": "사용자 확인" },
     { "id": 3, "key": "wireframe.wireframe_md",  "stage": "WIREFRAME", "item": "작업",        "conditional": true },
-    { "id": 4, "key": "wireframe.pm_gate",       "stage": "WIREFRAME", "item": "PM Gate",     "conditional": true },
+    { "id": 4, "key": "wireframe.pm_gate",       "stage": "WIREFRAME", "item": "PM Gate",     "conditional": true,
+      "gate": { "artifacts": ["TASK.md", "wireframe.md"], "checklist": ["TASK.md 요구사항", "wireframe.md 화면 목록", "op-dev-qa/SKILL.md 와이어프레임 검증 기준 참조"] } },
     { "id": 5, "key": "wireframe.user_confirm",  "stage": "WIREFRAME", "item": "사용자 확인", "conditional": true },
     { "id": 6, "key": "execute.implement",       "stage": "EXECUTE",   "item": "작업" },
-    { "id": 7, "key": "execute.pm_gate",         "stage": "EXECUTE",   "item": "PM Gate" },
+    { "id": 7, "key": "execute.pm_gate",         "stage": "EXECUTE",   "item": "PM Gate",
+      "gate": { "artifacts": [], "checklist": ["빌드/린트 결과", "wireframe↔코드 대조", "컨벤션 자동 진단", "EXECUTE 변경 파일 목록(changed_files) 확인", "컨벤션 자동 진단 PASS (GC-CONVENTION-*.md Critical/High 0건 — 컨벤션 적용 대상 ≥1건 시 발동)"] } },
     { "id": 8, "key": "execute.user_confirm",    "stage": "EXECUTE",   "item": "사용자 확인" },
     { "id": 9, "key": "close.done_md",           "stage": "CLOSE",     "item": "DONE.md 생성" }
-  ],
-  "pm_gate": [
-    { "stage": "WIREFRAME", "artifacts": ["TASK.md", "wireframe.md"], "checklist": ["TASK.md 요구사항", "wireframe.md 화면 목록", "op-dev-qa 와이어프레임 검증 기준"] },
-    { "stage": "EXECUTE",   "artifacts": ["changed_files", "GC-CONVENTION-*.md"], "checklist": ["빌드/린트 결과", "wireframe↔코드 대조", "컨벤션 자동 진단"] }
   ]
 }

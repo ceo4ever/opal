@@ -3,10 +3,11 @@
   "module": "todo_mirror_hook",
   "layer": "util",
   "domain": "opal-pipeline",
-  "description": "076 F-002: Claude Code PostToolUse 릴레이 헬퍼 — stdin(PostToolUse 이벤트 JSON)을 파싱해 Bash·state-tool(init/advance/mark/block) 호출을 필터하고, 도구 stdout에서 build_todo_mirror 페이로드를 추출한 뒤 hookSpecificOutput.additionalContext(지시문+payload)로 세션에 결정론 주입한다. 비Bash·비state-tool·페이로드 부재·파싱 실패 등 전 경로에서 무출력 exit0 fail-safe(DEC-9) — 정상 도구 흐름을 절대 차단하지 않는다. 표준 라이브러리만(json/sys/shlex). 088: history_link 리마인더 병존 릴레이 추가 — _extract_payload로 추출 로직 일반화(extract_todo_mirror는 위임, 동작·시그니처 불변), extract_history_link 신설, build_additional_context에 선택 인자 history_link 추가(있으면 reminder를 기존 todo 미러 지시문 뒤에 병존 첨부, payload 단독 부재 시에도 reminder만으로 출력), main()이 두 페이로드를 모두 추출해 둘 다 없을 때만 무출력.",
+  "description": "076 F-002: Claude Code PostToolUse 릴레이 헬퍼 — stdin(PostToolUse 이벤트 JSON)을 파싱해 Bash·state-tool(init/advance/mark/block) 호출을 필터하고, 도구 stdout에서 build_todo_mirror 페이로드를 추출한 뒤 hookSpecificOutput.additionalContext(지시문+payload)로 세션에 결정론 주입한다. 비Bash·비state-tool·페이로드 부재·파싱 실패 등 전 경로에서 무출력 exit0 fail-safe(DEC-9) — 정상 도구 흐름을 절대 차단하지 않는다. 표준 라이브러리만(json/sys/shlex). 088: history_link 리마인더 병존 릴레이 추가 — _extract_payload로 추출 로직 일반화(extract_todo_mirror는 위임, 동작·시그니처 불변), extract_history_link 신설, build_additional_context에 선택 인자 history_link 추가(있으면 reminder를 기존 todo 미러 지시문 뒤에 병존 첨부, payload 단독 부재 시에도 reminder만으로 출력), main()이 두 페이로드를 모두 추출해 둘 다 없을 때만 무출력. 091 F-004 §3.4.2 (7): gate_checklist 3번째 페이로드 병존 릴레이 추가 — extract_gate_checklist 신설(_extract_payload 재사용), build_additional_context에 선택 인자 gate_checklist 추가(있으면 reminder+checklist json을 기존 todo_mirror/history_link 뒤에 병존 첨부), main()이 3-페이로드 분기로 확장되어 셋 다 없을 때만 무출력(fail-safe DEC-9 불변).",
   "exports": [
     "main", "extract_command", "is_state_tool_event",
-    "extract_todo_mirror", "extract_history_link", "build_additional_context"
+    "extract_todo_mirror", "extract_history_link", "extract_gate_checklist",
+    "build_additional_context"
   ]
 }
 """
@@ -92,9 +93,15 @@ def extract_history_link(stdout):
     return _extract_payload(stdout, "history_link")
 
 
-def build_additional_context(command_name, payload, history_link=None):
-    """결정론 지시문 + todo_mirror payload(있으면) + history_link.reminder(있으면) 병존 직렬화
-    (DEC-8, 088 §2.7 — 교체가 아닌 병존 확장). SSOT 불변·능력 감지 문구를 지시에 명시한다.
+def extract_gate_checklist(stdout):
+    """091 R-11(b)/R-12 §3.4.2 (7): stdout에서 gate_checklist 페이로드 추출."""
+    return _extract_payload(stdout, "gate_checklist")
+
+
+def build_additional_context(command_name, payload, history_link=None, gate_checklist=None):
+    """결정론 지시문 + todo_mirror payload(있으면) + history_link.reminder(있으면)
+    + gate_checklist(있으면) 병존 직렬화 (DEC-8, 088 §2.7 / 091 §3.4.2 (7) — 교체가 아닌
+    병존 확장). SSOT 불변·능력 감지 문구를 지시에 명시한다.
     payload가 없으면 todo 미러 지시문을 생략하고 리마인더만 담는다(TS-10)."""
     parts = []
     if payload:
@@ -110,13 +117,17 @@ def build_additional_context(command_name, payload, history_link=None):
         reminder = history_link.get("reminder")
         if reminder:
             parts.append(reminder)
+    if gate_checklist:
+        parts.append(gate_checklist.get("reminder", "") + "\n"
+                     + json.dumps(gate_checklist, ensure_ascii=False))
     return "\n".join(parts)
 
 
 def main():
     """PostToolUse 이벤트를 stdin으로 받아 조건 충족 시 additionalContext를 stdout에 출력.
     미충족 전 경로는 무출력 return(DEC-9 fail-safe).
-    088: todo_mirror/history_link 2-페이로드 분기 — 둘 다 없으면 무출력, 하나라도 있으면 출력."""
+    088: todo_mirror/history_link 2-페이로드 분기 — 둘 다 없으면 무출력, 하나라도 있으면 출력.
+    091: gate_checklist 추가 — 3-페이로드 분기, 셋 다 없을 때만 무출력."""
     raw = sys.stdin.read()
     try:
         data = json.loads(raw)
@@ -132,9 +143,10 @@ def main():
     stdout = _get_stdout(data.get("tool_response"))
     todo_payload = extract_todo_mirror(stdout)
     history_link = extract_history_link(stdout)
-    if not todo_payload and not history_link:                # 둘 다 부재 → 무출력(H-5/DEC-9)
+    gate_checklist = extract_gate_checklist(stdout)
+    if not todo_payload and not history_link and not gate_checklist:  # 셋 다 부재 → 무출력(H-5/DEC-9)
         return
-    ctx = build_additional_context(_subcommand(command), todo_payload, history_link)
+    ctx = build_additional_context(_subcommand(command), todo_payload, history_link, gate_checklist)
     print(json.dumps({
         "hookSpecificOutput": {
             "hookEventName": "PostToolUse",

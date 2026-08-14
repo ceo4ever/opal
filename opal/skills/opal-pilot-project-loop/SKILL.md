@@ -126,37 +126,16 @@ state-tool을 호출하여 초기화한다:
 ~/.opal/tools/state-tool/run.sh init <task-path> --skill oppl --mode <interactive|semi-agentic|agentic> --rows-from opal/skills/opal-pilot-project-loop/references/pipeline.json
 ```
 
-> state-tool의 `--skill` choices·schema enum에 `oppl`이 등록되어 있다(F-003). `state-tool`이 `references/pipeline.json`을 읽어 state.json을 초기화한다. 아래 표는 사람 열람용 미러다.
+> state-tool의 `--skill` choices·schema enum에 `oppl`이 등록되어 있다(F-003). `state-tool`이 `references/pipeline.json`을 읽어 state.json을 초기화한다.
 
-**[R-10 비표준 행 구성]** oppl은 Loop 기반 비표준 행 구조를 사용한다 — Loop 1(D1~D7)은 고정 행, Loop 2(태스크 파이프라인)는 `[R-13]` 동적 `add-row`로 태스크 행을 삽입한다. `gate-pass`는 deprecated — PM Gate/사용자 확인은 `mark` 개별 호출로 처리한다. 행 SSOT는 `references/pipeline.json`이다.
+**[R-10 비표준 행 구성]** oppl은 Loop 기반 비표준 행 구조를 사용한다 — Loop 1(D1~D7)은 고정 행, Loop 2(태스크 파이프라인)는 `[R-13]` 동적 `add-row`로 태스크 행을 삽입한다. `gate-pass`는 deprecated — PM Gate/사용자 확인은 `mark` 개별 호출로 처리한다.
 
-**파이프라인 현황판** (아래 표는 사람 열람용 미러 — SSOT는 `references/pipeline.json`. `.md` 파싱은 하위호환 폴백으로만 존치, 편집 금지):
+> **행 구성 SSOT**: `references/pipeline.json` `task_steps[]`. 현재 행 목록은
+> `~/.opal/tools/state-tool/run.sh show <task-path>` 또는 pipeline.json을 직접 조회한다.
+>
+> **게이트 정의 SSOT**: `references/pipeline.json` `task_steps[].gate` — 산출물·체크리스트는 이곳에만 정의한다. `mark --task-step <게이트 key>` 호출 시 도구가 artifacts 존재를 검증하고 checklist를 stdout으로 반환한다.
 
-> 상태값: ⬜ 대기 / 🔄 진행 중 / ✅ 완료 / ❌ 실패 / - 해당 없음
-
-| # | Stage | 항목 | 상태 | 시점 |
-|---|-------|------|------|------|
-| 1 | TASK | TASK.md 작성 | ⬜ | |
-| 2 | TASK | STATE.md 생성 | ⬜ | |
-| 3 | TASK | 사용자 확인 | ⬜ | |
-| 4 | ANALYSIS | D1 인터뷰 — 명확화 4요소(목표/범위/제약/완료기준) | ⬜ | |
-| 5 | ANALYSIS | D1.5 여정 매핑 (조건부 — user-facing 프로젝트만, `references/journey-flow.md`) | ⬜ | |
-| 6 | PLAN | D2 PRD 작성 | ⬜ | |
-| 7 | PLAN | D3 TRD 작성 | ⬜ | |
-| 8 | PLAN | D4 CONTRACT 작성 (`references/contract.md`) | ⬜ | |
-| 9 | WBS | D5 백로그 생성 (`backlog-tool init`+`add-task`) | ⬜ | |
-| 10 | REVIEW | D6 Evaluator 설계 검토 (phase: design-review) | ⬜ | |
-| 11 | REVIEW | PM Gate | ⬜ | |
-| 12 | REVIEW | D7 사용자 확정 게이트 (4요소 잠김 확인) | ⬜ | |
-| 13 | EXECUTE | L0 태스크 선택 (상세: 태스크 목록 참조 — `add-row`로 T{NN} 행 동적 삽입) | ⬜ | |
-| 14 | EXECUTE | PM Gate | ⬜ | |
-| 15 | EXECUTE | 사용자 확인 | ⬜ | |
-| 16 | VERIFY | L✓ 종료 판정 (`backlog-tool done-check` all_done + 회귀 0) | ⬜ | |
-| 17 | VERIFY | PM Gate | ⬜ | |
-| 18 | VERIFY | 사용자 확인 | ⬜ | |
-| 19 | CLOSE | DONE.md 생성 | ⬜ | |
-
-> **[R-13] 태스크 동적 행**: Loop 2 진입(행 #13 advance) 후, backlog-tool `select-next`가 태스크를 반환할 때마다 `add-row`로 해당 태스크 행을 삽입한다:
+> **[R-13] 태스크 동적 행**: Loop 2 진입(`execute.l0_select` advance) 후, backlog-tool `select-next`가 태스크를 반환할 때마다 `add-row`로 해당 태스크 행을 삽입한다:
 > ```
 > ~/.opal/tools/state-tool/run.sh add-row <task-path> --after 13 --stage EXECUTE --item 'T{NN}: {태스크 제목} (T1~T5+G)'
 > ```
@@ -234,8 +213,8 @@ verdict가 `fail`이거나 미해결 이슈가 있으면 D2~D5로 재회전한�
 
 Gate 시 state-tool 호출:
 ```
-~/.opal/tools/state-tool/run.sh mark <task-path> --row 11 --done  # PM Gate
-~/.opal/tools/state-tool/run.sh mark <task-path> --row 12 --done --owner user --note '{owner_name} 확인: Loop 1 확정'
+~/.opal/tools/state-tool/run.sh mark <task-path> --task-step review.pm_gate --done  # PM Gate
+~/.opal/tools/state-tool/run.sh mark <task-path> --task-step review.d7_user_gate --done --owner user --note '{owner_name} 확인: Loop 1 확정'
 ```
 
 ---
@@ -282,8 +261,8 @@ L✓ 종료 판정 — backlog-tool done-check
 
 Gate 시 state-tool 호출:
 ```
-~/.opal/tools/state-tool/run.sh mark <task-path> --row 17 --done  # PM Gate
-~/.opal/tools/state-tool/run.sh mark <task-path> --row 18 --done --owner user --note '{owner_name} 확인: Loop 2 완료'
+~/.opal/tools/state-tool/run.sh mark <task-path> --task-step verify.pm_gate --done  # PM Gate
+~/.opal/tools/state-tool/run.sh mark <task-path> --task-step verify.user_confirm --done --owner user --note '{owner_name} 확인: Loop 2 완료'
 ```
 
 ---
@@ -438,9 +417,7 @@ opal-harness-agentic.md / opal-harness-semi-agentic.md 참조. 본 절은 이 �
 
 ### 활성화
 
-```
-~/.opal/tools/state-tool/run.sh init <task-path> --skill oppl --mode <interactive|semi-agentic|agentic> --rows-from opal/skills/opal-pilot-project-loop/references/pipeline.json
-```
+> STATE.md 초기 생성은 §STATE.md 초기 생성 참조.
 
 ### 자율 게이트 흐름 (semi-agentic)
 
@@ -603,3 +580,4 @@ Loop 1 재회전 {N}회 · Loop 2 태스크 {M}개 완주.
 | v1.7 | 2026-07-18 22:46 KST | D4에 surfaces.json(표면 전수·auth·인증표면 등재)+origins 선언 요구 추가(contract.md §2.2.1 참조 위임) / D5에 실행 스켈레톤 P0 태스크 의무(구성 4항)+`add-task --covers` 안내 추가 / D7 진입 전 `coverage-check` 게이트 호출 의무화 / L✓ 종료 판정을 `done-check.all_done` ∧ `scenario-conformance.all_surfaces_green` ∧ 회귀 0 3중 AND로 확장(user-facing 여정 스모크 포함) + T4a에 `scenario-fidelity-check` 통과 요건 1줄 / 병렬 실행 절 "통합 태스크 필수"를 `coverage-check`(`integration_task_missing`) 게이트와 연결 / 검증 2원화 절에 충실도 규범 참조(`verification.md` §1.5) 추가 (069) |
 | v1.8 | 2026-07-28 22:47 KST | 프로젝트 메모리 동기화 절 정정(기존 결함 교정, memory-tool 도입(045) 이전 관행의 표 편집 서술 잔존분) — `MEMORY.json` + `append --kind history` 도구 호출로 교체, 직접 편집 금지 명시 (078) |
 | v1.9 | 2026-08-13 16:57 KST | pipeline.json 전환 + init 하드 실패 해소 — references/pipeline.json 신설(19 task-step, SSOT), --rows-from를 pipeline.json으로 교체하여 기존 skill_md_parse_error(header not found) 해소, 표는 사람 열람용 미러로 명시(헤더·표 헤더 개명 없음) (090) |
+| v2.0 | 2026-08-14 09:33 KST | SKILL.md 감량 — `--row N` 4건을 `--task-step <key>`로 전환(review.pm_gate/review.d7_user_gate/verify.pm_gate/verify.user_confirm), 진행 현황 미러 표 19행 삭제 → `references/pipeline.json` 포인터 1줄로 교체, 중복 init 완전 명령 1건 삭제(§STATE.md 초기 생성 1건만 정본 존치), R-13 서술의 `행 #13` 참조를 `execute.l0_select` key 참조로 교체, PM Gate 절차 블록쿼트에 게이트 정의 SSOT 포인터 1줄 추가(기존 판정 절차 산문은 존치) (091) |

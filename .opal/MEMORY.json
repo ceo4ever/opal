@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_task_number": 90,
+  "last_task_number": 91,
   "memories": [
     {
       "title": "Console 브레인 구독 인증",
@@ -53,6 +53,13 @@
   ],
   "history": [
     {
+      "title": "091 파이프라인 스펙 중복정리",
+      "date": "2026-08-14",
+      "stage": "완료",
+      "path": "tasks/091-260813-opd-파이프라인-스펙-중복정리/",
+      "result": "PM Gate 정의를 task_steps[].gate 단일 SSOT로 승격하고 state-tool이 집행 — artifacts 존재 검증 차단(gate_artifact_missing)+checklist stdout 주입, hook 3-페이로드 병존. pilot 10종 감량: 미러표 134행·--row 45건·산문 행N 36건·게이트표 전량 제거, --task-step 전환 45건 수량 대응 일치. 전후 동등 20/20 diff 0, 회귀 284→304 pass, spec-validate 10/10, 배포본 게이트 3종 실동작. 목표-커버 게이트 iter1이 '삭제만 하고 채택 안 함'(070 실패모드) 검출 → S-35+H-13 신설로 해소. S-33·S-34 캡틴 대기"
+    },
+    {
       "title": "090 파이프라인 스펙 마이그레이션",
       "date": "2026-08-13",
       "stage": "완료",
@@ -79,13 +86,6 @@
       "stage": "완료·커밋",
       "path": "tasks/087-260810-opp-파이썬-버전게이트-설치유도/",
       "result": "3.9 venv 무검증 생성·재사용 결함 fix. Windows winget 규약을 macOS brew로 미러링, Linux 안내만. 실물 3.9.6·3.9 venv로 게이트 거부 실증, 실 venv mtime 불변. Windows 런타임 미검증"
-    },
-    {
-      "title": "086 아키텍처 다이어그램 재작성",
-      "date": "2026-08-10",
-      "stage": "완료·커밋",
-      "path": "tasks/086-260810-opp-아키텍처-다이어그램-재작성/",
-      "result": "지식자산 L3 승격+환류루프 시각화, 사실 11건 교정. 세로쓰기 회전 결함=grep 미검출"
     }
   ]
 }

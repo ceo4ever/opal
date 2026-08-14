@@ -28,20 +28,17 @@
           "key":         { "type": "string", "pattern": "^[a-z][a-z0-9_]*\\.[a-z][a-z0-9_]*(_[0-9]+)?$" },
           "stage":       { "type": "string" },
           "item":        { "type": "string", "minLength": 1 },
-          "conditional": { "type": "boolean" }
-        }
-      }
-    },
-    "pm_gate": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "required": ["stage", "artifacts", "checklist"],
-        "additionalProperties": false,
-        "properties": {
-          "stage":     { "type": "string" },
-          "artifacts": { "type": "array", "items": {"type": "string"} },
-          "checklist": { "type": "array", "items": {"type": "string"} }
+          "conditional": { "type": "boolean" },
+          "gate": {
+            "type": "object",
+            "required": ["artifacts", "checklist"],
+            "additionalProperties": false,
+            "properties": {
+              "artifacts": { "type": "array", "items": { "type": "string" } },
+              "checklist": { "type": "array", "items": { "type": "string" }, "minItems": 1 }
+            },
+            "description": "PM Gate 정의 (091). artifacts=태스크 폴더 기준 상대 경로/글롭 — mark가 존재 검증하여 미충족 시 거부. checklist=PM 판단 항목 — mark stdout으로 주입."
+          }
         }
       }
     }

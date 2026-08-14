@@ -107,6 +107,16 @@
           "conditional": {
             "type": "boolean",
             "description": "조건부 task-step (예: opdw WIREFRAME 스킵 대상). 순수 메타데이터 — 자동 na 없음 (070 DEC-1)"
+          },
+          "gate": {
+            "type": "object",
+            "required": ["artifacts", "checklist"],
+            "additionalProperties": false,
+            "properties": {
+              "artifacts": { "type": "array", "items": { "type": "string" } },
+              "checklist": { "type": "array", "items": { "type": "string" }, "minItems": 1 }
+            },
+            "description": "PM Gate 정의 (091). artifacts=태스크 폴더 기준 상대 경로/글롭 — mark가 존재 검증하여 미충족 시 거부. checklist=PM 판단 항목 — mark stdout으로 주입."
           }
         }
       }

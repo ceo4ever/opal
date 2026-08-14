@@ -127,8 +127,8 @@ harness "4. TASK 공통 프로세스" 참조. 다음 단계명: SPEC.
 Gate 시 state-tool 호출 (R-10: gate-pass deprecated(014) — mark 개별 호출 필수):
 
 ```
-~/.opal/tools/state-tool/run.sh mark <task-path> --row 6 --done   # PM Gate
-~/.opal/tools/state-tool/run.sh mark <task-path> --row 7 --done --owner user --note '{owner_name} 확인: SPEC 완료'
+~/.opal/tools/state-tool/run.sh mark <task-path> --task-step spec.pm_gate --done   # PM Gate
+~/.opal/tools/state-tool/run.sh mark <task-path> --task-step spec.user_confirm --done --owner user --note '{owner_name} 확인: SPEC 완료'
 ```
 
 > SPEC.md 상세 구조: `references/spec-guide.md` 참조
@@ -151,8 +151,8 @@ PM이 직접 SPEC.md를 검증하고 TEST-SCENARIOS.md를 작성한다. **워커
 
 3. 목표-커버 게이트: op-scenario-gate 호출 (pilot: opsdd)
    - 입력: task_folder, producer_artifact={task_folder}/TEST-SCENARIOS.md, pilot: opsdd, iteration(최초=1)
-   - Step 3 coverage-check exit 0 → 행 10 mark (커버리지 게이트 = 구 수동 FR↔TS 대체)
-   - Step 4 evaluator verdict pass → 행 11 mark (독립 evaluator = self-confirming 해소, Producer≠Evaluator)
+   - Step 3 coverage-check exit 0 → `review.coverage_gate` mark (커버리지 게이트 = 구 수동 FR↔TS 대체)
+   - Step 4 evaluator verdict pass → `review.scenario_gate` mark (독립 evaluator = self-confirming 해소, Producer≠Evaluator)
    - verdict: rewrite → TEST-SCENARIOS.md 재작성 후 iteration+1로 재호출
    - verdict: escalate → 사용자 에스컬레이션, 자율 재시도 금지
 
@@ -195,8 +195,8 @@ PM이 직접 SPEC.md를 검증하고 TEST-SCENARIOS.md를 작성한다. **워커
 Gate 시 state-tool 호출 (R-10: gate-pass deprecated(014) — mark 개별 호출 필수):
 
 ```
-~/.opal/tools/state-tool/run.sh mark <task-path> --row 16 --done  # PM Gate
-~/.opal/tools/state-tool/run.sh mark <task-path> --row 17 --done --owner user --note '{owner_name} 확인: DESIGN 완료'
+~/.opal/tools/state-tool/run.sh mark <task-path> --task-step design.pm_gate --done  # PM Gate
+~/.opal/tools/state-tool/run.sh mark <task-path> --task-step design.user_confirm --done --owner user --note '{owner_name} 확인: DESIGN 완료'
 ```
 
 > SPEC-PLAN.md 상세 구조: `references/spec-plan-guide.md` 참조
@@ -242,7 +242,7 @@ L2 2회 초과 실패 → 소유자 에스컬레이션
 
 ACT 완료마다 state-tool을 호출하여 STATE.md를 갱신한다 (R-10: gate-pass deprecated(014) — mark 개별 호출 필수):
 - ACT 목록 행은 `add-row --after <N> --stage EXECUTE --item 'ACT-{N}: {이름}'` 로 동적 삽입
-- ACT 상태 갱신: `mark <task-path> --row <ACT_행N> --done`
+- ACT 상태 갱신: `mark <task-path> --task-step execute.act_run --done` (ACT별 add-row로 생성된 동적 행 기준)
 - TS 상태, L1/L2: ACT 완료 후 PM 직접 검증 → ACT 목록 내 해당 열 갱신
 
 > **[R-13] ACT 동적 행**: `--rows-acts` 옵션은 미구현. ACT 행은 EXECUTE Phase 진입 후 수동으로 `add-row`로 삽입한다.
@@ -250,8 +250,8 @@ ACT 완료마다 state-tool을 호출하여 STATE.md를 갱신한다 (R-10: gate
 **Gate** (ACT 루프 완료 후, EXECUTE 행 #19~#20 처리):
 
 ```
-~/.opal/tools/state-tool/run.sh mark <task-path> --row 19 --done  # PM Gate
-~/.opal/tools/state-tool/run.sh mark <task-path> --row 20 --done --owner user --note '{owner_name} 확인: EXECUTE 완료'
+~/.opal/tools/state-tool/run.sh mark <task-path> --task-step execute.pm_gate --done  # PM Gate
+~/.opal/tools/state-tool/run.sh mark <task-path> --task-step execute.user_confirm --done --owner user --note '{owner_name} 확인: EXECUTE 완료'
 ```
 
 ### Gate
@@ -293,7 +293,7 @@ ACT 완료마다 state-tool을 호출하여 STATE.md를 갱신한다 (R-10: gate
 3. DONE.md 생성 후 CLOSE 행 mark:
 
 ```
-~/.opal/tools/state-tool/run.sh mark <task-path> --row 25 --done  # DONE.md 생성 (CLOSE 완료)
+~/.opal/tools/state-tool/run.sh mark <task-path> --task-step close.done_md --done  # DONE.md 생성 (CLOSE 완료)
 ```
 
 > **CLOSE 게이트 제약 (§2.16 G-13)**: CLOSE 단계 최초 진입 행(#25)은 `--auto-pass` 적용 불가 (`close_gate_violation`). 반드시 위 명시 호출로 처리한다.
@@ -328,62 +328,29 @@ ACT 완료마다 state-tool을 호출하여 STATE.md를 갱신한다 (R-10: gate
 
 | 필드 | 값 |
 |------|------|
-| 모드 | SDD Task |
-| 단계 목록 | TASK / SPEC / REVIEW / DESIGN / EXECUTE-LOOP / VERIFY / CLOSE |
 | 산출물 목록 | TASK.md, SPEC.md, TEST-SCENARIOS.md, SPEC-PLAN.md, actions/ACT-{N}/, DONE.md |
 | 태스크 경로 | tasks/{NNN}-{feature}/ |
 
-> **[SSOT]** SSOT는 `references/pipeline.json`이며, `state-tool init` 호출 시 이를 `--rows-from` 옵션으로 참조한다:
->
-> ```
-> ~/.opal/tools/state-tool/run.sh init <task-path> --skill opsdd --rows-from opal/skills/opal-pilot-sdd/references/pipeline.json
-> ```
+> **[SSOT]** SSOT는 `references/pipeline.json`이며, `state-tool init` 호출 시 이를 `--rows-from` 옵션으로 참조한다. STATE.md 초기 생성 완전 명령은 §Agentic / Semi-Agentic 모드 "활성화" 참조.
 >
 > state-tool이 `references/pipeline.json`을 읽어 state.json을 초기화한다. 행 데이터를 직접 편집하지 않는다.
 >
 > **[R-10 비표준 행 구성]** 행 SSOT는 `references/pipeline.json`이다. opsdd는 25행 + ACT 동적 행 비표준 구조를 사용한다(State Gate 행 제거 후). `gate-pass`는 deprecated(014) — `mark` 개별 호출 필수.
 >
-> **[R-13 ACT 동적 행]** `--rows-acts` 옵션은 미구현. EXECUTE Phase 진입 후 `add-row`로 ACT 행을 수동 삽입한다 (EXECUTE ACT 실행 행 = #18):
+> **[R-13 ACT 동적 행]** `--rows-acts` 옵션은 미구현. EXECUTE Phase 진입 후 `add-row`로 ACT 행을 수동 삽입한다 (EXECUTE ACT 실행 행 = `execute.act_run`):
 > ```
 > ~/.opal/tools/state-tool/run.sh add-row <task-path> --after 18 --stage EXECUTE --item 'ACT-001: {이름}'
 > ```
 
-**파이프라인 현황판** (아래 표는 사람 열람용 미러 — SSOT는 `references/pipeline.json`. `.md` 파싱은 하위호환 폴백으로만 존치, 편집 금지):
+> **행 구성 SSOT**: `references/pipeline.json` `task_steps[]`. 현재 행 목록은
+> `~/.opal/tools/state-tool/run.sh show <task-path>` 또는 pipeline.json을 직접 조회한다.
 
 > 상태값: ⬜ 대기 / 🔄 진행 중 / ✅ 완료 / ❌ 실패 / - 해당 없음
 > **수행 원칙**: 위에서 아래로 순서대로 처리한다. 현재 행이 ✅가 아니면 다음 행으로 진행 불가.
 
-| # | Phase | 항목 | 상태 | 시점 |
-|---|-------|------|------|------|
-| 1 | TASK | TASK.md 작성 | ⬜ | |
-| 2 | TASK | STATE.md 생성 | ⬜ | |
-| 3 | TASK | 사용자 확인 | ⬜ | |
-| 4 | SPEC | 워커 디스패치 | ⬜ | |
-| 5 | SPEC | SPEC.md 생성 | ⬜ | |
-| 6 | SPEC | PM Gate | ⬜ | |
-| 7 | SPEC | 사용자 확인 | ⬜ | |
-| 8 | REVIEW | 구조 검증 (S-1~S-6) | ⬜ | |
-| 9 | REVIEW | TEST-SCENARIOS.md 작성 | ⬜ | |
-| 10 | REVIEW | 커버리지 게이트 (scenario-coverage-check) | ⬜ | |
-| 11 | REVIEW | 목표-커버 게이트 (op-scenario-gate evaluator) | ⬜ | |
-| 12 | REVIEW | PM Gate | ⬜ | |
-| 13 | REVIEW | 사용자 확인 | ⬜ | |
-| 14 | DESIGN | 워커 디스패치 | ⬜ | |
-| 15 | DESIGN | SPEC-PLAN.md 생성 | ⬜ | |
-| 16 | DESIGN | PM Gate | ⬜ | |
-| 17 | DESIGN | 사용자 확인 | ⬜ | |
-| 18 | EXECUTE | ACT 실행 (상세: ACT 목록 참조) | ⬜ | |
-| 19 | EXECUTE | PM Gate | ⬜ | |
-| 20 | EXECUTE | 사용자 확인 | ⬜ | |
-| 21 | VERIFY | E2E 테스트 수행 | ⬜ | |
-| 22 | VERIFY | TS 전체 Green 확인 | ⬜ | |
-| 23 | VERIFY | PM Gate | ⬜ | |
-| 24 | VERIFY | 사용자 확인 | ⬜ | |
-| 25 | CLOSE | DONE.md 생성 | ⬜ | |
-
 ### STATE.md 구조
 
-STATE.md 전체 구조 예시 (파이프라인 현황판은 위 SSOT 표를 기준으로 state-tool이 생성):
+STATE.md 전체 구조 예시 (파이프라인 현황판은 `references/pipeline.json`을 기준으로 state-tool이 생성):
 
 ```
 STATE: {기능명} SDD 개발
@@ -396,7 +363,7 @@ STATE: {기능명} SDD 개발
 - 상태: {진행 중 / 완료 / 블로커 / 추가작업중 / 추가작업완료}
 
 파이프라인 현황판
-(위 SSOT 표 기준으로 state-tool이 자동 생성 — 직접 편집 금지)
+(`references/pipeline.json` 기준으로 state-tool이 자동 생성 — 직접 편집 금지)
 
 섹션 목록:
 - ACT 목록 (EXECUTE Phase 상세 — DESIGN 완료 후 state-tool add-row로 동적 삽입)
@@ -411,11 +378,10 @@ STATE: {기능명} SDD 개발
 
 ## PM Gate 점검 목록
 
-| Phase | 산출물 | 체크리스트 위치 |
-|-------|-------|----------------|
-| SPEC | TASK.md, SPEC.md | TASK.md 요구사항 (QA Gate 없음 — PM 직접 검증) |
-| DESIGN | SPEC-PLAN.md | SPEC.md FR↔ACT 분해 정합 |
-| EXECUTE | actions/ACT-{N}/DONE.md | SPEC-PLAN.md ACT 완료 기준 |
+> **게이트 정의 SSOT**: `references/pipeline.json` `task_steps[].gate` — 산출물(`artifacts`)과
+> 체크리스트(`checklist`)는 이곳에만 정의한다. `state-tool mark --task-step <게이트 key>` 호출 시
+> artifacts 존재를 도구가 검증하고(미충족 시 `gate_artifact_missing`으로 거부) checklist를
+> stdout `gate_checklist` 페이로드로 반환한다.
 
 ---
 
@@ -475,7 +441,7 @@ TASK (PM 직접)
 - EXECUTE-LOOP 진입 = PM이 대행 승인 (구현 금지 원칙의 "실행 허가"를 PM이 판단)
 - 자율 통과 시 state-tool `--auto-pass` 호출 (P-8):
   ```
-  ~/.opal/tools/state-tool/run.sh mark <task-path> --row N --done --auto-pass --note '<근거>'
+  ~/.opal/tools/state-tool/run.sh mark <task-path> --task-step <key> --done --auto-pass --note '<근거>'
   ```
 - **CLOSE 단계 최초 진입 행(#25)은 `--auto-pass` 금지** (`agentic_close_gate_requires_user` — §2.16 G-13); 반드시 명시 호출
 - R-10 비표준 행 구성: `gate-pass` deprecated(014) — mark 개별 호출 필수 (agentic/semi-agentic에서도 동일 적용)
@@ -543,3 +509,4 @@ opal-harness-agentic.md §6 공통 기준에 추가:
 | v3.5.2 | 2026-07-10 13:12 | note 예시의 소유자 확인 표기를 `{owner_name} 확인:` 형식으로 통일 — identity.md owner_name 재해석 규칙(AGENT.md §정체성 적용)과 정합, 오염 차단 (054) |
 | v3.6.0 | 2026-07-23 | Phase 2 REVIEW 목표-커버 게이트 배선 — 행 10 "FR↔TS 커버리지 확인"을 "커버리지 게이트(scenario-coverage-check)"로 교체 + 행 11 "목표-커버 게이트(op-scenario-gate evaluator)" 신설, 이후 행 전부 +1(24→25행). REVIEW 흐름 3→4단계 재작성(구조 검증 → TEST-SCENARIOS.md 작성 → 목표-커버 게이트 → PM Gate/사용자 Gate) — 독립 evaluator 디스패치로 self-confirming 해소(PRINCIPLES §15). 6단계 요약 REVIEW 행 갱신. `--row N`/`#N`/`--after N` 본문 리터럴 전수 재정렬(rows≥11 +1, 070 pipeline.json 전환은 범위 밖) (075) |
 | v3.7.0 | 2026-08-13 16:58 | pipeline.json 전환 — references/pipeline.json 신설(25 task-step, SSOT), --rows-from 호출 경로를 SKILL.md에서 pipeline.json으로 교체, 표는 사람 열람용 미러로 명시. meta.stages는 stage 값 EXECUTE 사용(산문의 Phase 4 명칭 표기는 불변) (090) |
+| v3.8.0 | 2026-08-14 09:27 | 파이프라인 스펙 중복정리 — `--row N`(9건)→`--task-step <key>`, 산문 `행 N`(2건)→key 참조로 전환. 미러 표(25행)·PM Gate 나열 표·중복 STATE.md 초기화 명령·모드/단계 목록 치환값 삭제 → `references/pipeline.json` 원천 포인터로 대체(산출물 목록·태스크 경로는 고유값이라 존치). R-1 "위 SSOT 표를 기준으로" 오문장 정정. EXECUTE-LOOP 표기 17곳은 090 확정사항으로 불변 (091) |

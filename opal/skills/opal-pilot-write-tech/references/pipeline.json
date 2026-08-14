@@ -6,11 +6,11 @@
     { "id": 1,  "key": "task.task_md",            "stage": "TASK",    "item": "작업" },
     { "id": 2,  "key": "task.user_confirm",       "stage": "TASK",    "item": "사용자 확인" },
     { "id": 3,  "key": "plan.plan_md",            "stage": "PLAN",    "item": "작업" },
-    { "id": 4,  "key": "plan.pm_gate",            "stage": "PLAN",    "item": "PM Gate" },
+    { "id": 4,  "key": "plan.pm_gate",            "stage": "PLAN",    "item": "PM Gate", "gate": { "artifacts": ["PLAN.md"], "checklist": ["TASK.md 요구사항", "PLAN.md §3", "PLAN.md §4"] } },
     { "id": 5,  "key": "plan.user_confirm",       "stage": "PLAN",    "item": "사용자 확인" },
     { "id": 6,  "key": "execute.batches",         "stage": "EXECUTE", "item": "작업 (Batch 동적 삽입)" },
     { "id": 7,  "key": "qa.consistency_check",    "stage": "QA",      "item": "작업" },
-    { "id": 8,  "key": "qa.pm_gate",              "stage": "QA",      "item": "PM Gate" },
+    { "id": 8,  "key": "qa.pm_gate",              "stage": "QA",      "item": "PM Gate", "gate": { "artifacts": [], "checklist": ["references/consistency-rules.md 기반 유형 간/내 정합성 확인", "모든 QA 체크리스트 항목이 [x] 또는 \"N/A + 사유\"로 채워졌는지 확인"] } },
     { "id": 9,  "key": "qa.user_confirm",         "stage": "QA",      "item": "사용자 확인" },
     { "id": 10, "key": "close.done_md",           "stage": "CLOSE",   "item": "DONE.md 생성" }
   ]

@@ -91,7 +91,7 @@
 - CLOSE 단계: 모든 파이프라인의 마지막 단계. `DONE.md 생성` (1행). Gate 없음. 사용자 확인 없음 — 직전 단계의 사용자 확인이 CLOSE 진입 게이트 역할.
 - Gate가 없는 단계(opp TASK 등)는 PM Gate 행 생략
 - EXECUTE 단계(코드 변경)는 산출물 행 없음 — `작업` 행에 흡수
-- 오케스트레이터 SKILL.md "STATE.md 도메인 치환값"에 해당 스킬의 파이프라인 현황판 행 예시가 명시됨
+- 파이프라인 행 구성의 SSOT는 각 pilot의 `references/pipeline.json` `task_steps[]`이다 — 오케스트레이터 SKILL.md에 행 예시를 중복 게재하지 않는다 (091).
 
 > **CLOSE 진입 게이트**: 사용자의 확인된 지시(`승인`, `확인`, `확인완료` 등 명시적 표현)가 없으면 CLOSE 단계 진입 불가. 이 규칙은 agentic 모드에서도 유지된다.
 
@@ -112,3 +112,4 @@
 | v1.4 | 2026-05-09 18:30 | 개인 식별자 누설 정정 — "캡틴이" → "소유자가" 치환 (139) |
 | v1.5 | 2026-06-07 | 행 구성 규칙·산출물 행 규칙을 새 STATE 구조로 정합화 — 일반 단계 행을 `작업/PM Gate/사용자 확인`으로 축소(QA Gate·QA 산출물·State Gate 행 제거: 문서 QA는 PM Gate 흡수, state 기록은 행 mark 자체, 단계 건너뛰기는 stage-transition guard). 산출물 생성은 작업 행에 흡수. CLOSE를 `DONE.md 생성` 1행으로 갱신. 동작 검증(TEST/verify) 영역 불변 (014 Phase 4-2) |
 | v1.6 | 2026-07-23 12:09 | "다음 액션은 PM 수동 갱신" 설계 반전 — `advance`/`mark` 시 파이프라인 프론티어에서 자동 파생·갱신(첫 줄만 치환, 하위 자유 기재 보존), `init`/전이 `--next-action` 오버라이드(비지속). `## 블로커`는 기존대로 PM 수동 갱신 유지 (072) |
+| v1.7 | 2026-08-14 08:38 | 파이프라인 현황판 행 예시 SSOT를 오케스트레이터 SKILL.md에서 각 pilot `references/pipeline.json` `task_steps[]`로 이전 — SKILL.md 행 예시 중복 게재 금지 명문화 (091) |

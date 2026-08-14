@@ -112,9 +112,7 @@ git ls-files
 
 태스크 폴더 생성 + STATE.md 초기화:
 
-```
-~/.opal/tools/state-tool/run.sh init <task-path> --skill opgc --rows-from opal/skills/opal-pilot-gc/references/pipeline.json
-```
+> STATE.md 초기 생성은 §Agentic Mode(--agentic 플래그) 참조.
 
 ### 1.5 PROJECT.md 프로젝트 구성 기반 분할
 
@@ -340,7 +338,7 @@ CLOSE로 진행할까요? 수정이 필요하면 CLOSE 단계에서 //opds 체�
 DONE.md 생성 완료 후 state-tool로 행 갱신:
 
 ```
-~/.opal/tools/state-tool/run.sh mark <task-path> --row 7 --done  # DONE.md 생성 (CLOSE 완료)
+~/.opal/tools/state-tool/run.sh mark <task-path> --task-step close.done_md --done  # DONE.md 생성 (CLOSE 완료)
 ```
 
 > **[MUST] 행 갱신**: mark하는 것 자체가 state 기록이며 별도의 State Gate 행은 존재하지 않는다. state-tool stage-transition guard가 이전 단계 필수 행 완료 여부를 자동 검증한다.
@@ -423,32 +421,16 @@ opgc 실행 결과 {N}건 이슈 감지
 
 ## STATE.md 도메인 치환값
 
-| 필드 | 값 |
-|------|------|
-| 모드 | GC |
-| 단계 목록 | SCAN / CHECK / REPORT / CLOSE |
-
-> **[SSOT]** SSOT는 `references/pipeline.json`이며, `state-tool init` 호출 시 이를 `--rows-from` 옵션으로 참조한다:
+> **[SSOT]** SSOT는 `references/pipeline.json`이며, `state-tool init` 호출 시 이를 `--rows-from` 옵션으로 참조한다.
 >
-> ```
-> ~/.opal/tools/state-tool/run.sh init <task-path> --skill opgc --rows-from opal/skills/opal-pilot-gc/references/pipeline.json
-> ```
+> STATE.md 초기 생성은 §Agentic Mode(--agentic 플래그) 참조.
 >
 > state-tool이 `references/pipeline.json`을 읽어 state.json을 초기화한다. 아래 표는 사람 열람용 미러이며 행 데이터를 직접 편집하지 않는다.
 
 **파이프라인 현황판 행 구조** (아래 표는 사람 열람용 미러 — SSOT는 `references/pipeline.json`. `.md` 파싱은 하위호환 폴백으로만 존치, 편집 금지):
 
-```markdown
-| # | 단계 | 항목 | 상태 | 시점 |
-|---|------|------|------|------|
-| 1 | SCAN | 대상 파일 선별 + 스택 감지 + 프로젝트 구성 파싱 | ⬜ | - |
-| 2 | CHECK | 에이전트 (요소×체커) 병렬 디스패치 | ⬜ | - |
-| 3 | CHECK | 에이전트 완료 확인 | ⬜ | - |
-| 4 | REPORT | GC-SECURITY-{ts}[-{element}].md 생성 | ⬜ | - |
-| 5 | REPORT | GC-CONVENTION-{ts}[-{element}].md 생성 | ⬜ | - |
-| 6 | REPORT | 실행 요약 테이블 갱신 | ⬜ | - |
-| 7 | CLOSE | DONE.md 생성 | ⬜ | - |
-```
+> **행 구성 SSOT**: `references/pipeline.json` `task_steps[]`. 현재 행 목록은
+> `~/.opal/tools/state-tool/run.sh show <task-path>` 또는 pipeline.json을 직접 조회한다.
 
 **실행 요약 테이블 템플릿** (REPORT 단계에서 STATE.md에 추가):
 
@@ -474,7 +456,7 @@ Agentic 모드 특수 규칙:
 - 보고서 내 `[?] review` 항목은 **건너뛰지 않고** 주석에 "agentic: 사용자 확인 필요" 표기
 - 자율 통과 시 state-tool `--auto-pass` 호출 (P-8):
   ```
-  ~/.opal/tools/state-tool/run.sh mark <task-path> --row N --done --auto-pass --note '<근거>'
+  ~/.opal/tools/state-tool/run.sh mark <task-path> --task-step <task-step-key> --done --auto-pass --note '<근거>'
   ```
 - **CLOSE 단계 첫 행(#7)은 `--auto-pass` 금지** (`close_gate_violation` — §2.16 G-13); 반드시 명시 호출
 - init 시 `--mode agentic` 플래그 추가:
@@ -539,3 +521,4 @@ fingerprint = sha1(fingerprint_input).hex()[:16]
 | v1.8 | 2026-07-17 | §4.2 CLOSE op-brain-ingest 직후에 "회고(개선 루프) 하드스텝" 삽입 — 궤적 신호→관찰/분류/기록(improve-tool record --scope local\|fw), 개선후보 0건 시 no-op 비차단(brain-ingest 패턴 답습) (058) |
 | v1.9 | 2026-07-28 | `NNN` 채번 서술을 `.opal/MEMORY.md` 헤더 직접 참조에서 `memory-tool task-number --bump` 포인터 참조로 전환 (절차 SSOT: `harness/task-process.md`) (078) |
 | v1.10 | 2026-08-13 16:56 | pipeline.json 전환 — references/pipeline.json 신설(7 task-step, SSOT), --rows-from 호출 경로를 SKILL.md에서 pipeline.json으로 교체, 표는 사람 열람용 미러로 명시 (090) |
+| v1.11 | 2026-08-14 09:23 | `--row N` 2건을 `--task-step <key>`로 전환(close.done_md 확정 / Agentic 범용 예시는 플레이스홀더) + STATE.md 도메인 치환값 `필드/값`(모드·단계 목록) 중복 표 제거(meta와 중복) + 진행 현황 미러 표를 `references/pipeline.json` SSOT 포인터로 교체 + init 완전 명령 1지점화(§Agentic Mode 정본, SCAN 1.4·치환값 절은 포인터) (091) |

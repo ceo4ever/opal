@@ -43,7 +43,7 @@ PM Gate 자가 진단(interactive §3 / agentic §4)에서 확인하는 필수 �
 | WIREFRAME | `wireframe.md` | `tasks/{NNN}-{YYMMDD}-{name}/` (opdw 전용) |
 | DONE | `DONE.md` | `tasks/{NNN}-{YYMMDD}-{name}/` |
 
-**스킬별 산출물 오버라이드**: 각 오케스트레이터 SKILL.md의 "STATE.md 도메인 치환값" 또는 별도 섹션에서 단계별 QA 산출물 파일명을 명시할 수 있다.
+**스킬별 산출물 오버라이드**: 각 pilot `references/pipeline.json`의 `task_steps[].gate.artifacts`가 단계별 게이트 산출물의 SSOT다 — `state-tool mark`가 이를 존재 검증하고 `gate.checklist`를 stdout으로 반환한다 (091).
 
 **스킬별 검증 방식**:
 
@@ -74,3 +74,4 @@ EXECUTE QA는 "글자 존재 여부(grep)"가 아니라 **실제 동작**으로 
 | 버전 | 날짜 | 내용 |
 |------|------|------|
 | v1.0 | 2026-06-07 | QA Gate 별도 단계 전제 → PM Gate 문서검증 전제로 전환 — 로드 시점/2단계 갱신 구조(QA 에이전트 1차→PM 2차)/스킬별 검증 방식을 PM 단독 검토·갱신으로 재정의, EXECUTE QA 동작 증거의 실수행 주체(TEST/verify, 불변)·PM 확인 역할 1줄 명시. 동작 검증 영역은 불변 (014) |
+| v1.1 | 2026-08-14 08:38 | 스킬별 산출물 오버라이드 근거를 오케스트레이터 SKILL.md에서 각 pilot `references/pipeline.json`의 `task_steps[].gate.artifacts`로 이전 — `state-tool mark`의 존재 검증·`gate.checklist` stdout 반환 연계 명시 (091) |

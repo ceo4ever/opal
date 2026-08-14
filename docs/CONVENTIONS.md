@@ -227,6 +227,7 @@ OPAL 본체(스킬·에이전트·도구·하네스)를 작성할 때 따라야 
 - 단계 진입/완료/차단/추가작업 행 삽입 모두 state-tool 서브 명령(`init`/`advance`/`mark`/`block`/`add-row`/`spec-validate` 등)으로 처리한다.
 - 행 주소는 `--task-step <key>`(예: `plan.pm_gate`) 우선 사용, `--task-step-id <N>`은 숫자 폴백 — `--row`는 deprecated 별칭(신규 문서·프롬프트에 사용 금지). key 정의는 pilot `references/pipeline.json`이 SSOT.
 - `state-tool init --rows-from`은 pilot `references/pipeline.json`을 지정한다. SKILL.md 마크다운 파싱(`build_rows_from_skill_md`)은 deprecated이며 신규 지시에 사용 금지 — **10/10 pilot 전환 완료(090)**.
+- **PM Gate 정의의 SSOT는 pilot `references/pipeline.json`의 `task_steps[].gate`**(`artifacts`·`checklist`)다 — SKILL.md에 산출물·체크리스트를 표로 중복 게재하지 않는다. `mark`가 `artifacts` 존재를 결정론 검증하여 미충족 시 `gate_artifact_missing`으로 거부하고, 통과 시 `checklist`를 stdout `gate_checklist`로 반환한다. `artifacts`에는 **해당 게이트 시점에 반드시 존재하는 태스크 폴더 기준 상대 경로/글롭만** 올린다 — 조건부 산출물·논리 개념은 `checklist`에 문안으로 둔다(잘못 올리면 그 게이트가 영구 차단된다). `--force --note`로 우회하면 STATE.md 의사결정 로그에 `gate_artifact_force`가 강제 기록된다 (091).
 - 근거: `opal/core/references/opal-harness.md` §3 State
 
 ### 도구 우선 원칙
@@ -270,3 +271,4 @@ OPAL 본체(스킬·에이전트·도구·하네스)를 작성할 때 따라야 
 |------|------|---------|
 | v1.1.0 | 2026-08-11 13:26 | 실측 대조 기반 전면 최신화 — 태스크 폴더·에이전트 경로 네이밍 정정, 에이전트 15종·alias 27종·도구 18종 인벤토리 반영, 브랜치·커밋·State·배포 경계를 현행 관행에 정합, 변경이력 절 신설 (089) |
 | v1.2.0 | 2026-08-13 17:19 | §State 관리에 행 원천 규칙 1줄 추가 — `init --rows-from`은 pilot `references/pipeline.json`을 지정하며 SKILL.md 마크다운 파싱(`build_rows_from_skill_md`)은 deprecated·신규 지시 사용 금지. 미전환 6 pilot(opdd·opgc·opwt·opsdd·oppl·oppd) 이관으로 10/10 전환 완료, deprecated 경로 호출자 0건 (090) |
+| v1.3.0 | 2026-08-14 09:38 | §State 관리에 PM Gate 정의 SSOT 규칙 추가 — 게이트 산출물·체크리스트의 원천을 pilot `references/pipeline.json` `task_steps[].gate`로 확정하고 SKILL.md 표 중복 게재를 금지. `mark`의 `artifacts` 결정론 존재 검증(`gate_artifact_missing` 거부)·`checklist` stdout 반환(`gate_checklist`)·`--force --note` 우회 시 `gate_artifact_force` 의사결정 로그 강제를 명문화. artifacts 적격 토큰을 "게이트 시점 필재 상대 경로/글롭"으로 한정(조건부 산출물·논리 개념은 checklist로 — 오등재 시 영구 차단) (091) |

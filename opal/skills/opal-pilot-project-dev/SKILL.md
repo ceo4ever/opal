@@ -115,29 +115,16 @@ state-tool을 호출하여 초기화한다:
 ~/.opal/tools/state-tool/run.sh init <task-path> --skill oppd --mode <interactive|semi-agentic|agentic> --rows-from opal/skills/opal-pilot-project-dev/references/pipeline.json
 ```
 
-**진행 현황 행 예시** (아래 표는 사람 열람용 미러 — SSOT는 `references/pipeline.json`. `.md` 파싱은 하위호환 폴백으로만 존치, 편집 금지):
+> **행 구성 SSOT**: `references/pipeline.json` `task_steps[]`. 현재 행 목록은
+> `~/.opal/tools/state-tool/run.sh show <task-path>` 또는 pipeline.json을 직접 조회한다.
 
-| # | 단계 | 항목 | 상태 | 시점 |
-|---|------|------|------|------|
-| 1 | TASK | 작업 | ⬜ | - |
-| 2 | TASK | 사용자 확인 | ⬜ | - |
-| 3 | PLAN | Phase1 PRD/TRD 작성 (opwt) | ⬜ | - |
-| 4 | PLAN | Phase1 명세 검증 (op-spec-validator) | ⬜ | - |
-| 5 | PLAN | PM Gate | ⬜ | - |
-| 6 | PLAN | Phase1 사용자 확정 | ⬜ | - |
-| 7 | WBS | Phase2 WBS 작성 | ⬜ | - |
-| 8 | WBS | PM Gate | ⬜ | - |
-| 9 | WBS | Phase2 사용자 확정 | ⬜ | - |
-| 10 | EXECUTE | Phase3 액션 실행 (동적 추가) | ⬜ | - |
-| 11 | EXECUTE | PM Gate | ⬜ | - |
-| 12 | EXECUTE | 사용자 확인 | ⬜ | - |
-| 13 | CLOSE | DONE.md 생성 | ⬜ | - |
-
-> **[R-10 비표준 행 구성]** oppd는 Phase 기반(1-PLAN/2-WBS/3-EXECUTE) 비표준 행 구조를 사용한다. `gate-pass` 명령은 deprecated — 사용 불가. State Gate/QA Gate 행은 존재하지 않으며(state-tool stage-transition guard로 이전), PM Gate 단일 mark만 사용한다. PM Gate 단일 mark 규정은 Phase별 PM Gate 행(id 5·8·11)과 정합한다.
+> **[R-10 비표준 행 구성]** oppd는 Phase 기반(1-PLAN/2-WBS/3-EXECUTE) 비표준 행 구조를 사용한다. `gate-pass` 명령은 deprecated — 사용 불가. State Gate/QA Gate 행은 존재하지 않으며(state-tool stage-transition guard로 이전), PM Gate 단일 mark만 사용한다. PM Gate 단일 mark 규정은 Phase별 PM Gate 행(`plan.pm_gate`/`wbs.pm_gate`/`execute.pm_gate`)과 정합한다.
+>
+> **게이트 정의 SSOT**: `references/pipeline.json` `task_steps[].gate` — 산출물·체크리스트는 이곳에만 정의한다. `mark --task-step <게이트 key>` 호출 시 도구가 artifacts 존재를 검증하고 checklist를 stdout으로 반환한다.
 >
 > 각 Gate 전환 시 PM Gate 행만 mark한다:
 > ```
-> ~/.opal/tools/state-tool/run.sh mark <task-path> --row <PM_Gate_N> --done
+> ~/.opal/tools/state-tool/run.sh mark <task-path> --task-step <plan.pm_gate|wbs.pm_gate|execute.pm_gate> --done
 > ```
 
 아래 "STATE.md 관리" 섹션의 템플릿으로 STATE.md 본문을 작성한다.
@@ -278,7 +265,7 @@ opwt 완료 후, PM이 결과를 종합하여 사용자에게 보고한다:
 
 4. STATE.md Phase 진행 현황 갱신 (Phase 1 → 확정) — state-tool을 호출한다:
    ```
-   ~/.opal/tools/state-tool/run.sh mark <task-path> --row <Phase1_확정_행N> --done --owner user --note '{owner_name} 확인: Phase 1 확정'
+   ~/.opal/tools/state-tool/run.sh mark <task-path> --task-step plan.user_confirm --done --owner user --note '{owner_name} 확인: Phase 1 확정'
    ```
 5. 작업 히스토리를 `memory-tool append --kind history`로 갱신한다 (직접 편집 금지)
 
@@ -363,7 +350,7 @@ PRD/TRD를 기반으로 태스크를 분할한다.
 
 1. STATE.md Phase 진행 현황 갱신 (Phase 2 → 확정) — state-tool을 호출한다:
    ```
-   ~/.opal/tools/state-tool/run.sh mark <task-path> --row <Phase2_확정_행N> --done --owner user --note '{owner_name} 확인: Phase 2 확정'
+   ~/.opal/tools/state-tool/run.sh mark <task-path> --task-step wbs.user_confirm --done --owner user --note '{owner_name} 확인: Phase 2 확정'
    ```
 2. 작업 히스토리를 `memory-tool append --kind history`로 갱신한다 (직접 편집 금지)
 
@@ -417,7 +404,7 @@ for each group in groups:
     5. 사용자에게 액션 완료 보고
     6. STATE.md Phase 3 행 갱신 — state-tool을 호출한다:
        ```
-       ~/.opal/tools/state-tool/run.sh mark <task-path> --row <Phase3_액션_행N> --done --note 'A{NN} 완료'
+       ~/.opal/tools/state-tool/run.sh mark <task-path> --task-step execute.actions --done --note 'A{NN} 완료'
        ```
 
   if group.type == "parallel":
@@ -428,7 +415,7 @@ for each group in groups:
     5. 사용자에게 그룹 완료 보고
     6. STATE.md 병렬 그룹 행 갱신 — state-tool을 호출한다:
        ```
-       ~/.opal/tools/state-tool/run.sh mark <task-path> --row <그룹_행N> --done --note '그룹 완료'
+       ~/.opal/tools/state-tool/run.sh mark <task-path> --task-step <add-row 시 지정한 그룹 key> --done --note '그룹 완료'
        ```
 ```
 
@@ -835,3 +822,4 @@ opal-harness-agentic.md "에스컬레이션 조건" 공통 기준에 추가:
 | v5.1 | 2026-07-17 | DONE.md 생성 직후 op-brain-ingest 디스패치 다음에 "회고(개선 루프) 하드스텝" 삽입 — 궤적 신호→관찰/분류/기록(improve-tool record --scope local\|fw), 개선후보 0건 시 no-op 비차단(brain-ingest 패턴 답습) (058) |
 | v5.2 | 2026-07-28 22:47 | 프로젝트 메모리 동기화 절 정정(기존 결함 교정, memory-tool 도입(045) 이전 관행의 표 편집 서술 잔존분) — `MEMORY.json` + `append --kind history` 도구 호출로 교체, 직접 편집 금지 명시 (078) |
 | v5.3 | 2026-08-13 16:56 | pipeline.json 전환 + init 하드 실패 해소 — references/pipeline.json 신설(13 task-step, SSOT), 파이프라인 현황판 미러 표 13행 신설, --rows-from를 pipeline.json으로 교체하여 기존 skill_md_parse_error(header not found) 해소. `--wbs` 경로 서술을 실동작(`--force --note`) 기준으로 정정 — `mark --na`는 CLI에 미구현이며 TEST S-16에서 검출 (090) |
+| v5.4 | 2026-08-14 09:31 | SKILL.md 감량 — `--row N` 5건을 `--task-step <key>`로 전환(plan.user_confirm/wbs.user_confirm/execute.actions 고정 매핑 3건 + PM Gate 범용 안내문·동적 그룹 행 플레이스홀더 2건), 진행 현황 미러 표 13행 삭제 → `references/pipeline.json` 포인터 1줄로 교체, PM Gate 절차 블록쿼트에 게이트 정의 SSOT 포인터 1줄 추가(기존 판정 절차 산문은 존치) (091) |

@@ -76,12 +76,12 @@ TASK 단계에서 다음을 자동 감지·주입한다:
   ```
 - 행 갱신:
   ```
-  ~/.opal/tools/state-tool/run.sh advance <task-path> --row 1
-  ~/.opal/tools/state-tool/run.sh mark <task-path> --row 1 --done
+  ~/.opal/tools/state-tool/run.sh advance <task-path> --task-step task.task_md
+  ~/.opal/tools/state-tool/run.sh mark <task-path> --task-step task.task_md --done
   ```
 - 사용자 보고 → 사용자 확인 행 mark:
   ```
-  ~/.opal/tools/state-tool/run.sh mark <task-path> --row 2 --done --owner user --note '{owner_name} 확인: TASK 완료'
+  ~/.opal/tools/state-tool/run.sh mark <task-path> --task-step task.user_confirm --done --owner user --note '{owner_name} 확인: TASK 완료'
   ```
 
 ---
@@ -110,8 +110,8 @@ op-data-dictionary 스킬을 수행하라.
   → **PM Gate** (사전 3종 내용·SSOT 정합 검토)
   → 사용자 보고 후 사용자 확인:
   ```
-  ~/.opal/tools/state-tool/run.sh mark <task-path> --row 4 --done   # DICT PM Gate
-  ~/.opal/tools/state-tool/run.sh mark <task-path> --row 5 --done --owner user --note '{owner_name} 확인: 사전 확정'
+  ~/.opal/tools/state-tool/run.sh mark <task-path> --task-step dict.pm_gate --done   # DICT PM Gate
+  ~/.opal/tools/state-tool/run.sh mark <task-path> --task-step dict.user_confirm --done --owner user --note '{owner_name} 확인: 사전 확정'
   ```
 
 ---
@@ -140,11 +140,11 @@ op-data-model 스킬을 수행하라.
   → **PM Gate** (개념·논리·물리 ERD 정합·DICT 사전 용어 정합 검토)
   → 사용자 보고 후 사용자 확인:
   ```
-  ~/.opal/tools/state-tool/run.sh mark <task-path> --row 7 --done   # MODEL PM Gate
-  ~/.opal/tools/state-tool/run.sh mark <task-path> --row 8 --done --owner user --note '{owner_name} 확인: 모델링 확정'
+  ~/.opal/tools/state-tool/run.sh mark <task-path> --task-step model.pm_gate --done   # MODEL PM Gate
+  ~/.opal/tools/state-tool/run.sh mark <task-path> --task-step model.user_confirm --done --owner user --note '{owner_name} 확인: 모델링 확정'
   ```
 
-> **모드 경계 (U-5)**: MODEL 사용자 확인 행(행 8) 통과 후부터 DDL·QA·CLOSE 직전까지 PM 자율. DICT·MODEL은 설계 SSOT 확정 단계이므로 사용자 검토 필수. 행 8 이후는 기계적 추출 단계 — PM 자율 적합. (`opal/skills/opal-pilot-dev/SKILL.md:313-314` 모드 경계 패턴 계승)
+> **모드 경계 (U-5)**: MODEL 사용자 확인(`model.user_confirm`) 통과 후부터 DDL·QA·CLOSE 직전까지 PM 자율. DICT·MODEL은 설계 SSOT 확정 단계이므로 사용자 검토 필수. `model.user_confirm` 이후는 기계적 추출 단계 — PM 자율 적합. (모드 경계 패턴 계승)
 
 ---
 
@@ -172,9 +172,9 @@ op-data-ddl 스킬을 수행하라.
   → PM Gate (DDL/마이그레이션 내용·명명규칙·제약 검토)
   → 행 mark:
   ```
-  ~/.opal/tools/state-tool/run.sh mark <task-path> --row 9 --done   # DDL 작업
-  ~/.opal/tools/state-tool/run.sh mark <task-path> --row 10 --done  # DDL PM Gate
-  ~/.opal/tools/state-tool/run.sh mark <task-path> --row 11 --done --owner user --note '{owner_name} 확인: DDL 확정'
+  ~/.opal/tools/state-tool/run.sh mark <task-path> --task-step ddl_migration.ddl_scripts --done   # DDL 작업
+  ~/.opal/tools/state-tool/run.sh mark <task-path> --task-step ddl_migration.pm_gate --done  # DDL PM Gate
+  ~/.opal/tools/state-tool/run.sh mark <task-path> --task-step ddl_migration.user_confirm --done --owner user --note '{owner_name} 확인: DDL 확정'
   ```
 
 ---
@@ -191,9 +191,9 @@ PM Gate — QA 검증 항목 직접 수행 (`docs/proposals/opal-data-design.md 
 
 QA 통과 시:
 ```
-~/.opal/tools/state-tool/run.sh mark <task-path> --row 12 --done  # QA 작업
-~/.opal/tools/state-tool/run.sh mark <task-path> --row 13 --done  # QA PM Gate
-~/.opal/tools/state-tool/run.sh mark <task-path> --row 14 --done --owner user --note '{owner_name} 확인: QA 통과'
+~/.opal/tools/state-tool/run.sh mark <task-path> --task-step qa.review --done  # QA 작업
+~/.opal/tools/state-tool/run.sh mark <task-path> --task-step qa.pm_gate --done  # QA PM Gate
+~/.opal/tools/state-tool/run.sh mark <task-path> --task-step qa.user_confirm --done --owner user --note '{owner_name} 확인: QA 통과'
 ```
 
 ---
@@ -204,7 +204,7 @@ QA 통과 시:
 
 1. DONE.md 생성 후 행 mark:
    ```
-   ~/.opal/tools/state-tool/run.sh mark <task-path> --row 15 --done
+   ~/.opal/tools/state-tool/run.sh mark <task-path> --task-step close.done_md --done
    ```
 2. **관련 문서 업데이트** (op-brain-ingest 디스패치 직전 실행):
    - `<프로젝트-루트>/docs/PROJECT.md`의 "프로젝트 문서" 레지스트리와 이번 태스크의 `changed_files`(EXECUTE 산출)를 양쪽 종합하여, 태스크 결과로 내용이 달라진 관련 문서(ARCHITECTURE.md·표준사전·ERD 등)를 식별한다.
@@ -231,49 +231,21 @@ QA 통과 시:
 
 ## STATE.md 도메인 치환값
 
-| 필드 | 값 |
-|------|------|
-| 모드 | Full Task |
-| 단계 목록 | TASK / DICT / MODEL / DDL/MIGRATION / QA / CLOSE |
+> STATE.md 초기 생성은 §STEP 1: TASK "완료 처리" 참조 — `--rows-from`이 `references/pipeline.json`의 `task_steps[]`를 읽어 행을 생성한다.
 
-**진행 현황 행 예시** (아래 표는 사람 열람용 미러 — SSOT는 `references/pipeline.json`. `.md` 파싱은 하위호환 폴백으로만 존치, 편집 금지):
+> **행 구성 SSOT**: `references/pipeline.json` `task_steps[]`. 현재 행 목록은
+> `~/.opal/tools/state-tool/run.sh show <task-path>` 또는 pipeline.json을 직접 조회한다.
 
-> **[MUST] STATE.md 초기 생성**: `~/.opal/tools/state-tool/run.sh init <task-path> --skill opdd --mode <interactive|semi-agentic|agentic> --rows-from opal/skills/opal-pilot-data-design/references/pipeline.json` 호출. 기본값: `semi-agentic`. `--rows-from`이 아래 표를 파싱하여 행 구성을 자동 추출한다.
-> 근거: `docs/proposals/opal-data-design.md §3.5` STATE 행 15행 구성 / `opal/skills/opal-pilot-dev/SKILL.md:266-289` D-5 패턴 계승
-
-```markdown
-| # | 단계 | 항목 | 상태 | 시점 |
-|---|------|------|------|------|
-| 1 | TASK | 작업 | ⬜ | - |
-| 2 | TASK | 사용자 확인 | ⬜ | - |
-| 3 | DICT | 작업 | ⬜ | - |
-| 4 | DICT | PM Gate | ⬜ | - |
-| 5 | DICT | 사용자 확인 | ⬜ | - |
-| 6 | MODEL | 작업 | ⬜ | - |
-| 7 | MODEL | PM Gate | ⬜ | - |
-| 8 | MODEL | 사용자 확인 | ⬜ | - |
-| 9 | DDL/MIGRATION | 작업 | ⬜ | - |
-| 10 | DDL/MIGRATION | PM Gate | ⬜ | - |
-| 11 | DDL/MIGRATION | 사용자 확인 | ⬜ | - |
-| 12 | QA | 작업 | ⬜ | - |
-| 13 | QA | PM Gate | ⬜ | - |
-| 14 | QA | 사용자 확인 | ⬜ | - |
-| 15 | CLOSE | DONE.md 생성 | ⬜ | - |
-```
-
-> 행 8(MODEL 사용자 확인) 이후부터 PM 자율 — 모드 경계(U-5 확정). CLOSE 진입은 사용자 승인 필수(공통).
+> `model.user_confirm`(MODEL 사용자 확인) 이후부터 PM 자율 — 모드 경계(U-5 확정). CLOSE 진입은 사용자 승인 필수(공통).
 
 ---
 
 ## PM Gate 점검 목록
 
-| Phase | 산출물 | 체크리스트 |
-|-------|-------|----------|
-| TASK | TASK.md | `{설계}` 루트 확정, 인풋 컨텍스트 수집 완료, DBMS 확정 |
-| DICT | `{설계}/사전/` 3종 md | 표준단어·도메인·코드사전 존재, md SSOT 규칙 준수, xlsx export 선택 여부 |
-| MODEL | `{설계}/개념·논리·물리` 모델링 | 3모드 순차 완료, 논리 속성명 = DICT 용어, 물리 DBML 존재 |
-| DDL/MIGRATION | `{설계}/DDL/` | DDL 스크립트 + 마이그레이션, 물리 DBML 기반 생성 확인 |
-| QA | 전체 산출물 | `docs/proposals/opal-data-design.md §3.4` 4개 검증 항목 PASS |
+> **게이트 정의 SSOT**: `references/pipeline.json` `task_steps[].gate` — 산출물(`artifacts`)과
+> 체크리스트(`checklist`)는 이곳에만 정의한다. `state-tool mark --task-step <게이트 key>` 호출 시
+> artifacts 존재를 도구가 검증하고(미충족 시 `gate_artifact_missing`으로 거부) checklist를
+> stdout `gate_checklist` 페이로드로 반환한다.
 
 ---
 
@@ -286,7 +258,7 @@ opal-harness-agentic.md / opal-harness-semi-agentic.md 참조. 본 절은 이 �
 기본 호출(`//opdd {작업}`)은 semi-agentic 모드.
 
 **모드 경계** (이 시점부터 PM 자율):
-- MODEL 사용자 확인 행(행 8) 통과 후 → DDL·QA 행부터 PM 자율 (`opal/skills/opal-pilot-dev/SKILL.md:313-314` 패턴 계승 — 본 파이프라인에서 MODEL이 설계 SSOT 확정의 최종 사용자 게이트)
+- MODEL 사용자 확인(`model.user_confirm`) 통과 후 → DDL·QA 단계부터 PM 자율 (본 파이프라인에서 MODEL이 설계 SSOT 확정의 최종 사용자 게이트)
 
 ### 명시 모드
 
@@ -301,11 +273,11 @@ opal-harness-agentic.md / opal-harness-semi-agentic.md 참조. 본 절은 이 �
 ```
 TASK → DICT Gate → MODEL Gate → DDL Gate → QA Gate → CLOSE
 사용자   사용자 승인    사용자 승인    PM 자율     PM 자율    사용자 승인 필수
-                       (모드 경계 — 행 8)
+                       (모드 경계 — model.user_confirm)
 ```
 
 - TASK→DICT Gate→MODEL Gate까지 사용자 승인 필수
-- MODEL 사용자 확인(행 8) 통과 후 DDL·QA Gate는 PM 자율 통과
+- MODEL 사용자 확인(`model.user_confirm`) 통과 후 DDL·QA Gate는 PM 자율 통과
 - CLOSE 진입은 사용자 승인 필수 (공통 게이트)
 
 ### CLOSE 진입 게이트 (공통)
@@ -322,3 +294,4 @@ semi-agentic / agentic 모두 CLOSE 첫 행 `--auto-pass` 거부 (`agentic_close
 | v1.1 | 2026-06-24 | CLOSE 단계 op-brain-ingest 디스패치 직전에 "관련 문서 업데이트" 스텝 삽입 — PROJECT.md 레지스트리 + changed_files 종합으로 관련 문서 최신화 후 ingest (없으면 no-op). 후속 항목 번호 재정렬 (042) |
 | v1.2 | 2026-07-10 13:12 | note 예시의 소유자 확인 표기를 `{owner_name} 확인:` 형식으로 통일 — identity.md owner_name 재해석 규칙(AGENT.md §정체성 적용)과 정합, 오염 차단 (054) |
 | v1.3 | 2026-08-13 16:54 | pipeline.json 전환 — references/pipeline.json 신설(15 task-step, SSOT), --rows-from 호출 경로를 SKILL.md에서 pipeline.json으로 교체, 표는 사람 열람용 미러로 명시 (090) |
+| v1.4 | 2026-08-14 09:27 | 파이프라인 스펙 중복정리 — `--row N`(14건)→`--task-step <key>`, 산문 `행 N`(7건)→key 참조로 전환. 미러 표·PM Gate 나열 표·중복 STATE.md 초기화 명령·모드/단계 목록 치환값 삭제 → `references/pipeline.json` 원천 포인터로 대체. R-1 자기모순 문장 정정 + 타 SKILL.md 줄번호 인용 전량 삭제 (091) |

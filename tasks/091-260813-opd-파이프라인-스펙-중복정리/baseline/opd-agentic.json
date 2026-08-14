@@ -1,0 +1,146 @@
+[
+  {
+    "row_id": 1,
+    "stage": "TASK",
+    "item": "작업",
+    "key": "task.task_md",
+    "status": "pending",
+    "status_label": "⬜",
+    "owner": "PM"
+  },
+  {
+    "row_id": 2,
+    "stage": "TASK",
+    "item": "사용자 확인",
+    "key": "task.user_confirm",
+    "status": "na",
+    "status_label": "-",
+    "owner": "auto"
+  },
+  {
+    "row_id": 3,
+    "stage": "ANALYSIS",
+    "item": "작업",
+    "key": "analysis.analysis_md",
+    "status": "pending",
+    "status_label": "⬜",
+    "owner": "PM"
+  },
+  {
+    "row_id": 4,
+    "stage": "ANALYSIS",
+    "item": "PM Gate",
+    "key": "analysis.pm_gate",
+    "status": "pending",
+    "status_label": "⬜",
+    "owner": "PM"
+  },
+  {
+    "row_id": 5,
+    "stage": "ANALYSIS",
+    "item": "사용자 확인",
+    "key": "analysis.user_confirm",
+    "status": "na",
+    "status_label": "-",
+    "owner": "auto"
+  },
+  {
+    "row_id": 6,
+    "stage": "PLAN",
+    "item": "작업",
+    "key": "plan.plan_md",
+    "status": "pending",
+    "status_label": "⬜",
+    "owner": "PM"
+  },
+  {
+    "row_id": 7,
+    "stage": "PLAN",
+    "item": "PM Gate",
+    "key": "plan.pm_gate",
+    "status": "pending",
+    "status_label": "⬜",
+    "owner": "PM"
+  },
+  {
+    "row_id": 8,
+    "stage": "PLAN",
+    "item": "사용자 확인",
+    "key": "plan.user_confirm",
+    "status": "na",
+    "status_label": "-",
+    "owner": "auto"
+  },
+  {
+    "row_id": 9,
+    "stage": "TEST-SCENARIO",
+    "item": "작업",
+    "key": "test_scenario.test_scenario_md",
+    "status": "pending",
+    "status_label": "⬜",
+    "owner": "PM"
+  },
+  {
+    "row_id": 10,
+    "stage": "TEST-SCENARIO",
+    "item": "목표-커버 게이트",
+    "key": "test_scenario.scenario_gate",
+    "status": "pending",
+    "status_label": "⬜",
+    "owner": "PM"
+  },
+  {
+    "row_id": 11,
+    "stage": "TEST-SCENARIO",
+    "item": "사용자 확인",
+    "key": "test_scenario.user_confirm",
+    "status": "na",
+    "status_label": "-",
+    "owner": "auto"
+  },
+  {
+    "row_id": 12,
+    "stage": "EXECUTE",
+    "item": "작업",
+    "key": "execute.implement",
+    "status": "pending",
+    "status_label": "⬜",
+    "owner": "PM"
+  },
+  {
+    "row_id": 13,
+    "stage": "TEST",
+    "item": "작업",
+    "key": "test.run_tests",
+    "status": "pending",
+    "status_label": "⬜",
+    "owner": "PM"
+  },
+  {
+    "row_id": 14,
+    "stage": "TEST",
+    "item": "PM Gate",
+    "key": "test.pm_gate",
+    "status": "pending",
+    "status_label": "⬜",
+    "owner": "PM"
+  },
+  {
+    "row_id": 15,
+    "stage": "TEST",
+    "item": "사용자 확인",
+    "key": "test.user_confirm",
+    "status": "na",
+    "status_label": "-",
+    "owner": "auto"
+  },
+  {
+    "row_id": 16,
+    "stage": "CLOSE",
+    "item": "DONE.md 생성",
+    "key": "close.done_md",
+    "status": "pending",
+    "status_label": "⬜",
+    "owner": "PM"
+  }
+]

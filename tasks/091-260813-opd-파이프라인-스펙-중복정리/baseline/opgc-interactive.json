@@ -1,0 +1,65 @@
+[
+  {
+    "row_id": 1,
+    "stage": "SCAN",
+    "item": "대상 파일 선별 + 스택 감지 + 프로젝트 구성 파싱",
+    "key": "scan.select_targets",
+    "status": "pending",
+    "status_label": "⬜",
+    "owner": "PM"
+  },
+  {
+    "row_id": 2,
+    "stage": "CHECK",
+    "item": "에이전트 (요소×체커) 병렬 디스패치",
+    "key": "check.dispatch_agents",
+    "status": "pending",
+    "status_label": "⬜",
+    "owner": "PM"
+  },
+  {
+    "row_id": 3,
+    "stage": "CHECK",
+    "item": "에이전트 완료 확인",
+    "key": "check.await_agents",
+    "status": "pending",
+    "status_label": "⬜",
+    "owner": "PM"
+  },
+  {
+    "row_id": 4,
+    "stage": "REPORT",
+    "item": "GC-SECURITY-{ts}[-{element}].md 생성",
+    "key": "report.security_report",
+    "status": "pending",
+    "status_label": "⬜",
+    "owner": "PM"
+  },
+  {
+    "row_id": 5,
+    "stage": "REPORT",
+    "item": "GC-CONVENTION-{ts}[-{element}].md 생성",
+    "key": "report.convention_report",
+    "status": "pending",
+    "status_label": "⬜",
+    "owner": "PM"
+  },
+  {
+    "row_id": 6,
+    "stage": "REPORT",
+    "item": "실행 요약 테이블 갱신",
+    "key": "report.summary_table",
+    "status": "pending",
+    "status_label": "⬜",
+    "owner": "PM"
+  },
+  {
+    "row_id": 7,
+    "stage": "CLOSE",
+    "item": "DONE.md 생성",
+    "key": "close.done_md",
+    "status": "pending",
+    "status_label": "⬜",
+    "owner": "PM"
+  }
+]

@@ -194,9 +194,9 @@ interview 완료 후 결과를 TASK.md에 다음 섹션 양식으로 기록한�
   ```
 - 행 갱신:
   ```
-  ~/.opal/tools/state-tool/run.sh advance <task-path> --row 1   # TASK 작업 행 🔄
-  ~/.opal/tools/state-tool/run.sh mark <task-path> --row 1 --done  # TASK 작업 + TASK.md 생성
-  ~/.opal/tools/state-tool/run.sh mark <task-path> --row 2 --done --owner user --note '{owner_name} 확인: TASK 완료'
+  ~/.opal/tools/state-tool/run.sh advance <task-path> --task-step task.task_md   # TASK 작업 행 🔄
+  ~/.opal/tools/state-tool/run.sh mark <task-path> --task-step task.task_md --done  # TASK 작업 + TASK.md 생성
+  ~/.opal/tools/state-tool/run.sh mark <task-path> --task-step task.user_confirm --done --owner user --note '{owner_name} 확인: TASK 완료'
   ```
 
 > **[MUST] 행 갱신**: `mark` 호출 자체가 state 기록이며 별도의 State Gate 행은 존재하지 않는다. state-tool stage-transition guard가 단계 완료 여부를 자동 검증한다.
@@ -246,11 +246,11 @@ ANALYSIS 완료 후 아래 절차를 순서대로 수행한다:
    - Artifact Gate: `ANALYSIS.md` 파일이 존재하고 내용이 있는지 확인한다
 2. PM Gate 통과 후 해당 행을 단일 mark:
    ```
-   ~/.opal/tools/state-tool/run.sh mark <task-path> --row <ANALYSIS_PM_Gate_N> --done
+   ~/.opal/tools/state-tool/run.sh mark <task-path> --task-step analysis.pm_gate --done
    ```
 3. 사용자 확인 (interactive) / PM 자율 승인 (agentic):
    ```
-   ~/.opal/tools/state-tool/run.sh mark <task-path> --row <ANALYSIS_사용자확인_N> --done --owner user --note '{owner_name} 확인: ANALYSIS 완료'
+   ~/.opal/tools/state-tool/run.sh mark <task-path> --task-step analysis.user_confirm --done --owner user --note '{owner_name} 확인: ANALYSIS 완료'
    ```
 
 ---
@@ -292,11 +292,11 @@ tasks/{NNN}-opwt-{name}/PLAN.md
   - TASK.md 요구사항 전체 커버 여부 확인
   - PM Gate 통과 후 해당 행을 단일 mark:
     ```
-    ~/.opal/tools/state-tool/run.sh mark <task-path> --row <PLAN_PM_Gate_N> --done
+    ~/.opal/tools/state-tool/run.sh mark <task-path> --task-step plan.pm_gate --done
     ```
 - 사용자 확인 (interactive) / PM 자율 승인 (agentic):
   ```
-  ~/.opal/tools/state-tool/run.sh mark <task-path> --row <PLAN_사용자확인_N> --done --owner user --note '{owner_name} 확인: PLAN 완료'
+  ~/.opal/tools/state-tool/run.sh mark <task-path> --task-step plan.user_confirm --done --owner user --note '{owner_name} 확인: PLAN 완료'
   ```
 - **게이트**: PLAN.md + 배치 계획 사용자 확인 (interactive) / PM 자율 승인 (agentic)
 
@@ -326,12 +326,12 @@ tasks/{NNN}-opwt-{name}/PLAN.md
 배치 완료
   → **PM Gate** (배치 단위 간이 검토 — 문서 내용 완성도·논리 일관성 확인. 전체 PM Gate는 QA 단계 최종 판정에서 수행):
   ```
-  ~/.opal/tools/state-tool/run.sh mark <task-path> --row <EXECUTE_Batch_PM_Gate_N> --done
+  ~/.opal/tools/state-tool/run.sh mark <task-path> --task-step execute.batch_pm_gate_{N} --done
   ```
 
   → 사용자 확인 (interactive) / PM 자율 승인 후 다음 배치 (agentic):
   ```
-  ~/.opal/tools/state-tool/run.sh mark <task-path> --row <EXECUTE_Batch_사용자확인_N> --done --owner user --note '{owner_name} 확인: Batch N 완료'
+  ~/.opal/tools/state-tool/run.sh mark <task-path> --task-step execute.batch_user_confirm_{N} --done --owner user --note '{owner_name} 확인: Batch N 완료'
   ```
 배치 완료 후 `docs/PROJECT.md` 등록 확인
 
@@ -359,7 +359,7 @@ PLAN.md의 QA 체크리스트를 검증 결과로 갱신한다 (하네스 §2 QA
   - 모든 QA 체크리스트 항목이 `[x]` 또는 "N/A + 사유"로 채워졌는지 확인
   - PM Gate 통과 후 해당 행을 단일 mark:
     ```
-    ~/.opal/tools/state-tool/run.sh mark <task-path> --row <QA_PM_Gate_N> --done
+    ~/.opal/tools/state-tool/run.sh mark <task-path> --task-step qa.pm_gate --done
     ```
 - **Pass**: 사용자에게 완료 보고 후 CLOSE 단계 진입 승인 요청
 
@@ -380,7 +380,7 @@ QA 최종 판정 Pass 후 태스크를 마감한다.
 
 1. DONE.md 생성 후 행 mark:
    ```
-   ~/.opal/tools/state-tool/run.sh mark <task-path> --row <CLOSE_DONE_행N> --done  # DONE.md 생성
+   ~/.opal/tools/state-tool/run.sh mark <task-path> --task-step close.done_md --done  # DONE.md 생성
    ```
    > **CLOSE 게이트 제약 (§2.16 G-13)**: CLOSE 단계 최초 진입 행은 `--auto-pass` 적용 불가 (`close_gate_violation`). 반드시 위 명시 호출로 처리한다.
 2. **관련 문서 업데이트** (op-brain-ingest 디스패치 직전 실행):
@@ -420,43 +420,30 @@ QA 최종 판정 Pass 후 태스크를 마감한다.
 
 하네스 STATE.md 기본 구조에 도메인 고유 섹션 추가:
 
-- `{모드}`: 작성/수정/분석
-- `{단계 목록}`: TASK → ANALYSIS → PLAN → EXECUTE → QA → CLOSE (모드에 따라 일부 생략)
 - **네트워크 상태**: 산출물 | 유형 | 상태 | 버전 | 경로
 - **배치 계획**: Batch | 문서 | 의존 | 상태
 
-> **[SSOT]** SSOT는 `references/pipeline.json`이며, `state-tool init` 호출 시 이를 `--rows-from` 옵션으로 참조한다:
->
-> ```
-> ~/.opal/tools/state-tool/run.sh init <task-path> --skill opwt --rows-from opal/skills/opal-pilot-write-tech/references/pipeline.json
-> ```
->
-> opwt는 모드(작성/수정/분석)에 따라 단계 구성이 가변적이다. state-tool은 `references/pipeline.json`을 읽어 초기 행을 생성한다. EXECUTE 단계의 배치 행은 PLAN 완료 후 `add-row`로 동적 삽입한다:
-> ```
-> ~/.opal/tools/state-tool/run.sh add-row <task-path> --after <EXECUTE_행N> --stage EXECUTE --item 'Batch N: {문서 목록}'
-> ```
+> **행 구성 SSOT**: `references/pipeline.json` `task_steps[]`. 현재 행 목록은
+> `~/.opal/tools/state-tool/run.sh show <task-path>` 또는 pipeline.json을 직접 조회한다.
+> STATE.md 초기 생성은 §TASK 단계 완료 처리 참조.
 
-**진행 현황 행 예시** (아래 표는 사람 열람용 미러 — SSOT는 `references/pipeline.json`. `.md` 파싱은 하위호환 폴백으로만 존치, 편집 금지):
+opwt는 모드(작성/수정/분석)에 따라 단계 구성이 가변적이다. `task.task_md`(TASK 작업)가 TASK.md 생성을 흡수한다. ANALYSIS 모드에서는 ANALYSIS 행이 PLAN 앞에 삽입된다. 수정/분석 모드의 ANALYSIS 행과 EXECUTE 배치 행은 pipeline.json에 고정 key가 없으므로 아래 규약대로 `add-row --key`로 동적 삽입한다.
 
-> **[MUST] STATE.md 초기 생성**: `~/.opal/tools/state-tool/run.sh init <task-path> --skill opwt --mode <interactive|semi-agentic|agentic> --rows-from opal/skills/opal-pilot-write-tech/references/pipeline.json` 호출.
-
-```markdown
-| # | 단계 | 항목 | 상태 | 시점 |
-|---|------|------|------|------|
-| 1 | TASK | 작업 | ⬜ | - |
-| 2 | TASK | 사용자 확인 | ⬜ | - |
-| 3 | PLAN | 작업 | ⬜ | - |
-| 4 | PLAN | PM Gate | ⬜ | - |
-| 5 | PLAN | 사용자 확인 | ⬜ | - |
-| 6 | EXECUTE | 작업 (Batch 동적 삽입) | ⬜ | - |
-| 7 | QA | 작업 | ⬜ | - |
-| 8 | QA | PM Gate | ⬜ | - |
-| 9 | QA | 사용자 확인 | ⬜ | - |
-| 10 | CLOSE | DONE.md 생성 | ⬜ | - |
+**수정/분석 모드 진입 시 ANALYSIS 행 동적 삽입**:
+```
+~/.opal/tools/state-tool/run.sh add-row <task-path> --after-task-step task.user_confirm --stage ANALYSIS --key analysis.analysis_md --item '작업'
+~/.opal/tools/state-tool/run.sh add-row <task-path> --after-task-step analysis.analysis_md --stage ANALYSIS --key analysis.pm_gate --item 'PM Gate'
+~/.opal/tools/state-tool/run.sh add-row <task-path> --after-task-step analysis.pm_gate --stage ANALYSIS --key analysis.user_confirm --item '사용자 확인'
 ```
 
-> TASK.md 생성은 행 1(TASK 작업)에 흡수. ANALYSIS 모드에서는 ANALYSIS 행이 PLAN 앞에 삽입된다. State Gate 행은 state-tool stage-transition guard로 이전 — 행으로 강제하지 않는다.
-> EXECUTE 배치 행은 PLAN 완료 후 `add-row`로 동적 삽입한다. 배치별 PM Gate·사용자 확인 행도 함께 삽입한다.
+**EXECUTE 배치 행 동적 삽입** (N=1,2,… — 직전 배치 완료 후 순차 삽입, `execute.batches` 뒤에 이어붙임):
+```
+~/.opal/tools/state-tool/run.sh add-row <task-path> --after-task-step execute.batches --stage EXECUTE --key execute.batch_{N} --item 'Batch {N}: {문서 목록}'
+~/.opal/tools/state-tool/run.sh add-row <task-path> --after-task-step execute.batch_{N} --stage EXECUTE --key execute.batch_pm_gate_{N} --item 'PM Gate'
+~/.opal/tools/state-tool/run.sh add-row <task-path> --after-task-step execute.batch_pm_gate_{N} --stage EXECUTE --key execute.batch_user_confirm_{N} --item '사용자 확인'
+```
+
+> **[MUST]** 위 key는 전부 `KEY_PATTERN ^[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*(_[0-9]+)?$`를 만족해야 한다. 동적 게이트 행에는 `gate`가 실리지 않으므로 배치별 PM Gate·사용자 확인은 PM 판단에만 의존한다(pipeline.json 3모드 확장은 별도 태스크로 이월됨).
 
 ---
 
@@ -471,10 +458,10 @@ opal-doc-standard 적용: `~/.opal/references/opal-doc-standard.md`
 
 ## PM Gate 점검 목록
 
-| Phase | 산출물 | 체크리스트 위치 |
-|-------|-------|----------------|
-| PLAN | TASK.md, PLAN.md, QA-PLAN.md | TASK.md 요구사항, PLAN.md §3, §4 |
-| EXECUTE | QA-EXECUTE.md | - |
+> **게이트 정의 SSOT**: `references/pipeline.json` `task_steps[].gate` — 산출물(`artifacts`)과
+> 체크리스트(`checklist`)는 이곳에만 정의한다. `state-tool mark --task-step <게이트 key>` 호출 시
+> artifacts 존재를 도구가 검증하고(미충족 시 `gate_artifact_missing`으로 거부) checklist를
+> stdout `gate_checklist` 페이로드로 반환한다.
 
 ---
 
@@ -558,3 +545,4 @@ semi-agentic / agentic 모두 CLOSE 첫 행 `--auto-pass` 거부 (`agentic_close
 | v4.6 | 2026-07-10 13:12 | note 예시의 소유자 확인 표기를 `{owner_name} 확인:` 형식으로 통일 — identity.md owner_name 재해석 규칙(AGENT.md §정체성 적용)과 정합, 오염 차단 (054) |
 | v4.7 | 2026-07-17 | CLOSE 단계에 "회고(개선 루프) 하드스텝" 삽입 — op-brain-ingest 직후·완료보고 직전, 궤적 신호→관찰/분류/기록(improve-tool record --scope local\|fw), 개선후보 0건 시 no-op 비차단(brain-ingest 패턴 답습) (058) |
 | v4.8 | 2026-08-13 16:56 | pipeline.json 전환 — references/pipeline.json 신설(10 task-step, SSOT), --rows-from 호출 경로를 SKILL.md에서 pipeline.json으로 교체, 표는 사람 열람용 미러로 명시 (090) |
+| v4.9 | 2026-08-14 09:28 | SKILL.md 감량 — `--row N` 11건을 `--task-step <key>`로 전환(정적 7 + 동적 4는 `add-row --key` 규약 경유), 산문 `행 1` 1건을 `task.task_md` key 참조로 교체, STATE.md 도메인 치환값의 `{모드}`/`{단계 목록}` 중복 기재 삭제(네트워크 상태·배치 계획만 존치), 진행 현황 미러 표 10행 삭제 → `references/pipeline.json` 포인터 1줄로 교체, 중복 init 완전 명령 2건 삭제(§TASK 단계 완료 처리 1건만 정본 존치), PM Gate 점검 목록 표 삭제 → 게이트 정의 SSOT 포인터로 교체, 수정/분석 모드 ANALYSIS 행·EXECUTE 배치 행의 `add-row --key` 동적 생성 규약 신규 저술 (091) |
