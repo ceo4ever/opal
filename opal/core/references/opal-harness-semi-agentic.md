@@ -41,19 +41,30 @@
 
 ## 5. EXECUTE-equivalent 이후의 동작 (agentic 준용)
 
-- PM 자율 통과 (`state-tool --auto-pass` 호출)
+- PM 자율 통과 (사용자 확인 행은 도구가 자동 승인 — 아래 참조)
 - AGENTIC-LOG.md 자동 생성 (EXECUTE 등가 첫 행 advance/mark 시점에 PM이 생성)
 - Gate 루핑 규칙: `opal-harness-agentic.md §5` 적용
 - PM 대행 의무(판단 기록/직접 검증/완수/품질 책임/투명성/에스컬레이션/폴백 승인): `opal-harness-agentic.md §3` 적용
 
-**Pass 시 state-tool 호출 (EXECUTE-equivalent 이후 사용자 확인 행)**:
+**사용자 확인 행 — PM 명시 호출 불필요 (도구 자동 승인, 093)**:
+
+사용자 확인 행은 전 모드 `pending / ⬜ / owner=PM`으로 초기화되며, PM이 `--auto-pass`를 별도로 호출하지 않는다. 다음 단계 진입(`advance` 또는 `mark`) 시 도구가 stage-transition guard 직전에 `auto_approve_prior_user_confirmations`를 실행하여, 대상 행 앞 구간(`[0, row_index)`)의 미완 "사용자 확인" 행을 자동 승인한다(`status = done`, `owner = auto`, `timestamp`, `note = "auto-approved on <stage> entry"`). `--as-worker` · `--force` · 대상 행 `stage = CLOSE`이면 즉시 no-op이며, `advance`/`mark` 응답의 `auto_approved` 배열로 관측한다.
+
+**semi-agentic 자동 승인 불가 구간 — 캡틴 승인 필요**:
+
+semi-agentic 모드에서 자동 승인은 **EXECUTE-equivalent 이후 구간에만** 적용된다. 모드 경계 상수 `MODE_BOUNDARY_STAGES`(`TASK`, `ANALYSIS`, `PLAN`, `TEST-SCENARIO`, `SPEC`, `REVIEW`, `DESIGN`, `WBS`, `WIREFRAME`)에 속하는 stage의 사용자 확인 행은 `can_auto_approve_user_confirmation`이 `semi_agentic_pre_execute`로 거부하며, 도구가 `user_confirmation_required` 에러를 반환한다.
+
+```json
+{"ok": false, "error": "user_confirmation_required", "row_id": N}
+```
+
+이 구간에서는 PM이 소유자에게 보고하고 사용자 승인 발화를 받은 뒤 캡틴이 직접 승인해야 한다:
 
 ```
-~/.opal/tools/state-tool/run.sh mark tasks/{NNN}-.../ \
-  --row <N> --done \
-  --auto-pass \
-  --note "semi-agentic auto-pass: <PM 판단 근거>"
+~/.opal/tools/state-tool/run.sh mark tasks/{NNN}-.../ --row <N> --done --owner user
 ```
+
+- 근거: 093 F-002·F-003·F-004 / `state_tool.py` `MODE_BOUNDARY_STAGES` · `can_auto_approve_user_confirmation`
 
 ## 6. CLOSE 진입 게이트 (공통)
 
@@ -240,3 +251,4 @@ CLOSE 진입 절차:
 | v1.2 | 2026-05-15 16:40 | §3 opd 행 모드 경계 갱신 — PLAN 사용자 확인 행 → TEST-SCENARIO 사용자 확인 행. §8 차이 표에 TEST-SCENARIO 완료 행 추가(opd 전용) + 비고 컬럼 신설 (004) |
 | v1.3 | 2026-06-07 | §4 QA→PM Gate 통합 정합화 — "QA Gate / PM Gate" → "PM Gate"(문서 QA 흡수, 별도 QA Gate 단계 없음, interactive §3 참조). 동작 검증(TEST/verify) 영역 불변 (014 Phase 4-2) |
 | v1.4 | 2026-06-08 | §10 단계전환 보고 양식 3종 신설 — reporting-template.md §8 이전 + 🎯 결론·근거 통합 표기 + ▶️ 승인 대기 어미 통일 (015) |
+| v1.5 | 2026-08-15 21:48 | §5 사용자 확인 행 자동 승인 계약 전환 — PM `--auto-pass` 명시 호출 지시 삭제, 다음 단계 진입 시 도구가 `auto_approve_prior_user_confirmations`로 자동 승인. `MODE_BOUNDARY_STAGES` 구간은 자동 승인 불가(`user_confirmation_required`)이며 캡틴이 `mark --owner user`로 승인해야 함을 명시. §6 CLOSE 진입 게이트 절차 불변 (093) |

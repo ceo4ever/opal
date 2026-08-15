@@ -242,7 +242,7 @@ TASK → WIREFRAME Gate → EXECUTE Gate → CLOSE
 - WIREFRAME 사용자 확인 행 통과 후 EXECUTE Gate는 PM 자율 통과
 - CLOSE 진입은 사용자 승인 필수 (공통 게이트)
 - 각 게이트에서 opal-harness-agentic.md "Gate 루핑 규칙" 적용
-- 자율 통과 시 `mark --task-step <task-step-key> --done --auto-pass --note '<근거>'` 호출 (P-8)
+- 자율 통과 시 `mark --task-step <task-step-key> --done` 호출 (P-8). 사용자 확인 행은 PM이 명시 호출하지 않으며 다음 단계 진입 시 도구가 자동 승인한다 (계약 SSOT: `opal/core/references/opal-harness-agentic.md §4` / `opal-harness-semi-agentic.md §5`)
 - **CLOSE 단계 최초 진입 행은 `--auto-pass` 금지** (`agentic_close_gate_requires_user` — §2.16 G-13)
 - AGENTIC-LOG.md 생성: EXECUTE 등가 첫 행 advance/mark 시점
 
@@ -286,3 +286,4 @@ semi-agentic / agentic 모두 CLOSE 첫 행 `--auto-pass` 거부 (`agentic_close
 | v3.2 | 2026-07-20 15:45 | task-step 키 주소 체계 도입 — `references/pipeline.json` 신설(9 task-step, WIREFRAME 3~5행 `conditional:true`, SSOT), `--rows-from` 호출 경로를 SKILL.md에서 pipeline.json으로 교체(`.md` 파싱은 하위호환 폴백으로 존치), 표는 사람 열람용 미러로 축소 (070) |
 | v3.3 | 2026-07-23 09:56 | 본문 state-tool 명령 예시를 task-step key 주소로 전환(--row→--task-step, --step→--action-step). pipeline.json key 기준. (070 후속) |
 | v3.4 | 2026-08-14 09:23 | 산문 `행 N` 참조 3건을 task-step key 참조로 전환 + STATE.md 진행 현황 미러 표/PM Gate 점검 표를 `references/pipeline.json` SSOT 포인터로 교체 + 치환값 절 `{모드}`/`{단계 목록}` 중복 기재 제거(meta.mode_label/stages와 중복) + init 완전 명령 1지점화(§STATE.md 도메인 치환값 정본, §활성화는 포인터) (091) |
+| v3.5 | 2026-08-15 21:48 | 사용자 확인 행 자동 승인 계약 반영 — agentic STATE 갱신 지시에서 PM `--auto-pass` 명시 호출 삭제, 다음 단계 진입 시 도구 자동 승인으로 전환하고 계약 본문은 하네스 SSOT(`opal-harness-agentic.md §4` / `opal-harness-semi-agentic.md §5`) 참조로 정리. CLOSE 진입 게이트 서술 불변 (093) |
