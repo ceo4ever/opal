@@ -30,6 +30,7 @@ from conftest import (
     build_guard_repo,
     clone_repo,
     make_bare_remote,
+    make_monorepo_bare_remote,
     parse_json_stdout,
     run_git,
     run_state_cli,
@@ -45,6 +46,25 @@ def _minimal_project(tmp_path: pathlib.Path, config: dict, name: str) -> pathlib
     root.mkdir()
     write_json(root / ".opal" / "worktree.json", config)
     return root
+
+
+def _build_independent_repo(
+    remotes_dir: pathlib.Path,
+    project_root: pathlib.Path,
+    workspace_subdir: str,
+    repo_name: str,
+    extra_files: dict | None = None,
+) -> pathlib.Path:
+    """S-30(`init` 탐지) 전용 — `<project_root>/<workspace_subdir>/<repo_name>`에 독립
+    bare remote의 clone(자체 `.git` 보유)을 만든다. `extra_files`(상대경로→내용)는 워킹
+    트리에만 기록한다 — 탐지는 파일시스템 스캔이므로 커밋이 필요 없다."""
+    origin = make_bare_remote(remotes_dir, f"origin_{repo_name}")
+    dest = clone_repo(origin, project_root / workspace_subdir, repo_name)
+    for relpath, content in (extra_files or {}).items():
+        target = dest / relpath
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(content, encoding="utf-8")
+    return dest
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -970,4 +990,476 @@ def test_s29_4_empty_shell_slot_root_does_not_permanently_block_recreate(project
     assert payload.get("error") != "WORKTREE_EXISTS", (
         f"빈 껍데기 슬롯 루트가 WORKTREE_EXISTS로 영구 차단한다 — 진단 불가능한 결함(H-22): "
         f"{payload}"
+    )
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# S-30: `worktree-tool init` 신설 — 탐지 기반 초안 생성 (H-23, DEC-8, ADD-1)
+#
+# 미구현이므로(RED 규율) 전부 실패가 정상이다. init은 `code-scan init`처럼 비대화형
+# 탐지 초안 생성이며, 자동 생성이 아니다 — 규칙은 DEC-8 "탐지 규칙"·"setup[] 탐지"·
+# "추측하지 않는 것"·"멱등·안전" 4절에 전부 있다(PLAN.md §1.4 DEC-8).
+# ═════════════════════════════════════════════════════════════════════════════
+
+
+def test_s30_1_multi_repo_layout_detected_with_sorted_repos(tmp_path):
+    """[T092/L2-ADD1] S-30 계약1 — 유형 A: `workspace/` 하위 독립 `.git` 2개(backend,
+    frontend)가 있으면 init은 `layout: "multi-repo"` + `repos`에 발견된 2경로를 프로젝트
+    루트 상대·정렬된 형태로 채운다(DEC-8 탐지 규칙 2~3단계, revup 실측과 동형 — revup
+    root 자체도 `.git`을 갖는 컨테이너 레포다: PLAN D-5 `.gitignore:2 workspace/`)."""
+    remotes_dir = tmp_path / "_remotes_s30_1"
+    remotes_dir.mkdir()
+    project_root = tmp_path / "proj_s30_1"
+    project_root.mkdir()
+    run_git(["init", "-b", "main"], cwd=project_root)
+    # 정렬 검증을 위해 알파벳 역순으로 생성한다(zzz 먼저, aaa 나중).
+    _build_independent_repo(remotes_dir, project_root, "workspace", "zzz_frontend")
+    _build_independent_repo(remotes_dir, project_root, "workspace", "aaa_backend")
+
+    result = run_worktree_cli(["init", "--project-root", str(project_root)])
+    payload = parse_json_stdout(result, "init(S-30 계약1)")
+    assert payload.get("ok") is True, f"multi-repo 탐지 init 실패: {payload}"
+
+    config_path = project_root / ".opal" / "worktree.json"
+    assert config_path.exists(), "init이 .opal/worktree.json을 생성하지 않음"
+    cfg = json.loads(config_path.read_text(encoding="utf-8"))
+    assert cfg.get("layout") == "multi-repo"
+    assert cfg.get("repos") == ["workspace/aaa_backend", "workspace/zzz_frontend"], (
+        f"repos가 프로젝트 루트 상대·정렬된 2경로여야 한다: {cfg.get('repos')}"
+    )
+
+
+def test_s30_2_monorepo_layout_detected_with_top_level_manifest_dir(tmp_path):
+    """[T092/L2-ADD1] S-30 계약2 — 유형 B: 독립 `.git` 0개 + 루트 레포가 `workspace/**`를
+    추적하고 `workspace/backend/pyproject.toml`이 존재하면 init은 `layout: "monorepo"` +
+    `repos == ["workspace"]`를 반환한다(DEC-8 탐지 규칙 4단계, mams 실측과 동형 — `tasks/`·
+    `.opal/`은 manifest가 없어 후보에서 자연 배제된다)."""
+    remotes_dir = tmp_path / "_remotes_s30_2"
+    remotes_dir.mkdir()
+    origin = make_monorepo_bare_remote(remotes_dir, "origin_s30_2")
+    project_root = clone_repo(origin, tmp_path, "proj_s30_2")
+    (project_root / "workspace" / "backend" / "pyproject.toml").write_text(
+        '[project]\nname = "mams-backend"\n', encoding="utf-8"
+    )
+
+    result = run_worktree_cli(["init", "--project-root", str(project_root)])
+    payload = parse_json_stdout(result, "init(S-30 계약2)")
+    assert payload.get("ok") is True, f"monorepo 탐지 init 실패: {payload}"
+
+    cfg = json.loads((project_root / ".opal" / "worktree.json").read_text(encoding="utf-8"))
+    assert cfg.get("layout") == "monorepo"
+    assert cfg.get("repos") == ["workspace"], (
+        f"mams 실측과 동형으로 최상위 단일 dir이어야 한다: {cfg.get('repos')}"
+    )
+
+
+def test_s30_3_setup_lock_file_mapping_and_gradle_maven_excluded(tmp_path):
+    """[T092/L2-ADD1] S-30 계약3 — lock 파일 기반 `setup[]` 매핑: `uv.lock`→`uv sync`,
+    `pnpm-lock.yaml`→`pnpm install`, `bun.lock`→`bun install`이 각각 해당 `cwd`와 함께
+    생성되고, `build.gradle`만 있는 디렉토리는 setup 항목이 생성되지 않는다(DEC-8
+    `setup[]` 탐지표)."""
+    remotes_dir = tmp_path / "_remotes_s30_3"
+    remotes_dir.mkdir()
+    project_root = tmp_path / "proj_s30_3"
+    project_root.mkdir()
+    run_git(["init", "-b", "main"], cwd=project_root)
+
+    _build_independent_repo(remotes_dir, project_root, "workspace", "svc_uv", {"uv.lock": ""})
+    _build_independent_repo(
+        remotes_dir, project_root, "workspace", "svc_pnpm", {"pnpm-lock.yaml": ""}
+    )
+    _build_independent_repo(remotes_dir, project_root, "workspace", "svc_bun", {"bun.lock": ""})
+    _build_independent_repo(
+        remotes_dir, project_root, "workspace", "svc_gradle", {"build.gradle": ""}
+    )
+
+    result = run_worktree_cli(["init", "--project-root", str(project_root)])
+    payload = parse_json_stdout(result, "init(S-30 계약3)")
+    assert payload.get("ok") is True, f"init 실패: {payload}"
+
+    cfg = json.loads((project_root / ".opal" / "worktree.json").read_text(encoding="utf-8"))
+    setup = cfg.get("setup", [])
+    by_cwd = {item.get("cwd"): item.get("run") for item in setup}
+
+    assert by_cwd.get("workspace/svc_uv") == "uv sync", f"uv.lock 매핑 불일치: {setup}"
+    assert by_cwd.get("workspace/svc_pnpm") == "pnpm install", f"pnpm-lock.yaml 매핑 불일치: {setup}"
+    assert by_cwd.get("workspace/svc_bun") == "bun install", f"bun.lock 매핑 불일치: {setup}"
+    assert "workspace/svc_gradle" not in by_cwd, (
+        f"gradle만 있는 디렉토리는 setup 항목을 생성하면 안 된다(빌드 시 자동 해석): {setup}"
+    )
+
+
+def test_s30_4_generated_draft_never_guesses_copy_port_offset_branch_template(tmp_path):
+    """[T092/L2-ADD1] S-30 계약4 — 생성물의 `copy`는 빈 배열, `portOffset`은 `0`,
+    `branchTemplate`은 `"feat/OP-TASK-{NNN}"`이어야 한다(DEC-8 "추측하지 않는 것" —
+    로컬 설정·포트 실태·브랜치 규칙을 도구가 임의로 채우지 않는다)."""
+    remotes_dir = tmp_path / "_remotes_s30_4"
+    remotes_dir.mkdir()
+    project_root = tmp_path / "proj_s30_4"
+    project_root.mkdir()
+    run_git(["init", "-b", "main"], cwd=project_root)
+    _build_independent_repo(remotes_dir, project_root, "workspace", "backend")
+    _build_independent_repo(remotes_dir, project_root, "workspace", "frontend")
+
+    result = run_worktree_cli(["init", "--project-root", str(project_root)])
+    payload = parse_json_stdout(result, "init(S-30 계약4)")
+    assert payload.get("ok") is True, f"init 실패: {payload}"
+
+    cfg = json.loads((project_root / ".opal" / "worktree.json").read_text(encoding="utf-8"))
+    assert cfg.get("copy") == [], f"copy는 추측 금지 — 빈 배열이어야 한다: {cfg.get('copy')}"
+    assert cfg.get("portOffset") == 0, f"portOffset은 추측 금지 — 0이어야 한다: {cfg.get('portOffset')}"
+    assert cfg.get("branchTemplate") == "feat/OP-TASK-{NNN}", (
+        f"branchTemplate 기본값이 DEC-1(C-4)과 달라야 한다: {cfg.get('branchTemplate')}"
+    )
+
+
+def test_s30_5_existing_config_rejected_with_config_exists_and_file_untouched(project_a: ProjectA):
+    """[T092/L2-ADD1] S-30 계약5a — 이미 `.opal/worktree.json`이 있으면(project_a fixture가
+    사전 생성) `--force` 없이 init을 실행하면 `CONFIG_EXISTS`로 거부하고 파일 내용은
+    sha256 기준으로 완전히 불변이어야 한다(DEC-8 "멱등·안전")."""
+    before_sha = hashlib.sha256(project_a.config_path.read_bytes()).hexdigest()
+
+    result = run_worktree_cli(["init", "--project-root", str(project_a.root)])
+    payload = parse_json_stdout(result, "init(S-30 계약5a CONFIG_EXISTS)")
+    assert payload.get("ok") is False
+    assert payload.get("error") == "CONFIG_EXISTS"
+
+    after_sha = hashlib.sha256(project_a.config_path.read_bytes()).hexdigest()
+    assert before_sha == after_sha, "CONFIG_EXISTS 거부 시 기존 파일 내용이 바뀌면 안 된다"
+
+
+def test_s30_6_force_flag_overwrites_existing_config(project_a: ProjectA):
+    """[T092/L2-ADD1] S-30 계약5b — `--force`를 주면 기존 설정을 실제로 덮어써야 한다.
+    우연한 내용 일치로 거짓 통과하지 않도록, fixture 기본값과 다른 내용(bogus monorepo)을
+    먼저 덮어써 둔 뒤 `--force` init을 실행해 실제 탐지 결과(multi-repo)로 갱신됨을
+    확인한다."""
+    write_json(project_a.config_path, {"layout": "monorepo", "repos": ["bogus"]})
+    stale_sha = hashlib.sha256(project_a.config_path.read_bytes()).hexdigest()
+
+    result = run_worktree_cli(
+        ["init", "--project-root", str(project_a.root), "--force"]
+    )
+    payload = parse_json_stdout(result, "init(S-30 계약5b --force)")
+    assert payload.get("ok") is True, f"--force는 성공해야 한다: {payload}"
+
+    after_sha = hashlib.sha256(project_a.config_path.read_bytes()).hexdigest()
+    assert after_sha != stale_sha, "--force는 파일을 실제로 덮어써야 한다"
+
+    cfg = json.loads(project_a.config_path.read_text(encoding="utf-8"))
+    assert cfg.get("layout") == "multi-repo", (
+        f"--force 이후에는 bogus 값이 아니라 실제 탐지 결과(multi-repo)로 갱신돼야 한다: {cfg}"
+    )
+
+
+def test_s30_7_dry_run_does_not_write_file_but_returns_draft_json(tmp_path):
+    """[T092/L2-ADD1] S-30 계약6 — `--dry-run`은 파일을 쓰지 않고(`.opal/worktree.json`
+    미생성) 초안을 stdout JSON으로만 반환해야 한다(DEC-8 "멱등·안전").
+
+    [설계 공백 — 임의로 정하지 않음] DEC-8은 dry-run 응답의 정확한 JSON 키 이름까지는
+    규정하지 않는다. 이 테스트는 응답이 최상위이든 `draft` 키 아래든 탐지된 layout/repos를
+    포함하기만 하면 통과하도록 관대하게 작성했다 — 구현이 키 이름을 다르게 고르면 이
+    지점만 조정하면 된다."""
+    remotes_dir = tmp_path / "_remotes_s30_7"
+    remotes_dir.mkdir()
+    project_root = tmp_path / "proj_s30_7"
+    project_root.mkdir()
+    run_git(["init", "-b", "main"], cwd=project_root)
+    _build_independent_repo(remotes_dir, project_root, "workspace", "backend")
+    _build_independent_repo(remotes_dir, project_root, "workspace", "frontend")
+
+    config_path = project_root / ".opal" / "worktree.json"
+    result = run_worktree_cli(
+        ["init", "--project-root", str(project_root), "--dry-run"]
+    )
+    payload = parse_json_stdout(result, "init(S-30 계약6 --dry-run)")
+    assert payload.get("ok") is True, f"--dry-run도 성공 응답이어야 한다: {payload}"
+    assert not config_path.exists(), "--dry-run은 .opal/worktree.json을 쓰면 안 된다"
+
+    draft = payload.get("draft")
+    draft = draft if isinstance(draft, dict) else payload
+    assert draft.get("layout") == "multi-repo", (
+        f"--dry-run 응답에 탐지된 초안(layout 포함)이 있어야 한다: {payload}"
+    )
+    assert draft.get("repos") == ["workspace/backend", "workspace/frontend"], (
+        f"--dry-run 응답의 repos가 탐지 결과와 일치해야 한다: {payload}"
+    )
+
+
+def test_s30_8_non_git_root_rejected_with_not_a_git_repo(tmp_path):
+    """[T092/L2-ADD1] S-30 계약7a — 프로젝트 루트가 git 레포가 아니면(어디에도 `.git`
+    없음) `NOT_A_GIT_REPO`로 거부하고 파일을 생성하지 않는다(DEC-8 탐지 규칙 1단계)."""
+    project_root = tmp_path / "proj_s30_8_not_git"
+    project_root.mkdir()
+
+    result = run_worktree_cli(["init", "--project-root", str(project_root)])
+    payload = parse_json_stdout(result, "init(S-30 계약7a NOT_A_GIT_REPO)")
+    assert payload.get("ok") is False
+    assert payload.get("error") == "NOT_A_GIT_REPO"
+    assert not (project_root / ".opal" / "worktree.json").exists(), (
+        "거부 시 파일을 생성하면 안 된다"
+    )
+
+
+def test_s30_9_monorepo_without_manifest_rejected_with_layout_undetermined(tmp_path):
+    """[T092/L2-ADD1] S-30 계약7b — 독립 `.git`이 0개(monorepo 후보)인데 어떤 최상위
+    디렉토리도 코드 manifest를 갖지 않으면 `LAYOUT_UNDETERMINED`로 거부하고 추측 생성하지
+    않는다(DEC-8 탐지 규칙 5단계 "추측 금지"). `workspace/backend`·`workspace/frontend`에
+    `app.py`/`app.js`만 있고 manifest 파일(`package.json`/`pyproject.toml`/... )은 없다."""
+    remotes_dir = tmp_path / "_remotes_s30_9"
+    remotes_dir.mkdir()
+    origin = make_monorepo_bare_remote(remotes_dir, "origin_s30_9")
+    project_root = clone_repo(origin, tmp_path, "proj_s30_9")
+
+    result = run_worktree_cli(["init", "--project-root", str(project_root)])
+    payload = parse_json_stdout(result, "init(S-30 계약7b LAYOUT_UNDETERMINED)")
+    assert payload.get("ok") is False
+    assert payload.get("error") == "LAYOUT_UNDETERMINED", (
+        f"manifest 없는 monorepo 후보는 추측 생성 없이 거부해야 한다: {payload}"
+    )
+    assert not (project_root / ".opal" / "worktree.json").exists(), (
+        "LAYOUT_UNDETERMINED 거부 시 파일을 생성하면 안 된다"
+    )
+
+
+def test_s30_10_generated_config_passes_validation_and_create_succeeds(tmp_path):
+    """[T092/L2-ADD1] S-30 계약8 — 관통 검증: init으로 만든 파일이 기존
+    `validate_worktree_config()`(list 경로로 확인)를 통과하고, 이어서 `create`가 성공해야
+    한다. 초안이 문법만 맞고 실제로 못 쓰면 의미가 없다(DEC-8 결론부)."""
+    remotes_dir = tmp_path / "_remotes_s30_10"
+    remotes_dir.mkdir()
+    project_root = tmp_path / "proj_s30_10"
+    project_root.mkdir()
+    run_git(["init", "-b", "main"], cwd=project_root)
+    _build_independent_repo(remotes_dir, project_root, "workspace", "backend")
+    _build_independent_repo(remotes_dir, project_root, "workspace", "frontend")
+
+    r_init = run_worktree_cli(["init", "--project-root", str(project_root)])
+    p_init = parse_json_stdout(r_init, "init(S-30 계약8)")
+    assert p_init.get("ok") is True, f"init 실패: {p_init}"
+
+    r_list = run_worktree_cli(["list", "--project-root", str(project_root)])
+    p_list = parse_json_stdout(r_list, "list(S-30 계약8 검증관통)")
+    assert p_list.get("ok") is True, (
+        f"init 생성물이 validate_worktree_config()를 통과해야 한다(list 경로로 확인): {p_list}"
+    )
+
+    r_create = run_worktree_cli(
+        ["create", "--project-root", str(project_root), "--task", "092"]
+    )
+    p_create = parse_json_stdout(r_create, "create(S-30 계약8 검증관통)")
+    assert p_create.get("ok") is True, (
+        f"init 생성물로 곧바로 create가 성공해야 한다(관통 검증 — 초안이 문법만 맞고 "
+        f"실제로 못 쓰면 의미 없다): {p_create}"
+    )
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# S-31: `worktree-tool init`의 `setup[]`/`_copy_candidates` 탐지가 monorepo에서
+# repos 바로 아래(depth 1)만 보는 결함 (H-24, mams 실환경 실측)
+#
+# mams(monorepo, repos=["workspace"])는 workspace/backend/uv.lock,
+# workspace/frontend/pnpm-lock.yaml처럼 repos 경로보다 한 단계 더 깊은 곳에 lock
+# 파일이 있다. 현재 `_detect_setup()`(worktree_tool.py:472-481)과
+# `_detect_copy_candidates()`(:484-)는 `repo_dir / lock_name`만 검사(비재귀)하므로
+# 전부 놓친다 — setup: [] 로 생성돼 lazy setup(C-7)이 무의미해진다.
+# RED 규율(작성자≠구현자) — worktree_tool.py를 고치지 않는다. 아래는 전부 실패가
+# 정상이다(현재 구현이 depth 1만 보므로).
+# ═════════════════════════════════════════════════════════════════════════════
+
+
+def test_s31_1_monorepo_deep_lock_files_detected_at_actual_directories(tmp_path):
+    """[T092/L2-ADD1b] S-31 계약1 — mams 실측 구조 재현: `layout: "monorepo"` +
+    `repos == ["workspace"]`인 프로젝트에서 `workspace/backend/uv.lock`,
+    `workspace/frontend/pnpm-lock.yaml`처럼 repos 자신보다 한 단계 더 깊은 lock
+    파일도 `setup[]`에 반영돼야 하고, 각 항목의 `cwd`는 lock 파일이 실제로 있는
+    디렉토리(`workspace/backend`, `workspace/frontend`)여야 한다 — `workspace`
+    자신이 아니다(현재 구현은 repos 최상위만 보므로 RED 예상)."""
+    remotes_dir = tmp_path / "_remotes_s31_1"
+    remotes_dir.mkdir()
+    origin = make_monorepo_bare_remote(remotes_dir, "origin_s31_1")
+    project_root = clone_repo(origin, tmp_path, "proj_s31_1")
+    (project_root / "workspace" / "backend" / "pyproject.toml").write_text(
+        '[project]\nname = "mams-backend"\n', encoding="utf-8"
+    )
+    (project_root / "workspace" / "backend" / "uv.lock").write_text("", encoding="utf-8")
+    (project_root / "workspace" / "frontend" / "package.json").write_text(
+        '{"name": "mams-frontend"}\n', encoding="utf-8"
+    )
+    (project_root / "workspace" / "frontend" / "pnpm-lock.yaml").write_text(
+        "", encoding="utf-8"
+    )
+
+    result = run_worktree_cli(["init", "--project-root", str(project_root)])
+    payload = parse_json_stdout(result, "init(S-31 계약1)")
+    assert payload.get("ok") is True, f"init 실패: {payload}"
+
+    cfg = json.loads((project_root / ".opal" / "worktree.json").read_text(encoding="utf-8"))
+    assert cfg.get("layout") == "monorepo"
+    assert cfg.get("repos") == ["workspace"]
+
+    setup = cfg.get("setup", [])
+    by_cwd = {item.get("cwd"): item.get("run") for item in setup}
+    assert by_cwd.get("workspace/backend") == "uv sync", (
+        f"repos(['workspace']) 바로 아래가 아니라 한 단계 더 깊은 workspace/backend의 "
+        f"uv.lock도 탐지돼야 한다(mams 실측 결함): {setup}"
+    )
+    assert by_cwd.get("workspace/frontend") == "pnpm install", (
+        f"workspace/frontend의 pnpm-lock.yaml도 탐지돼야 한다: {setup}"
+    )
+    assert "workspace" not in by_cwd, (
+        f"cwd는 lock 파일이 실제 있는 디렉토리여야 한다 — repos 자체(workspace)가 "
+        f"아니다: {setup}"
+    )
+
+
+def test_s31_2_multi_repo_shallow_lock_detection_unchanged(tmp_path):
+    """[T092/L2-ADD1b] S-31 계약2 — 회귀 불변: repos 바로 아래(depth 0, 기존 동작)에
+    lock 파일이 있는 multi-repo 기존 케이스는 깊은 탐지가 추가돼도 그대로 동작해야
+    한다 — `cwd`는 여전히 repos 경로 자신(`workspace/svc_uv`)이다(test_s30_3과
+    동형이나 S-31 회귀 계약으로 명시)."""
+    remotes_dir = tmp_path / "_remotes_s31_2"
+    remotes_dir.mkdir()
+    project_root = tmp_path / "proj_s31_2"
+    project_root.mkdir()
+    run_git(["init", "-b", "main"], cwd=project_root)
+
+    _build_independent_repo(
+        remotes_dir, project_root, "workspace", "svc_uv", {"uv.lock": ""}
+    )
+    _build_independent_repo(
+        remotes_dir, project_root, "workspace", "svc_pnpm", {"pnpm-lock.yaml": ""}
+    )
+
+    result = run_worktree_cli(["init", "--project-root", str(project_root)])
+    payload = parse_json_stdout(result, "init(S-31 계약2)")
+    assert payload.get("ok") is True, f"init 실패: {payload}"
+
+    cfg = json.loads((project_root / ".opal" / "worktree.json").read_text(encoding="utf-8"))
+    setup = cfg.get("setup", [])
+    by_cwd = {item.get("cwd"): item.get("run") for item in setup}
+    assert by_cwd.get("workspace/svc_uv") == "uv sync", (
+        f"repos 바로 아래 lock 탐지(기존 동작)가 회귀되면 안 된다: {setup}"
+    )
+    assert by_cwd.get("workspace/svc_pnpm") == "pnpm install", (
+        f"repos 바로 아래 lock 탐지(기존 동작)가 회귀되면 안 된다: {setup}"
+    )
+
+
+def test_s31_3_deep_search_excludes_build_artifact_directories(tmp_path):
+    """[T092/L2-ADD1b] S-31 계약3 — 깊이 경계: monorepo 깊은 탐지는 무한 재귀를 해서는
+    안 되고, `node_modules` 같은 빌드 산출물 디렉토리 안의 lock 파일을 주워오면 안
+    된다. `workspace/frontend/pnpm-lock.yaml`(정상 2단계)은 탐지되어야 하지만,
+    `workspace/frontend/node_modules/some-pkg/package-lock.json`(빌드 산출물 내부)은
+    탐지되면 안 된다."""
+    remotes_dir = tmp_path / "_remotes_s31_3"
+    remotes_dir.mkdir()
+    origin = make_monorepo_bare_remote(remotes_dir, "origin_s31_3")
+    project_root = clone_repo(origin, tmp_path, "proj_s31_3")
+    (project_root / "workspace" / "backend" / "pyproject.toml").write_text(
+        '[project]\nname = "mams-backend"\n', encoding="utf-8"
+    )
+    (project_root / "workspace" / "frontend" / "package.json").write_text(
+        '{"name": "mams-frontend"}\n', encoding="utf-8"
+    )
+    (project_root / "workspace" / "frontend" / "pnpm-lock.yaml").write_text(
+        "", encoding="utf-8"
+    )
+    nested_pkg = (
+        project_root
+        / "workspace"
+        / "frontend"
+        / "node_modules"
+        / "some-pkg"
+        / "package-lock.json"
+    )
+    nested_pkg.parent.mkdir(parents=True, exist_ok=True)
+    nested_pkg.write_text("{}", encoding="utf-8")
+
+    result = run_worktree_cli(["init", "--project-root", str(project_root)])
+    payload = parse_json_stdout(result, "init(S-31 계약3)")
+    assert payload.get("ok") is True, f"init 실패: {payload}"
+
+    cfg = json.loads((project_root / ".opal" / "worktree.json").read_text(encoding="utf-8"))
+    setup = cfg.get("setup", [])
+    by_cwd = {item.get("cwd"): item.get("run") for item in setup}
+    assert by_cwd.get("workspace/frontend") == "pnpm install", (
+        f"정상 2단계 깊이의 pnpm-lock.yaml은 탐지되어야 한다: {setup}"
+    )
+    assert not any(
+        "node_modules" in (item.get("cwd") or "") for item in setup
+    ), f"node_modules 같은 빌드 산출물 디렉토리 내부 lock을 주워오면 안 된다: {setup}"
+
+
+def test_s31_4_duplicate_lock_kinds_in_same_dir_yield_single_entry(tmp_path):
+    """[T092/L2-ADD1b] S-31 계약4 — 중복 방지: 같은 디렉토리(`workspace/backend`)에
+    `uv.lock`과 `package-lock.json`이 둘 다 있으면 setup 항목은 우선순위 첫 매칭
+    (`_LOCK_FILE_SETUP_MAP` 순서상 `uv.lock`→`uv sync`) 1건만 생성돼야 한다. 서로
+    다른 디렉토리(`workspace/frontend`)는 별개로 1건 생성된다."""
+    remotes_dir = tmp_path / "_remotes_s31_4"
+    remotes_dir.mkdir()
+    origin = make_monorepo_bare_remote(remotes_dir, "origin_s31_4")
+    project_root = clone_repo(origin, tmp_path, "proj_s31_4")
+    (project_root / "workspace" / "backend" / "pyproject.toml").write_text(
+        '[project]\nname = "mams-backend"\n', encoding="utf-8"
+    )
+    (project_root / "workspace" / "backend" / "uv.lock").write_text("", encoding="utf-8")
+    (project_root / "workspace" / "backend" / "package-lock.json").write_text(
+        "{}", encoding="utf-8"
+    )
+    (project_root / "workspace" / "frontend" / "package.json").write_text(
+        '{"name": "mams-frontend"}\n', encoding="utf-8"
+    )
+    (project_root / "workspace" / "frontend" / "pnpm-lock.yaml").write_text(
+        "", encoding="utf-8"
+    )
+
+    result = run_worktree_cli(["init", "--project-root", str(project_root)])
+    payload = parse_json_stdout(result, "init(S-31 계약4)")
+    assert payload.get("ok") is True, f"init 실패: {payload}"
+
+    cfg = json.loads((project_root / ".opal" / "worktree.json").read_text(encoding="utf-8"))
+    setup = cfg.get("setup", [])
+    backend_entries = [item for item in setup if item.get("cwd") == "workspace/backend"]
+    assert len(backend_entries) == 1, (
+        f"같은 디렉토리에 lock 2종이 있어도 setup 항목은 1건이어야 한다: {setup}"
+    )
+    assert backend_entries[0].get("run") == "uv sync", (
+        f"우선순위 첫 매칭(uv.lock→uv sync)이 채택돼야 한다: {setup}"
+    )
+    frontend_entries = [
+        item for item in setup if item.get("cwd") == "workspace/frontend"
+    ]
+    assert len(frontend_entries) == 1, (
+        f"다른 디렉토리는 별개로 1건씩 생성돼야 한다: {setup}"
+    )
+    assert frontend_entries[0].get("run") == "pnpm install"
+
+
+def test_s31_5_copy_candidates_detected_at_same_deeper_level(tmp_path):
+    """[T092/L2-ADD1b] S-31 계약5 — `_copy_candidates`도 `setup[]`과 동일한 깊이까지
+    탐지해야 한다: `workspace/backend/settings.local.yaml`처럼 repos 자신보다 한 단계
+    더 깊은 후보도 참고용 목록에 제시돼야 한다(copy[]에는 여전히 자동 반영되지
+    않는다 — DEC-8 '추측하지 않는 것')."""
+    remotes_dir = tmp_path / "_remotes_s31_5"
+    remotes_dir.mkdir()
+    origin = make_monorepo_bare_remote(remotes_dir, "origin_s31_5")
+    project_root = clone_repo(origin, tmp_path, "proj_s31_5")
+    (project_root / "workspace" / "backend" / "pyproject.toml").write_text(
+        '[project]\nname = "mams-backend"\n', encoding="utf-8"
+    )
+    (project_root / "workspace" / "backend" / "settings.local.yaml").write_text(
+        "db: local\n", encoding="utf-8"
+    )
+
+    result = run_worktree_cli(["init", "--project-root", str(project_root)])
+    payload = parse_json_stdout(result, "init(S-31 계약5)")
+    assert payload.get("ok") is True, f"init 실패: {payload}"
+
+    cfg = json.loads((project_root / ".opal" / "worktree.json").read_text(encoding="utf-8"))
+    candidates = cfg.get("_copy_candidates", [])
+    assert "workspace/backend/settings.local.yaml" in candidates, (
+        f"repos 자신보다 한 단계 더 깊은 로컬 설정 후보도 제시돼야 한다: {candidates}"
+    )
+    assert cfg.get("copy") == [], (
+        "깊은 탐지가 추가돼도 copy[]는 여전히 추측 없이 빈 배열이어야 한다(DEC-8)"
     )

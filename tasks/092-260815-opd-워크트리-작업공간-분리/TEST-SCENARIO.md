@@ -75,6 +75,8 @@
 | **H-20** | F-002 중복 생성 거부 | 살아 있는 슬롯에 동일 태스크 번호 재실행 시 거부 + 기존 worktree·브랜치·메타 **무손상**. H-7(롤백 후 재실행 허용)의 **반대 방향** | P1 | L2 | S-27 |
 | **H-21** | F-002 메타 부재 경로 | 슬롯 없이 `remove`/`status` 호출 시 예외로 죽지 않고 `META_NOT_FOUND` 보고. CLOSE 경로에서는 **no-op 비차단** | P2 | L2 | S-28 |
 | **H-22** | F-002 `remove` 정리 범위 + `create` 재생성 (DEC-7) | `remove` 후 슬롯 루트 잔존 금지 + 같은 번호 재생성 성공(브랜치 재사용) + `list`·`create` 슬롯 판정 일치. 위반 시 **재작업 영구 차단** | **P0** | L2 | S-29 |
+| **H-23** | F-002 `init` 서브명령 (DEC-8, ADD-1) | 탐지가 revup=multi-repo(repos 2)·mams=monorepo(repos `workspace`)를 정확히 판정 + 기존 파일 미덮어쓰기 + `copy[]`·`portOffset` 미추측 + 기존 4서브명령 회귀 0 | **P1** | L2 | S-30 |
+| **H-24** | F-002 `init` 탐색 깊이 (DEC-8 보충 2) | monorepo에서 repos 하위 depth 2까지 lock·설정 후보 탐지, `cwd`는 실제 디렉토리. 빌드 산출물 제외·무한 재귀 금지. multi-repo depth-1 불변 | **P1** | L2 | S-31 |
 | **목표** | 태스크 전체 (TASK §작업 목표) | "여러 태스크를 격리된 작업공간에서 동시 수행" — 2슬롯이 서로 간섭 없이 독립 편집 가능 | P0 | L2 + L3 | **S-23**, **S-18**, **S-24** |
 
 > **iteration 2 추가분 (H-17~H-20)**: 목표-커버 게이트 iteration 1에서 `opal-evaluator-agent`가 gaps G-1·G-4·G-5·G-6으로 지적한 누락 가설이다. 게이트 루프가 "있어야 할 시나리오가 빠졌는지"를 잡아낸 결과이며(`scenario-gate.md` §1 070 사건 대응), PLAN §리스크 가설 표에는 없던 항목을 Producer가 추가했다.
@@ -560,6 +562,38 @@
 
 > **이 시나리오의 출처**: pytest 36건이 전부 GREEN인 상태에서 **revup 실환경 검증이 잡아낸 차단성 결함**이다(AGENTIC-LOG #25). S-9는 레포별 경로만, S-27은 살아 있는 슬롯만 봐서 "제거된 슬롯의 재생성" 경로가 비어 있었다. **단위 테스트 전건 통과가 실환경 정상을 보장하지 않는다는 증거**로 남긴다.
 
+#### S-30: `init`이 프로젝트 구조를 탐지해 설정 초안을 만든다 (추가작업 ADD-1)
+
+| 항목 | 내용 |
+|------|------|
+| 가설 매핑 | **H-23** |
+| 대상 | F-002 `cmd_init` (DEC-8) |
+| 계층 | L2 |
+| **실행 방식** | **M1 (pytest + 실 git)** |
+| 조건 | 10 케이스 — multi-repo/monorepo 탐지 · `setup[]` lock 매핑(gradle 제외) · 추측 금지(`copy`/`portOffset`/`branchTemplate`) · `CONFIG_EXISTS` 멱등 · `--force` · `--dry-run` · `NOT_A_GIT_REPO` · `LAYOUT_UNDETERMINED` · **관통 검증**(init 산출물이 validate 통과 후 create 성공) |
+| 기대 결과 | 탐지 결과가 DEC-8 5단계와 일치하고, 기존 파일은 `CONFIG_EXISTS`로 거부되며 sha256 불변, `--dry-run`은 파일을 쓰지 않고 `draft` 키로 반환 |
+| 도구 | pytest |
+| 실행 명령 | `~/.opal/.venv/bin/python -m pytest opal/tools/worktree-tool/tests/ -q -k s30` |
+| 결과 | **Pass** — 10/10 (2026-08-15) |
+| 상세 | 실환경 실측: revup → `multi-repo` / `["workspace/backend","workspace/frontend"]` / `bun install` 1건. mams → `monorepo` / `["workspace"]`. 양쪽 `--dry-run`에서 파일 미생성 확인 |
+
+#### S-31: `init` 탐색이 monorepo의 깊은 구조를 놓치지 않는다
+
+| 항목 | 내용 |
+|------|------|
+| 가설 매핑 | **H-24** |
+| 대상 | F-002 `_detect_setup`·`_detect_copy_candidates` (DEC-8 보충 2) |
+| 계층 | L2 |
+| **실행 방식** | **M1 (pytest + 실 git)** |
+| 조건 | 5 케이스 — monorepo 깊은 lock 탐지(`cwd`가 실제 디렉토리) · **multi-repo 회귀 불변** · 빌드 산출물 디렉토리 제외(`node_modules` 내부 lock 무시) · 같은 디렉토리 중복 lock 1건 · `_copy_candidates` 동일 깊이 |
+| 기대 결과 | repos 이하 depth 2까지 탐지되고, `node_modules` 등 제외 디렉토리 내부는 주워오지 않으며, depth-1 기존 동작이 바뀌지 않는다 |
+| 도구 | pytest |
+| 실행 명령 | `~/.opal/.venv/bin/python -m pytest opal/tools/worktree-tool/tests/ -q -k s31` |
+| 결과 | **Pass** — 5/5 (2026-08-15) |
+| 상세 | 수정 전 mams 실측 `setup: []` → 수정 후 **4건**(`uv sync` + `pnpm install` ×3), `_copy_candidates` 0 → **12건**. revup은 `bun install` 1건·후보 3건으로 **불변**(회귀 0) |
+
+> **이 두 시나리오의 출처**: S-30은 "worktree.json은 언제 만들어지나"라는 캡틴 질문으로 드러난 온보딩 경로 부재(AGENTIC-LOG #44), S-31은 그 `init`을 만든 뒤 **mams 실환경 실측이 잡은 깊이 결함**이다. 본편 S-29에 이어 **실환경 검증이 pytest 전건 GREEN 상태에서 결함을 잡은 두 번째 사례**다.
+
 ### L3. 사용자 협업 (수동, [SUPERVISOR] 마커)
 
 #### S-18: revup(유형 A) 실환경 검증 [SUPERVISOR]
@@ -642,7 +676,7 @@
 | ④ `remove` 3중 가드 각 조건 거부 | H-5, **H-22** | L2 | S-6, S-7, S-8, **S-29** | 코드 상이 검증 + 제거 후 재생성 가능 |
 | ⑤ `.gitignore` 멱등(중복 0행) | H-6 | L2 | S-11 | 바이트 무변경 포함 |
 | ⑥ `UV_CACHE_DIR` 이전 후 `uv sync` + 측정 보고 | H-14 | L3 | **S-20** | 캡틴 승인 게이트 |
-| ⑦ worktree-tool 회귀 테스트 전량 pass | **H-1~H-22** | L1 + L2 | **S-1~S-17, S-21~S-29** (L3 3건 S-18·S-19·S-20 제외) | `pytest` 스위트 전량 |
+| ⑦ worktree-tool 회귀 테스트 전량 pass | **H-1~H-24** | L1 + L2 | **S-1~S-17, S-21~S-31** (L3 3건 S-18·S-19·S-20 제외) | `pytest` 스위트 전량 |
 
 ### 4.3 목표달성 시나리오 (`scenario-gate.md` §2 ①축)
 
@@ -689,11 +723,11 @@
 
 - [x] mock/patch/MagicMock 등 시나리오 본문에 부재 (§0.3에 "mock 금지" 명시, 실 git 저장소 사용)
 - [x] 사전 조건 데이터 표(§2.1) 모든 칸 채워짐 (**21행**, 빈 칸 0 — iteration 2 fixture 4종 포함. S-29는 기존 fixture 재사용)
-- [x] 모든 시나리오에 Given/When/Then(§2.2) 3필드 채워짐 (**29행** — S-24~S-29 포함)
+- [x] 모든 시나리오에 Given/When/Then(§2.2) 3필드 채워짐 (**31행** — S-24~S-31 포함)
 - [x] 가설↔시나리오 매핑(§4) 완전 (미매핑 시나리오 없음)
 - [x] L1/L2/L3 계층 명시 (모든 시나리오)
 - [x] L3 [SUPERVISOR] 마커 존재 + PM 요청 양식 첨부 (S-18·S-19·S-20)
-- [x] 리스크 가설 표(§1) H-N ID와 시나리오 S-N 1:N 매핑 완전 (**H-1~H-22** + H-목표 전건 연결)
+- [x] 리스크 가설 표(§1) H-N ID와 시나리오 S-N 1:N 매핑 완전 (**H-1~H-24** + H-목표 전건 연결)
 - [x] 모든 시나리오에 실행 방식(M1/M2/M3) 명시
 - [x] **FE 변경 시 M2 시나리오 포함** — **면제**. §0.2에서 트리거 3종(FE 화면·인증/인가·외부 API) 전부 미해당임을 근거와 함께 판정 (iteration 2 Evaluator가 "면제 정당" 확인)
 - [x] **목표 커버** — TASK 요구사항 F-1~F-9 전건 + 완료기준 ①~⑦ 전건이 §4.1·§4.2에 매핑되고, 목표달성 시나리오 **S-23**(격리 실효성)·**S-24**(파이프라인 관통)·**S-18**(실환경 2슬롯)이 존재

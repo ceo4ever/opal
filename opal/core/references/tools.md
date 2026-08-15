@@ -950,6 +950,9 @@ bash ~/.opal/tools/tool-scan/run.sh check <도구>               # 설치/실행
 
 ```bash
 # 코드 작업본 생성 — pre-flight 통과 후에만 worktree/브랜치 생성
+# 설정 초안 생성 — 프로젝트 구조를 탐지해 .opal/worktree.json을 만든다 (092 ADD-1)
+~/.opal/tools/worktree-tool/run.sh init --project-root <프로젝트 절대경로> [--force] [--dry-run]
+
 ~/.opal/tools/worktree-tool/run.sh create \
   --project-root <프로젝트 절대경로> --task <NNN> [--slug <태스크명>] [--skill <약어>]
 
@@ -1133,6 +1136,7 @@ bash ~/.opal/tools/tool-scan/run.sh check <도구>               # 설치/실행
 
 | 버전 | 날짜 | 내용 |
 |------|------|------|
+| v2.14 | 2026-08-15 19:40 | worktree-tool `init` 서브명령 추가(4→**5서브명령**) — 프로젝트 구조 탐지 기반 `.opal/worktree.json` 초안 생성. 독립 `.git` ≥1이면 multi-repo, 0이면 monorepo(추적 최상위 중 manifest 보유). `setup[]`은 lock 파일로 결정론 매핑(repos 이하 depth 2까지, 빌드 산출물 디렉토리 제외), `copy[]`·`portOffset`은 미추측(후보는 `_copy_candidates` 주석 키). 기존 파일은 `CONFIG_EXISTS` 거부·`--force`로만 덮어씀, `--dry-run`은 쓰지 않고 `draft` 키 반환 (092 ADD-1 DEC-8) |
 | v1.0 | 2026-04-03 | xlsx-tool 등록 (076) |
 | v1.1 | 2026-04-11 | code-scan 등록 |
 | v1.2 | 2026-04-12 | code-scan 섹션에 PM 관리 방안 서브섹션 추가 + exports 커맨드 사용 예시 추가 (109) |

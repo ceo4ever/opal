@@ -65,6 +65,14 @@
       "status": "candidate",
       "file": "memory/도구_신설_시_상태_전이_왕복_경로를_시나리오에_명시.md",
       "summary": "092에서 pytest 36건이 전건 통과한 상태로 실환경 검증에 들어갔고 거기서 remove 후 빈 슬롯이 남아 같은 번호 재생성이 영구 차…"
+    },
+    {
+      "title": "테스트 fixture가 실환경 구조를 재현하지 않으면 결함이 통과한다",
+      "date": "2026-08-15",
+      "type": "improvement",
+      "status": "candidate",
+      "file": "memory/테스트_fixture가_실환경_구조를_재현하지_않으면_결함이_통과한다.md",
+      "summary": "092에서 실환경 검증이 pytest 전건 GREEN 상태에서 결함을 두 번 잡았다. 1) 본편 — remove 후 재생성 영구 차단. 기존…"
     }
   ],
   "history": [
@@ -73,7 +81,7 @@
       "date": "2026-08-15",
       "stage": "완료",
       "path": "tasks/092-260815-opd-워크트리-작업공간-분리/",
-      "result": "모드 축과 직교하는 --worktree/--wt 축 신설 — worktree-tool(817행·4서브명령·에러 18종) + 하네스 §2.5 + task-process 스텝 4.5 + dispatch 경로계약 + state-tool --worktree(+8/-1). pilot 10종 중 opd 1건만 변경(C-9 성립). 실환경 2유형 검증: revup 2슬롯 격리 실증(092 커밋 시 093·메인 불변), mams sparse 슬롯 13MB(메인 1.9GB). UV_CACHE_DIR 이전으로 슬롯당 .venv 263MB→8.7MB(30배). 349 passed·보안 4/4·컨벤션 위반 0. DEC-7 도출 계기: pytest 36건 전건 GREEN 상태에서 실환경이 차단성 결함(remove 후 재생성 영구차단) 검출 — 판정 기준을 '존재'에서 '점유'로 전환. 목표-커버 게이트 iter1 fail(1.00→1.67): 훅 미호출에도 전건 PASS하던 070형 공백을 S-24 관통 시나리오로 폐쇄. 후속: worktree.json 자동 생성 경로 부재(수동 배치만), pilot 9종 실사용 미검증"
+      "result": "모드 축과 직교하는 --worktree/--wt 축 신설 — worktree-tool(5서브명령 create/list/status/remove/init) + 하네스 §2.5 + task-process 스텝 4.5 + dispatch 경로계약 + state-tool --worktree(+8/-1). pilot 10종 중 opd 1건만 변경(C-9 성립). 실환경 2유형 검증: revup 2슬롯 격리 실증(092 커밋 시 093·메인 불변), mams sparse 슬롯 13MB(메인 1.9GB). UV_CACHE_DIR 이전으로 슬롯당 .venv 263MB→8.7MB(30배). 최종 364 passed·보안 4/4·컨벤션 위반 0. [ADD-1] worktree.json 온보딩 경로 부재가 소유자 질문으로 드러나 init 서브명령 신설 — 탐지 기반 초안 생성(독립 .git 발견=multi-repo, 없으면 monorepo), setup은 lock 파일로 depth2까지 결정론 매핑, copy/portOffset은 미추측. [교훈] 실환경 검증이 pytest 전건 GREEN 상태에서 결함을 2회 검출(remove 후 재생성 영구차단 / monorepo setup 탐지 실패) — 두 번 다 fixture가 실환경 구조(왕복 경로·깊이)를 재현하지 않은 것이 원인. 요구사항 자체의 누락은 목표-커버 게이트로도 검출 불가라는 구조적 공백 확인. fw-inbox 5건 누적"
     },
     {
       "title": "091 파이프라인 스펙 중복정리",

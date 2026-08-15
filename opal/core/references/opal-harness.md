@@ -151,7 +151,7 @@ Lazy 로드 모듈. 각 §의 stub이 로드 시점과 파일 경로를 지시�
 
 `--wt`를 받았는데 `{프로젝트}/.opal/worktree.json`이 없으면:
 - `worktree-tool create`가 `{"ok": false, "error": "CONFIG_NOT_FOUND"}`를 반환한다.
-- PM은 **태스크를 중단하지 않는다.** `--wt` 없이 위 (2) 경로로 계속 진행하고, 사용자에게 사유와 템플릿 경로(`~/.opal/templates/worktree-multi-repo.json` · `worktree-monorepo.json`)를 안내한다.
+- PM은 **태스크를 중단하지 않는다.** `--wt` 없이 위 (2) 경로로 계속 진행하고, 사용자에게 사유와 함께 **`worktree-tool init` 실행을 안내**한다 — `~/.opal/tools/worktree-tool/run.sh init --project-root <프로젝트> [--dry-run]`. `init`은 프로젝트 구조를 탐지해 초안을 만든다(독립 `.git` 발견 시 multi-repo, 없으면 monorepo). **자동 생성이 아니라 초안 생성**이므로 사용자가 검토·수정한다. 수동으로 쓰려면 템플릿 (`~/.opal/templates/worktree-multi-repo.json` · `worktree-monorepo.json`)을 복사한다.
 - 경로 계약: 코드 작업본은 `{프로젝트}/.opal-worktrees/task_{NNN}/`이며 태스크 문서(`tasks/`)·`.opal/MEMORY.json`·`.opal/brain/`은 **분기하지 않고 허브에 고정**한다.
 - 생성·회수 절차의 SSOT는 `harness/task-process.md` §오케스트레이터 공통 영역 스텝 4.5(생성)와 `worktree-tool remove`(회수)이며, 본 절은 축의 정의만 소유한다.
 
@@ -306,6 +306,7 @@ OPAL 도구는 모두 `~/.opal/tools/{tool-name}/run.sh` 래퍼를 통해 호출
 
 | 버전 | 날짜 | 내용 |
 |------|------|------|
+| v7.1 | 2026-08-15 19:40 | §2.5 (3) `worktree.json` 부재 시 동작 갱신 — 종전 "템플릿 경로 안내"에서 **`worktree-tool init`(탐지 기반 초안 생성) 실행 안내**로 교체. 092 추가작업 ADD-1에서 온보딩 경로 부재가 드러나 `init` 서브명령을 신설했다(092 DEC-8) |
 | v1.0 | - | 최초 작성 |
 | v2.0 | 2026-03-31 | 모듈화 — §2 Gates → opal-harness-interactive.md, §7 Agentic → opal-harness-agentic.md 분리. §2 모듈 구조 + QA 체크리스트 검증 추가 (058) |
 | v2.1 | 2026-04-01 | §7 병렬 처리 원칙 추가 — 읽기(툴콜)/실행(Agent) 병렬 필수 원칙 (067) |

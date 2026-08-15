@@ -3,11 +3,12 @@
   "module": "worktree_tool",
   "layer": "util",
   "domain": "opal-workspace",
-  "description": "태스크별 코드 작업본을 git worktree로 격리하는 CLI. `.opal/worktree.json`(multi-repo/monorepo 2유형)을 선언 기반으로 읽어 create/list/status/remove 4서브명령을 제공한다. create의 슬롯·브랜치 판정은 '존재'가 아니라 '점유'다(DEC-7) — 대상 경로가 `git worktree list --porcelain`에 실제 등록돼 있으면 WORKTREE_EXISTS, 브랜치가 다른 worktree에 체크아웃 중이면 BRANCH_EXISTS로 거부하고, 브랜치가 존재하지만 미점유면 `worktree add <path> <branch>` 단일 명령으로 재사용한다(빈 디렉토리 잔존은 차단 사유가 아니다). pre-flight(대상 미점유·repos 경로 실재·git 레포 여부) 전부 통과 후에만 worktree를 생성하고(all-or-nothing), 중간 실패 시 자기 생성물만 롤백한다(DEC-2, 신규 브랜치 경로에만 적용). base-ref는 create 시점에 1회 해석해 `.opal-worktrees/.meta/task_{NNN}.json`(worktree 밖)에 동결 기록하고 remove/status는 그 값만 읽는다(DEC-3, 재해석 없음). remove는 dirty→unpushed→unmerged 순서로 3중 가드를 적용하고 worktree 디렉토리 + 슬롯 루트(`task_{NNN}/`)를 회수한다(브랜치 보존, user sovereignty. `.opal-worktrees/`·`.meta/`는 남긴다). `.gitignore`·캐시 볼륨·code-scan exclude·동시 슬롯 수는 전부 비차단 진단이다.",
+  "description": "태스크별 코드 작업본을 git worktree로 격리하는 CLI. `.opal/worktree.json`(multi-repo/monorepo 2유형)을 선언 기반으로 읽어 create/list/status/remove/init 5서브명령을 제공한다. create의 슬롯·브랜치 판정은 '존재'가 아니라 '점유'다(DEC-7) — 대상 경로가 `git worktree list --porcelain`에 실제 등록돼 있으면 WORKTREE_EXISTS, 브랜치가 다른 worktree에 체크아웃 중이면 BRANCH_EXISTS로 거부하고, 브랜치가 존재하지만 미점유면 `worktree add <path> <branch>` 단일 명령으로 재사용한다(빈 디렉토리 잔존은 차단 사유가 아니다). pre-flight(대상 미점유·repos 경로 실재·git 레포 여부) 전부 통과 후에만 worktree를 생성하고(all-or-nothing), 중간 실패 시 자기 생성물만 롤백한다(DEC-2, 신규 브랜치 경로에만 적용). base-ref는 create 시점에 1회 해석해 `.opal-worktrees/.meta/task_{NNN}.json`(worktree 밖)에 동결 기록하고 remove/status는 그 값만 읽는다(DEC-3, 재해석 없음). remove는 dirty→unpushed→unmerged 순서로 3중 가드를 적용하고 worktree 디렉토리 + 슬롯 루트(`task_{NNN}/`)를 회수한다(브랜치 보존, user sovereignty. `.opal-worktrees/`·`.meta/`는 남긴다). `.gitignore`·캐시 볼륨·code-scan exclude·동시 슬롯 수는 전부 비차단 진단이다. init(DEC-8, ADD-1)은 `.opal/worktree.json`을 탐지 기반으로 초안 생성한다(자동 생성이 아니다) — 루트 이하 최대 3 depth에서 독립 `.git` 디렉토리를 찾아 ≥1개면 multi-repo(그 경로들이 repos), 0개면 root 자체가 git 레포일 때만 루트 레포가 추적하는 최상위 디렉토리 중 하위에 코드 manifest를 가진 것을 monorepo repos로 채운다(둘 다 실패하면 LAYOUT_UNDETERMINED). `copy`는 항상 빈 배열·`portOffset`은 항상 0으로 두고 추측하지 않으며(로컬 설정 후보는 `_copy_candidates` 주석 키로만 제시), 기존 파일이 있으면 `--force` 없이는 `CONFIG_EXISTS`로 거부해 파일을 건드리지 않고, `--dry-run`은 쓰지 않고 최상위 `draft` 키로만 반환한다.",
   "exports": [
     "load_config", "validate_worktree_config", "resolve_base_ref", "check_guards",
     "ensure_gitignore_entry", "diagnose_cache_volume", "diagnose_code_scan_exclude",
-    "diagnose_concurrent_slots", "cmd_create", "cmd_list", "cmd_status", "cmd_remove"
+    "diagnose_concurrent_slots", "cmd_create", "cmd_list", "cmd_status", "cmd_remove",
+    "cmd_init"
   ],
   "depends": ["git CLI 2.25+"]
 }
@@ -46,6 +47,8 @@ ERROR_CODES = {
     "GUARD_DIRTY": "작업본에 미커밋 변경 사항이 있습니다.",
     "GUARD_UNPUSHED": "원격에 반영되지 않은 커밋이 있습니다.",
     "GUARD_UNMERGED": "base 브랜치에 아직 병합되지 않았습니다.",
+    "CONFIG_EXISTS": "'.opal/worktree.json' 파일이 이미 존재합니다. --force로만 덮어쓸 수 있습니다.",
+    "LAYOUT_UNDETERMINED": "layout을 결정할 수 없습니다 — 독립 저장소도, manifest를 가진 최상위 디렉토리도 찾지 못했습니다.",
     "INTERNAL_ERROR": "예상하지 못한 오류가 발생했습니다.",
 }
 
@@ -372,6 +375,229 @@ def _copy_local_files(
         shutil.copy2(src, dest)
         copied.append(rel)
     return copied, warnings
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# init 서브명령 — 탐지 기반 초안 생성 (F-002, DEC-8/ADD-1). 자동 생성이 아니라
+# `code-scan init`과 동형의 비대화형 탐지 초안 생성이다. 알고리즘은 PLAN.md §1.4
+# DEC-8 "탐지 규칙"·"setup[] 탐지"·"추측하지 않는 것"·"멱등·안전" 4절 그대로다.
+# ─────────────────────────────────────────────────────────────────────────────
+
+MANIFEST_FILENAMES = frozenset(
+    {
+        "package.json",
+        "pyproject.toml",
+        "go.mod",
+        "Cargo.toml",
+        "pom.xml",
+        "build.gradle",
+        "build.gradle.kts",
+        "composer.json",
+        "Gemfile",
+    }
+)
+
+# lock/manifest → 생성될 setup 항목(run). 순서가 곧 우선순위(한 디렉토리에 둘 이상
+# 있으면 먼저 매치되는 것 하나만 채택). gradle·maven·go·cargo는 의도적으로 없음
+# (빌드 시 자동 해석 — DEC-8 setup[] 탐지표).
+_LOCK_FILE_SETUP_MAP = (
+    ("uv.lock", "uv sync"),
+    ("pnpm-lock.yaml", "pnpm install"),
+    ("bun.lock", "bun install"),
+    ("bun.lockb", "bun install"),
+    ("package-lock.json", "npm ci"),
+    ("yarn.lock", "yarn install"),
+)
+
+# gitignore된 로컬 설정 후보 — copy[]는 채우지 않고(추측 금지) 이 패턴으로만
+# `_copy_candidates`에 제시한다(DEC-8 "추측하지 않는 것").
+_COPY_CANDIDATE_PATTERNS = (".env*", "settings*.local.*", "settings.yaml")
+
+# `setup[]`·`_copy_candidates` 깊은 탐색에서 내려가지 않는 빌드 산출물·의존성
+# 디렉토리(DEC-8 보충 2 — S-31). 이 이름을 가진 디렉토리는 그 자체도 검사하지
+# 않고 하위로도 재귀하지 않는다.
+_BUILD_ARTIFACT_DIR_NAMES = frozenset(
+    {"node_modules", ".venv", ".git", "dist", "build", ".next"}
+)
+
+
+def _iter_setup_search_dirs(repo_dir: pathlib.Path, max_depth: int = 2):
+    """`repo_dir` 자신(depth 0)부터 `max_depth`까지 하위 디렉토리를 얕게 순회한다
+    (DEC-8 보충 2 — mams 실측: repos 자신보다 한 단계 더 깊은 곳에 lock이 있다).
+    `_BUILD_ARTIFACT_DIR_NAMES`에 속한 이름의 디렉토리는 자기 자신도 내어주지
+    않고 그 하위로도 내려가지 않는다(무한 재귀 금지 + 빌드 산출물 제외)."""
+    if not repo_dir.is_dir():
+        return
+    yield repo_dir
+
+    def _walk(directory: pathlib.Path, depth: int):
+        try:
+            children = sorted(directory.iterdir())
+        except OSError:
+            return
+        for child in children:
+            if not child.is_dir() or child.name in _BUILD_ARTIFACT_DIR_NAMES:
+                continue
+            yield child
+            if depth < max_depth:
+                yield from _walk(child, depth + 1)
+
+    yield from _walk(repo_dir, 1)
+
+
+def _find_independent_git_dirs(project_root: pathlib.Path, max_depth: int = 3) -> list:
+    """루트 이하 최대 3 depth에서 독립 `.git` **디렉토리**(worktree의 `.git` 파일은
+    제외 — 기존 태스크 슬롯을 오탐하지 않기 위함)를 찾는다. 루트 자신은 후보에서
+    제외하고(DEC-8 탐지 규칙 2단계), 발견 즉시 그 경계 아래로는 내려가지 않는다."""
+    found: list = []
+
+    def _walk(directory: pathlib.Path, depth: int) -> None:
+        if depth > max_depth:
+            return
+        try:
+            children = sorted(directory.iterdir())
+        except OSError:
+            return
+        for child in children:
+            if not child.is_dir():
+                continue
+            if child.name in (".git", ".opal-worktrees"):
+                continue
+            if (child / ".git").is_dir():
+                found.append(child)
+                continue  # 독립 레포 경계 — 더 내려가지 않는다
+            _walk(child, depth + 1)
+
+    _walk(project_root, 1)
+    return sorted(child.relative_to(project_root).as_posix() for child in found)
+
+
+def _tracked_top_level_dirs(project_root: pathlib.Path) -> list:
+    """루트 레포(HEAD)가 추적하는 최상위 디렉토리 이름 목록. HEAD가 없거나 git 실패 시
+    빈 리스트(추측하지 않는다 — 호출부가 LAYOUT_UNDETERMINED로 이어진다)."""
+    result = _run_git(["ls-tree", "-d", "--name-only", "HEAD"], project_root)
+    if result.returncode != 0:
+        return []
+    return [line for line in result.stdout.splitlines() if line.strip()]
+
+
+def _has_manifest_beneath(dir_path: pathlib.Path) -> bool:
+    for _root, dirnames, filenames in os.walk(dir_path):
+        dirnames[:] = [d for d in dirnames if d != ".git"]
+        if any(name in MANIFEST_FILENAMES for name in filenames):
+            return True
+    return False
+
+
+def _find_monorepo_candidates(project_root: pathlib.Path) -> list:
+    """DEC-8 탐지 규칙 4단계 — 루트 레포가 추적하는 최상위 디렉토리 중 하위(임의 깊이)에
+    코드 manifest를 하나라도 가진 것만 후보로 채택한다."""
+    candidates = []
+    for name in _tracked_top_level_dirs(project_root):
+        candidate_path = project_root / name
+        if candidate_path.is_dir() and _has_manifest_beneath(candidate_path):
+            candidates.append(name)
+    return sorted(candidates)
+
+
+def _detect_setup(project_root: pathlib.Path, repos: list) -> list:
+    """DEC-8 `setup[]` 탐지(보충 2로 깊이 확장) — repos 각 경로 이하 최소 depth 2까지
+    하위 디렉토리를 탐색해 lock 파일을 찾아 매핑한다. `cwd`는 lock 파일이 실제로
+    있는 디렉토리(repos 경로 자신이 아닐 수 있다)이며, 같은 디렉토리에 lock이
+    여러 종류면 `_LOCK_FILE_SETUP_MAP` 순서상 첫 매칭 1건만 채택한다. 빌드
+    산출물·의존성 디렉토리(`_BUILD_ARTIFACT_DIR_NAMES`)는 탐색하지 않는다."""
+    setup = []
+    for rel in repos:
+        repo_dir = project_root / rel
+        for search_dir in _iter_setup_search_dirs(repo_dir):
+            for lock_name, run_cmd in _LOCK_FILE_SETUP_MAP:
+                if (search_dir / lock_name).is_file():
+                    cwd = search_dir.relative_to(project_root).as_posix()
+                    setup.append({"cwd": cwd, "run": run_cmd})
+                    break
+    return setup
+
+
+def _detect_copy_candidates(project_root: pathlib.Path, repos: list) -> list:
+    """gitignore 대상이 될 법한 로컬 설정 후보를 `setup[]`과 동일 깊이·동일 제외
+    규칙(`_iter_setup_search_dirs`)으로 찾아 제시한다(DEC-8 보충 2). `copy[]`에
+    넣지 않는다 — 안내용이다(DEC-8 "추측하지 않는 것")."""
+    candidates = set()
+    for rel in repos:
+        repo_dir = project_root / rel
+        for search_dir in _iter_setup_search_dirs(repo_dir):
+            for pattern in _COPY_CANDIDATE_PATTERNS:
+                for match in search_dir.glob(pattern):
+                    if match.is_file():
+                        candidates.add(match.relative_to(project_root).as_posix())
+    return sorted(candidates)
+
+
+def _build_init_draft(project_root: pathlib.Path, layout: str, repos: list) -> dict:
+    return {
+        "layout": layout,
+        "repos": repos,
+        "branchTemplate": "feat/OP-TASK-{NNN}",
+        "copy": [],
+        "setup": _detect_setup(project_root, repos),
+        "portOffset": 0,
+        "_copy_candidates": _detect_copy_candidates(project_root, repos),
+        "_help": (
+            "이 파일은 worktree-tool init이 탐지 결과로 자동 생성한 초안입니다 — "
+            "그대로 신뢰하지 말고 검토·수정하세요. copy/portOffset은 도구가 추측하지 "
+            "않으므로 빈 값/0으로 남겨두었습니다. _copy_candidates는 로컬 설정으로 "
+            "보이는 gitignore 후보 파일을 참고용으로 나열한 것이며 copy[]에 자동 반영되지 "
+            "않습니다."
+        ),
+    }
+
+
+def cmd_init(args) -> None:
+    project_root = _resolve_project_root(args.project_root)
+    config_path = project_root / ".opal" / "worktree.json"
+
+    # ── 멱등·안전(DEC-8) — dry-run은 쓰지 않으므로 이 게이트 대상이 아니다 ──
+    if not args.dry_run and config_path.is_file() and not args.force:
+        err_response("CONFIG_EXISTS", path=str(config_path))
+
+    # ── 탐지(DEC-8 탐지 규칙, 결정론) ──
+    independent = _find_independent_git_dirs(project_root)
+    if independent:
+        layout = "multi-repo"
+        repos = independent
+    else:
+        if not (project_root / ".git").exists():
+            err_response("NOT_A_GIT_REPO", path=str(project_root))
+        candidates = _find_monorepo_candidates(project_root)
+        if not candidates:
+            err_response("LAYOUT_UNDETERMINED", path=str(project_root))
+        layout = "monorepo"
+        repos = candidates
+
+    draft = _build_init_draft(project_root, layout, repos)
+
+    if args.dry_run:
+        ok_response(
+            command="init",
+            project_root=str(project_root),
+            dry_run=True,
+            draft=draft,
+        )
+        return
+
+    config_path.parent.mkdir(parents=True, exist_ok=True)
+    config_path.write_text(
+        json.dumps(draft, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+    ok_response(
+        command="init",
+        project_root=str(project_root),
+        config_path=str(config_path),
+        forced=bool(args.force),
+        layout=layout,
+        repos=repos,
+        config=draft,
+    )
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -798,6 +1024,12 @@ def build_parser() -> argparse.ArgumentParser:
     p_remove.add_argument("--task", required=True)
     p_remove.add_argument("--force", action="store_true")
     p_remove.set_defaults(func=cmd_remove)
+
+    p_init = subparsers.add_parser("init")
+    p_init.add_argument("--project-root", required=True)
+    p_init.add_argument("--force", action="store_true")
+    p_init.add_argument("--dry-run", action="store_true", dest="dry_run")
+    p_init.set_defaults(func=cmd_init)
 
     return parser
 

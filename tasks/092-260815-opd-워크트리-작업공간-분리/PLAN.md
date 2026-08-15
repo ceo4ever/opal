@@ -164,6 +164,108 @@ PLAN 초안은 이 제약이 F-001~F-009 어느 AC에도 편입되지 않았음�
 
 **영향**: 신규 가설 **H-22**, 시나리오 **S-29**(5 케이스). S-27(살아 있는 슬롯 거부)은 계약 불변 — 회귀로 지킨다.
 
+
+### DEC-8 — `worktree-tool init` 신설 (추가작업 ADD-1, 2026-08-15)
+
+**배경**: 092 본편 완료 후 캡틴이 "`worktree.json`은 언제 만들어지나"를 물어 갭이 드러났다. 실측 결과 **구현에도 규범에도 생성 경로가 없다** — 도구는 `load_config()`로 읽기만 하고(서브명령 4종에 `init` 없음), opi는 `.gitignore` 한 줄만 보장하며, 하네스 §2.5 (3)은 "템플릿 경로를 **안내**한다"까지다. PM이 revup·mams 실환경 검증에서 두 번 다 손으로 `cat >`로 만들었으면서 갭으로 인지하지 못했다.
+
+**원인**: TASK F-1이 "스키마 정의 + 템플릿 **제공**"까지였고 배치·생성은 요구사항 9항목 어디에도 없었다. 이후 게이트는 전부 "만든 것"을 검사하므로 **요구사항 자체의 누락은 구조적으로 검출되지 않는다**(목표-커버 게이트도 "TASK 요구사항 전체가 매핑되는가"를 보므로, 요구사항에 없으면 커버리지 100%로 통과한다).
+
+**결론**: `worktree-tool init` 서브명령을 신설한다. **자동 생성이 아니라 탐지 기반 초안 생성**이다 — `code-scan init`의 비대화형 초안 생성 패턴을 따른다.
+
+#### 탐지 규칙 (실측 2유형에서 도출 — 결정론)
+
+| 단계 | 판정 | revup 결과 | mams 결과 |
+|------|------|-----------|----------|
+| 1 | 프로젝트 루트가 git 레포가 아니면 `NOT_A_GIT_REPO` 거부 | 통과 | 통과 |
+| 2 | 루트 이하 **최대 3 depth**에서 독립 `.git` 디렉토리 탐색(루트 자신 제외) | `workspace/backend`·`workspace/frontend` **2개** | **0개** |
+| 3 | 2단계 결과 ≥1 → `layout: "multi-repo"`, `repos` = 발견 경로(프로젝트 루트 상대, 정렬) | multi-repo, repos 2개 | — |
+| 4 | 2단계 결과 0 → `layout: "monorepo"`, `repos` = 루트 레포가 추적하는 최상위 디렉토리 중 **하위에 코드 manifest를 가진** 것 | — | monorepo, `["workspace"]` |
+| 5 | 4단계에서 후보 0개면 `LAYOUT_UNDETERMINED` 거부(추측 금지) | — | — |
+
+> 코드 manifest 판정 파일: `package.json` · `pyproject.toml` · `go.mod` · `Cargo.toml` · `pom.xml` · `build.gradle` · `build.gradle.kts` · `composer.json` · `Gemfile`
+
+#### `setup[]` 탐지 (lock 파일 기반 — 결정론)
+
+| lock/manifest | 생성될 setup 항목 |
+|---------------|------------------|
+| `uv.lock` | `uv sync` |
+| `pnpm-lock.yaml` | `pnpm install` |
+| `bun.lock` / `bun.lockb` | `bun install` |
+| `package-lock.json` | `npm ci` |
+| `yarn.lock` | `yarn install` |
+| gradle · maven · go · cargo | **생성하지 않음**(빌드 시 자동 해석) |
+
+#### 추측하지 않는 것
+
+- **`copy[]`**: 빈 배열로 두고, gitignore된 로컬 설정 후보(`.env*`·`settings*.local.*`·`settings.yaml`)를 **`_copy_candidates` 주석 키**로만 제시한다. 잘못 복사하면 슬롯에 엉뚱한 자격증명이 들어간다.
+- **`portOffset`**: `0`. 프로젝트의 포트 사용 실태를 도구가 알 수 없다.
+- **`branchTemplate`**: 기본값 `feat/OP-TASK-{NNN}`(C-4).
+
+#### 멱등·안전
+
+- 이미 `.opal/worktree.json`이 있으면 **덮어쓰지 않고** `CONFIG_EXISTS` 반환. `--force`로만 덮어쓴다.
+- `--dry-run`은 파일을 쓰지 않고 초안 JSON을 stdout으로만 반환한다.
+- 생성물에 `_help` 키로 "탐지 결과이므로 검토·수정하라"는 안내와 탐지 근거를 남긴다.
+
+**영향**: 신규 가설 **H-23**, 시나리오 **S-30**. 기존 4서브명령 동작은 불변(회귀로 지킨다).
+
+#### DEC-8 보충 — RED 워커 에스컬레이션 3건 확정 (PM, 2026-08-15)
+
+RED 워커가 DEC-8에 규정이 없어 임의 판단이 필요했던 지점 3건을 정직하게 올렸다. 각각 확정한다.
+
+| # | 미규정 항목 | 확정 | 근거 |
+|---|------------|------|------|
+| 1 | `--dry-run` 응답의 초안 JSON 키 이름 | **최상위 `draft` 키**에 초안 객체를 담는다 | 기존 서브명령이 최상위에 의미 필드를 놓는 패턴(`create`의 `worktree_root`·`entries`, `list`의 `entries`)과 정합. RED 테스트가 `payload["draft"]`·최상위 양쪽을 허용하도록 관대하게 작성돼 있어 구현이 이 값을 택하면 그대로 통과한다 |
+| 2 | multi-repo에서도 **프로젝트 루트 자체가 git 레포**여야 하는가 | ~~그렇다~~ → **아니다. 독립 `.git`이 1개 이상 발견되면 그 자체로 multi-repo로 확정하고 루트의 `.git` 유무를 묻지 않는다.** `NOT_A_GIT_REPO`는 **독립 레포 0개 AND 루트도 git 레포 아님**일 때만 발동한다 ※PM 정정 | **아래 「PM 정정 — 보충 #2」 참조** |
+| 3 | `--dry-run` 플래그명 | **`--dry-run`** 확정 | 널리 통용되는 관례이며, `code-scan split --plan`과 표기는 다르지만 그쪽은 "제안 산출"이고 이쪽은 "쓰기 억제"라 의미가 다르다. `--project-root`·`--force`는 기존 서브명령과 동형이라 이견 없음 |
+
+
+##### PM 정정 — 보충 #2 (2026-08-15)
+
+**정정 사유**: 초안에서 "layout과 무관하게 루트 git 레포 필수"로 확정하며 근거 ⓐⓑⓒ를 들었으나, **PM이 테스트 실물을 읽지 않고 RED 워커의 요약 보고만으로 판단한 오류**다. 워커 보고의 "root도 `git init` 추가"는 `test_s30_1`이 자체 구성한 fixture 얘기였고, `test_s30_6`은 **092 본편의 기존 `project_a` fixture**(루트에 `.git` 없음, 코드 레포 2개만 독립 레포)를 재사용한다. 즉 테스트 집합은 처음부터 "독립 레포만 있어도 multi-repo"를 계약으로 요구하고 있었고, `test_s30_8` docstring도 `NOT_A_GIT_REPO` 조건을 "**어디에도 `.git` 없음**"으로 명시하고 있었다.
+
+**GREEN 워커의 구현이 옳다는 실증** (PM이 임시 워크스페이스로 직접 확인):
+
+루트에 `.git`이 없고 `workspace/be`·`workspace/fe`만 독립 레포인 구성에서 —
+
+| 단계 | 결과 |
+|------|------|
+| `init` | `ok:true`, `layout: multi-repo`, `repos: ["workspace/be","workspace/fe"]` |
+| 생성물 | `validate_worktree_config()` 통과 |
+| `create --task 001` | `ok:true`, entries 2, worktree 2개 실제 생성 |
+| `.gitignore` | `created` (루트가 git 레포가 아니라 실효는 없으나 **비차단·무해**) |
+
+초안 근거 ⓐⓑ가 왜 약했는지 — ⓐ `worktree.json`은 그냥 파일이라 루트가 git 레포가 아니어도 읽고 쓸 수 있다. ⓑ `.gitignore` 멱등 추가는 애초에 **비차단 부수 효과**로 설계됐으므로(DEC-5·F-7) 실효가 없어도 실패 사유가 아니다. ⓒ는 사실이지만 **실측 2건이 전체를 대표하지 않는다** — clone 여러 개를 한 폴더에 모아둔 멀티레포 워크스페이스는 흔한 구성이고, worktree는 **코드 레포**에 생기므로 루트 git 여부와 무관하다.
+
+**교훈**: PM이 워커 산출물을 검증할 때 **요약 보고가 아니라 실물**을 봐야 한다. 이 건은 4개 케이스의 계약 전제가 걸려 있었다.
+
+
+##### DEC-8 보충 2 — `setup[]`·`_copy_candidates` 탐색 깊이 (실환경 결함 대응, 2026-08-15)
+
+**배경**: `init` 구현 후 mams 실환경 실측에서 `setup: []`이 나왔다. 원인은 `_detect_setup()`이 repos 경로 **바로 아래(depth 1)만** 검사한 것. multi-repo는 repos가 코드 레포 자신이라 lock이 바로 아래 있지만(revup `workspace/frontend/bun.lock` — 탐지 성공), **monorepo는 repos가 상위 디렉토리 하나**(`workspace`)라 lock이 한 단계 더 깊다(mams `workspace/backend/uv.lock` — 놓침).
+
+**pytest가 놓친 이유**: `test_s30_3`이 lock 파일을 repos 바로 아래 두는 fixture로만 검증해 depth 가정이 드러나지 않았다. **또다시 실환경이 잡았다.**
+
+**실해**: monorepo 사용자가 `init`을 돌리면 `setup`이 비어 lazy setup(C-7)이 무의미해진다 — 슬롯마다 손으로 채워야 한다.
+
+**결론 — 탐색을 깊이 확장하되 경계를 둔다.**
+
+| 항목 | 규칙 |
+|------|------|
+| 탐색 범위 | repos 각 경로 이하 **최소 depth 2까지** 하위 디렉토리를 탐색한다(mams 실측 구조가 2단계) |
+| `cwd` 값 | **lock 파일이 실제로 있는 디렉토리**의 프로젝트 루트 상대 경로. repos 경로 자신이 아니다 |
+| 제외 디렉토리 | 빌드 산출물·의존성 디렉토리 안의 lock은 주워오지 않는다(`node_modules`·`.venv`·`.git`·`dist`·`build`·`.next` 등). **무한 재귀 금지** |
+| 중복 | 같은 디렉토리에 lock 2종 이상이면 항목 1건(우선순위 첫 매칭). 서로 다른 디렉토리면 각각 1건 |
+| `_copy_candidates` | `setup[]`과 **동일 깊이·동일 제외 규칙**을 적용한다 |
+| multi-repo 회귀 | repos 바로 아래 lock이 있는 기존 동작은 **불변**(S-31 계약2가 지킨다) |
+
+**영향**: 신규 가설 **H-24**, 시나리오 **S-31**(5 케이스). 기존 51건 회귀 0.
+
+> **평가**: 세 건 모두 워커가 **임의로 정하고 넘어갈 수 있었는데 블로커로 올렸다.** 특히 #2는 fixture 전제가 걸린 문제였는데, **PM의 확정이 틀렸고 GREEN 워커가 구현 단계에서 이를 다시 잡아냈다**(위 정정 참조). 작성자·확정자·구현자 3자가 분리돼 있어 PM 단독 오판이 코드까지 가지 않았다 — red-first §2가 의도한 것 이상으로 작동한 사례다.
+
+
+
 ---
 
 ## 리스크 가설 표
@@ -187,6 +289,8 @@ PLAN 초안은 이 제약이 F-001~F-009 어느 AC에도 편입되지 않았음�
 | H-13 | F-003 하네스 § 번호 삽입 | 신규 절을 `§3`으로 넣으면 이후 `§4`~`§10` 번호가 전부 밀려 프로젝트 전역 인용(`opal-harness.md §9 OPAL Tools` 등)이 dangling이 되는 계약 | **P1** | L1(`grep -rn "opal-harness.md §" opal/ docs/` 결과가 전부 유효 절을 가리키는지 대조) | S-13 후보 |
 | H-14 | F-009(a) `UV_CACHE_DIR` 이전 | 비가역 로컬 환경 변경. 이전 후 `uv sync`가 실패하면 mams 개발 환경이 멈춤. 복구 경로가 없으면 치명 | **P0** | L3(실환경: 이전 → `uv cache dir` 확인 → `uv sync` 완주 → `df` 측정 → 복구 절차 리허설) | S-14 후보 |
 | H-15 | F-002 lazy setup (TASK C-7) | `create`는 `setup[]`을 **실행하지 않고 열거만** 해야 하는 계약. 실행해버리면 편집만 하는 슬롯에 수 분의 설치 시간이 붙음 | **P2** | L2(`setup`에 sentinel 파일 생성 명령을 넣고 create 후 sentinel 부재 assert + `pending_setup[]` 열거 확인) | S-15 후보 |
+| **H-24** | F-002 `init` 탐색 깊이 (DEC-8 보충 2) | monorepo에서 repos 하위 2단계 lock·설정 후보를 탐지하고 `cwd`를 실제 디렉토리로 기록. 빌드 산출물 디렉토리 제외·무한 재귀 금지. multi-repo depth-1 동작 불변 | **P1** | L2 | S-31 |
+| **H-23** | F-002 `init` 서브명령 (DEC-8, ADD-1) | 탐지가 revup=multi-repo(repos 2)·mams=monorepo(repos `workspace`)를 정확히 판정 + 기존 파일 미덮어쓰기(`CONFIG_EXISTS`) + `copy[]`·`portOffset` 미추측 + 기존 4서브명령 회귀 0 | **P1** | L2 | S-30 |
 | **H-22** | F-002 `remove` 정리 범위 + `create` 재생성 (DEC-7) | `remove` 후 슬롯 루트 잔존 금지 + 같은 번호 재생성 성공(브랜치 재사용) + `list`·`create`의 슬롯 판정 일치. 위반 시 **재작업 영구 차단** | **P0** | L2(S-29 5케이스: 유형 A/B 슬롯 루트 · 재생성 · 판정 일치 · 빈 껍데기 내성) | S-29 |
 | H-16 | F-002 동시 슬롯 경고 (DEC-6, PM 추가) | TASK §제약 "DB 동시성 — 도구가 경고한다(차단하지 않는다)" 계약. 경고가 아예 없으면 제약 미충족이고, 반대로 차단하면 "차단하지 않는다"를 위반 | **P2** | L2(슬롯 1개째 경고 부재 → 2개째 경고 출현 + 양쪽 모두 `ok:true` assert) | S-16 후보 |
 
