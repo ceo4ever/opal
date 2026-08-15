@@ -34,7 +34,7 @@ PM이 사용자를 대행하는 만큼, interactive 모드보다 **책임과 의
 
 | 의무 | 설명 |
 |------|------|
-| **판단 기록 의무** | 매 게이트에서 Pass/Fail 판단 근거를 AGENTIC-LOG.md에 기록한다. 왜 승인했는지, 무엇을 확인했는지 명시. agentic auto-pass(`--auto-pass`) 사용 시 state.json `note` 필드에 "agentic auto-pass: ..." 형태로 자동 기재되므로 AGENTIC-LOG.md의 `GATE` 엔트리와 이중 추적된다 (PLAN §2.8). |
+| **판단 기록 의무** | 매 게이트에서 Pass/Fail 판단 근거를 AGENTIC-LOG.md에 기록한다. 왜 승인했는지, 무엇을 확인했는지 명시. 사용자 확인 행 자동 승인 시 state.json `note` 필드에 "auto-approved on &lt;stage&gt; entry" 형태로 자동 기재되므로 AGENTIC-LOG.md의 `GATE` 엔트리와 이중 추적된다 (PLAN §2.8 / §4 자동 승인 계약). |
 | **산출물 직접 검증 의무** | 체크리스트 수준이 아닌, 산출물을 **직접 Read하여 내용 수준까지 검증**한다. 요구사항 누락, 설계 오류, 일관성 문제를 내용 기반으로 판단. |
 | **완수 의무** | 100% 완수까지 루핑한다. 미완료 항목을 추적하고, 모든 체크리스트 항목이 충족될 때까지 진행. |
 | **품질 책임** | PM이 최종 품질에 책임진다. 사용자가 agentic 결과를 받았을 때 추가 수정이 불필요한 수준이 목표. |
@@ -67,24 +67,23 @@ PM이 사용자를 대행하는 만큼, interactive 모드보다 **책임과 의
 
 **Pass 시 state-tool 호출**:
 
-일반 단계 Gate 통과 시 (`--auto-pass`는 사용자 확인 행 전용):
+일반 단계 Gate 통과 시:
 
 ```
 ~/.opal/tools/state-tool/run.sh mark tasks/{NNN}-.../ --row <N> --done
 ```
 
-사용자 확인 행(agentic 모드에서 PM이 사용자 대행 자율 통과):
+**사용자 확인 행 — PM 명시 호출 불필요 (도구 자동 승인, 093)**:
 
-```
-~/.opal/tools/state-tool/run.sh mark tasks/{NNN}-.../ \
-  --row <N> --done \
-  --auto-pass \
-  --note "agentic auto-pass: <PM 판단 근거>"
-```
+사용자 확인 행은 전 모드 `pending / ⬜ / owner=PM`으로 초기화되며, PM이 `--auto-pass`를 별도로 호출하지 않는다. 다음 단계 진입(`advance` 또는 `mark`) 시 도구가 stage-transition guard 직전에 `auto_approve_prior_user_confirmations`를 실행하여, 대상 행 앞 구간(`[0, row_index)`)의 미완 "사용자 확인" 행을 자동 승인한다.
 
-- `--auto-pass` 명시 시 state.json `rows[N].owner = "auto"`, `note`에 "agentic auto-pass: ..." 자동 기재 (PLAN T-9)
-- agentic auto-pass는 state.json `note`에 자동 기재되므로 별도 감사 로그 불필요 (PLAN §2.8)
-- 근거: TASK F-12 / PLAN §2.15 G-12
+- 자동 승인 결과: `status = done`, `owner = auto`, `timestamp` 기록, `note = "auto-approved on <stage> entry"`
+- 자동 승인 가부는 `can_auto_approve_user_confirmation(stage, mode)` 단일 판정을 따른다 — agentic 모드는 CLOSE를 제외한 전 구간에서 허용된다
+- `advance` / `mark` 응답의 `auto_approved` 배열로 어떤 행이 자동 승인되었는지 관측한다
+- `--as-worker`(워커 호출) · `--force` · 대상 행 `stage = CLOSE`이면 자동 승인은 즉시 no-op이다
+- 자동 승인 불가 구간에서는 도구가 `user_confirmation_required` 에러로 거부하며, 캡틴이 `mark --owner user`로 승인해야 한다
+- 자동 승인 사실은 state.json `note`에 기재되므로 별도 감사 로그는 불필요하다 (PLAN §2.8)
+- 근거: TASK F-12 / PLAN §2.15 G-12 / 093 F-001·F-002·F-003
 
 **CLOSE 진입 게이트 (agentic 모드 예외)**:
 
@@ -238,3 +237,4 @@ PM이 수행한 모든 활동을 시계열로 기록하여, 사용자가 사후�
 | v1.6 | 2026-05-09 11:22 | §1 모드 정의에 semi-agentic 행 추가 / §7 CLOSE 게이트 행 semi-agentic 공통 적용 명시 / §8 AGENTIC-LOG 생성 시점 분기 (140) |
 | v1.7 | 2026-05-09 18:30 | 개인 식별자 누설 정정 — "캡틴" → "소유자" / note 예시 "{owner_name} 확인" placeholder 치환 (139) |
 | v1.8 | 2026-06-07 | §4 QA→PM Gate 통합 정합화 — "QA Gate + PM Gate" → "PM Gate"(문서 QA 흡수), 강화 검토 기준 2번을 PM 직접 문서 QA 검증으로, Artifact Gate의 "QA 에이전트 재소환" → "워커 재지시"로 수정(QA 에이전트 디스패치 없음, op-dev-qa/op-task-qa는 검증 기준 라이브러리). 동작 검증(TEST/verify) 영역 불변 (014 Phase 4-2) |
+| v1.9 | 2026-08-15 21:48 | §4 사용자 확인 행 자동 승인 계약 전환 — PM `--auto-pass` 명시 호출 지시 삭제, 다음 단계 진입 시 도구가 `auto_approve_prior_user_confirmations`로 자동 승인(done/auto/timestamp + note `auto-approved on <stage> entry`), `can_auto_approve_user_confirmation` 단일 판정·`auto_approved` 응답 필드·as-worker/force/CLOSE no-op·`user_confirmation_required` 거부 명시. CLOSE 진입 게이트 절차 불변 (093) |

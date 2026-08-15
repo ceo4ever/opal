@@ -439,10 +439,11 @@ TASK (PM 직접)
 
 - agentic: 모든 Phase Gate를 PM이 자율 통과
 - EXECUTE-LOOP 진입 = PM이 대행 승인 (구현 금지 원칙의 "실행 허가"를 PM이 판단)
-- 자율 통과 시 state-tool `--auto-pass` 호출 (P-8):
+- 자율 통과 시 state-tool mark 호출 (P-8):
   ```
-  ~/.opal/tools/state-tool/run.sh mark <task-path> --task-step <key> --done --auto-pass --note '<근거>'
+  ~/.opal/tools/state-tool/run.sh mark <task-path> --task-step <key> --done
   ```
+- 사용자 확인 행은 PM이 명시 호출하지 않는다 — 다음 단계 진입 시 도구가 자동 승인한다 (계약 SSOT: `opal/core/references/opal-harness-agentic.md §4` / `opal-harness-semi-agentic.md §5`)
 - **CLOSE 단계 최초 진입 행(#25)은 `--auto-pass` 금지** (`agentic_close_gate_requires_user` — §2.16 G-13); 반드시 명시 호출
 - R-10 비표준 행 구성: `gate-pass` deprecated(014) — mark 개별 호출 필수 (agentic/semi-agentic에서도 동일 적용)
 - AGENTIC-LOG.md에 모든 판단/오류/수정/의사결정 기록
@@ -510,3 +511,4 @@ opal-harness-agentic.md §6 공통 기준에 추가:
 | v3.6.0 | 2026-07-23 | Phase 2 REVIEW 목표-커버 게이트 배선 — 행 10 "FR↔TS 커버리지 확인"을 "커버리지 게이트(scenario-coverage-check)"로 교체 + 행 11 "목표-커버 게이트(op-scenario-gate evaluator)" 신설, 이후 행 전부 +1(24→25행). REVIEW 흐름 3→4단계 재작성(구조 검증 → TEST-SCENARIOS.md 작성 → 목표-커버 게이트 → PM Gate/사용자 Gate) — 독립 evaluator 디스패치로 self-confirming 해소(PRINCIPLES §15). 6단계 요약 REVIEW 행 갱신. `--row N`/`#N`/`--after N` 본문 리터럴 전수 재정렬(rows≥11 +1, 070 pipeline.json 전환은 범위 밖) (075) |
 | v3.7.0 | 2026-08-13 16:58 | pipeline.json 전환 — references/pipeline.json 신설(25 task-step, SSOT), --rows-from 호출 경로를 SKILL.md에서 pipeline.json으로 교체, 표는 사람 열람용 미러로 명시. meta.stages는 stage 값 EXECUTE 사용(산문의 Phase 4 명칭 표기는 불변) (090) |
 | v3.8.0 | 2026-08-14 09:27 | 파이프라인 스펙 중복정리 — `--row N`(9건)→`--task-step <key>`, 산문 `행 N`(2건)→key 참조로 전환. 미러 표(25행)·PM Gate 나열 표·중복 STATE.md 초기화 명령·모드/단계 목록 치환값 삭제 → `references/pipeline.json` 원천 포인터로 대체(산출물 목록·태스크 경로는 고유값이라 존치). R-1 "위 SSOT 표를 기준으로" 오문장 정정. EXECUTE-LOOP 표기 17곳은 090 확정사항으로 불변 (091) |
+| v3.9.0 | 2026-08-15 21:48 | 사용자 확인 행 자동 승인 계약 반영 — agentic STATE 갱신 지시에서 PM `--auto-pass` 명시 호출 삭제, 다음 단계 진입 시 도구 자동 승인으로 전환하고 계약 본문은 하네스 SSOT(`opal-harness-agentic.md §4` / `opal-harness-semi-agentic.md §5`) 참조로 정리. CLOSE 진입 게이트 서술 불변 (093) |
