@@ -130,6 +130,33 @@ Lazy 로드 모듈. 각 §의 stub이 로드 시점과 파일 경로를 지시�
 
 ---
 
+## 2.5 워크스페이스 축 (`--worktree` / `--wt`)
+
+### (1) 모드 축과 직교하는 별개 축
+
+`--worktree`(약칭 `--wt`)는 §2의 모드 축(`--interactive`/`--semi-agentic`/`--agentic`)과 **직교**한다.
+- 모드 축은 "PM이 얼마나 자율적으로 진행하는가"를, 워크스페이스 축은 "코드를 어느 작업본에서 만지는가"를 결정한다.
+- 조합 가능: `//opd --agentic --wt`, `//opds --wt` 모두 유효하다.
+- `mode_flag_conflict` 판정 대상이 **아니다** — 모드 플래그 개수 검사에 `--wt`를 세지 않는다.
+- 서브 하네스 로딩 규칙(§2 로딩 규칙)에 영향을 주지 않는다.
+
+### (2) `--wt` 미사용 시 = 현행 동작 100% 유지
+
+플래그가 없으면 다음이 전부 현행과 동일하다. 어떤 조건부 분기도 실행되지 않는다.
+- `state.json` 스키마 — `worktree` 키가 **아예 생성되지 않는다**(`state-tool init`에 `--worktree`를 전달하지 않는다).
+- STATE.md 렌더 결과 · 산출물 경로 · 워커 디스패치 프롬프트(`pm/dispatch-process.md` §작업 경로 블록 미주입).
+- 코드 작업본은 프로젝트 기본 작업본(`workspace/` 등)이다.
+
+### (3) `.opal/worktree.json` 부재 시 동작
+
+`--wt`를 받았는데 `{프로젝트}/.opal/worktree.json`이 없으면:
+- `worktree-tool create`가 `{"ok": false, "error": "CONFIG_NOT_FOUND"}`를 반환한다.
+- PM은 **태스크를 중단하지 않는다.** `--wt` 없이 위 (2) 경로로 계속 진행하고, 사용자에게 사유와 템플릿 경로(`~/.opal/templates/worktree-multi-repo.json` · `worktree-monorepo.json`)를 안내한다.
+- 경로 계약: 코드 작업본은 `{프로젝트}/.opal-worktrees/task_{NNN}/`이며 태스크 문서(`tasks/`)·`.opal/MEMORY.json`·`.opal/brain/`은 **분기하지 않고 허브에 고정**한다.
+- 생성·회수 절차의 SSOT는 `harness/task-process.md` §오케스트레이터 공통 영역 스텝 4.5(생성)와 `worktree-tool remove`(회수)이며, 본 절은 축의 정의만 소유한다.
+
+---
+
 ## 3. State (상태 관리)
 
 > **[필수 로드]** TASK 단계 시작 / EXECUTE Step 진행 / Gate 직후 State Gate 수행 시 로드한다.
@@ -258,6 +285,7 @@ OPAL 도구는 모두 `~/.opal/tools/{tool-name}/run.sh` 래퍼를 통해 호출
 | memory-tool | 프로젝트 메모리 인덱스·히스토리 결정론적 집행 — 9서브명령 init/append/update/promote/prune/migrate/show/review/delete. 메모리→docs/brain 졸업 워크플로우·히스토리 FIFO5·요약 길이캡·라이프사이클·마커 직접편집 금지·매 변경 후 자가검토(review)·dead/superseded 정리(delete 무손실 가드) | 메모리 등록·정리·이관 시 |
 | git-sync-tool | 워크스페이스 git 저장소 일괄 동기화 — `sync <경로>` 단일 서브명령. 직속 자식 1단계 순회 + clean/ff-only pull, 5종 skip 판정(dirty/diverged/detached/no-upstream/fetch-failed) 후 JSON 반환. 문제 저장소 자율 조치 없음(skip·보고). git 2.22+ | 워크스페이스 여러 저장소 최신화 시 (opal-workspace-sync 스킬이 호출) |
 | opal-action-monitor | oppl 태스크 진행 현황판 렌더 — `<task_folder>/.oppl-run/` 산출물(events.jsonl/result.json/exitcode/journal.md 등) 파싱, 텍스트/`--json`/`--watch` 3모드, 읽기 전용 | oppl 태스크 진행 현황 관측 / 루프 액션 에이전트 실행 관측 시 |
+| worktree-tool | 태스크별 코드 작업본 git worktree 격리 결정론 집행 — 4서브명령 `create`/`list`/`status`/`remove`. `.opal/worktree.json` 선언 기반으로 multi-repo(레포별 worktree)·monorepo(sparse-checkout) 2유형 흡수, `.gitignore` 멱등 보장, `remove` 3중 가드(dirty/unpushed/미머지). 자동 커밋·자동 머지·자동 제거 없음. git 2.25+ | `--worktree`/`--wt` 태스크의 TASK 후처리 / CLOSE 정리 안내 / 캡틴 수동 회수 시 |
 
 > 전체 사용법: `~/.opal/references/tools.md`
 
@@ -328,3 +356,4 @@ OPAL 도구는 모두 `~/.opal/tools/{tool-name}/run.sh` 래퍼를 통해 호출
 | v6.7 | 2026-07-28 23:28 | §9 등록 도구 표 code-scan 행 현행화 — `.opal/code-map/` 헤더 작성층 신규 5서브명령(discover/scaffold/target/validate/feature) 반영, 타 행과 동일 서식(서브명령 열거)으로 정합 (077) |
 | v6.8 | 2026-08-02 16:03 | §1 자동 루핑 제약 표에 "워커 프로세스 비정상 종료(스톨·응답 중 연결 종료)" 행 추가 — 재시도 1회(동일 컨텍스트 재개), 초과 시 새 컨텍스트 분할 재배치. 판정 절차는 `harness/pm-review-gate.md`, 분할 기준은 `pm/dispatch-process.md` Step 6가 소유하고 본 표는 수치만 소유(중복 기재 금지) (081) |
 | v6.9 | 2026-08-04 17:30 | §9 등록 도구 표 code-scan 행 현행화 — 13→15서브명령(+`split`/`init`), 과대 매니페스트 판정을 `shardPolicy` 3단 우선순위(프로젝트 > 전역 `~/.opal/setting.json` > 코드 상수) 기반 바이트·엔트리 2축 비차단 열거로, 분할은 `split`(표준단어사전 옵셔널 참조)로, 설정 초안은 `init`으로 반영 (083) |
+| v7.0 | 2026-08-15 16:16 | §2 모듈 구조 직후에 **§2.5 워크스페이스 축(`--worktree`/`--wt`)** 신설 — 모드 축과 직교하는 별개 축 선언 + `--wt` 미사용 시 현행 동작 100% 유지 + `.opal/worktree.json` 부재 시 동작(비차단·안내) 3항목. §9 등록 도구 표에 worktree-tool 행 추가(4서브명령 create/list/status/remove) (092) |

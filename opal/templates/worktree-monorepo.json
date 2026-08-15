@@ -1,0 +1,11 @@
+{
+  "layout": "monorepo",
+  "repos": ["workspace"],
+  "branchTemplate": "feat/OP-TASK-{NNN}",
+  "copy": ["workspace/backend/settings.local.yaml", "workspace/docker/.env.compose.local"],
+  "setup": [
+    {"cwd": "workspace/backend", "run": "uv sync"},
+    {"cwd": "workspace/frontend", "run": "pnpm install"}
+  ],
+  "portOffset": 100
+}

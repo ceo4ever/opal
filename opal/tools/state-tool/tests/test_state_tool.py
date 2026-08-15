@@ -5948,6 +5948,135 @@ class TestTaskStepGate(unittest.TestCase):
 
 
 # ═════════════════════════════════════════════════════════════════════════════
+# 092(RED-first, mode:red): TestWorktreeFlag 신설 — `state-tool init --worktree <path>`
+# TEST-SCENARIO.md S-1(H-1)·S-2(H-1,H-11) — worktree-tool 축 신설의 state-tool 측 계약.
+# 작성자(opal-test-agent)≠구현자(EXECUTE 워커) — red-first.md §2. 현재 state_tool.py의
+# cmd_init/argparse에는 --worktree 처리가 전혀 없으므로(F-005 GREEN 이전), '지정 시
+# 키 존재 + 값이 전달한 절대경로와 문자열 동일'(S-1②, G-3 반영)과 'worktree 키 유무만
+# 차이나야 한다'(S-2)는 단언이 실패하는 것이 RED 증거다. 공개 인터페이스(ST.cmd_init/
+# ST.cmd_show 직접 호출 + 실 state.json/STATE.md 파일 내용)로만 검증 — 기존 BaseTestCase
+# 관행과 동일하게 mock/patch 없음. 기존 테스트 케이스는 일절 수정하지 않았다(파일 끝 append).
+# ═════════════════════════════════════════════════════════════════════════════
+
+class TestWorktreeFlag(BaseTestCase):
+    """092: `state-tool init --worktree <path>` — TEST-SCENARIO.md S-1·S-2 (H-1, H-11)."""
+
+    def _new_task_path(self, name):
+        p = self.tmpdir / name
+        p.mkdir()
+        return p
+
+    def _init_at(self, task_path, worktree=None, task_title=None):
+        kwargs = dict(
+            task_path=str(task_path),
+            skill="opd",
+            mode="interactive",
+            rows_spec=SIMPLE_ROWS_SPEC,
+            force=False,
+            note=None,
+            import_existing=False,
+            next_action=None,
+            task_title=task_title,
+        )
+        if worktree is not None:
+            kwargs["worktree"] = worktree
+        with _mock_now():
+            args = make_args(**kwargs)
+            return self._call_cmd(ST.cmd_init, args)
+
+    def _show_json_at(self, task_path):
+        with _mock_now():
+            args = make_args(task_path=str(task_path), format="json")
+            _, result = self._call_cmd(ST.cmd_show, args)
+        return result
+
+    # ── S-1: --worktree 미지정/지정 양방향 (H-1) ────────────────────────────
+
+    def test_s1_worktree_unspecified_key_absent_in_state_json(self):
+        """[T092/L1-F5a] S-1① — --worktree 미지정 시 state.json에 "worktree" 키가
+        아예 존재하지 않아야 한다(null 값 키도 불가)."""
+        task_path = self._new_task_path("s1_no_wt")
+        exit_code, _ = self._init_at(task_path)
+        self.assertEqual(exit_code, 0, "미지정 init은 exit 0이어야 한다")
+        state = json.loads((task_path / "state.json").read_text(encoding="utf-8"))
+        self.assertNotIn("worktree", state, "미지정인데 worktree 키가 생성됨(H-1 위반)")
+
+    def test_s1_worktree_specified_key_matches_value_and_show_json(self):
+        """[T092/L1-F5a] S-1② — --worktree 지정 시 state["worktree"]가 전달한 절대경로와
+        문자열 동일해야 하고(null·빈 문자열·상대경로 불가), show --format json의
+        data.worktree도 같은 값을 반환해야 한다(iteration 2 G-3 반영 — '키 존재'만이
+        아니라 '값 정합'까지 확인)."""
+        task_path = self._new_task_path("s1_with_wt")
+        wt_path = "/abs/fake/worktree/task_092"
+        exit_code, _ = self._init_at(task_path, worktree=wt_path)
+        self.assertEqual(exit_code, 0, "지정 init은 exit 0이어야 한다")
+
+        state = json.loads((task_path / "state.json").read_text(encoding="utf-8"))
+        self.assertIn("worktree", state, "지정했는데 worktree 키가 생성되지 않음")
+        self.assertIsNotNone(state["worktree"], "worktree 값이 null이면 안 된다")
+        self.assertNotEqual(state["worktree"], "", "worktree 값이 빈 문자열이면 안 된다")
+        self.assertEqual(state["worktree"], wt_path,
+                         "worktree 값이 전달한 절대경로와 문자열 동일해야 한다")
+
+        show_payload = self._show_json_at(task_path)
+        self.assertEqual(show_payload["data"]["worktree"], wt_path,
+                         "show --format json의 data.worktree가 init 값과 동일해야 한다")
+
+    # ── S-2: --worktree 유무와 무관하게 STATE.md/스키마 동일 (H-1, H-11) ────
+
+    def test_s2_state_md_identical_regardless_of_worktree_flag(self):
+        """[T092/L2-F5b] S-2 — 동일 인자(_mock_now로 타임스탬프까지 고정)로 두 태스크
+        폴더에 init한다. 한쪽만 --worktree를 추가해도 STATE.md가 바이트 동일해야 한다
+        (_build_new_state_md는 state dict를 받지 않아 worktree를 참조할 수 없다 — H-11)."""
+        task_no_wt = self._new_task_path("s2_no_wt")
+        task_with_wt = self._new_task_path("s2_with_wt")
+        # 폴더명이 다르면 STATE.md 제목 줄 자체가 달라지므로(무관 변수), task_title을
+        # 동일하게 고정해 --worktree 유무만 변수로 통제한다.
+        common_title = "동일 태스크 제목(S-2)"
+
+        exit_no, _ = self._init_at(task_no_wt, task_title=common_title)
+        exit_with, _ = self._init_at(
+            task_with_wt, worktree="/abs/fake/worktree/task_092", task_title=common_title
+        )
+        self.assertEqual(exit_no, 0)
+        self.assertEqual(exit_with, 0)
+
+        md_no_wt = (task_no_wt / "STATE.md").read_text(encoding="utf-8")
+        md_with_wt = (task_with_wt / "STATE.md").read_text(encoding="utf-8")
+        self.assertEqual(md_no_wt, md_with_wt,
+                         "STATE.md가 --worktree 유무에 따라 달라지면 안 된다(H-11)")
+
+    def test_s2_state_json_differs_only_in_worktree_key(self):
+        """[T092/L2-F5b] S-2 — state.json은 worktree 키 유무만 차이나야 하고 그 외 필드는
+        전부 동일해야 한다. 현재는 --worktree 처리가 없어 두 state.json 모두 키가 없으므로
+        '한쪽만 키 존재' 단언이 실패하는 것이 RED 증거다(H-1 GREEN 이후 통과 기대)."""
+        task_no_wt = self._new_task_path("s2_diff_no_wt")
+        task_with_wt = self._new_task_path("s2_diff_with_wt")
+        # task_id는 태스크 폴더명(task_path.name)에서 파생되므로 두 폴더명이 다른 이상
+        # 값이 다른 게 정상이다(무관 변수) — 비교 대상에서 제외한다.
+        common_title = "동일 태스크 제목(S-2 diff)"
+
+        self._init_at(task_no_wt, task_title=common_title)
+        self._init_at(task_with_wt, worktree="/abs/fake/worktree/task_092", task_title=common_title)
+
+        state_no_wt = json.loads((task_no_wt / "state.json").read_text(encoding="utf-8"))
+        state_with_wt = json.loads((task_with_wt / "state.json").read_text(encoding="utf-8"))
+
+        self.assertNotIn("worktree", state_no_wt)
+        self.assertIn("worktree", state_with_wt,
+                      "--worktree 지정 케이스에만 키가 있어야 한다(H-1 GREEN 이전엔 실패 — RED)")
+
+        ignore_keys = {"task_id", "worktree"}
+        keys_no_wt = set(state_no_wt.keys()) - ignore_keys
+        keys_with_wt = set(state_with_wt.keys()) - ignore_keys
+        self.assertEqual(keys_no_wt, keys_with_wt,
+                         "worktree 키(및 폴더명 파생 task_id) 외에는 스키마가 동일해야 한다")
+        for key in keys_no_wt:
+            self.assertEqual(state_no_wt[key], state_with_wt[key],
+                             f"'{key}' 필드가 --worktree 유무에 따라 달라짐(H-1 위반)")
+
+
+# ═════════════════════════════════════════════════════════════════════════════
 # 진입점
 # ═════════════════════════════════════════════════════════════════════════════
 

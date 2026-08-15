@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-08-14 11:52
+> 갱신: 2026-08-15 19:08
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -27,6 +27,7 @@
 - [[state-tool]] — state-tool #tool #pipeline
 - [[test-tool]] — test-tool #tool #testing #pipeline
 - [[tool-scan]] — tool-scan #tool #opal-tools #discovery #usage #capability
+- [[worktree-tool]] — worktree-tool #tool #workspace #git #pipeline
 
 ## 개념
 - [[070-derivation-engine-perspective-bias-lesson]] — 070 사건 근본원인 — 도출 엔진 관점 편향과 게이트 집행 #lesson-learned #testing #scenario-gate #root-cause #task-073
@@ -257,6 +258,8 @@
 - [[warm-handle-single-entry-injection]] — 웜 핸들 단일 진입점 주입 결정 #brain #session #api-compat #dependency-injection
 - [[wbs-세분화-단일책임-수용시나리오]] — WBS 세분화 원칙 — 단일 책임 + 수용 시나리오 기준 #oppd #wbs #sizing #be #fe #acceptance-scenario
 - [[wiki-intelligence-decisions-016]] — opal-wiki-pilot 지능화 결정 — M-4/M-5 (016) #architecture #naming #git #brain #policy
+- [[worktree-slot-existence-to-occupancy-judgment]] — 워크트리 슬롯 판정 — 존재에서 점유로 #worktree #git #lesson #non-trivial-resolution
+- [[worktree-workspace-isolation-axis]] — 워크트리 격리 축 — 문서는 허브 고정, 코드만 분기 #architecture #workspace #worktree #git #isolation
 - [[wtm-agent-cmux-integration]] — wtm-agent OPAL 표준화 + cmux-tool 신설 #tool #agent #wtm #cmux #task
 
 ## 흐름

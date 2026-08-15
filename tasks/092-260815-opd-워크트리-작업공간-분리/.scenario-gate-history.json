@@ -1,0 +1,43 @@
+[
+  {
+    "iteration": 1,
+    "missing": {
+      "requirements": [],
+      "features": [],
+      "hypotheses": []
+    },
+    "gaps": [
+      "G-1",
+      "G-2",
+      "G-3",
+      "G-4",
+      "G-5",
+      "G-6",
+      "G-7"
+    ],
+    "scores": {
+      "goal": 1,
+      "adoption": 1,
+      "boundary": 1
+    },
+    "average": 1.0,
+    "verdict": "fail"
+  },
+  {
+    "iteration": 2,
+    "missing": {
+      "requirements": [],
+      "features": [],
+      "hypotheses": []
+    },
+    "gaps": [],
+    "scores": {
+      "goal": 1,
+      "adoption": 2,
+      "boundary": 2
+    },
+    "average": 1.67,
+    "verdict": "pass",
+    "note": "수렴(종료조건 1) — coverage-check exit 0 AND evaluator verdict pass. 판정 시점 산출물은 시나리오 27건. 이후 Producer가 Evaluator 권고 R-1(S-24 ⓓ 문서 grep)·R-2(S-28 신설)·R-3(부속 표 4곳 iteration 1 잔존 정정)을 반영해 28건이 되었으며, 전부 additive(시나리오 삭제·기대결과 약화 0건)이고 coverage-check를 재실행해 exit 0을 재확인했다."
+  }
+]

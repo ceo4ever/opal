@@ -304,3 +304,7 @@
 - 갱신: [[replacement-goal-verification-scope-gap]]
 - 출처: task:091
 
+## [2026-08-15] ingest | CLOSE ingest — 태스크 092 워크트리 작업공간 분리
+- 신규: [[pages/entity/worktree-tool.md]], [[pages/concept/worktree-workspace-isolation-axis.md]], [[pages/concept/worktree-slot-existence-to-occupancy-judgment.md]]
+- 출처: task:092
+

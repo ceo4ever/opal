@@ -934,6 +934,91 @@ bash ~/.opal/tools/tool-scan/run.sh check <도구>               # 설치/실행
 
 ---
 
+## worktree-tool
+
+**용도**: 태스크별 코드 작업본을 git worktree로 격리하는 결정론 집행 도구 — 4서브명령 `create`/`list`/`status`/`remove`. `.opal/worktree.json` 선언(`layout`/`repos`/`branchTemplate`/`baseBranch`/`copy`/`setup`/`portOffset`)을 기반으로 multi-repo(레포별 worktree)·monorepo(sparse-checkout) 2유형을 흡수한다. `create`는 pre-flight 선검사 전부 통과 후에만 생성하고(all-or-nothing), 중간 실패 시 자기 생성물만 롤백한다(DEC-2). base-ref는 create 시점에 1회 해석해 `.opal-worktrees/.meta/task_{NNN}.json`(worktree 밖)에 동결 기록하고 `remove`/`status`는 그 값만 읽는다(재해석 없음, DEC-3). `remove`는 dirty→unpushed→unmerged 순서 3중 가드를 적용하며 worktree 디렉토리만 회수하고 브랜치는 삭제하지 않는다(user sovereignty). `.gitignore` 멱등 보장·캐시 볼륨 진단·code-scan exclude 진단·동시 슬롯 진단은 전부 비차단(파일 미수정, `ok:true` 유지). 자동 커밋·자동 머지·자동 제거 없음.  
+**실행 경로**: `~/.opal/tools/worktree-tool/run.sh`  
+**소스 경로**: `opal/tools/worktree-tool/worktree_tool.py`  
+**의존성**: `~/.opal/.venv/bin/python` (표준 라이브러리만 — argparse/json/os/pathlib/shutil/subprocess/sys/datetime) + 로컬 **git 2.25+**(`sparse-checkout --cone` 사용)  
+**호출자**: `harness/task-process.md` 스텝 4.5(`--worktree`/`--wt` 태스크의 생성 훅) / `opal-pilot-dev/SKILL.md` STEP 6 CLOSE(정리 안내, `status` 조회) / 캡틴 수동 회수(`remove`)
+
+### 트리거 조건
+
+`--worktree`/`--wt` 플래그가 있는 태스크의 TASK 후처리(스텝 4.5)에서 `create` 호출. CLOSE 단계에서 `status` 조회. 머지 완료 후 캡틴이 `remove` 수동 호출.
+
+### 커맨드 (4서브명령)
+
+```bash
+# 코드 작업본 생성 — pre-flight 통과 후에만 worktree/브랜치 생성
+~/.opal/tools/worktree-tool/run.sh create \
+  --project-root <프로젝트 절대경로> --task <NNN> [--slug <태스크명>] [--skill <약어>]
+
+# 활성 슬롯 목록 조회
+~/.opal/tools/worktree-tool/run.sh list --project-root <프로젝트 절대경로>
+
+# 단일 슬롯 상태 조회 (dirty/unpushed/merged — 거부하지 않음)
+~/.opal/tools/worktree-tool/run.sh status --project-root <프로젝트 절대경로> --task <NNN>
+
+# 슬롯 회수 — dirty→unpushed→unmerged 3중 가드, 위반 시 거부(--force로만 우회)
+~/.opal/tools/worktree-tool/run.sh remove --project-root <프로젝트 절대경로> --task <NNN> [--force]
+```
+
+### ERROR_CODES 카탈로그
+
+| 코드 | 의미 |
+|------|------|
+| `CONFIG_NOT_FOUND` | `.opal/worktree.json` 설정 파일을 찾을 수 없음 |
+| `CONFIG_INVALID_JSON` | 설정 파일이 유효한 JSON이 아님 |
+| `CONFIG_MISSING_KEY` | 필수 키(`layout`/`repos`) 누락 |
+| `CONFIG_INVALID_LAYOUT` | `layout` 값이 `multi-repo`/`monorepo`가 아님 |
+| `CONFIG_INVALID_TYPE` | 설정 값의 타입이 유효하지 않음 |
+| `CONFIG_PATH_ESCAPE` | `repos`/`copy` 경로가 프로젝트 루트를 벗어남 |
+| `PROJECT_ROOT_NOT_FOUND` | 지정한 프로젝트 루트가 존재하지 않음 |
+| `WORKTREE_EXISTS` | 대상 worktree 경로가 이미 존재함 |
+| `BRANCH_EXISTS` | 브랜치가 이미 존재함 |
+| `REPO_NOT_FOUND` | 지정된 `repos` 경로가 존재하지 않음 |
+| `NOT_A_GIT_REPO` | 지정된 경로가 git 저장소가 아님 |
+| `GIT_COMMAND_FAILED` | git 명령이 실패함 (create는 여기서 자기 생성물만 롤백) |
+| `META_NOT_FOUND` | 메타 파일을 찾을 수 없음 — `--force`로만 우회 |
+| `WORKTREE_NOT_FOUND` | 메타는 있으나 실제 worktree 경로가 존재하지 않음 |
+| `GUARD_DIRTY` | 작업본에 미커밋 변경 사항이 있음 |
+| `GUARD_UNPUSHED` | 원격에 반영되지 않은 커밋이 있음 |
+| `GUARD_UNMERGED` | base 브랜치에 아직 병합되지 않음 |
+| `INTERNAL_ERROR` | 예상하지 못한 오류 (트레이스백 대신 통제된 JSON으로 대체) |
+
+### 출력 형식 (JSON)
+
+```json
+// create
+{"ok": true, "error": null, "command": "create", "task": "<NNN>", "layout": "multi-repo|monorepo",
+ "worktree_root": "<절대경로>", "branch": "<브랜치명>",
+ "entries": [{"repo","path","branch","base_ref"}],
+ "gitignore": "created|added|present", "copied": ["..."],
+ "pending_setup": [{"cwd","run"}], "port_offset": 0, "warnings": ["..."]}
+
+// list
+{"ok": true, "error": null, "command": "list", "project_root": "<절대경로>", "layout": "...",
+ "entries": [{"task","branch","worktree_root","exists"}]}
+
+// status
+{"ok": true, "error": null, "command": "status", "task": "<NNN>", "branch": "...", "worktree_root": "...",
+ "entries": [{"repo","path","branch","base_ref","dirty","unpushed","merged"}],
+ "pending_setup": [...]}
+
+// remove
+{"ok": true, "error": null, "command": "remove", "task": "<NNN>",
+ "removed": ["<path>", ...], "forced": false, "bypassed_guards": []}
+
+// 공통 에러
+{"ok": false, "error": "<ERROR_CODE>", "message": "<사람이 읽는 설명>", ...}
+```
+
+- `remove`의 가드 판정 순서는 dirty→unpushed→unmerged 고정, 첫 위반에서 즉시 반환. `--force` 지정 시 위반을 우회하고 `bypassed_guards[]`에 코드를 수집하며 `forced:true`가 stdout에 기록된다.
+- exit code: `ok:true` → 0 / `ok:false`(err_response 경유) → 1.
+- 축 정의·`--wt` 미사용 시 현행 동작 100% 유지 등 하네스 규약의 SSOT는 `opal/core/references/opal-harness.md` §2.5.
+
+---
+
 ## improve-tool
 
 **용도**: PM 개선 루프 결정론 집행 도구 — 3서브명령(`record`/`list`/`show`)으로 개선 후보를 로컬(프로젝트 `.opal/`)/FW(`~/.opal/fw-inbox/`) 2원 분기로 기록. 분류(로컬/FW 판단)는 호출자(opal-improve 스킬·CLOSE 회고 하드스텝)가 수행하고, 이 도구는 확정된 scope를 결정론적으로 집행만 한다  
@@ -1071,3 +1156,4 @@ bash ~/.opal/tools/tool-scan/run.sh check <도구>               # 설치/실행
 | v2.10 | 2026-08-03 13:20 | code-scan 섹션 — 매니페스트 샤딩 반영: `scaffold`/`target`/`validate` 커맨드 주석에 `_shards/` 예약 폴더·샤드 라우팅·`manifestMaxBytes` 비차단 상한 서술 추가, 신규 에러 코드 2종(`shard_declaration_invalid`/`reserved_name_collision`) 표 신설, `target`의 신규 실패 표면 `manifest_parse_failed` 명시, §매니페스트 샤딩 서브섹션(`shards` 스키마 + `manifestMaxBytes` 설정 예시) 신설 (082) |
 | v2.11 | 2026-08-04 17:18 | code-scan 섹션 — 샤드 정책 확장 반영(v1.6.0 / 13→15서브명령): `split`(제안 `--plan`·집행 `--groups`)·`init`(비대화형 설정 초안, 차단 게이트 앞 배치) 커맨드 등재, 옵션 표에 `--write`/`--force`/`--plan`/`--groups`/`--trace`/`--stop-after` 6행 추가 및 `--out`/`--dry-run` 설명 확장, 에러 코드 `init` 2종(`init_header_source_required`/`config_exists`)·`split` 7종(쓰기 상태 열 포함) 표 신설, §샤드 정책 신설 — `shardPolicy` 설정 3단 우선순위(프로젝트 > 전역 `~/.opal/setting.json` > 코드 상수 10240/40, 셀 단위 머지)·구 위치 `manifestMaxBytes` 폐기 안내(값 미독·자동 변환 없음)·2축 판정(바이트 `>` AND 엔트리 `>=`, 비차단 + 페이로드 4필드)·분할 절차 4단·제안 사다리 S1~S5 표·표준단어사전 탐색 3단/폴백 3분기(부재 침묵·파손 안내 1줄·매칭 0건 통과) 서술, `ladder` 설정 노출 후속 이관 명시, PM 관리 방안에 `init` 생성·`init --force` 복구 경로 반영 (083) |
 | v2.12 | 2026-08-13 16:57 | state-tool 행 원천 지시 정정 — `--rows-from` 시놉시스·실행 예시를 `references/pipeline.json` 기준으로 교체(구형 `.md` 파싱 지시 제거). 10/10 pilot 전환에 맞춘 pilot 밖 정합 (090) |
+| v2.13 | 2026-08-15 16:30 | worktree-tool 섹션 신설(git-sync-tool 직후) — 4서브명령(create/list/status/remove) 커맨드·ERROR_CODES 18종 카탈로그·응답 필드·exit code. 태스크별 코드 작업본 git worktree 격리 도구, 실물 `worktree_tool.py` 구현 기준 작성 (092) |
