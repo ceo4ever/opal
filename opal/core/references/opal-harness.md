@@ -164,21 +164,24 @@ Lazy 로드 모듈. 각 §의 stub이 로드 시점과 파일 경로를 지시�
 >
 > 적용 주체: PM(오케스트레이터), 워커(EXECUTE Step 갱신)
 > 적용 시점: TASK/EXECUTE/Gate 단계 전반
-> PM Gate 검증: STATE.md 갱신 여부, 파이프라인 현황판 행 상태 정합성
+> PM Gate 검증: 파이프라인 행 상태 정합성(`state-tool show`로 확인), STATE.md 저널(의사결정 로그·블로커) 기재 여부
 
-> **[MUST]** 파이프라인 현황판 행 상태 변경은 `state-tool`로만 수행한다. LLM이 STATE.md 마크다운 표를 직접 편집하는 것은 금지된다.
+> **[MUST] 파이프라인 행 상태(⬜/🔄/✅) 변경은 `~/.opal/tools/state-tool/run.sh`로만 수행한다. `state.json` 직접 편집 금지 — 현황 조회는 `state-tool show <task-path>`로 한다.**
+>
+> STATE.md는 **의사결정 로그·블로커·자유 기재를 담는 저널**이다. 파이프라인 현황(행 상태·진행·다음 액션)의 SSOT는 `state.json`이며, 조회는 `state-tool show`로 한다.
 >
 > - TASK 단계 시작: `~/.opal/tools/state-tool/run.sh init <task-path> --skill <약어> --mode <모드>`
-> - 단계 시작(⬜→🔄): `~/.opal/tools/state-tool/run.sh advance <task-path> --row <N>`
-> - 단계 완료(→✅): `~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done`
-> - 워커 완료(EXECUTE Step): `~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done --as-worker --worker-stage <stage>`
-> - PM Gate 통과 후 단일 mark: `~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done`
+> - 단계 시작(⬜→🔄): `~/.opal/tools/state-tool/run.sh advance <task-path> --task-step <key>`
+> - 단계 완료(→✅): `~/.opal/tools/state-tool/run.sh mark <task-path> --task-step <key> --done`
+> - 워커 완료(EXECUTE Step): `~/.opal/tools/state-tool/run.sh mark <task-path> --task-step <key> --done --as-worker --worker-stage <stage>`
+> - PM Gate 통과 후 단일 mark: `~/.opal/tools/state-tool/run.sh mark <task-path> --task-step <key> --done`
 > - [deprecated] gate-pass — 레거시 전용. 신규는 위 단일 mark 사용 (Phase4 완료, State Gate/QA Gate 행 제거)
-> - 추가작업 행 삽입: `~/.opal/tools/state-tool/run.sh add-row <task-path> --after <N> --stage <단계> --item <항목>`
+> - 추가작업 행 삽입: `~/.opal/tools/state-tool/run.sh add-row <task-path> --after-task-step <key> --stage <단계> --item <항목>`
+> - 현황 조회: `~/.opal/tools/state-tool/run.sh show <task-path> [--format md|json|full]`
 >
 > 위반 시 도구가 거부하며 에러 코드를 반환한다. 주요 에러:
-> `marker_missing`(STATE.md 마커 누락) / `worker_scope_violation`(워커 권한 초과) / `state_not_initialized`(state.json 미존재)
-> — 전체 에러 카탈로그 23종: `tasks/134-260501-opp-pipeline-state-tool/PLAN.md` §2.18
+> `worker_scope_violation`(워커 권한 초과) / `state_not_initialized`(state.json 미존재)
+> — 전체 에러 카탈로그: `opal/tools/state-tool/README.md` §에러 코드 카탈로그
 >
 > 근거: `tasks/134-260501-opp-pipeline-state-tool/TASK.md` F-13 / `PLAN.md` §1.5 M-8 / §3 Step 3
 
@@ -306,6 +309,7 @@ OPAL 도구는 모두 `~/.opal/tools/{tool-name}/run.sh` 래퍼를 통해 호출
 
 | 버전 | 날짜 | 내용 |
 |------|------|------|
+| v7.2 | 2026-08-16 13:19 | §3 State — STATE.md 역할을 "파이프라인 현황판"에서 "의사결정 로그·블로커를 담는 저널"로 재정의(094 R-6). 마커 명세·`marker_missing` 서술 삭제 + 표준 문구 A/B 적용, 에러 카탈로그 종수 리터럴 삭제 후 `state-tool/README.md` §에러 코드 카탈로그 포인터로 대체(R-9 ①), 예시 명령의 `--row <N>`을 `--task-step <key>`로 교체(CONVENTIONS §State 관리 정합), `show` 조회 명령 1줄 추가 |
 | v7.1 | 2026-08-15 19:40 | §2.5 (3) `worktree.json` 부재 시 동작 갱신 — 종전 "템플릿 경로 안내"에서 **`worktree-tool init`(탐지 기반 초안 생성) 실행 안내**로 교체. 092 추가작업 ADD-1에서 온보딩 경로 부재가 드러나 `init` 서브명령을 신설했다(092 DEC-8) |
 | v1.0 | - | 최초 작성 |
 | v2.0 | 2026-03-31 | 모듈화 — §2 Gates → opal-harness-interactive.md, §7 Agentic → opal-harness-agentic.md 분리. §2 모듈 구조 + QA 체크리스트 검증 추가 (058) |

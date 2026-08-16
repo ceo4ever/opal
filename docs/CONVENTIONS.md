@@ -147,13 +147,13 @@ tasks/{NNN}-{YYMMDD}-{스킬약어}-{태스크명}/
 ├── PLAN.md               구현 계획
 ├── TEST-SCENARIO.md      테스트 시나리오
 ├── state.json            상태 SSOT — state-tool이 소유 (직접 편집 금지)
-├── STATE.md              state.json의 렌더 뷰 (사람이 읽는 표)
+├── STATE.md              의사결정 로그·블로커 저널 (로그는 도구 자동, 블로커·자유기재는 PM 수동)
 ├── AGENTIC-LOG.md        agentic 실행 로그
 ├── GC-*.md               GC 체크 보고서 (opal-pilot-gc 실행 시)
 └── DONE.md               완료 보고
 ```
 
-- 상태 SSOT는 **`state.json`**이며, `STATE.md`는 이를 렌더한 읽기용 뷰다. 두 파일 모두 `state-tool`이 갱신한다.
+- STATE.md는 **의사결정 로그·블로커·자유 기재를 담는 저널**이다. 파이프라인 현황(행 상태·진행·다음 액션)의 SSOT는 `state.json`이며, 조회는 `state-tool show`로 한다. `state.json`은 `state-tool`이 전량 갱신하고, STATE.md는 저널 골격 보증(`ensure_journal_skeleton`)과 의사결정 로그 기재(`append_decision_log`)만 `state-tool`이 자동 수행하며, 블로커 내용·자유 기재는 PM이 수동으로 기록한다.
 
 ## 브랜치 전략
 
@@ -224,7 +224,7 @@ OPAL 본체(스킬·에이전트·도구·하네스)를 작성할 때 따라야 
 
 ### State 관리
 
-- 파이프라인 STATE.md 행 상태(⬜/🔄/✅) 변경은 `~/.opal/tools/state-tool/run.sh`로만 수행한다. 마크다운 표 직접 편집 금지.
+- **[MUST] 파이프라인 행 상태(⬜/🔄/✅) 변경은 `~/.opal/tools/state-tool/run.sh`로만 수행한다. `state.json` 직접 편집 금지 — 현황 조회는 `state-tool show <task-path>`로 한다.**
 - 단계 진입/완료/차단/추가작업 행 삽입 모두 state-tool 서브 명령(`init`/`advance`/`mark`/`block`/`add-row`/`spec-validate` 등)으로 처리한다.
 - 행 주소는 `--task-step <key>`(예: `plan.pm_gate`) 우선 사용, `--task-step-id <N>`은 숫자 폴백 — `--row`는 deprecated 별칭(신규 문서·프롬프트에 사용 금지). key 정의는 pilot `references/pipeline.json`이 SSOT.
 - `state-tool init --rows-from`은 pilot `references/pipeline.json`을 지정한다. SKILL.md 마크다운 파싱(`build_rows_from_skill_md`)은 deprecated이며 신규 지시에 사용 금지 — **10/10 pilot 전환 완료(090)**.
@@ -276,3 +276,5 @@ OPAL 본체(스킬·에이전트·도구·하네스)를 작성할 때 따라야 
 | v1.3.0 | 2026-08-14 09:38 | §State 관리에 PM Gate 정의 SSOT 규칙 추가 — 게이트 산출물·체크리스트의 원천을 pilot `references/pipeline.json` `task_steps[].gate`로 확정하고 SKILL.md 표 중복 게재를 금지. `mark`의 `artifacts` 결정론 존재 검증(`gate_artifact_missing` 거부)·`checklist` stdout 반환(`gate_checklist`)·`--force --note` 우회 시 `gate_artifact_force` 의사결정 로그 강제를 명문화. artifacts 적격 토큰을 "게이트 시점 필재 상대 경로/글롭"으로 한정(조건부 산출물·논리 개념은 checklist로 — 오등재 시 영구 차단) (091) |
 | v1.4.0 | 2026-08-15 16:35 | 도구 인벤토리 18종 → **19종**(`worktree-tool` 추가) + §브랜치 전략에 **적용 범위 명시** — 본 절 규칙은 OPAL 저장소 자체 전용이고, worktree 대상 프로젝트의 코드 브랜치는 `{프로젝트}/.opal/worktree.json` `branchTemplate`(기본 `feat/OP-TASK-{NNN}`)을 따른다. 두 규칙의 충돌이 아니라 적용 범위 미표기가 문제였다 (092 DEC-1) |
 | v1.5.0 | 2026-08-15 21:48 | §State 관리에 사용자 확인 행 자동 승인 계약 1줄 추가 — 전 모드 `pending/owner=PM` 초기화, 다음 단계 진입 시 state-tool 자동 승인(`done/owner=auto/timestamp`), 자동 승인 불가 구간(CLOSE 직전·interactive·semi-agentic `MODE_BOUNDARY_STAGES`)의 `user_confirmation_required` 거부와 캡틴 `mark --owner user` 승인 명문화 (093) |
+| v1.6.0 | 2026-08-16 13:36 | STATE.md 저널화 반영 — §State 관리 첫 항목을 도구 규율 표준 문구로 교체("마크다운 표 직접 편집 금지" 서술 제거 + `state-tool show <task-path>` 조회 경로 명시), §태스크 산출물 구조의 STATE.md 행 설명을 "의사결정 로그·블로커 저널"로 정정, "상태 SSOT는 state.json이며 STATE.md는 이를 렌더한 읽기용 뷰다" 서술을 "STATE.md는 의사결정 로그·블로커·자유 기재를 담는 저널이며 파이프라인 현황의 SSOT는 state.json, 조회는 state-tool show"로 교체 — STATE.md는 더 이상 state.json의 렌더 뷰가 아니다 (094) |
+| v1.6.1 | 2026-08-16 15:05 | §태스크 산출물 구조 STATE.md 행 말미 정정 — "두 파일 모두 `state-tool`이 갱신한다"(부정확, 블로커·자유 기재는 도구 미접촉)를 코드 실측(`state_tool.py` `ensure_journal_skeleton`/`append_decision_log`/`cmd_block`) 기준으로 "state.json은 state-tool 전량 갱신, STATE.md는 저널 골격·의사결정 로그만 자동 갱신, 블로커·자유 기재는 PM 수동"으로 세분화 (094 Step 14) |

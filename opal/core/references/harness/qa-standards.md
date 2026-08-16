@@ -31,7 +31,7 @@ PM Gate 자가 진단(interactive §3 / agentic §4)에서 확인하는 필수 �
 
 ### 단계별 주요 산출물 표준 파일명
 
-파이프라인 현황판 산출물 행에서 추적하는 파일명의 기본값.
+파이프라인 산출물 행(`state.json` `rows[]`, 조회: `state-tool show`)에서 추적하는 파일명의 기본값.
 오케스트레이터 SKILL.md에서 오버라이드 가능하며, 명시가 없으면 이 표준을 따른다.
 
 | 단계 | 주요 산출물 | 위치 |
@@ -75,3 +75,4 @@ EXECUTE QA는 "글자 존재 여부(grep)"가 아니라 **실제 동작**으로 
 |------|------|------|
 | v1.0 | 2026-06-07 | QA Gate 별도 단계 전제 → PM Gate 문서검증 전제로 전환 — 로드 시점/2단계 갱신 구조(QA 에이전트 1차→PM 2차)/스킬별 검증 방식을 PM 단독 검토·갱신으로 재정의, EXECUTE QA 동작 증거의 실수행 주체(TEST/verify, 불변)·PM 확인 역할 1줄 명시. 동작 검증 영역은 불변 (014) |
 | v1.1 | 2026-08-14 08:38 | 스킬별 산출물 오버라이드 근거를 오케스트레이터 SKILL.md에서 각 pilot `references/pipeline.json`의 `task_steps[].gate.artifacts`로 이전 — `state-tool mark`의 존재 검증·`gate.checklist` stdout 반환 연계 명시 (091) |
+| v1.2 | 2026-08-16 13:26 | STATE.md 저널화 — "파이프라인 현황판 산출물 행"(표 전제)을 "파이프라인 산출물 행(`state.json` rows[])"으로 치환, `state-tool show` 조회 경로 명시 (094) |

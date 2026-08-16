@@ -3,19 +3,7 @@
   "module": "test_state_tool",
   "layer": "test",
   "domain": "opal-pipeline",
-  "description": "state-tool 단위 테스트 — 9개 명령 happy path + 23종 에러 코드 × 최소 1건 + G-5~G-15 시나리오. 005: TestClarificationGate 신설 — verify --clarification-check + TASK→다음단계 자동 훅 RED-first 케이스 ①~⑨ + 회귀 보호. 054: TestOwnerNamePlaceholder 신설 — note '{owner_name}' 플레이스홀더 identity.md write-time 치환 RED-first(S-1~S-7). 056: TestOpplSkillInit 신설 — `--skill oppl` enum 미등록 RED-first(S-020, H-1) — run.sh subprocess 실호출로 공개 인터페이스만 검증(mock 미사용). 070: task-step 키 주소 체계 도입 1차 RED-first — TestPipelineSpecValidate/TestPipelineJsonInit/TestStateSchema11Compat/TestTaskStepAddressing/TestActionStepRename/TestAddRowKey/TestOpddEnumDrift/TestGroupAPipelineSpecs/TestBackwardCompatAliases 9종 신설(TEST-SCENARIO.md S-1~S-14, PLAN §3.7.2) — 미구현 기능이므로 전부 FAIL 기대(RED 증거). 072: TestNextActionAutoDerive 신설 — STATE.md '다음 액션' 자동 파생 RED-first(TEST-SCENARIO.md S-1~S-4,S-6,S-7) — init next_action 영속화+schema optional 등록, advance/mark 프론티어 파생(pending '진입'/in_progress '진행 중'/전체완료 '태스크 완료'), 첫 줄만 치환(하위 자유기재 보존), --next-action 오버라이드 우선+비지속 복귀 — 공개 CLI 경로(직접 호출+run.sh subprocess)로만 검증, 미구현이므로 실패 기대(RED 증거). 074: TestImportPreservesKeys 신설 — `--import-existing` task-step key 유실 결함 RED-first(TEST-SCENARIO.md S-a~S-e) — force+import-existing 후 rows[].key 100% 보존, pipeline.json 폴백 복원, key 원천 전무 시 keyless+stderr 경고(하위호환), schema_version 1.1 유지, 동일 (stage,item) 중복 순서 소비 — 공개 cmd_init 호출 + 실 파일 I/O로만 검증, 수정 전 코드에서 FAIL 기대(RED 증거). 076: TestTodoMirror 신설 — build_todo_mirror 파생 규칙(TS-001~007): init create 페이로드·전부pending→pending·전부done→completed·advance/부분→in_progress·na 중립·블로커 in_progress 유지·영속 경계(state.json 미영속+schema validate 통과) — 공개 cmd_init/advance/mark/block ok() stdout 페이로드 캡처로만 검증. 088: TestCloseHistoryLink 신설(TS-1~TS-7) — CLOSE 마지막 행 mark 시 link_memory_history()가 <프로젝트루트>/.opal/MEMORY.json history에 행을 자동 생성(title/path/stage/result 파생값, date는 memory-tool KST 충전)·재mark 멱등(duplicate_skipped)·MEMORY.json 부재/손상 시 비차단(ok:true + skipped/failed)·비CLOSE 행 무발동 대조군·result 보강 리마인더 구성요소·state.json 영속 경계(schema validate 통과) — 공개 cmd_mark 호출 + 실 MEMORY.json 파일 내용으로만 검증(내부 함수 mock 없음, 블랙박스 결함 주입). 091(RED-first, mode:red, F-004 게이트 집행 배선): TestTaskStepGate 신설(TEST-SCENARIO S-10~S-17) — check_gate_artifacts()/build_gate_payload()가 아직 없어(Step 8 GREEN 이전) 실 pipeline.json(opd/opdw/opsdd) 기반 gate 정의를 state.json 행에 직접 주입하는 픽스처로 산출물 부재 차단(H-1)·부분 상태 변경 부재·checklist dict 페이로드(H-6)·gate 없는 행 무영향(H-2/H-3)·빈 artifacts 비차단(opdw 실사례)·--force --note 우회 의사결정 로그(H-5)·경로 이탈 토큰 거부(H-4)·glob 토큰 매칭(opsdd 실사례)을 검증(공개 cmd_mark 호출 + 실 state.json/STATE.md 파일 내용, mock 없음). TestPipelineSpecValidate에 gate violation 4종(spec_gate_type_invalid/spec_gate_missing_field/spec_gate_field_type_invalid/spec_gate_checklist_empty, S-9) 케이스 + 실 pipeline.json 10종 유효성 케이스 추가. TestErrorCodesCompleteness에 091 신규 5종 반영(39→44). 094 Step 0(RED-first, mode:red,\
- F-001/F-002/F-003 저널화): TestJournalResilience/TestLegacyCoexistence/TestShowAsQueryStandard\
- 3종 신설(TEST-SCENARIO.md S-4,S-5,S-30,S-32 / S-29,S-11 / S-10,S-24,S-25) + 기존 클래스\
- (TestInit/TestAdvance/TestG14G15DecisionLog/TestBasicScenarios/TestValidate/\
-TestErrorCodesCompleteness/TestPipelineJsonInit)에 S-1,S-2,S-3,S-6,S-7,S-8,S-9,S-21,S-22,S-23\
- 추가 — STATE.md 파생 섹션(마커/파이프라인 표/`## 현재 상태`/`## 다음 액션`) 완전 제거 후 저널\
-(의사결정 로그+블로커) 재정의, 마커 하드 게이트·`--import-existing` 제거, `show` 렌더 원천\
- state.json 단일화(레거시 배너 극성 반전)를 검증한다 — 전부 미구현이므로 FAIL 기대(RED 증거).\
- 레거시 사본 조작은 tasks/093-*/를 tmp_path로 복사한 사본에 한정하고 원본은 read-only(소급\
- 변경 금지). 공개 인터페이스(run.sh subprocess, stdout JSON + exit code) + 실 파일 I/O로만\
- 검증, mock/patch/MagicMock 미사용(red-first.md §4). 구현(op-be-agent)과 작성자(opal-test-agent)\
- 분리.",
-  "description": "state-tool 단위 테스트 — 9개 명령 happy path + 23종 에러 코드 × 최소 1건 + G-5~G-15 시나리오. 005: TestClarificationGate 신설 — verify --clarification-check + TASK→다음단계 자동 훅 RED-first 케이스 ①~⑨ + 회귀 보호. 054: TestOwnerNamePlaceholder 신설 — note '{owner_name}' 플레이스홀더 identity.md write-time 치환 RED-first(S-1~S-7). 056: TestOpplSkillInit 신설 — `--skill oppl` enum 미등록 RED-first(S-020, H-1) — run.sh subprocess 실호출로 공개 인터페이스만 검증(mock 미사용). 070: task-step 키 주소 체계 도입 1차 RED-first — TestPipelineSpecValidate/TestPipelineJsonInit/TestStateSchema11Compat/TestTaskStepAddressing/TestActionStepRename/TestAddRowKey/TestOpddEnumDrift/TestGroupAPipelineSpecs/TestBackwardCompatAliases 9종 신설(TEST-SCENARIO.md S-1~S-14, PLAN §3.7.2) — 미구현 기능이므로 전부 FAIL 기대(RED 증거). 072: TestNextActionAutoDerive 신설 — STATE.md '다음 액션' 자동 파생 RED-first(TEST-SCENARIO.md S-1~S-4,S-6,S-7) — init next_action 영속화+schema optional 등록, advance/mark 프론티어 파생(pending '진입'/in_progress '진행 중'/전체완료 '태스크 완료'), 첫 줄만 치환(하위 자유기재 보존), --next-action 오버라이드 우선+비지속 복귀 — 공개 CLI 경로(직접 호출+run.sh subprocess)로만 검증, 미구현이므로 실패 기대(RED 증거). 074: TestImportPreservesKeys 신설 — `--import-existing` task-step key 유실 결함 RED-first(TEST-SCENARIO.md S-a~S-e) — force+import-existing 후 rows[].key 100% 보존, pipeline.json 폴백 복원, key 원천 전무 시 keyless+stderr 경고(하위호환), schema_version 1.1 유지, 동일 (stage,item) 중복 순서 소비 — 공개 cmd_init 호출 + 실 파일 I/O로만 검증, 수정 전 코드에서 FAIL 기대(RED 증거). 076: TestTodoMirror 신설 — build_todo_mirror 파생 규칙(TS-001~007): init create 페이로드·전부pending→pending·전부done→completed·advance/부분→in_progress·na 중립·블로커 in_progress 유지·영속 경계(state.json 미영속+schema validate 통과) — 공개 cmd_init/advance/mark/block ok() stdout 페이로드 캡처로만 검증. 088: TestCloseHistoryLink 신설(TS-1~TS-7) — CLOSE 마지막 행 mark 시 link_memory_history()가 <프로젝트루트>/.opal/MEMORY.json history에 행을 자동 생성(title/path/stage/result 파생값, date는 memory-tool KST 충전)·재mark 멱등(duplicate_skipped)·MEMORY.json 부재/손상 시 비차단(ok:true + skipped/failed)·비CLOSE 행 무발동 대조군·result 보강 리마인더 구성요소·state.json 영속 경계(schema validate 통과) — 공개 cmd_mark 호출 + 실 MEMORY.json 파일 내용으로만 검증(내부 함수 mock 없음, 블랙박스 결함 주입). 091(RED-first, mode:red, F-004 게이트 집행 배선): TestTaskStepGate 신설(TEST-SCENARIO S-10~S-17) — check_gate_artifacts()/build_gate_payload()가 아직 없어(Step 8 GREEN 이전) 실 pipeline.json(opd/opdw/opsdd) 기반 gate 정의를 state.json 행에 직접 주입하는 픽스처로 산출물 부재 차단(H-1)·부분 상태 변경 부재·checklist dict 페이로드(H-6)·gate 없는 행 무영향(H-2/H-3)·빈 artifacts 비차단(opdw 실사례)·--force --note 우회 의사결정 로그(H-5)·경로 이탈 토큰 거부(H-4)·glob 토큰 매칭(opsdd 실사례)을 검증(공개 cmd_mark 호출 + 실 state.json/STATE.md 파일 내용, mock 없음). TestPipelineSpecValidate에 gate violation 4종(spec_gate_type_invalid/spec_gate_missing_field/spec_gate_field_type_invalid/spec_gate_checklist_empty, S-9) 케이스 + 실 pipeline.json 10종 유효성 케이스 추가. TestErrorCodesCompleteness에 091 신규 5종 반영(39→44). 093(RED-first, mode:red, 사용자 확인 행 자동 승인 경로 일원화): TestT093AutoNaRemoval/TestT093AutoApproveHook/TestT093AutoApproveBoundary/TestT093HookGuardOrder/TestT093MarkIdempotency/TestT093NaBackwardCompat/TestT093SingleDecisionSource 7종 신설(TEST-SCENARIO S-1~S-18·S-24~S-26) — init 시점 agentic auto-na 제거 후 전 모드 pending/PM 동형성(S-2~S-4), 다음 단계 진입 시 auto_approve_prior_user_confirmations 훅 자동 승인(S-1/S-5/S-13/S-26), CLOSE·워커 경로 구조적 제외(S-6~S-9), user_confirmation_required 전용 에러(S-12/S-24), 훅→후속 가드 순서와 파일 미오염(S-10/S-11), mark 접두 멱등·재-auto-pass no-op(S-15/S-16), MODE_BOUNDARY_STAGES 단일 판정 수렴(S-25), 경계 불변 회귀표 18셀·na 하위호환(S-14/S-17/S-18) — worktree run.sh subprocess 실호출 + 실 pipeline.json/state.json 파일 상태로만 검증(mock 미사용), 미구현 기능이므로 신규 계약 케이스는 전부 FAIL 기대(RED 증거: RED-EVIDENCE.md). 093 GREEN(Step 9): 구형 계약을 고정하던 기존 테스트를 신규 계약으로 수정 — test_init_agentic_auto_na_user_confirmation→test_init_agentic_user_confirmation_pending, test_rows_from_agentic_auto_na→test_rows_from_agentic_user_confirmation_pending(둘 다 na→pending 단언 교체), test_close_gate_regression_via_task_step_addressing_subprocess(주석 갱신 + CLOSE 직전 사용자 확인 행 row 8 캡틴 승인 단계 추가, 최종 assert 불변), agentic CLOSE 게이트 3건(test_agentic_close_gate_requires_user·test_g13_agentic_close_gate_auto_pass_rejected·test_c6_agentic_auto_pass_close_first_row)에 캡틴 승인 사전 단계 추가, test_new_structure_guard_blocks_skip에 사용자 확인 행 선(先)승인으로 guard 축 격리, test_s13_new_style_row_without_gate_response_unaffected 기대 키 집합에 auto_approved 추가, TestErrorCodesCompleteness 44→45종(user_confirmation_required). 테스트 삭제 0건.",
+  "description": "state-tool 단위 테스트 — 9개 명령 happy path + 23종 에러 코드 × 최소 1건 + G-5~G-15 시나리오. 005: TestClarificationGate 신설 — verify --clarification-check + TASK→다음단계 자동 훅 RED-first 케이스 ①~⑨ + 회귀 보호. 054: TestOwnerNamePlaceholder 신설 — note '{owner_name}' 플레이스홀더 identity.md write-time 치환 RED-first(S-1~S-7). 056: TestOpplSkillInit 신설 — `--skill oppl` enum 미등록 RED-first(S-020, H-1) — run.sh subprocess 실호출로 공개 인터페이스만 검증(mock 미사용). 070: task-step 키 주소 체계 도입 1차 RED-first — TestPipelineSpecValidate/TestPipelineJsonInit/TestStateSchema11Compat/TestTaskStepAddressing/TestActionStepRename/TestAddRowKey/TestOpddEnumDrift/TestGroupAPipelineSpecs/TestBackwardCompatAliases 9종 신설(TEST-SCENARIO.md S-1~S-14, PLAN §3.7.2) — 미구현 기능이므로 전부 FAIL 기대(RED 증거). 072: TestNextActionAutoDerive 신설 — STATE.md '다음 액션' 자동 파생 RED-first(TEST-SCENARIO.md S-1~S-4,S-6,S-7) — init next_action 영속화+schema optional 등록, advance/mark 프론티어 파생(pending '진입'/in_progress '진행 중'/전체완료 '태스크 완료'), 첫 줄만 치환(하위 자유기재 보존), --next-action 오버라이드 우선+비지속 복귀 — 공개 CLI 경로(직접 호출+run.sh subprocess)로만 검증, 미구현이므로 실패 기대(RED 증거). 074: TestImportPreservesKeys 신설 — `--import-existing` task-step key 유실 결함 RED-first(TEST-SCENARIO.md S-a~S-e) — force+import-existing 후 rows[].key 100% 보존, pipeline.json 폴백 복원, key 원천 전무 시 keyless+stderr 경고(하위호환), schema_version 1.1 유지, 동일 (stage,item) 중복 순서 소비 — 공개 cmd_init 호출 + 실 파일 I/O로만 검증, 수정 전 코드에서 FAIL 기대(RED 증거). 076: TestTodoMirror 신설 — build_todo_mirror 파생 규칙(TS-001~007): init create 페이로드·전부pending→pending·전부done→completed·advance/부분→in_progress·na 중립·블로커 in_progress 유지·영속 경계(state.json 미영속+schema validate 통과) — 공개 cmd_init/advance/mark/block ok() stdout 페이로드 캡처로만 검증. 088: TestCloseHistoryLink 신설(TS-1~TS-7) — CLOSE 마지막 행 mark 시 link_memory_history()가 <프로젝트루트>/.opal/MEMORY.json history에 행을 자동 생성(title/path/stage/result 파생값, date는 memory-tool KST 충전)·재mark 멱등(duplicate_skipped)·MEMORY.json 부재/손상 시 비차단(ok:true + skipped/failed)·비CLOSE 행 무발동 대조군·result 보강 리마인더 구성요소·state.json 영속 경계(schema validate 통과) — 공개 cmd_mark 호출 + 실 MEMORY.json 파일 내용으로만 검증(내부 함수 mock 없음, 블랙박스 결함 주입). 091(RED-first, mode:red, F-004 게이트 집행 배선): TestTaskStepGate 신설(TEST-SCENARIO S-10~S-17) — check_gate_artifacts()/build_gate_payload()가 아직 없어(Step 8 GREEN 이전) 실 pipeline.json(opd/opdw/opsdd) 기반 gate 정의를 state.json 행에 직접 주입하는 픽스처로 산출물 부재 차단(H-1)·부분 상태 변경 부재·checklist dict 페이로드(H-6)·gate 없는 행 무영향(H-2/H-3)·빈 artifacts 비차단(opdw 실사례)·--force --note 우회 의사결정 로그(H-5)·경로 이탈 토큰 거부(H-4)·glob 토큰 매칭(opsdd 실사례)을 검증(공개 cmd_mark 호출 + 실 state.json/STATE.md 파일 내용, mock 없음). TestPipelineSpecValidate에 gate violation 4종(spec_gate_type_invalid/spec_gate_missing_field/spec_gate_field_type_invalid/spec_gate_checklist_empty, S-9) 케이스 + 실 pipeline.json 10종 유효성 케이스 추가. TestErrorCodesCompleteness에 091 신규 5종 반영(39→44). 093(RED-first, mode:red, 사용자 확인 행 자동 승인 경로 일원화): TestT093AutoNaRemoval/TestT093AutoApproveHook/TestT093AutoApproveBoundary/TestT093HookGuardOrder/TestT093MarkIdempotency/TestT093NaBackwardCompat/TestT093SingleDecisionSource 7종 신설(TEST-SCENARIO S-1~S-18·S-24~S-26) — init 시점 agentic auto-na 제거 후 전 모드 pending/PM 동형성(S-2~S-4), 다음 단계 진입 시 auto_approve_prior_user_confirmations 훅 자동 승인(S-1/S-5/S-13/S-26), CLOSE·워커 경로 구조적 제외(S-6~S-9), user_confirmation_required 전용 에러(S-12/S-24), 훅→후속 가드 순서와 파일 미오염(S-10/S-11), mark 접두 멱등·재-auto-pass no-op(S-15/S-16), MODE_BOUNDARY_STAGES 단일 판정 수렴(S-25), 경계 불변 회귀표 18셀·na 하위호환(S-14/S-17/S-18) — worktree run.sh subprocess 실호출 + 실 pipeline.json/state.json 파일 상태로만 검증(mock 미사용), 미구현 기능이므로 신규 계약 케이스는 전부 FAIL 기대(RED 증거: RED-EVIDENCE.md). 093 GREEN(Step 9): 구형 계약을 고정하던 기존 테스트를 신규 계약으로 수정 — test_init_agentic_auto_na_user_confirmation→test_init_agentic_user_confirmation_pending, test_rows_from_agentic_auto_na→test_rows_from_agentic_user_confirmation_pending(둘 다 na→pending 단언 교체), test_close_gate_regression_via_task_step_addressing_subprocess(주석 갱신 + CLOSE 직전 사용자 확인 행 row 8 캡틴 승인 단계 추가, 최종 assert 불변), agentic CLOSE 게이트 3건(test_agentic_close_gate_requires_user·test_g13_agentic_close_gate_auto_pass_rejected·test_c6_agentic_auto_pass_close_first_row)에 캡틴 승인 사전 단계 추가, test_new_structure_guard_blocks_skip에 사용자 확인 행 선(先)승인으로 guard 축 격리, test_s13_new_style_row_without_gate_response_unaffected 기대 키 집합에 auto_approved 추가, TestErrorCodesCompleteness 44→45종(user_confirmation_required). 테스트 삭제 0건. 094 R-11 Step0(RED-first, mode:red, agentic 승인 계약 정합): TestR11ModeBoundary/TestR11CloseGateFallback/TestR11DerivedSignals/TestR11Invariants 4종 신설(TEST-SCENARIO S-34~S-37,S-40) — G-1 MODE_BOUNDARY_STAGES에 DICT/MODEL/DDL·MIGRATION 3원소 부재로 semi-agentic opdd 설계 확정 3건이 미노출 통과하는 결함을 3 stage 개별 advance 호출로 판정(부분 구현 방지, S-34), G-2 check_close_gate가 확인 행 0개 파이프라인(opgc)에서 --owner user로도 영구 데드락인 결함(S-35), G-3-a/G-3-b _derive_next_action·build_todo_mirror가 자동 승인 예정 확인 행을 중립 처리하지 않아 next_action 헛 확인·todo 오판정하는 결함(S-36/S-37), R-11 [MUST] 불변 제약(신규 판정 함수 금지·next_action 스키마·build_todo_mirror 시그니처·ERROR_CODES 무접촉) 역검증(S-40) — 실 pipeline.json(opdd/opgc/opd) + run.sh subprocess 실호출 + 실 state.json 파일 상태로만 검증(mock 미사용), 미구현 기능이므로 신규 계약 케이스는 전부 FAIL 기대(RED 증거). 구현(op-be-agent)과 작성자(opal-test-agent) 분리.",
   "exports": [
     "TestInit", "TestShow", "TestAdvance", "TestMark",
     "TestBlock", "TestValidate", "TestAddRow", "TestStatus", "TestGatePass",
@@ -26,10 +14,12 @@ TestErrorCodesCompleteness/TestPipelineJsonInit)에 S-1,S-2,S-3,S-6,S-7,S-8,S-9,
     "TestOpddEnumDrift", "TestGroupAPipelineSpecs", "TestBackwardCompatAliases",
     "TestNextActionAutoDerive", "TestImportPreservesKeys", "TestTodoMirror",
     "TestCloseHistoryLink", "TestTaskStepGate",
-    "TestJournalResilience", "TestLegacyCoexistence", "TestShowAsQueryStandard"
+    "TestJournalResilience", "TestLegacyCoexistence", "TestShowAsQueryStandard",
     "TestT093AutoNaRemoval", "TestT093AutoApproveHook", "TestT093AutoApproveBoundary",
     "TestT093HookGuardOrder", "TestT093MarkIdempotency", "TestT093NaBackwardCompat",
-    "TestT093SingleDecisionSource"
+    "TestT093SingleDecisionSource",
+    "TestR11ModeBoundary", "TestR11CloseGateFallback", "TestR11DerivedSignals",
+    "TestR11Invariants"
   ]
 }
 
@@ -42,6 +32,7 @@ TestErrorCodesCompleteness/TestPipelineJsonInit)에 S-1,S-2,S-3,S-6,S-7,S-8,S-9,
 """
 
 # TASK T-11: 표준 라이브러리만 import
+import ast
 import json
 import os
 import pathlib
@@ -1771,9 +1762,19 @@ class TestBasicScenarios(BaseTestCase):
         임의 텍스트로 덮어쓰기, 3케이스 각각에서 `advance`·`mark`를 호출하면
         6회 전부 `ok:true`·exit 0이어야 한다(R-3 AC(a) 마커 하드 차단 제거).
 
-        RED 근거: 현재 `sync_state_md`는 `load_state_md()`가 None이거나
-        마커가 없으면 즉시 `err(command, "marker_missing")`로 exit 1하므로
-        (state_tool.py:375-383), 6회 호출이 전부 실패한다."""
+        [Step 3-c 시퀀스 교정, 093 머지 여파] 원래는 advance(task.task_md) →
+        mark(task.user_confirm)로 서로 다른 두 행을 건드렸으나, 093의
+        stage-transition guard(F-002)는 대상 행 앞의 모든 행이 done/na여야
+        진입을 허용한다 — advance는 pending→in_progress까지만 전진시키므로
+        task.task_md가 in_progress로 남은 채 task.user_confirm을 mark하면
+        `stage_transition_violation`(마커 게이트와 무관한 별개 가드)에 걸린다.
+        이 테스트의 검증 대상은 어디까지나 '마커 손상 상태에서 advance·mark가
+        차단되지 않는다'이므로, **같은 행(task.task_md)에 advance→mark를
+        순서대로 걸어 그 행 하나를 완결**시키는 유효한 시퀀스로 교정한다 —
+        advance 호출 앞에는 검증할 선행 행이 없어(row_index=0) guard가
+        구조적으로 통과하고, mark 호출도 동일 행(이미 앞 행 없음)이라 guard가
+        걸릴 여지가 없다. 3케이스 × 2명령 = 6회 호출이라는 시나리오 강도는
+        그대로 유지된다."""
         self.assertTrue(_OPD_REAL_PIPELINE_JSON.exists())
         corruption_cases = ["삭제", "마커만_제거", "임의_텍스트"]
         for case_name in corruption_cases:
@@ -1807,7 +1808,7 @@ class TestBasicScenarios(BaseTestCase):
                 self.assertTrue(data.get("ok"), f"advance ok:true 아님({case_name}): {data}")
 
                 code, stdout, stderr, data = _run094([
-                    "mark", str(task_path), "--task-step", "task.user_confirm", "--done",
+                    "mark", str(task_path), "--task-step", "task.task_md", "--done",
                 ])
                 self.assertEqual(code, 0,
                                  f"mark가 exit 0이어야 함({case_name}, 마커 게이트 소멸): "
@@ -6458,6 +6459,74 @@ class TestJournalResilience(BaseTestCase):
         finally:
             md_path.chmod(original_mode)
 
+    # ── S-5 보안 후속 — journal_warning 경로 노출 (PLAN.md:1094, 094 Step 14 TEST 발견) ──
+
+    def test_journal_warning_reason_redacts_absolute_path_and_home_dir(self):
+        """[T094/SEC-FOLLOWUP] PLAN.md §5.4 "`journal_warning` 페이로드에 절대
+        경로·사용자 홈 경로가 노출되지 않는가 — 예외 메시지에 경로가 포함되면
+        파일명만 남기고 절삭" 요구사항의 회귀 테스트.
+
+        opal-test-agent가 배포본(`~/.opal/tools/state-tool/run.sh`) 실증 중
+        STATE.md를 0444(쓰기 불가)로 만든 뒤 `mark --auto-pass`를 호출하면
+        `journal_warning.reason`에 태스크 폴더의 **절대 경로 전체**가 그대로
+        노출됨을 실측했다(TEST-SCENARIO.md §6 보안 3번째 행, 094 Step 14).
+        PM이 결함으로 확정하고 본 RED 테스트 작성을 지시했다(red-first.md §2 —
+        작성자≠구현자, 구현은 별도 워커가 수행).
+
+        검증 4조건 — `mark --auto-pass` 호출로 STATE.md 쓰기 실패를 유발한 뒤
+        stdout `journal_warning.reason` 문자열에 대해:
+        ① **절대경로 부재** — 태스크 폴더의 절대 경로 문자열(`str(task_path)`)이
+           포함되지 않는다 (POSIX 절대경로 `/...` 형태 전체가 새어나가지 않는다)
+        ② **홈 경로 부재** — `str(pathlib.Path.home())`가 포함되지 않는다
+        ③ **파일명은 남는다** — `STATE.md`는 그대로 포함되어 진단 가치가
+           보존된다(파일명까지 지우면 무엇이 실패했는지 알 수 없다)
+        ④ **예외 타입은 남는다** — `PermissionError`가 포함되어 원인 분류가
+           가능하다
+
+        RED 근거: 현재 `sync_state_md`(`state_tool.py:447-450`)의 except 블록은
+        `f"{type(e).__name__}: {e}"`로 예외 객체를 그대로 문자열화한다.
+        `PermissionError`의 `str(e)`는 `[Errno 13] Permission denied: '<전체
+        경로>'` 형태로 실패한 파일의 **절대 경로 전체**를 포함하므로(Python
+        표준 OSError 메시지 포맷), 절삭 로직이 없는 현재 구현에서는 조건
+        ①이 반드시 FAIL한다(경로 문자열이 그대로 나타남). [MUST]
+        `state_tool.py`는 이 테스트를 통과시키기 위해 수정하지 않는다 — 구현은
+        후속 워커(op-be-agent) 몫이다.
+
+        [MUST] mock 금지 — 실 `os.chmod`(권한 조작으로 실패 주입) + 실
+        `run.sh` CLI subprocess(`_run094`)로만 검증한다."""
+        task_path = self.tmpdir / "094-secfix-journal-warning-path"
+        task_path.mkdir()
+        self._init_opd(task_path)
+        md_path = task_path / "STATE.md"
+        original_mode = md_path.stat().st_mode
+        md_path.chmod(0o444)
+        try:
+            code, stdout, stderr, data = _run094([
+                "mark", str(task_path), "--task-step", "task.task_md", "--done",
+                "--auto-pass", "--note", "보안회귀-경로노출점검",
+            ])
+            self.assertEqual(code, 0,
+                             f"저널 쓰기 실패가 파이프라인을 막으면 안 됨(fail-open): "
+                             f"stdout={stdout!r} stderr={stderr!r}")
+            self.assertIn("journal_warning", data,
+                         f"journal_warning 필드가 stdout에 없음: {data}")
+            reason = data["journal_warning"].get("reason", "")
+
+            home = str(pathlib.Path.home())
+            self.assertNotIn(str(task_path), reason,
+                            f"journal_warning.reason에 태스크 폴더 절대 경로가 그대로 "
+                            f"노출됨(PLAN §5.4 위반, 파일명만 남겨야 함): {reason!r}")
+            self.assertNotIn(home, reason,
+                            f"journal_warning.reason에 사용자 홈 디렉토리 경로가 "
+                            f"노출됨(PLAN §5.4 위반): {reason!r}")
+            self.assertIn("STATE.md", reason,
+                         f"경로 절삭 시 파일명(STATE.md)까지 지워지면 진단 가치가 "
+                         f"소실됨: {reason!r}")
+            self.assertIn("PermissionError", reason,
+                         f"예외 타입명이 사라지면 원인 분류가 불가능해짐: {reason!r}")
+        finally:
+            md_path.chmod(original_mode)
+
     # ── S-30: 손상 저널 골격 복구 append 분기 + 멱등 ───────────────────────
 
     def test_s30_broken_journal_skeleton_recovers_and_is_idempotent(self):
@@ -7875,6 +7944,391 @@ class TestT093SingleDecisionSource(unittest.TestCase):
         for stage, mode, expected in cases:
             with self.subTest(stage=stage, mode=mode):
                 self.assertEqual(tuple(fn(stage, mode)), expected)
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# 094 R-11(RED-first, mode:red): agentic 승인 계약 정합
+# TestR11ModeBoundary / TestR11CloseGateFallback / TestR11DerivedSignals / TestR11Invariants
+# (TEST-SCENARIO.md S-34~S-37, S-40 / R-11-요청서.md §2 G-1~G-3, §7)
+#
+# [MUST] red-first.md §4 / 헌법 §4 "Don't fake it" — mock/patch/MagicMock 미사용.
+#        _T093Base(worktree run.sh subprocess 실호출 + 실 pipeline.json/state.json 파일
+#        상태)를 그대로 재사용한다 — 신규 헬퍼 신설 없음(헌법 §2 중복 구현 금지).
+#        구현 대상 state_tool.py는 이 RED 단계에서 무변경(작성자≠구현자, 다음 Step이
+#        can_auto_approve_user_confirmation() 단일 판정 함수를 재사용해 배선한다).
+# ═════════════════════════════════════════════════════════════════════════════
+
+# 실 opdd pipeline.json — G-1 모드 경계 상수 검증 대상(_REPO_ROOT_093 재사용, R-10 무관 —
+# 워크트리에도 opal/skills/가 존재하므로 허브 탐색 헬퍼 불요, TASK.md R-10 범위 밖)
+_OPDD_REAL_PIPELINE = (_REPO_ROOT_093 / "opal" / "skills" / "opal-pilot-data-design"
+                       / "references" / "pipeline.json")
+
+
+class TestR11ModeBoundary(_T093Base):
+    """G-1 `MODE_BOUNDARY_STAGES` 3원소(DICT/MODEL/DDL·MIGRATION) 정합 (S-34, R-11 AC(a)).
+
+    [MUST] 3 stage를 각각 별도 advance 호출로 노출시켜 개별 subTest로 판정한다 —
+    단일 케이스만 보면 'DICT'만 추가한 부분 구현이 통과한다(SCENARIO-GATE-3.md ① 지적)."""
+
+    def test_semi_agentic_opdd_boundary_three_stages_individually_S34(self):
+        """S-34 — semi-agentic opdd에서 DICT/MODEL/DDL·MIGRATION 3개 확인 행이
+        각각 개별적으로 차단되어야 하고, 승인 후에는 다음 전이가 정상 진행되어야 하며
+        (영구 데드락 아님), 경계 밖 QA는 기존대로 자동 승인되어야 한다(과잉 차단 아님)."""
+        self.assertTrue(_OPDD_REAL_PIPELINE.is_file(),
+                        f"실 pipeline.json 부재: {_OPDD_REAL_PIPELINE}")
+        d = self._task_dir("s34-opdd-semi-agentic")
+        self._init(d, "semi-agentic", rows_from=_OPDD_REAL_PIPELINE, skill="opdd")
+
+        # TASK 단계 확인 행(row 2)은 093에서 이미 경계에 있던 기존 stage다 —
+        # 이 테스트의 대상(R-11 신규 3원소)이 아니므로 명시 승인으로 조기에 통과시킨다.
+        self._assert_ok(self._mark_key(d, "task.task_md"), "S-34 prep task.task_md")
+        self._assert_ok(self._mark_key(d, "task.user_confirm", "--owner", "user"),
+                        "S-34 prep task.user_confirm (기존 TASK 경계 — R-11 대상 아님)")
+
+        # ── ① DICT 경계 (직전 확인행 = id 5 dict.user_confirm) ──────────────────
+        self._assert_ok(self._mark_key(d, "dict.dictionaries"), "S-34 prep dict.dictionaries")
+        self._assert_ok(self._mark_key(d, "dict.pm_gate"), "S-34 prep dict.pm_gate")
+
+        with self.subTest(stage="DICT"):
+            code, stdout, stderr, data = self._advance_key(d, "model.modeling")
+            self.assertEqual(code, 1,
+                f"S-34 DICT 경계 미차단 — advance model.modeling이 성공함(부분/무구현 의심) "
+                f"— {stdout!r}")
+            self.assertEqual(data.get("error"), "user_confirmation_required", f"S-34 DICT {data!r}")
+            self.assertEqual(data.get("row_id"), 5, f"S-34 DICT row_id 불일치 — {data!r}")
+            self.assertEqual(data.get("stage"), "DICT", f"S-34 DICT stage 불일치 — {data!r}")
+            self.assertEqual(data.get("reason"), "semi_agentic_pre_execute", f"S-34 DICT {data!r}")
+            self.assertIn(data.get("auto_approved"), (None, []),
+                         f"S-34 DICT auto_approved가 비어있지 않음 — {data!r}")
+            r5 = self._row(d, 5)
+            self.assertEqual(r5["status"], "pending", f"S-34 DICT dict.user_confirm이 승인됨 — {r5!r}")
+            self.assertEqual(r5.get("owner"), "PM", f"S-34 DICT owner 변조 — {r5!r}")
+
+        # 통과 경로 — 소유자 명시 승인 후 재진입(차단이 영구 데드락이 아님을 증명).
+        # advance가 아닌 mark를 쓴다 — 미구현 상태에서 앞선 advance가 이미 통과해 버리면
+        # row가 in_progress로 바뀌어 advance의 pending 전용 제약과 충돌하기 때문이다.
+        self._assert_ok(self._mark_key(d, "dict.user_confirm", "--owner", "user"),
+                        "S-34 DICT 소유자 승인")
+        self._assert_ok(self._mark_key(d, "model.modeling"),
+                        "S-34 DICT 승인 후 model.modeling 진입 실패 — 차단이 영구 데드락이 됨")
+
+        # ── ② MODEL 경계 (직전 확인행 = id 8 model.user_confirm) ─────────────────
+        self._assert_ok(self._mark_key(d, "model.pm_gate"), "S-34 prep model.pm_gate")
+
+        with self.subTest(stage="MODEL"):
+            code, stdout, stderr, data = self._advance_key(d, "ddl_migration.ddl_scripts")
+            self.assertEqual(code, 1, f"S-34 MODEL 경계 미차단 — {stdout!r}")
+            self.assertEqual(data.get("error"), "user_confirmation_required", f"S-34 MODEL {data!r}")
+            self.assertEqual(data.get("row_id"), 8, f"S-34 MODEL row_id 불일치 — {data!r}")
+            self.assertEqual(data.get("stage"), "MODEL", f"S-34 MODEL stage 불일치 — {data!r}")
+            self.assertEqual(data.get("reason"), "semi_agentic_pre_execute", f"S-34 MODEL {data!r}")
+            self.assertIn(data.get("auto_approved"), (None, []),
+                         f"S-34 MODEL auto_approved가 비어있지 않음 — {data!r}")
+            r8 = self._row(d, 8)
+            self.assertEqual(r8["status"], "pending",
+                             f"S-34 MODEL model.user_confirm이 승인됨 — {r8!r}")
+            self.assertEqual(r8.get("owner"), "PM", f"S-34 MODEL owner 변조 — {r8!r}")
+
+        self._assert_ok(self._mark_key(d, "model.user_confirm", "--owner", "user"),
+                        "S-34 MODEL 소유자 승인")
+        self._assert_ok(self._mark_key(d, "ddl_migration.ddl_scripts"),
+                        "S-34 MODEL 승인 후 ddl_migration.ddl_scripts 진입 실패 — 영구 데드락")
+
+        # ── ③ DDL/MIGRATION 경계 (직전 확인행 = id 11 ddl_migration.user_confirm) ─
+        self._assert_ok(self._mark_key(d, "ddl_migration.pm_gate"), "S-34 prep ddl_migration.pm_gate")
+
+        with self.subTest(stage="DDL/MIGRATION"):
+            code, stdout, stderr, data = self._advance_key(d, "qa.review")
+            self.assertEqual(code, 1, f"S-34 DDL/MIGRATION 경계 미차단 — {stdout!r}")
+            self.assertEqual(data.get("error"), "user_confirmation_required",
+                             f"S-34 DDL/MIGRATION {data!r}")
+            self.assertEqual(data.get("row_id"), 11, f"S-34 DDL/MIGRATION row_id 불일치 — {data!r}")
+            self.assertEqual(data.get("stage"), "DDL/MIGRATION",
+                             f"S-34 DDL/MIGRATION stage 불일치 — {data!r}")
+            self.assertEqual(data.get("reason"), "semi_agentic_pre_execute",
+                             f"S-34 DDL/MIGRATION {data!r}")
+            self.assertIn(data.get("auto_approved"), (None, []),
+                         f"S-34 DDL/MIGRATION auto_approved가 비어있지 않음 — {data!r}")
+            r11 = self._row(d, 11)
+            self.assertEqual(r11["status"], "pending",
+                             f"S-34 DDL/MIGRATION ddl_migration.user_confirm이 승인됨 — {r11!r}")
+            self.assertEqual(r11.get("owner"), "PM", f"S-34 DDL/MIGRATION owner 변조 — {r11!r}")
+
+        self._assert_ok(self._mark_key(d, "ddl_migration.user_confirm", "--owner", "user"),
+                        "S-34 DDL/MIGRATION 소유자 승인")
+        self._assert_ok(self._mark_key(d, "qa.review"),
+                        "S-34 DDL/MIGRATION 승인 후 qa.review 진입 실패 — 영구 데드락")
+
+        # ── 대조군: QA(id 14)는 경계 밖 — 기존대로 자동 승인되어야 한다(과잉 차단 아님) ──
+        self._assert_ok(self._mark_key(d, "qa.pm_gate"), "S-34 prep qa.pm_gate")
+        qa_data = self._assert_ok(self._mark_key(d, "qa.user_confirm", "--auto-pass"),
+                                  "S-34 QA 대조군 — 경계 밖인데 자동 승인이 차단됨(과잉 차단)")
+        r14 = self._row(d, 14)
+        self.assertEqual(r14["status"], "done", f"S-34 QA 대조군 status 불일치 — {r14!r}")
+        self.assertEqual(r14.get("owner"), "auto", f"S-34 QA 대조군 owner 불일치 — {r14!r}")
+
+
+# 실 opgc pipeline.json — G-2 CLOSE 게이트 폴백 검증 대상(확인 행 0개 파이프라인)
+_OPGC_REAL_PIPELINE = (_REPO_ROOT_093 / "opal" / "skills" / "opal-pilot-gc"
+                       / "references" / "pipeline.json")
+
+
+class TestR11CloseGateFallback(_T093Base):
+    """G-2 `check_close_gate` 폴백 — 확인 행 0개 파이프라인(opgc) 데드락 해소 (S-35,
+    R-11 AC(c))."""
+
+    _OPGC_STEPS = (
+        "scan.select_targets", "check.dispatch_agents", "check.await_agents",
+        "report.security_report", "report.convention_report", "report.summary_table",
+    )
+
+    def _opgc_ready(self, name):
+        self.assertTrue(_OPGC_REAL_PIPELINE.is_file(),
+                        f"실 pipeline.json 부재: {_OPGC_REAL_PIPELINE}")
+        d = self._task_dir(name)
+        self._init(d, "agentic", rows_from=_OPGC_REAL_PIPELINE, skill="opgc")
+        for key in self._OPGC_STEPS:
+            self._assert_ok(self._mark_key(d, key), f"S-35 prep {key}")
+        return d
+
+    def test_opgc_close_fallback_owner_axis_and_opd_control_S35(self):
+        """S-35 — 확인 행이 없는 opgc는 CLOSE 첫 행 자체가 소유자 승인 지점이 된다.
+        ① --owner user 있으면 ok:true(--force 불요) ② 없으면 close_gate_violation
+        ③ 대조군 — 확인 행이 있는 opd는 기존 prev_user_row 검증 경로가 그대로 동작
+        (폴백이 기존 게이트를 무력화하지 않음)."""
+        with self.subTest(case="opgc-owner-user-passes-without-force"):
+            d = self._opgc_ready("s35-owner-user")
+            code, stdout, stderr, data = self._mark_key(d, "close.done_md", "--owner", "user")
+            self.assertEqual(code, 0,
+                f"S-35 확인 행 0개(opgc) CLOSE 첫 행이 --owner user로도 통과하지 못함"
+                f"(폴백 미구현 — --force 없이는 영구 데드락) — {stdout!r}")
+            self.assertEqual(data.get("status"), "done", f"S-35 {data!r}")
+
+        with self.subTest(case="opgc-without-owner-still-denied"):
+            d2 = self._opgc_ready("s35-no-owner")
+            code, stdout, stderr, data = self._mark_key(d2, "close.done_md")
+            self.assertEqual(code, 1,
+                f"S-35 --owner user 없이 통과됨 — 폴백이 게이트를 무력화함 — {stdout!r}")
+            self.assertEqual(data.get("error"), "close_gate_violation", f"S-35 {data!r}")
+
+        with self.subTest(case="opd-control-prev-user-row-path-unaffected"):
+            d3 = self._task_dir("s35-opd-control")
+            self._init(d3, "agentic", rows_from=_OPD_PIPELINE_093, skill="opd")
+            state_path = d3 / "state.json"
+            state = json.loads(state_path.read_text(encoding="utf-8"))
+            for r in state["rows"]:
+                if r.get("key") != "close.done_md":
+                    r["status"] = "done"
+                    r["status_label"] = "✅"
+                    r["owner"] = "auto"
+            state_path.write_text(json.dumps(state, ensure_ascii=False, indent=2),
+                                  encoding="utf-8")
+            code, stdout, stderr, data = self._mark_key(d3, "close.done_md")
+            self.assertEqual(code, 1,
+                f"S-35 대조군 — 확인 행이 있는 opd(test.user_confirm owner=auto)에서도 "
+                f"CLOSE 게이트가 무력화됨(G-2 회귀) — {stdout!r}")
+            self.assertEqual(data.get("error"), "close_gate_violation", f"S-35 대조군 {data!r}")
+
+
+class TestR11DerivedSignals(_T093Base):
+    """G-3-a `_derive_next_action` + G-3-b `build_todo_mirror` 파생 신호 배선
+    (S-36, S-37, R-11 AC(a)(d))."""
+
+    _TASK_MD = (
+        "# TASK: R-11 파생 신호 픽스처\n\n"
+        "## 목표\nS-36/S-37 검증\n\n"
+        "## 완료 기준\n- 전 행 진행\n"
+    )  # '## 명확화 결과' 섹션 부재 → graceful skip(005 정책 A)
+
+    def _opd_task(self, name, mode="agentic"):
+        d = self._task_dir(name)
+        self._init(d, mode, rows_from=_OPD_PIPELINE_093, skill="opd")
+        # gate.artifacts 실 파일 생성(analysis.pm_gate/plan.pm_gate/scenario_gate/test.pm_gate)
+        (d / "TASK.md").write_text(self._TASK_MD, encoding="utf-8")
+        (d / "ANALYSIS.md").write_text("# ANALYSIS\n", encoding="utf-8")
+        (d / "PLAN.md").write_text("# PLAN\n", encoding="utf-8")
+        (d / "TEST-SCENARIO.md").write_text("# TEST SCENARIO\n", encoding="utf-8")
+        return d
+
+    def _next_action(self, d):
+        code, stdout, stderr, data = _run070(["show", str(d), "--format", "json"])
+        self.assertEqual(code, 0, f"S-36 show 실패: {stdout!r}/{stderr!r}")
+        return (data.get("data") or {}).get("next_action")
+
+    def test_agentic_next_action_suppresses_hollow_confirmation_S36(self):
+        """S-36 — agentic opd 16행 전 구간에서 next_action이 '사용자 확인'을 가리키지
+        않는다. 단, CLOSE 진입 직전(test.user_confirm, id15)은 실제 승인 필요 지점이므로
+        예외. 대조군 — interactive 모드는 확인 프론티어를 정상적으로 노출해야 한다
+        (과잉 억제 방지)."""
+        d = self._opd_task("s36-agentic")
+        steps = [
+            ("mark",    "task.task_md"),
+            ("advance", "analysis.analysis_md"),
+            ("mark",    "analysis.analysis_md"),
+            ("mark",    "analysis.pm_gate"),
+            ("advance", "plan.plan_md"),
+            ("mark",    "plan.plan_md"),
+            ("mark",    "plan.pm_gate"),
+            ("advance", "test_scenario.test_scenario_md"),
+            ("mark",    "test_scenario.test_scenario_md"),
+            ("mark",    "test_scenario.scenario_gate"),
+            ("advance", "execute.implement"),
+            ("mark",    "execute.implement"),
+            ("mark",    "test.run_tests"),
+            ("mark",    "test.pm_gate"),
+        ]
+        captured = {}
+        for action, key in steps:
+            if action == "mark":
+                self._assert_ok(self._mark_key(d, key), f"S-36 mark {key}")
+            else:
+                self._assert_ok(self._advance_key(d, key), f"S-36 advance {key}")
+            captured[key] = self._next_action(d)
+
+        with self.subTest(check="no-hollow-confirmation-mid-pipeline"):
+            hollow = {k: na for k, na in captured.items()
+                      if k != "test.pm_gate" and na and "사용자 확인" in na}
+            self.assertEqual(hollow, {}, f"S-36 헛 확인 잔존(자동 승인 예정 행이 노출됨) — {hollow!r}")
+
+        with self.subTest(check="close-adjacent-exception-preserved"):
+            na = captured["test.pm_gate"]
+            self.assertIsNotNone(na, "S-36 test.pm_gate 이후 next_action 미획득")
+            self.assertIn("사용자 확인", na,
+                          "S-36 CLOSE 진입 직전(test.user_confirm) 노출이 과잉 억제됨 — "
+                          "실제 승인이 필요한 유일 지점이다")
+
+        with self.subTest(check="interactive-control-still-shows-confirmation"):
+            d2 = self._opd_task("s36-interactive", mode="interactive")
+            self._assert_ok(self._mark_key(d2, "task.task_md"), "S-36 control mark task.task_md")
+            na2 = self._next_action(d2)
+            self.assertIsNotNone(na2)
+            self.assertIn("사용자 확인", na2,
+                          "S-36 대조군 — interactive 모드에서 확인 프론티어가 억제됨(과잉 억제)")
+
+    def test_todo_mirror_neutralizes_pending_auto_approve_row_S37(self):
+        """S-37 — 작업+PM Gate 완료·확인 행만 pending인 단계의 todo가 completed로
+        렌더된다(자동 승인 예정 행 중립 처리). 대조군 — semi-agentic 모드 경계 내부
+        단계는 중립 처리되지 않고 in_progress 유지. state.json 미접촉(스키마 validate 통과)."""
+        with self.subTest(case="agentic-stage-neutralized-to-completed"):
+            d = self._opd_task("s37-agentic")
+            self._assert_ok(self._mark_key(d, "task.task_md"), "S-37 mark task.task_md")
+            self._assert_ok(self._mark_key(d, "analysis.analysis_md"),
+                            "S-37 mark analysis.analysis_md(task.user_confirm 훅 자동승인 동반)")
+            data = self._assert_ok(self._mark_key(d, "analysis.pm_gate"),
+                                   "S-37 mark analysis.pm_gate")
+            self.assertEqual(self._row(d, 5)["item"], "사용자 확인")
+            self.assertEqual(self._row(d, 5)["status"], "pending",
+                             "S-37 전제: analysis.user_confirm은 아직 pending이어야 한다")
+            by_stage = {t["id"]: t for t in data["todo_mirror"]["todos"]}
+            self.assertEqual(by_stage["stage:ANALYSIS"]["status"], "completed",
+                f"S-37 자동 승인 예정 확인 행이 중립 처리되지 않음(과잉 in_progress) — "
+                f"{by_stage['stage:ANALYSIS']!r}")
+
+            vcode, vstdout, vstderr, vdata = self._validate(d)
+            self.assertEqual(vdata.get("violations_count"), 0, f"S-37 validate 위반 — {vdata!r}")
+            state = json.loads((d / "state.json").read_text(encoding="utf-8"))
+            self.assertNotIn("todo_mirror", state, "S-37 todo_mirror가 state.json에 영속화됨(H-3 위반)")
+
+        with self.subTest(case="semi-agentic-boundary-control-stays-in-progress"):
+            d2 = self._task_dir("s37-semi-boundary")
+            self._init(d2, "semi-agentic", rows_from=_OPD_PIPELINE_093, skill="opd")
+            data2 = self._assert_ok(self._mark_key(d2, "task.task_md"),
+                                    "S-37 control mark task.task_md")
+            self.assertEqual(self._row(d2, 2)["status"], "pending",
+                             "S-37 control 전제: task.user_confirm pending")
+            by_stage2 = {t["id"]: t for t in data2["todo_mirror"]["todos"]}
+            self.assertEqual(by_stage2["stage:TASK"]["status"], "in_progress",
+                f"S-37 대조군 — semi-agentic 경계 내부 단계가 중립 처리(과잉 억제)됨 — "
+                f"{by_stage2['stage:TASK']!r}")
+
+
+def _error_codes_key_set_from_source(source_text):
+    """[Step 3-c] state_tool.py 소스 텍스트에서 `ERROR_CODES = {...}` 대입문을 AST로
+    찾아 `ast.literal_eval`로 안전하게 평가한 뒤 키 집합만 반환한다(코드 실행 없음).
+    대입문을 찾지 못하면 None."""
+    tree = ast.parse(source_text)
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Assign):
+            continue
+        if not any(isinstance(t, ast.Name) and t.id == "ERROR_CODES" for t in node.targets):
+            continue
+        value = ast.literal_eval(node.value)
+        return set(value.keys())
+    return None
+
+
+class TestR11Invariants(_T093Base):
+    """R-11 [MUST] 불변 제약 역검증 — 신규 판정 함수/상수 금지, `next_action` 스키마·
+    `build_todo_mirror` 시그니처·`ERROR_CODES` 무접촉 (S-40).
+
+    [주의] 이 클래스의 '무접촉'류 서브케이스(diff 기반)는 R-11이 아직 배선되지 않은
+    RED 시점에는 git diff 자체가 비어 있어 공허하게 참일 수 있다(비교 대상 부재).
+    이 테스트가 실질적으로 RED인 지점은 '단일 판정 함수 재사용'이 아직 배선되지
+    않았다는 사실을 양성 단언(포함 여부)으로 검증하는 서브케이스다 — 부재를 확인하는
+    것이 아니라 재사용의 '존재'를 확인하므로 미구현 상태에서 반드시 실패한다."""
+
+    def test_r11_invariants_S40(self):
+        """S-40 — R-11 적용 전후 불변 제약. ① G-1·G-3가 `can_auto_approve_user_confirmation`
+        단일 판정 함수를 재사용함(신규 판정 함수/상수 금지, 헌법 §2) ② `next_action`
+        필드·스키마 불변 ③ `build_todo_mirror` 시그니처·반환 키 집합 불변 ④ R-11 diff가
+        `ERROR_CODES`를 접촉하지 않음(종수 리터럴은 S-7·S-15가 실측 기준으로 판정하므로
+        여기서 재고정하지 않는다)."""
+        import inspect
+
+        with self.subTest(check="derive_next_action_reuses_single_judge"):
+            src = inspect.getsource(ST._derive_next_action)
+            self.assertIn(
+                "can_auto_approve_user_confirmation", src,
+                "S-40 _derive_next_action이 단일 판정 함수(can_auto_approve_user_confirmation)를 "
+                "재사용하지 않음 — 새 판정 로직/상수를 별도로 만들면 이 검증이 깨진다(헌법 §2)")
+
+        with self.subTest(check="build_todo_mirror_reuses_single_judge"):
+            src = inspect.getsource(ST.build_todo_mirror)
+            self.assertIn(
+                "can_auto_approve_user_confirmation", src,
+                "S-40 build_todo_mirror가 단일 판정 함수(can_auto_approve_user_confirmation)를 "
+                "재사용하지 않음")
+
+        with self.subTest(check="next_action_schema_unchanged"):
+            schema = json.loads((_TOOL_DIR / "schema" / "state.schema.json")
+                                .read_text(encoding="utf-8"))
+            props = schema.get("properties", {})
+            na_schema = props.get("next_action")
+            self.assertIsNotNone(na_schema, "S-40 next_action 필드가 스키마에서 소멸")
+            one_of_types = {t.get("type") for t in na_schema.get("oneOf", [])}
+            self.assertIn("string", one_of_types,
+                         f"S-40 next_action 타입 계약 변경 감지 — {na_schema!r}")
+
+        with self.subTest(check="build_todo_mirror_signature_unchanged"):
+            params = list(inspect.signature(ST.build_todo_mirror).parameters)
+            self.assertEqual(params, ["state", "action"],
+                             f"S-40 build_todo_mirror 시그니처 변경 감지 — {params!r}")
+
+        with self.subTest(check="error_codes_key_set_untouched"):
+            # [Step 3-c 정교화] git diff의 substring 판정은 @header description이
+            # 단일 물리 라인이라 과거 이력 문구("ERROR_CODES 8종 추가" 등)가 이미
+            # 박혀 있다 — 그 줄에 R-11 요약을 한 글자만 보태도 diff가 줄 전체를
+            # 삭제+추가로 잡아 거짓 FAIL을 낸다(@header 갱신 자체를 구조적으로
+            # 막는 부작용). S-40이 검증하려는 것은 "ERROR_CODES 자체가 바뀌지
+            # 않았다"이지 "diff 텍스트에 그 문자열이 없다"가 아니므로, HEAD
+            # 시점(R-11 반영 전)의 ERROR_CODES 딕셔너리를 AST로 직접 파싱해
+            # 키 집합을 비교한다 — @header 같은 무관한 문자열 변경에 흔들리지
+            # 않으면서 실제 종목 추가·삭제는 그대로 잡아낸다.
+            head_src = subprocess.run(
+                ["git", "show", "HEAD:./state_tool.py"],
+                cwd=str(_TOOL_DIR), capture_output=True, text=True,
+            ).stdout
+            self.assertTrue(head_src, "S-40 git show HEAD:state_tool.py 결과가 비어 있음")
+            head_keys = _error_codes_key_set_from_source(head_src)
+            self.assertIsNotNone(head_keys,
+                                 "S-40 HEAD 버전 소스에서 ERROR_CODES 대입문을 찾지 못함")
+            current_keys = set(ST.ERROR_CODES.keys())
+            self.assertEqual(
+                current_keys, head_keys,
+                f"S-40 R-11 변경이 ERROR_CODES 키 집합을 바꿈 — "
+                f"추가={sorted(current_keys - head_keys)!r} "
+                f"삭제={sorted(head_keys - current_keys)!r} "
+                "(종수는 S-7·S-15가 실측 기준으로 판정 — 여기서 재고정 금지)")
 
 
 # ═════════════════════════════════════════════════════════════════════════════

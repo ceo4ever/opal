@@ -135,7 +135,14 @@ state-tool을 호출하여 초기화한다:
 
 새 세션에서 `//oppd` 호출 시:
 1. `tasks/` 하위에 `*-oppd-*` 패턴의 폴더가 있는지 확인한다
-2. **존재하면**: STATE.md Read → 현재 Phase와 상태를 파악 → 정확한 지점에서 재개
+2. **존재하면**: 아래 표준 절차로 상태를 복원한 뒤 정확한 지점에서 재개한다(`harness/state.md` §세션 복원 · 094 §3.3.2 (4)):
+   ```
+   1. `~/.opal/tools/state-tool/run.sh show <task-path> --format json` 을 호출해
+      현재 단계·행 상태·current_status·next_action을 파악한다 (SSOT: state.json).
+   2. `tasks/{NNN}-oppd-{프로젝트명}/STATE.md`(저널)를 Read하여 의사결정 로그·블로커·검증 루프
+      기재 등 도구가 담지 못하는 서술 맥락을 보완한다.
+   ```
+   1단계(`show`)가 기계 상태의 유일 근거이며, 2단계(STATE.md Read)는 서술 맥락 보완 전용이다 — STATE.md에서 Phase·상태를 읽어 판단하지 않는다.
 3. **미존재**: 사전 조건 체크부터 시작한다
 
 ---
@@ -582,11 +589,8 @@ PM 검수 로그에서 **반복 패턴**이 감지되면 PM 개선 루프로 승
 # STATE: {프로젝트명} 개발 파일럿
 
 > 최종 갱신: YYYY-MM-DD HH:mm
-
-## 현재 상태
-- 스킬: //oppd
-- Phase: {1-PLAN(PRD/TRD) / 2-WBS / 3-EXECUTE}
-- 상태: {진행 중 / PM 검수 / 사용자 검토 대기 / 완료}
+> Phase·행 상태·`current_status`·다음 액션의 SSOT는 `state.json`입니다. 조회: `~/.opal/tools/state-tool/run.sh show <task-path>`
+> 아래 표(Phase 진행 현황·WBS 액션·병렬 실행 현황·검증 루프 로그·재설계 루프 로그·PM 검수 로그)는 state.json 파생이 아닌 oppd 고유 자유 기재이며, 도구가 담지 못하는 서술 정보를 담는 저널입니다(094 R-6).
 
 ## Phase 진행 현황
 | Phase | 방식 | 산출물 | 상태 |
@@ -824,3 +828,4 @@ opal-harness-agentic.md "에스컬레이션 조건" 공통 기준에 추가:
 | v5.3 | 2026-08-13 16:56 | pipeline.json 전환 + init 하드 실패 해소 — references/pipeline.json 신설(13 task-step, SSOT), 파이프라인 현황판 미러 표 13행 신설, --rows-from를 pipeline.json으로 교체하여 기존 skill_md_parse_error(header not found) 해소. `--wbs` 경로 서술을 실동작(`--force --note`) 기준으로 정정 — `mark --na`는 CLI에 미구현이며 TEST S-16에서 검출 (090) |
 | v5.4 | 2026-08-14 09:31 | SKILL.md 감량 — `--row N` 5건을 `--task-step <key>`로 전환(plan.user_confirm/wbs.user_confirm/execute.actions 고정 매핑 3건 + PM Gate 범용 안내문·동적 그룹 행 플레이스홀더 2건), 진행 현황 미러 표 13행 삭제 → `references/pipeline.json` 포인터 1줄로 교체, PM Gate 절차 블록쿼트에 게이트 정의 SSOT 포인터 1줄 추가(기존 판정 절차 산문은 존치) (091) |
 | v5.5 | 2026-08-15 21:48 | `--wbs` 옵션 설명에서 "조건부 행 자동 `na` 처리는 미구현… `na`는 현재 init 시점 agentic 사용자 확인 행에만 부여된다" 괄호 서술 삭제 — 사용자 확인 행이 전 모드 pending/PM으로 초기화되어 사실과 어긋남. CLOSE 진입 게이트 서술 불변 (093) |
+| v5.6 | 2026-08-16 13:31 | STATE.md 저널화 정합 — §세션 복원을 `STATE.md Read` 단일 절차에서 `show`(기계 상태) → `STATE.md Read`(서술 맥락 보완) 2단계 표준 절차로 교체(harness/state.md §세션 복원과 동일 문구). 자체 STATE.md 템플릿에서 `## 현재 상태`(state.json 파생) 삭제 + SSOT 포인터 2줄 추가 — 나머지 5종 표(Phase 진행 현황·WBS 액션·병렬 실행 현황·검증 루프 로그·재설계 루프 로그·PM 검수 로그)는 state.json 파생이 아닌 oppd 고유 자유 기재이므로 존치(094 R-6) |

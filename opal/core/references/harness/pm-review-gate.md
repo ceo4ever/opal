@@ -117,7 +117,7 @@ PM Gate는 별도 QA Gate 단계를 두지 않고, 문서 QA(요구사항→설�
 
 ### 자가 진단 (PM Gate 진입 전 체크)
 
-1. 파이프라인 현황판 행 상태가 state-tool로만 갱신되었는가 (LLM 직접 편집 0건)
+1. 파이프라인 행 상태가 `state-tool`로만 갱신되었는가 (`state.json` 직접 편집 0건)
 2. 각 Gate 직후 State Gate 행이 즉시 ✅ 처리되었는가
 3. CLOSE 진입 게이트 통과 확인 — CLOSE 단계 첫 행 mark 시 prev_user_row(owner=user, status=done)가 존재하는가
    - 미통과 시 도구가 `close_gate_violation`으로 거부함 — 사용자 확인 행 먼저 처리 필요
@@ -171,3 +171,4 @@ PM Gate 통과 후 해당 행을 state-tool로 단일 mark한다. State Gate 행
 | v1.7 | 2026-07-28 23:28 | 표준 검토 항목 8번 CLOSE 게이트 — `uncovered` 2분류(`newly_uncovered`/`pre_existing`) 반영: 게이트 기준을 "violations 0건"에서 "`counts.newly_uncovered` 0건"으로 명확화, `pre_existing`은 비차단 보고 항목(레거시 소급 부여는 discover/scaffold 몫)임을 명시 — Step 19 검증에서 자체 저장소 레거시 파일이 게이트를 막던 결함 재작업 (077) |
 | v1.8 | 2026-08-02 14:50 | 표준 검토 항목 8번 — 헤더 소스 단일화 반영: 2소스 판정을 전역 `headerSource` 1개 기준으로 재서술(스코프 단위 예외 서술 제거), 합산 커버리지 → 모드별 단일 소스 커버리지(`inline`은 인라인분만·`manifest`는 매니페스트분만), `header_source_unset` 거부 시 PM 최초 설정 후 재실행하는 미설정 대응 소절 신설(워커 결함으로 판정하지 않음) (080) |
 | v1.9 | 2026-08-02 16:03 | §워커 중단 시 산출물 실측 판정 절 신설 — ①`git status`로 산출물 확정 → ②PLAN §4.2 체크리스트 대조로 완료/잔여 판정 → ③잔여만 재배치([MUST] 완료분 덮어쓰기 금지) 3단계. 재시도 상한(`opal-harness.md` §1)·산출량 상한(`pm/dispatch-process.md` Step 6)은 참조만. 역할 라인에 신규 절 반영 및 고정 항목수 표기 제거 (081) |
+| v1.10 | 2026-08-16 13:22 | 자가 진단 1번 — "파이프라인 현황판 행 상태가 state-tool로만 갱신되었는가(LLM 직접 편집 0건)" → "파이프라인 행 상태가 `state-tool`로만 갱신되었는가(`state.json` 직접 편집 0건)" — STATE.md 저널 전환에 맞춘 표 전제 어구 제거 (094) |
