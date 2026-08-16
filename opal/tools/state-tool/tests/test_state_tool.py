@@ -3,7 +3,18 @@
   "module": "test_state_tool",
   "layer": "test",
   "domain": "opal-pipeline",
-  "description": "state-tool 단위 테스트 — 9개 명령 happy path + 23종 에러 코드 × 최소 1건 + G-5~G-15 시나리오. 005: TestClarificationGate 신설 — verify --clarification-check + TASK→다음단계 자동 훅 RED-first 케이스 ①~⑨ + 회귀 보호. 054: TestOwnerNamePlaceholder 신설 — note '{owner_name}' 플레이스홀더 identity.md write-time 치환 RED-first(S-1~S-7). 056: TestOpplSkillInit 신설 — `--skill oppl` enum 미등록 RED-first(S-020, H-1) — run.sh subprocess 실호출로 공개 인터페이스만 검증(mock 미사용). 070: task-step 키 주소 체계 도입 1차 RED-first — TestPipelineSpecValidate/TestPipelineJsonInit/TestStateSchema11Compat/TestTaskStepAddressing/TestActionStepRename/TestAddRowKey/TestOpddEnumDrift/TestGroupAPipelineSpecs/TestBackwardCompatAliases 9종 신설(TEST-SCENARIO.md S-1~S-14, PLAN §3.7.2) — 미구현 기능이므로 전부 FAIL 기대(RED 증거). 072: TestNextActionAutoDerive 신설 — STATE.md '다음 액션' 자동 파생 RED-first(TEST-SCENARIO.md S-1~S-4,S-6,S-7) — init next_action 영속화+schema optional 등록, advance/mark 프론티어 파생(pending '진입'/in_progress '진행 중'/전체완료 '태스크 완료'), 첫 줄만 치환(하위 자유기재 보존), --next-action 오버라이드 우선+비지속 복귀 — 공개 CLI 경로(직접 호출+run.sh subprocess)로만 검증, 미구현이므로 실패 기대(RED 증거). 074: TestImportPreservesKeys 신설 — `--import-existing` task-step key 유실 결함 RED-first(TEST-SCENARIO.md S-a~S-e) — force+import-existing 후 rows[].key 100% 보존, pipeline.json 폴백 복원, key 원천 전무 시 keyless+stderr 경고(하위호환), schema_version 1.1 유지, 동일 (stage,item) 중복 순서 소비 — 공개 cmd_init 호출 + 실 파일 I/O로만 검증, 수정 전 코드에서 FAIL 기대(RED 증거). 076: TestTodoMirror 신설 — build_todo_mirror 파생 규칙(TS-001~007): init create 페이로드·전부pending→pending·전부done→completed·advance/부분→in_progress·na 중립·블로커 in_progress 유지·영속 경계(state.json 미영속+schema validate 통과) — 공개 cmd_init/advance/mark/block ok() stdout 페이로드 캡처로만 검증. 088: TestCloseHistoryLink 신설(TS-1~TS-7) — CLOSE 마지막 행 mark 시 link_memory_history()가 <프로젝트루트>/.opal/MEMORY.json history에 행을 자동 생성(title/path/stage/result 파생값, date는 memory-tool KST 충전)·재mark 멱등(duplicate_skipped)·MEMORY.json 부재/손상 시 비차단(ok:true + skipped/failed)·비CLOSE 행 무발동 대조군·result 보강 리마인더 구성요소·state.json 영속 경계(schema validate 통과) — 공개 cmd_mark 호출 + 실 MEMORY.json 파일 내용으로만 검증(내부 함수 mock 없음, 블랙박스 결함 주입). 091(RED-first, mode:red, F-004 게이트 집행 배선): TestTaskStepGate 신설(TEST-SCENARIO S-10~S-17) — check_gate_artifacts()/build_gate_payload()가 아직 없어(Step 8 GREEN 이전) 실 pipeline.json(opd/opdw/opsdd) 기반 gate 정의를 state.json 행에 직접 주입하는 픽스처로 산출물 부재 차단(H-1)·부분 상태 변경 부재·checklist dict 페이로드(H-6)·gate 없는 행 무영향(H-2/H-3)·빈 artifacts 비차단(opdw 실사례)·--force --note 우회 의사결정 로그(H-5)·경로 이탈 토큰 거부(H-4)·glob 토큰 매칭(opsdd 실사례)을 검증(공개 cmd_mark 호출 + 실 state.json/STATE.md 파일 내용, mock 없음). TestPipelineSpecValidate에 gate violation 4종(spec_gate_type_invalid/spec_gate_missing_field/spec_gate_field_type_invalid/spec_gate_checklist_empty, S-9) 케이스 + 실 pipeline.json 10종 유효성 케이스 추가. TestErrorCodesCompleteness에 091 신규 5종 반영(39→44).",
+  "description": "state-tool 단위 테스트 — 9개 명령 happy path + 23종 에러 코드 × 최소 1건 + G-5~G-15 시나리오. 005: TestClarificationGate 신설 — verify --clarification-check + TASK→다음단계 자동 훅 RED-first 케이스 ①~⑨ + 회귀 보호. 054: TestOwnerNamePlaceholder 신설 — note '{owner_name}' 플레이스홀더 identity.md write-time 치환 RED-first(S-1~S-7). 056: TestOpplSkillInit 신설 — `--skill oppl` enum 미등록 RED-first(S-020, H-1) — run.sh subprocess 실호출로 공개 인터페이스만 검증(mock 미사용). 070: task-step 키 주소 체계 도입 1차 RED-first — TestPipelineSpecValidate/TestPipelineJsonInit/TestStateSchema11Compat/TestTaskStepAddressing/TestActionStepRename/TestAddRowKey/TestOpddEnumDrift/TestGroupAPipelineSpecs/TestBackwardCompatAliases 9종 신설(TEST-SCENARIO.md S-1~S-14, PLAN §3.7.2) — 미구현 기능이므로 전부 FAIL 기대(RED 증거). 072: TestNextActionAutoDerive 신설 — STATE.md '다음 액션' 자동 파생 RED-first(TEST-SCENARIO.md S-1~S-4,S-6,S-7) — init next_action 영속화+schema optional 등록, advance/mark 프론티어 파생(pending '진입'/in_progress '진행 중'/전체완료 '태스크 완료'), 첫 줄만 치환(하위 자유기재 보존), --next-action 오버라이드 우선+비지속 복귀 — 공개 CLI 경로(직접 호출+run.sh subprocess)로만 검증, 미구현이므로 실패 기대(RED 증거). 074: TestImportPreservesKeys 신설 — `--import-existing` task-step key 유실 결함 RED-first(TEST-SCENARIO.md S-a~S-e) — force+import-existing 후 rows[].key 100% 보존, pipeline.json 폴백 복원, key 원천 전무 시 keyless+stderr 경고(하위호환), schema_version 1.1 유지, 동일 (stage,item) 중복 순서 소비 — 공개 cmd_init 호출 + 실 파일 I/O로만 검증, 수정 전 코드에서 FAIL 기대(RED 증거). 076: TestTodoMirror 신설 — build_todo_mirror 파생 규칙(TS-001~007): init create 페이로드·전부pending→pending·전부done→completed·advance/부분→in_progress·na 중립·블로커 in_progress 유지·영속 경계(state.json 미영속+schema validate 통과) — 공개 cmd_init/advance/mark/block ok() stdout 페이로드 캡처로만 검증. 088: TestCloseHistoryLink 신설(TS-1~TS-7) — CLOSE 마지막 행 mark 시 link_memory_history()가 <프로젝트루트>/.opal/MEMORY.json history에 행을 자동 생성(title/path/stage/result 파생값, date는 memory-tool KST 충전)·재mark 멱등(duplicate_skipped)·MEMORY.json 부재/손상 시 비차단(ok:true + skipped/failed)·비CLOSE 행 무발동 대조군·result 보강 리마인더 구성요소·state.json 영속 경계(schema validate 통과) — 공개 cmd_mark 호출 + 실 MEMORY.json 파일 내용으로만 검증(내부 함수 mock 없음, 블랙박스 결함 주입). 091(RED-first, mode:red, F-004 게이트 집행 배선): TestTaskStepGate 신설(TEST-SCENARIO S-10~S-17) — check_gate_artifacts()/build_gate_payload()가 아직 없어(Step 8 GREEN 이전) 실 pipeline.json(opd/opdw/opsdd) 기반 gate 정의를 state.json 행에 직접 주입하는 픽스처로 산출물 부재 차단(H-1)·부분 상태 변경 부재·checklist dict 페이로드(H-6)·gate 없는 행 무영향(H-2/H-3)·빈 artifacts 비차단(opdw 실사례)·--force --note 우회 의사결정 로그(H-5)·경로 이탈 토큰 거부(H-4)·glob 토큰 매칭(opsdd 실사례)을 검증(공개 cmd_mark 호출 + 실 state.json/STATE.md 파일 내용, mock 없음). TestPipelineSpecValidate에 gate violation 4종(spec_gate_type_invalid/spec_gate_missing_field/spec_gate_field_type_invalid/spec_gate_checklist_empty, S-9) 케이스 + 실 pipeline.json 10종 유효성 케이스 추가. TestErrorCodesCompleteness에 091 신규 5종 반영(39→44). 094 Step 0(RED-first, mode:red,\
+ F-001/F-002/F-003 저널화): TestJournalResilience/TestLegacyCoexistence/TestShowAsQueryStandard\
+ 3종 신설(TEST-SCENARIO.md S-4,S-5,S-30,S-32 / S-29,S-11 / S-10,S-24,S-25) + 기존 클래스\
+ (TestInit/TestAdvance/TestG14G15DecisionLog/TestBasicScenarios/TestValidate/\
+TestErrorCodesCompleteness/TestPipelineJsonInit)에 S-1,S-2,S-3,S-6,S-7,S-8,S-9,S-21,S-22,S-23\
+ 추가 — STATE.md 파생 섹션(마커/파이프라인 표/`## 현재 상태`/`## 다음 액션`) 완전 제거 후 저널\
+(의사결정 로그+블로커) 재정의, 마커 하드 게이트·`--import-existing` 제거, `show` 렌더 원천\
+ state.json 단일화(레거시 배너 극성 반전)를 검증한다 — 전부 미구현이므로 FAIL 기대(RED 증거).\
+ 레거시 사본 조작은 tasks/093-*/를 tmp_path로 복사한 사본에 한정하고 원본은 read-only(소급\
+ 변경 금지). 공개 인터페이스(run.sh subprocess, stdout JSON + exit code) + 실 파일 I/O로만\
+ 검증, mock/patch/MagicMock 미사용(red-first.md §4). 구현(op-be-agent)과 작성자(opal-test-agent)\
+ 분리.",
   "exports": [
     "TestInit", "TestShow", "TestAdvance", "TestMark",
     "TestBlock", "TestValidate", "TestAddRow", "TestStatus", "TestGatePass",
@@ -13,7 +24,8 @@
     "TestTaskStepAddressing", "TestActionStepRename", "TestAddRowKey",
     "TestOpddEnumDrift", "TestGroupAPipelineSpecs", "TestBackwardCompatAliases",
     "TestNextActionAutoDerive", "TestImportPreservesKeys", "TestTodoMirror",
-    "TestCloseHistoryLink", "TestTaskStepGate"
+    "TestCloseHistoryLink", "TestTaskStepGate",
+    "TestJournalResilience", "TestLegacyCoexistence", "TestShowAsQueryStandard"
   ]
 }
 
@@ -29,6 +41,7 @@
 import json
 import os
 import pathlib
+import re
 import shutil
 import subprocess
 import sys
@@ -44,6 +57,46 @@ import state_tool as ST
 
 # 056: TestOpplSkillInit용 — run.sh 공개 인터페이스 subprocess 실호출 (mock 금지, red-first.md §4)
 _RUN_SH = _TOOL_DIR / "run.sh"
+
+
+def _run094(args_list):
+    """094: run.sh 공개 인터페이스 subprocess 실호출 → (returncode, stdout_str, stderr_str, parsed_json).
+    [MUST] red-first.md §4: 공개 인터페이스(stdout/exit code)만 관찰 — mock/patch/MagicMock 금지.
+    STATE.md 저널화(094) RED 테스트 전용 — TestJournalResilience/TestLegacyCoexistence/
+    TestShowAsQueryStandard 및 기존 클래스 추가분(S-1~S-32)이 공유한다."""
+    cmd = ["bash", str(_RUN_SH)] + args_list
+    result = subprocess.run(cmd, capture_output=True, text=True)
+    stdout = result.stdout.strip()
+    try:
+        data = json.loads(stdout) if stdout else {}
+    except json.JSONDecodeError:
+        data = {"_raw": stdout}
+    return result.returncode, stdout, result.stderr, data
+
+
+# 094: opd pipeline.json 실 스펙 경로 — TEST-SCENARIO.md §2.1 "pipeline 스펙" 실 파일 자산.
+# task.task_md 등 gate 필드 없는 순수 행이 다수라 mark/advance/block 회귀 시나리오에 적합하다.
+_OPD_REAL_PIPELINE_JSON = _TOOL_DIR.parent.parent / "skills" / "opal-pilot-dev" / "references" / "pipeline.json"
+
+
+def _extract_md_section(md, heading):
+    """094: `## {heading}` 섹션 본문(다음 `## ` 헤딩 직전까지)을 반환. 없으면 "".
+    파이프라인 현황판 표와 의사결정 로그 표가 동일한 '| N | ... |' 행 형태를
+    공유하므로, 행 수 계산은 반드시 이 헬퍼로 섹션을 먼저 격리한 뒤 수행한다
+    (그렇지 않으면 파이프라인 표 행까지 오카운트된다)."""
+    m = re.search(rf"^## {re.escape(heading)}\n", md, re.MULTILINE)
+    if not m:
+        return ""
+    start = m.end()
+    nxt = re.search(r"^## ", md[start:], re.MULTILINE)
+    end = start + nxt.start() if nxt else len(md)
+    return md[start:end]
+
+
+def _decision_log_row_numbers(md):
+    """094: '## 의사결정 로그' 표의 '#' 컬럼 값 목록을 등장 순서대로 반환."""
+    section = _extract_md_section(md, "의사결정 로그")
+    return re.findall(r"^\|\s*(\d+)\s*\|", section, re.MULTILINE)
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 테스트 공통 픽스처 / 헬퍼
@@ -270,25 +323,40 @@ class TestInit(BaseTestCase):
         self.assertEqual(len(state["rows"]), 20)  # SAMPLE_ROWS_SPEC = 20행
 
     def test_init_creates_state_md(self):
-        """init: STATE.md 파일 생성 및 마커 포함 확인 (PLAN §2.11 G-8, T-6)"""
+        """[T094 수정] init: STATE.md 저널 산출물(의사결정 로그·블로커) 생성 확인
+        (D-1 완전 제거 — 마커/파이프라인 표/'## 현재 상태'는 더 이상 생성되지
+        않는다. 검증 지점을 파생 표/마커 존재에서 저널 골격 존재로 이동한다.
+        PLAN §3.1.2 (1), TEST-SCENARIO S-1)."""
         self._init()
         md = self._md()
-        self.assertIn("<!-- pipeline:start -->", md)
-        self.assertIn("<!-- pipeline:end -->", md)
-        self.assertIn("## 현재 상태", md)
+        self.assertIn("## 의사결정 로그", md, "저널 골격 '## 의사결정 로그'가 생성되지 않음")
+        self.assertIn("| # | 시점 | 결정 | 근거 |", md, "의사결정 로그 빈 표 헤더가 없음")
+        self.assertIn("## 블로커", md, "저널 골격 '## 블로커'가 생성되지 않음")
+        self.assertIn("없음", md)
+        # D-1 완전 제거 — 파생 4패턴은 신규 저널에 0건이어야 함(회귀 가드)
+        self.assertNotIn("<!-- pipeline:start -->", md, "마커가 잔존함(D-1 위반)")
+        self.assertNotIn("<!-- pipeline:end -->", md, "마커가 잔존함(D-1 위반)")
+        self.assertNotIn("## 현재 상태", md, "'## 현재 상태' 섹션이 잔존함(D-1 위반)")
+        self.assertNotIn("## 다음 액션", md, "'## 다음 액션' 섹션이 잔존함(D-1 위반)")
 
     def test_init_g8_free_text_sections(self):
-        """G-8: init이 자유 텍스트 3개 섹션을 정확히 생성 (PLAN §2.11 G-8)"""
+        """[T094 수정] init이 저널 2섹션(의사결정 로그·블로커)을 정확히 생성한다
+        (D-1 — '## 다음 액션' 섹션은 완전 제거되어 더 이상 렌더되지 않는다.
+        `next_action` 값은 state.json 필드로만 영속화되므로 검증 지점을
+        state.json으로 이동한다. PLAN §3.1.2 (1))."""
         self._init(next_action="테스트 다음 액션")
         md = self._md()
-        # 3개 자유 텍스트 섹션 존재 확인
+        # 저널 2개 섹션 존재 확인
         self.assertIn("## 의사결정 로그", md)
         self.assertIn("## 블로커", md)
         self.assertIn("없음", md)
-        self.assertIn("## 다음 액션", md)
-        self.assertIn("테스트 다음 액션", md)
         # 의사결정 로그 빈 표 헤더
         self.assertIn("| # | 시점 | 결정 | 근거 |", md)
+        # '## 다음 액션'은 D-1로 완전 제거됨 — state.json 필드로만 확인(정보 손실 0)
+        self.assertNotIn("## 다음 액션", md, "'## 다음 액션' 섹션이 잔존함(D-1 위반)")
+        state = self._state()
+        self.assertEqual(state.get("next_action"), "테스트 다음 액션",
+                         "next_action 값이 state.json에 정상 영속화되어야 함(정보 손실 0)")
 
     def test_init_agentic_auto_na_user_confirmation(self):
         """init agentic: 사용자 확인 행(CLOSE 제외) auto-na 처리 (PLAN §2.20.1)"""
@@ -316,6 +384,102 @@ class TestInit(BaseTestCase):
             self.assertEqual(row["status"], "pending")
             self.assertEqual(row["status_label"], "⬜")
             self.assertIsNone(row["timestamp"])
+
+    # ─────────────────────────────────────────────────────────────────────
+    # 094 RED-first 추가 — TEST-SCENARIO.md S-1, S-9 (PLAN §3.1.2/§3.2.2)
+    # [MUST] red-first.md §4: 공개 인터페이스(run.sh subprocess, stdout JSON +
+    # exit code) + 실 파일 내용으로만 검증 — mock/patch/MagicMock 금지.
+    # ─────────────────────────────────────────────────────────────────────
+
+    def test_s1_new_journal_has_zero_derived_artifacts(self):
+        """[T094/L1-F001] S-1 — 빈 태스크 폴더에서
+        `init --skill opd --mode agentic --rows-from <pipeline.json>` 실행 시,
+        산출 STATE.md 본문에 파생 4패턴(`pipeline:start` 마커 / 파이프라인 표
+        헤더 `| # | 단계 | 항목 |` / `## 현재 상태` / `## 다음 액션`)이 각각
+        0건이어야 한다(PLAN §3.1.2 (1) 저널 템플릿, D-1 완전 제거).
+
+        RED 근거: 현재 `_build_new_state_md`는 여전히 `<!-- pipeline:start -->`
+        마커·파이프라인 표·`## 현재 상태`·`## 다음 액션` 4블록을 전부 생성하므로
+        (state_tool.py:1317-1346), 아래 4개 assertEqual(count, 0)이 전부 실패한다."""
+        self.assertTrue(_OPD_REAL_PIPELINE_JSON.exists(),
+                        f"opd pipeline.json 실 스펙 부재: {_OPD_REAL_PIPELINE_JSON}")
+        task_path = self.tmpdir / "094-s1-new-journal"
+        task_path.mkdir()
+        code, stdout, stderr, data = _run094([
+            "init", str(task_path),
+            "--skill", "opd", "--mode", "agentic",
+            "--rows-from", str(_OPD_REAL_PIPELINE_JSON),
+        ])
+        self.assertEqual(code, 0, f"init 실패: stdout={stdout!r} stderr={stderr!r}")
+        self.assertTrue(data.get("ok"))
+
+        md = (task_path / "STATE.md").read_text(encoding="utf-8")
+        self.assertEqual(md.count("pipeline:start"), 0,
+                         "신규 저널에 pipeline:start 마커가 잔존함(D-1 위반)")
+        self.assertEqual(md.count("| # | 단계 | 항목 |"), 0,
+                         "신규 저널에 파이프라인 현황판 표 헤더가 잔존함(D-1 위반)")
+        self.assertEqual(md.count("## 현재 상태"), 0,
+                         "신규 저널에 '## 현재 상태' 섹션이 잔존함(D-1 위반)")
+        self.assertEqual(md.count("## 다음 액션"), 0,
+                         "신규 저널에 '## 다음 액션' 섹션이 잔존함(D-1 완전 제거 결정)")
+
+    def test_s9_import_existing_removed_rejected(self):
+        """[T094/L2-F002] S-9 — `init --import-existing` 명시적 거부(D-2).
+
+        기대: `{"ok":false,"error":"import_existing_removed",...}` 단일 라인 JSON +
+        exit 1 (argparse usage 에러인 exit 2가 아님). RED 근거: 현재 `cmd_init`은
+        `--import-existing`을 여전히 정상 처리(마커 파싱·재삽입)하므로 이 에러
+        코드 자체가 ERROR_CODES에 없어 어서션이 실패한다(state_tool.py:1177-1206)."""
+        task_path = self.tmpdir / "094-s9-import-rejected"
+        task_path.mkdir()
+        code, stdout, stderr, data = _run094([
+            "init", str(task_path),
+            "--skill", "opd", "--mode", "agentic",
+            "--import-existing",
+        ])
+        self.assertEqual(code, 1,
+                         f"--import-existing은 exit 1(명시적 에러)이어야 한다 — 실제: "
+                         f"code={code}, stdout={stdout!r}, stderr={stderr!r}")
+        self.assertEqual(len(stdout.splitlines()), 1,
+                         "stdout은 단일 라인 JSON이어야 한다(usage 에러 다중 라인 아님)")
+        self.assertFalse(data.get("ok"))
+        self.assertEqual(data.get("error"), "import_existing_removed")
+
+    def test_s9_no_framework_call_sites_reference_import_existing(self):
+        """[T094/L2-F002] S-9 부속 — `opal/`·`docs/`·`.opal/` 전역(현재시제
+        본문, `## 변경이력` 섹션 제외)에서 `--import-existing` 문자열 참조가
+        0건이어야 한다(H-7, 치환 규격 #11). changelog 섹션은 과거 이력이므로
+        소급 변경 금지 대상이라 검사 범위에서 제외한다(치환 규격 #12).
+
+        RED 근거: 개정 전 `README.md`(§2.2.3 실측: `:51,:58,:284,:287`)에
+        `--import-existing` 사용 안내가 아직 남아 있어 현재시제 본문 참조가
+        0을 초과한다."""
+        project_root = _TOOL_DIR.parent.parent.parent  # .../opal (worktree)
+        hits = []
+        for base in ("opal", "docs", ".opal"):
+            base_dir = project_root / base
+            if not base_dir.exists():
+                continue
+            for path in base_dir.rglob("*.md"):
+                # PLAN §2.4.1 "개정 제외 확정" — (D) 074 히스토리 fixture 문자열은
+                # 검사 대상에서 제외한다(오탐, 소급 변경 금지 대상 아님).
+                if ("backup" in path.parts or "tasks" in path.parts
+                        or "fixtures" in path.parts):
+                    continue
+                try:
+                    text = path.read_text(encoding="utf-8", errors="ignore")
+                except OSError:
+                    continue
+                changelog_start = text.find("## 변경이력")
+                body = text[:changelog_start] if changelog_start != -1 else text
+                body_line_count = len(body.splitlines())
+                for lineno, line in enumerate(text.splitlines(), start=1):
+                    if lineno > body_line_count:
+                        break  # 변경이력 섹션 진입 — 과거 이력이므로 검사 제외
+                    if "--import-existing" in line:
+                        hits.append(f"{path.relative_to(project_root)}:{lineno}: {line.strip()}")
+        self.assertEqual(hits, [],
+                         f"--import-existing 참조가 현재시제 본문에 잔존함(H-7): {hits}")
 
 
 class TestShow(BaseTestCase):
@@ -346,24 +510,15 @@ class TestShow(BaseTestCase):
         self.assertEqual(result["data"]["skill"], "opp")
 
     def test_show_full_happy_path(self):
-        """show --format full: STATE.md 전체 본문 출력 (PLAN §2.14 G-11)"""
+        """[T094 수정] show --format full: STATE.md 전체 본문 출력 (PLAN §2.14
+        G-11). '## 현재 상태'는 D-1로 완전 제거되었으므로, 신규 저널이 실제로
+        갖는 골격(제목·의사결정 로그)으로 검증 지점을 이동한다."""
         result = self._show("full")
         self.assertTrue(result["ok"])
         self.assertEqual(result["format"], "full")
         self.assertIn("content", result)
-        self.assertIn("## 현재 상태", result["content"])
-
-    def test_show_md_marker_missing_fallback(self):
-        """G-11: 마커 손실 시 show md fallback — 헤더 명시 + json rows 재구성 (PLAN §2.14 G-11)"""
-        # 마커 제거
-        md = self._md()
-        md_no_marker = md.replace("<!-- pipeline:start -->", "").replace("<!-- pipeline:end -->", "")
-        (self.task_path / "STATE.md").write_text(md_no_marker)
-
-        result = self._show("md")
-        self.assertTrue(result["ok"])
-        self.assertFalse(result.get("marker_present", True))
-        self.assertIn("fallback", result.get("content", ""))
+        self.assertIn("# STATE:", result["content"])
+        self.assertIn("## 의사결정 로그", result["content"])
 
     def test_show_json_marker_missing_marker_present_false(self):
         """G-11: 마커 손실 시 show json → marker_present=false (PLAN §2.14 G-11)"""
@@ -372,14 +527,6 @@ class TestShow(BaseTestCase):
         (self.task_path / "STATE.md").write_text(md_no_marker)
         result = self._show("json")
         self.assertFalse(result.get("marker_present", True))
-
-    def test_show_full_marker_missing_warning_prepend(self):
-        """G-11: 마커 손실 시 show full → WARNING 주석 prepend (PLAN §2.14 G-11)"""
-        md = self._md()
-        md_no_marker = md.replace("<!-- pipeline:start -->", "").replace("<!-- pipeline:end -->", "")
-        (self.task_path / "STATE.md").write_text(md_no_marker)
-        result = self._show("full")
-        self.assertIn("WARNING", result.get("content", ""))
 
 
 class TestAdvance(BaseTestCase):
@@ -404,10 +551,60 @@ class TestAdvance(BaseTestCase):
         self.assertIn("> 최종 갱신: 2026-05-01 23:00", md)
 
     def test_advance_g6_progress_updated(self):
-        """G-6: advance 후 '## 현재 상태' - 진행: 라인 갱신 (PLAN §2.11 G-6)"""
+        """[T094 수정] G-6: advance 후 진행 상태 갱신 (PLAN §2.11 G-6).
+        '## 현재 상태' 섹션은 D-1로 STATE.md에서 완전 제거되었다 — 동일 정보는
+        `state.json.next_action`(프론티어 파생)으로 이동했으므로 검증 지점을
+        옮긴다(정보 손실 0, `_derive_next_action` in_progress 분기)."""
         self._advance(1)
-        md = self._md()
-        self.assertIn("- 진행: TASK 단계", md)
+        state = self._state()
+        self.assertEqual(state["rows"][0]["status"], "in_progress")
+        self.assertEqual(state.get("next_action"), "TASK 작업 진행 중",
+                         "advance 후 next_action이 진행 중 프론티어로 파생되지 않음")
+
+    def test_s21_header_timestamp_updates_after_journal_refactor(self):
+        """[T094/L1-F001] S-21 — `> 최종 갱신:` 헤더 존치 회귀(D-3).
+
+        저널 축소판(§3.1.2 (3))에서도 `update_state_md_header`가 계속 호출되어
+        `advance`/`mark` 후 헤더 타임스탬프가 실제 호출 시각으로 갱신되어야
+        한다. 실 date.js 호출로 [before, after] 시각 창을 잡고, advance 직후
+        헤더 타임스탬프가 그 창 안에 들어오는지로 검증한다(mock 없이 real-time
+        경계 비교 — 분 단위 우연 불일치를 피한다).
+
+        RED 근거: 이 자체는 D-3 존치 대상이라 현재 코드에서도 통과할 수 있으나,
+        S-1(§3.1.2 (1) 템플릿 재작성)이 먼저 깨지면 STATE.md 형식이 달라져
+        헤더 정규식 위치를 흔들 수 있으므로 회귀 안전망으로 유지한다(기존
+        test_advance_g5_header_updated 4건과 함께 D-3 이중 보호)."""
+        self.assertTrue(_OPD_REAL_PIPELINE_JSON.exists())
+        task_path = self.tmpdir / "094-s21-header"
+        task_path.mkdir()
+        code, stdout, stderr, data = _run094([
+            "init", str(task_path), "--skill", "opd", "--mode", "agentic",
+            "--rows-from", str(_OPD_REAL_PIPELINE_JSON),
+        ])
+        self.assertEqual(code, 0, f"init 실패: {stdout!r} {stderr!r}")
+
+        before = subprocess.run(
+            ["node", os.path.expanduser("~/.opal/tools/date/date.js"), "datetime"],
+            capture_output=True, text=True, timeout=10,
+        ).stdout.strip()
+
+        code, stdout, stderr, data = _run094([
+            "advance", str(task_path), "--task-step", "task.task_md",
+        ])
+        self.assertEqual(code, 0, f"advance 실패: {stdout!r} {stderr!r}")
+
+        after = subprocess.run(
+            ["node", os.path.expanduser("~/.opal/tools/date/date.js"), "datetime"],
+            capture_output=True, text=True, timeout=10,
+        ).stdout.strip()
+
+        md = (task_path / "STATE.md").read_text(encoding="utf-8")
+        m = re.search(r"^> 최종 갱신: (.+)$", md, re.MULTILINE)
+        self.assertIsNotNone(m, "'> 최종 갱신:' 헤더 라인이 STATE.md에 없음(D-3 위반)")
+        header_ts = m.group(1).strip()
+        self.assertTrue(before <= header_ts <= after,
+                       f"헤더 타임스탬프({header_ts!r})가 advance 호출 시각 창"
+                       f"[{before!r}, {after!r}] 밖에 있음 — 헤더 갱신 누락 의심")
 
 
 class TestMark(BaseTestCase):
@@ -432,13 +629,11 @@ class TestMark(BaseTestCase):
         self.assertIn("> 최종 갱신: 2026-05-01 23:00", md)
 
     def test_mark_close_last_row_status_done(self):
-        """G-6: CLOSE 마지막 State Gate mark → current_status=done, '- 상태: 완료' (PLAN §2.11 G-6)"""
-        # SIMPLE_ROWS_SPEC: row4 = CLOSE/State Gate
-        # 먼저 사용자 확인 행(row3)을 user로 mark해야 close gate 통과
-        self._mark(3, owner="user")  # EXECUTE/작업 → user mark (close gate 위해)
-        # 실제로 CLOSE 첫 행 전에 사용자 확인 행을 owner=user로 처리
-        # SIMPLE_ROWS_SPEC에서 row3=EXECUTE/작업은 사용자 확인이 아님
-        # 최소 사양의 rows로 재init
+        """[T094 수정] G-6: CLOSE 마지막 행 mark → current_status=done (PLAN §2.11
+        G-6). '- 상태: 완료' STATE.md 렌더는 D-1로 제거되었다 — 동일 정보는
+        `state.json.current_status`(기존에도 검증하던 필드)로 충분히 커버되므로
+        MD 렌더 확인만 제거한다(정보 손실 0, 조회 경로는 `show --format md`의
+        `STATUS_TEXT` 매핑으로 이관 — TestShowAsQueryStandard가 별도 검증)."""
         rows = json.dumps([
             {"stage": "TASK", "item": "사용자 확인"},
             {"stage": "CLOSE", "item": "State Gate"},
@@ -448,8 +643,6 @@ class TestMark(BaseTestCase):
         self._mark(2)  # CLOSE State Gate → done
         state = self._state()
         self.assertEqual(state["current_status"], "done")
-        md = self._md()
-        self.assertIn("- 상태: 완료", md)
 
     def test_mark_auto_pass_owner_auto(self):
         """G-12: mark --auto-pass → owner=auto 자동 저장 (PLAN §2.15 G-12)"""
@@ -475,13 +668,19 @@ class TestMark(BaseTestCase):
         self.assertEqual(state["rows"][2]["status"], "done")
 
     def test_mark_as_worker_with_step_progress(self):
-        """G-6: mark --as-worker --step N/M → '- 진행: Step N/M 완료' (PLAN §2.11 G-6)"""
+        """[T094 수정] G-6: mark --as-worker --step N/M → 진행률 영속화 (PLAN
+        §2.11 G-6). '- 진행: Step N/M 완료' STATE.md 렌더는 D-1로 제거되었다 —
+        동일 정보는 `state.json.rows[].step` 필드로 이미 영속화되므로(017,
+        state_tool.py 조기 done 가드) 검증 지점을 그쪽으로 이동한다(정보 손실 0)."""
         # prior_stage_only guard: EXECUTE 대상 행은 앞 단계(TASK·PLAN)가 완료여야 통과
         self._mark(1)  # TASK 완료
         self._mark(2)  # PLAN 완료
         self._mark(3, as_worker=True, worker_stage="EXECUTE", step="2/5")
-        md = self._md()
-        self.assertIn("- 진행: Step 2/5 완료", md)
+        state = self._state()
+        self.assertEqual(state["rows"][2].get("step"), "2/5",
+                         "Step 진행률이 state.json rows[].step에 영속화되지 않음")
+        self.assertEqual(state["rows"][2]["status"], "in_progress",
+                         "N<M(2/5)은 조기 done 없이 in_progress로 유지되어야 함")
 
 
 class TestBlock(BaseTestCase):
@@ -508,10 +707,17 @@ class TestBlock(BaseTestCase):
         self.assertIn("> 최종 갱신: 2026-05-01 23:00", md)
 
     def test_block_g6_status_blocker(self):
-        """G-6: block 후 '- 상태: 블로커' (PLAN §2.11 G-6)"""
+        """[T094 수정] G-6: block 후 상태가 블로커로 갱신 (PLAN §2.11 G-6).
+        '- 상태:' STATE.md 렌더는 D-1로 제거되었다 — 조회 경로가
+        `show --format md`의 `STATUS_TEXT` 매핑으로 이관되었으므로(R-5 AC(b))
+        검증 지점을 그쪽으로 이동한다(정보 손실 0)."""
         self._block(1)
-        md = self._md()
-        self.assertIn("- 상태: 블로커", md)
+        state = self._state()
+        self.assertEqual(state["current_status"], "blocked")
+        args = make_args(task_path=str(self.task_path), format="md")
+        _, result = self._call_cmd(ST.cmd_show, args)
+        self.assertIn("- 상태: 블로커", result.get("content", ""),
+                     "show --format md가 블로커 상태 텍스트를 반영하지 않음")
 
 
 class TestValidate(BaseTestCase):
@@ -532,6 +738,25 @@ class TestValidate(BaseTestCase):
         result = self._validate()
         self.assertIn("violations", result)
         self.assertIsInstance(result["violations"], list)
+
+    def test_s8_validate_no_marker_missing_violation(self):
+        """[T094/L1-F002] S-8 — 마커 없는 STATE.md에서 `validate` 실행 시
+        `violations[]`에 `marker_missing` 항목이 0건이어야 한다(R-3 AC(a),
+        `cmd_validate` 마커 검사 블록 삭제, state_tool.py:1734-1740).
+
+        RED 근거: 현재 `cmd_validate`는 `md and not (마커 존재)`일 때
+        `violations`에 `{"code": "marker_missing", ...}`를 추가하므로, 마커를
+        제거한 STATE.md에서 이 어서션이 실패한다."""
+        md = self._md()
+        md_no_marker = (md.replace("<!-- pipeline:start -->", "")
+                           .replace("<!-- pipeline:end -->", ""))
+        (self.task_path / "STATE.md").write_text(md_no_marker, encoding="utf-8")
+        result = self._validate()
+        marker_violations = [v for v in result.get("violations", [])
+                             if v.get("code") == "marker_missing"]
+        self.assertEqual(marker_violations, [],
+                         f"validate가 marker_missing 위반을 여전히 보고함(R-3 위반): "
+                         f"{marker_violations}")
 
 
 class TestAddRow(BaseTestCase):
@@ -577,13 +802,20 @@ class TestAddRow(BaseTestCase):
         self.assertIn("> 최종 갱신: 2026-05-01 23:00", md)
 
     def test_add_row_g6_status_additional_work(self):
-        """G-6: add-row(done→additional_work) 후 '- 상태: 추가작업중' (PLAN §2.11 G-6)"""
+        """[T094 수정] G-6: add-row(done→additional_work) 후 상태 갱신 (PLAN §2.11
+        G-6). '- 상태:' STATE.md 렌더는 D-1로 제거되었다 — 조회 경로가
+        `show --format md`의 `STATUS_TEXT` 매핑으로 이관되었으므로 검증 지점을
+        그쪽으로 이동한다(정보 손실 0)."""
         state = self._state()
         state["current_status"] = "done"
         ST.save_state_json(self.task_path, state)
         self._add_row(after=1, stage="CLOSE", item="추가")
-        md = self._md()
-        self.assertIn("- 상태: 추가작업중", md)
+        state = self._state()
+        self.assertEqual(state["current_status"], "additional_work")
+        args = make_args(task_path=str(self.task_path), format="md")
+        _, result = self._call_cmd(ST.cmd_show, args)
+        self.assertIn("- 상태: 추가작업중", result.get("content", ""),
+                     "show --format md가 추가작업중 상태 텍스트를 반영하지 않음")
 
     def test_add_row_decision_log_appended(self):
         """G-14/G-15: add-row 후 의사결정 로그 자동 기재 (PLAN §2.17 트리거 #5)"""
@@ -633,10 +865,16 @@ class TestStatus(BaseTestCase):
         self.assertIn("current_status changed:", md)
 
     def test_status_g6_status_text_updated(self):
-        """G-6: status --set 후 '- 상태:' 라인 갱신 (PLAN §2.11 G-6)"""
+        """[T094 수정] G-6: status --set 후 상태 텍스트 갱신 (PLAN §2.11 G-6).
+        '- 상태:' STATE.md 렌더는 D-1로 제거되었다 — 조회 경로가
+        `show --format md`의 `STATUS_TEXT` 매핑으로 이관되었으므로 검증 지점을
+        그쪽으로 이동한다(정보 손실 0)."""
         self._status_set("blocked")
-        md = self._md()
-        self.assertIn("- 상태: 블로커", md)
+        self.assertEqual(self._state()["current_status"], "blocked")
+        args = make_args(task_path=str(self.task_path), format="md")
+        _, result = self._call_cmd(ST.cmd_show, args)
+        self.assertIn("- 상태: 블로커", result.get("content", ""),
+                     "show --format md가 블로커 상태 텍스트를 반영하지 않음")
 
 
 class TestGatePass(BaseTestCase):
@@ -707,19 +945,11 @@ class TestErrorCodes(BaseTestCase):
             code = self._err_code(ST.cmd_mark, args)
         self.assertEqual(code, "worker_scope_violation")
 
-    # ── E-2: marker_missing ───────────────────────────────────────────────────
-    def test_marker_missing(self):
-        """#2 marker_missing: STATE.md 마커 누락 시 갱신 명령 거부 (PLAN §2.18 #2, T-6)"""
-        self._init(rows_spec=SIMPLE_ROWS_SPEC)
-        # 마커 제거
-        md = self._md()
-        (self.task_path / "STATE.md").write_text(
-            md.replace("<!-- pipeline:start -->", "REMOVED").replace("<!-- pipeline:end -->", "REMOVED")
-        )
-        with _mock_now():
-            args = make_args(task_path=str(self.task_path), row=1, done=True)
-            code = self._err_code(ST.cmd_mark, args)
-        self.assertEqual(code, "marker_missing")
+    # ── E-2: marker_missing — [T094 삭제·D-2/R-3] 094 R-3으로 마커 하드 게이트
+    # 자체가 제거되어 `marker_missing` 에러 코드가 ERROR_CODES에서 소멸했다
+    # (state_tool.py:81-133 실측 43종 중 부재). 대체 회귀 커버리지는
+    # `TestBasicScenarios.test_s6_marker_gate_removed_three_corruption_cases`
+    # (마커 제거 상태에서 advance/mark가 ok:true를 반환함을 검증)가 담당한다.
 
     # ── E-3: already_initialized ─────────────────────────────────────────────
     def test_already_initialized_rejection(self):
@@ -743,20 +973,12 @@ class TestErrorCodes(BaseTestCase):
             exit_code, _ = self._call_cmd(ST.cmd_mark, args)
         self.assertEqual(exit_code, 2)
 
-    # ── E-5: import_failed ───────────────────────────────────────────────────
-    def test_import_failed(self):
-        """#5 import_failed: --import-existing 파싱 실패 (PLAN §2.18 #5, §2.5)"""
-        # 파싱 불가한 STATE.md 작성 (표 행 없음)
-        (self.task_path / "STATE.md").write_text("# STATE: 테스트\n빈 파일\n")
-        with _mock_now():
-            args = make_args(
-                task_path=str(self.task_path),
-                skill="opp", mode="interactive",
-                import_existing=True,
-            )
-            exit_code, result = self._call_cmd(ST.cmd_init, args)
-        self.assertEqual(exit_code, 1)
-        self.assertEqual(result.get("error"), "import_failed")
+    # ── E-5: import_failed — [T094 삭제·D-2/R-3] 094 D-2로 `--import-existing`
+    # 파싱 분기(`parse_existing_state_md` 등) 자체가 삭제되어 `import_failed`
+    # 에러 코드의 유일 발생점이 소멸했다(ERROR_CODES 실측 43종 중 부재).
+    # 대체 회귀 커버리지는 `TestInit.test_s9_import_existing_removed_rejected`
+    # (--import-existing 호출 시 `import_existing_removed` 단일 에러로 즉시
+    # 거부됨을 검증)가 담당한다.
 
     # ── E-6: invalid_status_transition ───────────────────────────────────────
     def test_invalid_status_transition(self):
@@ -1356,6 +1578,111 @@ class TestG14G15DecisionLog(BaseTestCase):
         state = self._state()
         self.assertIn("block: 테스트 블로커", state["rows"][0]["note"])
 
+    # ─────────────────────────────────────────────────────────────────────
+    # 094 RED-first 추가 — TEST-SCENARIO.md S-2, S-3 (PLAN §3.1.2, D-1/D-2)
+    # [MUST] 실 CLI subprocess(run.sh) + 실 파일 내용으로만 검증, mock 금지.
+    # ─────────────────────────────────────────────────────────────────────
+
+    def test_s2_journal_two_sections_survive_consecutive_updates(self):
+        """[T094/L1-F001] S-2 — S-1 산출 저널에 `advance` → `mark` → `block`을
+        연속 호출해도 `## 의사결정 로그`와 `## 블로커` 2섹션이 보존되어야 하고,
+        D-1이 제거하는 파생 4패턴(`pipeline:start`/표 헤더/`## 현재 상태`/
+        `## 다음 액션`)은 3회 호출 후에도 여전히 0건이어야 한다(재파생 금지).
+
+        RED 근거: 현재 `_build_new_state_md`가 4패턴을 그대로 생성하므로
+        마지막 4개 assertEqual(count, 0)이 init 직후부터 이미 실패한다."""
+        self.assertTrue(_OPD_REAL_PIPELINE_JSON.exists())
+        task_path = self.tmpdir / "094-s2-two-sections"
+        task_path.mkdir()
+        code, stdout, stderr, _ = _run094([
+            "init", str(task_path), "--skill", "opd", "--mode", "agentic",
+            "--rows-from", str(_OPD_REAL_PIPELINE_JSON),
+        ])
+        self.assertEqual(code, 0, f"init 실패: {stdout!r} {stderr!r}")
+
+        code, stdout, stderr, _ = _run094([
+            "advance", str(task_path), "--task-step", "task.task_md",
+        ])
+        self.assertEqual(code, 0, f"advance 실패: {stdout!r} {stderr!r}")
+
+        code, stdout, stderr, _ = _run094([
+            "mark", str(task_path), "--task-step", "task.task_md", "--done",
+        ])
+        self.assertEqual(code, 0, f"mark 실패: {stdout!r} {stderr!r}")
+
+        code, stdout, stderr, _ = _run094([
+            "block", str(task_path), "--task-step", "task.user_confirm",
+            "--reason", "테스트 블로커",
+        ])
+        self.assertEqual(code, 0, f"block 실패: {stdout!r} {stderr!r}")
+
+        md = (task_path / "STATE.md").read_text(encoding="utf-8")
+        self.assertIn("## 의사결정 로그", md,
+                     "3회 연속 갱신 후 '## 의사결정 로그' 표 헤더가 소실됨(H-1)")
+        self.assertIn("## 블로커", md,
+                     "3회 연속 갱신 후 '## 블로커' 섹션이 소실됨")
+        self.assertEqual(md.count("pipeline:start"), 0,
+                         "연속 갱신 중 pipeline:start 마커가 재파생됨(D-1 위반)")
+        self.assertEqual(md.count("## 현재 상태"), 0,
+                         "연속 갱신 중 '## 현재 상태' 섹션이 재파생됨(D-1 위반)")
+        self.assertEqual(md.count("## 다음 액션"), 0,
+                         "연속 갱신 중 '## 다음 액션' 섹션이 재파생됨(D-1 위반)")
+
+    def test_s3_decision_log_accumulates_without_loss(self):
+        """[T094/L1-F001] S-3 — 로그 1행이 이미 있는 저널에 후속
+        `mark --auto-pass --note '두번째'`를 호출하면 표 행이 +1(총 2행)되어야
+        하고, 기존 1행이 원문 그대로 보존되며, `#` 컬럼이 1·2로 연속되어야
+        한다(§3.1.2 (6) `append_decision_log` 행 수 계산 보강 — 오프바이원 수정).
+
+        [PM 판정 정정 2026-08-16] 최초 작성 시 관찰 대상을 `mark --force --note`
+        (비워커·비게이트)로 삼았으나, 실측 결과 이 경로는 `decision`을 전혀
+        세팅하지 않는 트리거 3종(auto-pass/worker-force/gate-force) 밖의
+        존재하지 않는 트리거였다(state_tool.py:1615-1634, PLAN §3.1.2 "decision/
+        reason_text 계산 로직 전량 존치" — 신규 트리거 미신설 확정, 헌법 §3
+        Surgical Changes). TASK.md R-2 AC와 TEST-SCENARIO S-3 조건을 실재
+        트리거 `--auto-pass`로 교정하고 본 테스트도 동일하게 교정한다. 1행
+        시딩은 계속 무조건 로그하는 `status --set --note`(트리거 #4)로 수행해
+        관찰 대상(두 번째 `mark --auto-pass --note`)과 분리한다.
+
+        RED 근거: 현재 `append_decision_log`의 `row_count =
+        existing_rows.count("\\n| ")`는 기존 행이 정확히 1개일 때 캡처 그룹
+        문자열이 "\\n"으로 시작하지 않아 0으로 오카운트되므로(오프바이원),
+        두 번째 호출 후에도 `#`가 1로 재사용되어 1,2 연속에 실패한다."""
+        self.assertTrue(_OPD_REAL_PIPELINE_JSON.exists())
+        task_path = self.tmpdir / "094-s3-log-accum"
+        task_path.mkdir()
+        code, stdout, stderr, _ = _run094([
+            "init", str(task_path), "--skill", "opd", "--mode", "agentic",
+            "--rows-from", str(_OPD_REAL_PIPELINE_JSON),
+        ])
+        self.assertEqual(code, 0, f"init 실패: {stdout!r} {stderr!r}")
+
+        # 1행 시딩 — 무조건 로그하는 경로(트리거 #4)
+        code, stdout, stderr, _ = _run094([
+            "status", str(task_path), "--set", "blocked", "--note", "첫번째",
+        ])
+        self.assertEqual(code, 0, f"status 실패: {stdout!r} {stderr!r}")
+        md_seed = (task_path / "STATE.md").read_text(encoding="utf-8")
+        seed_rows = _decision_log_row_numbers(md_seed)
+        self.assertEqual(len(seed_rows), 1,
+                         f"시딩 직후 로그가 정확히 1행이어야 함 — 실제: {seed_rows}")
+
+        # 관찰 대상 — mark --auto-pass --note (두 번째 로그, 실재 트리거 #2)
+        code, stdout, stderr, _ = _run094([
+            "mark", str(task_path), "--task-step", "task.task_md", "--done",
+            "--auto-pass", "--note", "두번째",
+        ])
+        self.assertEqual(code, 0, f"mark --auto-pass 실패: {stdout!r} {stderr!r}")
+
+        md_after = (task_path / "STATE.md").read_text(encoding="utf-8")
+        all_rows = _decision_log_row_numbers(md_after)
+        self.assertEqual(len(all_rows), 2,
+                         f"두 번째 호출 후 로그 총 행수는 2여야 함 — 실제: {all_rows}")
+        self.assertEqual(all_rows, ["1", "2"],
+                         f"'#' 컬럼이 1,2로 연속되어야 함(오프바이원 없음) — 실제: {all_rows}")
+        self.assertIn("첫번째", md_after, "기존 1행(첫번째)이 원문 보존되어야 함")
+        self.assertIn("두번째", md_after, "신규 행(두번째)이 추가되어야 함")
+
 
 # ═════════════════════════════════════════════════════════════════════════════
 # D. 기본 시나리오 (PLAN §3 Step 2 "A. 기본 시나리오")
@@ -1388,18 +1715,13 @@ class TestBasicScenarios(BaseTestCase):
         self.assertEqual(exit_code, 1)
         self.assertEqual(result.get("error"), "worker_scope_violation")
 
-    def test_scenario_marker_missing_init_then_remove(self):
-        """마커 손실: init 후 마커 제거 → advance 거부 (PLAN §2.18 #2, T-6)"""
-        self._init(rows_spec=SIMPLE_ROWS_SPEC)
-        md = self._md()
-        (self.task_path / "STATE.md").write_text(
-            md.replace("<!-- pipeline:start -->", "").replace("<!-- pipeline:end -->", "")
-        )
-        with _mock_now():
-            args = make_args(task_path=str(self.task_path), row=1)
-            exit_code, result = self._call_cmd(ST.cmd_advance, args)
-        self.assertEqual(exit_code, 1)
-        self.assertEqual(result.get("error"), "marker_missing")
+    # [T094 삭제·D-2/R-3] test_scenario_marker_missing_init_then_remove — 마커
+    # 하드 게이트 자체가 R-3으로 제거되어 "마커 제거 → advance 거부"라는 전제
+    # (marker_missing exit 1)가 더 이상 성립하지 않는다(정반대 동작이 정상 —
+    # advance는 ok:true를 반환해야 함). 대체 회귀 커버리지는
+    # `TestBasicScenarios.test_s6_marker_gate_removed_three_corruption_cases`가
+    # (i)삭제 (ii)마커만 제거 (iii)임의 텍스트 3케이스 × advance/mark 6회 호출
+    # 전부 ok:true를 검증하며 이미 담당한다.
 
     def test_scenario_idempotency_already_initialized(self):
         """멱등성 위반: init 두 번 → already_initialized 거부 (PLAN §2.18 #3, T-8)"""
@@ -1422,361 +1744,202 @@ class TestBasicScenarios(BaseTestCase):
         # 재초기화 성공 확인
         self.assertIsNotNone(state)
 
-    def test_scenario_import_existing_success(self):
-        """--import-existing 성공: 파싱 가능한 STATE.md (PLAN §2.5, T-13)"""
-        # 마크다운 표가 있는 STATE.md 직접 작성
-        md_content = """# STATE: 테스트
+    # [T094 삭제·D-2/R-3] test_scenario_import_existing_success /
+    # test_scenario_import_existing_failure — `--import-existing` 파싱 분기
+    # (성공/실패 양쪽 모두)가 D-2로 완전히 삭제되어 두 전제 모두 성립하지
+    # 않는다(호출 자체가 항상 `import_existing_removed`로 즉시 거부됨).
+    # 대체 회귀 커버리지는 `TestInit.test_s9_import_existing_removed_rejected`
+    # (단일 라인 JSON + exit 1 + `import_existing_removed` 검증)가 담당한다.
 
-> 최종 갱신: 2026-05-01 22:00
+    # ─────────────────────────────────────────────────────────────────────
+    # 094 RED-first 추가 — TEST-SCENARIO.md S-6, S-23 (PLAN §3.2.2 (3), 제약 ③)
+    # [MUST] 실 CLI subprocess(run.sh) + 실 파일 내용으로만 검증, mock 금지.
+    # ─────────────────────────────────────────────────────────────────────
 
-## 현재 상태
-- 모드: interactive
-- 단계: TASK
-- 진행: TASK 단계
-- 상태: 진행 중
+    def test_s6_marker_gate_removed_three_corruption_cases(self):
+        """[T094/L2-F002] S-6 — STATE.md (i) 삭제 (ii) 마커 라인만 제거 (iii)
+        임의 텍스트로 덮어쓰기, 3케이스 각각에서 `advance`·`mark`를 호출하면
+        6회 전부 `ok:true`·exit 0이어야 한다(R-3 AC(a) 마커 하드 차단 제거).
 
-## 파이프라인 현황판
+        RED 근거: 현재 `sync_state_md`는 `load_state_md()`가 None이거나
+        마커가 없으면 즉시 `err(command, "marker_missing")`로 exit 1하므로
+        (state_tool.py:375-383), 6회 호출이 전부 실패한다."""
+        self.assertTrue(_OPD_REAL_PIPELINE_JSON.exists())
+        corruption_cases = ["삭제", "마커만_제거", "임의_텍스트"]
+        for case_name in corruption_cases:
+            with self.subTest(case=case_name):
+                task_path = self.tmpdir / f"094-s6-{case_name}"
+                task_path.mkdir()
+                code, stdout, stderr, _ = _run094([
+                    "init", str(task_path), "--skill", "opd", "--mode", "agentic",
+                    "--rows-from", str(_OPD_REAL_PIPELINE_JSON),
+                ])
+                self.assertEqual(code, 0, f"init 실패({case_name}): {stdout!r} {stderr!r}")
 
-| # | 단계 | 항목 | 상태 | 시점 |
-|---|------|------|------|------|
-| 1 | TASK | 작업 | ⬜ |  |
-| 2 | TASK | TASK.md 생성 | ⬜ |  |
-| 3 | CLOSE | State Gate | ⬜ |  |
+                md_path = task_path / "STATE.md"
+                if case_name == "삭제":
+                    md_path.unlink()
+                elif case_name == "마커만_제거":
+                    md_text = md_path.read_text(encoding="utf-8")
+                    md_path.write_text(
+                        md_text.replace(ST.PIPELINE_MARKER_START, "")
+                                .replace(ST.PIPELINE_MARKER_END, ""),
+                        encoding="utf-8")
+                else:  # 임의_텍스트
+                    md_path.write_text("마커도 표도 없는 임의 텍스트\n", encoding="utf-8")
 
-## 의사결정 로그
-| # | 시점 | 결정 | 근거 |
-|---|------|------|------|
+                code, stdout, stderr, data = _run094([
+                    "advance", str(task_path), "--task-step", "task.task_md",
+                ])
+                self.assertEqual(code, 0,
+                                 f"advance가 exit 0이어야 함({case_name}, 마커 게이트 소멸): "
+                                 f"stdout={stdout!r} stderr={stderr!r}")
+                self.assertTrue(data.get("ok"), f"advance ok:true 아님({case_name}): {data}")
 
-## 블로커
-없음
+                code, stdout, stderr, data = _run094([
+                    "mark", str(task_path), "--task-step", "task.user_confirm", "--done",
+                ])
+                self.assertEqual(code, 0,
+                                 f"mark가 exit 0이어야 함({case_name}, 마커 게이트 소멸): "
+                                 f"stdout={stdout!r} stderr={stderr!r}")
+                self.assertTrue(data.get("ok"), f"mark ok:true 아님({case_name}): {data}")
 
-## 다음 액션
-PLAN 단계 진입
-"""
-        (self.task_path / "STATE.md").write_text(md_content)
-        with _mock_now():
-            args = make_args(
-                task_path=str(self.task_path),
-                skill="opp", mode="interactive",
-                import_existing=True,
-            )
-            exit_code, result = self._call_cmd(ST.cmd_init, args)
-        self.assertEqual(exit_code, 0, f"import_existing failed: {result}")
-        state = self._state()
-        self.assertEqual(len(state["rows"]), 3)
+    def test_s23_five_update_commands_response_keys_preserved(self):
+        """[T094/L1-F001/F003] S-23 — `advance`/`mark`/`block`/`add-row`/`status`
+        5개 갱신 명령의 stdout 응답 키 집합에서 기존 키 삭제가 0건이어야 하고,
+        `journal_warning`은 조건부(실패 시에만) 추가되어야 한다(제약 ③ stdout
+        계약 호환, PLAN §3.1.2 (4)).
 
-    def test_scenario_import_existing_failure(self):
-        """--import-existing 실패: 파싱 불가 STATE.md → import_failed (PLAN §2.18 #5)"""
-        (self.task_path / "STATE.md").write_text("# 파싱 불가능한 내용\n")
-        with _mock_now():
-            args = make_args(
-                task_path=str(self.task_path),
-                skill="opp", mode="interactive",
-                import_existing=True,
-            )
-            exit_code, result = self._call_cmd(ST.cmd_init, args)
-        self.assertEqual(exit_code, 1)
-        self.assertEqual(result.get("error"), "import_failed")
+        정상 경로(저널 쓰기 성공)에서는 `journal_warning` 키가 아예 없어야
+        한다 — 이 부분은 현재도 성립해 회귀 안전망 역할을 하지만, 기존 키
+        보존 자체는 F-001 재배선이 인자를 축소하며 실수로 키를 지우지
+        않는지 GREEN 이후에도 감시한다.
 
-
-# ═════════════════════════════════════════════════════════════════════════════
-# D-2. TestImportPreservesKeys — 074 `--import-existing` task-step key 유실 결함
-#      (TEST-SCENARIO.md S-a~S-e, RED-first — 작성자≠구현자, mock/patch 금지)
-# ═════════════════════════════════════════════════════════════════════════════
-
-class TestImportPreservesKeys(BaseTestCase):
-    """`cmd_init` import 분기가 기존 state.json/pipeline.json의 rows[].key를
-    (stage,item) 순서 매칭으로 재접합하는지 검증 — PLAN 074 §3.2 DEC-1~DEC-5.
-
-    RED 근거: 현재 `cmd_init` import 분기(state_tool.py:900-908)는
-    `parse_existing_state_md`가 만든 keyless rows를 그대로 사용하고, line 932
-    schema_version 계산도 그 결과에 의존한다 — key 재접합 로직이 없으므로
-    S-a/S-b/S-d/S-e는 GREEN(구현) 이전에는 FAIL한다(key 부재/None,
-    schema_version "1.0" 강등). S-c는 keyless 자체는 이미 성립하나 stderr 경고
-    단언이 없어 FAIL한다.
-
-    검증 방식: mock/patch/MagicMock 금지 — 실 `cmd_init` 호출(직접 함수 호출,
-    `BaseTestCase._call_cmd` 패턴) + 실 파일 I/O(state.json/STATE.md)만 사용한다
-    (red-first.md §4).
-    """
-
-    # S-a/S-d/S-e 공용 — key 보유 상태 fixture 생성용 pipeline.json 스펙
-    # (TestPipelineJsonInit._MINI_SPEC과 동형 구조, task_steps 4행)
-    _KEY_SPEC = {
-        "spec_version": "1.0",
-        "skill": "opp",
-        "meta": {"mode_label": "Mini", "stages": ["TASK", "PLAN", "CLOSE"]},
-        "task_steps": [
-            {"id": 1, "key": "task.task_md",      "stage": "TASK",  "item": "작업"},
-            {"id": 2, "key": "task.user_confirm", "stage": "TASK",  "item": "사용자 확인"},
-            {"id": 3, "key": "plan.plan_md",       "stage": "PLAN",  "item": "작업"},
-            {"id": 4, "key": "close.done_md",      "stage": "CLOSE", "item": "DONE.md 생성"},
-        ],
-    }
-
-    # S-e 전용 — 동일 (stage,item)("EXECUTE","작업")이 2회 중복 등장하는 스펙
-    _DUP_SPEC = {
-        "spec_version": "1.0",
-        "skill": "opp",
-        "meta": {"mode_label": "Dup", "stages": ["TASK", "EXECUTE", "CLOSE"]},
-        "task_steps": [
-            {"id": 1, "key": "task.task_md",   "stage": "TASK",    "item": "작업"},
-            {"id": 2, "key": "execute.step_a", "stage": "EXECUTE", "item": "작업"},
-            {"id": 3, "key": "execute.step_b", "stage": "EXECUTE", "item": "작업"},
-            {"id": 4, "key": "close.done_md",  "stage": "CLOSE",   "item": "DONE.md 생성"},
-        ],
-    }
-
-    def _write_spec_file(self, name, spec_dict):
-        p = self.tmpdir / name
-        p.write_text(json.dumps(spec_dict, ensure_ascii=False), encoding="utf-8")
-        return p
-
-    def _write_state_md_table(self, stage_item_pairs):
-        """key 컬럼이 없는 실제 렌더 형식 STATE.md를 직접 작성한다
-        (`render_pipeline_table` state_tool.py:271 산출 형식과 동일한
-        `| # | 단계 | 항목 | 상태 | 시점 |` 5컬럼 표 — key 원천이 STATE.md뿐인
-        결함 재현 조건)."""
-        header = (
-            "# STATE: 테스트\n\n"
-            "> 최종 갱신: 2026-05-01 22:00\n\n"
-            "## 현재 상태\n- 모드: interactive\n- 단계: TASK\n"
-            "- 진행: TASK 단계\n- 상태: 진행 중\n\n"
-            "## 파이프라인 현황판\n\n"
-            "| # | 단계 | 항목 | 상태 | 시점 |\n"
-            "|---|------|------|------|------|\n"
-        )
-        body = "".join(
-            f"| {i + 1} | {stage} | {item} | ⬜ |  |\n"
-            for i, (stage, item) in enumerate(stage_item_pairs)
-        )
-        footer = (
-            "\n## 의사결정 로그\n| # | 시점 | 결정 | 근거 |\n|---|------|------|------|\n\n"
-            "## 블로커\n없음\n\n## 다음 액션\nPLAN 단계 진입\n"
-        )
-        (self.task_path / "STATE.md").write_text(header + body + footer, encoding="utf-8")
-
-    def _run_init(self, **kwargs):
-        """cmd_init 직접 호출 — stdout+stderr 동시 캡처.
-        반환: (exit_code, result_dict, stderr_text)."""
-        import io
-        from contextlib import redirect_stdout, redirect_stderr
-        kwargs.setdefault("skill", "opp")
-        kwargs.setdefault("mode", "interactive")
-        args = make_args(task_path=str(self.task_path), **kwargs)
-        out, err_buf = io.StringIO(), io.StringIO()
-        exit_code = 0
-        with redirect_stdout(out), redirect_stderr(err_buf):
-            with _mock_now():
-                try:
-                    ST.cmd_init(args)
-                except SystemExit as e:
-                    exit_code = e.code
-        output = out.getvalue().strip()
-        result = json.loads(output) if output else {}
-        return exit_code, result, err_buf.getvalue()
-
-    def _make_key_bearing_fixture(self, spec_dict, name="key_spec.json"):
-        """spec_dict로 실제 init을 1회 실행해 key 보유 state.json + 렌더된
-        STATE.md(key 컬럼 없음) fixture를 생성한다. 반환: 원본 state dict."""
-        spec_path = self._write_spec_file(name, spec_dict)
-        exit_code, result, _ = self._run_init(rows_from=str(spec_path))
-        self.assertEqual(exit_code, 0, f"fixture 생성용 init 실패: {result}")
-        return self._state()
-
-    # ── S-a ──────────────────────────────────────────────────────────────
-    def test_force_import_preserves_all_keys(self):
-        """S-a (H-1): key 보유 state.json + STATE.md 존재 상태에서
-        `init --force --import-existing` 후 rows[].key가 원본과 순서·값
-        100% 일치해야 한다 (070 --task-step 주소 계약)."""
-        original = self._make_key_bearing_fixture(self._KEY_SPEC)
-        original_keys = [r.get("key") for r in original["rows"]]
-        original_stage_item = [(r["stage"], r["item"]) for r in original["rows"]]
-        self.assertTrue(all(original_keys), "fixture 자체에 key 없음 — 사전조건 오류")
-
-        exit_code, result, _ = self._run_init(
-            force=True, import_existing=True, note="recovery"
-        )
-        self.assertEqual(exit_code, 0, f"force+import_existing 실패: {result}")
-
-        restored = self._state()
-        restored_keys = [r.get("key") for r in restored["rows"]]
-        restored_stage_item = [(r["stage"], r["item"]) for r in restored["rows"]]
-        self.assertEqual(
-            restored_keys, original_keys,
-            f"key 유실 — 원본 {original_keys} vs 복구 후 {restored_keys}"
-        )
-        self.assertEqual(restored_stage_item, original_stage_item)
-
-    # ── S-b ──────────────────────────────────────────────────────────────
-    def test_import_with_pipeline_json_restores_keys(self):
-        """S-b (H-2): state.json 없음 + STATE.md + pipeline.json 스펙 상태에서
-        `--import-existing --rows-from mini.json` 후 rows[].key가 스펙 기준
-        (stage,item) 매칭으로 복원되어야 한다."""
-        pairs = [(ts["stage"], ts["item"]) for ts in self._KEY_SPEC["task_steps"]]
-        self._write_state_md_table(pairs)
-        spec_path = self._write_spec_file("mini.json", self._KEY_SPEC)
-        self.assertFalse((self.task_path / "state.json").exists())
-
-        exit_code, result, _ = self._run_init(
-            import_existing=True, rows_from=str(spec_path)
-        )
-        self.assertEqual(exit_code, 0, f"pipeline.json 폴백 import 실패: {result}")
-
-        state = self._state()
-        expected_keys = [ts["key"] for ts in self._KEY_SPEC["task_steps"]]
-        actual_keys = [r.get("key") for r in state["rows"]]
-        self.assertEqual(actual_keys, expected_keys)
-
-    # ── S-c ──────────────────────────────────────────────────────────────
-    def test_import_no_key_source_keyless_with_warning(self):
-        """S-c (H-3): key 원천(기존 state.json/pipeline.json)이 전무한 상태에서
-        `--import-existing`만 호출 시 ①rows keyless 유지 ②stderr 경고 JSON
-        1줄 ③stdout ok 페이로드·rows_count 불변(하위호환) ④schema_version
-        "1.0" 유지를 만족해야 한다."""
-        self._write_state_md_table([
-            ("TASK", "작업"), ("TASK", "TASK.md 생성"), ("CLOSE", "State Gate"),
+        [PM 판정 정정 2026-08-16] 최초 작성 시 `block` 직후(current_status가
+        이미 "blocked") `status --set blocked`를 호출해 `blocked→blocked`
+        (`ALLOWED_TRANSITIONS` 미등재 — 자기 전이 불허)가 되어 시퀀스 자체가
+        무효했다. `blocked`에서 허용되는 전이(`in_progress`/`done`) 중
+        `in_progress`로 교정한다 — 검증 목적(5개 갱신 명령의 응답 키 계약)은
+        불변이다."""
+        self.assertTrue(_OPD_REAL_PIPELINE_JSON.exists())
+        task_path = self.tmpdir / "094-s23-response-keys"
+        task_path.mkdir()
+        code, stdout, stderr, _ = _run094([
+            "init", str(task_path), "--skill", "opd", "--mode", "agentic",
+            "--rows-from", str(_OPD_REAL_PIPELINE_JSON),
         ])
-        self.assertFalse((self.task_path / "state.json").exists())
+        self.assertEqual(code, 0, f"init 실패: {stdout!r} {stderr!r}")
 
-        exit_code, result, stderr_text = self._run_init(import_existing=True)
+        baseline_keys = {
+            "advance": {"ok", "command", "row_id", "stage", "item", "status",
+                        "timestamp", "todo_mirror"},
+            "mark":    {"ok", "command", "row_id", "stage", "item", "status",
+                        "timestamp", "owner", "todo_mirror"},
+            "block":   {"ok", "command", "row_id", "stage", "item", "status",
+                        "current_status", "timestamp", "todo_mirror"},
+            "add-row": {"ok", "command", "row_id", "key", "rows_count",
+                        "current_status"},
+            "status":  {"ok", "command", "from", "to", "timestamp"},
+        }
 
-        self.assertEqual(exit_code, 0, f"key 원천 전무 import 실패: {result}")
-        self.assertTrue(result.get("ok"), f"ok 페이로드 불변 위반: {result}")
-        self.assertEqual(result.get("rows_count"), 3, "rows_count 불변(하위호환) 위반")
+        code, stdout, stderr, data = _run094([
+            "advance", str(task_path), "--task-step", "task.task_md",
+        ])
+        self.assertEqual(code, 0, f"advance 실패: {stdout!r} {stderr!r}")
+        missing = baseline_keys["advance"] - set(data.keys())
+        self.assertEqual(missing, set(), f"advance 응답에서 기존 키 삭제됨: {missing}")
 
-        state = self._state()
-        self.assertEqual(len(state["rows"]), 3)
-        for row in state["rows"]:
-            self.assertFalse(row.get("key"), f"key 원천 전무인데 key 부여됨: {row}")
-        self.assertEqual(state["schema_version"], "1.0")
+        code, stdout, stderr, data = _run094([
+            "mark", str(task_path), "--task-step", "task.task_md", "--done",
+        ])
+        self.assertEqual(code, 0, f"mark 실패: {stdout!r} {stderr!r}")
+        missing = baseline_keys["mark"] - set(data.keys())
+        self.assertEqual(missing, set(), f"mark 응답에서 기존 키 삭제됨: {missing}")
 
-        self.assertIn(
-            "warning", stderr_text,
-            f"key 원천 전무 시 stderr 경고 1줄이 있어야 함 — 실제 stderr: {stderr_text!r}"
-        )
+        code, stdout, stderr, data = _run094([
+            "block", str(task_path), "--task-step", "task.user_confirm",
+            "--reason", "테스트 블로커",
+        ])
+        self.assertEqual(code, 0, f"block 실패: {stdout!r} {stderr!r}")
+        missing = baseline_keys["block"] - set(data.keys())
+        self.assertEqual(missing, set(), f"block 응답에서 기존 키 삭제됨: {missing}")
 
-    # ── S-d ──────────────────────────────────────────────────────────────
-    def test_preserved_keys_keep_schema_version_1_1(self):
-        """S-d (H-4): key 보유 state.json + STATE.md 상태에서
-        `init --force --import-existing` 후 결과 state.json의 schema_version이
-        "1.1"로 유지되어야 한다 (재접합이 schema_version 계산 이전에 배치되어
-        any(key) 조건이 True가 되는 정합, state_tool.py:932 무변경 전제)."""
-        self._make_key_bearing_fixture(self._KEY_SPEC)
+        code, stdout, stderr, data = _run094([
+            "add-row", str(task_path), "--after-task-step", "task.user_confirm",
+            "--stage", "TASK", "--item", "094 추가행",
+        ])
+        self.assertEqual(code, 0, f"add-row 실패: {stdout!r} {stderr!r}")
+        missing = baseline_keys["add-row"] - set(data.keys())
+        self.assertEqual(missing, set(), f"add-row 응답에서 기존 키 삭제됨: {missing}")
 
-        exit_code, result, _ = self._run_init(
-            force=True, import_existing=True, note="recovery"
-        )
-        self.assertEqual(exit_code, 0, f"force+import_existing 실패: {result}")
+        code, stdout, stderr, data = _run094([
+            "status", str(task_path), "--set", "in_progress", "--note", "상태 전환",
+        ])
+        self.assertEqual(code, 0, f"status 실패: {stdout!r} {stderr!r}")
+        missing = baseline_keys["status"] - set(data.keys())
+        self.assertEqual(missing, set(), f"status 응답에서 기존 키 삭제됨: {missing}")
 
-        restored = self._state()
-        self.assertEqual(
-            restored["schema_version"], "1.1",
-            f"key 보존 import인데 schema_version 강등: {restored['schema_version']}"
-        )
 
-    # ── S-e ──────────────────────────────────────────────────────────────
-    def test_duplicate_stage_item_ordered_consumption(self):
-        """S-e (H-2, H-5): 동일 (stage,item)("EXECUTE","작업")이 복수 행으로
-        존재하는 key 보유 state.json + STATE.md 상태에서
-        `init --force --import-existing` 후 각 중복 행이 원본 순서대로
-        대응 key를 부여받아 key 오배정 0건, 원본과 100% 일치해야 한다."""
-        original = self._make_key_bearing_fixture(self._DUP_SPEC, name="dup_spec.json")
-        original_keys = [r.get("key") for r in original["rows"]]
-        # 사전조건: 실제로 중복 (stage,item) 쌍이 존재하는지 확인
-        stage_items = [(r["stage"], r["item"]) for r in original["rows"]]
-        self.assertEqual(
-            stage_items.count(("EXECUTE", "작업")), 2,
-            "fixture에 중복 (stage,item) 쌍이 없음 — 사전조건 오류"
-        )
-
-        exit_code, result, _ = self._run_init(
-            force=True, import_existing=True, note="recovery duplicate order"
-        )
-        self.assertEqual(exit_code, 0, f"force+import_existing 실패: {result}")
-
-        restored = self._state()
-        restored_keys = [r.get("key") for r in restored["rows"]]
-        self.assertEqual(
-            restored_keys, original_keys,
-            f"중복 (stage,item) 순서 소비 오배정 — 원본 {original_keys} vs 복구 후 {restored_keys}"
-        )
-
+# [T094 삭제·D-2/R-3] TestImportPreservesKeys 클래스 전체(5건: test_force_import_preserves_all_keys,
+# test_import_with_pipeline_json_restores_keys, test_import_no_key_source_keyless_with_warning,
+# test_preserved_keys_keep_schema_version_1_1, test_duplicate_stage_item_ordered_consumption) —
+# 074가 도입한 `--import-existing` key 재접합 로직(`parse_existing_state_md`/
+# `_key_source_index`/`_reattach_import_keys`)이 094 D-2로 전부 삭제되어 이 클래스가
+# 검증하던 기능 자체가 소멸했다. 대체 회귀 커버리지는
+# `TestInit.test_s9_import_existing_removed_rejected`(호출 시 즉시 거부)가 담당한다.
 
 # ═════════════════════════════════════════════════════════════════════════════
 # E. 자유 텍스트 영역 보존 (PLAN §3 Step 2 마지막 항목)
 # ═════════════════════════════════════════════════════════════════════════════
 
 class TestFreeTextPreservation(BaseTestCase):
-    """[MUST] 자유 텍스트 영역 보존: 블로커는 전 명령(mark/advance/block/add-row) 보존.
-    '다음 액션'은 mark/advance 시 파생 갱신(첫 줄), block/add-row 시 보존.
-    하위 자유 기재 라인(- 세부 액션 N)은 전 명령 보존.
-    (PLAN 072 F-002/F-004)
+    """[MUST] 자유 텍스트 영역 보존: 블로커 섹션은 전 명령(mark/advance/block/
+    add-row) 보존되어야 한다.
+
+    [T094 수정 2026-08-16] '## 다음 액션' 섹션은 D-1로 STATE.md에서 완전
+    제거되었다(값은 state.json.next_action에만 영속화, 조회는 `show`).
+    이에 따라 이 클래스가 검증하던 3영역 중 '다음 액션' 렌더 관련 부분은
+    다음과 같이 정리한다:
+    - `test_mark_derives_next_action_preserves_others` /
+      `test_advance_derives_next_action_preserves_others`: STATE.md '## 다음
+      액션' 첫 줄 치환 + 하위 자유기재 보존만 검증하는 순수 렌더 테스트라
+      대체 불가능하게 기능이 소멸했으므로 삭제한다(D-1). 동일 파생값 검증은
+      `TestAdvance.test_advance_g6_progress_updated`가 `state.json.next_action`
+      기준으로 계승한다.
+    - `test_block_preserves_free_text` / `test_add_row_preserves_free_text` /
+      `test_pipeline_marker_region_only_changed`: '블로커 섹션 보존'은 여전히
+      살아있는 계약(TASK.md §제약 "의사결정 로그·블로커 데이터는 어떤 경로에서도
+      유실되어서는 안 된다")이므로 존치하되, `_free_text_sections`이 더 이상
+      존재하지 않는 '## 다음 액션'을 경계로 삼던 부분을 제거해 블로커 섹션을
+      파일 끝까지로 재정의한다(수정 없이 두면 항상 (None, None)을 반환해
+      비교가 무의미하게 항상 통과하는 결함이 있었다 — 이번에 회귀 감지력을
+      복원한다).
     """
 
     def setUp(self):
         super().setUp()
-        self._init(rows_spec=SIMPLE_ROWS_SPEC, next_action="초기 다음 액션")
-        # 자유 텍스트 영역에 마커 내용 추가
+        self._init(rows_spec=SIMPLE_ROWS_SPEC)
+        # 블로커 자유 텍스트 영역에 마커 내용 추가('## 다음 액션'은 D-1로 제거되어
+        # 더 이상 fixture에 없다 — 하위 자유기재 삽입 대상도 함께 제거)
         md = self._md()
         md = md.replace("없음", "블로커 상세: 테스트 블로커 내용이 여기 있음")
-        md = md.replace("초기 다음 액션", "초기 다음 액션\n- 세부 액션 1\n- 세부 액션 2")
         (self.task_path / "STATE.md").write_text(md)
 
     def _free_text_sections(self, md):
-        """자유 텍스트 영역 3개 섹션 추출."""
+        """[T094 수정] 블로커 섹션(파일 끝까지) 추출. '## 다음 액션'은 D-1로
+        제거되어 경계로 사용할 수 없으므로, '## 블로커' 시작부터 파일 끝까지를
+        블로커 영역으로 간주한다."""
         blocker_start = md.find("## 블로커")
-        next_start = md.find("## 다음 액션")
-        if blocker_start == -1 or next_start == -1:
-            return None, None
-        blocker = md[blocker_start:next_start]
-        next_action = md[next_start:]
-        return blocker, next_action
+        if blocker_start == -1:
+            return None
+        return md[blocker_start:]
 
     def _assert_free_text_preserved(self, before_md, after_md):
-        """블로커 / 다음 액션 섹션이 변경되지 않았는지 확인."""
-        b_before, n_before = self._free_text_sections(before_md)
-        b_after, n_after = self._free_text_sections(after_md)
+        """블로커 섹션이 변경되지 않았는지 확인."""
+        b_before = self._free_text_sections(before_md)
+        b_after = self._free_text_sections(after_md)
+        self.assertIsNotNone(b_before, "블로커 섹션 추출 실패(픽스처 손상)")
         self.assertEqual(b_before, b_after, "블로커 섹션이 변경됨!")
-        self.assertEqual(n_before, n_after, "다음 액션 섹션이 변경됨!")
-
-    def test_mark_derives_next_action_preserves_others(self):
-        """mark 후: 블로커 섹션 보존 + '다음 액션' 첫 줄 파생 갱신 + 하위 자유기재 보존
-        (PLAN 072 F-002/F-004 — 의도된 설계 반전, 회귀 아님)"""
-        md_before = self._md()
-        blocker_before, _ = self._free_text_sections(md_before)
-
-        self._mark(1)  # SIMPLE_ROWS_SPEC row1 = TASK/작업 → done, 프론티어 = row2(PLAN/작업)
-
-        md_after = self._md()
-        blocker_after, _ = self._free_text_sections(md_after)
-        self.assertEqual(blocker_before, blocker_after, "블로커 섹션이 변경됨!")
-
-        next_start = md_after.find("## 다음 액션")
-        lines = md_after[next_start:].splitlines()
-        self.assertEqual(lines[1], "PLAN 작업 진입",
-                         f"'다음 액션' 첫 줄이 파생값으로 갱신되지 않음: {lines[1]!r}")
-        self.assertEqual(lines[2:], ["- 세부 액션 1", "- 세부 액션 2"],
-                         "하위 자유 기재 라인이 보존되지 않음")
-
-    def test_advance_derives_next_action_preserves_others(self):
-        """advance 후: 블로커 섹션 보존 + '다음 액션' 첫 줄 파생 갱신 + 하위 자유기재 보존
-        (PLAN 072 F-002/F-004 — 의도된 설계 반전, 회귀 아님)"""
-        md_before = self._md()
-        blocker_before, _ = self._free_text_sections(md_before)
-
-        self._advance(1)  # SIMPLE_ROWS_SPEC row1 = TASK/작업 → in_progress, 프론티어 = row1 자신
-
-        md_after = self._md()
-        blocker_after, _ = self._free_text_sections(md_after)
-        self.assertEqual(blocker_before, blocker_after, "블로커 섹션이 변경됨!")
-
-        next_start = md_after.find("## 다음 액션")
-        lines = md_after[next_start:].splitlines()
-        self.assertEqual(lines[1], "TASK 작업 진행 중",
-                         f"'다음 액션' 첫 줄이 파생값으로 갱신되지 않음: {lines[1]!r}")
-        self.assertEqual(lines[2:], ["- 세부 액션 1", "- 세부 액션 2"],
-                         "하위 자유 기재 라인이 보존되지 않음")
 
     def test_block_preserves_free_text(self):
         """block 후 블로커/다음 액션 섹션 보존 (PLAN §3 Step 2)"""
@@ -1793,14 +1956,16 @@ class TestFreeTextPreservation(BaseTestCase):
         self._assert_free_text_preserved(md_before, md_after)
 
     def test_pipeline_marker_region_only_changed(self):
-        """갱신 명령은 마커 영역만 변경, 자유 텍스트 영역은 불변 (PLAN §2.11 G-8, F-4)"""
+        """[T094 수정] 갱신 명령은 파이프라인 표 영역만 변경, 블로커 영역은 불변
+        (PLAN §2.11 G-8, F-4). '## 다음 액션'은 D-1로 제거되어 더 이상 경계로
+        쓸 수 없으므로 블로커 섹션을 파일 끝까지로 재정의한다."""
         md_before = self._md()
         self._mark(1)
         md_after = self._md()
-        # 마커 영역 밖 자유 텍스트는 동일해야 함
-        # (의사결정 로그 자동 기재는 허용)
-        blocker_before = md_before[md_before.find("## 블로커"):md_before.find("## 다음 액션")]
-        blocker_after = md_after[md_after.find("## 블로커"):md_after.find("## 다음 액션")]
+        # 블로커 영역(파일 끝까지)은 동일해야 함(의사결정 로그 자동 기재는 허용 범위 밖)
+        blocker_before = self._free_text_sections(md_before)
+        blocker_after = self._free_text_sections(md_after)
+        self.assertIsNotNone(blocker_before)
         self.assertEqual(blocker_before, blocker_after)
 
 
@@ -1819,6 +1984,16 @@ class TestNextActionAutoDerive(BaseTestCase):
 
     파생 로직 구현 **전** 현재 코드에서 이 클래스는 실패(RED)해야 한다 —
     GREEN 구현은 op-dev-execute가 담당한다(red-first.md §2, 작성자≠구현자).
+
+    [T094 수정 2026-08-16] '## 다음 액션' STATE.md 섹션은 D-1로 완전 제거되었다
+    (`next_action` 값은 state.json 필드로만 영속화, 조회는 `show`). 이 클래스의
+    9개 테스트 중 `_derive_next_action` 프론티어 파생 로직 자체(state.json
+    `next_action` 필드 검증)는 여전히 완전히 살아있는 기능이므로, STATE.md
+    렌더 확인 부분만 제거하고 state.json 검증은 그대로 존치한다("기능은
+    있는데 확인 위치만 옮겨졌다" — 삭제하면 프론티어 파생 회귀 감지력이
+    사라진다). `test_m1_first_line_replaced_subordinate_free_text_preserved`
+    하나만 STATE.md 렌더 자체(첫 줄 치환 + 하위 자유기재 보존)만을 검증하는
+    순수 렌더 테스트라 대체 불가능하게 기능이 소멸했으므로 삭제한다(D-1).
     """
 
     # S-2/S-3 프론티어 파생 검증용 — CLOSE 게이트 없이 순수 전이 순서만 확인
@@ -1840,14 +2015,9 @@ class TestNextActionAutoDerive(BaseTestCase):
         {"stage": "PLAN", "item": "작업"},
     ])
 
-    def _next_action_lines(self, md):
-        """STATE.md '## 다음 액션' 섹션에서 (첫 줄, 하위 잔여 라인 리스트) 반환."""
-        idx = md.find("## 다음 액션")
-        self.assertNotEqual(idx, -1, "STATE.md에 '## 다음 액션' 섹션이 없음")
-        section_lines = md[idx:].splitlines()
-        first_line = section_lines[1] if len(section_lines) > 1 else ""
-        rest_lines = section_lines[2:]
-        return first_line, rest_lines
+    # [T094 수정] `_next_action_lines`(STATE.md '## 다음 액션' 첫 줄/하위 라인
+    # 추출 헬퍼)는 D-1로 해당 섹션 자체가 제거되어 삭제한다. 프론티어 파생값은
+    # 이제 각 테스트에서 `state.get("next_action")`으로만 검증한다.
 
     # ── S-1 (R-1/H-4): init next_action 영속화 + schema optional 등록 + 하위호환 ──
 
@@ -1896,10 +2066,14 @@ class TestNextActionAutoDerive(BaseTestCase):
     # ── S-2 (R-2/R-3): advance/mark 순차 전이 프론티어 파생 + 렌더 정합 ──
 
     def test_r2_r3_sequential_frontier_derivation_advance_mark(self):
-        """[T072/L1-R2,R3] S-2 — 여러 행을 순차로 advance(→in_progress)/mark(→done)하며
-        각 시점 state.json `next_action`과 STATE.md '## 다음 액션' 첫 줄이 프론티어
-        (첫 미완료 행) 기반 값과 일치해야 한다: pending → "{stage} {item} 진입",
-        in_progress → "{stage} {item} 진행 중". 현재 미구현이므로 매 단계 실패한다(RED)."""
+        """[T072/L1-R2,R3][T094 수정] S-2 — 여러 행을 순차로 advance(→in_progress)/
+        mark(→done)하며 각 시점 state.json `next_action`이 프론티어(첫 미완료
+        행) 기반 값과 일치해야 한다: pending → "{stage} {item} 진입",
+        in_progress → "{stage} {item} 진행 중".
+
+        STATE.md '## 다음 액션' 렌더 확인은 D-1로 해당 섹션이 완전히
+        제거되어 삭제한다 — 프론티어 파생 로직 자체(`_derive_next_action`)는
+        state.json에 여전히 살아있는 기능이므로 그 검증만 존치한다."""
         self._init(rows_spec=self._NEXT_ACTION_ROWS_SPEC)
 
         steps = [
@@ -1919,19 +2093,16 @@ class TestNextActionAutoDerive(BaseTestCase):
                     f"{action}(row={row_id}) 후 state.json next_action 불일치: "
                     f"{state.get('next_action')!r} (기대: {expected!r})"
                 )
-                first_line, _ = self._next_action_lines(self._md())
-                self.assertEqual(
-                    first_line, expected,
-                    f"{action}(row={row_id}) 후 STATE.md '## 다음 액션' 첫 줄 불일치: "
-                    f"{first_line!r} (기대: {expected!r})"
-                )
 
     # ── S-3 (R-2/M-2): 전체 완료 시 "태스크 완료" 경계 ──
 
     def test_r2_m2_all_rows_complete_next_action_task_complete(self):
-        """[T072/L1-R2,M-2] S-3 — 마지막 행까지 모두 완료(current_status=done)되면
-        프론티어(다음 대기 행)가 부재하므로 `next_action == "태스크 완료"`여야 한다.
-        현재 미구현이므로 실패한다(RED)."""
+        """[T072/L1-R2,M-2][T094 수정] S-3 — 마지막 행까지 모두 완료
+        (current_status=done)되면 프론티어(다음 대기 행)가 부재하므로
+        `next_action == "태스크 완료"`여야 한다.
+
+        STATE.md 첫 줄 렌더 확인은 D-1로 '## 다음 액션' 섹션이 완전히
+        제거되어 삭제한다 — state.json 필드 검증(태스크 완료 경계)은 존치."""
         self._init(rows_spec=self._NEXT_ACTION_CLOSE_ROWS_SPEC)
 
         code1 = self._mark(1, owner="user")  # TASK 사용자 확인 → done/user (CLOSE 게이트 통과)
@@ -1953,52 +2124,22 @@ class TestNextActionAutoDerive(BaseTestCase):
             state_final.get("next_action"), "태스크 완료",
             f"전체 완료 후 next_action 불일치: {state_final.get('next_action')!r}"
         )
-        first_line, _ = self._next_action_lines(self._md())
-        self.assertEqual(
-            first_line, "태스크 완료",
-            f"전체 완료 후 STATE.md 첫 줄 불일치: {first_line!r}"
-        )
 
-    # ── S-4 (R-2/M-1): 첫 줄만 치환 — 하위 자유 기재 보존 ──
-
-    def test_m1_first_line_replaced_subordinate_free_text_preserved(self):
-        """[T072/L1-M1] S-4 — '## 다음 액션' 헤더 + 첫 줄 + 하위 자유 기재
-        ("- 세부 액션 1"/"- 세부 액션 2") 상태에서 mark/advance 시 첫 줄만 파생값으로
-        치환되고 하위 2줄은 잔존해야 하며, 다른 섹션(블로커 등)은 오염되지 않아야 한다.
-        현재 첫 줄이 갱신되지 않으므로 실패한다(RED)."""
-        self._init(rows_spec=SIMPLE_ROWS_SPEC, next_action="초기 다음 액션")
-        md = self._md()
-        md = md.replace(
-            "## 다음 액션\n초기 다음 액션",
-            "## 다음 액션\n초기 다음 액션\n- 세부 액션 1\n- 세부 액션 2",
-        )
-        self.assertIn("- 세부 액션 2", md, "픽스처 조립 실패 — 하위 자유 기재 삽입 확인 필요")
-        blocker_before = md[md.find("## 블로커"):md.find("## 다음 액션")]
-        (self.task_path / "STATE.md").write_text(md, encoding="utf-8")
-
-        code = self._advance(1)  # SIMPLE_ROWS_SPEC row1 = TASK/작업 → in_progress
-        self.assertEqual(code, 0, "advance(1) 실패")
-
-        new_md = self._md()
-        first_line, rest_lines = self._next_action_lines(new_md)
-        self.assertEqual(
-            first_line, "TASK 작업 진행 중",
-            f"'## 다음 액션' 첫 줄이 파생값으로 치환되지 않음: {first_line!r}"
-        )
-        self.assertEqual(
-            rest_lines, ["- 세부 액션 1", "- 세부 액션 2"],
-            f"하위 자유 기재가 보존되지 않음: {rest_lines!r}"
-        )
-        blocker_after = new_md[new_md.find("## 블로커"):new_md.find("## 다음 액션")]
-        self.assertEqual(blocker_before, blocker_after, "블로커 섹션이 오염됨")
+    # [T094 삭제·D-1] test_m1_first_line_replaced_subordinate_free_text_preserved
+    # — '## 다음 액션' 헤더의 첫 줄 치환 + 하위 자유 기재 보존을 검증하는
+    # 순수 STATE.md 렌더 테스트였다(state.json 검증 0건). D-1로 해당 섹션
+    # 자체가 완전 제거되어 대체 불가능하게 기능이 소멸했다.
 
     # ── S-6 (R-4): advance/mark --next-action 오버라이드 우선 ──
 
     def test_r4_override_next_action_takes_priority_over_derivation(self):
-        """[T072/L1-R4] S-6 — `advance --next-action "커스텀 안내"` 지정 시 자동 파생값보다
-        오버라이드가 우선해야 한다. 공개 CLI 실호출(run.sh subprocess, red-first.md §4) —
-        현재 advance 파서에 `--next-action`이 없어 argparse 단계에서 거부(usage error,
-        exit 2)되므로 실패한다(RED)."""
+        """[T072/L1-R4][T094 수정] S-6 — `advance --next-action "커스텀 안내"`
+        지정 시 자동 파생값보다 오버라이드가 우선해야 한다. 공개 CLI 실호출
+        (run.sh subprocess, red-first.md §4).
+
+        STATE.md 첫 줄 렌더 확인은 D-1로 '## 다음 액션' 섹션이 완전히
+        제거되어 삭제한다 — 오버라이드 우선 순위 로직 자체(state.json 필드)는
+        여전히 살아있는 기능이므로 그 검증만 존치한다."""
         self._init(rows_spec=self._NEXT_ACTION_OVERRIDE_ROWS_SPEC)
 
         code, stdout, stderr, data = _run070([
@@ -2017,19 +2158,17 @@ class TestNextActionAutoDerive(BaseTestCase):
             state.get("next_action"), "커스텀 안내",
             f"오버라이드가 파생값보다 우선하지 않음: {state.get('next_action')!r}"
         )
-        first_line, _ = self._next_action_lines(self._md())
-        self.assertEqual(
-            first_line, "커스텀 안내",
-            f"STATE.md 오버라이드 반영 불일치: {first_line!r}"
-        )
 
     # ── S-7 (R-4/M-3): 오버라이드 비지속 — 다음 전이 자동 파생 복귀 ──
 
     def test_m3_override_non_persistent_reverts_to_derived_on_next_transition(self):
-        """[T072/L1-R4,M-3] S-7 — S-6과 동일한 오버라이드 전이 직후, `--next-action` 없는
-        후속 mark 시 자동 파생값으로 복귀해야 한다(오버라이드 비지속 — stale 값 재도입 금지).
-        현재 오버라이드 자체가 미구현이라 사전 단계(advance --next-action)에서부터
-        실패한다(RED)."""
+        """[T072/L1-R4,M-3][T094 수정] S-7 — S-6과 동일한 오버라이드 전이 직후,
+        `--next-action` 없는 후속 mark 시 자동 파생값으로 복귀해야 한다
+        (오버라이드 비지속 — stale 값 재도입 금지).
+
+        STATE.md 첫 줄 렌더 확인은 D-1로 '## 다음 액션' 섹션이 완전히
+        제거되어 삭제한다 — 오버라이드 비지속 로직 자체(state.json 필드)는
+        여전히 살아있는 기능이므로 그 검증만 존치한다."""
         self._init(rows_spec=self._NEXT_ACTION_OVERRIDE_ROWS_SPEC)
 
         code, stdout, stderr, data = _run070([
@@ -2054,11 +2193,6 @@ class TestNextActionAutoDerive(BaseTestCase):
         self.assertEqual(
             state.get("next_action"), "PLAN 작업 진입",
             f"후속 전이 후 자동 파생값 복귀 실패: {state.get('next_action')!r}"
-        )
-        first_line, _ = self._next_action_lines(self._md())
-        self.assertEqual(
-            first_line, "PLAN 작업 진입",
-            f"STATE.md 첫 줄 복귀 실패: {first_line!r}"
         )
 
 
@@ -2257,23 +2391,25 @@ class TestRowsFrom(BaseTestCase):
 # ═════════════════════════════════════════════════════════════════════════════
 
 class TestErrorCodesCompleteness(unittest.TestCase):
-    """PLAN §2.18 E-1: ERROR_CODES 25종 기존 + PLAN 013 신규 2종 + PLAN 014 신규 1종 + PLAN 016 신규 2종 + PLAN 005 신규 1종 + 070 신규 8종 + 091 신규 5종 = 44종 모두 등재 확인.
+    """PLAN §2.18 E-1: ERROR_CODES 25종 기존 + PLAN 013 신규 2종 + PLAN 014 신규 1종 + PLAN 016 신규 2종 + PLAN 005 신규 1종 + 070 신규 8종 + 091 신규 5종 - 094 삭제 2종 + 094 신규 1종 = 43종 모두 등재 확인.
 
     [PM 승인 예외 — 070 GREEN 후속 정정] 31→39 계약 갱신은 테스트 약화가 아니라
     카탈로그 정합 보존을 위한 승인된 갱신이다(AGENTIC-LOG #16 승인 근거).
     091(RED-first, F-004): 게이트 집행 배선 신규 5종(gate_artifact_missing +
     spec_gate_type_invalid/spec_gate_missing_field/spec_gate_field_type_invalid/
-    spec_gate_checklist_empty) 반영 — Step 8 GREEN 이전에는 ST.ERROR_CODES에
-    미등재이므로 FAIL이 정상(RED 증거).
-    """
+    spec_gate_checklist_empty) 반영.
+    [T094 수정 2026-08-16 — R-3/D-2] 마커 하드 게이트 제거로 `marker_missing`,
+    `--import-existing` 파싱 분기 삭제로 `import_failed`가 ERROR_CODES에서
+    소멸(44→42)하고, 명시적 거부 코드 `import_existing_removed`가 신규
+    등재(42→43)되어 실측 39→43(070 GREEN 후속 정정)이 아니라 44→43으로
+    갱신됐다. 목록·카운트 둘 다 실측값(43)에 맞춰 동기화한다."""
 
     EXPECTED_CODES = [
-        # 기존 25종 (PLAN §2.18 + 이전 추가분)
+        # 기존 25종 (PLAN §2.18 + 이전 추가분) 중 23종 존치
+        # ([T094 삭제] marker_missing/import_failed 2종은 아래 094 절 참조)
         "worker_scope_violation",
-        "marker_missing",
         "already_initialized",
         "date_tool_failed",
-        "import_failed",
         "invalid_status_transition",
         "row_not_found",
         "invalid_stage_enum",
@@ -2319,16 +2455,54 @@ class TestErrorCodesCompleteness(unittest.TestCase):
         "spec_gate_missing_field",
         "spec_gate_field_type_invalid",
         "spec_gate_checklist_empty",
+        # 094 신규 1종 (D-2 — --import-existing 명시적 거부)
+        "import_existing_removed",
     ]
 
     def test_error_codes_count(self):
-        """ERROR_CODES 상수가 44종 모두 포함 (PLAN §2.18 + PLAN 013 + PLAN 014 + PLAN 016 + PLAN 005 + 070 F-001/F-003/F-004 8종 + 091 F-004 5종)"""
-        self.assertEqual(len(ST.ERROR_CODES), 44)
+        """[T094 수정] ERROR_CODES 상수가 43종 모두 포함 (PLAN §2.18 + PLAN 013 +
+        PLAN 014 + PLAN 016 + PLAN 005 + 070 F-001/F-003/F-004 8종 + 091 F-004
+        5종 - 094 R-3/D-2 삭제 2종(marker_missing/import_failed) + 094 D-2
+        신규 1종(import_existing_removed) = 44-2+1 = 43종, README.md 실측과
+        동기화(TestErrorCodesCompleteness.test_s7_error_catalog_marker_import_realignment
+        가 README 기재 종수 == 실측값을 별도 검증)."""
+        self.assertEqual(len(ST.ERROR_CODES), 43)
 
     def test_all_28_codes_registered(self):
-        """44종 코드 각각이 ERROR_CODES에 등재됨(070 신규 8종 + 091 신규 5종 포함)"""
+        """[T094 수정] 43종 코드 각각이 ERROR_CODES에 등재됨(070 신규 8종 + 091
+        신규 5종 + 094 신규 1종 포함, marker_missing/import_failed 2종 제외)"""
         for code in self.EXPECTED_CODES:
             self.assertIn(code, ST.ERROR_CODES, f"에러 코드 {code} 미등재")
+        self.assertEqual(len(self.EXPECTED_CODES), len(ST.ERROR_CODES),
+                         "EXPECTED_CODES 목록 건수가 실측 ERROR_CODES 종수와 불일치")
+
+    def test_s7_error_catalog_marker_import_realignment(self):
+        """[T094/L1-F002] S-7 — 에러 카탈로그 코드↔문서 정합(D-5 ①, R-3 AC(b)).
+
+        기대: `marker_missing`·`import_failed`가 `ERROR_CODES`에서 삭제되고
+        `import_existing_removed`가 신규 등재되며, 실측 `len(ERROR_CODES)`가
+        `README.md`의 카탈로그 헤더 기재 종수와 일치해야 한다(설계 목표 43이나
+        실측값을 채택 — PLAN §1.5 D-5 각주).
+
+        RED 근거: 현재 `ERROR_CODES`는 `marker_missing`/`import_failed`를 여전히
+        보유하고 `import_existing_removed`가 없으며(state_tool.py:81-133),
+        `README.md` 헤더는 "39종"으로 실측 44종과도 이미 불일치한다."""
+        self.assertNotIn("marker_missing", ST.ERROR_CODES,
+                         "marker_missing이 아직 ERROR_CODES에 남아있음(R-3 위반)")
+        self.assertNotIn("import_failed", ST.ERROR_CODES,
+                         "import_failed가 아직 ERROR_CODES에 남아있음(D-2 위반)")
+        self.assertIn("import_existing_removed", ST.ERROR_CODES,
+                     "import_existing_removed가 ERROR_CODES에 없음(D-2 위반)")
+
+        readme_path = _TOOL_DIR / "README.md"
+        readme_text = readme_path.read_text(encoding="utf-8")
+        m = re.search(r"##\s*에러\s*코드\s*카탈로그\s*\((\d+)종", readme_text)
+        self.assertIsNotNone(m, "README.md에서 '에러 코드 카탈로그 (N종' 헤더를 찾지 못함")
+        readme_count = int(m.group(1))
+        actual_count = len(ST.ERROR_CODES)
+        self.assertEqual(readme_count, actual_count,
+                         f"README 기재 종수({readme_count})와 실측 len(ERROR_CODES)"
+                         f"({actual_count})가 불일치함(D-5 ① 정합 위반)")
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -2687,13 +2861,28 @@ class TestVerify(BaseTestCase):
         """034 TS-013 (자기검증): 034 자신의 TEST-SCENARIO.md → _check_mock_patterns []
         + verify exit 0. 메타-순환(가드 검증 문서가 가드에 막힘) 해소 증명.
         TEST-SCENARIO.md를 통과 목적으로 수정 금지 — 본문은 PM이 #2 전제로 작성.
-        """
+
+        [T094 R-10 수정 2026-08-16] `repo_root = _TOOL_DIR.parents[2]`는 "레포
+        루트 = 작업 루트"를 가정한다 — worktree(`.opal-worktrees/task_094/`)에서
+        실행하면 worktree 자체의 루트를 가리켜, `tasks/`가 분기되지 않고
+        허브에 고정되는 092 경로 계약(`opal-harness.md` §2.5)과 어긋나
+        `tasks/034-*`를 못 찾는다. [MUST] 신규 헬퍼를 만들지 않고
+        `find_project_root()`(state_tool.py:553 — `.opal/MEMORY.json` 보유
+        조상 탐색, 088 §2.3에서 이미 검증된 패턴)를 재사용한다 — 이 함수는
+        worktree/허브(전체 체크아웃) 양쪽에서 정확히 허브 루트를 반환한다."""
         import io
         from contextlib import redirect_stdout
 
-        # 레포 루트 기준 상대 해석 — 절대경로 하드코딩은 레포 개명(opal→ai-framework)으로
-        # 이미 한 차례 끊겼다. 034는 tasks/backup/으로 이관됐으므로 두 위치를 모두 탐색한다.
-        repo_root = _TOOL_DIR.parents[2]
+        # 092 경로 계약(tasks/는 허브 고정) — find_project_root()로 허브 루트를
+        # 찾는다. worktree에서 실행돼도 `.opal/MEMORY.json` 보유 조상(허브)까지
+        # 거슬러 올라가므로 정확하다(088 §2.3 선례 재사용, 신규 헬퍼 미신설).
+        repo_root = ST.find_project_root(str(_TOOL_DIR))
+        self.assertIsNotNone(
+            repo_root,
+            f"find_project_root({_TOOL_DIR})가 None을 반환함 — .opal/MEMORY.json "
+            "보유 조상을 찾지 못함(허브 경로 계약 위반 의심)"
+        )
+        # 034는 tasks/backup/으로 이관됐으므로 두 위치를 모두 탐색한다.
         task_dir = "034-260621-opds-state-tool-mock-패턴-오탐수정"
         candidates = [
             repo_root / "tasks" / task_dir / "TEST-SCENARIO.md",
@@ -3045,8 +3234,11 @@ class TestNewStandardRowStructure(BaseTestCase):
         self.assertEqual(len(state["rows"]), 10)
 
     def test_new_structure_full_sequential_flow_completes(self):
-        """새 10행 구조 전체 순차 완주: 모든 행 순서대로 mark → current_status=done.
-        guard가 정상 통과하고 CLOSE "DONE.md 생성" 행에서 완료 전환 (014 Phase 4)"""
+        """[T094 수정] 새 10행 구조 전체 순차 완주: 모든 행 순서대로 mark →
+        current_status=done. guard가 정상 통과하고 CLOSE "DONE.md 생성" 행에서
+        완료 전환 (014 Phase 4). '- 상태: 완료' STATE.md 렌더는 D-1로 제거되어
+        `state.json.current_status` 검증만으로 충분하다(정보 손실 0, 조회
+        경로는 `show --format md`로 이관)."""
         # row1 TASK 작업
         self.assertEqual(self._mark(1), 0)
         # row2 TASK 사용자 확인 (owner=user — 사용자 발화)
@@ -3070,8 +3262,6 @@ class TestNewStandardRowStructure(BaseTestCase):
 
         state = self._state()
         self.assertEqual(state["current_status"], "done")
-        md = self._md()
-        self.assertIn("- 상태: 완료", md)
 
     def test_new_structure_close_done_row_triggers_done_status(self):
         """새 구조: CLOSE 마지막 행 항목이 'DONE.md 생성'이어도 current_status=done 전환.
@@ -4627,6 +4817,36 @@ class TestPipelineJsonInit(BaseTestCase):
         validate_result = self._validate()
         self.assertTrue(validate_result["ok"], f"1.1 state.json validate 실패: {validate_result}")
 
+    def test_s22_rows_from_json_regression_after_import_existing_removal(self):
+        """[T094/L1-F002] S-22 — `--import-existing` 및 074 key 재접합 삭제(D-2)가
+        정상 `--rows-from <pipeline.json>` 경로를 훼손하지 않아야 한다(회귀).
+        실 opd pipeline.json(16개 task_steps)으로 init 시 `rows[].key` 전건
+        영속화 + `schema_version=="1.1"` 유지를 확인한다.
+
+        이 테스트는 D-2가 삭제하는 대상(`--import-existing`/`_reattach_import_keys`)
+        과 무관한 정상 경로만 검증하므로, F-002 삭제 작업 전후 모두 통과해야
+        하는 회귀 안전망이다(TEST-SCENARIO.md S-22 '정상 경로 회귀')."""
+        self.assertTrue(_OPD_REAL_PIPELINE_JSON.exists())
+        with _mock_now():
+            args = make_args(
+                task_path=str(self.task_path),
+                skill="opd", mode="agentic",
+                rows_from=str(_OPD_REAL_PIPELINE_JSON),
+            )
+            exit_code, result = self._call_cmd(ST.cmd_init, args)
+        self.assertEqual(exit_code, 0, f"opd pipeline.json init 실패: {result}")
+        state = self._state()
+        self.assertEqual(state["schema_version"], "1.1",
+                         "실 opd pipeline.json init은 schema_version 1.1을 유지해야 함")
+        with open(_OPD_REAL_PIPELINE_JSON, encoding="utf-8") as f:
+            spec = json.load(f)
+        expected_keys = [ts["key"] for ts in spec["task_steps"]]
+        actual_keys = [row.get("key") for row in state["rows"]]
+        self.assertEqual(actual_keys, expected_keys,
+                         "rows[].key가 실 pipeline.json task_steps[].key 순서와 불일치")
+        validate_result = self._validate()
+        self.assertTrue(validate_result["ok"], f"validate 실패: {validate_result}")
+
 
 # ═════════════════════════════════════════════════════════════════════════════
 # 3. TestStateSchema11Compat — F-002 state.schema.json 1.1 병행 (TEST-SCENARIO S-4)
@@ -6074,6 +6294,639 @@ class TestWorktreeFlag(BaseTestCase):
         for key in keys_no_wt:
             self.assertEqual(state_no_wt[key], state_with_wt[key],
                              f"'{key}' 필드가 --worktree 유무에 따라 달라짐(H-1 위반)")
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# 094 RED-first 신설 — TestJournalResilience (TEST-SCENARIO.md S-4, S-5, S-30, S-32)
+# PLAN §3.1.2 (2)(3) ensure_journal_skeleton/fail-open sync_state_md, §3.5.2
+# [MUST] red-first.md §2/§4: 작성자(opal-test-agent mode:red) ≠ 구현자(opal-be-agent),
+# 공개 인터페이스(run.sh subprocess, stdout JSON + exit code) + 실 파일 내용으로만
+# 검증 — mock/patch/MagicMock 금지. 파일 권한 조작(os.chmod)은 실 환경 조작이므로 허용.
+# ═════════════════════════════════════════════════════════════════════════════
+
+def _corrupt_decision_log_table_header(md):
+    """094: '## 의사결정 로그' 표 헤더행+구분행만 제거해 손상 저널을 만든다
+    (헤딩 텍스트와 본문 나머지는 그대로 보존 — S-30 fixture)."""
+    return re.sub(
+        r"(## 의사결정 로그\n)\| # \| 시점 \| 결정 \| 근거 \|\n\|[-| ]+\|\n",
+        r"\1",
+        md,
+    )
+
+
+class TestJournalResilience(BaseTestCase):
+    """094 F-001 — 저널 쓰기 회복력: STATE.md 삭제/권한불가/골격손상/입력파괴
+    4가지 실패 모드에서도 의사결정 로그가 유실되지 않아야 한다(TASK.md §제약
+    "의사결정 로그·블로커 데이터는 어떤 경로에서도 유실되어서는 안 된다").
+
+    [MUST] 전 테스트가 실 CLI subprocess(run.sh) + 실 파일 I/O로만 검증한다.
+    """
+
+    def setUp(self):
+        super().setUp()
+        self.assertTrue(_OPD_REAL_PIPELINE_JSON.exists(),
+                        f"opd pipeline.json 실 스펙 부재: {_OPD_REAL_PIPELINE_JSON}")
+
+    def _init_opd(self, task_path):
+        code, stdout, stderr, data = _run094([
+            "init", str(task_path), "--skill", "opd", "--mode", "agentic",
+            "--rows-from", str(_OPD_REAL_PIPELINE_JSON),
+        ])
+        self.assertEqual(code, 0, f"init 실패: {stdout!r} {stderr!r}")
+        return data
+
+    # ── S-4: STATE.md 삭제 상태에서 의사결정 로그 무손실 [P0] ──────────────
+
+    def test_s4_state_md_deleted_mark_autopass_autocreates_and_logs(self):
+        """[T094/L2-F001] S-4 — STATE.md를 삭제한 뒤
+        `mark --task-step <key> --done --auto-pass --note '삭제상태기재'`를
+        호출하면 `ok:true` + STATE.md **자동 생성** + `## 의사결정 로그`에 해당
+        note 1행 기재 + state.json 정상 갱신이 이루어져야 한다(R-2 AC,
+        `ensure_journal_skeleton` §3.1.2 (2)).
+
+        [PM 판정 정정 2026-08-16] 최초 작성 시 `--force`(비워커·비게이트)를
+        트리거로 삼았으나, 이 경로는 `decision`을 세팅하지 않는 실재하지 않는
+        트리거였다(실측: `decision` 세팅 트리거는 auto-pass/worker-force/
+        gate-force 3종뿐, state_tool.py:1615-1634). TASK.md R-2 AC·TEST-SCENARIO
+        S-4를 실재 트리거 `--auto-pass`로 교정하고 본 테스트도 동일 교정한다.
+
+        RED 근거: 현재 `sync_state_md`는 `load_state_md(task_path)`가 None이면
+        즉시 `err(command, "marker_missing")`로 exit 1하므로(state_tool.py:
+        375-378), STATE.md 자동 생성도 로그 기재도 일어나지 않는다. 단,
+        `save_state_json()`이 `sync_state_md()`보다 먼저 커밋되므로(H-3) row
+        상태 자체는 state.json에 이미 반영된 채 exit 1이 발생하는 이중 실패
+        창(H-2)이 관측된다."""
+        task_path = self.tmpdir / "094-s4-deleted"
+        task_path.mkdir()
+        self._init_opd(task_path)
+        (task_path / "STATE.md").unlink()
+        self.assertFalse((task_path / "STATE.md").exists())
+
+        code, stdout, stderr, data = _run094([
+            "mark", str(task_path), "--task-step", "task.task_md", "--done",
+            "--auto-pass", "--note", "삭제상태기재",
+        ])
+        self.assertEqual(code, 0,
+                         f"STATE.md 삭제 상태에서도 mark는 exit 0이어야 함(fail-open): "
+                         f"stdout={stdout!r} stderr={stderr!r}")
+        self.assertTrue(data.get("ok"), f"ok:true가 아님: {data}")
+
+        self.assertTrue((task_path / "STATE.md").exists(),
+                        "mark --force 후 STATE.md가 자동 생성되어야 함")
+        md = (task_path / "STATE.md").read_text(encoding="utf-8")
+        self.assertIn("삭제상태기재", md,
+                     "삭제 상태에서 기재하려던 note가 저널 어디에도 없음(로그 유실)")
+
+        state = json.loads((task_path / "state.json").read_text(encoding="utf-8"))
+        row = next(r for r in state["rows"] if r.get("key") == "task.task_md")
+        self.assertEqual(row["status"], "done",
+                         "state.json은 STATE.md 부재와 무관하게 정상 갱신되어야 함")
+
+    # ── S-5: 저널 쓰기 불가 시 이중 실패 방지 [P0] ─────────────────────────
+
+    def test_s5_state_md_readonly_fail_open_journal_warning(self):
+        """[T094/L2-F001/F002] S-5 — STATE.md 권한을 0444(쓰기 불가)로 만든 뒤
+        `mark --task-step <key> --done --auto-pass --note '권한불가기재'`를
+        호출하면 ① `ok:true`·exit 0(파이프라인이 멈추지 않음) ②
+        stdout `journal_warning.decision`에 기재 실패한 decision 원문 포함
+        (로그가 조용히 증발하지 않음) ③ `state.json`은 정상 갱신, 이 3가지가
+        모두 성립해야 한다(H-2/H-3, §3.1.2 (3) fail-open try/except).
+
+        [PM 판정 정정 2026-08-16] 최초 작성 시 `status --set blocked --note`를
+        트리거로 삼았으나, 저널 쓰기 불가 조건(0444) 자체를 검증하는 데는
+        문제가 없되 R-2 AC가 요구하는 "실재 트리거 3종" 목록에 정합시키기
+        위해 `mark --auto-pass --note`(트리거 #2)로 교정한다. 권한 0444 조건은
+        그대로 유지한다. `mark`는 CLOSE 마지막 행이 아닌 한 `current_status`를
+        건드리지 않으므로, state.json 정상 갱신 확인은 대상 행의
+        `status`/`owner` 필드로 검증한다.
+
+        RED 근거: 현재 `sync_state_md`는 어떤 예외도 흡수하지 않으므로,
+        `save_state_md()`의 쓰기 시도가 `PermissionError`를 그대로 전파해
+        CLI가 비정상 종료(exit 1, stdout에 유효 JSON 없음)한다 — journal_warning
+        필드 자체가 존재하지 않는다."""
+        task_path = self.tmpdir / "094-s5-readonly"
+        task_path.mkdir()
+        self._init_opd(task_path)
+        md_path = task_path / "STATE.md"
+        original_mode = md_path.stat().st_mode
+        md_path.chmod(0o444)
+        try:
+            code, stdout, stderr, data = _run094([
+                "mark", str(task_path), "--task-step", "task.task_md", "--done",
+                "--auto-pass", "--note", "권한불가기재",
+            ])
+            self.assertEqual(code, 0,
+                             f"저널 쓰기 실패가 파이프라인을 막으면 안 됨(fail-open): "
+                             f"stdout={stdout!r} stderr={stderr!r}")
+            self.assertTrue(data.get("ok"), f"ok:true가 아님: {data}")
+            self.assertIn("journal_warning", data,
+                         "저널 쓰기 실패 시 journal_warning 필드가 stdout에 없음(로그 유실 위험)")
+            jw = data["journal_warning"]
+            self.assertIn("권한불가기재", json.dumps(jw, ensure_ascii=False),
+                         f"journal_warning에 기재 실패한 decision 원문이 없음: {jw}")
+
+            state = json.loads((task_path / "state.json").read_text(encoding="utf-8"))
+            row = next(r for r in state["rows"] if r.get("key") == "task.task_md")
+            self.assertEqual(row["status"], "done",
+                             "저널 쓰기 실패와 무관하게 state.json 행 상태는 정상 갱신되어야 함")
+            self.assertEqual(row["owner"], "auto",
+                             "저널 쓰기 실패와 무관하게 state.json owner는 정상 갱신되어야 함")
+        finally:
+            md_path.chmod(original_mode)
+
+    # ── S-30: 손상 저널 골격 복구 append 분기 + 멱등 ───────────────────────
+
+    def test_s30_broken_journal_skeleton_recovers_and_is_idempotent(self):
+        """[T094/L2-F001] S-30 — `## 의사결정 로그` 표 헤더(헤더행+구분행)만
+        제거한 손상 저널에서 `mark --auto-pass --note`를 2회 연속 호출하면,
+        1회차에 골격이 append로 복구되며 로그 1행이 기재되고 기존 본문은
+        무손실이어야 하며, 2회차에는 골격이 중복 append되지 않고(멱등) 로그만
+        2행으로 누적되어야 한다(`ensure_journal_skeleton` 두 번째 분기 —
+        헤더 미매칭 시 파일 끝 append, §3.1.2 (2)).
+
+        [PM 판정 정정 2026-08-16] 최초 작성 시 `--force`(비워커·비게이트)를
+        트리거로 삼았으나 실재하지 않는 트리거였다(실측: decision 세팅 트리거는
+        auto-pass/worker-force/gate-force 3종뿐). 실재 트리거 `--auto-pass`
+        (트리거 #2)로 교정한다. 2회차는 1회차와 다른 행(`task.user_confirm`)을
+        대상으로 하여 "이미 done인 행 재대상"이 아닌 순수 append-경로 멱등성만
+        관찰한다.
+
+        RED 근거: 현재 코드에는 `ensure_journal_skeleton` 자체가 없다.
+        `append_decision_log`는 `## 의사결정 로그\\n| # | 시점 | 결정 | 근거 |\\n
+        |[-| ]+\\n` 정규식으로 헤더를 못 찾으면 조용히 원문을 반환하므로
+        (state_tool.py:344-350), 골격 복구도 로그 기재도 일어나지 않는다."""
+        task_path = self.tmpdir / "094-s30-broken"
+        task_path.mkdir()
+        self._init_opd(task_path)
+        md_path = task_path / "STATE.md"
+        original_md = md_path.read_text(encoding="utf-8")
+        self.assertIn("| # | 시점 | 결정 | 근거 |", original_md,
+                      "픽스처 전제: 원본 저널에 의사결정 로그 표 헤더가 있어야 함")
+        broken_md = _corrupt_decision_log_table_header(original_md)
+        self.assertNotIn("| # | 시점 | 결정 | 근거 |", broken_md,
+                        "픽스처 손상 실패: 표 헤더가 여전히 남아있음")
+        md_path.write_text(broken_md, encoding="utf-8")
+
+        # 무손실 확인 대상 — 손상시키지 않은 임의 본문 마커
+        self.assertIn("## 블로커", broken_md)
+        self.assertIn("없음", broken_md)
+
+        # 1회차 호출
+        code, stdout, stderr, data = _run094([
+            "mark", str(task_path), "--task-step", "task.task_md", "--done",
+            "--auto-pass", "--note", "손상복구기재",
+        ])
+        self.assertEqual(code, 0, f"1회차 mark --auto-pass 실패: {stdout!r} {stderr!r}")
+        self.assertTrue(data.get("ok"))
+
+        md_after_1 = md_path.read_text(encoding="utf-8")
+        self.assertIn("## 블로커", md_after_1, "1회차 이후 '## 블로커' 섹션이 소실됨(무손실 위반)")
+        self.assertEqual(md_after_1.count("## 의사결정 로그"), 1,
+                         "1회차 이후 '## 의사결정 로그' 헤딩이 중복 생성됨")
+        self.assertEqual(md_after_1.count("| # | 시점 | 결정 | 근거 |"), 1,
+                         "1회차 이후 표 헤더가 정확히 1개 복구되어야 함(append 분기)")
+        rows_after_1 = _decision_log_row_numbers(md_after_1)
+        self.assertEqual(rows_after_1, ["1"],
+                         f"1회차 이후 로그가 정확히 1행(#1)이어야 함 — 실제: {rows_after_1}")
+        self.assertIn("손상복구기재", md_after_1, "1회차 note가 로그에 기재되지 않음(조용한 no-op)")
+
+        # 2회차 호출 — 멱등성(골격 중복 append 0, 로그만 누적)
+        code, stdout, stderr, data = _run094([
+            "mark", str(task_path), "--task-step", "task.user_confirm", "--done",
+            "--auto-pass", "--note", "손상복구기재2",
+        ])
+        self.assertEqual(code, 0, f"2회차 mark --auto-pass 실패: {stdout!r} {stderr!r}")
+        self.assertTrue(data.get("ok"))
+
+        md_after_2 = md_path.read_text(encoding="utf-8")
+        self.assertEqual(md_after_2.count("## 의사결정 로그"), 1,
+                         "2회차 이후 '## 의사결정 로그' 헤딩이 중복 생성됨(비멱등)")
+        self.assertEqual(md_after_2.count("| # | 시점 | 결정 | 근거 |"), 1,
+                         "2회차 이후 표 헤더가 중복 append됨(비멱등)")
+        rows_after_2 = _decision_log_row_numbers(md_after_2)
+        self.assertEqual(rows_after_2, ["1", "2"],
+                         f"2회차 이후 로그가 1,2로 누적되어야 함 — 실제: {rows_after_2}")
+        self.assertIn("손상복구기재", md_after_2, "1회차 로그가 2회차 이후에도 보존되어야 함")
+        self.assertIn("손상복구기재2", md_after_2, "2회차 note가 로그에 기재되지 않음")
+
+    # ── S-32: --note 표 파괴 입력 방어 [경계 보강] ─────────────────────────
+
+    def test_s32_note_with_pipe_and_newline_does_not_break_table(self):
+        """[T094/L2-F001] S-32 — `--note` 값에 마크다운 표 구분자(`|`)와 개행이
+        포함된 입력(`'A | B\\n두번째줄'`)으로 `mark --auto-pass`를 실행해도 ①
+        `ok:true` ② `## 의사결정 로그` 표 구조가 파괴되지 않고 행 수가 정확히
+        +1·컬럼 수 유지 ③ 입력 원문이 복원 가능한 형태로 보존(이스케이프/치환,
+        무단 절삭 금지) ④ 후속 `mark` 호출이 정상 동작해야 한다
+        (`append_decision_log` 입력 방어).
+
+        [PM 판정 정정 2026-08-16] 최초 작성 시 `--force`(비워커·비게이트)를
+        트리거로 삼았으나 실재하지 않는 트리거였다. 실재 트리거 `--auto-pass`
+        (트리거 #2)로 교정한다 — dirty note는 `reason_text`(근거 컬럼)로
+        유입된다.
+
+        RED 근거: 현재 `append_decision_log`는 `decision`/`reason`을 이스케이프
+        없이 `f"| {new_num} | {now_str} | {decision} | {reason} |\\n"`로 그대로
+        삽입하므로(state_tool.py:356), `|`가 열 경계를 늘리고 개행이 표 행을
+        여러 줄로 쪼갠다."""
+        task_path = self.tmpdir / "094-s32-dirty-note"
+        task_path.mkdir()
+        self._init_opd(task_path)
+        dirty_note = "A | B\n두번째줄"
+
+        code, stdout, stderr, data = _run094([
+            "mark", str(task_path), "--task-step", "task.task_md", "--done",
+            "--auto-pass", "--note", dirty_note,
+        ])
+        self.assertEqual(code, 0, f"mark --auto-pass(dirty note) 실패: {stdout!r} {stderr!r}")
+        self.assertTrue(data.get("ok"))
+
+        md = (task_path / "STATE.md").read_text(encoding="utf-8")
+        rows = _decision_log_row_numbers(md)
+        self.assertEqual(rows, ["1"],
+                         f"표 구분자/개행 입력 후에도 로그는 정확히 1행(#1)이어야 함 — 실제: {rows}")
+
+        section = _extract_md_section(md, "의사결정 로그")
+        data_lines = [ln for ln in section.splitlines() if re.match(r"^\|\s*1\s*\|", ln)]
+        self.assertEqual(len(data_lines), 1,
+                         f"1번 로그 행이 단일 물리 라인이어야 함(개행 미이스케이프 시 라인 분열) — "
+                         f"섹션: {section!r}")
+        cell_count = len(data_lines[0].strip().strip("|").split("|"))
+        self.assertEqual(cell_count, 4,
+                         f"표 컬럼 수(#/시점/결정/근거=4)가 유지되어야 함(| 미이스케이프 시 컬럼 증가) — "
+                         f"실제 행: {data_lines[0]!r}")
+
+        # 원문 복원 가능성 — 이스케이프/치환되었더라도 핵심 토큰은 보존되어야 함
+        self.assertIn("A", md)
+        self.assertIn("B", md)
+        self.assertIn("두번째줄", md)
+
+        # 후속 mark 호출 정상 동작
+        code, stdout, stderr, data = _run094([
+            "mark", str(task_path), "--task-step", "task.user_confirm", "--done",
+            "--auto-pass", "--note", "후속 정상 호출",
+        ])
+        self.assertEqual(code, 0,
+                         f"표 파괴 입력 이후 후속 mark가 실패하면 안 됨: {stdout!r} {stderr!r}")
+        self.assertTrue(data.get("ok"))
+
+    # ── R-2 AC 확대분 (PM 판정 2026-08-16) — 트리거 #3 worker-force 로그 보존 ──
+    # [MUST 재사용 명시] 트리거 #3(gate-force)의 저널 보존은 이미
+    # `TestTaskStepGate.test_s15_force_note_bypass_records_decision_log`
+    # (state_tool.py:6357 부근)가 `gate_artifact_force` + missing 목록 기재를
+    # 검증하고 있으므로 중복 신설하지 않는다 — 본 테스트는 나머지 1종
+    # (`--as-worker --force`, 트리거 #3-a "worker-force")만 신규로 담당한다.
+
+    def test_r2_worker_force_trigger_decision_log_preserved(self):
+        """[T094/L2-F001] R-2 AC 확대 — `--as-worker --worker-stage <다른 단계>
+        --force --note`(트리거 #3 "worker_scope_force")로 워커 스코프 위반을
+        강제 우회해도 `## 의사결정 로그`에 `worker_scope_force` 및 note 원문이
+        정상 기재되어야 한다(TASK.md R-2 AC가 auto-pass/worker-force/
+        gate-force 3트리거 전부를 요구하도록 확대됨).
+
+        이 트리거 자체는 094 이전부터 이미 `decision`을 세팅하는 실재 경로다
+        (state_tool.py:1623-1627, "§2.17 트리거 #3"). 저널화(F-001) 이후에도
+        이 로그 기재가 계속 보존되는지 확인하는 회귀 안전망이며, S-1이
+        만드는 신규 저널 형식(`## 현재 상태` 등 파생 4패턴 부재) 위에서도
+        `## 의사결정 로그`만은 여전히 기능해야 한다는 것이 R-2 AC의 핵심이다."""
+        task_path = self.tmpdir / "094-r2-worker-force"
+        task_path.mkdir()
+        self._init_opd(task_path)
+
+        code, stdout, stderr, data = _run094([
+            "mark", str(task_path), "--task-step", "task.user_confirm", "--done",
+            "--as-worker", "--worker-stage", "EXECUTE",
+            "--force", "--note", "워커범위강제기재",
+        ])
+        self.assertEqual(code, 0, f"mark --as-worker --force 실패: {stdout!r} {stderr!r}")
+        self.assertTrue(data.get("ok"), f"ok:true가 아님: {data}")
+
+        md = (task_path / "STATE.md").read_text(encoding="utf-8")
+        self.assertIn("worker_scope_force", md,
+                     "저널화 이후 worker_scope_force 트리거의 의사결정 로그 기재가 유실됨(R-2 AC 위반)")
+        self.assertIn("워커범위강제기재", md,
+                     "worker_scope_force 로그에 note 원문이 없음(로그 유실 위험)")
+
+        state = json.loads((task_path / "state.json").read_text(encoding="utf-8"))
+        row = next(r for r in state["rows"] if r.get("key") == "task.user_confirm")
+        self.assertEqual(row["status"], "done", "state.json 행 상태가 정상 갱신되어야 함")
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# 094 RED-first 신설 — TestLegacyCoexistence (TEST-SCENARIO.md S-29, S-11)
+# PLAN §3.2.2 (4) 함수 생사 판정 / §3.3.2 (1)(2) show 렌더 원천 단일화·배너, D-4
+# [MUST] 레거시 원본 tasks/093-*는 절대 직접 조작하지 않는다 — 반드시 tmp_path
+# 사본을 조작한다(TASK.md 확정 방향 §4 소급 변경 금지). mock/patch 금지.
+# ═════════════════════════════════════════════════════════════════════════════
+
+# TEST-SCENARIO.md §2.1 "레거시 STATE.md" 실 파일 자산 — 메인 저장소 경로(워크트리에는
+# tasks/ 디렉토리가 포함되지 않으므로 절대경로로 직접 참조한다).
+_LEGACY_093_TASK_DIR = pathlib.Path(
+    "/Volumes/Data/AiStudio/workspace/opal/tasks/093-260815-opd-사용자확인행-자동승인-일원화"
+)
+
+
+def _extract_marker_region(md):
+    """094: PIPELINE_MARKER_START~END(마커 포함) 구간 원문을 반환. 없으면 None."""
+    start = md.find(ST.PIPELINE_MARKER_START)
+    end = md.find(ST.PIPELINE_MARKER_END)
+    if start == -1 or end == -1:
+        return None
+    return md[start:end + len(ST.PIPELINE_MARKER_END)]
+
+
+def _extract_current_status_region(md):
+    """094: '## 현재 상태' 섹션(헤딩 + '- ' 라인들) 원문을 반환. 없으면 None."""
+    m = re.search(r"## 현재 상태\n(?:- [^\n]+\n){1,6}", md)
+    return m.group(0) if m else None
+
+
+class TestLegacyCoexistence(BaseTestCase):
+    """094 F-002/F-003 — 레거시(001~093, 마커+표+`## 현재 상태` 보유) STATE.md와
+    신형 저널 코드의 공존. 반드시 `tasks/093-*` **사본**으로만 조작하고 원본은
+    읽기만 한다(소급 변경 금지). [MUST] 실 CLI subprocess + 실 파일 I/O, mock 금지.
+    """
+
+    def setUp(self):
+        super().setUp()
+        if not _LEGACY_093_TASK_DIR.exists():
+            self.skipTest(f"레거시 실 자산 없음(메인 저장소 경로): {_LEGACY_093_TASK_DIR}")
+        self._legacy_original_state_md = (_LEGACY_093_TASK_DIR / "STATE.md").read_bytes()
+        self._legacy_original_state_json = (_LEGACY_093_TASK_DIR / "state.json").read_bytes()
+
+    def _copy_legacy_task(self, name):
+        """093 STATE.md + state.json을 tmp_path 사본으로 복사(원본 무변경)."""
+        dst = self.tmpdir / name
+        dst.mkdir()
+        shutil.copy2(_LEGACY_093_TASK_DIR / "STATE.md", dst / "STATE.md")
+        shutil.copy2(_LEGACY_093_TASK_DIR / "state.json", dst / "state.json")
+        return dst
+
+    def _assert_legacy_original_untouched(self):
+        self.assertEqual(
+            (_LEGACY_093_TASK_DIR / "STATE.md").read_bytes(), self._legacy_original_state_md,
+            "원본 tasks/093-*/STATE.md가 변경됨(소급 변경 금지 위반)")
+        self.assertEqual(
+            (_LEGACY_093_TASK_DIR / "state.json").read_bytes(), self._legacy_original_state_json,
+            "원본 tasks/093-*/state.json이 변경됨(소급 변경 금지 위반)")
+
+    # ── S-29: 레거시 저널 쓰기 경로 — 표 바이트 동결 [P0·BLOCKING 해소] ────
+
+    def test_s29_legacy_write_path_freezes_pipeline_table_bytes(self):
+        """[T094/L2-F001/F002] S-29 — `tasks/093-*` 사본(마커+표+`## 현재 상태`
+        보유)에 `advance` → `mark --auto-pass --note '레거시쓰기기재'` → `block`을
+        연속 호출하면 ① 3개 호출 전건 `ok:true`·무예외 ② `## 의사결정 로그`에
+        해당 note 1행 정상 추가 ③ 마커·파이프라인 표·`## 현재 상태` 블록이
+        **바이트 동결**(호출 전후 diff 0) ④ 마커·표 중복 삽입 0건 ⑤ 원본
+        무변경이 모두 성립해야 한다(H-4 핵심 — §3.1.2 (3) 신형 `sync_state_md`는
+        더 이상 파이프라인 표/`## 현재 상태`를 재렌더하지 않는다).
+
+        [PM 판정 정정 2026-08-16] 최초 작성 시 중간 호출을 `mark --force --note`
+        (비워커·비게이트)로 삼았으나 실재하지 않는 트리거였다. 실재 트리거
+        `--auto-pass`(트리거 #2)로 교정한다.
+
+        RED 근거: 현재 `sync_state_md`는 매 호출마다 `render_pipeline_table`+
+        `replace_pipeline_section`으로 마커 구간을 다시 그리고
+        `update_current_status_section`으로 `## 현재 상태`를 갱신하므로
+        (state_tool.py:380-387), 세 번의 호출 후 두 구간 모두 원본과
+        바이트 단위로 달라진다(동결 위반)."""
+        task_path = self._copy_legacy_task("094-s29-legacy-write")
+
+        # advance가 가능하도록 사본 state.json의 한 행만 pending으로 되돌린다
+        # (093 원본은 전 행 done/na로 완주되어 advance 대상이 없음 — 사본 한정 조정,
+        # 원본 파일은 건드리지 않는다).
+        state = json.loads((task_path / "state.json").read_text(encoding="utf-8"))
+        state["rows"][0]["status"] = "pending"
+        state["rows"][0]["status_label"] = "⬜"
+        state["rows"][0]["timestamp"] = None
+        (task_path / "state.json").write_text(
+            json.dumps(state, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+        md_before = (task_path / "STATE.md").read_text(encoding="utf-8")
+        marker_before = _extract_marker_region(md_before)
+        current_status_before = _extract_current_status_region(md_before)
+        self.assertIsNotNone(marker_before, "픽스처 전제: 사본에 마커 구간이 있어야 함")
+        self.assertIsNotNone(current_status_before, "픽스처 전제: 사본에 '## 현재 상태'가 있어야 함")
+
+        code, stdout, stderr, data = _run094([
+            "advance", str(task_path), "--task-step", "task.task_md",
+        ])
+        self.assertEqual(code, 0, f"advance 실패: {stdout!r} {stderr!r}")
+        self.assertTrue(data.get("ok"))
+
+        code, stdout, stderr, data = _run094([
+            "mark", str(task_path), "--task-step", "task.task_md", "--done",
+            "--auto-pass", "--note", "레거시쓰기기재",
+        ])
+        self.assertEqual(code, 0, f"mark --auto-pass 실패: {stdout!r} {stderr!r}")
+        self.assertTrue(data.get("ok"))
+
+        code, stdout, stderr, data = _run094([
+            "block", str(task_path), "--task-step", "task.user_confirm",
+            "--reason", "레거시블록",
+        ])
+        self.assertEqual(code, 0, f"block 실패: {stdout!r} {stderr!r}")
+        self.assertTrue(data.get("ok"))
+
+        md_after = (task_path / "STATE.md").read_text(encoding="utf-8")
+        self.assertIn("레거시쓰기기재", md_after,
+                     "레거시 사본에서도 의사결정 로그 기재가 유실되면 안 됨(H-1)")
+
+        marker_after = _extract_marker_region(md_after)
+        current_status_after = _extract_current_status_region(md_after)
+        self.assertEqual(marker_after, marker_before,
+                         "3회 호출 후 레거시 파이프라인 표/마커 구간이 바이트 동결되지 않음(H-4 위반)")
+        self.assertEqual(current_status_after, current_status_before,
+                         "3회 호출 후 레거시 '## 현재 상태' 블록이 바이트 동결되지 않음(H-4 위반)")
+
+        self.assertEqual(md_after.count(ST.PIPELINE_MARKER_START), 1,
+                         "pipeline:start 마커가 중복 삽입됨")
+        self.assertEqual(md_after.count(ST.PIPELINE_MARKER_END), 1,
+                         "pipeline:end 마커가 중복 삽입됨")
+        self.assertEqual(md_after.count("## 현재 상태"), 1,
+                         "'## 현재 상태' 섹션이 중복 삽입됨")
+
+        self._assert_legacy_original_untouched()
+
+    # ── S-11: 레거시 동결 표 오반환 차단 [P0] ──────────────────────────────
+
+    def test_s11_show_md_returns_state_json_values_not_frozen_table(self):
+        """[T094/L2-F003] S-11 — `tasks/093-*` 사본에서 STATE.md 표 내용과
+        `state.json.rows[]`를 의도적으로 불일치시킨 뒤 `show --format md`를
+        호출하면 ① 반환 표가 **state.json 값**과 일치(STATE.md 동결 표가
+        아님) ② 배너 1줄 prepend ③ `marker_present:true` ④ 원본 무변경이
+        모두 성립해야 한다(D-4, R-5 AC(b) — 렌더 원천 단일화).
+
+        RED 근거: 현재 `cmd_show --format md`는 마커가 있으면 STATE.md
+        본문에서 표를 그대로 추출해 반환하므로(state_tool.py:1395-1405),
+        의도적으로 불일치시킨 state.json 값이 아니라 STATE.md의 동결된
+        옛 값을 그대로 반환한다 — 배너도 붙지 않는다."""
+        task_path = self._copy_legacy_task("094-s11-legacy-show")
+
+        # state.json 값과 STATE.md 표 내용을 의도적으로 불일치시킨다
+        # (STATE.md 표는 원래 row1=done/✅ — state.json만 in_progress로 되돌려
+        # 표와 어긋나게 만든다).
+        state = json.loads((task_path / "state.json").read_text(encoding="utf-8"))
+        self.assertEqual(state["rows"][0]["status"], "done",
+                         "픽스처 전제: 원본 093 row1은 done이어야 의도적 불일치 설계가 성립함")
+        distinct_note = "094-S11-불일치마커"
+        state["rows"][0]["status"] = "in_progress"
+        state["rows"][0]["status_label"] = "🔄"
+        state["rows"][0]["note"] = distinct_note
+        (task_path / "state.json").write_text(
+            json.dumps(state, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+        code, stdout, stderr, data = _run094([
+            "show", str(task_path), "--format", "md",
+        ])
+        self.assertEqual(code, 0, f"show 실패: {stdout!r} {stderr!r}")
+        self.assertTrue(data.get("ok"))
+        self.assertTrue(data.get("marker_present"),
+                        "레거시 사본은 마커가 있으므로 marker_present:true여야 함")
+
+        content = data.get("content", "")
+        self.assertIn(distinct_note, content,
+                     "show --format md가 state.json의 최신(불일치) 값을 반영하지 않음"
+                     "(STATE.md 동결 표를 그대로 반환한 것으로 의심됨, D-4 위반)")
+        self.assertTrue(content.lstrip().startswith("> [레거시]"),
+                        f"레거시 배너가 content 최상단에 prepend되지 않음: {content[:200]!r}")
+
+        self._assert_legacy_original_untouched()
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# 094 RED-first 신설 — TestShowAsQueryStandard (TEST-SCENARIO.md S-10, S-24, S-25)
+# PLAN §3.3.2 (1)(2)(3) cmd_show 3분기 재설계 — 렌더 원천 단일화·배너 극성 반전
+# [MUST] mock/patch 금지. 신규 저널(마커 없음) 픽스처는 현재 코드가 마커를 항상
+# 생성하므로, init 후 마커 구간을 제거해 "D-1 완전 제거 후" 형태를 모사한다.
+# ═════════════════════════════════════════════════════════════════════════════
+
+class TestShowAsQueryStandard(BaseTestCase):
+    """094 F-003 — `show`가 현황 조회 표준 경로로서 3포맷 모두 일관되게
+    동작해야 한다: md는 항상 state.json 파생, full은 배너 극성이 마커 유무에
+    따라 정확히 반전(레거시=부착/신규=미부착), 응답 키 계약은 삭제 0건."""
+
+    def setUp(self):
+        super().setUp()
+        self.assertTrue(_OPD_REAL_PIPELINE_JSON.exists())
+
+    def _init_opd(self, task_path):
+        code, stdout, stderr, data = _run094([
+            "init", str(task_path), "--skill", "opd", "--mode", "agentic",
+            "--rows-from", str(_OPD_REAL_PIPELINE_JSON),
+        ])
+        self.assertEqual(code, 0, f"init 실패: {stdout!r} {stderr!r}")
+        return data
+
+    def _strip_markers_to_simulate_new_journal(self, task_path):
+        """094: D-1 완전 제거(파생 4패턴 부재) 후의 신규 저널 형태를 모사하기
+        위해, 현재 코드가 생성한 마커+표+`## 현재 상태` 블록을 제거한다.
+        (GREEN 이후에는 `init` 자체가 이 형태를 직접 산출하게 된다 — S-1)."""
+        md = (task_path / "STATE.md").read_text(encoding="utf-8")
+        md = re.sub(
+            re.escape(ST.PIPELINE_MARKER_START) + r".*?" + re.escape(ST.PIPELINE_MARKER_END) + r"\n?",
+            "", md, flags=re.DOTALL)
+        md = re.sub(r"## 현재 상태\n(?:- [^\n]+\n){1,6}\n?", "", md)
+        (task_path / "STATE.md").write_text(md, encoding="utf-8")
+        return md
+
+    # ── S-10: show --format md 신규 태스크 렌더 ────────────────────────────
+
+    def test_s10_show_md_new_journal_renders_from_state_json(self):
+        """[T094/L1-F003] S-10 — 신규 태스크(마커 없음)에서 `show --format md`는
+        `state.json.rows[]` 파생 표 + `- 모드:`/`- 상태:`/`- 다음 액션:` 3줄을
+        포함해야 하고, `marker_present:false`여야 한다(R-5 AC(b) — STATE.md에서
+        뺀 '## 현재 상태' 4줄 정보가 조회 경로로 이동, 정보 손실 0).
+
+        RED 근거: 현재 `cmd_show`의 마커-없음 fallback 분기는
+        `render_pipeline_table` 결과만 반환하고 `- 모드:`/`- 상태:`/
+        `- 다음 액션:` 3줄을 전혀 포함하지 않는다(state_tool.py:1376-1393)."""
+        task_path = self.tmpdir / "094-s10-new-journal"
+        task_path.mkdir()
+        self._init_opd(task_path)
+        self._strip_markers_to_simulate_new_journal(task_path)
+
+        code, stdout, stderr, data = _run094([
+            "show", str(task_path), "--format", "md",
+        ])
+        self.assertEqual(code, 0, f"show 실패: {stdout!r} {stderr!r}")
+        self.assertTrue(data.get("ok"))
+        self.assertFalse(data.get("marker_present", True),
+                         "마커 없는 신규 저널은 marker_present:false여야 함")
+
+        content = data.get("content", "")
+        self.assertIn("- 모드:", content, "show --format md에 '- 모드:' 라인이 없음(정보 손실)")
+        self.assertIn("- 상태:", content, "show --format md에 '- 상태:' 라인이 없음(정보 손실)")
+        self.assertIn("- 다음 액션:", content, "show --format md에 '- 다음 액션:' 라인이 없음(정보 손실)")
+        self.assertIn("작업", content, "표에 rows[] 파생 내용(항목명)이 반영되어야 함")
+
+    # ── S-24: show --format full 배너 조건부 부착 ──────────────────────────
+
+    def test_s24_show_full_banner_only_on_legacy(self):
+        """[T094/L2-F003] S-24 — `show --format full`은 레거시(마커 잔존)에는
+        배너를 부착하고 신규(마커 없음)에는 부착하지 않으며, 두 경우 모두
+        STATE.md 원문을 손상 없이 반환해야 한다(D-4 배너 극성 반전).
+
+        RED 근거: 현재 `cmd_show --format full`은 정확히 반대로 동작한다 —
+        마커 **없을 때** 복구 권고 WARNING을 prepend하고, 마커가 **있을 때**는
+        아무 배너 없이 원문만 반환한다(state_tool.py:1365-1374, D-4가 뒤집으려는
+        지점 그 자체)."""
+        if not _LEGACY_093_TASK_DIR.exists():
+            self.skipTest(f"레거시 실 자산 없음: {_LEGACY_093_TASK_DIR}")
+
+        # 케이스 1 — 레거시(마커 잔존)
+        legacy_path = self.tmpdir / "094-s24-legacy"
+        legacy_path.mkdir()
+        shutil.copy2(_LEGACY_093_TASK_DIR / "STATE.md", legacy_path / "STATE.md")
+        shutil.copy2(_LEGACY_093_TASK_DIR / "state.json", legacy_path / "state.json")
+        legacy_raw = (legacy_path / "STATE.md").read_text(encoding="utf-8")
+
+        code, stdout, stderr, data = _run094(["show", str(legacy_path), "--format", "full"])
+        self.assertEqual(code, 0, f"레거시 show full 실패: {stdout!r} {stderr!r}")
+        legacy_content = data.get("content", "")
+        self.assertTrue(legacy_content.lstrip().startswith("> [레거시]"),
+                        f"레거시 사본에는 배너가 부착되어야 함: {legacy_content[:200]!r}")
+        self.assertIn(legacy_raw, legacy_content,
+                     "레거시 원문이 손상 없이(배너 아래) 포함되어야 함")
+
+        # 케이스 2 — 신규(마커 없음)
+        new_path = self.tmpdir / "094-s24-new"
+        new_path.mkdir()
+        self._init_opd(new_path)
+        self._strip_markers_to_simulate_new_journal(new_path)
+        new_raw = (new_path / "STATE.md").read_text(encoding="utf-8")
+
+        code, stdout, stderr, data = _run094(["show", str(new_path), "--format", "full"])
+        self.assertEqual(code, 0, f"신규 show full 실패: {stdout!r} {stderr!r}")
+        new_content = data.get("content", "")
+        self.assertFalse(new_content.lstrip().startswith("> [레거시]"),
+                         "신규 저널(마커 없음)에는 배너가 부착되면 안 됨")
+        self.assertEqual(new_content, new_raw,
+                        "신규 저널은 원문 그대로(배너·경고 문구 없이) 반환되어야 함")
+
+    # ── S-25: show 3포맷 응답 키 계약 유지 ──────────────────────────────────
+
+    def test_s25_show_three_formats_response_key_contract_preserved(self):
+        """[T094/L1-F003] S-25 — `show --format md/json/full` 3포맷 응답의
+        키 집합이 기존과 동일해야 한다(추가만 허용, 삭제 0) — `ok`, `command`,
+        `format`, `marker_present`, `content`(md/full)/`data`(json)(제약 ③).
+
+        이 검사 자체는 F-003이 `content`/`data` 값의 출처만 바꾸고 키를
+        삭제하지 않으므로 현재도 통과할 수 있는 회귀 안전망이다."""
+        task_path = self.tmpdir / "094-s25-response-keys"
+        task_path.mkdir()
+        self._init_opd(task_path)
+
+        baseline = {
+            "md":   {"ok", "command", "format", "marker_present", "content"},
+            "json": {"ok", "command", "format", "marker_present", "data"},
+            "full": {"ok", "command", "format", "content"},
+        }
+        for fmt, expected in baseline.items():
+            code, stdout, stderr, data = _run094(["show", str(task_path), "--format", fmt])
+            self.assertEqual(code, 0, f"show --format {fmt} 실패: {stdout!r} {stderr!r}")
+            missing = expected - set(data.keys())
+            self.assertEqual(missing, set(),
+                             f"show --format {fmt} 응답에서 기존 키 삭제됨: {missing}")
 
 
 # ═════════════════════════════════════════════════════════════════════════════
