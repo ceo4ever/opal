@@ -78,7 +78,7 @@ tasks/{NNN}-{feature}/
 ├── SPEC.md                  # Phase 1 — 기능 명세 SSOT (FR/NFR/제약조건)
 ├── TEST-SCENARIOS.md        # Phase 2 — SPEC 기반 테스트 기준 + ACT별 TS 매핑
 ├── SPEC-PLAN.md             # Phase 3 — 아키텍처 설계 + ACT 분해 + 병렬/순서 의존관계
-├── STATE.md                 # 전체 진행 상태 (Phase + ACT 목록 상태 통합 관리)
+├── STATE.md                 # 저널(의사결정 로그·블로커·ACT 세부·TS 현황) — Phase·행 상태 SSOT는 state.json
 ├── DONE.md                  # Phase 6 — 최종 완료 확인
 └── actions/
     ├── ACT-001-{name}/
@@ -213,7 +213,7 @@ SPEC-PLAN.md의 의존 순서대로 ACT를 반복 실행한다. 각 ACT는 `opal
 2. **opal-sdd-action-agent 디스패치**: ACT 폴더 생성 + PLAN + EXECUTE + VERIFY 루프 자율 완주
 3. **결과 수신**: status 확인
 4. **Pass/Fail 판정**: Pass → DONE.md 작성 | Fail → 재시도 루프
-5. **state-tool로 STATE.md ACT 행 갱신**: ACT 상태 + TS 상태 갱신
+5. **state-tool mark로 ACT 파이프라인 행 갱신 + STATE.md ACT 목록에 세부 기록**: 행 상태 SSOT는 `state.json`(조회: `show`), L1/L2/TS 세부는 저널에 기록
 
 ### 재시도 루프
 
@@ -240,10 +240,10 @@ L2 2회 초과 실패 → 소유자 에스컬레이션
 
 ### 상태 갱신
 
-ACT 완료마다 state-tool을 호출하여 STATE.md를 갱신한다 (R-10: gate-pass deprecated(014) — mark 개별 호출 필수):
-- ACT 목록 행은 `add-row --after <N> --stage EXECUTE --item 'ACT-{N}: {이름}'` 로 동적 삽입
-- ACT 상태 갱신: `mark <task-path> --task-step execute.act_run --done` (ACT별 add-row로 생성된 동적 행 기준)
-- TS 상태, L1/L2: ACT 완료 후 PM 직접 검증 → ACT 목록 내 해당 열 갱신
+ACT 완료마다 state-tool을 호출하여 파이프라인 행(`state.json`)을 갱신한다 (R-10: gate-pass deprecated(014) — mark 개별 호출 필수):
+- ACT 파이프라인 행은 `add-row --after <N> --stage EXECUTE --item 'ACT-{N}: {이름}'` 로 동적 삽입
+- ACT 행 상태 갱신: `mark <task-path> --task-step execute.act_run --done` (ACT별 add-row로 생성된 동적 행 기준, 조회는 `show`)
+- TS 상태, L1/L2: ACT 완료 후 PM 직접 검증 → STATE.md ACT 목록(저널 자유 기재)의 해당 열 갱신
 
 > **[R-13] ACT 동적 행**: `--rows-acts` 옵션은 미구현. ACT 행은 EXECUTE Phase 진입 후 수동으로 `add-row`로 삽입한다.
 
@@ -350,28 +350,21 @@ ACT 완료마다 state-tool을 호출하여 STATE.md를 갱신한다 (R-10: gate
 
 ### STATE.md 구조
 
-STATE.md 전체 구조 예시 (파이프라인 현황판은 `references/pipeline.json`을 기준으로 state-tool이 생성):
+STATE.md는 **의사결정 로그·블로커·자유 기재를 담는 저널**이다. Phase·행 상태·`current_status`·다음 액션의 SSOT는 `state.json`(`references/pipeline.json` 기준으로 state-tool이 구성)이며, 조회는 `~/.opal/tools/state-tool/run.sh show <task-path>`로 한다.
+
+STATE.md 전체 구조 예시 (ACT 목록·TS 현황·SPEC 변경 이력은 state.json 파생이 아닌 opsdd 고유 자유 기재이며, 도구가 담지 못하는 서술 정보를 담는 저널이다):
 
 ```
 STATE: {기능명} SDD 개발
 
 최종 갱신: YYYY-MM-DD HH:mm
 
-현재 상태
-- 모드: SDD Task
-- Phase: {현재 Phase (TASK/SPEC/REVIEW/DESIGN/EXECUTE-LOOP/VERIFY/CLOSE)}
-- 상태: {진행 중 / 완료 / 블로커 / 추가작업중 / 추가작업완료}
-
-파이프라인 현황판
-(`references/pipeline.json` 기준으로 state-tool이 자동 생성 — 직접 편집 금지)
-
 섹션 목록:
-- ACT 목록 (EXECUTE Phase 상세 — DESIGN 완료 후 state-tool add-row로 동적 삽입)
-- TS 현황 (VERIFY Phase 요약)
+- ACT 목록 (EXECUTE Phase 상세 — ACT별 파이프라인 행 자체는 state-tool add-row/mark로 관리되며 SSOT는 state.json(조회: show). 본 섹션은 ACT별 L1/L2/TS 세부 결과를 담는 저널 자유 기재 표)
+- TS 현황 (VERIFY Phase 요약, Green/Red/Fail/Skip 건수)
 - SPEC 변경 이력
 - 의사결정 로그
 - 블로커
-- 다음 액션
 ```
 
 ---
@@ -512,3 +505,4 @@ opal-harness-agentic.md §6 공통 기준에 추가:
 | v3.7.0 | 2026-08-13 16:58 | pipeline.json 전환 — references/pipeline.json 신설(25 task-step, SSOT), --rows-from 호출 경로를 SKILL.md에서 pipeline.json으로 교체, 표는 사람 열람용 미러로 명시. meta.stages는 stage 값 EXECUTE 사용(산문의 Phase 4 명칭 표기는 불변) (090) |
 | v3.8.0 | 2026-08-14 09:27 | 파이프라인 스펙 중복정리 — `--row N`(9건)→`--task-step <key>`, 산문 `행 N`(2건)→key 참조로 전환. 미러 표(25행)·PM Gate 나열 표·중복 STATE.md 초기화 명령·모드/단계 목록 치환값 삭제 → `references/pipeline.json` 원천 포인터로 대체(산출물 목록·태스크 경로는 고유값이라 존치). R-1 "위 SSOT 표를 기준으로" 오문장 정정. EXECUTE-LOOP 표기 17곳은 090 확정사항으로 불변 (091) |
 | v3.9.0 | 2026-08-15 21:48 | 사용자 확인 행 자동 승인 계약 반영 — agentic STATE 갱신 지시에서 PM `--auto-pass` 명시 호출 삭제, 다음 단계 진입 시 도구 자동 승인으로 전환하고 계약 본문은 하네스 SSOT(`opal-harness-agentic.md §4` / `opal-harness-semi-agentic.md §5`) 참조로 정리. CLOSE 진입 게이트 서술 불변 (093) |
+| v3.10.0 | 2026-08-16 13:40 | STATE.md 저널화 정합 — 폴더 구조 주석·EXECUTE-LOOP ACT 행 갱신 서술·`### STATE.md 구조` 예시에서 "파이프라인 현황판"·"## 현재 상태"·"## 다음 액션" 표 전제를 걷어내고 `state.json` SSOT + `show` 조회 포인터로 교체. ACT 목록·TS 현황·SPEC 변경이력은 state.json 파생이 아닌 opsdd 고유 자유 기재로 명시 존치(094 R-6, Step 10 project-dev 선례 준용) (094) |

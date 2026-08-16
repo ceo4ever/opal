@@ -162,7 +162,7 @@ llm-wiki 사상을 융합한 프로젝트 지식 위키 — 프로젝트의 WHY�
 | `opal-action-monitor` | - | 도구 | 루프 액션 에이전트 진행 현황판 — `.oppl-run/`(events.jsonl·journal.md·exitcode) 파싱, 단계×축 상태 렌더 + `--json`/`--watch` (읽기 전용) |
 | `opal-action-status` | opas | operator | 액션 에이전트 현황 발동층 — `//opas [태스크폴더]` 자동 탐지 + opal-action-monitor/backlog-tool 소비 + 해석 보고 (읽기 전용). 커버리지 oppl 한정, 069/070 전환 시 무변경 확장 |
 
-> 3-SSOT tool-gated: backlog.json(backlog-tool) · state.json(state-tool) · test-scenario.json(test-tool) — 사람 뷰는 자동 렌더, 손편집 금지.
+> 3-SSOT tool-gated: backlog.json(backlog-tool) · state.json(state-tool) · test-scenario.json(test-tool) — 손편집 금지. 사람 뷰는 도구가 제공한다: `BACKLOG.md`는 자동 렌더, `state.json` 현황 조회는 `state-tool show`(094 저널화 이후 STATE.md는 렌더 뷰가 아니라 의사결정 로그·블로커 저널이다).
 
 ## 주요 컴포넌트 (OPAL Console)
 
@@ -232,6 +232,7 @@ TEST-SCENARIO 단계를 "목표 달성 검증"으로 재정의 — 루브릭 채
 
 | 날짜 | 변경 내용 |
 |------|----------|
+| 2026-08-16 15:55 | STATE.md 저널화 반영 — 3-SSOT 각주에서 "사람 뷰는 자동 렌더" 전제 제거. `BACKLOG.md`는 자동 렌더 유지, `state.json` 현황 조회는 `state-tool show`로 명시(STATE.md는 의사결정 로그·블로커 저널) (Task 094) |
 | 2026-08-15 16:35 | `worktree-tool` 신설 반영 — 폴더 구조맵 `opal/tools/` 행 18종 → **19종**. 태스크별 코드 작업공간 격리(`--worktree`/`--wt` 축) 집행 도구 (Task 092) |
 | 2026-08-11 13:26 | 문서 최신화 — 실측 1:1 대조 반영. 폴더 구조맵에서 루트 `agents/`(부재) 행 제거하고 누락 7폴더(`opal/agents/`·`opal/tools/`·`opal/bootstrapper/`·`opal/templates/`·`dashboard/`·`cursor-rules/`·`memory/`) 추가 + `.opal/` 설명을 실제 범위(브레인·메모리·코드맵 설정·로컬 설정)로 확장. 태스크 폴더 형식을 `{NNN}-{YYMMDD}-{스킬약어}-{태스크명}`으로 교체하고 실존 예시로 갱신(태스크명 한글 기본·앞 3요소 ASCII·공백 금지 명문화). **§주요 컴포넌트 (Dev 파이프라인) 신설** — 오케스트레이터 6종(opd/opds/opdw/opp/opwt/oppd)·`op-dev-*` 단계 스킬 7종·Dev 계열 워커 에이전트 10종이 SSOT에서 통째로 누락돼 있던 것을 등재. `brain-tool` 8→**10 서브명령**(`analyze`·`ingest-scan`) 정합. §프로젝트 구성 Framework 경로에서 `agents/` 제거. §프로젝트 문서 레지스트리 4행 추가 — 아키텍처 다이어그램 HTML(태스크 086 산출, 구조 시각 SSOT)·`SECURITY.md`(본문이 이미 참조 중이던 내부 모순 해소)·`proposals/` 설계 SSOT 2종 (Task 089) |
 | 2026-08-04 | 코드맵 샤드 정책 확장 — `split`(제안 `--plan`/집행 `--groups`)·`init`(`.opal/code-scan.json` 비대화형 초안 생성, 차단 게이트 앞 배치) 2서브명령 신설(13→15). 과대 매니페스트 판정을 `shardPolicy` 3단 우선순위(프로젝트 `.opal/code-scan.json` > 전역 `~/.opal/setting.json` > 코드 상수 `maxBytes` 10240/`minFiles` 40, **셀 단위 머지**) 기반 **바이트 초과(`>`) AND 엔트리 수 이상(`>=`) 2축**으로 정교화(전면 비차단, 초과만으로는 exit 0). `split --plan`은 **5단계 제안 사다리**(첫 토큰 → 1~2토큰 결합 → 전체 토큰 → 마지막 토큰 → `depends` 공유, 각 단계는 직전 단계 미분류분만 입력)로 분류하고 잔여는 `unassigned`로 남긴다(임의 배분 없음 — 의미 경계는 사람의 몫). `op-data-dictionary` 산출물 표준단어사전.md를 **읽기 전용·옵셔널**로 대조(부재·파싱 실패·매칭 0건 전부 비차단 — code-scan이 `.opal/` 밖 문서를 읽는 첫 사례이자 `~/.opal/setting.json`을 읽는 첫 도구). 구 위치 `index.json`의 `manifestMaxBytes`는 값을 읽지 않고 안내만 한다(자동 변환 없음). code-scan v1.6.0 (Task 083) |

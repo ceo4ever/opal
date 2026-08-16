@@ -68,7 +68,7 @@
 
 ## state-tool
 
-**용도**: STATE.md 파이프라인 현황판 JSON SSOT 관리 — 9개 서브 명령으로 행 상태 갱신, 검증, 추가작업 삽입  
+**용도**: `state.json` 파이프라인 JSON SSOT 관리(STATE.md는 의사결정 로그·블로커 저널) — 9개 서브 명령으로 행 상태 갱신, 검증, 추가작업 삽입  
 **실행 경로**: `~/.opal/tools/state-tool/run.sh`  
 **소스 경로**: `opal/tools/state-tool/`  
 **의존성**: `~/.opal/.venv/bin/python` (표준 라이브러리만 — `json`, `argparse`, `pathlib`, `subprocess`, `re`, `sys`, `datetime`, `os`)
@@ -82,9 +82,9 @@
   --mode <interactive|agentic> \
   [--task-title <text>] [--next-action <text>] \
   [--rows-spec <inline-json>] [--rows-from <path-to-pipeline.json>] \
-  [--force] [--note <text>] [--import-existing]
+  [--force] [--note <text>]
 
-# 파이프라인 현황판 출력 (md/json/full)
+# 파이프라인 행 현황 출력 (md/json/full)
 ~/.opal/tools/state-tool/run.sh show <task-path> [--format md|json|full]
 
 # ⬜→🔄 전환 한정 (단계 시작 시)
@@ -134,7 +134,7 @@
 {"ok": false, "command": "mark", "error": "worker_scope_violation", "message": "..."}
 
 // 실패 (violations 포함)
-{"ok": false, "command": "validate", "violations": [{"code": "marker_missing", "row_id": null, "detail": "..."}], "violations_count": 1}
+{"ok": false, "command": "validate", "violations": [{"code": "user_confirmation_owner_mismatch", "row_id": 12, "detail": "owner=None"}], "violations_count": 1}
 ```
 
 ### 사용 예시
@@ -167,7 +167,7 @@
 # PM Gate 전 정합성 검증
 ~/.opal/tools/state-tool/run.sh validate tasks/134-.../
 
-# 현황판 출력 (기본 마크다운)
+# 파이프라인 행 현황 출력 (기본 마크다운)
 ~/.opal/tools/state-tool/run.sh show tasks/134-.../
 
 # 사용자 확인 행 처리
@@ -182,9 +182,6 @@
 ~/.opal/tools/state-tool/run.sh status tasks/134-.../ \
   --set additional_work_done --note "추가작업 완료"
 
-# 기존 STATE.md 흡수 (회귀 마이그레이션)
-~/.opal/tools/state-tool/run.sh init tasks/134-.../ \
-  --skill opp --mode interactive --import-existing
 ```
 
 ### 종료 코드
@@ -192,10 +189,10 @@
 | 코드 | 의미 |
 |------|------|
 | `0` | 성공 |
-| `1` | 위반 / 스코프 오류 / 검증 실패 (`worker_scope_violation`, `marker_missing`, `state_not_initialized` 등) |
+| `1` | 위반 / 스코프 오류 / 검증 실패 (`worker_scope_violation`, `state_not_initialized` 등) |
 | `2` | 내부 오류 (`date_tool_failed`, `rows_acts_not_implemented` 등) |
 
-> 근거: `tasks/134-260501-opp-pipeline-state-tool/TASK.md` T-3 / `PLAN.md` §2.18 에러 코드 카탈로그 23종 SSOT
+> 근거: `tasks/134-260501-opp-pipeline-state-tool/TASK.md` T-3 / 전체 에러 카탈로그: `opal/tools/state-tool/README.md` §에러 코드 카탈로그
 
 ---
 
@@ -1137,6 +1134,7 @@ bash ~/.opal/tools/tool-scan/run.sh check <도구>               # 설치/실행
 | 버전 | 날짜 | 내용 |
 |------|------|------|
 | v2.14 | 2026-08-15 19:40 | worktree-tool `init` 서브명령 추가(4→**5서브명령**) — 프로젝트 구조 탐지 기반 `.opal/worktree.json` 초안 생성. 독립 `.git` ≥1이면 multi-repo, 0이면 monorepo(추적 최상위 중 manifest 보유). `setup[]`은 lock 파일로 결정론 매핑(repos 이하 depth 2까지, 빌드 산출물 디렉토리 제외), `copy[]`·`portOffset`은 미추측(후보는 `_copy_candidates` 주석 키). 기존 파일은 `CONFIG_EXISTS` 거부·`--force`로만 덮어씀, `--dry-run`은 쓰지 않고 `draft` 키 반환 (092 ADD-1 DEC-8) |
+| v2.15 | 2026-08-16 13:26 | STATE.md 저널화 — state-tool 섹션 `:71` 용도 서술을 "`state.json` 파이프라인 JSON SSOT 관리(STATE.md는 의사결정 로그·블로커 저널)"로 교체, `show` 커맨드 주석 2곳(`:87,:170`) "현황판" → "파이프라인 행 현황"으로 치환. `marker_missing`(validate 응답 예시·종료 코드 표) → `user_confirmation_owner_mismatch`로 교체, `--import-existing` 옵션·사용 예시 삭제 (094) |
 | v1.0 | 2026-04-03 | xlsx-tool 등록 (076) |
 | v1.1 | 2026-04-11 | code-scan 등록 |
 | v1.2 | 2026-04-12 | code-scan 섹션에 PM 관리 방안 서브섹션 추가 + exports 커맨드 사용 예시 추가 (109) |
@@ -1161,3 +1159,4 @@ bash ~/.opal/tools/tool-scan/run.sh check <도구>               # 설치/실행
 | v2.11 | 2026-08-04 17:18 | code-scan 섹션 — 샤드 정책 확장 반영(v1.6.0 / 13→15서브명령): `split`(제안 `--plan`·집행 `--groups`)·`init`(비대화형 설정 초안, 차단 게이트 앞 배치) 커맨드 등재, 옵션 표에 `--write`/`--force`/`--plan`/`--groups`/`--trace`/`--stop-after` 6행 추가 및 `--out`/`--dry-run` 설명 확장, 에러 코드 `init` 2종(`init_header_source_required`/`config_exists`)·`split` 7종(쓰기 상태 열 포함) 표 신설, §샤드 정책 신설 — `shardPolicy` 설정 3단 우선순위(프로젝트 > 전역 `~/.opal/setting.json` > 코드 상수 10240/40, 셀 단위 머지)·구 위치 `manifestMaxBytes` 폐기 안내(값 미독·자동 변환 없음)·2축 판정(바이트 `>` AND 엔트리 `>=`, 비차단 + 페이로드 4필드)·분할 절차 4단·제안 사다리 S1~S5 표·표준단어사전 탐색 3단/폴백 3분기(부재 침묵·파손 안내 1줄·매칭 0건 통과) 서술, `ladder` 설정 노출 후속 이관 명시, PM 관리 방안에 `init` 생성·`init --force` 복구 경로 반영 (083) |
 | v2.12 | 2026-08-13 16:57 | state-tool 행 원천 지시 정정 — `--rows-from` 시놉시스·실행 예시를 `references/pipeline.json` 기준으로 교체(구형 `.md` 파싱 지시 제거). 10/10 pilot 전환에 맞춘 pilot 밖 정합 (090) |
 | v2.13 | 2026-08-15 16:30 | worktree-tool 섹션 신설(git-sync-tool 직후) — 4서브명령(create/list/status/remove) 커맨드·ERROR_CODES 18종 카탈로그·응답 필드·exit code. 태스크별 코드 작업본 git worktree 격리 도구, 실물 `worktree_tool.py` 구현 기준 작성 (092) |
+| v2.16 | 2026-08-16 15:05 | 종료 코드 표 근거 각주 정정 — 에러 코드 카탈로그 종수 리터럴(23종, stale) 삭제 후 `opal/tools/state-tool/README.md` §에러 코드 카탈로그 SSOT 포인터로 교체 (중복 SSOT 재발 방지, R-9 D-5 ①) (094 Step 14) |

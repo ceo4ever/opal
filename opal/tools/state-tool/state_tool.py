@@ -3,7 +3,7 @@
   "module": "state_tool",
   "layer": "util",
   "domain": "opal-pipeline",
-  "description": "OPAL 파이프라인 현황판 JSON SSOT 관리 CLI — 10개 서브 명령(init/show/advance/mark/block/validate/add-row/status/spec-validate/gate-pass[deprecated]) + verify + 3-way 모드(interactive/semi-agentic/agentic) 지원. 014 Phase 4: 새 표준 행 구조(QA Gate/State Gate 행 없음)와 정합 — gate-pass deprecate, CLOSE 마지막 행 판정 항목명 비의존화. 016: verify --red-check(RED 증거 게이트) + --fix-mode/--changed-files/--test-globs(테스트 불변성 게이트) 추가 — RED-first TDD 트랙 deterministic 집행. 017: mark --step N/M 다중 Step 조기 done 가드 — N<M이면 in_progress 유지(done 미처리) + 진행률(step) 영속화, N==M에서만 done; 미완 행은 기존 stage-transition guard가 단계전환·CLOSE 진입을 자동 차단. 005: verify --clarification-check + TASK→다음단계 자동 훅 — TASK 4요소(목표/범위/제약/완료기준) 미잠금 시 다음 단계 진입 거부(PRINCIPLES §1 집행), 정책 A graceful skip(섹션/파일 부재 시 하위호환). 034: mock 가드 false positive 수정 — _MOCK_CODE_PATTERNS 정규식 'MagicMock' 맨 단어 대안 제거(#1 산문 오탐) + _check_mock_patterns 인라인 백틱 제거 전처리 추가(#2 메타-순환 해소); 헌법 §4 정탐 유지. 054: resolve_owner_placeholder() 신설 — note-write 6경로(advance/mark/add-row/block/status/init)에서 '{owner_name}' 플레이스홀더를 identity.md owner_name으로 write-time 치환(fail-safe: 부재/공란/파싱실패 시 원문 유지). 070: task-step 키 주소 체계 도입 1차 — spec-validate 서브명령(pipeline.json 스펙 검증) + KEY_PATTERN/stage_to_slug/resolve_row_index 신설, build_rows_from_pipeline_json(init --rows-from .json 확장자 분기, .md는 deprecation 경고 유지), advance/mark/block에 --task-step/--task-step-id/--row(deprecated) 3주소·add-row에 --after-task-step/--after-task-step-id/--key(자동 생성) 추가, --step→--action-step 별칭(dest 공유), opdd skill·DICT/MODEL/DDL·MIGRATION stage enum 등록, ERROR_CODES 8종 추가. 072: STATE.md '다음 액션' 자동 파생 — state.json next_action 필드 신설(init 영속화·schema optional 등록), _derive_next_action(파이프라인 프론티어=첫 미완료 행 기준 파생)·update_next_action_section(첫 줄만 치환, 하위 자유기재 보존) 신규, advance/mark가 상태 반영 후 next_action 계산·저장·렌더(block/add-row/status는 미접촉), advance/mark --next-action per-transition 오버라이드(비지속 — 다음 전이 자동 파생 복귀). 074: --import-existing key-보존 재접합 — cmd_init import 분기가 파싱 후 기존 state.json→pipeline.json (stage,item) 순서 매칭으로 key 재접합(schema_version 1.1 유지), 원천 전무 시 keyless+경고(하위호환); _key_source_index/_reattach_import_keys 신규. 076: build_todo_mirror() 신설 — init/advance/mark/block ok() stdout 페이로드에 단계 단위 todo 미러(파생: na 중립·전부pending→pending·전부done→completed·부분/failed→in_progress) 추가, PostToolUse hook이 이를 세션에 결정론 주입(파이프라인 todo 미러 hook 강제); todo_mirror는 stdout 전용 비영속(state.json 미접촉 — schema additionalProperties:false 보존). 088: CLOSE 마지막 행 mark 시 메모리 히스토리 자동 연결 — link_memory_history()가 형제 memory_tool.py를 sys.executable subprocess로 호출해 `<프로젝트루트>/.opal/MEMORY.json` history에 행을 자동 생성(find_project_root 조상 탐색·derive_history_title·build_history_reminder·_run_memory_tool 신설), path 사전 조회로 멱등 보장, 예외/실패 전부 흡수해 mark는 항상 ok:true 유지(cmd_mark ok() stdout에 history_link 필드 조건부 추가, state.json 미접촉). 091: PM Gate 집행 배선(F-004) — validate_pipeline_spec()에 task_steps[].gate 검사 4건 추가(spec_gate_type_invalid/spec_gate_missing_field/spec_gate_field_type_invalid/spec_gate_checklist_empty, artifacts:[] 단독은 위반 아님); _is_safe_artifact_token()·check_gate_artifacts() 신설 — gate.artifacts 존재 검증(정적 경로/글롭 지원, 절대경로·'..' 토큰 태스크 폴더 밖 이탈 차단), gate 미보유 행·artifacts:[] 행은 즉시 통과(기존 동작 불변), 미충족 시 gate_artifact_missing 거부(--force+--note로만 우회 가능, 우회 시 decision 로그 gate_artifact_force 강제 기록); build_gate_payload() 신설 — 통과 시 checklist를 dict로 stdout 반환(todo_mirror_hook 릴레이용); build_rows_from_pipeline_json()/build_rows_from_spec()에 gate 필드 init-time 영속화 각 1줄 추가; cmd_mark가 save_state_json() 이전 검증 구간에서 가드를 호출하여 부분 상태 변경을 배제하고 _ok_kwargs에 gate_checklist 조건부 추가; ERROR_CODES 5종 신규(gate_artifact_missing 포함). 092: `init --worktree <path>` 조건부 영속화(F-005) — argparse `init`에 `--worktree` optional 인자 추가, cmd_init이 state dict 구성 직후 `getattr(args, \"worktree\", None)`으로 조건부 대입(미지정 시 키 자체 미생성 — H-1), state.schema.json properties에 `worktree` optional 등록(required 미변경); `_build_new_state_md`/`render_pipeline_table`/`build_todo_mirror`/`cmd_show` 무변경으로 STATE.md 렌더·`show --format json` 노출 하위호환 보장(H-11). 093: 사용자 확인 행 자동 승인 경로 일원화 — can_auto_approve_user_confirmation() 신설(F-003, CLOSE 축 + 모드 축 2축 합성 단일 판정; semi-agentic 모드 경계 상수의 유일 참조자이며 cmd_mark 사전검사와 cmd_validate 사후검사가 거부 사유별로 소비 범위를 달리한다 — validate는 include_close_axis=False로 CLOSE 축을 평가하지 않아 기존 경계를 보존, H-4); auto_approve_prior_user_confirmations() 신설(F-002, cmd_advance·cmd_mark가 stage-transition guard 직전에 호출해 대상 행 앞 [0,row_index) 구간의 미완 '사용자 확인' 행을 done/auto/timestamp로 자동 승인하고 note에 'auto-approved on <stage> entry' 기록 — as_worker/force/대상 행 stage=CLOSE면 즉시 no-op이고 save_state_json을 호출하지 않아 후속 가드 실패 시 파일이 오염되지 않는다(H-8), 승인 불가 구간은 user_confirmation_required로 거부(F-004)); advance/mark ok() 응답에 auto_approved 배열 관측 필드 추가(기존 필드 불변); build_rows_from_spec/build_rows_from_skill_md/build_rows_from_pipeline_json의 init 시점 agentic auto-na 분기 3곳 삭제(F-001 — 전 모드 pending/⬜/PM 동형 초기화; 세 빌더의 mode 파라미터 시그니처, state.schema.json status enum의 na, _COMPLETE_STATUSES, build_todo_mirror na 필터는 하위호환으로 존치, R-6); cmd_mark 멱등성(F-005) — _AUTO_PASS_PREFIX 모듈 상수 신설 후 auto-pass note를 3분기(빈 note/이미 접두 보유→중첩 방지/신규 부여)로 부여하고, check_gate_artifacts 통과 직후 재-auto-pass no-op 조기 반환(auto_pass and not force and not action_step and status=='done' and owner=='auto' 4중 조건 — 상태·timestamp·updated_at 불변, 응답에 idempotent:true; --force·--action-step N/M·owner=user done 행은 기존 경로 유지).",
+  "description": "OPAL 파이프라인 현황판 JSON SSOT 관리 CLI — 10개 서브 명령(init/show/advance/mark/block/validate/add-row/status/spec-validate/gate-pass[deprecated]) + verify + 3-way 모드(interactive/semi-agentic/agentic) 지원. 014 Phase 4: 새 표준 행 구조(QA Gate/State Gate 행 없음)와 정합 — gate-pass deprecate, CLOSE 마지막 행 판정 항목명 비의존화. 016: verify --red-check(RED 증거 게이트) + --fix-mode/--changed-files/--test-globs(테스트 불변성 게이트) 추가 — RED-first TDD 트랙 deterministic 집행. 017: mark --step N/M 다중 Step 조기 done 가드 — N<M이면 in_progress 유지(done 미처리) + 진행률(step) 영속화, N==M에서만 done; 미완 행은 기존 stage-transition guard가 단계전환·CLOSE 진입을 자동 차단. 005: verify --clarification-check + TASK→다음단계 자동 훅 — TASK 4요소(목표/범위/제약/완료기준) 미잠금 시 다음 단계 진입 거부(PRINCIPLES §1 집행), 정책 A graceful skip(섹션/파일 부재 시 하위호환). 034: mock 가드 false positive 수정 — _MOCK_CODE_PATTERNS 정규식 'MagicMock' 맨 단어 대안 제거(#1 산문 오탐) + _check_mock_patterns 인라인 백틱 제거 전처리 추가(#2 메타-순환 해소); 헌법 §4 정탐 유지. 054: resolve_owner_placeholder() 신설 — note-write 6경로(advance/mark/add-row/block/status/init)에서 '{owner_name}' 플레이스홀더를 identity.md owner_name으로 write-time 치환(fail-safe: 부재/공란/파싱실패 시 원문 유지). 070: task-step 키 주소 체계 도입 1차 — spec-validate 서브명령(pipeline.json 스펙 검증) + KEY_PATTERN/stage_to_slug/resolve_row_index 신설, build_rows_from_pipeline_json(init --rows-from .json 확장자 분기, .md는 deprecation 경고 유지), advance/mark/block에 --task-step/--task-step-id/--row(deprecated) 3주소·add-row에 --after-task-step/--after-task-step-id/--key(자동 생성) 추가, --step→--action-step 별칭(dest 공유), opdd skill·DICT/MODEL/DDL·MIGRATION stage enum 등록, ERROR_CODES 8종 추가. 072: STATE.md '다음 액션' 자동 파생 — state.json next_action 필드 신설(init 영속화·schema optional 등록), _derive_next_action(파이프라인 프론티어=첫 미완료 행 기준 파생)·update_next_action_section(첫 줄만 치환, 하위 자유기재 보존) 신규, advance/mark가 상태 반영 후 next_action 계산·저장·렌더(block/add-row/status는 미접촉), advance/mark --next-action per-transition 오버라이드(비지속 — 다음 전이 자동 파생 복귀). 074: --import-existing key-보존 재접합 — cmd_init import 분기가 파싱 후 기존 state.json→pipeline.json (stage,item) 순서 매칭으로 key 재접합(schema_version 1.1 유지), 원천 전무 시 keyless+경고(하위호환); _key_source_index/_reattach_import_keys 신규. 076: build_todo_mirror() 신설 — init/advance/mark/block ok() stdout 페이로드에 단계 단위 todo 미러(파생: na 중립·전부pending→pending·전부done→completed·부분/failed→in_progress) 추가, PostToolUse hook이 이를 세션에 결정론 주입(파이프라인 todo 미러 hook 강제); todo_mirror는 stdout 전용 비영속(state.json 미접촉 — schema additionalProperties:false 보존). 088: CLOSE 마지막 행 mark 시 메모리 히스토리 자동 연결 — link_memory_history()가 형제 memory_tool.py를 sys.executable subprocess로 호출해 `<프로젝트루트>/.opal/MEMORY.json` history에 행을 자동 생성(find_project_root 조상 탐색·derive_history_title·build_history_reminder·_run_memory_tool 신설), path 사전 조회로 멱등 보장, 예외/실패 전부 흡수해 mark는 항상 ok:true 유지(cmd_mark ok() stdout에 history_link 필드 조건부 추가, state.json 미접촉). 091: PM Gate 집행 배선(F-004) — validate_pipeline_spec()에 task_steps[].gate 검사 4건 추가(spec_gate_type_invalid/spec_gate_missing_field/spec_gate_field_type_invalid/spec_gate_checklist_empty, artifacts:[] 단독은 위반 아님); _is_safe_artifact_token()·check_gate_artifacts() 신설 — gate.artifacts 존재 검증(정적 경로/글롭 지원, 절대경로·'..' 토큰 태스크 폴더 밖 이탈 차단), gate 미보유 행·artifacts:[] 행은 즉시 통과(기존 동작 불변), 미충족 시 gate_artifact_missing 거부(--force+--note로만 우회 가능, 우회 시 decision 로그 gate_artifact_force 강제 기록); build_gate_payload() 신설 — 통과 시 checklist를 dict로 stdout 반환(todo_mirror_hook 릴레이용); build_rows_from_pipeline_json()/build_rows_from_spec()에 gate 필드 init-time 영속화 각 1줄 추가; cmd_mark가 save_state_json() 이전 검증 구간에서 가드를 호출하여 부분 상태 변경을 배제하고 _ok_kwargs에 gate_checklist 조건부 추가; ERROR_CODES 5종 신규(gate_artifact_missing 포함). 092: `init --worktree <path>` 조건부 영속화(F-005) — argparse `init`에 `--worktree` optional 인자 추가, cmd_init이 state dict 구성 직후 `getattr(args, \"worktree\", None)`으로 조건부 대입(미지정 시 키 자체 미생성 — H-1), state.schema.json properties에 `worktree` optional 등록(required 미변경); `_build_new_state_md`/`render_pipeline_table`/`build_todo_mirror`/`cmd_show` 무변경으로 STATE.md 렌더·`show --format json` 노출 하위호환 보장(H-11). 093: 사용자 확인 행 자동 승인 경로 일원화 — can_auto_approve_user_confirmation() 신설(F-003, CLOSE 축 + 모드 축 2축 합성 단일 판정; semi-agentic 모드 경계 상수의 유일 참조자이며 cmd_mark 사전검사와 cmd_validate 사후검사가 거부 사유별로 소비 범위를 달리한다 — validate는 include_close_axis=False로 CLOSE 축을 평가하지 않아 기존 경계를 보존, H-4); auto_approve_prior_user_confirmations() 신설(F-002, cmd_advance·cmd_mark가 stage-transition guard 직전에 호출해 대상 행 앞 [0,row_index) 구간의 미완 '사용자 확인' 행을 done/auto/timestamp로 자동 승인하고 note에 'auto-approved on <stage> entry' 기록 — as_worker/force/대상 행 stage=CLOSE면 즉시 no-op이고 save_state_json을 호출하지 않아 후속 가드 실패 시 파일이 오염되지 않는다(H-8), 승인 불가 구간은 user_confirmation_required로 거부(F-004)); advance/mark ok() 응답에 auto_approved 배열 관측 필드 추가(기존 필드 불변); build_rows_from_spec/build_rows_from_skill_md/build_rows_from_pipeline_json의 init 시점 agentic auto-na 분기 3곳 삭제(F-001 — 전 모드 pending/⬜/PM 동형 초기화; 세 빌더의 mode 파라미터 시그니처, state.schema.json status enum의 na, _COMPLETE_STATUSES, build_todo_mirror na 필터는 하위호환으로 존치, R-6); cmd_mark 멱등성(F-005) — _AUTO_PASS_PREFIX 모듈 상수 신설 후 auto-pass note를 3분기(빈 note/이미 접두 보유→중첩 방지/신규 부여)로 부여하고, check_gate_artifacts 통과 직후 재-auto-pass no-op 조기 반환(auto_pass and not force and not action_step and status=='done' and owner=='auto' 4중 조건 — 상태·timestamp·updated_at 불변, 응답에 idempotent:true; --force·--action-step N/M·owner=user done 행은 기존 경로 유지). 094: STATE.md를 state.json 파생 섹션(마커/파이프라인 표/'## 현재 상태'/'## 다음 액션') 없는 저널(의사결정 로그+블로커)로 재정의 — `_build_new_state_md` 2인자 축소·`ensure_journal_skeleton` 신설·`sync_state_md` fail-open 축소판 재작성(6개 호출부 인자 정리, journal_warning 조건부 stdout 표면화)·`append_decision_log` 오프바이원 수정+표 셀 이스케이프(`_escape_table_cell`)·`replace_pipeline_section`/`update_current_status_section`/`update_next_action_section` 삭제·`ERROR_CODES`에서 `marker_missing`/`import_failed` 삭제 후 `import_existing_removed` 추가·`cmd_init` import 분기·`parse_existing_state_md`/`_key_source_index`/`_reattach_import_keys` 삭제(--import-existing은 help=SUPPRESS로 존치, 항상 거부)·`cmd_validate` 마커 검사 삭제·`cmd_show` md/full 3분기를 state.json 단일 파생으로 재설계(`LEGACY_FROZEN_BANNER`, `STATUS_TEXT`)·`render_pipeline_table`에 '비고'(note) 열 추가 — `render_pipeline_table`/`PIPELINE_MARKER_*`/`update_state_md_header`는 레거시(001~093) STATE.md 공존을 위해 존치. 094 R-11: 093 집행 층(can_auto_approve_user_confirmation 단일 판정) 일원화를 표시·게이트 층에 정합 — G-1) 모드 경계 상수에 `DICT`/`MODEL`/`DDL/MIGRATION` 3원소 추가로 semi-agentic(기본 모드) opdd에서 설계 확정 3단계가 소유자 미노출로 자동 승인되던 주권 침해 해소; G-2) `check_close_gate`에 확인 행 0개 파이프라인(opgc) 폴백 신설 + `owner` 인자 추가(CLOSE 첫 행 자체를 소유자 승인 지점으로 삼아 `--force` 없이 종료 불가하던 데드락 해소); G-3) `_derive_next_action`·`build_todo_mirror`가 `can_auto_approve_user_confirmation()`을 재사용해 자동 승인 예정 사용자 확인 행을 각각 프론티어/집계에서 제외(CLOSE 직전은 예외 유지)해 agentic 헛 확인 신호 소멸. 094 SEC-FOLLOWUP: `sync_state_md` except 절이 `journal_warning.reason`에 예외 메시지(`str(e)`)를 원문 그대로 담아 태스크 절대경로·홈 디렉토리 경로를 노출하던 결함(PLAN.md §5.4) 수정 — `_redact_path_like()` 신설(공백 토큰 단위로 `/` 또는 홈 경로로 시작하는 조각을 `os.path.basename`으로 치환, 특정 OS/Errno 포맷 비가정) 후 except 절 `reason` 조합에 적용; 예외 타입명·파일명(예: `STATE.md`)은 보존해 진단 가치 유지, `decision`/`note` 필드는 미접촉.",
   "exports": [
     "cmd_init", "cmd_show", "cmd_advance", "cmd_mark",
     "cmd_block", "cmd_validate", "cmd_add_row", "cmd_status",
@@ -52,6 +52,9 @@ MODE_BOUNDARY_STAGES = {
     "TASK", "ANALYSIS", "PLAN", "TEST-SCENARIO",
     "SPEC", "REVIEW", "DESIGN",
     "WBS", "WIREFRAME",
+    # 094 R-11 G-1: opdd 설계 확정 3단계(070에서 STAGE_ENUM에는 등록됐으나
+    # 경계 상수 누락 — semi-agentic 기본 모드에서 소유자 미노출 통과 결함)
+    "DICT", "MODEL", "DDL/MIGRATION",
 }
 
 
@@ -91,6 +94,15 @@ STATUS_LABEL_MAP = {
 }
 LABEL_STATUS_MAP = {v: k for k, v in STATUS_LABEL_MAP.items()}
 
+# 094 F-003: current_status → 한글 라벨 (cmd_show '- 상태:' 라인 전용 SSOT)
+STATUS_TEXT = {
+    "in_progress":          "진행 중",
+    "done":                 "완료",
+    "blocked":              "블로커",
+    "additional_work":      "추가작업중",
+    "additional_work_done": "추가작업완료",
+}
+
 # PLAN §2.2 G-4 표준 항목 상수
 # 014 Phase 4: 새 표준 행 구조에서는 "작업 / PM Gate / 사용자 확인 / DONE.md 생성"만 사용한다.
 #   "QA Gate"/"State Gate"는 deprecated — State Gate는 stage-transition guard(§M-A)로 이전,
@@ -109,10 +121,13 @@ GATE_PATTERN = ["QA Gate", "State Gate", "PM Gate", "State Gate"]
 # 모든 error 응답 값은 이 상수의 키를 참조한다. 추가/임의 변형 금지.
 ERROR_CODES = {
     "worker_scope_violation":         "워커가 자기 단계({worker_stage}) 외 행(row {row_id}, stage={stage}) 갱신 시도",
-    "marker_missing":                 "STATE.md에 <!-- pipeline:start --> ~ <!-- pipeline:end --> 마커 누락",
     "already_initialized":            "state.json이 이미 존재합니다. --force로 덮어쓰기 가능",
     "date_tool_failed":               "node ~/.opal/tools/date/date.js datetime 호출 실패 — STATE.md 변경 없음(원자성)",
-    "import_failed":                  "기존 STATE.md 파싱 실패 — 마크다운 표 정규식 매칭 0건",
+    # 094 R-4/D-2: --import-existing은 저널화로 제거됨 — 파싱 대상(파이프라인 표) 자체가 STATE.md에서 소멸
+    "import_existing_removed":
+        "--import-existing은 094(STATE.md 저널화)에서 제거되었습니다 — "
+        "STATE.md 파이프라인 표가 더 이상 존재하지 않습니다. "
+        "행 구성은 --rows-from <pipeline.json> 또는 --rows-spec을 사용하세요.",
     "invalid_status_transition":      "current_status 전이 그래프(§2.11 G-7) 위반: {from_status} → {to_status}",
     "row_not_found":                  "--row {row_id}에 해당하는 행이 state.json에 없음",
     "invalid_stage_enum":             "--stage {value}는 §2.2 G-3 enum 16종에 없음",
@@ -167,6 +182,13 @@ ERROR_CODES = {
 
 PIPELINE_MARKER_START = "<!-- pipeline:start -->"
 PIPELINE_MARKER_END   = "<!-- pipeline:end -->"
+
+# 094 F-003 (§3.3.2 (1)(2)): 레거시(001~093) STATE.md는 마커+표를 동결 텍스트로
+# 보유한다. cmd_show가 그 동결 표를 최신인 양 반환하지 않도록 배너로 명시한다.
+LEGACY_FROZEN_BANNER = (
+    "> [레거시] 이 태스크의 STATE.md에는 파이프라인 표가 남아 있으나 더 이상 "
+    "갱신되지 않는 동결 텍스트입니다. 현황의 SSOT는 state.json이며 아래 렌더가 최신입니다."
+)
 
 # current_status 전이 그래프 (PLAN §2.11 G-7)
 ALLOWED_TRANSITIONS = {
@@ -301,74 +323,74 @@ def resolve_owner_placeholder(text: str) -> str:
 # ─────────────────────────────────────────────────────────────────────────────
 
 def render_pipeline_table(rows):
-    """state.json rows[]를 마크다운 표로 렌더 (마커 제외)."""
+    """state.json rows[]를 마크다운 표로 렌더 (마커 제외).
+    094: cmd_show --format md의 유일한 렌더 경로로 용도가 격하되었다 — 파일에
+    고정 저장하는 미러가 아니라 요청 시 생성하는 뷰(§3.2.2 (4)). '비고' 열에
+    row.note를 노출해, 렌더가 STATE.md 동결 텍스트가 아니라 state.json 최신
+    값을 반영함을 조회 결과로도 구분할 수 있게 한다(F-003 렌더 원천 단일화)."""
     lines = [
         "## 파이프라인 현황판",
         "",
         "> 상태값: ⬜ 대기 / 🔄 진행 중 / ✅ 완료 / ❌ 실패 / - 해당 없음",
         "> **수행 원칙**: 위에서 아래로 순서대로 처리한다. 현재 행이 ✅가 아니면 다음 행으로 진행 불가.",
         "",
-        "| # | 단계 | 항목 | 상태 | 시점 |",
-        "|---|------|------|------|------|",
+        "| # | 단계 | 항목 | 상태 | 시점 | 비고 |",
+        "|---|------|------|------|------|------|",
     ]
     for row in rows:
         ts = row.get("timestamp") or ""
+        note = row.get("note") or ""
         lines.append(
-            f"| {row['row_id']} | {row['stage']} | {row['item']} | {row['status_label']} | {ts} |"
+            f"| {row['row_id']} | {row['stage']} | {row['item']} | {row['status_label']} | {ts} | {note} |"
         )
     return "\n".join(lines)
 
-def replace_pipeline_section(md_content, new_table_content):
-    """STATE.md 마커 영역을 new_table_content로 교체 반환.
-    마커 없으면 None 반환 (호출자가 marker_missing 처리).
-    """
-    start_idx = md_content.find(PIPELINE_MARKER_START)
-    end_idx   = md_content.find(PIPELINE_MARKER_END)
-    if start_idx == -1 or end_idx == -1 or end_idx < start_idx:
-        return None
-    before = md_content[:start_idx]
-    after  = md_content[end_idx + len(PIPELINE_MARKER_END):]
-    return f"{before}{PIPELINE_MARKER_START}\n{new_table_content}\n{PIPELINE_MARKER_END}{after}"
-
 def update_state_md_header(md_content, new_datetime):
-    """G-5: STATE.md '> 최종 갱신:' 라인 교체."""
+    """G-5(D-3 존치): STATE.md '> 최종 갱신:' 라인 교체. 저널 축소판에서도
+    계속 호출되어 advance/mark 후 헤더 타임스탬프가 갱신된다(094 §3.1.2 (3))."""
     return re.sub(
         r"^(> 최종 갱신: ).*$",
         lambda m: f"{m.group(1)}{new_datetime}",
         md_content, count=1, flags=re.MULTILINE
     )
 
-def update_current_status_section(md_content, progress=None, status_text=None):
-    """G-6: '## 현재 상태' 섹션 내 '- 진행:' / '- 상태:' 라인 갱신 (None이면 미변경)."""
-    if progress is not None:
-        md_content = re.sub(
-            r"^(- 진행: ).*$",
-            lambda m: f"{m.group(1)}{progress}",
-            md_content, count=1, flags=re.MULTILINE
-        )
-    if status_text is not None:
-        md_content = re.sub(
-            r"^(- 상태: ).*$",
-            lambda m: f"{m.group(1)}{status_text}",
-            md_content, count=1, flags=re.MULTILINE
-        )
-    return md_content
-
-def update_next_action_section(md_content, next_action):
-    """072 G-16: '## 다음 액션' 섹션의 첫 줄(파생값)만 치환. 하위 자유 기재 라인 보존.
-    next_action=None이면 미변경(block/add-row/status 등 미접촉 계약, H-5).
-    섹션 부재 시 미변경(fail-safe, 레거시 STATE.md 호환)."""
-    if next_action is None:
-        return md_content
-    pattern = re.compile(r"(^## 다음 액션\n)([^\n]*)", re.MULTILINE)
-    m = pattern.search(md_content)
-    if not m:
-        return md_content
-    return md_content[:m.start()] + m.group(1) + next_action + md_content[m.end():]
-
 # ─────────────────────────────────────────────────────────────────────────────
-# 의사결정 로그 자동 기재 (PLAN §2.17 G-14/G-15)
+# 의사결정 로그 자동 기재 (PLAN §2.17 G-14/G-15, 094 §3.1.2 (2)(6))
 # ─────────────────────────────────────────────────────────────────────────────
+
+def _escape_table_cell(value):
+    """094 S-32: 의사결정 로그 표 셀에 들어갈 값의 '|'·개행을 이스케이프해
+    표 구조 파괴(열 증가·행 분열)를 방지한다. '|' → '&#124;', 개행 → '<br>' —
+    원문 토큰은 삭제되지 않고 치환되므로 복원 가능성이 보존된다."""
+    text = "" if value is None else str(value)
+    return text.replace("|", "&#124;").replace("\r\n", "<br>").replace("\n", "<br>")
+
+
+def ensure_journal_skeleton(md, task_title, now_str):
+    """저널 필수 골격('## 의사결정 로그' 표 헤더)을 보증한다 (094 §3.1.2 (2)).
+    - md is None            → _build_new_state_md(task_title, now_str) 반환
+    - 표 헤더 정규식 미매칭 → 헤딩이 있으면 그 직후에 표 헤더만 복구 삽입,
+                              헤딩조차 없으면 파일 끝에 '## 의사결정 로그' 빈 표 블록을 append
+    - 이미 존재            → md 원문 그대로 반환 (멱등)
+    레거시 STATE.md(마커·표 보유)는 본문을 일절 건드리지 않는다 — append/삽입만 수행한다.
+    """
+    if md is None:
+        return _build_new_state_md(task_title, now_str)
+
+    full_pattern = re.compile(r"## 의사결정 로그\n\| # \| 시점 \| 결정 \| 근거 \|\n\|[-| ]+\|\n")
+    if full_pattern.search(md):
+        return md  # 이미 골격 존재 — 멱등
+
+    header_block = "| # | 시점 | 결정 | 근거 |\n|---|------|------|------|\n"
+    heading_match = re.search(r"^## 의사결정 로그\n", md, re.MULTILINE)
+    if heading_match:
+        # 헤딩은 있으나 표 헤더/구분행이 손상됨 — 헤딩 직후에 표 헤더만 복구
+        insert_at = heading_match.end()
+        return md[:insert_at] + header_block + md[insert_at:]
+
+    # 헤딩 자체가 없음 — 파일 끝에 전체 섹션 append
+    return md.rstrip("\n") + "\n\n## 의사결정 로그\n" + header_block
+
 
 def append_decision_log(md_content, now_str, decision, reason):
     """STATE.md '## 의사결정 로그' 표에 1행 추가.
@@ -383,46 +405,71 @@ def append_decision_log(md_content, now_str, decision, reason):
         return md_content  # 표 없으면 조용히 패스
 
     # 기존 행 수 파악 → 새 # 컬럼값
+    # 094: 오프바이원 수정 — 캡처 그룹 문자열이 '\n'으로 시작하지 않는 경계
+    # (기존 행이 정확히 1개일 때)를 정확히 세기 위해 실제 '|'로 시작하는 줄
+    # 수를 직접 카운트한다(기존 "\n| " count 방식은 그 경계에서 0으로 오카운트).
     existing_rows = m.group(2)
-    row_count = existing_rows.count("\n| ")  # "|" 로 시작하는 줄 수
+    row_count = len([l for l in existing_rows.splitlines() if l.strip().startswith("|")])
     new_num = row_count + 1
-    new_row = f"| {new_num} | {now_str} | {decision} | {reason} |\n"
+    safe_decision = _escape_table_cell(decision)
+    safe_reason   = _escape_table_cell(reason)
+    new_row = f"| {new_num} | {now_str} | {safe_decision} | {safe_reason} |\n"
 
     replacement = m.group(1) + existing_rows + new_row
     return md_content[:m.start()] + replacement + md_content[m.end():]
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 공통 STATE.md 갱신 후처리 (G-5, G-6, 마커 교체)
+# 저널 후처리 (094: 구 '미러 동기화'에서 의미 재정의 — fail-open)
 # ─────────────────────────────────────────────────────────────────────────────
 
-def sync_state_md(task_path, state, now_str, command,
-                  progress=None, status_text=None,
-                  decision=None, reason=None, next_action=None):
-    """갱신 명령 공통 후처리:
-    1. STATE.md 마커 영역 교체 (marker_missing 시 err)
-    2. G-5 최종 갱신 헤더 교체
-    3. G-6 현재 상태 섹션 갱신
-    4. 072 G-16: '## 다음 액션' 첫 줄 파생 갱신 (next_action=None이면 미접촉, H-5)
-    5. G-14/G-15 의사결정 로그 기재 (decision/reason이 None이면 생략)
+def _redact_path_like(text):
+    """예외 메시지에 섞여 나오는 절대경로/홈 디렉토리 경로를 파일명(basename)
+    으로 치환한다(R-11 SEC 후속 — journal_warning.reason 경로 노출 차단,
+    PLAN.md §5.4). 특정 OS·예외의 메시지 포맷(Errno 구조 등)을 가정하지 않고,
+    공백으로 나눈 토큰 중 '/'로 시작하거나 사용자 홈 경로로 시작하는 것을
+    일반적으로 탐지해 basename만 남긴다 — 예외 타입명·파일명 등 진단 가치는
+    보존하고 경로 프리픽스만 절삭한다."""
+    home = str(pathlib.Path.home())
+
+    def _shrink(token):
+        m = re.match(r"^([\"'`]*)(.*?)([\"'`.,;:]*)$", token, re.DOTALL)
+        prefix, core, suffix = m.groups() if m else ("", token, "")
+        if core and (core.startswith("/") or core.startswith(home)):
+            base = os.path.basename(core.rstrip("/")) or core
+            return f"{prefix}{base}{suffix}"
+        return token
+
+    return " ".join(_shrink(tok) for tok in text.split(" "))
+
+
+def sync_state_md(task_path, state, now_str, command, decision=None, reason=None):
+    """저널 후처리 (094 §3.1.2 (3)):
+    1. G-5(D-3) 최종 갱신 헤더 교체
+    2. decision이 있으면 저널 골격을 보증(ensure_journal_skeleton)한 뒤
+       G-14/G-15 의사결정 로그 기재
+    반환: dict | None — 실패 시 {"journal_warning": {...}}, 성공(또는 no-op) 시 None.
+    [MUST] 어떤 경로에서도 err()/sys.exit()를 호출하지 않는다(fail-open) — 저널
+    쓰기 실패가 파이프라인을 막아서는 안 되지만, 실패 자체는 stdout
+    journal_warning으로 표면화해 결정 로그 원문이 조용히 증발하지 않게 한다.
     """
-    md = load_state_md(task_path)
-    if md is None:
-        # STATE.md 자체가 없으면 마커 에러로 처리
-        err(command, "marker_missing")
+    try:
+        md = load_state_md(task_path)
+        if decision is not None:
+            md = ensure_journal_skeleton(md, state.get("task_id", "task"), now_str)
+        if md is None:
+            return None  # 갱신할 저널 없음 + 기재할 결정 없음 → no-op
 
-    new_table = render_pipeline_table(state["rows"])
-    replaced  = replace_pipeline_section(md, new_table)
-    if replaced is None:
-        err(command, "marker_missing")
+        md = update_state_md_header(md, now_str)
+        if decision is not None:
+            md = append_decision_log(md, now_str, decision, reason or "(none)")
 
-    replaced = update_state_md_header(replaced, now_str)
-    replaced = update_current_status_section(replaced, progress=progress, status_text=status_text)
-    replaced = update_next_action_section(replaced, next_action)
-
-    if decision is not None:
-        replaced = append_decision_log(replaced, now_str, decision, reason or "(none)")
-
-    save_state_md(task_path, replaced)
+        save_state_md(task_path, md)
+        return None
+    except Exception as e:  # 디스크/권한 등 I/O 오류만 도달
+        return {"journal_warning": {
+            "reason": _redact_path_like(f"{type(e).__name__}: {e}"),
+            "decision": decision, "note": reason,
+        }}
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 행 조회 헬퍼
@@ -513,8 +560,17 @@ def build_todo_mirror(state, action):
     stages = list(dict.fromkeys(r["stage"] for r in rows))
     todos = []
     for stage in stages:
-        statuses = [r.get("status") for r in rows if r["stage"] == stage]
-        effective = [s for s in statuses if s != "na"]  # na 중립(DEC-2)
+        srows = [r for r in rows if r["stage"] == stage]
+        effective = []
+        for r in srows:
+            if r.get("status") == "na":
+                continue                       # na 중립(DEC-2, 기존)
+            if r.get("item") == "사용자 확인":   # R-11 G-3-b: 자동 승인 예정 행도 중립
+                allowed, _ = can_auto_approve_user_confirmation(
+                    r.get("stage"), state.get("mode"))
+                if allowed:
+                    continue
+            effective.append(r.get("status"))
         if not effective or all(s in ("done", "additional_work_done") for s in effective):
             st = "completed"
         elif all(s == "pending" for s in effective):
@@ -534,10 +590,23 @@ def _derive_next_action(state):
     """072 G-16: 파이프라인 프론티어(첫 미완료 행)에서 '다음 액션' 문자열 파생.
     전체 완료 시 '태스크 완료'(M-2). 070 정합: row 순서 스캔 + _COMPLETE_STATUSES 재사용
     (resolve_row_index/task-step key 체계 무접촉)."""
-    for row in state.get("rows", []):
+    mode = state.get("mode")
+    rows = state.get("rows", [])
+    for idx, row in enumerate(rows):
         st = row.get("status")
         if st in _COMPLETE_STATUSES:
             continue
+        # R-11 G-3-a: 다음 진입 시 도구가 자동 승인할 사용자 확인 행은 프론티어가 아니다.
+        # 단, CLOSE 진입 직전 확인 행은 예외 — auto_approve_prior_user_confirmations가
+        # target_row.stage=="CLOSE"이면 무조건 자동 승인을 no-op하므로(H-8 1차 방어와 동형),
+        # 바로 다음 행이 CLOSE면 이 확인 행은 실제로 소유자 승인이 필요한 프론티어다.
+        if row.get("item") == "사용자 확인":
+            next_row = rows[idx + 1] if idx + 1 < len(rows) else None
+            next_is_close = bool(next_row and next_row.get("stage") == "CLOSE")
+            if not next_is_close:
+                allowed, _ = can_auto_approve_user_confirmation(row.get("stage"), mode)
+                if allowed:
+                    continue
         stage, item = row.get("stage", ""), row.get("item", "")
         if st == "in_progress":
             return f"{stage} {item} 진행 중"
@@ -775,10 +844,15 @@ def auto_approve_prior_user_confirmations(
 # CLOSE 진입 게이트 검증 (PLAN §2.16 G-13)
 # ─────────────────────────────────────────────────────────────────────────────
 
-def check_close_gate(state, row_index, command, auto_pass=False, force=False):
+def check_close_gate(state, row_index, command, auto_pass=False, force=False, owner=None):
     """CLOSE 단계 첫 행 갱신 시 게이트 검증.
     위반 시 close_gate_violation 또는 agentic_close_gate_requires_user.
     force=True면 스킵.
+
+    owner: 이번 호출로 이 행에 적용될 예정인 --owner 값(cmd_mark 전용, 094 R-11 G-2).
+    CLOSE 첫 행 갱신 시점에는 row["owner"]가 아직 갱신 전(=기존 값, 통상 'PM')이므로
+    확인 행 0개 파이프라인의 소유자 승인 판정은 반드시 이 인자로 해야 한다 —
+    row.get("owner")를 참조하면 항상 갱신 전 값을 보게 되어 폴백이 무의미해진다.
     """
     row = state["rows"][row_index]
     if row["stage"] != "CLOSE":
@@ -804,8 +878,14 @@ def check_close_gate(state, row_index, command, auto_pass=False, force=False):
             break
 
     if prev_user_row is None:
-        err(command, "close_gate_violation",
-            violation_detail="no preceding user confirmation row found")
+        # 094 R-11 G-2: 확인 행이 없는 파이프라인(opgc 등) — CLOSE 첫 행 자체를
+        # 소유자 승인 지점으로 삼는다(정상 형태로 인정, 데드락 폴백).
+        if owner != "user":
+            err(command, "close_gate_violation",
+                violation_detail=(
+                    "pipeline has no user confirmation row — "
+                    "CLOSE first row must be marked with --owner user"))
+        return
 
     if prev_user_row["status"] != "done" or prev_user_row.get("owner") != "user":
         err(command, "close_gate_violation",
@@ -1131,78 +1211,6 @@ def build_rows_from_pipeline_json(spec_path, command, mode):
     return rows
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 기존 STATE.md import 파싱 (PLAN §2.5, T-13)
-# ─────────────────────────────────────────────────────────────────────────────
-
-def parse_existing_state_md(md_content, command):
-    """마크다운 표 정규식 파싱 → rows[] 반환. 0건 시 import_failed."""
-    row_pattern = re.compile(
-        r"^\|\s*(\d+)\s*\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|\s*([⬜🔄✅❌\-])\s*\|\s*([^|]*?)\s*\|",
-        re.MULTILINE
-    )
-    matches = row_pattern.findall(md_content)
-    if not matches:
-        err(command, "import_failed")
-
-    rows = []
-    for i, (rid, stage, item, status_label, timestamp) in enumerate(matches):
-        stage     = stage.strip()
-        item      = item.strip()
-        timestamp = timestamp.strip() or None
-        status    = LABEL_STATUS_MAP.get(status_label, "pending")
-
-        # stage 검증
-        if stage not in STAGE_ENUM:
-            stage = "TASK"  # fallback — import 시는 관대하게 처리
-
-        row = {
-            "row_id":       i + 1,
-            "stage":        stage,
-            "item":         item,
-            "status":       status,
-            "status_label": status_label if status_label != "-" else "-",
-            "timestamp":    timestamp,
-            "owner":        "PM",
-            "note":         None,
-        }
-        rows.append(row)
-    return rows
-
-# ─────────────────────────────────────────────────────────────────────────────
-# 074: --import-existing key-보존 재접합 헬퍼 (PLAN §3.2.2)
-# ─────────────────────────────────────────────────────────────────────────────
-
-def _key_source_index(source_rows):
-    """원천 rows에서 (stage,item) -> [key,...] 순서 큐 구성. key 없는 행은 제외.
-    반환: dict[tuple[str,str], list[str]]"""
-    index = {}
-    for row in source_rows:
-        key = row.get("key")
-        if not key:
-            continue
-        idx_key = (row.get("stage"), row.get("item"))
-        index.setdefault(idx_key, []).append(key)
-    return index
-
-
-def _reattach_import_keys(imported_rows, source_rows):
-    """imported_rows의 keyless 행에 source_rows의 key를 (stage,item) 순서 소비로 재접합.
-    imported_rows를 in-place 수정. 반환: 재접합된 행 수(int).
-    - 이미 key 있는 행은 건너뜀(체이닝 안전)
-    - 동일 (stage,item) 큐에서 앞에서부터 pop → 중복 순서 정렬"""
-    index = _key_source_index(source_rows)
-    matched = 0
-    for row in imported_rows:
-        if row.get("key"):
-            continue
-        idx_key = (row.get("stage"), row.get("item"))
-        queue = index.get(idx_key)
-        if queue:
-            row["key"] = queue.pop(0)
-            matched += 1
-    return matched
-
-# ─────────────────────────────────────────────────────────────────────────────
 # 9개 서브 명령 구현
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -1228,6 +1236,12 @@ def cmd_init(args):
             note="opsdd ACT dynamic injection is out of scope for task 134. Track at R-13.",
             exit_code=2)
 
+    # 094 R-4/D-2: --import-existing 제거 — STATE.md 저널화로 파싱 대상(파이프라인
+    # 표)이 소멸했으므로 명시적으로 거부한다. argparse 정의는 하위 호환을 위해
+    # 유지하되 help는 감춘다(§3.2.2 (2)).
+    if getattr(args, "import_existing", False):
+        err(command, "import_existing_removed")
+
     # C-1: --rows-spec / --rows-from 배타 (§2.19)
     if args.rows_spec and args.rows_from:
         err(command, "rows_input_conflict")
@@ -1247,52 +1261,21 @@ def cmd_init(args):
 
     # 행 구성 결정
     rows = []
-    import_mode = args.import_existing
 
-    if import_mode:
-        md_content = load_state_md(task_path)
-        if md_content:
-            try:
-                rows = parse_existing_state_md(md_content, command)
-            except SystemExit:
-                if not (args.rows_spec or args.rows_from):
-                    raise  # rows_spec/from fallback 없으면 그대로 실패
-                rows = []  # fallback으로 아래에서 처리
-
-        # 074: keyless import rows에 key 재접합 (우선순위: 기존 state.json → pipeline.json)
-        if rows:
-            # (1) 기존 state.json (DEC-4: 덮어쓰기 전 soft-load)
-            if state_file.exists():
-                try:
-                    _old_rows = json.loads(state_file.read_text(encoding="utf-8")).get("rows", [])
-                except Exception:
-                    _old_rows = []
-                if any(r.get("key") for r in _old_rows):
-                    _reattach_import_keys(rows, _old_rows)
-            # (2) pipeline.json 폴백 (DEC-2: 아직 keyless 행이 남고 .json 스펙이 있을 때만)
-            if any(not r.get("key") for r in rows) and \
-               getattr(args, "rows_from", None) and args.rows_from.endswith(".json"):
-                _reattach_import_keys(rows, build_rows_from_pipeline_json(args.rows_from, command, args.mode))
-            # (3) 원천 전무 → 경고 (DEC-5: 하위호환)
-            if not any(r.get("key") for r in rows):
-                print('{"warning":"--import-existing: key 원천(기존 state.json/pipeline.json) 부재 — '
-                      'keyless 유지(하위호환). --task-step 주소 불가 (task 074)."}', file=sys.stderr)
-
-    if not rows:
-        if args.rows_spec:
-            rows = build_rows_from_spec(args.rows_spec, command, args.mode)
-        elif args.rows_from:
-            # 070 R-2: --rows-from 확장자 분기 — .json(신규 pipeline.json 스펙) vs
-            # .md(레거시 SKILL.md 파싱, deprecated stderr 경고 1줄).
-            if args.rows_from.endswith(".json"):
-                rows = build_rows_from_pipeline_json(args.rows_from, command, args.mode)
-            else:
-                print('{"warning":"--rows-from <SKILL.md> markdown 파싱은 deprecated. '
-                      'references/pipeline.json으로 이관하세요 (task 070)."}', file=sys.stderr)
-                rows = build_rows_from_skill_md(args.rows_from, command, args.mode)
+    if args.rows_spec:
+        rows = build_rows_from_spec(args.rows_spec, command, args.mode)
+    elif args.rows_from:
+        # 070 R-2: --rows-from 확장자 분기 — .json(신규 pipeline.json 스펙) vs
+        # .md(레거시 SKILL.md 파싱, deprecated stderr 경고 1줄).
+        if args.rows_from.endswith(".json"):
+            rows = build_rows_from_pipeline_json(args.rows_from, command, args.mode)
         else:
-            # 행 없이 init — 최소 1행 빈 구조는 허용 안 함, 경고 없이 빈 rows로 진행
-            rows = []
+            print('{"warning":"--rows-from <SKILL.md> markdown 파싱은 deprecated. '
+                  'references/pipeline.json으로 이관하세요 (task 070)."}', file=sys.stderr)
+            rows = build_rows_from_skill_md(args.rows_from, command, args.mode)
+    else:
+        # 행 없이 init — 최소 1행 빈 구조는 허용 안 함, 경고 없이 빈 rows로 진행
+        rows = []
 
     # task_id = 마지막 디렉토리명
     task_id = task_path.name
@@ -1332,40 +1315,9 @@ def cmd_init(args):
 
     save_state_json(task_path, state)
 
-    # STATE.md 생성 or 갱신
-    first_stage = rows[0]["stage"] if rows else "TASK"
-    task_title  = args.task_title or task_id
-    table_str   = render_pipeline_table(rows)
-
-    if import_mode:
-        # 기존 STATE.md에 마커 영역만 교체/삽입 (G-8 import 정책)
-        existing_md = load_state_md(task_path) or ""
-        new_md = replace_pipeline_section(existing_md, table_str)
-        if new_md is None:
-            # 마커 없음 — 마커 영역을 파이프라인 표 직전에 삽입 시도
-            # 파이프라인 현황판 헤더 찾아 마커로 감싸기
-            ph = existing_md.find("## 파이프라인 현황판")
-            if ph != -1:
-                # 현황판 섹션 끝 찾기 (다음 ## 헤더 직전)
-                next_h = re.search(r"\n## ", existing_md[ph + 1:])
-                end_pos = ph + 1 + next_h.start() if next_h else len(existing_md)
-                before  = existing_md[:ph]
-                after   = existing_md[end_pos:]
-                new_md  = f"{before}{PIPELINE_MARKER_START}\n{table_str}\n{PIPELINE_MARKER_END}\n{after}"
-            else:
-                # 아예 없으면 STATE.md 끝에 추가
-                new_md = existing_md.rstrip("\n") + f"\n\n{PIPELINE_MARKER_START}\n{table_str}\n{PIPELINE_MARKER_END}\n"
-        new_md = update_state_md_header(new_md, now_str)
-        new_md = update_current_status_section(
-            new_md, progress=f"{first_stage} 단계", status_text="진행 중"
-        )
-    else:
-        # 신규 STATE.md 생성 (G-8 템플릿)
-        new_md = _build_new_state_md(
-            task_title, now_str, args.mode, first_stage,
-            rows, table_str, next_action
-        )
-
+    # 094 §3.2.2 (2): STATE.md 저널 생성 (import 분기 소멸 — 항상 신규 템플릿)
+    task_title = args.task_title or task_id
+    new_md = _build_new_state_md(task_title, now_str)
     save_state_md(task_path, new_md)
 
     # force 사용 시 의사결정 로그 기재 (§2.17 트리거 #1)
@@ -1383,29 +1335,21 @@ def cmd_init(args):
        task_id=task_id,
        rows_count=len(rows),
        created_at=now_str,
-       import_existing=import_mode,
+       # 094 D-2: --import-existing 제거 후에도 응답 키는 유지하고 값만 고정(제약 ③)
+       import_existing=False,
        todo_mirror=build_todo_mirror(state, "create"))
 
 
-def _build_new_state_md(task_title, now_str, mode, first_stage,
-                        rows, table_str, next_action):
-    """신규 STATE.md 템플릿 생성 (PLAN §2.11 G-8)."""
-    stage_list = list(dict.fromkeys(r["stage"] for r in rows))
-    stage_summary = " / ".join(stage_list) if stage_list else "(행 없음)"
-
+def _build_new_state_md(task_title, now_str):
+    """신규 STATE.md 저널 템플릿 생성 (094 §3.1.2 (1), D-1).
+    파생 섹션(마커/파이프라인 표/'## 현재 상태'/'## 다음 액션')을 전부 제거하고
+    의사결정 로그·블로커만 남긴 저널로 재정의한다. 기계 상태(rows/현재 상태/
+    다음 액션)의 SSOT는 state.json 단일이며, 조회는 `state-tool show`로 일원화된다."""
     return f"""# STATE: {task_title}
 
 > 최종 갱신: {now_str}
-
-## 현재 상태
-- 모드: {mode}
-- 단계: {stage_summary}
-- 진행: {first_stage} 단계
-- 상태: 진행 중
-
-{PIPELINE_MARKER_START}
-{table_str}
-{PIPELINE_MARKER_END}
+> 파이프라인 현황(rows/상태/다음 액션)의 SSOT는 `state.json`입니다.
+> 조회: `~/.opal/tools/state-tool/run.sh show <task-path>`
 
 ## 의사결정 로그
 | # | 시점 | 결정 | 근거 |
@@ -1413,69 +1357,46 @@ def _build_new_state_md(task_title, now_str, mode, first_stage,
 
 ## 블로커
 없음
-
-## 다음 액션
-{next_action}
 """
 
 # ── 2. show ───────────────────────────────────────────────────────────────────
 
 def cmd_show(args):
-    """PLAN §2.14 G-11 — 파이프라인 현황판 출력"""
+    """094 §3.3.2 — 파이프라인 현황 조회. R-5: state.json이 파생 표시의 유일한
+    렌더 원천이다(md/json 공통). 레거시(001~093, 마커+표 보유) STATE.md는 동결
+    텍스트로만 취급되며 절대 최신 현황으로 오반환되지 않는다(H-5)."""
     command = "show"
     task_path = resolve_task_path(args.task_path, command)
     state     = load_state_json(task_path, command)
     fmt       = getattr(args, "format", "md") or "md"
 
     md = load_state_md(task_path)
+    legacy = bool(md) and (PIPELINE_MARKER_START in md and PIPELINE_MARKER_END in md)
 
     if fmt == "json":
-        marker_present = False
-        if md:
-            marker_present = (PIPELINE_MARKER_START in md and PIPELINE_MARKER_END in md)
-        ok(command, format="json", marker_present=marker_present, data=state)
+        ok(command, format="json", marker_present=legacy, data=state)
+        return
 
-    elif fmt == "full":
+    if fmt == "full":
         if md is None:
             ok(command, format="full", content="(STATE.md 없음)")
             return
-        has_markers = (PIPELINE_MARKER_START in md and PIPELINE_MARKER_END in md)
-        if not has_markers:
-            warning = "<!-- WARNING: pipeline markers missing — table region is unrendered. Run `state init --import-existing` to recover. -->\n"
-            ok(command, format="full", content=warning + md)
-        else:
-            ok(command, format="full", content=md)
+        banner = (LEGACY_FROZEN_BANNER + "\n\n") if legacy else ""
+        ok(command, format="full", content=banner + md)
+        return
 
-    else:  # md (기본)
-        has_markers = md and (PIPELINE_MARKER_START in md and PIPELINE_MARKER_END in md)
-        if not has_markers:
-            # fallback: state.json rows[]로 표 재구성 (§2.14 G-11)
-            table = render_pipeline_table(state["rows"])
-            header = "# 파이프라인 현황판 (마커 누락 — fallback 출력)\n\n"
-            print(json.dumps({
-                "ok": True, "command": command, "format": "md",
-                "marker_present": False,
-                "content": header + table
-            }, ensure_ascii=False), file=sys.stderr)
-            # stdout에는 정상 출력
-            print(json.dumps({
-                "ok": True, "command": command, "format": "md",
-                "marker_present": False,
-                "content": header + table
-            }, ensure_ascii=False))
-            return
-
-        # 현황판 섹션만 추출
-        start_idx = md.find(PIPELINE_MARKER_START) + len(PIPELINE_MARKER_START)
-        end_idx   = md.find(PIPELINE_MARKER_END)
-        pipeline_section = md[start_idx:end_idx].strip()
-
-        # ## 현재 상태 섹션 추출
-        m = re.search(r"(## 현재 상태\n(?:- [^\n]+\n){1,6})", md)
-        current_status_section = m.group(1).strip() if m else ""
-
-        content = (current_status_section + "\n\n" + pipeline_section) if current_status_section else pipeline_section
-        ok(command, format="md", marker_present=True, content=content)
+    # md (기본) — state.json 단일 파생(§3.3.2 (1))
+    head = [
+        "## 현재 상태",
+        f"- 모드: {state.get('mode')}",
+        f"- 상태: {STATUS_TEXT.get(state.get('current_status'), state.get('current_status'))}",
+        f"- 다음 액션: {state.get('next_action') or '-'}",
+        "",
+    ]
+    body = render_pipeline_table(state["rows"])
+    banner = (LEGACY_FROZEN_BANNER + "\n\n") if legacy else ""
+    ok(command, format="md", marker_present=legacy,
+       content=banner + "\n".join(head) + body)
 
 # ── 3. advance ────────────────────────────────────────────────────────────────
 
@@ -1529,13 +1450,12 @@ def cmd_advance(args):
     state["next_action"] = getattr(args, "next_action", None) or _derive_next_action(state)
     save_state_json(task_path, state)
 
-    progress = f"{row['stage']} 단계"
-    sync_state_md(task_path, state, now_str, command, progress=progress,
-                  next_action=state["next_action"])
+    _jw = sync_state_md(task_path, state, now_str, command)
     ok(command, row_id=row["row_id"], stage=row["stage"], item=row["item"],
        status="in_progress", timestamp=now_str,
        auto_approved=auto_approved,
-       todo_mirror=build_todo_mirror(state, "update"))
+       todo_mirror=build_todo_mirror(state, "update"),
+       **(_jw or {}))
 
 # ── 4. mark ───────────────────────────────────────────────────────────────────
 
@@ -1604,7 +1524,7 @@ def cmd_mark(args):
 
     # CLOSE 진입 게이트 (§2.16 G-13)
     check_close_gate(state, row_index, command,
-                     auto_pass=args.auto_pass, force=args.force)
+                     auto_pass=args.auto_pass, force=args.force, owner=args.owner)
 
     # 005 명확화 게이트 — TASK→다음 단계 첫 행 진입 차단 (상태 변경 전)
     _run_clarification_hook(task_path, state, row_index, command,
@@ -1680,8 +1600,6 @@ def cmd_mark(args):
     # CLOSE 단계 마지막 행 → current_status = done (§2.11 G-6)
     # 014 Phase 4: 새 표준 구조의 CLOSE 마지막 행은 "DONE.md 생성"이고, 레거시 구조는
     #   "State Gate"였다. 항목명에 의존하지 않고 "CLOSE 단계의 마지막 행" 여부로 판정한다.
-    progress_text = None
-    status_text   = None
     is_close_last = (
         row["stage"] == "CLOSE" and
         (row_index == len(state["rows"]) - 1 or
@@ -1690,11 +1608,6 @@ def cmd_mark(args):
     # 017: in_progress(N<M)로 남긴 행은 current_status=done 전환에서 제외 — 다중 Step CLOSE 마지막 행 오판 방지
     if is_close_last and row["status"] == "done":
         state["current_status"] = "done"
-        status_text = "완료"
-
-    # EXECUTE Step 진행 표기 (§2.11 G-6)
-    if args.as_worker and _step_str:
-        progress_text = f"Step {_step_str} 완료"
 
     # 072 F-002/F-003: '다음 액션' 자동 파생(프론티어) + --next-action 오버라이드(비지속, M-3)
     state["next_action"] = getattr(args, "next_action", None) or _derive_next_action(state)
@@ -1734,10 +1647,8 @@ def cmd_mark(args):
                     f"missing={_gate_forced_missing}")
         reason_text = args.note
 
-    sync_state_md(task_path, state, now_str, command,
-                  progress=progress_text, status_text=status_text,
-                  decision=decision, reason=reason_text,
-                  next_action=state["next_action"])
+    _jw = sync_state_md(task_path, state, now_str, command,
+                        decision=decision, reason=reason_text)
 
     # 088 §2.1: CLOSE 마지막 행 완료 시 메모리 히스토리 자동 연결 (R-1~R-5)
     # state.json·STATE.md 영속화가 완전히 끝난 뒤에만 실행 — 실패해도 mark 응답은
@@ -1755,6 +1666,8 @@ def cmd_mark(args):
     _gate_payload = build_gate_payload(row)
     if _gate_payload is not None:
         _ok_kwargs["gate_checklist"] = _gate_payload
+    if _jw:
+        _ok_kwargs.update(_jw)
     ok(command, **_ok_kwargs)
 
 # ── 5. block ──────────────────────────────────────────────────────────────────
@@ -1782,11 +1695,12 @@ def cmd_block(args):
     state["updated_at"]     = now_str
 
     save_state_json(task_path, state)
-    sync_state_md(task_path, state, now_str, command, status_text="블로커")
+    _jw = sync_state_md(task_path, state, now_str, command)
 
     ok(command, row_id=row["row_id"], stage=row["stage"], item=row["item"],
        status="failed", current_status="blocked", timestamp=now_str,
-       todo_mirror=build_todo_mirror(state, "update"))
+       todo_mirror=build_todo_mirror(state, "update"),
+       **(_jw or {}))
 
 # ── 6. validate ───────────────────────────────────────────────────────────────
 
@@ -1836,14 +1750,6 @@ def cmd_validate(args):
                         "row_id": row["row_id"],
                         "detail": f"semi-agentic mode but owner=auto on stage={row.get('stage')}"
                     })
-
-    # 마커 존재 여부
-    md = load_state_md(task_path)
-    if md and not (PIPELINE_MARKER_START in md and PIPELINE_MARKER_END in md):
-        violations.append({
-            "code": "marker_missing", "row_id": None,
-            "detail": "STATE.md pipeline markers not found"
-        })
 
     count = len(violations)
     is_ok = count == 0
@@ -1956,15 +1862,15 @@ def cmd_add_row(args):
     decision = f"additional row inserted after row {after_index + 1}: stage={args.stage}, item={args.item}, key={new_key}, new_row_id={after_index + 2}"
     reason   = args.note or "additional work entry"
 
-    sync_state_md(task_path, state, now_str, command,
-                  status_text=("추가작업중" if state["current_status"] == "additional_work" else None),
-                  decision=decision, reason=reason)
+    _jw = sync_state_md(task_path, state, now_str, command,
+                        decision=decision, reason=reason)
 
     ok(command,
        row_id=after_index + 2,
        key=new_key,
        rows_count=len(state["rows"]),
-       current_status=state["current_status"])
+       current_status=state["current_status"],
+       **(_jw or {}))
 
 # ── 8. status ─────────────────────────────────────────────────────────────────
 
@@ -1989,24 +1895,15 @@ def cmd_status(args):
     state["updated_at"]     = now_str
     save_state_json(task_path, state)
 
-    # G-6 상태 텍스트 매핑
-    status_text_map = {
-        "in_progress":          "진행 중",
-        "done":                 "완료",
-        "blocked":              "블로커",
-        "additional_work":      "추가작업중",
-        "additional_work_done": "추가작업완료",
-    }
-    status_text = status_text_map.get(to_status)
-
     # §2.17 트리거 #4
     decision = f"current_status changed: {from_status} → {to_status}"
     reason   = resolve_owner_placeholder(args.note) or "(none)"
 
-    sync_state_md(task_path, state, now_str, command,
-                  status_text=status_text, decision=decision, reason=reason)
+    _jw = sync_state_md(task_path, state, now_str, command,
+                        decision=decision, reason=reason)
 
-    ok(command, **{"from": from_status, "to": to_status}, timestamp=now_str)
+    ok(command, **{"from": from_status, "to": to_status}, timestamp=now_str,
+       **(_jw or {}))
 
 # ── 9. gate-pass ──────────────────────────────────────────────────────────────
 
@@ -2082,12 +1979,13 @@ def cmd_gate_pass(args):
     decision = f"Gate Pass: rows {passed_ids[0]}~{passed_ids[-1]}, stage={stage}"
     reason   = args.note or "(none)"
 
-    sync_state_md(task_path, state, now_str, command,
-                  decision=decision, reason=reason)
+    _jw = sync_state_md(task_path, state, now_str, command,
+                        decision=decision, reason=reason)
 
     ok(command, rows_passed=passed_ids, stage=stage, timestamp=now_str,
        deprecated=True,
-       deprecation_note="gate-pass is deprecated (014 Phase 4): new standard rows have no QA/State Gate rows; use single mark for PM Gate.")
+       deprecation_note="gate-pass is deprecated (014 Phase 4): new standard rows have no QA/State Gate rows; use single mark for PM Gate.",
+       **(_jw or {}))
 
 # ── 10. verify ───────────────────────────────────────────────────────────────
 
@@ -2569,7 +2467,10 @@ def build_parser():
                         help="opsdd ACT 동적 주입 (시그니처만, 미구현 — R-13)")
     p_init.add_argument("--force", action="store_true")
     p_init.add_argument("--note")
-    p_init.add_argument("--import-existing", action="store_true", dest="import_existing")
+    # 094 D-2: 저널화로 파싱 대상(파이프라인 표)이 소멸 — cmd_init이 즉시 거부.
+    # 인자 정의는 하위 호환을 위해 유지하되 help는 감춘다(§3.2.2 (2)).
+    p_init.add_argument("--import-existing", action="store_true", dest="import_existing",
+                        help=argparse.SUPPRESS)
     p_init.add_argument("--worktree", metavar="<path>",
                         help="worktree 코드 작업본 절대경로 (092). 미지정 시 state.json에 키를 생성하지 않는다.")
     p_init.set_defaults(func=cmd_init)

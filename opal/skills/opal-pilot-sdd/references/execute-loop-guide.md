@@ -38,7 +38,7 @@ SPEC-PLAN.md에서 실행 그룹 확인
           순차 실행 (섹션 3)
       → if Group has multiple independent ACTs:
           병렬 실행 (섹션 4) + worktree 격리
-      → Group 완료 후 state-tool 호출로 STATE.md 행 갱신 (§9 참조)
+      → Group 완료 후 state-tool 호출로 파이프라인 행 갱신 (§9 참조)
       → 다음 Group 진행
 ```
 
@@ -293,7 +293,7 @@ PM이 ACT 완료 확인 시 작성하는 문서.
 
 ## 9. STATE.md ACT 상태 관리
 
-> **[MUST] 파이프라인 행 상태 변경은 `~/.opal/tools/state-tool/run.sh` 호출로만 수행한다. LLM이 STATE.md를 직접 편집하는 것은 금지된다.**
+> **[MUST] 파이프라인 행 상태(⬜/🔄/✅) 변경은 `~/.opal/tools/state-tool/run.sh`로만 수행한다. `state.json` 직접 편집 금지 — 현황 조회는 `state-tool show <task-path>`로 한다.**
 > — `tasks/134-260501-opp-pipeline-state-tool/TASK.md` F-18 / `PLAN.md` §1.5 M-31 / §3 Step 11
 >
 > **[R-10]** opsdd 비표준 행 구성 — `gate-pass` 사용 불가. `mark` 개별 호출 필수 (`PLAN.md` §2.13 G-10, R-10)
@@ -302,9 +302,9 @@ PM이 ACT 완료 확인 시 작성하는 문서.
 > ```bash
 > ~/.opal/tools/state-tool/run.sh mark <task-path> --row <ACT_행N> --done --note 'ACT-001 완료'
 > ```
-> ACT 목록 SSOT는 `opal/skills/opal-pilot-sdd/SKILL.md` "STATE.md 도메인 치환값" 섹션에 있으며, 본 섹션(§9)은 표기 통일 목적으로만 참조한다.
+> ACT 파이프라인 행 SSOT는 `opal/skills/opal-pilot-sdd/SKILL.md` "STATE.md 도메인 치환값" 섹션에 있으며, 본 섹션(§9)은 표기 통일 목적으로만 참조한다.
 
-상위 STATE.md가 전체 ACT 목록의 상태를 통합 관리한다 (ACT 내부 STATE.md 없음).
+상위 STATE.md 저널이 ACT별 L1/L2/TS 세부(자유 기재)를 통합 관리한다 (ACT 내부 STATE.md 없음). ACT 파이프라인 행 상태 자체의 SSOT는 `state.json`이며 조회는 `state-tool show`로 한다.
 
 ### 9-1. ACT 상태 필드
 
@@ -317,13 +317,9 @@ PM이 ACT 완료 확인 시 작성하는 문서.
 
 ### 9-2. STATE.md EXECUTE-LOOP 섹션 구조
 
+> Phase·진행(ACT {현재}/{총 수})·상태의 SSOT는 `state.json`이며, 조회는 `~/.opal/tools/state-tool/run.sh show <task-path>`로 한다. 아래 ACT 목록·TS 상태 표는 state.json 파생이 아닌 opsdd 고유 자유 기재(저널)이다 — ACT 파이프라인 행 자체(add-row/mark)는 별도로 `state.json`에 있다.
+
 ```markdown
-## EXECUTE-LOOP 현황
-
-- Phase: EXECUTE-LOOP
-- 진행: ACT {현재}/{총 수}
-- 상태: 진행 중
-
 ### ACT 목록
 
 | ACT | 이름 | 그룹 | 의존 | 코드 | L1 lint | L2 build | 상태 | 시작 | 완료 |
@@ -443,3 +439,4 @@ Group 3 (순차): ACT-004  ← ACT-002, ACT-003 완료 후
 |------|------|---------|
 | 2026-04-10 | R-3 | ACT 목록 테이블 L1/L2 컬럼 추가 (의존, 코드, L1 lint, L2 build, 시작, 완료) + L1/L2 검증 루프 규칙 섹션 추가 + 9-3 갱신 시점 테이블에 L1/L2 이벤트 행 추가 |
 | 2026-05-01 | R-4 | state-tool 도입 — §2 실행 흐름 + §2-1 단일 ACT 실행에 `state mark` 호출 표기. §9 ACT 상태 관리에 `[MUST]` state-tool 호출 블록 + R-10 비표준 행 구성 표기(gate-pass 금지). §10 전체 흐름 예시 STATE.md 갱신 표현 → `state mark` 호출 표기. ACT 목록 SSOT는 SKILL.md 보존 — TASK F-18 / PLAN §1.5 M-31 / §3 Step 11 (134) |
+| 2026-08-16 13:40 | v1.1 | STATE.md 저널화 정합 — §2·§9·§9-2에서 "STATE.md 행 갱신"·"[MUST] LLM이 STATE.md를 직접 편집하는 것은 금지된다"·"## EXECUTE-LOOP 현황"(Phase/진행/상태 표 전제)를 표준 문구 A(도구 규율) + `state.json` SSOT 포인터로 교체. ACT 목록·TS 상태 표는 state.json 파생이 아닌 opsdd 고유 자유 기재로 명시 존치(094 R-6) (094) |

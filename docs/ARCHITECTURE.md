@@ -204,7 +204,7 @@ OPAL은 2-레이어 아키텍처로 동작한다.
 |------|------|
 | Guards | 구현 금지 원칙, Git 사전 점검, 커밋 규칙 |
 | Gates | 단계 게이트 (캡틴 승인), QA Gate, PM Gate |
-| State | STATE.md 상태 관리, 세션 복원 |
+| State | `state.json` 파이프라인 SSOT(state-tool) + STATE.md 저널, 세션 복원 |
 | TASK 프로세스 | op-task 스킬로 TASK.md 작성 (오케스트레이터 직접 수행) |
 | Observability | 스킬/에이전트 탐색 경로, 프로젝트 메모리 동기화 |
 
@@ -475,6 +475,7 @@ opal/                                    ← 이 저장소
 
 | 날짜 | 변경 내용 |
 |------|----------|
+| 2026-08-16 13:36 | 하네스 표 State 행 서술 정정 — "STATE.md 상태 관리" → "`state.json` 파이프라인 SSOT(state-tool) + STATE.md 저널", 세션 복원. STATE.md는 파이프라인 현황(행 상태·진행·다음 액션)의 SSOT가 아니라 의사결정 로그·블로커를 담는 저널이며, 현황 조회는 `state-tool show`가 담당한다 (094) |
 | 2026-08-15 16:35 | `worktree-tool` 신설 반영 — 도구 인벤토리 **18종 → 19종**(§핵심 디렉토리 `tools/` 행 '환경·배포' 범주에 항목 추가 + 디렉토리 트리 1행). 태스크별 코드 작업공간을 `{프로젝트}/.opal-worktrees/task_{NNN}/`에 git worktree로 격리하는 `--worktree`/`--wt` 축(모드 축과 직교, `opal-harness.md` §2.5)의 집행 도구다 (Task 092) |
 | 2026-08-11 13:25 | opi 최신화 — 실측 1:1 대조 결과 32건을 전건 반영. 수량 정합(서브에이전트 12→**15개**, 내역 "전문 7 + 범용 4 + 도구성 1"→**전문 8 + 범용 7** / 독립 스킬 5·6→**8개** / OPAL 스킬 24·25→**42개** / `tools/` 6→**18종**), **Codex 플랫폼 신설**(어댑터 emit·`~/.codex/config.toml` `[agents]`·`~/.codex/AGENTS.md` 부트스트래퍼·`codex mcp add` — 종전에는 지원 플랫폼 하나가 배포 모델 전 경로에서 비가시였다), 스킬 표에 미문서화 16종 추가(Pilot 2 + **데이터 단계 3종 그룹 신설** + **보조 단계 3종 그룹 신설** + OPAL 6 + 독립 2)하고 실물 없는 `op-sdd-tasks`를 `op-sdd-action-plan`으로 교체 + opsdd 파이프라인 단계명을 실측 7 Phase로 정정, model 2건 정정(`opal-task-agent`·`opal-be-agent` standard→**advanced**), wtm 폴백 3단→**2단**(WebFetch 제거), MCP 4종 적용 플랫폼을 **5종**으로 통일하고 미배포 `Notion` 행 삭제 + `install_type` 전건 `config_merge` 명시, `references/`를 6종 열거에서 **범주 서술**로 전환(`harness/` 17파일 · `pm/` 6파일 포함), `console` 서브명령에 `log` 추가, 디렉토리 트리 재작성(부재하는 루트 `agents/` 삭제 · `opal/core/` 직속 4파일 · 저장소 루트 6항목 · `scripts/` 6엔트리 · frontend 6→**7화면** · `docs/architecture-diagram/` · 미종료 코드펜스 복구), 변경이력 **날짜 역순 정렬 복구** (Task 089) |
 | 2026-08-11 | tools/ 표 memory-tool 행에 **CLOSE 자동 연결** 반영 — CLOSE 마지막 행 mark 시 state-tool이 memory-tool을 subprocess로 직접 호출해 작업 히스토리 행을 결정론적으로 생성한다. 종전에는 히스토리 갱신이 ambient 트리거로만 정의되어 커밋 뒤로 밀렸고 태스크마다 히스토리 전용 후속 커밋이 1건 추가됐다. 판단이 개입하지 않는 title·date·stage·path는 도구가 채우고 `result`만 PM이 보강하며(`"(PM 보강 대기)"` 플레이스홀더 + 실행 가능한 리마인더), 연동 실패는 `history_link.warning`으로만 표면화되어 mark를 차단하지 않는다. pilot 10종 CLOSE 스펙 무수정 — 도구 계층 단일 지점 변경으로 전 pilot 동시 적용 (Task 088) |

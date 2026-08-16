@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "OPAL state.json Schema",
-  "description": "state-tool이 관리하는 파이프라인 현황판 JSON. PLAN §2.2 G-1~G-4 SSOT.",
+  "description": "state-tool이 관리하는 파이프라인 현황판 JSON — 파이프라인 현황(rows/상태/다음 액션)의 단일 SSOT(094). STATE.md는 이 값을 파생 렌더하지 않는 저널(의사결정 로그/블로커)이며, 조회는 `state-tool show`로 일원화된다. PLAN §2.2 G-1~G-4.",
   "type": "object",
   "required": ["task_id", "skill", "mode", "schema_version", "created_at", "updated_at", "current_status", "rows"],
   "additionalProperties": false,
@@ -40,7 +40,7 @@
     "rows": {
       "type": "array",
       "minItems": 1,
-      "description": "파이프라인 현황판 행 목록 — row_id 1-based 단조 증가",
+      "description": "파이프라인 현황판 행 목록 — row_id 1-based 단조 증가. SSOT는 이 필드이며, 조회는 `state-tool show`로 렌더한다(094).",
       "items": {
         "type": "object",
         "required": ["row_id", "stage", "item", "status", "status_label", "timestamp"],
@@ -126,7 +126,7 @@
         {"type": "string"},
         {"type": "null"}
       ],
-      "description": "STATE.md '## 다음 액션' 렌더 SSOT — advance/mark 시 다음 대기 행에서 자동 파생, init/전이 --next-action 오버라이드 가능 (072). optional (하위호환)"
+      "description": "파이프라인 다음 액션 파생값 — advance/mark 시 다음 대기 행에서 자동 파생, init/전이 --next-action 오버라이드 가능 (072). 조회: `state-tool show`(094 — STATE.md는 더 이상 이 값을 렌더하지 않는다). optional (하위호환)"
     },
     "worktree": {
       "type": "string",

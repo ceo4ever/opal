@@ -10,38 +10,41 @@
 
 오케스트레이터 전용. 단계 스킬은 STATE.md를 갱신하지 않는다 (EXECUTE Step 진행 제외).
 
-> **[강제]** 아래 각 이벤트 발생 시 STATE.md 갱신은 **필수**다. 갱신 미수행 시 다음 단계 진입이 금지된다. 행 mark 자체가 state 기록이며, 단계 건너뛰기·순서 위반은 state-tool stage-transition guard가 차단한다. PM은 PM Gate 직전에 상태 자가 점검(아래 §상태 자가 점검)으로 갱신 여부를 확인한다.
+STATE.md는 **의사결정 로그·블로커·자유 기재를 담는 저널**이다(094 R-6). 파이프라인 현황(행 상태·진행·`current_status`·다음 액션)의 SSOT는 `state.json`이며, 조회는 `state-tool show`로 한다 — STATE.md는 그 값을 파생 렌더하지 않는다.
 
-> **[MUST] 파이프라인 행 상태 변경은 `state-tool`로만 수행한다. LLM이 STATE.md 마크다운 표를 직접 편집하는 것은 금지된다.**
+> **[강제]** 아래 각 이벤트 발생 시 `state-tool` 호출은 **필수**다. 호출 미수행 시 다음 단계 진입이 금지된다. 행 mark 자체가 state 기록이며, 단계 건너뛰기·순서 위반은 state-tool stage-transition guard가 차단한다. PM은 PM Gate 직전에 상태 자가 점검(아래 §상태 자가 점검)으로 갱신 여부를 확인한다.
+
+> **[MUST] 파이프라인 행 상태(⬜/🔄/✅) 변경은 `~/.opal/tools/state-tool/run.sh`로만 수행한다. `state.json` 직접 편집 금지 — 현황 조회는 `state-tool show <task-path>`로 한다.**
 >
 > 호출 형식: `~/.opal/tools/state-tool/run.sh <command> <task-path> [options]`
 >
 > 위반 시 도구가 거부하며 에러 코드를 반환한다. 주요 에러:
-> `marker_missing`(STATE.md 마커 누락) / `worker_scope_violation`(워커 권한 초과) / `state_not_initialized`(state.json 미존재)
-> — 전체 에러 카탈로그 23종: `tasks/134-260501-opp-pipeline-state-tool/PLAN.md` §2.18
+> `worker_scope_violation`(워커 권한 초과) / `state_not_initialized`(state.json 미존재)
+> — 전체 에러 카탈로그: `opal/tools/state-tool/README.md` §에러 코드 카탈로그
 >
 > 근거: `tasks/134-260501-opp-pipeline-state-tool/TASK.md` F-7 / `PLAN.md` §2.11 G-6 / §1.5 M-1
 
-| 이벤트 | 갱신 주체 | 파이프라인 현황판 행 갱신 | 상태: 필드 | 강제 여부 | 갱신 명령 |
+| 이벤트 | 갱신 주체 | 파이프라인 행 갱신 | `current_status` | 강제 여부 | 갱신 명령 |
 |--------|----------|--------------------|-----------|----------|---------|
-| TASK 완료 | 오케스트레이터 | STATE.md 초기 생성 + 파이프라인 현황판 행 구성 | 진행 중 | **필수** | `~/.opal/tools/state-tool/run.sh init <task-path> --skill <약어> --mode <모드>` |
-| 단계 시작 | 오케스트레이터 | 해당 단계 작업 행 → 🔄 | 진행 중 | **필수** | `~/.opal/tools/state-tool/run.sh advance <task-path> --row <N>` |
-| 단계 완료(작업) | 워커(1차) + PM(확인) | 해당 단계 작업 행 → ✅ (산출물 생성은 작업 행에 흡수) | - | **필수** | `~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done` |
-| PM Gate 통과 (문서검증 포함) | PM | PM Gate 행 → ✅ | - | **필수** | `~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done` |
-| 사용자 확인 완료 | PM | 사용자 확인 행 → ✅ | 완료 (직전 단계가 CLOSE 진입 게이트인 경우) | **필수** | `~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done --owner user` |
-| EXECUTE Step 완료 | 워커(1차) + PM(확인) | - | 진행: Step N/M | **필수** | `~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done --as-worker --worker-stage EXECUTE --step <N/M>` |
-| 블로커 | 워커 | 해당 행 → ❌ | 블로커 | **필수** | `~/.opal/tools/state-tool/run.sh block <task-path> --row <N> --reason <text>` |
-| 태스크 완료 | 오케스트레이터 | CLOSE 단계 `DONE.md 생성` 행 → ✅ | 완료 (CLOSE 단계 완료 시 발생) | **필수** | `~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done` |
-| 추가작업 진입 | 오케스트레이터 | - | 추가작업중 (CLOSE 단계 재진입) | **필수** | `~/.opal/tools/state-tool/run.sh add-row <task-path> --after <N> --stage <단계> --item <항목>` |
+| TASK 완료 | 오케스트레이터 | STATE.md 저널 초기 생성 + 파이프라인 행 구성(`state.json`) | 진행 중 | **필수** | `~/.opal/tools/state-tool/run.sh init <task-path> --skill <약어> --mode <모드>` |
+| 단계 시작 | 오케스트레이터 | 해당 단계 작업 행 → 🔄 | 진행 중 | **필수** | `~/.opal/tools/state-tool/run.sh advance <task-path> --task-step <key>` |
+| 단계 완료(작업) | 워커(1차) + PM(확인) | 해당 단계 작업 행 → ✅ (산출물 생성은 작업 행에 흡수) | - | **필수** | `~/.opal/tools/state-tool/run.sh mark <task-path> --task-step <key> --done` |
+| PM Gate 통과 (문서검증 포함) | PM | PM Gate 행 → ✅ | - | **필수** | `~/.opal/tools/state-tool/run.sh mark <task-path> --task-step <key> --done` |
+| 사용자 확인 완료 | PM | 사용자 확인 행 → ✅ | 완료 (직전 단계가 CLOSE 진입 게이트인 경우) | **필수** | `~/.opal/tools/state-tool/run.sh mark <task-path> --task-step <key> --done --owner user` |
+| EXECUTE Step 완료 | 워커(1차) + PM(확인) | - | 진행: Step N/M(행 `note`에 기록, `show`로 조회) | **필수** | `~/.opal/tools/state-tool/run.sh mark <task-path> --task-step <key> --done --as-worker --worker-stage EXECUTE --step <N/M>` |
+| 블로커 | 워커 | 해당 행 → ❌ | 블로커 | **필수** | `~/.opal/tools/state-tool/run.sh block <task-path> --task-step <key> --reason <text>` |
+| 태스크 완료 | 오케스트레이터 | CLOSE 단계 `DONE.md 생성` 행 → ✅ | 완료 (CLOSE 단계 완료 시 발생) | **필수** | `~/.opal/tools/state-tool/run.sh mark <task-path> --task-step <key> --done` |
+| 추가작업 진입 | 오케스트레이터 | - | 추가작업중 (CLOSE 단계 재진입) | **필수** | `~/.opal/tools/state-tool/run.sh add-row <task-path> --after-task-step <key> --stage <단계> --item <항목>` |
 | 추가작업 완료 | 오케스트레이터 | - | 추가작업완료 (CLOSE 재진입 완료) | **필수** | `~/.opal/tools/state-tool/run.sh status <task-path> --set additional_work_done` |
+| 현황 조회 (모든 시점) | PM/워커 | - | - | - | `~/.opal/tools/state-tool/run.sh show <task-path> [--format md|json|full]` |
 
 **갱신 모델**: 워커가 1차 갱신을 수행하고(best effort), PM이 PM Gate 직전 상태 자가 점검에서 확인하여 미갱신/오갱신 시 즉시 보완한다.
 
 **note 소유자 호칭**: note에 소유자 호칭이 필요하면 `{owner_name}` 플레이스홀더를 사용한다 — state-tool이 identity.md `owner_name`으로 치환한다. 규칙 상세: `opal/core/AGENT.md` §정체성 적용(오염 금지).
 
-**수행 순서 강제 원칙**: 파이프라인 현황판 테이블은 위에서 아래로 순서대로 처리한다. 현재 행이 ✅가 아니면 다음 행으로 진행 불가. 일반 단계 행은 `작업 / PM Gate / 사용자 확인`으로 구성된다(문서 QA는 PM Gate가 흡수, 별도 QA Gate·State Gate 행 없음). Gate가 없는 단계(TASK 등)는 PM Gate 행을 생략한다.
+**수행 순서 강제 원칙**: 파이프라인 행(`state.json` `rows[]`, `state-tool show`로 조회)은 위에서 아래로 순서대로 처리한다. 현재 행이 ✅가 아니면 다음 행으로 진행 불가. 일반 단계 행은 `작업 / PM Gate / 사용자 확인`으로 구성된다(문서 QA는 PM Gate가 흡수, 별도 QA Gate·State Gate 행 없음). Gate가 없는 단계(TASK 등)는 PM Gate 행을 생략한다.
 
-**상태: 필드 전이 흐름**:
+**`current_status` 전이 흐름** (`state.json` `current_status` 필드 — 조회: `state-tool show --format json`):
 
 ```
 진행 중 → (CLOSE 단계 완료) → 완료
@@ -54,7 +57,7 @@
 > **소유자**: PM(오케스트레이터). 모든 opal-pilot이 상속한다 — pilot SKILL.md는 이 규칙을 재서술하지 않는다.
 > **적용 시점**: state-tool 이벤트(`init`/`advance`/`mark`/`block`) 호출 **직후, PostToolUse hook이 결정론 트리거**한다.
 
-파이프라인 현황판을 **단계(stage) 단위로 네이티브 할일 패널에 비춘다**. 소유자는 STATE.md 파일을 열지 않고도 하단 패널에서 진행 상황을 한눈에 본다.
+파이프라인 행(`state.json` `rows[]`)을 **단계(stage) 단위로 네이티브 할일 패널에 비춘다**. 소유자는 STATE.md 파일이나 `state-tool show`를 열지 않고도 하단 패널에서 진행 상황을 한눈에 본다.
 
 **강제 메커니즘 (hook 트리거)**: 갱신은 산문 지시가 아니라 도구·hook로 집행된다(헌법 Core Stance "Enforce, don't just advise").
 1. state-tool이 `init`/`advance`/`mark`/`block` 응답(`ok()` stdout)에 단계별 파생 상태를 담은 `todo_mirror` 페이로드(`{action, todos[]}`)를 함께 출력한다 — 파생은 도구가 결정론 산출한다(PM 재계산 아님).
@@ -63,10 +66,10 @@
 
 > **[게이트 — 능력 감지]** 네이티브 할일 도구(`TaskCreate`/`TaskUpdate` 등)가 노출된 세션(현재 Claude Code)에서만 수행한다. 도구가 없는 플랫폼(Cursor/Gemini/Codex 등)은 이 절 전체를 건너뛴다. 이는 하드코딩 플랫폼 분기가 아니라 **능력 감지**이므로 플랫폼 독립성을 보존한다(헌법 Core Stance). hook은 어댑터 계층(`claude-hooks.json`)에만 격리되고 비Claude는 애초에 이 능력이 없어 기존 no-op이 유지된다.
 >
-> **[SSOT 불변]** STATE.md/state-tool이 진행 현황의 유일한 SSOT다. todo 패널은 STATE.md 파이프라인 현황판을 비추는 **읽기 전용 거울**이며, 충돌 시 STATE.md가 이긴다. todo를 진행·게이트 판단의 근거로 삼지 않는다.
+> **[SSOT 불변]** `state.json`(state-tool)이 진행 현황의 유일한 SSOT다. STATE.md는 의사결정 로그·블로커를 담는 저널이며 진행 현황의 SSOT가 아니다. todo 패널은 읽기 전용 거울이며, 충돌 시 `state-tool show`가 이긴다. todo를 진행·게이트 판단의 근거로 삼지 않는다.
 
 **미러 규칙**:
-- **대상**: 파이프라인 현황판 행을 `단계`로 그룹핑하여 **단계당 todo 1개**를 만든다 (TASK/PLAN/EXECUTE/TEST/CLOSE 등). 항목(`작업`/`PM Gate`/`사용자 확인`) 단위가 아니다.
+- **대상**: 파이프라인 행을 `단계`로 그룹핑하여 **단계당 todo 1개**를 만든다 (TASK/PLAN/EXECUTE/TEST/CLOSE 등). 항목(`작업`/`PM Gate`/`사용자 확인`) 단위가 아니다.
 - **상태 파생**(state-tool이 해당 단계 행들을 집계하여 `todo_mirror`로 출력):
   - 전부 ✅ → `completed`
   - 하나라도 🔄 있거나 일부만 ✅ → `in_progress`
@@ -97,28 +100,46 @@
 
 ### 세션 복원
 
-새 세션에서 `tasks/{NNN}-{name}/STATE.md`가 존재하면 Read하여 정확한 지점에서 재개한다.
+새 세션에서 태스크를 재개할 때는 아래 순서로 상태를 복원한다(094 §3.3.2 (4)).
+
+```
+1. `~/.opal/tools/state-tool/run.sh show <task-path> --format json` 을 호출해
+   현재 단계·행 상태·current_status·next_action을 파악한다 (SSOT: state.json).
+2. `tasks/{NNN}-{name}/STATE.md`(저널)를 Read하여 의사결정 로그·블로커·검증 루프
+   기재 등 도구가 담지 못하는 서술 맥락을 보완한다.
+```
+
+> **[MUST]** 1단계(`show`)가 **기계 상태의 유일 근거**이며, 2단계(STATE.md Read)는 서술 맥락 보완 전용이다. STATE.md에서 행 상태·진행률을 읽어 판단하지 않는다.
+> 이 절차는 플랫폼 분기가 아니라 **모든 플랫폼 공통 경로**다 — `show`는 CLI이므로 Cursor/Gemini/Codex에서도 동일하게 동작한다.
+
+**검증 루프 진행률의 보관처** (H-12): 구 `## 현재 상태`의 `- 진행:`/`- 검증:` 필드는 아래로 대체되었다.
+
+| 잃는 것 | 대체 |
+|---------|------|
+| `- 진행:`(Step N/M) | `show --format json` → `data.rows[].note`(`Step N/M 완료`가 `row["note"]`에 기록됨) + `data.current_status` |
+| `- 상태:` | `show --format json` → `data.current_status` / `show --format md` → `- 상태:` 라인(파생 렌더) |
+| `- 검증:`(oppd 검증 루프 계층·시도) | STATE.md 저널의 자유 기재 섹션 `## 검증 루프`(PM 수동 기재) — 파생값이 아니라 도구가 담지 못하는 서술 정보이므로 저널 정의에 부합한다 |
 
 ---
 
 ### 상태 자가 점검
 
-> **소유자**: PM(오케스트레이터). 단계 작업 완료 후 PM Gate 직전에 수행한다. 별도 `State Gate` 행은 두지 않는다 — state 기록은 행 mark 자체이며, 단계 건너뛰기·순서 위반은 state-tool stage-transition guard가 차단한다. 본 자가 점검은 PM이 PM Gate 검토에 앞서 STATE.md 갱신 정합성을 확인하는 절차다.
+> **소유자**: PM(오케스트레이터). 단계 작업 완료 후 PM Gate 직전에 수행한다. 별도 `State Gate` 행은 두지 않는다 — state 기록은 행 mark 자체이며, 단계 건너뛰기·순서 위반은 state-tool stage-transition guard가 차단한다. 본 자가 점검은 PM이 PM Gate 검토에 앞서 `state.json` 갱신 정합성을 `state-tool show`로 확인하는 절차다.
 
 **점검 위치**: 작업(산출물 생성 포함) → **상태 자가 점검** → PM Gate
 
-**자가 점검 프롬프트**:
+**자가 점검 프롬프트** (`~/.opal/tools/state-tool/run.sh show <task-path> --format json` 호출 결과 기준):
 
-> 1. `tasks/{NNN}-{name}/STATE.md`의 `최종 갱신` 타임스탬프가 현재 단계 완료 시점 이후인가?
-> 2. `단계` 필드가 현재 완료된 단계를 반영하는가?
-> 3. 파이프라인 현황판 테이블에서 현재 단계의 행이 올바른 상태값인가? (완료 행: ✅ / 진행 중 행: 🔄 / 미착수 행: ⬜) `상태:` 필드가 적절한 값인가? (진행 중 / 완료 / 추가작업중 / 추가작업완료)
+> 1. `data.updated_at` 타임스탬프가 현재 단계 완료 시점 이후인가?
+> 2. `data.rows[]`의 프론티어(첫 미완료 행)가 현재 완료된 단계 다음을 반영하는가?
+> 3. 현재 단계의 행이 올바른 상태값인가? (완료 행: ✅ / 진행 중 행: 🔄 / 미착수 행: ⬜) `data.current_status`가 적절한 값인가? (진행 중 / 완료 / 추가작업중 / 추가작업완료)
 
 | 확인 결과 | 동작 |
 |----------|------|
 | 3개 항목 모두 충족 | PM Gate 진입 허용 |
-| 1개 이상 미충족 | STATE.md를 즉시 갱신(행 mark) 후 재점검 → PM Gate 진입 |
+| 1개 이상 미충족 | `state-tool`로 즉시 갱신(행 mark) 후 재점검 → PM Gate 진입 |
 
-**이전 단계 차단 규칙**: 이전 단계의 상태가 `완료`가 아니면 다음 단계 진입을 금지한다(state-tool stage-transition guard로 강제). 자가 점검은 현재 단계의 STATE.md 갱신 여부와 함께, 이전 단계 상태가 `완료`인지도 확인한다.
+**이전 단계 차단 규칙**: 이전 단계의 상태가 `완료`가 아니면 다음 단계 진입을 금지한다(state-tool stage-transition guard로 강제). 자가 점검은 현재 단계의 `state.json` 갱신 여부(`state-tool show`로 확인)와 함께, 이전 단계 상태가 `완료`인지도 확인한다.
 
 **차단 원칙**: 상태 자가 점검 미통과 상태에서 PM Gate 및 DONE.md 생성 단계로 진입하지 않는다.
 
@@ -126,7 +147,7 @@
 
 ```
 워커 완료 (산출물 생성 포함)
-  → 상태 자가 점검 (하네스 §3 참조 — STATE.md 갱신 확인)
+  → 상태 자가 점검 (하네스 §3 참조 — `state-tool show`로 갱신 확인)
   → PM Gate (종합 검토 — 문서 QA(요구사항→설계 검토) 흡수)
 ```
 
@@ -136,6 +157,7 @@
 
 | 버전 | 날짜 | 내용 |
 |------|------|------|
+| v1.6 | 2026-08-16 13:19 | STATE.md 역할을 "파이프라인 현황판"에서 "저널(의사결정 로그·블로커)"로 재정의(094 R-6). 이벤트 표를 `state.json` 파생 개념으로 정합(컬럼명·`--row`→`--task-step`·`show` 행 추가), `marker_missing`/에러 종수 리터럴 삭제 후 `state-tool/README.md` 포인터로 대체(R-9 ①③), `[SSOT 불변]` 자기모순 해소(R-9 ②) — `state.json`이 유일 SSOT, STATE.md는 저널, 충돌 시 `state-tool show`가 이김, §세션 복원을 `STATE.md Read` 단일 절차에서 `show`(기계 상태) → `STATE.md Read`(서술 맥락 보완) 2단계 표준 절차로 교체 + 검증 루프 진행률 보관처(`## 검증 루프` 자유 기재) 명문화(H-12), 상태 자가 점검 프롬프트를 `state-tool show --format json` 조회 기준으로 재작성 (094) |
 | v1.0 | 2026-04-21 | 다운사이징 — opal-harness.md §3 분리. 레거시 호환 노트 3건 제외 (128) |
 | v1.1 | 2026-05-01 | 갱신 이벤트 표에 "갱신 명령" 컬럼 추가 + `[MUST] state-tool 호출만 허용` 블록 추가 — TASK F-7 / PLAN §2.11 G-6 / §1.5 M-1 (134) |
 | v1.2 | 2026-06-07 | QA→PM Gate 통합 + State Gate 행 제거 정합화 — 이벤트 표에서 QA Gate/State Gate/산출물 생성 행 제거(문서 QA는 PM Gate 흡수, 산출물 생성은 작업 행 흡수, state 기록은 행 mark 자체, 단계 건너뛰기는 stage-transition guard). `State Gate` 섹션을 `상태 자가 점검`(PM Gate 직전 PM 절차)으로 재정의. 표준 단계 순서 문구를 `작업→상태 자가 점검→PM Gate`로 갱신. 동작 검증(TEST/verify) 영역 불변 (014 Phase 4-2) |

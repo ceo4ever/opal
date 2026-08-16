@@ -62,7 +62,7 @@
    ```
 
    - `--task-title`: STATE.md 1행 제목 (생략 시 task-path 마지막 디렉토리명)
-   - `--next-action`: `## 다음 액션` 초기값 (생략 시 `"PLAN 단계 진입"`) — 이후 `advance`/`mark`에서도 파이프라인 프론티어 기준으로 자동 갱신되며, 전이 시 동일 플래그로 1회성 오버라이드 가능하다(072)
+   - `--next-action`: `state.json` `next_action` 필드 초기값 (조회: `state-tool show`) (생략 시 `"PLAN 단계 진입"`) — 이후 `advance`/`mark`에서도 파이프라인 프론티어 기준으로 자동 갱신되며, 전이 시 동일 플래그로 1회성 오버라이드 가능하다(072)
    - 행 구성의 SSOT는 오케스트레이터 `references/pipeline.json`이며 `--rows-from`으로 지정한다(`--rows-spec`은 인라인 JSON 직접 지정용). SKILL.md 행 표는 사람 열람용 미러이며 `.md` 파싱은 deprecated(090)
 
    근거: `tasks/134-260501-opp-pipeline-state-tool/TASK.md` F-9 / `PLAN.md` §2.11 G-8 / §2.19.1 / §1.5 M-3
@@ -104,3 +104,4 @@
 | v1.6 | 2026-07-28 | 태스크 채번 규칙을 `.opal/MEMORY.md` 헤더 직접 Read+Edit에서 `memory-tool task-number --bump` 도구 호출로 전환 — 동시성 중복 방지 책임을 도구로 이전 (078) |
 | v1.7 | 2026-08-13 16:57 | state-tool 행 원천 지시 정정 — `--rows-from` 서술을 오케스트레이터 `references/pipeline.json` SSOT 기준으로 교체(구형 `.md` 파싱 지시 제거). 10/10 pilot 전환에 맞춘 pilot 밖 정합 (090) |
 | v1.8 | 2026-08-15 16:30 | 오케스트레이터 공통 영역에 스텝 4.5(`--worktree`/`--wt` worktree 생성 훅) 신설 — `worktree-tool create` 호출·성공/실패 분기·DEC-2 실패 정책(롤백 금지, agentic 자동 계속 + AGENTIC-LOG 기록) 명문화 + 스텝 5 `state init` 코드블록에 `--worktree` 옵션 1행 추가. 기존 스텝 3·4·5·6 번호·본문 무변경 (092) |
+| v1.9 | 2026-08-16 13:22 | 스텝 5 `--next-action` 설명 — "`## 다음 액션` 초기값" → "`state.json` `next_action` 필드 초기값 (조회: `state-tool show`)"로 치환 — STATE.md 저널 전환에 맞춘 표 전제 어구 제거 (094) |
