@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-08-15 19:08
+> 갱신: 2026-08-16 00:05
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -40,6 +40,7 @@
 - [[anchor-load-condition-must-match-target]] — SSOT 앵커는 대상 문서의 로드 조건과 일치해야 한다 #ssot #governance #anchor #dispatch #harness
 - [[argparse-choices-breaks-json-contract]] — argparse choices=가 단일라인 JSON 응답 계약을 깬다 #cli #argparse #json-contract #pitfall
 - [[asis-workflow-order-over-new-skill]] — 부품은 있고 순서가 없었다 — 신규 스킬 대신 참조 문서 + 행동 프로세스 #pm #architecture-decision #ssot #task-084
+- [[auto-approve-user-confirmation-axis-separation]] — 자동 승인 판정의 두 독립 축 — CLOSE 축과 모드 경계 축은 분리된다 #state-tool #gate-design #pattern #task-093
 - [[b7-action-completion-loop]] — B7 액션 완성도 루프 — triage 기반 경계 재설계 순환 구조 #oppd #action-loop #triage #verification #b7
 - [[backward-compat-default-value-discipline]] — 하위호환 확장의 기본값 규율 — 분기 인자 기본값을 기존 동작으로 #backward-compat #api-design #cli #pattern
 - [[blind-reproduction-verification-test]] — 블라인드 재현 테스트 — 작성자 자기검증 배제 검증법 #verification #testing #scenario #ssot #evaluator
@@ -190,6 +191,7 @@
 - [[phase-name-stage-value-homonym-boundary]] — 프로세스 표시명과 파이프라인 단계값의 동명이의 경계 — 개명 파급 판단 원칙 #pipeline #naming #state-tool #lesson #task-090
 - [[pipeline-json-full-adoption-migration]] — pilot 파이프라인 행 정의 SSOT 전면 단일화 — pipeline.json 10/10 전환 #pipeline #state-tool #ssot #migration #task-090
 - [[pipeline-todo-mirror-hook-enforcement]] — 파이프라인 todo 미러 hook 강제 전환 (prose 지시 → 결정론 트리거) #opal-pipeline #todo-mirror #hook #enforce-not-advise #state-tool
+- [[pipeline-user-confirmation-single-status-axis]] — 사용자 확인 행 상태 계약 — pending에서 done/auto 또는 done/user로 단일화 #state-tool #pipeline #contract #task-093
 - [[platform-parity-mirror-before-design]] — 플랫폼 규약 편측 존재 — 새 설계보다 미러링 우선 #install #platform #lesson #mirroring
 - [[pm-conversation-readonly-collection-exception]] — PM(대화) 읽기 전용 수집 워커 예외 — 수집만 나누고 판단은 단일 주체 #pm #dispatch #boundary #task-084
 - [[pm-gate-artifact-tool-enforcement]] — PM Gate 정의 단일화와 산출물 존재 게이트 집행 #gate-design #state-tool #pm-gate #ssot #enforce-not-advise #task-091
@@ -213,6 +215,7 @@
 - [[scenario-normalized-contract-pilot-neutral]] — 시나리오 정규화 계약 — pilot-중립 페이로드 설계 #contract #scenario-gate #normalization #multi-pilot #task-073 #task-075
 - [[section-append-at-tail-preserves-backrefs]] — 절 번호가 주소인 문서는 말미에 추가한다 — 외부 역참조 보존 #documentation #reference-integrity #task-084
 - [[self-edit-line-anchor-drift]] — 자기 편집 파일의 행번호 앵커는 드리프트한다 #verification #anchor #test-scenario #regression
+- [[self-modifying-tool-deploy-unit-coupling]] — 자기 자신을 고치는 도구의 배포 단위 결합 원칙 #deploy #gate-design #pattern #task-093
 - [[shard-policy-block-vs-nonblock-fallback-criterion]] — 미설정 시 차단 vs 비차단 폴백 판정 기준 #code-scan #configuration #backward-compat #task-080 #task-083
 - [[silent-loss-prevention-row-accounting-invariant]] — 무성 유실 차단 — 행 회계 불변식 설계 패턴 #migration #data-integrity #invariant #design-pattern #memory
 - [[silent-render-failure-deterministic-gate]] — 조용히 실패하는 코드는 브라우저 검증을 무력화한다 — 결정론 대조를 차단 게이트로 #lesson #verification #render-verification #gate-design #silent-failure

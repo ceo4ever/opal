@@ -3,12 +3,13 @@
   "module": "state_tool",
   "layer": "util",
   "domain": "opal-pipeline",
-  "description": "OPAL 파이프라인 현황판 JSON SSOT 관리 CLI — 10개 서브 명령(init/show/advance/mark/block/validate/add-row/status/spec-validate/gate-pass[deprecated]) + verify + 3-way 모드(interactive/semi-agentic/agentic) 지원. 014 Phase 4: 새 표준 행 구조(QA Gate/State Gate 행 없음)와 정합 — gate-pass deprecate, CLOSE 마지막 행 판정 항목명 비의존화. 016: verify --red-check(RED 증거 게이트) + --fix-mode/--changed-files/--test-globs(테스트 불변성 게이트) 추가 — RED-first TDD 트랙 deterministic 집행. 017: mark --step N/M 다중 Step 조기 done 가드 — N<M이면 in_progress 유지(done 미처리) + 진행률(step) 영속화, N==M에서만 done; 미완 행은 기존 stage-transition guard가 단계전환·CLOSE 진입을 자동 차단. 005: verify --clarification-check + TASK→다음단계 자동 훅 — TASK 4요소(목표/범위/제약/완료기준) 미잠금 시 다음 단계 진입 거부(PRINCIPLES §1 집행), 정책 A graceful skip(섹션/파일 부재 시 하위호환). 034: mock 가드 false positive 수정 — _MOCK_CODE_PATTERNS 정규식 'MagicMock' 맨 단어 대안 제거(#1 산문 오탐) + _check_mock_patterns 인라인 백틱 제거 전처리 추가(#2 메타-순환 해소); 헌법 §4 정탐 유지. 054: resolve_owner_placeholder() 신설 — note-write 6경로(advance/mark/add-row/block/status/init)에서 '{owner_name}' 플레이스홀더를 identity.md owner_name으로 write-time 치환(fail-safe: 부재/공란/파싱실패 시 원문 유지). 070: task-step 키 주소 체계 도입 1차 — spec-validate 서브명령(pipeline.json 스펙 검증) + KEY_PATTERN/stage_to_slug/resolve_row_index 신설, build_rows_from_pipeline_json(init --rows-from .json 확장자 분기, .md는 deprecation 경고 유지), advance/mark/block에 --task-step/--task-step-id/--row(deprecated) 3주소·add-row에 --after-task-step/--after-task-step-id/--key(자동 생성) 추가, --step→--action-step 별칭(dest 공유), opdd skill·DICT/MODEL/DDL·MIGRATION stage enum 등록, ERROR_CODES 8종 추가. 072: STATE.md '다음 액션' 자동 파생 — state.json next_action 필드 신설(init 영속화·schema optional 등록), _derive_next_action(파이프라인 프론티어=첫 미완료 행 기준 파생)·update_next_action_section(첫 줄만 치환, 하위 자유기재 보존) 신규, advance/mark가 상태 반영 후 next_action 계산·저장·렌더(block/add-row/status는 미접촉), advance/mark --next-action per-transition 오버라이드(비지속 — 다음 전이 자동 파생 복귀). 074: --import-existing key-보존 재접합 — cmd_init import 분기가 파싱 후 기존 state.json→pipeline.json (stage,item) 순서 매칭으로 key 재접합(schema_version 1.1 유지), 원천 전무 시 keyless+경고(하위호환); _key_source_index/_reattach_import_keys 신규. 076: build_todo_mirror() 신설 — init/advance/mark/block ok() stdout 페이로드에 단계 단위 todo 미러(파생: na 중립·전부pending→pending·전부done→completed·부분/failed→in_progress) 추가, PostToolUse hook이 이를 세션에 결정론 주입(파이프라인 todo 미러 hook 강제); todo_mirror는 stdout 전용 비영속(state.json 미접촉 — schema additionalProperties:false 보존). 088: CLOSE 마지막 행 mark 시 메모리 히스토리 자동 연결 — link_memory_history()가 형제 memory_tool.py를 sys.executable subprocess로 호출해 `<프로젝트루트>/.opal/MEMORY.json` history에 행을 자동 생성(find_project_root 조상 탐색·derive_history_title·build_history_reminder·_run_memory_tool 신설), path 사전 조회로 멱등 보장, 예외/실패 전부 흡수해 mark는 항상 ok:true 유지(cmd_mark ok() stdout에 history_link 필드 조건부 추가, state.json 미접촉). 091: PM Gate 집행 배선(F-004) — validate_pipeline_spec()에 task_steps[].gate 검사 4건 추가(spec_gate_type_invalid/spec_gate_missing_field/spec_gate_field_type_invalid/spec_gate_checklist_empty, artifacts:[] 단독은 위반 아님); _is_safe_artifact_token()·check_gate_artifacts() 신설 — gate.artifacts 존재 검증(정적 경로/글롭 지원, 절대경로·'..' 토큰 태스크 폴더 밖 이탈 차단), gate 미보유 행·artifacts:[] 행은 즉시 통과(기존 동작 불변), 미충족 시 gate_artifact_missing 거부(--force+--note로만 우회 가능, 우회 시 decision 로그 gate_artifact_force 강제 기록); build_gate_payload() 신설 — 통과 시 checklist를 dict로 stdout 반환(todo_mirror_hook 릴레이용); build_rows_from_pipeline_json()/build_rows_from_spec()에 gate 필드 init-time 영속화 각 1줄 추가; cmd_mark가 save_state_json() 이전 검증 구간에서 가드를 호출하여 부분 상태 변경을 배제하고 _ok_kwargs에 gate_checklist 조건부 추가; ERROR_CODES 5종 신규(gate_artifact_missing 포함). 092: `init --worktree <path>` 조건부 영속화(F-005) — argparse `init`에 `--worktree` optional 인자 추가, cmd_init이 state dict 구성 직후 `getattr(args, \"worktree\", None)`으로 조건부 대입(미지정 시 키 자체 미생성 — H-1), state.schema.json properties에 `worktree` optional 등록(required 미변경); `_build_new_state_md`/`render_pipeline_table`/`build_todo_mirror`/`cmd_show` 무변경으로 STATE.md 렌더·`show --format json` 노출 하위호환 보장(H-11). 094: STATE.md를 state.json 파생 섹션(마커/파이프라인 표/'## 현재 상태'/'## 다음 액션') 없는 저널(의사결정 로그+블로커)로 재정의 — `_build_new_state_md` 2인자 축소·`ensure_journal_skeleton` 신설·`sync_state_md` fail-open 축소판 재작성(6개 호출부 인자 정리, journal_warning 조건부 stdout 표면화)·`append_decision_log` 오프바이원 수정+표 셀 이스케이프(`_escape_table_cell`)·`replace_pipeline_section`/`update_current_status_section`/`update_next_action_section` 삭제·`ERROR_CODES`에서 `marker_missing`/`import_failed` 삭제 후 `import_existing_removed` 추가·`cmd_init` import 분기·`parse_existing_state_md`/`_key_source_index`/`_reattach_import_keys` 삭제(--import-existing은 help=SUPPRESS로 존치, 항상 거부)·`cmd_validate` 마커 검사 삭제·`cmd_show` md/full 3분기를 state.json 단일 파생으로 재설계(`LEGACY_FROZEN_BANNER`, `STATUS_TEXT`)·`render_pipeline_table`에 '비고'(note) 열 추가 — `render_pipeline_table`/`PIPELINE_MARKER_*`/`update_state_md_header`는 레거시(001~093) STATE.md 공존을 위해 존치.",
+  "description": "OPAL 파이프라인 현황판 JSON SSOT 관리 CLI — 10개 서브 명령(init/show/advance/mark/block/validate/add-row/status/spec-validate/gate-pass[deprecated]) + verify + 3-way 모드(interactive/semi-agentic/agentic) 지원. 014 Phase 4: 새 표준 행 구조(QA Gate/State Gate 행 없음)와 정합 — gate-pass deprecate, CLOSE 마지막 행 판정 항목명 비의존화. 016: verify --red-check(RED 증거 게이트) + --fix-mode/--changed-files/--test-globs(테스트 불변성 게이트) 추가 — RED-first TDD 트랙 deterministic 집행. 017: mark --step N/M 다중 Step 조기 done 가드 — N<M이면 in_progress 유지(done 미처리) + 진행률(step) 영속화, N==M에서만 done; 미완 행은 기존 stage-transition guard가 단계전환·CLOSE 진입을 자동 차단. 005: verify --clarification-check + TASK→다음단계 자동 훅 — TASK 4요소(목표/범위/제약/완료기준) 미잠금 시 다음 단계 진입 거부(PRINCIPLES §1 집행), 정책 A graceful skip(섹션/파일 부재 시 하위호환). 034: mock 가드 false positive 수정 — _MOCK_CODE_PATTERNS 정규식 'MagicMock' 맨 단어 대안 제거(#1 산문 오탐) + _check_mock_patterns 인라인 백틱 제거 전처리 추가(#2 메타-순환 해소); 헌법 §4 정탐 유지. 054: resolve_owner_placeholder() 신설 — note-write 6경로(advance/mark/add-row/block/status/init)에서 '{owner_name}' 플레이스홀더를 identity.md owner_name으로 write-time 치환(fail-safe: 부재/공란/파싱실패 시 원문 유지). 070: task-step 키 주소 체계 도입 1차 — spec-validate 서브명령(pipeline.json 스펙 검증) + KEY_PATTERN/stage_to_slug/resolve_row_index 신설, build_rows_from_pipeline_json(init --rows-from .json 확장자 분기, .md는 deprecation 경고 유지), advance/mark/block에 --task-step/--task-step-id/--row(deprecated) 3주소·add-row에 --after-task-step/--after-task-step-id/--key(자동 생성) 추가, --step→--action-step 별칭(dest 공유), opdd skill·DICT/MODEL/DDL·MIGRATION stage enum 등록, ERROR_CODES 8종 추가. 072: STATE.md '다음 액션' 자동 파생 — state.json next_action 필드 신설(init 영속화·schema optional 등록), _derive_next_action(파이프라인 프론티어=첫 미완료 행 기준 파생)·update_next_action_section(첫 줄만 치환, 하위 자유기재 보존) 신규, advance/mark가 상태 반영 후 next_action 계산·저장·렌더(block/add-row/status는 미접촉), advance/mark --next-action per-transition 오버라이드(비지속 — 다음 전이 자동 파생 복귀). 074: --import-existing key-보존 재접합 — cmd_init import 분기가 파싱 후 기존 state.json→pipeline.json (stage,item) 순서 매칭으로 key 재접합(schema_version 1.1 유지), 원천 전무 시 keyless+경고(하위호환); _key_source_index/_reattach_import_keys 신규. 076: build_todo_mirror() 신설 — init/advance/mark/block ok() stdout 페이로드에 단계 단위 todo 미러(파생: na 중립·전부pending→pending·전부done→completed·부분/failed→in_progress) 추가, PostToolUse hook이 이를 세션에 결정론 주입(파이프라인 todo 미러 hook 강제); todo_mirror는 stdout 전용 비영속(state.json 미접촉 — schema additionalProperties:false 보존). 088: CLOSE 마지막 행 mark 시 메모리 히스토리 자동 연결 — link_memory_history()가 형제 memory_tool.py를 sys.executable subprocess로 호출해 `<프로젝트루트>/.opal/MEMORY.json` history에 행을 자동 생성(find_project_root 조상 탐색·derive_history_title·build_history_reminder·_run_memory_tool 신설), path 사전 조회로 멱등 보장, 예외/실패 전부 흡수해 mark는 항상 ok:true 유지(cmd_mark ok() stdout에 history_link 필드 조건부 추가, state.json 미접촉). 091: PM Gate 집행 배선(F-004) — validate_pipeline_spec()에 task_steps[].gate 검사 4건 추가(spec_gate_type_invalid/spec_gate_missing_field/spec_gate_field_type_invalid/spec_gate_checklist_empty, artifacts:[] 단독은 위반 아님); _is_safe_artifact_token()·check_gate_artifacts() 신설 — gate.artifacts 존재 검증(정적 경로/글롭 지원, 절대경로·'..' 토큰 태스크 폴더 밖 이탈 차단), gate 미보유 행·artifacts:[] 행은 즉시 통과(기존 동작 불변), 미충족 시 gate_artifact_missing 거부(--force+--note로만 우회 가능, 우회 시 decision 로그 gate_artifact_force 강제 기록); build_gate_payload() 신설 — 통과 시 checklist를 dict로 stdout 반환(todo_mirror_hook 릴레이용); build_rows_from_pipeline_json()/build_rows_from_spec()에 gate 필드 init-time 영속화 각 1줄 추가; cmd_mark가 save_state_json() 이전 검증 구간에서 가드를 호출하여 부분 상태 변경을 배제하고 _ok_kwargs에 gate_checklist 조건부 추가; ERROR_CODES 5종 신규(gate_artifact_missing 포함). 092: `init --worktree <path>` 조건부 영속화(F-005) — argparse `init`에 `--worktree` optional 인자 추가, cmd_init이 state dict 구성 직후 `getattr(args, \"worktree\", None)`으로 조건부 대입(미지정 시 키 자체 미생성 — H-1), state.schema.json properties에 `worktree` optional 등록(required 미변경); `_build_new_state_md`/`render_pipeline_table`/`build_todo_mirror`/`cmd_show` 무변경으로 STATE.md 렌더·`show --format json` 노출 하위호환 보장(H-11). 093: 사용자 확인 행 자동 승인 경로 일원화 — can_auto_approve_user_confirmation() 신설(F-003, CLOSE 축 + 모드 축 2축 합성 단일 판정; semi-agentic 모드 경계 상수의 유일 참조자이며 cmd_mark 사전검사와 cmd_validate 사후검사가 거부 사유별로 소비 범위를 달리한다 — validate는 include_close_axis=False로 CLOSE 축을 평가하지 않아 기존 경계를 보존, H-4); auto_approve_prior_user_confirmations() 신설(F-002, cmd_advance·cmd_mark가 stage-transition guard 직전에 호출해 대상 행 앞 [0,row_index) 구간의 미완 '사용자 확인' 행을 done/auto/timestamp로 자동 승인하고 note에 'auto-approved on <stage> entry' 기록 — as_worker/force/대상 행 stage=CLOSE면 즉시 no-op이고 save_state_json을 호출하지 않아 후속 가드 실패 시 파일이 오염되지 않는다(H-8), 승인 불가 구간은 user_confirmation_required로 거부(F-004)); advance/mark ok() 응답에 auto_approved 배열 관측 필드 추가(기존 필드 불변); build_rows_from_spec/build_rows_from_skill_md/build_rows_from_pipeline_json의 init 시점 agentic auto-na 분기 3곳 삭제(F-001 — 전 모드 pending/⬜/PM 동형 초기화; 세 빌더의 mode 파라미터 시그니처, state.schema.json status enum의 na, _COMPLETE_STATUSES, build_todo_mirror na 필터는 하위호환으로 존치, R-6); cmd_mark 멱등성(F-005) — _AUTO_PASS_PREFIX 모듈 상수 신설 후 auto-pass note를 3분기(빈 note/이미 접두 보유→중첩 방지/신규 부여)로 부여하고, check_gate_artifacts 통과 직후 재-auto-pass no-op 조기 반환(auto_pass and not force and not action_step and status=='done' and owner=='auto' 4중 조건 — 상태·timestamp·updated_at 불변, 응답에 idempotent:true; --force·--action-step N/M·owner=user done 행은 기존 경로 유지). 094: STATE.md를 state.json 파생 섹션(마커/파이프라인 표/'## 현재 상태'/'## 다음 액션') 없는 저널(의사결정 로그+블로커)로 재정의 — `_build_new_state_md` 2인자 축소·`ensure_journal_skeleton` 신설·`sync_state_md` fail-open 축소판 재작성(6개 호출부 인자 정리, journal_warning 조건부 stdout 표면화)·`append_decision_log` 오프바이원 수정+표 셀 이스케이프(`_escape_table_cell`)·`replace_pipeline_section`/`update_current_status_section`/`update_next_action_section` 삭제·`ERROR_CODES`에서 `marker_missing`/`import_failed` 삭제 후 `import_existing_removed` 추가·`cmd_init` import 분기·`parse_existing_state_md`/`_key_source_index`/`_reattach_import_keys` 삭제(--import-existing은 help=SUPPRESS로 존치, 항상 거부)·`cmd_validate` 마커 검사 삭제·`cmd_show` md/full 3분기를 state.json 단일 파생으로 재설계(`LEGACY_FROZEN_BANNER`, `STATUS_TEXT`)·`render_pipeline_table`에 '비고'(note) 열 추가 — `render_pipeline_table`/`PIPELINE_MARKER_*`/`update_state_md_header`는 레거시(001~093) STATE.md 공존을 위해 존치."
   "exports": [
     "cmd_init", "cmd_show", "cmd_advance", "cmd_mark",
     "cmd_block", "cmd_validate", "cmd_add_row", "cmd_status",
     "cmd_spec_validate", "cmd_gate_pass", "build_todo_mirror",
-    "link_memory_history"
+    "link_memory_history",
+    "can_auto_approve_user_confirmation", "auto_approve_prior_user_confirmations"
   ]
 }
 """
@@ -52,6 +53,34 @@ MODE_BOUNDARY_STAGES = {
     "SPEC", "REVIEW", "DESIGN",
     "WBS", "WIREFRAME",
 }
+
+
+# 093 F-003 R-3: '이 사용자 확인 행을 자동 승인해도 되는가' 단일 판정 (PLAN §3.3.2 (1))
+def can_auto_approve_user_confirmation(stage, mode, *, include_close_axis=True):
+    """R-3 — 사용자 확인 행 자동 승인 가부 단일 판정.
+
+    반환: (allowed: bool, deny_reason: str | None)
+      deny_reason ∈ {"close_requires_user", "interactive_requires_user",
+                     "semi_agentic_pre_execute"}
+
+    두 축 합성:
+      축1 CLOSE 여부  — 모드 무관 무조건 거부 (check_close_gate와 동일 규범, 별개 상수 규칙)
+      축2 모드별 경계  — interactive는 전 stage 거부 / semi-agentic은 모드 경계 상수 한정 거부
+    두 축은 상호 배타다 — "CLOSE"는 모드 경계 상수에 속하지 않는다.
+
+    include_close_axis=False — 축1을 평가하지 않고 축2만 합성한다. cmd_validate 전용
+    (H-4): 현행 validate는 CLOSE 축을 갖지 않으므로 CLOSE 행에도 모드 축 판정을 그대로
+    적용해야 표 B V-7(CLOSE×interactive → auto_pass_in_interactive_mode)과
+    V-8·V-9(CLOSE×semi-agentic/agentic → 위반 없음)가 동시에 성립한다.
+    """
+    if include_close_axis and stage == "CLOSE":
+        return (False, "close_requires_user")            # 축1 — 최우선
+    if mode == "interactive":
+        return (False, "interactive_requires_user")      # 축2-a — stage 무관
+    if mode == "semi-agentic" and stage in MODE_BOUNDARY_STAGES:
+        return (False, "semi_agentic_pre_execute")       # 축2-b — stage 한정
+    return (True, None)                                  # agentic 전 구간 / semi-agentic 경계 밖
+
 
 STATUS_LABEL_MAP = {
     "pending":     "⬜",
@@ -142,6 +171,10 @@ ERROR_CODES = {
     "spec_gate_missing_field":        "task_steps[].gate 필수 필드 누락: {detail}",
     "spec_gate_field_type_invalid":   "task_steps[].gate 필드 타입 오류(문자열 배열 필요): {detail}",
     "spec_gate_checklist_empty":      "task_steps[].gate.checklist가 비어 있음: {detail}",
+    # 093 F-004 R-4: 자동 승인 불가 구간 — 캡틴 승인 필요 (PLAN §3.4.2)
+    "user_confirmation_required":
+        "자동 승인 불가 — 사용자 확인 행(row {row_id}, stage={stage})에 캡틴 승인이 필요합니다"
+        " (사유: {reason}). 보고 → 캡틴 승인 → mark --done --owner user",
 }
 
 PIPELINE_MARKER_START = "<!-- pipeline:start -->"
@@ -479,6 +512,9 @@ def resolve_row_index(state, command, key_val=None, id_val=None, row_val=None,
 # 완료로 간주하는 상태값 — 이 상태의 앞 행은 건너뛰기 검증에서 제외
 _COMPLETE_STATUSES = {"done", "additional_work_done", "na"}
 
+# 093 F-005: --auto-pass note 접두 (기존 state.json·하네스 문서가 참조 — 문자열 불변)
+_AUTO_PASS_PREFIX = "agentic auto-pass"
+
 
 def build_todo_mirror(state, action):
     """076 R-1: state.json rows[] → 단계(stage) 단위 todo 미러 페이로드.
@@ -703,6 +739,63 @@ def check_stage_transition_guard(state, row_index, command, force=False, scope="
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# 자동 승인 훅 (093 F-002 R-2, PLAN §3.2.2)
+# ─────────────────────────────────────────────────────────────────────────────
+
+def auto_approve_prior_user_confirmations(
+    state, row_index, command, *,
+    as_worker=False, force=False, now_str=None,
+):
+    """R-2 조항 2 집행 — 대상 행 진입 시 앞의 미완 '사용자 확인' 행을 자동 승인한다.
+
+    반환: 자동 승인한 row_id 리스트 (list[int]). 승인 대상이 없으면 [].
+    부작용: state["rows"][i]를 in-place 갱신 (호출자가 save_state_json 책임).
+    거부: 자동 승인 불가 구간이면 err(command, "user_confirmation_required", ...) 후 exit 1.
+
+    [MUST] 이 함수는 save_state_json을 호출하지 않는다 — 가드 전량 통과 후 1회 저장
+    패턴을 유지해, 후속 가드 실패 시 파일이 오염되지 않는다 (H-8).
+    """
+    if as_worker:
+        return []          # 워커 경로 — 자동 승인 없음 (DEC-C)
+    if force:
+        return []          # --force 우회 경로 — 가드 자체가 스킵되므로 훅도 no-op
+
+    target_row = state["rows"][row_index]
+    if target_row["stage"] == "CLOSE":
+        return []          # [MUST] CLOSE 진입 경로에서는 어떤 행도 자동 승인하지 않는다 (DEC-D 1차 방어)
+
+    approved = []
+    for i in range(row_index):                        # [0, row_index) — full scope와 동일 범위
+        prev = state["rows"][i]
+        if prev.get("item") != "사용자 확인":
+            continue
+        if prev.get("status") in _COMPLETE_STATUSES:  # done / additional_work_done / na
+            continue                                  # 멱등 — 기존 na 행도 재승인하지 않는다 (R-6)
+        if prev["stage"] == "CLOSE":
+            continue                                  # DEC-D 2차 방어
+
+        allowed, deny_reason = can_auto_approve_user_confirmation(   # DEC-D 3차 방어 포함
+            prev["stage"], state.get("mode", "interactive"))
+        if not allowed:
+            err(command, "user_confirmation_required",               # F-004
+                row_id=prev["row_id"], stage=prev["stage"],
+                key=prev.get("key"), item=prev["item"],
+                mode=state.get("mode"), reason=deny_reason,
+                required_action=(
+                    f"보고 → 캡틴 승인 → state mark <task-path> "
+                    f"--task-step {prev.get('key') or prev['row_id']} --done --owner user"
+                ))
+
+        prev["status"]       = "done"
+        prev["status_label"] = "✅"
+        prev["owner"]        = "auto"
+        prev["timestamp"]    = now_str
+        prev["note"]         = f"auto-approved on {target_row['stage']} entry"
+        approved.append(prev["row_id"])
+    return approved
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # CLOSE 진입 게이트 검증 (PLAN §2.16 G-13)
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -845,13 +938,6 @@ def build_rows_from_spec(spec_json_str, command, mode):
         if item.get("gate"):
             row["gate"] = item["gate"]  # 091 F-004 R-9(a): --rows-spec 인라인 경로도 동형 지원
 
-        # agentic 자동 마킹 (§2.20.1 — CLOSE 사용자 확인 행 제외)
-        if mode == "agentic" and name == "사용자 확인" and stage != "CLOSE":
-            row["status"]       = "na"
-            row["status_label"] = "-"
-            row["owner"]        = "auto"
-            row["note"]         = "agentic auto-na at init"
-
         rows.append(row)
     return rows
 
@@ -937,13 +1023,6 @@ def build_rows_from_skill_md(skill_md_path, command, mode):
             "owner":        "PM",
             "note":         None,
         }
-        # 단계 10: agentic 자동 마킹 (§2.20.1 동일 규칙)
-        if mode == "agentic" and item == "사용자 확인" and stage != "CLOSE":
-            row["status"]       = "na"
-            row["status_label"] = "-"
-            row["owner"]        = "auto"
-            row["note"]         = "agentic auto-na at init"
-
         rows.append(row)
     return rows
 
@@ -1046,7 +1125,8 @@ def build_rows_from_pipeline_json(spec_path, command, mode):
     """.json 스펙 → rows[] (070 F-002 R-2, PLAN §3.2.2). 절차:
     1. spec = load_pipeline_spec(spec_path, command)
     2. violations = validate_pipeline_spec(spec); 있으면 spec_validation_failed
-    3. task_steps[] 순회하며 row 구성(key·conditional 영속, agentic 자동 na 규칙 재사용)
+    3. task_steps[] 순회하며 row 구성(key·conditional 영속. 093 F-001 이후 모드별 분기 없음
+       — 사용자 확인 행도 전 모드 pending/PM으로 초기화되고 자동 승인은 진입 훅이 담당)
     """
     spec = load_pipeline_spec(spec_path, command)
     violations = validate_pipeline_spec(spec)
@@ -1070,13 +1150,6 @@ def build_rows_from_pipeline_json(spec_path, command, mode):
             row["conditional"] = True  # DEC-1 — 순수 메타데이터, 자동 na 없음
         if ts.get("gate"):
             row["gate"] = ts["gate"]  # 091 F-004 R-9(a): init-time 정적 스냅샷 영속화
-
-        # agentic 자동 마킹 (§2.20.1 동일 규칙 — CLOSE 사용자 확인 행 제외)
-        if mode == "agentic" and ts["item"] == "사용자 확인" and ts["stage"] != "CLOSE":
-            row["status"]       = "na"
-            row["status_label"] = "-"
-            row["owner"]        = "auto"
-            row["note"]         = "agentic auto-na at init"
 
         rows.append(row)
     return rows
@@ -1290,6 +1363,14 @@ def cmd_advance(args):
     # 단계 건너뛰기 차단 (PLAN §M-A)
     # PM 경로: 앞 모든 행 검증 (full). 워커 경로: 앞 단계 행만 검증 (prior_stage_only).
     _guard_scope = "prior_stage_only" if getattr(args, "as_worker", False) else "full"
+
+    # 093 F-002 R-2: 앞 단계 미완 사용자 확인 행 자동 승인 (stage-transition guard보다 먼저)
+    now_str = get_kst_datetime(command)
+    auto_approved = auto_approve_prior_user_confirmations(
+        state, row_index, command,
+        as_worker=getattr(args, "as_worker", False),
+        force=getattr(args, "force", False), now_str=now_str)
+
     check_stage_transition_guard(state, row_index, command, force=False,
                                  scope=_guard_scope)
 
@@ -1301,7 +1382,6 @@ def cmd_advance(args):
                             auto_pass=getattr(args, "auto_pass", False),
                             force=getattr(args, "force", False))
 
-    now_str = get_kst_datetime(command)
     row["status"]       = "in_progress"
     row["status_label"] = "🔄"
     row["timestamp"]    = now_str
@@ -1317,6 +1397,7 @@ def cmd_advance(args):
     _jw = sync_state_md(task_path, state, now_str, command)
     ok(command, row_id=row["row_id"], stage=row["stage"], item=row["item"],
        status="in_progress", timestamp=now_str,
+       auto_approved=auto_approved,
        todo_mirror=build_todo_mirror(state, "update"),
        **(_jw or {}))
 
@@ -1375,6 +1456,13 @@ def cmd_mark(args):
     # 단계 건너뛰기 차단 (PLAN §M-A)
     # PM 경로: 앞 모든 행 검증 (full). 워커 경로: 앞 단계 행만 검증 (prior_stage_only).
     _guard_scope = "prior_stage_only" if args.as_worker else "full"
+
+    # 093 F-002 R-2: 앞 단계 미완 사용자 확인 행 자동 승인 (stage-transition guard보다 먼저)
+    now_str = get_kst_datetime(command)
+    auto_approved = auto_approve_prior_user_confirmations(
+        state, row_index, command,
+        as_worker=args.as_worker, force=args.force, now_str=now_str)
+
     check_stage_transition_guard(state, row_index, command, force=args.force,
                                  scope=_guard_scope)
 
@@ -1386,22 +1474,32 @@ def cmd_mark(args):
     _run_clarification_hook(task_path, state, row_index, command,
                             auto_pass=args.auto_pass, force=args.force)
 
-    # semi-agentic 모드에서 EXECUTE-equivalent 이전 행은 --auto-pass 거부 (D-DEC-5)
-    if args.auto_pass and state.get("mode") == "semi-agentic":
-        if row["stage"] in MODE_BOUNDARY_STAGES:
+    # semi-agentic 모드에서 EXECUTE-equivalent 이전 행은 --auto-pass 거부
+    # (D-DEC-5, 093 F-003 단일 판정 소비 — PLAN §3.3.2 (2))
+    if args.auto_pass:
+        _allowed, _deny = can_auto_approve_user_confirmation(row["stage"], state.get("mode"))
+        if not _allowed and _deny == "semi_agentic_pre_execute":   # [MUST] 이 사유만 소비 (DEC-E)
             err(command, "semi_agentic_pre_execute_auto_pass_denied",
                 row_id=row["row_id"], stage=row["stage"])
 
     # 091 F-004 R-11: PM Gate 산출물 검증 (H-1 — save_state_json() 이전 검증 구간에 위치)
     _gate_forced_missing = check_gate_artifacts(task_path, row, command, force=args.force)
 
-    now_str = get_kst_datetime(command)
-
     # 017: 다중 Step 진행률 파싱 + 조기 done 가드 (R-1, C-1, C-5)
     # 070 R-5: --action-step은 dest="step" 공유 별칭(argparse) — 직접 호출(테스트)
     #   경로에서는 args.step/args.action_step이 분리된 속성일 수 있으므로 폴백 병합한다.
     _step_str = getattr(args, "step", None) or getattr(args, "action_step", None)
     _step_pair = _parse_step(_step_str) if _step_str else None
+
+    # 093 F-005 R-5 멱등성 — 이미 auto 승인된 행에 대한 재-auto-pass는 상태 변경 없이 성공 반환
+    #   (--force·--action-step N/M·owner=user done 행은 조건에서 제외 — 기존 경로 유지)
+    if (args.auto_pass and not args.force and not _step_str
+            and row.get("status") == "done" and row.get("owner") == "auto"):
+        ok(command, row_id=row["row_id"], stage=row["stage"], item=row["item"],
+           status="done", timestamp=row.get("timestamp"), idempotent=True,
+           todo_mirror=build_todo_mirror(state, "update"))
+        return
+
     if _step_pair is not None:
         _n, _total = _step_pair
         row["step"] = f"{_n}/{_total}"           # 진행률 영속화
@@ -1425,10 +1523,13 @@ def cmd_mark(args):
     # owner 결정
     if args.auto_pass:
         row["owner"] = "auto"
-        if note_text:
-            row["note"] = f"agentic auto-pass: {note_text}"
+        # 093 F-005 R-5: 접두 3분기 — 빈 note / 이미 접두 보유(중첩 방지) / 신규 부여
+        if not note_text:
+            row["note"] = _AUTO_PASS_PREFIX
+        elif note_text.startswith(f"{_AUTO_PASS_PREFIX}:"):
+            row["note"] = note_text
         else:
-            row["note"] = "agentic auto-pass"
+            row["note"] = f"{_AUTO_PASS_PREFIX}: {note_text}"
     elif args.owner:
         row["owner"] = args.owner
         if note_text:
@@ -1502,6 +1603,7 @@ def cmd_mark(args):
 
     _ok_kwargs = dict(row_id=row["row_id"], stage=row["stage"], item=row["item"],
                       status=row["status"], timestamp=now_str, owner=row["owner"],
+                      auto_approved=auto_approved,
                       todo_mirror=build_todo_mirror(state, "update"))
     if history_link is not None:
         _ok_kwargs["history_link"] = history_link
@@ -1574,15 +1676,19 @@ def cmd_validate(args):
                     "row_id": row["row_id"],
                     "detail": f"owner={owner}"
                 })
-            if owner == "auto" and mode == "interactive":
-                violations.append({
-                    "code":   "auto_pass_in_interactive_mode",
-                    "row_id": row["row_id"],
-                    "detail": f"interactive mode but owner=auto"
-                })
-            if owner == "auto" and mode == "semi-agentic":
-                # PLAN-equivalent 이전 행에 owner=auto는 위반 (D-DEC-5)
-                if row.get("stage") in MODE_BOUNDARY_STAGES:
+            if owner == "auto":
+                # 093 F-003 단일 판정 소비 — CLOSE 축은 평가하지 않는다
+                # (H-4: 현행 validate는 CLOSE stage 자체로는 위반을 내지 않는다. 표 B V-7~V-9)
+                _allowed, _deny = can_auto_approve_user_confirmation(
+                    row.get("stage"), mode, include_close_axis=False)
+                if not _allowed and _deny == "interactive_requires_user":
+                    violations.append({
+                        "code":   "auto_pass_in_interactive_mode",
+                        "row_id": row["row_id"],
+                        "detail": f"interactive mode but owner=auto"
+                    })
+                if not _allowed and _deny == "semi_agentic_pre_execute":
+                    # PLAN-equivalent 이전 행에 owner=auto는 위반 (D-DEC-5)
                     violations.append({
                         "code":   "semi_agentic_pre_execute_auto_pass_denied",
                         "row_id": row["row_id"],

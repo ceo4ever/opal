@@ -155,7 +155,7 @@ state-tool을 호출하여 초기화한다:
 
 | 플래그 | 설명 |
 |--------|------|
-| `--wbs` | Phase 1(PRD/TRD) + Phase 2(WBS) 완료 후 파이프라인 종료. Phase 3 액션 실행을 건너뛴다. WBS 산출물만 확정하고 종료할 때 사용. `--agentic`과 조합 가능 (`//oppd --wbs --agentic`). 이 경로에서는 EXECUTE 행(id 10~12)이 미완으로 남는다. CLOSE 행(id 13)은 `mark --task-step close.done_md --done --force --note "oppd --wbs: Phase 3 미실행"`으로 진행한다 — `--force`가 단계 건너뛰기 가드를 통과시키며 `--note`는 필수다(미제공 시 `note_required_for_force` 거부). 사유는 `state.json` 해당 행 `note` 필드에 기록된다(STATE.md 의사결정 로그 표 자동 기재는 `--auto-pass`·`--as-worker --force` 전용이라 이 경로는 대상이 아니다). (조건부 행 자동 `na` 처리는 미구현이며 후속 과제다 — `na`는 현재 `init` 시점 agentic 사용자 확인 행에만 부여된다.) |
+| `--wbs` | Phase 1(PRD/TRD) + Phase 2(WBS) 완료 후 파이프라인 종료. Phase 3 액션 실행을 건너뛴다. WBS 산출물만 확정하고 종료할 때 사용. `--agentic`과 조합 가능 (`//oppd --wbs --agentic`). 이 경로에서는 EXECUTE 행(id 10~12)이 미완으로 남는다. CLOSE 행(id 13)은 `mark --task-step close.done_md --done --force --note "oppd --wbs: Phase 3 미실행"`으로 진행한다 — `--force`가 단계 건너뛰기 가드를 통과시키며 `--note`는 필수다(미제공 시 `note_required_for_force` 거부). 사유는 `state.json` 해당 행 `note` 필드에 기록된다(STATE.md 의사결정 로그 표 자동 기재는 `--auto-pass`·`--as-worker --force` 전용이라 이 경로는 대상이 아니다). |
 | `--agentic` | 전 Phase 사용자 게이트를 PM이 대행. opal-harness-agentic.md 참조. |
 
 ---
@@ -823,3 +823,4 @@ opal-harness-agentic.md "에스컬레이션 조건" 공통 기준에 추가:
 | v5.2 | 2026-07-28 22:47 | 프로젝트 메모리 동기화 절 정정(기존 결함 교정, memory-tool 도입(045) 이전 관행의 표 편집 서술 잔존분) — `MEMORY.json` + `append --kind history` 도구 호출로 교체, 직접 편집 금지 명시 (078) |
 | v5.3 | 2026-08-13 16:56 | pipeline.json 전환 + init 하드 실패 해소 — references/pipeline.json 신설(13 task-step, SSOT), 파이프라인 현황판 미러 표 13행 신설, --rows-from를 pipeline.json으로 교체하여 기존 skill_md_parse_error(header not found) 해소. `--wbs` 경로 서술을 실동작(`--force --note`) 기준으로 정정 — `mark --na`는 CLI에 미구현이며 TEST S-16에서 검출 (090) |
 | v5.4 | 2026-08-14 09:31 | SKILL.md 감량 — `--row N` 5건을 `--task-step <key>`로 전환(plan.user_confirm/wbs.user_confirm/execute.actions 고정 매핑 3건 + PM Gate 범용 안내문·동적 그룹 행 플레이스홀더 2건), 진행 현황 미러 표 13행 삭제 → `references/pipeline.json` 포인터 1줄로 교체, PM Gate 절차 블록쿼트에 게이트 정의 SSOT 포인터 1줄 추가(기존 판정 절차 산문은 존치) (091) |
+| v5.5 | 2026-08-15 21:48 | `--wbs` 옵션 설명에서 "조건부 행 자동 `na` 처리는 미구현… `na`는 현재 init 시점 agentic 사용자 확인 행에만 부여된다" 괄호 서술 삭제 — 사용자 확인 행이 전 모드 pending/PM으로 초기화되어 사실과 어긋남. CLOSE 진입 게이트 서술 불변 (093) |

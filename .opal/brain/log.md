@@ -308,3 +308,7 @@
 - 신규: [[pages/entity/worktree-tool.md]], [[pages/concept/worktree-workspace-isolation-axis.md]], [[pages/concept/worktree-slot-existence-to-occupancy-judgment.md]]
 - 출처: task:092
 
+## [2026-08-16] ingest | CLOSE ingest — 태스크 093 파이프라인 사용자 확인 행 자동 승인 경로 일원화
+- 신규: [[pages/concept/pipeline-user-confirmation-single-status-axis.md]], [[pages/concept/auto-approve-user-confirmation-axis-separation.md]], [[pages/concept/self-modifying-tool-deploy-unit-coupling.md]]
+- 출처: task:093
+

@@ -454,10 +454,11 @@ Agentic 모드 특수 규칙:
 - **CLOSE 진입 게이트만 유지** — REPORT 사용자 확인 게이트는 자율 통과
 - `AGENTIC-LOG.md`를 태스크 폴더에 생성하여 자율 결정 내역을 기록
 - 보고서 내 `[?] review` 항목은 **건너뛰지 않고** 주석에 "agentic: 사용자 확인 필요" 표기
-- 자율 통과 시 state-tool `--auto-pass` 호출 (P-8):
+- 자율 통과 시 state-tool mark 호출 (P-8):
   ```
-  ~/.opal/tools/state-tool/run.sh mark <task-path> --task-step <task-step-key> --done --auto-pass --note '<근거>'
+  ~/.opal/tools/state-tool/run.sh mark <task-path> --task-step <task-step-key> --done
   ```
+- 사용자 확인 행은 PM이 명시 호출하지 않는다 — 다음 단계 진입 시 도구가 자동 승인한다 (계약 SSOT: `opal/core/references/opal-harness-agentic.md §4` / `opal-harness-semi-agentic.md §5`)
 - **CLOSE 단계 첫 행(#7)은 `--auto-pass` 금지** (`close_gate_violation` — §2.16 G-13); 반드시 명시 호출
 - init 시 `--mode agentic` 플래그 추가:
   ```
@@ -522,3 +523,4 @@ fingerprint = sha1(fingerprint_input).hex()[:16]
 | v1.9 | 2026-07-28 | `NNN` 채번 서술을 `.opal/MEMORY.md` 헤더 직접 참조에서 `memory-tool task-number --bump` 포인터 참조로 전환 (절차 SSOT: `harness/task-process.md`) (078) |
 | v1.10 | 2026-08-13 16:56 | pipeline.json 전환 — references/pipeline.json 신설(7 task-step, SSOT), --rows-from 호출 경로를 SKILL.md에서 pipeline.json으로 교체, 표는 사람 열람용 미러로 명시 (090) |
 | v1.11 | 2026-08-14 09:23 | `--row N` 2건을 `--task-step <key>`로 전환(close.done_md 확정 / Agentic 범용 예시는 플레이스홀더) + STATE.md 도메인 치환값 `필드/값`(모드·단계 목록) 중복 표 제거(meta와 중복) + 진행 현황 미러 표를 `references/pipeline.json` SSOT 포인터로 교체 + init 완전 명령 1지점화(§Agentic Mode 정본, SCAN 1.4·치환값 절은 포인터) (091) |
+| v1.12 | 2026-08-15 21:48 | 사용자 확인 행 자동 승인 계약 반영 — agentic STATE 갱신 지시에서 PM `--auto-pass` 명시 호출 삭제, 다음 단계 진입 시 도구 자동 승인으로 전환하고 계약 본문은 하네스 SSOT(`opal-harness-agentic.md §4` / `opal-harness-semi-agentic.md §5`) 참조로 정리. CLOSE 진입 게이트 서술 불변 (093) |

@@ -15,6 +15,7 @@ TestErrorCodesCompleteness/TestPipelineJsonInit)에 S-1,S-2,S-3,S-6,S-7,S-8,S-9,
  변경 금지). 공개 인터페이스(run.sh subprocess, stdout JSON + exit code) + 실 파일 I/O로만\
  검증, mock/patch/MagicMock 미사용(red-first.md §4). 구현(op-be-agent)과 작성자(opal-test-agent)\
  분리.",
+  "description": "state-tool 단위 테스트 — 9개 명령 happy path + 23종 에러 코드 × 최소 1건 + G-5~G-15 시나리오. 005: TestClarificationGate 신설 — verify --clarification-check + TASK→다음단계 자동 훅 RED-first 케이스 ①~⑨ + 회귀 보호. 054: TestOwnerNamePlaceholder 신설 — note '{owner_name}' 플레이스홀더 identity.md write-time 치환 RED-first(S-1~S-7). 056: TestOpplSkillInit 신설 — `--skill oppl` enum 미등록 RED-first(S-020, H-1) — run.sh subprocess 실호출로 공개 인터페이스만 검증(mock 미사용). 070: task-step 키 주소 체계 도입 1차 RED-first — TestPipelineSpecValidate/TestPipelineJsonInit/TestStateSchema11Compat/TestTaskStepAddressing/TestActionStepRename/TestAddRowKey/TestOpddEnumDrift/TestGroupAPipelineSpecs/TestBackwardCompatAliases 9종 신설(TEST-SCENARIO.md S-1~S-14, PLAN §3.7.2) — 미구현 기능이므로 전부 FAIL 기대(RED 증거). 072: TestNextActionAutoDerive 신설 — STATE.md '다음 액션' 자동 파생 RED-first(TEST-SCENARIO.md S-1~S-4,S-6,S-7) — init next_action 영속화+schema optional 등록, advance/mark 프론티어 파생(pending '진입'/in_progress '진행 중'/전체완료 '태스크 완료'), 첫 줄만 치환(하위 자유기재 보존), --next-action 오버라이드 우선+비지속 복귀 — 공개 CLI 경로(직접 호출+run.sh subprocess)로만 검증, 미구현이므로 실패 기대(RED 증거). 074: TestImportPreservesKeys 신설 — `--import-existing` task-step key 유실 결함 RED-first(TEST-SCENARIO.md S-a~S-e) — force+import-existing 후 rows[].key 100% 보존, pipeline.json 폴백 복원, key 원천 전무 시 keyless+stderr 경고(하위호환), schema_version 1.1 유지, 동일 (stage,item) 중복 순서 소비 — 공개 cmd_init 호출 + 실 파일 I/O로만 검증, 수정 전 코드에서 FAIL 기대(RED 증거). 076: TestTodoMirror 신설 — build_todo_mirror 파생 규칙(TS-001~007): init create 페이로드·전부pending→pending·전부done→completed·advance/부분→in_progress·na 중립·블로커 in_progress 유지·영속 경계(state.json 미영속+schema validate 통과) — 공개 cmd_init/advance/mark/block ok() stdout 페이로드 캡처로만 검증. 088: TestCloseHistoryLink 신설(TS-1~TS-7) — CLOSE 마지막 행 mark 시 link_memory_history()가 <프로젝트루트>/.opal/MEMORY.json history에 행을 자동 생성(title/path/stage/result 파생값, date는 memory-tool KST 충전)·재mark 멱등(duplicate_skipped)·MEMORY.json 부재/손상 시 비차단(ok:true + skipped/failed)·비CLOSE 행 무발동 대조군·result 보강 리마인더 구성요소·state.json 영속 경계(schema validate 통과) — 공개 cmd_mark 호출 + 실 MEMORY.json 파일 내용으로만 검증(내부 함수 mock 없음, 블랙박스 결함 주입). 091(RED-first, mode:red, F-004 게이트 집행 배선): TestTaskStepGate 신설(TEST-SCENARIO S-10~S-17) — check_gate_artifacts()/build_gate_payload()가 아직 없어(Step 8 GREEN 이전) 실 pipeline.json(opd/opdw/opsdd) 기반 gate 정의를 state.json 행에 직접 주입하는 픽스처로 산출물 부재 차단(H-1)·부분 상태 변경 부재·checklist dict 페이로드(H-6)·gate 없는 행 무영향(H-2/H-3)·빈 artifacts 비차단(opdw 실사례)·--force --note 우회 의사결정 로그(H-5)·경로 이탈 토큰 거부(H-4)·glob 토큰 매칭(opsdd 실사례)을 검증(공개 cmd_mark 호출 + 실 state.json/STATE.md 파일 내용, mock 없음). TestPipelineSpecValidate에 gate violation 4종(spec_gate_type_invalid/spec_gate_missing_field/spec_gate_field_type_invalid/spec_gate_checklist_empty, S-9) 케이스 + 실 pipeline.json 10종 유효성 케이스 추가. TestErrorCodesCompleteness에 091 신규 5종 반영(39→44). 093(RED-first, mode:red, 사용자 확인 행 자동 승인 경로 일원화): TestT093AutoNaRemoval/TestT093AutoApproveHook/TestT093AutoApproveBoundary/TestT093HookGuardOrder/TestT093MarkIdempotency/TestT093NaBackwardCompat/TestT093SingleDecisionSource 7종 신설(TEST-SCENARIO S-1~S-18·S-24~S-26) — init 시점 agentic auto-na 제거 후 전 모드 pending/PM 동형성(S-2~S-4), 다음 단계 진입 시 auto_approve_prior_user_confirmations 훅 자동 승인(S-1/S-5/S-13/S-26), CLOSE·워커 경로 구조적 제외(S-6~S-9), user_confirmation_required 전용 에러(S-12/S-24), 훅→후속 가드 순서와 파일 미오염(S-10/S-11), mark 접두 멱등·재-auto-pass no-op(S-15/S-16), MODE_BOUNDARY_STAGES 단일 판정 수렴(S-25), 경계 불변 회귀표 18셀·na 하위호환(S-14/S-17/S-18) — worktree run.sh subprocess 실호출 + 실 pipeline.json/state.json 파일 상태로만 검증(mock 미사용), 미구현 기능이므로 신규 계약 케이스는 전부 FAIL 기대(RED 증거: RED-EVIDENCE.md). 093 GREEN(Step 9): 구형 계약을 고정하던 기존 테스트를 신규 계약으로 수정 — test_init_agentic_auto_na_user_confirmation→test_init_agentic_user_confirmation_pending, test_rows_from_agentic_auto_na→test_rows_from_agentic_user_confirmation_pending(둘 다 na→pending 단언 교체), test_close_gate_regression_via_task_step_addressing_subprocess(주석 갱신 + CLOSE 직전 사용자 확인 행 row 8 캡틴 승인 단계 추가, 최종 assert 불변), agentic CLOSE 게이트 3건(test_agentic_close_gate_requires_user·test_g13_agentic_close_gate_auto_pass_rejected·test_c6_agentic_auto_pass_close_first_row)에 캡틴 승인 사전 단계 추가, test_new_structure_guard_blocks_skip에 사용자 확인 행 선(先)승인으로 guard 축 격리, test_s13_new_style_row_without_gate_response_unaffected 기대 키 집합에 auto_approved 추가, TestErrorCodesCompleteness 44→45종(user_confirmation_required). 테스트 삭제 0건.",
   "exports": [
     "TestInit", "TestShow", "TestAdvance", "TestMark",
     "TestBlock", "TestValidate", "TestAddRow", "TestStatus", "TestGatePass",
@@ -26,6 +27,9 @@ TestErrorCodesCompleteness/TestPipelineJsonInit)에 S-1,S-2,S-3,S-6,S-7,S-8,S-9,
     "TestNextActionAutoDerive", "TestImportPreservesKeys", "TestTodoMirror",
     "TestCloseHistoryLink", "TestTaskStepGate",
     "TestJournalResilience", "TestLegacyCoexistence", "TestShowAsQueryStandard"
+    "TestT093AutoNaRemoval", "TestT093AutoApproveHook", "TestT093AutoApproveBoundary",
+    "TestT093HookGuardOrder", "TestT093MarkIdempotency", "TestT093NaBackwardCompat",
+    "TestT093SingleDecisionSource"
   ]
 }
 
@@ -358,8 +362,9 @@ class TestInit(BaseTestCase):
         self.assertEqual(state.get("next_action"), "테스트 다음 액션",
                          "next_action 값이 state.json에 정상 영속화되어야 함(정보 손실 0)")
 
-    def test_init_agentic_auto_na_user_confirmation(self):
-        """init agentic: 사용자 확인 행(CLOSE 제외) auto-na 처리 (PLAN §2.20.1)"""
+    def test_init_agentic_user_confirmation_pending(self):
+        """[093 TS-002] init agentic: 사용자 확인 행은 전 모드 pending/⬜/PM으로 초기화된다.
+        (093 F-001 — 구형 auto-na 분기 제거. 자동 승인은 init이 아니라 다음 단계 진입 훅이 수행)"""
         rows = json.dumps([
             {"stage": "TASK",    "item": "작업"},
             {"stage": "TASK",    "item": "사용자 확인"},
@@ -367,11 +372,11 @@ class TestInit(BaseTestCase):
         ])
         self._init(rows_spec=rows, mode="agentic")
         state = self._state()
-        # TASK 사용자 확인 행 → na
+        # TASK 사용자 확인 행 → pending (구형: na)
         task_user = next(r for r in state["rows"] if r["stage"] == "TASK" and r["item"] == "사용자 확인")
-        self.assertEqual(task_user["status"], "na")
-        self.assertEqual(task_user["status_label"], "-")
-        self.assertEqual(task_user["owner"], "auto")
+        self.assertEqual(task_user["status"], "pending")
+        self.assertEqual(task_user["status_label"], "⬜")
+        self.assertEqual(task_user["owner"], "PM")
         # CLOSE 사용자 확인 행 → pending 유지
         close_user = next(r for r in state["rows"] if r["stage"] == "CLOSE" and r["item"] == "사용자 확인")
         self.assertEqual(close_user["status"], "pending")
@@ -1110,6 +1115,9 @@ class TestErrorCodes(BaseTestCase):
             {"stage": "CLOSE", "item": "State Gate"},
         ])
         self._init(rows_spec=rows, mode="agentic")
+        # 093 F-001: 사용자 확인 행은 init 시 pending이며, CLOSE 직전 행이라 훅이
+        # 자동 승인하지 않는다(DEC-D) — 캡틴 승인으로 CLOSE 게이트 축까지 도달시킨다.
+        self._mark(1, owner="user")
         # agentic 모드에서 CLOSE 첫 행에 auto-pass 시도
         with _mock_now():
             args = make_args(
@@ -1470,7 +1478,9 @@ class TestG13CloseGate(BaseTestCase):
     def test_g13_agentic_close_gate_auto_pass_rejected(self):
         """G-13: agentic 모드 CLOSE 첫 행 + --auto-pass → agentic_close_gate_requires_user (PLAN §2.16 G-13)"""
         self._init(rows_spec=self._make_close_rows(), mode="agentic")
-        # agentic 모드에서 TASK 사용자 확인 행은 auto-na로 초기화됨
+        # 093 F-001: TASK 사용자 확인 행은 전 모드 pending으로 초기화된다.
+        # CLOSE 직전 사용자 확인 행이므로 훅이 자동 승인하지 않는다(DEC-D) — 캡틴 승인 필수.
+        self._mark(1, owner="user")
         # CLOSE 첫 행에 auto-pass 시도
         with _mock_now():
             args = make_args(
@@ -2274,6 +2284,8 @@ class TestConflictConstraints(BaseTestCase):
             {"stage": "CLOSE", "item": "State Gate"},
         ])
         self._init(rows_spec=rows, mode="agentic", force=True, note="재초기화")
+        # 093 F-001/F-002: 사용자 확인 행은 pending 초기화 + CLOSE 직전이라 훅 제외(DEC-D)
+        self._mark(1, owner="user")
         with _mock_now():
             args = make_args(
                 task_path=str(self.task_path),
@@ -2331,8 +2343,9 @@ class TestRowsFrom(BaseTestCase):
         self.assertEqual(exit_code, 1)
         self.assertEqual(result.get("error"), "skill_md_parse_error")
 
-    def test_rows_from_agentic_auto_na(self):
-        """--rows-from agentic: 사용자 확인 행 auto-na (PLAN §2.20.2 단계 10)"""
+    def test_rows_from_agentic_user_confirmation_pending(self):
+        """[093 TS-003] --rows-from agentic: 사용자 확인 행은 pending으로 초기화된다
+        (093 F-001 — 구형 auto-na 분기 제거)"""
         skill_md = self._make_skill_md("""
 ## STATE.md 도메인 치환값
 
@@ -2350,9 +2363,9 @@ class TestRowsFrom(BaseTestCase):
             self._call_cmd(ST.cmd_init, args)
         state = self._state()
         task_user = next(r for r in state["rows"] if r["stage"] == "TASK")
-        self.assertEqual(task_user["status"], "na")
+        self.assertEqual(task_user["status"], "pending")
         close_user = next(r for r in state["rows"] if r["stage"] == "CLOSE")
-        self.assertEqual(close_user["status"], "pending")  # CLOSE는 na 불가
+        self.assertEqual(close_user["status"], "pending")  # CLOSE도 pending (불변)
 
     def test_md_init_stamps_schema_version_1_0_and_validates(self):
         """[T070 후속/Part B] `.md`(SKILL.md 레거시 파싱) init → schema_version=="1.0" 유지 + validate ok.
@@ -2457,20 +2470,18 @@ class TestErrorCodesCompleteness(unittest.TestCase):
         "spec_gate_checklist_empty",
         # 094 신규 1종 (D-2 — --import-existing 명시적 거부)
         "import_existing_removed",
+        # 093 F-004 R-4 (머지 편입)
+        "user_confirmation_required",
     ]
 
     def test_error_codes_count(self):
-        """[T094 수정] ERROR_CODES 상수가 43종 모두 포함 (PLAN §2.18 + PLAN 013 +
-        PLAN 014 + PLAN 016 + PLAN 005 + 070 F-001/F-003/F-004 8종 + 091 F-004
-        5종 - 094 R-3/D-2 삭제 2종(marker_missing/import_failed) + 094 D-2
-        신규 1종(import_existing_removed) = 44-2+1 = 43종, README.md 실측과
-        동기화(TestErrorCodesCompleteness.test_s7_error_catalog_marker_import_realignment
-        가 README 기재 종수 == 실측값을 별도 검증)."""
-        self.assertEqual(len(ST.ERROR_CODES), 43)
+        """[T094 수정 + 093 머지] ERROR_CODES 44종 — 093 시점 45종에서
+        094 R-3/D-2로 marker_missing·import_failed 2종 삭제, D-2로
+        import_existing_removed 1종 추가 = 45-2+1 = 44종."""
+        self.assertEqual(len(ST.ERROR_CODES), 44)
 
     def test_all_28_codes_registered(self):
-        """[T094 수정] 43종 코드 각각이 ERROR_CODES에 등재됨(070 신규 8종 + 091
-        신규 5종 + 094 신규 1종 포함, marker_missing/import_failed 2종 제외)"""
+        """[T094 수정 + 093 머지] 44종 각각이 ERROR_CODES에 등재됨."""
         for code in self.EXPECTED_CODES:
             self.assertIn(code, ST.ERROR_CODES, f"에러 코드 {code} 미등재")
         self.assertEqual(len(self.EXPECTED_CODES), len(ST.ERROR_CODES),
@@ -3283,6 +3294,10 @@ class TestNewStandardRowStructure(BaseTestCase):
         row1 미완 상태에서 row3(PLAN 작업) mark → stage_transition_violation"""
         import io
         from contextlib import redirect_stdout
+        # 093 F-002: row2(TASK 사용자 확인)가 pending이면 훅이 먼저 user_confirmation_required로
+        # 거부한다(interactive). 본 테스트가 관찰하려는 축은 stage-transition guard이므로
+        # row2를 캡틴 승인으로 닫아 미완 행을 row1만 남긴다.
+        self.assertEqual(self._mark(2, owner="user", force=True, note="guard 축 격리"), 0)
         out = io.StringIO()
         with redirect_stdout(out):
             with _mock_now():
@@ -5044,13 +5059,21 @@ class TestTaskStepAddressing(BaseTestCase):
         ])
         self.assertEqual(code, 0, f"agentic pipeline.json init 실패: {stdout!r}")
 
-        # opp 스펙: row 2(task.user_confirm)/5(plan.user_confirm)/8(execute.user_confirm)는
-        # "사용자 확인"(non-CLOSE) — agentic 자동 na로 이미 완료. 나머지(1,3,4,6,7)만 mark.
+        # opp 스펙: row 2(task.user_confirm)/5(plan.user_confirm)는 "사용자 확인"(non-CLOSE)
+        # — 093 F-002 훅이 다음 행 진입 시 자동 승인하므로 명시 mark가 불필요하다.
+        # row 8(execute.user_confirm)은 CLOSE 직전 행이라 훅이 손대지 않으며(DEC-D 1차 방어)
+        # 캡틴 승인(--owner user)이 필수다. 나머지(1,3,4,6,7)만 mark.
         for rid in (1, 3, 4, 6, 7):
             code, stdout, stderr, data = _run070(
                 ["mark", str(agentic_task), "--row", str(rid), "--done"]
             )
             self.assertEqual(code, 0, f"사전 행 {rid} mark 실패: {stdout!r}")
+
+        # row 8 = execute.user_confirm — CLOSE 직전 사용자 확인 행은 캡틴 승인만 가능
+        code, stdout, stderr, data = _run070(
+            ["mark", str(agentic_task), "--row", "8", "--done", "--owner", "user"]
+        )
+        self.assertEqual(code, 0, f"CLOSE 직전 사용자 확인 행 캡틴 승인 실패: {stdout!r}")
 
         # row 9 = close.done_md(CLOSE 첫 행) — key가 실제 존재하므로 --task-step 주소가
         # task_step_not_found 없이 정상 해석된 뒤 CLOSE 게이트가 발동해야 한다.
@@ -6023,7 +6046,8 @@ class TestTaskStepGate(unittest.TestCase):
         self.assertEqual(exit_code, 0)
         self.assertTrue(result.get("ok"))
         expected_keys = {"ok", "command", "row_id", "stage", "item", "status",
-                         "timestamp", "owner", "todo_mirror"}
+                         "timestamp", "owner", "todo_mirror",
+                         "auto_approved"}  # 093 F-002 관측 필드(PLAN §3.2.2 (6)) — 상시 존재
         self.assertEqual(set(result.keys()), expected_keys,
                          f"gate 없는 행인데 응답 키 집합이 변경됨: {sorted(result.keys())}")
         self.assertNotIn("gate_checklist", result)
@@ -6927,6 +6951,930 @@ class TestShowAsQueryStandard(BaseTestCase):
             missing = expected - set(data.keys())
             self.assertEqual(missing, set(),
                              f"show --format {fmt} 응답에서 기존 키 삭제됨: {missing}")
+# 093 (RED-first, mode:red) — 파이프라인 사용자 확인 행 자동 승인 경로 일원화
+#   TEST-SCENARIO.md S-1~S-18 / S-24~S-26 (S-19 전체 스위트·S-20~S-22 문서·S-23 L3 제외)
+#   PLAN §3 F-001~F-006 시그니처·계약을 그대로 신뢰해 작성한 실패 테스트다.
+#
+# [MUST] red-first.md §2 작성자≠구현자 — 본 블록은 테스트만 추가하며 state_tool.py를
+#        수정하지 않는다. 기존 케이스도 수정·삭제하지 않는다(순수 additive).
+# [MUST] red-first.md §4 / 헌법 §4 "Don't fake it" — mock/patch/MagicMock 미사용.
+#        worktree run.sh subprocess 실호출 + 실 pipeline.json + 실 state.json 파일
+#        내용(공개 인터페이스: exit code / stdout JSON / 파일 상태)으로만 검증한다.
+#        시각도 실 date.js를 통과한 실제 KST 값을 쓴다(고정 모킹 없음).
+# ═════════════════════════════════════════════════════════════════════════════
+
+_REPO_ROOT_093 = _TOOL_DIR.parent.parent.parent
+_SRC_093 = _TOOL_DIR / "state_tool.py"
+_OPD_PIPELINE_093 = (_REPO_ROOT_093 / "opal" / "skills" / "opal-pilot-dev"
+                     / "references" / "pipeline.json")
+
+
+def _t093_json(obj):
+    return json.dumps(obj, ensure_ascii=False)
+
+
+def _t093_pipeline_spec(skill, stages, steps):
+    """070/091 pipeline.json 스펙 포맷 픽스처 (validate_pipeline_spec 통과 형태)."""
+    return {
+        "spec_version": "1.0",
+        "skill": skill,
+        "meta": {"mode_label": "T093 fixture", "stages": stages},
+        "task_steps": steps,
+    }
+
+
+# 경계 불변 회귀표 표 A(B-1~B-9) 공용 픽스처 — PLAN §3.3.2 (3)
+_T093_B_SPEC = _t093_json([
+    {"stage": "TASK",    "item": "작업"},            # row 1
+    {"stage": "TASK",    "item": "사용자 확인"},      # row 2 — MODE_BOUNDARY_STAGES
+    {"stage": "EXECUTE", "item": "작업"},            # row 3
+    {"stage": "EXECUTE", "item": "사용자 확인"},      # row 4 — 경계 밖 일반 stage
+    {"stage": "CLOSE",   "item": "DONE.md 생성"},    # row 5 — CLOSE 첫 행
+])
+
+# 경계 불변 회귀표 표 B(V-1~V-9) 공용 픽스처 — CLOSE 첫 행이 사용자 확인 행이 아니게 두어
+# check_close_gate와 무관하게 validate 축만 관찰한다.
+_T093_V_SPEC = _t093_json([
+    {"stage": "TASK",    "item": "사용자 확인"},      # row 1
+    {"stage": "EXECUTE", "item": "사용자 확인"},      # row 2
+    {"stage": "CLOSE",   "item": "DONE.md 생성"},    # row 3
+    {"stage": "CLOSE",   "item": "사용자 확인"},      # row 4
+])
+
+
+class _T093Base(unittest.TestCase):
+    """093 공통 베이스 — tmp 작업 폴더 + worktree run.sh subprocess 실호출.
+
+    [MUST] AGENT.md §확정 기준 #2 — tempfile.mkdtemp() 밖(레포/~/.opal)을 쓰지 않는다.
+    tmp 경로에는 .opal/MEMORY.json이 없으므로 CLOSE 마지막 행 mark의
+    link_memory_history()는 skipped로 무해하게 끝난다(실 메모리 파일 미오염).
+    """
+
+    def setUp(self):
+        self.tmpdir = pathlib.Path(tempfile.mkdtemp())
+
+    def tearDown(self):
+        shutil.rmtree(self.tmpdir, ignore_errors=True)
+
+    # ── 픽스처 ────────────────────────────────────────────────────────────
+    def _task_dir(self, name):
+        d = self.tmpdir / name
+        d.mkdir(parents=True, exist_ok=True)
+        return d
+
+    def _init(self, task_dir, mode, *, rows_spec=None, rows_from=None, skill="opd"):
+        argv = ["init", str(task_dir), "--skill", skill, "--mode", mode]
+        if rows_spec is not None:
+            argv += ["--rows-spec", rows_spec]
+        if rows_from is not None:
+            argv += ["--rows-from", str(rows_from)]
+        code, stdout, stderr, data = _run070(argv)
+        self.assertEqual(code, 0, f"init 실패(mode={mode}): {stdout!r} / {stderr!r}")
+        return data
+
+    def _init_b(self, mode, name=None):
+        d = self._task_dir(name or f"b-{mode}")
+        self._init(d, mode, rows_spec=_T093_B_SPEC)
+        return d
+
+    # ── 관찰 ──────────────────────────────────────────────────────────────
+    def _state_of(self, task_dir):
+        return json.loads((task_dir / "state.json").read_text(encoding="utf-8"))
+
+    def _row(self, task_dir, row_id):
+        for r in self._state_of(task_dir)["rows"]:
+            if r["row_id"] == row_id:
+                return r
+        self.fail(f"row {row_id} 없음 (task_dir={task_dir})")
+
+    # ── 호출 ──────────────────────────────────────────────────────────────
+    def _mark(self, task_dir, row_id, *extra):
+        return _run070(["mark", str(task_dir), "--row", str(row_id), "--done", *extra])
+
+    def _mark_key(self, task_dir, key, *extra):
+        return _run070(["mark", str(task_dir), "--task-step", key, "--done", *extra])
+
+    def _advance(self, task_dir, row_id, *extra):
+        return _run070(["advance", str(task_dir), "--row", str(row_id), *extra])
+
+    def _advance_key(self, task_dir, key, *extra):
+        return _run070(["advance", str(task_dir), "--task-step", key, *extra])
+
+    def _validate(self, task_dir):
+        return _run070(["validate", str(task_dir)])
+
+    def _assert_ok(self, result, label):
+        code, stdout, stderr, data = result
+        self.assertEqual(code, 0, f"{label} exit!=0 (stdout={stdout!r} stderr={stderr!r})")
+        return data
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# S-2 / S-3 / S-4 — F-001 auto-na 제거 + 전 모드 pending 초기화
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestT093AutoNaRemoval(_T093Base):
+    """F-001 — init 시점 agentic auto-na 분기 제거 (TEST-SCENARIO S-2/S-3/S-4)."""
+
+    _USER_CONFIRM_INIT = {
+        "status": "pending", "status_label": "⬜", "owner": "PM",
+        "timestamp": None, "note": None,
+    }
+
+    def _assert_pending_user_confirm(self, task_dir, label):
+        rows = self._state_of(task_dir)["rows"]
+        targets = [r for r in rows if r["item"] == "사용자 확인"]
+        self.assertTrue(targets, f"{label}: 사용자 확인 행이 픽스처에 없음")
+        for r in targets:
+            for field, expected in self._USER_CONFIRM_INIT.items():
+                self.assertEqual(
+                    r.get(field), expected,
+                    f"{label}: row {r['row_id']}({r['stage']}) {field}="
+                    f"{r.get(field)!r}, 기대 {expected!r} — F-1 AC(b) 전 모드 pending/PM")
+
+    def test_auto_na_marker_absent_in_source_T093_L1_F1a(self):
+        """[T093/L1-F1a] S-2 — state_tool.py에 'agentic auto-na at init' 잔존 0건.
+        3개 빌더의 mode 파라미터 시그니처는 존치(PLAN §3.1.2 [MUST])."""
+        src = _SRC_093.read_text(encoding="utf-8")
+        hits = [i + 1 for i, line in enumerate(src.splitlines())
+                if "agentic auto-na at init" in line]
+        self.assertEqual(hits, [],
+                         f"F-001 구형 잔존 — 'agentic auto-na at init' 라인 {hits}")
+
+        import inspect
+        for fn in (ST.build_rows_from_spec, ST.build_rows_from_skill_md,
+                   ST.build_rows_from_pipeline_json):
+            params = list(inspect.signature(fn).parameters)
+            self.assertIn("mode", params,
+                          f"{fn.__name__} 시그니처에서 mode 제거 금지 (PLAN §3.1.2)")
+
+    def test_three_modes_init_rows_identical_T093_L1_F1b(self):
+        """[T093/L1-F1b] S-3 — 실 opd pipeline.json을 3모드로 init → rows[] 전 필드 diff 0.
+        F-1 AC(b)의 유일한 직접 검증(PLAN TS-004)."""
+        self.assertTrue(_OPD_PIPELINE_093.is_file(),
+                        f"실 pipeline.json 부재: {_OPD_PIPELINE_093}")
+        rows_by_mode = {}
+        for mode in ("interactive", "semi-agentic", "agentic"):
+            d = self._task_dir(f"3mode-{mode}")
+            self._init(d, mode, rows_from=_OPD_PIPELINE_093)
+            rows_by_mode[mode] = self._state_of(d)["rows"]
+            self._assert_pending_user_confirm(d, f"S-3/{mode}")
+
+        base = rows_by_mode["interactive"]
+        for mode in ("semi-agentic", "agentic"):
+            other = rows_by_mode[mode]
+            self.assertEqual(len(base), len(other), f"{mode}: 행 수 불일치")
+            for i, (a, b) in enumerate(zip(base, other)):
+                self.assertEqual(
+                    a, b,
+                    f"S-3 diff!=0 — row index {i}: interactive={a!r} / {mode}={b!r}")
+
+    def test_all_three_builders_init_pending_T093_L1_F1b(self):
+        """[T093/L1-F1b] S-4 — 빌더 3경로(--rows-spec / --rows-from *.md / *.json)를
+        각각 --mode agentic으로 init → 사용자 확인 행 전건 pending/⬜/PM."""
+        # (a) build_rows_from_spec — 인라인 JSON
+        d_spec = self._task_dir("builder-spec")
+        self._init(d_spec, "agentic", rows_spec=_t093_json([
+            {"stage": "TASK",  "item": "사용자 확인"},
+            {"stage": "CLOSE", "item": "사용자 확인"},
+        ]))
+        self._assert_pending_user_confirm(d_spec, "S-4(a) rows-spec")
+
+        # (b) build_rows_from_skill_md — 레거시 SKILL.md 표
+        skill_md = self.tmpdir / "SKILL.md"
+        skill_md.write_text(
+            "\n## STATE.md 도메인 치환값\n\n"
+            "| # | 단계 | 항목 | 상태 | 시점 |\n"
+            "|---|------|------|------|------|\n"
+            "| 1 | TASK | 사용자 확인 | ⬜ |  |\n"
+            "| 2 | CLOSE | 사용자 확인 | ⬜ |  |\n",
+            encoding="utf-8")
+        d_md = self._task_dir("builder-skillmd")
+        self._init(d_md, "agentic", rows_from=skill_md)
+        self._assert_pending_user_confirm(d_md, "S-4(b) rows-from SKILL.md")
+
+        # (c) build_rows_from_pipeline_json — 실 opd pipeline.json
+        d_json = self._task_dir("builder-pipeline")
+        self._init(d_json, "agentic", rows_from=_OPD_PIPELINE_093)
+        self._assert_pending_user_confirm(d_json, "S-4(c) rows-from pipeline.json")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# S-1 / S-5 / S-13 / S-26 — F-002 자동 승인 훅 (긍정 경로)
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestT093AutoApproveHook(_T093Base):
+    """F-002 auto_approve_prior_user_confirmations — 다음 단계 진입만으로 자동 승인."""
+
+    _TASK_MD = (
+        "# TASK: T093 픽스처\n\n"
+        "## 목표\n자동 승인 훅 관통 검증\n\n"
+        "## 완료 기준\n- 전 행 진행\n"
+    )  # '## 명확화 결과' 섹션 부재 → _run_clarification_hook graceful skip(005 정책 A)
+
+    def _opd_task(self, name):
+        d = self._task_dir(name)
+        self._init(d, "agentic", rows_from=_OPD_PIPELINE_093)
+        # gate.artifacts 실 파일 생성 (analysis.pm_gate / plan.pm_gate / scenario_gate)
+        (d / "TASK.md").write_text(self._TASK_MD, encoding="utf-8")
+        (d / "ANALYSIS.md").write_text("# ANALYSIS\n", encoding="utf-8")
+        (d / "PLAN.md").write_text("# PLAN\n", encoding="utf-8")
+        (d / "TEST-SCENARIO.md").write_text("# TEST SCENARIO\n", encoding="utf-8")
+        return d
+
+    def test_pipeline_traversal_auto_approves_T093_L2_GOAL(self):
+        """[T093/L2-GOAL] S-1 — 실 opd pipeline.json 관통(TASK→EXECUTE).
+        어느 호출에도 --auto-pass를 전달하지 않는다. 훅 미배선이면
+        stage_transition_violation으로 실패해야 한다(070 동형 공백 방지)."""
+        d = self._opd_task("s1-traversal")
+        for key in ("task.task_md", "analysis.analysis_md", "analysis.pm_gate",
+                    "plan.plan_md", "plan.pm_gate",
+                    "test_scenario.test_scenario_md", "test_scenario.scenario_gate"):
+            self._assert_ok(self._mark_key(d, key), f"S-1 mark {key}")
+
+        entry = self._assert_ok(self._advance_key(d, "execute.implement"),
+                                "S-1 advance execute.implement")
+
+        state = self._state_of(d)
+        by_key = {r.get("key"): r for r in state["rows"]}
+
+        # ② 4개 user_confirm 행이 명시 호출 없이 done/auto/timestamp≠None
+        for key, stage in (("task.user_confirm", "TASK"),
+                           ("analysis.user_confirm", "ANALYSIS"),
+                           ("plan.user_confirm", "PLAN"),
+                           ("test_scenario.user_confirm", "TEST-SCENARIO")):
+            r = by_key[key]
+            self.assertEqual(r["status"], "done", f"S-1 {key} status={r['status']}")
+            self.assertEqual(r["owner"], "auto", f"S-1 {key} owner={r.get('owner')}")
+            self.assertIsNotNone(r.get("timestamp"), f"S-1 {key} timestamp 미기록")
+            self.assertEqual(r["stage"], stage)
+
+        # ③ na 상태 행 0건
+        na_rows = [r["row_id"] for r in state["rows"] if r.get("status") == "na"]
+        self.assertEqual(na_rows, [], f"S-1 na 잔존 행 {na_rows}")
+
+        # ④ 승인 timestamp가 그 행을 승인시킨 진입 호출 응답 timestamp와 문자열 일치
+        approved = entry.get("auto_approved")
+        self.assertEqual(approved, [by_key["test_scenario.user_confirm"]["row_id"]],
+                         f"S-1 EXECUTE 진입 auto_approved={approved!r}")
+        self.assertEqual(by_key["test_scenario.user_confirm"]["timestamp"],
+                         entry.get("timestamp"),
+                         "S-1 승인 timestamp가 진입 호출 응답 timestamp와 불일치")
+        self.assertEqual(by_key["execute.implement"]["status"], "in_progress")
+
+    def test_hook_fires_without_auto_pass_flag_T093_L2_F2(self):
+        """[T093/L2-F2] S-5 — PLAN 첫 행 advance 시 앞 ANALYSIS 사용자 확인 행이
+        done/auto/timestamp≠None이 되고 note가 'auto-approved on PLAN entry'
+        형식('agentic auto-pass:' 접두 미사용, PLAN §3.2.2 (4) [MUST])."""
+        d = self._opd_task("s5-hook")
+        for key in ("task.task_md", "analysis.analysis_md", "analysis.pm_gate"):
+            self._assert_ok(self._mark_key(d, key), f"S-5 mark {key}")
+
+        data = self._assert_ok(self._advance_key(d, "plan.plan_md"), "S-5 advance plan.plan_md")
+
+        r = {x.get("key"): x for x in self._state_of(d)["rows"]}["analysis.user_confirm"]
+        self.assertEqual(r["status"], "done")
+        self.assertEqual(r["owner"], "auto")
+        self.assertIsNotNone(r.get("timestamp"))
+        self.assertEqual(r.get("status_label"), "✅")
+        self.assertEqual(r.get("note"), "auto-approved on PLAN entry",
+                         f"S-5 note={r.get('note')!r}")
+        self.assertNotIn("agentic auto-pass", str(r.get("note")),
+                         "훅 승인 note는 PM 명시 호출(F-005) 문자열 공간과 분리되어야 한다")
+        self.assertIn(r["row_id"], data.get("auto_approved") or [])
+
+    def test_semi_agentic_post_execute_auto_approved_T093_L1_F3(self):
+        """[T093/L1-F3] S-13 — semi-agentic에서 MODE_BOUNDARY_STAGES 밖(EXECUTE→TEST)
+        구간은 자동 승인이 허용된다(exit 0, done/auto/timestamp≠None)."""
+        d = self._task_dir("s13-semi-post")
+        self._init(d, "semi-agentic", rows_spec=_t093_json([
+            {"stage": "EXECUTE", "item": "작업"},
+            {"stage": "EXECUTE", "item": "사용자 확인"},
+            {"stage": "TEST",    "item": "작업"},
+        ]))
+        self._assert_ok(self._mark(d, 1), "S-13 mark row1")
+        data = self._assert_ok(self._advance(d, 3), "S-13 advance row3")
+
+        r = self._row(d, 2)
+        self.assertEqual(r["status"], "done")
+        self.assertEqual(r["owner"], "auto")
+        self.assertIsNotNone(r.get("timestamp"))
+        self.assertEqual(data.get("auto_approved"), [2])
+
+    def test_auto_approved_payload_positive_T093_L1_F2o(self):
+        """[T093/L1-F2o] S-26 — 성공 응답 JSON의 auto_approved 배열이 승인된 row_id를
+        정확히 담는다(advance/mark 양쪽). 승인 0건 호출은 빈 배열."""
+        rows = _t093_json([
+            {"stage": "TASK",    "item": "작업"},
+            {"stage": "TASK",    "item": "사용자 확인"},
+            {"stage": "EXECUTE", "item": "작업"},
+        ])
+        # (a) advance 경로
+        d_adv = self._task_dir("s26-advance")
+        self._init(d_adv, "agentic", rows_spec=rows)
+        first = self._assert_ok(self._mark(d_adv, 1), "S-26 mark row1")
+        self.assertEqual(first.get("auto_approved", []), [],
+                         "승인 0건 호출의 auto_approved는 빈 배열이어야 한다")
+        data_adv = self._assert_ok(self._advance(d_adv, 3), "S-26 advance row3")
+        self.assertEqual(data_adv.get("auto_approved"), [2])
+
+        # (b) mark 경로
+        d_mark = self._task_dir("s26-mark")
+        self._init(d_mark, "agentic", rows_spec=rows)
+        self._assert_ok(self._mark(d_mark, 1), "S-26 mark row1")
+        data_mark = self._assert_ok(self._mark(d_mark, 3), "S-26 mark row3")
+        self.assertEqual(data_mark.get("auto_approved"), [2])
+        self.assertEqual(self._row(d_mark, 2)["owner"], "auto")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# S-6 / S-7 / S-8 / S-9 / S-12 / S-14 / S-24 — 경계·부정 경로
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestT093AutoApproveBoundary(_T093Base):
+    """F-002 CLOSE·워커 구조적 제외 + F-003 경계 불변 + F-004 전용 에러."""
+
+    def test_close_entry_does_not_auto_approve_T093_L2_GOAL(self):
+        """[T093/L2-GOAL] S-6 — agentic에서 TEST 사용자 확인 행을 pending으로 둔 채
+        CLOSE 첫 행 mark → 차단(exit 1) + 파일 재로드 시 그 행이 여전히 pending.
+        이후 --owner user로 승인하면 CLOSE 진입이 정상 통과(DEC-D 1차 방어)."""
+        d = self._task_dir("s6-close")
+        self._init(d, "agentic", rows_spec=_t093_json([
+            {"stage": "TEST",  "item": "작업"},
+            {"stage": "TEST",  "item": "사용자 확인"},
+            {"stage": "CLOSE", "item": "DONE.md 생성"},
+        ]))
+        self._assert_ok(self._mark(d, 1), "S-6 mark row1")
+        self.assertEqual(self._row(d, 2)["status"], "pending",
+                         "S-6 전제: TEST 사용자 확인 행은 init 직후 pending이어야 한다")
+
+        code, stdout, stderr, data = self._mark(d, 3)
+        self.assertEqual(code, 1, f"S-6 CLOSE 첫 행 mark가 차단되지 않음 (stdout={stdout!r})")
+        r2 = self._row(d, 2)
+        self.assertEqual(r2["status"], "pending",
+                         f"S-6 훅이 CLOSE 진입 경로에서 앞 행을 승인함 — {r2!r}")
+        self.assertNotEqual(r2.get("owner"), "auto")
+
+        self._assert_ok(self._mark(d, 2, "--owner", "user"), "S-6 캡틴 승인")
+        self._assert_ok(self._mark(d, 3), "S-6 CLOSE 재진입")
+        self.assertEqual(self._row(d, 3)["status"], "done")
+
+    def test_close_first_row_auto_pass_denied_T093_L1_F3(self):
+        """[T093/L1-F3] S-7 — agentic·semi-agentic 모두 CLOSE 첫 행
+        mark --done --auto-pass가 agentic_close_gate_requires_user로 거부(exit 1).
+        에러 코드 문자열까지 대조."""
+        for mode in ("agentic", "semi-agentic"):
+            with self.subTest(mode=mode):
+                d = self._init_b(mode, name=f"s7-{mode}")
+                self._assert_ok(self._mark(d, 1), "prep row1")
+                self._assert_ok(self._mark(d, 2, "--owner", "user"), "prep row2")
+                self._assert_ok(self._mark(d, 3), "prep row3")
+                self._assert_ok(self._mark(d, 4, "--auto-pass"), "prep row4")
+                code, stdout, stderr, data = self._mark(d, 5, "--auto-pass")
+                self.assertEqual(code, 1, f"S-7/{mode} 미차단 (stdout={stdout!r})")
+                self.assertEqual(data.get("error"), "agentic_close_gate_requires_user",
+                                 f"S-7/{mode} 에러 코드 회귀 — {data!r}")
+
+    def test_worker_path_hook_disabled_T093_L2_GOAL(self):
+        """[T093/L2-GOAL] S-8 — --as-worker --worker-stage EXECUTE 경로에서 앞 단계
+        PLAN 사용자 확인 행이 자동 승인되지 않고 stage_transition_violation(exit 1).
+        워커가 주소 지정 없이 앞 단계 행을 실질 갱신하는 우회가 불가해야 한다(DEC-C)."""
+        d = self._worker_fixture("s8-worker")
+        code, stdout, stderr, data = self._mark(
+            d, 3, "--as-worker", "--worker-stage", "EXECUTE")
+        self.assertEqual(code, 1, f"S-8 워커 경로 미차단 (stdout={stdout!r})")
+        self.assertEqual(data.get("error"), "stage_transition_violation", f"S-8 {data!r}")
+        r2 = self._row(d, 2)
+        self.assertEqual(r2["status"], "pending",
+                         f"S-8 워커 경로에서 앞 단계 사용자 확인 행이 갱신됨 — {r2!r}")
+
+    def test_worker_path_leaves_file_byte_identical_T093_L2_GOAL(self):
+        """[T093/L2-GOAL] S-9 — S-8과 동일 호출 후 state.json 바이트가 호출 전과 완전 동일
+        (updated_at 포함 무변경)."""
+        d = self._worker_fixture("s9-worker")
+        before = (d / "state.json").read_bytes()
+        code, stdout, stderr, data = self._mark(
+            d, 3, "--as-worker", "--worker-stage", "EXECUTE")
+        self.assertEqual(code, 1, f"S-9 전제: 호출이 차단되어야 한다 (stdout={stdout!r})")
+        after = (d / "state.json").read_bytes()
+        self.assertEqual(before, after,
+                         "S-9 워커 경로 실패 호출이 state.json 바이트를 변경했다")
+
+    def _worker_fixture(self, name):
+        d = self._task_dir(name)
+        self._init(d, "agentic", rows_spec=_t093_json([
+            {"stage": "PLAN",    "item": "작업"},
+            {"stage": "PLAN",    "item": "사용자 확인"},
+            {"stage": "EXECUTE", "item": "작업"},
+        ]))
+        self._assert_ok(self._mark(d, 1), f"{name} prep row1")
+        self.assertEqual(self._row(d, 2)["status"], "pending",
+                         f"{name} 전제: PLAN 사용자 확인 행은 init 직후 pending")
+        return d
+
+    def test_semi_agentic_boundary_requires_user_T093_L1_F4(self):
+        """[T093/L1-F4] S-12 — semi-agentic + MODE_BOUNDARY_STAGES 사용자 확인 행은
+        훅 경로에서 자동 승인되지 않고 user_confirmation_required를 반환한다.
+        페이로드에 row_id·stage·reason·required_action 포함(PLAN §3.4.2)."""
+        d = self._task_dir("s12-semi-boundary")
+        self._init(d, "semi-agentic", rows_spec=_t093_json([
+            {"stage": "TASK",    "item": "작업"},
+            {"stage": "TASK",    "item": "사용자 확인"},
+            {"stage": "EXECUTE", "item": "작업"},
+        ]))
+        self._assert_ok(self._mark(d, 1), "S-12 mark row1")
+        code, stdout, stderr, data = self._advance(d, 3)
+
+        self.assertEqual(code, 1, f"S-12 자동 승인이 발생함 (stdout={stdout!r})")
+        self.assertEqual(data.get("error"), "user_confirmation_required", f"S-12 {data!r}")
+        self.assertEqual(data.get("row_id"), 2)
+        self.assertEqual(data.get("stage"), "TASK")
+        self.assertEqual(data.get("reason"), "semi_agentic_pre_execute")
+        self.assertTrue(data.get("required_action"), f"S-12 required_action 누락 — {data!r}")
+        self.assertEqual(self._row(d, 2)["status"], "pending")
+
+    def test_interactive_path_split_T093_L1_F4(self):
+        """[T093/L1-F4] S-24 — DEC-A 경로 분리 실측.
+        (a) 훅 경로: user_confirmation_required 거부(reason=interactive_requires_user)
+        (b) PM 직접 mark --auto-pass: 현행대로 exit 0 + validate가
+            auto_pass_in_interactive_mode 위반 1건 방출.
+        [MUST] (b)를 차단으로 바꾸면 F-3 AC '경계 불변'이 깨진다."""
+        rows = _t093_json([
+            {"stage": "TASK",    "item": "작업"},
+            {"stage": "TASK",    "item": "사용자 확인"},
+            {"stage": "EXECUTE", "item": "작업"},
+        ])
+        # (a) 훅 경로
+        d_a = self._task_dir("s24-hook")
+        self._init(d_a, "interactive", rows_spec=rows)
+        self._assert_ok(self._mark(d_a, 1), "S-24(a) mark row1")
+        code, stdout, stderr, data = self._advance(d_a, 3)
+        self.assertEqual(code, 1, f"S-24(a) interactive 훅이 자동 승인함 (stdout={stdout!r})")
+        self.assertEqual(data.get("error"), "user_confirmation_required", f"S-24(a) {data!r}")
+        self.assertEqual(data.get("reason"), "interactive_requires_user")
+        self.assertEqual(self._row(d_a, 2)["status"], "pending")
+
+        # (b) PM 명시 호출 경로 — 현행 유지
+        d_b = self._task_dir("s24-explicit")
+        self._init(d_b, "interactive", rows_spec=rows)
+        self._assert_ok(self._mark(d_b, 1), "S-24(b) mark row1")
+        self._assert_ok(self._mark(d_b, 2, "--auto-pass"),
+                        "S-24(b) PM 직접 --auto-pass는 exit 0이어야 한다(경계 불변)")
+        self.assertEqual(self._row(d_b, 2)["owner"], "auto")
+
+        vcode, vstdout, vstderr, vdata = self._validate(d_b)
+        codes = [v["code"] for v in vdata.get("violations", [])]
+        self.assertEqual(codes, ["auto_pass_in_interactive_mode"],
+                         f"S-24(b) validate 위반 집합 회귀 — {vdata!r}")
+        self.assertEqual(vcode, 1)
+
+    # ── S-14 경계 불변 회귀표 18셀 (PLAN §3.3.2 (3) 표 A/표 B) ────────────────
+
+    _B_TABLE = [
+        # (cell, target_row, mode, expected_exit, expected_error)
+        ("B-1", 2, "interactive",  0, None),
+        ("B-2", 2, "semi-agentic", 1, "semi_agentic_pre_execute_auto_pass_denied"),
+        ("B-3", 2, "agentic",      0, None),
+        ("B-4", 4, "interactive",  0, None),
+        ("B-5", 4, "semi-agentic", 0, None),
+        ("B-6", 4, "agentic",      0, None),
+        ("B-7", 5, "interactive",  1, "close_gate_violation"),
+        ("B-8", 5, "semi-agentic", 1, "agentic_close_gate_requires_user"),
+        ("B-9", 5, "agentic",      1, "agentic_close_gate_requires_user"),
+    ]
+
+    def test_boundary_table_a_mark_auto_pass_T093_L1_F3(self):
+        """[T093/L1-F3] S-14(표 A) — mark --auto-pass 즉시 차단 여부 9셀.
+        exit code만이 아니라 error 필드 문자열까지 대조한다(B-7 vs B-8/B-9 구분)."""
+        for cell, target, mode, exp_code, exp_err in self._B_TABLE:
+            with self.subTest(cell=cell, mode=mode, target=target):
+                d = self._init_b(mode, name=f"s14-{cell}")
+                self._assert_ok(self._mark(d, 1), f"{cell} prep row1")
+                if target >= 4:
+                    self._assert_ok(self._mark(d, 2, "--owner", "user"), f"{cell} prep row2")
+                    self._assert_ok(self._mark(d, 3), f"{cell} prep row3")
+                if target >= 5:
+                    self._assert_ok(self._mark(d, 4, "--auto-pass"), f"{cell} prep row4")
+
+                code, stdout, stderr, data = self._mark(d, target, "--auto-pass")
+                self.assertEqual(code, exp_code,
+                                 f"{cell} exit={code} 기대={exp_code} (stdout={stdout!r})")
+                self.assertEqual(data.get("error"), exp_err,
+                                 f"{cell} error={data.get('error')!r} 기대={exp_err!r}")
+
+    _V_TABLE = [
+        # (cell, stage, mode, expected violation codes)
+        ("V-1", "TASK",    "interactive",  {"auto_pass_in_interactive_mode"}),
+        ("V-2", "TASK",    "semi-agentic", {"semi_agentic_pre_execute_auto_pass_denied"}),
+        ("V-3", "TASK",    "agentic",      set()),
+        ("V-4", "EXECUTE", "interactive",  {"auto_pass_in_interactive_mode"}),
+        ("V-5", "EXECUTE", "semi-agentic", set()),
+        ("V-6", "EXECUTE", "agentic",      set()),
+        ("V-7", "CLOSE",   "interactive",  {"auto_pass_in_interactive_mode"}),
+        ("V-8", "CLOSE",   "semi-agentic", set()),
+        ("V-9", "CLOSE",   "agentic",      set()),
+    ]
+
+    def _validate_fixture(self, name, stage, mode):
+        """init(실 CLI)으로 만든 state.json의 tmp 복사본에서 대상 stage의 사용자 확인
+        행만 done/auto로 바꾼 픽스처 — 손편집 대상은 tmp 복사본뿐이다."""
+        d = self._task_dir(name)
+        self._init(d, "interactive", rows_spec=_T093_V_SPEC)
+        state_path = d / "state.json"
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+        state["mode"] = mode
+        hit = 0
+        for r in state["rows"]:
+            if r["item"] == "사용자 확인" and r["stage"] == stage:
+                r["status"] = "done"
+                r["status_label"] = "✅"
+                r["owner"] = "auto"
+                r["timestamp"] = state["created_at"]
+                hit += 1
+        self.assertEqual(hit, 1, f"{name}: stage={stage} 사용자 확인 행 1건이어야 함")
+        state_path.write_text(json.dumps(state, ensure_ascii=False, indent=2),
+                              encoding="utf-8")
+        return d
+
+    def test_boundary_table_b_validate_T093_L1_F3(self):
+        """[T093/L1-F3] S-14(표 B) — validate 사후 위반 방출 9셀.
+        V-8·V-9(CLOSE × semi-agentic/agentic)는 violations_count == 0 — H-4 핵심 셀.
+        판정 함수의 close_requires_user를 cmd_validate가 소비하면 이 셀이 깨진다."""
+        for cell, stage, mode, expected in self._V_TABLE:
+            with self.subTest(cell=cell, stage=stage, mode=mode):
+                d = self._validate_fixture(f"s14-{cell}", stage, mode)
+                code, stdout, stderr, data = self._validate(d)
+                codes = {v["code"] for v in data.get("violations", [])}
+                self.assertEqual(codes, expected,
+                                 f"{cell} violations={data.get('violations')!r}")
+                self.assertEqual(data.get("violations_count"), len(expected))
+
+    def test_close_done_auto_validate_no_violation_T093_L2_F6a(self):
+        """[T093/L2-F6a] S-18 — CLOSE stage 사용자 확인 행이 done/auto인 state.json에
+        validate → violations_count == 0. 판정 함수 도입으로 신규 위반이 생기면 안 된다(H-4)."""
+        for mode in ("semi-agentic", "agentic"):
+            with self.subTest(mode=mode):
+                d = self._validate_fixture(f"s18-{mode}", "CLOSE", mode)
+                code, stdout, stderr, data = self._validate(d)
+                self.assertEqual(data.get("violations_count"), 0,
+                                 f"S-18/{mode} 신규 오탐 — {data!r}")
+                self.assertEqual(code, 0)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# S-10 / S-11 — H-8 훅 × 후속 가드 순서 (파일 오염·응답 오염 배제)
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestT093HookGuardOrder(_T093Base):
+    """F-002 — 훅은 save_state_json을 호출하지 않는다(PLAN §3.2.2 (1) [MUST])."""
+
+    def _gate_fixture(self, name):
+        """사용자 확인 행 바로 다음이 gate 보유 PM Gate 행인 최소 pipeline.json 픽스처.
+        gate.artifacts가 가리키는 ANALYSIS.md는 의도적으로 만들지 않는다(§2.1)."""
+        spec = _t093_pipeline_spec("opd", ["TASK", "ANALYSIS"], [
+            {"id": 1, "key": "task.task_md",      "stage": "TASK",     "item": "작업"},
+            {"id": 2, "key": "task.user_confirm", "stage": "TASK",     "item": "사용자 확인"},
+            {"id": 3, "key": "analysis.pm_gate",  "stage": "ANALYSIS", "item": "PM Gate",
+             "gate": {"artifacts": ["ANALYSIS.md"], "checklist": ["-"]}},
+        ])
+        spec_path = self.tmpdir / f"{name}-pipeline.json"
+        spec_path.write_text(_t093_json(spec), encoding="utf-8")
+        d = self._task_dir(name)
+        self._init(d, "agentic", rows_from=spec_path)
+        self._assert_ok(self._mark_key(d, "task.task_md"), f"{name} prep row1")
+        self.assertEqual(self._row(d, 2)["status"], "pending",
+                         f"{name} 전제: 사용자 확인 행은 init 직후 pending")
+        self.assertFalse((d / "ANALYSIS.md").exists())
+        return d
+
+    def test_guard_failure_leaves_file_unsaved_T093_L2_F2(self):
+        """[T093/L2-F2] S-10 — 훅 통과 후 check_gate_artifacts가 실패하면
+        저장된 state.json의 앞 단계 사용자 확인 행이 여전히 pending이어야 한다.
+        (메모리 mutate는 있어도 파일에 반영되지 않음 — H-8)"""
+        d = self._gate_fixture("s10-gate")
+        before = (d / "state.json").read_bytes()
+        code, stdout, stderr, data = self._mark_key(d, "analysis.pm_gate")
+        self.assertEqual(code, 1, f"S-10 gate 미차단 (stdout={stdout!r})")
+        self.assertEqual(data.get("error"), "gate_artifact_missing", f"S-10 {data!r}")
+
+        r2 = self._row(d, 2)
+        self.assertEqual(r2["status"], "pending",
+                         f"S-10 훅 승인이 파일에 저장됨(부분 상태 변경) — {r2!r}")
+        self.assertEqual(before, (d / "state.json").read_bytes(),
+                         "S-10 실패 경로에서 state.json이 변경됨")
+
+    def test_failed_response_has_no_auto_approved_T093_L1_F2o(self):
+        """[T093/L1-F2o] S-11 — 훅 거부/후속 가드 실패 응답 JSON에 auto_approved 필드가
+        없거나 빈 배열이어야 한다(관측 계약 오염 배제)."""
+        d = self._gate_fixture("s11-gate")
+        code, stdout, stderr, data = self._mark_key(d, "analysis.pm_gate")
+        self.assertEqual(code, 1, f"S-11 전제: 실패 경로 (stdout={stdout!r})")
+        self.assertIn(data.get("auto_approved", []), ([], None),
+                      f"S-11 실패 응답에 auto_approved 오염 — {data!r}")
+        self.assertEqual(self._row(d, 2)["status"], "pending")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# S-15 / S-16 — F-005 mark 멱등성
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestT093MarkIdempotency(_T093Base):
+    """F-005 — note 접두 1회 부여 + 재-auto-pass no-op (PLAN §3.5.2)."""
+
+    # TASK 단계를 두지 않는다 — _run_clarification_hook(005)은 TASK 단계가 있는
+    # 파이프라인의 'TASK 직후 첫 행'에서 --auto-pass를 무조건 거부하므로, F-005
+    # 멱등성(자동 승인 경계와 무관한 축)만 격리 관찰하기 위해 그 축을 제거한다.
+    _SPEC = _t093_json([
+        {"stage": "EXECUTE", "item": "작업"},
+        {"stage": "EXECUTE", "item": "사용자 확인"},
+        {"stage": "EXECUTE", "item": "사용자 확인"},
+    ])
+
+    def _fixture(self, name):
+        d = self._task_dir(name)
+        self._init(d, "agentic", rows_spec=self._SPEC)
+        self._assert_ok(self._mark(d, 1), f"{name} prep row1")
+        return d
+
+    def test_auto_pass_note_prefix_applied_once_T093_L1_F5(self):
+        """[T093/L1-F5] S-15 — mark --done --auto-pass --note "X" 1회 →
+        note == 'agentic auto-pass: X'. 접두 문자열 자체는 불변."""
+        d = self._fixture("s15-note")
+        self._assert_ok(self._mark(d, 2, "--auto-pass", "--note", "PM 판단 근거"),
+                        "S-15 1회차")
+        self.assertEqual(self._row(d, 2).get("note"), "agentic auto-pass: PM 판단 근거")
+
+        # ANALYSIS §4 #5 실측 패턴(tasks/092-*/state.json:71,116,163) 재현 —
+        # PM이 이미 접두를 가진 note 문자열을 그대로 재전달해도 중첩되지 않아야 한다.
+        self._assert_ok(
+            self._mark(d, 3, "--auto-pass", "--note", "agentic auto-pass: 접두 보유"),
+            "S-15 접두 보유 note")
+        self.assertEqual(self._row(d, 3).get("note"), "agentic auto-pass: 접두 보유",
+                         f"S-15 접두 중첩 — {self._row(d, 3).get('note')!r}")
+
+    def test_re_auto_pass_is_noop_T093_L1_F5(self):
+        """[T093/L1-F5] S-16 — 2회차 동일 명령이 ok:true이고 note 문자열 불변
+        (접두 중첩 0건) + timestamp·updated_at 미변경. 대조군 3종은 no-op에 삼켜지지 않는다."""
+        d = self._fixture("s16-noop")
+        self._assert_ok(self._mark(d, 2, "--auto-pass", "--note", "PM 판단 근거"),
+                        "S-16 1회차")
+        first_row = self._row(d, 2)
+        first_updated = self._state_of(d)["updated_at"]
+
+        data = self._assert_ok(self._mark(d, 2, "--auto-pass", "--note", "PM 판단 근거"),
+                               "S-16 2회차")
+        second_row = self._row(d, 2)
+        self.assertTrue(data.get("ok"), f"S-16 2회차 ok:true 아님 — {data!r}")
+        self.assertEqual(second_row.get("note"), "agentic auto-pass: PM 판단 근거",
+                         f"S-16 접두 중첩 — {second_row.get('note')!r}")
+        self.assertNotIn("agentic auto-pass: agentic auto-pass",
+                         str(second_row.get("note")))
+        self.assertEqual(second_row.get("timestamp"), first_row.get("timestamp"),
+                         "S-16 no-op이 timestamp를 갱신했다")
+        self.assertEqual(self._state_of(d)["updated_at"], first_updated,
+                         "S-16 no-op이 updated_at을 갱신했다")
+        self.assertTrue(data.get("idempotent"), f"S-16 idempotent 미표기 — {data!r}")
+
+    def test_noop_control_groups_T093_L1_F5(self):
+        """[T093/L1-F5] S-16 대조군 3종 — (a) owner=user done 행 (b) --force
+        (c) --action-step N/M 은 멱등 조기 반환에 삼켜지지 않고 기존 경로로 진행한다."""
+        # (a) owner=user로 done인 행에 --auto-pass → 기존 동작대로 owner=auto로 진행
+        d_a = self._fixture("s16-ctl-a")
+        self._assert_ok(self._mark(d_a, 2, "--owner", "user"), "(a) prep")
+        self._assert_ok(self._mark(d_a, 2, "--auto-pass"), "(a) 재호출")
+        self.assertEqual(self._row(d_a, 2).get("owner"), "auto",
+                         "(a) owner=user done 행이 no-op으로 삼켜졌다")
+
+        # (b) --force는 명시 우회 의도 → no-op 금지
+        d_b = self._fixture("s16-ctl-b")
+        self._assert_ok(self._mark(d_b, 2, "--auto-pass"), "(b) prep")
+        data_b = self._assert_ok(
+            self._mark(d_b, 2, "--auto-pass", "--force", "--note", "긴급 재승인"),
+            "(b) --force 재호출")
+        self.assertNotEqual(data_b.get("idempotent"), True,
+                            f"(b) --force가 no-op으로 삼켜졌다 — {data_b!r}")
+
+        # (c) --action-step N/M 진행률 갱신은 상태 변경이 목적 → no-op 금지
+        d_c = self._fixture("s16-ctl-c")
+        self._assert_ok(self._mark(d_c, 2, "--auto-pass"), "(c) prep")
+        self._assert_ok(self._mark(d_c, 2, "--auto-pass", "--action-step", "1/3"),
+                        "(c) --action-step 재호출")
+        row_c = self._row(d_c, 2)
+        self.assertEqual(row_c.get("step"), "1/3",
+                         f"(c) --action-step이 no-op으로 삼켜졌다 — {row_c!r}")
+        self.assertEqual(row_c.get("status"), "in_progress")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# S-17 — F-006 (a) 기존 na 보유 실파일 하위호환
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestT093NaBackwardCompat(_T093Base):
+    """F-006 (a) — _COMPLETE_STATUSES의 na 존치 확인 (DEC-G, TEST-SCENARIO S-17).
+
+    검증 경로는 2단이다.
+      주 경로(항상 실행): 아래 `_SNAPSHOT_092` — `tasks/092-260815-opd-워크트리-작업공간-분리/
+        state.json`의 구조를 보존한 축약 스냅샷. 실파일 존재 여부와 무관하게 반드시 실행된다.
+      부가 경로(실파일 존재 시): 동일 검증을 레포 실파일 복사본에도 수행한다.
+    [PM 판정] 실파일이 아카이브로 이관되면 skipTest로 시나리오 전체가 조용히 무력화되므로
+    (헌법 §4 — 검증하지 않은 것을 통과로 만들지 않는다) skip 경로를 제거하고 스냅샷을
+    주 경로로 승격했다. 실파일 원본은 여전히 읽기 전용이며 바이트 대조로 무변경을 증명한다.
+    """
+
+    # ── 092 실파일 구조 보존 축약 스냅샷 (실 파일에서 그대로 발췌한 값) ─────────
+    # 보존 특징:
+    #   ① row 2 — status="na" / owner="auto" / note="agentic auto-na at init" (F-001 구형 산물)
+    #   ② row 4 — status="done" / owner="auto" / note에 "agentic auto-pass:" 접두 **중첩**
+    #              (ANALYSIS §4 #5가 실측한 결함 패턴, 원문 tasks/092-*/state.json:71)
+    #   ③ row 6 — status="done" / owner="user" (CLOSE 게이트 요건 충족 행)
+    #   ④ schema_version "1.1" · mode "agentic" · skill "opd" · task-step key 체계
+    #   ⑤ CLOSE stage에 add-row 산물(`close.item_1`, 추가작업 행)이 이미 존재
+    _SNAPSHOT_092 = {
+        "task_id": "092-260815-opd-워크트리-작업공간-분리",
+        "skill": "opd",
+        "mode": "agentic",
+        "schema_version": "1.1",
+        "created_at": "2026-08-15 14:10",
+        "updated_at": "2026-08-15 19:52",
+        "current_status": "done",
+        "rows": [
+            {"row_id": 1, "stage": "TASK", "item": "작업", "key": "task.task_md",
+             "status": "done", "status_label": "✅", "timestamp": "2026-08-15 14:11",
+             "owner": "PM", "note": None},
+            {"row_id": 2, "stage": "TASK", "item": "사용자 확인", "key": "task.user_confirm",
+             "status": "na", "status_label": "-", "timestamp": None,
+             "owner": "auto", "note": "agentic auto-na at init"},
+            {"row_id": 3, "stage": "ANALYSIS", "item": "작업", "key": "analysis.analysis_md",
+             "status": "done", "status_label": "✅", "timestamp": "2026-08-15 14:58",
+             "owner": "PM", "note": None},
+            {"row_id": 4, "stage": "ANALYSIS", "item": "사용자 확인",
+             "key": "analysis.user_confirm",
+             "status": "done", "status_label": "✅", "timestamp": "2026-08-15 14:59",
+             "owner": "auto",
+             "note": "agentic auto-pass: agentic auto-pass: PM Gate 강화 검토 Pass — "
+                     "접합면 6곳 전건 분석, 핵심 주장 4건 PM 직접 실측 대조, "
+                     "근거 오류 1건 정정 완료, 블로커 0건"},
+            {"row_id": 5, "stage": "TEST", "item": "작업", "key": "test.run_tests",
+             "status": "done", "status_label": "✅", "timestamp": "2026-08-15 18:40",
+             "owner": "PM", "note": None},
+            {"row_id": 6, "stage": "TEST", "item": "사용자 확인", "key": "test.user_confirm",
+             "status": "done", "status_label": "✅", "timestamp": "2026-08-15 19:01",
+             "owner": "user",
+             "note": "캡틴 확인: CLOSE 진입 승인 (L3 S-18·S-19·S-20 결과 수용 포함)"},
+            {"row_id": 7, "stage": "CLOSE", "item": "DONE.md 생성", "key": "close.done_md",
+             "status": "done", "status_label": "✅", "timestamp": "2026-08-15 19:40",
+             "owner": "PM", "note": None},
+            {"row_id": 8, "stage": "CLOSE",
+             "item": "추가작업 ADD-1: worktree.json 온보딩 경로 (worktree-tool init)",
+             "key": "close.item_1",
+             "status": "done", "status_label": "✅", "timestamp": "2026-08-15 19:52",
+             "owner": "PM", "note": None},
+        ],
+        "next_action": "태스크 완료",
+    }
+
+    @staticmethod
+    def _find_092_state():
+        """레포 실파일 탐색. worktree는 sparse checkout이라 tasks/가 없을 수 있으므로
+        상위 메인 체크아웃까지 본다. 미탐색 시 None — 부가 경로만 생략된다."""
+        candidates = [_REPO_ROOT_093, _REPO_ROOT_093.parent.parent]
+        for root in candidates:
+            tasks_dir = root / "tasks"
+            if not tasks_dir.is_dir():
+                continue
+            for base in (tasks_dir, tasks_dir / "backup"):
+                if not base.is_dir():
+                    continue
+                for d in sorted(base.glob("092-*")):
+                    if (d / "state.json").is_file() and (d / "STATE.md").is_file():
+                        return d
+        return None
+
+    def _snapshot_task_dir(self, name):
+        """스냅샷 state.json + 실 init이 생성한 STATE.md(마커/섹션 포함)로 tmp 태스크 구성.
+        STATE.md는 손으로 쓰지 않고 실 CLI init 산물을 쓴다 — 마커 계약을 위조하지 않기 위함."""
+        rows_spec = _t093_json([{"stage": r["stage"], "item": r["item"]}
+                                for r in self._SNAPSHOT_092["rows"]])
+        d = self._task_dir(name)
+        self._init(d, "interactive", rows_spec=rows_spec)
+        (d / "state.json").write_text(
+            json.dumps(self._SNAPSHOT_092, ensure_ascii=False, indent=2), encoding="utf-8")
+        return d
+
+    def _exercise_na_state(self, d, label):
+        """na 보유 state.json에 validate → add-row/advance → mark --done 3종 실호출.
+        na 행이 _COMPLETE_STATUSES로 완료 인정되어 stage-transition guard를 통과해야 한다."""
+        state = self._state_of(d)
+        na_rows = [r["row_id"] for r in state["rows"] if r.get("status") == "na"]
+        self.assertTrue(na_rows, f"{label}: na 행이 있어야 한다(전제)")
+        nested = [r["row_id"] for r in state["rows"]
+                  if "agentic auto-pass: agentic auto-pass" in str(r.get("note"))]
+        self.assertTrue(nested, f"{label}: 접두 중첩 note 행이 있어야 한다(ANALYSIS §4 #5 전제)")
+
+        # ① validate
+        vcode, vstdout, vstderr, vdata = self._validate(d)
+        self.assertEqual(vdata.get("violations_count"), 0, f"{label} validate — {vdata!r}")
+        self.assertEqual(vcode, 0, f"{label} validate exit={vcode}")
+
+        # ② add-row로 미완 행을 만들고 advance
+        last_row_id = state["rows"][-1]["row_id"]
+        self._assert_ok(
+            _run070(["add-row", str(d), "--after", str(last_row_id),
+                     "--stage", "CLOSE", "--item", "추가작업 ADD-093: na 하위호환 회귀"]),
+            f"{label} add-row")
+        new_row_id = self._state_of(d)["rows"][-1]["row_id"]
+        self._assert_ok(self._advance(d, new_row_id), f"{label} advance")
+
+        # ③ mark --done
+        self._assert_ok(self._mark(d, new_row_id), f"{label} mark")
+        self.assertEqual(self._row(d, new_row_id)["status"], "done")
+
+        # na 행은 소급 변환되지 않는다 (PLAN §3.1.4 — 기존 파일 미마이그레이션)
+        after = self._state_of(d)
+        self.assertEqual([r["row_id"] for r in after["rows"] if r.get("status") == "na"],
+                         na_rows, f"{label}: 기존 na 행이 소급 변환되었다")
+
+    def test_existing_na_state_json_still_operable_T093_L2_F6a(self):
+        """[T093/L2-F6a] S-17 — na 보유 state.json에 validate → add-row/advance →
+        mark --done 3종 실행 → 전부 exit 0, violations 0.
+
+        주 경로(스냅샷)는 항상 실행된다. 실파일이 있으면 동일 검증을 추가 수행하고,
+        원본 바이트 대조로 읽기 전용 제약을 증명한다."""
+        # ── 주 경로: 092 구조 보존 스냅샷 (실파일 유무와 무관하게 항상 실행) ──
+        with self.subTest(source="snapshot"):
+            d = self._snapshot_task_dir("s17-snapshot")
+            self._exercise_na_state(d, "S-17 스냅샷")
+
+        # ── 부가 경로: 레포 실파일 복사본 (존재할 때만) ──
+        src = self._find_092_state()
+        if src is None:
+            return
+        with self.subTest(source="real-file", path=str(src)):
+            original = (src / "state.json").read_bytes()
+            d2 = self._task_dir("s17-real-file")
+            shutil.copy2(src / "state.json", d2 / "state.json")
+            shutil.copy2(src / "STATE.md", d2 / "STATE.md")
+            self._exercise_na_state(d2, f"S-17 실파일({src.name})")
+            # [MUST] 원본은 읽기만 한다 — 수정 0건
+            self.assertEqual(original, (src / "state.json").read_bytes(),
+                             "S-17 원본 실파일이 변경되었다 — 읽기 전용 제약 위반")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# S-25 — F-003 구조적 단일화 (행동 불변만으로는 복붙 통과)
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestT093SingleDecisionSource(unittest.TestCase):
+    """F-003 — 판정 로직이 실제로 단일 함수로 수렴했는가 (TEST-SCENARIO S-25)."""
+
+    _FN = "can_auto_approve_user_confirmation"
+
+    def test_mode_boundary_stages_single_reference_T093_L1_F3s(self):
+        """[T093/L1-F3s] S-25 — MODE_BOUNDARY_STAGES 참조가 판정 함수 내부 1곳으로 수렴
+        (정의부 제외). cmd_mark·cmd_validate가 상수를 직접 참조하지 않아야 한다.
+        [MUST] 행동 불변(S-14)만 검증하면 판정 로직을 3곳에 복붙해도 PASS한다."""
+        lines = _SRC_093.read_text(encoding="utf-8").splitlines()
+        hits = [(i + 1, ln) for i, ln in enumerate(lines) if "MODE_BOUNDARY_STAGES" in ln]
+        refs = [(n, ln) for n, ln in hits if not ln.lstrip().startswith("MODE_BOUNDARY_STAGES =")]
+        self.assertEqual(len(refs), 1,
+                         f"S-25 참조 지점이 1곳으로 수렴하지 않음 — {[(n, l.strip()) for n, l in refs]}")
+
+        # 유일 참조가 판정 함수 본문 안에 있는지 확인
+        def_line = None
+        for i, ln in enumerate(lines):
+            if ln.startswith(f"def {self._FN}("):
+                def_line = i + 1
+                break
+        self.assertIsNotNone(def_line, f"S-25 판정 함수 {self._FN} 미정의")
+        end_line = len(lines) + 1
+        for i in range(def_line, len(lines)):
+            if lines[i].startswith(("def ", "class ")):
+                end_line = i + 1
+                break
+        ref_line = refs[0][0]
+        self.assertTrue(def_line < ref_line < end_line,
+                        f"S-25 유일 참조(line {ref_line})가 {self._FN} 본문"
+                        f"({def_line}~{end_line}) 밖에 있다")
+
+    def test_decision_function_contract_T093_L1_F3s(self):
+        """[T093/L1-F3s] S-25 보조 — 판정 함수의 (allowed, deny_reason) 계약
+        (PLAN §3.3.2 (1) 두 축 합성 순서: CLOSE → interactive → semi-agentic 경계)."""
+        fn = getattr(ST, self._FN, None)
+        self.assertIsNotNone(fn, f"판정 함수 {self._FN} 부재 (F-003 미구현)")
+        cases = [
+            ("CLOSE",   "interactive",  (False, "close_requires_user")),
+            ("CLOSE",   "semi-agentic", (False, "close_requires_user")),
+            ("CLOSE",   "agentic",      (False, "close_requires_user")),
+            ("TASK",    "interactive",  (False, "interactive_requires_user")),
+            ("TASK",    "semi-agentic", (False, "semi_agentic_pre_execute")),
+            ("TASK",    "agentic",      (True,  None)),
+            ("EXECUTE", "interactive",  (False, "interactive_requires_user")),
+            ("EXECUTE", "semi-agentic", (True,  None)),
+            ("EXECUTE", "agentic",      (True,  None)),
+        ]
+        for stage, mode, expected in cases:
+            with self.subTest(stage=stage, mode=mode):
+                self.assertEqual(tuple(fn(stage, mode)), expected)
 
 
 # ═════════════════════════════════════════════════════════════════════════════
