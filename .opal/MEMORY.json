@@ -85,6 +85,13 @@
   ],
   "history": [
     {
+      "title": "094 STATE 저널화",
+      "date": "2026-08-16",
+      "stage": "완료",
+      "path": "tasks/094-260815-opd-STATE-저널화/",
+      "result": "STATE.md를 state.json 파생 섹션(현황판 표·마커·현재상태·다음액션) 없는 저널(의사결정 로그+블로커)로 재정의 — 미러가 SSOT를 인질로 잡던 marker_missing 하드게이트 소멸, show가 레거시 동결 표를 최신인 양 반환하던 정확성 버그 수정. 범위 편입 3건: R-9(에러종수 3중 불일치→44 통일·SSOT 자기모순 해소·091/093 6종 README 누락 발견) R-10(worktree 허브자산 접근을 기존 find_project_root 재사용으로 교정, 신규 헬퍼 0) R-11(agentic 승인계약 정합 — G-1 semi-agentic opdd 설계확정 3단계 주권침해 해소·G-2 opgc CLOSE 데드락·G-3 헛확인 신호 제거). 최종 344 passed/0 fail, ERROR_CODES 44, 52파일 +7057/-1190. 목표-커버 게이트 3회(1.33 fail→2.00 pass→1.67 pass). [미판정] S-28(저널 수용성)·S-41(승인계약 체감) 소유자 확인 대기 — 기계검증 All Pass이지 All Pass 아님. [교훈] pytest 전건 GREEN 상태에서 실환경·컨벤션 검증이 결함 3회 검출(journal_warning 경로노출·@header JSON 무효 2건) — 요구사항이 문서에만 있고 코드·테스트로 안 이어진 구간은 자동검증이 못 잡는다. SSOT 값을 산문에 복제하면 반드시 어긋남(에러종수 3중·경계stage 2중) → 열거 제거+포인터 대체가 구조적 해법. 범위 확대 시 신규기능 RED 트랙 판정을 강제하는 장치 부재로 동일 위반 2회 재발(#21→#34). 095 이월: --row 55건/15파일·G-6 교차매트릭스·opdd/opwt 계약 집필"
+    },
+    {
       "title": "093 사용자확인행 자동승인 일원화",
       "date": "2026-08-16",
       "stage": "완료",
@@ -111,13 +118,6 @@
       "stage": "완료",
       "path": "tasks/090-260813-opds-파이프라인-스펙-마이그레이션/",
       "result": "미전환 6 pilot(opdd·opgc·opwt·opsdd·oppl·oppd) pipeline.json 이관 — 10/10 단일 SSOT 달성, deprecated .md 파싱 호출자 0건. 전후 동등 8/8·spec-validate 10/10·registry 파생 10/10. oppl·oppd init 하드실패 해소(19/13). opsdd EXECUTE-LOOP 17 불변. TEST 18 Pass, S-17만 캡틴 대기"
-    },
-    {
-      "title": "089 opi 프로젝트 최신화",
-      "date": "2026-08-11",
-      "stage": "완료·커밋",
-      "path": "docs/, tasks/089-260811-opi-opal/",
-      "result": "docs 3종 실측 정합 64건+신규섹션2. Codex 비가시·없는경로 6지점 해소. 다이어그램 opsdd 정정"
     }
   ]
 }

@@ -9,12 +9,14 @@ tags:
 - principles
 sources:
 - task:050
+- task:094
 related:
 - agent-md-digest-pattern
 - opal-principles-constitution
 - coding-principles-ssot
+- state-md-journal-redefinition
 created: '2026-06-30'
-updated: '2026-06-30'
+updated: '2026-08-16'
 status: active
 ---
 
@@ -42,8 +44,17 @@ AGENT.md 다이제스트(task:050) 과정에서 PM 섹션을 `opal-pm.md`로 이
 
 이 원칙은 향후 모든 문서 이관·다이제스트 작업에 적용된다. 특히 brain ingest 단계에서도 "목적지 brain 페이지에 동일 내용이 존재하는 경우 멱등 skip"이라는 유사 원칙(`~/.opal/skills/op-brain-ingest/SKILL.md` §STEP 3 제외 기준)이 동일 사상의 연장이다.
 
+## 확장 사례 — 문서 이관을 넘어 "코드 SSOT 값의 산문 복제"에도 동일 원칙이 적용된다 (task:094)
+
+이관 대상 문서뿐 아니라, **코드가 원천인 숫자·목록 값을 여러 문서가 각자 산문으로 복제**할 때도 같은 실패 양상이 재발한다 — 원본이 바뀌면 복제본들이 서로 다른 시점에 멈춘 채 어긋난다.
+
+- **에러 종수 3중 불일치**: `state-tool` 에러 코드 종수가 코드 실측 44종인데 `README.md`는 39종, 하네스 문서 2곳은 23종을 각각 산문으로 박아 두고 있었다(근거: task:094 PLAN.md §1.5 D-5). 091·093이 추가한 6종은 README에 아예 반영돼 있지 않았다.
+- **모드 경계 stage 2중 기재**: 코드 상수·하네스 §3 표·하네스 §5 산문 세 곳에 같은 stage 목록이 따로 적혀 있어, 신규 stage 3개(DICT/MODEL/DDL·MIGRATION) 추가 시 한 곳만 갱신되고 나머지에서 누락됐다(근거: task:094 R-11 G-1/G-5).
+- **대응은 문서 이관 사례와 동일했다**: 값을 다시 세어 복제하는 대신, 산문에서 숫자·목록 자체를 제거하고 코드(또는 코드를 그대로 반영하는 단일 문서)로의 포인터로 치환했다 — 이후 원본이 바뀌어도 포인터가 가리키는 곳이 항상 최신이므로 구조적으로 불일치가 발생할 수 없다. 상세는 [[state-md-journal-redefinition]].
+
 ## 관련 페이지
 
 - [[agent-md-digest-pattern]]
 - [[opal-principles-constitution]]
 - [[coding-principles-ssot]]
+- [[state-md-journal-redefinition]]

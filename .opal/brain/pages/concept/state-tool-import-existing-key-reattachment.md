@@ -8,15 +8,23 @@ tags:
 - task-074
 sources:
 - task:074
+- task:094
 related:
 - state-tool
 - state-tool-task-step-key-address
 - pipeline-json-spec
+- state-md-journal-redefinition
 created: '2026-07-23'
-updated: '2026-07-23'
-status: draft
+updated: '2026-08-16'
+status: stale
 ---
-## 개념 요약
+## 이후 갱신 (task:094 — 기능 자체 제거)
+
+**이 결정이 다루는 기능(`--import-existing`)은 task:094에서 완전히 제거됐다.** STATE.md가 파생 표 없는 저널로 재정의되면서(D-1, R-1) `parse_existing_state_md`의 파싱 원천(렌더 표)이 소멸했고, 이 페이지가 기록한 key 재접합 로직(`_key_source_index`·`_reattach_import_keys`)도 함께 삭제됐다. `cmd_init`은 이제 `--import-existing` 지정 시 항상 `import_existing_removed`로 거부한다(exit 1). argparse 인자는 `help=argparse.SUPPRESS`로만 존치한다(삭제 시 비-JSON exit 2가 stdout 계약을 깨기 때문 — task:094 D-2 근거 ③). 신규 태스크는 전량 `init --rows-from pipeline.json` 경로다.
+
+아래 원 결정 기록은 **역사적 참고**로만 남긴다 — "렌더용 표는 원본 데이터의 lossy projection"이라는 교훈 자체는 여전히 유효하다(상세: [[state-md-journal-redefinition]]).
+
+## 개념 요약 (역사적 기록 — task:074 원 결정)
 
 `state-tool init --import-existing`의 기존 task-step key 복구 원천을 STATE.md 렌더 표에서 권위 원천(state.json/pipeline.json)으로 전환하는 설계다. 렌더 표는 key 컬럼이 없는 lossy projection이므로, keyless import 행에 원천의 key를 (stage,item) 순서 소비로 재접합해야 한다.
 

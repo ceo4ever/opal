@@ -312,3 +312,7 @@
 - 신규: [[pages/concept/pipeline-user-confirmation-single-status-axis.md]], [[pages/concept/auto-approve-user-confirmation-axis-separation.md]], [[pages/concept/self-modifying-tool-deploy-unit-coupling.md]]
 - 출처: task:093
 
+## [2026-08-16] ingest | CLOSE ingest — 태스크 094 STATE.md 파생 섹션 제거·저널화
+- 신규: [[pages/concept/state-md-journal-redefinition.md]], [[pages/concept/mirror-gate-must-not-hostage-ssot-record.md]]
+- 출처: task:094
+
