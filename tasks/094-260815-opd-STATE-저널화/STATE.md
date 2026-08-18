@@ -1,6 +1,6 @@
 # STATE: STATE.md 파생 섹션 제거 — 저널로 재정의
 
-> 최종 갱신: 2026-08-16 15:53
+> 최종 갱신: 2026-08-16 23:59
 
 ## 현재 상태
 - 모드: agentic
@@ -38,6 +38,7 @@
 | # | 시점 | 결정 | 근거 |
 |---|------|------|------|
 | 1 | 2026-08-16 00:47 | agentic auto-pass at row 11, item=사용자 확인 | agentic auto-pass: 목표-커버 게이트 tool-gated 2증거 충족(coverage-check exit 0 all_covered / evaluator iteration 2 verdict pass 2.0). 소유자가 'agentic이니 테스트까지 계속 진행' 지시 |
+| 2 | 2026-08-16 23:55 | additional row inserted after row 16: stage=CLOSE, item=추가작업: test_s9 스코프 교정(.opal/brain 제외), key=close.item_1, new_row_id=17 | additional work entry |
 
 ## 블로커
 없음

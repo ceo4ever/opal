@@ -153,6 +153,22 @@ tasks/094-260815-opd-STATE-저널화/
 └── DONE.md                               본 문서
 ```
 
+## 9.5 추가작업 — `test_s9` 스코프 교정 (머지 후)
+
+머지 직후 허브(전체 체크아웃)에서 `test_s9_no_framework_call_sites_reference_import_existing` 1건이 실패했다.
+
+**원인**: CLOSE의 brain ingest가 `.opal/brain/pages/entity/state-tool.md`를 갱신하며 `--import-existing` 제거를 지식으로 기록했고, 그 과정에서 플래그 철자를 원문 그대로 썼다. **EXECUTE·TEST가 진행된 worktree는 sparse-checkout이라 `.opal/`이 없어** 그때는 통과했고 머지 후 처음 드러났다 — **R-10과 같은 계열**(sparse 환경과 전체 환경의 검증 결과가 갈림).
+
+**판정**: 테스트 약화가 아니라 **스코프 교정**이다. `test_s9`의 목적은 "프레임워크가 사용자에게 이 플래그를 쓰라고 안내하지 않는다"(R-4 AC)이며, brain은 **과거 결정을 보존하는 지식 아카이브**로 `## 변경이력`과 동일한 성격이다. 이번 ingest가 관련 페이지를 stale로 강등하되 원 결정을 보존한 것이 brain의 존재 이유다. **brain 페이지에서 철자를 회피하는 방식은 채택하지 않았다** — 지식 페이지가 정확한 식별자를 못 쓰면 검색·추적 가치가 사라진다.
+
+**조치**: 스코프 제외 목록에 `.opal/brain` 추가(기존 `backup`/`tasks`/`fixtures`와 병합), 제외 사유를 docstring·주석에 명시. **작성자(opal-test-agent)에게 위임**해 구현자가 자기 편의로 테스트를 고치는 경로를 차단했다.
+
+**검증력 보존 실증**: `tools.md`(brain 밖)에 `--import-existing` 사용 안내 1줄을 임시 삽입 → **FAIL 확인** → 원복(`git diff` empty). "제외만 늘려 통과시킨 것"이 아님을 기계로 증명했다.
+
+**결과**: `344 passed, 84 subtests, 0 failures`(허브 환경). 변경은 `test_state_tool.py` 1파일.
+
+> **부수 관찰(095 후보)**: 추가작업 행이 CLOSE 마지막 행일 때 `mark`가 `current_status`를 `done`으로 전이시켜 `status --set additional_work_done` 경로가 `invalid_status_transition`으로 막힌다. 하네스 §3 전이 흐름(`완료 → 추가작업중 → 추가작업완료`)과 어긋난다. 실해는 없으나(둘 다 완료 의미) 상태 의미 구분이 사라진다.
+
 ## 10. 커밋·워크스페이스
 
 - 커밋 2건: `b2804bd`(저널 전환 코어) · `9d901ea`(093 머지)

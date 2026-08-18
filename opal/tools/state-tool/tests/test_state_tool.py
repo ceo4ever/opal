@@ -447,6 +447,15 @@ class TestInit(BaseTestCase):
         0건이어야 한다(H-7, 치환 규격 #11). changelog 섹션은 과거 이력이므로
         소급 변경 금지 대상이라 검사 범위에서 제외한다(치환 규격 #12).
 
+        [T094 추가작업] `.opal/brain/`도 검사 범위에서 제외한다. brain은
+        지식 아카이브로서 과거 결정을 원 철자 그대로 보존하는 것이 존재
+        이유이며(예: `.opal/brain/pages/entity/state-tool.md`가 D-2
+        "`--import-existing` 완전 제거" 결정을 역사적 기록으로 남김),
+        `## 변경이력` 섹션과 동일하게 현재시제 사용 안내가 아니다 —
+        머지 후 허브(전체 체크아웃) 환경에서 brain ingest가 반영되며
+        드러난 오탐이며, brain 페이지 자체를 수정하는 것은 소급 변경
+        금지 대상이라 해법이 아니다.
+
         RED 근거: 개정 전 `README.md`(§2.2.3 실측: `:51,:58,:284,:287`)에
         `--import-existing` 사용 안내가 아직 남아 있어 현재시제 본문 참조가
         0을 초과한다."""
@@ -459,8 +468,13 @@ class TestInit(BaseTestCase):
             for path in base_dir.rglob("*.md"):
                 # PLAN §2.4.1 "개정 제외 확정" — (D) 074 히스토리 fixture 문자열은
                 # 검사 대상에서 제외한다(오탐, 소급 변경 금지 대상 아님).
+                # [T094 추가작업] `.opal/brain/`은 지식 아카이브(과거 결정
+                # 보존소)이며 changelog와 동일하게 현재시제 사용 안내가
+                # 아니므로 제외한다.
+                rel_parts = path.relative_to(project_root).parts
                 if ("backup" in path.parts or "tasks" in path.parts
-                        or "fixtures" in path.parts):
+                        or "fixtures" in path.parts
+                        or rel_parts[:2] == (".opal", "brain")):
                     continue
                 try:
                     text = path.read_text(encoding="utf-8", errors="ignore")
