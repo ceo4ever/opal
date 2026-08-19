@@ -3,30 +3,6 @@
   "last_task_number": 95,
   "memories": [
     {
-      "title": "Console 브레인 구독 인증",
-      "date": "2026-06-22",
-      "type": "project",
-      "status": "active",
-      "file": "memory/console-brain-subscription-auth.md",
-      "summary": "Console 브레인 질의는 종량제 API 아닌 사용자 Claude 구독(로컬 claude -p). API키·SDK 금지"
-    },
-    {
-      "title": "브레인 질의 콜드 경량화(037후속)",
-      "date": "2026-06-23",
-      "type": "task",
-      "status": "active",
-      "file": "memory/follow-up-brain-query-lite.md",
-      "summary": "브레인 질의 콜드 latency 경량화 — 검색을 LLM 밖 brain-tool로. opbr --lite 권고"
-    },
-    {
-      "title": "후속 069·070 액션에이전트 관측 확장",
-      "date": "2026-07-17",
-      "type": "task",
-      "status": "active",
-      "file": "memory/후속_069_070_액션에이전트_관측_확장.md",
-      "summary": "oppd·opsdd를 opal-agent 채널+규약 전환→action-monitor 공용화. phase 동적발견 필수"
-    },
-    {
       "title": "워커 보고는 실측 대조 없이 신뢰 불가",
       "date": "2026-07-29",
       "type": "improvement",
@@ -35,20 +11,12 @@
       "summary": "078 PM Gate에서 워커 자기보고 오류 2건을 적발했다. (1) Step 14가 '에러코드 표를 실제 ERROR_CODES와 일치하도록…"
     },
     {
-      "title": "078 워커 실패 완화책이 079에서 인프라 실패 0건으로 재현됨",
+      "title": "워커 실패 완화책 선제 적용 효과",
       "date": "2026-07-30",
       "type": "improvement",
       "status": "promoted",
       "file": "memory/078_워커_실패_완화책이_079에서_인프라_실패_0건으로_재현됨.md",
       "summary": "078에서 워커 3연속 인프라 실패(API 종료 2·스톨 1) 후 도출한 완화 조합을 079 전 워커 프롬프트에 선제 적용했다: (1) 배치…"
-    },
-    {
-      "title": "080 이관 결정 — headerSource 단일화(D-1~D-5)+개선 A",
-      "date": "2026-08-01",
-      "type": "task",
-      "status": "active",
-      "file": "memory/079_이관_결정_headerSource_단일화_D_1_D_5_개선_A.md",
-      "summary": "auto제거·미설정에러·전명령차단·readonly제거·스코프별 override + scopes include/exclude"
     },
     {
       "title": "변경이력 제거 검토 결정 — A안 확정",
@@ -59,7 +27,7 @@
       "summary": "프레임워크 md 137개 변경이력 표+버전표기 22건 제거 확정. 생성·검증 측 동반 개정 필수"
     },
     {
-      "title": "도구 신설 시 상태 전이 왕복 경로를 시나리오에 명시",
+      "title": "도구 신설 시 왕복 경로 시나리오화",
       "date": "2026-08-15",
       "type": "improvement",
       "status": "candidate",
@@ -67,7 +35,7 @@
       "summary": "092에서 pytest 36건이 전건 통과한 상태로 실환경 검증에 들어갔고 거기서 remove 후 빈 슬롯이 남아 같은 번호 재생성이 영구 차…"
     },
     {
-      "title": "테스트 fixture가 실환경 구조를 재현하지 않으면 결함이 통과한다",
+      "title": "fixture 실환경 미재현 시 결함 통과",
       "date": "2026-08-15",
       "type": "improvement",
       "status": "candidate",

@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-08-19 23:54
+> 갱신: 2026-08-20 06:33
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -87,6 +87,7 @@
 - [[conditional-artifact-gate-ineligibility]] — 조건부 산출물은 존재 게이트 대상이 아니다 #gate-design #verification #artifact #task-091
 - [[config-file-concurrent-write-defense-standard]] — 설정 파일 동시 쓰기 방어 표준 #architecture #concurrency #backend #pattern #file-io
 - [[console-brain-exit-guard-pattern]] — 콘솔 브레인 이탈 가드 4경로 패턴 #brain #ux #guard #console #session-management
+- [[console-brain-subscription-auth]] — Console 브레인 질의 인증 — 종량제 API 금지, 소유자 구독 사용 #console #brain #auth #cost #task-036
 - [[console-brain-volatile-single-session]] — 콘솔 브레인 휘발성 단일 세션 설계 전환 #brain #session-management #architecture #console #ux
 - [[console-settings-incremental-scope-policy]] — 콘솔 설정 화면 점진 확장 방침 #product-decision #console #scope #security
 - [[console-write-exception-router-isolation]] — 콘솔 쓰기 예외 라우터 격리 패턴 #architecture #console #security #pattern #write-isolation
