@@ -1,0 +1,8 @@
+{
+  "layout": "multi-repo",
+  "repos": ["workspace/storelink6", "workspace/revup-front"],
+  "branchTemplate": "feat/OP-TASK-{NNN}",
+  "copy": [],
+  "setup": [],
+  "portOffset": 0
+}

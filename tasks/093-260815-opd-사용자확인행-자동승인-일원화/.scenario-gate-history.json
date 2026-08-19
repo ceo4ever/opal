@@ -1,0 +1,18 @@
+[
+  {
+    "iteration": 1,
+    "missing": {
+      "requirements": [],
+      "features": [],
+      "hypotheses": []
+    },
+    "gaps": [],
+    "verdict": "pass",
+    "scores": {
+      "goal": 2,
+      "adoption": 2,
+      "boundary": 2
+    },
+    "average": 2.0
+  }
+]

@@ -49,7 +49,14 @@ AGENT.md 미존재 시 스킵.
 
 PM Gate 진입 시 아래 순서로 자가 진단을 수행한다.
 
-1. **STATE.md Read** → 현재 Phase 파악
+1. **현재 Phase 파악** — 표준 절차로 상태를 확인한다(`harness/state.md` §세션 복원 · 094 §3.3.2 (4)):
+   ```
+   1. `~/.opal/tools/state-tool/run.sh show <task-path> --format json` 을 호출해
+      현재 단계·행 상태·current_status·next_action을 파악한다 (SSOT: state.json).
+   2. `tasks/{NNN}-.../STATE.md`(저널)를 Read하여 의사결정 로그·블로커·검증 루프
+      기재 등 도구가 담지 못하는 서술 맥락을 보완한다.
+   ```
+   1단계(`show`)가 기계 상태의 유일 근거이며, 2단계(STATE.md Read)는 서술 맥락 보완 전용이다 — STATE.md에서 Phase·상태를 읽어 판단하지 않는다.
 2. **SKILL.md `## PM Gate 점검 목록` 섹션 Read** → 해당 Phase의 산출물·체크리스트 위치 확인
 3. **각 산출물 Read** → 존재 여부 + 내용 비어있지 않음 확인
 4. **체크리스트 Read → `[ ]` 발견 시 내용 기반 판단**:
@@ -84,7 +91,7 @@ PM Gate에서 해당 단계에 관련된 하네스 모듈이 적용되었는지 
 > 적용 조건 미해당 모듈은 검증 스킵. 적용 조건 해당 모듈만 검증한다.
 
 **PM Gate 완료 즉시 — State Gate**:
-파이프라인 현황판에서 PM Gate 행과 바로 이어지는 State Gate 행을 state-tool로 갱신한다.
+파이프라인 행(`state.json` `rows[]`, 조회: `state-tool show`)에서 PM Gate 행과 바로 이어지는 State Gate 행을 `state-tool`로 갱신한다.
 
 ```
 ~/.opal/tools/state-tool/run.sh mark tasks/{NNN}-.../ --row <PM Gate 행 N> --done
@@ -127,7 +134,7 @@ Gate 통과 실패 시 아래 절차를 따른다. 각 Gate 섹션의 "Fail 시 
 
 | Gate | Fail 원인 | PM 처리 |
 |------|----------|---------|
-| State Gate | 파이프라인 현황판 테이블 미갱신 | PM이 즉시 해당 행 갱신 → State Gate 재확인 |
+| State Gate | 파이프라인 행 미갱신 | PM이 즉시 해당 행 갱신 → State Gate 재확인 |
 
 ### 재지시·보완 처리
 
@@ -183,3 +190,5 @@ Gate 통과 실패 시 아래 절차를 따른다. 각 Gate 섹션의 "Fail 시 
 | v2.6 | 2026-05-09 11:22 | 도입부 semi-agentic 모드의 PLAN까지 동작 준용 안내 추가 (140) |
 | v2.7 | 2026-06-07 | 문서 QA를 PM Gate로 통합 — §2 QA Gate를 "PM Gate 통합·별도 단계 없음"으로 재정의(QA 스킬/에이전트 디스패치 테이블 제거, State Gate gate-pass 호환 유지). §3 체크리스트 갱신 상태 확인을 PM 직접 확인·갱신으로 일원화(자가 진단 절차와 모순 해소). §3 모듈표 qa-standards 행을 "PM Gate 문서검증 시 / PM 직접 보완"으로 갱신. §4 QA Gate 행·PM Gate 재소환 행을 PM Gate 일원화로 통합. 동작 검증(TEST/verify) 영역은 불변 (014) |
 | v2.8 | 2026-06-07 | §2 gate-pass deprecated 정합 — "State Gate gate-pass 호환" 서술을 "PM Gate 단일 mark"로 교체. 4행 패턴 권장 제거, [deprecated] gate-pass 레거시 안내 추가. Phase4 완료 반영 (014 Phase 4) |
+| v2.9 | 2026-08-16 13:24 | STATE.md 저널화 — `:87,:130` "파이프라인 현황판" 표 전제 서술을 "파이프라인 행(`state.json` rows[])"으로 치환 (094) |
+| v2.10 | 2026-08-16 15:12 | PM Gate 자가 진단 절차 1단계(`:52`) 정정 — Step 5(하네스 SSOT 3종) 개정 시 `:87,:130`만 지정돼 누락됐던 "STATE.md Read → 현재 Phase 파악" 구형 잔존을 `harness/state.md` §세션 복원의 표준 2단계 절차(`show`→SSOT 파악·STATE.md Read→서술 맥락 보완)로 교체 (094 Step 14, R-5 잔여 발견) |

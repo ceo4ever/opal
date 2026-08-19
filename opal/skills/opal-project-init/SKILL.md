@@ -78,6 +78,10 @@ docs/ 하위 문서를 수정(Write/Edit)하기 직전에, 해당 파일이 이�
    - `models: {}` = 아무것도 덮어쓰지 않음 → 전역 `~/.opal/setting.json`을 그대로 상속. 필요한 셀만 추가한다(부트스트랩 step 0이 전역 위에 머지 — `opal-model-mapping.md` §5).
 3. 생성한 경우, 프로젝트 `.gitignore`에 `.opal/setting.local.json` 한 줄을 추가한다(이미 있으면 스킵). 개인 per-project 오버라이드이므로 기본 미추적(팀 공유 목적이면 사용자가 직접 제외).
 4. **이미 존재하면 스킵** — 사용자 설정을 보존한다(내용 변경·검증 안 함).
+5. `.gitignore`에 `.opal-worktrees/` 한 줄을 **멱등 보장**한다 — 없으면 추가, 이미 있으면 파일을 변경하지 않는다.
+   - 초기화·최신화 두 모드 모두에서 수행한다(아직 `--wt`를 쓰지 않는 기존 프로젝트도 선반영).
+   - 이유: 미비 시 `--wt` 사용 순간 루트 레포가 worktree 사본 전체를 변경분으로 인식한다.
+   - 축 정의: `opal/core/references/opal-harness.md` §2.5.
 
 ---
 
@@ -988,3 +992,4 @@ opi 최신화 완료
 | v4.4 | 2026-06-28 | 프로젝트 로컬 설정 보장 추가 — "공통: setting.local.json 보장" 섹션 신설(없으면 최소-상속 템플릿 생성·있으면 스킵·.gitignore 추가). 초기화 Phase 2 §2-1 산출물 행 추가 + 최신화 모드 진입부 연결로 **기존 프로젝트(최신화 모드)도 커버**. (047) |
 | v4.5 | 2026-06-30 16:42 | Codex AGENTS.md 템플릿 신규 + apply.js PLATFORM_FILES 4항목 — templates/common/platform/AGENTS.md 생성, apply.js 배열에 AGENTS.md 항목 추가(mergeOther 경로 재사용), SKILL.md Phase 4-1 표·기존파일처리·완료보고 반영 (049) |
 | v4.6 | 2026-07-28 | MEMORY.json 단독 SSOT 전환 — 산출물 3행 `.opal/MEMORY.md` → `.opal/MEMORY.json`, §2-4 인라인 md 템플릿(마커 4개 포함) 삭제 → `memory-tool init` 호출, 초기화·최신화 4-2 히스토리 기록을 `append --kind history` 호출로 대체(구 6컬럼 스니펫 소멸), 최신화 1-0 변경 맥락 수집을 `show --brief` 1회 호출로 통합 (078) |
+| v4.7 | 2026-08-15 16:16 | §공통: 프로젝트 로컬 설정 보장에 항목 5 추가 — `.gitignore`에 `.opal-worktrees/` 멱등 보장(없으면 추가, 있으면 무변경), 초기화·최신화 두 모드 모두에서 매번 수행(기존 setting.local.json 항목의 1회성 조건과 무관한 별도 멱등 규칙) (092) |

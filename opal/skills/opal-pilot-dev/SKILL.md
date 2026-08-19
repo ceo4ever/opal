@@ -24,7 +24,7 @@ opal-harness.md "TASK 공통 프로세스" 참조.
 
 TASK 완료 → 사용자 보고.
 
-> **[MUST] 행 갱신**: `~/.opal/tools/state-tool/run.sh mark <task-path> --task-step <task-step-key> --done` 호출. LLM이 STATE.md 마크다운 표를 직접 편집하는 것은 금지된다. 행을 mark하는 것 자체가 state 기록이며 별도의 State Gate 행은 존재하지 않는다.
+> **[MUST] 행 갱신**: `~/.opal/tools/state-tool/run.sh mark <task-path> --task-step <task-step-key> --done` 호출. **[MUST] 파이프라인 행 상태(⬜/🔄/✅) 변경은 `~/.opal/tools/state-tool/run.sh`로만 수행한다. `state.json` 직접 편집 금지 — 현황 조회는 `state-tool show <task-path>`로 한다.** 행을 mark하는 것 자체가 state 기록이며 별도의 State Gate 행은 존재하지 않는다.
 > **단계 시작 (P-3)**: `~/.opal/tools/state-tool/run.sh advance <task-path> --task-step <task-step-key>` 호출로 해당 단계 작업 행을 🔄로 전환.
 > **단계 건너뛰기 차단**: state-tool stage-transition guard가 단계 N의 필수 행이 완료되지 않으면 단계 N+1 진입(mark)을 자동 거부한다 (PLAN §M-A). 행에 의존하지 않는다.
 > 근거: `tasks/134-260501-opp-pipeline-state-tool/TASK.md` F-15 / `PLAN.md` §1.5 M-11 / §3 Step 8 P-1 / P-3
@@ -51,7 +51,11 @@ op-dev-analysis 스킬을 수행하라.
   → **PM Gate** (분석 방향 종합 검토)
   → 사용자 보고 (분석 방향 검토 후 PLAN 진입 승인).
 
-> **사용자 확인 (P-5)**: 사용자 발화 후 PM이 `~/.opal/tools/state-tool/run.sh mark <task-path> --task-step analysis.user_confirm --done --owner user --note '{owner_name} 확인: ...'` 호출.
+> **사용자 확인 (P-5)**: 이 행은 **모드에 따라 주체가 다르다**.
+> - 자동 승인 구간(agentic 전 구간 / semi-agentic의 EXECUTE-equivalent 이후) — **PM은 호출하지 않는다.**
+>   다음 단계 진입 시 도구가 자동 승인한다. 계약 SSOT: `opal-harness-agentic.md §4` / `opal-harness-semi-agentic.md §5`.
+> - 그 외(interactive 전 구간 / semi-agentic의 모드 경계 내) — 소유자에게 보고하고 승인 발화를 받은 뒤
+>   `~/.opal/tools/state-tool/run.sh mark <task-path> --task-step analysis.user_confirm --done --owner user --note '{owner_name} 확인: ...'` 호출.
 > 근거: `PLAN.md` §3 Step 8 P-1 / P-5
 
 ## STEP 3: PLAN
@@ -107,7 +111,12 @@ PLAN 완료
    - `test_scenario.scenario_gate` 행 mark 시점은 보강 완료(4) 후 `verdict: pass` 수신 이후다.
 6. 사용자에게 TEST-SCENARIO 보고 — 승인 = EXECUTE 시작 허가
 
-> **사용자 확인 (P-5)**: 사용자 발화 후 PM이 `~/.opal/tools/state-tool/run.sh mark <task-path> --task-step test_scenario.user_confirm --done --owner user --note '{owner_name} 확인: ...'` 호출. CLOSE 진입 전 이 행의 `owner=user` 여부를 도구가 자동 검증한다 (§2.16 G-13).
+> **사용자 확인 (P-5)**: 이 행은 **모드에 따라 주체가 다르다**.
+> - 자동 승인 구간(agentic 전 구간 / semi-agentic의 EXECUTE-equivalent 이후) — **PM은 호출하지 않는다.**
+>   다음 단계 진입 시 도구가 자동 승인한다. 계약 SSOT: `opal-harness-agentic.md §4` / `opal-harness-semi-agentic.md §5`.
+> - 그 외(interactive 전 구간 / semi-agentic의 모드 경계 내) — 소유자에게 보고하고 승인 발화를 받은 뒤
+>   `~/.opal/tools/state-tool/run.sh mark <task-path> --task-step test_scenario.user_confirm --done --owner user --note '{owner_name} 확인: ...'` 호출.
+> CLOSE 진입 전 이 행의 `owner=user` 여부를 도구가 자동 검증한다 (§2.16 G-13).
 > 근거: `PLAN.md` §3 Step 8 P-1 / P-5 / §2.16 G-13 / `tasks/073-260723-opd-시나리오-목표커버리지-루프/PLAN.md` §3.5.2 (목표-커버 게이트 접합)
 
 ## STEP 4: EXECUTE
@@ -208,7 +217,11 @@ op-dev-test-agent 워커 디스패치. TEST-SCENARIO.md 실행 + 결과 기록 +
      - [ ] 컨벤션 자동 진단 PASS (changed_files 컨벤션 적용 대상 ≥1건 시 발동, GC-CONVENTION-*.md 보고서 Critical/High 0건)
 → PM Gate 통과 후 해당 행을 단일 mark. 사용자에게 완료 보고 후 CLOSE 단계 진입 승인 요청.
 
-> **사용자 확인 (P-5)**: 사용자 발화 후 PM이 `~/.opal/tools/state-tool/run.sh mark <task-path> --task-step test.user_confirm --done --owner user --note '{owner_name} 확인: ...'` 호출.
+> **사용자 확인 (P-5)**: 이 행은 **모드에 따라 주체가 다르다**.
+> - 자동 승인 구간(agentic 전 구간 / semi-agentic의 EXECUTE-equivalent 이후) — **PM은 호출하지 않는다.**
+>   다음 단계 진입 시 도구가 자동 승인한다. 계약 SSOT: `opal-harness-agentic.md §4` / `opal-harness-semi-agentic.md §5`.
+> - 그 외(interactive 전 구간 / semi-agentic의 모드 경계 내) — 소유자에게 보고하고 승인 발화를 받은 뒤
+>   `~/.opal/tools/state-tool/run.sh mark <task-path> --task-step test.user_confirm --done --owner user --note '{owner_name} 확인: ...'` 호출.
 > 근거: `PLAN.md` §3 Step 8 P-1 / P-5
 
 보고 형식:
@@ -264,7 +277,12 @@ op-dev-test-agent 워커 디스패치. TEST-SCENARIO.md 실행 + 결과 기록 +
    - 산출 결정론 기록: 개선 후보 N건은 improve-tool이 결정론적으로 기록(로컬→.opal / FW→fw-inbox).
    - **no-op 안전 [MUST]**: 궤적 신호에서 개선 후보가 **없으면** 기록 없이 "개선후보 0건" 보고 — op-brain-ingest의 skipped와 동일하게 **CLOSE를 중단시키지 않는다**.
    - 개선 루프 프로세스 SSOT: `opal/core/references/harness/pm-improvement-loop.md`.
-5. 완료 보고
+5. **worktree 정리 안내** (`--worktree`/`--wt` 태스크에서만 — 미사용 시 자연 스킵):
+   - `~/.opal/tools/worktree-tool/run.sh status --project-root <프로젝트 루트> --task <NNN>`으로 현재 상태를 조회해 보고한다.
+   - **[MUST] 자동 제거하지 않는다.** CLOSE 시점에 미머지 커밋이 남아 있는 것이 정상이다 — 커밋·머지는 캡틴의 권한이며 PM이 대행하지 않는다.
+   - 안내 문구: "worktree `{worktree_root}`는 **머지 대기** 상태입니다. 머지·PR 처리 후 `~/.opal/tools/worktree-tool/run.sh remove --project-root <루트> --task <NNN>`으로 회수하세요."
+   - `status` 호출 실패·메타 부재·worktree 부재는 전부 **no-op** — op-brain-ingest(스텝 3)·회고(스텝 4)와 동일하게 **CLOSE를 중단시키지 않는다**.
+6. 완료 보고
 
 > **CLOSE 진입 게이트 자동 검증**: CLOSE 단계 첫 행 mark 시 도구가 직전 단계 사용자 확인 행의 `owner=user` 여부를 자동 검증한다. 미통과 시 `close_gate_violation` 에러 반환 — agentic 모드의 `--auto-pass`도 거부됨 (§2.16 G-13 / PLAN §3 Step 8 P-8).
 > **추가작업 진입 (P-6)**: `~/.opal/tools/state-tool/run.sh add-row <task-path> --after <N> --stage CLOSE --item '...'` 호출 → current_status 자동 `additional_work` 전환. 완료 시 `~/.opal/tools/state-tool/run.sh status <task-path> --set additional_work_done`.
@@ -321,7 +339,7 @@ opal-harness-agentic.md / opal-harness-semi-agentic.md 참조. 본 절은 이 �
 
 ### 활성화
 
-> **[MUST] agentic 모드 STATE 갱신**: 게이트 자율 통과 시 `~/.opal/tools/state-tool/run.sh mark <task-path> --task-step <task-step-key> --done --auto-pass --note '<PM 판단 근거>'` 호출 (P-8). `--auto-pass` 명시 시 `state.json rows[N].note`에 "agentic auto-pass: <근거>"가 자동 기재된다.
+> **[MUST] agentic 모드 STATE 갱신**: 게이트 자율 통과 시 `~/.opal/tools/state-tool/run.sh mark <task-path> --task-step <task-step-key> --done` 호출 (P-8). **사용자 확인 행은 PM이 명시 호출하지 않는다** — 다음 단계 진입 시 도구가 자동 승인한다. 계약 SSOT: `opal/core/references/opal-harness-agentic.md §4` / `opal-harness-semi-agentic.md §5`.
 >
 > **[MUST] CLOSE 진입 게이트 거부 정책 (P-8 / §2.16 G-13)**: CLOSE 단계 첫 행은 `--auto-pass` 거부(`agentic_close_gate_requires_user` 에러). agentic/semi-agentic 모드라도 CLOSE 진입 직전 소유자에게 보고 후 사용자 발화("확인"/"승인")를 받아 직전 단계 사용자 확인 행을 `--owner user`로 mark한 뒤 CLOSE 첫 행을 진행한다.
 >
@@ -395,4 +413,7 @@ semi-agentic / agentic 모두 CLOSE 첫 행 `--auto-pass` 거부 (`agentic_close
 | v4.8 | 2026-07-23 | STEP 3.5 목표-커버 게이트 접합 — `references/pipeline.json`에 `test_scenario.scenario_gate` 행 신설(id 10, 이후 11~16 재부여, 15→16 task-step), TEST-SCENARIO.md 작성 mark 후 `op-scenario-gate` 스킬 호출 절차 배선(verdict pass만 게이트 행 mark, rewrite=재작성 루프, escalate=사용자 에스컬레이션), 사람 열람 미러 표 16행 갱신 + 게이트 mark 조건 주석 추가. state-tool 소스 무변경(pipeline.json만 편집) (073) |
 | v4.8 | 2026-07-23 09:56 | 본문 state-tool 명령 예시를 task-step key 주소로 전환(--row→--task-step, --step→--action-step). pipeline.json key 기준. (070 후속) |
 | v4.9 | 2026-08-14 09:23 | pipeline.json 중복 정리 — STATE.md 진행 현황 미러 표 삭제 + 산문 `행 N` 참조를 task-step key로 전환, 모드·단계 목록 표 제거(meta 중복), PM Gate 점검 목록 표를 `references/pipeline.json` `task_steps[].gate` SSOT 포인터로 교체 (091) |
-| v5.0 | 2026-08-19 21:10 | STEP 3(PLAN) §3-1에 목표계열 선작성 병렬 착수 지시 + STEP 3.5 절차 1을 Block B 보강으로 재작성·4에 보강 완료 판정·5에 게이트 1회 전제 및 test_scenario.scenario_gate mark 시점 명시. STEP 2(ANALYSIS)·STEP 4(EXECUTE)·pipeline.json 무변경 (095) |
+| v5.0 | 2026-08-15 16:30 | STEP 6 CLOSE에 "worktree 정리 안내" 스텝 삽입 — `--worktree`/`--wt` 태스크에서만 `worktree-tool status` 조회 결과를 근거로 "머지 대기" 안내(자동 제거하지 않음), 미사용 태스크는 no-op 비차단(op-brain-ingest·회고와 동일 패턴). 기존 "5. 완료 보고"를 6으로 재조정 (092) |
+| v5.1 | 2026-08-15 21:48 | 사용자 확인 행 자동 승인 계약 반영 — agentic STATE 갱신 지시에서 PM `--auto-pass` 명시 호출 삭제, 다음 단계 진입 시 도구 자동 승인으로 전환하고 계약 본문은 하네스 SSOT(`opal-harness-agentic.md §4` / `opal-harness-semi-agentic.md §5`) 참조로 정리. CLOSE 진입 게이트 서술 불변 (093) |
+| v5.2 | 2026-08-16 13:30 | 사용자 확인 (P-5) 3건(analysis/test_scenario/test) 산문을 모드 무분기 명령형 → 모드 분기 서술로 교체 — 자동 승인 구간(agentic 전 구간 / semi-agentic EXECUTE-equivalent 이후)은 PM 미호출·도구 자동 승인, 그 외 구간은 기존 mark 호출 유지. 지점별 --task-step 키·근거 인용 보존 (094 R-11 G-4). STEP 1 "[MUST] 행 갱신" 서술의 표 전제("LLM이 STATE.md 마크다운 표를 직접 편집하는 것은 금지된다")를 표준 문구 A("파이프라인 행 상태 변경은 `state-tool`로만 수행, `state.json` 직접 편집 금지, 조회는 `state-tool show`")로 치환 — STATE.md가 파생 표를 렌더하지 않는 저널로 재정의됨에 따른 정합(094 R-6/R-7, Step 8) |
+| v5.3 | 2026-08-19 21:10 | STEP 3(PLAN) §3-1에 목표계열 선작성 병렬 착수 지시 + STEP 3.5 절차 1을 Block B 보강으로 재작성·4에 보강 완료 판정·5에 게이트 1회 전제 및 test_scenario.scenario_gate mark 시점 명시. STEP 2(ANALYSIS)·STEP 4(EXECUTE)·pipeline.json 무변경 (095) |

@@ -10,8 +10,7 @@
 
 > **070: task-step 키 주소 체계**. 행 주소를 불안정한 순번(`--row N`)이 아니라 `references/pipeline.json`에 선언된 task-step key(`plan.pm_gate` 형식)로 지정할 수 있다. `advance`/`mark`/`block`/`add-row`는 `--task-step <key>` / `--task-step-id <n>` / `--row <n>`(deprecated 별칭, 하위호환) 중 정확히 하나를 받는다. 미지정 시 `task_step_addr_required`, 2개 이상 동시 지정 시 `task_step_addr_conflict`, key 미매칭 시 `task_step_not_found`(candidates 포함).
 
-- **SSOT**: `state.json` (마크다운 표는 도구가 자동 렌더한 미러)
-- **마커**: `<!-- pipeline:start -->` ~ `<!-- pipeline:end -->` (STATE.md 내 파이프라인 영역 경계)
+- STATE.md는 **의사결정 로그·블로커·자유 기재를 담는 저널**이다. 파이프라인 현황(행 상태·진행·다음 액션)의 SSOT는 `state.json`이며, 조회는 `state-tool show`로 한다.
 - **출력 형식**: 모든 응답은 단일 라인 JSON
 
 ## 호출 형식
@@ -47,15 +46,14 @@
   [--rows-from <path-to-pipeline.json-or-skill.md>] \
   [--rows-acts <inline-json>]          # 시그니처만, 미구현 (R-13) \
   [--force]                            # 멱등성 우회 (--note 필수) \
-  [--note <text>] \
-  [--import-existing]                  # 기존 STATE.md 흡수
+  [--note <text>]
 ```
 
 - `--rows-spec`과 `--rows-from`은 배타적 (동시 사용 불가 — `rows_input_conflict`)
 - `--rows-from`은 확장자로 분기한다(070 R-2): `.json`이면 `pipeline.json` 스펙 검증 후 로딩(rows에 task-step `key` 영속, `conditional` 메타데이터 저장), `.md`이면 기존 SKILL.md 표 파싱(레거시) + stderr에 deprecation 경고 1줄 출력. 두 경로 모두 stdout 응답 계약은 동일.
-- `--next-action`: `state.json` `next_action` 필드로 영속화되고 `## 다음 액션` 첫 줄로 렌더된다(기본값 `"PLAN 단계 진입"`). 이후 `advance`/`mark` 시 파이프라인 프론티어(첫 미완료 행)에서 자동 파생·갱신된다 — PM 수동 갱신 불필요(072)
+- `--next-action`: `state.json` `next_action` 필드로 영속화된다(기본값 `"PLAN 단계 진입"`). 이후 `advance`/`mark` 시 파이프라인 프론티어(첫 미완료 행)에서 자동 파생·갱신된다(072) — PM 수동 갱신 불필요. **094부터 이를 렌더하는 STATE.md 전용 섹션은 없다**(저널화로 `## 다음 액션` 자동 파생 섹션 삭제) — 현재 값은 `show`(md의 `- 다음 액션:` 줄 또는 json의 `next_action` 필드)로 조회한다
 - `--force` 사용 시 `--note` 필수 (`note_required_for_force`)
-- `--import-existing`: 기존 STATE.md 마크다운 표를 파싱하여 rows 초기화 + 자유 텍스트 영역 보존
+- 구 STATE.md 표 흡수 옵션(`import`+`existing` 합성명, 094 이전 사용): **094(STATE.md 저널화)에서 제거됨** — 호출 시 rows 파싱 없이 항상 `import_existing_removed`로 거부된다(exit 1). 파싱 대상이던 파이프라인 표 자체가 STATE.md에서 소멸했기 때문이다. 행 구성은 `--rows-from <pipeline.json>` 또는 `--rows-spec`을 사용한다. (해당 인자는 argparse에 `help=argparse.SUPPRESS`로만 존치 — 완전히 삭제하면 미인식 인자로 exit 2 비-JSON 출력이 발생해 stdout 계약이 깨지므로, 인자는 받되 즉시 거부하는 방식을 택했다. 이 문서는 SUPPRESS 취지에 따라 정확한 플래그 철자를 의도적으로 노출하지 않는다)
 - agentic 모드에서 CLOSE 단계가 아닌 사용자 확인 행은 자동으로 `na`(-) 처리 (`.json`/`.md`/`--rows-spec` 공통)
 - `--note`(`--force` 시 기재)에 `{owner_name}` 플레이스홀더를 쓰면 `~/.opal/identity.md`의 `owner_name`으로 write-time 치환된다. identity.md 부재/`owner_name` 공란/파싱 실패 시 원문(`{owner_name}`) 그대로 유지(fail-safe) — 054
 
@@ -66,7 +64,7 @@
 
 ---
 
-### 2. `show` — 파이프라인 현황판 출력
+### 2. `show` — 파이프라인 현황 조회 (094 R-5: 표준 경로)
 
 ```bash
 ~/.opal/tools/state-tool/run.sh show <task-path> [--format md|json|full]
@@ -74,11 +72,13 @@
 
 | `--format` | 출력 내용 |
 |-----------|----------|
-| `md` (기본) | 파이프라인 현황판 마크다운 표 + `## 현재 상태` 4줄 |
+| `md` (기본) | `state.json.rows[]`에서 파생 렌더한 파이프라인 표 + `## 현재 상태` 3줄(모드/상태/다음 액션) |
 | `json` | state.json raw (`marker_present` 필드 포함) |
 | `full` | STATE.md 전체 본문 |
 
-- 마커 누락 시 `md`/`full`은 fallback 출력 (exit 0 + stderr warning)
+- `md`/`full` 모두 **마커 유무와 무관하게** `state.json`에서 렌더한다(094 R-5/D-4 — SSOT는 `state.json` 단일이며, 레거시 STATE.md의 마커·표 잔존 여부는 렌더 소스에 영향을 주지 않는다)
+- 레거시(001~093) STATE.md에 파이프라인 마커가 잔존해 `marker_present:true`이면 `md`/`full` 응답 상단에 배너 1줄이 prepend된다: "[레거시] 이 태스크의 STATE.md에는 파이프라인 표가 남아 있으나 더 이상 갱신되지 않는 동결 텍스트입니다. 현황의 SSOT는 state.json이며 아래 렌더가 최신입니다."
+- `marker_present`(`json` 포맷 필드): 094 저널화 이후 이 값이 `true`인 것은 **레거시 동결 표 잔존**을 뜻한다(현재 갱신되는 미러가 아니다) — 키·타입은 하위호환으로 존치
 - state.json 미존재 시: `state_not_initialized` + exit 1
 
 ---
@@ -95,8 +95,8 @@
 - 행 주소는 `--task-step`(key) / `--task-step-id`(숫자) / `--row`(숫자, deprecated 별칭) 중 정확히 하나 (070 R-4)
 - `pending` 상태인 행만 `in_progress`로 전환 (T-7)
 - CLOSE 단계 첫 행이면 직전 사용자 확인 게이트 자동 검증 (§2.16 G-13)
-- `## 현재 상태` 섹션 `- 진행:` 라인 자동 갱신
-- `## 다음 액션` 첫 줄이 파이프라인 프론티어(첫 미완료 행)에서 자동 파생·갱신된다(하위 자유 기재 보존). `--next-action <text>` 지정 시 해당 값이 파생값보다 우선하며, 이 오버라이드는 **해당 전이 1회에만** 적용된다 — 다음 전이가 `--next-action` 없이 실행되면 자동 파생으로 복귀한다(072)
+- `state.json` `next_action`이 파이프라인 프론티어(첫 미완료 행)에서 자동 파생·갱신된다. `--next-action <text>` 지정 시 해당 값이 파생값보다 우선하며, 이 오버라이드는 **해당 전이 1회에만** 적용된다 — 다음 전이가 `--next-action` 없이 실행되면 자동 파생으로 복귀한다(072). **094부터 STATE.md에 이를 렌더하는 `## 현재 상태`/`## 다음 액션` 섹션은 없다** — 현재 상태 조회는 `show`로 한다
+- STATE.md는 `> 최종 갱신:` 헤더 타임스탬프만 갱신된다(저널 후처리, 094)
 - `--note`의 `{owner_name}` 플레이스홀더는 identity.md `owner_name`으로 write-time 치환된다. 부재/공란/파싱 실패 시 원문 유지(fail-safe) — 054
 
 ---
@@ -122,7 +122,8 @@
 - `--auto-pass` 사용 시 `owner = "auto"`, note에 "agentic auto-pass" 자동 기재
 - CLOSE 첫 행 + agentic/semi-agentic 모드 + `--auto-pass` 조합 거부 (`agentic_close_gate_requires_user`)
 - `--force` 사용 시 `--note` 필수 + 의사결정 로그 자동 기재
-- `## 다음 액션` 첫 줄이 파이프라인 프론티어(첫 미완료 행)에서 자동 파생·갱신된다(하위 자유 기재 보존). `--next-action <text>` 지정 시 해당 값이 파생값보다 우선하며, 이 오버라이드는 **해당 전이 1회에만** 적용된다 — 다음 전이가 `--next-action` 없이 실행되면 자동 파생으로 복귀한다(072)
+- `state.json` `next_action`이 파이프라인 프론티어(첫 미완료 행)에서 자동 파생·갱신된다. `--next-action <text>` 지정 시 해당 값이 파생값보다 우선하며, 이 오버라이드는 **해당 전이 1회에만** 적용된다 — 다음 전이가 `--next-action` 없이 실행되면 자동 파생으로 복귀한다(072). **094부터 STATE.md에 이를 렌더하는 `## 다음 액션` 섹션은 없다** — 현재 상태 조회는 `show`로 한다
+- STATE.md는 `> 최종 갱신:` 헤더 타임스탬프 갱신 + (의사결정 있을 시) `## 의사결정 로그` 표에 1행 자동 추가(저널 후처리, 094)
 - `--note`의 `{owner_name}` 플레이스홀더는 identity.md `owner_name`으로 write-time 치환된다(`--auto-pass` 접두 "agentic auto-pass: " 뒤에도 적용). 부재/공란/파싱 실패 시 원문 유지(fail-safe) — 054
 
 ---
@@ -136,9 +137,9 @@
 ```
 
 - 행 주소는 `--task-step`(key) / `--task-step-id`(숫자) / `--row`(숫자, deprecated 별칭) 중 정확히 하나 (070 R-4)
-- 행 상태 `failed`(❌) + `current_status` → `blocked` 자동 전환
-- `STATE.md` `- 상태: 블로커` 자동 갱신
-- 의사결정 로그 자동 기재 안 함 (블로커 섹션은 PM 별도 작성)
+- 행 상태 `failed`(❌) + `current_status` → `blocked` 자동 전환(`state.json`)
+- STATE.md는 `> 최종 갱신:` 헤더 타임스탬프만 갱신된다 — **094부터 `- 상태:` 자동 렌더 섹션은 없다**, 현재 상태 조회는 `show`로 한다
+- 의사결정 로그 자동 기재 안 함 (`## 블로커` 자유 기재 섹션은 PM이 직접 작성)
 - `--reason`의 `{owner_name}` 플레이스홀더는 identity.md `owner_name`으로 write-time 치환된다(`note`는 `"block: {치환결과}"`). 부재/공란/파싱 실패 시 원문 유지(fail-safe) — 054
 
 ---
@@ -154,14 +155,15 @@
 - 사용자 확인 행 `owner` 정합성
 - interactive 모드에서 `owner=auto` 사용 여부
 - semi-agentic 모드에서 EXECUTE-equivalent 이전 행 `owner=auto` 사용 여부 (`semi_agentic_pre_execute_auto_pass_denied`)
-- STATE.md 마커 존재 여부
+
+> 094: STATE.md 마커 존재 여부 검사는 저널화로 제거되었다 — `validate`는 더 이상 마커 유무를 판정하지 않는다(`marker_missing` 소멸).
 
 **응답 예시**:
 ```json
 {"ok": true, "command": "validate", "violations": [], "violations_count": 0}
 ```
 ```json
-{"ok": false, "command": "validate", "violations": [{"code": "marker_missing", "row_id": null, "detail": "..."}], "violations_count": 1}
+{"ok": false, "command": "validate", "violations": [{"code": "user_confirmation_owner_mismatch", "row_id": 12, "detail": "owner=None"}], "violations_count": 1}
 ```
 
 ---
@@ -276,51 +278,58 @@
 
 ---
 
-## 에러 코드 카탈로그 (39종 SSOT — PLAN §2.18 E-1 + 070 R-1/R-4/R-9)
+## 에러 코드 카탈로그 (44종 실측 SSOT — PLAN §2.18 E-1 + 070 R-1/R-4/R-9 + 091 F-004 R-10/R-11 + 093 F-004 R-4 + 094 R-3/R-4/R-9)
+
+> 종수는 `len(ERROR_CODES)`(`state_tool.py`) 실측값이 기준이다 — 이 헤더 숫자를 리터럴로 신뢰하지 말고 코드 실측으로 재검증할 것(094 R-9 ①, S-7/S-15).
 
 | # | 에러 코드 | 발생 명령 | 종료 코드 | 의미 |
 |---|---------|---------|---------|------|
 | 1 | `worker_scope_violation` | mark | 1 | 워커가 자기 단계 외 행 갱신 시도 |
-| 2 | `marker_missing` | init(--import-existing 외)/advance/mark/block/add-row | 1 | STATE.md 마커 누락 |
-| 3 | `already_initialized` | init | 1 | state.json 이미 존재 (`--force`로 우회) |
-| 4 | `date_tool_failed` | 모든 갱신 명령 | 2 | date.js 호출 실패 |
-| 5 | `import_failed` | init --import-existing | 1 | 기존 STATE.md 파싱 실패 |
-| 6 | `invalid_status_transition` | status | 1 | current_status 전이 그래프 위반 |
-| 7 | `row_not_found` | mark/advance/block/add-row | 1 | --row N 행 미존재 |
-| 8 | `invalid_stage_enum` | add-row | 1 | --stage 값이 16종 enum 외 |
-| 9 | `gate_pattern_mismatch` | gate-pass | 1 | 4행 패턴 불일치 |
-| 10 | `gate_stage_mixed` | gate-pass | 1 | 4행 stage 혼합 |
-| 11 | `state_not_initialized` | show/advance/mark/block/validate/add-row/status/gate-pass | 1 | state.json 미존재 |
-| 12 | `user_confirmation_owner_mismatch` | validate | 1 | 사용자 확인 행 owner 불일치 |
-| 13 | `owner_flag_conflict` | mark | 1 | --owner와 --auto-pass 동시 사용 |
-| 14 | `auto_pass_in_interactive_mode` | validate | 1 | interactive 모드에서 owner=auto |
-| 15 | `close_gate_violation` | mark/advance | 1 | CLOSE 진입 게이트 위반 |
-| 16 | `agentic_close_gate_requires_user` | mark | 1 | agentic/semi-agentic CLOSE 첫 행에 --auto-pass 거부 |
-| 17 | `note_required_for_force` | init --force / mark --force | 1 | --force 시 --note 미제공 |
-| 18 | `rows_spec_invalid_json` | init --rows-spec | 1 | --rows-spec JSON 배열 아님 |
-| 19 | `skill_md_parse_error` | init --rows-from | 1 | SKILL.md 행 추출 실패 |
-| 20 | `task_path_not_found` | 모든 명령 | 1 | task-path 디렉토리 미존재 |
-| 21 | `worker_stage_required` | mark | 1 | --as-worker 시 --worker-stage 미지정 |
-| 22 | `rows_input_conflict` | init | 1 | --rows-spec과 --rows-from 동시 사용 |
-| 23 | `rows_acts_not_implemented` | init --rows-acts | 2 | opsdd ACT 동적 주입 미구현 |
-| 24 | `semi_agentic_pre_execute_auto_pass_denied` | mark / validate | 1 | semi-agentic 모드에서 EXECUTE 등가 단계 이전 행에 --auto-pass 사용 불가 |
-| 25 | `mode_flag_conflict` | (state init 포함 -- 향후) | 1 | 다중 모드 플래그 동시 사용 불가 |
-| 26 | `mock_in_scenario` | mark(TEST stage done 훅) | 1 | TEST-SCENARIO.md에 mock 코드 패턴 발견 (013) |
-| 27 | `evidence_missing` | mark(TEST stage done 훅) | 1 | TEST-SCENARIO.md Pass 시나리오에 실행 증거 누락 (013) |
-| 28 | `stage_transition_violation` | advance/mark | 1 | 단계 건너뛰기 차단 — 앞 행 미완료 (014 §M-A) |
-| 29 | `red_evidence_missing` | verify --red-check | 1 | RED 증거(실패 출력) 누락 (016) |
-| 30 | `test_modified_in_fix` | verify --fix-mode | 1 | fix 루핑 중 RED 테스트 파일 수정 감지 (016) |
-| 31 | `clarification_gate_unmet` | verify --clarification-check / advance / mark | 1 | TASK 4요소 미잠금 — 다음 단계 진입 거부 (005) |
-| 32 | `spec_file_not_found` | spec-validate / init --rows-from(.json) | 1 | pipeline.json 스펙 파일 없음 (070) |
-| 33 | `spec_invalid_json` | spec-validate / init --rows-from(.json) | 1 | pipeline.json JSON 파싱 실패 (070) |
-| 34 | `spec_validation_failed` | init --rows-from(.json) | 1 | pipeline.json 스펙 검증 실패(violations[0] 포함) (070) |
-| 35 | `task_step_addr_required` | advance/mark/block/add-row | 1 | 행 주소 플래그 0개 지정 (070) |
-| 36 | `task_step_addr_conflict` | advance/mark/block/add-row | 1 | 행 주소 플래그 2개 이상 동시 지정 (070) |
-| 37 | `task_step_not_found` | advance/mark/block/add-row | 1 | `--task-step <key>` 미매칭(candidates 후보 목록 포함) (070) |
-| 38 | `task_step_key_invalid` | add-row --key | 1 | `--key` 형식 위반(KEY_PATTERN) (070) |
-| 39 | `task_step_key_duplicate` | add-row --key | 1 | `--key`가 기존 행 key와 중복 (070) |
+| 2 | `already_initialized` | init | 1 | state.json 이미 존재 (`--force`로 우회) |
+| 3 | `date_tool_failed` | 모든 갱신 명령 | 2 | date.js 호출 실패 |
+| 4 | `import_existing_removed` | init(구 STATE.md 표 흡수 옵션 호출 시) | 1 | 해당 옵션 사용 시 항상 거부 — 파싱 대상이던 파이프라인 표가 STATE.md에서 소멸 (094 R-4/D-2) |
+| 5 | `invalid_status_transition` | status | 1 | current_status 전이 그래프 위반 |
+| 6 | `row_not_found` | mark/advance/block/add-row | 1 | --row N 행 미존재 |
+| 7 | `invalid_stage_enum` | add-row | 1 | --stage 값이 16종 enum 외 |
+| 8 | `gate_pattern_mismatch` | gate-pass | 1 | 4행 패턴 불일치 |
+| 9 | `gate_stage_mixed` | gate-pass | 1 | 4행 stage 혼합 |
+| 10 | `state_not_initialized` | show/advance/mark/block/validate/add-row/status/gate-pass | 1 | state.json 미존재 |
+| 11 | `user_confirmation_owner_mismatch` | validate | 1 | 사용자 확인 행 owner 불일치 |
+| 12 | `owner_flag_conflict` | mark | 1 | --owner와 --auto-pass 동시 사용 |
+| 13 | `auto_pass_in_interactive_mode` | validate | 1 | interactive 모드에서 owner=auto |
+| 14 | `close_gate_violation` | mark/advance | 1 | CLOSE 진입 게이트 위반 |
+| 15 | `agentic_close_gate_requires_user` | mark | 1 | agentic/semi-agentic CLOSE 첫 행에 --auto-pass 거부 |
+| 16 | `semi_agentic_pre_execute_auto_pass_denied` | mark / validate | 1 | semi-agentic 모드에서 EXECUTE 등가 단계 이전 행에 --auto-pass 사용 불가 |
+| 17 | `mode_flag_conflict` | (state init 포함 -- 향후) | 1 | 다중 모드 플래그 동시 사용 불가 |
+| 18 | `note_required_for_force` | init --force / mark --force | 1 | --force 시 --note 미제공 |
+| 19 | `rows_spec_invalid_json` | init --rows-spec | 1 | --rows-spec JSON 배열 아님 |
+| 20 | `skill_md_parse_error` | init --rows-from | 1 | SKILL.md 행 추출 실패 |
+| 21 | `task_path_not_found` | 모든 명령 | 1 | task-path 디렉토리 미존재 |
+| 22 | `worker_stage_required` | mark | 1 | --as-worker 시 --worker-stage 미지정 |
+| 23 | `rows_input_conflict` | init | 1 | --rows-spec과 --rows-from 동시 사용 |
+| 24 | `rows_acts_not_implemented` | init --rows-acts | 2 | opsdd ACT 동적 주입 미구현 |
+| 25 | `mock_in_scenario` | mark(TEST stage done 훅) | 1 | TEST-SCENARIO.md에 mock 코드 패턴 발견 (013) |
+| 26 | `evidence_missing` | mark(TEST stage done 훅) | 1 | TEST-SCENARIO.md Pass 시나리오에 실행 증거 누락 (013) |
+| 27 | `stage_transition_violation` | advance/mark | 1 | 단계 건너뛰기 차단 — 앞 행 미완료 (014 §M-A) |
+| 28 | `red_evidence_missing` | verify --red-check | 1 | RED 증거(실패 출력) 누락 (016) |
+| 29 | `test_modified_in_fix` | verify --fix-mode | 1 | fix 루핑 중 RED 테스트 파일 수정 감지 (016) |
+| 30 | `clarification_gate_unmet` | verify --clarification-check / advance / mark | 1 | TASK 4요소 미잠금 — 다음 단계 진입 거부 (005) |
+| 31 | `spec_file_not_found` | spec-validate / init --rows-from(.json) | 1 | pipeline.json 스펙 파일 없음 (070) |
+| 32 | `spec_invalid_json` | spec-validate / init --rows-from(.json) | 1 | pipeline.json JSON 파싱 실패 (070) |
+| 33 | `spec_validation_failed` | init --rows-from(.json) | 1 | pipeline.json 스펙 검증 실패(violations[0] 포함) (070) |
+| 34 | `task_step_addr_required` | advance/mark/block/add-row | 1 | 행 주소 플래그 0개 지정 (070) |
+| 35 | `task_step_addr_conflict` | advance/mark/block/add-row | 1 | 행 주소 플래그 2개 이상 동시 지정 (070) |
+| 36 | `task_step_not_found` | advance/mark/block/add-row | 1 | `--task-step <key>` 미매칭(candidates 후보 목록 포함) (070) |
+| 37 | `task_step_key_invalid` | add-row --key | 1 | `--key` 형식 위반(KEY_PATTERN) (070) |
+| 38 | `task_step_key_duplicate` | add-row --key | 1 | `--key`가 기존 행 key와 중복 (070) |
+| 39 | `gate_artifact_missing` | mark | 1 | PM Gate 산출물(`gate.artifacts`) 미충족 — 게이트 아티팩트 부재(`--force`+`--note`로만 우회) (091) |
+| 40 | `spec_gate_type_invalid` | spec-validate / init --rows-from(.json) | 1 | `task_steps[].gate`가 object가 아님 (091) |
+| 41 | `spec_gate_missing_field` | spec-validate / init --rows-from(.json) | 1 | `task_steps[].gate` 필수 필드(`artifacts`/`checklist`) 누락 (091) |
+| 42 | `spec_gate_field_type_invalid` | spec-validate / init --rows-from(.json) | 1 | `task_steps[].gate` 필드 타입 오류(문자열 배열 필요) (091) |
+| 43 | `spec_gate_checklist_empty` | spec-validate / init --rows-from(.json) | 1 | `task_steps[].gate.checklist`가 비어 있음 (091) |
+| 44 | `user_confirmation_required` | advance/mark | 1 | 자동 승인 불가 구간의 사용자 확인 행 — 캡틴 승인 필요 (093) |
 
-> `spec-validate` 서브 명령 자체의 violations[] 내부 코드(`spec_missing_field`/`spec_skill_invalid`/`spec_stage_invalid`/`spec_key_format_invalid`/`spec_key_duplicate`/`spec_id_sequence_invalid`/`spec_key_stage_mismatch`)는 `cmd_validate`의 `schema_violation`처럼 인라인 문자열로 쓰이며 ERROR_CODES 템플릿을 거치지 않는다(070 §3.1.2).
+> `spec-validate` 서브 명령 자체의 violations[] 내부 코드(`spec_missing_field`/`spec_skill_invalid`/`spec_stage_invalid`/`spec_key_format_invalid`/`spec_key_duplicate`/`spec_id_sequence_invalid`/`spec_key_stage_mismatch`)는 `cmd_validate`의 `schema_violation`처럼 인라인 문자열로 쓰이며 ERROR_CODES 템플릿을 거치지 않는다(070 §3.1.2). (`spec_gate_*` 4종은 동일하게 violations[]에 인라인 append되지만 ERROR_CODES에 등록되어 있어 위 카탈로그에 포함된다 — 091이 만든 예외.)
 
 ---
 
@@ -351,3 +360,4 @@
 | v1.4 | 2026-07-10 | (056 ADD-2) | 드리프트 정정 — state.schema.json `mode` enum에 `semi-agentic` 추가 (CLI `--mode` choices와 정합). 신규 필드 없음, `schema_version` 유지("1.0") |
 | v1.5 | 2026-07-20 15:45 | (070) | task-step 키 주소 체계 도입 1차 — `spec-validate` 서브명령 신설(10종), `pipeline-spec.schema.json` 신설, `init --rows-from` `.json`/`.md` 확장자 분기(json 스펙 로딩 시 rows[].key·conditional 영속, md는 deprecation 경고), `state.schema.json` 1.1 병행(rows[].key·conditional 선택 필드, schema_version enum), `--task-step`/`--task-step-id`/`--row`(deprecated)/`--action-step`(구 `--step` 별칭) 신설(advance/mark/block), `--after-task-step`/`--after-task-step-id`/`--key`(add-row), opdd skill·DICT/MODEL/DDL·MIGRATION stage enum 등록, ERROR_CODES 8종 추가(39종) |
 | v1.6 | 2026-07-23 12:09 | (072) | STATE.md "다음 액션" 자동 파생 — `state.json` `next_action` 필드 신설(init 영속화, `state.schema.json` optional 등록), `advance`/`mark` 프론티어(첫 미완료 행) 자동 파생·`update_next_action_section`(첫 줄만 치환, 하위 자유기재 보존), `advance`/`mark` `--next-action` per-transition 오버라이드(비지속 — 다음 전이 자동 파생 복귀). `## 블로커`는 기존대로 PM 수동 갱신 |
+| v1.7 | 2026-08-16 13:15 | (094) | STATE.md 저널화에 따른 문서 재정합(R-4 문서 + R-9 ①③) — 에러 카탈로그 재실측(`marker_missing`/`import_failed` 삭제, `import_existing_removed` 추가, 39종 표기 → **44종 실측값**으로 정정 및 091/093 누락 행(`gate_artifact_missing`/`spec_gate_*`/`user_confirmation_required`) 보강, 행 번호 전체 재부여); `init --import-existing` 사용 안내 제거 — 항상 `import_existing_removed`로 거부됨을 명시(인자는 `help=SUPPRESS`로 존치, 설계 의도 기술); `validate` 검증 항목·응답 예시에서 `marker_missing` 서술 제거; `show` 절을 `cmd_show` 재설계(R-5/D-4)에 맞춰 재작성 — `md`/`full` 모두 마커 유무와 무관하게 `state.json` 단일 파생 렌더, 레거시 마커 잔존 시 배너 1줄 prepend, `marker_present` 필드 의미 재해석(레거시 동결 표 잔존 신호) 1줄 추가 |

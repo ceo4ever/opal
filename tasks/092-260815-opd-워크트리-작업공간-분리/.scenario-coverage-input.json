@@ -1,0 +1,503 @@
+{
+  "goal": "OPAL 태스크 파이프라인에 모드 축과 직교하는 --worktree/--wt 축을 신설하여, 태스크별 코드 작업공간을 {프로젝트}/.opal-worktrees/task_{NNN}/에 git worktree로 격리한다. 플래그가 없으면 현행 동작을 100% 그대로 유지한다.",
+  "requirements": [
+    "F-1",
+    "F-2",
+    "F-3",
+    "F-4",
+    "F-5",
+    "F-6",
+    "F-7",
+    "F-8",
+    "F-9"
+  ],
+  "features": [
+    "F-001",
+    "F-002",
+    "F-003",
+    "F-004",
+    "F-005",
+    "F-006",
+    "F-007",
+    "F-008",
+    "F-009"
+  ],
+  "hypotheses": [
+    "H-1",
+    "H-2",
+    "H-3",
+    "H-4",
+    "H-5",
+    "H-6",
+    "H-7",
+    "H-8",
+    "H-9",
+    "H-10",
+    "H-11",
+    "H-12",
+    "H-13",
+    "H-14",
+    "H-15",
+    "H-16",
+    "H-17",
+    "H-18",
+    "H-19",
+    "H-20",
+    "H-21"
+  ],
+  "scenarios": [
+    {
+      "id": "S-1",
+      "covers_requirements": [
+        "F-5"
+      ],
+      "covers_features": [
+        "F-005"
+      ],
+      "covers_hypotheses": [
+        "H-1"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": true,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-2",
+      "covers_requirements": [
+        "F-5"
+      ],
+      "covers_features": [
+        "F-005"
+      ],
+      "covers_hypotheses": [
+        "H-1",
+        "H-11"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": true,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-3",
+      "covers_requirements": [
+        "F-3",
+        "F-4",
+        "F-6"
+      ],
+      "covers_features": [
+        "F-003",
+        "F-004",
+        "F-006"
+      ],
+      "covers_hypotheses": [
+        "H-2"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": true,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-4",
+      "covers_requirements": [
+        "F-2"
+      ],
+      "covers_features": [
+        "F-002"
+      ],
+      "covers_hypotheses": [
+        "H-3"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-5",
+      "covers_requirements": [
+        "F-2"
+      ],
+      "covers_features": [
+        "F-002"
+      ],
+      "covers_hypotheses": [
+        "H-4"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-6",
+      "covers_requirements": [
+        "F-8"
+      ],
+      "covers_features": [
+        "F-008"
+      ],
+      "covers_hypotheses": [
+        "H-5"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": true
+    },
+    {
+      "id": "S-7",
+      "covers_requirements": [
+        "F-8"
+      ],
+      "covers_features": [
+        "F-008"
+      ],
+      "covers_hypotheses": [
+        "H-5"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": true
+    },
+    {
+      "id": "S-8",
+      "covers_requirements": [
+        "F-8"
+      ],
+      "covers_features": [
+        "F-008"
+      ],
+      "covers_hypotheses": [
+        "H-5"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": true
+    },
+    {
+      "id": "S-9",
+      "covers_requirements": [
+        "F-8"
+      ],
+      "covers_features": [
+        "F-008"
+      ],
+      "covers_hypotheses": [
+        "H-5"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-10",
+      "covers_requirements": [
+        "F-8"
+      ],
+      "covers_features": [
+        "F-008"
+      ],
+      "covers_hypotheses": [
+        "H-5"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": true
+    },
+    {
+      "id": "S-11",
+      "covers_requirements": [
+        "F-7"
+      ],
+      "covers_features": [
+        "F-007"
+      ],
+      "covers_hypotheses": [
+        "H-6"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": true
+    },
+    {
+      "id": "S-12",
+      "covers_requirements": [
+        "F-2"
+      ],
+      "covers_features": [
+        "F-002"
+      ],
+      "covers_hypotheses": [
+        "H-7"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": true
+    },
+    {
+      "id": "S-13",
+      "covers_requirements": [
+        "F-2"
+      ],
+      "covers_features": [
+        "F-002"
+      ],
+      "covers_hypotheses": [
+        "H-8"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": true
+    },
+    {
+      "id": "S-14",
+      "covers_requirements": [
+        "F-1"
+      ],
+      "covers_features": [
+        "F-001"
+      ],
+      "covers_hypotheses": [
+        "H-9"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": true
+    },
+    {
+      "id": "S-15",
+      "covers_requirements": [
+        "F-2"
+      ],
+      "covers_features": [
+        "F-002"
+      ],
+      "covers_hypotheses": [
+        "H-10"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-16",
+      "covers_requirements": [
+        "F-9"
+      ],
+      "covers_features": [
+        "F-009"
+      ],
+      "covers_hypotheses": [
+        "H-12"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": true
+    },
+    {
+      "id": "S-17",
+      "covers_requirements": [
+        "F-3"
+      ],
+      "covers_features": [
+        "F-003"
+      ],
+      "covers_hypotheses": [
+        "H-13"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": true
+    },
+    {
+      "id": "S-18",
+      "covers_requirements": [
+        "F-2",
+        "F-7"
+      ],
+      "covers_features": [
+        "F-002",
+        "F-007"
+      ],
+      "covers_hypotheses": [
+        "H-3"
+      ],
+      "is_goal_scenario": true,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-19",
+      "covers_requirements": [
+        "F-2",
+        "F-7"
+      ],
+      "covers_features": [
+        "F-002",
+        "F-007"
+      ],
+      "covers_hypotheses": [
+        "H-4"
+      ],
+      "is_goal_scenario": true,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-20",
+      "covers_requirements": [
+        "F-9"
+      ],
+      "covers_features": [
+        "F-009"
+      ],
+      "covers_hypotheses": [
+        "H-14"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-21",
+      "covers_requirements": [
+        "F-2"
+      ],
+      "covers_features": [
+        "F-002"
+      ],
+      "covers_hypotheses": [
+        "H-15"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-22",
+      "covers_requirements": [
+        "F-2"
+      ],
+      "covers_features": [
+        "F-002"
+      ],
+      "covers_hypotheses": [
+        "H-16"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": true
+    },
+    {
+      "id": "S-23",
+      "covers_requirements": [
+        "F-1",
+        "F-2",
+        "F-3",
+        "F-4",
+        "F-5",
+        "F-6",
+        "F-7",
+        "F-8",
+        "F-9"
+      ],
+      "covers_features": [
+        "F-001",
+        "F-002",
+        "F-003",
+        "F-004",
+        "F-005",
+        "F-006",
+        "F-007",
+        "F-008",
+        "F-009"
+      ],
+      "covers_hypotheses": [],
+      "is_goal_scenario": true,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-24",
+      "covers_requirements": [
+        "F-4",
+        "F-5",
+        "F-6"
+      ],
+      "covers_features": [
+        "F-004",
+        "F-005",
+        "F-006"
+      ],
+      "covers_hypotheses": [
+        "H-17"
+      ],
+      "is_goal_scenario": true,
+      "is_adoption_scenario": true,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-25",
+      "covers_requirements": [
+        "F-2",
+        "F-8"
+      ],
+      "covers_features": [
+        "F-002",
+        "F-008"
+      ],
+      "covers_hypotheses": [
+        "H-18"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": true,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-26",
+      "covers_requirements": [
+        "F-2",
+        "F-3"
+      ],
+      "covers_features": [
+        "F-002",
+        "F-003"
+      ],
+      "covers_hypotheses": [
+        "H-19"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": true,
+      "is_boundary_scenario": true
+    },
+    {
+      "id": "S-27",
+      "covers_requirements": [
+        "F-2"
+      ],
+      "covers_features": [
+        "F-002"
+      ],
+      "covers_hypotheses": [
+        "H-20"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": true
+    },
+    {
+      "id": "S-28",
+      "covers_requirements": [
+        "F-2",
+        "F-8"
+      ],
+      "covers_features": [
+        "F-002",
+        "F-008"
+      ],
+      "covers_hypotheses": [
+        "H-21"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": true
+    }
+  ]
+}

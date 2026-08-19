@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "OPAL .opal/worktree.json Schema",
+  "description": "worktree-tool이 소비하는 프로젝트 선언 파일. PLAN(092) §3.1.2 SSOT. 문서 SSOT로만 기능하며 런타임에 로드되지 않는다(DEC-4) — 검증은 worktree_tool.py의 validate_worktree_config()가 hand-rolled로 수행한다(state.schema.json과 동일한 선례).",
+  "type": "object",
+  "required": ["layout", "repos"],
+  "additionalProperties": false,
+  "properties": {
+    "layout": {
+      "enum": ["multi-repo", "monorepo"],
+      "description": "격리 대상 처리 방식. multi-repo=repos[] 각 path가 독립 git 레포. monorepo=repos[] 각 path가 루트 레포의 서브디렉토리(sparse-checkout으로 처리)."
+    },
+    "repos": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string" },
+      "description": "격리 대상 코드 경로(프로젝트 루트 상대). layout이 해석 방식을 결정한다. 절대경로·'..' 이탈 경로는 CONFIG_PATH_ESCAPE로 거부된다."
+    },
+    "branchTemplate": {
+      "type": "string",
+      "default": "feat/OP-TASK-{NNN}",
+      "description": "생성 브랜치명 템플릿. 치환 토큰: {NNN}(태스크 번호) · {slug}(태스크명) · {skill}(스킬 약어). OPAL 저장소 자체의 브랜치 전략과는 별개 규칙(DEC-1)."
+    },
+    "baseBranch": {
+      "type": "string",
+      "description": "base-ref 명시 선언(선택). 미선언 시 resolve_base_ref()가 origin/HEAD → 현재 체크아웃 브랜치 순으로 자동 판정한다(DEC-3 3단 우선순위 1번째)."
+    },
+    "copy": {
+      "type": "array",
+      "items": { "type": "string" },
+      "default": [],
+      "description": "gitignore된 로컬 설정 파일의 프로젝트 루트 상대 경로 목록. create가 worktree로 복사한다. 원본 부재는 비차단 경고."
+    },
+    "setup": {
+      "type": "array",
+      "default": [],
+      "description": "의존성 설치 명령 목록. create는 이 명령들을 실행하지 않는다 — pending_setup[]으로 열거만 한다(lazy setup, C-7).",
+      "items": {
+        "type": "object",
+        "required": ["cwd", "run"],
+        "additionalProperties": false,
+        "properties": {
+          "cwd": { "type": "string", "description": "명령 실행 작업 디렉토리(worktree 루트 상대)" },
+          "run": { "type": "string", "description": "실행할 셸 명령 문자열" }
+        }
+      }
+    },
+    "portOffset": {
+      "type": "integer",
+      "minimum": 0,
+      "default": 0,
+      "description": "슬롯 포트 오프셋 힌트. 도구는 값을 응답에 출력만 하고 실제로 적용하지 않는다."
+    }
+  }
+}

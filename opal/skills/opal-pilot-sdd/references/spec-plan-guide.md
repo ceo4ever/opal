@@ -273,7 +273,7 @@ SPEC-PLAN.md 작성 전에 반드시 아래를 수행한다:
 SPEC-PLAN.md의 "8. ACT 분해" 섹션에서 각 ACT를 기술할 때 아래 원칙을 준수한다.
 
 > **주의**: ACT 블록에 상태 필드(`- **상태**: 대기/완료`)를 두지 않는다.
-> ACT 실행 상태는 state.json(SSOT)이며 STATE.md ACT 목록 테이블은 `state-tool`이 렌더한 뷰다.
+> ACT별 파이프라인 행 자체(상태 전이)의 SSOT는 `state.json`이며 조회는 `state-tool show`로 한다. STATE.md의 ACT 목록 표는 state.json 파생이 아닌, ACT별 L1/L2/TS 세부 결과를 담는 저널 자유 기재다(`SKILL.md` §STATE.md 구조).
 > 이중 추적(SPEC-PLAN.md + STATE.md)은 갱신 누락의 직접 원인이 된다.
 
 ---
@@ -293,3 +293,4 @@ SPEC-PLAN.md의 "8. ACT 분해" 섹션에서 각 ACT를 기술할 때 아래 원
 |------|------|---------|
 | 2026-04-10 | R-4 | §7 주의사항 추가 — ACT 블록에 상태 필드 금지 원칙 (STATE.md ACT 목록 테이블이 SSOT) |
 | 2026-05-01 | R-5 | §7 SSOT 표현 갱신 — state.json SSOT + STATE.md는 state-tool 렌더 뷰 (TASK F-18 / PLAN §1.5 M-38 / §3 Step 12) |
+| 2026-08-16 15:12 | - | §7 SSOT 표현 재정정 — STATE.md 저널화(094)로 "state-tool이 렌더한 뷰" 서술이 신형 정의와 모순돼 폐기, `opal-pilot-sdd/SKILL.md` §STATE.md 구조(Step 11 확정)의 혼합 판정과 정합시킴: ACT 파이프라인 행 자체(상태 전이)는 `state.json` SSOT(조회: `state-tool show`), ACT 목록 표의 L1/L2/TS 세부 컬럼은 저널 자유 기재로 구분 (094 Step 14, R-7 잔여 발견) |

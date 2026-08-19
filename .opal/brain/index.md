@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-08-19 22:39
+> 갱신: 2026-08-19 23:54
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -27,6 +27,7 @@
 - [[state-tool]] — state-tool #tool #pipeline
 - [[test-tool]] — test-tool #tool #testing #pipeline
 - [[tool-scan]] — tool-scan #tool #opal-tools #discovery #usage #capability
+- [[worktree-tool]] — worktree-tool #tool #workspace #git #pipeline
 
 ## 개념
 - [[070-derivation-engine-perspective-bias-lesson]] — 070 사건 근본원인 — 도출 엔진 관점 편향과 게이트 집행 #lesson-learned #testing #scenario-gate #root-cause #task-073
@@ -39,6 +40,7 @@
 - [[anchor-load-condition-must-match-target]] — SSOT 앵커는 대상 문서의 로드 조건과 일치해야 한다 #ssot #governance #anchor #dispatch #harness
 - [[argparse-choices-breaks-json-contract]] — argparse choices=가 단일라인 JSON 응답 계약을 깬다 #cli #argparse #json-contract #pitfall
 - [[asis-workflow-order-over-new-skill]] — 부품은 있고 순서가 없었다 — 신규 스킬 대신 참조 문서 + 행동 프로세스 #pm #architecture-decision #ssot #task-084
+- [[auto-approve-user-confirmation-axis-separation]] — 자동 승인 판정의 두 독립 축 — CLOSE 축과 모드 경계 축은 분리된다 #state-tool #gate-design #pattern #task-093
 - [[b7-action-completion-loop]] — B7 액션 완성도 루프 — triage 기반 경계 재설계 순환 구조 #oppd #action-loop #triage #verification #b7
 - [[backward-compat-default-value-discipline]] — 하위호환 확장의 기본값 규율 — 분기 인자 기본값을 기존 동작으로 #backward-compat #api-design #cli #pattern
 - [[blind-reproduction-verification-test]] — 블라인드 재현 테스트 — 작성자 자기검증 배제 검증법 #verification #testing #scenario #ssot #evaluator
@@ -126,9 +128,10 @@
 - [[long-running-worker-infra-failure-mitigation]] — 장시간 워커 인프라 실패 대응 — 배치분할+모델하향+함수단위저장 #agentic #execute #infra-failure #worker #resilience
 - [[loop-upper-bound-ssot-pattern]] — 루프 상한 SSOT 단일 기재 패턴 — harness 포인터, 수치 복제 금지 #harness #ssot #loop-bound #anti-pattern
 - [[manual-scenario-verbatim-output-evidence]] — M3 수동 시나리오는 출력 원문을 증거로 남긴다 #testing #verification #evidence #manual-scenario
-- [[mark-force-decision-log-scope]] — 강제 처리의 실제 거동 — 사유는 필수지만 의사결정 로그에는 자동 기재되지 않는다 #state-tool #pipeline #decision-log #doc-correction #task-090
+- [[mark-force-decision-log-scope]] — 강제 처리의 실제 거동 — 사유는 필수지만 의사결정 로그에는 자동 기재되지 않는다 #state-tool #pipeline #decision-log #doc-correction #task-090 #task-094
 - [[marker-literal-check-meta-circular-false-positive]] — 마커 리터럴 검사의 메타-순환 오탐 — 표기 문맥 제거 전처리를 규칙과 함께 정의 #false-positive #verification #documentation #scenario-gate #task-095
 - [[memory-lifecycle-graduation-workflow]] — 메모리 라이프사이클·졸업(promote) 워크플로우 #memory #lifecycle #architecture #promote
+- [[mirror-gate-must-not-hostage-ssot-record]] — 미러 게이트가 SSOT 기록을 인질로 잡지 않는다 — fail-open 저널 쓰기 경계 #state-tool #ssot #mirror #fail-open #defensive-design #task-094
 - [[mitigation-recurs-without-ssot-registration]] — 완화책은 SSOT 미등재 시 재발한다 #governance #worker #infra-failure #ssot #resilience
 - [[model-mapping-2layer-override]] — 모델 매핑 2-레이어 오버라이드 (setting.json SSOT + 부트스트랩 step 0 머지) #model #mapping #setting #override #bootstrap
 - [[model-mapping-latest-tracking]] — OPAL 모델 매핑 최신화 + 최신 추종 전략 #model #mapping #gemini #codex #task
@@ -191,6 +194,7 @@
 - [[phase-name-stage-value-homonym-boundary]] — 프로세스 표시명과 파이프라인 단계값의 동명이의 경계 — 개명 파급 판단 원칙 #pipeline #naming #state-tool #lesson #task-090
 - [[pipeline-json-full-adoption-migration]] — pilot 파이프라인 행 정의 SSOT 전면 단일화 — pipeline.json 10/10 전환 #pipeline #state-tool #ssot #migration #task-090
 - [[pipeline-todo-mirror-hook-enforcement]] — 파이프라인 todo 미러 hook 강제 전환 (prose 지시 → 결정론 트리거) #opal-pipeline #todo-mirror #hook #enforce-not-advise #state-tool
+- [[pipeline-user-confirmation-single-status-axis]] — 사용자 확인 행 상태 계약 — pending에서 done/auto 또는 done/user로 단일화 #state-tool #pipeline #contract #task-093
 - [[platform-parity-mirror-before-design]] — 플랫폼 규약 편측 존재 — 새 설계보다 미러링 우선 #install #platform #lesson #mirroring
 - [[pm-conversation-readonly-collection-exception]] — PM(대화) 읽기 전용 수집 워커 예외 — 수집만 나누고 판단은 단일 주체 #pm #dispatch #boundary #task-084
 - [[pm-gate-artifact-tool-enforcement]] — PM Gate 정의 단일화와 산출물 존재 게이트 집행 #gate-design #state-tool #pm-gate #ssot #enforce-not-advise #task-091
@@ -217,6 +221,7 @@
 - [[scenario-prewrite-goal-series-track]] — 목표계열 선작성 트랙 — 도출 입력 2계열 분리와 게이트 계약 경계 #scenario-gate #testing #prewrite #opd #opds #task-095
 - [[section-append-at-tail-preserves-backrefs]] — 절 번호가 주소인 문서는 말미에 추가한다 — 외부 역참조 보존 #documentation #reference-integrity #task-084
 - [[self-edit-line-anchor-drift]] — 자기 편집 파일의 행번호 앵커는 드리프트한다 #verification #anchor #test-scenario #regression
+- [[self-modifying-tool-deploy-unit-coupling]] — 자기 자신을 고치는 도구의 배포 단위 결합 원칙 #deploy #gate-design #pattern #task-093
 - [[shard-policy-block-vs-nonblock-fallback-criterion]] — 미설정 시 차단 vs 비차단 폴백 판정 기준 #code-scan #configuration #backward-compat #task-080 #task-083
 - [[silent-loss-prevention-row-accounting-invariant]] — 무성 유실 차단 — 행 회계 불변식 설계 패턴 #migration #data-integrity #invariant #design-pattern #memory
 - [[silent-render-failure-deterministic-gate]] — 조용히 실패하는 코드는 브라우저 검증을 무력화한다 — 결정론 대조를 차단 게이트로 #lesson #verification #render-verification #gate-design #silent-failure
@@ -242,6 +247,7 @@
 - [[skill-registry-validate-extension]] — skill-registry validate 확장 — dangling error 격상 + unregistered 역방향 감지 #skill-registry #validate #drift-detection #tooling
 - [[skill-rename-validate-pattern]] — 스킬 rename 후 레지스트리 정합 검증 패턴 #skill-registry #validate #rename #drift-detection #lesson
 - [[source-measured-figures-over-stale-docs]] — 규모 수치의 SSOT는 문서가 아니라 소스 실측이다 #ssot #documentation #drift #measurement #discipline
+- [[state-md-journal-redefinition]] — STATE.md 저널 재정의 — 파생 섹션 제거 + state.json 단일 SSOT #state-tool #ssot #journal #architecture #task-094
 - [[state-tool-import-existing-key-reattachment]] — state-tool import-existing key 재접합 #state-tool #import #key-address #task-074
 - [[state-tool-mock-guard-skill-false-positive]] — state-tool mock 가드 정규식 ↔ SKILL 표준 문구 false positive #state-tool #mock-guard #false-positive #skill #bug #framework
 - [[state-tool-next-action-auto-derivation]] — STATE.md 다음 액션 자동 파생 — 설계 반전 (state-tool) #state-tool #pipeline #architecture-decision #enforce-dont-advise
@@ -264,6 +270,8 @@
 - [[wbs-세분화-단일책임-수용시나리오]] — WBS 세분화 원칙 — 단일 책임 + 수용 시나리오 기준 #oppd #wbs #sizing #be #fe #acceptance-scenario
 - [[wiki-intelligence-decisions-016]] — opal-wiki-pilot 지능화 결정 — M-4/M-5 (016) #architecture #naming #git #brain #policy
 - [[worker-abort-artifact-measured-adjudication]] — 워커 중단 시 재개 대신 산출물 실측 판정 — 중단과 미완은 별개 사실 #agentic #worker #pm-discipline #resilience #task-095
+- [[worktree-slot-existence-to-occupancy-judgment]] — 워크트리 슬롯 판정 — 존재에서 점유로 #worktree #git #lesson #non-trivial-resolution
+- [[worktree-workspace-isolation-axis]] — 워크트리 격리 축 — 문서는 허브 고정, 코드만 분기 #architecture #workspace #worktree #git #isolation
 - [[wtm-agent-cmux-integration]] — wtm-agent OPAL 표준화 + cmux-tool 신설 #tool #agent #wtm #cmux #task
 
 ## 흐름

@@ -7,6 +7,6 @@
   },
   "extensions": [".py", ".js", ".ts", ".jsx", ".tsx", ".vue", ".svelte", ".kt", ".kts", ".java", ".swift", ".md"],
   "exclude": ["node_modules", "__pycache__", ".git", "dist", "build", ".venv", "env", ".next", ".nuxt", ".output",
-              "fixtures", "backup", ".pytest_cache", "tasks", "specs"],
+              "fixtures", "backup", ".pytest_cache", "tasks", "specs", ".opal-worktrees"],
   "excludePatterns": []
 }

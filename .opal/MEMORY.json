@@ -49,6 +49,38 @@
       "status": "active",
       "file": "memory/079_이관_결정_headerSource_단일화_D_1_D_5_개선_A.md",
       "summary": "auto제거·미설정에러·전명령차단·readonly제거·스코프별 override + scopes include/exclude"
+    },
+    {
+      "title": "변경이력 제거 검토 결정 — A안 확정",
+      "date": "2026-08-14",
+      "type": "task",
+      "status": "active",
+      "file": "memory/변경이력_제거_검토_결정_A안_확정.md",
+      "summary": "프레임워크 md 137개 변경이력 표+버전표기 22건 제거 확정. 생성·검증 측 동반 개정 필수"
+    },
+    {
+      "title": "도구 신설 시 상태 전이 왕복 경로를 시나리오에 명시",
+      "date": "2026-08-15",
+      "type": "improvement",
+      "status": "candidate",
+      "file": "memory/도구_신설_시_상태_전이_왕복_경로를_시나리오에_명시.md",
+      "summary": "092에서 pytest 36건이 전건 통과한 상태로 실환경 검증에 들어갔고 거기서 remove 후 빈 슬롯이 남아 같은 번호 재생성이 영구 차…"
+    },
+    {
+      "title": "테스트 fixture가 실환경 구조를 재현하지 않으면 결함이 통과한다",
+      "date": "2026-08-15",
+      "type": "improvement",
+      "status": "candidate",
+      "file": "memory/테스트_fixture가_실환경_구조를_재현하지_않으면_결함이_통과한다.md",
+      "summary": "092에서 실환경 검증이 pytest 전건 GREEN 상태에서 결함을 두 번 잡았다. 1) 본편 — remove 후 재생성 영구 차단. 기존…"
+    },
+    {
+      "title": "PM이 도구 계수를 grep으로 대체해 오판했다",
+      "date": "2026-08-16",
+      "type": "improvement",
+      "status": "candidate",
+      "file": "memory/PM이_도구_계수를_grep으로_대체해_오판했다.md",
+      "summary": "테스트 함수 수를 grep -c 'def test_'로 세어 292→316으로 보고했으나 문자열 리터럴 \"def test_foo(): pass…"
     }
   ],
   "history": [
@@ -60,32 +92,32 @@
       "result": "TEST-SCENARIO 도출 입력을 Block A(TASK 유래 목표·R·채택 → 축 ①②⑤⑥)/Block B(PLAN 유래 F·H → 축 ③④)로 분리하고 Block A를 PLAN 워커와 병렬 선작성하는 opt-in 트랙을 red-first.md §1.6 신설 + test-scenario-guide Step 1 재구성 + scenario-gate §4 호출시점 [MUST] + opds STEP 2/opd STEP 3·3.5 배선 5문서로 집행. 코드 0줄. 자기적용 실측이 결론을 뒤집음 — 효율 이득은 순 7%에 총작업량 3분 증가로 미미했고, 품질 이득이 실측됨(선작성 고유 3건 S-11 채택·S-12 음성통제·S-15 목표달성이 PLAN TS-001~029에 대응 0건 / PLAN TS는 29/29 흡수 / AC 되읽기형 6·16 과반미달). 그래서 §1.6 리드에 '효율은 목적이 아니다'를 못박고 (f)에 착수 판단 기준+판단유보시 순차 규범을 넣음. 시나리오 18/18 PASS, 게이트 2/2/2 평균 2.0 gaps 0, install 배포본 정합 5/5 OK, 제약 7항 전건 방어(도구·pipeline.json diff 0, spec-validate 10-10). 캡틴 지적 2건 반영: A·D는 FW 소스가 목적지(PLAN은 경유지) / install은 TEST 전건 통과 후로 순서 변경(전역 비가역 배포 차단). 선재 결함 3건 미접촉 보고 — test-tool 전역홈 격리부재(083 OPAL_HOME 선례) · opal-harness §2에 scenario-gate 미등록 · ARCHITECTURE:108 opds 흐름 불일치"
     },
     {
+      "title": "094 STATE 저널화",
+      "date": "2026-08-16",
+      "stage": "완료",
+      "path": "tasks/094-260815-opd-STATE-저널화/",
+      "result": "STATE.md를 state.json 파생 섹션(현황판 표·마커·현재상태·다음액션) 없는 저널(의사결정 로그+블로커)로 재정의 — 미러가 SSOT를 인질로 잡던 marker_missing 하드게이트 소멸, show가 레거시 동결 표를 최신인 양 반환하던 정확성 버그 수정. 범위 편입 3건: R-9(에러종수 3중 불일치→44 통일·SSOT 자기모순 해소·091/093 6종 README 누락 발견) R-10(worktree 허브자산 접근을 기존 find_project_root 재사용으로 교정, 신규 헬퍼 0) R-11(agentic 승인계약 정합 — G-1 semi-agentic opdd 설계확정 3단계 주권침해 해소·G-2 opgc CLOSE 데드락·G-3 헛확인 신호 제거). 최종 344 passed/0 fail, ERROR_CODES 44, 52파일 +7057/-1190. 목표-커버 게이트 3회(1.33 fail→2.00 pass→1.67 pass). [미판정] S-28(저널 수용성)·S-41(승인계약 체감) 소유자 확인 대기 — 기계검증 All Pass이지 All Pass 아님. [교훈] pytest 전건 GREEN 상태에서 실환경·컨벤션 검증이 결함 3회 검출(journal_warning 경로노출·@header JSON 무효 2건) — 요구사항이 문서에만 있고 코드·테스트로 안 이어진 구간은 자동검증이 못 잡는다. SSOT 값을 산문에 복제하면 반드시 어긋남(에러종수 3중·경계stage 2중) → 열거 제거+포인터 대체가 구조적 해법. 범위 확대 시 신규기능 RED 트랙 판정을 강제하는 장치 부재로 동일 위반 2회 재발(#21→#34). 095 이월: --row 55건/15파일·G-6 교차매트릭스·opdd/opwt 계약 집필"
+    },
+    {
+      "title": "093 사용자확인행 자동승인 일원화",
+      "date": "2026-08-16",
+      "stage": "완료",
+      "path": "tasks/093-260815-opd-사용자확인행-자동승인-일원화/",
+      "result": "(PM 보강 대기)"
+    },
+    {
+      "title": "092 워크트리 작업공간 분리",
+      "date": "2026-08-15",
+      "stage": "완료",
+      "path": "tasks/092-260815-opd-워크트리-작업공간-분리/",
+      "result": "모드 축과 직교하는 --worktree/--wt 축 신설 — worktree-tool(5서브명령 create/list/status/remove/init) + 하네스 §2.5 + task-process 스텝 4.5 + dispatch 경로계약 + state-tool --worktree(+8/-1). pilot 10종 중 opd 1건만 변경(C-9 성립). 실환경 2유형 검증: revup 2슬롯 격리 실증(092 커밋 시 093·메인 불변), mams sparse 슬롯 13MB(메인 1.9GB). UV_CACHE_DIR 이전으로 슬롯당 .venv 263MB→8.7MB(30배). 최종 364 passed·보안 4/4·컨벤션 위반 0. [ADD-1] worktree.json 온보딩 경로 부재가 소유자 질문으로 드러나 init 서브명령 신설 — 탐지 기반 초안 생성(독립 .git 발견=multi-repo, 없으면 monorepo), setup은 lock 파일로 depth2까지 결정론 매핑, copy/portOffset은 미추측. [교훈] 실환경 검증이 pytest 전건 GREEN 상태에서 결함을 2회 검출(remove 후 재생성 영구차단 / monorepo setup 탐지 실패) — 두 번 다 fixture가 실환경 구조(왕복 경로·깊이)를 재현하지 않은 것이 원인. 요구사항 자체의 누락은 목표-커버 게이트로도 검출 불가라는 구조적 공백 확인. fw-inbox 5건 누적"
+    },
+    {
       "title": "091 파이프라인 스펙 중복정리",
       "date": "2026-08-14",
       "stage": "완료",
       "path": "tasks/091-260813-opd-파이프라인-스펙-중복정리/",
       "result": "PM Gate 정의를 task_steps[].gate 단일 SSOT로 승격하고 state-tool이 집행 — artifacts 존재 검증 차단(gate_artifact_missing)+checklist stdout 주입, hook 3-페이로드 병존. pilot 10종 감량: 미러표 134행·--row 45건·산문 행N 36건·게이트표 전량 제거, --task-step 전환 45건 수량 대응 일치. 전후 동등 20/20 diff 0, 회귀 284→304 pass, spec-validate 10/10, 배포본 게이트 3종 실동작. 목표-커버 게이트 iter1이 '삭제만 하고 채택 안 함'(070 실패모드) 검출 → S-35+H-13 신설로 해소. S-33·S-34 캡틴 대기"
-    },
-    {
-      "title": "090 파이프라인 스펙 마이그레이션",
-      "date": "2026-08-13",
-      "stage": "완료",
-      "path": "tasks/090-260813-opds-파이프라인-스펙-마이그레이션/",
-      "result": "미전환 6 pilot(opdd·opgc·opwt·opsdd·oppl·oppd) pipeline.json 이관 — 10/10 단일 SSOT 달성, deprecated .md 파싱 호출자 0건. 전후 동등 8/8·spec-validate 10/10·registry 파생 10/10. oppl·oppd init 하드실패 해소(19/13). opsdd EXECUTE-LOOP 17 불변. TEST 18 Pass, S-17만 캡틴 대기"
-    },
-    {
-      "title": "089 opi 프로젝트 최신화",
-      "date": "2026-08-11",
-      "stage": "완료·커밋",
-      "path": "docs/, tasks/089-260811-opi-opal/",
-      "result": "docs 3종 실측 정합 64건+신규섹션2. Codex 비가시·없는경로 6지점 해소. 다이어그램 opsdd 정정"
-    },
-    {
-      "title": "088 클로즈 메모리히스토리 자동연결",
-      "date": "2026-08-11",
-      "stage": "완료",
-      "path": "tasks/088-260811-opp-클로즈-메모리히스토리-자동연결/",
-      "result": "CLOSE 마지막 행 mark 시 state-tool이 memory-tool을 직접 호출해 히스토리 행 자동 생성(생성=도구/result 보강=PM). pilot 10종 무수정, 회귀 284건·E2E 4종 실증. 히스토리 전용 후속 커밋 제거"
     }
   ]
 }

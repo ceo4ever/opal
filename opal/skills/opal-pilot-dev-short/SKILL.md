@@ -29,7 +29,7 @@ harness "4. TASK 공통 프로세스" 참조. 다음 단계명: PLAN.
 
 TASK 완료 → 사용자 보고.
 
-> **[MUST] 행 갱신**: `~/.opal/tools/state-tool/run.sh mark <task-path> --task-step <task-step-key> --done` 호출. LLM이 STATE.md 마크다운 표를 직접 편집하는 것은 금지된다. 행을 mark하는 것 자체가 state 기록이며 별도의 State Gate 행은 존재하지 않는다.
+> **[MUST] 행 갱신**: `~/.opal/tools/state-tool/run.sh mark <task-path> --task-step <task-step-key> --done` 호출. **[MUST] 파이프라인 행 상태(⬜/🔄/✅) 변경은 `~/.opal/tools/state-tool/run.sh`로만 수행한다. `state.json` 직접 편집 금지 — 현황 조회는 `state-tool show <task-path>`로 한다.** 행을 mark하는 것 자체가 state 기록이며 별도의 State Gate 행은 존재하지 않는다.
 > **단계 시작 (P-3)**: `~/.opal/tools/state-tool/run.sh advance <task-path> --task-step <task-step-key>` 호출로 해당 단계 작업 행을 🔄로 전환.
 > **단계 건너뛰기 차단**: state-tool stage-transition guard가 단계 N의 필수 행이 완료되지 않으면 단계 N+1 진입(mark)을 자동 거부한다 (PLAN §M-A). 행에 의존하지 않는다.
 > 근거: `tasks/134-260501-opp-pipeline-state-tool/TASK.md` F-15 / `PLAN.md` §1.5 M-11 / §3 Step 8 P-1 / P-3
@@ -92,7 +92,12 @@ PLAN 완료
        - [ ] 규모 기준 초과 시 Full Task 에스컬레이션 검토 여부
   → PM Gate 통과 후 해당 행(P-4, `plan.pm_gate`)을 단일 mark. 사용자에게 PLAN + TEST-SCENARIO 함께 보고. 승인 = EXECUTE 시작 허가.
 
-> **사용자 확인 (P-5)**: 사용자 발화 후 PM이 `~/.opal/tools/state-tool/run.sh mark <task-path> --task-step plan.user_confirm --done --owner user --note '{owner_name} 확인: ...'` 호출. CLOSE 진입 전 이 행의 `owner=user` 여부를 도구가 자동 검증한다 (§2.16 G-13).
+> **사용자 확인 (P-5)**: 이 행은 **모드에 따라 주체가 다르다**.
+> - 자동 승인 구간(agentic 전 구간 / semi-agentic의 EXECUTE-equivalent 이후) — **PM은 호출하지 않는다.**
+>   다음 단계 진입 시 도구가 자동 승인한다. 계약 SSOT: `opal-harness-agentic.md §4` / `opal-harness-semi-agentic.md §5`.
+> - 그 외(interactive 전 구간 / semi-agentic의 모드 경계 내) — 소유자에게 보고하고 승인 발화를 받은 뒤
+>   `~/.opal/tools/state-tool/run.sh mark <task-path> --task-step plan.user_confirm --done --owner user --note '{owner_name} 확인: ...'` 호출.
+> CLOSE 진입 전 이 행의 `owner=user` 여부를 도구가 자동 검증한다 (§2.16 G-13).
 > 근거: `PLAN.md` §3 Step 8 P-1 / P-5
 
 ---
@@ -161,7 +166,11 @@ op-dev-test-agent 워커 디스패치. TEST-SCENARIO.md 실행 + 결과 기록 +
      - [ ] 컨벤션 자동 진단 PASS (changed_files 컨벤션 적용 대상 ≥1건 시 발동, GC-CONVENTION-*.md 보고서 Critical/High 0건)
 → PM Gate 통과 후 해당 행(`test.pm_gate`)을 단일 mark. 사용자에게 완료 보고 후 CLOSE 단계 진입 승인 요청.
 
-> **사용자 확인 (P-5)**: 사용자 발화 후 PM이 `~/.opal/tools/state-tool/run.sh mark <task-path> --task-step test.user_confirm --done --owner user --note '{owner_name} 확인: ...'` 호출.
+> **사용자 확인 (P-5)**: 이 행은 **모드에 따라 주체가 다르다**.
+> - 자동 승인 구간(agentic 전 구간 / semi-agentic의 EXECUTE-equivalent 이후) — **PM은 호출하지 않는다.**
+>   다음 단계 진입 시 도구가 자동 승인한다. 계약 SSOT: `opal-harness-agentic.md §4` / `opal-harness-semi-agentic.md §5`.
+> - 그 외(interactive 전 구간 / semi-agentic의 모드 경계 내) — 소유자에게 보고하고 승인 발화를 받은 뒤
+>   `~/.opal/tools/state-tool/run.sh mark <task-path> --task-step test.user_confirm --done --owner user --note '{owner_name} 확인: ...'` 호출.
 > 근거: `PLAN.md` §3 Step 8 P-1 / P-5
 
 보고 형식:
@@ -304,7 +313,7 @@ opal-harness-agentic.md / opal-harness-semi-agentic.md 참조. 본 절은 이 �
 
 ### 활성화
 
-> **[MUST] agentic 모드 STATE 갱신**: 게이트 자율 통과 시 `~/.opal/tools/state-tool/run.sh mark <task-path> --task-step <task-step-key> --done --auto-pass --note '<PM 판단 근거>'` 호출 (P-8).
+> **[MUST] agentic 모드 STATE 갱신**: 게이트 자율 통과 시 `~/.opal/tools/state-tool/run.sh mark <task-path> --task-step <task-step-key> --done` 호출 (P-8). **사용자 확인 행은 PM이 명시 호출하지 않는다** — 다음 단계 진입 시 도구가 자동 승인한다. 계약 SSOT: `opal/core/references/opal-harness-agentic.md §4` / `opal-harness-semi-agentic.md §5`.
 >
 > **[MUST] CLOSE 진입 게이트 거부 정책 (P-8 / §2.16 G-13)**: CLOSE 단계 첫 행은 `--auto-pass` 거부. agentic/semi-agentic 모드라도 CLOSE 진입 직전 소유자에게 보고 후 사용자 발화를 받아 사용자 확인 행을 `--owner user`로 mark한 뒤 진행한다.
 >
@@ -379,4 +388,6 @@ semi-agentic / agentic 모두 CLOSE 첫 행 `--auto-pass` 거부 (`agentic_close
 | v4.3 | 2026-07-23 09:56 | 본문 state-tool 명령 예시를 task-step key 주소로 전환(--row→--task-step, --step→--action-step). pipeline.json key 기준. (070 후속) |
 | v4.4 | 2026-07-23 15:26 | STEP 2 producer를 op-dev-plan(PLAN.md만) → 알투(PM)+캡틴 페어 직접 작성(TEST-SCENARIO.md, opd STEP 3.5 동형)으로 확립 — op-dev-plan/SKILL.md 미접촉; PLAN 절차에 목표-커버 게이트(op-scenario-gate, pilot:opds) 호출 삽입; pipeline.json `plan.scenario_gate` 행 추가(10→11행) + STATE 미러 표·산문 "행 N" 전수 +1 재정렬; PM Gate checklist에 게이트 항목 추가 (075) |
 | v4.5 | 2026-08-14 09:23 | pipeline.json 중복 정리 — STATE.md 진행 현황 미러 표 삭제 + 산문 `행 N` 참조를 task-step key로 전환, 모드·단계 목록 표 제거(meta 중복), PM Gate 점검 목록 표를 `references/pipeline.json` `task_steps[].gate` SSOT 포인터로 교체 (091) |
-| v4.6 | 2026-08-19 21:10 | STEP 2에 목표계열 선작성 3단계 배선 — (a) PLAN 디스패치와 동시 선작성 착수 (b) PLAN.md 수신 후 Block B 보강(수정·삭제 포함) (c) 보강 완료 후 게이트 1회 호출 + `plan.scenario_gate` mark 시점 명시. 규칙 본문 0줄(SSOT 포인터만), pipeline.json·PM Gate 체크리스트 무변경 (095) |
+| v4.6 | 2026-08-15 21:48 | 사용자 확인 행 자동 승인 계약 반영 — agentic STATE 갱신 지시에서 PM `--auto-pass` 명시 호출 삭제, 다음 단계 진입 시 도구 자동 승인으로 전환하고 계약 본문은 하네스 SSOT(`opal-harness-agentic.md §4` / `opal-harness-semi-agentic.md §5`) 참조로 정리. CLOSE 진입 게이트 서술 불변 (093) |
+| v4.7 | 2026-08-16 13:30 | 사용자 확인 (P-5) 2건(plan/test) 산문을 모드 무분기 명령형 → 모드 분기 서술로 교체 — 자동 승인 구간(agentic 전 구간 / semi-agentic EXECUTE-equivalent 이후)은 PM 미호출·도구 자동 승인, 그 외 구간은 기존 mark 호출 유지. 지점별 --task-step 키·근거 인용 보존 (094 R-11 G-4). STEP 1 "[MUST] 행 갱신" 서술의 표 전제("LLM이 STATE.md 마크다운 표를 직접 편집하는 것은 금지된다")를 표준 문구 A("파이프라인 행 상태 변경은 `state-tool`로만 수행, `state.json` 직접 편집 금지, 조회는 `state-tool show`")로 치환 — STATE.md가 파생 표를 렌더하지 않는 저널로 재정의됨에 따른 정합(094 R-6/R-7, Step 8) |
+| v4.8 | 2026-08-19 21:10 | STEP 2에 목표계열 선작성 3단계 배선 — (a) PLAN 디스패치와 동시 선작성 착수 (b) PLAN.md 수신 후 Block B 보강(수정·삭제 포함) (c) 보강 완료 후 게이트 1회 호출 + `plan.scenario_gate` mark 시점 명시. 규칙 본문 0줄(SSOT 포인터만), pipeline.json·PM Gate 체크리스트 무변경 (095) |

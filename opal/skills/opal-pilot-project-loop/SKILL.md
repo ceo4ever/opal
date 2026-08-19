@@ -46,10 +46,12 @@ Loop 2(실행 수렴: 태스크 선택~완료, 전 수용기준 GREEN까지 반�
 | SSOT | 도구 | 관리 대상 | 사람 뷰(자동 렌더 미러) |
 |------|------|---------|----------------------|
 | `backlog.json` | `backlog-tool` | 태스크 목록·상태·의존·우선순위 | `BACKLOG.md` |
-| `state.json` | `state-tool` | 파이프라인 진행 현황판 | `STATE.md` |
+| `state.json` | `state-tool` | 파이프라인 행(`rows[]`) 진행 상태 | `state-tool show`(조회) |
 | `test-scenario.json` | `test-tool` (`scenario-*`) | 태스크별 테스트 시나리오 spec/result | (없음 — `scenario-status`로 조회) |
 
-> **[MUST]** `docs/CONVENTIONS.md` §State 관리: "마크다운 표 직접 편집 금지" — 위 3종 마크다운 미러(BACKLOG.md·STATE.md)는 항상 해당 도구가 렌더하며, PM은 손편집하지 않는다.
+> STATE.md는 **의사결정 로그·블로커·자유 기재를 담는 저널**이다. 파이프라인 현황(행 상태·진행·다음 액션)의 SSOT는 `state.json`이며, 조회는 `state-tool show`로 한다.
+
+> **[MUST] 파이프라인 행 상태(⬜/🔄/✅) 변경은 `~/.opal/tools/state-tool/run.sh`로만 수행한다. `state.json` 직접 편집 금지 — 현황 조회는 `state-tool show <task-path>`로 한다.** `BACKLOG.md`는 `backlog-tool`이 항상 렌더하는 자동 미러이며 PM은 손편집하지 않는다.
 
 ---
 
@@ -432,7 +434,7 @@ TASK (사용자 승인)
 
 ### 자율 게이트 흐름 (agentic)
 
-동일 흐름에서 D7 게이트까지 PM이 자율 검토·확정하고(`--auto-pass` + `--note` 근거), Loop 2 전체를 PM이 자율 관리한다. **비가역 행동(loop-control.md §9)은 agentic에서도 예외 없이 사용자 승인을 받는다** — TRD/PRD 확정(D7)·배포·DB 마이그레이션이 여기 해당하므로, D7은 agentic에서도 자동 통과 대상이 아니다.
+동일 흐름에서 D7 게이트까지 PM이 자율 검토·확정하고(사용자 확인 행은 PM 명시 호출 없이 다음 단계 진입 시 도구가 자동 승인 — 계약 SSOT: `opal/core/references/opal-harness-agentic.md §4` / `opal-harness-semi-agentic.md §5`), Loop 2 전체를 PM이 자율 관리한다. **비가역 행동(loop-control.md §9)은 agentic에서도 예외 없이 사용자 승인을 받는다** — TRD/PRD 확정(D7)·배포·DB 마이그레이션이 여기 해당하므로, D7은 agentic에서도 자동 통과 대상이 아니다.
 
 ### G 게이트 재작업 루핑
 
@@ -581,3 +583,5 @@ Loop 1 재회전 {N}회 · Loop 2 태스크 {M}개 완주.
 | v1.8 | 2026-07-28 22:47 KST | 프로젝트 메모리 동기화 절 정정(기존 결함 교정, memory-tool 도입(045) 이전 관행의 표 편집 서술 잔존분) — `MEMORY.json` + `append --kind history` 도구 호출로 교체, 직접 편집 금지 명시 (078) |
 | v1.9 | 2026-08-13 16:57 KST | pipeline.json 전환 + init 하드 실패 해소 — references/pipeline.json 신설(19 task-step, SSOT), --rows-from를 pipeline.json으로 교체하여 기존 skill_md_parse_error(header not found) 해소, 표는 사람 열람용 미러로 명시(헤더·표 헤더 개명 없음) (090) |
 | v2.0 | 2026-08-14 09:33 KST | SKILL.md 감량 — `--row N` 4건을 `--task-step <key>`로 전환(review.pm_gate/review.d7_user_gate/verify.pm_gate/verify.user_confirm), 진행 현황 미러 표 19행 삭제 → `references/pipeline.json` 포인터 1줄로 교체, 중복 init 완전 명령 1건 삭제(§STATE.md 초기 생성 1건만 정본 존치), R-13 서술의 `행 #13` 참조를 `execute.l0_select` key 참조로 교체, PM Gate 절차 블록쿼트에 게이트 정의 SSOT 포인터 1줄 추가(기존 판정 절차 산문은 존치) (091) |
+| v2.1 | 2026-08-15 21:48 | 사용자 확인 행 자동 승인 계약 반영 — agentic STATE 갱신 지시에서 PM `--auto-pass` 명시 호출 삭제, 다음 단계 진입 시 도구 자동 승인으로 전환하고 계약 본문은 하네스 SSOT(`opal-harness-agentic.md §4` / `opal-harness-semi-agentic.md §5`) 참조로 정리. CLOSE 진입 게이트 서술 불변 (093) |
+| v2.2 | 2026-08-16 13:38 KST | STATE.md 저널화 반영 — 3-SSOT 표에서 `state.json` 행의 "사람 뷰" 열을 `STATE.md`(자동 렌더 미러 전제)에서 `state-tool show`(조회)로 정정, STATE.md 역할을 저널(의사결정 로그·블로커·자유 기재)로 재정의하는 문구 추가, 도구 규율 문구를 표준화(`state-tool`로만 파이프라인 행 상태 변경, `state.json` 직접 편집 금지). `BACKLOG.md`가 `backlog-tool`의 자동 렌더 미러라는 서술은 존치 (094) |

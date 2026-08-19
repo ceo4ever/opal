@@ -41,7 +41,7 @@ AI 프레임워크 설계 전문가 — 모든 산출물을 **재사용성, 플�
 - **새 스킬·에이전트 추가 시**: 기존 컴포넌트와의 의존 관계, 약어(alias) 충돌, 부트스트래퍼 영향을 확인한다.
 - **하네스 변경 시**: `opal/core/references/opal-harness.md`(SSOT)를 수정한다. 다른 곳에서 발췌·복제하지 않는다.
 - **문서 변경이력**: 스킬·에이전트·참조 문서 수정 시 변경이력 표에 행을 추가한다 (일시 KST + 태스크 번호 포함).
-- **state-tool 사용 의무**: 파이프라인 STATE.md 행 변경은 `~/.opal/tools/state-tool/run.sh`로만 수행한다. 마크다운 표 직접 편집 금지.
+- **state-tool 사용 의무**: **[MUST] 파이프라인 행 상태(⬜/🔄/✅) 변경은 `~/.opal/tools/state-tool/run.sh`로만 수행한다. `state.json` 직접 편집 금지 — 현황 조회는 `state-tool show <task-path>`로 한다.**
 
 ## 도메인 지식
 

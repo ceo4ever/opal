@@ -42,6 +42,7 @@
 #   v4.2 2026-07-28: code-scan run.sh 실행 권한 chmod 블록 추가(improve-tool 블록 직후, state-tool 패턴) — code-map 헤더 작성층 도구 배포·tool-scan usage 정상화 (077)
 #   v4.3 2026-08-04 15:24 KST: install_opal_setting 병합 로직을 SEED_KEYS 목록 루프로 재작성 — models 키 존재 시 조기 sys.exit(0)으로 shardPolicy가 영구 미시드되던 구조 제거, 키별 독립 판정으로 전환(H-11) (083)
 #   v4.4 2026-08-10 23:24 KST: Python 버전 계약 상수 + 게이트 함수군 8종 신설(python_candidates/python_meets_min/find_python/venv_meets_min/python_autoinstall_enabled/install_platform_python/ensure_python) + install_opal_venv fail-fast·기존 venv 하한 재검증 재생성 — macOS brew 자동설치·Linux 안내 어댑터 분기, 구버전 Python으로 venv가 조용히 생성·재사용되던 결함 fix (087)
+#   v4.5 2026-08-15 16:30 KST: worktree-tool run.sh 실행 권한 chmod 블록 추가 (092)
 #
 
 set -euo pipefail
@@ -1199,6 +1200,13 @@ install_opal() {
         if [[ -f "$code_scan_run" ]]; then
             chmod +x "$code_scan_run"
             success "code-scan run.sh 실행 권한 설정"
+        fi
+
+        # ── worktree-tool 실행 권한 (092) ──
+        local worktree_run="$opal_home/tools/worktree-tool/run.sh"
+        if [[ -f "$worktree_run" ]]; then
+            chmod +x "$worktree_run"
+            success "worktree-tool run.sh 실행 권한 설정"
         fi
 
         # cmux 의존성 안내 (정보성 — 설치 강제 없음, silent fallback 정책)

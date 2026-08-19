@@ -304,6 +304,18 @@
 - 갱신: [[replacement-goal-verification-scope-gap]]
 - 출처: task:091
 
+## [2026-08-15] ingest | CLOSE ingest — 태스크 092 워크트리 작업공간 분리
+- 신규: [[pages/entity/worktree-tool.md]], [[pages/concept/worktree-workspace-isolation-axis.md]], [[pages/concept/worktree-slot-existence-to-occupancy-judgment.md]]
+- 출처: task:092
+
+## [2026-08-16] ingest | CLOSE ingest — 태스크 093 파이프라인 사용자 확인 행 자동 승인 경로 일원화
+- 신규: [[pages/concept/pipeline-user-confirmation-single-status-axis.md]], [[pages/concept/auto-approve-user-confirmation-axis-separation.md]], [[pages/concept/self-modifying-tool-deploy-unit-coupling.md]]
+- 출처: task:093
+
+## [2026-08-16] ingest | CLOSE ingest — 태스크 094 STATE.md 파생 섹션 제거·저널화
+- 신규: [[pages/concept/state-md-journal-redefinition.md]], [[pages/concept/mirror-gate-must-not-hostage-ssot-record.md]]
+- 출처: task:094
+
 ## [2026-08-19] ingest | CLOSE ingest — 태스크 095 TEST-SCENARIO 목표계열 선작성 (PLAN 병렬 도출 트랙 신설)
 - 신규: [[scenario-prewrite-goal-series-track]], [[prewrite-track-quality-not-efficiency-measurement]], [[prewrite-self-confirming-triple-defense]], [[subsection-number-insertion-preserves-citations]], [[marker-literal-check-meta-circular-false-positive]], [[global-deploy-after-verification-ordering]], [[worker-abort-artifact-measured-adjudication]]
 - 출처: task:095

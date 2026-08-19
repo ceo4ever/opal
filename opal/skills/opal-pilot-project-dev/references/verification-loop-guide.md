@@ -479,12 +479,12 @@ QA 피드백:
 
 ## 6. PM 루프 모니터링
 
-> **[MUST] 파이프라인 행 상태 변경은 `~/.opal/tools/state-tool/run.sh` 호출로만 수행한다. LLM이 STATE.md를 직접 편집하는 것은 금지된다.**
-> — `tasks/134-260501-opp-pipeline-state-tool/TASK.md` F-18 / `PLAN.md` §1.5 M-30 / §3 Step 11
+> **[MUST] 파이프라인 행 상태(⬜/🔄/✅) 변경은 `~/.opal/tools/state-tool/run.sh`로만 수행한다. `state.json` 직접 편집 금지 — 현황 조회는 `state-tool show <task-path>`로 한다.**
+> — `tasks/134-260501-opp-pipeline-state-tool/TASK.md` F-18 / `PLAN.md` §1.5 M-30 / §3 Step 11 / 094 §3.4.2 표준 문구 A
 >
 > 예: EXECUTE Step 완료 시:
 > ```bash
-> ~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done --as-worker --worker-stage EXECUTE --step <N/M>
+> ~/.opal/tools/state-tool/run.sh mark <task-path> --task-step <key> --done --as-worker --worker-stage EXECUTE --step <N/M>
 > ```
 > **[R-10]** oppd 비표준 행 구성 — `gate-pass` 사용 불가. `mark` 개별 호출 필수.
 
@@ -503,24 +503,43 @@ QA 피드백:
 
 ### 루프 진행률 추적 방법
 
-오케스트레이터는 STATE.md의 다음 필드로 전체 진행률을 추적한다:
+`## 현재 상태` 섹션은 저널화(094 R-1)로 STATE.md에서 제거되었다. 오케스트레이터는 아래 경로로 전체 진행률을 추적한다(H-12 대체 보관처 — `harness/state.md` §세션 복원 · 094 §3.3.2 (4)):
+
+| 구 필드 | 대체 |
+|---------|------|
+| `- 진행:` (Step N/M) | `state-tool show --format json` → `data.rows[].note`(`Step N/M 완료`가 기록됨) + `data.current_status` |
+| `- 상태:` | `state-tool show --format json` → `data.current_status` |
+| `- 검증:` (현재 검증 계층·시도 횟수) | STATE.md 저널의 자유 기재 섹션 `## 검증 루프`(PM 수동 기재) — 파생값이 아니라 도구가 담지 못하는 서술 정보이므로 저널 정의에 부합한다 |
+
+`## 검증 루프` 자유 기재 예시 (STATE.md 저널 안에 PM이 직접 기재):
 
 ```markdown
-## 현재 상태
-- 진행: Step 3/7 완료
+## 검증 루프
 - 검증: L2 build 시도 1/2
 - 상태: 검증 중
 ```
 
-- `검증` 필드: 현재 검증 계층과 시도 횟수를 표시
-- `상태` 필드: `검증 중` / `수정 중` / `에스컬레이션` 중 하나
+- `검증` 항목: 현재 검증 계층과 시도 횟수를 표시
+- `상태` 항목: `검증 중` / `수정 중` / `에스컬레이션` 중 하나
+- 두 항목의 이력(과거 시도)은 §5 "STATE.md 검증 루프 로그" 표(`## 검증 루프 로그`)에 누적 기록한다
 
 ### 세션 복원 시 루프 상태 재개
 
-새 세션에서 STATE.md를 Read하여 중단된 지점을 파악한다:
+새 세션에서 검증 루프의 중단 지점을 파악할 때는 아래 순서로 상태를 복원한다(`harness/state.md` §세션 복원 · 094 §3.3.2 (4)):
 
-1. STATE.md의 `검증` 필드에서 마지막 검증 계층과 시도 횟수를 확인한다
-2. 검증 루프 로그의 마지막 행에서 결과를 확인한다:
+```
+1. `~/.opal/tools/state-tool/run.sh show <task-path> --format json` 을 호출해
+   현재 단계·행 상태·current_status·next_action을 파악한다 (SSOT: state.json).
+2. `tasks/{NNN}-{name}/STATE.md`(저널)를 Read하여 `## 검증 루프`(현재 계층·시도 횟수)와
+   `## 검증 루프 로그`(이력) 등 도구가 담지 못하는 서술 맥락을 보완한다.
+```
+
+1단계(`show`)가 기계 상태(단계·행 상태·`current_status`)의 유일 근거이며, 2단계(STATE.md Read)는 검증 루프 진행 상태를 포함한 서술 맥락 보완 전용이다 — STATE.md에서 진행률·행 상태를 읽어 판단하지 않는다.
+
+위 2단계 절차로 복원한 뒤, `## 검증 루프`·`## 검증 루프 로그` 자유 기재를 아래 순서로 해석하여 재개 지점을 판단한다:
+
+1. `## 검증 루프`의 `검증` 항목에서 마지막 검증 계층과 시도 횟수를 확인한다
+2. `## 검증 루프 로그`의 마지막 행에서 결과를 확인한다:
    - `Fail` → 해당 계층의 다음 시도부터 재개
    - `Escalation` → 사용자에게 에스컬레이션 상태 알림, 결정 요청
    - `Regression` → 회귀 상태 알림, 복원 여부 결정 요청
@@ -564,3 +583,4 @@ QA 피드백:
 | 2026-06-21 16:05 | R-3 | B7 triage 3분류(구현/설계/회귀) 추가 + §3-5 "QA 0회"→"설계 수준" scope별 분기(action 재PLAN[harness 포인터]/wbs PM/trd 0회 유지) + §7 정합성 표 PLAN 재진입 행(harness §1 포인터, 수치 미복제) (031) |
 | 2026-06-21 | R-4 | 검증 명령 4종 표준 정합 — §2 L1 `lint`→`lint:fix`, L3a `test:unit`→`npm test -- --run`(watch 금지 단발 실행). watch 모드 금지 규칙 1문장 신규 추가(SSOT 단일 기재). `--testPathPattern` 2건 Vitest식 치환(L3a 템플릿·auth 예시). §검증 명령 결정 추론 키 구조 보존 (033) |
 | 2026-06-23 | R-5 | 3축 명명 매핑 표 추가(L계층/검증깊이/파이프라인 단계 별도 축 명시) + 단위=EXECUTE/통합=TEST 배선 (039) |
+| 2026-08-16 13:31 | R-6 | STATE.md 저널화 정합 — §6 MUST 블록을 표준 문구 A로 교체 + `--row`→`--task-step`. "루프 진행률 추적 방법"의 `## 현재 상태` 필드 서술을 삭제하고 `show --format json`(진행/상태) + STATE.md 저널 자유 기재 `## 검증 루프`(현재 계층·시도) 보관처로 재정의(H-12). "세션 복원 시 루프 상태 재개"를 `STATE.md Read` 단일 절차에서 `show`(기계 상태) → `STATE.md Read`(서술 맥락 보완) 2단계 표준 절차로 교체(harness/state.md §세션 복원과 동일 문구) (094) |

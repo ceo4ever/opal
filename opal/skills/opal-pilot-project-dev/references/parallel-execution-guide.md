@@ -353,8 +353,8 @@ npm run lint:fix && npm run build && npm test
 
 ## 7. STATE.md 갱신
 
-> **[MUST] 파이프라인 행 상태 변경은 `~/.opal/tools/state-tool/run.sh` 호출로만 수행한다. LLM이 STATE.md를 직접 편집하는 것은 금지된다.**
-> — `tasks/134-260501-opp-pipeline-state-tool/TASK.md` F-18 / `PLAN.md` §1.5 M-29 / §3 Step 11
+> **[MUST] 파이프라인 행 상태(⬜/🔄/✅) 변경은 `~/.opal/tools/state-tool/run.sh`로만 수행한다. `state.json` 직접 편집 금지 — 현황 조회는 `state-tool show <task-path>`로 한다.**
+> — `tasks/134-260501-opp-pipeline-state-tool/TASK.md` F-18 / `PLAN.md` §1.5 M-29 / §3 Step 11 / 094 §3.4.2 표준 문구 A
 
 ### 7-1. 갱신 원칙
 
@@ -561,3 +561,4 @@ git branch -d feat/oppd-A03
 | 2026-05-01 | R-2 | state-tool 도입 — STATE.md 직접 편집 금지 + `state-tool` 호출 표현 교체. §4-3 결과 수집, §7-1 갱신 원칙, §7-2 갱신 시점 표, §8-1 Fallback 절차에 `state mark`/`state advance`/`state block` 호출 표기 통일. oppd 비표준 행 구성 R-10 명시(gate-pass 금지 — mark 개별 호출). 머지 이력/검증 루프 로그는 자유 텍스트 영역으로 보존 — TASK F-18 / PLAN §1.5 M-29 / §3 Step 11 (134) |
 | 2026-06-21 16:05 | R-3 | §1 개요 §목적 재서술 — 병렬은 1차 목표가 아니라 세분화의 파생 효과(세분화↑→충돌↓→병렬↑). 기존 worktree 격리/머지/디스패치 본문 보존 (031) |
 | 2026-06-21 | R-4 | `npm run lint` → `npm run lint:fix` 정합 — 액션 예시표(A01~A04), §5-2 머지 검증 예시, §6-1 전체 검증, §8-2 예시 코드 내 lint 명령을 L1 표준(`lint:fix`)으로 교체. watch 금지 규칙은 SSOT 단일 기재 — 재서술 없음 (033) |
+| 2026-08-16 13:31 | R-5 | STATE.md 저널화 정합 — §7 MUST 블록을 표준 문구 A로 교체 (094) |

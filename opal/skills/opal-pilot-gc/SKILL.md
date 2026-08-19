@@ -63,7 +63,7 @@ description: |
 
 ```
 tasks/{NNN}-{YYMMDD}-opgc-{short-summary}/
-  ├── STATE.md                        # 파이프라인 상태 + 실행 요약 테이블 (허브)
+  ├── STATE.md                        # 저널(의사결정 로그·블로커) + 실행 요약(자유 기재) (허브)
   ├── GC-SECURITY-{타임스탬프}.md     # 보안 보고서 (요소별 N개 가능, 체크리스트 내장, 자기완결)
   ├── GC-CONVENTION-{타임스탬프}.md   # 컨벤션 보고서 (요소별 N개 가능, 체크리스트 내장, 자기완결)
   └── DONE.md                         # CLOSE 단계 완료 문서
@@ -151,7 +151,7 @@ else:
 
 > **[MUST] 하위호환**: "프로젝트 구성" 섹션이 없는 기존 프로젝트에서는 fallback(프로젝트 전체 × 체커)으로 진행하여 1+1 단일 디스패치와 동일하게 동작한다.
 
-**산출물**: state-tool로 STATE.md 갱신 (분할 결과는 내부 참조, STATE.md에는 디스패치 매트릭스 요약만 기록)
+**산출물**: PM이 STATE.md 저널(자유 기재 영역)에 디스패치 매트릭스 요약 직접 기록 (분할 결과는 내부 참조용, `state.json` 비접촉 — state.json 파생이 아닌 opgc 고유 서술 정보)
 
 **게이트**: 없음 (자동 진행)
 
@@ -286,6 +286,8 @@ Critical 또는 High 이슈 1건 이상 → "[심각도 트리거]" 제안 생�
 
 ### 3.4 STATE.md 실행 요약 테이블 갱신
 
+> 아래 표는 `state.json` 파생이 아닌 opgc 고유 자유 기재이며, PM이 STATE.md 저널에 직접 기록한다(094 R-6).
+
 요소별 보고서가 여러 개인 경우, 요소별 행 + 합계 행으로 확장한다:
 
 ```markdown
@@ -302,9 +304,9 @@ Critical 또는 High 이슈 1건 이상 → "[심각도 트리거]" 제안 생�
 
 단일 요소(Fallback)인 경우 기존 2행 + 합계 포맷 유지.
 
-**산출물**: `GC-SECURITY-{ts}[-{element}].md` × N, `GC-CONVENTION-{ts}[-{element}].md` × N, state-tool로 STATE.md 갱신
+**산출물**: `GC-SECURITY-{ts}[-{element}].md` × N, `GC-CONVENTION-{ts}[-{element}].md` × N, PM이 STATE.md 저널(자유 기재)에 실행 요약 직접 기록
 
-**게이트**: 사용자 확인 (기본) — Agentic 모드에서 자율 통과
+**게이트**: 사용자 확인 (기본, 대화형 — pipeline.json 행 아님) — Agentic 모드에서 자율 통과. 이 확인의 결과는 별도 행으로 기록되지 않고 CLOSE 첫 행(`close.done_md`) `--owner user` mark로 집행된다(R-11 G-2, §4.2 참조).
 
 보고 형식:
 ```
@@ -323,8 +325,8 @@ CLOSE로 진행할까요? 수정이 필요하면 CLOSE 단계에서 //opds 체�
 
 **목적**: 실행 요약 집계, DONE.md 생성, 필요 시 opds 수동 체인 안내
 
-> **[MUST] CLOSE 진입 게이트**: REPORT 단계 사용자 확인 없이는 CLOSE 진입 금지.
-> (하네스 §1 Guards, TASK.md §제약조건 원문 준수)
+> **[MUST] CLOSE 진입 게이트 (R-11 G-2 — 확인 행 0개 파이프라인 폴백)**: opgc `references/pipeline.json`에는 "사용자 확인" 행이 없다. 이 경우 `check_close_gate`는 **CLOSE 첫 행(`close.done_md`) 자체를 유일한 소유자 승인 지점**으로 취급한다 — 소유자에게 REPORT 결과를 보고하고 승인 발화를 받은 뒤 `--owner user`로 mark해야 하며, 생략 시 `close_gate_violation`으로 거부된다(`--force` 불요 — `--force`는 정책 우회이므로 사용하지 않는다).
+> (하네스 §1 Guards, `opal/tools/state-tool/state_tool.py` `check_close_gate` G-2 폴백 / `opal/core/references/opal-harness-semi-agentic.md` §3 opgc 행 / TASK.md §제약조건 원문 준수)
 
 ### 4.1 DONE.md 생성
 
@@ -335,14 +337,14 @@ CLOSE로 진행할까요? 수정이 필요하면 CLOSE 단계에서 //opds 체�
 
 ### 4.2 CLOSE 행 갱신
 
-DONE.md 생성 완료 후 state-tool로 행 갱신:
+소유자 승인 발화 수신 + DONE.md 생성 완료 후 state-tool로 행 갱신:
 
 ```
-~/.opal/tools/state-tool/run.sh mark <task-path> --task-step close.done_md --done  # DONE.md 생성 (CLOSE 완료)
+~/.opal/tools/state-tool/run.sh mark <task-path> --task-step close.done_md --done --owner user --note '{owner_name} 확인: GC 결과 확인 후 CLOSE 진행'
 ```
 
 > **[MUST] 행 갱신**: mark하는 것 자체가 state 기록이며 별도의 State Gate 행은 존재하지 않는다. state-tool stage-transition guard가 이전 단계 필수 행 완료 여부를 자동 검증한다.
-> **CLOSE 진입 게이트 (§2.16 G-13)**: CLOSE 단계 첫 행(#7)은 `--auto-pass` 적용 불가 (`close_gate_violation`). 반드시 위 명시 호출로 처리한다.
+> **CLOSE 진입 게이트 (R-11 G-2 / §2.16 G-13)**: opgc는 확인 행이 0개이므로 CLOSE 첫 행(`close.done_md`)이 유일한 소유자 승인 지점이다. `--owner user` 누락 시 `close_gate_violation`으로 거부된다(`--force` 불요). `--auto-pass`는 agentic/semi-agentic 모드에서 별도로 `agentic_close_gate_requires_user`로 거부된다.
 
 **관련 문서 업데이트** (op-brain-ingest 디스패치 직전 실행):
 
@@ -421,18 +423,20 @@ opgc 실행 결과 {N}건 이슈 감지
 
 ## STATE.md 도메인 치환값
 
+> **[MUST] 파이프라인 행 상태(⬜/🔄/✅) 변경은 `~/.opal/tools/state-tool/run.sh`로만 수행한다. `state.json` 직접 편집 금지 — 현황 조회는 `state-tool show <task-path>`로 한다.**
+>
 > **[SSOT]** SSOT는 `references/pipeline.json`이며, `state-tool init` 호출 시 이를 `--rows-from` 옵션으로 참조한다.
 >
 > STATE.md 초기 생성은 §Agentic Mode(--agentic 플래그) 참조.
 >
 > state-tool이 `references/pipeline.json`을 읽어 state.json을 초기화한다. 아래 표는 사람 열람용 미러이며 행 데이터를 직접 편집하지 않는다.
 
-**파이프라인 현황판 행 구조** (아래 표는 사람 열람용 미러 — SSOT는 `references/pipeline.json`. `.md` 파싱은 하위호환 폴백으로만 존치, 편집 금지):
+**파이프라인 행 구조**(`state.json` `rows[]`) (아래 표는 사람 열람용 미러 — SSOT는 `references/pipeline.json`. `.md` 파싱은 하위호환 폴백으로만 존치, 편집 금지):
 
 > **행 구성 SSOT**: `references/pipeline.json` `task_steps[]`. 현재 행 목록은
 > `~/.opal/tools/state-tool/run.sh show <task-path>` 또는 pipeline.json을 직접 조회한다.
 
-**실행 요약 테이블 템플릿** (REPORT 단계에서 STATE.md에 추가):
+**실행 요약 테이블 템플릿** (REPORT 단계에서 PM이 STATE.md 저널에 직접 기록 — `state.json` 비접촉, 자유 기재):
 
 ```markdown
 ## 이번 실행 요약
@@ -451,14 +455,15 @@ opgc 실행 결과 {N}건 이슈 감지
 `~/.opal/references/opal-harness-agentic.md`를 Read한다.
 
 Agentic 모드 특수 규칙:
-- **CLOSE 진입 게이트만 유지** — REPORT 사용자 확인 게이트는 자율 통과
+- **CLOSE 진입 게이트만 유지** — REPORT 사용자 확인 게이트(대화형, pipeline.json 행 아님)는 자율 통과
 - `AGENTIC-LOG.md`를 태스크 폴더에 생성하여 자율 결정 내역을 기록
 - 보고서 내 `[?] review` 항목은 **건너뛰지 않고** 주석에 "agentic: 사용자 확인 필요" 표기
-- 자율 통과 시 state-tool `--auto-pass` 호출 (P-8):
+- 자율 통과 시 state-tool mark 호출 (P-8):
   ```
-  ~/.opal/tools/state-tool/run.sh mark <task-path> --task-step <task-step-key> --done --auto-pass --note '<근거>'
+  ~/.opal/tools/state-tool/run.sh mark <task-path> --task-step <task-step-key> --done
   ```
-- **CLOSE 단계 첫 행(#7)은 `--auto-pass` 금지** (`close_gate_violation` — §2.16 G-13); 반드시 명시 호출
+- **opgc는 "사용자 확인" 행 자체가 없다(R-11 G-2)** — 다른 pilot의 "사용자 확인 행은 PM이 명시 호출하지 않는다"(자동 승인) 규칙은 opgc에 적용 대상이 없다. 대신 **CLOSE 첫 행(`close.done_md`)이 유일한 소유자 승인 지점**이며, agentic 모드라도 이 행은 `--owner user`를 명시하여 mark해야 한다(자동 승인 대상 아님, `check_close_gate` G-2 폴백).
+- **CLOSE 단계 첫 행(`close.done_md`)은 `--auto-pass` 금지** (`close_gate_violation` / agentic·semi-agentic은 `agentic_close_gate_requires_user` — §2.16 G-13); 반드시 `--owner user` 포함 명시 호출
 - init 시 `--mode agentic` 플래그 추가:
   ```
   ~/.opal/tools/state-tool/run.sh init <task-path> --skill opgc --mode agentic --rows-from opal/skills/opal-pilot-gc/references/pipeline.json
@@ -522,3 +527,5 @@ fingerprint = sha1(fingerprint_input).hex()[:16]
 | v1.9 | 2026-07-28 | `NNN` 채번 서술을 `.opal/MEMORY.md` 헤더 직접 참조에서 `memory-tool task-number --bump` 포인터 참조로 전환 (절차 SSOT: `harness/task-process.md`) (078) |
 | v1.10 | 2026-08-13 16:56 | pipeline.json 전환 — references/pipeline.json 신설(7 task-step, SSOT), --rows-from 호출 경로를 SKILL.md에서 pipeline.json으로 교체, 표는 사람 열람용 미러로 명시 (090) |
 | v1.11 | 2026-08-14 09:23 | `--row N` 2건을 `--task-step <key>`로 전환(close.done_md 확정 / Agentic 범용 예시는 플레이스홀더) + STATE.md 도메인 치환값 `필드/값`(모드·단계 목록) 중복 표 제거(meta와 중복) + 진행 현황 미러 표를 `references/pipeline.json` SSOT 포인터로 교체 + init 완전 명령 1지점화(§Agentic Mode 정본, SCAN 1.4·치환값 절은 포인터) (091) |
+| v1.12 | 2026-08-15 21:48 | 사용자 확인 행 자동 승인 계약 반영 — agentic STATE 갱신 지시에서 PM `--auto-pass` 명시 호출 삭제, 다음 단계 진입 시 도구 자동 승인으로 전환하고 계약 본문은 하네스 SSOT(`opal-harness-agentic.md §4` / `opal-harness-semi-agentic.md §5`) 참조로 정리. CLOSE 진입 게이트 서술 불변 (093) |
+| v1.13 | 2026-08-16 14:20 | STATE.md 저널화 정합 — ① STEP 1 "행 갱신"·§도메인 치환값의 표 전제(마크다운 표 직접 편집 금지/파이프라인 현황판 행)를 표준 문구 A/"파이프라인 행(`state.json` rows[])"으로 치환, "STATE.md 실행 요약 테이블" 관련 서술을 "PM이 저널에 직접 기록하는 자유 기재"로 명확화(`state.json` 비접촉) ② CLOSE 게이트 전면 재작성 — opgc는 "사용자 확인" 행이 0개인 파이프라인이므로 `check_close_gate` G-2 폴백에 따라 CLOSE 첫 행(`close.done_md`)이 유일한 소유자 승인 지점임을 명시, mark 예시에 `--owner user` 추가(`--force` 불요), Agentic 모드 절의 "사용자 확인 행 자동 승인" 보일러플레이트가 opgc에 미적용됨을 명시 (094 R-6/R-7/R-11 G-2, Step 9) |
