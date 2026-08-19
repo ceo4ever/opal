@@ -1,23 +1,7 @@
 {
   "version": 1,
-  "last_task_number": 95,
+  "last_task_number": 96,
   "memories": [
-    {
-      "title": "워커 보고는 실측 대조 없이 신뢰 불가",
-      "date": "2026-07-29",
-      "type": "improvement",
-      "status": "promoted",
-      "file": "memory/워커_보고는_실측_대조_없이_신뢰_불가.md",
-      "summary": "078 PM Gate에서 워커 자기보고 오류 2건을 적발했다. (1) Step 14가 '에러코드 표를 실제 ERROR_CODES와 일치하도록…"
-    },
-    {
-      "title": "워커 실패 완화책 선제 적용 효과",
-      "date": "2026-07-30",
-      "type": "improvement",
-      "status": "promoted",
-      "file": "memory/078_워커_실패_완화책이_079에서_인프라_실패_0건으로_재현됨.md",
-      "summary": "078에서 워커 3연속 인프라 실패(API 종료 2·스톨 1) 후 도출한 완화 조합을 079 전 워커 프롬프트에 선제 적용했다: (1) 배치…"
-    },
     {
       "title": "변경이력 제거 검토 결정 — A안 확정",
       "date": "2026-08-14",
@@ -25,14 +9,6 @@
       "status": "active",
       "file": "memory/변경이력_제거_검토_결정_A안_확정.md",
       "summary": "프레임워크 md 137개 변경이력 표+버전표기 22건 제거 확정. 생성·검증 측 동반 개정 필수"
-    },
-    {
-      "title": "도구 신설 시 왕복 경로 시나리오화",
-      "date": "2026-08-15",
-      "type": "improvement",
-      "status": "candidate",
-      "file": "memory/도구_신설_시_상태_전이_왕복_경로를_시나리오에_명시.md",
-      "summary": "092에서 pytest 36건이 전건 통과한 상태로 실환경 검증에 들어갔고 거기서 remove 후 빈 슬롯이 남아 같은 번호 재생성이 영구 차…"
     },
     {
       "title": "fixture 실환경 미재현 시 결함 통과",

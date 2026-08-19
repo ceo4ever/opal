@@ -1,0 +1,155 @@
+{
+  "task_id": "096-260820-opds-메모리툴-참조무결성-고착해소",
+  "skill": "opds",
+  "mode": "agentic",
+  "schema_version": "1.1",
+  "created_at": "2026-08-20 07:58",
+  "updated_at": "2026-08-20 07:59",
+  "current_status": "in_progress",
+  "rows": [
+    {
+      "row_id": 1,
+      "stage": "TASK",
+      "item": "작업",
+      "key": "task.task_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-20 07:59",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 2,
+      "stage": "TASK",
+      "item": "사용자 확인",
+      "key": "task.user_confirm",
+      "status": "pending",
+      "status_label": "⬜",
+      "timestamp": null,
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 3,
+      "stage": "PLAN",
+      "item": "작업",
+      "key": "plan.plan_md",
+      "status": "pending",
+      "status_label": "⬜",
+      "timestamp": null,
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 4,
+      "stage": "PLAN",
+      "item": "목표-커버 게이트",
+      "key": "plan.scenario_gate",
+      "status": "pending",
+      "status_label": "⬜",
+      "timestamp": null,
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 5,
+      "stage": "PLAN",
+      "item": "PM Gate",
+      "key": "plan.pm_gate",
+      "status": "pending",
+      "status_label": "⬜",
+      "timestamp": null,
+      "owner": "PM",
+      "note": null,
+      "gate": {
+        "artifacts": [
+          "TASK.md",
+          "PLAN.md",
+          "TEST-SCENARIO.md"
+        ],
+        "checklist": [
+          "TASK.md 요구사항",
+          "PLAN.md §4.2",
+          "PLAN.md §5",
+          "TEST-SCENARIO.md 시나리오 목록/보안/설계 피드백"
+        ]
+      }
+    },
+    {
+      "row_id": 6,
+      "stage": "PLAN",
+      "item": "사용자 확인",
+      "key": "plan.user_confirm",
+      "status": "pending",
+      "status_label": "⬜",
+      "timestamp": null,
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 7,
+      "stage": "EXECUTE",
+      "item": "작업",
+      "key": "execute.implement",
+      "status": "pending",
+      "status_label": "⬜",
+      "timestamp": null,
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 8,
+      "stage": "TEST",
+      "item": "작업",
+      "key": "test.run_tests",
+      "status": "pending",
+      "status_label": "⬜",
+      "timestamp": null,
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 9,
+      "stage": "TEST",
+      "item": "PM Gate",
+      "key": "test.pm_gate",
+      "status": "pending",
+      "status_label": "⬜",
+      "timestamp": null,
+      "owner": "PM",
+      "note": null,
+      "gate": {
+        "artifacts": [
+          "TEST-SCENARIO.md"
+        ],
+        "checklist": [
+          "시나리오 결과/코드품질/보안/회귀",
+          "컨벤션 자동 진단 PASS (GC-CONVENTION-*.md Critical/High 0건 — 컨벤션 적용 대상 ≥1건 시 발동)"
+        ]
+      }
+    },
+    {
+      "row_id": 10,
+      "stage": "TEST",
+      "item": "사용자 확인",
+      "key": "test.user_confirm",
+      "status": "pending",
+      "status_label": "⬜",
+      "timestamp": null,
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 11,
+      "stage": "CLOSE",
+      "item": "DONE.md 생성",
+      "key": "close.done_md",
+      "status": "pending",
+      "status_label": "⬜",
+      "timestamp": null,
+      "owner": "PM",
+      "note": null
+    }
+  ],
+  "next_action": "PLAN 작업 진입"
+}
