@@ -9,6 +9,10 @@
 !.opal/memory/**
 !.opal/worktree.json
 
+# machine-local 산출물 — `.local` 접미사 규약(setting.local.json 계열).
+# `.opal/memory/**` 예외보다 뒤에 두어야 재-무시가 적용된다(마지막 매칭 우선).
+*.local.md
+
 # Python
 __pycache__/
 *.py[cod]
