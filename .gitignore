@@ -5,6 +5,9 @@
 !.opal/code-map/
 !.opal/code-map/**
 !.opal/code-scan.json
+!.opal/memory/
+!.opal/memory/**
+!.opal/worktree.json
 
 # Python
 __pycache__/

@@ -1,0 +1,24 @@
+{
+  "layout": "monorepo",
+  "repos": [
+    "cursor-rules",
+    "dashboard",
+    "docs",
+    "memory",
+    "opal",
+    "scripts",
+    "skills"
+  ],
+  "branchTemplate": "feat/OP-TASK-{NNN}",
+  "baseBranch": "main",
+  "copy": [],
+  "setup": [
+    {
+      "cwd": "dashboard/frontend",
+      "run": "npm ci"
+    }
+  ],
+  "portOffset": 0,
+  "_copy_candidates": [],
+  "_help": "이 파일은 worktree-tool init이 탐지 결과로 자동 생성한 초안입니다 — 그대로 신뢰하지 말고 검토·수정하세요. copy/portOffset은 도구가 추측하지 않으므로 빈 값/0으로 남겨두었습니다. _copy_candidates는 로컬 설정으로 보이는 gitignore 후보 파일을 참고용으로 나열한 것이며 copy[]에 자동 반영되지 않습니다."
+}
