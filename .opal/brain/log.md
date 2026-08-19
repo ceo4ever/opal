@@ -304,3 +304,7 @@
 - 갱신: [[replacement-goal-verification-scope-gap]]
 - 출처: task:091
 
+## [2026-08-19] ingest | CLOSE ingest — 태스크 095 TEST-SCENARIO 목표계열 선작성 (PLAN 병렬 도출 트랙 신설)
+- 신규: [[scenario-prewrite-goal-series-track]], [[prewrite-track-quality-not-efficiency-measurement]], [[prewrite-self-confirming-triple-defense]], [[subsection-number-insertion-preserves-citations]], [[marker-literal-check-meta-circular-false-positive]], [[global-deploy-after-verification-ordering]], [[worker-abort-artifact-measured-adjudication]]
+- 출처: task:095
+

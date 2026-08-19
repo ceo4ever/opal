@@ -1,0 +1,14 @@
+[
+  {
+    "iteration": 1,
+    "missing": { "requirements": [], "features": [], "hypotheses": [] },
+    "gaps": [],
+    "scores": { "goal": 2, "adoption": 2, "boundary": 2 },
+    "average": 2.0,
+    "verdict": "pass",
+    "evidence": {
+      "deterministic": "test-tool scenario-coverage-check exit 0, all_covered:true (requirements 6 / features 6 / hypotheses 9 / scenarios 16)",
+      "judgment": "opal-evaluator-agent scenario-rubric verdict:pass — SCENARIO-GATE-1.md"
+    }
+  }
+]

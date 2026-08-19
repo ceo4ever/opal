@@ -71,6 +71,12 @@ op-dev-plan 스킬을 수행하라.
 ```
 **model**: advanced
 
+> **목표계열 선작성 착수 (PLAN 병렬)**: 위 PLAN 워커 디스패치와 **동시에**, 알투(PM)+캡틴 페어가 TASK.md만으로 Block A(채택 관점 — 목표 문장 · 요구사항 R 전체 · 교체형 시 채택/잔존 기준)를 도출해 TEST-SCENARIO.md 초안을 선작성한다. PLAN.md를 읽지 않은 상태에서 도출하여 PLAN 관점 오염을 원천 차단한다. 초안은 별도 임시 파일 없이 TEST-SCENARIO.md 본문에 직접 쓰고 보강 대기 마커를 남긴다.
+>
+> 이 시점에 목표-커버 게이트를 호출하지 않으며 `test_scenario.*` 행을 advance/mark하지 않는다. 선작성 초안과 PLAN.md 설계의 불일치는 PLAN PM Gate 시점의 조기 경보로 취급하여 사용자 보고에 포함한다.
+>
+> 규칙 SSOT: 트랙 = `opal/core/references/harness/red-first.md` §1.6 / 절차 = `op-dev-test-scenario/references/test-scenario-guide.md` §작성 프로세스 Step 1 Block A / 게이트 호출 시점 = `opal/core/references/harness/scenario-gate.md` §4. 선작성은 opt-in이며 미착수 시 STEP 3.5에서 Block A·B를 연속 수행한다(결과 동등).
+
 PLAN 완료
   → **PM Gate** (PLAN.md 직접 검증 — 점검 목록 참조):
     1. `{PLAN.md 경로}` Read — §4.2 실행 체크리스트, §5 QA 체크리스트, §리스크 가설 표 확인
@@ -83,21 +89,22 @@ PLAN 완료
 
 ## STEP 3.5: TEST-SCENARIO
 
-> **[MUST] RED-first**: TEST-SCENARIO 작성 시 RED-first 트랙 적용 여부를 판단하고 기재한다. 규칙 SSOT: `opal/core/references/harness/red-first.md`.
+> **[MUST] RED-first**: TEST-SCENARIO 작성 시 RED-first 트랙 적용 여부를 판단하고 기재한다. 규칙 SSOT: `opal/core/references/harness/red-first.md`. 목표계열 선작성 트랙은 동 문서 §1.6.
 
 작성자: **알투(PM) + 캡틴 페어** — 오케스트레이터가 직접 작성 (워커 디스패치 없음).
 이 단계는 self-confirming 방지를 위해 PLAN 워커(opal-plan-agent)와 다른 작성자가 수행한다.
 
-1. PLAN.md §리스크 가설 표 Read
+1. **Block B 보강** — 선작성 초안(STEP 3 병렬 착수분)이 있으면, PLAN.md §리스크 가설 표(H-N)와 §1.2 기능 목록(F-NNN)을 도출 입력에 추가해 루브릭 ③기능커버·④리스크커버를 보강한다. 보강은 추가만이 아니라 초안 시나리오의 **수정·삭제를 포함**한다(→ `test-scenario-guide.md` §작성 프로세스 Step 1 Block B). 선작성하지 않았으면 Block A·B를 연속 수행한다(결과 동등).
 2. `op-dev-test-scenario/SKILL.md`의 "TEST-SCENARIO.md 통일 형식"을 따라 TEST-SCENARIO.md 작성
 3. `test-scenario-guide.md`의 5단계 프로세스 적용 (Step 3 계층 결정 + Step 3-b 실행 방식 M1/M2/M3 결정)
-4. 해당 행을 단일 mark (`~/.opal/tools/state-tool/run.sh mark <task-path> --task-step test_scenario.test_scenario_md --done` 호출 — P-1)
-5. **목표-커버 게이트**: `~/.opal/tools/state-tool/run.sh advance <task-path> --task-step test_scenario.scenario_gate` 호출 후, `op-scenario-gate` 스킬을 호출한다.
+4. **보강 완료 판정 3조건**(`test-scenario-guide.md` Step 1 "보강 완료 판정")을 충족 확인한 뒤 해당 행을 단일 mark (`~/.opal/tools/state-tool/run.sh mark <task-path> --task-step test_scenario.test_scenario_md --done` 호출 — P-1)
+5. **목표-커버 게이트 (1회)**: 4의 보강 완료 이후에만 호출한다 — 선작성 시점 호출 금지(`scenario-gate.md` §4). `~/.opal/tools/state-tool/run.sh advance <task-path> --task-step test_scenario.scenario_gate` 호출 후, `op-scenario-gate` 스킬을 호출한다.
    - 탐색 경로: `{프로젝트}/.opal/skills/op-scenario-gate/SKILL.md` → `~/.opal/skills/op-scenario-gate/SKILL.md`
    - 입력: `task_folder`(태스크 폴더 경로), `producer_artifact`(`{task_folder}/TEST-SCENARIO.md`), `pilot: opd`, `iteration`(최초 호출 = 1)
    - 수신 `verdict: pass` → 게이트 행 mark (`~/.opal/tools/state-tool/run.sh mark <task-path> --task-step test_scenario.scenario_gate --done` — Step 3 tool-gated 두 증거 근거로만 mark, 산문 판단으로 mark 금지)
    - 수신 `verdict: rewrite` → PM+캡틴이 `gaps`를 반영해 TEST-SCENARIO.md 재작성 후 `iteration+1`로 op-scenario-gate 재호출 (루프, 게이트 행은 아직 mark하지 않음)
    - 수신 `verdict: escalate` → 사용자에게 에스컬레이션하고 자율 재시도하지 않음
+   - `test_scenario.scenario_gate` 행 mark 시점은 보강 완료(4) 후 `verdict: pass` 수신 이후다.
 6. 사용자에게 TEST-SCENARIO 보고 — 승인 = EXECUTE 시작 허가
 
 > **사용자 확인 (P-5)**: 사용자 발화 후 PM이 `~/.opal/tools/state-tool/run.sh mark <task-path> --task-step test_scenario.user_confirm --done --owner user --note '{owner_name} 확인: ...'` 호출. CLOSE 진입 전 이 행의 `owner=user` 여부를 도구가 자동 검증한다 (§2.16 G-13).
@@ -388,3 +395,4 @@ semi-agentic / agentic 모두 CLOSE 첫 행 `--auto-pass` 거부 (`agentic_close
 | v4.8 | 2026-07-23 | STEP 3.5 목표-커버 게이트 접합 — `references/pipeline.json`에 `test_scenario.scenario_gate` 행 신설(id 10, 이후 11~16 재부여, 15→16 task-step), TEST-SCENARIO.md 작성 mark 후 `op-scenario-gate` 스킬 호출 절차 배선(verdict pass만 게이트 행 mark, rewrite=재작성 루프, escalate=사용자 에스컬레이션), 사람 열람 미러 표 16행 갱신 + 게이트 mark 조건 주석 추가. state-tool 소스 무변경(pipeline.json만 편집) (073) |
 | v4.8 | 2026-07-23 09:56 | 본문 state-tool 명령 예시를 task-step key 주소로 전환(--row→--task-step, --step→--action-step). pipeline.json key 기준. (070 후속) |
 | v4.9 | 2026-08-14 09:23 | pipeline.json 중복 정리 — STATE.md 진행 현황 미러 표 삭제 + 산문 `행 N` 참조를 task-step key로 전환, 모드·단계 목록 표 제거(meta 중복), PM Gate 점검 목록 표를 `references/pipeline.json` `task_steps[].gate` SSOT 포인터로 교체 (091) |
+| v5.0 | 2026-08-19 21:10 | STEP 3(PLAN) §3-1에 목표계열 선작성 병렬 착수 지시 + STEP 3.5 절차 1을 Block B 보강으로 재작성·4에 보강 완료 판정·5에 게이트 1회 전제 및 test_scenario.scenario_gate mark 시점 명시. STEP 2(ANALYSIS)·STEP 4(EXECUTE)·pipeline.json 무변경 (095) |
