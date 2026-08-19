@@ -5,7 +5,7 @@ tags: [brain, latency, architecture, optimization, async]
 sources: [task:037]
 related: [brain-tool, opal-console, brain-search-on-demand, bootstrap-marker-skip-ladder]
 created: 2026-06-23
-updated: 2026-07-02
+updated: 2026-08-20
 status: active
 ---
 
@@ -25,17 +25,17 @@ status: active
 - `claude -p` (in-agent) → 멀티턴 루프: 질문 이해 → brain-tool search → 페이지 fetch → 합성 (≈21~69초)
 - 콜드 경로는 opbr 세션 초기화(≈5초) + 위 루프
 
-**후속 최적화 방향 (후속 태스크, PoC 완료)**:
-- `opbr --lite` 모드 신설(권고): "질문→검색어" 변환(1턴 LLM) + brain-tool 검색(결정론적 파이썬) + 합성(1턴 LLM)으로 멀티턴을 2턴+도구로 단축
-- 예상 콜드 ≈21~26초 (기존 69초 대비 ≈3.2배 단축)
-- 설계 결정 포인트: "질문→검색어" 변환을 opbr 내부에서 처리할지, Console이 전처리할지 — DRY 유지를 위해 opbr `--lite` 모드 내부화 권고
+**최적화 방향 — 폐기 (소유자 판정 2026-08-20)**:
+- 당시 권고안은 스킬에 경량 모드를 신설해 멀티턴을 2턴+도구로 압축하는 것이었고 PoC로 콜드 ≈21~26초(기존 69초 대비 ≈3.2배)를 실증했다.
+- **그러나 소유자가 이 방향을 폐기했다.** 경량 모드 플래그를 추가하는 접근으로는 해결할 문제가 아니라는 판단이다. 대안 방향은 미정이다.
+- **이 문서에 남은 유효한 지식은 병목의 위치(아래 인사이트)이며, 그 대책은 아직 열려 있다.** 경량 모드 재제안 시 이 폐기 기록을 먼저 확인할 것.
 
 **인사이트**: brain-tool 랭킹 알고리즘은 LLM 추론 없이 결정론적 파이썬으로 동작 → 검색 단계를 LLM 루프 밖으로 빼낼수록 latency가 단축된다.
 
 ## 영향 범위
 
 - 037 기준 현재 구현: 비동기 잡+폴링으로 fetch 타임아웃 해소됨 (latency 자체는 동일)
-- 후속 태스크 예약 (`.opal/MEMORY.md` 후속 메모리): `opbr --lite` 모드 구현
+- 후속 태스크 예약 없음 — 경량 모드 방향은 폐기되고 대응 메모리도 정리됐다(2026-08-20). 병목 진단만 유효하게 남았다.
 - `brain-tool search` 결정론성: `~/.opal/tools/brain-tool/` 파이썬 구현, 외부 LLM 호출 없음
 
 ## 관련 페이지
