@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_task_number": 94,
+  "last_task_number": 95,
   "memories": [
     {
       "title": "Console 브레인 구독 인증",
@@ -85,6 +85,13 @@
   ],
   "history": [
     {
+      "title": "095 시나리오 목표계열 선작성",
+      "date": "2026-08-19",
+      "stage": "완료",
+      "path": "tasks/095-260819-opds-시나리오-목표계열-선작성/",
+      "result": "TEST-SCENARIO 도출 입력을 Block A(TASK 유래 목표·R·채택 → 축 ①②⑤⑥)/Block B(PLAN 유래 F·H → 축 ③④)로 분리하고 Block A를 PLAN 워커와 병렬 선작성하는 opt-in 트랙을 red-first.md §1.6 신설 + test-scenario-guide Step 1 재구성 + scenario-gate §4 호출시점 [MUST] + opds STEP 2/opd STEP 3·3.5 배선 5문서로 집행. 코드 0줄. 자기적용 실측이 결론을 뒤집음 — 효율 이득은 순 7%에 총작업량 3분 증가로 미미했고, 품질 이득이 실측됨(선작성 고유 3건 S-11 채택·S-12 음성통제·S-15 목표달성이 PLAN TS-001~029에 대응 0건 / PLAN TS는 29/29 흡수 / AC 되읽기형 6·16 과반미달). 그래서 §1.6 리드에 '효율은 목적이 아니다'를 못박고 (f)에 착수 판단 기준+판단유보시 순차 규범을 넣음. 시나리오 18/18 PASS, 게이트 2/2/2 평균 2.0 gaps 0, install 배포본 정합 5/5 OK, 제약 7항 전건 방어(도구·pipeline.json diff 0, spec-validate 10-10). 캡틴 지적 2건 반영: A·D는 FW 소스가 목적지(PLAN은 경유지) / install은 TEST 전건 통과 후로 순서 변경(전역 비가역 배포 차단). 선재 결함 3건 미접촉 보고 — test-tool 전역홈 격리부재(083 OPAL_HOME 선례) · opal-harness §2에 scenario-gate 미등록 · ARCHITECTURE:108 opds 흐름 불일치"
+    },
+    {
       "title": "094 STATE 저널화",
       "date": "2026-08-16",
       "stage": "완료",
@@ -111,13 +118,6 @@
       "stage": "완료",
       "path": "tasks/091-260813-opd-파이프라인-스펙-중복정리/",
       "result": "PM Gate 정의를 task_steps[].gate 단일 SSOT로 승격하고 state-tool이 집행 — artifacts 존재 검증 차단(gate_artifact_missing)+checklist stdout 주입, hook 3-페이로드 병존. pilot 10종 감량: 미러표 134행·--row 45건·산문 행N 36건·게이트표 전량 제거, --task-step 전환 45건 수량 대응 일치. 전후 동등 20/20 diff 0, 회귀 284→304 pass, spec-validate 10/10, 배포본 게이트 3종 실동작. 목표-커버 게이트 iter1이 '삭제만 하고 채택 안 함'(070 실패모드) 검출 → S-35+H-13 신설로 해소. S-33·S-34 캡틴 대기"
-    },
-    {
-      "title": "090 파이프라인 스펙 마이그레이션",
-      "date": "2026-08-13",
-      "stage": "완료",
-      "path": "tasks/090-260813-opds-파이프라인-스펙-마이그레이션/",
-      "result": "미전환 6 pilot(opdd·opgc·opwt·opsdd·oppl·oppd) pipeline.json 이관 — 10/10 단일 SSOT 달성, deprecated .md 파싱 호출자 0건. 전후 동등 8/8·spec-validate 10/10·registry 파생 10/10. oppl·oppd init 하드실패 해소(19/13). opsdd EXECUTE-LOOP 17 불변. TEST 18 Pass, S-17만 캡틴 대기"
     }
   ]
 }

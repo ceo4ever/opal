@@ -78,6 +78,12 @@ Producer(작성) → scenario-coverage-check(결정론 게이트) → opal-evalu
 
 > [MUST] Producer≠Evaluator — 매 반복마다 작성자(PM+캡틴)와 채점자(opal-evaluator-agent)가 분리 유지된다. self-confirming(PM 단독으로 게이트 통과 선언) 방지가 목적이다(→ TASK.md §확정된 설계 방향 3).
 
+> **[MUST] 호출 시점 — PLAN 확정 + 보강 완료 후 1회**: 목표-커버 게이트는 ① PLAN.md 확정(F-NNN·H-N 확정) **AND** ② 도출 입력 2계열 보강 완료(→ `opal/skills/op-dev-test-scenario/references/test-scenario-guide.md` §작성 프로세스 Step 1 "보강 완료 판정" 3조건) 두 조건을 모두 충족한 뒤 **1회** 호출한다. 목표계열 선작성 시점(PLAN 워커 실행 중)에는 호출하지 않는다. (여기서 "1회"는 최초 진입 1회를 뜻하며, `verdict: rewrite` 수신 후의 §4-5 재작성 루프 재호출은 이 규율의 예외가 아니라 동일 게이트 1건의 반복이다.)
+
+> **금지 근거**: 선작성 시점에는 §3 정규화 입력의 `features`·`hypotheses`가 미확정(빈 배열 또는 부분)이다. 이 상태로 호출하면 §2 ③기능커버·④리스크커버를 결정론 판정할 수 없고, §3 "`missing`의 세 배열 중 하나라도 비어있지 않으면 FAIL(§2 ②③④ 미달)"에 따라 확정 FAIL이 되어 §5-2 반복 상한을 무의미하게 소모한다. 트랙 규칙 SSOT는 `opal/core/references/harness/red-first.md` §1.6이다.
+
+> **도구 층 정합**: pilot의 게이트 행(opd `test_scenario.scenario_gate` / opds `plan.scenario_gate`)은 state-tool stage-transition guard가 앞 행 전부 완료를 요구하므로(`opal/tools/state-tool/state_tool.py:634`, advance 경로는 `force=False` 하드코딩 `:1423`), PLAN.md 작성 행 미완 상태의 조기 `advance`는 `stage_transition_violation`으로 거부된다. 본 규율은 그 도구 집행과 정합하는 산문 규율이며, 도구 코드를 변경하지 않는다.
+
 ## 5. 종료조건 3종 [MUST]
 
 1. **수렴(PASS)**: 커버리지 누락 = 0 (hard gate, §2 ②③④) **AND** 판단축(①⑤⑥) 각 ≥ 1점(0점 축 없음) **AND** 평균 ≥ 1.5점(2점 척도 0~2).
@@ -97,3 +103,4 @@ PM은 위 두 도구 출력 없이 게이트 통과를 산문으로 선언할 �
 | 버전 | 날짜 | 변경내용 |
 |------|------|---------|
 | v1.0 | 2026-07-23 | 최초 작성 — 루브릭 6축·판정주체분리·정규화계약·루프 프로세스·종료조건 3종·tool-gated 집행 SSOT 신설 (073) |
+| v1.1 | 2026-08-19 20:59 | §4에 `[MUST]` 호출 시점 규율 블록 신설 — PLAN 확정+보강 완료 후 1회 호출 / 선작성 시점 호출 금지 근거(F·H 미확정 → ③④ 결정론 판정 불가) / state-tool stage-transition guard 정합 (095) |

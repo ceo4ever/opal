@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-08-16 16:02
+> 갱신: 2026-08-19 23:54
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -109,6 +109,7 @@
 - [[fix-validity-requires-failure-mode-reproduction]] — 수정의 유효성은 실패 모드를 재현해서 확인한다 #lesson #verification #pm-discipline #worker-report
 - [[fixture-conflicting-requirements-lesson]] — 픽스처 요구 충돌 — RED 작성 시점 시나리오 간 요구 대조 필요 #lesson #testing #fixture #red-first #task-082
 - [[fixture-vs-real-blind-spot-lesson]] — fixture-vs-real 맹점 — 테스트 픽스처 통과·실데이터 버그 반복 교훈 #lesson #testing #bug #fixture
+- [[global-deploy-after-verification-ordering]] — 검증 미완 규칙의 전역 배포 차단 — 배포는 검증의 결과여야 한다 #deploy #install #pipeline-order #framework #task-095
 - [[governance-single-owner-rule-mapping]] — 규칙 1소유자 매핑 — Governance 중복 기재 방지 설계 #governance #ssot #design-pattern #dispatch
 - [[green-tests-do-not-imply-contract-conformance]] — 테스트 GREEN은 규약 정합을 뜻하지 않는다 — 정적 대조를 별도 게이트로 둔다 #lesson #test-strategy #verification #contract
 - [[inherit-new-boundary-fixed-before-writing]] — 상속·신규 경계를 집필 전에 표로 고정한다 #documentation #ssot #dedup #task-084
@@ -128,6 +129,7 @@
 - [[loop-upper-bound-ssot-pattern]] — 루프 상한 SSOT 단일 기재 패턴 — harness 포인터, 수치 복제 금지 #harness #ssot #loop-bound #anti-pattern
 - [[manual-scenario-verbatim-output-evidence]] — M3 수동 시나리오는 출력 원문을 증거로 남긴다 #testing #verification #evidence #manual-scenario
 - [[mark-force-decision-log-scope]] — 강제 처리의 실제 거동 — 사유는 필수지만 의사결정 로그에는 자동 기재되지 않는다 #state-tool #pipeline #decision-log #doc-correction #task-090 #task-094
+- [[marker-literal-check-meta-circular-false-positive]] — 마커 리터럴 검사의 메타-순환 오탐 — 표기 문맥 제거 전처리를 규칙과 함께 정의 #false-positive #verification #documentation #scenario-gate #task-095
 - [[memory-lifecycle-graduation-workflow]] — 메모리 라이프사이클·졸업(promote) 워크플로우 #memory #lifecycle #architecture #promote
 - [[mirror-gate-must-not-hostage-ssot-record]] — 미러 게이트가 SSOT 기록을 인질로 잡지 않는다 — fail-open 저널 쓰기 경계 #state-tool #ssot #mirror #fail-open #defensive-design #task-094
 - [[mitigation-recurs-without-ssot-registration]] — 완화책은 SSOT 미등재 시 재발한다 #governance #worker #infra-failure #ssot #resilience
@@ -199,6 +201,8 @@
 - [[pm-improvement-loop-two-tracks]] — PM 개선 루프 2트랙 구조 (회고/온디맨드) #pm-loop #architecture-decision #improvement #process
 - [[pool-lock-idiom-contract]] — 프라임 풀 락 관용구 계약 #brain #concurrency #locking #pattern
 - [[pre-edit-baseline-single-capture-invariant]] — 전후 동등 검증의 기준선은 편집 전 단 한 번만 유효하다 #verification #migration #baseline #gate-design #task-091
+- [[prewrite-self-confirming-triple-defense]] — 선작성 구간 self-confirming 퇴행 방어 3종 — 작성자 분리만으로는 불충분 #scenario-gate #testing #self-confirming #prewrite #task-095
+- [[prewrite-track-quality-not-efficiency-measurement]] — 선작성 트랙의 목적은 효율이 아니라 관점 편향 차단 — 실측이 초기 가설을 뒤집음 #scenario-gate #testing #prewrite #measurement #lesson-learned #task-095
 - [[project-id-query-param-pattern]] — 절대경로 프로젝트 식별자를 query param으로 전달 #api #routing #url-design
 - [[pure-function-enables-nondestructive-verification]] — 판정부·실행부 분리가 파괴적 검증을 비파괴 검증으로 바꾼다 #verification #architecture #lesson #pure-function
 - [[read-based-gate-pattern]] — Read 기반 설정파일 게이트 패턴 #bootstrap #permission #gate #read-pattern #session-toggle
@@ -214,6 +218,7 @@
 - [[scenario-gate-pilot-fit-criteria]] — 목표-커버 게이트 pilot 접합 판정 기준 #scenario-gate #pilot-fit #tool-gated #self-confirming #task-075
 - [[scenario-goal-coverage-gate-loop]] — TEST-SCENARIO 목표-커버리지 루브릭 게이트 루프 — 결정론+판단 분리 #testing #scenario-gate #tool-gated #rubric #opd #task-073 #task-075
 - [[scenario-normalized-contract-pilot-neutral]] — 시나리오 정규화 계약 — pilot-중립 페이로드 설계 #contract #scenario-gate #normalization #multi-pilot #task-073 #task-075
+- [[scenario-prewrite-goal-series-track]] — 목표계열 선작성 트랙 — 도출 입력 2계열 분리와 게이트 계약 경계 #scenario-gate #testing #prewrite #opd #opds #task-095
 - [[section-append-at-tail-preserves-backrefs]] — 절 번호가 주소인 문서는 말미에 추가한다 — 외부 역참조 보존 #documentation #reference-integrity #task-084
 - [[self-edit-line-anchor-drift]] — 자기 편집 파일의 행번호 앵커는 드리프트한다 #verification #anchor #test-scenario #regression
 - [[self-modifying-tool-deploy-unit-coupling]] — 자기 자신을 고치는 도구의 배포 단위 결합 원칙 #deploy #gate-design #pattern #task-093
@@ -249,6 +254,7 @@
 - [[state-tool-owner-name-write-time-substitution]] — state-tool {owner_name} write-time 치환 메커니즘 #state-tool #identity #note #mechanism
 - [[state-tool-task-step-key-address]] — state-tool task-step 키 주소 체계 #state-tool #pipeline #key-address #task-070
 - [[strip-deploy-runtime-token-neutral]] — strip_deploy_md 런타임 토큰 영향 0 — 변경이력 trim 측정 정정 교훈 #deploy-pipeline #token #install #measurement #lesson
+- [[subsection-number-insertion-preserves-citations]] — 하위 절 번호 삽입으로 외부 인용 보존 — 의미 위치와 주소 안정성 동시 확보 #documentation #reference-integrity #harness #task-095
 - [[test-real-data-validation-lesson]] — TEST 실데이터 검증이 build-only 가 놓친 결함을 발견한다 #testing #lesson #test-strategy #real-data
 - [[test-scenario-pipeline-redesign]] — 테스트 시나리오 파이프라인 재설계 (2차원 매트릭스 + self-confirming 4분리) #testing #pipeline #framework #flow #task
 - [[test-two-tier-system]] — 테스트 2단계 체계 (단위=EXECUTE / 통합=TEST) #testing #pipeline #framework
@@ -263,6 +269,7 @@
 - [[warm-handle-single-entry-injection]] — 웜 핸들 단일 진입점 주입 결정 #brain #session #api-compat #dependency-injection
 - [[wbs-세분화-단일책임-수용시나리오]] — WBS 세분화 원칙 — 단일 책임 + 수용 시나리오 기준 #oppd #wbs #sizing #be #fe #acceptance-scenario
 - [[wiki-intelligence-decisions-016]] — opal-wiki-pilot 지능화 결정 — M-4/M-5 (016) #architecture #naming #git #brain #policy
+- [[worker-abort-artifact-measured-adjudication]] — 워커 중단 시 재개 대신 산출물 실측 판정 — 중단과 미완은 별개 사실 #agentic #worker #pm-discipline #resilience #task-095
 - [[worktree-slot-existence-to-occupancy-judgment]] — 워크트리 슬롯 판정 — 존재에서 점유로 #worktree #git #lesson #non-trivial-resolution
 - [[worktree-workspace-isolation-axis]] — 워크트리 격리 축 — 문서는 허브 고정, 코드만 분기 #architecture #workspace #worktree #git #isolation
 - [[wtm-agent-cmux-integration]] — wtm-agent OPAL 표준화 + cmux-tool 신설 #tool #agent #wtm #cmux #task

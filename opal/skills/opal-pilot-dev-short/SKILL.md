@@ -38,7 +38,7 @@ TASK 완료 → 사용자 보고.
 
 ## STEP 2: PLAN
 
-> **[MUST] RED-first**: PLAN 단계에서 RED-first 트랙 적용 여부를 판단하고 TEST-SCENARIO.md에 기재한다. 규칙 SSOT: `opal/core/references/harness/red-first.md`.
+> **[MUST] RED-first**: PLAN 단계에서 RED-first 트랙 적용 여부를 판단하고 TEST-SCENARIO.md에 기재한다. 규칙 SSOT: `opal/core/references/harness/red-first.md`. 목표계열 선작성 트랙은 동 문서 §1.6.
 
 ### PLAN 디스패치
 
@@ -51,15 +51,32 @@ op-dev-plan 워커 디스패치. **model**: advanced. 이전 산출물: TASK.md�
 > 2. 관련 참조 문서 경로 (docs/PROJECT.md 문서 테이블 기반)
 > 3. 기술 스택 연동 지시 (기존 "참조 문서 전달 의무" 통합)
 
-> op-dev-plan 워커는 PLAN.md만 작성한다(op-dev-plan/SKILL.md가 TEST-SCENARIO.md를 출력 범위에서 제외). PLAN.md 수신 후, **알투(PM) + 캡틴 페어**가 `op-dev-test-scenario/SKILL.md`의 "TEST-SCENARIO.md 통일 형식"(§1 리스크 가설 표 / §4 AC↔가설↔계층↔시나리오 매핑 표)을 명시 참조하여 TEST-SCENARIO.md를 직접 작성한다(self-confirming 방지 — PLAN 워커와 다른 작성자, opd STEP 3.5 동형). 문서 전용 작업 시 스킵(게이트도 자연 스킵).
+### TEST-SCENARIO 작성 — 목표계열 선작성 → 보강 → 게이트 (3단계)
 
-PLAN.md + TEST-SCENARIO.md 작성 완료 → **목표-커버 게이트**: `~/.opal/tools/state-tool/run.sh advance <task-path> --task-step plan.scenario_gate` 호출 후 `op-scenario-gate` 스킬을 호출한다.
+> op-dev-plan 워커는 PLAN.md만 작성한다(op-dev-plan/SKILL.md가 TEST-SCENARIO.md를 출력 범위에서 제외). TEST-SCENARIO.md는 **알투(PM) + 캡틴 페어**가 `op-dev-test-scenario/SKILL.md`의 "TEST-SCENARIO.md 통일 형식"(§1 리스크 가설 표 / §4 AC↔가설↔계층↔시나리오 매핑 표)을 명시 참조하여 직접 작성한다(self-confirming 방지 — PLAN 워커와 다른 작성자, opd STEP 3.5 동형). 문서 전용 작업 시 스킵(게이트도 자연 스킵).
+>
+> **규칙 SSOT** — 선작성 트랙: `opal/core/references/harness/red-first.md` §1.6 / 2계열 도출 절차: `op-dev-test-scenario/references/test-scenario-guide.md` §작성 프로세스 Step 1 / 게이트 호출 시점: `opal/core/references/harness/scenario-gate.md` §4. 본 절은 규칙을 재정의하지 않고 **순서만 배선**한다.
+
+**(a) 선작성 착수 — PLAN 디스패치와 동시**
+- 위 "PLAN 디스패치"와 **동시에** 착수한다. PLAN.md를 읽지 않은 상태에서 TASK.md만으로 Block A(채택 관점: 목표 문장 · 요구사항 R 전체 · 교체형 시 채택/잔존 기준)를 도출해 TEST-SCENARIO.md 초안을 작성한다.
+- 초안은 별도 임시 파일 없이 TEST-SCENARIO.md 본문에 직접 쓰고, 보강 대기 지점에 마커를 남긴다(포맷: `test-scenario-guide.md` Step 1 Block A).
+- 이 시점에 목표-커버 게이트를 호출하지 않으며 `plan.scenario_gate` 행을 advance/mark하지 않는다.
+
+**(b) PLAN.md 수신 후 Block B 보강**
+- PLAN.md의 F-NNN(§1.2)·H-N(§리스크 가설 표)을 도출 입력에 추가해 루브릭 ③기능커버·④리스크커버를 보강한다.
+- 보강은 추가만이 아니라 **선작성 초안의 수정·삭제를 포함**한다. 선작성 초안과 PLAN 설계의 불일치는 PLAN PM Gate 시점의 조기 경보로 취급하여 사용자 보고에 포함한다.
+- 보강 완료 판정 3조건(`test-scenario-guide.md` Step 1)을 충족시킨다.
+
+**(c) 목표-커버 게이트 1회 호출**
+- (b) 완료 후에만 호출한다 — (a) 시점 호출 금지(`scenario-gate.md` §4).
+- `~/.opal/tools/state-tool/run.sh advance <task-path> --task-step plan.scenario_gate` 호출 후 `op-scenario-gate` 스킬을 호출한다.
   - 탐색 경로: `{프로젝트}/.opal/skills/op-scenario-gate/SKILL.md` → `~/.opal/skills/op-scenario-gate/SKILL.md`
   - 입력: `task_folder`(태스크 폴더 경로), `producer_artifact`(`{task_folder}/TEST-SCENARIO.md`), `pilot: opds`, `iteration`(최초 호출 = 1)
   - 수신 `verdict: pass` → 게이트 행 mark (`~/.opal/tools/state-tool/run.sh mark <task-path> --task-step plan.scenario_gate --done` 호출 — Step 3 coverage-check exit 0 AND Step 4 evaluator verdict pass 두 증거 근거로만 mark, 산문 판단으로 mark 금지)
   - 수신 `verdict: rewrite` → PM+캡틴이 `gaps`를 반영해 TEST-SCENARIO.md 재작성 후 `iteration+1`로 op-scenario-gate 재호출 (루프, 게이트 행은 아직 mark하지 않음)
   - 수신 `verdict: escalate` → 사용자에게 에스컬레이션하고 자율 재시도하지 않음
   - 문서 전용 작업 시(TEST-SCENARIO.md 스킵) 게이트도 자연 스킵
+- `plan.scenario_gate` 행 mark 시점은 **(c)의 `verdict: pass` 수신 이후**다 — (a)·(b) 시점에는 mark하지 않는다.
 
 PLAN 완료
   → **PM Gate** (PLAN.md + TEST-SCENARIO.md 직접 검증 — 점검 목록 참조):
@@ -373,3 +390,4 @@ semi-agentic / agentic 모두 CLOSE 첫 행 `--auto-pass` 거부 (`agentic_close
 | v4.5 | 2026-08-14 09:23 | pipeline.json 중복 정리 — STATE.md 진행 현황 미러 표 삭제 + 산문 `행 N` 참조를 task-step key로 전환, 모드·단계 목록 표 제거(meta 중복), PM Gate 점검 목록 표를 `references/pipeline.json` `task_steps[].gate` SSOT 포인터로 교체 (091) |
 | v4.6 | 2026-08-15 21:48 | 사용자 확인 행 자동 승인 계약 반영 — agentic STATE 갱신 지시에서 PM `--auto-pass` 명시 호출 삭제, 다음 단계 진입 시 도구 자동 승인으로 전환하고 계약 본문은 하네스 SSOT(`opal-harness-agentic.md §4` / `opal-harness-semi-agentic.md §5`) 참조로 정리. CLOSE 진입 게이트 서술 불변 (093) |
 | v4.7 | 2026-08-16 13:30 | 사용자 확인 (P-5) 2건(plan/test) 산문을 모드 무분기 명령형 → 모드 분기 서술로 교체 — 자동 승인 구간(agentic 전 구간 / semi-agentic EXECUTE-equivalent 이후)은 PM 미호출·도구 자동 승인, 그 외 구간은 기존 mark 호출 유지. 지점별 --task-step 키·근거 인용 보존 (094 R-11 G-4). STEP 1 "[MUST] 행 갱신" 서술의 표 전제("LLM이 STATE.md 마크다운 표를 직접 편집하는 것은 금지된다")를 표준 문구 A("파이프라인 행 상태 변경은 `state-tool`로만 수행, `state.json` 직접 편집 금지, 조회는 `state-tool show`")로 치환 — STATE.md가 파생 표를 렌더하지 않는 저널로 재정의됨에 따른 정합(094 R-6/R-7, Step 8) |
+| v4.8 | 2026-08-19 21:10 | STEP 2에 목표계열 선작성 3단계 배선 — (a) PLAN 디스패치와 동시 선작성 착수 (b) PLAN.md 수신 후 Block B 보강(수정·삭제 포함) (c) 보강 완료 후 게이트 1회 호출 + `plan.scenario_gate` mark 시점 명시. 규칙 본문 0줄(SSOT 포인터만), pipeline.json·PM Gate 체크리스트 무변경 (095) |
