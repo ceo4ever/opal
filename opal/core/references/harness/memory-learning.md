@@ -31,11 +31,16 @@
 | 상태 | 의미 | 진입 트리거 | 도구 동작 |
 |------|------|-----------|----------|
 | `active` | 살아있는 지식. 인덱스에 노출·로드 대상 | 신규 등록(append) | 인덱스 행 유지 |
+| `candidate` | 승격 검토 대기. 아직 성숙 판정 전인 기록 | `append --status candidate` — improve-tool `record --scope local`의 memory-tool 위임 등 | 인덱스 행 유지. `promote_candidates` 산출 대상은 아니다(`active` 한정) → 성숙 판정 시 `promote`, 진부화 시 `update --status dead\|superseded` |
 | `promoted` | 영구 거처(docs/brain)로 졸업 완료 | PM이 본문을 docs 규칙/brain 페이지로 이전했다고 판단 | `promote --to <docs\|brain>`: 이전 확인 후 인덱스 행 + `.md` 파일 삭제 + provenance 기록(SSOT 이중화 해소) |
 | `superseded` | 더 새로운 메모리/결정이 대체 | PM이 대체 관계 식별 | `update --status superseded`: 행 보존(추적용), 로드 제외. 자가검토 `cleanup_candidates`로 표면화 후 `delete`로 제거(`--with-file`로 `.md`도 정리) |
 | `dead` | 완료·진부화(task 완료, 이슈 해소) | task 완료 / 이슈 해소 / 철회 | `update --status dead`: 로드 제외. 자가검토 `cleanup_candidates`로 표면화 후 `delete`로 제거 |
 
 > **[MUST] `delete` 무손실 가드**: `delete`는 `dead`/`superseded` 상태 행만 제거한다. `active`/`promoted` 행 삭제 시도는 `delete_requires_dead_or_superseded`로 거부 — 살아있는 지식의 blind 삭제를 차단한다. migrate가 단 crude 제목은 `update --new-title`로 보정한다.
+
+> **[MUST] 참조 무결성과 고아 행 정리**: 인덱스 행의 `file` 포인터가 가리키는 본문 `.md`가 실재하지 않으면 자가검토(`review`)가 `violations`에 **`memory_file_missing`**으로 표면화한다. 이런 고아 행은 `promote`(본문 필수)와 `delete`(상태 가드)가 조합되어 어떤 명령으로도 도달할 수 없었으므로, `delete --orphan --ref <지식 귀착처>`를 정식 경로로 둔다. `--orphan`은 **본문이 실재하면 `memory_file_exists`로 거부**하므로 위 무손실 가드를 우회하지 않는다. 정리 시 행의 `summary`가 `.memory_provenance.log`에 함께 기록된다(데이터 무손실). 상태를 임의 조작(`update --status superseded`)해 삭제를 강행하는 우회는 감사 추적을 오염시키므로 금지한다.
+>
+> **[MUST] 확인 불가 ≠ 부재**: `file` 포인터를 `memory/` 하위로 **해석할 수 없는** 행(경로 탈출 등)은 별도 어휘 **`memory_file_unresolvable`**로 표면화되며, `promote`와 `delete --orphan`이 이를 거부한다 — 본문이 `memory/` 밖에 실재할 수 있어 부재를 확인할 수 없기 때문이다. 이런 행의 올바른 처방은 삭제가 아니라 **포인터 수리**다(`dead`/`superseded` 행은 종전대로 무플래그 `delete`로 제거할 수 있다).
 
 > **갯수 상한 없음**: 본 체계는 메모리 활성 갯수 상한을 두지 않는다(캡틴 지시 2026-06-26). 비대화 방지는 **졸업(promote)·자가검토(review)·요약 길이캡**이 담당하며, promoted/superseded/dead는 로드 대상에서 제외되어 토큰을 잠식하지 않는다.
 
@@ -101,3 +106,4 @@ CLOSE 마지막 행 mark 시점에 작업 히스토리 행이 **도구에 의해
 | v1.2 | 2026-07-28 | 078 메모리 JSON 전환 — 구 HTML 주석 규약 절 삭제, 인덱스·히스토리 형식 서술을 스키마 참조 1줄로 대체, 저장소 경로 MEMORY.json, 자가검토 명령 목록 migrate 제거·task-number 추가 |
 | v1.3 | 2026-07-30 | 079 히스토리 정정 경로 안내 — FIFO 불릿 아래 `update --kind history` 정정 1줄 추가(삭제 없음, 행 수 불변) |
 | v1.4 | 2026-08-11 | 088 CLOSE 자동 연결 절 신설 — CLOSE 마지막 행 mark 시 state-tool이 히스토리 행을 결정론적으로 자동 생성(생성=도구/result 보강=PM), 단계값 `완료` 규약 명문화(`완료·커밋` 표기 폐기), 갱신 트리거 "태스크 완료" 문구를 도구 집행으로 정정 |
+| v1.5 | 2026-08-20 12:23 | 096 라이프사이클 표에 `candidate` 행 추가 — 스키마 `status` enum 5종과 정합(종전 4행, `memory.schema.json:54` 대비 누락). `delete --orphan --ref` 고아 행 정리 경로 [MUST] 노트 신설 — `review` `memory_file_missing` 검출 → 정리 왕복, 본문 실재 시 `memory_file_exists` 거부로 무손실 가드 불가침, `summary` provenance 보존, 상태 임의 조작 우회 금지 명문화. 확인 불가(`memory_file_unresolvable`) ≠ 부재 [MUST] 노트 신설. 기존 4행 서술·§무손실 원칙 본문 diff 0 (096) |

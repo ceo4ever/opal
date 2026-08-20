@@ -1,0 +1,41 @@
+[
+  {
+    "iteration": 1,
+    "missing": {
+      "requirements": [],
+      "features": [],
+      "hypotheses": []
+    },
+    "scores": {
+      "goal": 1,
+      "adoption": 1,
+      "boundary": 2
+    },
+    "average": 1.333,
+    "gaps": [
+      "G-1",
+      "G-2",
+      "G-3",
+      "G-4"
+    ],
+    "verdict": "fail",
+    "note": "Step 3 exit 0 / Step 4 fail(평균 1.333<1.5). G-3은 PLAN 설계 P0 결함 — 재설계 루프 1/2회차로 해소."
+  },
+  {
+    "iteration": 2,
+    "missing": {
+      "requirements": [],
+      "features": [],
+      "hypotheses": []
+    },
+    "scores": {
+      "goal": 2,
+      "adoption": 2,
+      "boundary": 2
+    },
+    "average": 2.0,
+    "gaps": [],
+    "verdict": "pass",
+    "note": "Step 3 exit 0(scenarios 37) + Step 4 pass. 무진전 미해당(gaps 4→0, 평균 1.333→2.0). 채점 외 필수 정정 3건은 PM Gate 전 처리."
+  }
+]

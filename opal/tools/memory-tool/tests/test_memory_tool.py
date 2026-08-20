@@ -3,7 +3,7 @@
   "module": "test_memory_tool",
   "layer": "test",
   "domain": "opal-pipeline",
-  "description": "memory-tool RED-first 테스트 — 045 트랙(S-1~S-17, S-24, 프리픽스 [T045/L1-...]) + 078 MEMORY.json 전환 트랙(TS-001~TS-021·TS-037~TS-041, 프리픽스 [T078/...]) + 079 `update --kind history` 작업 히스토리 정정 트랙(TS-001~TS-020·TS-025·TS-027·TS-028, 프리픽스 [T079/...]). mock/patch/MagicMock 금지(헌법 §4) — 실 fixture·실 프로세스(subprocess)만. 078·079 블록은 구현 전 작성된 RED이므로 신규 기능 케이스는 전량 FAIL이 정상(단, 하위호환·불변식 가드 케이스는 구현 전에도 통과할 수 있다).",
+  "description": "memory-tool RED-first 테스트 — 045 트랙(S-1~S-17, S-24, 프리픽스 [T045/L1-...]) + 078 MEMORY.json 전환 트랙(TS-001~TS-021·TS-037~TS-041, 프리픽스 [T078/...]) + 079 `update --kind history` 작업 히스토리 정정 트랙(TS-001~TS-020·TS-025·TS-027·TS-028, 프리픽스 [T079/...]) + 096 참조 무결성·고아 행 정리 트랙(QA-001~QA-018·QA-024~QA-026, 프리픽스 [T096/L1-R1|R2|R3]). mock/patch/MagicMock 금지(헌법 §4) — 실 fixture·실 프로세스(subprocess)만. 078·079·096 블록은 구현 전 작성된 RED이므로 신규 기능 케이스는 전량 FAIL이 정상(단, 하위호환·불변식 가드 케이스는 구현 전에도 통과할 수 있다).",
   "exports": [
     "TestSkeleton", "TestMarkerGuard", "TestSummaryLengthCap",
     "TestCountUnlimited", "TestHistoryFIFO", "TestPruneIdempotent",
@@ -17,7 +17,8 @@
     "TestConcurrentMigration", "TestTaskNumber", "TestSuiteMigration",
     "TestTaskNumberDocs",
     "TestUpdateBackCompat", "TestUpdateKindHistory",
-    "TestUpdateKindArgGuard", "TestUpdateHistoryLossless"
+    "TestUpdateKindArgGuard", "TestUpdateHistoryLossless",
+    "TestReviewReferenceIntegrity", "TestDeleteOrphan", "TestLifecycleDocParity"
   ]
 }
 
@@ -28,6 +29,13 @@
                   (TS-001~TS-020, TS-025, TS-027, TS-028) 신규 클래스 4종 32케이스.
                   신규 픽스처 신설 없음(기존 fixture_doc_populated.json in-test 가공).
                   구현(GREEN)은 opal-be-agent 별도 담당 (red-first.md §2) (079)
+  v1.3 2026-08-20 096 RED-first 블록 추가 — review 참조 무결성 검사(memory_file_missing/
+                  memory_file_unresolvable 2분) + delete --orphan --ref 고아 행 정리 +
+                  라이프사이클 문서-스키마 파리티(TEST-SCENARIO.md TS-001~005·006~014·015~018·
+                  024~026·036~039 대응) 신규 클래스 3종(TestReviewReferenceIntegrity·
+                  TestDeleteOrphan·TestLifecycleDocParity) + 헬퍼 1종(_setup_populated_orphan).
+                  신규 픽스처 파일 신설 없음(fixture_doc_populated.json in-test 가공 + 직접 dict
+                  구성). 구현(GREEN)은 opal-be-agent 별도 담당 (red-first.md §2) (096)
 """
 
 # [MUST] 표준 라이브러리만 import
@@ -112,6 +120,55 @@ def _setup_populated(tmp_dir: pathlib.Path) -> pathlib.Path:
     dst = tmp_dir / "MEMORY.json"
     shutil.copy2(_FIXTURES_DIR / "fixture_doc_populated.json", dst)
     return dst
+
+
+def _setup_populated_orphan(tmp_dir: pathlib.Path, skip=("improve_candidate.md",)) -> pathlib.Path:
+    """_setup_populated와 동일하되 skip에 든 본문 .md를 생성하지 않는다 —
+    인덱스 행은 있고 본문이 없는 고아 행 상태를 만든다(096 R-1/R-2).
+    기본 skip 대상 improve_candidate.md는 대응 인덱스 행이 status:"candidate"여서
+    실환경 2건과 동일한 상태값이다(092/094 교훈 — fixture가 실환경을 재현해야 한다).
+    """
+    memory_dir = tmp_dir / "memory"
+    memory_dir.mkdir(exist_ok=True)
+    for name, content in [
+        ("prefs_commit.md", "# 메인 직접 커밋 선호\n\nmain 직접 커밋 선호 상세 내용.\n"),
+        ("task_done.md", "# 완료된 태스크 기록\n\n종료된 일회성 태스크 상세.\n"),
+        ("console-brain-subscription-auth.md", "# 콘솔 브레인 구독 인증\n\n브레인 질의 상세.\n"),
+        ("arch_old.md", "# 대체된 아키텍처 결정\n\n구 도구 패턴 상세.\n"),
+        ("prefs_graduated.md", "# 졸업한 선호 규칙\n\nAGENT.md 이관 상세.\n"),
+        ("improve_candidate.md", "# 개선 후보 기록\n\nimprove-tool 후보 상세.\n"),
+    ]:
+        if name in skip:
+            continue
+        (memory_dir / name).write_text(content, encoding="utf-8")
+    dst = tmp_dir / "MEMORY.json"
+    shutil.copy2(_FIXTURES_DIR / "fixture_doc_populated.json", dst)
+    return dst
+
+
+def _write_doc(json_path: pathlib.Path, memories, history=None) -> pathlib.Path:
+    """memories(list[dict])만으로 최소 유효 MEMORY.json을 직접 작성한다(096, in-test 직접 구성).
+    CLI append로는 만들 수 없는 field 조합(경로 탈출 file 등)을 스키마 pattern은 통과시키되
+    실제 파일시스템 상태는 임의로 구성해야 하는 시나리오 전용 — mock이 아니라 실 파일 작성이다.
+    """
+    doc = {
+        "version": 1,
+        "last_task_number": 0,
+        "memories": list(memories),
+        "history": list(history) if history is not None else [],
+    }
+    json_path.write_text(json.dumps(doc, ensure_ascii=False, indent=2), encoding="utf-8")
+    return json_path
+
+
+def _traversal_row(title="탈출 포인터 행", status="candidate",
+                    file_field="memory/../outside.md") -> dict:
+    """`memory/` 밖으로 해석되지만 스키마 패턴 `^memory/[^/].*\\.md$`은 통과하는 행
+    (096 G-3 — `_resolve_memory_file()`이 None을 반환하는 경로 탈출 벡터 실증용)."""
+    return {
+        "title": title, "date": "2026-08-01", "type": "project",
+        "status": status, "file": file_field, "summary": "경로 탈출 참조 무결성 테스트(096)",
+    }
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -3004,12 +3061,57 @@ class TestUpdateKindArgGuard(unittest.TestCase):
             self.assertEqual(result.get("error"), "invalid_args")
             self.assertEqual(_snapshot(md), before)
 
+    # 079 원본 ERROR_CODES 23종(079 시점 SSOT) — 096이 §3.2.2에서 3종을 추가하기 전의
+    # 전체 키 집합. 이 상수 자체를 하드코딩된 총 개수 대신 "삭제·개명 여부"를 검사하는
+    # 기준선으로 쓴다(PM 판정 §교정 요구 1) — 다음 태스크가 또 추가해도 이 리스트는
+    # 불변이며, 애초에 존재하던 23종의 생존만 계속 확인한다.
+    _T079_ORIGINAL_ERROR_CODES = frozenset({
+        "memory_file_not_found", "row_not_found", "already_initialized", "invalid_kind",
+        "invalid_type", "invalid_status", "summary_too_long", "title_required",
+        "invalid_promote_target", "promote_ref_missing", "date_tool_failed",
+        "delete_requires_dead_or_superseded", "memory_json_not_found", "invalid_json",
+        "unsupported_version", "schema_validation_failed", "schema_load_failed",
+        "schema_unsupported_keyword", "invalid_date", "lock_timeout", "migration_failed",
+        "task_number_regression", "invalid_args",
+    })
+
     def test_ts028_error_codes_unchanged_no_new_codes(self):
-        """TS-028: ERROR_CODES 키 23종 그대로(신규 0) + invalid_kind/invalid_args 템플릿 무변경.
-        (계약상 신규 코드가 없어야 하는 불변식이므로 구현 전에도 참일 수 있다 — 회귀 가드.)"""
+        """TS-028: ERROR_CODES 기존 23종 전건 생존(삭제·개명 0) + invalid_kind/invalid_args
+        템플릿 무변경. (계약상 이 23종이 사라지거나 이름이 바뀌면 안 되는 불변식 —
+        079 scope-creep 회귀 가드.)
+
+        [096 갱신, PM 판정] 원래 단언은 `len(codes) == 23`으로 **총 개수**를 고정했으나,
+        096이 PLAN §3.2.2 설계에 따라 의도적·문서화된 3종
+        (`memory_file_exists`/`orphan_ref_missing`/`memory_file_unresolvable`)을
+        추가하면서 23→26이 됐다(목표-커버 게이트 iteration 2 pass, `git diff -U0` 확인
+        결과 기존 23종 삭제·개명 0줄·추가 3줄 — 순수 가산). 이 단언이 원래 잡으려던
+        것은 "079 작업 중 의도치 않은 드리프트"이지 "영구히 23종 고정"이 아니었으므로
+        (독스트링 자신이 "회귀 가드"라 명시), 총 개수 하드코딩을 다시 `== 26`으로
+        바꾸는 대신 — (1) 기존 23종이 **전부** 여전히 존재하는지(부분집합 단언,
+        삭제·개명이 있으면 즉시 FAIL)와 (2) 추가분이 **정확히** 096의 3종과
+        일치하는지(그 이상도 이하도 아님)를 각각 단언하는 형태로 정밀화한다.
+        이러면 다음 태스크가 또 코드를 추가할 때 (2)가 발동해 "의도적 갱신"을
+        강제하면서도, (1)은 79/096 어느 쪽이 지정한 기존 코드도 조용히 사라지지
+        못하게 계속 지킨다."""
         module = _load_tool_module(_TOOL_PY, "memory_tool_t079_errcodes")
         codes = module.ERROR_CODES
-        self.assertEqual(len(codes), 23, f"ERROR_CODES 개수가 23이 아님(신규 코드 유입 의심): {sorted(codes)}")
+        code_keys = set(codes)
+
+        # (1) 기존 23종 전건 생존 — 삭제·개명 0
+        missing = self._T079_ORIGINAL_ERROR_CODES - code_keys
+        self.assertEqual(missing, set(),
+                         f"079 원본 ERROR_CODES 중 삭제·개명된 키: {sorted(missing)}")
+
+        # (2) 추가분이 정확히 096의 3종과 일치 — 그 이상·이하도 아님
+        added = code_keys - self._T079_ORIGINAL_ERROR_CODES
+        self.assertEqual(
+            added,
+            {"memory_file_exists", "orphan_ref_missing", "memory_file_unresolvable"},
+            f"079 원본 23종 이후 추가된 키가 096이 문서화한 3종과 불일치(의도치 않은 "
+            f"드리프트 의심 — 새 태스크가 코드를 추가했다면 이 단언을 의도적으로 "
+            f"갱신하라): {sorted(added)}",
+        )
+
         self.assertEqual(codes["invalid_kind"],
                          "--kind는 memory 또는 history 중 하나여야 함: {kind}",
                          "invalid_kind 템플릿이 변경됨")
@@ -3094,6 +3196,651 @@ class TestUpdateHistoryLossless(unittest.TestCase):
             self.assertTrue(show_result.get("ok"), f"동시 정정 후 문서가 스키마 유효하지 않음: {show_result}")
 
             self.assertEqual(_residue(tmp_dir), [], f"동시 정정 후 락/tmp 잔여: {_residue(tmp_dir)}")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 096 헬퍼 — 문서-스키마 파리티 검사 (PLAN §3.3.5, TS-015/TS-016)
+# ─────────────────────────────────────────────────────────────────────────────
+
+_MEMORY_LEARNING = _REPO_ROOT / "opal/core/references/harness/memory-learning.md"
+_MEMORY_SCHEMA_PATH = _TOOL_DIR / "schema" / "memory.schema.json"
+_README_PATH = _TOOL_DIR / "README.md"
+_TOOLS_MD_PATH = _REPO_ROOT / "opal/core/references/tools.md"
+_NEW_ERROR_CODES_096 = ("memory_file_exists", "orphan_ref_missing", "memory_file_unresolvable")
+
+
+def _lifecycle_table_section(text):
+    """memory-learning.md '## 메모리 라이프사이클' 표 구간 텍스트만 절취한다."""
+    section = text.split("## 메모리 라이프사이클", 1)[1]
+    section = section.split("## 메모리 이관", 1)[0]
+    return section
+
+
+def _lifecycle_table_statuses(text):
+    """라이프사이클 표 첫 열(백틱 상태값)의 집합을 파싱한다."""
+    section = _lifecycle_table_section(text)
+    return set(re.findall(r"^\|\s*`([a-z]+)`\s*\|", section, flags=re.MULTILINE))
+
+
+# 변경 전 memory-learning.md 라이프사이클 표의 기존 4행 — R-3 반영 전후 문자 그대로 불변이어야 한다
+# (PLAN §3.3.2 (2): "기존 4행 서술은 R-2 반영분 외 diff 0", QA-018).
+_EXPECTED_LIFECYCLE_ROWS_096 = (
+    "| `active` | 살아있는 지식. 인덱스에 노출·로드 대상 | 신규 등록(append) | 인덱스 행 유지 |",
+    r"| `promoted` | 영구 거처(docs/brain)로 졸업 완료 | PM이 본문을 docs 규칙/brain 페이지로 "
+    r"이전했다고 판단 | `promote --to <docs\|brain>`: 이전 확인 후 인덱스 행 + `.md` 파일 삭제 + "
+    r"provenance 기록(SSOT 이중화 해소) |",
+    "| `superseded` | 더 새로운 메모리/결정이 대체 | PM이 대체 관계 식별 | "
+    "`update --status superseded`: 행 보존(추적용), 로드 제외. 자가검토 `cleanup_candidates`로 "
+    "표면화 후 `delete`로 제거(`--with-file`로 `.md`도 정리) |",
+    "| `dead` | 완료·진부화(task 완료, 이슈 해소) | task 완료 / 이슈 해소 / 철회 | "
+    "`update --status dead`: 로드 제외. 자가검토 `cleanup_candidates`로 표면화 후 `delete`로 제거 |",
+)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 096 F-001: review 참조 무결성 검사 [T096/L1-R1] — QA-001~QA-005 (+ TS-036 리스크 커버)
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestReviewReferenceIntegrity(unittest.TestCase):
+    """[T096/L1-R1] R-1 AC — build_review_block(doc, json_path)의 참조 무결성 검사.
+    본문 부재는 memory_file_missing, 경로 해석 불가는 memory_file_unresolvable로 어휘를
+    2분한다(G-3). 096 구현 전이므로 신규 케이스는 FAIL이 정상(red-first.md §1)."""
+
+    def test_qa001_missing_body_detected_in_violations(self):
+        """QA-001 (TS-001): 본문 부재 행 2건이 review violations에 memory_file_missing
+        정확히 2건으로 검출된다."""
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_dir = pathlib.Path(tmp)
+            md = _setup_populated_orphan(
+                tmp_dir, skip=("improve_candidate.md", "prefs_graduated.md"))
+            result = _run(["review", "--file", str(md)])
+            self.assertTrue(result.get("ok"), f"review 실패: {result}")
+            missing = [v for v in result.get("violations", [])
+                       if v.get("type") == "memory_file_missing"]
+            self.assertEqual(len(missing), 2,
+                             f"본문 부재 2건이 memory_file_missing으로 검출돼야 한다: "
+                             f"{result.get('violations')}")
+            titles = {v["title"] for v in missing}
+            self.assertEqual(titles, {"개선 후보 기록", "졸업한 선호 규칙"},
+                             f"검출된 행 제목 불일치: {titles}")
+            for v in missing:
+                self.assertIn("file", v, f"memory_file_missing 엔트리에 file 없음: {v}")
+
+    def test_qa002_no_false_positive_when_bodies_intact(self):
+        """QA-002 (TS-002, 음성 통제): 본문이 전건 실재하면 memory_file_missing 0건."""
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_dir = pathlib.Path(tmp)
+            md = _setup_populated(tmp_dir)  # 6행 전부 본문 실재
+            result = _run(["review", "--file", str(md)])
+            self.assertTrue(result.get("ok"), f"review 실패: {result}")
+            missing = [v for v in result.get("violations", [])
+                       if v.get("type") == "memory_file_missing"]
+            self.assertEqual(missing, [],
+                             f"본문 전건 실재인데 memory_file_missing이 검출됨: {missing}")
+
+    def test_qa003_existing_four_violation_types_unchanged(self):
+        """QA-003 (TS-003): build_review_block(doc, json_path=None)이 기존 4종
+        violations(invalid_status/invalid_type/summary_too_long/title_too_long)의
+        키 집합·값·상대 순서를 변경 전과 동일하게 유지한다. json_path=None이면
+        참조 무결성 검사는 건너뛴다(하위호환).
+
+        [096 교정 1] 최초 버전은 제목을 "긴제목"*10(정확히 30자)으로 구성했으나
+        판정식이 `len(title) > TITLE_MAX_LENGTH`(memory_tool.py:856, TITLE_MAX_LENGTH=30 —
+        schema/memory.schema.json:106)이므로 30>30=False라 title_too_long이 애초에
+        검출 불가능한 fixture 결함이었다(구현과 무관하게 검증 불능). 임계값을
+        `module.TITLE_MAX_LENGTH`에서 직접 취득해 31자(초과 → 검출)와 30자(경계 →
+        미검출) 두 케이스로 분리했다 — 경계 자체를 명시적으로 확인하는 편이 ⑥경계
+        축에도 기여한다(PM 지적 반영)."""
+        module = _load_tool_module(_TOOL_PY, "memory_tool_qa003")
+        max_len = module.TITLE_MAX_LENGTH
+        boundary_title = "가" * max_len          # 정확히 상한 — 미검출이 정상(30>30=False)
+        over_title = "가" * (max_len + 1)        # 상한 초과 — 검출이 정상
+        doc = {
+            "version": 1, "last_task_number": 0,
+            "memories": [
+                {"title": "잘못된 상태", "date": "2026-08-01", "type": "project",
+                 "status": "bogus_status", "file": "memory/a.md", "summary": "s"},
+                {"title": "잘못된 유형", "date": "2026-08-01", "type": "bogus_type",
+                 "status": "active", "file": "memory/b.md", "summary": "s"},
+                {"title": "긴 요약", "date": "2026-08-01", "type": "project",
+                 "status": "active", "file": "memory/c.md", "summary": "x" * 81},
+                {"title": boundary_title, "date": "2026-08-01", "type": "project",
+                 "status": "active", "file": "memory/d0.md", "summary": "경계 정확히 상한"},
+                {"title": over_title, "date": "2026-08-01", "type": "project",
+                 "status": "active", "file": "memory/d.md", "summary": "s"},
+            ],
+            "history": [],
+        }
+        review = module.build_review_block(doc, json_path=None)
+        violations = review["violations"]
+        types = [v["type"] for v in violations]
+        self.assertEqual(
+            types,
+            ["invalid_status", "invalid_type", "summary_too_long", "title_too_long"],
+            f"기존 4종 violations의 구성·상대 순서가 변경됨(경계 30자 행은 무위반이어야 "
+            f"하므로 목록 길이는 여전히 4): {types}",
+        )
+        self.assertEqual(violations[0],
+                         {"type": "invalid_status", "title": "잘못된 상태", "value": "bogus_status"})
+        self.assertEqual(violations[1],
+                         {"type": "invalid_type", "title": "잘못된 유형", "value": "bogus_type"})
+        self.assertEqual(violations[2],
+                         {"type": "summary_too_long", "title": "긴 요약", "length": 81})
+        self.assertEqual(violations[3]["type"], "title_too_long")
+        self.assertEqual(violations[3]["title"], over_title,
+                         f"title_too_long이 상한 초과({max_len + 1}자) 행이 아닌 다른 행을 가리킴")
+        self.assertEqual(violations[3]["length"], max_len + 1)
+        violation_titles = [v.get("title") for v in violations]
+        self.assertNotIn(boundary_title, violation_titles,
+                         f"경계값 정확히 {max_len}자 제목이 title_too_long으로 오탐됨 "
+                         f"({max_len}>{max_len}는 False여야 한다)")
+        self.assertNotIn("memory_file_missing", types,
+                         "json_path=None인데 참조 무결성 검사가 수행됨(하위호환 위반)")
+
+    def test_qa004_call_sites_pass_json_path_and_six_commands_detect(self):
+        """QA-004 (TS-004, H-1): build_review_block(doc) 구형태(1-인자) 호출 잔존 0건
+        (호출부 9곳 전량 json_path 배선) + 변경 명령 6종(init/append/update/prune/
+        task-number --bump/delete) 응답의 자동 첨부 review 전부에서 검출된다.
+
+        [096 교정 2] 최초 버전은 append 이후에도 기대치를 2(orphan 사전조건 그대로)로
+        두었으나, 이는 fixture 결함이 아니라 **cmd_append의 실제 동작을 잘못 예측한
+        assertion 오류**였다. `cmd_append`는 `file_field = _title_to_filename(title)`
+        (memory_tool.py:965)로 경로 문자열만 인덱스에 기록할 뿐 `memory/<file>.md`
+        본문을 생성하지 않는다 — 저장소 전체에 `.md` 본문을 쓰는 코드가 존재하지
+        않는다(grep `write_text` 결과 memory_tool.py:345의 MEMORY.json 원자적 쓰기용
+        tmp 파일 1건뿐, memory/*.md 대상 0건). 따라서 `append --kind memory`는
+        구조적으로 항상 "본문 없는 신규 행"을 만들며, F-001 참조 무결성 검사가
+        **append 시점에 그 행을 즉시 검출하는 것이 정상 동작**이다(오탐이 아니라
+        이 기능의 핵심 가치 — 태스크 배경의 "인덱스 참조는 있는데 본문이 없는" 상태가
+        바로 이렇게 발생한다). append 이후의 기대치를 3(orphan 사전조건 2 +
+        append 신규 1)으로 정정하고, 숫자만이 아니라 **append로 만든 행이 실제로
+        검출 목록에 title로 포함되는지**를 append 직후와 마지막 delete 이후
+        (지속성 확인) 양쪽에서 단언한다."""
+        src = _TOOL_PY.read_text(encoding="utf-8")
+        self.assertEqual(
+            src.count("build_review_block(doc)"), 0,
+            "build_review_block(doc) 구형태(1-인자) 호출이 잔존 — json_path 미배선 호출부가 "
+            "있으면 그 명령에서만 검사가 침묵 실패한다(H-1)",
+        )
+
+        appended_title = "QA-004 신규 메모리"
+
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_dir = pathlib.Path(tmp)
+            md = _setup_populated_orphan(
+                tmp_dir, skip=("improve_candidate.md", "prefs_graduated.md"))
+
+            def _missing_titles(result):
+                review = result.get("review") if "review" in result else result
+                return {v["title"] for v in review.get("violations", [])
+                       if v.get("type") == "memory_file_missing"}
+
+            init_result = _run(["init", "--file", str(md), "--force"])
+            self.assertTrue(init_result.get("ok"), f"init 실패: {init_result}")
+            self.assertEqual(len(_missing_titles(init_result)), 2,
+                             f"init 응답 review에서 검출 안 됨: {init_result}")
+
+            append_result = _run([
+                "append", "--file", str(md), "--kind", "memory",
+                "--title", appended_title, "--type", "project",
+                "--summary", "호출부 누락 검증용",
+            ])
+            self.assertTrue(append_result.get("ok"), f"append 실패: {append_result}")
+            append_missing = _missing_titles(append_result)
+            self.assertEqual(
+                len(append_missing), 3,
+                f"append는 본문 없는 신규 행을 만들므로(memory_tool.py:965 — "
+                f"_title_to_filename만 계산, .md 쓰기 없음) orphan 사전조건 2건 + "
+                f"신규 1건 = 3건이 정상이다: {append_result}",
+            )
+            self.assertIn(
+                appended_title, append_missing,
+                f"append로 생성된 행 '{appended_title}' 자신이 검출 목록에 없음 — "
+                f"append 시점 검출이라는 핵심 동작이 성립하지 않음: {append_missing}",
+            )
+
+            update_result = _run([
+                "update", "--file", str(md), "--title", "메인 직접 커밋 선호", "--status", "dead",
+            ])
+            self.assertTrue(update_result.get("ok"), f"update 실패: {update_result}")
+            self.assertEqual(len(_missing_titles(update_result)), 3,
+                             f"update 응답에서 검출 안 됨: {update_result}")
+
+            prune_result = _run(["prune", "--file", str(md)])
+            self.assertTrue(prune_result.get("ok"), f"prune 실패: {prune_result}")
+            self.assertEqual(len(_missing_titles(prune_result)), 3,
+                             f"prune 응답에서 검출 안 됨: {prune_result}")
+
+            task_number_result = _run(["task-number", "--file", str(md), "--bump"])
+            self.assertTrue(task_number_result.get("ok"),
+                            f"task-number --bump 실패: {task_number_result}")
+            self.assertEqual(len(_missing_titles(task_number_result)), 3,
+                             f"task-number 응답에서 검출 안 됨: {task_number_result}")
+
+            delete_result = _run(["delete", "--file", str(md), "--title", "완료된 태스크 기록"])
+            self.assertTrue(delete_result.get("ok"), f"delete 실패: {delete_result}")
+            delete_missing = _missing_titles(delete_result)
+            self.assertEqual(len(delete_missing), 3,
+                             f"delete 응답에서 검출 안 됨: {delete_result}")
+            self.assertIn(
+                appended_title, delete_missing,
+                f"append로 생성된 행이 이후 명령(delete)까지 지속 검출되지 않음: "
+                f"{delete_missing}",
+            )
+
+    def test_qa005_traversal_row_reported_as_unresolvable_not_missing(self):
+        """QA-005 (TS-005): 경로 탈출 file은 memory_file_missing이 아니라
+        memory_file_unresolvable로 검출된다(어휘 2분, G-3)."""
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_dir = pathlib.Path(tmp)
+            (tmp_dir / "memory").mkdir()
+            md = tmp_dir / "MEMORY.json"
+            _write_doc(md, [_traversal_row()])
+            # memory/ 밖에는 아무 파일도 만들지 않는다 — 어휘 구분이 본문 실재 여부와
+            # 무관하게 "해석 가능 여부" 하나로 결정됨을 보인다.
+            result = _run(["review", "--file", str(md)])
+            self.assertTrue(result.get("ok"), f"review 실패: {result}")
+            violations = result.get("violations", [])
+            types = {v["type"] for v in violations}
+            self.assertNotIn("memory_file_missing", types,
+                             f"경로 탈출 행이 memory_file_missing으로 오분류됨: {violations}")
+            self.assertIn("memory_file_unresolvable", types,
+                          f"경로 탈출 행이 memory_file_unresolvable로 검출되지 않음: {violations}")
+
+    def test_ts036_mixed_vocab_review_distinguishes_missing_from_unresolvable(self):
+        """TS-036 (리스크 커버 H-4, PLAN QA-ID 대응 없음): 본문 부재 행과 경로 탈출 행이
+        공존할 때 review가 두 행을 서로 다른 type으로 반환한다 — 운영자가 review 출력만으로
+        "정리 가능" vs "포인터 수리 필요"를 구별할 수 있어야 한다."""
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_dir = pathlib.Path(tmp)
+            md = _setup_populated_orphan(tmp_dir, skip=("improve_candidate.md",))
+            doc = _read_doc(md)
+            doc["memories"].append(_traversal_row(title="탈출-혼합", status="candidate"))
+            md.write_text(json.dumps(doc, ensure_ascii=False, indent=2), encoding="utf-8")
+
+            result = _run(["review", "--file", str(md)])
+            self.assertTrue(result.get("ok"), f"review 실패: {result}")
+            by_title = {v["title"]: v["type"] for v in result.get("violations", [])
+                       if v.get("title") in ("개선 후보 기록", "탈출-혼합")}
+            self.assertEqual(by_title.get("개선 후보 기록"), "memory_file_missing",
+                             f"본문 부재 행 어휘 불일치: {by_title}")
+            self.assertEqual(by_title.get("탈출-혼합"), "memory_file_unresolvable",
+                             f"경로 탈출 행 어휘 불일치: {by_title}")
+            self.assertNotEqual(
+                by_title.get("개선 후보 기록"), by_title.get("탈출-혼합"),
+                "두 행이 같은 type으로 뭉뚱그려짐 — 검출 어휘 2분 실패",
+            )
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 096 F-002: delete --orphan --ref 고아 행 정리 [T096/L1-R2] — QA-006~QA-014,
+# QA-024~QA-026 (+ TS-037·TS-038 리스크 커버)
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestDeleteOrphan(unittest.TestCase):
+    """[T096/L1-R2] R-2 AC — `delete --orphan --ref`. 무손실 가드는 약화되지 않고
+    술어가 정밀화된다: 본문 실재(status 무관) → memory_file_exists 거부(H-2 벡터①),
+    해석 불가(경로 탈출 등) → memory_file_unresolvable 거부(G-3, H-2 벡터②).
+    096 구현 전이므로 신규 케이스는 FAIL이 정상(red-first.md §1)."""
+
+    def test_qa006_candidate_orphan_row_cleaned_real_layout_roundtrip(self):
+        """QA-006 (TS-006) [MUST 실환경 재현]: `.opal/MEMORY.json` ↔ `.opal/memory/*.md`
+        왕복 경로를 `_install_json()`으로 재현 — candidate + 본문 부재 행에
+        `delete --orphan --ref X` → 검출→정리 왕복 성립(잔여 재검출 없음)."""
+        with tempfile.TemporaryDirectory() as tmp:
+            opal, md = _install_json(tmp)  # memory/*.md 미생성 → 6행 전부 본문 부재
+            title = "개선 후보 기록"
+
+            pre_review = _run(["review", "--file", str(md)])
+            self.assertTrue(pre_review.get("ok"), f"사전 review 실패: {pre_review}")
+            pre_missing = {v["title"] for v in pre_review.get("violations", [])
+                          if v.get("type") == "memory_file_missing"}
+            self.assertIn(title, pre_missing, f"사전 검출 실패: {pre_review.get('violations')}")
+
+            result = _run(["delete", "--file", str(md), "--title", title,
+                          "--orphan", "--ref", "docs/CONVENTIONS.md#변경이력"])
+            self.assertTrue(result.get("ok"), f"orphan delete 실패: {result}")
+            self.assertIs(result.get("orphan"), True, f"orphan 플래그 미반영: {result}")
+            self.assertEqual(result.get("reason"), "memory_file_missing",
+                             f"reason이 검출 어휘와 불일치: {result}")
+            self.assertEqual(result.get("ref"), "docs/CONVENTIONS.md#변경이력")
+
+            doc = _read_doc(md)
+            self.assertTrue(all(r["title"] != title for r in doc["memories"]),
+                            f"행이 제거되지 않음: {doc['memories']}")
+
+            post_review = _run(["review", "--file", str(md)])
+            post_missing = {v["title"] for v in post_review.get("violations", [])
+                           if v.get("type") == "memory_file_missing"}
+            self.assertNotIn(title, post_missing, "정리 후에도 재검출됨(검출→정리 왕복 실패)")
+
+    def test_qa007_promoted_orphan_row_cleaned(self):
+        """QA-007 (TS-007 일부): promoted + 본문 부재 행도 동일하게 성공한다."""
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_dir = pathlib.Path(tmp)
+            md = _setup_populated_orphan(tmp_dir, skip=("prefs_graduated.md",))
+            result = _run(["delete", "--file", str(md), "--title", "졸업한 선호 규칙",
+                          "--orphan", "--ref", "docs/CONVENTIONS.md#변경이력"])
+            self.assertTrue(result.get("ok"), f"promoted 행 orphan delete 실패: {result}")
+            doc = _read_doc(md)
+            self.assertTrue(all(r["title"] != "졸업한 선호 규칙" for r in doc["memories"]),
+                            f"행이 제거되지 않음: {doc['memories']}")
+
+    def test_qa008_orphan_rejected_when_body_exists_all_statuses(self):
+        """QA-008 (TS-008) [핵심]: 본문 실재 행은 status 무관하게 memory_file_exists로
+        거부되고 인덱스·본문 모두 불변이다(무손실 가드 우회 불가, H-2 벡터①, 4 status 전수)."""
+        targets = [
+            ("메인 직접 커밋 선호", "active", "prefs_commit.md"),
+            ("완료된 태스크 기록", "dead", "task_done.md"),
+            ("대체된 아키텍처 결정", "superseded", "arch_old.md"),
+            ("졸업한 선호 규칙", "promoted", "prefs_graduated.md"),
+        ]
+        for title, status, fname in targets:
+            with self.subTest(status=status):
+                with tempfile.TemporaryDirectory() as tmp:
+                    tmp_dir = pathlib.Path(tmp)
+                    md = _setup_populated(tmp_dir)  # 전건 본문 실재
+                    before_doc = _snapshot(md)
+                    body_path = tmp_dir / "memory" / fname
+                    before_body = body_path.read_bytes()
+
+                    result = _run(["delete", "--file", str(md), "--title", title,
+                                  "--orphan", "--ref", "X"])
+                    self.assertFalse(result.get("ok"),
+                                     f"본문 실재({status}) 행이 --orphan으로 제거됨: {result}")
+                    self.assertEqual(result.get("error"), "memory_file_exists",
+                                     f"[{status}] 에러 코드 불일치: {result}")
+                    self.assertEqual(_snapshot(md), before_doc,
+                                     f"[{status}] 인덱스가 변경됨(무손실 가드 위반)")
+                    self.assertEqual(body_path.read_bytes(), before_body,
+                                     f"[{status}] 본문 파일이 변경됨")
+
+    def test_qa009_active_body_exists_orphan_rejected_bytes_unchanged(self):
+        """QA-009 (TS-009) [핵심]: active + 본문 실재 행에 --orphan --ref →
+        memory_file_exists 거부 + MEMORY.json 바이트 단위 불변."""
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_dir = pathlib.Path(tmp)
+            md = _setup_populated(tmp_dir)
+            before = _snapshot(md)
+            result = _run(["delete", "--file", str(md), "--title", "메인 직접 커밋 선호",
+                          "--orphan", "--ref", "X"])
+            self.assertFalse(result.get("ok"), f"active+본문실재 행이 제거됨: {result}")
+            self.assertEqual(result.get("error"), "memory_file_exists",
+                             f"에러 코드 불일치: {result}")
+            self.assertEqual(_snapshot(md), before, "MEMORY.json 바이트가 변경됨")
+
+    def test_qa010_orphan_without_ref_rejected(self):
+        """QA-010 (TS-010): --orphan 단독(--ref 없음) → orphan_ref_missing, 행 불변."""
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_dir = pathlib.Path(tmp)
+            md = _setup_populated_orphan(tmp_dir, skip=("improve_candidate.md",))
+            before = _snapshot(md)
+            result = _run(["delete", "--file", str(md), "--title", "개선 후보 기록", "--orphan"])
+            self.assertFalse(result.get("ok"), f"--ref 없이 성공함: {result}")
+            self.assertEqual(result.get("error"), "orphan_ref_missing",
+                             f"에러 코드 불일치: {result}")
+            self.assertEqual(_snapshot(md), before, "행이 변경됨")
+
+    def test_qa011_no_flag_delete_still_requires_dead_or_superseded(self):
+        """QA-011 (TS-011, 불변식 가드 — RED 시점에도 통과 가능): 본문 부재 candidate
+        행에 무플래그 delete → 여전히 delete_requires_dead_or_superseded(silent 완화 없음)."""
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_dir = pathlib.Path(tmp)
+            md = _setup_populated_orphan(tmp_dir, skip=("improve_candidate.md",))
+            before = _snapshot(md)
+            result = _run(["delete", "--file", str(md), "--title", "개선 후보 기록"])
+            self.assertFalse(result.get("ok"), f"본문 부재 candidate가 무플래그로 제거됨: {result}")
+            self.assertEqual(result.get("error"), "delete_requires_dead_or_superseded",
+                             f"에러 코드 불일치: {result}")
+            self.assertEqual(_snapshot(md), before, "행이 변경됨")
+
+    def test_qa012_provenance_log_records_reason_ref_and_summary(self):
+        """QA-012 (TS-012, H-3): `.memory_provenance.log`에 delete-orphan 행이 기록되고
+        ref=/summary=가 포함된다(무손실 — 본문 없는 행에서 유일하게 남은 지식 보존)."""
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_dir = pathlib.Path(tmp)
+            md = _setup_populated_orphan(tmp_dir, skip=("improve_candidate.md",))
+            result = _run(["delete", "--file", str(md), "--title", "개선 후보 기록",
+                          "--orphan", "--ref", "docs/CONVENTIONS.md#변경이력"])
+            self.assertTrue(result.get("ok"), f"orphan delete 실패: {result}")
+            log_path = tmp_dir / ".memory_provenance.log"
+            self.assertTrue(log_path.exists(), "provenance 로그가 생성되지 않음")
+            content = log_path.read_text(encoding="utf-8")
+            self.assertIn("delete-orphan", content, "행 접두 토큰 'delete-orphan' 없음")
+            self.assertIn("ref=docs/CONVENTIONS.md#변경이력", content, "ref= 미기록")
+            self.assertIn("summary=", content, "summary= 미기록")
+            self.assertIn("improve-tool record --scope local이 기록한 개선 후보", content,
+                          "행의 summary 원문이 provenance에 보존되지 않음")
+
+    def test_qa013_orphan_delete_leaves_no_residue_and_show_ok(self):
+        """QA-013 (TS-013, H-5): orphan delete 후 .tmp/.lock 잔여 0건,
+        후속 show가 ok:true(스키마 유효)."""
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_dir = pathlib.Path(tmp)
+            md = _setup_populated_orphan(tmp_dir, skip=("improve_candidate.md",))
+            result = _run(["delete", "--file", str(md), "--title", "개선 후보 기록",
+                          "--orphan", "--ref", "X"])
+            self.assertTrue(result.get("ok"), f"orphan delete 실패: {result}")
+            self.assertEqual(_residue(tmp_dir), [], f"tmp/lock 잔여: {_residue(tmp_dir)}")
+            show_result = _run(["show", "--file", str(md)])
+            self.assertTrue(show_result.get("ok"), f"후속 show 실패(스키마 무효): {show_result}")
+
+    def test_qa014_single_call_no_status_transition_required(self):
+        """QA-014 (TS-014): `update --status` 선행 호출 없이 단일
+        `delete --orphan --ref` 1회 호출로 행이 제거된다."""
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_dir = pathlib.Path(tmp)
+            md = _setup_populated_orphan(tmp_dir, skip=("improve_candidate.md",))
+            doc_before = _read_doc(md)
+            row = next(r for r in doc_before["memories"] if r["title"] == "개선 후보 기록")
+            self.assertEqual(row["status"], "candidate", "전제 상태값이 candidate가 아님")
+            result = _run(["delete", "--file", str(md), "--title", "개선 후보 기록",
+                          "--orphan", "--ref", "X"])
+            self.assertTrue(result.get("ok"),
+                            f"단일 호출 실패 — update --status 선행이 필요하다면 결함: {result}")
+
+    def test_qa024_traversal_with_live_body_outside_memory_rejected(self):
+        """QA-024 (TS-034) [P0, H-2 벡터②]: memory/ 밖에 본문이 실재하는 경로 탈출 행은
+        memory_file_unresolvable로 거부되고 인덱스 행·memory/ 밖 본문 파일 모두 불변이다
+        (확인 불가는 부재가 아니므로 삭제하지 않는다 — G-3)."""
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_dir = pathlib.Path(tmp)
+            (tmp_dir / "memory").mkdir()
+            md = tmp_dir / "MEMORY.json"
+            _write_doc(md, [_traversal_row(title="탈출-실재", status="candidate",
+                                           file_field="memory/../outside_live.md")])
+            outside = tmp_dir / "outside_live.md"
+            outside.write_text("본문이 memory/ 밖에 실재한다 — 소실되면 안 됨\n", encoding="utf-8")
+            before_doc = _snapshot(md)
+            before_body = outside.read_bytes()
+
+            result = _run(["delete", "--file", str(md), "--title", "탈출-실재",
+                          "--orphan", "--ref", "X"])
+            self.assertFalse(result.get("ok"), f"경로 탈출+본문 실재 행이 제거됨: {result}")
+            self.assertEqual(result.get("error"), "memory_file_unresolvable",
+                             f"에러 코드 불일치: {result}")
+            self.assertEqual(_snapshot(md), before_doc, "인덱스가 변경됨")
+            self.assertTrue(outside.exists(), "memory/ 밖 본문 파일이 삭제됨(지식 소실)")
+            self.assertEqual(outside.read_bytes(), before_body, "memory/ 밖 본문 파일이 수정됨")
+
+    def test_qa025_none_return_three_paths_all_rejected(self):
+        """QA-025 (TS-035) [P0, H-2 벡터②]: `_resolve_memory_file()`이 None을 반환하는
+        3경로(① 경로 탈출 ② resolve 예외(임베디드 null 문자) ③ 빈 file) 전수가 삭제로
+        이어지지 않는다. ③은 스키마 pattern이 CLI 경로 도달을 막으므로(PLAN §3.2.2 판정3)
+        기존 함수 `_resolve_memory_file()`을 직접 호출해 None 반환을 확인한다(모듈 레벨
+        직접 호출 — mock 아님, 실제 함수를 실행한다)."""
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_dir = pathlib.Path(tmp)
+            (tmp_dir / "memory").mkdir()
+
+            # ① 경로 탈출
+            md1 = tmp_dir / "MEMORY_1.json"
+            _write_doc(md1, [_traversal_row(title="탈출-1", file_field="memory/../outside1.md")])
+            before1 = _snapshot(md1)
+            r1 = _run(["delete", "--file", str(md1), "--title", "탈출-1",
+                      "--orphan", "--ref", "X"])
+            self.assertFalse(r1.get("ok"), f"①경로 탈출 행이 제거됨: {r1}")
+            self.assertEqual(r1.get("error"), "memory_file_unresolvable", f"①: {r1}")
+            self.assertEqual(_snapshot(md1), before1, "①행이 변경됨")
+
+            # ② resolve 예외(임베디드 null 문자 — 스키마 pattern은 통과, resolve()가 ValueError)
+            md2 = tmp_dir / "MEMORY_2.json"
+            _write_doc(md2, [_traversal_row(title="탈출-2", file_field="memory/\x00bad.md")])
+            before2 = _snapshot(md2)
+            r2 = _run(["delete", "--file", str(md2), "--title", "탈출-2",
+                      "--orphan", "--ref", "X"])
+            self.assertFalse(r2.get("ok"), f"②resolve 예외 유발 행이 제거됨: {r2}")
+            self.assertEqual(r2.get("error"), "memory_file_unresolvable", f"②: {r2}")
+            self.assertEqual(_snapshot(md2), before2, "②행이 변경됨")
+
+            # ③ 빈 file — CLI 경로 도달 불가(스키마 pattern 불일치)이므로 함수 단위 직접 확인
+            module = _load_tool_module(_TOOL_PY, "memory_tool_qa025")
+            self.assertIsNone(
+                module._resolve_memory_file(str(md2), ""),
+                "③빈 file_field가 None으로 해석되지 않음 — cmd_delete orphan 분기의 "
+                "`if file_field else None` 단락 전제가 깨짐",
+            )
+
+    def test_qa026_ts039_vocabulary_consistency_across_three_commands(self):
+        """QA-026 (TS-039, 정정 3): 동일 경로 탈출 행에 대해 review·promote·
+        delete --orphan 세 명령이 모두 memory_file_unresolvable 어휘로 일치한다
+        (citation-rules §7.1 영역 간 용어 일관성). promote는 096 이전에는 이 경우를
+        memory_file_not_found로 반환했다 — 096이 만든 어휘 단절을 정합한다."""
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_dir = pathlib.Path(tmp)
+            (tmp_dir / "memory").mkdir()
+            md = tmp_dir / "MEMORY.json"
+            _write_doc(md, [_traversal_row(title="탈출-어휘일관성", status="candidate")])
+
+            review_result = _run(["review", "--file", str(md)])
+            self.assertTrue(review_result.get("ok"), f"review 실패: {review_result}")
+            review_types = {v["type"] for v in review_result.get("violations", [])
+                           if v.get("title") == "탈출-어휘일관성"}
+            self.assertIn("memory_file_unresolvable", review_types,
+                          f"review 어휘 불일치: {review_result}")
+            self.assertNotIn("memory_file_missing", review_types,
+                             f"review가 해석 불가를 부재로 오분류: {review_result}")
+
+            promote_result = _run(["promote", "--file", str(md), "--title", "탈출-어휘일관성",
+                                   "--to", "docs", "--ref", "X"])
+            self.assertFalse(promote_result.get("ok"), f"해석 불가 행이 promote됨: {promote_result}")
+            self.assertEqual(promote_result.get("error"), "memory_file_unresolvable",
+                             f"promote 어휘 불일치(096 정정 3 미반영, 구코드 memory_file_not_found "
+                             f"잔존 의심): {promote_result}")
+
+            delete_result = _run(["delete", "--file", str(md), "--title", "탈출-어휘일관성",
+                                  "--orphan", "--ref", "X"])
+            self.assertFalse(delete_result.get("ok"),
+                             f"해석 불가 행이 orphan 삭제됨: {delete_result}")
+            self.assertEqual(delete_result.get("error"), "memory_file_unresolvable",
+                             f"delete --orphan 어휘 불일치: {delete_result}")
+
+    def test_ts037_orphan_and_promote_reject_regardless_of_status(self):
+        """TS-037 (①②일부, PLAN §9 R-13 잔존 고착 실증): --orphan과 promote는 해석 불가
+        행에 대해 status(candidate/dead)와 무관하게 거부한다 — 무손실 가드는 상태 축이
+        아니라 본문 확인 가능 여부 축으로 판정된다."""
+        for status in ("candidate", "dead"):
+            with self.subTest(status=status):
+                with tempfile.TemporaryDirectory() as tmp:
+                    tmp_dir = pathlib.Path(tmp)
+                    (tmp_dir / "memory").mkdir()
+                    md = tmp_dir / "MEMORY.json"
+                    title = f"탈출-{status}"
+                    _write_doc(md, [_traversal_row(title=title, status=status)])
+
+                    orphan_result = _run(["delete", "--file", str(md), "--title", title,
+                                         "--orphan", "--ref", "X"])
+                    self.assertFalse(orphan_result.get("ok"),
+                                     f"[{status}] --orphan이 해석 불가 행을 제거함: {orphan_result}")
+                    self.assertEqual(orphan_result.get("error"), "memory_file_unresolvable",
+                                     f"[{status}] --orphan 에러 코드 불일치: {orphan_result}")
+
+                    promote_result = _run(["promote", "--file", str(md), "--title", title,
+                                          "--to", "docs", "--ref", "X"])
+                    self.assertFalse(promote_result.get("ok"),
+                                     f"[{status}] promote가 해석 불가 행을 졸업시킴: {promote_result}")
+                    self.assertEqual(promote_result.get("error"), "memory_file_unresolvable",
+                                     f"[{status}] promote 에러 코드 불일치: {promote_result}")
+
+    def test_ts038_no_flag_delete_allows_dead_unresolvable_row(self):
+        """TS-038 [핵심/음성 통제, 불변식 가드 — RED 시점에도 통과 가능]: 무플래그 delete는
+        mem_file을 조회하지 않으므로 dead + 해석 불가(경로 탈출) 행도 여전히 허용되어
+        제거된다. PLAN이 [MUST]로 보존 명령한 else 3줄(memory_tool.py:1355-1357)이
+        문자 그대로 불변임을 실증한다 — GREEN을 좇아 무플래그 경로에 가드를 추가하면
+        이 시나리오가 FAIL해야 한다."""
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_dir = pathlib.Path(tmp)
+            (tmp_dir / "memory").mkdir()
+            md = tmp_dir / "MEMORY.json"
+            _write_doc(md, [_traversal_row(title="탈출-dead", status="dead")])
+
+            result = _run(["delete", "--file", str(md), "--title", "탈출-dead"])
+            self.assertTrue(
+                result.get("ok"),
+                f"dead+해석불가 행이 무플래그 delete에서 거부됨 — else 3줄이 mem_file을 "
+                f"조회하도록 변경됐다는 뜻이며 PLAN [MUST] 위반: {result}",
+            )
+            doc = _read_doc(md)
+            self.assertTrue(all(r["title"] != "탈출-dead" for r in doc["memories"]),
+                            "허용됐다는데 행이 실제로는 제거되지 않음")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 096 F-003: 규범·도구 문서 정합 [T096/L1-R3] — QA-015~QA-018
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestLifecycleDocParity(unittest.TestCase):
+    """[T096/L1-R3] R-3 AC — memory-learning.md 라이프사이클 표 ↔
+    memory.schema.json status enum 파리티(H-7, 수동 동기화 계약을 기계 집행으로 전환).
+    `TestTaskNumberDocs`(:2515)의 `_REPO_ROOT` 기준 문서 읽기 패턴을 재사용한다."""
+
+    def test_qa015_lifecycle_table_matches_schema_enum(self):
+        """QA-015 (TS-015): 라이프사이클 표 상태 값 집합 == 스키마 status enum
+        (문자 단위 동일, 5종)."""
+        text = _MEMORY_LEARNING.read_text(encoding="utf-8")
+        table_statuses = _lifecycle_table_statuses(text)
+        schema = json.loads(_MEMORY_SCHEMA_PATH.read_text(encoding="utf-8"))
+        schema_statuses = set(schema["$defs"]["memoryRow"]["properties"]["status"]["enum"])
+        self.assertEqual(
+            table_statuses, schema_statuses,
+            f"라이프사이클 표 상태 집합과 스키마 enum 불일치: 표={table_statuses} "
+            f"스키마={schema_statuses}",
+        )
+        self.assertEqual(len(schema_statuses), 5, f"스키마 enum이 5종이 아님: {schema_statuses}")
+
+    def test_qa016_candidate_row_columns_filled(self):
+        """QA-016 (TS-016): `candidate` 행의 의미·진입 트리거·도구 동작 3열이
+        모두 비어있지 않다."""
+        text = _MEMORY_LEARNING.read_text(encoding="utf-8")
+        section = _lifecycle_table_section(text)
+        row_match = re.search(r"^\|\s*`candidate`\s*\|(.+)\|(.+)\|(.+)\|\s*$",
+                              section, flags=re.MULTILINE)
+        self.assertIsNotNone(row_match, "candidate 행이 라이프사이클 표에 없음")
+        for i, col in enumerate(row_match.groups(), start=1):
+            self.assertTrue(col.strip(), f"candidate 행 {i}번째 열이 비어있음")
+
+    def test_qa017_new_error_codes_documented_in_readme_and_toolsmd(self):
+        """QA-017 (TS-017, H-9): ERROR_CODES 신규 3종
+        (memory_file_exists/orphan_ref_missing/memory_file_unresolvable)이
+        README.md·tools.md 에러 코드 표에 모두 등재된다."""
+        module = _load_tool_module(_TOOL_PY, "memory_tool_qa017")
+        codes = set(module.ERROR_CODES)
+        for code in _NEW_ERROR_CODES_096:
+            self.assertIn(code, codes, f"ERROR_CODES에 신규 코드 '{code}' 부재 — GREEN 미구현")
+
+        readme_text = _README_PATH.read_text(encoding="utf-8")
+        tools_text = _TOOLS_MD_PATH.read_text(encoding="utf-8")
+        for code in _NEW_ERROR_CODES_096:
+            self.assertIn(f"`{code}`", readme_text, f"README.md 에러 코드 표에 '{code}' 누락")
+            self.assertIn(f"`{code}`", tools_text, f"tools.md 에러 코드 표에 '{code}' 누락")
+
+    def test_qa018_existing_four_rows_text_unchanged(self):
+        """QA-018 (TS-018, 불변식 가드 — RED 시점에도 통과 가능): 기존 4개 상태 행
+        (active/promoted/superseded/dead)의 3열 텍스트가 R-3 반영 전후 문자 그대로
+        동일하다(§3.3.2 (2): "기존 4행 서술은 R-2 반영분 외 diff 0")."""
+        text = _MEMORY_LEARNING.read_text(encoding="utf-8")
+        for row in _EXPECTED_LIFECYCLE_ROWS_096:
+            self.assertIn(row, text, f"기존 라이프사이클 행 텍스트가 변경됨: {row!r}")
 
 
 if __name__ == "__main__":

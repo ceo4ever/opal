@@ -4,7 +4,7 @@
   "mode": "agentic",
   "schema_version": "1.1",
   "created_at": "2026-08-20 07:58",
-  "updated_at": "2026-08-20 07:59",
+  "updated_at": "2026-08-20 13:31",
   "current_status": "in_progress",
   "rows": [
     {
@@ -23,20 +23,20 @@
       "stage": "TASK",
       "item": "사용자 확인",
       "key": "task.user_confirm",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
-      "owner": "PM",
-      "note": null
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-20 08:02",
+      "owner": "auto",
+      "note": "auto-approved on PLAN entry"
     },
     {
       "row_id": 3,
       "stage": "PLAN",
       "item": "작업",
       "key": "plan.plan_md",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-20 10:47",
       "owner": "PM",
       "note": null
     },
@@ -45,9 +45,9 @@
       "stage": "PLAN",
       "item": "목표-커버 게이트",
       "key": "plan.scenario_gate",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-20 11:27",
       "owner": "PM",
       "note": null
     },
@@ -56,9 +56,9 @@
       "stage": "PLAN",
       "item": "PM Gate",
       "key": "plan.pm_gate",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-20 11:37",
       "owner": "PM",
       "note": null,
       "gate": {
@@ -80,20 +80,20 @@
       "stage": "PLAN",
       "item": "사용자 확인",
       "key": "plan.user_confirm",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
-      "owner": "PM",
-      "note": null
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-20 11:37",
+      "owner": "auto",
+      "note": "auto-approved on EXECUTE entry"
     },
     {
       "row_id": 7,
       "stage": "EXECUTE",
       "item": "작업",
       "key": "execute.implement",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-20 13:18",
       "owner": "PM",
       "note": null
     },
@@ -102,9 +102,9 @@
       "stage": "TEST",
       "item": "작업",
       "key": "test.run_tests",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-20 13:31",
       "owner": "PM",
       "note": null
     },
@@ -113,9 +113,9 @@
       "stage": "TEST",
       "item": "PM Gate",
       "key": "test.pm_gate",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-20 13:31",
       "owner": "PM",
       "note": null,
       "gate": {
@@ -151,5 +151,5 @@
       "note": null
     }
   ],
-  "next_action": "PLAN 작업 진입"
+  "next_action": "TEST 사용자 확인 진입"
 }

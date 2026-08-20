@@ -180,26 +180,39 @@ run.sh review --file MEMORY.json
   "promote_candidates": [{"title": "...", "type": "...", "date": "..."}],
   "cleanup_candidates": [{"title": "...", "status": "dead"}],
   "history_status": {"fifo_trimmed": false, "count": 2},
-  "violations": []
+  "violations": [{"type": "memory_file_missing", "title": "...", "file": "memory/<name>.md"}]
 }
 ```
 
 - `promote_candidates`: 오래된 active 행(≥30일) — 졸업 후보 (졸업지 단정 없음, PM 판단)
 - `cleanup_candidates`: dead/superseded 행 — 정리 후보
-- `violations`: 스키마 위반(요약 길이>80·enum 위반 등)
+- `violations`: 스키마 위반(요약 길이>80·enum 위반 등) + **참조 무결성 위반**(`file` 포인터가 가리키는 본문 `.md` 부재 시 `memory_file_missing`, 경로를 `memory/` 하위로 해석할 수 없을 시 `memory_file_unresolvable` — 096. 전자는 `delete --orphan --ref`로 정리 가능, 후자는 확인 불가이므로 정리 거부·포인터 수리 필요)
 
 ---
 
-### `delete` — dead/superseded 행 물리 제거 (무손실 가드)
+### `delete` — dead/superseded 행 물리 제거 (무손실 가드) + 고아 행 정리(`--orphan`)
 
 ```bash
 run.sh delete --file MEMORY.json --title "제목" [--with-file]
+run.sh delete --file MEMORY.json --title "제목" --orphan --ref "<지식 귀착처>" [--with-file]
 ```
 
 - `--with-file`: `memory/<file>.md`도 함께 삭제(경로 화이트리스트 검증 재사용)
-- **무손실 가드 [MUST]**: `status`가 `dead`/`superseded`가 아닌 행(active/promoted)은 `delete_requires_dead_or_superseded`로 거부, 행 불변
+- **무손실 가드 [MUST]**: `status`가 `dead`/`superseded`가 아닌 행(active/promoted/candidate)은 `delete_requires_dead_or_superseded`로 거부, 행 불변
+- **`--orphan`(096)**: 본문 `.md`가 부재한 행 전용 정리 경로. 상태 가드 대신 본문 부재를 검증하므로 `update --status` 선행이 불필요하다. `--ref`(지식 귀착처)가 필수이며, 정리 시 행의 `summary`까지 `.memory_provenance.log`에 기록된다(무손실).
 
-에러: `title_required` | `row_not_found` | `delete_requires_dead_or_superseded` | `schema_validation_failed`
+**`--orphan` 상태 × 본문 전이 표**
+
+| 행 status | 본문 `.md` | `delete`(플래그 없음) | `delete --orphan --ref` |
+|-----------|-----------|----------------------|------------------------|
+| active/promoted/candidate | 존재 | 거부 `delete_requires_dead_or_superseded` | 거부 `memory_file_exists`(무손실 가드 우회 불가) |
+| active/promoted/candidate | 부재 | 거부 `delete_requires_dead_or_superseded` | **허용** |
+| dead/superseded | 존재 | 허용 | 거부 `memory_file_exists` |
+| dead/superseded | 부재 | 허용 | 허용(동치 경로) |
+| active/promoted/candidate | 해석 불가(경로 탈출 등) | 거부 `delete_requires_dead_or_superseded` | 거부 `memory_file_unresolvable`(확인 불가는 부재가 아님) |
+| dead/superseded | 해석 불가 | 허용 | 거부 `memory_file_unresolvable` |
+
+에러: `title_required` | `row_not_found` | `delete_requires_dead_or_superseded` | `memory_file_exists` | `orphan_ref_missing` | `memory_file_unresolvable` | `schema_validation_failed`
 
 ---
 
@@ -273,7 +286,7 @@ run.sh task-number --file MEMORY.json --set 80    # 복구·보정 (역행 거�
 
 | 코드 | 의미 |
 |------|------|
-| `memory_file_not_found` | `--file`에 해당하는 `memory/<file>.md`가 없음 (promote/delete --with-file) |
+| `memory_file_not_found` | 경로 해석은 **성공**했으나 `memory/<file>.md`가 부재 (promote/delete `--with-file`) |
 | `memory_json_not_found` | `MEMORY.json`도 `MEMORY.md`도 없음 — `init` 먼저 실행 |
 | `invalid_json` | `MEMORY.json` 파싱 실패(손상된 JSON) |
 | `unsupported_version` | 문서 `version`이 지원 상한을 초과 |
@@ -293,6 +306,9 @@ run.sh task-number --file MEMORY.json --set 80    # 복구·보정 (역행 거�
 | `invalid_promote_target` | `--to`가 `docs`/`brain` 외 값 |
 | `promote_ref_missing` | `--ref`(영구 거처 위치) 필수 — 이전 미확인 promote 거부(무손실, H-1) |
 | `delete_requires_dead_or_superseded` | `delete`는 `dead`/`superseded` 행만 허용(무손실 가드) |
+| `memory_file_exists` | `--orphan`은 본문 `.md`가 부재한 행 전용 — 본문이 실재함(무손실 가드 유지) |
+| `orphan_ref_missing` | `--orphan` 사용 시 `--ref`(지식 귀착처) 필수 — 귀착처 미기재 정리 거부(감사 추적) |
+| `memory_file_unresolvable` | `file` 경로를 `memory/` 하위로 해석할 수 없어 본문 부재를 확인할 수 없음 — 확인 불가는 부재가 아니므로 정리 거부(무손실) |
 | `task_number_regression` | `--set`이 현재값보다 작음 — 채번 역행 거부(무손실) |
 | `invalid_args` | 인자 조합이 올바르지 않음(예: `--bump`와 `--set` 동시 지정) |
 | `date_tool_failed` | `node ~/.opal/tools/date/date.js` 호출 실패 |
@@ -307,3 +323,4 @@ run.sh task-number --file MEMORY.json --set 80    # 복구·보정 (역행 거�
 | v1.1 | 058 | VALID_TYPES에 `improvement`, VALID_STATUSES에 `candidate` 추가(additive) |
 | v2.0 | 078 | MEMORY.json 단독 SSOT 전환 — 구 마커·표 파싱 계층 및 `migrate` 서브명령 소멸, lazy 자동 마이그레이션(md→json, `.bak` 보존) 신설, `task-number` 서브명령 신설, `show --brief`/`--history N` 추가, 스키마 런타임 검증(`schema/memory.schema.json`)·파일 락 기반 원자적 쓰기 도입 |
 | v2.1 | 079 | `update`에 `--kind {memory,history}` 신설 — 히스토리 행 정정(`--stage`/`--result`/`--path`) 지원, kind별 필드 조합 검증(`invalid_args`) 및 대상 판별(배열 선행 매치) 정책 문서화 |
+| v2.2 | 096 | 2026-08-20 12:23 — `review` 참조 무결성 검사 반영 — `violations`에 `memory_file_missing`(`file` 포인터 실재 검사) 추가, 응답 예시·배열 설명 갱신. `delete --orphan --ref` 절 신설(가드 전이 표·provenance 기록). 에러 코드 표 3행 추가(`memory_file_exists`·`orphan_ref_missing`·`memory_file_unresolvable`). `violations` 어휘 2종 분리 명시(`memory_file_missing` = `--orphan` 정리 가능 / `memory_file_unresolvable` = `--orphan` 거부·포인터 수리 필요). `memory_file_not_found` 의미를 "해석 성공 + 본문 부재"로 한정. 서브명령 9종 불변 (096) |

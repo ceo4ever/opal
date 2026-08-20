@@ -804,8 +804,10 @@ bash ~/.opal/tools/tool-scan/run.sh check <도구>               # 설치/실행
 # 자가검토 단독 health 명령 — violations[] + 라이프사이클 후보 반환
 ~/.opal/tools/memory-tool/run.sh review --file <path>
 
-# dead/superseded 메모리 정리(인덱스 행 제거) — 무손실 가드(active/promoted 거부)
+# dead/superseded 메모리 정리(인덱스 행 제거) — 무손실 가드(active/promoted/candidate 거부)
 ~/.opal/tools/memory-tool/run.sh delete --file <path> --title <제목> [--with-file]  # --with-file: memory/<file>.md도 삭제
+# 본문 .md가 부재한 고아 행 정리(096) — 본문이 실재하면 memory_file_exists로 거부(무손실 가드 유지)
+~/.opal/tools/memory-tool/run.sh delete --file <path> --title <제목> --orphan --ref <지식 귀착처> [--with-file]
 
 # last_task_number 조회·원자적 채번 (태스크 번호 발급 SSOT)
 ~/.opal/tools/memory-tool/run.sh task-number --file <path>            # 조회(파일 무변경)
@@ -820,7 +822,8 @@ bash ~/.opal/tools/tool-scan/run.sh check <도구>               # 설치/실행
 모든 서브명령은 단일라인 JSON으로 출력한다.
 
 ```json
-// 성공 (변경 명령은 review 블록 자동 첨부)
+// 성공 (변경 명령은 review 블록 자동 첨부 — violations는 스키마 위반 + 참조 무결성 검사(096:
+// memory_file_missing/memory_file_unresolvable)까지 포함)
 {"ok": true, "command": "append", "kind": "memory", "title": "...", "active_count": 3,
  "review": {"promote_candidates": [], "cleanup_candidates": [], "violations": [], "history_status": {...}}}
 
@@ -847,9 +850,12 @@ bash ~/.opal/tools/tool-scan/run.sh check <도구>               # 설치/실행
 | `summary_too_long` | 요약 >80자 제한 위반 |
 | `promote_ref_missing` | promote 시 --ref(영구 거처 위치) 미지정 — 무손실 가드 |
 | `row_not_found` | --title 에 해당하는 인덱스 행 없음 |
-| `memory_file_not_found` | 메모리 파일(memory/*.md) 없음 |
+| `memory_file_not_found` | 경로 해석은 성공했으나 memory/*.md가 부재(promote/delete --with-file) |
 | `already_initialized` | MEMORY.json 이미 존재 — --force로 재초기화 |
-| `delete_requires_dead_or_superseded` | active/promoted 행 delete 시도 — dead/superseded만 제거 가능(무손실 가드) |
+| `delete_requires_dead_or_superseded` | active/promoted/candidate 행 delete 시도 — dead/superseded만 제거 가능(무손실 가드) |
+| `memory_file_exists` | delete --orphan은 본문 부재 행 전용 — 본문이 실재함(무손실 가드 유지, 096) |
+| `orphan_ref_missing` | delete --orphan 사용 시 --ref(지식 귀착처) 미지정 — 정리 거부(감사 추적, 096) |
+| `memory_file_unresolvable` | file 경로를 memory/ 하위로 해석할 수 없어 본문 부재를 확인할 수 없음 — 확인 불가는 부재가 아니므로 정리 거부(무손실, 096) |
 | `task_number_regression` | --set이 현재값보다 작음 — 채번 역행 거부(무손실) |
 | `invalid_args` | 인자 조합이 올바르지 않음 (예: --bump와 --set 동시 지정) |
 | `invalid_kind` | --kind가 memory 또는 history 중 하나가 아님 |
@@ -1160,3 +1166,4 @@ bash ~/.opal/tools/tool-scan/run.sh check <도구>               # 설치/실행
 | v2.12 | 2026-08-13 16:57 | state-tool 행 원천 지시 정정 — `--rows-from` 시놉시스·실행 예시를 `references/pipeline.json` 기준으로 교체(구형 `.md` 파싱 지시 제거). 10/10 pilot 전환에 맞춘 pilot 밖 정합 (090) |
 | v2.13 | 2026-08-15 16:30 | worktree-tool 섹션 신설(git-sync-tool 직후) — 4서브명령(create/list/status/remove) 커맨드·ERROR_CODES 18종 카탈로그·응답 필드·exit code. 태스크별 코드 작업본 git worktree 격리 도구, 실물 `worktree_tool.py` 구현 기준 작성 (092) |
 | v2.16 | 2026-08-16 15:05 | 종료 코드 표 근거 각주 정정 — 에러 코드 카탈로그 종수 리터럴(23종, stale) 삭제 후 `opal/tools/state-tool/README.md` §에러 코드 카탈로그 SSOT 포인터로 교체 (중복 SSOT 재발 방지, R-9 D-5 ①) (094 Step 14) |
+| v2.17 | 2026-08-20 12:23 | memory-tool 섹션 정합 — `delete` 커맨드에 `--orphan --ref` 예시 추가, `review` 출력 예시 주석에 참조 무결성 검사(memory_file_missing/memory_file_unresolvable) 명시, 주요 에러 코드 표에 `memory_file_exists`·`orphan_ref_missing`·`memory_file_unresolvable` 3행 추가 + `memory_file_not_found` 의미를 "해석 성공 + 본문 부재"로 한정. 커맨드 종수(9) 무변경 (096) |

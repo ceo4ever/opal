@@ -3,7 +3,7 @@
   "module": "memory_tool",
   "layer": "util",
   "domain": "opal-pipeline",
-  "description": "OPAL 메모리 관리 CLI — MEMORY.json SSOT + 9서브명령 init/append/update/promote/prune/show/review/delete/task-number. lazy 자동 마이그레이션(MEMORY.md→MEMORY.json, .bak 보존)·표준 라이브러리 전용 스키마 런타임 검증기(validate_document)·파일 락 기반 원자적 쓰기(memory_lock/atomic_write_json)·요약 길이캡(≤80)·히스토리 FIFO=5·promote 무손실 이전(--to docs|brain --ref 필수)·자가검토(review) 매 변경 명령 자동 첨부. update --kind history로 작업 히스토리 행 정정(무손실·행수 불변, FIFO 미적용). state-tool ok/err/ERROR_CODES 패턴 재사용. 표준 라이브러리만.",
+  "description": "OPAL 메모리 관리 CLI — MEMORY.json SSOT + 9서브명령 init/append/update/promote/prune/show/review/delete/task-number. lazy 자동 마이그레이션(MEMORY.md→MEMORY.json, .bak 보존)·표준 라이브러리 전용 스키마 런타임 검증기(validate_document)·파일 락 기반 원자적 쓰기(memory_lock/atomic_write_json)·요약 길이캡(≤80)·히스토리 FIFO=5·promote 무손실 이전(--to docs|brain --ref 필수)·자가검토(review) 매 변경 명령 자동 첨부. update --kind history로 작업 히스토리 행 정정(무손실·행수 불변, FIFO 미적용). state-tool ok/err/ERROR_CODES 패턴 재사용. 표준 라이브러리만. delete --orphan --ref로 본문 부재 고아 행 정리(본문 실재 시 거부 — 무손실 가드 유지, provenance summary 보존)·review 참조 무결성 검사(memory_file_missing).",
   "exports": [
     "cmd_init", "cmd_append", "cmd_update", "cmd_promote",
     "cmd_prune", "cmd_show", "cmd_review", "cmd_delete", "cmd_task_number",
@@ -22,6 +22,11 @@
   v2.1 2026-07-30 update --kind history 정정 명령 추가(079) — --kind/--stage/--result/--path
                   인자 신설, _check_update_kind_args(락 밖 조합 게이트)·_apply_history_correction
                   (무손실 in-place 정정, FIFO 미적용) 신설. --kind memory(기본) 기존 동작 무변경.
+  v2.2 2026-08-20 참조 무결성 검사 + 고아 행 정리(096) — build_review_block(doc, json_path)로
+                  file 포인터 실재 검사 추가(violations memory_file_missing), delete --orphan/--ref
+                  신설(본문 실재 시 memory_file_exists / 경로 해석 실패 시 memory_file_unresolvable
+                  거부 — 확인 불가는 부재가 아님), promote의 해석 불가 반환도 동일 코드로 정합,
+                  ERROR_CODES 3종 추가(23→26)
 """
 
 # 표준 라이브러리만 (state-tool 동형)
@@ -134,6 +139,10 @@ ERROR_CODES = {
     "promote_ref_missing":   "--ref(영구 거처 위치) 필수 — 이전 미확인 promote 거부 (무손실, H-1)",
     "date_tool_failed":      "node ~/.opal/tools/date/date.js 호출 실패 — MEMORY.md 변경 없음(원자성)",
     "delete_requires_dead_or_superseded": "delete는 status가 dead 또는 superseded인 행만 허용 (무손실 가드) — active/promoted 행은 먼저 상태를 변경하세요",
+    # ── 096 신설 (PLAN §3.2.2) ──
+    "memory_file_exists":       "--orphan은 본문 .md가 부재한 행 전용 — 본문이 실재함: {path} (무손실 가드 유지)",
+    "orphan_ref_missing":       "--orphan 사용 시 --ref(지식 귀착처) 필수 — 귀착처 미기재 정리 거부 (감사 추적)",
+    "memory_file_unresolvable": "<file> 경로를 memory/ 하위로 해석할 수 없어 본문 부재를 확인할 수 없음: file={file} — 확인 불가는 부재가 아니므로 정리 거부 (무손실)",
     # ── 078 신설 (PLAN §3.2.3) ──
     "memory_json_not_found":      "MEMORY.json이 존재하지 않음 — init을 먼저 실행하세요: {path}",
     "invalid_json":               "MEMORY.json 파싱 실패 (손상된 JSON) — 파일 변경 없음: {path}",
@@ -825,9 +834,12 @@ def _path_has_traversal(path_str):
 # 자가검토 헬퍼 (F-010)
 # ─────────────────────────────────────────────────────────────────────────────
 
-def build_review_block(doc):
+def build_review_block(doc, json_path=None):
     """자가검토 블록 생성 (PLAN §3.2.2). dict(MEMORY.json 문서)를 받아 read 없이 소비한다.
     x-advisory 위반(title>TITLE_MAX_LENGTH자)을 violations에 추가한다.
+    json_path가 주어지면 각 행의 file 포인터 실재 여부를 검사해
+    violations에 memory_file_missing/memory_file_unresolvable을 추가한다(참조 무결성, 096 R-1).
+    json_path=None이면 참조 무결성 검사를 건너뛴다(문서 단독 검토 하위호환).
     """
     promote_candidates = []
     cleanup_candidates = []
@@ -852,6 +864,17 @@ def build_review_block(doc):
             violations.append({"type": "summary_too_long", "title": title, "length": len(summary)})
         if len(title) > TITLE_MAX_LENGTH:
             violations.append({"type": "title_too_long", "title": title, "length": len(title)})
+
+        if json_path is not None:
+            file_field = row.get("file", "")
+            mem_file = _resolve_memory_file(str(json_path), file_field) if file_field else None
+            if mem_file is None:
+                # 경로 해석 실패 = "본문 부재"가 아니라 "확인 불가" — 처분이 다르므로 어휘를 분리한다 (G-3)
+                violations.append({"type": "memory_file_unresolvable",
+                                   "title": title, "file": file_field})
+            elif not mem_file.exists():
+                violations.append({"type": "memory_file_missing",
+                                   "title": title, "file": file_field})
 
         if status == "active":
             is_candidate = False
@@ -906,7 +929,7 @@ def cmd_init(args):
             }
             atomic_write_json(json_path, doc)
 
-    review = build_review_block(doc)
+    review = build_review_block(doc, json_path)
     ok("init", file=str(json_path), review=review)
 
 
@@ -987,7 +1010,7 @@ def cmd_append(args):
 
             atomic_write_json(json_path, doc)
 
-    review = build_review_block(doc)
+    review = build_review_block(doc, json_path)
     if kind == "memory":
         ok("append", kind=kind, title=title, active_count=active_count, review=review, migration=migration)
     else:
@@ -1115,7 +1138,7 @@ def cmd_update(args):
 
         atomic_write_json(json_path, doc)
 
-    review = build_review_block(doc)
+    review = build_review_block(doc, json_path)
     ok("update", kind=kind, title=title, review=review, migration=migration, **result_kwargs)
 
 
@@ -1163,7 +1186,7 @@ def cmd_promote(args):
 
         mem_file = _resolve_memory_file(str(json_path), file_field)
         if mem_file is None:
-            err("promote", "memory_file_not_found", path=file_field)
+            err("promote", "memory_file_unresolvable", file=file_field)
         if not mem_file.exists():
             err("promote", "memory_file_not_found", path=str(mem_file))
 
@@ -1191,7 +1214,7 @@ def cmd_promote(args):
         except Exception:
             pass  # provenance 기록 실패는 비치명적
 
-    review = build_review_block(doc)
+    review = build_review_block(doc, json_path)
     ok(
         "promote",
         title=title,
@@ -1226,7 +1249,7 @@ def cmd_prune(args):
                 err("prune", "schema_validation_failed", violations=violations)
             atomic_write_json(json_path, doc)
 
-    review = build_review_block(doc)
+    review = build_review_block(doc, json_path)
     ok("prune", before=before_count, after=after_count, trimmed=(before_count - after_count),
        review=review, migration=migration)
 
@@ -1329,6 +1352,9 @@ def cmd_delete(args):
     """dead/superseded 상태 행 물리 제거 (MEMORY.json).
     --title로 행 식별. 행 없으면 row_not_found.
     무손실 가드: active/promoted 행은 delete_requires_dead_or_superseded 반환 + 행 불변 [MUST — 무변경].
+    --orphan: 본문 .md가 부재한 행 전용 정리 경로(096 R-2). 상태 가드 대신 본문 부재를
+      검증하며, 본문이 실재하면 memory_file_exists로 거부한다(무손실 가드 우회 불가).
+      --ref(지식 귀착처) 필수 + .memory_provenance.log에 summary까지 기록(무손실).
     --with-file 시 memory/<file>.md도 삭제(_resolve_memory_file() 경로 화이트리스트 재사용).
     성공 시 review 블록 첨부.
     """
@@ -1352,9 +1378,23 @@ def cmd_delete(args):
         row = doc["memories"][target_idx]
         status = row.get("status", "")
 
-        # 무손실 가드: active/promoted 행은 삭제 거부 [MUST — 무변경]
-        if status not in ("dead", "superseded"):
-            err("delete", "delete_requires_dead_or_superseded")
+        orphan = bool(getattr(args, "orphan", False))
+        ref = (getattr(args, "ref", None) or "").strip()
+
+        if orphan:
+            file_field = row.get("file", "")
+            mem_file = _resolve_memory_file(str(json_path), file_field) if file_field else None
+            # G-3: 해석 실패는 "부재"가 아니라 "확인 불가" — 확인할 수 없으면 삭제하지 않는다 [MUST 무손실]
+            if mem_file is None:
+                err("delete", "memory_file_unresolvable", file=file_field)
+            if mem_file.exists():
+                err("delete", "memory_file_exists", path=str(mem_file))
+            if not ref:
+                err("delete", "orphan_ref_missing")
+        else:
+            # 무손실 가드: active/promoted 행은 삭제 거부 [MUST — 무변경]
+            if status not in ("dead", "superseded"):
+                err("delete", "delete_requires_dead_or_superseded")
 
         del doc["memories"][target_idx]
 
@@ -1373,8 +1413,28 @@ def cmd_delete(args):
                     mem_file.unlink()
                     file_deleted = True
 
-    review = build_review_block(doc)
-    ok("delete", title=title, row_removed=True, file_deleted=file_deleted, review=review, migration=migration)
+        provenance_logged = False
+        if orphan:
+            today = get_kst_date()
+            provenance_entry = (
+                f"{today} | delete-orphan | title={row['title']} | "
+                f"type={row.get('type', '')} | status={status} | ref={ref} | "
+                f"file={row.get('file', '')} | summary={row.get('summary', '')}\n"
+            )
+            try:
+                with (json_path.parent / ".memory_provenance.log").open("a", encoding="utf-8") as f:
+                    f.write(provenance_entry)
+                provenance_logged = True
+            except Exception:
+                pass  # provenance 기록 실패는 비치명적 (promote :1193-1194 동형)
+
+    review = build_review_block(doc, json_path)
+    result = {"title": title, "row_removed": True, "file_deleted": file_deleted,
+              "orphan": orphan, "review": review, "migration": migration}
+    if orphan:
+        result.update({"reason": "memory_file_missing", "ref": ref,
+                       "provenance_logged": provenance_logged})
+    ok("delete", **result)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -1386,7 +1446,7 @@ def cmd_review(args):
     json_path = pathlib.Path(args.file)
     doc = load_document(json_path, "review")
     migration = _pop_migration_report()
-    review = build_review_block(doc)
+    review = build_review_block(doc, json_path)
     ok(
         "review",
         file=str(json_path),
@@ -1429,7 +1489,7 @@ def cmd_task_number(args):
             if violations:
                 err("task-number", "schema_validation_failed", violations=violations)
             atomic_write_json(json_path, doc)
-            review = build_review_block(doc)
+            review = build_review_block(doc, json_path)
             ok("task-number", last_task_number=new_value, previous=current,
                bumped=True, review=review, migration=migration)
         else:  # --set N
@@ -1440,7 +1500,7 @@ def cmd_task_number(args):
             if violations:
                 err("task-number", "schema_validation_failed", violations=violations)
             atomic_write_json(json_path, doc)
-            review = build_review_block(doc)
+            review = build_review_block(doc, json_path)
             ok("task-number", last_task_number=set_value, previous=current,
                set=True, review=review, migration=migration)
 
@@ -1527,6 +1587,10 @@ def main():
     p_delete.add_argument("--title", required=True, help="삭제할 행 제목")
     p_delete.add_argument("--with-file", action="store_true", dest="with_file",
                           help="memory/<file>.md도 함께 삭제")
+    p_delete.add_argument("--orphan", action="store_true",
+                          help="본문 .md가 부재한 인덱스 행 정리 — 본문이 실재하면 memory_file_exists로 거부(무손실 가드 유지). --ref 필수")
+    p_delete.add_argument("--ref", default=None,
+                          help="지식 귀착처 (--orphan 필수) — 예: docs/CONVENTIONS.md#변경이력 | .opal/brain/pages/... | '미복원: 작성 머신 로컬'")
     p_delete.set_defaults(func=cmd_delete)
 
     # ── task-number ──
