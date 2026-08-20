@@ -18,6 +18,14 @@
   ]
 }
 
+변경이력:
+  v1.1 2026-08-20 TestResolve.setUp에 OPAL_TEST_TOOLS_GLOBAL 제거 env(isolated_env) 신설 —
+                  resolver.py:188-191이 이 변수의 부재를 "테스트 환경" 신호로 삼는데
+                  install-mac.sh:915가 shell rc에 자동 등록하므로(041) 개발자 셸에서는
+                  항상 설정돼 전제가 깨졌다. 실 시스템 글로벌 템플릿이 2순위로 개입해
+                  test_resolve_infer_fallback_when_no_yaml이 source='global'로 FAIL하고
+                  3순위(infer) 폴백 경로가 검증되지 않았다. env 유무 양쪽에서 통과 확인 (096 후속)
+
 [T039] test-tool 4서브명령 행위 계약 — RED-first TDD
 검증 대상: opal/tools/test-tool/run.sh 의 공개 인터페이스(exit code + stdout JSON)만 단언.
 내부 구현/private 결합 금지(red-first.md §4).
@@ -110,6 +118,14 @@ class TestResolve(unittest.TestCase):
 
     def setUp(self):
         self.tmpdir = pathlib.Path(tempfile.mkdtemp())
+        # [격리] OPAL_TEST_TOOLS_GLOBAL 제거 env — resolver.py:188-191이 이 변수의
+        # 부재를 "테스트 환경" 신호로 쓰는데, install-mac.sh:915가 shell rc에 이를
+        # 자동 등록하므로(041) 개발자 셸에서는 항상 설정돼 있어 전제가 깨진다.
+        # 실 시스템 ~/.opal/templates/test-tools.yaml이 2순위로 개입해 3순위(infer)
+        # 폴백 경로가 검증되지 않는다. 글로벌 경로를 의도적으로 쓰는 케이스는
+        # 이 env를 명시 주입해 덮어쓴다(아래 test_resolve_global_yaml 참조).
+        self.isolated_env = os.environ.copy()
+        self.isolated_env.pop("OPAL_TEST_TOOLS_GLOBAL", None)
         # v2.0 tiers 구조의 project test-tools.yaml fixture 생성
         self.project_root = self.tmpdir / "project"
         self.project_root.mkdir()
@@ -223,12 +239,17 @@ tiers:
             '{"name": "test-app", "devDependencies": {"vitest": "^1.0.0", "eslint": "^8.0.0"}}'
         )
         code, stdout, data = _run(
-            ["resolve", "--project-root", str(no_yaml_root)]
+            ["resolve", "--project-root", str(no_yaml_root)],
+            env=self.isolated_env,
         )
         self.assertEqual(code, 0, f"infer fallback should exit 0. stdout={stdout}")
         self.assertEqual(
             data.get("source"), "infer",
             f"source should be 'infer'. data={data}"
+        )
+        self.assertNotIn(
+            "OPAL_TEST_TOOLS_GLOBAL", self.isolated_env,
+            "격리 실패 — env에 OPAL_TEST_TOOLS_GLOBAL이 남아 2순위(global)가 개입한다"
         )
 
 
