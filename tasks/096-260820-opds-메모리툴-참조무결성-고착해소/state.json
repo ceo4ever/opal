@@ -4,8 +4,8 @@
   "mode": "agentic",
   "schema_version": "1.1",
   "created_at": "2026-08-20 07:58",
-  "updated_at": "2026-08-20 13:31",
-  "current_status": "in_progress",
+  "updated_at": "2026-08-20 13:57",
+  "current_status": "done",
   "rows": [
     {
       "row_id": 1,
@@ -133,23 +133,23 @@
       "stage": "TEST",
       "item": "사용자 확인",
       "key": "test.user_confirm",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
-      "owner": "PM",
-      "note": null
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-20 13:55",
+      "owner": "user",
+      "note": "캡틴 확인: CLOSE 진입 승인 (TEST All Pass 38/39, 1건 캡틴 판정 대기)"
     },
     {
       "row_id": 11,
       "stage": "CLOSE",
       "item": "DONE.md 생성",
       "key": "close.done_md",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-20 13:57",
       "owner": "PM",
       "note": null
     }
   ],
-  "next_action": "TEST 사용자 확인 진입"
+  "next_action": "태스크 완료"
 }

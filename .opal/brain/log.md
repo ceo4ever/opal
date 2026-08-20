@@ -320,3 +320,7 @@
 - 신규: [[scenario-prewrite-goal-series-track]], [[prewrite-track-quality-not-efficiency-measurement]], [[prewrite-self-confirming-triple-defense]], [[subsection-number-insertion-preserves-citations]], [[marker-literal-check-meta-circular-false-positive]], [[global-deploy-after-verification-ordering]], [[worker-abort-artifact-measured-adjudication]]
 - 출처: task:095
 
+## [2026-08-20] ingest | CLOSE ingest — 태스크 096 memory-tool 참조 무결성 검사 + 본문 부재 행 고착 해소
+- 신규: [[guard-precision-none-passthrough-early-return]], [[unresolvable-not-absent-two-vocabulary-split]], [[tool-created-state-flagged-by-consumer-as-reminder]], [[pytest-subtests-parent-passed-masks-failure]]
+- 출처: task:096
+

@@ -29,6 +29,13 @@
   ],
   "history": [
     {
+      "title": "096 메모리툴 참조무결성 고착해소",
+      "date": "2026-08-20",
+      "stage": "완료",
+      "path": "tasks/096-260820-opds-메모리툴-참조무결성-고착해소/",
+      "result": "인덱스↔본문 불일치 검출(review violations)과 본문 부재 행 정식 정리 경로(delete --orphan --ref)를 신설해 promote(본문 필수)×delete(상태 가드) 조합 사각지대를 해소. 검출 어휘 2분(missing=정리 가능/unresolvable=포인터 수리 필요), ERROR_CODES 23→26(삭제·개명 0), 라이프사이클 표에 candidate 추가로 스키마 enum 5종 정합. 목표-커버 게이트가 PLAN 설계 P0을 검출 — _resolve_memory_file() None 반환 3경로에서 가드가 통과해 본문이 memory/ 밖에 살아있는데 인덱스만 끊기는 blind 삭제 벡터. 무손실 가드 정밀화가 새 blind 삭제 경로를 만들 뻔했고 조기 반환 재구성으로 해소(재설계 2/2 소진). 구현 중 근본 원인 발견 — memory_tool.py에 본문 생성 코드 0곳, cmd_append는 경로만 기록하므로 본문 부재 행은 append의 정상 산출물이다. 이에 memory-learning.md:41에 [MUST] 참조 무결성을 신설해 정책으로 확정. 검증: 시나리오 38/39 Pass, 게이트 2회차 2/2/2 평균 2.0, 회귀 163→187(감소 0), state-tool·improve-tool 358 pass, 원본 해시 보전, 배포본 diff 0. 워커 블로커 3건 전건 red-first §3 준수. PM 자기판정 철회 2건(선작성률 61→50% 부적격 신호 인정 / 신규 고착→선재 고착). 후속 7건 이월, TS-033 캡틴 판정 대기"
+    },
+    {
       "title": "095 시나리오 목표계열 선작성",
       "date": "2026-08-19",
       "stage": "완료",
@@ -55,13 +62,6 @@
       "stage": "완료",
       "path": "tasks/092-260815-opd-워크트리-작업공간-분리/",
       "result": "모드 축과 직교하는 --worktree/--wt 축 신설 — worktree-tool(5서브명령 create/list/status/remove/init) + 하네스 §2.5 + task-process 스텝 4.5 + dispatch 경로계약 + state-tool --worktree(+8/-1). pilot 10종 중 opd 1건만 변경(C-9 성립). 실환경 2유형 검증: revup 2슬롯 격리 실증(092 커밋 시 093·메인 불변), mams sparse 슬롯 13MB(메인 1.9GB). UV_CACHE_DIR 이전으로 슬롯당 .venv 263MB→8.7MB(30배). 최종 364 passed·보안 4/4·컨벤션 위반 0. [ADD-1] worktree.json 온보딩 경로 부재가 소유자 질문으로 드러나 init 서브명령 신설 — 탐지 기반 초안 생성(독립 .git 발견=multi-repo, 없으면 monorepo), setup은 lock 파일로 depth2까지 결정론 매핑, copy/portOffset은 미추측. [교훈] 실환경 검증이 pytest 전건 GREEN 상태에서 결함을 2회 검출(remove 후 재생성 영구차단 / monorepo setup 탐지 실패) — 두 번 다 fixture가 실환경 구조(왕복 경로·깊이)를 재현하지 않은 것이 원인. 요구사항 자체의 누락은 목표-커버 게이트로도 검출 불가라는 구조적 공백 확인. fw-inbox 5건 누적"
-    },
-    {
-      "title": "091 파이프라인 스펙 중복정리",
-      "date": "2026-08-14",
-      "stage": "완료",
-      "path": "tasks/091-260813-opd-파이프라인-스펙-중복정리/",
-      "result": "PM Gate 정의를 task_steps[].gate 단일 SSOT로 승격하고 state-tool이 집행 — artifacts 존재 검증 차단(gate_artifact_missing)+checklist stdout 주입, hook 3-페이로드 병존. pilot 10종 감량: 미러표 134행·--row 45건·산문 행N 36건·게이트표 전량 제거, --task-step 전환 45건 수량 대응 일치. 전후 동등 20/20 diff 0, 회귀 284→304 pass, spec-validate 10/10, 배포본 게이트 3종 실동작. 목표-커버 게이트 iter1이 '삭제만 하고 채택 안 함'(070 실패모드) 검출 → S-35+H-13 신설로 해소. S-33·S-34 캡틴 대기"
     }
   ]
 }

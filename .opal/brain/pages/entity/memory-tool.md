@@ -11,12 +11,16 @@ sources:
   - task:078
   - task:079
   - task:088
+  - task:096
 related:
   - state-tool
   - three-layer-memory-architecture
   - close-history-auto-link-enforce-conversion
+  - guard-precision-none-passthrough-early-return
+  - unresolvable-not-absent-two-vocabulary-split
+  - tool-created-state-flagged-by-consumer-as-reminder
 created: "2026-06-26"
-updated: "2026-08-11"
+updated: "2026-08-20"
 status: active
 ---
 
@@ -38,8 +42,8 @@ SSOT는 2026-07-29(task:078)부터 `.opal/MEMORY.md`(HTML 주석 마커 + 마크
 | `promote` | 메모리를 영구 거처(`--to docs\|brain`)로 졸업 — `--ref`(위치) 필수, 이전 확인 후 행+파일 삭제 + provenance 기록 |
 | `prune` | 히스토리 FIFO=5 결정론 정리 (멱등) |
 | `show` | 인덱스·히스토리 현황 출력 (read-only). `--brief`(dead/superseded/promoted/candidate 제외 필터, PM 브리핑 전용, task:078) / `--history` 옵션 |
-| `review` | 자가검토 단독 health 명령 — violations[] + 라이프사이클 후보 반환 |
-| `delete` | `dead`/`superseded` 상태 메모리만 삭제 허용 (`delete_requires_dead_or_superseded` 가드) |
+| `review` | 자가검토 단독 health 명령 — violations[] + 라이프사이클 후보 반환. task:096부터 인덱스 행의 `file` 포인터 참조 무결성도 검사한다 (아래 참조) |
+| `delete` | `dead`/`superseded` 상태 메모리만 삭제 허용 (`delete_requires_dead_or_superseded` 가드). task:096부터 `--orphan --ref <위치>`로 본문 부재 행(상태 무관)을 정식 정리하는 경로가 추가됐다 (아래 참조) |
 | `task-number` | (task:078 신설) 태스크 채번을 락으로 직렬화해 원자적으로 발급 — 종전에는 LLM이 헤더를 직접 Read+Edit하던 유일한 비게이트 쓰기 경로였다(상세: [[non-gated-write-path-audit-before-ssot-conversion]]) |
 
 md만 있는 프로젝트에서 임의 서브명령을 호출하면 `_migrate_md_to_json`이 락 하에서 자동 변환하고 `.bak`을 보존한다(상세: [[silent-loss-prevention-row-accounting-invariant]]). 모든 변경 명령(`init/append/update/promote/prune`) 응답 JSON에 `review` 블록이 자동 첨부된다 — 호출할 때마다 메모리 정리·졸업을 ambient하게 강제한다. (`opal/tools/memory-tool/memory_tool.py`)
@@ -54,6 +58,8 @@ md만 있는 프로젝트에서 임의 서브명령을 호출하면 `_migrate_md
 
 md→JSON 전환(task:078)은 마커·표 파싱의 변형 취약성(헤더 컬럼 순서 변화, 자유텍스트 상태값 등)을 근본 해소하기 위한 결정이었다 — 문서 스키마가 코드 enum 상수의 단일 출처가 되어 두 계층이 구조적으로 어긋날 수 없게 됐다. 원자적 쓰기(`tmp→fsync→os.replace`)와 O_EXCL+stale 60s 크로스프로세스 락(`memory_lock`)이 신설되어, 검증 실패나 동시 진입 상황에서도 SSOT 파손 없이 실패한다. (근거: task:078 PLAN §3.1.2, §3.2.2)
 
+task:096 이전에는 `review`가 인덱스 행의 `file` 포인터가 가리키는 본문이 실제로 존재하는지 검사하지 않았고, 그 결과 인덱스와 본문이 불일치한 행은 `promote`(본문 실재를 전제)로도 무플래그 `delete`(상태 가드만 봄)로도 다시 도달할 수 없는 고착 상태에 빠질 수 있었다(근거: task:096 DONE.md §1). `build_review_block(doc, json_path)`이 참조 무결성 검사를 신설해 이 상태를 두 검출 어휘(`memory_file_missing`=포인터는 정상 해석되나 파일이 없음 / `memory_file_unresolvable`=포인터 자체를 해석할 수 없음)로 분리하고, `delete --orphan --ref`가 전자에 한해 정식 정리를 허용한다. 가드는 삭제 허용 조건이 아니라 "본문 부재 확인"을 술어로 삼도록 정밀화됐으며, 이 정밀화 과정에서 술어가 의존하는 경로 해석 함수의 `None` 반환을 조기 반환으로 처리하지 않으면 오히려 새 blind 삭제 벡터가 생긴다는 점이 목표-커버 게이트 1차 반복에서 드러나 재설계됐다(상세: [[guard-precision-none-passthrough-early-return]], [[unresolvable-not-absent-two-vocabulary-split]]). `append --kind memory`는 인덱스 행만 만들고 본문 파일을 생성하지 않으므로, 이 검사는 본문을 쓰지 않고 방치된 행을 append 직후부터 표면화한다 — 이는 오탐이 아니라 검사의 존재 이유로 재해석됐다(상세: [[tool-created-state-flagged-by-consumer-as-reminder]]). 부수적으로 스키마 `status` enum과 `memory-learning.md`의 라이프사이클 표 사이에 있던 `candidate` 행 누락(4행 vs 5종)도 함께 정합됐다(근거: task:096 DONE.md §1 F-003). (근거: task:096 PLAN §미확정 사항 판정, DONE.md §1-§4)
+
 078의 전환으로 히스토리 관리가 전량 tool-gated되며 오기재를 되돌릴 경로가 사라진 부작용이 발생했다(task:079). `delete --kind history`는 신설하지 않았다 — 무손실 삭제 가드를 걸 `status` 필드가 히스토리 행에 없고, 히스토리는 FIFO=5 회전 로그라 지목 삭제가 애초에 불필요하기 때문이다. 대신 `update --kind history`로 행 추가·삭제 없이 4필드(`stage`/`result`/`path`/`title`)만 in-place 정정한다. 이 정정 경로는 FIFO 절단 함수(`_enforce_history_fifo`)를 호출하지 않는다 — 상한 초과 문서에서 행을 조용히 버리게 되어 "삭제 없는 정정" 전제를 깨기 때문이다(상세: [[rotating-log-correction-over-deletion]]). `--kind` 인자는 기본값을 `memory`로 두어 기존 132건 테스트가 무변경 통과했고(상세: [[backward-compat-default-value-discipline]]), 값 검증은 `choices=`가 아니라 코드에서 수행해 단일라인 JSON 응답 계약을 지켰다(상세: [[argparse-choices-breaks-json-contract]]). (근거: task:079 DONE §1, §5, §6)
 
 ## 관계 (HOW)
@@ -63,6 +69,8 @@ md→JSON 전환(task:078)은 마커·표 파싱의 변형 취약성(헤더 컬�
 - `brain-tool` — promote `--to brain` 경로는 brain-tool add-page / `//opbr ingest`를 재사용. memory-tool이 brain 쓰기를 재발명하지 않는다 (Simplicity)
 - [[json-not-token-saving-format]] / [[silent-loss-prevention-row-accounting-invariant]] / [[non-gated-write-path-audit-before-ssot-conversion]] / [[parser-drift-silent-longevity-lesson]] — task:078 전환에서 도출된 설계 판단·교훈
 - [[rotating-log-correction-over-deletion]] / [[backward-compat-default-value-discipline]] / [[argparse-choices-breaks-json-contract]] — task:079 `update --kind history` 신설에서 도출된 설계 판단
+- [[guard-precision-none-passthrough-early-return]] / [[unresolvable-not-absent-two-vocabulary-split]] / [[tool-created-state-flagged-by-consumer-as-reminder]] — task:096 참조 무결성 검사·`delete --orphan` 신설에서 도출된 설계 판단
+- [[expected-total-as-reference-not-gate-criterion]] — task:096이 선재 `ERROR_CODES` 총계 하드코딩 회귀 가드를 부분집합+추가분 단언으로 재구성한 사례가 이 페이지에 추가됨
 
 ## 소스 커버리지
 
@@ -78,3 +86,7 @@ md→JSON 전환(task:078)은 마커·표 파싱의 변형 취약성(헤더 컬�
 | `atomic_write_json` | `opal/tools/memory-tool/memory_tool.py` | tmp→fsync→os.replace 원자적 쓰기 (task:078) |
 | `_apply_history_correction` | `opal/tools/memory-tool/memory_tool.py` | `update --kind history` 대상 행 식별 + in-place 필드 치환 (task:079 신설) |
 | `_check_update_kind_args` | `opal/tools/memory-tool/memory_tool.py` | `--kind` ↔ 필드 인자 조합 사전 검증, 락 밖 게이트 (task:079 신설) |
+| `build_review_block` | `opal/tools/memory-tool/memory_tool.py:837-` | 자가검토 블록 생성 + `file` 포인터 참조 무결성 검사 (task:096 확장) |
+| `_resolve_memory_file` | `opal/tools/memory-tool/memory_tool.py:806-820` | 경로 포인터 해석, 실패 시 `None` 반환 3경로(예외/탈출/빈 값) |
+| `cmd_delete` `--orphan/--ref` | `opal/tools/memory-tool/memory_tool.py:1380-1391` | 본문 부재 행 정식 정리 — 조기 반환 가드로 `None` 통과 차단 (task:096 신설) |
+| `ERROR_CODES` 3종 신설 | `opal/tools/memory-tool/memory_tool.py:105-160` | `memory_file_exists`/`memory_file_unresolvable`/`orphan_ref_missing` — 총 23→26종 (task:096) |

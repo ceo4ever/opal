@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-08-20 06:43
+> 갱신: 2026-08-20 14:04
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -113,6 +113,7 @@
 - [[global-deploy-after-verification-ordering]] — 검증 미완 규칙의 전역 배포 차단 — 배포는 검증의 결과여야 한다 #deploy #install #pipeline-order #framework #task-095
 - [[governance-single-owner-rule-mapping]] — 규칙 1소유자 매핑 — Governance 중복 기재 방지 설계 #governance #ssot #design-pattern #dispatch
 - [[green-tests-do-not-imply-contract-conformance]] — 테스트 GREEN은 규약 정합을 뜻하지 않는다 — 정적 대조를 별도 게이트로 둔다 #lesson #test-strategy #verification #contract
+- [[guard-precision-none-passthrough-early-return]] — 가드 정밀화가 새 우회로를 만든다 — None 통과는 조기 반환으로 봉쇄한다 #memory-tool #guard-design #none-safety #lesson #task-096
 - [[inherit-new-boundary-fixed-before-writing]] — 상속·신규 경계를 집필 전에 표로 고정한다 #documentation #ssot #dedup #task-084
 - [[install-hook-ownership-marker-idempotent-upsert]] — install hook 소유권-마커 멱등 upsert (외부 hook clobber 해소) #install #deploy #hook #idempotent #ownership-marker
 - [[install-mac-seed-key-loop-generalization]] — install 시드 키별 루프 일반화 — 조기 종료 시드 함정 #install #configuration #pattern #task-083
@@ -203,9 +204,10 @@
 - [[pool-lock-idiom-contract]] — 프라임 풀 락 관용구 계약 #brain #concurrency #locking #pattern
 - [[pre-edit-baseline-single-capture-invariant]] — 전후 동등 검증의 기준선은 편집 전 단 한 번만 유효하다 #verification #migration #baseline #gate-design #task-091
 - [[prewrite-self-confirming-triple-defense]] — 선작성 구간 self-confirming 퇴행 방어 3종 — 작성자 분리만으로는 불충분 #scenario-gate #testing #self-confirming #prewrite #task-095
-- [[prewrite-track-quality-not-efficiency-measurement]] — 선작성 트랙의 목적은 효율이 아니라 관점 편향 차단 — 실측이 초기 가설을 뒤집음 #scenario-gate #testing #prewrite #measurement #lesson-learned #task-095
+- [[prewrite-track-quality-not-efficiency-measurement]] — 선작성 트랙의 목적은 효율이 아니라 관점 편향 차단 — 실측이 초기 가설을 뒤집음 #scenario-gate #testing #prewrite #measurement #lesson-learned #task-095 #task-096
 - [[project-id-query-param-pattern]] — 절대경로 프로젝트 식별자를 query param으로 전달 #api #routing #url-design
 - [[pure-function-enables-nondestructive-verification]] — 판정부·실행부 분리가 파괴적 검증을 비파괴 검증으로 바꾼다 #verification #architecture #lesson #pure-function
+- [[pytest-subtests-parent-passed-masks-failure]] — pytest-subtests는 subtest 실패를 부모 PASSED로 표시한다 — 판정 단위를 서브케이스로 내린다 #testing #pytest #verification #lesson #task-096
 - [[read-based-gate-pattern]] — Read 기반 설정파일 게이트 패턴 #bootstrap #permission #gate #read-pattern #session-toggle
 - [[readme-ssot-principle]] — README는 SSOT를 따른다 — 문서·코드 불일치 시 SKILL.md가 정본 #readme #ssot #doc-code-mismatch #documentation
 - [[red-first-hybrid-verification-track]] — RED-first 하이브리드 검증 트랙 — 도구 계약 변경 한정 적용 #verification #red-first #opal-agent #testing
@@ -260,9 +262,11 @@
 - [[test-scenario-pipeline-redesign]] — 테스트 시나리오 파이프라인 재설계 (2차원 매트릭스 + self-confirming 4분리) #testing #pipeline #framework #flow #task
 - [[test-two-tier-system]] — 테스트 2단계 체계 (단위=EXECUTE / 통합=TEST) #testing #pipeline #framework
 - [[three-layer-memory-architecture]] — 3계층 기억 아키텍처 — MEMORY / brain / tasks #architecture #memory #brain #long-term #tasks
+- [[tool-created-state-flagged-by-consumer-as-reminder]] — 생성 도구가 만든 상태를 소비 도구가 결함으로 부르는 구간 — 오탐이 아니라 리마인더 #memory-tool #policy-gap #design-pattern #lesson #task-096
 - [[tool-scan-thin-manifest-federation]] — tool-scan 매니페스트 thin 설계 + federation 불파괴 #design-principle #tool-scan #manifest #federation #ssot
 - [[tool-usage-precheck-error-diagnosis-rule]] — 도구 사용법 선확인·에러 종류 진단후 폴백 규율 #design-principle #tool-usage #mams-lesson #fallback #error-handling
 - [[uncommitted-component-readme-policy]] — 미커밋 컴포넌트는 공개 README에 미노출 #readme #policy #git #documentation #ppt-builder
+- [[unresolvable-not-absent-two-vocabulary-split]] — 확인 불가는 부재가 아니다 — 검출 어휘 2분으로 처분을 표현한다 #memory-tool #guard-design #vocabulary #lesson #task-096
 - [[usage-ssot-live-help-principle]] — 사용법 SSOT는 도구 자신의 live --help #design-principle #tool-scan #usage #drift #ssot
 - [[verification-command-4-standard]] — 검증 명령 4종 표준 (SSOT — verification-loop-guide) #verification #lint #build #test #watch-mode #ssot #standard
 - [[version-stamp-export-subst-decision]] — 버전 결정 모델 전환 — 설치 시점 API 조회 → 릴리스 시점 export-subst 각인 #version #install #git #export-subst #architecture

@@ -8,11 +8,12 @@ tags:
   - promote
 sources:
   - task:045
+  - task:096
 related:
   - memory-tool
   - three-layer-memory-architecture
 created: "2026-06-26"
-updated: "2026-06-26"
+updated: "2026-08-20"
 status: active
 ---
 
@@ -30,14 +31,21 @@ OPAL 메모리는 영구 지식 저장소가 아니라 **임시 인박스**다. 
 
 ## 결정 내용
 
-### 라이프사이클 4상태
+### 라이프사이클 5상태
 
 | 상태 | 의미 | 도구 집행 |
 |------|------|---------|
 | `active` | 살아있는 지식. 인덱스에 노출·로드 대상 | `append` 시 자동 부여 |
+| `candidate` | 승격 검토 대기. 아직 성숙 판정 전인 기록 (task:058 `improve-tool record --scope local` 위임 등 도입) | `append --status candidate` → 성숙 판정 시 `promote`, 진부화 시 `update --status dead\|superseded`. `promote_candidates` 산출 대상은 아니다(`active` 한정) |
 | `promoted` | 영구 거처로 졸업 완료 | `promote --to docs\|brain --ref <위치>` → 행+파일 삭제 + provenance 기록 |
 | `superseded` | 더 새로운 결정이 대체 | `update --status superseded` → 행 보존(추적용), 로드 제외 |
 | `dead` | 완료·진부화·철회 | `update --status dead` → 행 보존(추적용), 로드 제외 |
+
+> `candidate`는 `memory.schema.json`의 `status` enum에는 task:058부터 있었으나, 이 페이지가 참조하는 규범 문서(`memory-learning.md`)의 표에는 task:096까지 누락돼 있었다 — 규범 문서만 뒤처지고 도구·`README.md`는 이미 5행이었던 불일치를 정합했다(근거: task:096 PLAN.md:275-277).
+
+### 참조 무결성 (task:096)
+
+`review`(`build_review_block`)는 task:096부터 각 행의 `file` 포인터가 가리키는 본문이 실제로 존재하는지도 검사한다 — 상태와 무관하게 `active`/`promoted`/`candidate` 어느 상태의 행이든 본문이 없으면 `memory_file_missing`, 포인터를 해석할 수 없으면 `memory_file_unresolvable`으로 검출된다. 전자는 `delete --orphan --ref <위치>`로 정식 정리할 수 있고, 후자는 무손실 원칙에 따라 정리가 거부된다(상세: [[unresolvable-not-absent-two-vocabulary-split]], [[guard-precision-none-passthrough-early-return]]). task:096 이전에는 이 불일치를 검출할 수단이 없어 인덱스만 있고 본문이 없는 행이 침묵 고착 상태로 남았다(근거: task:096 DONE.md §1-§3).
 
 ### 졸업(promote) 라우팅 표
 
@@ -69,3 +77,4 @@ OPAL 메모리는 영구 지식 저장소가 아니라 **임시 인박스**다. 
 
 - [[memory-tool]] — 이 워크플로우를 집행하는 도구
 - [[three-layer-memory-architecture]] — 메모리가 단기 인박스임을 명문화한 3계층 아키텍처
+- [[unresolvable-not-absent-two-vocabulary-split]] / [[guard-precision-none-passthrough-early-return]] — task:096 참조 무결성 검사 설계 판단
