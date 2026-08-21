@@ -218,7 +218,7 @@ interview 완료 후 결과를 TASK.md에 다음 섹션 양식으로 기록한�
 문서별 워커를 **병렬 디스패치**하여 요약/이슈를 반환받는다.
 
 - 워커 프롬프트: `references/network-guide.md` "Phase 1 워커 프롬프트"
-- **[PM 컨텍스트 주입]** 워커 프롬프트 첫 줄에 `[WORKER]` 삽입. 하네스 Guards 핵심 규칙 + 관련 참조 문서 경로를 포함한다.
+- **[PM 컨텍스트 주입]** 디스패치 프롬프트 첫 줄에 `[WORKER]` 삽입. 주입 항목·핵심 제약(전 워커 공통 고정 포함)은 `opal/core/references/pm/dispatch-process.md` §워커 컨텍스트 주입 템플릿을 따른다 — 본 스킬은 항목을 열거하지 않는다.
 
 ### 산출물
 
@@ -314,7 +314,7 @@ tasks/{NNN}-opwt-{name}/PLAN.md
 ### 워커 디스패치
 
 - 워커 프롬프트: `references/network-guide.md` "Phase 3 워커 프롬프트"
-- **[PM 컨텍스트 주입]** 워커 프롬프트 첫 줄에 `[WORKER]` 삽입. 하네스 Guards 핵심 규칙 + 관련 참조 문서 경로를 포함한다.
+- **[PM 컨텍스트 주입]** 디스패치 프롬프트 첫 줄에 `[WORKER]` 삽입. 주입 항목·핵심 제약(전 워커 공통 고정 포함)은 `opal/core/references/pm/dispatch-process.md` §워커 컨텍스트 주입 템플릿을 따른다 — 본 스킬은 항목을 열거하지 않는다.
 
 ### STATE 갱신
 
@@ -341,7 +341,7 @@ tasks/{NNN}-opwt-{name}/PLAN.md
 
 QA 워커 디스패치 (`references/consistency-rules.md` 기반, 유형 간+내 검증).
 
-- **[PM 컨텍스트 주입]** QA 워커 프롬프트 첫 줄에 `[WORKER]` 삽입. 하네스 Guards 핵심 규칙 + 관련 참조 문서 경로를 포함한다.
+- **[PM 컨텍스트 주입]** 디스패치 프롬프트 첫 줄에 `[WORKER]` 삽입. 주입 항목·핵심 제약(전 워커 공통 고정 포함)은 `opal/core/references/pm/dispatch-process.md` §워커 컨텍스트 주입 템플릿을 따른다 — 본 스킬은 항목을 열거하지 않는다.
 
 ### STATE 갱신
 
@@ -546,3 +546,4 @@ semi-agentic / agentic 모두 CLOSE 첫 행 `--auto-pass` 거부 (`agentic_close
 | v4.7 | 2026-07-17 | CLOSE 단계에 "회고(개선 루프) 하드스텝" 삽입 — op-brain-ingest 직후·완료보고 직전, 궤적 신호→관찰/분류/기록(improve-tool record --scope local\|fw), 개선후보 0건 시 no-op 비차단(brain-ingest 패턴 답습) (058) |
 | v4.8 | 2026-08-13 16:56 | pipeline.json 전환 — references/pipeline.json 신설(10 task-step, SSOT), --rows-from 호출 경로를 SKILL.md에서 pipeline.json으로 교체, 표는 사람 열람용 미러로 명시 (090) |
 | v4.9 | 2026-08-14 09:28 | SKILL.md 감량 — `--row N` 11건을 `--task-step <key>`로 전환(정적 7 + 동적 4는 `add-row --key` 규약 경유), 산문 `행 1` 1건을 `task.task_md` key 참조로 교체, STATE.md 도메인 치환값의 `{모드}`/`{단계 목록}` 중복 기재 삭제(네트워크 상태·배치 계획만 존치), 진행 현황 미러 표 10행 삭제 → `references/pipeline.json` 포인터 1줄로 교체, 중복 init 완전 명령 2건 삭제(§TASK 단계 완료 처리 1건만 정본 존치), PM Gate 점검 목록 표 삭제 → 게이트 정의 SSOT 포인터로 교체, 수정/분석 모드 ANALYSIS 행·EXECUTE 배치 행의 `add-row --key` 동적 생성 규약 신규 저술 (091) |
+| v4.10 | 2026-08-21 15:26 | §[PM 컨텍스트 주입] 블록(`:221`·`:317`·`:344` 3건)을 `pm/dispatch-process.md` §워커 컨텍스트 주입 템플릿 포인터로 일원화 — 주입 항목 열거(하네스 Guards·참조 문서·기술 스택 3항목)를 제거하고 SSOT 참조 1줄로 대체. 전 워커 공통 고정(git 이력 변경 금지 포함)이 파일럿 종류와 무관하게 도달하도록 함 (097) |

@@ -388,6 +388,8 @@ Phase 3 시작 전:
 
 확정된 `tasks/{NNN}-oppd-…/WBS.md`의 의존성 그래프를 기반으로, 순차 + 병렬 혼합으로 진행한다:
 
+> **[PM 컨텍스트 주입]** 디스패치 프롬프트 첫 줄에 `[WORKER]` 삽입. 주입 항목·핵심 제약(전 워커 공통 고정 포함)은 `opal/core/references/pm/dispatch-process.md` §워커 컨텍스트 주입 템플릿을 따른다 — 본 스킬은 항목을 열거하지 않는다.
+
 ```
 groups = buildParallelGroups(WBS.actions)  # 의존성 그래프 → 실행 그룹
 
@@ -829,3 +831,4 @@ opal-harness-agentic.md "에스컬레이션 조건" 공통 기준에 추가:
 | v5.4 | 2026-08-14 09:31 | SKILL.md 감량 — `--row N` 5건을 `--task-step <key>`로 전환(plan.user_confirm/wbs.user_confirm/execute.actions 고정 매핑 3건 + PM Gate 범용 안내문·동적 그룹 행 플레이스홀더 2건), 진행 현황 미러 표 13행 삭제 → `references/pipeline.json` 포인터 1줄로 교체, PM Gate 절차 블록쿼트에 게이트 정의 SSOT 포인터 1줄 추가(기존 판정 절차 산문은 존치) (091) |
 | v5.5 | 2026-08-15 21:48 | `--wbs` 옵션 설명에서 "조건부 행 자동 `na` 처리는 미구현… `na`는 현재 init 시점 agentic 사용자 확인 행에만 부여된다" 괄호 서술 삭제 — 사용자 확인 행이 전 모드 pending/PM으로 초기화되어 사실과 어긋남. CLOSE 진입 게이트 서술 불변 (093) |
 | v5.6 | 2026-08-16 13:31 | STATE.md 저널화 정합 — §세션 복원을 `STATE.md Read` 단일 절차에서 `show`(기계 상태) → `STATE.md Read`(서술 맥락 보완) 2단계 표준 절차로 교체(harness/state.md §세션 복원과 동일 문구). 자체 STATE.md 템플릿에서 `## 현재 상태`(state.json 파생) 삭제 + SSOT 포인터 2줄 추가 — 나머지 5종 표(Phase 진행 현황·WBS 액션·병렬 실행 현황·검증 루프 로그·재설계 루프 로그·PM 검수 로그)는 state.json 파생이 아닌 oppd 고유 자유 기재이므로 존치(094 R-6) |
+| v5.7 | 2026-08-21 15:26 | §3-1 실행 루프 첫 디스패치 절에 `[PM 컨텍스트 주입]` 정규 포인터 블록 신설 — 주입 SSOT 참조 블록을 `pm/dispatch-process.md` §워커 컨텍스트 주입 템플릿으로 신규 연결(`:397` 인접). 기존 `harness_guards` 단계 고유 가드 필드는 무변경 (097) |

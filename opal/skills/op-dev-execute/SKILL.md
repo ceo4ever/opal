@@ -94,7 +94,7 @@ version: 2.0
 각 Step 완료 시 체크박스를 실시간 갱신한다:
 PLAN.md 실행 체크리스트의 `- [ ] 완료` → `- [x] 완료`
 
-갱신 시점은 **산출물 1개를 완결 저장한 직후**다 — 모든 Step을 끝낸 뒤 일괄 갱신하지 않는다. 산출물 저장 시점·입력 축소 규율 자체의 SSOT는 `opal/core/references/pm/dispatch-process.md` §워커 컨텍스트 주입 템플릿 §핵심 제약(전 워커 공통 고정 2항목)이며, 본 스킬은 이를 복제하지 않는다.
+갱신 시점은 **산출물 1개를 완결 저장한 직후**다 — 모든 Step을 끝낸 뒤 일괄 갱신하지 않는다. 산출물 저장 시점·입력 축소 규율 자체의 SSOT는 `opal/core/references/pm/dispatch-process.md` §워커 컨텍스트 주입 템플릿 §핵심 제약(전 워커 공통 고정 항목)이며, 본 스킬은 이를 복제하지 않는다 — 항목 수·문언은 그 문서가 소유한다.
 
 ### Step 5. QA 체크리스트 검증
 
@@ -113,6 +113,7 @@ PLAN.md 실행 체크리스트의 `- [ ] 완료` → `- [x] 완료`
 | 4 | PLAN에 명시되지 않은 패키지 설치 | 의존성 변경은 사전 승인 필요 |
 | 5 | 환경변수/시크릿을 소스 코드에 하드코딩 | 보안 위반 |
 | 6 | RED 테스트 파일(opal-test-agent가 작성한 테스트)을 수정 | 프로덕션 코드만 변경. 테스트 파일 수정 필요 시 블로커 보고 (reward hacking 방어 — `opal/core/references/harness/red-first.md`) |
+| 7 | `git commit`·`git push`·`git reset`·`git rebase` 실행 | 커밋·머지는 소유자 권한 — 자동 커밋 금지(`opal/core/references/opal-harness.md` §1 커밋 규칙). 변경은 워킹트리에 남긴다: PM의 산출물 실측 판정 근거가 워킹트리이므로(`opal/core/references/harness/pm-review-gate.md` §워커 중단 시 산출물 실측 판정) 이력 변경은 판정 입력을 파괴한다 |
 
 ### 보안 가드레일
 
@@ -208,3 +209,4 @@ PLAN.md §4 실행 체크리스트를 기반으로:
 | v2.2 | 2026-06-10 10:13 | 가드레일 #6 RED 테스트 파일 수정 금지 (reward hacking 방어) (016) |
 | v2.3 | 2026-06-24 | Step 3-S에 test-tool unit 명시 호출 추가 — 구현 완료 즉시 단위 테스트 도구 기반 실행 (041) |
 | v2.4 | 2026-08-02 16:09 | Step 4를 "체크리스트 갱신 및 증분 저장"으로 확장 — 갱신 시점을 산출물 완결 직후로 명시(말미 일괄 갱신 금지)하고, 증분 저장·입력 축소 규율의 SSOT를 `pm/dispatch-process.md` §워커 컨텍스트 주입 템플릿 참조로 연결(문언 복제 금지) (081) |
+| v2.5 | 2026-08-21 15:19 | §절대 금지 표에 #7 행 추가(git commit·push·reset·rebase 실행 금지, 이유 칼럼에 `opal-harness.md` §1 커밋 규칙 포인터) + Step 4 원격 카운트 복제 제거(개수 표기 삭제 → 개수 없는 포인터, 항목 수는 `pm/dispatch-process.md`가 소유) (097) |

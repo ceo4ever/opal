@@ -185,7 +185,7 @@ tasks/{NNN}-{YYMMDD}-{스킬약어}-{태스크명}/
 
 ### 규칙
 
-- 커밋은 캡틴이 명시적으로 요청할 때만 수행
+- 커밋 실행 시점 규칙(사용자 요청 시에만 수행 · 자동 커밋 금지)은 `opal/core/references/opal-harness.md` §1 Guards가 소유한다 — 본 절은 커밋 **메시지 형식·단위**만 규정한다.
 - 커밋 메시지는 한국어
 - 하나의 태스크 = 하나의 커밋 (원칙)
 - CLOSE 시 메모리 히스토리 행은 `state-tool mark`가 자동 생성한다(088). PM은 `result` 필드를 보강한 뒤 커밋하며, 히스토리 갱신용 별도 커밋을 만들지 않는다.
@@ -200,7 +200,6 @@ OPAL 본체(스킬·에이전트·도구·하네스)를 작성할 때 따라야 
   - 허용: 산출물 문서(.md) 작성, QA 에이전트 호출, 코드베이스 읽기·분석
   - 금지(승인 전): 소스 코드 파일 생성·수정, 패키지 설치, 설정 파일 수정
 - CLOSE 단계 진입 직전에는 사용자의 명시적 확인(`승인`/`확인`/`확인완료`)이 반드시 있어야 한다 (agentic/semi-agentic 모드에서도 유지).
-- 커밋은 사용자가 명시적으로 요청할 때만 수행한다 — EXECUTE 완료·DONE.md 생성·테스트 통과 후에도 자동 커밋 금지.
 - 근거: `opal/core/references/opal-harness.md` §1 Guards
 
 ### 디스패치 의무
@@ -278,3 +277,4 @@ OPAL 본체(스킬·에이전트·도구·하네스)를 작성할 때 따라야 
 | v1.5.0 | 2026-08-15 21:48 | §State 관리에 사용자 확인 행 자동 승인 계약 1줄 추가 — 전 모드 `pending/owner=PM` 초기화, 다음 단계 진입 시 state-tool 자동 승인(`done/owner=auto/timestamp`), 자동 승인 불가 구간(CLOSE 직전·interactive·semi-agentic `MODE_BOUNDARY_STAGES`)의 `user_confirmation_required` 거부와 캡틴 `mark --owner user` 승인 명문화 (093) |
 | v1.6.0 | 2026-08-16 13:36 | STATE.md 저널화 반영 — §State 관리 첫 항목을 도구 규율 표준 문구로 교체("마크다운 표 직접 편집 금지" 서술 제거 + `state-tool show <task-path>` 조회 경로 명시), §태스크 산출물 구조의 STATE.md 행 설명을 "의사결정 로그·블로커 저널"로 정정, "상태 SSOT는 state.json이며 STATE.md는 이를 렌더한 읽기용 뷰다" 서술을 "STATE.md는 의사결정 로그·블로커·자유 기재를 담는 저널이며 파이프라인 현황의 SSOT는 state.json, 조회는 state-tool show"로 교체 — STATE.md는 더 이상 state.json의 렌더 뷰가 아니다 (094) |
 | v1.6.1 | 2026-08-16 15:05 | §태스크 산출물 구조 STATE.md 행 말미 정정 — "두 파일 모두 `state-tool`이 갱신한다"(부정확, 블로커·자유 기재는 도구 미접촉)를 코드 실측(`state_tool.py` `ensure_journal_skeleton`/`append_decision_log`/`cmd_block`) 기준으로 "state.json은 state-tool 전량 갱신, STATE.md는 저널 골격·의사결정 로그만 자동 갱신, 블로커·자유 기재는 PM 수동"으로 세분화 (094 Step 14) |
+| v1.7.0 | 2026-08-21 15:30 | 커밋 실행 시점 규칙의 원문 복제 2건을 하네스 포인터로 축약 — §커밋 규칙 §규칙 첫 항목과 §구현 규칙 §Guards 커밋 항목을 제거하고, 규칙 소유권이 `opal/core/references/opal-harness.md` §1 Guards에 있음을 명시. 본 문서는 커밋 **메시지 형식·단위**만 규정한다. 에이전트 행동 Guard를 코드 컨벤션 문서에 복제하면 프로젝트마다 존재 여부가 갈리는 우발 경로가 되므로, 워커 도달은 `pm/dispatch-process.md` §워커 컨텍스트 주입 템플릿의 전 워커 공통 고정 항목이 담당한다 (097) |

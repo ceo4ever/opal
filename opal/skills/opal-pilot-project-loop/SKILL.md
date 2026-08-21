@@ -361,6 +361,8 @@ PM은 **태스크당 `opal-loop-action-agent`를 1회 디스패치**하며, 루�
 
 **디스패치 idiom (PM → 루프 액션 에이전트)**: PM은 프롬프트 첫 줄에 `[WORKER]` 마커(부트스트랩 생략)를 넣고, `opal-loop-action-agent`의 입력 명세 10필드(`task_id, task_goal, task_scope, task_area, acceptance, task_folder, verify_commands, contract_path, project_root, project_context` — `opal/agents/opal-loop-action-agent/AGENT.md` §입력 명세 참조)를 전달한다.
 
+> **[PM 컨텍스트 주입]** 디스패치 프롬프트 첫 줄에 `[WORKER]` 삽입. 주입 항목·핵심 제약(전 워커 공통 고정 포함)은 `opal/core/references/pm/dispatch-process.md` §워커 컨텍스트 주입 템플릿을 따른다 — 본 스킬은 항목을 열거하지 않는다.
+
 **디스패치 idiom (루프 액션 에이전트 → 생성자/Evaluator/test-agent)**: opal-agent 채널 호출(동기/비동기 이원화·`[WORKER]` 마커 — `opal/agents/opal-loop-action-agent/AGENT.md` §실행 프로세스 참조)을 따른다 — 루프 액션 에이전트가 area로 생성자 도메인을 resolve한 후 내부 디스패치하며, T1~T5+G 전체가 루프 액션 에이전트 위임 범위다(G 게이트가 루프 액션 에이전트 내부에서 T2와 T3 사이를 끊는다).
 
 **blocked 반환 시**: 루프 액션 에이전트가 `status: blocked`를 반환하면 PM은 즉시 자율 재시도를 중단하고 `blockers[]` 사유를 확인하여 사용자에게 에스컬레이션한다(`references/loop-control.md` §7·§9). 루프 액션 에이전트는 소유자에게 직접 에스컬레이션하지 않는다.
@@ -585,3 +587,4 @@ Loop 1 재회전 {N}회 · Loop 2 태스크 {M}개 완주.
 | v2.0 | 2026-08-14 09:33 KST | SKILL.md 감량 — `--row N` 4건을 `--task-step <key>`로 전환(review.pm_gate/review.d7_user_gate/verify.pm_gate/verify.user_confirm), 진행 현황 미러 표 19행 삭제 → `references/pipeline.json` 포인터 1줄로 교체, 중복 init 완전 명령 1건 삭제(§STATE.md 초기 생성 1건만 정본 존치), R-13 서술의 `행 #13` 참조를 `execute.l0_select` key 참조로 교체, PM Gate 절차 블록쿼트에 게이트 정의 SSOT 포인터 1줄 추가(기존 판정 절차 산문은 존치) (091) |
 | v2.1 | 2026-08-15 21:48 | 사용자 확인 행 자동 승인 계약 반영 — agentic STATE 갱신 지시에서 PM `--auto-pass` 명시 호출 삭제, 다음 단계 진입 시 도구 자동 승인으로 전환하고 계약 본문은 하네스 SSOT(`opal-harness-agentic.md §4` / `opal-harness-semi-agentic.md §5`) 참조로 정리. CLOSE 진입 게이트 서술 불변 (093) |
 | v2.2 | 2026-08-16 13:38 KST | STATE.md 저널화 반영 — 3-SSOT 표에서 `state.json` 행의 "사람 뷰" 열을 `STATE.md`(자동 렌더 미러 전제)에서 `state-tool show`(조회)로 정정, STATE.md 역할을 저널(의사결정 로그·블로커·자유 기재)로 재정의하는 문구 추가, 도구 규율 문구를 표준화(`state-tool`로만 파이프라인 행 상태 변경, `state.json` 직접 편집 금지). `BACKLOG.md`가 `backlog-tool`의 자동 렌더 미러라는 서술은 존치 (094) |
+| v2.3 | 2026-08-21 15:26 | §디스패치 idiom(PM → 루프 액션 에이전트, `:362` 인접)에 `[PM 컨텍스트 주입]` 정규 포인터 블록 신설 — 주입 SSOT 참조 블록을 `pm/dispatch-process.md` §워커 컨텍스트 주입 템플릿으로 신규 연결. 기존 10필드 입력 명세 서술은 무변경 (097) |

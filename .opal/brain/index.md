@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-08-20 14:04
+> 갱신: 2026-08-21 16:22
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -113,6 +113,7 @@
 - [[global-deploy-after-verification-ordering]] — 검증 미완 규칙의 전역 배포 차단 — 배포는 검증의 결과여야 한다 #deploy #install #pipeline-order #framework #task-095
 - [[governance-single-owner-rule-mapping]] — 규칙 1소유자 매핑 — Governance 중복 기재 방지 설계 #governance #ssot #design-pattern #dispatch
 - [[green-tests-do-not-imply-contract-conformance]] — 테스트 GREEN은 규약 정합을 뜻하지 않는다 — 정적 대조를 별도 게이트로 둔다 #lesson #test-strategy #verification #contract
+- [[grep-ac-layer-judgment]] — grep 판정식은 문자열의 층위를 구분해야 한다 #verification #test-scenario #gate-design #lesson
 - [[guard-precision-none-passthrough-early-return]] — 가드 정밀화가 새 우회로를 만든다 — None 통과는 조기 반환으로 봉쇄한다 #memory-tool #guard-design #none-safety #lesson #task-096
 - [[inherit-new-boundary-fixed-before-writing]] — 상속·신규 경계를 집필 전에 표로 고정한다 #documentation #ssot #dedup #task-084
 - [[install-hook-ownership-marker-idempotent-upsert]] — install hook 소유권-마커 멱등 upsert (외부 hook clobber 해소) #install #deploy #hook #idempotent #ownership-marker
@@ -215,6 +216,7 @@
 - [[red-test-determinism-abort-trap]] — RED 테스트 결정론성 함정 — neverResolve fetch 대역의 abort 무반응 #testing #red-first #determinism #abort #fetch-mock
 - [[regression-only-coverage-gate]] — 회귀만 차단하는 커버리지 게이트 — 레거시 소급 부여는 게이트의 몫이 아니다 #code-scan #gate #close
 - [[release-asset-presence-single-signal]] — 릴리즈 자산 존재 판정 — 체크섬 목록 수신 성공을 단일 신호로 쓴다 #deploy #release #install #checksum #decision
+- [[replacement-edit-new-path-before-old-path-removal]] — 교체형 개정은 신형 완결 후 구형을 제거한다 — 도달 경로 0개 구간 차단 #ssot #migration #governance #phase-ordering #lesson
 - [[replacement-goal-verification-scope-gap]] — 교체형 목표의 검증 범위 함정 — 주장의 범위와 검증의 범위를 맞춰야 한다 #lesson #verification #gate-design #scenario-gate #task-090 #task-091
 - [[rotating-log-correction-over-deletion]] — 회전 로그는 삭제 대신 정정 — FIFO 히스토리 무손실 가드 설계 #memory #fifo #data-integrity #design-pattern
 - [[round-trip-pre-state-assertion-false-green-guard]] — 왕복 검증 사전 상태 단언 — false green 차단 장치 #testing #pattern #task-083

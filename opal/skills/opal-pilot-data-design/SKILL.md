@@ -92,6 +92,8 @@ TASK 단계에서 다음을 자동 감지·주입한다:
 
 `opal-db-agent` 단일 에이전트에 op-data-dictionary 스킬을 디스패치한다 (`docs/proposals/opal-data-design.md §3.1` 단일 도메인 원칙).
 
+> **[PM 컨텍스트 주입]** 디스패치 프롬프트 첫 줄에 `[WORKER]` 삽입. 주입 항목·핵심 제약(전 워커 공통 고정 포함)은 `opal/core/references/pm/dispatch-process.md` §워커 컨텍스트 주입 템플릿을 따른다 — 본 스킬은 항목을 열거하지 않는다.
+
 **디스패치 프롬프트**:
 ```
 [WORKER]
@@ -295,3 +297,4 @@ semi-agentic / agentic 모두 CLOSE 첫 행 `--auto-pass` 거부 (`agentic_close
 | v1.2 | 2026-07-10 13:12 | note 예시의 소유자 확인 표기를 `{owner_name} 확인:` 형식으로 통일 — identity.md owner_name 재해석 규칙(AGENT.md §정체성 적용)과 정합, 오염 차단 (054) |
 | v1.3 | 2026-08-13 16:54 | pipeline.json 전환 — references/pipeline.json 신설(15 task-step, SSOT), --rows-from 호출 경로를 SKILL.md에서 pipeline.json으로 교체, 표는 사람 열람용 미러로 명시 (090) |
 | v1.4 | 2026-08-14 09:27 | 파이프라인 스펙 중복정리 — `--row N`(14건)→`--task-step <key>`, 산문 `행 N`(7건)→key 참조로 전환. 미러 표·PM Gate 나열 표·중복 STATE.md 초기화 명령·모드/단계 목록 치환값 삭제 → `references/pipeline.json` 원천 포인터로 대체. R-1 자기모순 문장 정정 + 타 SKILL.md 줄번호 인용 전량 삭제 (091) |
+| v1.5 | 2026-08-21 15:26 | STEP 2 DICT 첫 디스패치 절에 `[PM 컨텍스트 주입]` 정규 포인터 블록 신설 — `pm/dispatch-process.md` §워커 컨텍스트 주입 템플릿 SSOT 참조 1줄로 통일. `**하네스 Guards**:` 단계 고유 가드 필드는 주입의 산출물이므로 무변경 (097) |

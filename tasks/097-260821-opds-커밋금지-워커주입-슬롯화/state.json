@@ -1,0 +1,155 @@
+{
+  "task_id": "097-260821-opds-커밋금지-워커주입-슬롯화",
+  "skill": "opds",
+  "mode": "agentic",
+  "schema_version": "1.1",
+  "created_at": "2026-08-21 14:48",
+  "updated_at": "2026-08-21 16:14",
+  "current_status": "done",
+  "rows": [
+    {
+      "row_id": 1,
+      "stage": "TASK",
+      "item": "작업",
+      "key": "task.task_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-21 14:48",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 2,
+      "stage": "TASK",
+      "item": "사용자 확인",
+      "key": "task.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-21 14:51",
+      "owner": "auto",
+      "note": "auto-approved on PLAN entry"
+    },
+    {
+      "row_id": 3,
+      "stage": "PLAN",
+      "item": "작업",
+      "key": "plan.plan_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-21 15:05",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 4,
+      "stage": "PLAN",
+      "item": "목표-커버 게이트",
+      "key": "plan.scenario_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-21 15:13",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 5,
+      "stage": "PLAN",
+      "item": "PM Gate",
+      "key": "plan.pm_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-21 15:15",
+      "owner": "PM",
+      "note": null,
+      "gate": {
+        "artifacts": [
+          "TASK.md",
+          "PLAN.md",
+          "TEST-SCENARIO.md"
+        ],
+        "checklist": [
+          "TASK.md 요구사항",
+          "PLAN.md §4.2",
+          "PLAN.md §5",
+          "TEST-SCENARIO.md 시나리오 목록/보안/설계 피드백"
+        ]
+      }
+    },
+    {
+      "row_id": 6,
+      "stage": "PLAN",
+      "item": "사용자 확인",
+      "key": "plan.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-21 15:17",
+      "owner": "auto",
+      "note": "auto-approved on EXECUTE entry"
+    },
+    {
+      "row_id": 7,
+      "stage": "EXECUTE",
+      "item": "작업",
+      "key": "execute.implement",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-21 15:30",
+      "owner": "PM",
+      "note": "H-9 순서 제약 준수 확인: R-1(주입 슬롯 신설, Step 1) 완료·PM 실측 Pass 이후에 R-5(CONVENTIONS 포인터화, Step 7)를 착수했다. Step 1 산출 15:19 → Step 7 산출 15:30. 따라서 커밋 금지 도달 경로가 0개가 되는 구간은 발생하지 않았다 — 슬롯 신설이 선행 완료된 상태에서만 프로젝트 문서의 원문 복제를 제거했다."
+    },
+    {
+      "row_id": 8,
+      "stage": "TEST",
+      "item": "작업",
+      "key": "test.run_tests",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-21 16:10",
+      "owner": "PM",
+      "note": "시나리오 23건 실행 완료 — 22 Pass / 0 Fail / 1 보류(S-17 SUPERVISOR). 회귀 4스위트 전건 pass, 실패 증가 0."
+    },
+    {
+      "row_id": 9,
+      "stage": "TEST",
+      "item": "PM Gate",
+      "key": "test.pm_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-21 16:10",
+      "owner": "PM",
+      "note": "TEST PM Gate Pass — 시나리오 22 Pass / 0 Fail / 1 보류(S-17 SUPERVISOR 캡틴 판정 대기, CLOSE 승인 시점 해소). 회귀 4스위트 전건 pass·실패 증가 0. 부정 검증 4건 PM 재실측 일치. 컨벤션 자동 진단 PASS(Critical 0 High 0). 기계검증 전건 통과이나 S-17 미판정이므로 All Pass 확정은 캡틴 판정 후.",
+      "gate": {
+        "artifacts": [
+          "TEST-SCENARIO.md"
+        ],
+        "checklist": [
+          "시나리오 결과/코드품질/보안/회귀",
+          "컨벤션 자동 진단 PASS (GC-CONVENTION-*.md Critical/High 0건 — 컨벤션 적용 대상 ≥1건 시 발동)"
+        ]
+      }
+    },
+    {
+      "row_id": 10,
+      "stage": "TEST",
+      "item": "사용자 확인",
+      "key": "test.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-21 16:12",
+      "owner": "user",
+      "note": "캡틴 확인: TEST 결과(22 Pass/0 Fail/1 보류) + 컨벤션 진단 PASS 보고 후 승인. S-17 주입 문언 수용성도 동 승인에 포함 — 금지 범위 commit·push·reset·rebase / 제외 add·stash·checkout 확정. CLOSE 진입 승인."
+    },
+    {
+      "row_id": 11,
+      "stage": "CLOSE",
+      "item": "DONE.md 생성",
+      "key": "close.done_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-21 16:14",
+      "owner": "PM",
+      "note": null
+    }
+  ],
+  "next_action": "태스크 완료"
+}

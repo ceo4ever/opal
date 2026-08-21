@@ -220,7 +220,7 @@ TEST-SCENARIO 단계를 "목표 달성 검증"으로 재정의 — 루브릭 채
 | `.opal/AGENT.md` | PM 프로필 | PM 역할 및 검토 기준 | Framework | 부트스트랩 시 자동 |
 | `docs/PROJECT.md` | 프로젝트 정의 (SSOT) | 프로젝트 개요, 원칙, 문서 허브 | Framework | 부트스트랩 시 자동 |
 | `docs/ARCHITECTURE.md` | 시스템 아키텍처 | 구조, 컴포넌트 관계, 배포 모델 | Framework | 개발 작업 시 항상 |
-| `docs/CONVENTIONS.md` | 코드 및 문서 컨벤션 | 네이밍, 파일 구조, 커밋 규칙, 구현 규칙(Guards/디스패치/@header/Citation/State/도구·배포 경계·플랫폼 분기) | Framework | 개발 작업 시 항상 |
+| `docs/CONVENTIONS.md` | 코드 및 문서 컨벤션 | 네이밍, 파일 구조, 커밋 **메시지 형식·단위**, 구현 규칙(디스패치/@header/Citation/State/도구·배포 경계·플랫폼 분기). 승인 게이트·커밋 실행 시점 등 Guards 규칙 **원문**은 `opal/core/references/opal-harness.md` §1이 소유하고 본 문서는 포인터만 둔다 | Framework | 개발 작업 시 항상 |
 | `.opal/MEMORY.json` | 프로젝트 메모리 인덱스 (JSON SSOT) | 메모리·작업 히스토리·피드백 추적 (`memory/` 하위 메모리 파일 인덱스). 변경은 `memory-tool`만 수행 | Framework | 부트스트랩 시 자동 (`memory-tool show --brief` 브리핑) |
 | `README.md` | 프레임워크 공개 소개 문서 | Pilot 개념, 사용 사례, 프레임워크 철학 정의 | Framework | Pilot 추가/변경 시, 사용자 대면 문서 작업 시, 프레임워크 철학/방향 관련 작업 시 |
 | `docs/architecture-diagram/opal_framework_architecture.html` | 프레임워크 구조 다이어그램 (시각 SSOT) | 3층 구조·파이프라인·도구 관계 시각화 (태스크 086 산출) | Framework | 구조 설명·온보딩 시 |
@@ -234,6 +234,7 @@ TEST-SCENARIO 단계를 "목표 달성 검증"으로 재정의 — 루브릭 채
 
 | 날짜 | 변경 내용 |
 |------|----------|
+| 2026-08-21 15:30 | 문서 레지스트리 `docs/CONVENTIONS.md` 행 정합 — 용도 서술의 `커밋 규칙`을 `커밋 메시지 형식·단위`로 정정하고 구현 규칙 열거에서 `Guards/`를 제거. Guards 규칙 원문 소유권이 `opal/core/references/opal-harness.md` §1임을 명시해, CONVENTIONS.md 포인터화(v1.7.0)와의 내부 모순을 해소 (097) |
 | 2026-08-16 15:55 | STATE.md 저널화 반영 — 3-SSOT 각주에서 "사람 뷰는 자동 렌더" 전제 제거. `BACKLOG.md`는 자동 렌더 유지, `state.json` 현황 조회는 `state-tool show`로 명시(STATE.md는 의사결정 로그·블로커 저널) (Task 094) |
 | 2026-08-15 16:35 | `worktree-tool` 신설 반영 — 폴더 구조맵 `opal/tools/` 행 18종 → **19종**. 태스크별 코드 작업공간 격리(`--worktree`/`--wt` 축) 집행 도구 (Task 092) |
 | 2026-08-11 13:26 | 문서 최신화 — 실측 1:1 대조 반영. 폴더 구조맵에서 루트 `agents/`(부재) 행 제거하고 누락 7폴더(`opal/agents/`·`opal/tools/`·`opal/bootstrapper/`·`opal/templates/`·`dashboard/`·`cursor-rules/`·`memory/`) 추가 + `.opal/` 설명을 실제 범위(브레인·메모리·코드맵 설정·로컬 설정)로 확장. 태스크 폴더 형식을 `{NNN}-{YYMMDD}-{스킬약어}-{태스크명}`으로 교체하고 실존 예시로 갱신(태스크명 한글 기본·앞 3요소 ASCII·공백 금지 명문화). **§주요 컴포넌트 (Dev 파이프라인) 신설** — 오케스트레이터 6종(opd/opds/opdw/opp/opwt/oppd)·`op-dev-*` 단계 스킬 7종·Dev 계열 워커 에이전트 10종이 SSOT에서 통째로 누락돼 있던 것을 등재. `brain-tool` 8→**10 서브명령**(`analyze`·`ingest-scan`) 정합. §프로젝트 구성 Framework 경로에서 `agents/` 제거. §프로젝트 문서 레지스트리 4행 추가 — 아키텍처 다이어그램 HTML(태스크 086 산출, 구조 시각 SSOT)·`SECURITY.md`(본문이 이미 참조 중이던 내부 모순 해소)·`proposals/` 설계 SSOT 2종 (Task 089) |

@@ -204,6 +204,8 @@ Case D — Fallback (프로젝트 구성 섹션 부재):
   → 2회 병렬 디스패치 (기존 1+1 동작, 하위호환)
 ```
 
+> **[PM 컨텍스트 주입]** 디스패치 프롬프트 첫 줄에 `[WORKER]` 삽입. 주입 항목·핵심 제약(전 워커 공통 고정 포함)은 `opal/core/references/pm/dispatch-process.md` §워커 컨텍스트 주입 템플릿을 따른다 — 본 스킬은 항목을 열거하지 않는다.
+
 ### 2.3 병렬 디스패치 프롬프트 템플릿
 
 각 `(element, checker)` 조합당 1개 에이전트를 병렬 호출한다:
@@ -529,3 +531,4 @@ fingerprint = sha1(fingerprint_input).hex()[:16]
 | v1.11 | 2026-08-14 09:23 | `--row N` 2건을 `--task-step <key>`로 전환(close.done_md 확정 / Agentic 범용 예시는 플레이스홀더) + STATE.md 도메인 치환값 `필드/값`(모드·단계 목록) 중복 표 제거(meta와 중복) + 진행 현황 미러 표를 `references/pipeline.json` SSOT 포인터로 교체 + init 완전 명령 1지점화(§Agentic Mode 정본, SCAN 1.4·치환값 절은 포인터) (091) |
 | v1.12 | 2026-08-15 21:48 | 사용자 확인 행 자동 승인 계약 반영 — agentic STATE 갱신 지시에서 PM `--auto-pass` 명시 호출 삭제, 다음 단계 진입 시 도구 자동 승인으로 전환하고 계약 본문은 하네스 SSOT(`opal-harness-agentic.md §4` / `opal-harness-semi-agentic.md §5`) 참조로 정리. CLOSE 진입 게이트 서술 불변 (093) |
 | v1.13 | 2026-08-16 14:20 | STATE.md 저널화 정합 — ① STEP 1 "행 갱신"·§도메인 치환값의 표 전제(마크다운 표 직접 편집 금지/파이프라인 현황판 행)를 표준 문구 A/"파이프라인 행(`state.json` rows[])"으로 치환, "STATE.md 실행 요약 테이블" 관련 서술을 "PM이 저널에 직접 기록하는 자유 기재"로 명확화(`state.json` 비접촉) ② CLOSE 게이트 전면 재작성 — opgc는 "사용자 확인" 행이 0개인 파이프라인이므로 `check_close_gate` G-2 폴백에 따라 CLOSE 첫 행(`close.done_md`)이 유일한 소유자 승인 지점임을 명시, mark 예시에 `--owner user` 추가(`--force` 불요), Agentic 모드 절의 "사용자 확인 행 자동 승인" 보일러플레이트가 opgc에 미적용됨을 명시 (094 R-6/R-7/R-11 G-2, Step 9) |
+| v1.14 | 2026-08-21 15:26 | §2.3 병렬 디스패치 프롬프트 템플릿 직전에 §[PM 컨텍스트 주입] 블록 신설 — `pm/dispatch-process.md` §워커 컨텍스트 주입 템플릿 포인터로 주입 항목 열거를 대체. 전 워커 공통 고정(git 이력 변경 금지 포함)이 도달하도록 함. `:221`의 `[MUST] 커밋 금지 (git commit 호출 금지)` 리터럴은 워커에게 전달되는 프롬프트 본문(주입의 산출물)이므로 무변경 보존 (097) |

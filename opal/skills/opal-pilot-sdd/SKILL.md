@@ -119,6 +119,8 @@ harness "4. TASK 공통 프로세스" 참조. 다음 단계명: SPEC.
 **참조 문서**: {관련 문서 경로}
 **핵심 제약**: {[MUST] <문서명> §N: <인용문> 형식으로 원문 인용 필수 항목. 요약 허용 항목은 일반 목록}
 ```
+> **[PM 컨텍스트 주입]** 디스패치 프롬프트 첫 줄에 `[WORKER]` 삽입. 주입 항목·핵심 제약(전 워커 공통 고정 포함)은 `opal/core/references/pm/dispatch-process.md` §워커 컨텍스트 주입 템플릿을 따른다 — 본 스킬은 항목을 열거하지 않는다.
+
 **에이전트**: opal-task-agent | **model**: advanced
 
 **Gate**:
@@ -506,3 +508,4 @@ opal-harness-agentic.md §6 공통 기준에 추가:
 | v3.8.0 | 2026-08-14 09:27 | 파이프라인 스펙 중복정리 — `--row N`(9건)→`--task-step <key>`, 산문 `행 N`(2건)→key 참조로 전환. 미러 표(25행)·PM Gate 나열 표·중복 STATE.md 초기화 명령·모드/단계 목록 치환값 삭제 → `references/pipeline.json` 원천 포인터로 대체(산출물 목록·태스크 경로는 고유값이라 존치). R-1 "위 SSOT 표를 기준으로" 오문장 정정. EXECUTE-LOOP 표기 17곳은 090 확정사항으로 불변 (091) |
 | v3.9.0 | 2026-08-15 21:48 | 사용자 확인 행 자동 승인 계약 반영 — agentic STATE 갱신 지시에서 PM `--auto-pass` 명시 호출 삭제, 다음 단계 진입 시 도구 자동 승인으로 전환하고 계약 본문은 하네스 SSOT(`opal-harness-agentic.md §4` / `opal-harness-semi-agentic.md §5`) 참조로 정리. CLOSE 진입 게이트 서술 불변 (093) |
 | v3.10.0 | 2026-08-16 13:40 | STATE.md 저널화 정합 — 폴더 구조 주석·EXECUTE-LOOP ACT 행 갱신 서술·`### STATE.md 구조` 예시에서 "파이프라인 현황판"·"## 현재 상태"·"## 다음 액션" 표 전제를 걷어내고 `state.json` SSOT + `show` 조회 포인터로 교체. ACT 목록·TS 현황·SPEC 변경이력은 state.json 파생이 아닌 opsdd 고유 자유 기재로 명시 존치(094 R-6, Step 10 project-dev 선례 준용) (094) |
+| v3.11.0 | 2026-08-21 15:26 | Phase 1 SPEC 첫 디스패치 절에 §[PM 컨텍스트 주입] 블록 신설 — `pm/dispatch-process.md` §워커 컨텍스트 주입 템플릿 포인터로 주입 항목 열거(하네스 Guards·참조 문서·기술 스택 3항목)를 대체. 전 워커 공통 고정(git 이력 변경 금지 포함)이 파일럿 종류와 무관하게 도달하도록 함. 디스패치 프롬프트 리터럴(`**하네스 Guards**:`/`**핵심 제약**:` 필드)은 단계 고유 가드이므로 무변경 (097) |

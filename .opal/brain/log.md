@@ -324,3 +324,7 @@
 - 신규: [[guard-precision-none-passthrough-early-return]], [[unresolvable-not-absent-two-vocabulary-split]], [[tool-created-state-flagged-by-consumer-as-reminder]], [[pytest-subtests-parent-passed-masks-failure]]
 - 출처: task:096
 
+## [2026-08-21] ingest | CLOSE ingest — 태스크 097 워커 커밋 금지 주입 슬롯화
+- 신규: [[grep-ac-layer-judgment]], [[replacement-edit-new-path-before-old-path-removal]]
+- 출처: task:097
+
