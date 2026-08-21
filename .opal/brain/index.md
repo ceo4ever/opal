@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-08-21 16:22
+> 갱신: 2026-08-21 22:58
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -92,15 +92,20 @@
 - [[console-settings-incremental-scope-policy]] — 콘솔 설정 화면 점진 확장 방침 #product-decision #console #scope #security
 - [[console-write-exception-router-isolation]] — 콘솔 쓰기 예외 라우터 격리 패턴 #architecture #console #security #pattern #write-isolation
 - [[daemon-as-tool-orchestrator]] — 데몬은 도구 오케스트레이터 — 데이터 SSOT는 프로젝트 파일 #architecture #dashboard #ssot
+- [[decision-vs-fact-claim-separation]] — 결정과 사실 주장의 분리 — 결정은 근거 판정 대상이 아니다 #evidence #citation #decision #opds
 - [[dedup-pointer-over-copy]] — dedup 원칙 — 목적지 기존 존재 시 표 복사 금지·포인터 단일화 #dedup #ssot #pointer #architecture #principles
 - [[degraded-execution-with-explicit-gap]] — 자산 부재에도 중단하지 않는다 — 축소 실행 + 결측 명시 불변 규칙 #fallback #workflow #reporting #task-084
 - [[delegation-only-file-gate-bypass]] — 위임 전용 파일에 게이트를 두면 우회된다 — 진입경로 역추적 #gate #architecture #lesson #call-graph
+- [[demote-promote-recursion-guard-timing-threshold-split]] — 강등·승격 재귀 차단 — 판정 시점 분리 + 임계 상호배타 #track-routing #recursion #architecture #opds
 - [[deploy-artifact-verification-lesson]] — 동작검증은 배포 산출물+실 브라우저 기준으로 수행해야 한다 #verification #qa #deployment #lesson
 - [[dict-선행-model-ssot]] — DICT가 MODEL을 선행한다 — 사전이 속성명·타입 SSOT #architecture-decision #data-design #ssot #pipeline
 - [[dl-contract-download-verify-target-identity]] — DL-CONTRACT — 검증 대상과 다운로드 대상은 같은 파일이어야 한다 #deploy #release #install #checksum #contract
 - [[e2e-cmux-first-playwright-fallback]] — E2E 도구 우선순위 — cmux 1순위 → playwright 폴백 (에러코드 소비) #testing #e2e #cmux #framework
 - [[enforce-rule-legacy-data-surfacing-lesson]] — enforce 규칙 신설 시 잔존 데이터 표면화 — 배포 전 실 데이터 스캔 필요 교훈 #lesson #enforce #validate #brain-tool
 - [[erd-modeler-deprecation]] — erd-modeler deprecate — op-data-model/ddl로 분해, //erm 하위호환 #architecture-decision #deprecation #erd-modeler #migration
+- [[evaluator-self-weakness-disclosure-pattern]] — 평가자에 PM 자기약점 명시 전달 + 신고사실 감점면제 금지 명문화 #lesson #evaluator #governance #opds
+- [[evidence-tier-asis-tobe-jurisdiction]] — 근거 등급 5단계 + AS-IS/TO-BE 관할 2축 #evidence #citation #architecture #opds
+- [[execution-observation-scope-citation-requirement]] — 실행 관측 인용은 스코프 병기 필수 — 단일파일 vs 디렉토리 수치 상이 #lesson #measurement #citation #opds
 - [[existence-check-not-version-check]] — 존재 검사와 버전 검사는 다른 게이트다 #gate #lesson #version #defect-class
 - [[expected-total-as-reference-not-gate-criterion]] — 하드코딩된 기대 총계는 게이트를 흉기로 만든다 — 판정은 집합 일치로 #lesson #gate-design #verification #plan-discipline #worker-instruction
 - [[exports-generation-tool-verification-division]] — 생성은 워커, 검증은 도구 — 비대칭을 이용한 분업 #code-scan #header #architecture
@@ -133,6 +138,7 @@
 - [[manual-scenario-verbatim-output-evidence]] — M3 수동 시나리오는 출력 원문을 증거로 남긴다 #testing #verification #evidence #manual-scenario
 - [[mark-force-decision-log-scope]] — 강제 처리의 실제 거동 — 사유는 필수지만 의사결정 로그에는 자동 기재되지 않는다 #state-tool #pipeline #decision-log #doc-correction #task-090 #task-094
 - [[marker-literal-check-meta-circular-false-positive]] — 마커 리터럴 검사의 메타-순환 오탐 — 표기 문맥 제거 전처리를 규칙과 함께 정의 #false-positive #verification #documentation #scenario-gate #task-095
+- [[measurement-tool-more-fallible-than-artifact-lesson]] — 판정식이 산출물보다 자주 틀린다 — 측정 결함 4례 + 정규식 전종매치 계수 #lesson #measurement #verification #opds
 - [[memory-lifecycle-graduation-workflow]] — 메모리 라이프사이클·졸업(promote) 워크플로우 #memory #lifecycle #architecture #promote
 - [[mirror-gate-must-not-hostage-ssot-record]] — 미러 게이트가 SSOT 기록을 인질로 잡지 않는다 — fail-open 저널 쓰기 경계 #state-tool #ssot #mirror #fail-open #defensive-design #task-094
 - [[mitigation-recurs-without-ssot-registration]] — 완화책은 SSOT 미등재 시 재발한다 #governance #worker #infra-failure #ssot #resilience
@@ -141,6 +147,7 @@
 - [[model-mapping-missing-cell-error-policy]] — 모델 매핑 미설정 셀 오류 정책 (폴백 없음 · "default" 폐기) #model #mapping #error #policy #setting
 - [[na-status-contract-agentic-init-only]] — state-tool na 상태의 실제 계약 — 부여 시점은 초기화 하나뿐 #state-tool #pipeline #na-status #task-090
 - [[native-todo-panel-llm-only-hook-boundary]] — 네이티브 todo 패널 LLM 전용 기록 한계 (hook은 트리거·페이로드까지) #opal-pipeline #todo-mirror #hook #platform-constraint #honest-limit
+- [[new-ssot-pointer-not-value-copy]] — 신규 SSOT 신설 시 타 SSOT 수치 복제 금지 — 포인터만 #ssot #dedup #architecture #opds
 - [[nojs-flex-rail-over-inline-svg-overlay]] — 자기완결 HTML의 연결선은 레이아웃으로 만든다 — 좌표 측정 오버레이 기각 #html #visual-artifact #design-decision #no-js #responsive
 - [[non-gated-write-path-audit-before-ssot-conversion]] — 비게이트 쓰기 경로는 SSOT 전환 전에 먼저 감사해야 한다 #ssot #tool-gated #migration #architecture #memory
 - [[observability-3layer-protocol-renderer-trigger-separation]] — 관측 3층 구조 완성 — 데이터 규약·렌더러·발동층 역할 분리 #oppl #observability-boundary #architecture
@@ -270,6 +277,7 @@
 - [[uncommitted-component-readme-policy]] — 미커밋 컴포넌트는 공개 README에 미노출 #readme #policy #git #documentation #ppt-builder
 - [[unresolvable-not-absent-two-vocabulary-split]] — 확인 불가는 부재가 아니다 — 검출 어휘 2분으로 처분을 표현한다 #memory-tool #guard-design #vocabulary #lesson #task-096
 - [[usage-ssot-live-help-principle]] — 사용법 SSOT는 도구 자신의 live --help #design-principle #tool-scan #usage #drift #ssot
+- [[verdict-tool-fail-safe-direction-design]] — 판정 도구 오작동 방향 고정 — unknown 미확정 계상 + 강등 4축 AND #evidence #tooling #fail-safe #opds
 - [[verification-command-4-standard]] — 검증 명령 4종 표준 (SSOT — verification-loop-guide) #verification #lint #build #test #watch-mode #ssot #standard
 - [[version-stamp-export-subst-decision]] — 버전 결정 모델 전환 — 설치 시점 API 조회 → 릴리스 시점 export-subst 각인 #version #install #git #export-subst #architecture
 - [[vertical-writing-rotation-glyph-flip]] — 세로쓰기에 회전을 겹치면 글리프가 뒤집힌다 — grep도 축소 캡처도 못 잡는 결함 #lesson #css #render-verification #visual-artifact #verification-blind-spot
@@ -277,6 +285,7 @@
 - [[wbs-세분화-단일책임-수용시나리오]] — WBS 세분화 원칙 — 단일 책임 + 수용 시나리오 기준 #oppd #wbs #sizing #be #fe #acceptance-scenario
 - [[wiki-intelligence-decisions-016]] — opal-wiki-pilot 지능화 결정 — M-4/M-5 (016) #architecture #naming #git #brain #policy
 - [[worker-abort-artifact-measured-adjudication]] — 워커 중단 시 재개 대신 산출물 실측 판정 — 중단과 미완은 별개 사실 #agentic #worker #pm-discipline #resilience #task-095
+- [[worker-role-boundary-exposes-pm-measurement-error]] — 워커 역할경계 준수가 PM 측정식 결함을 드러낸다 #lesson #worker #governance #opds
 - [[worktree-slot-existence-to-occupancy-judgment]] — 워크트리 슬롯 판정 — 존재에서 점유로 #worktree #git #lesson #non-trivial-resolution
 - [[worktree-workspace-isolation-axis]] — 워크트리 격리 축 — 문서는 허브 고정, 코드만 분기 #architecture #workspace #worktree #git #isolation
 - [[wtm-agent-cmux-integration]] — wtm-agent OPAL 표준화 + cmux-tool 신설 #tool #agent #wtm #cmux #task

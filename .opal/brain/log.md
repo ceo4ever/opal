@@ -328,3 +328,7 @@
 - 신규: [[grep-ac-layer-judgment]], [[replacement-edit-new-path-before-old-path-removal]]
 - 출처: task:097
 
+## [2026-08-21] ingest | CLOSE ingest — 태스크 098 근거 등급층 신설 + 확정/미확정 판정 + 트랙 자동 강등
+- 신규: [[evidence-tier-asis-tobe-jurisdiction]], [[decision-vs-fact-claim-separation]], [[verdict-tool-fail-safe-direction-design]], [[demote-promote-recursion-guard-timing-threshold-split]], [[measurement-tool-more-fallible-than-artifact-lesson]], [[execution-observation-scope-citation-requirement]], [[worker-role-boundary-exposes-pm-measurement-error]], [[evaluator-self-weakness-disclosure-pattern]], [[new-ssot-pointer-not-value-copy]]
+- 출처: task:098
+

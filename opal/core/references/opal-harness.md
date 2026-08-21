@@ -109,6 +109,7 @@ Lazy 로드 모듈. 각 §의 stub이 로드 시점과 파일 경로를 지시�
 | TASK 공통 프로세스 | `harness/task-process.md` | TASK 단계 진입 시 | §4 |
 | Coding Principles | `harness/coding-principles.md` | EXECUTE 단계 진입 시 (코드 변경 워커) / PM "그냥 해" 진입 시 | §10 |
 | RED-first 규칙 | `harness/red-first.md` | TEST-SCENARIO 작성·EXECUTE 진입 시 | §1.5 |
+| 트랙 라우팅 | `harness/track-routing.md` | `//opd` 진입 시 트랙 강등 판정 수행 시점 (TASK 완료 직후) | §4 |
 
 > 탐색 경로: `{프로젝트}/.opal/references/harness/{file}` → `~/.opal/references/harness/{file}`
 
@@ -309,6 +310,7 @@ OPAL 도구는 모두 `~/.opal/tools/{tool-name}/run.sh` 래퍼를 통해 호출
 
 | 버전 | 날짜 | 내용 |
 |------|------|------|
+| v7.3 | 2026-08-21 22:11 | §2 하네스 모듈 테이블에 트랙 라우팅 행 추가 — `harness/track-routing.md` 신설(`//opd`→`opds` 자동 강등 판정 4축·잠정 임계값 SSOT) 등록, 로드 시점: `//opd` 진입 시 트랙 강등 판정 수행 시점(TASK 완료 직후) (098) |
 | v7.2 | 2026-08-16 13:19 | §3 State — STATE.md 역할을 "파이프라인 현황판"에서 "의사결정 로그·블로커를 담는 저널"로 재정의(094 R-6). 마커 명세·`marker_missing` 서술 삭제 + 표준 문구 A/B 적용, 에러 카탈로그 종수 리터럴 삭제 후 `state-tool/README.md` §에러 코드 카탈로그 포인터로 대체(R-9 ①), 예시 명령의 `--row <N>`을 `--task-step <key>`로 교체(CONVENTIONS §State 관리 정합), `show` 조회 명령 1줄 추가 |
 | v7.1 | 2026-08-15 19:40 | §2.5 (3) `worktree.json` 부재 시 동작 갱신 — 종전 "템플릿 경로 안내"에서 **`worktree-tool init`(탐지 기반 초안 생성) 실행 안내**로 교체. 092 추가작업 ADD-1에서 온보딩 경로 부재가 드러나 `init` 서브명령을 신설했다(092 DEC-8) |
 | v1.0 | - | 최초 작성 |

@@ -29,6 +29,9 @@ TASK 완료 → 사용자 보고.
 > **단계 건너뛰기 차단**: state-tool stage-transition guard가 단계 N의 필수 행이 완료되지 않으면 단계 N+1 진입(mark)을 자동 거부한다 (PLAN §M-A). 행에 의존하지 않는다.
 > 근거: `tasks/134-260501-opp-pipeline-state-tool/TASK.md` F-15 / `PLAN.md` §1.5 M-11 / §3 Step 8 P-1 / P-3
 
+> **[MUST] 트랙 강등 판정**: TASK 완료 직후 1회, `opal/core/references/harness/track-routing.md`(SSOT) 4축 전건(AND) 충족 여부를 판정한다. 하나라도 미충족·판정 불능이면 강등하지 않고 `opd`를 유지한다(fail-safe).
+> 전건 충족 시 소유자 승인 왕복 없이 `opds`로 진입하고, 진입 직후 4축 실측값·판정 결과를 소유자에게 **사후 통보**한다.
+
 ## STEP 2: ANALYSIS
 워커를 디스패치하여 코드베이스를 분석한다.
 
@@ -418,3 +421,4 @@ semi-agentic / agentic 모두 CLOSE 첫 행 `--auto-pass` 거부 (`agentic_close
 | v5.2 | 2026-08-16 13:30 | 사용자 확인 (P-5) 3건(analysis/test_scenario/test) 산문을 모드 무분기 명령형 → 모드 분기 서술로 교체 — 자동 승인 구간(agentic 전 구간 / semi-agentic EXECUTE-equivalent 이후)은 PM 미호출·도구 자동 승인, 그 외 구간은 기존 mark 호출 유지. 지점별 --task-step 키·근거 인용 보존 (094 R-11 G-4). STEP 1 "[MUST] 행 갱신" 서술의 표 전제("LLM이 STATE.md 마크다운 표를 직접 편집하는 것은 금지된다")를 표준 문구 A("파이프라인 행 상태 변경은 `state-tool`로만 수행, `state.json` 직접 편집 금지, 조회는 `state-tool show`")로 치환 — STATE.md가 파생 표를 렌더하지 않는 저널로 재정의됨에 따른 정합(094 R-6/R-7, Step 8) |
 | v5.3 | 2026-08-19 21:10 | STEP 3(PLAN) §3-1에 목표계열 선작성 병렬 착수 지시 + STEP 3.5 절차 1을 Block B 보강으로 재작성·4에 보강 완료 판정·5에 게이트 1회 전제 및 test_scenario.scenario_gate mark 시점 명시. STEP 2(ANALYSIS)·STEP 4(EXECUTE)·pipeline.json 무변경 (095) |
 | v5.4 | 2026-08-21 15:19 | §[PM 컨텍스트 주입] 블록을 `pm/dispatch-process.md` §워커 컨텍스트 주입 템플릿 포인터로 일원화 — 주입 항목 열거(하네스 Guards·참조 문서·기술 스택 3항목)를 제거하고 SSOT 참조 1줄로 대체. 전 워커 공통 고정(git 이력 변경 금지 포함)이 파일럿 종류와 무관하게 도달하도록 함 (097) |
+| v5.5 | 2026-08-21 22:15 | STEP 1(TASK) 직후에 트랙 강등 판정 호출 지점 배선 — `opal/core/references/harness/track-routing.md`(SSOT) 포인터 + 소유자 승인 왕복 없이 진입·사후 통보 명시. 임계값 수치는 SSOT에만 존치(복제 0건) (098) |

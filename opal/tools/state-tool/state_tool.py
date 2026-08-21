@@ -3,7 +3,7 @@
   "module": "state_tool",
   "layer": "util",
   "domain": "opal-pipeline",
-  "description": "OPAL 파이프라인 현황판 JSON SSOT 관리 CLI — 10개 서브 명령(init/show/advance/mark/block/validate/add-row/status/spec-validate/gate-pass[deprecated]) + verify + 3-way 모드(interactive/semi-agentic/agentic) 지원. 014 Phase 4: 새 표준 행 구조(QA Gate/State Gate 행 없음)와 정합 — gate-pass deprecate, CLOSE 마지막 행 판정 항목명 비의존화. 016: verify --red-check(RED 증거 게이트) + --fix-mode/--changed-files/--test-globs(테스트 불변성 게이트) 추가 — RED-first TDD 트랙 deterministic 집행. 017: mark --step N/M 다중 Step 조기 done 가드 — N<M이면 in_progress 유지(done 미처리) + 진행률(step) 영속화, N==M에서만 done; 미완 행은 기존 stage-transition guard가 단계전환·CLOSE 진입을 자동 차단. 005: verify --clarification-check + TASK→다음단계 자동 훅 — TASK 4요소(목표/범위/제약/완료기준) 미잠금 시 다음 단계 진입 거부(PRINCIPLES §1 집행), 정책 A graceful skip(섹션/파일 부재 시 하위호환). 034: mock 가드 false positive 수정 — _MOCK_CODE_PATTERNS 정규식 'MagicMock' 맨 단어 대안 제거(#1 산문 오탐) + _check_mock_patterns 인라인 백틱 제거 전처리 추가(#2 메타-순환 해소); 헌법 §4 정탐 유지. 054: resolve_owner_placeholder() 신설 — note-write 6경로(advance/mark/add-row/block/status/init)에서 '{owner_name}' 플레이스홀더를 identity.md owner_name으로 write-time 치환(fail-safe: 부재/공란/파싱실패 시 원문 유지). 070: task-step 키 주소 체계 도입 1차 — spec-validate 서브명령(pipeline.json 스펙 검증) + KEY_PATTERN/stage_to_slug/resolve_row_index 신설, build_rows_from_pipeline_json(init --rows-from .json 확장자 분기, .md는 deprecation 경고 유지), advance/mark/block에 --task-step/--task-step-id/--row(deprecated) 3주소·add-row에 --after-task-step/--after-task-step-id/--key(자동 생성) 추가, --step→--action-step 별칭(dest 공유), opdd skill·DICT/MODEL/DDL·MIGRATION stage enum 등록, ERROR_CODES 8종 추가. 072: STATE.md '다음 액션' 자동 파생 — state.json next_action 필드 신설(init 영속화·schema optional 등록), _derive_next_action(파이프라인 프론티어=첫 미완료 행 기준 파생)·update_next_action_section(첫 줄만 치환, 하위 자유기재 보존) 신규, advance/mark가 상태 반영 후 next_action 계산·저장·렌더(block/add-row/status는 미접촉), advance/mark --next-action per-transition 오버라이드(비지속 — 다음 전이 자동 파생 복귀). 074: --import-existing key-보존 재접합 — cmd_init import 분기가 파싱 후 기존 state.json→pipeline.json (stage,item) 순서 매칭으로 key 재접합(schema_version 1.1 유지), 원천 전무 시 keyless+경고(하위호환); _key_source_index/_reattach_import_keys 신규. 076: build_todo_mirror() 신설 — init/advance/mark/block ok() stdout 페이로드에 단계 단위 todo 미러(파생: na 중립·전부pending→pending·전부done→completed·부분/failed→in_progress) 추가, PostToolUse hook이 이를 세션에 결정론 주입(파이프라인 todo 미러 hook 강제); todo_mirror는 stdout 전용 비영속(state.json 미접촉 — schema additionalProperties:false 보존). 088: CLOSE 마지막 행 mark 시 메모리 히스토리 자동 연결 — link_memory_history()가 형제 memory_tool.py를 sys.executable subprocess로 호출해 `<프로젝트루트>/.opal/MEMORY.json` history에 행을 자동 생성(find_project_root 조상 탐색·derive_history_title·build_history_reminder·_run_memory_tool 신설), path 사전 조회로 멱등 보장, 예외/실패 전부 흡수해 mark는 항상 ok:true 유지(cmd_mark ok() stdout에 history_link 필드 조건부 추가, state.json 미접촉). 091: PM Gate 집행 배선(F-004) — validate_pipeline_spec()에 task_steps[].gate 검사 4건 추가(spec_gate_type_invalid/spec_gate_missing_field/spec_gate_field_type_invalid/spec_gate_checklist_empty, artifacts:[] 단독은 위반 아님); _is_safe_artifact_token()·check_gate_artifacts() 신설 — gate.artifacts 존재 검증(정적 경로/글롭 지원, 절대경로·'..' 토큰 태스크 폴더 밖 이탈 차단), gate 미보유 행·artifacts:[] 행은 즉시 통과(기존 동작 불변), 미충족 시 gate_artifact_missing 거부(--force+--note로만 우회 가능, 우회 시 decision 로그 gate_artifact_force 강제 기록); build_gate_payload() 신설 — 통과 시 checklist를 dict로 stdout 반환(todo_mirror_hook 릴레이용); build_rows_from_pipeline_json()/build_rows_from_spec()에 gate 필드 init-time 영속화 각 1줄 추가; cmd_mark가 save_state_json() 이전 검증 구간에서 가드를 호출하여 부분 상태 변경을 배제하고 _ok_kwargs에 gate_checklist 조건부 추가; ERROR_CODES 5종 신규(gate_artifact_missing 포함). 092: `init --worktree <path>` 조건부 영속화(F-005) — argparse `init`에 `--worktree` optional 인자 추가, cmd_init이 state dict 구성 직후 `getattr(args, \"worktree\", None)`으로 조건부 대입(미지정 시 키 자체 미생성 — H-1), state.schema.json properties에 `worktree` optional 등록(required 미변경); `_build_new_state_md`/`render_pipeline_table`/`build_todo_mirror`/`cmd_show` 무변경으로 STATE.md 렌더·`show --format json` 노출 하위호환 보장(H-11). 093: 사용자 확인 행 자동 승인 경로 일원화 — can_auto_approve_user_confirmation() 신설(F-003, CLOSE 축 + 모드 축 2축 합성 단일 판정; semi-agentic 모드 경계 상수의 유일 참조자이며 cmd_mark 사전검사와 cmd_validate 사후검사가 거부 사유별로 소비 범위를 달리한다 — validate는 include_close_axis=False로 CLOSE 축을 평가하지 않아 기존 경계를 보존, H-4); auto_approve_prior_user_confirmations() 신설(F-002, cmd_advance·cmd_mark가 stage-transition guard 직전에 호출해 대상 행 앞 [0,row_index) 구간의 미완 '사용자 확인' 행을 done/auto/timestamp로 자동 승인하고 note에 'auto-approved on <stage> entry' 기록 — as_worker/force/대상 행 stage=CLOSE면 즉시 no-op이고 save_state_json을 호출하지 않아 후속 가드 실패 시 파일이 오염되지 않는다(H-8), 승인 불가 구간은 user_confirmation_required로 거부(F-004)); advance/mark ok() 응답에 auto_approved 배열 관측 필드 추가(기존 필드 불변); build_rows_from_spec/build_rows_from_skill_md/build_rows_from_pipeline_json의 init 시점 agentic auto-na 분기 3곳 삭제(F-001 — 전 모드 pending/⬜/PM 동형 초기화; 세 빌더의 mode 파라미터 시그니처, state.schema.json status enum의 na, _COMPLETE_STATUSES, build_todo_mirror na 필터는 하위호환으로 존치, R-6); cmd_mark 멱등성(F-005) — _AUTO_PASS_PREFIX 모듈 상수 신설 후 auto-pass note를 3분기(빈 note/이미 접두 보유→중첩 방지/신규 부여)로 부여하고, check_gate_artifacts 통과 직후 재-auto-pass no-op 조기 반환(auto_pass and not force and not action_step and status=='done' and owner=='auto' 4중 조건 — 상태·timestamp·updated_at 불변, 응답에 idempotent:true; --force·--action-step N/M·owner=user done 행은 기존 경로 유지). 094: STATE.md를 state.json 파생 섹션(마커/파이프라인 표/'## 현재 상태'/'## 다음 액션') 없는 저널(의사결정 로그+블로커)로 재정의 — `_build_new_state_md` 2인자 축소·`ensure_journal_skeleton` 신설·`sync_state_md` fail-open 축소판 재작성(6개 호출부 인자 정리, journal_warning 조건부 stdout 표면화)·`append_decision_log` 오프바이원 수정+표 셀 이스케이프(`_escape_table_cell`)·`replace_pipeline_section`/`update_current_status_section`/`update_next_action_section` 삭제·`ERROR_CODES`에서 `marker_missing`/`import_failed` 삭제 후 `import_existing_removed` 추가·`cmd_init` import 분기·`parse_existing_state_md`/`_key_source_index`/`_reattach_import_keys` 삭제(--import-existing은 help=SUPPRESS로 존치, 항상 거부)·`cmd_validate` 마커 검사 삭제·`cmd_show` md/full 3분기를 state.json 단일 파생으로 재설계(`LEGACY_FROZEN_BANNER`, `STATUS_TEXT`)·`render_pipeline_table`에 '비고'(note) 열 추가 — `render_pipeline_table`/`PIPELINE_MARKER_*`/`update_state_md_header`는 레거시(001~093) STATE.md 공존을 위해 존치. 094 R-11: 093 집행 층(can_auto_approve_user_confirmation 단일 판정) 일원화를 표시·게이트 층에 정합 — G-1) 모드 경계 상수에 `DICT`/`MODEL`/`DDL/MIGRATION` 3원소 추가로 semi-agentic(기본 모드) opdd에서 설계 확정 3단계가 소유자 미노출로 자동 승인되던 주권 침해 해소; G-2) `check_close_gate`에 확인 행 0개 파이프라인(opgc) 폴백 신설 + `owner` 인자 추가(CLOSE 첫 행 자체를 소유자 승인 지점으로 삼아 `--force` 없이 종료 불가하던 데드락 해소); G-3) `_derive_next_action`·`build_todo_mirror`가 `can_auto_approve_user_confirmation()`을 재사용해 자동 승인 예정 사용자 확인 행을 각각 프론티어/집계에서 제외(CLOSE 직전은 예외 유지)해 agentic 헛 확인 신호 소멸. 094 SEC-FOLLOWUP: `sync_state_md` except 절이 `journal_warning.reason`에 예외 메시지(`str(e)`)를 원문 그대로 담아 태스크 절대경로·홈 디렉토리 경로를 노출하던 결함(PLAN.md §5.4) 수정 — `_redact_path_like()` 신설(공백 토큰 단위로 `/` 또는 홈 경로로 시작하는 조각을 `os.path.basename`으로 치환, 특정 OS/Errno 포맷 비가정) 후 except 절 `reason` 조합에 적용; 예외 타입명·파일명(예: `STATE.md`)은 보존해 진단 가치 유지, `decision`/`note` 필드는 미접촉.",
+  "description": "OPAL 파이프라인 현황판 JSON SSOT 관리 CLI — 10개 서브 명령(init/show/advance/mark/block/validate/add-row/status/spec-validate/gate-pass[deprecated]) + verify + 3-way 모드(interactive/semi-agentic/agentic) 지원. 014 Phase 4: 새 표준 행 구조(QA Gate/State Gate 행 없음)와 정합 — gate-pass deprecate, CLOSE 마지막 행 판정 항목명 비의존화. 016: verify --red-check(RED 증거 게이트) + --fix-mode/--changed-files/--test-globs(테스트 불변성 게이트) 추가 — RED-first TDD 트랙 deterministic 집행. 017: mark --step N/M 다중 Step 조기 done 가드 — N<M이면 in_progress 유지(done 미처리) + 진행률(step) 영속화, N==M에서만 done; 미완 행은 기존 stage-transition guard가 단계전환·CLOSE 진입을 자동 차단. 005: verify --clarification-check + TASK→다음단계 자동 훅 — TASK 4요소(목표/범위/제약/완료기준) 미잠금 시 다음 단계 진입 거부(PRINCIPLES §1 집행), 정책 A graceful skip(섹션/파일 부재 시 하위호환). 034: mock 가드 false positive 수정 — _MOCK_CODE_PATTERNS 정규식 'MagicMock' 맨 단어 대안 제거(#1 산문 오탐) + _check_mock_patterns 인라인 백틱 제거 전처리 추가(#2 메타-순환 해소); 헌법 §4 정탐 유지. 054: resolve_owner_placeholder() 신설 — note-write 6경로(advance/mark/add-row/block/status/init)에서 '{owner_name}' 플레이스홀더를 identity.md owner_name으로 write-time 치환(fail-safe: 부재/공란/파싱실패 시 원문 유지). 070: task-step 키 주소 체계 도입 1차 — spec-validate 서브명령(pipeline.json 스펙 검증) + KEY_PATTERN/stage_to_slug/resolve_row_index 신설, build_rows_from_pipeline_json(init --rows-from .json 확장자 분기, .md는 deprecation 경고 유지), advance/mark/block에 --task-step/--task-step-id/--row(deprecated) 3주소·add-row에 --after-task-step/--after-task-step-id/--key(자동 생성) 추가, --step→--action-step 별칭(dest 공유), opdd skill·DICT/MODEL/DDL·MIGRATION stage enum 등록, ERROR_CODES 8종 추가. 072: STATE.md '다음 액션' 자동 파생 — state.json next_action 필드 신설(init 영속화·schema optional 등록), _derive_next_action(파이프라인 프론티어=첫 미완료 행 기준 파생)·update_next_action_section(첫 줄만 치환, 하위 자유기재 보존) 신규, advance/mark가 상태 반영 후 next_action 계산·저장·렌더(block/add-row/status는 미접촉), advance/mark --next-action per-transition 오버라이드(비지속 — 다음 전이 자동 파생 복귀). 074: --import-existing key-보존 재접합 — cmd_init import 분기가 파싱 후 기존 state.json→pipeline.json (stage,item) 순서 매칭으로 key 재접합(schema_version 1.1 유지), 원천 전무 시 keyless+경고(하위호환); _key_source_index/_reattach_import_keys 신규. 076: build_todo_mirror() 신설 — init/advance/mark/block ok() stdout 페이로드에 단계 단위 todo 미러(파생: na 중립·전부pending→pending·전부done→completed·부분/failed→in_progress) 추가, PostToolUse hook이 이를 세션에 결정론 주입(파이프라인 todo 미러 hook 강제); todo_mirror는 stdout 전용 비영속(state.json 미접촉 — schema additionalProperties:false 보존). 088: CLOSE 마지막 행 mark 시 메모리 히스토리 자동 연결 — link_memory_history()가 형제 memory_tool.py를 sys.executable subprocess로 호출해 `<프로젝트루트>/.opal/MEMORY.json` history에 행을 자동 생성(find_project_root 조상 탐색·derive_history_title·build_history_reminder·_run_memory_tool 신설), path 사전 조회로 멱등 보장, 예외/실패 전부 흡수해 mark는 항상 ok:true 유지(cmd_mark ok() stdout에 history_link 필드 조건부 추가, state.json 미접촉). 091: PM Gate 집행 배선(F-004) — validate_pipeline_spec()에 task_steps[].gate 검사 4건 추가(spec_gate_type_invalid/spec_gate_missing_field/spec_gate_field_type_invalid/spec_gate_checklist_empty, artifacts:[] 단독은 위반 아님); _is_safe_artifact_token()·check_gate_artifacts() 신설 — gate.artifacts 존재 검증(정적 경로/글롭 지원, 절대경로·'..' 토큰 태스크 폴더 밖 이탈 차단), gate 미보유 행·artifacts:[] 행은 즉시 통과(기존 동작 불변), 미충족 시 gate_artifact_missing 거부(--force+--note로만 우회 가능, 우회 시 decision 로그 gate_artifact_force 강제 기록); build_gate_payload() 신설 — 통과 시 checklist를 dict로 stdout 반환(todo_mirror_hook 릴레이용); build_rows_from_pipeline_json()/build_rows_from_spec()에 gate 필드 init-time 영속화 각 1줄 추가; cmd_mark가 save_state_json() 이전 검증 구간에서 가드를 호출하여 부분 상태 변경을 배제하고 _ok_kwargs에 gate_checklist 조건부 추가; ERROR_CODES 5종 신규(gate_artifact_missing 포함). 092: `init --worktree <path>` 조건부 영속화(F-005) — argparse `init`에 `--worktree` optional 인자 추가, cmd_init이 state dict 구성 직후 `getattr(args, \"worktree\", None)`으로 조건부 대입(미지정 시 키 자체 미생성 — H-1), state.schema.json properties에 `worktree` optional 등록(required 미변경); `_build_new_state_md`/`render_pipeline_table`/`build_todo_mirror`/`cmd_show` 무변경으로 STATE.md 렌더·`show --format json` 노출 하위호환 보장(H-11). 093: 사용자 확인 행 자동 승인 경로 일원화 — can_auto_approve_user_confirmation() 신설(F-003, CLOSE 축 + 모드 축 2축 합성 단일 판정; semi-agentic 모드 경계 상수의 유일 참조자이며 cmd_mark 사전검사와 cmd_validate 사후검사가 거부 사유별로 소비 범위를 달리한다 — validate는 include_close_axis=False로 CLOSE 축을 평가하지 않아 기존 경계를 보존, H-4); auto_approve_prior_user_confirmations() 신설(F-002, cmd_advance·cmd_mark가 stage-transition guard 직전에 호출해 대상 행 앞 [0,row_index) 구간의 미완 '사용자 확인' 행을 done/auto/timestamp로 자동 승인하고 note에 'auto-approved on <stage> entry' 기록 — as_worker/force/대상 행 stage=CLOSE면 즉시 no-op이고 save_state_json을 호출하지 않아 후속 가드 실패 시 파일이 오염되지 않는다(H-8), 승인 불가 구간은 user_confirmation_required로 거부(F-004)); advance/mark ok() 응답에 auto_approved 배열 관측 필드 추가(기존 필드 불변); build_rows_from_spec/build_rows_from_skill_md/build_rows_from_pipeline_json의 init 시점 agentic auto-na 분기 3곳 삭제(F-001 — 전 모드 pending/⬜/PM 동형 초기화; 세 빌더의 mode 파라미터 시그니처, state.schema.json status enum의 na, _COMPLETE_STATUSES, build_todo_mirror na 필터는 하위호환으로 존치, R-6); cmd_mark 멱등성(F-005) — _AUTO_PASS_PREFIX 모듈 상수 신설 후 auto-pass note를 3분기(빈 note/이미 접두 보유→중첩 방지/신규 부여)로 부여하고, check_gate_artifacts 통과 직후 재-auto-pass no-op 조기 반환(auto_pass and not force and not action_step and status=='done' and owner=='auto' 4중 조건 — 상태·timestamp·updated_at 불변, 응답에 idempotent:true; --force·--action-step N/M·owner=user done 행은 기존 경로 유지). 094: STATE.md를 state.json 파생 섹션(마커/파이프라인 표/'## 현재 상태'/'## 다음 액션') 없는 저널(의사결정 로그+블로커)로 재정의 — `_build_new_state_md` 2인자 축소·`ensure_journal_skeleton` 신설·`sync_state_md` fail-open 축소판 재작성(6개 호출부 인자 정리, journal_warning 조건부 stdout 표면화)·`append_decision_log` 오프바이원 수정+표 셀 이스케이프(`_escape_table_cell`)·`replace_pipeline_section`/`update_current_status_section`/`update_next_action_section` 삭제·`ERROR_CODES`에서 `marker_missing`/`import_failed` 삭제 후 `import_existing_removed` 추가·`cmd_init` import 분기·`parse_existing_state_md`/`_key_source_index`/`_reattach_import_keys` 삭제(--import-existing은 help=SUPPRESS로 존치, 항상 거부)·`cmd_validate` 마커 검사 삭제·`cmd_show` md/full 3분기를 state.json 단일 파생으로 재설계(`LEGACY_FROZEN_BANNER`, `STATUS_TEXT`)·`render_pipeline_table`에 '비고'(note) 열 추가 — `render_pipeline_table`/`PIPELINE_MARKER_*`/`update_state_md_header`는 레거시(001~093) STATE.md 공존을 위해 존치. 094 R-11: 093 집행 층(can_auto_approve_user_confirmation 단일 판정) 일원화를 표시·게이트 층에 정합 — G-1) 모드 경계 상수에 `DICT`/`MODEL`/`DDL/MIGRATION` 3원소 추가로 semi-agentic(기본 모드) opdd에서 설계 확정 3단계가 소유자 미노출로 자동 승인되던 주권 침해 해소; G-2) `check_close_gate`에 확인 행 0개 파이프라인(opgc) 폴백 신설 + `owner` 인자 추가(CLOSE 첫 행 자체를 소유자 승인 지점으로 삼아 `--force` 없이 종료 불가하던 데드락 해소); G-3) `_derive_next_action`·`build_todo_mirror`가 `can_auto_approve_user_confirmation()`을 재사용해 자동 승인 예정 사용자 확인 행을 각각 프론티어/집계에서 제외(CLOSE 직전은 예외 유지)해 agentic 헛 확인 신호 소멸. 094 SEC-FOLLOWUP: `sync_state_md` except 절이 `journal_warning.reason`에 예외 메시지(`str(e)`)를 원문 그대로 담아 태스크 절대경로·홈 디렉토리 경로를 노출하던 결함(PLAN.md §5.4) 수정 — `_redact_path_like()` 신설(공백 토큰 단위로 `/` 또는 홈 경로로 시작하는 조각을 `os.path.basename`으로 치환, 특정 OS/Errno 포맷 비가정) 후 except 절 `reason` 조합에 적용; 예외 타입명·파일명(예: `STATE.md`)은 보존해 진단 가치 유지, `decision`/`note` 필드는 미접촉. 098: `verify --evidence-check` 신설(F-003) — TASK.md '## 명확화 결과' 표의 '의존 사실' 셀을 근거 등급 4축(인용 존재·인용 유효·등급 부여·E5 단독 아님)으로 판정해 항목별 확정/미확정+사유를 반환하는 라우터(항상 exit 0, 차단 없음); `_locate_clarification_table()` 신설(표 탐색 전용, H-8) 후 `_parse_clarification_table()`을 그 위에 얇게 재구성(dict 반환 계약 불변)·`_extract_citations()`/`_grade_citation()`/`_check_evidence_gate()` 신규(인용 형식 4종 파싱: `경로:N`/`경로` §N/`[사이트](URL)`/`(→ D-N §N)`, 등급 패턴 기본 세트 E5/E4/E2/unknown, `unknown`은 `confirmed_ratio`에서 미확정 계상), `cmd_verify`가 `clarification_check` 분기 뒤·`fix_mode` 분기 앞에서 처리하며 `--clarification-check`와 동시 지정 시 `evidence_check_flag_conflict`로 거부(ERROR_CODES 44→45); `_grade_citation`의 경로 실존 검사는 `_is_safe_artifact_token()`을 재사용해 절대경로·`..` 이탈 토큰을 미존재로 fail-safe 처리. 098 ADD-2: `_resolve_citation_exists()`가 프로젝트 루트를 스크립트 자기 위치(`__file__`)에서 파생해 배포본(`~/.opal/tools/state-tool/`) 실행 시 root=None → 정규 인용 전건 오강등되던 결함 수정 — `_check_evidence_gate`가 `find_project_root(task_md_path)`를 우선 시도하고 실패 시 기존 `__file__` 파생으로 폴백하는 `root`를 1회 계산해 `_evaluate_evidence_item`→`_grade_citation`→`_resolve_citation_exists`로 트레일링 옵셔널 인자로 전달(세 함수 시그니처에 `root=None` 각 1개 추가, 기존 2-인자 호출 형태 하위호환); 폴백까지 실패한 `root=None`은 기존 fail-safe(미존재 처리) 그대로 유지.",
   "exports": [
     "cmd_init", "cmd_show", "cmd_advance", "cmd_mark",
     "cmd_block", "cmd_validate", "cmd_add_row", "cmd_status",
@@ -178,6 +178,9 @@ ERROR_CODES = {
     "user_confirmation_required":
         "자동 승인 불가 — 사용자 확인 행(row {row_id}, stage={stage})에 캡틴 승인이 필요합니다"
         " (사유: {reason}). 보고 → 캡틴 승인 → mark --done --owner user",
+    # 098 F-003 R-4: 근거 등급 확정/미확정 판정 게이트 (PLAN §3.3.2)
+    "evidence_check_flag_conflict":
+        "--evidence-check와 --clarification-check는 동시 사용 불가 (무성 무시 방지)",
 }
 
 PIPELINE_MARKER_START = "<!-- pipeline:start -->"
@@ -2222,12 +2225,12 @@ def _find_task_md(task_path, task_md_arg):
     return p if p.exists() else None
 
 
-def _parse_clarification_table(lines):
-    """TASK.md "## 명확화 결과" 섹션의 표를 파싱.
+def _locate_clarification_table(lines):
+    """"## 명확화 결과" 섹션의 표를 "위치"만 탐색한다 (H-8 — 표 탐색은 공유,
+    셀 해석·판정은 호출자별로 분리).
 
-    반환: {element_label: confirmed_value_cell_text} 딕셔너리.
-    섹션/표 부재 시 None 반환 (호출자가 graceful skip).
-    "확정값" 열을 헤더에서 식별; 없으면 라벨 다음(2번째) 셀을 확정값으로 폴백.
+    반환: (section_lines, header_cells, header_line_idx) 튜플.
+    섹션/표 부재 시 None (호출자가 graceful skip 정책 적용).
     """
     # 1) "## 명확화 결과" 헤더 위치 탐색
     section_start = None
@@ -2248,7 +2251,6 @@ def _parse_clarification_table(lines):
     # 3) 표 헤더 행 탐색 — "|" 로 시작하고 구분선이 아닌 첫 행
     header_cells = None
     header_line_idx = None
-    confirmed_col_idx = None
     for idx, line in enumerate(section_lines):
         stripped = line.strip()
         if not stripped.startswith("|"):
@@ -2257,23 +2259,42 @@ def _parse_clarification_table(lines):
             continue  # 구분선 행 스킵
         cells = [c.strip() for c in stripped.split("|")]
         cells = cells[1:-1] if len(cells) > 2 else cells
-        if header_cells is None:
-            header_cells = cells
-            header_line_idx = idx
-            # "확정값" 열 인덱스 식별
-            for ci, cell in enumerate(cells):
-                if "확정값" in cell:
-                    confirmed_col_idx = ci
-                    break
-            # 미발견 시 폴백: 라벨 다음(인덱스 1) 셀
-            if confirmed_col_idx is None and len(cells) >= 2:
-                confirmed_col_idx = 1
-            break
+        header_cells = cells
+        header_line_idx = idx
+        break
 
-    if header_cells is None or confirmed_col_idx is None:
+    if header_cells is None:
         return None  # 표 부재
+    return section_lines, header_cells, header_line_idx
 
-    # 4) 데이터 행 파싱 — 첫 셀이 4요소 키워드를 포함하면 {라벨: 확정값셀}
+
+def _parse_clarification_table(lines):
+    """TASK.md "## 명확화 결과" 섹션의 표를 파싱.
+
+    반환: {element_label: confirmed_value_cell_text} 딕셔너리.
+    섹션/표 부재 시 None 반환 (호출자가 graceful skip).
+    "확정값" 열을 헤더에서 식별; 없으면 라벨 다음(2번째) 셀을 확정값으로 폴백.
+
+    [098] `_locate_clarification_table`(표 탐색)을 호출하는 얇은 래퍼 — 기존
+    dict 반환 계약은 그대로 유지한다(H-8, 하위호환 파서 무접촉).
+    """
+    located = _locate_clarification_table(lines)
+    if located is None:
+        return None
+    section_lines, header_cells, header_line_idx = located
+
+    # "확정값" 열 인덱스 식별. 미발견 시 폴백: 라벨 다음(인덱스 1) 셀
+    confirmed_col_idx = None
+    for ci, cell in enumerate(header_cells):
+        if "확정값" in cell:
+            confirmed_col_idx = ci
+            break
+    if confirmed_col_idx is None and len(header_cells) >= 2:
+        confirmed_col_idx = 1
+    if confirmed_col_idx is None:
+        return None  # 표 부재(열 2개 미만)
+
+    # 데이터 행 파싱 — 첫 셀이 4요소 키워드를 포함하면 {라벨: 확정값셀}
     result = {}
     for line in section_lines[header_line_idx + 1:]:
         stripped = line.strip()
@@ -2319,10 +2340,228 @@ def _check_clarification_gate(task_md_path):
     return missing
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# 근거 등급 확정/미확정 판정 (098 F-003, PLAN §3.3.2)
+# ─────────────────────────────────────────────────────────────────────────────
+
+# 인용 토큰 추출 — 인라인 코드 스팬(백틱)·마크다운 링크·단축 참조(→ D-N ...) 3종.
+# 백틱 스팬에 괄호 주석이 바로 동반되면(예: `path`(`func`)) 앞뒤 백틱 스팬과 그
+# 괄호를 통째로 소비해 괄호 내용은 별도 토큰으로 취급하지 않는다.
+_CITATION_TOKEN_RE = re.compile(
+    r"\[[^\]]*\]\([^)]+\)"      # ③ 마크다운 링크
+    r"|\(→[^)]*\)"               # ④ 단축 참조
+    r"|`[^`]+`(?:\([^)]*\))?"    # ①·② 인라인 코드 스팬 (+ 선택적 괄호 주석 폐기)
+)
+
+# 형식① `경로:N` / `경로:N-M` 판별
+_CITATION_LINE_RE = re.compile(r"^(.+):(\d+)(?:-\d+)?$")
+
+# 등급 패턴 기본 세트(1차, PLAN §3.3.2) — E1(실행 관측)·E3(생성 코드)은 경로
+# 패턴으로 판별 불가하므로 자동 부여 대상이 아니다(unknown으로 귀결, H-11).
+_EVIDENCE_GRADE_PATTERNS = (
+    ("E5", (".opal/brain/**", ".opal/code-scan.json", "*code-map*")),
+    ("E4", ("docs/**", "*.md")),
+    ("E2", ("**/tests/**", "test_*.py", "*.py", "*.ts", "*.tsx", "*.js", "*.sh", "*.json")),
+)
+
+
+def _extract_citations(cell):
+    """'의존 사실' 셀에서 인용 토큰 원문 목록을 추출한다.
+    백틱 밖 산문·단독 괄호 주석은 경로 후보가 아니다 — 백틱 안 경로 스팬 또는
+    마크다운 링크·단축 참조만 취한다. 셀이 비었거나 '-'이면 [] 반환."""
+    if not cell or not cell.strip() or cell.strip() == "-":
+        return []
+    tokens = []
+    for m in _CITATION_TOKEN_RE.finditer(cell):
+        text = m.group(0)
+        if text.startswith("`"):
+            tokens.append(re.match(r"`[^`]+`", text).group(0))  # 앞 스팬만(괄호 주석 폐기)
+        else:
+            tokens.append(text)
+    return tokens
+
+
+def _grade_path_pattern(path):
+    """경로 문자열 → 등급('E5'|'E4'|'E2'|'unknown'). 매칭 패턴 없으면 'unknown'."""
+    for grade, patterns in _EVIDENCE_GRADE_PATTERNS:
+        if any(fnmatch.fnmatch(path, pat) for pat in patterns):
+            return grade
+    return "unknown"
+
+
+def _resolve_citation_exists(path, line_no, root=None):
+    """프로젝트 루트(`root`) 기준 경로 존재 판정.
+    line_no 지정(형식①): 파일 존재 AND line_no <= 파일 총 줄수.
+    line_no 미지정(형식②): 경로 존재만(파일/디렉토리 무관), §N 유효성은 미검사.
+    절대경로·'..' 이탈 토큰은 `_is_safe_artifact_token` 재사용으로 미존재 처리
+    (fail-safe — PLAN §5.4 보안 요구). `root`는 호출자(`_check_evidence_gate`)가
+    1회 계산해 전달한다(098 ADD-2 — 배포 경로에서도 등가 판정). `root`가
+    None이면(호출자 전달 실패) 기존 fail-safe대로 미존재 처리한다."""
+    if not _is_safe_artifact_token(path):
+        return False
+    if root is None:
+        return False
+    target = root / path
+    if line_no is None:
+        return target.exists()
+    if not target.is_file():
+        return False
+    try:
+        with target.open("r", encoding="utf-8", errors="replace") as f:
+            total_lines = sum(1 for _ in f)
+    except OSError:
+        return False
+    return line_no <= total_lines
+
+
+def _grade_citation(raw, root=None):
+    """인용 토큰 원문 → (grade, exists). PLAN §3.3.2 인용 형식별 파싱 계약 4종.
+
+    ① `경로:N`/`경로:N-M` — 경로 패턴 매핑 등급 + 파일·줄 실존 검사.
+    ② `` `경로` §N `` (및 §N 없는 바른 백틱 경로) — 경로 패턴 매핑 등급 + 경로
+       존재만(§N 유효성 미검사).
+    ③ `[사이트명](URL)` — 네트워크 접근 금지, grade:'unknown' exists:None.
+    ④ `(→ D-N §N)` 단축 참조 — 테이블 역참조 미해석, grade:'unknown' exists:None.
+    디렉토리 없는 파일명 단독 토큰(경로에 '/' 없음)은 저장소 탐색을 수행하지
+    않고 grade:'unknown' exists:None으로 반환한다. `root`는 호출자가 1회
+    계산한 프로젝트 루트를 그대로 `_resolve_citation_exists`로 릴레이한다
+    (098 ADD-2)."""
+    if raw.startswith("[") or raw.startswith("(→"):
+        return "unknown", None
+
+    inner = raw[1:-1] if raw.startswith("`") and raw.endswith("`") else raw
+    m = _CITATION_LINE_RE.match(inner)
+    if m:
+        path, line_no = m.group(1), int(m.group(2))
+    else:
+        path, line_no = inner, None
+
+    if "/" not in path:
+        return "unknown", None
+
+    grade = _grade_path_pattern(path)
+    exists = _resolve_citation_exists(path, line_no, root)
+    return grade, exists
+
+
+def _has_decision_tag(cell):
+    """확정값 셀에 캡틴의 `[결정]` 태그가 있는지 확인 — 결정은 근거 판정
+    대상이 아니다(PLAN §3.3.2, TASK.md §확정된 설계 방향 (5))."""
+    return "[결정]" in (cell or "")
+
+
+def _evaluate_evidence_item(confirmed_cell, dependency_cell, root=None):
+    """항목 1건 판정 — 도구 4축(① 인용 존재 ② 인용 유효 ③ 등급 부여 ④ E5 단독
+    아님). 반환: (verdict, reasons, citations).
+
+    [결정] 태그가 확정값 셀에 있으면 근거 없이도 확정 유지(축 판정을 건너뛴다).
+    ③④ 및 grade:'unknown' 토큰은 "E5 아닌 근거"로 계수해 e5_sole_citation
+    오탐을 방지한다. `root`는 호출자가 1회 계산한 프로젝트 루트를
+    `_grade_citation`으로 릴레이한다(098 ADD-2)."""
+    if _has_decision_tag(confirmed_cell):
+        return "확정", [], []
+
+    raws = _extract_citations(dependency_cell)
+    if not raws:
+        return "미확정", ["citation_missing"], []
+
+    citations = []
+    for raw in raws:
+        grade, exists = _grade_citation(raw, root)
+        citations.append({"raw": raw, "grade": grade, "exists": exists})
+
+    # 인용 중 하나라도 "유효 등급(E2/E4) + 실존"이면 그 인용 하나로 확정된다 —
+    # E5는 단독으로 확정시키지 못하고(④), 다른 인용의 존재 실패는 확정 인용이
+    # 있으면 전체를 끌어내리지 않는다(S-35 양성 대조군).
+    if any(c["grade"] in ("E2", "E4") and c["exists"] is True for c in citations):
+        return "확정", [], citations
+
+    reasons = []
+    if any(c["exists"] is False for c in citations):
+        reasons.append("citation_path_not_found")
+
+    non_unknown = [c for c in citations if c["grade"] != "unknown"]
+    if not non_unknown:
+        reasons.append("grade_unknown")
+
+    e5_citations = [c for c in citations if c["grade"] == "E5"]
+    non_e5_evidence = [c for c in citations if c["grade"] != "E5"]
+    if e5_citations and not non_e5_evidence:
+        reasons.append("e5_sole_citation")
+
+    return "미확정", reasons, citations
+
+
+def _check_evidence_gate(task_md_path):
+    """TASK.md '## 명확화 결과' 표를 근거 등급 4축으로 판정한다(PLAN §3.3.2).
+
+    반환: {"items":[{element,verdict,reasons,citations}], "confirmed_ratio": float,
+    "unconfirmed": [element,...]}. 섹션/표/'의존 사실' 열 부재 시 None(호출자가
+    graceful skip). `unknown` 등급은 confirmed_ratio에서 미확정으로 계상한다
+    (분자 제외·분모 포함) — 도구는 차단하지 않는다(exit 0 유지).
+
+    098 ADD-2: 인용 실존 판정용 프로젝트 루트를 여기서 1회 계산해 각 항목으로
+    전달한다 — `task_md_path`(실제 태스크 경로) 기준 파생을 우선 시도하고
+    (배포본이 `~/.opal/tools/state-tool/`에 있어도 태스크 경로는 항상 실제
+    프로젝트 안에 있으므로 정상 판정), 실패 시 기존 `__file__` 기준 파생으로
+    폴백한다(테스트 픽스처처럼 태스크 경로가 프로젝트 밖 임시 디렉토리인
+    경우의 하위호환)."""
+    root = (find_project_root(task_md_path)
+            or find_project_root(str(pathlib.Path(__file__).resolve())))
+    lines = task_md_path.read_text(encoding="utf-8").splitlines()
+    located = _locate_clarification_table(lines)
+    if located is None:
+        return None
+    section_lines, header_cells, header_line_idx = located
+
+    confirmed_col_idx = None
+    dependency_col_idx = None
+    for ci, cell in enumerate(header_cells):
+        if confirmed_col_idx is None and "확정값" in cell:
+            confirmed_col_idx = ci
+        if dependency_col_idx is None and "의존" in cell:
+            dependency_col_idx = ci
+    if confirmed_col_idx is None and len(header_cells) >= 2:
+        confirmed_col_idx = 1
+    if confirmed_col_idx is None or dependency_col_idx is None:
+        return None  # 확정값/의존 사실 열 부재 — 레거시 스키마, graceful skip
+
+    items = []
+    for line in section_lines[header_line_idx + 1:]:
+        stripped = line.strip()
+        if not stripped.startswith("|"):
+            continue
+        if re.match(r"^\|[\s\-:]+\|", stripped):
+            continue
+        cells = [c.strip() for c in stripped.split("|")]
+        cells = cells[1:-1] if len(cells) > 2 else cells
+        if not cells:
+            continue
+        label = cells[0]
+        elem = next((e for e in _CLARIFICATION_ELEMENTS if e in label), None)
+        if elem is None:
+            continue
+        confirmed_cell = cells[confirmed_col_idx] if confirmed_col_idx < len(cells) else ""
+        dependency_cell = cells[dependency_col_idx] if dependency_col_idx < len(cells) else ""
+        verdict, reasons, citations = _evaluate_evidence_item(confirmed_cell, dependency_cell, root)
+        items.append({
+            "element": elem, "verdict": verdict, "reasons": reasons, "citations": citations,
+        })
+
+    if not items:
+        return None  # 데이터 행 부재 — graceful skip
+
+    confirmed_count = sum(1 for it in items if it["verdict"] == "확정")
+    ratio = confirmed_count / len(items)
+    unconfirmed = [it["element"] for it in items if it["verdict"] != "확정"]
+    return {"items": items, "confirmed_ratio": ratio, "unconfirmed": unconfirmed}
+
+
 def cmd_verify(args):
     """PLAN 013 §verify — TEST-SCENARIO.md mock 코드 패턴 + 증거 누락 검사.
     016 확장: --red-check(RED 증거 게이트) / --fix-mode(테스트 불변성).
     005 확장: --clarification-check(TASK 4요소 잠금 게이트).
+    098 확장: --evidence-check(근거 등급 확정/미확정 판정 라우터, 차단 없음).
     대상 파일 부재 시 doc-only skip (ok).
     """
     command = "verify"
@@ -2333,7 +2572,12 @@ def cmd_verify(args):
     changed_files = getattr(args, "changed_files", None) or []
     test_globs = getattr(args, "test_globs", None)
     clarification_check = getattr(args, "clarification_check", False)
+    evidence_check = getattr(args, "evidence_check", False)
     task_md_arg = getattr(args, "task_md", None)
+
+    # 098 — 두 게이트 플래그 동시 지정 거부 (무성 무시 방지, PLAN §3.3.2)
+    if clarification_check and evidence_check:
+        err(command, "evidence_check_flag_conflict")
 
     # 005 — TASK 4요소 잠금 게이트 (fix_mode와 같은 조기 반환 패턴 — 독립 분기)
     if clarification_check:
@@ -2360,6 +2604,37 @@ def cmd_verify(args):
         print(json.dumps({
             "ok": True, "command": command,
             "clarification_check": "pass",
+        }, ensure_ascii=False))
+        sys.exit(0)
+
+    # 098 — 근거 등급 확정/미확정 판정 라우터 (clarification_check 뒤·fix_mode 앞,
+    # 기존 조기 반환 순서 불변)
+    if evidence_check:
+        task_md_path = _find_task_md(task_path, task_md_arg)
+        if task_md_path is None:
+            # 정책 A(graceful skip): TASK.md 파일 부재 → skip ok
+            print(json.dumps({
+                "ok": True, "command": command,
+                "evidence_check": "skipped",
+                "reason": "TASK.md not found (backward-compat skip)",
+            }, ensure_ascii=False))
+            sys.exit(0)
+        gate = _check_evidence_gate(task_md_path)
+        if gate is None:
+            # 정책 A(graceful skip): 섹션/표/'의존 사실' 열 부재 → skip ok
+            print(json.dumps({
+                "ok": True, "command": command,
+                "evidence_check": "skipped",
+                "reason": "no '## 명확화 결과' section or '의존 사실' column (backward-compat skip)",
+            }, ensure_ascii=False))
+            sys.exit(0)
+        status = "pass" if gate["confirmed_ratio"] >= 1.0 else "routed"
+        print(json.dumps({
+            "ok": True, "command": command,
+            "evidence_check": status,
+            "items": gate["items"],
+            "confirmed_ratio": gate["confirmed_ratio"],
+            "unconfirmed": gate["unconfirmed"],
         }, ensure_ascii=False))
         sys.exit(0)
 
@@ -2601,6 +2876,10 @@ def build_parser():
                        help="TASK 4요소 잠금 게이트 — 미충족 시 clarification_gate_unmet (PRINCIPLES §1 집행)")
     p_vfy.add_argument("--task-md", metavar="<path>", dest="task_md",
                        help="TASK.md 경로 명시 (기본: <task-path>/TASK.md)")
+    # 098 근거 등급 확정/미확정 판정 게이트
+    p_vfy.add_argument("--evidence-check", action="store_true", dest="evidence_check",
+                       help="근거 등급 확정/미확정 판정 라우터 — 항목별 판정+사유를 "
+                            "반환하되 차단하지 않음(exit 0 유지, PLAN §3.3.2)")
     p_vfy.set_defaults(func=cmd_verify)
 
     return parser

@@ -102,6 +102,8 @@
 
 > 나머지 워커 5종은 각 파이프라인 섹션에 등재된다 — `opal-db-agent`(Data Design) · `opal-evaluator-agent`·`opal-loop-action-agent`(Project Loop) · `opal-security-checker`·`opal-convention-checker`(GC).
 
+> **트랙 라우팅 (Task 098)**: `//opd` 호출이어도 4축(설계 확정률·예상 변경 파일 수·신규 개념 유무·최고 검증 계층)을 전건(AND) 충족하면 `opds`로 자동 강등 진입한다. 판정 시점은 TASK 완료 직후 1회이며, 승격(`opds`→`opd`, PLAN 결과 시점)과 시점·임계가 상호배타여서 왕복 구조가 성립하지 않는다. 판정 불능·`## 확정된 설계 방향` 부재 시 fail-safe는 강등 불발(`opd` 유지)이다. 강등은 소유자 승인 왕복 없이 진입하고 4축 실측값을 사후 통보한다. 접합: opd STEP 1 직후 · opds §에스컬레이션 규칙 포인터. 임계값 수치는 SSOT에만 존치 — SSOT: `opal/core/references/harness/track-routing.md`.
+
 ## 주요 컴포넌트 (SDD 파이프라인)
 
 | 컴포넌트 | 약어 | 유형 | 설명 |
@@ -234,6 +236,7 @@ TEST-SCENARIO 단계를 "목표 달성 검증"으로 재정의 — 루브릭 채
 
 | 날짜 | 변경 내용 |
 |------|----------|
+| 2026-08-21 22:18 | §주요 컴포넌트 (Dev 파이프라인)에 **트랙 라우팅** 항목 신설 — `opal/core/references/harness/track-routing.md`(규칙 SSOT) 등재. `//opd` 4축 AND 자동 강등, 판정 시점 분리(강등=TASK 직후 / 승격=PLAN 결과)로 승격 규칙과 상호배타, fail-safe는 강등 불발. 임계값 수치는 SSOT 단독 보유(복제 0건) (098) |
 | 2026-08-21 15:30 | 문서 레지스트리 `docs/CONVENTIONS.md` 행 정합 — 용도 서술의 `커밋 규칙`을 `커밋 메시지 형식·단위`로 정정하고 구현 규칙 열거에서 `Guards/`를 제거. Guards 규칙 원문 소유권이 `opal/core/references/opal-harness.md` §1임을 명시해, CONVENTIONS.md 포인터화(v1.7.0)와의 내부 모순을 해소 (097) |
 | 2026-08-16 15:55 | STATE.md 저널화 반영 — 3-SSOT 각주에서 "사람 뷰는 자동 렌더" 전제 제거. `BACKLOG.md`는 자동 렌더 유지, `state.json` 현황 조회는 `state-tool show`로 명시(STATE.md는 의사결정 로그·블로커 저널) (Task 094) |
 | 2026-08-15 16:35 | `worktree-tool` 신설 반영 — 폴더 구조맵 `opal/tools/` 행 18종 → **19종**. 태스크별 코드 작업공간 격리(`--worktree`/`--wt` 축) 집행 도구 (Task 092) |

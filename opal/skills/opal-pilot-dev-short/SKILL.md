@@ -247,6 +247,8 @@ TASK.md 작성 완료 시점에서 아래 조건이 **명백히** 해당하면, 
 
 > **주의**: 조기 에스컬레이션은 TASK.md만으로 **명백히** 판단 가능한 경우에만 적용한다. 불확실하면 PLAN을 진행하여 정확한 판별을 받는다.
 
+> **참고**: 하향 강등(`opd`→`opds`)은 `opal/core/references/harness/track-routing.md`(SSOT)가 별도로 규정하며, 판정 시점이 TASK 직후(강등)/PLAN 결과(본 절 승격)로 분리되어 상호배타 — 아래 승격 규칙과 충돌하지 않는다.
+
 ### PLAN 결과 에스컬레이션 (기존)
 
 op-dev-plan 결과에서 아래 조건이 감지되면 **Full Task(opal-pilot-dev) 전환을 제안**한다:
@@ -389,3 +391,4 @@ semi-agentic / agentic 모두 CLOSE 첫 행 `--auto-pass` 거부 (`agentic_close
 | v4.7 | 2026-08-16 13:30 | 사용자 확인 (P-5) 2건(plan/test) 산문을 모드 무분기 명령형 → 모드 분기 서술로 교체 — 자동 승인 구간(agentic 전 구간 / semi-agentic EXECUTE-equivalent 이후)은 PM 미호출·도구 자동 승인, 그 외 구간은 기존 mark 호출 유지. 지점별 --task-step 키·근거 인용 보존 (094 R-11 G-4). STEP 1 "[MUST] 행 갱신" 서술의 표 전제("LLM이 STATE.md 마크다운 표를 직접 편집하는 것은 금지된다")를 표준 문구 A("파이프라인 행 상태 변경은 `state-tool`로만 수행, `state.json` 직접 편집 금지, 조회는 `state-tool show`")로 치환 — STATE.md가 파생 표를 렌더하지 않는 저널로 재정의됨에 따른 정합(094 R-6/R-7, Step 8) |
 | v4.8 | 2026-08-19 21:10 | STEP 2에 목표계열 선작성 3단계 배선 — (a) PLAN 디스패치와 동시 선작성 착수 (b) PLAN.md 수신 후 Block B 보강(수정·삭제 포함) (c) 보강 완료 후 게이트 1회 호출 + `plan.scenario_gate` mark 시점 명시. 규칙 본문 0줄(SSOT 포인터만), pipeline.json·PM Gate 체크리스트 무변경 (095) |
 | v4.9 | 2026-08-21 15:19 | §[PM 컨텍스트 주입] 블록 2건(PLAN·TEST 디스패치)을 `pm/dispatch-process.md` §워커 컨텍스트 주입 템플릿 포인터로 일원화 — 주입 항목 열거(하네스 Guards·참조 문서·기술 스택 3항목)를 제거하고 SSOT 참조 1줄로 대체. 전 워커 공통 고정(git 이력 변경 금지 포함)이 파일럿 종류와 무관하게 도달하도록 함 (097) |
+| v5.0 | 2026-08-21 22:15 | 에스컬레이션 규칙에 하향 강등(`opd`→`opds`) SSOT 포인터 1줄 추가 — `opal/core/references/harness/track-routing.md` 참조, 판정 시점 분리(강등=TASK 직후/승격=PLAN 결과)로 상호배타임을 명시. 승격 임계값 표·문장 무변경 (098) |

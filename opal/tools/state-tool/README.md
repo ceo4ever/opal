@@ -255,6 +255,61 @@
 
 ---
 
+### `verify` — TEST-SCENARIO.md 검증 + TASK 게이트 (013/016/005/098)
+
+`10개 서브 명령`과 별개로 동작하는 검증 전용 명령. task-path 하나에 여러 독립
+분기(mock 패턴/증거 누락 검사, `--red-check`, `--fix-mode`, `--clarification-check`,
+`--evidence-check`)가 있으며 각 분기는 조기 반환한다 — 동시 지정 가능 조합은
+플래그별 계약을 따른다(`--clarification-check`와 `--evidence-check`는 동시 지정
+불가, 아래 참조).
+
+```bash
+~/.opal/tools/state-tool/run.sh verify <task-path> --evidence-check [--task-md <path>]
+```
+
+- `--evidence-check`: TASK.md `## 명확화 결과` 표의 `의존 사실` 셀을 근거 등급
+  4축(① 인용 존재 ② 인용 유효(경로·줄 실존) ③ 등급 부여 ④ E5 단독 아님)으로
+  판정하여 항목별 확정/미확정 + 사유를 반환하는 **라우터**다 — 미충족이어도
+  차단하지 않는다(exit code 항상 0). PM이 반환된 `unconfirmed`를 검토해 판단으로
+  확정 승격할 수 있다(098, PLAN §3.3.2).
+- `--task-md <path>`: TASK.md 경로 명시(기본 `<task-path>/TASK.md`).
+- `--clarification-check`와 동시 지정 시 `evidence_check_flag_conflict`로 거부(exit 1) — 같은 표를 서로 다른 반환 계약(차단형/라우터형)으로 동시에 소비할 수 없다.
+- TASK.md 부재, `## 명확화 결과` 섹션/표 부재, `의존 사실` 열 부재는 모두 하위호환
+  graceful skip(`evidence_check: "skipped"`, exit 0) — 레거시 TASK.md 회귀 없음.
+- 인용 형식 4종: `` `경로:N` ``/`` `경로:N-M` `` (등급 매핑 + 파일·줄 실존 검사) /
+  `` `경로` §N `` (등급 매핑 + 경로 존재만) / `[사이트명](URL)` (네트워크 접근
+  금지, `grade:"unknown"`) / `(→ D-N §N)` 단축 참조(테이블 역참조 미해석,
+  `grade:"unknown"`). 디렉토리 없는 파일명 단독 토큰(`/` 없음)도 저장소 탐색 없이
+  `grade:"unknown"`.
+- 등급 패턴 기본 세트(1차): `.opal/brain/**`·`.opal/code-scan.json`·`*code-map*` →
+  E5 / `docs/**`·`*.md` → E4 / `**/tests/**`·`test_*.py` 및 코드 확장자(`.py .ts
+  .tsx .js .sh .json`) → E2 / 그 외 → `unknown`. E1(실행 관측)·E3(생성 코드)은
+  경로 패턴으로 판별 불가하므로 자동 부여 대상이 아니다(항상 `unknown`).
+- `unknown` 등급은 `confirmed_ratio` 계산에서 미확정으로 계상한다(분자 제외·
+  분모 포함) — 근거 없음은 완료가 아니라는 원칙의 도구 집행이다.
+
+**성공 응답(라우터)**:
+```json
+{
+  "ok": true, "command": "verify", "evidence_check": "routed",
+  "items": [
+    {"element": "목표", "verdict": "확정", "reasons": [],
+     "citations": [{"raw": "`opal/tools/state-tool/state_tool.py:100`", "grade": "E2", "exists": true}]},
+    {"element": "제약", "verdict": "미확정", "reasons": ["citation_missing"], "citations": []}
+  ],
+  "confirmed_ratio": 0.5, "unconfirmed": ["제약", "완료기준"]
+}
+```
+`evidence_check`는 `"pass"`(confirmed_ratio 1.0) / `"routed"`(일부 미확정) /
+`"skipped"`(graceful skip) 중 하나이며, exit code는 항상 0이다.
+
+**플래그 충돌 응답**:
+```json
+{"ok": false, "command": "verify", "error": "evidence_check_flag_conflict", "message": "..."}
+```
+
+---
+
 ## `--rows-spec` 입력 형식
 
 ```bash
@@ -278,7 +333,7 @@
 
 ---
 
-## 에러 코드 카탈로그 (44종 실측 SSOT — PLAN §2.18 E-1 + 070 R-1/R-4/R-9 + 091 F-004 R-10/R-11 + 093 F-004 R-4 + 094 R-3/R-4/R-9)
+## 에러 코드 카탈로그 (45종 실측 SSOT — PLAN §2.18 E-1 + 070 R-1/R-4/R-9 + 091 F-004 R-10/R-11 + 093 F-004 R-4 + 094 R-3/R-4/R-9 + 098 F-003 R-4)
 
 > 종수는 `len(ERROR_CODES)`(`state_tool.py`) 실측값이 기준이다 — 이 헤더 숫자를 리터럴로 신뢰하지 말고 코드 실측으로 재검증할 것(094 R-9 ①, S-7/S-15).
 
@@ -328,6 +383,7 @@
 | 42 | `spec_gate_field_type_invalid` | spec-validate / init --rows-from(.json) | 1 | `task_steps[].gate` 필드 타입 오류(문자열 배열 필요) (091) |
 | 43 | `spec_gate_checklist_empty` | spec-validate / init --rows-from(.json) | 1 | `task_steps[].gate.checklist`가 비어 있음 (091) |
 | 44 | `user_confirmation_required` | advance/mark | 1 | 자동 승인 불가 구간의 사용자 확인 행 — 캡틴 승인 필요 (093) |
+| 45 | `evidence_check_flag_conflict` | verify --evidence-check | 1 | `--evidence-check`와 `--clarification-check` 동시 지정 — 두 게이트 계약 충돌 (098) |
 
 > `spec-validate` 서브 명령 자체의 violations[] 내부 코드(`spec_missing_field`/`spec_skill_invalid`/`spec_stage_invalid`/`spec_key_format_invalid`/`spec_key_duplicate`/`spec_id_sequence_invalid`/`spec_key_stage_mismatch`)는 `cmd_validate`의 `schema_violation`처럼 인라인 문자열로 쓰이며 ERROR_CODES 템플릿을 거치지 않는다(070 §3.1.2). (`spec_gate_*` 4종은 동일하게 violations[]에 인라인 append되지만 ERROR_CODES에 등록되어 있어 위 카탈로그에 포함된다 — 091이 만든 예외.)
 
@@ -361,3 +417,4 @@
 | v1.5 | 2026-07-20 15:45 | (070) | task-step 키 주소 체계 도입 1차 — `spec-validate` 서브명령 신설(10종), `pipeline-spec.schema.json` 신설, `init --rows-from` `.json`/`.md` 확장자 분기(json 스펙 로딩 시 rows[].key·conditional 영속, md는 deprecation 경고), `state.schema.json` 1.1 병행(rows[].key·conditional 선택 필드, schema_version enum), `--task-step`/`--task-step-id`/`--row`(deprecated)/`--action-step`(구 `--step` 별칭) 신설(advance/mark/block), `--after-task-step`/`--after-task-step-id`/`--key`(add-row), opdd skill·DICT/MODEL/DDL·MIGRATION stage enum 등록, ERROR_CODES 8종 추가(39종) |
 | v1.6 | 2026-07-23 12:09 | (072) | STATE.md "다음 액션" 자동 파생 — `state.json` `next_action` 필드 신설(init 영속화, `state.schema.json` optional 등록), `advance`/`mark` 프론티어(첫 미완료 행) 자동 파생·`update_next_action_section`(첫 줄만 치환, 하위 자유기재 보존), `advance`/`mark` `--next-action` per-transition 오버라이드(비지속 — 다음 전이 자동 파생 복귀). `## 블로커`는 기존대로 PM 수동 갱신 |
 | v1.7 | 2026-08-16 13:15 | (094) | STATE.md 저널화에 따른 문서 재정합(R-4 문서 + R-9 ①③) — 에러 카탈로그 재실측(`marker_missing`/`import_failed` 삭제, `import_existing_removed` 추가, 39종 표기 → **44종 실측값**으로 정정 및 091/093 누락 행(`gate_artifact_missing`/`spec_gate_*`/`user_confirmation_required`) 보강, 행 번호 전체 재부여); `init --import-existing` 사용 안내 제거 — 항상 `import_existing_removed`로 거부됨을 명시(인자는 `help=SUPPRESS`로 존치, 설계 의도 기술); `validate` 검증 항목·응답 예시에서 `marker_missing` 서술 제거; `show` 절을 `cmd_show` 재설계(R-5/D-4)에 맞춰 재작성 — `md`/`full` 모두 마커 유무와 무관하게 `state.json` 단일 파생 렌더, 레거시 마커 잔존 시 배너 1줄 prepend, `marker_present` 필드 의미 재해석(레거시 동결 표 잔존 신호) 1줄 추가 |
+| v1.8 | 2026-08-21 18:04 | (098) | `verify --evidence-check` 신설(F-003, PLAN §3.3.2) — TASK.md `## 명확화 결과` 표의 `의존 사실` 셀을 근거 등급 4축으로 판정해 항목별 확정/미확정+사유를 반환하는 라우터(exit 0 유지, 미확정도 차단하지 않음) 신규 절 추가; 에러 코드 44→**45종**(`evidence_check_flag_conflict` — `--evidence-check`/`--clarification-check` 동시 지정 거부) 반영해 카탈로그 헤더·표 정정 |

@@ -3,7 +3,7 @@
   "module": "test_state_tool",
   "layer": "test",
   "domain": "opal-pipeline",
-  "description": "state-tool 단위 테스트 — 9개 명령 happy path + 23종 에러 코드 × 최소 1건 + G-5~G-15 시나리오. 005: TestClarificationGate 신설 — verify --clarification-check + TASK→다음단계 자동 훅 RED-first 케이스 ①~⑨ + 회귀 보호. 054: TestOwnerNamePlaceholder 신설 — note '{owner_name}' 플레이스홀더 identity.md write-time 치환 RED-first(S-1~S-7). 056: TestOpplSkillInit 신설 — `--skill oppl` enum 미등록 RED-first(S-020, H-1) — run.sh subprocess 실호출로 공개 인터페이스만 검증(mock 미사용). 070: task-step 키 주소 체계 도입 1차 RED-first — TestPipelineSpecValidate/TestPipelineJsonInit/TestStateSchema11Compat/TestTaskStepAddressing/TestActionStepRename/TestAddRowKey/TestOpddEnumDrift/TestGroupAPipelineSpecs/TestBackwardCompatAliases 9종 신설(TEST-SCENARIO.md S-1~S-14, PLAN §3.7.2) — 미구현 기능이므로 전부 FAIL 기대(RED 증거). 072: TestNextActionAutoDerive 신설 — STATE.md '다음 액션' 자동 파생 RED-first(TEST-SCENARIO.md S-1~S-4,S-6,S-7) — init next_action 영속화+schema optional 등록, advance/mark 프론티어 파생(pending '진입'/in_progress '진행 중'/전체완료 '태스크 완료'), 첫 줄만 치환(하위 자유기재 보존), --next-action 오버라이드 우선+비지속 복귀 — 공개 CLI 경로(직접 호출+run.sh subprocess)로만 검증, 미구현이므로 실패 기대(RED 증거). 074: TestImportPreservesKeys 신설 — `--import-existing` task-step key 유실 결함 RED-first(TEST-SCENARIO.md S-a~S-e) — force+import-existing 후 rows[].key 100% 보존, pipeline.json 폴백 복원, key 원천 전무 시 keyless+stderr 경고(하위호환), schema_version 1.1 유지, 동일 (stage,item) 중복 순서 소비 — 공개 cmd_init 호출 + 실 파일 I/O로만 검증, 수정 전 코드에서 FAIL 기대(RED 증거). 076: TestTodoMirror 신설 — build_todo_mirror 파생 규칙(TS-001~007): init create 페이로드·전부pending→pending·전부done→completed·advance/부분→in_progress·na 중립·블로커 in_progress 유지·영속 경계(state.json 미영속+schema validate 통과) — 공개 cmd_init/advance/mark/block ok() stdout 페이로드 캡처로만 검증. 088: TestCloseHistoryLink 신설(TS-1~TS-7) — CLOSE 마지막 행 mark 시 link_memory_history()가 <프로젝트루트>/.opal/MEMORY.json history에 행을 자동 생성(title/path/stage/result 파생값, date는 memory-tool KST 충전)·재mark 멱등(duplicate_skipped)·MEMORY.json 부재/손상 시 비차단(ok:true + skipped/failed)·비CLOSE 행 무발동 대조군·result 보강 리마인더 구성요소·state.json 영속 경계(schema validate 통과) — 공개 cmd_mark 호출 + 실 MEMORY.json 파일 내용으로만 검증(내부 함수 mock 없음, 블랙박스 결함 주입). 091(RED-first, mode:red, F-004 게이트 집행 배선): TestTaskStepGate 신설(TEST-SCENARIO S-10~S-17) — check_gate_artifacts()/build_gate_payload()가 아직 없어(Step 8 GREEN 이전) 실 pipeline.json(opd/opdw/opsdd) 기반 gate 정의를 state.json 행에 직접 주입하는 픽스처로 산출물 부재 차단(H-1)·부분 상태 변경 부재·checklist dict 페이로드(H-6)·gate 없는 행 무영향(H-2/H-3)·빈 artifacts 비차단(opdw 실사례)·--force --note 우회 의사결정 로그(H-5)·경로 이탈 토큰 거부(H-4)·glob 토큰 매칭(opsdd 실사례)을 검증(공개 cmd_mark 호출 + 실 state.json/STATE.md 파일 내용, mock 없음). TestPipelineSpecValidate에 gate violation 4종(spec_gate_type_invalid/spec_gate_missing_field/spec_gate_field_type_invalid/spec_gate_checklist_empty, S-9) 케이스 + 실 pipeline.json 10종 유효성 케이스 추가. TestErrorCodesCompleteness에 091 신규 5종 반영(39→44). 093(RED-first, mode:red, 사용자 확인 행 자동 승인 경로 일원화): TestT093AutoNaRemoval/TestT093AutoApproveHook/TestT093AutoApproveBoundary/TestT093HookGuardOrder/TestT093MarkIdempotency/TestT093NaBackwardCompat/TestT093SingleDecisionSource 7종 신설(TEST-SCENARIO S-1~S-18·S-24~S-26) — init 시점 agentic auto-na 제거 후 전 모드 pending/PM 동형성(S-2~S-4), 다음 단계 진입 시 auto_approve_prior_user_confirmations 훅 자동 승인(S-1/S-5/S-13/S-26), CLOSE·워커 경로 구조적 제외(S-6~S-9), user_confirmation_required 전용 에러(S-12/S-24), 훅→후속 가드 순서와 파일 미오염(S-10/S-11), mark 접두 멱등·재-auto-pass no-op(S-15/S-16), MODE_BOUNDARY_STAGES 단일 판정 수렴(S-25), 경계 불변 회귀표 18셀·na 하위호환(S-14/S-17/S-18) — worktree run.sh subprocess 실호출 + 실 pipeline.json/state.json 파일 상태로만 검증(mock 미사용), 미구현 기능이므로 신규 계약 케이스는 전부 FAIL 기대(RED 증거: RED-EVIDENCE.md). 093 GREEN(Step 9): 구형 계약을 고정하던 기존 테스트를 신규 계약으로 수정 — test_init_agentic_auto_na_user_confirmation→test_init_agentic_user_confirmation_pending, test_rows_from_agentic_auto_na→test_rows_from_agentic_user_confirmation_pending(둘 다 na→pending 단언 교체), test_close_gate_regression_via_task_step_addressing_subprocess(주석 갱신 + CLOSE 직전 사용자 확인 행 row 8 캡틴 승인 단계 추가, 최종 assert 불변), agentic CLOSE 게이트 3건(test_agentic_close_gate_requires_user·test_g13_agentic_close_gate_auto_pass_rejected·test_c6_agentic_auto_pass_close_first_row)에 캡틴 승인 사전 단계 추가, test_new_structure_guard_blocks_skip에 사용자 확인 행 선(先)승인으로 guard 축 격리, test_s13_new_style_row_without_gate_response_unaffected 기대 키 집합에 auto_approved 추가, TestErrorCodesCompleteness 44→45종(user_confirmation_required). 테스트 삭제 0건. 094 R-11 Step0(RED-first, mode:red, agentic 승인 계약 정합): TestR11ModeBoundary/TestR11CloseGateFallback/TestR11DerivedSignals/TestR11Invariants 4종 신설(TEST-SCENARIO S-34~S-37,S-40) — G-1 MODE_BOUNDARY_STAGES에 DICT/MODEL/DDL·MIGRATION 3원소 부재로 semi-agentic opdd 설계 확정 3건이 미노출 통과하는 결함을 3 stage 개별 advance 호출로 판정(부분 구현 방지, S-34), G-2 check_close_gate가 확인 행 0개 파이프라인(opgc)에서 --owner user로도 영구 데드락인 결함(S-35), G-3-a/G-3-b _derive_next_action·build_todo_mirror가 자동 승인 예정 확인 행을 중립 처리하지 않아 next_action 헛 확인·todo 오판정하는 결함(S-36/S-37), R-11 [MUST] 불변 제약(신규 판정 함수 금지·next_action 스키마·build_todo_mirror 시그니처·ERROR_CODES 무접촉) 역검증(S-40) — 실 pipeline.json(opdd/opgc/opd) + run.sh subprocess 실호출 + 실 state.json 파일 상태로만 검증(mock 미사용), 미구현 기능이므로 신규 계약 케이스는 전부 FAIL 기대(RED 증거). 구현(op-be-agent)과 작성자(opal-test-agent) 분리.",
+  "description": "state-tool 단위 테스트 — 9개 명령 happy path + 23종 에러 코드 × 최소 1건 + G-5~G-15 시나리오. 005: TestClarificationGate 신설 — verify --clarification-check + TASK→다음단계 자동 훅 RED-first 케이스 ①~⑨ + 회귀 보호. 054: TestOwnerNamePlaceholder 신설 — note '{owner_name}' 플레이스홀더 identity.md write-time 치환 RED-first(S-1~S-7). 056: TestOpplSkillInit 신설 — `--skill oppl` enum 미등록 RED-first(S-020, H-1) — run.sh subprocess 실호출로 공개 인터페이스만 검증(mock 미사용). 070: task-step 키 주소 체계 도입 1차 RED-first — TestPipelineSpecValidate/TestPipelineJsonInit/TestStateSchema11Compat/TestTaskStepAddressing/TestActionStepRename/TestAddRowKey/TestOpddEnumDrift/TestGroupAPipelineSpecs/TestBackwardCompatAliases 9종 신설(TEST-SCENARIO.md S-1~S-14, PLAN §3.7.2) — 미구현 기능이므로 전부 FAIL 기대(RED 증거). 072: TestNextActionAutoDerive 신설 — STATE.md '다음 액션' 자동 파생 RED-first(TEST-SCENARIO.md S-1~S-4,S-6,S-7) — init next_action 영속화+schema optional 등록, advance/mark 프론티어 파생(pending '진입'/in_progress '진행 중'/전체완료 '태스크 완료'), 첫 줄만 치환(하위 자유기재 보존), --next-action 오버라이드 우선+비지속 복귀 — 공개 CLI 경로(직접 호출+run.sh subprocess)로만 검증, 미구현이므로 실패 기대(RED 증거). 074: TestImportPreservesKeys 신설 — `--import-existing` task-step key 유실 결함 RED-first(TEST-SCENARIO.md S-a~S-e) — force+import-existing 후 rows[].key 100% 보존, pipeline.json 폴백 복원, key 원천 전무 시 keyless+stderr 경고(하위호환), schema_version 1.1 유지, 동일 (stage,item) 중복 순서 소비 — 공개 cmd_init 호출 + 실 파일 I/O로만 검증, 수정 전 코드에서 FAIL 기대(RED 증거). 076: TestTodoMirror 신설 — build_todo_mirror 파생 규칙(TS-001~007): init create 페이로드·전부pending→pending·전부done→completed·advance/부분→in_progress·na 중립·블로커 in_progress 유지·영속 경계(state.json 미영속+schema validate 통과) — 공개 cmd_init/advance/mark/block ok() stdout 페이로드 캡처로만 검증. 088: TestCloseHistoryLink 신설(TS-1~TS-7) — CLOSE 마지막 행 mark 시 link_memory_history()가 <프로젝트루트>/.opal/MEMORY.json history에 행을 자동 생성(title/path/stage/result 파생값, date는 memory-tool KST 충전)·재mark 멱등(duplicate_skipped)·MEMORY.json 부재/손상 시 비차단(ok:true + skipped/failed)·비CLOSE 행 무발동 대조군·result 보강 리마인더 구성요소·state.json 영속 경계(schema validate 통과) — 공개 cmd_mark 호출 + 실 MEMORY.json 파일 내용으로만 검증(내부 함수 mock 없음, 블랙박스 결함 주입). 091(RED-first, mode:red, F-004 게이트 집행 배선): TestTaskStepGate 신설(TEST-SCENARIO S-10~S-17) — check_gate_artifacts()/build_gate_payload()가 아직 없어(Step 8 GREEN 이전) 실 pipeline.json(opd/opdw/opsdd) 기반 gate 정의를 state.json 행에 직접 주입하는 픽스처로 산출물 부재 차단(H-1)·부분 상태 변경 부재·checklist dict 페이로드(H-6)·gate 없는 행 무영향(H-2/H-3)·빈 artifacts 비차단(opdw 실사례)·--force --note 우회 의사결정 로그(H-5)·경로 이탈 토큰 거부(H-4)·glob 토큰 매칭(opsdd 실사례)을 검증(공개 cmd_mark 호출 + 실 state.json/STATE.md 파일 내용, mock 없음). TestPipelineSpecValidate에 gate violation 4종(spec_gate_type_invalid/spec_gate_missing_field/spec_gate_field_type_invalid/spec_gate_checklist_empty, S-9) 케이스 + 실 pipeline.json 10종 유효성 케이스 추가. TestErrorCodesCompleteness에 091 신규 5종 반영(39→44). 093(RED-first, mode:red, 사용자 확인 행 자동 승인 경로 일원화): TestT093AutoNaRemoval/TestT093AutoApproveHook/TestT093AutoApproveBoundary/TestT093HookGuardOrder/TestT093MarkIdempotency/TestT093NaBackwardCompat/TestT093SingleDecisionSource 7종 신설(TEST-SCENARIO S-1~S-18·S-24~S-26) — init 시점 agentic auto-na 제거 후 전 모드 pending/PM 동형성(S-2~S-4), 다음 단계 진입 시 auto_approve_prior_user_confirmations 훅 자동 승인(S-1/S-5/S-13/S-26), CLOSE·워커 경로 구조적 제외(S-6~S-9), user_confirmation_required 전용 에러(S-12/S-24), 훅→후속 가드 순서와 파일 미오염(S-10/S-11), mark 접두 멱등·재-auto-pass no-op(S-15/S-16), MODE_BOUNDARY_STAGES 단일 판정 수렴(S-25), 경계 불변 회귀표 18셀·na 하위호환(S-14/S-17/S-18) — worktree run.sh subprocess 실호출 + 실 pipeline.json/state.json 파일 상태로만 검증(mock 미사용), 미구현 기능이므로 신규 계약 케이스는 전부 FAIL 기대(RED 증거: RED-EVIDENCE.md). 093 GREEN(Step 9): 구형 계약을 고정하던 기존 테스트를 신규 계약으로 수정 — test_init_agentic_auto_na_user_confirmation→test_init_agentic_user_confirmation_pending, test_rows_from_agentic_auto_na→test_rows_from_agentic_user_confirmation_pending(둘 다 na→pending 단언 교체), test_close_gate_regression_via_task_step_addressing_subprocess(주석 갱신 + CLOSE 직전 사용자 확인 행 row 8 캡틴 승인 단계 추가, 최종 assert 불변), agentic CLOSE 게이트 3건(test_agentic_close_gate_requires_user·test_g13_agentic_close_gate_auto_pass_rejected·test_c6_agentic_auto_pass_close_first_row)에 캡틴 승인 사전 단계 추가, test_new_structure_guard_blocks_skip에 사용자 확인 행 선(先)승인으로 guard 축 격리, test_s13_new_style_row_without_gate_response_unaffected 기대 키 집합에 auto_approved 추가, TestErrorCodesCompleteness 44→45종(user_confirmation_required). 테스트 삭제 0건. 094 R-11 Step0(RED-first, mode:red, agentic 승인 계약 정합): TestR11ModeBoundary/TestR11CloseGateFallback/TestR11DerivedSignals/TestR11Invariants 4종 신설(TEST-SCENARIO S-34~S-37,S-40) — G-1 MODE_BOUNDARY_STAGES에 DICT/MODEL/DDL·MIGRATION 3원소 부재로 semi-agentic opdd 설계 확정 3건이 미노출 통과하는 결함을 3 stage 개별 advance 호출로 판정(부분 구현 방지, S-34), G-2 check_close_gate가 확인 행 0개 파이프라인(opgc)에서 --owner user로도 영구 데드락인 결함(S-35), G-3-a/G-3-b _derive_next_action·build_todo_mirror가 자동 승인 예정 확인 행을 중립 처리하지 않아 next_action 헛 확인·todo 오판정하는 결함(S-36/S-37), R-11 [MUST] 불변 제약(신규 판정 함수 금지·next_action 스키마·build_todo_mirror 시그니처·ERROR_CODES 무접촉) 역검증(S-40) — 실 pipeline.json(opdd/opgc/opd) + run.sh subprocess 실호출 + 실 state.json 파일 상태로만 검증(mock 미사용), 미구현 기능이므로 신규 계약 케이스는 전부 FAIL 기대(RED 증거). 구현(op-be-agent)과 작성자(opal-test-agent) 분리. 098 ADD-2(RED-first, mode:red, 배포 경로 루트 파생 결함): TestT098Add2RootDerivation 신설 — `_resolve_citation_exists()`(`state_tool.py:2400`)가 프로젝트 루트를 `task_md_path`가 아니라 스크립트 자기 위치(`__file__`)에서 파생해, 배포본(`~/.opal/tools/state-tool/`)에서 실행 시 조상에 `.opal/MEMORY.json`이 없어 root=None → 정규 인용도 전건 citation_path_not_found로 오강등되는 결함을 3축(①스크립트 위치 독립성 ②오강등 부재 ③프로젝트 소스 실행 회귀 방어)으로 검증 — 실 TASK.md(본 태스크 098) + `state_tool.py` 임시 사본 subprocess 실행(공개 CLI `verify --evidence-check` stdout JSON)으로만 검증(mock 미사용), 미구현이므로 ①·②는 FAIL 기대(RED 증거: RED-EVIDENCE.md ADD-2절). 구현(op-be-agent)과 작성자(opal-test-agent) 분리, state_tool.py 무접촉.",
   "exports": [
     "TestInit", "TestShow", "TestAdvance", "TestMark",
     "TestBlock", "TestValidate", "TestAddRow", "TestStatus", "TestGatePass",
@@ -19,7 +19,7 @@
     "TestT093HookGuardOrder", "TestT093MarkIdempotency", "TestT093NaBackwardCompat",
     "TestT093SingleDecisionSource",
     "TestR11ModeBoundary", "TestR11CloseGateFallback", "TestR11DerivedSignals",
-    "TestR11Invariants"
+    "TestR11Invariants", "TestT098Add2RootDerivation"
   ]
 }
 
@@ -2487,32 +2487,42 @@ class TestErrorCodesCompleteness(unittest.TestCase):
         "import_existing_removed",
         # 093 F-004 R-4 (머지 편입)
         "user_confirmation_required",
+        # 098 신규 1종 (F-003 R-4 — --evidence-check/--clarification-check 동시 지정 거부)
+        "evidence_check_flag_conflict",
     ]
 
     def test_error_codes_count(self):
-        """[T094 수정 + 093 머지] ERROR_CODES 44종 — 093 시점 45종에서
-        094 R-3/D-2로 marker_missing·import_failed 2종 삭제, D-2로
-        import_existing_removed 1종 추가 = 45-2+1 = 44종."""
-        self.assertEqual(len(ST.ERROR_CODES), 44)
+        """[098 H-10 선갱신] ERROR_CODES 45종 — 093 시점 44종에서 098 F-003이
+        `evidence_check_flag_conflict` 1종을 신규 등재해 44+1=45종.
+
+        RED 근거: 098 GREEN(Step 5, opal-be-agent) 구현 전에는 ERROR_CODES가
+        여전히 44종이므로 이 단언은 현재 실패한다(45!=44) — 신규 에러 코드
+        추가가 본 테스트를 동시에 깨는 문제(H-10)를 선갱신으로 흡수한다."""
+        self.assertEqual(len(ST.ERROR_CODES), 45,
+                         "[RED] 098 evidence_check_flag_conflict 반영 전이므로 "
+                         "44종으로 실패 예상")
 
     def test_all_28_codes_registered(self):
-        """[T094 수정 + 093 머지] 44종 각각이 ERROR_CODES에 등재됨."""
+        """[098 H-10 선갱신] 45종 각각이 ERROR_CODES에 등재됨."""
         for code in self.EXPECTED_CODES:
             self.assertIn(code, ST.ERROR_CODES, f"에러 코드 {code} 미등재")
         self.assertEqual(len(self.EXPECTED_CODES), len(ST.ERROR_CODES),
                          "EXPECTED_CODES 목록 건수가 실측 ERROR_CODES 종수와 불일치")
 
     def test_s7_error_catalog_marker_import_realignment(self):
-        """[T094/L1-F002] S-7 — 에러 카탈로그 코드↔문서 정합(D-5 ①, R-3 AC(b)).
+        """[T094/L1-F002 + 098 H-10 선갱신] S-7 — 에러 카탈로그 코드↔문서
+        정합(D-5 ①, R-3 AC(b)).
 
         기대: `marker_missing`·`import_failed`가 `ERROR_CODES`에서 삭제되고
         `import_existing_removed`가 신규 등재되며, 실측 `len(ERROR_CODES)`가
         `README.md`의 카탈로그 헤더 기재 종수와 일치해야 한다(설계 목표 43이나
-        실측값을 채택 — PLAN §1.5 D-5 각주).
+        실측값을 채택 — PLAN §1.5 D-5 각주). 098부터는 두 종수 모두 45종을
+        명시 기대한다(H-10 대응, PLAN §3.3.2 신규 에러 코드 1종).
 
-        RED 근거: 현재 `ERROR_CODES`는 `marker_missing`/`import_failed`를 여전히
-        보유하고 `import_existing_removed`가 없으며(state_tool.py:81-133),
-        `README.md` 헤더는 "39종"으로 실측 44종과도 이미 불일치한다."""
+        RED 근거: 현재 `ERROR_CODES`는 44종이고 `README.md` 헤더도 "44종"으로
+        표기되어 있다(098 Step 5가 GREEN에서 정정) — 따라서 아래 하드코딩된
+        45 기대값 2건은 GREEN(state_tool.py 구현 + README 정정) 완료 전까지
+        의도적으로 실패한다. 이것도 RED 증거다(098 dispatch 지시)."""
         self.assertNotIn("marker_missing", ST.ERROR_CODES,
                          "marker_missing이 아직 ERROR_CODES에 남아있음(R-3 위반)")
         self.assertNotIn("import_failed", ST.ERROR_CODES,
@@ -2529,6 +2539,13 @@ class TestErrorCodesCompleteness(unittest.TestCase):
         self.assertEqual(readme_count, actual_count,
                          f"README 기재 종수({readme_count})와 실측 len(ERROR_CODES)"
                          f"({actual_count})가 불일치함(D-5 ① 정합 위반)")
+        # [098 H-10 선갱신] 종수 45 하드 기대 — Step 5(GREEN) 전에는 의도적으로 실패
+        self.assertEqual(actual_count, 45,
+                         "[RED] len(ERROR_CODES)==45 기대 — 098 evidence_check_flag_conflict "
+                         "미반영 상태이므로 44로 실패 예상")
+        self.assertEqual(readme_count, 45,
+                         "[RED] README 헤더 종수==45 기대 — 098 Step5 README 정정 전이므로 "
+                         "44로 실패 예상")
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -4202,6 +4219,453 @@ class TestClarificationGate(BaseTestCase):
         code2 = self._mark(2)
         self.assertEqual(code2, 0,
                          f"[RED] 기존 SIMPLE_ROWS_SPEC 픽스처는 게이트 미발동, 정상 진행 기대. 실제 exit_code={code2}")
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# T098 — verify --evidence-check 근거 등급·확정판정 RED 테스트 (PLAN 098 §3.3.2, Step 4)
+# ═════════════════════════════════════════════════════════════════════════════
+
+class TestT098EvidenceCheck(BaseTestCase):
+    """098 F-003 RED — `verify --evidence-check` 반환 계약(PLAN §3.3.2).
+
+    [MUST] mock/patch/MagicMock 금지 — 실 파일 픽스처(tmp_path) + 공개 CLI 경로
+    (`cmd_verify` 직접 호출)만 사용한다. 구현(`state_tool.py`) 무접촉 — 본
+    클래스는 RED 증거만 확보한다(작성자≠구현자, `harness/red-first.md` §2).
+    GREEN은 Step 5(`opal-be-agent`)가 담당한다.
+
+    `## 명확화 결과` 표는 열 수 4(`요소 | 확정값 | 미확정(있으면) | 의존 사실`)를
+    유지한다 — 열 추가는 설계에 없다(098 dispatch 지시).
+    """
+
+    _ELEMENTS = ("목표", "범위", "제약", "완료기준")
+
+    def _write_task_md(self, rows):
+        """rows: {요소: (확정값, 의존사실)} 또는 4-tuple 시퀀스.
+        누락된 요소는 빈 확정값·'-' 의존사실로 채운다(4행 고정 — U-2 설계)."""
+        if isinstance(rows, dict):
+            row_map = rows
+        else:
+            row_map = {elem: (confirmed, dep) for elem, confirmed, dep in rows}
+        lines = [
+            "## 명확화 결과",
+            "",
+            "| 요소 | 확정값 | 미확정(있으면) | 의존 사실 |",
+            "|------|--------|--------------|----------|",
+        ]
+        for elem in self._ELEMENTS:
+            confirmed, dep = row_map.get(elem, (f"{elem} 확정값", "-"))
+            lines.append(f"| {elem} | {confirmed} | - | {dep} |")
+        p = self.task_path / "TASK.md"
+        p.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        return p
+
+    def _call_evidence_verify(self, task_path=None, task_md=None, **extra_flags):
+        """cmd_verify --evidence-check 호출 → (exit_code, result_dict).
+
+        [MUST] 신규 헬퍼 — `TestClarificationGate._call_clarification_verify`
+        (:3926-3946)는 무수정으로 둔다(098 dispatch 지시). evidence_check
+        플래그를 기본 True로 명시 지정하되, 필요 시 extra_flags로 덮어쓴다
+        (플래그 충돌 케이스 등)."""
+        import io
+        from contextlib import redirect_stdout
+        out = io.StringIO()
+        exit_code = 0
+        fields = dict(
+            task_path=str(task_path or self.task_path),
+            scenario=None,
+            clarification_check=False,
+            evidence_check=True,
+            task_md=task_md,
+            red_check=False,
+            fix_mode=False,
+            changed_files=None,
+            test_globs=None,
+        )
+        fields.update(extra_flags)
+        args = types.SimpleNamespace(**fields)
+        with redirect_stdout(out):
+            try:
+                ST.cmd_verify(args)
+            except SystemExit as e:
+                exit_code = e.code
+        output = out.getvalue().strip()
+        result = json.loads(output) if output else {}
+        return exit_code, result
+
+    @staticmethod
+    def _items_by_element(result):
+        return {it.get("element"): it for it in result.get("items", [])}
+
+    @staticmethod
+    def _find_citation(item, substr):
+        for c in item.get("citations", []):
+            if substr in str(c.get("raw", "")):
+                return c
+        return None
+
+    # ── S-7: 신 스키마 판정 반환 계약 (FX-NEW) ─────────────────────────────
+
+    def test_s7_new_schema_verdict_reasons_citations_ratio(self):
+        """S-7 — `FX-NEW`: 항목별 verdict+reasons+citations[{raw,grade,exists}]
+        + confirmed_ratio 반환, exit 0 (PLAN §3.3.2 반환 JSON 스키마)."""
+        self._write_task_md({
+            "목표": ("목표 확정값", "`opal/tools/state-tool/state_tool.py:100`"),
+            "범위": ("범위 확정값", "`opal/tools/state-tool/README.md` §1"),
+            "제약": ("제약 확정값", "-"),
+            "완료기준": ("완료기준 확정값", "`.opal/brain/note.md`"),
+        })
+        exit_code, result = self._call_evidence_verify()
+        self.assertEqual(exit_code, 0, f"[RED] exit 0 기대. result={result}")
+        self.assertTrue(result.get("ok"), f"[RED] ok=true 기대. result={result}")
+        self.assertEqual(result.get("command"), "verify")
+
+        items = result.get("items")
+        self.assertIsInstance(items, list, f"[RED] items가 list 기대. result={result}")
+        self.assertEqual(len(items), 4, f"[RED] items 4건(요소별) 기대. result={result}")
+        for it in items:
+            for key in ("element", "verdict", "reasons", "citations"):
+                self.assertIn(key, it, f"[RED] item에 '{key}' 키 기대. item={it}")
+            for c in it.get("citations", []):
+                for ckey in ("raw", "grade", "exists"):
+                    self.assertIn(ckey, c, f"[RED] citation에 '{ckey}' 키 기대. citation={c}")
+
+        by_elem = self._items_by_element(result)
+        self.assertEqual(by_elem["목표"].get("verdict"), "확정",
+                         f"[RED] 목표(코드 인용, 유효)는 확정 기대. result={result}")
+        self.assertEqual(by_elem["범위"].get("verdict"), "확정",
+                         f"[RED] 범위(문서 인용, 유효)는 확정 기대. result={result}")
+        self.assertEqual(by_elem["제약"].get("verdict"), "미확정",
+                         f"[RED] 제약(인용 0건)은 미확정 기대. result={result}")
+        self.assertIn("citation_missing", by_elem["제약"].get("reasons", []))
+        self.assertEqual(by_elem["완료기준"].get("verdict"), "미확정",
+                         f"[RED] 완료기준(E5 단독)은 미확정 기대. result={result}")
+        self.assertIn("e5_sole_citation", by_elem["완료기준"].get("reasons", []))
+
+        self.assertEqual(result.get("confirmed_ratio"), 0.5,
+                         f"[RED] confirmed_ratio 2/4=0.5 기대. result={result}")
+        unconfirmed = set(result.get("unconfirmed", []))
+        self.assertEqual(unconfirmed, {"제약", "완료기준"},
+                         f"[RED] unconfirmed={{제약,완료기준}} 기대. result={result}")
+
+    # ── S-2: 인용 부재 항목의 미확정 강등 (FX-NOCITE) ──────────────────────
+
+    def test_s2_citation_missing_demotes(self):
+        """S-2 — `FX-NOCITE`: `[사실]` 항목의 `의존 사실` 셀이 `-` →
+        verdict:'미확정', reasons:['citation_missing'], exit 0."""
+        self._write_task_md({
+            "목표": ("목표 확정값", "`opal/tools/state-tool/README.md` §1"),
+            "범위": ("범위 확정값", "`opal/tools/state-tool/README.md` §2"),
+            "제약": ("제약 확정값", "-"),
+            "완료기준": ("완료기준 확정값", "`opal/tools/state-tool/README.md` §3"),
+        })
+        exit_code, result = self._call_evidence_verify()
+        self.assertEqual(exit_code, 0, f"[RED] exit 0 기대(라우터형, 차단 아님). result={result}")
+        by_elem = self._items_by_element(result)
+        item = by_elem.get("제약", {})
+        self.assertEqual(item.get("verdict"), "미확정",
+                         f"[RED] 인용 0건 항목은 미확정 기대. result={result}")
+        self.assertIn("citation_missing", item.get("reasons", []),
+                     f"[RED] reasons에 'citation_missing' 기대. item={item}")
+        self.assertEqual(item.get("citations", []), [],
+                         f"[RED] 인용 0건이므로 citations도 빈 리스트 기대. item={item}")
+
+    # ── S-16: 경로 부재·줄번호 초과 강등 (FX-BADPATH) ──────────────────────
+
+    def test_s16_bad_path_and_line_overflow_demotes(self):
+        """S-16 — `FX-BADPATH`: 없는 경로 + 파일 끝 초과 줄번호 →
+        reasons:['citation_path_not_found']로 미확정 강등."""
+        self._write_task_md({
+            "목표": ("목표 확정값", "`opal/tools/state-tool/README.md` §1"),
+            "범위": ("범위 확정값", "`docs/DOES_NOT_EXIST_098_XYZ.md:3`"),
+            "제약": ("제약 확정값", "`opal/tools/state-tool/README.md:999999`"),
+            "완료기준": ("완료기준 확정값", "`opal/tools/state-tool/README.md` §4"),
+        })
+        exit_code, result = self._call_evidence_verify()
+        self.assertEqual(exit_code, 0, f"[RED] exit 0 기대. result={result}")
+        by_elem = self._items_by_element(result)
+
+        no_path = by_elem.get("범위", {})
+        self.assertEqual(no_path.get("verdict"), "미확정",
+                         f"[RED] 없는 경로 인용은 미확정 기대. result={result}")
+        self.assertIn("citation_path_not_found", no_path.get("reasons", []),
+                     f"[RED] reasons에 'citation_path_not_found' 기대. item={no_path}")
+
+        overflow = by_elem.get("제약", {})
+        self.assertEqual(overflow.get("verdict"), "미확정",
+                         f"[RED] 파일 끝 초과 줄번호 인용은 미확정 기대. result={result}")
+        self.assertIn("citation_path_not_found", overflow.get("reasons", []),
+                     f"[RED] reasons에 'citation_path_not_found' 기대. item={overflow}")
+
+    # ── S-15: brain 단독 인용 강등 (FX-E5ONLY) ─────────────────────────────
+
+    def test_s15_e5_sole_citation_demotes(self):
+        """S-15 — `FX-E5ONLY`: `.opal/brain/**` 단독 인용 →
+        reasons:['e5_sole_citation']로 미확정 강등."""
+        self._write_task_md({
+            "목표": ("목표 확정값", "`.opal/brain/note.md`"),
+            "범위": ("범위 확정값", "`opal/tools/state-tool/README.md` §1"),
+            "제약": ("제약 확정값", "`opal/tools/state-tool/README.md` §2"),
+            "완료기준": ("완료기준 확정값", "`opal/tools/state-tool/README.md` §3"),
+        })
+        exit_code, result = self._call_evidence_verify()
+        self.assertEqual(exit_code, 0, f"[RED] exit 0 기대. result={result}")
+        by_elem = self._items_by_element(result)
+        item = by_elem.get("목표", {})
+        self.assertEqual(item.get("verdict"), "미확정",
+                         f"[RED] E5 단독 인용은 미확정 기대. result={result}")
+        self.assertIn("e5_sole_citation", item.get("reasons", []),
+                     f"[RED] reasons에 'e5_sole_citation' 기대. item={item}")
+
+    # ── S-35: E5 동반 인용 통과 — 과잉 차단 대조군 (FX-E5PAIR) ─────────────
+
+    def test_s35_e5_paired_with_source_stays_confirmed(self):
+        """S-35 — `FX-E5PAIR`: `.opal/brain/**` + 원천(E4) 동반 인용 →
+        e5_sole_citation 미발생, 확정 유지 (S-15의 양성 대조군)."""
+        self._write_task_md({
+            "목표": ("목표 확정값",
+                    "`.opal/brain/note.md`, `opal/tools/state-tool/README.md` §1"),
+            "범위": ("범위 확정값", "`opal/tools/state-tool/README.md` §2"),
+            "제약": ("제약 확정값", "`opal/tools/state-tool/README.md` §3"),
+            "완료기준": ("완료기준 확정값", "`opal/tools/state-tool/README.md` §4"),
+        })
+        exit_code, result = self._call_evidence_verify()
+        self.assertEqual(exit_code, 0, f"[RED] exit 0 기대. result={result}")
+        by_elem = self._items_by_element(result)
+        item = by_elem.get("목표", {})
+        self.assertNotIn("e5_sole_citation", item.get("reasons", []),
+                        f"[RED] E5 동반 인용은 e5_sole_citation 미발생 기대. item={item}")
+        self.assertEqual(item.get("verdict"), "확정",
+                         f"[RED] E5 동반 인용(원천 유효)은 확정 유지 기대. result={result}")
+
+    # ── S-14: 미매칭 경로의 unknown 반환 (FX-UNKNOWN) ──────────────────────
+
+    def test_s14_unmatched_path_returns_unknown_not_blocked(self):
+        """S-14 — `FX-UNKNOWN`: 등급 패턴 밖 경로 → grade:'unknown' 반환.
+        차단(exit!=0) 0건, 임의 등급 부여 0건."""
+        self._write_task_md({
+            "목표": ("목표 확정값", "`opal/tools/state-tool/README.md` §1"),
+            "범위": ("범위 확정값", "`opal/tools/state-tool/README.md` §2"),
+            "제약": ("제약 확정값", "`opal/tools/requirements.txt:1`"),
+            "완료기준": ("완료기준 확정값", "`opal/tools/state-tool/README.md` §3"),
+        })
+        exit_code, result = self._call_evidence_verify()
+        self.assertEqual(exit_code, 0,
+                         f"[RED] 미매칭 경로는 차단하지 않음(exit 0) 기대. result={result}")
+        by_elem = self._items_by_element(result)
+        item = by_elem.get("제약", {})
+        citation = self._find_citation(item, "requirements.txt")
+        self.assertIsNotNone(citation, f"[RED] requirements.txt 인용 미검출. item={item}")
+        self.assertEqual(citation.get("grade"), "unknown",
+                         f"[RED] 미매칭 경로 grade='unknown' 기대. citation={citation}")
+        self.assertNotIn(citation.get("grade"), ("E1", "E2", "E3", "E4", "E5"),
+                         f"[RED] 임의 등급 부여 0건 기대. citation={citation}")
+
+    # ── S-26: E1·E3 자동 부여 제외 경계 (Block B — H-11) ───────────────────
+
+    def test_s26_e1_execution_log_and_e3_generated_code_return_unknown(self):
+        """S-26 — E1(실행 로그)·E3(생성 코드) 경로 인용 → 둘 다 grade:'unknown'
+        (도구 자동 부여 대상 아님, PLAN §3.3.2 [MUST] H-11)."""
+        self._write_task_md({
+            "목표": ("목표 확정값", "`logs/test-run-output.log:5`"),
+            "범위": ("범위 확정값", "`generated/migrations/0001_auto_schema.sql:3`"),
+            "제약": ("제약 확정값", "`opal/tools/state-tool/README.md` §1"),
+            "완료기준": ("완료기준 확정값", "`opal/tools/state-tool/README.md` §2"),
+        })
+        exit_code, result = self._call_evidence_verify()
+        self.assertEqual(exit_code, 0, f"[RED] exit 0 기대. result={result}")
+        by_elem = self._items_by_element(result)
+
+        e1_item = by_elem.get("목표", {})
+        e1_citation = self._find_citation(e1_item, "test-run-output.log")
+        self.assertIsNotNone(e1_citation, f"[RED] E1 로그 인용 미검출. item={e1_item}")
+        self.assertEqual(e1_citation.get("grade"), "unknown",
+                         f"[RED] E1(실행 로그)는 unknown 기대. citation={e1_citation}")
+
+        e3_item = by_elem.get("범위", {})
+        e3_citation = self._find_citation(e3_item, "0001_auto_schema.sql")
+        self.assertIsNotNone(e3_citation, f"[RED] E3 생성코드 인용 미검출. item={e3_item}")
+        self.assertEqual(e3_citation.get("grade"), "unknown",
+                         f"[RED] E3(생성 코드)는 unknown 기대. citation={e3_citation}")
+
+    # ── S-17: 근거 없는 `[결정]`은 확정 유지 — 과잉 차단 대조군 (FX-DECISION) ──
+
+    def test_s17_decision_tag_without_citation_stays_confirmed(self):
+        """S-17 — `FX-DECISION`: `[결정]` 태그만, 인용 0건, `의존 사실` 전건 `-`
+        → 해당 항목 verdict:'확정' 유지. 미확정 강등 발생 시 FAIL (P0 —
+        캡틴의 새 요구사항이 미확정으로 강등되면 파이프라인이 멈춘다)."""
+        self._write_task_md({
+            "목표": ("[결정] 캡틴이 정한 목표(근거 불요)", "-"),
+            "범위": ("[결정] 캡틴이 정한 범위(근거 불요)", "-"),
+            "제약": ("[결정] 캡틴이 정한 제약(근거 불요)", "-"),
+            "완료기준": ("[결정] 캡틴이 정한 완료기준(근거 불요)", "-"),
+        })
+        exit_code, result = self._call_evidence_verify()
+        self.assertEqual(exit_code, 0, f"[RED] exit 0 기대. result={result}")
+        for elem, item in self._items_by_element(result).items():
+            self.assertEqual(item.get("verdict"), "확정",
+                             f"[RED][P0] [결정] 항목({elem})은 인용 없어도 확정 유지 기대 — "
+                             f"강등되면 새 요구사항이 파이프라인을 멈춘다. item={item}")
+            self.assertNotIn("citation_missing", item.get("reasons", []),
+                            f"[RED][P0] [결정] 항목({elem})에 citation_missing 발생 0건 기대. item={item}")
+        self.assertEqual(result.get("confirmed_ratio"), 1.0,
+                         f"[RED] 전건 [결정] → confirmed_ratio 1.0 기대. result={result}")
+
+    # ── S-34: 정규 인용 형식 변형 통과 — 과잉 차단 대조군 (FX-FORMAT) ──────
+
+    def test_s34_regular_citation_formats_not_overblocked(self):
+        """S-34 — `FX-FORMAT`: 정규 4형식 혼재 → 4형식 전건이
+        citation_path_not_found로 강등되지 않음. 파싱 비대상 형식(③④)은
+        unknown으로 PM 판단에 위임되되 경로 부재로 오판정하지 않는다."""
+        self._write_task_md({
+            "목표": ("목표 확정값", "`opal/tools/state-tool/state_tool.py:100`"),
+            "범위": ("범위 확정값", "`opal/tools/state-tool/README.md` §1"),
+            "제약": ("제약 확정값", "[Anthropic Docs](https://docs.anthropic.com)"),
+            "완료기준": ("완료기준 확정값", "(→ D-1 §2)"),
+        })
+        exit_code, result = self._call_evidence_verify()
+        self.assertEqual(exit_code, 0, f"[RED] exit 0 기대. result={result}")
+        by_elem = self._items_by_element(result)
+
+        for elem in self._ELEMENTS:
+            item = by_elem.get(elem, {})
+            self.assertNotIn("citation_path_not_found", item.get("reasons", []),
+                            f"[RED] 정규 형식({elem})이 citation_path_not_found로 "
+                            f"오강등되면 안 됨(H-13). item={item}")
+
+        self.assertEqual(by_elem.get("목표", {}).get("verdict"), "확정",
+                         f"[RED] 형식①(경로:N, 유효) 확정 기대. result={result}")
+        self.assertEqual(by_elem.get("범위", {}).get("verdict"), "확정",
+                         f"[RED] 형식②(경로 §N, 유효) 확정 기대. result={result}")
+
+        shorthand_item = by_elem.get("완료기준", {})
+        self.assertNotIn("citation_missing", shorthand_item.get("reasons", []),
+                        f"[RED] 형식④(단축 참조)는 백틱이 없어도 citation_missing이 "
+                        f"아니어야 함(PLAN §3.3.2 [MUST]). item={shorthand_item}")
+
+    # ── S-31: 본 태스크 TASK.md 실파일 판정 — 목표달성 축 (L2, 저장소 실파일) ──
+
+    def test_s31_self_task_md_real_file_confirmed_ratio(self):
+        """S-31 — `FX-SELF`: 본 태스크(098) `TASK.md`(신 스키마로 작성된 유일한
+        실파일) → exit 0 + citation_missing 0건(4셀 전건 백틱 경로 스팬 보유)
+        + confirmed_ratio == 3/4 (목표 행만 디렉토리 없는 파일명 단독이라
+        unknown). tmp_path 합성 픽스처(S-7)로 대신할 수 없는 목표달성 검증."""
+        repo_root = ST.find_project_root(str(_TOOL_DIR))
+        self.assertIsNotNone(
+            repo_root,
+            "find_project_root가 None을 반환함 — .opal/MEMORY.json 보유 조상을 찾지 못함"
+        )
+        task_md_path = repo_root / "tasks" / "098-260821-opds-근거등급-확정판정-트랙강등" / "TASK.md"
+        self.assertTrue(task_md_path.exists(),
+                       f"[RED] 098 TASK.md 실파일 부재: {task_md_path}")
+
+        exit_code, result = self._call_evidence_verify(
+            task_path=str(task_md_path.parent), task_md=str(task_md_path)
+        )
+        self.assertEqual(exit_code, 0, f"[RED] exit 0 기대. result={result}")
+
+        all_reasons = [
+            r for it in result.get("items", []) for r in it.get("reasons", [])
+        ]
+        self.assertNotIn("citation_missing", all_reasons,
+                        f"[RED] 098 TASK.md 4셀 전건 백틱 경로 스팬 보유 — "
+                        f"citation_missing 0건 기대. reasons={all_reasons}")
+
+        by_elem = self._items_by_element(result)
+        self.assertEqual(by_elem.get("목표", {}).get("verdict"), "미확정",
+                         f"[RED] '목표' 행은 디렉토리 없는 파일명 단독(`citation-rules.md`)"
+                         f"이라 unknown→미확정 기대. result={result}")
+
+        self.assertEqual(result.get("confirmed_ratio"), 0.75,
+                         f"[RED] confirmed_ratio == 3/4 기대(목표 행만 미확정, "
+                         f"범위·제약·완료기준은 E4/E2 등급 부여). result={result}")
+
+    # ── S-13: 레거시 실파일 다건 무차단 처리 (L2, 저장소 실파일) ───────────
+
+    def test_s13_legacy_task_md_real_files_no_block(self):
+        """S-13 — `FX-LEGACY`: 저장소 실측 `tasks/*/TASK.md` 다건(`의존 사실`
+        전건 `-`인 레거시 다수 포함) → 전건 exit 0
+        (`evidence_check:'skipped'` 또는 미확정 반환이되 차단 없음).
+        예외·차단 0건."""
+        repo_root = ST.find_project_root(str(_TOOL_DIR))
+        self.assertIsNotNone(repo_root, "find_project_root가 None을 반환함")
+        task_md_files = sorted((repo_root / "tasks").glob("*/TASK.md"))
+        self.assertGreater(len(task_md_files), 0,
+                           "[RED] 저장소 실측 TASK.md 파일이 0건 — 픽스처 불가")
+
+        failures = []
+        for p in task_md_files:
+            try:
+                exit_code, result = self._call_evidence_verify(
+                    task_path=str(p.parent), task_md=str(p)
+                )
+            except Exception as e:  # pragma: no cover — RED 증거용 방어적 캡처
+                failures.append((str(p), "exception", repr(e)))
+                continue
+            if exit_code != 0:
+                failures.append((str(p), exit_code, result))
+            elif "evidence_check" not in result:
+                failures.append((str(p), exit_code,
+                                  "evidence_check 키 부재(신 스키마 미반영)"))
+        self.assertEqual(failures, [],
+                         f"[RED] 레거시 TASK.md 실파일 {len(task_md_files)}건 중 "
+                         f"비정상/미반영 {len(failures)}건: {failures}")
+
+    # ── 신규 에러: --evidence-check + --clarification-check 동시 지정 ─────
+
+    def test_evidence_check_flag_conflict_exit1(self):
+        """신규 에러 — `--evidence-check`와 `--clarification-check` 동시 지정 →
+        `evidence_check_flag_conflict` exit 1 (무성 무시 방지, PLAN §3.3.2)."""
+        self._write_task_md({})
+        exit_code, result = self._call_evidence_verify(clarification_check=True)
+        self.assertEqual(exit_code, 1,
+                         f"[RED] 두 플래그 동시 지정 시 exit 1 기대. result={result}")
+        self.assertFalse(result.get("ok"), f"[RED] ok=false 기대. result={result}")
+        self.assertEqual(result.get("error"), "evidence_check_flag_conflict",
+                         f"[RED] error='evidence_check_flag_conflict' 기대. result={result}")
+
+    # ── S-24: 고정 필드 SimpleNamespace 호출 안전 (Block B — H-9) ──────────
+
+    def test_s24_fixed_field_namespace_no_attribute_error(self):
+        """S-24 — 신 속성(`evidence_check`) 없는 고정 필드 `SimpleNamespace`로
+        `cmd_verify` 호출 → AttributeError 0건(`getattr(args,"evidence_check",
+        False)` 기본값 경로, H-9).
+
+        [RED 예외 고지] 현재(미구현) 상태에서는 evidence_check 분기 자체가
+        없어 이 케이스가 자연히 PASS할 수 있다 — '충돌 부재'를 검증하는
+        가드성 테스트이기 때문이다. GREEN이 getattr 없이 `args.evidence_check`
+        로 직접 접근하도록 구현하면 그때 이 케이스가 비로소 실패하여 회귀를
+        잡아낸다(TestClarificationGate._call_clarification_verify:3936-3946과
+        동일한 고정 필드 패턴 재현, 헬퍼 자체는 무수정)."""
+        self._write_task_md({
+            "목표": ("목표 확정값", "-"),
+            "범위": ("범위 확정값", "-"),
+            "제약": ("제약 확정값", "-"),
+            "완료기준": ("완료기준 확정값", "-"),
+        })
+        import io
+        from contextlib import redirect_stdout
+        out = io.StringIO()
+        args = types.SimpleNamespace(
+            task_path=str(self.task_path),
+            scenario=None,
+            clarification_check=False,
+            task_md=None,
+            red_check=False,
+            fix_mode=False,
+            changed_files=None,
+            test_globs=None,
+        )
+        exit_code = 0
+        raised = None
+        with redirect_stdout(out):
+            try:
+                ST.cmd_verify(args)
+            except SystemExit as e:
+                exit_code = e.code
+            except AttributeError as e:
+                raised = e
+        self.assertIsNone(raised,
+                         f"[RED] evidence_check 속성 부재로 AttributeError 발생: {raised!r}")
 
 
 class TestOwnerNamePlaceholder(BaseTestCase):
@@ -8343,6 +8807,176 @@ class TestR11Invariants(_T093Base):
                 f"추가={sorted(current_keys - head_keys)!r} "
                 f"삭제={sorted(head_keys - current_keys)!r} "
                 "(종수는 S-7·S-15가 실측 기준으로 판정 — 여기서 재고정 금지)")
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# 098 ADD-2 RED-first — 배포 경로 루트 파생 결함 (mode:red)
+# [MUST] red-first.md §2 작성자≠구현자 — 본 블록은 테스트만 추가하며 state_tool.py를
+#        수정하지 않는다(Read 전용). 기존 케이스도 수정·삭제하지 않는다(순수 additive).
+# [MUST] 헌법 §4 "Don't fake it" — mock/patch/MagicMock 미사용. 합성 픽스처가 아니라
+#        저장소 실파일(본 태스크 TASK.md) + `state_tool.py` 임시 사본 subprocess
+#        실행(공개 CLI `verify --evidence-check` stdout JSON)으로만 검증한다.
+# ═════════════════════════════════════════════════════════════════════════════
+
+_T098ADD2_TASK_PATH = _REPO_ROOT_093 / "tasks" / "098-260821-opds-근거등급-확정판정-트랙강등"
+
+
+class TestT098Add2RootDerivation(unittest.TestCase):
+    """098 ADD-2 RED — `_resolve_citation_exists()`(`state_tool.py:2400`)가 프로젝트
+    루트를 `find_project_root(str(pathlib.Path(__file__).resolve()))`로, 즉
+    `task_md_path`가 아니라 스크립트 자기 위치에서 파생하는 결함의 배포 경로
+    등가성 실패 테스트.
+
+    결함 재현: `state_tool.py`를 프로젝트 밖(조상에 `.opal/MEMORY.json`이 없는
+    임시 디렉토리)으로 복사한 사본으로 실행하면 `find_project_root`가 None을
+    반환해 `_resolve_citation_exists`가 조기 반환 False를 내놓고, 정규 인용을
+    갖춘 항목까지 전건 `citation_path_not_found`로 오강등된다(PM 실측: 프로젝트
+    소스 실행 confirmed_ratio=0.75 vs 배포본 `~/.opal/tools/state-tool/run.sh`
+    실행 confirmed_ratio=0.0).
+
+    구현 시그니처(예: `_resolve_citation_exists`가 root 인자를 받는지)는 GREEN
+    단계(op-be-agent) 결정 — 본 클래스는 내부 함수가 아니라 공개 CLI 동작
+    (`verify --evidence-check` stdout)만으로 판정한다.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        if not (_T098ADD2_TASK_PATH / "TASK.md").is_file():
+            raise unittest.SkipTest(
+                f"본 태스크 TASK.md 부재 — 실파일 입력 전제가 깨짐: {_T098ADD2_TASK_PATH}"
+            )
+
+    def setUp(self):
+        self._copy_dir = pathlib.Path(tempfile.mkdtemp())
+        self._copied_script = self._copy_dir / "state_tool.py"
+        # 힌트: memory_tool.py는 `verify` 경로에서 미참조(_MEMORY_TOOL은
+        # link_memory_history 전용 — cmd_mark에서만 소비)이므로 복사 불필요.
+        shutil.copy2(_SRC_093, self._copied_script)
+
+    def tearDown(self):
+        shutil.rmtree(self._copy_dir, ignore_errors=True)
+
+    def _run_verify(self, script_path):
+        """공개 CLI `verify <task-path> --evidence-check` subprocess 실행 →
+        stdout JSON dict. exit code는 라우터형이라 항상 0 기대(차단 없음,
+        PLAN §3.3.2)."""
+        result = subprocess.run(
+            [sys.executable, str(script_path), "verify",
+             str(_T098ADD2_TASK_PATH), "--evidence-check"],
+            capture_output=True, text=True,
+        )
+        self.assertEqual(
+            result.returncode, 0,
+            f"[RED] verify --evidence-check는 라우터형이라 항상 exit 0 기대 "
+            f"(script={script_path}). stderr={result.stderr}",
+        )
+        stdout = result.stdout.strip()
+        try:
+            return json.loads(stdout)
+        except json.JSONDecodeError:
+            self.fail(
+                f"[RED] stdout이 JSON이 아님(script={script_path}): "
+                f"{stdout!r} stderr={result.stderr}"
+            )
+
+    # ── 축 ① 스크립트 위치 독립성 ────────────────────────────────────────
+
+    def test_axis1_copied_script_confirmed_ratio_matches_source_location(self):
+        """축① — 프로젝트 밖 임시 디렉토리로 복사한 사본으로
+        `verify <태스크경로> --evidence-check`를 실행해도, 프로젝트 소스로
+        실행한 결과와 `confirmed_ratio`·항목별 `verdict`·`reasons`가 동일해야
+        한다(배포 경로 등가 조건). 결함 현재: 사본은 root=None → 모든 실존
+        인용이 미존재 처리되어 confirmed_ratio가 0.75→0.0으로 붕괴 — 지금 FAIL
+        기대."""
+        source_result = self._run_verify(_SRC_093)
+        copied_result = self._run_verify(self._copied_script)
+
+        self.assertEqual(
+            copied_result.get("confirmed_ratio"),
+            source_result.get("confirmed_ratio"),
+            f"[RED] 사본 실행 confirmed_ratio가 프로젝트 소스 실행과 달라짐"
+            f"(배포 경로 루트 파생 결함 재현). "
+            f"source={source_result.get('confirmed_ratio')} "
+            f"copied={copied_result.get('confirmed_ratio')}",
+        )
+
+        source_items = {it.get("element"): it for it in source_result.get("items", [])}
+        copied_items = {it.get("element"): it for it in copied_result.get("items", [])}
+        self.assertEqual(
+            set(copied_items.keys()), set(source_items.keys()),
+            f"[RED] 항목 집합 자체가 달라짐. source={sorted(source_items)} "
+            f"copied={sorted(copied_items)}",
+        )
+        for elem, s_item in source_items.items():
+            c_item = copied_items.get(elem, {})
+            self.assertEqual(
+                c_item.get("verdict"), s_item.get("verdict"),
+                f"[RED] '{elem}' verdict 불일치(사본 vs 소스) — "
+                f"source={s_item} copied={c_item}",
+            )
+            self.assertEqual(
+                c_item.get("reasons"), s_item.get("reasons"),
+                f"[RED] '{elem}' reasons 불일치(사본 vs 소스) — "
+                f"source={s_item} copied={c_item}",
+            )
+
+    # ── 축 ② 오강등 부재 ─────────────────────────────────────────────────
+
+    def test_axis2_copied_script_no_false_demotion_for_valid_citation(self):
+        """축② — 사본 실행에서 정규 인용(`경로:N` 형식으로 실존 파일을 가리키는
+        항목, 여기서는 '제약' 요소의 `opal/tools/state-tool/state_tool.py:2225`)이
+        `citation_path_not_found`를 받지 않아야 한다. 결함 현재: 사본 실행은
+        실존 파일 인용까지 미존재로 오판정 — 지금 FAIL 기대."""
+        copied_result = self._run_verify(self._copied_script)
+        by_elem = {it.get("element"): it for it in copied_result.get("items", [])}
+
+        constraint_item = by_elem.get("제약", {})
+        citation = None
+        for c in constraint_item.get("citations", []):
+            if "state_tool.py:2225" in str(c.get("raw", "")):
+                citation = c
+                break
+        self.assertIsNotNone(
+            citation,
+            f"[RED] '제약' 항목에서 `state_tool.py:2225` 인용을 찾지 못함 — "
+            f"TASK.md 표 구조가 전제와 달라졌을 가능성. item={constraint_item}",
+        )
+        self.assertNotIn(
+            "citation_path_not_found", constraint_item.get("reasons", []),
+            f"[RED] 정규 인용(실존 파일:유효 줄번호)이 배포 경로에서 "
+            f"citation_path_not_found로 오강등됨. item={constraint_item}",
+        )
+        self.assertIs(
+            citation.get("exists"), True,
+            f"[RED] 실존 파일 인용의 exists가 True 기대. citation={citation}",
+        )
+
+    # ── 축 ③ 회귀 방어 (프로젝트 소스 실행 — 지금 PASS, GREEN 이후에도 PASS) ─
+
+    def test_axis3_source_location_confirmed_ratio_unchanged_regression_guard(self):
+        """축③ — 프로젝트 소스 위치(`opal/tools/state-tool/state_tool.py`)로
+        실행한 기존 판정(PM 실측 confirmed_ratio=0.75, '목표'만 grade_unknown,
+        나머지 3요소는 확정)이 불변이어야 한다. 회귀 가드 — 지금 PASS 기대이며
+        ①·②의 GREEN 구현 이후에도 계속 PASS해야 한다."""
+        result = self._run_verify(_SRC_093)
+        self.assertEqual(
+            result.get("confirmed_ratio"), 0.75,
+            f"[REGRESSION] 프로젝트 소스 실행 confirmed_ratio 변경됨. result={result}",
+        )
+        by_elem = {it.get("element"): it for it in result.get("items", [])}
+        self.assertEqual(
+            by_elem.get("목표", {}).get("verdict"), "미확정",
+            f"[REGRESSION] '목표'(grade_unknown 인용) verdict 변경됨. result={result}",
+        )
+        self.assertIn(
+            "grade_unknown", by_elem.get("목표", {}).get("reasons", []),
+            f"[REGRESSION] '목표' reasons에 grade_unknown 부재. result={result}",
+        )
+        for elem in ("범위", "제약", "완료기준"):
+            self.assertEqual(
+                by_elem.get(elem, {}).get("verdict"), "확정",
+                f"[REGRESSION] '{elem}' verdict 변경됨(기존 확정 항목). result={result}",
+            )
 
 
 # ═════════════════════════════════════════════════════════════════════════════

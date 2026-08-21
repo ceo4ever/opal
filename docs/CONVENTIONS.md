@@ -219,6 +219,7 @@ OPAL 본체(스킬·에이전트·도구·하네스)를 작성할 때 따라야 
 
 - TASK.md / PLAN.md / ANALYSIS.md / QA 산출물 등을 작성할 때 모든 주장은 근거를 인용한다 (`{경로}:{라인}` 또는 `docs/문서명 §섹션`).
 - `[MUST]` 토큰이 붙은 항목은 인용 누락 시 산출물 부적합 처리.
+- 근거 등급(E1 실행 관측 ~ E5 파생 스냅샷)과 AS-IS/TO-BE 관할 2축의 규정 **원문**은 `opal/core/references/harness/citation-rules.md` §9 근거 등급과 관할이 소유한다 — 본 문서는 포인터만 둔다.
 - 근거: `opal/core/references/harness/citation-rules.md`
 
 ### State 관리
@@ -278,3 +279,4 @@ OPAL 본체(스킬·에이전트·도구·하네스)를 작성할 때 따라야 
 | v1.6.0 | 2026-08-16 13:36 | STATE.md 저널화 반영 — §State 관리 첫 항목을 도구 규율 표준 문구로 교체("마크다운 표 직접 편집 금지" 서술 제거 + `state-tool show <task-path>` 조회 경로 명시), §태스크 산출물 구조의 STATE.md 행 설명을 "의사결정 로그·블로커 저널"로 정정, "상태 SSOT는 state.json이며 STATE.md는 이를 렌더한 읽기용 뷰다" 서술을 "STATE.md는 의사결정 로그·블로커·자유 기재를 담는 저널이며 파이프라인 현황의 SSOT는 state.json, 조회는 state-tool show"로 교체 — STATE.md는 더 이상 state.json의 렌더 뷰가 아니다 (094) |
 | v1.6.1 | 2026-08-16 15:05 | §태스크 산출물 구조 STATE.md 행 말미 정정 — "두 파일 모두 `state-tool`이 갱신한다"(부정확, 블로커·자유 기재는 도구 미접촉)를 코드 실측(`state_tool.py` `ensure_journal_skeleton`/`append_decision_log`/`cmd_block`) 기준으로 "state.json은 state-tool 전량 갱신, STATE.md는 저널 골격·의사결정 로그만 자동 갱신, 블로커·자유 기재는 PM 수동"으로 세분화 (094 Step 14) |
 | v1.7.0 | 2026-08-21 15:30 | 커밋 실행 시점 규칙의 원문 복제 2건을 하네스 포인터로 축약 — §커밋 규칙 §규칙 첫 항목과 §구현 규칙 §Guards 커밋 항목을 제거하고, 규칙 소유권이 `opal/core/references/opal-harness.md` §1 Guards에 있음을 명시. 본 문서는 커밋 **메시지 형식·단위**만 규정한다. 에이전트 행동 Guard를 코드 컨벤션 문서에 복제하면 프로젝트마다 존재 여부가 갈리는 우발 경로가 되므로, 워커 도달은 `pm/dispatch-process.md` §워커 컨텍스트 주입 템플릿의 전 워커 공통 고정 항목이 담당한다 (097) |
+| v1.8.0 | 2026-08-21 22:18 | §Citation Rules에 근거 등급·관할 SSOT 포인터 1줄 추가 — 등급 5단계(E1~E5)와 AS-IS/TO-BE 관할 2축의 원문 소유권이 `opal/core/references/harness/citation-rules.md` §9임을 명시. 본 문서는 포인터만 두어 등급표 복제를 차단한다 (098) |
