@@ -332,3 +332,7 @@
 - 신규: [[evidence-tier-asis-tobe-jurisdiction]], [[decision-vs-fact-claim-separation]], [[verdict-tool-fail-safe-direction-design]], [[demote-promote-recursion-guard-timing-threshold-split]], [[measurement-tool-more-fallible-than-artifact-lesson]], [[execution-observation-scope-citation-requirement]], [[worker-role-boundary-exposes-pm-measurement-error]], [[evaluator-self-weakness-disclosure-pattern]], [[new-ssot-pointer-not-value-copy]]
 - 출처: task:098
 
+## [2026-08-22] ingest | CLOSE ingest — 태스크 099 보고 형식 개정(ADHD 하네스 v1.0)
+- 신규: [[pages/concept/template-precedence-over-prose-norms.md]], [[pages/concept/lean-core-relocation-benefit-precondition.md]], [[pages/concept/norm-relaxation-must-replace-not-add.md]], [[pages/concept/zero-margin-constraint-forces-wrong-choice.md]], [[pages/concept/worker-bypassed-blocked-tool-filename-trigger.md]]
+- 출처: task:099
+

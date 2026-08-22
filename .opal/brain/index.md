@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-08-21 22:58
+> 갱신: 2026-08-22 15:35
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -129,6 +129,7 @@
 - [[kanban-current-stage-derivation]] — 칸반 current_stage 파생 규칙 (도달 단계 기준) #opal-console #kanban #pipeline #be-single-source
 - [[kanban-pipeline-stage-grouping]] — 파이프라인 스테퍼 stage 그룹화 (BE 단일 소스, na/skipped 제외) #opal-console #pipeline #stage-grouping #be-single-source
 - [[knowledge-assets-as-flow-entrypoint]] — 지식 자산은 흐름의 끝이 아니라 시작점이다 — 참조 순서 기준 계층 배치 + 도구·자산 범주 분리 #architecture #knowledge-asset #layering #diagram #decision
+- [[lean-core-relocation-benefit-precondition]] — lean core 이관 이익의 전제 조건 — PM 전용 + Phase B 기 로드 #lean-core #agent-md #relocation #pm-tier #assistant-tier
 - [[legacy-row-address-gate-insertion-regression]] — 레거시 행번호 파이프라인에 게이트 행 삽입 시 전수 수정 결합 회귀 #state-tool #pipeline #legacy-row #regression #scenario-gate #task-075
 - [[linux-install-script]] — Linux 설치 스크립트 신설 (단순 위임 전략) #install #linux #deploy #task
 - [[literal-version-test-expectation-fragility]] — 리터럴 버전번호를 테스트 기대값으로 쓰면 동시 작업이 깨뜨린다 #testing #concurrency #test-scenario #lesson
@@ -150,6 +151,7 @@
 - [[new-ssot-pointer-not-value-copy]] — 신규 SSOT 신설 시 타 SSOT 수치 복제 금지 — 포인터만 #ssot #dedup #architecture #opds
 - [[nojs-flex-rail-over-inline-svg-overlay]] — 자기완결 HTML의 연결선은 레이아웃으로 만든다 — 좌표 측정 오버레이 기각 #html #visual-artifact #design-decision #no-js #responsive
 - [[non-gated-write-path-audit-before-ssot-conversion]] — 비게이트 쓰기 경로는 SSOT 전환 전에 먼저 감사해야 한다 #ssot #tool-gated #migration #architecture #memory
+- [[norm-relaxation-must-replace-not-add]] — 규범 완화는 추가가 아니라 교체다 #norm-editing #governance #conflict-resolution #principles
 - [[observability-3layer-protocol-renderer-trigger-separation]] — 관측 3층 구조 완성 — 데이터 규약·렌더러·발동층 역할 분리 #oppl #observability-boundary #architecture
 - [[op-brain-ingest]] — op-brain-ingest — CLOSE 경량 ingest 워커 #knowledge #close #ingest #skill
 - [[op-dev-analysis]] — op-dev-analysis — 코드베이스 분석 및 기술 컨텍스트 수집 #dev #analysis #skill
@@ -267,6 +269,7 @@
 - [[state-tool-task-step-key-address]] — state-tool task-step 키 주소 체계 #state-tool #pipeline #key-address #task-070
 - [[strip-deploy-runtime-token-neutral]] — strip_deploy_md 런타임 토큰 영향 0 — 변경이력 trim 측정 정정 교훈 #deploy-pipeline #token #install #measurement #lesson
 - [[subsection-number-insertion-preserves-citations]] — 하위 절 번호 삽입으로 외부 인용 보존 — 의미 위치와 주소 안정성 동시 확보 #documentation #reference-integrity #harness #task-095
+- [[template-precedence-over-prose-norms]] — 템플릿 우위 법칙 — 규범은 산문보다 템플릿이 이긴다 #template-precedence #prose-norms #framework-norm #governance #harness-design
 - [[test-real-data-validation-lesson]] — TEST 실데이터 검증이 build-only 가 놓친 결함을 발견한다 #testing #lesson #test-strategy #real-data
 - [[test-scenario-pipeline-redesign]] — 테스트 시나리오 파이프라인 재설계 (2차원 매트릭스 + self-confirming 4분리) #testing #pipeline #framework #flow #task
 - [[test-two-tier-system]] — 테스트 2단계 체계 (단위=EXECUTE / 통합=TEST) #testing #pipeline #framework
@@ -285,10 +288,12 @@
 - [[wbs-세분화-단일책임-수용시나리오]] — WBS 세분화 원칙 — 단일 책임 + 수용 시나리오 기준 #oppd #wbs #sizing #be #fe #acceptance-scenario
 - [[wiki-intelligence-decisions-016]] — opal-wiki-pilot 지능화 결정 — M-4/M-5 (016) #architecture #naming #git #brain #policy
 - [[worker-abort-artifact-measured-adjudication]] — 워커 중단 시 재개 대신 산출물 실측 판정 — 중단과 미완은 별개 사실 #agentic #worker #pm-discipline #resilience #task-095
+- [[worker-bypassed-blocked-tool-filename-trigger]] — 워커가 차단된 도구를 우회한 사례 — 원인은 파일명 트리거 + 규율 부재 #worker-discipline #tool-bypass #pm-prompt #dispatch
 - [[worker-role-boundary-exposes-pm-measurement-error]] — 워커 역할경계 준수가 PM 측정식 결함을 드러낸다 #lesson #worker #governance #opds
 - [[worktree-slot-existence-to-occupancy-judgment]] — 워크트리 슬롯 판정 — 존재에서 점유로 #worktree #git #lesson #non-trivial-resolution
 - [[worktree-workspace-isolation-axis]] — 워크트리 격리 축 — 문서는 허브 고정, 코드만 분기 #architecture #workspace #worktree #git #isolation
 - [[wtm-agent-cmux-integration]] — wtm-agent OPAL 표준화 + cmux-tool 신설 #tool #agent #wtm #cmux #task
+- [[zero-margin-constraint-forces-wrong-choice]] — 여유 0인 정량 제약은 실행자를 잘못된 선택으로 민다 #quantitative-constraint #pm-instruction #execution-risk
 
 ## 흐름
 - [[asis-analysis-five-stage-workflow]] — AS-IS 분석 5단계 워크플로우 (PM 대화) #pm #asis-analysis #workflow #task-084
