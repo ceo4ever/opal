@@ -1,7 +1,7 @@
 {
   "$schema": "opal-skills-registry-v1",
-  "version": "3.10.0",
-  "updated_at": "2026-08-13",
+  "version": "3.12.0",
+  "updated_at": "2026-08-24",
   "groups": {
     "opal-pilot": [
       {
@@ -747,6 +747,34 @@
           "~/.opal/skills/opal-improve/SKILL.md"
         ],
         "domain": "improvement"
+      },
+      {
+        "name": "opal-grill",
+        "alias": "opgr",
+        "description": "산출물 캐묻기 — 상류 정합·자기 정합·근거 3축 분석 후 라운드형 질문 반환 (readonly, 판정 비소유, 명시 호출 전용)",
+        "triggers": [
+          "^opal-grill$",
+          "^opgr$"
+        ],
+        "paths": [
+          "{project}/.opal/skills/opal-grill/SKILL.md",
+          "~/.opal/skills/opal-grill/SKILL.md"
+        ],
+        "domain": "review"
+      },
+      {
+        "name": "opal-eli5",
+        "alias": "opeli5",
+        "description": "주제 하나를 아무것도 모르는 사람에게 설명 — 프로젝트 자산(brain·code-scan·docs·태스크) 근거 우선, 부재 시 일반 지식. 큰 그림 중심 자기완결 파일 1건 산출 (--html 기본 / --md, 명시 호출 전용)",
+        "triggers": [
+          "^opal-eli5$",
+          "^opeli5$"
+        ],
+        "paths": [
+          "{project}/.opal/skills/opal-eli5/SKILL.md",
+          "~/.opal/skills/opal-eli5/SKILL.md"
+        ],
+        "domain": "explain"
       }
     ],
     "op-brain": [
@@ -838,6 +866,32 @@
         "opal-pilot-project-dev: opal 그룹 → opal-pilot 그룹 이동",
         "opal-brain: opal 그룹 잔류 (불변 — alias opbr·triggers·paths 동일)",
         "system-architecture-html: paths에 '~/.opal/skills/...' 경로 보충 (다른 standalone 스킬과 달리 누락되어 있던 드리프트 — validate가 검출. 형제 항목 패턴과 정합)"
+      ]
+    },
+    {
+      "version": "3.11.0",
+      "date": "2026-08-22",
+      "task": "-",
+      "changes": [
+        "opal-grill 신규 등록 (alias opgr, group opal) — 단계 산출물 3축 캐묻기 사용자 진입점"
+      ]
+    },
+    {
+      "version": "3.11.1",
+      "date": "2026-08-23",
+      "task": "-",
+      "changes": [
+        "opal-grill v2.0 — 자연어 트리거 제거(명시 호출 전용, allow_implicit_invocation:false 대응) + description 갱신"
+      ]
+    },
+    {
+      "version": "3.12.0",
+      "date": "2026-08-24",
+      "task": "-",
+      "changes": [
+        "opal-eli5 신규 등록 (alias opeli5, group opal) — 주제 설명서 생성 사용자 진입점. 커뮤니티 플러그인 eli5(claude-community)와 동명 충돌을 피하려 opal- 접두 채택",
+        "스킬 레벨 출력 포맷 플래그 최초 도입 (--html 기본 / --md) — 기존 -- 플래그는 오케스트레이터 전용이었음. 의도된 선례로 기록",
+        "미지원 포맷값은 기본값 폴백 없이 1줄 오류 후 중단 (조용한 폴백 금지)"
       ]
     }
   ]

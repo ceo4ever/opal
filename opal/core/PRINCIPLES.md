@@ -24,6 +24,8 @@ and agent doc inherits this by reference — not by copy.
 - Solve only the current requirement. No speculative abstraction or unrequested flexibility.
 - No abstractions for single-use code.
 - Remove a duplicated existing pattern before introducing a new one.
+- Framework docs (skills, agents, harness, references) are execution instructions, not explanations:
+  keep prose only where it changes what an agent does or decides. See `opal-doc-standard.md` §0.
 - Self-check: "Would a senior engineer say this is overcomplicated?"
 
 ## 3. Surgical Changes
