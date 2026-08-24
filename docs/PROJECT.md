@@ -196,6 +196,7 @@ TEST-SCENARIO 단계를 "목표 달성 검증"으로 재정의 — 루브릭 채
 
 | 컴포넌트 | 약어 | 유형 | 설명 |
 |----------|------|------|------|
+| `analysis-core.md` | - | 규칙 SSOT | ANALYSIS·PLAN 공유 분석 절차 SSOT — 지식 선조회 3단·증분 소비·델타 탐색·분석 깊이·관련 파일 맵 6영역 축·의존성/영향 범위·품질 체크리스트. 절차는 이 문서, 산출물 형식은 각 스킬이 소유. `opal/core/references/harness/analysis-core.md` |
 | `scenario-gate.md` | - | 규칙 SSOT | 루브릭 6축(①목표달성~⑥경계/부정)·판정주체 분리(②③④ 결정론/①⑤⑥ 판단)·정규화 계약·종료조건 3종(수렴/반복상한/무진전)·tool-gated 집행. `opal/core/references/harness/` |
 | `op-scenario-gate` | - | 단계 스킬 | 목표-커버 루프 컨트롤 — 정규화 페이로드 빌드→coverage-check→evaluator→종료조건 판정→verdict 반환. Step 2 pilot 변환기로 재사용(opd/opds/opsdd 3종 접합, oppl 제외·oppd 2차) |
 | `test-tool scenario-coverage-check` | - | 도구 확장 | R/F/H↔시나리오 매핑 누락 결정론 판정(②③④). exit 0(전커버)/16(coverage_unmet)/17(입력오류). pilot-중립 정규화 페이로드 소비 |
@@ -236,6 +237,7 @@ TEST-SCENARIO 단계를 "목표 달성 검증"으로 재정의 — 루브릭 채
 
 | 날짜 | 변경 내용 |
 |------|----------|
+| 2026-08-23 | 분석 코어 SSOT 신설 반영 — §주요 컴포넌트에 `analysis-core.md` 행 추가(ANALYSIS·PLAN 공유 절차 SSOT, 수치 복제 없이 경로 포인터만). 태스크 100 |
 | 2026-08-21 22:18 | §주요 컴포넌트 (Dev 파이프라인)에 **트랙 라우팅** 항목 신설 — `opal/core/references/harness/track-routing.md`(규칙 SSOT) 등재. `//opd` 4축 AND 자동 강등, 판정 시점 분리(강등=TASK 직후 / 승격=PLAN 결과)로 승격 규칙과 상호배타, fail-safe는 강등 불발. 임계값 수치는 SSOT 단독 보유(복제 0건) (098) |
 | 2026-08-21 15:30 | 문서 레지스트리 `docs/CONVENTIONS.md` 행 정합 — 용도 서술의 `커밋 규칙`을 `커밋 메시지 형식·단위`로 정정하고 구현 규칙 열거에서 `Guards/`를 제거. Guards 규칙 원문 소유권이 `opal/core/references/opal-harness.md` §1임을 명시해, CONVENTIONS.md 포인터화(v1.7.0)와의 내부 모순을 해소 (097) |
 | 2026-08-16 15:55 | STATE.md 저널화 반영 — 3-SSOT 각주에서 "사람 뷰는 자동 렌더" 전제 제거. `BACKLOG.md`는 자동 렌더 유지, `state.json` 현황 조회는 `state-tool show`로 명시(STATE.md는 의사결정 로그·블로커 저널) (Task 094) |

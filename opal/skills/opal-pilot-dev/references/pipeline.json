@@ -7,7 +7,12 @@
     { "id": 2,  "key": "task.user_confirm",            "stage": "TASK",          "item": "사용자 확인" },
     { "id": 3,  "key": "analysis.analysis_md",         "stage": "ANALYSIS",      "item": "작업" },
     { "id": 4,  "key": "analysis.pm_gate",             "stage": "ANALYSIS",      "item": "PM Gate",
-      "gate": { "artifacts": ["ANALYSIS.md"], "checklist": ["-"] } },
+      "gate": { "artifacts": ["ANALYSIS.md"], "checklist": [
+        "ANALYSIS.md §0 참조 문서 — code-scan·brain 선조회 결과 1건 이상",
+        "ANALYSIS.md §확정 입력 판정 — TASK.md [결정]·[사실] 전건 판정(누락 0)",
+        "ANALYSIS.md §다음 단계 입력 — 항목|확정값|근거 3열 표 존재",
+        "소스코드 원문 블록 0건 (코드펜스는 실행 명령·시그니처 한정)"
+      ] } },
     { "id": 5,  "key": "analysis.user_confirm",        "stage": "ANALYSIS",      "item": "사용자 확인" },
     { "id": 6,  "key": "plan.plan_md",                 "stage": "PLAN",          "item": "작업" },
     { "id": 7,  "key": "plan.pm_gate",                 "stage": "PLAN",          "item": "PM Gate",

@@ -336,3 +336,8 @@
 - 신규: [[pages/concept/template-precedence-over-prose-norms.md]], [[pages/concept/lean-core-relocation-benefit-precondition.md]], [[pages/concept/norm-relaxation-must-replace-not-add.md]], [[pages/concept/zero-margin-constraint-forces-wrong-choice.md]], [[pages/concept/worker-bypassed-blocked-tool-filename-trigger.md]]
 - 출처: task:099
 
+## [2026-08-24] ingest | CLOSE ingest — 태스크 100 분석 코어 공유 SSOT 신설
+- 신규: [[shared-ssot-procedure-artifact-role-split]], [[conditional-precheck-over-unconditional-alibi-call]], [[split-return-contract-no-denominator-expansion]], [[handoff-contract-table-schema-mismatch]]
+- 갱신: [[template-precedence-over-prose-norms]], [[measurement-tool-more-fallible-than-artifact-lesson]]
+- 출처: task:100
+

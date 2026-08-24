@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_task_number": 99,
+  "last_task_number": 100,
   "memories": [
     {
       "title": "변경이력 제거 검토 결정 — A안 확정",
@@ -29,6 +29,13 @@
   ],
   "history": [
     {
+      "title": "100 분석코어 공유SSOT",
+      "date": "2026-08-24",
+      "stage": "완료",
+      "path": "tasks/100-260822-opd-분석코어-공유SSOT/",
+      "result": "(PM 보강 대기)"
+    },
+    {
       "title": "099 보고형식 ADHD 하네스",
       "date": "2026-08-22",
       "stage": "완료",
@@ -55,13 +62,6 @@
       "stage": "완료",
       "path": "tasks/096-260820-opds-메모리툴-참조무결성-고착해소/",
       "result": "인덱스↔본문 불일치 검출(review violations)과 본문 부재 행 정식 정리 경로(delete --orphan --ref)를 신설해 promote(본문 필수)×delete(상태 가드) 조합 사각지대를 해소. 검출 어휘 2분(missing=정리 가능/unresolvable=포인터 수리 필요), ERROR_CODES 23→26(삭제·개명 0), 라이프사이클 표에 candidate 추가로 스키마 enum 5종 정합. 목표-커버 게이트가 PLAN 설계 P0을 검출 — _resolve_memory_file() None 반환 3경로에서 가드가 통과해 본문이 memory/ 밖에 살아있는데 인덱스만 끊기는 blind 삭제 벡터. 무손실 가드 정밀화가 새 blind 삭제 경로를 만들 뻔했고 조기 반환 재구성으로 해소(재설계 2/2 소진). 구현 중 근본 원인 발견 — memory_tool.py에 본문 생성 코드 0곳, cmd_append는 경로만 기록하므로 본문 부재 행은 append의 정상 산출물이다. 이에 memory-learning.md:41에 [MUST] 참조 무결성을 신설해 정책으로 확정. 검증: 시나리오 38/39 Pass, 게이트 2회차 2/2/2 평균 2.0, 회귀 163→187(감소 0), state-tool·improve-tool 358 pass, 원본 해시 보전, 배포본 diff 0. 워커 블로커 3건 전건 red-first §3 준수. PM 자기판정 철회 2건(선작성률 61→50% 부적격 신호 인정 / 신규 고착→선재 고착). 후속 7건 이월, TS-033 캡틴 판정 대기"
-    },
-    {
-      "title": "095 시나리오 목표계열 선작성",
-      "date": "2026-08-19",
-      "stage": "완료",
-      "path": "tasks/095-260819-opds-시나리오-목표계열-선작성/",
-      "result": "TEST-SCENARIO 도출 입력을 Block A(TASK 유래 목표·R·채택 → 축 ①②⑤⑥)/Block B(PLAN 유래 F·H → 축 ③④)로 분리하고 Block A를 PLAN 워커와 병렬 선작성하는 opt-in 트랙을 red-first.md §1.6 신설 + test-scenario-guide Step 1 재구성 + scenario-gate §4 호출시점 [MUST] + opds STEP 2/opd STEP 3·3.5 배선 5문서로 집행. 코드 0줄. 자기적용 실측이 결론을 뒤집음 — 효율 이득은 순 7%에 총작업량 3분 증가로 미미했고, 품질 이득이 실측됨(선작성 고유 3건 S-11 채택·S-12 음성통제·S-15 목표달성이 PLAN TS-001~029에 대응 0건 / PLAN TS는 29/29 흡수 / AC 되읽기형 6·16 과반미달). 그래서 §1.6 리드에 '효율은 목적이 아니다'를 못박고 (f)에 착수 판단 기준+판단유보시 순차 규범을 넣음. 시나리오 18/18 PASS, 게이트 2/2/2 평균 2.0 gaps 0, install 배포본 정합 5/5 OK, 제약 7항 전건 방어(도구·pipeline.json diff 0, spec-validate 10-10). 캡틴 지적 2건 반영: A·D는 FW 소스가 목적지(PLAN은 경유지) / install은 TEST 전건 통과 후로 순서 변경(전역 비가역 배포 차단). 선재 결함 3건 미접촉 보고 — test-tool 전역홈 격리부재(083 OPAL_HOME 선례) · opal-harness §2에 scenario-gate 미등록 · ARCHITECTURE:108 opds 흐름 불일치"
     }
   ]
 }

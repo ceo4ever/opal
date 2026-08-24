@@ -255,7 +255,7 @@
 
 ---
 
-### `verify` — TEST-SCENARIO.md 검증 + TASK 게이트 (013/016/005/098)
+### `verify` — TEST-SCENARIO.md 검증 + TASK 게이트 (013/016/005/098/100)
 
 `10개 서브 명령`과 별개로 동작하는 검증 전용 명령. task-path 하나에 여러 독립
 분기(mock 패턴/증거 누락 검사, `--red-check`, `--fix-mode`, `--clarification-check`,
@@ -267,15 +267,28 @@
 ~/.opal/tools/state-tool/run.sh verify <task-path> --evidence-check [--task-md <path>]
 ```
 
-- `--evidence-check`: TASK.md `## 명확화 결과` 표의 `의존 사실` 셀을 근거 등급
-  4축(① 인용 존재 ② 인용 유효(경로·줄 실존) ③ 등급 부여 ④ E5 단독 아님)으로
-  판정하여 항목별 확정/미확정 + 사유를 반환하는 **라우터**다 — 미충족이어도
-  차단하지 않는다(exit code 항상 0). PM이 반환된 `unconfirmed`를 검토해 판단으로
-  확정 승격할 수 있다(098, PLAN §3.3.2).
+- `--evidence-check`: TASK.md의 **두 곳**을 근거 등급 4축(① 인용 존재 ② 인용
+  유효(경로·줄 실존) ③ 등급 부여 ④ E5 단독 아님)으로 판정하여 항목별
+  확정/미확정 + 사유를 반환하는 **라우터**다 — 미충족이어도 차단하지 않는다
+  (exit code 항상 0). PM이 반환된 `unconfirmed`를 검토해 판단으로 확정 승격할
+  수 있다(098, PLAN §3.3.2 / 100 §3.7.2).
+  - **파싱 대상 ①** `## 명확화 결과` **표**의 `의존 사실` 열 → `source:
+    "clarification"` (098부터).
+  - **파싱 대상 ②** `## 확정된 설계 방향` 섹션의 **최상위 불릿** → `source:
+    "confirmed_direction"` (100부터). 표가 아니라 불릿 리스트이므로 전용 파서로
+    수집하며, 표의 열 구성에는 아무 영향이 없다. 중첩(들여쓴) 불릿은 항목으로
+    수집하지 않고, `element`에는 불릿 본문 원문이 그대로 담긴다(어떤 항목이
+    미확정인지 PM이 식별할 수 있어야 하므로 인덱스형 라벨을 쓰지 않는다).
+- `items[]`의 `source` 필드가 두 출처를 구분한다(`"clarification"` |
+  `"confirmed_direction"`). 두 소스는 하나의 `items[]`로 병합되지만 **비율
+  분모는 공유하지 않는다** — 아래 `confirmed_ratio` / `direction_confirmed_ratio`
+  참조.
 - `--task-md <path>`: TASK.md 경로 명시(기본 `<task-path>/TASK.md`).
 - `--clarification-check`와 동시 지정 시 `evidence_check_flag_conflict`로 거부(exit 1) — 같은 표를 서로 다른 반환 계약(차단형/라우터형)으로 동시에 소비할 수 없다.
 - TASK.md 부재, `## 명확화 결과` 섹션/표 부재, `의존 사실` 열 부재는 모두 하위호환
   graceful skip(`evidence_check: "skipped"`, exit 0) — 레거시 TASK.md 회귀 없음.
+  `## 확정된 설계 방향` 섹션 부재·항목 0건도 마찬가지로 조용히 건너뛴다
+  (`direction_confirmed_ratio: null`, 분모 0 나눗셈 없음).
 - 인용 형식 4종: `` `경로:N` ``/`` `경로:N-M` `` (등급 매핑 + 파일·줄 실존 검사) /
   `` `경로` §N `` (등급 매핑 + 경로 존재만) / `[사이트명](URL)` (네트워크 접근
   금지, `grade:"unknown"`) / `(→ D-N §N)` 단축 참조(테이블 역참조 미해석,
@@ -287,6 +300,13 @@
   경로 패턴으로 판별 불가하므로 자동 부여 대상이 아니다(항상 `unknown`).
 - `unknown` 등급은 `confirmed_ratio` 계산에서 미확정으로 계상한다(분자 제외·
   분모 포함) — 근거 없음은 완료가 아니라는 원칙의 도구 집행이다.
+- **verdict 3종**: `확정` / `승계` / `미확정`.
+  - `확정` — `[결정]` 태그 보유(캡틴 결정은 근거 판정 면제) 또는 4축 통과.
+  - `승계` — `[사실]` 태그 + 유효 인용(E2/E4 + 실존)으로 4축 통과. 상류에서 이미
+    대조 확인된 사실을 승계했다는 표시이며(재확인 면제), **계수상 `확정`과
+    동등하게 confirmed로 집계**된다(100).
+  - `미확정` — 인용 부재/경로 부재/등급 unknown/E5 단독 등. `unconfirmed[]`에
+    오르며, 두 출처의 미확정 항목이 함께 담긴다.
 
 **성공 응답(라우터)**:
 ```json
@@ -294,14 +314,33 @@
   "ok": true, "command": "verify", "evidence_check": "routed",
   "items": [
     {"element": "목표", "verdict": "확정", "reasons": [],
-     "citations": [{"raw": "`opal/tools/state-tool/state_tool.py:100`", "grade": "E2", "exists": true}]},
-    {"element": "제약", "verdict": "미확정", "reasons": ["citation_missing"], "citations": []}
+     "citations": [{"raw": "`opal/tools/state-tool/state_tool.py:100`", "grade": "E2", "exists": true}],
+     "source": "clarification"},
+    {"element": "제약", "verdict": "미확정", "reasons": ["citation_missing"], "citations": [],
+     "source": "clarification"},
+    {"element": "`[사실]` evidence-check는 라우터다 (`opal/tools/state-tool/README.md:267`).",
+     "verdict": "승계", "reasons": [],
+     "citations": [{"raw": "`opal/tools/state-tool/README.md:267`", "grade": "E4", "exists": true}],
+     "source": "confirmed_direction"}
   ],
-  "confirmed_ratio": 0.5, "unconfirmed": ["제약", "완료기준"]
+  "confirmed_ratio": 0.5, "direction_confirmed_ratio": 1.0,
+  "unconfirmed": ["제약", "완료기준"]
 }
 ```
 `evidence_check`는 `"pass"`(confirmed_ratio 1.0) / `"routed"`(일부 미확정) /
 `"skipped"`(graceful skip) 중 하나이며, exit code는 항상 0이다.
+
+**두 비율 키는 분모가 다르다**(100 PD-1 — 분리형):
+
+| 키 | 분모 | 분자 |
+|----|------|------|
+| `confirmed_ratio` | `## 명확화 결과` 4요소 항목 수 **고정(불변)** | 그중 `확정`+`승계` |
+| `direction_confirmed_ratio` | `## 확정된 설계 방향` 최상위 불릿 수 | 그중 `확정`+`승계` |
+
+`confirmed_ratio`의 분모에 방향 항목이 섞이지 않는다 — 기존 소비자의 의미를
+바꾸지 않기 위한 의도적 분리다. `direction_confirmed_ratio`는 섹션 부재 또는
+항목 0건일 때 `null`이며, `evidence_check` 상태값(`pass`/`routed`) 판정에는
+관여하지 않는다(기존 `confirmed_ratio` 단독 기준 유지).
 
 **플래그 충돌 응답**:
 ```json
@@ -418,3 +457,4 @@
 | v1.6 | 2026-07-23 12:09 | (072) | STATE.md "다음 액션" 자동 파생 — `state.json` `next_action` 필드 신설(init 영속화, `state.schema.json` optional 등록), `advance`/`mark` 프론티어(첫 미완료 행) 자동 파생·`update_next_action_section`(첫 줄만 치환, 하위 자유기재 보존), `advance`/`mark` `--next-action` per-transition 오버라이드(비지속 — 다음 전이 자동 파생 복귀). `## 블로커`는 기존대로 PM 수동 갱신 |
 | v1.7 | 2026-08-16 13:15 | (094) | STATE.md 저널화에 따른 문서 재정합(R-4 문서 + R-9 ①③) — 에러 카탈로그 재실측(`marker_missing`/`import_failed` 삭제, `import_existing_removed` 추가, 39종 표기 → **44종 실측값**으로 정정 및 091/093 누락 행(`gate_artifact_missing`/`spec_gate_*`/`user_confirmation_required`) 보강, 행 번호 전체 재부여); `init --import-existing` 사용 안내 제거 — 항상 `import_existing_removed`로 거부됨을 명시(인자는 `help=SUPPRESS`로 존치, 설계 의도 기술); `validate` 검증 항목·응답 예시에서 `marker_missing` 서술 제거; `show` 절을 `cmd_show` 재설계(R-5/D-4)에 맞춰 재작성 — `md`/`full` 모두 마커 유무와 무관하게 `state.json` 단일 파생 렌더, 레거시 마커 잔존 시 배너 1줄 prepend, `marker_present` 필드 의미 재해석(레거시 동결 표 잔존 신호) 1줄 추가 |
 | v1.8 | 2026-08-21 18:04 | (098) | `verify --evidence-check` 신설(F-003, PLAN §3.3.2) — TASK.md `## 명확화 결과` 표의 `의존 사실` 셀을 근거 등급 4축으로 판정해 항목별 확정/미확정+사유를 반환하는 라우터(exit 0 유지, 미확정도 차단하지 않음) 신규 절 추가; 에러 코드 44→**45종**(`evidence_check_flag_conflict` — `--evidence-check`/`--clarification-check` 동시 지정 거부) 반영해 카탈로그 헤더·표 정정 |
+| v1.9 | 2026-08-23 13:03 | (100) | `verify --evidence-check` 파싱 대상 확장(F-007, PLAN §3.7.2) — `## 명확화 결과` 표에 더해 `## 확정된 설계 방향` 섹션의 **최상위 불릿**을 전용 파서(`_locate_confirmed_direction_items`)로 수집해 하나의 `items[]`로 병합, 각 항목에 출처 구분 `source`(`clarification` \| `confirmed_direction`) 필드 신설; verdict에 `승계` 추가(`[사실]` 태그 + 유효 인용 → 상류 대조 확인 승계, 계수상 `확정`과 동등); 신규 반환 키 `direction_confirmed_ratio`(섹션 부재·항목 0건 시 `null`) 추가 — **기존 `confirmed_ratio`의 분모는 `## 명확화 결과` 항목 수로 불변**(PD-1 분리형, 소비자 계약 보호). 표 열 구성·플래그·에러 코드 45종·exit 0 3경로 전부 불변 |

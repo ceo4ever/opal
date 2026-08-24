@@ -47,6 +47,7 @@ op-dev-analysis 스킬을 수행하라.
 **하네스 Guards**: PLAN.md에 없는 파일 생성/수정 금지. PLAN 설계를 임의 변경 금지. 블로커 발생 시 즉시 중단 후 보고.
 **참조 문서**: {docs/PROJECT.md 문서 테이블 기반 관련 문서 경로}
 **핵심 제약**: {[MUST] <문서명> §N: <인용문> 형식으로 원문 인용 필수 항목. 요약 허용 항목은 일반 목록}
+**분석 질문**: {Q1~QN — PM이 이번 분석에서 답을 받아야 할 질문. 없으면 "없음"}
 ```
 **model**: standard
 
@@ -422,3 +423,4 @@ semi-agentic / agentic 모두 CLOSE 첫 행 `--auto-pass` 거부 (`agentic_close
 | v5.3 | 2026-08-19 21:10 | STEP 3(PLAN) §3-1에 목표계열 선작성 병렬 착수 지시 + STEP 3.5 절차 1을 Block B 보강으로 재작성·4에 보강 완료 판정·5에 게이트 1회 전제 및 test_scenario.scenario_gate mark 시점 명시. STEP 2(ANALYSIS)·STEP 4(EXECUTE)·pipeline.json 무변경 (095) |
 | v5.4 | 2026-08-21 15:19 | §[PM 컨텍스트 주입] 블록을 `pm/dispatch-process.md` §워커 컨텍스트 주입 템플릿 포인터로 일원화 — 주입 항목 열거(하네스 Guards·참조 문서·기술 스택 3항목)를 제거하고 SSOT 참조 1줄로 대체. 전 워커 공통 고정(git 이력 변경 금지 포함)이 파일럿 종류와 무관하게 도달하도록 함 (097) |
 | v5.5 | 2026-08-21 22:15 | STEP 1(TASK) 직후에 트랙 강등 판정 호출 지점 배선 — `opal/core/references/harness/track-routing.md`(SSOT) 포인터 + 소유자 승인 왕복 없이 진입·사후 통보 명시. 임계값 수치는 SSOT에만 존치(복제 0건) (098) |
+| v5.6 | 2026-08-23 12:45 | STEP 2(ANALYSIS) 디스패치 프롬프트에 `**분석 질문**:` 슬롯 1줄 추가 — 워커가 전방위 스캔 대신 PM 지정 질문에 답하도록 유도, `op-dev-analysis/SKILL.md`「지정 분석 질문」 섹션과 대응. PM Gate checklist 문구 복제 없음(SSOT는 pipeline.json 유지) (100) |

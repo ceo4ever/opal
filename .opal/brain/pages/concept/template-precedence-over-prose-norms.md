@@ -9,11 +9,12 @@ tags:
 - harness-design
 sources:
 - task:099
+- task:100
 related:
 - lean-core-relocation-benefit-precondition
 - agent-md-digest-pattern
 created: '2026-08-22'
-updated: '2026-08-22'
+updated: '2026-08-24'
 status: draft
 ---
 ## 개요
@@ -27,6 +28,12 @@ status: draft
 - 이 관측들은 3단 분리 조건 아래서 얻어졌다 — 규범 저자는 산출 과정에 불참했고, 산출자는 채점 판정표를 열람하지 않았으며, 채점자는 산출자와 별도 주체였다(근거: task:099 DONE.md §5 도입부).
 - (근거: task:099 DONE.md §5 회차 3) 재현 실험 — 템플릿 실물화 5항목이 전건 0% → 100%로 이동했다.
 - (근거: task:099 DONE.md §5 회차 4) 역방향으로도 확증됐다 — 템플릿이 항목을 붙여 쓰자 "항목 사이 빈 줄" 원칙 준수가 3/3에서 0/3으로 퇴행했고, 템플릿에 빈 줄을 되돌리자 0/4에서 4/4로 복구됐다.
+
+### 타 태스크 재확인 (task:100)
+
+- (근거: task:100 DONE.md §5) PM이 아무 절차도 주입하지 않은 표준 프롬프트로 ANALYSIS를 1회 재생성했을 때, 템플릿 실물 섹션(지식 선조회 3단·Q표·「다음 단계 입력」·「PLAN 결정 필요」)은 지시 없이도 워커가 자발 재현했다.
+- (근거: task:100 DONE.md §5) 반면 코드펜스 비율은 6.3%→0.0%로 개선됐는데, 이는 산문 규칙이 아니라 판정식 자체가 문단 수 기준으로 교체된 결과다 — 산문에만 있던 규칙은 이번에도 별도 확증 대상이 아니었다.
+- 결론은 099와 동일한 방향으로 재확인됐다: 템플릿 실물 섹션에 넣은 것은 지시 없이 재현되고, 산문에만 있는 것은 재현 여부가 불확실하다.
 
 ## 결정 내용
 
@@ -42,3 +49,4 @@ status: draft
 
 - [[lean-core-relocation-benefit-precondition]]
 - [[agent-md-digest-pattern]]
+- [[shared-ssot-procedure-artifact-role-split]]

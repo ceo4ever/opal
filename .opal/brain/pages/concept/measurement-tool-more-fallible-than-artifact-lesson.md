@@ -8,11 +8,12 @@ tags:
 - opds
 sources:
 - task:098
+- task:100
 related:
 - execution-observation-scope-citation-requirement
 - evidence-tier-asis-tobe-jurisdiction
 created: '2026-08-21'
-updated: '2026-08-21'
+updated: '2026-08-24'
 status: draft
 ---
 ## 개요
@@ -25,6 +26,11 @@ status: draft
 - (근거: task:098 DONE §6) ② S-32 시나리오 검증 대상 파일을 잘못 지목해 실제로는 검사가 이뤄지지 않았는데 PASS로 기록되는 공허 PASS가 발생했다.
 - (근거: task:098 DONE §6) ③ 통과 건수의 스코프를 잘못 판단했다 — 단일 파일 실행(324 passed)과 디렉토리 전체 실행(341 passed)의 수치가 다른데 스코프를 명시하지 않고 인용해 혼선이 생겼다.
 - (근거: task:098 DONE §6) ④ 시나리오 플레이스홀더 문구가 `_{채움}_`·`_{EXECUTE 워커가 채움}_`·`_{캡틴 확인 후 기록}_` 3종으로 존재하는데, 정확 문자열 grep으로 하나만 세어 다른 문언을 쓴 항목(S-2)을 누락했다.
+
+### 타 태스크 재확인 (task:100)
+
+- (근거: task:100 DONE.md §7-2) PM이 `docs/ARCHITECTURE.md`의 "17파일" 표기를 확인할 때 같은 줄에 함께 등장한 harness 파일 수치의 **첫 발생만 확인**하고 두 번째 수치를 놓쳤다 — S-28 시나리오 검증에서 이 누락이 검출됐다.
+- 098에서 정립한 "정규식 전종 매치로 세야 한다"는 결정이, 098과 무관한 후속 태스크(100)의 PM 실측 과정에서 동일 실패 유형으로 그대로 재현됐다 — 이 페이지의 결정 내용이 일회성 사례가 아님을 확인해 준다.
 
 ## 결정 내용
 

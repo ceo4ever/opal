@@ -3,7 +3,7 @@
   "module": "test_state_tool",
   "layer": "test",
   "domain": "opal-pipeline",
-  "description": "state-tool 단위 테스트 — 9개 명령 happy path + 23종 에러 코드 × 최소 1건 + G-5~G-15 시나리오. 005: TestClarificationGate 신설 — verify --clarification-check + TASK→다음단계 자동 훅 RED-first 케이스 ①~⑨ + 회귀 보호. 054: TestOwnerNamePlaceholder 신설 — note '{owner_name}' 플레이스홀더 identity.md write-time 치환 RED-first(S-1~S-7). 056: TestOpplSkillInit 신설 — `--skill oppl` enum 미등록 RED-first(S-020, H-1) — run.sh subprocess 실호출로 공개 인터페이스만 검증(mock 미사용). 070: task-step 키 주소 체계 도입 1차 RED-first — TestPipelineSpecValidate/TestPipelineJsonInit/TestStateSchema11Compat/TestTaskStepAddressing/TestActionStepRename/TestAddRowKey/TestOpddEnumDrift/TestGroupAPipelineSpecs/TestBackwardCompatAliases 9종 신설(TEST-SCENARIO.md S-1~S-14, PLAN §3.7.2) — 미구현 기능이므로 전부 FAIL 기대(RED 증거). 072: TestNextActionAutoDerive 신설 — STATE.md '다음 액션' 자동 파생 RED-first(TEST-SCENARIO.md S-1~S-4,S-6,S-7) — init next_action 영속화+schema optional 등록, advance/mark 프론티어 파생(pending '진입'/in_progress '진행 중'/전체완료 '태스크 완료'), 첫 줄만 치환(하위 자유기재 보존), --next-action 오버라이드 우선+비지속 복귀 — 공개 CLI 경로(직접 호출+run.sh subprocess)로만 검증, 미구현이므로 실패 기대(RED 증거). 074: TestImportPreservesKeys 신설 — `--import-existing` task-step key 유실 결함 RED-first(TEST-SCENARIO.md S-a~S-e) — force+import-existing 후 rows[].key 100% 보존, pipeline.json 폴백 복원, key 원천 전무 시 keyless+stderr 경고(하위호환), schema_version 1.1 유지, 동일 (stage,item) 중복 순서 소비 — 공개 cmd_init 호출 + 실 파일 I/O로만 검증, 수정 전 코드에서 FAIL 기대(RED 증거). 076: TestTodoMirror 신설 — build_todo_mirror 파생 규칙(TS-001~007): init create 페이로드·전부pending→pending·전부done→completed·advance/부분→in_progress·na 중립·블로커 in_progress 유지·영속 경계(state.json 미영속+schema validate 통과) — 공개 cmd_init/advance/mark/block ok() stdout 페이로드 캡처로만 검증. 088: TestCloseHistoryLink 신설(TS-1~TS-7) — CLOSE 마지막 행 mark 시 link_memory_history()가 <프로젝트루트>/.opal/MEMORY.json history에 행을 자동 생성(title/path/stage/result 파생값, date는 memory-tool KST 충전)·재mark 멱등(duplicate_skipped)·MEMORY.json 부재/손상 시 비차단(ok:true + skipped/failed)·비CLOSE 행 무발동 대조군·result 보강 리마인더 구성요소·state.json 영속 경계(schema validate 통과) — 공개 cmd_mark 호출 + 실 MEMORY.json 파일 내용으로만 검증(내부 함수 mock 없음, 블랙박스 결함 주입). 091(RED-first, mode:red, F-004 게이트 집행 배선): TestTaskStepGate 신설(TEST-SCENARIO S-10~S-17) — check_gate_artifacts()/build_gate_payload()가 아직 없어(Step 8 GREEN 이전) 실 pipeline.json(opd/opdw/opsdd) 기반 gate 정의를 state.json 행에 직접 주입하는 픽스처로 산출물 부재 차단(H-1)·부분 상태 변경 부재·checklist dict 페이로드(H-6)·gate 없는 행 무영향(H-2/H-3)·빈 artifacts 비차단(opdw 실사례)·--force --note 우회 의사결정 로그(H-5)·경로 이탈 토큰 거부(H-4)·glob 토큰 매칭(opsdd 실사례)을 검증(공개 cmd_mark 호출 + 실 state.json/STATE.md 파일 내용, mock 없음). TestPipelineSpecValidate에 gate violation 4종(spec_gate_type_invalid/spec_gate_missing_field/spec_gate_field_type_invalid/spec_gate_checklist_empty, S-9) 케이스 + 실 pipeline.json 10종 유효성 케이스 추가. TestErrorCodesCompleteness에 091 신규 5종 반영(39→44). 093(RED-first, mode:red, 사용자 확인 행 자동 승인 경로 일원화): TestT093AutoNaRemoval/TestT093AutoApproveHook/TestT093AutoApproveBoundary/TestT093HookGuardOrder/TestT093MarkIdempotency/TestT093NaBackwardCompat/TestT093SingleDecisionSource 7종 신설(TEST-SCENARIO S-1~S-18·S-24~S-26) — init 시점 agentic auto-na 제거 후 전 모드 pending/PM 동형성(S-2~S-4), 다음 단계 진입 시 auto_approve_prior_user_confirmations 훅 자동 승인(S-1/S-5/S-13/S-26), CLOSE·워커 경로 구조적 제외(S-6~S-9), user_confirmation_required 전용 에러(S-12/S-24), 훅→후속 가드 순서와 파일 미오염(S-10/S-11), mark 접두 멱등·재-auto-pass no-op(S-15/S-16), MODE_BOUNDARY_STAGES 단일 판정 수렴(S-25), 경계 불변 회귀표 18셀·na 하위호환(S-14/S-17/S-18) — worktree run.sh subprocess 실호출 + 실 pipeline.json/state.json 파일 상태로만 검증(mock 미사용), 미구현 기능이므로 신규 계약 케이스는 전부 FAIL 기대(RED 증거: RED-EVIDENCE.md). 093 GREEN(Step 9): 구형 계약을 고정하던 기존 테스트를 신규 계약으로 수정 — test_init_agentic_auto_na_user_confirmation→test_init_agentic_user_confirmation_pending, test_rows_from_agentic_auto_na→test_rows_from_agentic_user_confirmation_pending(둘 다 na→pending 단언 교체), test_close_gate_regression_via_task_step_addressing_subprocess(주석 갱신 + CLOSE 직전 사용자 확인 행 row 8 캡틴 승인 단계 추가, 최종 assert 불변), agentic CLOSE 게이트 3건(test_agentic_close_gate_requires_user·test_g13_agentic_close_gate_auto_pass_rejected·test_c6_agentic_auto_pass_close_first_row)에 캡틴 승인 사전 단계 추가, test_new_structure_guard_blocks_skip에 사용자 확인 행 선(先)승인으로 guard 축 격리, test_s13_new_style_row_without_gate_response_unaffected 기대 키 집합에 auto_approved 추가, TestErrorCodesCompleteness 44→45종(user_confirmation_required). 테스트 삭제 0건. 094 R-11 Step0(RED-first, mode:red, agentic 승인 계약 정합): TestR11ModeBoundary/TestR11CloseGateFallback/TestR11DerivedSignals/TestR11Invariants 4종 신설(TEST-SCENARIO S-34~S-37,S-40) — G-1 MODE_BOUNDARY_STAGES에 DICT/MODEL/DDL·MIGRATION 3원소 부재로 semi-agentic opdd 설계 확정 3건이 미노출 통과하는 결함을 3 stage 개별 advance 호출로 판정(부분 구현 방지, S-34), G-2 check_close_gate가 확인 행 0개 파이프라인(opgc)에서 --owner user로도 영구 데드락인 결함(S-35), G-3-a/G-3-b _derive_next_action·build_todo_mirror가 자동 승인 예정 확인 행을 중립 처리하지 않아 next_action 헛 확인·todo 오판정하는 결함(S-36/S-37), R-11 [MUST] 불변 제약(신규 판정 함수 금지·next_action 스키마·build_todo_mirror 시그니처·ERROR_CODES 무접촉) 역검증(S-40) — 실 pipeline.json(opdd/opgc/opd) + run.sh subprocess 실호출 + 실 state.json 파일 상태로만 검증(mock 미사용), 미구현 기능이므로 신규 계약 케이스는 전부 FAIL 기대(RED 증거). 구현(op-be-agent)과 작성자(opal-test-agent) 분리. 098 ADD-2(RED-first, mode:red, 배포 경로 루트 파생 결함): TestT098Add2RootDerivation 신설 — `_resolve_citation_exists()`(`state_tool.py:2400`)가 프로젝트 루트를 `task_md_path`가 아니라 스크립트 자기 위치(`__file__`)에서 파생해, 배포본(`~/.opal/tools/state-tool/`)에서 실행 시 조상에 `.opal/MEMORY.json`이 없어 root=None → 정규 인용도 전건 citation_path_not_found로 오강등되는 결함을 3축(①스크립트 위치 독립성 ②오강등 부재 ③프로젝트 소스 실행 회귀 방어)으로 검증 — 실 TASK.md(본 태스크 098) + `state_tool.py` 임시 사본 subprocess 실행(공개 CLI `verify --evidence-check` stdout JSON)으로만 검증(mock 미사용), 미구현이므로 ①·②는 FAIL 기대(RED 증거: RED-EVIDENCE.md ADD-2절). 구현(op-be-agent)과 작성자(opal-test-agent) 분리, state_tool.py 무접촉.",
+  "description": "state-tool 단위 테스트 — 9개 명령 happy path + 23종 에러 코드 × 최소 1건 + G-5~G-15 시나리오. 005: TestClarificationGate 신설 — verify --clarification-check + TASK→다음단계 자동 훅 RED-first 케이스 ①~⑨ + 회귀 보호. 054: TestOwnerNamePlaceholder 신설 — note '{owner_name}' 플레이스홀더 identity.md write-time 치환 RED-first(S-1~S-7). 056: TestOpplSkillInit 신설 — `--skill oppl` enum 미등록 RED-first(S-020, H-1) — run.sh subprocess 실호출로 공개 인터페이스만 검증(mock 미사용). 070: task-step 키 주소 체계 도입 1차 RED-first — TestPipelineSpecValidate/TestPipelineJsonInit/TestStateSchema11Compat/TestTaskStepAddressing/TestActionStepRename/TestAddRowKey/TestOpddEnumDrift/TestGroupAPipelineSpecs/TestBackwardCompatAliases 9종 신설(TEST-SCENARIO.md S-1~S-14, PLAN §3.7.2) — 미구현 기능이므로 전부 FAIL 기대(RED 증거). 072: TestNextActionAutoDerive 신설 — STATE.md '다음 액션' 자동 파생 RED-first(TEST-SCENARIO.md S-1~S-4,S-6,S-7) — init next_action 영속화+schema optional 등록, advance/mark 프론티어 파생(pending '진입'/in_progress '진행 중'/전체완료 '태스크 완료'), 첫 줄만 치환(하위 자유기재 보존), --next-action 오버라이드 우선+비지속 복귀 — 공개 CLI 경로(직접 호출+run.sh subprocess)로만 검증, 미구현이므로 실패 기대(RED 증거). 074: TestImportPreservesKeys 신설 — `--import-existing` task-step key 유실 결함 RED-first(TEST-SCENARIO.md S-a~S-e) — force+import-existing 후 rows[].key 100% 보존, pipeline.json 폴백 복원, key 원천 전무 시 keyless+stderr 경고(하위호환), schema_version 1.1 유지, 동일 (stage,item) 중복 순서 소비 — 공개 cmd_init 호출 + 실 파일 I/O로만 검증, 수정 전 코드에서 FAIL 기대(RED 증거). 076: TestTodoMirror 신설 — build_todo_mirror 파생 규칙(TS-001~007): init create 페이로드·전부pending→pending·전부done→completed·advance/부분→in_progress·na 중립·블로커 in_progress 유지·영속 경계(state.json 미영속+schema validate 통과) — 공개 cmd_init/advance/mark/block ok() stdout 페이로드 캡처로만 검증. 088: TestCloseHistoryLink 신설(TS-1~TS-7) — CLOSE 마지막 행 mark 시 link_memory_history()가 <프로젝트루트>/.opal/MEMORY.json history에 행을 자동 생성(title/path/stage/result 파생값, date는 memory-tool KST 충전)·재mark 멱등(duplicate_skipped)·MEMORY.json 부재/손상 시 비차단(ok:true + skipped/failed)·비CLOSE 행 무발동 대조군·result 보강 리마인더 구성요소·state.json 영속 경계(schema validate 통과) — 공개 cmd_mark 호출 + 실 MEMORY.json 파일 내용으로만 검증(내부 함수 mock 없음, 블랙박스 결함 주입). 091(RED-first, mode:red, F-004 게이트 집행 배선): TestTaskStepGate 신설(TEST-SCENARIO S-10~S-17) — check_gate_artifacts()/build_gate_payload()가 아직 없어(Step 8 GREEN 이전) 실 pipeline.json(opd/opdw/opsdd) 기반 gate 정의를 state.json 행에 직접 주입하는 픽스처로 산출물 부재 차단(H-1)·부분 상태 변경 부재·checklist dict 페이로드(H-6)·gate 없는 행 무영향(H-2/H-3)·빈 artifacts 비차단(opdw 실사례)·--force --note 우회 의사결정 로그(H-5)·경로 이탈 토큰 거부(H-4)·glob 토큰 매칭(opsdd 실사례)을 검증(공개 cmd_mark 호출 + 실 state.json/STATE.md 파일 내용, mock 없음). TestPipelineSpecValidate에 gate violation 4종(spec_gate_type_invalid/spec_gate_missing_field/spec_gate_field_type_invalid/spec_gate_checklist_empty, S-9) 케이스 + 실 pipeline.json 10종 유효성 케이스 추가. TestErrorCodesCompleteness에 091 신규 5종 반영(39→44). 093(RED-first, mode:red, 사용자 확인 행 자동 승인 경로 일원화): TestT093AutoNaRemoval/TestT093AutoApproveHook/TestT093AutoApproveBoundary/TestT093HookGuardOrder/TestT093MarkIdempotency/TestT093NaBackwardCompat/TestT093SingleDecisionSource 7종 신설(TEST-SCENARIO S-1~S-18·S-24~S-26) — init 시점 agentic auto-na 제거 후 전 모드 pending/PM 동형성(S-2~S-4), 다음 단계 진입 시 auto_approve_prior_user_confirmations 훅 자동 승인(S-1/S-5/S-13/S-26), CLOSE·워커 경로 구조적 제외(S-6~S-9), user_confirmation_required 전용 에러(S-12/S-24), 훅→후속 가드 순서와 파일 미오염(S-10/S-11), mark 접두 멱등·재-auto-pass no-op(S-15/S-16), MODE_BOUNDARY_STAGES 단일 판정 수렴(S-25), 경계 불변 회귀표 18셀·na 하위호환(S-14/S-17/S-18) — worktree run.sh subprocess 실호출 + 실 pipeline.json/state.json 파일 상태로만 검증(mock 미사용), 미구현 기능이므로 신규 계약 케이스는 전부 FAIL 기대(RED 증거: RED-EVIDENCE.md). 093 GREEN(Step 9): 구형 계약을 고정하던 기존 테스트를 신규 계약으로 수정 — test_init_agentic_auto_na_user_confirmation→test_init_agentic_user_confirmation_pending, test_rows_from_agentic_auto_na→test_rows_from_agentic_user_confirmation_pending(둘 다 na→pending 단언 교체), test_close_gate_regression_via_task_step_addressing_subprocess(주석 갱신 + CLOSE 직전 사용자 확인 행 row 8 캡틴 승인 단계 추가, 최종 assert 불변), agentic CLOSE 게이트 3건(test_agentic_close_gate_requires_user·test_g13_agentic_close_gate_auto_pass_rejected·test_c6_agentic_auto_pass_close_first_row)에 캡틴 승인 사전 단계 추가, test_new_structure_guard_blocks_skip에 사용자 확인 행 선(先)승인으로 guard 축 격리, test_s13_new_style_row_without_gate_response_unaffected 기대 키 집합에 auto_approved 추가, TestErrorCodesCompleteness 44→45종(user_confirmation_required). 테스트 삭제 0건. 094 R-11 Step0(RED-first, mode:red, agentic 승인 계약 정합): TestR11ModeBoundary/TestR11CloseGateFallback/TestR11DerivedSignals/TestR11Invariants 4종 신설(TEST-SCENARIO S-34~S-37,S-40) — G-1 MODE_BOUNDARY_STAGES에 DICT/MODEL/DDL·MIGRATION 3원소 부재로 semi-agentic opdd 설계 확정 3건이 미노출 통과하는 결함을 3 stage 개별 advance 호출로 판정(부분 구현 방지, S-34), G-2 check_close_gate가 확인 행 0개 파이프라인(opgc)에서 --owner user로도 영구 데드락인 결함(S-35), G-3-a/G-3-b _derive_next_action·build_todo_mirror가 자동 승인 예정 확인 행을 중립 처리하지 않아 next_action 헛 확인·todo 오판정하는 결함(S-36/S-37), R-11 [MUST] 불변 제약(신규 판정 함수 금지·next_action 스키마·build_todo_mirror 시그니처·ERROR_CODES 무접촉) 역검증(S-40) — 실 pipeline.json(opdd/opgc/opd) + run.sh subprocess 실호출 + 실 state.json 파일 상태로만 검증(mock 미사용), 미구현 기능이므로 신규 계약 케이스는 전부 FAIL 기대(RED 증거). 구현(op-be-agent)과 작성자(opal-test-agent) 분리. 098 ADD-2(RED-first, mode:red, 배포 경로 루트 파생 결함): TestT098Add2RootDerivation 신설 — `_resolve_citation_exists()`(`state_tool.py:2400`)가 프로젝트 루트를 `task_md_path`가 아니라 스크립트 자기 위치(`__file__`)에서 파생해, 배포본(`~/.opal/tools/state-tool/`)에서 실행 시 조상에 `.opal/MEMORY.json`이 없어 root=None → 정규 인용도 전건 citation_path_not_found로 오강등되는 결함을 3축(①스크립트 위치 독립성 ②오강등 부재 ③프로젝트 소스 실행 회귀 방어)으로 검증 — 실 TASK.md(본 태스크 098) + `state_tool.py` 임시 사본 subprocess 실행(공개 CLI `verify --evidence-check` stdout JSON)으로만 검증(mock 미사용), 미구현이므로 ①·②는 FAIL 기대(RED 증거: RED-EVIDENCE.md ADD-2절). 구현(op-be-agent)과 작성자(opal-test-agent) 분리, state_tool.py 무접촉. 100: TestT100DirectionEvidence 신설(RED-first 7케이스) — `verify --evidence-check`의 `## 확정된 설계 방향` 불릿 파서 확장 계약 검증. ① items[] 편입 + source 필드 ② verdict `승계` ③ `direction_confirmed_ratio` 신규 키 ④ 기존 `confirmed_ratio` 분모 불변(PD-1 분리형) ⑤ 섹션 부재 graceful skip ⑥ exit 0 3경로 ⑦ 항목 0건 분모 0 경계. 실 파일 픽스처 3종(A 방향 6불릿+표 4행 / B 섹션 없음 / C 항목 0건), mock 금지. RED 증거: 단일 파일 7 failed·340 passed → GREEN 후 347 passed(스코프·명령 병기). 작성자(opal-be-agent Step 10)와 구현자(Step 11) 분리.",
   "exports": [
     "TestInit", "TestShow", "TestAdvance", "TestMark",
     "TestBlock", "TestValidate", "TestAddRow", "TestStatus", "TestGatePass",
@@ -19,7 +19,8 @@
     "TestT093HookGuardOrder", "TestT093MarkIdempotency", "TestT093NaBackwardCompat",
     "TestT093SingleDecisionSource",
     "TestR11ModeBoundary", "TestR11CloseGateFallback", "TestR11DerivedSignals",
-    "TestR11Invariants", "TestT098Add2RootDerivation"
+    "TestR11Invariants", "TestT098Add2RootDerivation",
+    "TestT100DirectionEvidence"
   ]
 }
 
@@ -8977,6 +8978,421 @@ class TestT098Add2RootDerivation(unittest.TestCase):
                 by_elem.get(elem, {}).get("verdict"), "확정",
                 f"[REGRESSION] '{elem}' verdict 변경됨(기존 확정 항목). result={result}",
             )
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# T100 — verify --evidence-check `## 확정된 설계 방향` 승계 파서 RED 테스트
+#        (PLAN 100 §3.7.2 / §4.2 Step 10, TS-025~TS-030)
+# ═════════════════════════════════════════════════════════════════════════════
+
+class TestT100DirectionEvidence(BaseTestCase):
+    """태스크 100 / RED-first / 실 파일 픽스처, mock 금지.
+
+    `verify --evidence-check`의 확장 계약(PLAN 100 §3.7.2)에 대한 RED 증거만
+    확보한다. 구현(`state_tool.py`)은 Step 11(GREEN) 소관이며 본 Step에서
+    무접촉이다(`opal/core/references/harness/red-first.md`).
+
+    [MUST] mock/patch/MagicMock 금지 — `tmp_path`(tempfile) 실 파일 픽스처 +
+    공개 CLI 경로(`cmd_verify` 직접 호출)만 사용한다. 기존
+    `TestT098EvidenceCheck`(:4225)의 원칙을 그대로 따르며, 해당 클래스와
+    그 헬퍼는 무수정으로 둔다(본 클래스는 자체 헬퍼를 보유한다).
+
+    검증 대상 계약 6종:
+      ① `## 확정된 설계 방향` 최상위 불릿이 `items[]`에 편입되고, 모든 item에
+         출처 구분 `source` 필드(`clarification` | `confirmed_direction`)가 붙는다.
+      ② 상류에서 대조 확인된 `[사실]` 항목의 verdict로 `승계`가 존재한다
+         (`확정`·`승계` 모두 confirmed로 계수).
+      ③ 신규 키 `direction_confirmed_ratio`가 반환된다(섹션 부재 시 None).
+      ④ [회귀] 기존 `confirmed_ratio`의 분모는 `## 명확화 결과` 4요소로 불변이다(PD-1).
+      ⑤ [회귀] `## 확정된 설계 방향` 섹션이 없는 레거시 TASK.md는 graceful skip.
+      ⑥ [회귀] 위 전 경로에서 exit code 0 유지.
+
+    [MUST] `## 명확화 결과` 표는 열 4개 고정(:4237-4238) — 열 추가가 아니라
+    **별도 섹션 파서**를 전제한다. 본 클래스의 어떤 픽스처도 표 열을 늘리지 않는다.
+
+    [계약] direction item의 `element`는 해당 불릿을 식별할 수 있는 문자열이어야
+    한다(불릿 본문 유래). 인덱스형 불투명 라벨은 PM이 어떤 항목이 미확정인지
+    식별할 수 없게 하므로 계약 위반이다 — 아래 테스트는 불릿에 심어둔 마커
+    (`DIR-D1` 등)가 `element`에 남는지로 이를 판정한다.
+    """
+
+    _ELEMENTS = ("목표", "범위", "제약", "완료기준")
+
+    # 명확화 결과 4행 — 확정 2(목표: [결정] / 범위: 유효 E4 인용) +
+    # 미확정 2(제약: 인용 0건 / 완료기준: E5 단독) → confirmed_ratio 고정 0.5.
+    # 이 0.5는 ④(분모 불변) 판정의 기준값이다.
+    _CLARIFICATION_ROWS = {
+        "목표": ("[결정] 캡틴이 정한 목표(근거 불요)", "-"),
+        "범위": ("범위 확정값", "`opal/tools/state-tool/README.md` §1"),
+        "제약": ("제약 확정값", "-"),
+        "완료기준": ("완료기준 확정값", "`.opal/brain/note.md`"),
+    }
+    _CLARIFICATION_RATIO = 0.5
+    _CLARIFICATION_UNCONFIRMED = {"제약", "완료기준"}
+
+    _DECISION_MARKERS = ("DIR-D1", "DIR-D2", "DIR-D3")
+    _FACT_MARKERS = ("DIR-F1", "DIR-F2", "DIR-F3")
+
+    # 픽스처 A의 `[사실]` 불릿 3건이 인용하는 **실재 파일 + 유효 줄번호**.
+    # (state_tool.py 2897줄 / README.md 420줄 / citation-rules.md 487줄 — 전부
+    #  E2·E4 등급 매칭 경로이므로 4축을 통과한다.)
+    _REAL_CITATIONS = (
+        "opal/tools/state-tool/state_tool.py:100",
+        "opal/tools/state-tool/README.md:10",
+        "opal/core/references/harness/citation-rules.md:20",
+    )
+
+    # ── 픽스처 빌더 (실 파일만, mock 없음) ────────────────────────────────
+
+    def _clarification_block(self):
+        """`## 명확화 결과` 4행 표 — 열 4개 고정(:4237-4238 계약 유지)."""
+        lines = [
+            "## 명확화 결과",
+            "",
+            "| 요소 | 확정값 | 미확정(있으면) | 의존 사실 |",
+            "|------|--------|--------------|----------|",
+        ]
+        for elem in self._ELEMENTS:
+            confirmed, dep = self._CLARIFICATION_ROWS[elem]
+            lines.append(f"| {elem} | {confirmed} | - | {dep} |")
+        return lines
+
+    def _write_fixture_a(self):
+        """픽스처 A — `## 확정된 설계 방향` 최상위 불릿 6행([결정] 3 + [사실] 3,
+        사실 항목은 실재 `경로:줄번호` 인용) + `## 명확화 결과` 표 4행.
+
+        불릿 표기는 실제 TASK.md 형식을 그대로 따른다
+        (`tasks/100-260822-opd-분석코어-공유SSOT/TASK.md:63-87` — 헤딩 접미사
+        `(대화에서 합의)` 포함, 태그는 백틱 스팬).
+        중첩 불릿 1행을 섞어 **최상위 불릿만 수집**되는지도 함께 판정한다."""
+        lines = [
+            "# TASK — T100 RED 픽스처 A",
+            "",
+            "## 확정된 설계 방향 (대화에서 합의)",
+            "",
+            f"- `[결정]` {self._DECISION_MARKERS[0]} — 근거 없이 확정 유지되는 캡틴 결정 1.",
+            f"- `[결정]` {self._DECISION_MARKERS[1]} — 근거 없이 확정 유지되는 캡틴 결정 2.",
+            "  - 중첩 불릿 — 최상위가 아니므로 항목으로 수집하지 않는다.",
+            f"- `[결정]` {self._DECISION_MARKERS[2]} — 근거 없이 확정 유지되는 캡틴 결정 3.",
+            f"- `[사실]` {self._FACT_MARKERS[0]} — 상류에서 대조 확인된 사실 1 "
+            f"(`{self._REAL_CITATIONS[0]}`).",
+            f"- `[사실]` {self._FACT_MARKERS[1]} — 상류에서 대조 확인된 사실 2 "
+            f"(`{self._REAL_CITATIONS[1]}`).",
+            f"- `[사실]` {self._FACT_MARKERS[2]} — 상류에서 대조 확인된 사실 3 "
+            f"(`{self._REAL_CITATIONS[2]}`).",
+            "",
+        ]
+        lines += self._clarification_block()
+        return self._write(lines)
+
+    def _write_fixture_b(self):
+        """픽스처 B — `## 확정된 설계 방향` 섹션 **없음**(레거시 TASK.md)."""
+        lines = ["# TASK — T100 RED 픽스처 B (레거시)", ""]
+        lines += self._clarification_block()
+        return self._write(lines)
+
+    def _write_fixture_c(self):
+        """픽스처 C — `## 확정된 설계 방향` 헤딩만 있고 항목 0건.
+        분모 0 나눗셈 경계(ZeroDivisionError 금지)."""
+        lines = [
+            "# TASK — T100 RED 픽스처 C (항목 0건)",
+            "",
+            "## 확정된 설계 방향",
+            "",
+        ]
+        lines += self._clarification_block()
+        return self._write(lines)
+
+    def _write(self, lines):
+        p = self.task_path / "TASK.md"
+        p.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        return p
+
+    # ── 호출 헬퍼 ─────────────────────────────────────────────────────────
+
+    def _call_evidence_verify(self, task_path=None, task_md=None, **extra_flags):
+        """cmd_verify --evidence-check 호출 → (exit_code, result_dict).
+
+        [MUST] 신규 헬퍼 — `TestT098EvidenceCheck._call_evidence_verify`(:4285)는
+        무수정으로 둔다(태스크 100 dispatch 지시: 기존 클래스 무접촉)."""
+        import io
+        from contextlib import redirect_stdout
+        out = io.StringIO()
+        exit_code = 0
+        fields = dict(
+            task_path=str(task_path or self.task_path),
+            scenario=None,
+            clarification_check=False,
+            evidence_check=True,
+            task_md=task_md,
+            red_check=False,
+            fix_mode=False,
+            changed_files=None,
+            test_globs=None,
+        )
+        fields.update(extra_flags)
+        args = types.SimpleNamespace(**fields)
+        with redirect_stdout(out):
+            try:
+                ST.cmd_verify(args)
+            except SystemExit as e:
+                exit_code = e.code
+        output = out.getvalue().strip()
+        result = json.loads(output) if output else {}
+        return exit_code, result
+
+    @staticmethod
+    def _items_with_source(result, source):
+        return [it for it in result.get("items", []) if it.get("source") == source]
+
+    @staticmethod
+    def _item_by_marker(result, marker):
+        """불릿 마커(`DIR-D1` 등)를 `element`에 보유한 item 1건을 찾는다.
+        미발견 시 None — 계약 위반 메시지는 호출자가 낸다."""
+        for it in result.get("items", []):
+            if marker in str(it.get("element", "")):
+                return it
+        return None
+
+    @staticmethod
+    def _clarification_items(result):
+        """명확화 결과 4요소 라벨을 가진 item만 골라낸다(source 필드가 아직
+        없는 현행 구현에서도 분모 계산 회귀를 판정할 수 있게 한다)."""
+        elems = TestT100DirectionEvidence._ELEMENTS
+        return [it for it in result.get("items", []) if it.get("element") in elems]
+
+    # ── ① 확정된 설계 방향 항목의 items[] 편입 + source 필드 (TS-025) ──────
+
+    def test_t100_direction_items_merged_into_items_with_source_field(self):
+        """① TS-025 — `## 확정된 설계 방향` 최상위 불릿 6건이 `items[]`에
+        `source="confirmed_direction"`으로 편입되고, 명확화 결과 4건은
+        `source="clarification"`을 보유한다. 중첩 불릿은 수집 대상이 아니다.
+        (PLAN 100 §3.7.2 `_locate_confirmed_direction_items`, R-10 AC (a))"""
+        self._write_fixture_a()
+        exit_code, result = self._call_evidence_verify()
+        self.assertEqual(exit_code, 0, f"[RED] exit 0 기대. result={result}")
+        self.assertTrue(result.get("ok"), f"[RED] ok=true 기대. result={result}")
+
+        direction = self._items_with_source(result, "confirmed_direction")
+        self.assertEqual(
+            len(direction), 6,
+            f"[RED] 최상위 불릿 6건이 source='confirmed_direction'으로 편입 기대"
+            f"(중첩 불릿 1행은 비수집). 실제 {len(direction)}건. result={result}")
+
+        clarification = self._items_with_source(result, "clarification")
+        self.assertEqual(
+            len(clarification), 4,
+            f"[RED] 명확화 결과 4건이 source='clarification' 기대. "
+            f"실제 {len(clarification)}건. result={result}")
+
+        self.assertEqual(
+            len(result.get("items", [])), 10,
+            f"[RED] 두 소스 병합 items 10건(6+4) 기대. result={result}")
+
+        for it in result.get("items", []):
+            self.assertIn("source", it, f"[RED] 모든 item에 source 필드 기대. item={it}")
+            self.assertIn(
+                it.get("source"), ("clarification", "confirmed_direction"),
+                f"[RED] source는 'clarification'|'confirmed_direction' 중 하나 기대. item={it}")
+            for key in ("element", "verdict", "reasons", "citations"):
+                self.assertIn(key, it, f"[RED] item에 '{key}' 키 기대(기존 스키마 유지). item={it}")
+
+        for marker in self._DECISION_MARKERS + self._FACT_MARKERS:
+            item = self._item_by_marker(result, marker)
+            self.assertIsNotNone(
+                item,
+                f"[RED] 불릿 마커 '{marker}'를 element에 보유한 item 미검출 — "
+                f"element는 불릿을 식별 가능해야 한다(불투명 인덱스 라벨 금지). "
+                f"result={result}")
+
+        nested = [it for it in result.get("items", []) if "중첩 불릿" in str(it.get("element", ""))]
+        self.assertEqual(
+            nested, [],
+            f"[RED] 중첩(비최상위) 불릿은 항목으로 수집하지 않는다. 검출={nested}")
+
+    # ── ② verdict `승계` 신설 (TS-025 / R-10 AC (c)) ───────────────────────
+
+    def test_t100_fact_bullet_with_valid_citation_gets_inherited_verdict(self):
+        """② `[사실]` + E1~E4 유효 인용(실재 경로:줄번호) → verdict `승계`,
+        `[결정]` 불릿 → verdict `확정`(등급 판정 면제). `확정`·`승계` 모두
+        confirmed로 계수된다. (PLAN 100 §3.7.2 verdict 규칙)"""
+        self._write_fixture_a()
+        exit_code, result = self._call_evidence_verify()
+        self.assertEqual(exit_code, 0, f"[RED] exit 0 기대. result={result}")
+
+        for marker in self._DECISION_MARKERS:
+            item = self._item_by_marker(result, marker) or {}
+            self.assertEqual(
+                item.get("verdict"), "확정",
+                f"[RED] `[결정]` 불릿({marker})은 인용 없어도 확정 기대 "
+                f"(_has_decision_tag 재사용). item={item}")
+
+        for marker in self._FACT_MARKERS:
+            item = self._item_by_marker(result, marker) or {}
+            self.assertEqual(
+                item.get("verdict"), "승계",
+                f"[RED] `[사실]` + 유효 인용 불릿({marker})은 신규 verdict '승계' 기대 "
+                f"(상류 대조 확인 승계 — 재확인 면제). item={item}")
+            self.assertEqual(
+                item.get("reasons", []), [],
+                f"[RED] 승계 항목은 강등 사유 0건 기대. item={item}")
+
+        unconfirmed = set(result.get("unconfirmed", []))
+        for marker in self._DECISION_MARKERS + self._FACT_MARKERS:
+            self.assertNotIn(
+                marker, " ".join(unconfirmed),
+                f"[RED] 확정·승계 항목({marker})은 unconfirmed에 오르지 않는다. "
+                f"unconfirmed={unconfirmed}")
+
+    # ── ③ direction_confirmed_ratio 신규 키 (PD-1) ─────────────────────────
+
+    def test_t100_direction_confirmed_ratio_new_key_returned(self):
+        """③ 신규 키 `direction_confirmed_ratio`가 반환된다 — 픽스처 A는
+        확정 3 + 승계 3 / 6 = 1.0. 기존 `confirmed_ratio`(0.5)와 **다른 값**이어야
+        분리형(PD-1)이 성립한다."""
+        self._write_fixture_a()
+        exit_code, result = self._call_evidence_verify()
+        self.assertEqual(exit_code, 0, f"[RED] exit 0 기대. result={result}")
+        self.assertIn(
+            "direction_confirmed_ratio", result,
+            f"[RED] 신규 키 'direction_confirmed_ratio' 반환 기대(PD-1 분리형). result={result}")
+        self.assertEqual(
+            result.get("direction_confirmed_ratio"), 1.0,
+            f"[RED] 확정3+승계3 / 6 = 1.0 기대. result={result}")
+        self.assertNotEqual(
+            result.get("direction_confirmed_ratio"), result.get("confirmed_ratio"),
+            f"[RED] 두 비율은 분모가 다른 별개 키다(PD-1 — 기존 키 의미 불변). "
+            f"result={result}")
+
+    # ── ④ [회귀] 기존 confirmed_ratio 분모 불변 (TS-029 / H-2) ─────────────
+
+    def test_t100_existing_confirmed_ratio_denominator_unchanged(self):
+        """④ [회귀] `confirmed_ratio`의 분모는 `## 명확화 결과` 4요소로 불변이다
+        (PD-1 — 조용한 계약 파괴 방지). 픽스처 A에서 확정 2/4 = 0.5이며,
+        방향 항목 6건이 분모(10)로 섞여 들어가면 FAIL. `unconfirmed[]`는 병합
+        대상이지만 방향 항목이 전건 확정·승계이므로 명확화 2건만 남는다."""
+        self._write_fixture_a()
+        exit_code, result = self._call_evidence_verify()
+        self.assertEqual(exit_code, 0, f"[RED] exit 0 기대. result={result}")
+
+        self.assertEqual(
+            result.get("confirmed_ratio"), self._CLARIFICATION_RATIO,
+            f"[RED][REGRESSION] confirmed_ratio 2/4=0.5 불변 기대 — 방향 항목이 "
+            f"분모에 섞이면 조용한 계약 파괴(H-2). result={result}")
+
+        clar_by_source = self._items_with_source(result, "clarification")
+        self.assertEqual(
+            len(clar_by_source), 4,
+            f"[RED] confirmed_ratio 분모 근거인 clarification item은 4건 고정. result={result}")
+        self.assertEqual(
+            len(self._clarification_items(result)), 4,
+            f"[RED] 명확화 4요소 항목 수 불변 기대. result={result}")
+
+        self.assertEqual(
+            set(result.get("unconfirmed", [])), self._CLARIFICATION_UNCONFIRMED,
+            f"[RED] unconfirmed는 명확화 미확정 2건({{제약,완료기준}})만 기대 "
+            f"(방향 항목 전건 확정·승계). result={result}")
+
+    # ── ⑤ [회귀] 섹션 부재 레거시 TASK.md graceful skip (TS-030 / H-1) ─────
+
+    def test_t100_legacy_task_md_without_direction_section_graceful_skip(self):
+        """⑤ [회귀] `## 확정된 설계 방향` 섹션이 없는 레거시 TASK.md —
+        예외 없이 기존 반환 형태를 유지한다: exit 0 + items 4건 +
+        confirmed_ratio 0.5 + unconfirmed 2건, `direction_confirmed_ratio`는
+        None(섹션 부재 → 신규 파서 None 반환, 호출자 graceful skip)."""
+        self._write_fixture_b()
+        exit_code, result = self._call_evidence_verify()
+
+        self.assertEqual(exit_code, 0, f"[RED] 레거시 TASK.md도 exit 0 기대. result={result}")
+        self.assertTrue(result.get("ok"), f"[RED] ok=true 기대. result={result}")
+        self.assertEqual(
+            len(result.get("items", [])), 4,
+            f"[RED] 명확화 4건만 반환 기대(방향 항목 0건). result={result}")
+        self.assertEqual(
+            result.get("confirmed_ratio"), self._CLARIFICATION_RATIO,
+            f"[RED][REGRESSION] 레거시 confirmed_ratio 0.5 불변 기대. result={result}")
+        self.assertEqual(
+            set(result.get("unconfirmed", [])), self._CLARIFICATION_UNCONFIRMED,
+            f"[RED][REGRESSION] 레거시 unconfirmed 불변 기대. result={result}")
+        self.assertIsNone(
+            result.get("direction_confirmed_ratio"),
+            f"[RED] 섹션 부재 시 direction_confirmed_ratio는 None 기대. result={result}")
+
+        for it in result.get("items", []):
+            self.assertEqual(
+                it.get("source"), "clarification",
+                f"[RED] 레거시 경로의 item도 출처 구분 source='clarification' 보유 기대(①). "
+                f"item={it}")
+
+    # ── 픽스처 C: 항목 0건 — 분모 0 나눗셈 경계 ────────────────────────────
+
+    def test_t100_direction_section_with_zero_items_no_zero_division(self):
+        """⑤-b 헤딩만 있고 항목 0건 — ZeroDivisionError 없이 exit 0.
+        `direction_confirmed_ratio`는 None(항목 부재 → 미산출) 또는 0.0을
+        허용하되, 예외·비정상 종료·기존 키 변형은 허용하지 않는다."""
+        self._write_fixture_c()
+        exit_code, result = self._call_evidence_verify()
+
+        self.assertEqual(
+            exit_code, 0,
+            f"[RED] 항목 0건 섹션에서도 exit 0 기대(0 나눗셈 금지). result={result}")
+        self.assertTrue(result.get("ok"), f"[RED] ok=true 기대. result={result}")
+        self.assertIn(
+            result.get("direction_confirmed_ratio"), (None, 0.0),
+            f"[RED] 항목 0건 → None 또는 0.0 기대(분모 0 나눗셈 금지). result={result}")
+        self.assertEqual(
+            result.get("confirmed_ratio"), self._CLARIFICATION_RATIO,
+            f"[RED][REGRESSION] 항목 0건이어도 confirmed_ratio 0.5 불변 기대. result={result}")
+        self.assertEqual(
+            len(result.get("items", [])), 4,
+            f"[RED] 방향 항목 0건 → items는 명확화 4건. result={result}")
+        for it in result.get("items", []):
+            self.assertEqual(
+                it.get("source"), "clarification",
+                f"[RED] 항목 0건 경로의 item도 source='clarification' 보유 기대(①). item={it}")
+
+    # ── ⑥ [회귀] 전 반환 경로 exit 0 유지 (TS-026 / R-10 AC (b)) ───────────
+
+    def test_t100_exit_code_zero_on_all_return_paths(self):
+        """⑥ [회귀] `--evidence-check` 반환 3경로 전부 exit 0 유지 —
+        ① TASK.md 부재 skip ② 섹션/열 부재 skip ③ 정상 판정(픽스처 A·B·C).
+        정상 경로에서는 신규 키가 JSON에 실려야 한다(③과 동일 계약).
+        (`state_tool.py:2621` `:2630` `:2639` — 신규 플래그 신설 금지)"""
+        # ① TASK.md 부재
+        exit_code, result = self._call_evidence_verify()
+        self.assertEqual(exit_code, 0, f"[RED] TASK.md 부재 skip exit 0 기대. result={result}")
+        self.assertEqual(result.get("evidence_check"), "skipped",
+                         f"[RED] TASK.md 부재는 skipped 기대. result={result}")
+
+        # ② 명확화 결과 섹션 자체가 없는 문서 — 기존 graceful skip 유지
+        (self.task_path / "TASK.md").write_text(
+            "# TASK — 섹션 없음\n\n본문만 있는 레거시 문서.\n", encoding="utf-8")
+        exit_code, result = self._call_evidence_verify()
+        self.assertEqual(exit_code, 0, f"[RED] 섹션 부재 skip exit 0 기대. result={result}")
+        self.assertEqual(result.get("evidence_check"), "skipped",
+                         f"[RED] 명확화 섹션 부재는 skipped 기대. result={result}")
+
+        # ③ 정상 판정 3픽스처
+        for name, writer in (("A", self._write_fixture_a),
+                             ("B", self._write_fixture_b),
+                             ("C", self._write_fixture_c)):
+            writer()
+            exit_code, result = self._call_evidence_verify()
+            self.assertEqual(
+                exit_code, 0,
+                f"[RED] 픽스처 {name} 정상 판정 exit 0 기대(라우터형·차단 없음). result={result}")
+            self.assertTrue(result.get("ok"), f"[RED] 픽스처 {name} ok=true 기대. result={result}")
+            self.assertIn(
+                "confirmed_ratio", result,
+                f"[RED] 픽스처 {name} 기존 키 confirmed_ratio 유지 기대. result={result}")
+
+        # 정상 경로(A)에서 신규 키가 실제 JSON 출력에 실리는지
+        self._write_fixture_a()
+        exit_code, result = self._call_evidence_verify()
+        self.assertEqual(exit_code, 0, f"[RED] exit 0 기대. result={result}")
+        self.assertIn(
+            "direction_confirmed_ratio", result,
+            f"[RED] 정상 반환 경로 JSON에 direction_confirmed_ratio 포함 기대. result={result}")
 
 
 # ═════════════════════════════════════════════════════════════════════════════
