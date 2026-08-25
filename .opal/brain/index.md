@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-08-24 14:57
+> 갱신: 2026-08-24 23:44
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -121,7 +121,7 @@
 - [[green-tests-do-not-imply-contract-conformance]] — 테스트 GREEN은 규약 정합을 뜻하지 않는다 — 정적 대조를 별도 게이트로 둔다 #lesson #test-strategy #verification #contract
 - [[grep-ac-layer-judgment]] — grep 판정식은 문자열의 층위를 구분해야 한다 #verification #test-scenario #gate-design #lesson
 - [[guard-precision-none-passthrough-early-return]] — 가드 정밀화가 새 우회로를 만든다 — None 통과는 조기 반환으로 봉쇄한다 #memory-tool #guard-design #none-safety #lesson #task-096
-- [[handoff-contract-table-schema-mismatch]] — 승계 계약과 표 스키마의 불일치 — 요구 필드를 담지 못하는 표 #contract #schema #handoff #verification-gap #opd
+- [[handoff-contract-table-schema-mismatch]] — 승계 계약과 표 스키마의 불일치 — 원천 재지정으로 해소(스키마 확장 대신 분리) #contract #schema #handoff #verification-gap #opd
 - [[inherit-new-boundary-fixed-before-writing]] — 상속·신규 경계를 집필 전에 표로 고정한다 #documentation #ssot #dedup #task-084
 - [[install-hook-ownership-marker-idempotent-upsert]] — install hook 소유권-마커 멱등 upsert (외부 hook clobber 해소) #install #deploy #hook #idempotent #ownership-marker
 - [[install-mac-seed-key-loop-generalization]] — install 시드 키별 루프 일반화 — 조기 종료 시드 함정 #install #configuration #pattern #task-083
@@ -236,6 +236,7 @@
 - [[scenario-normalized-contract-pilot-neutral]] — 시나리오 정규화 계약 — pilot-중립 페이로드 설계 #contract #scenario-gate #normalization #multi-pilot #task-073 #task-075
 - [[scenario-prewrite-goal-series-track]] — 목표계열 선작성 트랙 — 도출 입력 2계열 분리와 게이트 계약 경계 #scenario-gate #testing #prewrite #opd #opds #task-095
 - [[section-append-at-tail-preserves-backrefs]] — 절 번호가 주소인 문서는 말미에 추가한다 — 외부 역참조 보존 #documentation #reference-integrity #task-084
+- [[self-confirming-validation-timing-argument]] — 자기확인 검증의 시점 논거 판별 — 개정 대상 무변경 확인으로 순환 논증을 잡는다 #self-confirming #verification #evaluator #scenario-gate #opd
 - [[self-edit-line-anchor-drift]] — 자기 편집 파일의 행번호 앵커는 드리프트한다 #verification #anchor #test-scenario #regression
 - [[self-modifying-tool-deploy-unit-coupling]] — 자기 자신을 고치는 도구의 배포 단위 결합 원칙 #deploy #gate-design #pattern #task-093
 - [[shard-policy-block-vs-nonblock-fallback-criterion]] — 미설정 시 차단 vs 비차단 폴백 판정 기준 #code-scan #configuration #backward-compat #task-080 #task-083

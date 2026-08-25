@@ -12,6 +12,7 @@ related:
 - evidence-tier-asis-tobe-jurisdiction
 - verdict-tool-fail-safe-direction-design
 - clarification-gate
+- handoff-contract-table-schema-mismatch
 created: '2026-08-21'
 updated: '2026-08-21'
 status: draft
@@ -41,3 +42,4 @@ TASK.md 작성 스키마, state-tool `--evidence-check`의 확정률 계산 로�
 - [[evidence-tier-asis-tobe-jurisdiction]]
 - [[verdict-tool-fail-safe-direction-design]]
 - [[clarification-gate]]
+- [[handoff-contract-table-schema-mismatch]] — `[결정]`/`[사실]` 유사 2계열 구분이 ANALYSIS§8 확정 입력 판정값에도 별도 맥락으로 재적용된 사례(근거: task:101 DONE.md §3.2)

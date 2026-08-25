@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_task_number": 100,
+  "last_task_number": 102,
   "memories": [
     {
       "title": "변경이력 제거 검토 결정 — A안 확정",
@@ -29,6 +29,13 @@
   ],
   "history": [
     {
+      "title": "101 핸드오프 스키마 계약정합",
+      "date": "2026-08-24",
+      "stage": "완료",
+      "path": "tasks/101-260824-opd-핸드오프-스키마-계약정합/",
+      "result": "(PM 보강 대기)"
+    },
+    {
       "title": "100 분석코어 공유SSOT",
       "date": "2026-08-24",
       "stage": "완료",
@@ -55,13 +62,6 @@
       "stage": "완료",
       "path": "tasks/097-260821-opds-커밋금지-워커주입-슬롯화/",
       "result": "하네스 §1 커밋 금지 규칙이 워커에게 닿는 프레임워크 보증 경로를 신설했다. 워커는 [WORKER] 마커로 부트스트랩을 생략해 하네스를 직접 읽지 않으므로 PM의 디스패치 주입이 유일한 전역 도달점인데, 주입 템플릿에 그 슬롯이 없었고 대신 프로젝트 CONVENTIONS.md에 복제돼 있었다 — 신규 opi 프로젝트에는 그 조항이 없으므로 도달 경로가 실제로 0개가 되는 우발 경로였다. pm/dispatch-process.md 「전 워커 공통 고정」에 3번째 항목(git 이력 변경 금지 — commit·push·reset·rebase, add·stash·checkout은 과잉차단 방지로 제외)을 신설하고, 파일럿 10종을 주입 SSOT 포인터로 일원화(참조 0/10→10/10, 열거형 잔존 0), op-dev-execute 절대금지 표 6→7행 + :97 원격 카운트 제거, CONVENTIONS 원문 2곳(:188·:203) 제거 후 포인터 대체, PROJECT.md 레지스트리 Guards 소유권 정합. 결과: 커밋 금지 원문이 opal-harness.md:42 단 1곳만 남았다(레포 전수 grep). 코드 0줄·14파일 +42/-24. 검증: 시나리오 23/23 Pass, 회귀 4스위트 전건 pass(감소 0), 목표-커버 게이트 PASS(결정론 exit 0 + evaluator 1/2/2 평균 1.67), 컨벤션 진단 Critical·High 0. 핵심 설계: R-3 포인터 채택 근거는 opal-pm.md:57(PM은 디스패치 직전 dispatch-process를 무조건 로드 → 실질 hop 0)이고, 열거안은 '발췌·복제 금지' 위반. reset·rebase 포함 근거는 pm-review-gate.md:21(판정 근거는 워킹트리) — 이력을 되돌리면 PM 판정 입력이 파괴된다. 층 구분으로 gc:221 프롬프트 리터럴은 존치(규범 복제 아니라 주입 산출물). R-5는 Phase 2 격리로 도달경로 0 구간을 구조적으로 차단(Step1 15:19 → Step7 15:30). 교훈: 판정식이 산출물보다 자주 틀렸다 — 5건 전부 판정 도구 결함(조사 오류·행번호 하드코딩·구 태스크 번호 충돌·변경이력 문자열 언급 오탐·정규문언 자기포함). grep AC는 문자열 존재가 아니라 '어느 층의 문자열인가'를 판정해야 한다. 개수 복제(:97 '2항목')는 SSOT가 어긋나는 첫 지점이므로 개수는 목록 소유 문서에만 둔다. 미수행: 커밋·install 재배포(캡틴 지시 대기) — 소스만 수정돼 현 세션 런타임은 미적용. 후속 5건 이월(semver 정합 11파일·CONVENTIONS 적용대상 기준공백·baseline 판정식 동결 규약·permission 도달 실측·배포본 stale 점검)."
-    },
-    {
-      "title": "096 메모리툴 참조무결성 고착해소",
-      "date": "2026-08-20",
-      "stage": "완료",
-      "path": "tasks/096-260820-opds-메모리툴-참조무결성-고착해소/",
-      "result": "인덱스↔본문 불일치 검출(review violations)과 본문 부재 행 정식 정리 경로(delete --orphan --ref)를 신설해 promote(본문 필수)×delete(상태 가드) 조합 사각지대를 해소. 검출 어휘 2분(missing=정리 가능/unresolvable=포인터 수리 필요), ERROR_CODES 23→26(삭제·개명 0), 라이프사이클 표에 candidate 추가로 스키마 enum 5종 정합. 목표-커버 게이트가 PLAN 설계 P0을 검출 — _resolve_memory_file() None 반환 3경로에서 가드가 통과해 본문이 memory/ 밖에 살아있는데 인덱스만 끊기는 blind 삭제 벡터. 무손실 가드 정밀화가 새 blind 삭제 경로를 만들 뻔했고 조기 반환 재구성으로 해소(재설계 2/2 소진). 구현 중 근본 원인 발견 — memory_tool.py에 본문 생성 코드 0곳, cmd_append는 경로만 기록하므로 본문 부재 행은 append의 정상 산출물이다. 이에 memory-learning.md:41에 [MUST] 참조 무결성을 신설해 정책으로 확정. 검증: 시나리오 38/39 Pass, 게이트 2회차 2/2/2 평균 2.0, 회귀 163→187(감소 0), state-tool·improve-tool 358 pass, 원본 해시 보전, 배포본 diff 0. 워커 블로커 3건 전건 red-first §3 준수. PM 자기판정 철회 2건(선작성률 61→50% 부적격 신호 인정 / 신규 고착→선재 고착). 후속 7건 이월, TS-033 캡틴 판정 대기"
     }
   ]
 }

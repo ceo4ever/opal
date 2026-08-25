@@ -341,3 +341,8 @@
 - 갱신: [[template-precedence-over-prose-norms]], [[measurement-tool-more-fallible-than-artifact-lesson]]
 - 출처: task:100
 
+## [2026-08-24] ingest | CLOSE ingest — 태스크 101 핸드오프 스키마 계약정합(승계 원천 2원 재지정 확정) + self-confirming 시점 논거 판별 기준 신설
+- 신규: [[self-confirming-validation-timing-argument]]
+- 갱신: [[handoff-contract-table-schema-mismatch]], [[measurement-tool-more-fallible-than-artifact-lesson]], [[template-precedence-over-prose-norms]], [[shared-ssot-procedure-artifact-role-split]], [[decision-vs-fact-claim-separation]]
+- 출처: task:101
+

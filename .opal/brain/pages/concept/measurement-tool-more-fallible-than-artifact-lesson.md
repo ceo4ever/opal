@@ -9,9 +9,11 @@ tags:
 sources:
 - task:098
 - task:100
+- task:101
 related:
 - execution-observation-scope-citation-requirement
 - evidence-tier-asis-tobe-jurisdiction
+- self-confirming-validation-timing-argument
 created: '2026-08-21'
 updated: '2026-08-24'
 status: draft
@@ -32,12 +34,18 @@ status: draft
 - (근거: task:100 DONE.md §7-2) PM이 `docs/ARCHITECTURE.md`의 "17파일" 표기를 확인할 때 같은 줄에 함께 등장한 harness 파일 수치의 **첫 발생만 확인**하고 두 번째 수치를 놓쳤다 — S-28 시나리오 검증에서 이 누락이 검출됐다.
 - 098에서 정립한 "정규식 전종 매치로 세야 한다"는 결정이, 098과 무관한 후속 태스크(100)의 PM 실측 과정에서 동일 실패 유형으로 그대로 재현됐다 — 이 페이지의 결정 내용이 일회성 사례가 아님을 확인해 준다.
 
+### 3차 확인 (task:101) — 판정 기준과 판정 시점의 시차
+
+- (근거: task:101 DONE.md §5) 동일 명제가 한 태스크 안에서 **세 층위**로 재현됐다. ① ANALYSIS 교차확인이 "두 문서의 컬럼명·순서까지 동일"이라 판정했으나 실제로는 `변경유형`(공백 없음)과 `변경 유형`(공백 있음)의 문자열 차이를 놓쳤다. ② PLAN이 "L3 검증 불요 — 본 태스크 산출물이 실증 사례"라 주장했으나 개정 대상 6파일이 그 시점에 전건 무변경이어서 목표-커버 게이트 평가자가 self-confirming으로 기각했다(→ [[self-confirming-validation-timing-argument]]). ③ TEST가 "changed_files 정확히 6파일"을 기준으로 판정했으나 실행 중 범위가 7파일로 확장돼 기준값 자체가 낡아 있었다.
+- (근거: task:101 DONE.md §5 공통 구조) 세 건의 공통 구조는 "판정 기준을 만든 시점"과 "판정을 실행한 시점" 사이에 사실이 변했거나, 애초에 기준이 실측 없이 작성됐다는 것이다 — 판정식이 산출물보다 먼저 검증돼야 한다는 원 명제에 **시간축**이라는 구체적 원인을 추가한다.
+
 ## 결정 내용
 
 - **계수·플레이스홀더 판정은 정확 문자열 매칭이 아니라 정규식 전종 매치로 세야 한다.** 문언이 여러 종으로 존재할 수 있는 항목(플레이스홀더, 마커, 태그 등)을 정확 문자열 하나로만 세면 다른 문언의 항목을 놓치고 완결로 착각하게 된다.
 - E4급(요약·기억·문서) 원천을 E1급(실행 관측) 사실의 근거로 대체 사용하지 않는다 — 등급이 다른 원천은 서로 대체할 수 없다.
 - 회귀·통과 건수를 인용할 때는 실행 스코프(단일 파일인지 디렉토리 전체인지)를 항상 함께 기재한다.
 - 검증 대상 파일을 판정 전에 재확인하는 절차 없이는 "PASS"가 공허 PASS일 위험이 있다 — 대상 파일 지목 자체를 검증 항목으로 삼는다.
+- 판정 기준은 실행 시점 기준으로 재확인해야 한다 — 작성 시점의 사실(파일 개수·문자열 표기 등)이 실행 시점까지 불변이라고 가정하지 않는다(근거: task:101 DONE.md §5).
 
 ## 영향 범위
 
@@ -47,3 +55,4 @@ status: draft
 
 - [[execution-observation-scope-citation-requirement]]
 - [[evidence-tier-asis-tobe-jurisdiction]]
+- [[self-confirming-validation-timing-argument]]
