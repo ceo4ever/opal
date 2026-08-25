@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>대시보드 — 진행 통계 목업</title>
+
+  <!-- 1. Pretendard 한글 폰트 -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+
+  <!-- 2. Tailwind CSS CDN (Play CDN) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- 3. DaisyUI @4 -->
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4/dist/full.min.css" rel="stylesheet">
+
+  <!-- 4. Alpine.js @3 (defer) -->
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3/dist/cdn.min.js"></script>
+
+  <!-- 5. Lucide Icons (latest) -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+
+  <!-- 공통 스타일 -->
+  <link rel="stylesheet" href="./shared/style.css">
+
+  <!-- 화면 전용 확장 -->
+  <style>
+    :root {
+      --opal-primary:   #6364FC;
+      --opal-secondary: #008A7E;
+      --opal-tertiary:  #EB881F;
+      --st-todo:    #74969F;
+      --st-running: #0085E8;
+      --st-done:    #26894C;
+      --st-blocked: #DE394B;
+      --bar-soft:   #C9CAFE;
+      --grid-line:  #EFEFF4;
+    }
+    [data-theme="dark"] {
+      --opal-primary:   #7279FF;
+      --opal-secondary: #00A798;
+      --opal-tertiary:  #CC7200;
+      --st-todo:    #8DA9B1;
+      --st-running: #4AA5F0;
+      --st-done:    #45A96A;
+      --st-blocked: #F0616F;
+      --bar-soft:   #33356B;
+      --grid-line:  #222226;
+    }
+
+    .mono { font-family: ui-monospace, "SF Mono", Menlo, monospace; }
+    .tnum { font-variant-numeric: tabular-nums; }
+
+    .bar-track { height: 14px; background: var(--grid-line); border-radius: 4px; overflow: hidden; }
+    .bar-fill  { display: block; height: 100%; border-radius: 4px; background: var(--bar-soft); }
+    .bar-peak .bar-fill { background: var(--opal-primary); }
+
+    /* card-body(flex column) 안에서 눌리지 않도록 flex:none 고정 */
+    .spark { display: flex; align-items: stretch; gap: 4px; height: 112px; flex: none; margin-bottom: 20px; }
+    .spark-col { flex: 1; position: relative; height: 100%; min-width: 0; }
+    .spark-bar {
+      position: absolute; bottom: 0; left: 0; width: 100%;
+      background: var(--bar-soft); border-radius: 3px 3px 0 0; min-height: 2px;
+    }
+    .spark-x { position: absolute; bottom: -18px; left: 0; width: 100%; text-align: center; }
+    .spark-col.peak .spark-bar { background: var(--opal-primary); }
+    .spark-col.live .spark-bar { background: var(--st-running); }
+
+    .dist-bar { display: flex; height: 22px; border-radius: 5px; overflow: hidden; gap: 2px; flex: none; }
+    .dist-bar > span { display: block; }
+    .swatch i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+    .dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+  </style>
+</head>
+<body class="font-pretendard">
+
+  <div class="flex h-screen overflow-hidden bg-base-200">
+
+    <!-- ================= 좌측 사이드바 ================= -->
+    <aside class="w-56 shrink-0 bg-base-100 border-r border-base-300 flex flex-col">
+      <div class="h-14 flex items-center gap-2 px-4 border-b border-base-300">
+        <div class="w-7 h-7 rounded-lg flex items-center justify-center text-white text-xs font-bold"
+             style="background: var(--opal-primary)">O</div>
+        <span class="font-semibold text-sm">OPAL Console</span>
+      </div>
+
+      <nav class="flex-1 p-2 space-y-0.5 text-sm">
+        <a class="flex items-center gap-2.5 px-3 py-2 rounded-lg font-medium text-white"
+           style="background: var(--opal-primary)">
+          <i data-lucide="layout-dashboard" class="w-4 h-4"></i> 대시보드</a>
+        <a class="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-base-200">
+          <i data-lucide="folder" class="w-4 h-4 opacity-70"></i> 프로젝트</a>
+        <a class="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-base-200">
+          <i data-lucide="kanban" class="w-4 h-4 opacity-70"></i> 태스크</a>
+        <a class="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-base-200">
+          <i data-lucide="brain" class="w-4 h-4 opacity-70"></i> 메모리</a>
+        <a class="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-base-200">
+          <i data-lucide="stethoscope" class="w-4 h-4 opacity-70"></i> 환경</a>
+        <a class="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-base-200">
+          <i data-lucide="network" class="w-4 h-4 opacity-70"></i> 프로젝트 브레인</a>
+        <a class="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-base-200">
+          <i data-lucide="settings" class="w-4 h-4 opacity-70"></i> 설정</a>
+      </nav>
+
+      <div class="p-3 border-t border-base-300">
+        <button onclick="toggleTheme()" class="btn btn-ghost btn-xs w-full justify-start gap-2">
+          <i data-lucide="moon" class="w-3.5 h-3.5"></i> 테마 전환
+        </button>
+      </div>
+    </aside>
+
+    <!-- ================= 메인 ================= -->
+    <main class="flex-1 flex flex-col overflow-hidden">
+
+      <header class="h-14 shrink-0 flex items-center gap-3 px-6 border-b border-base-300 bg-base-100">
+        <h1 class="text-sm font-semibold">대시보드</h1>
+        <span class="text-xs opacity-60 font-medium">ai-framework</span>
+        <span class="ml-auto badge badge-ghost gap-1 text-xs">
+          <i data-lucide="lock" class="w-3 h-3"></i> 읽기 전용
+        </span>
+      </header>
+
+      <div class="flex-1 overflow-y-auto p-6 space-y-6">
+
+        <!-- ===== 기존 4메트릭 (현행 유지) ===== -->
+        <section>
+          <p class="text-xs opacity-50 mb-2 mono">현행 — 변경 없음</p>
+          <div class="grid grid-cols-4 gap-4">
+            <div class="card bg-base-100 shadow-sm">
+              <div class="card-body p-4">
+                <div class="flex items-center gap-2 opacity-60"><i data-lucide="folder" class="w-4 h-4"></i><span class="text-xs">프로젝트</span></div>
+                <p class="text-3xl font-semibold tnum">4</p>
+              </div>
+            </div>
+            <div class="card bg-base-100 shadow-sm">
+              <div class="card-body p-4">
+                <div class="flex items-center gap-2 opacity-60"><i data-lucide="play-circle" class="w-4 h-4"></i><span class="text-xs">진행중 태스크</span></div>
+                <p class="text-3xl font-semibold tnum" style="color: var(--st-running)">2</p>
+              </div>
+            </div>
+            <div class="card bg-base-100 shadow-sm">
+              <div class="card-body p-4">
+                <div class="flex items-center gap-2 opacity-60"><i data-lucide="alert-triangle" class="w-4 h-4"></i><span class="text-xs">블로커</span></div>
+                <p class="text-3xl font-semibold tnum">0</p>
+              </div>
+            </div>
+            <div class="card bg-base-100 shadow-sm">
+              <div class="card-body p-4">
+                <div class="flex items-center gap-2 opacity-60"><i data-lucide="plus-circle" class="w-4 h-4"></i><span class="text-xs">추가작업</span></div>
+                <p class="text-3xl font-semibold tnum">0</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div class="divider my-1"></div>
+
+        <!-- ===== B-1 프로젝트 요약 카드 ===== -->
+        <section>
+          <div class="flex items-center gap-2 mb-3">
+            <span class="mono text-[10px] font-semibold px-1.5 py-0.5 rounded"
+                  style="background: color-mix(in oklab, var(--opal-primary) 15%, transparent); color: var(--opal-primary)">B-1</span>
+            <span class="text-[13px] font-semibold">태스크 통계 요약</span>
+            <span class="mono text-[11px] opacity-40 ml-auto">완료 21건 집계</span>
+          </div>
+
+          <div class="grid grid-cols-5 gap-4">
+            <div class="card bg-base-100 shadow-sm">
+              <div class="card-body p-4 gap-1">
+                <p class="text-[11px] opacity-60">완료 태스크</p>
+                <p class="text-2xl font-semibold tnum leading-tight">21</p>
+                <p class="mono text-[10px] opacity-50">진행중 2 · 아카이브 80</p>
+              </div>
+            </div>
+            <div class="card bg-base-100 shadow-sm">
+              <div class="card-body p-4 gap-1">
+                <p class="text-[11px] opacity-60">리드타임 중앙값</p>
+                <p class="text-2xl font-semibold tnum leading-tight">5<span class="text-sm font-medium opacity-60">시간</span> 42<span class="text-sm font-medium opacity-60">분</span></p>
+                <p class="mono text-[10px] opacity-50">평균 10시간 14분</p>
+              </div>
+            </div>
+            <div class="card bg-base-100 shadow-sm border" style="border-color: color-mix(in oklab, var(--opal-primary) 40%, transparent)">
+              <div class="card-body p-4 gap-1">
+                <p class="text-[11px] opacity-60">캡틴 확인 대기 비중</p>
+                <p class="text-2xl font-semibold tnum leading-tight" style="color: var(--opal-primary)">16<span class="text-sm font-medium opacity-60">%</span></p>
+                <p class="mono text-[10px]" style="color: var(--opal-tertiary)">누적 34시간 39분</p>
+              </div>
+            </div>
+            <div class="card bg-base-100 shadow-sm">
+              <div class="card-body p-4 gap-1">
+                <p class="text-[11px] opacity-60">게이트 통과</p>
+                <p class="text-2xl font-semibold tnum leading-tight">30</p>
+                <p class="mono text-[10px]" style="color: var(--st-done)">블로커 0건</p>
+              </div>
+            </div>
+            <div class="card bg-base-100 shadow-sm">
+              <div class="card-body p-4 gap-1">
+                <p class="text-[11px] opacity-60">산출물</p>
+                <p class="text-2xl font-semibold tnum leading-tight">184 <span class="text-sm font-medium opacity-60">md</span></p>
+                <p class="mono text-[10px] opacity-50">누적 4.8 MB</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ===== B-2 + B-4 (2단) ===== -->
+        <div class="grid grid-cols-3 gap-6">
+
+          <!-- B-2 -->
+          <section class="col-span-2 card bg-base-100 shadow-sm">
+            <div class="card-body p-5">
+              <div class="flex items-center gap-2 mb-4">
+                <span class="mono text-[10px] font-semibold px-1.5 py-0.5 rounded"
+                      style="background: color-mix(in oklab, var(--opal-primary) 15%, transparent); color: var(--opal-primary)">B-2</span>
+                <span class="text-[13px] font-semibold">단계별 평균 소요 — 어디가 병목인가</span>
+              </div>
+
+              <div class="space-y-1.5">
+                <div class="grid items-center gap-3" style="grid-template-columns: 108px 1fr 100px">
+                  <span class="mono text-[11px] opacity-60 text-right">TASK</span>
+                  <span class="bar-track"><span class="bar-fill" style="width:14.0%"></span></span>
+                  <span class="mono text-[11px] opacity-60 tnum">33분</span>
+                </div>
+                <div class="grid items-center gap-3" style="grid-template-columns: 108px 1fr 100px">
+                  <span class="mono text-[11px] opacity-60 text-right">ANALYSIS</span>
+                  <span class="bar-track"><span class="bar-fill" style="width:25.0%"></span></span>
+                  <span class="mono text-[11px] opacity-60 tnum">59분</span>
+                </div>
+                <div class="grid items-center gap-3" style="grid-template-columns: 108px 1fr 100px">
+                  <span class="mono text-[11px] opacity-60 text-right">PLAN</span>
+                  <span class="bar-track"><span class="bar-fill" style="width:50.4%"></span></span>
+                  <span class="mono text-[11px] opacity-60 tnum">1시간 59분</span>
+                </div>
+                <div class="grid items-center gap-3 bar-peak" style="grid-template-columns: 108px 1fr 100px">
+                  <span class="mono text-[11px] font-semibold text-right">TEST-SCENARIO</span>
+                  <span class="bar-track"><span class="bar-fill" style="width:100%"></span></span>
+                  <span class="mono text-[11px] font-semibold tnum">3시간 56분</span>
+                </div>
+                <div class="grid items-center gap-3" style="grid-template-columns: 108px 1fr 100px">
+                  <span class="mono text-[11px] opacity-60 text-right">EXECUTE</span>
+                  <span class="bar-track"><span class="bar-fill" style="width:93.2%"></span></span>
+                  <span class="mono text-[11px] opacity-60 tnum">3시간 40분</span>
+                </div>
+                <div class="grid items-center gap-3" style="grid-template-columns: 108px 1fr 100px">
+                  <span class="mono text-[11px] opacity-60 text-right">TEST</span>
+                  <span class="bar-track"><span class="bar-fill" style="width:58.9%"></span></span>
+                  <span class="mono text-[11px] opacity-60 tnum">2시간 19분</span>
+                </div>
+                <div class="grid items-center gap-3" style="grid-template-columns: 108px 1fr 100px">
+                  <span class="mono text-[11px] opacity-60 text-right">CLOSE</span>
+                  <span class="bar-track"><span class="bar-fill" style="width:13.1%"></span></span>
+                  <span class="mono text-[11px] opacity-60 tnum">31분</span>
+                </div>
+              </div>
+
+              <p class="text-xs opacity-70 mt-3">TEST-SCENARIO와 EXECUTE 두 단계가 전체 소요의 절반을 차지합니다.</p>
+            </div>
+          </section>
+
+          <!-- B-4 -->
+          <section class="card bg-base-100 shadow-sm">
+            <div class="card-body p-5">
+              <div class="flex items-center gap-2 mb-4">
+                <span class="mono text-[10px] font-semibold px-1.5 py-0.5 rounded"
+                      style="background: color-mix(in oklab, var(--opal-primary) 15%, transparent); color: var(--opal-primary)">B-4</span>
+                <span class="text-[13px] font-semibold">스킬 · 모드 분포</span>
+              </div>
+
+              <p class="text-[11px] opacity-60 mb-2">파이프라인 스킬</p>
+              <div class="dist-bar">
+                <span style="width:47.6%; background: var(--opal-primary)"></span>
+                <span style="width:33.3%; background: var(--opal-secondary)"></span>
+                <span style="width:19.1%; background: var(--opal-tertiary)"></span>
+              </div>
+              <div class="flex flex-wrap gap-3 mt-2.5">
+                <span class="swatch inline-flex items-center gap-1.5 mono text-[11px]"><i style="background: var(--opal-primary)"></i> opds 10</span>
+                <span class="swatch inline-flex items-center gap-1.5 mono text-[11px]"><i style="background: var(--opal-secondary)"></i> opd 7</span>
+                <span class="swatch inline-flex items-center gap-1.5 mono text-[11px]"><i style="background: var(--opal-tertiary)"></i> opp 4</span>
+              </div>
+
+              <p class="text-[11px] opacity-60 mb-2 mt-5">하네스 모드</p>
+              <div class="dist-bar">
+                <span style="width:81.0%; background: var(--opal-primary)"></span>
+                <span style="width:19.0%; background: var(--opal-tertiary)"></span>
+              </div>
+              <div class="flex flex-wrap gap-3 mt-2.5">
+                <span class="swatch inline-flex items-center gap-1.5 mono text-[11px]"><i style="background: var(--opal-primary)"></i> agentic 17</span>
+                <span class="swatch inline-flex items-center gap-1.5 mono text-[11px]"><i style="background: var(--opal-tertiary)"></i> semi-agentic 4</span>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- ===== B-3 태스크별 리드타임 ===== -->
+        <section class="card bg-base-100 shadow-sm">
+          <div class="card-body p-5">
+            <div class="flex items-center gap-2 mb-4">
+              <span class="mono text-[10px] font-semibold px-1.5 py-0.5 rounded"
+                    style="background: color-mix(in oklab, var(--opal-primary) 15%, transparent); color: var(--opal-primary)">B-3</span>
+              <span class="text-[13px] font-semibold">태스크별 리드타임</span>
+              <span class="mono text-[11px] opacity-40 ml-auto">막대 = 총 소요</span>
+            </div>
+
+            <div class="spark">
+              <div class="spark-col"><span class="spark-bar" style="height:57.6%"></span><span class="spark-x mono text-[9.5px] opacity-40">080</span></div>
+              <div class="spark-col"><span class="spark-bar" style="height:6.6%"></span><span class="spark-x mono text-[9.5px] opacity-40">081</span></div>
+              <div class="spark-col"><span class="spark-bar" style="height:11.7%"></span><span class="spark-x mono text-[9.5px] opacity-40">082</span></div>
+              <div class="spark-col"><span class="spark-bar" style="height:71.5%"></span><span class="spark-x mono text-[9.5px] opacity-40">083</span></div>
+              <div class="spark-col"><span class="spark-bar" style="height:1.2%"></span><span class="spark-x mono text-[9.5px] opacity-40">084</span></div>
+              <div class="spark-col"><span class="spark-bar" style="height:10.1%"></span><span class="spark-x mono text-[9.5px] opacity-40">085</span></div>
+              <div class="spark-col"><span class="spark-bar" style="height:17.9%"></span><span class="spark-x mono text-[9.5px] opacity-40">086</span></div>
+              <div class="spark-col"><span class="spark-bar" style="height:1.9%"></span><span class="spark-x mono text-[9.5px] opacity-40">087</span></div>
+              <div class="spark-col"><span class="spark-bar" style="height:4.1%"></span><span class="spark-x mono text-[9.5px] opacity-40">088</span></div>
+              <div class="spark-col"><span class="spark-bar" style="height:8.5%"></span><span class="spark-x mono text-[9.5px] opacity-40">090</span></div>
+              <div class="spark-col"><span class="spark-bar" style="height:31.7%"></span><span class="spark-x mono text-[9.5px] opacity-40">091</span></div>
+              <div class="spark-col"><span class="spark-bar" style="height:13.6%"></span><span class="spark-x mono text-[9.5px] opacity-40">092</span></div>
+              <div class="spark-col"><span class="spark-bar" style="height:9.4%"></span><span class="spark-x mono text-[9.5px] opacity-40">093</span></div>
+              <div class="spark-col"><span class="spark-bar" style="height:64.5%"></span><span class="spark-x mono text-[9.5px] opacity-40">094</span></div>
+              <div class="spark-col"><span class="spark-bar" style="height:10.2%"></span><span class="spark-x mono text-[9.5px] opacity-40">095</span></div>
+              <div class="spark-col"><span class="spark-bar" style="height:14.3%"></span><span class="spark-x mono text-[9.5px] opacity-40">096</span></div>
+              <div class="spark-col"><span class="spark-bar" style="height:3.4%"></span><span class="spark-x mono text-[9.5px] opacity-40">097</span></div>
+              <div class="spark-col"><span class="spark-bar" style="height:16.8%"></span><span class="spark-x mono text-[9.5px] opacity-40">098</span></div>
+              <div class="spark-col"><span class="spark-bar" style="height:39.9%"></span><span class="spark-x mono text-[9.5px] opacity-40">099</span></div>
+              <div class="spark-col peak"><span class="spark-bar" style="height:100%"></span><span class="spark-x mono text-[9.5px] opacity-40">100</span></div>
+              <div class="spark-col"><span class="spark-bar" style="height:16.9%"></span><span class="spark-x mono text-[9.5px] opacity-40">101</span></div>
+              <div class="spark-col live"><span class="spark-bar" style="height:6%"></span><span class="spark-x mono text-[9.5px] opacity-40">102</span></div>
+              <div class="spark-col live"><span class="spark-bar" style="height:6%"></span><span class="spark-x mono text-[9.5px] opacity-40">103</span></div>
+            </div>
+
+            <div class="flex justify-between mono text-[10.5px] opacity-40 border-t border-base-300 pt-2 mt-2">
+              <span>최단 31분 · 084</span>
+              <span>최장 41시간 59분 · 100</span>
+            </div>
+
+            <div class="flex flex-wrap gap-4 mt-3">
+              <span class="swatch inline-flex items-center gap-1.5 mono text-[11px]"><i style="background: var(--opal-primary)"></i> 최장</span>
+              <span class="swatch inline-flex items-center gap-1.5 mono text-[11px]"><i style="background: var(--st-running)"></i> 진행중</span>
+              <span class="swatch inline-flex items-center gap-1.5 mono text-[11px]"><i style="background: var(--bar-soft)"></i> 완료</span>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <script>
+    function toggleTheme() {
+      const html = document.documentElement;
+      html.setAttribute('data-theme', html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+    }
+  </script>
+
+  <!-- 공통 스크립트 -->
+  <script src="./shared/main.js" defer></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.lucide && typeof window.lucide.createIcons === 'function') {
+        window.lucide.createIcons();
+      }
+    });
+  </script>
+</body>
+</html>

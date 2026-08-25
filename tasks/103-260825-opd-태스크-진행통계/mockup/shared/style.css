@@ -1,0 +1,32 @@
+/* html-mockup shared styles — 모든 화면 공통 */
+/* 주의: Tailwind Play CDN은 외부 CSS 파일에서 @apply 컴파일을 보장하지 않는다.
+   외부 파일은 일반 CSS 속성만 사용한다. Tailwind 유틸리티가 필요하면 HTML 인라인 클래스로 적용. */
+
+/* 한글 폰트 — Pretendard 우선 + 시스템 폴백 (R-T5 폴백 체인) */
+.font-pretendard {
+  font-family: 'Pretendard', 'Pretendard Variable', -apple-system, BlinkMacSystemFont,
+               system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+               'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+}
+
+/* 본문 기본 — 일반 CSS (Tailwind text-base/leading-relaxed 동등) */
+body { font-size: 1rem; line-height: 1.625; }
+
+/* 자주 쓰는 컨테이너 — 페이지 가운데 정렬 + 반응형 패딩 */
+.mockup-container {
+  max-width: 64rem;       /* Tailwind max-w-5xl */
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;     /* px-4 */
+  padding-right: 1rem;
+}
+@media (min-width: 640px) {
+  .mockup-container { padding-left: 1.5rem; padding-right: 1.5rem; }   /* sm:px-6 */
+}
+@media (min-width: 1024px) {
+  .mockup-container { padding-left: 2rem; padding-right: 2rem; }       /* lg:px-8 */
+}
+
+/* 단일 파일 모드 — section 간 시각 구분 (§(f) 단일 파일 모드 참조) */
+section[id^="screen-"] { border-top: 1px solid hsl(var(--b3, 220 13% 91%)); }
+section[id^="screen-"]:first-of-type { border-top: 0; }

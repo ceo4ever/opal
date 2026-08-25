@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>태스크 진행 통계 — 화면 인덱스</title>
+
+  <!-- 1. Pretendard 한글 폰트 -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+
+  <!-- 2. Tailwind CSS CDN (Play CDN) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- 3. DaisyUI @4 -->
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4/dist/full.min.css" rel="stylesheet">
+
+  <!-- 4. Alpine.js @3 (defer) -->
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3/dist/cdn.min.js"></script>
+
+  <!-- 5. Lucide Icons (latest) -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+
+  <!-- 공통 스타일 -->
+  <link rel="stylesheet" href="./shared/style.css">
+</head>
+<body class="font-pretendard bg-base-200 min-h-screen">
+
+  <main class="mockup-container py-10">
+
+    <header class="mb-8">
+      <p class="text-xs font-semibold tracking-widest uppercase mb-2" style="color: #6364FC">
+        OPAL Console · 태스크 103
+      </p>
+      <h1 class="text-3xl font-bold mb-2">태스크 진행 통계</h1>
+      <p class="text-base-content/70">총 2개 화면 — 통계 블록 8종이 들어갈 실제 화면입니다.</p>
+    </header>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">
+
+      <a href="task-kanban.html" class="card bg-base-100 shadow hover:shadow-lg transition cursor-pointer">
+        <div class="card-body">
+          <h2 class="card-title flex items-center gap-2 text-lg">
+            <i data-lucide="kanban" class="w-5 h-5"></i>
+            태스크 칸반 — 상세 패널
+          </h2>
+          <p class="text-sm text-base-content/70">
+            5컬럼 칸반 + 카드 클릭 시 열리는 우측 상세 Sheet. 본문이
+            <b>「태스크 대시보드」·「산출물」 2탭</b>으로 나뉩니다. 대시보드 탭에 파이프라인 스테퍼와
+            <b>A-1 진행 요약 · A-2 단계별 소요 · A-3 타임라인 · A-4 단계별 상세</b>가, 산출물 탭에 문서 뷰어가 들어갑니다.
+          </p>
+          <div class="flex flex-wrap gap-1.5 mt-2">
+            <span class="badge badge-sm" style="background:#6364FC; color:#fff; border:none">2탭</span>
+            <span class="badge badge-outline badge-sm">A-1</span>
+            <span class="badge badge-outline badge-sm">A-2</span>
+            <span class="badge badge-outline badge-sm">A-3</span>
+            <span class="badge badge-outline badge-sm">A-4</span>
+          </div>
+        </div>
+      </a>
+
+      <a href="dashboard.html" class="card bg-base-100 shadow hover:shadow-lg transition cursor-pointer">
+        <div class="card-body">
+          <h2 class="card-title flex items-center gap-2 text-lg">
+            <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+            대시보드
+          </h2>
+          <p class="text-sm text-base-content/70">
+            기존 4메트릭은 그대로 두고 아래에
+            <b>B-1 통계 요약 · B-2 단계별 평균 · B-3 태스크별 리드타임 · B-4 스킬·모드 분포</b> 4블록을 붙입니다.
+          </p>
+          <div class="flex flex-wrap gap-1.5 mt-2">
+            <span class="badge badge-outline badge-sm">B-1</span>
+            <span class="badge badge-outline badge-sm">B-2</span>
+            <span class="badge badge-outline badge-sm">B-3</span>
+            <span class="badge badge-outline badge-sm">B-4</span>
+          </div>
+        </div>
+      </a>
+
+    </div>
+
+    <section class="card bg-base-100 shadow-sm">
+      <div class="card-body">
+        <h2 class="text-base font-semibold mb-1">읽는 방법</h2>
+        <ul class="text-sm text-base-content/80 space-y-1.5 list-disc pl-5">
+          <li>표시된 수치는 전부 <code class="text-xs">tasks/*/state.json</code> 실측값입니다 — 더미 데이터가 아닙니다.</li>
+          <li>집계 기준은 완료 태스크 21건(<code class="text-xs">080</code>~<code class="text-xs">101</code>), 파이프라인 행 287행입니다.</li>
+          <li>소요 시간은 <b>직전 행 완료 시각 → 이 행 완료 시각</b> 기준입니다. 야간 공백도 소요로 계상됩니다.</li>
+          <li>좌하단 <b>테마 전환</b> 버튼으로 라이트·다크를 모두 확인할 수 있습니다.</li>
+          <li>상세 Sheet의 <b>탭 전환은 실제로 동작합니다</b> — 눌러서 두 탭을 모두 확인해 보세요.</li>
+          <li>그 밖의 클릭·정렬 등 인터랙션은 동작하지 않습니다. 레이아웃과 정보 구성만 보시면 됩니다.</li>
+        </ul>
+
+        <h2 class="text-base font-semibold mb-1 mt-5">이 목업에 없는 것</h2>
+        <ul class="text-sm text-base-content/80 space-y-1.5 list-disc pl-5">
+          <li>칸반 카드 제목이 폴더명으로 나오는 현행 결함은 <b>읽기 쉽게 보정해</b> 표시했습니다. 제목 복원은 이번 범위 밖입니다.</li>
+          <li>산출물 탭 본문은 렌더 예시입니다 — 실제로는 마크다운 원문이 그대로 출력됩니다.</li>
+        </ul>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="./shared/main.js" defer></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.lucide && typeof window.lucide.createIcons === 'function') {
+        window.lucide.createIcons();
+      }
+    });
+  </script>
+</body>
+</html>
