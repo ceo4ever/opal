@@ -141,7 +141,7 @@ CLOSE 진입 절차:
 
 **양식 예시**:
 
-🎯 결론·근거
+🎯 결론
 
 1) PLAN 완료
    - 의사결정 요약: M-1 Eager 방식 채택 (Lazy 대비 정직성·가시성 우위) / M-2 알투 자율 판단
@@ -177,7 +177,7 @@ CLOSE 진입 절차:
 
 **양식 예시**:
 
-🎯 결론·근거
+🎯 결론
 
 1) EXECUTE 완료
    - 변경 파일 4개, QA 전 항목 통과
@@ -219,7 +219,7 @@ CLOSE 진입 절차:
 
 **양식 예시**:
 
-🎯 결론·근거
+🎯 결론
 
 1) 태스크 015 완료
    - CLOSE 확정을 요청합니다
@@ -256,3 +256,4 @@ CLOSE 진입 절차:
 | v1.4 | 2026-06-08 | §10 단계전환 보고 양식 3종 신설 — reporting-template.md §8 이전 + 🎯 결론·근거 통합 표기 + ▶️ 승인 대기 어미 통일 (015) |
 | v1.5 | 2026-08-15 21:48 | §5 사용자 확인 행 자동 승인 계약 전환 — PM `--auto-pass` 명시 호출 지시 삭제, 다음 단계 진입 시 도구가 `auto_approve_prior_user_confirmations`로 자동 승인. `MODE_BOUNDARY_STAGES` 구간은 자동 승인 불가(`user_confirmation_required`)이며 캡틴이 `mark --owner user`로 승인해야 함을 명시. §6 CLOSE 진입 게이트 절차 불변 (093) |
 | v1.6 | 2026-08-16 13:11 | §3 모드 경계 표에 누락 3종(opdd·oppl·opgc) 추가 — opdd 행은 `MODE_BOUNDARY_STAGES`의 DICT/MODEL/DDL·MIGRATION 3원소 전부가 경계임을 반영(요청서 초안의 "DDL/MIGRATION 1건" 표기를 실제 구현 기준으로 정정), opgc 행은 `check_close_gate` 확인-행-0개 폴백(CLOSE 첫 행 `--owner user` 필수)과 정합, oppl 행은 pipeline.json 실측 기준 REVIEW D7 사용자 확정 게이트(PLAN 스테이지에는 확인 행 없음)로 기술 — pilot 10종 전부 등재 완료. **추가**: §5 산문에 `MODE_BOUNDARY_STAGES` 9개 stage가 재기재(DICT/MODEL/DDL·MIGRATION 누락)되어 §3 표와 같은 문서 내 불일치 상태였던 것을 발견 — 열거를 제거하고 SSOT(`state_tool.py`) 포인터 + §3 표 참조로 대체(상수 재기재 지점 자체를 소멸시켜 재발 차단) (094 R-11 G-5) |
+| v1.5 | 2026-08-25 10:19 | §10 단계전환 보고 양식 3종의 블록 헤딩을 `🎯 결론·근거` → `🎯 결론`으로 동기화 (AGENT.md §보고 형식 재설계 반영) |
