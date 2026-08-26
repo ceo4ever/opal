@@ -3,7 +3,7 @@
   "module": "state_tool",
   "layer": "util",
   "domain": "opal-pipeline",
-  "description": "OPAL 파이프라인 현황판 JSON SSOT 관리 CLI — 10개 서브 명령(init/show/advance/mark/block/validate/add-row/status/spec-validate/gate-pass[deprecated]) + verify + 3-way 모드(interactive/semi-agentic/agentic) 지원. 014 Phase 4: 새 표준 행 구조(QA Gate/State Gate 행 없음)와 정합 — gate-pass deprecate, CLOSE 마지막 행 판정 항목명 비의존화. 016: verify --red-check(RED 증거 게이트) + --fix-mode/--changed-files/--test-globs(테스트 불변성 게이트) 추가 — RED-first TDD 트랙 deterministic 집행. 017: mark --step N/M 다중 Step 조기 done 가드 — N<M이면 in_progress 유지(done 미처리) + 진행률(step) 영속화, N==M에서만 done; 미완 행은 기존 stage-transition guard가 단계전환·CLOSE 진입을 자동 차단. 005: verify --clarification-check + TASK→다음단계 자동 훅 — TASK 4요소(목표/범위/제약/완료기준) 미잠금 시 다음 단계 진입 거부(PRINCIPLES §1 집행), 정책 A graceful skip(섹션/파일 부재 시 하위호환). 034: mock 가드 false positive 수정 — _MOCK_CODE_PATTERNS 정규식 'MagicMock' 맨 단어 대안 제거(#1 산문 오탐) + _check_mock_patterns 인라인 백틱 제거 전처리 추가(#2 메타-순환 해소); 헌법 §4 정탐 유지. 054: resolve_owner_placeholder() 신설 — note-write 6경로(advance/mark/add-row/block/status/init)에서 '{owner_name}' 플레이스홀더를 identity.md owner_name으로 write-time 치환(fail-safe: 부재/공란/파싱실패 시 원문 유지). 070: task-step 키 주소 체계 도입 1차 — spec-validate 서브명령(pipeline.json 스펙 검증) + KEY_PATTERN/stage_to_slug/resolve_row_index 신설, build_rows_from_pipeline_json(init --rows-from .json 확장자 분기, .md는 deprecation 경고 유지), advance/mark/block에 --task-step/--task-step-id/--row(deprecated) 3주소·add-row에 --after-task-step/--after-task-step-id/--key(자동 생성) 추가, --step→--action-step 별칭(dest 공유), opdd skill·DICT/MODEL/DDL·MIGRATION stage enum 등록, ERROR_CODES 8종 추가. 072: STATE.md '다음 액션' 자동 파생 — state.json next_action 필드 신설(init 영속화·schema optional 등록), _derive_next_action(파이프라인 프론티어=첫 미완료 행 기준 파생)·update_next_action_section(첫 줄만 치환, 하위 자유기재 보존) 신규, advance/mark가 상태 반영 후 next_action 계산·저장·렌더(block/add-row/status는 미접촉), advance/mark --next-action per-transition 오버라이드(비지속 — 다음 전이 자동 파생 복귀). 074: --import-existing key-보존 재접합 — cmd_init import 분기가 파싱 후 기존 state.json→pipeline.json (stage,item) 순서 매칭으로 key 재접합(schema_version 1.1 유지), 원천 전무 시 keyless+경고(하위호환); _key_source_index/_reattach_import_keys 신규. 076: build_todo_mirror() 신설 — init/advance/mark/block ok() stdout 페이로드에 단계 단위 todo 미러(파생: na 중립·전부pending→pending·전부done→completed·부분/failed→in_progress) 추가, PostToolUse hook이 이를 세션에 결정론 주입(파이프라인 todo 미러 hook 강제); todo_mirror는 stdout 전용 비영속(state.json 미접촉 — schema additionalProperties:false 보존). 088: CLOSE 마지막 행 mark 시 메모리 히스토리 자동 연결 — link_memory_history()가 형제 memory_tool.py를 sys.executable subprocess로 호출해 `<프로젝트루트>/.opal/MEMORY.json` history에 행을 자동 생성(find_project_root 조상 탐색·derive_history_title·build_history_reminder·_run_memory_tool 신설), path 사전 조회로 멱등 보장, 예외/실패 전부 흡수해 mark는 항상 ok:true 유지(cmd_mark ok() stdout에 history_link 필드 조건부 추가, state.json 미접촉). 091: PM Gate 집행 배선(F-004) — validate_pipeline_spec()에 task_steps[].gate 검사 4건 추가(spec_gate_type_invalid/spec_gate_missing_field/spec_gate_field_type_invalid/spec_gate_checklist_empty, artifacts:[] 단독은 위반 아님); _is_safe_artifact_token()·check_gate_artifacts() 신설 — gate.artifacts 존재 검증(정적 경로/글롭 지원, 절대경로·'..' 토큰 태스크 폴더 밖 이탈 차단), gate 미보유 행·artifacts:[] 행은 즉시 통과(기존 동작 불변), 미충족 시 gate_artifact_missing 거부(--force+--note로만 우회 가능, 우회 시 decision 로그 gate_artifact_force 강제 기록); build_gate_payload() 신설 — 통과 시 checklist를 dict로 stdout 반환(todo_mirror_hook 릴레이용); build_rows_from_pipeline_json()/build_rows_from_spec()에 gate 필드 init-time 영속화 각 1줄 추가; cmd_mark가 save_state_json() 이전 검증 구간에서 가드를 호출하여 부분 상태 변경을 배제하고 _ok_kwargs에 gate_checklist 조건부 추가; ERROR_CODES 5종 신규(gate_artifact_missing 포함). 092: `init --worktree <path>` 조건부 영속화(F-005) — argparse `init`에 `--worktree` optional 인자 추가, cmd_init이 state dict 구성 직후 `getattr(args, \"worktree\", None)`으로 조건부 대입(미지정 시 키 자체 미생성 — H-1), state.schema.json properties에 `worktree` optional 등록(required 미변경); `_build_new_state_md`/`render_pipeline_table`/`build_todo_mirror`/`cmd_show` 무변경으로 STATE.md 렌더·`show --format json` 노출 하위호환 보장(H-11). 093: 사용자 확인 행 자동 승인 경로 일원화 — can_auto_approve_user_confirmation() 신설(F-003, CLOSE 축 + 모드 축 2축 합성 단일 판정; semi-agentic 모드 경계 상수의 유일 참조자이며 cmd_mark 사전검사와 cmd_validate 사후검사가 거부 사유별로 소비 범위를 달리한다 — validate는 include_close_axis=False로 CLOSE 축을 평가하지 않아 기존 경계를 보존, H-4); auto_approve_prior_user_confirmations() 신설(F-002, cmd_advance·cmd_mark가 stage-transition guard 직전에 호출해 대상 행 앞 [0,row_index) 구간의 미완 '사용자 확인' 행을 done/auto/timestamp로 자동 승인하고 note에 'auto-approved on <stage> entry' 기록 — as_worker/force/대상 행 stage=CLOSE면 즉시 no-op이고 save_state_json을 호출하지 않아 후속 가드 실패 시 파일이 오염되지 않는다(H-8), 승인 불가 구간은 user_confirmation_required로 거부(F-004)); advance/mark ok() 응답에 auto_approved 배열 관측 필드 추가(기존 필드 불변); build_rows_from_spec/build_rows_from_skill_md/build_rows_from_pipeline_json의 init 시점 agentic auto-na 분기 3곳 삭제(F-001 — 전 모드 pending/⬜/PM 동형 초기화; 세 빌더의 mode 파라미터 시그니처, state.schema.json status enum의 na, _COMPLETE_STATUSES, build_todo_mirror na 필터는 하위호환으로 존치, R-6); cmd_mark 멱등성(F-005) — _AUTO_PASS_PREFIX 모듈 상수 신설 후 auto-pass note를 3분기(빈 note/이미 접두 보유→중첩 방지/신규 부여)로 부여하고, check_gate_artifacts 통과 직후 재-auto-pass no-op 조기 반환(auto_pass and not force and not action_step and status=='done' and owner=='auto' 4중 조건 — 상태·timestamp·updated_at 불변, 응답에 idempotent:true; --force·--action-step N/M·owner=user done 행은 기존 경로 유지). 094: STATE.md를 state.json 파생 섹션(마커/파이프라인 표/'## 현재 상태'/'## 다음 액션') 없는 저널(의사결정 로그+블로커)로 재정의 — `_build_new_state_md` 2인자 축소·`ensure_journal_skeleton` 신설·`sync_state_md` fail-open 축소판 재작성(6개 호출부 인자 정리, journal_warning 조건부 stdout 표면화)·`append_decision_log` 오프바이원 수정+표 셀 이스케이프(`_escape_table_cell`)·`replace_pipeline_section`/`update_current_status_section`/`update_next_action_section` 삭제·`ERROR_CODES`에서 `marker_missing`/`import_failed` 삭제 후 `import_existing_removed` 추가·`cmd_init` import 분기·`parse_existing_state_md`/`_key_source_index`/`_reattach_import_keys` 삭제(--import-existing은 help=SUPPRESS로 존치, 항상 거부)·`cmd_validate` 마커 검사 삭제·`cmd_show` md/full 3분기를 state.json 단일 파생으로 재설계(`LEGACY_FROZEN_BANNER`, `STATUS_TEXT`)·`render_pipeline_table`에 '비고'(note) 열 추가 — `render_pipeline_table`/`PIPELINE_MARKER_*`/`update_state_md_header`는 레거시(001~093) STATE.md 공존을 위해 존치. 094 R-11: 093 집행 층(can_auto_approve_user_confirmation 단일 판정) 일원화를 표시·게이트 층에 정합 — G-1) 모드 경계 상수에 `DICT`/`MODEL`/`DDL/MIGRATION` 3원소 추가로 semi-agentic(기본 모드) opdd에서 설계 확정 3단계가 소유자 미노출로 자동 승인되던 주권 침해 해소; G-2) `check_close_gate`에 확인 행 0개 파이프라인(opgc) 폴백 신설 + `owner` 인자 추가(CLOSE 첫 행 자체를 소유자 승인 지점으로 삼아 `--force` 없이 종료 불가하던 데드락 해소); G-3) `_derive_next_action`·`build_todo_mirror`가 `can_auto_approve_user_confirmation()`을 재사용해 자동 승인 예정 사용자 확인 행을 각각 프론티어/집계에서 제외(CLOSE 직전은 예외 유지)해 agentic 헛 확인 신호 소멸. 094 SEC-FOLLOWUP: `sync_state_md` except 절이 `journal_warning.reason`에 예외 메시지(`str(e)`)를 원문 그대로 담아 태스크 절대경로·홈 디렉토리 경로를 노출하던 결함(PLAN.md §5.4) 수정 — `_redact_path_like()` 신설(공백 토큰 단위로 `/` 또는 홈 경로로 시작하는 조각을 `os.path.basename`으로 치환, 특정 OS/Errno 포맷 비가정) 후 except 절 `reason` 조합에 적용; 예외 타입명·파일명(예: `STATE.md`)은 보존해 진단 가치 유지, `decision`/`note` 필드는 미접촉. 098: `verify --evidence-check` 신설(F-003) — TASK.md '## 명확화 결과' 표의 '의존 사실' 셀을 근거 등급 4축(인용 존재·인용 유효·등급 부여·E5 단독 아님)으로 판정해 항목별 확정/미확정+사유를 반환하는 라우터(항상 exit 0, 차단 없음); `_locate_clarification_table()` 신설(표 탐색 전용, H-8) 후 `_parse_clarification_table()`을 그 위에 얇게 재구성(dict 반환 계약 불변)·`_extract_citations()`/`_grade_citation()`/`_check_evidence_gate()` 신규(인용 형식 4종 파싱: `경로:N`/`경로` §N/`[사이트](URL)`/`(→ D-N §N)`, 등급 패턴 기본 세트 E5/E4/E2/unknown, `unknown`은 `confirmed_ratio`에서 미확정 계상), `cmd_verify`가 `clarification_check` 분기 뒤·`fix_mode` 분기 앞에서 처리하며 `--clarification-check`와 동시 지정 시 `evidence_check_flag_conflict`로 거부(ERROR_CODES 44→45); `_grade_citation`의 경로 실존 검사는 `_is_safe_artifact_token()`을 재사용해 절대경로·`..` 이탈 토큰을 미존재로 fail-safe 처리. 098 ADD-2: `_resolve_citation_exists()`가 프로젝트 루트를 스크립트 자기 위치(`__file__`)에서 파생해 배포본(`~/.opal/tools/state-tool/`) 실행 시 root=None → 정규 인용 전건 오강등되던 결함 수정 — `_check_evidence_gate`가 `find_project_root(task_md_path)`를 우선 시도하고 실패 시 기존 `__file__` 파생으로 폴백하는 `root`를 1회 계산해 `_evaluate_evidence_item`→`_grade_citation`→`_resolve_citation_exists`로 트레일링 옵셔널 인자로 전달(세 함수 시그니처에 `root=None` 각 1개 추가, 기존 2-인자 호출 형태 하위호환); 폴백까지 실패한 `root=None`은 기존 fail-safe(미존재 처리) 그대로 유지. 100: `verify --evidence-check` 파싱 대상 확장(F-007, PLAN §3.7.2) — `_locate_confirmed_direction_items()` 신설(`_locate_clarification_table`의 형제 함수, 표가 아닌 불릿 리스트 전용 파서: `## 확정된 설계 방향` 섹션의 최상위 불릿만 수집하고 중첩 불릿·그 이어쓰기 행은 비수집, 섹션 부재 시 None·항목 0건 시 [] 반환, `element`에 불릿 본문 원문 보존 — 인덱스형 불투명 라벨 금지)·`_has_fact_tag()`/`_CONFIRMED_VERDICTS` 신설, `_evaluate_evidence_item()`의 4축 통과 분기가 `[사실]` 태그 보유 시 verdict `승계`를 반환(상류 대조 확인 승계 — 재확인 면제, 계수상 `확정`과 동등; 태그 없는 기존 항목은 `확정` 그대로), `_check_evidence_gate()`가 두 소스를 하나의 `items[]`로 병합하며 각 항목에 `source`(`clarification`|`confirmed_direction`) 필드 부여 + 신규 키 `direction_confirmed_ratio` 반환(섹션 부재·항목 0건 시 None — 분모 0 나눗셈 없음), **기존 `confirmed_ratio`의 분모는 `## 명확화 결과` 항목 수로 불변**(PD-1 분리형 — 분모 확대는 소비자를 조용히 깨뜨린다), `cmd_verify` evidence 분기 JSON에 신규 키 1줄 추가(플래그 신설 없음·`evidence_check_flag_conflict` 로직 불변·exit 0 3경로 불변).",
+  "description": "OPAL 파이프라인 현황판 JSON SSOT 관리 CLI — 10개 서브 명령(init/show/advance/mark/block/validate/add-row/status/spec-validate/gate-pass[deprecated]) + verify + 3-way 모드(interactive/semi-agentic/agentic) 지원. 014 Phase 4: 새 표준 행 구조(QA Gate/State Gate 행 없음)와 정합 — gate-pass deprecate, CLOSE 마지막 행 판정 항목명 비의존화. 016: verify --red-check(RED 증거 게이트) + --fix-mode/--changed-files/--test-globs(테스트 불변성 게이트) 추가 — RED-first TDD 트랙 deterministic 집행. 017: mark --step N/M 다중 Step 조기 done 가드 — N<M이면 in_progress 유지(done 미처리) + 진행률(step) 영속화, N==M에서만 done; 미완 행은 기존 stage-transition guard가 단계전환·CLOSE 진입을 자동 차단. 005: verify --clarification-check + TASK→다음단계 자동 훅 — TASK 4요소(목표/범위/제약/완료기준) 미잠금 시 다음 단계 진입 거부(PRINCIPLES §1 집행), 정책 A graceful skip(섹션/파일 부재 시 하위호환). 034: mock 가드 false positive 수정 — _MOCK_CODE_PATTERNS 정규식 'MagicMock' 맨 단어 대안 제거(#1 산문 오탐) + _check_mock_patterns 인라인 백틱 제거 전처리 추가(#2 메타-순환 해소); 헌법 §4 정탐 유지. 054: resolve_owner_placeholder() 신설 — note-write 6경로(advance/mark/add-row/block/status/init)에서 '{owner_name}' 플레이스홀더를 identity.md owner_name으로 write-time 치환(fail-safe: 부재/공란/파싱실패 시 원문 유지). 070: task-step 키 주소 체계 도입 1차 — spec-validate 서브명령(pipeline.json 스펙 검증) + KEY_PATTERN/stage_to_slug/resolve_row_index 신설, build_rows_from_pipeline_json(init --rows-from .json 확장자 분기, .md는 deprecation 경고 유지), advance/mark/block에 --task-step/--task-step-id/--row(deprecated) 3주소·add-row에 --after-task-step/--after-task-step-id/--key(자동 생성) 추가, --step→--action-step 별칭(dest 공유), opdd skill·DICT/MODEL/DDL·MIGRATION stage enum 등록, ERROR_CODES 8종 추가. 072: STATE.md '다음 액션' 자동 파생 — state.json next_action 필드 신설(init 영속화·schema optional 등록), _derive_next_action(파이프라인 프론티어=첫 미완료 행 기준 파생)·update_next_action_section(첫 줄만 치환, 하위 자유기재 보존) 신규, advance/mark가 상태 반영 후 next_action 계산·저장·렌더(block/add-row/status는 미접촉), advance/mark --next-action per-transition 오버라이드(비지속 — 다음 전이 자동 파생 복귀). 074: --import-existing key-보존 재접합 — cmd_init import 분기가 파싱 후 기존 state.json→pipeline.json (stage,item) 순서 매칭으로 key 재접합(schema_version 1.1 유지), 원천 전무 시 keyless+경고(하위호환); _key_source_index/_reattach_import_keys 신규. 076: build_todo_mirror() 신설 — init/advance/mark/block ok() stdout 페이로드에 단계 단위 todo 미러(파생: na 중립·전부pending→pending·전부done→completed·부분/failed→in_progress) 추가, PostToolUse hook이 이를 세션에 결정론 주입(파이프라인 todo 미러 hook 강제); todo_mirror는 stdout 전용 비영속(state.json 미접촉 — schema additionalProperties:false 보존). 088: CLOSE 마지막 행 mark 시 메모리 히스토리 자동 연결 — link_memory_history()가 형제 memory_tool.py를 sys.executable subprocess로 호출해 `<프로젝트루트>/.opal/MEMORY.json` history에 행을 자동 생성(find_project_root 조상 탐색·derive_history_title·build_history_reminder·_run_memory_tool 신설), path 사전 조회로 멱등 보장, 예외/실패 전부 흡수해 mark는 항상 ok:true 유지(cmd_mark ok() stdout에 history_link 필드 조건부 추가, state.json 미접촉). 091: PM Gate 집행 배선(F-004) — validate_pipeline_spec()에 task_steps[].gate 검사 4건 추가(spec_gate_type_invalid/spec_gate_missing_field/spec_gate_field_type_invalid/spec_gate_checklist_empty, artifacts:[] 단독은 위반 아님); _is_safe_artifact_token()·check_gate_artifacts() 신설 — gate.artifacts 존재 검증(정적 경로/글롭 지원, 절대경로·'..' 토큰 태스크 폴더 밖 이탈 차단), gate 미보유 행·artifacts:[] 행은 즉시 통과(기존 동작 불변), 미충족 시 gate_artifact_missing 거부(--force+--note로만 우회 가능, 우회 시 decision 로그 gate_artifact_force 강제 기록); build_gate_payload() 신설 — 통과 시 checklist를 dict로 stdout 반환(todo_mirror_hook 릴레이용); build_rows_from_pipeline_json()/build_rows_from_spec()에 gate 필드 init-time 영속화 각 1줄 추가; cmd_mark가 save_state_json() 이전 검증 구간에서 가드를 호출하여 부분 상태 변경을 배제하고 _ok_kwargs에 gate_checklist 조건부 추가; ERROR_CODES 5종 신규(gate_artifact_missing 포함). 092: `init --worktree <path>` 조건부 영속화(F-005) — argparse `init`에 `--worktree` optional 인자 추가, cmd_init이 state dict 구성 직후 `getattr(args, \"worktree\", None)`으로 조건부 대입(미지정 시 키 자체 미생성 — H-1), state.schema.json properties에 `worktree` optional 등록(required 미변경); `_build_new_state_md`/`render_pipeline_table`/`build_todo_mirror`/`cmd_show` 무변경으로 STATE.md 렌더·`show --format json` 노출 하위호환 보장(H-11). 093: 사용자 확인 행 자동 승인 경로 일원화 — can_auto_approve_user_confirmation() 신설(F-003, CLOSE 축 + 모드 축 2축 합성 단일 판정; semi-agentic 모드 경계 상수의 유일 참조자이며 cmd_mark 사전검사와 cmd_validate 사후검사가 거부 사유별로 소비 범위를 달리한다 — validate는 include_close_axis=False로 CLOSE 축을 평가하지 않아 기존 경계를 보존, H-4); auto_approve_prior_user_confirmations() 신설(F-002, cmd_advance·cmd_mark가 stage-transition guard 직전에 호출해 대상 행 앞 [0,row_index) 구간의 미완 '사용자 확인' 행을 done/auto/timestamp로 자동 승인하고 note에 'auto-approved on <stage> entry' 기록 — as_worker/force/대상 행 stage=CLOSE면 즉시 no-op이고 save_state_json을 호출하지 않아 후속 가드 실패 시 파일이 오염되지 않는다(H-8), 승인 불가 구간은 user_confirmation_required로 거부(F-004)); advance/mark ok() 응답에 auto_approved 배열 관측 필드 추가(기존 필드 불변); build_rows_from_spec/build_rows_from_skill_md/build_rows_from_pipeline_json의 init 시점 agentic auto-na 분기 3곳 삭제(F-001 — 전 모드 pending/⬜/PM 동형 초기화; 세 빌더의 mode 파라미터 시그니처, state.schema.json status enum의 na, _COMPLETE_STATUSES, build_todo_mirror na 필터는 하위호환으로 존치, R-6); cmd_mark 멱등성(F-005) — _AUTO_PASS_PREFIX 모듈 상수 신설 후 auto-pass note를 3분기(빈 note/이미 접두 보유→중첩 방지/신규 부여)로 부여하고, check_gate_artifacts 통과 직후 재-auto-pass no-op 조기 반환(auto_pass and not force and not action_step and status=='done' and owner=='auto' 4중 조건 — 상태·timestamp·updated_at 불변, 응답에 idempotent:true; --force·--action-step N/M·owner=user done 행은 기존 경로 유지). 094: STATE.md를 state.json 파생 섹션(마커/파이프라인 표/'## 현재 상태'/'## 다음 액션') 없는 저널(의사결정 로그+블로커)로 재정의 — `_build_new_state_md` 2인자 축소·`ensure_journal_skeleton` 신설·`sync_state_md` fail-open 축소판 재작성(6개 호출부 인자 정리, journal_warning 조건부 stdout 표면화)·`append_decision_log` 오프바이원 수정+표 셀 이스케이프(`_escape_table_cell`)·`replace_pipeline_section`/`update_current_status_section`/`update_next_action_section` 삭제·`ERROR_CODES`에서 `marker_missing`/`import_failed` 삭제 후 `import_existing_removed` 추가·`cmd_init` import 분기·`parse_existing_state_md`/`_key_source_index`/`_reattach_import_keys` 삭제(--import-existing은 help=SUPPRESS로 존치, 항상 거부)·`cmd_validate` 마커 검사 삭제·`cmd_show` md/full 3분기를 state.json 단일 파생으로 재설계(`LEGACY_FROZEN_BANNER`, `STATUS_TEXT`)·`render_pipeline_table`에 '비고'(note) 열 추가 — `render_pipeline_table`/`PIPELINE_MARKER_*`/`update_state_md_header`는 레거시(001~093) STATE.md 공존을 위해 존치. 094 R-11: 093 집행 층(can_auto_approve_user_confirmation 단일 판정) 일원화를 표시·게이트 층에 정합 — G-1) 모드 경계 상수에 `DICT`/`MODEL`/`DDL/MIGRATION` 3원소 추가로 semi-agentic(기본 모드) opdd에서 설계 확정 3단계가 소유자 미노출로 자동 승인되던 주권 침해 해소; G-2) `check_close_gate`에 확인 행 0개 파이프라인(opgc) 폴백 신설 + `owner` 인자 추가(CLOSE 첫 행 자체를 소유자 승인 지점으로 삼아 `--force` 없이 종료 불가하던 데드락 해소); G-3) `_derive_next_action`·`build_todo_mirror`가 `can_auto_approve_user_confirmation()`을 재사용해 자동 승인 예정 사용자 확인 행을 각각 프론티어/집계에서 제외(CLOSE 직전은 예외 유지)해 agentic 헛 확인 신호 소멸. 094 SEC-FOLLOWUP: `sync_state_md` except 절이 `journal_warning.reason`에 예외 메시지(`str(e)`)를 원문 그대로 담아 태스크 절대경로·홈 디렉토리 경로를 노출하던 결함(PLAN.md §5.4) 수정 — `_redact_path_like()` 신설(공백 토큰 단위로 `/` 또는 홈 경로로 시작하는 조각을 `os.path.basename`으로 치환, 특정 OS/Errno 포맷 비가정) 후 except 절 `reason` 조합에 적용; 예외 타입명·파일명(예: `STATE.md`)은 보존해 진단 가치 유지, `decision`/`note` 필드는 미접촉. 098: `verify --evidence-check` 신설(F-003) — TASK.md '## 명확화 결과' 표의 '의존 사실' 셀을 근거 등급 4축(인용 존재·인용 유효·등급 부여·E5 단독 아님)으로 판정해 항목별 확정/미확정+사유를 반환하는 라우터(항상 exit 0, 차단 없음); `_locate_clarification_table()` 신설(표 탐색 전용, H-8) 후 `_parse_clarification_table()`을 그 위에 얇게 재구성(dict 반환 계약 불변)·`_extract_citations()`/`_grade_citation()`/`_check_evidence_gate()` 신규(인용 형식 4종 파싱: `경로:N`/`경로` §N/`[사이트](URL)`/`(→ D-N §N)`, 등급 패턴 기본 세트 E5/E4/E2/unknown, `unknown`은 `confirmed_ratio`에서 미확정 계상), `cmd_verify`가 `clarification_check` 분기 뒤·`fix_mode` 분기 앞에서 처리하며 `--clarification-check`와 동시 지정 시 `evidence_check_flag_conflict`로 거부(ERROR_CODES 44→45); `_grade_citation`의 경로 실존 검사는 `_is_safe_artifact_token()`을 재사용해 절대경로·`..` 이탈 토큰을 미존재로 fail-safe 처리. 098 ADD-2: `_resolve_citation_exists()`가 프로젝트 루트를 스크립트 자기 위치(`__file__`)에서 파생해 배포본(`~/.opal/tools/state-tool/`) 실행 시 root=None → 정규 인용 전건 오강등되던 결함 수정 — `_check_evidence_gate`가 `find_project_root(task_md_path)`를 우선 시도하고 실패 시 기존 `__file__` 파생으로 폴백하는 `root`를 1회 계산해 `_evaluate_evidence_item`→`_grade_citation`→`_resolve_citation_exists`로 트레일링 옵셔널 인자로 전달(세 함수 시그니처에 `root=None` 각 1개 추가, 기존 2-인자 호출 형태 하위호환); 폴백까지 실패한 `root=None`은 기존 fail-safe(미존재 처리) 그대로 유지. 100: `verify --evidence-check` 파싱 대상 확장(F-007, PLAN §3.7.2) — `_locate_confirmed_direction_items()` 신설(`_locate_clarification_table`의 형제 함수, 표가 아닌 불릿 리스트 전용 파서: `## 확정된 설계 방향` 섹션의 최상위 불릿만 수집하고 중첩 불릿·그 이어쓰기 행은 비수집, 섹션 부재 시 None·항목 0건 시 [] 반환, `element`에 불릿 본문 원문 보존 — 인덱스형 불투명 라벨 금지)·`_has_fact_tag()`/`_CONFIRMED_VERDICTS` 신설, `_evaluate_evidence_item()`의 4축 통과 분기가 `[사실]` 태그 보유 시 verdict `승계`를 반환(상류 대조 확인 승계 — 재확인 면제, 계수상 `확정`과 동등; 태그 없는 기존 항목은 `확정` 그대로), `_check_evidence_gate()`가 두 소스를 하나의 `items[]`로 병합하며 각 항목에 `source`(`clarification`|`confirmed_direction`) 필드 부여 + 신규 키 `direction_confirmed_ratio` 반환(섹션 부재·항목 0건 시 None — 분모 0 나눗셈 없음), **기존 `confirmed_ratio`의 분모는 `## 명확화 결과` 항목 수로 불변**(PD-1 분리형 — 분모 확대는 소비자를 조용히 깨뜨린다), `cmd_verify` evidence 분기 JSON에 신규 키 1줄 추가(플래그 신설 없음·`evidence_check_flag_conflict` 로직 불변·exit 0 3경로 불변). 103 R-15: 워커 소요 계측 필드 신설 — `state.schema.json` rows[].items.properties에 `worker_duration_minutes`(integer, minimum 0) **선택** 등록(required·additionalProperties:false 불변), `_worker_duration_minutes()` argparse type 파서 신설(음수·소수·비수치를 파싱 시점 exit 2로 거부 — `--owner` choices와 동일 계열이므로 ERROR_CODES 신설 없음, 45종 불변), `mark --worker-duration-minutes <n>` 인자 추가 후 cmd_mark가 지정된 경우에만 `row[\"worker_duration_minutes\"]` 기록 + ok() stdout에 동명 키 조건부 추가(미지정 호출은 state.json·응답 키 집합 모두 종전과 바이트 동일 — H-1/H-11); 093 F-005 재-auto-pass no-op 조건에 `_worker_minutes is None`을 더해 값이 실린 호출이 조용히 버려지지 않게 했다(기존 호출은 항상 None이라 조건 동형). 미기록 행은 집계에서 PM 계열로 전액 축퇴한다(103 집계 기준 16/16-a/16-b). 103 R-19: 시각 해상도 초 확장 — `get_kst_datetime`이 date.js `datetime-sec`(신규 포맷, 순수 additive)를 1순위로 요청하고 형식 불일치 시 `datetime`(분)으로 폴백해, 배포본이 아직 신규 포맷을 모르는 구간에도 종전 값을 그대로 낸다(`TS_PATTERN_SEC`/`TS_PATTERN_MIN`·`_date_js_path`·`_run_date_js` 신설, date.js 경로는 형제 배치 우선 해석이라 배포 레이아웃에서는 종전과 동일 경로). `state.schema.json`의 `created_at`·`updated_at`·`rows[].timestamp` pattern에 `(:\\d{2})?`를 더해 초 있음/없음을 모두 수용한다 — 기존 분 해상도 기록 전건이 그대로 통과하며, 집계는 초 부재를 `:00`으로 읽어 분 단위 차분이 항등이다. 103 R-21: 워커 소요 누락 경고 — `WARNING_CODES`(ERROR_CODES와 분리된 신규 사전, 45종 불변) 1종(`worker_duration_missing`)과 `build_worker_duration_warning()` 신설, `mark`가 워커 디스패치 행(`--as-worker` 또는 `--worker-stage`)을 `done`으로 닫으면서 `--worker-duration-minutes`를 넘기지 않으면 stdout JSON에 `warnings` 배열을 조건부로 싣는다(**exit 0 유지·차단 없음**, `state.json`/`STATE.md` 바이트 동일). 오탐 차단 4관문: 값 보유·억제 인자·워커 신호 부재(PM 직접 수행 행)·`--action-step N/M`(N<M) 중간 진행 행은 모두 무경고이며, `owner=="user"`(사용자 확인 행)와 093 F-005 재-auto-pass no-op 경로도 제외된다. 억제 인자 `--worker-duration-unknown`(store_true)은 `--worker-duration-minutes`와 argparse 배타 그룹으로 묶이며, 지정 시 경고·필드 모두 생성하지 않는다(기록 결과는 인자 미지정과 동형).",
   "exports": [
     "cmd_init", "cmd_show", "cmd_advance", "cmd_mark",
     "cmd_block", "cmd_validate", "cmd_add_row", "cmd_status",
@@ -183,6 +183,26 @@ ERROR_CODES = {
         "--evidence-check와 --clarification-check는 동시 사용 불가 (무성 무시 방지)",
 }
 
+# ─────────────────────────────────────────────────────────────────────────────
+# 경고 카탈로그 (103 R-21) — ERROR_CODES와 별개 사전이다.
+#   경고는 에러가 아니다: exit 0을 유지하고 err()를 타지 않으며 상태 변경을 막지도
+#   않는다. ERROR_CODES에 넣지 않는 이유는 두 가지다 — (1) err()는 sys.exit()로
+#   끝나므로 카탈로그를 공유하면 "경고인데 차단"이라는 오용 경로가 생긴다,
+#   (2) ERROR_CODES 키 집합은 회귀 테스트(TestErrorCodesCompleteness / S-40)가
+#   HEAD와 대조해 고정하고 있어 종수를 늘리면 계약이 깨진다.
+# ─────────────────────────────────────────────────────────────────────────────
+WARNING_CODES = {
+    "worker_duration_missing":
+        "워커를 디스패치한 행(row {row_id}, stage={stage})을 완료 처리하면서 "
+        "--worker-duration-minutes를 넘기지 않았습니다. 워커 완료 알림의 duration_ms는 "
+        "세션과 함께 사라지고 행에는 완료 시각만 남아 시작 시각을 되살릴 수 없으므로, "
+        "지금 적지 않으면 이 소요는 영구히 소실되고 통계에서 PM 몫으로 잘못 귀속됩니다 "
+        "— 소급 복구 경로가 없습니다. 알림에 실린 duration_ms를 분으로 환산해 "
+        "`--worker-duration-minutes <분>`으로 다시 mark하거나, 실제로 알 수 없는 경우"
+        "(중단된 워커·PM 직접 수행·소급 불가 과거 데이터)라면 "
+        "`--worker-duration-unknown`으로 미측정임을 명시하십시오.",
+}
+
 PIPELINE_MARKER_START = "<!-- pipeline:start -->"
 PIPELINE_MARKER_END   = "<!-- pipeline:end -->"
 
@@ -230,21 +250,59 @@ def err(command, code, message=None, exit_code=1, **kwargs):
 # 시점 취득 (PLAN §2.11 G-5, TASK T-5)
 # ─────────────────────────────────────────────────────────────────────────────
 
-def get_kst_datetime(command="(unknown)"):
-    """node ~/.opal/tools/date/date.js datetime 호출 → KST YYYY-MM-DD HH:mm 반환
-    실패 시 date_tool_failed 에러 응답 후 exit 2.
+# 시각 문자열 형식 — 초 해상도가 1순위, 분 해상도가 하위호환 폴백이다 (103 R-19).
+TS_PATTERN_SEC = re.compile(r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$")
+TS_PATTERN_MIN = re.compile(r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$")
+
+
+def _date_js_path():
+    """date.js 실경로 — 형제 배치(`<tools>/date/date.js`) 우선, 없으면 배포본.
+
+    배포 레이아웃(`~/.opal/tools/state-tool/`)에서는 형제 경로가 곧
+    `~/.opal/tools/date/date.js`라 종전과 동일하게 해석된다. 레포 소스에서
+    직접 실행할 때만 레포의 date.js를 쓰게 되어, 배포 전 검증이 가능하다.
     """
-    date_js = os.path.expanduser("~/.opal/tools/date/date.js")
+    sibling = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), os.pardir, "date", "date.js")
+    sibling = os.path.normpath(sibling)
+    if os.path.exists(sibling):
+        return sibling
+    return os.path.expanduser("~/.opal/tools/date/date.js")
+
+
+def _run_date_js(date_js, fmt):
+    """date.js 1회 호출 → (returncode, stdout, stderr). 예외는 호출자가 처리한다."""
+    result = subprocess.run(
+        ["node", date_js, fmt],
+        capture_output=True, text=True, timeout=10
+    )
+    return result.returncode, result.stdout.strip(), result.stderr.strip()
+
+
+def get_kst_datetime(command="(unknown)"):
+    """date.js 호출 → KST `YYYY-MM-DD HH:mm:ss` 반환 (103 R-19).
+
+    `datetime-sec`(초 해상도)를 먼저 요청하고, 응답이 형식에 맞지 않으면
+    `datetime`(분 해상도)으로 폴백한다 — date.js가 아직 `datetime-sec`를
+    모르는 배포본이면 사용법 안내를 exit 0으로 출력하므로, 반환값 형식 검사가
+    지원 여부 판정을 겸한다. 폴백 값은 종전과 바이트 동일한 분 해상도 문자열이며
+    스키마·집계 양쪽이 두 형식을 모두 수용한다.
+
+    두 형식 모두 얻지 못하면 date_tool_failed 에러 응답 후 exit 2.
+    """
+    date_js = _date_js_path()
     try:
-        result = subprocess.run(
-            ["node", date_js, "datetime"],
-            capture_output=True, text=True, timeout=10
-        )
-        if result.returncode != 0 or not result.stdout.strip():
-            err(command, "date_tool_failed",
-                message=f"exit={result.returncode}, stderr={result.stderr.strip()}",
-                exit_code=2)
-        return result.stdout.strip()
+        code, out, stderr = _run_date_js(date_js, "datetime-sec")
+        if code == 0 and TS_PATTERN_SEC.match(out):
+            return out
+
+        code, out, stderr = _run_date_js(date_js, "datetime")
+        if code == 0 and TS_PATTERN_MIN.match(out):
+            return out
+
+        err(command, "date_tool_failed",
+            message=f"exit={code}, stderr={stderr}",
+            exit_code=2)
     except Exception as e:
         err(command, "date_tool_failed", message=str(e), exit_code=2)
 
@@ -1475,6 +1533,200 @@ def _parse_step(step_str):
     return (n, total)
 
 
+def _worker_duration_minutes(value):
+    """--worker-duration-minutes 값 파서 — 0 이상 정수(분)만 허용 (103 R-15).
+
+    argparse `type=`으로 소비되어 음수(`-5`)·소수(`1.5`)·비수치(`abc`)·공문자열을
+    파싱 시점에 거부한다(exit 2). ERROR_CODES를 신설하지 않는 이유는 `--owner`
+    choices 위반이나 `--task-step-id` 정수 위반과 동일한 "CLI 인자 형식 오류"
+    계열이기 때문이다 — 기존 인자 검증 경로와 동일하게 argparse가 처리한다.
+
+    0은 유효값이다(측정했으나 1분 미만). '측정하지 않음'은 인자 미지정으로
+    표현되며 그 경우 행에 필드 자체가 생기지 않는다(집계 기준 16-a 축퇴).
+    """
+    if not re.fullmatch(r"\d+", str(value).strip()):
+        raise argparse.ArgumentTypeError(
+            f"0 이상 정수(분)여야 합니다: {value!r}")
+    return int(value)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 103 강제 2단 — 차단 코드 카탈로그
+#
+# ERROR_CODES와 물리적으로 분리한다. 이유는 WARNING_CODES와 동일하다 —
+# ERROR_CODES 키 집합은 회귀 테스트가 실측/HEAD 대조로 고정하고 있어 종수를
+# 늘리면 계약이 깨진다. `err(..., message=...)`로 문구를 직접 넘기면 카탈로그를
+# 늘리지 않고도 전용 코드를 쓸 수 있다.
+# ─────────────────────────────────────────────────────────────────────────────
+BLOCK_CODES = {
+    "worker_duration_undeclared":
+        "CLOSE 진입 차단 — 워커 디스패치 규범 단계의 행 {count}건이 워커 소요를 "
+        "기록하지도, 미측정을 선언하지도 않았습니다: {rows}. "
+        "각 행에 `--worker-duration-minutes <분>`으로 소요를 넣거나, 워커를 돌리지 "
+        "않았다면 `--worker-duration-unknown`으로 미측정임을 명시하십시오. "
+        "침묵은 통과하지 못합니다 — 워커 완료 알림의 duration_ms는 세션과 함께 "
+        "사라지고 행에는 완료 시각만 남아 사후 복구가 불가능하기 때문입니다. "
+        "부득이하면 `--force --note <사유>`로 강제 통과할 수 있으며, 그 사실이 "
+        "의사결정 로그에 남습니다.",
+}
+
+# 워커 디스패치가 **규범**인 단계. 하네스 §1 「디스패치 의무 원칙」이 워커 디스패치로
+# 정의한 단계들이며, TASK(TASK.md 작성)·CLOSE(DONE.md 작성)는 PM 직접 수행이 규범이라
+# 제외한다. 이 집합과 아래 `_WORKER_DISPATCH_ITEM_PREFIX`가 결합해 **PM의 자발적
+# 표시(--as-worker)에 의존하지 않는** 판정 근거를 만든다.
+_WORKER_DISPATCH_STAGES = {
+    "ANALYSIS", "PLAN", "TEST-SCENARIO", "EXECUTE", "TEST",
+    "WIREFRAME", "SPEC", "DESIGN", "REVIEW", "VERIFY", "SCAN", "CHECK",
+    "REPORT", "WBS", "DICT", "MODEL", "DDL/MIGRATION",
+}
+
+# 같은 단계 안에서도 「작업」 행만 워커 디스패치 지점이다. `PM Gate`·`사용자 확인`·
+# `목표-커버 게이트`는 PM/캡틴 판정 행이므로 소요를 요구하면 전부 오탐이 된다.
+# 실 pipeline.json 10종 실측: 작업 행 item은 "작업" 또는 "작업 (…)" 형태다.
+_WORKER_DISPATCH_ITEM_PREFIX = "작업"
+
+# 워커 소요 계측이 도입된 날(`worker_duration_minutes` 필드 신설). 이 날짜 **이전에
+# 생성된** 태스크는 선언할 수단 자체가 없었으므로 CLOSE 차단에서 유예한다.
+# 이후 생성 태스크에는 예외가 없다 — 캡틴 지시 「반드시 적용」.
+_WORKER_MEASUREMENT_EPOCH = "2026-08-26"
+
+
+def is_worker_dispatch_row(row):
+    """이 행이 **워커 디스패치가 규범인 지점**인지 판정한다 (103 강제 2단).
+
+    핵심은 `--as-worker`/`--worker-stage`를 **보지 않는다**는 점이다. 그 인자는 PM이
+    자발적으로 붙이는 신호이고, 붙이지 않으면 판정 자체가 성립하지 않아 규범이 통째로
+    우회된다(실측: 다른 프로젝트 태스크가 15행 전건 미기록으로 통과). 그래서 근거를
+    행의 `stage`·`item`에서 가져온다 — PM 의사와 무관한 파이프라인 구조다.
+    """
+    if row.get("stage") not in _WORKER_DISPATCH_STAGES:
+        return False
+    item = (row.get("item") or "").strip()
+    if not item.startswith(_WORKER_DISPATCH_ITEM_PREFIX):
+        return False
+    # 사용자 확인 행은 캡틴 승인 지점이지 워커 디스패치 지점이 아니다.
+    return row.get("owner") != "user"
+
+
+def collect_undeclared_worker_rows(state):
+    """워커 소요가 **기록도 선언도 없는** 완료 행을 모은다 (CLOSE 차단 판정 근거).
+
+    「미측정 선언」(`worker_duration_unknown: true`)과 「침묵」(둘 다 부재)을 가른다.
+    집계는 둘을 같게 다루지만(축퇴 규칙 16-a), 게이트는 반드시 달리 다뤄야 한다 —
+    그러지 않으면 선언할 이유가 사라지고 강제가 무의미해진다.
+    """
+    out = []
+    for row in state.get("rows", []):
+        if row.get("status") != "done":
+            continue
+        if not is_worker_dispatch_row(row):
+            continue
+        if row.get("worker_duration_minutes") is not None:
+            continue
+        if row.get("worker_duration_unknown"):
+            continue
+        out.append(row)
+    return out
+
+
+def check_worker_duration_declared(state, row_index, command, force=False):
+    """CLOSE 첫 행 진입 시 워커 소요 미선언 행이 남아 있으면 **차단**한다.
+
+    경고(`worker_duration_missing`)는 조기 발견용이고 이 함수가 최종 방어다.
+    경고만으로는 무시하면 그대로 통과하므로, 태스크를 닫는 지점에서 한 번은
+    반드시 걸리게 한다. 통과 경로는 「소요 기록」 또는 「미측정 선언」 둘뿐이며,
+    `--force`는 의사결정 로그를 남기는 최후 수단이다.
+
+    **소급 유예는 `created_at` 기준이다** — 태스크가 계측 도입 시점
+    (`_WORKER_MEASUREMENT_EPOCH`) **이전에 생성**됐으면 통과시킨다. 그 시기의 태스크는
+    `worker_duration_minutes` 필드가 존재하지 않아 선언할 방법 자체가 없었고, 그것까지
+    막으면 과거 태스크를 영구히 닫을 수 없다.
+
+    「기록이 한 건도 없으면 유예」로 두지 않는 이유가 핵심이다 — 그 규칙은 **워커를
+    돌리고도 한 건도 기록하지 않은 신규 태스크**를 그대로 통과시켜(실측 사례 존재)
+    강제가 무의미해진다. 생성 시점 기준이면 도입 이후 태스크에는 **예외가 없다**.
+
+    `created_at` 부재·파싱 실패는 유예로 처리한다(fail-safe) — 판정 불가를 차단으로
+    바꾸면 정상 태스크가 닫히지 않는 쪽이 더 위험하다.
+    """
+    if force:
+        return
+    row = state["rows"][row_index]
+    if row.get("stage") != "CLOSE":
+        return
+    is_first_close = (row_index == 0
+                      or state["rows"][row_index - 1].get("stage") != "CLOSE")
+    if not is_first_close:
+        return
+
+    created = (state.get("created_at") or "")[:10]
+    if not created or created < _WORKER_MEASUREMENT_EPOCH:
+        return  # 계측 도입 이전 생성 — 소급 유예 (부재·파싱 실패도 fail-safe로 유예)
+
+    missing = collect_undeclared_worker_rows(state)
+    if not missing:
+        return
+
+    labels = ", ".join(
+        f"row {r.get('row_id')} {r.get('stage')}/{r.get('item')}" for r in missing)
+    err(command, "worker_duration_undeclared",
+        message=BLOCK_CODES["worker_duration_undeclared"].format(
+            count=len(missing), rows=labels),
+        undeclared_rows=[r.get("row_id") for r in missing])
+
+
+def build_worker_duration_warning(args, row, worker_minutes):
+    """103 R-21 — 워커 디스패치 행을 소요 없이 완료 처리했을 때의 경고를 만든다.
+
+    반환은 경고 dict 1개 또는 None이다. **상태를 만지지 않고 exit code도 바꾸지
+    않는다** — 산출물(`state.json`/`STATE.md`)은 경고 유무와 무관하게 바이트 동일이며,
+    경고는 오직 `mark` stdout JSON의 `warnings` 배열에만 실린다.
+
+    판정은 4개 관문을 모두 통과해야 성립한다. 오탐(정당한 호출에 뜨는 경고)이
+    반복되면 PM이 경고 전체를 무시하게 되므로, 각 관문은 "이 경고가 실제로 유실을
+    막는 상황"만 남기도록 좁힌다:
+
+      (1) 이미 값이 실렸으면 경고할 것이 없다.
+      (2) `--worker-duration-unknown`으로 미측정을 **명시**했으면 침묵한다
+          (§(c) 억제 — 정당한 미측정을 소음으로 만들지 않는다).
+      (3) `--as-worker` 또는 `--worker-stage`가 있어야 한다. 이 두 인자는 "이 행은
+          워커가 수행했다"는 유일한 기계 판독 신호다. PM 직접 수행 행은 둘 다 없이
+          호출되므로 구조적으로 제외된다.
+      (4) 이 호출로 행이 실제 `done`이 되어야 한다. `--action-step N/M`(N<M)은 행을
+          `in_progress`로 남기며 소요는 마지막 Step에서 합산 기록하는 것이 규범이므로,
+          중간 진행 보고마다 경고를 내면 전부 오탐이다.
+
+    추가로 `owner == "user"`인 행은 제외한다. 사용자 확인 행은 캡틴 승인 지점이지
+    워커 디스패치 지점이 아니므로, 설령 `--as-worker`가 함께 실렸더라도 여기에 소요를
+    요구하는 것은 오탐이다(캡틴 지시 §1(a) 명시 제외 대상).
+
+    093 F-005 재-auto-pass no-op 경로는 이 함수에 도달하기 전에 조기 반환하므로,
+    이미 완료된 행을 다시 두드리는 멱등 호출에도 경고가 뜨지 않는다.
+    """
+    if worker_minutes is not None:
+        return None
+    if getattr(args, "worker_duration_unknown", False):
+        return None
+    # (3) 워커 신호 — 인자(PM의 자발적 표시) **또는** 행 구조(파이프라인 규범).
+    # 후자를 더한 것이 103 강제 2단의 핵심이다. 인자만 보면 PM이 `--as-worker`를
+    # 붙이지 않는 순간 경고가 침묵해 규범이 통째로 우회된다(실측 사례 존재).
+    _arg_signal = bool(getattr(args, "as_worker", False)
+                       or getattr(args, "worker_stage", None))
+    if not (_arg_signal or is_worker_dispatch_row(row)):
+        return None
+    if row.get("status") != "done":
+        return None
+    if row.get("owner") == "user":
+        return None
+
+    code = "worker_duration_missing"
+    return {
+        "code": code,
+        "message": WARNING_CODES[code].format(
+            row_id=row.get("row_id"), stage=row.get("stage")),
+    }
+
+
 def cmd_mark(args):
     """PLAN §2.1, T-7, §2.4, §2.15 G-12, §2.16 G-13 — ⬜/🔄→✅"""
     command = "mark"
@@ -1529,6 +1781,10 @@ def cmd_mark(args):
     check_close_gate(state, row_index, command,
                      auto_pass=args.auto_pass, force=args.force, owner=args.owner)
 
+    # 103 강제 2단 (b) — 워커 소요 미선언 행이 남아 있으면 CLOSE 진입을 차단한다.
+    # 상태 변경 전 구간이라 거부 시 파일이 오염되지 않는다.
+    check_worker_duration_declared(state, row_index, command, force=args.force)
+
     # 005 명확화 게이트 — TASK→다음 단계 첫 행 진입 차단 (상태 변경 전)
     _run_clarification_hook(task_path, state, row_index, command,
                             auto_pass=args.auto_pass, force=args.force)
@@ -1550,9 +1806,17 @@ def cmd_mark(args):
     _step_str = getattr(args, "step", None) or getattr(args, "action_step", None)
     _step_pair = _parse_step(_step_str) if _step_str else None
 
+    # 103 R-15: 워커 소요(분). 미지정(None)이면 행에 필드를 만들지 않는다 — 기존
+    #   태스크 무영향(집계 기준 16-a 축퇴). 값 검증(0 이상 정수)은 argparse
+    #   type=_worker_duration_minutes가 파싱 시점에 수행한다.
+    _worker_minutes = getattr(args, "worker_duration_minutes", None)
+
     # 093 F-005 R-5 멱등성 — 이미 auto 승인된 행에 대한 재-auto-pass는 상태 변경 없이 성공 반환
     #   (--force·--action-step N/M·owner=user done 행은 조건에서 제외 — 기존 경로 유지)
+    # 103 R-15: --worker-duration-minutes가 실린 호출은 기록할 값이 있으므로 no-op
+    #   대상에서 뺀다. 기존 호출은 이 값이 항상 None이라 조건이 종전과 동일하다.
     if (args.auto_pass and not args.force and not _step_str
+            and _worker_minutes is None
             and row.get("status") == "done" and row.get("owner") == "auto"):
         ok(command, row_id=row["row_id"], stage=row["stage"], item=row["item"],
            status="done", timestamp=row.get("timestamp"), idempotent=True,
@@ -1575,6 +1839,14 @@ def cmd_mark(args):
         row["status"]       = "done"
         row["status_label"] = "✅"
     row["timestamp"]    = now_str
+
+    # 103 R-15: 지정된 경우에만 기록 — 미지정 행은 키 자체가 생기지 않는다(H-1).
+    if _worker_minutes is not None:
+        row["worker_duration_minutes"] = _worker_minutes
+    # 103 강제 2단 (c) — 미측정 **선언**을 행에 남긴다. 남기지 않으면 CLOSE 차단이
+    # 「선언했음」과 「침묵」을 구별할 수 없어 강제가 성립하지 않는다.
+    if getattr(args, "worker_duration_unknown", False):
+        row["worker_duration_unknown"] = True
 
     # note 소유자 호칭 치환 (PLAN §3.1.2, TASK 054) — 3분기 공용 1회 산출
     note_text = resolve_owner_placeholder(args.note)
@@ -1666,6 +1938,18 @@ def cmd_mark(args):
                       todo_mirror=build_todo_mirror(state, "update"))
     if history_link is not None:
         _ok_kwargs["history_link"] = history_link
+    # 103 R-15: 기록한 경우에만 응답에 실어 PM이 반영값을 확인할 수 있게 한다.
+    #   미지정 호출의 응답 키 집합은 종전과 완전히 동일하다(H-11 하위호환).
+    if _worker_minutes is not None:
+        _ok_kwargs["worker_duration_minutes"] = _worker_minutes
+    if getattr(args, "worker_duration_unknown", False):
+        _ok_kwargs["worker_duration_unknown"] = True
+    # 103 R-21: 워커 디스패치 행인데 소요가 비었으면 경고를 실어 보낸다.
+    #   경고가 없으면 `warnings` 키 자체를 만들지 않는다 — 기존 mark 호출의 응답
+    #   키 집합이 종전과 완전히 동일해야 하기 때문이다(H-11, S-5와 동일 계약).
+    _warning = build_worker_duration_warning(args, row, _worker_minutes)
+    if _warning is not None:
+        _ok_kwargs["warnings"] = [_warning]
     _gate_payload = build_gate_payload(row)
     if _gate_payload is not None:
         _ok_kwargs["gate_checklist"] = _gate_payload
@@ -2903,6 +3187,22 @@ def build_parser():
     p_mark.add_argument("--step", dest="step", metavar="N/M")
     p_mark.add_argument("--action-step", dest="step", metavar="N/M",
                         help="EXECUTE 액션 진행률 (구 --step 별칭, 070 R-5)")
+    # 103 R-21: 소요 '값'과 소요 '미상 선언'은 동시에 성립할 수 없으므로 배타 그룹으로
+    #   묶는다. 둘 다 주면 argparse가 exit 2로 거부한다 — `--owner`/`--auto-pass`와
+    #   동일 계열의 CLI 인자 형식 오류이므로 ERROR_CODES를 신설하지 않는다(45종 불변).
+    duration_group = p_mark.add_mutually_exclusive_group()
+    duration_group.add_argument("--worker-duration-minutes", dest="worker_duration_minutes",
+                        type=_worker_duration_minutes, metavar="<minutes>",
+                        help="103 R-15: 이 행에서 워커가 실제 실행한 시간(분, 0 이상 정수). "
+                             "원천은 하네스 duration_ms — 분으로 환산해 전달한다. "
+                             "지정 시에만 rows[].worker_duration_minutes에 기록되며, "
+                             "미지정 시 필드를 만들지 않는다(기존 태스크 무영향)")
+    duration_group.add_argument("--worker-duration-unknown", action="store_true",
+                        dest="worker_duration_unknown",
+                        help="103 R-21: 이 행의 워커 소요를 알 수 없음을 명시한다"
+                             "(중단된 워커·PM 직접 수행·소급 불가 과거 데이터). "
+                             "worker_duration_missing 경고를 억제하며, 행에 필드를 "
+                             "만들지 않는다 — 기록 결과는 인자 미지정과 완전히 동일하다")
     owner_group = p_mark.add_mutually_exclusive_group()  # C-2
     owner_group.add_argument("--owner", choices=["PM","worker","user","auto"])
     owner_group.add_argument("--auto-pass", action="store_true", dest="auto_pass")

@@ -9,6 +9,12 @@
     "codex":  { "light": "gpt-5.4-mini", "standard": "gpt-5.4", "advanced": "gpt-5.5" },
     "cursor": { "light": "inherit", "standard": "inherit", "advanced": "inherit" }
   },
+  "quietHours": {
+    "_help": "진행 통계(OPAL Console)가 태스크 소요를 계산할 때 매일 제외할 야간 시간대. enabled를 false로 두면 보정을 끄고 벽시계 그대로 집계한다. start·end는 24시간 `HH:MM` 표기이며 반개구간 [start, end)다 — end 정각은 제외에 포함되지 않는다. start > end면 자정을 넘는 구간으로 읽고(예: 22:00~06:00), start == end면 제외할 구간이 없다(보정 꺼짐과 같다). 프로젝트별로 다르게 쓰려면 {프로젝트}/.opal/setting.local.json 최상위 quietHours에 바꿀 키만 덮어쓴다(로컬 우선, 없는 키는 전역).",
+    "enabled": true,
+    "start": "00:00",
+    "end": "09:00"
+  },
   "shardPolicy": {
     "_help": "code-scan 매니페스트 분할 판정 2축(바이트 상한 maxBytes·엔트리 수 하한 minFiles). 두 조건을 모두 넘어야 분할 대상으로 판정한다. 프로젝트별로 다르게 쓰려면 {프로젝트}/.opal/code-scan.json 최상위 shardPolicy에 바꿀 키만 덮어쓴다(로컬 우선, 없는 키는 전역, 전역에도 없으면 코드 상수).",
     "maxBytes": 10240,

@@ -937,7 +937,7 @@ install_opal_setting() {
 import json, sys
 
 src_path, dst_path = sys.argv[1], sys.argv[2]
-SEED_KEYS = ['models', 'shardPolicy']
+SEED_KEYS = ['models', 'shardPolicy', 'quietHours']
 
 try:
     with open(src_path, 'r', encoding='utf-8') as f:

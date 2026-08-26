@@ -182,7 +182,11 @@ Lazy 로드 모듈. 각 §의 stub이 로드 시점과 파일 경로를 지시�
 > - TASK 단계 시작: `~/.opal/tools/state-tool/run.sh init <task-path> --skill <약어> --mode <모드>`
 > - 단계 시작(⬜→🔄): `~/.opal/tools/state-tool/run.sh advance <task-path> --task-step <key>`
 > - 단계 완료(→✅): `~/.opal/tools/state-tool/run.sh mark <task-path> --task-step <key> --done`
-> - 워커 완료(EXECUTE Step): `~/.opal/tools/state-tool/run.sh mark <task-path> --task-step <key> --done --as-worker --worker-stage <stage>`
+> - 워커 완료(EXECUTE Step): `~/.opal/tools/state-tool/run.sh mark <task-path> --task-step <key> --done --as-worker --worker-stage <stage> --worker-duration-minutes <분>`
+>   - **[MUST] `--worker-duration-minutes`는 워커를 디스패치한 행에서 필수다.** 워커 완료 알림이 반환한 `duration_ms`를 분으로 환산(반올림)해 전달한다. 한 행에 워커가 여러 번 붙으면 합산한다. 이 값을 넘기지 않으면 그 시간은 영구히 소실되고(알림은 세션과 함께 사라진다) 통계에서 PM 몫으로 잘못 귀속된다 — 소급 복구 경로가 없다.
+>   - **[MUST] 워커를 디스패치한 행은 `--as-worker --worker-stage`로 마킹한다.** 이 표시가 없으면 소요를 넘길 자리도 없어 규범이 통째로 우회된다(실측: 배포 후 시작된 태스크가 15행 전건 미기록으로 통과).
+>   - 예외는 **선언**해야 한다 — 소요를 알 수 없으면(중단된 워커·PM 직접 수행) `--worker-duration-unknown`으로 미측정임을 밝힌다. **생략(침묵)은 예외가 아니다.** 선언과 `0`도 다르다 — 선언은 「측정 안 함」, `0`은 「측정했으나 1분 미만」이다.
+>   - **CLOSE 차단** — 도구가 CLOSE 첫 행 진입 시 워커 규범 단계의 완료 행 중 기록도 선언도 없는 행이 있으면 **거부**한다(`worker_duration_undeclared`). 통과 경로는 기록 또는 선언 둘뿐이며, `--force --note`는 의사결정 로그를 남기는 최후 수단이다. 계측 도입(2026-08-26) **이전 생성** 태스크는 유예되고 이후 생성분에는 예외가 없다.
 > - PM Gate 통과 후 단일 mark: `~/.opal/tools/state-tool/run.sh mark <task-path> --task-step <key> --done`
 > - [deprecated] gate-pass — 레거시 전용. 신규는 위 단일 mark 사용 (Phase4 완료, State Gate/QA Gate 행 제거)
 > - 추가작업 행 삽입: `~/.opal/tools/state-tool/run.sh add-row <task-path> --after-task-step <key> --stage <단계> --item <항목>`
@@ -318,6 +322,8 @@ OPAL 도구는 모두 `~/.opal/tools/{tool-name}/run.sh` 래퍼를 통해 호출
 
 | 버전 | 날짜 | 내용 |
 |------|------|------|
+| v1.17 | 2026-08-26 | §3 State — 워커 기록 강제 2단 명시. (1) `[MUST]` 워커 디스패치 행은 `--as-worker --worker-stage`로 마킹 — 이 표시가 없으면 소요 인자를 넣을 자리도 없어 규범이 우회된다(배포 후 시작 태스크가 15행 전건 미기록으로 통과한 실측 사례). (2) 예외는 침묵이 아니라 `--worker-duration-unknown` **선언**이어야 함을 명문화. (3) `state-tool`이 CLOSE 첫 행에서 미선언 행을 **차단**함을 기재(`worker_duration_undeclared`, 계측 도입 이전 생성 태스크는 유예) (태스크 103) |
+| v1.16 | 2026-08-26 | §3 State — 워커 완료 mark 명령에 `--worker-duration-minutes <분>` 추가 + [MUST] 규범 신설. 하네스는 워커 완료 시 `duration_ms`를 반환하나 `state.json`이 이를 버려 왔고, 그 결과 워커 실행 시간이 통계에서 PM 몫으로 잘못 귀속됐다. 알림은 세션과 함께 사라지고 행에는 완료 시각만 남아 사후 계산이 불가능하므로 수신 시점 기록이 유일한 경로다. 생략(미측정)과 `0`(1분 미만 측정)의 구별도 명시 (태스크 103) |
 | v7.3 | 2026-08-21 22:11 | §2 하네스 모듈 테이블에 트랙 라우팅 행 추가 — `harness/track-routing.md` 신설(`//opd`→`opds` 자동 강등 판정 4축·잠정 임계값 SSOT) 등록, 로드 시점: `//opd` 진입 시 트랙 강등 판정 수행 시점(TASK 완료 직후) (098) |
 | v7.4 | 2026-08-23 12:39 | §2 하네스 모듈 테이블에 분석 코어 행 추가 — `harness/analysis-core.md` 등록, 로드 시점: ANALYSIS 단계 진입 시 / PLAN 2단계(기능별 분석) 진입 시. §2 하위 `### 분석 코어 적용 의무` stub 서브섹션 신설 (100) |
 | v7.2 | 2026-08-16 13:19 | §3 State — STATE.md 역할을 "파이프라인 현황판"에서 "의사결정 로그·블로커를 담는 저널"로 재정의(094 R-6). 마커 명세·`marker_missing` 서술 삭제 + 표준 문구 A/B 적용, 에러 카탈로그 종수 리터럴 삭제 후 `state-tool/README.md` §에러 코드 카탈로그 포인터로 대체(R-9 ①), 예시 명령의 `--row <N>`을 `--task-step <key>`로 교체(CONVENTIONS §State 관리 정합), `show` 조회 명령 1줄 추가 |

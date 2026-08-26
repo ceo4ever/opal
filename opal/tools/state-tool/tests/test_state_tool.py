@@ -3,7 +3,7 @@
   "module": "test_state_tool",
   "layer": "test",
   "domain": "opal-pipeline",
-  "description": "state-tool 단위 테스트 — 9개 명령 happy path + 23종 에러 코드 × 최소 1건 + G-5~G-15 시나리오. 005: TestClarificationGate 신설 — verify --clarification-check + TASK→다음단계 자동 훅 RED-first 케이스 ①~⑨ + 회귀 보호. 054: TestOwnerNamePlaceholder 신설 — note '{owner_name}' 플레이스홀더 identity.md write-time 치환 RED-first(S-1~S-7). 056: TestOpplSkillInit 신설 — `--skill oppl` enum 미등록 RED-first(S-020, H-1) — run.sh subprocess 실호출로 공개 인터페이스만 검증(mock 미사용). 070: task-step 키 주소 체계 도입 1차 RED-first — TestPipelineSpecValidate/TestPipelineJsonInit/TestStateSchema11Compat/TestTaskStepAddressing/TestActionStepRename/TestAddRowKey/TestOpddEnumDrift/TestGroupAPipelineSpecs/TestBackwardCompatAliases 9종 신설(TEST-SCENARIO.md S-1~S-14, PLAN §3.7.2) — 미구현 기능이므로 전부 FAIL 기대(RED 증거). 072: TestNextActionAutoDerive 신설 — STATE.md '다음 액션' 자동 파생 RED-first(TEST-SCENARIO.md S-1~S-4,S-6,S-7) — init next_action 영속화+schema optional 등록, advance/mark 프론티어 파생(pending '진입'/in_progress '진행 중'/전체완료 '태스크 완료'), 첫 줄만 치환(하위 자유기재 보존), --next-action 오버라이드 우선+비지속 복귀 — 공개 CLI 경로(직접 호출+run.sh subprocess)로만 검증, 미구현이므로 실패 기대(RED 증거). 074: TestImportPreservesKeys 신설 — `--import-existing` task-step key 유실 결함 RED-first(TEST-SCENARIO.md S-a~S-e) — force+import-existing 후 rows[].key 100% 보존, pipeline.json 폴백 복원, key 원천 전무 시 keyless+stderr 경고(하위호환), schema_version 1.1 유지, 동일 (stage,item) 중복 순서 소비 — 공개 cmd_init 호출 + 실 파일 I/O로만 검증, 수정 전 코드에서 FAIL 기대(RED 증거). 076: TestTodoMirror 신설 — build_todo_mirror 파생 규칙(TS-001~007): init create 페이로드·전부pending→pending·전부done→completed·advance/부분→in_progress·na 중립·블로커 in_progress 유지·영속 경계(state.json 미영속+schema validate 통과) — 공개 cmd_init/advance/mark/block ok() stdout 페이로드 캡처로만 검증. 088: TestCloseHistoryLink 신설(TS-1~TS-7) — CLOSE 마지막 행 mark 시 link_memory_history()가 <프로젝트루트>/.opal/MEMORY.json history에 행을 자동 생성(title/path/stage/result 파생값, date는 memory-tool KST 충전)·재mark 멱등(duplicate_skipped)·MEMORY.json 부재/손상 시 비차단(ok:true + skipped/failed)·비CLOSE 행 무발동 대조군·result 보강 리마인더 구성요소·state.json 영속 경계(schema validate 통과) — 공개 cmd_mark 호출 + 실 MEMORY.json 파일 내용으로만 검증(내부 함수 mock 없음, 블랙박스 결함 주입). 091(RED-first, mode:red, F-004 게이트 집행 배선): TestTaskStepGate 신설(TEST-SCENARIO S-10~S-17) — check_gate_artifacts()/build_gate_payload()가 아직 없어(Step 8 GREEN 이전) 실 pipeline.json(opd/opdw/opsdd) 기반 gate 정의를 state.json 행에 직접 주입하는 픽스처로 산출물 부재 차단(H-1)·부분 상태 변경 부재·checklist dict 페이로드(H-6)·gate 없는 행 무영향(H-2/H-3)·빈 artifacts 비차단(opdw 실사례)·--force --note 우회 의사결정 로그(H-5)·경로 이탈 토큰 거부(H-4)·glob 토큰 매칭(opsdd 실사례)을 검증(공개 cmd_mark 호출 + 실 state.json/STATE.md 파일 내용, mock 없음). TestPipelineSpecValidate에 gate violation 4종(spec_gate_type_invalid/spec_gate_missing_field/spec_gate_field_type_invalid/spec_gate_checklist_empty, S-9) 케이스 + 실 pipeline.json 10종 유효성 케이스 추가. TestErrorCodesCompleteness에 091 신규 5종 반영(39→44). 093(RED-first, mode:red, 사용자 확인 행 자동 승인 경로 일원화): TestT093AutoNaRemoval/TestT093AutoApproveHook/TestT093AutoApproveBoundary/TestT093HookGuardOrder/TestT093MarkIdempotency/TestT093NaBackwardCompat/TestT093SingleDecisionSource 7종 신설(TEST-SCENARIO S-1~S-18·S-24~S-26) — init 시점 agentic auto-na 제거 후 전 모드 pending/PM 동형성(S-2~S-4), 다음 단계 진입 시 auto_approve_prior_user_confirmations 훅 자동 승인(S-1/S-5/S-13/S-26), CLOSE·워커 경로 구조적 제외(S-6~S-9), user_confirmation_required 전용 에러(S-12/S-24), 훅→후속 가드 순서와 파일 미오염(S-10/S-11), mark 접두 멱등·재-auto-pass no-op(S-15/S-16), MODE_BOUNDARY_STAGES 단일 판정 수렴(S-25), 경계 불변 회귀표 18셀·na 하위호환(S-14/S-17/S-18) — worktree run.sh subprocess 실호출 + 실 pipeline.json/state.json 파일 상태로만 검증(mock 미사용), 미구현 기능이므로 신규 계약 케이스는 전부 FAIL 기대(RED 증거: RED-EVIDENCE.md). 093 GREEN(Step 9): 구형 계약을 고정하던 기존 테스트를 신규 계약으로 수정 — test_init_agentic_auto_na_user_confirmation→test_init_agentic_user_confirmation_pending, test_rows_from_agentic_auto_na→test_rows_from_agentic_user_confirmation_pending(둘 다 na→pending 단언 교체), test_close_gate_regression_via_task_step_addressing_subprocess(주석 갱신 + CLOSE 직전 사용자 확인 행 row 8 캡틴 승인 단계 추가, 최종 assert 불변), agentic CLOSE 게이트 3건(test_agentic_close_gate_requires_user·test_g13_agentic_close_gate_auto_pass_rejected·test_c6_agentic_auto_pass_close_first_row)에 캡틴 승인 사전 단계 추가, test_new_structure_guard_blocks_skip에 사용자 확인 행 선(先)승인으로 guard 축 격리, test_s13_new_style_row_without_gate_response_unaffected 기대 키 집합에 auto_approved 추가, TestErrorCodesCompleteness 44→45종(user_confirmation_required). 테스트 삭제 0건. 094 R-11 Step0(RED-first, mode:red, agentic 승인 계약 정합): TestR11ModeBoundary/TestR11CloseGateFallback/TestR11DerivedSignals/TestR11Invariants 4종 신설(TEST-SCENARIO S-34~S-37,S-40) — G-1 MODE_BOUNDARY_STAGES에 DICT/MODEL/DDL·MIGRATION 3원소 부재로 semi-agentic opdd 설계 확정 3건이 미노출 통과하는 결함을 3 stage 개별 advance 호출로 판정(부분 구현 방지, S-34), G-2 check_close_gate가 확인 행 0개 파이프라인(opgc)에서 --owner user로도 영구 데드락인 결함(S-35), G-3-a/G-3-b _derive_next_action·build_todo_mirror가 자동 승인 예정 확인 행을 중립 처리하지 않아 next_action 헛 확인·todo 오판정하는 결함(S-36/S-37), R-11 [MUST] 불변 제약(신규 판정 함수 금지·next_action 스키마·build_todo_mirror 시그니처·ERROR_CODES 무접촉) 역검증(S-40) — 실 pipeline.json(opdd/opgc/opd) + run.sh subprocess 실호출 + 실 state.json 파일 상태로만 검증(mock 미사용), 미구현 기능이므로 신규 계약 케이스는 전부 FAIL 기대(RED 증거). 구현(op-be-agent)과 작성자(opal-test-agent) 분리. 098 ADD-2(RED-first, mode:red, 배포 경로 루트 파생 결함): TestT098Add2RootDerivation 신설 — `_resolve_citation_exists()`(`state_tool.py:2400`)가 프로젝트 루트를 `task_md_path`가 아니라 스크립트 자기 위치(`__file__`)에서 파생해, 배포본(`~/.opal/tools/state-tool/`)에서 실행 시 조상에 `.opal/MEMORY.json`이 없어 root=None → 정규 인용도 전건 citation_path_not_found로 오강등되는 결함을 3축(①스크립트 위치 독립성 ②오강등 부재 ③프로젝트 소스 실행 회귀 방어)으로 검증 — 실 TASK.md(본 태스크 098) + `state_tool.py` 임시 사본 subprocess 실행(공개 CLI `verify --evidence-check` stdout JSON)으로만 검증(mock 미사용), 미구현이므로 ①·②는 FAIL 기대(RED 증거: RED-EVIDENCE.md ADD-2절). 구현(op-be-agent)과 작성자(opal-test-agent) 분리, state_tool.py 무접촉. 100: TestT100DirectionEvidence 신설(RED-first 7케이스) — `verify --evidence-check`의 `## 확정된 설계 방향` 불릿 파서 확장 계약 검증. ① items[] 편입 + source 필드 ② verdict `승계` ③ `direction_confirmed_ratio` 신규 키 ④ 기존 `confirmed_ratio` 분모 불변(PD-1 분리형) ⑤ 섹션 부재 graceful skip ⑥ exit 0 3경로 ⑦ 항목 0건 분모 0 경계. 실 파일 픽스처 3종(A 방향 6불릿+표 4행 / B 섹션 없음 / C 항목 0건), mock 금지. RED 증거: 단일 파일 7 failed·340 passed → GREEN 후 347 passed(스코프·명령 병기). 작성자(opal-be-agent Step 10)와 구현자(Step 11) 분리.",
+  "description": "state-tool 단위 테스트 — 9개 명령 happy path + 23종 에러 코드 × 최소 1건 + G-5~G-15 시나리오. 005: TestClarificationGate 신설 — verify --clarification-check + TASK→다음단계 자동 훅 RED-first 케이스 ①~⑨ + 회귀 보호. 054: TestOwnerNamePlaceholder 신설 — note '{owner_name}' 플레이스홀더 identity.md write-time 치환 RED-first(S-1~S-7). 056: TestOpplSkillInit 신설 — `--skill oppl` enum 미등록 RED-first(S-020, H-1) — run.sh subprocess 실호출로 공개 인터페이스만 검증(mock 미사용). 070: task-step 키 주소 체계 도입 1차 RED-first — TestPipelineSpecValidate/TestPipelineJsonInit/TestStateSchema11Compat/TestTaskStepAddressing/TestActionStepRename/TestAddRowKey/TestOpddEnumDrift/TestGroupAPipelineSpecs/TestBackwardCompatAliases 9종 신설(TEST-SCENARIO.md S-1~S-14, PLAN §3.7.2) — 미구현 기능이므로 전부 FAIL 기대(RED 증거). 072: TestNextActionAutoDerive 신설 — STATE.md '다음 액션' 자동 파생 RED-first(TEST-SCENARIO.md S-1~S-4,S-6,S-7) — init next_action 영속화+schema optional 등록, advance/mark 프론티어 파생(pending '진입'/in_progress '진행 중'/전체완료 '태스크 완료'), 첫 줄만 치환(하위 자유기재 보존), --next-action 오버라이드 우선+비지속 복귀 — 공개 CLI 경로(직접 호출+run.sh subprocess)로만 검증, 미구현이므로 실패 기대(RED 증거). 074: TestImportPreservesKeys 신설 — `--import-existing` task-step key 유실 결함 RED-first(TEST-SCENARIO.md S-a~S-e) — force+import-existing 후 rows[].key 100% 보존, pipeline.json 폴백 복원, key 원천 전무 시 keyless+stderr 경고(하위호환), schema_version 1.1 유지, 동일 (stage,item) 중복 순서 소비 — 공개 cmd_init 호출 + 실 파일 I/O로만 검증, 수정 전 코드에서 FAIL 기대(RED 증거). 076: TestTodoMirror 신설 — build_todo_mirror 파생 규칙(TS-001~007): init create 페이로드·전부pending→pending·전부done→completed·advance/부분→in_progress·na 중립·블로커 in_progress 유지·영속 경계(state.json 미영속+schema validate 통과) — 공개 cmd_init/advance/mark/block ok() stdout 페이로드 캡처로만 검증. 088: TestCloseHistoryLink 신설(TS-1~TS-7) — CLOSE 마지막 행 mark 시 link_memory_history()가 <프로젝트루트>/.opal/MEMORY.json history에 행을 자동 생성(title/path/stage/result 파생값, date는 memory-tool KST 충전)·재mark 멱등(duplicate_skipped)·MEMORY.json 부재/손상 시 비차단(ok:true + skipped/failed)·비CLOSE 행 무발동 대조군·result 보강 리마인더 구성요소·state.json 영속 경계(schema validate 통과) — 공개 cmd_mark 호출 + 실 MEMORY.json 파일 내용으로만 검증(내부 함수 mock 없음, 블랙박스 결함 주입). 091(RED-first, mode:red, F-004 게이트 집행 배선): TestTaskStepGate 신설(TEST-SCENARIO S-10~S-17) — check_gate_artifacts()/build_gate_payload()가 아직 없어(Step 8 GREEN 이전) 실 pipeline.json(opd/opdw/opsdd) 기반 gate 정의를 state.json 행에 직접 주입하는 픽스처로 산출물 부재 차단(H-1)·부분 상태 변경 부재·checklist dict 페이로드(H-6)·gate 없는 행 무영향(H-2/H-3)·빈 artifacts 비차단(opdw 실사례)·--force --note 우회 의사결정 로그(H-5)·경로 이탈 토큰 거부(H-4)·glob 토큰 매칭(opsdd 실사례)을 검증(공개 cmd_mark 호출 + 실 state.json/STATE.md 파일 내용, mock 없음). TestPipelineSpecValidate에 gate violation 4종(spec_gate_type_invalid/spec_gate_missing_field/spec_gate_field_type_invalid/spec_gate_checklist_empty, S-9) 케이스 + 실 pipeline.json 10종 유효성 케이스 추가. TestErrorCodesCompleteness에 091 신규 5종 반영(39→44). 093(RED-first, mode:red, 사용자 확인 행 자동 승인 경로 일원화): TestT093AutoNaRemoval/TestT093AutoApproveHook/TestT093AutoApproveBoundary/TestT093HookGuardOrder/TestT093MarkIdempotency/TestT093NaBackwardCompat/TestT093SingleDecisionSource 7종 신설(TEST-SCENARIO S-1~S-18·S-24~S-26) — init 시점 agentic auto-na 제거 후 전 모드 pending/PM 동형성(S-2~S-4), 다음 단계 진입 시 auto_approve_prior_user_confirmations 훅 자동 승인(S-1/S-5/S-13/S-26), CLOSE·워커 경로 구조적 제외(S-6~S-9), user_confirmation_required 전용 에러(S-12/S-24), 훅→후속 가드 순서와 파일 미오염(S-10/S-11), mark 접두 멱등·재-auto-pass no-op(S-15/S-16), MODE_BOUNDARY_STAGES 단일 판정 수렴(S-25), 경계 불변 회귀표 18셀·na 하위호환(S-14/S-17/S-18) — worktree run.sh subprocess 실호출 + 실 pipeline.json/state.json 파일 상태로만 검증(mock 미사용), 미구현 기능이므로 신규 계약 케이스는 전부 FAIL 기대(RED 증거: RED-EVIDENCE.md). 093 GREEN(Step 9): 구형 계약을 고정하던 기존 테스트를 신규 계약으로 수정 — test_init_agentic_auto_na_user_confirmation→test_init_agentic_user_confirmation_pending, test_rows_from_agentic_auto_na→test_rows_from_agentic_user_confirmation_pending(둘 다 na→pending 단언 교체), test_close_gate_regression_via_task_step_addressing_subprocess(주석 갱신 + CLOSE 직전 사용자 확인 행 row 8 캡틴 승인 단계 추가, 최종 assert 불변), agentic CLOSE 게이트 3건(test_agentic_close_gate_requires_user·test_g13_agentic_close_gate_auto_pass_rejected·test_c6_agentic_auto_pass_close_first_row)에 캡틴 승인 사전 단계 추가, test_new_structure_guard_blocks_skip에 사용자 확인 행 선(先)승인으로 guard 축 격리, test_s13_new_style_row_without_gate_response_unaffected 기대 키 집합에 auto_approved 추가, TestErrorCodesCompleteness 44→45종(user_confirmation_required). 테스트 삭제 0건. 094 R-11 Step0(RED-first, mode:red, agentic 승인 계약 정합): TestR11ModeBoundary/TestR11CloseGateFallback/TestR11DerivedSignals/TestR11Invariants 4종 신설(TEST-SCENARIO S-34~S-37,S-40) — G-1 MODE_BOUNDARY_STAGES에 DICT/MODEL/DDL·MIGRATION 3원소 부재로 semi-agentic opdd 설계 확정 3건이 미노출 통과하는 결함을 3 stage 개별 advance 호출로 판정(부분 구현 방지, S-34), G-2 check_close_gate가 확인 행 0개 파이프라인(opgc)에서 --owner user로도 영구 데드락인 결함(S-35), G-3-a/G-3-b _derive_next_action·build_todo_mirror가 자동 승인 예정 확인 행을 중립 처리하지 않아 next_action 헛 확인·todo 오판정하는 결함(S-36/S-37), R-11 [MUST] 불변 제약(신규 판정 함수 금지·next_action 스키마·build_todo_mirror 시그니처·ERROR_CODES 무접촉) 역검증(S-40) — 실 pipeline.json(opdd/opgc/opd) + run.sh subprocess 실호출 + 실 state.json 파일 상태로만 검증(mock 미사용), 미구현 기능이므로 신규 계약 케이스는 전부 FAIL 기대(RED 증거). 구현(op-be-agent)과 작성자(opal-test-agent) 분리. 098 ADD-2(RED-first, mode:red, 배포 경로 루트 파생 결함): TestT098Add2RootDerivation 신설 — `_resolve_citation_exists()`(`state_tool.py:2400`)가 프로젝트 루트를 `task_md_path`가 아니라 스크립트 자기 위치(`__file__`)에서 파생해, 배포본(`~/.opal/tools/state-tool/`)에서 실행 시 조상에 `.opal/MEMORY.json`이 없어 root=None → 정규 인용도 전건 citation_path_not_found로 오강등되는 결함을 3축(①스크립트 위치 독립성 ②오강등 부재 ③프로젝트 소스 실행 회귀 방어)으로 검증 — 실 TASK.md(본 태스크 098) + `state_tool.py` 임시 사본 subprocess 실행(공개 CLI `verify --evidence-check` stdout JSON)으로만 검증(mock 미사용), 미구현이므로 ①·②는 FAIL 기대(RED 증거: RED-EVIDENCE.md ADD-2절). 구현(op-be-agent)과 작성자(opal-test-agent) 분리, state_tool.py 무접촉. 100: TestT100DirectionEvidence 신설(RED-first 7케이스) — `verify --evidence-check`의 `## 확정된 설계 방향` 불릿 파서 확장 계약 검증. ① items[] 편입 + source 필드 ② verdict `승계` ③ `direction_confirmed_ratio` 신규 키 ④ 기존 `confirmed_ratio` 분모 불변(PD-1 분리형) ⑤ 섹션 부재 graceful skip ⑥ exit 0 3경로 ⑦ 항목 0건 분모 0 경계. 실 파일 픽스처 3종(A 방향 6불릿+표 4행 / B 섹션 없음 / C 항목 0건), mock 금지. RED 증거: 단일 파일 7 failed·340 passed → GREEN 후 347 passed(스코프·명령 병기). 작성자(opal-be-agent Step 10)와 구현자(Step 11) 분리. 103 R-21: TestT103WorkerDurationWarning 신설(13케이스) — `mark`가 워커 디스패치 행(`--as-worker` 또는 `--worker-stage`)을 `done`으로 닫으면서 `--worker-duration-minutes`를 빠뜨렸을 때 stdout JSON `warnings`로 경고하는 계약 검증. 발생(W1/W2 두 신호·W3 마지막 Step·W4 문구 구성요소), 차단 아님·산출물 불변(W5 경고본 vs 억제본 state.json/STATE.md 시각 정규화 후 동일·W6 validate ok), 오탐 방어(W7 PM 직접 수행 행 + 응답 키 집합 불변·W8 `owner=user` 사용자 확인 행·W9 값 보유(0 포함)·W10 093 재-auto-pass 멱등 no-op·W3 중간 진행 N<M), 억제(W11 `--worker-duration-unknown` 무경고+필드 미생성·W12 `--worker-duration-minutes`와 배타 exit 2), 카탈로그 경계(W13 `ERROR_CODES` 45종 불변 + `WARNING_CODES` 분리). _T093Base(run.sh subprocess 실호출 + 실 파일 상태)만 사용하며 mock 미사용, 기존 케이스 수정·삭제 0건.",
   "exports": [
     "TestInit", "TestShow", "TestAdvance", "TestMark",
     "TestBlock", "TestValidate", "TestAddRow", "TestStatus", "TestGatePass",
@@ -20,7 +20,8 @@
     "TestT093SingleDecisionSource",
     "TestR11ModeBoundary", "TestR11CloseGateFallback", "TestR11DerivedSignals",
     "TestR11Invariants", "TestT098Add2RootDerivation",
-    "TestT100DirectionEvidence"
+    "TestT100DirectionEvidence", "TestT103WorkerDuration",
+    "TestT103WorkerDurationWarning"
   ]
 }
 
@@ -613,7 +614,11 @@ class TestAdvance(BaseTestCase):
         m = re.search(r"^> 최종 갱신: (.+)$", md, re.MULTILINE)
         self.assertIsNotNone(m, "'> 최종 갱신:' 헤더 라인이 STATE.md에 없음(D-3 위반)")
         header_ts = m.group(1).strip()
-        self.assertTrue(before <= header_ts <= after,
+        # [T103] 시각이 초 해상도(`datetime-sec`)로 확장되면서 `before`/`after` 창(분 해상도)과
+        # 사전순 비교가 깨진다("21:59:54" > "21:59"). 이 테스트의 의도는 포맷이 아니라
+        # "헤더가 실제로 갱신됐는가"이므로 양쪽을 분 단위로 절삭해 비교한다.
+        header_minute = header_ts[:16]
+        self.assertTrue(before[:16] <= header_minute <= after[:16],
                        f"헤더 타임스탬프({header_ts!r})가 advance 호출 시각 창"
                        f"[{before!r}, {after!r}] 밖에 있음 — 헤더 갱신 누락 의심")
 
@@ -7852,7 +7857,10 @@ class TestT093AutoApproveBoundary(_T093Base):
             {"stage": "TEST",  "item": "사용자 확인"},
             {"stage": "CLOSE", "item": "DONE.md 생성"},
         ]))
-        self._assert_ok(self._mark(d, 1), "S-6 mark row1")
+        # [T103 강제 2단] TEST/작업은 워커 디스패치 규범 행이라 소요를 기록하거나
+        # 미측정을 선언해야 CLOSE를 통과한다. 이 테스트의 관심사는 「사용자 확인 행이
+        # 자동 승인되지 않는가」이므로, 축을 격리하기 위해 미측정을 선언해 둔다.
+        self._assert_ok(self._mark(d, 1, "--worker-duration-unknown"), "S-6 mark row1")
         self.assertEqual(self._row(d, 2)["status"], "pending",
                          "S-6 전제: TEST 사용자 확인 행은 init 직후 pending이어야 한다")
 
@@ -9396,8 +9404,581 @@ class TestT100DirectionEvidence(BaseTestCase):
 
 
 # ═════════════════════════════════════════════════════════════════════════════
+# 103 R-15 — 워커 소요 계측 필드 (`rows[].worker_duration_minutes`)
+# 집계 기준 16/16-a/16-b: 소요를 캡틴/워커/PM 3계열로 분해하려면 워커 실행 시간이
+# 행에 남아야 한다. 미기록 행은 축퇴 규칙에 따라 PM 계열로 전액 귀속되므로,
+# **필드가 없는 기존 태스크의 수치가 종전과 항등**인 것이 이 블록의 핵심 계약이다.
+# [MUST] red-first.md §4 — run.sh subprocess 공개 인터페이스(stdout/exit code)와
+#   실 state.json 파일 내용으로만 관찰한다(mock/patch 없음). 기존 케이스 무수정.
+# ═════════════════════════════════════════════════════════════════════════════
+
+# TASK→ANALYSIS→EXECUTE 평이한 3행 — '사용자 확인' 행이 없어 자동 승인/CLOSE 게이트
+# 축과 무관하게 워커 소요 축만 관찰한다.
+_T103_SPEC = _t093_json([
+    {"stage": "TASK",     "item": "작업"},              # row 1
+    {"stage": "ANALYSIS", "item": "ANALYSIS.md"},       # row 2
+    {"stage": "EXECUTE",  "item": "작업"},              # row 3
+])
+
+# 인자 미지정 mark 응답의 키 집합 — 6528행 S-13(gate 없는 행)과 동일한 계약.
+# 103이 새 키를 무조건 싣지 않는다는 것(H-11)을 이 집합이 고정한다.
+_T103_BASELINE_MARK_KEYS = {
+    "ok", "command", "row_id", "stage", "item", "status",
+    "timestamp", "owner", "auto_approved", "todo_mirror",
+}
+
+
+class TestT103WorkerDuration(_T093Base):
+    """103 R-15 — `mark --worker-duration-minutes`와 `rows[].worker_duration_minutes`.
+
+    핵심 계약 3가지:
+      (1) 인자를 넘기면 해당 행에 분 단위 정수로 기록된다
+      (2) 넘기지 않으면 **필드를 만들지 않는다** — state.json·응답 키 집합 모두 종전과 동일
+      (3) 음수·비정수는 거부되고, 거부 시 행이 전혀 변경되지 않는다(부분 상태 변경 부재)
+    """
+
+    def _fresh(self, mode="interactive", name="t103"):
+        d = self._task_dir(name)
+        self._init(d, mode, rows_spec=_T103_SPEC)
+        return d
+
+    # ── (1) 기록 경로 ────────────────────────────────────────────────────
+
+    def test_s1_worker_duration_recorded_when_flag_passed(self):
+        """[T103/R-15] `--worker-duration-minutes 12` → 행에 정수 12로 기록되고
+        mark 응답 JSON에도 동명 키가 실린다(PM이 반영값을 확인할 수 있어야 한다)."""
+        d = self._fresh(name="t103-record")
+        data = self._assert_ok(
+            self._mark(d, 1, "--worker-duration-minutes", "12"), "mark w/ duration")
+
+        row = self._row(d, 1)
+        self.assertIn("worker_duration_minutes", row,
+                      f"인자를 넘겼는데 행에 필드가 없음: {row}")
+        self.assertEqual(row["worker_duration_minutes"], 12,
+                         f"기록값 불일치: {row['worker_duration_minutes']!r}")
+        self.assertIsInstance(row["worker_duration_minutes"], int,
+                              "분 단위 정수로 기록되어야 함(문자열 저장 금지)")
+        self.assertEqual(data.get("worker_duration_minutes"), 12,
+                         f"mark 응답에 반영값이 없음: {data}")
+
+    def test_s2_zero_is_a_recorded_value_not_absence(self):
+        """[T103/R-15] `0`은 '측정했으나 1분 미만'이라는 유효값이다 — 필드가
+        생성되고 값이 0이어야 한다. '측정하지 않음'(인자 미지정)과 구별된다."""
+        d = self._fresh(name="t103-zero")
+        self._assert_ok(self._mark(d, 1, "--worker-duration-minutes", "0"), "mark 0")
+
+        row = self._row(d, 1)
+        self.assertIn("worker_duration_minutes", row,
+                      f"0이 '미기록'으로 뭉개졌음 — 축퇴 규칙(16-a)과 충돌: {row}")
+        self.assertEqual(row["worker_duration_minutes"], 0)
+
+    def test_s3_recorded_state_json_still_passes_validate(self):
+        """[T103/R-15] 필드가 실린 state.json도 `validate` ok:true — 신규 필드가
+        정합성 검증을 깨지 않는다."""
+        d = self._fresh(name="t103-validate")
+        self._assert_ok(self._mark(d, 1, "--worker-duration-minutes", "37"), "mark")
+        data = self._assert_ok(self._validate(d), "validate")
+        self.assertTrue(data.get("ok"), f"validate 실패: {data}")
+        self.assertEqual(data.get("violations_count"), 0, f"violations: {data}")
+
+    # ── (2) 하위호환 — 인자 미지정 ───────────────────────────────────────
+
+    def test_s4_field_absent_when_flag_omitted(self):
+        """[T103/R-15 하위호환] 인자 없는 mark는 필드를 만들지 않는다. 기존 23개
+        태스크의 state.json이 무영향인 근거이자, 축퇴 규칙(16-a)의 전제다."""
+        d = self._fresh(name="t103-omitted")
+        self._assert_ok(self._mark(d, 1), "mark w/o duration")
+
+        for row in self._state_of(d)["rows"]:
+            self.assertNotIn(
+                "worker_duration_minutes", row,
+                f"인자를 넘기지 않았는데 행에 필드가 생성됨(기존 태스크 오염): {row}")
+
+    def test_s5_response_key_set_unchanged_when_flag_omitted(self):
+        """[T103/R-15 하위호환 H-11] 인자 미지정 mark의 응답 키 집합이 종전과
+        완전히 동일하다 — 신규 키를 무조건 싣지 않는다(6528행 S-13과 동일 계약)."""
+        d = self._fresh(name="t103-keys")
+        data = self._assert_ok(self._mark(d, 1), "mark w/o duration")
+        self.assertEqual(
+            set(data.keys()), _T103_BASELINE_MARK_KEYS,
+            f"인자 미지정인데 mark 응답 키 집합이 변경됨: {sorted(data.keys())}")
+
+    def test_s6_legacy_rows_without_field_are_unaffected_by_a_recorded_sibling(self):
+        """[T103/R-15 하위호환] 한 행에 기록해도 다른 행에는 필드가 생기지 않는다 —
+        행 단위 선택 필드이지 파일 단위 스키마 승격이 아니다."""
+        d = self._fresh(name="t103-mixed")
+        self._assert_ok(self._mark(d, 1, "--worker-duration-minutes", "5"), "mark row1")
+        self._assert_ok(self._mark(d, 2), "mark row2")
+
+        self.assertEqual(self._row(d, 1).get("worker_duration_minutes"), 5)
+        self.assertNotIn("worker_duration_minutes", self._row(d, 2),
+                         "인자 없는 행에 필드가 번졌음")
+        self.assertNotIn("worker_duration_minutes", self._row(d, 3),
+                         "미완 행에 필드가 번졌음")
+
+    # ── (3) 거부 경로 ────────────────────────────────────────────────────
+
+    def test_s7_invalid_values_rejected_without_touching_the_row(self):
+        """[T103/R-15] 음수·소수·비수치·공백은 거부되고(exit != 0), 거부된 호출은
+        행을 전혀 바꾸지 않는다(부분 상태 변경 부재 — 091 H-1과 동일 원칙)."""
+        for bad in ("-5", "-1", "1.5", "0.0", "abc", "", "  ", "3분", "12m", "1e3"):
+            with self.subTest(value=bad):
+                d = self._fresh(name=f"t103-bad-{abs(hash(bad))}")
+                before = self._row(d, 1)
+
+                code, stdout, stderr, _ = self._mark(
+                    d, 1, "--worker-duration-minutes", bad)
+                self.assertNotEqual(
+                    code, 0,
+                    f"{bad!r}가 수용됨 — 0 이상 정수만 허용해야 함 "
+                    f"(stdout={stdout!r})")
+
+                after = self._row(d, 1)
+                self.assertEqual(
+                    after, before,
+                    f"{bad!r} 거부인데 행이 변경됨(부분 상태 변경): {before} → {after}")
+                self.assertNotIn("worker_duration_minutes", after,
+                                 f"{bad!r} 거부인데 필드가 기록됨: {after}")
+
+    # ── (4) 093 재-auto-pass no-op과의 상호작용 ──────────────────────────
+
+    def test_s8_auto_pass_noop_preserved_but_a_carried_value_is_not_dropped(self):
+        """[T103/R-15 × 093 F-005] 인자 없는 재-auto-pass는 종전대로 no-op
+        (`idempotent: true`)이고, 값이 실린 재-auto-pass는 no-op을 타지 않고
+        값을 기록한다 — 전달한 계측치가 조용히 버려지지 않아야 한다."""
+        d = self._fresh(mode="agentic", name="t103-idem")
+        self._assert_ok(self._mark(d, 1, "--auto-pass"), "1st auto-pass")
+
+        again = self._assert_ok(self._mark(d, 1, "--auto-pass"), "2nd auto-pass")
+        self.assertTrue(again.get("idempotent"),
+                        f"인자 없는 재-auto-pass no-op(093)이 깨졌음: {again}")
+        self.assertNotIn("worker_duration_minutes", self._row(d, 1))
+
+        carried = self._assert_ok(
+            self._mark(d, 1, "--auto-pass", "--worker-duration-minutes", "9"),
+            "auto-pass w/ duration")
+        self.assertNotIn(
+            "idempotent", carried,
+            f"값이 실린 호출이 no-op으로 흡수됨 — 계측치 유실: {carried}")
+        self.assertEqual(self._row(d, 1).get("worker_duration_minutes"), 9,
+                         "재-auto-pass 경로에서 워커 소요가 기록되지 않음")
+
+    # ── (5) 스키마 등록 계약 ─────────────────────────────────────────────
+
+    def test_s9_schema_registers_optional_nonnegative_integer(self):
+        """[T103/R-15] `state.schema.json`에 선택 필드로 등록된다 —
+        `rows[].items.required`에 들어가면 기존 23개 state.json이 전건 무효가 되고,
+        `additionalProperties`가 풀리면 스키마가 오타를 못 잡는다."""
+        schema = json.loads((_SCHEMA_DIR / "state.schema.json")
+                            .read_text(encoding="utf-8"))
+        items = schema["properties"]["rows"]["items"]
+        props = items["properties"]
+
+        self.assertIn("worker_duration_minutes", props,
+                      "rows[].items.properties에 worker_duration_minutes 미등록")
+        field = props["worker_duration_minutes"]
+        self.assertEqual(field.get("type"), "integer",
+                         f"분 단위 정수여야 함: {field}")
+        self.assertEqual(field.get("minimum"), 0,
+                         f"음수를 스키마에서 배제해야 함: {field}")
+
+        self.assertNotIn("worker_duration_minutes", items.get("required", []),
+                         "선택 필드여야 함 — required 등재 시 기존 state.json 전건 무효")
+        self.assertIs(items.get("additionalProperties"), False,
+                      "행 스키마의 additionalProperties: false는 유지되어야 함")
+
+    def test_s10_error_codes_untouched(self):
+        """[T103/R-15] 값 검증은 argparse가 파싱 시점에 수행하므로 ERROR_CODES는
+        건드리지 않는다 — 카탈로그 종수 고정 테스트(S-7/S-15)와 충돌하지 않는다."""
+        self.assertNotIn("worker_duration_invalid", ST.ERROR_CODES,
+                         "103이 ERROR_CODES를 신설했음 — 카탈로그 종수 계약 위반")
+        self.assertEqual(len(ST.ERROR_CODES), 45,
+                         f"ERROR_CODES 종수가 변했음: {len(ST.ERROR_CODES)}")
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# 103 R-21: 워커 소요 누락 경고 (`mark` stdout `warnings`)
+# TestT103WorkerDurationWarning — 발생 / 미발생(오탐 방어) / 억제 3경로
+#
+# [MUST] 헌법 §4 "Don't fake it" — mock/patch 미사용. _T093Base(run.sh subprocess
+#        실호출 + 실 state.json/STATE.md 파일 상태)만 사용한다.
+# [MUST] 경고는 에러가 아니다 — exit 0 유지, 산출물 바이트 불변이 계약의 절반이다.
+# ═════════════════════════════════════════════════════════════════════════════
+
+# 워커 경로(prior_stage_only)를 태우려면 EXECUTE 행 앞의 TASK/ANALYSIS가 완료여야 한다.
+_T103W_SPEC = _t093_json([
+    {"stage": "TASK",     "item": "작업"},          # row 1
+    {"stage": "ANALYSIS", "item": "ANALYSIS.md"},   # row 2
+    {"stage": "EXECUTE",  "item": "Step 1"},        # row 3
+    {"stage": "EXECUTE",  "item": "Step 2"},        # row 4
+])
+
+_T103W_TS_RE = re.compile(r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}(:\d{2})?")
+
+
+class TestT103WorkerDurationWarning(_T093Base):
+    """103 R-21 — 워커를 디스패치한 행을 소요 없이 닫으면 `mark`가 경고한다.
+
+    계약 4가지:
+      (1) 발생 — `--as-worker`/`--worker-stage`로 행을 `done`으로 닫는데
+          `--worker-duration-minutes`가 없으면 stdout JSON에 `warnings`가 실린다
+      (2) 차단 아님 — exit 0이 유지되고 `state.json`/`STATE.md`는 경고 유무와
+          무관하게 동일하다(경고는 stdout 전용)
+      (3) 미발생 — PM 직접 수행 행·값이 실린 호출·중간 진행 행(N<M)에는 뜨지 않는다
+          (오탐이 반복되면 PM이 경고 자체를 무시하게 된다)
+      (4) 억제 — `--worker-duration-unknown`은 경고를 없애고 필드도 만들지 않는다
+    """
+
+    _CODE = "worker_duration_missing"
+
+    def _fresh(self, name, mode="interactive"):
+        d = self._task_dir(name)
+        self._init(d, mode, rows_spec=_T103W_SPEC)
+        # EXECUTE 행에 워커 경로로 접근하기 위한 앞 단계 완료 (prior_stage_only 전제)
+        self._assert_ok(self._mark(d, 1), f"{name} prep row1")
+        self._assert_ok(self._mark(d, 2), f"{name} prep row2")
+        return d
+
+    def _warnings(self, data):
+        return data.get("warnings")
+
+    def _assert_warned(self, data, label):
+        warns = self._warnings(data)
+        self.assertIsInstance(
+            warns, list,
+            f"{label}: 워커 디스패치 행을 소요 없이 닫았는데 warnings가 없음 — {data}")
+        self.assertEqual([w.get("code") for w in warns], [self._CODE],
+                         f"{label}: 경고 코드 불일치 — {warns}")
+        return warns[0]
+
+    def _assert_not_warned(self, data, label):
+        self.assertNotIn(
+            "warnings", data,
+            f"{label}: 오탐 — 이 호출에는 경고가 뜨면 안 된다: {data}")
+
+    # ── (1) 발생 경로 ────────────────────────────────────────────────────
+
+    def test_w1_warns_when_worker_row_closed_without_duration(self):
+        """[T103/R-21] `--as-worker --worker-stage EXECUTE`로 행을 done 처리하면서
+        소요를 넘기지 않으면 경고가 실린다 — 이 값은 소급 복구가 불가능하므로
+        도구가 알려주지 않으면 영구히 소실된다."""
+        d = self._fresh("w1")
+        code, stdout, stderr, data = self._mark(
+            d, 3, "--as-worker", "--worker-stage", "EXECUTE")
+        self.assertEqual(code, 0, f"W1 경고는 차단이 아니어야 함: {stdout!r} {stderr!r}")
+        w = self._assert_warned(data, "W1")
+        self.assertEqual(w.get("row_id", 3) if "row_id" in w else 3, 3)
+
+    def test_w2_warns_on_worker_stage_alone_without_as_worker(self):
+        """[T103/R-21] `--worker-stage`만 실린 호출도 '워커가 수행한 행'이라는 신호다 —
+        `--as-worker` 유무로만 판정하면 이 형태가 조용히 새어나간다."""
+        d = self._fresh("w2")
+        code, stdout, stderr, data = self._mark(d, 3, "--worker-stage", "EXECUTE")
+        self.assertEqual(code, 0, f"W2 exit!=0: {stdout!r} {stderr!r}")
+        self._assert_warned(data, "W2")
+
+    def test_w3_warns_on_last_action_step_but_not_intermediate(self):
+        """[T103/R-21 오탐 방어] `--action-step N/M`에서 N<M은 행이 `in_progress`로
+        남으므로 경고하지 않고, N==M(행이 실제 done이 되는 시점)에만 경고한다.
+        중간 진행 보고마다 경고하면 전부 오탐이 된다."""
+        d = self._fresh("w3")
+        for n in ("1/3", "2/3"):
+            with self.subTest(step=n):
+                data = self._assert_ok(
+                    self._mark(d, 3, "--as-worker", "--worker-stage", "EXECUTE",
+                               "--action-step", n), f"W3 {n}")
+                self._assert_not_warned(data, f"W3 {n}(중간 진행)")
+                self.assertEqual(self._row(d, 3)["status"], "in_progress",
+                                 f"W3 전제: {n}은 in_progress로 남아야 함")
+
+        data = self._assert_ok(
+            self._mark(d, 3, "--as-worker", "--worker-stage", "EXECUTE",
+                       "--action-step", "3/3"), "W3 3/3")
+        self.assertEqual(self._row(d, 3)["status"], "done", "W3 전제: 3/3은 done")
+        self._assert_warned(data, "W3 3/3(마지막 Step)")
+
+    def test_w4_message_states_what_was_missed_and_why_it_is_permanent(self):
+        """[T103/R-21] 문구는 '무엇을 놓쳤는지'(--worker-duration-minutes)와
+        '왜 문제인지'(알림은 세션과 함께 사라져 영구 소실 + PM 몫 오귀속)를 담고,
+        복구 행동 2가지(다시 mark / 미상 명시)를 제시해야 한다."""
+        d = self._fresh("w4")
+        data = self._assert_ok(
+            self._mark(d, 3, "--as-worker", "--worker-stage", "EXECUTE"), "W4")
+        msg = self._assert_warned(data, "W4").get("message", "")
+        for fragment in ("--worker-duration-minutes", "세션", "영구", "소실",
+                         "PM", "--worker-duration-unknown"):
+            self.assertIn(fragment, msg,
+                          f"W4 경고 문구에 '{fragment}' 없음 — 왜 문제인지 전달 실패: {msg!r}")
+        self.assertIn("EXECUTE", msg, f"W4 문구에 대상 행 stage 없음: {msg!r}")
+
+    # ── (2) 차단 아님 + 산출물 불변 ──────────────────────────────────────
+
+    def test_w5_warning_does_not_change_exit_code_or_artifacts(self):
+        """[T103/R-21 MUST] 경고는 exit 0을 유지하고 `state.json`/`STATE.md`를 바꾸지
+        않는다 — 경고가 실린 호출과 억제된 호출의 산출물이 (시각 제외) 동일해야 한다."""
+        # 두 픽스처의 폴더명(=task_id)을 같게 두어야 산출물 diff가 '경고 유무' 축만
+        # 남긴다 — 상위 디렉토리로만 분리한다.
+        warned = self._fresh("w5-warned/t")
+        quiet  = self._fresh("w5-quiet/t")
+
+        dw = self._assert_ok(
+            self._mark(warned, 3, "--as-worker", "--worker-stage", "EXECUTE"), "W5 warned")
+        dq = self._assert_ok(
+            self._mark(quiet, 3, "--as-worker", "--worker-stage", "EXECUTE",
+                       "--worker-duration-unknown"), "W5 quiet")
+        self._assert_warned(dw, "W5 warned")
+        self._assert_not_warned(dq, "W5 quiet")
+
+        def _norm(path):
+            return _T103W_TS_RE.sub("<TS>", path.read_text(encoding="utf-8"))
+
+        # [T103 강제 2단 정밀화] 억제 인자는 이제 `worker_duration_unknown: true`를
+        # 행에 **남긴다** — CLOSE 차단이 「미측정 선언」과 「침묵」을 갈라야 하기 때문이다.
+        # 남기지 않으면 선언할 이유가 사라지고 강제가 무의미해진다. 따라서 두 산출물의
+        # 유일한 차이는 그 한 필드여야 하며, 그 밖은 여전히 바이트 동일이어야 한다.
+        _decl = ',\n      "worker_duration_unknown": true'
+        self.assertEqual(
+            _norm(warned / "state.json"),
+            _norm(quiet / "state.json").replace(_decl, "", 1),
+            "W5 경고가 state.json을 바꿨음 — 차이는 미측정 선언 1필드뿐이어야 한다")
+        self.assertIn('"worker_duration_unknown": true',
+                      _norm(quiet / "state.json"),
+                      "W5 억제 인자는 미측정 선언을 행에 남겨야 한다(강제 2단 (c))")
+        self.assertNotIn("worker_duration_unknown", _norm(warned / "state.json"),
+                         "W5 침묵 호출은 선언 필드를 만들지 않아야 한다")
+        self.assertEqual(_norm(warned / "STATE.md"), _norm(quiet / "STATE.md"),
+                         "W5 경고가 STATE.md 내용을 바꿨음")
+        for d in (warned, quiet):
+            self.assertNotIn("worker_duration_minutes", self._row(d, 3),
+                             "W5 경고·억제 어느 쪽도 소요 값 필드를 만들면 안 된다")
+
+    def test_w6_warned_state_json_still_validates(self):
+        """[T103/R-21] 경고가 뜬 뒤에도 `validate`는 ok:true — 경고는 정합성과 무관하다."""
+        d = self._fresh("w6")
+        self._assert_warned(
+            self._assert_ok(self._mark(d, 3, "--as-worker", "--worker-stage", "EXECUTE"),
+                            "W6 mark"), "W6")
+        data = self._assert_ok(self._validate(d), "W6 validate")
+        self.assertTrue(data.get("ok"), f"W6 validate 실패: {data}")
+        self.assertEqual(data.get("violations_count"), 0, f"W6 violations: {data}")
+
+    # ── (3) 미발생 경로 (오탐 방어) ──────────────────────────────────────
+
+    def test_w7_no_warning_for_pm_direct_row(self):
+        """[T103/R-21 오탐 방어] PM 직접 수행 행(`--as-worker`/`--worker-stage` 없음)에는
+        경고가 뜨지 않고, 응답 키 집합도 종전과 완전히 동일하다(H-11 하위호환)."""
+        d = self._task_dir("w7")
+        self._init(d, "interactive", rows_spec=_T103W_SPEC)
+        data = self._assert_ok(self._mark(d, 1), "W7 PM 직접")
+        self._assert_not_warned(data, "W7 PM 직접")
+        self.assertEqual(
+            set(data.keys()), _T103_BASELINE_MARK_KEYS,
+            f"W7 인자 미지정 mark의 응답 키 집합이 변경됨: {sorted(data.keys())}")
+
+    def test_w8_no_warning_for_user_confirmation_row(self):
+        """[T103/R-21 오탐 방어] 사용자 확인 행(`--owner user`)은 캡틴 승인 지점이지
+        워커 디스패치 지점이 아니다 — `--as-worker`가 함께 실려도 경고하지 않는다."""
+        d = self._fresh("w8")
+        data = self._assert_ok(
+            self._mark(d, 3, "--as-worker", "--worker-stage", "EXECUTE",
+                       "--owner", "user"), "W8")
+        self.assertEqual(self._row(d, 3)["owner"], "user", "W8 전제: owner=user")
+        self._assert_not_warned(data, "W8 사용자 확인 행")
+
+    def test_w9_no_warning_when_duration_is_supplied(self):
+        """[T103/R-21] 값을 넘긴 호출(0 포함)에는 경고할 것이 없다."""
+        for minutes in ("0", "12"):
+            with self.subTest(minutes=minutes):
+                d = self._fresh(f"w9-{minutes}")
+                data = self._assert_ok(
+                    self._mark(d, 3, "--as-worker", "--worker-stage", "EXECUTE",
+                               "--worker-duration-minutes", minutes), f"W9 {minutes}")
+                self._assert_not_warned(data, f"W9 {minutes}")
+                self.assertEqual(self._row(d, 3)["worker_duration_minutes"], int(minutes))
+
+    def test_w10_no_warning_on_idempotent_reauto_pass(self):
+        """[T103/R-21 오탐 방어 × 093 F-005] 이미 auto 승인된 행을 다시 두드리는
+        멱등 호출(`idempotent: true`)은 상태를 바꾸지 않으므로 경고도 없다."""
+        d = self._task_dir("w10")
+        self._init(d, "agentic", rows_spec=_T103W_SPEC)
+        self._assert_ok(self._mark(d, 1, "--auto-pass"), "W10 1st")
+        again = self._assert_ok(self._mark(d, 1, "--auto-pass",
+                                           "--as-worker", "--worker-stage", "TASK"),
+                                "W10 2nd")
+        self.assertTrue(again.get("idempotent"), f"W10 전제: 재-auto-pass no-op — {again}")
+        self._assert_not_warned(again, "W10 멱등 재호출")
+
+    # ── (4) 억제 인자 ────────────────────────────────────────────────────
+
+    def test_w11_unknown_flag_suppresses_and_creates_no_field(self):
+        """[T103/R-21] `--worker-duration-unknown`은 경고를 억제하고 행에 필드를
+        만들지 않는다 — 기록 결과가 인자 미지정과 완전히 동형이어야 '미측정'이
+        `0`(측정했으나 1분 미만)으로 오독되지 않는다."""
+        d = self._fresh("w11")
+        code, stdout, stderr, data = self._mark(
+            d, 3, "--as-worker", "--worker-stage", "EXECUTE", "--worker-duration-unknown")
+        self.assertEqual(code, 0, f"W11 exit!=0: {stdout!r} {stderr!r}")
+        self._assert_not_warned(data, "W11 억제")
+        self.assertNotIn("worker_duration_minutes", data,
+                         f"W11 억제 인자가 응답에 값을 만들었음: {data}")
+        self.assertNotIn("worker_duration_minutes", self._row(d, 3),
+                         f"W11 억제 인자가 행에 필드를 만들었음: {self._row(d, 3)}")
+        self.assertEqual(self._row(d, 3)["status"], "done", "W11 억제해도 mark는 정상 완료")
+
+    def test_w12_minutes_and_unknown_are_mutually_exclusive(self):
+        """[T103/R-21] 값과 '미상 선언'은 동시에 성립할 수 없다 — argparse 배타 그룹이
+        exit 2로 거부하며(`--owner`/`--auto-pass`와 동일 계열), 행은 변경되지 않는다."""
+        d = self._fresh("w12")
+        before = self._row(d, 3)
+        code, stdout, stderr, data = self._mark(
+            d, 3, "--as-worker", "--worker-stage", "EXECUTE",
+            "--worker-duration-minutes", "5", "--worker-duration-unknown")
+        self.assertEqual(code, 2, f"W12 배타 미집행 (exit={code}, stderr={stderr!r})")
+        self.assertEqual(self._row(d, 3), before, "W12 거부인데 행이 변경됨")
+
+    # ── (5) 카탈로그 경계 ────────────────────────────────────────────────
+
+    def test_w13_warning_catalog_is_separate_from_error_codes(self):
+        """[T103/R-21] 경고는 에러가 아니다 — `ERROR_CODES` 45종은 불변이고 경고 코드는
+        별도 사전(`WARNING_CODES`)에 산다. 카탈로그를 공유하면 `err()`가 sys.exit로
+        끝나는 탓에 '경고인데 차단'이라는 오용 경로가 생긴다."""
+        self.assertNotIn(self._CODE, ST.ERROR_CODES,
+                         "R-21이 ERROR_CODES를 늘렸음 — 카탈로그 종수 계약 위반")
+        self.assertEqual(len(ST.ERROR_CODES), 45,
+                         f"ERROR_CODES 종수가 변했음: {len(ST.ERROR_CODES)}")
+        self.assertIn(self._CODE, ST.WARNING_CODES,
+                      "WARNING_CODES에 worker_duration_missing 미등재")
+
+
+
+# ═════════════════════════════════════════════════════════════════════════════
 # 진입점
 # ═════════════════════════════════════════════════════════════════════════════
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 103 강제 2단 — CLOSE 차단 (침묵으로는 통과 못 한다)
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestT103WorkerEnforce(_T093Base):
+    """워커 소요 기록 강제 — 조기 경고(행 기반 판정) + CLOSE 차단.
+
+    배경: 인자 신호(`--as-worker`)에만 의존하던 경고는 PM이 그 인자를 쓰지 않는 순간
+    침묵했다(실측: 다른 프로젝트 태스크가 15행 전건 미기록으로 통과). 그래서 판정
+    근거를 행의 `stage`·`item`으로 옮기고, CLOSE에서 한 번은 반드시 걸리게 했다.
+    """
+
+    def _pipeline(self):
+        return _t093_json([
+            {"stage": "TEST",  "item": "작업"},
+            {"stage": "TEST",  "item": "사용자 확인"},
+            {"stage": "CLOSE", "item": "DONE.md 생성"},
+        ])
+
+    def _aged(self, d, created):
+        """created_at을 조작해 유예 경계를 검증 가능하게 만든다."""
+        p = d / "state.json"
+        data = json.loads(p.read_text(encoding="utf-8"))
+        data["created_at"] = created
+        p.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n",
+                     encoding="utf-8")
+
+    def _close(self, d, *extra):
+        return self._mark(d, 3, *extra)
+
+    def test_e1_warning_without_arg_signal(self):
+        """[T103/E1] `--as-worker` 없이 워커 규범 행을 닫아도 경고가 뜬다.
+
+        이것이 강제 2단의 1단이다 — 인자에만 의존하던 종전 판정은 여기서 침묵했다."""
+        d = self._task_dir("e1")
+        self._init(d, "agentic", rows_spec=self._pipeline())
+        data = self._assert_ok(self._mark(d, 1), "E1 mark")
+        codes = [w.get("code") for w in (data.get("warnings") or [])]
+        self.assertIn("worker_duration_missing", codes,
+                      "E1 인자 신호 없이도 행 기반 판정으로 경고해야 한다")
+
+    def test_e2_no_warning_for_gate_row(self):
+        """[T103/E2 오탐 방어] PM Gate·사용자 확인 행은 워커 디스패치 지점이 아니다."""
+        d = self._task_dir("e2")
+        self._init(d, "agentic", rows_spec=self._pipeline())
+        self._assert_ok(self._mark(d, 1, "--worker-duration-unknown"), "E2 row1")
+        data = self._assert_ok(self._mark(d, 2, "--owner", "user"), "E2 row2")
+        self.assertFalse(data.get("warnings"),
+                         "E2 사용자 확인 행에 경고가 뜨면 오탐이다")
+
+    def test_e3_close_blocked_on_silence(self):
+        """[T103/E3 ★] 침묵한 채 CLOSE에 들어가면 **차단**된다 — exit != 0."""
+        d = self._task_dir("e3")
+        self._init(d, "agentic", rows_spec=self._pipeline())
+        self._aged(d, "2026-09-01 10:00:00")
+        self._assert_ok(self._mark(d, 1), "E3 row1 침묵")
+        self._assert_ok(self._mark(d, 2, "--owner", "user"), "E3 row2")
+        code, stdout, _stderr, data = self._close(d)
+        self.assertEqual(code, 1, f"E3 CLOSE가 차단되지 않았다: {stdout!r}")
+        self.assertEqual(data.get("error"), "worker_duration_undeclared")
+        self.assertIn(1, data.get("undeclared_rows") or [],
+                      "E3 미선언 행 번호가 응답에 실려야 한다")
+        self.assertEqual(self._row(d, 3)["status"], "pending",
+                         "E3 차단 시 상태가 바뀌면 안 된다")
+
+    def test_e4_close_passes_with_minutes(self):
+        """[T103/E4] 소요를 기록하면 통과한다."""
+        d = self._task_dir("e4")
+        self._init(d, "agentic", rows_spec=self._pipeline())
+        self._aged(d, "2026-09-01 10:00:00")
+        self._assert_ok(self._mark(d, 1, "--worker-duration-minutes", "12"), "E4 row1")
+        self._assert_ok(self._mark(d, 2, "--owner", "user"), "E4 row2")
+        self._assert_ok(self._close(d), "E4 CLOSE")
+
+    def test_e5_close_passes_with_declaration(self):
+        """[T103/E5] 미측정을 **선언**하면 통과한다 — 「모르면 모른다고 말해야」 한다."""
+        d = self._task_dir("e5")
+        self._init(d, "agentic", rows_spec=self._pipeline())
+        self._aged(d, "2026-09-01 10:00:00")
+        self._assert_ok(self._mark(d, 1, "--worker-duration-unknown"), "E5 row1")
+        self.assertTrue(self._row(d, 1).get("worker_duration_unknown"),
+                        "E5 선언이 행에 영속화돼야 침묵과 구별된다")
+        self._assert_ok(self._mark(d, 2, "--owner", "user"), "E5 row2")
+        self._assert_ok(self._close(d), "E5 CLOSE")
+
+    def test_e6_force_bypasses(self):
+        """[T103/E6] `--force --note`는 최후 우회로 남는다."""
+        d = self._task_dir("e6")
+        self._init(d, "agentic", rows_spec=self._pipeline())
+        self._aged(d, "2026-09-01 10:00:00")
+        self._assert_ok(self._mark(d, 1), "E6 row1 침묵")
+        self._assert_ok(self._mark(d, 2, "--owner", "user"), "E6 row2")
+        self._assert_ok(self._close(d, "--force", "--note", "E6 강제 통과"), "E6 CLOSE")
+
+    def test_e7_grace_before_epoch(self):
+        """[T103/E7] 계측 도입 **이전 생성** 태스크는 유예한다 — 선언할 수단이 없었다."""
+        d = self._task_dir("e7")
+        self._init(d, "agentic", rows_spec=self._pipeline())
+        self._aged(d, "2026-08-25 10:00:00")
+        self._assert_ok(self._mark(d, 1), "E7 row1 침묵")
+        self._assert_ok(self._mark(d, 2, "--owner", "user"), "E7 row2")
+        self._assert_ok(self._close(d), "E7 CLOSE — 유예")
+
+    def test_e8_no_grace_after_epoch(self):
+        """[T103/E8 ★] 도입 **이후 생성**에는 예외가 없다 — 「반드시 적용」의 핵심.
+
+        기록이 한 건도 없다는 이유로 유예하면 워커를 돌리고도 전건 미기록인 신규
+        태스크가 그대로 통과한다. 그래서 유예 기준을 `created_at`으로 둔다."""
+        d = self._task_dir("e8")
+        self._init(d, "agentic", rows_spec=self._pipeline())
+        self._aged(d, "2026-08-26 00:00:00")
+        self._assert_ok(self._mark(d, 1), "E8 row1 침묵")
+        self._assert_ok(self._mark(d, 2, "--owner", "user"), "E8 row2")
+        code, _stdout, _stderr, data = self._close(d)
+        self.assertEqual(code, 1, "E8 도입 이후 태스크는 유예 없이 차단돼야 한다")
+        self.assertEqual(data.get("error"), "worker_duration_undeclared")
+
+    def test_e9_error_codes_untouched(self):
+        """[T103/E9] 차단 코드는 `ERROR_CODES`를 늘리지 않는다(BLOCK_CODES 분리)."""
+        import state_tool as st  # noqa: F401 — 경로는 _T093Base가 세팅한다
+        self.assertNotIn("worker_duration_undeclared", st.ERROR_CODES,
+                         "E9 ERROR_CODES 종수를 늘리면 기존 카탈로그 계약이 깨진다")
+        self.assertIn("worker_duration_undeclared", st.BLOCK_CODES)

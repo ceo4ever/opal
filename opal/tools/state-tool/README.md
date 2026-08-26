@@ -109,6 +109,8 @@
   [--note <text>] \
   [--as-worker --worker-stage <stage>] \   # 워커 권한 게이트 (T-10)
   [--step <N/M> | --action-step <N/M>] \    # EXECUTE Step 진행 표기 (동일 dest, 070 R-5)
+  [--worker-duration-minutes <minutes>] \   # 워커 실제 실행 시간(분) 기록 (103 R-15)
+  [--worker-duration-unknown] \             # 소요 미상 명시 — 누락 경고 억제 (103 R-21)
   [--owner <PM|worker|user|auto>] \
   [--auto-pass] \                           # agentic 자율 통과 (T-9)
   [--force] \                               # --note 필수
@@ -119,6 +121,21 @@
 - `--action-step`은 `--step`의 신규 별칭(동일 동작, 070 R-5) — 기존 `--step`도 그대로 동작
 - `--owner`와 `--auto-pass`는 배타적
 - `--as-worker` 사용 시 `--worker-stage` 필수
+- `--worker-duration-minutes <n>`(103 R-15)은 그 행에서 **워커(서브에이전트)가 실제 실행한 시간을 분 단위 0 이상 정수**로 `rows[].worker_duration_minutes`에 기록한다. 원천은 워커 완료 시 하네스가 반환하는 `duration_ms`이며, PM이 분으로 환산해 전달한다(집계 기준 16-b)
+  - **지정 시에만 기록된다** — 미지정 호출은 필드를 만들지 않으며 `state.json`·응답 키 집합이 종전과 완전히 동일하다(기존 태스크 무영향)
+  - 미기록 행의 소요는 집계에서 `PM` 계열로 전액 귀속된다(축퇴 규칙, 집계 기준 16-a) — 따라서 기록이 없는 과거 태스크는 종전 2계열 수치와 항등이다
+  - `0`은 유효값이다(측정했으나 1분 미만). "측정하지 않음"은 인자 미지정으로 표현한다
+  - 음수·소수·비수치는 **argparse 파싱 시점에 거부**된다(exit 2, `--owner` choices 위반과 동일 계열) — 전용 에러 코드는 신설하지 않았다
+  - `--auto-pass` 재호출 멱등 no-op(093 F-005)은 이 인자가 실린 호출에는 적용되지 않는다 — 기록할 값이 조용히 버려지지 않게 하기 위함이며, 인자 없는 기존 호출의 no-op 조건은 불변이다
+  - 기록에 성공하면 `mark` 응답 JSON에도 `worker_duration_minutes` 키가 실린다(지정하지 않으면 키 없음)
+- **소요 누락 경고**(103 R-21) — `--as-worker` 또는 `--worker-stage`가 실린 `mark`가 그 행을 실제로 `done`으로 닫는데 `--worker-duration-minutes`가 없으면, 응답 JSON에 `warnings` 배열이 조건부로 실린다(`[{"code": "worker_duration_missing", "message": ...}]`)
+  - **경고이지 차단이 아니다** — exit code는 `0`을 유지하고 상태 전이도 정상 수행되며, `state.json`·`STATE.md` 산출물은 경고 유무와 무관하게 동일하다. 경고는 stdout JSON에만 실린다
+  - 경고가 없으면 `warnings` 키 자체를 만들지 않는다 — 기존 호출의 응답 키 집합은 종전과 완전히 동일하다
+  - 이 경고가 필요한 이유: 워커 완료 알림의 `duration_ms`는 세션과 함께 사라지고 행에는 완료 시각만 남아 시작 시각을 되살릴 수 없다. 그 자리에서 적지 않으면 소요는 **영구히 소실**되고 통계에서 PM 몫으로 잘못 귀속된다(소급 복구 경로 없음)
+  - 오탐을 막는 4관문: ① 값이 이미 실림 ② `--worker-duration-unknown` 억제 ③ 워커 신호 부재(PM 직접 수행 행) ④ `--action-step N/M`에서 `N<M`(행이 `in_progress`로 남는 중간 진행 보고). 추가로 `owner = "user"`인 사용자 확인 행과 `--auto-pass` 재호출 멱등 no-op(093 F-005) 경로도 제외된다
+  - 경고 코드는 `ERROR_CODES`가 아니라 별도 사전 `WARNING_CODES`에 산다 — 경고는 에러가 아니며, **에러 코드는 45종 그대로다**
+- `--worker-duration-unknown`(103 R-21)은 그 행의 워커 소요를 **알 수 없음을 명시**한다(중단된 워커·PM 직접 수행·소급 불가 과거 데이터). 경고를 억제하며 행에는 필드를 만들지 않는다 — 기록 결과는 인자 미지정과 완전히 동형이므로 "미측정"이 `0`("측정했으나 1분 미만")으로 오독되지 않는다
+  - `--worker-duration-minutes`와 **배타적**이다(값과 미상 선언은 동시에 성립할 수 없음). 둘 다 지정하면 argparse가 exit 2로 거부한다 — `--owner`/`--auto-pass` 배타와 동일 계열이므로 전용 에러 코드는 신설하지 않았다
 - `--auto-pass` 사용 시 `owner = "auto"`, note에 "agentic auto-pass" 자동 기재
 - CLOSE 첫 행 + agentic/semi-agentic 모드 + `--auto-pass` 조합 거부 (`agentic_close_gate_requires_user`)
 - `--force` 사용 시 `--note` 필수 + 의사결정 로그 자동 기재
@@ -458,3 +475,6 @@
 | v1.7 | 2026-08-16 13:15 | (094) | STATE.md 저널화에 따른 문서 재정합(R-4 문서 + R-9 ①③) — 에러 카탈로그 재실측(`marker_missing`/`import_failed` 삭제, `import_existing_removed` 추가, 39종 표기 → **44종 실측값**으로 정정 및 091/093 누락 행(`gate_artifact_missing`/`spec_gate_*`/`user_confirmation_required`) 보강, 행 번호 전체 재부여); `init --import-existing` 사용 안내 제거 — 항상 `import_existing_removed`로 거부됨을 명시(인자는 `help=SUPPRESS`로 존치, 설계 의도 기술); `validate` 검증 항목·응답 예시에서 `marker_missing` 서술 제거; `show` 절을 `cmd_show` 재설계(R-5/D-4)에 맞춰 재작성 — `md`/`full` 모두 마커 유무와 무관하게 `state.json` 단일 파생 렌더, 레거시 마커 잔존 시 배너 1줄 prepend, `marker_present` 필드 의미 재해석(레거시 동결 표 잔존 신호) 1줄 추가 |
 | v1.8 | 2026-08-21 18:04 | (098) | `verify --evidence-check` 신설(F-003, PLAN §3.3.2) — TASK.md `## 명확화 결과` 표의 `의존 사실` 셀을 근거 등급 4축으로 판정해 항목별 확정/미확정+사유를 반환하는 라우터(exit 0 유지, 미확정도 차단하지 않음) 신규 절 추가; 에러 코드 44→**45종**(`evidence_check_flag_conflict` — `--evidence-check`/`--clarification-check` 동시 지정 거부) 반영해 카탈로그 헤더·표 정정 |
 | v1.9 | 2026-08-23 13:03 | (100) | `verify --evidence-check` 파싱 대상 확장(F-007, PLAN §3.7.2) — `## 명확화 결과` 표에 더해 `## 확정된 설계 방향` 섹션의 **최상위 불릿**을 전용 파서(`_locate_confirmed_direction_items`)로 수집해 하나의 `items[]`로 병합, 각 항목에 출처 구분 `source`(`clarification` \| `confirmed_direction`) 필드 신설; verdict에 `승계` 추가(`[사실]` 태그 + 유효 인용 → 상류 대조 확인 승계, 계수상 `확정`과 동등); 신규 반환 키 `direction_confirmed_ratio`(섹션 부재·항목 0건 시 `null`) 추가 — **기존 `confirmed_ratio`의 분모는 `## 명확화 결과` 항목 수로 불변**(PD-1 분리형, 소비자 계약 보호). 표 열 구성·플래그·에러 코드 45종·exit 0 3경로 전부 불변 |
+| v1.10 | 2026-08-25 | (103 R-15) | 워커 소요 계측 필드 신설 — `state.schema.json` `rows[].worker_duration_minutes`(integer, `minimum: 0`) **선택** 등록(`required`·`additionalProperties: false` 불변, 기존 `state.json` 전건 유효), `mark --worker-duration-minutes <n>` 인자 추가(값 검증은 argparse `type` 파서가 파싱 시점에 수행 — 음수·소수·비수치 exit 2, **에러 코드 45종 불변**). 지정 시에만 행에 기록 + `mark` 응답에 동명 키 조건부 추가하며, **미지정 호출은 `state.json`·stdout 모두 종전과 바이트 동일**. 미기록 행은 집계에서 `PM` 계열로 전액 축퇴(집계 기준 16-a) |
+| v1.11 | 2026-08-26 | (103 R-21) | 워커 소요 누락 경고 신설 — `mark`가 워커 디스패치 행(`--as-worker` 또는 `--worker-stage`)을 `done`으로 닫으면서 `--worker-duration-minutes`를 넘기지 않으면 응답 JSON에 `warnings` 배열(`worker_duration_missing`)을 조건부로 싣는다. **exit 0 유지·차단 없음**이며 `state.json`·`STATE.md` 산출물은 경고 유무와 무관하게 동일하다(경고는 stdout 전용). 오탐 차단 4관문(값 보유·억제 인자·워커 신호 부재·`--action-step N/M`의 `N<M`) + `owner="user"` 사용자 확인 행·093 재-auto-pass 멱등 no-op 제외. 억제 인자 `--worker-duration-unknown` 추가(`--worker-duration-minutes`와 argparse 배타, 지정 시 경고·필드 모두 미생성). 경고 카탈로그는 신규 `WARNING_CODES`로 분리 — **에러 코드 45종 불변** |
+| v1.12 | 2026-08-26 | (103 강제 2단) | 워커 소요 기록 강제 — (1) 경고 판정을 인자 신호(`--as-worker`/`--worker-stage`) **또는 행 구조**(`stage`가 워커 디스패치 규범 단계 + `item`이 「작업」)로 확장해 PM의 자발적 표시에 의존하지 않게 했다. (2) `--worker-duration-unknown`이 행에 `worker_duration_unknown: true`를 영속화한다(스키마 선택 필드) — CLOSE 게이트가 「미측정 선언」과 「침묵」을 갈라야 하기 때문. (3) `mark`가 CLOSE 첫 행 진입 시 기록도 선언도 없는 워커 규범 행이 있으면 **차단**한다(`BLOCK_CODES.worker_duration_undeclared`, `ERROR_CODES` 45종 불변). 통과는 기록 또는 선언 둘뿐이고 `--force --note`가 최후 우회다. 계측 도입(`_WORKER_MEASUREMENT_EPOCH` 2026-08-26) 이전 `created_at` 태스크는 유예 — 「기록 0건이면 유예」로 두면 전건 미기록 신규 태스크가 통과해 강제가 무의미해진다 |

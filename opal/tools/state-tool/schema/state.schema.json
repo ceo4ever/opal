@@ -3,7 +3,16 @@
   "title": "OPAL state.json Schema",
   "description": "state-tool이 관리하는 파이프라인 현황판 JSON — 파이프라인 현황(rows/상태/다음 액션)의 단일 SSOT(094). STATE.md는 이 값을 파생 렌더하지 않는 저널(의사결정 로그/블로커)이며, 조회는 `state-tool show`로 일원화된다. PLAN §2.2 G-1~G-4.",
   "type": "object",
-  "required": ["task_id", "skill", "mode", "schema_version", "created_at", "updated_at", "current_status", "rows"],
+  "required": [
+    "task_id",
+    "skill",
+    "mode",
+    "schema_version",
+    "created_at",
+    "updated_at",
+    "current_status",
+    "rows"
+  ],
   "additionalProperties": false,
   "properties": {
     "task_id": {
@@ -12,29 +21,53 @@
       "description": "태스크 폴더명 (예: 134-260501-opp-pipeline-state-tool)"
     },
     "skill": {
-      "enum": ["opp", "opd", "opds", "opdw", "opwt", "opgc", "oppd", "opsdd", "oppl", "opdd"],
+      "enum": [
+        "opp",
+        "opd",
+        "opds",
+        "opdw",
+        "opwt",
+        "opgc",
+        "oppd",
+        "opsdd",
+        "oppl",
+        "opdd"
+      ],
       "description": "오케스트레이터 스킬 약어 — opal-pilot-* 10종 (070 R-8: opdd 드리프트 정정)"
     },
     "mode": {
-      "enum": ["interactive", "semi-agentic", "agentic"],
+      "enum": [
+        "interactive",
+        "semi-agentic",
+        "agentic"
+      ],
       "description": "OPAL 실행 모드 — 3-way (interactive/semi-agentic/agentic)"
     },
     "schema_version": {
-      "enum": ["1.0", "1.1"],
+      "enum": [
+        "1.0",
+        "1.1"
+      ],
       "description": "스키마 버전 — 1.0(레거시·key 없음) / 1.1(key·conditional 지원) 병행 허용 (070 R-3)"
     },
     "created_at": {
       "type": "string",
-      "pattern": "^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}$",
-      "description": "state.json 최초 생성 시점 (KST YYYY-MM-DD HH:mm)"
+      "pattern": "^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}(:\\d{2})?$",
+      "description": "state.json 최초 생성 시점 (KST YYYY-MM-DD HH:mm[:ss] — 초는 선택. 103 R-19 이전 기록은 분 해상도)"
     },
     "updated_at": {
       "type": "string",
-      "pattern": "^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}$",
-      "description": "마지막 갱신 시점 (KST YYYY-MM-DD HH:mm)"
+      "pattern": "^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}(:\\d{2})?$",
+      "description": "마지막 갱신 시점 (KST YYYY-MM-DD HH:mm[:ss] — 초는 선택. 103 R-19 이전 기록은 분 해상도)"
     },
     "current_status": {
-      "enum": ["in_progress", "done", "blocked", "additional_work", "additional_work_done"],
+      "enum": [
+        "in_progress",
+        "done",
+        "blocked",
+        "additional_work",
+        "additional_work_done"
+      ],
       "description": "태스크 전체 상태 — §2.11 G-7 전이 그래프 참조"
     },
     "rows": {
@@ -43,7 +76,14 @@
       "description": "파이프라인 현황판 행 목록 — row_id 1-based 단조 증가. SSOT는 이 필드이며, 조회는 `state-tool show`로 렌더한다(094).",
       "items": {
         "type": "object",
-        "required": ["row_id", "stage", "item", "status", "status_label", "timestamp"],
+        "required": [
+          "row_id",
+          "stage",
+          "item",
+          "status",
+          "status_label",
+          "timestamp"
+        ],
         "additionalProperties": false,
         "properties": {
           "row_id": {
@@ -53,10 +93,25 @@
           },
           "stage": {
             "enum": [
-              "TASK", "ANALYSIS", "PLAN", "EXECUTE", "TEST",
-              "WIREFRAME", "QA", "SPEC", "REVIEW", "DESIGN",
-              "VERIFY", "SCAN", "CHECK", "REPORT", "WBS", "CLOSE",
-              "DICT", "MODEL", "DDL/MIGRATION"
+              "TASK",
+              "ANALYSIS",
+              "PLAN",
+              "EXECUTE",
+              "TEST",
+              "WIREFRAME",
+              "QA",
+              "SPEC",
+              "REVIEW",
+              "DESIGN",
+              "VERIFY",
+              "SCAN",
+              "CHECK",
+              "REPORT",
+              "WBS",
+              "CLOSE",
+              "DICT",
+              "MODEL",
+              "DDL/MIGRATION"
             ],
             "description": "단계명 — opal-pilot SKILL.md 합집합 19종 (G-3, 070 R-8: opdd DICT/MODEL/DDL·MIGRATION 추가)"
           },
@@ -66,36 +121,61 @@
             "description": "행 항목명. 표준 항목(STANDARD_ITEMS) 또는 산출물명 자유 string"
           },
           "status": {
-            "enum": ["pending", "in_progress", "done", "failed", "na"],
+            "enum": [
+              "pending",
+              "in_progress",
+              "done",
+              "failed",
+              "na"
+            ],
             "description": "행 상태 enum (T-2) — status_label과 정합 필수"
           },
           "status_label": {
-            "enum": ["⬜", "🔄", "✅", "❌", "-"],
+            "enum": [
+              "⬜",
+              "🔄",
+              "✅",
+              "❌",
+              "-"
+            ],
             "description": "행 상태 이모지 (T-2) — status와 정합 필수"
           },
           "timestamp": {
             "oneOf": [
               {
                 "type": "string",
-                "pattern": "^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}$"
+                "pattern": "^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}(:\\d{2})?$"
               },
               {
                 "type": "null"
               }
             ],
-            "description": "행 갱신 시점 (KST). pending 행은 null 허용, 그 외 상태는 string 필수"
+            "description": "행 갱신 시점 (KST YYYY-MM-DD HH:mm[:ss] — 초는 선택). pending 행은 null 허용, 그 외 상태는 string 필수. 103 R-19 이전 기록은 전건 분 해상도이며 집계는 초 부재를 :00으로 읽는다"
           },
           "owner": {
             "oneOf": [
-              {"enum": ["PM", "worker", "user", "auto"]},
-              {"type": "null"}
+              {
+                "enum": [
+                  "PM",
+                  "worker",
+                  "user",
+                  "auto"
+                ]
+              },
+              {
+                "type": "null"
+              }
             ],
             "description": "갱신 주체 — G-12 참조"
           },
           "note": {
             "oneOf": [
-              {"type": "string"},
-              {"type": "null"}
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
             ],
             "description": "행 메모 — auto-pass / force / block 이유 등"
           },
@@ -108,23 +188,50 @@
             "type": "boolean",
             "description": "조건부 task-step (예: opdw WIREFRAME 스킵 대상). 순수 메타데이터 — 자동 na 없음 (070 DEC-1)"
           },
+          "worker_duration_minutes": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "이 행에서 워커(서브에이전트)가 실제 실행한 시간 — 분 단위 0 이상 정수 (103 R-15, 집계 기준 16-b). 원천은 워커 완료 시 하네스가 반환하는 duration_ms이며, PM이 분으로 환산해 `mark --worker-duration-minutes <n>`으로 전달할 때만 기록된다. **선택 필드** — 미기록 행은 키 자체가 없고(전달하지 않으면 생성하지 않는다), 집계에서 그 몫은 축퇴 규칙에 따라 PM 계열에 전액 귀속된다(집계 기준 16-a). 따라서 이 필드가 없는 기존 태스크는 종전 2계열 수치와 항등이다"
+          },
           "gate": {
             "type": "object",
-            "required": ["artifacts", "checklist"],
+            "required": [
+              "artifacts",
+              "checklist"
+            ],
             "additionalProperties": false,
             "properties": {
-              "artifacts": { "type": "array", "items": { "type": "string" } },
-              "checklist": { "type": "array", "items": { "type": "string" }, "minItems": 1 }
+              "artifacts": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "checklist": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "minItems": 1
+              }
             },
             "description": "PM Gate 정의 (091). artifacts=태스크 폴더 기준 상대 경로/글롭 — mark가 존재 검증하여 미충족 시 거부. checklist=PM 판단 항목 — mark stdout으로 주입."
+          },
+          "worker_duration_unknown": {
+            "type": "boolean",
+            "description": "103 강제 2단 — 워커 소요 미측정을 PM이 명시 선언했음(--worker-duration-unknown). 선택 필드이며 부재는 「침묵」(미선언)을 뜻한다. CLOSE 게이트가 선언과 침묵을 갈라 판정한다."
           }
         }
       }
     },
     "next_action": {
       "oneOf": [
-        {"type": "string"},
-        {"type": "null"}
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
       ],
       "description": "파이프라인 다음 액션 파생값 — advance/mark 시 다음 대기 행에서 자동 파생, init/전이 --next-action 오버라이드 가능 (072). 조회: `state-tool show`(094 — STATE.md는 더 이상 이 값을 렌더하지 않는다). optional (하위호환)"
     },

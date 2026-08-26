@@ -6,6 +6,7 @@
 //     yymmdd    → KST 기준 YYMMDD (예: 260409)
 //     date      → KST 기준 YYYY-MM-DD (예: 2026-04-09)
 //     datetime  → KST 기준 YYYY-MM-DD HH:mm (예: 2026-04-09 10:29)
+//     datetime-sec → KST 기준 YYYY-MM-DD HH:mm:ss (예: 2026-04-09 10:29:07)
 //
 // 인자 없거나 미지원 포맷: 사용법 출력 후 정상 종료
 
@@ -20,6 +21,7 @@ function getKST() {
     day: '2-digit',
     hour: '2-digit',
     minute: '2-digit',
+    second: '2-digit',
     hour12: false,
   });
 
@@ -31,8 +33,9 @@ function getKST() {
   const day = get('day');     // 2자리
   const hour = get('hour');   // 2자리 (00-23)
   const minute = get('minute'); // 2자리
+  const second = get('second'); // 2자리 (00-59)
 
-  return { year, month, day, hour, minute };
+  return { year, month, day, hour, minute, second };
 }
 
 function printUsage() {
@@ -42,6 +45,7 @@ function printUsage() {
   console.log('  yymmdd    — KST 기준 YYMMDD         (예: 260409)');
   console.log('  date      — KST 기준 YYYY-MM-DD      (예: 2026-04-09)');
   console.log('  datetime  — KST 기준 YYYY-MM-DD HH:mm (예: 2026-04-09 10:29)');
+  console.log('  datetime-sec — KST 기준 YYYY-MM-DD HH:mm:ss (예: 2026-04-09 10:29:07)');
 }
 
 if (!format) {
@@ -49,7 +53,7 @@ if (!format) {
   process.exit(0);
 }
 
-const { year, month, day, hour, minute } = getKST();
+const { year, month, day, hour, minute, second } = getKST();
 
 switch (format) {
   case 'yymmdd': {
@@ -63,6 +67,12 @@ switch (format) {
   }
   case 'datetime': {
     console.log(`${year}-${month}-${day} ${hour}:${minute}`);
+    break;
+  }
+  // 초 해상도 — 분 해상도 `datetime`은 기존 소비자(brain-tool·backlog-tool)를 위해
+  // 그대로 두고, 초가 필요한 소비자만 이 포맷을 요청한다 (순수 additive).
+  case 'datetime-sec': {
+    console.log(`${year}-${month}-${day} ${hour}:${minute}:${second}`);
     break;
   }
   default: {
