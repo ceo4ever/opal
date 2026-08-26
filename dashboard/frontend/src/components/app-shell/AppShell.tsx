@@ -398,9 +398,11 @@ export function AppShell() {
     <TooltipProvider>
       <SidebarProvider>
         <AppSidebar />
-        <SidebarInset>
+        {/* [T103] min-w-0: flex 자식은 기본 min-width:auto라 콘텐츠보다 작아지지 않는다.
+            없으면 넓은 표·차트가 사이드바까지 밀어내 뷰포트 오른쪽이 잘린다. */}
+        <SidebarInset className="min-w-0">
           <TopBar />
-          <main className="flex flex-1 flex-col overflow-auto">
+          <main className="flex flex-1 flex-col min-w-0 overflow-auto">
             <Outlet />
           </main>
         </SidebarInset>

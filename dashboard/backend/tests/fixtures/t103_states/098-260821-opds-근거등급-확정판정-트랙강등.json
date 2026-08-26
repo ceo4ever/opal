@@ -1,0 +1,177 @@
+{
+  "task_id": "098-260821-opds-근거등급-확정판정-트랙강등",
+  "skill": "opds",
+  "mode": "agentic",
+  "schema_version": "1.1",
+  "created_at": "2026-08-21 16:17",
+  "updated_at": "2026-08-21 23:20",
+  "current_status": "done",
+  "rows": [
+    {
+      "row_id": 1,
+      "stage": "TASK",
+      "item": "작업",
+      "key": "task.task_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-21 16:18",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 2,
+      "stage": "TASK",
+      "item": "사용자 확인",
+      "key": "task.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-21 16:19",
+      "owner": "auto",
+      "note": "auto-approved on PLAN entry"
+    },
+    {
+      "row_id": 3,
+      "stage": "PLAN",
+      "item": "작업",
+      "key": "plan.plan_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-21 16:40",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 4,
+      "stage": "PLAN",
+      "item": "목표-커버 게이트",
+      "key": "plan.scenario_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-21 17:03",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 5,
+      "stage": "PLAN",
+      "item": "PM Gate",
+      "key": "plan.pm_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-21 17:07",
+      "owner": "PM",
+      "note": null,
+      "gate": {
+        "artifacts": [
+          "TASK.md",
+          "PLAN.md",
+          "TEST-SCENARIO.md"
+        ],
+        "checklist": [
+          "TASK.md 요구사항",
+          "PLAN.md §4.2",
+          "PLAN.md §5",
+          "TEST-SCENARIO.md 시나리오 목록/보안/설계 피드백"
+        ]
+      }
+    },
+    {
+      "row_id": 6,
+      "stage": "PLAN",
+      "item": "사용자 확인",
+      "key": "plan.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-21 17:15",
+      "owner": "auto",
+      "note": "auto-approved on EXECUTE entry"
+    },
+    {
+      "row_id": 7,
+      "stage": "EXECUTE",
+      "item": "작업",
+      "key": "execute.implement",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-21 22:19",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 8,
+      "stage": "EXECUTE",
+      "item": "추가작업 ADD-1 — §9 E1 실행 관측 스코프 병기 1줄",
+      "key": "execute.add1_e1_scope",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-21 22:24",
+      "owner": "PM",
+      "note": "캡틴 승인 2026-08-21 22:2x — 통과 수 스코프 누락 3회 반복 대응. 태스크 미완료 상태이므로 CLOSE 재진입 아닌 EXECUTE 인플라이트 확장"
+    },
+    {
+      "row_id": 9,
+      "stage": "TEST",
+      "item": "작업",
+      "key": "test.run_tests",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-21 22:41",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 10,
+      "stage": "TEST",
+      "item": "PM Gate",
+      "key": "test.pm_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-21 22:41",
+      "owner": "PM",
+      "note": null,
+      "gate": {
+        "artifacts": [
+          "TEST-SCENARIO.md"
+        ],
+        "checklist": [
+          "시나리오 결과/코드품질/보안/회귀",
+          "컨벤션 자동 진단 PASS (GC-CONVENTION-*.md Critical/High 0건 — 컨벤션 적용 대상 ≥1건 시 발동)"
+        ]
+      }
+    },
+    {
+      "row_id": 11,
+      "stage": "TEST",
+      "item": "사용자 확인",
+      "key": "test.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-21 22:49",
+      "owner": "user",
+      "note": "캡틴 확인: '승인' — CLOSE 진입 및 DONE.md·install 재배포·brain ingest 3건 수행 승인 (2026-08-21 22:4x)"
+    },
+    {
+      "row_id": 12,
+      "stage": "CLOSE",
+      "item": "DONE.md 생성",
+      "key": "close.done_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-21 22:52",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 13,
+      "stage": "CLOSE",
+      "item": "추가작업 ADD-2 — 배포 경로 루트 파생 결함 수정 (RED-first)",
+      "key": "close.add2_root_derivation",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-21 23:20",
+      "owner": "PM",
+      "note": "ADD_DONE-2.md 산출. RED 3축 → GREEN 3/3, 실질 회귀 0건, 배포 등가 PM 독립 재현(confirmed_ratio 0.75 동일). 재배포 대기"
+    }
+  ],
+  "next_action": "태스크 완료"
+}

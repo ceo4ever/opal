@@ -3,9 +3,15 @@
   "module": "routers.dashboard",
   "layer": "router",
   "domain": "console",
-  "description": "GET /api/dashboard — 전 프로젝트 집계 또는 개별 프로젝트 집계(4메트릭·상태분포·활동추이·주의알림·최근활동). project 쿼리 파라미터로 개별/전체 구분. 읽기 전용. 최근활동·주의알림 title은 TASK.md H1에서 파생(_resolve_task_title: 'TASK NNN —'/'TASK:' 접두사 제거, 부재 시 폴더명 슬러그 폴백) — state.json에 title 필드가 없어 폴더명 중복 방지",
+  "description": "GET /api/dashboard — 전 프로젝트 집계 또는 개별 프로젝트 집계(4메트릭·상태분포·활동추이·주의알림·최근활동). project 쿼리 파라미터로 개별/전체 구분. 읽기 전용. 최근활동·주의알림 title은 TASK.md H1에서 파생(_resolve_task_title: 'TASK NNN —'/'TASK:' 접두사 제거, 부재 시 폴더명 슬러그 폴백) — state.json에 title 필드가 없어 폴더명 중복 방지. [T103] 워크플로우별 횡단 집계 additive — 모수는 current_status == done인 완료 태스크만이며(집계기준 3) 진행 중은 total_tasks 차이로만 드러난다. stats.workflow_stats(skill 단위 중앙값·2계열·3계열(pm/worker/captain)·단계별)를 호출하기 전 각 state에 _title을 주입한다(stats.py는 파일 I/O를 하지 않는다). 산출물 규모(artifact_total·artifact_by_type 4유형)는 routers.tasks의 _get_artifact_files·classify_artifact를 함수 내부 지연 import로 호출한다(COLUMN_MAP 선례). 캐시는 현행 유지 — 모수에 실시간 성분이 없고 다중 파일 소스라 단일 source_path mtime 무효화가 적용 불가하다. [T103 R-21] 야간 제외 구간(집계 기준 17)은 라우터가 config.load_quiet_hours로 읽어 workflow_stats에 주입한다 — 개별 프로젝트 모드는 그 프로젝트의 로컬 설정이 전역을 덮고, 전체 모드는 어느 프로젝트도 편들 수 없어 전역 설정만 쓴다. 캐시 키 `dashboard:{project|ALL}:{구간서명}`에 서명을 실어 설정 변경 시 보정 전후 값이 같은 키를 공유하지 않게 했다.",
   "exports": ["GET /api/dashboard"],
-  "depends": ["models", "scanner", "config", "cache", "adapters.state_adapter"]
+  "depends": ["models", "scanner", "config", "cache", "stats", "adapters.state_adapter"],
+  "changelog": [
+    "2026-08-26 호칭 하드코딩 제거: 응답에 owner_term 표면화 — config.load_owner_name() 1회 호출. 집계·필터 경로 무변경",
+    "2026-08-26 T103 R-21: 야간 제외 구간을 config.load_quiet_hours로 읽어 workflow_stats에 주입 + 캐시 키에 구간 서명 부착 + 응답에 quiet_hours_applied·quiet_hours_label 표면화",
+    "2026-08-25 T103 R-16: workflow_stats 3계열 필드가 WorkflowStat(**w) 경로로 자동 승계 — 라우터 로직 무변경, @header 기술만 갱신",
+    "2026-08-25 T103 Step7: 워크플로우별 집계 5필드 additive(completed_tasks·total_tasks·artifact_total·artifact_by_type·workflow_stats) — F-003, TS-020~024. 기존 8필드 무변경"
+  ]
 }
 """
 from __future__ import annotations
@@ -17,15 +23,17 @@ from datetime import datetime, timedelta
 from fastapi import APIRouter, HTTPException, Query
 
 from dashboard.backend.cache import cache
-from dashboard.backend.config import load_config
+from dashboard.backend.config import load_config, load_owner_name, load_quiet_hours, quiet_hours_token
 from dashboard.backend.models import (
     ActivityPoint,
     AlertItem,
     DashboardSummaryResponse,
     RecentActivity,
     StatusDistribution,
+    WorkflowStat,
 )
 from dashboard.backend.scanner import scan_projects
+from dashboard.backend.stats import format_quiet_hours, workflow_stats
 
 router = APIRouter()
 
@@ -114,7 +122,13 @@ def get_dashboard(project: str = Query(default="")) -> DashboardSummaryResponse:
         project: 절대경로 문자열. 비어있으면 전체 OPAL 프로젝트 집계.
                  지정 시 해당 프로젝트 1개만 집계. 매칭 없으면 404.
     """
-    cache_key = f"dashboard:{project or 'ALL'}"
+    # 야간 제외 구간(집계 기준 17)은 라우터가 읽어 stats.py에 주입한다.
+    # 개별 프로젝트 모드면 그 프로젝트의 로컬 설정이 전역을 덮고, 전체 모드는
+    # 어느 프로젝트 하나를 편들 수 없으므로 전역 설정만 쓴다.
+    quiet_hours = load_quiet_hours(project or None)
+
+    # 캐시 키에 구간 서명을 실어 설정 변경이 곧바로 갈리게 한다.
+    cache_key = f"dashboard:{project or 'ALL'}:{quiet_hours_token(quiet_hours)}"
     cached = cache.get(cache_key)
     if cached is not None:
         return cached
@@ -136,6 +150,10 @@ def get_dashboard(project: str = Query(default="")) -> DashboardSummaryResponse:
     all_tasks: list[dict] = []
     for proj in target_projects:
         all_tasks.extend(_collect_all_tasks(proj.path))
+
+    # 태스크 제목 주입 — B-3 리드타임 표의 표시명 (stats.py는 파일 I/O를 하지 않는다)
+    for t in all_tasks:
+        t["_title"] = _resolve_task_title(t.get("_task_dir", ""), t.get("_task_id", ""))
 
     # 4메트릭
     running = sum(
@@ -207,6 +225,20 @@ def get_dashboard(project: str = Query(default="")) -> DashboardSummaryResponse:
         for t in recent_raw
     ]
 
+    # 워크플로우별 집계 (T103 R-10) — 모수는 완료 태스크만 (집계기준 3)
+    completed = [t for t in all_tasks if t.get("current_status") == "done"]
+    workflows = [WorkflowStat(**w) for w in workflow_stats(completed, quiet_hours)]
+
+    # 산출물 규모 — 파일시스템 접근이므로 tasks.py 헬퍼를 지연 import한다 (COLUMN_MAP 선례)
+    from dashboard.backend.routers.tasks import _get_artifact_files, classify_artifact
+    artifact_by_type: dict[str, int] = {
+        "pipeline": 0, "verification": 0, "log": 0, "other": 0,
+    }
+    for t in all_tasks:
+        for name in _get_artifact_files(t.get("_task_dir", "")):
+            artifact_type, _ = classify_artifact(name)
+            artifact_by_type[artifact_type] += 1
+
     result = DashboardSummaryResponse(
         total_projects=len(target_projects),
         running_tasks=running,
@@ -216,6 +248,15 @@ def get_dashboard(project: str = Query(default="")) -> DashboardSummaryResponse:
         activity_trend=activity_trend,
         alerts=alerts,
         recent_activities=recent_activities,
+        completed_tasks=len(completed),
+        total_tasks=len(all_tasks),
+        artifact_total=sum(artifact_by_type.values()),
+        artifact_by_type=artifact_by_type,
+        workflow_stats=workflows,
+        quiet_hours_applied=quiet_hours is not None,
+        quiet_hours_label=format_quiet_hours(quiet_hours),
+        # 사용자 호칭 표면화 — 화면 문구·범례가 이 값으로 조립한다 (하드코딩 금지)
+        owner_term=load_owner_name(),
     )
     cache.set(cache_key, result)
     return result

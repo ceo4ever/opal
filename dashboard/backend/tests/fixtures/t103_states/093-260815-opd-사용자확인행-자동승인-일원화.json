@@ -1,0 +1,233 @@
+{
+  "task_id": "093-260815-opd-사용자확인행-자동승인-일원화",
+  "skill": "opd",
+  "mode": "agentic",
+  "schema_version": "1.1",
+  "created_at": "2026-08-15 20:03",
+  "updated_at": "2026-08-16 00:01",
+  "current_status": "done",
+  "rows": [
+    {
+      "row_id": 1,
+      "stage": "TASK",
+      "item": "작업",
+      "key": "task.task_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-15 20:04",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 2,
+      "stage": "TASK",
+      "item": "사용자 확인",
+      "key": "task.user_confirm",
+      "status": "na",
+      "status_label": "-",
+      "timestamp": null,
+      "owner": "auto",
+      "note": "agentic auto-na at init"
+    },
+    {
+      "row_id": 3,
+      "stage": "ANALYSIS",
+      "item": "작업",
+      "key": "analysis.analysis_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-15 20:14",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 4,
+      "stage": "ANALYSIS",
+      "item": "PM Gate",
+      "key": "analysis.pm_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-15 20:14",
+      "owner": "PM",
+      "note": "ANALYSIS PM Gate Pass — 워커 주장 4건 PM 직접 실측 대조 전건 일치, 근거 오류 0건, 미승인 폴백 0건",
+      "gate": {
+        "artifacts": [
+          "ANALYSIS.md"
+        ],
+        "checklist": [
+          "-"
+        ]
+      }
+    },
+    {
+      "row_id": 5,
+      "stage": "ANALYSIS",
+      "item": "사용자 확인",
+      "key": "analysis.user_confirm",
+      "status": "na",
+      "status_label": "-",
+      "timestamp": null,
+      "owner": "auto",
+      "note": "agentic auto-na at init"
+    },
+    {
+      "row_id": 6,
+      "stage": "PLAN",
+      "item": "작업",
+      "key": "plan.plan_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-15 20:33",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 7,
+      "stage": "PLAN",
+      "item": "PM Gate",
+      "key": "plan.pm_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-15 20:33",
+      "owner": "PM",
+      "note": "PLAN PM Gate Pass — F-1~F-6 전건 커버, 20 Step 전건 5필드 기재, H-1~H-9, 5쟁점 집행·검증 Step 매핑 완결, 무변경 주장 실측 일치",
+      "gate": {
+        "artifacts": [
+          "TASK.md",
+          "PLAN.md"
+        ],
+        "checklist": [
+          "TASK.md 요구사항",
+          "PLAN.md §4.2",
+          "PLAN.md §5",
+          "PLAN.md §리스크 가설 표"
+        ]
+      }
+    },
+    {
+      "row_id": 8,
+      "stage": "PLAN",
+      "item": "사용자 확인",
+      "key": "plan.user_confirm",
+      "status": "na",
+      "status_label": "-",
+      "timestamp": null,
+      "owner": "auto",
+      "note": "agentic auto-na at init"
+    },
+    {
+      "row_id": 9,
+      "stage": "TEST-SCENARIO",
+      "item": "작업",
+      "key": "test_scenario.test_scenario_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-15 20:57",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 10,
+      "stage": "TEST-SCENARIO",
+      "item": "목표-커버 게이트",
+      "key": "test_scenario.scenario_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-15 21:03",
+      "owner": "PM",
+      "note": "목표-커버 게이트 iteration 1 pass — coverage-check exit 0(요구6/기능6/가설9/시나리오26 누락0) AND evaluator verdict pass(goal2/adoption2/boundary2, 평균 2.0). 판정 후 A-1~A-4 additive 반영(23→26건, 삭제·약화 0) 후 재실행 exit 0 재확인",
+      "gate": {
+        "artifacts": [
+          "TEST-SCENARIO.md"
+        ],
+        "checklist": [
+          "mock 부재(grep)",
+          "사전 조건 데이터 채워짐",
+          "Given/When/Then 3필드",
+          "가설↔시나리오 매핑 완전",
+          "L1/L2/L3 계층 명시",
+          "L3 [SUPERVISOR] 마커 + PM 요청 양식",
+          "실행 방식(M1/M2/M3) 명시"
+        ]
+      }
+    },
+    {
+      "row_id": 11,
+      "stage": "TEST-SCENARIO",
+      "item": "사용자 확인",
+      "key": "test_scenario.user_confirm",
+      "status": "na",
+      "status_label": "-",
+      "timestamp": null,
+      "owner": "auto",
+      "note": "agentic auto-na at init"
+    },
+    {
+      "row_id": 12,
+      "stage": "EXECUTE",
+      "item": "작업",
+      "key": "execute.implement",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-15 21:52",
+      "owner": "PM",
+      "note": null,
+      "step": "20/20"
+    },
+    {
+      "row_id": 13,
+      "stage": "TEST",
+      "item": "작업",
+      "key": "test.run_tests",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-15 22:01",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 14,
+      "stage": "TEST",
+      "item": "PM Gate",
+      "key": "test.pm_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-15 22:04",
+      "owner": "PM",
+      "note": "TEST PM Gate Pass — 시나리오 25 Pass/0 Fail/1 Skip(L3), 컨벤션 진단 Critical·High 0건, 코드품질 델타 기준 회귀 0, 보안 2종 Pass",
+      "gate": {
+        "artifacts": [
+          "TEST-SCENARIO.md"
+        ],
+        "checklist": [
+          "시나리오 결과/코드품질/보안/회귀",
+          "컨벤션 자동 진단 PASS (GC-CONVENTION-*.md Critical/High 0건 — 컨벤션 적용 대상 ≥1건 시 발동)"
+        ]
+      }
+    },
+    {
+      "row_id": 15,
+      "stage": "TEST",
+      "item": "사용자 확인",
+      "key": "test.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-16 00:00",
+      "owner": "user",
+      "note": "캡틴 확인: CLOSE 진입 승인"
+    },
+    {
+      "row_id": 16,
+      "stage": "CLOSE",
+      "item": "DONE.md 생성",
+      "key": "close.done_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-16 00:01",
+      "owner": "PM",
+      "note": null
+    }
+  ],
+  "next_action": "태스크 완료",
+  "worktree": "/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_093"
+}

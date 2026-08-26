@@ -1,0 +1,133 @@
+{
+  "task_id": "090-260813-opds-파이프라인-스펙-마이그레이션",
+  "skill": "opds",
+  "mode": "agentic",
+  "schema_version": "1.1",
+  "created_at": "2026-08-13 14:27",
+  "updated_at": "2026-08-13 18:02",
+  "current_status": "done",
+  "rows": [
+    {
+      "row_id": 1,
+      "stage": "TASK",
+      "item": "작업",
+      "key": "task.task_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-13 14:27",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 2,
+      "stage": "TASK",
+      "item": "사용자 확인",
+      "key": "task.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-13 14:27",
+      "owner": "auto",
+      "note": "agentic auto-pass: TASK 4요소 잠금 확인. 범위 경계 D-1~D-6이 캡틴 확정 발화(A안 //opds --agentic)와 일치하며, 교체형 목표 R-5에 잔존0·채택 검증 기준 포함"
+    },
+    {
+      "row_id": 3,
+      "stage": "PLAN",
+      "item": "작업",
+      "key": "plan.plan_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-13 16:11",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 4,
+      "stage": "PLAN",
+      "item": "목표-커버 게이트",
+      "key": "plan.scenario_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-13 16:42",
+      "owner": "PM",
+      "note": "목표-커버 게이트 iteration 2 pass (goal2/adoption2/boundary2, avg 2.00, gaps 0). coverage-check exit 0 + evaluator pass 두 증거 충족. 평가자 관찰 P1(state-template.md:94)은 캡틴 결정으로 범위 밖 확정"
+    },
+    {
+      "row_id": 5,
+      "stage": "PLAN",
+      "item": "PM Gate",
+      "key": "plan.pm_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-13 16:46",
+      "owner": "PM",
+      "note": "PLAN PM Gate 재검증(v2.4 기준) 통과 — R-1~R-9 전건 F 매핑, Step 12개 연속+agent 12/12, Batch1 7병렬 파일 비중첩, 3자 정합(TASK v2.4 / PLAN v2.4 / TEST-SCENARIO 18건)"
+    },
+    {
+      "row_id": 6,
+      "stage": "PLAN",
+      "item": "사용자 확인",
+      "key": "plan.user_confirm",
+      "status": "na",
+      "status_label": "-",
+      "timestamp": null,
+      "owner": "auto",
+      "note": "agentic auto-na at init"
+    },
+    {
+      "row_id": 7,
+      "stage": "EXECUTE",
+      "item": "작업",
+      "key": "execute.implement",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-13 17:23",
+      "owner": "PM",
+      "note": "Step 1~12 완료. 전후 동등 5/5, spec-validate 10/10, registry 10/10, 잔존 0·채택 10, oppl 19·oppd 13 하드실패 해소, opsdd EXECUTE-LOOP 17 불변, 배포본 diff 0 + 배포경로 init 실증"
+    },
+    {
+      "row_id": 8,
+      "stage": "TEST",
+      "item": "작업",
+      "key": "test.run_tests",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-13 17:58",
+      "owner": "PM",
+      "note": "TEST-SCENARIO 18/19 실행 완료 — 18 Pass, 0 Fail. S-17은 [SUPERVISOR]로 캡틴 직접 수행 대기(자동 통과 처리 안 함)"
+    },
+    {
+      "row_id": 9,
+      "stage": "TEST",
+      "item": "PM Gate",
+      "key": "test.pm_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-13 17:58",
+      "owner": "PM",
+      "note": "TEST PM Gate 통과: 18 Pass / 0 Fail / S-17 캡틴 대기. S-16은 Fail 검출→문서 정정→재판정 Pass. 핵심 판정축 4종 전건 Pass"
+    },
+    {
+      "row_id": 10,
+      "stage": "TEST",
+      "item": "사용자 확인",
+      "key": "test.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-13 18:00",
+      "owner": "user",
+      "note": "캡틴 확인: 'close 승인' — TEST 18 Pass/0 Fail 보고 후 CLOSE 진입 승인. S-17은 캡틴이 별도 직접 수행"
+    },
+    {
+      "row_id": 11,
+      "stage": "CLOSE",
+      "item": "DONE.md 생성",
+      "key": "close.done_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-13 18:02",
+      "owner": "PM",
+      "note": "DONE.md 생성 완료"
+    }
+  ],
+  "next_action": "태스크 완료"
+}

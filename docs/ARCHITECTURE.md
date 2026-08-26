@@ -296,6 +296,23 @@ opal/core/mcps/*    ──── install ─→  claude mcp add --scope user (Cl
 | 범위 제외(후속) | console.config 전반 편집·프로젝트 로컬 `.opal/setting.local.json` 편집 — 파일 수동 편집으로 관리, 미사용 쓰기 API는 표면 최소화 위해 미노출 |
 | 불변 | LLM 호출 0회(브레인 라우터 격리 유지) · 기존 read-only 5종 + 브레인 POST 계약 불변 · 127.0.0.1 바인딩 |
 
+### 태스크 진행 통계 (태스크 103)
+
+태스크 상세 패널과 대시보드가 `tasks/*/state.json` 파이프라인 행을 집계해 **병목 단계**와 **캡틴 대기 구간**을 수치로 드러낸다. 통계 전용 화면은 만들지 않고 기존 2화면을 확장했다. 읽기 전용 원칙은 유지된다(쓰기 동작 0건).
+
+| 항목 | 값 |
+|------|-----|
+| 집계 코어 | `dashboard/backend/stats.py` — 집계 정의 SSOT. **import는 `__future__`·`datetime`·`statistics` 3종뿐**(모델·라우터·캐시 미의존 → 순환 회피, 파일 I/O 0건). 공개 함수 7종 `parse_ts`·`format_duration`·`owner_series`·`row_durations`·`task_static_stats`·`task_live_stats`·`workflow_stats`. 라우터 2곳(`tasks.py`·`dashboard.py`)과 FE는 계산하지 않고 이 모듈만 소비한다 |
+| 분해축 | **총 리드타임 = 작업(`owner`가 `PM`·`auto`) + 대기(`owner`가 `user`)**. 병목은 작업 계열, 대기 축소는 대기 계열을 본다 |
+| 소요 계산 | 앵커 `created_at` → 각 done 행, 직전 done 행 대비 차이. `status != "done"` 전부 제외. **역행 타임스탬프는 0으로 clamp**(실측 1건) |
+| 비교 단위 | **워크플로우(`skill`)별 분리** — opd 7단계 / opds 5단계 / opp 4단계로 파이프라인 구성이 달라 혼합 집계는 제공하지 않는다. 대표값은 중앙값(평균은 보조), `n<5`는 「표본 부족」 표기 |
+| 모수 | **대시보드는 완료 태스크만**(진행 중은 건수만 별도), **태스크 상세는 실시간**. 실시간 함수는 전부 `now` 파라미터를 받아 결정론을 유지한다 |
+| 실시간 대기 귀속 | 완료 행은 `owner`, 현재 행은 `key`의 `*.user_confirm` 패턴 — `pending` 행 `owner`는 `state-tool init` 기본값(`PM`)이라 신뢰할 수 없다 |
+| 필드 명명 | **원천 용어 정렬** — 응답 키는 `state.json` 스키마 용어(`skill`·`timestamp`·`row_id`). 사표 필드 `updated_at`·`row`는 deprecated 별칭으로 존치하되 값을 채운다. 「워크플로우」는 UI 표시 라벨 전용 |
+| 표시 문자열 | **BE 소유** — `*_minutes` + `*_label` 쌍으로 내리고 `format_duration`을 `stats.py` 단일 지점에 둔다(FE 무계산) |
+| 캐시 | 정적 파생만 캐시(`source_path`에 태스크 `state.json` 경로 전달), **실시간 파생은 캐시 밖에서 조립**. 이 과정에서 `cache.py`의 mtime 비교가 monotonic 파생값과 epoch를 직접 비교하던 결함을 wall-clock 기준으로 교정했다 |
+| 검증 | 기준일 스냅샷 `STATS-BASELINE.md`(태스크 산출물, 런타임 미배치)와 대조. 모수는 **태스크 ID 목록으로 동결**해 후속 태스크 완료로 중앙값이 이동해도 검증이 깨지지 않는다 |
+
 | 항목 | 값 |
 |------|-----|
 | 소스 | `{프로젝트}/dashboard/` (frontend: React+TS+Vite+shadcn / backend: FastAPI) |
@@ -475,6 +492,7 @@ opal/                                    ← 이 저장소
 
 | 날짜 | 변경 내용 |
 |------|----------|
+| 2026-08-25 17:55 | **§OPAL Console에 「태스크 진행 통계」 절 신설** — 태스크 상세·대시보드가 `tasks/*/state.json`을 집계해 병목 단계와 캡틴 대기 구간을 표시한다. 집계 코어 `dashboard/backend/stats.py` 신설(표준 라이브러리 3종만 의존해 순환 회피, 공개 함수 7종, 라우터·FE는 소비만) · 분해축 「총 리드타임 = 작업 + 대기」 · 워크플로우별 분리 집계(혼합 미제공, opd 7·opds 5·opp 4단계로 구성 상이) · 대시보드는 완료 태스크 모수 / 상세는 실시간(`now` 주입 결정론) · 실시간 대기 귀속은 `key`의 `*.user_confirm` 패턴(`pending` 행 `owner`는 `init` 기본값이라 비신뢰) · 필드 명명 원천 용어 정렬(`skill`·`timestamp`·`row_id`, 사표 필드는 별칭 존치) · 표시 문자열 BE 소유 · 정적만 캐시하고 실시간은 캐시 밖 조립. 부수 교정 — `cache.py`의 mtime 비교가 monotonic 파생값과 epoch를 직접 비교해 `source_path` 지정 시 상시 무효화되던 결함을 wall-clock 기준으로 수정 (태스크 103) |
 | 2026-08-23 13:09 | `harness/` 파일 수 정정 — 트리 뷰 `harness/ 17파일` → **19파일**(선재 stale 1건 + 태스크 100 `analysis-core.md` 신규 1건 실측 반영). §핵심 디렉토리 `references/` 행(`:80`)도 같은 줄 안에 `harness/`(하네스 세부 규약 **17파일**) 언급을 별도로 갖고 있어 함께 **19파일**로 정정 — 동일 줄에 '17파일'이 2회 등장하며 앞의 '최상위 17파일'은 references/ 최상위 실측값이라 무변경, 뒤의 harness/ 수치만 정정. **정정 경위**: 최초 조치에서 앞의 1건만 확인하고 무변경으로 판단했으나 TEST S-28이 잔존을 검출해 보완(H-12 재현). 태스크 100 |
 | 2026-08-16 13:36 | 하네스 표 State 행 서술 정정 — "STATE.md 상태 관리" → "`state.json` 파이프라인 SSOT(state-tool) + STATE.md 저널", 세션 복원. STATE.md는 파이프라인 현황(행 상태·진행·다음 액션)의 SSOT가 아니라 의사결정 로그·블로커를 담는 저널이며, 현황 조회는 `state-tool show`가 담당한다 (094) |
 | 2026-08-15 16:35 | `worktree-tool` 신설 반영 — 도구 인벤토리 **18종 → 19종**(§핵심 디렉토리 `tools/` 행 '환경·배포' 범주에 항목 추가 + 디렉토리 트리 1행). 태스크별 코드 작업공간을 `{프로젝트}/.opal-worktrees/task_{NNN}/`에 git worktree로 격리하는 `--worktree`/`--wt` 축(모드 축과 직교, `opal-harness.md` §2.5)의 집행 도구다 (Task 092) |

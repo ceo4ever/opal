@@ -1,0 +1,199 @@
+{
+  "task_id": "099-260821-opds-보고형식-ADHD-하네스",
+  "skill": "opds",
+  "mode": "agentic",
+  "schema_version": "1.1",
+  "created_at": "2026-08-21 22:46",
+  "updated_at": "2026-08-22 15:30",
+  "current_status": "done",
+  "rows": [
+    {
+      "row_id": 1,
+      "stage": "TASK",
+      "item": "작업",
+      "key": "task.task_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-21 22:46",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 2,
+      "stage": "TASK",
+      "item": "사용자 확인",
+      "key": "task.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-21 22:49",
+      "owner": "auto",
+      "note": "auto-approved on PLAN entry"
+    },
+    {
+      "row_id": 3,
+      "stage": "PLAN",
+      "item": "작업",
+      "key": "plan.plan_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-21 23:01",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 4,
+      "stage": "PLAN",
+      "item": "목표-커버 게이트",
+      "key": "plan.scenario_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-21 23:20",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 5,
+      "stage": "PLAN",
+      "item": "PM Gate",
+      "key": "plan.pm_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-21 23:22",
+      "owner": "PM",
+      "note": null,
+      "gate": {
+        "artifacts": [
+          "TASK.md",
+          "PLAN.md",
+          "TEST-SCENARIO.md"
+        ],
+        "checklist": [
+          "TASK.md 요구사항",
+          "PLAN.md §4.2",
+          "PLAN.md §5",
+          "TEST-SCENARIO.md 시나리오 목록/보안/설계 피드백"
+        ]
+      }
+    },
+    {
+      "row_id": 6,
+      "stage": "PLAN",
+      "item": "사용자 확인",
+      "key": "plan.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-21 23:30",
+      "owner": "auto",
+      "note": "auto-approved on EXECUTE entry"
+    },
+    {
+      "row_id": 7,
+      "stage": "EXECUTE",
+      "item": "작업",
+      "key": "execute.implement",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-21 23:46",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 8,
+      "stage": "TEST",
+      "item": "작업",
+      "key": "test.run_tests",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-22 14:41",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 9,
+      "stage": "TEST",
+      "item": "fix 작업 (1/3) — 규범 결함 4건 보정",
+      "key": "test.fix_1",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-22 14:41",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 10,
+      "stage": "TEST",
+      "item": "fix 작업 (2/3) — 골격 템플릿 실물화",
+      "key": "test.fix_2",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-22 14:41",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 11,
+      "stage": "TEST",
+      "item": "명세 변경 반영 — 승인 블록 개정 + 상한 삭제 (캡틴 지시)",
+      "key": "test.item_1",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-22 14:41",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 12,
+      "stage": "TEST",
+      "item": "잔여 결함 D-1~D-4 보정 + 재검증",
+      "key": "test.item_2",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-22 14:59",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 13,
+      "stage": "TEST",
+      "item": "PM Gate",
+      "key": "test.pm_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-22 15:03",
+      "owner": "PM",
+      "note": null,
+      "gate": {
+        "artifacts": [
+          "TEST-SCENARIO.md"
+        ],
+        "checklist": [
+          "시나리오 결과/코드품질/보안/회귀",
+          "컨벤션 자동 진단 PASS (GC-CONVENTION-*.md Critical/High 0건 — 컨벤션 적용 대상 ≥1건 시 발동)"
+        ]
+      }
+    },
+    {
+      "row_id": 14,
+      "stage": "TEST",
+      "item": "사용자 확인",
+      "key": "test.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-22 15:28",
+      "owner": "user",
+      "note": "캡틴 확인: TEST 전 단계 통과 보고 후 CLOSE 진입 승인"
+    },
+    {
+      "row_id": 15,
+      "stage": "CLOSE",
+      "item": "DONE.md 생성",
+      "key": "close.done_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-22 15:30",
+      "owner": "PM",
+      "note": null
+    }
+  ],
+  "next_action": "태스크 완료"
+}

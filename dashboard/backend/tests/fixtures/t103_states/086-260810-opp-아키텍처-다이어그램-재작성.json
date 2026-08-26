@@ -1,0 +1,122 @@
+{
+  "task_id": "086-260810-opp-아키텍처-다이어그램-재작성",
+  "skill": "opp",
+  "mode": "agentic",
+  "schema_version": "1.1",
+  "created_at": "2026-08-10 15:18",
+  "updated_at": "2026-08-10 22:48",
+  "current_status": "done",
+  "rows": [
+    {
+      "row_id": 1,
+      "stage": "TASK",
+      "item": "작업",
+      "key": "task.task_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-10 15:19",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 2,
+      "stage": "TASK",
+      "item": "사용자 확인",
+      "key": "task.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-10 15:19",
+      "owner": "auto",
+      "note": "agentic auto-pass: TASK 4요소 잠금 확인·AC 판정가능성 확인"
+    },
+    {
+      "row_id": 3,
+      "stage": "PLAN",
+      "item": "작업",
+      "key": "plan.plan_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-10 15:47",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 4,
+      "stage": "PLAN",
+      "item": "PM Gate",
+      "key": "plan.pm_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-10 15:47",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 5,
+      "stage": "PLAN",
+      "item": "사용자 확인",
+      "key": "plan.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-10 15:46",
+      "owner": "auto",
+      "note": "agentic auto-pass: PLAN 정정 3건 PM 직접 실측 확인(43키 잔존 0·legend 정밀카운트·수치 grep 분리). EXECUTE S1~S9 진행, S10 검증도구는 캡틴 에스컬레이션 대기로 보류"
+    },
+    {
+      "row_id": 6,
+      "stage": "EXECUTE",
+      "item": "작업",
+      "key": "execute.implement",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-10 16:32",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 7,
+      "stage": "EXECUTE",
+      "item": "PM Gate",
+      "key": "execute.pm_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-10 16:32",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 8,
+      "stage": "EXECUTE",
+      "item": "환류 레일 한글 역방향 결함 수정 + 재검증",
+      "key": "execute.item_1",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-10 18:16",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 9,
+      "stage": "EXECUTE",
+      "item": "사용자 확인",
+      "key": "execute.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-10 22:46",
+      "owner": "user",
+      "note": "캡틴 확인: '1번' — CLOSE 진입(DONE.md 생성 + brain ingest) 지시"
+    },
+    {
+      "row_id": 10,
+      "stage": "CLOSE",
+      "item": "DONE.md 생성",
+      "key": "close.done_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-10 22:48",
+      "owner": "PM",
+      "note": null
+    }
+  ],
+  "next_action": "태스크 완료"
+}

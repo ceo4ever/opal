@@ -1,0 +1,234 @@
+{
+  "task_id": "102-260824-opd-태스크분석-경계재정의",
+  "skill": "opd",
+  "mode": "semi-agentic",
+  "schema_version": "1.1",
+  "created_at": "2026-08-24 17:33",
+  "updated_at": "2026-08-24 17:33",
+  "current_status": "in_progress",
+  "rows": [
+    {
+      "row_id": 1,
+      "stage": "TASK",
+      "item": "작업",
+      "key": "task.task_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-24 17:33",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 2,
+      "stage": "TASK",
+      "item": "사용자 확인",
+      "key": "task.user_confirm",
+      "status": "pending",
+      "status_label": "⬜",
+      "timestamp": null,
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 3,
+      "stage": "ANALYSIS",
+      "item": "작업",
+      "key": "analysis.analysis_md",
+      "status": "pending",
+      "status_label": "⬜",
+      "timestamp": null,
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 4,
+      "stage": "ANALYSIS",
+      "item": "PM Gate",
+      "key": "analysis.pm_gate",
+      "status": "pending",
+      "status_label": "⬜",
+      "timestamp": null,
+      "owner": "PM",
+      "note": null,
+      "gate": {
+        "artifacts": [
+          "ANALYSIS.md"
+        ],
+        "checklist": [
+          "ANALYSIS.md §0 참조 문서 — code-scan·brain 선조회 결과 1건 이상",
+          "ANALYSIS.md §확정 입력 판정 — TASK.md [결정]·[사실] 전건 판정(누락 0)",
+          "ANALYSIS.md §다음 단계 입력 — 항목|확정값|근거 3열 표 존재",
+          "소스코드 원문 블록 0건 (코드펜스는 실행 명령·시그니처 한정)"
+        ]
+      }
+    },
+    {
+      "row_id": 5,
+      "stage": "ANALYSIS",
+      "item": "사용자 확인",
+      "key": "analysis.user_confirm",
+      "status": "pending",
+      "status_label": "⬜",
+      "timestamp": null,
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 6,
+      "stage": "PLAN",
+      "item": "작업",
+      "key": "plan.plan_md",
+      "status": "pending",
+      "status_label": "⬜",
+      "timestamp": null,
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 7,
+      "stage": "PLAN",
+      "item": "PM Gate",
+      "key": "plan.pm_gate",
+      "status": "pending",
+      "status_label": "⬜",
+      "timestamp": null,
+      "owner": "PM",
+      "note": null,
+      "gate": {
+        "artifacts": [
+          "TASK.md",
+          "PLAN.md"
+        ],
+        "checklist": [
+          "TASK.md 요구사항",
+          "PLAN.md §4.2",
+          "PLAN.md §5",
+          "PLAN.md §리스크 가설 표"
+        ]
+      }
+    },
+    {
+      "row_id": 8,
+      "stage": "PLAN",
+      "item": "사용자 확인",
+      "key": "plan.user_confirm",
+      "status": "pending",
+      "status_label": "⬜",
+      "timestamp": null,
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 9,
+      "stage": "TEST-SCENARIO",
+      "item": "작업",
+      "key": "test_scenario.test_scenario_md",
+      "status": "pending",
+      "status_label": "⬜",
+      "timestamp": null,
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 10,
+      "stage": "TEST-SCENARIO",
+      "item": "목표-커버 게이트",
+      "key": "test_scenario.scenario_gate",
+      "status": "pending",
+      "status_label": "⬜",
+      "timestamp": null,
+      "owner": "PM",
+      "note": null,
+      "gate": {
+        "artifacts": [
+          "TEST-SCENARIO.md"
+        ],
+        "checklist": [
+          "mock 부재(grep)",
+          "사전 조건 데이터 채워짐",
+          "Given/When/Then 3필드",
+          "가설↔시나리오 매핑 완전",
+          "L1/L2/L3 계층 명시",
+          "L3 [SUPERVISOR] 마커 + PM 요청 양식",
+          "실행 방식(M1/M2/M3) 명시"
+        ]
+      }
+    },
+    {
+      "row_id": 11,
+      "stage": "TEST-SCENARIO",
+      "item": "사용자 확인",
+      "key": "test_scenario.user_confirm",
+      "status": "pending",
+      "status_label": "⬜",
+      "timestamp": null,
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 12,
+      "stage": "EXECUTE",
+      "item": "작업",
+      "key": "execute.implement",
+      "status": "pending",
+      "status_label": "⬜",
+      "timestamp": null,
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 13,
+      "stage": "TEST",
+      "item": "작업",
+      "key": "test.run_tests",
+      "status": "pending",
+      "status_label": "⬜",
+      "timestamp": null,
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 14,
+      "stage": "TEST",
+      "item": "PM Gate",
+      "key": "test.pm_gate",
+      "status": "pending",
+      "status_label": "⬜",
+      "timestamp": null,
+      "owner": "PM",
+      "note": null,
+      "gate": {
+        "artifacts": [
+          "TEST-SCENARIO.md"
+        ],
+        "checklist": [
+          "시나리오 결과/코드품질/보안/회귀",
+          "컨벤션 자동 진단 PASS (GC-CONVENTION-*.md Critical/High 0건 — 컨벤션 적용 대상 ≥1건 시 발동)"
+        ]
+      }
+    },
+    {
+      "row_id": 15,
+      "stage": "TEST",
+      "item": "사용자 확인",
+      "key": "test.user_confirm",
+      "status": "pending",
+      "status_label": "⬜",
+      "timestamp": null,
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 16,
+      "stage": "CLOSE",
+      "item": "DONE.md 생성",
+      "key": "close.done_md",
+      "status": "pending",
+      "status_label": "⬜",
+      "timestamp": null,
+      "owner": "PM",
+      "note": null
+    }
+  ],
+  "next_action": "TASK 사용자 확인 진입"
+}

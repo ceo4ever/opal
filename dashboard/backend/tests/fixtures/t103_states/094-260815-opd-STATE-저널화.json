@@ -1,0 +1,243 @@
+{
+  "task_id": "094-260815-opd-STATE-저널화",
+  "skill": "opd",
+  "mode": "agentic",
+  "schema_version": "1.1",
+  "created_at": "2026-08-15 20:55",
+  "updated_at": "2026-08-16 23:59",
+  "current_status": "done",
+  "rows": [
+    {
+      "row_id": 1,
+      "stage": "TASK",
+      "item": "작업",
+      "key": "task.task_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-15 20:56",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 2,
+      "stage": "TASK",
+      "item": "사용자 확인",
+      "key": "task.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-15 21:42",
+      "owner": "user",
+      "note": "캡틴 확인: 승인, 이슈 없으면 agentic 모드 유지"
+    },
+    {
+      "row_id": 3,
+      "stage": "ANALYSIS",
+      "item": "작업",
+      "key": "analysis.analysis_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-15 22:07",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 4,
+      "stage": "ANALYSIS",
+      "item": "PM Gate",
+      "key": "analysis.pm_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-15 22:07",
+      "owner": "PM",
+      "note": null,
+      "gate": {
+        "artifacts": [
+          "ANALYSIS.md"
+        ],
+        "checklist": [
+          "-"
+        ]
+      }
+    },
+    {
+      "row_id": 5,
+      "stage": "ANALYSIS",
+      "item": "사용자 확인",
+      "key": "analysis.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-16 00:00",
+      "owner": "user",
+      "note": "캡틴 확인: 5번(에러 카탈로그·SSOT 자기모순 정정) 포함해서 PLAN 진행"
+    },
+    {
+      "row_id": 6,
+      "stage": "PLAN",
+      "item": "작업",
+      "key": "plan.plan_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-16 00:19",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 7,
+      "stage": "PLAN",
+      "item": "PM Gate",
+      "key": "plan.pm_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-16 00:19",
+      "owner": "PM",
+      "note": null,
+      "gate": {
+        "artifacts": [
+          "TASK.md",
+          "PLAN.md"
+        ],
+        "checklist": [
+          "TASK.md 요구사항",
+          "PLAN.md §4.2",
+          "PLAN.md §5",
+          "PLAN.md §리스크 가설 표"
+        ]
+      }
+    },
+    {
+      "row_id": 8,
+      "stage": "PLAN",
+      "item": "사용자 확인",
+      "key": "plan.user_confirm",
+      "status": "na",
+      "status_label": "-",
+      "timestamp": null,
+      "owner": "auto",
+      "note": "agentic auto-na at init"
+    },
+    {
+      "row_id": 9,
+      "stage": "TEST-SCENARIO",
+      "item": "작업",
+      "key": "test_scenario.test_scenario_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-16 00:29",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 10,
+      "stage": "TEST-SCENARIO",
+      "item": "목표-커버 게이트",
+      "key": "test_scenario.scenario_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-16 00:45",
+      "owner": "PM",
+      "note": null,
+      "gate": {
+        "artifacts": [
+          "TEST-SCENARIO.md"
+        ],
+        "checklist": [
+          "mock 부재(grep)",
+          "사전 조건 데이터 채워짐",
+          "Given/When/Then 3필드",
+          "가설↔시나리오 매핑 완전",
+          "L1/L2/L3 계층 명시",
+          "L3 [SUPERVISOR] 마커 + PM 요청 양식",
+          "실행 방식(M1/M2/M3) 명시"
+        ]
+      }
+    },
+    {
+      "row_id": 11,
+      "stage": "TEST-SCENARIO",
+      "item": "사용자 확인",
+      "key": "test_scenario.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-16 00:47",
+      "owner": "auto",
+      "note": "agentic auto-pass: 목표-커버 게이트 tool-gated 2증거 충족(coverage-check exit 0 all_covered / evaluator iteration 2 verdict pass 2.0). 소유자가 'agentic이니 테스트까지 계속 진행' 지시"
+    },
+    {
+      "row_id": 12,
+      "stage": "EXECUTE",
+      "item": "작업",
+      "key": "execute.implement",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-16 14:50",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 13,
+      "stage": "TEST",
+      "item": "작업",
+      "key": "test.run_tests",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-16 15:39",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 14,
+      "stage": "TEST",
+      "item": "PM Gate",
+      "key": "test.pm_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-16 15:39",
+      "owner": "PM",
+      "note": null,
+      "gate": {
+        "artifacts": [
+          "TEST-SCENARIO.md"
+        ],
+        "checklist": [
+          "시나리오 결과/코드품질/보안/회귀",
+          "컨벤션 자동 진단 PASS (GC-CONVENTION-*.md Critical/High 0건 — 컨벤션 적용 대상 ≥1건 시 발동)"
+        ]
+      }
+    },
+    {
+      "row_id": 15,
+      "stage": "TEST",
+      "item": "사용자 확인",
+      "key": "test.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-16 15:51",
+      "owner": "user",
+      "note": "캡틴 확인: TEST 결과 확인 후 CLOSE 진입 승인 — 컨벤션 High/Medium/Low 처리 후 진행 지시"
+    },
+    {
+      "row_id": 16,
+      "stage": "CLOSE",
+      "item": "DONE.md 생성",
+      "key": "close.done_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-16 15:53",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 17,
+      "stage": "CLOSE",
+      "item": "추가작업: test_s9 스코프 교정(.opal/brain 제외)",
+      "key": "close.item_1",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-16 23:59",
+      "owner": "PM",
+      "note": null
+    }
+  ],
+  "next_action": "태스크 완료",
+  "worktree": "/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_094"
+}

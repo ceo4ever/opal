@@ -3,7 +3,7 @@
   "module": "routers.tasks",
   "layer": "router",
   "domain": "console",
-  "description": "GET /api/tasks, /api/tasks/detail?project=&task_id=, /api/tasks/artifact?project=&task_id=&name= — 칸반 5컬럼 정규화(pending/in_progress/blocked/done/archive) + 산출물 뷰어. tasks/backup/ 하위 폴더 → archive 컬럼. state.json 없는 옛 형식 태스크는 산출물(DONE.md/PLAN.md 등)로 컬럼 추론. 완료·아카이브 최근순(task_id desc). 절대경로 식별자는 query param으로 전달(path segment 금지). 읽기 전용. _derive_current_stage: rows에서 도달 단계 파생(①in_progress→②마지막도달단계(done/na/skipped)→③전부pending이면첫행; pending 미시작 단계 제외). _group_pipeline_stages: rows를 stage 단위 PipelineStageGroup으로 그룹핑(total/done_count는 na/skipped 제외 active 기준). _aggregate_status: 단계 내 행 status 집계(na/skipped 제외→blocked우선→all_done→in_progress/혼재→pending; active없으면done).",
+  "description": "GET /api/tasks, /api/tasks/detail?project=&task_id=, /api/tasks/artifact?project=&task_id=&name= — 칸반 5컬럼 정규화(pending/in_progress/blocked/done/archive) + 산출물 뷰어. tasks/backup/ 하위 폴더 → archive 컬럼. state.json 없는 옛 형식 태스크는 산출물(DONE.md/PLAN.md 등)로 컬럼 추론. 완료·아카이브 최근순(task_id desc). 절대경로 식별자는 query param으로 전달(path segment 금지). 읽기 전용. _derive_current_stage: rows에서 도달 단계 파생(①in_progress→②마지막도달단계(done/na/skipped)→③전부pending이면첫행; pending 미시작 단계 제외). _group_pipeline_stages: rows를 stage 단위 PipelineStageGroup으로 그룹핑(total/done_count는 na/skipped 제외 active 기준) + stats.py 파생(행 소요·단계 2계열 + 3계열 pm/worker/captain) 결합. _aggregate_status: 단계 내 행 status 집계(na/skipped 제외→blocked우선→all_done→in_progress/혼재→pending; active없으면done). [T103] 상세 응답에 진행 통계 결합 — 행 매핑을 원천 키(row_id·timestamp)로 교정하고 사표 필드(row·updated_at)에 같은 값을 채운다(집계기준 15). 캐시(task_detail:{project}:{task_id})에는 **정적 파생만** 담고 실시간 파생(is_running·current_elapsed_*)은 캐시 밖에서 task_live_stats(now 주입)로 합성한다 — 캐시 저장 시 state.json을 source_path로 넘겨 mtime 무효화를 켠다. [T103 R-21] 야간 제외 구간(집계 기준 17)은 **라우터가** config.load_quiet_hours(project_path)로 읽어 task_static_stats·row_durations·task_live_stats에 인자로 주입한다 — stats.py는 설정을 읽지 않는다. 캐시 키는 `task_detail:{project}:{task_id}:{구간서명}`으로 설정 변경 시 자연히 갈린다(mtime 축은 state.json만 본다). 행 시각 표시 문자열(`time_label`)은 자체 슬라이싱이 아니라 stats.format_timestamp를 호출해 얻는다 — 표시 규칙은 stats.py 단일 소유다(P-7). _get_artifact_files는 6종 화이트리스트를 폐기하고 .md 전수를 유형 순(pipeline→verification→log→other)으로 열거하며, classify_artifact가 파일명 기반 4유형을 판정한다(P-3). artifact_count·artifacts[] **값** 증가는 P-4가 선언한 회귀 예외다. [호칭 하드코딩 제거] 행 라벨의 사용자 호칭은 config.load_owner_name()이 원천이다 — _OWNER_ROLE_LABELS는 역할명(PM·자동)만 갖고, _owner_label()이 owner == \"user\"일 때만 호칭을 붙인다. 라우터가 요청당 1회 읽어 _build_static_detail → _group_pipeline_stages → _to_pipeline_row로 주입하며 상세 응답 최상위 owner_term에도 같은 값을 싣는다(FE가 문구를 조립한다). owner_term은 캐시 키에 넣지 않는다 — 행 라벨은 캐시 TTL(30초)만큼 지연될 수 있고 TTL이 스스로 회복한다.",
   "exports": [
     "GET /api/tasks",
     "GET /api/tasks/detail?project=&task_id=",
@@ -11,9 +11,20 @@
     "COLUMN_MAP",
     "_derive_current_stage",
     "_aggregate_status",
-    "_group_pipeline_stages"
+    "_group_pipeline_stages",
+    "classify_artifact",
+    "_get_artifact_files"
   ],
-  "depends": ["models", "scanner", "config", "cache", "adapters.state_adapter", "parsers.markdown_reader"]
+  "depends": ["models", "scanner", "config", "cache", "stats", "adapters.state_adapter", "parsers.markdown_reader"],
+  "changelog": [
+    "2026-08-26 호칭 하드코딩 제거: _OWNER_LABELS의 특정 호칭 리터럴 제거 → _OWNER_ROLE_LABELS(PM·자동) + _owner_label(owner, owner_term). owner_term을 라우터에서 1회 로드해 행에 주입 + 상세 응답에 additive 표면화",
+    "2026-08-26 T103 R-21: 야간 제외 구간을 config.load_quiet_hours로 읽어 stats.py 4함수에 주입 + 캐시 키에 quiet_hours_token 서명 부착. stats.py는 설정을 읽지 않는다(TS-008 유지)",
+    "2026-08-25 T103 R-19: 행 시각 표시 문자열 소유권을 stats.py로 이관 — `time_label`을 `timestamp[11:16]` 슬라이싱에서 `stats.format_timestamp`(`YY-MM-DD HH:mm:ss`) 호출로 교체. 날짜가 라벨에 실려 날짜 경계를 넘는 행이 역행처럼 읽히던 결함이 해소된다(P-7 단일 소유)",
+    "2026-08-25 T103 R-20: _group_pipeline_stages가 단계 3계열 표시 문자열(pm_label·worker_label·captain_label)을 PipelineStageGroup에 결합 — 값은 stats.py 소유, 라우터는 전달만 한다",
+    "2026-08-25 T103 R-16: _group_pipeline_stages가 stats.py 단계 3계열(pm/worker/captain + worker_measured)을 PipelineStageGroup에 결합 — 태스크 단위 3계열은 TaskStats(**merged) 경로로 자동 승계. TS-101~TS-105",
+    "2026-08-25 T103 Step5: 상세 응답에 stats.py 정적·실시간 파생 결합 + _group_pipeline_stages 행 매핑 교정(row_id·timestamp) + 캐시 source_path 전달·정적 파생만 캐시 — F-002, TS-010~013·015·018",
+    "2026-08-25 T103 Step6: _get_artifact_files 화이트리스트 폐기(.md 전수) + classify_artifact 4유형 분류 + artifact_items 응답 추가 — F-002, TS-014"
+  ]
 }
 """
 from __future__ import annotations
@@ -26,15 +37,24 @@ from typing import Literal
 from fastapi import APIRouter, HTTPException, Query
 
 from dashboard.backend.cache import cache
-from dashboard.backend.config import load_config
+from dashboard.backend.config import load_config, load_owner_name, load_quiet_hours, quiet_hours_token
 from dashboard.backend.models import (
+    ArtifactItem,
+    PipelineGate,
     PipelineRow,
     PipelineStageGroup,
     TaskCardResponse,
     TaskDetailResponse,
+    TaskStats,
 )
 from dashboard.backend.parsers.markdown_reader import read_markdown
 from dashboard.backend.scanner import scan_projects
+from dashboard.backend.stats import (
+    format_timestamp,
+    row_durations,
+    task_live_stats,
+    task_static_stats,
+)
 
 router = APIRouter()
 
@@ -86,14 +106,60 @@ def _find_project_path(project_path: str) -> str | None:
     return None
 
 
+# 산출물 4유형 분류 (T103 P-3) — 화이트리스트 폐기, .md 전수 노출 + 유형 부여
+_ARTIFACT_PIPELINE = [
+    "TASK.md", "ANALYSIS.md", "PLAN.md", "TEST-SCENARIO.md",
+    "TEST.md", "DONE.md", "WIREFRAME.md",
+]
+_ARTIFACT_VERIFICATION_PREFIXES = [
+    "SCENARIO-GATE-", "GC-", "L3-JUDGMENT", "RED-EVIDENCE", "CONTRACT-CROSSCHECK",
+]
+_ARTIFACT_LOG = ["STATE.md", "AGENTIC-LOG.md"]
+_ARTIFACT_TYPE_ORDER = {"pipeline": 0, "verification": 1, "log": 2, "other": 3}
+_ARTIFACT_TYPE_LABELS = {
+    "pipeline": "파이프라인", "verification": "검증", "log": "로그", "other": "기타",
+}
+
+
+def classify_artifact(name: str) -> tuple[str, str]:
+    """산출물 파일명 → (유형, 표시 라벨). 미해당은 전부 `other` 버킷이 흡수한다."""
+    if name in _ARTIFACT_PIPELINE:
+        artifact_type = "pipeline"
+    elif any(name.startswith(p) for p in _ARTIFACT_VERIFICATION_PREFIXES):
+        artifact_type = "verification"
+    elif name in _ARTIFACT_LOG:
+        artifact_type = "log"
+    else:
+        artifact_type = "other"
+    return artifact_type, _ARTIFACT_TYPE_LABELS[artifact_type]
+
+
+def _artifact_sort_key(name: str) -> tuple[int, int, str]:
+    """정렬: 유형 순 → 유형 내 나열 순 → 파일명 오름차순."""
+    artifact_type, _ = classify_artifact(name)
+    if artifact_type == "pipeline":
+        inner = _ARTIFACT_PIPELINE.index(name)
+    elif artifact_type == "verification":
+        inner = next(
+            i for i, p in enumerate(_ARTIFACT_VERIFICATION_PREFIXES) if name.startswith(p)
+        )
+    elif artifact_type == "log":
+        inner = _ARTIFACT_LOG.index(name)
+    else:
+        inner = 0
+    return (_ARTIFACT_TYPE_ORDER[artifact_type], inner, name)
+
+
 def _get_artifact_files(task_dir: str) -> list[str]:
-    """task_dir 하위 .md 산출물 파일 목록 반환."""
-    artifacts = []
-    known = ["TASK.md", "PLAN.md", "DONE.md", "TEST-SCENARIO.md", "ANALYSIS.md", "WIREFRAME.md"]
-    for name in known:
-        if os.path.isfile(os.path.join(task_dir, name)):
-            artifacts.append(name)
-    return artifacts
+    """task_dir 하위 `.md` 산출물 **전수** 목록 (유형 순 정렬). 시그니처 불변."""
+    try:
+        names = [
+            e.name for e in os.scandir(task_dir)
+            if e.is_file() and e.name.endswith(".md")
+        ]
+    except OSError:
+        return []
+    return sorted(names, key=_artifact_sort_key)
 
 
 # state.json 없는 태스크의 컬럼 추론에 사용할 진행 산출물 파일 목록
@@ -225,46 +291,115 @@ def _aggregate_status(grp_rows: list[dict]) -> str:
     return "pending"                           # ⑥ 전부 pending
 
 
-def _group_pipeline_stages(rows: list[dict]) -> list[PipelineStageGroup]:
+# `owner` 원천값 → 화면 라벨. `PM`·`auto`는 **역할명**이라 고정이고, `user`만
+# 사용자 호칭이라 identity.md에서 읽어 붙인다 (특정 호칭 하드코딩 금지).
+_OWNER_ROLE_LABELS = {"PM": "PM", "auto": "자동"}
+
+_OWNER_USER = "user"
+
+
+def _owner_label(owner: str, owner_term: str) -> str:
+    """`owner` 원천값을 화면 라벨로. 미지의 값은 원천값 그대로 노출한다."""
+    if owner == _OWNER_USER:
+        return owner_term or load_owner_name()
+    return _OWNER_ROLE_LABELS.get(owner, owner)
+
+
+def _to_pipeline_row(row: dict, index: int, derived: dict | None, owner_term: str = "") -> PipelineRow:
+    """원천 행 dict → PipelineRow. 사표 필드(`row`·`updated_at`)에 원천 값을 채운다.
+
+    [MUST] 집계기준 15 — 원천 키는 `row_id`·`timestamp`이며, `row`·`updated_at`은
+    deprecated 별칭으로 존치하되 같은 값을 담는다 (T103).
+    """
+    row_id = row.get("row_id", index + 1)
+    timestamp = row.get("timestamp") or ""
+    owner = row.get("owner") or ""
+    gate = row.get("gate")
+    derived = derived or {}
+    return PipelineRow(
+        row=row_id,
+        stage=row.get("stage", ""),
+        status=row.get("status", ""),
+        updated_at=timestamp,
+        row_id=row_id,
+        key=row.get("key") or "",
+        item=row.get("item") or "",
+        timestamp=timestamp,
+        time_label=format_timestamp(timestamp),
+        owner=owner,
+        owner_label=_owner_label(owner, owner_term),
+        note=row.get("note"),
+        gate=PipelineGate(**gate) if isinstance(gate, dict) else None,
+        duration_minutes=derived.get("duration_minutes") or 0,
+        duration_label=derived.get("duration_label", ""),
+        series=derived.get("series", ""),
+        is_max_gap=derived.get("is_max_gap", False),
+    )
+
+
+def _group_pipeline_stages(
+    rows: list[dict],
+    derived: list[dict] | None = None,
+    stage_minutes: dict[str, dict] | None = None,
+    owner_term: str = "",
+) -> list[PipelineStageGroup]:
     """rows를 stage 단위로 그룹핑하여 PipelineStageGroup 배열 반환 (BE 단일 소스).
 
     - stage 등장 순서 보존 (원본 rows 순서 = 파이프라인 진행 순서)
     - 동일 stage의 연속/분산 행을 하나의 그룹으로 합침
     - done_count/total/status 집계 (D-2 규칙)
     - 빈 rows → [] 반환 (IndexError 없음)
+    - derived/stage_minutes(stats.py 파생, T103)는 있으면 행·그룹에 결합한다
+    - owner_term은 `owner == "user"` 행의 라벨로 쓸 사용자 호칭이다. 호출자가 주지
+      않으면 여기서 1회 읽어 행마다 파일을 다시 열지 않는다.
     """
     if not rows:
         return []
 
-    groups: list[tuple[str, list[dict]]] = []  # [(stage, [row, ...]), ...] 등장 순서
-    index: dict[str, int] = {}                  # stage -> groups 내 위치
+    owner_term = owner_term or load_owner_name()
+    derived = derived or []
+    stage_minutes = stage_minutes or {}
 
-    for r in rows:
+    groups: list[tuple[str, list[PipelineRow]]] = []  # [(stage, [row, ...]), ...] 등장 순서
+    raw: dict[str, list[dict]] = {}                    # stage -> 원천 행 (집계용)
+    index: dict[str, int] = {}                         # stage -> groups 내 위치
+
+    for i, r in enumerate(rows):
         st = r.get("stage", "")
         if st not in index:
             index[st] = len(groups)
             groups.append((st, []))
-        groups[index[st]][1].append(r)
+            raw[st] = []
+        groups[index[st]][1].append(
+            _to_pipeline_row(r, i, derived[i] if i < len(derived) else None, owner_term)
+        )
+        raw[st].append(r)
 
     result: list[PipelineStageGroup] = []
     for stage, grp_rows in groups:
         # na/skipped 제외한 active 행 기준 카운트 (표시 정합)
-        active_rows = [r for r in grp_rows if r.get("status") not in ("na", "skipped")]
+        active_rows = [r for r in raw[stage] if r.get("status") not in ("na", "skipped")]
         done_count = sum(1 for r in active_rows if r.get("status") == "done")
+        minutes = stage_minutes.get(stage, {})
         result.append(PipelineStageGroup(
             stage=stage,
             done_count=done_count,
             total=len(active_rows),
-            status=_aggregate_status(grp_rows),
-            rows=[
-                PipelineRow(
-                    row=r.get("row", i),
-                    stage=r.get("stage", ""),
-                    status=r.get("status", ""),
-                    updated_at=r.get("updated_at", ""),
-                )
-                for i, r in enumerate(grp_rows)
-            ],
+            status=_aggregate_status(raw[stage]),
+            rows=grp_rows,
+            work_minutes=minutes.get("work_minutes", 0),
+            wait_minutes=minutes.get("wait_minutes", 0),
+            total_minutes=minutes.get("total_minutes", 0),
+            total_label=minutes.get("total_label", ""),
+            is_peak=minutes.get("is_peak", False),
+            pm_minutes=minutes.get("pm_minutes", 0),
+            worker_minutes=minutes.get("worker_minutes", 0),
+            captain_minutes=minutes.get("captain_minutes", 0),
+            # 3계열 표시 문자열 (R-20) — 단계 구획 호버 지표. stats.py가 소유한다 (P-7)
+            pm_label=minutes.get("pm_label", "—"),
+            worker_label=minutes.get("worker_label", "—"),
+            captain_label=minutes.get("captain_label", "—"),
+            worker_measured=minutes.get("worker_measured", False),
         ))
     return result
 
@@ -395,43 +530,120 @@ def get_task_detail(
     if not os.path.isdir(task_dir):
         raise HTTPException(status_code=404, detail=f"Task not found: {task_id}")
 
-    cache_key = f"task_detail:{project}:{task_id}"
-    cached = cache.get(cache_key)
-    if cached is not None:
-        return cached
-
+    # 캐시 조회보다 state 읽기가 앞선다 — 실시간 파생은 캐시 밖에서 조립하므로
+    # 캐시 히트 시에도 state가 필요하다 (T103 PLAN §3.2.2)
     state = _read_state(task_dir)
-    if state is None:
-        result = TaskDetailResponse(
-            task_id=task_id,
-            title=task_id,
-            current_status="pending",
-            artifacts=_get_artifact_files(task_dir),
+
+    # 야간 제외 구간(집계 기준 17)은 **라우터가 읽어 stats.py에 주입**한다 —
+    # stats.py는 파일 I/O를 하지 않는다(TS-008). 프로젝트 로컬 설정이 전역을 덮는다.
+    quiet_hours = load_quiet_hours(project_path)
+
+    # 사용자 호칭도 **라우터가 읽는다** — 요청당 1회 읽어 행마다 파일을 다시 열지
+    # 않는다. identity.md는 전역 1개라 프로젝트별로 갈리지 않는다.
+    owner_term = load_owner_name()
+
+    # 캐시 키에 구간 서명을 실어 설정 변경이 곧바로 갈리게 한다 — mtime 축은
+    # state.json만 보므로 설정 변경을 감지하지 못한다.
+    cache_key = f"task_detail:{project}:{task_id}:{quiet_hours_token(quiet_hours)}"
+    static_payload = cache.get(cache_key)
+    if static_payload is None:
+        static_payload = _build_static_detail(
+            task_id, task_dir, state, quiet_hours, owner_term
         )
-        cache.set(cache_key, result)
-        return result
+        cache.set(
+            cache_key,
+            static_payload,
+            source_path=os.path.join(task_dir, "state.json") if state is not None else None,
+        )
+
+    return _compose_task_detail(static_payload, state, quiet_hours, owner_term)
+
+
+def _build_static_detail(
+    task_id: str,
+    task_dir: str,
+    state: dict | None,
+    quiet_hours: tuple[int, int] | None = None,
+    owner_term: str = "",
+) -> dict:
+    """상세 응답의 **정적 파생만** 담은 캐시 payload.
+
+    [MUST] 실시간 파생(`is_running`·`current_elapsed_*`)은 여기 담지 않는다 —
+    캐시에 고착되면 진행 중 태스크의 경과가 최대 TTL만큼 정지한다 (H-6).
+    """
+    artifacts = _get_artifact_files(task_dir)
+    artifact_items = [
+        {"name": name, "type": t, "type_label": label}
+        for name, (t, label) in ((n, classify_artifact(n)) for n in artifacts)
+    ]
+
+    if state is None:
+        return {
+            "task_id": task_id,
+            "title": task_id,
+            "skill": "",
+            "mode": "",
+            "current_status": "pending",
+            "current_stage": "",
+            "progress": 0,
+            "pipeline": [],
+            "artifacts": artifacts,
+            "artifact_items": artifact_items,
+            "updated_at": "",
+            "static_stats": None,
+        }
 
     rows = state.get("rows", [])
-    pipeline = _group_pipeline_stages(rows)
+    static_stats = task_static_stats(state, quiet_hours)
+    stage_minutes = {g["stage"]: g for g in static_stats["stages"]}
+    pipeline = _group_pipeline_stages(
+        rows, row_durations(state, quiet_hours), stage_minutes, owner_term
+    )
 
     done_count = sum(1 for r in rows if r.get("status") == "done")
     total = len(rows) if rows else 1
     progress = int((done_count / total) * 100) if total > 0 else 0
 
-    result = TaskDetailResponse(
-        task_id=task_id,
-        title=state.get("title", task_id),
-        skill=state.get("skill", ""),
-        mode=state.get("mode", ""),
-        current_status=state.get("current_status", ""),
-        current_stage=state.get("current_stage") or _derive_current_stage(rows),
-        progress=progress,
-        pipeline=pipeline,
-        artifacts=_get_artifact_files(task_dir),
-        updated_at=state.get("updated_at", ""),
-    )
-    cache.set(cache_key, result)
-    return result
+    return {
+        "task_id": task_id,
+        "title": state.get("title", task_id),
+        "skill": state.get("skill", ""),
+        "mode": state.get("mode", ""),
+        "current_status": state.get("current_status", ""),
+        "current_stage": state.get("current_stage") or _derive_current_stage(rows),
+        "progress": progress,
+        "pipeline": pipeline,
+        "artifacts": artifacts,
+        "artifact_items": artifact_items,
+        "updated_at": state.get("updated_at", ""),
+        "static_stats": static_stats,
+    }
+
+
+def _compose_task_detail(
+    static_payload: dict,
+    state: dict | None,
+    quiet_hours: tuple[int, int] | None = None,
+    owner_term: str = "",
+) -> TaskDetailResponse:
+    """정적 payload(캐시 대상) + 실시간 파생(캐시 밖)을 합성한 응답.
+
+    `owner_term`은 화면 문구·범례가 쓸 사용자 호칭이며 **캐시 밖에서** 매 응답에
+    붙는다. 행 라벨(`owner_label`)은 정적 payload 안이라 호칭 변경이 캐시 TTL(30초)
+    만큼 늦게 반영될 수 있다 — 캐시 키를 늘리지 않는 대신 TTL이 스스로 회복한다.
+    """
+    payload = {k: v for k, v in static_payload.items() if k != "static_stats"}
+    payload["artifact_items"] = [ArtifactItem(**item) for item in payload["artifact_items"]]
+    static_stats = static_payload["static_stats"]
+
+    if static_stats is None or state is None:
+        stats = TaskStats()   # available=False — 결측 태스크도 200으로 응답한다
+    else:
+        merged = {k: v for k, v in static_stats.items() if k not in ("stages", "rows")}
+        merged.update(task_live_stats(state, now=datetime.datetime.now(), quiet_hours=quiet_hours))
+        stats = TaskStats(**merged)
+
+    return TaskDetailResponse(**payload, stats=stats, owner_term=owner_term or load_owner_name())
 
 
 @router.get("/api/tasks/artifact")
