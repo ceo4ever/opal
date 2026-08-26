@@ -4,8 +4,8 @@
   "mode": "semi-agentic",
   "schema_version": "1.1",
   "created_at": "2026-08-25 13:14",
-  "updated_at": "2026-08-25 13:14",
-  "current_status": "in_progress",
+  "updated_at": "2026-08-26 16:07:26",
+  "current_status": "done",
   "rows": [
     {
       "row_id": 1,
@@ -23,33 +23,34 @@
       "stage": "TASK",
       "item": "사용자 확인",
       "key": "task.user_confirm",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
-      "owner": "PM",
-      "note": null
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-25 15:09",
+      "owner": "user",
+      "note": "캡틴 승인: TASK.md 재작성본(집계 기준 14항목·요구사항 R-1~R-14) 확인 + ANALYSIS 진입 승인"
     },
     {
       "row_id": 3,
       "stage": "ANALYSIS",
       "item": "작업",
       "key": "analysis.analysis_md",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-25 15:28",
       "owner": "PM",
-      "note": null
+      "note": "R-17 소급 기록 — 하네스 duration_ms 실측을 분 단위로 환산. 3계열 분해(집계 기준 16) 검증용",
+      "worker_duration_minutes": 16
     },
     {
       "row_id": 4,
       "stage": "ANALYSIS",
       "item": "PM Gate",
       "key": "analysis.pm_gate",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-25 15:28",
       "owner": "PM",
-      "note": null,
+      "note": "PM Gate Pass — 필수 4섹션 완비, 코드 변경 0건, 소스 원문 블록 0건, 확정 입력 27건 전건 판정. 신규 발견 3건(음수 소요·죽은 필드·auto 41건) 실측 확증. 워커 부수 관측 1건(화이트리스트 91) 불일치 적발 → 실측 92",
       "gate": {
         "artifacts": [
           "ANALYSIS.md"
@@ -68,33 +69,34 @@
       "stage": "ANALYSIS",
       "item": "사용자 확인",
       "key": "analysis.user_confirm",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
-      "owner": "PM",
-      "note": null
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-25 15:35",
+      "owner": "user",
+      "note": "캡틴 승인: ANALYSIS.md 확인 + PLAN 진입 승인. TASK.md 정정 3건·신규 발견 3건 편입 위임"
     },
     {
       "row_id": 6,
       "stage": "PLAN",
       "item": "작업",
       "key": "plan.plan_md",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-25 16:01",
       "owner": "PM",
-      "note": null
+      "note": "R-17 소급 기록 — 하네스 duration_ms 실측을 분 단위로 환산. 3계열 분해(집계 기준 16) 검증용",
+      "worker_duration_minutes": 21
     },
     {
       "row_id": 7,
       "stage": "PLAN",
       "item": "PM Gate",
       "key": "plan.pm_gate",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-25 16:01",
       "owner": "PM",
-      "note": null,
+      "note": "PM Gate Pass — 1379줄, §4.2·§5·리스크 가설 표(H-1~H-12) 완비, R-1~R-14 전건 매핑, 14 Step 전건 agent 배정, 코드 변경 0건, 코드펜스 7블록 전부 명령·시그니처. P-8(cache.py monotonic↔epoch 혼용) PM 실측 확증: monotonic 609212 vs mtime epoch 1781516662 → source_path 전달 시 상시 무효화. 범위 확대 3건(cache.py·FE 테스트 2파일·ARCHITECTURE.md)은 캡틴 확인 대상",
       "gate": {
         "artifacts": [
           "TASK.md",
@@ -113,33 +115,34 @@
       "stage": "PLAN",
       "item": "사용자 확인",
       "key": "plan.user_confirm",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
-      "owner": "PM",
-      "note": null
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-25 16:03",
+      "owner": "user",
+      "note": "캡틴 승인: PLAN.md 확인 + 범위 추가 3건(cache.py 시계 교정·FE 컴포넌트 테스트 2파일·ARCHITECTURE.md) 수용 + TEST-SCENARIO 진입 승인"
     },
     {
       "row_id": 9,
       "stage": "TEST-SCENARIO",
       "item": "작업",
       "key": "test_scenario.test_scenario_md",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-25 16:22",
       "owner": "PM",
-      "note": null
+      "note": "R-17 소급 기록 — 하네스 duration_ms 실측을 분 단위로 환산. 3계열 분해(집계 기준 16) 검증용",
+      "worker_duration_minutes": 16
     },
     {
       "row_id": 10,
       "stage": "TEST-SCENARIO",
       "item": "목표-커버 게이트",
       "key": "test_scenario.scenario_gate",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-25 16:29",
       "owner": "PM",
-      "note": null,
+      "note": "R-17 소급 기록 — 하네스 duration_ms 실측을 분 단위로 환산. 3계열 분해(집계 기준 16) 검증용",
       "gate": {
         "artifacts": [
           "TEST-SCENARIO.md"
@@ -153,51 +156,138 @@
           "L3 [SUPERVISOR] 마커 + PM 요청 양식",
           "실행 방식(M1/M2/M3) 명시"
         ]
-      }
+      },
+      "worker_duration_minutes": 4
     },
     {
       "row_id": 11,
       "stage": "TEST-SCENARIO",
       "item": "사용자 확인",
       "key": "test_scenario.user_confirm",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
-      "owner": "PM",
-      "note": null
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-25 16:35",
+      "owner": "user",
+      "note": "캡틴 승인: TEST-SCENARIO.md(49건) 확인 + EXECUTE 진입 승인"
     },
     {
       "row_id": 12,
       "stage": "EXECUTE",
       "item": "작업",
       "key": "execute.implement",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-25 18:02",
       "owner": "PM",
-      "note": null
+      "note": "R-17 소급 기록 — 하네스 duration_ms 실측을 분 단위로 환산. 3계열 분해(집계 기준 16) 검증용",
+      "step": "14/14",
+      "worker_duration_minutes": 80
     },
     {
       "row_id": 13,
       "stage": "TEST",
       "item": "작업",
       "key": "test.run_tests",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-25 18:13",
       "owner": "PM",
-      "note": null
+      "note": "R-17 소급 기록 — 하네스 duration_ms 실측을 분 단위로 환산. 3계열 분해(집계 기준 16) 검증용",
+      "worker_duration_minutes": 9
     },
     {
       "row_id": 14,
+      "stage": "EXECUTE",
+      "item": "3계열 분해 확장 (캡틴 지시)",
+      "key": "execute.three_series",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-25 21:30",
+      "owner": "PM",
+      "note": "3계열 확장 완료 — R-15(state-tool worker_duration_minutes 필드·mark 인자, 374 passed, 인자 미지정 시 바이트 동일) · R-16(stats.py 3계열, 상한 clamp로 항등 구조 보장, BE 297→307) · R-17(103 자신 6행 소급 기록) · R-18(A-1 4타일·A-2/B-2 3색 스택, FE 104→110)",
+      "worker_duration_minutes": 37
+    },
+    {
+      "row_id": 15,
+      "stage": "TEST",
+      "item": "3계열 재검증",
+      "key": "test.three_series_verify",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-25 21:34",
+      "owner": "PM",
+      "note": "3계열 재검증 PASS — 101 항등 425=PM105+워커0+캡틴320(work105/wait320 기존값과 동일, measured=false) · 103 분해 299=PM23+워커146+캡틴130(measured=true) · clamp 0건 · BE 307 passed · FE 110 passed · hex 0건. [PM 기록] add-row 앵커를 두 번 다 test.run_tests로 지정해 행 14/15 순서가 역전 삽입됨(EXECUTE 확장이 TEST 재검증 뒤). 표기 순서 역전이며 실제 수행 순서는 EXECUTE→TEST가 맞다"
+    },
+    {
+      "row_id": 16,
+      "stage": "EXECUTE",
+      "item": "시각 표기 YY-MM-DD HH:mm:ss (캡틴 지시)",
+      "key": "execute.timestamp_format",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-25 23:21:54",
+      "owner": "PM",
+      "note": "시각 표기 YY-MM-DD HH:mm:ss 완료 — date.js datetime-sec 신규 추가(기존 datetime 무변경, 구버전 배포본은 분 해상도 폴백) · 스키마 pattern에 (:\\d{2})? 확장(기존 276행 전건 통과) · stats.format_timestamp 신설로 라벨 소유를 BE 단일 지점으로 이동 · FE는 A-3 거터/A-4 열 폭 + 기간 라벨 혼용 교정 3곳. 날짜 경계 오독 7태스크 8곳 해소(최대: 100의 82분처럼 읽히던 구간이 실제 25시간 22분)",
+      "worker_duration_minutes": 14
+    },
+    {
+      "row_id": 17,
+      "stage": "EXECUTE",
+      "item": "차트 호버 툴팁 (캡틴 지시)",
+      "key": "execute.chart_tooltip",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-26 10:38:23",
+      "owner": "PM",
+      "note": "차트 호버 툴팁 완료 — BE 단계·워크플로우 층 3계열 라벨 보강(311 passed) + A-2·B-2·B-3·A-1 툴팁(FE 117 passed). 워커 1회 중단(절전)·1회 재개, duration 817487ms + 재개분 합산",
+      "worker_duration_minutes": 27
+    },
+    {
+      "row_id": 18,
+      "stage": "EXECUTE",
+      "item": "워커 소요 기록 규범화 (캡틴 지시)",
+      "key": "execute.worker_duration_norm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-26 12:59:56",
+      "owner": "PM",
+      "note": "워커 소요 기록 규범화 완료 — 산문 3곳(opal-harness.md §3 v1.16 · pm-review-gate.md 워커 완료 선언 + 자가 진단 v1.9) + 도구 경고 1곳(state_tool.py WARNING_CODES/worker_duration_missing, 억제 인자 --worker-duration-unknown, 387 passed). 부수: TEST-SCENARIO.md 미완 슬롯 158건 포인터 전환 + 부록 A 판정 소유권 신설, README 변경이력 v1.10 순서 정정",
+      "worker_duration_minutes": 12
+    },
+    {
+      "row_id": 19,
+      "stage": "EXECUTE",
+      "item": "야간 시간대 보정 (캡틴 지시)",
+      "key": "execute.quiet_hours",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-26 15:34:08",
+      "owner": "PM",
+      "note": "야간 시간대 보정 완료 — setting.default.json quietHours 시드 + install SEED_KEYS 배선 + config.load_quiet_hours 2층 머지 + stats.quiet_overlap_minutes(워커 미보정, 해당 행 계열에서 차감) + 응답 배지 2필드 + FE 배지 2곳. BE 311->340, FE 117->123. opd 중앙 799->425 실증, 101 425 불변",
+      "worker_duration_minutes": 31
+    },
+    {
+      "row_id": 20,
+      "stage": "EXECUTE",
+      "item": "워커 기록 강제 2단 (캡틴 지시)",
+      "key": "execute.worker_enforce",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-26 15:54:47",
+      "owner": "PM",
+      "note": "워커 기록 강제 2단 완료 — (1) 조기 경고를 행 기반 판정(is_worker_dispatch_row: stage∈워커규범단계 AND item^=작업)으로 확장해 --as-worker 미사용 시에도 발동. (2) CLOSE 차단(BLOCK_CODES.worker_duration_undeclared, ERROR_CODES 45종 불변) — 기록도 선언도 없으면 거부, 통과는 --worker-duration-minutes 또는 --worker-duration-unknown 둘뿐, --force --note 최후 우회. (3) --worker-duration-unknown이 worker_duration_unknown:true 영속화(스키마 선택 등록)로 선언·침묵 구별. (4) 유예는 created_at < 2026-08-26 기준 — 기록0건 기준은 전건 미기록 신규 태스크를 통과시켜 무의미. 산문 2곳(opal-harness v1.17·pm-review-gate v1.10)·README v1.12. 387→396 passed(신규 9) [PM 정정] 워커 소요 45분 기록을 미측정 선언으로 교체 — 이 작업은 워커 3회가 API 529로 끊겨 PM이 직접 완주했다. 워커를 돌리지 않았으므로 기록할 소요가 없다(행 소요 20분 대비 45분이 상한 clamp에 걸려 강제 2단이 이 오기록을 잡아냈다).",
+      "worker_duration_unknown": true
+    },
+    {
+      "row_id": 21,
       "stage": "TEST",
       "item": "PM Gate",
       "key": "test.pm_gate",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-26 16:05:26",
       "owner": "PM",
-      "note": null,
+      "note": "TEST PM Gate Pass — TEST.md §12 마감 갱신 확인. BLOCKED 2건(TS-062·063) 재배포 후 재집행 PASS, L3 2건(TS-060·061) 캡틴 확인 PASS, 범위 확장 4건 검증 완료. 최종 테스트 state-tool 396 / BE 357 / FE 123 전건 green, 기존 회귀 0건. 최종 판정 Partial Fail -> All Pass 갱신",
       "gate": {
         "artifacts": [
           "TEST-SCENARIO.md"
@@ -209,27 +299,27 @@
       }
     },
     {
-      "row_id": 15,
+      "row_id": 22,
       "stage": "TEST",
       "item": "사용자 확인",
       "key": "test.user_confirm",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
-      "owner": "PM",
-      "note": null
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-26 16:05:26",
+      "owner": "user",
+      "note": "캡틴 확인 완료 — 화면에서 L3 2건(TS-060 병목 식별·TS-061 워크플로우 대조) 확인, FAIL 지적 없음. CLOSE 진입 승인"
     },
     {
-      "row_id": 16,
+      "row_id": 23,
       "stage": "CLOSE",
       "item": "DONE.md 생성",
       "key": "close.done_md",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-08-26 16:07:26",
       "owner": "PM",
-      "note": null
+      "note": "DONE.md 생성 완료 — 통계 8블록 + 3계열 분해 + 워커 계측 강제 2단 + 시각 초 표기 + 야간 보정. 38파일(신규 13·수정 25) +5516/-377. 테스트 state-tool 396·BE 357·FE 123 전건 green. 사고 6건·이월 11건 기록"
     }
   ],
-  "next_action": "TASK 사용자 확인 진입"
+  "next_action": "태스크 완료"
 }
