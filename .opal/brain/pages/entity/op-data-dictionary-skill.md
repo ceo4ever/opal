@@ -36,7 +36,9 @@ DB 설계 파이프라인의 DICT 단계 스킬. 표준사전·코드사전의 C
 
 ## 관련 페이지
 
-- [[skill-opal-pilot-data-design.md]]
-- [[op-data-model-skill.md]]
-- [[dict-선행-model-ssot.md]]
-- [[opdd-design-artifacts-path-pattern.md]]
+- [[skill-opal-pilot-data-design]]
+- [[op-data-model-skill]]
+- [[dict-선행-model-ssot]]
+- [[opdd-design-artifacts-path-pattern]]
+- [[opdd-pipeline-flow]]
+

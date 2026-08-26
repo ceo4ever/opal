@@ -71,9 +71,9 @@ CLOSE (DONE.md)
 
 ## 관련 페이지
 
-- [[skill-opal-pilot-data-design.md]]
-- [[op-data-dictionary-skill.md]]
-- [[op-data-model-skill.md]]
-- [[op-data-ddl-skill.md]]
-- [[dict-선행-model-ssot.md]]
-- [[opdd-design-artifacts-path-pattern.md]]
+- [[skill-opal-pilot-data-design]]
+- [[op-data-dictionary-skill]]
+- [[op-data-model-skill]]
+- [[op-data-ddl-skill]]
+- [[dict-선행-model-ssot]]
+- [[opdd-design-artifacts-path-pattern]]

@@ -40,8 +40,8 @@ DB 설계 업무가 standalone `erd-modeler`로 처리되던 것을 OPAL 표준 
 
 ## 관련 페이지
 
-- [[op-data-dictionary-skill.md]]
-- [[op-data-model-skill.md]]
-- [[op-data-ddl-skill.md]]
-- [[opdd-pipeline-flow.md]]
-- [[dict-선행-model-ssot.md]]
+- [[op-data-dictionary-skill]]
+- [[op-data-model-skill]]
+- [[op-data-ddl-skill]]
+- [[opdd-pipeline-flow]]
+- [[dict-선행-model-ssot]]

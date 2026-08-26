@@ -49,3 +49,5 @@ MEMORY 본체 스캐폴딩 제거(`MEMORY.md` → `MEMORY.json`, 3,518 B → 2,9
 ## 관련 페이지
 
 - [[memory-tool]] — 이 판단이 적용된 실제 전환 대상 도구
+- [[three-layer-memory-architecture]]
+

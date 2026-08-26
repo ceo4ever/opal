@@ -34,6 +34,6 @@ opdd 파이프라인에서 DICT(표준사전) 단계가 MODEL(데이터 모델�
 
 ## 관련 페이지
 
-- [[opdd-pipeline-flow.md]]
-- [[op-data-dictionary-skill.md]]
-- [[op-data-model-skill.md]]
+- [[opdd-pipeline-flow]]
+- [[op-data-dictionary-skill]]
+- [[op-data-model-skill]]

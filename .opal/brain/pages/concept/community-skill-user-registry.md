@@ -3,7 +3,7 @@ type: concept
 title: 커뮤니티 스킬 사용자 레지스트리 — install 배포 경계 격리
 tags: [architecture, community-skills, deploy, registry]
 sources: [task:064]
-related: [[community-skill-installation-architecture]]
+related: [community-skill-installation-architecture]
 created: 2026-07-17
 updated: 2026-07-17
 status: active

@@ -57,3 +57,5 @@ SSOT 위치를 `opal/core/references/harness/citation-rules.md` §8 "비즈니�
 - [[skill-opal-pilot-write-tech]]
 - [[op-brain-ingest]]
 - [[opal-principles-constitution]]
+- [[brain-business-term-layer]]
+

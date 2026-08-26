@@ -45,6 +45,8 @@ standalone `skills/erd-modeler`를 `op-data-model`(모델링 로직)과 `op-data
 
 ## 관련 페이지
 
-- [[op-data-model-skill.md]]
-- [[op-data-ddl-skill.md]]
-- [[op-data-dictionary-skill.md]]
+- [[op-data-model-skill]]
+- [[op-data-ddl-skill]]
+- [[op-data-dictionary-skill]]
+- [[opdd-pipeline-flow]]
+

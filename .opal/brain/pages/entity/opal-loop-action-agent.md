@@ -52,3 +52,8 @@ oppl(opal-pilot-project-loop) Loop 2에서 태스크당 1회만 디스패치되�
 |--------|-----------|------|
 | `opal-loop-action-agent` | `opal/agents/opal-loop-action-agent/AGENT.md` | 루프 액션 에이전트 정의 본체 (frontmatter/입력명세/실행프로세스/결과계약) |
 | 디스패치 개편 | `opal/skills/opal-pilot-project-loop/SKILL.md` | oppl 본문 — 태스크당 루프 액션 에이전트 1회 디스패치 구조로 개편 |
+
+## 관련 페이지
+
+- [[opal-action-monitor]]
+- [[oppl-run-record-journal-dual-observability]]

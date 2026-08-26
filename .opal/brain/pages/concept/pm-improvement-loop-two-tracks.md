@@ -3,7 +3,7 @@ type: concept
 title: PM 개선 루프 2트랙 구조 (회고/온디맨드)
 tags: [pm-loop, architecture-decision, improvement, process]
 sources: [task:058]
-related: [[close-retrospective-hardstep], [opal-improve], [op-brain-ingest]]
+related: [close-retrospective-hardstep, opal-improve, op-brain-ingest]
 created: 2026-07-20
 updated: 2026-07-20
 status: active
@@ -35,3 +35,5 @@ PM 개선 루프(자기 개선)를 정의만 있고 호출 0건인 prose 프로�
 - [[opal-improve]] — 온디맨드 스킬 5단계 프로세스
 - [[improve-tool]] — 기록 집행 도구
 - [[local-fw-improvement-classification]] — 로컬/FW 2원화 분류 기준
+- [[op-brain-ingest]]
+

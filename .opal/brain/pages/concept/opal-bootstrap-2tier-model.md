@@ -54,3 +54,5 @@ Phase B는 현재 디렉토리에 프로젝트 초기화 신호가 존재하는 
 - [[bootstrapper-marker-ssot-single-point]]
 - [[opal-pm-promotion-gate]]
 - [[bootstrap-marker-skip-ladder]] — 헤드리스(`claude -p`) 호출을 위해 이 2-tier 모델에 `[ASSISTANT]` 중간 단을 추가한 후속 결정(task:051)
+- [[opal-adapter-platform-isolation]]
+

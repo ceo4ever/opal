@@ -49,3 +49,7 @@ RED 테스트가 실저장소(`git archive HEAD`)의 export-subst 치환을 직�
 ## 근거 출처
 
 - task:048 AGENTIC-LOG.md 항목 6, 7, 8, 9 (가드 위반 적발·근본 원인 분석·교정 결정)
+
+## 관련 페이지
+
+- [[red-test-determinism-abort-trap]]

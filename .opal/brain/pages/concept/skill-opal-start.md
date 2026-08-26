@@ -39,3 +39,7 @@ opal-onboarding(identity.md 생성), opal-project-init(프로젝트 초기화)�
 ## 근거 출처
 
 file_path: `opal/skills/opal-start/SKILL.md`
+
+## 관련 페이지
+
+- [[skill-opal-next]]

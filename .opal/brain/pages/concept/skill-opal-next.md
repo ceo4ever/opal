@@ -49,3 +49,7 @@ status: active
 ## 근거 출처
 
 태스크 030 (`task:030`). `opal/skills/opal-next/SKILL.md`, `opal/core/references/opal-skills-registry.json`
+
+## 관련 페이지
+
+- [[skill-registry-validate-extension]]

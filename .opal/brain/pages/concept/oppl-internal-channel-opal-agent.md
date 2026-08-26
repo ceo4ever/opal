@@ -47,3 +47,8 @@ status: active
 ## 근거 출처
 
 task:066 — TASK.md §확정된 방향, PLAN.md §1.5/§3(결정 R-A, R-B, R-C, R-G, R-I, R-H, #8, R-4, #9, R-6), DONE.md 요약·완료기준 대조표.
+
+## 관련 페이지
+
+- [[opal-agent-stream-json-passthrough]]
+- [[oppl-run-record-journal-dual-observability]]

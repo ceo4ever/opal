@@ -3,7 +3,7 @@ type: concept
 title: 커뮤니티 스킬 basename alias 매칭 — 벤더 무관 호출
 tags: [architecture, community-skills, ux, routing]
 sources: [task:064]
-related: [[community-skill-installation-architecture]]
+related: [community-skill-installation-architecture]
 created: 2026-07-17
 updated: 2026-07-17
 status: active

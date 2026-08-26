@@ -47,6 +47,6 @@ opdd 파이프라인의 설계 산출물 저장 경로를 `opwt(opal-pilot-write
 
 ## 관련 페이지
 
-- [[opdd-pipeline-flow.md]]
-- [[op-data-dictionary-skill.md]]
-- [[skill-opal-pilot-write-tech.md]]
+- [[opdd-pipeline-flow]]
+- [[op-data-dictionary-skill]]
+- [[skill-opal-pilot-write-tech]]

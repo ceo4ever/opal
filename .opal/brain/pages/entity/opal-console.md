@@ -54,3 +54,6 @@ opal-cli console open     # 브라우저 열기
 - [[project-id-query-param-pattern]]
 - [[deploy-artifact-verification-lesson]]
 - [[opal-architecture]]
+- [[brain-tool]]
+- [[state-tool]]
+

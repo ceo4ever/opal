@@ -346,3 +346,13 @@
 - 갱신: [[handoff-contract-table-schema-mismatch]], [[measurement-tool-more-fallible-than-artifact-lesson]], [[template-precedence-over-prose-norms]], [[shared-ssot-procedure-artifact-role-split]], [[decision-vs-fact-claim-separation]]
 - 출처: task:101
 
+## [2026-08-26] ingest | CLOSE ingest — 태스크 103 OPAL Console 태스크 진행 통계(3계열 분해) + 워커 소요 계측 강제 2단
+- 신규: [[enforcement-basis-must-be-structural-not-voluntary]], [[silence-is-not-a-declared-exception]], [[grandfather-by-creation-time-not-by-result-state]], [[degeneracy-rule-preserves-past-values-on-axis-split]], [[upper-bound-clamp-preserves-sum-identity]], [[timestamp-resolution-shortfall-hides-date-boundary]], [[force-flag-side-effect-trial-run-first]], [[eye-inspection-cannot-count-machine-check-at-close]], [[order-inversion-corrupts-derived-attribution]], [[blanket-prohibition-blocks-required-artifacts]], [[monotonic-epoch-clock-mixing-invalidates-cache]]
+- 출처: task:103
+
+## [2026-08-26] lint | brain lint 기계적 안전 정비 — wikilink .md 확장자 32건 교정(8페이지). 이슈 136→79건(-57: broken_link -32, missing_link -25). stale 2건은 concept 페이지라 sync-header 비대상으로 보류
+
+## [2026-08-26] lint | brain lint 2회차 — related frontmatter 중첩 리스트 9페이지 평탄화 + 자기참조 1건 제거. 이슈 79→60건(missing_link -19). broken_link 11·orphan 6·speculative 4·stale 2는 오탐 또는 판단 필요로 존치
+
+## [2026-08-26] lint | brain lint 3회차 — 본문 관련 페이지 절 보강. 절 신설 14페이지 + 링크 37건 추가 + close-retrospective-hardstep related 오기 1건 교정(opal-pilot-dev→skill-opal-pilot-dev). 이슈 60→20건(missing_link 37→0, orphan 6→3)
+

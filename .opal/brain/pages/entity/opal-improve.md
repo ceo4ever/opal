@@ -3,7 +3,7 @@ type: entity
 title: opal-improve (//opim)
 tags: [skill, operator, improvement, pm-loop, tool-gated]
 sources: [task:058]
-related: [[improve-tool], [pm-improvement-loop-two-tracks], [local-fw-improvement-classification]]
+related: [improve-tool, pm-improvement-loop-two-tracks, local-fw-improvement-classification]
 created: 2026-07-20
 updated: 2026-07-20
 status: active

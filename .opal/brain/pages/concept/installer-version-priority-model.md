@@ -54,3 +54,7 @@ OPAL 설치기 4종(install.sh / install-mac.sh / install.ps1 / windows.ps1)이 
 
 - task:048 DONE.md §버전 결정 우선순위
 - task:048 PLAN.md §3.2~3.5 (설치기별 설계 상세)
+
+## 관련 페이지
+
+- [[opal-adapter-platform-isolation]]

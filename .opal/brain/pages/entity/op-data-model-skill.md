@@ -36,8 +36,10 @@ DB 설계 파이프라인의 MODEL 단계 스킬. `concept(개념) → logical(�
 
 ## 관련 페이지
 
-- [[skill-opal-pilot-data-design.md]]
-- [[op-data-dictionary-skill.md]]
-- [[op-data-ddl-skill.md]]
-- [[erd-modeler-deprecation.md]]
-- [[dict-선행-model-ssot.md]]
+- [[skill-opal-pilot-data-design]]
+- [[op-data-dictionary-skill]]
+- [[op-data-ddl-skill]]
+- [[erd-modeler-deprecation]]
+- [[dict-선행-model-ssot]]
+- [[opdd-pipeline-flow]]
+

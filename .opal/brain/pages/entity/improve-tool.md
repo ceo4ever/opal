@@ -3,7 +3,7 @@ type: entity
 title: improve-tool
 tags: [tool, improvement, cli, decision-making]
 sources: [task:058]
-related: [[opal-improve], [fw-inbox-collection], [memory-tool]]
+related: [opal-improve, fw-inbox-collection, memory-tool]
 created: 2026-07-20
 updated: 2026-07-20
 status: active

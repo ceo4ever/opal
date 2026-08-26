@@ -58,3 +58,9 @@ status: active
 ## 근거 출처
 
 태스크 029 (`task:029`), `opal/core/references/opal-skills-registry.json:255,321,552`
+
+## 관련 페이지
+
+- [[opal-architecture]]
+- [[opal-brain-not-pilot-decision]]
+- [[skill-registry-validate-extension]]

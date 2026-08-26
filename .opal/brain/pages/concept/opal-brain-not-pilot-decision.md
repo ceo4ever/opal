@@ -55,3 +55,9 @@ status: active
 ## 근거 출처
 
 태스크 029 (`task:029`), `opal/skills/opal-brain/SKILL.md:14,21,24,28-43`
+
+## 관련 페이지
+
+- [[skill-opal-brain]]
+- [[opal-architecture]]
+- [[skill-registry-validate-extension]]

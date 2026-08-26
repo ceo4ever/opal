@@ -3,7 +3,7 @@ type: concept
 title: 로컬/FW 2원화 개선 분류 판단
 tags: [pm-loop, classification, decision-making, scope-determination]
 sources: [task:058]
-related: [[opal-improve], [improve-tool], [local-fw-improvement-classification]]
+related: [opal-improve, improve-tool]
 created: 2026-07-20
 updated: 2026-07-20
 status: active

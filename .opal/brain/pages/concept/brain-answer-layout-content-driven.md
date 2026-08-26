@@ -46,3 +46,9 @@ status: active
 - `task:062`
 - `opal/skills/opal-brain/SKILL.md:322` (§답변 구조), `:469` (read-only 역참조), `:559` (§변경이력 v1.8)
 - `dashboard/backend/adapters/opbr_adapter.py:133` (read-only 프롬프트 구성 — 어댑터 무변경 확인 대상)
+
+## 관련 페이지
+
+- [[skill-opal-brain]]
+- [[opal-brain-system]]
+- [[brain-query-latency-model]]

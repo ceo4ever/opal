@@ -51,3 +51,7 @@ status: active
 
 - task:055 DONE.md §배경, §핵심 설계 결정, §변경 내역
 - task:055 PLAN.md §H-3, §H-5, §3.2.2 리다이렉트 표준안(D-A)
+
+## 관련 페이지
+
+- [[linux-install-script]]

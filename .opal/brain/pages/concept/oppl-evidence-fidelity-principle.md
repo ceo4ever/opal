@@ -51,3 +51,5 @@ oppl의 완료(done) 판정에 "증거 충실도" 개념을 1급 규범으로 �
 - [[oppl-coverage-conformance-axis-split]]
 - [[oppl-scenario-red-confirmed-gap]]
 - [[oppl-3-ssot-tool-gated-separation]]
+- [[test-tool]]
+

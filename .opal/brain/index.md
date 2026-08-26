@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-08-24 23:44
+> 갱신: 2026-08-26 17:52
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -43,6 +43,7 @@
 - [[auto-approve-user-confirmation-axis-separation]] — 자동 승인 판정의 두 독립 축 — CLOSE 축과 모드 경계 축은 분리된다 #state-tool #gate-design #pattern #task-093
 - [[b7-action-completion-loop]] — B7 액션 완성도 루프 — triage 기반 경계 재설계 순환 구조 #oppd #action-loop #triage #verification #b7
 - [[backward-compat-default-value-discipline]] — 하위호환 확장의 기본값 규율 — 분기 인자 기본값을 기존 동작으로 #backward-compat #api-design #cli #pattern
+- [[blanket-prohibition-blocks-required-artifacts]] — 워커 프롬프트의 포괄 금지가 규정 산출물을 막는다 — 금지 대신 반환 경로를 지정한다 #dispatch #prompt #worker #pm-discipline #lesson-learned
 - [[blind-reproduction-verification-test]] — 블라인드 재현 테스트 — 작성자 자기검증 배제 검증법 #verification #testing #scenario #ssot #evaluator
 - [[bootstrap-marker-skip-ladder]] — 부트스트랩 첫 줄 마커 3단 스킵 사다리 ([WORKER]/[ASSISTANT]/무마커) #bootstrap #2tier #assistant-tier #headless #pm-gate #architecture
 - [[bootstrapper-marker-ssot-single-point]] — 부트스트래퍼 마커 SSOT 단일 지점 수정 원칙 #bootstrap #adapter #platform #ssot #install
@@ -95,6 +96,7 @@
 - [[daemon-as-tool-orchestrator]] — 데몬은 도구 오케스트레이터 — 데이터 SSOT는 프로젝트 파일 #architecture #dashboard #ssot
 - [[decision-vs-fact-claim-separation]] — 결정과 사실 주장의 분리 — 결정은 근거 판정 대상이 아니다 #evidence #citation #decision #opds
 - [[dedup-pointer-over-copy]] — dedup 원칙 — 목적지 기존 존재 시 표 복사 금지·포인터 단일화 #dedup #ssot #pointer #architecture #principles
+- [[degeneracy-rule-preserves-past-values-on-axis-split]] — 집계 축을 쪼갤 때 축퇴 규칙이 과거 확정값을 보존한다 #aggregation #statistics #backward-compat #opal-console #design-decision
 - [[degraded-execution-with-explicit-gap]] — 자산 부재에도 중단하지 않는다 — 축소 실행 + 결측 명시 불변 규칙 #fallback #workflow #reporting #task-084
 - [[delegation-only-file-gate-bypass]] — 위임 전용 파일에 게이트를 두면 우회된다 — 진입경로 역추적 #gate #architecture #lesson #call-graph
 - [[demote-promote-recursion-guard-timing-threshold-split]] — 강등·승격 재귀 차단 — 판정 시점 분리 + 임계 상호배타 #track-routing #recursion #architecture #opds
@@ -103,6 +105,7 @@
 - [[dl-contract-download-verify-target-identity]] — DL-CONTRACT — 검증 대상과 다운로드 대상은 같은 파일이어야 한다 #deploy #release #install #checksum #contract
 - [[e2e-cmux-first-playwright-fallback]] — E2E 도구 우선순위 — cmux 1순위 → playwright 폴백 (에러코드 소비) #testing #e2e #cmux #framework
 - [[enforce-rule-legacy-data-surfacing-lesson]] — enforce 규칙 신설 시 잔존 데이터 표면화 — 배포 전 실 데이터 스캔 필요 교훈 #lesson #enforce #validate #brain-tool
+- [[enforcement-basis-must-be-structural-not-voluntary]] — 강제의 판정 근거는 자발적 표시가 아니라 구조여야 한다 — 3회 우회 후 행 기반 판정 + CLOSE 차단 #enforcement #governance #state-tool #worker #measurement #lesson-learned
 - [[erd-modeler-deprecation]] — erd-modeler deprecate — op-data-model/ddl로 분해, //erm 하위호환 #architecture-decision #deprecation #erd-modeler #migration
 - [[evaluator-self-weakness-disclosure-pattern]] — 평가자에 PM 자기약점 명시 전달 + 신고사실 감점면제 금지 명문화 #lesson #evaluator #governance #opds
 - [[evidence-tier-asis-tobe-jurisdiction]] — 근거 등급 5단계 + AS-IS/TO-BE 관할 2축 #evidence #citation #architecture #opds
@@ -111,13 +114,16 @@
 - [[expected-total-as-reference-not-gate-criterion]] — 하드코딩된 기대 총계는 게이트를 흉기로 만든다 — 판정은 집합 일치로 #lesson #gate-design #verification #plan-discipline #worker-instruction
 - [[exports-generation-tool-verification-division]] — 생성은 워커, 검증은 도구 — 비대칭을 이용한 분업 #code-scan #header #architecture
 - [[external-tool-boundary-stub-insufficient-lesson]] — 외부 도구 경계는 스텁만으로 불충분 — 실연동 검증이 통합 결함을 잡는다 #testing #lesson #integration #test-strategy
+- [[eye-inspection-cannot-count-machine-check-at-close]] — 세어야 하는 검사는 사람이 아니라 도구가 한다 — 미완 슬롯 158건 누락 #pm-gate #verification #close #tooling #lesson-learned
 - [[fail-fast-earliest-legible-point]] — 실패는 늦추기보다 앞당긴다 — 가장 이른 지점에서 읽기 쉽게 #gate #ux #lesson #fail-fast
 - [[fallback-approval-detached-head-precedence]] — detached HEAD 판정은 no-upstream보다 먼저 검사해야 한다 #git #judgment-order #fallback-approval #lesson
 - [[fix-validity-requires-failure-mode-reproduction]] — 수정의 유효성은 실패 모드를 재현해서 확인한다 #lesson #verification #pm-discipline #worker-report
 - [[fixture-conflicting-requirements-lesson]] — 픽스처 요구 충돌 — RED 작성 시점 시나리오 간 요구 대조 필요 #lesson #testing #fixture #red-first #task-082
 - [[fixture-vs-real-blind-spot-lesson]] — fixture-vs-real 맹점 — 테스트 픽스처 통과·실데이터 버그 반복 교훈 #lesson #testing #bug #fixture
+- [[force-flag-side-effect-trial-run-first]] — --force류는 1건 시험 실행 후 확대한다 — 시각 덮어쓰기로 6행 손상 #tooling #state-tool #incident #discipline #lesson-learned
 - [[global-deploy-after-verification-ordering]] — 검증 미완 규칙의 전역 배포 차단 — 배포는 검증의 결과여야 한다 #deploy #install #pipeline-order #framework #task-095
 - [[governance-single-owner-rule-mapping]] — 규칙 1소유자 매핑 — Governance 중복 기재 방지 설계 #governance #ssot #design-pattern #dispatch
+- [[grandfather-by-creation-time-not-by-result-state]] — 유예 기준은 결과 상태가 아니라 생성 시각으로 잡는다 — 「기록 0건이면 유예」의 자기무력화 #enforcement #migration #backward-compat #state-tool #lesson-learned
 - [[green-tests-do-not-imply-contract-conformance]] — 테스트 GREEN은 규약 정합을 뜻하지 않는다 — 정적 대조를 별도 게이트로 둔다 #lesson #test-strategy #verification #contract
 - [[grep-ac-layer-judgment]] — grep 판정식은 문자열의 층위를 구분해야 한다 #verification #test-scenario #gate-design #lesson
 - [[guard-precision-none-passthrough-early-return]] — 가드 정밀화가 새 우회로를 만든다 — None 통과는 조기 반환으로 봉쇄한다 #memory-tool #guard-design #none-safety #lesson #task-096
@@ -148,6 +154,7 @@
 - [[model-mapping-2layer-override]] — 모델 매핑 2-레이어 오버라이드 (setting.json SSOT + 부트스트랩 step 0 머지) #model #mapping #setting #override #bootstrap
 - [[model-mapping-latest-tracking]] — OPAL 모델 매핑 최신화 + 최신 추종 전략 #model #mapping #gemini #codex #task
 - [[model-mapping-missing-cell-error-policy]] — 모델 매핑 미설정 셀 오류 정책 (폴백 없음 · "default" 폐기) #model #mapping #error #policy #setting
+- [[monotonic-epoch-clock-mixing-invalidates-cache]] — 서로 다른 시계 계열을 직접 비교하면 캐시가 상시 무효화된다 #cache #clock #bug #opal-console #lesson-learned
 - [[na-status-contract-agentic-init-only]] — state-tool na 상태의 실제 계약 — 부여 시점은 초기화 하나뿐 #state-tool #pipeline #na-status #task-090
 - [[native-todo-panel-llm-only-hook-boundary]] — 네이티브 todo 패널 LLM 전용 기록 한계 (hook은 트리거·페이로드까지) #opal-pipeline #todo-mirror #hook #platform-constraint #honest-limit
 - [[new-ssot-pointer-not-value-copy]] — 신규 SSOT 신설 시 타 SSOT 수치 복제 금지 — 포인터만 #ssot #dedup #architecture #opds
@@ -202,6 +209,7 @@
 - [[oppl-two-loop-orchestrator]] — opal-pilot-project-loop(oppl) — 2-루프 수렴 오케스트레이터 #skill #pilot #orchestrator #loop #oppl
 - [[opsdd-pipeline-ssot]] — opsdd 파이프라인 정본 — SKILL.md SSOT (7단계) #opsdd #pipeline #ssot #workflow
 - [[opwt-v4-output-system]] — opwt v4 산출물 체계 재설계 (PRD 8섹션 + interview 통합) #opwt #planning #output #framework #task
+- [[order-inversion-corrupts-derived-attribution]] — 순서 역전은 표기 문제가 아니다 — 파생 계산의 귀속까지 오염한다 #state-tool #incident #aggregation #lesson-learned
 - [[owner-honorific-contamination-prevention]] — 산출물 소유자 호칭 오염 차단 원칙 #state-tool #identity #harness #contamination #brain-ingest
 - [[page-type-dynamic-schema]] — 페이지 타입 동적화 — SCHEMA SSOT #architecture #brain #schema #dynamic-type
 - [[parser-drift-silent-longevity-lesson]] — 파서 drift는 조용히 오래 산다 — '회귀 없음' 기준선의 함정 #lesson-learned #parser #drift #dashboard #test-strategy
@@ -241,6 +249,7 @@
 - [[self-modifying-tool-deploy-unit-coupling]] — 자기 자신을 고치는 도구의 배포 단위 결합 원칙 #deploy #gate-design #pattern #task-093
 - [[shard-policy-block-vs-nonblock-fallback-criterion]] — 미설정 시 차단 vs 비차단 폴백 판정 기준 #code-scan #configuration #backward-compat #task-080 #task-083
 - [[shared-ssot-procedure-artifact-role-split]] — 분석 코어 공유 SSOT — 절차와 산출물의 역할 분리 #ssot #analysis-core #role-separation #architecture #opd
+- [[silence-is-not-a-declared-exception]] — 예외는 침묵이 아니라 선언이어야 한다 — 미측정 선언과 0의 구별 #enforcement #measurement #state-tool #contract #lesson-learned
 - [[silent-loss-prevention-row-accounting-invariant]] — 무성 유실 차단 — 행 회계 불변식 설계 패턴 #migration #data-integrity #invariant #design-pattern #memory
 - [[silent-render-failure-deterministic-gate]] — 조용히 실패하는 코드는 브라우저 검증을 무력화한다 — 결정론 대조를 차단 게이트로 #lesson #verification #render-verification #gate-design #silent-failure
 - [[silent-success-defect-class]] — '조용한 성공' 결함 클래스 — 실패가 정상 종료로 위장된다 #lesson #defect-class #verification #fail-closed
@@ -279,11 +288,13 @@
 - [[test-scenario-pipeline-redesign]] — 테스트 시나리오 파이프라인 재설계 (2차원 매트릭스 + self-confirming 4분리) #testing #pipeline #framework #flow #task
 - [[test-two-tier-system]] — 테스트 2단계 체계 (단위=EXECUTE / 통합=TEST) #testing #pipeline #framework
 - [[three-layer-memory-architecture]] — 3계층 기억 아키텍처 — MEMORY / brain / tasks #architecture #memory #brain #long-term #tasks
+- [[timestamp-resolution-shortfall-hides-date-boundary]] — 표기 해상도 부족은 가독성이 아니라 정확성 문제다 — 25시간을 82분으로 읽힌 사례 #observability #timestamp #opal-console #lesson-learned
 - [[tool-created-state-flagged-by-consumer-as-reminder]] — 생성 도구가 만든 상태를 소비 도구가 결함으로 부르는 구간 — 오탐이 아니라 리마인더 #memory-tool #policy-gap #design-pattern #lesson #task-096
 - [[tool-scan-thin-manifest-federation]] — tool-scan 매니페스트 thin 설계 + federation 불파괴 #design-principle #tool-scan #manifest #federation #ssot
 - [[tool-usage-precheck-error-diagnosis-rule]] — 도구 사용법 선확인·에러 종류 진단후 폴백 규율 #design-principle #tool-usage #mams-lesson #fallback #error-handling
 - [[uncommitted-component-readme-policy]] — 미커밋 컴포넌트는 공개 README에 미노출 #readme #policy #git #documentation #ppt-builder
 - [[unresolvable-not-absent-two-vocabulary-split]] — 확인 불가는 부재가 아니다 — 검출 어휘 2분으로 처분을 표현한다 #memory-tool #guard-design #vocabulary #lesson #task-096
+- [[upper-bound-clamp-preserves-sum-identity]] — 음수 차단은 사후 0-clamp가 아니라 상한 clamp로 — 합 항등 보존과 오기록 적발 #aggregation #statistics #invariant #opal-console #design-decision
 - [[usage-ssot-live-help-principle]] — 사용법 SSOT는 도구 자신의 live --help #design-principle #tool-scan #usage #drift #ssot
 - [[verdict-tool-fail-safe-direction-design]] — 판정 도구 오작동 방향 고정 — unknown 미확정 계상 + 강등 4축 AND #evidence #tooling #fail-safe #opds
 - [[verification-command-4-standard]] — 검증 명령 4종 표준 (SSOT — verification-loop-guide) #verification #lint #build #test #watch-mode #ssot #standard

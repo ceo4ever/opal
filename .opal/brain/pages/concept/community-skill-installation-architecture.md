@@ -3,7 +3,7 @@ type: concept
 title: 커뮤니티 스킬 설치 아키텍처 — vendor 중첩 + clone-copy
 tags: [architecture, community-skills, install, deploy]
 sources: [task:064]
-related: [[community-skill-user-registry]]
+related: [community-skill-user-registry]
 created: 2026-07-17
 updated: 2026-07-17
 status: active

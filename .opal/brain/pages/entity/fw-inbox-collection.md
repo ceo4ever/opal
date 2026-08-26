@@ -3,7 +3,7 @@ type: entity
 title: fw-inbox (프레임워크 개선 수집소)
 tags: [runtime-directory, improvement, collection, deployment]
 sources: [task:058]
-related: [[improve-tool], [opal-improve], [pm-improvement-loop-two-tracks]]
+related: [improve-tool, opal-improve, pm-improvement-loop-two-tracks]
 created: 2026-07-20
 updated: 2026-07-20
 status: active
@@ -73,3 +73,5 @@ status: inbox
 - [[opal-improve]] — 온디맨드 스킬에서 분류 후 기록
 - [[close-retrospective-hardstep]] — CLOSE 회고에서 분류 후 기록
 - [[local-fw-improvement-classification]] — 로컬/FW 분류 기준
+- [[pm-improvement-loop-two-tracks]]
+

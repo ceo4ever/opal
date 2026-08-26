@@ -3,7 +3,7 @@ type: flow
 title: CLOSE 회고 하드스텝 (개선 루프 자동 enforce)
 tags: [flow, close-pipeline, improvement, tool-gated, architecture-decision]
 sources: [task:058]
-related: [[pm-improvement-loop-two-tracks], [op-brain-ingest], [opal-pilot-dev], [improve-tool]]
+related: [pm-improvement-loop-two-tracks, op-brain-ingest, skill-opal-pilot-dev, improve-tool]
 created: 2026-07-20
 updated: 2026-07-20
 status: active
@@ -81,3 +81,5 @@ CLOSE 파이프라인의 op-brain-ingest 직후에 삽입된 회고 하드스텝
 - [[op-brain-ingest]] — 자매 CLOSE 훅 (지식 누적)
 - [[improve-tool]] — 기록 집행 도구
 - [[opal-improve]] — 온디맨드 스킬 (별도 5단계 프로세스)
+- [[skill-opal-pilot-dev]]
+

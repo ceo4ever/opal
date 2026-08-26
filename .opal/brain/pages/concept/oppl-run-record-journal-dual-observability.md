@@ -39,3 +39,7 @@ status: active
 ## 근거 출처
 
 task:067 — TASK.md §배경 분석, PLAN.md §3.2.2, DONE.md 핵심 설계 결정·특이 관찰.
+
+## 관련 페이지
+
+- [[opal-loop-action-agent]]

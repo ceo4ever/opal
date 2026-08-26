@@ -60,3 +60,7 @@ GitHub API(`/releases/latest`, `/tags`)는 rate limit 403이나 네트워크 차
 - task:048 DONE.md (결과 요약·변경 파일 목록)
 - task:048 PLAN.md §1.1, §3.1 (설계 배경·메커니즘 실측 검증)
 - task:048 AGENTIC-LOG.md (가드 위반 적발·정정 이력)
+
+## 관련 페이지
+
+- [[opal-adapter-platform-isolation]]

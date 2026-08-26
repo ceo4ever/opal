@@ -35,6 +35,6 @@ DB 설계 파이프라인의 DDL 단계 스킬. MODEL 물리 산출물(DBML)을 
 
 ## 관련 페이지
 
-- [[skill-opal-pilot-data-design.md]]
-- [[op-data-model-skill.md]]
-- [[opdd-pipeline-flow.md]]
+- [[skill-opal-pilot-data-design]]
+- [[op-data-model-skill]]
+- [[opdd-pipeline-flow]]

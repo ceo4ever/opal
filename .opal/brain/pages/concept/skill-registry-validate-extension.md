@@ -54,3 +54,9 @@ status: active
 ## 근거 출처
 
 태스크 029 (`task:029`), `opal/tools/skill-registry/skill-registry.js:277-392,379,448-450`
+
+## 관련 페이지
+
+- [[opal-architecture]]
+- [[opal-brain-not-pilot-decision]]
+- [[opal-skill-classification-system]]
