@@ -105,6 +105,7 @@ ingest 대상별로 brain 페이지 본문을 작성한다.
   | `aliases` | string[] | 별칭·동의 표현 (검색 보강 및 alias_collision lint 대상) |
   | `actors` | string[] | 업무 행위자 (예: PM, 운영자, 구매자) |
   | `surfaces` | string[] | 업무 표면 — 용어가 등장하는 화면·프로세스 |
+  | `related` | string[] | 관련 페이지 **슬러그 평문** 목록. `--related` CSV로만 전달한다 — 대괄호·`[[ ]]`·`.md` 금지 |
 
 - **본문**: 업무 의미를 2~4문장으로 서술한다. 비즈니스 용어 우선(코드 식별자를 본문 주어로 나열 금지). 기존 §8 비즈니스 용어 우선 불릿과 정합 (→ `opal/core/references/harness/citation-rules.md` §8).
 - **다층 근거 `sources`**: 코드참조(`file_path:line`)만이 아닌 정책참조(`POL-{번호}`)·IA참조(`ia:{system}:{screen}`)를 병기하여 다층 근거를 구성한다 (형식은 brain SCHEMA §4 링크 규칙 참조).
@@ -121,7 +122,7 @@ actors: [<행위자1>]
 surfaces: [<화면·프로세스1>]
 tags: [<관련 태그>]
 sources: [task:<번호>, POL-<번호>]
-related: [[<관련 페이지>]]
+related: [<관련 페이지 슬러그>, <관련 페이지 슬러그>]   # 슬러그 평문 — [[ ]]·.md 금지
 created: <YYYY-MM-DD>
 updated: <YYYY-MM-DD>
 status: draft
@@ -142,7 +143,7 @@ type: concept
 title: <결정 제목>
 tags: [<관련 태그>]
 sources: [task:<번호>]
-related: [[<관련 페이지>]]
+related: [<관련 페이지 슬러그>, <관련 페이지 슬러그>]   # 슬러그 평문 — [[ ]]·.md 금지
 created: <YYYY-MM-DD>
 updated: <YYYY-MM-DD>
 status: active
@@ -186,7 +187,7 @@ type: entity
 title: <컴포넌트명>
 tags: [<layer>, <domain>]
 sources: [task:<번호>]
-related: [[<관련 페이지>]]
+related: [<관련 페이지 슬러그>, <관련 페이지 슬러그>]   # 슬러그 평문 — [[ ]]·.md 금지
 created: <YYYY-MM-DD>
 updated: <YYYY-MM-DD>
 status: active
@@ -231,10 +232,29 @@ status: active
   --title "<제목>" \
   --tags "<태그>" \
   --sources "task:<태스크번호>" \
+  --related "<관련 페이지 슬러그 CSV>" \
   --body-file <본문 파일 경로 — STEP4에서 작성한 페이지 본문을 저장한 스크래치 .md>
 ```
 
-- `ok: false` → 에러 코드 확인. `duplicate_page`이면 멱등 skip(정상). `speculative_content`이면 §brain-tool 에러 대응 표에 따라 skip-and-continue. 그 외는 에스컬레이션.
+> **[MUST] `related`는 `--related`로만 넣는다.** 값은 슬러그 평문 CSV다(`state-tool,brain-tool`). 대괄호·`[[ ]]`·`.md`를 붙이면 도구가 `frontmatter_invalid`로 거부한다. **페이지 파일을 열어 frontmatter를 직접 쓰지 않는다** — 손으로 쓴 frontmatter가 중첩 리스트로 붕괴한 사례가 9페이지 있다.
+
+- `ok: false` → 에러 코드 확인. `speculative_content`이면 §brain-tool 에러 대응 표에 따라 skip-and-continue. 그 외는 에스컬레이션.
+- `duplicate_page`이면 **이미 존재하는 페이지**다. 내용 보강이 필요하면 아래 5-1b 갱신 경로를 쓰고, 보강할 것이 없으면 멱등 skip(정상)으로 넘어간다.
+
+#### 5-1b. 기존 페이지 갱신 — `update-page`
+
+기존 페이지에 이번 태스크의 지식을 보태야 하면 `update-page`를 쓴다. `add-page`는 기존 페이지를 덮어쓰지 못한다(`duplicate_page`).
+
+```bash
+~/.opal/tools/brain-tool/run.sh update-page pages/<type>/<kebab-name>.md \
+  --sources "<기존 + 신규 출처 CSV>" \
+  --related "<관련 페이지 슬러그 CSV>" \
+  --body-file <보강한 전체 본문을 저장한 스크래치 .md>
+```
+
+- 지정한 필드만 바뀐다. `created`는 보존되고 `updated`만 오늘로 갱신된다.
+- `page_not_found`이면 대상이 없다는 뜻이므로 `add-page`로 신설한다.
+- 갱신도 `add-page`와 같은 frontmatter·미실체 계약을 집행한다.
 
 #### 5-2. index 갱신
 
@@ -306,6 +326,7 @@ brain 부재 시:
 
 | 버전 | 일시 | 변경내용 |
 |------|------|---------|
+| v1.7 | 2026-08-27 | related frontmatter 반복 붕괴의 원천 교정 — (1) §2.1/§2.2/§2.3 frontmatter 템플릿 3곳의 `related: [[<관련 페이지>]]`(YAML 중첩 리스트)를 슬러그 평문 리스트로 교체. 이 예시를 그대로 따른 페이지가 9건 붕괴했다. (2) STEP5-1 add-page 예시에 `--related` 추가 + [MUST] 직접 편집 금지 명시. (3) STEP5-1b `update-page` 갱신 경로 신설 — `duplicate_page`의 처리를 「멱등 skip」 단일 경로에서 「보강 필요 시 update-page / 아니면 skip」 2경로로 분기. (4) frontmatter 선택 키 표에 `related` 행 추가 |
 | v1.0 | 2026-06-10 | 초기 작성 — CLOSE 경량 ingest 워커. brain 미존재 no-op, 포함/제외 기준, brain-tool add-page/index/log 절차, 에러 안전 처리 (015) |
 | v1.1 | 2026-06-11 19:20 | STEP 3에 백필 기준 SSOT 재사용 명시(M-3) + 동적 타입 로드(SCHEMA §1.5) 정합 안내 추가 (016) |
 | v1.2 | 2026-06-16 | STEP 4 작성 규칙에 비즈니스 용어 우선 불릿 추가 — citation-rules §8 참조 (024) |

@@ -231,6 +231,7 @@ index.md 전체 맵 등록 완료
    ~/.opal/tools/brain-tool/run.sh add-page pages/<type>/<name>.md \
      --type <type> --title "<제목>" \
      --tags "<태그>" --sources "<출처>" \
+     --related "<관련 페이지 슬러그 CSV — 대괄호·[[ ]]·.md 금지>" \
      --body-file <본문 파일 경로 — 작성한 페이지 본문을 저장한 스크래치 .md>
    ```
    - `ok: false`이고 `speculative_content`이면 미실체 마커 감지 거부(정상 동작) — 해당 페이지는 등록하지 않는다(§공통 규칙 미실체 제외).
@@ -296,6 +297,7 @@ index.md 전체 맵 등록 완료
    ~/.opal/tools/brain-tool/run.sh add-page pages/concept/<name>.md \
      --type concept --title "<태스크 핵심 결정 제목>" \
      --tags "task" --sources "task:<NNN>" \
+     --related "<관련 페이지 슬러그 CSV — 대괄호·[[ ]]·.md 금지>" \
      --body-file <본문 파일 경로 — 작성한 페이지 본문을 저장한 스크래치 .md>
    ~/.opal/tools/brain-tool/run.sh log \
      --op ingest --summary "task:<NNN> 백필" \
@@ -514,6 +516,7 @@ brain의 품질 문제를 탐지하고 정비 방안을 제안한다.
 | `unsourced` | `sources` frontmatter 없이 주장하는 페이지 | 출처 추가 또는 draft 상태로 강등 |
 | `contradiction` | 서로 다른 페이지에서 모순되는 내용 | 검토 후 최신 정보 반영 |
 | `speculative` | 미실체 마커(섹션 헤딩) 검출 — 아직 실재하지 않는 지식(개선·오류·향후·미확정 설계)이 등록된 정황. 검출까지만 — 자동 삭제·수정 없음 | 내용 실체화 후 재작성하거나 memory로 이관, 또는 `--force --note`로 등록한 사유 검토 |
+| `frontmatter_invalid` | frontmatter 표준 위반 — `related`·`tags`·`sources`가 평탄 문자열 리스트가 아니거나, `related` 값에 `[[ ]]`·`.md`가 섞임 | `update-page --related "<슬러그 CSV>"`로 교정. 파일을 직접 열어 고치지 않는다 |
 | `term_duplicate` | 서로 다른 term 페이지의 표준명(`title`)이 정규화 시 동일·중복 | 중복 표준명 병합 — 한 페이지에 통합하고 나머지 삭제 |
 | `alias_collision` | 한 term의 `aliases` 항목이 다른 term의 `title` 또는 `aliases`와 충돌 | 별칭 정리 — 충돌 별칭을 삭제하거나 term 통합 |
 
@@ -534,6 +537,7 @@ brain의 품질 문제를 탐지하고 정비 방안을 제안한다.
 ### 집행 경계 ([MUST])
 
 - `index.md` / `log.md`는 **brain-tool로만** 갱신한다. LLM이 직접 편집하는 것은 금지된다.
+- **frontmatter는 도구 인자로만 쓴다.** 신설은 `add-page`, 기존 페이지 갱신은 `update-page`다(`add-page`는 `duplicate_page`로 거부한다). 페이지 파일을 열어 frontmatter를 손으로 쓰면 `related`가 중첩 리스트로 붕괴한다 — 실제로 9페이지에서 발생했고 `lint`의 `frontmatter_invalid`가 이를 잡는다.
 - 페이지 본문은 LLM이 작성하며, 인덱싱·log append·frontmatter 검증은 도구가 전담한다.
 - @header → brain 단방향 동기화만 허용. brain → 코드 역방향 수정은 **절대 금지**.
 
@@ -582,6 +586,7 @@ brain의 품질 문제를 탐지하고 정비 방안을 제안한다.
 
 | 버전 | 일시 | 변경내용 |
 |------|------|---------|
+| v2.1 | 2026-08-27 | frontmatter 도구 경로 일원화 — ingest add-page 예시 2곳에 `--related` 추가, §공통 규칙 집행 경계에 「신설=add-page / 갱신=update-page, frontmatter 직접 작성 금지」 명시, lint issue 표에 `frontmatter_invalid` 행 추가 |
 | v1.0 | 2026-06-10 | 초기 작성 — 단일 pilot + 4모드(init/ingest/query/lint), 결정4 임계값·결정5 배치정책·결정7 SCHEMA 기반 (015) |
 | v1.1 | 2026-06-11 19:20 | init STEP 0 신설(analyze→타입 제안→사용자 확인→`init --types` SCHEMA 확정), ingest --all 범위 확장(docs·스킬·참조 concept 요약+포인터, ingest-scan 활용), ingest task:NNN 모드+001~015 백필 절차 추가(op-brain-ingest 기준 재사용), query 후보 목록→선택→선택 페이지만 주입으로 정정(W5 RAG식 전량 로드 금지), [MUST] 단방향·전량로드금지 인용 명문화 (016) |
 | v1.2 | 2026-06-11 21:42 | [MUST] source_ref 형식 규칙 명시 — add-page `--sources` 값은 ingest-scan `source_ref` 그대로 사용, 임의 형식(전체 경로 등) 금지(멱등 skip 보호). 단일 소스 절차 5항 + 배치 정책 멱등 행 2곳 추가 (016) |

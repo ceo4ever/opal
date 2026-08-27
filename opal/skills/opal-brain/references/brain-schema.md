@@ -34,7 +34,7 @@ status: active        # 필수: active | stale | draft
 ```yaml
 tags: [tool, pipeline, state]                            # 검색·분류 태그
 sources: [code:opal/tools/state-tool/, task:013]         # 근거 출처
-related: [[opal-harness]], [[pipeline-state]]             # 교차참조 링크
+related: [opal-harness, pipeline-state]                   # 교차참조 — 슬러그 평문([[ ]]·.md 금지)
 ```
 
 ## 4. entity 페이지 추가 키 (@header 시드)
