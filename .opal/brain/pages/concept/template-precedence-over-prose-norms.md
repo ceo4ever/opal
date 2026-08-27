@@ -11,11 +11,15 @@ sources:
 - task:099
 - task:100
 - task:101
+- skill:op-brain-ingest
+- doc:opal/core/references/pm/dispatch-process.md
 related:
 - lean-core-relocation-benefit-precondition
 - agent-md-digest-pattern
+- shared-ssot-procedure-artifact-role-split
+- skill-owned-constraint-restated-in-prompt-overrides-skill
 created: '2026-08-22'
-updated: '2026-08-24'
+updated: '2026-08-27'
 status: draft
 ---
 ## 개요
@@ -42,12 +46,22 @@ status: draft
 - 이는 이 페이지가 정립한 법칙의 **역방향 사례**다. 099·100은 "신설 규칙이 템플릿에 없으면 유도되지 않는다"는 방향이었다면, 이 사례는 "프롬프트의 명시 지시가 있어도 문서에 이미 적힌 틀린 예시가 그 지시를 무력화한다"는 방향이다 — 문서 예시가 프롬프트 지시를 이긴다.
 - 결론: 규범 문서의 **예시 문안**은 지시와 동일 강도로 검증해야 한다. 틀린 예시가 먼저 고쳐지지 않으면 올바른 프롬프트 지시조차 조용히 무력화된다(근거: task:101 DONE.md §8 후속 이월 4).
 
+### 3차 확인 (brain-tool 개정) — 틀린 예시가 규범을 이긴 실사례
+
+- 이 페이지가 task:101에서 경고한 "예시 문안이 틀리면 지시가 있어도 진다"가 그대로 재현됐다. 경고를 적어 둔 것만으로는 막히지 않았다.
+- brain 지식 등록 스킬의 frontmatter 템플릿 3곳과 스키마 문서 1곳이 관련 페이지 목록을 **대괄호를 두 겹으로 감싼 표기**로 예시했다(위키링크 문법을 frontmatter에 그대로 옮긴 형태다). 이 표기는 YAML에서 문자열 목록이 아니라 **목록의 목록**으로 읽힌다 — 곧 붕괴 형태 그 자체다(`opal/skills/op-brain-ingest/SKILL.md`, `opal/skills/opal-brain/references/brain-schema.md`).
+- 같은 스킬의 산문에는 슬러그 평문을 쓰라는 규칙이 있었고, 페이지 생성 도구는 그 형태를 실제로 거부하도록 두 차례 강화돼 있었다. 그럼에도 9개 페이지가 예시대로 붕괴한 채 등록됐다.
+- 즉 **작성자는 규율을 어긴 것이 아니라 문서를 충실히 따랐다.** 산문 규칙 · 도구 거부 · 틀린 예시가 함께 있을 때 이긴 것은 예시였다.
+- 붕괴가 세 프로젝트·여러 태스크에 걸쳐 재발한 이유도 여기서 설명된다 — 프롬프트를 고쳐도, 작성자를 바꿔도, 예시가 그대로면 결과가 같다.
+
+
 ## 결정 내용
 
 - 산문 규칙을 신설·개정할 때는 함께 배포되는 템플릿·예시에 그 규칙을 실물로 반영해야 한다. 템플릿에 반영되지 않은 산문 규칙은 "문서에는 있으나 실행에는 없는" 상태로 남을 위험이 크다.
 - 다만 템플릿 배치는 **필요조건이지 충분조건은 아니다**. `round3/sample-c.md`에서는 초점 볼드 규칙이 템플릿에 반영돼 있었음에도 산출자 3인 중 1인만 이행했다(근거: task:099 DONE.md §5 한계). 템플릿 정합만으로 100% 준수를 보장할 수 없으며, 산출자 개인차 등 다른 요인이 잔여 변이를 설명한다.
 - 적용 범위는 보고 형식에 국한되지 않는다. 스킬·하네스·가이드가 규칙을 산문으로만 적고 대응 템플릿·예시를 갱신하지 않았다면, 그 규칙은 유도되지 않고 있을 가능성이 있다(근거: task:099 DONE.md §5 적용 범위) — "규범 문서 전수 점검"이 후속 후보로 남아 있다(근거: task:099 DONE.md §8 잔여·보류).
 - 예시 문안이 틀리면 지시가 있어도 진다(위 역방향 사례). 따라서 템플릿·예시는 "반영돼 있는가"만이 아니라 "정확한가"까지 함께 검증해야 한다.
+- **예시는 규범과 같은 강도로 검증한다.** 규칙을 산문에 적었는지가 아니라, 그 규칙을 어긴 형태가 예시에 남아 있지 않은지를 본다. 검증 도구가 그 형태를 거부하고 있더라도 예시는 따로 고쳐야 한다 — 도구는 등록 시점에만 막고, 예시는 작성 시점에 이미 이겼다.
 
 ## 영향 범위
 
@@ -58,3 +72,4 @@ status: draft
 - [[lean-core-relocation-benefit-precondition]]
 - [[agent-md-digest-pattern]]
 - [[shared-ssot-procedure-artifact-role-split]]
+- [[skill-owned-constraint-restated-in-prompt-overrides-skill]]

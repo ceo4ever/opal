@@ -356,3 +356,10 @@
 
 ## [2026-08-26] lint | brain lint 3회차 — 본문 관련 페이지 절 보강. 절 신설 14페이지 + 링크 37건 추가 + close-retrospective-hardstep related 오기 1건 교정(opal-pilot-dev→skill-opal-pilot-dev). 이슈 60→20건(missing_link 37→0, orphan 6→3)
 
+## [2026-08-27] ingest | 프레임워크 개정 ingest — related 붕괴 원천 교정(스킬 예시) + brain-tool update-page/lint frontmatter 검사
+- 신규: [[instruction-without-tool-path-forces-violation]], [[misnamed-diagnosis-repeats-remediation]], [[skill-owned-constraint-restated-in-prompt-overrides-skill]]
+- 갱신: [[template-precedence-over-prose-norms]]
+- 출처: skill:op-brain-ingest
+
+## [2026-08-27] lint | ingest 자가 교정 — 신규 4페이지가 만든 broken_link 1·missing_link 1을 update-page로 해소(깨진 예시 문자 직접 인용 제거·관련 페이지 절 반영). 20건 복귀
+

@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-08-26 17:52
+> 갱신: 2026-08-27 14:20
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -133,6 +133,7 @@
 - [[install-mac-seed-key-loop-generalization]] — install 시드 키별 루프 일반화 — 조기 종료 시드 함정 #install #configuration #pattern #task-083
 - [[installer-verification-path-stub-boundary-sealing]] — 설치 스크립트 실측 검증 — 경계 두 지점만 봉인하고 나머지는 실물로 #testing #isolation #install #verification #pattern
 - [[installer-version-priority-model]] — 설치기 버전 결정 우선순위 모델 (4종 공통) #version #install #priority #architecture
+- [[instruction-without-tool-path-forces-violation]] — 수행 수단이 없는 지시는 금지를 깨게 만든다 — 지시·수단·금지 3자 모순 #dispatch #tooling #guard #prompt #lesson-learned
 - [[json-not-token-saving-format]] — JSON은 토큰 절약 포맷이 아니다 — 절약 원천의 정직한 귀속 #json #token #ssot #measurement #memory
 - [[kanban-current-stage-derivation]] — 칸반 current_stage 파생 규칙 (도달 단계 기준) #opal-console #kanban #pipeline #be-single-source
 - [[kanban-pipeline-stage-grouping]] — 파이프라인 스테퍼 stage 그룹화 (BE 단일 소스, na/skipped 제외) #opal-console #pipeline #stage-grouping #be-single-source
@@ -150,6 +151,7 @@
 - [[measurement-tool-more-fallible-than-artifact-lesson]] — 판정식이 산출물보다 자주 틀린다 — 측정 결함 4례 + 정규식 전종매치 계수 #lesson #measurement #verification #opds
 - [[memory-lifecycle-graduation-workflow]] — 메모리 라이프사이클·졸업(promote) 워크플로우 #memory #lifecycle #architecture #promote
 - [[mirror-gate-must-not-hostage-ssot-record]] — 미러 게이트가 SSOT 기록을 인질로 잡지 않는다 — fail-open 저널 쓰기 경계 #state-tool #ssot #mirror #fail-open #defensive-design #task-094
+- [[misnamed-diagnosis-repeats-remediation]] — 잘못된 이름으로 표면화된 결함은 정비를 반복시킨다 #diagnostics #lint #classification #tooling #lesson-learned
 - [[mitigation-recurs-without-ssot-registration]] — 완화책은 SSOT 미등재 시 재발한다 #governance #worker #infra-failure #ssot #resilience
 - [[model-mapping-2layer-override]] — 모델 매핑 2-레이어 오버라이드 (setting.json SSOT + 부트스트랩 step 0 머지) #model #mapping #setting #override #bootstrap
 - [[model-mapping-latest-tracking]] — OPAL 모델 매핑 최신화 + 최신 추종 전략 #model #mapping #gemini #codex #task
@@ -270,6 +272,7 @@
 - [[skill-opal-skill-creator]] — opal-skill-creator — OPAL 스킬 생성 파이프라인 #skill #creator #framework
 - [[skill-opal-skill-manager]] — opal-skill-manager — OPAL 커뮤니티 스킬 관리 #skill #manager #community
 - [[skill-opal-start]] — opal-start — OPAL 재진입 가이드 #skill #start #onboarding #guide
+- [[skill-owned-constraint-restated-in-prompt-overrides-skill]] — 프롬프트에 재서술한 제약은 스킬 원문을 이긴다 #dispatch #prompt #skill #pm-discipline #lesson-learned
 - [[skill-registry-index-registration-required-for-discovery]] — 신규 스킬은 파일 배포만으로 부족하다 — 레지스트리 인덱스 등록이 발견의 전제조건 #skill-registry #deployment-gap #discovery #lesson
 - [[skill-registry-validate-extension]] — skill-registry validate 확장 — dangling error 격상 + unregistered 역방향 감지 #skill-registry #validate #drift-detection #tooling
 - [[skill-rename-validate-pattern]] — 스킬 rename 후 레지스트리 정합 검증 패턴 #skill-registry #validate #rename #drift-detection #lesson
