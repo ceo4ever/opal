@@ -22,6 +22,7 @@
 #   v1.0.4 2026-05-10 21:00 KST: verify_checksum 강화 — release tag + sha256sums.txt 부재 시 prompt/거부 + main UNVERIFIED banner (GC-001, R-2) (144)
 #   v1.0.5 2026-06-29 15:24 KST: 추출 후 extract_dir/VERSION 각인값으로 version override — tarball VERSION 우선, API/main 폴백 강등 (048)
 #   v1.0.6 2026-07-10 KST: 미설치 감지 시 안내를 신규 설치 원라이너로 교체 — install 서브커맨드 제거에 따른 순환 안내 방지 (055)
+#   v1.0.7 2026-08-27 09:20 KST: 업데이트 성공 직후 릴리즈 노트 링크 안내 — version이 릴리즈 태그(v*)면 releases/tag/<version>, main/SHA면 releases 목록으로 분기(태그 페이지 404 방지). 출력 1블록 추가, 로직 무변경 (103 후속)
 #   v1.1 2026-08-07 12:04 KST: DL-CONTRACT (085) 적용 — 다운로드 대상을 릴리즈 자산으로 전환, 체크섬 3분기(verify/unverified/branch) 하드닝(무음 통과·해시 도구 하드의존 제거), 추출 strip 자동 판정 + 사후조건 검사. 정합 fix: sha 항목 선택을 파일명 컬럼 정확 일치로 교정(상위문자열 오채택 차단, D-2) + 체크섬 case에 `*)` 하드 실패 분기 추가(모드값 이상 fail-closed, D-6). TEST fix: strip 판정값 검증 추가 — 빈 값·비수치 값을 그 지점에서 하드 실패로 거부(무음 강등 차단, O-5) (085)
 #   v1.2 2026-08-08 21:52 KST: 체크섬 불일치 오류에 탈출 경로 안내 추가 — 우회 옵션은 제공하지 않되(무결성 유지), 원라이너 재설치·이슈 등록 경로를 출력하여 사용자가 막다른 길에 서지 않게 한다. 로컬 구버전 update.sh 결함으로 자가 갱신이 불가한 사용자(v0.6.0~v0.6.11)의 실제 이탈 사례 반영. 출력만 변경 — 검증·다운로드·추출 로직 무변경 (L2 경량)
 #
@@ -409,6 +410,15 @@ cmd_update() {
     # OPAL_VERSION="$version" — install-mac.sh가 ~/.opal/VERSION에 기록하는 버전 (다음 update 비교 기준).
     OPAL_AUTO_INSTALL=1 OPAL_VERSION="$version" FRAMEWORK_ROOT="$extract_dir" bash "$installer"
     success "업데이트 완료 ($version)"
+
+    # 릴리즈 노트 링크 — 무엇이 바뀌었는지 바로 확인할 수 있게 안내한다.
+    # version이 릴리즈 태그(v*)면 해당 태그 페이지로, main/SHA 등 태그가 아니면
+    # 릴리즈 목록으로 보낸다(태그 페이지가 404가 되지 않도록).
+    if [[ "$version" == v* ]]; then
+        info "릴리즈 노트: https://github.com/${opal_repo}/releases/tag/${version}"
+    else
+        info "릴리즈 노트: https://github.com/${opal_repo}/releases"
+    fi
 }
 
 _update_usage() {
