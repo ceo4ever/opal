@@ -3,9 +3,9 @@
   "module": "brain_tool",
   "layer": "util",
   "domain": "opal-brain",
-  "description": "OPAL Project Brain 지식 위키 결정론적 집행 CLI — 10개 서브 명령(init/add-page/index/log/search/sync-header/lint/validate/analyze/ingest-scan). index/log/링크 무결성을 brain-tool이 집행(LLM 직접 편집 금지). 페이지 타입은 SCHEMA §1.5에서 동적 로드(하드코딩 없음). frontmatter 파싱은 PyYAML, KST 타임스탬프는 date.js subprocess. sync-header는 code-scan @header → brain entity frontmatter 단방향 동기화만 수행. analyze는 code-scan @header 정량 집계 → JSON. ingest-scan은 docs/skills/tasks 목록 반환. [027] lint에 term 일관성 2종(term_duplicate·alias_collision) 추가. search에 draft 필터(--include-draft, R-6 term 한정) 추가. init이 schema-template.md에서 타입 동적 로드. [035] validate_frontmatter에 선택 필드(tags/sources/related) 평탄성 검사(flat string[]) 추가 — 중첩 리스트·비문자열 요소를 frontmatter_invalid violation으로 집행. [053] validate_frontmatter 링크필드(related) 값 검사 추가 — '[[', ']]', '.md' 포함 슬러그를 frontmatter_invalid로 집행; add-page에 --related(CSV→평탄 리스트) 플래그 추가. [071] add-page 미실체 거부 게이트(--body-file/--force/--note, speculative_content) + lint speculative kind + SPECULATIVE_MARKERS 구조적 헤딩 탐지.",
+  "description": "OPAL Project Brain 지식 위키 결정론적 집행 CLI — 11개 서브 명령(init/add-page/update-page/index/log/search/sync-header/lint/validate/analyze/ingest-scan). index/log/링크 무결성을 brain-tool이 집행(LLM 직접 편집 금지). 페이지 타입은 SCHEMA §1.5에서 동적 로드(하드코딩 없음). frontmatter 파싱은 PyYAML, KST 타임스탬프는 date.js subprocess. sync-header는 code-scan @header → brain entity frontmatter 단방향 동기화만 수행. analyze는 code-scan @header 정량 집계 → JSON. ingest-scan은 docs/skills/tasks 목록 반환. [027] lint에 term 일관성 2종(term_duplicate·alias_collision) 추가. search에 draft 필터(--include-draft, R-6 term 한정) 추가. init이 schema-template.md에서 타입 동적 로드. [035] validate_frontmatter에 선택 필드(tags/sources/related) 평탄성 검사(flat string[]) 추가 — 중첩 리스트·비문자열 요소를 frontmatter_invalid violation으로 집행. [053] validate_frontmatter 링크필드(related) 값 검사 추가 — '[[', ']]', '.md' 포함 슬러그를 frontmatter_invalid로 집행; add-page에 --related(CSV→평탄 리스트) 플래그 추가. [071] add-page 미실체 거부 게이트(--body-file/--force/--note, speculative_content) + lint speculative kind + SPECULATIVE_MARKERS 구조적 헤딩 탐지. [related-fix] update-page 신설 — add-page가 duplicate_page로 거부하던 기존 페이지 갱신의 도구 경로(부분 갱신·created 보존·updated 자동). lint에 frontmatter_invalid kind 편입 — validate_frontmatter를 lint 경로에서도 호출하고, related 붕괴 페이지의 missing_link 중복 보고를 억제한다.",
   "exports": [
-    "cmd_init", "cmd_add_page", "cmd_index", "cmd_log",
+    "cmd_init", "cmd_add_page", "cmd_update_page", "cmd_index", "cmd_log",
     "cmd_search", "cmd_sync_header", "cmd_lint", "cmd_validate",
     "cmd_analyze", "cmd_ingest_scan",
     "load_page_types", "DEFAULT_PAGE_TYPES", "detect_speculative_markers"
@@ -155,7 +155,9 @@ ERROR_CODES = {
     "brain_not_initialized":      "brain이 초기화되지 않음 (.opal/brain/SCHEMA.md 부재): {brain_path}",
     "invalid_page_type":          "유효하지 않은 페이지 타입: {page_type} (허용: {allowed})",
     "frontmatter_invalid":        "frontmatter 표준 위반: {detail}",
-    "duplicate_page":             "동일 경로의 페이지가 이미 존재: {page}",
+    "duplicate_page":             "동일 경로의 페이지가 이미 존재: {page}. 갱신은 update-page를 사용",
+    "page_not_found":             "갱신 대상 페이지가 존재하지 않음: {page}. 신설은 add-page를 사용",
+    "no_update_fields":           "갱신할 필드가 지정되지 않음 — --title/--tags/--sources/--related/--status/--body-file 중 최소 1개 필요",
     "index_write_failed":         "index.md 쓰기 실패: {detail}",
     "date_tool_failed":           "node ~/.opal/tools/date/date.js datetime 호출 실패",
     "log_append_failed":          "log.md append 실패: {detail}",
@@ -569,6 +571,99 @@ def cmd_add_page(args):
         ok_kwargs["override_note"] = args.note
     ok(command, **ok_kwargs)
 
+def cmd_update_page(args):
+    """기존 페이지 갱신 — frontmatter 선택 필드·본문을 도구 경로로 수정한다.
+
+    add-page가 `duplicate_page`로 거부하는 「기존 페이지 갱신」의 유일한 도구 경로다.
+    이 명령이 없으면 갱신 지시를 받은 LLM이 .md 파일을 직접 편집하게 되고,
+    그때 frontmatter가 손으로 쓰여 related 중첩 리스트 같은 형식 붕괴가 발생한다.
+
+    created는 보존하고 updated만 오늘로 갱신한다. 지정한 필드만 바뀐다.
+    """
+    command = "update-page"
+    brain_root = require_brain(command, args.brain_path)
+    dyn_types, type_to_cat = load_page_types(brain_root)
+
+    # 갱신 대상 탐색 — 슬러그 또는 pages/<type>/<name>.md 어느 쪽으로도 지목 가능
+    arg_path = pathlib.Path(args.path)
+    slug = arg_path.stem if arg_path.suffix == ".md" else arg_path.name
+    page_path = None
+    for ptype in dyn_types:
+        candidate = brain_root / "pages" / ptype / f"{slug}.md"
+        if candidate.exists():
+            page_path = candidate
+            break
+    if page_path is None:
+        err(command, "page_not_found", page=slug)
+
+    fm, body = parse_frontmatter(page_path.read_text(encoding="utf-8"))
+    if fm is None:
+        err(command, "frontmatter_invalid", detail=f"{slug}: frontmatter 파싱 불가")
+
+    # 갱신 필드 반영 — 지정된 것만 바꾼다(부분 갱신)
+    updated_fields = []
+    if args.title:
+        fm["title"] = args.title
+        updated_fields.append("title")
+    if args.tags is not None:
+        fm["tags"] = [t.strip() for t in args.tags.split(",") if t.strip()]
+        updated_fields.append("tags")
+    if args.sources is not None:
+        fm["sources"] = [s.strip() for s in args.sources.split(",") if s.strip()]
+        updated_fields.append("sources")
+    if args.related is not None:
+        fm["related"] = [r.strip() for r in args.related.split(",") if r.strip()]
+        updated_fields.append("related")
+    if args.status:
+        fm["status"] = args.status
+        updated_fields.append("status")
+
+    body_file = getattr(args, "body_file", None)
+    if body_file:
+        body_text = pathlib.Path(body_file).read_text(encoding="utf-8")
+        _, new_body = parse_frontmatter(body_text)
+        body = new_body
+        updated_fields.append("body")
+
+    if not updated_fields:
+        err(command, "no_update_fields")
+
+    fm["updated"] = get_kst_date(command)
+
+    issues = validate_frontmatter(fm, page_types=dyn_types)
+    if issues:
+        err(command, "frontmatter_invalid", detail="; ".join(issues))
+
+    # 미실체 지식 거부 게이트 — 본문이 바뀐 경우에만 재판정(add-page와 동일 계약)
+    markers = []
+    if body_file:
+        markers = detect_speculative_markers(fm.get("title", ""), body)
+        if markers:
+            if not args.force:
+                err(command, "speculative_content", detail=", ".join(markers), markers=markers)
+            if not getattr(args, "note", None):
+                err(command, "speculative_content",
+                    message="미실체 마커 감지 — --force 우회 시 --note '<사유>' 필수",
+                    markers=markers)
+            fm["speculative_override"] = True
+            fm["override_note"] = args.note
+
+    fm_yaml = yaml.safe_dump(fm, allow_unicode=True, sort_keys=False, default_flow_style=False).strip()
+    page_path.write_text(f"---\n{fm_yaml}\n---\n{body}", encoding="utf-8")
+
+    # index 재생성 (title 변경이 index에 반영되어야 한다)
+    pages = scan_pages(brain_root)
+    now_str = get_kst_datetime(command)
+    cat_order = _get_category_order(type_to_cat)
+    write_index(brain_root, pages, now_str, command, type_to_cat, cat_order)
+
+    ok_kwargs = dict(page=str(page_path), type=fm.get("type"), title=fm.get("title"),
+                     updated_fields=updated_fields, indexed=True)
+    if markers:
+        ok_kwargs["warning"] = "speculative_content_overridden"
+        ok_kwargs["speculative_markers"] = markers
+    ok(command, **ok_kwargs)
+
 # ─────────────────────────────────────────────────────────────────────────────
 # 3. index
 # ─────────────────────────────────────────────────────────────────────────────
@@ -868,12 +963,14 @@ _WIKILINK_RE = re.compile(r"\[\[([^\]:]+)\]\]")  # [[page]] (source: 제외)
 
 
 def cmd_lint(args):
-    """링크 무결성·고아·stale·근거 누락 페이지 탐지 → JSON 리포트.
-    kind ∈ {orphan, stale, broken_link, missing_link, unsourced, contradiction, speculative}
+    """링크 무결성·고아·stale·근거 누락·frontmatter 위반 탐지 → JSON 리포트.
+    kind ∈ {orphan, stale, broken_link, missing_link, unsourced, contradiction,
+            speculative, frontmatter_invalid}
     """
     command = "lint"
     brain_root = require_brain(command, args.brain_path)
 
+    dyn_types, _type_to_cat = load_page_types(brain_root)
     pages = scan_pages(brain_root)
     page_keys = {pg["rel"] for pg in pages}
     issues = []
@@ -889,6 +986,15 @@ def cmd_lint(args):
         fm = pg["fm"] or {}
         body = pg["body"] or ""
         rel = pg["rel"]
+
+        # frontmatter_invalid: 표준 위반을 lint 경로에서도 표면화한다.
+        # 이 검사가 lint에 없으면 붕괴된 related가 missing_link라는 다른 이름으로
+        # 뭉개져 나와 원인이 보이지 않는다(관측: related 중첩 리스트 9페이지가
+        # 3회차 정비까지 missing_link로만 표시됨).
+        fm_issues = validate_frontmatter(fm, page_types=dyn_types)
+        for fi in fm_issues:
+            issues.append({"kind": "frontmatter_invalid", "page": rel, "detail": fi})
+        related_broken = any("related" in fi for fi in fm_issues)
 
         # stale: status == stale
         if fm.get("status") == "stale":
@@ -910,8 +1016,10 @@ def cmd_lint(args):
             issues.append({"kind": "orphan", "page": rel,
                            "detail": "피참조·발신 링크 모두 없음 (고립 페이지)"})
 
-        # missing_link: related frontmatter에 있으나 본문에 링크 부재
-        related = fm.get("related") or []
+        # missing_link: related frontmatter에 있으나 본문에 링크 부재.
+        # related 자체가 붕괴된 페이지는 frontmatter_invalid가 이미 소유하므로
+        # 중복·오도 보고를 만들지 않는다(형식 결함을 링크 누락으로 위장 금지).
+        related = [] if related_broken else (fm.get("related") or [])
         for r in related:
             r = str(r).strip()
             if r and f"[[{r}]]" not in body:
@@ -1231,7 +1339,7 @@ def cmd_ingest_scan(args):
 def build_parser():
     parser = argparse.ArgumentParser(
         prog="brain-tool",
-        description="OPAL Project Brain 지식 위키 결정론적 집행 CLI (10 서브 명령)",
+        description="OPAL Project Brain 지식 위키 결정론적 집행 CLI (11 서브 명령)",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 서브 명령 (10종):
@@ -1277,6 +1385,22 @@ def build_parser():
     p_add.add_argument("--brain-path", dest="brain_path", default=".")
     p_add.set_defaults(func=cmd_add_page)
 
+    # ── update-page ──
+    p_upd = sub.add_parser("update-page", help="기존 페이지 갱신 (frontmatter 선택 필드·본문)")
+    p_upd.add_argument("path", metavar="<path>")
+    p_upd.add_argument("--title")
+    p_upd.add_argument("--tags")
+    p_upd.add_argument("--sources")
+    p_upd.add_argument("--related", help="관련 페이지 슬러그 CSV (예: state-tool,brain-tool)")
+    p_upd.add_argument("--status")
+    p_upd.add_argument("--force", action="store_true",
+                        help="미실체 마커 감지 거부를 우회 (--note 필수)")
+    p_upd.add_argument("--note", help="--force 우회 사유")
+    p_upd.add_argument("--body-file", dest="body_file",
+                        help="본문 파일 경로 — 지정 시 본문을 이 파일 내용으로 교체")
+    p_upd.add_argument("--brain-path", dest="brain_path", default=".")
+    p_upd.set_defaults(func=cmd_update_page)
+
     # ── index ──
     p_idx = sub.add_parser("index", help="pages/ 스캔 → index.md 재생성")
     p_idx.add_argument("--brain-path", dest="brain_path", default=".")
@@ -1312,7 +1436,7 @@ def build_parser():
     p_sh.set_defaults(func=cmd_sync_header)
 
     # ── lint ──
-    p_lint = sub.add_parser("lint", help="링크 무결성·고아·stale·근거 누락 탐지")
+    p_lint = sub.add_parser("lint", help="링크 무결성·고아·stale·근거 누락·frontmatter 위반 탐지")
     p_lint.add_argument("--brain-path", dest="brain_path", default=".")
     p_lint.set_defaults(func=cmd_lint)
 

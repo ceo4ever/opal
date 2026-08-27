@@ -83,6 +83,8 @@ def make_args(**kwargs):
         # sync-header
         "scope": None,
         "page": None,
+        # update-page
+        "status": None,
         # ingest-scan
         "source": "all",
     }
@@ -2291,6 +2293,179 @@ class TestSpeculativeGate071(BrainTestCase):
             draft_term_matches, [],
             f"draft term 페이지가 기본 search에 노출됨 — M-3 회귀 발생: {draft_term_matches}"
         )
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# related-fix: update-page 신설 + lint frontmatter_invalid 편입
+#   근본 원인 — 갱신 도구 경로가 없어 LLM이 .md를 직접 편집했고, 손으로 쓴
+#   frontmatter가 related 중첩 리스트로 붕괴했다. lint가 frontmatter를 검사하지
+#   않아 그 붕괴가 missing_link라는 다른 이름으로 뭉개져 원인이 가려졌다.
+# ═════════════════════════════════════════════════════════════════════════════
+
+class TestUpdatePage(BrainTestCase):
+    """update-page — 기존 페이지 갱신의 도구 경로."""
+
+    def setUp(self):
+        super().setUp()
+        self._init()
+        exit_code, _ = self._add_page(name="target-page", title="원본 제목",
+                                      tags="a,b", sources="task:001")
+        self.assertEqual(exit_code, 0)
+        self.page = self.brain_root / "pages" / "concept" / "target-page.md"
+
+    def _update(self, **kwargs):
+        kwargs.setdefault("title", None)   # argparse 미지정 시의 None을 재현
+        with _mock_kst():
+            args = make_args(brain_path=str(self.brain_root), path="target-page", **kwargs)
+            return self._call(BT.cmd_update_page, args)
+
+    def test_related_updated_as_flat_list(self):
+        """related를 CSV로 넘기면 평탄 문자열 리스트로 기록된다 — 직접 편집이 필요 없다."""
+        self._add_page(name="other-page", title="다른 페이지")
+        exit_code, result = self._update(related="other-page")
+        self.assertEqual(exit_code, 0, f"update-page 실패: {result}")
+        fm, _ = BT.parse_frontmatter(self.page.read_text(encoding="utf-8"))
+        self.assertEqual(fm["related"], ["other-page"],
+                         f"related가 평탄 리스트로 기록되지 않음: {fm['related']!r}")
+        self.assertIn("related", result["updated_fields"])
+
+    def test_created_preserved_and_updated_bumped(self):
+        """갱신은 created를 보존하고 updated만 바꾼다."""
+        fm_before, _ = BT.parse_frontmatter(self.page.read_text(encoding="utf-8"))
+        self._update(tags="x,y")
+        fm_after, _ = BT.parse_frontmatter(self.page.read_text(encoding="utf-8"))
+        self.assertEqual(fm_after["created"], fm_before["created"],
+                         "created가 갱신 시 덮어써짐")
+        self.assertEqual(fm_after["tags"], ["x", "y"])
+
+    def test_unspecified_fields_untouched(self):
+        """지정하지 않은 필드는 바뀌지 않는다 (부분 갱신)."""
+        self._update(tags="x")
+        fm, _ = BT.parse_frontmatter(self.page.read_text(encoding="utf-8"))
+        self.assertEqual(fm["title"], "원본 제목", "미지정 title이 변경됨")
+        self.assertEqual(fm["sources"], ["task:001"], "미지정 sources가 변경됨")
+
+    def test_missing_page_returns_page_not_found(self):
+        """존재하지 않는 페이지 갱신은 page_not_found로 거부한다."""
+        with _mock_kst():
+            args = make_args(brain_path=str(self.brain_root), path="no-such-page",
+                             title=None, tags="x")
+            self.assertEqual(self._err_code(BT.cmd_update_page, args), "page_not_found")
+
+    def test_no_fields_returns_no_update_fields(self):
+        """갱신 필드를 하나도 주지 않으면 no_update_fields로 거부한다."""
+        with _mock_kst():
+            args = make_args(brain_path=str(self.brain_root), path="target-page", title=None)
+            self.assertEqual(self._err_code(BT.cmd_update_page, args), "no_update_fields")
+
+    def test_wikilink_related_rejected(self):
+        """update-page도 add-page와 같은 frontmatter 계약을 집행한다 — 손글씨 문법 거부."""
+        with _mock_kst():
+            args = make_args(brain_path=str(self.brain_root), path="target-page",
+                             title=None, related="[[other-page]]")
+            self.assertEqual(self._err_code(BT.cmd_update_page, args), "frontmatter_invalid")
+
+    def test_md_suffix_related_rejected(self):
+        """`.md` 접미사 슬러그도 거부한다."""
+        with _mock_kst():
+            args = make_args(brain_path=str(self.brain_root), path="target-page",
+                             title=None, related="other-page.md")
+            self.assertEqual(self._err_code(BT.cmd_update_page, args), "frontmatter_invalid")
+
+    def test_title_change_reflected_in_index(self):
+        """title 갱신은 index.md에 반영된다."""
+        exit_code, result = self._update(title="바뀐 제목")
+        self.assertEqual(exit_code, 0, f"update-page 실패: {result}")
+        index_text = (self.brain_root / "index.md").read_text(encoding="utf-8")
+        self.assertIn("바뀐 제목", index_text, "갱신한 title이 index에 반영되지 않음")
+
+    def test_body_file_replaces_body(self):
+        """--body-file은 본문을 교체한다."""
+        body = self.tmpdir / "new-body.md"
+        body.write_text("## 개념 요약\n\n갱신된 본문이다.\n", encoding="utf-8")
+        exit_code, result = self._update(body_file=str(body))
+        self.assertEqual(exit_code, 0, f"update-page 실패: {result}")
+        self.assertIn("갱신된 본문이다.", self.page.read_text(encoding="utf-8"))
+
+    def test_speculative_body_rejected(self):
+        """본문 교체 시 미실체 게이트가 add-page와 동일하게 발동한다."""
+        body = self.tmpdir / "spec-body.md"
+        body.write_text("## 개선사항\n\n아직 착수하지 않았다.\n", encoding="utf-8")
+        with _mock_kst():
+            args = make_args(brain_path=str(self.brain_root), path="target-page",
+                             title=None, body_file=str(body))
+            self.assertEqual(self._err_code(BT.cmd_update_page, args), "speculative_content")
+
+
+class TestLintFrontmatterInvalid(BrainTestCase):
+    """lint가 frontmatter 위반을 제 이름으로 표면화하는가."""
+
+    def setUp(self):
+        super().setUp()
+        self._init()
+
+    def _write_raw(self, name, related_yaml):
+        page_dir = self.brain_root / "pages" / "concept"
+        page_dir.mkdir(parents=True, exist_ok=True)
+        (page_dir / f"{name}.md").write_text(
+            "---\n"
+            "type: concept\n"
+            f"title: {name}\n"
+            "tags: []\n"
+            "sources: [task:001]\n"
+            f"{related_yaml}"
+            "created: 2026-07-20\n"
+            "updated: 2026-07-20\n"
+            "status: active\n"
+            "---\n\n## 개념 요약\n\n본문.\n",
+            encoding="utf-8",
+        )
+
+    def _lint(self):
+        args = make_args(brain_path=str(self.brain_root))
+        return self._call(BT.cmd_lint, args)
+
+    def test_nested_related_surfaces_as_frontmatter_invalid(self):
+        """중첩 리스트 related는 frontmatter_invalid로 나온다 — 실제 붕괴 형태 재현."""
+        self._write_raw("nested", "related:\n  - - a\n    - b\n")
+        _, result = self._lint()
+        kinds = [(i["kind"], i["page"]) for i in result["issues"]]
+        self.assertIn(("frontmatter_invalid", "nested"), kinds,
+                      f"lint가 중첩 related를 frontmatter_invalid로 보고하지 않음: {kinds}")
+
+    def test_nested_related_not_reported_as_missing_link(self):
+        """붕괴된 related가 missing_link로 위장 보고되지 않는다 — 원인 은폐 차단."""
+        self._write_raw("nested", "related:\n  - - a\n    - b\n")
+        _, result = self._lint()
+        disguised = [i for i in result["issues"]
+                     if i["kind"] == "missing_link" and i["page"] == "nested"]
+        self.assertEqual(disguised, [],
+                         f"형식 결함이 missing_link로 위장 보고됨: {disguised}")
+
+    def test_md_suffix_related_surfaces_as_frontmatter_invalid(self):
+        """`.md` 접미사 related도 lint에서 잡힌다."""
+        self._write_raw("dotmd", "related: [other-page.md]\n")
+        _, result = self._lint()
+        kinds = [(i["kind"], i["page"]) for i in result["issues"]]
+        self.assertIn(("frontmatter_invalid", "dotmd"), kinds,
+                      f"lint가 .md 접미사 related를 잡지 못함: {kinds}")
+
+    def test_healthy_page_has_no_frontmatter_issue(self):
+        """정상 페이지에는 frontmatter_invalid가 붙지 않는다 (오탐 회귀 방지)."""
+        self._add_page(name="healthy", title="정상 페이지", sources="task:001")
+        _, result = self._lint()
+        bad = [i for i in result["issues"]
+               if i["kind"] == "frontmatter_invalid" and i["page"] == "healthy"]
+        self.assertEqual(bad, [], f"정상 페이지에 frontmatter_invalid 오탐: {bad}")
+
+    def test_missing_link_still_reported_for_valid_related(self):
+        """related가 정상이면 missing_link 판정은 종전대로 동작한다 (기존 계약 회귀 방지)."""
+        self._write_raw("valid-rel", "related: [some-target]\n")
+        _, result = self._lint()
+        ml = [i for i in result["issues"]
+              if i["kind"] == "missing_link" and i["page"] == "valid-rel"]
+        self.assertEqual(len(ml), 1,
+                         f"정상 related의 missing_link 판정이 사라짐: {result['issues']}")
 
 
 if __name__ == "__main__":

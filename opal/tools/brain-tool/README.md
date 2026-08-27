@@ -60,6 +60,23 @@ run.sh add-page <path> --type <entity|concept|flow|synthesis> --title <..> [--ta
 - 출력: `{ok, page, type, title, indexed:true}` (override 통과 시 `warning`·`speculative_markers`·`override_note` 추가)
 - 에러: `invalid_page_type`, `frontmatter_invalid`, `duplicate_page`, `speculative_content`
 
+### 2b. `update-page` — 기존 페이지 갱신
+
+```bash
+run.sh update-page <path> [--title ..] [--tags a,b] [--sources x,y] [--related a,b] [--status ..] [--body-file <file>] [--force] [--note <사유>] [--brain-path .]
+```
+
+`add-page`가 `duplicate_page`로 거부하는 **기존 페이지 갱신의 유일한 도구 경로**다. 이 경로가 없으면 갱신 지시를 받은 LLM이 `.md`를 직접 편집하게 되고, 손으로 쓴 frontmatter가 `related` 중첩 리스트로 붕괴한다.
+
+- 대상 탐색: 슬러그(`my-page`) 또는 `pages/<type>/<name>.md` 어느 쪽으로도 지목 가능. 타입 디렉토리를 순회해 찾는다.
+- **부분 갱신**: 지정한 필드만 바뀐다. 미지정 필드는 그대로 둔다.
+- `created`는 보존하고 `updated`만 오늘(KST)로 갱신한다.
+- `add-page`와 동일한 frontmatter 계약을 집행한다 — `related`에 `[[ ]]`·`.md`·중첩 리스트가 있으면 `frontmatter_invalid`로 거부한다.
+- `--body-file` 지정 시에만 미실체 게이트를 재판정한다(본문이 바뀐 경우에만).
+- title 변경은 index.md에 반영된다(갱신 후 index 자동 재생성).
+- 출력: `{ok, page, type, title, updated_fields:[...], indexed:true}`
+- 에러: `page_not_found`, `no_update_fields`, `frontmatter_invalid`, `speculative_content`
+
 ### 3. `index` — index.md 재생성
 
 ```bash
@@ -136,6 +153,7 @@ brain 구조(필수 파일·디렉토리)와 페이지 frontmatter 표준 준수
 
 | 버전 | 일시 | 변경내용 |
 |------|------|---------|
+| v1.13 | 2026-08-27 | `update-page` 신설 + `lint` frontmatter 검사 편입 — (1) 기존 페이지 갱신 도구 경로 부재가 LLM 직접 편집을 강제했고 그때 `related`가 중첩 리스트로 붕괴했다(9페이지 실측). `update-page`가 부분 갱신·`created` 보존·`updated` 자동 갱신을 집행하며 `add-page`와 동일한 frontmatter·미실체 계약을 적용한다. 에러 2종 신설(`page_not_found`·`no_update_fields`). (2) `cmd_lint`가 `validate_frontmatter`를 호출해 `frontmatter_invalid` kind를 표면화한다 — 종전에는 붕괴된 `related`가 `missing_link`라는 다른 이름으로 뭉개져 원인이 3회차 정비까지 가려졌다. `related` 붕괴 페이지의 `missing_link` 중복 보고는 억제한다. 테스트 127→142 |
 | v1.0 | 2026-06-10 | 초기 구현 — 8 서브 명령(init/add-page/index/log/search/sync-header/lint/validate) (015) |
 | v1.1 | 2026-06-16 18:15 | search 공백 무시 매칭 — 한국어 복합명사 띄어쓰기 편차 흡수(검색 시점 정규화, 저장 문서 불변, 스니펫 원문 노출) (025) |
 | v1.2 | 2026-07-23 10:15 | 미실체 지식 등록 차단 게이트 — add-page에 `--body-file`(실제 본문 스캔)·`--force`·`--note`(우회, note 필수) 추가 + `speculative_content` 에러(거부/우회 시 frontmatter `speculative_override`·`override_note` 기재) + lint에 `speculative` kind 추가(소급 검출, 비파괴) (071) |
