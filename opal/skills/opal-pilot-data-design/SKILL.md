@@ -67,6 +67,37 @@ TASK 단계에서 다음을 자동 감지·주입한다:
 
 > 인풋 부재 시: 기획서/대화에서 신규 도출, 사전은 `naming-convention.md` 기본 규칙 폴백.
 
+### 트랙 판정 (신규 / 역공학)
+
+MODEL 단계의 모드 순차 실행 방식을 결정하는 **트랙**을 TASK 단계에서 확정한다.
+
+**트랙 2종 정의**:
+
+| 트랙 | 정의 | MODEL 실행 순서 |
+|------|------|----------------|
+| `greenfield` (신규) | 설계 출발점이 백지 — 비즈니스 관점 개념 ERD부터 시작 | concept → logical → physical (3모드) |
+| `reverse` (역공학) | 설계 출발점이 기존 DB/DDL/ORM 스키마 — 물리가 이미 확정 | physical → logical (2모드, concept 제외) |
+
+**판정 우선순위** (3단, 상위가 하위를 대체):
+
+1. **명시 플래그** — `--reverse`/`--rev` 또는 `--greenfield`/`--gf`가 있으면 해당 트랙으로 즉시 확정, 자동 감지·확인 절차를 모두 생략한다
+2. **자동 감지 + 사용자 확인** — 플래그가 없으면 아래 3종 인풋을 감지해 역공학 후보 여부를 판단하고, 사용자 확인으로 확정한다 (감지만으로 자동 확정하지 않는다)
+3. **폴백** — 감지 대상이 모두 부재하거나 code-scan 실패 시 `greenfield`로 폴백한다 (fail-safe = 현행 동작)
+
+**자동 감지 대상** (1건 이상 → 역공학 후보):
+
+| # | 감지 대상 | 감지 경로 |
+|---|----------|----------|
+| 1 | 기존 ORM 모델·마이그레이션 코드 | `models/`·`migrations/` code-scan |
+| 2 | 기존 DDL 스크립트·덤프(`.sql`) | 사용자 지정 경로·`{설계}/250.DDL/` |
+| 3 | 기존 물리 DBML | `{설계}/물리모델링/*.dbml` |
+
+> 「기존 ERD」 인풋(개념·논리 ERD 가능)은 역공학 신호로 인정하지 않는다 — 오탐 억제.
+
+**확인 절차**: 신규 게이트·신규 STATE 행을 추가하지 않는다. 트랙 확정 질의는 TASK 단계 interview 절차 내부 질문 항목으로 편입한다.
+
+**확정 결과 기록**: TASK.md "산출물 저장 경로" 절과 나란히 「트랙」으로 기록하고, STEP 3 디스패치 프롬프트에 주입한다.
+
 ### 완료 처리
 
 - TASK.md 작성 (인터뷰 결과 + 인풋 컨텍스트 + `{설계}` 경로 포함)
@@ -122,7 +153,9 @@ op-data-dictionary 스킬을 수행하라.
 
 **[MUST]** `docs/proposals/opal-data-design.md §3.2`: "DDL/MIGRATION은 MODEL의 물리(DBML) 산출 이후에만 실행 가능(캡틴 명시). state-tool stage-transition guard가 자동 차단."
 
-`opal-db-agent` 단일 에이전트에 op-data-model 스킬을 디스패치한다. pilot은 **3모드 순차 실행** (개념 → 논리 → 물리).
+`opal-db-agent` 단일 에이전트에 op-data-model 스킬을 디스패치한다.
+
+**[MUST]** `docs/proposals/opal-data-design.md` §3.2.1: "pilot은 MODEL 단계에서 **트랙에 따라 모드를 순차 실행**한다 — 신규(greenfield) 트랙은 개념→논리→물리 3모드, 역공학(reverse) 트랙은 물리→논리 2모드(개념 모드 제외)다."
 
 **디스패치 프롬프트**:
 ```
@@ -130,16 +163,19 @@ op-data-dictionary 스킬을 수행하라.
 op-data-model 스킬을 수행하라.
 **스킬 경로**: {op-data-model/SKILL.md 탐색 경로}
 **태스크 폴더**: {tasks/{NNN}-{name}/}
-**이전 산출물**: {TASK.md 경로}, {DICT 산출물 경로 — 사전 3종}
+**이전 산출물**: {TASK.md 경로}, {DICT 산출물 경로 — 사전 3종}, {역공학 트랙: 기존 DDL 덤프·ORM 스키마·기존 물리 DBML 중 감지된 인풋 경로}
 **{설계} 루트**: {PROJECT.md에서 확정된 설계 산출물 루트 경로}
-**실행 순서**: concept → logical → physical (순차, 이전 모드 산출물이 다음 모드 입력)
+**트랙**: {greenfield | reverse — TASK.md 트랙 판정 결과}
+**실행 순서**:
+  - greenfield(신규): concept → logical → physical (순차, 이전 모드 산출물이 다음 모드 입력)
+  - reverse(역공학): physical → logical (순차, 역추출 물리를 기점으로 논리를 역산. concept 미실행)
 **속성명 SSOT**: {설계}/사전/표준단어사전.md (논리/물리 모드에서 DICT 사전 기반 필수)
 **하네스 Guards**: PLAN.md에 없는 파일 생성/수정 금지. 블로커 발생 시 즉시 중단 후 보고.
 ```
 **model**: standard
 
 워커 완료
-  → **PM Gate** (개념·논리·물리 ERD 정합·DICT 사전 용어 정합 검토)
+  → **PM Gate** (트랙별 모델링 산출물 정합 — 신규: 개념·논리·물리 / 역공학: 물리·논리 · DICT 사전 용어 정합 검토)
   → 사용자 보고 후 사용자 확인:
   ```
   ~/.opal/tools/state-tool/run.sh mark <task-path> --task-step model.pm_gate --done   # MODEL PM Gate
@@ -186,7 +222,7 @@ op-data-ddl 스킬을 수행하라.
 PM Gate — QA 검증 항목 직접 수행 (`docs/proposals/opal-data-design.md §3.4` 준수).
 
 **QA 검증 항목**:
-- [ ] 단계 간 정합: 개념 ERD ↔ 논리 ↔ 물리 (엔티티/관계 보존)
+- [ ] 단계 간 정합 — 신규 트랙: 개념 ERD ↔ 논리 ↔ 물리 / 역공학 트랙: 물리 ↔ 논리 (엔티티/관계 보존)
 - [ ] 사전 정합: 모든 컬럼명이 DICT 표준사전 등록 용어 (미등록 0)
 - [ ] 기획 정합: 기획서 엔티티 ↔ ERD 누락 0 (citation-rules §7 영역 간 일관성)
 - [ ] DDL 검증: 물리 DBML ↔ DDL 일치, 명명규칙(`PK_`/`FK_`/`UQ_`/`IDX_`) 준수
@@ -270,6 +306,16 @@ opal-harness-agentic.md / opal-harness-semi-agentic.md 참조. 본 절은 이 �
 | `//opdd --interactive 작업` | interactive — 모든 단계 사용자 승인 |
 | `//opdd --agentic 작업` | agentic — 모든 단계 PM 자율 (CLOSE 진입 제외) |
 
+### 트랙 축 (--reverse / --greenfield)
+
+**(1) 모드 축과 직교하는 별개 축**: 모드 축은 "PM이 얼마나 자율적으로 진행하는가"를, 트랙 축은 "설계의 출발점이 백지인가 기존 스키마인가"를 결정한다. 조합 가능(`//opdd --agentic --rev`). **`mode_flag_conflict` 판정 대상이 아니다 — 모드 플래그 개수 검사에 트랙 플래그를 세지 않는다.** 서브 하네스 로딩 규칙(§Harness)에 영향을 주지 않는다.
+
+**(2) 트랙 플래그 미사용 시 = 현행 동작 100% 유지**: 자동 감지 0건이면 `greenfield`로 확정되고, MODEL 실행 순서·PM Gate·QA 항목 문구가 전부 현행과 동일하다. 어떤 조건부 분기도 실행되지 않는다. `pipeline.json` `task_steps[]` 행 수·key·STATE 렌더 결과는 불변이다.
+
+**(3) 감지 불능·인풋 부재 시 폴백**: 감지 대상 3종이 모두 부재하거나 code-scan 실패 시 **태스크를 중단하지 않는다.** `greenfield`로 폴백하고 사용자에게 사유를 통보한다 (fail-safe = 현행 동작).
+
+**(4) 산출물 경로 계약**: 역공학 트랙에서도 `{설계}` 트리는 불변이며, `{설계}/220.개념모델링/`만 **생성하지 않는다**. `230.논리모델링/`·`240.물리모델링/`·`250.DDL/` 경로는 신규 트랙과 동일하다.
+
 ### 자율 게이트 흐름 (semi-agentic)
 
 ```
@@ -298,3 +344,4 @@ semi-agentic / agentic 모두 CLOSE 첫 행 `--auto-pass` 거부 (`agentic_close
 | v1.3 | 2026-08-13 16:54 | pipeline.json 전환 — references/pipeline.json 신설(15 task-step, SSOT), --rows-from 호출 경로를 SKILL.md에서 pipeline.json으로 교체, 표는 사람 열람용 미러로 명시 (090) |
 | v1.4 | 2026-08-14 09:27 | 파이프라인 스펙 중복정리 — `--row N`(14건)→`--task-step <key>`, 산문 `행 N`(7건)→key 참조로 전환. 미러 표·PM Gate 나열 표·중복 STATE.md 초기화 명령·모드/단계 목록 치환값 삭제 → `references/pipeline.json` 원천 포인터로 대체. R-1 자기모순 문장 정정 + 타 SKILL.md 줄번호 인용 전량 삭제 (091) |
 | v1.5 | 2026-08-21 15:26 | STEP 2 DICT 첫 디스패치 절에 `[PM 컨텍스트 주입]` 정규 포인터 블록 신설 — `pm/dispatch-process.md` §워커 컨텍스트 주입 템플릿 SSOT 참조 1줄로 통일. `**하네스 Guards**:` 단계 고유 가드 필드는 주입의 산출물이므로 무변경 (097) |
+| v1.6 | 2026-08-30 17:18 | 신규/역공학 2트랙 판정 도입 — STEP 1에 §트랙 판정 절 신설(플래그 우선 → 자동 감지 + 사용자 확인 → greenfield 폴백), STEP 3 실행 순서·산문·PM Gate 괄호를 트랙별 분기(역공학은 physical→logical, concept 제외), STEP 5 QA 첫 항목 트랙 분기, §명시 모드 뒤 §트랙 축 4소절 신설(모드 축과 직교, `mode_flag_conflict` 비대상, 미사용 시 현행 유지) (104) |

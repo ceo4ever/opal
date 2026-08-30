@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-08-27 14:20
+> 갱신: 2026-08-30 17:38
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -196,6 +196,7 @@
 - [[opal-security-model]] — OPAL 보안 모델 #security #install #mcp #supply-chain #owasp
 - [[opal-skill-classification-system]] — OPAL 스킬 분류 체계 — opal-pilot / op-* / opal-* 의미 계층 #skill-registry #classification #pilot #operator #architecture
 - [[opdd-design-artifacts-path-pattern]] — opdd 설계 산출물 경로 패턴 — opwt 차용 + {설계} 변수 #architecture-decision #data-design #path #ssot #opwt
+- [[opdd-reverse-track-physical-first-order]] — 역공학 트랙 MODEL 순서는 물리가 먼저다 #architecture-decision #data-design #pipeline #reverse-engineering #task-104
 - [[opds-testscenario-producer-establishment]] — opds 시나리오 producer 확립 — 공용 스킬 미접촉 SSOT 상충 해소 #opds #ssot-conflict #producer #shared-skill #task-075
 - [[opi-impl-injectable-depth-standard]] — opi 문서 깊이 기준 — "구현 시 주입 가능 수준" #opi #opal-project-init #docs-quality #architecture-decision
 - [[opi-v42-architecture-decisions]] — opi v4.2 아키텍처 결정 — 심층 분석·멀티서비스·워커 디스패치 #opi #opal-project-init #architecture-decision #multi-service #worker-dispatch
@@ -217,6 +218,7 @@
 - [[parser-drift-silent-longevity-lesson]] — 파서 drift는 조용히 오래 산다 — '회귀 없음' 기준선의 함정 #lesson-learned #parser #drift #dashboard #test-strategy
 - [[phase-name-stage-value-homonym-boundary]] — 프로세스 표시명과 파이프라인 단계값의 동명이의 경계 — 개명 파급 판단 원칙 #pipeline #naming #state-tool #lesson #task-090
 - [[pipeline-json-full-adoption-migration]] — pilot 파이프라인 행 정의 SSOT 전면 단일화 — pipeline.json 10/10 전환 #pipeline #state-tool #ssot #migration #task-090
+- [[pipeline-step-internal-mode-not-a-state-row]] — 단계 내부 모드는 STATE 행이 아니다 #pipeline #state-tool #mode #skip #task-104
 - [[pipeline-todo-mirror-hook-enforcement]] — 파이프라인 todo 미러 hook 강제 전환 (prose 지시 → 결정론 트리거) #opal-pipeline #todo-mirror #hook #enforce-not-advise #state-tool
 - [[pipeline-user-confirmation-single-status-axis]] — 사용자 확인 행 상태 계약 — pending에서 done/auto 또는 done/user로 단일화 #state-tool #pipeline #contract #task-093
 - [[platform-parity-mirror-before-design]] — 플랫폼 규약 편측 존재 — 새 설계보다 미러링 우선 #install #platform #lesson #mirroring
@@ -273,6 +275,7 @@
 - [[skill-opal-skill-manager]] — opal-skill-manager — OPAL 커뮤니티 스킬 관리 #skill #manager #community
 - [[skill-opal-start]] — opal-start — OPAL 재진입 가이드 #skill #start #onboarding #guide
 - [[skill-owned-constraint-restated-in-prompt-overrides-skill]] — 프롬프트에 재서술한 제약은 스킬 원문을 이긴다 #dispatch #prompt #skill #pm-discipline #lesson-learned
+- [[skill-quoting-ssot-must-edit-ssot-first]] — 스킬이 원문 인용하는 SSOT는 SSOT부터 고친다 #ssot #skill-authoring #citation #pipeline #task-104
 - [[skill-registry-index-registration-required-for-discovery]] — 신규 스킬은 파일 배포만으로 부족하다 — 레지스트리 인덱스 등록이 발견의 전제조건 #skill-registry #deployment-gap #discovery #lesson
 - [[skill-registry-validate-extension]] — skill-registry validate 확장 — dangling error 격상 + unregistered 역방향 감지 #skill-registry #validate #drift-detection #tooling
 - [[skill-rename-validate-pattern]] — 스킬 rename 후 레지스트리 정합 검증 패턴 #skill-registry #validate #rename #drift-detection #lesson

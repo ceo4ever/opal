@@ -2,10 +2,10 @@
 type: flow
 title: opdd 파이프라인 흐름 — DB 설계 표준 3층 파이프라인
 tags: [pipeline, data-design, flow, opdd, db]
-sources: [task:019]
+sources: [task:019, task:104]
 related: [skill-opal-pilot-data-design, op-data-dictionary-skill, op-data-model-skill, op-data-ddl-skill, dict-선행-model-ssot]
 created: 2026-06-12
-updated: 2026-06-12
+updated: 2026-08-30
 status: active
 ---
 
@@ -21,7 +21,8 @@ TASK (PM 직접)
 DICT (op-data-dictionary)          ← 사전이 MODEL의 속성명·타입 SSOT
   ↓
 MODEL (op-data-model)
-  ↓ 개념 → 논리 → 물리 (순차 3모드)
+  ↓ 신규 트랙: 개념 → 논리 → 물리 (3모드)
+  ↓ 역공학 트랙: 물리 → 논리 (2모드, 개념 스킵)
   ↓ 물리(DBML) 완료 확인 [gate]
   ↓
 DDL/MIGRATION (op-data-ddl)        ← 물리 DBML 산출 이후에만 실행 가능

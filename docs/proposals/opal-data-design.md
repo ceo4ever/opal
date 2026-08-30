@@ -43,14 +43,14 @@
 
 ```
 TASK → DICT → MODEL → DDL/MIGRATION → QA → CLOSE
-              (개념·논리·물리)  (물리 이후만)
+              (트랙별 모드)   (물리 이후만)
 ```
 
 | 단계 | 스킬 | 핵심 | 의존 |
 |------|------|------|------|
 | TASK | (PM 직접) | 인풋 컨텍스트 수집·범위 확정 | - |
 | DICT | op-data-dictionary | 표준사전·코드 신규 작성 또는 기존 보강. **모델링 SSOT 선확립** | TASK |
-| MODEL | op-data-model | 개념(Mermaid)→논리(Mermaid)→물리(DBML). 속성명·타입은 DICT 사전 기반 | **DICT** |
+| MODEL | op-data-model | 신규 트랙: 개념→논리→물리 / 역공학 트랙: 물리→논리(개념 제외). 속성명·타입은 DICT 사전 기반 | **DICT** |
 | DDL/MIGRATION | op-data-ddl | DBML→DDL 스크립트 생성 + ORM 마이그레이션 | **MODEL 물리 완료 후만** |
 | QA | (PM Gate) | 정합성 검증 (§3.4) | DDL |
 
@@ -59,7 +59,7 @@ TASK → DICT → MODEL → DDL/MIGRATION → QA → CLOSE
 
 ### 3.2.1 MODEL 3모드 — 분리 발동 + 산출물 양식 (캡틴 사양)
 
-op-data-model은 개념/논리/물리 **3모드를 분리 발동**할 수 있다(`erd-modeler` 3단계 모델링 흐름 계승). pilot은 MODEL 단계에서 3모드를 순차 실행(개념→논리→물리)하되, 단계 스킬 단독 호출 시 특정 모드만 발동 가능.
+op-data-model은 개념/논리/물리 **3모드를 분리 발동**할 수 있다(`erd-modeler` 3단계 모델링 흐름 계승). pilot은 MODEL 단계에서 **트랙에 따라 모드를 순차 실행**한다 — 신규(greenfield) 트랙은 개념→논리→물리 3모드, 역공학(reverse) 트랙은 물리→논리 2모드(개념 모드 제외)다. 단계 스킬 단독 호출 시 특정 모드만 발동 가능.
 
 | 모드 | 발동 | 산출물 (양식) | 핵심 규칙 (erd-modeler 계승) |
 |------|------|-------------|------------------------------|
@@ -67,7 +67,7 @@ op-data-model은 개념/논리/물리 **3모드를 분리 발동**할 수 있다
 | `logical`(논리) | `--logical` | `{설계}/논리모델링/ERD_{영역}_논리.mermaid` + `.md` | Mermaid + 속성/PK/FK. 식별/비식별 관계, M:N 매핑 해소, **속성명=DICT 표준사전 용어** |
 | `physical`(물리) | `--physical` | `{설계}/물리모델링/{프로젝트}.dbml` | DBML. 명명규칙 `{스키마}_{주제}_{엔티티}_{유형}`, 타입=도메인사전 매핑, 인덱스·제약·오딧컬럼 |
 
-> **모드 의존**: 논리는 개념, 물리는 논리 산출물을 입력으로 한다(증분). 기존 ERD가 인풋으로 주입되면 해당 모드부터 시작 가능. 각 모드 산출물 양식·폴더 구조는 erd-modeler `SKILL.md:35-51`·`references/mermaid-guide.md`·`dbml-guide.md`를 op-data-model `references/`로 이관하여 관리한다.
+> **모드 의존**: 논리는 개념, 물리는 논리 산출물을 입력으로 한다(증분). 기존 ERD가 인풋으로 주입되면 해당 모드부터 시작 가능. 역공학 트랙에서는 기존 DB·DDL·ORM에서 역추출한 **물리(DBML)가 기점**이며, 논리는 물리에서 역산한다. 개념 모드는 실행하지 않는다. 각 모드 산출물 양식·폴더 구조는 erd-modeler `SKILL.md:35-51`·`references/mermaid-guide.md`·`dbml-guide.md`를 op-data-model `references/`로 이관하여 관리한다.
 
 ### 3.2.2 DICT 사전 포맷 — 이중 포맷 (md SSOT + xlsx 뷰) (캡틴 사양)
 
@@ -98,7 +98,7 @@ TASK 단계에서 다음을 자동 감지·주입한다 (opwt의 외부참조 �
 
 ### 3.4 QA 검증 항목
 
-- 단계 간 정합: 개념 ERD ↔ 논리 ↔ 물리 (엔티티/관계 보존)
+- 단계 간 정합 — 신규 트랙: 개념 ERD ↔ 논리 ↔ 물리 / 역공학 트랙: 물리 ↔ 논리 (엔티티/관계 보존)
 - 사전 정합: 모든 컬럼명이 DICT 표준사전 등록 용어 (미등록 0)
 - 기획 정합: 기획서 엔티티 ↔ ERD 누락 0 (citation-rules §7 영역 간 일관성)
 - DDL 검증: 물리 DBML ↔ DDL 일치, 명명규칙(`PK_`/`FK_`/`UQ_`/`IDX_`) 준수

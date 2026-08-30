@@ -53,11 +53,14 @@ DB 설계 파이프라인의 MODEL 단계를 담당한다. 개념/논리/물리 
 
 | 상황 | 발동 모드 |
 |------|----------|
-| pilot 파이프라인 MODEL 단계 | concept → logical → physical 순차 3모드 |
+| pilot 파이프라인 MODEL 단계 (신규 트랙) | concept → logical → physical 순차 3모드 |
 | 단독 호출, 모드 미지정 | 사용자에게 모드 확인 |
 | 기존 개념 ERD 주입 | logical 모드부터 시작 |
 | 기존 논리 ERD 주입 | physical 모드부터 시작 |
+| 기존 DB/DDL 스키마 주입 (역공학) | physical(역추출·정규화) → logical(역산) — **concept 미실행** |
 | `//erm` alias 단독 호출 | concept 모드 (기본) 또는 사용자 지정 모드 |
+
+> 역공학 트랙의 물리 역추출 절차는 `op-data-ddl` §Step 4(`sql2dbml`)를 참조한다 — 산출물은 이 스킬 physical 모드 경로(`{설계}/물리모델링/{프로젝트}.dbml`)에 저장한다.
 
 ---
 
@@ -103,6 +106,7 @@ erDiagram
 **발동**: `--logical` 또는 기존 개념 ERD 주입 시
 
 **입력 전제**: 개념 ERD 산출물 (`{설계}/개념모델링/`) 존재 또는 주입
+역공학 트랙 예외: 물리(DBML) 산출물을 입력으로 논리를 역산한다 (§모드 선택 규칙 참조).
 
 **산출물 경로**:
 ```
@@ -153,6 +157,7 @@ erDiagram
 **발동**: `--physical` 또는 기존 논리 ERD 주입 시
 
 **입력 전제**: 논리 ERD 산출물 (`{설계}/논리모델링/`) 존재 또는 주입
+역공학 트랙 예외: 기존 DDL·ORM·DB 스키마를 입력으로 하며 논리 ERD 선행을 요구하지 않는다 (§모드 선택 규칙 참조).
 
 **산출물 경로**:
 ```
@@ -198,6 +203,7 @@ erDiagram
 - pilot 파이프라인 디스패치 시: 오케스트레이터가 지정한 모드부터 시작
 - 단독 호출 시: 사용자 지정 또는 확인
 - 기존 ERD 주입 시: 주입된 ERD 단계 다음 모드부터 시작
+- 역공학 트랙 디스패치 시: physical부터 시작하고 concept은 실행하지 않는다
 
 ### Step 3. 입력 컨텍스트 수집
 
@@ -306,3 +312,4 @@ default 트리 (`{설계}` 미선언 시 제안값):
 | 버전 | 일시(KST) | 변경 내용 |
 |------|----------|----------|
 | 1.0 | 2026-06-12 | 초안 — erd-modeler §4(`:82-191`) 계승 + 검토서 §3.2.1 MODEL 3모드 양식 반영. mermaid-guide.md 이관 (erd-modeler → op-data-model/references/). stage=MODEL, dispatched_by=opal-pilot-data-design |
+| 1.1 | 2026-08-30 17:18 | 역공학(reverse) 트랙 지원 — §모드 선택 규칙에 「기존 DB/DDL 스키마 주입」 행 추가(physical→logical, concept 미실행) + `op-data-ddl` §Step 4 참조 노트, logical/physical 입력 전제에 역공학 예외 추가, Step 2 모드 결정에 역공학 분기 불릿 추가 (104) |

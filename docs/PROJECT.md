@@ -144,7 +144,7 @@ llm-wiki 사상을 융합한 프로젝트 지식 위키 — 프로젝트의 WHY�
 |----------|------|------|------|
 | `opal-pilot-data-design` | opdd | 오케스트레이터 | 데이터 설계 파이프라인: TASK → DICT → MODEL → DDL/MIGRATION → QA → CLOSE |
 | `op-data-dictionary` | - | 단계 스킬 | DICT 단계 — 용어사전·도메인사전·코드사전 산출물 생성 |
-| `op-data-model` | - | 단계 스킬 | MODEL 단계 — 개념(Mermaid) → 논리(Mermaid) → 물리(DBML) ERD 산출물 생성 |
+| `op-data-model` | - | 단계 스킬 | MODEL 단계 — 트랙별 ERD 산출물 생성. 신규(greenfield): 개념(Mermaid) → 논리(Mermaid) → 물리(DBML) / 역공학(reverse): 물리 → 논리 (개념 제외) |
 | `op-data-ddl` | - | 단계 스킬 | DDL 단계 — DBML → DBMS별 CREATE TABLE 스크립트 생성 |
 | `opal-db-agent` | - | 서브에이전트 | DB 모델 설계+구현 전문 워커 — 마이그레이션 코드 구현 담당 |
 

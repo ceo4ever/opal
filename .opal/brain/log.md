@@ -363,3 +363,7 @@
 
 ## [2026-08-27] lint | ingest 자가 교정 — 신규 4페이지가 만든 broken_link 1·missing_link 1을 update-page로 해소(깨진 예시 문자 직접 인용 제거·관련 페이지 절 반영). 20건 복귀
 
+## [2026-08-30] ingest | CLOSE ingest — 태스크 104 opdd 역공학 트랙 개념모델링 스킵
+- 신규: [[pages/concept/opdd-reverse-track-physical-first-order.md]], [[pages/concept/skill-quoting-ssot-must-edit-ssot-first.md]], [[pages/concept/pipeline-step-internal-mode-not-a-state-row.md]]
+- 출처: task:104
+

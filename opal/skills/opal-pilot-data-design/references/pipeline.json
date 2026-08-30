@@ -11,7 +11,7 @@
     { "id": 5,  "key": "dict.user_confirm",           "stage": "DICT",           "item": "사용자 확인" },
     { "id": 6,  "key": "model.modeling",              "stage": "MODEL",          "item": "작업" },
     { "id": 7,  "key": "model.pm_gate",               "stage": "MODEL",          "item": "PM Gate",
-      "gate": { "artifacts": [], "checklist": ["{설계}/개념·논리·물리 모델링", "3모드 순차 완료", "논리 속성명 = DICT 용어", "물리 DBML 존재"] } },
+      "gate": { "artifacts": [], "checklist": ["{설계} 모델링 산출물 — 신규 트랙: 개념·논리·물리 / 역공학 트랙: 물리·논리", "트랙별 모드 순차 완료 — 신규: concept→logical→physical 3모드 / 역공학: physical→logical 2모드(개념 산출물 미요구)", "논리 속성명 = DICT 용어", "물리 DBML 존재"] } },
     { "id": 8,  "key": "model.user_confirm",          "stage": "MODEL",          "item": "사용자 확인" },
     { "id": 9,  "key": "ddl_migration.ddl_scripts",   "stage": "DDL/MIGRATION",  "item": "작업" },
     { "id": 10, "key": "ddl_migration.pm_gate",       "stage": "DDL/MIGRATION",  "item": "PM Gate",
