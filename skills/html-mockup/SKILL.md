@@ -313,7 +313,7 @@ output = lowercase + ASCII + hyphen-only  # file:// URL 호환성
 
 - [MUST] `~/.opal/references/skills.md` §스킬 도구 사용법: "스킬 메타데이터는 JSON 레지스트리가 SSOT이다." — 스킬 추가/수정 시 `opal/core/references/opal-skills-registry.json`만 수정. `~/.opal/` 직접 수정 금지.
 
-- [MUST] `.opal/AGENT.md` §확정 기준 #2: "`~/.opal/` 경로 파일을 Edit/Write하지 않는다. 수정 대상은 반드시 소스 경로에서 찾아 수정한다." — 본 스킬 실행 중 어떤 파일도 `~/.opal/` 경로에 직접 생성/수정하지 않는다. 배포는 캡틴 권한.
+- [MUST] `.opal/AGENT.md` §확정 기준 #2: "`~/.opal/` 경로 파일을 Edit/Write하지 않는다. 수정 대상은 반드시 소스 경로에서 찾아 수정한다." — 본 스킬 실행 중 어떤 파일도 `~/.opal/` 경로에 직접 생성/수정하지 않는다. 배포는 사용자 권한.
 
 - [MUST] `.opal/AGENT.md` §금지사항: "배포 행위 금지: install-mac.sh 실행, ~/.opal/에 파일 직접 복사/생성/수정 금지." — html-mockup 스킬은 캡틴 명시 지시 없이 install-mac.sh 실행 또는 배포 행위를 트리거하지 않는다.
 

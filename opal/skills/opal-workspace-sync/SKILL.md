@@ -16,7 +16,7 @@ domain: workspace
 
 단일 pilot 구조의 operator 타입 스킬이다. 여러 독립 git 저장소가 모여 있는 워크스페이스를 순회하여, 안전하게 pull 가능한 저장소만 자동 최신화하고 문제 저장소는 건드리지 않는다.
 
-**핵심 원칙 — 문제 저장소는 알투가 자율 조치하지 않는다.** dirty/diverged/detached/no-upstream/fetch-failed 저장소는 항상 **skip → 보고 → 제안 → 승인 후에만 조치**한다. 승인 없이 stash/rebase/merge/force/commit/push 등을 자동 실행하는 것은 절대 금지다 (헌법 user sovereignty 원칙).
+**핵심 원칙 — 문제 저장소는 PM이 자율 조치하지 않는다.** dirty/diverged/detached/no-upstream/fetch-failed 저장소는 항상 **skip → 보고 → 제안 → 승인 후에만 조치**한다. 승인 없이 stash/rebase/merge/force/commit/push 등을 자동 실행하는 것은 절대 금지다 (헌법 user sovereignty 원칙).
 
 ## Harness
 
@@ -120,7 +120,7 @@ STEP 2의 JSON을 아래 5섹션 형식으로 렌더한다.
 ### ① 요약 헤더
 워크스페이스 경로 + `summary` 집계를 한 줄로 표시한다. `already-current`는 별도로 "이미 최신 N개"로 표기한다 (updated/skipped/failed 카운트에는 포함되지 않으므로 `repositories[]`에서 `status == "already-current"` 개수를 직접 센다).
 
-`root`가 `null`이 아니면 그 저장소가 root repo임을 헤더 다음 줄에 명시한다 — 캡틴이 root 포함 여부를 헤더에서 바로 읽을 수 있어야 한다.
+`root`가 `null`이 아니면 그 저장소가 root repo임을 헤더 다음 줄에 명시한다 — 사용자가 root 포함 여부를 헤더에서 바로 읽을 수 있어야 한다.
 
 ```
 [opal-workspace-sync] <workspace 경로>
@@ -168,3 +168,4 @@ root 저장소: <root 경로> 포함              ← root != null일 때만
 |------|------|---------|
 | v1.0 | 2026-07-02 | 초기 작성 — 대상결정 3분기, git-sync-tool 호출, 5섹션 보고서, 승인 게이트, 사유별 제안조치 카탈로그 (052) |
 | v1.1 | 2026-09-02 14:04 | root 저장소 포함 — STEP 1에 root 확정 분기 + [MUST] 누락 금지, STEP 2 `--root` 규칙, JSON `root` 필드, ① 요약 헤더 root 표기. `<경로>/workspace` 순회 시 프로젝트 root repo가 대상에서 빠지던 누락 교정 (L2 직접 수정) |
+| v1.2 | 2026-09-02 17:22 | 에이전트명·소유자 호칭 리터럴 제거 — 규범 산문은 역할어(`PM`/`사용자`/`소유자`)로, 산출물·보고 문면은 `{owner_name}` 플레이스홀더로 전환해 런타임에 소유자 호칭으로 대체된다. 프레임워크 재사용성 확보 (L2 직접 수정) |

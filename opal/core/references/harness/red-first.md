@@ -81,7 +81,7 @@ load: TEST-SCENARIO 작성·EXECUTE 진입 시
 
 **(c) [MUST] 작성자≠PLAN 워커 불변**
 
-[MUST] 선작성 주체는 알투(PM)+캡틴 페어이며 PLAN.md 작성 주체(`opal-plan-agent`)와 분리 유지한다. 도출 시점이 앞당겨져도 이 분리는 변하지 않는다.
+[MUST] 선작성 주체는 PM+사용자 페어이며 PLAN.md 작성 주체(`opal-plan-agent`)와 분리 유지한다. 도출 시점이 앞당겨져도 이 분리는 변하지 않는다.
 
 근거: [MUST] `opal/skills/op-dev-test-scenario/references/test-scenario-guide.md` §목적 1: "self-confirming 방지를 위해 PLAN 작성자(opal-plan-agent)와 다른 작성자가 수행." / 채점 측 분리는 `opal/core/references/harness/scenario-gate.md` §4 Producer≠Evaluator.
 
@@ -154,3 +154,4 @@ RED는 EXECUTE 내부 서브스텝으로 흡수한다. 별도 STATE 행을 추�
 |------|------|------|
 | v1.0 | 2026-06-09 18:42 | 초기 작성 — RED-first 트랙 SSOT 신설 (016) |
 | v1.1 | 2026-08-19 20:59 | §1.6 목표계열 선작성 트랙(PLAN 병렬) 신설 — 선작성 가능 입력 3종·③④축 보강 필수·작성자≠PLAN 워커·RED→GREEN 불변·게이트 호출 금지 구간·opt-in 착수 판단 기준 (095) |
+| v1.2 | 2026-09-02 17:22 | 에이전트명·소유자 호칭 리터럴 제거 — 규범 산문은 역할어(`PM`/`사용자`/`소유자`)로, 산출물·보고 문면은 `{owner_name}` 플레이스홀더로 전환해 런타임에 소유자 호칭으로 대체된다. 프레임워크 재사용성 확보 (L2 직접 수정) |

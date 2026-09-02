@@ -25,7 +25,7 @@
 # [MUST] B/C 모드에서 tab close 절대 금지 — dispatch.sh extract A) 케이스 내부에서만 호출.
 #
 # 단독 호출 경계 (PLAN §2.5):
-#   알투/워커가 cmux-tool을 단독 호출 시 이 도구는 단일 책임(cmux browser 래퍼)만 수행한다.
+#   PM/워커가 cmux-tool을 단독 호출 시 이 도구는 단일 책임(cmux browser 래퍼)만 수행한다.
 #   cmux 미설치 시 에러 JSON 반환 ({"ok":false,"error":"cmux_not_installed"}).
 #   fallback 로직은 도구 내부에 없다 — 호출자(wtm-agent 등)가 판단한다.
 #

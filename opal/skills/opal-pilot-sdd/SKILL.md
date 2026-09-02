@@ -147,7 +147,7 @@ PM이 직접 SPEC.md를 검증하고 TEST-SCENARIOS.md를 작성한다. **워커
 1. 구조 검증 (PM 직접, 빠르게)
    verify-guide.md §2 참조 — S-1~S-6 항목 체크 (무변경 존치)
 
-2. TEST-SCENARIOS.md 작성 (PM+캡틴 페어, producer)
+2. TEST-SCENARIOS.md 작성 (PM+사용자 페어, producer)
    SPEC.md의 각 FR → AC → TS 도출
    이 과정에서 의미적/도메인 검증(M-1~M-6, D-1~D-2) 자연스럽게 수행
 
@@ -509,3 +509,4 @@ opal-harness-agentic.md §6 공통 기준에 추가:
 | v3.9.0 | 2026-08-15 21:48 | 사용자 확인 행 자동 승인 계약 반영 — agentic STATE 갱신 지시에서 PM `--auto-pass` 명시 호출 삭제, 다음 단계 진입 시 도구 자동 승인으로 전환하고 계약 본문은 하네스 SSOT(`opal-harness-agentic.md §4` / `opal-harness-semi-agentic.md §5`) 참조로 정리. CLOSE 진입 게이트 서술 불변 (093) |
 | v3.10.0 | 2026-08-16 13:40 | STATE.md 저널화 정합 — 폴더 구조 주석·EXECUTE-LOOP ACT 행 갱신 서술·`### STATE.md 구조` 예시에서 "파이프라인 현황판"·"## 현재 상태"·"## 다음 액션" 표 전제를 걷어내고 `state.json` SSOT + `show` 조회 포인터로 교체. ACT 목록·TS 현황·SPEC 변경이력은 state.json 파생이 아닌 opsdd 고유 자유 기재로 명시 존치(094 R-6, Step 10 project-dev 선례 준용) (094) |
 | v3.11.0 | 2026-08-21 15:26 | Phase 1 SPEC 첫 디스패치 절에 §[PM 컨텍스트 주입] 블록 신설 — `pm/dispatch-process.md` §워커 컨텍스트 주입 템플릿 포인터로 주입 항목 열거(하네스 Guards·참조 문서·기술 스택 3항목)를 대체. 전 워커 공통 고정(git 이력 변경 금지 포함)이 파일럿 종류와 무관하게 도달하도록 함. 디스패치 프롬프트 리터럴(`**하네스 Guards**:`/`**핵심 제약**:` 필드)은 단계 고유 가드이므로 무변경 (097) |
+| v3.11.1 | 2026-09-02 17:22 | 에이전트명·소유자 호칭 리터럴 제거 — 규범 산문은 역할어(`PM`/`사용자`/`소유자`)로, 산출물·보고 문면은 `{owner_name}` 플레이스홀더로 전환해 런타임에 소유자 호칭으로 대체된다. 프레임워크 재사용성 확보 (L2 직접 수정) |

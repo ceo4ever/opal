@@ -11,7 +11,7 @@ description: |
 ## 실행 컨텍스트
 
 - **호출자**: 오케스트레이터(1차 적용 = `opal-pilot-dev` STEP 3.5, TEST-SCENARIO.md 작성 직후) — 루프 컨트롤 자체는 오케스트레이터가 수행하며, 본 스킬은 `verdict`를 반환할 뿐 게이트 행 mark는 하지 않는다(그 권한은 호출자·state-tool에 있다).
-- **실행 주체**: 호출자(PM+캡틴)가 직접 수행한다. 서브에이전트 디스패치는 **Step 4의 opal-evaluator-agent 1건**뿐이다.
+- **실행 주체**: 호출자(PM+사용자)가 직접 수행한다. 서브에이전트 디스패치는 **Step 4의 opal-evaluator-agent 1건**뿐이다.
 - **규칙 SSOT**: `opal/core/references/harness/scenario-gate.md` — **[MUST] Step 1에서 반드시 먼저 Read**한다. 6축 정의(§2)·정규화 계약(§3)·루프 프로세스(§4)·종료조건 3종(§5)·tool-gated 집행(§6)이 이 문서에 정의되어 있으며, 본 SKILL은 그 규칙을 실행 절차로 배선할 뿐 규칙을 재정의하지 않는다.
 - **입력**:
   - `task_folder` — 태스크 폴더 경로 (예: `tasks/{NNN}-{태스크명}/`)
@@ -112,7 +112,7 @@ scenario_source: {producer_artifact}
 
 수신: `{scores: {goal, adoption, boundary}, average, gaps[], verdict: pass|fail}` + 보고서 `{task_folder}/SCENARIO-GATE-{N}.md`.
 
-> **[MUST] Producer≠Evaluator**: 작성자(PM+캡틴, `producer_artifact` 작성자)와 채점자(`opal-evaluator-agent` 서브에이전트 디스패치)는 매 반복 분리 유지한다. 호출자가 스스로 판단축을 채점하여 pass를 선언할 수 없다.
+> **[MUST] Producer≠Evaluator**: 작성자(PM+사용자, `producer_artifact` 작성자)와 채점자(`opal-evaluator-agent` 서브에이전트 디스패치)는 매 반복 분리 유지한다. 호출자가 스스로 판단축을 채점하여 pass를 선언할 수 없다.
 
 ### Step 5. 종료조건 3종 판정
 
@@ -140,8 +140,8 @@ scenario_source: {producer_artifact}
 }
 ```
 
-- `verdict: rewrite` → Producer(PM+캡틴)가 `gaps`를 반영해 `producer_artifact`를 재작성한 뒤, `iteration+1`로 Step 2부터 재호출한다(루프).
-- `verdict: escalate` → 호출자가 캡틴(사용자)에게 에스컬레이션하고 루프를 중단한다. 자율 재시도하지 않는다.
+- `verdict: rewrite` → Producer(PM+사용자)가 `gaps`를 반영해 `producer_artifact`를 재작성한 뒤, `iteration+1`로 Step 2부터 재호출한다(루프).
+- `verdict: escalate` → 호출자가 사용자에게 에스컬레이션하고 루프를 중단한다. 자율 재시도하지 않는다.
 - `verdict: pass` → 호출자가 두 증거(Step 3 exit 0 + Step 4 verdict pass)를 근거로 게이트 행(`test_scenario.scenario_gate`) mark를 진행한다. 본 스킬 자신은 mark를 수행하지 않는다.
 
 ## [MUST] 규율
@@ -149,7 +149,7 @@ scenario_source: {producer_artifact}
 | # | 규율 | 근거 |
 |---|------|------|
 | 1 | **tool-gated**: `verdict: pass`는 오직 (Step 3) test-tool exit 0 **AND** (Step 4) evaluator `verdict: pass` 두 증거가 모두 존재할 때만 성립한다. 호출자가 산문 판단만으로 pass를 생성할 수 없다. | `scenario-gate.md` §6, `opal/core/PRINCIPLES.md:15` |
-| 2 | **Producer≠Evaluator**: 작성자(PM+캡틴)와 채점자(opal-evaluator-agent 서브에이전트 디스패치)를 매 반복 분리 유지한다. | `scenario-gate.md` §4, TASK.md §확정된 설계 방향 3 |
+| 2 | **Producer≠Evaluator**: 작성자(PM+사용자)와 채점자(opal-evaluator-agent 서브에이전트 디스패치)를 매 반복 분리 유지한다. | `scenario-gate.md` §4, TASK.md §확정된 설계 방향 3 |
 | 3 | **수치 비복제**: 반복 상한/무진전 임계 수치는 `scenario-gate.md` §5(→ `opal-harness.md` §1)를 참조만 하고 본 SKILL 본문에 리터럴로 복제하지 않는다. | `scenario-gate.md` §5, `loop-control.md:41,143` |
 | 4 | **다중 pilot 지원**: opd(STEP 3.5)·opds(STEP 2)·opsdd(Phase 2 REVIEW) 3종 접합. 확산은 Step 2 pilot 변환기 추가만으로 재사용(정규화 계약이 확장성 근거). oppl 제외·oppd 2차. | TASK.md §범위, `scenario-gate.md` §3 |
 | 5 | **경로 이탈 방지**: Step 2 페이로드 빌드는 `task_folder` 하위 파일만 Read/Write한다. | PLAN §5.4 보안 |
@@ -173,3 +173,4 @@ scenario_source: {producer_artifact}
 |------|------|---------|
 | v1.0 | 2026-07-23 | 최초 작성 — 루프 프로세스 6단계(정규화 빌드→coverage-check→evaluator→종료조건→반환) 배선, tool-gated·Producer≠Evaluator·수치 비복제·1차 opd 단일 호출 [MUST] 명문화 (073/F-004) |
 | v1.1 | 2026-07-23 15:28 KST | Step 2에 `pilot=opds`(opd 동형)·`pilot=opsdd`(SPEC.md FR/AC/EC 소스) 변환기 표 additive 추가, 입력 설명 pilot enum·확장성 산문·[MUST] 규율 #4를 opd/opds/opsdd 3종 지원 사실로 정합 갱신 — opd 변환기 행 diff 0 (075/F-001) |
+| v1.2 | 2026-09-02 17:22 KST | 에이전트명·소유자 호칭 리터럴 제거 — 규범 산문은 역할어(`PM`/`사용자`/`소유자`)로, 산출물·보고 문면은 `{owner_name}` 플레이스홀더로 전환해 런타임에 소유자 호칭으로 대체된다. 프레임워크 재사용성 확보 (L2 직접 수정) |

@@ -1,6 +1,6 @@
 # TEST-SCENARIO.md 작성 가이드
 
-> **실행 컨텍스트**: 이 가이드는 `opal-pilot-dev` STEP 3.5에서 알투(PM) + 캡틴 페어가 직접 읽고 따른다.
+> **실행 컨텍스트**: 이 가이드는 `opal-pilot-dev` STEP 3.5에서 PM + 사용자 페어가 직접 읽고 따른다.
 > PLAN 완료 후, EXECUTE 전에 오케스트레이터가 이 가이드를 읽고 TEST-SCENARIO.md를 작성한다.
 > 작성된 TEST-SCENARIO.md는 사용자 검토 게이트를 거친 후, EXECUTE 단계에서 실행 명령이 채워지고, TEST 단계에서 opal-test-agent가 결과를 채운다.
 
@@ -122,9 +122,9 @@ TEST-SCENARIO.md §2를 작성한다:
 | DB 스키마/마이그레이션 | pytest + 실 DB | (해당 없음) | (해당 없음) |
 | API 엔드포인트 | pytest + httpx | **Swagger UI via cmux** (`test-tool integration --url <swagger_url>`) / playwright API | (해당 없음) |
 | 비즈니스 로직 | pytest/vitest | (해당 없음) | (해당 없음) |
-| 병렬/동시성 | pytest + asyncio | 부하 도구(locust 등) | 캡틴 모니터 확인 |
-| FE 화면/컴포넌트 | vitest + RTL | **cmux 1순위 → playwright 폴백** (cmux 미가용 시 폴백) | **캡틴 화면 시각 확인** |
-| 인증/인가 | pytest | playwright 로그인 흐름 | **캡틴 실 매체 로그인** |
+| 병렬/동시성 | pytest + asyncio | 부하 도구(locust 등) | 사용자 모니터 확인 |
+| FE 화면/컴포넌트 | vitest + RTL | **cmux 1순위 → playwright 폴백** (cmux 미가용 시 폴백) | **사용자 화면 시각 확인** |
+| 인증/인가 | pytest | playwright 로그인 흐름 | **사용자 실 매체 로그인** |
 | 외부 API 연동 | pytest + stub | cmux 1순위 → playwright 폴백 실 API | (해당 없음) |
 
 > **[MUST] M2 의무 트리거**: 변경 영역에 FE 화면/컴포넌트·인증/인가·외부 API 연동 중 하나라도 포함되면 해당 시나리오에 **L2/M2(E2E 자동화)를 의무로 포함**한다. M2 누락 = PM Gate FAIL. (DB 스키마·비즈니스 로직 단독 변경은 M2 면제.)
@@ -142,7 +142,7 @@ L3 사용자 협업       —               (옵션)          ✓
 
 > L1×M2가 불가(`—`)인 이유: L1(기능 단위)은 함수·컴포넌트 단위 격리 검증으로 브라우저·외부 시스템 자동화(M2)의 대상이 아니다. **FE 변경의 E2E 검증은 L2/M2로 작성**한다 (L1에 M2를 얹으려다 M2 자체를 누락하는 실수 방지).
 
-→ 시나리오마다 (L, M) 두 코드 모두 명시한다 (예: `L2/M1` = 실 DB 통합 / `L2/M2` = cmux E2E / `L3/M3` = 캡틴 협업).
+→ 시나리오마다 (L, M) 두 코드 모두 명시한다 (예: `L2/M1` = 실 DB 통합 / `L2/M2` = cmux E2E / `L3/M3` = 사용자 협업).
 
 **2단계 명명 매핑** (파이프라인 단계 ↔ 검증 묶음):
 
@@ -173,8 +173,8 @@ L3 사용자 협업       —               (옵션)          ✓
 **L3 시나리오 작성 요령**:
 - 계층: L3 명시
 - `[SUPERVISOR]` 마커를 시나리오 제목에 붙임
-- 실행자 필드: "[SUPERVISOR] — 캡틴 수동 확인 필요"
-- 결과/상세: 비워둠 (캡틴이 수동 확인 후 기록)
+- 실행자 필드: "[SUPERVISOR] — {owner_name} 수동 확인 필요"
+- 결과/상세: 비워둠 ({owner_name}이 수동 확인 후 기록)
 - 실행 방식: M3 (사용자 협업) 기본. M2 자동화 시도가 가능하면 옵션으로 병기.
 
 > **mock 금지 룰 (헌법 §4 "Don't fake it")**
@@ -252,3 +252,4 @@ TEST-SCENARIO.md §4 매핑 표를 완성한다:
 | v2.6 | 2026-06-24 | BE API 변경 시 Swagger via cmux M2 의무 트리거 추가 (041) |
 | v2.7 | 2026-07-23 | 목적에 "3. 목표 달성(채택 관점) 검증" 추가 + Step 1에 TASK.md 요구사항(R)·목표 문장·(교체형 시)채택/잔존 기준 도출 입력 병행 추가 — `scenario-gate.md` SSOT 참조 (073) |
 | v2.8 | 2026-08-19 20:59 | Step 1을 도출 입력 2계열(Block A: TASK 유래 / Block B: PLAN 유래)로 재구성 — 계열↔루브릭 축 매핑 표 + ⑥경계·부정 동시 도출 `[MUST]` + 선작성 초안 규정(마커·게이트 금지) + 보강 additive-only 금지 + 보강 완료 판정 3조건 + 선작성 대상이 아닌 Step 절 + 체크리스트 3행 (095) |
+| v2.9 | 2026-09-02 17:22 | 에이전트명·소유자 호칭 리터럴 제거 — 규범 산문은 역할어(`PM`/`사용자`/`소유자`)로, 산출물·보고 문면은 `{owner_name}` 플레이스홀더로 전환해 런타임에 소유자 호칭으로 대체된다. 프레임워크 재사용성 확보 (L2 직접 수정) |

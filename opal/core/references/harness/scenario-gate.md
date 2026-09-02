@@ -70,13 +70,13 @@ TEST-SCENARIO 단계는 두 가지 역할(① 리스크 가설 기반 시나리�
 Producer(작성) → scenario-coverage-check(결정론 게이트) → opal-evaluator-agent(scenario-rubric, 판단) → 종료조건 판정 → 재작성
 ```
 
-1. **Producer**: 알투(PM) + 캡틴 페어가 TEST-SCENARIO.md(또는 pilot별 등가 문서)를 작성/재작성한다.
+1. **Producer**: PM + 사용자 페어가 TEST-SCENARIO.md(또는 pilot별 등가 문서)를 작성/재작성한다.
 2. **coverage-check (결정론)**: test-tool `scenario-coverage-check`가 §3 정규화 입력을 받아 §2 ②③④ 매핑 누락을 판정한다.
 3. **evaluator (판단)**: opal-evaluator-agent가 `scenario-rubric` phase로 §2 ①⑤⑥ 판단축을 채점하고 gaps를 반환한다.
 4. **종료조건 판정**: §5 3종 중 하나로 귀결된다.
 5. **재작성**: 미수렴이면 Producer가 gaps를 반영해 재작성하고 1로 되돌아간다.
 
-> [MUST] Producer≠Evaluator — 매 반복마다 작성자(PM+캡틴)와 채점자(opal-evaluator-agent)가 분리 유지된다. self-confirming(PM 단독으로 게이트 통과 선언) 방지가 목적이다(→ TASK.md §확정된 설계 방향 3).
+> [MUST] Producer≠Evaluator — 매 반복마다 작성자(PM+사용자)와 채점자(opal-evaluator-agent)가 분리 유지된다. self-confirming(PM 단독으로 게이트 통과 선언) 방지가 목적이다(→ TASK.md §확정된 설계 방향 3).
 
 > **[MUST] 호출 시점 — PLAN 확정 + 보강 완료 후 1회**: 목표-커버 게이트는 ① PLAN.md 확정(F-NNN·H-N 확정) **AND** ② 도출 입력 2계열 보강 완료(→ `opal/skills/op-dev-test-scenario/references/test-scenario-guide.md` §작성 프로세스 Step 1 "보강 완료 판정" 3조건) 두 조건을 모두 충족한 뒤 **1회** 호출한다. 목표계열 선작성 시점(PLAN 워커 실행 중)에는 호출하지 않는다. (여기서 "1회"는 최초 진입 1회를 뜻하며, `verdict: rewrite` 수신 후의 §4-5 재작성 루프 재호출은 이 규율의 예외가 아니라 동일 게이트 1건의 반복이다.)
 
@@ -87,8 +87,8 @@ Producer(작성) → scenario-coverage-check(결정론 게이트) → opal-evalu
 ## 5. 종료조건 3종 [MUST]
 
 1. **수렴(PASS)**: 커버리지 누락 = 0 (hard gate, §2 ②③④) **AND** 판단축(①⑤⑥) 각 ≥ 1점(0점 축 없음) **AND** 평균 ≥ 1.5점(2점 척도 0~2).
-2. **반복 상한**: MAX 초과 → 캡틴(사용자) 에스컬레이션. **상한 수치는 본 문서가 복제하지 않는다** — `opal/core/references/opal-harness.md` §1 "시나리오 목표-커버 게이트 (루브릭 미달)" 행이 유일한 SSOT이며, 본 문서·op-scenario-gate는 그 행을 참조만 한다 (`loop-control.md:41,143` "본 표를 참조·복제하지 않음" 원칙 준용).
-3. **무진전**: 연속 2회 gaps·점수 개선 없음 → 캡틴(사용자) 에스컬레이션 (신호 정의는 `opal/skills/opal-pilot-project-loop/references/loop-control.md` §4 준용).
+2. **반복 상한**: MAX 초과 → 사용자 에스컬레이션. **상한 수치는 본 문서가 복제하지 않는다** — `opal/core/references/opal-harness.md` §1 "시나리오 목표-커버 게이트 (루브릭 미달)" 행이 유일한 SSOT이며, 본 문서·op-scenario-gate는 그 행을 참조만 한다 (`loop-control.md:41,143` "본 표를 참조·복제하지 않음" 원칙 준용).
+3. **무진전**: 연속 2회 gaps·점수 개선 없음 → 사용자 에스컬레이션 (신호 정의는 `opal/skills/opal-pilot-project-loop/references/loop-control.md` §4 준용).
 
 ## 6. tool-gated 집행 [MUST]
 
@@ -104,3 +104,4 @@ PM은 위 두 도구 출력 없이 게이트 통과를 산문으로 선언할 �
 |------|------|---------|
 | v1.0 | 2026-07-23 | 최초 작성 — 루브릭 6축·판정주체분리·정규화계약·루프 프로세스·종료조건 3종·tool-gated 집행 SSOT 신설 (073) |
 | v1.1 | 2026-08-19 20:59 | §4에 `[MUST]` 호출 시점 규율 블록 신설 — PLAN 확정+보강 완료 후 1회 호출 / 선작성 시점 호출 금지 근거(F·H 미확정 → ③④ 결정론 판정 불가) / state-tool stage-transition guard 정합 (095) |
+| v1.2 | 2026-09-02 17:22 | 에이전트명·소유자 호칭 리터럴 제거 — 규범 산문은 역할어(`PM`/`사용자`/`소유자`)로, 산출물·보고 문면은 `{owner_name}` 플레이스홀더로 전환해 런타임에 소유자 호칭으로 대체된다. 프레임워크 재사용성 확보 (L2 직접 수정) |

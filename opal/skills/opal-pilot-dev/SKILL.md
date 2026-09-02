@@ -79,7 +79,7 @@ op-dev-plan 스킬을 수행하라.
 ```
 **model**: advanced
 
-> **목표계열 선작성 착수 (PLAN 병렬)**: 위 PLAN 워커 디스패치와 **동시에**, 알투(PM)+캡틴 페어가 TASK.md만으로 Block A(채택 관점 — 목표 문장 · 요구사항 R 전체 · 교체형 시 채택/잔존 기준)를 도출해 TEST-SCENARIO.md 초안을 선작성한다. PLAN.md를 읽지 않은 상태에서 도출하여 PLAN 관점 오염을 원천 차단한다. 초안은 별도 임시 파일 없이 TEST-SCENARIO.md 본문에 직접 쓰고 보강 대기 마커를 남긴다.
+> **목표계열 선작성 착수 (PLAN 병렬)**: 위 PLAN 워커 디스패치와 **동시에**, PM+사용자 페어가 TASK.md만으로 Block A(채택 관점 — 목표 문장 · 요구사항 R 전체 · 교체형 시 채택/잔존 기준)를 도출해 TEST-SCENARIO.md 초안을 선작성한다. PLAN.md를 읽지 않은 상태에서 도출하여 PLAN 관점 오염을 원천 차단한다. 초안은 별도 임시 파일 없이 TEST-SCENARIO.md 본문에 직접 쓰고 보강 대기 마커를 남긴다.
 >
 > 이 시점에 목표-커버 게이트를 호출하지 않으며 `test_scenario.*` 행을 advance/mark하지 않는다. 선작성 초안과 PLAN.md 설계의 불일치는 PLAN PM Gate 시점의 조기 경보로 취급하여 사용자 보고에 포함한다.
 >
@@ -99,7 +99,7 @@ PLAN 완료
 
 > **[MUST] RED-first**: TEST-SCENARIO 작성 시 RED-first 트랙 적용 여부를 판단하고 기재한다. 규칙 SSOT: `opal/core/references/harness/red-first.md`. 목표계열 선작성 트랙은 동 문서 §1.6.
 
-작성자: **알투(PM) + 캡틴 페어** — 오케스트레이터가 직접 작성 (워커 디스패치 없음).
+작성자: **PM + 사용자 페어** — 오케스트레이터가 직접 작성 (워커 디스패치 없음).
 이 단계는 self-confirming 방지를 위해 PLAN 워커(opal-plan-agent)와 다른 작성자가 수행한다.
 
 1. **Block B 보강** — 선작성 초안(STEP 3 병렬 착수분)이 있으면, PLAN.md §리스크 가설 표(H-N)와 §1.2 기능 목록(F-NNN)을 도출 입력에 추가해 루브릭 ③기능커버·④리스크커버를 보강한다. 보강은 추가만이 아니라 초안 시나리오의 **수정·삭제를 포함**한다(→ `test-scenario-guide.md` §작성 프로세스 Step 1 Block B). 선작성하지 않았으면 Block A·B를 연속 수행한다(결과 동등).
@@ -110,7 +110,7 @@ PLAN 완료
    - 탐색 경로: `{프로젝트}/.opal/skills/op-scenario-gate/SKILL.md` → `~/.opal/skills/op-scenario-gate/SKILL.md`
    - 입력: `task_folder`(태스크 폴더 경로), `producer_artifact`(`{task_folder}/TEST-SCENARIO.md`), `pilot: opd`, `iteration`(최초 호출 = 1)
    - 수신 `verdict: pass` → 게이트 행 mark (`~/.opal/tools/state-tool/run.sh mark <task-path> --task-step test_scenario.scenario_gate --done` — Step 3 tool-gated 두 증거 근거로만 mark, 산문 판단으로 mark 금지)
-   - 수신 `verdict: rewrite` → PM+캡틴이 `gaps`를 반영해 TEST-SCENARIO.md 재작성 후 `iteration+1`로 op-scenario-gate 재호출 (루프, 게이트 행은 아직 mark하지 않음)
+   - 수신 `verdict: rewrite` → PM+사용자가 `gaps`를 반영해 TEST-SCENARIO.md 재작성 후 `iteration+1`로 op-scenario-gate 재호출 (루프, 게이트 행은 아직 mark하지 않음)
    - 수신 `verdict: escalate` → 사용자에게 에스컬레이션하고 자율 재시도하지 않음
    - `test_scenario.scenario_gate` 행 mark 시점은 보강 완료(4) 후 `verdict: pass` 수신 이후다.
 6. 사용자에게 TEST-SCENARIO 보고 — 승인 = EXECUTE 시작 허가
@@ -196,7 +196,7 @@ TEST 단계 진입 시 opal-test-agent 디스패치 전에:
 
 **PM 표준 요청 양식**:
 ```
-캡틴, [시나리오 S-N]은 사용자 협업 검증이 필요합니다.
+{owner_name}, [시나리오 S-N]은 사용자 협업 검증이 필요합니다.
 요청 내용: {시나리오 조건 요약}
 기대 결과: {기대 결과 요약}
 확인 후 결과(PASS/FAIL + 상세)를 알려주세요.
@@ -283,7 +283,7 @@ op-dev-test-agent 워커 디스패치. TEST-SCENARIO.md 실행 + 결과 기록 +
    - 개선 루프 프로세스 SSOT: `opal/core/references/harness/pm-improvement-loop.md`.
 5. **worktree 정리 안내** (`--worktree`/`--wt` 태스크에서만 — 미사용 시 자연 스킵):
    - `~/.opal/tools/worktree-tool/run.sh status --project-root <프로젝트 루트> --task <NNN>`으로 현재 상태를 조회해 보고한다.
-   - **[MUST] 자동 제거하지 않는다.** CLOSE 시점에 미머지 커밋이 남아 있는 것이 정상이다 — 커밋·머지는 캡틴의 권한이며 PM이 대행하지 않는다.
+   - **[MUST] 자동 제거하지 않는다.** CLOSE 시점에 미머지 커밋이 남아 있는 것이 정상이다 — 커밋·머지는 사용자의 권한이며 PM이 대행하지 않는다.
    - 안내 문구: "worktree `{worktree_root}`는 **머지 대기** 상태입니다. 머지·PR 처리 후 `~/.opal/tools/worktree-tool/run.sh remove --project-root <루트> --task <NNN>`으로 회수하세요."
    - `status` 호출 실패·메타 부재·worktree 부재는 전부 **no-op** — op-brain-ingest(스텝 3)·회고(스텝 4)와 동일하게 **CLOSE를 중단시키지 않는다**.
 6. 완료 보고
@@ -424,3 +424,4 @@ semi-agentic / agentic 모두 CLOSE 첫 행 `--auto-pass` 거부 (`agentic_close
 | v5.4 | 2026-08-21 15:19 | §[PM 컨텍스트 주입] 블록을 `pm/dispatch-process.md` §워커 컨텍스트 주입 템플릿 포인터로 일원화 — 주입 항목 열거(하네스 Guards·참조 문서·기술 스택 3항목)를 제거하고 SSOT 참조 1줄로 대체. 전 워커 공통 고정(git 이력 변경 금지 포함)이 파일럿 종류와 무관하게 도달하도록 함 (097) |
 | v5.5 | 2026-08-21 22:15 | STEP 1(TASK) 직후에 트랙 강등 판정 호출 지점 배선 — `opal/core/references/harness/track-routing.md`(SSOT) 포인터 + 소유자 승인 왕복 없이 진입·사후 통보 명시. 임계값 수치는 SSOT에만 존치(복제 0건) (098) |
 | v5.6 | 2026-08-23 12:45 | STEP 2(ANALYSIS) 디스패치 프롬프트에 `**분석 질문**:` 슬롯 1줄 추가 — 워커가 전방위 스캔 대신 PM 지정 질문에 답하도록 유도, `op-dev-analysis/SKILL.md`「지정 분석 질문」 섹션과 대응. PM Gate checklist 문구 복제 없음(SSOT는 pipeline.json 유지) (100) |
+| v5.7 | 2026-09-02 17:22 | 에이전트명·소유자 호칭 리터럴 제거 — 규범 산문은 역할어(`PM`/`사용자`/`소유자`)로, 산출물·보고 문면은 `{owner_name}` 플레이스홀더로 전환해 런타임에 소유자 호칭으로 대체된다. 프레임워크 재사용성 확보 (L2 직접 수정) |

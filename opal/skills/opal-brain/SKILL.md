@@ -261,7 +261,7 @@ index.md 전체 맵 등록 완료
 | `opal/skills/**` | concept | **3~6줄 요약 + `file_path` 포인터** |
 | `opal/*/references/**` | concept | **3~6줄 요약 + `file_path` 포인터** |
 | 코드 @header | — | **ingest --all 미해당** — entity는 `//opbr init` 시드 경로에서만 생성됨. ingest-scan은 docs/skills/tasks→concept만 스캔하며 코드→entity 분기가 없다 (`brain_tool.py:1082-1135`) |
-| 신규 업무 용어·상태·업무 표면 후보 | term (`status: draft`) | **업무 의미 2~4문장 + `aliases`/`actors`/`surfaces` frontmatter 선택 키 + 다층 근거 `sources` 병기**. [MUST] term 타입이 채택된 프로젝트에서만 추출(미채택 프로젝트는 건너뜀). [MUST] draft 페이지는 답변에 쓰지 않으며, 캡틴/PM 확정 시 `active` 승격. |
+| 신규 업무 용어·상태·업무 표면 후보 | term (`status: draft`) | **업무 의미 2~4문장 + `aliases`/`actors`/`surfaces` frontmatter 선택 키 + 다층 근거 `sources` 병기**. [MUST] term 타입이 채택된 프로젝트에서만 추출(미채택 프로젝트는 건너뜀). [MUST] draft 페이지는 답변에 쓰지 않으며, 사용자/PM 확정 시 `active` 승격. |
 
 **배치 정책:**
 
@@ -598,3 +598,4 @@ brain의 품질 문제를 탐지하고 정비 방안을 제안한다.
 | v1.8 | 2026-07-14 16:59 KST | query 답변을 content-driven 6단계 내부 워크플로우로 재구조화 — 고정 질의유형 택소노미 폐기, 관측 축 6종·후보 레이아웃 5종·판정 규칙(축→후보 매핑 1차 + 동점 시 단순한 쪽 tie-break), 불변 가드 3종(비출력 내부사고/호출 1회/read-only JSON 이스케이프), 두 예시(캠페인=Flow / 미션유형+정책=복합) + 표현·가독성 규율(항목 내부 다문장 분해·1라인 1내용, 전 후보 공통) 추가. 대화형·read-only 공통. (062) |
 | v1.9 | 2026-07-23 10:15 | 미실체 지식 등록 차단 게이트 정합 — STEP ingest 절에 "미실체 제외" [MUST] 1문장 추가(`op-brain-ingest` §STEP3 SSOT 재사용, 별도 정의 없음), lint issue kind 표에 `speculative` 행 추가, 단일 소스·task:NNN ingest add-page 예시에 `--body-file` 인자 반영(실제 본문 스캔). query 진입점③·synthesis 흐름·search draft 필터는 불변(M-3). (071) |
 | v2.0 | 2026-08-06 11:02 | query 질의 절차 보강 — `0.5 기존 분석 재사용` 항 신설(`search --type synthesis` 조회 + 재사용/갱신/신규 3분기, 미채택·부재 시 비차단 스킵), 3번에 `sources` 근거 원문 확인 1줄, 5번에 갱신 판정 시 신규 파일링 대신 갱신 제안 1줄. frontmatter version 드리프트(1.8 ↔ v1.9) 동시 해소. §답변 구조·read-only 계약 무변경 (084) |
+| v2.1 | 2026-09-02 17:22 | 에이전트명·소유자 호칭 리터럴 제거 — 규범 산문은 역할어(`PM`/`사용자`/`소유자`)로, 산출물·보고 문면은 `{owner_name}` 플레이스홀더로 전환해 런타임에 소유자 호칭으로 대체된다. 프레임워크 재사용성 확보 (L2 직접 수정) |

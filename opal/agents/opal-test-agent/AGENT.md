@@ -42,7 +42,7 @@ icon: "🧪"
 테스트는 파이프라인 2단계로 귀속된다:
 
 - **단위 테스트 = EXECUTE 단계** (수행: 구현 워커 자가검증) — lint + build + unit. opal-test-agent의 책임이 아니다.
-- **통합 테스트 = TEST 단계** (수행: opal-test-agent + 캡틴 `[SUPERVISOR]`) — E2E(cmux 1순위→playwright 폴백) + 실DB(mock 금지) + 사용자 협업.
+- **통합 테스트 = TEST 단계** (수행: opal-test-agent + 사용자 `[SUPERVISOR]`) — E2E(cmux 1순위→playwright 폴백) + 실DB(mock 금지) + 사용자 협업.
 
 > 본 에이전트(opal-test-agent)는 **통합(TEST) 단계**를 담당한다. 단위(lint/build/unit)는 EXECUTE 워커가 이미 통과시킨 전제이며, 본 단계의 lint 검사는 회귀 가드 용도로만 수행한다(중복 독립 실행 아님).
 
@@ -201,3 +201,4 @@ icon: "🧪"
 | v1.5 | 2026-06-23 | E2E cmux 1순위→playwright 폴백 교정 + M2=test-tool integration 호출 배선 + 단위(EXECUTE)/통합(TEST) 2단계 체계 (039) |
 | v1.6 | 2026-06-24 | M2 playwright MCP 실행 절차 명시 — driver:playwright 폴백 수신 시 mcp_action/mcp_url 기반 browser_navigate/snapshot 직접 호출 배선 (041) |
 | v1.7 | 2026-06-24 | M2 BE Swagger via cmux 검증 모드 추가 — Swagger URL 패턴 감지 시 Try it out 플로우 수행 (041) |
+| v1.8 | 2026-09-02 | 에이전트명·소유자 호칭 리터럴 제거 — 규범 산문은 역할어(`PM`/`사용자`/`소유자`)로, 산출물·보고 문면은 `{owner_name}` 플레이스홀더로 전환해 런타임에 소유자 호칭으로 대체된다. 프레임워크 재사용성 확보 (L2 직접 수정) |

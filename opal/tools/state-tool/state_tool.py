@@ -1581,7 +1581,7 @@ _WORKER_DISPATCH_STAGES = {
 }
 
 # 같은 단계 안에서도 「작업」 행만 워커 디스패치 지점이다. `PM Gate`·`사용자 확인`·
-# `목표-커버 게이트`는 PM/캡틴 판정 행이므로 소요를 요구하면 전부 오탐이 된다.
+# `목표-커버 게이트`는 PM/사용자 판정 행이므로 소요를 요구하면 전부 오탐이 된다.
 # 실 pipeline.json 10종 실측: 작업 행 item은 "작업" 또는 "작업 (…)" 형태다.
 _WORKER_DISPATCH_ITEM_PREFIX = "작업"
 
@@ -2787,7 +2787,7 @@ def _grade_citation(raw, root=None):
 
 
 def _has_decision_tag(cell):
-    """확정값 셀에 캡틴의 `[결정]` 태그가 있는지 확인 — 결정은 근거 판정
+    """확정값 셀에 사용자의 `[결정]` 태그가 있는지 확인 — 결정은 근거 판정
     대상이 아니다(PLAN §3.3.2, TASK.md §확정된 설계 방향 (5))."""
     return "[결정]" in (cell or "")
 

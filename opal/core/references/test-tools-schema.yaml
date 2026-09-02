@@ -140,7 +140,7 @@ tiers:
             via:      "호출 경로 (cmux-tool) — cmux 항목"
             fallback: "폴백 여부 (playwright 항목 true)"
         supervisor:
-          description: "캡틴 수동 검증 [SUPERVISOR] (예: captain-manual)"
+          description: "사용자 수동 검증 [SUPERVISOR] (예: captain-manual)"
   item_fields:
     name:
       type: string

@@ -50,7 +50,7 @@ op-dev-plan 워커 디스패치. **model**: advanced. 이전 산출물: TASK.md�
 
 ### TEST-SCENARIO 작성 — 목표계열 선작성 → 보강 → 게이트 (3단계)
 
-> op-dev-plan 워커는 PLAN.md만 작성한다(op-dev-plan/SKILL.md가 TEST-SCENARIO.md를 출력 범위에서 제외). TEST-SCENARIO.md는 **알투(PM) + 캡틴 페어**가 `op-dev-test-scenario/SKILL.md`의 "TEST-SCENARIO.md 통일 형식"(§1 리스크 가설 표 / §4 AC↔가설↔계층↔시나리오 매핑 표)을 명시 참조하여 직접 작성한다(self-confirming 방지 — PLAN 워커와 다른 작성자, opd STEP 3.5 동형). 문서 전용 작업 시 스킵(게이트도 자연 스킵).
+> op-dev-plan 워커는 PLAN.md만 작성한다(op-dev-plan/SKILL.md가 TEST-SCENARIO.md를 출력 범위에서 제외). TEST-SCENARIO.md는 **PM + 사용자 페어**가 `op-dev-test-scenario/SKILL.md`의 "TEST-SCENARIO.md 통일 형식"(§1 리스크 가설 표 / §4 AC↔가설↔계층↔시나리오 매핑 표)을 명시 참조하여 직접 작성한다(self-confirming 방지 — PLAN 워커와 다른 작성자, opd STEP 3.5 동형). 문서 전용 작업 시 스킵(게이트도 자연 스킵).
 >
 > **규칙 SSOT** — 선작성 트랙: `opal/core/references/harness/red-first.md` §1.6 / 2계열 도출 절차: `op-dev-test-scenario/references/test-scenario-guide.md` §작성 프로세스 Step 1 / 게이트 호출 시점: `opal/core/references/harness/scenario-gate.md` §4. 본 절은 규칙을 재정의하지 않고 **순서만 배선**한다.
 
@@ -70,7 +70,7 @@ op-dev-plan 워커 디스패치. **model**: advanced. 이전 산출물: TASK.md�
   - 탐색 경로: `{프로젝트}/.opal/skills/op-scenario-gate/SKILL.md` → `~/.opal/skills/op-scenario-gate/SKILL.md`
   - 입력: `task_folder`(태스크 폴더 경로), `producer_artifact`(`{task_folder}/TEST-SCENARIO.md`), `pilot: opds`, `iteration`(최초 호출 = 1)
   - 수신 `verdict: pass` → 게이트 행 mark (`~/.opal/tools/state-tool/run.sh mark <task-path> --task-step plan.scenario_gate --done` 호출 — Step 3 coverage-check exit 0 AND Step 4 evaluator verdict pass 두 증거 근거로만 mark, 산문 판단으로 mark 금지)
-  - 수신 `verdict: rewrite` → PM+캡틴이 `gaps`를 반영해 TEST-SCENARIO.md 재작성 후 `iteration+1`로 op-scenario-gate 재호출 (루프, 게이트 행은 아직 mark하지 않음)
+  - 수신 `verdict: rewrite` → PM+사용자가 `gaps`를 반영해 TEST-SCENARIO.md 재작성 후 `iteration+1`로 op-scenario-gate 재호출 (루프, 게이트 행은 아직 mark하지 않음)
   - 수신 `verdict: escalate` → 사용자에게 에스컬레이션하고 자율 재시도하지 않음
   - 문서 전용 작업 시(TEST-SCENARIO.md 스킵) 게이트도 자연 스킵
 - `plan.scenario_gate` 행 mark 시점은 **(c)의 `verdict: pass` 수신 이후**다 — (a)·(b) 시점에는 mark하지 않는다.
@@ -392,3 +392,4 @@ semi-agentic / agentic 모두 CLOSE 첫 행 `--auto-pass` 거부 (`agentic_close
 | v4.8 | 2026-08-19 21:10 | STEP 2에 목표계열 선작성 3단계 배선 — (a) PLAN 디스패치와 동시 선작성 착수 (b) PLAN.md 수신 후 Block B 보강(수정·삭제 포함) (c) 보강 완료 후 게이트 1회 호출 + `plan.scenario_gate` mark 시점 명시. 규칙 본문 0줄(SSOT 포인터만), pipeline.json·PM Gate 체크리스트 무변경 (095) |
 | v4.9 | 2026-08-21 15:19 | §[PM 컨텍스트 주입] 블록 2건(PLAN·TEST 디스패치)을 `pm/dispatch-process.md` §워커 컨텍스트 주입 템플릿 포인터로 일원화 — 주입 항목 열거(하네스 Guards·참조 문서·기술 스택 3항목)를 제거하고 SSOT 참조 1줄로 대체. 전 워커 공통 고정(git 이력 변경 금지 포함)이 파일럿 종류와 무관하게 도달하도록 함 (097) |
 | v5.0 | 2026-08-21 22:15 | 에스컬레이션 규칙에 하향 강등(`opd`→`opds`) SSOT 포인터 1줄 추가 — `opal/core/references/harness/track-routing.md` 참조, 판정 시점 분리(강등=TASK 직후/승격=PLAN 결과)로 상호배타임을 명시. 승격 임계값 표·문장 무변경 (098) |
+| v5.1 | 2026-09-02 17:22 | 에이전트명·소유자 호칭 리터럴 제거 — 규범 산문은 역할어(`PM`/`사용자`/`소유자`)로, 산출물·보고 문면은 `{owner_name}` 플레이스홀더로 전환해 런타임에 소유자 호칭으로 대체된다. 프레임워크 재사용성 확보 (L2 직접 수정) |

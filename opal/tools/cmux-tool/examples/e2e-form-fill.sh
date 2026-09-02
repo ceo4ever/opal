@@ -7,7 +7,7 @@
 #   - tasks/007-260520-opp-cmux-tool-generic-expansion/cmux/scripts/test-browser.sh (부분)
 #
 # 역할: cmux-tool 디스패처를 통해 "폼 입력 → 제출 → 결과 확인" E2E 자동화를 수행한다.
-#       알투/워커가 E2E 자동화 레시피로 참조하거나 직접 실행할 수 있다.
+#       PM/워커가 E2E 자동화 레시피로 참조하거나 직접 실행할 수 있다.
 #
 # 사용법:
 #   e2e-form-fill.sh <url> --email <email> --password <pw> [--surface <handle>]

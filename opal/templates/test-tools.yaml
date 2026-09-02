@@ -128,7 +128,7 @@ tiers:
     e2e:
       - { name: cmux, priority: 1, via: cmux-tool }
       - { name: playwright, priority: 2, fallback: true }
-    # 캡틴 수동 검증 [SUPERVISOR]
+    # 사용자 수동 검증 [SUPERVISOR]
     supervisor:
       - { name: captain-manual }
 

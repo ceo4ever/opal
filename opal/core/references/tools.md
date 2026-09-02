@@ -518,7 +518,7 @@ node ~/.opal/tools/code-scan/code-scan.js scan src/auth/auth.service.ts --json
 
 ### 트리거 조건
 
-알투가 아래 사용자 문장을 수신하면 cmux-tool을 우선 선택한다.  
+PM이 아래 사용자 문장을 수신하면 cmux-tool을 우선 선택한다.  
 cmux 미설치 시 wtm-agent 경유 호출은 silent fallback → playwright-tool. 단독 호출 시 에러 JSON 반환.
 
 | 사용 시점 | 대표 사용자 문장 | 우선 명령 (cmux-tool) | 폴백 |
@@ -945,11 +945,11 @@ bash ~/.opal/tools/tool-scan/run.sh check <도구>               # 설치/실행
 **실행 경로**: `~/.opal/tools/worktree-tool/run.sh`  
 **소스 경로**: `opal/tools/worktree-tool/worktree_tool.py`  
 **의존성**: `~/.opal/.venv/bin/python` (표준 라이브러리만 — argparse/json/os/pathlib/shutil/subprocess/sys/datetime) + 로컬 **git 2.25+**(`sparse-checkout --cone` 사용)  
-**호출자**: `harness/task-process.md` 스텝 4.5(`--worktree`/`--wt` 태스크의 생성 훅) / `opal-pilot-dev/SKILL.md` STEP 6 CLOSE(정리 안내, `status` 조회) / 캡틴 수동 회수(`remove`)
+**호출자**: `harness/task-process.md` 스텝 4.5(`--worktree`/`--wt` 태스크의 생성 훅) / `opal-pilot-dev/SKILL.md` STEP 6 CLOSE(정리 안내, `status` 조회) / 사용자 수동 회수(`remove`)
 
 ### 트리거 조건
 
-`--worktree`/`--wt` 플래그가 있는 태스크의 TASK 후처리(스텝 4.5)에서 `create` 호출. CLOSE 단계에서 `status` 조회. 머지 완료 후 캡틴이 `remove` 수동 호출.
+`--worktree`/`--wt` 플래그가 있는 태스크의 TASK 후처리(스텝 4.5)에서 `create` 호출. CLOSE 단계에서 `status` 조회. 머지 완료 후 사용자가 `remove` 수동 호출.
 
 ### 커맨드 (4서브명령)
 
@@ -1170,3 +1170,4 @@ bash ~/.opal/tools/tool-scan/run.sh check <도구>               # 설치/실행
 | v2.16 | 2026-08-16 15:05 | 종료 코드 표 근거 각주 정정 — 에러 코드 카탈로그 종수 리터럴(23종, stale) 삭제 후 `opal/tools/state-tool/README.md` §에러 코드 카탈로그 SSOT 포인터로 교체 (중복 SSOT 재발 방지, R-9 D-5 ①) (094 Step 14) |
 | v2.17 | 2026-08-20 12:23 | memory-tool 섹션 정합 — `delete` 커맨드에 `--orphan --ref` 예시 추가, `review` 출력 예시 주석에 참조 무결성 검사(memory_file_missing/memory_file_unresolvable) 명시, 주요 에러 코드 표에 `memory_file_exists`·`orphan_ref_missing`·`memory_file_unresolvable` 3행 추가 + `memory_file_not_found` 의미를 "해석 성공 + 본문 부재"로 한정. 커맨드 종수(9) 무변경 (096) |
 | v2.18 | 2026-09-02 14:05 | git-sync-tool 섹션 — `sync`에 `--root <경로>` 옵션 등재(순회 대상 밖 상위 root 저장소를 대상 선두 추가, `.git` 없으면 조용히 제외, 순회 결과와 중복 시 미계상, 미전달 시 현행 동일) + 출력 JSON에 `root` 필드 1행 추가. `<프로젝트>/workspace` 순회 시 프로젝트 root repo 누락 교정 |
+| v2.19 | 2026-09-02 17:22 | 에이전트명·소유자 호칭 리터럴 제거 — 규범 산문은 역할어(`PM`/`사용자`/`소유자`)로, 산출물·보고 문면은 `{owner_name}` 플레이스홀더로 전환해 런타임에 소유자 호칭으로 대체된다. 프레임워크 재사용성 확보 (L2 직접 수정) |

@@ -175,10 +175,10 @@ registry는 **이원 구조**다:
 
 ### 6. `// 커맨드` 미설치 매칭 시 자동 설치·실행
 
-알투가 `//pdf` 같은 community 트리거를 매칭했는데 skill-registry가 `installed: false`로 응답하면,
+PM이 `//pdf` 같은 community 트리거를 매칭했는데 skill-registry가 `installed: false`로 응답하면,
 **라이선스가 확인된 스킬은 동의 대기 없이 자동으로 clone-copy 설치·실행**한다. 문제 있는 라이선스(미확인, Unknown)만 게이트한다.
 
-> 근거: 소유자(캡틴) 확정 — "문제 있는 라이선스만 아니면 무조건 설치·실행" (064).
+> 근거: 소유자 확정 — "문제 있는 라이선스만 아니면 무조건 설치·실행" (064).
 
 **분기 판정** (skill-registry `match` 응답의 `license`·`source_repo`·`ambiguous` 기준):
 
@@ -215,3 +215,4 @@ registry는 **이원 구조**다:
 | v1.3 | 2026-07-16 14:59 KST | §6 미설치 매칭 → 자동 설치·실행 (라이선스 확인 스킬 동의 게이트 제거, Unknown만 게이트 유지) (064) |
 | v1.4 | 2026-07-17 09:17 KST | 검색·설치·제거·업데이트 4절차를 clone-copy 단일 방식으로 재작성 + 관리 진입 시 `migrate` 훅 명시 + user-registry.json 이원 registry 경계 명문화 + `npx skills add` 전량 제거(find/check는 보조 유지) + §6 ambiguous 분기 추가 (064) |
 | v1.4.1 | 2026-07-17 09:26 KST | §2 설치 절차 3단계에 복사 원본 탐지 폴백 추가 — `{tmp}/{subdir}/SKILL.md` → `{tmp}/skills/{basename}/SKILL.md` → `find` 탐색 → 실패 시 후보 목록 보고하고 중단(빈 설치 금지). anthropics/skills 카탈로그가 `skills/{name}/` 중첩 레이아웃임을 실 clone으로 확인(064 S-9 fix) |
+| v1.4.2 | 2026-09-02 17:22 KST | 에이전트명·소유자 호칭 리터럴 제거 — 규범 산문은 역할어(`PM`/`사용자`/`소유자`)로, 산출물·보고 문면은 `{owner_name}` 플레이스홀더로 전환해 런타임에 소유자 호칭으로 대체된다. 프레임워크 재사용성 확보 (L2 직접 수정) |

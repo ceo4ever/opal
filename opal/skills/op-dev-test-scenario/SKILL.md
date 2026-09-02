@@ -10,8 +10,8 @@ description: |
 
 ## 실행 컨텍스트
 
-- **호출자**: `opal-pilot-dev` STEP 3.5 — 오케스트레이터(알투 PM + 캡틴 페어)가 직접 수행 (워커 디스패치 없음)
-- **작성자**: 알투(PM) + 캡틴 페어 — self-confirming 방지를 위해 PLAN 워커(opal-plan-agent)와 다른 작성자가 수행한다
+- **호출자**: `opal-pilot-dev` STEP 3.5 — 오케스트레이터(PM + 사용자 페어)가 직접 수행 (워커 디스패치 없음)
+- **작성자**: PM + 사용자 페어 — self-confirming 방지를 위해 PLAN 워커(opal-plan-agent)와 다른 작성자가 수행한다
 - **입력**: `tasks/{NNN}-{태스크명}/TASK.md` + `PLAN.md` (§ 리스크 가설 표 필수)
 - **출력**: `tasks/{NNN}-{태스크명}/TEST-SCENARIO.md`
 - **목표-커버리지 게이트 규칙 SSOT**: `opal/core/references/harness/scenario-gate.md` — 루브릭 6축(①목표달성~⑥경계/부정)·판정 주체 분리·정규화 계약·종료조건 3종은 이 문서가 SSOT다.
@@ -52,10 +52,10 @@ Read ~/.opal/skills/op-dev-test-scenario/references/test-scenario-guide.md
 
 | 구성요소 | 담당 | 시점 |
 |---------|------|------|
-| 리스크 가설 표 (§1) | 알투(PM) + 캡틴 페어 | PLAN.md §리스크 가설 표 기반 |
-| 테스트 데이터 설계 (§2) | 알투(PM) + 캡틴 페어 | STEP 3.5 작성 시 |
-| 시나리오 본문 Given/When/Then (§3) | 알투(PM) + 캡틴 페어 | STEP 3.5 작성 시 |
-| 4열 매핑 표 (§4) | 알투(PM) + 캡틴 페어 | STEP 3.5 작성 시 |
+| 리스크 가설 표 (§1) | PM + 사용자 페어 | PLAN.md §리스크 가설 표 기반 |
+| 테스트 데이터 설계 (§2) | PM + 사용자 페어 | STEP 3.5 작성 시 |
+| 시나리오 본문 Given/When/Then (§3) | PM + 사용자 페어 | STEP 3.5 작성 시 |
+| 4열 매핑 표 (§4) | PM + 사용자 페어 | STEP 3.5 작성 시 |
 | 실행 명령 채움 (§3 내 각 시나리오) | op-dev-execute 워커 | EXECUTE 단계 |
 | RED 테스트 코드 작성 (M1 시나리오 → 실패 테스트 코드 변환·실행·RED 증거 기록) | opal-test-agent (mode: red) | EXECUTE 진입 전 (RED-first 트랙 한정) — 마크다운 시나리오는 PM 작성 유지, 실행 가능 테스트 코드 변환은 test-agent(red). SSOT: `opal/core/references/harness/red-first.md` |
 | 결과/상세 채움 (§3 내 각 시나리오) | opal-test-agent | TEST 단계 |
@@ -67,7 +67,7 @@ Read ~/.opal/skills/op-dev-test-scenario/references/test-scenario-guide.md
 # TEST SCENARIO: {태스크 제목}
 
 > 작성일: YYYY-MM-DD | 상태: {작성 완료 / 실행 완료}
-> 작성자: 알투(PM) + 캡틴 페어 | PLAN.md 가설 표 기반
+> 작성자: PM + 사용자 페어 | PLAN.md 가설 표 기반
 
 ## 1. 리스크 가설 표
 
@@ -124,9 +124,9 @@ Read ~/.opal/skills/op-dev-test-scenario/references/test-scenario-guide.md
 | **실행 방식** | **M3 (사용자 협업). M2 자동화 시도 가능 시 병기** |
 | 조건 | {사전 조건} |
 | 기대 결과 | {기대 결과} |
-| 실행자 | [SUPERVISOR] — 캡틴 수동 확인 필요 |
-| 결과 | _{캡틴 확인 후 기록}_ |
-| 상세 | _{캡틴 확인 후 기록}_ |
+| 실행자 | [SUPERVISOR] — {owner_name} 수동 확인 필요 |
+| 결과 | _{owner_name} 확인 후 기록_ |
+| 상세 | _{owner_name} 확인 후 기록_ |
 
 ## 4. AC ↔ 가설 ↔ 계층 ↔ 시나리오 매핑 표
 
@@ -212,3 +212,4 @@ TEST-SCENARIO 완료: tasks/{NNN}-{태스크명}/TEST-SCENARIO.md
 | v1.6 | 2026-06-10 10:13 | 역할 분배표 RED 작성주체(opal-test-agent mode:red) 행 + §4 매핑표 '테스트 파일:케이스' 열 (016) |
 | v1.7 | 2026-06-24 | PM Gate FE→M2 체크 항목 추가 + 시나리오 작성 체크리스트 보강 (041) |
 | v1.8 | 2026-07-23 | scenario-gate.md SSOT 참조 추가(실행 컨텍스트) + PM Gate에 "목표 커버(TASK R·목표달성 시나리오 존재)" 항목 추가 (073) |
+| v1.9 | 2026-09-02 | 에이전트명·소유자 호칭 리터럴 제거 — 규범 산문은 역할어(`PM`/`사용자`/`소유자`)로, 산출물·보고 문면은 `{owner_name}` 플레이스홀더로 전환해 런타임에 소유자 호칭으로 대체된다. 프레임워크 재사용성 확보 (L2 직접 수정) |

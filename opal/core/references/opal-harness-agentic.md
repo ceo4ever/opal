@@ -81,7 +81,7 @@ PM이 사용자를 대행하는 만큼, interactive 모드보다 **책임과 의
 - 자동 승인 가부는 `can_auto_approve_user_confirmation(stage, mode)` 단일 판정을 따른다 — agentic 모드는 CLOSE를 제외한 전 구간에서 허용된다
 - `advance` / `mark` 응답의 `auto_approved` 배열로 어떤 행이 자동 승인되었는지 관측한다
 - `--as-worker`(워커 호출) · `--force` · 대상 행 `stage = CLOSE`이면 자동 승인은 즉시 no-op이다
-- 자동 승인 불가 구간에서는 도구가 `user_confirmation_required` 에러로 거부하며, 캡틴이 `mark --owner user`로 승인해야 한다
+- 자동 승인 불가 구간에서는 도구가 `user_confirmation_required` 에러로 거부하며, 사용자가 `mark --owner user`로 승인해야 한다
 - 자동 승인 사실은 state.json `note`에 기재되므로 별도 감사 로그는 불필요하다 (PLAN §2.8)
 - 근거: TASK F-12 / PLAN §2.15 G-12 / 093 F-001·F-002·F-003
 
@@ -238,3 +238,4 @@ PM이 수행한 모든 활동을 시계열로 기록하여, 사용자가 사후�
 | v1.7 | 2026-05-09 18:30 | 개인 식별자 누설 정정 — "캡틴" → "소유자" / note 예시 "{owner_name} 확인" placeholder 치환 (139) |
 | v1.8 | 2026-06-07 | §4 QA→PM Gate 통합 정합화 — "QA Gate + PM Gate" → "PM Gate"(문서 QA 흡수), 강화 검토 기준 2번을 PM 직접 문서 QA 검증으로, Artifact Gate의 "QA 에이전트 재소환" → "워커 재지시"로 수정(QA 에이전트 디스패치 없음, op-dev-qa/op-task-qa는 검증 기준 라이브러리). 동작 검증(TEST/verify) 영역 불변 (014 Phase 4-2) |
 | v1.9 | 2026-08-15 21:48 | §4 사용자 확인 행 자동 승인 계약 전환 — PM `--auto-pass` 명시 호출 지시 삭제, 다음 단계 진입 시 도구가 `auto_approve_prior_user_confirmations`로 자동 승인(done/auto/timestamp + note `auto-approved on <stage> entry`), `can_auto_approve_user_confirmation` 단일 판정·`auto_approved` 응답 필드·as-worker/force/CLOSE no-op·`user_confirmation_required` 거부 명시. CLOSE 진입 게이트 절차 불변 (093) |
+| v1.10 | 2026-09-02 17:22 | 에이전트명·소유자 호칭 리터럴 제거 — 규범 산문은 역할어(`PM`/`사용자`/`소유자`)로, 산출물·보고 문면은 `{owner_name}` 플레이스홀더로 전환해 런타임에 소유자 호칭으로 대체된다. 프레임워크 재사용성 확보 (L2 직접 수정) |
