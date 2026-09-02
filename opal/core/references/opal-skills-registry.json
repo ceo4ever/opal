@@ -1,7 +1,7 @@
 {
   "$schema": "opal-skills-registry-v1",
-  "version": "3.12.0",
-  "updated_at": "2026-08-24",
+  "version": "3.13.0",
+  "updated_at": "2026-09-02",
   "groups": {
     "opal-pilot": [
       {
@@ -721,7 +721,7 @@
       {
         "name": "opal-workspace-sync",
         "alias": "opws",
-        "description": "워크스페이스 Git 일괄 동기화 — 직속 자식 git 저장소 순회 + clean/ff-only pull, 문제 저장소(dirty/diverged/detached/no-upstream/fetch-failed)는 skip·보고·승인 후 조치",
+        "description": "워크스페이스 Git 일괄 동기화 — 직속 자식 git 저장소 + 프로젝트 root 저장소 순회 + clean/ff-only pull, 문제 저장소(dirty/diverged/detached/no-upstream/fetch-failed)는 skip·보고·승인 후 조치",
         "triggers": [
           "^opws$",
           "^opal-workspace-sync$",
@@ -892,6 +892,14 @@
         "opal-eli5 신규 등록 (alias opeli5, group opal) — 주제 설명서 생성 사용자 진입점. 커뮤니티 플러그인 eli5(claude-community)와 동명 충돌을 피하려 opal- 접두 채택",
         "스킬 레벨 출력 포맷 플래그 최초 도입 (--html 기본 / --md) — 기존 -- 플래그는 오케스트레이터 전용이었음. 의도된 선례로 기록",
         "미지원 포맷값은 기본값 폴백 없이 1줄 오류 후 중단 (조용한 폴백 금지)"
+      ]
+    },
+    {
+      "version": "3.13.0",
+      "date": "2026-09-02",
+      "task": "-",
+      "changes": [
+        "opws(opal-workspace-sync) description 현행화 — 순회 대상에 프로젝트 root 저장소 포함 명시. `<프로젝트>/workspace` 순회 시 root repo가 대상에서 빠지던 누락 교정에 동반"
       ]
     }
   ]

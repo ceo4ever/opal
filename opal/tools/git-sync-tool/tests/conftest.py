@@ -3,8 +3,8 @@
   "module": "conftest",
   "layer": "test",
   "domain": "opal-workspace",
-  "description": "git-sync-tool pytest fixture — tmp_path에 로컬 bare remote + 상태별 clone 8종(behind/current/dirty/diverged/detached/noupstream/fetchfail 및 이들을 담는 workspace 컨테이너)을 subprocess로 구성한다. RED-first 트랙(052) — 실 git 저장소만 사용, mock/patch 금지. 전역 git config 의존 제거를 위해 모든 git 호출에 -c user.email/-c user.name 주입.",
-  "exports": ["run_git", "make_bare_remote", "clone_repo", "GitFixtureWorkspace", "git_workspace"],
+  "description": "git-sync-tool pytest fixture — tmp_path에 로컬 bare remote + 상태별 clone 8종(behind/current/dirty/diverged/detached/noupstream/fetchfail 및 이들을 담는 workspace 컨테이너)을 subprocess로 구성한다. root 저장소 시나리오용으로 자체가 git 저장소인 프로젝트 루트 + 그 아래 workspace/ 컨테이너 구조(project_root_with_workspace)도 제공한다. RED-first 트랙(052) — 실 git 저장소만 사용, mock/patch 금지. 전역 git config 의존 제거를 위해 모든 git 호출에 -c user.email/-c user.name 주입.",
+  "exports": ["run_git", "make_bare_remote", "clone_repo", "GitFixtureWorkspace", "git_workspace", "GitProjectRootFixture", "project_root_with_workspace"],
   "depends": ["git CLI 2.22+"]
 }
 """
@@ -176,6 +176,55 @@ def git_workspace(tmp_path: pathlib.Path) -> GitFixtureWorkspace:
     )
 
 
+@dataclass
+class GitProjectRootFixture:
+    """자체가 git 저장소인 프로젝트 루트 + 그 아래 workspace/ 컨테이너 구조."""
+
+    root: pathlib.Path  # tmp_path 자체 (git 아님)
+    project: pathlib.Path  # 프로젝트 루트 = root 저장소 (clean, behind N)
+    workspace: pathlib.Path  # project/workspace — git 아닌 컨테이너
+    child: pathlib.Path  # project/workspace/repo_child (clean, behind N)
+    behind_n: int = field(default=2)
+
+
+@pytest.fixture
+def project_root_with_workspace(tmp_path: pathlib.Path) -> GitProjectRootFixture:
+    """
+    opws STEP 1 첫 분기(`<경로>/workspace` 존재)에서 root 저장소가 순회 대상 밖에 놓이는 구조를 재현한다.
+    project/ 자체가 git 저장소이고, 그 아래 workspace/ 컨테이너에 자식 저장소가 있다.
+    project는 workspace/를 .gitignore로 무시해 clean 상태를 유지한다 (자식 clone이 dirty를 유발하지 않도록).
+    """
+    remotes_dir = tmp_path / "_remotes"
+    remotes_dir.mkdir()
+
+    behind_n = 2
+
+    # ---- project: 프로젝트 루트 = root 저장소 ----
+    bare_project = make_bare_remote(remotes_dir, "project")
+    project = clone_repo(bare_project, tmp_path, "project")
+    _write_file(project, ".gitignore", "workspace/\n")
+    run_git(["add", ".gitignore"], cwd=project)
+    run_git(["commit", "-m", "ignore workspace container"], cwd=project)
+    run_git(["push", "origin", "main"], cwd=project)
+    # 원격을 N커밋 앞세워 root 저장소를 behind(=pull 대상)로 만든다.
+    push_extra_commits(bare_project, tmp_path, behind_n, "project")
+
+    # ---- project/workspace: git 아닌 컨테이너 + 자식 저장소 ----
+    workspace = project / "workspace"
+    workspace.mkdir()
+    bare_child = make_bare_remote(remotes_dir, "child")
+    child = clone_repo(bare_child, workspace, "repo_child")
+    push_extra_commits(bare_child, tmp_path, behind_n, "child")
+
+    return GitProjectRootFixture(
+        root=tmp_path,
+        project=project,
+        workspace=workspace,
+        child=child,
+        behind_n=behind_n,
+    )
+
+
 @pytest.fixture
 def single_repo_root(tmp_path: pathlib.Path) -> pathlib.Path:
     """S-10: 경로 자체가 단일 git 루트인 fixture (workspace 컨테이너 없이 clone 1개만)."""
@@ -191,12 +240,21 @@ GIT_SYNC_TOOL_PATH = (
 )
 
 
-def run_sync_cli(workspace_path: pathlib.Path) -> subprocess.CompletedProcess:
+def run_sync_cli(
+    workspace_path: pathlib.Path, *extra_args: str
+) -> subprocess.CompletedProcess:
     """
     공개 인터페이스(CLI 호출)로만 도구를 검증한다. 내부 함수 import 금지 (red-first §4).
+    extra_args는 `--root <경로>` 등 옵션을 그대로 전달한다.
     """
     return subprocess.run(
-        [sys.executable, str(GIT_SYNC_TOOL_PATH), "sync", str(workspace_path)],
+        [
+            sys.executable,
+            str(GIT_SYNC_TOOL_PATH),
+            "sync",
+            str(workspace_path),
+            *extra_args,
+        ],
         capture_output=True,
         text=True,
     )

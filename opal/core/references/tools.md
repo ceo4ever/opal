@@ -916,16 +916,17 @@ bash ~/.opal/tools/tool-scan/run.sh check <도구>               # 설치/실행
 
 ```bash
 # 지정 경로 순회 + 안전 최신화 → JSON 결과
-~/.opal/tools/git-sync-tool/run.sh sync <workspace_path>
+~/.opal/tools/git-sync-tool/run.sh sync <workspace_path> [--root <root_repo_path>]
 ```
 
 - `<path>/.git` 존재 → 그 1개를 단일 저장소로 처리. 아니면 `<path>` 직속 자식 1단계만 순회(재귀 안 함).
+- `--root <경로>`: 순회 대상 밖의 상위 root 저장소를 대상 **선두**에 추가한다(`<프로젝트>/workspace`를 순회할 때의 `<프로젝트>` 자체). `.git` 없는 경로는 조용히 제외(상위 저장소 오조작 방지), 순회 결과와 중복되면 미계상. 미전달 시 동작은 도입 이전과 동일.
 - 저장소별 판정 순서: detached → no-upstream → dirty → fetch → diverged/ff (detached HEAD에서 `@{u}` 조회가 fatal이라 no-upstream보다 선행).
 
 ### 출력 형식 (JSON)
 
 ```json
-{"ok": true, "command": "sync", "workspace": "<절대경로>",
+{"ok": true, "command": "sync", "workspace": "<절대경로>", "root": "<절대경로>|null",
  "repositories": [{"name","branch","upstream","status","reason","ahead","behind","prev_head","new_head","pulled_commits"}],
  "summary": {"total","updated","skipped","failed"}, "error": null}
 ```
@@ -933,6 +934,7 @@ bash ~/.opal/tools/tool-scan/run.sh check <도구>               # 설치/실행
 - `status`: `updated` | `skipped` | `failed` | `already-current`
 - `reason`: `dirty` | `diverged` | `detached` | `no-upstream` | `fetch-failed` (정상이면 `null`)
 - `already-current`는 `total`에 포함되나 updated/skipped/failed 카운트에는 미포함.
+- `root`: `--root`로 추가된 root 저장소 경로(미전달·제외 시 `null`). 해당 저장소는 `repositories[]` 선두.
 - `ok: false` + `error`(예: `PATH_NOT_FOUND`, `NOT_A_DIRECTORY`)는 치명 오류 시. exit 0(ok)/1(에러).
 
 ---
@@ -1167,3 +1169,4 @@ bash ~/.opal/tools/tool-scan/run.sh check <도구>               # 설치/실행
 | v2.13 | 2026-08-15 16:30 | worktree-tool 섹션 신설(git-sync-tool 직후) — 4서브명령(create/list/status/remove) 커맨드·ERROR_CODES 18종 카탈로그·응답 필드·exit code. 태스크별 코드 작업본 git worktree 격리 도구, 실물 `worktree_tool.py` 구현 기준 작성 (092) |
 | v2.16 | 2026-08-16 15:05 | 종료 코드 표 근거 각주 정정 — 에러 코드 카탈로그 종수 리터럴(23종, stale) 삭제 후 `opal/tools/state-tool/README.md` §에러 코드 카탈로그 SSOT 포인터로 교체 (중복 SSOT 재발 방지, R-9 D-5 ①) (094 Step 14) |
 | v2.17 | 2026-08-20 12:23 | memory-tool 섹션 정합 — `delete` 커맨드에 `--orphan --ref` 예시 추가, `review` 출력 예시 주석에 참조 무결성 검사(memory_file_missing/memory_file_unresolvable) 명시, 주요 에러 코드 표에 `memory_file_exists`·`orphan_ref_missing`·`memory_file_unresolvable` 3행 추가 + `memory_file_not_found` 의미를 "해석 성공 + 본문 부재"로 한정. 커맨드 종수(9) 무변경 (096) |
+| v2.18 | 2026-09-02 14:05 | git-sync-tool 섹션 — `sync`에 `--root <경로>` 옵션 등재(순회 대상 밖 상위 root 저장소를 대상 선두 추가, `.git` 없으면 조용히 제외, 순회 결과와 중복 시 미계상, 미전달 시 현행 동일) + 출력 JSON에 `root` 필드 1행 추가. `<프로젝트>/workspace` 순회 시 프로젝트 root repo 누락 교정 |

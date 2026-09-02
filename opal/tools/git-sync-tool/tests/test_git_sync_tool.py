@@ -3,7 +3,7 @@
   "module": "test_git_sync_tool",
   "layer": "test",
   "domain": "opal-workspace",
-  "description": "git-sync-tool RED-first 테스트 (052 TEST-SCENARIO.md S-1~S-10,S-16~S-18 대응). 구현(git_sync_tool.py) 부재 상태에서 작성 — CLI(subprocess) 공개 인터페이스로만 검증, mock/patch 금지, 실 git 저장소 fixture(conftest.py) 사용. RED 증거: git_sync_tool.py 미존재로 전 테스트 실패해야 한다.",
+  "description": "git-sync-tool RED-first 테스트 (052 TEST-SCENARIO.md S-1~S-10,S-16~S-18 대응 + S-19~S-22 root 저장소 포함). 구현(git_sync_tool.py) 부재 상태에서 작성 — CLI(subprocess) 공개 인터페이스로만 검증, mock/patch 금지, 실 git 저장소 fixture(conftest.py) 사용. RED 증거: git_sync_tool.py 미존재로 전 테스트 실패해야 한다. S-19~S-22는 `--root` 옵션 부재 상태에서 작성 — 옵션 미구현 시 argparse가 거부해 실패한다.",
   "exports": [],
   "depends": ["conftest.py", "git_sync_tool.py(미구현)"]
 }
@@ -17,7 +17,12 @@ import subprocess
 
 import pytest
 
-from conftest import GitFixtureWorkspace, run_git, run_sync_cli
+from conftest import (
+    GitFixtureWorkspace,
+    GitProjectRootFixture,
+    run_git,
+    run_sync_cli,
+)
 
 REQUIRED_TOP_FIELDS = {"ok", "command", "workspace", "repositories", "summary", "error"}
 REQUIRED_REPO_FIELDS = {
@@ -349,3 +354,99 @@ def test_s18_diverged_repo_pull_never_attempted(git_workspace: GitFixtureWorkspa
 
     # 도구가 크래시 없이 정상 종료했는지 (non-ff 예외로 전체 프로세스가 죽지 않아야 함)
     assert result.returncode in (0, 1), f"예상치 못한 exit code: {result.returncode}, stderr={result.stderr}"
+
+
+# ---------------------------------------------------------------------------
+# S-19: --root 전달 시 순회 대상 밖의 root 저장소도 pull된다 (Golden Path)
+# ---------------------------------------------------------------------------
+def test_s19_root_repo_is_pulled_with_root_option(
+    project_root_with_workspace: GitProjectRootFixture,
+) -> None:
+    fx = project_root_with_workspace
+    result = run_sync_cli(fx.workspace, "--root", str(fx.project))
+    payload = _parse_json_stdout(result)
+    _assert_top_schema(payload)
+
+    assert payload["root"] == str(fx.project), (
+        f"root 필드가 전달한 root 경로와 다름: {payload['root']!r}"
+    )
+
+    all_names = {r["name"] for r in payload["repositories"]}
+    assert "project" in all_names, (
+        f"--root로 전달한 root 저장소가 순회 대상에 없음: {all_names}"
+    )
+    assert "repo_child" in all_names, (
+        f"workspace 직속 자식 저장소가 누락됨(기존 동작 회귀): {all_names}"
+    )
+
+    root_repo = _find_repo(payload, "project")
+    _assert_repo_schema(root_repo)
+    assert root_repo["status"] == "updated", (
+        f"behind 상태 root 저장소가 최신화되지 않음: {root_repo}"
+    )
+    assert root_repo["pulled_commits"] == fx.behind_n, (
+        f"root 저장소 pulled_commits가 behind 수({fx.behind_n})와 다름: {root_repo}"
+    )
+    assert payload["summary"]["total"] == len(payload["repositories"])
+
+
+# ---------------------------------------------------------------------------
+# S-20: --root 미전달 시 현행 동작 100% 유지 (root 저장소 미포함)
+# ---------------------------------------------------------------------------
+def test_s20_root_repo_absent_without_root_option(
+    project_root_with_workspace: GitProjectRootFixture,
+) -> None:
+    fx = project_root_with_workspace
+    result = run_sync_cli(fx.workspace)
+    payload = _parse_json_stdout(result)
+    _assert_top_schema(payload)
+
+    all_names = {r["name"] for r in payload["repositories"]}
+    assert "project" not in all_names, (
+        f"--root 미전달인데 root 저장소가 순회됨(현행 동작 변경): {all_names}"
+    )
+    assert all_names == {"repo_child"}, f"대상이 workspace 직속 자식뿐이 아님: {all_names}"
+    assert payload["root"] is None, f"--root 미전달인데 root 필드가 null이 아님: {payload['root']!r}"
+
+
+# ---------------------------------------------------------------------------
+# S-21: .git 없는 --root는 제외된다 (발생 낮음 / 영향 높음 — 상위 저장소 오조작 방지)
+#       .git 없는 경로에서 git을 실행하면 상위 디렉토리의 저장소로 올라가 엉뚱한 저장소를 조작한다.
+# ---------------------------------------------------------------------------
+def test_s21_non_repo_root_is_excluded(
+    project_root_with_workspace: GitProjectRootFixture,
+) -> None:
+    fx = project_root_with_workspace
+    # workspace 자체는 git 저장소가 아니지만, 상위 project는 저장소다 (오조작 유발 조건).
+    result = run_sync_cli(fx.workspace, "--root", str(fx.workspace))
+    payload = _parse_json_stdout(result)
+    _assert_top_schema(payload)
+
+    assert payload["root"] is None, (
+        f".git 없는 root가 제외되지 않음: {payload['root']!r}"
+    )
+    all_names = {r["name"] for r in payload["repositories"]}
+    assert all_names == {"repo_child"}, (
+        f".git 없는 root가 대상에 포함됨(상위 저장소 오조작 위험): {all_names}"
+    )
+    assert result.returncode == 0, f"제외는 에러가 아니어야 함: exit={result.returncode}"
+
+
+# ---------------------------------------------------------------------------
+# S-22: --root가 이미 발견된 대상과 같으면 중복 계상하지 않는다
+#       (발생 낮음 / 영향 높음 — 같은 저장소 2회 pull + summary 이중 계상)
+# ---------------------------------------------------------------------------
+def test_s22_root_duplicate_is_not_counted_twice(
+    project_root_with_workspace: GitProjectRootFixture,
+) -> None:
+    fx = project_root_with_workspace
+    # project 자체를 순회 경로로 주면 단일 git 루트로 발견된다 → --root와 중복.
+    result = run_sync_cli(fx.project, "--root", str(fx.project))
+    payload = _parse_json_stdout(result)
+    _assert_top_schema(payload)
+
+    assert len(payload["repositories"]) == 1, (
+        f"root 중복이 제거되지 않음: {payload['repositories']}"
+    )
+    assert payload["repositories"][0]["name"] == "project"
+    assert payload["summary"]["total"] == 1, f"summary 이중 계상: {payload['summary']}"

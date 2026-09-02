@@ -1,14 +1,14 @@
 ---
 name: opal-workspace-sync
 description: |
-  **워크스페이스 Git 일괄 동기화** — 워크스페이스 직속 자식 git 저장소를 순회하여 안전 최신화(clean+ff-only pull)하고, 문제 저장소(dirty/diverged/detached/no-upstream/fetch-failed)는 skip+보고+승인 후 조치.
+  **워크스페이스 Git 일괄 동기화** — 워크스페이스 직속 자식 git 저장소 + 프로젝트 root 저장소를 순회하여 안전 최신화(clean+ff-only pull)하고, 문제 저장소(dirty/diverged/detached/no-upstream/fetch-failed)는 skip+보고+승인 후 조치.
   반드시 이 스킬을 사용해야 하는 상황: "워크스페이스 동기화", "저장소 일괄 pull", "opal-workspace-sync".
 alias: opws
 triggers:
   - "^opal-workspace-sync$"
   - "^opws$"
   - "(?i)(워크스페이스\\s*동기화|저장소\\s*일괄|일괄\\s*pull)"
-version: "1.0"
+version: "1.1"
 domain: workspace
 ---
 
@@ -39,7 +39,8 @@ git-sync-tool은 `~/.opal/tools/git-sync-tool/run.sh`로 호출한다. 출력이
 
 ```
 (현재 프로젝트 또는 사용자가 지정한 경로)/workspace 존재?
-  ├─ 예 → 그 workspace 경로를 대상으로 확정
+  ├─ 예 → 그 workspace 경로를 순회 대상으로 확정
+  │        + <경로>/.git 존재 시 <경로>를 root 저장소로 함께 확정 (STEP 2에서 --root로 전달)
   └─ 아니오 → 받은 경로 자체가 단일 git 루트(<경로>/.git 존재)?
                ├─ 예 → 그 경로를 대상으로 확정 (git-sync-tool이 1개 저장소로 처리)
                └─ 아니오 → AskUserQuestion으로 워크스페이스 경로를 질의하여 확정
@@ -47,6 +48,8 @@ git-sync-tool은 `~/.opal/tools/git-sync-tool/run.sh`로 호출한다. 출력이
 
 - 판단에 필요한 경로 존재 확인은 Bash(`ls`/`test -d`) 또는 Read 도구로 수행한다.
 - 사용자가 이미 명시적으로 경로를 지정했다면 그 경로에 대해 위 분기를 그대로 적용한다(우선 `<경로>/workspace`, 다음 `<경로>` 자체가 단일 루트인지 확인).
+- **[MUST] root 저장소 누락 금지.** `<경로>/workspace`를 순회 대상으로 확정한 경우, 순회는 workspace 직속 자식 1단계만 돌기 때문에 프로젝트 root repo가 대상에서 빠진다. `<경로>/.git`이 존재하면 반드시 `--root <경로>`로 함께 전달한다 (미전달 시 root repo는 조용히 최신화되지 않는다).
+- 두 번째 분기(경로 자체가 단일 git 루트)에서는 그 경로가 곧 root이므로 `--root`를 전달하지 않는다.
 
 ---
 
@@ -55,8 +58,14 @@ git-sync-tool은 `~/.opal/tools/git-sync-tool/run.sh`로 호출한다. 출력이
 STEP 1에서 확정된 경로로 도구를 호출한다:
 
 ```bash
-~/.opal/tools/git-sync-tool/run.sh sync <확정 경로>
+~/.opal/tools/git-sync-tool/run.sh sync <확정 경로> [--root <프로젝트 root 경로>]
 ```
+
+**`--root` 규칙:**
+- STEP 1에서 root 저장소를 함께 확정한 경우에만 전달한다. 전달된 root는 순회 결과 **선두**에 추가된다.
+- `.git`이 없는 경로를 `--root`로 주면 조용히 제외된다(에러 아님) — `.git` 없는 경로에서 git을 실행하면 상위 저장소로 올라가 엉뚱한 저장소를 조작하기 때문이다.
+- root가 순회에서 이미 발견된 저장소와 동일하면 중복 계상하지 않는다.
+- `--root` 미전달 시 동작은 이 옵션 도입 이전과 100% 동일하다.
 
 **순회 규칙 (도구 책임, 참고용):**
 - 순회 깊이: **직속 자식 1단계만** (재귀하지 않는다).
@@ -70,6 +79,7 @@ STEP 1에서 확정된 경로로 도구를 호출한다:
   "ok": true,
   "command": "sync",
   "workspace": "/absolute/path/to/workspace",
+  "root": "/absolute/path/to/project",
   "repositories": [
     {
       "name": "backend",
@@ -91,6 +101,7 @@ STEP 1에서 확정된 경로로 도구를 호출한다:
 
 | 필드 | 설명 |
 |------|------|
+| `root` | `--root`로 전달되어 대상에 추가된 root 저장소 절대경로. 미전달 또는 `.git` 없어 제외된 경우 `null`. 해당 저장소는 `repositories[]` **선두**에 온다 |
 | `status` | enum: `updated` \| `skipped` \| `failed` \| `already-current` |
 | `reason` | enum: `dirty` \| `diverged` \| `detached` \| `no-upstream` \| `fetch-failed` (정상 상태면 `null`) |
 | `upstream` | `no-upstream`이면 `null` |
@@ -109,9 +120,12 @@ STEP 2의 JSON을 아래 5섹션 형식으로 렌더한다.
 ### ① 요약 헤더
 워크스페이스 경로 + `summary` 집계를 한 줄로 표시한다. `already-current`는 별도로 "이미 최신 N개"로 표기한다 (updated/skipped/failed 카운트에는 포함되지 않으므로 `repositories[]`에서 `status == "already-current"` 개수를 직접 센다).
 
+`root`가 `null`이 아니면 그 저장소가 root repo임을 헤더 다음 줄에 명시한다 — 캡틴이 root 포함 여부를 헤더에서 바로 읽을 수 있어야 한다.
+
 ```
 [opal-workspace-sync] <workspace 경로>
 총 <total>개 저장소 — ✅ 최신화 <updated> · ⏭️ skip <skipped> · ❌ 실패 <failed> · 이미 최신 <already-current 수>
+root 저장소: <root 경로> 포함              ← root != null일 때만
 ```
 
 ### ② ✅ 최신화 (status=updated)
@@ -153,3 +167,4 @@ STEP 2의 JSON을 아래 5섹션 형식으로 렌더한다.
 | 버전 | 일시 | 변경내용 |
 |------|------|---------|
 | v1.0 | 2026-07-02 | 초기 작성 — 대상결정 3분기, git-sync-tool 호출, 5섹션 보고서, 승인 게이트, 사유별 제안조치 카탈로그 (052) |
+| v1.1 | 2026-09-02 14:04 | root 저장소 포함 — STEP 1에 root 확정 분기 + [MUST] 누락 금지, STEP 2 `--root` 규칙, JSON `root` 필드, ① 요약 헤더 root 표기. `<경로>/workspace` 순회 시 프로젝트 root repo가 대상에서 빠지던 누락 교정 (L2 직접 수정) |

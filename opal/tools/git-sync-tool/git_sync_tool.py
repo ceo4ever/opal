@@ -3,8 +3,8 @@
   "module": "git_sync_tool",
   "layer": "util",
   "domain": "opal-workspace",
-  "description": "워크스페이스 아래 여러 독립 git 저장소를 순회하며 안전하게 일괄 최신화(clean+ff-only pull)하는 CLI. 대상 결정(단일 git 루트 또는 직속 자식 1단계, 재귀 금지) → 저장소별 판정(detached→no-upstream→dirty→fetch→diverged/ff) → JSON 결과 출력. git 2.22+ 필요 (rev-list --left-right --count). detached HEAD에서는 @{u} 조회 자체가 fatal로 실패해 no-upstream과 구분되지 않으므로 detached 판정을 no-upstream보다 먼저 수행한다. dirty/diverged/detached/no-upstream 저장소에는 stash/rebase/force/commit/push 등 자율 조치를 일절 수행하지 않는다(skip 후 보고만) — 헌법 user sovereignty 원칙.",
-  "exports": ["cmd_sync", "process_repo", "discover_targets"],
+  "description": "워크스페이스 아래 여러 독립 git 저장소를 순회하며 안전하게 일괄 최신화(clean+ff-only pull)하는 CLI. 대상 결정(단일 git 루트 또는 직속 자식 1단계, 재귀 금지) → 저장소별 판정(detached→no-upstream→dirty→fetch→diverged/ff) → JSON 결과 출력. git 2.22+ 필요 (rev-list --left-right --count). detached HEAD에서는 @{u} 조회 자체가 fatal로 실패해 no-upstream과 구분되지 않으므로 detached 판정을 no-upstream보다 먼저 수행한다. dirty/diverged/detached/no-upstream 저장소에는 stash/rebase/force/commit/push 등 자율 조치를 일절 수행하지 않는다(skip 후 보고만) — 헌법 user sovereignty 원칙. `--root <경로>`는 순회 대상 밖에 있는 상위 root 저장소(예: `<프로젝트>/workspace`를 순회할 때의 `<프로젝트>` 자체)를 대상 선두에 추가한다 — 미전달 시 동작은 현행과 동일하고, `.git` 없는 root는 조용히 제외하며(상위 저장소 오조작 방지) 이미 발견된 대상과 중복되면 계상하지 않는다.",
+  "exports": ["cmd_sync", "process_repo", "discover_targets", "resolve_root_target"],
   "depends": ["git CLI 2.22+"]
 }
 """
@@ -74,6 +74,24 @@ def discover_targets(path: pathlib.Path):
         if child.is_dir() and (child / ".git").exists():
             targets.append(child)
     return targets
+
+
+def resolve_root_target(root_arg: str):
+    """
+    --root 인자를 순회 대상에 추가할 root 저장소 경로로 해석한다.
+    경로 부재/비디렉토리는 에러로 거부하고, `.git`이 없으면 None을 반환해 제외한다
+    (`.git` 없는 경로에서 git을 실행하면 상위 저장소로 올라가 엉뚱한 저장소를 조작한다).
+    """
+    root_path = pathlib.Path(root_arg)
+    if not root_path.exists():
+        err_response("PATH_NOT_FOUND", path=str(root_path))
+    if not root_path.is_dir():
+        err_response("NOT_A_DIRECTORY", path=str(root_path))
+
+    root_path = root_path.resolve()
+    if not (root_path / ".git").exists():
+        return None
+    return root_path
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -196,7 +214,12 @@ def cmd_sync(args):
         err_response("NOT_A_DIRECTORY", path=str(path))
 
     path = path.resolve()
+
+    root = resolve_root_target(args.root) if args.root else None
+
     targets = discover_targets(path)
+    if root is not None and root not in targets:
+        targets = [root, *targets]
 
     repositories = []
     for target in targets:
@@ -212,6 +235,7 @@ def cmd_sync(args):
     ok_response(
         command="sync",
         workspace=str(path),
+        root=str(root) if root is not None else None,
         repositories=repositories,
         summary=summary,
     )
@@ -227,6 +251,11 @@ def main():
 
     sync_parser = subparsers.add_parser("sync")
     sync_parser.add_argument("path")
+    sync_parser.add_argument(
+        "--root",
+        default=None,
+        help="순회 대상 밖의 상위 root 저장소 경로. 대상 선두에 추가한다 (.git 없으면 제외)",
+    )
     sync_parser.set_defaults(func=cmd_sync)
 
     args = parser.parse_args()
