@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-09-03 13:16
+> 갱신: 2026-09-03 23:32
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -33,6 +33,7 @@
 - [[070-derivation-engine-perspective-bias-lesson]] — 070 사건 근본원인 — 도출 엔진 관점 편향과 게이트 집행 #lesson-learned #testing #scenario-gate #root-cause #task-073
 - [[active-platform-dir-install-target-lesson]] — 활성 Claude 플랫폼 디렉토리가 ~/.claude 기본이 아닐 수 있다 — install 타겟 정합 교훈 (032 P2) #install #deploy #platform #dispatch #lesson-learned
 - [[adapter-body-model-level-substitution]] — 어댑터 본문 model 레벨 치환 — frontmatter 비대칭 해소 (032) #adapter #install #model #platform #sub-dispatch #constitution
+- [[additive-field-extension-over-schema-replacement]] — 레지스트리 확장은 스키마 교체보다 additive 필드 추가가 기능 후퇴를 막는다 #registry #schema-evolution #skill-registry #task-105
 - [[agent-md-digest-pattern]] — AGENT.md 다이제스트 패턴 — 비서 코어 lean 분리 #bootstrap #digest #lean-core #assistant-tier #pm-tier #architecture
 - [[agentic-output-direct-verification-lesson]] — agentic 산출물 직접 검증 의무 — PM 직접 실행이 self-confirming을 포착 #lesson #verification #self-confirming #pm-discipline #red-first
 - [[analysis-drift-pm-cross-verify-lesson]] — ANALYSIS 드리프트 분석 환각 → PM 강화검토 패턴 (학습) #analysis #hallucination #pm-gate #lesson-learned #drift
@@ -93,6 +94,7 @@
 - [[console-brain-volatile-single-session]] — 콘솔 브레인 휘발성 단일 세션 설계 전환 #brain #session-management #architecture #console #ux
 - [[console-settings-incremental-scope-policy]] — 콘솔 설정 화면 점진 확장 방침 #product-decision #console #scope #security
 - [[console-write-exception-router-isolation]] — 콘솔 쓰기 예외 라우터 격리 패턴 #architecture #console #security #pattern #write-isolation
+- [[context-tag-suppresses-false-positive-without-removing-hit]] — 오탐 억제는 hit를 배열에서 빼지 않고 context 태그로 분류한다 #false-positive #pattern-scan #risk-detection #task-105
 - [[daemon-as-tool-orchestrator]] — 데몬은 도구 오케스트레이터 — 데이터 SSOT는 프로젝트 파일 #architecture #dashboard #ssot
 - [[decision-vs-fact-claim-separation]] — 결정과 사실 주장의 분리 — 결정은 근거 판정 대상이 아니다 #evidence #citation #decision #opds
 - [[dedup-pointer-over-copy]] — dedup 원칙 — 목적지 기존 존재 시 표 복사 금지·포인터 단일화 #dedup #ssot #pointer #architecture #principles
@@ -119,6 +121,7 @@
 - [[fallback-approval-detached-head-precedence]] — detached HEAD 판정은 no-upstream보다 먼저 검사해야 한다 #git #judgment-order #fallback-approval #lesson
 - [[fix-validity-requires-failure-mode-reproduction]] — 수정의 유효성은 실패 모드를 재현해서 확인한다 #lesson #verification #pm-discipline #worker-report
 - [[fixture-conflicting-requirements-lesson]] — 픽스처 요구 충돌 — RED 작성 시점 시나리오 간 요구 대조 필요 #lesson #testing #fixture #red-first #task-082
+- [[fixture-ownership-separation-closes-reward-hacking]] — 픽스처 소유권을 구현자와 분리하면 reward hacking 표면이 닫힌다 #testing #fixture-design #reward-hacking #task-105
 - [[fixture-vs-real-blind-spot-lesson]] — fixture-vs-real 맹점 — 테스트 픽스처 통과·실데이터 버그 반복 교훈 #lesson #testing #bug #fixture
 - [[force-flag-side-effect-trial-run-first]] — --force류는 1건 시험 실행 후 확대한다 — 시각 덮어쓰기로 6행 손상 #tooling #state-tool #incident #discipline #lesson-learned
 - [[global-deploy-after-verification-ordering]] — 검증 미완 규칙의 전역 배포 차단 — 배포는 검증의 결과여야 한다 #deploy #install #pipeline-order #framework #task-095
@@ -248,6 +251,7 @@
 - [[scenario-goal-coverage-gate-loop]] — TEST-SCENARIO 목표-커버리지 루브릭 게이트 루프 — 결정론+판단 분리 #testing #scenario-gate #tool-gated #rubric #opd #task-073 #task-075
 - [[scenario-normalized-contract-pilot-neutral]] — 시나리오 정규화 계약 — pilot-중립 페이로드 설계 #contract #scenario-gate #normalization #multi-pilot #task-073 #task-075
 - [[scenario-prewrite-goal-series-track]] — 목표계열 선작성 트랙 — 도출 입력 2계열 분리와 게이트 계약 경계 #scenario-gate #testing #prewrite #opd #opds #task-095
+- [[score-free-tiered-verdict-ladder]] — 재현 불가한 채점을 하드필터+3단 판정어+순서 있는 사다리로 대체 #verification #decision-pattern #anti-scoring #task-105
 - [[section-append-at-tail-preserves-backrefs]] — 절 번호가 주소인 문서는 말미에 추가한다 — 외부 역참조 보존 #documentation #reference-integrity #task-084
 - [[self-confirming-validation-timing-argument]] — 자기확인 검증의 시점 논거 판별 — 개정 대상 무변경 확인으로 순환 논증을 잡는다 #self-confirming #verification #evaluator #scenario-gate #opd
 - [[self-edit-line-anchor-drift]] — 자기 편집 파일의 행번호 앵커는 드리프트한다 #verification #anchor #test-scenario #regression
@@ -291,6 +295,7 @@
 - [[strip-deploy-runtime-token-neutral]] — strip_deploy_md 런타임 토큰 영향 0 — 변경이력 trim 측정 정정 교훈 #deploy-pipeline #token #install #measurement #lesson
 - [[subsection-number-insertion-preserves-citations]] — 하위 절 번호 삽입으로 외부 인용 보존 — 의미 위치와 주소 안정성 동시 확보 #documentation #reference-integrity #harness #task-095
 - [[template-precedence-over-prose-norms]] — 템플릿 우위 법칙 — 규범은 산문보다 템플릿이 이긴다 #template-precedence #prose-norms #framework-norm #governance #harness-design
+- [[test-path-layer-gap-masks-deployment-defect]] — 테스트 소스 경로와 배포본 경로의 계층 차이가 실사용 불가를 덮는다 #testing #deployment #layered-verification #task-105
 - [[test-real-data-validation-lesson]] — TEST 실데이터 검증이 build-only 가 놓친 결함을 발견한다 #testing #lesson #test-strategy #real-data
 - [[test-scenario-pipeline-redesign]] — 테스트 시나리오 파이프라인 재설계 (2차원 매트릭스 + self-confirming 4분리) #testing #pipeline #framework #flow #task
 - [[test-seam-self-contained-fallback-masks-production-divergence]] — 테스트 seam의 자기완결 폴백이 프로덕션과의 차이를 가린다 #test-seam #verification #shell-testing #lesson #install

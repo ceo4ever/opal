@@ -6,10 +6,14 @@
 // @description OPAL 스킬 레지스트리 CLI — opal-skills-registry.json + community-skills-registry.json을 로드하여
 //              // 커맨드 매칭, 스킬 조회, 목록 표시, 유효성 검증을 제공한다.
 //              v2 스키마: community 스킬의 installed 동적 계산 + fetch 정보(source_repo/license/install_command) 노출.
+//              커뮤니티 스킬 설치 절차의 1층 하드 필터 — clone 디렉토리 위험 패턴 스캔(scan-risk)도 제공한다.
 // @exports     CLI: match <input> | get <name> | list [--group=X] [--domain=X] | validate |
-//              migrate [--dry-run] | parse-source-repo <source_repo>
+//              migrate [--dry-run] | parse-source-repo <source_repo> | scan-risk <dir>
 //
 // 변경이력:
+//   v1.4 2026-09-03 00:45 KST: scan-risk 서브명령 신설 — 위험 패턴 10종 상수 + 오탐 억제 4규칙 +
+//                              읽기 전용 디렉토리 스캔. 기존 서브명령 6종·list 출력 계약·종료 코드
+//                              규약은 무수정 (105)
 //   v1.3 2026-07-17 KST: 커뮤니티 스킬 관리 워크플로우 통일 (태스크 064):
 //                        - resolveCommunitySkillPath() 신설 — vendor 중첩 우선 → flat basename 폴백 → null.
 //                          getCommunitySkillPath()는 canonical(설치 타깃) 경로 계산 용도로 시그니처·반환 유지.
@@ -648,6 +652,198 @@ function parseSourceRepo(sourceRepo) {
   return { owner, repo, subdir };
 }
 
+// === 1층 하드 필터: scan-risk (태스크 105 F-002) ===
+//
+// scanRiskCommand(dir)는 clone된 스킬 후보 디렉토리를 읽기 전용으로 스캔하여
+// 위험 패턴 매칭 결과(hits[])와 4단 verdict(SAFE/CAUTION/RISKY/UNKNOWN)를 반환한다.
+// [scanned 정의] 확장자 화이트리스트·파일 크기(1MB)·바이너리(NUL) 검사를 통과하여
+// 실제로 라인 단위 패턴 매칭을 수행한 파일 수 — skip된 파일은 포함하지 않는다.
+
+const RISK_SCAN_EXTENSIONS = new Set(['.md', '.sh', '.bash', '.zsh', '.js', '.mjs', '.cjs', '.py', '.rb', '.ts']);
+const RISK_EXCLUDED_DIRS = new Set(['.git', 'node_modules', 'dist', 'build']);
+const RISK_MAX_FILE_SIZE = 1024 * 1024;  // 1MB
+const RISK_MAX_LINE_LENGTH = 2000;       // ReDoS·성능 방어 (H-7)
+const RISK_EXCERPT_MAX = 200;            // credential 등 장문 원문 노출 방지 (PLAN §5.4)
+
+const RISK_FIXTURE_PATH_RE = /(^|\/)(tests|test|fixtures|__fixtures__|examples)\//;
+const RISK_COMMENT_LINE_RE = /^\s*(#|\/\/|\*)/;
+const RISK_NEGATION_TOKENS = ['절대', '금지', '하지 마', 'never', 'do not', "don't", 'avoid', 'must not', 'should not', '無'];
+
+// 위험 패턴 10종(RP-01~RP-10). 전건 선형(비-nested quantifier), .* / .+ ≤2회, 길이 ≤100자
+// — isUnsafeRegex() 기준(:151-165)과 동일 규율 (H-7).
+const RISK_PATTERNS = [
+  { id: 'RP-01', severity: 'high',   capability: 'fs:destructive',      regex: /\brm\s+-[a-zA-Z]{1,4}\s+["'`]?(\/|~|\$HOME|\*)/ },
+  { id: 'RP-02', severity: 'high',   capability: 'system:privilege',    regex: /(^|[;&|]\s*)sudo\b/ },
+  { id: 'RP-03', severity: 'high',   capability: 'exec:remote',         regex: /\b(curl|wget)\b[^\n]{0,60}\|\s*(sudo\s+)?(sh|bash|zsh)\b/ },
+  { id: 'RP-04', severity: 'high',   capability: 'secret:credential',   regex: /~\/\.(ssh\/id_(rsa|ed25519|ecdsa|dsa)|aws\/credentials|netrc|npmrc)/ },
+  { id: 'RP-05', severity: 'medium', capability: 'secret:env',          regex: /\.env\b/ },
+  { id: 'RP-06', severity: 'medium', capability: 'exec:dynamic',        regex: /\beval\s*["('`]/ },
+  { id: 'RP-07', severity: 'medium', capability: 'obfuscation:base64',  regex: /\bbase64\s+(-d|-D|--decode)\b/ },
+  { id: 'RP-08', severity: 'medium', capability: 'network:outbound',    regex: /\bcurl\b[^\n]{0,60}(-X\s*POST|--data\b|-d\s)/ },
+  { id: 'RP-09', severity: 'medium', capability: 'fs:permission',       regex: /\bchmod\s+(-R\s+)?777\b/ },
+  { id: 'RP-10', severity: 'medium', capability: 'system:persistence',  regex: /\b(crontab\s+-|launchctl\s+load\b|~\/Library\/LaunchAgents)/ }
+];
+
+function riskHasNegation(line) {
+  const lower = line.toLowerCase();
+  return RISK_NEGATION_TOKENS.some(tok => lower.includes(tok.toLowerCase()));
+}
+
+/** 코드 영역(비-md 전체, md 코드펜스 내부, md 인라인 코드 스팬)의 context 분류 — 억제-3·4. */
+function riskClassifyCodeContext(line, relFile) {
+  if (riskHasNegation(line)) return 'negated';
+  if (RISK_COMMENT_LINE_RE.test(line)) return 'comment';
+  if (RISK_FIXTURE_PATH_RE.test(relFile)) return 'fixture';
+  return 'active';
+}
+
+function riskTruncateExcerpt(line) {
+  return line.length > RISK_EXCERPT_MAX ? line.slice(0, RISK_EXCERPT_MAX) : line;
+}
+
+/** 백틱으로 감싼 인라인 코드 스팬의 [start,end) 구간 목록. */
+function riskFindBacktickSpans(line) {
+  const spans = [];
+  const re = /`[^`]*`/g;
+  let m;
+  while ((m = re.exec(line)) !== null) {
+    spans.push([m.index, m.index + m[0].length]);
+  }
+  return spans;
+}
+
+function riskIndexInSpans(idx, spans) {
+  return spans.some(([s, e]) => idx >= s && idx < e);
+}
+
+/**
+ * @function    scanRiskCommand
+ * @description clone 디렉토리를 읽기 전용으로 스캔하여 위험 패턴 hits[] + 4단 verdict를 반환한다
+ *              (커뮤니티 스킬 설치 절차 1층 하드 필터, 태스크 105 F-002).
+ * @param {string} dir - 스캔 대상 디렉토리(clone 임시 경로)
+ * @returns {{ok:boolean, verdict:string, dir:string, scanned?:number, hits?:Array, skipped?:Array, error?:string}}
+ */
+function scanRiskCommand(dir) {
+  let realDir;
+  try {
+    realDir = fs.realpathSync(dir);
+    if (!fs.statSync(realDir).isDirectory()) {
+      return { ok: false, verdict: 'UNKNOWN', dir, error: `Not a directory: ${dir}` };
+    }
+  } catch (e) {
+    return { ok: false, verdict: 'UNKNOWN', dir, error: `Directory not found or inaccessible: ${dir}` };
+  }
+
+  const hits = [];
+  const skipped = [];
+  let scanned = 0;
+
+  const stack = [realDir];
+  while (stack.length) {
+    const cur = stack.pop();
+    let entries;
+    try {
+      entries = fs.readdirSync(cur, { withFileTypes: true });
+    } catch (e) {
+      continue;
+    }
+    for (const entry of entries) {
+      const abs = path.join(cur, entry.name);
+      if (entry.isDirectory()) {
+        if (RISK_EXCLUDED_DIRS.has(entry.name)) continue;
+        stack.push(abs);
+        continue;
+      }
+      if (!entry.isFile()) continue;
+
+      const relFile = path.relative(realDir, abs).split(path.sep).join('/');
+      const ext = path.extname(entry.name).toLowerCase();
+      if (!RISK_SCAN_EXTENSIONS.has(ext)) {
+        skipped.push({ file: relFile, reason: `extension not scanned: ${ext || '(none)'}` });
+        continue;
+      }
+
+      let stat;
+      try {
+        stat = fs.statSync(abs);
+      } catch (e) {
+        skipped.push({ file: relFile, reason: `stat failed: ${e.message}` });
+        continue;
+      }
+      if (stat.size > RISK_MAX_FILE_SIZE) {
+        skipped.push({ file: relFile, reason: `file size ${stat.size} > ${RISK_MAX_FILE_SIZE}` });
+        continue;
+      }
+
+      let buf;
+      try {
+        buf = fs.readFileSync(abs);
+      } catch (e) {
+        skipped.push({ file: relFile, reason: `read failed: ${e.message}` });
+        continue;
+      }
+      if (buf.includes(0)) {
+        skipped.push({ file: relFile, reason: 'binary file (NUL byte)' });
+        continue;
+      }
+
+      scanned++;
+      const isMd = ext === '.md';
+      let inFence = false;
+      const lines = buf.toString('utf8').split('\n');
+
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        const lineNo = i + 1;
+
+        if (line.length > RISK_MAX_LINE_LENGTH) {
+          skipped.push({ file: relFile, reason: `line ${lineNo} length ${line.length} > ${RISK_MAX_LINE_LENGTH}` });
+          continue;
+        }
+
+        if (isMd && /^\s*(```|~~~)/.test(line)) {
+          inFence = !inFence;
+          continue;
+        }
+
+        if (isMd && !inFence) {
+          // 억제-2: 산문 라인 — 코드펜스·인라인 코드 스팬(백틱) 안쪽 매칭만 code-region 취급
+          const spans = riskFindBacktickSpans(line);
+          for (const pat of RISK_PATTERNS) {
+            const m = pat.regex.exec(line);
+            if (!m) continue;
+            const context = riskIndexInSpans(m.index, spans)
+              ? riskClassifyCodeContext(line, relFile)
+              : 'prose';
+            hits.push({
+              id: pat.id, severity: pat.severity, capability: pat.capability,
+              file: relFile, line: lineNo, excerpt: riskTruncateExcerpt(line), context
+            });
+          }
+          continue;
+        }
+
+        // 코드 영역: 비-md 파일 전체 라인, 또는 md 코드펜스 내부 라인
+        for (const pat of RISK_PATTERNS) {
+          const m = pat.regex.exec(line);
+          if (!m) continue;
+          hits.push({
+            id: pat.id, severity: pat.severity, capability: pat.capability,
+            file: relFile, line: lineNo, excerpt: riskTruncateExcerpt(line),
+            context: riskClassifyCodeContext(line, relFile)
+          });
+        }
+      }
+    }
+  }
+
+  const activeHigh = hits.some(h => h.context === 'active' && h.severity === 'high');
+  const activeMedium = hits.some(h => h.context === 'active' && h.severity === 'medium');
+  const verdict = activeHigh ? 'RISKY' : (activeMedium ? 'CAUTION' : 'SAFE');
+
+  return { ok: true, verdict, dir: realDir, scanned, hits, skipped };
+}
+
 // === CLI Router ===
 
 function main() {
@@ -655,13 +851,14 @@ function main() {
   const command = args[0];
 
   if (!command) {
-    console.error('Usage: skill-registry.js <match|get|list|validate|migrate|parse-source-repo> [args]');
+    console.error('Usage: skill-registry.js <match|get|list|validate|migrate|parse-source-repo|scan-risk> [args]');
     console.error('  match <input>          Match skill from user input');
     console.error('  get <name>             Get skill metadata');
     console.error('  list [--group=X] [--domain=X]  List skills');
     console.error('  validate               Validate registries');
     console.error('  migrate [--dry-run]    flat→vendor 중첩 레이아웃 이동 (멱등)');
     console.error('  parse-source-repo <source_repo>  owner/repo@subdir 파싱');
+    console.error('  scan-risk <dir>        clone 디렉토리 위험 패턴 스캔 (1층 하드 필터)');
     process.exit(1);
   }
 
@@ -710,6 +907,14 @@ function main() {
         process.exit(1);
       }
       result = parseSourceRepo(args[1]);
+      break;
+
+    case 'scan-risk':
+      if (!args[1]) {
+        console.error('Usage: skill-registry.js scan-risk <dir>');
+        process.exit(1);
+      }
+      result = scanRiskCommand(args[1]);
       break;
 
     default:

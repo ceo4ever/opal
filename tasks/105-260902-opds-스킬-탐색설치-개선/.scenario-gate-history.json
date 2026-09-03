@@ -1,0 +1,46 @@
+[
+  {
+    "iteration": 1,
+    "missing": {
+      "requirements": [],
+      "features": [],
+      "hypotheses": []
+    },
+    "gaps": [
+      "G-1",
+      "G-2",
+      "G-3",
+      "G-4",
+      "G-5",
+      "G-6"
+    ],
+    "scores": {
+      "goal": 1,
+      "adoption": 1,
+      "boundary": 2
+    },
+    "average": 1.33,
+    "verdict": "fail"
+  },
+  {
+    "iteration": 2,
+    "missing": {
+      "requirements": [],
+      "features": [],
+      "hypotheses": []
+    },
+    "gaps": [],
+    "scores": {
+      "goal": 2,
+      "adoption": 2,
+      "boundary": 2
+    },
+    "average": 2.0,
+    "verdict": "pass",
+    "post_pass_findings": [
+      "N-1 M1→M2 재지정(self-confirming 회피)",
+      "N-2 TS-019 실행/문언 분리",
+      "N-3 체크 항목 수 표기 정정"
+    ]
+  }
+]

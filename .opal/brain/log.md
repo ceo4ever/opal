@@ -369,5 +369,11 @@
 
 ## [2026-09-03] ingest | CLOSE ingest — 태스크 105 플랫폼 sub-agent 어댑터 확장 필드 통로 신설 + effort 첫 적용
 - 신규: [[test-seam-self-contained-fallback-masks-production-divergence]], [[replacement-ac-must-target-artifact-not-source]]
+## [2026-09-03] ingest | CLOSE ingest — 태스크 105 opal-skill-manager 탐색·설치 절차 보안 판정 축 + 후보 비교 도입
+- 신규: [[test-path-layer-gap-masks-deployment-defect]], [[score-free-tiered-verdict-ladder]], [[additive-field-extension-over-schema-replacement]], [[context-tag-suppresses-false-positive-without-removing-hit]], [[fixture-ownership-separation-closes-reward-hacking]]
+- 출처: task:105
+
+## [2026-09-03] ingest | CLOSE ingest — 태스크 105 stale 페이지 정정: community-skill-user-registry commit_sha 서술 교정 + loadAllSkills 병합 로직 실제 구조 반영
+- 갱신: [[community-skill-user-registry]]
 - 출처: task:105
 
