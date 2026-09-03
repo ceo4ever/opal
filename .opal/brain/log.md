@@ -367,3 +367,7 @@
 - 신규: [[pages/concept/opdd-reverse-track-physical-first-order.md]], [[pages/concept/skill-quoting-ssot-must-edit-ssot-first.md]], [[pages/concept/pipeline-step-internal-mode-not-a-state-row.md]]
 - 출처: task:104
 
+## [2026-09-03] ingest | CLOSE ingest — 태스크 105 플랫폼 sub-agent 어댑터 확장 필드 통로 신설 + effort 첫 적용
+- 신규: [[test-seam-self-contained-fallback-masks-production-divergence]], [[replacement-ac-must-target-artifact-not-source]]
+- 출처: task:105
+

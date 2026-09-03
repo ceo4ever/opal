@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-08-30 17:38
+> 갱신: 2026-09-03 13:16
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -239,6 +239,7 @@
 - [[red-test-determinism-abort-trap]] — RED 테스트 결정론성 함정 — neverResolve fetch 대역의 abort 무반응 #testing #red-first #determinism #abort #fetch-mock
 - [[regression-only-coverage-gate]] — 회귀만 차단하는 커버리지 게이트 — 레거시 소급 부여는 게이트의 몫이 아니다 #code-scan #gate #close
 - [[release-asset-presence-single-signal]] — 릴리즈 자산 존재 판정 — 체크섬 목록 수신 성공을 단일 신호로 쓴다 #deploy #release #install #checksum #decision
+- [[replacement-ac-must-target-artifact-not-source]] — 교체형 AC는 산출물을 판정해야 한다 — 소스 grep은 자기모순을 만든다 #test-scenario #acceptance-criteria #gate-design #lesson #migration
 - [[replacement-edit-new-path-before-old-path-removal]] — 교체형 개정은 신형 완결 후 구형을 제거한다 — 도달 경로 0개 구간 차단 #ssot #migration #governance #phase-ordering #lesson
 - [[replacement-goal-verification-scope-gap]] — 교체형 목표의 검증 범위 함정 — 주장의 범위와 검증의 범위를 맞춰야 한다 #lesson #verification #gate-design #scenario-gate #task-090 #task-091
 - [[rotating-log-correction-over-deletion]] — 회전 로그는 삭제 대신 정정 — FIFO 히스토리 무손실 가드 설계 #memory #fifo #data-integrity #design-pattern
@@ -292,6 +293,7 @@
 - [[template-precedence-over-prose-norms]] — 템플릿 우위 법칙 — 규범은 산문보다 템플릿이 이긴다 #template-precedence #prose-norms #framework-norm #governance #harness-design
 - [[test-real-data-validation-lesson]] — TEST 실데이터 검증이 build-only 가 놓친 결함을 발견한다 #testing #lesson #test-strategy #real-data
 - [[test-scenario-pipeline-redesign]] — 테스트 시나리오 파이프라인 재설계 (2차원 매트릭스 + self-confirming 4분리) #testing #pipeline #framework #flow #task
+- [[test-seam-self-contained-fallback-masks-production-divergence]] — 테스트 seam의 자기완결 폴백이 프로덕션과의 차이를 가린다 #test-seam #verification #shell-testing #lesson #install
 - [[test-two-tier-system]] — 테스트 2단계 체계 (단위=EXECUTE / 통합=TEST) #testing #pipeline #framework
 - [[three-layer-memory-architecture]] — 3계층 기억 아키텍처 — MEMORY / brain / tasks #architecture #memory #brain #long-term #tasks
 - [[timestamp-resolution-shortfall-hides-date-boundary]] — 표기 해상도 부족은 가독성이 아니라 정확성 문제다 — 25시간을 82분으로 읽힌 사례 #observability #timestamp #opal-console #lesson-learned
