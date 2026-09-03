@@ -596,7 +596,7 @@ const NODE_DATA = {
     chips:["GEMINI.md","프로젝트 자동삽입"]},
   codex:{t:"Codex",badge:"stable",layer:"L1 · 진입·부트스트랩",tag:"primary entry",
     desc:"글로벌 ~/.codex/AGENTS.md 마커. tool-backed 세션은 커스텀 에이전트 이름 호출이 불가해, PM이 에이전트 본문을 인라인 주입해 디스패치한다(task 028).",
-    detail:["config [agents]로 글로벌 한계치 설정(max_threads/depth)","인라인 주입 = 배포가 아닌 디스패치 런타임 PM 행위"],
+    detail:["config [agents]로 글로벌 한계치 설정(max_concurrent_threads_per_session/depth)","인라인 주입 = 배포가 아닌 디스패치 런타임 PM 행위"],
     chips:["AGENTS.md","config [agents]","inline-inject"]},
   /* ---- L2 거버넌스 ---- */
   principles:{t:"PRINCIPLES.md",badge:"core",layer:"L2 · 거버넌스·정체성",tag:"헌법 · SSOT",

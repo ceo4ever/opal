@@ -29,7 +29,7 @@
 #   v2.9 2026-06-15: OPAL Console 설치 추가 — install_dashboard() 신설 (FE npm 빌드·BE 복사·dashboard-server 배포) + clean_dirs에 dashboard-server 추가 (021)
 #   v3.0 2026-06-15: 메뉴 [5] OPAL Console 추가 — install_dashboard 단독 + 자동 재시작(stop→start) + /health 확인 (021 후속)
 #   v3.1 2026-06-17 10:24: install_opal()에 git core.quotepath=false 전역 설정 추가 — 한글 태스크 폴더명 허용에 따른 git 경로 표시 개선 (026 L2: 한글 폴더명 허용)
-#   v3.2 2026-06-17: Codex 어댑터 정합 — install_codex_config 신설(config.toml [agents] 멱등 작성, max_threads=6/max_depth=1/job_max_runtime_seconds=1800) + 호출부 연결 + emit_platform_agent_adapter·codex_model_map stale Codex 매핑(standard=gpt-5.5/advanced=gpt-5.3-codex) → SSOT v1.4 정정(standard=gpt-5.4/advanced=gpt-5.5) (028)
+#   v3.2 2026-06-17: Codex 어댑터 정합 — install_codex_config 신설(config.toml [agents] 멱등 작성, max_concurrent_threads_per_session=6/max_depth=1/job_max_runtime_seconds=1800) + 호출부 연결 + emit_platform_agent_adapter·codex_model_map stale Codex 매핑(standard=gpt-5.5/advanced=gpt-5.3-codex) → SSOT v1.4 정정(standard=gpt-5.4/advanced=gpt-5.5) (028)
 #   v3.3 2026-06-21 16:18 KST: emit_platform_agent_adapter 본문 model 레벨 치환 추가 — f.write(body) 직전 _LEVEL_RE(`[,(]\s*model:\s*(light|standard|advanced)\b`)+_sub_body_model로 본문 인라인 sub-dispatch 토큰을 mapping[platform] 실모델명으로 변환(cursor=inherit→토큰 제거+빈괄호 정리). 액션 에이전트 sub-dispatch model 레벨명이 Agent 도구 model enum 위반하던 버그 fix. frontmatter 변환·prose 자기참조 불변 (032)
 #   v3.4 2026-06-24: OPAL_TEST_TOOLS_GLOBAL shell rc 자동 등록 추가 — register_test_tools_global_in_shell_rc 신설 + install_opal_bin 연결 (041)
 #   v3.5 2026-06-24: install_claude_permissions perm_entries에 'Bash(echo $OPAL_BOOTSTRAP)' 추가 — 부트스트랩 스킵 게이트 환경변수 점검 명령을 매 세션 무프롬프트 허용
@@ -43,6 +43,9 @@
 #   v4.3 2026-08-04 15:24 KST: install_opal_setting 병합 로직을 SEED_KEYS 목록 루프로 재작성 — models 키 존재 시 조기 sys.exit(0)으로 shardPolicy가 영구 미시드되던 구조 제거, 키별 독립 판정으로 전환(H-11) (083)
 #   v4.4 2026-08-10 23:24 KST: Python 버전 계약 상수 + 게이트 함수군 8종 신설(python_candidates/python_meets_min/find_python/venv_meets_min/python_autoinstall_enabled/install_platform_python/ensure_python) + install_opal_venv fail-fast·기존 venv 하한 재검증 재생성 — macOS brew 자동설치·Linux 안내 어댑터 분기, 구버전 Python으로 venv가 조용히 생성·재사용되던 결함 fix (087)
 #   v4.5 2026-08-15 16:30 KST: worktree-tool run.sh 실행 권한 chmod 블록 추가 (092)
+#   v4.6 2026-09-02 18:00 KST: install_codex_config — legacy 키 max_threads → max_concurrent_threads_per_session 전량 교체(리터럴·주석·변경이력 포함) + 멱등 판정 2분기 → 3분기 확장(append/migrate-in-place/skip), 기존 설치 머신의 [agents] 블록 내 legacy 키를 값 보존한 채 in-place 치환, [mcp_servers] 등 타 블록 무손상 (105)
+#   v4.7 2026-09-02 21:40 KST: 플랫폼 sub-agent 어댑터 확장 필드 통로 신설 — 센티넬 주석으로 감싼 OPAL_ADAPTER_FIELD_SPEC JSON 상수(name/description/model/effort × 4플랫폼) 도입, emit_platform_agent_adapter의 인라인 mapping dict·out_lines 3줄 고정과 install_codex_agents의 codex_model_map·4줄 고정 write를 build_pairs()+serialize_yaml()/serialize_toml() 스펙 순회로 교체(값 인용은 기존 yaml_escape/toml_escape 재사용, 플랫폼명 리터럴 비교 없이 mode 값에만 분기). effort를 Claude(독립 key)/Codex(model_reasoning_effort, max→xhigh 축약)에 첫 적용, Cursor는 예약(omit)·Gemini는 미지원(omit). 미정의 effort 값은 stderr 경고 후 필드만 생략(종료코드 0). 기존 3필드 emit 결과는 바이트 동일 유지(TS-001) (105)
+#   v4.8 2026-09-02 22:40 KST: emit_platform_agent_adapter/install_codex_agents의 `OPAL_ADAPTER_FIELD_SPEC="$spec_json" "$py" ...` 커맨드 prefix-assignment가 전역 `readonly OPAL_ADAPTER_FIELD_SPEC`(v4.7)와 이름이 같아 대입 자체가 거부되어 install-mac.sh 실행이 즉시 중단되던 결함 fix — 두 호출부 모두 `env OPAL_ADAPTER_FIELD_SPEC=... "$py"`로 전환(env(1) 인자 경유라 셸 readonly 판정을 거치지 않음). 폴백 스펙 리터럴 바이트는 무변경. 부수 원인 fix — 테스트 하네스(test_agent_adapter_fields.sh)가 함수 본문만 추출해 전역 readonly 선언 없이 실행했기 때문에 이 결함이 기존 14케이스를 통과했었다 → extract_sentinel() 신설로 전역 센티넬 블록을 함수보다 먼저 source하도록 seam을 프로덕션과 정합, TS-024(strict set -euo pipefail 기동 검증) 신규 추가 (105 fix)
 #
 
 set -euo pipefail
@@ -458,6 +461,15 @@ with open(config_path, 'w') as f:
 # 변환 규칙 SSOT: opal/core/references/agents.md §플랫폼 sub-agent 어댑터 변환 규칙
 # Antigravity는 custom sub-agent 미지원 (2026-04 기준):
 #   https://discuss.ai.google.dev/t/antigravity-sub-agents/114381
+#
+# 확장 필드 변환 스펙 (105): OPAL frontmatter 필드 → 플랫폼별 필드 변환 테이블을 JSON
+# 리터럴 하나로 표현한다. windows.ps1의 $OpalAdapterFieldSpec here-string과 바이트 동일
+# 유지 의무(미러 규약) — 아래 센티넬 주석 사이 텍스트만 두 스크립트에서 비교한다.
+# 스키마: fields[].{opal,order,default?,omit_if_empty?,flatten?,platforms.<platform>.
+#   {mode:key|model_param|omit, to?, attach?, values?, fallback?, note?}}
+# >>> OPAL_ADAPTER_FIELD_SPEC >>>
+readonly OPAL_ADAPTER_FIELD_SPEC='{"fields":[{"opal":"name","order":10,"platforms":{"claude":{"mode":"key","to":"name"},"cursor":{"mode":"key","to":"name"},"gemini":{"mode":"key","to":"name"},"codex":{"mode":"key","to":"name"}}},{"opal":"description","order":20,"omit_if_empty":true,"flatten":true,"platforms":{"claude":{"mode":"key","to":"description"},"cursor":{"mode":"key","to":"description"},"gemini":{"mode":"key","to":"description"},"codex":{"mode":"key","to":"description"}}},{"opal":"model","order":30,"default":"standard","platforms":{"claude":{"mode":"key","to":"model","values":{"light":"haiku","standard":"sonnet","advanced":"opus"},"fallback":"inherit"},"cursor":{"mode":"key","to":"model","values":{"light":"inherit","standard":"inherit","advanced":"inherit"},"fallback":"inherit"},"gemini":{"mode":"key","to":"model","values":{"light":"gemini-3.1-flash-lite","standard":"gemini-flash-latest","advanced":"gemini-pro-latest"},"fallback":"inherit"},"codex":{"mode":"key","to":"model","values":{"light":"gpt-5.4-mini","standard":"gpt-5.4","advanced":"gpt-5.5"},"fallback":"gpt-5.5"}}},{"opal":"effort","order":40,"platforms":{"claude":{"mode":"key","to":"effort","values":{"low":"low","medium":"medium","high":"high","xhigh":"xhigh","max":"max"}},"cursor":{"mode":"omit","note":"reserved: model_param/effort - cursor inherit policy pending"},"gemini":{"mode":"omit"},"codex":{"mode":"key","to":"model_reasoning_effort","values":{"minimal":"minimal","low":"low","medium":"medium","high":"high","xhigh":"xhigh","max":"xhigh"}}}}]}'
+# <<< OPAL_ADAPTER_FIELD_SPEC <<<
 
 emit_platform_agent_adapter() {
     local src_dir="$1"
@@ -475,10 +487,93 @@ emit_platform_agent_adapter() {
         py="/usr/bin/python3"
     fi
 
-    "$py" - "$agent_md" "$dst_file" "$platform" <<'PYEOF'
-import os, re, sys
+    # 확장 필드 스펙 전달 (105) — 테스트 하네스(scripts/tests/test_agent_adapter_fields.sh)가
+    # 함수 본문만 sed/python 추출해 source하므로, 위 전역 상수가 없는 컨텍스트에서도
+    # 자기완결 동작하도록 폴백 리터럴을 둔다. 폴백은 위 OPAL_ADAPTER_FIELD_SPEC 캐노니컬
+    # 값과 반드시 바이트 동일하게 유지한다.
+    local spec_json="${OPAL_ADAPTER_FIELD_SPEC:-}"
+    if [[ -z "$spec_json" ]]; then
+        spec_json='{"fields":[{"opal":"name","order":10,"platforms":{"claude":{"mode":"key","to":"name"},"cursor":{"mode":"key","to":"name"},"gemini":{"mode":"key","to":"name"},"codex":{"mode":"key","to":"name"}}},{"opal":"description","order":20,"omit_if_empty":true,"flatten":true,"platforms":{"claude":{"mode":"key","to":"description"},"cursor":{"mode":"key","to":"description"},"gemini":{"mode":"key","to":"description"},"codex":{"mode":"key","to":"description"}}},{"opal":"model","order":30,"default":"standard","platforms":{"claude":{"mode":"key","to":"model","values":{"light":"haiku","standard":"sonnet","advanced":"opus"},"fallback":"inherit"},"cursor":{"mode":"key","to":"model","values":{"light":"inherit","standard":"inherit","advanced":"inherit"},"fallback":"inherit"},"gemini":{"mode":"key","to":"model","values":{"light":"gemini-3.1-flash-lite","standard":"gemini-flash-latest","advanced":"gemini-pro-latest"},"fallback":"inherit"},"codex":{"mode":"key","to":"model","values":{"light":"gpt-5.4-mini","standard":"gpt-5.4","advanced":"gpt-5.5"},"fallback":"gpt-5.5"}}},{"opal":"effort","order":40,"platforms":{"claude":{"mode":"key","to":"effort","values":{"low":"low","medium":"medium","high":"high","xhigh":"xhigh","max":"max"}},"cursor":{"mode":"omit","note":"reserved: model_param/effort - cursor inherit policy pending"},"gemini":{"mode":"omit"},"codex":{"mode":"key","to":"model_reasoning_effort","values":{"minimal":"minimal","low":"low","medium":"medium","high":"high","xhigh":"xhigh","max":"xhigh"}}}}]}'
+    fi
+
+    # env 경유 전달(105 fix) — bash 커맨드 prefix-assignment(`VAR=val cmd`)는
+    # VAR가 위 전역 `readonly OPAL_ADAPTER_FIELD_SPEC`와 이름이 같으면 대입
+    # 자체로 취급되어 "readonly variable" 오류로 install을 즉시 중단시킨다
+    # (실측). `env VAR=val cmd`는 별도 실행 파일(env(1))의 인자로 환경을
+    # 구성하므로 셸의 readonly 판정을 거치지 않는다.
+    env OPAL_ADAPTER_FIELD_SPEC="$spec_json" "$py" - "$agent_md" "$dst_file" "$platform" <<'PYEOF'
+import json, os, re, sys
 
 src, dst, platform = sys.argv[1], sys.argv[2], sys.argv[3]
+
+_OMIT = object()
+
+
+def load_spec():
+    return json.loads(os.environ['OPAL_ADAPTER_FIELD_SPEC'])
+
+
+def resolve_value(pspec, raw, ctx, platform):
+    """D-결정3 (§3.1.2): values 미보유=항등, values 매칭, fallback, 그 외 경고+생략."""
+    values = pspec.get('values')
+    if values is None:
+        return raw
+    if raw in values:
+        return values[raw]
+    fallback = pspec.get('fallback')
+    if fallback is not None:
+        return fallback
+    sys.stderr.write(f"warn: unsupported {ctx} value '{raw}' for platform {platform} — field omitted\n")
+    return _OMIT
+
+
+def build_pairs(spec, fm, platform, agent_name):
+    """스펙을 order 오름차순으로 순회해 (필드명, 값) pair 목록을 만든다.
+    mode(key/model_param/omit)에만 분기한다 — 플랫폼명 리터럴 비교는 하지 않는다."""
+    pairs = []
+    attach_groups = {}
+    for field in sorted(spec['fields'], key=lambda f: f['order']):
+        opal_key = field['opal']
+        pspec = field.get('platforms', {}).get(platform)
+        if not pspec or pspec.get('mode') == 'omit':
+            continue
+        if opal_key == 'name':
+            raw = agent_name
+        else:
+            raw = fm.get(opal_key)
+            if (raw is None or raw == '') and field.get('default') is not None:
+                raw = field['default']
+            if field.get('flatten'):
+                raw = _flatten_description(raw or '')
+        if raw is None:
+            continue
+        if raw == '' and field.get('omit_if_empty'):
+            continue
+        resolved = resolve_value(pspec, raw, opal_key, platform)
+        if resolved is _OMIT:
+            continue
+        mode = pspec['mode']
+        if mode == 'key':
+            pairs.append([pspec.get('to', opal_key), resolved])
+        elif mode == 'model_param':
+            attach = pspec.get('attach', 'model')
+            attach_groups.setdefault(attach, []).append((pspec.get('to', opal_key), resolved))
+    for attach_key, params in attach_groups.items():
+        for pair in pairs:
+            if pair[0] == attach_key:
+                composed = ','.join(f"{k}={v}" for k, v in params)
+                pair[1] = f"{pair[1]}[{composed}]"
+                break
+    return [tuple(p) for p in pairs]
+
+
+def model_level_map(spec, platform):
+    """본문 인라인 model 레벨 sub-dispatch 토큰 치환용 {light,standard,advanced}→실모델명 (H-8)."""
+    for field in spec['fields']:
+        if field['opal'] == 'model':
+            return field.get('platforms', {}).get(platform, {}).get('values', {}) or {}
+    return {}
+
 
 def _flatten_description(s):
     """multiline description을 single-line으로 평탄화 (Claude Code 파서 호환)."""
@@ -553,17 +648,7 @@ if not agent_name:
     agent_name = os.path.basename(os.path.dirname(src))
     sys.stderr.write(f"warn: name missing — using dir name '{agent_name}'\n")
 
-description = _flatten_description(fm.get('description') or '')
-opal_model = fm.get('model', 'standard')
-
-# 플랫폼별 모델 매핑 (agents.md §변환 규칙 표와 동기)
-mapping = {
-    'claude': {'light': 'haiku', 'standard': 'sonnet', 'advanced': 'opus'},
-    'cursor': {'light': 'inherit', 'standard': 'inherit', 'advanced': 'inherit'},
-    'gemini': {'light': 'gemini-3.1-flash-lite', 'standard': 'gemini-flash-latest', 'advanced': 'gemini-pro-latest'},
-    'codex': {'light': 'gpt-5.4-mini', 'standard': 'gpt-5.4', 'advanced': 'gpt-5.5'},
-}
-model_value = mapping.get(platform, {}).get(opal_model, 'inherit')
+spec = load_spec()
 
 # 사용자 파일 충돌 가드 (W-2 R-T4) — 어댑터의 AUTO-GENERATED 헤더는 frontmatter 뒤(line 9 이후)에 위치하므로 전체 파일을 검사한다
 if os.path.isfile(dst):
@@ -573,7 +658,7 @@ if os.path.isfile(dst):
         sys.stderr.write(f"warn: user-managed file detected (no AUTO-GENERATED header) — skipping: {dst}\n")
         sys.exit(0)
 
-# 출력 frontmatter 직렬화 (3필드만)
+# 출력 frontmatter 직렬화 — 스펙 순회(pair 목록) 결과를 yaml_escape로 인용한다 (105)
 def yaml_escape(v):
     if v is None:
         return ''
@@ -582,11 +667,13 @@ def yaml_escape(v):
         return '"' + s.replace('\\', '\\\\').replace('"', '\\"') + '"'
     return s
 
-out_lines = []
-out_lines.append(f"name: {yaml_escape(agent_name)}")
-if description:
-    out_lines.append(f"description: {yaml_escape(description)}")
-out_lines.append(f"model: {yaml_escape(model_value)}")
+
+def serialize_yaml(pairs):
+    return [f"{k}: {yaml_escape(v)}" for k, v in pairs]
+
+
+pairs = build_pairs(spec, fm, platform, agent_name)
+out_lines = serialize_yaml(pairs)
 
 header = (
     f"<!-- AUTO-GENERATED by install-mac.sh from ~/.opal/agents/{agent_name}/AGENT.md. DO NOT EDIT. -->\n"
@@ -598,15 +685,17 @@ header = (
 #   - 바레-paren:  "(op-dev-plan, model: advanced)" → lead=", " (선행 콤마)
 #   - 백틱-skill paren: "`op-dev-plan` (model: advanced)" → lead="(" (여는 괄호)
 #   - prose 자기참조("frontmatter의 `model: standard`를 따른다")는 선행이 백틱이라 미매칭 → 오염 차단.
-# `\b` 단어 경계로 레벨명 부분 매칭 차단. mapping[platform]는 frontmatter 변환(:559-565)과 동일 dict 재사용.
+# `\b` 단어 경계로 레벨명 부분 매칭 차단. mapping은 model_level_map(spec, platform)이 반환하는
+# {light,standard,advanced}→실모델명 dict — 이미 platform으로 스코프된 값이다 (105, H-8 계약 유지).
 # 정규식은 frontmatter가 아닌 `body` 문자열에만 적용된다(:504에서 분리 보유 — frontmatter 변환과 독립).
+mapping = model_level_map(spec, platform)
 _LEVEL_RE = re.compile(r'(?P<lead>[,(]\s*)model:\s*(?P<lvl>light|standard|advanced)\b')
 # cursor inherit 제거 시 백틱-skill paren 잔여 빈 괄호만 정리하기 위한 sentinel (정상 괄호 미오염).
 _INHERIT_OPEN = '\x00OPAL_INHERIT_OPEN\x00'
 
 def _sub_body_model(m):
     lvl = m.group('lvl')
-    repl = mapping.get(platform, {}).get(lvl)
+    repl = mapping.get(lvl)
     if repl is None:
         return m.group(0)            # 매핑 부재(오타·미지원 플랫폼) → 원문 유지 (H-2 방어)
     if repl == 'inherit':
@@ -726,17 +815,80 @@ install_codex_agents() {
 
         local dst_file="$agents_dst/$agent_name.toml"
 
-        "$py" - "$agent_md" "$dst_file" <<'PYEOF'
-import os, re, sys
+        # 확장 필드 스펙 전달 (105) — emit_platform_agent_adapter와 동일한 자기완결 폴백 규약.
+        # 폴백은 위 OPAL_ADAPTER_FIELD_SPEC 캐노니컬 값과 반드시 바이트 동일하게 유지한다.
+        local spec_json="${OPAL_ADAPTER_FIELD_SPEC:-}"
+        if [[ -z "$spec_json" ]]; then
+            spec_json='{"fields":[{"opal":"name","order":10,"platforms":{"claude":{"mode":"key","to":"name"},"cursor":{"mode":"key","to":"name"},"gemini":{"mode":"key","to":"name"},"codex":{"mode":"key","to":"name"}}},{"opal":"description","order":20,"omit_if_empty":true,"flatten":true,"platforms":{"claude":{"mode":"key","to":"description"},"cursor":{"mode":"key","to":"description"},"gemini":{"mode":"key","to":"description"},"codex":{"mode":"key","to":"description"}}},{"opal":"model","order":30,"default":"standard","platforms":{"claude":{"mode":"key","to":"model","values":{"light":"haiku","standard":"sonnet","advanced":"opus"},"fallback":"inherit"},"cursor":{"mode":"key","to":"model","values":{"light":"inherit","standard":"inherit","advanced":"inherit"},"fallback":"inherit"},"gemini":{"mode":"key","to":"model","values":{"light":"gemini-3.1-flash-lite","standard":"gemini-flash-latest","advanced":"gemini-pro-latest"},"fallback":"inherit"},"codex":{"mode":"key","to":"model","values":{"light":"gpt-5.4-mini","standard":"gpt-5.4","advanced":"gpt-5.5"},"fallback":"gpt-5.5"}}},{"opal":"effort","order":40,"platforms":{"claude":{"mode":"key","to":"effort","values":{"low":"low","medium":"medium","high":"high","xhigh":"xhigh","max":"max"}},"cursor":{"mode":"omit","note":"reserved: model_param/effort - cursor inherit policy pending"},"gemini":{"mode":"omit"},"codex":{"mode":"key","to":"model_reasoning_effort","values":{"minimal":"minimal","low":"low","medium":"medium","high":"high","xhigh":"xhigh","max":"xhigh"}}}}]}'
+        fi
+
+        # env 경유 전달(105 fix) — emit_platform_agent_adapter와 동일한 readonly
+        # 충돌 회피(위 사이트 주석 참조).
+        env OPAL_ADAPTER_FIELD_SPEC="$spec_json" "$py" - "$agent_md" "$dst_file" <<'PYEOF'
+import json, os, re, sys
 
 src, dst = sys.argv[1], sys.argv[2]
 
-# Codex sub-agent 모델 매핑 (opal-model-mapping.md §2 Codex 컬럼과 동기)
-codex_model_map = {
-    'light': 'gpt-5.4-mini',
-    'standard': 'gpt-5.4',
-    'advanced': 'gpt-5.5',
-}
+_OMIT = object()
+
+
+def load_spec():
+    return json.loads(os.environ['OPAL_ADAPTER_FIELD_SPEC'])
+
+
+def resolve_value(pspec, raw, ctx, platform):
+    """D-결정3 (§3.1.2): values 미보유=항등, values 매칭, fallback, 그 외 경고+생략."""
+    values = pspec.get('values')
+    if values is None:
+        return raw
+    if raw in values:
+        return values[raw]
+    fallback = pspec.get('fallback')
+    if fallback is not None:
+        return fallback
+    sys.stderr.write(f"warn: unsupported {ctx} value '{raw}' for platform {platform} — field omitted\n")
+    return _OMIT
+
+
+def build_pairs(spec, fm, platform, agent_name):
+    """스펙을 order 오름차순으로 순회해 (필드명, 값) pair 목록을 만든다.
+    mode(key/model_param/omit)에만 분기한다 — 플랫폼명 리터럴 비교는 하지 않는다."""
+    pairs = []
+    attach_groups = {}
+    for field in sorted(spec['fields'], key=lambda f: f['order']):
+        opal_key = field['opal']
+        pspec = field.get('platforms', {}).get(platform)
+        if not pspec or pspec.get('mode') == 'omit':
+            continue
+        if opal_key == 'name':
+            raw = agent_name
+        else:
+            raw = fm.get(opal_key)
+            if (raw is None or raw == '') and field.get('default') is not None:
+                raw = field['default']
+            if field.get('flatten'):
+                raw = _flatten_description(raw or '')
+        if raw is None:
+            continue
+        if raw == '' and field.get('omit_if_empty'):
+            continue
+        resolved = resolve_value(pspec, raw, opal_key, platform)
+        if resolved is _OMIT:
+            continue
+        mode = pspec['mode']
+        if mode == 'key':
+            pairs.append([pspec.get('to', opal_key), resolved])
+        elif mode == 'model_param':
+            attach = pspec.get('attach', 'model')
+            attach_groups.setdefault(attach, []).append((pspec.get('to', opal_key), resolved))
+    for attach_key, params in attach_groups.items():
+        for pair in pairs:
+            if pair[0] == attach_key:
+                composed = ','.join(f"{k}={v}" for k, v in params)
+                pair[1] = f"{pair[1]}[{composed}]"
+                break
+    return [tuple(p) for p in pairs]
+
 
 def _flatten_description(s):
     if not s:
@@ -776,9 +928,8 @@ agent_name = fm.get('name', '').strip()
 if not agent_name:
     agent_name = os.path.basename(os.path.dirname(src))
 
-description = _flatten_description(fm.get('description') or '')
-opal_model = fm.get('model', 'standard')
-model_value = codex_model_map.get(opal_model, 'gpt-5.5')
+spec = load_spec()
+pairs = build_pairs(spec, fm, 'codex', agent_name)
 
 # 사용자 파일 충돌 가드 (AUTO-GENERATED 헤더 없으면 스킵)
 if os.path.isfile(dst):
@@ -792,14 +943,18 @@ def toml_escape(s):
     r"""TOML triple-quoted basic string 내부 escape: \ → \\, " → \" """
     return s.replace('\\', '\\\\').replace('"', '\\"')
 
+
+def serialize_toml(pairs):
+    return [f'{k} = "{toml_escape(str(v))}"' for k, v in pairs]
+
+
 os.makedirs(os.path.dirname(dst), exist_ok=True)
 with open(dst, 'w', encoding='utf-8') as f:
     f.write(f'# AUTO-GENERATED by install-mac.sh from ~/.opal/agents/{agent_name}/AGENT.md. DO NOT EDIT.\n')
     f.write(f'# SSOT: opal/agents/{agent_name}/AGENT.md (project), ~/.opal/agents/{agent_name}/AGENT.md (deploy).\n\n')
-    f.write(f'name = "{toml_escape(agent_name)}"\n')
-    if description:
-        f.write(f'description = "{toml_escape(description)}"\n')
-    f.write(f'model = "{model_value}"\n')
+    for line in serialize_toml(pairs):
+        f.write(line + '\n')
+    # developer_instructions는 pair 체계 밖의 본문 슬롯 — 스펙 미등재, body는 무변환 유지 (§9 R-3)
     f.write(f'developer_instructions = """\n{toml_escape(body)}\n"""\n')
 PYEOF
 
@@ -811,27 +966,43 @@ PYEOF
 
 # Codex config.toml [agents] 글로벌 설정 멱등 작성
 # 키/기본값 출처: https://developers.openai.com/codex/config-reference (2026-06-17 확인)
-#   max_threads=6, max_depth=1, job_max_runtime_seconds=1800
-# 멱등성: [agents] 헤더가 이미 존재하면 중복 추가 생략.
+#   max_concurrent_threads_per_session=6, max_depth=1, job_max_runtime_seconds=1800
+# 멱등성 3분기 (105 — legacy alias 마이그레이션 추가):
+#   1) [agents] 없음(또는 파일 부재)         → append (정식 키로 신설)
+#   2) [agents] 있음 + legacy 키(max_threads) 있음 → 해당 라인만 in-place 치환(값 보존)
+#   3) [agents] 있음 + legacy 키 없음        → 스킵 (이미 정식 키)
 # 기존 [mcp_servers] 등 다른 블록은 훼손하지 않는다.
 # 사용: install_codex_config
 install_codex_config() {
     local config_file="$USER_HOME/.codex/config.toml"
     mkdir -p "$(dirname "$config_file")"
 
-    # 멱등성: [agents] 헤더가 이미 있으면 스킵
     if [[ -f "$config_file" ]] && grep -q '^\[agents\]' "$config_file"; then
-        info "Codex config.toml — [agents] 블록 이미 존재, 스킵"
+        # 분기 2) legacy 키(max_threads) 잔존 — in-place 치환, 값 보존, 타 블록 무손상.
+        # BSD/GNU `sed -i` 인자 비호환 회피 위해 임시 파일 + mv(원자적 교체)로 처리.
+        if grep -qE '^[[:space:]]*max_threads[[:space:]]*=' "$config_file"; then
+            local tmp_file
+            tmp_file="$(mktemp "${config_file}.tmp.XXXXXX")"
+            awk '
+                /^[[:space:]]*max_threads[[:space:]]*=/ { gsub(/max_threads/, "max_concurrent_threads_per_session") }
+                { print }
+            ' "$config_file" > "$tmp_file"
+            mv "$tmp_file" "$config_file"
+            success "Codex config.toml — legacy 키(max_threads) → max_concurrent_threads_per_session 마이그레이션(값 보존) → $config_file"
+            return
+        fi
+        # 분기 3) 이미 정식 키 — 스킵
+        info "Codex config.toml — [agents] 블록 이미 존재(정식 키), 스킵"
         return
     fi
 
-    # [agents] 블록 append (기존 블록 보존)
+    # 분기 1) [agents] 블록 append (기존 블록 보존)
     {
         echo ""
         echo "# AUTO-GENERATED by install-mac.sh — OPAL Codex 글로벌 에이전트 한계치"
         echo "# 출처: https://developers.openai.com/codex/config-reference"
         echo "[agents]"
-        echo "max_threads = 6"
+        echo "max_concurrent_threads_per_session = 6"
         echo "max_depth = 1"
         echo "job_max_runtime_seconds = 1800"
     } >> "$config_file"

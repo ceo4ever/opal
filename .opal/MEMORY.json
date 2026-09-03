@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_task_number": 104,
+  "last_task_number": 105,
   "memories": [
     {
       "title": "변경이력 제거 검토 결정 — A안 확정",
@@ -29,6 +29,13 @@
   ],
   "history": [
     {
+      "title": "105 어댑터 확장필드 통로",
+      "date": "2026-09-03",
+      "stage": "완료",
+      "path": "tasks/105-260902-opds-어댑터-확장필드-통로/",
+      "result": "install 어댑터의 frontmatter 재조립을 name/description/model 3필드 하드코딩에서 OPAL_ADAPTER_FIELD_SPEC JSON 스펙 순회로 전환하고, effort를 첫 확장 필드로 Claude(effort)·Codex(model_reasoning_effort)에 실었다. 배치 모드 3종(key/model_param/omit)만으로 분기해 플랫폼명 조건문을 없앴고, mac·windows 스펙 JSON은 센티넬 구간 바이트 동일을 규약으로 삼아 기계 검증한다. 값역은 공통 4단 항등 + max→Codex xhigh 축약, 미정의 값은 경고+필드생략+exit 0. effort에 default를 두지 않아 미선언 에이전트 산출물이 바이트 동일하게 보존되며 이를 차등 골든(구판 emitter vs 신판 × 60건)으로 자동 검증한다. 최대 산출은 기능이 아니라 테스트 seam 결함 발견 — 단위 13/14 PASS인데 install이 readonly 충돌로 한 줄도 실행되지 않았다. 하네스가 함수 본문만 추출해 실행하느라 전역 readonly 선언이 빠진 컨텍스트를 만들었고, 그 seam을 성립시키려 넣은 자기완결 폴백이 프로덕션과의 차이를 가렸다. seam을 전역 센티넬 선로드로 교정하자 fix 전 상태에서 7개 케이스가 FAIL로 전환돼 소급 재현이 증명됐고, strict 기동 케이스 TS-024를 신설했다. Codex legacy alias는 단순 치환으로는 기존 설치 머신이 영구 보존한다는 멱등 스킵 함정을 PLAN이 발견해 3분기 마이그레이션으로 해결했다. R-6 AC는 소스 grep 0건이 탐지 로직과 원리적으로 충돌해 사용자 승인 아래 판정 대상을 결과 파일로 이전했다(난독화 금지 명시). 최종 스위트 15/15, 회귀 22/22, 컨벤션 Critical/High 0, 실환경 codex doctor 0 warn·0 fail. 이월 10건 — 최대는 S-14 Windows 런타임 미검증(pwsh 미설치)과 에이전트별 effort 값 배정. 미수행: 커밋."
+    },
+    {
       "title": "104 역공학 개념모델링 스킵",
       "date": "2026-08-30",
       "stage": "완료",
@@ -54,13 +61,6 @@
       "date": "2026-08-24",
       "stage": "완료",
       "path": "tasks/101-260824-opd-핸드오프-스키마-계약정합/",
-      "result": "(PM 보강 대기)"
-    },
-    {
-      "title": "100 분석코어 공유SSOT",
-      "date": "2026-08-24",
-      "stage": "완료",
-      "path": "tasks/100-260822-opd-분석코어-공유SSOT/",
       "result": "(PM 보강 대기)"
     }
   ]

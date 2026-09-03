@@ -89,13 +89,15 @@
         v1.10.0 2026-06-07       OPAL 헌법(PRINCIPLES.md) 배포 추가 — opal/core/PRINCIPLES.md → ~/.opal/PRINCIPLES.md (Strip 변경이력, always-on) (012)
         v1.11.0 2026-06-15       OPAL Console 설치 추가 — Install-Dashboard 신설 (FE npm.cmd 빌드·BE 복사·dashboard-server 배포) + cleanDirs에 dashboard-server 추가 (021)
         v1.12.0 2026-06-15       메뉴 [5] OPAL Console 자동 기동 추가 — Start-OpalConsole 신설 (기존 프로세스 Stop-OpalConsole + Start-Process uvicorn 백그라운드 + /health 확인) (021 후속)
-        v1.13.0 2026-06-17       Codex 어댑터 정합 — Install-CodexConfig 신설(config.toml [agents] 멱등 작성, max_threads=6/max_depth=1/job_max_runtime_seconds=1800) + 호출부 연결 + Install-PlatformAgents codex ModelMap stale(standard=gpt-5.5/advanced=gpt-5.3-codex) → SSOT v1.4 정정(standard=gpt-5.4/advanced=gpt-5.5) (028)
+        v1.13.0 2026-06-17       Codex 어댑터 정합 — Install-CodexConfig 신설(config.toml [agents] 멱등 작성, max_concurrent_threads_per_session=6/max_depth=1/job_max_runtime_seconds=1800) + 호출부 연결 + Install-PlatformAgents codex ModelMap stale(standard=gpt-5.5/advanced=gpt-5.3-codex) → SSOT v1.4 정정(standard=gpt-5.4/advanced=gpt-5.5) (028)
         v1.14.0 2026-06-21 16:18 Convert-BodyModelTokens 신규 — 본문 인라인 model 레벨 sub-dispatch 토큰('[,(]\s*model:\s*(light|standard|advanced)\b')을 ModelMap 실모델명으로 변환(cursor=inherit→토큰 제거+빈괄호 정리). Install-PlatformAgents Markdown 경로($convertedBody 직렬화)·Codex TOML 경로(escape 전) 양쪽 적용. install-mac.sh _sub_body_model 미러(문자 단위 동일 정규식) — 액션 에이전트 sub-dispatch model enum 위반 버그 fix (032)
         v1.15.0 2026-06-24 17:26 KST: Install-OpalCore setting.json create-if-absent 배포 추가 (043)
         v1.16.0 2026-06-29 15:24 KST: Invoke-OpalWindowsInstall에 $repoRoot/VERSION 각인값 최우선 읽기 추가 — install-mac.sh record_installed_version 대칭, -notlike '$Format:*' 판별 (048)
         v1.17.0 2026-07-10 18:07  Install-Dashboard 말미에 console.config.json 자동 생성/머지 로직 추가 — .opal\AGENT.md 마커 탐색 + scan_roots 병합(보존+추가+dedup)의 PowerShell 네이티브 등가, opal-cli console scan(install-mac.sh v3.9) 과 의미상 동등, try/catch 격리로 install 비중단 (057)
         v1.18.0 2026-07-17       Install-OpalCore 도구 복사 직후 fw-inbox 런타임 디렉토리 초기화 블록 추가 — New-Item -Force(멱등) + fw-inbox-README.md create-if-absent seed, cleanDirs(:433) 미포함으로 재설치 시 기존 수집 항목 보존(H-5 멱등, install-mac.sh v4.0 대칭). 스킬(opal-improve)·도구(improve-tool)는 기존 skills/tools 자동 복사 블록이 처리 (058)
         v1.19.0 2026-08-10 23:24 KST: Test-PythonMinVersion 신설 + Find-Python 하한 판정 추가(미달 인터프리터 비채택 → 자동 설치 트리거를 "미설치 또는 하한 미달"로 확대) + Install-WindowsPython 의 3.14 리터럴을 $OpalPythonTarget 상수 파생으로 전환, install-mac.sh v4.4 대칭 (087)
+        v1.20.0 2026-09-02 18:00 KST: Install-CodexConfig — legacy 키 max_threads → max_concurrent_threads_per_session 전량 교체(리터럴·주석·변경이력 포함) + 멱등 판정 2분기 → 3분기 확장(append/migrate-in-place/skip), 기존 설치 머신의 [agents] 블록 내 legacy 키를 값 보존한 채 in-place 치환, [mcp_servers] 등 타 블록 무손상, install-mac.sh v4.6 대칭 (105)
+        v1.21.0 2026-09-02 22:10 KST: install-mac.sh OPAL_ADAPTER_FIELD_SPEC(105 v4.7) 미러 반영 — $OpalAdapterFieldSpecMirror here-string 신설(센티넬 마커 사이 JSON 리터럴 바이트 동일, TS-011) + ConvertTo-OpalHashtable(PS5.1 호환 재귀 변환, AsHashtable 스위치 미사용) + Resolve-OpalFieldValue/ConvertTo-OpalFieldPairs/Get-OpalModelLevelMap(install-mac.sh resolve_value/build_pairs/model_level_map 미러) 신규. Get-AgentFrontmatter 의 name/description/model 3키 한정 switch 를 전 키 Fields 해시 수집으로 확장(기존 4키 Name/Description/Model/Body 유지, H-5 결함 fix). Install-PlatformAgents 의 $platforms 인라인 ModelMap·md 3줄/toml 4줄 고정 직렬화를 스펙 pairs 순회로 교체 — Convert-BodyModelTokens 의 [hashtable]$ModelMap 계약은 무변경(H-8). effort 를 Claude(effort 키)/Codex(model_reasoning_effort, max→xhigh)에 반영, Cursor 는 예약(omit)·Gemini 는 미지원(omit). 경고 문구 mac 과 동일 본문("unsupported {field} value '{raw}' for platform {platform} — field omitted"). 미러 규약을 "스펙 JSON 리터럴 블록의 바이트 동일 + 배치 모드 3종의 동일 의미 구현"으로 재정의(§3.2.2). Windows 런타임 검증(TS-012·013)은 본 환경 pwsh 미설치로 미수행 — 정적 리뷰 + TS-011/TS-014로 대체 (105)
 #>
 
 #Requires -Version 5.1
@@ -1598,13 +1600,164 @@ function Install-OpalMcp {
 
 # ─── Install-PlatformAgents (install-mac.sh emit_platform_agent_adapter 이식) ──
 
+# ─── OPAL_ADAPTER_FIELD_SPEC (105) — install-mac.sh 미러 ──────────────────
+# 아래 here-string은 scripts/install-mac.sh 의 OPAL_ADAPTER_FIELD_SPEC 선언부
+# (센티넬 마커로 감싼 3줄)를 텍스트 그대로 보존한 미러다. bash 문법(readonly NAME='json')을
+# 그대로 옮겨야 TS-011(스펙 JSON 블록 mac/windows 바이트 diff 공집합)이 언어 독립적으로
+# 성립하므로, 이 here-string 내부는 실행되지 않는 순수 데이터로만 취급한다. 실제로 소비되는
+# $OpalAdapterFieldSpec 은 아래에서 이 텍스트로부터 JSON 리터럴만 잘라내 만든다.
+# mac 쪽 JSON 리터럴과 바이트 동일 — 값을 바꿀 때는 양쪽을 함께 갱신한다 (§3.1.2 D-결정1).
+$OpalAdapterFieldSpecMirror = @'
+# >>> OPAL_ADAPTER_FIELD_SPEC >>>
+readonly OPAL_ADAPTER_FIELD_SPEC='{"fields":[{"opal":"name","order":10,"platforms":{"claude":{"mode":"key","to":"name"},"cursor":{"mode":"key","to":"name"},"gemini":{"mode":"key","to":"name"},"codex":{"mode":"key","to":"name"}}},{"opal":"description","order":20,"omit_if_empty":true,"flatten":true,"platforms":{"claude":{"mode":"key","to":"description"},"cursor":{"mode":"key","to":"description"},"gemini":{"mode":"key","to":"description"},"codex":{"mode":"key","to":"description"}}},{"opal":"model","order":30,"default":"standard","platforms":{"claude":{"mode":"key","to":"model","values":{"light":"haiku","standard":"sonnet","advanced":"opus"},"fallback":"inherit"},"cursor":{"mode":"key","to":"model","values":{"light":"inherit","standard":"inherit","advanced":"inherit"},"fallback":"inherit"},"gemini":{"mode":"key","to":"model","values":{"light":"gemini-3.1-flash-lite","standard":"gemini-flash-latest","advanced":"gemini-pro-latest"},"fallback":"inherit"},"codex":{"mode":"key","to":"model","values":{"light":"gpt-5.4-mini","standard":"gpt-5.4","advanced":"gpt-5.5"},"fallback":"gpt-5.5"}}},{"opal":"effort","order":40,"platforms":{"claude":{"mode":"key","to":"effort","values":{"low":"low","medium":"medium","high":"high","xhigh":"xhigh","max":"max"}},"cursor":{"mode":"omit","note":"reserved: model_param/effort - cursor inherit policy pending"},"gemini":{"mode":"omit"},"codex":{"mode":"key","to":"model_reasoning_effort","values":{"minimal":"minimal","low":"low","medium":"medium","high":"high","xhigh":"xhigh","max":"xhigh"}}}}]}'
+# <<< OPAL_ADAPTER_FIELD_SPEC <<<
+'@
+
+$OpalAdapterFieldSpecDeclPrefix = "readonly OPAL_ADAPTER_FIELD_SPEC='"
+$OpalAdapterFieldSpecDeclLine = ($OpalAdapterFieldSpecMirror -split "`r?`n") |
+    Where-Object { $_.StartsWith($OpalAdapterFieldSpecDeclPrefix) } |
+    Select-Object -First 1
+if (-not $OpalAdapterFieldSpecDeclLine) {
+    throw 'OPAL_ADAPTER_FIELD_SPEC 미러 파싱 실패 — 센티넬 블록 형식이 install-mac.sh와 어긋남'
+}
+$OpalAdapterFieldSpec = $OpalAdapterFieldSpecDeclLine.Substring(
+    $OpalAdapterFieldSpecDeclPrefix.Length,
+    $OpalAdapterFieldSpecDeclLine.Length - $OpalAdapterFieldSpecDeclPrefix.Length - 1)
+
+function ConvertTo-OpalHashtable {
+    <#
+    .SYNOPSIS
+        ConvertFrom-Json 이 반환하는 PSCustomObject 를 재귀적으로 Hashtable/배열로 변환한다.
+        PS 5.1 은 ConvertFrom-Json 의 AsHashtable 스위치를 지원하지 않으므로(PS7 전용, TS-014 위반)
+        직접 재귀 변환한다(H-5).
+    #>
+    param($InputObject)
+    if ($null -eq $InputObject) { return $null }
+    if (($InputObject -is [System.Collections.IEnumerable]) -and
+        ($InputObject -isnot [string]) -and
+        ($InputObject -isnot [System.Collections.IDictionary])) {
+        $list = @()
+        foreach ($item in $InputObject) { $list += , (ConvertTo-OpalHashtable $item) }
+        return , $list
+    }
+    if ($InputObject -is [System.Management.Automation.PSCustomObject]) {
+        $ht = @{}
+        foreach ($prop in $InputObject.PSObject.Properties) {
+            $ht[$prop.Name] = ConvertTo-OpalHashtable $prop.Value
+        }
+        return $ht
+    }
+    return $InputObject
+}
+
+$script:OpalAdapterFieldSpecObj = ConvertTo-OpalHashtable (ConvertFrom-Json $OpalAdapterFieldSpec)
+$script:OpalOmit = New-Object object
+
+function Resolve-OpalFieldValue {
+    <#
+    .SYNOPSIS
+        install-mac.sh resolve_value() 미러 (§3.1.2 D-결정3): values 미보유=항등,
+        values 매칭, fallback, 그 외 경고 + 생략.
+    .OUTPUTS
+        해석된 문자열 값, 또는 생략 시 $script:OpalOmit 센티넬.
+    #>
+    param($PlatformSpec, [string]$Raw, [string]$Ctx, [string]$Platform)
+    $values = $PlatformSpec['values']
+    if (-not $values) { return $Raw }
+    if ($values.ContainsKey($Raw)) { return $values[$Raw] }
+    if ($PlatformSpec['fallback']) { return $PlatformSpec['fallback'] }
+    Write-OpalWarn "unsupported $Ctx value '$Raw' for platform $Platform — field omitted"
+    return $script:OpalOmit
+}
+
+function ConvertTo-OpalFieldPairs {
+    <#
+    .SYNOPSIS
+        install-mac.sh build_pairs() 미러: 스펙을 order 오름차순 순회해 (필드명, 값) pair
+        목록을 만든다. mode(key/model_param/omit)에만 분기한다 — 플랫폼명 리터럴 비교는
+        하지 않는다(R-1 AC).
+    .OUTPUTS
+        @(@{Key=...; Value=...}, ...) 순서 배열.
+    #>
+    param($Spec, [hashtable]$Fields, [string]$Platform, [string]$AgentName)
+    $pairs = New-Object System.Collections.ArrayList
+    $attachGroups = @{}
+    $sortedFields = $Spec['fields'] | Sort-Object { [int]$_['order'] }
+    foreach ($field in $sortedFields) {
+        $opalKey = $field['opal']
+        $platforms = $field['platforms']
+        if ((-not $platforms) -or (-not $platforms.ContainsKey($Platform))) { continue }
+        $pspec = $platforms[$Platform]
+        if ($pspec['mode'] -eq 'omit') { continue }
+
+        if ($opalKey -eq 'name') {
+            $raw = $AgentName
+        } else {
+            $raw = $Fields[$opalKey]
+            if ((($null -eq $raw) -or ($raw -eq '')) -and $field['default']) {
+                $raw = $field['default']
+            }
+            if ($field['flatten']) {
+                if ($raw) { $raw = ($raw -replace '\s+', ' ').Trim() } else { $raw = '' }
+            }
+        }
+        if ($null -eq $raw) { continue }
+        if (($raw -eq '') -and $field['omit_if_empty']) { continue }
+
+        $resolved = Resolve-OpalFieldValue -PlatformSpec $pspec -Raw $raw -Ctx $opalKey -Platform $Platform
+        if ($resolved -eq $script:OpalOmit) { continue }
+
+        $mode = $pspec['mode']
+        if ($mode -eq 'key') {
+            $to = if ($pspec['to']) { $pspec['to'] } else { $opalKey }
+            [void]$pairs.Add(@{ Key = $to; Value = $resolved })
+        } elseif ($mode -eq 'model_param') {
+            $attach = if ($pspec['attach']) { $pspec['attach'] } else { 'model' }
+            $to = if ($pspec['to']) { $pspec['to'] } else { $opalKey }
+            if (-not $attachGroups.ContainsKey($attach)) { $attachGroups[$attach] = New-Object System.Collections.ArrayList }
+            [void]$attachGroups[$attach].Add(@{ Key = $to; Value = $resolved })
+        }
+    }
+    foreach ($attachKey in $attachGroups.Keys) {
+        foreach ($pair in $pairs) {
+            if ($pair.Key -eq $attachKey) {
+                $composed = ($attachGroups[$attachKey] | ForEach-Object { "$($_.Key)=$($_.Value)" }) -join ','
+                $pair.Value = "$($pair.Value)[$composed]"
+                break
+            }
+        }
+    }
+    return $pairs
+}
+
+function Get-OpalModelLevelMap {
+    <#
+    .SYNOPSIS
+        install-mac.sh model_level_map() 미러 — 본문 인라인 model 레벨 sub-dispatch 토큰
+        치환용 {light,standard,advanced}→실모델명 (H-8 계약 유지, Convert-BodyModelTokens 소비).
+    #>
+    param($Spec, [string]$Platform)
+    foreach ($field in $Spec['fields']) {
+        if ($field['opal'] -eq 'model') {
+            $platforms = $field['platforms']
+            if ($platforms -and $platforms.ContainsKey($Platform) -and $platforms[$Platform]['values']) {
+                return $platforms[$Platform]['values']
+            }
+            return @{}
+        }
+    }
+    return @{}
+}
+
 function Get-AgentFrontmatter {
     <#
     .SYNOPSIS
-        AGENT.md 의 YAML frontmatter 에서 name/description/model 추출 (정규식 기반).
-        Python PyYAML 의존 없이 stdlib 수준 파싱.
+        AGENT.md 의 YAML frontmatter 를 정규식 기반으로 파싱한다(PyYAML 미의존).
+        105 이전에는 name/description/model 3키만 switch 로 추출해 확장 필드(effort 등)가
+        파싱 단계에서 소실됐다(H-5) — 이제 전 키를 Fields 해시로 수집한다.
     .OUTPUTS
-        @{ Name; Description; Model; Body }
+        @{ Name; Description; Model; Body; Fields } — Name/Description/Model/Body 4키는
+        기존 호출부 하위호환을 위해 유지, Fields 는 frontmatter 전체 key→value(문자열) 해시.
     #>
     param([Parameter(Mandatory)][string]$Path)
     $raw = Get-Content -Path $Path -Raw -Encoding UTF8
@@ -1614,7 +1767,7 @@ function Get-AgentFrontmatter {
     $fmRaw = $matches[1]
     $body = $matches[2]
 
-    $name = $null; $desc = $null; $model = 'standard'
+    $fields = @{}
     $lines = $fmRaw -split "`r?`n"
     for ($i = 0; $i -lt $lines.Count; $i++) {
         $line = $lines[$i]
@@ -1632,24 +1785,24 @@ function Get-AgentFrontmatter {
                         $j++
                     } else { break }
                 }
-                $val = ($blockLines -join ' ') -replace '\s+', ' '
+                $val = (($blockLines -join ' ') -replace '\s+', ' ').Trim()
                 $i = $j - 1
             } else {
                 if (($val -match '^"(.*)"$') -or ($val -match "^'(.*)'$")) {
                     $val = $matches[1]
                 }
             }
-            switch ($key) {
-                'name'        { $name = $val.Trim() }
-                'description' { $desc = ($val.Trim() -replace '\s+', ' ') }
-                'model'       { $model = $val.Trim() }
-            }
+            if ($key -eq 'description') { $val = ($val.Trim() -replace '\s+', ' ') } else { $val = $val.Trim() }
+            $fields[$key] = $val
         }
     }
+    $name = $fields['name']
     if (-not $name) {
         $name = (Split-Path -Parent $Path | Split-Path -Leaf)
     }
-    return @{ Name = $name; Description = $desc; Model = $model; Body = $body }
+    $model = $fields['model']
+    if (-not $model) { $model = 'standard' }
+    return @{ Name = $name; Description = $fields['description']; Model = $model; Body = $body; Fields = $fields }
 }
 
 function Format-YamlValue {
@@ -1711,27 +1864,13 @@ function Install-PlatformAgents {
     }
 
     $userHome = $env:USERPROFILE
+    # 플랫폼별 목적지·직렬화 포맷만 남긴다 — model 매핑 등 필드 변환 규칙은 전부
+    # $OpalAdapterFieldSpec(위 OPAL_ADAPTER_FIELD_SPEC 미러) 순회로 대체한다(105).
     $platforms = @{
-        'claude' = @{
-            Dst = Join-Path $userHome '.claude\agents'
-            ModelMap = @{ light = 'haiku'; standard = 'sonnet'; advanced = 'opus' }
-            Format = 'md'
-        }
-        'cursor' = @{
-            Dst = Join-Path $userHome '.cursor\agents'
-            ModelMap = @{ light = 'inherit'; standard = 'inherit'; advanced = 'inherit' }
-            Format = 'md'
-        }
-        'gemini' = @{
-            Dst = Join-Path $userHome '.gemini\agents'
-            ModelMap = @{ light = 'gemini-3.1-flash-lite'; standard = 'gemini-flash-latest'; advanced = 'gemini-pro-latest' }
-            Format = 'md'
-        }
-        'codex' = @{
-            Dst = Join-Path $userHome '.codex\agents'
-            ModelMap = @{ light = 'gpt-5.4-mini'; standard = 'gpt-5.4'; advanced = 'gpt-5.5' }
-            Format = 'toml'
-        }
+        'claude' = @{ Dst = Join-Path $userHome '.claude\agents'; Format = 'md' }
+        'cursor' = @{ Dst = Join-Path $userHome '.cursor\agents'; Format = 'md' }
+        'gemini' = @{ Dst = Join-Path $userHome '.gemini\agents'; Format = 'md' }
+        'codex'  = @{ Dst = Join-Path $userHome '.codex\agents';  Format = 'toml' }
     }
 
     foreach ($pname in $platforms.Keys) {
@@ -1739,6 +1878,9 @@ function Install-PlatformAgents {
         if (-not (Test-Path $cfg.Dst)) {
             New-Item -ItemType Directory -Path $cfg.Dst -Force | Out-Null
         }
+        # 본문 인라인 model 레벨 sub-dispatch 토큰 치환용 맵 — 스펙의 model 필드
+        # platforms[...].values 를 그대로 사용해 Convert-BodyModelTokens 계약(H-8) 유지.
+        $modelLevelMap = Get-OpalModelLevelMap -Spec $script:OpalAdapterFieldSpecObj -Platform $pname
         $count = 0
         Get-ChildItem -Path $agentsSrc -Directory -ErrorAction SilentlyContinue | ForEach-Object {
             $agentMd = Join-Path $_.FullName 'AGENT.md'
@@ -1746,14 +1888,16 @@ function Install-PlatformAgents {
             $fm = Get-AgentFrontmatter -Path $agentMd
             if (-not $fm) { return }
 
-            $platformModel = $cfg.ModelMap[$fm.Model]
-            if (-not $platformModel) { $platformModel = if ($cfg.Format -eq 'toml') { 'gpt-5.5' } else { 'inherit' } }
-
             # 본문 인라인 model 레벨 sub-dispatch 토큰 치환 (032 — F-003 미러, Markdown·Codex TOML 양 경로 공통)
-            $convertedBody = Convert-BodyModelTokens -Body $fm.Body -ModelMap $cfg.ModelMap
+            $convertedBody = Convert-BodyModelTokens -Body $fm.Body -ModelMap $modelLevelMap
+
+            # 확장 필드 변환 스펙 순회(105) — install-mac.sh build_pairs() 미러.
+            # mode(key/model_param/omit)에만 분기한다 — 플랫폼명 리터럴 비교는 하지 않는다(R-1 AC).
+            $pairs = ConvertTo-OpalFieldPairs -Spec $script:OpalAdapterFieldSpecObj -Fields $fm.Fields -Platform $pname -AgentName $fm.Name
 
             if ($cfg.Format -eq 'toml') {
-                # Codex sub-agent TOML 직렬화 (필수 필드: name/description/developer_instructions)
+                # Codex sub-agent TOML 직렬화 — pairs 순회(105) + developer_instructions는
+                # 스펙 밖 본문 슬롯으로 유지(mac install_codex_agents 대칭)
                 $dstFile = Join-Path $cfg.Dst "$($fm.Name).toml"
                 # 사용자 파일 충돌 가드
                 if (Test-Path $dstFile) {
@@ -1764,20 +1908,17 @@ function Install-PlatformAgents {
                     }
                 }
                 # TOML escape: \ → \\, " → \"
-                $escapedName  = $fm.Name -replace '\\', '\\' -replace '"', '\"'
-                $escapedDesc  = if ($fm.Description) { $fm.Description -replace '\\', '\\' -replace '"', '\"' } else { '' }
                 $escapedBody  = $convertedBody -replace '\\', '\\' -replace '"', '\"'
                 $tomlContent  = "# AUTO-GENERATED by install-windows.ps1 from ~/.opal/agents/$($fm.Name)/AGENT.md. DO NOT EDIT.`r`n"
                 $tomlContent += "# SSOT: opal/agents/$($fm.Name)/AGENT.md`r`n`r`n"
-                $tomlContent += "name = `"$escapedName`"`r`n"
-                if ($escapedDesc) {
-                    $tomlContent += "description = `"$escapedDesc`"`r`n"
+                foreach ($pair in $pairs) {
+                    $escapedVal = ([string]$pair.Value) -replace '\\', '\\' -replace '"', '\"'
+                    $tomlContent += "$($pair.Key) = `"$escapedVal`"`r`n"
                 }
-                $tomlContent += "model = `"$platformModel`"`r`n"
                 $tomlContent += "developer_instructions = `"`"`"`r`n$escapedBody`r`n`"`"`"`r`n"
                 Set-ContentNoBom -Path $dstFile -Value $tomlContent
             } else {
-                # Markdown YAML 직렬화 (Claude/Cursor/Gemini 기존 경로)
+                # Markdown YAML 직렬화 — pairs 순회(105), Format-YamlValue 재사용
                 $dstFile = Join-Path $cfg.Dst "$($fm.Name).md"
                 # 사용자 파일 충돌 가드 — AUTO-GENERATED 헤더가 없으면 사용자 관리로 간주, 스킵
                 if (Test-Path $dstFile) {
@@ -1788,11 +1929,9 @@ function Install-PlatformAgents {
                     }
                 }
                 $fmLines = @()
-                $fmLines += "name: $(Format-YamlValue $fm.Name)"
-                if ($fm.Description) {
-                    $fmLines += "description: $(Format-YamlValue $fm.Description)"
+                foreach ($pair in $pairs) {
+                    $fmLines += "$($pair.Key): $(Format-YamlValue ([string]$pair.Value))"
                 }
-                $fmLines += "model: $(Format-YamlValue $platformModel)"
 
                 $header = "<!-- AUTO-GENERATED by install-windows.ps1 from ~/.opal/agents/$($fm.Name)/AGENT.md. DO NOT EDIT. -->`r`n<!-- SSOT: opal/agents/$($fm.Name)/AGENT.md -->`r`n`r`n"
 
@@ -1811,8 +1950,11 @@ function Install-CodexConfig {
         Codex config.toml 에 [agents] 글로벌 설정 블록을 멱등 작성한다.
     .NOTES
         키/기본값 출처: https://developers.openai.com/codex/config-reference (2026-06-17 확인)
-          max_threads=6, max_depth=1, job_max_runtime_seconds=1800
-        멱등성: [agents] 헤더가 이미 존재하면 중복 추가 생략.
+          max_concurrent_threads_per_session=6, max_depth=1, job_max_runtime_seconds=1800
+        멱등성 3분기 (105 — legacy alias 마이그레이션 추가):
+          1) [agents] 없음(또는 파일 부재)              → append (정식 키로 신설)
+          2) [agents] 있음 + legacy 키(max_threads) 있음 → 해당 라인만 in-place 치환(값 보존)
+          3) [agents] 있음 + legacy 키 없음             → 스킵 (이미 정식 키)
         기존 [mcp_servers] 등 다른 블록은 훼손하지 않는다.
         macOS 대칭: scripts/install-mac.sh install_codex_config.
     #>
@@ -1822,18 +1964,28 @@ function Install-CodexConfig {
         New-Item -ItemType Directory -Path $configDir -Force | Out-Null
     }
 
-    # 멱등성: [agents] 헤더가 이미 있으면 스킵
-    if ((Test-Path $configFile) -and ((Get-Content -Path $configFile -Raw -Encoding UTF8) -match '(?m)^\[agents\]')) {
-        Write-OpalInfo 'Codex config.toml — [agents] 블록 이미 존재, 스킵'
-        return
+    if (Test-Path $configFile) {
+        $existing = Get-Content -Path $configFile -Raw -Encoding UTF8
+        if ($existing -match '(?m)^\[agents\]') {
+            # 분기 2) legacy 키 잔존 — 해당 라인만 in-place 치환, 값 보존, 타 블록 무손상
+            if ($existing -match '(?m)^[ \t]*max_threads[ \t]*=') {
+                $migrated = [regex]::Replace($existing, '(?m)^([ \t]*)max_threads([ \t]*=)', '${1}max_concurrent_threads_per_session${2}')
+                [System.IO.File]::WriteAllText($configFile, $migrated, $Script:Utf8NoBom)
+                Write-OpalOk "Codex config.toml — legacy 키 → max_concurrent_threads_per_session 마이그레이션(값 보존) → $configFile"
+                return
+            }
+            # 분기 3) 이미 정식 키 — 스킵
+            Write-OpalInfo 'Codex config.toml — [agents] 블록 이미 존재(정식 키), 스킵'
+            return
+        }
     }
 
-    # [agents] 블록 append (기존 블록 보존)
+    # 분기 1) [agents] 블록 append (기존 블록 보존)
     $block  = "`r`n"
     $block += "# AUTO-GENERATED by install-windows.ps1 — OPAL Codex 글로벌 에이전트 한계치`r`n"
     $block += "# 출처: https://developers.openai.com/codex/config-reference`r`n"
     $block += "[agents]`r`n"
-    $block += "max_threads = 6`r`n"
+    $block += "max_concurrent_threads_per_session = 6`r`n"
     $block += "max_depth = 1`r`n"
     $block += "job_max_runtime_seconds = 1800`r`n"
 

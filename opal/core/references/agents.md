@@ -191,13 +191,23 @@ OPAL frontmatter → 플랫폼 frontmatter:
 | `model: standard` | `model: sonnet` | `model: inherit` | `model: gemini-flash-latest` | `model: gpt-5.4` |
 | `model: advanced` | `model: opus` | `model: inherit` | `model: gemini-pro-latest` | `model: gpt-5.5` |
 | `icon` | (제거 — 미지원) | (제거 — 미지원) | (제거 — 미지원) | (제거 — 미지원) |
-| (기타 OPAL 전용 필드) | (제거) | (제거) | (제거) | (제거) |
+| `effort` | `effort` (그대로) | (제거 — 예약, `inherit` 정책 해제 전 미적용) | (제거 — 미지원) | `model_reasoning_effort` (`max`→`xhigh`, 그 외 그대로) |
+| (변환 테이블 미등재 필드) | (제거) | (제거) | (제거) | (제거) |
 
 > Codex 컬럼 모델값은 `opal/core/references/opal-model-mapping.md` §2 Codex 컬럼(SSOT v1.4)과 동일하게 유지한다. `gpt-5.3-codex`는 2026-06-30 일몰 예정이므로 사용하지 않는다.
 
 > Cursor는 사용자가 IDE에서 모델 제공자를 직접 설정하므로 `inherit`로 위임한다 (→ `opal/core/references/opal-model-mapping.md` §4 Cursor 특이사항).
 
 > Cursor `inherit` 정책은 사용자 IDE 모델 설정 위임을 의미한다. Cursor가 향후 `light/standard/advanced` alias를 도입하면 본 표와 `scripts/install-mac.sh` `emit_platform_agent_adapter` 함수의 인라인 매핑을 동시 갱신해야 한다.
+
+> `effort` 값역: 공통 `low`/`medium`/`high`/`xhigh`는 4플랫폼(적용 대상: Claude·Codex) 모두 항등 변환. Claude 전용 `max`는 항등(`max`→`max`). Codex 전용 `minimal`은 항등(`minimal`→`minimal`), Codex는 추가로 `max`→`xhigh` 축약 변환을 적용한다. 스펙에 없는 미정의 값은 stderr 경고 후 해당 필드만 생략(종료코드 0, 나머지 필드는 정상 emit).
+
+> `effort` 행을 포함해 이 표의 셀 값은 **사람이 읽는 미러**이며 SSOT가 아니다. 실제 변환 규칙의 SSOT는 코드 상수다 — `scripts/install-mac.sh`의 `OPAL_ADAPTER_FIELD_SPEC`(센티넬 `# >>> OPAL_ADAPTER_FIELD_SPEC >>>` ~ `# <<< OPAL_ADAPTER_FIELD_SPEC <<<` 구간)과 `scripts/install/windows.ps1`의 `$OpalAdapterFieldSpec`(`$OpalAdapterFieldSpecMirror` here-string, 동일 센티넬 마커)이며, 양자는 **바이트 동일**해야 하는 규약이다(TS-011). 표와 스펙이 어긋나면 스펙이 옳다 — 표를 스펙에 맞춰 정정한다.
+
+> 배치 모드 3종 (`OPAL_ADAPTER_FIELD_SPEC`의 `platforms.<platform>.mode`):
+> - `key` — OPAL 값(또는 `values` 맵으로 변환한 값)을 플랫폼 frontmatter/TOML의 `to` 키에 그대로 기록한다 (예: `effort`→Claude `effort`, `effort`→Codex `model_reasoning_effort`).
+> - `model_param` — 예약 모드. 값을 별도 키가 아닌 모델 파라미터의 일부로 합성 기록한다 (`effort`는 현재 어떤 플랫폼도 이 모드를 쓰지 않음 — Cursor `omit` 주석의 "reserved: model_param/effort"는 향후 Cursor alias 도입 시 이 모드로 전환될 수 있음을 표시).
+> - `omit` — 해당 플랫폼에는 필드를 아예 emit하지 않는다 (Cursor·Gemini의 `effort`가 이 모드).
 
 ### 본문(System Prompt) 처리
 
@@ -357,3 +367,4 @@ project: mams
 | v1.8 | 2026-06-21 16:18 KST | §본문 처리 정정 — "본문은 변경 없이 그대로 복사된다" 무조건 진술 제거. 어댑터가 본문 인라인 `model: <레벨>` sub-dispatch 오버라이드 토큰(괄호 내 `, model:`/`(model:`)도 frontmatter와 동일하게 플랫폼 실모델명으로 변환(cursor=토큰 제거), prose 자기참조(백틱 내)는 비대상임을 명시 — frontmatter만 변환하고 본문 verbatim 복사하던 경계 비대칭 제거(install-mac.sh `_sub_body_model`·windows.ps1 `Convert-BodyModelTokens`) (032) |
 | v1.9 | 2026-06-28 | §Codex tool-backed 인라인 주입 Step 3에 오버라이드 우선순위 포인터 추가 — setting.local.json → setting.json → §2 표(셀 단위) 적용 + `opal-model-mapping.md` §5 참조. `opal-model-mapping.md` §5 오버라이드 도입과 정합 (046) |
 | v2.0 | 2026-07-10 16:49 KST | opal-evaluator-agent 신규 등록 — `### opal-evaluator-agent` 섹션(전문 에이전트) + 매핑 테이블 행(단계: 명세 리뷰 oppl G/D6, 영역: 평가, model: advanced) 추가 (056) |
+| v2.1 | 2026-09-02 19:32 KST | §frontmatter 변환 규칙 표에 `effort` 행 추가(4셀 — Claude `effort` 그대로 / Cursor 제거·예약 / Gemini 제거·미지원 / Codex `model_reasoning_effort`, `max`→`xhigh`) + `(기타 OPAL 전용 필드)` 행을 `(변환 테이블 미등재 필드)`로 정정(판정 기준이 "OPAL 전용 여부"에서 "스펙 테이블 등재 여부"로 전환) + 값역 주석·SSOT는 코드(`scripts/install-mac.sh` `OPAL_ADAPTER_FIELD_SPEC` / `scripts/install/windows.ps1` `$OpalAdapterFieldSpec`, 바이트 동일 규약)라는 포인터·배치 모드 3종(`key`/`model_param`/`omit`) 설명 하단 추가 (105) |
