@@ -8,7 +8,7 @@
     { "id": 3,  "key": "plan.plan_md",         "stage": "PLAN",    "item": "작업" },
     { "id": 4,  "key": "plan.scenario_gate",   "stage": "PLAN",    "item": "목표-커버 게이트" },
     { "id": 5,  "key": "plan.pm_gate",         "stage": "PLAN",    "item": "PM Gate",
-      "gate": { "artifacts": ["TASK.md", "PLAN.md", "TEST-SCENARIO.md"], "checklist": ["TASK.md 요구사항", "PLAN.md §4.2", "PLAN.md §5", "TEST-SCENARIO.md 시나리오 목록/보안/설계 피드백"] } },
+      "gate": { "artifacts": ["TASK.md", "PLAN.md", "TEST-SCENARIO.md"], "checklist": ["TASK.md 요구사항", "PLAN.md §4.2", "PLAN.md §5", "TEST-SCENARIO.md 시나리오 목록/보안/설계 피드백", "code-scan 결과 인용 — state-tool verify <태스크폴더> --code-scan-citation-check 통과 (코드 변경 태스크 한정, 문서 태스크는 skipped)"] } },
     { "id": 6,  "key": "plan.user_confirm",    "stage": "PLAN",    "item": "사용자 확인" },
     { "id": 7,  "key": "execute.implement",    "stage": "EXECUTE", "item": "작업" },
     { "id": 8,  "key": "test.run_tests",       "stage": "TEST",    "item": "작업" },

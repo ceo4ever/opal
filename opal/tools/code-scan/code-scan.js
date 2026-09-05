@@ -4,7 +4,7 @@
  *   "module": "code-scan",
  *   "layer": "util",
  *   "domain": "code-scan",
- *   "description": "OPAL @header 메타블록 스캐너 CLI — 코드 파일의 인라인/code-map @header를 파싱해 도메인·레이어·의존관계를 조회하고, discover/scaffold/target/validate/feature 5서브명령으로 code-map 헤더 작성층(외부 매니페스트 기반 상속·워커 권한 경계 집행·uncovered 2분류)을 관리한다. headerSource는 inline|manifest 2택 전역 단일 키이며, resolveHeaderSource가 CLI --header-source > 전역 config 2층으로 실행당 1회 판정해 미설정·무효값이면 전 명령을 차단한다. 확정된 모드는 조회·작성·검증 전 경로를 직접 지배한다 — resolveHeader는 inline이면 인라인 단독, manifest면 files>package>layerRules>domains 4단만 보고(index.json 부재는 stderr 1줄 비차단), decideTarget은 파일 상태를 보지 않고 모드에서 write_to/reason을 직결하며, scaffold는 inline에서 매니페스트를 만들지 않고 skipped 사유만 보고하고, validate는 모드별 단일 소스 커버리지(합산 폐기)와 구조 패스 분기를 적용해 결과에 모드를 실어 보낸다. 두 스코프 레지스트리(code-scan.json의 path 축약·객체형 / code-map index.json의 root)는 normalizeConfigScope·normalizeIndexScope가 {root, include, exclude} 단일 내부 형태로 정규화하고, 파일 집합 필터 판정은 isInScope 1곳에, 소속 스코프 판정은 resolveScopeIn(최장 root > include 매칭 > 사전순, 동률 include 경합은 scope_ambiguous) 1곳에 봉인한다. 그 필터는 열거(discoverFiles)·scaffold 열거(collectDirsWithCodeFiles)·validate 구조 패스(listCodeFilesInDir)·validate --changed·target(decideTarget) 5지점에 배선되며, target은 isFilteredOutOfScope를 경유해 필터 탈락 파일에 {write_to:'none', reason:'out_of_scope'}를 exit 0으로 돌려준다. scan <file> 명시 경로만 필터 면제다. 베이스 매니페스트는 예약 폴더 _shards/ 아래에 의미 단위 샤드로 분산될 수 있다 — 베이스가 shards 배열로 라벨을 선언하면 resolveShards 1곳이 조회·기록 위치·구조 검증 경로 전체의 샤드 해석(로딩·byKey 합집합·중복 판정)을 봉인하고, 미선언 자산에서는 null을 돌려 오늘과 동일하게 동작한다(하위호환). 분할 판정은 shardPolicy 2축(바이트 초과 AND 엔트리 수 이상)이며 resolveShardPolicy 1곳이 프로젝트 code-scan.json > 전역 setting.json > 코드 상수(10240/40) 3단을 셀 단위로 병합해 실행당 1회 확정한다 — 전면 비차단이고 초과 열거에 권고 조각 수·다음 명령을 실어 보낸다. split 서브명령이 분할을 제안(--plan: 5단 사다리 S1~S5 + 표준단어사전 대조, 무쓰기)하고 집행(--groups: 사전 불변식 → tmp 전량 작성 → rename 커밋 → 사후 재검증, 엔트리 유실 0건)하며, init 서브명령은 headerSource 미설정 순환을 끊는 비대화형 설정 초안 창구다",
+ *   "description": "OPAL @header 메타블록 스캐너 CLI — 조회 8커맨드(scan/domain/layer/search/exports/summary/depends/missing)와 작성·검증층 7서브명령(discover/scaffold/target/validate/feature/split/init)을 전역 headerSource(inline|manifest) 2택 아래 단일 진입점에서 집행한다",
  *   "exports": ["mirrorPathForDir", "decideTarget", "loadCodeMap", "loadConfig", "findProjectRoot", "resolveScope", "matchLayerRule", "matchDomain", "resolveHeader", "extractHeader"],
  *   "note": "code-scan.js 자신은 프로젝트 .opal/code-map/index.json 부재로 인라인 전용 모드로 스캔됨 (태스크 077). 모드 판정 지점은 resolveHeaderSource 1곳으로 봉인되며, 허용 3구간(resolveHeaderSource/loadConfig/parseArgs) 밖에서는 확정값을 ctx.headerSource 읽기·buildCtx 파라미터 전달 형태로만 다룬다 — 중간 전달 변수명은 mode다 (태스크 080 TS-070). 스코프 단위 모드 선언 키는 존재하지 않는다 — 두 레지스트리 모두 해당 키를 무시하고 deprecationOnce로 키별 실행당 1회만 stderr 안내한다 (태스크 080 F-002). index.json에서 폐기된 스코프 단위 쓰기금지 플래그도 같은 방식으로 무시 + 안내되며 다른 모드로 흡수하지 않는다 — 기록 소스는 오직 전역 headerSource가 결정하므로 스코프 단위 예외 판정 분기는 존재하지 않는다 (태스크 080 F-004). 두 소스는 모드에 의해 상호 배타이므로 '인라인 단독 승리' 같은 병합 규칙이 존재하지 않으며, decideTarget의 reason 도메인은 header_source_inline / header_source_manifest / out_of_scope 3값으로 닫힌다 — 파일 존재 여부·인라인 보유 여부는 판정에 관여하지 않는다 (태스크 080 F-003). 매니페스트 샤딩(태스크 082): 샤드 로딩·byKey 구성·중복 판정은 resolveShards 밖에 복제하지 않는다. CODE_MAP_VERSION은 1로 고정 유지되며(샤드 미선언 매니페스트 포맷 불변, 상향 시 기존 전 자산이 unsupported_version으로 차단됨), 샤드 라벨은 kebab 정규식으로 집행되어 경로 이탈을 차단한다(shard_declaration_invalid). 예약 폴더명과 겹치는 소스 디렉토리는 scaffold가 reserved_name_collision으로 거부한다. 크기 상한 초과는 validate/scaffold 모두 전면 비차단(열거·경고 1단)이다. 샤드 정책 확장(태스크 083): 정책 판정은 resolveShardPolicy 밖에 복제하지 않으며 DEFAULT_SHARD_POLICY·loadGlobalSetting도 그 함수 본문 밖에서 참조하지 않는다. 구 위치 index.json manifestMaxBytes는 폐기되어 값을 읽지 않고 deprecationOnce 안내만 한다(자동 변환 없음). 표준단어사전은 옵셔널이며 부재·파싱 실패·매칭 0건 3분기가 전부 비차단이다 — 부재는 침묵, 파손은 noticeOnce 1줄이고, loadWordDictionary 호출은 split --plan 경로 1곳뿐이라 조회 8커맨드의 출력 바이트가 흔들리지 않는다. split은 자산을 쓰는 유일한 명령이므로 실패 지점별로 쓰기 상태가 다른 에러 코드 7종(split_usage_invalid/split_inline_mode/split_target_invalid/split_groups_invalid/split_write_failed/split_rollback/split_verify_failed)을 갖고, 사후 재검증은 resolveShards를 비운 캐시로 다시 호출해 해석 로직을 복제하지 않는다. 의미 경계(그룹 라벨·파일 배분) 확정은 사람/워커의 몫이며 도구는 미분류를 임의 배분하거나 '기타' 그룹을 만들지 않는다"
  * }
@@ -36,7 +36,13 @@ const { spawnSync } = require('child_process');
 // ═══════════════════════════════════════════
 
 const VERSION = '1.6.0';
-const HEADER_READ_BYTES = 8192;
+// @header 블록을 담기 위해 파일 선두에서 읽는 **바이트** 수. 단위는 바이트로 고정이며,
+// 이 상수를 소비하는 두 경로(라이브 readFileHead / HEAD 비교 classifyUncovered)는 반드시
+// 같은 단위로 창문을 잘라야 한다 — 한쪽이 문자 기준이면 한글 헤더에서 창문 크기가 3배
+// 어긋나 거짓 회귀(newly_uncovered)를 만든다(태스크 106 ADD-1).
+// 값 근거(레포 @header 보유 115건 전수 실측): 바이트 p50 683 / p90 3666 / 최대 17810,
+// 8192 초과 3건 · 16384 초과 1건 · 24576 초과 0건. 24576은 전건을 담는 최소 여유값이다.
+const HEADER_READ_BYTES = 24576;
 
 const DEFAULT_CONFIG = {
   scopes: {},
@@ -1089,7 +1095,15 @@ function classifyUncovered(projectRoot, relPath) {
   }
   const head = readGitHeadContent(projectRoot, relPath);
   if (!head.exists) return 'newly_uncovered';
-  const headSlice = head.content.slice(0, HEADER_READ_BYTES);
+  // [정합 조건] 이 함수는 "HEAD에 헤더가 있었는데 지금 없다 = 회귀"로 판정하므로, HEAD 창문과
+  // 라이브 창문(readFileHead)이 **같은 단위**여야 성립한다. readFileHead는 HEADER_READ_BYTES를
+  // 바이트로 읽으므로 여기서도 바이트로 자른다 — 문자(String#slice = UTF-16 코드 유닛) 기준으로
+  // 자르면 한글(UTF-8 3바이트 / UTF-16 1유닛) 헤더에서 HEAD 창문이 라이브 창문의 약 3배가 되고,
+  // 블록 종료가 두 창문 사이에 놓인 파일은 변경과 무관하게 매번 거짓 회귀로 CLOSE를 차단한다
+  // (태스크 106 ADD-1 — 실측 재현: test_state_tool.py 블록 종료 11203바이트 / 8362문자).
+  // 경계에서 잘린 멀티바이트 문자는 U+FFFD가 되지만 이는 라이브 경로(buf.toString)와 동일한
+  // 동작이며, JSON 구조 문자({ } " \)는 모두 1바이트 ASCII라 절단으로 생성·소멸되지 않는다.
+  const headSlice = Buffer.from(head.content, 'utf8').subarray(0, HEADER_READ_BYTES).toString('utf8');
   // hasNearbyHeaderBlock과 extractHeaderFromContent는 이제 동일한 근접 판정 함수
   // (findProximateHeaderIndex)를 공유한다 — 결함 C 수정으로 중복 로직 신설 없이 정리됨.
   const headHeader = hasNearbyHeaderBlock(headSlice) ? extractHeaderFromContent(headSlice) : null;

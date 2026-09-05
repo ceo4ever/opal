@@ -29,15 +29,37 @@
 - 베이스 매니페스트가 `shards`를 선언한 파일은 `manifest`가 보유 샤드 경로를 가리킨다(부가 필드 `shard`에 라벨 동반) — 보유 샤드가 없으면 베이스로 라우팅된다("보유 샤드 → 없으면 베이스").
 - 전역 `headerSource`가 미설정이거나 유효 2택(`inline` 또는 `manifest`) 밖의 값이면 `target`을 포함한 **전 명령이 exit 1로 거부**된다(`header_source_unset` \| `header_source_invalid` \| `code_scan_config_invalid`). 판정 이전 단계이므로 이때는 기록 위치가 반환되지 않는다.
 
-### 갱신 시점 (3단)
+### 갱신 시점 (4단)
 
-@header는 "작업 완료 후 일괄 갱신"하지 않는다 — 아래 3개 시점에서만 갱신한다.
+@header는 "작업 완료 후 일괄 갱신"하지 않는다 — 아래 4개 시점에서만 갱신한다.
 
 | # | 시점 | 주체 | 수단 |
 |---|------|------|------|
 | (a) | 파일 변경과 **같은 자리에서** | 워커 | `target` 판정 결과에 따라 인라인 또는 매니페스트를 즉시 기록 |
 | (b) | **CLOSE 진입 전** 게이트 | PM | `validate --changed <changed_files>` — exit≠0(`counts.newly_uncovered` ≥1건 또는 다른 위반 존재)이면 CLOSE 진입을 차단. `uncovered:pre_existing`(HEAD 버전에도 원래 헤더가 없던 레거시 파일)만 있으면 비차단(exit 0) — 레거시 소급 부여는 이 게이트가 아니라 `discover`/`scaffold`의 몫이다 |
 | (c) | **PostToolUse hook** | 도구 | 파일 변경 감지 시 기록 위치 미갱신을 경고로 감지 |
+| (d) | **L2 경량 트랙 완료 시점** | PM | `git diff --name-only HEAD`(+ untracked)로 변경 파일을 재구성해 `code-scan validate --changed <목록>` 실행 — exit≠0이면 **L2 종료 선언 전에** @header를 같은 자리에 기록한다 |
+
+#### (d) L2 완료 시점 — 폴백(미발동) 조건 3종
+
+**[MUST] 아래 3종은 `validate` 판정보다 앞에 평가한다** — 순서 자체가 계약이다(`opal/tools/code-scan/code-map-hook.js:121-124`의 조기 이탈 순서 재사용). 게이트를 자산 로딩·판정 아래로 내리면 조용히 통과해야 할 트리에서 출력·거부가 발생한다.
+
+1. **자산 게이트** — `.opal/code-scan.json` 부재 또는 `headerSource` ∉ {`inline`, `manifest`} → 미발동
+2. **적용 범위** — 변경 파일 중 code-scan 적용 대상 확장자가 0건(순수 `.md`·설정 수정 등, 프로젝트 `extensions` 기준) → 미발동
+3. **`pre_existing` 비차단** — `uncovered:pre_existing`만 존재하면 도구가 exit 0을 돌려주므로 비차단 (레거시 소급 부여는 `discover`/`scaffold`의 몫 — (b) 행과 동일 계약)
+
+#### (d) 미수행 탐지 조건
+
+(d) 미수행은 그 파일이 다음 태스크의 변경 대상이 될 때 **(b) CLOSE 게이트의 `validate --changed` exit≠0**으로 누적 탐지된다 — L2가 헤더를 남기지 않은 파일은 다음 태스크에서 기록 위치가 비어 있으므로 (b)의 판정에 걸린다. 즉 (d)는 (b)의 **선행 방어선**이며, 두 시점의 판정 수단은 동일 명령이다.
+
+모드별 차단 사유는 2종이며, **둘 중 하나라도 성립하면 (b)가 차단한다**:
+
+| 모드 | 차단 사유 | 판정 근거 |
+|------|----------|----------|
+| `inline` | `counts.newly_uncovered` ≥1 | 인라인 모드에는 관리 매니페스트 개념이 없으므로 미작성은 항상 git 2분류(`newly_uncovered`/`pre_existing`)로 계상된다 |
+| `manifest` (관리 매니페스트 하위) | `violations[].sub == "no_entry"` | 매니페스트가 그 디렉토리를 관리 중인데 `files{}`에 키가 없는 경우는 구조적 결손이므로 **git 상태와 무관하게** `no_entry`로 분류되어 항상 차단된다 |
+
+**[MUST] `counts.newly_uncovered` 단독 인용은 금지** — `no_entry`는 `newly_uncovered`에 계상되지 않으므로(`counts.newly_uncovered`는 `sub == "newly_uncovered"`만 센다) `manifest` 모드 관리 매니페스트 하위 누락은 그 카운트가 0으로 나온다. 차단 여부는 카운트가 아니라 `ok`/exit 코드로 읽고, 사유는 `violations[].sub`로 식별한다.
 
 **[MUST] 작업 완료 후 일괄 갱신 금지** — 여러 Step을 몰아서 마지막에 한 번에 @header를 채우는 방식은 금지한다. 각 Step에서 파일을 바꾸는 즉시 (a)를 수행한다.
 
@@ -159,3 +181,4 @@ code-scan 결과가 충분하지 않을 때 아래 3분기 기준으로 대응�
 | v1.6 | 2026-08-03 13:20 | 매니페스트 샤딩 반영 — §워커 권한 경계 금지 필드에 `shards` 추가(도구·소유자 관할), §기록 위치 판정에 보유 샤드 경로 라우팅 1줄 추가("보유 샤드 → 없으면 베이스") (082) |
 | v1.7 | 2026-08-04 17:18 | §워커 권한 경계 — 엔트리 이동(분할) 관할 1줄 추가: `code-scan split --groups`가 `files` 엔트리를 베이스↔샤드 간 이동시키며 관리 필드(`dir`·`scope`·`version`·`shards`)는 도구 소유, 워커는 그룹 문서의 의미 경계만 확정하고 매니페스트를 손으로 옮기지 않음 (083) |
 | v1.8 | 2026-08-16 13:22 | STATE 기록 규약·TASK §제약 인용문에서 "현황판 표 행"/"현황판 행" 어구 → "파이프라인 행"으로 정정 — STATE.md 저널 전환에 맞춘 표 전제 어구 제거 (094) |
+| v1.9 | 2026-09-04 22:38 | §갱신 시점 (3단) → **(4단)** — (d) L2 경량 트랙 완료 시점 행 신설(`git diff --name-only HEAD` + `code-scan validate --changed` 재사용, 신규 도구 0건) + 폴백(미발동) 조건 3종(자산 게이트 → 적용 범위 → `pre_existing` 비차단, 판정보다 선행 평가하는 순서 계약) + 미수행 탐지 조건((b) CLOSE 게이트 exit≠0 누적 탐지, 모드별 차단 사유 2종 `inline`=`counts.newly_uncovered` ≥1 / `manifest` 관리 하위=`violations[].sub == "no_entry"`) 신설. (a)(b)(c) 3행 원문 무변경 (106) |

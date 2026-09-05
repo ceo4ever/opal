@@ -42,7 +42,7 @@
 ### 약어 (Alias)
 
 > **SSOT: `opal/core/references/opal-skills-registry.json`** — 약어의 등록·변경은 레지스트리에서만 수행한다.
-> 아래 표는 레지스트리의 사본이며, 불일치 시 레지스트리가 우선한다. 현재 **27종**.
+> 아래 표는 레지스트리의 사본이며, 불일치 시 레지스트리가 우선한다. 현재 **30종**.
 
 **오케스트레이터 (파일럿)**
 
@@ -74,6 +74,9 @@
 | opas | opal-action-status |
 | opws | opal-workspace-sync |
 | opim | opal-improve |
+| opgr | opal-grill |
+| opeli5 | opal-eli5 |
+| opcmb | opal-code-map-builder |
 
 **독립 스킬**
 
@@ -280,3 +283,4 @@ OPAL 본체(스킬·에이전트·도구·하네스)를 작성할 때 따라야 
 | v1.6.1 | 2026-08-16 15:05 | §태스크 산출물 구조 STATE.md 행 말미 정정 — "두 파일 모두 `state-tool`이 갱신한다"(부정확, 블로커·자유 기재는 도구 미접촉)를 코드 실측(`state_tool.py` `ensure_journal_skeleton`/`append_decision_log`/`cmd_block`) 기준으로 "state.json은 state-tool 전량 갱신, STATE.md는 저널 골격·의사결정 로그만 자동 갱신, 블로커·자유 기재는 PM 수동"으로 세분화 (094 Step 14) |
 | v1.7.0 | 2026-08-21 15:30 | 커밋 실행 시점 규칙의 원문 복제 2건을 하네스 포인터로 축약 — §커밋 규칙 §규칙 첫 항목과 §구현 규칙 §Guards 커밋 항목을 제거하고, 규칙 소유권이 `opal/core/references/opal-harness.md` §1 Guards에 있음을 명시. 본 문서는 커밋 **메시지 형식·단위**만 규정한다. 에이전트 행동 Guard를 코드 컨벤션 문서에 복제하면 프로젝트마다 존재 여부가 갈리는 우발 경로가 되므로, 워커 도달은 `pm/dispatch-process.md` §워커 컨텍스트 주입 템플릿의 전 워커 공통 고정 항목이 담당한다 (097) |
 | v1.8.0 | 2026-08-21 22:18 | §Citation Rules에 근거 등급·관할 SSOT 포인터 1줄 추가 — 등급 5단계(E1~E5)와 AS-IS/TO-BE 관할 2축의 원문 소유권이 `opal/core/references/harness/citation-rules.md` §9임을 명시. 본 문서는 포인터만 두어 등급표 복제를 차단한다 (098) |
+| v1.6.0 | 2026-09-04 22:44 | §약어 (Alias) 사본 정합 회복 — 「프레임워크 운영」 표에 신설 `opcmb`(opal-code-map-builder) 1건 등재 + **실측 결손 2건 보정**(`opgr`/opal-grill · `opeli5`/opal-eli5 — 레지스트리에는 있으나 사본 표에 누락되어 있었다). 도입문 총계를 27종 → **30종**으로 정정하여 레지스트리(v3.14.0, alias 30종) 실측값과 1:1 일치시켰다. 본 표가 스스로 "레지스트리의 사본"임을 선언하므로 사본 정합 회복은 규정 집행이다 (106) |

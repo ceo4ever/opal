@@ -133,7 +133,7 @@
   - 경고가 없으면 `warnings` 키 자체를 만들지 않는다 — 기존 호출의 응답 키 집합은 종전과 완전히 동일하다
   - 이 경고가 필요한 이유: 워커 완료 알림의 `duration_ms`는 세션과 함께 사라지고 행에는 완료 시각만 남아 시작 시각을 되살릴 수 없다. 그 자리에서 적지 않으면 소요는 **영구히 소실**되고 통계에서 PM 몫으로 잘못 귀속된다(소급 복구 경로 없음)
   - 오탐을 막는 4관문: ① 값이 이미 실림 ② `--worker-duration-unknown` 억제 ③ 워커 신호 부재(PM 직접 수행 행) ④ `--action-step N/M`에서 `N<M`(행이 `in_progress`로 남는 중간 진행 보고). 추가로 `owner = "user"`인 사용자 확인 행과 `--auto-pass` 재호출 멱등 no-op(093 F-005) 경로도 제외된다
-  - 경고 코드는 `ERROR_CODES`가 아니라 별도 사전 `WARNING_CODES`에 산다 — 경고는 에러가 아니며, **에러 코드는 45종 그대로다**
+  - 경고 코드는 `ERROR_CODES`가 아니라 별도 사전 `WARNING_CODES`에 산다 — 경고는 에러가 아니며, **103은 에러 코드를 늘리지 않았다**(103 시점 45종 유지. 이후 106 F-004가 `code_scan_citation_unmet` 1종을 등재해 현재 실측은 **46종**이며, 경고/에러 사전 분리 자체는 불변이다)
 - `--worker-duration-unknown`(103 R-21)은 그 행의 워커 소요를 **알 수 없음을 명시**한다(중단된 워커·PM 직접 수행·소급 불가 과거 데이터). 경고를 억제하며 행에는 필드를 만들지 않는다 — 기록 결과는 인자 미지정과 완전히 동형이므로 "미측정"이 `0`("측정했으나 1분 미만")으로 오독되지 않는다
   - `--worker-duration-minutes`와 **배타적**이다(값과 미상 선언은 동시에 성립할 수 없음). 둘 다 지정하면 argparse가 exit 2로 거부한다 — `--owner`/`--auto-pass` 배타와 동일 계열이므로 전용 에러 코드는 신설하지 않았다
 - `--auto-pass` 사용 시 `owner = "auto"`, note에 "agentic auto-pass" 자동 기재
@@ -276,9 +276,9 @@
 
 `10개 서브 명령`과 별개로 동작하는 검증 전용 명령. task-path 하나에 여러 독립
 분기(mock 패턴/증거 누락 검사, `--red-check`, `--fix-mode`, `--clarification-check`,
-`--evidence-check`)가 있으며 각 분기는 조기 반환한다 — 동시 지정 가능 조합은
-플래그별 계약을 따른다(`--clarification-check`와 `--evidence-check`는 동시 지정
-불가, 아래 참조).
+`--evidence-check`, `--code-scan-citation-check`)가 있으며 각 분기는 조기 반환한다 — 동시 지정 가능
+조합은 플래그별 계약을 따른다(`--clarification-check`·`--evidence-check`·`--code-scan-citation-check`
+3종은 서로 동시 지정 불가, 아래 참조).
 
 ```bash
 ~/.opal/tools/state-tool/run.sh verify <task-path> --evidence-check [--task-md <path>]
@@ -366,6 +366,31 @@
 
 ---
 
+#### `--code-scan-citation-check` — code-scan 결과 인용 게이트 (106)
+
+```bash
+~/.opal/tools/state-tool/run.sh verify <task-path> --code-scan-citation-check
+```
+
+- **판정 대상**: `<task-path>/PLAN.md` §4.2 실행 체크리스트 본문. 그 안에 code-scan 결과
+  인용 토큰(`domain`/`layer`/`depends`/`exports` 및 `discover`/`scaffold`/`target`/`validate`/`feature`
+  결과 필드)이 1건 이상 존재하는지 판정한다. 디스패치 프롬프트는 파일로 남지 않으므로,
+  **파일로 영속되고 워커에 그대로 전달되는 PLAN.md Step 본문**을 증거로 삼는다.
+- **반환** `code_scan_citation_check`: `pass` | `skipped` | `unmet` (도메인 3값으로 닫힘).
+  `exit`: `pass`·`skipped` → 0 / `unmet` → 1 (`error: code_scan_citation_unmet`).
+- **스킵 `reason` 3값** — **[MUST] 판정보다 앞에 평가한다.** 순서 자체가 계약이며, 아래로
+  내리면 조용히 통과해야 할 태스크에서 거부가 발생한다:
+  1. `code_scan_unavailable` — `.opal/code-scan.json` 부재 또는 `headerSource` ∉ {`inline`, `manifest`}
+  2. `plan_md_absent` — PLAN.md 부재 (하위호환)
+  3. `doc_only_task` — §4.2 대상 파일에 code-scan 적용 확장자 0건 (순수 문서 태스크)
+- **집행 지점 2곳**: ① 위 라우터(PM 수동 호출) ② **EXECUTE 단계 첫 행 진입 시
+  `advance`/`mark`의 자동 훅** — 동일 판정을 재실행해 진입 자체를 차단한다. 거부는
+  `save_state_json()` **이전** 검증 구간이므로 `state.json`·`STATE.md`가 오염되지 않는다.
+  우회는 `--force --note`만 가능하며(의사결정 로그에 남는다), `--auto-pass`로는 우회할 수 없다.
+- `--clarification-check`·`--evidence-check`와 동시 지정 시 `evidence_check_flag_conflict`로 거부(exit 1).
+- 신규 영속 필드 0건 — `state.json`·`STATE.md`·`schema/*.json`은 변경되지 않는다.
+- 규정 SSOT: `opal/core/references/harness/pm-review-gate.md` §표준 검토 항목 14.
+
 ## `--rows-spec` 입력 형식
 
 ```bash
@@ -389,7 +414,7 @@
 
 ---
 
-## 에러 코드 카탈로그 (45종 실측 SSOT — PLAN §2.18 E-1 + 070 R-1/R-4/R-9 + 091 F-004 R-10/R-11 + 093 F-004 R-4 + 094 R-3/R-4/R-9 + 098 F-003 R-4)
+## 에러 코드 카탈로그 (46종 실측 SSOT — PLAN §2.18 E-1 + 070 R-1/R-4/R-9 + 091 F-004 R-10/R-11 + 093 F-004 R-4 + 094 R-3/R-4/R-9 + 098 F-003 R-4 + 106 F-004 R-4)
 
 > 종수는 `len(ERROR_CODES)`(`state_tool.py`) 실측값이 기준이다 — 이 헤더 숫자를 리터럴로 신뢰하지 말고 코드 실측으로 재검증할 것(094 R-9 ①, S-7/S-15).
 
@@ -440,6 +465,7 @@
 | 43 | `spec_gate_checklist_empty` | spec-validate / init --rows-from(.json) | 1 | `task_steps[].gate.checklist`가 비어 있음 (091) |
 | 44 | `user_confirmation_required` | advance/mark | 1 | 자동 승인 불가 구간의 사용자 확인 행 — 캡틴 승인 필요 (093) |
 | 45 | `evidence_check_flag_conflict` | verify --evidence-check | 1 | `--evidence-check`와 `--clarification-check` 동시 지정 — 두 게이트 계약 충돌 (098) |
+| 46 | `code_scan_citation_unmet` | verify --code-scan-citation-check / advance·mark(EXECUTE 첫 행 자동 훅) | 1 | `PLAN.md` §4.2 대상 파일에 코드 확장자가 있는데 §4.2 본문에 code-scan 결과 인용 토큰이 0건 — 또는 EXECUTE 첫 행 진입에 `--auto-pass`가 실려 우회 시도 (106) |
 
 > `spec-validate` 서브 명령 자체의 violations[] 내부 코드(`spec_missing_field`/`spec_skill_invalid`/`spec_stage_invalid`/`spec_key_format_invalid`/`spec_key_duplicate`/`spec_id_sequence_invalid`/`spec_key_stage_mismatch`)는 `cmd_validate`의 `schema_violation`처럼 인라인 문자열로 쓰이며 ERROR_CODES 템플릿을 거치지 않는다(070 §3.1.2). (`spec_gate_*` 4종은 동일하게 violations[]에 인라인 append되지만 ERROR_CODES에 등록되어 있어 위 카탈로그에 포함된다 — 091이 만든 예외.)
 
@@ -478,3 +504,5 @@
 | v1.10 | 2026-08-25 | (103 R-15) | 워커 소요 계측 필드 신설 — `state.schema.json` `rows[].worker_duration_minutes`(integer, `minimum: 0`) **선택** 등록(`required`·`additionalProperties: false` 불변, 기존 `state.json` 전건 유효), `mark --worker-duration-minutes <n>` 인자 추가(값 검증은 argparse `type` 파서가 파싱 시점에 수행 — 음수·소수·비수치 exit 2, **에러 코드 45종 불변**). 지정 시에만 행에 기록 + `mark` 응답에 동명 키 조건부 추가하며, **미지정 호출은 `state.json`·stdout 모두 종전과 바이트 동일**. 미기록 행은 집계에서 `PM` 계열로 전액 축퇴(집계 기준 16-a) |
 | v1.11 | 2026-08-26 | (103 R-21) | 워커 소요 누락 경고 신설 — `mark`가 워커 디스패치 행(`--as-worker` 또는 `--worker-stage`)을 `done`으로 닫으면서 `--worker-duration-minutes`를 넘기지 않으면 응답 JSON에 `warnings` 배열(`worker_duration_missing`)을 조건부로 싣는다. **exit 0 유지·차단 없음**이며 `state.json`·`STATE.md` 산출물은 경고 유무와 무관하게 동일하다(경고는 stdout 전용). 오탐 차단 4관문(값 보유·억제 인자·워커 신호 부재·`--action-step N/M`의 `N<M`) + `owner="user"` 사용자 확인 행·093 재-auto-pass 멱등 no-op 제외. 억제 인자 `--worker-duration-unknown` 추가(`--worker-duration-minutes`와 argparse 배타, 지정 시 경고·필드 모두 미생성). 경고 카탈로그는 신규 `WARNING_CODES`로 분리 — **에러 코드 45종 불변** |
 | v1.12 | 2026-08-26 | (103 강제 2단) | 워커 소요 기록 강제 — (1) 경고 판정을 인자 신호(`--as-worker`/`--worker-stage`) **또는 행 구조**(`stage`가 워커 디스패치 규범 단계 + `item`이 「작업」)로 확장해 PM의 자발적 표시에 의존하지 않게 했다. (2) `--worker-duration-unknown`이 행에 `worker_duration_unknown: true`를 영속화한다(스키마 선택 필드) — CLOSE 게이트가 「미측정 선언」과 「침묵」을 갈라야 하기 때문. (3) `mark`가 CLOSE 첫 행 진입 시 기록도 선언도 없는 워커 규범 행이 있으면 **차단**한다(`BLOCK_CODES.worker_duration_undeclared`, `ERROR_CODES` 45종 불변). 통과는 기록 또는 선언 둘뿐이고 `--force --note`가 최후 우회다. 계측 도입(`_WORKER_MEASUREMENT_EPOCH` 2026-08-26) 이전 `created_at` 태스크는 유예 — 「기록 0건이면 유예」로 두면 전건 미기록 신규 태스크가 통과해 강제가 무의미해진다 |
+| v1.13 | 2026-09-04 22:52 | (106) | 에러 코드 45→**46종** 반영(F-004 R-4) — `code_scan_citation_unmet` 카탈로그 행 1건 추가(`verify --code-scan-citation-check` 및 `advance`/`mark`의 EXECUTE 첫 행 자동 훅, exit 1: `PLAN.md` §4.2 대상 파일에 코드 확장자가 있는데 §4.2 본문의 code-scan 결과 인용 토큰이 0건이거나, EXECUTE 첫 행 진입에 `--auto-pass`로 우회 시도) + 카탈로그 헤더 종수·근거 목록 정정. 103 R-21 절의 「에러 코드는 45종 그대로다」 문면을 「103이 늘리지 않았다(103 시점 45종) + 현재 실측 46종」으로 정정 — 경고/에러 사전 분리 계약 자체는 불변. 코드↔문서 정합(D-5 ①)은 `test_s7_error_catalog_marker_import_realignment`가 카탈로그 헤더 종수를 `len(ERROR_CODES)` 실측과 대조하므로 이 표기는 코드와 함께 움직여야 한다 |
+| v1.14 | 2026-09-04 23:05 | (106) | `verify --code-scan-citation-check` 절 신설 — 판정 대상(PLAN.md §4.2 본문)·반환 3값·스킵 `reason` 3값과 순서 계약·집행 지점 2곳(라우터 + EXECUTE 첫 행 자동 훅)·플래그 상호배타·영속 무변경을 기재. 카탈로그 정정과 함께 신규 절을 추가한 098 v1.8 선례를 준용 |

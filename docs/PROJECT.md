@@ -34,7 +34,7 @@
 | `docs/` | 프로젝트 문서 | 아키텍처, 컨벤션 등 프로젝트 레벨 문서 |
 | `tasks/` | 태스크 산출물 | `{NNN}-{YYMMDD}-{스킬약어}-{태스크명}/` 형식의 작업 단위 폴더 |
 | `skills/` | 독립 스킬 소스 | 파이프라인 없이 단독 사용하는 스킬 (8종) |
-| `opal/skills/` | OPAL 스킬 소스 | 오케스트레이터, 단계 스킬 등 OPAL 전용 (42종) |
+| `opal/skills/` | OPAL 스킬 소스 | 오케스트레이터, 단계 스킬 등 OPAL 전용 (45종) |
 | `opal/agents/` | 워커 에이전트 소스 | 모든 서브에이전트 정의 (15종) |
 | `opal/tools/` | OPAL 도구 소스 | 결정론 집행 CLI (19종) |
 | `opal/core/` | 프레임워크 코어 | 레퍼런스, MCP 설정, 도구 |
@@ -242,6 +242,7 @@ TEST-SCENARIO 단계를 "목표 달성 검증"으로 재정의 — 루브릭 채
 | 2026-08-21 15:30 | 문서 레지스트리 `docs/CONVENTIONS.md` 행 정합 — 용도 서술의 `커밋 규칙`을 `커밋 메시지 형식·단위`로 정정하고 구현 규칙 열거에서 `Guards/`를 제거. Guards 규칙 원문 소유권이 `opal/core/references/opal-harness.md` §1임을 명시해, CONVENTIONS.md 포인터화(v1.7.0)와의 내부 모순을 해소 (097) |
 | 2026-08-16 15:55 | STATE.md 저널화 반영 — 3-SSOT 각주에서 "사람 뷰는 자동 렌더" 전제 제거. `BACKLOG.md`는 자동 렌더 유지, `state.json` 현황 조회는 `state-tool show`로 명시(STATE.md는 의사결정 로그·블로커 저널) (Task 094) |
 | 2026-08-15 16:35 | `worktree-tool` 신설 반영 — 폴더 구조맵 `opal/tools/` 행 18종 → **19종**. 태스크별 코드 작업공간 격리(`--worktree`/`--wt` 축) 집행 도구 (Task 092) |
+| 2026-09-04 23:05 | §프로젝트 구조 `opal/skills/` 셀 스킬 수 42종 → **45종** 정합 — 실측(`find opal/skills -mindepth 1 -maxdepth 1 -type d | wc -l`) 대조 결과 신설 `opal-code-map-builder` 반영 전에도 이미 2건 드리프트 상태였다(문서 42 vs 실측 44). 신설분 +1을 더해 45로 확정 (106) |
 | 2026-08-11 13:26 | 문서 최신화 — 실측 1:1 대조 반영. 폴더 구조맵에서 루트 `agents/`(부재) 행 제거하고 누락 7폴더(`opal/agents/`·`opal/tools/`·`opal/bootstrapper/`·`opal/templates/`·`dashboard/`·`cursor-rules/`·`memory/`) 추가 + `.opal/` 설명을 실제 범위(브레인·메모리·코드맵 설정·로컬 설정)로 확장. 태스크 폴더 형식을 `{NNN}-{YYMMDD}-{스킬약어}-{태스크명}`으로 교체하고 실존 예시로 갱신(태스크명 한글 기본·앞 3요소 ASCII·공백 금지 명문화). **§주요 컴포넌트 (Dev 파이프라인) 신설** — 오케스트레이터 6종(opd/opds/opdw/opp/opwt/oppd)·`op-dev-*` 단계 스킬 7종·Dev 계열 워커 에이전트 10종이 SSOT에서 통째로 누락돼 있던 것을 등재. `brain-tool` 8→**10 서브명령**(`analyze`·`ingest-scan`) 정합. §프로젝트 구성 Framework 경로에서 `agents/` 제거. §프로젝트 문서 레지스트리 4행 추가 — 아키텍처 다이어그램 HTML(태스크 086 산출, 구조 시각 SSOT)·`SECURITY.md`(본문이 이미 참조 중이던 내부 모순 해소)·`proposals/` 설계 SSOT 2종 (Task 089) |
 | 2026-08-04 | 코드맵 샤드 정책 확장 — `split`(제안 `--plan`/집행 `--groups`)·`init`(`.opal/code-scan.json` 비대화형 초안 생성, 차단 게이트 앞 배치) 2서브명령 신설(13→15). 과대 매니페스트 판정을 `shardPolicy` 3단 우선순위(프로젝트 `.opal/code-scan.json` > 전역 `~/.opal/setting.json` > 코드 상수 `maxBytes` 10240/`minFiles` 40, **셀 단위 머지**) 기반 **바이트 초과(`>`) AND 엔트리 수 이상(`>=`) 2축**으로 정교화(전면 비차단, 초과만으로는 exit 0). `split --plan`은 **5단계 제안 사다리**(첫 토큰 → 1~2토큰 결합 → 전체 토큰 → 마지막 토큰 → `depends` 공유, 각 단계는 직전 단계 미분류분만 입력)로 분류하고 잔여는 `unassigned`로 남긴다(임의 배분 없음 — 의미 경계는 사람의 몫). `op-data-dictionary` 산출물 표준단어사전.md를 **읽기 전용·옵셔널**로 대조(부재·파싱 실패·매칭 0건 전부 비차단 — code-scan이 `.opal/` 밖 문서를 읽는 첫 사례이자 `~/.opal/setting.json`을 읽는 첫 도구). 구 위치 `index.json`의 `manifestMaxBytes`는 값을 읽지 않고 안내만 한다(자동 변환 없음). code-scan v1.6.0 (Task 083) |
 | 2026-08-03 | 코드맵 매니페스트 샤딩 — 한 소스 디렉토리의 매니페스트를 예약 폴더 `_shards/` 아래 **의미 단위 샤드로 분산**할 수 있게 하고(베이스 매니페스트가 `shards` 라벨 배열로 선언), 샤드 해석·`byKey` 합집합·중복 판정을 `resolveShards` **1곳에 봉인**. `index.json` 최상위 `manifestMaxBytes`(기본 20480바이트)로 **파일당 크기 상한을 비차단 감지·열거** — 초과가 있어도 다른 위반이 없으면 exit 0이라 CLOSE 게이트를 봉쇄하지 않는다. 샤드 미선언 자산은 조회 8커맨드·`target`·`scaffold` stdout이 **바이트 동일**(옵트인). `_shards` 예약어 충돌·라벨 path traversal 차단. code-scan v1.5.0 (Task 082) |

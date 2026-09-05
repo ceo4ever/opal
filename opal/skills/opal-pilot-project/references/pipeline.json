@@ -6,7 +6,7 @@
     { "id": 1, "key": "task.task_md",        "stage": "TASK",    "item": "작업" },
     { "id": 2, "key": "task.user_confirm",   "stage": "TASK",    "item": "사용자 확인" },
     { "id": 3, "key": "plan.plan_md",        "stage": "PLAN",    "item": "작업" },
-    { "id": 4, "key": "plan.pm_gate",        "stage": "PLAN",    "item": "PM Gate", "gate": { "artifacts": ["TASK.md", "PLAN.md"], "checklist": ["TASK.md 요구사항", "PLAN.md §3", "PLAN.md §4"] } },
+    { "id": 4, "key": "plan.pm_gate",        "stage": "PLAN",    "item": "PM Gate", "gate": { "artifacts": ["TASK.md", "PLAN.md"], "checklist": ["TASK.md 요구사항", "PLAN.md §3", "PLAN.md §4", "code-scan 결과 인용 — state-tool verify <태스크폴더> --code-scan-citation-check 통과 (코드 변경 태스크 한정, 문서 태스크는 skipped)"] } },
     { "id": 5, "key": "plan.user_confirm",   "stage": "PLAN",    "item": "사용자 확인" },
     { "id": 6, "key": "execute.implement",   "stage": "EXECUTE", "item": "작업" },
     { "id": 7, "key": "execute.pm_gate",     "stage": "EXECUTE", "item": "PM Gate", "gate": { "artifacts": [], "checklist": ["PLAN.md §3 실행 체크리스트", "컨벤션 자동 진단 PASS (GC-CONVENTION-*.md Critical/High 0건 — 컨벤션 적용 대상 ≥1건 시 발동)"] } },

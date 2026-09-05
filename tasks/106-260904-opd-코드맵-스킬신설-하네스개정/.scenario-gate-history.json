@@ -1,0 +1,39 @@
+[
+  {
+    "iteration": 1,
+    "missing": {
+      "requirements": [],
+      "features": [],
+      "hypotheses": []
+    },
+    "gaps": [
+      "①목표달성 — 갱신 국면(R-2) 검증이 L1 문면 판독 전용. 탐지 조건 실발동 관측 시나리오 0건. goal 시나리오 2건이 모두 R-1에만 매핑",
+      "⑥경계/부정 — 훅 게이트 7단 중 ②force·③code_scan_unavailable·④plan_md_absent 3분기 미커버, ⑥auto_pass 거부는 문면만. 순서 계약 위반을 탐지하는 조합 부재. 플래그 상호배타 미커버"
+    ],
+    "scores": {
+      "goal": 1,
+      "adoption": 2,
+      "boundary": 1
+    },
+    "average": 1.33,
+    "verdict": "fail"
+  },
+  {
+    "iteration": 2,
+    "missing": {
+      "requirements": [],
+      "features": [],
+      "hypotheses": []
+    },
+    "gaps": [
+      "①목표달성 — S-23 기대 결과가 자기 fixture와 불일치(no_entry vs newly_uncovered / git 사전조건 미기재). PM이 코드 실측 후 교정 완료"
+    ],
+    "scores": {
+      "goal": 1,
+      "adoption": 2,
+      "boundary": 2
+    },
+    "average": 1.67,
+    "verdict": "pass"
+  }
+]

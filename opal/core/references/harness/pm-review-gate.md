@@ -113,9 +113,18 @@ PM Gate는 별도 QA Gate 단계를 두지 않고, 문서 QA(요구사항→설�
    - **트리거 조건**: `changed_files` 또는 `target`에 code-scan 지원 확장자(`.py .js .ts .vue .jsx .tsx .svelte .kt .kts .java .swift` 등) 포함 — §8/§13과 동형
    - **검증 내용**: 워커에게 전달된 디스패치 컨텍스트(PLAN.md Step 본문 또는 PM 메시지)에 code-scan 결과(`domain`/`layer`/`depends`/`exports`)가 인용되었는가
    - **신규 서브명령 인용도 대상**: `discover`/`scaffold`/`target`/`validate`/`feature` 서브명령의 결과(예: `target` 결과의 `write_to`/`reason`, `validate` 결과의 `coverage`/`counts`, `feature` 결과의 교차 스코프 목록)도 인용 대상에 포함한다 — `domain`/`layer`/`depends`/`exports` 인용과 동등하게 취급.
-   - **적용 범위**: 코드 변경/탐색 태스크 한정. 순수 .md 문서·기획·정책만인 문서 작업은 **N/A(스킵)**.
-   - **판정**: 인용 부재 시 **Fail** → 재디스패치 1회 (code-scan 결과 인용 추가 후 재시작)
-   - **Pass 조건**: 디스패치 컨텍스트에 code-scan 결과 표(domain/layer/depends/exports 중 1개 이상, 또는 신규 서브명령 결과 필드 1개 이상) 또는 명시적 인용문 존재
+   - **판정 수단**: `~/.opal/tools/state-tool/run.sh verify tasks/{NNN}-.../ --code-scan-citation-check`
+     - `code_scan_citation_check: "pass"`(exit 0) → **Pass** / `"skipped"`(exit 0) → **N/A** / `"unmet"`(exit 1, `error: code_scan_citation_unmet`) → **Fail** → 워커에 재디스패치 1회(code-scan 결과 인용 추가 후 재시작)
+     - 판정(verdict)은 이 도구가 결정론으로 낸다. PM은 명령을 실행하고 그 결과를 보고할 뿐이며, 인용 여부를 눈으로 읽어 스스로 판단하지 않는다 — **[MUST]** `~/.opal/PRINCIPLES.md` §Core Stance: "Enforce, don't just advise: if a rule must always hold, a tool gates it — not prose."
+     - 도구는 아래 **Pass 조건**의 토큰 집합을 그대로 집행한다(별도 판정 기준을 신설하지 않는다).
+   - **집행 지점** (2곳): ① 위 `verify --code-scan-citation-check`(PM 수동 호출) ② **EXECUTE 단계 첫 행 진입 시 `advance`/`mark`의 자동 훅** — 동일 판정을 재실행해 진입 자체를 차단한다(거부는 `state.json` 저장 이전 검증 구간이므로 파일이 오염되지 않는다)
+     - 우회는 `--force --note`만 가능하며, 우회 사실은 의사결정 로그에 남는다(§자가 진단 4번 `--force` 0건 확인 대상). `--auto-pass`로는 우회할 수 없다.
+   - **스킵 조건 3종** (F-005 폴백) — **[MUST] 3종은 판정보다 앞에 평가한다.** 순서 자체가 계약이며(`opal/tools/code-scan/code-map-hook.js:121-124` "이 게이트는 ⑥ code-map 로딩보다 **반드시 위**에 있어야 한다 … 순서 자체가 계약이며" 동형 규율 · `harness/header-rules.md` §갱신 시점 (4단) (d)와 동일 계약), 판정 아래로 내리면 조용히 통과해야 할 태스크에서 거부가 발생한다.
+     1. **자산 게이트** — `.opal/code-scan.json` 부재 또는 `headerSource` ∉ {`inline`, `manifest`} → `reason: code_scan_unavailable`
+     2. **산출물 게이트** — PLAN.md 부재 → `reason: plan_md_absent` (하위호환)
+     3. **적용 범위** — PLAN.md §4.2 대상 파일 중 code-scan 적용 대상 확장자가 0건(순수 `.md`·설정 수정 등, 프로젝트 `extensions` 기준) → `reason: doc_only_task`
+   - **적용 범위**: 코드 변경/탐색 태스크 한정. 순수 .md 문서·기획·정책만인 문서 작업은 스킵 조건 3번에 걸려 도구가 **N/A(`skipped`)** 로 처리한다 — PM이 적용 여부를 따로 선언하지 않는다.
+   - **Pass 조건**: 디스패치 컨텍스트에 code-scan 결과 표(domain/layer/depends/exports 중 1개 이상, 또는 신규 서브명령 결과 필드 1개 이상) 또는 명시적 인용문 존재 — 도구가 이 조건을 그대로 집행한다.
 
 ### 자가 진단 (PM Gate 진입 전 체크)
 
@@ -178,3 +187,4 @@ PM Gate 통과 후 해당 행을 state-tool로 단일 mark한다. State Gate 행
 | v1.8 | 2026-08-02 14:50 | 표준 검토 항목 8번 — 헤더 소스 단일화 반영: 2소스 판정을 전역 `headerSource` 1개 기준으로 재서술(스코프 단위 예외 서술 제거), 합산 커버리지 → 모드별 단일 소스 커버리지(`inline`은 인라인분만·`manifest`는 매니페스트분만), `header_source_unset` 거부 시 PM 최초 설정 후 재실행하는 미설정 대응 소절 신설(워커 결함으로 판정하지 않음) (080) |
 | v1.9 | 2026-08-02 16:03 | §워커 중단 시 산출물 실측 판정 절 신설 — ①`git status`로 산출물 확정 → ②PLAN §4.2 체크리스트 대조로 완료/잔여 판정 → ③잔여만 재배치([MUST] 완료분 덮어쓰기 금지) 3단계. 재시도 상한(`opal-harness.md` §1)·산출량 상한(`pm/dispatch-process.md` Step 6)은 참조만. 역할 라인에 신규 절 반영 및 고정 항목수 표기 제거 (081) |
 | v1.10 | 2026-08-16 13:22 | 자가 진단 1번 — "파이프라인 현황판 행 상태가 state-tool로만 갱신되었는가(LLM 직접 편집 0건)" → "파이프라인 행 상태가 `state-tool`로만 갱신되었는가(`state.json` 직접 편집 0건)" — STATE.md 저널 전환에 맞춘 표 전제 어구 제거 (094) |
+| v1.11 | 2026-09-04 22:53 | 표준 검토 항목 14 — PM 자기판정 → **도구 판정** 승격: **판정 수단**(`verify <태스크폴더> --code-scan-citation-check`, `pass`/`skipped` exit 0 · `unmet` exit 1 `code_scan_citation_unmet`)·**집행 지점 2곳**(verify 수동 호출 + EXECUTE 단계 첫 행 `advance`/`mark` 자동 훅, `--force --note`만 우회·`--auto-pass` 불가)·**스킵 조건 3종**(자산 게이트 `code_scan_unavailable` → 산출물 게이트 `plan_md_absent` → 적용 범위 `doc_only_task`, 판정보다 선행 평가하는 순서 계약) 신설. 기존 「**판정**: 인용 부재 시 Fail → 재디스패치 1회」 자기판정 서술을 도구 exit 규약으로 대체 — 판정은 도구가 내고 PM은 실행·보고만 한다(PRINCIPLES §Core Stance). 트리거 조건·검증 내용·신규 서브명령 인용 대상·Pass 조건 문면 유지, 항목 1~13·자가 진단 절 무변경 (106) |

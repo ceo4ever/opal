@@ -1,7 +1,7 @@
 {
   "$schema": "opal-skills-registry-v1",
-  "version": "3.13.0",
-  "updated_at": "2026-09-02",
+  "version": "3.14.0",
+  "updated_at": "2026-09-04",
   "groups": {
     "opal-pilot": [
       {
@@ -775,6 +775,19 @@
           "~/.opal/skills/opal-eli5/SKILL.md"
         ],
         "domain": "explain"
+      },
+      {
+        "name": "opal-code-map-builder",
+        "alias": "opcmb",
+        "description": "@header 자산(code-map 매니페스트) 구축·환경설정 — init | update 2모드",
+        "triggers": [
+          "^opal-code-map-builder$",
+          "^opcmb$",
+          "(?i)(코드\\s*맵|code-?map|헤더\\s*자산)"
+        ],
+        "paths": [
+          "~/.opal/skills/opal-code-map-builder/SKILL.md"
+        ]
       }
     ],
     "op-brain": [
@@ -900,6 +913,14 @@
       "task": "-",
       "changes": [
         "opws(opal-workspace-sync) description 현행화 — 순회 대상에 프로젝트 root 저장소 포함 명시. `<프로젝트>/workspace` 순회 시 root repo가 대상에서 빠지던 누락 교정에 동반"
+      ]
+    },
+    {
+      "version": "3.14.0",
+      "date": "2026-09-04",
+      "task": "106",
+      "changes": [
+        "opal-code-map-builder(opcmb) 신규 등록 (alias opcmb, group opal) — @header 자산(code-map 매니페스트) 구축·환경설정 스킬. init | update 2모드"
       ]
     }
   ]

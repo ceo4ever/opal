@@ -3,7 +3,7 @@
   "module": "test_state_tool",
   "layer": "test",
   "domain": "opal-pipeline",
-  "description": "state-tool 단위 테스트 — 9개 명령 happy path + 23종 에러 코드 × 최소 1건 + G-5~G-15 시나리오. 005: TestClarificationGate 신설 — verify --clarification-check + TASK→다음단계 자동 훅 RED-first 케이스 ①~⑨ + 회귀 보호. 054: TestOwnerNamePlaceholder 신설 — note '{owner_name}' 플레이스홀더 identity.md write-time 치환 RED-first(S-1~S-7). 056: TestOpplSkillInit 신설 — `--skill oppl` enum 미등록 RED-first(S-020, H-1) — run.sh subprocess 실호출로 공개 인터페이스만 검증(mock 미사용). 070: task-step 키 주소 체계 도입 1차 RED-first — TestPipelineSpecValidate/TestPipelineJsonInit/TestStateSchema11Compat/TestTaskStepAddressing/TestActionStepRename/TestAddRowKey/TestOpddEnumDrift/TestGroupAPipelineSpecs/TestBackwardCompatAliases 9종 신설(TEST-SCENARIO.md S-1~S-14, PLAN §3.7.2) — 미구현 기능이므로 전부 FAIL 기대(RED 증거). 072: TestNextActionAutoDerive 신설 — STATE.md '다음 액션' 자동 파생 RED-first(TEST-SCENARIO.md S-1~S-4,S-6,S-7) — init next_action 영속화+schema optional 등록, advance/mark 프론티어 파생(pending '진입'/in_progress '진행 중'/전체완료 '태스크 완료'), 첫 줄만 치환(하위 자유기재 보존), --next-action 오버라이드 우선+비지속 복귀 — 공개 CLI 경로(직접 호출+run.sh subprocess)로만 검증, 미구현이므로 실패 기대(RED 증거). 074: TestImportPreservesKeys 신설 — `--import-existing` task-step key 유실 결함 RED-first(TEST-SCENARIO.md S-a~S-e) — force+import-existing 후 rows[].key 100% 보존, pipeline.json 폴백 복원, key 원천 전무 시 keyless+stderr 경고(하위호환), schema_version 1.1 유지, 동일 (stage,item) 중복 순서 소비 — 공개 cmd_init 호출 + 실 파일 I/O로만 검증, 수정 전 코드에서 FAIL 기대(RED 증거). 076: TestTodoMirror 신설 — build_todo_mirror 파생 규칙(TS-001~007): init create 페이로드·전부pending→pending·전부done→completed·advance/부분→in_progress·na 중립·블로커 in_progress 유지·영속 경계(state.json 미영속+schema validate 통과) — 공개 cmd_init/advance/mark/block ok() stdout 페이로드 캡처로만 검증. 088: TestCloseHistoryLink 신설(TS-1~TS-7) — CLOSE 마지막 행 mark 시 link_memory_history()가 <프로젝트루트>/.opal/MEMORY.json history에 행을 자동 생성(title/path/stage/result 파생값, date는 memory-tool KST 충전)·재mark 멱등(duplicate_skipped)·MEMORY.json 부재/손상 시 비차단(ok:true + skipped/failed)·비CLOSE 행 무발동 대조군·result 보강 리마인더 구성요소·state.json 영속 경계(schema validate 통과) — 공개 cmd_mark 호출 + 실 MEMORY.json 파일 내용으로만 검증(내부 함수 mock 없음, 블랙박스 결함 주입). 091(RED-first, mode:red, F-004 게이트 집행 배선): TestTaskStepGate 신설(TEST-SCENARIO S-10~S-17) — check_gate_artifacts()/build_gate_payload()가 아직 없어(Step 8 GREEN 이전) 실 pipeline.json(opd/opdw/opsdd) 기반 gate 정의를 state.json 행에 직접 주입하는 픽스처로 산출물 부재 차단(H-1)·부분 상태 변경 부재·checklist dict 페이로드(H-6)·gate 없는 행 무영향(H-2/H-3)·빈 artifacts 비차단(opdw 실사례)·--force --note 우회 의사결정 로그(H-5)·경로 이탈 토큰 거부(H-4)·glob 토큰 매칭(opsdd 실사례)을 검증(공개 cmd_mark 호출 + 실 state.json/STATE.md 파일 내용, mock 없음). TestPipelineSpecValidate에 gate violation 4종(spec_gate_type_invalid/spec_gate_missing_field/spec_gate_field_type_invalid/spec_gate_checklist_empty, S-9) 케이스 + 실 pipeline.json 10종 유효성 케이스 추가. TestErrorCodesCompleteness에 091 신규 5종 반영(39→44). 093(RED-first, mode:red, 사용자 확인 행 자동 승인 경로 일원화): TestT093AutoNaRemoval/TestT093AutoApproveHook/TestT093AutoApproveBoundary/TestT093HookGuardOrder/TestT093MarkIdempotency/TestT093NaBackwardCompat/TestT093SingleDecisionSource 7종 신설(TEST-SCENARIO S-1~S-18·S-24~S-26) — init 시점 agentic auto-na 제거 후 전 모드 pending/PM 동형성(S-2~S-4), 다음 단계 진입 시 auto_approve_prior_user_confirmations 훅 자동 승인(S-1/S-5/S-13/S-26), CLOSE·워커 경로 구조적 제외(S-6~S-9), user_confirmation_required 전용 에러(S-12/S-24), 훅→후속 가드 순서와 파일 미오염(S-10/S-11), mark 접두 멱등·재-auto-pass no-op(S-15/S-16), MODE_BOUNDARY_STAGES 단일 판정 수렴(S-25), 경계 불변 회귀표 18셀·na 하위호환(S-14/S-17/S-18) — worktree run.sh subprocess 실호출 + 실 pipeline.json/state.json 파일 상태로만 검증(mock 미사용), 미구현 기능이므로 신규 계약 케이스는 전부 FAIL 기대(RED 증거: RED-EVIDENCE.md). 093 GREEN(Step 9): 구형 계약을 고정하던 기존 테스트를 신규 계약으로 수정 — test_init_agentic_auto_na_user_confirmation→test_init_agentic_user_confirmation_pending, test_rows_from_agentic_auto_na→test_rows_from_agentic_user_confirmation_pending(둘 다 na→pending 단언 교체), test_close_gate_regression_via_task_step_addressing_subprocess(주석 갱신 + CLOSE 직전 사용자 확인 행 row 8 캡틴 승인 단계 추가, 최종 assert 불변), agentic CLOSE 게이트 3건(test_agentic_close_gate_requires_user·test_g13_agentic_close_gate_auto_pass_rejected·test_c6_agentic_auto_pass_close_first_row)에 캡틴 승인 사전 단계 추가, test_new_structure_guard_blocks_skip에 사용자 확인 행 선(先)승인으로 guard 축 격리, test_s13_new_style_row_without_gate_response_unaffected 기대 키 집합에 auto_approved 추가, TestErrorCodesCompleteness 44→45종(user_confirmation_required). 테스트 삭제 0건. 094 R-11 Step0(RED-first, mode:red, agentic 승인 계약 정합): TestR11ModeBoundary/TestR11CloseGateFallback/TestR11DerivedSignals/TestR11Invariants 4종 신설(TEST-SCENARIO S-34~S-37,S-40) — G-1 MODE_BOUNDARY_STAGES에 DICT/MODEL/DDL·MIGRATION 3원소 부재로 semi-agentic opdd 설계 확정 3건이 미노출 통과하는 결함을 3 stage 개별 advance 호출로 판정(부분 구현 방지, S-34), G-2 check_close_gate가 확인 행 0개 파이프라인(opgc)에서 --owner user로도 영구 데드락인 결함(S-35), G-3-a/G-3-b _derive_next_action·build_todo_mirror가 자동 승인 예정 확인 행을 중립 처리하지 않아 next_action 헛 확인·todo 오판정하는 결함(S-36/S-37), R-11 [MUST] 불변 제약(신규 판정 함수 금지·next_action 스키마·build_todo_mirror 시그니처·ERROR_CODES 무접촉) 역검증(S-40) — 실 pipeline.json(opdd/opgc/opd) + run.sh subprocess 실호출 + 실 state.json 파일 상태로만 검증(mock 미사용), 미구현 기능이므로 신규 계약 케이스는 전부 FAIL 기대(RED 증거). 구현(op-be-agent)과 작성자(opal-test-agent) 분리. 098 ADD-2(RED-first, mode:red, 배포 경로 루트 파생 결함): TestT098Add2RootDerivation 신설 — `_resolve_citation_exists()`(`state_tool.py:2400`)가 프로젝트 루트를 `task_md_path`가 아니라 스크립트 자기 위치(`__file__`)에서 파생해, 배포본(`~/.opal/tools/state-tool/`)에서 실행 시 조상에 `.opal/MEMORY.json`이 없어 root=None → 정규 인용도 전건 citation_path_not_found로 오강등되는 결함을 3축(①스크립트 위치 독립성 ②오강등 부재 ③프로젝트 소스 실행 회귀 방어)으로 검증 — 실 TASK.md(본 태스크 098) + `state_tool.py` 임시 사본 subprocess 실행(공개 CLI `verify --evidence-check` stdout JSON)으로만 검증(mock 미사용), 미구현이므로 ①·②는 FAIL 기대(RED 증거: RED-EVIDENCE.md ADD-2절). 구현(op-be-agent)과 작성자(opal-test-agent) 분리, state_tool.py 무접촉. 100: TestT100DirectionEvidence 신설(RED-first 7케이스) — `verify --evidence-check`의 `## 확정된 설계 방향` 불릿 파서 확장 계약 검증. ① items[] 편입 + source 필드 ② verdict `승계` ③ `direction_confirmed_ratio` 신규 키 ④ 기존 `confirmed_ratio` 분모 불변(PD-1 분리형) ⑤ 섹션 부재 graceful skip ⑥ exit 0 3경로 ⑦ 항목 0건 분모 0 경계. 실 파일 픽스처 3종(A 방향 6불릿+표 4행 / B 섹션 없음 / C 항목 0건), mock 금지. RED 증거: 단일 파일 7 failed·340 passed → GREEN 후 347 passed(스코프·명령 병기). 작성자(opal-be-agent Step 10)와 구현자(Step 11) 분리. 103 R-21: TestT103WorkerDurationWarning 신설(13케이스) — `mark`가 워커 디스패치 행(`--as-worker` 또는 `--worker-stage`)을 `done`으로 닫으면서 `--worker-duration-minutes`를 빠뜨렸을 때 stdout JSON `warnings`로 경고하는 계약 검증. 발생(W1/W2 두 신호·W3 마지막 Step·W4 문구 구성요소), 차단 아님·산출물 불변(W5 경고본 vs 억제본 state.json/STATE.md 시각 정규화 후 동일·W6 validate ok), 오탐 방어(W7 PM 직접 수행 행 + 응답 키 집합 불변·W8 `owner=user` 사용자 확인 행·W9 값 보유(0 포함)·W10 093 재-auto-pass 멱등 no-op·W3 중간 진행 N<M), 억제(W11 `--worker-duration-unknown` 무경고+필드 미생성·W12 `--worker-duration-minutes`와 배타 exit 2), 카탈로그 경계(W13 `ERROR_CODES` 45종 불변 + `WARNING_CODES` 분리). _T093Base(run.sh subprocess 실호출 + 실 파일 상태)만 사용하며 mock 미사용, 기존 케이스 수정·삭제 0건.",
+  "description": "state-tool 단위 테스트 — 9개 명령 happy path + 23종 에러 코드 × 최소 1건 + G-5~G-15 시나리오. 005: TestClarificationGate 신설 — verify --clarification-check + TASK→다음단계 자동 훅 RED-first 케이스 ①~⑨ + 회귀 보호. 054: TestOwnerNamePlaceholder 신설 — note '{owner_name}' 플레이스홀더 identity.md write-time 치환 RED-first(S-1~S-7). 056: TestOpplSkillInit 신설 — `--skill oppl` enum 미등록 RED-first(S-020, H-1) — run.sh subprocess 실호출로 공개 인터페이스만 검증(mock 미사용). 070: task-step 키 주소 체계 도입 1차 RED-first — TestPipelineSpecValidate/TestPipelineJsonInit/TestStateSchema11Compat/TestTaskStepAddressing/TestActionStepRename/TestAddRowKey/TestOpddEnumDrift/TestGroupAPipelineSpecs/TestBackwardCompatAliases 9종 신설(TEST-SCENARIO.md S-1~S-14, PLAN §3.7.2) — 미구현 기능이므로 전부 FAIL 기대(RED 증거). 072: TestNextActionAutoDerive 신설 — STATE.md '다음 액션' 자동 파생 RED-first(TEST-SCENARIO.md S-1~S-4,S-6,S-7) — init next_action 영속화+schema optional 등록, advance/mark 프론티어 파생(pending '진입'/in_progress '진행 중'/전체완료 '태스크 완료'), 첫 줄만 치환(하위 자유기재 보존), --next-action 오버라이드 우선+비지속 복귀 — 공개 CLI 경로(직접 호출+run.sh subprocess)로만 검증, 미구현이므로 실패 기대(RED 증거). 074: TestImportPreservesKeys 신설 — `--import-existing` task-step key 유실 결함 RED-first(TEST-SCENARIO.md S-a~S-e) — force+import-existing 후 rows[].key 100% 보존, pipeline.json 폴백 복원, key 원천 전무 시 keyless+stderr 경고(하위호환), schema_version 1.1 유지, 동일 (stage,item) 중복 순서 소비 — 공개 cmd_init 호출 + 실 파일 I/O로만 검증, 수정 전 코드에서 FAIL 기대(RED 증거). 076: TestTodoMirror 신설 — build_todo_mirror 파생 규칙(TS-001~007): init create 페이로드·전부pending→pending·전부done→completed·advance/부분→in_progress·na 중립·블로커 in_progress 유지·영속 경계(state.json 미영속+schema validate 통과) — 공개 cmd_init/advance/mark/block ok() stdout 페이로드 캡처로만 검증. 088: TestCloseHistoryLink 신설(TS-1~TS-7) — CLOSE 마지막 행 mark 시 link_memory_history()가 <프로젝트루트>/.opal/MEMORY.json history에 행을 자동 생성(title/path/stage/result 파생값, date는 memory-tool KST 충전)·재mark 멱등(duplicate_skipped)·MEMORY.json 부재/손상 시 비차단(ok:true + skipped/failed)·비CLOSE 행 무발동 대조군·result 보강 리마인더 구성요소·state.json 영속 경계(schema validate 통과) — 공개 cmd_mark 호출 + 실 MEMORY.json 파일 내용으로만 검증(내부 함수 mock 없음, 블랙박스 결함 주입). 091(RED-first, mode:red, F-004 게이트 집행 배선): TestTaskStepGate 신설(TEST-SCENARIO S-10~S-17) — check_gate_artifacts()/build_gate_payload()가 아직 없어(Step 8 GREEN 이전) 실 pipeline.json(opd/opdw/opsdd) 기반 gate 정의를 state.json 행에 직접 주입하는 픽스처로 산출물 부재 차단(H-1)·부분 상태 변경 부재·checklist dict 페이로드(H-6)·gate 없는 행 무영향(H-2/H-3)·빈 artifacts 비차단(opdw 실사례)·--force --note 우회 의사결정 로그(H-5)·경로 이탈 토큰 거부(H-4)·glob 토큰 매칭(opsdd 실사례)을 검증(공개 cmd_mark 호출 + 실 state.json/STATE.md 파일 내용, mock 없음). TestPipelineSpecValidate에 gate violation 4종(spec_gate_type_invalid/spec_gate_missing_field/spec_gate_field_type_invalid/spec_gate_checklist_empty, S-9) 케이스 + 실 pipeline.json 10종 유효성 케이스 추가. TestErrorCodesCompleteness에 091 신규 5종 반영(39→44). 093(RED-first, mode:red, 사용자 확인 행 자동 승인 경로 일원화): TestT093AutoNaRemoval/TestT093AutoApproveHook/TestT093AutoApproveBoundary/TestT093HookGuardOrder/TestT093MarkIdempotency/TestT093NaBackwardCompat/TestT093SingleDecisionSource 7종 신설(TEST-SCENARIO S-1~S-18·S-24~S-26) — init 시점 agentic auto-na 제거 후 전 모드 pending/PM 동형성(S-2~S-4), 다음 단계 진입 시 auto_approve_prior_user_confirmations 훅 자동 승인(S-1/S-5/S-13/S-26), CLOSE·워커 경로 구조적 제외(S-6~S-9), user_confirmation_required 전용 에러(S-12/S-24), 훅→후속 가드 순서와 파일 미오염(S-10/S-11), mark 접두 멱등·재-auto-pass no-op(S-15/S-16), MODE_BOUNDARY_STAGES 단일 판정 수렴(S-25), 경계 불변 회귀표 18셀·na 하위호환(S-14/S-17/S-18) — worktree run.sh subprocess 실호출 + 실 pipeline.json/state.json 파일 상태로만 검증(mock 미사용), 미구현 기능이므로 신규 계약 케이스는 전부 FAIL 기대(RED 증거: RED-EVIDENCE.md). 093 GREEN(Step 9): 구형 계약을 고정하던 기존 테스트를 신규 계약으로 수정 — test_init_agentic_auto_na_user_confirmation→test_init_agentic_user_confirmation_pending, test_rows_from_agentic_auto_na→test_rows_from_agentic_user_confirmation_pending(둘 다 na→pending 단언 교체), test_close_gate_regression_via_task_step_addressing_subprocess(주석 갱신 + CLOSE 직전 사용자 확인 행 row 8 캡틴 승인 단계 추가, 최종 assert 불변), agentic CLOSE 게이트 3건(test_agentic_close_gate_requires_user·test_g13_agentic_close_gate_auto_pass_rejected·test_c6_agentic_auto_pass_close_first_row)에 캡틴 승인 사전 단계 추가, test_new_structure_guard_blocks_skip에 사용자 확인 행 선(先)승인으로 guard 축 격리, test_s13_new_style_row_without_gate_response_unaffected 기대 키 집합에 auto_approved 추가, TestErrorCodesCompleteness 44→45종(user_confirmation_required). 테스트 삭제 0건. 094 R-11 Step0(RED-first, mode:red, agentic 승인 계약 정합): TestR11ModeBoundary/TestR11CloseGateFallback/TestR11DerivedSignals/TestR11Invariants 4종 신설(TEST-SCENARIO S-34~S-37,S-40) — G-1 MODE_BOUNDARY_STAGES에 DICT/MODEL/DDL·MIGRATION 3원소 부재로 semi-agentic opdd 설계 확정 3건이 미노출 통과하는 결함을 3 stage 개별 advance 호출로 판정(부분 구현 방지, S-34), G-2 check_close_gate가 확인 행 0개 파이프라인(opgc)에서 --owner user로도 영구 데드락인 결함(S-35), G-3-a/G-3-b _derive_next_action·build_todo_mirror가 자동 승인 예정 확인 행을 중립 처리하지 않아 next_action 헛 확인·todo 오판정하는 결함(S-36/S-37), R-11 [MUST] 불변 제약(신규 판정 함수 금지·next_action 스키마·build_todo_mirror 시그니처·ERROR_CODES 무접촉) 역검증(S-40) — 실 pipeline.json(opdd/opgc/opd) + run.sh subprocess 실호출 + 실 state.json 파일 상태로만 검증(mock 미사용), 미구현 기능이므로 신규 계약 케이스는 전부 FAIL 기대(RED 증거). 구현(op-be-agent)과 작성자(opal-test-agent) 분리. 098 ADD-2(RED-first, mode:red, 배포 경로 루트 파생 결함): TestT098Add2RootDerivation 신설 — `_resolve_citation_exists()`(`state_tool.py:2400`)가 프로젝트 루트를 `task_md_path`가 아니라 스크립트 자기 위치(`__file__`)에서 파생해, 배포본(`~/.opal/tools/state-tool/`)에서 실행 시 조상에 `.opal/MEMORY.json`이 없어 root=None → 정규 인용도 전건 citation_path_not_found로 오강등되는 결함을 3축(①스크립트 위치 독립성 ②오강등 부재 ③프로젝트 소스 실행 회귀 방어)으로 검증 — 실 TASK.md(본 태스크 098) + `state_tool.py` 임시 사본 subprocess 실행(공개 CLI `verify --evidence-check` stdout JSON)으로만 검증(mock 미사용), 미구현이므로 ①·②는 FAIL 기대(RED 증거: RED-EVIDENCE.md ADD-2절). 구현(op-be-agent)과 작성자(opal-test-agent) 분리, state_tool.py 무접촉. 100: TestT100DirectionEvidence 신설(RED-first 7케이스) — `verify --evidence-check`의 `## 확정된 설계 방향` 불릿 파서 확장 계약 검증. ① items[] 편입 + source 필드 ② verdict `승계` ③ `direction_confirmed_ratio` 신규 키 ④ 기존 `confirmed_ratio` 분모 불변(PD-1 분리형) ⑤ 섹션 부재 graceful skip ⑥ exit 0 3경로 ⑦ 항목 0건 분모 0 경계. 실 파일 픽스처 3종(A 방향 6불릿+표 4행 / B 섹션 없음 / C 항목 0건), mock 금지. RED 증거: 단일 파일 7 failed·340 passed → GREEN 후 347 passed(스코프·명령 병기). 작성자(opal-be-agent Step 10)와 구현자(Step 11) 분리. 103 R-21: TestT103WorkerDurationWarning 신설(13케이스) — `mark`가 워커 디스패치 행(`--as-worker` 또는 `--worker-stage`)을 `done`으로 닫으면서 `--worker-duration-minutes`를 빠뜨렸을 때 stdout JSON `warnings`로 경고하는 계약 검증. 발생(W1/W2 두 신호·W3 마지막 Step·W4 문구 구성요소), 차단 아님·산출물 불변(W5 경고본 vs 억제본 state.json/STATE.md 시각 정규화 후 동일·W6 validate ok), 오탐 방어(W7 PM 직접 수행 행 + 응답 키 집합 불변·W8 `owner=user` 사용자 확인 행·W9 값 보유(0 포함)·W10 093 재-auto-pass 멱등 no-op·W3 중간 진행 N<M), 억제(W11 `--worker-duration-unknown` 무경고+필드 미생성·W12 `--worker-duration-minutes`와 배타 exit 2), 카탈로그 경계(W13 `ERROR_CODES` 45종 불변 + `WARNING_CODES` 분리). _T093Base(run.sh subprocess 실호출 + 실 파일 상태)만 사용하며 mock 미사용, 기존 케이스 수정·삭제 0건. 106: ERROR_CODES 45→46(`code_scan_citation_unmet`) 종수·키집합 단언 6건 후행 정합 — 098 H-10 동형. 상세: PLAN §4.2 Step 15. 106 Step 19: TestT106CodeScanCitationBehavior 신설(C1~C4) — code-scan 인용 게이트 동작 고정(force 우회 시 `code_scan_citation_force` 1건 기재, 문서 전용·인용 존재 force는 무기재, auto-pass 거부 불변, ⑥이 ③④⑤ 뒤라는 H-7 순서).",
   "exports": [
     "TestInit", "TestShow", "TestAdvance", "TestMark",
     "TestBlock", "TestValidate", "TestAddRow", "TestStatus", "TestGatePass",
@@ -21,7 +21,8 @@
     "TestR11ModeBoundary", "TestR11CloseGateFallback", "TestR11DerivedSignals",
     "TestR11Invariants", "TestT098Add2RootDerivation",
     "TestT100DirectionEvidence", "TestT103WorkerDuration",
-    "TestT103WorkerDurationWarning"
+    "TestT103WorkerDurationWarning",
+    "TestT106CodeScanCitationBehavior"
   ]
 }
 
@@ -2495,40 +2496,45 @@ class TestErrorCodesCompleteness(unittest.TestCase):
         "user_confirmation_required",
         # 098 신규 1종 (F-003 R-4 — --evidence-check/--clarification-check 동시 지정 거부)
         "evidence_check_flag_conflict",
+        # 106 신규 1종 (F-004 R-4 — PLAN.md §4.2 code-scan 결과 인용 미충족 게이트)
+        "code_scan_citation_unmet",
     ]
 
     def test_error_codes_count(self):
-        """[098 H-10 선갱신] ERROR_CODES 45종 — 093 시점 44종에서 098 F-003이
-        `evidence_check_flag_conflict` 1종을 신규 등재해 44+1=45종.
+        """[098 H-10 선갱신 + 106 종수 갱신] ERROR_CODES 46종 — 093 시점 44종에서
+        098 F-003이 `evidence_check_flag_conflict` 1종을 등재해 45종이 되고,
+        106 F-004가 `code_scan_citation_unmet` 1종을 등재해 45+1=46종 (106).
 
-        RED 근거: 098 GREEN(Step 5, opal-be-agent) 구현 전에는 ERROR_CODES가
-        여전히 44종이므로 이 단언은 현재 실패한다(45!=44) — 신규 에러 코드
-        추가가 본 테스트를 동시에 깨는 문제(H-10)를 선갱신으로 흡수한다."""
-        self.assertEqual(len(ST.ERROR_CODES), 45,
-                         "[RED] 098 evidence_check_flag_conflict 반영 전이므로 "
-                         "44종으로 실패 예상")
+        갱신 근거: 098 H-10과 동일 구조다 — 신규 에러 코드 등재가 종수 단언을
+        같이 깨므로 등재 태스크가 기대값을 함께 옮긴다. 106에서는 Step 4가
+        `state_tool.py`에 등재하고(실측 `len(ERROR_CODES)`=46) 본 Step 15가
+        기대값을 뒤따라 정합시킨다 — 단언을 없애지 않고 값만 옮긴다."""
+        self.assertEqual(len(ST.ERROR_CODES), 46,
+                         "[106] code_scan_citation_unmet 등재 후 46종 기대 — "
+                         "45종이면 Step 4 등재가 유실됐다는 뜻")
 
     def test_all_28_codes_registered(self):
-        """[098 H-10 선갱신] 45종 각각이 ERROR_CODES에 등재됨."""
+        """[098 H-10 선갱신 + 106 종수 갱신] 46종 각각이 ERROR_CODES에 등재됨 (106)."""
         for code in self.EXPECTED_CODES:
             self.assertIn(code, ST.ERROR_CODES, f"에러 코드 {code} 미등재")
         self.assertEqual(len(self.EXPECTED_CODES), len(ST.ERROR_CODES),
                          "EXPECTED_CODES 목록 건수가 실측 ERROR_CODES 종수와 불일치")
 
     def test_s7_error_catalog_marker_import_realignment(self):
-        """[T094/L1-F002 + 098 H-10 선갱신] S-7 — 에러 카탈로그 코드↔문서
+        """[T094/L1-F002 + 098 H-10 선갱신 + 106 종수 갱신] S-7 — 에러 카탈로그 코드↔문서
         정합(D-5 ①, R-3 AC(b)).
 
         기대: `marker_missing`·`import_failed`가 `ERROR_CODES`에서 삭제되고
         `import_existing_removed`가 신규 등재되며, 실측 `len(ERROR_CODES)`가
         `README.md`의 카탈로그 헤더 기재 종수와 일치해야 한다(설계 목표 43이나
         실측값을 채택 — PLAN §1.5 D-5 각주). 098부터는 두 종수 모두 45종을
-        명시 기대한다(H-10 대응, PLAN §3.3.2 신규 에러 코드 1종).
+        명시 기대했고(H-10 대응, PLAN §3.3.2 신규 에러 코드 1종), 106 F-004가
+        `code_scan_citation_unmet` 1종을 등재해 **46종**으로 옮긴다 (106).
 
-        RED 근거: 현재 `ERROR_CODES`는 44종이고 `README.md` 헤더도 "44종"으로
-        표기되어 있다(098 Step 5가 GREEN에서 정정) — 따라서 아래 하드코딩된
-        45 기대값 2건은 GREEN(state_tool.py 구현 + README 정정) 완료 전까지
-        의도적으로 실패한다. 이것도 RED 증거다(098 dispatch 지시)."""
+        갱신 근거(106, PLAN §4.2 Step 15): Step 4가 `state_tool.py`에 1종을
+        등재해 실측 `len(ERROR_CODES)`가 46이 됐다. 코드↔문서 정합(D-5 ①)은
+        두 축이 함께 움직여야 성립하므로 본 Step 15가 아래 하드코딩 종수
+        기대값 2건과 `README.md` 카탈로그 헤더를 같은 46으로 맞춘다."""
         self.assertNotIn("marker_missing", ST.ERROR_CODES,
                          "marker_missing이 아직 ERROR_CODES에 남아있음(R-3 위반)")
         self.assertNotIn("import_failed", ST.ERROR_CODES,
@@ -2545,13 +2551,13 @@ class TestErrorCodesCompleteness(unittest.TestCase):
         self.assertEqual(readme_count, actual_count,
                          f"README 기재 종수({readme_count})와 실측 len(ERROR_CODES)"
                          f"({actual_count})가 불일치함(D-5 ① 정합 위반)")
-        # [098 H-10 선갱신] 종수 45 하드 기대 — Step 5(GREEN) 전에는 의도적으로 실패
-        self.assertEqual(actual_count, 45,
-                         "[RED] len(ERROR_CODES)==45 기대 — 098 evidence_check_flag_conflict "
-                         "미반영 상태이므로 44로 실패 예상")
-        self.assertEqual(readme_count, 45,
-                         "[RED] README 헤더 종수==45 기대 — 098 Step5 README 정정 전이므로 "
-                         "44로 실패 예상")
+        # [098 H-10 선갱신 + 106 종수 갱신] 종수 46 하드 기대 — 106 Step 4 등재 반영
+        self.assertEqual(actual_count, 46,
+                         "[106] len(ERROR_CODES)==46 기대 — code_scan_citation_unmet "
+                         "등재가 유실되면 45로 실패")
+        self.assertEqual(readme_count, 46,
+                         "[106] README 헤더 종수==46 기대 — 카탈로그 정정이 누락되면 "
+                         "45로 실패")
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -8801,6 +8807,16 @@ class TestR11Invariants(_T093Base):
             # 시점(R-11 반영 전)의 ERROR_CODES 딕셔너리를 AST로 직접 파싱해
             # 키 집합을 비교한다 — @header 같은 무관한 문자열 변경에 흔들리지
             # 않으면서 실제 종목 추가·삭제는 그대로 잡아낸다.
+            #
+            # [106 종수 갱신] HEAD 대조는 "R-11 축의 변경이 ERROR_CODES를 접촉하지
+            # 않았다"를 보는 장치이고, HEAD는 「이번 태스크 반영 전」을 뜻하는
+            # 이동 기준점이다. 106 F-004가 `code_scan_citation_unmet` 1종을
+            # 신규 등재(Step 4, `state_tool.py`)했으므로 HEAD와의 차분이 정확히
+            # 그 1종이 된다 — 그래서 등가 비교를 (삭제 0건 고정) + (추가는 태스크가
+            # 선언한 종목으로 한정)으로 분해한다. 미선언 종목 추가와 임의 삭제는
+            # 그대로 FAIL하며, 106 커밋 후에는 차분이 공집합이 되어 부분집합
+            # 판정이 양쪽 시점에서 모두 성립한다(단언 무력화 아님) (106).
+            declared_new_codes = {"code_scan_citation_unmet"}  # 106 F-004 R-4
             head_src = subprocess.run(
                 ["git", "show", "HEAD:./state_tool.py"],
                 cwd=str(_TOOL_DIR), capture_output=True, text=True,
@@ -8811,10 +8827,15 @@ class TestR11Invariants(_T093Base):
                                  "S-40 HEAD 버전 소스에서 ERROR_CODES 대입문을 찾지 못함")
             current_keys = set(ST.ERROR_CODES.keys())
             self.assertEqual(
-                current_keys, head_keys,
-                f"S-40 R-11 변경이 ERROR_CODES 키 집합을 바꿈 — "
-                f"추가={sorted(current_keys - head_keys)!r} "
+                head_keys - current_keys, set(),
+                f"S-40 ERROR_CODES 종목이 삭제됨 — "
                 f"삭제={sorted(head_keys - current_keys)!r} "
+                "(삭제는 어떤 태스크도 선언하지 않았다)")
+            self.assertLessEqual(
+                current_keys - head_keys, declared_new_codes,
+                f"S-40 선언되지 않은 ERROR_CODES 종목이 추가됨 — "
+                f"추가={sorted(current_keys - head_keys)!r} "
+                f"선언={sorted(declared_new_codes)!r} "
                 "(종수는 S-7·S-15가 실측 기준으로 판정 — 여기서 재고정 금지)")
 
 
@@ -9588,11 +9609,16 @@ class TestT103WorkerDuration(_T093Base):
                       "행 스키마의 additionalProperties: false는 유지되어야 함")
 
     def test_s10_error_codes_untouched(self):
-        """[T103/R-15] 값 검증은 argparse가 파싱 시점에 수행하므로 ERROR_CODES는
-        건드리지 않는다 — 카탈로그 종수 고정 테스트(S-7/S-15)와 충돌하지 않는다."""
+        """[T103/R-15 + 106 종수 갱신] 값 검증은 argparse가 파싱 시점에 수행하므로
+        ERROR_CODES는 건드리지 않는다 — 카탈로그 종수 고정 테스트(S-7/S-15)와
+        충돌하지 않는다.
+
+        [106] 이 케이스의 계약은 "103 축이 종목을 늘리지 않았다"이며(첫 단언),
+        종수 리터럴은 실측 SSOT를 따라 45→46으로 옮긴다 — 106 F-004가
+        `code_scan_citation_unmet` 1종을 등재했고 이는 103 축과 무관하다 (106)."""
         self.assertNotIn("worker_duration_invalid", ST.ERROR_CODES,
                          "103이 ERROR_CODES를 신설했음 — 카탈로그 종수 계약 위반")
-        self.assertEqual(len(ST.ERROR_CODES), 45,
+        self.assertEqual(len(ST.ERROR_CODES), 46,
                          f"ERROR_CODES 종수가 변했음: {len(ST.ERROR_CODES)}")
 
 
@@ -9839,12 +9865,16 @@ class TestT103WorkerDurationWarning(_T093Base):
     # ── (5) 카탈로그 경계 ────────────────────────────────────────────────
 
     def test_w13_warning_catalog_is_separate_from_error_codes(self):
-        """[T103/R-21] 경고는 에러가 아니다 — `ERROR_CODES` 45종은 불변이고 경고 코드는
-        별도 사전(`WARNING_CODES`)에 산다. 카탈로그를 공유하면 `err()`가 sys.exit로
-        끝나는 탓에 '경고인데 차단'이라는 오용 경로가 생긴다."""
+        """[T103/R-21 + 106 종수 갱신] 경고는 에러가 아니다 — 경고 코드는 별도
+        사전(`WARNING_CODES`)에 살고 R-21은 `ERROR_CODES`를 늘리지 않는다.
+        카탈로그를 공유하면 `err()`가 sys.exit로 끝나는 탓에 '경고인데 차단'이라는
+        오용 경로가 생긴다.
+
+        [106] 종수 리터럴은 실측 SSOT를 따라 45→46으로 옮긴다 — 106 F-004
+        `code_scan_citation_unmet` 1종 등재분이며 R-21 축과 무관하다 (106)."""
         self.assertNotIn(self._CODE, ST.ERROR_CODES,
                          "R-21이 ERROR_CODES를 늘렸음 — 카탈로그 종수 계약 위반")
-        self.assertEqual(len(ST.ERROR_CODES), 45,
+        self.assertEqual(len(ST.ERROR_CODES), 46,
                          f"ERROR_CODES 종수가 변했음: {len(ST.ERROR_CODES)}")
         self.assertIn(self._CODE, ST.WARNING_CODES,
                       "WARNING_CODES에 worker_duration_missing 미등재")
@@ -9982,3 +10012,205 @@ class TestT103WorkerEnforce(_T093Base):
         self.assertNotIn("worker_duration_undeclared", st.ERROR_CODES,
                          "E9 ERROR_CODES 종수를 늘리면 기존 카탈로그 계약이 깨진다")
         self.assertIn("worker_duration_undeclared", st.BLOCK_CODES)
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# 106 Step 19 — code-scan 인용 게이트 **동작 케이스** 회귀 고정
+#        (Step 15는 ERROR_CODES 종수 단언 6건만 정합시켰고 동작 케이스는 0건이었다.)
+# [MUST] 헌법 §4 "Don't fake it" — 가짜 대체물·내부 함수 가로채기 없이 `_T093Base`의
+#        run.sh subprocess 실호출 + 실 파일(state.json/STATE.md/PLAN.md/.opal) 상태로만
+#        판정한다. 작성자(opal-test-agent)와 구현자(Step 18)는 분리된 주체다.
+# ═════════════════════════════════════════════════════════════════════════════
+
+# EXECUTE 행(row 3)의 직전 행을 PLAN으로 두어 005 명확화 훅의 발동 조건
+# (직전 행 stage == TASK)에서 벗어나게 한다 — 관찰 축을 code-scan 게이트로 격리한다.
+_T106_ROWS_SPEC = _t093_json([
+    {"stage": "TASK",    "item": "작업"},            # row 1
+    {"stage": "PLAN",    "item": "작업"},            # row 2
+    {"stage": "EXECUTE", "item": "작업"},            # row 3 — EXECUTE 첫 행(게이트 발동점)
+    {"stage": "CLOSE",   "item": "DONE.md 생성"},    # row 4
+])
+
+# 인용 0건 + code-scan 적용 확장자(.py) 대상 → 게이트 ⑦ 판정 대상.
+# [MUST] 본문에 `_CODE_SCAN_CITATION_RES` 토큰 9종(domain/layer/depends/exports/
+#        write_to/reason/coverage/counts/code-scan)이 단 1건도 없어야 "인용 0건"이다.
+_T106_PLAN_CODE_NO_CITATION = (
+    "# PLAN\n\n"
+    "### 4.2 실행 체크리스트\n\n"
+    "**Step 1**\n"
+    "- **파일**: opal/tools/state-tool/state_tool.py\n"
+)
+
+# §4.2 대상이 `.md`뿐 → 게이트 ⑤ 적용 범위(doc_only_task)에서 조용히 이탈해야 한다.
+_T106_PLAN_DOC_ONLY = (
+    "# PLAN\n\n"
+    "### 4.2 실행 체크리스트\n\n"
+    "**Step 1**\n"
+    "- **파일**: docs/PROJECT.md\n"
+)
+
+# 인용 존재(`code-scan` 토큰) + `.py` 대상 → 게이트 ⑦ 통과.
+_T106_PLAN_CODE_WITH_CITATION = (
+    "# PLAN\n\n"
+    "code-scan 조회 결과를 인용한다.\n\n"
+    "### 4.2 실행 체크리스트\n\n"
+    "**Step 1**\n"
+    "- **파일**: opal/tools/state-tool/state_tool.py\n"
+)
+
+_T106_NOTE = "긴급 우회 — 인용 없이 EXECUTE 진입"
+
+
+class TestT106CodeScanCitationBehavior(_T093Base):
+    """106 F-004/F-005 + S-25 — 게이트 동작 4케이스 + H-7 순서 계약.
+
+    고정하는 계약:
+    - C1 인용 0건 + `.py` + `--force --note` → exit 0 + `code_scan_citation_force`
+      의사결정 로그 **1건**(091 `gate_artifact_force` 동형 — 도구가 기재를 집행한다).
+    - C2 문서 전용 태스크(§4.2 대상 `.md`만) + force → exit 0 + **무기재**(오탐 0건).
+      같은 트리에 `--auto-pass`를 넣어도 통과해야 한다 — 게이트 ⑥이 ③④⑤ **뒤**라는
+      [MUST] 순서 계약(H-7)의 직접 관측점이다.
+    - C3 인용 존재 + force → exit 0 + **무기재**(거부될 상태가 아니면 로그를 남기지 않는다).
+    - C4 인용 0건 + `--auto-pass`(force 없음) → 거부 불변(exit 1, 게이트 ⑥).
+    """
+
+    def setUp(self):
+        super().setUp()
+        # 실 파일 픽스처 — tmpdir을 프로젝트 루트로 만든다.
+        # `find_project_root`는 조상 중 `.opal/MEMORY.json` 보유 첫 디렉토리를 루트로 잡으므로
+        # 이 파일 없이는 게이트 ③이 무조건 이탈해 관찰이 불가능하다.
+        opal_dir = self.tmpdir / ".opal"
+        opal_dir.mkdir(parents=True, exist_ok=True)
+        (opal_dir / "MEMORY.json").write_text(
+            _t093_json({"history": []}), encoding="utf-8")
+        (opal_dir / "code-scan.json").write_text(
+            _t093_json({"headerSource": "inline",
+                        "extensions": [".py", ".js", ".ts"]}), encoding="utf-8")
+
+    # ── 픽스처 ────────────────────────────────────────────────────────────
+    def _execute_ready(self, name, plan_body):
+        """EXECUTE 첫 행(row 3) 직전까지 진행된 실 태스크 폴더를 만든다."""
+        d = self._task_dir(name)
+        self._init(d, "semi-agentic", rows_spec=_T106_ROWS_SPEC)
+        (d / "PLAN.md").write_text(plan_body, encoding="utf-8")
+        self._assert_ok(self._mark(d, 1), f"{name} row1(TASK)")
+        self._assert_ok(self._mark(d, 2), f"{name} row2(PLAN)")
+        return d
+
+    # ── 관찰 ──────────────────────────────────────────────────────────────
+    def _decision_rows(self, task_dir):
+        """STATE.md 「## 의사결정 로그」 표의 **데이터 행**만 셀 리스트로 돌려준다."""
+        md = (task_dir / "STATE.md").read_text(encoding="utf-8")
+        rows, in_section = [], False
+        for line in md.splitlines():
+            if line.startswith("## "):
+                in_section = (line.strip() == "## 의사결정 로그")
+                continue
+            if not in_section or not line.strip().startswith("|"):
+                continue
+            cells = [c.strip() for c in line.strip().strip("|").split("|")]
+            if cells[:1] == ["#"]:                       # 표 헤더
+                continue
+            if set("".join(cells)) <= {"-"}:             # 구분선
+                continue
+            rows.append(cells)
+        return rows
+
+    def _code_scan_decision_rows(self, task_dir):
+        """의사결정 로그 중 **code-scan 게이트가 남긴** 행만 골라낸다.
+
+        `--auto-pass`는 그 자체로 `agentic auto-pass at row N` 행을 남기는 별개
+        계약(093)이다. 전체 로그 공백을 단언하면 그 무관한 행에 걸려 게이트 축을
+        관찰할 수 없으므로, 게이트가 쓰는 결정 코드로 좁힌다.
+        """
+        return [r for r in self._decision_rows(task_dir)
+                if "code_scan_citation" in r[2]]
+
+    # ── C1 ────────────────────────────────────────────────────────────────
+    def test_c1_force_bypass_records_decision_log(self):
+        """[T106/C1] 인용 0건 + `.py` 대상 + `--force --note` → exit 0 + 로그 1건.
+
+        S-25 계약: force는 조기 반환하지 않고 ③④⑤ skip·⑥⑦ 판정을 통과해
+        "실제로 거부될 상태였는지"를 확정한 뒤 우회 사유를 반환하고, `cmd_mark`가
+        `code_scan_citation_force`를 의사결정 로그에 **강제 기재**한다.
+        """
+        d = self._execute_ready("c1", _T106_PLAN_CODE_NO_CITATION)
+        code, stdout, stderr, data = self._mark(
+            d, 3, "--force", "--note", _T106_NOTE)
+        self.assertEqual(code, 0,
+                         f"C1 force 우회는 통과해야 한다 (stdout={stdout!r} stderr={stderr!r})")
+        self.assertTrue(data.get("ok"), f"C1 ok:true 기대 — {stdout!r}")
+        self.assertEqual(self._row(d, 3)["status"], "done", "C1 row 3이 done이어야 한다")
+
+        logged = self._decision_rows(d)
+        self.assertEqual(len(logged), 1,
+                         f"C1 의사결정 로그 1건 기대 — 실제 {len(logged)}건: {logged!r}")
+        decision, reason = logged[0][2], logged[0][3]
+        self.assertIn("code_scan_citation_force", decision,
+                      f"C1 결정 셀에 우회 코드가 없다: {decision!r}")
+        self.assertIn("row 3", decision, f"C1 결정 셀에 행 식별자가 없다: {decision!r}")
+        self.assertIn("citation_absent", decision,
+                      f"C1 결정 셀에 실제 미충족 사유가 없다: {decision!r}")
+        self.assertEqual(reason, _T106_NOTE, "C1 근거 셀은 --note 원문이어야 한다")
+
+    # ── C2 ────────────────────────────────────────────────────────────────
+    def test_c2_doc_only_task_leaves_no_decision_log(self):
+        """[T106/C2 ★] 문서 전용 태스크는 force에서도 **무기재** + auto-pass 통과.
+
+        ⑤ 적용 범위 게이트에서 조용히 이탈하므로 우회할 것이 없다 — 여기서 로그가
+        남으면 문서 태스크마다 허위 우회 기록이 쌓인다(오탐).
+        후반부는 [MUST] H-7 — ⑥(auto_pass 거부)이 ③④⑤ **앞**으로 올라가면
+        문서 전용 태스크가 `--auto-pass`에서 차단되며 즉시 실패한다.
+        """
+        d = self._execute_ready("c2-force", _T106_PLAN_DOC_ONLY)
+        code, stdout, stderr, _data = self._mark(
+            d, 3, "--force", "--note", _T106_NOTE)
+        self.assertEqual(code, 0,
+                         f"C2 문서 전용 태스크는 통과해야 한다 (stdout={stdout!r} stderr={stderr!r})")
+        self.assertEqual(self._decision_rows(d), [],
+                         "C2 ⑤에서 이탈했으므로 의사결정 로그가 비어야 한다(오탐 0건)")
+
+        # H-7 순서 관측 — force 없이 --auto-pass만으로도 ⑤ 이탈이 우선해야 한다.
+        d2 = self._execute_ready("c2-autopass", _T106_PLAN_DOC_ONLY)
+        code2, stdout2, stderr2, _d2 = self._mark(d2, 3, "--auto-pass")
+        self.assertEqual(code2, 0,
+                         "C2/H-7 ⑥이 ③④⑤보다 앞에 있으면 문서 전용 태스크가 auto-pass에서 "
+                         f"오탐 차단된다 (stdout={stdout2!r} stderr={stderr2!r})")
+        self.assertEqual(self._code_scan_decision_rows(d2), [],
+                         "C2/H-7 auto-pass 통과 경로에도 게이트 우회 기록이 남지 않아야 한다")
+
+    # ── C3 ────────────────────────────────────────────────────────────────
+    def test_c3_citation_present_leaves_no_decision_log(self):
+        """[T106/C3] 인용이 **존재**하면 force에서도 무기재.
+
+        `--force`는 상시 붙는 인자다. 통과 상태에서도 로그를 남기면 우회 기록이
+        신호를 잃는다(091 `gate_artifact_force` 동형 — 미충족 시에만 기재).
+        """
+        d = self._execute_ready("c3", _T106_PLAN_CODE_WITH_CITATION)
+        code, stdout, stderr, _data = self._mark(
+            d, 3, "--force", "--note", _T106_NOTE)
+        self.assertEqual(code, 0,
+                         f"C3 인용 존재 시 통과해야 한다 (stdout={stdout!r} stderr={stderr!r})")
+        self.assertEqual(self._row(d, 3)["status"], "done", "C3 row 3이 done이어야 한다")
+        self.assertEqual(self._decision_rows(d), [],
+                         "C3 거부될 상태가 아니므로 의사결정 로그가 비어야 한다")
+
+    # ── C4 ────────────────────────────────────────────────────────────────
+    def test_c4_auto_pass_cannot_bypass_gate(self):
+        """[T106/C4] 인용 0건 + `--auto-pass`(force 없음) → 거부 불변(게이트 ⑥).
+
+        차단은 `save_state_json()` 이전 검증 구간에서 일어나므로 실 파일이
+        오염되지 않아야 한다 — 부분 상태 변경 부재까지 함께 고정한다.
+        """
+        d = self._execute_ready("c4", _T106_PLAN_CODE_NO_CITATION)
+        code, stdout, _stderr, data = self._mark(d, 3, "--auto-pass")
+        self.assertEqual(code, 1, f"C4 auto-pass 우회는 거부돼야 한다 — {stdout!r}")
+        self.assertEqual(data.get("error"), "code_scan_citation_unmet",
+                         f"C4 기존 에러 코드로 닫혀야 한다(신규 코드 금지) — {stdout!r}")
+        self.assertIn("auto-pass cannot bypass code-scan citation gate",
+                      data.get("missing") or [],
+                      f"C4 missing이 ⑥ 사유를 지목해야 한다 — {stdout!r}")
+        self.assertEqual(self._row(d, 3)["status"], "pending",
+                         "C4 거부 시 row 3 상태가 변하지 않아야 한다")
+        self.assertEqual(self._decision_rows(d), [],
+                         "C4 거부 경로는 의사결정 로그를 남기지 않아야 한다")
