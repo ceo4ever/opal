@@ -3,14 +3,10 @@
   "module": "main",
   "layer": "router",
   "domain": "console",
-  "description": "FastAPI app 진입점. uvicorn host=127.0.0.1:7823(외부 노출 금지, H-7/S-5). CORS dev=localhost:5173 / prod=동일 오리진. /health. 7개 라우터 등록(5개 read-only + brain POST + config POST/GET, T061). StaticFiles SPA 서빙(dist 존재 시): 알 수 없는 경로 → index.html fallback. [T060 F-3] lifespan asynccontextmanager 신설 — 기동 시 load_config().prewarm_projects를 순회하며 brain_session_registry.prewarm(project_path)를 호출(비블로킹, daemon 스레드 내부 분리 — lifespan 본문은 즉시 yield). prewarm_projects 미지정 시 생략 로그만 남긴다.",
+  "description": "FastAPI app 진입점. uvicorn host=127.0.0.1:7823(외부 노출 금지, H-7/S-5). CORS dev=localhost:5173 / prod=동일 오리진. /health. 7개 라우터 등록(5개 read-only + brain POST + config POST/GET). StaticFiles SPA 서빙(dist 존재 시): 알 수 없는 경로 → index.html fallback. lifespan asynccontextmanager — 기동 시 load_config().prewarm_projects를 순회하며 brain_session_registry.prewarm(project_path)를 호출한다(비블로킹, daemon 스레드 내부 분리 — lifespan 본문은 즉시 yield). prewarm_projects 미지정 시 생략 로그만 남긴다.",
   "exports": ["app"],
   "depends": ["routers.dashboard", "routers.projects", "routers.tasks", "routers.memory", "routers.doctor", "routers.brain", "routers.config", "config", "adapters.brain_session"],
-  "task": "061",
-  "changelog": [
-    "2026-07-14 T060 Step4: lifespan asynccontextmanager 신설 — 기동 선프라임 훅 연결 (F-3)",
-    "2026-07-14 T061 Step4: config 라우터 등록 — 설정 쓰기 API 추가(F-001)"
-  ]
+  "task": "061"
 }
 """
 from __future__ import annotations

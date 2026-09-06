@@ -3,7 +3,7 @@
   "module": "test_brain_tool",
   "layer": "test",
   "domain": "opal-brain",
-  "description": "brain-tool 단위 테스트 — 10 서브커맨드 happy-path + ERROR_CODES 주요 14종 + 동적 타입 로드 + analyze/ingest-scan + 027(term 동적로드·draft search 필터·lint term_duplicate/alias_collision). tmp_path 기반 격리 실행. mock 금지 — 실제 brain_tool.py를 import 호출하는 진짜 테스트. [053] validate_frontmatter 링크필드(related) 거부/통과 케이스 + add-page --related 지정/미지정 케이스 추가. [071] RED-first — add-page 미실체 마커 거부 게이트(--body-file/--force/--note, speculative_content)·lint speculative kind·draft-term 불변(M-3) 계약 테스트(TestSpeculativeGate071, TS-201~209). 구현(brain_tool.py) 없이 작성된 RED 테스트 — GREEN은 op-dev-execute 담당.",
+  "description": "brain-tool 단위 테스트 — 10 서브커맨드 happy-path + ERROR_CODES 주요 14종 + 동적 타입 로드 + analyze/ingest-scan + term 동적로드·draft search 필터·lint term_duplicate/alias_collision 커버리지를 포함한다. tmp_path 기반 격리 실행. mock 금지 — 실제 brain_tool.py를 import 호출하는 진짜 테스트. validate_frontmatter 링크필드(related) 거부/통과 케이스와 add-page --related 지정/미지정 케이스를 포함한다. TestSpeculativeGate071(TS-201~209)은 add-page 미실체 마커 거부 게이트(--body-file/--force/--note, speculative_content)·lint speculative kind·draft-term 불변(M-3) 계약을 검증한다.",
   "task": "027",
   "exports": [
     "TestInit", "TestAddPage", "TestIndex", "TestLog",

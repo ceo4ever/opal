@@ -3,7 +3,7 @@
  *   "module": "test-shard",
  *   "layer": "test",
  *   "domain": "code-scan",
- *   "description": "RED-first — code-scan 매니페스트 샤딩(_shards/ 의미 단위 분산 + 파일당 크기 상한) 계약 CLI 블랙박스 테스트. 크기 상한 설정 창구는 083에서 .opal/code-scan.json의 shardPolicy로 이전됐고(구 index.json manifestMaxBytes는 폐기·비차단) 판정은 바이트 초과 AND 엔트리 수 이상 2축이다. 샤드 합집합 해석·package 3단 상속·라벨 경로 안전·CODE_MAP_VERSION 불변·target 라우팅·validate 위반 4종·오탐 증폭 차단·scaffold 보존/멱등/중복가드/stale·크기 상한 열거+비차단·예약어 가드·하위호환 회귀·다중 스코프 격리·목표달성(분산 후 크기 하강+조회 무손실)을 검증한다 (F-1~F-8, 태스크 082)",
+ *   "description": "RED-first — code-scan 매니페스트 샤딩(_shards/ 의미 단위 분산 + 파일당 크기 상한) 계약 CLI 블랙박스 테스트. 크기 상한 설정 창구는 `.opal/code-scan.json`의 `shardPolicy`이며 판정은 바이트 초과 AND 엔트리 수 이상 2축이다. 샤드 합집합 해석·package 3단 상속·라벨 경로 안전·CODE_MAP_VERSION 불변·target 라우팅·validate 위반 4종·오탐 증폭 차단·scaffold 보존/멱등/중복가드/stale·크기 상한 열거+비차단·예약어 가드·하위호환 회귀·다중 스코프 격리·목표달성(분산 후 크기 하강+조회 무손실)을 검증한다",
  *   "exports": [],
  *   "depends": ["node:test", "node:assert/strict", "node:child_process", "node:fs", "node:os", "node:path"],
  *   "task": "082",

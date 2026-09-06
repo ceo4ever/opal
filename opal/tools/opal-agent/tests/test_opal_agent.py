@@ -3,7 +3,7 @@
   "module": "test_opal_agent",
   "layer": "test",
   "domain": "opal-tools",
-  "description": "opal_agent.py 단위 테스트 — 059(부트스트랩 마커 3-way 확장 + caller-supplied cold session id) RED-first TS-001~TS-009 + 067(stream-json 실행 경로) RED-first S-1/S-2/S-3(`[T067/L1-R1]`). subprocess 미사용 — ClaudeAdapter/GeminiAdapter/CursorAdapter/AntigravityAdapter.build_invocation()의 공개 조립 출력(cmd 배열)과 _mark()/_run()/_build_parser()의 관찰 가능한 예외·경고·SystemExit만 검증한다. TS-002(on/off 하위호환)·TS-006(warm resume 유지)은 RED 시점에도 PASS해야 하는 회귀 baseline(§4 표)이다.",
+  "description": "opal_agent.py 단위 테스트. subprocess 미사용 — ClaudeAdapter/GeminiAdapter/CursorAdapter/AntigravityAdapter.build_invocation()의 공개 조립 출력(cmd 배열)과 _mark()/_run()/_build_parser()의 관찰 가능한 예외·경고·SystemExit만 검증한다. TS-002(on/off 하위호환)·TS-006(warm resume 유지)은 RED 시점에도 PASS해야 하는 회귀 baseline(§4 표)이다.",
   "exports": [
     "TestBootstrapMarkerAssembly", "TestBootstrapBackCompatBaseline",
     "TestBootstrapCliChoices", "TestColdSessionIdAssembly",

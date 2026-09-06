@@ -13,10 +13,7 @@
   ],
   "depends": ["cache"],
   "task": "103",
-  "scenarios": ["TS-016"],
-  "changelog": [
-    "2026-08-25 T103 R1 RED: TS-016 cache.py mtime 무효화 실동작 실패 테스트 신규 — 구현(Step 2) 전 RED 트랙(red-first.md §1), 작성자!=구현자(동 §2)"
-  ]
+  "scenarios": ["TS-016"]
 }
 """
 from __future__ import annotations

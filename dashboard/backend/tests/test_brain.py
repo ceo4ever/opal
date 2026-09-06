@@ -36,14 +36,7 @@
     "config"
   ],
   "task": "060",
-  "scenarios": ["S-1", "S-2", "S-3", "S-4", "S-5", "S-6", "S-7", "S-8", "S-9", "S-11"],
-  "changelog": [
-    "2026-07-14 T060 RED: 프라임 연결 풀(F-2)·웜 핸들 주입(F-4)·lifespan 선프라임(F-3)·픽스처 회귀(H-7) 실패 테스트 추가 — 구현 전 RED 트랙(red-first.md)",
-    "2026-07-14 13:31 KST T060 Step5: reset_brain_registry 픽스처에 _pool/_pool_inflight 클리어 추가(S-11 GREEN 전환) + 플레이키 4건 동기화 수리(체크아웃 직후 풀 비움·동시 체크아웃 무중복은 threading.Event로 리필 완료 게이트, 신규 세션 콜드 미호출·투명 재프라임 순서는 registry.prewarm no-op으로 리필 부수효과 분리) + TestOpbrAdapterAllowedTools stale 단언 갱신(커밋 400c03a --model/--effort 삽입 반영, 계약 의도 불변)",
-    "2026-07-15 T063 RED(opal-test-agent mode:red): TestBrainPoolT063NeedBasedFill 추가 — prewarm() need=pool_size-have 충전 로직(F-003, H-1) RED 노출(S-1/S-2) + 락순서·세마포어 회귀 가드(H-2/H-3, S-3/S-4). opbr_adapter.prime_and_ask는 mock/patch 미사용, 모듈 속성 직접 대입 스텁으로 대체(red-first.md §4 공개 인터페이스 검증)",
-    "2026-07-15 T063 Step5(GREEN 후 정비): test_consecutive_checkout_both_return_distinct_warm_handles(S-2) flaky 결정론화 — need-기반 동시 충전(GREEN)에서 무효화된 stub call-index 게이트(idx==2 대기)를 풀 상태 폴링(`_pool` 길이==pool_size)으로 교체. 기대값(2회 모두 non-None·서로 다른 웜 핸들) 불변, 동기화 메커니즘만 교체 — 10회 반복 무결함 확인",
-    "2026-07-15 T063 CLOSE: @header exports 정합 — 존재하지 않는 TestConversationBrainSessionWarm 제거, 누락된 TestOpbrAdapterAllowedTools 반영(코드 변경 없음)"
-  ]
+  "scenarios": ["S-1", "S-2", "S-3", "S-4", "S-5", "S-6", "S-7", "S-8", "S-9", "S-11"]
 }
 """
 from __future__ import annotations

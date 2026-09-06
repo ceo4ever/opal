@@ -3,12 +3,9 @@
  *   "module": "api-client",
  *   "layer": "api-client",
  *   "domain": "core",
- *   "description": "OPAL Console API 클라이언트 — fetch 래퍼(선택적 timeoutMs AbortController 타임아웃 가드 + AbortError→사용자 친화 메시지 변환) + TanStack QueryClient (refetchInterval 30s, staleTime 30s). timeoutMs 미전달 시 기존 동작 완전 불변. [T061] 비정상 응답 시 JSON body의 detail 필드(FastAPI HTTPException=문자열, Pydantic 422=배열)를 파싱해 기존 에러 메시지 뒤에 덧붙인다 — 파싱 실패 시 기존 메시지 그대로 폴백(안전 폴백), 성공 경로·기존 호출부 시그니처는 불변.",
+ *   "description": "OPAL Console API 클라이언트 — fetch 래퍼(선택적 timeoutMs AbortController 타임아웃 가드 + AbortError→사용자 친화 메시지 변환) + TanStack QueryClient (refetchInterval 30s, staleTime 30s). 비정상 응답 시 JSON body의 detail 필드(FastAPI HTTPException=문자열, Pydantic 422=배열)를 파싱해 에러 메시지 뒤에 덧붙인다 — 파싱 실패 시 기존 메시지 그대로 폴백(안전 폴백).",
  *   "exports": ["apiClient", "queryClient", "API_BASE_URL"],
- *   "task": "061",
- *   "changelog": [
- *     "2026-07-14 T061 PM 승인 스코프 확장: 에러 응답 body의 detail 필드를 파싱해 메시지에 병기 — SettingsPage 저장 실패 Alert에 백엔드 사유(예: '프로젝트를 찾을 수 없습니다', Pydantic 필드 오류) 노출 (S-10/TS-043 대응)"
- *   ]
+ *   "task": "061"
  * }
  */
 

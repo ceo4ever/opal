@@ -3,11 +3,10 @@
  *   "module": "brain-job-polling-test",
  *   "layer": "test",
  *   "domain": "brain",
- *   "description": "잡 폴링 순수 헬퍼 단위 테스트 — S-7(폴링 done 수신 → resolvePendingTurn done 전이), S-10(폴링 error 수신 → resolvePendingTurn error graceful). jobResponseToResolution·jobPollingInterval은 시그니처 불변(H-8 회귀 가드). [T063] resolvePendingTurn/addPendingTurn 호출부를 turns[] 기반 2-인자 신규 시그니처로 갱신 — 대화 배열(BrainConversation) 전제의 교차대화 귀속 케이스는 단일 세션 리팩터로 개념이 소멸해 제거(세션 오귀속 가드는 컴포넌트의 capturedSessionIdRef로 이동).",
+ *   "description": "잡 폴링 순수 헬퍼 단위 테스트 — S-7(폴링 done 수신 → resolvePendingTurn done 전이), S-10(폴링 error 수신 → resolvePendingTurn error graceful). jobResponseToResolution·jobPollingInterval은 시그니처 불변(H-8 회귀 가드). resolvePendingTurn/addPendingTurn은 turns[] 기반 2-인자 시그니처로 호출한다 — 세션 오귀속 가드는 컴포넌트의 capturedSessionIdRef가 담당.",
  *   "exports": [],
  *   "task": "037-260622-opd-브레인질의-타임아웃-견고화 / 063-260715-opd-콘솔-브레인-세션-단순화",
- *   "scenarios": ["S-7", "S-10"],
- *   "changelog": ["2026-07-15 T063 CLOSE: @header exports 필드 추가(누락, 코드 변경 없음)"]
+ *   "scenarios": ["S-7", "S-10"]
  * }
  */
 

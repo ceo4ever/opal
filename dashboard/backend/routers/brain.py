@@ -5,11 +5,7 @@
   "domain": "console",
   "description": "대화별 session_id 격리: GET /api/brain/auth — shutil.which(claude) 경량 체크. GET /api/brain/status?project=<경로>&session_id=<id> — project·session_id 필수, BrainSessionRegistry.status(session_id) 반환. session_id 미등록 시 state=idle 응답(아직 프라임 안 된 대화). POST /api/brain/prime — project·session_id 필수, 빈값/무효→400, 그 session_id 세션만 콜드 프라임(다른 세션 불변), 백그라운드 스레드로 트리거(prime-on-intent). POST /api/brain/query — project·session_id 필수, 빈값/무효→400, BrainSessionRegistry.submit_job 호출 → job_id 즉시 반환(BrainJobSubmitResponse). 미등록 session_id로 query 오면 콜드 잡 자동 등록(robust). GET /api/brain/job/{job_id}?project=<>&session_id=<> — 잡 상태 폴링, BrainJobResponse(job_id,status,answer,citations,error_msg). 잡 소멸/미존재 시 graceful error 응답. [MUST] LLM 호출은 이 라우터에만 격리. project·session_id 빈값·무효 → 명시적 400 반환.",
   "exports": ["GET /api/brain/auth", "GET /api/brain/status", "POST /api/brain/prime", "POST /api/brain/query", "GET /api/brain/job/{job_id}"],
-  "depends": ["adapters.brain_session", "adapters.opbr_adapter", "models", "scanner", "config"],
-  "changelog": [
-    "2026-06-23 Step3: POST /query → submit_job 비동기(BrainJobSubmitResponse), GET /api/brain/job/{job_id} 신설(PLAN §3.1.2)",
-    "2026-07-15 T063 Step5(F-004): new_conversation 폐기 필드 정리 — POST /query docstring·[NOTE] 주석에서 잔재 제거(BrainQueryRequest에서도 필드 삭제, models.py)"
-  ]
+  "depends": ["adapters.brain_session", "adapters.opbr_adapter", "models", "scanner", "config"]
 }
 """
 from __future__ import annotations

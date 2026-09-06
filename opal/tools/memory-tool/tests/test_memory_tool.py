@@ -3,7 +3,7 @@
   "module": "test_memory_tool",
   "layer": "test",
   "domain": "opal-pipeline",
-  "description": "memory-tool RED-first 테스트 — 045 트랙(S-1~S-17, S-24, 프리픽스 [T045/L1-...]) + 078 MEMORY.json 전환 트랙(TS-001~TS-021·TS-037~TS-041, 프리픽스 [T078/...]) + 079 `update --kind history` 작업 히스토리 정정 트랙(TS-001~TS-020·TS-025·TS-027·TS-028, 프리픽스 [T079/...]) + 096 참조 무결성·고아 행 정리 트랙(QA-001~QA-018·QA-024~QA-026, 프리픽스 [T096/L1-R1|R2|R3]). mock/patch/MagicMock 금지(헌법 §4) — 실 fixture·실 프로세스(subprocess)만. 078·079·096 블록은 구현 전 작성된 RED이므로 신규 기능 케이스는 전량 FAIL이 정상(단, 하위호환·불변식 가드 케이스는 구현 전에도 통과할 수 있다).",
+  "description": "memory-tool 단위 테스트 — 스켈레톤(S-1~S-17, S-24)·MEMORY.json 전환(TS-001~TS-021·TS-037~TS-041)·`update --kind history` 작업 히스토리 정정(TS-001~TS-020·TS-025·TS-027·TS-028)·참조 무결성·고아 행 정리(QA-001~QA-018·QA-024~QA-026) 트랙을 포함한다. mock/patch/MagicMock 금지(헌법 §4) — 실 fixture·실 프로세스(subprocess)만.",
   "exports": [
     "TestSkeleton", "TestMarkerGuard", "TestSummaryLengthCap",
     "TestCountUnlimited", "TestHistoryFIFO", "TestPruneIdempotent",

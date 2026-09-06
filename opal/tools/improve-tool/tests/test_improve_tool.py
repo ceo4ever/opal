@@ -4,7 +4,7 @@
   "task": "058",
   "layer": "test",
   "domain": "opal-tools",
-  "description": "improve-tool record 서브명령 행위 계약 테스트 (058 TEST-SCENARIO.md S-1~S-5 + 078 F-008 TS-024/025/026 대응). scope local 위임 대상이 MEMORY.json 단독 SSOT로 전환됨에 따라 fixture와 단언을 json 문서 기준으로 갱신(078).",
+  "description": "improve-tool record 서브명령 행위 계약 테스트. scope local 위임 대상은 MEMORY.json 단독 SSOT이며, fixture와 단언은 json 문서 기준이다.",
   "scenarios": ["S-1", "S-2", "S-3", "S-4", "S-5", "TS-024", "TS-025", "TS-026"],
   "exports": [
     "TestJsonContractThreePaths",

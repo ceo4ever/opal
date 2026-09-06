@@ -3,11 +3,10 @@
  *   "module": "brain-storage-test",
  *   "layer": "test",
  *   "domain": "brain",
- *   "description": "BrainPage 단일 세션 turns[] 헬퍼 단위 테스트 — addPendingTurn·resolvePendingTurn(turns 기반 2-인자 시그니처) 낙관적 업데이트 검증 + projectDisplayName 검증 + localStorage 비영속 검증(R-2 — 질의·응답 흐름 후 opal-console:brain:* 키 미기록, 복원 경로 부재로 재mount 시 turns=[]). [T063] 멀티대화관리·localStorage 이력 헬퍼(loadConversations/saveConversations/filterConversationsByProject/makeNewConversation/appendTurnToConversation, 타입 BrainConversation)가 리팩터로 제거되어 해당 테스트 전건 함께 제거. 네트워크 미사용.",
+ *   "description": "BrainPage 단일 세션 turns[] 헬퍼 단위 테스트 — addPendingTurn·resolvePendingTurn(turns 기반 2-인자 시그니처) 낙관적 업데이트 검증 + projectDisplayName 검증 + localStorage 비영속 검증(R-2 — 질의·응답 흐름 후 opal-console:brain:* 키 미기록, 복원 경로 부재로 재mount 시 turns=[]). 멀티대화관리·localStorage 이력 헬퍼(loadConversations/saveConversations/filterConversationsByProject/makeNewConversation/appendTurnToConversation, 타입 BrainConversation)에 대한 테스트는 없다(해당 헬퍼 자체가 없음). 네트워크 미사용.",
  *   "exports": [],
  *   "task": "022-260615-opd-opx-flex-pilot / 063-260715-opd-콘솔-브레인-세션-단순화",
- *   "scenarios": ["H-optimistic-pending", "H-resolve-pending", "T063-S-10", "T063-S-11"],
- *   "changelog": ["2026-07-15 T063 CLOSE: @header exports 필드 추가(누락, 코드 변경 없음)"]
+ *   "scenarios": ["H-optimistic-pending", "H-resolve-pending", "T063-S-10", "T063-S-11"]
  * }
  */
 

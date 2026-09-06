@@ -3,14 +3,10 @@
  *   "module": "app-shell",
  *   "layer": "component",
  *   "domain": "core",
- *   "description": "OPAL Console 글로벌 레이아웃 셸 — shadcn sidebar 기반 좌측 7개 네비 + 프로젝트 스위처 + 상단바(검색·테마토글·새로고침·연결상태·설정). [T061] NAV_ITEMS에 '설정' 추가 + TopBar 설정 버튼을 /settings NavLink로 연결(기존 no-op 제거). [T063 R-8] 프로젝트 스위처가 ui-store brainDirty(브레인 화면 turns.length>0)를 확인해, dirty 상태에서 다른 프로젝트로 전환 시 AlertDialog로 확인 후 진행(취소 시 잔류) — 브레인 화면이 아니면(brainDirty=false) 기존과 동일하게 즉시 전환.",
+ *   "description": "OPAL Console 글로벌 레이아웃 셸 — shadcn sidebar 기반 좌측 7개 네비 + 프로젝트 스위처 + 상단바(검색·테마토글·새로고침·연결상태·설정). NAV_ITEMS에 '설정' 항목이 포함되며 TopBar 설정 버튼은 /settings NavLink로 연결된다. 프로젝트 스위처는 ui-store brainDirty(브레인 화면 turns.length>0)를 확인해, dirty 상태에서 다른 프로젝트로 전환 시 AlertDialog로 확인 후 진행하고(취소 시 잔류), 브레인 화면이 아니면(brainDirty=false) 즉시 전환한다.",
  *   "exports": ["AppShell"],
  *   "depends": ["ui-store", "api-client", "sidebar", "badge", "dropdown-menu", "tooltip", "alert-dialog"],
- *   "task": "063",
- *   "changelog": [
- *     "2026-07-14 T061 Step10: NAV_ITEMS '설정' 추가 + TopBar 설정 버튼 /settings 연결 (F-005)",
- *     "2026-07-15 T063 R-8: ProjectSwitcher에 brainDirty 가드 추가 — dirty 시 AlertDialog 확인 후 setContextProject 진행"
- *   ]
+ *   "task": "063"
  * }
  */
 

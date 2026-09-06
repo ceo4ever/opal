@@ -3,16 +3,11 @@
  *   "module": "dashboard-page-stats-test",
  *   "layer": "test",
  *   "domain": "dashboard",
- *   "description": "[T103] 대시보드 B-1~B-4 + 워크플로우 필터 렌더 AC 컴포넌트 테스트. apiClient를 vi.mock으로 대체해 동결 코호트 응답(FX-DASH, BE 실응답 스냅샷)과 빈 응답(FX-DASH-EMPTY)을 주입하고 QueryClientProvider로 DashboardPage를 렌더한다. 스냅샷 테스트·픽셀 비교·전체 트리 검증은 작성하지 않는다(PLAN P-6 범위 한정). [R-18] 소요 3계열 렌더 — B-1 구성 스트립·B-2 3색 스택의 계열 항등(PM + 워커 == 작업 · 캡틴 == 대기)과 워커 미측정 코호트의 축퇴(워커 0폭 · 작업 구획 폭 불변, 16-a)를 단정한다. [R-21] TS-142·TS-143은 B-1 야간 보정 배지 — 응답 최상위 applied=true면 BE 구간 라벨 배지와 툴팁 문면이 서고, applied=false·필드 부재 2경로 모두 배지가 뜨지 않음을 단정한다.",
+ *   "description": "대시보드 B-1~B-4 + 워크플로우 필터 렌더 AC 컴포넌트 테스트. apiClient를 vi.mock으로 대체해 동결 코호트 응답(FX-DASH, BE 실응답 스냅샷)과 빈 응답(FX-DASH-EMPTY)을 주입하고 QueryClientProvider로 DashboardPage를 렌더한다. 스냅샷 테스트·픽셀 비교·전체 트리 검증은 작성하지 않는다(PLAN P-6 범위 한정). 소요 3계열 렌더 — B-1 구성 스트립·B-2 3색 스택의 계열 항등(PM + 워커 == 작업 · 캡틴 == 대기)과 워커 미측정 코호트의 축퇴(워커 0폭 · 작업 구획 폭 불변, 16-a)를 단정한다. TS-142·TS-143은 B-1 야간 보정 배지 — 응답 최상위 applied=true면 BE 구간 라벨 배지와 툴팁 문면이 서고, applied=false·필드 부재 2경로 모두 배지가 뜨지 않음을 단정한다.",
  *   "exports": [],
  *   "depends": ["dashboard-page", "api-client", "ui-store"],
  *   "task": "103",
- *   "scenarios": ["TS-040", "TS-041", "TS-042", "TS-043", "TS-044", "TS-045", "TS-046", "TS-047", "TS-110", "TS-111", "TS-134", "TS-135", "TS-136", "TS-142", "TS-143"],
- *   "changelog": [
- *     "2026-08-26 T103 R-21: 야간 보정 배지 케이스 2건(TS-142·TS-143) + 픽스처 FX-DASH-QUIET·FX-DASH-NOQUIET 신설. 기존 케이스·픽스처 무변경",
- *     "2026-08-26 T103 R-20: 구획 호버 툴팁 케이스 3건(TS-134~TS-136) + 픽스처 FX-DASH-WORKER-LABELS·FX-DASH-UNMEASURED-LABELS(3계열 라벨·누적 총 동반 응답) 신설. 트리거는 키보드 포커스로 열고 열린 툴팁이 항상 1개임을 확인한다. 기존 케이스·픽스처 무변경",
- *     "2026-08-25 T103 R-18: 3계열 렌더 케이스 2건(TS-110·TS-111) + 픽스처 FX-DASH-WORKER 신설. 기존 케이스·픽스처 무변경"
- *   ]
+ *   "scenarios": ["TS-040", "TS-041", "TS-042", "TS-043", "TS-044", "TS-045", "TS-046", "TS-047", "TS-110", "TS-111", "TS-134", "TS-135", "TS-136", "TS-142", "TS-143"]
  * }
  */
 

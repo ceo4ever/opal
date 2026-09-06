@@ -3,7 +3,7 @@
  *   "module": "test-validate",
  *   "layer": "test",
  *   "domain": "code-scan",
- *   "description": "RED-first — `validate` 서브명령의 모드별 단일 소스 커버리지(합산 폐기)·구조 패스 모드 분기·headerSource 결과 필드·스코프 필터 존중(오탐/미탐 양방향) + 077 위반 검출/git 2분류/--changed 필터 회귀 CLI 블랙박스 테스트 (F-005/F-009, 태스크 080)",
+ *   "description": "RED-first — `validate` 서브명령의 모드별 단일 소스 커버리지(합산 폐기)·구조 패스 모드 분기·headerSource 결과 필드·스코프 필터 존중(오탐/미탐 양방향) + 위반 검출/git 2분류/--changed 필터 회귀 CLI 블랙박스 테스트 (F-005/F-009)",
  *   "exports": [],
  *   "depends": ["node:test", "node:assert/strict", "node:child_process", "node:fs", "node:os", "node:path"],
  *   "task": "080",

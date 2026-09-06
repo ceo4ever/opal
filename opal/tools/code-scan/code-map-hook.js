@@ -4,7 +4,7 @@
  *   "module": "code-map-hook",
  *   "layer": "util",
  *   "domain": "code-scan",
- *   "description": "PostToolUse hook — Edit/Write/MultiEdit 이벤트에서 code-map 대상 파일의 외부 매니페스트 미갱신을 감지해 결정론 경고(additionalContext)를 주입한다. 조기 이탈 10단으로 무관한 이벤트를 걸러낸다: 전역 headerSource가 미설정·무효값이거나 inline인 트리는 ⑤단에서, code-map 미사용 프로젝트(index.json 부재)는 그 뒤 ⑥단에서 즉시 무관 판정·무출력·exit 0 (PM-7, TASK 077 / TASK 080 F-005·F-12e). 여기서 무출력은 stdout·stderr 양축 0바이트를 뜻하므로 모드 게이트가 code-map 로딩보다 반드시 앞선다. 확정 모드는 ctx.headerSource로 실려 decideTarget의 모드 직결 판정을 지배한다",
+ *   "description": "PostToolUse hook — Edit/Write/MultiEdit 이벤트에서 code-map 대상 파일의 외부 매니페스트 미갱신을 감지해 결정론 경고(additionalContext)를 주입한다. 조기 이탈 10단으로 무관한 이벤트를 걸러낸다: 전역 headerSource가 미설정·무효값이거나 inline인 트리는 ⑤단에서, code-map 미사용 프로젝트(index.json 부재)는 그 뒤 ⑥단에서 즉시 무관 판정·무출력·exit 0. 여기서 무출력은 stdout·stderr 양축 0바이트를 뜻하므로 모드 게이트가 code-map 로딩보다 반드시 앞선다. 확정 모드는 ctx.headerSource로 실려 decideTarget의 모드 직결 판정을 지배한다",
  *   "exports": ["main"],
  *   "depends": ["code-scan"],
  *   "note": "조기 이탈 10단(PLAN.md §3.9.2 (C) 9단 + 080 §3.5.2 모드 게이트 신설) + 전 경로 fail-safe(todo_mirror_hook.py:124-130 패턴 준용). 모드 게이트 ⑤는 code-map 로딩 ⑥보다 위에 놓인다 — loadCodeMap이 normalizeIndexScope를 경유해 폐기 키 안내를 stderr로 1회 발화하므로(code-scan.js:455) 게이트가 아래에 있으면 조용히 이탈해야 할 트리에서 무출력 계약이 stderr 축에서 깨진다(080 F-12e, TS-076). 이 순서 자체가 계약이며 게이트 위에서 code-map을 읽어서는 안 된다. ⑤는 전역 config 1층만 본다 — hook에는 CLI 플래그가 없으므로 code-scan.js resolveHeaderSource의 2층 병합 중 CLI 층이 구조적으로 성립하지 않는다. 미설정·무효값·설정 파싱 실패는 CLI에서 전 명령 차단(exit 1)이지만 hook은 계약상 예외이며 항상 무출력 exit 0이다. WORKER_FIELDS는 code-scan.js가 module.exports로 노출하지 않으므로 표시용으로 로컬 복제(header-standard.md §7 5필드와 동기 유지)."

@@ -22,14 +22,7 @@
     "workflow_stats"
   ],
   "depends": [],
-  "task": "103",
-  "changelog": [
-    "2026-08-26 T103 R-21: 야간 시간대 보정(집계 기준 17) — quiet_overlap_minutes·format_quiet_hours 2종 신설, row_durations·task_static_stats·task_live_stats·workflow_stats에 quiet_hours 인자 additive(기본 None=미적용). 제외분은 행의 계열에서 빼고 워커는 보정하지 않는다. quiet_hours_applied·quiet_hours_label 표면화. TS-130~TS-136",
-    "2026-08-25 T103 Step3: 집계 코어 신설 — 공개 함수 7종(parse_ts·format_duration·owner_series·row_durations·task_static_stats·task_live_stats·workflow_stats). F-001, TS-001~TS-009",
-    "2026-08-25 T103 R-19: 시각 표기 초 해상도 확장 — parse_ts가 `%Y-%m-%d %H:%M:%S`/`%Y-%m-%d %H:%M` 2형식 수용(초 부재는 :00), format_timestamp(`YY-MM-DD HH:mm:ss`) 신설로 행 시각 표시 문자열 소유권을 tasks.py 슬라이싱에서 회수. 날짜 경계 소실 결함 해소",
-    "2026-08-25 T103 R-20: 3계열 표시 문자열 additive — 단계 층 그룹·워크플로우 단계·워크플로우 총계·태스크 막대에 pm_label·worker_label·captain_label 추가 + 워크플로우 단계에 누적 total_minutes·total_label 신설. 기존 수치 필드 무변경. TS-120~TS-122",
-    "2026-08-25 T103 R-16: 소요 3계열 분해(캡틴·워커·PM) additive — worker_recorded·series_split 2종 신설, 행·단계·태스크·워크플로우 4층에 pm/worker/captain 분해값과 worker_measured 측정 신호 추가. 기존 work·wait 필드는 존치(work = pm + worker). TS-101~TS-105"
-  ]
+  "task": "103"
 }
 """
 from __future__ import annotations

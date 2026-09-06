@@ -3,7 +3,7 @@
  *   "module": "test-feature",
  *   "layer": "test",
  *   "domain": "code-scan",
- *   "description": "RED-first — `feature` 서브명령(cross-scope 조회 기본 + --scope 제한, 077 PM-1) 077 자산 유지 + 080 신 계약 정합(픽스처 headerSource manifest 명시·전 명령 차단 게이트 포함·--header-source 플래그 인자 소비) CLI 블랙박스 테스트 (F-008/F-001, 태스크 080)",
+ *   "description": "RED-first — `feature` 서브명령(cross-scope 조회 기본 + --scope 제한) 및 픽스처 headerSource manifest 명시·전 명령 차단 게이트 포함·--header-source 플래그 인자 소비 계약을 검증하는 CLI 블랙박스 테스트 (F-008/F-001)",
  *   "exports": [],
  *   "depends": ["node:test", "node:assert/strict", "node:child_process", "node:fs", "node:os", "node:path"],
  *   "task": "080",
