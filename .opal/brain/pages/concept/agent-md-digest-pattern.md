@@ -10,15 +10,17 @@ tags:
 - architecture
 sources:
 - task:050
+- task:108
 related:
 - opal-bootstrap-2tier-model
 - dedup-pointer-over-copy
 - bootstrapper-marker-ssot-single-point
+- lean-core-relocation-benefit-precondition
+- norm-proliferation-spiral-without-enforcement
 created: '2026-06-30'
-updated: '2026-06-30'
+updated: '2026-09-06'
 status: active
 ---
-
 ## 개요
 
 부트스트랩이 비서/PM 2-tier 구조로 전환된 이후(task:049), 매 세션 항상 로드되는 전역 AGENT.md는 "비서 코어만 담은 lean core"로 유지해야 한다. PM/프로젝트 전용 섹션은 Phase B에서 이미 로드되는 별도 reference로 이관하고, AGENT.md에는 비서가 알투로 행동하는 데 필요한 최소 집합만 남기는 것이 다이제스트 패턴의 핵심이다.
@@ -31,20 +33,29 @@ OPAL 헌법 Surgical 원칙 (`opal/core/PRINCIPLES.md` §3)상 이관 대상의 
 
 ## 결정 내용
 
-비서 코어 잔류 필수 7항목은 다음과 같다: 정체성 적용, 보고 형식, 도구·MCP 인지 맵, `//` 진입 불변식(Phase A), 주도성, 핵심 역할(비서/PM 인식), 비서/PM 상태 정의 소형 표. 이 7항목은 비서가 단독으로 완결되게 행동하기 위한 최소 집합이다 (task:050 PLAN §3.1.2 비서 코어 완결성 점검).
+비서 코어 잔류 필수 항목은 다음 6항목이다: 정체성 적용, 도구·MCP 인지 맵, `//` 진입 불변식(Phase A), 주도성, 핵심 역할(비서/PM 인식), 비서/PM 상태 정의 소형 표. 이 6항목은 비서가 단독으로 완결되게 행동하기 위한 최소 집합이다 (task:050 PLAN §3.1.2 비서 코어 완결성 점검).
 
 PM 전용 섹션(역할 전환 상세, L2 경량 트랙, code-scan/opal-brain 활용 규칙, 메모리 브리핑, 모델매핑 적용, 프로젝트 컨텍스트)은 `opal-pm.md`로 이관한다. 이 파일은 Phase B에서 이미 로드되므로 PM 세션의 토큰은 중립이고, 비서 세션의 부담만 감소한다. 이관 결과 AGENT.md 소스 493줄에서 236줄로, 런타임 기준 약 455줄에서 약 223줄(약 51% 경감)로 축소되었다 (task:050 DONE.md §결과 요약).
 
 부트스트래퍼 자동관리(4개 플랫폼 정책 + 수동 삽입 마커 블록)는 설치 시점 가이드로 매 세션 런타임 행동과 무관하므로 신규 reference `bootstrapper-management.md`로 이관한다. AGENT.md에는 포인터 1줄만 남긴다 (task:050 PLAN §F-003).
 
+## 결정 변천 (이력)
+
+- **task:050 시점(2026-06-30)**: 「보고 형식」은 비서 코어 잔류 **필수 7항목** 중 하나로 판정되었다 — 비서가 단독 완결되려면 보고를 골격에 맞춰 산출하는 능력이 코어에 있어야 한다고 봤다.
+- **task:099(2026-08-22)**: 「보고 형식」을 AGENT.md 밖으로 **이관**하는 안을 검토했으나, 전 tier 공통 규범이라 이관 이익이 성립하지 않는다고 판정하고 인라인 유지를 택했다(`[[lean-core-relocation-benefit-precondition]]`).
+- **task:108(2026-09-06)**: 099의 "전 tier 공통 규범 분리는 순이익 0 또는 음수" 판정을 **뒤집지 않고 오히려 근거로 삼아**, 이관 대신 **전면 폐지**를 택했다. §보고 형식 177줄을 대체 규범 없이 삭제했다(근거: task:108 DONE.md §6 M-1, `.opal/brain/pages/concept/lean-core-relocation-benefit-precondition.md`). 그 결과 비서 코어 잔류 필수 항목은 7항목에서 **6항목**으로 조정된다 — 「보고 형식」은 더 이상 코어의 필수 구성요소가 아니다.
+
 ## 영향 범위
 
-- `opal/core/AGENT.md` — 이관 섹션 10개 제거 + 교차참조 3건 갱신 + 비서 코어 7항목 완전 보존
+- `opal/core/AGENT.md` — 이관 섹션 10개 제거 + 교차참조 3건 갱신 + 비서 코어 6항목 완전 보존 (task:108에서 7→6으로 조정)
 - `opal/core/references/opal-pm.md` — §12~§17 신규 수신(역할전환 상세·L2·code-scan/brain 활용·메모리 브리핑·모델매핑 적용·프로젝트 컨텍스트)
 - `opal/core/references/bootstrapper-management.md` — 신규 생성(부트스트래퍼 자동관리 이관)
+- task:108에서 §보고 형식 자체가 AGENT.md에서 전면 삭제됨 — 이관이 아니라 폐지
 
 ## 관련 페이지
 
 - [[opal-bootstrap-2tier-model]]
 - [[dedup-pointer-over-copy]]
 - [[bootstrapper-marker-ssot-single-point]]
+- [[lean-core-relocation-benefit-precondition]]
+- [[norm-proliferation-spiral-without-enforcement]]
