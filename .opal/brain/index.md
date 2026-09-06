@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-09-03 23:32
+> 갱신: 2026-09-06 22:41
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -9,6 +9,7 @@
 - [[code-scan-tool]] — code-scan #tool #util #code-scan
 - [[fw-inbox-collection]] — fw-inbox (프레임워크 개선 수집소) #runtime-directory #improvement #collection #deployment
 - [[git-sync-tool]] — git-sync-tool #tool #git #workspace #safety
+- [[header-standard-doc]] — header-standard.md — @header 작성 표준 #header-standard #reference #code-scan
 - [[improve-tool]] — improve-tool #tool #improvement #cli #decision-making
 - [[memory-tool]] — memory-tool — 프로젝트 메모리 인덱스·히스토리 결정론적 집행 CLI #tool #memory #cli #lifecycle
 - [[op-data-ddl-skill]] — op-data-ddl (DDL 단계 스킬) #skill #stage-skill #data-design #ddl #migration #dbml
@@ -160,11 +161,14 @@
 - [[model-mapping-latest-tracking]] — OPAL 모델 매핑 최신화 + 최신 추종 전략 #model #mapping #gemini #codex #task
 - [[model-mapping-missing-cell-error-policy]] — 모델 매핑 미설정 셀 오류 정책 (폴백 없음 · "default" 폐기) #model #mapping #error #policy #setting
 - [[monotonic-epoch-clock-mixing-invalidates-cache]] — 서로 다른 시계 계열을 직접 비교하면 캐시가 상시 무효화된다 #cache #clock #bug #opal-console #lesson-learned
+- [[multilayer-verification-no-single-layer-catches-all]] — 검증 다층화 실증 — 어느 한 층도 전건을 잡지 못함 #verification #quality-gate #pipeline
 - [[na-status-contract-agentic-init-only]] — state-tool na 상태의 실제 계약 — 부여 시점은 초기화 하나뿐 #state-tool #pipeline #na-status #task-090
 - [[native-todo-panel-llm-only-hook-boundary]] — 네이티브 todo 패널 LLM 전용 기록 한계 (hook은 트리거·페이로드까지) #opal-pipeline #todo-mirror #hook #platform-constraint #honest-limit
 - [[new-ssot-pointer-not-value-copy]] — 신규 SSOT 신설 시 타 SSOT 수치 복제 금지 — 포인터만 #ssot #dedup #architecture #opds
 - [[nojs-flex-rail-over-inline-svg-overlay]] — 자기완결 HTML의 연결선은 레이아웃으로 만든다 — 좌표 측정 오버레이 기각 #html #visual-artifact #design-decision #no-js #responsive
 - [[non-gated-write-path-audit-before-ssot-conversion]] — 비게이트 쓰기 경로는 SSOT 전환 전에 먼저 감사해야 한다 #ssot #tool-gated #migration #architecture #memory
+- [[non-tty-install-bypass-pattern]] — 비-tty 설치 스크립트 강제 분기 우회 패턴 #install-script #non-tty #bash-source #technique
+- [[norm-proliferation-spiral-without-enforcement]] — 규범 증식 나선 — 집행 수단 부재의 산문 규범 #enforcement #agent-md #norm-design #anti-pattern
 - [[norm-relaxation-must-replace-not-add]] — 규범 완화는 추가가 아니라 교체다 #norm-editing #governance #conflict-resolution #principles
 - [[observability-3layer-protocol-renderer-trigger-separation]] — 관측 3층 구조 완성 — 데이터 규약·렌더러·발동층 역할 분리 #oppl #observability-boundary #architecture
 - [[op-brain-ingest]] — op-brain-ingest — CLOSE 경량 ingest 워커 #knowledge #close #ingest #skill
@@ -232,6 +236,7 @@
 - [[pre-edit-baseline-single-capture-invariant]] — 전후 동등 검증의 기준선은 편집 전 단 한 번만 유효하다 #verification #migration #baseline #gate-design #task-091
 - [[prewrite-self-confirming-triple-defense]] — 선작성 구간 self-confirming 퇴행 방어 3종 — 작성자 분리만으로는 불충분 #scenario-gate #testing #self-confirming #prewrite #task-095
 - [[prewrite-track-quality-not-efficiency-measurement]] — 선작성 트랙의 목적은 효율이 아니라 관점 편향 차단 — 실측이 초기 가설을 뒤집음 #scenario-gate #testing #prewrite #measurement #lesson-learned #task-095 #task-096
+- [[prohibit-by-property-not-name]] — 이름이 아니라 성질로 금지한다 #header-standard #code-scan #design-principle
 - [[project-id-query-param-pattern]] — 절대경로 프로젝트 식별자를 query param으로 전달 #api #routing #url-design
 - [[pure-function-enables-nondestructive-verification]] — 판정부·실행부 분리가 파괴적 검증을 비파괴 검증으로 바꾼다 #verification #architecture #lesson #pure-function
 - [[pytest-subtests-parent-passed-masks-failure]] — pytest-subtests는 subtest 실패를 부모 PASSED로 표시한다 — 판정 단위를 서브케이스로 내린다 #testing #pytest #verification #lesson #task-096
@@ -241,10 +246,14 @@
 - [[red-test-commit-coercion-guard-lesson]] — RED 테스트가 실저장소 git archive 검증 시 커밋을 구조적으로 강요하는 결함 #red-first #test #git #lesson #guard
 - [[red-test-determinism-abort-trap]] — RED 테스트 결정론성 함정 — neverResolve fetch 대역의 abort 무반응 #testing #red-first #determinism #abort #fetch-mock
 - [[regression-only-coverage-gate]] — 회귀만 차단하는 커버리지 게이트 — 레거시 소급 부여는 게이트의 몫이 아니다 #code-scan #gate #close
+- [[regression-pin-of-task-time-fact]] — 태스크 시점 사실의 영구 회귀 단언 고정 — 3연속 재현 #regression #test-design #header-standard
+- [[regulation-tool-four-way-mismatch]] — 규정-도구 4방향 불일치 — 같은 태스크 안에서도 발생한다 #header-standard #code-scan #convention
 - [[release-asset-presence-single-signal]] — 릴리즈 자산 존재 판정 — 체크섬 목록 수신 성공을 단일 신호로 쓴다 #deploy #release #install #checksum #decision
+- [[removal-task-boundary-unification]] — 제거형 태스크의 판정 경계 통일 기법 — 배포 strip 식 재사용 #verification #removal #install-script #technique
 - [[replacement-ac-must-target-artifact-not-source]] — 교체형 AC는 산출물을 판정해야 한다 — 소스 grep은 자기모순을 만든다 #test-scenario #acceptance-criteria #gate-design #lesson #migration
 - [[replacement-edit-new-path-before-old-path-removal]] — 교체형 개정은 신형 완결 후 구형을 제거한다 — 도달 경로 0개 구간 차단 #ssot #migration #governance #phase-ordering #lesson
 - [[replacement-goal-verification-scope-gap]] — 교체형 목표의 검증 범위 함정 — 주장의 범위와 검증의 범위를 맞춰야 한다 #lesson #verification #gate-design #scenario-gate #task-090 #task-091
+- [[report-norm-topology-10-types]] — 보고 규범 지형 — 10유형과 소유 문서 매핑 #reporting #agent-md #norm-ownership #minimal-guide #task-108
 - [[rotating-log-correction-over-deletion]] — 회전 로그는 삭제 대신 정정 — FIFO 히스토리 무손실 가드 설계 #memory #fifo #data-integrity #design-pattern
 - [[round-trip-pre-state-assertion-false-green-guard]] — 왕복 검증 사전 상태 단언 — false green 차단 장치 #testing #pattern #task-083
 - [[scenario-gate-pilot-fit-criteria]] — 목표-커버 게이트 pilot 접합 판정 기준 #scenario-gate #pilot-fit #tool-gated #self-confirming #task-075
@@ -294,6 +303,7 @@
 - [[state-tool-task-step-key-address]] — state-tool task-step 키 주소 체계 #state-tool #pipeline #key-address #task-070
 - [[strip-deploy-runtime-token-neutral]] — strip_deploy_md 런타임 토큰 영향 0 — 변경이력 trim 측정 정정 교훈 #deploy-pipeline #token #install #measurement #lesson
 - [[subsection-number-insertion-preserves-citations]] — 하위 절 번호 삽입으로 외부 인용 보존 — 의미 위치와 주소 안정성 동시 확보 #documentation #reference-integrity #harness #task-095
+- [[tag-removal-is-not-history-removal]] — 태그 제거는 이력 제거가 아니다 — 문장이 무엇을 말하는가 #header-standard #test-design
 - [[template-precedence-over-prose-norms]] — 템플릿 우위 법칙 — 규범은 산문보다 템플릿이 이긴다 #template-precedence #prose-norms #framework-norm #governance #harness-design
 - [[test-path-layer-gap-masks-deployment-defect]] — 테스트 소스 경로와 배포본 경로의 계층 차이가 실사용 불가를 덮는다 #testing #deployment #layered-verification #task-105
 - [[test-real-data-validation-lesson]] — TEST 실데이터 검증이 build-only 가 놓친 결함을 발견한다 #testing #lesson #test-strategy #real-data
@@ -320,6 +330,7 @@
 - [[worker-bypassed-blocked-tool-filename-trigger]] — 워커가 차단된 도구를 우회한 사례 — 원인은 파일명 트리거 + 규율 부재 #worker-discipline #tool-bypass #pm-prompt #dispatch
 - [[worker-role-boundary-exposes-pm-measurement-error]] — 워커 역할경계 준수가 PM 측정식 결함을 드러낸다 #lesson #worker #governance #opds
 - [[worktree-slot-existence-to-occupancy-judgment]] — 워크트리 슬롯 판정 — 존재에서 점유로 #worktree #git #lesson #non-trivial-resolution
+- [[worktree-tasks-fixture-structural-limit]] — 워크트리 tasks 픽스처 구조적 한계 — 절대 수치 대신 기준선 대비 증분 #worktree #test-design #harness
 - [[worktree-workspace-isolation-axis]] — 워크트리 격리 축 — 문서는 허브 고정, 코드만 분기 #architecture #workspace #worktree #git #isolation
 - [[wtm-agent-cmux-integration]] — wtm-agent OPAL 표준화 + cmux-tool 신설 #tool #agent #wtm #cmux #task
 - [[zero-margin-constraint-forces-wrong-choice]] — 여유 0인 정량 제약은 실행자를 잘못된 선택으로 민다 #quantitative-constraint #pm-instruction #execution-risk
