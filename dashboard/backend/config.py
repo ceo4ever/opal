@@ -3,17 +3,10 @@
   "module": "config",
   "layer": "config",
   "domain": "console",
-  "description": "~/.opal/console.config.json 로드 및 기본값 추론. scan_roots/scan_depth/exclude/prewarm_projects 관리. prewarm_projects는 기동 선프라임 대상 프로젝트 절대경로 목록(T060 F-1) — _coerce_str_list()로 비-list 값을 안전하게 []로 폴백한다. [T061 F-1] save_config — 원자적 쓰기(_atomic_write_json: temp write + os.replace) + _WRITE_LOCK(threading.Lock)으로 read-modify-write 사이클 직렬화. 쓰기 대상은 routers/config.py의 POST /api/config/prewarm이 검증한 prewarm_projects 갱신뿐이다(T061 범위 축소로 save_project_local 제거). [T103 R-21] load_quiet_hours — 진행 통계 야간 제외 구간(집계 기준 17)을 OPAL setting 2층 머지로 로드한다. 전역 ~/.opal/setting.json의 quietHours 위에 {프로젝트}/.opal/setting.local.json의 quietHours를 하위 키 단위로 덮어쓰며(로컬 우선), 어느 층에도 없으면 DEFAULT_QUIET_HOURS(enabled true·00:00~09:00)다. enabled != true거나 start == end면 None(보정 끔). 반환값 (시작 분, 끝 분)은 라우터가 stats.py에 인자로 주입한다 — stats.py는 설정을 읽지 않는다. quiet_hours_token은 캐시 키 서명으로, 설정 변경 시 보정 전후 값이 같은 캐시 키를 공유하지 않게 한다. load_owner_name — 화면에 쓸 사용자 호칭의 단일 로더다. 원천은 ~/.opal/identity.md frontmatter의 owner_name(전역 1개, 프로젝트별 분기 없음)이며 파일 부재·frontmatter 부재·키 부재·값 공란·읽기 실패 전건을 DEFAULT_OWNER_NAME(\"사용자\")로 폴백하고 예외를 밖으로 던지지 않는다. 표준 라이브러리 정규식만 쓰며 state-tool을 import하지 않는다(콘솔이 도구에 의존하지 않는다). 호칭은 라우터 층에서 붙으며 stats.py는 이 값을 모른다.",
+  "description": "~/.opal/console.config.json 로드 및 기본값 추론. scan_roots/scan_depth/exclude/prewarm_projects 관리. prewarm_projects는 기동 선프라임 대상 프로젝트 절대경로 목록 — _coerce_str_list()로 비-list 값을 안전하게 []로 폴백한다. save_config — 원자적 쓰기(_atomic_write_json: temp write + os.replace) + _WRITE_LOCK(threading.Lock)으로 read-modify-write 사이클 직렬화. 쓰기 대상은 routers/config.py의 POST /api/config/prewarm이 검증한 prewarm_projects 갱신뿐이다. load_quiet_hours — 진행 통계 야간 제외 구간(집계 기준 17)을 OPAL setting 2층 머지로 로드한다. 전역 ~/.opal/setting.json의 quietHours 위에 {프로젝트}/.opal/setting.local.json의 quietHours를 하위 키 단위로 덮어쓰며(로컬 우선), 어느 층에도 없으면 DEFAULT_QUIET_HOURS(enabled true·00:00~09:00)다. enabled != true거나 start == end면 None(보정 끔). 반환값 (시작 분, 끝 분)은 라우터가 stats.py에 인자로 주입한다 — stats.py는 설정을 읽지 않는다. quiet_hours_token은 캐시 키 서명으로, 설정 변경 시 보정 전후 값이 같은 캐시 키를 공유하지 않게 한다. load_owner_name — 화면에 쓸 사용자 호칭의 단일 로더다. 원천은 ~/.opal/identity.md frontmatter의 owner_name(전역 1개, 프로젝트별 분기 없음)이며 파일 부재·frontmatter 부재·키 부재·값 공란·읽기 실패 전건을 DEFAULT_OWNER_NAME(\"사용자\")로 폴백하고 예외를 밖으로 던지지 않는다. 표준 라이브러리 정규식만 쓰며 state-tool을 import하지 않는다(콘솔이 도구에 의존하지 않는다). 호칭은 라우터 층에서 붙으며 stats.py는 이 값을 모른다.",
   "exports": ["load_config", "ConsoleConfig", "save_config", "load_quiet_hours", "quiet_hours_token", "load_owner_name"],
   "depends": [],
-  "task": "061",
-  "changelog": [
-    "2026-08-26 호칭 하드코딩 제거: load_owner_name 신설 — ~/.opal/identity.md frontmatter owner_name을 읽고 부재·공란·파손 시 \"사용자\"로 폴백. 라우터가 owner==user 라벨과 응답 owner_term에 쓴다",
-    "2026-08-26 T103 R-21: load_quiet_hours + quiet_hours_token 신설 — OPAL setting 2층(전역/프로젝트) 머지로 야간 제외 구간 로드. 기존 console.config.json 경로 무변경",
-    "2026-07-14 T060 Step1: prewarm_projects 필드 + _coerce_str_list 타입 가드 추가 (F-1, H-4)",
-    "2026-07-14 T061 Step2: _WRITE_LOCK + _atomic_write_json + save_config + save_project_local 추가 — 원자 쓰기·머지 보존 (F-001, H-2/H-3)",
-    "2026-07-14 T061 범위 축소: save_project_local 제거(프로젝트 로컬 설정 편집 미반영, 수동 JSON 편집 대체)"
-  ]
+  "task": "061"
 }
 """
 from __future__ import annotations

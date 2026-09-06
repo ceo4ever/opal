@@ -215,7 +215,8 @@ OPAL 본체(스킬·에이전트·도구·하네스)를 작성할 때 따라야 
 - 코드 파일을 생성·수정할 때 파일 상단에 @header 블록을 작성한다 (해당 확장자에 한해).
 - **기록 위치는 `code-scan target <file>` 판정을 따른다** — 인라인 주석 또는 외부 소스 코드 지도(`.opal/code-map/`) 2소스 중 하나이며, 사람·워커가 임의 선택하지 않는다(전역 `headerSource`가 `manifest`이면 code-map 강제).
 - **기록 소스는 `.opal/code-scan.json`의 전역 `headerSource` 단일 키가 결정한다** — `inline` \| `manifest` 2택이며 스코프별 오버라이드는 없다. 미설정·무효값이면 code-scan 전 명령이 exit 1로 차단된다 (Task 080).
-- 변경이력은 별도 표(스킬·에이전트·참조 문서) 또는 헤더 내 변경이력 라인으로 갱신한다.
+- 변경이력은 스킬·에이전트·참조 문서의 "## 변경이력" 표로 갱신한다.
+- **코드 `@header`에는 이력을 기재하지 않는다** — `@header`는 현재 시점의 사실만 담고, 이력은 git 로그와 `tasks/{NNN}-*/DONE.md`가 갖는다. 원칙 원문은 `opal/core/references/header-standard.md` §2.1이 소유한다. `code-scan validate`의 `header_history` 비차단 경고가 이를 관측한다 (Task 107).
 - 근거: `opal/core/references/harness/header-rules.md`, `opal/core/references/header-standard.md` §7(2소스 표현)
 
 ### Citation Rules (인용)
@@ -284,3 +285,4 @@ OPAL 본체(스킬·에이전트·도구·하네스)를 작성할 때 따라야 
 | v1.7.0 | 2026-08-21 15:30 | 커밋 실행 시점 규칙의 원문 복제 2건을 하네스 포인터로 축약 — §커밋 규칙 §규칙 첫 항목과 §구현 규칙 §Guards 커밋 항목을 제거하고, 규칙 소유권이 `opal/core/references/opal-harness.md` §1 Guards에 있음을 명시. 본 문서는 커밋 **메시지 형식·단위**만 규정한다. 에이전트 행동 Guard를 코드 컨벤션 문서에 복제하면 프로젝트마다 존재 여부가 갈리는 우발 경로가 되므로, 워커 도달은 `pm/dispatch-process.md` §워커 컨텍스트 주입 템플릿의 전 워커 공통 고정 항목이 담당한다 (097) |
 | v1.8.0 | 2026-08-21 22:18 | §Citation Rules에 근거 등급·관할 SSOT 포인터 1줄 추가 — 등급 5단계(E1~E5)와 AS-IS/TO-BE 관할 2축의 원문 소유권이 `opal/core/references/harness/citation-rules.md` §9임을 명시. 본 문서는 포인터만 두어 등급표 복제를 차단한다 (098) |
 | v1.6.0 | 2026-09-04 22:44 | §약어 (Alias) 사본 정합 회복 — 「프레임워크 운영」 표에 신설 `opcmb`(opal-code-map-builder) 1건 등재 + **실측 결손 2건 보정**(`opgr`/opal-grill · `opeli5`/opal-eli5 — 레지스트리에는 있으나 사본 표에 누락되어 있었다). 도입문 총계를 27종 → **30종**으로 정정하여 레지스트리(v3.14.0, alias 30종) 실측값과 1:1 일치시켰다. 본 표가 스스로 "레지스트리의 사본"임을 선언하므로 사본 정합 회복은 규정 집행이다 (106) |
+| v1.9.0 | 2026-09-06 13:35 | §@header 규칙 — 코드 `@header`에 이력을 남기도록 허용하던 구형 어구를 제거하고 이력 비기재 원칙으로 교체(원문 소유권은 `opal/core/references/header-standard.md` §2.1, 관측은 `code-scan validate` `header_history` 비차단 경고). 직전 행이 v1.8.0 뒤에 v1.6.0으로 기재된 것은 106의 버전 표기 오류이며 본 행은 실제 최신인 v1.8.0을 기준으로 채번했다 (107) |

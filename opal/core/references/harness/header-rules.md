@@ -120,6 +120,9 @@ code-scan.js 기본 지원 확장자와 동일하다:
 | 새 의존 모듈 추가 | `depends` |
 | 레이어/도메인 이동 | `layer`, `domain` |
 
+> **[MUST] 갱신은 교체지 누적이 아니다** — 위 표의 「갱신」은 해당 필드 값을 **제자리에서 바꾸는 것**이다. 이전 값 뒤에 태스크 번호를 붙여 새 단락을 append하지 않는다. 이력은 git과 `tasks/{NNN}-*/DONE.md`가 갖는다 — 원칙 원문은 `~/.opal/references/header-standard.md` §2.1이 소유하며 본 문서는 포인터만 둔다.
+> `code-scan validate`가 `description`·`note`에서 서로 다른 태스크 번호 2개 이상을 감지하면 `header_history` **비차단 경고**를 낸다(exit code 불변). 경고를 받으면 이력 단락을 제거하고 역할 한 줄로 되돌린다.
+
 기존 파일에 @header가 없으면, 파일 생성 규칙과 동일하게 신규 작성한다.
 
 ### 주석 문법
@@ -182,3 +185,4 @@ code-scan 결과가 충분하지 않을 때 아래 3분기 기준으로 대응�
 | v1.7 | 2026-08-04 17:18 | §워커 권한 경계 — 엔트리 이동(분할) 관할 1줄 추가: `code-scan split --groups`가 `files` 엔트리를 베이스↔샤드 간 이동시키며 관리 필드(`dir`·`scope`·`version`·`shards`)는 도구 소유, 워커는 그룹 문서의 의미 경계만 확정하고 매니페스트를 손으로 옮기지 않음 (083) |
 | v1.8 | 2026-08-16 13:22 | STATE 기록 규약·TASK §제약 인용문에서 "현황판 표 행"/"현황판 행" 어구 → "파이프라인 행"으로 정정 — STATE.md 저널 전환에 맞춘 표 전제 어구 제거 (094) |
 | v1.9 | 2026-09-04 22:38 | §갱신 시점 (3단) → **(4단)** — (d) L2 경량 트랙 완료 시점 행 신설(`git diff --name-only HEAD` + `code-scan validate --changed` 재사용, 신규 도구 0건) + 폴백(미발동) 조건 3종(자산 게이트 → 적용 범위 → `pre_existing` 비차단, 판정보다 선행 평가하는 순서 계약) + 미수행 탐지 조건((b) CLOSE 게이트 exit≠0 누적 탐지, 모드별 차단 사유 2종 `inline`=`counts.newly_uncovered` ≥1 / `manifest` 관리 하위=`violations[].sub == "no_entry"`) 신설. (a)(b)(c) 3행 원문 무변경 (106) |
+| v1.10 | 2026-09-06 13:34 | §파일 수정 시 — 갱신은 교체지 누적이 아님 [MUST] 블록 + header_history 비차단 경고 안내 추가, 원칙 원문은 header-standard.md §2.1 포인터 (107) |

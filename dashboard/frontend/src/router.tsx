@@ -3,11 +3,10 @@
  *   "module": "router",
  *   "layer": "config",
  *   "domain": "core",
- *   "description": "React Router 설정 — 7개 라우트(/ /projects /tasks /memory /doctor /brain /settings)를 AppShell로 래핑. 절대경로 식별자는 searchParams 방식(?project= ?task_id=) — path segment 라우트 제거(슬래시 포함 절대경로 매칭 실패 근본 수정). [T061] /settings 추가 — 프로젝트별 환경 설정 화면(프라임 풀 토글·console.config·프로젝트 로컬 설정), 대상 프로젝트는 contextProject(ui-store) 스위처 연동.",
+ *   "description": "React Router 설정 — 7개 라우트(/ /projects /tasks /memory /doctor /brain /settings)를 AppShell로 래핑. 절대경로 식별자는 searchParams 방식(?project= ?task_id=)으로 관리한다. /settings는 프로젝트별 환경 설정 화면(프라임 풀 토글·console.config·프로젝트 로컬 설정)이며, 대상 프로젝트는 contextProject(ui-store) 스위처와 연동된다.",
  *   "exports": ["router"],
  *   "depends": ["app-shell", "dashboard-page", "projects-page", "tasks-page", "memory-page", "doctor-page", "brain-page", "settings-page"],
- *   "task": "061",
- *   "changelog": ["2026-07-14 T061 Step10: /settings 라우트 추가 (F-005)"]
+ *   "task": "061"
  * }
  */
 

@@ -3,17 +3,13 @@
   "module": "routers.config",
   "layer": "router",
   "domain": "console",
-  "description": "설정 쓰기 라우터(T061 신설, T061 추가작업 범위 축소) — 콘솔 '읽기 전용' 원칙의 유일한 예외. 이번 범위는 프라임 풀 스위칭 한정: 쓰기 대상은 ~/.opal/console.config.json의 prewarm_projects 필드뿐이다. _require_project_path(brain.py 선례 재사용)로 project 빈값/비스캔 400. GET /api/config(스냅샷) + POST /api/config/prewarm(토글, 신규 등재 시에만 prewarm() 1회 호출). [MUST] LLM/claude 서브프로세스 호출은 이 라우터에서 0회 — 파일 쓰기 + prewarm() 호출만 수행한다(brain.py 라우터 격리 원칙 준수). 거부된 쓰기 요청은 logger.warning으로 기록한다. console.config 전반 편집·프로젝트 로컬 설정 편집은 이번 범위에서 제외(수동 JSON 편집 대체) — 캡틴 지시로 미사용 쓰기 API(POST /api/config/console, GET|POST /api/config/project-local) 제거(T061 범위 축소).",
+  "description": "설정 쓰기 라우터 — 콘솔 '읽기 전용' 원칙의 유일한 예외. 이번 범위는 프라임 풀 스위칭 한정: 쓰기 대상은 ~/.opal/console.config.json의 prewarm_projects 필드뿐이다. _require_project_path(brain.py 선례 재사용)로 project 빈값/비스캔 400. GET /api/config(스냅샷) + POST /api/config/prewarm(토글, 신규 등재 시에만 prewarm() 1회 호출). [MUST] LLM/claude 서브프로세스 호출은 이 라우터에서 0회 — 파일 쓰기 + prewarm() 호출만 수행한다(brain.py 라우터 격리 원칙 준수). 거부된 쓰기 요청은 logger.warning으로 기록한다. console.config 전반 편집·프로젝트 로컬 설정 편집은 지원하지 않는다(수동 JSON 편집 대체).",
   "exports": [
     "GET /api/config",
     "POST /api/config/prewarm"
   ],
   "depends": ["config", "scanner", "models", "adapters.brain_session"],
-  "task": "061",
-  "changelog": [
-    "2026-07-14 T061 Step3~7: 설정 쓰기 라우터 신설 — 경로검증/화이트리스트 헬퍼 + GET/config·POST/console·POST/prewarm·GET|POST/project-local (F-001~F-004)",
-    "2026-07-14 T061 범위 축소: 캡틴 지시로 프라임 풀 스위칭만 반영 — POST /api/config/console, GET|POST /api/config/project-local, _resolve_setting_local_path 제거(미사용 쓰기 표면 최소화)"
-  ]
+  "task": "061"
 }
 """
 from __future__ import annotations

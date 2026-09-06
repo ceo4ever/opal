@@ -6,7 +6,7 @@
  *   "domain": "code-scan",
  *   "description": "OPAL @header 메타블록 스캐너 CLI — 조회 8커맨드(scan/domain/layer/search/exports/summary/depends/missing)와 작성·검증층 7서브명령(discover/scaffold/target/validate/feature/split/init)을 전역 headerSource(inline|manifest) 2택 아래 단일 진입점에서 집행한다",
  *   "exports": ["mirrorPathForDir", "decideTarget", "loadCodeMap", "loadConfig", "findProjectRoot", "resolveScope", "matchLayerRule", "matchDomain", "resolveHeader", "extractHeader"],
- *   "note": "code-scan.js 자신은 프로젝트 .opal/code-map/index.json 부재로 인라인 전용 모드로 스캔됨 (태스크 077). 모드 판정 지점은 resolveHeaderSource 1곳으로 봉인되며, 허용 3구간(resolveHeaderSource/loadConfig/parseArgs) 밖에서는 확정값을 ctx.headerSource 읽기·buildCtx 파라미터 전달 형태로만 다룬다 — 중간 전달 변수명은 mode다 (태스크 080 TS-070). 스코프 단위 모드 선언 키는 존재하지 않는다 — 두 레지스트리 모두 해당 키를 무시하고 deprecationOnce로 키별 실행당 1회만 stderr 안내한다 (태스크 080 F-002). index.json에서 폐기된 스코프 단위 쓰기금지 플래그도 같은 방식으로 무시 + 안내되며 다른 모드로 흡수하지 않는다 — 기록 소스는 오직 전역 headerSource가 결정하므로 스코프 단위 예외 판정 분기는 존재하지 않는다 (태스크 080 F-004). 두 소스는 모드에 의해 상호 배타이므로 '인라인 단독 승리' 같은 병합 규칙이 존재하지 않으며, decideTarget의 reason 도메인은 header_source_inline / header_source_manifest / out_of_scope 3값으로 닫힌다 — 파일 존재 여부·인라인 보유 여부는 판정에 관여하지 않는다 (태스크 080 F-003). 매니페스트 샤딩(태스크 082): 샤드 로딩·byKey 구성·중복 판정은 resolveShards 밖에 복제하지 않는다. CODE_MAP_VERSION은 1로 고정 유지되며(샤드 미선언 매니페스트 포맷 불변, 상향 시 기존 전 자산이 unsupported_version으로 차단됨), 샤드 라벨은 kebab 정규식으로 집행되어 경로 이탈을 차단한다(shard_declaration_invalid). 예약 폴더명과 겹치는 소스 디렉토리는 scaffold가 reserved_name_collision으로 거부한다. 크기 상한 초과는 validate/scaffold 모두 전면 비차단(열거·경고 1단)이다. 샤드 정책 확장(태스크 083): 정책 판정은 resolveShardPolicy 밖에 복제하지 않으며 DEFAULT_SHARD_POLICY·loadGlobalSetting도 그 함수 본문 밖에서 참조하지 않는다. 구 위치 index.json manifestMaxBytes는 폐기되어 값을 읽지 않고 deprecationOnce 안내만 한다(자동 변환 없음). 표준단어사전은 옵셔널이며 부재·파싱 실패·매칭 0건 3분기가 전부 비차단이다 — 부재는 침묵, 파손은 noticeOnce 1줄이고, loadWordDictionary 호출은 split --plan 경로 1곳뿐이라 조회 8커맨드의 출력 바이트가 흔들리지 않는다. split은 자산을 쓰는 유일한 명령이므로 실패 지점별로 쓰기 상태가 다른 에러 코드 7종(split_usage_invalid/split_inline_mode/split_target_invalid/split_groups_invalid/split_write_failed/split_rollback/split_verify_failed)을 갖고, 사후 재검증은 resolveShards를 비운 캐시로 다시 호출해 해석 로직을 복제하지 않는다. 의미 경계(그룹 라벨·파일 배분) 확정은 사람/워커의 몫이며 도구는 미분류를 임의 배분하거나 '기타' 그룹을 만들지 않는다"
+ *   "note": "code-scan.js 자신은 프로젝트 .opal/code-map/index.json 부재로 인라인 전용 모드로 스캔됨. 모드 판정 지점은 resolveHeaderSource 1곳으로 봉인되며, 허용 3구간(resolveHeaderSource/loadConfig/parseArgs) 밖에서는 확정값을 ctx.headerSource 읽기·buildCtx 파라미터 전달 형태로만 다룬다 — 중간 전달 변수명은 mode다. 스코프 단위 모드 선언 키는 존재하지 않는다 — 두 레지스트리 모두 해당 키를 무시하고 deprecationOnce로 키별 실행당 1회만 stderr 안내한다. index.json에서 폐기된 스코프 단위 쓰기금지 플래그도 같은 방식으로 무시 + 안내되며 다른 모드로 흡수하지 않는다 — 기록 소스는 오직 전역 headerSource가 결정하므로 스코프 단위 예외 판정 분기는 존재하지 않는다. 두 소스는 모드에 의해 상호 배타이므로 '인라인 단독 승리' 같은 병합 규칙이 존재하지 않으며, decideTarget의 reason 도메인은 header_source_inline / header_source_manifest / out_of_scope 3값으로 닫힌다 — 파일 존재 여부·인라인 보유 여부는 판정에 관여하지 않는다. 매니페스트 샤딩: 샤드 로딩·byKey 구성·중복 판정은 resolveShards 밖에 복제하지 않는다. CODE_MAP_VERSION은 1로 고정 유지되며(샤드 미선언 매니페스트 포맷 불변, 상향 시 기존 전 자산이 unsupported_version으로 차단됨), 샤드 라벨은 kebab 정규식으로 집행되어 경로 이탈을 차단한다(shard_declaration_invalid). 예약 폴더명과 겹치는 소스 디렉토리는 scaffold가 reserved_name_collision으로 거부한다. 크기 상한 초과는 validate/scaffold 모두 전면 비차단(열거·경고 1단)이다. 샤드 정책 확장: 정책 판정은 resolveShardPolicy 밖에 복제하지 않으며 DEFAULT_SHARD_POLICY·loadGlobalSetting도 그 함수 본문 밖에서 참조하지 않는다. index.json의 manifestMaxBytes는 읽지 않고 deprecationOnce 안내만 한다(자동 변환 없음). 표준단어사전은 옵셔널이며 부재·파싱 실패·매칭 0건 3분기가 전부 비차단이다 — 부재는 침묵, 파손은 noticeOnce 1줄이고, loadWordDictionary 호출은 split --plan 경로 1곳뿐이라 조회 8커맨드의 출력 바이트가 흔들리지 않는다. split은 자산을 쓰는 유일한 명령이므로 실패 지점별로 쓰기 상태가 다른 에러 코드 7종(split_usage_invalid/split_inline_mode/split_target_invalid/split_groups_invalid/split_write_failed/split_rollback/split_verify_failed)을 갖고, 사후 재검증은 resolveShards를 비운 캐시로 다시 호출해 해석 로직을 복제하지 않는다. 의미 경계(그룹 라벨·파일 배분) 확정은 사람/워커의 몫이며 도구는 미분류를 임의 배분하거나 '기타' 그룹을 만들지 않는다"
  * }
  */
 // code-scan — OPAL @header metadata scanner
@@ -43,6 +43,56 @@ const VERSION = '1.6.0';
 // 값 근거(레포 @header 보유 115건 전수 실측): 바이트 p50 683 / p90 3666 / 최대 17810,
 // 8192 초과 3건 · 16384 초과 1건 · 24576 초과 0건. 24576은 전건을 담는 최소 여유값이다.
 const HEADER_READ_BYTES = 24576;
+
+// description/note에 실린 서로 다른 태스크 번호가 몇 개 이상이면 "이력 누적"으로 보는지의 임계값.
+// 1 = 단발 출처 인용(허용), 2 = 서로 다른 시점의 변경이 한 필드에 쌓이기 시작한 지점.
+// 값 근거(3스코프 109파일 전수 실측, 태스크 107): 임계값 2에서 진성 23/23 탐지·F-code/TS-id
+// 오탐 0건, 3이면 진성 6건 탈락.
+const TASK_TAG_THRESHOLD = 2;
+
+// header-standard.md §2 표에 정의된 @header 선언 필드 8종. 이 집합 밖의 키가 @header에 나타나면
+// (이름을 불문하고) 미정의 필드 위반이다 — "changelog·history·revisions" 처럼 이름을 나열해 막으면
+// 다음에 다른 이름으로 다시 뚫리므로, "선언되지 않았다"는 성질 하나로 판정한다(GC-C001, 태스크 107 fix).
+const DECLARED_HEADER_FIELDS = new Set([
+  'module', 'layer', 'domain', 'description', 'exports', 'depends', 'note', 'feature',
+]);
+
+// 위 집합의 예외: header-standard.md §2가 명시적으로 금지 대상에서 제외한 필드다. `task`·`scenarios`는
+// 이력 필드가 아니라 다른 도구(테스트 자산 — test-regression.js TS-057)가 참조하는 필드이므로
+// DECLARED_HEADER_FIELDS에 넣지 않고 별도 예외로 둔다(§2 "다만 task·scenarios처럼... 이 금지의
+// 대상이 아니다").
+const HEADER_FIELD_EXCEPTIONS = new Set(['task', 'scenarios']);
+
+// 위 두 집합과는 근거 층위가 다른 예외: header-standard.md §7.2가 정의한 매니페스트 전용·도구
+// 관할 필드다("files[].draft | 선택 | boolean | description 공란이면 true | 도구 | 골격 미기입
+// 마커", header-standard.md §7.2). §2 8필드가 인라인 @header 층위의 계약인 반면, draft는 매니페스트
+// 파일 엔트리 스키마 층위의 계약이며 resolveHeader()가 manifest 모드에서만 `fe.draft`를 `resolved`에
+// 주입한다(`if (hasOwn(fe, 'draft')) result.draft = fe.draft;`). task/scenarios처럼 "§2가 금지 대상
+//에서 제외한 필드"가 아니라 애초에 §2가 다루는 층위 밖의 필드이므로 별도 상수로 분리한다
+// (GC-C004, 태스크 107 fix). manifest 모드에서만 발생 가능한 필드이므로 mode 조건 없이 제외해도
+// inline 모드에 영향이 없지만, §7.2/§2 층위 분리를 판정부에서도 드러내기 위해 호출부에서
+// mode === 'manifest'일 때만 참조한다.
+const MANIFEST_ONLY_HEADER_FIELDS = new Set(['draft']);
+
+// countTaskTags의 토큰화(TOK)에서 마커 없는 bare 3자리 숫자를 걸러내기 위한 HTTP 상태코드 집합.
+const HTTP_STATUS_CODES = new Set([
+  200, 201, 202, 204, 301, 302, 304, 400, 401, 403, 404, 405, 409, 410, 422, 429, 500, 501, 502, 503, 504
+]);
+
+// countTaskTags의 마스킹(M1~M4) — 태스크 번호가 아닌 3자리 숫자를 토큰화 전에 '#'로 치환한다.
+// 순서 고정: M1이 M2보다 먼저여야 `code-scan.js:455`류 경로:줄번호 인용의 `455`가
+// M2(소수)에 앞서 통째로 제거된다.
+const HISTORY_MASK_PATTERNS = [
+  // M1: 경로:줄번호 인용 (예: code-scan.js:455, todo_mirror_hook.py:124-130)
+  /[\w./-]+\.(?:py|js|jsx|ts|tsx|md|json|sh|ya?ml|txt|css)\s*:\s*\d+(?:\s*[-–~]\s*\d+)?/g,
+  // M2: 소수·버전·절번호 (예: v1.6.0, §3.4.2, 127.0.0.1)
+  /\d+(?:\.\d+)+/g,
+  // M3: 수량 표기 (예: 340 passed, 347 passed). 단위 뒤에 한글이 더 이어지면(예: "077 자산"의
+  // "자산") 단위 표기가 아니라 다른 단어의 일부이므로 제외한다.
+  /\d{3}(?=\s*(?:passed|failed|skipped|건|개|자|줄|바이트|ms)(?![가-힣]))/g,
+  // M4: 접두 하이픈 식별자 및 그 나열·범위 (예: F-001, TS-070, TS-024/025/026, TS-201~209)
+  /(?<![A-Za-z0-9])(?!TASK-)[A-Za-z]{1,4}-\d{1,4}(?:\s*[~\-/·,]\s*(?:[A-Za-z]{1,4}-)?\d{1,4})*/g
+];
 
 const DEFAULT_CONFIG = {
   scopes: {},
@@ -3152,6 +3202,35 @@ function listCodeFilesInDir(dirAbs, dirRel, config, excludeDirs, excludePatterns
   return out;
 }
 
+// description/note에 실린 태스크 번호(distinct)를 센다. module.exports에는 노출하지 않는다
+// (@header.exports 무변경 유지, R-4 AC(e) 정합).
+//   1) mask(text)      — 태스크 번호가 아닌 것을 '#'로 치환 (HISTORY_MASK_PATTERNS)
+//   2) tokenize(masked) — 태스크 번호 후보만 추출 (TOK)
+//   3) distinct         — 3자리 문자열 집합 반환
+function countTaskTags(text) {
+  let masked = text;
+  for (const re of HISTORY_MASK_PATTERNS) {
+    masked = masked.replace(re, '#');
+  }
+  const tags = new Set();
+  const TOK = /(?<![0-9])(?:(TASK|task|태스크)[ \-#:]?|(T))?(\d{3})(?![0-9])/g;
+  let m;
+  while ((m = TOK.exec(masked)) !== null) {
+    const marker = m[1] || m[2];
+    const num = m[3];
+    if (marker) {
+      tags.add(num);
+      continue;
+    }
+    // bare 3자리 — HTTP 상태코드 또는 마스킹/영숫자 경계 오검출은 제외한다.
+    if (HTTP_STATUS_CODES.has(Number(num))) continue;
+    const before = masked[m.index - 1];
+    if (before && /[A-Za-z가-힣#]/.test(before)) continue;
+    tags.add(num);
+  }
+  return tags;
+}
+
 function cmdValidate(projectRoot, config, opts, mode) {
   const ctx = buildCtx(projectRoot, config, mode);
   // 이 실행이 어느 소스를 유일한 진실로 보는가 — 커버리지 분자·uncovered 분류·draft·구조 패스가
@@ -3252,6 +3331,45 @@ function cmdValidate(projectRoot, config, opts, mode) {
         if (!text.includes(id)) {
           violations.push({ code: 'exports_not_found', file: relPath, manifest: ownerRel, key: basename, detail: idRaw });
         }
+      }
+    }
+
+    for (const [field, sub] of [['description', 'description'], ['note', 'note']]) {
+      const val = resolved && typeof resolved[field] === 'string' ? resolved[field] : '';
+      if (!val) continue;
+      const tags = countTaskTags(val);
+      if (tags.size >= TASK_TAG_THRESHOLD) {
+        violations.push({
+          code: 'header_history', sub, file: relPath, manifest: ownerRel, key: basename,
+          detail: [...tags].sort().join(','),
+          tasks: tags.size,
+        });
+      }
+    }
+
+    // 미정의 필드: header-standard.md §2 선언 8필드(DECLARED_HEADER_FIELDS) + 예외(task/scenarios)
+    // 밖의 키가 @header에 있으면, 이름을 불문하고(changelog든 history든 임의 이름이든) 그 자체로
+    // 위반이다 — countTaskTags 임계값 판정은 적용하지 않는다(필드 존재 자체가 위반이라는 다른 축이며,
+    // description/note의 distinct>=2 임계값 축과는 섞지 않는다. GC-C001, 태스크 107 fix).
+    if (resolved) {
+      for (const key of Object.keys(resolved)) {
+        if (key.startsWith('_')) continue; // _source/_sources 등 내부 메타 키
+        if (DECLARED_HEADER_FIELDS.has(key)) continue;
+        if (HEADER_FIELD_EXCEPTIONS.has(key)) continue;
+        // §7.2 매니페스트 전용 도구 관할 필드(draft 등) — manifest 모드에서만 resolved에 나타날 수
+        // 있으므로 mode 조건까지 확인해 §2/§7 층위 분리를 명시한다(GC-C004, 태스크 107 fix).
+        if (!isInlineMode && MANIFEST_ONLY_HEADER_FIELDS.has(key)) continue;
+        const val = resolved[key];
+        const empty = val === undefined || val === null
+          || (Array.isArray(val) && val.length === 0)
+          || (typeof val === 'string' && val.trim() === '');
+        if (empty) continue;
+        const count = Array.isArray(val) ? val.length : 1;
+        violations.push({
+          code: 'header_history', sub: 'undeclared_field', file: relPath, manifest: ownerRel, key: basename,
+          detail: key,
+          tasks: count,
+        });
       }
     }
   }
@@ -3441,13 +3559,15 @@ function cmdValidate(projectRoot, config, opts, mode) {
     newly_uncovered: violations.filter(v => v.code === 'uncovered' && v.sub === 'newly_uncovered').length,
     pre_existing: violations.filter(v => v.code === 'uncovered' && v.sub === 'pre_existing').length,
     manifest_oversize: violations.filter(v => v.code === 'manifest_oversize').length,
+    header_history: violations.filter(v => v.code === 'header_history').length,
   };
   const covered = inlineCount + manifestCount;
   const percent = totalCount === 0 ? 100 : Math.round((covered / totalCount) * 1000) / 10;
-  // 'uncovered:pre_existing'과 'manifest_oversize'는 비차단(U-2) — 나머지는 차단 불변.
+  // 'uncovered:pre_existing'·'manifest_oversize'·'header_history'는 비차단(U-2) — 나머지는 차단 불변.
   const blockingViolations = violations.filter(v =>
     !(v.code === 'uncovered' && v.sub === 'pre_existing') &&
-    v.code !== 'manifest_oversize');
+    v.code !== 'manifest_oversize' &&
+    v.code !== 'header_history');
   const ok = blockingViolations.length === 0;
 
   const result = {

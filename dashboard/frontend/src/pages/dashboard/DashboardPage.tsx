@@ -3,16 +3,10 @@
  *   "module": "dashboard-page",
  *   "layer": "page",
  *   "domain": "dashboard",
- *   "description": "대시보드 화면 — 4메트릭 section-cards + Recharts 활동추이(7d/30d/90d) + 단계분포 파이 + 주의알림 + 최근활동 테이블. [T103] 기존 5블록 아래에 횡단 통계 4블록 추가 — B-4 워크플로우 대조표(필터 진입점, 로컬 useState·API 재호출 0건) · B-1 요약 5타일 · B-2 단계별 PM·워커·캡틴 3색 스택(단계별 n= 표기) · B-3 태스크별 리드타임 스파크 컬럼(완료 태스크만). n<5는 「표본 부족」 배지. brain 위젯 제외(C-11). contextProject 스위처 연동으로 전체/개별 프로젝트 집계 전환. [T103/R-18] 소요 3계열(집계기준 16) — B-1에 3계열 구성 스트립, B-2 막대를 PM=var(--brand-primary)·워커=var(--brand-secondary)·캡틴=var(--brand-tertiary) 3색 스택으로 확장. 3계열 필드가 없는 응답은 seriesOf가 축퇴 16-a로 사상해 워커 0폭·PM=기존 작업 폭이 되어 시각 회귀가 없다. [MUST] 신규 색상은 CSS 변수 문자열 전달(var(--brand-*)) — hex 리터럴 금지. [MUST] FE 무계산 — 시간 표시 문자열은 BE *_label 직독(PLAN P-7). [T103/R-20] 구획 호버 툴팁 — 막대의 각 구획(PM·워커·캡틴, A-1은 진행중 포함)과 막대 전체가 Radix Tooltip 트리거(TooltipTrigger asChild)이며 tabIndex로 키보드 포커스에서도 뜬다. 구획은 SEG_STOP으로 포인터·포커스 전파를 끊어 상위 막대 툴팁이 겹쳐 열리지 않게 한다. 워커 미측정 태스크는 워커 구획이 0폭이라 호버가 잡히지 않으므로 막대 전체 툴팁이 3계열 요약과 「워커 미측정 — 그 몫은 PM에 귀속됩니다」를 대신 말한다(16-a). [MUST] 툴팁의 시간 문자열도 BE `*_label` 직독이며 분→시간 변환을 FE가 하지 않는다(P-7) — 비율(%)만 막대 폭 계산에 쓰는 값을 그대로 반올림한다. [T103/R-21] 야간 보정 배지 — BE 응답 최상위 `quiet_hours_applied`가 참일 때만 B-1 헤딩에 「야간 제외 {quiet_hours_label}」 배지를 세우고 Radix Tooltip으로 「매일 이 구간을 소요에서 제외합니다」를 덧붙인다. 거짓이면 렌더하지 않는다(보정 꺼짐 = 벽시계 그대로). [MUST] 구간 문자열은 BE 완성값 직독이며 FE가 시:분을 조립하지 않는다(P-7).",
+ *   "description": "대시보드 화면 — 4메트릭 section-cards + Recharts 활동추이(7d/30d/90d) + 단계분포 파이 + 주의알림 + 최근활동 테이블, 그 아래 횡단 통계 4블록으로 구성된다 — B-4 워크플로우 대조표(필터 진입점, 로컬 useState·API 재호출 0건) · B-1 요약 5타일 겸 소요 3계열 구성 스트립 · B-2 단계별 PM·워커·캡틴 3색 스택(단계별 n= 표기, PM=var(--brand-primary)·워커=var(--brand-secondary)·캡틴=var(--brand-tertiary)) · B-3 태스크별 리드타임 스파크 컬럼(완료 태스크만). n<5는 「표본 부족」 배지. brain 위젯은 제외한다(C-11). contextProject 스위처와 연동해 전체/개별 프로젝트 집계를 전환한다. 소요는 3계열(집계기준 16)이며, 3계열 필드가 없는 응답은 seriesOf가 축퇴 16-a로 사상해 워커 0폭·PM=기존 작업 폭이 되어 시각 회귀가 없다. [MUST] 신규 색상은 CSS 변수 문자열 전달(var(--brand-*)) — hex 리터럴 금지. [MUST] FE 무계산 — 시간 표시 문자열은 BE *_label 직독(PLAN P-7). B-2의 각 구획(PM·워커·캡틴, A-1은 진행중 포함)과 막대 전체는 Radix Tooltip 트리거(TooltipTrigger asChild)이며 tabIndex로 키보드 포커스에서도 뜬다. 구획은 SEG_STOP으로 포인터·포커스 전파를 끊어 상위 막대 툴팁이 겹쳐 열리지 않는다. 워커 미측정 태스크는 워커 구획이 0폭이라 호버가 잡히지 않으므로 막대 전체 툴팁이 3계열 요약과 「워커 미측정 — 그 몫은 PM에 귀속됩니다」를 대신 말한다(16-a). [MUST] 툴팁의 시간 문자열도 BE `*_label` 직독이며 분→시간 변환을 FE가 하지 않는다(P-7) — 비율(%)만 막대 폭 계산에 쓰는 값을 그대로 반올림한다. BE 응답 최상위 `quiet_hours_applied`가 참일 때만 B-1 헤딩에 「야간 제외 {quiet_hours_label}」 배지를 세우고 Radix Tooltip으로 「매일 이 구간을 소요에서 제외합니다」를 덧붙이며, 거짓이면 렌더하지 않는다(보정 꺼짐 = 벽시계 그대로). [MUST] 구간 문자열은 BE 완성값 직독이며 FE가 시:분을 조립하지 않는다(P-7).",
  *   "exports": ["DashboardPage"],
  *   "depends": ["api-client", "card", "badge", "table", "skeleton", "toggle-group", "tooltip", "ui-store"],
- *   "task": "103",
- *   "changelog": [
- *     "2026-08-26 T103 R-21: B-1 헤딩에 야간 보정 배지 추가 — QuietHoursBadge 신설, BlockHeading에 extra 슬롯 추가, DashboardSummary 로컬 타입에 quiet_hours_applied·quiet_hours_label 동기. 타일·막대·색·레이아웃 무변경",
- *     "2026-08-25 T103 Step11: B-1~B-4 + 워크플로우 필터 추가 + 로컬 타입 동기(WorkflowStat·StageStat·TaskLeadtime). 기존 5블록·PIE_COLORS 무변경",
- *     "2026-08-26 T103 R-20: B-2 스택 막대 구획·B-3 태스크별 리드타임 막대에 호버 툴팁 추가 — ChartTip·SeriesTip·UnmeasuredNote·pctOf·SEG_STOP·SEG_FOCUS 신설, StageStat(누적 total_*·3계열 라벨)·TaskLeadtime(3계열 승계) 로컬 타입 동기. B-3의 native title 속성은 Radix 툴팁으로 대체(중복 표시 제거). 막대 폭·색 무변경. TS-134~TS-136",
- *     "2026-08-25 T103 R-18: B-1 3계열 구성 스트립 + B-2 3색 스택(작업 구획 내부 PM·워커 2분할) + seriesOf·LegendDot 신설. B-3·B-4·기존 5블록 무변경"
- *   ]
+ *   "task": "103"
  * }
  */
 

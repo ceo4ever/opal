@@ -34,6 +34,17 @@
 
 규칙: 표준값을 우선 사용하고, 프로젝트 도메인에 따라 추가 정의 가능.
 
+> 위 표에 정의된 필드 외의 필드를 `@header`에 신설하지 않는다. 특히 **이력 전용 필드** — 변경 이력을 누적 기재하려는 목적의 필드 — 를 두지 않는다. 이름을 불문한다(예: `changelog`·`history`·`revisions`). 이력은 git과 `tasks/{NNN}-*/DONE.md`가 갖는다(§2.1). 다만 `task`·`scenarios`처럼 이력 필드가 아니라 다른 도구(예: 테스트 자산)가 참조하는 필드는 이 금지의 대상이 아니다.
+
+---
+
+### 2.1 이력 비기재 원칙
+
+> `@header`의 어느 필드에도 **변경 이력을 기재하지 않는다**. 근거는 `opal-doc-standard.md:28` — "실행 지시문은 코드처럼 제자리에서 갱신되고 **변경 이력은 git이 갖는다**. 다만 **버전 번호**는 문서 안에 남는다". `@header`는 코드 파일의 실행 지시문이므로 같은 원칙이 적용된다.
+> **이력의 소재는 2곳이다** — ① `git log --oneline --all -- <파일>`(커밋 메시지에 태스크 번호가 실린다) ② `tasks/{NNN}-*/DONE.md`(태스크별 변경 서술).
+> `@header`는 **현재 시점의 사실만** 담는다. 필드를 갱신할 때는 이전 값 옆에 덧붙이지 않고 **제자리에서 교체**한다.
+> 적용 범위: `@header` JSON 블록 전체. 특히 워커가 기입하는 `description`·`exports`·`depends`·`note`·`feature` 5필드가 그 예다. `@header` 블록 **밖**의 평문 주석 `변경이력:` 블록(예: `opal/tools/code-scan/tests/test-validate.js:39-48`)과 `.md` 문서의 `## 변경이력` 표는 이 원칙의 적용 대상이 **아니다**(별건).
+
 ---
 
 ## 3. 언어별 주석 포맷
@@ -130,7 +141,9 @@
 
 ---
 
-## 4. exports 작성 가이드 (layer별)
+## 4. 필드 작성 가이드
+
+### 4.1 exports (layer별)
 
 `exports`는 layer에 따라 담는 내용이 달라진다:
 
@@ -156,6 +169,17 @@
 | `wireframe` | 화면/컴포넌트명 | `["로그인 화면", "상품 목록", "결제 확인 팝업"]` |
 | `erd` | 엔티티/테이블명 | `["User", "Order", "Payment"]` |
 | `api-spec` | API 엔드포인트 또는 서비스명 | `["POST /payments", "PG 결제 승인 API"]` |
+
+### 4.2 description·depends·note·feature
+
+| 필드 | 담는 것 | 담지 않는 것 | 예시 |
+|------|--------|------------|------|
+| `description` | 이 파일이 **지금 무엇인가** — 역할 한 줄. 코드량이 늘어도 길이가 늘지 않는 축이다(코드량 축은 `exports`가 담당한다) | **변경 이력** — 서로 다른 태스크 번호(`[T061]`·`014:`·`TASK 077` 등 시점 표기)가 **2개 이상** 쌓이는 형태, 시점별 변경 단락의 append, 함수 목록(=`exports` 관할). 자산의 출신 태스크 1개를 단발로 인용하는 것은 이력이 아니므로 허용한다 | `"세션별 BrainSession 상태기계 — 대화 단위 인메모리 핸들 + 프라임 연결 풀"` |
+| `depends` | 이 파일이 의존하는 **모듈 ID**(코드: kebab-case) 또는 **참조 문서명**(기획/설계) | 표준 라이브러리 나열, 버전 번호, 도입 시점·태스크 번호 | `["auth-service", "결제_정책서"]` |
+| `note` | 코드를 읽어서는 알 수 없는 **현재 유효한 제약·계약**(순서 계약, fail-safe 이유, 의도적 예외) | **변경 이력**(`description`의 이력을 옮겨 담는 대체 저장소가 아니다 — 블록 총량이 그대로면 창문 재포화를 늦출 뿐이다) — 서로 다른 태스크 번호가 **2개 이상** 쌓이는 형태, TODO·미래 계획. 출신 태스크 1개의 단발 인용은 허용한다 | `"모드 게이트는 code-map 로딩보다 위에 놓인다 — 아래에 있으면 무출력 계약이 stderr 축에서 깨진다"` |
+| `feature` | 기능축 조인 키 1개 — `code-scan feature <id>` 조회 키(§7) | 복수 값 나열, 태스크 번호, 화면/정책 축 값(`ia:{system}:{screen}`·`POL-{번호}`는 별개 축) | `"F-003"` |
+
+> **임계값 근거**: `description`·`note` 모두 서로 다른 태스크 번호가 **2개 이상**(`TASK_TAG_THRESHOLD = 2`, `opal/tools/code-scan/code-scan.js:51`) 모이면 `code-scan validate`가 `header_history` 비차단 경고로 감지한다(같은 파일 `:3311-3321`). 1개는 규정과 도구 양쪽에서 허용된다 — 자산의 출신 태스크를 밝히는 단발 인용일 뿐 시간이 지나도 늘지 않기 때문이다.
 
 ---
 
@@ -298,4 +322,5 @@ scope `svc` (`root: "svc/"`, `anchors: ["order-api","ship-api"]`, `stripPrefix: 
 | v1.1 | 2026-04-12 | 기획/설계 layer 5개 추가(`policy`/`ia`/`wireframe`/`erd`/`api-spec`) + `depends` 필드 설명 보강 + exports 가이드 확장 + Markdown 예시 갱신 (113) |
 | v1.2 | 2026-04-17 | §2 `module` 필드 — kebab-case 단일 → 언어별 컨벤션(Python: snake_case, TS/JS: kebab-case, Kotlin/Swift: PascalCase). §3 Python 예시 module 값 수정 |
 | v1.4 | 2026-08-02 14:47 | §7 전면 개정 — `headerSource` `inline`/`manifest` **2택 전역 단일 키**(미설정 시 전 명령 거부·CLI > 전역 2층 우선순위), 상속을 모드별로 재정의(`inline` tier① 단독 / `manifest` tier②~⑤ 4단), `scopes[].readonly` 제거 표기, `scopes[].include`/`exclude` 필드 행 신설, §7.2 `files` 집합 일치를 필터 통과 부분집합으로 재정의, §7.3 `_source`를 `manifest` 모드 4종으로 축소, §7.5 스코프 필터·소속 판정 우선순위 신설 (080) |
+| v1.5 | 2026-09-06 13:34 | @header 4필드 작성 가이드(§4.2) 신설 + 이력 비기재 원칙(§2.1) 명문화 + §2 이력 전용 필드(`changelog`·`history`·`revisions` 등) 신설 금지 문단 추가 + §2.1 적용 범위를 5필드 한정에서 `@header` JSON 블록 전체로 확장 + §4.2 `description`·`note` 「담지 않는 것」의 「태스크 번호」 항목을 `code-scan` 임계값(`TASK_TAG_THRESHOLD = 2`)과 일치하도록 「서로 다른 태스크 번호 2개 이상」 기준으로 정밀화(출신 태스크 1개 단발 인용은 허용) (107) |
 | v1.3 | 2026-07-28 15:33 | §2에 `feature`(선택, string) 필드 행 추가 + §7 "2소스 표현 — 인라인과 code-map" 절 신설 — `index.json` 필드 표·패키지 매니페스트 필드 표(각 필수/선택/타입/기본값 포함)·`_source` 5종 표·미러 경로 사상 예시(root→anchors→stripPrefix, 최장 일치 승리). code-scan.js v1.3.0 실제 구현(`resolveHeader`/`mirrorPathForDir`/`loadCodeMap` 등)과 대조 확인 완료 (077) |

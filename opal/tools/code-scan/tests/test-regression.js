@@ -508,12 +508,39 @@ test('[T080/L2-F12c] TS-045 (S-14): 미설정 트리에서 brain-tool sync-heade
   }
 });
 
-test('[T080/L2-F12c] TS-045 (S-14): brain_tool.py는 변경 0줄 — stderr 병기 설계로 무수정 성립 (PLAN §3.5.4)', () => {
-  const r = spawnSync('git', ['diff', '--numstat', 'HEAD', '--', 'opal/tools/brain-tool/brain_tool.py'],
+test('[T080/L2-F12c] TS-045 (S-14): brain_tool.py는 @header JSON 블록을 제외한 기능 코드가 HEAD와 바이트 동일 — stderr 병기 설계로 무수정 성립 (PLAN §3.5.4)', () => {
+  // [MUST 강화 근거] git diff --numstat(파일 전체 diff)는 "차이 없음"만 본다 — @header
+  // 블록(docstring 내부, brain_tool.py:2-13)의 메타데이터(설명/이력) 편집만으로도 전체
+  // 라인이 걸려 영구 실패한다. 이 태스크(107)는 @header.description에서 이력을 제거하므로
+  // numstat 기준은 오탐이다. 이 assert는 @header JSON 블록 하나만 제외하고 나머지 바이트가
+  // HEAD와 정확히 같음을 검사한다 — "기능 코드가 정확히 같음"을 보는 더 좁고 강한 판정이다.
+  // 완화가 아니다: 제외 범위는 @header JSON 블록 1개뿐이며, 그 밖의 단 한 바이트라도
+  // 달라지면 FAIL한다.
+  const headSrc = spawnSync('git', ['show', 'HEAD:opal/tools/brain-tool/brain_tool.py'],
     { cwd: REPO_ROOT, encoding: 'utf8' });
-  assert.strictEqual(r.status, 0, `git diff 실행 실패: ${r.stderr}`);
-  assert.strictEqual((r.stdout || '').trim(), '',
-    `brain_tool.py는 이 태스크에서 수정하지 않는다(무수정 성립이 F-12③의 설계 결론이다). got:\n${r.stdout}`);
+  assert.strictEqual(headSrc.status, 0, `git show 실행 실패: ${headSrc.stderr}`);
+  const workingSrc = fs.readFileSync(BRAIN_TOOL_PY, 'utf8');
+
+  // @header { ... } JSON 블록만 제거 (파일 최상단 docstring 안, brain_tool.py:2-13).
+  // 그 외(주석/코드 전체)는 그대로 남겨 비교 범위를 좁게 유지한다.
+  const stripHeaderBlock = (src) => {
+    const start = src.indexOf('@header {');
+    assert.ok(start !== -1, '@header { 블록을 찾을 수 없음');
+    const braceStart = src.indexOf('{', start);
+    let depth = 0, i = braceStart;
+    for (; i < src.length; i++) {
+      if (src[i] === '{') depth++;
+      else if (src[i] === '}') { depth--; if (depth === 0) break; }
+    }
+    assert.ok(depth === 0, '@header { JSON 블록의 닫는 }를 찾을 수 없음');
+    return src.slice(0, start) + src.slice(i + 1);
+  };
+
+  const headStripped = stripHeaderBlock(headSrc.stdout);
+  const workingStripped = stripHeaderBlock(workingSrc);
+  assert.strictEqual(workingStripped, headStripped,
+    'brain_tool.py는 @header JSON 블록(메타데이터) 밖의 기능 코드를 이 태스크에서 수정하지 않는다' +
+    '(무수정 성립이 F-12③의 설계 결론이다 — @header.description의 이력 편집은 허용, 기능 코드 변경은 불허).');
 });
 
 // ═════════════════════════════════════════════════════════════════════════
@@ -933,8 +960,8 @@ test('077 TS-057: tests/ 전 테스트 파일이 @header를 보유하고 code-sc
     const key = Object.keys(json).find(p => p.endsWith(`tests/${f}`));
     if (!key) { problems.push(`${f}: scan 결과 미검출`); continue; }
     if (json[key].layer !== 'test') problems.push(`${f}: layer=${json[key].layer}`);
-    // 허용 태스크 번호는 테스트 자산을 신설한 태스크만 누적한다 (083: test-shard-policy.js 신설).
-    if (!['077', '080', '082', '083'].includes(String(json[key].task))) problems.push(`${f}: task=${json[key].task}`);
+    // 허용 태스크 번호는 테스트 자산을 신설한 태스크만 누적한다 (083: test-shard-policy.js 신설, 107: test-header-history.js 신설).
+    if (!['077', '080', '082', '083', '107'].includes(String(json[key].task))) problems.push(`${f}: task=${json[key].task}`);
     if (!Array.isArray(json[key].scenarios) || json[key].scenarios.length === 0) problems.push(`${f}: scenarios 없음`);
   }
   assert.deepStrictEqual(problems, [], '테스트 파일도 @header 자산이다 (header-standard.md §3)');

@@ -1395,8 +1395,8 @@ test('[T083/L2-F7] TS-080: 기존 11개 테스트 스크립트 전량 GREEN (자
   // 재귀 가드 규약 ① (파일 상단 규약 참조) — 이 프로세스 자체가 다른 메타테스트의 자식이면
   // 본 메타테스트를 수행하지 않고 통과 처리한다. skip/todo 마킹 대신 조기 return을 쓴다(규약 ④).
   if (process.env.CODE_SCAN_META_CHILD === '1') return;
-  assert.strictEqual(OTHER_TEST_FILES.length, 11,
-    `[MUST] 083 신규 파일 1개를 제외하면 기존 스크립트가 정확히 11개여야 함(082 완료 시점 기준), got ${JSON.stringify(OTHER_TEST_FILES)}`);
+  assert.strictEqual(OTHER_TEST_FILES.length, 12,
+    `[MUST] 083 신규 파일 1개(test-shard-policy.js 자기 자신) + 107 신규 파일 1개(test-header-history.js)를 제외하면 기존 스크립트가 정확히 12개여야 함(107 완료 시점 기준), got ${JSON.stringify(OTHER_TEST_FILES)}`);
   const failures = [];
   for (const f of OTHER_TEST_FILES) {
     const res = spawnSync(process.execPath, ['--test', path.join(TESTS_DIR, f)], { encoding: 'utf8', timeout: 60000, env: cleanTestEnv() });

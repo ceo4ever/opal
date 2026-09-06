@@ -5,10 +5,7 @@
   "domain": "console",
   "description": "in-memory TTL 캐시(30초) + os.path.getmtime() 무효화. 키→(data, expires_at, source_path, set_wall) 4-tuple 저장. TTL 축은 time.monotonic() 기준 expires_at, mtime 무효화 축은 time.time() 기준 set_wall로 시계를 분리한다 — 두 축을 혼용하면 epoch mtime > monotonic 값이 항상 참이 되어 source_path 지정 항목이 상시 무효화된다(T103 P-8). 읽기 전용 — 소스 파일 불변",
   "exports": ["CacheStore", "cache"],
-  "depends": [],
-  "changelog": [
-    "2026-08-25 T103 Step2: mtime 무효화 비교 기준을 monotonic 파생값(expires_at - TTL)에서 wall-clock set_wall로 교정 — _store 3-tuple → 4-tuple. 공개 시그니처·TTL_SECONDS·키 전략·invalidate 무변경 (P-8, TS-016)"
-  ]
+  "depends": []
 }
 """
 from __future__ import annotations

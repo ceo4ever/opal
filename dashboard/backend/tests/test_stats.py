@@ -3,7 +3,7 @@
   "module": "tests.test_stats",
   "layer": "test",
   "domain": "console",
-  "description": "[T103] stats.py 집계 코어 순수 함수 계약 (TS-001~TS-009 + R-16 3계열 TS-101~TS-105 + R-20 표시 문자열 TS-120~TS-122). 앵커 차분·2계열 귀속·음수 clamp·단조 앵커·결측 내성·실시간 now 주입·워크플로우별 대표값·format_duration·순환 import 차단을 단정한다. 기대값 원천은 tasks/103-260825-opd-태스크-진행통계/STATS-BASELINE.md §3~§5 (ANALYSIS §8 재검증 완료 수치, 근거 E1) — stats.py 출력을 되쓰지 않는다(self-confirming 금지). 픽스처는 tests/fixtures/t103_states/ 동결 복사본이며 라이브 tasks/*/state.json을 직독하지 않는다. RED-first — 작성자(opal-test-agent, mode: red) != 구현자(opal-be-agent). TS-130~TS-136은 R-21 야간 시간대 보정(집계 기준 17) 계약 — 매일 반복되는 제외 구간 `00:00~09:00`을 소요에서 빼며, 여러 밤 걸침·반개구간 경계·자정 넘는 구간·보정 끔을 단정하고, 워커 소요가 보정 대상이 아님과 3계열 항등 유지를 못박는다. 기대값은 손계산과 STATS-BASELINE.md §4.4(보정 후 병기 절)에서만 가져온다. TS-101~TS-105는 R-16 소요 3계열(캡틴·워커·PM) 계약 — 워커 기록 태스크(103 동결본)의 실분해, 미기록 태스크(101)의 축퇴 항등(PM == 기존 작업 · 캡틴 == 기존 대기), 「기록된 0」과 「미기록」의 worker_measured 신호 구분, 상한 clamp에 의한 PM 음수 차단, 워크플로우 대표값 불변을 단정한다.",
+  "description": "stats.py 집계 코어 순수 함수 계약 (TS-001~TS-009 + 3계열 TS-101~TS-105 + 표시 문자열 TS-120~TS-122). 앵커 차분·2계열 귀속·음수 clamp·단조 앵커·결측 내성·실시간 now 주입·워크플로우별 대표값·format_duration·순환 import 차단을 단정한다. 기대값 원천은 STATS-BASELINE.md §3~§5(근거 E1) — stats.py 출력을 되쓰지 않는다(self-confirming 금지). 픽스처는 tests/fixtures/t103_states/ 동결 복사본이며 라이브 tasks/*/state.json을 직독하지 않는다. RED-first — 작성자(opal-test-agent, mode: red) != 구현자(opal-be-agent). TS-130~TS-136은 야간 시간대 보정(집계 기준 17) 계약 — 매일 반복되는 제외 구간 `00:00~09:00`을 소요에서 빼며, 여러 밤 걸침·반개구간 경계·자정 넘는 구간·보정 끔을 단정하고, 워커 소요가 보정 대상이 아님과 3계열 항등 유지를 못박는다. 기대값은 손계산과 STATS-BASELINE.md §4.4(보정 후 병기 절)에서만 가져온다. TS-101~TS-105는 소요 3계열(캡틴·워커·PM) 계약 — 워커 기록 보유 태스크(동결 픽스처)의 실분해, 미기록 태스크의 축퇴 항등(PM == 기존 작업 · 캡틴 == 기존 대기), 「기록된 0」과 「미기록」의 worker_measured 신호 구분, 상한 clamp에 의한 PM 음수 차단, 워크플로우 대표값 불변을 단정한다.",
   "exports": [
     "test_ts001_task_static_total_two_series",
     "test_ts002_task_static_stage_breakdown",
@@ -38,13 +38,7 @@
   ],
   "depends": ["stats"],
   "task": "103",
-  "scenarios": ["TS-001", "TS-002", "TS-003", "TS-004", "TS-005", "TS-006", "TS-007", "TS-008", "TS-009", "TS-101", "TS-102", "TS-103", "TS-104", "TS-105", "TS-120", "TS-121", "TS-122", "TS-130", "TS-131", "TS-132", "TS-133", "TS-134", "TS-135", "TS-136"],
-  "changelog": [
-    "2026-08-26 T103 R-21: TS-130~TS-136 야간 보정 케이스 8건 추가 — 여러 밤 걸침·미걸침(101 불변)·보정 끔·반개구간 경계(09:00)·워커 미보정·3계열 항등·코호트 대표값 이동(opd 799→425)·자정 넘는 구간. 기존 TS-001~TS-122 무변경(quiet_hours 기본 None)",
-    "2026-08-25 T103 R2 RED: TS-001~TS-009 실패 테스트 신규 — dashboard/backend/stats.py 미존재 상태에서 작성. 구현(Step 3) 전 RED 트랙(red-first.md §1), 작성자!=구현자(동 §2)",
-    "2026-08-25 T103 R-20: TS-120~TS-122 3계열 표시 문자열 케이스 4건 추가 — 단계·워크플로우·태스크 막대 층의 pm/worker/captain_label과 워크플로우 단계 누적 총 라벨. 오라클은 _spec_label(표시 규칙 독립 재기술)이며 format_duration을 되쓰지 않는다. 기존 케이스·픽스처 무변경",
-    "2026-08-25 T103 R-16: TS-101~TS-105 3계열 분해 케이스 7건 추가 + fixtures/t103_states/103-*.json 동결본 신규(워커 소요 기록 6행 보유 — 이 프로젝트 유일). 기존 TS-001~TS-009 무변경"
-  ]
+  "scenarios": ["TS-001", "TS-002", "TS-003", "TS-004", "TS-005", "TS-006", "TS-007", "TS-008", "TS-009", "TS-101", "TS-102", "TS-103", "TS-104", "TS-105", "TS-120", "TS-121", "TS-122", "TS-130", "TS-131", "TS-132", "TS-133", "TS-134", "TS-135", "TS-136"]
 }
 """
 from __future__ import annotations

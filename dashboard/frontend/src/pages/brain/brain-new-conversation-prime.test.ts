@@ -3,11 +3,10 @@
  *   "module": "brain-new-conversation-prime-test",
  *   "layer": "test",
  *   "domain": "brain",
- *   "description": "새 대화(handleNewSession)→재프라임 경로 단위 테스트 — prime 페이로드에 session_id 포함 + query에 동일 session_id 포함 + makeSessionId() 신규 헬퍼(mount·새 대화마다 새 세션 발급) 검증 + addPendingTurn(turns, question) 2-인자 신규 시그니처 누적 검증. fetch mock 사용. [T063] 멀티대화 배열(BrainConversation) 전제의 대화별 독립성·localStorage 이력·프로젝트 필터 테스트는 단일 세션 리팩터로 개념이 소멸해 제거하고, makeNewConversation 참조를 makeSessionId로 치환.",
+ *   "description": "새 대화(handleNewSession)→재프라임 경로 단위 테스트 — prime 페이로드에 session_id 포함 + query에 동일 session_id 포함 + makeSessionId() 헬퍼(mount·새 대화마다 새 세션 발급) 검증 + addPendingTurn(turns, question) 2-인자 시그니처 누적 검증. fetch mock 사용. 단일 세션 모델 기준 테스트 — 대화별 독립성·localStorage 이력·프로젝트 필터는 이 화면의 범위가 아니다.",
  *   "exports": [],
  *   "task": "022-260615-opd-opx-flex-pilot / 063-260715-opd-콘솔-브레인-세션-단순화",
- *   "scenarios": ["new-conv-prime", "T063-S-6", "T063-S-8"],
- *   "changelog": ["2026-07-15 T063 CLOSE: @header exports 필드 추가(누락, 코드 변경 없음)"]
+ *   "scenarios": ["new-conv-prime", "T063-S-6", "T063-S-8"]
  * }
  */
 

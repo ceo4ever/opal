@@ -3,13 +3,10 @@
   "module": "test_parsers",
   "layer": "test",
   "domain": "console",
-  "description": "파서 RED-first 테스트 — S-4 시나리오 (L2/M1). memory_parser는 078 F-009 JSON 전환 — fixture_doc_populated.json 원본 대조로 재작성(H-5: 현행 오프바이원 출력을 기준선으로 잡지 않음). 그 외 파서는 실 파일 + mtime 불변 검증",
+  "description": "파서 RED-first 테스트 — S-4 시나리오 (L2/M1). memory_parser는 fixture_doc_populated.json(MEMORY.json 원본) 1:1 대조를 검증 기준으로 삼는다(H-5: 현행 오프바이원 출력을 기준선으로 잡지 않음). 그 외 파서는 실 파일 + mtime 불변 검증",
   "exports": ["[T021/L2-R3] test_memory_parser_returns_structure", "[T021/L2-R3] test_memory_parser_mtime_invariant", "[T021/L2-R3] test_memory_file_parser", "[T021/L2-R3] test_project_parser", "[T021/L2-R3] test_markdown_reader"],
   "depends": ["parsers.memory_parser", "parsers.memory_file_parser", "parsers.project_parser", "parsers.markdown_reader"],
-  "task": "078",
-  "changelog": [
-    "2026-07-28 T078 F-009: memory_parser 관련 4건(returns_structure/rows_have_fields/history_have_fields/mtime_invariant)을 MEMORY.json 원본(fixture_doc_populated.json) 1:1 대조 기준으로 재작성 — H-5 오프바이원 해소 검증"
-  ]
+  "task": "078"
 }
 """
 import json

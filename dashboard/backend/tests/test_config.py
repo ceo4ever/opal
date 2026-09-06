@@ -3,16 +3,11 @@
   "module": "tests.test_config",
   "layer": "test",
   "domain": "console",
-  "description": "config.load_config()의 prewarm_projects 파싱·타입 가드 테스트(T060 F-1, RED). 5variant: 키 부재/빈 배열/문자열(비-list)/dict(비-list)/정상 배열(경로 2개+비str 원소 혼합) → 부재·빈·비-list는 예외 없이 []로 폴백, 정상 배열은 str 원소만 로드된다(H-4). CONFIG_PATH를 tmp_path로 monkeypatch하여 실제 ~/.opal/console.config.json과 격리. [T061] config.save_config(머지 보존, H-3)·config._atomic_write_json(temp+os.replace 원자 쓰기·동시 쓰기 직렬화, H-2) 검증. save_project_local 계약(TestSaveProjectLocal)은 T061 범위 축소로 프로젝트 로컬 설정 편집이 제외되어 삭제됨. [T103 R-21] TestLoadQuietHours — 야간 제외 구간(집계 기준 17)의 2층 머지 계약. 두 층 부재 시 기본 켬(00:00~09:00), 전역 끔·전역 구간 변경·로컬 하위 키 우선(전역 잔존)·로컬 끔·start==end 무효화·형식 위반 9variant 폴백·파손 JSON 무예외·캐시 키 서명 분리. OPAL_SETTING_PATH를 tmp로 monkeypatch해 실제 ~/.opal/setting.json과 격리한다. TestQuietHoursSeedDefault — setting.default.json 시드와 코드 기본값의 일치 + install-mac.sh SEED_KEYS 배선. [호칭] TestLoadOwnerName — config.load_owner_name의 정상 읽기 + 폴백 4경로(파일 부재·키 부재·값 공란·읽기 실패)를 단정한다. IDENTITY_PATH를 tmp로 monkeypatch해 실행 머신의 ~/.opal/identity.md와 격리하며, 폴백값이 특정인이 아니라 중립 호칭(\"사용자\")임을 못박는다.",
+  "description": "config.load_config()의 prewarm_projects 파싱·타입 가드 테스트. 5variant: 키 부재/빈 배열/문자열(비-list)/dict(비-list)/정상 배열(경로 2개+비str 원소 혼합) → 부재·빈·비-list는 예외 없이 []로 폴백, 정상 배열은 str 원소만 로드된다(H-4). CONFIG_PATH를 tmp_path로 monkeypatch하여 실제 ~/.opal/console.config.json과 격리. config.save_config(머지 보존, H-3)·config._atomic_write_json(temp+os.replace 원자 쓰기·동시 쓰기 직렬화, H-2) 검증. TestLoadQuietHours — 야간 제외 구간(집계 기준 17)의 2층 머지 계약. 두 층 부재 시 기본 켬(00:00~09:00), 전역 끔·전역 구간 변경·로컬 하위 키 우선(전역 잔존)·로컬 끔·start==end 무효화·형식 위반 9variant 폴백·파손 JSON 무예외·캐시 키 서명 분리. OPAL_SETTING_PATH를 tmp로 monkeypatch해 실제 ~/.opal/setting.json과 격리한다. TestQuietHoursSeedDefault — setting.default.json 시드와 코드 기본값의 일치 + install-mac.sh SEED_KEYS 배선. [호칭] TestLoadOwnerName — config.load_owner_name의 정상 읽기 + 폴백 4경로(파일 부재·키 부재·값 공란·읽기 실패)를 단정한다. IDENTITY_PATH를 tmp로 monkeypatch해 실행 머신의 ~/.opal/identity.md와 격리하며, 폴백값이 특정인이 아니라 중립 호칭(\"사용자\")임을 못박는다.",
   "exports": ["TestConfigPrewarmProjects", "TestSaveConfigMergePreservation", "TestAtomicWriteJson", "TestLoadQuietHours", "TestQuietHoursSeedDefault"],
   "depends": ["config"],
   "task": "061",
-  "scenarios": ["S-2", "S-3", "TS-138"],
-  "changelog": [
-    "2026-08-26 T103 R-21: TestLoadQuietHours(9케이스) + TestQuietHoursSeedDefault(2케이스) 추가 — 야간 제외 구간 2층 머지·시드 일치. 기존 T060/T061 케이스 무변경",
-    "2026-07-14 T061 RED: config.save_config 머지 보존(S-3)·config._atomic_write_json 원자 쓰기+동시성(S-2)·config.save_project_local 원자 쓰기 실패 테스트 추가 — 구현 전 RED 트랙(red-first.md), 작성자(opal-test-agent)≠구현자(opal-be-agent)",
-    "2026-07-14 T061 범위 축소: TestSaveProjectLocal 클래스 삭제(save_project_local 제거에 따른 계약 삭제) — TestSaveConfigMergePreservation·TestAtomicWriteJson은 유지"
-  ]
+  "scenarios": ["S-2", "S-3", "TS-138"]
 }
 """
 from __future__ import annotations

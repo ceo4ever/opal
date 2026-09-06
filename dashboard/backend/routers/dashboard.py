@@ -5,13 +5,7 @@
   "domain": "console",
   "description": "GET /api/dashboard — 전 프로젝트 집계 또는 개별 프로젝트 집계(4메트릭·상태분포·활동추이·주의알림·최근활동). project 쿼리 파라미터로 개별/전체 구분. 읽기 전용. 최근활동·주의알림 title은 TASK.md H1에서 파생(_resolve_task_title: 'TASK NNN —'/'TASK:' 접두사 제거, 부재 시 폴더명 슬러그 폴백) — state.json에 title 필드가 없어 폴더명 중복 방지. [T103] 워크플로우별 횡단 집계 additive — 모수는 current_status == done인 완료 태스크만이며(집계기준 3) 진행 중은 total_tasks 차이로만 드러난다. stats.workflow_stats(skill 단위 중앙값·2계열·3계열(pm/worker/captain)·단계별)를 호출하기 전 각 state에 _title을 주입한다(stats.py는 파일 I/O를 하지 않는다). 산출물 규모(artifact_total·artifact_by_type 4유형)는 routers.tasks의 _get_artifact_files·classify_artifact를 함수 내부 지연 import로 호출한다(COLUMN_MAP 선례). 캐시는 현행 유지 — 모수에 실시간 성분이 없고 다중 파일 소스라 단일 source_path mtime 무효화가 적용 불가하다. [T103 R-21] 야간 제외 구간(집계 기준 17)은 라우터가 config.load_quiet_hours로 읽어 workflow_stats에 주입한다 — 개별 프로젝트 모드는 그 프로젝트의 로컬 설정이 전역을 덮고, 전체 모드는 어느 프로젝트도 편들 수 없어 전역 설정만 쓴다. 캐시 키 `dashboard:{project|ALL}:{구간서명}`에 서명을 실어 설정 변경 시 보정 전후 값이 같은 키를 공유하지 않게 했다.",
   "exports": ["GET /api/dashboard"],
-  "depends": ["models", "scanner", "config", "cache", "stats", "adapters.state_adapter"],
-  "changelog": [
-    "2026-08-26 호칭 하드코딩 제거: 응답에 owner_term 표면화 — config.load_owner_name() 1회 호출. 집계·필터 경로 무변경",
-    "2026-08-26 T103 R-21: 야간 제외 구간을 config.load_quiet_hours로 읽어 workflow_stats에 주입 + 캐시 키에 구간 서명 부착 + 응답에 quiet_hours_applied·quiet_hours_label 표면화",
-    "2026-08-25 T103 R-16: workflow_stats 3계열 필드가 WorkflowStat(**w) 경로로 자동 승계 — 라우터 로직 무변경, @header 기술만 갱신",
-    "2026-08-25 T103 Step7: 워크플로우별 집계 5필드 additive(completed_tasks·total_tasks·artifact_total·artifact_by_type·workflow_stats) — F-003, TS-020~024. 기존 8필드 무변경"
-  ]
+  "depends": ["models", "scanner", "config", "cache", "stats", "adapters.state_adapter"]
 }
 """
 from __future__ import annotations

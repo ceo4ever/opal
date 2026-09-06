@@ -5,8 +5,7 @@
  *   "domain": "core",
  *   "description": "Zustand UI 상태 스토어 — 테마(다크/라이트/시스템, localStorage 영속) + 컨텍스트 프로젝트(URL 쿼리 동기) + 브레인 이탈가드 플래그(brainDirty, 비영속 — BrainPage가 turns.length>0일 때 true로 노출해 AppShell 프로젝트 스위처가 전환 전 확인 다이얼로그를 띄우도록 함, R-8)",
  *   "exports": ["useUiStore", "Theme"],
- *   "task": "063",
- *   "changelog": ["2026-07-15 T063 R-8: brainDirty/setBrainDirty 추가 — 프로젝트 스위처 이탈 가드용, partialize 미포함(비영속)"]
+ *   "task": "063"
  * }
  */
 
