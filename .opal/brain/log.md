@@ -377,3 +377,7 @@
 - 갱신: [[community-skill-user-registry]]
 - 출처: task:105
 
+## [2026-09-06] ingest | CLOSE ingest — 태스크 108 AGENT.md §보고 형식 전면 제거
+- 신규: [[pages/concept/norm-proliferation-spiral-without-enforcement.md]], [[pages/concept/removal-task-boundary-unification.md]], [[pages/concept/non-tty-install-bypass-pattern.md]], [[pages/concept/multilayer-verification-no-single-layer-catches-all.md]]
+- 출처: task:108
+
