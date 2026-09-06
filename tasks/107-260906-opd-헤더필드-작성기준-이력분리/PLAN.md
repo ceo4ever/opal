@@ -608,10 +608,10 @@ for f in <18 경로>; do echo "## $f"; git log --oneline --all -- "$f" | head -4
 
 ### 4.2 실행 체크리스트
 
-> 총 **30개** Step(초안 15 + D-REQ-1 (나) 확대분 3 + PM Gate 발견 편입 1[6b] + **캡틴 3차 `changelog` 편입 11**[1b·5b·6c·16~22·23]) | Phase 5개 | 실행 모드: **복잡**
+> 총 **33개** Step(초안 15 + D-REQ-1 (나) 확대분 3 + PM Gate 발견 편입 **4**[6b·6d·1c·6e] + 캡틴 3차 `changelog` 편입 11[1b·5b·6c·16~22·23]) | Phase 5개 | 실행 모드: **복잡**
 
 #### Step 1: `header-standard.md` §2.1 이력 비기재 원칙 + §4.2 4필드 작성 가이드 신설
-- [ ] 완료
+- [x] 완료
 - **소속 기능**: F-001
 - **영역**: 가이드
 - **agent**: opal-task-agent — FE/BE/DB 어느 영역도 아닌 프레임워크 참조 문서(.md) 개정이므로 공통 폴백을 쓴다
@@ -635,7 +635,7 @@ for f in <18 경로>; do echo "## $f"; git log --oneline --all -- "$f" | head -4
 - **의존**: 없음
 
 #### Step 3: `docs/CONVENTIONS.md` §@header 규칙 문구 교체 (docs/ 갱신)
-- [ ] 완료
+- [x] 완료
 - **소속 기능**: F-001
 - **영역**: 문서
 - **agent**: PM 직접 — `docs/` 갱신 Step은 PM 관할(스킬 §docs/ 갱신 Step 자동 생성 규칙)
@@ -647,7 +647,7 @@ for f in <18 경로>; do echo "## $f"; git log --oneline --all -- "$f" | head -4
 - **의존**: 없음
 
 #### Step 4: `test-header-history.js` RED-first 신설
-- [ ] 완료
+- [x] 완료
 - **소속 기능**: F-002
 - **영역**: 도구 테스트
 - **agent**: opal-test-agent — 테스트 전문 워커. 작성자≠구현자(red-first.md §2)를 지키려면 Step 6과 다른 에이전트여야 한다
@@ -659,7 +659,7 @@ for f in <18 경로>; do echo "## $f"; git log --oneline --all -- "$f" | head -4
 - **의존**: 없음
 
 #### Step 5: 23파일 이력 소실 확인 전수 (`HISTORY-EVIDENCE.md`)
-- [ ] 완료
+- [x] 완료
 - **소속 기능**: F-003
 - **영역**: 문서
 - **agent**: opal-task-agent — 읽기 전용 git 조사 + 문서 산출, 도메인 전문성 불필요
@@ -683,7 +683,7 @@ for f in <18 경로>; do echo "## $f"; git log --oneline --all -- "$f" | head -4
 - **의존**: Step 4
 
 #### Step 6b: 메타 테스트 단언 갱신 (신설 테스트 파일 편입) — **[PM Gate 발견, PLAN 사후 편입]**
-- [ ] 완료
+- [x] 완료
 - **소속 기능**: F-002 (+ F-004 회귀)
 - **영역**: 도구 테스트
 - **agent**: opal-task-agent — 메타 테스트 단언 갱신. 도메인 전문성 불필요
@@ -698,8 +698,45 @@ for f in <18 경로>; do echo "## $f"; git log --oneline --all -- "$f" | head -4
 - **실행 방법**: sub-agent
 - **의존**: Step 4, Step 6
 
-#### Step 7: state-tool 코어 2건 정리
+#### Step 6d: TS-045 파일 diff 핀 재정의 — **[PM Gate 발견, PLAN 사후 편입]**
+- [x] 완료
+- **소속 기능**: F-002 (+ F-004 회귀)
+- **영역**: 도구 테스트
+- **agent**: opal-task-agent
+- **파일**: `opal/tools/code-scan/tests/test-regression.js` (1파일)
+- **발견 경위**: Step 9가 `brain_tool.py`의 `@header`를 정리하자 **TS-045**(`test-regression.js:511-517`)가 실패했다. 이 테스트는 `git diff --numstat HEAD -- opal/tools/brain-tool/brain_tool.py`가 **빈 문자열**일 것을 단언한다 — 즉 **그 파일에 워킹트리 변경이 한 줄이라도 있으면 영구 실패**한다. 연쇄로 TS-062·S-19·TS-080이 함께 무너져 스위트가 4 fail이 됐다.
+- **왜 고쳐야 하는가**: TS-045가 실제로 보호하려는 명제는 자기 실패 메시지에 적혀 있다 — 「무수정 성립이 F-12③의 **설계 결론**이다」. 즉 **080의 stderr 병기 설계가 brain-tool 기능 코드 수정을 요구하지 않았다**는 주장이다. 그런데 판정 수단이 「파일 전체 diff 0줄」이라 **`@header` 메타데이터 편집까지 설계 위반으로 오판**한다. 태스크 080 시점의 사실을 영구 단언으로 굳힌 mis-scoped 가드다.
+- **작업 내용**: 판정 대상을 **「파일 전체 diff」 → 「`@header` 블록을 제외한 기능 코드」**로 좁힌다.
+  - 구현: `git show HEAD:opal/tools/brain-tool/brain_tool.py`와 워킹 사본에서 **각각 `@header` 블록(파일 최상단 docstring)을 제거**한 뒤 **나머지가 바이트 동일**임을 단언한다.
+  - **[MUST] 이것은 완화가 아니라 강화다** — `numstat === ''`는 "차이가 없다"만 보지만, 잔여 바이트 동일은 "기능 코드가 정확히 같다"를 본다. 단언 문구와 실패 메시지에 이 근거를 남긴다.
+  - **[MUST] `@header` 제외 범위를 넓히지 마라** — 제외하는 것은 `@header` JSON 블록 하나뿐이다. 주석 전체·docstring 전체를 제외하면 실제 완화가 된다.
+- **완료 기준**: TS-045 GREEN + 연쇄 3건(TS-062·S-19·TS-080) GREEN + 전체 스위트 **fail 0** + 다른 단언 무변경
+- **테스트**: TS-030, TS-032
+- **실행 방법**: sub-agent
+- **의존**: Step 9
+
+#### Step 6e: 감지기를 「미정의 필드」 축으로 일반화 — **[컨벤션 진단 GC-C001, High]**
 - [ ] 완료
+- **소속 기능**: F-002
+- **영역**: 도구 + 도구 테스트
+- **agent**: opal-task-agent
+- **파일**: `opal/tools/code-scan/code-scan.js`, `opal/tools/code-scan/tests/test-header-history.js`
+- **발견 경위**: TEST PM Gate의 컨벤션 자동 진단(`GC-CONVENTION-260906.md`)이 **High 1건**을 냈다 — Step 6c가 배선한 감지기는 `resolved.changelog` **이름 하나만 리터럴 검사**하는데, 같은 태스크가 `header-standard.md` §2에 쓴 규정은 「표에 정의된 필드 외의 필드를 신설하지 않는다. 특히 이력 전용 필드 — **이름을 불문한다**(예: `changelog`·`history`·`revisions`)」다. **구현이 자기가 세운 규정을 위반한다.**
+- **왜 이름 목록 확장으로 때우지 않는가**: `changelog`·`history`·`revisions` 3개를 상수 집합으로 넣어도 「이름 불문」이 아니라 「이름 3개」다. 다음에 `updates`로 이름만 바꾸면 다시 뚫린다 — Step 1b에서 **규정을 이름이 아니라 성질로 걸었던 이유**와 같은 논리를 구현에도 적용한다.
+- **작업 내용**: §2 필드 정의 표의 **선언 필드 집합**을 상수로 두고, `@header`에 **그 밖의 필드가 존재하면** 위반으로 본다.
+  - 선언 집합: `module`·`layer`·`domain`·`description`·`exports`·`depends`·`note`·`feature` (§2 표 8필드) **+ 예외 `task`·`scenarios`** — 이 둘은 §2가 「이력 필드가 아니라 다른 도구(테스트 자산)가 참조하는 필드」로 명시 제외했고 `test-regression.js` TS-057이 요구한다.
+  - push: `{code:'header_history', sub:'undeclared_field', ..., detail:'<필드명>'}` — **같은 `code`를 재사용**해 `counts` 집계·비차단 제외를 승계한다. 기존 `sub:'changelog'` 경로는 **제거**하고 이 일반 규칙이 흡수한다(`changelog`는 미정의 필드의 한 사례일 뿐이다).
+  - **[MUST] 임계값 판정 미적용** — 필드 존재 자체가 위반이다(`description`·`note`의 2개 이상 임계와 다른 축이다).
+  - **[MUST] 상수에 근거 주석 동반** — `HEADER_READ_BYTES` 형식 준용, `header-standard.md` §2를 인용.
+- **예상 부수 효과(정상)**: 현재 `track` 필드 보유 2파일이 새로 경고에 잡힌다. `track`은 §2 표에 없는 필드이며 **규정대로 드러나는 것이 맞다**. 비차단이라 CLOSE를 막지 않는다 — 정리는 이월한다.
+- **테스트 갱신**: TS-052·TS-053·TS-054의 `sub` 기대값을 `changelog` → `undeclared_field`로 맞추고, **`history`·`revisions`·임의 이름(`updates`) 각각이 탐지되는 케이스를 추가**하라(「이름 불문」의 실증). `task`·`scenarios`는 **미탐지**여야 한다.
+- **완료 기준**: 전체 스위트 fail 0 · `changelog`/`history`/`revisions`/임의 이름 전건 탐지 · `task`·`scenarios` 미탐지 · `--version` 불변 · 컨벤션 재진단 **Critical/High 0건**
+- **테스트**: TS-052, TS-053, TS-054, TS-030, TS-032
+- **실행 방법**: sub-agent
+- **의존**: Step 6c
+
+#### Step 7: state-tool 코어 2건 정리
+- [x] 완료
 - **소속 기능**: F-003
 - **영역**: 이력 정리
 - **agent**: opal-task-agent — Python 파일이나 애플리케이션 BE가 아닌 프레임워크 도구 자산의 `@header` 텍스트 편집
@@ -711,7 +748,7 @@ for f in <18 경로>; do echo "## $f"; git log --oneline --all -- "$f" | head -4
 - **의존**: Step 1, Step 5
 
 #### Step 8: state-tool 훅 + test-tool 3건 정리
-- [ ] 완료
+- [x] 완료
 - **소속 기능**: F-003
 - **영역**: 이력 정리
 - **agent**: opal-task-agent — 위와 동일 사유
@@ -723,7 +760,7 @@ for f in <18 경로>; do echo "## $f"; git log --oneline --all -- "$f" | head -4
 - **의존**: Step 1, Step 5
 
 #### Step 9: brain-tool + memory-tool 3건 정리
-- [ ] 완료
+- [x] 완료
 - **소속 기능**: F-003
 - **영역**: 이력 정리
 - **agent**: opal-task-agent — 위와 동일 사유
@@ -747,7 +784,7 @@ for f in <18 경로>; do echo "## $f"; git log --oneline --all -- "$f" | head -4
 - **의존**: Step 1, Step 5
 
 #### Step 11: console BE 소스 3건 정리
-- [ ] 완료
+- [x] 완료
 - **소속 기능**: F-003
 - **영역**: 이력 정리
 - **agent**: opal-be-agent — `dashboard/backend/` FastAPI 애플리케이션 코드이므로 BE 전문 워커가 「현재 유효한 계약 vs 이력」 판정(§3.3.2 (A) 2·3단)을 정확히 내린다
@@ -759,7 +796,7 @@ for f in <18 경로>; do echo "## $f"; git log --oneline --all -- "$f" | head -4
 - **의존**: Step 1, Step 5
 
 #### Step 12: console BE 어댑터·설정 테스트 2건 정리
-- [ ] 완료
+- [x] 완료
 - **소속 기능**: F-003
 - **영역**: 이력 정리
 - **agent**: opal-be-agent — 위와 동일 사유(`brain_session.py`는 1954자 중 대부분이 동시성·락 순서 계약이라 판정 난도가 가장 높다)
@@ -771,7 +808,7 @@ for f in <18 경로>; do echo "## $f"; git log --oneline --all -- "$f" | head -4
 - **의존**: Step 1, Step 5
 
 #### Step 13: console BE 테스트 2건 정리
-- [ ] 완료
+- [x] 완료
 - **소속 기능**: F-003
 - **영역**: 이력 정리
 - **agent**: opal-be-agent — 위와 동일 사유
@@ -783,7 +820,7 @@ for f in <18 경로>; do echo "## $f"; git log --oneline --all -- "$f" | head -4
 - **의존**: Step 1, Step 5
 
 #### Step 12b: console FE 1건 정리 (D-REQ-1 확대분)
-- [ ] 완료
+- [x] 완료
 - **소속 기능**: F-003
 - **영역**: FE
 - **agent**: opal-fe-agent — `dashboard/frontend/` React 컴포넌트이며, 「현재 유효한 UI 계약 vs 지나간 변경 이력」 판정에 FE 문맥이 필요하다
@@ -795,7 +832,7 @@ for f in <18 경로>; do echo "## $f"; git log --oneline --all -- "$f" | head -4
 - **의존**: Step 1, Step 5
 
 #### Step 13b: backlog-tool + code-scan `test-shard.js` 2건 정리 (D-REQ-1 확대분)
-- [ ] 완료
+- [x] 완료
 - **소속 기능**: F-003
 - **영역**: 이력 정리
 - **agent**: opal-task-agent — 프레임워크 도구·테스트의 `@header` 정리로 도메인 전문성 불필요
@@ -807,7 +844,7 @@ for f in <18 경로>; do echo "## $f"; git log --oneline --all -- "$f" | head -4
 - **의존**: Step 1, Step 5
 
 #### Step 13c: code-scan `test-feature.js`·`test-validate.js` 2건 정리 (D-REQ-1 확대분, 경계 재분류)
-- [ ] 완료
+- [x] 완료
 - **소속 기능**: F-003
 - **영역**: 이력 정리
 - **agent**: opal-task-agent — 위와 동일 사유
@@ -819,7 +856,7 @@ for f in <18 경로>; do echo "## $f"; git log --oneline --all -- "$f" | head -4
 - **의존**: Step 1, Step 5
 
 #### Step 1b: `header-standard.md` §2 — 이력 전용 필드 신설 금지 명문화 **[캡틴 3차 확정 편입]**
-- [ ] 완료
+- [x] 완료
 - **소속 기능**: F-001
 - **영역**: 가이드
 - **agent**: opal-task-agent — 프레임워크 참조 문서 개정
@@ -830,8 +867,26 @@ for f in <18 경로>; do echo "## $f"; git log --oneline --all -- "$f" | head -4
 - **실행 방법**: sub-agent
 - **의존**: Step 1
 
+#### Step 1c: §4.2 `description`·`note` 「담지 않는 것」을 감지 축과 정합화 — **[PM Gate 발견, PLAN 사후 편입]**
+- [x] 완료
+- **소속 기능**: F-001
+- **영역**: 가이드
+- **agent**: opal-task-agent
+- **파일**: `opal/core/references/header-standard.md` (§4.2 표 2행)
+- **발견 경위**: Step 17 검토 중 `dashboard/backend/routers/dashboard.py`가 `description`에 `[T103]` **1개**를 남긴 채 감지기를 통과하는 것을 확인했다. 감지기는 정상 동작이다(§3.2.2 (A) 축 정의상 **단발 출처 인용 1개는 허용**, 2개 이상이 이력 누적). 그런데 Step 1이 신설한 §4.2 표는 `description` 「담지 않는 것」에 **「태스크 번호(`[T061]`·`014:`·`TASK 077` 등 시점 표기 전반)」**이라고 써서 **1개도 금지**로 읽힌다.
+- **왜 고쳐야 하는가**: 이번 태스크의 목표가 「규정·도구·자산 3층 일관」이다. 규정이 도구보다 엄격하면 **워커는 규정을 지켜도 도구가 안 잡고, 도구를 통과해도 규정 위반**이 된다 — 이 태스크가 제거하려던 바로 그 구조(원칙은 「어느 필드에도」인데 적용 범위는 5필드였던 `changelog` 구멍)의 재발이다.
+- **작업 내용**: §4.2 표 `description`·`note` 행의 「담지 않는 것」에서 「태스크 번호」 항목을 **축 정의와 같은 문언으로 정밀화**한다.
+  - 취지: **변경 이력 — 서로 다른 태스크 번호가 2개 이상 쌓이는 형태**를 금지한다. **출신 태스크 1개의 단발 인용은 허용**한다(자산이 어디서 왔는지는 시간이 지나도 늘지 않는다).
+  - **[MUST] 감지기 임계값(2)과 같은 근거를 인용**해 규정·도구가 같은 축을 말하고 있음을 본문에서 드러낸다.
+  - **[MUST] `note` 행도 같은 기준으로 맞춘다** — 감지기가 `note`에 동일 판정식을 적용한다.
+  - **[MUST] `changelog` 같은 이력 전용 필드 금지(§2)는 그대로 유지** — 그건 임계값 축이 아니라 필드 존재 축이다. 두 규칙을 섞지 마라.
+- **완료 기준**: §4.2 `description`·`note` 「담지 않는 것」이 「2개 이상」 기준으로 서술되고, §3.2.2 임계값 2와 모순되지 않는다. 최상위 절 개수 불변. `code-scan` 스위트 fail 0
+- **테스트**: TS-002, TS-050
+- **실행 방법**: sub-agent
+- **의존**: Step 1, Step 1b
+
 #### Step 5b: `changelog` 81엔트리 이력 소실 확인 **[캡틴 3차 확정 편입]**
-- [ ] 완료
+- [x] 완료
 - **소속 기능**: F-003
 - **영역**: 문서
 - **agent**: opal-task-agent — 읽기 전용 git 조사
@@ -843,7 +898,7 @@ for f in <18 경로>; do echo "## $f"; git log --oneline --all -- "$f" | head -4
 - **의존**: 없음
 
 #### Step 6c: 감지기 `changelog` 축 추가 **[캡틴 3차 확정 편입]**
-- [ ] 완료
+- [x] 완료
 - **소속 기능**: F-002
 - **영역**: 도구 + 도구 테스트
 - **agent**: opal-task-agent
@@ -855,7 +910,7 @@ for f in <18 경로>; do echo "## $f"; git log --oneline --all -- "$f" | head -4
 - **의존**: Step 6, Step 6b
 
 #### Step 16~22: `changelog` 제거 20파일 (신규분) **[캡틴 3차 확정 편입]**
-- [ ] 완료
+- [x] 완료
 - **소속 기능**: F-003
 - **영역**: 이력 정리 (console BE 3 Step / console FE 4 Step)
 - **agent**: `dashboard/backend/*` → opal-be-agent · `dashboard/frontend/*` → opal-fe-agent
@@ -874,7 +929,7 @@ for f in <18 경로>; do echo "## $f"; git log --oneline --all -- "$f" | head -4
 - **의존**: Step 5b, Step 6c
 
 #### Step 23: `AppShell.tsx` `changelog` 제거 (Step 12b 후속) **[캡틴 3차 확정 편입]**
-- [ ] 완료
+- [x] 완료
 - **소속 기능**: F-003
 - **영역**: FE
 - **agent**: opal-fe-agent

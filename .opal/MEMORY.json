@@ -25,9 +25,32 @@
       "status": "candidate",
       "file": "memory/PM이_도구_계수를_grep으로_대체해_오판했다.md",
       "summary": "테스트 함수 수를 grep -c 'def test_'로 세어 292→316으로 보고했으나 문자열 리터럴 \"def test_foo(): pass…"
+    },
+    {
+      "title": "PLAN 체크박스를 복수 하위 Step에 공용으로 두지 않는다",
+      "date": "2026-09-06",
+      "type": "improvement",
+      "status": "candidate",
+      "file": "memory/PLAN_체크박스를_복수_하위_Step에_공용으로_두지_않는다.md",
+      "summary": "태스크 107 PLAN의 Step 16~22가 7개 하위 Step(BE 3 + FE 4)을 하나의 체크박스로 묶었다. 워커 3명이 연달아 「단…"
+    },
+    {
+      "title": "PM이 자기 규율의 예외가 되지 않게 한다",
+      "date": "2026-09-06",
+      "type": "improvement",
+      "status": "candidate",
+      "file": "memory/PM이_자기_규율의_예외가_되지_않게_한다.md",
+      "summary": "태스크 107에서 PM 귀책 5건이 났고 그중 3건이 워커에게는 [MUST]로 주입한 규율을 PM 자신이 어긴 것이다 — (1) 절대경로 사용…"
     }
   ],
   "history": [
+    {
+      "title": "107 헤더필드 작성기준 이력분리",
+      "date": "2026-09-06",
+      "stage": "완료",
+      "path": "tasks/107-260906-opd-헤더필드-작성기준-이력분리/",
+      "result": "@header 워커 기입 필드에 작성 기준을 신설하고 「이력은 git이 갖는다」를 규정·도구·자산 3층에 적용했다. 규정: header-standard.md §2.1 이력 비기재 원칙 + §2 이력 전용 필드 신설 금지(이름 불문) + §4.2 4필드 가이드, header-rules.md 갱신=교체 [MUST], CONVENTIONS.md §@header 교체. 도구: code-scan validate에 header_history 비차단 경고 3축(description·note는 태스크번호 distinct>=2, undeclared_field는 §2 미정의 필드 존재). 자산: 43파일 정리(description·note 23건 + changelog 필드 28파일 81엔트리 제거). 실측 @header 총 바이트 122752 → 75810(-38.2%), 이력 탐지 0건, changelog 0/110파일, TEST 33/33 Pass, 컨벤션 3차 Critical/High 0, 회귀 4스위트 전건 기준선 일치. 최대 산출은 정리 자체가 아니라 문제 정의가 세 번 틀렸다는 발견이다 — 12→18(글자수 선별이 진성을 놓침)→23(축 재정의로 임계값 3→2)→43(문서화되지 않은 changelog 필드 발견). 규정-도구 불일치가 4번 나왔고(도구가 못 봄/규정이 더 엄격/도구가 더 느슨/층위 혼동) 3·4번은 각각 직전 수정이 유발했으며 두 번 다 PM 자체 검증이 깨끗한 상태에서 컨벤션 진단이 잡았다. 목표-커버 게이트는 iteration 1에서 1.33으로 반려하며 발원 동기(창문 재포화) 무측정을 지적했고 그때 신설된 TS-025가 최종 -38.2%를 증명했다. 하네스 발견: 태스크 시점 사실을 영구 회귀 단언으로 고정하면 후속이 구조적으로 걸린다(VERSION 핀·테스트 개수 핀·파일 diff 핀 3연속), --wt 축은 tasks/ 픽스처 의존 테스트 34건을 통과 불가로 만든다, 서브에이전트 Write 차단으로 전 워커에 heredoc 우회 주입 필요. PM 귀책 5건. 이월 7건 — 최우선 track 필드 2파일과 Step 15 배포(소유자 실행). 미수행: 커밋·머지(소유자 권한)."
+    },
     {
       "title": "108 보고형식 전면제거",
       "date": "2026-09-06",
@@ -55,13 +78,6 @@
       "stage": "완료",
       "path": "tasks/105-260902-opds-스킬-탐색설치-개선/",
       "result": "커뮤니티 스킬 설치의 안전 판정을 라이선스 1축에서 위험 패턴 스캔+라이선스 2축·4단(SAFE/CAUTION/RISKY/UNKNOWN)으로 확장하고, 점수 없이 추천 1건을 뽑는 6단 흐름을 도입했다. 외부 스펙안 중 3개 이식·4개 폐기 — 100점 루브릭은 재현 불가라 도구 하드필터+3단 판정어+순서 사다리 6단으로, YAML registry 교체는 commit_sha 소실로 기능 후퇴라 trust/capabilities/scanned_at 3필드 additive 추가로 대체했다. 4파일 +352/-31(신규 test-scan-risk.js 831줄 별도), 테스트 41/41, 컨벤션 Critical/High 0건, 시나리오 40건 전건 Pass. 최대 산출은 검증 계층 설계의 실증 — L3 [SUPERVISOR] 시나리오 TS-080이 자동 검증 39건과 컨벤션 진단 전건 통과 상태에서 결함 3건을 잡았다. 핵심은 단위 테스트가 소스 경로를 호출하고 SKILL.md가 배포본을 호출하는 계층 차이 때문에, 배포본에 scan-risk가 없어 절차가 4단에서 멈추는 것을 40건 어느 것도 검출 못한 점이다. 녹색 지표가 실사용 불가를 덮고 있었고 재배포 후 재검증에서 해소됐다. 목표-커버 게이트도 iteration 1에서 산출물을 반려(평균 1.33<1.5)해 목표 종점 미검증·채택축 과대 표기·CAUTION 실동작 미검증을 잡았고, 통과 후에도 M1 지정이 self-confirming이라는 지적으로 M2 재지정을 유발했다. 픽스처 소유권 분리도 작동해 오탐 4종이 축 분리를 강제했다. 절 번호는 skill-commands.md가 축자 지목하므로 6개 절을 보존해 무성 파손을 막았다. PM 귀책 사고 5건(근거 없는 수치 기재 2회 동일 실패모드 재발 포함). 리터럴 grep AC 메타-순환 오탐 2회 재발 — brain에 이미 동일 패턴 페이지가 있어 재발이 더 문제다. brain ingest 신규 5건+기존 stale 1건 정정. **태스크 번호 105가 어댑터 확장필드 통로 태스크와 중복** — 채번 도구 원자성이 단일 파일 락 기반이라 다른 클론 병행 작업에서 보장되지 않는다(프레임워크 결함 후보). 이월 9건 — 최우선 커뮤니티 스킬 스코프 선택 도입, 다음 skill-registry 하네스 도구 표 미등재."
-    },
-    {
-      "title": "105 어댑터 확장필드 통로",
-      "date": "2026-09-03",
-      "stage": "완료",
-      "path": "tasks/105-260902-opds-어댑터-확장필드-통로/",
-      "result": "install 어댑터의 frontmatter 재조립을 name/description/model 3필드 하드코딩에서 OPAL_ADAPTER_FIELD_SPEC JSON 스펙 순회로 전환하고, effort를 첫 확장 필드로 Claude(effort)·Codex(model_reasoning_effort)에 실었다. 배치 모드 3종(key/model_param/omit)만으로 분기해 플랫폼명 조건문을 없앴고, mac·windows 스펙 JSON은 센티넬 구간 바이트 동일을 규약으로 삼아 기계 검증한다. 값역은 공통 4단 항등 + max→Codex xhigh 축약, 미정의 값은 경고+필드생략+exit 0. effort에 default를 두지 않아 미선언 에이전트 산출물이 바이트 동일하게 보존되며 이를 차등 골든(구판 emitter vs 신판 × 60건)으로 자동 검증한다. 최대 산출은 기능이 아니라 테스트 seam 결함 발견 — 단위 13/14 PASS인데 install이 readonly 충돌로 한 줄도 실행되지 않았다. 하네스가 함수 본문만 추출해 실행하느라 전역 readonly 선언이 빠진 컨텍스트를 만들었고, 그 seam을 성립시키려 넣은 자기완결 폴백이 프로덕션과의 차이를 가렸다. seam을 전역 센티넬 선로드로 교정하자 fix 전 상태에서 7개 케이스가 FAIL로 전환돼 소급 재현이 증명됐고, strict 기동 케이스 TS-024를 신설했다. Codex legacy alias는 단순 치환으로는 기존 설치 머신이 영구 보존한다는 멱등 스킵 함정을 PLAN이 발견해 3분기 마이그레이션으로 해결했다. R-6 AC는 소스 grep 0건이 탐지 로직과 원리적으로 충돌해 사용자 승인 아래 판정 대상을 결과 파일로 이전했다(난독화 금지 명시). 최종 스위트 15/15, 회귀 22/22, 컨벤션 Critical/High 0, 실환경 codex doctor 0 warn·0 fail. 이월 10건 — 최대는 S-14 Windows 런타임 미검증(pwsh 미설치)과 에이전트별 effort 값 배정. 미수행: 커밋."
     }
   ]
 }

@@ -24,12 +24,15 @@ tags:
 sources:
 - task:077
 - code:opal/tools/code-scan/
+- task:107
 related:
 - brain-code-scan-role-division
 - code-header-dual-source-inheritance
 - exports-generation-tool-verification-division
+- regulation-tool-four-way-mismatch
+- prohibit-by-property-not-name
 created: '2026-08-01'
-updated: '2026-08-01'
+updated: '2026-09-06'
 status: draft
 ---
 ## 개요
@@ -43,10 +46,13 @@ status: draft
 - 기록 위치 판정: 파일 하나를 주면 그 파일의 헤더를 인라인과 외부 지도 중 어디에 남겨야 하는지 알려준다(`opal/tools/code-scan/code-scan.js:755` `decideTarget`).
 - 커버리지·위반 검증: 연결 끊김·미커버·충돌·초안 상태·존재하지 않는 노출 인터페이스 다섯 가지 위반을 검사하고, 변경된 파일만 골라 검사하는 모드를 지원한다(`opal/tools/code-scan/code-scan.js:1448` `cmdValidate`).
 - 여러 소속 영역에 걸쳐 이름이 같은 항목을 한 번에 조회하는 기능도 제공한다(근거: task:077 PLAN F-008).
+- 이력 누적 비차단 경고: `description`·`note`에 서로 다른 태스크 번호가 2개 이상 쌓이면(단발 출처 인용은 허용, 시점이 다른 변경이 겹겹이 쌓이면 경고) `header_history` 위반으로 표시하고, `@header` 블록에 §2가 정의하지 않은 필드(`changelog` 등)가 존재하면 `undeclared_field`로 표시한다. 둘 다 기존 `blockingViolations` 필터에서 제외된 비차단 경고다(근거: task:107 `code-scan.js:34-46,3245-3256,3443,3450`, PLAN §3.2.2 (C)).
 
 ## 설계 배경 (WHY)
 
 기존 여덟 가지 조회 동작은 하나도 건드리지 않고 그 위에 작성 기능을 얹었다 — 외부 지도가 없는 프로젝트에서는 이전과 완전히 동일한 결과가 나와야 한다는 제약을 지키기 위해서다(근거: task:077 TASK.md 제약②, PLAN§3.2.2(H)). 문법 해석기 없이 판단하도록 만든 것은, 새 의존성을 들이지 않는다는 이 도구군 전체의 원칙을 지키기 위함이다(추론: 코드패턴).
+
+이력 누적 감지의 임계값(2)은 튜닝 파라미터가 아니라 "단발 출처 인용(1개)"과 "이력 누적(2개 이상)"을 가르는 축 정의 자체의 귀결이다 — 3으로 올리면 실제 이력 누적 사례 다수가 탈락한다(근거: task:107 PLAN §3.2.2 (A) "[MUST] 임계값 2는 선택이 아니라 축 정의의 귀결"). `undeclared_field` 축은 처음엔 `changelog`라는 이름 하나만 검사했으나, "이름 불문 금지"라는 규정과 불일치한다는 컨벤션 진단 지적을 받고 "정의되지 않은 필드"라는 성질 기반 판정으로 일반화됐다(근거: task:107 `AGENTIC-LOG.md` "[ERROR] GC-C001" 절 → [[prohibit-by-property-not-name]]).
 
 ## 관계 (HOW)
 
@@ -55,6 +61,8 @@ status: draft
 - [[brain-code-scan-role-division]] — opal-brain과의 역할 경계.
 - [[code-header-dual-source-inheritance]] — 조회 시 헤더를 해석하는 규칙.
 - [[exports-generation-tool-verification-division]] — 노출 인터페이스 필드의 생성·검증 분업.
+- [[regulation-tool-four-way-mismatch]] — `header_history`/`undeclared_field` 감지 축 설계 과정에서 규정과 도구가 네 방향으로 어긋난 경위.
+- [[prohibit-by-property-not-name]] — `undeclared_field` 축이 이름 나열에서 성질 판정으로 일반화된 논리.
 
 ## 소스 커버리지
 
@@ -67,3 +75,4 @@ status: draft
 | `resolveHeader` | `opal/tools/code-scan/code-scan.js:688` | 5단 상속 해석기 |
 | `decideTarget` | `opal/tools/code-scan/code-scan.js:755` | 기록 위치 4단 판정 |
 | `cmdValidate` | `opal/tools/code-scan/code-scan.js:1448` | 위반 5종 + 커버리지 검증 |
+| `countTaskTags` | `opal/tools/code-scan/code-scan.js:3245-3256` | `header_history` 이력 누적 감지 순수 함수 |

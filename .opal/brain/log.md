@@ -381,3 +381,7 @@
 - 신규: [[pages/concept/norm-proliferation-spiral-without-enforcement.md]], [[pages/concept/removal-task-boundary-unification.md]], [[pages/concept/non-tty-install-bypass-pattern.md]], [[pages/concept/multilayer-verification-no-single-layer-catches-all.md]]
 - 출처: task:108
 
+## [2026-09-06] ingest | CLOSE ingest — 태스크 107 @header 워커 기입 필드 작성 기준 신설 + 이력 분리
+- 신규: [[pages/concept/regression-pin-of-task-time-fact.md]], [[pages/concept/regulation-tool-four-way-mismatch.md]], [[pages/concept/prohibit-by-property-not-name.md]], [[pages/concept/tag-removal-is-not-history-removal.md]], [[pages/concept/worktree-tasks-fixture-structural-limit.md]], [[pages/entity/header-standard-doc.md]]
+- 출처: task:107
+
