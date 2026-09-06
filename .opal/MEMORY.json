@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_task_number": 108,
+  "last_task_number": 109,
   "memories": [
     {
       "title": "변경이력 제거 검토 결정 — A안 확정",
@@ -9,38 +9,6 @@
       "status": "active",
       "file": "memory/변경이력_제거_검토_결정_A안_확정.md",
       "summary": "프레임워크 md 137개 변경이력 표+버전표기 22건 제거 확정. 생성·검증 측 동반 개정 필수"
-    },
-    {
-      "title": "fixture 실환경 미재현 시 결함 통과",
-      "date": "2026-08-15",
-      "type": "improvement",
-      "status": "candidate",
-      "file": "memory/테스트_fixture가_실환경_구조를_재현하지_않으면_결함이_통과한다.md",
-      "summary": "092에서 실환경 검증이 pytest 전건 GREEN 상태에서 결함을 두 번 잡았다. 1) 본편 — remove 후 재생성 영구 차단. 기존…"
-    },
-    {
-      "title": "PM이 도구 계수를 grep으로 대체해 오판했다",
-      "date": "2026-08-16",
-      "type": "improvement",
-      "status": "candidate",
-      "file": "memory/PM이_도구_계수를_grep으로_대체해_오판했다.md",
-      "summary": "테스트 함수 수를 grep -c 'def test_'로 세어 292→316으로 보고했으나 문자열 리터럴 \"def test_foo(): pass…"
-    },
-    {
-      "title": "PLAN 체크박스를 복수 하위 Step에 공용으로 두지 않는다",
-      "date": "2026-09-06",
-      "type": "improvement",
-      "status": "candidate",
-      "file": "memory/PLAN_체크박스를_복수_하위_Step에_공용으로_두지_않는다.md",
-      "summary": "태스크 107 PLAN의 Step 16~22가 7개 하위 Step(BE 3 + FE 4)을 하나의 체크박스로 묶었다. 워커 3명이 연달아 「단…"
-    },
-    {
-      "title": "PM이 자기 규율의 예외가 되지 않게 한다",
-      "date": "2026-09-06",
-      "type": "improvement",
-      "status": "candidate",
-      "file": "memory/PM이_자기_규율의_예외가_되지_않게_한다.md",
-      "summary": "태스크 107에서 PM 귀책 5건이 났고 그중 3건이 워커에게는 [MUST]로 주입한 규율을 PM 자신이 어긴 것이다 — (1) 절대경로 사용…"
     }
   ],
   "history": [
