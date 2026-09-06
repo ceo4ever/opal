@@ -657,3 +657,204 @@ test('[T077-승계] 대조군: 제외 대상 아닌 신규 미등재 파일은 �
   assert.ok(hit,
     `대조군: 제외 대상이 아닌 Rogue.java는 files_key_removed로 정상 검출되어야 함(게이트 무력화 방지), got ${JSON.stringify(json && json.violations)}`);
 });
+
+// ─────────────────────────────────────────────────────────────────────────
+// [T106/ADD-2] 헤더 읽기 창문의 **단위(바이트) 동일성** — 한글 경계 회귀 (이월 1-a)
+//
+// 결함(106 ADD-1): `HEADER_READ_BYTES`를 라이브 경로(readFileHead — Buffer/readSync = 바이트)와
+// HEAD 비교 경로(classifyUncovered — head.content.slice = UTF-16 문자)가 **다른 단위**로 소비했다.
+// 한글은 UTF-8 3바이트 / UTF-16 1유닛이므로 두 창문이 약 3배 어긋나고, @header 블록 종료가 두
+// 창문 **사이**에 놓인 파일은 워킹 사본과 커밋 사본이 완전히 동일해도 "HEAD엔 있었는데 지금
+// 없다 = 회귀"로 오판돼 매번 거짓 `newly_uncovered`(exit 2)로 CLOSE 게이트를 차단했다.
+//
+// 기존 git 2분류 회귀 5건은 전부 ASCII 픽스처라 이 비대칭을 구조적으로 검출할 수 없다. 아래
+// 3케이스는 창문 경계가 **한글 문자 중간**에 놓이도록 바이트 단위로 정밀 제어한 픽스처를 쓴다.
+// 실 파일시스템 + 실 git + 실 CLI만 사용한다(mock 금지).
+// ─────────────────────────────────────────────────────────────────────────
+
+// code-scan.js:45 `HEADER_READ_BYTES` — 단위는 **바이트** 고정. 이 테스트군의 픽스처는 이 값을
+// 기준으로 "창문 안/밖"을 배치하므로, 상수를 바꾸면 이 한 줄만 따라 바꾼다.
+const HEADER_WINDOW_BYTES = 24576;
+const HAN = '가'; // UTF-8 3바이트 / UTF-16 1유닛 — 두 단위를 벌리는 최소 재료
+
+/** content를 UTF-8로 인코딩했을 때 `at` 바이트 경계가 멀티바이트 문자 **중간**을 자르는가. */
+function splitsMultibyteAt(content, at) {
+  const b = Buffer.from(content, 'utf8');
+  return b.length > at && (b[at] & 0xc0) === 0x80; // 10xxxxxx = UTF-8 continuation byte
+}
+
+/**
+ * @header 블록의 닫는 `}`가 파일 선두로부터 정확히 `endByteTarget` 바이트(±2, 한글 3바이트
+ * 정렬 올림)에 오도록 한글 패딩으로 정밀 제어한 .java 소스를 만든다.
+ * - `description`을 JSON **마지막** 필드로 두어 패딩이 블록 끝까지 이어진다(경계를 블록 내부에
+ *   놓는 c3에 필요).
+ * - `domain` 값에 0~2자 shim을 넣어 한글 런 시작 바이트를 미세 조정한다 — 창문 경계가 반드시
+ *   한글 문자 중간에 놓이게 만드는 결정론적 수단이다.
+ * - 블록이 창문 안에서 끝나는 경우(c1)에는 한글 주석 꼬리를 덧붙여 경계가 꼬리의 한글 중간에
+ *   놓이게 한다(절단 U+FFFD가 `raw` 범위 밖이라 파싱에 무해함을 실측하기 위함).
+ */
+function buildBoundaryHeaderJava(mod, endByteTarget) {
+  for (let shim = 0; shim < 3; shim++) {
+    const pre = `/**\n * @header {\n *   "module": "${mod}",\n *   "layer": "util",\n` +
+      ` *   "domain": "demo${'o'.repeat(shim)}",\n *   "exports": ["${mod}"],\n *   "description": "`;
+    const post = `"\n * `;
+    const fixed = Buffer.byteLength(pre) + post.length;
+    const padBytes = Math.ceil((endByteTarget - fixed) / 3) * 3;
+    const pad = HAN.repeat(padBytes / 3);
+    let content = pre + pad + post + `}\n */\npackage svc.mod;\npublic class ${mod} {}\n`;
+    if (Buffer.byteLength(content) <= HEADER_WINDOW_BYTES) {
+      let lead = '// ';
+      while ((HEADER_WINDOW_BYTES - (Buffer.byteLength(content) + lead.length)) % 3 === 0) lead += ' ';
+      const need = HEADER_WINDOW_BYTES - Buffer.byteLength(content) - lead.length;
+      content += lead + HAN.repeat(Math.ceil(need / 3) + 8);
+    }
+    if (!splitsMultibyteAt(content, HEADER_WINDOW_BYTES)) continue;
+    return {
+      content,
+      closeByte: fixed + padBytes,                          // 닫는 `}`의 0-기반 바이트 인덱스
+      closeChar: pre.length + pad.length + post.length,     // 같은 위치의 UTF-16 문자 인덱스
+    };
+  }
+  throw new Error(`[T106/ADD-2] 경계 픽스처 구성 실패(창문 경계를 한글 중간에 놓지 못함): ${mod}`);
+}
+
+// 3케이스 + 회귀 대조군이 **하나의 임시 git 레포와 2회의 CLI 실행을 공유**한다.
+// (레포 생성·커밋이 비용의 대부분이고, 이 파일은 메타테스트 3건에 중첩 실행되므로 시간 예산이
+//  합산된다 — 케이스마다 새 레포를 만들지 않는다.)
+let _boundaryEnv = null;
+function boundaryEnv() {
+  if (_boundaryEnv) return _boundaryEnv;
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'opal-t106add2-hanwin-'));
+  cleanupDirs.push(dir);
+  initGitRepo(dir);
+  writeGitClassConfig(dir);
+
+  const specs = {
+    winIn: ['HanWinIn', 24001],        // c1: 블록이 창문 **안**에서 종료
+    winOut: ['HanWinOut', 25001],      // c2: 블록이 창문 **밖**에서 종료
+    winEdge: ['HanWinEdge', 24583],    // c3: 창문 경계가 JSON 블록 **내부**
+    regressCtl: ['HanRegressCtl', 24001], // 대조군: 진짜 회귀(커밋엔 헤더, 워킹엔 제거)
+  };
+  const fx = {};
+  for (const [key, [mod, target]] of Object.entries(specs)) {
+    const built = buildBoundaryHeaderJava(mod, target);
+    const rel = `svc/mod/${mod}.java`;
+    const abs = path.join(dir, rel);
+    fs.mkdirSync(path.dirname(abs), { recursive: true });
+    fs.writeFileSync(abs, built.content);
+    fx[key] = Object.assign({ mod, rel, abs }, built);
+  }
+  git(dir, ['add', '.']);
+  const c = git(dir, ['commit', '-q', '-m', 'boundary fixtures (working copy == HEAD copy)']);
+  if (c.status !== 0) throw new Error(`git commit failed: ${c.stderr}`);
+
+  // 대조군만 워킹 사본에서 헤더를 제거한다 — 이것이 **진짜** 회귀다.
+  fs.writeFileSync(fx.regressCtl.abs, `package svc.mod;\npublic class ${fx.regressCtl.mod} {}\n`);
+
+  // c1/c2/c3는 워킹==커밋이므로 한 번에 판정해도 서로 오염되지 않는다(대조군만 분리 실행 —
+  // 대조군의 차단(exit 2)이 3케이스의 exit 0 단언을 가리지 않게 하기 위함).
+  const same = run(dir, ['validate', '--changed',
+    [fx.winIn.rel, fx.winOut.rel, fx.winEdge.rel].join(','), '--json']);
+  const regress = run(dir, ['validate', '--changed', fx.regressCtl.rel, '--json']);
+
+  _boundaryEnv = { dir, fx, same, regress };
+  return _boundaryEnv;
+}
+
+function uncoveredHit(result, rel) {
+  return ((result.json && result.json.violations) || []).find(v => v.code === 'uncovered' && v.file === rel);
+}
+
+test('[T106/ADD-2] c1: @header 블록이 창문 **안**에서 종료 + 워킹==커밋 → covered · exit 0 · newly_uncovered 0', () => {
+  const { fx, same } = boundaryEnv();
+  const f = fx.winIn;
+
+  // 픽스처 전제 — 이 두 수치가 결함의 판별면이다: 바이트 창문(24576) **안**이면서
+  // 교정 전 문자 창문(8192) 안이기도 해야 HEAD 경로가 "있었다"고 오판할 수 있다.
+  assert.ok(f.closeByte < HEADER_WINDOW_BYTES,
+    `블록 종료가 바이트 창문 안이어야 함, closeByte=${f.closeByte}`);
+  assert.ok(f.closeChar < 8192,
+    `교정 전 문자 창문(8192)에는 들어가야 거짓 회귀가 재현된다, closeChar=${f.closeChar}`);
+  assert.ok(splitsMultibyteAt(f.content, HEADER_WINDOW_BYTES),
+    `창문 경계가 한글 문자 중간을 잘라야 함(절단 U+FFFD 무해 확인 포함)`);
+
+  assert.strictEqual(same.exitCode, 0,
+    `워킹==커밋인 파일은 회귀가 아니므로 차단되면 안 됨, got exit ${same.exitCode} (stdout: ${same.stdout})`);
+  assert.strictEqual(same.json && same.json.counts.newly_uncovered, 0,
+    `[거짓 회귀 방지] counts.newly_uncovered === 0, got ${JSON.stringify(same.json && same.json.counts)}`);
+  assert.strictEqual(uncoveredHit(same, f.rel), undefined,
+    `${f.rel}은 covered이므로 uncovered 위반이 없어야 함, got ${JSON.stringify(uncoveredHit(same, f.rel))}`);
+  assert.strictEqual(same.json && same.json.coverage.covered, 1,
+    `창문 안에서 종료한 블록 1건만 covered로 계상, got ${JSON.stringify(same.json && same.json.coverage)}`);
+  assert.strictEqual(same.json && same.json.coverage.inline, 1,
+    `inline 소스 covered 1건, got ${JSON.stringify(same.json && same.json.coverage)}`);
+});
+
+test('[T106/ADD-2] c2: @header 블록이 창문 **밖**에서 종료 + 워킹==커밋 → pre_existing · exit 0(비차단)', () => {
+  const { fx, same } = boundaryEnv();
+  const f = fx.winOut;
+
+  assert.ok(f.closeByte > HEADER_WINDOW_BYTES,
+    `블록 종료가 바이트 창문 밖이어야 함, closeByte=${f.closeByte}`);
+  assert.ok(splitsMultibyteAt(f.content, HEADER_WINDOW_BYTES),
+    `창문 경계가 한글 문자 중간을 잘라야 함`);
+
+  assert.strictEqual(same.exitCode, 0, `pre_existing만이므로 비차단 exit 0, got ${same.exitCode}`);
+  const hit = uncoveredHit(same, f.rel);
+  assert.strictEqual(hit && hit.sub, 'pre_existing',
+    `라이브·HEAD 두 창문이 모두 못 보므로 회귀가 아니다 — sub:'pre_existing', got ${JSON.stringify(hit)}`);
+});
+
+test('[T106/ADD-2] c3: 창문 경계가 JSON 블록 **내부**(닫는 `}`가 창문 밖) → end === -1 정상 null → pre_existing · exit 0', () => {
+  const { fx, same } = boundaryEnv();
+  const f = fx.winEdge;
+
+  // 경계가 블록 내부에 있다 = 여는 `{`는 창문 안, 닫는 `}`는 창문 밖.
+  assert.ok(f.closeByte > HEADER_WINDOW_BYTES,
+    `닫는 '}'가 창문 밖이어야 함, closeByte=${f.closeByte}`);
+  assert.ok(f.closeByte - HEADER_WINDOW_BYTES < 32,
+    `경계가 블록 **내부** 근접이어야 의미가 있다(닫는 '}' 직전), closeByte=${f.closeByte}`);
+  assert.ok(splitsMultibyteAt(f.content, HEADER_WINDOW_BYTES),
+    `경계가 블록 내부의 한글 문자 중간을 잘라야 함 — 절단 U+FFFD가 중괄호로 오인되면 안 된다`);
+
+  assert.strictEqual(same.exitCode, 0, `pre_existing만이므로 비차단 exit 0, got ${same.exitCode}`);
+  const hit = uncoveredHit(same, f.rel);
+  assert.strictEqual(hit && hit.sub, 'pre_existing',
+    `닫는 '}'를 못 찾아 양 경로 모두 null — 회귀가 아니다, got ${JSON.stringify(hit)}`);
+  assert.strictEqual(same.json && same.json.counts.newly_uncovered, 0,
+    `절단 U+FFFD가 '}'로 오인돼 한쪽만 파싱에 성공하면 거짓 회귀가 난다, got ${JSON.stringify(same.json && same.json.counts)}`);
+});
+
+test('[T106/ADD-2] 불변식: 라이브 창문과 HEAD 비교 창문은 **같은 바이트 창문**을 본다(플립 지점 일치)', () => {
+  const { dir, fx, same, regress } = boundaryEnv();
+
+  // (1) 전제 — c1/c2/c3는 워킹 사본과 커밋 사본이 **바이트 동일**하다. 이것이 성립해야
+  //     이들에게서 나오는 newly_uncovered가 "거짓 회귀"임이 증명된다.
+  for (const key of ['winIn', 'winOut', 'winEdge']) {
+    const f = fx[key];
+    const shown = spawnSync('git', ['show', `HEAD:${f.rel}`],
+      { cwd: dir, encoding: 'buffer', maxBuffer: 16 * 1024 * 1024 });
+    assert.strictEqual(shown.status, 0, `git show HEAD:${f.rel} 성공해야 함`);
+    assert.ok(Buffer.compare(shown.stdout, fs.readFileSync(f.abs)) === 0,
+      `${f.rel}의 워킹 사본과 커밋 사본이 바이트 동일해야 함(거짓 회귀 성립 조건)`);
+  }
+
+  // (2) 두 경로의 "보인다/안 보인다" 플립 지점이 같은 바이트에서 일어난다.
+  //     라이브 창문: closeByte=${winIn}는 보고(covered) closeByte=${winOut}는 못 본다(uncovered).
+  //     HEAD  창문: 같은 closeByte의 대조군을 보고(newly_uncovered) winOut은 못 본다(pre_existing).
+  //     한쪽이 문자 단위였다면 winIn(문자 8천대)은 HEAD에서만 보여 거짓 회귀가 되고,
+  //     HEAD 창문이 라이브보다 좁았다면 대조군의 **진짜** 회귀가 pre_existing으로 미탐된다.
+  assert.strictEqual(uncoveredHit(same, fx.winIn.rel), undefined,
+    `라이브 창문은 closeByte=${fx.winIn.closeByte}를 본다(covered)`);
+  const outHit = uncoveredHit(same, fx.winOut.rel);
+  assert.strictEqual(outHit && outHit.sub, 'pre_existing',
+    `HEAD 창문도 closeByte=${fx.winOut.closeByte}를 못 본다 — 라이브보다 넓지 않다, got ${JSON.stringify(outHit)}`);
+
+  assert.strictEqual(regress.exitCode, 2,
+    `대조군은 진짜 회귀이므로 차단돼야 함, got exit ${regress.exitCode} (stdout: ${regress.stdout})`);
+  const ctlHit = uncoveredHit(regress, fx.regressCtl.rel);
+  assert.strictEqual(ctlHit && ctlHit.sub, 'newly_uncovered',
+    `HEAD 창문이 closeByte=${fx.regressCtl.closeByte}를 본다 — 라이브보다 좁지 않다(미탐 방지), got ${JSON.stringify(ctlHit)}`);
+  assert.strictEqual(regress.json && regress.json.counts.newly_uncovered, 1,
+    `진짜 회귀 1건, got ${JSON.stringify(regress.json && regress.json.counts)}`);
+});
