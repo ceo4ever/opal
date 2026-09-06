@@ -56,7 +56,7 @@ OPAL은 2-레이어 아키텍처로 동작한다.
 
 | Tier | 트리거 | 로드 대상 | 모드 |
 |------|--------|----------|------|
-| **Phase A — 비서(Lite)** | 전역 마커(install이 `~/.claude/CLAUDE.md` 등에 1회 삽입) — 모든 세션 상시 | 스킵게이트(setting.json 머지) + identity + PRINCIPLES(헌법) + 보고형식·도구맵·`//` 레지스트리 해석 | 자비스 비서 |
+| **Phase A — 비서(Lite)** | 전역 마커(install이 `~/.claude/CLAUDE.md` 등에 1회 삽입) — 모든 세션 상시 | 스킵게이트(setting.json 머지) + identity + PRINCIPLES(헌법) + 도구맵·`//` 레지스트리 해석 | 자비스 비서 |
 | **Phase B — PM(Full)** | cwd에 `.opal/AGENT.md` 존재 시에만 승격 | (Phase A에 더해) opal-harness(Guards/State) + opal-pm(PM 프로세스) + 프로젝트 `.opal/AGENT.md` + PROJECT/MEMORY 브리핑 | 프로젝트 PM |
 
 - **opt-in 모델**: `.opal/AGENT.md`가 없는 비-opi 디렉토리에서는 Phase B가 스킵되어 PM/파이프라인이 로드되지 않는다. `//opi`로 초기화하면 `.opal/AGENT.md`가 생성되어 다음 진입부터 PM tier로 승격된다.
@@ -494,6 +494,7 @@ opal/                                    ← 이 저장소
 
 | 날짜 | 변경 내용 |
 |------|----------|
+| 2026-09-06 13:18 | §2-tier 표 Phase A 로드 항목 열거에서 **`보고형식`** 제거 — AGENT.md §보고 형식 전면 제거(108)에 따라 Phase A가 더 이상 로드하지 않는 항목을 표에서 삭제. 스킵게이트·identity·PRINCIPLES(헌법)·도구맵·`//` 레지스트리 해석 5항목은 무변경 (108) |
 | 2026-09-03 13:15 | **§배포 구조에 「어댑터 확장 필드 통로」 서술 신설** — `emit_platform_agent_adapter()`·`install_codex_agents()`의 frontmatter 재조립이 `name`/`description`/`model` 3필드 하드코딩에서 `OPAL_ADAPTER_FIELD_SPEC` JSON 스펙 순회로 전환됐다. 필드명·값·배치 3중 변환을 스펙 하나가 소유하고 emit은 배치 모드 3종(`key`/`model_param`/`omit`)에만 분기하여 플랫폼명 조건문을 두지 않는다. 첫 확장 필드 `effort`(Claude=`effort` / Codex=`model_reasoning_effort` / Cursor·Gemini=생략) 적용. mac·windows 스펙 JSON은 센티넬 구간 바이트 동일을 규약으로 하며 테스트가 기계 검증한다. 함께 `install_codex_config()` 서술을 legacy `max_threads` → `max_concurrent_threads_per_session`으로 정정하고 3분기 마이그레이션(신규 append / 기존 블록 in-place 치환 / 스킵)을 명시. `docs/architecture-diagram/opal_framework_architecture.html:599`의 동일 legacy 키 표기도 정정 (태스크 105) |
 | 2026-09-03 00:59 | **§커뮤니티 스킬 설치 판정을 라이선스 1축 → 2축·4단으로 갱신** — 본문 위험 패턴 스캔(`skill-registry.js scan-risk` 신설, 1층 하드 필터)과 라이선스를 합쳐 SAFE/CAUTION/RISKY/UNKNOWN 4단으로 판정한다. 1층은 필요조건이며 사람 검토를 대체하지 않음을 명시(산문 영역 미탐 한계). §레지스트리(이원) 행에 사용자 등록분 판정 3필드(`trust`·`capabilities`·`scanned_at`) additive 기록 반영 — `validate`가 미지 필드를 무시하는 성질을 이용해 스키마 교체 없이 확장. §핵심 디렉토리 `tools/` 표 `skill-registry/` 항목에 `scan-risk` 반영. 근거 — `opal/skills/opal-skill-manager/SKILL.md` v1.5(§1·§2 6단 흐름 재작성), `opal/tools/skill-registry/skill-registry.js`(`scan-risk` 서브명령) (태스크 105) |
 | 2026-08-25 17:55 | **§OPAL Console에 「태스크 진행 통계」 절 신설** — 태스크 상세·대시보드가 `tasks/*/state.json`을 집계해 병목 단계와 캡틴 대기 구간을 표시한다. 집계 코어 `dashboard/backend/stats.py` 신설(표준 라이브러리 3종만 의존해 순환 회피, 공개 함수 7종, 라우터·FE는 소비만) · 분해축 「총 리드타임 = 작업 + 대기」 · 워크플로우별 분리 집계(혼합 미제공, opd 7·opds 5·opp 4단계로 구성 상이) · 대시보드는 완료 태스크 모수 / 상세는 실시간(`now` 주입 결정론) · 실시간 대기 귀속은 `key`의 `*.user_confirm` 패턴(`pending` 행 `owner`는 `init` 기본값이라 비신뢰) · 필드 명명 원천 용어 정렬(`skill`·`timestamp`·`row_id`, 사표 필드는 별칭 존치) · 표시 문자열 BE 소유 · 정적만 캐시하고 실시간은 캐시 밖 조립. 부수 교정 — `cache.py`의 mtime 비교가 monotonic 파생값과 epoch를 직접 비교해 `source_path` 지정 시 상시 무효화되던 결함을 wall-clock 기준으로 수정 (태스크 103) |
