@@ -1,0 +1,247 @@
+{
+  "task_id": "109-260906-opds-태스크루트-해석-수렴",
+  "skill": "opd",
+  "mode": "agentic",
+  "schema_version": "1.1",
+  "created_at": "2026-09-06 23:37:13",
+  "updated_at": "2026-09-07 23:37:10",
+  "current_status": "in_progress",
+  "rows": [
+    {
+      "row_id": 1,
+      "stage": "TASK",
+      "item": "작업",
+      "key": "task.task_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-06 23:39:00",
+      "owner": "PM",
+      "note": null,
+      "worker_duration_unknown": true
+    },
+    {
+      "row_id": 2,
+      "stage": "TASK",
+      "item": "사용자 확인",
+      "key": "task.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-06 23:40:01",
+      "owner": "auto",
+      "note": "auto-approved on ANALYSIS entry"
+    },
+    {
+      "row_id": 3,
+      "stage": "ANALYSIS",
+      "item": "작업",
+      "key": "analysis.analysis_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-07 10:58:53",
+      "owner": "PM",
+      "note": null,
+      "worker_duration_minutes": 12
+    },
+    {
+      "row_id": 4,
+      "stage": "ANALYSIS",
+      "item": "PM Gate",
+      "key": "analysis.pm_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-07 10:58:53",
+      "owner": "PM",
+      "note": null,
+      "gate": {
+        "artifacts": [
+          "ANALYSIS.md"
+        ],
+        "checklist": [
+          "ANALYSIS.md §0 참조 문서 — code-scan·brain 선조회 결과 1건 이상",
+          "ANALYSIS.md §확정 입력 판정 — TASK.md [결정]·[사실] 전건 판정(누락 0)",
+          "ANALYSIS.md §1.1 관련 파일 목록 — 영역|경로|역할|변경 유형|근거 5열 표 존재 (영역 라벨은 analysis-core.md §5 축)",
+          "ANALYSIS.md §다음 단계 입력 — 항목|확정값|근거 3열 표 존재",
+          "소스코드 원문 블록 0건 (코드펜스는 실행 명령·시그니처 한정)"
+        ]
+      }
+    },
+    {
+      "row_id": 5,
+      "stage": "ANALYSIS",
+      "item": "사용자 확인",
+      "key": "analysis.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-07 10:59:00",
+      "owner": "auto",
+      "note": "auto-approved on PLAN entry"
+    },
+    {
+      "row_id": 6,
+      "stage": "PLAN",
+      "item": "작업",
+      "key": "plan.plan_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-07 13:14:29",
+      "owner": "PM",
+      "note": null,
+      "worker_duration_minutes": 27
+    },
+    {
+      "row_id": 7,
+      "stage": "PLAN",
+      "item": "PM Gate",
+      "key": "plan.pm_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-07 13:14:29",
+      "owner": "PM",
+      "note": null,
+      "gate": {
+        "artifacts": [
+          "TASK.md",
+          "PLAN.md"
+        ],
+        "checklist": [
+          "TASK.md 요구사항",
+          "PLAN.md §4.2",
+          "PLAN.md §5",
+          "PLAN.md §리스크 가설 표",
+          "code-scan 결과 인용 — state-tool verify <태스크폴더> --code-scan-citation-check 통과 (코드 변경 태스크 한정, 문서 태스크는 skipped)"
+        ]
+      }
+    },
+    {
+      "row_id": 8,
+      "stage": "PLAN",
+      "item": "사용자 확인",
+      "key": "plan.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-07 14:05:43",
+      "owner": "auto",
+      "note": "auto-approved on TEST-SCENARIO entry"
+    },
+    {
+      "row_id": 9,
+      "stage": "TEST-SCENARIO",
+      "item": "작업",
+      "key": "test_scenario.test_scenario_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-07 14:11:38",
+      "owner": "PM",
+      "note": "TEST-SCENARIO.md 작성 (18,601B) — H-1~H-11 전재, TS 45건(PLAN 43 + PM 보강 2: TS-060 골든표 단일성, TS-061 L3 워크트리 검증 한계)",
+      "worker_duration_unknown": true
+    },
+    {
+      "row_id": 10,
+      "stage": "TEST-SCENARIO",
+      "item": "목표-커버 게이트",
+      "key": "test_scenario.scenario_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-07 14:31:18",
+      "owner": "PM",
+      "note": "목표-커버 게이트 수렴 — 결정론 exit 0(all_covered, R7/F6/H11/S40) + 평가자 iteration 2 pass(2/2/2, 평균 2.0). iteration 1 pass였으나 ⑤=1 사유 G-1 포함 4건 반영 후 재검; 권고 G-5·G-6·O-1도 전건 반영",
+      "gate": {
+        "artifacts": [
+          "TEST-SCENARIO.md"
+        ],
+        "checklist": [
+          "mock 부재(grep)",
+          "사전 조건 데이터 채워짐",
+          "Given/When/Then 3필드",
+          "가설↔시나리오 매핑 완전",
+          "L1/L2/L3 계층 명시",
+          "L3 [SUPERVISOR] 마커 + PM 요청 양식",
+          "실행 방식(M1/M2/M3) 명시"
+        ]
+      },
+      "worker_duration_unknown": true
+    },
+    {
+      "row_id": 11,
+      "stage": "TEST-SCENARIO",
+      "item": "사용자 확인",
+      "key": "test_scenario.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-07 15:10:10",
+      "owner": "user",
+      "note": "캡틴 결정 3건 수령·반영: skip 0 목표 편입(R-4 AC(e) 신설) / 허브 검증은 머지 후 push 전 실패 시 reset / TS-061 L3 유지. 반영 중 R-ID 충돌(R-7 중복) 발견·정정 → R-8 신설, TS-027~029 신설",
+      "worker_duration_unknown": true
+    },
+    {
+      "row_id": 12,
+      "stage": "EXECUTE",
+      "item": "작업",
+      "key": "execute.implement",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-07 17:20:12",
+      "owner": "PM",
+      "note": "EXECUTE 15+6 Step 완료. 워크트리 state-tool 400/0/3 · console BE 383/0/0 · brain-tool 146/0/0 · code-scan 368/6(구조적 잔존, 머지 후 해소) · 허브 validate 27614B 바이트 동일. 커밋 880a486 (25파일 +1068/-129)",
+      "worker_duration_unknown": true
+    },
+    {
+      "row_id": 13,
+      "stage": "TEST",
+      "item": "작업",
+      "key": "test.run_tests",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-07 23:07:52",
+      "owner": "PM",
+      "note": "TEST 43건: PASS 41(TS-061 처방 후 소유자 재판정 PASS 포함) / FAIL 0 / 이연 5(CLOSE 게이트). TS-061이 진성 결함 1건 발견 → stderr 스캔루트 노출로 처방, 커밋 70d6361",
+      "worker_duration_unknown": true
+    },
+    {
+      "row_id": 14,
+      "stage": "TEST",
+      "item": "PM Gate",
+      "key": "test.pm_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-07 23:35:45",
+      "owner": "PM",
+      "note": "PM Gate: 컨벤션 진단 High 1(GC-C001 CONVENTIONS 규칙 재서술)·Medium 1(GC-C002 변경이력 순서) 반영 / 보안 진단 High 1(GC-001 findProjectRoot 저장소 경계 이탈, 태스크 기인)·Medium 1(GC-002 널바이트 500) 반영 → Critical/High 0. 경로이탈 반증 56입력 우회 0건. 선재 취약점 11입력(임의 파일 읽기 도달) 봉쇄 확인. 4스위트 재확인: state-tool 400/0/3 · console BE 383/0/0 · brain-tool 146/0 · code-scan 368/6. .gitignore 0 · 인증파일 0. 커밋 150a2c8",
+      "gate": {
+        "artifacts": [
+          "TEST-SCENARIO.md"
+        ],
+        "checklist": [
+          "시나리오 결과/코드품질/보안/회귀",
+          "컨벤션 자동 진단 PASS (GC-CONVENTION-*.md Critical/High 0건 — 컨벤션 적용 대상 ≥1건 시 발동)"
+        ]
+      },
+      "worker_duration_unknown": true
+    },
+    {
+      "row_id": 15,
+      "stage": "TEST",
+      "item": "사용자 확인",
+      "key": "test.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-07 23:37:10",
+      "owner": "user",
+      "note": "캡틴 확인 — TEST PASS 41 / FAIL 0 / 이연 5, High 2건(GC-001·GC-C001) 반영 확인, CLOSE 진입 승인",
+      "worker_duration_unknown": true
+    },
+    {
+      "row_id": 16,
+      "stage": "CLOSE",
+      "item": "DONE.md 생성",
+      "key": "close.done_md",
+      "status": "in_progress",
+      "status_label": "🔄",
+      "timestamp": "2026-09-07 23:37:10",
+      "owner": "PM",
+      "note": null
+    }
+  ],
+  "next_action": "CLOSE DONE.md 생성 진행 중",
+  "worktree": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_109"
+}

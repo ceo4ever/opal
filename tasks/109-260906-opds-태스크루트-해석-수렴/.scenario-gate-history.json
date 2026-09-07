@@ -1,0 +1,93 @@
+[
+  {
+    "iteration": 1,
+    "missing": {
+      "requirements": [],
+      "features": [],
+      "hypotheses": []
+    },
+    "gaps": [
+      "G-1",
+      "G-2",
+      "G-3",
+      "G-4"
+    ],
+    "scores": {
+      "goal": 2,
+      "adoption": 1,
+      "boundary": 2
+    },
+    "average": 1.67,
+    "verdict": "pass",
+    "note": "pass이나 ⑤=1 사유 G-1 → TEST 진입 전 4건 전건 반영 후 iteration 2 재검"
+  },
+  {
+    "iteration": 2,
+    "missing": {
+      "requirements": [],
+      "features": [],
+      "hypotheses": []
+    },
+    "gaps": [
+      "G-5 (권고)",
+      "G-6 (권고)",
+      "O-1 (관찰)"
+    ],
+    "closed": [
+      "G-1",
+      "G-2",
+      "G-3",
+      "G-4"
+    ],
+    "still_open": [],
+    "scores": {
+      "goal": 2,
+      "adoption": 2,
+      "boundary": 2
+    },
+    "average": 2.0,
+    "verdict": "pass",
+    "note": "수렴(§5-1). 권고 G-5·G-6·O-1도 전건 반영(PLAN 상류 정렬 / TS-047 성질 기준 전환 / §1 표 양방향 일치). 시나리오 40건"
+  },
+  {
+    "iteration": 3,
+    "missing": {
+      "requirements": [],
+      "features": [],
+      "hypotheses": []
+    },
+    "gaps": [
+      "G-7 (반영 강권)",
+      "G-8 (반영 강권)",
+      "G-9 (권고)",
+      "G-10 (정합)",
+      "G-11 (정합)",
+      "G-12 (정합)"
+    ],
+    "closed": [
+      "G-1",
+      "G-2",
+      "G-3",
+      "G-4",
+      "G-5",
+      "G-6",
+      "O-1",
+      "G-7",
+      "G-8",
+      "G-9",
+      "G-10",
+      "G-11",
+      "G-12"
+    ],
+    "still_open": [],
+    "scores": {
+      "goal": 2,
+      "adoption": 2,
+      "boundary": 2
+    },
+    "average": 2.0,
+    "verdict": "pass",
+    "collision_fix_verdict": "sound",
+    "note": "수렴(§5-1). R-ID 충돌 정정 sound 판정. 권고 6건 전건 반영. requirements 8 / scenarios 43. 반복 상한 3회 중 3회 사용 — 이후 재작성 시 에스컬레이션"
+  }
+]
