@@ -3,7 +3,7 @@
   "module": "routers.dashboard",
   "layer": "router",
   "domain": "console",
-  "description": "GET /api/dashboard — 전 프로젝트 집계 또는 개별 프로젝트 집계(4메트릭·상태분포·활동추이·주의알림·최근활동). project 쿼리 파라미터로 개별/전체 구분. 읽기 전용. 최근활동·주의알림 title은 TASK.md H1에서 파생(_resolve_task_title: 'TASK NNN —'/'TASK:' 접두사 제거, 부재 시 폴더명 슬러그 폴백) — state.json에 title 필드가 없어 폴더명 중복 방지. [T103] 워크플로우별 횡단 집계 additive — 모수는 current_status == done인 완료 태스크만이며(집계기준 3) 진행 중은 total_tasks 차이로만 드러난다. stats.workflow_stats(skill 단위 중앙값·2계열·3계열(pm/worker/captain)·단계별)를 호출하기 전 각 state에 _title을 주입한다(stats.py는 파일 I/O를 하지 않는다). 산출물 규모(artifact_total·artifact_by_type 4유형)는 routers.tasks의 _get_artifact_files·classify_artifact를 함수 내부 지연 import로 호출한다(COLUMN_MAP 선례). 캐시는 현행 유지 — 모수에 실시간 성분이 없고 다중 파일 소스라 단일 source_path mtime 무효화가 적용 불가하다. [T103 R-21] 야간 제외 구간(집계 기준 17)은 라우터가 config.load_quiet_hours로 읽어 workflow_stats에 주입한다 — 개별 프로젝트 모드는 그 프로젝트의 로컬 설정이 전역을 덮고, 전체 모드는 어느 프로젝트도 편들 수 없어 전역 설정만 쓴다. 캐시 키 `dashboard:{project|ALL}:{구간서명}`에 서명을 실어 설정 변경 시 보정 전후 값이 같은 키를 공유하지 않게 했다.",
+  "description": "GET /api/dashboard — 전 프로젝트 집계 또는 개별 프로젝트 집계(4메트릭·상태분포·활동추이·주의알림·최근활동). project 쿼리 파라미터로 개별/전체 구분. 읽기 전용. 태스크 열거는 scanner.iter_task_dirs 단일 진입점에 위임한다 — 모수는 tasks/ 직속 + tasks/backup/ 아카이브이고, state.json 부재 태스크도 빈 dict로 실려 /api/tasks 열거와 이름 집합이 항등이다(하류 집계는 전부 .get() 폴백으로 읽는다). 아카이브 소재 여부는 state[\"_archived\"] 1키로 싣는다(additive). 최근활동·주의알림 title은 TASK.md H1에서 파생(_resolve_task_title: 'TASK NNN —'/'TASK:' 접두사 제거, 부재 시 폴더명 슬러그 폴백) — state.json에 title 필드가 없어 폴더명 중복 방지. [T103] 워크플로우별 횡단 집계 additive — 모수는 current_status == done인 완료 태스크만이며(집계기준 3) 진행 중은 total_tasks 차이로만 드러난다. stats.workflow_stats(skill 단위 중앙값·2계열·3계열(pm/worker/captain)·단계별)를 호출하기 전 각 state에 _title을 주입한다(stats.py는 파일 I/O를 하지 않는다). 산출물 규모(artifact_total·artifact_by_type 4유형)는 routers.tasks의 _get_artifact_files·classify_artifact를 함수 내부 지연 import로 호출한다(COLUMN_MAP 선례). 캐시는 현행 유지 — 모수에 실시간 성분이 없고 다중 파일 소스라 단일 source_path mtime 무효화가 적용 불가하다. [T103 R-21] 야간 제외 구간(집계 기준 17)은 라우터가 config.load_quiet_hours로 읽어 workflow_stats에 주입한다 — 개별 프로젝트 모드는 그 프로젝트의 로컬 설정이 전역을 덮고, 전체 모드는 어느 프로젝트도 편들 수 없어 전역 설정만 쓴다. 캐시 키 `dashboard:{project|ALL}:{구간서명}`에 서명을 실어 설정 변경 시 보정 전후 값이 같은 키를 공유하지 않게 했다.",
   "exports": ["GET /api/dashboard"],
   "depends": ["models", "scanner", "config", "cache", "stats", "adapters.state_adapter"]
 }
@@ -26,7 +26,7 @@ from dashboard.backend.models import (
     StatusDistribution,
     WorkflowStat,
 )
-from dashboard.backend.scanner import scan_projects
+from dashboard.backend.scanner import iter_task_dirs, scan_projects
 from dashboard.backend.stats import format_quiet_hours, workflow_stats
 
 router = APIRouter()
@@ -46,23 +46,24 @@ def _get_state_for_task(task_dir: str) -> dict | None:
 
 
 def _collect_all_tasks(project_path: str) -> list[dict]:
-    """프로젝트의 모든 태스크 state 수집."""
-    tasks_dir = os.path.join(project_path, "tasks")
-    if not os.path.isdir(tasks_dir):
-        return []
+    """프로젝트의 모든 태스크 state 수집.
+
+    열거는 scanner.iter_task_dirs 단일 진입점에 위임한다 — `tasks/` 직속과
+    `tasks/backup/` 아카이브가 한 함수의 순서 규칙으로 나오므로, 이 집계의
+    모수가 `/api/tasks` 열거 모수와 이름 단위로 같다.
+    state.json이 없는 옛 형식 태스크도 빈 dict로 싣는다 — 열거 모수는 디렉토리이고
+    state는 그 위의 부가 정보다. 하류 집계는 전부 `.get()` 폴백으로 읽는다.
+    """
     tasks = []
-    try:
-        for entry in os.scandir(tasks_dir):
-            if not entry.is_dir():
-                continue
-            state = _get_state_for_task(entry.path)
-            if state:
-                state["_task_id"] = entry.name
-                state["_project"] = os.path.basename(project_path)
-                state["_task_dir"] = entry.path
-                tasks.append(state)
-    except OSError:
-        pass
+    for entry, is_archived in iter_task_dirs(os.path.join(project_path, "tasks")):
+        state = _get_state_for_task(entry.path) or {}
+        state["_task_id"] = entry.name
+        state["_project"] = os.path.basename(project_path)
+        state["_task_dir"] = entry.path
+        # 아카이브 소재 여부는 키 하나만 더하는 방식으로 싣는다 — 기존 키의
+        # 의미·이름은 그대로다.
+        state["_archived"] = is_archived
+        tasks.append(state)
     return tasks
 
 

@@ -4,7 +4,7 @@
   "layer": "test",
   "domain": "console",
   "description": "프로젝트 스캐너 RED-first 테스트 — S-1 시나리오 (L2/M1)",
-  "exports": ["[T021/L2-R1] test_scan_finds_opal_projects", "[T021/L2-R1] test_scan_excludes_node_modules", "[T021/L2-R1] test_scan_depth_guard", "[T021/L2-R1] test_scan_marks_non_opal"],
+  "exports": ["[T021/L2-R1] test_scan_finds_opal_projects", "[T021/L2-R1] test_scan_excludes_node_modules", "[T021/L2-R1] test_scan_depth_guard", "[T021/L2-R1] test_scan_marks_non_opal", "[T021/L2-R1][109] test_scan_task_count_two_tier_enumeration"],
   "depends": ["scanner", "config"]
 }
 """
@@ -114,6 +114,33 @@ def test_scan_depth_guard(tmp_path: Path) -> None:
 
     assert "level2" in names, "depth=2 허용 범위 프로젝트 미발견"
     assert "level3" not in names, "depth 초과 프로젝트가 잡힘 (maxdepth 가드 실패)"
+
+
+def test_scan_task_count_two_tier_enumeration(tmp_path: Path) -> None:
+    """[T021/L2-R1][109] task_count는 `tasks/` 1-depth + `tasks/backup/` 1-depth
+    2단 열거를 합산한다. `backup` 폴더 자체는 태스크로 세지 않고, 그 하위 폴더만 센다.
+    Step 8의 단일 열거 함수(iter_task_dirs/resolve_task_dir) 도입 전이므로 RED가 정상."""
+    from dashboard.backend.scanner import scan_projects
+
+    fx = tmp_path / "fx-opal-c"
+    (fx / ".opal").mkdir(parents=True)
+    (fx / ".opal" / "AGENT.md").write_text("# AGENT")
+    (fx / "tasks" / "001-task").mkdir(parents=True)
+    (fx / "tasks" / "002-task").mkdir(parents=True)
+    (fx / "tasks" / "backup" / "003-task").mkdir(parents=True)
+    (fx / "tasks" / "backup" / "004-task").mkdir(parents=True)
+
+    results = scan_projects(
+        roots=[str(tmp_path)],
+        depth=2,
+        exclude=["node_modules", ".git", ".venv", "__pycache__"],
+    )
+    names = {r.name: r for r in results}
+    assert "fx-opal-c" in names, "fx-opal-c 발견 실패"
+    # tasks/ 직속 2건 + tasks/backup/ 하위 2건 = 4건. backup 폴더 자체는 세지 않는다.
+    assert names["fx-opal-c"].task_count == 4, (
+        f"2단 열거(tasks/ + tasks/backup/) 합산 불일치: {names['fx-opal-c'].task_count}"
+    )
 
 
 def test_scan_marks_non_opal(opal_workspace: Path) -> None:

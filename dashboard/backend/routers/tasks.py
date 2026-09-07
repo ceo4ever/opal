@@ -3,7 +3,7 @@
   "module": "routers.tasks",
   "layer": "router",
   "domain": "console",
-  "description": "GET /api/tasks, /api/tasks/detail?project=&task_id=, /api/tasks/artifact?project=&task_id=&name= — 칸반 5컬럼 정규화(pending/in_progress/blocked/done/archive) + 산출물 뷰어. tasks/backup/ 하위 폴더 → archive 컬럼. state.json 없는 옛 형식 태스크는 산출물(DONE.md/PLAN.md 등)로 컬럼 추론. 완료·아카이브 최근순(task_id desc). 절대경로 식별자는 query param으로 전달(path segment 금지). 읽기 전용. _derive_current_stage: rows에서 도달 단계 파생(①in_progress→②마지막도달단계(done/na/skipped)→③전부pending이면첫행; pending 미시작 단계 제외). _group_pipeline_stages: rows를 stage 단위 PipelineStageGroup으로 그룹핑(total/done_count는 na/skipped 제외 active 기준) + stats.py 파생(행 소요·단계 2계열 + 3계열 pm/worker/captain) 결합. _aggregate_status: 단계 내 행 status 집계(na/skipped 제외→blocked우선→all_done→in_progress/혼재→pending; active없으면done). 상세 응답에 진행 통계가 결합되며, 행 매핑은 원천 키(row_id·timestamp) 기준이다 — 레거시 필드(row·updated_at)에도 같은 값이 채워진다(집계기준 15). 캐시(task_detail:{project}:{task_id})에는 **정적 파생만** 담고 실시간 파생(is_running·current_elapsed_*)은 캐시 밖에서 task_live_stats(now 주입)로 합성한다 — 캐시 저장 시 state.json을 source_path로 넘겨 mtime 무효화를 켠다. 야간 제외 구간(집계 기준 17)은 라우터가 config.load_quiet_hours(project_path)로 읽어 task_static_stats·row_durations·task_live_stats에 인자로 주입한다 — stats.py는 설정을 읽지 않는다. 캐시 키는 `task_detail:{project}:{task_id}:{구간서명}`으로 설정 변경 시 자연히 갈린다(mtime 축은 state.json만 본다). 행 시각 표시 문자열(`time_label`)은 자체 슬라이싱이 아니라 stats.format_timestamp를 호출해 얻는다 — 표시 규칙은 stats.py 단일 소유다(P-7). _get_artifact_files는 화이트리스트 없이 .md 전수를 유형 순(pipeline→verification→log→other)으로 열거하며, classify_artifact가 파일명 기반 4유형을 판정한다(P-3). artifact_count·artifacts[] 값 증가는 P-4가 선언한 회귀 예외다. 행 라벨의 사용자 호칭은 config.load_owner_name()이 원천이다 — _OWNER_ROLE_LABELS는 역할명(PM·자동)만 갖고, _owner_label()이 owner == \"user\"일 때만 호칭을 붙인다. 라우터가 요청당 1회 읽어 _build_static_detail → _group_pipeline_stages → _to_pipeline_row로 주입하며 상세 응답 최상위 owner_term에도 같은 값을 싣는다(FE가 문구를 조립한다). owner_term은 캐시 키에 넣지 않는다 — 행 라벨은 캐시 TTL(30초)만큼 지연될 수 있고 TTL이 스스로 회복한다.",
+  "description": "GET /api/tasks, /api/tasks/detail?project=&task_id=, /api/tasks/artifact?project=&task_id=&name= — 칸반 5컬럼 정규화(pending/in_progress/blocked/done/archive) + 산출물 뷰어. 목록 열거는 scanner.iter_task_dirs 단일 진입점이며 archive 컬럼은 그 is_archived 플래그로 판정한다(tasks/backup/ 소재 → archive). detail·artifact의 task_id → 디렉토리 해석은 scanner.resolve_task_dir 단독 책임이다 — 라우터는 경로를 조립하지 않고, 해석 실패(비존재·트리 이탈·경로 구분자)는 404다. state.json 없는 옛 형식 태스크는 산출물(DONE.md/PLAN.md 등)로 컬럼 추론. 완료·아카이브 최근순(task_id desc). 절대경로 식별자는 query param으로 전달(path segment 금지). 읽기 전용. _derive_current_stage: rows에서 도달 단계 파생(①in_progress→②마지막도달단계(done/na/skipped)→③전부pending이면첫행; pending 미시작 단계 제외). _group_pipeline_stages: rows를 stage 단위 PipelineStageGroup으로 그룹핑(total/done_count는 na/skipped 제외 active 기준) + stats.py 파생(행 소요·단계 2계열 + 3계열 pm/worker/captain) 결합. _aggregate_status: 단계 내 행 status 집계(na/skipped 제외→blocked우선→all_done→in_progress/혼재→pending; active없으면done). 상세 응답에 진행 통계가 결합되며, 행 매핑은 원천 키(row_id·timestamp) 기준이다 — 레거시 필드(row·updated_at)에도 같은 값이 채워진다(집계기준 15). 캐시(task_detail:{project}:{task_id})에는 **정적 파생만** 담고 실시간 파생(is_running·current_elapsed_*)은 캐시 밖에서 task_live_stats(now 주입)로 합성한다 — 캐시 저장 시 state.json을 source_path로 넘겨 mtime 무효화를 켠다. 야간 제외 구간(집계 기준 17)은 라우터가 config.load_quiet_hours(project_path)로 읽어 task_static_stats·row_durations·task_live_stats에 인자로 주입한다 — stats.py는 설정을 읽지 않는다. 캐시 키는 `task_detail:{project}:{task_id}:{구간서명}`으로 설정 변경 시 자연히 갈린다(mtime 축은 state.json만 본다). 행 시각 표시 문자열(`time_label`)은 자체 슬라이싱이 아니라 stats.format_timestamp를 호출해 얻는다 — 표시 규칙은 stats.py 단일 소유다(P-7). _get_artifact_files는 화이트리스트 없이 .md 전수를 유형 순(pipeline→verification→log→other)으로 열거하며, classify_artifact가 파일명 기반 4유형을 판정한다(P-3). artifact_count·artifacts[] 값 증가는 P-4가 선언한 회귀 예외다. 행 라벨의 사용자 호칭은 config.load_owner_name()이 원천이다 — _OWNER_ROLE_LABELS는 역할명(PM·자동)만 갖고, _owner_label()이 owner == \"user\"일 때만 호칭을 붙인다. 라우터가 요청당 1회 읽어 _build_static_detail → _group_pipeline_stages → _to_pipeline_row로 주입하며 상세 응답 최상위 owner_term에도 같은 값을 싣는다(FE가 문구를 조립한다). owner_term은 캐시 키에 넣지 않는다 — 행 라벨은 캐시 TTL(30초)만큼 지연될 수 있고 TTL이 스스로 회복한다.",
   "exports": [
     "GET /api/tasks",
     "GET /api/tasks/detail?project=&task_id=",
@@ -39,7 +39,7 @@ from dashboard.backend.models import (
     TaskStats,
 )
 from dashboard.backend.parsers.markdown_reader import read_markdown
-from dashboard.backend.scanner import scan_projects
+from dashboard.backend.scanner import iter_task_dirs, resolve_task_dir, scan_projects
 from dashboard.backend.stats import (
     format_timestamp,
     row_durations,
@@ -457,38 +457,24 @@ def list_tasks(project: str = Query(default="", description="프로젝트 절대
         tasks_dir = os.path.join(proj_path, "tasks")
         if not os.path.isdir(tasks_dir):
             continue
-        try:
-            for entry in os.scandir(tasks_dir):
-                if not entry.is_dir():
-                    continue
-                # backup 디렉토리는 일반 태스크에서 제외 — 아카이브 컬럼으로 별도 처리
-                if entry.name == "backup":
-                    continue
-                state = _read_state(entry.path)
-                card = _state_to_task_card(entry.name, entry.path, state)
-                cards.append(card)
-        except OSError:
-            pass
-
-        # tasks/backup/ 하위 폴더 → archive 컬럼 카드
-        backup_dir = os.path.join(tasks_dir, "backup")
-        if os.path.isdir(backup_dir):
-            try:
-                for entry in os.scandir(backup_dir):
-                    if not entry.is_dir():
-                        continue
-                    archive_card = TaskCardResponse(
-                        task_id=entry.name,
-                        title=entry.name,
-                        column="archive",
-                        current_stage="",
-                        progress=0,
-                        updated_at="",
-                        artifact_count=len(_get_artifact_files(entry.path)),
-                    )
-                    cards.append(archive_card)
-            except OSError:
-                pass
+        # 열거는 scanner.iter_task_dirs 단일 진입점 — `tasks/` 직속과
+        # `tasks/backup/` 아카이브를 한 번에 낸다. 컬럼 분기는 열거가 함께 주는
+        # is_archived 플래그로만 한다(폴더명 재판정 없음).
+        for entry, is_archived in iter_task_dirs(tasks_dir):
+            if is_archived:
+                # tasks/backup/ 하위 폴더 → archive 컬럼 카드
+                cards.append(TaskCardResponse(
+                    task_id=entry.name,
+                    title=entry.name,
+                    column="archive",
+                    current_stage="",
+                    progress=0,
+                    updated_at="",
+                    artifact_count=len(_get_artifact_files(entry.path)),
+                ))
+                continue
+            state = _read_state(entry.path)
+            cards.append(_state_to_task_card(entry.name, entry.path, state))
 
     # 완료·아카이브 컬럼: task_id 내림차순(최신이 맨 위)
     # 대기·진행중·블로킹: task_id 오름차순(일관 정렬)
@@ -517,8 +503,11 @@ def get_task_detail(
     if project_path is None:
         raise HTTPException(status_code=404, detail=f"Project not found: {project}")
 
-    task_dir = os.path.join(project_path, "tasks", task_id)
-    if not os.path.isdir(task_dir):
+    # task_id → 실 디렉토리 해석은 scanner.resolve_task_dir 단독 책임이다.
+    # 문자열 조립은 `..` 세그먼트를 조립 단계에서 흡수해 tasks/ 밖을 200으로
+    # 응답한다 — 조립 대신 트리 내부 확인(realpath 접두)에 맡긴다.
+    task_dir = resolve_task_dir(project_path, task_id)
+    if task_dir is None:
         raise HTTPException(status_code=404, detail=f"Task not found: {task_id}")
 
     # 캐시 조회보다 state 읽기가 앞선다 — 실시간 파생은 캐시 밖에서 조립하므로
@@ -651,8 +640,11 @@ def get_task_artifact(
     if project_path is None:
         raise HTTPException(status_code=404, detail=f"Project not found: {project}")
 
-    task_dir = os.path.join(project_path, "tasks", task_id)
-    if not os.path.isdir(task_dir):
+    # task_id → 실 디렉토리 해석은 scanner.resolve_task_dir 단독 책임이다.
+    # 문자열 조립은 `..` 세그먼트를 조립 단계에서 흡수해 tasks/ 밖을 200으로
+    # 응답한다 — 조립 대신 트리 내부 확인(realpath 접두)에 맡긴다.
+    task_dir = resolve_task_dir(project_path, task_id)
+    if task_dir is None:
         raise HTTPException(status_code=404, detail=f"Task not found: {task_id}")
 
     # 보안: path traversal 방지

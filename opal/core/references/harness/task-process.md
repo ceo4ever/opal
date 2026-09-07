@@ -49,6 +49,7 @@
    - `ok: false` → **태스크 폴더·TASK.md를 롤백하지 않는다.** `--wt` 없이 5번으로 진행하고(=`--worktree`를 전달하지 않으므로 `state.json`이 현행 스키마와 동일해진다), 실패 사유(`error` 코드)를 사용자에게 보고한다. agentic 모드에서는 사용자 확인을 요구하지 않고 자동 계속하되 AGENTIC-LOG.md에 실패 사유를 기록한다.
    - 도구는 부분 실패 시 자기가 만든 worktree·브랜치만 스스로 되돌린다(all-or-nothing) — 파이프라인이 정리할 잔여물은 없다.
    - 축 정의 SSOT: `opal/core/references/opal-harness.md` §2.5.
+   - 워크트리에서 허브 고정 데이터(`tasks/`·`.opal/`)를 참조하는 경로 판정 규칙은 `opal/core/references/opal-harness.md` §2.5 (4)가 SSOT다.
 
 5. **[필수] `state init`을 호출하여 STATE.md를 생성한다**. 이 단계를 건너뛰면 세션 복원과 상태 추적이 불가능하다. LLM이 직접 작성하는 것은 금지된다 (`harness/state-template.md` §[MUST] 블록).
 
@@ -105,3 +106,4 @@
 | v1.7 | 2026-08-13 16:57 | state-tool 행 원천 지시 정정 — `--rows-from` 서술을 오케스트레이터 `references/pipeline.json` SSOT 기준으로 교체(구형 `.md` 파싱 지시 제거). 10/10 pilot 전환에 맞춘 pilot 밖 정합 (090) |
 | v1.8 | 2026-08-15 16:30 | 오케스트레이터 공통 영역에 스텝 4.5(`--worktree`/`--wt` worktree 생성 훅) 신설 — `worktree-tool create` 호출·성공/실패 분기·DEC-2 실패 정책(롤백 금지, agentic 자동 계속 + AGENTIC-LOG 기록) 명문화 + 스텝 5 `state init` 코드블록에 `--worktree` 옵션 1행 추가. 기존 스텝 3·4·5·6 번호·본문 무변경 (092) |
 | v1.9 | 2026-08-16 13:22 | 스텝 5 `--next-action` 설명 — "`## 다음 액션` 초기값" → "`state.json` `next_action` 필드 초기값 (조회: `state-tool show`)"로 치환 — STATE.md 저널 전환에 맞춘 표 전제 어구 제거 (094) |
+| v1.10 | 2026-09-07 15:50 | 스텝 4.5에 허브 루트 해석 규칙 포인터 1줄 추가 — 워크트리에서 허브 고정 데이터(`tasks/`·`.opal/`)를 참조하는 경로 판정의 원문 SSOT는 `opal-harness.md` §2.5 (4)임을 지시 (109) |

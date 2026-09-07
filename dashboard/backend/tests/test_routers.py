@@ -76,7 +76,8 @@
     "config",
     "adapters.brain_session",
     "cache",
-    "stats"
+    "stats",
+    "paths"
   ],
   "task": "061",
   "scenarios": [
@@ -1004,11 +1005,37 @@ class TestConsoleConfigEndpoints:
 import statistics
 import urllib.parse
 
-_T103_ROOT = str(Path(__file__).resolve().parents[3])
+from dashboard.backend.paths import hub_root
+
+# [109 ①] 워크트리에서 실행하면 parents[3]은 워크트리 루트가 되고 그 아래엔 tasks/가
+# 없다 — hub_root()로 정규화해 항상 허브 루트를 가리키게 한다. test_config.py·
+# test_deploy_smoke.py는 소스 트리 내용(설정 기본값·설치 스크립트) 자체를 검증하므로
+# 정규화하면 안 된다(H-7, opal-harness.md §2.5 (4) 4항) — 그 두 파일은 손대지 않는다.
+_T103_ROOT = hub_root(str(Path(__file__).resolve().parents[3]))
+
+
+def _t103_find_task_id(root: str, prefix: str) -> str:
+    """[109 ②] 실 태스크 폴더가 `tasks/` 직속 또는 `tasks/backup/`으로 이관됐을 수
+    있어 접두사로 동적 해석한다. `tasks/{prefix}*`·`tasks/backup/{prefix}*` 2글롭을
+    합쳐 정확히 1건일 때만 반환한다 — 0건·2건 이상은 `AssertionError`로 실패시킨다
+    (skip 강등 금지). opal/tools/state-tool/tests/test_state_tool.py의
+    `_find_repo_task_dir` 선례를 그대로 따른다(런타임은 다르지만 성질은 동일)."""
+    root_path = Path(root)
+    candidates = sorted((root_path / "tasks").glob(f"{prefix}*"))
+    candidates += sorted((root_path / "tasks" / "backup").glob(f"{prefix}*"))
+    if len(candidates) != 1:
+        raise AssertionError(
+            f"[FIX-PIN] _t103_find_task_id(prefix={prefix!r}) 매칭 {len(candidates)}건 "
+            f"(정확히 1건 기대). 검색 경로: {root_path / 'tasks' / (prefix + '*')}, "
+            f"{root_path / 'tasks' / 'backup' / (prefix + '*')}. 발견: {candidates}. "
+            f"대상 폴더가 삭제됐거나 동일 접두사가 중복 생성됐다면 표본을 재선정해야 한다."
+        )
+    return candidates[0].name
+
 
 _T103_TASK_101 = "101-260824-opd-핸드오프-스키마-계약정합"
-_T103_TASK_091 = "091-260813-opd-파이프라인-스펙-중복정리"   # FX-LEGACY — gate 보유 행 0건
-_T103_TASK_089 = "089-260811-opi-opal"                      # FX-089 — state.json 부재
+_T103_TASK_091 = _t103_find_task_id(_T103_ROOT, "091")   # FX-LEGACY — gate 보유 행 0건
+_T103_TASK_089 = _t103_find_task_id(_T103_ROOT, "089")   # FX-089 — state.json 부재
 _T103_TASK_102 = "102-260824-opd-태스크분석-경계재정의"
 _T103_TASK_103 = "103-260825-opd-태스크-진행통계"
 
@@ -1804,8 +1831,16 @@ def test_t103_ts107_detail_three_series_splits_on_measured(client, t103_clean_ca
 
 
 def test_t103_ts108_dashboard_three_series_is_additive(client, t103_clean_cache):
-    """[T103/L2-R16] 워크플로우 집계가 3계열을 additive로 싣고 기존 대표값이 불변이다."""
+    """[T103/L2-R16] 워크플로우 집계가 3계열을 additive로 싣고 기존 대표값이 불변이다.
+
+    [MUST 109 교정 — §3.6.2] STATS-BASELINE.md §6.1: "완료기준 검증은 반드시 §2 ID
+    목록으로 필터한 뒤 대조한다." 필터 없이 raw median_minutes/wait_ratio를 그대로
+    단정하면 후속 태스크 완료로 opd 모수가 늘어나 425/23이 실측값(예: 857/…)으로
+    이동해 깨진다. 아래는 코호트(동결 21건) 필터 재계산이며, 재계산 값이 여전히
+    425/23(opd 기준)임을 단정한다 — 값 단정 자체를 없애지 않는다(단언 약화 금지).
+    """
     from dashboard.backend.models import StageStat, TaskStats, WorkflowStat
+    from dashboard.backend.stats import _ratio
 
     # 모델 확장이 전건 선택 필드다 (H-3 — 필수 필드는 기존 생성 경로를 깬다)
     for model in (TaskStats, WorkflowStat, StageStat):
@@ -1826,16 +1861,30 @@ def test_t103_ts108_dashboard_three_series_is_additive(client, t103_clean_cache)
         if skill not in workflows:
             continue
         w = workflows[skill]
-        # 3계열 추가가 기존 대표값을 흔들지 않는다
-        assert w["median_minutes"] == median, f"{skill} 중앙값 회귀"
-        assert w["wait_ratio"] == wait_ratio, f"{skill} 대기 비중 회귀"
-        # 워커 미기록 코호트 → 축퇴
-        assert w["pm_minutes"] == w["work_minutes"], skill
+
+        # [MUST] §6.1 — 코호트 21건 ID로 필터한 재계산만 동결값과 대조한다.
+        cohort = _T103_COHORT[skill]
+        cohort_tasks = [t for t in w["tasks"] if t["task_id"][:3] in cohort]
+        assert len(cohort_tasks) == n, f"{skill} 코호트 모수"
+        cohort_totals = [t["total_minutes"] for t in cohort_tasks]
+        assert round(statistics.median(cohort_totals)) == median, f"{skill} 코호트 중앙값 회귀"
+        cohort_wait = sum(t["wait_minutes"] for t in cohort_tasks)
+        cohort_work = sum(t["work_minutes"] for t in cohort_tasks)
+        assert _ratio(cohort_wait, cohort_work + cohort_wait) == wait_ratio, (
+            f"{skill} 코호트 대기 비중 회귀"
+        )
+
+        # work == pm + worker (models.py @header 항등 — 이동값 아닌 불변식이라 필터 불필요)
+        assert w["work_minutes"] == w["pm_minutes"] + w["worker_minutes"], skill
         assert w["captain_minutes"] == w["wait_minutes"], skill
         for field in _T103_THREE_SERIES:
             assert w[field] >= 0, (skill, field)
         for stage in w["stages"]:
-            assert stage["pm_minutes"] == stage["work_minutes"], (skill, stage["stage"])
+            # work == pm + worker (models.py @header 항등 — 이동값 아닌 불변식이라 필터 불필요)
+            assert stage["work_minutes"] == stage["pm_minutes"] + stage["worker_minutes"], (
+                skill,
+                stage["stage"],
+            )
             assert stage["captain_minutes"] == stage["wait_minutes"], (skill, stage["stage"])
 
 
@@ -1885,9 +1934,23 @@ def test_t103_ts137_disabled_setting_restores_wall_clock(client, monkeypatch):
         assert data["quiet_hours_applied"] is False
         assert data["quiet_hours_label"] == ""
         by_skill = {w["skill"]: w for w in data["workflow_stats"]}
-        assert by_skill["opd"]["median_minutes"] == 799     # STATS-BASELINE.md §4.1
-        assert by_skill["opds"]["median_minutes"] == 276
-        assert by_skill["opp"]["median_minutes"] == 75
+
+        # [MUST 109 교정 — §3.6.2] STATS-BASELINE.md §6.1 — 코호트 21건 ID로 필터한
+        # 재계산만 보정 전 확정값(799/276/75, §4.1)과 대조한다. 필터 없는 opd
+        # 재측정은 후속 태스크 완료로 모수가 늘어나 799가 아닌 값으로 이동한다
+        # (실측: 필터 없이 대조 시 opd median 799가 아닌 값으로 어긋난다).
+        # 값 단정 자체는 삭제하지 않는다 — 코호트 필터를 재계산 경로에 끼워 넣을 뿐이다.
+        _pre_correction_median = {"opd": 799, "opds": 276, "opp": 75}
+        for skill, expected_median in _pre_correction_median.items():
+            cohort = _T103_COHORT[skill]
+            w = by_skill[skill]
+            cohort_totals = [
+                t["total_minutes"] for t in w["tasks"] if t["task_id"][:3] in cohort
+            ]
+            assert len(cohort_totals) == len(cohort), f"{skill} 코호트 모수(보정 전)"
+            assert round(statistics.median(cohort_totals)) == expected_median, (
+                f"{skill} 코호트 중앙값(보정 전) 회귀"
+            )
     finally:
         cache.clear()
 
@@ -1974,3 +2037,129 @@ def test_state_missing_task_still_carries_owner_term(client, owner_term_stub):
     detail = _t103_detail(client, _T103_TASK_089)
     assert detail.status_code == 200
     assert detail.json()["owner_term"] == _OWNER_TERM_STUB
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# [109 EXECUTE Step 5] RED-first — 작성자(opal-test-agent, mode: red) != 구현자
+# (opal-be-agent, Step 8·9). 아래 3건은 Step 8(단일 열거 함수 수렴)·Step 9(2단
+# 아카이브 조회 + task_id 경로 검증) 이전이므로 실패해야 정상이다.
+# ══════════════════════════════════════════════════════════════════════════════
+
+# ── TS-040: scanner·routers/dashboard·routers/tasks 3지점 열거 이름 집합 항등 ──
+
+def test_t103_ts040_three_enumeration_points_name_set_identity(client, t103_clean_cache):
+    """TS-040 — scanner.py(`_count_tasks`) · routers/dashboard.py(`_collect_all_tasks`) ·
+    routers/tasks.py(`/api/tasks` 응답)의 태스크 열거 결과 이름 집합이 항등이어야
+    한다. Step 8이 단일 열거 함수로 수렴하기 전이므로 RED가 정상 — 현재 3곳이
+    `tasks/backup/` 처리를 각자 다르게 한다:
+      - scanner._count_tasks: `backup`을 하위 전개 없이 opaque 1건으로 카운트
+      - dashboard._collect_all_tasks: `tasks/` 1-depth만 스캔해 backup 자식 전체 배제
+      - routers/tasks.list_tasks: backup 자식을 전개해 archive 카드로 별도 편입
+    """
+    from dashboard.backend import scanner as _scanner
+    from dashboard.backend.routers import dashboard as _dashboard_router
+
+    scanner_count = _scanner._count_tasks(_T103_ROOT)
+
+    dashboard_names = {t["_task_id"] for t in _dashboard_router._collect_all_tasks(_T103_ROOT)}
+
+    project = urllib.parse.quote(_T103_ROOT, safe="")
+    resp = client.get(f"/api/tasks?project={project}")
+    assert resp.status_code == 200
+    tasks_router_names = {c["task_id"] for c in resp.json()}
+
+    assert dashboard_names == tasks_router_names, (
+        f"[FIX-PIN TS-040] dashboard 열거({len(dashboard_names)}건)와 tasks 열거"
+        f"({len(tasks_router_names)}건)의 이름 집합이 다르다 — backup/ 처리 불일치"
+        f"(Step 8 단일 열거 함수 수렴 전까지는 이 불일치가 정상이다). "
+        f"diff(dashboard-only)={sorted(dashboard_names - tasks_router_names)[:5]}, "
+        f"diff(tasks-only)={sorted(tasks_router_names - dashboard_names)[:5]}"
+    )
+    assert scanner_count == len(tasks_router_names), (
+        f"[FIX-PIN TS-040] scanner._count_tasks={scanner_count} vs "
+        f"tasks 열거 이름 수={len(tasks_router_names)} 불일치 — scanner는 backup을 "
+        f"1건으로 opaque 카운트하지만 tasks 열거는 backup 자식을 전개한다."
+    )
+
+
+# ── TS-043: 아카이브(tasks/backup/) 태스크 detail 200 + legacy 필드 유지 ───────
+
+def test_t103_ts043_archived_task_detail_returns_200_with_legacy_fields(client, t103_clean_cache):
+    """TS-043 — `tasks/backup/`으로 이관된 태스크(089)의 detail이 200 +
+    legacy 필드(ts015: stats.available False · ts017: 변경 전 10필드 · owner_term)를
+    유지한다. RED 기대: `get_task_detail`은 `os.path.join(project_path, "tasks",
+    task_id)`만 조회하고 `tasks/backup/{task_id}`는 조회하지 않으므로(Step 9 이전)
+    089가 `tasks/backup/`으로 이관된 지금은 404가 난다.
+    """
+    resp = _t103_detail(client, _T103_TASK_089)
+    assert resp.status_code == 200, (
+        f"[FIX-PIN TS-043] {_T103_TASK_089}가 tasks/backup/ 소재인데 detail이 "
+        f"{resp.status_code} — get_task_detail이 backup/을 조회 대상에 넣지 않았다"
+    )
+    data = resp.json()
+    assert data["stats"] is None or data["stats"]["available"] is False
+    assert data["pipeline"] == []
+    _t103_assert_legacy_fields(data, _T103_LEGACY_DETAIL, f"detail {_T103_TASK_089}(archive)")
+    assert "owner_term" in data
+
+
+def test_t103_ts043_archive_column_existing_behavior_unchanged(client, t103_clean_cache):
+    """TS-043 — `/api/tasks`의 archive 컬럼 판정(기존 동작)이 무변경이다:
+    backup 소재 태스크는 column == "archive", tasks/ 직속 태스크는 archive가 아니다.
+    이 자체는 Step 5 이전부터 통과하던 기존 동작이므로 GREEN이어야 하며, 회귀
+    가드로 함께 둔다(2단 열거로 조립 지점이 늘어난 뒤에도 깨지지 않아야 한다).
+    """
+    project = urllib.parse.quote(_T103_ROOT, safe="")
+    resp = client.get(f"/api/tasks?project={project}")
+    assert resp.status_code == 200
+    by_id = {c["task_id"]: c for c in resp.json()}
+
+    assert by_id[_T103_TASK_089]["column"] == "archive", (
+        "[FIX-PIN TS-043] backup 소재 태스크는 column == 'archive'여야 한다"
+    )
+    assert by_id[_T103_TASK_101]["column"] != "archive", (
+        "[FIX-PIN TS-043] tasks/ 직속 태스크가 archive로 오분류됐다"
+    )
+
+
+# ── TS-045 (P0 보안): task_id 경로 이탈 거부 — 조립 지점별 개별 확인 ───────────
+
+_T103_PATH_ESCAPE_TASK_IDS = [
+    "../",
+    "..",
+    "../../etc",
+    "/etc/passwd",
+    "tasks/" + _T103_TASK_101,          # 경로 구분자 포함
+    "..%2f..",                          # 인코딩 우회 시도
+]
+
+
+@pytest.mark.parametrize("task_id", _T103_PATH_ESCAPE_TASK_IDS)
+def test_t103_ts045_task_id_path_escape_rejected_on_detail(client, t103_clean_cache, task_id):
+    """TS-045 (P0 보안) — `../`·절대경로·경로 구분자가 섞인 task_id는 detail
+    조립 지점에서 전건 404여야 한다. RED 기대: `get_task_detail`은 artifact `name`
+    파라미터만 `..`/`/`/`\\`를 검증하고(`:659` 부근) task_id 자체는 검증 없이
+    `os.path.join(project_path, "tasks", task_id)`에 그대로 꽂는다.
+    """
+    resp = _t103_detail(client, task_id)
+    assert resp.status_code == 404, (
+        f"[FIX-PIN TS-045] detail: task_id={task_id!r} 경로 이탈 입력이 "
+        f"{resp.status_code}를 반환했다 (404 기대)"
+    )
+    # tasks/ 바깥 파일 내용이 실리지 않는지 — 404 detail 메시지 이상의 본문 누출 금지
+    assert "content" not in resp.json()
+
+
+@pytest.mark.parametrize("task_id", _T103_PATH_ESCAPE_TASK_IDS)
+def test_t103_ts045_task_id_path_escape_rejected_on_artifact(client, t103_clean_cache, task_id):
+    """TS-045 (P0 보안) — artifact 조회 조립 지점도 detail과 별도로 확인한다.
+    2단 열거(tasks/ 직속 + tasks/backup/)로 조립 지점이 늘었으므로 detail만으로
+    artifact 경로까지 안전하다고 단정하지 않는다."""
+    project = urllib.parse.quote(_T103_ROOT, safe="")
+    tid = urllib.parse.quote(task_id, safe="")
+    resp = client.get(f"/api/tasks/artifact?project={project}&task_id={tid}&name=TASK.md")
+    assert resp.status_code == 404, (
+        f"[FIX-PIN TS-045] artifact: task_id={task_id!r} 경로 이탈 입력이 "
+        f"{resp.status_code}를 반환했다 (404 기대)"
+    )
+    assert "content" not in resp.json()
