@@ -960,8 +960,8 @@ test('077 TS-057: tests/ 전 테스트 파일이 @header를 보유하고 code-sc
     const key = Object.keys(json).find(p => p.endsWith(`tests/${f}`));
     if (!key) { problems.push(`${f}: scan 결과 미검출`); continue; }
     if (json[key].layer !== 'test') problems.push(`${f}: layer=${json[key].layer}`);
-    // 허용 태스크 번호는 테스트 자산을 신설한 태스크만 누적한다 (083: test-shard-policy.js 신설, 107: test-header-history.js 신설).
-    if (!['077', '080', '082', '083', '107'].includes(String(json[key].task))) problems.push(`${f}: task=${json[key].task}`);
+    // 허용 태스크 번호는 테스트 자산을 신설한 태스크만 누적한다 (083: test-shard-policy.js 신설, 107: test-header-history.js 신설, 109: test-hub-root.js 신설).
+    if (!['077', '080', '082', '083', '107', '109'].includes(String(json[key].task))) problems.push(`${f}: task=${json[key].task}`);
     if (!Array.isArray(json[key].scenarios) || json[key].scenarios.length === 0) problems.push(`${f}: scenarios 없음`);
   }
   assert.deepStrictEqual(problems, [], '테스트 파일도 @header 자산이다 (header-standard.md §3)');

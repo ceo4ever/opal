@@ -3,6 +3,8 @@
  *   "module": "test-hub-root",
  *   "layer": "test",
  *   "domain": "code-scan",
+ *   "task": "109",
+ *   "scenarios": ["TS-011", "TS-012", "TS-022"],
  *   "description": "RED-first — hubRootFromPath 신설 계약: 골든 표(hub-root-cases.json) C-1~C-7 문자열 동치 + C-3·C-6 항등 케이스 바이트 동일(TS-012) + 실제 워크트리(.git 파일) cwd에서 CLI validate가 header_source_unset을 소거하는지 블랙박스 검증 + 리터럴 우선 음성 케이스: 어떤 조상에도 .opal/이 없으면 정규화가 위치를 발명하지 않고 header_source_unset이 남는다 (109)",
  *   "exports": [],
  *   "depends": ["node:test", "node:assert/strict", "node:child_process", "node:fs", "node:os", "node:path"]
