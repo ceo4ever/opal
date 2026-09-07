@@ -3,12 +3,13 @@
   "module": "brain_tool",
   "layer": "util",
   "domain": "opal-brain",
-  "description": "OPAL Project Brain 지식 위키 결정론적 집행 CLI — 11개 서브 명령(init/add-page/update-page/index/log/search/sync-header/lint/validate/analyze/ingest-scan). index/log/링크 무결성을 brain-tool이 집행(LLM 직접 편집 금지). 페이지 타입은 SCHEMA §1.5·init의 schema-template.md에서 동적 로드(하드코딩 없음). frontmatter 파싱은 PyYAML, KST 타임스탬프는 date.js subprocess. sync-header는 code-scan @header → brain entity frontmatter 단방향 동기화만 수행. analyze는 code-scan @header 정량 집계 → JSON. ingest-scan은 docs/skills/tasks 목록 반환. lint는 term 일관성 위반 2종(term_duplicate·alias_collision)과 frontmatter_invalid kind(validate_frontmatter를 lint 경로에서도 호출하며 related 붕괴 페이지의 missing_link 중복 보고를 억제)를 판정하고, speculative kind를 SPECULATIVE_MARKERS 구조적 헤딩 탐지로 검사한다. search는 draft 필터(--include-draft, R-6 term 한정)를 지원한다. validate_frontmatter는 선택 필드(tags/sources/related)의 평탄성(flat string[])을 검사해 중첩 리스트·비문자열 요소를 frontmatter_invalid violation으로 집행하고, 링크필드(related) 값을 검사해 '[[', ']]', '.md' 포함 슬러그를 frontmatter_invalid로 집행한다. add-page는 --related(CSV→평탄 리스트) 플래그와 미실체 거부 게이트(--body-file/--force/--note, speculative_content)를 갖는다. update-page는 기존 페이지 갱신 도구 경로다(부분 갱신·created 보존·updated 자동).",
+  "description": "OPAL Project Brain 지식 위키 결정론적 집행 CLI — 11개 서브 명령(init/add-page/update-page/index/log/search/sync-header/lint/validate/analyze/ingest-scan). index/log/링크 무결성을 brain-tool이 집행(LLM 직접 편집 금지). 페이지 타입은 SCHEMA §1.5·init의 schema-template.md에서 동적 로드(하드코딩 없음). frontmatter 파싱은 PyYAML, KST 타임스탬프는 date.js subprocess. sync-header는 code-scan @header → brain entity frontmatter 단방향 동기화만 수행. analyze는 code-scan @header 정량 집계 → JSON. ingest-scan은 docs/skills/tasks 목록 반환. lint는 term 일관성 위반 2종(term_duplicate·alias_collision)과 frontmatter_invalid kind(validate_frontmatter를 lint 경로에서도 호출하며 related 붕괴 페이지의 missing_link 중복 보고를 억제)를 판정하고, speculative kind를 SPECULATIVE_MARKERS 구조적 헤딩 탐지로 검사한다. search는 draft 필터(--include-draft, R-6 term 한정)를 지원한다. validate_frontmatter는 선택 필드(tags/sources/related)의 평탄성(flat string[])을 검사해 중첩 리스트·비문자열 요소를 frontmatter_invalid violation으로 집행하고, 링크필드(related) 값을 검사해 '[[', ']]', '.md' 포함 슬러그를 frontmatter_invalid로 집행한다. add-page는 --related(CSV→평탄 리스트) 플래그와 미실체 거부 게이트(--body-file/--force/--note, speculative_content)를 갖는다. update-page는 기존 페이지 갱신 도구 경로다(부분 갱신·created 보존·updated 자동). hub_root()는 경로 문자열을 허브 루트로 수렴시키는 순수 함수이며(규칙 SSOT: opal/core/references/opal-harness.md §2.5 (4), 골든 케이스: opal/core/references/hub-root-cases.json), cwd 파생 경로 조립 지점(_load_code_scan_json·ingest-scan 스캔 루트·--brain-path 기본값)에 적용된다. --brain-path 명시값은 _DefaultBrainPath 센티넬로 기본값과 구분해 수렴 대상에서 제외한다.",
   "exports": [
     "cmd_init", "cmd_add_page", "cmd_update_page", "cmd_index", "cmd_log",
     "cmd_search", "cmd_sync_header", "cmd_lint", "cmd_validate",
     "cmd_analyze", "cmd_ingest_scan",
-    "load_page_types", "DEFAULT_PAGE_TYPES", "detect_speculative_markers"
+    "load_page_types", "DEFAULT_PAGE_TYPES", "detect_speculative_markers",
+    "hub_root"
   ]
 }
 """
@@ -221,17 +222,66 @@ def get_kst_date(command="(unknown)"):
     return get_kst_datetime(command).split(" ")[0]
 
 # ─────────────────────────────────────────────────────────────────────────────
+# 허브 루트 수렴 (워크트리 → 허브)
+# ─────────────────────────────────────────────────────────────────────────────
+
+# git 워크트리 컨테이너 디렉터리 이름.
+WORKTREE_SEGMENT = ".opal-worktrees"
+
+
+def hub_root(path):
+    """워크트리 하위 경로를 허브 루트로 수렴한 문자열을 반환한다.
+
+    규칙: opal/core/references/opal-harness.md §2.5 (4)
+    골든 케이스: opal/core/references/hub-root-cases.json (C-1~C-7)
+
+    파일시스템·환경변수·cwd에 접근하지 않는 순수 문자열 함수다.
+    비워크트리 입력은 입력 문자열을 그대로(바이트 동일) 반환한다.
+    """
+    s = str(path)
+    segments = s.split("/")
+    for i, seg in enumerate(segments):
+        if seg == WORKTREE_SEGMENT:
+            prefix = "/".join(segments[:i])
+            if prefix:
+                return prefix
+            # 세그먼트가 경로 선두인 경우: 절대경로면 루트, 상대경로면 cwd 자신.
+            return "/" if s.startswith("/") else "."
+    return s
+
+
+def _hub_cwd():
+    """cwd를 허브 루트로 수렴한 Path. cwd 파생 경로 조립의 단일 진입점."""
+    return pathlib.Path(hub_root(str(pathlib.Path.cwd())))
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # brain 경로·파일 헬퍼
 # ─────────────────────────────────────────────────────────────────────────────
 
+class _DefaultBrainPath(str):
+    """argparse `--brain-path` 기본값 전용 str 마커. 사용자가 값을 명시하면
+    argparse가 평범한 str로 덮어쓰므로, isinstance로 기본값(cwd 파생)과
+    명시값을 구분한다. 명시값은 허브 수렴 대상이 아니다."""
+
+
+DEFAULT_BRAIN_PATH = _DefaultBrainPath(".")
+
+
 def resolve_brain_path(brain_path_str):
-    """brain-path 정규화. '.'이면 cwd 기준 .opal/brain 으로 해석.
+    """brain-path 정규화. 기본값이면 허브 루트 기준 .opal/brain 으로 해석.
 
     규칙:
     - 인자가 .opal/brain 으로 끝나거나 SCHEMA.md를 포함하면 그 경로를 brain 루트로.
     - 그 외 디렉토리면 <dir>/.opal/brain 을 brain 루트로 본다.
+    - 기본값(DEFAULT_BRAIN_PATH)만 허브 루트 기준으로 해석한다
+      (규칙: opal/core/references/opal-harness.md §2.5 (4)).
+      --brain-path 명시값은 받은 그대로 해석한다.
     """
-    p = pathlib.Path(brain_path_str).resolve()
+    if isinstance(brain_path_str, _DefaultBrainPath):
+        p = (_hub_cwd() / brain_path_str).resolve()
+    else:
+        p = pathlib.Path(brain_path_str).resolve()
     if p.name == "brain" and p.parent.name == ".opal":
         return p
     # 이미 brain 루트(SCHEMA.md 보유)면 그대로
@@ -866,7 +916,7 @@ def _load_code_scan_json(command):
     @header 시드를 흡수하려면 스캔 결과가 필요하므로, code-scan을 직접 실행해
     @header 맵을 얻는다. code-scan.json 부재 시 code_scan_json_missing.
     """
-    cwd = pathlib.Path.cwd()
+    cwd = _hub_cwd()
     config_path = cwd / ".opal" / "code-scan.json"
     if not config_path.exists():
         err(command, "code_scan_json_missing", path=str(config_path))
@@ -1249,7 +1299,7 @@ def cmd_ingest_scan(args):
     brain_root = require_brain(command, args.brain_path)
 
     source = getattr(args, "source", "all") or "all"
-    cwd = pathlib.Path.cwd()
+    cwd = _hub_cwd()
 
     # 이미 ingest된 sources 수집 (멱등 skip 판정용)
     pages = scan_pages(brain_root)
@@ -1382,7 +1432,7 @@ def build_parser():
     p_add.add_argument("--note", help="--force 우회 사유 (미실체 게이트 우회 시 필수, 071)")
     p_add.add_argument("--body-file", dest="body_file",
                         help="본문 파일 경로 — 지정 시 템플릿 본문 대신 이 파일 본문으로 페이지 생성 (071)")
-    p_add.add_argument("--brain-path", dest="brain_path", default=".")
+    p_add.add_argument("--brain-path", dest="brain_path", default=DEFAULT_BRAIN_PATH)
     p_add.set_defaults(func=cmd_add_page)
 
     # ── update-page ──
@@ -1398,12 +1448,12 @@ def build_parser():
     p_upd.add_argument("--note", help="--force 우회 사유")
     p_upd.add_argument("--body-file", dest="body_file",
                         help="본문 파일 경로 — 지정 시 본문을 이 파일 내용으로 교체")
-    p_upd.add_argument("--brain-path", dest="brain_path", default=".")
+    p_upd.add_argument("--brain-path", dest="brain_path", default=DEFAULT_BRAIN_PATH)
     p_upd.set_defaults(func=cmd_update_page)
 
     # ── index ──
     p_idx = sub.add_parser("index", help="pages/ 스캔 → index.md 재생성")
-    p_idx.add_argument("--brain-path", dest="brain_path", default=".")
+    p_idx.add_argument("--brain-path", dest="brain_path", default=DEFAULT_BRAIN_PATH)
     p_idx.set_defaults(func=cmd_index)
 
     # ── log ──
@@ -1413,7 +1463,7 @@ def build_parser():
     p_log.add_argument("--new")
     p_log.add_argument("--updated")
     p_log.add_argument("--sources")
-    p_log.add_argument("--brain-path", dest="brain_path", default=".")
+    p_log.add_argument("--brain-path", dest="brain_path", default=DEFAULT_BRAIN_PATH)
     p_log.set_defaults(func=cmd_log)
 
     # ── search ──
@@ -1425,24 +1475,24 @@ def build_parser():
     p_srch.add_argument("--include-draft", dest="include_draft", action="store_true",
                         default=False,
                         help="draft 상태 term 페이지도 검색 결과에 포함 (기본: term draft 제외)")
-    p_srch.add_argument("--brain-path", dest="brain_path", default=".")
+    p_srch.add_argument("--brain-path", dest="brain_path", default=DEFAULT_BRAIN_PATH)
     p_srch.set_defaults(func=cmd_search)
 
     # ── sync-header ──
     p_sh = sub.add_parser("sync-header", help="code-scan @header → entity frontmatter 단방향 동기화")
     p_sh.add_argument("--scope")
     p_sh.add_argument("--page")
-    p_sh.add_argument("--brain-path", dest="brain_path", default=".")
+    p_sh.add_argument("--brain-path", dest="brain_path", default=DEFAULT_BRAIN_PATH)
     p_sh.set_defaults(func=cmd_sync_header)
 
     # ── lint ──
     p_lint = sub.add_parser("lint", help="링크 무결성·고아·stale·근거 누락·frontmatter 위반 탐지")
-    p_lint.add_argument("--brain-path", dest="brain_path", default=".")
+    p_lint.add_argument("--brain-path", dest="brain_path", default=DEFAULT_BRAIN_PATH)
     p_lint.set_defaults(func=cmd_lint)
 
     # ── validate ──
     p_val = sub.add_parser("validate", help="brain 구조·frontmatter 표준 검증")
-    p_val.add_argument("--brain-path", dest="brain_path", default=".")
+    p_val.add_argument("--brain-path", dest="brain_path", default=DEFAULT_BRAIN_PATH)
     p_val.set_defaults(func=cmd_validate)
 
     # ── analyze ──
@@ -1454,7 +1504,7 @@ def build_parser():
     p_iscan.add_argument("--source", default="all",
                          choices=["docs", "skills", "tasks", "all"],
                          help="스캔 범위 (기본: all)")
-    p_iscan.add_argument("--brain-path", dest="brain_path", default=".")
+    p_iscan.add_argument("--brain-path", dest="brain_path", default=DEFAULT_BRAIN_PATH)
     p_iscan.set_defaults(func=cmd_ingest_scan)
 
     return parser

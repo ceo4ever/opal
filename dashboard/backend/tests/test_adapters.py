@@ -5,12 +5,32 @@
   "domain": "console",
   "description": "도구 어댑터 RED-first 테스트 — S-2 시나리오 (L1+L2/M1). 실 도구 호출, mock 대체 금지",
   "exports": ["[T021/L1-R2] test_run_tool_ok", "[T021/L1-R2] test_run_tool_exit_nonzero", "[T021/L1-R2] test_run_tool_timeout", "[T021/L1-R2] test_run_tool_ok_false", "[T021/L1-R2] test_state_adapter_real_tool"],
-  "depends": ["adapters.base", "adapters.state_adapter", "adapters.scan_adapter", "adapters.skill_adapter"]
+  "depends": ["adapters.base", "adapters.state_adapter", "adapters.scan_adapter", "adapters.skill_adapter", "paths.hub_root"]
 }
 """
 import os
 import pytest
 from pathlib import Path
+
+from dashboard.backend.paths import hub_root
+
+
+def _find_repo_task_dir(repo_root: Path, prefix: str) -> Path:
+    """109 — 태스크 폴더 위치(`tasks/` 직속 vs `tasks/backup/` 아래)에 내성인
+    접두사 탐색. `tasks/{prefix}*`·`tasks/backup/{prefix}*` 2개 글롭(1-depth,
+    `rglob` 금지)을 합쳐 정확히 1건일 때만 반환한다. 0건·2건 이상은 skip이 아닌
+    실패(AssertionError)로 드러낸다 — 선례: opal/tools/state-tool/tests/test_state_tool.py
+    의 동명 모듈 레벨 헬퍼."""
+    candidates = sorted((repo_root / "tasks").glob(f"{prefix}*"))
+    candidates += sorted((repo_root / "tasks" / "backup").glob(f"{prefix}*"))
+    if len(candidates) != 1:
+        raise AssertionError(
+            f"[FIX-PIN] _find_repo_task_dir(prefix={prefix!r}) 매칭 {len(candidates)}건 "
+            f"(정확히 1건 기대). 검색 경로: "
+            f"{repo_root / 'tasks' / (prefix + '*')}, "
+            f"{repo_root / 'tasks' / 'backup' / (prefix + '*')}. 발견: {candidates}."
+        )
+    return candidates[0]
 
 
 # ─── base.py — ToolError 3종 구분 ─────────────────────────────
@@ -81,11 +101,8 @@ def test_state_adapter_real_tool() -> None:
     """[T021/L1-R2] 실 state-tool 호출 → dict 반환 (실 도구, mock 금지)"""
     from dashboard.backend.adapters.state_adapter import get_state
 
-    task_dir = str(
-        Path(__file__).parents[3] / "tasks" / "021-260615-opd-opal-console"
-    )
-    if not os.path.isdir(task_dir):
-        pytest.skip("실 태스크 디렉토리 없음")
+    repo_root = Path(hub_root(str(Path(__file__).parents[3])))
+    task_dir = str(_find_repo_task_dir(repo_root, "021-"))
 
     result = get_state(task_dir)
     assert isinstance(result, dict), f"dict 반환 필요: {type(result)}"

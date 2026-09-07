@@ -3,7 +3,7 @@
   "module": "routers.doctor",
   "layer": "router",
   "domain": "console",
-  "description": "GET /api/doctor — doctor 4섹션+MCP+스킬 구조화 반환. project 파라미터 지원(캐시 키 분리 + 프로젝트 OPAL 구조 섹션 추가). 핵심 파일 체크 대상 MEMORY.json 전환 + MEMORY.md 잔존 시 warn 노출 (078 F-009). 읽기 전용",
+  "description": "GET /api/doctor — doctor 4섹션+MCP+스킬 구조화 반환. project 파라미터 지원(캐시 키 분리 + 프로젝트 OPAL 구조 섹션 추가). tasks/ 체크는 **인자로 받은 그 경로**의 1-depth 리터럴 상태를 보고한다 — 허브 정규화·단일 열거 함수 위임의 제외 대상이다(진단 도구 예외, opal/core/references/opal-harness.md §2.5 (4)). 핵심 파일 체크 대상 MEMORY.json 전환 + MEMORY.md 잔존 시 warn 노출 (078 F-009). 읽기 전용",
   "exports": ["GET /api/doctor"],
   "depends": ["models", "cache", "adapters.doctor_adapter", "adapters.skill_adapter"]
 }
@@ -82,6 +82,12 @@ def _build_project_section(project_path: str) -> DoctorSection:
         )
 
     # tasks/ 디렉토리 + 태스크 수
+    # [허브 정규화 제외 — 진단 도구 예외] opal/core/references/opal-harness.md §2.5 (4)
+    # 이 체크는 「인자로 받은 그 경로에 tasks/가 있는가」를 사람에게 보고하는 진단이다.
+    # hub_root() 정규화를 씌우면 워크트리를 진단해도 항상 허브를 보고해
+    # 「이 작업본에 태스크 문서가 없다」는 신호가 영구히 사라진다 — 진단 도구가
+    # 진단 대상의 해석에 의존하는 순환이 된다. 열거도 iter_task_dirs로 갈지 않는다:
+    # 여기서 세는 것은 태스크 모수가 아니라 이 경로 1-depth의 리터럴 상태다.
     tasks_dir = p / "tasks"
     if tasks_dir.exists():
         task_count = len([d for d in tasks_dir.iterdir() if d.is_dir()])

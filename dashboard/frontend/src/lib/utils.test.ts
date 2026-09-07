@@ -5,7 +5,8 @@
  *   "domain": "ui-util",
  *   "description": "cn() 유틸리티 샘플 테스트 — 클래스 병합 및 tailwind-merge dedupe 검증",
  *   "task": "033",
- *   "scenarios": ["S-8"]
+ *   "scenarios": ["S-8"],
+ *   "exports": []
  * }
  */
 import { describe, it, expect } from 'vitest'

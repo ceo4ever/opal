@@ -3,13 +3,14 @@
   "module": "test_brain_tool",
   "layer": "test",
   "domain": "opal-brain",
-  "description": "brain-tool 단위 테스트 — 10 서브커맨드 happy-path + ERROR_CODES 주요 14종 + 동적 타입 로드 + analyze/ingest-scan + term 동적로드·draft search 필터·lint term_duplicate/alias_collision 커버리지를 포함한다. tmp_path 기반 격리 실행. mock 금지 — 실제 brain_tool.py를 import 호출하는 진짜 테스트. validate_frontmatter 링크필드(related) 거부/통과 케이스와 add-page --related 지정/미지정 케이스를 포함한다. TestSpeculativeGate071(TS-201~209)은 add-page 미실체 마커 거부 게이트(--body-file/--force/--note, speculative_content)·lint speculative kind·draft-term 불변(M-3) 계약을 검증한다.",
+  "description": "brain-tool 단위 테스트 — 10 서브커맨드 happy-path + ERROR_CODES 주요 14종 + 동적 타입 로드 + analyze/ingest-scan + term 동적로드·draft search 필터·lint term_duplicate/alias_collision 커버리지를 포함한다. tmp_path 기반 격리 실행. mock 금지 — 실제 brain_tool.py를 import 호출하는 진짜 테스트. validate_frontmatter 링크필드(related) 거부/통과 케이스와 add-page --related 지정/미지정 케이스를 포함한다. TestSpeculativeGate071(TS-201~209)은 add-page 미실체 마커 거부 게이트(--body-file/--force/--note, speculative_content)·lint speculative kind·draft-term 불변(M-3) 계약을 검증한다. TestHubRootGoldenCases는 brain_tool.hub_root()가 opal/core/references/hub-root-cases.json 공유 골든 표(C-1~C-7)와 동치임을 대조하고 항등 케이스의 바이트 동일을 단정한다. TestFindProjectRootConsistency는 state_tool.find_project_root()가 워크트리 하위 경로에서 허브를 반환해 규칙 간 정합을 확인한다.",
   "task": "027",
   "exports": [
     "TestInit", "TestAddPage", "TestIndex", "TestLog",
     "TestSearch", "TestSyncHeader", "TestLint", "TestValidate",
     "TestErrorCodes", "TestDynamicPageTypes", "TestAnalyze", "TestIngestScan",
-    "TestTermDraft027", "TestTermLint027", "TestSpeculativeGate071"
+    "TestTermDraft027", "TestTermLint027", "TestSpeculativeGate071",
+    "TestHubRootGoldenCases", "TestFindProjectRootConsistency"
   ]
 }
 """
@@ -39,6 +40,16 @@ from unittest.mock import patch
 _TOOL_DIR = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(_TOOL_DIR))
 import brain_tool as BT  # noqa: E402
+
+# state_tool.py도 직접 import — TS-014 정합 케이스(find_project_root ↔ hub_root)용.
+# 형제 tools/ 부모를 공유하는 선례(state_tool.py:_MEMORY_TOOL)와 동일 패턴.
+_STATE_TOOL_DIR = _TOOL_DIR.parent / "state-tool"
+sys.path.insert(0, str(_STATE_TOOL_DIR))
+import state_tool as ST  # noqa: E402
+
+# 3스위트 공유 골든 케이스 표 — 사본 금지(TS-060).
+# _TOOL_DIR = opal/tools/brain-tool → parents[2] = repo_root
+_CASES_PATH = _TOOL_DIR.parents[2] / "opal" / "core" / "references" / "hub-root-cases.json"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 공통 상수·헬퍼
@@ -2466,6 +2477,104 @@ class TestLintFrontmatterInvalid(BrainTestCase):
               if i["kind"] == "missing_link" and i["page"] == "valid-rel"]
         self.assertEqual(len(ml), 1,
                          f"정상 related의 missing_link 판정이 사라짐: {result['issues']}")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# TestHubRootGoldenCases (TS-011, TS-012) — brain_tool.hub_root() 골든 케이스 동치
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _load_hub_root_cases():
+    with open(_CASES_PATH, encoding="utf-8") as f:
+        data = json.load(f)
+    return data["cases"]
+
+
+_HUB_ROOT_CASES = _load_hub_root_cases()
+_HUB_ROOT_IDENTITY_IDS = {"C-3", "C-6"}
+_HUB_ROOT_PREFIX = "/synthetic/root"
+
+
+def _hub_root_build_input(case):
+    return f"{_HUB_ROOT_PREFIX}/{case['input_rel']}" if case["input_rel"] else _HUB_ROOT_PREFIX
+
+
+def _hub_root_build_expected(case):
+    return f"{_HUB_ROOT_PREFIX}/{case['expected_rel']}" if case["expected_rel"] else _HUB_ROOT_PREFIX
+
+
+class TestHubRootGoldenCases(unittest.TestCase):
+    """brain_tool.hub_root()가 공유 골든 표 C-1~C-7 전건에서 opal-harness.md §2.5 (4)와
+    동일한 문자열을 반환하는지 대조한다(TS-011). 표는 opal/core/references/hub-root-cases.json
+    단일 파일이며(TS-060, 사본 금지) dashboard/backend/tests/test_paths.py와 공유한다."""
+
+    def test_all_golden_cases_match(self):
+        for case in _HUB_ROOT_CASES:
+            with self.subTest(case=case["id"]):
+                input_path = _hub_root_build_input(case)
+                expected_path = _hub_root_build_expected(case)
+                actual = BT.hub_root(input_path)
+                self.assertEqual(
+                    actual, expected_path,
+                    f"{case['id']} ({case['desc']}): expected={expected_path!r} actual={actual!r}",
+                )
+
+    def test_identity_cases_are_byte_identical_to_input(self):
+        """항등 케이스(C-3·C-6)는 반환값이 입력 문자열과 바이트 동일해야 한다(TS-012)."""
+        for case in _HUB_ROOT_CASES:
+            if case["id"] not in _HUB_ROOT_IDENTITY_IDS:
+                continue
+            with self.subTest(case=case["id"]):
+                input_path = _hub_root_build_input(case)
+                actual = BT.hub_root(input_path)
+                self.assertEqual(actual, input_path)
+                self.assertIsInstance(actual, str)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# TestFindProjectRootConsistency (TS-014) — state_tool.find_project_root ↔ hub_root 정합
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestFindProjectRootConsistency(unittest.TestCase):
+    """state_tool.find_project_root()는 '.opal/MEMORY.json 보유 조상 상향 탐색'이라는
+    다른 규칙으로 hub_root()와 같은 답(허브)에 도달한다(H-1 정합 케이스, 우연 일치가
+    갈라지지 않는지 대조). 실제 저장소 상태에 의존하지 않도록 합성 트리를 구성한다
+    (skip 원리적으로 불가능). 트리:
+      <tmp>/hub/.opal/MEMORY.json                                     (파일)
+      <tmp>/hub/.opal-worktrees/task_001/opal/tools/brain-tool/       (디렉터리)
+      <tmp>/hub/.opal-worktrees/task_001/.git                          (파일 — 진짜 워크트리의
+        .git은 `gitdir: ...`를 담은 파일이지 디렉터리가 아니다. 이 구분을 재현하지 않으면
+        픽스처가 현실을 반영하지 못한다)
+
+    의도 서술: hub_root()가 구현되면(Step 10, GREEN) 동일한 합성 입력들에 대해
+    hub_root()와 find_project_root()가 동일한 답(허브)에 도달하는지 대조하는 케이스가
+    이 테스트에 추가되어야 한다. 현재는 hub_root()가 아직 없어 그 대조를 넣지 않는다."""
+
+    def setUp(self):
+        self._tmpdir = tempfile.mkdtemp(prefix="test_find_project_root_")
+        self.hub = pathlib.Path(self._tmpdir) / "hub"
+        opal_dir = self.hub / ".opal"
+        opal_dir.mkdir(parents=True)
+        (opal_dir / "MEMORY.json").write_text("{}", encoding="utf-8")
+
+        self.worktree_root = self.hub / ".opal-worktrees" / "task_001"
+        self.brain_tool_dir = self.worktree_root / "opal" / "tools" / "brain-tool"
+        self.brain_tool_dir.mkdir(parents=True)
+        # .git은 파일이어야 한다 (진짜 워크트리의 .git은 gitdir: 를 담은 파일이다)
+        (self.worktree_root / ".git").write_text("gitdir: /dev/null\n", encoding="utf-8")
+
+        self.opal_tools_dir = self.hub / "opal" / "tools"
+        self.opal_tools_dir.mkdir(parents=True)
+
+    def tearDown(self):
+        shutil.rmtree(self._tmpdir, ignore_errors=True)
+
+    def test_find_project_root_from_worktree_subpath_returns_hub(self):
+        result = ST.find_project_root(str(self.brain_tool_dir))
+        self.assertEqual(result, self.hub.resolve())
+
+    def test_find_project_root_from_hub_subpath_returns_hub(self):
+        result = ST.find_project_root(str(self.opal_tools_dir))
+        self.assertEqual(result, self.hub.resolve())
 
 
 if __name__ == "__main__":

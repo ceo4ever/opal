@@ -5,7 +5,8 @@
  *   "domain": "core",
  *   "description": "apiClient timeoutMs 타임아웃 가드 RED 테스트 — S-8(timeoutMs 초과 → 명시 메시지), S-11(timeoutMs 미전달 → 기존 동작 불변 회귀). 네트워크 fetch는 vi.fn 대역으로 치환, 타임아웃은 fake timer로 결정론적 처리.",
  *   "task": "037-260622-opd-브레인질의-타임아웃-견고화",
- *   "scenarios": ["S-8", "S-11"]
+ *   "scenarios": ["S-8", "S-11"],
+ *   "exports": []
  * }
  */
 

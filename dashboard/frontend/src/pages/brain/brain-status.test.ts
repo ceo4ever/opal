@@ -5,7 +5,8 @@
  *   "domain": "brain",
  *   "description": "BrainPage 상태 게이팅 로직 단위 테스트 — state→isReady 도출, 폼 활성화 조건, 상태별 placeholder 문자열 검증 + 프로젝트 필수 게이팅(프로젝트 미선택 시 제출·폼 비활성) + session_id 기반 status query key 검증. 네트워크 미사용.",
  *   "task": "022-260615-opd-opx-flex-pilot",
- *   "scenarios": ["H-status-gate", "H-project-gate", "H-session-id-querykey"]
+ *   "scenarios": ["H-status-gate", "H-project-gate", "H-session-id-querykey"],
+ *   "exports": []
  * }
  */
 

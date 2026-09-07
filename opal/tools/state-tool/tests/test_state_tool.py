@@ -96,6 +96,28 @@ def _decision_log_row_numbers(md):
     section = _extract_md_section(md, "의사결정 로그")
     return re.findall(r"^\|\s*(\d+)\s*\|", section, re.MULTILINE)
 
+
+def _find_repo_task_dir(repo_root: pathlib.Path, prefix: str) -> pathlib.Path:
+    """109 — 태스크 폴더 위치(`tasks/` 직속 vs `tasks/backup/` 아래)에 내성인
+    접두사 탐색. `tasks/{prefix}*`·`tasks/backup/{prefix}*` 2개 글롭(1-depth,
+    `rglob` 금지)을 합쳐 정확히 1건일 때만 반환한다. 0건·2건 이상은 실패
+    (`self.fail()` 아님 — 모듈 레벨 헬퍼이므로 `AssertionError`를 직접 던져
+    호출측 TestCase의 실패로 전파한다). [MUST] 대상 부재를 skipTest로
+    강등하지 않는다 — 위치 이동 검증이 이 헬퍼의 존재 이유이며, 조용한 skip은
+    검증 무력화다."""
+    candidates = sorted((repo_root / "tasks").glob(f"{prefix}*"))
+    candidates += sorted((repo_root / "tasks" / "backup").glob(f"{prefix}*"))
+    if len(candidates) != 1:
+        raise AssertionError(
+            f"[FIX-PIN] _find_repo_task_dir(prefix={prefix!r}) 매칭 {len(candidates)}건 "
+            f"(정확히 1건 기대). 검색 경로: "
+            f"{repo_root / 'tasks' / (prefix + '*')}, "
+            f"{repo_root / 'tasks' / 'backup' / (prefix + '*')}. 발견: {candidates}. "
+            f"이 단언은 접두사 매칭 1건 고정에 대한 것이다 — 대상 폴더가 삭제됐거나 "
+            f"동일 접두사가 중복 생성됐다면 신 스키마 실파일로 대체 fixture를 선정해야 한다."
+        )
+    return candidates[0]
+
 # ─────────────────────────────────────────────────────────────────────────────
 # 테스트 공통 픽스처 / 헬퍼
 # ─────────────────────────────────────────────────────────────────────────────
@@ -4566,7 +4588,8 @@ class TestT098EvidenceCheck(BaseTestCase):
             repo_root,
             "find_project_root가 None을 반환함 — .opal/MEMORY.json 보유 조상을 찾지 못함"
         )
-        task_md_path = repo_root / "tasks" / "098-260821-opds-근거등급-확정판정-트랙강등" / "TASK.md"
+        task_dir = _find_repo_task_dir(repo_root, "098-")
+        task_md_path = task_dir / "TASK.md"
         self.assertTrue(task_md_path.exists(),
                        f"[RED] 098 TASK.md 실파일 부재: {task_md_path}")
 
@@ -8848,9 +8871,6 @@ class TestR11Invariants(_T093Base):
 #        실행(공개 CLI `verify --evidence-check` stdout JSON)으로만 검증한다.
 # ═════════════════════════════════════════════════════════════════════════════
 
-_T098ADD2_TASK_PATH = _REPO_ROOT_093 / "tasks" / "098-260821-opds-근거등급-확정판정-트랙강등"
-
-
 class TestT098Add2RootDerivation(unittest.TestCase):
     """098 ADD-2 RED — `_resolve_citation_exists()`(`state_tool.py:2400`)가 프로젝트
     루트를 `find_project_root(str(pathlib.Path(__file__).resolve()))`로, 즉
@@ -8871,10 +8891,18 @@ class TestT098Add2RootDerivation(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        if not (_T098ADD2_TASK_PATH / "TASK.md").is_file():
-            raise unittest.SkipTest(
-                f"본 태스크 TASK.md 부재 — 실파일 입력 전제가 깨짐: {_T098ADD2_TASK_PATH}"
-            )
+        # 109 — 자기 저장소 루트 가정 + 폴더명 하드코딩 결함 수정: 워크트리에서도
+        # 허브를 가리키는 find_project_root + Step 7 `_find_repo_task_dir`(접두사
+        # 탐색, tasks/ 직속·tasks/backup/ 모두 커버)로 대상을 동적 해석한다.
+        # 0건·2건은 헬퍼가 AssertionError로 fail시킨다 — skipTest로 강등하지 않는다.
+        repo_root = ST.find_project_root(str(_TOOL_DIR))
+        assert repo_root is not None, (
+            "find_project_root가 None을 반환함 — .opal/MEMORY.json 보유 조상을 찾지 못함"
+        )
+        cls._task_path = _find_repo_task_dir(repo_root, "098-")
+        assert (cls._task_path / "TASK.md").is_file(), (
+            f"본 태스크 TASK.md 부재 — 실파일 입력 전제가 깨짐: {cls._task_path}"
+        )
 
     def setUp(self):
         self._copy_dir = pathlib.Path(tempfile.mkdtemp())
@@ -8892,7 +8920,7 @@ class TestT098Add2RootDerivation(unittest.TestCase):
         PLAN §3.3.2)."""
         result = subprocess.run(
             [sys.executable, str(script_path), "verify",
-             str(_T098ADD2_TASK_PATH), "--evidence-check"],
+             str(self._task_path), "--evidence-check"],
             capture_output=True, text=True,
         )
         self.assertEqual(
