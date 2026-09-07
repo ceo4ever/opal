@@ -3,7 +3,7 @@
   "module": "scanner",
   "layer": "service",
   "domain": "console",
-  "description": "scan_roots 하위를 os.walk + maxdepth 가드로 탐색. .opal/AGENT.md 마커로 OPAL 프로젝트 발견. exclude 목록 진입 금지(H-4). 태스크 열거는 iter_task_dirs 단일 함수가 담당 — tasks/ + tasks/backup/ 2단 고정 깊이, 이름 정렬로 결정론적. resolve_task_dir는 realpath 접두 검사로 tasks/ 트리 이탈을 차단. 읽기 전용 — mtime 불변",
+  "description": "scan_roots 하위를 os.walk + maxdepth 가드로 탐색. .opal/AGENT.md 마커로 OPAL 프로젝트 발견. exclude 목록 진입 금지(H-4). 태스크 열거는 iter_task_dirs 단일 함수가 담당 — tasks/ + tasks/backup/ 2단 고정 깊이, 이름 정렬로 결정론적. resolve_task_dir는 realpath 접두 검사로 tasks/ 트리 이탈을 차단하고, 경로로 쓸 수 없는 입력(널 바이트)은 realpath 앞단에서 거른다. 읽기 전용 — mtime 불변",
   "exports": ["scan_projects", "ProjectInfo", "iter_task_dirs", "resolve_task_dir"],
   "depends": ["config"]
 }
@@ -96,6 +96,10 @@ def resolve_task_dir(project_path: str, task_id: str) -> str | None:
     if task_id != os.path.basename(task_id.rstrip("/\\")):
         return None
     if os.path.isabs(task_id) or "/" in task_id or "\\" in task_id:
+        return None
+    # 널 바이트는 경로로 쓸 수 없는 입력 — realpath가 ValueError를 던지므로 그 앞에서 거른다.
+    # 보안 판정은 여전히 아래 realpath 트리 내부 확인이 담당한다.
+    if "\x00" in task_id:
         return None
 
     tasks_root = os.path.join(project_path, "tasks")

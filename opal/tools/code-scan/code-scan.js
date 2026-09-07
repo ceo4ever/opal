@@ -4,7 +4,7 @@
  *   "module": "code-scan",
  *   "layer": "util",
  *   "domain": "code-scan",
- *   "description": "OPAL @header 메타블록 스캐너 CLI — 조회 8커맨드(scan/domain/layer/search/exports/summary/depends/missing)와 작성·검증층 7서브명령(discover/scaffold/target/validate/feature/split/init)을 전역 headerSource(inline|manifest) 2택 아래 단일 진입점에서 집행하며, 프로젝트 루트 탐색은 cwd를 허브 루트로 수렴시킨 지점(hubRootFromPath)에서 시작하고, 스캔 루트가 허브로 착지한 워크트리 실행은 stderr 1줄 안내만 받는다(stdout 무변경)",
+ *   "description": "OPAL @header 메타블록 스캐너 CLI — 조회 8커맨드(scan/domain/layer/search/exports/summary/depends/missing)와 작성·검증층 7서브명령(discover/scaffold/target/validate/feature/split/init)을 전역 headerSource(inline|manifest) 2택 아래 단일 진입점에서 집행하며, 프로젝트 루트 탐색은 cwd가 워크트리 안일 때만 자기 `.opal/`을 가진 조상을 허브 상한까지 먼저 찾고 그 밖에서는 cwd를 허브 루트로 수렴시킨 지점(hubRootFromPath)에서 저장소 경계 마커를 찾으며, 스캔 루트가 허브로 착지한 워크트리 실행은 stderr 1줄 안내만 받는다(stdout 무변경)",
  *   "exports": ["mirrorPathForDir", "decideTarget", "loadCodeMap", "loadConfig", "findProjectRoot", "hubRootFromPath", "resolveScope", "matchLayerRule", "matchDomain", "resolveHeader", "extractHeader"],
  *   "note": "code-scan.js 자신은 프로젝트 .opal/code-map/index.json 부재로 인라인 전용 모드로 스캔됨. 모드 판정 지점은 resolveHeaderSource 1곳으로 봉인되며, 허용 3구간(resolveHeaderSource/loadConfig/parseArgs) 밖에서는 확정값을 ctx.headerSource 읽기·buildCtx 파라미터 전달 형태로만 다룬다 — 중간 전달 변수명은 mode다. 스코프 단위 모드 선언 키는 존재하지 않는다 — 두 레지스트리 모두 해당 키를 무시하고 deprecationOnce로 키별 실행당 1회만 stderr 안내한다. index.json에서 폐기된 스코프 단위 쓰기금지 플래그도 같은 방식으로 무시 + 안내되며 다른 모드로 흡수하지 않는다 — 기록 소스는 오직 전역 headerSource가 결정하므로 스코프 단위 예외 판정 분기는 존재하지 않는다. 두 소스는 모드에 의해 상호 배타이므로 '인라인 단독 승리' 같은 병합 규칙이 존재하지 않으며, decideTarget의 reason 도메인은 header_source_inline / header_source_manifest / out_of_scope 3값으로 닫힌다 — 파일 존재 여부·인라인 보유 여부는 판정에 관여하지 않는다. 매니페스트 샤딩: 샤드 로딩·byKey 구성·중복 판정은 resolveShards 밖에 복제하지 않는다. CODE_MAP_VERSION은 1로 고정 유지되며(샤드 미선언 매니페스트 포맷 불변, 상향 시 기존 전 자산이 unsupported_version으로 차단됨), 샤드 라벨은 kebab 정규식으로 집행되어 경로 이탈을 차단한다(shard_declaration_invalid). 예약 폴더명과 겹치는 소스 디렉토리는 scaffold가 reserved_name_collision으로 거부한다. 크기 상한 초과는 validate/scaffold 모두 전면 비차단(열거·경고 1단)이다. 샤드 정책 확장: 정책 판정은 resolveShardPolicy 밖에 복제하지 않으며 DEFAULT_SHARD_POLICY·loadGlobalSetting도 그 함수 본문 밖에서 참조하지 않는다. index.json의 manifestMaxBytes는 읽지 않고 deprecationOnce 안내만 한다(자동 변환 없음). 표준단어사전은 옵셔널이며 부재·파싱 실패·매칭 0건 3분기가 전부 비차단이다 — 부재는 침묵, 파손은 noticeOnce 1줄이고, loadWordDictionary 호출은 split --plan 경로 1곳뿐이라 조회 8커맨드의 출력 바이트가 흔들리지 않는다. split은 자산을 쓰는 유일한 명령이므로 실패 지점별로 쓰기 상태가 다른 에러 코드 7종(split_usage_invalid/split_inline_mode/split_target_invalid/split_groups_invalid/split_write_failed/split_rollback/split_verify_failed)을 갖고, 사후 재검증은 resolveShards를 비운 캐시로 다시 호출해 해석 로직을 복제하지 않는다. 의미 경계(그룹 라벨·파일 배분) 확정은 사람/워커의 몫이며 도구는 미분류를 임의 배분하거나 '기타' 그룹을 만들지 않는다. 워크트리 실행 안내는 스캔 루트가 허브로 착지한 경우에만 main 1곳에서 noticeOnce로 나가며(자기 .opal/을 가진 자기완결 프로젝트가 워크트리 하위에 있으면 스캔 루트가 그 프로젝트이므로 침묵), stdout에는 어떤 필드도 추가하지 않아 허브 실행과 바이트 동일성이 유지된다"
  * }
@@ -346,17 +346,29 @@ function hubRootFromPath(p) {
 }
 
 function findProjectRoot() {
-  const root = path.parse(process.cwd()).root;
+  const cwd = process.cwd();
+  const root = path.parse(cwd).root;
+  const hubOfCwd = hubRootFromPath(cwd);
+  let dir;
 
-  // 1차 — 리터럴 상향 탐색: 자기 `.opal/`을 가진 루트가 이긴다.
-  // 규칙: opal/core/references/opal-harness.md §2.5 (4) 4항 — 정규화는 허브 고정 데이터
-  // 참조에만 적용하고 소스 트리 내용을 다루는 경로에는 적용하지 않는다.
-  // 픽스처처럼 자기완결 프로젝트가 워크트리 하위에 있어도 그것을 프로젝트 루트로 본다.
-  // `.opal/`은 허브 고정 자산이므로 워크트리에서 시작하면 이 탐색이 자연히 허브에 닿는다.
-  let dir = process.cwd();
-  while (dir !== root) {
-    if (fs.existsSync(path.join(dir, '.opal'))) return dir;
-    dir = path.dirname(dir);
+  // 1차 — cwd가 워크트리 안일 때만: 자기 `.opal/`을 가진 첫 조상이 이긴다.
+  // 규칙: opal/core/references/opal-harness.md §2.5 (4) 4항·부칙 「탐색 우선순위」 —
+  // 정규화는 허브 고정 데이터 참조에만 적용하고 소스 트리 내용을 다루는 경로에는
+  // 적용하지 않는다. 픽스처처럼 자기완결 프로젝트가 워크트리 하위에 있으면 그것을
+  // 프로젝트 루트로 본다.
+  // [MUST] 워크트리 밖에서는 수행하지 않는다 — 이 패스의 목적은 자기완결 프로젝트가
+  //        워크트리 하위에 있을 때의 보호이며, 밖에서 돌리면 저장소 경계 마커(.git·
+  //        CLAUDE.md)를 무시하고 상향해 남의 `.opal/`을 스캔 루트로 삼는다.
+  // [MUST] 상한은 허브다 — 허브 위로 올라가지 않는다.
+  if (hubOfCwd !== cwd) {
+    dir = cwd;
+    for (;;) {
+      if (fs.existsSync(path.join(dir, '.opal'))) return dir;
+      if (dir === hubOfCwd) break;
+      const parent = path.dirname(dir);
+      if (parent === dir) break;
+      dir = parent;
+    }
   }
 
   // 2차 — `.opal/` 부재: 기존 마커 탐색. 시작점만 허브로 수렴시킨다.
