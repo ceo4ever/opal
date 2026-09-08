@@ -385,3 +385,7 @@
 - 신규: [[pages/concept/regression-pin-of-task-time-fact.md]], [[pages/concept/regulation-tool-four-way-mismatch.md]], [[pages/concept/prohibit-by-property-not-name.md]], [[pages/concept/tag-removal-is-not-history-removal.md]], [[pages/concept/worktree-tasks-fixture-structural-limit.md]], [[pages/entity/header-standard-doc.md]]
 - 출처: task:107
 
+## [2026-09-08] ingest | 보고 규범 최소안 신설(opal-pm.md §8) 지식 등록 — 집행 불가 규범의 최소 설계 원리 신규 + 10유형 지형 갱신(무규범 3유형 닫힘)
+- 신규: [[unenforceable-norm-minimal-design]]
+- 출처: doc:opal/core/references/opal-pm.md
+

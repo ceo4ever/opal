@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-09-06 22:41
+> 갱신: 2026-09-08 16:09
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -316,6 +316,7 @@
 - [[tool-scan-thin-manifest-federation]] — tool-scan 매니페스트 thin 설계 + federation 불파괴 #design-principle #tool-scan #manifest #federation #ssot
 - [[tool-usage-precheck-error-diagnosis-rule]] — 도구 사용법 선확인·에러 종류 진단후 폴백 규율 #design-principle #tool-usage #mams-lesson #fallback #error-handling
 - [[uncommitted-component-readme-policy]] — 미커밋 컴포넌트는 공개 README에 미노출 #readme #policy #git #documentation #ppt-builder
+- [[unenforceable-norm-minimal-design]] — 집행 불가 규범의 최소 설계 — 템플릿이 상한을 소유하고 절 길이가 잠근다 #norm-design #reporting #enforcement #governance
 - [[unresolvable-not-absent-two-vocabulary-split]] — 확인 불가는 부재가 아니다 — 검출 어휘 2분으로 처분을 표현한다 #memory-tool #guard-design #vocabulary #lesson #task-096
 - [[upper-bound-clamp-preserves-sum-identity]] — 음수 차단은 사후 0-clamp가 아니라 상한 clamp로 — 합 항등 보존과 오기록 적발 #aggregation #statistics #invariant #opal-console #design-decision
 - [[usage-ssot-live-help-principle]] — 사용법 SSOT는 도구 자신의 live --help #design-principle #tool-scan #usage #drift #ssot
