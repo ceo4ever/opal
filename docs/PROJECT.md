@@ -34,7 +34,7 @@
 | `docs/` | 프로젝트 문서 | 아키텍처, 컨벤션 등 프로젝트 레벨 문서 |
 | `tasks/` | 태스크 산출물 | `{NNN}-{YYMMDD}-{스킬약어}-{태스크명}/` 형식의 작업 단위 폴더 |
 | `skills/` | 독립 스킬 소스 | 파이프라인 없이 단독 사용하는 스킬 (8종) |
-| `opal/skills/` | OPAL 스킬 소스 | 오케스트레이터, 단계 스킬 등 OPAL 전용 (43종) |
+| `opal/skills/` | OPAL 스킬 소스 | 오케스트레이터, 단계 스킬 등 OPAL 전용 (44종) |
 | `opal/agents/` | 워커 에이전트 소스 | 모든 서브에이전트 정의 (15종) |
 | `opal/tools/` | OPAL 도구 소스 | 결정론 집행 CLI (19종) |
 | `opal/core/` | 프레임워크 코어 | 레퍼런스, MCP 설정, 도구 |
@@ -239,6 +239,7 @@ TEST-SCENARIO 단계를 "목표 달성 검증"으로 재정의 — 루브릭 채
 
 | 날짜 | 변경 내용 |
 |------|----------|
+| 2026-09-09 | 폴더 구조맵 `opal/skills/` 카운트 43종 → **44종** 정합 — 태스크 114가 `opal-skill-wizard`를 추가했다(실측 `ls -d opal/skills/*/` = 44) (Task 114) |
 | 2026-09-09 | Dev 파이프라인 프로젝트 문서 주입 계약 반영 — PM이 `docs/PROJECT.md` 레지스트리로 작업 도메인·참조 시점별 문서를 선별 주입하고, 개발 워커는 주입 문서만 소비한다. PROJECT 부재 시에만 기존 영역별 최소 폴백 허용. PLAN 설명은 sdlc-v2 Work items `담당`·의존성·병렬 그룹 기준으로 정합. 태스크 111 |
 | 2026-09-06 | `@header` 이력 비기재 원칙 3층 적용 — 규정: `header-standard.md` §2.1(원칙 정본, 적용 범위 = `@header` JSON 블록 **전체**) · §2(이력 전용 필드 신설 금지 — `changelog`·`history`·`revisions` **이름 불문**) · §4.2(`description`·`depends`·`note`·`feature` 4필드 작성 가이드), `harness/header-rules.md`(갱신은 교체지 누적이 아님 [MUST]), `docs/CONVENTIONS.md` §@header 규칙 교체. 도구: `code-scan validate`에 `header_history` **비차단** 경고 3축 신설 — `description`·`note`는 서로 다른 태스크 번호 **distinct ≥ 2**(단발 출처 인용 1개는 허용), `undeclared_field`는 §2 미정의 필드 **존재 자체**(§7.2 매니페스트 전용 `draft`는 manifest 모드에서 제외). 자산: 43파일 정리(`description`·`note` 23건 + `changelog` 필드 28파일·81엔트리 제거), `@header` 총 바이트 122,752 → 75,810(−38.2%). code-scan `VERSION`은 v1.6.0 불변(additive 확장). 태스크 107 |
 | 2026-08-23 | 분석 코어 SSOT 신설 반영 — §주요 컴포넌트에 `analysis-core.md` 행 추가(ANALYSIS·PLAN 공유 절차 SSOT, 수치 복제 없이 경로 포인터만). 태스크 100 |

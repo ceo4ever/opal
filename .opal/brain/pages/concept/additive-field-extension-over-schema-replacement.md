@@ -8,11 +8,13 @@ tags:
 - task-105
 sources:
 - task:105
+- task:114
 related:
 - skill-registry-validate-extension
 - community-skill-user-registry
+- skill-registry-project-scope-4source-merge
 created: '2026-09-03'
-updated: '2026-09-03'
+updated: '2026-09-09'
 status: draft
 ---
 ## 개요
@@ -29,12 +31,17 @@ status: draft
 - 결과적으로 스키마 교체 0건, 검증 함수 재작성 0건으로 확장이 끝났다. 기존 필드(`commit_sha`)가 그대로 보존돼 후퇴가 발생하지 않았다.
 - **일반 원칙**: 외부 스펙·레퍼런스가 스키마 전체 교체를 제안할 때는, 먼저 (1) 기존 검증 로직이 실제로 무엇을 강제하는지, (2) 기존 스키마에 있는데 새 스키마엔 없는 필드가 무엇을 지원하고 있었는지를 확인한다. 검증이 미지 필드에 관대하면 additive 확장이 스키마 교체보다 위험이 낮고 변경 범위가 작다.
 
+### 재적용 사례 — task:114 `get` 서브커맨드 `resolved_path`
+
+(근거: task:114 PLAN.md DEC-5) 프로젝트 스코프 스킬 지원을 위해 `getCommand()`(`opal/tools/skill-registry/skill-registry.js:327-340`)의 경로 계산 계약을 확장해야 했다. 여기서도 기존 raw passthrough 반환(`paths` 배열 등 기존 필드)을 한 건도 제거·변경하지 않고, 신규 필드 `resolved_path` 1개만 additive로 추가하는 동일 원칙이 다시 적용됐다. 미설치·미해석 시 `resolved_path`는 `null`을 반환해, `match`의 `path` 필드가 미설치 community에서 `null`을 반환하는 기존 규약과 동형을 이뤘다. 이 재적용으로 이 원칙이 특정 태스크의 1회성 임기응변이 아니라 이 레지스트리 코드베이스에서 반복적으로 유효한 확장 전략임이 확인됐다.
+
 ## 영향 범위
 
-- `opal/tools/skill-registry/skill-registry.js` — `validate()` 미지 필드 관용 성질을 이용한 확장 사례
+- `opal/tools/skill-registry/skill-registry.js` — `validate()` 미지 필드 관용 성질을 이용한 확장 사례(task:105), `getCommand()` additive 필드 확장 사례(task:114)
 - 유사한 레지스트리·스키마 확장 결정 시 우선 검토할 패턴
 
 ## 관련 페이지
 
 - [[skill-registry-validate-extension]]
 - [[community-skill-user-registry]]
+- [[skill-registry-project-scope-4source-merge]]

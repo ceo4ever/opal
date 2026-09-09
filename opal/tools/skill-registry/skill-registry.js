@@ -11,6 +11,18 @@
 //              migrate [--dry-run] | parse-source-repo <source_repo> | scan-risk <dir>
 //
 // 변경이력:
+//   v1.5 2026-09-04 23:40 KST: 프로젝트 스코프 registry 지원 신설 (114):
+//                              - findProjectRoot() 신설 — cwd 기점 walk-up, 마커는 `.opal/` 디렉토리(파일 아님),
+//                                종료 3조건(홈 도달 시 미검사 반환 / FS 루트 / 32단 상한) + homedir realpath 정규화.
+//                              - loadProjectRegistry() 신설 — loadUserRegistry() 동형, 부재·파손 시 null(CLI 다운 방지).
+//                              - resolveProjectSkillPath() 신설 — vendor 중첩 → flat 폴백 → null + 프로젝트 루트
+//                                하위 검증(CWE-22 path traversal 방어).
+//                              - isProjectSkill() 신설 + loadAllSkills()에 4번째 병합 단계 추가(_source:'project',
+//                                동일 name은 프로젝트 최우선 override). 기존 3소스 병합 코드는 무수정(additive 한정).
+//                              - matchCommand()에 project 분기 추가 — scope:"project" 신규 필드,
+//                                installed = (path !== null). main·community 분기 반환 필드는 무변경.
+//                              - getCommand()에 resolved_path additive 필드 추가 — 기존 raw passthrough 필드 전건 보존.
+//                              - validate()에 project 분기 추가 — paths 필수 검사 생략(경로를 name에서 동적 계산).
 //   v1.4 2026-09-03 00:45 KST: scan-risk 서브명령 신설 — 위험 패턴 10종 상수 + 오탐 억제 4규칙 +
 //                              읽기 전용 디렉토리 스캔. 기존 서브명령 6종·list 출력 계약·종료 코드
 //                              규약은 무수정 (105)
@@ -113,6 +125,11 @@ function isCommunitySkill(skill) {
   return skill._source === 'community';
 }
 
+// project 스킬 여부 판단 (_source 마커 기반, 태스크 114 F-001)
+function isProjectSkill(skill) {
+  return skill._source === 'project';
+}
+
 // 사용자 수동 설치 등록분 방어적 로드 (태스크 064 F-006, H-3)
 // ~/.opal/community-skills/user-registry.json — install이 절대 건드리지 않는 위치.
 // 부재/파손 시 null 반환 → CLI 전체 다운 방지.
@@ -124,6 +141,56 @@ function loadUserRegistry() {
   } catch (e) {
     return null; // 파손 시 무시 — CLI 전체 다운 방지 (H-3)
   }
+}
+
+// 프로젝트 루트 탐색 — cwd 기점 walk-up, `.opal/` 디렉토리 존재가 마커다 (태스크 114 F-001, DEC-1).
+// [MUST] 종료 3조건: ① dir === os.homedir() 이면 검사 없이 null (전역 `~/.opal/` 오인 차단, H-4)
+//        ② FS 루트(path.dirname(dir) === dir) 도달 시 null  ③ 반복 32회 초과 시 null (심볼릭 루프 방지).
+function findProjectRoot(startDir = process.cwd()) {
+  try {
+    // os.homedir()는 HOME 환경변수 원문을 그대로 반환하나(심볼릭 링크 미해석), process.cwd()는
+    // OS가 getcwd(3)로 심볼릭 링크를 해석한 canonical 경로를 반환한다(예: macOS `/var` → `/private/var`).
+    // 두 값의 표현이 갈리면 홈 경계 정지(①)가 성립하지 않으므로 realpath로 동일 표현으로 맞춘다(H-4).
+    let home = os.homedir();
+    try { home = fs.realpathSync(home); } catch (e) { /* 접근 불가 시 원문 유지 */ }
+    let dir = path.resolve(startDir);
+    for (let i = 0; i < 32; i++) {
+      if (dir === home) return null; // 홈 디렉토리 자체는 검사하지 않고 중단 (H-4)
+      if (fs.existsSync(path.join(dir, '.opal'))) return dir;
+      const parent = path.dirname(dir);
+      if (parent === dir) return null; // FS 루트 도달
+      dir = parent;
+    }
+    return null;
+  } catch (e) {
+    return null; // CLI 다운 방지
+  }
+}
+
+// 프로젝트 스코프 registry 방어적 로드 (태스크 114 F-001) — loadUserRegistry()와 동일 구조.
+// 부재/파손 시 null 반환 → CLI 전체 다운 방지 (H-2).
+function loadProjectRegistry(projectRoot) {
+  if (!projectRoot) return null;
+  const p = path.join(projectRoot, '.opal', 'skills-registry.json');
+  try {
+    if (!fs.existsSync(p)) return null;
+    return JSON.parse(fs.readFileSync(p, 'utf8'));
+  } catch (e) {
+    return null;
+  }
+}
+
+// 프로젝트 스킬 실제 존재 경로 해석 — vendor 중첩 우선, flat 폴백, 없으면 null (태스크 114 F-001).
+// resolveCommunitySkillPath()의 규칙을 루트만 바꿔 이식 + 프로젝트 루트 하위 검증 (CWE-22 path traversal 방어).
+function resolveProjectSkillPath(skillName, projectRoot) {
+  if (!projectRoot) return null;
+  const root = path.resolve(projectRoot);
+  const nested = path.resolve(path.join(root, '.opal', 'community-skills', skillName, 'SKILL.md'));
+  if (nested.startsWith(root) && fs.existsSync(nested)) return nested;
+  const base = skillName.includes('/') ? skillName.split('/').pop() : skillName;
+  const flat = path.resolve(path.join(root, '.opal', 'community-skills', base, 'SKILL.md'));
+  if (flat.startsWith(root) && fs.existsSync(flat)) return flat;
+  return null;
 }
 
 function loadAllSkills() {
@@ -141,6 +208,19 @@ function loadAllSkills() {
     for (const us of userSkills) {
       const idx = skills.findIndex(s => s.name === us.name);
       if (idx >= 0) skills[idx] = us; else skills.push(us);
+    }
+  }
+
+  // 프로젝트 스코프 registry 4번째 병합 — 동일 name은 프로젝트 항목 우선(override, DEC-3),
+  // 신규 name은 추가 (태스크 114 F-001, additive 한정 — 위 3소스 로드·병합 코드는 무수정).
+  const projectRoot = findProjectRoot();
+  const projectReg = loadProjectRegistry(projectRoot);
+  if (projectReg) {
+    const projectSkills = flattenGroups(projectReg, 'project')
+      .map(s => ({ ...s, _project_root: projectRoot }));
+    for (const ps of projectSkills) {
+      const idx = skills.findIndex(s => s.name === ps.name);
+      if (idx >= 0) skills[idx] = ps; else skills.push(ps);
     }
   }
   return skills;
@@ -307,6 +387,27 @@ function matchCommand(input) {
       };
     }
 
+    // project 스킬: 프로젝트 스코프 — installed는 실물 SKILL.md 존재 여부로 계산 (태스크 114 F-001, H-6)
+    if (isProjectSkill(skill)) {
+      const skillPath = resolveProjectSkillPath(skill.name, skill._project_root);
+      const installed = skillPath !== null;
+      return {
+        found: true,
+        name: skill.name,
+        group: skill._group,
+        alias: skill.alias,
+        description: skill.description,
+        path: installed ? skillPath : null,
+        domain: skill.domain || null,
+        cleanInput,
+        // project 전용 신규 필드 — main·community 분기의 기존 필드는 변경하지 않는다 (DEC-3 3.1.2(e))
+        scope: 'project',
+        installed,
+        source_repo: skill.source_repo || null,
+        license: skill.license || 'Unknown'
+      };
+    }
+
     // main(opal) 스킬: 기존 응답 형식 유지 (호환성 보장)
     return {
       found: true,
@@ -333,8 +434,17 @@ function getCommand(name) {
     (s.alias && s.alias.toLowerCase() === lower)
   );
   if (skill) {
-    const { _group, _source, ...rest } = skill;
-    return { ...rest, group: _group };
+    const { _group, _source, _project_root, ...rest } = skill;
+    // resolved_path — additive 신규 필드, 기존 필드는 한 건도 제거·변경하지 않는다 (태스크 114 DEC-5)
+    let resolved_path = null;
+    if (_source === 'main') {
+      resolved_path = resolveFirstPath(skill.paths);
+    } else if (_source === 'community') {
+      resolved_path = resolveCommunitySkillPath(skill.name);
+    } else if (_source === 'project') {
+      resolved_path = resolveProjectSkillPath(skill.name, _project_root);
+    }
+    return { ...rest, group: _group, resolved_path };
   }
   return { error: `Skill not found: ${name}` };
 }
@@ -462,6 +572,8 @@ function validate() {
           errors.push(`${skill.name}: missing "paths" array (v1 스키마)`);
         }
       }
+    } else if (isProjectSkill(skill)) {
+      // project 스킬: paths 필드 검사 생략 — resolveProjectSkillPath()가 name에서 경로를 동적 계산하므로 registry에 paths를 두지 않는다 (태스크 114)
     } else {
       // main(opal) 스킬: paths 필드 필수
       if (!skill.paths || !Array.isArray(skill.paths)) {

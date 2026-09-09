@@ -1,6 +1,6 @@
 {
   "$schema": "opal-skills-registry-v1",
-  "version": "3.15.0",
+  "version": "3.16.0",
   "updated_at": "2026-09-09",
   "groups": {
     "opal-pilot": [
@@ -777,6 +777,19 @@
         "paths": [
           "~/.opal/skills/opal-code-map-builder/SKILL.md"
         ]
+      },
+      {
+        "name": "opal-skill-wizard",
+        "alias": "osw",
+        "description": "프로젝트 적합 커뮤니티 스킬 제안 + 프로젝트 스코프 설치 (2모드: 신규 인터뷰 / 기존 PROJECT.md 재사용)",
+        "triggers": [
+          "^opal-skill-wizard$",
+          "^osw$"
+        ],
+        "paths": [
+          "{project}/.opal/skills/opal-skill-wizard/SKILL.md",
+          "~/.opal/skills/opal-skill-wizard/SKILL.md"
+        ]
       }
     ],
     "op-brain": [
@@ -920,6 +933,14 @@
         "op-dev-todo 제거 — PLAN Work items와 중복되고 활성 pilot 호출이 없는 단계 스킬 정리",
         "opal-next 제거 — 부트스트랩 다음 액션, //help, //opi, opal-cli doctor와 중복되는 재진입 스킬 정리",
         "활성 게이트 스킬 op-scenario-gate의 누락된 레지스트리 등록 복구"
+      ]
+    },
+    {
+      "version": "3.16.0",
+      "date": "2026-09-09",
+      "task": "114",
+      "changes": [
+        "opal-skill-wizard(osw) 신규 등재 — 프로젝트 적합 커뮤니티 스킬 제안 + 프로젝트 스코프 설치. groups.opal 말미 append, 기존 항목 무변경"
       ]
     }
   ]

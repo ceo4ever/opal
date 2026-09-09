@@ -1,0 +1,41 @@
+[
+  {
+    "iteration": 1,
+    "missing": {
+      "requirements": [],
+      "features": [],
+      "hypotheses": []
+    },
+    "gaps": [
+      "R-3·R-9 신형 채택의 실행-시간 검증 부재",
+      "TS-024~028 부정경로 5건이 전부 정적 grep — self-confirming"
+    ],
+    "verdict": "fail",
+    "scores": {
+      "goal": 2,
+      "adoption": 1,
+      "boundary": 1
+    },
+    "average": 1.33
+  },
+  {
+    "iteration": 2,
+    "missing": {
+      "requirements": [],
+      "features": [],
+      "hypotheses": []
+    },
+    "gaps": [
+      "[⑥] TS-034/035/036 정합성 신호 부재 (게이트 통과 후 보강으로 해소)",
+      "[⑤] TS-031 전제 미검증 (반례 없음, 감점 없음)",
+      "[⑥] TS-035 동어반복 경향 (하한 보장, 감점 없음)"
+    ],
+    "verdict": "pass",
+    "scores": {
+      "goal": 2,
+      "adoption": 2,
+      "boundary": 1
+    },
+    "average": 1.67
+  }
+]

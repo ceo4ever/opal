@@ -191,8 +191,30 @@ OPAL은 2-레이어 아키텍처로 동작한다.
 | 카탈로그 SSOT | [skills.sh](https://skills.sh/) — `npx skills find` (검색·업데이트 확인 전용) |
 | 설치 방식 | clone-copy — `git clone --depth 1` → `{vendor}/{skill}/` 복사 + clone 시점 commit_sha 기록 (opal-skill-manager §설치, 알투 자동 호출 또는 `//skill-manager`) |
 | 설치 위치 | `~/.opal/community-skills/{vendor}/{skill}/SKILL.md` (vendor 중첩 SSOT — flat 잔재는 `skill-registry.js migrate`로 정규화) |
-| 레지스트리 (이원) | 프레임워크 카탈로그 `~/.opal/references/community-skills-registry.json` (install이 덮어써 갱신 전파) + 사용자 등록분 `~/.opal/community-skills/user-registry.json` (install 불가침 — 142 D-4, skill-registry가 병합 로드). 사용자 등록분은 기존 7필드에 판정 3필드(`trust`·`capabilities`·`scanned_at`)를 additive로 함께 기록한다 — 스키마 교체 없이 `validate`가 미지 필드를 무시하는 성질을 이용한다 |
+| 프로젝트 설치 위치 | `{project}/.opal/community-skills/{vendor}/{skill}/SKILL.md` (전역과 동형 구조 — 루트만 `~/.opal/` → `{project}/.opal/`로 상이) |
+| 레지스트리 (스코프 3원) | 프레임워크 카탈로그 `~/.opal/references/community-skills-registry.json` (install이 덮어써 갱신 전파) + 사용자 등록분 `~/.opal/community-skills/user-registry.json` (install 불가침 — 142 D-4, skill-registry가 병합 로드). 사용자 등록분은 기존 7필드에 판정 3필드(`trust`·`capabilities`·`scanned_at`)를 additive로 함께 기록한다 — 스키마 교체 없이 `validate`가 미지 필드를 무시하는 성질을 이용한다. + **프로젝트 스코프** `{project}/.opal/skills-registry.json` (프로젝트별 설치 이력 — 전역 두 스코프와 별개 파일, `skill-registry.js`가 병합 로드) |
 | 라이선스 책임 | 사용자 설치 시점 발생 (OPAL repo는 third-party 코드 재배포 안 함) |
+
+**프로젝트 registry 스키마 (12필드)** — `{project}/.opal/skills-registry.json`의 `groups.project[]` 항목 필드:
+
+| 필드 | 필수 | 타입 | 내용 |
+|------|------|------|------|
+| `name` | ✅ | string | `{vendor}/{skill}` 정식명 — 병합 override 키 |
+| `alias` | | string | 약어 (미지정 가능) |
+| `description` | ✅ | string | 1줄 설명 |
+| `triggers` | ✅ | string[] | 정규식 배열 — `matchByTriggers` 소비 |
+| `domain` | | string | 도메인 라벨 |
+| `source_repo` | ✅ | string | clone 출처 URL |
+| `commit_sha` | ✅ | string | clone 시점 commit |
+| `license` | ✅ | string | 라이선스 (미확인 시 `"Unknown"`) |
+| `trust` | ✅ | string | `SAFE`/`CAUTION`/`RISKY`/`UNKNOWN` |
+| `capabilities` | | string[] | `scan-risk` active hit 요약 |
+| `scanned_at` | ✅ | string | 스캔 시점 ISO8601 |
+| `installed_at` | ✅ | string | 복사 성립 시점 ISO8601 |
+
+**[MUST] `paths` 필드를 두지 않는다** — 프로젝트 스킬 경로는 `name`에서 동적 계산한다(community 스킬의 "paths 폐기, name에서 계산" 규약과 동일 방향).
+
+프로젝트 스코프의 담당 주체는 `opal-skill-wizard`(약어 `osw`)이며, 전역 두 스코프(카탈로그·사용자 등록분)는 계속 `opal-skill-manager`가 담당한다.
 
 ### 하네스 (Harness)
 
@@ -491,6 +513,7 @@ opal/                                    ← 이 저장소
 
 | 날짜 | 변경 내용 |
 |------|----------|
+| 2026-09-09 | 커뮤니티 스킬 레지스트리를 **스코프 3원**으로 확장 — 프레임워크 카탈로그·사용자 등록분에 더해 프로젝트 스코프 `{project}/.opal/skills-registry.json` 추가. 프로젝트 설치 위치 행 + registry 스키마 12필드 표 + `paths` 미보유 규칙 + 담당 주체 경계(프로젝트=`opal-skill-wizard`/전역=`opal-skill-manager`) 신설 (Task 114) |
 | 2026-09-06 13:18 | §2-tier 표 Phase A 로드 항목 열거에서 **`보고형식`** 제거 — AGENT.md §보고 형식 전면 제거(108)에 따라 Phase A가 더 이상 로드하지 않는 항목을 표에서 삭제. 스킵게이트·identity·PRINCIPLES(헌법)·도구맵·`//` 레지스트리 해석 5항목은 무변경 (108) |
 | 2026-09-03 13:15 | **§배포 구조에 「어댑터 확장 필드 통로」 서술 신설** — `emit_platform_agent_adapter()`·`install_codex_agents()`의 frontmatter 재조립이 `name`/`description`/`model` 3필드 하드코딩에서 `OPAL_ADAPTER_FIELD_SPEC` JSON 스펙 순회로 전환됐다. 필드명·값·배치 3중 변환을 스펙 하나가 소유하고 emit은 배치 모드 3종(`key`/`model_param`/`omit`)에만 분기하여 플랫폼명 조건문을 두지 않는다. 첫 확장 필드 `effort`(Claude=`effort` / Codex=`model_reasoning_effort` / Cursor·Gemini=생략) 적용. mac·windows 스펙 JSON은 센티넬 구간 바이트 동일을 규약으로 하며 테스트가 기계 검증한다. 함께 `install_codex_config()` 서술을 legacy `max_threads` → `max_concurrent_threads_per_session`으로 정정하고 3분기 마이그레이션(신규 append / 기존 블록 in-place 치환 / 스킵)을 명시. `docs/architecture-diagram/opal_framework_architecture.html:599`의 동일 legacy 키 표기도 정정 (태스크 105) |
 | 2026-09-03 00:59 | **§커뮤니티 스킬 설치 판정을 라이선스 1축 → 2축·4단으로 갱신** — 본문 위험 패턴 스캔(`skill-registry.js scan-risk` 신설, 1층 하드 필터)과 라이선스를 합쳐 SAFE/CAUTION/RISKY/UNKNOWN 4단으로 판정한다. 1층은 필요조건이며 사람 검토를 대체하지 않음을 명시(산문 영역 미탐 한계). §레지스트리(이원) 행에 사용자 등록분 판정 3필드(`trust`·`capabilities`·`scanned_at`) additive 기록 반영 — `validate`가 미지 필드를 무시하는 성질을 이용해 스키마 교체 없이 확장. §핵심 디렉토리 `tools/` 표 `skill-registry/` 항목에 `scan-risk` 반영. 근거 — `opal/skills/opal-skill-manager/SKILL.md` v1.5(§1·§2 6단 흐름 재작성), `opal/tools/skill-registry/skill-registry.js`(`scan-risk` 서브명령) (태스크 105) |

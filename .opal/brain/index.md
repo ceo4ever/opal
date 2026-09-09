@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-09-09 17:14
+> 갱신: 2026-09-09 21:22
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -22,9 +22,11 @@
 - [[opal-evaluator-agent]] — opal-evaluator-agent #agent #checker #verification #oppl
 - [[opal-improve]] — opal-improve (//opim) #skill #operator #improvement #pm-loop #tool-gated
 - [[opal-loop-action-agent]] — opal-loop-action-agent #agent #oppl #executor #action-agent
+- [[opal-skill-wizard]] — opal-skill-wizard (osw) #skill #skill-registry #project-scope #task-114
 - [[opal-workspace-sync]] — opal-workspace-sync (alias opws) #skill #workspace #git #operator
 - [[pipeline-json-spec]] — pipeline.json (pilot 파이프라인 정의 SSOT) #state-tool #pipeline #schema #task-070
 - [[skill-opal-pilot-data-design]] — opal-pilot-data-design (opdd) #pilot #orchestrator #data-design #db
+- [[skill-registry-project-scope-4source-merge]] — skill-registry 프로젝트 스코프 4소스 병합 #tool #skill-registry #project-scope #task-114
 - [[state-tool]] — state-tool #tool #pipeline
 - [[test-tool]] — test-tool #tool #testing #pipeline
 - [[tool-scan]] — tool-scan #tool #opal-tools #discovery #usage #capability
@@ -32,6 +34,7 @@
 
 ## 개념
 - [[070-derivation-engine-perspective-bias-lesson]] — 070 사건 근본원인 — 도출 엔진 관점 편향과 게이트 집행 #lesson-learned #testing #scenario-gate #root-cause #task-073
+- [[ac-infeasible-from-start-requires-preexisting-baseline-diff]] — AC가 착수 시점부터 실현 불가일 수 있다 #verification #ac #task-114
 - [[active-platform-dir-install-target-lesson]] — 활성 Claude 플랫폼 디렉토리가 ~/.claude 기본이 아닐 수 있다 — install 타겟 정합 교훈 (032 P2) #install #deploy #platform #dispatch #lesson-learned
 - [[adapter-body-model-level-substitution]] — 어댑터 본문 model 레벨 치환 — frontmatter 비대칭 해소 (032) #adapter #install #model #platform #sub-dispatch #constitution
 - [[additive-field-extension-over-schema-replacement]] — 레지스트리 확장은 스키마 교체보다 additive 필드 추가가 기능 후퇴를 막는다 #registry #schema-evolution #skill-registry #task-105
@@ -115,6 +118,7 @@
 - [[execution-observation-scope-citation-requirement]] — 실행 관측 인용은 스코프 병기 필수 — 단일파일 vs 디렉토리 수치 상이 #lesson #measurement #citation #opds
 - [[existence-check-not-version-check]] — 존재 검사와 버전 검사는 다른 게이트다 #gate #lesson #version #defect-class
 - [[expected-total-as-reference-not-gate-criterion]] — 하드코딩된 기대 총계는 게이트를 흉기로 만든다 — 판정은 집합 일치로 #lesson #gate-design #verification #plan-discipline #worker-instruction
+- [[exploration-marker-as-output-artifact-creates-circularity]] — 탐색 마커를 산출물 파일로 삼으면 순환이 생긴다 #architecture #skill-registry #task-114
 - [[exports-generation-tool-verification-division]] — 생성은 워커, 검증은 도구 — 비대칭을 이용한 분업 #code-scan #header #architecture
 - [[external-tool-boundary-stub-insufficient-lesson]] — 외부 도구 경계는 스텁만으로 불충분 — 실연동 검증이 통합 결함을 잡는다 #testing #lesson #integration #test-strategy
 - [[eye-inspection-cannot-count-machine-check-at-close]] — 세어야 하는 검사는 사람이 아니라 도구가 한다 — 미완 슬롯 158건 누락 #pm-gate #verification #close #tooling #lesson-learned
@@ -164,6 +168,8 @@
 - [[multilayer-verification-no-single-layer-catches-all]] — 검증 다층화 실증 — 어느 한 층도 전건을 잡지 못함 #verification #quality-gate #pipeline
 - [[na-status-contract-agentic-init-only]] — state-tool na 상태의 실제 계약 — 부여 시점은 초기화 하나뿐 #state-tool #pipeline #na-status #task-090
 - [[native-todo-panel-llm-only-hook-boundary]] — 네이티브 todo 패널 LLM 전용 기록 한계 (hook은 트리거·페이로드까지) #opal-pipeline #todo-mirror #hook #platform-constraint #honest-limit
+- [[negative-control-proves-verification-not-weakened]] — 음성 통제로 검증 약화 여부를 증명한다 #verification #testing #skill-wizard #task-114
+- [[negative-scenario-requires-3-condition-and]] — 부정 시나리오는 없다만으로 판정하지 않는다 — 3조건 AND #verification #testing #skill-wizard #task-114
 - [[new-ssot-pointer-not-value-copy]] — 신규 SSOT 신설 시 타 SSOT 수치 복제 금지 — 포인터만 #ssot #dedup #architecture #opds
 - [[nojs-flex-rail-over-inline-svg-overlay]] — 자기완결 HTML의 연결선은 레이아웃으로 만든다 — 좌표 측정 오버레이 기각 #html #visual-artifact #design-decision #no-js #responsive
 - [[non-gated-write-path-audit-before-ssot-conversion]] — 비게이트 쓰기 경로는 SSOT 전환 전에 먼저 감사해야 한다 #ssot #tool-gated #migration #architecture #memory
@@ -268,6 +274,7 @@
 - [[self-modifying-tool-deploy-unit-coupling]] — 자기 자신을 고치는 도구의 배포 단위 결합 원칙 #deploy #gate-design #pattern #task-093
 - [[shard-policy-block-vs-nonblock-fallback-criterion]] — 미설정 시 차단 vs 비차단 폴백 판정 기준 #code-scan #configuration #backward-compat #task-080 #task-083
 - [[shared-ssot-procedure-artifact-role-split]] — 분석 코어 공유 SSOT — 절차와 산출물의 역할 분리 #ssot #analysis-core #role-separation #architecture #opd
+- [[side-effect-observation-enables-runtime-verification]] — 부작용 관측이 실행-시간 검증을 자동화한다 #verification #testing #skill-wizard #task-114
 - [[silence-is-not-a-declared-exception]] — 예외는 침묵이 아니라 선언이어야 한다 — 미측정 선언과 0의 구별 #enforcement #measurement #state-tool #contract #lesson-learned
 - [[silent-loss-prevention-row-accounting-invariant]] — 무성 유실 차단 — 행 회계 불변식 설계 패턴 #migration #data-integrity #invariant #design-pattern #memory
 - [[silent-render-failure-deterministic-gate]] — 조용히 실패하는 코드는 브라우저 검증을 무력화한다 — 결정론 대조를 차단 게이트로 #lesson #verification #render-verification #gate-design #silent-failure
@@ -344,3 +351,4 @@
 
 ## 합성
 - [[opal-first-use-guide]] — OPAL 첫 사용 가이드 — 설치부터 파이프라인까지 #guide #onboarding #first-use
+- [[verification-dual-track-catches-author-blind-spots]] — 검증 2원화가 잡아낸 결함 6건 (작성자≠검증자) #verification #retrospective #task-114
