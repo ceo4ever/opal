@@ -199,7 +199,8 @@ opal-help는 안내만 한다. 다음은 각 전용 스킬로 위임한다.
 |------|----------|
 | 스킬 생성/수정 | `//osc` (opal-skill-creator) |
 | 커뮤니티 스킬 검색/설치/삭제 | `//osm` (opal-skill-manager) |
-| 현재 상태 진단 + 다음 액션 권유 | `//next` (opal-next) |
+| 환경·설치 이상 진단 | `opal-cli doctor` |
+| 프로젝트 초기화·갱신 | `//opi` (opal-project-init) |
 
 ---
 

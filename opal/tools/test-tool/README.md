@@ -1,6 +1,6 @@
 # test-tool
 
-> OPAL 테스트 단계별 도구 결정론적 집행기 — 4서브명령(resolve/check/unit/integration) + scenario-* 7서브명령(scenario-init/scenario-lock/scenario-mark/scenario-status/scenario-red/scenario-fidelity-check/scenario-conformance)
+> OPAL 테스트 단계별 도구 결정론적 집행기 — 4서브명령(resolve/check/unit/integration) + scenario-* 서브명령(scenario-init/scenario-lock/scenario-mark/scenario-status/scenario-red/scenario-fidelity-check/scenario-conformance/scenario-coverage-check/scenario-coverage-build)
 
 ## 개요
 
@@ -159,6 +159,8 @@ bash run.sh scenario-init --task-path <PATH> [--scenarios <JSON배열>]
 
 **[MUST] red_confirmed 시드 무력화(056/ADD-1)**: `--scenarios` 입력에 `red_confirmed: true`가 있어도 항상 `false`로 강제 생성한다 — RED 미관찰 상태를 init 시드로 우회 선언하는 경로를 봉쇄한다. 시드 시도가 있었으면 응답에 `warning` 필드를 추가한다(무시하되 침묵하지 않음). `red_confirmed`는 오직 `scenario-red`로만 true가 될 수 있다.
 
+`red_required`는 구현 전 RED가 필요한 시나리오에만 `true`로 준다. 필드가 없는 기존 입력은 호환성을 위해 `true`로 처리한다.
+
 **exit code**: `0` / `scenario_spec_invalid_json(11)`
 
 ---
@@ -185,7 +187,7 @@ bash run.sh scenario-red --task-path <PATH> --id <S-ID> --evidence <RED 실패 �
 
 ### `scenario-lock`
 
-전 시나리오 `red_confirmed==true`일 때만 `locked=true` (RED-first 동결 게이트, self-confirming 방지).
+`red_required==true`인 시나리오가 모두 `red_confirmed==true`일 때 `locked=true`로 만든다.
 
 ```bash
 bash run.sh scenario-lock --task-path <PATH>
@@ -196,7 +198,7 @@ bash run.sh scenario-lock --task-path <PATH>
 { "ok": true, "command": "scenario-lock", "locked": true, "locked_at": "2026-07-10T16:36:00+09:00" }
 ```
 
-**[MUST] RED-first 게이트**: 시나리오 중 하나라도 `red_confirmed==false`이면 거부한다 — 구현 전 실패 확인 없이 동결하면 self-confirming 테스트로 검증 게이트가 무력화된다.
+**[MUST] RED-first 게이트**: RED 대상으로 선택한 시나리오 중 하나라도 `red_confirmed==false`이면 거부한다. `red_required==false`인 구현 후·회귀 시나리오는 잠금을 막지 않는다.
 
 **exit code**: `0` / `scenario_not_initialized(10)` / `red_not_confirmed(8)`
 
@@ -207,7 +209,7 @@ bash run.sh scenario-lock --task-path <PATH>
 `locked==true` 이후에만 result존(`result`/`evidence`/`marked_at`) 기록을 허용한다.
 
 ```bash
-bash run.sh scenario-mark --task-path <PATH> --id <S-ID> --result pass|fail [--evidence <문자열>] [--fidelity mock|real-http|real-usage]
+bash run.sh scenario-mark --task-path <PATH> --id <S-ID> --result pass|fail|blocked [--evidence <문자열>] [--fidelity mock|real-http|real-usage]
 ```
 
 **출력 JSON**:
@@ -231,7 +233,7 @@ bash run.sh scenario-status --task-path <PATH>
 
 **출력 JSON**:
 ```json
-{ "ok": true, "command": "scenario-status", "locked": true, "total": 2, "red_confirmed": 2, "passed": 1, "failed": 0 }
+{ "ok": true, "command": "scenario-status", "locked": true, "total": 2, "red_confirmed": 1, "red_required": 1, "red_confirmed_required": 1, "passed": 1, "failed": 0, "blocked": 0 }
 ```
 
 **exit code**: `0` / `scenario_not_initialized(10)`
@@ -295,6 +297,60 @@ bash run.sh scenario-conformance --task-path <PATH> [--surfaces <surfaces.json �
 
 ---
 
+### `scenario-coverage-build` (111)
+
+sdlc-v2 `TASK.md` / `PLAN.md` / `TEST-SCENARIO.md`를 기존 `scenario-coverage-check`가 소비하는 정규화 JSON으로 변환한다.
+
+```bash
+bash run.sh scenario-coverage-build --task-folder <PATH> --template sdlc-v2
+```
+
+**입력 계약**:
+
+- `TASK.md`: 첫 YAML frontmatter `template: sdlc-v2`, `Acceptance criteria`의 `AC-N`, `Constraints`의 `C-N`
+- `PLAN.md`: 첫 YAML frontmatter `template: sdlc-v2`, `Risks` 절의 optional `H-N`. 추가 검증이 필요한 위험이 없으면 H는 0건일 수 있다.
+- `TEST-SCENARIO.md`: 첫 YAML frontmatter `template: sdlc-v2`, `Scenarios` 표의 `S-N`과 `검증 대상` 토큰
+- `TEST-SCENARIO.md` Setup의 test substitute 기록은 대체 대상·이유·한계 설명용이다. `scenario-coverage-build/check`는 substitute 결과를 실제 integration/E2E/manual 증거로 승격하지 않는다.
+
+**출력 파일**: `<task-folder>/.scenario-coverage-input.json`
+
+**변환 규칙**:
+
+- AC/C → `requirements[]`
+- H가 있으면 `hypotheses[]`, 없으면 빈 배열
+- S 행 → `scenarios[]`
+- W는 실행 작업 단위이므로 `features[]`에 넣지 않음
+- legacy F가 있는 문서에서만 `features[]`를 채움
+
+**출력 JSON**:
+```json
+{
+  "ok": true,
+  "command": "scenario-coverage-build",
+  "template": "sdlc-v2",
+  "coverage_input": "tasks/111/.scenario-coverage-input.json",
+  "counts": { "requirements": 4, "features": 0, "hypotheses": 2, "scenarios": 2 }
+}
+```
+
+**거부 조건**: unknown ref, 필수 AC/C 추출 실패, PLAN Risks 절 누락, S 0건, 중복 S-ID, 문서 부재/파손, sdlc-v2 frontmatter 누락. H는 optional이지만, PLAN Risks에 H가 있으면 `scenario-coverage-check`가 미커버 H를 실패시킨다.
+
+**exit code**: `0` / `coverage_input_invalid(17)`
+
+---
+
+### `scenario-coverage-check` (073)
+
+정규화 페이로드(`goal/requirements/features/hypotheses/scenarios`)의 R/F/H ↔ 시나리오 매핑 누락을 결정론으로 판정한다. sdlc-v2 문서는 먼저 `scenario-coverage-build`로 입력을 생성한다.
+
+```bash
+bash run.sh scenario-coverage-check --coverage-input <PATH>
+```
+
+**exit code**: `0` / `coverage_unmet(16)` / `coverage_input_invalid(17)`
+
+---
+
 ## 에러 코드
 
 | 코드 | exit | 원인 | 처리 |
@@ -306,7 +362,7 @@ bash run.sh scenario-conformance --task-path <PATH> [--surfaces <surfaces.json �
 | `layer_failed` | 5 | unit 계층 stop-on-fail | 실패 계층 수정 후 재시도 |
 | `e2e_failed` | 6 | E2E 실패 (폴백도 실패) | SUT 상태·네트워크 확인 |
 | `escalation` | 7 | cmux 에스컬레이션 에러코드 (폴백 금지) | 에러코드별 원인 수정 |
-| `red_not_confirmed` | 8 | scenario-lock 시 red_confirmed 미충족 시나리오 존재 | 구현 전 실패(RED) 확인 후 재시도 |
+| `red_not_confirmed` | 8 | scenario-lock 시 RED 대상의 red_confirmed 미충족 | 해당 RED 대상의 구현 전 실패 확인 후 재시도 |
 | `scenario_not_locked` | 9 | scenario-mark 호출 시점에 locked==false | scenario-lock 선행 후 재시도 |
 | `scenario_not_initialized` | 10 | test-scenario.json 부재 | scenario-init 선행 |
 | `scenario_spec_invalid_json` | 11 | scenario-init `--scenarios` JSON 파싱 실패 | JSON 문법 수정 후 재시도 |
@@ -314,8 +370,10 @@ bash run.sh scenario-conformance --task-path <PATH> [--surfaces <surfaces.json �
 | `fidelity_unmet` | 13 | scenario-fidelity-check 시 `fidelity < required_fidelity`(또는 result!=pass)인 시나리오 존재 | 요구 충실도 이상으로 재검증 후 scenario-mark --fidelity 재기록 |
 | `surface_unverified` | 14 | scenario-conformance 시 조건(대상 fidelity 이상 pass) 충족 시나리오가 없는 표면 존재 | 해당 표면의 surface_ref 시나리오를 요구 충실도 이상으로 재검증 |
 | `surfaces_file_not_found` | 15 | (정보용 배정) surfaces.json 부재 — 069/M-5 결정에 따라 실제로는 오류가 아닌 `applicable:false` 스킵으로 처리됨 | 해당 없음(스킵 정상 동작) |
+| `coverage_unmet` | 16 | scenario-coverage-check 시 요구/기능/가설 미커버 존재 | TEST-SCENARIO 매핑 보강 후 재시도 |
+| `coverage_input_invalid` | 17 | scenario-coverage-build/check 입력 문서·JSON 파싱/스키마 실패 | TASK/PLAN/TEST-SCENARIO 또는 coverage input 수정 후 재시도 |
 
-> `scenario-*` 7서브명령 에러코드는 `lib/scenario.py`의 `SCENARIO_ERROR_CODES`(전용 SSOT)에서 관리하며, 5~12는 기존 0~7 계열과 충돌 없이 배정됐고(격리 원칙 — PLAN.md §3.2.2, 056/ADD-1), 069는 13~15를 이어서 배정한다(격리 원칙 불변, `scenario.py:29-31`).
+> `scenario-*` 에러코드는 `lib/scenario.py`의 `SCENARIO_ERROR_CODES`(전용 SSOT)에서 관리하며, 5~12는 기존 0~7 계열과 충돌 없이 배정됐고(격리 원칙 — PLAN.md §3.2.2, 056/ADD-1), 069는 13~15, 073/111은 16~17을 이어서 배정한다.
 
 ### cmux-tool 에러코드 분류
 
@@ -366,3 +424,6 @@ bash run.sh scenario-conformance --task-path <PATH> [--surfaces <surfaces.json �
 | v1.1 | 2026-07-10 16:36 | scenario-* 4서브명령(scenario-init/scenario-lock/scenario-mark/scenario-status) 추가 — `lib/scenario.py`로 격리(기존 4서브명령 미간섭), test-scenario.json SSOT(spec존/result존), RED-first 동결 게이트(exit 8~11) (056) |
 | v1.2 | 2026-07-10 | `scenario-red` 서브명령 신설 — red_confirmed를 RED 증거와 함께 tool-gated로 갱신(--evidence 필수, locked 후 거부 scenario_already_locked exit 12), enforce-don't-advise 보강. scenario-init의 red_confirmed 시드 입력은 항상 무시(false 강제)+응답 warning으로 변경 — RED 미관찰 우회 선언 경로 봉쇄 (056/ADD-1) |
 | v1.3 | 2026-07-18 22:42 | 증거 충실도 사다리(`FIDELITY_ORDER`: mock<real-http<real-usage) 도입 — `required_fidelity`/`fidelity`/`surface_ref` 필드(optional additive, 미지정 시 mock 기본값) + `scenario-fidelity-check`(시나리오별 부분 게이트, fidelity_unmet exit 13) + `scenario-conformance`(표면 전수 conformance, surfaces.json 분모·읽기 전용, surface_unverified exit 14, surfaces.json 부재 시 applicable:false 스킵) 신규 서브명령. backlog.json 미접촉(축 분리 불변) (069) |
+| v1.4 | 2026-09-09 14:18 KST | `scenario-coverage-build --task-folder ... --template sdlc-v2` 추가 — sdlc-v2 TASK AC/C, PLAN H, TEST S를 `.scenario-coverage-input.json`으로 결정론 변환하고 W를 features에서 제외. 기존 `scenario-coverage-check` 입력·exit 계약은 유지 (task 111/W-5) |
+| v1.5 | 2026-09-09 14:58 KST | sdlc-v2 builder가 중복 S-ID를 `coverage_input_invalid`로 거부하도록 계약을 보강하고, Setup의 test substitute 기록이 실제 integration/E2E/manual 증거를 대체하지 못함을 명시 (task 111/W-5 보완) |
+| v1.6 | 2026-09-09 15:07 KST | sdlc-v2 PLAN Risks H를 optional로 변경. H 0건은 정상 build/check 통과하고, H가 존재하는 경우의 미커버 실패 계약은 유지 (task 111/W-5 보완) |

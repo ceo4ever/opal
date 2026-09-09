@@ -7,26 +7,31 @@ tags:
 - skill
 sources:
 - skill:op-dev-test-scenario
-related: []
+- task:111
+related:
+- sdlc-v2-development-artifact-contract
+- op-dev-plan
+- test-tool
+- scenario-goal-coverage-gate-loop
 created: '2026-06-11'
-updated: '2026-06-11'
-status: draft
+updated: '2026-09-09'
+status: active
 ---
-## 개념 요약
+## 개요
 
-PLAN.md 리스크 가설 표를 기반으로 데이터 설계·L1/L2/L3 계층 시나리오·4열 매핑 표를 작성하는 TEST-SCENARIO 단계 스킬.
+TASK의 완료 기준·제약과 PLAN의 실제 위험을 실행 전 검증 기준으로 연결하는 시나리오 작성 스킬이다.
 
-## 역할·호출 시점·핵심 규칙
+## 현재 계약
 
-- **역할**: TEST-SCENARIO.md 생성; 리스크 가설 표 기반 L1(단위)·L2(통합)·L3(E2E) 계층 시나리오 설계
-- **호출 시점**: 오케스트레이터(opal-pilot-dev) STEP 3.5에서 PM(알투+캡틴 페어)이 직접 수행 — 워커 디스패치 없음
-- **핵심 규칙**: 필수 입력 TASK.md + PLAN.md(리스크 가설 표); PLAN 워커와 다른 작성자가 수행(self-confirming 방지)
+출력은 Setup과 Scenarios 두 절만 사용한다. 각 시나리오는 검증 대상, 조건, 행동, 기대 결과, 방법·환경, 시점을 가진다. 결과와 증거를 문서에 쓰지 않고 test-tool이 관리하는 `test-scenario.json`에 기록한다. 시점이 `구현 전 RED`인 행만 `red_required: true`가 된다.
 
-## 파일 참조
+## 근거
 
-`file_path: opal/skills/op-dev-test-scenario/SKILL.md`
+`opal/skills/op-dev-test-scenario/SKILL.md:16`, `opal/skills/op-dev-test-scenario/references/test-scenario-guide.md:18`, task:111.
 
-## 관련
+## 관련 페이지
 
-- [[skill-opal-pilot-dev]] — 이 스킬을 STEP 3.5에서 PM이 직접 수행하도록 지시하는 Dev 오케스트레이터
-- [[op-dev-plan]] — 리스크 가설 표를 포함하는 PLAN.md를 생성하는 선행 단계 스킬
+- [[sdlc-v2-development-artifact-contract]]
+- [[op-dev-plan]]
+- [[test-tool]]
+- [[scenario-goal-coverage-gate-loop]]

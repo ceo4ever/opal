@@ -9,6 +9,7 @@ tags:
 - task-075
 sources:
 - task:075
+- task:111
 related:
 - skill-opal-pilot-dev-short
 - op-dev-test-scenario
@@ -16,8 +17,8 @@ related:
 - scenario-gate-pilot-fit-criteria
 - readme-ssot-principle
 created: '2026-07-23'
-updated: '2026-07-23'
-status: draft
+updated: '2026-09-09'
+status: stale
 ---
 ## 개요
 

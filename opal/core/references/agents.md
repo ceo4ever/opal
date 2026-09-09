@@ -3,15 +3,21 @@
 OPAL 에이전트가 호출할 수 있는 서브에이전트 목록.
 각 에이전트는 독립 컨텍스트에서 실행되며, 호출 시 해당 AGENT.md(또는 SKILL.md)를 Read로 읽어 지시를 전달한다.
 
+## 프로젝트 문서 주입 계약
+
+개발 에이전트는 고정된 `docs/ARCHITECTURE.md`/`docs/BACKEND.md`/`docs/FRONTEND.md` 목록이나 `docs/` 전체 로드를 자체 가정하지 않는다. PM은 태스크의 프로젝트 루트에서 `docs/PROJECT.md`를 먼저 읽고, 그 프로젝트 문서 레지스트리의 적용 범위와 참조 시점에 따라 작업 도메인에 필요한 프로젝트/기획/설계 문서 목록을 선별해 워커 프롬프트에 주입한다. 워커는 주입된 문서만 Read한다.
+
+`docs/PROJECT.md`가 없는 프로젝트에서만 에이전트별 기존 최소 폴백 문서를 허용한다. 이 경우에도 워커는 존재하는 파일만 읽고, `docs/` 전체를 스캔해 컨텍스트를 확대하지 않는다.
+
 ## opal-pilot 에이전트
 
 opal-pilot 오케스트레이터(opal-pilot-dev, opal-pilot-dev-short, opal-pilot-dev-wireframe, opal-pilot-project)가 호출하는 서브에이전트.
 
 ### opal-task-agent
 
-- **역할**: 범용 워커 — 오케스트레이터가 전달한 단계 스킬(op-task-plan, op-task-execute, op-dev-analysis, op-dev-plan 등)의 SKILL.md를 Read하고 프로세스를 따라 산출물 생성
+- **역할**: 범용 워커 — 오케스트레이터가 전달한 단계 스킬(op-task-plan, op-task-execute, op-dev-analysis, op-dev-plan 등)의 SKILL.md를 Read하고, PM이 `docs/PROJECT.md` 레지스트리에서 선별해 주입한 프로젝트 문서를 소비해 프로세스를 따라 산출물 생성
 - **호출 시점**: 각 단계 시작 시 오케스트레이터가 디스패치
-- **입력**: 스킬 경로, 태스크 폴더, 이전 산출물, 프로젝트 컨벤션
+- **입력**: 스킬 경로, 태스크 폴더, 이전 산출물, PM 주입 프로젝트 문서 목록
 - **출력**: 산출물(.md) + 결과 반환 (artifact_path, summary, status, blockers, changed_files)
 - **참고**: opal-pilot-project에서는 op-task-plan(advanced), op-task-execute(standard)을 사용
 
@@ -24,14 +30,14 @@ opal-pilot 오케스트레이터(opal-pilot-dev, opal-pilot-dev-short, opal-pilo
 
 ### opal-test-agent
 
-- **역할**: Test 에이전트 — TEST-SCENARIO.md 기반 동적 검증 (테스트 실행 + 결과 채움 + 판정), BE/FE/E2E 3가지 모드 지원
+- **역할**: Test 에이전트 — TEST-SCENARIO.md 기반 동적 검증 (테스트 실행 + 결과·증거 기록 + 판정), BE/FE/E2E 3가지 모드 지원
 - **호출 시점**: EXECUTE 완료 후 오케스트레이터가 호출
 - **단계**: TEST
 - **영역**: 공통
 - **model**: standard
-- **자체 로드 문서**: `docs/ARCHITECTURE.md` (테스트 섹션), 테스트 모드에 따라 도메인 문서 선택 로드
+- **프로젝트 문서**: PM 주입 문서와 `docs/PROJECT.md` 레지스트리에서 test_mode·changed_files 기준으로 선별한 검증 관련 문서. PROJECT 부재 시에만 테스트 도메인별 최소 docs 폴백
 - **입력**: scenario_path, changed_files, mode(full-simple/full-complex/short), test_mode(be/fe/e2e)
-- **출력**: TEST-SCENARIO.md (결과 채움 + 판정)
+- **출력**: sdlc-v2는 `test-scenario.json` 결과·증거 + 판정, legacy는 TEST-SCENARIO.md 결과 칸 갱신 허용
 - **에이전트 경로**: `opal/agents/opal-test-agent/`
 
 ### opal-task-action-agent
@@ -72,64 +78,64 @@ opal-pilot 오케스트레이터(opal-pilot-dev, opal-pilot-dev-short, opal-pilo
 ## 전문 에이전트 (Specialist)
 
 PM이 PLAN.md의 단계+영역 조합으로 직접 디스패치하는 전문 워커 에이전트.
-각 에이전트는 해당 도메인의 전문 지식과 자체 로드 문서를 보유하며, 범용 opal-task-agent 대신 투입된다.
+각 에이전트는 해당 도메인의 전문 지식을 보유하며, PM이 선별 주입한 프로젝트 문서를 소비한다. 범용 opal-task-agent 대신 투입된다.
 
 ### opal-plan-agent
 
-- **역할**: PLAN 단계 전문 워커 — 코드 분석 + 기능 중심 설계 + 테스트 시나리오 작성을 고품질로 수행. PM이 전달한 전문 에이전트 매핑 테이블을 참조하여 PLAN.md §4 실행 체크리스트의 각 Step에 agent 필드를 배정한다.
+- **역할**: PLAN 단계 전문 워커 — 코드 분석 + 기능 중심 설계 + 테스트 시나리오 작성을 고품질로 수행. PM이 전달한 전문 에이전트 매핑 테이블을 참조하여 sdlc-v2 PLAN.md Work items의 `담당` 필드를 배정한다. legacy PLAN.md 템플릿에서만 §4.2 실행 체크리스트 Step의 `agent` 필드를 배정한다.
 - **호출 시점**: PLAN 단계 시작 시 오케스트레이터가 디스패치
 - **단계**: PLAN
 - **영역**: 공통
 - **model**: advanced (오버라이드 불가)
-- **자체 로드 문서**: `docs/` 전체 (PROJECT.md, ARCHITECTURE.md, CONVENTIONS.md, FRONTEND.md, BACKEND.md 및 하위 모든 도메인 문서)
-- **입력**: 스킬 경로, 태스크 폴더, 이전 산출물, 전문 에이전트 매핑 테이블
+- **프로젝트 문서**: PM이 `docs/PROJECT.md` 레지스트리에서 선별해 주입한 문서. PROJECT 부재 시에만 `docs/ARCHITECTURE.md`, `docs/CONVENTIONS.md`, 변경 도메인 문서 최소 폴백
+- **입력**: 스킬 경로, 태스크 폴더, 이전 산출물, 전문 에이전트 매핑 테이블, PM 주입 프로젝트 문서 목록
 - **출력**: 산출물(.md) + 결과 반환 (artifact_path, summary, status, blockers, changed_files)
 - **에이전트 경로**: `opal/agents/opal-plan-agent/`
 
 ### opal-fe-agent
 
-- **역할**: FE 전문 워커 — PM이 PLAN.md의 FE 영역 Step을 디스패치하면, 해당 단계 스킬을 Read하고 FE 전문 지식(React, shadcn/ui, Tailwind, 접근성, 반응형)으로 구현을 수행한다.
-- **호출 시점**: EXECUTE 단계 FE 영역 Step 시작 시 오케스트레이터가 디스패치
+- **역할**: FE 전문 워커 — PM이 PLAN.md의 FE Work item을 디스패치하면, 해당 단계 스킬을 Read하고 FE 전문 지식(React, shadcn/ui, Tailwind, 접근성, 반응형)으로 구현을 수행한다.
+- **호출 시점**: EXECUTE 단계 FE Work item 시작 시 오케스트레이터가 디스패치
 - **단계**: EXECUTE
 - **영역**: FE
 - **model**: standard
-- **자체 로드 문서**: `docs/FRONTEND.md`, `docs/CONVENTIONS.md` (FE 섹션) — BE 계층 문서 로드 제외
-- **입력**: 스킬 경로, 태스크 폴더, 이전 산출물, 프로젝트 컨벤션
+- **프로젝트 문서**: PM이 `docs/PROJECT.md` 레지스트리에서 FE 도메인·참조 시점으로 선별해 주입한 문서. PROJECT 부재 시에만 `docs/FRONTEND.md`, `docs/CONVENTIONS.md` 최소 폴백
+- **입력**: 스킬 경로, 태스크 폴더, 이전 산출물, PM 주입 프로젝트 문서 목록
 - **출력**: 산출물(.md) + 결과 반환 (artifact_path, summary, status, blockers, changed_files)
 - **에이전트 경로**: `opal/agents/opal-fe-agent/`
 
 ### opal-be-agent
 
-- **역할**: BE 전문 워커 — PM이 PLAN.md의 BE 영역 Step을 디스패치하면, 해당 단계 스킬을 Read하고 BE 전문 지식(RESTful API, OWASP, 레이어 구조, N+1 방지, 시크릿 관리)으로 구현을 수행한다.
-- **호출 시점**: EXECUTE 단계 BE 영역 Step 시작 시 오케스트레이터가 디스패치
+- **역할**: BE 전문 워커 — PM이 PLAN.md의 BE Work item을 디스패치하면, 해당 단계 스킬을 Read하고 BE 전문 지식(RESTful API, OWASP, 레이어 구조, N+1 방지, 시크릿 관리)으로 구현을 수행한다.
+- **호출 시점**: EXECUTE 단계 BE Work item 시작 시 오케스트레이터가 디스패치
 - **단계**: EXECUTE
 - **영역**: BE
 - **model**: standard
-- **자체 로드 문서**: `docs/BACKEND.md`, `docs/BE-FRAMEWORK.md`, `docs/CONVENTIONS.md` (BE 섹션) — FE 전용 문서 로드 제외
-- **입력**: 스킬 경로, 태스크 폴더, 이전 산출물, 프로젝트 컨벤션
+- **프로젝트 문서**: PM이 `docs/PROJECT.md` 레지스트리에서 BE 도메인·참조 시점으로 선별해 주입한 문서. PROJECT 부재 시에만 `docs/BACKEND.md`, `docs/BACKEND-FRAMEWORK.md`, `docs/CONVENTIONS.md`, `docs/CONVENTIONS-BACKEND.md` 최소 폴백
+- **입력**: 스킬 경로, 태스크 폴더, 이전 산출물, PM 주입 프로젝트 문서 목록
 - **출력**: 산출물(.md) + 결과 반환 (artifact_path, summary, status, blockers, changed_files)
 - **에이전트 경로**: `opal/agents/opal-be-agent/`
 
 ### opal-db-agent
 
 - **역할**: DB 모델링 전문 워커 — 서비스 기획서를 참고하여 데이터 모델링(개념/논리/물리)을 수행하고 마이그레이션 코드를 구현한다. PLAN 단계에서 DB 설계 산출물(MD, DBML), EXECUTE 단계에서 마이그레이션 코드(SQL)를 담당한다.
-- **호출 시점**: PLAN(DB 설계) 또는 EXECUTE(마이그레이션 구현) 단계 DB 영역 Step 시작 시 오케스트레이터가 디스패치
+- **호출 시점**: PLAN(DB 설계) 또는 EXECUTE(마이그레이션 구현) 단계 DB Work item 시작 시 오케스트레이터가 디스패치
 - **단계**: PLAN, EXECUTE
 - **영역**: DB
 - **model**: standard
-- **자체 로드 문서**: `docs/db/` 내 모든 .md 파일, `docs/db/schema.dbml`, 표준사전(엑셀 — PM이 경로 주입), `docs/SERVICE.md` / `docs/SPEC.md` / `docs/PRD.md` (참조용)
-- **입력**: 스킬 경로, 태스크 폴더, 이전 산출물, 표준사전 경로(옵션)
+- **프로젝트 문서**: PM이 `docs/PROJECT.md` 레지스트리에서 DB/설계 도메인·참조 시점으로 선별해 주입한 문서와 표준사전 경로. PROJECT 부재 시에만 `docs/db/`·스키마·대표 기획서 최소 폴백
+- **입력**: 스킬 경로, 태스크 폴더, 이전 산출물, PM 주입 프로젝트 문서 목록, 표준사전 경로(옵션)
 - **출력**: 설계 문서(MD) + 스키마(DBML) 또는 마이그레이션 코드(SQL) + 결과 반환
 - **에이전트 경로**: `opal/agents/opal-db-agent/`
 
 ### opal-planning-agent
 
 - **역할**: 서비스 기획 전문 워커 — 서비스 초기 기획부터 기획서(PRD, TRD, 서비스 정책서, IA, 와이어프레임, WBS, 외부 API 명세서 등) 작성/수정/관리를 수행한다. opwt(opal-pilot-write-tech) 파이프라인의 EXECUTE 단계에서 투입된다.
-- **호출 시점**: EXECUTE 단계 기획 영역 Step 시작 시 오케스트레이터가 디스패치
+- **호출 시점**: EXECUTE 단계 기획 Work item 시작 시 오케스트레이터가 디스패치
 - **단계**: EXECUTE
 - **영역**: 기획
 - **model**: advanced (오버라이드 불가)
-- **자체 로드 문서**: `docs/PROJECT.md`, 기존 기획 산출물 전체(PRD, TRD, 서비스 정책서, IA, 외부 API 명세서, 개발 WBS 등), 와이어프레임·ERD(오케스트레이터가 경로 명시 시)
+- **프로젝트 문서**: `docs/PROJECT.md` 레지스트리에서 대상 문서 유형·참조 시점·경로 패턴으로 선별한 기획/설계 산출물. 기존 기획 산출물 전체 로드는 legacy 또는 PROJECT 부재 폴백에서만 허용
 - **입력**: 스킬 경로, 태스크 폴더, 이전 산출물, 대상 문서 유형
 - **출력**: 기획 산출물(.md 또는 .xlsx) + 결과 반환 (artifact_path, summary, status, blockers, changed_files)
 - **에이전트 경로**: `opal/agents/opal-planning-agent/`
@@ -148,17 +154,17 @@ PM이 PLAN.md의 단계+영역 조합으로 직접 디스패치하는 전문 워
 
 ## 전문 에이전트 매핑 테이블
 
-PM이 단계+영역으로 에이전트를 선택하고, opal-plan-agent가 PLAN.md §4 실행 체크리스트의 agent 필드를 배정할 때 참조하는 테이블.
+PM이 단계+영역으로 에이전트를 선택하고, opal-plan-agent가 sdlc-v2 PLAN.md Work items의 `담당` 필드를 배정할 때 참조하는 테이블. 기존 PLAN.md 템플릿에서만 legacy §4.2 실행 체크리스트 Step의 `agent` 필드 배정에 사용한다.
 
-| 에이전트 | 단계 | 영역 | model | 자체 로드 문서 |
+| 에이전트 | 단계 | 영역 | model | 프로젝트 문서/참조 |
 |----------|------|------|-------|--------------|
-| opal-plan-agent | PLAN | 공통 | advanced | 전체 docs/ |
-| opal-fe-agent | EXECUTE | FE | standard | FRONTEND.md, CONVENTIONS.md (FE) |
-| opal-be-agent | EXECUTE | BE | standard | BACKEND.md, BE-FRAMEWORK.md, CONVENTIONS.md (BE) |
-| opal-db-agent | PLAN, EXECUTE | DB | standard | DB 설계 문서, 표준사전(엑셀) |
-| opal-planning-agent | EXECUTE | 기획 | advanced | 기획 산출물, 와이어프레임 등 |
+| opal-plan-agent | PLAN | 공통 | advanced | PM 주입 문서 (PROJECT 레지스트리 기반) |
+| opal-fe-agent | EXECUTE | FE | standard | PM 주입 FE 문서 (PROJECT 레지스트리 기반) |
+| opal-be-agent | EXECUTE | BE | standard | PM 주입 BE 문서 (PROJECT 레지스트리 기반) |
+| opal-db-agent | PLAN, EXECUTE | DB | standard | PM 주입 DB/설계 문서, 표준사전 경로 |
+| opal-planning-agent | EXECUTE | 기획 | advanced | PM 주입 기획/설계 산출물 (PROJECT 레지스트리 기반) |
 | opal-evaluator-agent | 명세 리뷰 (oppl G/D6) | 평가 | advanced | SPEC §4 루브릭 Base, CONTRACT.md 루브릭절 |
-| opal-test-agent | TEST | 공통 | standard | ARCHITECTURE.md (테스트 섹션) |
+| opal-test-agent | TEST | 공통 | standard | PM 주입 검증 문서 (PROJECT 레지스트리 기반) |
 | opal-security-checker | CHECK (opgc) | 보안 | advanced | base-security-checklist, SECURITY.md (허브+링크 체이닝 — conventions-hub-model.md 참조) |
 | opal-convention-checker | CHECK (opgc) | 컨벤션 | standard | CONVENTIONS.md, base-convention-checklist (허브+링크 체이닝 — conventions-hub-model.md 참조) |
 
@@ -320,7 +326,7 @@ project: mams
 - 소프트 삭제 패턴 적용
 
 ### 추가 참조 문서
-- docs/BE-FRAMEWORK.md
+- docs/BACKEND-FRAMEWORK.md
 
 ### 추가 금지사항
 - raw SQL 금지
@@ -347,7 +353,7 @@ project: mams
 - **단계**: {PLAN / EXECUTE / TEST / 공통}
 - **영역**: {FE / BE / DB / 기획 / 공통}
 - **model**: {advanced / standard / light}
-- **자체 로드 문서**: {로드할 문서 목록}
+- **프로젝트 문서/참조**: {PM 주입 문서 또는 자체 기준}
 - **입력**: {필요한 입력}
 - **출력**: {생성하는 산출물}
 - **에이전트 경로**: `opal/agents/{agent-name}/`
@@ -368,3 +374,4 @@ project: mams
 | v1.9 | 2026-06-28 | §Codex tool-backed 인라인 주입 Step 3에 오버라이드 우선순위 포인터 추가 — setting.local.json → setting.json → §2 표(셀 단위) 적용 + `opal-model-mapping.md` §5 참조. `opal-model-mapping.md` §5 오버라이드 도입과 정합 (046) |
 | v2.0 | 2026-07-10 16:49 KST | opal-evaluator-agent 신규 등록 — `### opal-evaluator-agent` 섹션(전문 에이전트) + 매핑 테이블 행(단계: 명세 리뷰 oppl G/D6, 영역: 평가, model: advanced) 추가 (056) |
 | v2.1 | 2026-09-02 19:32 KST | §frontmatter 변환 규칙 표에 `effort` 행 추가(4셀 — Claude `effort` 그대로 / Cursor 제거·예약 / Gemini 제거·미지원 / Codex `model_reasoning_effort`, `max`→`xhigh`) + `(기타 OPAL 전용 필드)` 행을 `(변환 테이블 미등재 필드)`로 정정(판정 기준이 "OPAL 전용 여부"에서 "스펙 테이블 등재 여부"로 전환) + 값역 주석·SSOT는 코드(`scripts/install-mac.sh` `OPAL_ADAPTER_FIELD_SPEC` / `scripts/install/windows.ps1` `$OpalAdapterFieldSpec`, 바이트 동일 규약)라는 포인터·배치 모드 3종(`key`/`model_param`/`omit`) 설명 하단 추가 (105) |
+| v2.2 | 2026-09-09 15:20 KST | 개발 에이전트 문서 로딩을 PROJECT 레지스트리 기반 PM 주입 계약으로 정합하고, test-agent 결과 저장을 sdlc-v2 `test-scenario.json` 계약으로 갱신 (111) |

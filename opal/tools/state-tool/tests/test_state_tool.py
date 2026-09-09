@@ -22,7 +22,7 @@
     "TestR11Invariants", "TestT098Add2RootDerivation",
     "TestT100DirectionEvidence", "TestT103WorkerDuration",
     "TestT103WorkerDurationWarning",
-    "TestT106CodeScanCitationBehavior"
+    "TestT106CodeScanCitationBehavior", "TestT111SdlcV2Contracts"
   ]
 }
 
@@ -35,6 +35,7 @@
 """
 
 # TASK T-11: 표준 라이브러리만 import
+import argparse
 import ast
 import json
 import os
@@ -2520,23 +2521,24 @@ class TestErrorCodesCompleteness(unittest.TestCase):
         "evidence_check_flag_conflict",
         # 106 신규 1종 (F-004 R-4 — PLAN.md §4.2 code-scan 결과 인용 미충족 게이트)
         "code_scan_citation_unmet",
+        # 111 신규 1종 — sdlc-v2 PLAN Work items 계약 위반
+        "plan_contract_unmet",
     ]
 
     def test_error_codes_count(self):
-        """[098 H-10 선갱신 + 106 종수 갱신] ERROR_CODES 46종 — 093 시점 44종에서
+        """[098 H-10 선갱신 + 106 종수 갱신 + 111 갱신] ERROR_CODES 47종 — 093 시점 44종에서
         098 F-003이 `evidence_check_flag_conflict` 1종을 등재해 45종이 되고,
-        106 F-004가 `code_scan_citation_unmet` 1종을 등재해 45+1=46종 (106).
+        106 F-004가 `code_scan_citation_unmet` 1종을 등재해 46종, 111 W-1이
+        `plan_contract_unmet` 1종을 등재해 47종이다.
 
-        갱신 근거: 098 H-10과 동일 구조다 — 신규 에러 코드 등재가 종수 단언을
-        같이 깨므로 등재 태스크가 기대값을 함께 옮긴다. 106에서는 Step 4가
-        `state_tool.py`에 등재하고(실측 `len(ERROR_CODES)`=46) 본 Step 15가
-        기대값을 뒤따라 정합시킨다 — 단언을 없애지 않고 값만 옮긴다."""
-        self.assertEqual(len(ST.ERROR_CODES), 46,
-                         "[106] code_scan_citation_unmet 등재 후 46종 기대 — "
-                         "45종이면 Step 4 등재가 유실됐다는 뜻")
+        갱신 근거: 신규 에러 코드 등재가 종수 단언을 같이 깨므로 등재 태스크가
+        기대값을 함께 옮긴다. 111 W-1은 PLAN Work items 계약을 차단형 게이트로
+        집행하므로 전용 에러 코드를 추가한다."""
+        self.assertEqual(len(ST.ERROR_CODES), 47,
+                         "[111] plan_contract_unmet 등재 후 47종 기대")
 
     def test_all_28_codes_registered(self):
-        """[098 H-10 선갱신 + 106 종수 갱신] 46종 각각이 ERROR_CODES에 등재됨 (106)."""
+        """[098 H-10 선갱신 + 106 종수 갱신 + 111 갱신] 47종 각각이 ERROR_CODES에 등재됨."""
         for code in self.EXPECTED_CODES:
             self.assertIn(code, ST.ERROR_CODES, f"에러 코드 {code} 미등재")
         self.assertEqual(len(self.EXPECTED_CODES), len(ST.ERROR_CODES),
@@ -2573,13 +2575,13 @@ class TestErrorCodesCompleteness(unittest.TestCase):
         self.assertEqual(readme_count, actual_count,
                          f"README 기재 종수({readme_count})와 실측 len(ERROR_CODES)"
                          f"({actual_count})가 불일치함(D-5 ① 정합 위반)")
-        # [098 H-10 선갱신 + 106 종수 갱신] 종수 46 하드 기대 — 106 Step 4 등재 반영
-        self.assertEqual(actual_count, 46,
-                         "[106] len(ERROR_CODES)==46 기대 — code_scan_citation_unmet "
-                         "등재가 유실되면 45로 실패")
-        self.assertEqual(readme_count, 46,
-                         "[106] README 헤더 종수==46 기대 — 카탈로그 정정이 누락되면 "
-                         "45로 실패")
+        # [111] 종수 47 하드 기대 — W-1 plan_contract_unmet 등재 반영
+        self.assertEqual(actual_count, 47,
+                         "[111] len(ERROR_CODES)==47 기대 — plan_contract_unmet "
+                         "등재가 유실되면 46으로 실패")
+        self.assertEqual(readme_count, 47,
+                         "[111] README 헤더 종수==47 기대 — 카탈로그 정정이 누락되면 "
+                         "46으로 실패")
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -7762,6 +7764,10 @@ class TestT093AutoApproveHook(_T093Base):
         (d / "ANALYSIS.md").write_text("# ANALYSIS\n", encoding="utf-8")
         (d / "PLAN.md").write_text("# PLAN\n", encoding="utf-8")
         (d / "TEST-SCENARIO.md").write_text("# TEST SCENARIO\n", encoding="utf-8")
+        (d / "test-scenario.json").write_text(
+            json.dumps({"version": 1, "scenarios": []}, ensure_ascii=False),
+            encoding="utf-8",
+        )
         return d
 
     def test_pipeline_traversal_auto_approves_T093_L2_GOAL(self):
@@ -8664,6 +8670,10 @@ class TestR11DerivedSignals(_T093Base):
         (d / "ANALYSIS.md").write_text("# ANALYSIS\n", encoding="utf-8")
         (d / "PLAN.md").write_text("# PLAN\n", encoding="utf-8")
         (d / "TEST-SCENARIO.md").write_text("# TEST SCENARIO\n", encoding="utf-8")
+        (d / "test-scenario.json").write_text(
+            json.dumps({"version": 1, "scenarios": []}, ensure_ascii=False),
+            encoding="utf-8",
+        )
         return d
 
     def _next_action(self, d):
@@ -8839,7 +8849,10 @@ class TestR11Invariants(_T093Base):
             # 선언한 종목으로 한정)으로 분해한다. 미선언 종목 추가와 임의 삭제는
             # 그대로 FAIL하며, 106 커밋 후에는 차분이 공집합이 되어 부분집합
             # 판정이 양쪽 시점에서 모두 성립한다(단언 무력화 아님) (106).
-            declared_new_codes = {"code_scan_citation_unmet"}  # 106 F-004 R-4
+            declared_new_codes = {
+                "code_scan_citation_unmet",  # 106 F-004 R-4
+                "plan_contract_unmet",       # 111 W-1
+            }
             head_src = subprocess.run(
                 ["git", "show", "HEAD:./state_tool.py"],
                 cwd=str(_TOOL_DIR), capture_output=True, text=True,
@@ -9637,16 +9650,16 @@ class TestT103WorkerDuration(_T093Base):
                       "행 스키마의 additionalProperties: false는 유지되어야 함")
 
     def test_s10_error_codes_untouched(self):
-        """[T103/R-15 + 106 종수 갱신] 값 검증은 argparse가 파싱 시점에 수행하므로
+        """[T103/R-15 + 106/111 종수 갱신] 값 검증은 argparse가 파싱 시점에 수행하므로
         ERROR_CODES는 건드리지 않는다 — 카탈로그 종수 고정 테스트(S-7/S-15)와
         충돌하지 않는다.
 
-        [106] 이 케이스의 계약은 "103 축이 종목을 늘리지 않았다"이며(첫 단언),
-        종수 리터럴은 실측 SSOT를 따라 45→46으로 옮긴다 — 106 F-004가
-        `code_scan_citation_unmet` 1종을 등재했고 이는 103 축과 무관하다 (106)."""
+        [106/111] 이 케이스의 계약은 "103 축이 종목을 늘리지 않았다"이며(첫 단언),
+        종수 리터럴은 실측 SSOT를 따라 45→47로 옮긴다 — 106 F-004와 111 W-1
+        등재분은 103 축과 무관하다."""
         self.assertNotIn("worker_duration_invalid", ST.ERROR_CODES,
                          "103이 ERROR_CODES를 신설했음 — 카탈로그 종수 계약 위반")
-        self.assertEqual(len(ST.ERROR_CODES), 46,
+        self.assertEqual(len(ST.ERROR_CODES), 47,
                          f"ERROR_CODES 종수가 변했음: {len(ST.ERROR_CODES)}")
 
 
@@ -9893,16 +9906,16 @@ class TestT103WorkerDurationWarning(_T093Base):
     # ── (5) 카탈로그 경계 ────────────────────────────────────────────────
 
     def test_w13_warning_catalog_is_separate_from_error_codes(self):
-        """[T103/R-21 + 106 종수 갱신] 경고는 에러가 아니다 — 경고 코드는 별도
+        """[T103/R-21 + 106/111 종수 갱신] 경고는 에러가 아니다 — 경고 코드는 별도
         사전(`WARNING_CODES`)에 살고 R-21은 `ERROR_CODES`를 늘리지 않는다.
         카탈로그를 공유하면 `err()`가 sys.exit로 끝나는 탓에 '경고인데 차단'이라는
         오용 경로가 생긴다.
 
-        [106] 종수 리터럴은 실측 SSOT를 따라 45→46으로 옮긴다 — 106 F-004
-        `code_scan_citation_unmet` 1종 등재분이며 R-21 축과 무관하다 (106)."""
+        [106/111] 종수 리터럴은 실측 SSOT를 따라 45→47로 옮긴다 — 106 F-004와
+        111 W-1 등재분이며 R-21 축과 무관하다."""
         self.assertNotIn(self._CODE, ST.ERROR_CODES,
                          "R-21이 ERROR_CODES를 늘렸음 — 카탈로그 종수 계약 위반")
-        self.assertEqual(len(ST.ERROR_CODES), 46,
+        self.assertEqual(len(ST.ERROR_CODES), 47,
                          f"ERROR_CODES 종수가 변했음: {len(ST.ERROR_CODES)}")
         self.assertIn(self._CODE, ST.WARNING_CODES,
                       "WARNING_CODES에 worker_duration_missing 미등재")
@@ -10242,3 +10255,356 @@ class TestT106CodeScanCitationBehavior(_T093Base):
                          "C4 거부 시 row 3 상태가 변하지 않아야 한다")
         self.assertEqual(self._decision_rows(d), [],
                          "C4 거부 경로는 의사결정 로그를 남기지 않아야 한다")
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# 111 — sdlc-v2 TASK/PLAN 계약 검사
+# ═════════════════════════════════════════════════════════════════════════════
+
+_T111_TASK_OK = """---
+template: sdlc-v2
+---
+# TASK: 신규 계약
+
+## Problem
+P-1. 현재 문서가 길다.
+
+## Proposed outcome
+짧은 산출물을 생성한다.
+
+## Affected users and systems
+PM, state-tool.
+
+## Constraints
+- C-1. 상태는 state.json만 소유한다.
+
+## Acceptance criteria
+- AC-1. 신규 TASK가 필수 5절로 통과한다.
+"""
+
+_T111_PLAN_OK = """---
+template: sdlc-v2
+---
+# PLAN: 신규 계약
+
+code-scan 조회 결과를 인용한다.
+
+## Work items
+| 작업 | 담당 | 변경 대상 | 구체적 변경 | 선행 작업 | 실행 그룹 | 완료 기준 연결 |
+|---|---|---|---|---|---|---|
+| W-1. TASK 검사 | opal-be-agent | `opal/tools/state-tool/state_tool.py` | 신규 TASK 필수 절 검사 | 없음 | P1 | AC-1, C-1 |
+| W-2. 문서 갱신 | opal-task-agent | `opal/tools/state-tool/README.md` | README 갱신 | W-1 | P2 | AC-1 |
+"""
+
+
+class TestT111SdlcV2Contracts(unittest.TestCase):
+    """sdlc-v2 신규 TASK/PLAN 계약은 새 라우트로 판정하고 legacy는 기존 경로로 둔다."""
+
+    def setUp(self):
+        self.tmpdir = pathlib.Path(tempfile.mkdtemp(prefix="opal-state-t111-"))
+        opal_dir = self.tmpdir / ".opal"
+        opal_dir.mkdir(parents=True, exist_ok=True)
+        (opal_dir / "MEMORY.json").write_text(_t093_json({"history": []}), encoding="utf-8")
+        (opal_dir / "code-scan.json").write_text(
+            _t093_json({"headerSource": "inline", "extensions": [".py"]}), encoding="utf-8")
+
+    def tearDown(self):
+        shutil.rmtree(self.tmpdir, ignore_errors=True)
+
+    def _task_dir(self, name):
+        d = self.tmpdir / name
+        d.mkdir(parents=True, exist_ok=True)
+        return d
+
+    def _verify(self, task_dir, *args):
+        cmd = ["bash", str(_RUN_SH), "verify", str(task_dir)] + list(args)
+        result = subprocess.run(cmd, capture_output=True, text=True)
+        stdout = result.stdout.strip()
+        try:
+            data = json.loads(stdout) if stdout else {}
+        except json.JSONDecodeError:
+            data = {"_raw": stdout}
+        return result.returncode, stdout, data
+
+    def test_sdlc_v2_task_required_sections_pass(self):
+        d = self._task_dir("task-pass")
+        (d / "TASK.md").write_text(_T111_TASK_OK, encoding="utf-8")
+        code, stdout, data = self._verify(d, "--clarification-check")
+
+        self.assertEqual(code, 0, stdout)
+        self.assertEqual(data.get("clarification_check"), "pass")
+
+    def test_sdlc_v2_task_missing_required_section_fails(self):
+        d = self._task_dir("task-missing")
+        (d / "TASK.md").write_text(
+            _T111_TASK_OK.replace("## Constraints\n- C-1. 상태는 state.json만 소유한다.\n\n", ""),
+            encoding="utf-8",
+        )
+        code, stdout, data = self._verify(d, "--clarification-check")
+
+        self.assertEqual(code, 1, stdout)
+        self.assertEqual(data.get("error"), "clarification_gate_unmet")
+        self.assertIn("Constraints", data.get("missing") or [])
+
+    def test_sdlc_v2_plan_work_items_contract_passes(self):
+        d = self._task_dir("plan-pass")
+        (d / "TASK.md").write_text(_T111_TASK_OK, encoding="utf-8")
+        (d / "PLAN.md").write_text(_T111_PLAN_OK, encoding="utf-8")
+        code, stdout, data = self._verify(d, "--plan-contract-check")
+
+        self.assertEqual(code, 0, stdout)
+        self.assertEqual(data.get("plan_contract_check"), "pass")
+        self.assertEqual(data.get("work_items"), ["W-1", "W-2"])
+
+    def test_sdlc_v2_plan_rejects_unknown_dependency_and_completion_ref(self):
+        d = self._task_dir("plan-bad-ref")
+        (d / "TASK.md").write_text(_T111_TASK_OK, encoding="utf-8")
+        bad = _T111_PLAN_OK.replace("| W-2. 문서 갱신 | opal-task-agent | `opal/tools/state-tool/README.md` | README 갱신 | W-1 | P2 | AC-1 |",
+                                    "| W-2. 문서 갱신 | opal-task-agent | `opal/tools/state-tool/README.md` | README 갱신 | W-9 | P2 | AC-9 |")
+        (d / "PLAN.md").write_text(bad, encoding="utf-8")
+        code, stdout, data = self._verify(d, "--plan-contract-check")
+
+        self.assertEqual(code, 1, stdout)
+        self.assertEqual(data.get("error"), "plan_contract_unmet")
+        missing = "\n".join(data.get("missing") or [])
+        self.assertIn("unknown dependency W-9", missing)
+        self.assertIn("unknown completion ref AC-9", missing)
+
+    def test_sdlc_v2_plan_rejects_same_group_file_conflict(self):
+        d = self._task_dir("plan-conflict")
+        (d / "TASK.md").write_text(_T111_TASK_OK, encoding="utf-8")
+        bad = _T111_PLAN_OK.replace("| W-2. 문서 갱신 | opal-task-agent | `opal/tools/state-tool/README.md` | README 갱신 | W-1 | P2 | AC-1 |",
+                                    "| W-2. 문서 갱신 | opal-task-agent | `opal/tools/state-tool/state_tool.py` | 같은 파일 병렬 수정 | 없음 | P1 | AC-1 |")
+        (d / "PLAN.md").write_text(bad, encoding="utf-8")
+        code, stdout, data = self._verify(d, "--plan-contract-check")
+
+        self.assertEqual(code, 1, stdout)
+        self.assertEqual(data.get("error"), "plan_contract_unmet")
+        self.assertTrue(any("file conflict W-1/W-2" in m for m in data.get("missing") or []))
+
+    def test_code_scan_citation_reads_sdlc_v2_work_items(self):
+        d = self._task_dir("plan-code-scan")
+        (d / "TASK.md").write_text(_T111_TASK_OK, encoding="utf-8")
+        no_citation = _T111_PLAN_OK.replace("code-scan 조회 결과를 인용한다.\n\n", "")
+        (d / "PLAN.md").write_text(no_citation, encoding="utf-8")
+        code, stdout, data = self._verify(d, "--code-scan-citation-check")
+
+        self.assertEqual(code, 1, stdout)
+        self.assertEqual(data.get("error"), "code_scan_citation_unmet")
+        self.assertIn("opal/tools/state-tool/state_tool.py", data.get("target_files") or [])
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# 111 W-1 — sdlc-v2 TASK/PLAN 계약 검사 + Work items code-scan 대상 인식
+# ═════════════════════════════════════════════════════════════════════════════
+
+_T111_ROWS_SPEC = _t093_json([
+    {"stage": "TASK",    "item": "작업"},
+    {"stage": "PLAN",    "item": "작업"},
+    {"stage": "EXECUTE", "item": "작업"},
+    {"stage": "CLOSE",   "item": "DONE.md 생성"},
+])
+
+_T111_TASK_V2 = """---
+template: sdlc-v2
+---
+# TASK: fixture
+
+## Problem
+
+현재 계약이 중복된다.
+
+## Proposed outcome
+
+새 문서 계약을 결정론적으로 검증한다.
+
+## Affected users and systems
+
+PM, state-tool.
+
+## Constraints
+
+- C-1: legacy 동작은 유지한다.
+- C-2: 검증을 생략하지 않는다.
+
+## Acceptance criteria
+
+- AC-1: TASK 필수 절 누락을 거부한다.
+- AC-2: PLAN Work items 계약을 검사한다.
+"""
+
+_T111_PLAN_V2 = """---
+template: sdlc-v2
+---
+# PLAN: fixture
+
+code-scan 결과 domain 필드를 확인했다.
+
+## Approach
+
+새 계약을 검사한다.
+
+## Decisions and contracts
+
+| 결정 | 변경 후 계약 | 선택 이유·근거 |
+|---|---|---|
+| D-1 | Work items를 실행 입력으로 둔다. | 분석 근거 |
+
+## Work items
+
+| 작업 | 담당 | 변경 대상 | 구체적 변경 | 선행 작업 | 실행 그룹 | 완료 기준 연결 |
+|---|---|---|---|---|---|---|
+| W-1. TASK 검사 | opal-be-agent | `opal/tools/state-tool/state_tool.py` | sdlc-v2 TASK 필수 절을 검사한다. | 없음 | P1 | AC-1, C-1 |
+| W-2. PLAN 검사 | opal-be-agent | `opal/tools/state-tool/tests/test_state_tool.py` | Work items 계약을 검사한다. | W-1 | P2 | AC-2, C-2 |
+"""
+
+_T111_PLAN_LEGACY = """# PLAN
+
+### 4.2 실행 체크리스트
+
+**Step 1**
+- **파일**: opal/tools/state-tool/state_tool.py
+"""
+
+
+class TestT111SdlcV2StateContracts(_T093Base):
+    """111 W-1 — 공개 CLI 기준 RED-first 계약 테스트."""
+
+    def _write_task(self, task_dir, body=_T111_TASK_V2):
+        (task_dir / "TASK.md").write_text(body, encoding="utf-8")
+
+    def _write_plan(self, task_dir, body=_T111_PLAN_V2):
+        (task_dir / "PLAN.md").write_text(body, encoding="utf-8")
+
+    def _v2_task_without_section(self, section):
+        lines = _T111_TASK_V2.splitlines()
+        out, skipping = [], False
+        for line in lines:
+            if line.strip() == f"## {section}":
+                skipping = True
+                continue
+            if skipping and line.startswith("## "):
+                skipping = False
+            if not skipping:
+                out.append(line)
+        return "\n".join(out) + "\n"
+
+    def _project_ready_task(self, name):
+        opal_dir = self.tmpdir / ".opal"
+        opal_dir.mkdir(parents=True, exist_ok=True)
+        (opal_dir / "MEMORY.json").write_text(
+            _t093_json({"history": []}), encoding="utf-8")
+        (opal_dir / "code-scan.json").write_text(
+            _t093_json({"headerSource": "inline",
+                        "extensions": [".py", ".js", ".ts"]}), encoding="utf-8")
+        d = self._task_dir(name)
+        self._write_task(d)
+        return d
+
+    def _verify(self, task_dir, *flags):
+        return _run070(["verify", str(task_dir), *flags])
+
+    def test_s1_sdlc_v2_task_required_sections_pass(self):
+        """S-1 — first YAML frontmatter `template: sdlc-v2` + 필수 5절 채움 → pass."""
+        d = self._task_dir("t111-task-pass")
+        self._write_task(d)
+        code, stdout, stderr, data = self._verify(d, "--clarification-check")
+        self.assertEqual(code, 0, f"v2 TASK 완전본은 통과해야 한다: {stdout!r} {stderr!r}")
+        self.assertEqual(data.get("clarification_check"), "pass")
+        self.assertEqual(data.get("template"), "sdlc-v2")
+
+    def test_s2_sdlc_v2_task_missing_required_sections_fail(self):
+        """S-2 — v2 TASK 필수 5절 각각의 누락은 skip 없이 거부한다."""
+        required = [
+            "Problem", "Proposed outcome", "Affected users and systems",
+            "Constraints", "Acceptance criteria",
+        ]
+        for section in required:
+            with self.subTest(section=section):
+                d = self._task_dir(f"t111-task-missing-{section.replace(' ', '-')}")
+                self._write_task(d, self._v2_task_without_section(section))
+                code, stdout, _stderr, data = self._verify(d, "--clarification-check")
+                self.assertEqual(code, 1, f"{section} 누락은 거부되어야 한다: {stdout!r}")
+                self.assertEqual(data.get("error"), "clarification_gate_unmet")
+                self.assertIn(section, data.get("missing") or [])
+
+    def test_s3_legacy_task_still_uses_legacy_clarification_path(self):
+        """S-3 — legacy TASK는 기존 `## 명확화 결과` 경로로 판정한다."""
+        d = self._task_dir("t111-legacy-task")
+        (d / "TASK.md").write_text(_TASK_MD_ALL_FILLED, encoding="utf-8")
+        code, stdout, _stderr, data = self._verify(d, "--clarification-check")
+        self.assertEqual(code, 0, f"legacy 정상 TASK는 기존 경로로 통과해야 한다: {stdout!r}")
+        self.assertEqual(data.get("clarification_check"), "pass")
+        self.assertEqual(data.get("template"), "legacy")
+
+    def test_s4_plan_contract_pass_and_legacy_skip(self):
+        """S-4 — v2 Work items 정상본은 통과하고 legacy PLAN은 명시 skip한다."""
+        d = self._task_dir("t111-plan-pass")
+        self._write_task(d)
+        self._write_plan(d)
+        code, stdout, _stderr, data = self._verify(d, "--plan-contract-check")
+        self.assertEqual(code, 0, f"v2 PLAN 정상본은 통과해야 한다: {stdout!r}")
+        self.assertEqual(data.get("plan_contract_check"), "pass")
+        self.assertEqual(data.get("work_item_ids"), ["W-1", "W-2"])
+
+        legacy = self._task_dir("t111-plan-legacy")
+        self._write_plan(legacy, _T111_PLAN_LEGACY)
+        code2, stdout2, _stderr2, data2 = self._verify(legacy, "--plan-contract-check")
+        self.assertEqual(code2, 0, f"legacy PLAN은 명시 skip이어야 한다: {stdout2!r}")
+        self.assertEqual(data2.get("plan_contract_check"), "skipped")
+        self.assertEqual(data2.get("reason"), "legacy_plan")
+
+    def test_s4_plan_contract_rejects_bad_work_items(self):
+        """S-4 — 필수 열·중복 W·미확인 선행·순환·P 역행·파일 충돌·AC/C 미연결을 거부한다."""
+        cases = {
+            "missing_column": _T111_PLAN_V2.replace(" | 완료 기준 연결", ""),
+            "duplicate_w": _T111_PLAN_V2.replace("W-2. PLAN 검사", "W-1. PLAN 검사"),
+            "unknown_dep": _T111_PLAN_V2.replace("W-1 | P2", "W-99 | P2"),
+            "cycle": _T111_PLAN_V2.replace("없음 | P1", "W-2 | P1"),
+            "group_order": _T111_PLAN_V2.replace("W-1 | P2", "W-1 | P0"),
+            "same_group_file_conflict": _T111_PLAN_V2.replace(
+                "`opal/tools/state-tool/tests/test_state_tool.py` | Work items 계약을 검사한다. | W-1 | P2",
+                "`opal/tools/state-tool/state_tool.py` | Work items 계약을 검사한다. | 없음 | P1",
+            ),
+            "unknown_ac": _T111_PLAN_V2.replace("AC-2, C-2", "AC-99, C-2"),
+            "unlinked_w": _T111_PLAN_V2.replace("AC-2, C-2", "H-1"),
+        }
+        for name, plan_body in cases.items():
+            with self.subTest(name=name):
+                d = self._task_dir(f"t111-plan-bad-{name}")
+                self._write_task(d)
+                self._write_plan(d, plan_body)
+                code, stdout, _stderr, data = self._verify(d, "--plan-contract-check")
+                self.assertEqual(code, 1, f"{name}은 거부되어야 한다: {stdout!r}")
+                self.assertEqual(data.get("error"), "plan_contract_unmet")
+                self.assertTrue(data.get("violations"), f"{name} violations 필요: {stdout!r}")
+
+    def test_s5_code_scan_citation_reads_v2_work_items_targets(self):
+        """S-5 — code-scan 인용 검사는 v2 Work items 변경 대상을 우선 인식한다."""
+        d = self._project_ready_task("t111-citation-missing")
+        self._write_plan(d, _T111_PLAN_V2.replace("code-scan 결과 domain 필드를 확인했다.\n\n", ""))
+        code, stdout, _stderr, data = self._verify(d, "--code-scan-citation-check")
+        self.assertEqual(code, 1, f"v2 Work items의 .py 대상은 인용 누락을 거부해야 한다: {stdout!r}")
+        self.assertEqual(data.get("error"), "code_scan_citation_unmet")
+        self.assertIn("opal/tools/state-tool/state_tool.py", data.get("target_files") or [])
+
+        ok_dir = self._project_ready_task("t111-citation-pass")
+        self._write_plan(ok_dir)
+        code2, stdout2, _stderr2, data2 = self._verify(ok_dir, "--code-scan-citation-check")
+        self.assertEqual(code2, 0, f"v2 Work items 대상 + 인용 존재는 통과해야 한다: {stdout2!r}")
+        self.assertEqual(data2.get("code_scan_citation_check"), "pass")
+        self.assertIn("domain", data2.get("matched_tokens") or [])
+
+    def test_s12_state_tool_mode_contracts_remain_unchanged(self):
+        """S-12 — state-tool 3-way mode 선택지와 자동 승인 경계는 기존 계약 그대로다."""
+        parser = ST.build_parser()
+        init_action = next(a for a in parser._subparsers._group_actions
+                           if isinstance(a, argparse._SubParsersAction)).choices["init"]
+        mode_action = next(a for a in init_action._actions if a.dest == "mode")
+        self.assertEqual(set(mode_action.choices), {"interactive", "semi-agentic", "agentic"})
+        self.assertEqual(tuple(ST.can_auto_approve_user_confirmation("TASK", "semi-agentic")),
+                         (False, "semi_agentic_pre_execute"))
+        self.assertEqual(tuple(ST.can_auto_approve_user_confirmation("EXECUTE", "semi-agentic")),
+                         (True, None))
+        self.assertEqual(tuple(ST.can_auto_approve_user_confirmation("CLOSE", "agentic")),
+                         (False, "close_requires_user"))

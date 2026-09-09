@@ -1,111 +1,60 @@
-# 에이전트 컨텍스트 주입 원칙
+# 에이전트 컨텍스트 주입 계약
 
-> 출처: opal-pm.md §6
-> Lazy 트리거: 디스패치 전 컨텍스트 주입 상세 판단 필요 시
-> 탐색 경로: `opal/core/references/pm/context-injection.md`
+> Lazy 트리거: 워커 디스패치 입력을 구성할 때
 
-워커에게 **문서 누락 없이 최적의 컨텍스트**를 제공하는 것이 목적이다.
+이 문서는 워커에게 넘길 정보의 경계를 정의한다. 조회 순서와 에이전트·모델 선택은
+`pm/dispatch-process.md`가 소유한다.
 
-## 최소 보장 (모든 에이전트에 항상 주입)
+## 공통 입력
 
-- `TASK.md` — 작업 목표와 요구사항
-- `PLAN.md` 해당 Step 섹션 — EXECUTE 시 해당 기능 설계만 슬라이싱
-- 에이전트 자체 로드 문서 — 각 전문 에이전트 AGENT.md에 정의된 문서 (에이전트가 자체 Read)
+모든 워커에게 다음 중 현재 작업에 해당하는 내용만 전달한다.
 
-## 트리거 기반 동적 선별
+- 태스크 폴더와 현재 단계·실행 단위
+- 완료 기준과 변경 가능한 파일·인터페이스
+- 프로젝트 지식과 코드맵에서 선조회한 관련 사실·근거
+- PROJECT 레지스트리에서 선별한 문서 경로·관련 구간·강제 제약
+- 현재 실행 단위가 소비하는 이전 산출물과 선행 배치 결과
+- 현재 런타임에서 실제 사용할 수 있는 관련 capability
 
-PM이 작업 영역을 감지하여 관련 문서를 추가 선별한다. 정적 목록이 아닌 **원칙 기반 판단**:
+## 단계별 입력
 
-| 감지 조건 | 탐색 방법 | 선별 기준 |
-|----------|----------|----------|
-| DB 모델/엔티티 관련 작업 | Glob: DB 설계 디렉토리 | 도메인명·테이블명 매칭 |
-| FE 화면 구현 포함 | Glob: 와이어프레임/디자인 디렉토리 | 화면명 매칭 |
-| 외부 API 연동 포함 | Glob: API 분석 디렉토리 | 매체/서비스명 매칭 |
-| 기존 코드 수정 | code-scan: 변경 대상 파일의 depends 확인 | 의존 관계 파일 포함 |
-| 이전 태스크 결과 참조 | memory-tool `show` (MEMORY.json) 관련 항목 | 관련 태스크 산출물 경로 |
-| 작업 대상 파일 경로 | docs/PROJECT.md "## 프로젝트 구성" 섹션 | 요소 경로 prefix 매칭 → 매칭 요소의 전문 에이전트 참조 주입 (아래 §라우팅 참조) |
+| 단계 | 반드시 포함 | 제외 |
+|---|---|---|
+| ANALYSIS | TASK, 지식·코드맵 선조회 결과, PROJECT 선별 문서 | 전체 docs, 전체 코드맵, 무관한 과거 태스크 |
+| PLAN | TASK, ANALYSIS, 전문 에이전트 매핑, 설계에 필요한 문서 | ANALYSIS 재조사, TEST-SCENARIO, 실행 증거 |
+| EXECUTE | 해당 Work item/legacy Step, 관련 결정·위험·S, 선행 결과 | 전체 PLAN, 다른 실행 그룹의 무관한 W |
+| TEST | 관련 S, 변경 파일, 실행 환경, 기존 증거 | TEST-SCENARIO 재작성, 단계 승인 상태 |
 
-## PM 상황 판단 (추가 주입)
+sdlc-v2 EXECUTE는 PLAN의 해당 Work item 행과 연결된 `Decisions and contracts`, `Risks`,
+TEST-SCENARIO의 S 행을 사용한다. legacy는 기존 Step/F/H 구간을 사용한다.
 
-최소 보장 + 트리거로 부족한 경우, PM이 프로젝트 지식을 바탕으로 **추가 컨텍스트를 언제든 주입**한다:
+## 프로젝트 문서 선별
 
-- 프로젝트 메모리 (`.opal/memory/`에서 관련 항목)
-- 이전 태스크 결정 사항
-- 소유자 확정 기준 (`.opal/AGENT.md`)
-- 다른 에이전트 결과물 (인터페이스 계약, API 스펙 등)
-- 소유자 임시 지시 ("이번에는 이 방식으로 해")
+`docs/PROJECT.md`의 용도·참조 시점·경로 패턴이 현재 실행 단위와 맞는 문서만 전달한다.
+레지스트리가 폴더를 가리키면 도메인명, 화면명, 테이블명, API명, 변경 경로로 후보를 좁힌다.
+문서 전문 대신 필요한 구간과 이 작업에 미치는 영향을 전달한다.
 
-## 목적: 누락 방지 + 최적 컨텍스트
+구현으로 공개 API, 데이터 계약, 정책, 상태 전이, 운영 절차, 프로젝트 구성이 달라지면 해당 문서를
+갱신 대상 Work item에 포함한다. 단순 참조 문서는 갱신 대상으로 만들지 않는다.
 
-```
-최소 보장     → 기본 문서 누락 방지
-트리거 선별   → 작업 관련 문서 자동 감지
-PM 판단       → 위 두 가지로 못 잡는 맥락적 문서 보완
-= 문서 누락 없이 최적의 컨텍스트 제공
-```
+## capability
 
-## 기술 스택 연동 지시
+고정 MCP·스킬·도구 표를 두지 않는다. PM은 현재 런타임에서 확인한 항목 중 현재 실행 단위에
+필요한 것만 `## 실행 capability`로 전달한다. 워커는 주입되지 않은 capability를 찾거나 있다고
+가정하지 않는다.
 
-`docs/PROJECT.md` 또는 `docs/ARCHITECTURE.md`의 기술 스택을 확인하고, 해당 기술에 맞는 MCP/스킬 활용을 디스패치에 명시적으로 포함한다:
-- shadcn/ui 포함 → "shadcn MCP로 컴포넌트 조회 후 구현하라" 명시
-- Python 프로젝트 → "context7로 최신 API 확인하라" 명시
-- 외부 API 연동 → "웹 검색으로 최신 문서 확인하라" 명시
+## 완료 검사
 
-## 검증
+- 프로젝트 지식·코드맵 근거가 있으면 PROJECT 문서보다 먼저 제시됨
+- 변경 범위와 완료 기준이 실행 단위로 좁혀짐
+- 선별 문서의 강제 규칙이 누락되지 않음
+- 전체 문서·전체 기술 스택·고정 capability 목록이 복제되지 않음
+- 워커 결과에서 주입 제약 반영 여부와 문서 갱신 필요 여부를 확인할 수 있음
 
-워커 결과 검토(§4 PM Gate) 시, 주입한 참조 문서의 내용이 산출물에 반영되었는지 확인한다.
+## 변경이력
 
----
-
-## PROJECT.md 프로젝트 구성 기반 라우팅
-
-워커 디스패치 시 대상 파일 경로를 `docs/PROJECT.md`의 "## 프로젝트 구성" 섹션 요소 경로와 매칭하여 적합한 `전문 에이전트`를 자동 선정한다. opgc의 SCAN 동적 분할 병렬 디스패치도 동일 규약을 사용한다.
-
-### 절차
-
-1. `docs/PROJECT.md`의 "## 프로젝트 구성" 섹션 파싱 → `[(요소, 경로, 기술스택, 전문에이전트), ...]`
-2. 디스패치 대상 파일 목록에서 파일별 경로 → **가장 긴 prefix** 매칭 요소 선정
-3. 매칭된 요소의 `전문 에이전트`를 워커 디스패치 시 참조로 주입
-4. 섹션 부재 시 또는 매칭 실패 시: `opal-task-agent`(범용)으로 폴백
-
-### 의사코드
-
-```python
-def route(file_path, project_config):
-    if not project_config.has_section("프로젝트 구성"):
-        return "opal-task-agent"  # 하위호환 폴백
-    best = None
-    for element in project_config.elements:
-        # 경로 필드는 쉼표로 복수 경로 허용 (예: "opal/, skills/, agents/")
-        for prefix in element.paths:
-            if file_path.startswith(prefix):
-                if best is None or len(prefix) > len(best.matched_prefix):
-                    best = element
-                    best.matched_prefix = prefix
-    return best.agent if best else "opal-task-agent"
-```
-
-### 예시
-
-**프로젝트 구성 테이블**:
-
-```
-| 요소 | 경로 | 기술 스택 | 전문 에이전트 |
-|------|------|-----------|---------------|
-| frontend | web/ | React | opal-fe-agent |
-| backend | api/ | FastAPI | opal-be-agent |
-| batch | batch/ | (Backend 상속) | opal-be-agent |
-```
-
-**라우팅 결과**:
-
-- `web/components/Button.tsx` → `frontend` 매칭 → **opal-fe-agent**
-- `api/routers/user.py` → `backend` 매칭 → **opal-be-agent**
-- `batch/daily_report.py` → `batch` 매칭 → **opal-be-agent** (Backend 상속)
-- `scripts/deploy.sh` → 매칭 요소 없음 → **opal-task-agent** (폴백)
-
-### opgc SCAN 동적 분할 연계
-
-opgc(opal-pilot-gc)는 SCAN 단계에서 이 규약을 사용하여 `target_files`를 요소별로 분할하고, CHECK 단계에서 `(요소 × 체커)` 매트릭스로 병렬 디스패치한다. 각 체커 호출에는 매칭된 전문 에이전트 정보가 참조로 주입된다.
-
-상세: `opal/skills/opal-pilot-gc/SKILL.md` STEP 1.5 / STEP 2.2.
+| 버전 | 일시 | 변경내용 |
+|---|---|---|
+| v1.1 | 2026-09-09 15:18 KST | PROJECT 레지스트리 기반 기획·설계·운영 문서 선별과 sdlc-v2 슬라이싱 반영 (111) |
+| v1.2 | 2026-09-09 16:05 KST | 고정 MCP·스킬 예시를 런타임 capability 주입 계약으로 교체 (111) |
+| v2.0 | 2026-09-09 15:33 KST | 단계별 최소 입력 계약으로 재작성하고 조회·라우팅 절차를 dispatch-process로 일원화. 프로젝트 지식·코드맵 선조회 결과를 첫 컨텍스트로 명시 (task 111/W-13) |

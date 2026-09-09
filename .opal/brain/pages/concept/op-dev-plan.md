@@ -7,27 +7,29 @@ tags:
 - skill
 sources:
 - skill:op-dev-plan
-related: []
+- task:111
+related:
+- sdlc-v2-development-artifact-contract
+- op-dev-analysis
+- op-dev-execute
 created: '2026-06-11'
-updated: '2026-06-11'
-status: draft
+updated: '2026-09-09'
+status: active
 ---
-## 개념 요약
+## 개요
 
-TASK.md + ANALYSIS.md(선택)를 기반으로 탑다운 기능 중심 구조의 실행 가능한 구현 청사진(PLAN.md)을 작성하는 PLAN 단계 스킬.
+TASK와 선택적 ANALYSIS를 구현 가능한 결정과 Work items로 바꾸는 설계 단계 스킬이다.
 
-## 역할·호출 시점·핵심 규칙
+## 현재 계약
 
-- **역할**: 기능(F-NNN) 단위 분석·설계·QA 추적; Flat/Multi-Feature 모드 자동 선택; 실행 체크리스트·복잡도 판별·기능-QA 매트릭스·리스크 가설 표 포함 PLAN.md 생성
-- **호출 시점**: 오케스트레이터(opal-pilot-dev, opal-pilot-dev-short)가 PLAN 단계를 디스패치할 때
-- **핵심 규칙**: 필수 입력 TASK.md; ANALYSIS.md 유무에 따라 분석 깊이 자동 조절; TEST-SCENARIO.md는 PM이 별도 작성(STEP 3.5)
+PLAN은 Approach, Decisions and contracts, Work items, Risks, Release and recovery를 사용한다. Work item은 담당, 변경 대상, 구체적 변경, 선행 작업, 실행 그룹, 완료 기준 연결을 반드시 제공한다. 실행 그룹이 같고 선행 관계와 파일 충돌이 없는 작업만 병렬 실행할 수 있다. 기능 번호와 구형 실행 체크리스트는 신규 기본 계약이 아니다.
 
-## 파일 참조
+## 근거
 
-`file_path: opal/skills/op-dev-plan/SKILL.md`
+`opal/skills/op-dev-plan/SKILL.md:21`, `opal/skills/op-dev-plan/references/plan-guide.md:49`, task:111.
 
-## 관련
+## 관련 페이지
 
-- [[skill-opal-pilot-dev]] — 이 스킬을 PLAN 단계에서 디스패치하는 Dev 오케스트레이터
-- [[op-dev-analysis]] — PLAN 입력물(ANALYSIS.md)을 생성하는 선행 단계 스킬
-- [[op-dev-todo]] — PLAN.md를 기반으로 파일 단위 체크리스트를 상세 분해하는 후속 단계 스킬
+- [[sdlc-v2-development-artifact-contract]]
+- [[op-dev-analysis]]
+- [[op-dev-execute]]

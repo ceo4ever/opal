@@ -1,221 +1,132 @@
 # EXECUTE 단계 상세 가이드
 
-> **실행 컨텍스트**: 이 가이드는 워커 에이전트의 컨텍스트에서 실행된다.
-> 오케스트레이터가 워커를 디스패치하면, 워커가 이 가이드를 읽고 프로세스를 따른다.
-> 서브 에이전트 사용이 불가능한 플랫폼에서는 오케스트레이터가 직접 이 가이드를 따른다.
+> 실행 컨텍스트: 이 가이드는 EXECUTE 워커가 읽고 따른다. 서브 에이전트 사용이 불가능하거나 사용자가 직접 수행을 원하면 오케스트레이터가 같은 절차를 직접 따른다.
 
----
-
-## 금지 행동 (EXECUTE 가드레일)
-
-### 절대 금지
+## 절대 금지
 
 | # | 금지 행동 | 이유 |
-|---|----------|------|
-| 1 | PLAN.md에 없는 파일 생성/수정 | 계획 밖 변경은 추적 불가, 회귀 리스크 |
-| 2 | 설계(클래스 구조, 함수 시그니처, DB 스키마)를 임의로 변경 | PLAN에서 QA를 통과한 설계를 무효화 |
-| 3 | 다른 영역 침범 (FE 워커가 BE 파일 수정, 또는 그 반대) | 병렬 실행 시 충돌 발생 |
-| 4 | PLAN에 명시되지 않은 패키지 설치 | 의존성 변경은 사전 승인 필요 |
-| 5 | 환경변수/시크릿을 소스 코드에 하드코딩 | 보안 위반 |
+|---|---|---|
+| 1 | PLAN.md에 없는 파일 생성·수정 | 계획 밖 변경은 추적과 복구가 어렵다. |
+| 2 | PLAN 설계를 임의 변경 | PM Gate를 통과한 설계 계약이 무효화된다. |
+| 3 | 다른 영역 침범 금지 / 다른 W의 파일 소유권 침범 | 병렬 실행 충돌이 난다. |
+| 4 | PLAN에 없는 패키지 설치 | 의존성 변경은 사전 설계와 승인 대상이다. |
+| 5 | 시크릿 하드코딩 | 보안 위반이다. |
+| 6 | RED 테스트 파일 수정 | reward hacking 방지. 테스트 수정 필요 시 블로커로 보고한다. |
+| 7 | `git commit`, `git push`, `git reset`, `git rebase` | 커밋·머지는 소유자 권한이다. |
 
-### 판단 기준: 즉시 멈추고 보고 vs 진행 후 보고
+## 입력 우선순위
 
-**즉시 멈추고 보고 (블로커 처리)**:
-- PLAN의 설계와 실제 코드 간 구조적 불일치 발견
-- 필요한 외부 API/서비스가 응답하지 않음
-- 타입 에러가 연쇄적으로 발생하여 3개 이상 파일에 영향
-- 보안 가드레일 위반 감지
+1. sdlc-v2 `PLAN.md`의 `## Work items`
+2. legacy `PLAN.md §4.2` 실행 체크리스트
+3. legacy `PLAN.md §3` 실행 체크리스트
+4. legacy `execution-plan.json`
 
-**진행 후 보고 (완료 보고에 포함)**:
-- 사소한 네이밍 조정 (시그니처 변경 없이)
-- 더미 데이터 내용 조정
-- 코드 포매팅 차이
-- import 순서 정리
-- deprecated 경고 (동작은 함)
+## sdlc-v2 실행 절차
 
----
+### 1. 진입 계약 검사
 
-## 보안 가드레일 (기본 수준)
+실행 전 아래 검사를 호출한다.
 
-EXECUTE 중 아래 패턴을 감지하면 **즉시 실행을 중단**하고 블로커로 보고한다:
-
-| # | 패턴 | 감지 방법 | 조치 |
-|---|------|----------|------|
-| 1 | 하드코딩 시크릿 | `password=`, `secret=`, `api_key=`, `token=` 리터럴 값 | 환경변수로 교체 제안 |
-| 2 | SQL Injection 취약점 | f-string/문자열 연결로 SQL 구성 | 파라미터 바인딩으로 교체 제안 |
-| 3 | 민감 파일 커밋 위험 | `.env`, `credentials.*`, `*.pem` 파일 생성 시 `.gitignore` 미포함 | `.gitignore` 추가 제안 |
-| 4 | 무제한 입력 | 사용자 입력을 검증 없이 DB/파일시스템에 전달 | 입력 검증 추가 제안 |
-
----
-
-## PLAN.md 기반 실행
-
-PLAN.md §4 실행 체크리스트를 기반으로 워커는 실행 항목을 파악한다.
-
-**입력 우선순위**:
-1. `PLAN.md §4` 실행 체크리스트 (기능 중심 구조, 기본 입력)
-2. 폴백: `PLAN.md §3` 실행 체크리스트 (과거 형식)
-3. 폴백: `execution-plan.json` (과거 태스크에 json만 있는 경우)
-
-**PLAN.md §4 읽기 규칙**:
-1. `§4.1 Phase 그룹핑`에 따라 Phase별 실행
-2. Phase 내 독립 Step은 순차 실행 (오케스트레이터 판단으로 병렬 가능)
-3. 각 Step의 `**의존**` 필드를 확인하여 선행 작업 완료 여부 검증
-4. FE Step 중 ui-designer 연동이 필요한 경우는 **선택된 실행 가이드**(specialist 또는 generalist)의 FE 절차를 따른다
-5. BE Step: §4 체크리스트의 의존 순서대로 실행 (model → dto → service → router)
-
-**과거 태스크 폴백 규칙**:
-- PLAN.md에 §2·§3 기능별 섹션이 없는 경우:
-  - §3(기존 형식) 실행 체크리스트가 있으면 그대로 실행
-  - execution-plan.json이 있으면 기존 json 기반 실행 로직 적용
-    - `execution_order.sequence`에 따라 phase별 실행
-    - FE screen 항목: ui-designer plan-driven 모드 입력으로 전달
-    - BE layer 항목: model → dto → service → router 순서로 순차 실행
-  - 둘 다 없으면 블로커 보고
-
----
-
-## 실행 모드별 동작
-
-> **[MUST] 워커는 자기 단계 작업 행만 mark 가능.** `state mark --as-worker` 호출 시 `--worker-stage EXECUTE`를 반드시 지정해야 하며, 다른 단계 행(PLAN, TASK 등)을 갱신하려 하면 도구가 `worker_scope_violation`으로 거부한다.
->
-> 근거: `tasks/134-260501-opp-pipeline-state-tool/TASK.md` F-16 / `PLAN.md` §2.4 워커 권한 게이트(T-10) / §2.18 에러 카탈로그 #1 `worker_scope_violation` / §2.19.4 `--as-worker`+`--worker-stage` 종속 규칙 / `opal/core/references/harness/state.md` v1.1
-
-### 단순 모드 (Simple Mode)
-
-워커가 Step 순서대로 직접 실행한다.
-
-```
-Step 1 → Step 2 → ... → Step N → 인라인 테스트 → 결과 반환 → test 호출 → 완료 보고
+```bash
+~/.opal/tools/state-tool/run.sh verify <task-folder> --plan-contract-check
+~/.opal/tools/state-tool/run.sh verify <task-folder> --code-scan-citation-check
 ```
 
-**실행 규칙:**
-1. PLAN.md 실행 체크리스트(§4 또는 §3)의 Step을 의존성 순서대로 하나씩 실행
-2. 각 Step 실행 시:
-   - 대상 파일 Read → 내용 파악
-   - Edit/Write로 코드 작성/수정
-   - Step의 테스트 기준에 따라 인라인 테스트 실행
-   - PLAN.md 체크박스 갱신
-   - `~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done --as-worker --worker-stage EXECUTE --step <N/M>` 호출
-3. 블로커 발생 시:
-   - `~/.opal/tools/state-tool/run.sh block <task-path> --row <N> --reason "<블로커 설명>"` 호출
-   - 즉시 사용자에게 보고
-   - 사용자 지시 대기
-4. 모든 Step 완료 후:
-   - PLAN.md §5 QA 체크리스트(또는 §4 과거 형식)를 검증하고 체크박스 갱신
-   - 결과 반환 → 오케스트레이터가 op-dev-test-agent 호출 → DONE.md 생성 → 완료 보고
+`--plan-contract-check` 실패는 블로커다. `--code-scan-citation-check`는 code-scan 적용 코드 파일이 없으면 skip 가능하다.
 
-### 복잡 모드 (Complex Mode)
+### 2. Work items 읽기
 
-워커 내부에서 Part C 토폴로지에 따라 서브 에이전트를 배치하여 실행한다.
+각 W는 아래 필드를 실행 계약으로 사용한다.
 
-> **복잡 모드 + 중첩 불가 시**: 워커가 내부 서브 에이전트를 호출할 수 없는 플랫폼에서는, 오케스트레이터가 Part C 토폴로지에 따라 배치별 서브 에이전트를 직접 디스패치한다.
+| 필드 | 사용 방식 |
+|---|---|
+| 작업 | W-ID와 제목 |
+| 담당 | 디스패치 대상 확인 |
+| 변경 대상 | 수정 허용 파일 |
+| 구체적 변경 | 구현 지시 |
+| 선행 작업 | 순서 제약 |
+| 실행 그룹 | 병렬 가능 배치 |
+| 완료 기준 연결 | 담당 AC/C와 시나리오 연결 |
 
-```
-Batch 1: [Agent-1, Agent-2 병렬] → Batch 2: [Agent-3] → ... → 결과 반환 → Test → 완료 보고
-```
+오케스트레이터가 특정 W만 지정했으면 그 W만 처리한다. 지정되지 않았으면 실행 그룹 오름차순으로 처리한다.
 
-**실행 규칙:**
-1. Part C-1의 에이전트 토폴로지에 따라 배치(batch) 구성
-2. 각 배치 실행 시:
-   - 배치 내 에이전트를 **병렬로** Task 도구로 실행
-   - 각 서브 에이전트에 전달할 정보: 담당 Step + 컨텍스트 + 코드 컨벤션 + 스킬
-   - 배치 완료 시 진행 보고 + `~/.opal/tools/state-tool/run.sh mark <task-path> --row <N> --done --as-worker --worker-stage EXECUTE --step <N/M>` 호출
-3. 전체 에이전트 완료 후:
-   - Part B QA 체크리스트를 검증하고 체크박스 갱신
-   - 결과 반환
+### 3. 구현
 
----
+- `변경 대상`에 있는 파일만 수정한다.
+- 실제 코드 구조가 PLAN과 다르면 임의 해석하지 말고 블로커로 보고한다.
+- 문서 W가 배정되면 코드 W와 같은 절차로 수행한다. 구현으로 내용이 달라지는 기획·설계·운영 문서만 수정하고, 참조만 한 문서는 수정하지 않는다.
+- code-scan 대상 확장자 파일을 수정하면 `~/.opal/references/header-standard.md`에 맞춰 @header를 갱신한다.
 
-## 서브 에이전트 프롬프트 구성
+### 4. 자가 점검
 
-복잡 모드에서 각 서브 에이전트에 전달하는 프롬프트 구조:
+각 W 완료 직후 변경 범위에 맞는 검증을 실행한다.
 
-```
-## 역할
-{Agent-N}: {역할명}
+- `test-tool resolve`
+- BE 변경: `test-tool unit --scope be`
+- FE 변경: `test-tool unit --scope fe`
+- sdlc-v2 scenario coverage: `test-tool scenario-coverage-build --task-folder <task-folder> --template sdlc-v2` 후 `test-tool scenario-coverage-check --coverage-input <task-folder>/.scenario-coverage-input.json`
+- 담당 AC/C/H에 연결된 L1/L2 시나리오가 있으면 공개 인터페이스로 직접 실행한다.
 
-## 담당 작업
-{Part A에서 해당 Step들의 전체 내용 복사}
+실패하면 최대 3회 수정·재실행한다. 환경, 외부 서비스, 권한 문제로 검증할 수 없으면 통과 처리하지 않고 블로커로 보고한다.
 
-## 컨텍스트
-- 프로젝트 루트: {경로}
-- 참조 파일: {PLAN.md §N, 기존 파일 경로 등}
-- 코드 컨벤션: {CLAUDE.md 핵심 규칙}
+### 5. 상태 기록
 
-## 스킬 (필요 시)
-{스킬 경로 또는 인라인 지침}
+sdlc-v2는 PLAN.md에 체크박스를 갱신하지 않는다. 진행 상태는 state.json이 소유한다.
 
-## 실행 규칙
-1. 각 Step을 순서대로 실행
-2. Step마다: Read → Edit/Write → 테스트
-3. 완료 시 변경 파일 목록 반환
-4. 블로커 발생 시 즉시 보고
+```bash
+~/.opal/tools/state-tool/run.sh mark <task-folder> --task-step execute.implement --done --as-worker --worker-stage EXECUTE --action-step <N/M>
 ```
 
----
-
-## 체크리스트 갱신 규칙
-
-### 실행 체크리스트 갱신
-
-EXECUTE 중 각 Step 완료 시 즉시 체크박스를 갱신한다.
-
-PLAN.md 실행 체크리스트(§4.2 또는 §3)의 각 Step:
-- `- [ ] 완료` → `- [x] 완료`
-
-### QA 체크리스트 갱신
-
-모든 실행 Step 완료 후, test 에이전트 호출 전에 워커가 QA 체크리스트를 검증하고 갱신한다.
-
-**대상**: PLAN.md §5 QA 체크리스트 (기능 중심 구조) 또는 §4 (과거 형식)
-
-**절차**:
-1. QA 체크리스트의 각 항목(기능 테스트, 회귀 테스트, 코드 품질, 보안)을 실제로 검증
-2. 통과한 항목: `- [ ]` → `- [x]`
-3. 미통과 항목: `- [ ]` 유지 + 사유를 인라인 주석으로 기록
-
----
+시나리오 결과와 증거는 TEST 단계 또는 `test-scenario.json`이 소유한다. TEST-SCENARIO.md 본문에 PASS/FAIL을 복제하지 않는다.
 
 ## 블로커 처리
 
-블로커가 발생하면:
+블로커가 발생하면 즉시 중단하고 아래 정보를 오케스트레이터에 반환한다.
 
-1. **즉시 중단** -- 추측으로 해결하지 않는다
-2. **사용자 보고**: Step 번호, 구체적 에러, 가능한 원인, 해결 방안 제안
-3. **사용자 지시 대기** -- 지시에 따라 재개 또는 건너뛰기
+- 작업 ID: sdlc-v2는 `W-N`, legacy는 Step 번호
+- 상황: 실제 오류, 누락 입력, 외부 서비스·권한 문제
+- 원인: 확인된 사실만 적고 추정은 구분한다.
+- 필요한 결정: PLAN 수정, 파일 소유권 재배정, 환경 조치, 사용자 결정 중 무엇인지 명시한다.
 
----
+블로커 상태에서 PLAN 범위 밖 파일을 수정하거나 TEST-SCENARIO.md에 PASS/FAIL을 임의 기록하지 않는다.
 
-## 동적 스킬 사용 (복잡 모드)
+## Legacy 폴백
 
-Part C-2에서 스킬이 필요한 에이전트가 있을 때:
+legacy PLAN은 기존 `§4.2`/`§3` Step과 `execution-plan.json`을 읽어 기존 절차대로 처리한다. legacy 체크박스가 있으면 완료 시 갱신할 수 있다. 신규 sdlc-v2 PLAN에는 체크박스와 QA 결과를 만들지 않는다.
 
-- **기존 스킬**: 서브 에이전트 프롬프트에 스킬 경로를 전달
-- **신규 생성 스킬**: `tasks/{NNN}/skills/{name}/SKILL.md`에서 읽기
-- **인라인 지침**: 에이전트 프롬프트의 "스킬" 섹션에 직접 포함
+CLOSE 단계의 최종 보고·히스토리·정리 계약은 그대로 유지한다. EXECUTE의 문서 W는 구현으로 즉시 내용이 달라지는 문서 최신화만 수행한다.
 
----
+## 보안 가드레일
 
-## EXECUTE 품질 체크리스트
+아래 패턴을 감지하면 즉시 중단하고 블로커로 보고한다.
 
-- [ ] 모든 Step 체크박스가 [x] 또는 사용자 승인으로 건너뛰어졌는가?
-- [ ] 각 Step의 테스트 기준이 통과되었는가?
-- [ ] 블로커 발생 시 사용자에게 보고되었는가?
-- [ ] 변경 파일 목록이 PLAN.md의 파일 목록과 일치하는가?
-- [ ] 코드가 프로젝트 컨벤션을 따르는가?
-- [ ] QA 체크리스트 체크박스가 갱신되었는가?
-- [ ] PLAN.md에 없는 파일을 생성/수정하지 않았는가?
-- [ ] 하드코딩 시크릿이 없는가?
-- [ ] FE/BE 영역 간 침범이 없는가? (병렬 실행 시)
+| 패턴 | 감지 방법 | 조치 |
+|---|---|---|
+| 하드코딩 시크릿 | `password=`, `secret=`, `api_key=`, `token=` 리터럴 값 | 환경변수 또는 설정 주입으로 교체 제안 |
+| SQL Injection | 문자열 결합 SQL | 파라미터 바인딩 사용 |
+| 민감 파일 생성 | `.env`, `credentials.*`, `*.pem` | `.gitignore` 포함 여부 확인 |
+| 무제한 입력 | 사용자 입력을 검증 없이 DB/파일시스템에 전달 | 입력 검증 추가 |
 
----
+## 결과 반환
+
+```json
+{
+  "artifact_path": "tasks/{NNN}-{태스크명}/",
+  "summary": "실행 요약",
+  "status": "complete | blocked",
+  "blockers": [],
+  "changed_files": ["파일1", "파일2"],
+  "work_items": ["W-1"],
+  "verification": ["실행한 명령과 결과"]
+}
+```
 
 ## 변경이력
 
 | 버전 | 일시 | 변경내용 |
-|------|------|---------|
+|---|---|---|
 | v1.0 | - | 초기 작성 |
-| v1.1 | 2026-04-13 13:48 | PLAN.md 기반 실행 전환 — 입력 우선순위를 "PLAN.md §4 > §3 > json 폴백"으로 변경, "PLAN.md 기반 실행" 섹션으로 재작성 (기능 루프, FE 화면 설계 §3.N.2 참조), 금지 행동·품질 체크리스트에서 json 참조를 PLAN.md로 통일, 과거 태스크 폴백 규칙 추가, §5 QA 체크리스트 참조로 갱신 (114) |
-| v1.2 | 2026-04-23 11:39 | FE ui-designer 분기(L64-67) 제거 → specialist/generalist 가이드로 위임. 나머지 공통 규칙 유지 (129) |
-| v1.3 | 2026-05-01 | EXECUTE Step 갱신 → `state mark --as-worker --worker-stage EXECUTE --step <N/M>` 호출 교체. 블로커 갱신 → `state block` 호출 교체. `[MUST] 워커는 자기 단계 작업 행만 mark 가능` 추가 — TASK F-16 / PLAN §2.4(T-10) / §2.11 G-6 / §2.18 #1 / §3 Step 9 (134) |
+| v1.2 | 2026-04-23 11:39 | specialist/generalist 가이드 분리 (129) |
+| v3.0 | 2026-09-09 14:18 KST | sdlc-v2 Work items 우선 실행, plan-contract/code-scan 진입 검사, state.json/test-scenario.json 상태·증거 소유권, legacy 폴백 규칙을 정리 (task 111/W-4) |
+| v3.1 | 2026-09-09 14:18 KST | execute-specialist-guide.md와 execute-generalist-guide.md의 기존 참조가 유효하도록 `절대 금지`, `블로커 처리`, `다른 영역 침범 금지` 앵커를 복원하고 반환 형식에 work_items를 추가 (task 111/W-4) |
+| v3.2 | 2026-09-09 14:18 KST | 문서 W도 EXECUTE 범위에서 수행하고 구현으로 내용이 달라지는 문서만 수정하며 참조 전용 문서는 제외하도록 docs 계약 추가. legacy와 CLOSE 최신화 계약 유지 명시 (task 111/W-4) |

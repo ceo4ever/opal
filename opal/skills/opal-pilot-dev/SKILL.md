@@ -72,48 +72,44 @@ op-dev-plan 스킬을 수행하라.
 **태스크 폴더**: {tasks/{NNN}-{name}/}
 **이전 산출물**: {TASK.md 경로}, {ANALYSIS.md 경로}
 **프로젝트 컨텍스트**: {docs/PROJECT.md + 매칭 참조 문서. 미존재 시 CLAUDE.md 폴백}
-**산출물 저장 경로**: {PLAN.md 경로}, {execution-plan.json 경로 (FE/BE 시)}
+**산출물 저장 경로**: {PLAN.md 경로}
 **하네스 Guards**: PLAN.md에 없는 파일 생성/수정 금지. PLAN 설계를 임의 변경 금지. 블로커 발생 시 즉시 중단 후 보고.
 **참조 문서**: {docs/PROJECT.md 문서 테이블 기반 관련 문서 경로}
 **핵심 제약**: {[MUST] <문서명> §N: <인용문> 형식으로 원문 인용 필수 항목. 요약 허용 항목은 일반 목록}
 ```
 **model**: advanced
 
-> **목표계열 선작성 착수 (PLAN 병렬)**: 위 PLAN 워커 디스패치와 **동시에**, PM+사용자 페어가 TASK.md만으로 Block A(채택 관점 — 목표 문장 · 요구사항 R 전체 · 교체형 시 채택/잔존 기준)를 도출해 TEST-SCENARIO.md 초안을 선작성한다. PLAN.md를 읽지 않은 상태에서 도출하여 PLAN 관점 오염을 원천 차단한다. 초안은 별도 임시 파일 없이 TEST-SCENARIO.md 본문에 직접 쓰고 보강 대기 마커를 남긴다.
->
-> 이 시점에 목표-커버 게이트를 호출하지 않으며 `test_scenario.*` 행을 advance/mark하지 않는다. 선작성 초안과 PLAN.md 설계의 불일치는 PLAN PM Gate 시점의 조기 경보로 취급하여 사용자 보고에 포함한다.
->
-> 규칙 SSOT: 트랙 = `opal/core/references/harness/red-first.md` §1.6 / 절차 = `op-dev-test-scenario/references/test-scenario-guide.md` §작성 프로세스 Step 1 Block A / 게이트 호출 시점 = `opal/core/references/harness/scenario-gate.md` §4. 선작성은 opt-in이며 미착수 시 STEP 3.5에서 Block A·B를 연속 수행한다(결과 동등).
+> sdlc-v2 신규 경로에서는 PLAN 병렬 TEST-SCENARIO 선작성을 기본 수행하지 않는다. TEST-SCENARIO는 STEP 3.5에서 TASK.md의 AC/C와 PLAN.md의 Risks/Work items를 함께 읽고 한 번에 작성한다. legacy 태스크 재개나 사용자가 명시한 RED-first opt-in에서만 기존 선작성 규칙을 적용한다.
 
 PLAN 완료
   → **PM Gate** (PLAN.md 직접 검증 — 점검 목록 참조):
-    1. `{PLAN.md 경로}` Read — §4.2 실행 체크리스트, §5 QA 체크리스트, §리스크 가설 표 확인
+    1. `{PLAN.md 경로}` Read — sdlc-v2 `Approach`, `Decisions and contracts`, `Work items`, `Risks`, `Release and recovery` 확인
     2. 검증 체크리스트:
-       - [ ] TASK.md 요구사항 전체 커버 여부 (PLAN.md §1.2 기능 목록 대조)
-       - [ ] PLAN.md §4.2 실행 체크리스트 완성도 (소속 F-ID, 완료 기준 명시)
-       - [ ] PLAN.md §리스크 가설 표에 H-N 가설이 작성되어 있는가
-       - [ ] 설계 피드백/리스크 섹션에 미해결 빈틈이 없는가
+       - [ ] TASK.md AC/C가 Work items의 완료 기준 연결에 반영되어 있는가
+       - [ ] Work items에 담당·변경 대상·구체적 변경·선행 작업·실행 그룹·완료 기준 연결이 채워졌는가
+       - [ ] Risks에 실제 추가 검증 위험만 H-N으로 작성되었거나, 위험 없음이 명시되었는가
+       - [ ] Release and recovery에 source→installed 검증, 실제 사례 측정, 실패 복구 기준이 있는가
+       - [ ] `state-tool verify <task-folder> --plan-contract-check`와 `--code-scan-citation-check`가 통과 또는 의도된 skip인지 확인했는가
   → PM Gate 통과 후 해당 행을 단일 mark. 사용자에게 PLAN 보고. 승인 = TEST-SCENARIO 단계 진입 허가.
 
 ## STEP 3.5: TEST-SCENARIO
 
 > **[MUST] RED-first**: TEST-SCENARIO 작성 시 RED-first 트랙 적용 여부를 판단하고 기재한다. 규칙 SSOT: `opal/core/references/harness/red-first.md`. 목표계열 선작성 트랙은 동 문서 §1.6.
 
-작성자: **PM + 사용자 페어** — 오케스트레이터가 직접 작성 (워커 디스패치 없음).
+작성자: **PM** — 오케스트레이터가 직접 작성한다(작성 워커 디스패치 없음). 사용자 확인은 현재 진행 모드의 `test_scenario.user_confirm` 경계를 따른다.
 이 단계는 self-confirming 방지를 위해 PLAN 워커(opal-plan-agent)와 다른 작성자가 수행한다.
 
-1. **Block B 보강** — 선작성 초안(STEP 3 병렬 착수분)이 있으면, PLAN.md §리스크 가설 표(H-N)와 §1.2 기능 목록(F-NNN)을 도출 입력에 추가해 루브릭 ③기능커버·④리스크커버를 보강한다. 보강은 추가만이 아니라 초안 시나리오의 **수정·삭제를 포함**한다(→ `test-scenario-guide.md` §작성 프로세스 Step 1 Block B). 선작성하지 않았으면 Block A·B를 연속 수행한다(결과 동등).
-2. `op-dev-test-scenario/SKILL.md`의 "TEST-SCENARIO.md 통일 형식"을 따라 TEST-SCENARIO.md 작성
-3. `test-scenario-guide.md`의 5단계 프로세스 적용 (Step 3 계층 결정 + Step 3-b 실행 방식 M1/M2/M3 결정)
-4. **보강 완료 판정 3조건**(`test-scenario-guide.md` Step 1 "보강 완료 판정")을 충족 확인한 뒤 해당 행을 단일 mark (`~/.opal/tools/state-tool/run.sh mark <task-path> --task-step test_scenario.test_scenario_md --done` 호출 — P-1)
-5. **목표-커버 게이트 (1회)**: 4의 보강 완료 이후에만 호출한다 — 선작성 시점 호출 금지(`scenario-gate.md` §4). `~/.opal/tools/state-tool/run.sh advance <task-path> --task-step test_scenario.scenario_gate` 호출 후, `op-scenario-gate` 스킬을 호출한다.
+1. TASK.md의 AC/C와 PLAN.md `Risks`의 H-N, `Work items`의 변경 대상·실행 그룹을 입력으로 사용한다.
+2. `op-dev-test-scenario/SKILL.md`와 `test-scenario-guide.md`에 따라 `Setup / Scenarios`를 한 번 작성한다.
+3. 작성 계약을 확인한 뒤 문서 작성 행을 mark한다 (`~/.opal/tools/state-tool/run.sh mark <task-path> --task-step test_scenario.test_scenario_md --done` — P-1).
+4. **목표-커버 게이트**: `~/.opal/tools/state-tool/run.sh advance <task-path> --task-step test_scenario.scenario_gate` 호출 후, `op-scenario-gate` 스킬을 호출한다.
    - 탐색 경로: `{프로젝트}/.opal/skills/op-scenario-gate/SKILL.md` → `~/.opal/skills/op-scenario-gate/SKILL.md`
    - 입력: `task_folder`(태스크 폴더 경로), `producer_artifact`(`{task_folder}/TEST-SCENARIO.md`), `pilot: opd`, `iteration`(최초 호출 = 1)
    - 수신 `verdict: pass` → 게이트 행 mark (`~/.opal/tools/state-tool/run.sh mark <task-path> --task-step test_scenario.scenario_gate --done` — Step 3 tool-gated 두 증거 근거로만 mark, 산문 판단으로 mark 금지)
-   - 수신 `verdict: rewrite` → PM+사용자가 `gaps`를 반영해 TEST-SCENARIO.md 재작성 후 `iteration+1`로 op-scenario-gate 재호출 (루프, 게이트 행은 아직 mark하지 않음)
+   - 수신 `verdict: rewrite` → PM이 `gaps`를 반영해 TEST-SCENARIO.md를 보완한 후 `iteration+1`로 op-scenario-gate 재호출 (루프, 게이트 행은 아직 mark하지 않음)
    - 수신 `verdict: escalate` → 사용자에게 에스컬레이션하고 자율 재시도하지 않음
-   - `test_scenario.scenario_gate` 행 mark 시점은 보강 완료(4) 후 `verdict: pass` 수신 이후다.
-6. 사용자에게 TEST-SCENARIO 보고 — 승인 = EXECUTE 시작 허가
+   - `test_scenario.scenario_gate` 행 mark 시점은 문서 작성 완료(3) 후 `verdict: pass` 수신 이후다.
+5. 사용자에게 TEST-SCENARIO 보고 — 승인 = EXECUTE 시작 허가
 
 > **사용자 확인 (P-5)**: 이 행은 **모드에 따라 주체가 다르다**.
 > - 자동 승인 구간(agentic 전 구간 / semi-agentic의 EXECUTE-equivalent 이후) — **PM은 호출하지 않는다.**
@@ -126,19 +122,19 @@ PLAN 완료
 ## STEP 4: EXECUTE
 
 > **[MUST] RED-first**: EXECUTE 진입 전 RED 증거 확보, fix 루핑 중 테스트 불변. 규칙 SSOT: `opal/core/references/harness/red-first.md`.
-> RED-first 트랙인 경우, EXECUTE(GREEN) 진입 전 `~/.opal/tools/state-tool/run.sh verify <task> --red-check` 게이트를 호출하여 RED 증거를 확인한다. fix 루핑 시 `--fix-mode --changed-files ... --test-globs ...`로 테스트 불변성을 검사한다.
+> sdlc-v2는 TEST-SCENARIO의 `시점`을 기준으로 `test-tool scenario-init`의 `red_required`를 설정한다. RED 대상은 opal-test-agent red mode가 실제 실패를 관찰한 뒤 `scenario-red`로 증거를 기록하고, PM은 `scenario-lock` 통과 후에만 GREEN 구현을 시작한다. RED 대상이 없으면 init 직후 lock한다. legacy만 `state-tool verify <task> --red-check`를 사용한다. fix 루핑 시 `--fix-mode --changed-files ... --test-globs ...`로 테스트 불변성을 검사한다.
 
 워커를 디스패치하여 코드를 작성한다. **model**: standard.
 
 ### 4-1. 분배 디스패치 절차 (v3.2 신설)
 
-1. **PLAN.md §4.2 실행 체크리스트 Read** — 각 Step의 `영역`·`agent` 필드를 확인한다.
-2. **영역별 Step 묶음 생성** — 동일 agent(opal-fe-agent, opal-be-agent, opal-db-agent, opal-task-agent)가 배정된 Step을 하나의 배치로 묶는다.
-3. **Phase 순서 순회** — PLAN.md §4.1 Phase 그룹핑에 따라 Phase별로:
-   - Phase 내 독립 배치가 복수면 Agent 도구 병렬 호출
+1. **PLAN.md `Work items` Read** — 각 W의 `담당`, `변경 대상`, `선행 작업`, `실행 그룹`을 확인한다.
+2. **계약 검사** — `state-tool verify <task-folder> --plan-contract-check`와 `--code-scan-citation-check`를 호출한다.
+3. **실행 그룹 순회** — `P1`, `P2` 순서대로:
+   - 실행 그룹 내 독립 배치가 복수면 Agent 도구 병렬 호출
    - 순차 의존이 있으면 순차 호출
-4. **각 배치마다 워커 디스패치** — 해당 agent로 op-dev-execute 워커 디스패치.
-5. **폴백** — PLAN.md §4.2에 agent 필드가 없거나 "미지정"인 경우 `opal-task-agent` 단일 디스패치로 PLAN 전체를 처리한다.
+4. **각 배치마다 워커 디스패치** — 해당 담당 agent로 op-dev-execute 워커 디스패치.
+5. **폴백** — `template: sdlc-v2`가 없는 legacy PLAN은 기존 §4.2/§3/execution-plan.json 방식을 사용한다.
 
 ### 4-2. 디스패치 프롬프트
 
@@ -147,11 +143,11 @@ PLAN 완료
 op-dev-execute 스킬을 수행하라.
 **스킬 경로**: {op-dev-execute/SKILL.md 탐색 경로}
 **태스크 폴더**: {tasks/{NNN}-{name}/}
-**checklist_source**: {PLAN.md 경로}, 섹션: 4.2 실행 체크리스트
+**checklist_source**: {PLAN.md 경로}, 섹션: Work items (sdlc-v2) 또는 legacy §4.2
 **scenario_source**: {TEST-SCENARIO.md 경로}
 **완료 기준**: checklist 100% + 담당 Step 매핑 L1/L2 시나리오 PASS (L3는 TEST 단계 위임)
 **자가 점검 절차**: 코드 작성 → 시나리오 "실행 명령" 추출 → Bash 실행 → PASS 확인 → 완료 보고
-**담당 Step**: {이 워커가 처리할 Step 번호 목록 — 예: 3, 5, 7}
+**담당 Work items**: {이 워커가 처리할 W-ID 목록 — 예: W-1, W-3}
 **Scope 제한**: {agent 영역 — FE / BE / DB / 공통}. 영역 외 파일 수정 시 즉시 블로커 보고.
 **프로젝트 컨텍스트**: {docs/PROJECT.md + 매칭 참조 문서. 미존재 시 CLAUDE.md 폴백}
 **하네스 Guards**: PLAN.md에 없는 파일 생성/수정 금지. PLAN 설계를 임의 변경 금지. 블로커 발생 시 즉시 중단 후 보고.
@@ -161,13 +157,13 @@ op-dev-execute 스킬을 수행하라.
 
 > **에이전트별 자동 가이드 선택**: 워커는 op-dev-execute/SKILL.md의 매핑 테이블에 따라 자기 에이전트 이름으로 execute-specialist-guide.md 또는 execute-generalist-guide.md를 자동 Read한다. PM이 `applied_guide` 파라미터를 주입하지 않는다.
 
-### 4-3. FE/BE 병렬 (agent 필드 기반)
+### 4-3. FE/BE 병렬 (`담당` 필드 기반)
 
-PLAN.md §4.2의 agent 필드에 따라 FE/BE 배치를 구성한다:
+PLAN.md Work items의 담당·실행 그룹 필드에 따라 배치를 구성한다:
 - **Phase 내 FE·BE 배치가 독립적**이면 병렬 호출
 - **순차 의존**(FE → BE 통합 등)이 있으면 순차 호출
 
-**폴백**: agent 필드 없거나 execution-plan.json만 존재 시 기존 방식 유지:
+**폴백**: legacy §4.2의 agent 필드가 없거나 execution-plan.json만 존재 시 기존 방식 유지:
 1. Phase 1: Common → 단일 워커 순차
 2. Phase 2: FE + BE 워커 병렬
 3. Phase 3: 양쪽 완료 후 통합
@@ -184,25 +180,7 @@ PLAN.md §4.2의 agent 필드에 따라 FE/BE 배치를 구성한다:
 
 ## STEP 5: TEST
 
-### 5-0. L3 시나리오 협업 게이트
-
-TEST 단계 진입 시 opal-test-agent 디스패치 전에:
-1. TEST-SCENARIO.md에서 `[SUPERVISOR]` 마커 시나리오 식별
-2. `[SUPERVISOR]` 시나리오 존재 시:
-   - opal-test-agent를 L3 제외 모드로 디스패치 (L1/L2만 실행)
-   - PM이 사용자에게 아래 표준 양식으로 요청
-3. 사용자 응답 수신 후 결과를 TEST-SCENARIO.md에 기록
-4. L3 시나리오 없으면 정상 디스패치 진행
-
-**PM 표준 요청 양식**:
-```
-{owner_name}, [시나리오 S-N]은 사용자 협업 검증이 필요합니다.
-요청 내용: {시나리오 조건 요약}
-기대 결과: {기대 결과 요약}
-확인 후 결과(PASS/FAIL + 상세)를 알려주세요.
-```
-
-op-dev-test-agent 워커 디스패치. TEST-SCENARIO.md 실행 + 결과 기록 + PASS/FAIL 판정.
+opal-test-agent 워커 디스패치. TEST-SCENARIO.md를 실행 명세로 읽고, `test-tool scenario-status`로 잠금 상태를 확인한 뒤 각 결과·증거를 `scenario-mark`로 기록하고 PASS/FAIL/BLOCKED를 판정한다. 사용자 행동이 필요한 시나리오는 주입된 capability로 실행할 수 없을 때만 필요한 행동과 기대 결과를 PM에 BLOCKED로 반환한다.
 
 > **[PM 컨텍스트 주입]** 디스패치 프롬프트 첫 줄에 `[WORKER]` 삽입. 주입 항목·핵심 제약(전 워커 공통 고정 포함)은 `opal/core/references/pm/dispatch-process.md` §워커 컨텍스트 주입 템플릿을 따른다 — 본 스킬은 항목을 열거하지 않는다. 단계 추가 전달: TEST-SCENARIO.md 경로 · changed_files.
 
@@ -210,10 +188,11 @@ op-dev-test-agent 워커 디스패치. TEST-SCENARIO.md 실행 + 결과 기록 +
 
 ### PASS 시
 
-→ **PM Gate** (TEST-SCENARIO.md 직접 검증):
-  1. `{TEST-SCENARIO.md 경로}` Read — 시나리오 PASS/FAIL 전체 확인
-  2. 검증 체크리스트:
-     - [ ] TEST-SCENARIO.md 모든 시나리오 PASS
+→ **PM Gate** (TEST-SCENARIO.md 명세 + test-scenario.json 결과 검증):
+  1. `{TEST-SCENARIO.md 경로}` Read — 검증 기준 확인
+  2. `{test-scenario.json 경로}` Read — 시나리오 PASS/FAIL/BLOCKED와 증거 확인
+  3. 검증 체크리스트:
+     - [ ] test-scenario.json 모든 필수 시나리오 PASS
      - [ ] 코드 품질 항목(린트/타입/포맷) 모두 Pass
      - [ ] 보안 항목(시크릿 스캔/.gitignore) Pass
      - [ ] 회귀 테스트 항목 Pass
@@ -238,7 +217,7 @@ op-dev-test-agent 워커 디스패치. TEST-SCENARIO.md 실행 + 결과 기록 +
 
 ### FAIL 시 (루핑 — 최대 3회, 하네스 §1 L3a)
 
-1. PM이 TEST-SCENARIO.md에서 FAIL 항목을 추출한다
+1. PM이 `test-scenario.json`에서 FAIL/BLOCKED 항목을 추출하고, 해당 S-ID의 기준은 TEST-SCENARIO.md에서 확인한다
 2. op-dev-execute 워커 디스패치 (fix 모드):
    ```
    [WORKER]
@@ -247,11 +226,11 @@ op-dev-test-agent 워커 디스패치. TEST-SCENARIO.md 실행 + 결과 기록 +
    **fix 컨텍스트**:
      - 실패한 TEST-SCENARIO 항목: {FAIL 항목 목록}
      - 현재 시도 회차: {N}/3
-     - 실패 요약: {op-dev-test-agent 결과 요약}
+     - 실패 요약: {opal-test-agent 결과 요약}
    **checklist_source**: PLAN.md 실행 체크리스트 (실패 항목 집중)
    **하네스 Guards**: fix 범위를 실패 항목으로 한정. 회귀 방지: 이전 PASS 항목 재실행.
    ```
-3. fix 완료 → fix 행 mark → op-dev-test-agent 재호출 (루프)
+3. fix 완료 → fix 행 mark → opal-test-agent 재호출 (루프)
 4. 3회 초과 시 사용자 에스컬레이션:
    "TEST {N}회 FAIL — 수동 개입 필요. 실패 항목: {목록}"
 
@@ -425,3 +404,6 @@ semi-agentic / agentic 모두 CLOSE 첫 행 `--auto-pass` 거부 (`agentic_close
 | v5.5 | 2026-08-21 22:15 | STEP 1(TASK) 직후에 트랙 강등 판정 호출 지점 배선 — `opal/core/references/harness/track-routing.md`(SSOT) 포인터 + 소유자 승인 왕복 없이 진입·사후 통보 명시. 임계값 수치는 SSOT에만 존치(복제 0건) (098) |
 | v5.6 | 2026-08-23 12:45 | STEP 2(ANALYSIS) 디스패치 프롬프트에 `**분석 질문**:` 슬롯 1줄 추가 — 워커가 전방위 스캔 대신 PM 지정 질문에 답하도록 유도, `op-dev-analysis/SKILL.md`「지정 분석 질문」 섹션과 대응. PM Gate checklist 문구 복제 없음(SSOT는 pipeline.json 유지) (100) |
 | v5.7 | 2026-09-02 17:22 | 에이전트명·소유자 호칭 리터럴 제거 — 규범 산문은 역할어(`PM`/`사용자`/`소유자`)로, 산출물·보고 문면은 `{owner_name}` 플레이스홀더로 전환해 런타임에 소유자 호칭으로 대체된다. 프레임워크 재사용성 확보 (L2 직접 수정) |
+| v5.8 | 2026-09-09 14:18 KST | sdlc-v2 문서 계약 접합 — PLAN PM Gate를 Work items/Risks/Release and recovery와 plan-contract-check 기준으로 갱신하고, TEST-SCENARIO 선작성 기본값을 해제하며 EXECUTE 분배를 Work items 기준으로 전환. 진행 모드 승인 경계는 변경하지 않음 (task 111/W-6) |
+| v5.9 | 2026-09-09 15:35 KST | sdlc-v2 TEST 단계 결과 저장 경계를 `test-scenario.json`으로 정합하고, TEST-SCENARIO.md는 불변 검증 명세로 유지하도록 STEP 5와 pipeline gate를 갱신 (111) |
+| v6.0 | 2026-09-09 15:33 KST | TEST-SCENARIO 작성 단계의 중복 coverage build/check를 제거하고 op-scenario-gate 한 곳에서 실행하도록 일원화. PLAN H는 실제 위험이 있을 때만 요구 (task 111/W-13) |

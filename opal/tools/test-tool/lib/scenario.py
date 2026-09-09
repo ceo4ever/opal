@@ -1,9 +1,10 @@
 """
 @header {
   "module": "scenario",
+  "task": "056,069,073,111",
   "layer": "util",
   "domain": "opal-tools",
-  "description": "test-tool scenario-* 서브명령(scenario-init/scenario-lock/scenario-mark/scenario-status/scenario-red/scenario-fidelity-check/scenario-conformance/scenario-coverage-check) 핸들러. test-scenario.json SSOT(spec존/result존) 관리 — RED-first 동결 게이트(scenario-lock은 전 시나리오 red_confirmed==true일 때만 통과, self-confirming 방지) + scenario-mark는 locked==true 이후에만 허용. 증거 충실도 사다리(mock<real-http<real-usage) 필드(required_fidelity/fidelity)와 시나리오별 부분 게이트(scenario-fidelity-check) + 표면(surface) 전수 conformance 판정(scenario-conformance, surfaces.json 분모)을 제공한다. scenario-coverage-check는 scenario-gate.md §3 정규화 페이로드(pilot-중립, test-scenario.json SSOT 미접촉)의 R/F/H↔시나리오 매핑 커버리지(루브릭 ②③④)를 결정론 판정한다(거짓 초록불 재발 방지). resolver/runner/e2e_adapter와 완전 격리되어 기존 4서브명령(resolve/check/unit/integration) 로직에 간섭하지 않는다. 타 도구의 SSOT는 일절 미접촉(축 분리, H-7).",
+  "description": "test-tool scenario-* 서브명령(scenario-init/scenario-lock/scenario-mark/scenario-status/scenario-red/scenario-fidelity-check/scenario-conformance/scenario-coverage-check/scenario-coverage-build) 핸들러. test-scenario.json SSOT(spec존/result존) 관리 — RED-first 동결 게이트(scenario-lock은 red_required 시나리오의 red_confirmed만 요구하며 필드가 없는 기존 시나리오는 RED 대상으로 간주) + scenario-mark는 locked==true 이후에만 허용. 증거 충실도 사다리(mock<real-http<real-usage) 필드(required_fidelity/fidelity)와 시나리오별 부분 게이트(scenario-fidelity-check) + 표면(surface) 전수 conformance 판정(scenario-conformance, surfaces.json 분모)을 제공한다. scenario-coverage-check는 scenario-gate.md §3 정규화 페이로드(pilot-중립, test-scenario.json SSOT 미접촉)의 R/F/H↔시나리오 매핑 커버리지(루브릭 ②③④)를 결정론 판정한다. scenario-coverage-build는 sdlc-v2 TASK/PLAN/TEST-SCENARIO의 AC/C/S와 optional H를 결정론적으로 .scenario-coverage-input.json으로 변환하고 중복 S-ID를 입력 오류로 거부한다. resolver/runner/e2e_adapter와 완전 격리되어 기존 4서브명령(resolve/check/unit/integration) 로직에 간섭하지 않는다. 타 도구의 SSOT는 일절 미접촉(축 분리, H-7).",
   "exports": [
     "SCENARIO_ERROR_CODES",
     "FIDELITY_ORDER",
@@ -16,15 +17,17 @@
     "cmd_scenario_red",
     "cmd_scenario_fidelity_check",
     "cmd_scenario_conformance",
-    "cmd_scenario_coverage_check"
+    "cmd_scenario_coverage_check",
+    "cmd_scenario_coverage_build"
   ],
   "depends": []
 }
 
 test-tool scenario-* 핸들러 — test-scenario.json SSOT (spec존/result존 분리).
 
-[MUST] PLAN.md §3.2.2 RED-first 동결 게이트(H-2): scenario-lock은 전 시나리오
-  red_confirmed==true일 때만 locked=true. 미확인 시 red_not_confirmed exit 8
+[MUST] RED-first 동결 게이트: scenario-lock은 red_required==true인 시나리오가 모두
+  red_confirmed==true일 때만 locked=true. red_required가 없는 기존 JSON은 true로 간주한다.
+  미확인 시 red_not_confirmed exit 8
   (self-confirming 테스트로 T2→G 게이트 무력화 방지).
 [MUST] scenario-mark --result는 locked==true 이후에만 허용.
   미충족 시 scenario_not_locked exit 9.
@@ -59,14 +62,20 @@ test-tool scenario-* 핸들러 — test-scenario.json SSOT (spec존/result존 �
   exit 17. ①⑤⑥ 판단축(목표달성/채택잔존/경계부정)은 판정하지 않는다
   (opal-evaluator-agent scenario-rubric phase 소관). 기존 7서브명령·exit 8~14는 무변경
   (additive, H-2 회귀 보호).
+[MUST] (111/W-5) scenario-coverage-build — sdlc-v2 TASK/PLAN/TEST-SCENARIO를
+  `{task_folder}/.scenario-coverage-input.json`으로 변환한다. TASK AC/C, TEST S 및
+  검증 대상 토큰을 고정 파싱하고, PLAN H는 optional로 파싱한다. W는 features로 넣지
+  않는다. unknown ref, 필수 AC/C 추출 실패, S 0건, 중복 S-ID는
+  coverage_input_invalid exit 17로 거부한다.
 """
 
 import argparse
 import json
 import pathlib
+import re
 import sys
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Sequence, Set
 
 _KST = timezone(timedelta(hours=9))
 
@@ -76,7 +85,7 @@ _KST = timezone(timedelta(hours=9))
 # ─────────────────────────────────────────────────────────────────────────────
 
 SCENARIO_ERROR_CODES: Dict[str, str] = {
-    "red_not_confirmed":        "전 시나리오 red_confirmed==true 미충족 — scenario-lock 거부(H-2)",
+    "red_not_confirmed":        "RED 대상 시나리오의 red_confirmed==true 미충족 — scenario-lock 거부",
     "scenario_not_locked":      "test-scenario.json locked==false — scenario-mark 거부",
     "scenario_not_initialized": "test-scenario.json 부재 — scenario-init 선행 필요",
     "scenario_spec_invalid_json": "--scenarios 인자 JSON 파싱 실패",
@@ -152,6 +161,10 @@ def _normalize_scenario(raw: Dict[str, Any]) -> Dict[str, Any]:
     있다. 시드 입력에 true가 있었는지 여부는 cmd_scenario_init이 별도로 감지해
     응답 warning으로 알린다(무시하되 침묵하지 않음).
 
+    [MUST] (111/S-18) red_required(spec존): 명시값을 bool로 보존한다. 필드가 없는 기존
+    입력은 true가 기본값이다. 기존 전 시나리오 RED 계약을 유지하면서 sdlc-v2가
+    구현 전 실패 확인 대상으로 선택한 시나리오만 잠금 게이트에 포함할 수 있게 한다.
+
     [MUST] (069/M-5) required_fidelity(spec존): `raw.get("required_fidelity","mock")`
     방어 접근 — 미지원 값(FIDELITY_ORDER 밖)은 "mock"으로 강등한다(관대한 기본값,
     R-E/H-6 회귀 0). fidelity(result존)는 scenario-mark --fidelity로만 갱신되며
@@ -165,6 +178,8 @@ def _normalize_scenario(raw: Dict[str, Any]) -> Dict[str, Any]:
         "acceptance_ref": raw.get("acceptance_ref"),
         "type": raw.get("type"),
         "expected": raw.get("expected"),
+        # spec존 — 선택적 RED 대상. 기존 입력은 전부 RED 대상으로 호환한다.
+        "red_required": bool(raw.get("red_required", True)),
         # spec존 — red_confirmed/red_evidence/red_at은 scenario-init에서 항상 초기값으로
         # 생성되며, red_confirmed는 scenario-red를 통해서만 true로 갱신될 수 있다.
         "red_confirmed": False,
@@ -237,7 +252,7 @@ def cmd_scenario_init(args: argparse.Namespace) -> None:
 
 
 def cmd_scenario_lock(args: argparse.Namespace) -> None:
-    """scenario-lock — 전 시나리오 red_confirmed==true일 때만 locked=true (RED-first 게이트, H-2)."""
+    """scenario-lock — RED 대상 시나리오가 확인된 뒤 spec을 동결한다."""
     task_path = pathlib.Path(args.task_path)
     spec = _load_spec(task_path)
     if spec is None:
@@ -245,11 +260,14 @@ def cmd_scenario_lock(args: argparse.Namespace) -> None:
         return
 
     scenarios = spec.get("scenarios", [])
-    unconfirmed = [s.get("id") for s in scenarios if not s.get("red_confirmed")]
+    unconfirmed = [
+        s.get("id") for s in scenarios
+        if s.get("red_required", True) and not s.get("red_confirmed")
+    ]
     if unconfirmed:
         _error(
             "red_not_confirmed", "scenario-lock", 8,
-            detail=f"red_confirmed==false: {unconfirmed}",
+            detail=f"red_required==true and red_confirmed==false: {unconfirmed}",
         )
         return
 
@@ -338,7 +356,7 @@ def cmd_scenario_red(args: argparse.Namespace) -> None:
 
 
 def cmd_scenario_status(args: argparse.Namespace) -> None:
-    """scenario-status — spec/result 요약 (RED 확인 수·통과율)."""
+    """scenario-status — spec/result 요약 (전체·필수 RED 확인 수와 통과율)."""
     task_path = pathlib.Path(args.task_path)
     spec = _load_spec(task_path)
     if spec is None:
@@ -348,8 +366,14 @@ def cmd_scenario_status(args: argparse.Namespace) -> None:
     scenarios = spec.get("scenarios", [])
     total = len(scenarios)
     red_confirmed = sum(1 for s in scenarios if s.get("red_confirmed") is True)
+    red_required = sum(1 for s in scenarios if s.get("red_required", True) is True)
+    red_confirmed_required = sum(
+        1 for s in scenarios
+        if s.get("red_required", True) is True and s.get("red_confirmed") is True
+    )
     passed = sum(1 for s in scenarios if s.get("result") == "pass")
     failed = sum(1 for s in scenarios if s.get("result") == "fail")
+    blocked = sum(1 for s in scenarios if s.get("result") == "blocked")
 
     _respond({
         "ok": True,
@@ -357,8 +381,11 @@ def cmd_scenario_status(args: argparse.Namespace) -> None:
         "locked": bool(spec.get("locked", False)),
         "total": total,
         "red_confirmed": red_confirmed,
+        "red_required": red_required,
+        "red_confirmed_required": red_confirmed_required,
         "passed": passed,
         "failed": failed,
+        "blocked": blocked,
     }, 0)
 
 
@@ -469,6 +496,222 @@ def cmd_scenario_conformance(args: argparse.Namespace) -> None:
 
 
 _COVERAGE_REQUIRED_KEYS = ("goal", "requirements", "features", "hypotheses", "scenarios")
+_TOKEN_RE = re.compile(r"\b(AC|C|H|F|S|W)-\d+\b")
+_SECTION_RE = re.compile(r"^##\s+(.+?)\s*$", re.MULTILINE)
+_FRONTMATTER_RE = re.compile(r"\A---\s*\n(.*?)\n---\s*", re.DOTALL)
+
+
+def _read_text(path: pathlib.Path, command: str) -> str:
+    try:
+        return path.read_text(encoding="utf-8")
+    except OSError as e:
+        _error("coverage_input_invalid", command, 17, detail=f"파일 읽기 실패: {path}: {e}")
+        raise
+
+
+def _frontmatter_template(text: str) -> Optional[str]:
+    match = _FRONTMATTER_RE.match(text)
+    if not match:
+        return None
+    for line in match.group(1).splitlines():
+        if line.strip().startswith("template:"):
+            return line.split(":", 1)[1].strip().strip("\"'")
+    return None
+
+
+def _section_body(text: str, heading: str) -> str:
+    matches = list(_SECTION_RE.finditer(text))
+    for index, match in enumerate(matches):
+        current = match.group(1).strip()
+        if current == heading:
+            start = match.end()
+            end = matches[index + 1].start() if index + 1 < len(matches) else len(text)
+            return text[start:end]
+    return ""
+
+
+def _has_section(text: str, heading: str) -> bool:
+    return any(match.group(1).strip() == heading for match in _SECTION_RE.finditer(text))
+
+
+def _unique_in_order(values: Sequence[str]) -> List[str]:
+    seen = set()
+    result: List[str] = []
+    for value in values:
+        if value not in seen:
+            seen.add(value)
+            result.append(value)
+    return result
+
+
+def _ids_from_section(text: str, heading: str, prefixes: Sequence[str]) -> List[str]:
+    body = _section_body(text, heading)
+    prefix_alt = "|".join(re.escape(prefix) for prefix in prefixes)
+    pattern = re.compile(rf"(?m)^\s*(?:[-*]\s+)?(({prefix_alt})-\d+)\b")
+    return _unique_in_order(match.group(1) for match in pattern.finditer(body))
+
+
+def _tokens_by_prefix(text: str, prefixes: Sequence[str]) -> Dict[str, List[str]]:
+    result = {prefix: [] for prefix in prefixes}
+    for match in _TOKEN_RE.finditer(text):
+        token = match.group(0)
+        prefix = match.group(1)
+        if prefix in result and token not in result[prefix]:
+            result[prefix].append(token)
+    return result
+
+
+def _parse_markdown_table_rows(section: str) -> List[Dict[str, str]]:
+    rows: List[List[str]] = []
+    for raw_line in section.splitlines():
+        line = raw_line.strip()
+        if not line.startswith("|") or not line.endswith("|"):
+            continue
+        cells = [cell.strip() for cell in line.strip("|").split("|")]
+        if cells and all(re.fullmatch(r":?-{3,}:?", cell.replace(" ", "")) for cell in cells):
+            continue
+        rows.append(cells)
+
+    if not rows:
+        return []
+
+    header = rows[0]
+    parsed: List[Dict[str, str]] = []
+    for cells in rows[1:]:
+        if len(cells) != len(header):
+            continue
+        parsed.append({header[i]: cells[i] for i in range(len(header))})
+    return parsed
+
+
+def _goal_from_task(task_text: str) -> str:
+    proposed = _section_body(task_text, "Proposed outcome").strip()
+    return " ".join(line.strip() for line in proposed.splitlines() if line.strip())
+
+
+def _build_sdlc_v2_coverage_payload(task_folder: pathlib.Path) -> Dict[str, Any]:
+    command = "scenario-coverage-build"
+    task_text = _read_text(task_folder / "TASK.md", command)
+    plan_text = _read_text(task_folder / "PLAN.md", command)
+    scenario_text = _read_text(task_folder / "TEST-SCENARIO.md", command)
+
+    for label, text in (("TASK.md", task_text), ("PLAN.md", plan_text), ("TEST-SCENARIO.md", scenario_text)):
+        if _frontmatter_template(text) != "sdlc-v2":
+            _error(
+                "coverage_input_invalid", command, 17,
+                detail=f"{label} 첫 YAML frontmatter template 값이 sdlc-v2가 아니다",
+            )
+
+    acceptance_ids = _ids_from_section(task_text, "Acceptance criteria", ("AC",))
+    constraint_ids = _ids_from_section(task_text, "Constraints", ("C",))
+    if not acceptance_ids:
+        _error("coverage_input_invalid", command, 17, detail="Acceptance criteria AC 추출 실패")
+    if not constraint_ids:
+        _error("coverage_input_invalid", command, 17, detail="Constraints C 추출 실패")
+
+    if not _has_section(plan_text, "Risks"):
+        _error("coverage_input_invalid", command, 17, detail="PLAN Risks 절 누락")
+    risk_section = _section_body(plan_text, "Risks")
+    hypothesis_ids = _tokens_by_prefix(risk_section, ("H",))["H"]
+
+    legacy_feature_ids = _ids_from_section(plan_text, "기능 목록", ("F",))
+    scenario_section = _section_body(scenario_text, "Scenarios")
+    rows = _parse_markdown_table_rows(scenario_section)
+    scenarios: List[Dict[str, Any]] = []
+    known_requirements = set(acceptance_ids + constraint_ids)
+    known_hypotheses = set(hypothesis_ids)
+    known_features = set(legacy_feature_ids)
+    unknown_refs: List[str] = []
+    seen_scenario_ids: Set[str] = set()
+    duplicate_scenario_ids: List[str] = []
+
+    for row in rows:
+        scenario_id = (row.get("ID") or row.get("Id") or row.get("id") or "").strip()
+        if not re.fullmatch(r"S-\d+", scenario_id):
+            continue
+        if scenario_id in seen_scenario_ids:
+            duplicate_scenario_ids.append(scenario_id)
+        else:
+            seen_scenario_ids.add(scenario_id)
+        target_text = row.get("검증 대상") or row.get("Target") or row.get("대상") or ""
+        tokens = _tokens_by_prefix(target_text, ("AC", "C", "H", "F", "W"))
+        refs = tokens["AC"] + tokens["C"] + tokens["H"] + tokens["F"] + tokens["W"]
+        for ref in refs:
+            if ref.startswith(("AC-", "C-")) and ref not in known_requirements:
+                unknown_refs.append(ref)
+            elif ref.startswith("H-") and ref not in known_hypotheses:
+                unknown_refs.append(ref)
+            elif ref.startswith("F-") and ref not in known_features:
+                unknown_refs.append(ref)
+            elif ref.startswith("W-"):
+                unknown_refs.append(ref)
+        scenarios.append({
+            "id": scenario_id,
+            "covers_requirements": _unique_in_order(tokens["AC"] + tokens["C"]),
+            "covers_features": _unique_in_order(tokens["F"]),
+            "covers_hypotheses": _unique_in_order(tokens["H"]),
+            "is_goal_scenario": False,
+            "is_adoption_scenario": False,
+            "is_boundary_scenario": False,
+        })
+
+    if not scenarios:
+        _error("coverage_input_invalid", command, 17, detail="TEST-SCENARIO Scenarios S 0건")
+    if duplicate_scenario_ids:
+        _error(
+            "coverage_input_invalid", command, 17,
+            detail=f"duplicate scenario id: {_unique_in_order(duplicate_scenario_ids)}",
+        )
+    if unknown_refs:
+        _error(
+            "coverage_input_invalid", command, 17,
+            detail=f"unknown reference: {_unique_in_order(unknown_refs)}",
+        )
+
+    return {
+        "goal": _goal_from_task(task_text),
+        "requirements": acceptance_ids + constraint_ids,
+        "features": legacy_feature_ids,
+        "hypotheses": hypothesis_ids,
+        "scenarios": scenarios,
+    }
+
+
+def cmd_scenario_coverage_build(args: argparse.Namespace) -> None:
+    """scenario-coverage-build — sdlc-v2 문서를 coverage-check 입력 JSON으로 결정론 변환한다.
+
+    2026-09-09 14:18 KST task 111: 신규 TEST-SCENARIO는 Setup/Scenarios만 소유하고,
+    단계·승인은 state.json, 결과·증거는 test-scenario.json이 소유한다. 이 builder는
+    문서의 필수 AC/C/S와 optional H 추적 토큰만 transient coverage payload로 변환한다.
+    """
+    command = "scenario-coverage-build"
+    template = getattr(args, "template", None) or "sdlc-v2"
+    if template != "sdlc-v2":
+        _error("coverage_input_invalid", command, 17, detail=f"지원하지 않는 template: {template}")
+        return
+
+    task_folder = pathlib.Path(args.task_folder)
+    payload = _build_sdlc_v2_coverage_payload(task_folder)
+    output_path = task_folder / ".scenario-coverage-input.json"
+    try:
+        with open(output_path, "w", encoding="utf-8") as f:
+            json.dump(payload, f, ensure_ascii=False, indent=2)
+    except OSError as e:
+        _error("coverage_input_invalid", command, 17, detail=f"coverage input 저장 실패: {e}")
+        return
+
+    _respond({
+        "ok": True,
+        "command": command,
+        "template": template,
+        "coverage_input": str(output_path),
+        "counts": {
+            "requirements": len(payload["requirements"]),
+            "features": len(payload["features"]),
+            "hypotheses": len(payload["hypotheses"]),
+            "scenarios": len(payload["scenarios"]),
+        },
+    }, 0)
 
 
 def cmd_scenario_coverage_check(args: argparse.Namespace) -> None:
@@ -558,19 +801,20 @@ def cmd_scenario_coverage_check(args: argparse.Namespace) -> None:
 def add_scenario_subparsers(subparsers: "argparse._SubParsersAction") -> None:
     """test_tool.py `_build_parser`의 top-level subparsers 객체에
     scenario-init/scenario-lock/scenario-mark/scenario-status/scenario-red/
-    scenario-fidelity-check/scenario-conformance/scenario-coverage-check 8종을 추가한다."""
+    scenario-fidelity-check/scenario-conformance/scenario-coverage-check/
+    scenario-coverage-build 9종을 추가한다."""
 
     p_init = subparsers.add_parser("scenario-init", help="test-scenario.json 생성 (spec존, locked=false)")
     p_init.add_argument("--task-path", required=True, metavar="PATH", help="태스크 폴더 경로")
     p_init.add_argument("--scenarios", metavar="JSON", help="시나리오 배열 JSON (선택, 기본 [])")
 
-    p_lock = subparsers.add_parser("scenario-lock", help="전 시나리오 red_confirmed==true일 때만 동결(locked=true)")
+    p_lock = subparsers.add_parser("scenario-lock", help="RED 대상 시나리오 확인 후 동결(locked=true)")
     p_lock.add_argument("--task-path", required=True, metavar="PATH", help="태스크 폴더 경로")
 
     p_mark = subparsers.add_parser("scenario-mark", help="locked 후 result존 기록")
     p_mark.add_argument("--task-path", required=True, metavar="PATH", help="태스크 폴더 경로")
     p_mark.add_argument("--id", required=True, metavar="S", help="시나리오 id")
-    p_mark.add_argument("--result", required=True, choices=["pass", "fail"], help="판정 결과")
+    p_mark.add_argument("--result", required=True, choices=["pass", "fail", "blocked"], help="판정 결과")
     p_mark.add_argument("--evidence", metavar="E", help="증거 문자열 (선택)")
     p_mark.add_argument(
         "--fidelity", choices=["mock", "real-http", "real-usage"],
@@ -613,6 +857,19 @@ def add_scenario_subparsers(subparsers: "argparse._SubParsersAction") -> None:
         help="정규화 페이로드 JSON 경로 (goal/requirements/features/hypotheses/scenarios, test-scenario.json과 무관)",
     )
 
+    p_coverage_build = subparsers.add_parser(
+        "scenario-coverage-build",
+        help="sdlc-v2 TASK/PLAN/TEST-SCENARIO를 .scenario-coverage-input.json으로 결정론 변환(111/W-5)",
+    )
+    p_coverage_build.add_argument(
+        "--task-folder", required=True, metavar="PATH",
+        help="TASK.md/PLAN.md/TEST-SCENARIO.md가 있는 태스크 폴더",
+    )
+    p_coverage_build.add_argument(
+        "--template", default="sdlc-v2", choices=["sdlc-v2"],
+        help="입력 템플릿 계약 (기본: sdlc-v2)",
+    )
+
 
 SCENARIO_DISPATCH: Dict[str, Any] = {
     "scenario-init": cmd_scenario_init,
@@ -623,4 +880,5 @@ SCENARIO_DISPATCH: Dict[str, Any] = {
     "scenario-fidelity-check": cmd_scenario_fidelity_check,
     "scenario-conformance": cmd_scenario_conformance,
     "scenario-coverage-check": cmd_scenario_coverage_check,
+    "scenario-coverage-build": cmd_scenario_coverage_build,
 }

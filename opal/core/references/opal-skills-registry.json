@@ -1,7 +1,7 @@
 {
   "$schema": "opal-skills-registry-v1",
-  "version": "3.14.0",
-  "updated_at": "2026-09-04",
+  "version": "3.15.0",
+  "updated_at": "2026-09-09",
   "groups": {
     "opal-pilot": [
       {
@@ -199,22 +199,6 @@
         ]
       },
       {
-        "name": "op-dev-todo",
-        "alias": null,
-        "description": "실행 체크리스트 확장 (Full Task 전용)",
-        "triggers": [
-          "^op-dev-todo$"
-        ],
-        "paths": [
-          "{project}/.opal/skills/op-dev-todo/SKILL.md",
-          "~/.opal/skills/op-dev-todo/SKILL.md"
-        ],
-        "stage": "TODO",
-        "dispatched_by": [
-          "opal-pilot-dev"
-        ]
-      },
-      {
         "name": "op-dev-test-scenario",
         "alias": null,
         "description": "테스트 시나리오 작성",
@@ -229,6 +213,24 @@
         "dispatched_by": [
           "opal-pilot-dev",
           "opal-pilot-dev-short"
+        ]
+      },
+      {
+        "name": "op-scenario-gate",
+        "alias": null,
+        "description": "TEST-SCENARIO 목표-커버 게이트",
+        "triggers": [
+          "^op-scenario-gate$"
+        ],
+        "paths": [
+          "{project}/.opal/skills/op-scenario-gate/SKILL.md",
+          "~/.opal/skills/op-scenario-gate/SKILL.md"
+        ],
+        "stage": "SCENARIO-GATE",
+        "dispatched_by": [
+          "opal-pilot-dev",
+          "opal-pilot-dev-short",
+          "opal-pilot-sdd"
         ]
       },
       {
@@ -610,19 +612,6 @@
         "auto_trigger": "identity.md 없을 때"
       },
       {
-        "name": "opal-next",
-        "alias": "next",
-        "description": "OPAL 재진입 가이드 — 현재 상태 진단(identity / .opal/AGENT.md / docs/PROJECT.md / cwd 프로젝트 여부) + 다음 액션 권유",
-        "triggers": [
-          "^opal-next$",
-          "^next$",
-          "(?i)(어디서부터\\s*시작|다음에\\s*뭐\\s*해야|온보딩\\s*다시\\s*보고싶어)"
-        ],
-        "paths": [
-          "~/.opal/skills/opal-next/SKILL.md"
-        ]
-      },
-      {
         "name": "opal-help",
         "alias": "help",
         "description": "스킬 카탈로그 & 사용법 안내 — 사용자 호출 가능 스킬 목록(Mode 1) + 특정 스킬 기능·사용법·예시(Mode 2). skill-registry list/get 조회 기반 read-only operator 스킬",
@@ -921,6 +910,16 @@
       "task": "106",
       "changes": [
         "opal-code-map-builder(opcmb) 신규 등록 (alias opcmb, group opal) — @header 자산(code-map 매니페스트) 구축·환경설정 스킬. init | update 2모드"
+      ]
+    },
+    {
+      "version": "3.15.0",
+      "date": "2026-09-09",
+      "task": "111",
+      "changes": [
+        "op-dev-todo 제거 — PLAN Work items와 중복되고 활성 pilot 호출이 없는 단계 스킬 정리",
+        "opal-next 제거 — 부트스트랩 다음 액션, //help, //opi, opal-cli doctor와 중복되는 재진입 스킬 정리",
+        "활성 게이트 스킬 op-scenario-gate의 누락된 레지스트리 등록 복구"
       ]
     }
   ]

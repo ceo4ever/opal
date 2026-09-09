@@ -1,0 +1,36 @@
+[
+  {
+    "case": "empty",
+    "exit_code": 0,
+    "result": {
+      "ok": true,
+      "command": "scenario-coverage-check",
+      "goal": "probe",
+      "all_covered": true,
+      "counts": {
+        "requirements": 0,
+        "features": 0,
+        "hypotheses": 0,
+        "scenarios": 0
+      }
+    }
+  },
+  {
+    "case": "missing_ac",
+    "exit_code": 16,
+    "result": {
+      "ok": false,
+      "command": "scenario-coverage-check",
+      "error": "coverage_unmet",
+      "detail": {
+        "missing": {
+          "requirements": [
+            "AC-1"
+          ],
+          "features": [],
+          "hypotheses": []
+        }
+      }
+    }
+  }
+]

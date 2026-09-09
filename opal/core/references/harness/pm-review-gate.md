@@ -21,10 +21,10 @@
 워커가 정상 반환 없이 중단된 경우(600초대 스톨 · 응답 중 연결 종료 등)에도 산출물은 워킹트리에 남아 있을 수 있다. **[MUST] 워커 자기보고의 부재를 산출물의 부재로 간주하지 않는다.** 아래 3단계를 순서대로 수행하여 입력을 확정한 뒤 §검토 절차로 진입한다.
 
 1. **산출물 확정** — `git status --short`와 `git diff --stat`으로 실제 생성·수정된 파일을 확정한다. 판정 근거는 워커 반환 텍스트가 아니라 워킹트리다.
-2. **완료/잔여 판정** — 확정된 파일 집합을 `PLAN.md` §4.2 실행 체크리스트와 대조하여 Step 단위로 완료분과 잔여분을 가른다. 부분 산출된 파일은 내용을 열어 해당 Step의 **완료 기준** 충족 여부로 판정하고, 판정 불가면 잔여로 분류한다.
-3. **잔여만 재배치** — 잔여 Step만 새 디스패치로 재배치한다. **[MUST] 완료분 파일을 재작업 대상에 포함하거나 덮어쓰지 않는다** — 재디스패치 프롬프트의 대상 파일 목록에서 완료분을 명시적으로 제외하고, 워커에게 `Write`(전체 덮어쓰기) 대신 `Edit`(부분 치환) 사용을 지시한다.
+2. **완료/잔여 판정** — 확정된 파일 집합을 sdlc-v2 `PLAN.md`의 `Work items`와 대조하여 W 단위로 완료분과 잔여분을 가른다. legacy PLAN은 기존 `§4.2` 실행 체크리스트와 대조한다. 부분 산출된 파일은 내용을 열어 해당 W/Step의 **완료 기준** 충족 여부로 판정하고, 판정 불가면 잔여로 분류한다.
+3. **잔여만 재배치** — 잔여 W/Step만 새 디스패치로 재배치한다. **[MUST] 완료분 파일을 재작업 대상에 포함하거나 덮어쓰지 않는다** — 재디스패치 프롬프트의 대상 파일 목록에서 완료분을 명시적으로 제외하고, 워커에게 `Write`(전체 덮어쓰기) 대신 `Edit`(부분 치환) 사용을 지시한다.
 
-> 동일 컨텍스트 재개 횟수 상한은 `opal-harness.md` §1 자동 루핑 제약 표(워커 프로세스 비정상 종료 행)를, 재배치 시 산출 파일 수 상한은 `pm/dispatch-process.md` Step 6 실행 라우팅을 따른다. 본 절은 판정 절차만 소유하며 두 수치를 재서술하지 않는다.
+> 동일 컨텍스트 재개 횟수 상한은 `opal-harness.md` §1 자동 루핑 제약 표를, 재배치 분할은 `pm/dispatch-process.md` Step 1의 비중첩 변경 범위 계약을 따른다.
 
 ### 검토 절차
 
@@ -55,7 +55,10 @@ PM Gate는 별도 QA Gate 단계를 두지 않고, 문서 QA(요구사항→설�
 #### 표준 검토 항목
 
 1. 관련 참조 문서가 워커에게 전달되었는가
-2. 기술 스택에 맞는 MCP/스킬이 활용되었는가 (예: shadcn/ui → shadcn MCP 사용 여부)
+2. 디스패치된 `실행 capability` 블록과 실제 수행이 일치하는가
+   - 필요한 스킬·MCP·외부 도구가 런타임에서 확인되어 주입된 경우에만 사용했는가
+   - 주입되지 않은 capability를 워커가 있다고 가정하지 않았는가
+   - capability 부재 시 블로커 또는 기본 제공 도구 기반 대체 경로가 보고되었는가
 3. `.opal/AGENT.md`의 PM 검토 기준 체크리스트 평가
 4. TASK.md 요구사항과 산출물의 정합성
 5. 참조 문서 내용이 산출물에 반영되었는가
@@ -83,18 +86,16 @@ PM Gate는 별도 QA Gate 단계를 두지 않고, 문서 QA(요구사항→설�
    - 공통 영역(타입 정의 등) 변경 시 양쪽에 영향 분석이 되었는가
 10. Batch 간 인터페이스 정합성 (BE API ↔ FE 호출 일치)
 11. docs/ 무효화 체크
-   - EXECUTE의 changed_files가 docs/ 문서의 내용을 무효화하지 않는가
-   - 새 API 추가 → BACKEND.md 갱신 필요?
-   - 새 컴포넌트 추가 → FRONTEND.md 갱신 필요?
-   - 구조 변경 → ARCHITECTURE.md 갱신 필요?
-   - 새 패턴 도입 → CONVENTIONS.md 갱신 필요?
-   - 갱신 필요 시: PM이 직접 갱신하거나, opi 최신화를 제안
+   - EXECUTE의 changed_files가 `docs/PROJECT.md` 레지스트리에 등록된 프로젝트/기획/설계/운영 문서 내용을 무효화하지 않는가
+   - 새 API, 데이터 계약, 상태 전이, 배치/운영 절차, 화면/IA, 프로젝트 구성, 도메인 정책 변경이 해당 레지스트리 문서와 불일치하지 않는가
+   - 갱신 필요 시: sdlc-v2는 PLAN Work items에 문서 갱신 W가 있었는지 확인하고, legacy는 PM이 직접 갱신하거나 opi 최신화를 제안
+   - `docs/PROJECT.md` 부재 시에만 `BACKEND.md`/`FRONTEND.md`/`ARCHITECTURE.md`/`CONVENTIONS.md` 등 기존 docs 폴백으로 판단
 12. STATE.md 정합성 자동 검증 (state validate)
    - 실행: `~/.opal/tools/state-tool/run.sh validate tasks/{NNN}-.../`
    - 결과: violations[] 0건이면 Pass, ≥1건이면 PM Gate Fail (재작업)
-   - 근거: TASK F-10 / PLAN §2.6
+   - 근거: legacy TASK F-10 / PLAN §2.6
 13. 컨벤션 자동 진단
-   - **트리거 조건**: 단계 = EXECUTE이고 워커 반환 `changed_files` 중 docs/, .opal/, *.md, tasks/ 외 파일이 ≥1건 (R-6 스킵 조건의 역)
+   - **트리거 조건**: 단계 = EXECUTE이고 워커 반환 `changed_files` 중 docs/, .opal/, *.md, tasks/ 외 파일이 ≥1건 (legacy R-6 스킵 조건의 역)
    - **영역 분할 절차**: `docs/PROJECT.md` "## 프로젝트 구성" 섹션 prefix 매칭으로 영역별 분할 — 의사코드는 `opal/core/references/pm/context-injection.md` §PROJECT.md 프로젝트 구성 기반 라우팅을 그대로 적용 (→ D-3). 매칭 실패 시 단일 호출(`scope=all`)로 폴백 (→ D-4 예시 B)
    - **호출**: 영역별로 opal-convention-checker 워커 디스패치 — 파라미터 매핑은 `opal/agents/opal-convention-checker/AGENT.md` §입력 명세 §PM Gate 호출 시나리오 표 참조 (→ D-2)
    - **호출 입력 명세**: `target_files = changed_files ∩ 영역 prefix`, `scope = 영역명` (단일 호출 시 `scope=all`), `task_folder = 현재 태스크 폴더`, `timestamp` = 영역별 분리 (병렬 호출별 고유 ts)
@@ -106,9 +107,9 @@ PM Gate는 별도 QA Gate 단계를 두지 않고, 문서 QA(요구사항→설�
    - **스킵 조건** (3종):
      1. `changed_files` = 0건
      2. `changed_files`가 docs/, .opal/, *.md, tasks/ 등 컨벤션 적용 외 파일만 포함
-     3. `docs/CONVENTIONS.md` 부재 → 체커가 `check_enabled=false`로 자체 처리(`GC-CONVENTION-*.md` §5 "문서 작성 유도"만 작성) + PM Gate Pass
+     3. `docs/PROJECT.md` 레지스트리와 폴백 경로 어디에서도 현재 변경 영역에 맞는 컨벤션 문서가 선별되지 않음 → 체커가 `check_enabled=false`로 자체 처리(`GC-CONVENTION-*.md` §5 "문서 작성 유도"만 작성) + PM Gate Pass
    - **하위 호환**: `.opal/AGENT.md` 미존재 시 PM Gate 자체 스킵(§판정 4번째 항목)이므로 본 §13도 동시 스킵 (→ D-1 §판정)
-   - **근거**: TASK.md R-1~R-7 / `tasks/136-260508-opp-pm-gate-convention-auto-check/PLAN.md` §2 핵심 설계
+   - **근거**: legacy TASK.md R-1~R-7 / `tasks/136-260508-opp-pm-gate-convention-auto-check/PLAN.md` §2 핵심 설계
 14. 코드 변경 태스크의 디스패치 컨텍스트에 code-scan 결과 인용 검증
    - **트리거 조건**: `changed_files` 또는 `target`에 code-scan 지원 확장자(`.py .js .ts .vue .jsx .tsx .svelte .kt .kts .java .swift` 등) 포함 — §8/§13과 동형
    - **검증 내용**: 워커에게 전달된 디스패치 컨텍스트(PLAN.md Step 본문 또는 PM 메시지)에 code-scan 결과(`domain`/`layer`/`depends`/`exports`)가 인용되었는가
@@ -122,7 +123,7 @@ PM Gate는 별도 QA Gate 단계를 두지 않고, 문서 QA(요구사항→설�
    - **스킵 조건 3종** (F-005 폴백) — **[MUST] 3종은 판정보다 앞에 평가한다.** 순서 자체가 계약이며(`opal/tools/code-scan/code-map-hook.js:121-124` "이 게이트는 ⑥ code-map 로딩보다 **반드시 위**에 있어야 한다 … 순서 자체가 계약이며" 동형 규율 · `harness/header-rules.md` §갱신 시점 (4단) (d)와 동일 계약), 판정 아래로 내리면 조용히 통과해야 할 태스크에서 거부가 발생한다.
      1. **자산 게이트** — `.opal/code-scan.json` 부재 또는 `headerSource` ∉ {`inline`, `manifest`} → `reason: code_scan_unavailable`
      2. **산출물 게이트** — PLAN.md 부재 → `reason: plan_md_absent` (하위호환)
-     3. **적용 범위** — PLAN.md §4.2 대상 파일 중 code-scan 적용 대상 확장자가 0건(순수 `.md`·설정 수정 등, 프로젝트 `extensions` 기준) → `reason: doc_only_task`
+     3. **적용 범위** — sdlc-v2 Work items 또는 legacy PLAN.md §4.2 대상 파일 중 code-scan 적용 대상 확장자가 0건(순수 `.md`·설정 수정 등, 프로젝트 `extensions` 기준) → `reason: doc_only_task`
    - **적용 범위**: 코드 변경/탐색 태스크 한정. 순수 .md 문서·기획·정책만인 문서 작업은 스킵 조건 3번에 걸려 도구가 **N/A(`skipped`)** 로 처리한다 — PM이 적용 여부를 따로 선언하지 않는다.
    - **Pass 조건**: 디스패치 컨텍스트에 code-scan 결과 표(domain/layer/depends/exports 중 1개 이상, 또는 신규 서브명령 결과 필드 1개 이상) 또는 명시적 인용문 존재 — 도구가 이 조건을 그대로 집행한다.
 
@@ -137,7 +138,7 @@ PM Gate는 별도 QA Gate 단계를 두지 않고, 문서 QA(요구사항→설�
    - 근거: PLAN §2.16 G-13
 4. 최근 24시간 의사결정 로그에 `--force` 사용 0건 확인
    - 누적 발생 시 별도 태스크로 우회 제한 정책 재설계 필요
-   - 근거: PLAN §2.17 트리거 #1/#3/#8 / R-11
+   - 근거: legacy PLAN §2.17 트리거 #1/#3/#8 / R-11
 
 ### PM Gate 통과 후 단일 mark
 
@@ -148,7 +149,7 @@ PM Gate 통과 후 해당 행을 state-tool로 단일 mark한다. State Gate 행
 ```
 
 > [deprecated] gate-pass — 레거시 전용. State Gate/QA Gate 행이 제거되어 4행 패턴이 성립하지 않음. 신규 태스크는 위 단일 mark 사용. (Phase4 완료)
-- 근거: PLAN §2.13 G-10 / R-10 (gate-pass deprecated, Phase4 완료)
+- 근거: legacy PLAN §2.13 G-10 / R-10 (gate-pass deprecated, Phase4 완료)
 
 ### 판정
 
@@ -188,3 +189,6 @@ PM Gate 통과 후 해당 행을 state-tool로 단일 mark한다. State Gate 행
 | v1.9 | 2026-08-02 16:03 | §워커 중단 시 산출물 실측 판정 절 신설 — ①`git status`로 산출물 확정 → ②PLAN §4.2 체크리스트 대조로 완료/잔여 판정 → ③잔여만 재배치([MUST] 완료분 덮어쓰기 금지) 3단계. 재시도 상한(`opal-harness.md` §1)·산출량 상한(`pm/dispatch-process.md` Step 6)은 참조만. 역할 라인에 신규 절 반영 및 고정 항목수 표기 제거 (081) |
 | v1.10 | 2026-08-16 13:22 | 자가 진단 1번 — "파이프라인 현황판 행 상태가 state-tool로만 갱신되었는가(LLM 직접 편집 0건)" → "파이프라인 행 상태가 `state-tool`로만 갱신되었는가(`state.json` 직접 편집 0건)" — STATE.md 저널 전환에 맞춘 표 전제 어구 제거 (094) |
 | v1.11 | 2026-09-04 22:53 | 표준 검토 항목 14 — PM 자기판정 → **도구 판정** 승격: **판정 수단**(`verify <태스크폴더> --code-scan-citation-check`, `pass`/`skipped` exit 0 · `unmet` exit 1 `code_scan_citation_unmet`)·**집행 지점 2곳**(verify 수동 호출 + EXECUTE 단계 첫 행 `advance`/`mark` 자동 훅, `--force --note`만 우회·`--auto-pass` 불가)·**스킵 조건 3종**(자산 게이트 `code_scan_unavailable` → 산출물 게이트 `plan_md_absent` → 적용 범위 `doc_only_task`, 판정보다 선행 평가하는 순서 계약) 신설. 기존 「**판정**: 인용 부재 시 Fail → 재디스패치 1회」 자기판정 서술을 도구 exit 규약으로 대체 — 판정은 도구가 내고 PM은 실행·보고만 한다(PRINCIPLES §Core Stance). 트리거 조건·검증 내용·신규 서브명령 인용 대상·Pass 조건 문면 유지, 항목 1~13·자가 진단 절 무변경 (106) |
+| v1.12 | 2026-09-09 15:22 | docs 무효화 체크를 PROJECT 레지스트리 기반으로 확장하고, sdlc-v2 Work items 문서 갱신 W와 code-scan citation 적용 범위 판정을 반영 (111) |
+| v1.13 | 2026-09-09 15:30 | 워커 중단 시 산출물 실측 판정을 sdlc-v2 Work items 우선, legacy §4.2 폴백으로 분리 (111) |
+| v1.14 | 2026-09-09 15:52 | 고정 capability 권고를 런타임 `실행 capability` 주입 블록 정합 검토로 대체하고, 컨벤션 문서 판단과 legacy R/F 근거 표기를 정합화 (111) |

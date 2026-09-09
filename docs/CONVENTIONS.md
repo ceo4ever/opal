@@ -65,7 +65,6 @@
 |------|--------|
 | opi | opal-project-init |
 | onb | opal-onboarding |
-| next | opal-next |
 | help | opal-help |
 | osc | opal-skill-creator |
 | oac | opal-agent-creator |

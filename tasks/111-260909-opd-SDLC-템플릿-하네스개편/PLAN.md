@@ -1,0 +1,78 @@
+---
+template: sdlc-v2
+---
+# PLAN: SDLC 템플릿과 하네스 수행 기준 개편
+> 입력: [TASK.md](TASK.md), [ANALYSIS.md](ANALYSIS.md), [templates/README.md](templates/README.md)
+
+## Approach
+
+이번 변경은 신규 작성 경로만 네 신규 문서의 파일 첫 YAML frontmatter에 정확히 `template: sdlc-v2`를 쓰는 계약으로 단순화하고, 기존 태스크는 읽기·재개 호환으로 유지한다. 신규 판정에는 heading 추측 폴백을 쓰지 않는다. 구현은 저장소의 `opal/` 원본을 수정한 뒤 정식 설치 절차로 `~/.opal`에 반영하고, 설치본 비교로 실제 opd가 같은 계약을 쓰는지 확인한다. opds는 공유 계약이 깨지지 않는 범위에서 함께 정합화한다. MAMS 원본, 기존 태스크 일괄 변환, 다른 pilot 전면 개편은 범위에서 제외한다.
+
+문서 흐름은 `TASK.md → ANALYSIS.md → PLAN.md → TEST-SCENARIO.md`의 책임을 분리한다. `TASK.md`는 문제·목표·영향 범위·제약·완료조건만 담고, `ANALYSIS.md`는 소비자와 변경 경계 판단만 담고, `PLAN.md`는 실행 가능한 작업 단위와 계약만 담고, `TEST-SCENARIO.md`는 검증 시나리오와 예상 판정 기준만 담는다. 구형 문서에서 반복되던 QA 전문, 기능별 중복 매트릭스, execution-plan 별도 산출물은 생성하지 않는다.
+
+프로젝트 컨텍스트는 축소하지 않는다. `docs/PROJECT.md`가 문서 레지스트리와 경로 패턴의 허브이며, MAMS처럼 `100.기획/`, `200.개발/`, `docs/CONVENTIONS-*` 문서를 Glob으로 선별하는 프로젝트도 그대로 지원한다. 산출물에는 문서 전문을 복제하지 않고, 구현에 영향을 주는 제약은 ANALYSIS `Findings`, 변경으로 내용이 달라지는 문서는 PLAN `Work items`에만 둔다.
+
+하네스 변경은 최소 어댑터 방식으로 잡는다. `state-tool`은 신규 TASK 필수 누락을 skip이 아니라 실패로 판정하고, PLAN의 `Work items`를 공식 실행 입력으로 읽는다. legacy `§4.2` 체크리스트는 기존 태스크 재개용 폴백으로만 유지한다. scenario gate는 `test-tool scenario-coverage-build --task-folder ... --template sdlc-v2` 결정론 변환으로 새 문서의 AC/C/H/S를 기존 coverage JSON으로 변환한다. 변환기는 `.scenario-coverage-input.json`을 만든 뒤 기존 `scenario-coverage-check`를 호출하며, 기존 check 입력·exit 계약은 유지한다.
+
+구현은 파일 소유권이 겹치지 않는 W-1~W-5를 동시에 시작한다. W-6은 결과를 통합하고, W-14에서 문서 표준을 정리하며, W-15에서 중복 스킬과 활성 참조를 제거한 뒤 W-7 설치, W-8 실제 측정 순으로 진행한다. 변경이력 미생성 원칙은 `opal-doc-standard.md`에만 반영하고 기존 문서 일괄 삭제는 별도 태스크로 넘긴다. 코드 파일은 프로젝트 헤더 규칙을 갱신한다.
+
+## Decisions and contracts
+
+| 결정 | 변경 후 계약 | 선택 이유·근거 |
+|---|---|---|
+| `sdlc-v2`를 신규 작성의 단일 템플릿 계약으로 둔다. | op-task와 opd 신규 태스크 생성은 파일 첫 YAML frontmatter에 `template: sdlc-v2`만 명시하고 새 섹션만 작성한다. 단계·승인 상태는 `state.json`만 소유하며 문서에 복제하지 않는다. 신규 판정은 이 메타데이터만 사용하고, 기존 태스크는 legacy 파서로 읽고 재개한다. | 사용자의 목표는 문서량과 추론 분기를 줄이는 것이다. 새 계약과 legacy 폴백을 분리해야 신규 필수 누락은 실패시키면서 기존 자산은 깨지지 않는다. |
+| `TASK.md`의 필수 절을 5개로 고정한다. | `Problem`은 필수 배경, `Proposed outcome`은 목표, `Affected users and systems`는 범위, `Constraints`는 제약, `Acceptance criteria`는 완료기준으로 소비한다. `Open questions`만 선택 절이다. | ANALYSIS에서 확인한 구형 `명확화 결과` 표 의존을 제거하면서도 AC-1/C-1 같은 추적 단위를 유지할 수 있다. |
+| `PLAN.md`의 `Work items`를 실행의 공식 입력으로 승격한다. | state-tool은 `verify --plan-contract-check`로 계약을 검사하고, 실행 단계는 담당·변경 대상·선행 작업·실행 그룹·완료 기준 연결을 읽는다. 같은 그룹의 무의존·비충돌 작업은 병렬 수행하고 legacy `§4.2`는 폴백으로만 사용한다. | 현재 소비자는 `§4.2`에 묶여 있어 새 PLAN을 읽지 못하며 병렬 여부도 매번 추론해야 한다. |
+| AC/C/W/H/S와 기존 coverage JSON의 의미를 분리한다. | AC와 C는 모두 `requirements[]`, H는 `hypotheses[]`, S는 `scenarios[]`로 변환한다. 각 S의 검증 대상에서 AC/C/H 토큰을 고정 파싱해 `covers_requirements`와 `covers_hypotheses`를 채운다. W는 실행 작업 단위이며 `features[]`로 넣지 않는다. legacy F가 있는 문서에서만 `features[]`를 채운다. | 기존 coverage JSON에는 제약 전용 필드가 없으므로 C도 검증 요구사항 토큰으로 처리한다. W를 F로 취급하면 실행 단위와 제품 기능을 혼동하므로, 모든 W가 AC/C 중 1개 이상에 연결되는지는 `state-tool verify --plan-contract-check`에서 별도로 판정한다. |
+| gate 문구는 새 섹션을 직접 검토하도록 바꾼다. | PM Gate, op-scenario-gate, op-dev-* 스킬 지시는 구형 §번호·중복 표를 요구하지 않고 새 문서의 책임 경계만 확인한다. | 새 템플릿을 써도 gate가 구형 표를 요구하면 에이전트가 중복 문서를 재생성한다. |
+| 프로젝트 문서 라우팅은 `docs/PROJECT.md` 우선으로 둔다. | PM과 워커는 `docs/PROJECT.md`의 프로젝트 문서 레지스트리, 참조 시점, 경로 패턴을 먼저 확인한다. OPAL 기본 docs 4종은 부재 폴백 또는 최소 보장 문서일 뿐이고, MAMS식 기획·설계·운영 문서군은 Glob 선별 대상으로 유지한다. | 사용자가 요구한 to-be 핵심이다. 템플릿 단순화가 프로젝트 컨텍스트 누락으로 이어지면 MAMS의 정책서·ERD·매체 API 명세 같은 실제 SSOT를 놓친다. |
+| capability 선택은 PM dispatch가 소유한다. | PM은 디스패치 직전에 현재 런타임에서 실제 제공 가능한 스킬·MCP·도구와 용도를 주입한다. 워커는 주입된 capability만 소비하고 미제공 capability를 추정하지 않는다. 고정 “활용 스킬/MCP” 카탈로그는 제거하되, state-tool·test-tool·evaluator처럼 단계 성립에 필요한 호출은 workflow 계약으로 유지한다. | 문서에 이름을 나열해도 도구 제공이나 실제 사용은 보장되지 않는다. 오래된 카탈로그는 잘못된 선택과 추가 탐색을 유도한다. |
+| 진행 모드 계약은 변경하지 않는다. | `interactive`·`semi-agentic`·`agentic`의 단계 순서, 사용자 확인 경계, 자동 승인과 CLOSE 규칙은 현행 그대로 유지한다. 이번 변경은 문서 형식과 소비 계약에만 적용한다. | 문서 개편으로 사용자 통제 수준이나 자동화 범위가 달라지면 별도 정책 변경이 되므로 이번 범위를 벗어난다. |
+| 배포 계약은 source first, installed verify로 둔다. | 저장소 `opal/` 원본을 수정하고 정식 설치 후 `~/.opal` 설치본의 관련 skill·pipeline·tool 파일이 원본과 같은지 비교한다. | 현재 실행은 설치된 `~/.opal` opd를 쓰므로, 원본 수정만으로는 실제 사이클 개선이 적용됐다고 볼 수 없다. |
+| 문서 변경이력 정책은 SSOT만 먼저 바꾼다. | `opal-doc-standard.md`는 git 관리 Markdown의 수기 변경이력을 기본 생성하지 않는다. 기존 문서 절과 생성·검사·설치 규칙의 일괄 삭제는 별도 태스크에서 처리한다. | 정책 확정과 대규모 마이그레이션을 분리하라는 사용자 결정 반영이다. |
+| 중복·미호출 스킬을 제거한다. | `op-dev-todo`는 PLAN Work items로 흡수하고, `opal-next`는 부트스트랩·help·opi·doctor로 역할을 분리한다. 활성 레지스트리와 안내에서 함께 제거하며 과거 tasks·brain 기록은 보존한다. | 폴더만 삭제하면 dangling과 잘못된 안내가 남는다. 대체 경로가 이미 있어 기능 손실 없이 추론 분기를 줄일 수 있다. |
+
+## Work items
+
+| 작업 | 담당 | 변경 대상 | 구체적 변경 | 선행 작업 | 실행 그룹 | 완료 기준 연결 |
+|---|---|---|---|---|---|---|
+| W-1. `sdlc-v2` TASK·PLAN 계약 검사 | opal-be-agent, state-tool 전담 | `opal/tools/state-tool/state_tool.py`, `opal/tools/state-tool/tests/test_state_tool.py`, `opal/tools/state-tool/README.md` | TASK 필수 5개 절 검사와 legacy 경로를 구현한다. `verify --plan-contract-check`로 Work items 열·W-ID·내용·선행 관계·순환·실행 그룹·AC/C 연결을 검사하고, code-scan 인용 검사가 Work items 파일을 읽도록 한다. | 없음 | P1 | AC-2, AC-3, C-1, C-4 |
+| W-2. 신규 TASK 작성 지시 단순화 | opal-task-agent, op-task 전담 | `opal/skills/op-task/SKILL.md`, `opal/skills/op-task/references/task-guide.md` | 신규 태스크는 `template: sdlc-v2`와 새 TASK 템플릿만 쓰고 구형 R/F/H·대안·확인표를 생성하지 않는다. 기존 문서 해석 안내는 legacy 호환으로 남긴다. | 없음 | P1 | AC-1, AC-3, C-2, C-4 |
+| W-3. ANALYSIS 산출 계약 단순화 | opal-task-agent, analysis 전담 | `opal/skills/op-dev-analysis/SKILL.md`, `opal/skills/op-dev-analysis/references/analysis-guide.md`, `opal/skills/op-dev-analysis/references/tech-context-guide.md` | 출력은 `Findings / Change boundary / Critical assumptions / Handoff`만 사용하고 구형 분석 표·반복 QA 매트릭스·불필요한 대안 확장을 제거한다. 프로젝트 문서는 `docs/PROJECT.md` 레지스트리에서 작업 도메인에 맞게 동적 선별하며 고정 경로 목록과 구형 §6 출력 계약을 제거한다. MAMS식 기획·설계 산출물 Glob 선별과 문서 갱신 후보 판단을 명시한다. | 없음 | P1 | AC-1, AC-3, AC-6, C-2, C-7 |
+| W-4. PLAN·EXECUTE 계약 연결 | opal-task-agent, plan/execute 전담 | `opal/skills/op-dev-plan/SKILL.md`, `opal/skills/op-dev-plan/references/plan-guide.md`, `opal/skills/op-dev-execute/SKILL.md`, `opal/skills/op-dev-execute/references/execute-guide.md`, `opal/skills/op-dev-execute/references/execute-specialist-guide.md`, `opal/skills/op-dev-execute/references/execute-generalist-guide.md` | PLAN은 새 템플릿만 생성한다. EXECUTE는 Work items의 담당·파일·선행·실행 그룹·완료 연결을 사용하고 legacy §4.2는 기존 문서 폴백으로 유지한다. plan-contract-check와 code-scan 인용 검사를 PLAN Gate·EXECUTE 진입에서 호출한다. | 없음 | P1 | AC-1, AC-2, AC-3, C-2, C-4 |
+| W-5. TEST-SCENARIO와 scenario gate 정규화 | opal-be-agent, test-tool/scenario 전담 | `opal/skills/op-dev-test-scenario/SKILL.md`, `opal/skills/op-dev-test-scenario/references/test-scenario-guide.md`, `opal/skills/op-scenario-gate/SKILL.md`, `opal/tools/test-tool/lib/scenario.py`, `opal/tools/test-tool/tests/test_scenario.py`, `opal/tools/test-tool/README.md` | TEST-SCENARIO는 `Setup / Scenarios`만 작성한다. 단계·승인은 `state.json`, 시나리오 결과·증거는 `test-tool`이 관리하는 `test-scenario.json`만 소유한다. `scenario-coverage-build`가 AC/C/H/S를 고정 파싱하고 알려지지 않은 참조·필수 추출 실패·시나리오 0건을 거부한다. `red_required`인 행만 scenario-lock의 RED 증거 대상으로 삼고, PASS/FAIL/BLOCKED를 scenario-mark로 기록한다. 기존 입력은 모든 행을 RED 대상으로 보는 호환성을 유지한다. | 없음 | P1 | AC-1, AC-2, AC-3, C-1, C-3, C-4 |
+| W-9. 공통 하네스·분석 참조 계약 정합 | opal-task-agent, harness 전담 | `opal/core/references/opal-harness.md`, `opal/core/references/opal-harness-interactive.md`, `opal/core/references/opal-harness-agentic.md`, `opal/core/references/opal-harness-semi-agentic.md`, `opal/core/references/harness/task-process.md`, `opal/core/references/harness/analysis-core.md` | sdlc-v2/legacy 분기를 공통 하네스와 모드 하네스에 반영하고, TASK 헤더·구형 ANALYSIS 절·PLAN 체크박스를 신규 경로에서 요구하지 않게 한다. 진행 모드 승인·자동 승인·CLOSE 경계는 변경하지 않는다. | W-1, W-2, W-3 | P2 | AC-1, AC-3, AC-6, C-2, C-4, C-7 |
+| W-10. 시나리오·리뷰·실행 라우팅 참조 정합 | opal-task-agent, shared-reference 전담 | `opal/core/references/harness/scenario-gate.md`, `opal/core/references/harness/red-first.md`, `opal/core/references/harness/coding-principles.md`, `opal/core/references/harness/pm-review-gate.md`, `opal/core/references/pm/dispatch-process.md`, `opal/core/references/pm/context-injection.md` | 신규 경로의 AC/C/H/S·Work items·docs/PROJECT.md 동적 문서 선별을 공통 SSOT에 반영하고, R/F/§4.2/고정 docs 경로는 legacy 또는 해당 pilot 계약으로 한정한다. 기획·설계 산출물은 레지스트리의 참조 시점과 경로 패턴으로 선별한다. | W-3, W-4, W-5 | P2 | AC-1, AC-2, AC-3, AC-6, C-1, C-2, C-3, C-4, C-7 |
+| W-11. 개발 에이전트·프로젝트 레지스트리 정합 | opal-task-agent, agent-doc 전담 | `docs/PROJECT.md`, `opal/core/references/agents.md`, `opal/agents/opal-task-agent/AGENT.md`, `opal/agents/opal-plan-agent/AGENT.md`, `opal/agents/opal-plan-agent/personas/software-architect.md`, `opal/agents/opal-be-agent/AGENT.md`, `opal/agents/opal-fe-agent/AGENT.md`, `opal/agents/opal-db-agent/AGENT.md` | 에이전트가 고정 docs 파일이나 구형 PLAN Step을 자체 가정하지 않고, docs/PROJECT.md 레지스트리에서 PM이 선별해 주입한 프로젝트·기획·설계 문서와 Work items를 소비하게 한다. MAMS처럼 영역 문서가 `CONVENTIONS-BACKEND/DB/FRONTEND`, `BATCH`, 정책서, ERD로 분화된 사례를 회귀 기준으로 둔다. | W-2, W-3, W-4 | P2 | AC-1, AC-3, AC-6, C-2, C-4, C-7 |
+| W-12. TEST·문서 QA 참조 정합 | opal-test-agent, test-doc 전담 | `opal/agents/opal-test-agent/AGENT.md`, `opal/agents/opal-test-agent/personas/test-engineer.md`, `opal/skills/op-dev-qa/SKILL.md`, `opal/skills/op-dev-qa/references/qa-dev-guide.md`, `opal/core/references/harness/qa-standards.md` | 신규 경로는 TEST-SCENARIO를 불변 명세로 읽고 test-scenario 수명주기를 test-tool로만 관리한다. RED 대상은 시점으로 선별하며 실제 실패는 scenario-red, 결과는 scenario-mark로 기록한다. ANALYSIS·PLAN 문서 검증 기준을 신규 절로 바꾸고 QA 문서·체크박스 생성은 pipeline이 요구하는 경우 또는 legacy로 한정한다. | W-3, W-4, W-5 | P2 | AC-1, AC-2, AC-3, AC-6, C-1, C-3, C-4, C-7 |
+| W-13. 런타임 capability 주입과 죽은 산문 제거 | PM 직접, capability-contract 전담 | `opal/core/references/pm/dispatch-process.md`, op-task SKILL/guide와 미사용 persona 삭제, op-dev-analysis SKILL/guide·legacy lazy guide와 중복 tech/persona 삭제, op-dev-plan SKILL/guide와 미사용 persona 삭제, op-dev-execute SKILL/common/specialist/generalist guide와 범용 persona 삭제, test-scenario·QA SKILL, 개발·TEST agent 문서 | opd 전이 경로의 고정 활용 스킬/MCP 카탈로그를 제거한다. PM dispatch에 런타임 capability 주입 계약을 추가하고, 워커 문서는 주입 목록 소비·미제공 처리만 남긴다. op-task는 TASK 필드 확정·작성·검사만 남긴다. analysis는 신규 경로에서 legacy·기술 컨텍스트 중복 문서를 읽지 않는다. plan은 형식·작성 규칙을 guide에만 둔다. execute의 중복 실행 절차는 common guide 한 곳으로 모으고 variant guide는 차이만 유지한다. | W-2, W-3, W-4, W-5, W-10, W-11, W-12 | P3 | AC-1, AC-7, C-2, C-8 |
+| W-6. opd 파이프라인과 PM Gate 통합 | opal-task-agent, pilot 통합 전담 | `opal/skills/opal-pilot-dev/SKILL.md`, `opal/skills/opal-pilot-dev/references/pipeline.json` | W-1~W-5와 W-9~W-12의 명령·문서 계약을 단계 입력·출력·Gate에 연결하고 구형 절 번호와 중복 산출물 요구를 제거한다. pipeline 행과 세 진행 모드의 사용자 확인·자동 승인·CLOSE 규칙은 변경하지 않는다. | W-1, W-2, W-3, W-4, W-5, W-9, W-10, W-11, W-12 | P3 | AC-1, AC-2, AC-3, AC-6, C-1, C-2, C-3, C-4, C-7 |
+| W-14. 문서 변경이력 SSOT 정리 | PM 직접 | `opal/core/references/opal-doc-standard.md` | git 관리 실행 지시문과 프로젝트 산출물에 수기 변경이력을 기본 생성하지 않는 원칙을 명시한다. 기존 문서·도구 일괄 전환은 수행하지 않는다. | W-13 | P4 | AC-8, C-2, C-9 |
+| W-15. 중복·미호출 스킬 제거와 opds 정합 | PM 직접 | `opal/skills/op-dev-todo/`, `opal/skills/opal-next/`, `opal/skills/opal-pilot-dev-short/SKILL.md`, `opal/skills/opal-pilot-dev-short/references/pipeline.json`, `opal/core/references/opal-skills-registry.json`, `docs/PROJECT.md`, `docs/ARCHITECTURE.md`, `docs/CONVENTIONS.md`, `README.md`, `cursor-rules/002-development-workflow.mdc`, `cursor-rules/101-task-artifacts.mdc`, 관련 agent·help·onboarding 문서 | 두 스킬 소스를 삭제하고 활성 레지스트리·모델 표·사용자 안내를 정리한다. opds의 새 PLAN/TEST 계약, 결과 SSOT, worker duration, add-row 인자를 맞추고 registry validate에서 발견된 `op-scenario-gate` 누락 등록도 복구한다. | W-6, W-11 | P4 | AC-1, AC-3, AC-9, C-2, C-4 |
+| W-7. source→installed 적용 검증 | 실행 에이전트, PM 검토 | 저장소 `opal/` 변경본, 설치본 `~/.opal` 관련 파일 | 정식 설치를 수행한 뒤 변경 대상 skill, pipeline, tool 파일의 원본·설치본 차이를 비교한다. 설치본으로 신규 태스크 dry run이 새 계약을 쓰는지 확인한다. | W-14, W-15 | P5 | AC-3, C-5 |
+| W-8. 실제 사례 동등성·시간 측정 | PM, 실행 에이전트 | MAMS 사례 산출물, 신규 MAMS 또는 동등 실제 태스크 1건의 측정 기록 | W-7 이후 기존 MAMS 사례 요구와 핵심 검증이 새 문서 흐름에서도 동등하게 보존되는지 확인한다. 이어 실제 태스크 1건을 새 opd로 수행해 시작·종료·대기·재작업 시간을 분리 측정한다. 대상이 확정되지 않으면 AC-4/AC-5는 차단으로 남긴다. | W-7 | P6 | AC-4, AC-5, C-3, C-6 |
+
+## Risks
+
+| 위험 | 깨질 수 있는 동작·계약 | 영향 | 설계 대응 |
+|---|---|---|---|
+| H-1. 신규 TASK와 legacy TASK 판정이 섞인다. | 기존 태스크 재개 또는 신규 필수 누락 실패 판정 | 기존 작업이 막히거나 신규 작업이 skip으로 통과한다. | `template: sdlc-v2` 메타데이터 판정과 legacy 표 판정을 분리하고, 두 경로를 회귀 테스트한다. |
+| H-2. `Work items`의 순서·소유권을 실행 입력으로 읽지 못한다. | code-scan citation, execute 체크리스트, PM Gate | 병렬 가능한 작업을 직렬 처리하거나 같은 파일을 동시에 수정한다. | plan-contract-check로 실행 그룹·선행 관계·동일 그룹 파일 충돌을 검사하고 execute가 이를 직접 사용한다. |
+| H-3. scenario 분모가 비어 false green이 난다. | scenario-coverage-build, scenario-coverage-check, op-scenario-gate | AC/C가 빠진 상태나 시나리오 0건에서도 gate가 통과할 수 있다. | build 단계에서 필수 AC/C 추출 실패, 알려지지 않은 참조, 시나리오 0건을 input invalid로 거부한다. |
+| H-4. W를 F로 매핑해 의미가 왜곡된다. | 기능 커버리지와 실행 체크리스트 | 실행 단위를 제품 기능처럼 검증해 불필요한 시나리오가 늘어난다. | W는 실행 추적 단위로 두고, `state-tool verify --plan-contract-check`에서 모든 W가 AC/C 중 1개 이상에 연결되는지만 판정한다. |
+| H-5. 문서 축소가 검증 책임 누락으로 이어진다. | RED 경로, 통합 검증, 복구 판단 | 문서는 짧아지지만 품질 판단 근거가 약해진다. | TEST-SCENARIO의 Scenarios와 PLAN의 완료 기준 연결을 유지하고, 단계 상태는 `state.json`, 시나리오 결과·증거와 선택적 RED 잠금은 `test-tool`이 관리하는 `test-scenario.json`으로 분리한다. |
+| H-6. 원본과 설치본이 달라 실제 opd에 반영되지 않는다. | 사용자 실행 환경 | 저장소 테스트는 통과하지만 실제 사이클은 개선되지 않는다. | 정식 설치 후 관련 파일 비교와 설치본 dry run을 release gate로 둔다. |
+| H-7. 2시간 목표를 문서 변경만으로 입증했다고 오판한다. | AC-5, MAMS 실측 | 성능 개선 판정이 추정에 머문다. | deterministic/e2e dry run은 기능 검증으로 제한하고, MAMS 실측은 별도 적용 태스크에서 시작·종료·대기 기준을 확정해 측정한다. |
+| H-8. 문서 Gate 변경이 진행 모드 경계를 바꾼다. | 사용자 확인·자동 승인·CLOSE 계약 | 사용자 통제 수준이 의도하지 않게 달라진다. | 세 모드별 pipeline 회귀 테스트로 기존 승인 경계를 고정한다. |
+| H-9. 템플릿 축소가 프로젝트 문서 컨텍스트 누락으로 이어진다. | AC-6, C-7, MAMS 정책·설계 SSOT | MAMS 같은 프로젝트에서 정책서, ERD, 매체 API 명세, 도메인 컨벤션을 안 읽고 구현해 재작업이 늘어난다. | `docs/PROJECT.md` 레지스트리 선별을 ANALYSIS/PLAN/dispatch/agent reference에 공통 반영하고, MAMS 문서 구조를 S-13 회귀 시나리오로 검증한다. |
+| H-10. 고정 capability 카탈로그가 실제 제공 여부와 어긋난다. | AC-7, C-8, 워커 실행 경로 | 워커가 없는 도구를 찾거나 오래된 사용법을 따르고, 목록에 없는 제공 도구는 쓰지 못해 지연된다. | PM dispatch를 capability 주입 SSOT로 두고 고정 카탈로그를 제거한다. 구조적 workflow 의존성과 선택형 보조 capability를 정적 감사로 구분한다. |
+| H-11. 변경이력 원칙과 기존 문서가 전환 중 충돌한다. | AC-8, C-9, creator/checker/install | 새 문서에는 이력이 생기고 일부 문서는 삭제돼 일관성이 흔들릴 수 있다. | 이번에는 SSOT 정책만 확정하고, 기존 문서와 생성·검사·설치 로직은 별도 일괄 태스크에서 함께 전환한다. |
+| H-12. 스킬 폴더만 삭제해 레지스트리나 안내가 dangling 된다. | AC-9, skill registry, 사용자 명령 | 삭제된 스킬이 계속 매칭되거나 워커가 호출 대상으로 선택한다. | 활성 소스 전역 검색과 `skill-registry validate`를 실행하고 과거 tasks·brain만 예외로 분류한다. |
+
+## Release and recovery
+
+- 적용 순서: 1차 병렬로 파일 소유권이 분리된 W-1, W-2, W-3, W-4, W-5를 수행한다. 전이 참조 감사에서 발견한 구형 계약은 2차 W-9~W-12가 정합화한다. 3차 W-6 통합 후 W-13~W-15의 산문·표준·죽은 스킬을 정리하고, 4차 W-7에서 설치본 검증, 5차 W-8에서 MAMS 동등성과 실제 시간을 측정한다.
+- 검증 범위: 결정론 테스트는 `state-tool`의 신규 TASK complete/missing-required, legacy complete/missing-required, `verify --plan-contract-check`의 필수 열·W-ID·변경 내용·선행 W·순환·실행 그룹 순서·동일 그룹 파일 충돌·AC/C 연결, Work items 파일 추출, code-scan citation 통과·실패를 포함한다. `test-tool`은 `scenario-coverage-build --task-folder ... --template sdlc-v2`가 AC/C/H/S를 `.scenario-coverage-input.json`으로 고정 변환하는지, 잘못된 입력을 거부하는지, 선택적 `red_required` 잠금과 PASS/FAIL/BLOCKED 기록을 지원하는지 확인한다. 기존 `scenario-coverage-check` 입력·exit 계약은 유지한다. 신규 e2e dry run은 설치본 opd로 작은 태스크 하나를 `TASK → ANALYSIS → PLAN → TEST-SCENARIO`까지 생성해 구형 섹션 재생성이 없는지 확인한다. 이 dry run은 AC-5 실측 완료로 보지 않는다.
+- 실측 경계: MAMS는 원본 수정 없이 실제 적용 대상으로만 사용한다. AC-4는 기존 MAMS 사례의 요구와 핵심 검증이 새 흐름에서도 동등하게 유지되는지 확인해야 완료된다. AC-5는 dry run이 아니라 MAMS 또는 동등한 실제 프로젝트에서 시작·종료 시각, 사용자 응답 대기, 외부 승인 대기, 설치·환경 오류 시간을 분리해 측정한 뒤 판단한다. AC-6은 MAMS `docs/PROJECT.md`의 기획/설계 산출물 레지스트리와 최근 태스크의 문서 갱신 Step이 새 스킬·reference 계약에서 누락되지 않는지 정적 대조한다.
+- 실패 시: 설치 전이면 저장소 변경 diff 단위로 되돌린다. 설치 후이면 이전 설치본과 원본 diff를 비교해 관련 skill·pipeline·tool 파일만 복구하고, legacy 태스크 재개 테스트를 먼저 통과시킨 뒤 신규 경로를 다시 적용한다.
+- 미결 결정: MAMS 실측 대상 태스크와 2시간 산정 규칙은 W-8 시작 전에 PM이 확정해야 한다. 대상이 확정되지 않으면 구현은 완료될 수 있지만 AC-4/AC-5는 미완료로 남는다.

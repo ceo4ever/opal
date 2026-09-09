@@ -32,8 +32,8 @@ wireframe-builder가 생성한 wireframe.md의 품질을 검증한다.
 | W-1 | 섹션 완전성 | 서비스 개요, 전체 구조, 화면 목록, 화면별 상세, 공통 컴포넌트, shadcn 설치 목록 -- 6개 섹션이 모두 존재하는가 |
 | W-2 | 화면 목록 완전성 | TASK.md에서 요청한 화면이 모두 wireframe.md에 포함되었는가 |
 | W-3 | 상세 설계 충분성 | 각 화면의 ASCII 레이아웃, 구성 요소, 인터랙션이 명세되었는가 |
-| W-4 | shadcn 컴포넌트 매핑 | 각 화면 요소가 shadcn 컴포넌트로 매핑되었는가 |
-| W-5 | 구현 가능성 | ui-designer 스킬로 바로 구현 가능한 수준인가 (모호한 지시 없음) |
+| W-4 | UI kit 컴포넌트 매핑 | 각 화면 요소가 프로젝트의 기존 UI kit 컴포넌트 또는 신규 구현 대상으로 구분되었는가 |
+| W-5 | 구현 가능성 | 주입된 구현 계약만으로 바로 구현 가능한 수준인가 (모호한 지시 없음) |
 
 ### WIREFRAME QA 프로세스
 
@@ -58,7 +58,7 @@ wireframe-builder가 생성한 wireframe.md의 품질을 검증한다.
 | W-1 | 섹션 완전성 | Pass / Warning / Fail | {구체적 근거} |
 | W-2 | 화면 목록 완전성 | Pass / Warning / Fail | {구체적 근거} |
 | W-3 | 상세 설계 충분성 | Pass / Warning / Fail | {구체적 근거} |
-| W-4 | shadcn 컴포넌트 매핑 | Pass / Warning / Fail | {구체적 근거} |
+| W-4 | UI kit 컴포넌트 매핑 | Pass / Warning / Fail | {구체적 근거} |
 | W-5 | 구현 가능성 | Pass / Warning / Fail | {구체적 근거} |
 
 ## 3. 지적 사항
@@ -86,7 +86,7 @@ UI 구현 결과를 검증한다. **빌드/린트 실행**과 **wireframe↔코�
 | E-2 | 린트 통과 | ESLint/타입 체크(`npm run lint`, `tsc --noEmit`) 오류 없음 |
 | E-3 | 화면 커버리지 | wireframe.md의 화면 목록(마스터 테이블)이 모두 구현되었는가 |
 | E-4 | 레이아웃 대조 | wireframe.md의 ASCII 레이아웃과 구현 화면 구조가 일치하는가 |
-| E-5 | 컴포넌트 대조 | wireframe.md의 구성요소/shadcn 컴포넌트가 코드에 사용되었는가 |
+| E-5 | 컴포넌트 대조 | wireframe.md의 구성요소와 프로젝트 UI kit 컴포넌트가 코드에 사용되었는가 |
 | E-6 | 인터랙션 구현 | wireframe.md의 인터랙션 명세가 이벤트 핸들러로 구현되었는가 |
 
 ### EXECUTE-UI QA 프로세스
@@ -109,7 +109,7 @@ UI 구현 결과를 검증한다. **빌드/린트 실행**과 **wireframe↔코�
 | [C] 설정 | — | 미구현 |
 
 ### 컴포넌트 대조 (E-5)
-| wireframe.md 구성요소 | shadcn 컴포넌트 | 코드 경로 | 상태 |
+| wireframe.md 구성요소 | UI kit 컴포넌트 | 코드 경로 | 상태 |
 |---------------------|----------------|----------|------|
 | KPI 카드 4개 | Card | components/kpi-card.tsx | 구현됨 |
 | 데이터 테이블 | DataTable | components/data-table.tsx | 구현됨 |

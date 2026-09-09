@@ -1,9 +1,9 @@
 ---
 name: op-dev-qa
 description: |
-  **Dev 문서 QA 검증 기준 라이브러리**. 문서 QA(요구사항→설계 검토)는 별도 QA Gate 단계를 두지 않고 PM Gate가 직접 수행하며, PM이 PM Gate 문서검증 시 이 스킬의 검증 기준(공통 검증 원칙·단계별 검증 ID·QA-{단계}.md 형식)을 참조한다.
+  **Dev 문서 QA 검증 기준 라이브러리**. 문서 QA(요구사항→설계 검토)는 별도 QA Gate 단계를 두지 않고 PM Gate가 직접 수행하며, PM이 PM Gate 문서검증 시 이 스킬의 검증 기준을 참조한다.
   참조 시점: PM Gate 문서검증 시. 단계에 따라 qa-dev-guide 또는 qa-wireframe-guide를 참조한다.
-  검증 대상 입력: 검증 대상 산출물 경로 + 단계명. 선택 입력: TASK.md. 산출 형식: QA-{단계}.md (PM이 검증 결과 기록 시 사용).
+  검증 대상 입력: 검증 대상 산출물 경로 + 단계명. 선택 입력: TASK.md. 산출 형식: PM Gate 판정. QA-{단계}.md는 pipeline이 명시 요구하거나 legacy 태스크일 때만 사용한다.
 ---
 
 # op-dev-qa — Dev 문서 QA 검증 기준
@@ -13,7 +13,7 @@ description: |
 - **참조 주체**: PM Gate 문서검증을 수행하는 PM (오케스트레이터). 별도 QA 에이전트 디스패치 없이 PM이 본 스킬의 검증 기준을 참조한다.
 - **역할**: 동작 검증(TEST / TEST-SCENARIO / verify, 독립·불변 영역)과 무관한 **문서 QA(요구사항→설계 검토)** 의 검증 기준을 제공한다.
 - **검증 입력**: 검증 대상 산출물 경로 + `stage` (단계명)
-- **검증 산출 형식**: `tasks/{NNN}-{태스크명}/QA-{단계}.md` (PM이 검증 결과를 기록할 때 사용)
+- **검증 산출 형식**: PM Gate 판정. `tasks/{NNN}-{태스크명}/QA-{단계}.md`는 pipeline이 산출물로 요구하거나 legacy 태스크일 때만 사용한다.
 
 > **[MUST]** 산출물 작성·검증 시 `opal/core/references/harness/citation-rules.md`를 Read하여 규칙(근거 제시 원칙 / 트랙별 매트릭스 / [MUST] 토큰 / 영역 간 용어 일관성 / decision_required 계약)을 준수한다.
 
@@ -71,9 +71,11 @@ PM Gate 문서검증 시 PM이 다루는 검증 대상 정보:
 
 ### Step 4. 체크리스트 갱신
 
-QA 검증 결과를 바탕으로 해당 시점의 체크리스트를 Read하고, 검증 통과 항목을 `[x]`로 갱신한다.
+신규 `template: sdlc-v2` 태스크에서는 체크리스트를 갱신하지 않는다. 단계 상태는 `state.json`, 시나리오 결과·증거는 `test-scenario.json`이 소유한다.
 
-| 현재 단계 | 갱신 대상 | 갱신 내용 |
+legacy 태스크 또는 pipeline artifact가 QA 문서·체크박스 갱신을 명시 요구할 때만 QA 검증 결과를 바탕으로 해당 시점의 체크리스트를 Read하고, 검증 통과 항목을 `[x]`로 갱신한다.
+
+| legacy 현재 단계 | 갱신 대상 | 갱신 내용 |
 |-----------|----------|----------|
 | ANALYSIS | TASK.md 요구사항 체크박스 | ANALYSIS가 커버하는 요구사항 → `[x]` |
 | PLAN | TASK.md 요구사항 체크박스 | PLAN.md가 커버하는 요구사항 → `[x]` |
@@ -83,7 +85,7 @@ QA 검증 결과를 바탕으로 해당 시점의 체크리스트를 Read하고,
 - 검증을 통과한 항목만 `[x]`로 갱신한다
 - 검증 실패(Fail) 항목은 `[ ]` 유지 + QA 리포트에 사유 기재
 - Warning 항목은 `[x]`로 갱신하되 QA 리포트에 비고 기재
-- EXECUTE 단계에서 TEST-SCENARIO 결과도 체크리스트 갱신에 반영한다
+- sdlc-v2에서 EXECUTE·TEST 결과는 TEST-SCENARIO.md에 반영하지 않는다
 
 ### Step 5. 판정
 
@@ -93,14 +95,11 @@ QA 검증 결과를 바탕으로 해당 시점의 체크리스트를 Read하고,
 
 ### Step 6. QA 리포트 생성
 
-검증 결과를 QA-{단계}.md로 작성한다.
+legacy 태스크 또는 pipeline artifact가 QA 파일을 명시 요구할 때만 QA-{단계}.md로 작성한다. 신규 sdlc-v2 기본 경로에서는 PM Gate 판정 JSON/요약으로 반환하고 QA 파일을 만들지 않는다.
 
-## 활용 스킬
+## capability 소비 계약
 
-| 스킬 | 용도 | 사용 시점 |
-|------|------|----------|
-| getsentry/code-review | 코드 품질 리뷰 참조 | EXECUTE 후 코드 리뷰 시 |
-| openai/security-best-practices | 보안 검증 참조 | 보안 관련 검증 시 |
+PM이 dispatch-process에서 현재 런타임에 사용 가능한 capability를 명시 주입한 경우에만 해당 capability를 보조 근거로 사용한다. 고정 외부 스킬 카탈로그를 가정하지 않는다.
 
 ## 검증 기준 요약
 
@@ -115,20 +114,19 @@ QA 검증 결과를 바탕으로 해당 시점의 체크리스트를 Read하고,
 
 ### Dev 단계별 검증 ID
 
-- ANALYSIS: R-1 ~ R-8 (TASK 커버리지, 코드 실독, 파일 완전성, 영향 범위, 리스크, 깊이, **원문 덤프 차단**, **098 규약 준수**)
-  - R-7: 소스코드 원문 블록 0건, 코드펜스는 실행 명령·시그니처로 한정
-  - R-8: 확정 입력 판정표 전건 판정 + 근거 등급·관측 스코프·실행 명령 병기
-- PLAN (Full): P-1 ~ P-8 (구현 가능성, 의존성 순서, ANALYSIS 반영, 파일 일치, 설계 구체성, 테스트 전략, **기능-QA 커버리지**, **확정 승계 준수**)
-  - P-7 (Multi-Feature 모드에서만 필수): 모든 F-NNN이 §5 QA 체크리스트에서 최소 1개 항목으로 커버되는가? 빈틈 발견 시 Fail.
-  - P-8: ANALYSIS 핸드오프 2원천(§1.1 관련 파일 목록 = 파일 맵 4필드 영역·경로·역할·변경 유형 / §8 다음 단계 입력 = 결정형 확정값 3열)을 재도출 없이 인용, `[MUST] 재도출 금지` 위반 0건
-- PLAN (Short): SP-1 ~ SP-5 (코드 분석, 구현 계획, 체크리스트 완전성, QA 항목, Short 적정성)
+- ANALYSIS sdlc-v2: RA-1 ~ RA-6 (`Findings`, `Change boundary`, `Critical assumptions`, `Handoff`, 근거, 문서 레지스트리 반영)
+- PLAN sdlc-v2: PP-1 ~ PP-7 (`Approach`, `Decisions and contracts`, `Work items`, `Risks`, `Release and recovery`, 병렬/순차 계약, docs 갱신 후보)
+- TEST-SCENARIO sdlc-v2: TS-1 ~ TS-6 (`Setup`, `Scenarios`, AC/C/H 커버, 실행 방법·시점, 결과 비기재, coverage build/check)
+- legacy ANALYSIS/PLAN: 기존 R/P/SP ID를 `qa-dev-guide.md`의 legacy 절에서만 사용한다.
 
 ### Wireframe 단계별 검증 ID
 
-- WIREFRAME: W-1 ~ W-5 (섹션 완전성, 화면 목록, 상세 설계, shadcn 매핑, 구현 가능성)
+- WIREFRAME: W-1 ~ W-5 (섹션 완전성, 화면 목록, 상세 설계, 프로젝트 UI kit 매핑, 구현 가능성)
 - EXECUTE-UI: E-1 ~ E-6 (빌드 성공, 린트 통과, 화면 커버리지, 레이아웃 대조, 컴포넌트 대조, 인터랙션 구현)
 
-## QA-{단계}.md 통일 형식
+## QA-{단계}.md legacy 형식
+
+신규 sdlc-v2에서는 PM Gate 판정을 사용자 보고와 `state.json`에 반영한다. 아래 형식은 legacy 또는 pipeline artifact가 QA 문서를 요구할 때만 사용한다.
 
 ```markdown
 # QA: {단계명} — {태스크 제목}
@@ -197,3 +195,4 @@ QA: tasks/{NNN}-{태스크명}/QA-{단계}.md | 판정: {Pass / Needs Revision}
 | v1.3 | 2026-06-07 | 역할 한정 — "QA Gate 단계 워커"에서 "PM Gate 문서검증 시 PM이 참조하는 검증 기준 라이브러리"로 재정의(description/실행 컨텍스트/입력/반환). 검증 기준 콘텐츠(공통 검증 원칙·단계별 검증 ID·QA-{단계}.md 형식)는 보존. 동작 검증 영역은 불변 (014) |
 | v1.4 | 2026-08-23 12:44 | qa-dev-guide.md 거울 사본 번호 범위 동기화 — ANALYSIS: R-1~R-6 → R-1~R-8(원문 덤프 차단·098 규약 준수 추가), PLAN(Full): P-1~P-7 → P-1~P-8(확정 승계 준수 추가). PLAN(Short) SP-1~SP-5는 무변경 (100 EXECUTE Step 7) |
 | v1.5 | 2026-08-24 22:39 | P-8 정의를 「ANALYSIS 핸드오프 표 항목 재도출 없이 인용」 단일 서술에서 §1.1(파일 맵 4필드: 영역·경로·역할·변경 유형)/§8(결정형 확정값 3열) 2원천 병기로 개정 — qa-dev-guide.md와 거울 사본 동시 개정 (101) |
+| v1.6 | 2026-09-09 | sdlc-v2 문서 QA를 PM Gate 판정 기준으로 축소하고 QA 문서·체크박스 갱신은 pipeline 요구 또는 legacy로 한정. 신규 검증 ID를 sdlc-v2 절 기준으로 교체 (111) |

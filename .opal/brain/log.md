@@ -389,3 +389,11 @@
 - 신규: [[unenforceable-norm-minimal-design]]
 - 출처: doc:opal/core/references/opal-pm.md
 
+## [2026-09-09] ingest | CLOSE ingest — 태스크 111 SDLC 템플릿 하네스개편
+- 신규: [[sdlc-v2-development-artifact-contract]]
+- 출처: task:111
+
+## [2026-09-09] ingest | CLOSE ingest 보완 — 태스크 111 관련 페이지 현행화 및 폐기 계약 stale 처리
+- 갱신: [[skill-opal-pilot-dev]], [[skill-opal-pilot-dev-short]], [[op-dev-analysis]], [[op-dev-plan]], [[op-dev-execute]], [[op-dev-test-scenario]], [[test-tool]], [[test-scenario-pipeline-redesign]], [[scenario-prewrite-goal-series-track]], [[opds-testscenario-producer-establishment]], [[op-dev-todo]], [[skill-opal-next]]
+- 출처: task:111
+

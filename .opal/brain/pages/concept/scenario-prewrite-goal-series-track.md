@@ -10,8 +10,7 @@ tags:
 - task-095
 sources:
 - task:095
-- task:073
-- task:075
+- task:111
 related:
 - 070-derivation-engine-perspective-bias-lesson
 - scenario-goal-coverage-gate-loop
@@ -21,8 +20,8 @@ related:
 - prewrite-track-quality-not-efficiency-measurement
 - prewrite-self-confirming-triple-defense
 created: '2026-08-19'
-updated: '2026-08-19'
-status: draft
+updated: '2026-09-09'
+status: stale
 ---
 ## 개요
 

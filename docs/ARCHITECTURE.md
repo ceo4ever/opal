@@ -116,7 +116,6 @@ OPAL은 2-레이어 아키텍처로 동작한다.
 | | opal-pilot-gc (opgc) | 경량 Pilot — 커밋 전 보안·컨벤션 진단 4단계 (진단 전담, 수정 없음) |
 | **dev 단계** | op-dev-analysis | 코드베이스 분석 + 기술 컨텍스트 수집 |
 | | op-dev-plan | 구현 계획 (PLAN+TODO 통합) |
-| | op-dev-todo | 실행 체크리스트 확장 (Full Task 전용) |
 | | op-dev-test-scenario | 테스트 시나리오 생성 |
 | | op-dev-execute | 코드 실행 (체크포인트 기반) |
 | | op-dev-wireframe | 와이어프레임 생성 |
@@ -150,7 +149,6 @@ OPAL은 2-레이어 아키텍처로 동작한다.
 | | opal-skill-manager | 스킬 관리 |
 | | opal-brain (opbr) | 프로젝트 브레인 — 영속 지식 위키 생성·누적·질의·정비 |
 | | opal-help (help) | 스킬 카탈로그 & 사용법 안내 (목록 Mode 1 / 개별 안내 Mode 2) |
-| | opal-next (next) | 재진입 가이드 — 환경 상태 진단 후 다음 액션 권유 |
 | | opal-improve (opim) | PM 개선 루프 — 관찰→분류→기록→보고→승인 5단계 (로컬 `.opal/` / FW `~/.opal/fw-inbox`) |
 | | opal-action-status (opas) | 루프 액션 에이전트 진행 현황 발동층 — 자동 탐지 + 해석 보고 |
 | | opal-workspace-sync | 워크스페이스 Git 일괄 동기화 — 직속 자식 저장소 안전 최신화(clean+ff-only) |
@@ -433,8 +431,8 @@ opal/                                    ← 이 저장소
 │   │   ├── opal-pilot-sdd/              오케스트레이터: SDD (opsdd)
 │   │   ├── opal-pilot-data-design/      오케스트레이터: DB 설계 (opdd)
 │   │   ├── opal-pilot-gc/               오케스트레이터: 보안·컨벤션 진단 (opgc)
-│   │   ├── op-dev-{analysis,plan,todo,execute,test-scenario,qa,wireframe}/
-│   │   │                                dev 단계 스킬 (7개)
+│   │   ├── op-dev-{analysis,plan,execute,test-scenario,qa,wireframe}/
+│   │   │                                dev 단계 스킬 (6개)
 │   │   ├── op-data-{dictionary,model,ddl}/
 │   │   │                                데이터 설계 단계 스킬 (3개)
 │   │   ├── op-task{,-plan,-execute,-qa}/ 범용 단계 스킬 (4개)
@@ -449,7 +447,6 @@ opal/                                    ← 이 저장소
 │   │   ├── opal-onboarding/             에이전트 온보딩
 │   │   ├── opal-brain/                  프로젝트 브레인 (opbr)
 │   │   ├── opal-help/                   스킬 카탈로그·사용법 안내
-│   │   ├── opal-next/                   재진입 가이드
 │   │   ├── opal-improve/                PM 개선 루프 (opim)
 │   │   ├── opal-action-status/          루프 액션 진행 현황 (opas)
 │   │   └── opal-workspace-sync/         워크스페이스 Git 일괄 동기화

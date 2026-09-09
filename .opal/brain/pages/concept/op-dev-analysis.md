@@ -7,26 +7,29 @@ tags:
 - skill
 sources:
 - skill:op-dev-analysis
-related: []
+- task:111
+related:
+- sdlc-v2-development-artifact-contract
+- op-dev-plan
+- skill-opal-pilot-dev
 created: '2026-06-11'
-updated: '2026-06-11'
-status: draft
+updated: '2026-09-09'
+status: active
 ---
-## 개념 요약
+## 개요
 
-TASK.md를 기반으로 기존 코드를 분석하고 기술 스택을 식별하여 추천 스킬/MCP를 매핑하는 ANALYSIS 단계 스킬.
+TASK를 PLAN이 바로 사용할 수 있는 확인 사실과 변경 경계로 바꾸는 분석 단계 스킬이다.
 
-## 역할·호출 시점·핵심 규칙
+## 현재 계약
 
-- **역할**: 코드베이스 분석 및 기술 컨텍스트 수집; 결과물 ANALYSIS.md 생성
-- **호출 시점**: 오케스트레이터(opal-pilot-dev)가 ANALYSIS 단계를 디스패치할 때
-- **핵심 규칙**: 필수 입력 TASK.md; 출력 ANALYSIS.md; citation-rules.md 준수 필수; 워커 에이전트 실행(폴백: opal-task-agent)
+분석 순서는 프로젝트 brain 등 기존 지식, code map, `docs/PROJECT.md`에서 선별한 관련 문서, 변경분 중심 코드 조사다. 출력은 Findings, Change boundary, Critical assumptions, Handoff 네 절만 사용한다. 고정 기술 문서 목록이나 스킬·MCP 추천표를 만들지 않는다.
 
-## 파일 참조
+## 근거
 
-`file_path: opal/skills/op-dev-analysis/SKILL.md`
+`opal/skills/op-dev-analysis/SKILL.md:17`, `opal/skills/op-dev-analysis/references/analysis-guide.md:8`, task:111.
 
-## 관련
+## 관련 페이지
 
-- [[skill-opal-pilot-dev]] — 이 스킬을 ANALYSIS 단계에서 디스패치하는 Dev 오케스트레이터
-- [[op-dev-plan]] — ANALYSIS.md를 입력으로 받아 구현 계획을 수립하는 다음 단계 스킬
+- [[sdlc-v2-development-artifact-contract]]
+- [[op-dev-plan]]
+- [[skill-opal-pilot-dev]]

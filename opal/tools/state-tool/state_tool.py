@@ -3,7 +3,7 @@
   "module": "state_tool",
   "layer": "util",
   "domain": "opal-pipeline",
-  "description": "OPAL 파이프라인 현황판 JSON SSOT 관리 CLI. 서브커맨드: init/show/advance/mark/block/validate/add-row/status/spec-validate, gate-pass(deprecated). interactive/semi-agentic/agentic 3-way 모드를 지원하며 PLAN-equivalent 이전 단계(TASK/ANALYSIS/PLAN/TEST-SCENARIO/SPEC/REVIEW/DESIGN/WBS/WIREFRAME/DICT/MODEL/DDL·MIGRATION)는 semi-agentic 모드에서 사용자 검토를 강제한다. STATE.md는 state.json에서 파생되는 저널(의사결정 로그+블로커)이며 파이프라인 표·현재 상태·다음 액션 섹션은 없다(레거시 마커 포맷은 하위호환 인식만 유지). mark --step N/M은 N<M이면 in_progress를 유지하고 N==M에서만 done으로 닫는다. can_auto_approve_user_confirmation()은 CLOSE 축과 모드 축 2축 합성으로 사용자 확인 행 자동 승인 가부를 단일 판정하며, cmd_mark 사전검사와 cmd_validate 사후검사가 서로 다른 소비 범위(validate는 CLOSE 축 미평가)로 이를 참조한다. auto_approve_prior_user_confirmations()는 advance/mark가 대상 행 이전 구간의 미완 확인 행을 자동 승인하되 대상 행 자체가 CLOSE면 관여하지 않는다. 행 주소는 task-step 키 체계(--task-step/--task-step-id, --row는 deprecated)로 지정한다. check_gate_artifacts()는 task_steps[].gate.artifacts 존재를 검사하고(정적 경로·글롭 지원, 절대경로·'..' 이탈 토큰은 거부), 미충족 시 gate_artifact_missing으로 막되 --force+--note 조합에만 통과를 허용하며 그 경우 decision 로그에 gate_artifact_force를 강제 기록한다. verify 서브커맨드는 상호 배타적인 5개 검사 라우트를 갖는다 — --red-check(RED 증거 게이트), --fix-mode(+--changed-files/--test-globs, 테스트 불변성 게이트), --clarification-check(TASK 4요소 잠금 판정), --evidence-check(『명확화 결과』·『확정된 설계 방향』 인용을 근거 등급 4축으로 판정, 두 소스의 분모는 서로 분리 — confirmed_ratio는 명확화 결과 항목 수 기준 불변), --code-scan-citation-check(PLAN.md §4.2 Step 파일 경로의 code-scan 인용 집행). 다섯 라우트 모두 exit 0 비차단이다. link_memory_history()는 CLOSE 마지막 행 mark 시 memory_tool.py를 서브프로세스로 호출해 프로젝트 루트 .opal/MEMORY.json에 이력 행을 멱등으로 남기고, 실패는 전부 흡수해 mark 응답은 항상 ok:true다. resolve_owner_placeholder()는 note 작성 경로(advance/mark/add-row/block/status/init)에서 '{owner_name}' 플레이스홀더를 identity.md owner_name으로 write-time 치환한다(부재 시 원문 유지, fail-safe). worker_duration_minutes는 mark --worker-duration-minutes로 선택 기록되고, 워커 디스패치 행을 소요시간 없이 done 처리하면 --worker-duration-unknown 억제 인자가 없는 한 응답 warnings 배열에 worker_duration_missing이 실린다(exit 0 유지). build_todo_mirror()는 stdout 전용 파생 미러(state.json 비접촉)로 PostToolUse hook이 세션에 결정론적으로 주입한다.",
+  "description": "OPAL 파이프라인 현황판 JSON SSOT 관리 CLI. 서브커맨드: init/show/advance/mark/block/validate/add-row/status/spec-validate, gate-pass(deprecated). interactive/semi-agentic/agentic 3-way 모드를 지원하며 PLAN-equivalent 이전 단계(TASK/ANALYSIS/PLAN/TEST-SCENARIO/SPEC/REVIEW/DESIGN/WBS/WIREFRAME/DICT/MODEL/DDL·MIGRATION)는 semi-agentic 모드에서 사용자 검토를 강제한다. STATE.md는 state.json에서 파생되는 저널(의사결정 로그+블로커)이며 파이프라인 표·현재 상태·다음 액션 섹션은 없다(레거시 마커 포맷은 하위호환 인식만 유지). mark --step N/M은 N<M이면 in_progress를 유지하고 N==M에서만 done으로 닫는다. can_auto_approve_user_confirmation()은 CLOSE 축과 모드 축 2축 합성으로 사용자 확인 행 자동 승인 가부를 단일 판정하며, cmd_mark 사전검사와 cmd_validate 사후검사가 서로 다른 소비 범위(validate는 CLOSE 축 미평가)로 이를 참조한다. auto_approve_prior_user_confirmations()는 advance/mark가 대상 행 이전 구간의 미완 확인 행을 자동 승인하되 대상 행 자체가 CLOSE면 관여하지 않는다. 행 주소는 task-step 키 체계(--task-step/--task-step-id, --row는 deprecated)로 지정한다. check_gate_artifacts()는 task_steps[].gate.artifacts 존재를 검사하고(정적 경로·글롭 지원, 절대경로·'..' 이탈 토큰은 거부), 미충족 시 gate_artifact_missing으로 막되 --force+--note 조합에만 통과를 허용하며 그 경우 decision 로그에 gate_artifact_force를 강제 기록한다. verify 서브커맨드는 상호 배타적인 6개 검사 라우트를 갖는다 — --red-check(RED 증거 게이트), --fix-mode(+--changed-files/--test-globs, 테스트 불변성 게이트), --clarification-check(TASK 잠금 판정: sdlc-v2 5절 또는 legacy 명확화 4요소), --evidence-check(『명확화 결과』·『확정된 설계 방향』 인용을 근거 등급 4축으로 판정, 두 소스의 분모는 서로 분리 — confirmed_ratio는 명확화 결과 항목 수 기준 불변), --code-scan-citation-check(PLAN.md Work items 또는 legacy §4.2 파일 경로의 code-scan 인용 집행), --plan-contract-check(sdlc-v2 Work items 계약 검사). link_memory_history()는 CLOSE 마지막 행 mark 시 memory_tool.py를 서브프로세스로 호출해 프로젝트 루트 .opal/MEMORY.json에 이력 행을 멱등으로 남기고, 실패는 전부 흡수해 mark 응답은 항상 ok:true다. resolve_owner_placeholder()는 note 작성 경로(advance/mark/add-row/block/status/init)에서 '{owner_name}' 플레이스홀더를 identity.md owner_name으로 write-time 치환한다(부재 시 원문 유지, fail-safe). worker_duration_minutes는 mark --worker-duration-minutes로 선택 기록되고, 워커 디스패치 행을 소요시간 없이 done 처리하면 --worker-duration-unknown 억제 인자가 없는 한 응답 warnings 배열에 worker_duration_missing이 실린다(exit 0 유지). build_todo_mirror()는 stdout 전용 파생 미러(state.json 비접촉)로 PostToolUse hook이 세션에 결정론적으로 주입한다.",
   "exports": [
     "cmd_init", "cmd_show", "cmd_advance", "cmd_mark",
     "cmd_block", "cmd_validate", "cmd_add_row", "cmd_status",
@@ -11,6 +11,7 @@
     "link_memory_history",
     "can_auto_approve_user_confirmation", "auto_approve_prior_user_confirmations",
     "_collect_plan_target_files", "_check_code_scan_citation",
+    "_check_sdlc_v2_task_contract", "_check_plan_contract",
     "_run_code_scan_citation_hook"
   ]
 }
@@ -186,6 +187,9 @@ ERROR_CODES = {
     # 106 F-004 R-4: code-scan 결과 인용 게이트 (PLAN §3.4.2 (4))
     "code_scan_citation_unmet":
         "PLAN.md에 code-scan 결과 인용 없음 — EXECUTE 진입 차단 (pm-review-gate.md 항목 14): {missing}",
+    # 111 W-1: sdlc-v2 PLAN Work items 실행 계약 검증
+    "plan_contract_unmet":
+        "PLAN.md Work items 실행 계약 위반 — PLAN 단계 완료/EXECUTE 진입 거부: {violations}",
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -2465,6 +2469,313 @@ _NA_PATTERN = re.compile(r"^N/?A\s*[:：]", re.IGNORECASE)
 # 공란 / "TBD"(대소문자 무관) / "-" 단독 → FAIL (미확정으로 간주).
 _TBD_PATTERN = re.compile(r"^\s*(TBD|-)?\s*$", re.IGNORECASE)
 
+_SDLC_V2_REQUIRED_TASK_SECTIONS = (
+    "Problem",
+    "Proposed outcome",
+    "Affected users and systems",
+    "Constraints",
+    "Acceptance criteria",
+)
+
+_WORK_ITEMS_REQUIRED_COLUMNS = (
+    "작업",
+    "담당",
+    "변경 대상",
+    "구체적 변경",
+    "선행 작업",
+    "실행 그룹",
+    "완료 기준 연결",
+)
+
+_WORK_ITEM_ID_RE = re.compile(r"\bW-\d+\b")
+_PLAN_GROUP_RE = re.compile(r"\bP(\d+)\b", re.IGNORECASE)
+_PLAN_COMPLETION_REF_RE = re.compile(r"\b(AC|C)-\d+\b")
+
+
+def _read_markdown(path):
+    try:
+        return pathlib.Path(path).read_text(encoding="utf-8")
+    except OSError:
+        return None
+
+
+def _first_frontmatter_template(text):
+    """첫 YAML frontmatter의 template 값을 반환한다. v2 판정은 exact 라인만 허용한다."""
+    lines = text.splitlines()
+    if not lines or lines[0].strip() != "---":
+        return None
+    for idx in range(1, len(lines)):
+        if lines[idx].strip() == "---":
+            for line in lines[1:idx]:
+                stripped = line.strip()
+                if stripped == "template: sdlc-v2":
+                    return "sdlc-v2"
+                if stripped.startswith("template:"):
+                    return stripped[len("template:"):].strip()
+            return None
+    return None
+
+
+def _is_sdlc_v2_markdown(path):
+    text = _read_markdown(path)
+    return bool(text is not None and _first_frontmatter_template(text) == "sdlc-v2")
+
+
+def _normalize_md_cell(cell):
+    return re.sub(r"\s+", " ", cell.replace("`", "").strip())
+
+
+def _section_body_by_heading(text, heading):
+    """H2 heading 본문을 다음 H2 전까지 반환한다. 없으면 None."""
+    lines = text.splitlines()
+    start = None
+    wanted = heading.strip().lower()
+    for idx, line in enumerate(lines):
+        m = re.match(r"^##\s+(.+?)\s*$", line.strip())
+        if m and m.group(1).strip().lower() == wanted:
+            start = idx + 1
+            break
+    if start is None:
+        return None
+    body = []
+    for line in lines[start:]:
+        if re.match(r"^##\s+", line.strip()):
+            break
+        body.append(line)
+    return "\n".join(body).strip()
+
+
+def _check_sdlc_v2_task_contract(task_md_path):
+    """sdlc-v2 TASK.md 필수 5절이 존재하고 비어 있는지 검사한다."""
+    text = _read_markdown(task_md_path)
+    if text is None:
+        return None
+    if _first_frontmatter_template(text) != "sdlc-v2":
+        return None
+    missing = []
+    for heading in _SDLC_V2_REQUIRED_TASK_SECTIONS:
+        body = _section_body_by_heading(text, heading)
+        if body is None or _TBD_PATTERN.match(body):
+            missing.append(heading)
+    return missing
+
+
+def _extract_ids_from_section(text, heading, prefix):
+    body = _section_body_by_heading(text, heading)
+    if body is None:
+        return set()
+    return set(re.findall(r"\b" + re.escape(prefix) + r"-\d+\b", body))
+
+
+def _extract_ac_c_ids(task_md_path):
+    text = _read_markdown(task_md_path)
+    if text is None:
+        return set(), set()
+    return (
+        _extract_ids_from_section(text, "Acceptance criteria", "AC"),
+        _extract_ids_from_section(text, "Constraints", "C"),
+    )
+
+
+def _parse_markdown_table(lines, required_columns):
+    header_idx = None
+    headers = None
+    required_norm = [_normalize_md_cell(c) for c in required_columns]
+    for idx, line in enumerate(lines):
+        stripped = line.strip()
+        if not stripped.startswith("|") or "|" not in stripped[1:]:
+            continue
+        cells = [_normalize_md_cell(c) for c in stripped.strip("|").split("|")]
+        if all(c in cells for c in required_norm):
+            header_idx = idx
+            headers = cells
+            break
+    if header_idx is None:
+        return None, []
+
+    rows = []
+    for line in lines[header_idx + 1:]:
+        stripped = line.strip()
+        if not stripped.startswith("|"):
+            if rows:
+                break
+            continue
+        cells = [_normalize_md_cell(c) for c in stripped.strip("|").split("|")]
+        if cells and all(set(c) <= {"-", ":"} for c in cells):
+            continue
+        if len(cells) < len(headers):
+            cells += [""] * (len(headers) - len(cells))
+        rows.append(dict(zip(headers, cells)))
+    return headers, rows
+
+
+def _extract_work_items(plan_md_path, include_headers=False):
+    text = _read_markdown(plan_md_path)
+    if text is None or _first_frontmatter_template(text) != "sdlc-v2":
+        return (None, None) if include_headers else None
+    body = _section_body_by_heading(text, "Work items")
+    if body is None:
+        return ([], []) if include_headers else []
+    _headers, rows = _parse_markdown_table(
+        body.splitlines(), _WORK_ITEMS_REQUIRED_COLUMNS)
+    if include_headers:
+        return _headers, rows
+    return rows
+
+
+def _work_item_id(row):
+    m = _WORK_ITEM_ID_RE.search(row.get("작업", ""))
+    return m.group(0) if m else None
+
+
+def _work_item_targets(row):
+    raw = row.get("변경 대상", "")
+    candidates = []
+    for m in re.finditer(r"`([^`]+\.[A-Za-z0-9]+)`", raw):
+        candidates.append(m.group(1))
+    raw_without_ticks = re.sub(r"`[^`]+`", " ", raw)
+    candidates.extend(re.findall(
+        r"(?:[A-Za-z0-9_.가-힣-]+/)+[A-Za-z0-9_.가-힣-]+\.[A-Za-z0-9]+",
+        raw_without_ticks,
+    ))
+    targets = []
+    for tok in candidates:
+        tok = tok.strip(" .;()[]")
+        if tok and _is_safe_artifact_token(tok) and tok not in targets:
+            targets.append(tok)
+    return targets
+
+
+def _work_item_dependencies(row):
+    raw = row.get("선행 작업", "")
+    if raw in ("", "-", "없음", "N/A"):
+        return []
+    return _WORK_ITEM_ID_RE.findall(raw)
+
+
+def _work_item_group_number(row):
+    m = _PLAN_GROUP_RE.search(row.get("실행 그룹", ""))
+    return int(m.group(1)) if m else None
+
+
+def _has_path_between(graph, start, goal, seen=None):
+    seen = seen or set()
+    if start in seen:
+        return False
+    seen.add(start)
+    if start == goal:
+        return True
+    return any(_has_path_between(graph, nxt, goal, seen) for nxt in graph.get(start, []))
+
+
+def _check_plan_contract(task_path):
+    """sdlc-v2 PLAN.md Work items 계약을 검사한다. legacy PLAN은 skip 신호를 반환."""
+    task_dir = pathlib.Path(task_path)
+    plan_md = task_dir / "PLAN.md"
+    text = _read_markdown(plan_md)
+    if text is None:
+        return {"status": "skipped", "reason": "plan_md_absent", "missing": []}
+    if _first_frontmatter_template(text) != "sdlc-v2":
+        return {"status": "skipped", "reason": "legacy_plan", "missing": []}
+
+    headers, rows = _extract_work_items(plan_md, include_headers=True)
+    if rows is None:
+        return {"status": "skipped", "reason": "legacy_plan", "missing": []}
+    missing = []
+    if not rows:
+        missing.append("Work items table")
+    if tuple(headers or ()) != _WORK_ITEMS_REQUIRED_COLUMNS:
+        missing.append("Work items: required 7 columns")
+
+    ids = []
+    previous_group = None
+    for pos, row in enumerate(rows, 1):
+        wid = _work_item_id(row)
+        if wid is None:
+            missing.append(f"row {pos}: W-ID")
+            continue
+        ids.append(wid)
+        for col in _WORK_ITEMS_REQUIRED_COLUMNS:
+            if _TBD_PATTERN.match(row.get(col, "")):
+                missing.append(f"{wid}: {col}")
+        if _work_item_group_number(row) is None:
+            missing.append(f"{wid}: 실행 그룹 Pn")
+        if not _PLAN_COMPLETION_REF_RE.search(row.get("완료 기준 연결", "")):
+            missing.append(f"{wid}: 완료 기준 연결 AC/C")
+        cur_group = _work_item_group_number(row)
+        if cur_group is not None:
+            if previous_group is not None and cur_group < previous_group:
+                missing.append(f"{wid}: P group order")
+            previous_group = cur_group
+
+    duplicates = sorted({wid for wid in ids if ids.count(wid) > 1})
+    missing += [f"duplicate {wid}" for wid in duplicates]
+    id_set = set(ids)
+
+    graph = {wid: [] for wid in id_set}
+    row_by_id = {}
+    for row in rows:
+        wid = _work_item_id(row)
+        if wid:
+            row_by_id[wid] = row
+    for row in rows:
+        wid = _work_item_id(row)
+        if not wid:
+            continue
+        for dep in _work_item_dependencies(row):
+            if dep not in id_set:
+                missing.append(f"{wid}: unknown dependency {dep}")
+            else:
+                graph.setdefault(dep, []).append(wid)
+                dep_group = _work_item_group_number(row_by_id.get(dep, {}))
+                cur_group = _work_item_group_number(row)
+                if dep_group is not None and cur_group is not None and dep_group >= cur_group:
+                    missing.append(f"{wid}: dependency group order {dep}")
+
+    for wid in id_set:
+        if any(_has_path_between(graph, nxt, wid, set()) for nxt in graph.get(wid, [])):
+            missing.append(f"cycle at {wid}")
+            break
+
+    for i, left in enumerate(rows):
+        lid = _work_item_id(left)
+        lgroup = _work_item_group_number(left)
+        if lid is None or lgroup is None:
+            continue
+        ltargets = set(_work_item_targets(left))
+        for right in rows[i + 1:]:
+            rid = _work_item_id(right)
+            if rid is None or _work_item_group_number(right) != lgroup:
+                continue
+            overlap = sorted(ltargets & set(_work_item_targets(right)))
+            if not overlap:
+                continue
+            left_depends = rid in _work_item_dependencies(left)
+            right_depends = lid in _work_item_dependencies(right)
+            if not left_depends and not right_depends:
+                missing.append(f"P{lgroup}: file conflict {lid}/{rid}: {', '.join(overlap)}")
+
+    task_md = task_dir / "TASK.md"
+    ac_ids, c_ids = _extract_ac_c_ids(task_md)
+    known_refs = ac_ids | c_ids
+    if known_refs:
+        for row in rows:
+            wid = _work_item_id(row)
+            if not wid:
+                continue
+            text_refs = set(re.findall(r"\b(?:AC|C)-\d+\b", row.get("완료 기준 연결", "")))
+            unknown = sorted(text_refs - known_refs)
+            if unknown:
+                missing.append(f"{wid}: unknown completion ref {', '.join(unknown)}")
+
+    return {
+        "status": "pass" if not missing else "unmet",
+        "reason": None,
+        "missing": missing,
+        "violations": missing,
+        "work_items": ids,
+    }
+
 
 def _run_clarification_hook(task_path, state, row_index, command, auto_pass=False, force=False):
     """TASK→다음 단계 첫 행 진입 시 명확화 게이트 자동 훅 (005).
@@ -2515,7 +2826,7 @@ def _run_clarification_hook(task_path, state, row_index, command, auto_pass=Fals
     if task_md is None:
         return
 
-    # 명확화 게이트 검사
+    # sdlc-v2 TASK는 새 필수 5절 계약으로 검사하고, legacy만 명확화 표를 소비한다.
     missing = _check_clarification_gate(task_md)
     if missing is None:
         return  # 하위호환: "## 명확화 결과" 섹션 부재 → skip
@@ -2555,12 +2866,20 @@ _PLAN_TARGET_FILE_RE = re.compile(r"^\s*[-*]\s*\*\*파일\*\*\s*:(.*)$")
 
 
 def _collect_plan_target_files(plan_md_path):
-    """PLAN.md §4.2 각 Step의 '**파일**:' 라인에서 경로 토큰을 수집한다 (PLAN §3.4.2 (1)).
+    """PLAN.md 대상 파일을 수집한다.
 
-    쉼표·공백으로 분리하고 백틱을 제거한다. 산문 주석 토큰(`(신규)` 등)은 경로가
-    아니므로 `_is_safe_artifact_token()`(절대경로·'..' 이탈 차단)을 재사용해 걸러낸다.
-    §4.2 섹션 부재·해당 라인 부재 시 [] 반환.
+    sdlc-v2는 Work items의 `변경 대상` 열을 우선 사용한다. legacy PLAN은
+    §4.2 각 Step의 '**파일**:' 라인에서 경로 토큰을 수집한다.
     """
+    work_items = _extract_work_items(plan_md_path)
+    if work_items is not None:
+        targets = []
+        for row in work_items:
+            for target in _work_item_targets(row):
+                if target not in targets:
+                    targets.append(target)
+        return targets
+
     try:
         lines = pathlib.Path(plan_md_path).read_text(encoding="utf-8").splitlines()
     except OSError:
@@ -2591,13 +2910,18 @@ def _check_code_scan_citation(plan_md_path):
 
     판정 기준은 신설하지 않는다 — pm-review-gate.md 항목 14 Pass 조건 토큰 중
     1건 이상이 본문에 존재하면 통과다.
-    반환: [] 통과 / ["citation_absent"] 미충족 / None(§4.2 섹션 자체 부재 → 하위호환 skip).
+    반환: [] 통과 / ["citation_absent"] 미충족 / None(실행 입력 섹션 자체 부재 → 하위호환 skip).
     """
     try:
         body = pathlib.Path(plan_md_path).read_text(encoding="utf-8")
     except OSError:
         return None
-    if not any(_PLAN_SECTION_42_RE.match(ln) for ln in body.splitlines()):
+    has_sdlc_work_items = (
+        _first_frontmatter_template(body) == "sdlc-v2"
+        and _section_body_by_heading(body, "Work items") is not None
+    )
+    has_legacy_42 = any(_PLAN_SECTION_42_RE.match(ln) for ln in body.splitlines())
+    if not has_sdlc_work_items and not has_legacy_42:
         return None                                     # 하위호환: §4.2 섹션 부재
     if any(rx.search(body) for _, rx in _CODE_SCAN_CITATION_RES):
         return []
@@ -2843,11 +3167,17 @@ def _parse_clarification_table(lines):
 
 
 def _check_clarification_gate(task_md_path):
-    """4요소 잠금 검증. 반환: missing[] (빈 리스트면 PASS).
+    """TASK 잠금 검증. 반환: missing[] (빈 리스트면 PASS).
 
-    None 반환 = 섹션/표 부재 (호출자가 하위호환 정책 적용 — graceful skip).
-    각 요소: 확정값 셀이 공란/"TBD"/"-"이면 미충족. "N/A: <사유>"는 충족.
+    sdlc-v2는 필수 5절(Problem/Proposed outcome/Affected users and systems/
+    Constraints/Acceptance criteria)을 검사한다. legacy는 기존 명확화 4요소
+    표를 검사한다.
+    None 반환 = legacy 섹션/표 부재 (호출자가 하위호환 정책 적용 — graceful skip).
     """
+    sdlc_missing = _check_sdlc_v2_task_contract(task_md_path)
+    if sdlc_missing is not None:
+        return sdlc_missing
+
     lines = task_md_path.read_text(encoding="utf-8").splitlines()
     table = _parse_clarification_table(lines)
     if table is None:
@@ -3142,6 +3472,7 @@ def cmd_verify(args):
     005 확장: --clarification-check(TASK 4요소 잠금 게이트).
     098 확장: --evidence-check(근거 등급 확정/미확정 판정 라우터, 차단 없음).
     106 확장: --code-scan-citation-check(PLAN.md code-scan 결과 인용 게이트, unmet 시 exit 1).
+    111 확장: --plan-contract-check(sdlc-v2 Work items 계약 검사, unmet 시 exit 1).
     대상 파일 부재 시 doc-only skip (ok).
     """
     command = "verify"
@@ -3154,6 +3485,7 @@ def cmd_verify(args):
     clarification_check = getattr(args, "clarification_check", False)
     evidence_check = getattr(args, "evidence_check", False)
     code_scan_citation_check = getattr(args, "code_scan_citation_check", False)
+    plan_contract_check = getattr(args, "plan_contract_check", False)
     task_md_arg = getattr(args, "task_md", None)
 
     # 098/106 — 게이트 플래그 동시 지정 거부 (무성 무시 방지, PLAN §3.3.2 / §3.4.2 (5))
@@ -3161,6 +3493,7 @@ def cmd_verify(args):
         ("--clarification-check", clarification_check),
         ("--evidence-check", evidence_check),
         ("--code-scan-citation-check", code_scan_citation_check),
+        ("--plan-contract-check", plan_contract_check),
     ) if _v]
     if len(_gate_flags) > 1:
         err(command, "evidence_check_flag_conflict", flags=_gate_flags)
@@ -3182,7 +3515,8 @@ def cmd_verify(args):
             print(json.dumps({
                 "ok": True, "command": command,
                 "clarification_check": "skipped",
-                "reason": "no '## 명확화 결과' section (backward-compat skip)",
+                "template": "legacy",
+                "reason": "no sdlc-v2 contract or '## 명확화 결과' section (backward-compat skip)",
             }, ensure_ascii=False))
             sys.exit(0)
         if missing:
@@ -3190,6 +3524,32 @@ def cmd_verify(args):
         print(json.dumps({
             "ok": True, "command": command,
             "clarification_check": "pass",
+            "template": "sdlc-v2" if _is_sdlc_v2_markdown(task_md_path) else "legacy",
+        }, ensure_ascii=False))
+        sys.exit(0)
+
+    # 111 — sdlc-v2 PLAN Work items 계약 검사.
+    if plan_contract_check:
+        result = _check_plan_contract(task_path)
+        if result["status"] == "skipped":
+            print(json.dumps({
+                "ok": True, "command": command,
+                "plan_contract_check": "skipped",
+                "reason": result["reason"],
+            }, ensure_ascii=False))
+            sys.exit(0)
+        if result["status"] != "pass":
+            err(command, "plan_contract_unmet",
+                message="PLAN.md Work items 계약 미충족",
+                plan_contract_check="unmet",
+                missing=result["missing"],
+                violations=result["violations"],
+                work_items=result.get("work_items", []))
+        print(json.dumps({
+            "ok": True, "command": command,
+            "plan_contract_check": "pass",
+            "work_items": result.get("work_items", []),
+            "work_item_ids": result.get("work_items", []),
         }, ensure_ascii=False))
         sys.exit(0)
 
@@ -3540,6 +3900,11 @@ def build_parser():
                        help="PLAN.md code-scan 결과 인용 게이트 — 미충족 시 "
                             "code_scan_citation_unmet(exit 1). 자산·산출물·적용 범위 "
                             "3조건 미해당 시 skipped(exit 0, PLAN §3.4.2)")
+    p_vfy.add_argument("--plan-contract-check", action="store_true",
+                       dest="plan_contract_check",
+                       help="sdlc-v2 PLAN.md Work items 계약 검사 — 필수 열/W-ID/선행/그룹/"
+                            "AC-C 연결/동일 그룹 파일 충돌 미충족 시 plan_contract_unmet(exit 1). "
+                            "legacy PLAN은 skipped(exit 0)")
     p_vfy.set_defaults(func=cmd_verify)
 
     return parser

@@ -18,7 +18,7 @@ PM이 사용자를 대행하여 단계 게이트를 자율 통과하는 모드.
 ## 2. 활성화 방법
 
 - 반드시 `--agentic` 플래그를 포함해야 활성화. 가급적 스킬명 바로 뒤에 위치.
-- `--agentic` 플래그가 없으면 항상 interactive 모드.
+- `--agentic` 플래그가 없으면 공통 하네스의 기본값인 semi-agentic 모드로 동작한다.
 - 활성화 시 STATE.md 모드 필드를 `agentic`으로 기록한다.
 
 ```
@@ -35,8 +35,8 @@ PM이 사용자를 대행하는 만큼, interactive 모드보다 **책임과 의
 | 의무 | 설명 |
 |------|------|
 | **판단 기록 의무** | 매 게이트에서 Pass/Fail 판단 근거를 AGENTIC-LOG.md에 기록한다. 왜 승인했는지, 무엇을 확인했는지 명시. 사용자 확인 행 자동 승인 시 state.json `note` 필드에 "auto-approved on &lt;stage&gt; entry" 형태로 자동 기재되므로 AGENTIC-LOG.md의 `GATE` 엔트리와 이중 추적된다 (PLAN §2.8 / §4 자동 승인 계약). |
-| **산출물 직접 검증 의무** | 체크리스트 수준이 아닌, 산출물을 **직접 Read하여 내용 수준까지 검증**한다. 요구사항 누락, 설계 오류, 일관성 문제를 내용 기반으로 판단. |
-| **완수 의무** | 100% 완수까지 루핑한다. 미완료 항목을 추적하고, 모든 체크리스트 항목이 충족될 때까지 진행. |
+| **산출물 직접 검증 의무** | 형식 확인 수준이 아닌, 산출물을 **직접 Read하여 내용 수준까지 검증**한다. 요구사항 누락, 설계 오류, 일관성 문제를 내용 기반으로 판단. |
+| **완수 의무** | 100% 완수까지 루핑한다. 신규 sdlc-v2는 TASK `Acceptance criteria`와 PLAN `Work items`, legacy는 기존 체크리스트를 기준으로 미완료 항목을 추적한다. |
 | **품질 책임** | PM이 최종 품질에 책임진다. 사용자가 agentic 결과를 받았을 때 추가 수정이 불필요한 수준이 목표. |
 | **투명성 의무** | 사용자가 사후에 전체 과정을 추적할 수 있도록, 모든 활동(오류, 수정, 의사결정, 개선)을 AGENTIC-LOG.md에 남긴다. |
 | **에스컬레이션 책임** | 올려야 할 것을 안 올리는 것도 PM 실패. 판단이 모호하면 에스컬레이션이 기본. |
@@ -55,7 +55,8 @@ PM이 사용자를 대행하는 만큼, interactive 모드보다 **책임과 의
 6. 산출물 내용을 직접 Read하여 실질 검증
    - 워커 보고의 "추출/처리 방식"이 TASK.md 요구사항과 일치하는가
    - 산출물 파일 직접 Read → 내용 존재 여부 확인 (빈 파일/오류 메시지만 있는 파일 차단)
-   - TASK.md 체크리스트 항목 수 vs 산출물 실제 처리 항목 수 일치 여부
+   - 신규 sdlc-v2는 TASK `Acceptance criteria`와 PLAN `Work items`가 산출물에 실제 반영되었는지 확인
+   - legacy는 TASK.md 체크리스트 항목 수 vs 산출물 실제 처리 항목 수 일치 여부 확인
    - **미승인 폴백 = Gate Fail**: 워커가 TASK.md에 없는 폴백/대체 방식을 사용했고 PM이 사전/사후 승인하지 않은 경우
 
 **판정**:
@@ -239,3 +240,4 @@ PM이 수행한 모든 활동을 시계열로 기록하여, 사용자가 사후�
 | v1.8 | 2026-06-07 | §4 QA→PM Gate 통합 정합화 — "QA Gate + PM Gate" → "PM Gate"(문서 QA 흡수), 강화 검토 기준 2번을 PM 직접 문서 QA 검증으로, Artifact Gate의 "QA 에이전트 재소환" → "워커 재지시"로 수정(QA 에이전트 디스패치 없음, op-dev-qa/op-task-qa는 검증 기준 라이브러리). 동작 검증(TEST/verify) 영역 불변 (014 Phase 4-2) |
 | v1.9 | 2026-08-15 21:48 | §4 사용자 확인 행 자동 승인 계약 전환 — PM `--auto-pass` 명시 호출 지시 삭제, 다음 단계 진입 시 도구가 `auto_approve_prior_user_confirmations`로 자동 승인(done/auto/timestamp + note `auto-approved on <stage> entry`), `can_auto_approve_user_confirmation` 단일 판정·`auto_approved` 응답 필드·as-worker/force/CLOSE no-op·`user_confirmation_required` 거부 명시. CLOSE 진입 게이트 절차 불변 (093) |
 | v1.10 | 2026-09-02 17:22 | 에이전트명·소유자 호칭 리터럴 제거 — 규범 산문은 역할어(`PM`/`사용자`/`소유자`)로, 산출물·보고 문면은 `{owner_name}` 플레이스홀더로 전환해 런타임에 소유자 호칭으로 대체된다. 프레임워크 재사용성 확보 (L2 직접 수정) |
+| v1.11 | 2026-09-09 | 신규 sdlc-v2 검증 기준을 TASK Acceptance criteria와 PLAN Work items로 전환하고, legacy 체크리스트 검증은 재개 호환으로 분기 (111) |

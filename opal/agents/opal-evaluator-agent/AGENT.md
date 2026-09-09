@@ -29,7 +29,7 @@ tools: [Read, Grep, Glob, Bash]
 | contract_path | O | `CONTRACT.md` 경로 — 루브릭절 기준 원천 (convention-checker가 `docs/CONVENTIONS.md`를 읽듯, 본 에이전트는 `CONTRACT.md` 루브릭절을 읽는다) |
 | timestamp | O | 보고서 파일명용 타임스탬프 (예: `2026-07-10T16-33-00`) |
 | project_root | O | 프로젝트 루트 경로 |
-| iteration | `phase==scenario-rubric`일 때 O | op-scenario-gate 루프 회차(N) — `SCENARIO-GATE-{N}.md` 보고서 파일명에 사용 |
+| iteration | `phase==scenario-rubric`일 때 O | op-scenario-gate 루프 회차(N) — 이력 레코드 식별에 사용 |
 | scenario_source | `phase==scenario-rubric`일 때 O | 정규화 커버리지 페이로드 또는 `TEST-SCENARIO.md` 경로 |
 
 ---
@@ -63,8 +63,8 @@ tools: [Read, Grep, Glob, Bash]
 | 판단축 | 척도 | 통과선 | 앵커 |
 |--------|------|--------|------|
 | ① 목표 달성 | 0~2 | ≥1 | 0: 목표 검증 시나리오 없음 / 2: 사용자·운영 계층에서 목표를 직접 검증 |
-| ⑤ 채택/잔존 | 0~2 | ≥1 | 0: 교체형인데 잔존/채택 미검증 / 2: 구형 잔존0·신형 채택 모두 검증 |
-| ⑥ 경계/부정 | 0~2 | ≥1 | 0: 정상 경로만 / 2: 경계·부정 경로 시나리오 존재 |
+| ⑤ 채택/잔존 | 0~2 | ≥1 | 0: 교체형인데 잔존/채택 미검증 / 1: 한쪽만 검증 / 2: 양쪽 검증 또는 교체형 목표 아님 |
+| ⑥ 경계/부정 | 0~2 | ≥1 | 0: 적용 가능한 실패·경계가 있는데 정상 경로만 있음 / 1: 제약 시나리오로 경계를 확인하거나 적용 가능한 별도 경계가 없음 / 2: 실패·경계 경로를 직접 검증 |
 
 > **[MUST] verdict 규칙(scenario-rubric 전용)**: 세 축 각 ≥1점(0점 축 없음) **AND** 평균 ≥1.5 → `verdict: pass`, 아니면 `verdict: fail` + 미달 축별 `gaps[]` 반환. (근거: `opal/core/references/harness/scenario-gate.md` §2 6축 정의·§5-1 종료조건 임계)
 
@@ -118,8 +118,8 @@ verdict은 Phase 1-S의 `[MUST]` 규칙(세 축 각 ≥1점 AND 평균 ≥1.5)�
 - `phase == "spec-review"` → `{task_folder}/QA-SPEC.md`
 - `phase == "design-review"` → `{task_folder}/QA-SPEC-DESIGN-{timestamp}.md` (설계 루프 D6, 산출물별 반복 판정 가능)
 - `phase == "drift-recheck"` → `{task_folder}/QA-SPEC-DRIFT-{timestamp}.md`
-- `phase == "scenario-rubric"` → `{task_folder}/SCENARIO-GATE-{iteration}.md` (전용 파일명 — `VERIFICATION.md` 폴백 대상 아님. `iteration`은 입력 파라미터로 op-scenario-gate가 회차를 부여한다)
-- 위 산출물 경로가 이미 존재하는 프로젝트 리포트 규약과 충돌하면(기존 `QA-*.md` 관례 부재) 태스크 폴더 `VERIFICATION.md`에 결과 계약을 추가 기록한다. (단, `scenario-rubric`은 이 폴백 규칙의 적용 대상이 아니다 — 항상 `SCENARIO-GATE-{iteration}.md`로 고정)
+- `phase == "scenario-rubric"` → 파일을 만들지 않고 판정 JSON만 반환한다. op-scenario-gate가 `.scenario-gate-history.json`에 회차별 결과를 기록한다.
+- 그 외 phase의 기존 보고서 경로 규칙은 유지한다.
 
 보고서 구성:
 1. 헤더 — 실행 일시, phase, target_artifacts, 기준 문서 상태(CONTRACT.md 로드 여부)
@@ -127,11 +127,8 @@ verdict은 Phase 1-S의 `[MUST]` 규칙(세 축 각 ≥1점 AND 평균 ≥1.5)�
 3. 종합 verdict (`pass`/`fail`) + 근거 요약
 4. drift 필요성 별도 절 — yes인 경우만 "## CONTRACT 거버넌스" 오너십 계층(무변경→PM 자율 / 내부조정→PM 자율 / 인터페이스변경→통합 게이트 / 외부노출→사용자) 안내 포함, Evaluator는 판정만 반환하고 반영은 PM 책임임을 명시
 
-> 위 4항 구성은 `design-review`/`spec-review`/`drift-recheck`(Base Likert 트랙) 대상이다. `scenario-rubric`은 전용 구성을 쓴다:
-> 1. 헤더 — 실행 일시, phase, scenario_source, iteration
-> 2. 판단축별 판정 표 (Phase 1-S 3축 — 점수·근거·gap 여부)
-> 3. `scores`/`average`/`gaps[]`/종합 `verdict`(pass/fail)
-> (drift 필요성 절은 scenario-rubric에는 없다 — Base 트랙 전용 신호)
+> 위 보고서 구성은 `design-review`/`spec-review`/`drift-recheck`에만 적용한다.
+> `scenario-rubric`은 Phase 4 결과 계약 JSON만 반환한다.
 
 ### Phase 6: 결과 반환
 
@@ -150,7 +147,7 @@ verdict은 Phase 1-S의 `[MUST]` 규칙(세 축 각 ≥1점 AND 평균 ≥1.5)�
 
 ```json
 {
-  "artifact_path": "{task_folder}/SCENARIO-GATE-{iteration}.md",
+  "artifact_path": null,
   "summary": "scenario-rubric 채점 완료: verdict={pass|fail}, scores={goal,adoption,boundary}, average={N}",
   "status": "completed | blocked",
   "verdict": "pass | fail",
@@ -158,7 +155,7 @@ verdict은 Phase 1-S의 `[MUST]` 규칙(세 축 각 ≥1점 AND 평균 ≥1.5)�
   "average": 0,
   "gaps": [],
   "blockers": [],
-  "changed_files": ["SCENARIO-GATE-{iteration}.md"]
+  "changed_files": []
 }
 ```
 
@@ -194,3 +191,5 @@ verdict은 Phase 1-S의 `[MUST]` 규칙(세 축 각 ≥1점 AND 평균 ≥1.5)�
 | v1.0 | 2026-07-10 16:33 | 초기 작성 — 패턴 B(readonly·[WORKER] 부트스트랩 스킵·자기완결 보고서) 준용, 루브릭 Base 6차원 내장, CONTRACT.md 루브릭절 병합, verdict-only·drift binary·거버넌스 에스컬레이션 안내 (056) |
 | v1.1 | 2026-07-18 22:46 | Phase 1 Base 루브릭에 판정 항목 4종 추가 — ⑦표면 완전성(surfaces.json ↔ PRD/TRD/USER_JOURNEY, Likert≥4) ⑧auth 필드 완전성(binary) ⑨origin 선언(binary, 비웹 N/A) ⑩워킹 스켈레톤 태스크(binary, oppl SKILL.md D5 참조). target_artifacts 예시에 surfaces.json 추가 (069) |
 | v1.2 | 2026-07-23 13:30 | `scenario-rubric` phase 신설(additive) — phase 열거값 추가, Phase 1-S 전용 2점 척도 루브릭(①목표달성 ⑤채택/잔존 ⑥경계/부정, 각 통과선≥1·평균≥1.5 verdict 규칙), Phase 2/3 scenario-rubric 분기(CONTRACT 병합 skip·scenario_source 판정), Phase 4 결과 계약(`scores/average/gaps/verdict`), Phase 5 `SCENARIO-GATE-{iteration}.md` 전용 경로(VERIFICATION.md 폴백 제외), Phase 6 반환 예시, 입력 명세에 `iteration`·`scenario_source` 추가. 기존 3 phase(design-review/spec-review/drift-recheck) 판정·Likert 척도·보고서 경로·`tools`(readonly) 무변경 (073) |
+| v1.3 | 2026-09-09 15:33 KST | scenario-rubric의 반복별 Markdown 보고서 생성을 제거하고 verdict JSON만 반환. 회차 이력은 op-scenario-gate의 `.scenario-gate-history.json`이 소유 (task 111/W-13) |
+| v1.4 | 2026-09-09 15:33 KST | 교체형이 아닌 목표와 적용 가능한 별도 경계가 없는 태스크를 통과시키도록 ⑤·⑥ 축의 N/A 판정 앵커 명확화 (task 111/W-13) |

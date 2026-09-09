@@ -1,0 +1,47 @@
+{
+  "scope": "read-only verify with temporary TASK inputs; no source/state mutation",
+  "rows": [
+    {
+      "case": "new_complete",
+      "exit_code": 0,
+      "result": {
+        "ok": true,
+        "command": "verify",
+        "clarification_check": "skipped",
+        "reason": "no '## 명확화 결과' section (backward-compat skip)"
+      }
+    },
+    {
+      "case": "new_missing_acceptance",
+      "exit_code": 0,
+      "result": {
+        "ok": true,
+        "command": "verify",
+        "clarification_check": "skipped",
+        "reason": "no '## 명확화 결과' section (backward-compat skip)"
+      }
+    },
+    {
+      "case": "legacy_complete",
+      "exit_code": 0,
+      "result": {
+        "ok": true,
+        "command": "verify",
+        "clarification_check": "pass"
+      }
+    },
+    {
+      "case": "legacy_missing_acceptance",
+      "exit_code": 1,
+      "result": {
+        "ok": false,
+        "command": "verify",
+        "error": "clarification_gate_unmet",
+        "message": "TASK 4요소(목표/범위/제약/완료기준) 미잠금 — 다음 단계 진입 거부 (PRINCIPLES §1 집행): ['완료기준']",
+        "missing": [
+          "완료기준"
+        ]
+      }
+    }
+  ]
+}

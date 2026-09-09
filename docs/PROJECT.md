@@ -34,7 +34,7 @@
 | `docs/` | 프로젝트 문서 | 아키텍처, 컨벤션 등 프로젝트 레벨 문서 |
 | `tasks/` | 태스크 산출물 | `{NNN}-{YYMMDD}-{스킬약어}-{태스크명}/` 형식의 작업 단위 폴더 |
 | `skills/` | 독립 스킬 소스 | 파이프라인 없이 단독 사용하는 스킬 (8종) |
-| `opal/skills/` | OPAL 스킬 소스 | 오케스트레이터, 단계 스킬 등 OPAL 전용 (45종) |
+| `opal/skills/` | OPAL 스킬 소스 | 오케스트레이터, 단계 스킬 등 OPAL 전용 (43종) |
 | `opal/agents/` | 워커 에이전트 소스 | 모든 서브에이전트 정의 (15종) |
 | `opal/tools/` | OPAL 도구 소스 | 결정론 집행 CLI (19종) |
 | `opal/core/` | 프레임워크 코어 | 레퍼런스, MCP 설정, 도구 |
@@ -73,15 +73,14 @@
 | `opal-pilot-write-tech` | opwt | 오케스트레이터 | 기획 산출물 네트워크 (PRD·TRD·정책서·IA) — TASK → ANALYSIS → PLAN → EXECUTE → QA → CLOSE. 워커 병렬 디스패치 + 교차 논리 검토·정합성 검증 |
 | `opal-pilot-project-dev` | oppd | 오케스트레이터 | 프로젝트 개발 라이프사이클 3 Phase — PLAN → WBS → EXECUTE. 기획은 opwt, 코드 실행은 opal-task-action-agent에 위임하고 PM이 조율 |
 
-**단계 스킬 (`op-dev-*` 7종)**
+**단계 스킬 (`op-dev-*` 6종)**
 
 | 컴포넌트 | 약어 | 유형 | 설명 |
 |----------|------|------|------|
-| `op-dev-analysis` | - | 단계 스킬 | ANALYSIS 단계 — 코드베이스 분석·기술 스택 식별·추천 스킬/MCP 매핑 (입력 TASK.md → 출력 ANALYSIS.md) |
-| `op-dev-plan` | - | 단계 스킬 | PLAN 단계 — 기능(F-NNN) 중심 구현 청사진. Flat/Multi-Feature 모드 자동 선택 (출력 PLAN.md) |
-| `op-dev-todo` | - | 단계 스킬 | TODO 단계 (Full Task 전용) — PLAN을 파일 단위 작업으로 분해 + QA 체크리스트·복잡도 판별 (출력 TODO.md) |
-| `op-dev-test-scenario` | - | 단계 스킬 | TEST-SCENARIO 단계 — 리스크 가설 표 기반 L1/L2/L3 계층 시나리오·4열 매핑 표 (출력 TEST-SCENARIO.md) |
-| `op-dev-execute` | - | 단계 스킬 | EXECUTE 단계 — 지정 체크리스트 기반 코드 작성·검증. 에이전트 이름 매핑으로 specialist/generalist 가이드 자동 선택 |
+| `op-dev-analysis` | - | 단계 스킬 | ANALYSIS 단계 — 프로젝트 지식·코드맵·PROJECT.md 선별 문서를 먼저 소비하고 남은 코드 차이만 분석 (입력 TASK.md → 출력 ANALYSIS.md) |
+| `op-dev-plan` | - | 단계 스킬 | PLAN 단계 — 결정·계약과 Work items에 담당·선행·병렬 그룹·변경 대상·검증 명령을 정의 (출력 PLAN.md) |
+| `op-dev-test-scenario` | - | 단계 스킬 | TEST-SCENARIO 단계 — PLAN 리스크 가설과 목표 커버 입력 기반 L1/L2/L3 계층 시나리오·검증 계약 생성 (출력 TEST-SCENARIO.md) |
+| `op-dev-execute` | - | 단계 스킬 | EXECUTE 단계 — PLAN Work items의 담당·순서·병렬 그룹 기준으로 코드 작성·검증. 필요한 docs 갱신은 PROJECT.md 레지스트리 기반 주입 문서 범위에서 수행 |
 | `op-dev-qa` | - | 기준 라이브러리 | Dev 문서 QA 검증 기준 — 별도 QA 단계 없이 PM Gate가 직접 참조 (검증 ID·QA-{단계}.md 형식) |
 | `op-dev-wireframe` | - | 단계 스킬 | WIREFRAME 단계 — wireframe-builder 스킬에 위임하여 wireframe.md 생성 |
 
@@ -89,10 +88,10 @@
 
 | 컴포넌트 | 약어 | 유형 | 설명 |
 |----------|------|------|------|
-| `opal-task-agent` | - | 서브에이전트 | 범용 워커 — 단계 스킬 경로를 받아 독립 컨텍스트에서 실행 |
-| `opal-plan-agent` | - | 서브에이전트 | PLAN 전문 워커 — 코드 분석·기능 중심 설계·테스트 시나리오 작성, 체크리스트 Step별 agent 배정 |
-| `opal-be-agent` | - | 서브에이전트 | 백엔드 전문 워커 — PLAN.md의 BE 영역 Step 구현 |
-| `opal-fe-agent` | - | 서브에이전트 | 프론트엔드 전문 워커 — PLAN.md의 FE 영역 Step 구현 |
+| `opal-task-agent` | - | 서브에이전트 | 범용 워커 — 단계 스킬 경로와 PM 주입 프로젝트 문서 목록을 받아 독립 컨텍스트에서 실행 |
+| `opal-plan-agent` | - | 서브에이전트 | PLAN 전문 워커 — 코드 분석·기능 중심 설계·테스트 시나리오 작성, sdlc-v2 Work items `담당` 배정 |
+| `opal-be-agent` | - | 서브에이전트 | 백엔드 전문 워커 — PLAN.md의 BE Work item 구현 |
+| `opal-fe-agent` | - | 서브에이전트 | 프론트엔드 전문 워커 — PLAN.md의 FE Work item 구현 |
 | `opal-planning-agent` | - | 서브에이전트 | 서비스 기획 전문 워커 — opwt EXECUTE 단계 투입 (정책서·IA·와이어프레임·WBS·API 분석) |
 | `opal-task-qa-agent` | - | 서브에이전트 | 범용 QA 워커 — qa_skill·검증 대상·단계명을 받아 독립 컨텍스트에서 검증 |
 | `opal-test-agent` | - | 서브에이전트 | 테스트 전문 워커 — TEST-SCENARIO.md 기반 동적 검증, BE/FE/E2E 3모드 |
@@ -103,6 +102,8 @@
 > 나머지 워커 5종은 각 파이프라인 섹션에 등재된다 — `opal-db-agent`(Data Design) · `opal-evaluator-agent`·`opal-loop-action-agent`(Project Loop) · `opal-security-checker`·`opal-convention-checker`(GC).
 
 > **트랙 라우팅 (Task 098)**: `//opd` 호출이어도 4축(설계 확정률·예상 변경 파일 수·신규 개념 유무·최고 검증 계층)을 전건(AND) 충족하면 `opds`로 자동 강등 진입한다. 판정 시점은 TASK 완료 직후 1회이며, 승격(`opds`→`opd`, PLAN 결과 시점)과 시점·임계가 상호배타여서 왕복 구조가 성립하지 않는다. 판정 불능·`## 확정된 설계 방향` 부재 시 fail-safe는 강등 불발(`opd` 유지)이다. 강등은 소유자 승인 왕복 없이 진입하고 4축 실측값을 사후 통보한다. 접합: opd STEP 1 직후 · opds §에스컬레이션 규칙 포인터. 임계값 수치는 SSOT에만 존치 — SSOT: `opal/core/references/harness/track-routing.md`.
+
+> **프로젝트 문서 주입 계약 (Task 111)**: Dev 파이프라인의 PM은 `docs/PROJECT.md`를 먼저 읽고 §프로젝트 문서 레지스트리의 적용 범위·참조 시점으로 작업 도메인에 필요한 프로젝트/기획/설계 문서를 선별해 워커에 주입한다. 개발 워커는 주입된 문서만 읽으며, `docs/` 전체나 고정 파일명을 자체 가정하지 않는다. `docs/PROJECT.md`가 없는 프로젝트에서만 기존 영역별 최소 폴백 문서를 허용한다.
 
 ## 주요 컴포넌트 (SDD 파이프라인)
 
@@ -221,9 +222,9 @@ TEST-SCENARIO 단계를 "목표 달성 검증"으로 재정의 — 루브릭 채
 | 문서 | 설명 | 용도 | 적용 범위 | 참조 시점 |
 |------|------|------|----------|----------|
 | `.opal/AGENT.md` | PM 프로필 | PM 역할 및 검토 기준 | Framework | 부트스트랩 시 자동 |
-| `docs/PROJECT.md` | 프로젝트 정의 (SSOT) | 프로젝트 개요, 원칙, 문서 허브 | Framework | 부트스트랩 시 자동 |
-| `docs/ARCHITECTURE.md` | 시스템 아키텍처 | 구조, 컴포넌트 관계, 배포 모델 | Framework | 개발 작업 시 항상 |
-| `docs/CONVENTIONS.md` | 코드 및 문서 컨벤션 | 네이밍, 파일 구조, 커밋 **메시지 형식·단위**, 구현 규칙(디스패치/@header/Citation/State/도구·배포 경계·플랫폼 분기). 승인 게이트·커밋 실행 시점 등 Guards 규칙 **원문**은 `opal/core/references/opal-harness.md` §1이 소유하고 본 문서는 포인터만 둔다 | Framework | 개발 작업 시 항상 |
+| `docs/PROJECT.md` | 프로젝트 정의·문서 레지스트리 (SSOT) | 프로젝트 개요, 원칙, 문서 허브, PM 컨텍스트 선별 기준 | Framework | 부트스트랩 및 워커 디스패치 전 |
+| `docs/ARCHITECTURE.md` | 시스템 아키텍처 | 구조, 컴포넌트 관계, 배포 모델 | Framework | PROJECT.md 레지스트리가 구조 변경·영향 분석에 필요하다고 지시할 때 |
+| `docs/CONVENTIONS.md` | 코드 및 문서 컨벤션 | 네이밍, 파일 구조, 커밋 **메시지 형식·단위**, 구현 규칙(디스패치/@header/Citation/State/도구·배포 경계·플랫폼 분기). 승인 게이트·커밋 실행 시점 등 Guards 규칙 **원문**은 `opal/core/references/opal-harness.md` §1이 소유하고 본 문서는 포인터만 둔다 | Framework | PROJECT.md 레지스트리가 구현·문서 컨벤션 판단에 필요하다고 지시할 때 |
 | `.opal/MEMORY.json` | 프로젝트 메모리 인덱스 (JSON SSOT) | 메모리·작업 히스토리·피드백 추적 (`memory/` 하위 메모리 파일 인덱스). 변경은 `memory-tool`만 수행 | Framework | 부트스트랩 시 자동 (`memory-tool show --brief` 브리핑) |
 | `README.md` | 프레임워크 공개 소개 문서 | Pilot 개념, 사용 사례, 프레임워크 철학 정의 | Framework | Pilot 추가/변경 시, 사용자 대면 문서 작업 시, 프레임워크 철학/방향 관련 작업 시 |
 | `docs/architecture-diagram/opal_framework_architecture.html` | 프레임워크 구조 다이어그램 (시각 SSOT) | 3층 구조·파이프라인·도구 관계 시각화 (태스크 086 산출) | Framework | 구조 설명·온보딩 시 |
@@ -237,6 +238,7 @@ TEST-SCENARIO 단계를 "목표 달성 검증"으로 재정의 — 루브릭 채
 
 | 날짜 | 변경 내용 |
 |------|----------|
+| 2026-09-09 | Dev 파이프라인 프로젝트 문서 주입 계약 반영 — PM이 `docs/PROJECT.md` 레지스트리로 작업 도메인·참조 시점별 문서를 선별 주입하고, 개발 워커는 주입 문서만 소비한다. PROJECT 부재 시에만 기존 영역별 최소 폴백 허용. PLAN 설명은 sdlc-v2 Work items `담당`·의존성·병렬 그룹 기준으로 정합. 태스크 111 |
 | 2026-09-06 | `@header` 이력 비기재 원칙 3층 적용 — 규정: `header-standard.md` §2.1(원칙 정본, 적용 범위 = `@header` JSON 블록 **전체**) · §2(이력 전용 필드 신설 금지 — `changelog`·`history`·`revisions` **이름 불문**) · §4.2(`description`·`depends`·`note`·`feature` 4필드 작성 가이드), `harness/header-rules.md`(갱신은 교체지 누적이 아님 [MUST]), `docs/CONVENTIONS.md` §@header 규칙 교체. 도구: `code-scan validate`에 `header_history` **비차단** 경고 3축 신설 — `description`·`note`는 서로 다른 태스크 번호 **distinct ≥ 2**(단발 출처 인용 1개는 허용), `undeclared_field`는 §2 미정의 필드 **존재 자체**(§7.2 매니페스트 전용 `draft`는 manifest 모드에서 제외). 자산: 43파일 정리(`description`·`note` 23건 + `changelog` 필드 28파일·81엔트리 제거), `@header` 총 바이트 122,752 → 75,810(−38.2%). code-scan `VERSION`은 v1.6.0 불변(additive 확장). 태스크 107 |
 | 2026-08-23 | 분석 코어 SSOT 신설 반영 — §주요 컴포넌트에 `analysis-core.md` 행 추가(ANALYSIS·PLAN 공유 절차 SSOT, 수치 복제 없이 경로 포인터만). 태스크 100 |
 | 2026-08-21 22:18 | §주요 컴포넌트 (Dev 파이프라인)에 **트랙 라우팅** 항목 신설 — `opal/core/references/harness/track-routing.md`(규칙 SSOT) 등재. `//opd` 4축 AND 자동 강등, 판정 시점 분리(강등=TASK 직후 / 승격=PLAN 결과)로 승격 규칙과 상호배타, fail-safe는 강등 불발. 임계값 수치는 SSOT 단독 보유(복제 0건) (098) |

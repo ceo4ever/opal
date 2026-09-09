@@ -32,8 +32,8 @@
 
 #### 오케스트레이터 공통 영역 (스킬 완료 후 후처리)
 
-3. **STEP 5(오케스트레이터 선택)에서 결정된 스킬약어**를 폴더명과 TASK.md 헤더 `적용 스킬` 필드에 반영한다.
-4. **모드 플래그(`--interactive` / `--semi-agentic` / `--agentic`)를 TASK.md 헤더 `모드` 필드에 반드시 기록한다** (`interactive` / `semi-agentic` (기본) / `agentic`). 모드 플래그가 없으면 기본값 `semi-agentic`.
+3. **STEP 5(오케스트레이터 선택)에서 결정된 스킬약어**를 폴더명과 `state init --skill`에 반영한다. 신규 `template: sdlc-v2` TASK.md에는 스킬 헤더를 쓰지 않는다. legacy TASK를 재개할 때만 기존 헤더를 해석 호환으로 읽는다.
+4. **모드 플래그(`--interactive` / `--semi-agentic` / `--agentic`)는 `state init --mode`에만 기록한다** (`interactive` / `semi-agentic` (기본) / `agentic`). 신규 `template: sdlc-v2` TASK.md에는 모드 헤더를 쓰지 않는다.
 
 4.5. **`--worktree`/`--wt` 플래그가 있을 때만 수행한다** (플래그가 없으면 이 스텝 전체를 건너뛰고 4 → 5로 직행한다 — 현행 동작 100% 유지).
 
@@ -106,4 +106,5 @@
 | v1.7 | 2026-08-13 16:57 | state-tool 행 원천 지시 정정 — `--rows-from` 서술을 오케스트레이터 `references/pipeline.json` SSOT 기준으로 교체(구형 `.md` 파싱 지시 제거). 10/10 pilot 전환에 맞춘 pilot 밖 정합 (090) |
 | v1.8 | 2026-08-15 16:30 | 오케스트레이터 공통 영역에 스텝 4.5(`--worktree`/`--wt` worktree 생성 훅) 신설 — `worktree-tool create` 호출·성공/실패 분기·DEC-2 실패 정책(롤백 금지, agentic 자동 계속 + AGENTIC-LOG 기록) 명문화 + 스텝 5 `state init` 코드블록에 `--worktree` 옵션 1행 추가. 기존 스텝 3·4·5·6 번호·본문 무변경 (092) |
 | v1.9 | 2026-08-16 13:22 | 스텝 5 `--next-action` 설명 — "`## 다음 액션` 초기값" → "`state.json` `next_action` 필드 초기값 (조회: `state-tool show`)"로 치환 — STATE.md 저널 전환에 맞춘 표 전제 어구 제거 (094) |
+| v1.10 | 2026-09-09 | 신규 sdlc-v2 TASK의 스킬·모드 헤더 기록을 제거하고 `state init --skill/--mode` 계약으로 한정. legacy 헤더는 재개 호환으로만 해석 (111) |
 | v1.10 | 2026-09-07 15:50 | 스텝 4.5에 허브 루트 해석 규칙 포인터 1줄 추가 — 워크트리에서 허브 고정 데이터(`tasks/`·`.opal/`)를 참조하는 경로 판정의 원문 SSOT는 `opal-harness.md` §2.5 (4)임을 지시 (109) |

@@ -24,7 +24,7 @@
 | 규칙 | 기존 SSOT | 본 문서 처리 |
 |------|----------|-------------|
 | **I-1** PM 직접 작업 시 docs 프리로드 | `opal/core/references/opal-pm.md` §2 | 0단계에서 "프리로드를 수행한다" 참조 |
-| **I-2** brain search → 후보 → 선택 페이지만 Read | `opal/core/references/pm/dispatch-process.md` §Step 1.5 | 1단계가 조회 흐름을 그대로 위임 |
+| **I-2** brain search → 후보 → 선택 페이지만 Read | `opal/core/references/pm/dispatch-process.md` Step 2 | 1단계가 조회 흐름을 그대로 위임 |
 | **I-3** 기존 분석 페이지 재사용 3분기 | `opal/skills/opal-brain/SKILL.md` §질의 절차 | 1단계는 **판정 결과만 소비**하고 분기 규칙을 복제하지 않음 |
 | **I-4** code-scan 무조건 호출·Glob/Grep 직행 금지 | `opal/core/references/pm/dispatch-process.md` §code-scan | 2단계 코드축 "어떻게 좁히는가" 셀에서 참조 |
 | **I-5** code-scan 빈 결과 폴백 분기 | `opal/core/references/harness/header-rules.md` §빈 결과 폴백 | §7 F-3이 분기 판정을 **위임**(분기·임계값 미기재) |
@@ -89,7 +89,7 @@
 - **입력**: 0단계의 질의 경계 + 축별 SSOT 경로 목록.
 
 - **행위**:
-  1. 질의 키워드로 brain을 조회한다 — 조회 흐름(후보 → 선택 → 주입)은 `opal/core/references/pm/dispatch-process.md` §Step 1.5를 따른다 (→ I-2).
+  1. 질의 키워드로 brain을 조회한다 — 조회 흐름은 `opal/core/references/pm/dispatch-process.md` Step 2를 따른다 (→ I-2).
   2. 동일 질의의 기존 분석 페이지에 대한 **재사용·갱신·신규 판정 결과를 소비**한다 (→ I-3, `opal/skills/opal-brain/SKILL.md` §질의 절차).
      - 판정이 **재사용**이면 해당 페이지를 답변 골격으로 삼고 2단계는 근거 재확인 범위로만 수행한다.
      - 판정이 **갱신**이면 그 페이지를 갱신 대상으로 표시해 4단계 거처 선판정에 넘긴다.

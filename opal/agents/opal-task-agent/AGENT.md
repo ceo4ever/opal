@@ -15,11 +15,11 @@ icon: "✨"
 2. 스킬 SKILL.md를 Read한다.
 3. 프로젝트 컨텍스트를 로드한다.
    - 태스크 폴더에서 프로젝트 루트를 추론한다 (`tasks/` 상위 디렉토리).
-   - `docs/PROJECT.md`가 존재하면 Read한다.
-   - 스킬 유형에 따라 추가 문서를 Read한다:
-     - `op-dev-*` 스킬: `docs/ARCHITECTURE.md`, `docs/CONVENTIONS.md` 추가
-     - 해당 도메인 문서: `docs/FRONTEND.md`, `docs/BACKEND.md` (존재 시)
-   - `docs/` 또는 개별 문서가 없으면 스킵한다.
+   - 오케스트레이터가 `docs/PROJECT.md`의 프로젝트 문서 레지스트리에서 작업 도메인·참조 시점으로 선별해 주입한 프로젝트/기획/설계 문서 목록을 확인한다.
+   - 주입된 문서 목록만 Read한다. 문서 전문을 산출물에 복제하지 말고, 적용할 제약·확인한 사실·변경 후보 문서만 기록한다.
+   - 워커가 `docs/ARCHITECTURE.md`, `docs/CONVENTIONS.md`, `docs/FRONTEND.md`, `docs/BACKEND.md` 또는 `docs/` 전체를 고정 가정해 추가 로드하지 않는다.
+   - 프로젝트에 `docs/PROJECT.md`가 없고 주입 문서 목록도 없을 때만 기존 최소 폴백을 허용한다: `op-dev-*`는 `docs/ARCHITECTURE.md`, `docs/CONVENTIONS.md`, 해당 도메인 문서(`docs/FRONTEND.md`, `docs/BACKEND.md`)를 존재 시 Read한다.
+   - `docs/` 또는 개별 문서가 없으면 스킵하고, 설계·검증에 영향을 주는 결측만 블로커나 한계로 보고한다.
 4. 스킬의 `personas/`에서 지정된 페르소나를 Read한다.
 5. 스킬의 references/에서 지정된 가이드를 Read한다.
 6. 스킬의 프로세스를 따라 산출물을 생성한다.
@@ -48,7 +48,6 @@ icon: "✨"
 | op-task-execute | standard |
 | op-dev-analysis | standard |
 | op-dev-plan | advanced |
-| op-dev-todo | light |
 | op-dev-test-scenario | light |
 | op-dev-execute | standard |
 | op-dev-wireframe | standard |
@@ -70,3 +69,4 @@ icon: "✨"
 | v1.1 | 2026-05-12 11:16 | 행동 규칙에 EXECUTE 진입 시 coding-principles.md §4 Read 의무 추가 — op-dev-execute / op-task-execute 계열 (001) |
 | v1.2 | 2026-06-21 10:05 | frontmatter 기본 model `standard` → `advanced` (L2 경량) |
 | v1.3 | 2026-07-17 13:11 | 권장 model 표 op-dev-analysis light → standard — opal-pilot-dev v4.5 ANALYSIS 상향과 정합 (소유자 지시, L2) |
+| v1.4 | 2026-09-09 15:05 | 프로젝트 컨텍스트 로딩을 `docs/PROJECT.md` 문서 레지스트리와 PM 주입 문서 우선으로 전환하고, 고정 docs 경로는 레지스트리 부재 시 최소 폴백으로 한정 (111) |

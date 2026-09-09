@@ -27,10 +27,11 @@
 - 허용: TASK 단계(하네스에서 "직접 수행"으로 정의), 각 SKILL.md에서 "직접 수행"으로 명시된 경우
 - 금지: "워커 디스패치"로 정의된 단계를 PM이 직접 실행
 
-### 명확화 게이트 (PRINCIPLES §1 집행)
+### TASK 확정 입력 게이트 (PRINCIPLES §1 집행)
 
-TASK 4요소(목표·범위·제약·완료기준)가 TASK.md "## 명확화 결과" 섹션에 잠기지 않으면 다음 단계(PLAN 등) 진입 불가.
-state-tool `verify --clarification-check`가 집행하며, 미충족 시 ERROR_CODES `clarification_gate_unmet`로 거부한다(agentic `--auto-pass` 우회 불가).
+신규 `template: sdlc-v2` TASK는 5개 필수 절(`Problem`, `Proposed outcome`, `Affected users and systems`, `Constraints`, `Acceptance criteria`)이 비어 있지 않아야 다음 단계로 진입한다. 상태·승인·스킬·모드는 TASK.md가 아니라 `state.json`이 소유한다.
+
+legacy TASK는 기존 `## 명확화 결과` 기반 검증을 재개 호환으로만 적용한다. state-tool `verify --clarification-check`가 템플릿별 계약을 집행하며, 미충족 시 ERROR_CODES `clarification_gate_unmet`로 거부한다(agentic `--auto-pass` 우회 불가).
 
 ### CLOSE 진입 게이트
 
@@ -55,7 +56,7 @@ state-tool `verify --clarification-check`가 집행하며, 미충족 시 ERROR_C
 | 워커 폴백 반복 (동일 작업 내 동일 폴백 유형 재발) | 1회 | 즉시 에스컬레이션 |
 | PLAN 재진입 (재설계 루프) | 2회 | scope별 에스컬레이션 (action=상위 scope로 승격 / wbs=PM 에스컬레이션 / trd=사용자 에스컬레이션) |
 | 시나리오 목표-커버 게이트 (루브릭 미달) | 3회 | 사용자 에스컬레이션 |
-| 워커 프로세스 비정상 종료 (스톨 · 응답 중 연결 종료) | 1회 (동일 컨텍스트 재개) | 새 컨텍스트로 분할 재배치 (분할 기준: `pm/dispatch-process.md` Step 6) |
+| 워커 프로세스 비정상 종료 (스톨 · 응답 중 연결 종료) | 1회 (동일 컨텍스트 재개) | 새 컨텍스트로 분할 재배치 (분할 기준: `pm/dispatch-process.md` Step 1) |
 
 > **재설계 루프 = 액션 VERIFY 실패가 '설계 수준'으로 분류될 때 PLAN으로 재진입하는 횟수 상한. action-agent·verification-loop-guide는 이 수치를 복제하지 않고 본 표를 참조한다.**
 
@@ -78,7 +79,7 @@ state-tool `verify --clarification-check`가 집행하며, 미충족 시 ERROR_C
 | 모듈 | 역할 | 로드 조건 | 탐색 경로 |
 |------|------|----------|----------|
 | `opal-harness-semi-agentic.md` | semi-agentic 모드 (기본 — PLAN까지 interactive 흐름, EXECUTE 이후 agentic 흐름, CLOSE 게이트 공통) | 모드 플래그 없음 (기본) 또는 `--semi-agentic` | `~/.opal/references/opal-harness-semi-agentic.md` |
-| `opal-harness-interactive.md` | interactive 모드 (Gates — 단계/QA/PM/체크리스트 게이트) | `--interactive` 플래그 **있음** | `~/.opal/references/opal-harness-interactive.md` |
+| `opal-harness-interactive.md` | interactive 모드 (단계·PM Gate) | `--interactive` 플래그 **있음** | `~/.opal/references/opal-harness-interactive.md` |
 | `opal-harness-agentic.md` | agentic 모드 (PM 대행, 자율 검토, Gate 루핑, AGENTIC-LOG) | `--agentic` 플래그 **있음** | `~/.opal/references/opal-harness-agentic.md` |
 
 ### 로딩 규칙
@@ -110,7 +111,7 @@ Lazy 로드 모듈. 각 §의 stub이 로드 시점과 파일 경로를 지시�
 | Coding Principles | `harness/coding-principles.md` | EXECUTE 단계 진입 시 (코드 변경 워커) / PM "그냥 해" 진입 시 | §10 |
 | RED-first 규칙 | `harness/red-first.md` | TEST-SCENARIO 작성·EXECUTE 진입 시 | §1.5 |
 | 트랙 라우팅 | `harness/track-routing.md` | `//opd` 진입 시 트랙 강등 판정 수행 시점 (TASK 완료 직후) | §4 |
-| 분석 코어 | `harness/analysis-core.md` | ANALYSIS 단계 진입 시 / PLAN 2단계(기능별 분석) 진입 시 | §2 |
+| 분석 코어 | `harness/analysis-core.md` | ANALYSIS 단계 진입 시 | §2 |
 
 > 탐색 경로: `{프로젝트}/.opal/references/harness/{file}` → `~/.opal/references/harness/{file}`
 
@@ -121,7 +122,7 @@ Lazy 로드 모듈. 각 §의 stub이 로드 시점과 파일 경로를 지시�
 >
 > 적용 주체: PM
 > 적용 시점: PM Gate 문서검증 시
-> PM Gate 검증: QA 산출물 파일명이 표준을 따르는가, 체크리스트 갱신 규칙이 적용되었는가
+> PM Gate 검증: QA 산출물 파일명이 표준을 따르는가. legacy 체크리스트가 있는 태스크는 갱신 규칙이 적용되었는가
 
 ### Citation Rules 적용 의무
 
@@ -132,10 +133,10 @@ Lazy 로드 모듈. 각 §의 stub이 로드 시점과 파일 경로를 지시�
 
 ### 분석 코어 적용 의무
 
-> **[필수 로드]** ANALYSIS 단계 진입 시 / PLAN 2단계(기능별 분석) 진입 시 `harness/analysis-core.md`를 Read한다.
+> **[필수 로드]** ANALYSIS 단계 진입 시 `harness/analysis-core.md`를 Read한다.
 >
-> 적용 주체: PM(오케스트레이터), ANALYSIS·PLAN 워커
-> 로드 시점: ANALYSIS 단계 진입 시 / PLAN 2단계(기능별 분석) 진입 시
+> 적용 주체: PM(오케스트레이터), ANALYSIS 워커
+> 로드 시점: ANALYSIS 단계 진입 시. PLAN은 확정된 ANALYSIS를 소비하며 같은 조사를 반복하지 않는다.
 
 ---
 
@@ -227,7 +228,7 @@ Lazy 로드 모듈. 각 §의 stub이 로드 시점과 파일 경로를 지시�
 >
 > 적용 주체: PM(오케스트레이터)
 > 적용 시점: TASK 단계 진입 / 태스크 채번 / 저장 경로 판단 시
-> PM Gate 검증: TASK.md 헤더 필드 준수, STATE.md 생성 완료, 저장 경로 규칙 준수
+> PM Gate 검증: 신규 sdlc-v2는 TASK 5절 계약과 state.json 스킬·모드 기록, legacy는 TASK.md 헤더 필드 준수. 공통으로 STATE.md 생성 완료와 저장 경로 규칙 준수
 
 ---
 
@@ -281,49 +282,13 @@ opal-agent 채널 디스패치 시 레벨→실모델 치환은 호출 주체 �
 
 ---
 
-## 9. OPAL Tools (도구)
+## 9. 실행 capability
 
-> **Lazy 트리거**: 파일 처리(xlsx, pdf, 이미지 등) 또는 데이터 변환 작업 요청 시
+고정된 도구·MCP·스킬 목록은 런타임 capability를 보장하지 못하므로 이 문서에 보존하지 않는다.
 
-### 도구 우선 원칙
+PM은 워커 디스패치 직전에 `pm/dispatch-process.md` Step 6의 `## 실행 capability` 블록으로 현재 세션에서 실제 호출 가능한 capability만 주입한다. 워커는 그 블록에 없는 스킬·MCP·외부 도구가 있다고 가정하지 않는다.
 
-파일 처리나 데이터 변환이 필요할 때, **에이전트가 직접 코드를 작성하기 전에 OPAL 도구를 먼저 확인한다.**
-
-1. `~/.opal/references/tools.md`를 Read하여 사용 가능한 도구 목록을 확인한다
-2. 적합한 도구가 있으면 해당 도구를 Bash로 호출한다
-3. 도구가 없을 때만 직접 코드를 작성하거나 에이전트를 디스패치한다
-
-### 도구 호출 방식
-
-OPAL 도구는 모두 `~/.opal/tools/{tool-name}/run.sh` 래퍼를 통해 호출한다.
-출력은 JSON이며, `"ok": false`이면 `"error"` 필드를 확인하여 에스컬레이션한다.
-
-```bash
-# 올바른 예 — 래퍼 스크립트 호출
-~/.opal/tools/xlsx-tool/run.sh info file.xlsx
-
-# 출력 확인
-{ "ok": true, "command": "info", "sheets": [...] }
-```
-
-### 현재 등록된 도구
-
-| 도구 | 용도 | 트리거 조건 |
-|------|------|------------|
-| xlsx-tool | xlsx 읽기/쓰기/검색 | xlsx 파일 처리 요청 |
-| state-tool | 파이프라인 현황판 JSON SSOT 관리 (9개 서브 명령: `init`/`show`/`advance`/`mark`/`block`/`validate`/`add-row`/`status`/`gate-pass`) | TASK 단계 시작 / Gate 직후 / 추가작업 진입 |
-| brain-tool | 프로젝트 브레인 지식 위키 결정론적 집행 — 8 서브명령 `init`/`add-page`/`index`/`log`/`search`/`sync-header`/`lint`/`validate` | `//opbr` 또는 brain 참조 시 |
-| test-tool | 테스트 단계별 도구 결정론적 집행 — 9서브명령 resolve/check/unit/integration + scenario-init/lock/mark/status/red (+scenario-red — RED 증거 tool-gated red_confirmed 갱신) | EXECUTE/TEST 단계 진입 시 |
-| code-scan | 코드 `@header` 메타블록 스캔 + `.opal/code-map/` 헤더 작성층 결정론적 집행 — 15서브명령 `scan`/`domain`/`layer`/`search`/`exports`/`summary`/`depends`/`missing`/`discover`/`scaffold`/`target`/`validate`/`feature`/`split`/`init`. 과대 매니페스트를 `shardPolicy`(프로젝트 > 전역 `~/.opal/setting.json` > 코드 상수 3단 우선순위) 기반 바이트·엔트리 2축으로 비차단 열거하고 `split`으로 분할(표준단어사전 옵셔널 참조), `init`으로 설정 초안 생성 | 코드 구조·위치 파악 시 / 헤더 작성 위치 판정·code-map 무결성 검증 시 / 매니페스트 분할·설정 초기화 시 |
-| cmux-tool | cmux browser 자동화 래퍼 — 12+1 서브명령(웹 크롤링·스냅샷·스크린샷·E2E) | 브라우저/localhost 접근·웹 테스트 시 |
-| tool-scan | 도구·MCP·스킬 상황 검색 + live 사용법 확인 — 5서브명령 list/which/usage/resolve/check | 도구 선택·정확한 사용법 확인 시 |
-| backlog-tool | backlog.json SSOT 관리 — 7 서브명령 init/add-task/select-next/mark/update-task/done-check/show (oppl 백로그) | oppl 루프(백로그 생성·태스크 선택·종료 판정) 시 |
-| memory-tool | 프로젝트 메모리 인덱스·히스토리 결정론적 집행 — 9서브명령 init/append/update/promote/prune/migrate/show/review/delete. 메모리→docs/brain 졸업 워크플로우·히스토리 FIFO5·요약 길이캡·라이프사이클·마커 직접편집 금지·매 변경 후 자가검토(review)·dead/superseded 정리(delete 무손실 가드) | 메모리 등록·정리·이관 시 |
-| git-sync-tool | 워크스페이스 git 저장소 일괄 동기화 — `sync <경로> [--root <경로>]` 단일 서브명령. 직속 자식 1단계 순회 + clean/ff-only pull, 5종 skip 판정(dirty/diverged/detached/no-upstream/fetch-failed) 후 JSON 반환. `--root`는 순회 대상 밖 상위 root 저장소를 대상 선두에 추가(`.git` 없으면 제외·중복 미계상). 문제 저장소 자율 조치 없음(skip·보고). git 2.22+ | 워크스페이스 여러 저장소 최신화 시 (opal-workspace-sync 스킬이 호출) |
-| opal-action-monitor | oppl 태스크 진행 현황판 렌더 — `<task_folder>/.oppl-run/` 산출물(events.jsonl/result.json/exitcode/journal.md 등) 파싱, 텍스트/`--json`/`--watch` 3모드, 읽기 전용 | oppl 태스크 진행 현황 관측 / 루프 액션 에이전트 실행 관측 시 |
-| worktree-tool | 태스크별 코드 작업본 git worktree 격리 결정론 집행 — 4서브명령 `create`/`list`/`status`/`remove`. `.opal/worktree.json` 선언 기반으로 multi-repo(레포별 worktree)·monorepo(sparse-checkout) 2유형 흡수, `.gitignore` 멱등 보장, `remove` 3중 가드(dirty/unpushed/미머지). 자동 커밋·자동 머지·자동 제거 없음. git 2.25+ | `--worktree`/`--wt` 태스크의 TASK 후처리 / CLOSE 정리 안내 / 사용자 수동 회수 시 |
-
-> 전체 사용법: `~/.opal/references/tools.md`
+구조상 필수인 `state-tool`과 `test-tool` 호출은 각 소유 문서가 직접 명령을 가진다. 예: 상태 전이는 본 문서 §3과 `harness/task-process.md`, 시나리오 커버리지는 `harness/scenario-gate.md`와 테스트 스킬 가이드가 소유한다.
 
 ---
 
@@ -342,6 +307,7 @@ OPAL 도구는 모두 `~/.opal/tools/{tool-name}/run.sh` 래퍼를 통해 호출
 
 | 버전 | 날짜 | 내용 |
 |------|------|------|
+| v7.5 | 2026-09-09 15:33 KST | analysis-core 로드 시점을 ANALYSIS로 한정. PLAN은 확정 ANALYSIS를 소비하고 같은 조사를 반복하지 않도록 적용 주체·시점 정합 (task 111/W-13) |
 | v1.20 | 2026-09-07 23:30 | §2.5 (4) 부칙 「탐색 우선순위」에 **적용 범위 상한** 명문화 — 이 탐색은 **cwd가 워크트리 안일 때만** 수행하며 상한은 허브다. 워크트리 밖에서 수행하면 `.git`·`CLAUDE.md` 저장소 경계 마커를 무시하고 상향해 `.opal/`을 가진 임의의 조상(예: `$HOME`)을 스캔 루트로 삼아 저장소 밖 파일이 스캔 결과에 실리고 상위 디렉터리 설정 주입 경로가 열린다(보안 진단 GC-001) (109) |
 | v1.19 | 2026-09-07 16:10 | §2.5 (4) 부칙에 `탐색 우선순위` 추가 — 자기 `.opal/`을 가진 첫 조상이 프로젝트 루트이고 세그먼트 정규화는 그 탐색이 실패했을 때의 해석이다. 무조건 정규화는 자기완결 프로젝트(테스트 픽스처)가 워크트리 하위에 있을 때 그것을 허브로 덮어써 4항을 위반한다 (109) |
 | v1.18 | 2026-09-07 15:50 | §2.5 하위에 `(4) 허브 루트 해석 규칙` 신설 — `.opal-worktrees` 세그먼트 부모를 허브 루트로 보는 판정(정의·깊이 무관·허브 항등·적용 대상 경계·의미 한계 5항)과 부칙 3건(첫 출현 기준·유사 이름 비매칭·`doctor.py` 예외)의 원문 SSOT. 런타임 3구현(`dashboard/backend/paths.py`·`brain-tool`·`code-scan`)이 이 항을 포인터로 가리키며, 골든 케이스 표 `hub-root-cases.json`(C-1~C-7)이 실행 가능한 표현이다 (109) |
@@ -404,3 +370,4 @@ OPAL 도구는 모두 `~/.opal/tools/{tool-name}/run.sh` 래퍼를 통해 호출
 | v7.0 | 2026-08-15 16:16 | §2 모듈 구조 직후에 **§2.5 워크스페이스 축(`--worktree`/`--wt`)** 신설 — 모드 축과 직교하는 별개 축 선언 + `--wt` 미사용 시 현행 동작 100% 유지 + `.opal/worktree.json` 부재 시 동작(비차단·안내) 3항목. §9 등록 도구 표에 worktree-tool 행 추가(4서브명령 create/list/status/remove) (092) |
 | v7.1 | 2026-09-02 14:05 | §9 등록 도구 표 git-sync-tool 행 현행화 — `sync`에 `--root <경로>` 반영(순회 대상 밖 상위 root 저장소를 대상 선두 추가, `.git` 없으면 제외, 중복 미계상). `<프로젝트>/workspace` 순회 시 프로젝트 root repo 누락 교정 |
 | v7.2 | 2026-09-02 17:22 | 에이전트명·소유자 호칭 리터럴 제거 — 규범 산문은 역할어(`PM`/`사용자`/`소유자`)로, 산출물·보고 문면은 `{owner_name}` 플레이스홀더로 전환해 런타임에 소유자 호칭으로 대체된다. 프레임워크 재사용성 확보 (L2 직접 수정) |
+| v7.3 | 2026-09-09 | §9 정적 도구 카탈로그와 tools.md 의존을 제거하고, PM dispatch의 런타임 capability 주입 계약으로 전환. 구조상 필수 state-tool/test-tool 명령은 각 소유 문서 포인터로 한정 (111) |

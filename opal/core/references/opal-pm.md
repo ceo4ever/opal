@@ -138,7 +138,9 @@ PM은 (1) 최소 보장 문서 주입, (2) 작업 영역 감지 기반 트리거
 
 `{프로젝트}/.opal/code-scan.json`의 생성/갱신은 PM이 담당한다. 생성 시점, 갱신 트리거, PM Gate 확인 절차, 최소 JSON 구조는 별도 문서에서 관리한다.
 
-**코드 변경·코드 탐색 작업의 디스패치 전 code-scan 호출은 무조건이며**(상세 `pm/dispatch-process.md §code-scan 사전 범위 파악`), scan.json 부재 시 PM이 즉석 자동 생성한다(`pm/code-scan-management.md §생성 시점`).
+기존 코드맵이 있으면 디스패치 전에 먼저 조회한다(`pm/dispatch-process.md` Step 2). 코드맵이 없으면
+이번 디스패치를 위해 즉석 생성하지 않고 필요한 범위를 직접 탐색한다. 신규 생성·구조 변경으로
+코드맵 자체의 갱신이 필요한 시점은 `pm/code-scan-management.md`가 소유한다.
 
 > 상세: `opal/core/references/pm/code-scan-management.md` 참조.
 > Lazy 트리거: code-scan.json 갱신 필요 시.
@@ -260,21 +262,17 @@ PM(대화)는 원칙적으로 PM이 직접 수행하며 워커를 디스패치�
 | 키워드/패턴 포함 파일 탐색 | `code-scan search <pattern>` (전체 @header 필드, 정규식 지원) |
 | 의존 관계 파악 | `code-scan depends <module>` |
 
-**원칙**: 전체 파일 Read 전에 code-scan으로 범위를 좁혀 토큰 낭비를 줄인다.  
-`.opal/code-scan.json` 부재 시 PM이 즉석 자동 생성(`code-scan-management.md §생성 시점`) 후 활용. 자동 생성으로도 빈 결과면 `header-rules.md §빈 결과 폴백`을 따른다.
+**원칙**: 기존 코드맵이 있으면 전체 파일 Read 전에 범위를 좁힌다. 코드맵이 없거나 현재 변경을
+포함하지 않으면 필요한 경로를 직접 탐색하고, 구조 변경 완료 뒤 관리 규칙에 따라 갱신한다.
 
 #### 2단 소비 절차
 
 | 단 | 수단 | 목적 | 전환 조건 |
 |----|------|------|----------|
-| 1차 | `code-scan scan`/`domain`/`layer`/`search`/`exports`/`depends` | **범위 축소** — 후보 파일 집합 확정 | 항상 먼저. 건너뛸 수 없다 |
-| 2차 | Grep / Glob | **상세 확인** — 확정된 후보 파일 안의 본문·줄번호 확인 | 1차로 후보가 확정된 뒤. 또는 `harness/header-rules.md` §빈 결과 폴백 ① 매칭 0건(`search`/`exports` 결과 0건 → Glob/Grep 보강) · ② 저커버리지(`coverage.percent` 30% 미만 → code-scan + Glob/Grep 동시) 발동 시 |
+| 1차 | 기존 code-scan | **범위 축소** — 후보 파일 집합 확정 | 코드맵이 있을 때 |
+| 2차 | Grep / Glob | **상세 확인** — 후보 안의 본문·줄번호 또는 코드맵이 없는 범위 확인 | 1차 뒤, 매칭 부족, 코드맵 부재 |
 
-`pm/dispatch-process.md` §code-scan 사전 범위 파악의 "Glob/Grep 직행 금지"는 **1차를 건너뛴 직행**을 금지하는 것이고, 2차 전환은 1차를 수행한 뒤의 정당 경로다 — 두 규정은 적용 지점이 다른 별개 규칙이며 충돌하지 않는다.
-
-아래 **사용자 오버라이드**는 1차 자체를 면제하는 **소유자 권한 행사**이고, 위 2차 전환은 1차를 수행한 뒤의 **PM 자율 절차 진행**이다. 전자는 근거 인용 의무의 판정 대상이 아니며(`harness/citation-rules.md` §9 (f)), 후자는 1차 산출물이 전제 조건이다.
-
-**사용자 오버라이드**: 사용자가 'grep으로 해'·'직접 찾아' 등 특정 도구를 명시하면, code-scan 우선 원칙을 보류하고 지정 도구로 즉시 전환한다 (소유자 주도성 원칙 — `opal-harness.md §1`).
+사용자가 특정 탐색 도구를 지시하면 그 지시를 우선한다.
 
 #### brain ↔ code-scan 역할 분담
 

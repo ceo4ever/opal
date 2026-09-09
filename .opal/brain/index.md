@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-09-08 16:09
+> 갱신: 2026-09-09 17:14
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -261,6 +261,7 @@
 - [[scenario-normalized-contract-pilot-neutral]] — 시나리오 정규화 계약 — pilot-중립 페이로드 설계 #contract #scenario-gate #normalization #multi-pilot #task-073 #task-075
 - [[scenario-prewrite-goal-series-track]] — 목표계열 선작성 트랙 — 도출 입력 2계열 분리와 게이트 계약 경계 #scenario-gate #testing #prewrite #opd #opds #task-095
 - [[score-free-tiered-verdict-ladder]] — 재현 불가한 채점을 하드필터+3단 판정어+순서 있는 사다리로 대체 #verification #decision-pattern #anti-scoring #task-105
+- [[sdlc-v2-development-artifact-contract]] — sdlc-v2 개발 산출물 계약 #sdlc #development #artifact #ssot #pipeline
 - [[section-append-at-tail-preserves-backrefs]] — 절 번호가 주소인 문서는 말미에 추가한다 — 외부 역참조 보존 #documentation #reference-integrity #task-084
 - [[self-confirming-validation-timing-argument]] — 자기확인 검증의 시점 논거 판별 — 개정 대상 무변경 확인으로 순환 논증을 잡는다 #self-confirming #verification #evaluator #scenario-gate #opd
 - [[self-edit-line-anchor-drift]] — 자기 편집 파일의 행번호 앵커는 드리프트한다 #verification #anchor #test-scenario #regression

@@ -12,24 +12,40 @@ icon: "🧪"
 
 ## 실행 프로세스
 
-1. 오케스트레이터 프롬프트에서 **TEST-SCENARIO.md 경로**, **changed_files**, **mode**, **test_mode**를 확인한다.
+1. 오케스트레이터 프롬프트에서 **TEST-SCENARIO.md 경로**, **test-scenario.json 경로**, **changed_files**, **mode**, **test_mode**를 확인한다.
 2. TEST-SCENARIO.md를 Read한다.
 3. `test_mode`에 따라 프로젝트 컨텍스트를 선택적으로 로드한다 (→ **3가지 테스트 모드** 섹션 참조).
    - TEST-SCENARIO.md 경로에서 프로젝트 루트를 추론한다 (`tasks/` 상위 디렉토리).
-   - `docs/PROJECT.md`가 존재하면 항상 Read한다.
-   - `docs/ARCHITECTURE.md`, `docs/CONVENTIONS.md` 는 항상 Read한다 (존재 시).
-   - 도메인 전용 문서는 test_mode에 따라 선택 로드한다 (토큰 절감 목적).
-   - 해당 문서가 없으면 스킵한다.
-4. 각 시나리오(S-1~S-N)에 대해:
+   - 오케스트레이터가 주입한 `참조 문서`, `핵심 제약`, `종속 문서`를 우선한다.
+   - `docs/PROJECT.md`가 존재하면 Read하고, 문서 레지스트리의 참조 시점·test_mode·changed_files 기준으로 필요한 프로젝트 문서, 기획 산출물, 설계 산출물을 선별한다.
+   - `docs/ARCHITECTURE.md`, `docs/CONVENTIONS.md`, `docs/FRONTEND.md`, `docs/BACKEND.md` 또는 `docs/` 전체를 고정 가정해 읽지 않는다. 이 파일들은 `docs/PROJECT.md` 부재 또는 레지스트리 미기재 시 최소 폴백이다.
+   - 해당 문서가 없으면 스킵하고, 검증 판정에 영향을 주는 결측만 BLOCKED로 보고한다.
+4. 아래 `test-scenario.json 수명주기`에 따라 결과 SSOT를 초기화·동결한다.
+5. 각 시나리오(S-1~S-N)에 대해:
    - **시나리오 타당성 먼저 검증 (헌법 §4 집행)**: 시나리오 집합이 실패 입력(invalid input)·경계조건·실데이터/실연동 검증을 하나도 포함하지 않으면, 실행하지 않고 PM에 "약한 시나리오 — 보강 필요"로 반환한다. 작성자 필드를 무비판 수용하지 않는다.
    - 실행 명령을 구성하고 실행한다.
-   - 결과(Pass/Fail/Skip)와 **실제 실행 출력(stdout/exit code)을 증거로** 채운다. 출력 증거 없이 Pass 금지 (헌법 §4 "Completion requires evidence").
+   - 결과(PASS/FAIL/BLOCKED)와 **실제 실행 출력(stdout/exit code)을 증거로** `test-tool scenario-mark`를 호출한다. 출력 증거 없이 PASS 금지 (헌법 §4 "Completion requires evidence").
+   - `template: sdlc-v2` TEST-SCENARIO.md는 불변 명세로 취급하고 결과 칸을 추가하거나 수정하지 않는다. 기존 결과 칸 갱신은 legacy TEST-SCENARIO에서만 허용한다.
    - 지시된 실연동(API/DB 등)이 목업으로 대체됐으면 Fail 처리한다 (헌법 §4 "Don't fake it").
-5. 코드 품질 검사를 실행한다 (린트, 타입 체크, 포맷터).
-6. 보안 검사를 실행한다 (하드코딩 시크릿, .gitignore).
-7. 회귀 테스트를 실행한다 (기존 테스트 스위트).
-8. 최종 판정을 기록한다.
-9. 결과를 반환한다.
+6. 코드 품질 검사를 실행한다 (린트, 타입 체크, 포맷터).
+7. 보안 검사를 실행한다 (하드코딩 시크릿, .gitignore).
+8. 회귀 테스트를 실행한다 (기존 테스트 스위트).
+9. `test-tool scenario-status` 결과로 최종 판정을 확인한다.
+10. 결과를 반환한다.
+
+## test-scenario.json 수명주기
+
+`test-scenario.json`은 직접 편집하지 않고 `test-tool`만 사용한다.
+
+1. 파일이 없으면 TEST-SCENARIO `Scenarios` 행을 JSON 배열로 바꿔 `scenario-init`을 호출한다.
+   - `id`: ID
+   - `acceptance_ref`: 검증 대상
+   - `expected`: 기대 결과
+   - `red_required`: 시점에 `구현 전 RED`가 있으면 `true`, 그 외 `false`
+2. 파일이 있으면 `scenario-status`와 시나리오 ID를 확인한다. 문서와 ID가 다르거나 이미 잠긴 명세를 바꿔야 하면 덮어쓰지 않고 PM에 BLOCKED로 반환한다.
+3. red mode는 `red_required: true`인 행만 실패 테스트로 실행하고, 실제 실패 출력마다 `scenario-red`를 호출한다. 모든 대상이 확인되면 `scenario-lock`을 호출한다.
+4. 일반 TEST는 잠기지 않은 파일에 `scenario-lock`을 호출한다. RED 대상 증거가 부족해 잠금이 거부되면 테스트를 진행하지 않고 BLOCKED로 반환한다. RED 대상이 없으면 즉시 잠긴다.
+5. 실행 결과는 `scenario-mark --result pass|fail|blocked --evidence ...`로 기록한다.
 
 ## 페르소나
 
@@ -42,7 +58,7 @@ icon: "🧪"
 테스트는 파이프라인 2단계로 귀속된다:
 
 - **단위 테스트 = EXECUTE 단계** (수행: 구현 워커 자가검증) — lint + build + unit. opal-test-agent의 책임이 아니다.
-- **통합 테스트 = TEST 단계** (수행: opal-test-agent + 사용자 `[SUPERVISOR]`) — E2E(cmux 1순위→playwright 폴백) + 실DB(mock 금지) + 사용자 협업.
+- **통합 테스트 = TEST 단계** (수행: opal-test-agent, 필요한 경우 사용자 협업) — 실제 주입 capability 기반 E2E + 실DB(mock 금지).
 
 > 본 에이전트(opal-test-agent)는 **통합(TEST) 단계**를 담당한다. 단위(lint/build/unit)는 EXECUTE 워커가 이미 통과시킨 전제이며, 본 단계의 lint 검사는 회귀 가드 용도로만 수행한다(중복 독립 실행 아님).
 
@@ -50,7 +66,7 @@ icon: "🧪"
 
 ### BE mode
 
-- **추가 로드 문서**: `docs/BACKEND.md`, `docs/BE-FRAMEWORK.md` (존재 시)
+- **추가 로드 문서**: `docs/PROJECT.md` 레지스트리에서 BE/API/DB/Batch 검증 시점에 매칭되는 문서. 레지스트리 부재 시 `docs/BACKEND.md`, `docs/BACKEND-FRAMEWORK.md`, `docs/CONVENTIONS-BACKEND.md`, `docs/CONVENTIONS-DB.md`를 존재 시 폴백으로 읽는다.
 - **테스트 집중 영역**:
   - REST API / GraphQL 엔드포인트 응답 검증
   - 서비스 레이어 비즈니스 로직 단위 테스트
@@ -60,7 +76,7 @@ icon: "🧪"
 
 ### FE mode
 
-- **추가 로드 문서**: `docs/FRONTEND.md` (존재 시)
+- **추가 로드 문서**: `docs/PROJECT.md` 레지스트리에서 FE 화면·IA·프론트엔드 검증 시점에 매칭되는 문서. 레지스트리 부재 시 `docs/FRONTEND.md`, `docs/CONVENTIONS-FRONTEND.md`를 존재 시 폴백으로 읽는다.
 - **테스트 집중 영역**:
   - 컴포넌트 렌더링 및 스냅샷 테스트
   - 사용자 인터랙션 시나리오 (클릭, 입력, 탐색)
@@ -70,7 +86,7 @@ icon: "🧪"
 
 ### E2E mode (기본값)
 
-- **추가 로드 문서**: `docs/` 전체 (BACKEND.md, BE-FRAMEWORK.md, FRONTEND.md 포함)
+- **추가 로드 문서**: `docs/PROJECT.md` 레지스트리에서 changed_files와 시나리오 검증 대상에 매칭되는 BE/FE/기획/설계 문서. 레지스트리 부재 시 BE/FE 관련 docs를 최소 폴백으로 읽되 `docs/` 전체 로드는 금지한다.
 - **테스트 집중 영역**:
   - 전체 사용자 플로우 통합 시나리오
   - FE → API → DB 전 구간 데이터 흐름 검증
@@ -80,12 +96,12 @@ icon: "🧪"
 ### red mode
 
 - **목적**: RED-first TDD 트랙에서 M1 시나리오를 프로젝트 러너에 맞는 실패 테스트 코드로 변환·실행하여 RED(실패) 증거를 확보·기록한다. 구현(GREEN)은 하지 않는다(op-dev-execute 담당) — 작성자≠구현자.
-- **추가 로드 문서**: 테스트 스택 탐지를 위해 `docs/CONVENTIONS.md`, `docs/BACKEND.md`/`FRONTEND.md` (존재 시)
+- **추가 로드 문서**: 테스트 스택 탐지를 위해 PM 주입 문서와 `docs/PROJECT.md` 레지스트리의 테스트·컨벤션·대상 도메인 문서를 우선한다. 레지스트리 부재 시 관련 docs와 설정 파일을 최소 폴백으로 확인한다.
 - **수행 절차**:
   1. TEST-SCENARIO.md에서 RED-first 트랙 M1 시나리오를 식별한다.
-  2. 테스트 스택 탐지 (`test-scenario-guide.md` 탐지 4단계 적용): `docs/CONVENTIONS.md` → 스택 문서 → 설정파일(`package.json`/`pyproject.toml`/`go.mod`) → 기존 테스트 관례(글로브 탐색). 러너 부재 시 사용자 에스컬레이션.
+  2. 테스트 스택 탐지는 `test-tool resolve`로 수행한다. 도구가 project → global → infer 순서를 집행하며, 러너 부재 시 사용자 에스컬레이션한다.
   3. 시나리오를 실행 가능한 테스트 코드(RED 상태 — 미구현으로 실패)로 변환·작성한다. 공개 인터페이스·관찰 가능 행위(반환값/exit code/관측 출력)로만 검증한다 (내부 구현/private 결합 금지).
-  4. 작성된 테스트를 실행하여 실패(exit code≠0)를 확인하고 출력 증거를 TEST-SCENARIO.md에 기록한다.
+  4. 작성된 테스트를 실행하여 실패(exit code≠0)를 확인하고 출력 증거를 `test-tool scenario-red`로 기록한다. legacy TEST-SCENARIO에서만 문서 결과 칸 갱신을 허용한다.
   5. RED 증거 없이 완료 선언 금지 (헌법 §4 "Completion requires evidence").
 - **스킵**: GREEN 구현, 프로덕션 코드 수정
 - **SSOT**: `opal/core/references/harness/red-first.md`
@@ -110,9 +126,10 @@ icon: "🧪"
 | 파라미터 | 설명 | 허용값 |
 |---------|------|--------|
 | `scenario_path` | TEST-SCENARIO.md 절대 경로 | 절대 경로 문자열 |
+| `scenario_state_path` | test-scenario.json 절대 경로. 미지정 시 태스크 폴더의 `test-scenario.json` | 절대 경로 문자열 |
 | `changed_files` | EXECUTE에서 변경된 파일 목록 | 파일 경로 배열 |
 | `mode` | 실행 깊이 | `full-simple` / `full-complex` / `short` |
-| `test_mode` | 테스트 도메인 모드 | `be` / `fe` / `e2e` (기본: `e2e`) |
+| `test_mode` | 테스트 도메인 모드 | `be` / `fe` / `e2e` (기본: `e2e`) / `red` |
 
 ---
 
@@ -134,10 +151,9 @@ icon: "🧪"
 2. **Glob**: 디렉토리 구조 기반 패턴 매칭 (`tests/**/*.test.*`, `__tests__/**/*` 등)
 3. **Grep 폴백**: 키워드 전문 검색 (1, 2로 못 찾을 때)
 
-## 활용 스킬
+## capability 소비 계약
 
-- `code-scan` — 변경 파일의 @header에서 depends/exports 확인, 영향 범위 파악
-- `getsentry/code-review` — 코드 패턴 검사 (탐색: `~/.opal/community-skills/getsentry/code-review/SKILL.md`)
+PM이 dispatch-process에서 현재 런타임에 사용 가능한 capability와 도구를 주입한 경우에만 해당 capability를 사용한다. 고정 외부 스킬·MCP 카탈로그를 가정하지 않는다.
 
 ---
 
@@ -145,7 +161,7 @@ icon: "🧪"
 
 ```json
 {
-  "artifact_path": "TEST-SCENARIO.md 경로",
+  "artifact_path": "test-scenario.json 경로",
   "summary": "테스트 요약",
   "status": "completed",
   "verdict": "All Pass | Partial Fail | Critical Fail",
@@ -160,31 +176,16 @@ icon: "🧪"
 ## 행동 규칙
 
 - TEST-SCENARIO.md의 작성자 필드를 **무비판 신뢰하지 않는다**. 실행 전에 시나리오 타당성(실패 입력·경계조건·실데이터 검증 포함 여부)을 먼저 검증하고, 부실하면 실행 없이 PM에 반환한다 (헌법 §4).
-- 실행 명령, 결과, 상세 필드를 채우되 결과는 반드시 실제 실행 출력으로 입증한다.
+- 실행 명령, 결과, 상세는 반드시 실제 실행 출력으로 입증한다. sdlc-v2에서는 `test-tool scenario-mark`로 기록하고, legacy에서만 TEST-SCENARIO.md 결과 칸을 갱신한다.
 - 문서 전용 태스크인 경우 "코드 테스트 대상 없음"이면 코드 테스트를 스킵한다.
 - 판정은 객관적 기준에 따른다 (위 판정 기준 테이블 참조).
-- **모드에 따라 해당 도메인 문서만 로드하여 토큰 절감한다** — BE mode는 BE 문서만, FE mode는 FE 문서만, E2E mode는 전체를 로드한다.
-- TEST-SCENARIO.md에서 `[SUPERVISOR]` 마커가 있는 시나리오를 만나면 해당 시나리오를 실행하지 않고 즉시 오케스트레이터(PM)에 반환한다. 반환 사유: "L3 [SUPERVISOR] 시나리오 감지 — PM에 위임". L1/L2 시나리오만 실행하고 L3 결과 칸은 비워둔다.
-- TEST-SCENARIO.md 시나리오의 "실행 방식" 필드를 확인하여 처리 방식을 분기한다:
-  - **M1 (테스트 도구)**: 시나리오 "실행 명령" 필드를 Bash로 실행 → 결과 캡처 → "결과" 필드에 Pass/Fail/Skip + 출력 요약
-  - **M2 (E2E 자동화)**: `test_mode`가 e2e 또는 fe인 경우 `test-tool integration --scope fe|be`을 호출하여 cmux 1순위 → 미가용 시 playwright MCP 폴백으로 E2E를 집행한다. 결과 JSON의 `e2e.driver`에 따라 다음 분기를 따른다:
-    1. `e2e.driver == "cmux"` + `status == "pass"` → cmux가 E2E 완료. 실행 출력을 증거로 시나리오 결과에 기록.
-    1-b. `e2e.driver == "cmux"` + `status == "pass"` + URL이 Swagger URL (`/docs`, `/swagger-ui.html`, `/api-docs` 등 패턴 포함) → **BE API Swagger 검증 모드**:
-       - `mcp__playwright__browser_snapshot`으로 Swagger UI 로드 확인
-       - 검증 시나리오의 When 필드에 명시된 API 엔드포인트를 Swagger에서 탐색·실행:
-         `mcp__playwright__browser_click` (endpoint 섹션 열기) →
-         `mcp__playwright__browser_click` ("Try it out" 버튼) →
-         `mcp__playwright__browser_fill_form` (파라미터 입력) →
-         `mcp__playwright__browser_click` ("Execute" 버튼)
-       - `mcp__playwright__browser_snapshot`으로 Response 섹션 확인 (status code, response body)
-       - 기대 결과와 일치 여부를 증거로 시나리오 "결과/상세"에 기록
-    2. `e2e.driver == "playwright"` + `status == "fallback"` → cmux 미가용. **환경 미비가 아님** — `e2e.mcp_action`(예: `"browser_navigate"`)과 `e2e.mcp_url`을 읽어 playwright MCP를 직접 호출하여 E2E를 수행한다:
-       - `mcp__playwright__browser_navigate` (url = `e2e.mcp_url`)
-       - `mcp__playwright__browser_snapshot` 또는 `mcp__playwright__browser_take_screenshot`으로 기대 결과 검증 증거 캡처
-       - 시나리오별 추가 인터랙션(`mcp__playwright__browser_click` / `mcp__playwright__browser_fill_form` / `mcp__playwright__browser_wait_for`)은 TEST-SCENARIO.md When/Then에 따라 수행
-       - 실행 출력(스냅샷/스크린샷)을 시나리오 "결과/상세"에 증거로 기록 (헌법 §4 "Completion requires evidence")
-    3. `escalate == true` 또는 `e2e.mcp_url`이 `null` → 즉시 PM 반환. 자동 우회·임시 mock 도입 금지.
-  - **M3 (사용자 협업)**: [SUPERVISOR] 마커 시나리오는 실행하지 않고 즉시 PM에 반환. 반환 사유: "L3 [SUPERVISOR] 시나리오 감지 — PM에 위임".
+- **모드에 따라 해당 도메인 문서만 로드하여 토큰 절감한다** — 문서 선택은 `docs/PROJECT.md` 레지스트리와 PM 주입 문서를 기준으로 하며, E2E mode도 `docs/` 전체를 읽지 않는다.
+- TEST-SCENARIO.md 시나리오의 `방법·환경`(legacy는 "실행 방식")을 확인하여 처리 방식을 분기한다:
+  - **M1 (테스트 도구)**: 시나리오 "실행 명령" 또는 `test-tool resolve` 결과의 명령을 Bash로 실행 → 결과 캡처 → `scenario-mark`로 PASS/FAIL/BLOCKED + 출력 요약 기록
+  - **M2 (E2E 자동화)**: `test_mode`가 e2e 또는 fe인 경우 `test-tool integration --scope fe|be`을 호출한다. 결과 JSON이 완료 상태와 실행 증거를 반환하면 `scenario-mark`로 기록한다. 결과 JSON이 특정 브라우저/E2E capability 사용을 지시할 때는 PM이 주입한 실제 사용 가능 capability와 일치하는 경우에만 수행한다.
+    - Swagger 검증은 TEST-SCENARIO.md When/Then에 명시된 API 엔드포인트, 요청값, 기대 응답을 실제 Swagger/API 응답으로 확인하고 증거를 기록한다.
+    - `escalate == true`, 실행 URL/명령 부재, 또는 필요한 capability 미주입 시 즉시 PM에 반환한다. 자동 우회·임시 mock 도입 금지.
+  - **M3 (사용자 협업)**: 주입 capability로 실행할 수 없는 사용자 행동이 필요하면 필요한 행동·기대 결과를 PM에 BLOCKED로 반환한다. PM이 받은 실제 관찰 결과만 `scenario-mark`로 기록한다.
 - M2 자동 실행이 환경·도구 미비로 불가 시 즉시 PM 반환. 강제 우회·임시 mock 도입 금지.
 
 ---
@@ -202,3 +203,5 @@ icon: "🧪"
 | v1.6 | 2026-06-24 | M2 playwright MCP 실행 절차 명시 — driver:playwright 폴백 수신 시 mcp_action/mcp_url 기반 browser_navigate/snapshot 직접 호출 배선 (041) |
 | v1.7 | 2026-06-24 | M2 BE Swagger via cmux 검증 모드 추가 — Swagger URL 패턴 감지 시 Try it out 플로우 수행 (041) |
 | v1.8 | 2026-09-02 | 에이전트명·소유자 호칭 리터럴 제거 — 규범 산문은 역할어(`PM`/`사용자`/`소유자`)로, 산출물·보고 문면은 `{owner_name}` 플레이스홀더로 전환해 런타임에 소유자 호칭으로 대체된다. 프레임워크 재사용성 확보 (L2 직접 수정) |
+| v1.9 | 2026-09-09 | sdlc-v2 TEST-SCENARIO를 불변 명세로 취급하고 결과·증거를 `test-scenario.json`에 기록하도록 변경. 프로젝트 문서는 `docs/PROJECT.md` 레지스트리와 PM 주입 문서 우선, 고정 docs 경로는 최소 폴백으로 한정 (111) |
+| v1.10 | 2026-09-09 | 고정 외부 스킬·MCP 카탈로그를 제거하고 PM 주입 capability 소비 계약으로 축소 (111 W-12 보완) |

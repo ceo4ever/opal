@@ -7,10 +7,11 @@ tags:
 - skill
 sources:
 - skill:op-dev-todo
+- task:111
 related: []
 created: '2026-06-11'
-updated: '2026-06-11'
-status: draft
+updated: '2026-09-09'
+status: stale
 ---
 ## 개념 요약
 

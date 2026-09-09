@@ -1,17 +1,18 @@
 """
 @header {
   "module": "test_scenario",
-  "task": "056",
+  "task": "056,069,073,111",
   "layer": "test",
   "domain": "opal-tools",
-  "description": "test-tool scenario-* 4서브명령(scenario-init/scenario-lock/scenario-mark/scenario-status) 행위 계약 RED-first 테스트. RED 상태(미구현 — lib/scenario.py 부재, test_tool.py에 서브명령 미등록) — 전부 FAIL 예상. GREEN 전환은 EXECUTE 구현 워커 담당(작성자≠구현자, red-first.md §2). S-014는 기존 4서브명령 스위트 존재 확인만 수행(기존 test_test_tool.py 미수정).",
-  "scenarios": ["S-011", "S-012", "S-007", "S-014", "T069/S-5", "T069/S-6", "T069/S-7", "T073/S-1", "T073/S-2"],
+  "description": "test-tool scenario-* 서브명령(scenario-init/scenario-lock/scenario-mark/scenario-status/scenario-red/scenario-fidelity-check/scenario-conformance/scenario-coverage-check/scenario-coverage-build) 행위 계약 테스트. 공개 CLI(exit code + stdout JSON)만 검증하며 sdlc-v2 coverage-build 중복 S-ID와 선택적 RED 잠금 계약을 회귀 보호한다.",
+  "scenarios": ["S-011", "S-012", "S-007", "S-014", "T069/S-5", "T069/S-6", "T069/S-7", "T073/S-1", "T073/S-2", "T111/S-6", "T111/S-7", "T111/S-8", "T111/S-9", "T111/S-10", "T111/S-11", "T111/S-18"],
   "exports": [
     "TestScenarioLockRedGate",
     "TestScenarioMarkLockGate",
     "TestScenarioResultContract",
     "TestExistingSuiteRegressionPresence",
     "TestScenarioRedToolGated",
+    "TestScenarioSelectiveRedGate",
     "TestScenarioInitSeedNeutralized",
     "TestScenarioFidelityCheckUnmet",
     "TestScenarioFidelityCheckMixedAndLegacy",
@@ -219,6 +220,24 @@ class TestScenarioMarkLockGate(BaseScenarioTestCase):
         self.assertEqual(s1.get("evidence"), "pytest exit 0")
         self.assertIsNotNone(s1.get("marked_at"))
 
+    def test_mark_records_blocked_result_and_status_count(self):
+        """실행 환경이 없을 때 BLOCKED를 증거와 함께 결과 SSOT에 기록한다."""
+        lock_code, _, _ = _scenario_lock(self.task_path)
+        self.assertEqual(lock_code, 0)
+
+        code, _, data = _scenario_mark(
+            self.task_path,
+            "S1",
+            "blocked",
+            evidence="required API endpoint unavailable",
+        )
+        self.assertEqual(code, 0)
+        self.assertEqual(data.get("result"), "blocked")
+
+        status_code, _, status = _scenario_status(self.task_path)
+        self.assertEqual(status_code, 0)
+        self.assertEqual(status.get("blocked"), 1)
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # S-007 (scenario 몫): 도구 결과 계약 — 단일라인 JSON + exit code [T056/L1-F002]
@@ -371,6 +390,59 @@ class TestScenarioRedToolGated(BaseScenarioTestCase):
         self.assertNotEqual(code, 0)
         self.assertFalse(data.get("ok"))
         self.assertEqual(data.get("error"), "scenario_already_locked")
+
+
+class TestScenarioSelectiveRedGate(BaseScenarioTestCase):
+    """[T111/S-18] red_required=true인 시나리오만 RED 잠금 게이트에 포함한다."""
+
+    MIXED_SCENARIOS = [
+        {
+            "id": "S1",
+            "acceptance_ref": "AC1",
+            "type": "unit",
+            "expected": "구현 전에 실패해야 함",
+            "red_required": True,
+        },
+        {
+            "id": "S2",
+            "acceptance_ref": "AC2",
+            "type": "regression",
+            "expected": "기존 동작 회귀 확인",
+            "red_required": False,
+        },
+    ]
+
+    def test_init_preserves_red_required_and_lock_checks_only_required_scenarios(self):
+        code, _, data = _scenario_init(self.task_path, self.MIXED_SCENARIOS)
+        self.assertEqual(code, 0)
+        self.assertTrue(data.get("ok"))
+
+        spec = json.loads((self.task_path / "test-scenario.json").read_text(encoding="utf-8"))
+        scenarios = {s["id"]: s for s in spec["scenarios"]}
+        self.assertTrue(scenarios["S1"]["red_required"])
+        self.assertFalse(scenarios["S2"]["red_required"])
+        self.assertFalse(scenarios["S1"]["red_confirmed"])
+        self.assertFalse(scenarios["S2"]["red_confirmed"])
+
+        lock_code, _, lock_data = _scenario_lock(self.task_path)
+        self.assertEqual(lock_code, 8)
+        self.assertIn("S1", lock_data.get("detail", ""))
+        self.assertNotIn("S2", lock_data.get("detail", ""))
+
+        red_code, _, _ = _scenario_red(self.task_path, "S1", evidence="pytest failed before implementation")
+        self.assertEqual(red_code, 0)
+        lock_code, _, lock_data = _scenario_lock(self.task_path)
+        self.assertEqual(lock_code, 0)
+        self.assertTrue(lock_data.get("locked"))
+
+    def test_status_reports_required_red_progress_separately(self):
+        _scenario_init(self.task_path, self.MIXED_SCENARIOS)
+        _scenario_red(self.task_path, "S1", evidence="pytest failed before implementation")
+
+        code, _, data = _scenario_status(self.task_path)
+        self.assertEqual(code, 0)
+        self.assertEqual(data.get("red_required"), 1)
+        self.assertEqual(data.get("red_confirmed_required"), 1)
 
 
 class TestScenarioInitSeedNeutralized(BaseScenarioTestCase):
@@ -588,6 +660,19 @@ def _scenario_coverage_check(coverage_input_path):
     return _run(["scenario-coverage-check", "--coverage-input", str(coverage_input_path)])
 
 
+def _scenario_coverage_build(task_path, template="sdlc-v2"):
+    """scenario-coverage-build 서브명령 호출 헬퍼 [T111/W-5].
+
+    2026-09-09 14:18 KST task 111: sdlc-v2 TASK/PLAN/TEST-SCENARIO를 결정론적으로
+    .scenario-coverage-input.json으로 변환하는 공개 CLI 계약을 검증한다.
+    """
+    return _run([
+        "scenario-coverage-build",
+        "--task-folder", str(task_path),
+        "--template", template,
+    ])
+
+
 # fixture-cov-missing: requirements=[R-1,R-2], hypotheses=[H-1] 중 R-2·H-1이 어떤 시나리오에도
 # 매핑되지 않은 페이로드 (S-1 조건, TEST-SCENARIO.md §3 S-1).
 FX_COV_MISSING = {
@@ -748,6 +833,316 @@ class TestScenarioCoverageCheckRegression(unittest.TestCase):
             self.assertEqual(data.get("error"), "scenario_not_locked")
         finally:
             shutil.rmtree(tmpdir, ignore_errors=True)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# [T111] scenario-coverage-build — sdlc-v2 문서 → coverage input 결정론 변환
+# 검증 대상: run.sh 공개 인터페이스(exit code + stdout JSON)만 단언한다.
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _write_sdlc_v2_docs(task_path, *, task_body=None, plan_body=None, scenario_body=None):
+    task_path.mkdir(parents=True, exist_ok=True)
+    (task_path / "TASK.md").write_text(task_body or """---
+template: sdlc-v2
+---
+# TASK: Builder fixture
+
+## Problem
+
+Builder가 새 문서의 검증 토큰을 읽어야 한다.
+
+## Proposed outcome
+
+Coverage input이 결정론적으로 생성된다.
+
+## Affected users and systems
+
+- 사용자: PM
+- 시스템: test-tool
+
+## Constraints
+
+- C-1: W 토큰을 기능 분모로 취급하지 않는다.
+- C-2: 알 수 없는 검증 참조는 실패한다.
+
+## Acceptance criteria
+
+- AC-1: AC와 C가 requirements에 포함된다.
+- AC-2: TEST-SCENARIO의 S 행이 AC/C/H 커버로 변환된다.
+""", encoding="utf-8")
+    (task_path / "PLAN.md").write_text(plan_body or """---
+template: sdlc-v2
+---
+# PLAN: Builder fixture
+
+## Work items
+
+| 작업 | 담당 | 변경 대상 | 구체적 변경 | 선행 작업 | 실행 그룹 | 완료 기준 연결 |
+|---|---|---|---|---|---|---|
+| W-1. Builder 구현 | opal-be-agent | `opal/tools/test-tool/lib/scenario.py` | build 추가 | 없음 | P1 | AC-1, C-1 |
+
+## Risks
+
+| 위험 | 깨질 수 있는 동작·계약 | 영향 | 설계 대응 |
+|---|---|---|---|
+| H-1. 빈 분모 통과 | coverage build | false green | AC/C/S 추출 실패를 거부 |
+| H-2. W를 F로 오해 | coverage check | 과잉 시나리오 | W는 features에 넣지 않음 |
+""", encoding="utf-8")
+    (task_path / "TEST-SCENARIO.md").write_text(scenario_body or """---
+template: sdlc-v2
+---
+# TEST-SCENARIO: Builder fixture
+
+## Setup
+
+- 환경: 임시 태스크 폴더
+
+## Scenarios
+
+| ID | 검증 대상 | 조건 | 행동 | 기대 결과 | 방법·환경 | 시점 |
+|---|---|---|---|---|---|---|
+| S-1 | AC-1, C-1, H-1 | 정상 문서 | build 실행 | requirements와 hypotheses가 채워짐 | CLI | 구현 전 RED, 구현 후 |
+| S-2 | AC-2, C-2, H-2 | 정상 문서 | build 실행 | W는 features에 들어가지 않음 | CLI | 구현 전 RED, 구현 후 |
+""", encoding="utf-8")
+
+
+class TestScenarioCoverageBuildSdlcV2(BaseScenarioTestCase):
+    """[T111/S-6] sdlc-v2 scenario-coverage-build 정상 변환 계약."""
+
+    def test_builds_coverage_input_from_sdlc_v2_docs(self):
+        _write_sdlc_v2_docs(self.task_path)
+
+        code, stdout, data = _scenario_coverage_build(self.task_path)
+
+        self.assertEqual(code, 0, f"기대 exit 0, 실제 stdout={stdout!r}")
+        self.assertTrue(data.get("ok"))
+        self.assertEqual(data.get("command"), "scenario-coverage-build")
+        output_path = pathlib.Path(data.get("coverage_input"))
+        self.assertEqual(output_path, self.task_path / ".scenario-coverage-input.json")
+        self.assertTrue(output_path.exists())
+
+        payload = json.loads(output_path.read_text(encoding="utf-8"))
+        self.assertEqual(payload.get("requirements"), ["AC-1", "AC-2", "C-1", "C-2"])
+        self.assertEqual(payload.get("features"), [])
+        self.assertEqual(payload.get("hypotheses"), ["H-1", "H-2"])
+        self.assertEqual([s.get("id") for s in payload.get("scenarios", [])], ["S-1", "S-2"])
+        self.assertEqual(payload["scenarios"][0]["covers_requirements"], ["AC-1", "C-1"])
+        self.assertEqual(payload["scenarios"][0]["covers_hypotheses"], ["H-1"])
+        self.assertEqual(payload["scenarios"][0]["covers_features"], [])
+
+        check_code, check_stdout, check_data = _scenario_coverage_check(output_path)
+        self.assertEqual(check_code, 0, f"coverage-check 회귀 실패 stdout={check_stdout!r}")
+        self.assertTrue(check_data.get("all_covered"))
+
+    def test_allows_zero_hypotheses_when_risks_declares_none(self):
+        _write_sdlc_v2_docs(
+            self.task_path,
+            plan_body="""---
+template: sdlc-v2
+---
+# PLAN: Builder fixture
+
+## Work items
+
+| 작업 | 담당 | 변경 대상 | 구체적 변경 | 선행 작업 | 실행 그룹 | 완료 기준 연결 |
+|---|---|---|---|---|---|---|
+| W-1. Builder 구현 | opal-be-agent | `opal/tools/test-tool/lib/scenario.py` | build 추가 | 없음 | P1 | AC-1, C-1 |
+
+## Risks
+
+추가 검증이 필요한 위험 없음.
+""",
+            scenario_body="""---
+template: sdlc-v2
+---
+# TEST-SCENARIO: No hypotheses
+
+## Setup
+- 환경: 임시 태스크 폴더
+
+## Scenarios
+
+| ID | 검증 대상 | 조건 | 행동 | 기대 결과 | 방법·환경 | 시점 |
+|---|---|---|---|---|---|---|
+| S-1 | AC-1, C-1 | 정상 문서 | build 실행 | requirements가 채워짐 | CLI | 구현 전 RED, 구현 후 |
+| S-2 | AC-2, C-2 | 정상 문서 | coverage check 실행 | H가 없어도 통과 | CLI | 구현 전 RED, 구현 후 |
+""",
+        )
+
+        code, stdout, data = _scenario_coverage_build(self.task_path)
+
+        self.assertEqual(code, 0, f"기대 exit 0, 실제 stdout={stdout!r}")
+        output_path = pathlib.Path(data.get("coverage_input"))
+        payload = json.loads(output_path.read_text(encoding="utf-8"))
+        self.assertEqual(payload.get("hypotheses"), [])
+
+        check_code, check_stdout, check_data = _scenario_coverage_check(output_path)
+        self.assertEqual(check_code, 0, f"H=0 coverage-check 회귀 실패 stdout={check_stdout!r}")
+        self.assertTrue(check_data.get("all_covered"))
+
+    def test_existing_hypothesis_must_still_be_covered(self):
+        _write_sdlc_v2_docs(
+            self.task_path,
+            scenario_body="""---
+template: sdlc-v2
+---
+# TEST-SCENARIO: Missing existing hypothesis coverage
+
+## Setup
+- 환경: 임시 태스크 폴더
+
+## Scenarios
+
+| ID | 검증 대상 | 조건 | 행동 | 기대 결과 | 방법·환경 | 시점 |
+|---|---|---|---|---|---|---|
+| S-1 | AC-1, C-1, H-1 | 정상 문서 | build 실행 | 일부 H만 커버 | CLI | 구현 전 RED, 구현 후 |
+| S-2 | AC-2, C-2 | 정상 문서 | coverage check 실행 | H-2 미커버 실패 | CLI | 구현 전 RED, 구현 후 |
+""",
+        )
+
+        code, stdout, data = _scenario_coverage_build(self.task_path)
+
+        self.assertEqual(code, 0, f"기대 exit 0, 실제 stdout={stdout!r}")
+        output_path = pathlib.Path(data.get("coverage_input"))
+
+        check_code, check_stdout, check_data = _scenario_coverage_check(output_path)
+        self.assertEqual(check_code, 16, f"기대 exit 16, 실제 stdout={check_stdout!r}")
+        self.assertFalse(check_data.get("all_covered"))
+        self.assertIn("H-2", str(check_data.get("detail")))
+
+
+class TestScenarioCoverageBuildInvalidSdlcV2(BaseScenarioTestCase):
+    """[T111/S-7] sdlc-v2 scenario-coverage-build 부정·경계 계약."""
+
+    def test_rejects_missing_acceptance_criteria(self):
+        _write_sdlc_v2_docs(
+            self.task_path,
+            task_body="""---
+template: sdlc-v2
+---
+# TASK: Missing AC
+
+## Problem
+문제
+## Proposed outcome
+목표
+## Affected users and systems
+대상
+## Constraints
+- C-1: 제약
+## Acceptance criteria
+""",
+        )
+
+        code, stdout, data = _scenario_coverage_build(self.task_path)
+
+        self.assertEqual(code, 17, f"기대 exit 17, 실제 stdout={stdout!r}")
+        self.assertFalse(data.get("ok"))
+        self.assertEqual(data.get("error"), "coverage_input_invalid")
+        self.assertIn("Acceptance criteria", str(data.get("detail")))
+
+    def test_rejects_missing_risks_section(self):
+        _write_sdlc_v2_docs(
+            self.task_path,
+            plan_body="""---
+template: sdlc-v2
+---
+# PLAN: Missing Risks
+
+## Work items
+
+| 작업 | 담당 | 변경 대상 | 구체적 변경 | 선행 작업 | 실행 그룹 | 완료 기준 연결 |
+|---|---|---|---|---|---|---|
+| W-1. Builder 구현 | opal-be-agent | `opal/tools/test-tool/lib/scenario.py` | build 추가 | 없음 | P1 | AC-1, C-1 |
+""",
+        )
+
+        code, stdout, data = _scenario_coverage_build(self.task_path)
+
+        self.assertEqual(code, 17, f"기대 exit 17, 실제 stdout={stdout!r}")
+        self.assertFalse(data.get("ok"))
+        self.assertEqual(data.get("error"), "coverage_input_invalid")
+        self.assertIn("PLAN Risks", str(data.get("detail")))
+
+    def test_rejects_unknown_scenario_reference(self):
+        _write_sdlc_v2_docs(
+            self.task_path,
+            scenario_body="""---
+template: sdlc-v2
+---
+# TEST-SCENARIO: Unknown ref
+
+## Setup
+- 환경: 임시 태스크 폴더
+
+## Scenarios
+
+| ID | 검증 대상 | 조건 | 행동 | 기대 결과 | 방법·환경 | 시점 |
+|---|---|---|---|---|---|---|
+| S-1 | AC-999, C-1, H-1 | 정상 문서 | build 실행 | 실패 | CLI | 구현 전 RED |
+""",
+        )
+
+        code, stdout, data = _scenario_coverage_build(self.task_path)
+
+        self.assertEqual(code, 17, f"기대 exit 17, 실제 stdout={stdout!r}")
+        self.assertFalse(data.get("ok"))
+        self.assertEqual(data.get("error"), "coverage_input_invalid")
+        self.assertIn("unknown reference", str(data.get("detail")))
+        self.assertIn("AC-999", str(data.get("detail")))
+
+    def test_rejects_duplicate_scenario_id(self):
+        _write_sdlc_v2_docs(
+            self.task_path,
+            scenario_body="""---
+template: sdlc-v2
+---
+# TEST-SCENARIO: Duplicate scenario id
+
+## Setup
+- 환경: 임시 태스크 폴더
+
+## Scenarios
+
+| ID | 검증 대상 | 조건 | 행동 | 기대 결과 | 방법·환경 | 시점 |
+|---|---|---|---|---|---|---|
+| S-13 | AC-1, C-1, H-1 | 정상 문서 | build 실행 | 첫 번째 행 | CLI | 구현 전 RED |
+| S-13 | AC-2, C-2, H-2 | 정상 문서 | build 실행 | 중복 행은 거부 | CLI | 구현 전 RED |
+""",
+        )
+
+        code, stdout, data = _scenario_coverage_build(self.task_path)
+
+        self.assertEqual(code, 17, f"기대 exit 17, 실제 stdout={stdout!r}")
+        self.assertFalse(data.get("ok"))
+        self.assertEqual(data.get("error"), "coverage_input_invalid")
+        self.assertIn("duplicate scenario id", str(data.get("detail")))
+        self.assertIn("S-13", str(data.get("detail")))
+
+    def test_rejects_zero_scenarios(self):
+        _write_sdlc_v2_docs(
+            self.task_path,
+            scenario_body="""---
+template: sdlc-v2
+---
+# TEST-SCENARIO: Zero scenarios
+
+## Setup
+- 환경: 임시 태스크 폴더
+
+## Scenarios
+
+| ID | 검증 대상 | 조건 | 행동 | 기대 결과 | 방법·환경 | 시점 |
+|---|---|---|---|---|---|---|
+""",
+        )
+
+        code, stdout, data = _scenario_coverage_build(self.task_path)
+
+        self.assertEqual(code, 17, f"기대 exit 17, 실제 stdout={stdout!r}")
+        self.assertFalse(data.get("ok"))
+        self.assertEqual(data.get("error"), "coverage_input_invalid")
+        self.assertIn("scenario", str(data.get("detail")).lower())
 
 
 if __name__ == "__main__":

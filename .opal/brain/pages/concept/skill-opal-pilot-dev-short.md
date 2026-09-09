@@ -8,33 +8,35 @@ tags:
 - dev-short
 sources:
 - skill:opal-pilot-dev-short
-related: []
+- task:111
+related:
+- sdlc-v2-development-artifact-contract
+- skill-opal-pilot-dev
+- op-dev-plan
+- op-dev-test-scenario
 created: '2026-06-11'
-updated: '2026-06-11'
-status: draft
+updated: '2026-09-09'
+status: active
 ---
-## 개념 요약
+## 개요
 
-코드 변경이 수반되는 모든 개발 작업의 기본 진입점. Short Task 오케스트레이터로 5단계 파이프라인(TASK → PLAN → EXECUTE → TEST → CLOSE)을 수행한다.
+소규모 개발 작업을 TASK → PLAN → EXECUTE → TEST → CLOSE로 수행하는 오케스트레이터다.
 
-## 배경·문제 (WHY)
+## 현재 계약
 
-대부분의 개발 작업은 ANALYSIS 단계 없이도 PLAN에서 충분히 분석 가능하다. 규모가 커지면 PLAN 단계에서 Full Task(opd) 에스컬레이션을 자동 제안한다.
+- 신규 태스크는 [[sdlc-v2-development-artifact-contract]]를 사용한다.
+- PLAN과 TEST-SCENARIO는 한 묶음으로 검토하지만 PM이 각각 한 번 작성하며 PLAN 워커가 시나리오를 대신 쓰지 않는다.
+- 구현은 PLAN `Work items`의 선행 관계와 실행 그룹을 따른다.
+- 기존 11개 pipeline 행과 interactive, semi-agentic, agentic의 승인 경계를 유지한다.
+- 범위가 커지면 Full Task로 전환을 제안한다.
 
-## 결정 내용 (HOW)
+## 근거
 
-하네스 모드(--interactive/--agentic/--semi-agentic) 지원. state-tool로 단계별 진행 관리. PLAN 단계에서 전문 워커(opal-plan-agent) 디스패치. 코드 개발 전용 — 기획문서/PR리뷰/단순설정은 다른 스킬 사용.
+`opal/skills/opal-pilot-dev-short/SKILL.md:42`, `opal/skills/opal-pilot-dev-short/SKILL.md:83`, task:111.
 
-## 영향·관계
+## 관련 페이지
 
-opd(Full Task)의 경량 버전. opp(범용 프로젝트)와 구분: opds는 코드 개발 전용. OPAL 파이프라인에서 가장 자주 사용되는 기본 오케스트레이터.
-
-## 관련
-
-- [[op-dev-plan]] — PLAN 단계에서 디스패치하는 설계 워커 스텝
-- [[op-dev-execute]] — EXECUTE 단계에서 디스패치하는 코드 실행 워커 스텝
-- [[opal-project-definition]] — Short Task 파이프라인의 컨텍스트 로딩 기준 문서
-
-## 근거 출처
-
-file_path: `opal/skills/opal-pilot-dev-short/SKILL.md`
+- [[sdlc-v2-development-artifact-contract]]
+- [[skill-opal-pilot-dev]]
+- [[op-dev-plan]]
+- [[op-dev-test-scenario]]

@@ -13,18 +13,17 @@ icon: "🗄️"
 
 ## 실행 프로세스
 
-1. 오케스트레이터 프롬프트에서 **스킬 경로**, **태스크 폴더**, **이전 산출물**, **표준사전 경로**를 확인한다.
+1. 오케스트레이터 프롬프트에서 **스킬 경로**, **태스크 폴더**, **이전 산출물**, **표준사전 경로**, **주입 프로젝트 문서 목록**을 확인한다.
 2. 스킬 SKILL.md를 Read한다.
 3. 프로젝트 컨텍스트를 로드한다 (DB 도메인 문서 우선).
    - 태스크 폴더에서 프로젝트 루트를 추론한다 (`tasks/` 상위 디렉토리).
-   - `docs/PROJECT.md`가 존재하면 Read한다. `{설계}` 변수(설계 산출물 루트 경로)를 PROJECT.md에서 파악한다.
-   - DB 도메인 문서를 로드한다 (아래 **자체 로드 문서** 참조).
-   - `docs/ARCHITECTURE.md`, `docs/CONVENTIONS.md`가 존재하면 Read한다 (DB 섹션 우선).
-   - FE 전용 문서(`docs/FRONTEND.md` 등)는 로드하지 않는다.
+   - 오케스트레이터가 `docs/PROJECT.md`의 프로젝트 문서 레지스트리에서 DB 작업 도메인·참조 시점으로 선별해 주입한 문서 목록을 확인한다. `{설계}` 변수는 PM이 PROJECT.md를 근거로 주입한다.
+   - 주입된 문서 목록만 Read한다. 워커가 `docs/db/`, `docs/ARCHITECTURE.md`, `docs/CONVENTIONS.md`, `docs/SERVICE.md`, `docs/SPEC.md`, `docs/PRD.md`를 고정 가정해 추가 로드하지 않는다.
+   - 프로젝트에 `docs/PROJECT.md`가 없고 주입 문서 목록도 없을 때만 기존 DB 최소 폴백을 허용한다 (아래 **폴백 로드 문서** 참조).
    - `docs/` 또는 개별 문서가 없으면 스킵한다.
 4. **표준사전 경로 관리**: `{설계}` 변수가 확정된 경우 `{설계}/사전/` 디렉토리를 SSOT로 인식한다.
    - 표준사전 md가 주입된 경우: `{설계}/사전/표준단어사전.md`, `{설계}/사전/도메인사전.md`, `{설계}/사전/코드사전.md` 를 Read한다.
-   - xlsx 파일이 주입된 경우: xlsx-tool로 파일을 읽어 네이밍·타입 규칙을 파악한다. xlsx는 md SSOT의 파생물(export)이므로 수정하지 않는다.
+   - xlsx 파일이 주입된 경우: 주입된 spreadsheet capability가 있으면 읽어 네이밍·타입 규칙을 파악한다. xlsx는 md SSOT의 파생물(export)이므로 수정하지 않는다.
    - DICT 스킬(op-data-dictionary) 투입 시: md SSOT 작성·보강이 주 목적이며, xlsx export는 단방향(md→xlsx)만 허용한다.
 5. 스킬의 `personas/`에서 지정된 페르소나를 Read한다.
 6. 스킬의 `references/`에서 지정된 가이드를 Read한다.
@@ -39,21 +38,22 @@ icon: "🗄️"
 
 `personas/db-architect.md`를 Read하여 DB 전문 지식과 행동 규칙을 적용한다.
 
-## 자체 로드 문서
+## 폴백 로드 문서
 
-컨텍스트 로드 단계에서 아래 문서를 우선 탐색하고 존재하면 Read한다.
+`docs/PROJECT.md`가 없고 오케스트레이터가 주입한 프로젝트 문서 목록도 없을 때만 아래 문서를 우선 탐색하고 존재하면 Read한다.
 존재하지 않으면 조용히 스킵한다.
 
 | 문서 | 경로 (프로젝트 루트 기준) |
 |------|--------------------------|
 | DB 설계 문서 | `{설계}/` 디렉토리 내 .md 파일 (`{설계}`는 PROJECT.md 선언값; 미등록 시 `docs/db/` 폴백) |
 | DB 스키마 | `{설계}/물리모델링/{프로젝트}.dbml` (또는 `docs/db/schema.dbml` 폴백) |
+| MAMS형 DB 설계 | `200.개발/03.DB설계/` 하위 ERD/논리모델링/표준사전 문서 |
 | 표준단어사전 (md SSOT) | `{설계}/사전/표준단어사전.md` — 존재 시 Read, 없으면 스킵 |
 | 도메인사전 (md SSOT) | `{설계}/사전/도메인사전.md` — 존재 시 Read, 없으면 스킵 |
 | 코드사전 (md SSOT) | `{설계}/사전/코드사전.md` — 존재 시 Read, 없으면 스킵 |
 | 표준사전 (xlsx export) | PM이 디스패치 시 경로 주입 — xlsx는 md 파생물, 읽기 전용 |
 | 기획서 (참조용) | `docs/SERVICE.md`, `docs/SPEC.md`, `docs/PRD.md` (존재 시) |
-| 컨벤션 (DB 섹션) | `docs/CONVENTIONS.md` |
+| 컨벤션 (DB 섹션) | `docs/CONVENTIONS.md`, `docs/CONVENTIONS-DB.md` |
 
 ## 자체 탐색 절차
 
@@ -63,18 +63,12 @@ icon: "🗄️"
 2. **Glob**: 디렉토리 구조 기반 패턴 매칭 (`models/**/*.py`, `migrations/**/*.py` 등)
 3. **Grep 폴백**: 키워드 전문 검색 (1, 2로 못 찾을 때)
 
-## MCP/스킬 활용
+## capability 소비 계약
 
-| 상황 | 활용 수단 |
-|------|-----------|
-| DB 모델/마이그레이션 소스 탐색 | `code-scan search <키워드>` — @header 기반 검색 |
-| ORM/마이그레이션 라이브러리 최신 문서 조회 | `mcp__context7__resolve-library-id` → `mcp__context7__query-docs` |
-| Alembic, Django ORM, Prisma 등 API 확인 | context7 우선 사용 |
-| 복잡한 모델링 단계 분해 | `mcp__sequential-thinking__sequentialthinking` |
-| 표준사전 xlsx export (md→xlsx) | xlsx-tool — `{설계}/사전/*.md` → `{설계}/사전/*.xlsx` 단방향 출력 |
-| 표준사전 xlsx 읽기 (조회 전용) | xlsx-tool — 역방향(xlsx→md) 수정은 금지 |
-
-context7 사용 우선순위: ORM API, 마이그레이션 도구 버전별 변경사항, 설정 옵션 조회 시 반드시 사용한다.
+오케스트레이터가 현재 런타임에서 실제 사용할 수 있는 capability와 용도를 주입한 경우에만 사용한다.
+ORM·마이그레이션 API의 버전 확인이나 xlsx 읽기·내보내기가 필요한데 대응 capability가 없으면
+추정하거나 다른 형식으로 우회하지 않고 필요한 입력 또는 블로커를 반환한다. xlsx를 다룰 때에도
+md→xlsx 단방향 계약은 유지한다.
 
 ## 인지 스킬 경로
 
@@ -133,7 +127,6 @@ context7 사용 우선순위: ORM API, 마이그레이션 도구 버전별 변�
 |----------|-----------|
 | op-dev-analysis | standard |
 | op-dev-plan (DB 설계) | advanced |
-| op-dev-todo | light |
 | op-dev-execute (마이그레이션 구현) | standard |
 | op-data-dictionary (DICT 사전 CRUD) | standard |
 | op-data-model (MODEL 모델링) | advanced |
@@ -145,4 +138,4 @@ context7 사용 우선순위: ORM API, 마이그레이션 도구 버전별 변�
 |------|------|----------|------|
 | v1.1 | 2026-06-12 | F-005: description에 표준사전·표준코드 관리(CRUD) 추가; 실행 프로세스 DICT 단계 인지·사전 경로 관리 확장; 자체 로드 문서에 md SSOT 3종+xlsx export 항목 추가; MCP/도구 표에 xlsx-tool export 용도 명시; "인지 스킬 경로" 섹션 신설(op-data-dictionary/model/ddl); "단계별 스킬 디스패치 인식" 섹션 신설; model 오버라이드 표에 op-data-* 3종 추가; docs/db/ 토큰을 {설계} 변수 참조로 통일(R-T1 해소) | TASK 019 / PLAN §3.5 / ANALYSIS §3 |
 | v1.2 | 2026-07-17 13:11 | model 오버라이드 표 op-dev-analysis light → standard — opal-pilot-dev v4.5 ANALYSIS 상향과 정합 | 소유자 지시 (L2) |
-
+| v1.3 | 2026-09-09 | 프로젝트 문서 로드를 `docs/PROJECT.md` 레지스트리 기반 PM 주입 목록 소비로 전환하고, PROJECT 부재 시 DB 최소 폴백만 허용 (111) |
