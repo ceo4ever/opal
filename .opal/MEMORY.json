@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_task_number": 111,
+  "last_task_number": 113,
   "memories": [
     {
       "title": "변경이력 제거 검토 결정 — A안 확정",
@@ -9,6 +9,14 @@
       "status": "active",
       "file": "memory/변경이력_제거_검토_결정_A안_확정.md",
       "summary": "프레임워크 md 137개 변경이력 표+버전표기 22건 제거 확정. 생성·검증 측 동반 개정 필수"
+    },
+    {
+      "title": "워커 code-scan 우선 강제 격상 검토",
+      "date": "2026-09-09",
+      "type": "improvement",
+      "status": "candidate",
+      "file": "memory/워커_code_scan_우선_강제_격상_검토.md",
+      "summary": "010 Phase 2 후속. 워커 7종은 권고 수준(MUST·게이트 없음). 106은 PM측만 도구 판정 승격"
     }
   ],
   "history": [
@@ -27,25 +35,25 @@
       "result": "@header 워커 기입 필드에 작성 기준을 신설하고 「이력은 git이 갖는다」를 규정·도구·자산 3층에 적용했다. 규정: header-standard.md §2.1 이력 비기재 원칙 + §2 이력 전용 필드 신설 금지(이름 불문) + §4.2 4필드 가이드, header-rules.md 갱신=교체 [MUST], CONVENTIONS.md §@header 교체. 도구: code-scan validate에 header_history 비차단 경고 3축(description·note는 태스크번호 distinct>=2, undeclared_field는 §2 미정의 필드 존재). 자산: 43파일 정리(description·note 23건 + changelog 필드 28파일 81엔트리 제거). 실측 @header 총 바이트 122752 → 75810(-38.2%), 이력 탐지 0건, changelog 0/110파일, TEST 33/33 Pass, 컨벤션 3차 Critical/High 0, 회귀 4스위트 전건 기준선 일치. 최대 산출은 정리 자체가 아니라 문제 정의가 세 번 틀렸다는 발견이다 — 12→18(글자수 선별이 진성을 놓침)→23(축 재정의로 임계값 3→2)→43(문서화되지 않은 changelog 필드 발견). 규정-도구 불일치가 4번 나왔고(도구가 못 봄/규정이 더 엄격/도구가 더 느슨/층위 혼동) 3·4번은 각각 직전 수정이 유발했으며 두 번 다 PM 자체 검증이 깨끗한 상태에서 컨벤션 진단이 잡았다. 목표-커버 게이트는 iteration 1에서 1.33으로 반려하며 발원 동기(창문 재포화) 무측정을 지적했고 그때 신설된 TS-025가 최종 -38.2%를 증명했다. 하네스 발견: 태스크 시점 사실을 영구 회귀 단언으로 고정하면 후속이 구조적으로 걸린다(VERSION 핀·테스트 개수 핀·파일 diff 핀 3연속), --wt 축은 tasks/ 픽스처 의존 테스트 34건을 통과 불가로 만든다, 서브에이전트 Write 차단으로 전 워커에 heredoc 우회 주입 필요. PM 귀책 5건. 이월 7건 — 최우선 track 필드 2파일과 Step 15 배포(소유자 실행). 미수행: 커밋·머지(소유자 권한)."
     },
     {
-      "title": "108 보고형식 전면제거",
+      "title": "109 태스크루트 해석 수렴",
       "date": "2026-09-06",
       "stage": "완료",
-      "path": "tasks/108-260906-opds-보고형식-전면제거/",
-      "result": "AGENT.md §보고 형식 177줄 삭제, 배포본 361→184줄. 무규범 3유형 이월"
+      "path": "tasks/109-260906-opds-태스크루트-해석-수렴/",
+      "result": "허브 고정 계약(§2.5)을 집행하는 코드가 없어 워크트리에서 tasks/·MEMORY.json 참조가 깨지던 문제를 허브 루트 해석 규칙(§2.5 (4))+골든 케이스 C-1~C-7로 수렴. 경로 조립 9곳을 허브 참조로 교체, 허브·워크트리 양쪽 state-tool 400/console BE 383/code-scan 374 전건 0 failed, validate exit 2→0. 잔존 skip 3건은 옛 저장소 절대경로로 별건 이월."
     },
     {
       "title": "108 보고형식 전면제거",
       "date": "2026-09-06",
       "stage": "완료",
       "path": "tasks/108-260906-opds-보고형식-전면제거/",
-      "result": "(PM 보강 대기)"
+      "result": "AGENT.md §보고 형식 177줄 삭제 + 파생 참조 3파일 동기화 후 install 재배포. 배포본 361→184줄(−49%). 무규범으로 남긴 3유형(질의응답·분석/제안·경보/정정)은 09-08 L2 커밋 03ba4f3에서 opal-pm.md §8 4조+템플릿 1종으로 최소 규범 신설하여 닫힘(Phase B 한정, 상시 로드 코어 증가 0줄)."
     },
     {
       "title": "106 코드맵 스킬신설 하네스개정",
       "date": "2026-09-05",
       "stage": "완료",
       "path": "tasks/106-260904-opd-코드맵-스킬신설-하네스개정/",
-      "result": "(PM 보강 대기)"
+      "result": "@header 자산 생성–갱신–소비 3국면 완결. 생성: opal-code-map-builder(opcmb) 스킬 신설(init|update). 갱신: header-rules §갱신 시점 (3단)→(4단), L2 완료 시점 validate --changed 편입. 소비: opal-pm §13 2단 소비(code-scan→grep) + PM 자기판정을 state-tool verify --code-scan-citation-check 도구 판정으로 승격, EXECUTE 첫 행 자동 훅. 신규 1·수정 15, pytest 383/0, 회귀 0. 최대 발견: 게이트 배치 순서 자체가 계약(S-24로 고정)."
     }
   ]
 }

@@ -228,6 +228,7 @@ TEST-SCENARIO 단계를 "목표 달성 검증"으로 재정의 — 루브릭 채
 | `.opal/MEMORY.json` | 프로젝트 메모리 인덱스 (JSON SSOT) | 메모리·작업 히스토리·피드백 추적 (`memory/` 하위 메모리 파일 인덱스). 변경은 `memory-tool`만 수행 | Framework | 부트스트랩 시 자동 (`memory-tool show --brief` 브리핑) |
 | `README.md` | 프레임워크 공개 소개 문서 | Pilot 개념, 사용 사례, 프레임워크 철학 정의 | Framework | Pilot 추가/변경 시, 사용자 대면 문서 작업 시, 프레임워크 철학/방향 관련 작업 시 |
 | `docs/architecture-diagram/opal_framework_architecture.html` | 프레임워크 구조 다이어그램 (시각 SSOT) | 3층 구조·파이프라인·도구 관계 시각화 (태스크 086 산출) | Framework | 구조 설명·온보딩 시 |
+| `docs/architecture-diagram/opal_sdlc_artifact_traceability.html` | SDLC 산출물 연결 구조도 | TASK·ANALYSIS·PLAN·TEST-SCENARIO·EXECUTE·TEST의 정보 소유권과 AC/C/W/H/S 추적 관계 설명 | Framework | Dev 파이프라인 산출물 작성·검토·온보딩 시 |
 | `docs/SECURITY.md` | 프로젝트 보안 기준 | opal-security-checker가 OWASP/CWE/SANS Base에 병합하는 프로젝트 누적 기준 | Framework | 보안 체크(opgc CHECK) 시 |
 | `docs/proposals/opal-brain-design.md` | Project Brain 설계 SSOT | brain 구조·모드·도구 계약 설계 근거 | Framework | Brain 관련 변경 시 |
 | `docs/proposals/opal-data-design.md` | Data Design 파이프라인 설계 SSOT | 사전·ERD·DDL 흐름 설계 근거 | Framework | Data Design 관련 변경 시 |
