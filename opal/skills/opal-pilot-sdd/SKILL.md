@@ -10,7 +10,7 @@ triggers:
   - "opsdd"
   - "SDD 개발"
   - "명세 기반 개발"
-version: 3.12.0
+version: 3.6.0
 ---
 
 # opal-pilot-sdd (SDD 오케스트레이터)
@@ -21,15 +21,28 @@ EXECUTE-LOOP에서 `opal-sdd-action-agent`에 단일 디스패치하며, PM이 �
 ## Harness
 
 모드: SDD Task (TASK → SPEC → REVIEW → DESIGN → EXECUTE-LOOP → VERIFY → CLOSE)
-> 부트스트랩에서 로드되지 않은 경우: `~/.opal/references/opal-harness.md`를 Read한다.
+**[MUST — pilot.start 이벤트 게이트]** 파일럿의 첫 작업 전에 아래 순서를 수행한다.
 
-**[MUST]** 스킬 시작 즉시 모드에 따라 서브 하네스를 Read한다. 이 단계를 건너뛰면 안 된다:
-- `--interactive` 플래그 → `~/.opal/references/opal-harness-interactive.md`를 Read한다
-- `--agentic` 플래그 → `~/.opal/references/opal-harness-agentic.md`를 Read한다
-- 모드 플래그 없음 (기본) 또는 `--semi-agentic` → `~/.opal/references/opal-harness-semi-agentic.md`를 Read한다
-- 다중 모드 플래그 동시 사용 시 즉시 사용자에게 보고 + state init도 거부 (`mode_flag_conflict`)
+1. `~/.opal/tools/event-loader/run.sh load --event pilot.start > <pilot-receipt-path>`를 호출한다.
+2. load 응답의 `documents[].content` 전문을 모두 현재 컨텍스트에 적용하고, `modes` 문서가 현재 플래그에 대해 라우팅한 서브 하네스 전문 하나만 Read한다.
+3. `~/.opal/tools/state-tool/run.sh event-verify --event pilot.start --receipt <pilot-receipt-path>`가 성공한 뒤에만 진행한다.
 
-> **[MUST]** 산출물 작성·검증 시 `opal/core/references/harness/citation-rules.md`를 Read하여 규칙(근거 제시 원칙 / 트랙별 매트릭스 / [MUST] 토큰 / 영역 간 용어 일관성 / decision_required 계약)을 준수한다.
+**[MUST — 단계 이벤트 게이트]** 각 실제 단계의 첫 작업이나 `state-tool advance` 직전에 아래 매핑의 이벤트를 load하고, 응답 문서 전문을 적용한 뒤 같은 event id로 `state-tool event-verify`를 통과해야 한다.
+
+| 실제 단계 | 이벤트 |
+|---|---|
+| TASK | stage.task |
+| SPEC | stage.analysis |
+| REVIEW / DESIGN | stage.plan |
+| EXECUTE-LOOP | stage.execute |
+| VERIFY | stage.test |
+| CLOSE | stage.close |
+
+호출 형식은 `~/.opal/tools/event-loader/run.sh load --event <stage.*> > <stage-receipt-path>` 다음
+`~/.opal/tools/state-tool/run.sh event-verify --event <stage.*> --receipt <stage-receipt-path>`이다.
+문서 집합은 `events.json`만 SSOT로 사용하며 SKILL에 파일 목록을 복제하지 않는다. load 실패,
+필수 문서 누락, stale receipt, wrong-event receipt는 해당 파일럿·단계 진입을 즉시 중단하는
+blocker다. 부트 캐시를 근거로 공통 문서를 직접 재Read하는 우회는 금지한다.
 
 ---
 
@@ -39,14 +52,14 @@ EXECUTE-LOOP에서 `opal-sdd-action-agent`에 단일 디스패치하며, PM이 �
 WHAT 단계
 ─────────────────────────────────────────────────────────
 Phase 0: TASK      PM 직접    TASK.md 생성 (메타데이터)
-Phase 1: SPEC      워커       internal-skills/op-sdd-spec → SPEC.md
+Phase 1: SPEC      워커       op-sdd-spec → SPEC.md
                               PM Gate → 사용자 Gate
 Phase 2: REVIEW    PM 직접    구조 검증 (S-1~S-6) → TEST-SCENARIOS.md 작성
                               → 목표-커버 게이트(coverage-check + 독립 evaluator) → 사용자 Gate
 ── WHAT 완료 / 기준 확정 ──────────────────────────────────
 HOW 단계
 ─────────────────────────────────────────────────────────
-Phase 3: DESIGN    워커       internal-skills/op-sdd-plan → SPEC-PLAN.md (아키텍처 + ACT 분해)
+Phase 3: DESIGN    워커       op-sdd-plan → SPEC-PLAN.md (아키텍처 + ACT 분해)
                               PM Gate → 사용자 Gate
 Phase 4: EXECUTE   ACT 루프   사용자 Gate → opal-sdd-action-agent 디스패치
                               → 결과 수신 → DONE.md
@@ -112,9 +125,7 @@ harness "4. TASK 공통 프로세스" 참조. 다음 단계명: SPEC.
 **디스패치 프롬프트**:
 ```
 [WORKER] op-sdd-spec 스킬을 수행하라.
-**스킬 경로**:
-1. `{프로젝트}/opal/skills/opal-pilot-sdd/internal-skills/op-sdd-spec/SKILL.md`
-2. `~/.opal/skills/opal-pilot-sdd/internal-skills/op-sdd-spec/SKILL.md`
+**스킬 경로**: {op-sdd-spec/SKILL.md 탐색 경로}
 **태스크 폴더**: tasks/{NNN}-{feature}/
 **프로젝트 컨텍스트**: {docs/PROJECT.md + 매칭 참조 문서}
 **하네스 Guards**: 구현 금지. SPEC.md 외 파일 생성 금지.
@@ -182,9 +193,7 @@ PM이 직접 SPEC.md를 검증하고 TEST-SCENARIOS.md를 작성한다. **워커
 **디스패치 프롬프트**:
 ```
 [WORKER] op-sdd-plan 스킬을 수행하라.
-**스킬 경로**:
-1. `{프로젝트}/opal/skills/opal-pilot-sdd/internal-skills/op-sdd-plan/SKILL.md`
-2. `~/.opal/skills/opal-pilot-sdd/internal-skills/op-sdd-plan/SKILL.md`
+**스킬 경로**: {op-sdd-plan/SKILL.md 탐색 경로}
 **태스크 폴더**: tasks/{NNN}-{feature}/
 **이전 산출물**: {SPEC.md 경로}, {TEST-SCENARIOS.md 경로}
 **REVIEW 검증 메모**: {구조 검증 Warning 등 REVIEW 결과 요약}
@@ -358,7 +367,7 @@ ACT 완료마다 state-tool을 호출하여 파이프라인 행(`state.json`)을
 
 STATE.md는 **의사결정 로그·블로커·자유 기재를 담는 저널**이다. Phase·행 상태·`current_status`·다음 액션의 SSOT는 `state.json`(`references/pipeline.json` 기준으로 state-tool이 구성)이며, 조회는 `~/.opal/tools/state-tool/run.sh show <task-path>`로 한다.
 
-STATE.md 전체 구조 예시 (ACT 목록·TS 현황은 state.json 파생이 아닌 opsdd 고유 자유 기재이며, 도구가 담지 못하는 서술 정보를 담는 저널이다):
+STATE.md 전체 구조 예시 (ACT 목록·TS 현황·SPEC 변경 이력은 state.json 파생이 아닌 opsdd 고유 자유 기재이며, 도구가 담지 못하는 서술 정보를 담는 저널이다):
 
 ```
 STATE: {기능명} SDD 개발
@@ -368,6 +377,7 @@ STATE: {기능명} SDD 개발
 섹션 목록:
 - ACT 목록 (EXECUTE Phase 상세 — ACT별 파이프라인 행 자체는 state-tool add-row/mark로 관리되며 SSOT는 state.json(조회: show). 본 섹션은 ACT별 L1/L2/TS 세부 결과를 담는 저널 자유 기재 표)
 - TS 현황 (VERIFY Phase 요약, Green/Red/Fail/Skip 건수)
+- SPEC 변경 이력
 - 의사결정 로그
 - 블로커
 ```
@@ -479,3 +489,5 @@ opal-harness-agentic.md §6 공통 기준에 추가:
 | DECISION | ACT 순서/병렬 그룹핑 결정 |
 | IMPROVE | SPEC.md 갱신 반영 |
 | ESCALATION | 사용자 에스컬레이션 |
+
+---

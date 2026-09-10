@@ -12,13 +12,26 @@ description: |
 
 모드: GC (SCAN → CHECK → REPORT → CLOSE)
 
-> 부트스트랩에서 로드되지 않은 경우: `~/.opal/references/opal-harness.md`를 Read한다.
+**[MUST — pilot.start 이벤트 게이트]** 파일럿의 첫 작업 전에 아래 순서를 수행한다.
 
-**[MUST]** 스킬 시작 즉시 모드에 따라 서브 하네스를 Read한다:
-- `--agentic` 플래그 있음 → `~/.opal/references/opal-harness-agentic.md`를 Read한다
-- `--agentic` 없음 (기본) → `~/.opal/references/opal-harness-interactive.md`를 Read한다
+1. `~/.opal/tools/event-loader/run.sh load --event pilot.start > <pilot-receipt-path>`를 호출한다.
+2. load 응답의 `documents[].content` 전문을 모두 현재 컨텍스트에 적용하고, `modes` 문서가 현재 플래그에 대해 라우팅한 서브 하네스 전문 하나만 Read한다.
+3. `~/.opal/tools/state-tool/run.sh event-verify --event pilot.start --receipt <pilot-receipt-path>`가 성공한 뒤에만 진행한다.
 
-> **[MUST]** 산출물 작성·검증 시 `opal/core/references/harness/citation-rules.md`를 Read하여 규칙(근거 제시 원칙 / 트랙별 매트릭스 / [MUST] 토큰 / 영역 간 용어 일관성 / decision_required 계약)을 준수한다.
+**[MUST — 단계 이벤트 게이트]** 각 실제 단계의 첫 작업이나 `state-tool advance` 직전에 아래 매핑의 이벤트를 load하고, 응답 문서 전문을 적용한 뒤 같은 event id로 `state-tool event-verify`를 통과해야 한다.
+
+| 실제 단계 | 이벤트 |
+|---|---|
+| SCAN | stage.analysis |
+| CHECK | stage.test |
+| REPORT | stage.plan |
+| CLOSE | stage.close |
+
+호출 형식은 `~/.opal/tools/event-loader/run.sh load --event <stage.*> > <stage-receipt-path>` 다음
+`~/.opal/tools/state-tool/run.sh event-verify --event <stage.*> --receipt <stage-receipt-path>`이다.
+문서 집합은 `events.json`만 SSOT로 사용하며 SKILL에 파일 목록을 복제하지 않는다. load 실패,
+필수 문서 누락, stale receipt, wrong-event receipt는 해당 파일럿·단계 진입을 즉시 중단하는
+blocker다. 부트 캐시를 근거로 공통 문서를 직접 재Read하는 우회는 금지한다.
 
 > **[MUST] 진단 전담**: 본 스킬은 코드 파일을 수정하지 않는다(APPLY 단계 제거됨). 수정이 필요한 이슈는 CLOSE 단계에서 `//opds` 체인으로 이관한다. Guards §1 "소스 파일 수정 금지" 원칙과 부합한다.
 
@@ -328,7 +341,7 @@ CLOSE로 진행할까요? 수정이 필요하면 CLOSE 단계에서 //opds 체�
 **목적**: 실행 요약 집계, DONE.md 생성, 필요 시 opds 수동 체인 안내
 
 > **[MUST] CLOSE 진입 게이트 (R-11 G-2 — 확인 행 0개 파이프라인 폴백)**: opgc `references/pipeline.json`에는 "사용자 확인" 행이 없다. 이 경우 `check_close_gate`는 **CLOSE 첫 행(`close.done_md`) 자체를 유일한 소유자 승인 지점**으로 취급한다 — 소유자에게 REPORT 결과를 보고하고 승인 발화를 받은 뒤 `--owner user`로 mark해야 하며, 생략 시 `close_gate_violation`으로 거부된다(`--force` 불요 — `--force`는 정책 우회이므로 사용하지 않는다).
-> (하네스 §1 Guards, `opal/tools/state-tool/state_tool.py` `check_close_gate` G-2 폴백 / `opal/core/references/opal-harness-semi-agentic.md` §3 opgc 행 / TASK.md §제약조건 원문 준수)
+> (`pilot.start`가 전달한 `guards`, `opal/tools/state-tool/state_tool.py` `check_close_gate` G-2 폴백 / `opal/core/references/opal-harness-semi-agentic.md` §3 opgc 행 / TASK.md §제약조건 원문 준수)
 
 ### 4.1 DONE.md 생성
 
@@ -512,23 +525,3 @@ fingerprint = sha1(fingerprint_input).hex()[:16]
 | `opal/core/references/pm/context-injection.md` | PROJECT.md 프로젝트 구성 기반 라우팅 규약 |
 
 ---
-
-## 변경이력
-
-| 버전 | 날짜 | 변경내용 |
-|------|------|---------|
-| v1.0 | 2026-04-17 | 초기 작성 — 5단계 파이프라인, arguments 파싱, STATE.md 치환값, 에이전트 병렬 디스패치, Agentic Mode, CLOSE 진입 게이트, 트리거 독립 판정, stash 롤백, fingerprint (122) |
-| v1.1 | 2026-04-17 | APPLY 제거(진단 전담화) — 4단계 파이프라인(SCAN/CHECK/REPORT/CLOSE), CLI 토글 전환(`--security`/`--convention`, `--apply`/`--only X` 제거), PROJECT.md 프로젝트 구성 기반 동적 분할 병렬 디스패치, 체커에 `scope` 입력 + 허브+링크 체이닝, opds 수동 체인 가이드 (125) |
-| v1.2 | 2026-04-24 | citation-rules 트리거 1줄 주입 — SSOT + Trigger 패턴 (130) |
-| v1.3 | 2026-05-01 | state-tool 도입 — SCAN 1.4 init 호출 명시 + CLOSE State Gate를 state-tool mark 명시 호출로 교체 + `--rows-from` SSOT 지시 + agentic `--auto-pass` + CLOSE 진입 게이트 거부 정책 추가 (134) |
-| v1.4 | 2026-05-09 18:30 | 개인 식별자 "캡틴" → "소유자" 치환 — 배포 파일 정체성 누설 정정 (139) |
-| v1.5 | 2026-06-07 | STATE 행 8→7 재구성 — State Gate 행 제거(guard로 이전), §4.2 단일 mark 패턴으로 정합화 (014 Phase 4) |
-| v1.6 | 2026-06-11 19:26 | §4.2 CLOSE에 op-brain-ingest 훅 삽입 — brain 존재 시 GC 산출물 누적, 부재 시 no-op, CLOSE 비중단 (016) |
-| v1.7 | 2026-06-24 | §4.2 CLOSE op-brain-ingest 디스패치 직전에 "관련 문서 업데이트" 단락 삽입 — PROJECT.md 레지스트리 + changed_files 종합으로 관련 문서 최신화 후 ingest (없으면 no-op) (042) |
-| v1.8 | 2026-07-17 | §4.2 CLOSE op-brain-ingest 직후에 "회고(개선 루프) 하드스텝" 삽입 — 궤적 신호→관찰/분류/기록(improve-tool record --scope local\|fw), 개선후보 0건 시 no-op 비차단(brain-ingest 패턴 답습) (058) |
-| v1.9 | 2026-07-28 | `NNN` 채번 서술을 `.opal/MEMORY.md` 헤더 직접 참조에서 `memory-tool task-number --bump` 포인터 참조로 전환 (절차 SSOT: `harness/task-process.md`) (078) |
-| v1.10 | 2026-08-13 16:56 | pipeline.json 전환 — references/pipeline.json 신설(7 task-step, SSOT), --rows-from 호출 경로를 SKILL.md에서 pipeline.json으로 교체, 표는 사람 열람용 미러로 명시 (090) |
-| v1.11 | 2026-08-14 09:23 | `--row N` 2건을 `--task-step <key>`로 전환(close.done_md 확정 / Agentic 범용 예시는 플레이스홀더) + STATE.md 도메인 치환값 `필드/값`(모드·단계 목록) 중복 표 제거(meta와 중복) + 진행 현황 미러 표를 `references/pipeline.json` SSOT 포인터로 교체 + init 완전 명령 1지점화(§Agentic Mode 정본, SCAN 1.4·치환값 절은 포인터) (091) |
-| v1.12 | 2026-08-15 21:48 | 사용자 확인 행 자동 승인 계약 반영 — agentic STATE 갱신 지시에서 PM `--auto-pass` 명시 호출 삭제, 다음 단계 진입 시 도구 자동 승인으로 전환하고 계약 본문은 하네스 SSOT(`opal-harness-agentic.md §4` / `opal-harness-semi-agentic.md §5`) 참조로 정리. CLOSE 진입 게이트 서술 불변 (093) |
-| v1.13 | 2026-08-16 14:20 | STATE.md 저널화 정합 — ① STEP 1 "행 갱신"·§도메인 치환값의 표 전제(마크다운 표 직접 편집 금지/파이프라인 현황판 행)를 표준 문구 A/"파이프라인 행(`state.json` rows[])"으로 치환, "STATE.md 실행 요약 테이블" 관련 서술을 "PM이 저널에 직접 기록하는 자유 기재"로 명확화(`state.json` 비접촉) ② CLOSE 게이트 전면 재작성 — opgc는 "사용자 확인" 행이 0개인 파이프라인이므로 `check_close_gate` G-2 폴백에 따라 CLOSE 첫 행(`close.done_md`)이 유일한 소유자 승인 지점임을 명시, mark 예시에 `--owner user` 추가(`--force` 불요), Agentic 모드 절의 "사용자 확인 행 자동 승인" 보일러플레이트가 opgc에 미적용됨을 명시 (094 R-6/R-7/R-11 G-2, Step 9) |
-| v1.14 | 2026-08-21 15:26 | §2.3 병렬 디스패치 프롬프트 템플릿 직전에 §[PM 컨텍스트 주입] 블록 신설 — `pm/dispatch-process.md` §워커 컨텍스트 주입 템플릿 포인터로 주입 항목 열거를 대체. 전 워커 공통 고정(git 이력 변경 금지 포함)이 도달하도록 함. `:221`의 `[MUST] 커밋 금지 (git commit 호출 금지)` 리터럴은 워커에게 전달되는 프롬프트 본문(주입의 산출물)이므로 무변경 보존 (097) |

@@ -3,7 +3,7 @@
   "module": "memory_tool",
   "layer": "util",
   "domain": "opal-pipeline",
-  "description": "OPAL 메모리 관리 CLI — MEMORY.json SSOT + 9서브명령 init/append/update/promote/prune/show/review/delete/task-number. lazy 자동 마이그레이션(MEMORY.md→MEMORY.json, .bak 보존)·표준 라이브러리 전용 스키마 런타임 검증기(validate_document)·파일 락 기반 원자적 쓰기(memory_lock/atomic_write_json)·요약 길이캡(≤80)·히스토리 FIFO=5·promote 무손실 이전(--to docs|brain --ref 필수)·자가검토(review) 매 변경 명령 자동 첨부. update --kind history로 작업 히스토리 행 정정(무손실·행수 불변, FIFO 미적용). state-tool ok/err/ERROR_CODES 패턴 재사용. 표준 라이브러리만. delete --orphan --ref로 본문 부재 고아 행 정리(본문 실재 시 거부 — 무손실 가드 유지, provenance summary 보존)·review 참조 무결성 검사(memory_file_missing).",
+  "description": "OPAL 메모리 관리 CLI — MEMORY.json SSOT + 9서브명령 init/append/update/promote/prune/show/review/delete/task-number. lazy 자동 마이그레이션(MEMORY.md→MEMORY.json, .bak 보존)·표준 라이브러리 전용 스키마 런타임 검증기(validate_document)·파일 락 기반 원자적 쓰기(memory_lock/atomic_write_json)·요약 길이캡(≤80)·히스토리 FIFO=5·promote 무손실 이전(--to docs|brain --ref 필수)·자가검토(review) 매 변경 명령 자동 첨부. show --boot-brief는 active memory 최대 3건과 UTF-8 stdout 최대 1024 bytes를 보장하고 history result를 제외한다. update --kind history로 작업 히스토리 행 정정(무손실·행수 불변, FIFO 미적용). state-tool ok/err/ERROR_CODES 패턴 재사용. 표준 라이브러리만. delete --orphan --ref로 본문 부재 고아 행 정리(본문 실재 시 거부 — 무손실 가드 유지, provenance summary 보존)·review 참조 무결성 검사(memory_file_missing).",
   "exports": [
     "cmd_init", "cmd_append", "cmd_update", "cmd_promote",
     "cmd_prune", "cmd_show", "cmd_review", "cmd_delete", "cmd_task_number",
@@ -1291,6 +1291,82 @@ def _map_category_to_type(category):
 # ─────────────────────────────────────────────────────────────────────────────
 
 _BRIEF_MEMORY_FIELDS = ("title", "date", "type", "file", "summary")
+_BOOT_HISTORY_FIELDS = ("title", "date", "stage", "path")
+_BOOT_MAX_BYTES = 1024
+_BOOT_MAX_MEMORIES = 3
+
+
+def _compact_json(payload):
+    """stdout 상한 계산과 출력에 동일하게 쓰는 UTF-8 JSON 직렬화."""
+    return json.dumps(payload, ensure_ascii=False, default=str, separators=(",", ":")) + "\n"
+
+
+_BOOT_MIN_BYTES = len(_compact_json({
+    "ok": True,
+    "command": "show",
+    "boot_brief": True,
+    "index_rows": [],
+    "history_rows": [],
+}).encode("utf-8"))
+
+
+def _parse_show_int(value, option):
+    """show 정수 옵션을 기존 구조화 invalid_args 응답으로 검증한다."""
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        err("show", "invalid_args", detail=f"{option}는 정수여야 함: {value}")
+
+
+def _emit_boot_brief(index_rows, history_rows, max_bytes, memory_limit, history_limit):
+    """project-aware assistant용 boot brief를 결정론적으로 축약해 출력한다.
+
+    축약 순서: 오래된 history 행 → memory의 file 필드 → title 필드 →
+    오래된 memory 행. history의 긴 result와 memory 본문은 애초에 싣지 않는다.
+    """
+    active_rows = [
+        {field: row.get(field) for field in _BRIEF_MEMORY_FIELDS}
+        for row in index_rows if row.get("status") == "active"
+    ]
+    active_rows.sort(key=lambda row: row.get("date", ""), reverse=True)
+    active_rows = active_rows[:memory_limit]
+
+    brief_history = [
+        {field: row.get(field) for field in _BOOT_HISTORY_FIELDS}
+        for row in sorted(history_rows, key=lambda row: row.get("date", ""), reverse=True)
+    ][:history_limit]
+
+    payload = {
+        "ok": True,
+        "command": "show",
+        "boot_brief": True,
+        "index_rows": active_rows,
+        "history_rows": brief_history,
+    }
+
+    def fits():
+        return len(_compact_json(payload).encode("utf-8")) <= max_bytes
+
+    while payload["history_rows"] and not fits():
+        payload["history_rows"].pop()
+
+    for field in ("file", "title"):
+        if fits():
+            break
+        for row in payload["index_rows"]:
+            row.pop(field, None)
+
+    while payload["index_rows"] and not fits():
+        payload["index_rows"].pop()
+
+    output = _compact_json(payload)
+    if len(output.encode("utf-8")) > max_bytes:
+        err(
+            "show",
+            "invalid_args",
+            detail=f"--max-bytes가 boot brief 최소 JSON보다 작음: {max_bytes}",
+        )
+    sys.stdout.buffer.write(output.encode("utf-8"))
 
 
 def cmd_show(args):
@@ -1310,7 +1386,54 @@ def cmd_show(args):
     history_count = len(history_rows)
 
     brief = bool(getattr(args, "brief", False))
-    history_arg = getattr(args, "history", None)
+    boot_brief = bool(getattr(args, "boot_brief", False))
+    history_raw = getattr(args, "history", None)
+    history_arg = _parse_show_int(history_raw, "--history") if history_raw is not None else None
+    max_bytes_raw = getattr(args, "max_bytes", None)
+    memories_raw = getattr(args, "memories", None)
+
+    if not boot_brief and (max_bytes_raw is not None or memories_raw is not None):
+        err("show", "invalid_args", detail="--max-bytes와 --memories는 --boot-brief 전용")
+    if brief and boot_brief:
+        err("show", "invalid_args", detail="--brief와 --boot-brief는 동시에 지정할 수 없음")
+
+    if boot_brief:
+        max_bytes = (
+            _parse_show_int(max_bytes_raw, "--max-bytes")
+            if max_bytes_raw is not None else _BOOT_MAX_BYTES
+        )
+        memory_limit = (
+            _parse_show_int(memories_raw, "--memories")
+            if memories_raw is not None else _BOOT_MAX_MEMORIES
+        )
+        history_limit = history_arg if history_arg is not None else 0
+
+        if max_bytes < _BOOT_MIN_BYTES or max_bytes > _BOOT_MAX_BYTES:
+            err(
+                "show",
+                "invalid_args",
+                detail=(
+                    f"--max-bytes는 최소 성공 JSON 크기 {_BOOT_MIN_BYTES} 이상 "
+                    f"{_BOOT_MAX_BYTES} 이하여야 함: {max_bytes}"
+                ),
+            )
+        if memory_limit <= 0 or memory_limit > _BOOT_MAX_MEMORIES:
+            err(
+                "show",
+                "invalid_args",
+                detail=f"--memories는 1 이상 {_BOOT_MAX_MEMORIES} 이하여야 함: {memory_limit}",
+            )
+        if history_limit < 0:
+            err("show", "invalid_args", detail=f"--history는 0 이상이어야 함: {history_limit}")
+
+        _emit_boot_brief(
+            index_rows,
+            history_rows,
+            max_bytes,
+            memory_limit,
+            history_limit,
+        )
+        return
 
     extra = {}
     if brief:
@@ -1572,7 +1695,13 @@ def main():
     p_show.add_argument("--file", required=True, help="MEMORY.json 경로")
     p_show.add_argument("--brief", action="store_true",
                         help="active 메모리 5필드 + 히스토리 요약(PLAN §3.3.2)")
-    p_show.add_argument("--history", type=int, default=None, dest="history",
+    p_show.add_argument("--boot-brief", action="store_true", dest="boot_brief",
+                        help="project-aware boot 전용 bounded active memory 요약")
+    p_show.add_argument("--max-bytes", default=None, dest="max_bytes",
+                        help="boot brief UTF-8 stdout 상한(1~1024, 기본 1024)")
+    p_show.add_argument("--memories", default=None,
+                        help="boot brief active memory 상한(1~3, 기본 3)")
+    p_show.add_argument("--history", default=None, dest="history",
                         help="히스토리 반환 건수 재정의 (brief 기본 3)")
     p_show.set_defaults(func=cmd_show)
 

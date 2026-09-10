@@ -34,9 +34,9 @@
 | `docs/` | 프로젝트 문서 | 아키텍처, 컨벤션 등 프로젝트 레벨 문서 |
 | `tasks/` | 태스크 산출물 | `{NNN}-{YYMMDD}-{스킬약어}-{태스크명}/` 형식의 작업 단위 폴더 |
 | `skills/` | 독립 스킬 소스 | 파이프라인 없이 단독 사용하는 스킬 (8종) |
-| `opal/skills/` | OPAL 스킬 소스 | 오케스트레이터, 단계 스킬 등 OPAL 전용 (39종) |
+| `opal/skills/` | OPAL 스킬 소스 | 오케스트레이터, 단계 스킬 등 OPAL 전용 (43종) |
 | `opal/agents/` | 워커 에이전트 소스 | 모든 서브에이전트 정의 (15종) |
-| `opal/tools/` | OPAL 도구 소스 | 결정론 집행 CLI (19종) |
+| `opal/tools/` | OPAL 도구 소스 | 결정론 집행 CLI (20종, `event-loader` 포함) |
 | `opal/core/` | 프레임워크 코어 | 레퍼런스, MCP 설정, 도구 |
 | `opal/bootstrapper/` | 부트스트래퍼 | 플랫폼별 부트스트랩 진입점 (claude/codex/cursor/gemini) |
 | `opal/templates/` | 템플릿 | 배포 시 참조하는 설정 템플릿 |
@@ -67,7 +67,7 @@
 | 컴포넌트 | 약어 | 유형 | 설명 |
 |----------|------|------|------|
 | `opal-pilot-dev` | opd | 오케스트레이터 | Full Task — TASK → ANALYSIS → PLAN → TEST-SCENARIO → EXECUTE → TEST → CLOSE. 대규모 개발 작업용 |
-| `opal-pilot-dev` | opds logical alias | 오케스트레이터 | Short Task 프로필 — canonical Dev Pilot 내부 선택. 별도 물리 `opal-pilot-dev-short` 없이 TASK → PLAN → EXECUTE → TEST → CLOSE |
+| `opal-pilot-dev-short` | opds | 오케스트레이터 | Short Task (코드 변경 기본 진입점) — TASK → PLAN → EXECUTE → TEST → CLOSE. PLAN에서 규모 초과 판단 시 opd 에스컬레이션 제안 |
 | `opal-pilot-dev-wireframe` | opdw | 오케스트레이터 | Wireframe UI — TASK → WIREFRAME → EXECUTE → CLOSE. 와이어프레임 설계부터 UI 구현까지 |
 | `opal-pilot-project` | opp | 오케스트레이터 | Project Task 범용 (문서 작성·설정 변경·워크플로우) — TASK → PLAN → EXECUTE → CLOSE |
 | `opal-pilot-write-tech` | opwt | 오케스트레이터 | 기획 산출물 네트워크 (PRD·TRD·정책서·IA) — TASK → ANALYSIS → PLAN → EXECUTE → QA → CLOSE. 워커 병렬 디스패치 + 교차 논리 검토·정합성 검증 |
@@ -103,16 +103,17 @@
 
 > **트랙 라우팅 (Task 098)**: `//opd` 호출이어도 4축(설계 확정률·예상 변경 파일 수·신규 개념 유무·최고 검증 계층)을 전건(AND) 충족하면 `opds`로 자동 강등 진입한다. 판정 시점은 TASK 완료 직후 1회이며, 승격(`opds`→`opd`, PLAN 결과 시점)과 시점·임계가 상호배타여서 왕복 구조가 성립하지 않는다. 판정 불능·`## 확정된 설계 방향` 부재 시 fail-safe는 강등 불발(`opd` 유지)이다. 강등은 소유자 승인 왕복 없이 진입하고 4축 실측값을 사후 통보한다. 접합: opd STEP 1 직후 · opds §에스컬레이션 규칙 포인터. 임계값 수치는 SSOT에만 존치 — SSOT: `opal/core/references/harness/track-routing.md`.
 
-> **프로젝트 문서 주입 계약 (Task 111)**: Dev 파이프라인의 PM은 `docs/PROJECT.md`를 먼저 읽고 §프로젝트 문서 레지스트리의 적용 범위·참조 시점으로 작업 도메인에 필요한 프로젝트/기획/설계 문서를 선별해 워커에 주입한다. 개발 워커는 주입된 문서만 읽으며, `docs/` 전체나 고정 파일명을 자체 가정하지 않는다. `docs/PROJECT.md`가 없는 프로젝트에서만 기존 영역별 최소 폴백 문서를 허용한다.
+> **프로젝트 문서 주입 계약 (Task 111)**: Dev 파이프라인의 PM은 `pm.activate` 이벤트에서 `docs/PROJECT.md`를 읽고 §프로젝트 문서 레지스트리의 적용 범위·참조 시점으로 작업 도메인에 필요한 프로젝트/기획/설계 문서를 선별해 워커에 주입한다. 개발 워커는 주입된 문서만 읽으며, `docs/` 전체나 고정 파일명을 자체 가정하지 않는다. `docs/PROJECT.md`가 없는 프로젝트에서만 기존 영역별 최소 폴백 문서를 허용한다.
 
 ## 주요 컴포넌트 (SDD 파이프라인)
 
 | 컴포넌트 | 약어 | 유형 | 설명 |
 |----------|------|------|------|
 | `opal-pilot-sdd` | opsdd | 오케스트레이터 | SDD 기반 오케스트레이터: SPEC → VERIFY → PLAN → TASKS → EXECUTE |
-| `opal-pilot-sdd/internal-skills/op-sdd-spec` | - | 내부 단계 스킬 | SPEC 단계 — SDD 명세 작성 |
-| `opal-pilot-sdd/internal-skills/op-sdd-plan` | - | 내부 단계 스킬 | SPEC-PLAN 단계 — SDD 구현 계획 수립 |
-| `opal-pilot-sdd/internal-skills/op-sdd-action-plan` | - | 내부 단계 스킬 | PLAN(ACT) 단계 — SDD ACT 전용 경량 구현 청사진 작성 (opal-sdd-action-agent 디스패치) |
+| `op-sdd-spec` | - | 단계 스킬 | SPEC 단계 — SDD 명세 작성 |
+| `op-sdd-verify` | - | 단계 스킬 | VERIFY 단계 — SDD 명세 검증 |
+| `op-sdd-plan` | - | 단계 스킬 | SPEC-PLAN 단계 — SDD 구현 계획 수립 |
+| `op-sdd-action-plan` | - | 단계 스킬 | PLAN(ACT) 단계 — SDD ACT 전용 경량 구현 청사진 작성 (opal-sdd-action-agent 디스패치) |
 
 ## 주요 컴포넌트 (GC 파이프라인)
 
@@ -202,7 +203,7 @@ TEST-SCENARIO 단계를 "목표 달성 검증"으로 재정의 — 루브릭 채
 | `test-tool scenario-coverage-check` | - | 도구 확장 | R/F/H↔시나리오 매핑 누락 결정론 판정(②③④). exit 0(전커버)/16(coverage_unmet)/17(입력오류). pilot-중립 정규화 페이로드 소비 |
 | `opal-evaluator-agent scenario-rubric` | - | 서브에이전트 phase | 판단축 ①목표달성·⑤채택/잔존·⑥경계/부정 2점 척도 채점(각≥1 AND 평균≥1.5→pass). SCENARIO-GATE-{N}.md 산출. 기존 3 phase additive |
 
-> tool-gated: 게이트 PASS는 coverage-check exit 0 AND evaluator verdict pass 두 증거 필수. Producer(PM+캡틴)≠Evaluator(opal-evaluator-agent) 매반복 분리. 루프 상한 수치 SSOT는 `opal-harness.md` §1. opd STEP 3.5 접합 — pipeline.json `test_scenario.scenario_gate` 행이 EXECUTE 진입을 구조적 차단. SSOT: `opal/core/references/harness/scenario-gate.md`.
+> tool-gated: 게이트 PASS는 coverage-check exit 0 AND evaluator verdict pass 두 증거 필수. Producer(PM+캡틴)≠Evaluator(opal-evaluator-agent) 매반복 분리. 루프 상한 수치 SSOT는 `opal/core/references/harness/guards.md`, 게이트 절차 SSOT는 `opal/core/references/harness/scenario-gate.md`다. opd STEP 3.5의 pipeline.json `test_scenario.scenario_gate` 행이 EXECUTE 진입을 구조적으로 차단한다.
 >
 > **목표계열 선작성 트랙 (Task 095)**: 도출 입력을 Block A(TASK 유래 — 목표·R·채택/잔존 → 축 ①②⑤⑥)와 Block B(PLAN 유래 — F·H → 축 ③④)로 분리하고, Block A를 PLAN 워커 실행과 **병렬 선작성**할 수 있다. opt-in이며 목적은 효율이 아니라 **관점 편향 차단**(070 실패모드 방어)이다. 보강 없이는 게이트가 `coverage_unmet`으로 거부하고, 게이트는 보강 완료 후 1회만 호출한다. 접합: opds STEP 2 · opd STEP 3/3.5. SSOT: `opal/core/references/harness/red-first.md` §1.6 · 절차: `op-dev-test-scenario/references/test-scenario-guide.md` §Step 1.
 
@@ -220,16 +221,13 @@ TEST-SCENARIO 단계를 "목표 달성 검증"으로 재정의 — 루브릭 채
 
 | 문서 | 설명 | 용도 | 적용 범위 | 참조 시점 |
 |------|------|------|----------|----------|
-| `.opal/AGENT.md` | PM 프로필 | PM 역할 및 검토 기준 | Framework | 부트스트랩 시 자동 |
-| `docs/PROJECT.md` | 프로젝트 정의·문서 레지스트리 (SSOT) | 프로젝트 개요, 원칙, 문서 허브, PM 컨텍스트 선별 기준 | Framework | 부트스트랩 및 워커 디스패치 전 |
+| `.opal/AGENT.md` | PM 프로필 | PM 역할 및 검토 기준 | Framework | `pm.activate` 이벤트 |
+| `docs/PROJECT.md` | 프로젝트 정의·문서 레지스트리 (SSOT) | 프로젝트 개요, 원칙, 문서 허브, PM 컨텍스트 선별 기준 | Framework | `pm.activate` 이벤트. 세션 부트에서는 로드 금지, 이후 워커 디스패치 문서 선별에 사용 |
 | `docs/ARCHITECTURE.md` | 시스템 아키텍처 | 구조, 컴포넌트 관계, 배포 모델 | Framework | PROJECT.md 레지스트리가 구조 변경·영향 분석에 필요하다고 지시할 때 |
-| `docs/CONVENTIONS.md` | 코드 및 문서 컨벤션 | 네이밍, 파일 구조, 커밋 **메시지 형식·단위**, 구현 규칙(디스패치/@header/Citation/State/도구·배포 경계·플랫폼 분기). 승인 게이트·커밋 실행 시점 등 Guards 규칙 **원문**은 `opal/core/references/opal-harness.md` §1이 소유하고 본 문서는 포인터만 둔다 | Framework | PROJECT.md 레지스트리가 구현·문서 컨벤션 판단에 필요하다고 지시할 때 |
-| `.opal/MEMORY.json` | 프로젝트 메모리 인덱스 (JSON SSOT) | 메모리·작업 히스토리·피드백 추적 (`memory/` 하위 메모리 파일 인덱스). 변경은 `memory-tool`만 수행 | Framework | 부트스트랩 시 자동 (`memory-tool show --brief` 브리핑) |
+| `docs/CONVENTIONS.md` | 코드 및 문서 컨벤션 | 네이밍, 파일 구조, 커밋 **메시지 형식·단위**, 구현 규칙(디스패치/@header/Citation/State/도구·배포 경계·플랫폼 분기). 실행 규칙 원문은 `opal/core/references/harness/`의 owner 문서, 문서 이력 규칙은 `opal/core/references/opal-doc-standard.md` §5가 소유 | Framework | `pm.activate` 후 PROJECT 레지스트리가 구현·문서 컨벤션 판단에 필요하다고 지시할 때 |
+| `.opal/MEMORY.json` | 프로젝트 메모리 인덱스 (JSON SSOT) | 메모리·작업 히스토리·피드백 추적 (`memory/` 하위 메모리 파일 인덱스). 변경은 `memory-tool`만 수행 | Framework | `session.project`에서 `memory-tool show --boot-brief --max-bytes 1024 --memories 3 --history 0` 출력만 선택 로드. 본문·전체 history는 로드 금지 |
 | `README.md` | 프레임워크 공개 소개 문서 | Pilot 개념, 사용 사례, 프레임워크 철학 정의 | Framework | Pilot 추가/변경 시, 사용자 대면 문서 작업 시, 프레임워크 철학/방향 관련 작업 시 |
 | `docs/architecture-diagram/opal_framework_architecture.html` | 프레임워크 구조 다이어그램 (시각 SSOT) | 3층 구조·파이프라인·도구 관계 시각화 (태스크 086 산출) | Framework | 구조 설명·온보딩 시 |
-| `docs/architecture-diagram/opal_sdlc_artifact_traceability.html` | SDLC 산출물 연결 구조도 | TASK·ANALYSIS·PLAN·TEST-SCENARIO·EXECUTE·TEST의 정보 소유권과 AC/C/W/H/S 추적 관계 설명 | Framework | Dev 파이프라인 산출물 작성·검토·온보딩 시 |
 | `docs/SECURITY.md` | 프로젝트 보안 기준 | opal-security-checker가 OWASP/CWE/SANS Base에 병합하는 프로젝트 누적 기준 | Framework | 보안 체크(opgc CHECK) 시 |
 | `docs/proposals/opal-brain-design.md` | Project Brain 설계 SSOT | brain 구조·모드·도구 계약 설계 근거 | Framework | Brain 관련 변경 시 |
 | `docs/proposals/opal-data-design.md` | Data Design 파이프라인 설계 SSOT | 사전·ERD·DDL 흐름 설계 근거 | Framework | Data Design 관련 변경 시 |
-
----

@@ -4,7 +4,7 @@
 
 ## 시스템 구성
 
-OPAL은 2-레이어 아키텍처로 동작한다.
+OPAL 자산은 Global/Project 2-레이어로 배치되고, 런타임은 세션 이벤트와 JIT 실행 이벤트로 필요한 문서만 로드한다.
 
 > **정본 시각 자산**: 10계층 전체 구조도는 [`docs/architecture-diagram/opal_framework_architecture.html`](architecture-diagram/opal_framework_architecture.html)가 정본이다(태스크 086, `system-architecture-html` 스킬 산출). 아래 ASCII 다이어그램은 **진입 흐름 요약본**이며, 계층 상세는 HTML을 기준으로 한다.
 
@@ -14,22 +14,23 @@ OPAL은 2-레이어 아키텍처로 동작한다.
 │  ┌───────────────────────────────────────────────────┐  │
 │  │  부트스트래퍼 (CLAUDE.md / .cursorrules /           │  │
 │  │                GEMINI.md / AGENTS.md)              │  │
-│  │  → ~/.opal/AGENT.md Read → 에이전트 활성화          │
+│  │  → setting/marker 판정 → session.* 이벤트          │
 │  └───────────────────────────────────────────────────┘  │
 │                          │                               │
 │                          ▼                               │
 │  ┌───────────────────────────────────────────────────┐  │
-│  │  OPAL 에이전트 (알투)                               │
-│  │  ├─ 정체성: ~/.opal/identity.md                    │
-│  │  ├─ 레지스트리: ~/.opal/references/                │
-│  │  └─ PM 역할: {프로젝트}/.opal/AGENT.md             │
+│  │  일반 비서 / 프로젝트 인지 비서                     │
+│  │  ├─ session.assistant: 커널·헌법·정체성             │
+│  │  ├─ session.project: 프로젝트 감지 + ≤1KB brief     │
+│  │  └─ session.disabled: OPAL 문서 0건                 │
 │  └───────────────────────────────────────────────────┘  │
 │            │                          │                  │
-│     // 커맨드 또는                  자연어 요청          │
-│     자연어 요청                       │                  │
+│     프로젝트 작업 또는              일반 요청            │
+│     // 커맨드                                              │
 │            ▼                          ▼                  │
 │  ┌──────────────────┐    ┌──────────────────────────┐   │
-│  │  오케스트레이터    │    │  독립 스킬                │   │
+│  │  PM JIT 활성화     │    │  독립 스킬                │   │
+│  │  pm.activate       │    │                          │   │
 │  │  (opal-pilot-*)   │    │  (api-analyzer,          │   │
 │  │                   │    │   interview, ui-designer  │   │
 │  │  하네스 적용       │    │   등)                    │   │
@@ -50,19 +51,24 @@ OPAL은 2-레이어 아키텍처로 동작한다.
 └─────────────────────────────────────────────────────────┘
 ```
 
-### 부트스트랩 진입 모델 (2-tier)
+### 부트스트랩과 JIT 이벤트 모델
 
-부트스트랩은 **2-tier**로 동작한다 — 전역 마커는 항상 **비서 tier**를 로드하고, **PM tier**는 OPAL 프로젝트(`.opal/AGENT.md` 존재)에서만 승격된다. SSOT는 `~/.opal/AGENT.md` Eager 단계(소스 `opal/core/AGENT.md`).
+부트스트래퍼는 effective setting과 첫 줄 마커를 판정한 뒤 `session.*` 이벤트만 처리한다. 이벤트별 필수 문서의 단일 레지스트리는 `opal/core/references/events.json`, 전문·해시·receipt 로드는 `opal/tools/event-loader`가 소유한다. 프로젝트 존재만으로 PM을 활성화하지 않는다.
 
-| Tier | 트리거 | 로드 대상 | 모드 |
-|------|--------|----------|------|
-| **Phase A — 비서(Lite)** | 전역 마커(install이 `~/.claude/CLAUDE.md` 등에 1회 삽입) — 모든 세션 상시 | 스킵게이트(setting.json 머지) + identity + PRINCIPLES(헌법) + 도구맵·`//` 레지스트리 해석 | 자비스 비서 |
-| **Phase B — PM(Full)** | cwd에 `.opal/AGENT.md` 존재 시에만 승격 | (Phase A에 더해) opal-harness(Guards/State) + opal-pm(PM 프로세스) + 프로젝트 `.opal/AGENT.md` + PROJECT/MEMORY 브리핑 | 프로젝트 PM |
+| 상태·이벤트 | 트리거 | 로드 범위 |
+|-------------|--------|-----------|
+| `session.disabled` | effective setting의 `bootstrap`이 정확히 `off` | 설정 게이트 뒤 OPAL 문서 0건·0 bytes |
+| `session.worker` | 첫 줄 `[WORKER]` | 전역 세션 문서 0건. 이후 PM이 주입한 `worker.dispatch` receipt 계약만 적용 |
+| `session.assistant` | 첫 줄 `[ASSISTANT]` 또는 비프로젝트 세션 | 최소 비서 커널·PRINCIPLES·선택적 identity |
+| `session.project` | 무마커 + `.opal/AGENT.md` 존재 | `session.assistant`에 더해 프로젝트 존재와 `memory-tool`의 최대 1KB boot brief만 인지 |
+| `pm.activate` | 프로젝트 작업 요청 또는 프로젝트 내 `//` 커맨드 | PM 프로세스, PM 활성화 규칙, 프로젝트 `.opal/AGENT.md`, `docs/PROJECT.md`를 JIT 로드 |
+| `pilot.start` / `stage.*` / `worker.dispatch` | 파일럿·단계·워커 경계 | 해당 이벤트의 owner 문서 전문을 JIT 로드하고 receipt 검증 후 진행 |
 
-- **opt-in 모델**: `.opal/AGENT.md`가 없는 비-opi 디렉토리에서는 Phase B가 스킵되어 PM/파이프라인이 로드되지 않는다. `//opi`로 초기화하면 `.opal/AGENT.md`가 생성되어 다음 진입부터 PM tier로 승격된다.
-- **`//opi` 불변식**: `//` 커맨드 해석은 비서 tier에 속하므로(Lazy 트리거 전제조건 없음), 비-opi 폴더에서도 `//opi` 발동이 보장된다 — 새 프로젝트 OPAL화의 진입점.
-- **전역 비서 유지**: 전역 마커는 제거가 아니라 경량 비서 마커로 유지된다. `setting.json bootstrap:off`는 비서·PM 양쪽을 스킵하는 킬스위치(전역/프로젝트 공통).
-- **첫 줄 마커 3단 스킵 사다리**: 프롬프트/디스패치 첫 줄 마커로 로드 범위를 결정한다 — `[WORKER]`(전부 스킵: Phase A·B·공통) / `[ASSISTANT]`(비서 tier만: Phase A — `.opal/AGENT.md`가 있어도 Phase B 승격 억제) / 무마커(비서+PM: 프로젝트면 승격). `[ASSISTANT]`는 `claude -p` 등 headless 호출이 프로젝트 cwd에서도 PM tier 오염 없이 비서 tier로 동작하게 하는 캡이며, 첫 소비자는 대시보드 브레인 질의 어댑터(`dashboard/backend/adapters/opbr_adapter.py`)다. `//` 커맨드는 비서 tier 능력이므로 `[ASSISTANT]` 캡 상태에서도 `//opbr` 등이 정상 완주한다.
+- **설정 우선**: `bootstrap: off`는 marker보다 먼저 판정되는 순수 모드다. identity·PRINCIPLES·memory·PM·harness를 포함한 OPAL 문서를 읽지 않는다.
+- **worker 분리**: `[WORKER]`는 순수 모드가 아니라 전역 부트만 건너뛰는 디스패치 경로다. receipt가 없거나 stale/wrong-event이면 워커가 blocked로 반환한다.
+- **project-aware 경계**: `.opal/AGENT.md` 존재는 프로젝트 감지 신호일 뿐 PM 승격 신호가 아니다. 전체 `docs/PROJECT.md`, `opal-pm.md`, `opal-harness.md`는 세션 부트에서 읽지 않는다.
+- **JIT 검증**: receipt가 필요한 이벤트는 `event-loader load`가 반환한 모든 `documents[].content`를 소비하고 `verify`가 성공한 뒤에만 다음 행동을 시작한다.
+- **`//opi` 불변식**: 비프로젝트 세션도 비서 커널에서 `//` 진입을 해석할 수 있으므로 새 프로젝트 초기화 경로가 유지된다.
 
 ## 2-레이어 모델
 
@@ -72,13 +78,13 @@ OPAL은 2-레이어 아키텍처로 동작한다.
 
 | 디렉토리 | 내용 |
 |----------|------|
-| `AGENT.md` | 에이전트 핵심 정의 (부트스트랩, 행동 규칙, PM 역할) |
+| `AGENT.md` | 세션 이벤트 판정과 최소 비서 커널. PM·pilot·stage·worker 규칙은 JIT 포인터만 보유 |
 | `identity.md` | 에이전트 정체성 (이름, 성격, 톤) |
-| `skills/` | 독립 스킬 8개 + OPAL 스킬 39개 |
+| `skills/` | 독립 스킬 8개 + OPAL 스킬 43개 |
 | `agents/` | 서브에이전트 15개 (전문 8 + 범용 7) |
 | `community-skills/` | 커뮤니티 스킬 — clone-copy(git)로 사용자가 온디맨드 설치 (검색은 `npx skills find`). 사용자 등록분 `user-registry.json` 포함, install 불가침 |
-| `references/` | 레지스트리·표준 문서 **19 엔트리**(최상위 17파일 + 하위 디렉토리 2). 범주별로 — **레지스트리 4종**(`skills.md`·`agents.md`·`mcps.md`·`tools.md`) + JSON 카탈로그 2종(`opal-skills-registry.json`·`community-skills-registry.json`) / **하네스 4종**(`opal-harness.md` + agentic·semi-agentic·interactive 변형) / **표준 문서**(`opal-doc-standard.md`·`header-standard.md`·`conventions-hub-model.md`·`test-tools-schema.yaml`) / **운영 정의**(`opal-pm.md`·`opal-model-mapping.md`·`bootstrapper-management.md`). 하위 디렉토리 2종: `harness/`(하네스 세부 규약 19파일 — 코딩 원칙·게이트·검증 등) · `pm/`(PM 프로세스 세부 6파일 — `orchestration.md`·`dispatch-process.md`·`context-injection.md`·`specialist-agent.md`·`code-scan-management.md`·`asis-analysis.md`(태스크 084 신설)) |
-| `tools/` | CLI 도구 **19종**(도구 디렉토리 기준). 범주별로 — **파이프라인 집행**: `state-tool/`(현황판 JSON SSOT 관리·서브명령 11종), `test-tool/`(테스트 단계별 결정론 집행 — resolve/check/unit/integration + scenario-* 7종), `backlog-tool/`(oppl 2-루프 백로그 `backlog.json` SSOT), `opal-action-monitor/`(루프 액션 에이전트 `.oppl-run/` 진행 현황판 렌더 — 읽기 전용) / **환경·배포**: `opal-cli/`(update·doctor·uninstall·mcp·console 단일 진입점), `doctor/`(4섹션 환경 진단 — Dependencies/OPAL Paths/MCP/Bootstrappers), `git-sync-tool/`(워크스페이스 직속 git 저장소 일괄 안전 최신화 — clean+ff-only, dirty/diverged/detached는 skip 후 보고만), `improve-tool/`(PM 개선 루프 record/list/show — scope local/fw 2원 분기), `worktree-tool/`(태스크별 코드 작업공간 git worktree 격리 — create/list/status/remove 4서브명령. `.opal/worktree.json` 선언 기반 multi-repo(레포별 worktree)·monorepo(sparse-checkout) 2 layout 분기, `remove`는 dirty·unpushed·미머지 3중 가드로 거부하고 `--force`로만 우회, `setup[]`은 실행하지 않고 `pending_setup`으로 열거만 — lazy) / **탐색·연동**: `skill-registry/`(스킬 레지스트리 조회·병합 로드 + `scan-risk` — 커뮤니티 스킬 설치 전 위험 패턴 1층 하드 필터, `context` 태그로 오탐 억제), `tool-scan/`(capability 검색·live 사용법), `opal-agent/`(claude·gemini·codex·grok headless 서브에이전트 호출 라이브러리+CLI), `cmux-tool/`(cmux browser 래퍼 — 3모드 + user_owned 시그널), `playwright-tool/`(웹 페이지 수집 CLI — wtm 폴백 2단계), `xlsx-tool/`, `date/`(현재 일시 취득) / **지식·코드 지도**: `brain-tool/`(프로젝트 브레인 지식 위키 결정론적 집행), memory-tool/ — 메모리 인덱스·히스토리 결정론적 집행·docs/brain 졸업 워크플로우. CLOSE 마지막 행 mark 시 state-tool이 이 도구를 subprocess로 직접 호출해 작업 히스토리 행을 자동 생성한다(생성=도구 / `result` 보강=PM, 실패해도 mark 비차단), code-scan/ — @header 조회 + **헤더 작성층**(discover/scaffold/target/validate·인라인 및 `.opal/code-map/` 2소스) + **샤드 분할층**(`split --plan`/`--groups`, `init`). 기록 소스는 `.opal/code-scan.json`의 전역 `headerSource`(`inline`\|`manifest`) 단일 키가 결정하며 미설정 시 전 명령 차단(`init`으로 초안 생성). 매니페스트는 예약 폴더 `_shards/` 아래 **의미 단위 샤드로 분산** 가능하며(베이스가 `shards` 라벨 배열로 선언, 미선언 자산은 무변경), 과대 매니페스트는 `shardPolicy`(프로젝트 `.opal/code-scan.json` > 전역 `~/.opal/setting.json` > 코드 상수 3단 우선순위, 셀 단위 머지)의 **바이트 초과 AND 엔트리 수 이상 2축**으로 비차단 열거되며 `split --plan`(5단계 제안 사다리) → `--groups`(원자적 집행)로 분할하며, `--plan`은 `op-data-dictionary` 산출물(표준단어사전.md)을 **읽기 전용·옵셔널**로 대조한다(부재 시 건너뜀 — code-scan이 `.opal/` 밖 문서를 읽는 첫 사례). 구 위치 `index.json`의 `manifestMaxBytes`는 값을 읽지 않고 안내만 한다. `validate`는 **이력 비기재 집행층**도 갖는다 — `header_history` **비차단** 경고 3축(`description`·`note`는 서로 다른 태스크 번호 distinct ≥ 2, `undeclared_field`는 `header-standard.md` §2 미정의 필드 존재 자체)으로 `@header`에 쌓이는 변경 이력을 관측한다(exit code 불변). — **도구 외 보조 스크립트**(위 19종에 포함하지 않음): `check-env.js`(Node.js 환경 체크) · `requirements.txt`(Python 의존성 — venv 관리). |
+| `references/` | 레지스트리·표준·운영 문서 **21 엔트리**(최상위 19파일 + 하위 디렉토리 2). `events.json`이 이벤트별 필수 문서 집합을 소유하고 `opal-harness.md`는 호환 인덱스만 제공한다. 하위 디렉토리는 `harness/`(실행 규칙 owner 23파일)와 `pm/`(PM 프로세스 owner 7파일)이다. |
+| `tools/` | CLI 도구 **20종**(도구 디렉토리 기준). 파이프라인 집행(`state-tool`, `test-tool`, `backlog-tool`, `opal-action-monitor`), 이벤트 전문·해시·receipt 집행(`event-loader`), 환경·배포, 탐색·연동, 지식·코드 지도 도구로 구성된다. 세부 공개 계약은 각 도구의 README가 소유한다. |
 | `.venv/` | Python 가상환경 (openpyxl, pandas, playwright 등 — requirements.txt로 관리) |
 | `templates/` | 프로젝트 에이전트 템플릿 |
 
@@ -89,9 +95,9 @@ OPAL은 2-레이어 아키텍처로 동작한다.
 | 파일/디렉토리 | 내용 |
 |--------------|------|
 | `CLAUDE.md` / `.cursorrules` / `GEMINI.md` | 플랫폼 부트스트래퍼 (에이전트 로드 트리거) |
-| `.opal/AGENT.md` | PM 프로필 (역할, 검토 기준, 금지사항) |
-| `.opal/MEMORY.json` + `memory/` | 프로젝트 메모리 (히스토리, 피드백, 아키텍처 결정). 인덱스는 JSON SSOT, 본문은 `memory/*.md` |
-| `docs/PROJECT.md` | 프로젝트 정의 SSOT + 문서 허브 |
+| `.opal/AGENT.md` | `pm.activate`에서 JIT 로드하는 PM 프로필 (역할, 검토 기준, 금지사항) |
+| `.opal/MEMORY.json` + `memory/` | 프로젝트 메모리. `session.project`는 최대 1KB boot brief만 소비하고 본문은 해당 작업 시점에 로드 |
+| `docs/PROJECT.md` | `pm.activate`에서 JIT 로드하는 프로젝트 정의 SSOT + 문서 허브 |
 | `docs/ARCHITECTURE.md` | 아키텍처 (개발 프로젝트) |
 | `docs/CONVENTIONS.md` | 컨벤션 (개발 프로젝트) |
 | `tasks/` | 태스크 산출물 폴더 |
@@ -105,7 +111,7 @@ OPAL은 2-레이어 아키텍처로 동작한다.
 | 그룹 | 스킬 | 설명 |
 |------|------|------|
 | **오케스트레이터** | opal-pilot-dev (opd) | Full Task: TASK → ANALYSIS → PLAN → TEST-SCENARIO → EXECUTE |
-| | opal-pilot-dev (opds logical alias) | Short profile: TASK → PLAN → TEST-SCENARIO → EXECUTE. 별도 물리 `opal-pilot-dev-short` 없이 canonical Dev Pilot에서 선택 |
+| | opal-pilot-dev-short (opds) | Short Task (기본): TASK → PLAN → TEST-SCENARIO → EXECUTE |
 | | opal-pilot-dev-wireframe (opdw) | Wireframe UI: TASK → WIREFRAME → EXECUTE |
 | | opal-pilot-write-tech (opwt) | 서비스 기획 산출물: 네트워크형 오케스트레이션 |
 | | opal-pilot-project (opp) | 프로젝트 범용: TASK → PLAN → EXECUTE |
@@ -127,9 +133,10 @@ OPAL은 2-레이어 아키텍처로 동작한다.
 | | op-task-qa | 범용 QA 검증 (도메인 무관 산출물) |
 | | op-task-plan | 범용 계획 수립 (도메인 무관) |
 | | op-task-execute | 범용 실행 (도메인 무관) |
-| **SDD 내부 단계** | opal-pilot-sdd/internal-skills/op-sdd-spec | SPEC 단계 — SDD 명세 작성 |
-| | opal-pilot-sdd/internal-skills/op-sdd-plan | SPEC-PLAN 단계 — SDD 구현 계획 수립 |
-| | opal-pilot-sdd/internal-skills/op-sdd-action-plan | ACT 전용 경량 PLAN — SPEC.md + SPEC-PLAN.md + TEST-SCENARIOS.md + ACT 정의 기반 (Phase 4 액션 에이전트 내부) |
+| **SDD 단계** | op-sdd-spec | SPEC 단계 — SDD 명세 작성 |
+| | op-sdd-verify | VERIFY 단계 — SDD 명세 검증 |
+| | op-sdd-plan | SPEC-PLAN 단계 — SDD 구현 계획 수립 |
+| | op-sdd-action-plan | ACT 전용 경량 PLAN — SPEC.md + SPEC-PLAN.md + TEST-SCENARIOS.md + ACT 정의 기반 (Phase 4 액션 에이전트 내부) |
 | **보조 단계** | op-brain-ingest | CLOSE 단계 경량 워커 — 태스크 산출물을 프로젝트 brain에 자동 누적 |
 | | op-scenario-gate | TEST-SCENARIO 목표-커버리지 루브릭 게이트 루프 — 결정론 커버리지 체크(test-tool) + 판단 루브릭 |
 | | op-spec-validator | SDD 명세 검증 워커 — PRD/TRD 체크리스트 기반 완성도 판정 |
@@ -190,42 +197,21 @@ OPAL은 2-레이어 아키텍처로 동작한다.
 | 카탈로그 SSOT | [skills.sh](https://skills.sh/) — `npx skills find` (검색·업데이트 확인 전용) |
 | 설치 방식 | clone-copy — `git clone --depth 1` → `{vendor}/{skill}/` 복사 + clone 시점 commit_sha 기록 (opal-skill-manager §설치, 알투 자동 호출 또는 `//skill-manager`) |
 | 설치 위치 | `~/.opal/community-skills/{vendor}/{skill}/SKILL.md` (vendor 중첩 SSOT — flat 잔재는 `skill-registry.js migrate`로 정규화) |
-| 프로젝트 설치 위치 | `{project}/.opal/community-skills/{vendor}/{skill}/SKILL.md` (전역과 동형 구조 — 루트만 `~/.opal/` → `{project}/.opal/`로 상이) |
-| 레지스트리 (스코프 3원) | 프레임워크 카탈로그 `~/.opal/references/community-skills-registry.json` (install이 덮어써 갱신 전파) + 사용자 등록분 `~/.opal/community-skills/user-registry.json` (install 불가침 — 142 D-4, skill-registry가 병합 로드). 사용자 등록분은 기존 7필드에 판정 3필드(`trust`·`capabilities`·`scanned_at`)를 additive로 함께 기록한다 — 스키마 교체 없이 `validate`가 미지 필드를 무시하는 성질을 이용한다. + **프로젝트 스코프** `{project}/.opal/skills-registry.json` (프로젝트별 설치 이력 — 전역 두 스코프와 별개 파일, `skill-registry.js`가 병합 로드) |
+| 레지스트리 (이원) | 프레임워크 카탈로그 `~/.opal/references/community-skills-registry.json` (install이 덮어써 갱신 전파) + 사용자 등록분 `~/.opal/community-skills/user-registry.json` (install 불가침 — 142 D-4, skill-registry가 병합 로드). 사용자 등록분은 기존 7필드에 판정 3필드(`trust`·`capabilities`·`scanned_at`)를 additive로 함께 기록한다 — 스키마 교체 없이 `validate`가 미지 필드를 무시하는 성질을 이용한다 |
 | 라이선스 책임 | 사용자 설치 시점 발생 (OPAL repo는 third-party 코드 재배포 안 함) |
-
-**프로젝트 registry 스키마 (12필드)** — `{project}/.opal/skills-registry.json`의 `groups.project[]` 항목 필드:
-
-| 필드 | 필수 | 타입 | 내용 |
-|------|------|------|------|
-| `name` | ✅ | string | `{vendor}/{skill}` 정식명 — 병합 override 키 |
-| `alias` | | string | 약어 (미지정 가능) |
-| `description` | ✅ | string | 1줄 설명 |
-| `triggers` | ✅ | string[] | 정규식 배열 — `matchByTriggers` 소비 |
-| `domain` | | string | 도메인 라벨 |
-| `source_repo` | ✅ | string | clone 출처 URL |
-| `commit_sha` | ✅ | string | clone 시점 commit |
-| `license` | ✅ | string | 라이선스 (미확인 시 `"Unknown"`) |
-| `trust` | ✅ | string | `SAFE`/`CAUTION`/`RISKY`/`UNKNOWN` |
-| `capabilities` | | string[] | `scan-risk` active hit 요약 |
-| `scanned_at` | ✅ | string | 스캔 시점 ISO8601 |
-| `installed_at` | ✅ | string | 복사 성립 시점 ISO8601 |
-
-**[MUST] `paths` 필드를 두지 않는다** — 프로젝트 스킬 경로는 `name`에서 동적 계산한다(community 스킬의 "paths 폐기, name에서 계산" 규약과 동일 방향).
-
-프로젝트 스코프의 담당 주체는 `opal-skill-wizard`(약어 `osw`)이며, 전역 두 스코프(카탈로그·사용자 등록분)는 계속 `opal-skill-manager`가 담당한다.
 
 ### 하네스 (Harness)
 
-오케스트레이터가 공유하는 공통 인프라. `opal-harness.md`에 정의.
+오케스트레이터가 공유하는 공통 인프라. `opal-harness.md`는 이벤트·owner 인덱스이며, 각 규칙 원문은 `opal/core/references/harness/`와 `opal/core/references/pm/`의 owner 문서가 소유한다. 이벤트별 로드 목록은 `events.json`에만 둔다.
 
 | 요소 | 역할 |
 |------|------|
-| Guards | 구현 금지 원칙, Git 사전 점검, 커밋 규칙 |
-| Gates | 단계 게이트 (캡틴 승인), QA Gate, PM Gate |
-| State | `state.json` 파이프라인 SSOT(state-tool) + STATE.md 저널, 세션 복원 |
-| TASK 프로세스 | op-task 스킬로 TASK.md 작성 (오케스트레이터 직접 수행) |
-| Observability | 스킬/에이전트 탐색 경로, 프로젝트 메모리 동기화 |
+| Guards | `harness/guards.md` — 구현·CLOSE·커밋 경계와 검증 루프 상한 |
+| Modes | `harness/modes.md` — interactive/semi-agentic/agentic 라우팅 |
+| Worktree | `harness/worktree.md` — 축 판정과 허브 루트 해석 |
+| Capability | `harness/capability.md` — 디스패치 시점 런타임 capability 주입 |
+| State·TASK·Gates | `harness/state.md`, `harness/task-process.md`, 각 gate owner 문서 |
+| PM activation | `pm/activation.md` — project-aware assistant에서 PM으로 전환하는 경계 |
 
 ## 배포 모델
 
@@ -233,7 +219,7 @@ OPAL은 2-레이어 아키텍처로 동작한다.
 소스 (이 저장소)                    배포 대상 (~/.opal/)
 ─────────────────                  ──────────────────
 skills/* (독립 8개) ──┐
-opal/skills/* (39개)──┼─ install ─→  ~/.opal/skills/
+opal/skills/* (43개)──┼─ install ─→  ~/.opal/skills/
 opal/agents/* (15개)──┤              ~/.opal/agents/  (source 캐시 — 어댑터 재생성용)
 opal/core/          ──┤              ~/.opal/AGENT.md
   references/       ──┤              ~/.opal/references/
@@ -413,14 +399,15 @@ opal/                                    ← 이 저장소
 ├── opal/                                OPAL 코어
 │   ├── bootstrapper/                    플랫폼별 부트스트래퍼 (claude / cursor / gemini / codex + gemini-hardening)
 │   ├── core/                            에이전트 코어 + 레퍼런스 + MCP
-│   │   ├── AGENT.md                     에이전트 핵심 정의 (부트스트랩 SSOT)
+│   │   ├── AGENT.md                     세션 이벤트 판정 + 최소 비서 커널
 │   │   ├── PRINCIPLES.md                헌법 — 최상위 행동 원칙
 │   │   ├── identity-template.md         온보딩용 정체성 템플릿
 │   │   ├── setting.default.json         전역 setting 기본값
-│   │   ├── references/                  레지스트리·표준 19 엔트리 (harness/ 19파일 · pm/ 6파일 포함)
+│   │   ├── references/                  레지스트리·표준 21 엔트리 (harness/ 23파일 · pm/ 7파일 포함)
 │   │   ├── mcps/                        MCP 설정 4종 (context7, playwright, shadcn, sequential-thinking)
 │   │   └── hooks/                       Claude Code hooks 설정
-│   ├── tools/                           CLI 도구 19종 (+ check-env.js 보조 스크립트, requirements.txt)
+│   ├── tools/                           CLI 도구 20종 (+ check-env.js 보조 스크립트, requirements.txt)
+│   │   ├── event-loader/                이벤트 전문·해시·receipt 로드·검증
 │   │   ├── state-tool/                  파이프라인 현황판 JSON SSOT (서브명령 11종)
 │   │   ├── test-tool/                   테스트 단계 결정론 집행 (resolve/check/unit/integration + scenario-*)
 │   │   ├── backlog-tool/                oppl 백로그 backlog.json SSOT
@@ -441,8 +428,9 @@ opal/                                    ← 이 저장소
 │   │   ├── date/                        현재 일시 취득 (date.js)
 │   │   ├── check-env.js                 Node.js 환경 체크
 │   │   └── requirements.txt             Python 의존성 (venv 관리)
-│   ├── skills/                          OPAL 스킬 (39개)
-│   │   ├── opal-pilot-dev/              오케스트레이터: Full profile (opd) + Short profile (opds logical alias)
+│   ├── skills/                          OPAL 스킬 (43개)
+│   │   ├── opal-pilot-dev/              오케스트레이터: Full Task (opd)
+│   │   ├── opal-pilot-dev-short/        오케스트레이터: Short Task (opds)
 │   │   ├── opal-pilot-dev-wireframe/    오케스트레이터: Wireframe UI (opdw)
 │   │   ├── opal-pilot-write-tech/       오케스트레이터: Write-Tech (opwt)
 │   │   ├── opal-pilot-project/          오케스트레이터: Project (opp)
@@ -456,9 +444,8 @@ opal/                                    ← 이 저장소
 │   │   ├── op-data-{dictionary,model,ddl}/
 │   │   │                                데이터 설계 단계 스킬 (3개)
 │   │   ├── op-task{,-plan,-execute,-qa}/ 범용 단계 스킬 (4개)
-│   │   ├── opal-pilot-sdd/internal-skills/
-│   │   │   ├── op-sdd-{spec,plan,action-plan}/
-│   │   │   │                            SDD 내부 단계 스킬 (3개)
+│   │   ├── op-sdd-{spec,verify,plan,action-plan}/
+│   │   │                                SDD 단계 스킬 (4개)
 │   │   ├── op-{brain-ingest,scenario-gate,spec-validator}/
 │   │   │                                보조 단계 스킬 (3개)
 │   │   ├── opal-project-init/           프로젝트 초기화 (opi)
@@ -505,5 +492,3 @@ opal/                                    ← 이 저장소
 │   └── architecture-diagram/            정본 10계층 구조도 HTML (태스크 086)
 └── .opal/                               이 프로젝트의 PM 프로필 + 메모리 인덱스(MEMORY.json)
 ```
-
----

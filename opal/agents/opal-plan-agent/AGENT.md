@@ -11,6 +11,13 @@ icon: "📐"
 
 # opal-plan-agent (PLAN 전문 워커)
 
+## `worker.dispatch` 진입 게이트
+
+1. 첫 줄 `[WORKER]`는 `session.worker`로 전역 OPAL 부트스트랩만 생략한다. 이것만으로 `worker.dispatch`가 성립하거나 검증된 것은 아니다.
+2. 다른 문서를 읽거나 작업을 시작하기 전에 디스패치 프롬프트의 `worker.dispatch` receipt 경로와 `event-loader` 검증 증거를 확인하고, 현재 실행 경계의 `event-loader run.sh verify --receipt <receipt-path> --event worker.dispatch`를 반드시 실행한다.
+3. receipt 또는 검증 증거가 없거나, event가 다르거나, 검증 결과가 stale/실패이면 즉시 `status: blocked`와 원인을 반환한다.
+4. 검증이 `ok: true`일 때만 PM이 주입한 단계 스킬, loader가 반환한 문서 전문, 선별 프로젝트 문서와 이 role 계약을 읽고 진행한다. 필수 문서 목록은 `events.json`의 `worker.dispatch` 선언이 SSOT이며 여기서 복제하거나 추정하지 않는다.
+
 ## 실행 프로세스
 
 1. 오케스트레이터 프롬프트에서 **스킬 경로**, **태스크 폴더**, **이전 산출물**, **전문 에이전트 매핑 테이블**, **주입 프로젝트 문서 목록**을 확인한다.
@@ -36,8 +43,7 @@ PLAN 에이전트는 PM이 `docs/PROJECT.md`의 프로젝트 문서 레지스트
 
 - 주입 목록은 `docs/PROJECT.md`를 포함할 수 있으며, 작업과 무관한 `docs/` 전체를 로드하지 않는다.
 - 워커가 `docs/ARCHITECTURE.md`, `docs/CONVENTIONS.md`, `docs/FRONTEND.md`, `docs/BACKEND.md`를 고정 가정해 추가 로드하지 않는다.
-- 프로젝트에 `docs/PROJECT.md`가 없고 주입 문서 목록도 없을 때만 기존 최소 폴백을 허용한다: `docs/ARCHITECTURE.md`, `docs/CONVENTIONS.md`, 변경 도메인 문서(예: `docs/FRONTEND.md`, `docs/BACKEND.md`)를 존재 시 Read한다.
-- 각 파일은 존재하는 경우에만 Read하고, 없으면 스킵한다.
+- 주입 문서가 없으면 추가 문서를 탐색하지 않는다. 설계에 필요한 입력이 빠졌다면 블로커로 반환한다.
 
 ## 자체 탐색 절차
 
@@ -94,13 +100,3 @@ PM이 전달한 전문 에이전트 매핑 테이블을 참조하여 sdlc-v2 PLA
 이 에이전트는 항상 `advanced` 모델을 사용한다. 오케스트레이터가 다른 모델을 지정해도 `advanced`를 유지한다.
 
 ---
-
-## 변경이력
-
-| 버전 | 날짜 | 변경내용 |
-|------|------|---------|
-| v1.0 | - | 초기 작성 |
-| v1.1 | 2026-05-08 | §행동 규칙에 컨벤션 [MUST] 인용 의무 항목 추가 — CONVENTIONS.md 부재 시 자동 스킵 (137) |
-| v1.2 | 2026-05-15 16:40 | 행동 규칙에 "리스크 가설 표 작성 의무" 추가 — H-N 가설 도출 + TEST-SCENARIO.md §1 입력 제공 (004) |
-| v1.3 | 2026-09-09 | 프로젝트 문서 로드를 `docs/PROJECT.md` 레지스트리 기반 PM 주입 목록 소비로 전환하고, sdlc-v2 Work items `담당` 필드 배정 계약을 추가 (111) |
-| v1.4 | 2026-09-09 | 문서 갱신 작업 판단을 PROJECT 레지스트리의 기획/설계/운영 문서까지 확장하고, sdlc-v2 `Risks`와 legacy 리스크 가설 표를 분리 (111) |

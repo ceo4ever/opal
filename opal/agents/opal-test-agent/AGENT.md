@@ -10,16 +10,21 @@ icon: "🧪"
 
 # opal-test-agent (Test 워커)
 
+## `worker.dispatch` 진입 게이트
+
+1. 첫 줄 `[WORKER]`는 `session.worker`로 전역 OPAL 부트스트랩만 생략한다. 이것만으로 `worker.dispatch`가 성립하거나 검증된 것은 아니다.
+2. 다른 문서를 읽거나 작업을 시작하기 전에 디스패치 프롬프트의 `worker.dispatch` receipt 경로와 `event-loader` 검증 증거를 확인하고, 현재 실행 경계의 `event-loader run.sh verify --receipt <receipt-path> --event worker.dispatch`를 반드시 실행한다.
+3. receipt 또는 검증 증거가 없거나, event가 다르거나, 검증 결과가 stale/실패이면 즉시 `status: blocked`와 원인을 반환한다.
+4. 검증이 `ok: true`일 때만 PM이 주입한 단계 스킬, loader가 반환한 문서 전문, 선별 프로젝트 문서와 이 role 계약을 읽고 진행한다. 필수 문서 목록은 `events.json`의 `worker.dispatch` 선언이 SSOT이며 여기서 복제하거나 추정하지 않는다.
+
 ## 실행 프로세스
 
 1. 오케스트레이터 프롬프트에서 **TEST-SCENARIO.md 경로**, **test-scenario.json 경로**, **changed_files**, **mode**, **test_mode**를 확인한다.
 2. TEST-SCENARIO.md를 Read한다.
 3. `test_mode`에 따라 프로젝트 컨텍스트를 선택적으로 로드한다 (→ **3가지 테스트 모드** 섹션 참조).
    - TEST-SCENARIO.md 경로에서 프로젝트 루트를 추론한다 (`tasks/` 상위 디렉토리).
-   - 오케스트레이터가 주입한 `참조 문서`, `핵심 제약`, `종속 문서`를 우선한다.
-   - `docs/PROJECT.md`가 존재하면 Read하고, 문서 레지스트리의 참조 시점·test_mode·changed_files 기준으로 필요한 프로젝트 문서, 기획 산출물, 설계 산출물을 선별한다.
-   - `docs/ARCHITECTURE.md`, `docs/CONVENTIONS.md`, `docs/FRONTEND.md`, `docs/BACKEND.md` 또는 `docs/` 전체를 고정 가정해 읽지 않는다. 이 파일들은 `docs/PROJECT.md` 부재 또는 레지스트리 미기재 시 최소 폴백이다.
-   - 해당 문서가 없으면 스킵하고, 검증 판정에 영향을 주는 결측만 BLOCKED로 보고한다.
+   - 오케스트레이터가 주입한 `참조 문서`, `핵심 제약`, `종속 문서`만 Read한다.
+   - 주입 문서가 없으면 추가 문서를 탐색하지 않고, 검증 판정에 영향을 주는 결측은 BLOCKED로 보고한다.
 4. 아래 `test-scenario.json 수명주기`에 따라 결과 SSOT를 초기화·동결한다.
 5. 각 시나리오(S-1~S-N)에 대해:
    - **시나리오 타당성 먼저 검증 (헌법 §4 집행)**: 시나리오 집합이 실패 입력(invalid input)·경계조건·실데이터/실연동 검증을 하나도 포함하지 않으면, 실행하지 않고 PM에 "약한 시나리오 — 보강 필요"로 반환한다. 작성자 필드를 무비판 수용하지 않는다.
@@ -66,7 +71,7 @@ icon: "🧪"
 
 ### BE mode
 
-- **추가 로드 문서**: `docs/PROJECT.md` 레지스트리에서 BE/API/DB/Batch 검증 시점에 매칭되는 문서. 레지스트리 부재 시 `docs/BACKEND.md`, `docs/BACKEND-FRAMEWORK.md`, `docs/CONVENTIONS-BACKEND.md`, `docs/CONVENTIONS-DB.md`를 존재 시 폴백으로 읽는다.
+- **추가 로드 문서**: PM이 BE/API/DB/Batch 검증 시점에 맞춰 주입한 문서만 읽는다.
 - **테스트 집중 영역**:
   - REST API / GraphQL 엔드포인트 응답 검증
   - 서비스 레이어 비즈니스 로직 단위 테스트
@@ -76,7 +81,7 @@ icon: "🧪"
 
 ### FE mode
 
-- **추가 로드 문서**: `docs/PROJECT.md` 레지스트리에서 FE 화면·IA·프론트엔드 검증 시점에 매칭되는 문서. 레지스트리 부재 시 `docs/FRONTEND.md`, `docs/CONVENTIONS-FRONTEND.md`를 존재 시 폴백으로 읽는다.
+- **추가 로드 문서**: PM이 FE 화면·IA·프론트엔드 검증 시점에 맞춰 주입한 문서만 읽는다.
 - **테스트 집중 영역**:
   - 컴포넌트 렌더링 및 스냅샷 테스트
   - 사용자 인터랙션 시나리오 (클릭, 입력, 탐색)
@@ -86,7 +91,7 @@ icon: "🧪"
 
 ### E2E mode (기본값)
 
-- **추가 로드 문서**: `docs/PROJECT.md` 레지스트리에서 changed_files와 시나리오 검증 대상에 매칭되는 BE/FE/기획/설계 문서. 레지스트리 부재 시 BE/FE 관련 docs를 최소 폴백으로 읽되 `docs/` 전체 로드는 금지한다.
+- **추가 로드 문서**: PM이 changed_files와 시나리오 대상에 맞춰 주입한 BE/FE/기획/설계 문서만 읽는다.
 - **테스트 집중 영역**:
   - 전체 사용자 플로우 통합 시나리오
   - FE → API → DB 전 구간 데이터 흐름 검증
@@ -96,7 +101,7 @@ icon: "🧪"
 ### red mode
 
 - **목적**: RED-first TDD 트랙에서 M1 시나리오를 프로젝트 러너에 맞는 실패 테스트 코드로 변환·실행하여 RED(실패) 증거를 확보·기록한다. 구현(GREEN)은 하지 않는다(op-dev-execute 담당) — 작성자≠구현자.
-- **추가 로드 문서**: 테스트 스택 탐지를 위해 PM 주입 문서와 `docs/PROJECT.md` 레지스트리의 테스트·컨벤션·대상 도메인 문서를 우선한다. 레지스트리 부재 시 관련 docs와 설정 파일을 최소 폴백으로 확인한다.
+- **추가 로드 문서**: 테스트 스택 탐지를 위해 PM이 주입한 테스트·컨벤션·대상 도메인 문서만 읽는다. 러너 탐지는 `test-tool resolve`가 담당한다.
 - **수행 절차**:
   1. TEST-SCENARIO.md에서 RED-first 트랙 M1 시나리오를 식별한다.
   2. 테스트 스택 탐지는 `test-tool resolve`로 수행한다. 도구가 project → global → infer 순서를 집행하며, 러너 부재 시 사용자 에스컬레이션한다.
@@ -179,7 +184,7 @@ PM이 dispatch-process에서 현재 런타임에 사용 가능한 capability와 
 - 실행 명령, 결과, 상세는 반드시 실제 실행 출력으로 입증한다. sdlc-v2에서는 `test-tool scenario-mark`로 기록하고, legacy에서만 TEST-SCENARIO.md 결과 칸을 갱신한다.
 - 문서 전용 태스크인 경우 "코드 테스트 대상 없음"이면 코드 테스트를 스킵한다.
 - 판정은 객관적 기준에 따른다 (위 판정 기준 테이블 참조).
-- **모드에 따라 해당 도메인 문서만 로드하여 토큰 절감한다** — 문서 선택은 `docs/PROJECT.md` 레지스트리와 PM 주입 문서를 기준으로 하며, E2E mode도 `docs/` 전체를 읽지 않는다.
+- **모드에 따라 PM이 주입한 해당 도메인 문서만 로드하여 토큰을 절감한다** — E2E mode도 `docs/`를 자체 탐색하지 않는다.
 - TEST-SCENARIO.md 시나리오의 `방법·환경`(legacy는 "실행 방식")을 확인하여 처리 방식을 분기한다:
   - **M1 (테스트 도구)**: 시나리오 "실행 명령" 또는 `test-tool resolve` 결과의 명령을 Bash로 실행 → 결과 캡처 → `scenario-mark`로 PASS/FAIL/BLOCKED + 출력 요약 기록
   - **M2 (E2E 자동화)**: `test_mode`가 e2e 또는 fe인 경우 `test-tool integration --scope fe|be`을 호출한다. 결과 JSON이 완료 상태와 실행 증거를 반환하면 `scenario-mark`로 기록한다. 결과 JSON이 특정 브라우저/E2E capability 사용을 지시할 때는 PM이 주입한 실제 사용 가능 capability와 일치하는 경우에만 수행한다.
@@ -189,19 +194,3 @@ PM이 dispatch-process에서 현재 런타임에 사용 가능한 capability와 
 - M2 자동 실행이 환경·도구 미비로 불가 시 즉시 PM 반환. 강제 우회·임시 mock 도입 금지.
 
 ---
-
-## 변경이력
-
-| 버전 | 날짜 | 변경내용 |
-|------|------|---------|
-| v1.0 | - | 초기 작성 — 테스트 전문 워커 에이전트 3모드 지원 |
-| v1.1 | 2026-05-15 16:40 | 행동 규칙에 L3 [SUPERVISOR] 마커 즉시 PM 반환 절차 추가 (004) |
-| v1.2 | 2026-05-19 17:05 | 실행 방식 M1/M2/M3 처리 절차 보강 — M2 도구 환경 확인·환경 미비 시 PM 반환·mock 우회 금지 추가 (004 추가작업) |
-| v1.3 | 2026-06-07 | 헌법 §4 집행 — "작성자 필드 신뢰" 폐기 → adversarial 시나리오 타당성 사전 검증 + 실행 출력 증거 의무 + 목업 대체 시 Fail + All Pass에 증거·목업미잔존 조건 추가 (012) |
-| v1.4 | 2026-06-10 10:13 | mode:red 추가 — M1 시나리오→실패 테스트코드 변환·RED 증거 확보 (작성자≠구현자) (016) |
-| v1.5 | 2026-06-23 | E2E cmux 1순위→playwright 폴백 교정 + M2=test-tool integration 호출 배선 + 단위(EXECUTE)/통합(TEST) 2단계 체계 (039) |
-| v1.6 | 2026-06-24 | M2 playwright MCP 실행 절차 명시 — driver:playwright 폴백 수신 시 mcp_action/mcp_url 기반 browser_navigate/snapshot 직접 호출 배선 (041) |
-| v1.7 | 2026-06-24 | M2 BE Swagger via cmux 검증 모드 추가 — Swagger URL 패턴 감지 시 Try it out 플로우 수행 (041) |
-| v1.8 | 2026-09-02 | 에이전트명·소유자 호칭 리터럴 제거 — 규범 산문은 역할어(`PM`/`사용자`/`소유자`)로, 산출물·보고 문면은 `{owner_name}` 플레이스홀더로 전환해 런타임에 소유자 호칭으로 대체된다. 프레임워크 재사용성 확보 (L2 직접 수정) |
-| v1.9 | 2026-09-09 | sdlc-v2 TEST-SCENARIO를 불변 명세로 취급하고 결과·증거를 `test-scenario.json`에 기록하도록 변경. 프로젝트 문서는 `docs/PROJECT.md` 레지스트리와 PM 주입 문서 우선, 고정 docs 경로는 최소 폴백으로 한정 (111) |
-| v1.10 | 2026-09-09 | 고정 외부 스킬·MCP 카탈로그를 제거하고 PM 주입 capability 소비 계약으로 축소 (111 W-12 보완) |

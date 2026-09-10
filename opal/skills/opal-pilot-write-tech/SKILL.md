@@ -12,16 +12,28 @@ description: |
 
 ## Harness
 
-> 부트스트랩에서 로드되지 않은 경우: `~/.opal/references/opal-harness.md`를 Read한다.
-> 병렬 처리 원칙은 하네스 §7을 따른다 — 읽기는 병렬 툴콜, 독립 작업은 병렬 Agent 디스패치.
+**[MUST — pilot.start 이벤트 게이트]** 파일럿의 첫 작업 전에 아래 순서를 수행한다.
 
-**[MUST]** 스킬 시작 즉시 모드에 따라 서브 하네스를 Read한다. 이 단계를 건너뛰면 안 된다:
-- `--interactive` 플래그 → `~/.opal/references/opal-harness-interactive.md`를 Read한다
-- `--agentic` 플래그 → `~/.opal/references/opal-harness-agentic.md`를 Read한다
-- 모드 플래그 없음 (기본) 또는 `--semi-agentic` → `~/.opal/references/opal-harness-semi-agentic.md`를 Read한다
-- 다중 모드 플래그 동시 사용 시 즉시 사용자에게 보고 + state init도 거부 (`mode_flag_conflict`)
+1. `~/.opal/tools/event-loader/run.sh load --event pilot.start > <pilot-receipt-path>`를 호출한다.
+2. load 응답의 `documents[].content` 전문을 모두 현재 컨텍스트에 적용하고, `modes` 문서가 현재 플래그에 대해 라우팅한 서브 하네스 전문 하나만 Read한다.
+3. `~/.opal/tools/state-tool/run.sh event-verify --event pilot.start --receipt <pilot-receipt-path>`가 성공한 뒤에만 진행한다.
 
-> **[MUST]** 산출물 작성·검증 시 `opal/core/references/harness/citation-rules.md`를 Read하여 규칙(근거 제시 원칙 / 트랙별 매트릭스 / [MUST] 토큰 / 영역 간 용어 일관성 / decision_required 계약)을 준수한다.
+**[MUST — 단계 이벤트 게이트]** 각 실제 단계의 첫 작업이나 `state-tool advance` 직전에 아래 매핑의 이벤트를 load하고, 응답 문서 전문을 적용한 뒤 같은 event id로 `state-tool event-verify`를 통과해야 한다.
+
+| 실제 단계 | 이벤트 |
+|---|---|
+| TASK | stage.task |
+| ANALYSIS | stage.analysis |
+| PLAN | stage.plan |
+| EXECUTE | stage.execute |
+| QA | stage.test |
+| CLOSE | stage.close |
+
+호출 형식은 `~/.opal/tools/event-loader/run.sh load --event <stage.*> > <stage-receipt-path>` 다음
+`~/.opal/tools/state-tool/run.sh event-verify --event <stage.*> --receipt <stage-receipt-path>`이다.
+문서 집합은 `events.json`만 SSOT로 사용하며 SKILL에 파일 목록을 복제하지 않는다. load 실패,
+필수 문서 누락, stale receipt, wrong-event receipt는 해당 파일럿·단계 진입을 즉시 중단하는
+blocker다. 부트 캐시를 근거로 공통 문서를 직접 재Read하는 우회는 금지한다.
 
 ## 설계 원칙
 
@@ -509,41 +521,3 @@ semi-agentic / agentic 모두 CLOSE 첫 행 `--auto-pass` 거부 (`agentic_close
 - semi-agentic: EXECUTE-equivalent 첫 행 advance 시점에 PM이 생성
 
 ---
-
-## 변경이력
-
-| 버전 | 날짜 | 변경내용 |
-|------|------|---------|
-| v1.0 | 2026-03-29 | 초기 작성 |
-| v1.1 | 2026-03-28 | Harness 참조 전환으로 슬림화 |
-| v1.2 | 2026-03-29 | 컴포넌트 리네이밍 (042) |
-| v1.3 | 2026-04-01 | 외부 참조 산출물 지원 — diagnosis.json reference_artifacts[], 워커 프롬프트 확장, 외부 참조 검증 규칙 (062) |
-| v1.4 | 2026-04-01 | 외부 API 명세서 프로젝트 특화 선택 타입 추가 — 서드파티 API 기획 산출물화, 내부 API와 구분 (064) |
-| v1.5 | 2026-04-01 | IA 산출물 JSON + Mermaid 사이트맵 이중 출력으로 확정 — 변환 스펙, classDef 기준, 분리 규칙 (065) |
-| v1.6 | 2026-04-01 | Phase 1/3/4 워커 디스패치에 `[WORKER]` 마커 + PM 컨텍스트 주입 지침 추가 (063) |
-| v2.0 | 2026-04-01 | 재설계 — Phase 1-4 → 하네스 표준 단계(TASK/ANALYSIS/PLAN/EXECUTE/QA), TASK 단계 추가, 각 단계 STATE 갱신 명시, 병렬 원칙 적용 (067) |
-| v2.1 | 2026-04-01 | 단계별 산출물 문서 추가 — ANALYSIS.md(워커 결과 취합), PLAN.md(진단 근거+배치+QA체크리스트), QA 단계 PLAN.md 갱신 의무 (067) |
-| v2.2 | 2026-04-02 | ANALYSIS 게이트 + PLAN QA Gate + EXECUTE 배치별 QA Gate 추가 (072) |
-| v2.3 | 2026-04-05 | EXECUTE 후 추가작업 참조 가이드 추가 — 하네스 §3 추가작업 프로세스 (087) |
-| v2.4 | 2026-04-06 | PMO 그룹 신설 + 개발 WBS 추가 — 커버 범위 및 TASK 확인 항목 갱신 (089) |
-| v2.5 | 2026-04-06 | ANALYSIS PM Gate(자가 체크) 추가 + EXECUTE 배치 게이트 "PM 검토" → "PM Gate" 명확화 (090) |
-| v2.6 | 2026-04-07 | TASK/ANALYSIS/PLAN/EXECUTE/QA 각 단계 Gate에 State Gate 참조 추가 (094) |
-| v2.7 | 2026-04-07 | State Gate를 PM Gate 전 1개 → 각 Gate 직후로 재배치. EXECUTE 배치 Artifact Gate 제거(opwt 구조상 해당 없음) (097) |
-| v2.8 | 2026-04-10 | Artifact Gate 제거 + PM Gate 점검 목록 섹션 추가 + 파이프라인 현황판 이름 변경 (106) |
-| v2.9 | 2026-04-11 | PM Gate 점검 목록 — PLAN-equivalent Phase에 TASK.md 요구사항 추가 (108) |
-| v3.0 | 2026-04-15 | CLOSE 단계 섹션 신설 + QA 단계에서 DONE.md 생성 분리 + QA Pass 보고 형식 C안 적용 + 단계 목록 CLOSE 추가 (121) |
-| v3.1 | 2026-04-24 | citation-rules 트리거 1줄 주입 — SSOT + Trigger 패턴 (130) |
-| v3.2 | 2026-05-01 | state-tool 도입 — STATE.md 직접 편집 금지 + `state-tool` 호출 표현 교체 (P-1~P-8 패턴 적용). TASK/ANALYSIS/PLAN/EXECUTE/QA/CLOSE 각 단계 State Gate를 state-tool 명시 호출로 교체. "STATE.md 도메인 치환값" 섹션 리네이밍 + `--rows-from` SSOT 지시. CLOSE 게이트 제약 (§2.16 G-13) + P-6 add-row 가이드 추가 (134) |
-| v3.3 | 2026-05-09 11:22 | 3-way 모드 체계 도입 — semi-agentic 기본 채택 + Agentic/Semi-Agentic 모드 절 신규 추가 + Harness 절 3-way 분기 + state init --mode 인수 추가 (140) |
-| v3.4 | 2026-05-09 18:30 | 개인 식별자 "캡틴" → "소유자"/"사용자" 치환 — 배포 파일 정체성 누설 정정 (139) |
-| v4.0 | 2026-05-24 14:21 | 산출물 체계 v4 — interview 통합(TASK 절 재구성) + PRD 8섹션 표준 + 기능 시나리오 다이어그램 재정의(기존 '순서도' 재정의 — 사용자 수동 재분류) + 화면 흐름도 신설 + Mermaid 시각화 표준 절 신설 + PMO 그룹 및 개발 WBS 제거 (008) |
-| v4.1 | 2026-05-24 18:01 | 산출물 저장 경로 누락 보강 — v4 인터뷰 재구성 시 누락된 v3.4 "산출물 저장 경로" 확인 항목을 Round 2 Q6로 복원. Step 1 (d) 저장 경로 자동 감지 추가(PROJECT.md 등록 / 100.기획/ 존재 / 둘 다 없음 3분기). Step 4 TASK.md 양식에 "산출물 저장 경로" 섹션 추가. "산출물 저장 구조" 절에 default v4 7폴더 트리(100.기획/110.PRD~170.기능시나리오) 명시 + 한국어/kebab-case 컨벤션 충돌 안내. (008 추가작업) |
-| v4.2 | 2026-06-07 | State Gate 행 제거(guard 이전) + op-task-qa QA Gate 제거 → PM Gate 문서검증 흡수 + gate-pass 4-row 호출 제거 → PM Gate 단일 mark + CLOSE State Gate 행 제거(DONE.md 생성 단일 행) + STATE 행 예시 10행 구조 추가 + TASK 산출물 행 흡수. opds 패턴 정합 (014 Phase 4) |
-| v4.3 | 2026-06-11 19:25 | CLOSE 단계에 op-brain-ingest 디스패치 훅 삽입 — DONE.md 생성 직후 brain 존재 시 ingest 워커 디스패치, 부재 시 no-op, CLOSE 비중단. 탐색 경로 2단. STATE 행 수 10 불변 (016) |
-| v4.4 | 2026-06-16 | references 비즈니스 용어 우선 주입 — network-guide §7-0 공통 작성 원칙 + consistency-rules §3.1 검증 절 신설, citation-rules §8 참조 (024) |
-| v4.5 | 2026-06-24 | CLOSE 단계 op-brain-ingest 디스패치 직전에 "관련 문서 업데이트" 스텝 삽입 — PROJECT.md 레지스트리 + changed_files 종합으로 관련 문서 최신화 후 ingest (없으면 no-op). 후속 항목 번호 재정렬 (042) |
-| v4.6 | 2026-07-10 13:12 | note 예시의 소유자 확인 표기를 `{owner_name} 확인:` 형식으로 통일 — identity.md owner_name 재해석 규칙(AGENT.md §정체성 적용)과 정합, 오염 차단 (054) |
-| v4.7 | 2026-07-17 | CLOSE 단계에 "회고(개선 루프) 하드스텝" 삽입 — op-brain-ingest 직후·완료보고 직전, 궤적 신호→관찰/분류/기록(improve-tool record --scope local\|fw), 개선후보 0건 시 no-op 비차단(brain-ingest 패턴 답습) (058) |
-| v4.8 | 2026-08-13 16:56 | pipeline.json 전환 — references/pipeline.json 신설(10 task-step, SSOT), --rows-from 호출 경로를 SKILL.md에서 pipeline.json으로 교체, 표는 사람 열람용 미러로 명시 (090) |
-| v4.9 | 2026-08-14 09:28 | SKILL.md 감량 — `--row N` 11건을 `--task-step <key>`로 전환(정적 7 + 동적 4는 `add-row --key` 규약 경유), 산문 `행 1` 1건을 `task.task_md` key 참조로 교체, STATE.md 도메인 치환값의 `{모드}`/`{단계 목록}` 중복 기재 삭제(네트워크 상태·배치 계획만 존치), 진행 현황 미러 표 10행 삭제 → `references/pipeline.json` 포인터 1줄로 교체, 중복 init 완전 명령 2건 삭제(§TASK 단계 완료 처리 1건만 정본 존치), PM Gate 점검 목록 표 삭제 → 게이트 정의 SSOT 포인터로 교체, 수정/분석 모드 ANALYSIS 행·EXECUTE 배치 행의 `add-row --key` 동적 생성 규약 신규 저술 (091) |
-| v4.10 | 2026-08-21 15:26 | §[PM 컨텍스트 주입] 블록(`:221`·`:317`·`:344` 3건)을 `pm/dispatch-process.md` §워커 컨텍스트 주입 템플릿 포인터로 일원화 — 주입 항목 열거(하네스 Guards·참조 문서·기술 스택 3항목)를 제거하고 SSOT 참조 1줄로 대체. 전 워커 공통 고정(git 이력 변경 금지 포함)이 파일럿 종류와 무관하게 도달하도록 함 (097) |

@@ -36,7 +36,7 @@
 | `op-task-*` | 범용 단계 스킬 | op-task, op-task-qa, op-task-plan, op-task-execute |
 | `opal-task-*` | 범용 워커 에이전트 | opal-task-agent |
 | `opal-{domain}-agent` | 전문 워커 에이전트 | opal-fe-agent, opal-be-agent, opal-db-agent, opal-plan-agent, opal-test-agent, opal-planning-agent |
-| `op-sdd-*` | opsdd 내부 단계 스킬 | opal-pilot-sdd/internal-skills/op-sdd-spec, op-sdd-plan, op-sdd-action-plan |
+| `op-sdd-*` | SDD 단계 스킬 | op-sdd-spec, op-sdd-verify, op-sdd-plan, op-sdd-action-plan |
 | `opal-*` | OPAL 프레임워크 전용 | opal-project-init, opal-onboarding |
 
 ### 약어 (Alias)
@@ -50,7 +50,7 @@
 |------|--------|
 | opp | opal-pilot-project |
 | opd | opal-pilot-dev |
-| opds | opal-pilot-dev Short profile (registry logical name: opal-pilot-dev-short) |
+| opds | opal-pilot-dev-short |
 | opdw | opal-pilot-dev-wireframe |
 | opwt | opal-pilot-write-tech |
 | opsdd | opal-pilot-sdd |
@@ -125,9 +125,9 @@ icon: {이모지}         # 에이전트만 (선택, 디폴트: ✨)
 ---
 ```
 
-### 문서 이력 표준
+### 문서 이력과 버전
 
-Markdown 문서의 이력·버전 소유권은 `opal/core/references/opal-doc-standard.md` §4~§5를 따른다. 스킬, 에이전트, 하네스, 참조 문서와 git 관리 프로젝트 문서에는 수기 누적 이력 절을 만들지 않는다.
+git 관리 Markdown의 이력과 상단 버전 적용 여부는 `opal/core/references/opal-doc-standard.md` §5를 따른다.
 
 ### 태스크 산출물 구조
 
@@ -176,7 +176,7 @@ tasks/{NNN}-{YYMMDD}-{스킬약어}-{태스크명}/
 
 ### 규칙
 
-- 커밋 실행 시점 규칙(사용자 요청 시에만 수행 · 자동 커밋 금지)은 `opal/core/references/opal-harness.md` §1 Guards가 소유한다 — 본 절은 커밋 **메시지 형식·단위**만 규정한다.
+- 커밋 실행 시점 규칙(사용자 요청 시에만 수행 · 자동 커밋 금지)은 `opal/core/references/harness/guards.md` §커밋 규칙이 소유한다 — 본 절은 커밋 **메시지 형식·단위**만 규정한다.
 - 커밋 메시지는 한국어
 - 하나의 태스크 = 하나의 커밋 (원칙)
 - CLOSE 시 메모리 히스토리 행은 `state-tool mark`가 자동 생성한다(088). PM은 `result` 필드를 보강한 뒤 커밋하며, 히스토리 갱신용 별도 커밋을 만들지 않는다.
@@ -191,19 +191,19 @@ OPAL 본체(스킬·에이전트·도구·하네스)를 작성할 때 따라야 
   - 허용: 산출물 문서(.md) 작성, QA 에이전트 호출, 코드베이스 읽기·분석
   - 금지(승인 전): 소스 코드 파일 생성·수정, 패키지 설치, 설정 파일 수정
 - CLOSE 단계 진입 직전에는 사용자의 명시적 확인(`승인`/`확인`/`확인완료`)이 반드시 있어야 한다 (agentic/semi-agentic 모드에서도 유지).
-- 근거: `opal/core/references/opal-harness.md` §1 Guards
+- 근거: `opal/core/references/harness/guards.md` §구현 금지 원칙·§CLOSE 진입 게이트
 
 ### 디스패치 의무
 
 - 오케스트레이터 SKILL.md에서 "워커 디스패치"로 정의된 단계(ANALYSIS/PLAN/EXECUTE 등)는 반드시 서브에이전트를 디스패치한다. PM이 직접 실행으로 대체하지 않는다.
-- 근거: `opal/core/references/opal-harness.md` §1 디스패치 의무 원칙
+- 근거: `opal/core/references/harness/guards.md` §디스패치 의무 원칙
 
 ### @header 규칙
 
 - 코드 파일을 생성·수정할 때 파일 상단에 @header 블록을 작성한다 (해당 확장자에 한해).
 - **기록 위치는 `code-scan target <file>` 판정을 따른다** — 인라인 주석 또는 외부 소스 코드 지도(`.opal/code-map/`) 2소스 중 하나이며, 사람·워커가 임의 선택하지 않는다(전역 `headerSource`가 `manifest`이면 code-map 강제).
 - **기록 소스는 `.opal/code-scan.json`의 전역 `headerSource` 단일 키가 결정한다** — `inline` \| `manifest` 2택이며 스코프별 오버라이드는 없다. 미설정·무효값이면 code-scan 전 명령이 exit 1로 차단된다 (Task 080).
-- **코드 `@header`에는 이력을 기재하지 않는다** — `@header`는 현재 시점의 사실만 담고, 이력은 git 로그와 `tasks/{NNN}-*/DONE.md`가 갖는다. 원칙 원문은 `opal/core/references/header-standard.md` §2.1이 소유한다. `code-scan validate`의 `header_history` 비차단 경고가 이를 관측한다 (Task 107).
+- **코드 `@header`에는 현재 사실만 기재한다** — 이력은 git 로그와 `tasks/{NNN}-*/DONE.md`가 갖는다. 원칙 원문은 `opal/core/references/header-standard.md` §2.1이 소유한다. `code-scan validate`의 `header_history` 비차단 경고가 누적 서술을 관측한다.
 - 근거: `opal/core/references/harness/header-rules.md`, `opal/core/references/header-standard.md` §7(2소스 표현)
 
 ### Citation Rules (인용)
@@ -221,19 +221,14 @@ OPAL 본체(스킬·에이전트·도구·하네스)를 작성할 때 따라야 
 - `state-tool init --rows-from`은 pilot `references/pipeline.json`을 지정한다. SKILL.md 마크다운 파싱(`build_rows_from_skill_md`)은 deprecated이며 신규 지시에 사용 금지 — **10/10 pilot 전환 완료(090)**.
 - **PM Gate 정의의 SSOT는 pilot `references/pipeline.json`의 `task_steps[].gate`**(`artifacts`·`checklist`)다 — SKILL.md에 산출물·체크리스트를 표로 중복 게재하지 않는다. `mark`가 `artifacts` 존재를 결정론 검증하여 미충족 시 `gate_artifact_missing`으로 거부하고, 통과 시 `checklist`를 stdout `gate_checklist`로 반환한다. `artifacts`에는 **해당 게이트 시점에 반드시 존재하는 태스크 폴더 기준 상대 경로/글롭만** 올린다 — 조건부 산출물·논리 개념은 `checklist`에 문안으로 둔다(잘못 올리면 그 게이트가 영구 차단된다). `--force --note`로 우회하면 STATE.md 의사결정 로그에 `gate_artifact_force`가 강제 기록된다 (091).
 - 파이프라인 "사용자 확인" 행은 전 모드 `pending / owner=PM`으로 초기화되며, 다음 단계 진입 시 `state-tool`이 자동 승인한다(`done / owner=auto / timestamp`). 자동 승인 불가 구간(CLOSE 직전·interactive·semi-agentic의 `MODE_BOUNDARY_STAGES`)에서는 `user_confirmation_required` 에러가 반환되며 캡틴 승인(`mark --owner user`)이 필요하다 (093).
-- 근거: `opal/core/references/opal-harness.md` §3 State
+- 근거: `opal/core/references/harness/state.md`
 
 ### 도구 우선 원칙
 
 - 파일 처리·데이터 변환 작업이 필요할 때, 직접 코드를 작성하기 전에 OPAL 도구(`~/.opal/tools/`)를 우선 검토한다.
 - 상시 사용 핵심 도구: `state-tool`, `code-scan`, `memory-tool`, `brain-tool`, `test-tool`, `backlog-tool`.
-- **전체 목록: `opal/tools/` (19종)** — 위 6종 외 `xlsx-tool`, `skill-registry`, `playwright-tool`, `improve-tool`, `cmux-tool`, `git-sync-tool`, `worktree-tool`, `date`, `doctor`, `tool-scan`, `opal-cli`, `opal-agent`, `opal-action-monitor`.
-- 근거: `opal/core/references/opal-harness.md` §9 OPAL Tools
-
-### 문서 이력 계약
-
-- git 관리 Markdown 문서에는 수기 누적 이력 절을 만들지 않는다.
-- 이력은 git과 태스크 기록이 소유하며, 세부 기준은 `opal/core/references/opal-doc-standard.md` §4~§5가 소유한다.
+- **전체 목록: `opal/tools/` (20종)** — 위 6종 외 `event-loader`, `xlsx-tool`, `skill-registry`, `playwright-tool`, `improve-tool`, `cmux-tool`, `git-sync-tool`, `worktree-tool`, `date`, `doctor`, `tool-scan`, `opal-cli`, `opal-agent`, `opal-action-monitor`.
+- 근거: `opal/core/references/harness/capability.md`, 각 도구 README
 
 ### 배포 경계
 
@@ -251,8 +246,8 @@ OPAL 본체(스킬·에이전트·도구·하네스)를 작성할 때 따라야 
 
 ### 허브 루트 해석
 
-- 워크트리(`{프로젝트}/.opal-worktrees/task_{NNN}/`)에서 **허브 고정 데이터**(`tasks/`·`.opal/`)를 참조하는 경로 판정 규칙 — **정의·깊이 무관·허브 항등·적용 대상 경계·의미 한계 5항과 부칙 4건**(다중 출현·유사 이름·탐색 우선순위·진단 도구 예외) — 의 원문 소유권은 `opal/core/references/opal-harness.md` **§2.5 (4)**에 있다. 본 문서는 포인터만 두어 규칙 복제를 차단한다.
-- 실행 가능한 대조 기준은 골든 케이스 표 `opal/core/references/hub-root-cases.json`(C-1~C-7)이다. 런타임별 구현도 규칙 원문을 재서술하지 않고 §2.5 (4) 포인터 주석만 둔다.
+- 워크트리(`{프로젝트}/.opal-worktrees/task_{NNN}/`)에서 **허브 고정 데이터**(`tasks/`·`.opal/`)를 참조하는 경로 판정 규칙의 원문은 `opal/core/references/harness/worktree.md`가 소유한다. 본 문서는 포인터만 두어 규칙 복제를 차단한다.
+- 실행 가능한 대조 기준은 골든 케이스 표 `opal/core/references/hub-root-cases.json`(C-1~C-7)이다. 런타임별 구현도 규칙 원문을 재서술하지 않고 `harness/worktree.md` 포인터 주석만 둔다.
 
 ---
 

@@ -1,0 +1,388 @@
+{
+  "schema_version": 1,
+  "path_tokens": {
+    "source_root": "Framework source checkout root",
+    "deployed_root": "Installed OPAL root (normally ~/.opal)",
+    "project_root": "Current project hub root"
+  },
+  "events": [
+    {
+      "id": "session.disabled",
+      "required_docs": [],
+      "optional_docs": [],
+      "predecessors": [],
+      "receipt_required": false,
+      "consumer": {
+        "type": "session-bootstrap",
+        "paths": [
+          "opal/core/AGENT.md",
+          "opal/bootstrapper/*-bootstrap.md",
+          "opal/bootstrapper/*-bootstrap.mdc"
+        ]
+      }
+    },
+    {
+      "id": "session.worker",
+      "required_docs": [],
+      "optional_docs": [],
+      "predecessors": [],
+      "receipt_required": false,
+      "consumer": {
+        "type": "session-bootstrap",
+        "paths": [
+          "opal/core/AGENT.md",
+          "opal/bootstrapper/*-bootstrap.md",
+          "opal/bootstrapper/*-bootstrap.mdc"
+        ]
+      }
+    },
+    {
+      "id": "session.assistant",
+      "required_docs": [
+        {
+          "id": "agent-kernel",
+          "source": "{source_root}/opal/core/AGENT.md",
+          "deployed": "{deployed_root}/AGENT.md"
+        },
+        {
+          "id": "principles",
+          "source": "{source_root}/opal/core/PRINCIPLES.md",
+          "deployed": "{deployed_root}/PRINCIPLES.md"
+        }
+      ],
+      "optional_docs": [
+        {
+          "id": "identity",
+          "deployed": "{deployed_root}/identity.md"
+        }
+      ],
+      "predecessors": [],
+      "receipt_required": true,
+      "consumer": {
+        "type": "session-bootstrap",
+        "paths": [
+          "opal/core/AGENT.md",
+          "opal/bootstrapper/*-bootstrap.md",
+          "opal/bootstrapper/*-bootstrap.mdc"
+        ]
+      }
+    },
+    {
+      "id": "session.project",
+      "required_docs": [],
+      "optional_docs": [],
+      "predecessors": [
+        "session.assistant"
+      ],
+      "receipt_required": true,
+      "consumer": {
+        "type": "session-bootstrap",
+        "paths": [
+          "opal/core/AGENT.md",
+          "opal/bootstrapper/*-bootstrap.md",
+          "opal/bootstrapper/*-bootstrap.mdc"
+        ]
+      }
+    },
+    {
+      "id": "pm.activate",
+      "required_docs": [
+        {
+          "id": "pm-process",
+          "source": "{source_root}/opal/core/references/opal-pm.md",
+          "deployed": "{deployed_root}/references/opal-pm.md"
+        },
+        {
+          "id": "pm-activation",
+          "source": "{source_root}/opal/core/references/pm/activation.md",
+          "deployed": "{deployed_root}/references/pm/activation.md"
+        },
+        {
+          "id": "project-agent",
+          "project": "{project_root}/.opal/AGENT.md"
+        },
+        {
+          "id": "project-registry",
+          "project": "{project_root}/docs/PROJECT.md"
+        }
+      ],
+      "optional_docs": [],
+      "predecessors": [
+        "session.project"
+      ],
+      "receipt_required": true,
+      "consumer": {
+        "type": "pm",
+        "paths": [
+          "opal/core/AGENT.md",
+          "opal/core/references/opal-pm.md"
+        ]
+      }
+    },
+    {
+      "id": "pilot.start",
+      "required_docs": [
+        {
+          "id": "guards",
+          "source": "{source_root}/opal/core/references/harness/guards.md",
+          "deployed": "{deployed_root}/references/harness/guards.md"
+        },
+        {
+          "id": "modes",
+          "source": "{source_root}/opal/core/references/harness/modes.md",
+          "deployed": "{deployed_root}/references/harness/modes.md"
+        },
+        {
+          "id": "worktree",
+          "source": "{source_root}/opal/core/references/harness/worktree.md",
+          "deployed": "{deployed_root}/references/harness/worktree.md"
+        },
+        {
+          "id": "capability",
+          "source": "{source_root}/opal/core/references/harness/capability.md",
+          "deployed": "{deployed_root}/references/harness/capability.md"
+        }
+      ],
+      "optional_docs": [
+        {
+          "id": "observability",
+          "source": "{source_root}/opal/core/references/harness/observability.md",
+          "deployed": "{deployed_root}/references/harness/observability.md"
+        }
+      ],
+      "predecessors": [
+        "pm.activate"
+      ],
+      "receipt_required": true,
+      "consumer": {
+        "type": "pilot",
+        "paths": [
+          "opal/skills/opal-pilot-*/SKILL.md"
+        ]
+      }
+    },
+    {
+      "id": "stage.task",
+      "required_docs": [
+        {
+          "id": "task-process",
+          "source": "{source_root}/opal/core/references/harness/task-process.md",
+          "deployed": "{deployed_root}/references/harness/task-process.md"
+        },
+        {
+          "id": "state",
+          "source": "{source_root}/opal/core/references/harness/state.md",
+          "deployed": "{deployed_root}/references/harness/state.md"
+        },
+        {
+          "id": "citation-rules",
+          "source": "{source_root}/opal/core/references/harness/citation-rules.md",
+          "deployed": "{deployed_root}/references/harness/citation-rules.md"
+        }
+      ],
+      "optional_docs": [],
+      "predecessors": [
+        "pilot.start"
+      ],
+      "receipt_required": true,
+      "consumer": {
+        "type": "stage",
+        "paths": [
+          "opal/skills/opal-pilot-*/SKILL.md"
+        ]
+      }
+    },
+    {
+      "id": "stage.analysis",
+      "required_docs": [
+        {
+          "id": "analysis-core",
+          "source": "{source_root}/opal/core/references/harness/analysis-core.md",
+          "deployed": "{deployed_root}/references/harness/analysis-core.md"
+        },
+        {
+          "id": "citation-rules",
+          "source": "{source_root}/opal/core/references/harness/citation-rules.md",
+          "deployed": "{deployed_root}/references/harness/citation-rules.md"
+        }
+      ],
+      "optional_docs": [],
+      "predecessors": [
+        "pilot.start"
+      ],
+      "receipt_required": true,
+      "consumer": {
+        "type": "stage",
+        "paths": [
+          "opal/skills/opal-pilot-*/SKILL.md"
+        ]
+      }
+    },
+    {
+      "id": "stage.plan",
+      "required_docs": [
+        {
+          "id": "citation-rules",
+          "source": "{source_root}/opal/core/references/harness/citation-rules.md",
+          "deployed": "{deployed_root}/references/harness/citation-rules.md"
+        },
+        {
+          "id": "pm-review-gate",
+          "source": "{source_root}/opal/core/references/harness/pm-review-gate.md",
+          "deployed": "{deployed_root}/references/harness/pm-review-gate.md"
+        }
+      ],
+      "optional_docs": [],
+      "predecessors": [
+        "pilot.start"
+      ],
+      "receipt_required": true,
+      "consumer": {
+        "type": "stage",
+        "paths": [
+          "opal/skills/opal-pilot-*/SKILL.md"
+        ]
+      }
+    },
+    {
+      "id": "stage.test_scenario",
+      "required_docs": [
+        {
+          "id": "red-first",
+          "source": "{source_root}/opal/core/references/harness/red-first.md",
+          "deployed": "{deployed_root}/references/harness/red-first.md"
+        },
+        {
+          "id": "scenario-gate",
+          "source": "{source_root}/opal/core/references/harness/scenario-gate.md",
+          "deployed": "{deployed_root}/references/harness/scenario-gate.md"
+        }
+      ],
+      "optional_docs": [],
+      "predecessors": [
+        "pilot.start"
+      ],
+      "receipt_required": true,
+      "consumer": {
+        "type": "stage",
+        "paths": [
+          "opal/skills/opal-pilot-*/SKILL.md"
+        ]
+      }
+    },
+    {
+      "id": "stage.execute",
+      "required_docs": [
+        {
+          "id": "coding-principles",
+          "source": "{source_root}/opal/core/references/harness/coding-principles.md",
+          "deployed": "{deployed_root}/references/harness/coding-principles.md"
+        },
+        {
+          "id": "red-first",
+          "source": "{source_root}/opal/core/references/harness/red-first.md",
+          "deployed": "{deployed_root}/references/harness/red-first.md"
+        }
+      ],
+      "optional_docs": [],
+      "predecessors": [
+        "pilot.start"
+      ],
+      "receipt_required": true,
+      "consumer": {
+        "type": "stage",
+        "paths": [
+          "opal/skills/opal-pilot-*/SKILL.md"
+        ]
+      }
+    },
+    {
+      "id": "stage.test",
+      "required_docs": [
+        {
+          "id": "scenario-gate",
+          "source": "{source_root}/opal/core/references/harness/scenario-gate.md",
+          "deployed": "{deployed_root}/references/harness/scenario-gate.md"
+        },
+        {
+          "id": "qa-standards",
+          "source": "{source_root}/opal/core/references/harness/qa-standards.md",
+          "deployed": "{deployed_root}/references/harness/qa-standards.md"
+        }
+      ],
+      "optional_docs": [],
+      "predecessors": [
+        "pilot.start"
+      ],
+      "receipt_required": true,
+      "consumer": {
+        "type": "stage",
+        "paths": [
+          "opal/skills/opal-pilot-*/SKILL.md"
+        ]
+      }
+    },
+    {
+      "id": "stage.close",
+      "required_docs": [
+        {
+          "id": "additional-work",
+          "source": "{source_root}/opal/core/references/harness/additional-work.md",
+          "deployed": "{deployed_root}/references/harness/additional-work.md"
+        },
+        {
+          "id": "memory-learning",
+          "source": "{source_root}/opal/core/references/harness/memory-learning.md",
+          "deployed": "{deployed_root}/references/harness/memory-learning.md"
+        }
+      ],
+      "optional_docs": [],
+      "predecessors": [
+        "pilot.start"
+      ],
+      "receipt_required": true,
+      "consumer": {
+        "type": "stage",
+        "paths": [
+          "opal/skills/opal-pilot-*/SKILL.md"
+        ]
+      }
+    },
+    {
+      "id": "worker.dispatch",
+      "required_docs": [
+        {
+          "id": "agent-registry",
+          "source": "{source_root}/opal/core/references/agents.md",
+          "deployed": "{deployed_root}/references/agents.md"
+        },
+        {
+          "id": "dispatch-process",
+          "source": "{source_root}/opal/core/references/pm/dispatch-process.md",
+          "deployed": "{deployed_root}/references/pm/dispatch-process.md"
+        },
+        {
+          "id": "context-injection",
+          "source": "{source_root}/opal/core/references/pm/context-injection.md",
+          "deployed": "{deployed_root}/references/pm/context-injection.md"
+        },
+        {
+          "id": "observability",
+          "source": "{source_root}/opal/core/references/harness/observability.md",
+          "deployed": "{deployed_root}/references/harness/observability.md"
+        }
+      ],
+      "optional_docs": [],
+      "predecessors": [
+        "pilot.start"
+      ],
+      "receipt_required": true,
+      "consumer": {
+        "type": "worker",
+        "paths": [
+          "opal/agents/*/AGENT.md"
+        ]
+      }
+    }
+  ]
+}

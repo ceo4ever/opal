@@ -155,11 +155,15 @@ run.sh prune --file MEMORY.json
 run.sh show --file MEMORY.json
 run.sh show --file MEMORY.json --brief
 run.sh show --file MEMORY.json --history 5
+run.sh show --file MEMORY.json --boot-brief --max-bytes 1024 --memories 3 --history 0
 ```
 
 - (인자 없음): `index_rows`(전체 memories) + `history_rows`(전체 history) + `version`/`last_task_number` 반환
 - `--brief`: `status=="active"` 메모리만 5필드(`title/date/type/file/summary`)로 축약 반환(날짜 내림차순), 히스토리는 기본 최신 3건으로 절단
 - `--history N`: 히스토리 반환 건수를 N으로 재정의(단독 지정도 가능, `--brief` 없이도 동작). 절단 발생 시 `history_truncated: true`
+- `--boot-brief`: project-aware assistant 부트 전용 계약. active memory를 날짜 내림차순 최대 3건으로 제한하고, UTF-8로 직렬화한 최종 stdout 전체(개행 포함)를 최대 1024 bytes로 제한한다. 기본값은 `--max-bytes 1024 --memories 3 --history 0`이다.
+- boot brief에는 memory 본문과 history의 `result`를 싣지 않는다. byte 상한 초과 시 오래된 history 행 → memory의 `file` 필드 → `title` 필드 → 오래된 memory 행 순으로 줄인다. 모든 성공 출력은 유효한 단일 JSON이며 `ok:true`, `index_rows`, `history_rows`를 유지한다.
+- boot 전용 `--max-bytes` 허용 범위는 최소 성공 JSON 크기인 81~1024, `--memories`는 1~3, `--history`는 0 이상이다. 범위 밖·정수가 아닌 값, `--brief`와의 동시 사용, boot 전용 옵션의 단독 사용은 기존 구조화 `invalid_args` 오류로 거부한다.
 
 공통 응답 키(하위호환 유지, H-4): `index_rows`/`history_rows`/`active_count`/`total_count`/`history_count`/`migration`
 
@@ -314,13 +318,3 @@ run.sh task-number --file MEMORY.json --set 80    # 복구·보정 (역행 거�
 | `date_tool_failed` | `node ~/.opal/tools/date/date.js` 호출 실패 |
 
 ---
-
-## 변경이력
-
-| 버전 | 태스크 | 내용 |
-|------|--------|------|
-| v1.0 | 045 | memory-tool 신설 — 8서브명령, 마커 가드, FIFO=5, promote 무손실+provenance, 자가검토 |
-| v1.1 | 058 | VALID_TYPES에 `improvement`, VALID_STATUSES에 `candidate` 추가(additive) |
-| v2.0 | 078 | MEMORY.json 단독 SSOT 전환 — 구 마커·표 파싱 계층 및 `migrate` 서브명령 소멸, lazy 자동 마이그레이션(md→json, `.bak` 보존) 신설, `task-number` 서브명령 신설, `show --brief`/`--history N` 추가, 스키마 런타임 검증(`schema/memory.schema.json`)·파일 락 기반 원자적 쓰기 도입 |
-| v2.1 | 079 | `update`에 `--kind {memory,history}` 신설 — 히스토리 행 정정(`--stage`/`--result`/`--path`) 지원, kind별 필드 조합 검증(`invalid_args`) 및 대상 판별(배열 선행 매치) 정책 문서화 |
-| v2.2 | 096 | 2026-08-20 12:23 — `review` 참조 무결성 검사 반영 — `violations`에 `memory_file_missing`(`file` 포인터 실재 검사) 추가, 응답 예시·배열 설명 갱신. `delete --orphan --ref` 절 신설(가드 전이 표·provenance 기록). 에러 코드 표 3행 추가(`memory_file_exists`·`orphan_ref_missing`·`memory_file_unresolvable`). `violations` 어휘 2종 분리 명시(`memory_file_missing` = `--orphan` 정리 가능 / `memory_file_unresolvable` = `--orphan` 거부·포인터 수리 필요). `memory_file_not_found` 의미를 "해석 성공 + 본문 부재"로 한정. 서브명령 9종 불변 (096) |

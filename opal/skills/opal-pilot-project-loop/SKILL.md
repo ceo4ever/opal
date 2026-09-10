@@ -24,15 +24,28 @@ Loop 2(실행 수렴: 태스크 선택~완료, 전 수용기준 GREEN까지 반�
 ## Harness
 
 모드: Project Loop (설계 루프 → 실행 루프)
-> 부트스트랩에서 로드되지 않은 경우: `~/.opal/references/opal-harness.md`를 Read한다.
+**[MUST — pilot.start 이벤트 게이트]** 파일럿의 첫 작업 전에 아래 순서를 수행한다.
 
-**[MUST]** 스킬 시작 즉시 모드에 따라 서브 하네스를 Read한다. 이 단계를 건너뛰면 안 된다:
-- `--interactive` 플래그 → `~/.opal/references/opal-harness-interactive.md`를 Read한다
-- `--agentic` 플래그 → `~/.opal/references/opal-harness-agentic.md`를 Read한다
-- 모드 플래그 없음 (기본) 또는 `--semi-agentic` → `~/.opal/references/opal-harness-semi-agentic.md`를 Read한다
-- 다중 모드 플래그 동시 사용 시 즉시 사용자에게 보고 + state init도 거부 (`mode_flag_conflict`)
+1. `~/.opal/tools/event-loader/run.sh load --event pilot.start > <pilot-receipt-path>`를 호출한다.
+2. load 응답의 `documents[].content` 전문을 모두 현재 컨텍스트에 적용하고, `modes` 문서가 현재 플래그에 대해 라우팅한 서브 하네스 전문 하나만 Read한다.
+3. `~/.opal/tools/state-tool/run.sh event-verify --event pilot.start --receipt <pilot-receipt-path>`가 성공한 뒤에만 진행한다.
 
-> **[MUST]** 산출물 작성·검증 시 `opal/core/references/harness/citation-rules.md`를 Read하여 규칙(근거 제시 원칙 / 트랙별 매트릭스 / [MUST] 토큰 / 영역 간 용어 일관성 / decision_required 계약)을 준수한다.
+**[MUST — 단계 이벤트 게이트]** 각 실제 단계의 첫 작업이나 `state-tool advance` 직전에 아래 매핑의 이벤트를 load하고, 응답 문서 전문을 적용한 뒤 같은 event id로 `state-tool event-verify`를 통과해야 한다.
+
+| 실제 단계 | 이벤트 |
+|---|---|
+| 사전 조건·초기 TASK | stage.task |
+| Loop 1 수집·분석 | stage.analysis |
+| Loop 1 설계 확정 | stage.plan |
+| Loop 2 실행 | stage.execute |
+| Loop 2 검증 | stage.test |
+| CLOSE | stage.close |
+
+호출 형식은 `~/.opal/tools/event-loader/run.sh load --event <stage.*> > <stage-receipt-path>` 다음
+`~/.opal/tools/state-tool/run.sh event-verify --event <stage.*> --receipt <stage-receipt-path>`이다.
+문서 집합은 `events.json`만 SSOT로 사용하며 SKILL에 파일 목록을 복제하지 않는다. load 실패,
+필수 문서 누락, stale receipt, wrong-event receipt는 해당 파일럿·단계 진입을 즉시 중단하는
+blocker다. 부트 캐시를 근거로 공통 문서를 직접 재Read하는 우회는 금지한다.
 
 ---
 
@@ -383,7 +396,7 @@ PM은 **태스크당 `opal-loop-action-agent`를 1회 디스패치**하며, 루�
 
 Loop 1·Loop 2·태스크 내부 파이프라인 모두 아래 **5종 종료조건**을 갖는다 — 상세는 `references/loop-control.md`를 참조한다.
 
-1. **반복 상한** — 루프별 hard iteration cap (`references/loop-control.md` §2; 수치는 `opal/core/references/opal-harness.md` §1 자동 루핑 제약 표를 참조하며 복제하지 않는다)
+1. **반복 상한** — 루프별 hard iteration cap (`references/loop-control.md` §2; 공통 상한은 `pilot.start`가 전달한 `guards`의 자동 루핑 제약을 적용한다)
 2. **예산** — 토큰/비용 예산, 태스크당 루프 액션 에이전트 1회 디스패치를 초과하는 재디스패치를 소진 신호로 관찰 (`references/loop-control.md` §3)
 3. **무진전 감지** — 백로그 정체·동일 실패 반복·drift 반복 재콜백 등 신호 (`references/loop-control.md` §4)
 4. **목표 달성 체크** — 도구 결과(`backlog-tool done-check`, `test-tool scenario-status`)로만 판정, 주관적 판단 배제 (`references/loop-control.md` §5)
@@ -440,7 +453,7 @@ TASK (사용자 승인)
 
 ### G 게이트 재작업 루핑
 
-명세 리뷰(G) verdict `fail` → T1 재지시 (재시도 한도: `references/loop-control.md` §2, `opal-harness.md` §1 "PLAN 재진입" 행 참조). 한도 초과 → 사용자 에스컬레이션.
+명세 리뷰(G) verdict `fail` → T1 재지시 (재시도 한도: `references/loop-control.md` §2와 `pilot.start`가 전달한 `guards`의 PLAN 재진입 규칙). 한도 초과 → 사용자 에스컬레이션.
 
 ### CLOSE 진입 게이트 (공통)
 
@@ -569,22 +582,3 @@ Loop 1 재회전 {N}회 · Loop 2 태스크 {M}개 완주.
 - [MUST] 표·파일 직접 편집 금지 — 도구 호출만 사용한다. FIFO 5(도구 결정론 집행)는 상세: `opal/core/references/harness/observability.md` §프로젝트 메모리 동기화 참조.
 
 ---
-
-## 변경이력
-
-| 버전 | 날짜 | 변경내용 |
-|------|------|---------|
-| v1.0 | 2026-07-10 16:44 | 초기 작성 (056) |
-| v1.1 | 2026-07-10 | T2 테스트시나리오 절에 `scenario-red` 단계 반영 — RED 실관찰 → `scenario-red`(증거 tool-gated 갱신) → `scenario-lock` 순서로 변경, red_confirmed 시드 무력화 안내 추가 (056/ADD-1) |
-| v1.2 | 2026-07-17 12:12 | 태스크 내부 파이프라인(T1~T5+G)을 `opal-loop-action-agent`(태스크당 1회 디스패치 루프 액션 에이전트)에 위임하는 구조로 개편 — ASCII 마커·T1/G/T3/T4a/T4b 서술·검증 2원화 주체를 루프 액션 에이전트로 명시, §디스패치를 "하이브리드 C(~3회)"에서 "루프 액션 에이전트 1회 디스패치(내부 4축)"로 재구성, 루프 액션 에이전트 디스패치 idiom(입력 10필드)·blocked 에스컬레이션 경로 추가, 스킬 탐색 경로·자율 게이트 흐름 문구 정합. PM의 L0/L∞/done-check/사람 게이트 소유는 불변 (065) |
-| v1.3 | 2026-07-17 14:24 | 내부 디스패치 서술을 opal-agent 채널로 정합(T1~T4b 각 단계에 "[opal-agent 채널 — 동기/비동기]" 표기) + §디스패치 표 ①T2를 ①a(생성자)/①b(test-agent mode:red)로 분리하여 T2=test-agent(mode:red) 귀속 정정(H-10) (066) |
-| v1.4 | 2026-07-17 16:20 | §디스패치 절에 진행 현황 모니터링 안내 추가 — `oppl-monitor` 도구 포인터 + 결과 파일 규약 v2/운행 일지는 `opal-loop-action-agent/AGENT.md` 참조로 위임 (067) |
-| v1.5 | 2026-07-17 23:04 KST | 진행 현황 모니터링 도구 포인터 리네임 — `oppl-monitor` → `opal-action-monitor` (067) |
-| v1.6 | 2026-07-17 KST | 진행 현황 모니터링 안내에 스킬 발동 `//opas [태스크폴더]`(opal-action-status) 1줄 추가 — 자동 탐지 + 해석 보고(읽기 전용) (068) |
-| v1.7 | 2026-07-18 22:46 KST | D4에 surfaces.json(표면 전수·auth·인증표면 등재)+origins 선언 요구 추가(contract.md §2.2.1 참조 위임) / D5에 실행 스켈레톤 P0 태스크 의무(구성 4항)+`add-task --covers` 안내 추가 / D7 진입 전 `coverage-check` 게이트 호출 의무화 / L✓ 종료 판정을 `done-check.all_done` ∧ `scenario-conformance.all_surfaces_green` ∧ 회귀 0 3중 AND로 확장(user-facing 여정 스모크 포함) + T4a에 `scenario-fidelity-check` 통과 요건 1줄 / 병렬 실행 절 "통합 태스크 필수"를 `coverage-check`(`integration_task_missing`) 게이트와 연결 / 검증 2원화 절에 충실도 규범 참조(`verification.md` §1.5) 추가 (069) |
-| v1.8 | 2026-07-28 22:47 KST | 프로젝트 메모리 동기화 절 정정(기존 결함 교정, memory-tool 도입(045) 이전 관행의 표 편집 서술 잔존분) — `MEMORY.json` + `append --kind history` 도구 호출로 교체, 직접 편집 금지 명시 (078) |
-| v1.9 | 2026-08-13 16:57 KST | pipeline.json 전환 + init 하드 실패 해소 — references/pipeline.json 신설(19 task-step, SSOT), --rows-from를 pipeline.json으로 교체하여 기존 skill_md_parse_error(header not found) 해소, 표는 사람 열람용 미러로 명시(헤더·표 헤더 개명 없음) (090) |
-| v2.0 | 2026-08-14 09:33 KST | SKILL.md 감량 — `--row N` 4건을 `--task-step <key>`로 전환(review.pm_gate/review.d7_user_gate/verify.pm_gate/verify.user_confirm), 진행 현황 미러 표 19행 삭제 → `references/pipeline.json` 포인터 1줄로 교체, 중복 init 완전 명령 1건 삭제(§STATE.md 초기 생성 1건만 정본 존치), R-13 서술의 `행 #13` 참조를 `execute.l0_select` key 참조로 교체, PM Gate 절차 블록쿼트에 게이트 정의 SSOT 포인터 1줄 추가(기존 판정 절차 산문은 존치) (091) |
-| v2.1 | 2026-08-15 21:48 | 사용자 확인 행 자동 승인 계약 반영 — agentic STATE 갱신 지시에서 PM `--auto-pass` 명시 호출 삭제, 다음 단계 진입 시 도구 자동 승인으로 전환하고 계약 본문은 하네스 SSOT(`opal-harness-agentic.md §4` / `opal-harness-semi-agentic.md §5`) 참조로 정리. CLOSE 진입 게이트 서술 불변 (093) |
-| v2.2 | 2026-08-16 13:38 KST | STATE.md 저널화 반영 — 3-SSOT 표에서 `state.json` 행의 "사람 뷰" 열을 `STATE.md`(자동 렌더 미러 전제)에서 `state-tool show`(조회)로 정정, STATE.md 역할을 저널(의사결정 로그·블로커·자유 기재)로 재정의하는 문구 추가, 도구 규율 문구를 표준화(`state-tool`로만 파이프라인 행 상태 변경, `state.json` 직접 편집 금지). `BACKLOG.md`가 `backlog-tool`의 자동 렌더 미러라는 서술은 존치 (094) |
-| v2.3 | 2026-08-21 15:26 | §디스패치 idiom(PM → 루프 액션 에이전트, `:362` 인접)에 `[PM 컨텍스트 주입]` 정규 포인터 블록 신설 — 주입 SSOT 참조 블록을 `pm/dispatch-process.md` §워커 컨텍스트 주입 템플릿으로 신규 연결. 기존 10필드 입력 명세 서술은 무변경 (097) |

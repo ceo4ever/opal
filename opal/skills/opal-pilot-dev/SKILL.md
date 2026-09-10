@@ -1,34 +1,40 @@
 ---
 name: opal-pilot-dev
 description: |
-  **Dev Task 오케스트레이터**. 하나의 canonical 구현에서 Full Task(opd)와 Short Task(opds)를 profile로 선택해 수행한다.
-  반드시 이 스킬을 사용해야 하는 상황: "opal-pilot-dev", "opd", "opal-pilot-dev-short", "opds".
+  **Full Task 오케스트레이터**. 대규모 개발 작업을 5단계 파이프라인으로 수행한다.
+  반드시 이 스킬을 사용해야 하는 상황: "opal-pilot-dev", "opd".
   코드를 읽기만 하는 설명 요청, API 명세서(api-analyzer), 기획 문서(opal-pilot-write-tech), PR 리뷰, git 작업, 단순 설정 변경은 이 스킬이 아니다.
 ---
-# Dev Task 오케스트레이터
+# Full Task 오케스트레이터
 
 ## Harness
-프로필: 호출 name/alias로 먼저 확정한다.
+모드: Full Task (TASK → ANALYSIS → PLAN → TEST-SCENARIO → EXECUTE → TEST → CLOSE)
+**[MUST — pilot.start 이벤트 게이트]** 파일럿의 첫 작업 전에 아래 순서를 수행한다.
 
-| 호출 name/alias | profile | 파이프라인 |
-|---|---|---|
-| `opal-pilot-dev`, `opd` | `full` | Full Task: TASK → ANALYSIS → PLAN → TEST-SCENARIO → EXECUTE → TEST → CLOSE |
-| `opal-pilot-dev-short`, `opds` | `short` | Short Task: TASK → PLAN → EXECUTE → TEST → CLOSE |
+1. `~/.opal/tools/event-loader/run.sh load --event pilot.start > <pilot-receipt-path>`를 호출한다.
+2. load 응답의 `documents[].content` 전문을 모두 현재 컨텍스트에 적용하고, `modes` 문서가 현재 플래그에 대해 라우팅한 서브 하네스 전문 하나만 Read한다.
+3. `~/.opal/tools/state-tool/run.sh event-verify --event pilot.start --receipt <pilot-receipt-path>`가 성공한 뒤에만 진행한다.
 
-[MUST] profile 판정은 state 초기화와 단계 진입보다 먼저 수행한다. `opd`/`opds` 둘 다 이 파일을 실행하더라도 `skill` 식별자와 pipeline row 의미는 각각 `opd`/`opds`로 유지한다.
+**[MUST — 단계 이벤트 게이트]** 각 실제 단계의 첫 작업이나 `state-tool advance` 직전에 아래 매핑의 이벤트를 load하고, 응답 문서 전문을 적용한 뒤 같은 event id로 `state-tool event-verify`를 통과해야 한다.
 
-> 부트스트랩에서 로드되지 않은 경우: `~/.opal/references/opal-harness.md`를 Read한다.
+| 실제 단계 | 이벤트 |
+|---|---|
+| TASK | stage.task |
+| ANALYSIS | stage.analysis |
+| PLAN | stage.plan |
+| TEST-SCENARIO | stage.test_scenario |
+| EXECUTE | stage.execute |
+| TEST | stage.test |
+| CLOSE | stage.close |
 
-**[MUST]** 스킬 시작 즉시 모드에 따라 서브 하네스를 Read한다. 이 단계를 건너뛰면 안 된다:
-- `--interactive` 플래그 → `~/.opal/references/opal-harness-interactive.md`를 Read한다
-- `--agentic` 플래그 → `~/.opal/references/opal-harness-agentic.md`를 Read한다
-- 모드 플래그 없음 (기본) 또는 `--semi-agentic` → `~/.opal/references/opal-harness-semi-agentic.md`를 Read한다
-- 다중 모드 플래그 동시 사용 시 즉시 사용자에게 보고 + state init도 거부 (`mode_flag_conflict`)
-
-> **[MUST]** 산출물 작성·검증 시 `opal/core/references/harness/citation-rules.md`를 Read하여 규칙(근거 제시 원칙 / 트랙별 매트릭스 / [MUST] 토큰 / 영역 간 용어 일관성 / decision_required 계약)을 준수한다.
+호출 형식은 `~/.opal/tools/event-loader/run.sh load --event <stage.*> > <stage-receipt-path>` 다음
+`~/.opal/tools/state-tool/run.sh event-verify --event <stage.*> --receipt <stage-receipt-path>`이다.
+문서 집합은 `events.json`만 SSOT로 사용하며 SKILL에 파일 목록을 복제하지 않는다. load 실패,
+필수 문서 누락, stale receipt, wrong-event receipt는 해당 파일럿·단계 진입을 즉시 중단하는
+blocker다. 부트 캐시를 근거로 공통 문서를 직접 재Read하는 우회는 금지한다.
 
 ## STEP 1: TASK
-opal-harness.md "TASK 공통 프로세스" 참조.
+`stage.task`가 전달한 `task-process` 전문을 따른다.
 
 TASK 완료 → 사용자 보고.
 
@@ -37,14 +43,10 @@ TASK 완료 → 사용자 보고.
 > **단계 건너뛰기 차단**: state-tool stage-transition guard가 단계 N의 필수 행이 완료되지 않으면 단계 N+1 진입(mark)을 자동 거부한다 (PLAN §M-A). 행에 의존하지 않는다.
 > 근거: `tasks/134-260501-opp-pipeline-state-tool/TASK.md` F-15 / `PLAN.md` §1.5 M-11 / §3 Step 8 P-1 / P-3
 
-> **[MUST] profile=full 트랙 강등 판정**: TASK 완료 직후 1회, `opal/core/references/harness/track-routing.md`(SSOT) 4축 전건(AND) 충족 여부를 판정한다. 하나라도 미충족·판정 불능이면 강등하지 않고 `opd`를 유지한다(fail-safe).
+> **[MUST] 트랙 강등 판정**: TASK 완료 직후 1회, `opal/core/references/harness/track-routing.md`(SSOT) 4축 전건(AND) 충족 여부를 판정한다. 하나라도 미충족·판정 불능이면 강등하지 않고 `opd`를 유지한다(fail-safe).
 > 전건 충족 시 소유자 승인 왕복 없이 `opds`로 진입하고, 진입 직후 4축 실측값·판정 결과를 소유자에게 **사후 통보**한다.
 
-> **[MUST] profile=short 승격 판정 금지 구간**: PLAN.md 작성 전에는 Full Task 전환을 판정하거나 제안하지 않는다. Short→Full 승격 판단은 PLAN.md 수신 직후 1회만 수행한다.
-
 ## STEP 2: ANALYSIS
-profile=full 전용 단계다. profile=short는 ANALYSIS.md를 생성하지 않고 STEP 3 PLAN으로 진행한다.
-
 워커를 디스패치하여 코드베이스를 분석한다.
 
 **디스패치 프롬프트**:
@@ -77,15 +79,12 @@ op-dev-analysis 스킬을 수행하라.
 ## STEP 3: PLAN
 
 ### 3-1. PLAN 디스패치
-
-profile=full은 이전 산출물로 TASK.md와 ANALYSIS.md를 주입한다. profile=short는 이전 산출물로 TASK.md만 주입하며, ANALYSIS.md 없이 호출된 op-dev-plan이 필요한 코드 분석을 직접 수행한다. Short Task는 단계를 줄이는 것이지 분석을 줄이는 것이 아니다.
-
 ```
 [WORKER]
 op-dev-plan 스킬을 수행하라.
 **스킬 경로**: {op-dev-plan/SKILL.md 탐색 경로}
 **태스크 폴더**: {tasks/{NNN}-{name}/}
-**이전 산출물**: profile=full은 {TASK.md 경로}, {ANALYSIS.md 경로}; profile=short는 {TASK.md 경로}
+**이전 산출물**: {TASK.md 경로}, {ANALYSIS.md 경로}
 **프로젝트 컨텍스트**: {docs/PROJECT.md + 매칭 참조 문서. 미존재 시 CLAUDE.md 폴백}
 **산출물 저장 경로**: {PLAN.md 경로}
 **하네스 Guards**: PLAN.md에 없는 파일 생성/수정 금지. PLAN 설계를 임의 변경 금지. 블로커 발생 시 즉시 중단 후 보고.
@@ -96,22 +95,6 @@ op-dev-plan 스킬을 수행하라.
 
 > sdlc-v2 신규 경로에서는 PLAN 병렬 TEST-SCENARIO 선작성을 기본 수행하지 않는다. TEST-SCENARIO는 STEP 3.5에서 TASK.md의 AC/C와 PLAN.md의 Risks/Work items를 함께 읽고 한 번에 작성한다. legacy 태스크 재개나 사용자가 명시한 RED-first opt-in에서만 기존 선작성 규칙을 적용한다.
 
-> **[MUST] profile=short PLAN 결과 승격 판정**: PLAN.md 수신 직후 `opal/skills/opal-pilot-dev/references/track-escalation.md`의 승격 조건을 1회 판정한다. 승격 조건이 감지되면 PM이 자동 전환하지 않고 사용자에게 Full Task 전환을 제안한다. `Short로 진행해` 응답이면 short profile을 유지한다.
-
-### 3-2. profile=short TEST-SCENARIO 작성과 목표-커버 게이트
-
-profile=short에서는 TEST-SCENARIO가 별도 단계가 아니라 PLAN 단계 안의 `plan.scenario_gate` 행에 포함된다.
-
-- PLAN 워커는 PLAN.md만 작성한다. PLAN 수신 후 PM이 `op-dev-test-scenario/SKILL.md`를 따라 TEST-SCENARIO.md를 한 번 작성한다.
-- sdlc-v2는 TASK의 AC/C와 PLAN의 실제 H를 `Setup / Scenarios`에 연결한다. PLAN 확정 전 초안이나 임시 마커를 만들지 않는다.
-- legacy 태스크를 재개하면 기존 TEST-SCENARIO를 유지하고 필요한 경우에만 legacy adapter를 적용한다.
-- 작성 완료 후 `~/.opal/tools/state-tool/run.sh advance <task-path> --task-step plan.scenario_gate`를 호출하고 `op-scenario-gate`를 실행한다.
-  - 탐색 경로: `{프로젝트}/.opal/skills/op-scenario-gate/SKILL.md` → `~/.opal/skills/op-scenario-gate/SKILL.md`
-  - 입력: `task_folder`(태스크 폴더 경로), `producer_artifact`(`{task_folder}/TEST-SCENARIO.md`), `pilot: opds`, `iteration`(최초 호출 = 1)
-  - 수신 `verdict: pass` → 게이트 행 mark. coverage-check exit 0과 evaluator pass가 모두 있어야 한다.
-  - 수신 `verdict: rewrite` → PM이 `gaps`를 반영해 TEST-SCENARIO.md를 고친 뒤 `iteration+1`로 재호출한다.
-  - 수신 `verdict: escalate` → 사용자에게 에스컬레이션하고 자율 재시도하지 않음
-
 PLAN 완료
   → **PM Gate** (PLAN.md 직접 검증 — 점검 목록 참조):
     1. `{PLAN.md 경로}` Read — sdlc-v2 `Approach`, `Decisions and contracts`, `Work items`, `Risks`, `Release and recovery` 확인
@@ -121,12 +104,9 @@ PLAN 완료
        - [ ] Risks에 실제 추가 검증 위험만 H-N으로 작성되었거나, 위험 없음이 명시되었는가
        - [ ] Release and recovery에 source→installed 검증, 실제 사례 측정, 실패 복구 기준이 있는가
        - [ ] `state-tool verify <task-folder> --plan-contract-check`와 `--code-scan-citation-check`가 통과 또는 의도된 skip인지 확인했는가
-  → PM Gate 통과 후 해당 행을 단일 mark. profile=full은 사용자에게 PLAN 보고 후 TEST-SCENARIO 단계 진입 승인을 받는다. profile=short는 PLAN과 TEST-SCENARIO를 함께 보고하며 승인이 EXECUTE 시작 허가다.
-
-> **[MUST] profile=short 사용자 확인 (P-5)**: 이 행은 모드에 따라 주체가 다르다. 자동 승인 구간(agentic 전 구간 / semi-agentic의 EXECUTE-equivalent 이후)은 PM이 호출하지 않고 다음 단계 진입 시 도구가 자동 승인한다. 그 외에는 소유자에게 보고하고 승인 발화를 받은 뒤 `~/.opal/tools/state-tool/run.sh mark <task-path> --task-step plan.user_confirm --done --owner user --note '{owner_name} 확인: ...'`를 호출한다. CLOSE 진입 전 이 행의 `owner=user` 여부를 도구가 자동 검증한다.
+  → PM Gate 통과 후 해당 행을 단일 mark. 사용자에게 PLAN 보고. 승인 = TEST-SCENARIO 단계 진입 허가.
 
 ## STEP 3.5: TEST-SCENARIO
-profile=full 전용 단계다. profile=short의 TEST-SCENARIO 작성과 목표-커버 게이트는 STEP 3 PLAN 안에서 `plan.scenario_gate`로 처리한다.
 
 > **[MUST] RED-first**: TEST-SCENARIO 작성 시 RED-first 트랙 적용 여부를 판단하고 기재한다. 규칙 SSOT: `opal/core/references/harness/red-first.md`. 목표계열 선작성 트랙은 동 문서 §1.6.
 
@@ -154,7 +134,6 @@ profile=full 전용 단계다. profile=short의 TEST-SCENARIO 작성과 목표-�
 > 근거: `PLAN.md` §3 Step 8 P-1 / P-5 / §2.16 G-13 / `tasks/073-260723-opd-시나리오-목표커버리지-루프/PLAN.md` §3.5.2 (목표-커버 게이트 접합)
 
 ## STEP 4: EXECUTE
-profile=full에서는 STEP 4, profile=short에서는 STEP 3에 해당한다. 두 profile 모두 PLAN.md `Work items`를 실행 입력으로 사용하고 `execute.implement` 행을 갱신한다.
 
 > **[MUST] RED-first**: EXECUTE 진입 전 RED 증거 확보, fix 루핑 중 테스트 불변. 규칙 SSOT: `opal/core/references/harness/red-first.md`.
 > sdlc-v2는 TEST-SCENARIO의 `시점`을 기준으로 `test-tool scenario-init`의 `red_required`를 설정한다. RED 대상은 opal-test-agent red mode가 실제 실패를 관찰한 뒤 `scenario-red`로 증거를 기록하고, PM은 `scenario-lock` 통과 후에만 GREEN 구현을 시작한다. RED 대상이 없으면 init 직후 lock한다. legacy만 `state-tool verify <task> --red-check`를 사용한다. fix 루핑 시 `--fix-mode --changed-files ... --test-globs ...`로 테스트 불변성을 검사한다.
@@ -214,7 +193,6 @@ PLAN.md Work items의 담당·실행 그룹 필드에 따라 배치를 구성한
 ---
 
 ## STEP 5: TEST
-profile=full에서는 STEP 5, profile=short에서는 STEP 4에 해당한다. 두 profile 모두 TEST-SCENARIO.md를 실행 전 명세로만 읽고 결과·증거는 test-scenario.json에 기록한다.
 
 opal-test-agent 워커 디스패치. TEST-SCENARIO.md를 실행 명세로 읽고, `test-tool scenario-status`로 잠금 상태를 확인한 뒤 각 결과·증거를 `scenario-mark`로 기록하고 PASS/FAIL/BLOCKED를 판정한다. 사용자 행동이 필요한 시나리오는 주입된 capability로 실행할 수 없을 때만 필요한 행동과 기대 결과를 PM에 BLOCKED로 반환한다.
 
@@ -273,7 +251,6 @@ opal-test-agent 워커 디스패치. TEST-SCENARIO.md를 실행 명세로 읽고
 ---
 
 ## STEP 6: CLOSE
-profile=full에서는 STEP 6, profile=short에서는 STEP 5에 해당한다. CLOSE 첫 행은 두 profile 모두 직전 TEST 사용자 확인 행(`test.user_confirm`)의 사용자 승인 소유권을 요구한다. profile=short는 PLAN 사용자 확인 이후 EXECUTE/TEST를 진행하지만 CLOSE 진입 직전에는 TEST 결과 보고와 사용자 승인이 별도로 필요하다.
 
 모든 체크리스트 갱신 완료 확인 후 태스크를 마감한다.
 
@@ -319,25 +296,22 @@ profile=full에서는 STEP 6, profile=short에서는 STEP 5에 해당한다. CLO
 
 ## STATE.md 도메인 치환값
 
-> **[MUST] STATE.md 초기 생성**: profile=full은 `~/.opal/tools/state-tool/run.sh init <task-path> --skill opd --mode <interactive|semi-agentic|agentic> --rows-from opal/skills/opal-pilot-dev/references/pipeline.json`를 호출한다. profile=short는 `~/.opal/tools/state-tool/run.sh init <task-path> --skill opds --mode <interactive|semi-agentic|agentic> --rows-from opal/skills/opal-pilot-dev/references/pipeline-short.json`를 호출한다. 기본값은 `semi-agentic`이다. 행 구성 SSOT는 profile별 pipeline JSON의 `task_steps[]`이며, 기존 Full 16행과 Short 11행 의미를 유지한다.
+> **[MUST] STATE.md 초기 생성**: `~/.opal/tools/state-tool/run.sh init <task-path> --skill opd --mode <interactive|semi-agentic|agentic> --rows-from opal/skills/opal-pilot-dev/references/pipeline.json` 호출. 기본값: `semi-agentic`. 행 구성 SSOT는 `references/pipeline.json`(task-step key 포함) — `--rows-from`이 확장자로 분기해 파싱한다(070).
 > 근거: `tasks/134-260501-opp-pipeline-state-tool/TASK.md` F-15 / `PLAN.md` §2.3 / §2.20.2 / §3 Step 8 (P-3 advance, P-1 mark) / `tasks/070-260720-opd-태스크스텝-키주소-1차/PLAN.md` §3.6.2 (pipeline.json 전환)
 
-> **행 구성 SSOT**: profile=full은 `references/pipeline.json`, profile=short는 `references/pipeline-short.json`이다. 현재 행 목록은 `~/.opal/tools/state-tool/run.sh show <task-path>` 또는 profile별 pipeline JSON을 직접 조회한다.
+> **행 구성 SSOT**: `references/pipeline.json` `task_steps[]`. 현재 행 목록은
+> `~/.opal/tools/state-tool/run.sh show <task-path>` 또는 pipeline.json을 직접 조회한다.
 
-> TASK.md 생성은 `task.task_md` 행에 흡수한다. profile=full의 ANALYSIS.md 생성은 `analysis.analysis_md`, PLAN.md 생성은 `plan.plan_md`, TEST-SCENARIO.md 생성은 `test_scenario.test_scenario_md` 행에 흡수한다. profile=short의 PLAN.md와 TEST-SCENARIO.md 생성은 `plan.plan_md`와 `plan.scenario_gate`에 연결한다. State Gate 성격의 판정은 개별 행이 아니라 state-tool stage-transition guard(PLAN §M-A)가 자동 수행한다 — 행으로 강제하지 않는다.
-> **[MUST] 목표-커버 게이트 행은 `op-scenario-gate` 스킬 반환 `verdict: pass`일 때만 mark한다** — profile=full은 `test_scenario.scenario_gate`, profile=short는 `plan.scenario_gate`를 사용한다. PM이 산문 판단만으로 mark할 수 없으며, 이 행이 미완이면 stage-transition guard가 EXECUTE(`execute.implement`) 진입을 구조적으로 거부한다.
-> TEST 루핑 발생 시: profile=full은 `~/.opal/tools/state-tool/run.sh add-row <task-path> --after 15 --stage TEST --item 'fix 작업 (N/3)'`, profile=short는 `~/.opal/tools/state-tool/run.sh add-row <task-path> --after-task-step test.pm_gate --stage TEST --item 'fix 작업 (N/3)'` 호출로 동적 추가한다 (P-6 추가작업 행 추가 패턴).
+> TASK.md 생성은 `task.task_md` 행에 흡수, ANALYSIS.md 생성은 `analysis.analysis_md` 행에 흡수, PLAN.md 생성은 `plan.plan_md` 행에 흡수, TEST-SCENARIO.md 생성은 `test_scenario.test_scenario_md` 행에 흡수. State Gate 성격의 판정은 개별 행이 아니라 state-tool stage-transition guard(PLAN §M-A)가 자동 수행한다 — 행으로 강제하지 않는다.
+> **[MUST] `test_scenario.scenario_gate` 행(목표-커버 게이트)은 `op-scenario-gate` 스킬 반환 `verdict: pass`일 때만 mark한다** — PM이 산문 판단만으로 mark할 수 없으며, 이 행이 미완이면 stage-transition guard가 EXECUTE(`execute.implement`) 진입을 구조적으로 거부한다(073/F-005, R-5).
+> TEST 루핑 발생 시: `~/.opal/tools/state-tool/run.sh add-row <task-path> --after 15 --stage TEST --item 'fix 작업 (N/3)'` 호출로 동적 추가한다 (P-6 추가작업 행 추가 패턴).
 
 ## PM Gate 점검 목록
 
-> **게이트 정의 SSOT**: profile=full은 `references/pipeline.json`, profile=short는 `references/pipeline-short.json`의 `task_steps[].gate` — 산출물(`artifacts`)과
+> **게이트 정의 SSOT**: `references/pipeline.json` `task_steps[].gate` — 산출물(`artifacts`)과
 > 체크리스트(`checklist`)는 이곳에만 정의한다. `state-tool mark --task-step <게이트 key>` 호출 시
 > artifacts 존재를 도구가 검증하고(미충족 시 `gate_artifact_missing`으로 거부) checklist를
-> stdout `gate_checklist` 페이로드로 반환한다. 각 Phase의 판정 절차·기준은 profile=full의 STEP 2(ANALYSIS)/STEP 3(PLAN)/STEP 3.5(TEST-SCENARIO)/STEP 5(TEST) 또는 profile=short의 STEP 3(PLAN)/STEP 4(TEST) "PM Gate" 절을 따른다.
-
-## Short profile 승격 규칙
-
-승격 규칙 SSOT는 `opal/skills/opal-pilot-dev/references/track-escalation.md`다. profile=short는 PLAN.md 수신 직후에만 승격 조건을 1회 확인한다. PLAN.md 작성 전에는 승격 판단을 수행하지 않는다. PM은 승격 조건을 감지해도 자동 전환하지 않고 사용자에게 Full Task 전환을 제안한다. `track-routing.md`의 하향 강등은 profile=full TASK 직후 1회만 수행하므로 PLAN 결과 승격과 시점이 분리되어 왕복 재귀가 성립하지 않는다.
+> stdout `gate_checklist` 페이로드로 반환한다. 각 Phase의 판정 절차·기준은 STEP 2(ANALYSIS)/STEP 3(PLAN)/STEP 3.5(TEST-SCENARIO)/STEP 5(TEST)의 "PM Gate" 절을 따른다.
 
 ---
 
@@ -347,22 +321,18 @@ opal-harness-agentic.md / opal-harness-semi-agentic.md 참조. 본 절은 이 �
 
 ### 기본 모드 (semi-agentic)
 
-기본 호출(`//opd {작업}`, `//opds {작업}`)은 semi-agentic 모드. profile=full은 TEST-SCENARIO-equivalent까지 사용자 검토, profile=short는 PLAN-equivalent까지 사용자 검토, EXECUTE-equivalent 이후 PM 자율, CLOSE 진입은 사용자 승인 필수.
+기본 호출(`//opd {작업}`)은 semi-agentic 모드. TEST-SCENARIO-equivalent까지 사용자 검토, EXECUTE-equivalent 이후 PM 자율, CLOSE 진입은 사용자 승인 필수.
 
 **모드 경계** (이 시점부터 PM 자율):
-- profile=full: TEST-SCENARIO 사용자 확인 행 통과 후 → EXECUTE 작업 행부터 PM 자율
-- profile=short: PLAN 사용자 확인 행 통과 후 → EXECUTE 작업 행부터 PM 자율
+- TEST-SCENARIO 사용자 확인 행 통과 후 → EXECUTE 작업 행부터 PM 자율
 
 ### 명시 모드
 
 | 호출 | 모드 |
 |------|------|
 | `//opd 작업` | semi-agentic (기본) |
-| `//opds 작업` | semi-agentic (기본) |
 | `//opd --interactive 작업` | interactive — 모든 단계 사용자 승인 |
-| `//opds --interactive 작업` | interactive — 모든 단계 사용자 승인 |
 | `//opd --agentic 작업` | agentic — 모든 단계 PM 자율 (CLOSE 진입 제외) |
-| `//opds --agentic 작업` | agentic — 모든 단계 PM 자율 (CLOSE 진입 제외) |
 
 ### 활성화
 
@@ -374,25 +344,14 @@ opal-harness-agentic.md / opal-harness-semi-agentic.md 참조. 본 절은 이 �
 
 ### 자율 게이트 흐름 (semi-agentic)
 
-profile=full:
-
 ```
 TASK → ANALYSIS Gate → PLAN Gate → TEST-SCENARIO Gate → EXECUTE Gate → TEST Gate → CLOSE
 사용자   사용자 승인     사용자 승인    사용자 승인              PM 자율        PM 자율     사용자 승인 필수
                                       (모드 경계)
 ```
 
-profile=short:
-
-```
-TASK → PLAN Gate → EXECUTE Gate → TEST Gate → CLOSE
-사용자   사용자 승인    PM 자율         PM 자율     사용자 승인 필수
-         (모드 경계)
-```
-
-- profile=full은 TASK→ANALYSIS→PLAN→TEST-SCENARIO Gate까지 사용자 승인 필수 (interactive 동작)
-- profile=short는 TASK→PLAN Gate까지 사용자 승인 필수 (interactive 동작)
-- profile별 모드 경계 통과 후 EXECUTE/TEST Gate는 PM 자율 통과
+- TASK→ANALYSIS→PLAN→TEST-SCENARIO Gate까지 사용자 승인 필수 (interactive 동작)
+- TEST-SCENARIO 사용자 확인 행 통과 후 EXECUTE/TEST Gate는 PM 자율 통과
 - EXECUTE 진입 = PM이 대행 승인 (구현 금지 원칙의 "실행 허가"를 PM이 판단)
 - CLOSE 진입은 사용자 승인 필수 (공통 게이트)
 - 각 게이트에서 opal-harness-agentic.md "Gate 루핑 규칙" 적용

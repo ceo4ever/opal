@@ -6,7 +6,7 @@
 
 ## 개요
 
-`state-tool`은 STATE.md의 파이프라인 현황판 표를 `state.json`(단일 진실 공급원)으로 분리하고, 10개 서브 명령으로만 갱신 가능하게 만들어 LLM의 절차 우회/오갱신을 차단한다.
+`state-tool`은 STATE.md의 파이프라인 현황판 표를 `state.json`(단일 진실 공급원)으로 분리하고, 상태 변경 명령과 이벤트 receipt 검증 명령을 제공한다.
 
 > **070: task-step 키 주소 체계**. 행 주소를 불안정한 순번(`--row N`)이 아니라 `references/pipeline.json`에 선언된 task-step key(`plan.pm_gate` 형식)로 지정할 수 있다. `advance`/`mark`/`block`/`add-row`는 `--task-step <key>` / `--task-step-id <n>` / `--row <n>`(deprecated 별칭, 하위호환) 중 정확히 하나를 받는다. 미지정 시 `task_step_addr_required`, 2개 이상 동시 지정 시 `task_step_addr_conflict`, key 미매칭 시 `task_step_not_found`(candidates 포함).
 
@@ -19,7 +19,7 @@
 ~/.opal/tools/state-tool/run.sh <command> <task-path> [options]
 ```
 
-> 개발 중에는 소스 경로로 직접 호출:
+`event-verify`는 상태를 다루지 않으므로 `<task-path>` 없이 호출한다. 개발 중에는 소스 경로로 직접 호출:
 > `bash opal/tools/state-tool/run.sh <command> <task-path> [options]`
 
 ## 종료 코드
@@ -32,7 +32,7 @@
 
 > 근거: `tasks/134-260501-opp-pipeline-state-tool/TASK.md` T-3
 
-## 10개 서브 명령
+## 서브 명령
 
 ### 1. `init` — state.json + STATE.md 생성
 
@@ -272,9 +272,26 @@
 
 ---
 
+### 11. `event-verify` — 이벤트 receipt 검증
+
+파일럿과 단계 진입 전에 event-loader가 발급한 receipt를 검증한다. 이 명령은
+`state.json`과 `STATE.md`를 읽거나 쓰지 않으며 기존 `advance`/`mark` 호출 계약도 바꾸지 않는다.
+
+```bash
+~/.opal/tools/event-loader/run.sh load --event stage.execute > /tmp/stage.execute.json
+~/.opal/tools/state-tool/run.sh event-verify \
+  --event stage.execute --receipt /tmp/stage.execute.json
+```
+
+- 성공하려면 요청 event, manifest hash, 필수 문서 집합, 경로, sha256, bytes가 모두 현재 값과 일치해야 한다.
+- receipt 누락, wrong-event, stale manifest, 문서 누락·변경은 event-loader의 구조화 오류와 non-zero 종료 코드를 그대로 반환한다.
+- 파일럿은 load 응답의 `documents[].content` 전문을 적용한 뒤 이 명령이 성공해야 해당 단계 작업을 시작할 수 있다.
+
+---
+
 ### `verify` — TEST-SCENARIO.md 검증 + TASK/PLAN 게이트 (013/016/005/098/100/111)
 
-`10개 서브 명령`과 별개로 동작하는 검증 전용 명령. task-path 하나에 여러 독립
+위 11개 번호 명령과 별개로 동작하는 검증 전용 명령. task-path 하나에 여러 독립
 분기(mock 패턴/증거 누락 검사, `--red-check`, `--fix-mode`, `--clarification-check`,
 `--evidence-check`, `--plan-contract-check`, `--code-scan-citation-check`)가 있으며 각 분기는
 조기 반환한다 — 동시 지정 가능 조합은 플래그별 계약을 따른다
@@ -507,24 +524,3 @@
 | TASK.md | `tasks/134-260501-opp-pipeline-state-tool/TASK.md` | T-1~T-13 기술 결정 |
 | state.schema.json | `opal/tools/state-tool/schema/state.schema.json` | JSON Schema Draft-07 |
 | xlsx-tool 패턴 | `opal/tools/xlsx-tool/run.sh:1-12` | OPAL Tools 래퍼 패턴 |
-
-## 변경이력
-
-| 버전 | 일시 (KST) | 태스크 | 변경 내용 |
-|------|-----------|--------|---------|
-| v1.0 | 2026-05-01 | (134) | 최초 작성 |
-| v1.1 | 2026-05-09 11:22 | (140) | 3-way 모드 지원: init --mode semi-agentic 추가, mark/validate semi-agentic 경계 게이트 문서화, 오류 #24/#25 추가 |
-| v1.2 | 2026-07-10 13:15 | (054) | `resolve_owner_placeholder()` 신설 — note/reason의 `{owner_name}` 플레이스홀더를 identity.md `owner_name`으로 write-time 치환(fail-safe: 부재/공란/파싱실패 시 원문 유지). init/advance/mark/block/add-row/status 6경로 적용 |
-| v1.3 | 2026-07-10 16:33 | (056) | `init --skill` choices + state.schema.json `skill` enum에 `oppl` 추가 (opal-pilot-project-loop 등록, 스키마 신규 필드 없음) |
-| v1.4 | 2026-07-10 | (056 ADD-2) | 드리프트 정정 — state.schema.json `mode` enum에 `semi-agentic` 추가 (CLI `--mode` choices와 정합). 신규 필드 없음, `schema_version` 유지("1.0") |
-| v1.5 | 2026-07-20 15:45 | (070) | task-step 키 주소 체계 도입 1차 — `spec-validate` 서브명령 신설(10종), `pipeline-spec.schema.json` 신설, `init --rows-from` `.json`/`.md` 확장자 분기(json 스펙 로딩 시 rows[].key·conditional 영속, md는 deprecation 경고), `state.schema.json` 1.1 병행(rows[].key·conditional 선택 필드, schema_version enum), `--task-step`/`--task-step-id`/`--row`(deprecated)/`--action-step`(구 `--step` 별칭) 신설(advance/mark/block), `--after-task-step`/`--after-task-step-id`/`--key`(add-row), opdd skill·DICT/MODEL/DDL·MIGRATION stage enum 등록, ERROR_CODES 8종 추가(39종) |
-| v1.6 | 2026-07-23 12:09 | (072) | STATE.md "다음 액션" 자동 파생 — `state.json` `next_action` 필드 신설(init 영속화, `state.schema.json` optional 등록), `advance`/`mark` 프론티어(첫 미완료 행) 자동 파생·`update_next_action_section`(첫 줄만 치환, 하위 자유기재 보존), `advance`/`mark` `--next-action` per-transition 오버라이드(비지속 — 다음 전이 자동 파생 복귀). `## 블로커`는 기존대로 PM 수동 갱신 |
-| v1.7 | 2026-08-16 13:15 | (094) | STATE.md 저널화에 따른 문서 재정합(R-4 문서 + R-9 ①③) — 에러 카탈로그 재실측(`marker_missing`/`import_failed` 삭제, `import_existing_removed` 추가, 39종 표기 → **44종 실측값**으로 정정 및 091/093 누락 행(`gate_artifact_missing`/`spec_gate_*`/`user_confirmation_required`) 보강, 행 번호 전체 재부여); `init --import-existing` 사용 안내 제거 — 항상 `import_existing_removed`로 거부됨을 명시(인자는 `help=SUPPRESS`로 존치, 설계 의도 기술); `validate` 검증 항목·응답 예시에서 `marker_missing` 서술 제거; `show` 절을 `cmd_show` 재설계(R-5/D-4)에 맞춰 재작성 — `md`/`full` 모두 마커 유무와 무관하게 `state.json` 단일 파생 렌더, 레거시 마커 잔존 시 배너 1줄 prepend, `marker_present` 필드 의미 재해석(레거시 동결 표 잔존 신호) 1줄 추가 |
-| v1.8 | 2026-08-21 18:04 | (098) | `verify --evidence-check` 신설(F-003, PLAN §3.3.2) — TASK.md `## 명확화 결과` 표의 `의존 사실` 셀을 근거 등급 4축으로 판정해 항목별 확정/미확정+사유를 반환하는 라우터(exit 0 유지, 미확정도 차단하지 않음) 신규 절 추가; 에러 코드 44→**45종**(`evidence_check_flag_conflict` — `--evidence-check`/`--clarification-check` 동시 지정 거부) 반영해 카탈로그 헤더·표 정정 |
-| v1.9 | 2026-08-23 13:03 | (100) | `verify --evidence-check` 파싱 대상 확장(F-007, PLAN §3.7.2) — `## 명확화 결과` 표에 더해 `## 확정된 설계 방향` 섹션의 **최상위 불릿**을 전용 파서(`_locate_confirmed_direction_items`)로 수집해 하나의 `items[]`로 병합, 각 항목에 출처 구분 `source`(`clarification` \| `confirmed_direction`) 필드 신설; verdict에 `승계` 추가(`[사실]` 태그 + 유효 인용 → 상류 대조 확인 승계, 계수상 `확정`과 동등); 신규 반환 키 `direction_confirmed_ratio`(섹션 부재·항목 0건 시 `null`) 추가 — **기존 `confirmed_ratio`의 분모는 `## 명확화 결과` 항목 수로 불변**(PD-1 분리형, 소비자 계약 보호). 표 열 구성·플래그·에러 코드 45종·exit 0 3경로 전부 불변 |
-| v1.10 | 2026-08-25 | (103 R-15) | 워커 소요 계측 필드 신설 — `state.schema.json` `rows[].worker_duration_minutes`(integer, `minimum: 0`) **선택** 등록(`required`·`additionalProperties: false` 불변, 기존 `state.json` 전건 유효), `mark --worker-duration-minutes <n>` 인자 추가(값 검증은 argparse `type` 파서가 파싱 시점에 수행 — 음수·소수·비수치 exit 2, **에러 코드 45종 불변**). 지정 시에만 행에 기록 + `mark` 응답에 동명 키 조건부 추가하며, **미지정 호출은 `state.json`·stdout 모두 종전과 바이트 동일**. 미기록 행은 집계에서 `PM` 계열로 전액 축퇴(집계 기준 16-a) |
-| v1.11 | 2026-08-26 | (103 R-21) | 워커 소요 누락 경고 신설 — `mark`가 워커 디스패치 행(`--as-worker` 또는 `--worker-stage`)을 `done`으로 닫으면서 `--worker-duration-minutes`를 넘기지 않으면 응답 JSON에 `warnings` 배열(`worker_duration_missing`)을 조건부로 싣는다. **exit 0 유지·차단 없음**이며 `state.json`·`STATE.md` 산출물은 경고 유무와 무관하게 동일하다(경고는 stdout 전용). 오탐 차단 4관문(값 보유·억제 인자·워커 신호 부재·`--action-step N/M`의 `N<M`) + `owner="user"` 사용자 확인 행·093 재-auto-pass 멱등 no-op 제외. 억제 인자 `--worker-duration-unknown` 추가(`--worker-duration-minutes`와 argparse 배타, 지정 시 경고·필드 모두 미생성). 경고 카탈로그는 신규 `WARNING_CODES`로 분리 — **에러 코드 45종 불변** |
-| v1.12 | 2026-08-26 | (103 강제 2단) | 워커 소요 기록 강제 — (1) 경고 판정을 인자 신호(`--as-worker`/`--worker-stage`) **또는 행 구조**(`stage`가 워커 디스패치 규범 단계 + `item`이 「작업」)로 확장해 PM의 자발적 표시에 의존하지 않게 했다. (2) `--worker-duration-unknown`이 행에 `worker_duration_unknown: true`를 영속화한다(스키마 선택 필드) — CLOSE 게이트가 「미측정 선언」과 「침묵」을 갈라야 하기 때문. (3) `mark`가 CLOSE 첫 행 진입 시 기록도 선언도 없는 워커 규범 행이 있으면 **차단**한다(`BLOCK_CODES.worker_duration_undeclared`, `ERROR_CODES` 45종 불변). 통과는 기록 또는 선언 둘뿐이고 `--force --note`가 최후 우회다. 계측 도입(`_WORKER_MEASUREMENT_EPOCH` 2026-08-26) 이전 `created_at` 태스크는 유예 — 「기록 0건이면 유예」로 두면 전건 미기록 신규 태스크가 통과해 강제가 무의미해진다 |
-| v1.13 | 2026-09-04 22:52 | (106) | 에러 코드 45→**46종** 반영(F-004 R-4) — `code_scan_citation_unmet` 카탈로그 행 1건 추가(`verify --code-scan-citation-check` 및 `advance`/`mark`의 EXECUTE 첫 행 자동 훅, exit 1: `PLAN.md` §4.2 대상 파일에 코드 확장자가 있는데 §4.2 본문의 code-scan 결과 인용 토큰이 0건이거나, EXECUTE 첫 행 진입에 `--auto-pass`로 우회 시도) + 카탈로그 헤더 종수·근거 목록 정정. 103 R-21 절의 「에러 코드는 45종 그대로다」 문면을 「103이 늘리지 않았다(103 시점 45종) + 현재 실측 46종」으로 정정 — 경고/에러 사전 분리 계약 자체는 불변. 코드↔문서 정합(D-5 ①)은 `test_s7_error_catalog_marker_import_realignment`가 카탈로그 헤더 종수를 `len(ERROR_CODES)` 실측과 대조하므로 이 표기는 코드와 함께 움직여야 한다 |
-| v1.14 | 2026-09-04 23:05 | (106) | `verify --code-scan-citation-check` 절 신설 — 판정 대상(PLAN.md §4.2 본문)·반환 3값·스킵 `reason` 3값과 순서 계약·집행 지점 2곳(라우터 + EXECUTE 첫 행 자동 훅)·플래그 상호배타·영속 무변경을 기재. 카탈로그 정정과 함께 신규 절을 추가한 098 v1.8 선례를 준용 |
-| v1.15 | 2026-09-09 14:25 | (111 W-1) | sdlc-v2 state-tool 계약 반영 — `verify --clarification-check`가 첫 YAML frontmatter의 exact `template: sdlc-v2` TASK 필수 5절을 검사하고 legacy `## 명확화 결과` 경로는 유지한다. `verify --plan-contract-check`를 추가해 Work items 7열/W-ID/내용/선행·순환/P그룹/동일 그룹 파일 충돌/AC-C 연결을 차단형으로 검사한다. code-scan 인용 게이트가 sdlc-v2 Work items 변경 대상을 읽도록 확장하고, 에러 코드 46→**47종**(`plan_contract_unmet`)으로 정합했다 |

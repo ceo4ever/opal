@@ -146,7 +146,7 @@ echo "긴 프롬프트..." | opal-agent --provider gemini --json
 | `--resume ID` | 이어갈 세션 ID (warm resume, `--session-id`와 상호배타) |
 | `--session-id ID` | 신규(cold) 세션에 지정할 caller-supplied session id — **claude만** 지원(`--resume`과 상호배타) |
 | `--bin PATH` | CLI 바이너리 경로 오버라이드 |
-| `--opal-bootstrap on\|assistant\|off` | 서브에이전트 OPAL 부트스트랩 (기본 `on`). `assistant`면 프롬프트 첫 줄에 `[ASSISTANT]` 마커 주입 → 비서 tier(Phase A)만 로드(PM tier 승격 억제). `off`면 첫 줄에 `[WORKER]` 마커 주입 → 부트스트랩 전체 스킵(깨끗한 워커) |
+| `--opal-bootstrap on\|assistant\|off` | 서브에이전트 첫 줄 마커 어댑터(기본 `on`). `assistant`는 `[ASSISTANT]`→`session.assistant`, `off`는 `[WORKER]`→`session.worker`로 해석된다. setting의 `bootstrap: off`→`session.disabled`와는 다른 계약이다. |
 | `--json` / `--text` / `--stream` | 출력 형식 (기본 `--text`). `--json`/`--text`/`--stream`은 상호배타. `--stream`은 claude 전용(§stream 모드 참조) |
 
 종료 코드: 정상 `0`, 에이전트 오류(`is_error`) `1`, 실행 오류 `2`.
@@ -191,37 +191,33 @@ echo $? > events.exitcode
 ```
 
 - opal-agent 서브에이전트는 **fresh 프로세스**라 세션 컨텍스트를 공유하지 않는다 →
-  필요한 컨텍스트를 프롬프트에 직접 주입한다(`--opal-bootstrap off` = `[WORKER]` 규약과 동일 취지).
+  필요한 컨텍스트를 프롬프트에 직접 주입한다. OPAL 워커 디스패치라면 `[WORKER]` 다음에
+  `worker.dispatch` event id와 검증 가능한 receipt를 함께 주입해야 하며, 누락·stale·wrong-event
+  receipt는 워커가 blocked로 반환한다.
 - 반환 JSON의 `result`로 결과, `session_id`로 다중 턴(`--resume`).
 - 비-claude 플랫폼(codex/gemini/grok/cursor/antigravity) 워커도 `--provider`로 디스패치 가능
   — Agent/Task 툴(claude 전용)로는 불가능한 크로스-프로바이더 서브에이전트.
 - 미배포 환경이면 `bash ~/.opal/tools/opal-agent/run.sh ...` 또는
   `~/.opal/.venv/bin/python ~/.opal/tools/opal-agent/opal_agent.py ...`로 대체.
 
-## 변경이력
+## OPAL 세션 마커 (`--opal-bootstrap on|assistant|off`)
 
-- v1.0 (2026-07-12) 초기 구현 — claude 전용 `call_agent` + CLI
-- v2.0 (2026-07-12) 멀티 provider 어댑터 계층 — gemini/codex/grok 추가, codex 플래그 실측 반영
-- v2.1 (2026-07-12) cursor provider 추가(플래그 실측), `ProviderAdapter` ABC화. Antigravity는 보류
-- v2.2 (2026-07-12) antigravity(agy) provider 추가 — 실측 기반 text-only 2급 어댑터
-- v2.3 (2026-07-12) `effort`(추론 강도) 지원 — claude/codex/grok, 미지원 provider 경고. `model`은 v1.0부터 지원
-- v2.4 (2026-07-12) `--opal-bootstrap on\|off` — `off`면 `[WORKER]` 첫 줄 마커로 OPAL 부트스트랩 스킵(부트스트래퍼 진입점 게이트 배선과 연동). claude/codex/agy 실측 검증
-- v2.5 (2026-07-13 15:25 KST, 059) `--opal-bootstrap`을 `on\|assistant\|off` 3-way로 확장(`assistant`=`[ASSISTANT]` 첫 줄, 비서 tier Phase A만) + claude 전용 caller-supplied cold `--session-id` 지원(`--resume`과 상호배타, 미지원 provider는 경고 후 무시)
-- v2.6 (2026-07-17 19:49 KST, 067) `--stream` opt-in 실행 경로 추가(claude 전용) — `--output-format stream-json --verbose` 자동 조립, stdout line-buffered passthrough(호출측 리다이렉트로 증분 기록), 마지막 `type:result` 줄에서 기존과 동일한 5필드 추출. 기존 `--json`/`--text` 경로·5필드 계약·종료 코드 0/1/2는 불변
-
-## OPAL 부트스트랩 스킵 (`--opal-bootstrap on|assistant|off`)
-
-opal-agent가 띄우는 서브에이전트는 기본적으로 OPAL 부트스트랩(정체성 `알투`·PM tier 등)을 수행한다. `--opal-bootstrap`은 프롬프트 첫 줄에 마커를 주입해 이 부트스트랩을 3단으로 스킵할 수 있는 사다리다:
+`--opal-bootstrap`은 이름을 하위호환으로 유지하는 첫 줄 마커 어댑터다. 최종 상태는
+`opal_agent.resolve_session_event()`와 `opal/core/AGENT.md`의 우선순위 계약으로 판정한다.
 
 | 값 | 첫 줄 마커 | 로드 범위 |
 |---|-----------|----------|
-| `on` (기본) | 없음 | 비서 tier(Phase A) + PM tier(Phase B) 전부 |
-| `assistant` | `[ASSISTANT]` | 비서 tier(Phase A)만 — `.opal/AGENT.md`가 있어도 PM tier 승격 억제 |
-| `off` | `[WORKER]` | 전부 스킵 — 순수 워커(깨끗한 컨텍스트) |
+| `on` (기본) | 없음 | 비프로젝트면 `session.assistant`, 프로젝트면 `session.project`. 프로젝트 존재만으로 PM을 활성화하지 않음 |
+| `assistant` | `[ASSISTANT]` | `session.assistant` — 프로젝트 brief와 PM 활성화를 모두 억제 |
+| `off` | `[WORKER]` | `session.worker` — 전역 문서 0건, OPAL 워커는 별도 `worker.dispatch` receipt 필요 |
 
-- **메커니즘**: 첫 줄 마커 → OPAL 부트스트래퍼 진입점 게이트(`~/.claude/CLAUDE.md`·`~/.codex/AGENTS.md`·`~/.gemini/GEMINI.md`)가 `[MUST]`보다 먼저 이를 감지해 스킵 범위를 결정. env(`OPAL_BOOTSTRAP`) 방식이 아님 — 과거 env 게이트는 매 세션 권한 프롬프트 문제로 폐기됨(043).
-- **검증**(off → on): claude `클로드`→`알투`, codex `Codex`→`알투`, antigravity `Antigravity`(chrome 없음)→`알투:`+부트스트랩 로그.
-- **전제**: 부트스트래퍼 진입점에 "첫 줄 마커 게이트"가 배포돼 있어야 함(bootstrapper v1.1+/gemini v1.3+, 3-way는 v1.2+/059).
+- **최우선 설정 게이트**: effective setting의 `bootstrap`이 정확히 `off`면 marker보다 먼저
+  `session.disabled`가 선택되며 identity·PRINCIPLES·memory·PM·harness를 포함한 OPAL 문서를
+  0건 로드한다. 이는 `--opal-bootstrap off`가 만드는 `session.worker`와 다르다.
+- **PM JIT**: `session.project`에서 프로젝트 작업 또는 프로젝트 내 `//` 커맨드가 들어온 때
+  `pm.activate`를 load·verify한 뒤에만 PM으로 전환한다.
+- **이벤트 SSOT**: 필수 문서 목록은 `opal/core/references/events.json`, 전문·hash·receipt
+  계약은 `opal/tools/event-loader`가 소유한다.
 
 ## cold session id 지정 (`--session-id`, claude 전용)
 

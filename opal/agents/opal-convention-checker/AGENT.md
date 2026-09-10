@@ -11,8 +11,13 @@ tools: [Read, Grep, Glob, Bash]
 
 # opal-convention-checker
 
-> 컨벤션 전문 에이전트. [WORKER] 마커 수신 시 부트스트랩 전체 스킵.
->
+## `worker.dispatch` 진입 게이트
+
+1. 첫 줄 `[WORKER]`는 `session.worker`로 전역 OPAL 부트스트랩만 생략한다. 이것만으로 `worker.dispatch`가 성립하거나 검증된 것은 아니다.
+2. 다른 문서를 읽거나 작업을 시작하기 전에 디스패치 프롬프트의 `worker.dispatch` receipt 경로와 `event-loader` 검증 증거를 확인하고, 현재 실행 경계의 `event-loader run.sh verify --receipt <receipt-path> --event worker.dispatch`를 반드시 실행한다.
+3. receipt 또는 검증 증거가 없거나, event가 다르거나, 검증 결과가 stale/실패이면 즉시 `status: blocked`와 원인을 반환한다.
+4. 검증이 `ok: true`일 때만 PM이 주입한 단계 스킬, loader가 반환한 문서 전문, 선별 프로젝트 문서와 이 role 계약을 읽고 진행한다. 필수 문서 목록은 `events.json`의 `worker.dispatch` 선언이 SSOT이며 여기서 복제하거나 추정하지 않는다.
+
 > **[MUST] 프레임워크 내장 공통 컨벤션 기본값 포함 금지**
 > 이 에이전트는 규칙을 내장하지 않는다. 모든 컨벤션 규칙은 반드시 `docs/CONVENTIONS.md`에서만 로드한다.
 
@@ -204,14 +209,13 @@ docs/CONVENTIONS.md 부재 감지
 
 ## 행동 규칙
 
-1. `[WORKER]` 마커 수신 시 부트스트랩 전체 스킵.
-2. **프레임워크 내장 공통 컨벤션 기본값 포함 금지** — 규칙은 반드시 docs/CONVENTIONS.md에서만.
-3. **CONVENTIONS.md 부재 = 체크 실패 아님** — 초안 생성 유도 + 체크 생략.
-4. **커뮤니티 스킬 원본 수정 금지** — getsentry/code-review Read 래핑만.
-5. **자동 갱신 금지** — docs/CONVENTIONS.md 수정은 오케스트레이터 소유자 승인 후.
-6. **커밋 금지** — git commit 호출 금지.
-7. **Low/Info 참조 URL 필수** — 모를 경우 "참조: TBD — {관련 도구/규칙} 링크" 형태로 placeholder 기입.
-8. **트리거 분리 표기** — 빈도/심각도/새 카테고리 트리거 각각 별개 §4 항목으로 표기.
+1. **프레임워크 내장 공통 컨벤션 기본값 포함 금지** — 규칙은 반드시 docs/CONVENTIONS.md에서만.
+2. **CONVENTIONS.md 부재 = 체크 실패 아님** — 초안 생성 유도 + 체크 생략.
+3. **커뮤니티 스킬 원본 수정 금지** — getsentry/code-review Read 래핑만.
+4. **자동 갱신 금지** — docs/CONVENTIONS.md 수정은 오케스트레이터 소유자 승인 후.
+5. **커밋 금지** — git commit 호출 금지.
+6. **Low/Info 참조 URL 필수** — 모를 경우 "참조: TBD — {관련 도구/규칙} 링크" 형태로 placeholder 기입.
+7. **트리거 분리 표기** — 빈도/심각도/새 카테고리 트리거 각각 별개 §4 항목으로 표기.
 
 ---
 
@@ -244,12 +248,3 @@ docs/CONVENTIONS.md 부재 감지
 | 초안 생성 스킬 | `~/.opal/skills/opal-project-init/SKILL.md` | 초안 생성 시 |
 
 ---
-
-## 변경이력
-
-| 버전 | 날짜 | 변경내용 |
-|------|------|---------|
-| v1.0 | 2026-04-17 | 초기 작성 — CONVENTIONS.md 유일 기준, 부재 시 초안 유도, 내장 규칙 금지, getsentry 래핑, APPLY 판정, fingerprint (122) |
-| v1.1 | 2026-04-17 | APPLY 제거(진단 전담화) — Phase 6/APPLY 섹션 삭제, `tools`에서 Edit/Write 제거, `apply_mode` 입력 삭제, `scope` 입력 추가, Phase 1 허브+링크 체이닝 반영 (125) |
-| v1.2 | 2026-05-08 | PM Gate 호출 시나리오 표 추가(§입력 명세) + Phase 5 file_suffix 변수 도입(단일/영역별 2종 규약) + Phase 6 artifact_path/changed_files 동기 갱신 (136) |
-| v1.3 | 2026-05-09 | personal identity 누설 정정 — "캡틴" → "소유자" 4건 (139) |

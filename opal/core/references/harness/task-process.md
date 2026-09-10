@@ -1,6 +1,6 @@
 # TASK 공통 프로세스
 
-> 출처: opal/core/references/opal-harness.md §4
+> owner: 이 문서 (`harness/task-process.md`)
 > 로드 시점: TASK 단계 진입 시 / 태스크 채번 시 / 저장 경로 판단 시
 > 역할: 스킬 영역 프로세스 / 태스크 채번 규칙 / 공통 영역 후처리 / 저장 경로 규칙
 
@@ -47,9 +47,10 @@
 
    - `ok: true` → 응답의 `worktree_root` 값을 아래 5번 `state init`의 `--worktree <path>`에 전달한다. `warnings[]`가 있으면 그대로 사용자에게 전달한다(**차단하지 않는다**).
    - `ok: false` → **태스크 폴더·TASK.md를 롤백하지 않는다.** `--wt` 없이 5번으로 진행하고(=`--worktree`를 전달하지 않으므로 `state.json`이 현행 스키마와 동일해진다), 실패 사유(`error` 코드)를 사용자에게 보고한다. agentic 모드에서는 사용자 확인을 요구하지 않고 자동 계속하되 AGENTIC-LOG.md에 실패 사유를 기록한다.
+     - 오류가 `CONFIG_NOT_FOUND`이면 `~/.opal/tools/worktree-tool/run.sh init --project-root <프로젝트> [--dry-run]`을 안내한다. `init`은 독립 `.git` 발견 시 multi-repo, 없으면 monorepo 초안을 만들 뿐 자동 확정하지 않으므로 사용자가 검토·수정한다. 수동 작성은 `~/.opal/templates/worktree-multi-repo.json` 또는 `worktree-monorepo.json`을 복사해 시작한다.
    - 도구는 부분 실패 시 자기가 만든 worktree·브랜치만 스스로 되돌린다(all-or-nothing) — 파이프라인이 정리할 잔여물은 없다.
-   - 축 정의 SSOT: `opal/core/references/opal-harness.md` §2.5.
-   - 워크트리에서 허브 고정 데이터(`tasks/`·`.opal/`)를 참조하는 경로 판정 규칙은 `opal/core/references/opal-harness.md` §2.5 (4)가 SSOT다.
+   - 축 정의 SSOT: `opal/core/references/harness/worktree.md`.
+   - 워크트리에서 허브 고정 데이터(`tasks/`·`.opal/`)를 참조하는 경로 판정 규칙은 `opal/core/references/harness/worktree.md` §허브 루트 해석 규칙이 SSOT다.
 
 5. **[필수] `state init`을 호출하여 STATE.md를 생성한다**. 이 단계를 건너뛰면 세션 복원과 상태 추적이 불가능하다. LLM이 직접 작성하는 것은 금지된다 (`harness/state-template.md` §[MUST] 블록).
 
@@ -91,20 +92,3 @@
 > 도메인별 추가 확인 필드(문서 유형, 출력 모드 등)는 각 opal-pilot SKILL.md에서 정의.
 
 ---
-
-## 변경이력
-
-| 버전 | 일시 | 변경내용 |
-|------|------|------|
-| v1.0 | 2026-04-21 | 다운사이징 — opal-harness.md §4 분리 (128) |
-| v1.1 | 2026-05-01 | 31번 항목(5번) `[필수] STATE.md를 생성한다` → `[필수] state init 호출` 표현 교체. `--task-title` / `--next-action` 인자 명시 — TASK F-9 / PLAN §2.11 G-8 / §2.19.1 / §1.5 M-3 (134) |
-| v1.2 | 2026-05-09 11:22 | --mode choices 3-way 갱신 + 기본값 semi-agentic 명시 (140) |
-| v1.3 | 2026-06-17 10:24 | 저장 경로 규칙에 `{태스크명}` 문자 규칙 주석 추가 — 한글·혼용 허용(공백 금지·하이픈·앞 3요소 ASCII 고정) (026 L2: 한글 폴더명 허용) |
-| v1.4 | 2026-06-17 15:50 | `{태스크명}` 기본값을 **한글**로 변경 — 영문 kebab-case·혼용은 소유자 명시 요청 시. 허용→기본 강화 (026 후속 L2: 한글 기본) |
-| v1.5 | 2026-07-23 12:09 | `--next-action` 계약 보강 — advance/mark에서도 파이프라인 프론티어 기준 자동 갱신 + 전이 시 1회성 오버라이드 가능 명시 (072) |
-| v1.6 | 2026-07-28 | 태스크 채번 규칙을 `.opal/MEMORY.md` 헤더 직접 Read+Edit에서 `memory-tool task-number --bump` 도구 호출로 전환 — 동시성 중복 방지 책임을 도구로 이전 (078) |
-| v1.7 | 2026-08-13 16:57 | state-tool 행 원천 지시 정정 — `--rows-from` 서술을 오케스트레이터 `references/pipeline.json` SSOT 기준으로 교체(구형 `.md` 파싱 지시 제거). 10/10 pilot 전환에 맞춘 pilot 밖 정합 (090) |
-| v1.8 | 2026-08-15 16:30 | 오케스트레이터 공통 영역에 스텝 4.5(`--worktree`/`--wt` worktree 생성 훅) 신설 — `worktree-tool create` 호출·성공/실패 분기·DEC-2 실패 정책(롤백 금지, agentic 자동 계속 + AGENTIC-LOG 기록) 명문화 + 스텝 5 `state init` 코드블록에 `--worktree` 옵션 1행 추가. 기존 스텝 3·4·5·6 번호·본문 무변경 (092) |
-| v1.9 | 2026-08-16 13:22 | 스텝 5 `--next-action` 설명 — "`## 다음 액션` 초기값" → "`state.json` `next_action` 필드 초기값 (조회: `state-tool show`)"로 치환 — STATE.md 저널 전환에 맞춘 표 전제 어구 제거 (094) |
-| v1.10 | 2026-09-09 | 신규 sdlc-v2 TASK의 스킬·모드 헤더 기록을 제거하고 `state init --skill/--mode` 계약으로 한정. legacy 헤더는 재개 호환으로만 해석 (111) |
-| v1.10 | 2026-09-07 15:50 | 스텝 4.5에 허브 루트 해석 규칙 포인터 1줄 추가 — 워크트리에서 허브 고정 데이터(`tasks/`·`.opal/`)를 참조하는 경로 판정의 원문 SSOT는 `opal-harness.md` §2.5 (4)임을 지시 (109) |

@@ -10,15 +10,26 @@ description: |
 
 ## Harness
 모드: Wireframe UI (TASK → WIREFRAME → EXECUTE → CLOSE)
-> 부트스트랩에서 로드되지 않은 경우: `~/.opal/references/opal-harness.md`를 Read한다.
+**[MUST — pilot.start 이벤트 게이트]** 파일럿의 첫 작업 전에 아래 순서를 수행한다.
 
-**[MUST]** 스킬 시작 즉시 모드에 따라 서브 하네스를 Read한다. 이 단계를 건너뛰면 안 된다:
-- `--interactive` 플래그 → `~/.opal/references/opal-harness-interactive.md`를 Read한다
-- `--agentic` 플래그 → `~/.opal/references/opal-harness-agentic.md`를 Read한다
-- 모드 플래그 없음 (기본) 또는 `--semi-agentic` → `~/.opal/references/opal-harness-semi-agentic.md`를 Read한다
-- 다중 모드 플래그 동시 사용 시 즉시 사용자에게 보고 + state init도 거부 (`mode_flag_conflict`)
+1. `~/.opal/tools/event-loader/run.sh load --event pilot.start > <pilot-receipt-path>`를 호출한다.
+2. load 응답의 `documents[].content` 전문을 모두 현재 컨텍스트에 적용하고, `modes` 문서가 현재 플래그에 대해 라우팅한 서브 하네스 전문 하나만 Read한다.
+3. `~/.opal/tools/state-tool/run.sh event-verify --event pilot.start --receipt <pilot-receipt-path>`가 성공한 뒤에만 진행한다.
 
-> **[MUST]** 산출물 작성·검증 시 `opal/core/references/harness/citation-rules.md`를 Read하여 규칙(근거 제시 원칙 / 트랙별 매트릭스 / [MUST] 토큰 / 영역 간 용어 일관성 / decision_required 계약)을 준수한다.
+**[MUST — 단계 이벤트 게이트]** 각 실제 단계의 첫 작업이나 `state-tool advance` 직전에 아래 매핑의 이벤트를 load하고, 응답 문서 전문을 적용한 뒤 같은 event id로 `state-tool event-verify`를 통과해야 한다.
+
+| 실제 단계 | 이벤트 |
+|---|---|
+| TASK | stage.task |
+| WIREFRAME | stage.plan |
+| EXECUTE | stage.execute |
+| CLOSE | stage.close |
+
+호출 형식은 `~/.opal/tools/event-loader/run.sh load --event <stage.*> > <stage-receipt-path>` 다음
+`~/.opal/tools/state-tool/run.sh event-verify --event <stage.*> --receipt <stage-receipt-path>`이다.
+문서 집합은 `events.json`만 SSOT로 사용하며 SKILL에 파일 목록을 복제하지 않는다. load 실패,
+필수 문서 누락, stale receipt, wrong-event receipt는 해당 파일럿·단계 진입을 즉시 중단하는
+blocker다. 부트 캐시를 근거로 공통 문서를 직접 재Read하는 우회는 금지한다.
 
 ---
 
@@ -257,37 +268,3 @@ semi-agentic / agentic 모두 CLOSE 첫 행 `--auto-pass` 거부 (`agentic_close
 - semi-agentic: EXECUTE-equivalent 첫 행 advance 시점에 PM이 생성
 
 ---
-
-## 변경이력
-
-| 버전 | 날짜 | 변경내용 |
-|------|------|---------|
-| v1.0 | 2026-03-26 | 초기 작성 — dev-task-pilot 컴포지션 전환 |
-| v1.1 | 2026-03-28 | Harness 참조 전환으로 슬림화 |
-| v1.2 | 2026-03-29 | 컴포넌트 리네이밍 (042) |
-| v1.3 | 2026-03-29 | model override를 레벨 기반으로 전환 (044) |
-| v1.4 | 2026-04-01 | WIREFRAME/EXECUTE 워커 디스패치에 `[WORKER]` 마커 + PM 컨텍스트 주입 지침 추가 (063) |
-| v1.5 | 2026-04-02 | 서브 하네스 [MUST] 추가 + WIREFRAME/EXECUTE PM Gate 추가 (072) |
-| v1.6 | 2026-04-07 | TASK/WIREFRAME/EXECUTE 각 단계 Gate 순서에 State Gate 추가 + Agentic Mode 섹션 신설 (094) |
-| v1.7 | 2026-04-07 | State Gate를 PM Gate 전 1개 → 각 Gate 직후로 재배치 (097) |
-| v1.8 | 2026-04-09 | STATE.md 도메인 치환값 — 진행 현황 행 예시 신규 추가 (산출물 생성 행 포함) (101) |
-| v1.9 | 2026-04-10 | Artifact Gate 제거 + PM Gate 점검 목록 섹션 추가 + 파이프라인 현황판 이름 변경 (106) |
-| v2.0 | 2026-04-11 | PM Gate 점검 목록 — PLAN-equivalent Phase에 TASK.md 요구사항 추가 (108) |
-| v2.1 | 2026-04-15 | STEP 4 CLOSE 단계 신설 + EXECUTE PM Gate 후 State Gate/사용자 확인 추가 + 진행 현황 행 CLOSE 2행 구조 반영 + 보고 형식 C안 적용 (121) |
-| v2.2 | 2026-04-23 11:39 | STEP 3 EXECUTE를 FE 단일 라우팅(opal-fe-agent)으로 지정 — 와이어프레임 전용 흐름상 PLAN.md §4.2 분배 디스패치 미적용 근거 명시, 디스패치 프롬프트에 담당 Step/Scope 제한 필드 추가 (129) |
-| v2.3 | 2026-04-24 | citation-rules 트리거 1줄 주입 — SSOT + Trigger 패턴 (130) |
-| v2.4 | 2026-05-01 | state-tool 도입 — STATE.md 직접 편집 금지 + `state-tool` 호출 표현 교체 (P-1~P-8 패턴 적용). "STATE.md 도메인 치환값" SSOT 보존 + `--rows-from` 파싱 SSOT 명시. agentic 활성화에 `--auto-pass` + CLOSE 진입 게이트 거부 정책 추가 (134) |
-| v2.5 | 2026-05-08 | PM Gate 점검 목록 EXECUTE 행 산출물에 GC-CONVENTION-*.md 추가 — 컨벤션 자동 진단 EXECUTE PM Gate 발동 (136) |
-| v2.6 | 2026-05-09 11:22 | 3-way 모드 체계 도입 — semi-agentic 기본 채택 + Agentic/Semi-Agentic 모드 절 확장 + Harness 절 3-way 분기 + WIREFRAME 모드 경계 명시 (140) |
-| v2.7 | 2026-05-09 18:30 | 개인 식별자 "캡틴" → "소유자"/"사용자" 치환 — 배포 파일 정체성 누설 정정 (139) |
-| v2.8 | 2026-06-07 | STATE 행 20→9 재구성 — opds 패턴 적용 + op-dev-qa 디스패치→PM Gate 흡수: State Gate 행(#8/#10/#15/#17/#20) 제거(guard로 이전), QA Gate 행(#6/#13)+QA 산출물 행(#7/#14) 제거, 산출물 행 작업 행 흡수, gate-pass 제거, WIREFRAME·EXECUTE PM Gate에 빌드/린트·wireframe↔코드 대조 직접 검증 체크리스트 추가 (014) |
-| v2.9 | 2026-06-11 19:25 | STEP 4 CLOSE에 op-brain-ingest 디스패치 훅 추가 — DONE.md 생성 직후 brain 존재 시 디스패치, 부재 시 no-op, CLOSE 비중단. STATE 행 9 불변 (016) |
-| v3.0 | 2026-06-24 | CLOSE 단계 op-brain-ingest 디스패치 직전에 "관련 문서 업데이트" 스텝 삽입 — PROJECT.md 레지스트리 + changed_files 종합으로 관련 문서 최신화 후 ingest (없으면 no-op). 후속 항목 번호 재정렬 (042) |
-| v3.1 | 2026-07-10 13:12 | note 예시의 소유자 확인 표기를 `{owner_name} 확인:` 형식으로 통일 — identity.md owner_name 재해석 규칙(AGENT.md §정체성 적용)과 정합, 오염 차단 (054) |
-| v3.2 | 2026-07-20 15:45 | task-step 키 주소 체계 도입 — `references/pipeline.json` 신설(9 task-step, WIREFRAME 3~5행 `conditional:true`, SSOT), `--rows-from` 호출 경로를 SKILL.md에서 pipeline.json으로 교체(`.md` 파싱은 하위호환 폴백으로 존치), 표는 사람 열람용 미러로 축소 (070) |
-| v3.3 | 2026-07-23 09:56 | 본문 state-tool 명령 예시를 task-step key 주소로 전환(--row→--task-step, --step→--action-step). pipeline.json key 기준. (070 후속) |
-| v3.4 | 2026-08-14 09:23 | 산문 `행 N` 참조 3건을 task-step key 참조로 전환 + STATE.md 진행 현황 미러 표/PM Gate 점검 표를 `references/pipeline.json` SSOT 포인터로 교체 + 치환값 절 `{모드}`/`{단계 목록}` 중복 기재 제거(meta.mode_label/stages와 중복) + init 완전 명령 1지점화(§STATE.md 도메인 치환값 정본, §활성화는 포인터) (091) |
-| v3.5 | 2026-08-15 21:48 | 사용자 확인 행 자동 승인 계약 반영 — agentic STATE 갱신 지시에서 PM `--auto-pass` 명시 호출 삭제, 다음 단계 진입 시 도구 자동 승인으로 전환하고 계약 본문은 하네스 SSOT(`opal-harness-agentic.md §4` / `opal-harness-semi-agentic.md §5`) 참조로 정리. CLOSE 진입 게이트 서술 불변 (093) |
-| v3.6 | 2026-08-16 13:11 | 사용자 확인 (P-5) 1건(task) 산문을 모드 무분기 명령형 → 모드 분기 서술로 교체 — 자동 승인 구간(agentic 전 구간 / semi-agentic EXECUTE-equivalent 이후)은 PM 미호출·도구 자동 승인, 그 외 구간은 기존 mark 호출 유지. --task-step 키·근거 인용 보존 (094 R-11 G-4) |
-| v3.7 | 2026-08-16 14:20 | STEP 1 "[MUST] 행 갱신" 서술의 표 전제("LLM이 STATE.md 마크다운 표를 직접 편집하는 것은 금지된다")를 표준 문구 A("파이프라인 행 상태 변경은 `state-tool`로만 수행, `state.json` 직접 편집 금지, 조회는 `state-tool show`")로 치환 — STATE.md가 파생 표를 렌더하지 않는 저널로 재정의됨에 따른 정합(094 R-6/R-7, Step 9) |
-| v3.8 | 2026-08-21 15:19 | §[PM 컨텍스트 주입] 블록을 `pm/dispatch-process.md` §워커 컨텍스트 주입 템플릿 포인터로 일원화 — 주입 항목 열거(하네스 Guards·참조 문서·기술 스택 3항목)를 제거하고 SSOT 참조 1줄로 대체. 전 워커 공통 고정(git 이력 변경 금지 포함)이 파일럿 종류와 무관하게 도달하도록 함 (097) |

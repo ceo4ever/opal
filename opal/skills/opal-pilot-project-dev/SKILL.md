@@ -22,15 +22,28 @@ version: 4.0.0
 ## Harness
 
 모드: Project Dev (PLAN → WBS → EXECUTE)
-> 부트스트랩에서 로드되지 않은 경우: `~/.opal/references/opal-harness.md`를 Read한다.
+**[MUST — pilot.start 이벤트 게이트]** 파일럿의 첫 작업 전에 아래 순서를 수행한다.
 
-**[MUST]** 스킬 시작 즉시 모드에 따라 서브 하네스를 Read한다. 이 단계를 건너뛰면 안 된다:
-- `--interactive` 플래그 → `~/.opal/references/opal-harness-interactive.md`를 Read한다
-- `--agentic` 플래그 → `~/.opal/references/opal-harness-agentic.md`를 Read한다
-- 모드 플래그 없음 (기본) 또는 `--semi-agentic` → `~/.opal/references/opal-harness-semi-agentic.md`를 Read한다
-- 다중 모드 플래그 동시 사용 시 즉시 사용자에게 보고 + state init도 거부 (`mode_flag_conflict`)
+1. `~/.opal/tools/event-loader/run.sh load --event pilot.start > <pilot-receipt-path>`를 호출한다.
+2. load 응답의 `documents[].content` 전문을 모두 현재 컨텍스트에 적용하고, `modes` 문서가 현재 플래그에 대해 라우팅한 서브 하네스 전문 하나만 Read한다.
+3. `~/.opal/tools/state-tool/run.sh event-verify --event pilot.start --receipt <pilot-receipt-path>`가 성공한 뒤에만 진행한다.
 
-> **[MUST]** 산출물 작성·검증 시 `opal/core/references/harness/citation-rules.md`를 Read하여 규칙(근거 제시 원칙 / 트랙별 매트릭스 / [MUST] 토큰 / 영역 간 용어 일관성 / decision_required 계약)을 준수한다.
+**[MUST — 단계 이벤트 게이트]** 각 실제 단계의 첫 작업이나 `state-tool advance` 직전에 아래 매핑의 이벤트를 load하고, 응답 문서 전문을 적용한 뒤 같은 event id로 `state-tool event-verify`를 통과해야 한다.
+
+| 실제 단계 | 이벤트 |
+|---|---|
+| 태스크 생성 | stage.task |
+| Phase 1 기획 분석 | stage.analysis |
+| Phase 2 WBS | stage.plan |
+| Phase 3 액션 실행 | stage.execute |
+| Phase 3 검증 | stage.test |
+| CLOSE | stage.close |
+
+호출 형식은 `~/.opal/tools/event-loader/run.sh load --event <stage.*> > <stage-receipt-path>` 다음
+`~/.opal/tools/state-tool/run.sh event-verify --event <stage.*> --receipt <stage-receipt-path>`이다.
+문서 집합은 `events.json`만 SSOT로 사용하며 SKILL에 파일 목록을 복제하지 않는다. load 실패,
+필수 문서 누락, stale receipt, wrong-event receipt는 해당 파일럿·단계 진입을 즉시 중단하는
+blocker다. 부트 캐시를 근거로 공통 문서를 직접 재Read하는 우회는 금지한다.
 
 ## 설계 원칙
 
@@ -715,12 +728,12 @@ DONE.md 생성 직후 **op-brain-ingest 디스패치**를 수행한다:
 2. `~/.opal/agents/opal-task-action-agent/AGENT.md`
 
 **opd/opds/opdw (독립 호출 시 — 사용자 `//` 커맨드)**:
-1. `{프로젝트}/.opal/skills/opal-pilot-dev/SKILL.md` (canonical Dev Pilot — `//opd`는 Full profile, `//opds`는 Short profile)
+1. `{프로젝트}/.opal/skills/opal-pilot-dev/SKILL.md` (Full Task)
 2. `~/.opal/skills/opal-pilot-dev/SKILL.md`
-3. `{프로젝트}/.opal/skills/opal-pilot-dev-wireframe/SKILL.md` (Wireframe)
-4. `~/.opal/skills/opal-pilot-dev-wireframe/SKILL.md`
-
-`opds`는 registry logical alias와 `skill=opds` 상태 식별자를 유지하지만 별도 물리 구현을 탐색하지 않는다. canonical `opal-pilot-dev` SKILL이 호출 alias를 기준으로 Short profile을 선택한다.
+3. `{프로젝트}/.opal/skills/opal-pilot-dev-short/SKILL.md` (Short Task)
+4. `~/.opal/skills/opal-pilot-dev-short/SKILL.md`
+5. `{프로젝트}/.opal/skills/opal-pilot-dev-wireframe/SKILL.md` (Wireframe)
+6. `~/.opal/skills/opal-pilot-dev-wireframe/SKILL.md`
 
 ---
 
@@ -800,3 +813,5 @@ semi-agentic / agentic 모두 CLOSE 첫 행 `--auto-pass` 거부 (`agentic_close
 opal-harness-agentic.md "에스컬레이션 조건" 공통 기준에 추가:
 - PRD/TRD에서 사용자 비즈니스 판단이 필요한 경우
 - 액션 Critical Fail로 전체 WBS 재조정이 필요한 경우
+
+---
