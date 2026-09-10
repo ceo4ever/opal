@@ -1,7 +1,7 @@
 # SPEC-PLAN.md 작성 가이드
 
 > opal-pilot-sdd Phase 3: SPEC-PLAN에서 SPEC-PLAN.md를 작성할 때 참조하는 상세 지침.
-> op-sdd-plan 스킬과 연동된다.
+> `opal-pilot-sdd/internal-skills/op-sdd-plan` 스킬과 연동된다.
 
 ---
 
@@ -26,7 +26,7 @@ SPEC-PLAN.md는 SPEC.md의 WHAT를 HOW로 변환하는 **기능 수준 아키텍
 | **범위** | 기능 전체 | 개별 태스크 1개 |
 | **수준** | 설계 레벨 (아키텍처) | 구현 레벨 (코드) |
 | **내용** | 컴포넌트, 데이터 모델, API, 기술 결정 | 파일별 변경 계획, 구현 순서, 체크리스트 |
-| **생성 스킬** | op-sdd-plan | op-dev-plan |
+| **생성 스킬** | internal-skills/op-sdd-plan | op-dev-plan |
 | **소비자** | op-sdd-tasks (태스크 분해의 입력) | op-task-execute (코드 구현의 입력) |
 | **타이밍** | EXECUTE-LOOP 이전 (Phase 3) | EXECUTE-LOOP 내부 (각 태스크 실행 시) |
 
@@ -238,7 +238,7 @@ SPEC-PLAN.md 작성 전에 반드시 아래를 수행한다:
 
 1. **SPEC.md**: 요구사항(FR/NFR), 수용 기준(AC), 제약 조건(Constraints) 파악
 2. **TEST-SCENARIOS.md**: 테스트 시나리오와 AC 매핑 파악
-3. **VERIFY.md**: SPEC-VERIFY에서 발견된 경고/이슈 확인
+3. **REVIEW 검증 메모**: verify-guide.md S-1~S-6 구조 검증에서 발견된 경고/이슈 확인
 4. **docs/ARCHITECTURE.md**: 기존 시스템 구조, 레이어, 컴포넌트 관계
 5. **docs/PROJECT.md**: 기술 스택, 프로젝트 구조
 6. **docs/CONVENTIONS.md**: 네이밍 규칙, 코드 패턴, 디렉토리 구조
@@ -280,17 +280,7 @@ SPEC-PLAN.md의 "8. ACT 분해" 섹션에서 각 ACT를 기술할 때 아래 원
 
 ## 관련 문서
 
-- `op-sdd-plan/SKILL.md` -- SPEC-PLAN 작성 스킬 프로세스
+- `opal/skills/opal-pilot-sdd/internal-skills/op-sdd-plan/SKILL.md` -- SPEC-PLAN 작성 스킬 프로세스
 - `spec-guide.md` -- SPEC.md 작성 가이드 (입력 문서)
-- `verify-guide.md` -- 검증 상세 (TASKS-VERIFY에서 설계 반영 간접 검증)
+- `verify-guide.md` -- REVIEW 구조 검증과 목표-커버 게이트 상세
 - `execute-loop-guide.md` -- EXECUTE-LOOP에서 SPEC-PLAN.md 활용 방법
-
----
-
-## 변경이력
-
-| 날짜 | 버전 | 변경내용 |
-|------|------|---------|
-| 2026-04-10 | R-4 | §7 주의사항 추가 — ACT 블록에 상태 필드 금지 원칙 (STATE.md ACT 목록 테이블이 SSOT) |
-| 2026-05-01 | R-5 | §7 SSOT 표현 갱신 — state.json SSOT + STATE.md는 state-tool 렌더 뷰 (TASK F-18 / PLAN §1.5 M-38 / §3 Step 12) |
-| 2026-08-16 15:12 | - | §7 SSOT 표현 재정정 — STATE.md 저널화(094)로 "state-tool이 렌더한 뷰" 서술이 신형 정의와 모순돼 폐기, `opal-pilot-sdd/SKILL.md` §STATE.md 구조(Step 11 확정)의 혼합 판정과 정합시킴: ACT 파이프라인 행 자체(상태 전이)는 `state.json` SSOT(조회: `state-tool show`), ACT 목록 표의 L1/L2/TS 세부 컬럼은 저널 자유 기재로 구분 (094 Step 14, R-7 잔여 발견) |

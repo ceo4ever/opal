@@ -2,7 +2,7 @@
 module: track-routing
 role: 트랙 자동 판정·강등 규칙 SSOT
 load: `//opd` 진입 시 TASK 완료 직후 강등 판정 수행 시점
-상속: 승격 임계값은 `opal/skills/opal-pilot-dev-short/SKILL.md` §에스컬레이션 규칙 「PLAN 결과 에스컬레이션」이 SSOT — 본 문서는 복제하지 않는다
+상속: 승격 임계값은 `opal/skills/opal-pilot-dev/references/track-escalation.md`가 SSOT — 본 문서는 복제하지 않는다
 ---
 
 # 트랙 라우팅 — opd→opds 자동 강등 판정
@@ -36,7 +36,7 @@ load: `//opd` 진입 시 TASK 완료 직후 강등 판정 수행 시점
 [MUST] 아래 두 임계값은 관측 기반 잠정치다. 새 관측이 쌓이면 갱신한다.
 
 - **A1 90%**: 실측 분포(opds 태스크 081·085·095·097 = 100% vs 082 = 71%, 083 = 61%) 사이의 잠정 절단선이다. opd 태스크(091·093·094)도 100%가 다수여서 단독 판정축이 될 수 없다.
-- **A2 9**: 승격 임계와 **상호배타**가 되는 최대값이다 — 두 규칙이 동시 발동할 수 없다. 승격 임계값 SSOT는 `opal/skills/opal-pilot-dev-short/SKILL.md` §에스컬레이션 규칙 「PLAN 결과 에스컬레이션」이며, 본 문서는 그 수치를 복제하지 않는다(포인터만 유지).
+- **A2 9**: 승격 임계와 **상호배타**가 되는 최대값이다 — 두 규칙이 동시 발동할 수 없다. 승격 임계값 SSOT는 `opal/skills/opal-pilot-dev/references/track-escalation.md`이며, 본 문서는 그 수치를 복제하지 않는다(포인터만 유지).
 
 ---
 
@@ -61,13 +61,4 @@ load: `//opd` 진입 시 TASK 완료 직후 강등 판정 수행 시점
 
 ## 7. 승격 규칙과의 관계 (복제 금지)
 
-[MUST] 본 문서는 승격 판정 임계값을 복제하지 않는다. 승격 임계값 SSOT는 `opal/skills/opal-pilot-dev-short/SKILL.md` §에스컬레이션 규칙 「PLAN 결과 에스컬레이션」이다. 호출 지점 배선은 오케스트레이터 SKILL.md(별도 관리)의 소관이다.
-
----
-
-## 변경이력
-
-| 버전 | 날짜 | 내용 |
-|------|------|------|
-| v1.0 | 2026-08-21 22:11 | 초기 작성 — 트랙 자동 판정·강등 규칙 SSOT 신설, 4축(A1~A4)·임계값(잠정치)·fail-safe·판정 시점 분리·승격 규칙 포인터 (098) |
-| v1.1 | 2026-09-02 17:22 | 에이전트명·소유자 호칭 리터럴 제거 — 규범 산문은 역할어(`PM`/`사용자`/`소유자`)로, 산출물·보고 문면은 `{owner_name}` 플레이스홀더로 전환해 런타임에 소유자 호칭으로 대체된다. 프레임워크 재사용성 확보 (L2 직접 수정) |
+[MUST] 본 문서는 승격 판정 임계값을 복제하지 않는다. 승격 임계값 SSOT는 `opal/skills/opal-pilot-dev/references/track-escalation.md`이다. 호출 지점 배선은 `opal/skills/opal-pilot-dev/SKILL.md`의 Short profile 소관이다.

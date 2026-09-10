@@ -4,6 +4,7 @@ description: |
   **SDD 명세 작성 단계 스킬**. TASK.md와 프로젝트 컨텍스트를 분석하여 10섹션 표준 구조의 SPEC.md를 작성한다.
   반드시 이 스킬을 사용해야 하는 상황: 오케스트레이터(opal-pilot-sdd)가 SPEC 단계를 디스패치할 때.
   필수 입력: TASK.md. 선택 입력: docs/PROJECT.md, docs/ARCHITECTURE.md, 코드베이스. 보장 출력: tasks/{NNN}-{feature}/SPEC.md.
+version: 1.2.0
 ---
 
 # op-sdd-spec -- SDD 명세 작성
@@ -23,8 +24,12 @@ description: |
 ## 페르소나
 
 ```
-Read ~/.opal/skills/op-sdd-spec/personas/spec-writer.md
+Read personas/spec-writer.md
 ```
+
+이 스킬을 직접 경로로 로드해야 하는 경우 탐색 우선순위는 다음과 같다:
+1. `{프로젝트}/opal/skills/opal-pilot-sdd/internal-skills/op-sdd-spec/SKILL.md`
+2. `~/.opal/skills/opal-pilot-sdd/internal-skills/op-sdd-spec/SKILL.md`
 
 페르소나 파일이 없으면 다음 역할을 따른다:
 - SDD 명세 작성 전문가
@@ -137,7 +142,7 @@ TASK.md를 정밀하게 분석한다.
 
 #### 4-10. Open Questions (미결 사항)
 - spec 작성 과정에서 발생한 미해결 질문을 기록한다
-- **"없음"이 SPEC-VERIFY 진행 조건** -- 해소할 수 있는 OQ는 Step 5에서 해소한다
+- **"없음"이 REVIEW S-3 진행 조건** -- 해소할 수 있는 OQ는 Step 5에서 해소한다
 - 해소 불가능한 OQ는 오케스트레이터에 보고하여 소유자 판단을 구한다
 
 ### Step 5: Open Questions 해소
@@ -305,12 +310,3 @@ SPEC.md 작성 후 자체 검증한다:
 ```
 SPEC 완료: tasks/{NNN}-{feature}/SPEC.md
 ```
-
----
-
-## 변경이력
-
-| 버전 | 날짜 | 변경내용 |
-|------|------|---------|
-| v1.0 | 2026-04-05 | 초기 작성 -- PLAN D5/D13 기반, 10섹션 표준 구조 + GIVEN/WHEN/THEN AC + OQ 해소 프로세스 |
-| v1.1 | 2026-04-07 | 출력 경로 specs/ → tasks/ 단일 루트로 통합 (093) |

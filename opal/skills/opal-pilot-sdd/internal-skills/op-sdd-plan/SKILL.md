@@ -6,6 +6,7 @@ description: |
   필수 입력: SPEC.md, TEST-SCENARIOS.md. 보장 출력: tasks/{NNN}-{feature}/SPEC-PLAN.md (아키텍처 + ACT 분해 + 병렬/순서 의존관계 통합).
 agent: opal-task-agent
 model: advanced
+version: 2.2.0
 ---
 
 # SDD 아키텍처 설계 + ACT 분해 (SPEC-PLAN)
@@ -23,6 +24,10 @@ model: advanced
 ## 페르소나
 
 `personas/system-architect.md`를 Read하여 설계 원칙과 행동 규칙을 적용한다.
+
+이 스킬을 직접 경로로 로드해야 하는 경우 탐색 우선순위는 다음과 같다:
+1. `{프로젝트}/opal/skills/opal-pilot-sdd/internal-skills/op-sdd-plan/SKILL.md`
+2. `~/.opal/skills/opal-pilot-sdd/internal-skills/op-sdd-plan/SKILL.md`
 
 ---
 
@@ -416,13 +421,3 @@ Group 3 (순차): ACT-004              ← ACT-002, ACT-003 완료 후
 - [ ] 병렬 실행 그룹이 식별되어 있는가?
 - [ ] 코드베이스를 실제로 읽고 분석했는가? (추측 금지)
 - [ ] 한국어 본문 + 영어 코드/필드명 규칙을 따르는가?
-
----
-
-## 변경이력
-
-| 버전 | 날짜 | 변경내용 |
-|------|------|---------|
-| v1.0 | 2026-04-05 | 초기 작성 — opsdd Phase 3 아키텍처 설계 스킬 |
-| v2.0 | 2026-04-07 | op-sdd-tasks 통합 — ACT 분해 + 추적 매트릭스 + 의존관계 그래프 + 병렬 그룹 포함. 출력 경로 specs/ → tasks/ 단일 루트로 통합 (093) |
-| v2.1 | 2026-04-24 | citation-rules 트리거 1줄 주입 — SSOT + Trigger 패턴 (130) |

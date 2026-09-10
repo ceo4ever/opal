@@ -121,7 +121,7 @@ function makeFixture({ registeredNames, existingFolders, standaloneFolders = [],
  * @returns {{ exitCode: number, stdout: string, stderr: string, result: object|null }}
  */
 function runValidate(cwd, envOverride = {}) {
-  const env = { ...process.env, ...envOverride };
+  const env = { ...process.env, HOME: path.join(cwd, '.home'), ...envOverride };
   const result = spawnSync('node', [SKILL_REGISTRY_JS, 'validate'], {
     cwd,
     env,
@@ -312,4 +312,29 @@ test('TC5 (standalone): top-level skills/ 등록 폴더는 unregistered 오판 �
   // [GREEN] validateUnregistered가 양쪽 스캔 시에도 오판 없어야 함
   assert.strictEqual(exitCode, 0,
     `[TC5] 정합+standalone 등록 fixture는 exit 0 기대, got ${exitCode}. result: ${JSON.stringify(result)}`);
+});
+
+// ─── T112: nested internal SKILL.md는 public registry 대상이 아님 ─────────────
+
+test('T112: opal-pilot-sdd/internal-skills/*/SKILL.md는 unregistered로 오판하지 않음', () => {
+  const { dir, cleanup } = makeFixture({
+    registeredNames: ['opal-pilot-sdd'],
+    existingFolders: ['opal-pilot-sdd'],
+  });
+  cleanupFns.push(cleanup);
+
+  const internalNames = ['op-sdd-spec', 'op-sdd-plan', 'op-sdd-action-plan'];
+  for (const name of internalNames) {
+    const skillDir = path.join(dir, 'opal', 'skills', 'opal-pilot-sdd', 'internal-skills', name);
+    fs.mkdirSync(skillDir, { recursive: true });
+    fs.writeFileSync(path.join(skillDir, 'SKILL.md'), `# ${name}\n`);
+  }
+
+  const { exitCode, result } = runValidate(dir);
+
+  assert.strictEqual(exitCode, 0,
+    `nested internal SDD skills should not fail validate. result: ${JSON.stringify(result)}`);
+  assert.ok(result !== null, 'stdout should be valid JSON');
+  assert.deepStrictEqual(result.unregistered, [],
+    `internal SDD skill dirs should not be reported as unregistered: ${JSON.stringify(result.unregistered)}`);
 });

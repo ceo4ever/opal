@@ -3,9 +3,9 @@
   "module": "test_worktree_tool",
   "layer": "test",
   "domain": "opal-workspace",
-  "description": "worktree-tool RED-first 테스트 (092 TEST-SCENARIO.md S-4~S-17,S-21~S-28 대응. S-1/S-2는 state-tool 측 전용이라 test_state_tool.py에 있다. S-3/S-15는 각각 git working-tree diff의 일과성/~/.opal 배포본 변경 금지 때문에 이 파일에서 제외했다 — 완료 보고 참조). 구현(worktree_tool.py) 부재 상태에서 작성 — CLI(subprocess) 공개 인터페이스로만 검증, mock/patch 금지, 실 git 저장소 fixture(conftest.py) 사용. RED 증거: worktree_tool.py 미존재로 전 테스트 실패해야 한다.",
+  "description": "worktree-tool 공개 인터페이스 회귀 테스트. 092 TEST-SCENARIO.md S-4~S-17,S-21~S-28과 112 TEST-SCENARIO.md S-8 hub-fixed worktree 계약을 검증한다. S-1/S-2는 state-tool 측 전용이라 test_state_tool.py에 있다. S-3/S-15는 각각 git working-tree diff의 일과성/~/.opal 배포본 변경 금지 때문에 이 파일에서 제외했다. CLI(subprocess) 공개 인터페이스로만 검증하고, mock/patch 없이 실 git 저장소 fixture(conftest.py)를 사용한다.",
   "exports": [],
-  "depends": ["conftest.py", "worktree_tool.py(미구현)", "opal/tools/state-tool/state_tool.py"]
+  "depends": ["conftest.py", "worktree_tool.py", "opal/tools/state-tool/state_tool.py"]
 }
 """
 
@@ -254,6 +254,54 @@ def test_s5_monorepo_create_checks_out_workspace_only(project_b: ProjectB):
     assert (wt_root / "workspace").exists(), "workspace/ 미체크아웃"
     assert not (wt_root / "tasks").exists(), "tasks/가 체크아웃됨(H-4 위반)"
     assert not (wt_root / ".opal").exists(), ".opal/이 체크아웃됨(H-4 위반)"
+
+
+def test_s8_hub_fixed_paths_are_not_in_opal_monorepo_sparse_set(tmp_path):
+    """[T112/L2-S8] OPAL형 monorepo 설정은 source repos만 sparse checkout하고,
+    hub-fixed `.opal/`·`tasks/`와 삭제된 stale `memory` repo를 worktree에 포함하지 않는다."""
+    remotes_dir = tmp_path / "_remotes_112_s8"
+    remotes_dir.mkdir()
+    origin = make_bare_remote(remotes_dir, "origin_112_s8")
+    project_root = clone_repo(origin, tmp_path, "proj_112_s8")
+
+    source_repos = ["cursor-rules", "dashboard", "docs", "opal", "scripts", "skills"]
+    for rel in source_repos:
+        path = project_root / rel / "README.md"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(f"# {rel}\n", encoding="utf-8")
+    for rel in ("tasks/README.md", ".opal/README.md", "memory/README.md"):
+        path = project_root / rel
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(f"# {path.parent.name}\n", encoding="utf-8")
+
+    run_git(["add", "-A"], cwd=project_root)
+    run_git(["commit", "-m", "seed opal monorepo"], cwd=project_root)
+    run_git(["push", "origin", "main"], cwd=project_root)
+
+    write_json(
+        project_root / ".opal" / "worktree.json",
+        {
+            "layout": "monorepo",
+            "repos": source_repos,
+            "branchTemplate": "feat/OP-TASK-{NNN}",
+            "copy": [],
+            "setup": [],
+            "portOffset": 0,
+        },
+    )
+
+    result = run_worktree_cli(
+        ["create", "--project-root", str(project_root), "--task", "112"]
+    )
+    payload = parse_json_stdout(result, "create(T112/S-8)")
+    assert payload.get("ok") is True, f"OPAL형 monorepo create 실패: {payload}"
+
+    wt_root = project_root / ".opal-worktrees" / "task_112"
+    for rel in source_repos:
+        assert (wt_root / rel).exists(), f"source repo가 sparse checkout되지 않음: {rel}"
+    assert not (wt_root / ".opal").exists(), ".opal/이 체크아웃됨(hub-fixed 계약 위반)"
+    assert not (wt_root / "tasks").exists(), "tasks/가 체크아웃됨(hub-fixed 계약 위반)"
+    assert not (wt_root / "memory").exists(), "stale memory repo가 체크아웃됨"
 
 
 # ═════════════════════════════════════════════════════════════════════════════

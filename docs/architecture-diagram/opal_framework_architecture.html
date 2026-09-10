@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- v0.7 | 2026-09-09 KST | Dev Pilot Full/Short profile 통합 + SDD 내부 단계 3종 구조 정합 + top-level skills 38개 반영 (112) -->
 <!-- v0.6 | 2026-08-10 16:13 KST | 지식 자산 3종 독립 계층화(L3) + 환류 루프 시각화 + 실측 정합 복구 (086) -->
 <html lang="ko">
 <head>
@@ -301,7 +302,7 @@ html,body{background:var(--bg);font-family:'Inter Tight',sans-serif;-webkit-font
 
         <!-- L6 오케스트레이터 (하네스 관할) -->
         <div class="map-row">
-          <div class="mlabel"><span class="num">LAYER 06</span>오케스트레이터 / Pilot 10 <span class="num">하네스 관할</span></div>
+          <div class="mlabel"><span class="num">LAYER 06</span>Pilot command 10 <span class="num">물리 9 + opds profile</span></div>
           <div class="band band-l6">
             <div class="mnode" data-id="opd">opd <span class="mn-alias">full</span></div>
             <div class="mnode is-core" data-id="opds">opds <span class="mn-alias">기본</span></div>
@@ -318,14 +319,15 @@ html,body{background:var(--bg);font-family:'Inter Tight',sans-serif;-webkit-font
 
         <!-- L7 단계 스킬 -->
         <div class="map-row">
-          <div class="mlabel"><span class="num">LAYER 07</span>단계 스킬 21 (op-*)</div>
+          <div class="mlabel"><span class="num">LAYER 07</span>단계 스킬 16 + SDD 내부 3</div>
           <div class="band band-l7">
-            <div class="mnode" data-id="op-dev">op-dev <span class="mn-alias">7</span></div>
+            <div class="mnode" data-id="op-dev">op-dev <span class="mn-alias">6</span></div>
             <div class="mnode" data-id="op-task">op-task <span class="mn-alias">4</span></div>
-            <div class="mnode" data-id="op-sdd">op-sdd <span class="mn-alias">5</span></div>
+            <div class="mnode" data-id="op-sdd">op-sdd <span class="mn-alias">내부 3</span></div>
             <div class="mnode" data-id="op-data">op-data <span class="mn-alias">3</span></div>
             <div class="mnode" data-id="op-brain">op-brain-ingest <span class="mn-alias">1</span></div>
             <div class="mnode" data-id="op-scenario-gate">op-scenario-gate <span class="mn-alias">1</span></div>
+            <div class="mnode" data-id="op-spec-validator">op-spec-validator <span class="mn-alias">1</span></div>
           </div>
         </div>
 
@@ -401,7 +403,7 @@ html,body{background:var(--bg);font-family:'Inter Tight',sans-serif;-webkit-font
   <div class="wrap">
     <header class="head">
       <div>
-        <div class="eyebrow">Framework architecture / v0.6</div>
+        <div class="eyebrow">Framework architecture / v0.7</div>
         <h1>OPAL<br><span class="em">— Open Protocol for Agentic Loops</span></h1>
         <p class="subtitle">AI 플랫폼 위에서 IT 프로젝트를 수행하는 범용 에이전트 프레임워크. 플랫폼 부트스트랩 진입부터 멀티플랫폼 배포까지 10개 계층으로 동작한다. 위에서 아래로 읽으면 하나의 요청이 흐르는 하강 흐름이고, 맨 아래 환류 밴드는 CLOSE에서 적재된 지식이 L3로 되돌아오는 귀환 경로다.</p>
       </div>
@@ -478,10 +480,10 @@ html,body{background:var(--bg);font-family:'Inter Tight',sans-serif;-webkit-font
       </div>
       <div class="connector"></div>
       <div class="layer layer-l6">
-        <div class="layer-label"><div class="layer-num">LAYER 06</div><div class="layer-name">오케스트레이터 / Pilot · 직접 실행</div><div class="layer-tag">작업을 단계 파이프라인으로 분해·지휘 (Pilot 10 = 하네스 관할 ↓ / 하단 3 = 하네스 우회 직접 실행)</div></div>
+        <div class="layer-label"><div class="layer-num">LAYER 06</div><div class="layer-name">오케스트레이터 / Pilot · 직접 실행</div><div class="layer-tag">작업을 단계 파이프라인으로 분해·지휘 (Pilot command 10 = 물리 오케스트레이터 9 + opds Short profile / 하단 3 = 하네스 우회 직접 실행)</div></div>
         <div class="boxes boxes-3">
-          <div class="node"><div class="node-head"><div class="node-title">opd <span class="badge badge-stable">안정</span></div><div class="node-tag">dev · full</div></div><div class="node-desc">Full Task. 코드베이스 분석을 포함한 풀 개발 라이프사이클.</div><div class="node-tech"><span class="chip">TASK</span><span class="chip">ANALYSIS</span><span class="chip">PLAN</span><span class="chip">TEST</span><span class="chip">EXECUTE</span></div></div>
-          <div class="node"><div class="node-head"><div class="node-title">opds <span class="badge badge-core">기본</span></div><div class="node-tag">dev · short</div></div><div class="node-desc">Short Task — 프레임워크 기본 모드. ANALYSIS를 생략한 경량 개발 흐름.</div><div class="node-tech"><span class="chip">TASK</span><span class="chip">PLAN</span><span class="chip">TEST-SCENARIO</span><span class="chip">EXECUTE</span></div></div>
+          <div class="node"><div class="node-head"><div class="node-title">opd <span class="badge badge-stable">안정</span></div><div class="node-tag">dev · full</div></div><div class="node-desc">Full profile. canonical <code>opal-pilot-dev</code>가 코드베이스 분석을 포함한 풀 개발 라이프사이클을 실행한다.</div><div class="node-tech"><span class="chip">TASK</span><span class="chip">ANALYSIS</span><span class="chip">PLAN</span><span class="chip">TEST</span><span class="chip">EXECUTE</span></div></div>
+          <div class="node"><div class="node-head"><div class="node-title">opds <span class="badge badge-core">기본</span></div><div class="node-tag">dev · short profile</div></div><div class="node-desc">Short profile. 별도 물리 <code>opal-pilot-dev-short</code> 없이 canonical <code>opal-pilot-dev</code>가 <code>skill=opds</code>와 11행 pipeline을 선택한다.</div><div class="node-tech"><span class="chip">TASK</span><span class="chip">PLAN</span><span class="chip">TEST-SCENARIO</span><span class="chip">EXECUTE</span></div></div>
           <div class="node"><div class="node-head"><div class="node-title">opdw <span class="badge badge-stable">안정</span></div><div class="node-tag">dev · ui</div></div><div class="node-desc">Wireframe UI. 와이어프레임을 먼저 확정하고 구현으로 잇는 화면 작업용.</div><div class="node-tech"><span class="chip">TASK</span><span class="chip">WIREFRAME</span><span class="chip">EXECUTE</span></div></div>
           <div class="node"><div class="node-head"><div class="node-title">opp <span class="badge badge-stable">안정</span></div><div class="node-tag">generic</div></div><div class="node-desc">프로젝트 범용. 문서 작성 + 간단한 코드 수정을 포괄하는 일반 파이프라인.</div><div class="node-tech"><span class="chip">TASK</span><span class="chip">PLAN</span><span class="chip">EXECUTE</span></div></div>
           <div class="node"><div class="node-head"><div class="node-title">opwt <span class="badge badge-stable">안정</span></div><div class="node-tag">write-tech</div></div><div class="node-desc">서비스 기획 산출물 — 정책서·IA·와이어프레임·WBS·API 분석. 단계가 아닌 네트워크형 오케스트레이션.</div><div class="node-tech"><span class="chip">정책서</span><span class="chip">IA</span><span class="chip">WBS</span><span class="chip">API 분석</span></div></div>
@@ -497,14 +499,15 @@ html,body{background:var(--bg);font-family:'Inter Tight',sans-serif;-webkit-font
       </div>
       <div class="connector"></div>
       <div class="layer layer-l7">
-        <div class="layer-label"><div class="layer-num">LAYER 07</div><div class="layer-name">단계 스킬 21 (op-*)</div><div class="layer-tag">Pilot이 워커에게 디스패치하는 단계 단위 스킬 그룹 — 6그룹 = 단계 스킬 21</div></div>
+        <div class="layer-label"><div class="layer-num">LAYER 07</div><div class="layer-name">단계 스킬 16 + SDD 내부 3</div><div class="layer-tag">Pilot이 워커에게 디스패치하는 단계 단위 스킬 그룹. top-level <code>opal/skills</code> 전체는 38개, 그중 단계 스킬은 16개이고, SDD 전용 단계 3종은 <code>opal-pilot-sdd/internal-skills/</code> 내부에 둔다.</div></div>
         <div class="boxes boxes-3">
-          <div class="node"><div class="node-head"><div class="node-title">op-dev <span class="badge badge-stable">안정</span></div><div class="node-tag">7 skills</div></div><div class="node-desc">코드 개발 단계. analysis → plan → todo → test-scenario → execute, 그리고 wireframe·qa.</div><div class="node-tech"><span class="chip">analysis</span><span class="chip">plan</span><span class="chip">execute</span><span class="chip">qa</span></div></div>
+          <div class="node"><div class="node-head"><div class="node-title">op-dev <span class="badge badge-stable">안정</span></div><div class="node-tag">6 skills</div></div><div class="node-desc">코드 개발 단계. analysis → plan → test-scenario → execute, 그리고 wireframe·qa.</div><div class="node-tech"><span class="chip">analysis</span><span class="chip">plan</span><span class="chip">execute</span><span class="chip">qa</span></div></div>
           <div class="node"><div class="node-head"><div class="node-title">op-task <span class="badge badge-stable">안정</span></div><div class="node-tag">4 skills</div></div><div class="node-desc">도메인 무관 범용 단계. TASK.md 작성은 오케스트레이터가 직접 수행하는 공통 진입점.</div><div class="node-tech"><span class="chip">op-task</span><span class="chip">plan</span><span class="chip">execute</span><span class="chip">qa</span></div></div>
-          <div class="node"><div class="node-head"><div class="node-title">op-sdd <span class="badge badge-stable">안정</span></div><div class="node-tag">5 skills</div></div><div class="node-desc">명세 주도 단계. spec·verify·plan·action-plan + <code>op-spec-validator</code>(명세 정합 검증기).</div><div class="node-tech"><span class="chip">spec</span><span class="chip">verify</span><span class="chip">action-plan</span><span class="chip">op-spec-validator</span></div></div>
+          <div class="node"><div class="node-head"><div class="node-title">op-sdd internal <span class="badge badge-stable">안정</span></div><div class="node-tag">3 internal</div></div><div class="node-desc">SDD 전용 단계는 <code>opal-pilot-sdd/internal-skills/</code> 아래 spec·plan·action-plan 3종이다. REVIEW 검증 규칙은 verify-guide가 소유한다.</div><div class="node-tech"><span class="chip">spec</span><span class="chip">plan</span><span class="chip">action-plan</span></div></div>
           <div class="node"><div class="node-head"><div class="node-title">op-data <span class="badge badge-stable">안정</span></div><div class="node-tag">3 skills</div></div><div class="node-desc">데이터 설계 단계. 사전(md SSOT) → ERD 모델 → DBMS별 DDL.</div><div class="node-tech"><span class="chip">dictionary</span><span class="chip">model</span><span class="chip">ddl</span></div></div>
           <div class="node"><div class="node-head"><div class="node-title">op-brain-ingest <span class="badge badge-stable">안정</span></div><div class="node-tag">1 skill</div></div><div class="node-desc">CLOSE 자동 ingest 워커. Pilot의 CLOSE 훅에서 디스패치, brain 부재 시 no-op. <b style="color:var(--c-l7)">환류의 출발점</b>이다.</div><div class="node-tech"><span class="chip">ingest</span><span class="chip">CLOSE 훅</span><span class="chip">→ L3 brain</span></div></div>
           <div class="node"><div class="node-head"><div class="node-title">op-scenario-gate <span class="badge badge-stable">안정</span></div><div class="node-tag">1 skill</div></div><div class="node-desc">목표-커버 루프 컨트롤. 정규화 페이로드 → <code>coverage-check</code> → evaluator 루브릭 → 종료조건 3종 판정 후 verdict 반환. opd·opds·opsdd 3종 접합.</div><div class="node-tech"><span class="chip">coverage-check</span><span class="chip">scenario-rubric</span><span class="chip">verdict</span></div></div>
+          <div class="node"><div class="node-head"><div class="node-title">op-spec-validator <span class="badge badge-stable">안정</span></div><div class="node-tag">1 skill</div></div><div class="node-desc">PRD/TRD 체크리스트 기반 명세 정합 검증 워커. SDD 내부 단계와 별개인 보조 단계 스킬이다.</div><div class="node-tech"><span class="chip">spec review</span><span class="chip">validator</span></div></div>
         </div>
       </div>
       <div class="connector"></div>
@@ -558,14 +561,14 @@ html,body{background:var(--bg);font-family:'Inter Tight',sans-serif;-webkit-font
         <p class="sub">프레임워크 본체는 아키텍처 안정화 단계. 아래는 배포·관측 영역의 빌드 우선순위다 — 미루는 것을 명시하는 것도 초점의 일부.</p>
       </div>
       <div class="tracks">
-        <div class="track"><div class="track-h">▶ 현행 — 안정화</div><h3>코어 + 1차 배포</h3><ul><li>부트스트랩·하네스·Pilot 10·단계 스킬 21·에이전트 15·도구 18종 동작 중</li><li>릴리스 소비 규약 DL-CONTRACT 검증경로 정합 (085)</li><li>코드맵 매니페스트 샤딩 + 샤드 정책 3단 우선순위 (082 · 083)</li><li>멀티플랫폼 어댑터 (Claude · Cursor · Gemini · Codex)</li><li>Project Brain + Data Design + 목표-커버 게이트 내재화</li></ul></div>
+        <div class="track"><div class="track-h">▶ 현행 — 안정화</div><h3>코어 + 1차 배포</h3><ul><li>부트스트랩·하네스·Pilot command 10(물리 9 + opds profile)·top-level 단계 스킬 16(+SDD 내부 3)·에이전트 15·도구 19종 동작 중</li><li>릴리스 소비 규약 DL-CONTRACT 검증경로 정합 (085)</li><li>코드맵 매니페스트 샤딩 + 샤드 정책 3단 우선순위 (082 · 083)</li><li>멀티플랫폼 어댑터 (Claude · Cursor · Gemini · Codex)</li><li>Project Brain + Data Design + 목표-커버 게이트 내재화</li></ul></div>
         <div class="track"><div class="track-h">▶ 진행 — 확장 중</div><h3>관측 + 2차</h3><ul><li>코드맵 <code>@header</code> 커버리지 확충</li><li>OPAL Console 쓰기/편집 화면 (현재 read-only)</li><li>Homebrew tap — <code>brew install opal-cli</code></li><li>brain 커버리지 확충</li></ul></div>
         <div class="track"><div class="track-h">▶ 후순위 — 미룰 것</div><h3>Defer</h3><ul><li>npm 패키지 cross-platform 통합</li><li>Windows(ps1) 배포 경로 실행 검증</li><li>oppd deprecate 검토 (oppl 검증 후)</li><li>WBS 검증기 도구 게이트화</li></ul></div>
       </div>
     </section>
 
     <footer class="foot">
-      <div>opal / framework_architecture / v0.6</div>
+      <div>opal / framework_architecture / v0.7</div>
       <div>Open Protocol for Agentic Loops — 캡틴 · 알투(R2) · 10-layer 구성도 + 환류 루프</div>
     </footer>
   </div>
@@ -639,12 +642,12 @@ const NODE_DATA = {
     chips:["Node.js","regex triggers","skill-registry.js"]},
   /* ---- L6 Pilot · 직접 실행 ---- */
   opd:{t:"opd — Full Dev",badge:"stable",layer:"L6 · 오케스트레이터",tag:"dev · full",
-    desc:"코드베이스 분석을 포함한 풀 개발 라이프사이클 오케스트레이터.",
-    detail:["TASK → ANALYSIS → PLAN → TEST-SCENARIO → EXECUTE","규모가 크거나 분석이 필요한 작업에 사용"],
+    desc:"canonical opal-pilot-dev의 Full profile. 코드베이스 분석을 포함한 풀 개발 라이프사이클을 실행한다.",
+    detail:["TASK → ANALYSIS → PLAN → TEST-SCENARIO → EXECUTE","skill=opd와 16행 pipeline 유지","규모가 크거나 분석이 필요한 작업에 사용"],
     chips:["TASK","ANALYSIS","PLAN","TEST","EXECUTE"]},
-  opds:{t:"opds — Short Dev",badge:"core",layer:"L6 · 오케스트레이터",tag:"dev · 기본 모드",
-    desc:"프레임워크 기본 모드. ANALYSIS를 생략한 경량 개발 흐름으로 대부분의 작업에 사용된다.",
-    detail:["TASK → PLAN → TEST-SCENARIO → EXECUTE","semi-agentic 기본 — PLAN까지 검토, EXECUTE 이후 자율"],
+  opds:{t:"opds — Short Dev",badge:"core",layer:"L6 · 오케스트레이터",tag:"dev · short profile",
+    desc:"canonical opal-pilot-dev의 Short profile. 별도 물리 opal-pilot-dev-short 없이 ANALYSIS를 생략한 경량 개발 흐름을 실행한다.",
+    detail:["TASK → PLAN → TEST-SCENARIO → EXECUTE","skill=opds와 11행 pipeline 유지","semi-agentic 기본 — PLAN까지 검토, EXECUTE 이후 자율"],
     chips:["TASK","PLAN","TEST-SCENARIO","EXECUTE"]},
   opdw:{t:"opdw — Wireframe UI",badge:"stable",layer:"L6 · 오케스트레이터",tag:"dev · ui",
     desc:"와이어프레임을 먼저 확정하고 구현으로 잇는 화면 작업 전용 오케스트레이터.",
@@ -691,18 +694,22 @@ const NODE_DATA = {
     detail:["clone-copy: git clone → ~/.opal/community-skills/{vendor}/{skill}/","라이선스 책임은 사용자 설치 시점 발생","anthropics/* · google-labs-code/* · vercel-labs/* 등"],
     chips:["clone-copy","anthropics/*","vercel-labs/*"]},
   /* ---- L7 단계스킬 ---- */
-  "op-dev":{t:"op-dev (7 skills)",badge:"stable",layer:"L7 · 단계 스킬",tag:"코드 개발",
+  "op-dev":{t:"op-dev (6 skills)",badge:"stable",layer:"L7 · 단계 스킬",tag:"코드 개발",
     desc:"코드 개발 라이프사이클의 단계 스킬 묶음. Pilot이 워커에게 디스패치한다.",
-    detail:["analysis · plan · todo · test-scenario · execute","wireframe · qa","opd/opds 오케스트레이터가 단계별 호출"],
+    detail:["analysis · plan · test-scenario · execute","wireframe · qa","opd/opds profile이 단계별 호출"],
     chips:["analysis","plan","execute","qa"]},
   "op-task":{t:"op-task (4 skills)",badge:"stable",layer:"L7 · 단계 스킬",tag:"도메인 무관",
     desc:"도메인에 무관한 범용 단계 스킬. TASK.md 작성은 오케스트레이터가 직접 수행하는 공통 진입점이다.",
     detail:["op-task · op-task-plan · op-task-execute · op-task-qa","명확화 게이트(TASK 4요소 잠금)가 여기서 집행"],
     chips:["op-task","plan","execute","qa"]},
-  "op-sdd":{t:"op-sdd (5 skills)",badge:"stable",layer:"L7 · 단계 스킬",tag:"명세 주도",
-    desc:"SDD 파이프라인의 단계 스킬. 명세 작성·검증·계획·액션 청사진 + 정합 검증기.",
-    detail:["spec · verify · plan · action-plan","op-spec-validator — 명세 정합 검증"],
-    chips:["spec","verify","action-plan","validator"]},
+  "op-sdd":{t:"op-sdd internal (3 skills)",badge:"stable",layer:"L7 · 단계 스킬",tag:"명세 주도",
+    desc:"SDD 파이프라인 전용 내부 단계 스킬. 최상위 공개 스킬이 아니라 opal-pilot-sdd/internal-skills/ 아래에서 Pilot/Action Agent가 디스패치한다.",
+    detail:["op-sdd-spec — SPEC 작성","op-sdd-plan — DESIGN/SPEC-PLAN 작성","op-sdd-action-plan — ACT 전용 경량 PLAN 작성","REVIEW 검증 규칙 S-1~S-6은 verify-guide.md가 소유"],
+    chips:["spec","plan","action-plan","internal"]},
+  "op-spec-validator":{t:"op-spec-validator (1 skill)",badge:"stable",layer:"L7 · 단계 스킬",tag:"명세 검증",
+    desc:"PRD/TRD 체크리스트 기반 명세 정합 검증 워커. SDD 내부 단계와 별도인 보조 단계 스킬이다.",
+    detail:["top-level opal/skills에 남는 보조 단계 스킬","명세 완성도 판정에 사용","삭제된 구 verify 단계 흐름을 대체하는 SDD REVIEW SSOT는 verify-guide.md"],
+    chips:["validator","spec review","top-level"]},
   "op-data":{t:"op-data (3 skills)",badge:"stable",layer:"L7 · 단계 스킬",tag:"데이터 설계",
     desc:"데이터 설계 단계 스킬. 사전(md SSOT)을 선행하고 ERD·DDL을 산출한다.",
     detail:["dictionary — 용어·도메인·코드 사전(md SSOT + xlsx 단방향)","model — 개념→논리→물리 ERD","ddl — DBML → DBMS별 CREATE TABLE"],

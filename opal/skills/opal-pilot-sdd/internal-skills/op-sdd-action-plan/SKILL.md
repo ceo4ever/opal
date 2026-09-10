@@ -6,7 +6,7 @@ description: |
   plan-guide.md / personas / community-skills 로딩 없음 — SDD 컨텍스트로 대체.
   반드시 이 스킬을 사용해야 하는 상황: opal-sdd-action-agent가 ACT PLAN 단계를 디스패치할 때.
   필수 입력: SPEC.md, SPEC-PLAN.md, TEST-SCENARIOS.md, ACT 정의. 보장 출력: PLAN.md.
-version: 1.0.0
+version: 1.2.0
 ---
 
 # SDD ACT 구현 계획 수립 (PLAN)
@@ -15,6 +15,10 @@ version: 1.0.0
 
 이 스킬은 워커 에이전트의 컨텍스트에서 실행된다.
 opal-sdd-action-agent가 워커를 디스패치하면, 워커가 이 스킬을 읽고 프로세스를 따른다.
+
+이 스킬을 직접 경로로 로드해야 하는 경우 탐색 우선순위는 다음과 같다:
+1. `{프로젝트}/opal/skills/opal-pilot-sdd/internal-skills/op-sdd-action-plan/SKILL.md`
+2. `~/.opal/skills/opal-pilot-sdd/internal-skills/op-sdd-action-plan/SKILL.md`
 
 > **[MUST]** 산출물 작성·검증 시 `opal/core/references/harness/citation-rules.md`를 Read하여 규칙(근거 제시 원칙 / 트랙별 매트릭스 / [MUST] 토큰 / 영역 간 용어 일관성 / decision_required 계약)을 준수한다.
 
@@ -210,12 +214,3 @@ Step 형식으로 실행 체크리스트를 작성한다.
 - [ ] plan-guide.md / personas / community-skills를 로딩하지 않았는가?
 - [ ] execution-plan.json을 생성하지 않았는가?
 - [ ] 프로젝트 코드 컨벤션을 따르는가?
-
----
-
-## 변경이력
-
-| 버전 | 일시 | 변경내용 |
-|------|------|---------|
-| v1.0 | 2026-04-07 | 초기 작성 -- SDD ACT 전용 경량 PLAN 스킬 (095) |
-| v1.1 | 2026-04-24 | citation-rules 트리거 1줄 주입 — SSOT + Trigger 패턴 (130) |

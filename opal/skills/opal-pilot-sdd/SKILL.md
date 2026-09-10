@@ -10,7 +10,7 @@ triggers:
   - "opsdd"
   - "SDD 개발"
   - "명세 기반 개발"
-version: 3.6.0
+version: 3.12.0
 ---
 
 # opal-pilot-sdd (SDD 오케스트레이터)
@@ -39,14 +39,14 @@ EXECUTE-LOOP에서 `opal-sdd-action-agent`에 단일 디스패치하며, PM이 �
 WHAT 단계
 ─────────────────────────────────────────────────────────
 Phase 0: TASK      PM 직접    TASK.md 생성 (메타데이터)
-Phase 1: SPEC      워커       op-sdd-spec → SPEC.md
+Phase 1: SPEC      워커       internal-skills/op-sdd-spec → SPEC.md
                               PM Gate → 사용자 Gate
 Phase 2: REVIEW    PM 직접    구조 검증 (S-1~S-6) → TEST-SCENARIOS.md 작성
                               → 목표-커버 게이트(coverage-check + 독립 evaluator) → 사용자 Gate
 ── WHAT 완료 / 기준 확정 ──────────────────────────────────
 HOW 단계
 ─────────────────────────────────────────────────────────
-Phase 3: DESIGN    워커       op-sdd-plan → SPEC-PLAN.md (아키텍처 + ACT 분해)
+Phase 3: DESIGN    워커       internal-skills/op-sdd-plan → SPEC-PLAN.md (아키텍처 + ACT 분해)
                               PM Gate → 사용자 Gate
 Phase 4: EXECUTE   ACT 루프   사용자 Gate → opal-sdd-action-agent 디스패치
                               → 결과 수신 → DONE.md
@@ -112,7 +112,9 @@ harness "4. TASK 공통 프로세스" 참조. 다음 단계명: SPEC.
 **디스패치 프롬프트**:
 ```
 [WORKER] op-sdd-spec 스킬을 수행하라.
-**스킬 경로**: {op-sdd-spec/SKILL.md 탐색 경로}
+**스킬 경로**:
+1. `{프로젝트}/opal/skills/opal-pilot-sdd/internal-skills/op-sdd-spec/SKILL.md`
+2. `~/.opal/skills/opal-pilot-sdd/internal-skills/op-sdd-spec/SKILL.md`
 **태스크 폴더**: tasks/{NNN}-{feature}/
 **프로젝트 컨텍스트**: {docs/PROJECT.md + 매칭 참조 문서}
 **하네스 Guards**: 구현 금지. SPEC.md 외 파일 생성 금지.
@@ -180,7 +182,9 @@ PM이 직접 SPEC.md를 검증하고 TEST-SCENARIOS.md를 작성한다. **워커
 **디스패치 프롬프트**:
 ```
 [WORKER] op-sdd-plan 스킬을 수행하라.
-**스킬 경로**: {op-sdd-plan/SKILL.md 탐색 경로}
+**스킬 경로**:
+1. `{프로젝트}/opal/skills/opal-pilot-sdd/internal-skills/op-sdd-plan/SKILL.md`
+2. `~/.opal/skills/opal-pilot-sdd/internal-skills/op-sdd-plan/SKILL.md`
 **태스크 폴더**: tasks/{NNN}-{feature}/
 **이전 산출물**: {SPEC.md 경로}, {TEST-SCENARIOS.md 경로}
 **REVIEW 검증 메모**: {구조 검증 Warning 등 REVIEW 결과 요약}
@@ -354,7 +358,7 @@ ACT 완료마다 state-tool을 호출하여 파이프라인 행(`state.json`)을
 
 STATE.md는 **의사결정 로그·블로커·자유 기재를 담는 저널**이다. Phase·행 상태·`current_status`·다음 액션의 SSOT는 `state.json`(`references/pipeline.json` 기준으로 state-tool이 구성)이며, 조회는 `~/.opal/tools/state-tool/run.sh show <task-path>`로 한다.
 
-STATE.md 전체 구조 예시 (ACT 목록·TS 현황·SPEC 변경 이력은 state.json 파생이 아닌 opsdd 고유 자유 기재이며, 도구가 담지 못하는 서술 정보를 담는 저널이다):
+STATE.md 전체 구조 예시 (ACT 목록·TS 현황은 state.json 파생이 아닌 opsdd 고유 자유 기재이며, 도구가 담지 못하는 서술 정보를 담는 저널이다):
 
 ```
 STATE: {기능명} SDD 개발
@@ -364,7 +368,6 @@ STATE: {기능명} SDD 개발
 섹션 목록:
 - ACT 목록 (EXECUTE Phase 상세 — ACT별 파이프라인 행 자체는 state-tool add-row/mark로 관리되며 SSOT는 state.json(조회: show). 본 섹션은 ACT별 L1/L2/TS 세부 결과를 담는 저널 자유 기재 표)
 - TS 현황 (VERIFY Phase 요약, Green/Red/Fail/Skip 건수)
-- SPEC 변경 이력
 - 의사결정 로그
 - 블로커
 ```
@@ -476,37 +479,3 @@ opal-harness-agentic.md §6 공통 기준에 추가:
 | DECISION | ACT 순서/병렬 그룹핑 결정 |
 | IMPROVE | SPEC.md 갱신 반영 |
 | ESCALATION | 사용자 에스컬레이션 |
-
----
-
-## 변경이력
-
-| 버전 | 날짜 | 변경내용 |
-|------|------|---------|
-| v1.0 | 2026-04-05 | 초기 작성 — 7단계 SDD 파이프라인 오케스트레이터 (080) |
-| v2.0 | 2026-04-07 | 7→5단계 파이프라인 재작성. tasks/ 단일 루트 통합. EXECUTE-LOOP를 op-dev-plan+op-dev-execute 직접 디스패치로 전환. SPEC-VERIFY/TASKS-VERIFY 제거 → REVIEW Phase PM 직접 검증으로 통합. op-sdd-tasks 삭제 → op-sdd-plan 통합. ACT 구조 도입 (093) |
-| v2.1 | 2026-04-07 | Phase 1 SPEC, Phase 3 DESIGN Gate에 State Gate 참조 추가. Phase 4 EXECUTE-LOOP STATE.md 갱신에 State Gate 기준 명시 (094) |
-| v2.2 | 2026-04-07 | Phase 4 ACT 실행 구조 변경 — op-dev-plan+op-dev-execute 이중 디스패치 → opal-sdd-action-agent 단일 디스패치. 사용자 Gate 명시 (095) |
-| v2.3 | 2026-04-07 | QA Gate 없는 Phase(SPEC/DESIGN/EXECUTE-LOOP)는 State Gate 단독 구조 유지 확인. 하네스 §3 진행 현황 테이블 적용 (097) |
-| v2.4 | 2026-04-09 | STATE.md 완료 산출물 섹션에 공통 하네스 §2 참조 문구 추가 (101) |
-| v2.5.0 | 2026-04-10 | R-1 STATE.md 도메인 치환값 → 43행 진행 현황 구조로 교체 + ACT 목록 SSOT + TS 현황 + SPEC 변경이력 섹션 추가; R-2 VERIFY Phase(Phase 5) 신설 + DONE → Phase 6; R-3 EXECUTE-LOOP L1/L2 검증 루프 명시 (105) |
-| v2.6.0 | 2026-04-10 | Artifact Gate 제거 + PM Gate 점검 목록 섹션 추가 + 파이프라인 현황판 이름 변경 (106) |
-| v2.7.0 | 2026-04-11 | PM Gate 점검 목록 — PLAN-equivalent Phase에 TASK.md 요구사항 추가 (108) |
-| v2.8.0 | 2026-04-15 | Phase 1(SPEC)/Phase 3(DESIGN) 디스패치 프롬프트에 `**핵심 제약**:` 필드 추가 — `[MUST] <문서명> §N: <인용문>` 원문 인용 포맷 명시 (120) |
-| v2.9.0 | 2026-04-15 | Phase 6 DONE→CLOSE 리네이밍 + 4행→2행 통일 + 단계 목록 갱신 + Agentic Mode 흐름도 갱신 + CLOSE 보고 형식 C안 적용 (121) |
-| v3.0.0 | 2026-04-24 | citation-rules 트리거 1줄 주입 — SSOT + Trigger 패턴 (130) |
-| v3.1.0 | 2026-05-01 | state-tool 도입 — STATE.md 직접 편집 금지 + `state-tool` 호출 표현 교체 (P-1~P-8 패턴 적용). `--rows-from` SSOT 지시 + R-10 비표준 행 gate-pass 금지 + mark 4회 개별 호출 필수 블록 추가. R-13 ACT 동적 행 `add-row` 임시 가이드. CLOSE State Gate mark 명시 + G-13 제약 추가. agentic `--auto-pass` + CLOSE 진입 게이트 거부 정책 추가 (134) |
-| v3.2.0 | 2026-05-09 11:22 | 3-way 모드 체계 도입 — semi-agentic 기본 채택 + Agentic/Semi-Agentic 모드 절 확장 + Phase 3 DESIGN 모드 경계 명시(D-DEC-2) + AGENTIC-LOG 생성 시점 분기 + Harness 절 3-way 분기 + state init --mode choices 갱신 (140) |
-| v3.3.0 | 2026-05-09 18:30 | 개인 식별자 "캡틴" → "소유자"/"사용자" 치환 — 배포 파일 정체성 누설 정정 (139) |
-| v3.4.0 | 2026-06-07 | STATE 행 35→24 재구성 — State Gate 행 11개 제거(stage-transition guard로 이전)+CLOSE State Gate→DONE.md 생성 단일화. gate-pass 금지 문구를 deprecated(014)로 정합 갱신(mark 개별 호출 유지). 본문 Gate 흐름 "State Gate → PM Gate → State Gate → 사용자 Gate" → "PM Gate → 사용자 Gate" 정합화. 각 Phase mark 행번호 재정렬. R-13 add-row `--after 23`→`--after 17`. PM Gate 점검 목록 산출물을 실제 opsdd 산출물로 정정. ACT 폴더 반복·R-10 비표준 구조 보존 (014 Phase 4) |
-| v3.4.1 | 2026-06-07 | `--rows-from` 파싱 수정 — STATE.md 구조 예시 인라인 마크다운 헤더(# STATE:, ## 현재 상태, ## 파이프라인 현황판)가 파서 섹션 경계 오인식 유발. SSOT 파이프라인 현황판 표를 `### STATE.md 구조` 앞으로 이동 + 구조 예시를 비-마크다운 헤더 형식으로 교체. `rows_count: 24` 파싱 정상 복구 (014 Phase 4) |
-| v3.5.0 | 2026-06-11 19:25 | Phase 6 CLOSE에 op-brain-ingest 디스패치 훅 삽입 — DONE.md 생성 직후 brain 존재 시 워커 디스패치, 부재 시 no-op, CLOSE 비중단. STATE 행 24 불변 (016) |
-| v3.5.1 | 2026-06-24 | Phase 6 CLOSE op-brain-ingest 디스패치 직전에 "관련 문서 업데이트" 스텝 삽입 — PROJECT.md 레지스트리 + changed_files 종합으로 관련 문서 최신화 후 ingest (없으면 no-op). 후속 항목 번호 재정렬 (042) |
-| v3.5.2 | 2026-07-10 13:12 | note 예시의 소유자 확인 표기를 `{owner_name} 확인:` 형식으로 통일 — identity.md owner_name 재해석 규칙(AGENT.md §정체성 적용)과 정합, 오염 차단 (054) |
-| v3.6.0 | 2026-07-23 | Phase 2 REVIEW 목표-커버 게이트 배선 — 행 10 "FR↔TS 커버리지 확인"을 "커버리지 게이트(scenario-coverage-check)"로 교체 + 행 11 "목표-커버 게이트(op-scenario-gate evaluator)" 신설, 이후 행 전부 +1(24→25행). REVIEW 흐름 3→4단계 재작성(구조 검증 → TEST-SCENARIOS.md 작성 → 목표-커버 게이트 → PM Gate/사용자 Gate) — 독립 evaluator 디스패치로 self-confirming 해소(PRINCIPLES §15). 6단계 요약 REVIEW 행 갱신. `--row N`/`#N`/`--after N` 본문 리터럴 전수 재정렬(rows≥11 +1, 070 pipeline.json 전환은 범위 밖) (075) |
-| v3.7.0 | 2026-08-13 16:58 | pipeline.json 전환 — references/pipeline.json 신설(25 task-step, SSOT), --rows-from 호출 경로를 SKILL.md에서 pipeline.json으로 교체, 표는 사람 열람용 미러로 명시. meta.stages는 stage 값 EXECUTE 사용(산문의 Phase 4 명칭 표기는 불변) (090) |
-| v3.8.0 | 2026-08-14 09:27 | 파이프라인 스펙 중복정리 — `--row N`(9건)→`--task-step <key>`, 산문 `행 N`(2건)→key 참조로 전환. 미러 표(25행)·PM Gate 나열 표·중복 STATE.md 초기화 명령·모드/단계 목록 치환값 삭제 → `references/pipeline.json` 원천 포인터로 대체(산출물 목록·태스크 경로는 고유값이라 존치). R-1 "위 SSOT 표를 기준으로" 오문장 정정. EXECUTE-LOOP 표기 17곳은 090 확정사항으로 불변 (091) |
-| v3.9.0 | 2026-08-15 21:48 | 사용자 확인 행 자동 승인 계약 반영 — agentic STATE 갱신 지시에서 PM `--auto-pass` 명시 호출 삭제, 다음 단계 진입 시 도구 자동 승인으로 전환하고 계약 본문은 하네스 SSOT(`opal-harness-agentic.md §4` / `opal-harness-semi-agentic.md §5`) 참조로 정리. CLOSE 진입 게이트 서술 불변 (093) |
-| v3.10.0 | 2026-08-16 13:40 | STATE.md 저널화 정합 — 폴더 구조 주석·EXECUTE-LOOP ACT 행 갱신 서술·`### STATE.md 구조` 예시에서 "파이프라인 현황판"·"## 현재 상태"·"## 다음 액션" 표 전제를 걷어내고 `state.json` SSOT + `show` 조회 포인터로 교체. ACT 목록·TS 현황·SPEC 변경이력은 state.json 파생이 아닌 opsdd 고유 자유 기재로 명시 존치(094 R-6, Step 10 project-dev 선례 준용) (094) |
-| v3.11.0 | 2026-08-21 15:26 | Phase 1 SPEC 첫 디스패치 절에 §[PM 컨텍스트 주입] 블록 신설 — `pm/dispatch-process.md` §워커 컨텍스트 주입 템플릿 포인터로 주입 항목 열거(하네스 Guards·참조 문서·기술 스택 3항목)를 대체. 전 워커 공통 고정(git 이력 변경 금지 포함)이 파일럿 종류와 무관하게 도달하도록 함. 디스패치 프롬프트 리터럴(`**하네스 Guards**:`/`**핵심 제약**:` 필드)은 단계 고유 가드이므로 무변경 (097) |
-| v3.11.1 | 2026-09-02 17:22 | 에이전트명·소유자 호칭 리터럴 제거 — 규범 산문은 역할어(`PM`/`사용자`/`소유자`)로, 산출물·보고 문면은 `{owner_name}` 플레이스홀더로 전환해 런타임에 소유자 호칭으로 대체된다. 프레임워크 재사용성 확보 (L2 직접 수정) |

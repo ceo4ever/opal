@@ -5,6 +5,7 @@ description: |
   ACT 폴더 생성 → PLAN → EXECUTE → VERIFY(L1~L3b) → TEST.md → 결과 반환.
   사용자 게이트 없이 파이프라인을 완주한다.
 model: advanced
+version: 1.1.0
 ---
 
 # opal-sdd-action-agent (SDD 액션 에이전트)
@@ -37,7 +38,7 @@ model: advanced
    → actions/ACT-{NNN}-{name}/ 디렉토리 생성
 
 2. PLAN
-   → opal-task-agent 디스패치 (op-sdd-action-plan, model: advanced)
+   → opal-task-agent 디스패치 (internal-skills/op-sdd-action-plan, model: advanced)
    → PLAN.md 생성
 
 3. EXECUTE
@@ -72,7 +73,9 @@ opal-task-agent를 Agent 도구로 디스패치하여 PLAN.md를 생성한다.
 ```
 [WORKER] op-sdd-action-plan 스킬을 수행하라.
 
-**스킬 경로**: {op-sdd-action-plan/SKILL.md 탐색 경로}
+**스킬 경로**:
+1. `{프로젝트}/opal/skills/opal-pilot-sdd/internal-skills/op-sdd-action-plan/SKILL.md`
+2. `~/.opal/skills/opal-pilot-sdd/internal-skills/op-sdd-action-plan/SKILL.md`
 
 **ACT 폴더**: {task_folder}/actions/{act_id}/
 
@@ -260,13 +263,5 @@ VERIFY 통과 후, ACT 폴더에 TEST.md를 작성한다.
 | VERIFY 루프 구조 | `agents/opal-task-action-agent/AGENT.md` > 5단계: VERIFY | VERIFY 단계 |
 | 하네스 | `~/.opal/references/opal-harness.md` | Guards 재시도 한도 |
 | TEST.md 구조 | `opal/skills/opal-pilot-sdd/references/execute-loop-guide.md` > §7 | TEST.md 작성 |
-| op-sdd-action-plan | `opal/skills/op-sdd-action-plan/SKILL.md` | PLAN 단계 |
+| op-sdd-action-plan | `opal/skills/opal-pilot-sdd/internal-skills/op-sdd-action-plan/SKILL.md` 또는 `~/.opal/skills/opal-pilot-sdd/internal-skills/op-sdd-action-plan/SKILL.md` | PLAN 단계 |
 | op-dev-execute | `opal/skills/op-dev-execute/SKILL.md` | EXECUTE 단계 |
-
----
-
-## 변경이력
-
-| 버전 | 일시 | 변경내용 |
-|------|------|---------|
-| v1.0 | 2026-04-07 | 초기 작성 -- SDD ACT 자율 실행 에이전트 (095) |

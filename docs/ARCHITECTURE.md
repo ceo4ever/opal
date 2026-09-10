@@ -74,7 +74,7 @@ OPAL은 2-레이어 아키텍처로 동작한다.
 |----------|------|
 | `AGENT.md` | 에이전트 핵심 정의 (부트스트랩, 행동 규칙, PM 역할) |
 | `identity.md` | 에이전트 정체성 (이름, 성격, 톤) |
-| `skills/` | 독립 스킬 8개 + OPAL 스킬 45개 |
+| `skills/` | 독립 스킬 8개 + OPAL 스킬 39개 |
 | `agents/` | 서브에이전트 15개 (전문 8 + 범용 7) |
 | `community-skills/` | 커뮤니티 스킬 — clone-copy(git)로 사용자가 온디맨드 설치 (검색은 `npx skills find`). 사용자 등록분 `user-registry.json` 포함, install 불가침 |
 | `references/` | 레지스트리·표준 문서 **19 엔트리**(최상위 17파일 + 하위 디렉토리 2). 범주별로 — **레지스트리 4종**(`skills.md`·`agents.md`·`mcps.md`·`tools.md`) + JSON 카탈로그 2종(`opal-skills-registry.json`·`community-skills-registry.json`) / **하네스 4종**(`opal-harness.md` + agentic·semi-agentic·interactive 변형) / **표준 문서**(`opal-doc-standard.md`·`header-standard.md`·`conventions-hub-model.md`·`test-tools-schema.yaml`) / **운영 정의**(`opal-pm.md`·`opal-model-mapping.md`·`bootstrapper-management.md`). 하위 디렉토리 2종: `harness/`(하네스 세부 규약 19파일 — 코딩 원칙·게이트·검증 등) · `pm/`(PM 프로세스 세부 6파일 — `orchestration.md`·`dispatch-process.md`·`context-injection.md`·`specialist-agent.md`·`code-scan-management.md`·`asis-analysis.md`(태스크 084 신설)) |
@@ -105,7 +105,7 @@ OPAL은 2-레이어 아키텍처로 동작한다.
 | 그룹 | 스킬 | 설명 |
 |------|------|------|
 | **오케스트레이터** | opal-pilot-dev (opd) | Full Task: TASK → ANALYSIS → PLAN → TEST-SCENARIO → EXECUTE |
-| | opal-pilot-dev-short (opds) | Short Task (기본): TASK → PLAN → TEST-SCENARIO → EXECUTE |
+| | opal-pilot-dev (opds logical alias) | Short profile: TASK → PLAN → TEST-SCENARIO → EXECUTE. 별도 물리 `opal-pilot-dev-short` 없이 canonical Dev Pilot에서 선택 |
 | | opal-pilot-dev-wireframe (opdw) | Wireframe UI: TASK → WIREFRAME → EXECUTE |
 | | opal-pilot-write-tech (opwt) | 서비스 기획 산출물: 네트워크형 오케스트레이션 |
 | | opal-pilot-project (opp) | 프로젝트 범용: TASK → PLAN → EXECUTE |
@@ -127,10 +127,9 @@ OPAL은 2-레이어 아키텍처로 동작한다.
 | | op-task-qa | 범용 QA 검증 (도메인 무관 산출물) |
 | | op-task-plan | 범용 계획 수립 (도메인 무관) |
 | | op-task-execute | 범용 실행 (도메인 무관) |
-| **SDD 단계** | op-sdd-spec | SPEC 단계 — SDD 명세 작성 |
-| | op-sdd-verify | VERIFY 단계 — SDD 명세 검증 |
-| | op-sdd-plan | SPEC-PLAN 단계 — SDD 구현 계획 수립 |
-| | op-sdd-action-plan | ACT 전용 경량 PLAN — SPEC.md + SPEC-PLAN.md + TEST-SCENARIOS.md + ACT 정의 기반 (Phase 4 액션 에이전트 내부) |
+| **SDD 내부 단계** | opal-pilot-sdd/internal-skills/op-sdd-spec | SPEC 단계 — SDD 명세 작성 |
+| | opal-pilot-sdd/internal-skills/op-sdd-plan | SPEC-PLAN 단계 — SDD 구현 계획 수립 |
+| | opal-pilot-sdd/internal-skills/op-sdd-action-plan | ACT 전용 경량 PLAN — SPEC.md + SPEC-PLAN.md + TEST-SCENARIOS.md + ACT 정의 기반 (Phase 4 액션 에이전트 내부) |
 | **보조 단계** | op-brain-ingest | CLOSE 단계 경량 워커 — 태스크 산출물을 프로젝트 brain에 자동 누적 |
 | | op-scenario-gate | TEST-SCENARIO 목표-커버리지 루브릭 게이트 루프 — 결정론 커버리지 체크(test-tool) + 판단 루브릭 |
 | | op-spec-validator | SDD 명세 검증 워커 — PRD/TRD 체크리스트 기반 완성도 판정 |
@@ -234,7 +233,7 @@ OPAL은 2-레이어 아키텍처로 동작한다.
 소스 (이 저장소)                    배포 대상 (~/.opal/)
 ─────────────────                  ──────────────────
 skills/* (독립 8개) ──┐
-opal/skills/* (45개)──┼─ install ─→  ~/.opal/skills/
+opal/skills/* (39개)──┼─ install ─→  ~/.opal/skills/
 opal/agents/* (15개)──┤              ~/.opal/agents/  (source 캐시 — 어댑터 재생성용)
 opal/core/          ──┤              ~/.opal/AGENT.md
   references/       ──┤              ~/.opal/references/
@@ -442,9 +441,8 @@ opal/                                    ← 이 저장소
 │   │   ├── date/                        현재 일시 취득 (date.js)
 │   │   ├── check-env.js                 Node.js 환경 체크
 │   │   └── requirements.txt             Python 의존성 (venv 관리)
-│   ├── skills/                          OPAL 스킬 (45개)
-│   │   ├── opal-pilot-dev/              오케스트레이터: Full Task (opd)
-│   │   ├── opal-pilot-dev-short/        오케스트레이터: Short Task (opds)
+│   ├── skills/                          OPAL 스킬 (39개)
+│   │   ├── opal-pilot-dev/              오케스트레이터: Full profile (opd) + Short profile (opds logical alias)
 │   │   ├── opal-pilot-dev-wireframe/    오케스트레이터: Wireframe UI (opdw)
 │   │   ├── opal-pilot-write-tech/       오케스트레이터: Write-Tech (opwt)
 │   │   ├── opal-pilot-project/          오케스트레이터: Project (opp)
@@ -458,8 +456,9 @@ opal/                                    ← 이 저장소
 │   │   ├── op-data-{dictionary,model,ddl}/
 │   │   │                                데이터 설계 단계 스킬 (3개)
 │   │   ├── op-task{,-plan,-execute,-qa}/ 범용 단계 스킬 (4개)
-│   │   ├── op-sdd-{spec,verify,plan,action-plan}/
-│   │   │                                SDD 단계 스킬 (4개)
+│   │   ├── opal-pilot-sdd/internal-skills/
+│   │   │   ├── op-sdd-{spec,plan,action-plan}/
+│   │   │   │                            SDD 내부 단계 스킬 (3개)
 │   │   ├── op-{brain-ingest,scenario-gate,spec-validator}/
 │   │   │                                보조 단계 스킬 (3개)
 │   │   ├── opal-project-init/           프로젝트 초기화 (opi)
@@ -508,40 +507,3 @@ opal/                                    ← 이 저장소
 ```
 
 ---
-
-## 변경이력
-
-| 날짜 | 변경 내용 |
-|------|----------|
-| 2026-09-09 | 커뮤니티 스킬 레지스트리를 **스코프 3원**으로 확장 — 프레임워크 카탈로그·사용자 등록분에 더해 프로젝트 스코프 `{project}/.opal/skills-registry.json` 추가. 프로젝트 설치 위치 행 + registry 스키마 12필드 표 + `paths` 미보유 규칙 + 담당 주체 경계(프로젝트=`opal-skill-wizard`/전역=`opal-skill-manager`) 신설 (Task 114) |
-| 2026-09-06 13:18 | §2-tier 표 Phase A 로드 항목 열거에서 **`보고형식`** 제거 — AGENT.md §보고 형식 전면 제거(108)에 따라 Phase A가 더 이상 로드하지 않는 항목을 표에서 삭제. 스킵게이트·identity·PRINCIPLES(헌법)·도구맵·`//` 레지스트리 해석 5항목은 무변경 (108) |
-| 2026-09-03 13:15 | **§배포 구조에 「어댑터 확장 필드 통로」 서술 신설** — `emit_platform_agent_adapter()`·`install_codex_agents()`의 frontmatter 재조립이 `name`/`description`/`model` 3필드 하드코딩에서 `OPAL_ADAPTER_FIELD_SPEC` JSON 스펙 순회로 전환됐다. 필드명·값·배치 3중 변환을 스펙 하나가 소유하고 emit은 배치 모드 3종(`key`/`model_param`/`omit`)에만 분기하여 플랫폼명 조건문을 두지 않는다. 첫 확장 필드 `effort`(Claude=`effort` / Codex=`model_reasoning_effort` / Cursor·Gemini=생략) 적용. mac·windows 스펙 JSON은 센티넬 구간 바이트 동일을 규약으로 하며 테스트가 기계 검증한다. 함께 `install_codex_config()` 서술을 legacy `max_threads` → `max_concurrent_threads_per_session`으로 정정하고 3분기 마이그레이션(신규 append / 기존 블록 in-place 치환 / 스킵)을 명시. `docs/architecture-diagram/opal_framework_architecture.html:599`의 동일 legacy 키 표기도 정정 (태스크 105) |
-| 2026-09-03 00:59 | **§커뮤니티 스킬 설치 판정을 라이선스 1축 → 2축·4단으로 갱신** — 본문 위험 패턴 스캔(`skill-registry.js scan-risk` 신설, 1층 하드 필터)과 라이선스를 합쳐 SAFE/CAUTION/RISKY/UNKNOWN 4단으로 판정한다. 1층은 필요조건이며 사람 검토를 대체하지 않음을 명시(산문 영역 미탐 한계). §레지스트리(이원) 행에 사용자 등록분 판정 3필드(`trust`·`capabilities`·`scanned_at`) additive 기록 반영 — `validate`가 미지 필드를 무시하는 성질을 이용해 스키마 교체 없이 확장. §핵심 디렉토리 `tools/` 표 `skill-registry/` 항목에 `scan-risk` 반영. 근거 — `opal/skills/opal-skill-manager/SKILL.md` v1.5(§1·§2 6단 흐름 재작성), `opal/tools/skill-registry/skill-registry.js`(`scan-risk` 서브명령) (태스크 105) |
-| 2026-08-25 17:55 | **§OPAL Console에 「태스크 진행 통계」 절 신설** — 태스크 상세·대시보드가 `tasks/*/state.json`을 집계해 병목 단계와 캡틴 대기 구간을 표시한다. 집계 코어 `dashboard/backend/stats.py` 신설(표준 라이브러리 3종만 의존해 순환 회피, 공개 함수 7종, 라우터·FE는 소비만) · 분해축 「총 리드타임 = 작업 + 대기」 · 워크플로우별 분리 집계(혼합 미제공, opd 7·opds 5·opp 4단계로 구성 상이) · 대시보드는 완료 태스크 모수 / 상세는 실시간(`now` 주입 결정론) · 실시간 대기 귀속은 `key`의 `*.user_confirm` 패턴(`pending` 행 `owner`는 `init` 기본값이라 비신뢰) · 필드 명명 원천 용어 정렬(`skill`·`timestamp`·`row_id`, 사표 필드는 별칭 존치) · 표시 문자열 BE 소유 · 정적만 캐시하고 실시간은 캐시 밖 조립. 부수 교정 — `cache.py`의 mtime 비교가 monotonic 파생값과 epoch를 직접 비교해 `source_path` 지정 시 상시 무효화되던 결함을 wall-clock 기준으로 수정 (태스크 103) |
-| 2026-08-23 13:09 | `harness/` 파일 수 정정 — 트리 뷰 `harness/ 17파일` → **19파일**(선재 stale 1건 + 태스크 100 `analysis-core.md` 신규 1건 실측 반영). §핵심 디렉토리 `references/` 행(`:80`)도 같은 줄 안에 `harness/`(하네스 세부 규약 **17파일**) 언급을 별도로 갖고 있어 함께 **19파일**로 정정 — 동일 줄에 '17파일'이 2회 등장하며 앞의 '최상위 17파일'은 references/ 최상위 실측값이라 무변경, 뒤의 harness/ 수치만 정정. **정정 경위**: 최초 조치에서 앞의 1건만 확인하고 무변경으로 판단했으나 TEST S-28이 잔존을 검출해 보완(H-12 재현). 태스크 100 |
-| 2026-08-16 13:36 | 하네스 표 State 행 서술 정정 — "STATE.md 상태 관리" → "`state.json` 파이프라인 SSOT(state-tool) + STATE.md 저널", 세션 복원. STATE.md는 파이프라인 현황(행 상태·진행·다음 액션)의 SSOT가 아니라 의사결정 로그·블로커를 담는 저널이며, 현황 조회는 `state-tool show`가 담당한다 (094) |
-| 2026-08-15 16:35 | `worktree-tool` 신설 반영 — 도구 인벤토리 **18종 → 19종**(§핵심 디렉토리 `tools/` 행 '환경·배포' 범주에 항목 추가 + 디렉토리 트리 1행). 태스크별 코드 작업공간을 `{프로젝트}/.opal-worktrees/task_{NNN}/`에 git worktree로 격리하는 `--worktree`/`--wt` 축(모드 축과 직교, `opal-harness.md` §2.5)의 집행 도구다 (Task 092) |
-| 2026-09-04 23:05 | OPAL 스킬 수 42개 → **45개** 정합 3지점(§폴더 구조 표·§배포 모델 다이어그램·§디렉토리 트리) — 실측 대조 결과 신설 `opal-code-map-builder` 반영 전에도 이미 2건 드리프트였다(문서 42 vs 실측 44). 신설분 +1을 더해 45로 확정 (106) |
-| 2026-08-11 13:25 | opi 최신화 — 실측 1:1 대조 결과 32건을 전건 반영. 수량 정합(서브에이전트 12→**15개**, 내역 "전문 7 + 범용 4 + 도구성 1"→**전문 8 + 범용 7** / 독립 스킬 5·6→**8개** / OPAL 스킬 24·25→**42개** / `tools/` 6→**18종**), **Codex 플랫폼 신설**(어댑터 emit·`~/.codex/config.toml` `[agents]`·`~/.codex/AGENTS.md` 부트스트래퍼·`codex mcp add` — 종전에는 지원 플랫폼 하나가 배포 모델 전 경로에서 비가시였다), 스킬 표에 미문서화 16종 추가(Pilot 2 + **데이터 단계 3종 그룹 신설** + **보조 단계 3종 그룹 신설** + OPAL 6 + 독립 2)하고 실물 없는 `op-sdd-tasks`를 `op-sdd-action-plan`으로 교체 + opsdd 파이프라인 단계명을 실측 7 Phase로 정정, model 2건 정정(`opal-task-agent`·`opal-be-agent` standard→**advanced**), wtm 폴백 3단→**2단**(WebFetch 제거), MCP 4종 적용 플랫폼을 **5종**으로 통일하고 미배포 `Notion` 행 삭제 + `install_type` 전건 `config_merge` 명시, `references/`를 6종 열거에서 **범주 서술**로 전환(`harness/` 17파일 · `pm/` 6파일 포함), `console` 서브명령에 `log` 추가, 디렉토리 트리 재작성(부재하는 루트 `agents/` 삭제 · `opal/core/` 직속 4파일 · 저장소 루트 6항목 · `scripts/` 6엔트리 · frontend 6→**7화면** · `docs/architecture-diagram/` · 미종료 코드펜스 복구), 변경이력 **날짜 역순 정렬 복구** (Task 089) |
-| 2026-08-11 | tools/ 표 memory-tool 행에 **CLOSE 자동 연결** 반영 — CLOSE 마지막 행 mark 시 state-tool이 memory-tool을 subprocess로 직접 호출해 작업 히스토리 행을 결정론적으로 생성한다. 종전에는 히스토리 갱신이 ambient 트리거로만 정의되어 커밋 뒤로 밀렸고 태스크마다 히스토리 전용 후속 커밋이 1건 추가됐다. 판단이 개입하지 않는 title·date·stage·path는 도구가 채우고 `result`만 PM이 보강하며(`"(PM 보강 대기)"` 플레이스홀더 + 실행 가능한 리마인더), 연동 실패는 `history_link.warning`으로만 표면화되어 mark를 차단하지 않는다. pilot 10종 CLOSE 스펙 무수정 — 도구 계층 단일 지점 변경으로 전 pilot 동시 적용 (Task 088) |
-| 2026-08-10 | Python 의존성 절에 **요구 버전(3.11 이상, 권장 3.14)과 미달 시 설치 중단 동작** 명시 — 종전에는 설치 스크립트가 PATH의 `python3`를 버전 확인 없이 사용해 macOS 기본 3.9.6으로 venv가 생성되고 `mcp>=1.1.0` 의존성 해석에서 실패했다. 인터프리터 탐색·하한 게이트·기존 venv 재검증을 신설하고, 자동 설치를 macOS(Homebrew)·Windows(winget) 어댑터로 대칭화했다(Linux는 안내만, 옵트아웃 `OPAL_AUTO_INSTALL_PYTHON=0`). Node.js 절이 "경고만 출력"인 것과 달리 Python은 강제 중단이므로 서술 비대칭을 해소 (Task 087) |
-| 2026-08-10 22:59 | §시스템 구성에 **정본 시각 자산 포인터** 신설 — 10계층 전체 구조도 `docs/architecture-diagram/opal_framework_architecture.html`(`system-architecture-html` 스킬 산출)를 정본으로 명시하고, 기존 ASCII 다이어그램은 **진입 흐름 요약본**으로 위치를 낮췄다. 종전에는 ASCII와 HTML이 상호 포인터 없이 병존해, 정본을 1종으로 통일한 뒤에도 ASCII가 2차 진실로 굳을 위험이 있었다. 디렉토리 트리 `docs/` 하위에 `architecture-diagram/` 반영 (Task 086) |
-| 2026-08-07 | 배포 채널 표에 **다운로드 소스 규약(DL-CONTRACT)** 명시 — 설치·업데이트 3경로(`install.sh`·`install.ps1`·`opal-cli update`)가 릴리즈 자산을 1순위로 소비하고 같은 파일의 체크섬으로 검증하도록 정합. 종전에는 체크섬이 `git archive` 산출 자산에 대해 발행되는데 스크립트는 GitHub 자동 아카이브를 받아 검증이 구조적으로 불가능했다(`opal-cli update` 하드 실패 / `install.ps1` 예외 중단 / `install.sh` 무결성 검증 무음 스킵). 자산명은 `sha256sums.txt` 파일명 컬럼에서 파생하고, 자산 부재 시 자동 아카이브 폴백 + UNVERIFIED 정책(옵트인·프롬프트·비대화형 거부)을 유지하며, 아카이브 상위 디렉토리 유무에 따라 `--strip-components`를 자동 판정한다 (Task 085) |
-| 2026-08-06 11:33 | Global Layer `references/` 행에 `pm/` 하위 디렉토리 반영 — PM 대화형 AS-IS 분석 워크플로우 `opal/core/references/pm/asis-analysis.md`(5단계 SSOT + 읽기전용 수집 예외) 신설. 종전에는 `references/`를 최상위 6파일 열거로만 서술해 `harness/`·`pm/` 하위 디렉토리의 존재 자체가 드러나지 않았고, 신설 문서가 아키텍처 문서에 반영될 자리가 없었다 (Task 084) |
-| 2026-08-04 | tools/ 표 code-scan 행에 샤드 정책 확장 반영 — `split`(제안 `--plan`/집행 `--groups`)·`init`(비대화형 설정 초안) 서브명령 신설(13→15), 과대 매니페스트 판정을 `shardPolicy` 3단 우선순위(프로젝트 > 전역 `~/.opal/setting.json` > 코드 상수, 셀 단위 머지) 기반 **바이트 초과 AND 엔트리 수 이상 2축**(비차단)으로 정교화, `split --plan`의 5단계 제안 사다리 + `op-data-dictionary` 표준단어사전.md 옵셔널·읽기 전용 대조(code-scan이 `.opal/` 밖 문서를 읽는 첫 사례) 반영, 구 위치 `manifestMaxBytes` 폐기 안내. code-scan v1.6.0 (Task 083) |
-| 2026-08-03 | tools/ 표 code-scan 행에 매니페스트 샤딩 반영 — 예약 폴더 `_shards/` 의미 단위 분산(베이스 `shards` 라벨 배열 선언, `resolveShards` 1곳 봉인, 미선언 자산 바이트 동일 하위호환) + `index.json` 최상위 `manifestMaxBytes` 파일당 크기 상한 비차단 열거. code-scan v1.5.0 (Task 082) |
-| 2026-08-02 | tools/ 표 code-scan 행에 헤더 소스 단일화 반영 — 기록 소스를 `.opal/code-scan.json` 전역 `headerSource`(`inline`\|`manifest`) 단일 키가 결정하고 스코프별 오버라이드를 제거, 미설정·무효값 시 전 명령 차단. `readonly` 스코프 플래그 폐기 (Task 080) |
-| 2026-07-28 | 프로젝트 메모리 SSOT 전환 — Project Layer 표 `.opal/MEMORY.md` → `.opal/MEMORY.json`(인덱스는 JSON SSOT·본문은 `memory/*.md`), Console 파서 서술을 마크다운 파서에서 `MEMORY.json`(JSON) 파싱으로 정정 (Task 078) |
-| 2026-09-06 | `tools/` 표 code-scan 행에 **이력 비기재 집행층** 반영 — `validate`의 `header_history` 비차단 경고 3축(`description`·`note` 태스크번호 distinct ≥ 2 / `undeclared_field` §2 미정의 필드 존재). 규정 SSOT는 `header-standard.md` §2.1이며 본 문서는 도구 능력만 기술한다 (Task 107) |
-| 2026-07-28 | `tools/` 표 code-scan 행 현행화 — @header 조회에 더해 **헤더 작성층**(discover/scaffold/target/validate) 및 인라인·외부 소스 코드 지도(`.opal/code-map/`) 2소스 해석 반영 (Task 077) |
-| 2026-07-17 | 전문 에이전트 표에 opal-loop-action-agent 행 추가 — oppl Loop 2 루프 액션 에이전트, PM→루프 액션 에이전트→워커 계층 반영 (Task 065) |
-| 2026-07-17 | 커뮤니티 스킬 설치 방식 clone-copy 전환 — `npx skills add` 제거(경로 지정 불가 실측·D4), vendor 중첩 SSOT + migrate 정규화, 레지스트리 이원화(카탈로그=references / 사용자 등록분=community-skills/user-registry.json·install 불가침), npx는 find/check 전용 (Task 064) |
-| 2026-07-15 | OPAL Console 브레인 세션 단순화 — "이력" 행을 **휘발성 단일 세션(미영속)**으로 전환(localStorage 이력·멀티대화 관리 제거, mount·새 대화마다 새 session_id, 단일 대화창 멀티턴 유지), 프라임 연결 풀 크기 1→2 + `prewarm()` need-based 충전(연속 새대화 즉시 웜, 상수만 상향 시 풀 1까지만 차던 결함 수정) (Task 063) |
-| 2026-07-14 | OPAL Console 7번째 화면 "설정" 신설 절 추가 — 설정 라우터 쓰기 격리(화이트리스트)·프라임 풀 토글 단일 기능(캡틴 범위 확정: console.config·로컬 설정 편집은 수동 유지, 후속 단위 추가)·Lock+atomic rename·다이어그램 7화면 갱신 (Task 061) |
-| 2026-07-14 | OPAL Console 브레인 질의 표에 "프라임 연결 풀" 행 신설 — prewarm_projects 선프라임·프로젝트별 웜 핸들 풀(크기 1)·체크아웃+백그라운드 리필·Semaphore(2) 상한·콜드 폴백·인메모리 전용 (Task 060) |
-| 2026-07-10 | OPAL Console 표 갱신 — `console scan` 서브명령 반영(기동 행 scan 추가, 프로젝트 식별 행에 config 생성·머지·install 자동 실행·start 안내 명기) (Task 057) |
-| 2026-07-10 | Project Loop 파이프라인 반영 — 오케스트레이터 표 oppl 행, 전문 에이전트 표 opal-evaluator-agent 행, 폴더 트리 oppl 스킬·evaluator 에이전트, 서브에이전트 수 12개(전문 7)로 정합 (Task 056) |
-| 2026-07-10 | 배포 채널 표 `opal-cli` CLI 서브커맨드 목록에서 install 제거 — install 서브커맨드 완전 제거에 정합(신규 설치는 One-liner installer, 갱신은 update) (Task 055) |
-| 2026-07-02 | 부트스트랩 진입 모델에 첫 줄 마커 3단 스킵 사다리 추가 — `[ASSISTANT]` 마커 신설로 headless(claude -p) 호출을 비서 tier(Phase A)로 캡(PM tier 승격 억제). 첫 소비자 opbr_adapter (Task 051) |
-| 2026-06-30 | 부트스트랩 진입 모델 2-tier 절 추가 — 비서(Lite·전역 상시)/PM(Full·`.opal/AGENT.md` 존재 시 승격) 분리. opt-in 모델·`//opi` 불변식·전역 비서 유지 (Task 049) |
-| 2026-06-18 | opal-orchestrator 잔존 행 2곳 삭제 (폴더·레지스트리 항목 부재 — dangling. Task 029) |
