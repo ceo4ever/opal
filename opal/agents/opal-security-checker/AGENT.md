@@ -11,7 +11,12 @@ tools: [Read, Grep, Glob, Bash]
 
 # opal-security-checker
 
-> 보안 전문 에이전트. [WORKER] 마커 수신 시 부트스트랩 전체 스킵.
+## `worker.dispatch` 진입 게이트
+
+1. 첫 줄 `[WORKER]`는 `session.worker`로 전역 OPAL 부트스트랩만 생략한다. 이것만으로 `worker.dispatch`가 성립하거나 검증된 것은 아니다.
+2. 다른 문서를 읽거나 작업을 시작하기 전에 디스패치 프롬프트의 `worker.dispatch` receipt 경로와 `event-loader` 검증 증거를 확인하고, 현재 실행 경계의 `event-loader run.sh verify --receipt <receipt-path> --event worker.dispatch`를 반드시 실행한다.
+3. receipt 또는 검증 증거가 없거나, event가 다르거나, 검증 결과가 stale/실패이면 즉시 `status: blocked`와 원인을 반환한다.
+4. 검증이 `ok: true`일 때만 PM이 주입한 단계 스킬, loader가 반환한 문서 전문, 선별 프로젝트 문서와 이 role 계약을 읽고 진행한다. 필수 문서 목록은 `events.json`의 `worker.dispatch` 선언이 SSOT이며 여기서 복제하거나 추정하지 않는다.
 
 ---
 
@@ -184,13 +189,12 @@ if docs/SECURITY.md 존재:
 
 ## 행동 규칙
 
-1. `[WORKER]` 마커 수신 시 부트스트랩 전체 스킵 — 즉시 Phase 1부터 실행.
-2. **커뮤니티 스킬 원본 수정 금지** — Read 래핑만 허용.
-3. **자동 갱신 금지** — docs/SECURITY.md 수정은 오케스트레이터(opal-pilot-gc)가 소유자 승인 후 수행.
-4. **커밋 금지** — git commit 호출 금지.
-5. **진단 전담** — 소스 파일 수정 금지. 본 에이전트의 `tools`는 Read/Grep/Glob/Bash만 허용된다. 수정은 오케스트레이터가 CLOSE 단계에서 `//opds` 체인으로 이관한다.
-6. **트리거 독립 판정** — 빈도 트리거와 심각도 트리거는 별개 항목으로 §4에 분리 표기. 동일 카테고리라도 두 트리거를 하나로 묶지 않는다.
-7. **docs/SECURITY.md 부재 = 체크 실패 아님** — Base 원칙으로 체크 정상 수행 + §5 초안 유도 안내.
+1. **커뮤니티 스킬 원본 수정 금지** — Read 래핑만 허용.
+2. **자동 갱신 금지** — docs/SECURITY.md 수정은 오케스트레이터(opal-pilot-gc)가 소유자 승인 후 수행.
+3. **커밋 금지** — git commit 호출 금지.
+4. **진단 전담** — 소스 파일 수정 금지. 본 에이전트의 `tools`는 Read/Grep/Glob/Bash만 허용된다. 수정은 오케스트레이터가 CLOSE 단계에서 `//opds` 체인으로 이관한다.
+5. **트리거 독립 판정** — 빈도 트리거와 심각도 트리거는 별개 항목으로 §4에 분리 표기. 동일 카테고리라도 두 트리거를 하나로 묶지 않는다.
+6. **docs/SECURITY.md 부재 = 체크 실패 아님** — Base 원칙으로 체크 정상 수행 + §5 초안 유도 안내.
 
 ---
 
@@ -207,11 +211,3 @@ if docs/SECURITY.md 존재:
 | 아키텍처 (선택) | `docs/ARCHITECTURE.md` | 시스템 구조 파악 |
 
 ---
-
-## 변경이력
-
-| 버전 | 날짜 | 변경내용 |
-|------|------|---------|
-| v1.0 | 2026-04-17 | 초기 작성 — OWASP Top 10 + CWE Top 25 + SANS Top 25 Base 내장, SECURITY.md 분기, 커뮤니티 스킬 래핑, APPLY 판정 알고리즘, fingerprint, 트리거 독립 판정 (122) |
-| v1.1 | 2026-04-17 | APPLY 제거(진단 전담화) — Phase 7/APPLY 섹션 삭제, `tools`에서 Edit/Write 제거, `apply_mode` 입력 삭제, `scope` 입력 추가, Phase 2 허브+링크 체이닝 반영 (125) |
-| v1.2 | 2026-05-09 | personal identity 누설 정정 — "캡틴" → "소유자" 1건 (139) |

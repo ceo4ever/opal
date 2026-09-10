@@ -1,5 +1,8 @@
 # OPAL Agents Registry
 
+> 로드 이벤트: `worker.dispatch`. PM은 Agent 호출 직전에 event-loader의 같은 load 응답으로
+> 이 전문을 적용하고 receipt를 검증한다. 부트스트랩이나 이전 디스패치의 캐시를 사용하지 않는다.
+
 OPAL 에이전트가 호출할 수 있는 서브에이전트 목록.
 각 에이전트는 독립 컨텍스트에서 실행되며, 호출 시 해당 AGENT.md(또는 SKILL.md)를 Read로 읽어 지시를 전달한다.
 
@@ -358,20 +361,3 @@ project: mams
 - **출력**: {생성하는 산출물}
 - **에이전트 경로**: `opal/agents/{agent-name}/`
 ```
-
-## 변경이력
-
-| 버전 | 날짜 | 변경내용 |
-|------|------|---------|
-| v1.1 | 2026-04-30 | 플랫폼 sub-agent 어댑터 변환 규칙 §추가 — Claude/Cursor/Gemini 4개 플랫폼 메커니즘 표 + frontmatter 변환 규칙 + Antigravity 미지원 처리 (133) |
-| v1.2 | 2026-04-30 | emit_platform_agent_adapter description 평탄화 — Claude Code 파서 호환 (133) |
-| v1.3 | 2026-04-30 | AUTO-GENERATED 헤더 검사 범위를 전체 파일로 확장 — frontmatter 외 헤더 위치 오탐지 결함 수정 (133) |
-| v1.4 | 2026-05-12 21:35 KST | §wtm-agent → §opal-wtm-agent 갱신 — Phase 1(WebFetch)→Phase 2(cmux 조건부)→Phase 3(playwright-tool CLI) 폴백, 입력 `--surface` 3모드, 출력 JSON 8필드, 에이전트 경로 opal/agents/opal-wtm-agent/ (002) |
-| v1.5 | 2026-06-02 20:16 KST | Gemini 변환 표 부동 별칭 전환 — light=`gemini-3.1-flash-lite` 핀, standard=`gemini-flash-latest`, advanced=`gemini-pro-latest` (011) |
-| v1.6 | 2026-06-07 | QA→PM Gate 통합 정합화 — opal-task-qa-agent를 "QA Gate에서 디스패치되는 범용 QA 워커"에서 "디스패치되지 않는 검증 기준 라이브러리 참조 정의"로 역할 한정(삭제하지 않음). 문서 QA는 PM Gate가 직접 흡수, op-dev-qa/op-task-qa는 PM이 참조하는 검증 기준 라이브러리. 동작 검증(opal-test-agent/TEST/verify) 영역 불변 (014 Phase 4-2) |
-| v1.7 | 2026-06-17 | Codex CLI 어댑터 보강 — 메커니즘 표 Codex 행 추가(tool-backed=인라인 주입/TUI=이름호출, `~/.codex/agents/{name}.toml`) + frontmatter 변환 표 Codex 컬럼 추가(gpt-5.4-mini/gpt-5.4/gpt-5.5) + §Codex tool-backed 인라인 주입 규칙 §신설(PM 런타임 행위/spawn_agent message 주입/model 매핑/#15250 인용/배포 시점 아님/.toml 유지 명시) + 함수 참조에 codex 추가 (028) |
-| v1.8 | 2026-06-21 16:18 KST | §본문 처리 정정 — "본문은 변경 없이 그대로 복사된다" 무조건 진술 제거. 어댑터가 본문 인라인 `model: <레벨>` sub-dispatch 오버라이드 토큰(괄호 내 `, model:`/`(model:`)도 frontmatter와 동일하게 플랫폼 실모델명으로 변환(cursor=토큰 제거), prose 자기참조(백틱 내)는 비대상임을 명시 — frontmatter만 변환하고 본문 verbatim 복사하던 경계 비대칭 제거(install-mac.sh `_sub_body_model`·windows.ps1 `Convert-BodyModelTokens`) (032) |
-| v1.9 | 2026-06-28 | §Codex tool-backed 인라인 주입 Step 3에 오버라이드 우선순위 포인터 추가 — setting.local.json → setting.json → §2 표(셀 단위) 적용 + `opal-model-mapping.md` §5 참조. `opal-model-mapping.md` §5 오버라이드 도입과 정합 (046) |
-| v2.0 | 2026-07-10 16:49 KST | opal-evaluator-agent 신규 등록 — `### opal-evaluator-agent` 섹션(전문 에이전트) + 매핑 테이블 행(단계: 명세 리뷰 oppl G/D6, 영역: 평가, model: advanced) 추가 (056) |
-| v2.1 | 2026-09-02 19:32 KST | §frontmatter 변환 규칙 표에 `effort` 행 추가(4셀 — Claude `effort` 그대로 / Cursor 제거·예약 / Gemini 제거·미지원 / Codex `model_reasoning_effort`, `max`→`xhigh`) + `(기타 OPAL 전용 필드)` 행을 `(변환 테이블 미등재 필드)`로 정정(판정 기준이 "OPAL 전용 여부"에서 "스펙 테이블 등재 여부"로 전환) + 값역 주석·SSOT는 코드(`scripts/install-mac.sh` `OPAL_ADAPTER_FIELD_SPEC` / `scripts/install/windows.ps1` `$OpalAdapterFieldSpec`, 바이트 동일 규약)라는 포인터·배치 모드 3종(`key`/`model_param`/`omit`) 설명 하단 추가 (105) |
-| v2.2 | 2026-09-09 15:20 KST | 개발 에이전트 문서 로딩을 PROJECT 레지스트리 기반 PM 주입 계약으로 정합하고, test-agent 결과 저장을 sdlc-v2 `test-scenario.json` 계약으로 갱신 (111) |

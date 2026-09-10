@@ -36,7 +36,7 @@
 | `skills/` | 독립 스킬 소스 | 파이프라인 없이 단독 사용하는 스킬 (8종) |
 | `opal/skills/` | OPAL 스킬 소스 | 오케스트레이터, 단계 스킬 등 OPAL 전용 (43종) |
 | `opal/agents/` | 워커 에이전트 소스 | 모든 서브에이전트 정의 (15종) |
-| `opal/tools/` | OPAL 도구 소스 | 결정론 집행 CLI (19종) |
+| `opal/tools/` | OPAL 도구 소스 | 결정론 집행 CLI (20종, `event-loader` 포함) |
 | `opal/core/` | 프레임워크 코어 | 레퍼런스, MCP 설정, 도구 |
 | `opal/bootstrapper/` | 부트스트래퍼 | 플랫폼별 부트스트랩 진입점 (claude/codex/cursor/gemini) |
 | `opal/templates/` | 템플릿 | 배포 시 참조하는 설정 템플릿 |
@@ -103,7 +103,7 @@
 
 > **트랙 라우팅 (Task 098)**: `//opd` 호출이어도 4축(설계 확정률·예상 변경 파일 수·신규 개념 유무·최고 검증 계층)을 전건(AND) 충족하면 `opds`로 자동 강등 진입한다. 판정 시점은 TASK 완료 직후 1회이며, 승격(`opds`→`opd`, PLAN 결과 시점)과 시점·임계가 상호배타여서 왕복 구조가 성립하지 않는다. 판정 불능·`## 확정된 설계 방향` 부재 시 fail-safe는 강등 불발(`opd` 유지)이다. 강등은 소유자 승인 왕복 없이 진입하고 4축 실측값을 사후 통보한다. 접합: opd STEP 1 직후 · opds §에스컬레이션 규칙 포인터. 임계값 수치는 SSOT에만 존치 — SSOT: `opal/core/references/harness/track-routing.md`.
 
-> **프로젝트 문서 주입 계약 (Task 111)**: Dev 파이프라인의 PM은 `docs/PROJECT.md`를 먼저 읽고 §프로젝트 문서 레지스트리의 적용 범위·참조 시점으로 작업 도메인에 필요한 프로젝트/기획/설계 문서를 선별해 워커에 주입한다. 개발 워커는 주입된 문서만 읽으며, `docs/` 전체나 고정 파일명을 자체 가정하지 않는다. `docs/PROJECT.md`가 없는 프로젝트에서만 기존 영역별 최소 폴백 문서를 허용한다.
+> **프로젝트 문서 주입 계약 (Task 111)**: Dev 파이프라인의 PM은 `pm.activate` 이벤트에서 `docs/PROJECT.md`를 읽고 §프로젝트 문서 레지스트리의 적용 범위·참조 시점으로 작업 도메인에 필요한 프로젝트/기획/설계 문서를 선별해 워커에 주입한다. 개발 워커는 주입된 문서만 읽으며, `docs/` 전체나 고정 파일명을 자체 가정하지 않는다. `docs/PROJECT.md`가 없는 프로젝트에서만 기존 영역별 최소 폴백 문서를 허용한다.
 
 ## 주요 컴포넌트 (SDD 파이프라인)
 
@@ -203,7 +203,7 @@ TEST-SCENARIO 단계를 "목표 달성 검증"으로 재정의 — 루브릭 채
 | `test-tool scenario-coverage-check` | - | 도구 확장 | R/F/H↔시나리오 매핑 누락 결정론 판정(②③④). exit 0(전커버)/16(coverage_unmet)/17(입력오류). pilot-중립 정규화 페이로드 소비 |
 | `opal-evaluator-agent scenario-rubric` | - | 서브에이전트 phase | 판단축 ①목표달성·⑤채택/잔존·⑥경계/부정 2점 척도 채점(각≥1 AND 평균≥1.5→pass). SCENARIO-GATE-{N}.md 산출. 기존 3 phase additive |
 
-> tool-gated: 게이트 PASS는 coverage-check exit 0 AND evaluator verdict pass 두 증거 필수. Producer(PM+캡틴)≠Evaluator(opal-evaluator-agent) 매반복 분리. 루프 상한 수치 SSOT는 `opal-harness.md` §1. opd STEP 3.5 접합 — pipeline.json `test_scenario.scenario_gate` 행이 EXECUTE 진입을 구조적 차단. SSOT: `opal/core/references/harness/scenario-gate.md`.
+> tool-gated: 게이트 PASS는 coverage-check exit 0 AND evaluator verdict pass 두 증거 필수. Producer(PM+캡틴)≠Evaluator(opal-evaluator-agent) 매반복 분리. 루프 상한 수치 SSOT는 `opal/core/references/harness/guards.md`, 게이트 절차 SSOT는 `opal/core/references/harness/scenario-gate.md`다. opd STEP 3.5의 pipeline.json `test_scenario.scenario_gate` 행이 EXECUTE 진입을 구조적으로 차단한다.
 >
 > **목표계열 선작성 트랙 (Task 095)**: 도출 입력을 Block A(TASK 유래 — 목표·R·채택/잔존 → 축 ①②⑤⑥)와 Block B(PLAN 유래 — F·H → 축 ③④)로 분리하고, Block A를 PLAN 워커 실행과 **병렬 선작성**할 수 있다. opt-in이며 목적은 효율이 아니라 **관점 편향 차단**(070 실패모드 방어)이다. 보강 없이는 게이트가 `coverage_unmet`으로 거부하고, 게이트는 보강 완료 후 1회만 호출한다. 접합: opds STEP 2 · opd STEP 3/3.5. SSOT: `opal/core/references/harness/red-first.md` §1.6 · 절차: `op-dev-test-scenario/references/test-scenario-guide.md` §Step 1.
 
@@ -221,52 +221,13 @@ TEST-SCENARIO 단계를 "목표 달성 검증"으로 재정의 — 루브릭 채
 
 | 문서 | 설명 | 용도 | 적용 범위 | 참조 시점 |
 |------|------|------|----------|----------|
-| `.opal/AGENT.md` | PM 프로필 | PM 역할 및 검토 기준 | Framework | 부트스트랩 시 자동 |
-| `docs/PROJECT.md` | 프로젝트 정의·문서 레지스트리 (SSOT) | 프로젝트 개요, 원칙, 문서 허브, PM 컨텍스트 선별 기준 | Framework | 부트스트랩 및 워커 디스패치 전 |
+| `.opal/AGENT.md` | PM 프로필 | PM 역할 및 검토 기준 | Framework | `pm.activate` 이벤트 |
+| `docs/PROJECT.md` | 프로젝트 정의·문서 레지스트리 (SSOT) | 프로젝트 개요, 원칙, 문서 허브, PM 컨텍스트 선별 기준 | Framework | `pm.activate` 이벤트. 세션 부트에서는 로드 금지, 이후 워커 디스패치 문서 선별에 사용 |
 | `docs/ARCHITECTURE.md` | 시스템 아키텍처 | 구조, 컴포넌트 관계, 배포 모델 | Framework | PROJECT.md 레지스트리가 구조 변경·영향 분석에 필요하다고 지시할 때 |
-| `docs/CONVENTIONS.md` | 코드 및 문서 컨벤션 | 네이밍, 파일 구조, 커밋 **메시지 형식·단위**, 구현 규칙(디스패치/@header/Citation/State/도구·배포 경계·플랫폼 분기). 승인 게이트·커밋 실행 시점 등 Guards 규칙 **원문**은 `opal/core/references/opal-harness.md` §1이 소유하고 본 문서는 포인터만 둔다 | Framework | PROJECT.md 레지스트리가 구현·문서 컨벤션 판단에 필요하다고 지시할 때 |
-| `.opal/MEMORY.json` | 프로젝트 메모리 인덱스 (JSON SSOT) | 메모리·작업 히스토리·피드백 추적 (`memory/` 하위 메모리 파일 인덱스). 변경은 `memory-tool`만 수행 | Framework | 부트스트랩 시 자동 (`memory-tool show --brief` 브리핑) |
+| `docs/CONVENTIONS.md` | 코드 및 문서 컨벤션 | 네이밍, 파일 구조, 커밋 **메시지 형식·단위**, 구현 규칙(디스패치/@header/Citation/State/도구·배포 경계·플랫폼 분기). 실행 규칙 원문은 `opal/core/references/harness/`의 owner 문서, 문서 이력 규칙은 `opal/core/references/opal-doc-standard.md` §5가 소유 | Framework | `pm.activate` 후 PROJECT 레지스트리가 구현·문서 컨벤션 판단에 필요하다고 지시할 때 |
+| `.opal/MEMORY.json` | 프로젝트 메모리 인덱스 (JSON SSOT) | 메모리·작업 히스토리·피드백 추적 (`memory/` 하위 메모리 파일 인덱스). 변경은 `memory-tool`만 수행 | Framework | `session.project`에서 `memory-tool show --boot-brief --max-bytes 1024 --memories 3 --history 0` 출력만 선택 로드. 본문·전체 history는 로드 금지 |
 | `README.md` | 프레임워크 공개 소개 문서 | Pilot 개념, 사용 사례, 프레임워크 철학 정의 | Framework | Pilot 추가/변경 시, 사용자 대면 문서 작업 시, 프레임워크 철학/방향 관련 작업 시 |
 | `docs/architecture-diagram/opal_framework_architecture.html` | 프레임워크 구조 다이어그램 (시각 SSOT) | 3층 구조·파이프라인·도구 관계 시각화 (태스크 086 산출) | Framework | 구조 설명·온보딩 시 |
 | `docs/SECURITY.md` | 프로젝트 보안 기준 | opal-security-checker가 OWASP/CWE/SANS Base에 병합하는 프로젝트 누적 기준 | Framework | 보안 체크(opgc CHECK) 시 |
 | `docs/proposals/opal-brain-design.md` | Project Brain 설계 SSOT | brain 구조·모드·도구 계약 설계 근거 | Framework | Brain 관련 변경 시 |
 | `docs/proposals/opal-data-design.md` | Data Design 파이프라인 설계 SSOT | 사전·ERD·DDL 흐름 설계 근거 | Framework | Data Design 관련 변경 시 |
-
----
-
-## 변경이력
-
-| 날짜 | 변경 내용 |
-|------|----------|
-| 2026-09-09 | Dev 파이프라인 프로젝트 문서 주입 계약 반영 — PM이 `docs/PROJECT.md` 레지스트리로 작업 도메인·참조 시점별 문서를 선별 주입하고, 개발 워커는 주입 문서만 소비한다. PROJECT 부재 시에만 기존 영역별 최소 폴백 허용. PLAN 설명은 sdlc-v2 Work items `담당`·의존성·병렬 그룹 기준으로 정합. 태스크 111 |
-| 2026-09-06 | `@header` 이력 비기재 원칙 3층 적용 — 규정: `header-standard.md` §2.1(원칙 정본, 적용 범위 = `@header` JSON 블록 **전체**) · §2(이력 전용 필드 신설 금지 — `changelog`·`history`·`revisions` **이름 불문**) · §4.2(`description`·`depends`·`note`·`feature` 4필드 작성 가이드), `harness/header-rules.md`(갱신은 교체지 누적이 아님 [MUST]), `docs/CONVENTIONS.md` §@header 규칙 교체. 도구: `code-scan validate`에 `header_history` **비차단** 경고 3축 신설 — `description`·`note`는 서로 다른 태스크 번호 **distinct ≥ 2**(단발 출처 인용 1개는 허용), `undeclared_field`는 §2 미정의 필드 **존재 자체**(§7.2 매니페스트 전용 `draft`는 manifest 모드에서 제외). 자산: 43파일 정리(`description`·`note` 23건 + `changelog` 필드 28파일·81엔트리 제거), `@header` 총 바이트 122,752 → 75,810(−38.2%). code-scan `VERSION`은 v1.6.0 불변(additive 확장). 태스크 107 |
-| 2026-08-23 | 분석 코어 SSOT 신설 반영 — §주요 컴포넌트에 `analysis-core.md` 행 추가(ANALYSIS·PLAN 공유 절차 SSOT, 수치 복제 없이 경로 포인터만). 태스크 100 |
-| 2026-08-21 22:18 | §주요 컴포넌트 (Dev 파이프라인)에 **트랙 라우팅** 항목 신설 — `opal/core/references/harness/track-routing.md`(규칙 SSOT) 등재. `//opd` 4축 AND 자동 강등, 판정 시점 분리(강등=TASK 직후 / 승격=PLAN 결과)로 승격 규칙과 상호배타, fail-safe는 강등 불발. 임계값 수치는 SSOT 단독 보유(복제 0건) (098) |
-| 2026-08-21 15:30 | 문서 레지스트리 `docs/CONVENTIONS.md` 행 정합 — 용도 서술의 `커밋 규칙`을 `커밋 메시지 형식·단위`로 정정하고 구현 규칙 열거에서 `Guards/`를 제거. Guards 규칙 원문 소유권이 `opal/core/references/opal-harness.md` §1임을 명시해, CONVENTIONS.md 포인터화(v1.7.0)와의 내부 모순을 해소 (097) |
-| 2026-08-16 15:55 | STATE.md 저널화 반영 — 3-SSOT 각주에서 "사람 뷰는 자동 렌더" 전제 제거. `BACKLOG.md`는 자동 렌더 유지, `state.json` 현황 조회는 `state-tool show`로 명시(STATE.md는 의사결정 로그·블로커 저널) (Task 094) |
-| 2026-08-15 16:35 | `worktree-tool` 신설 반영 — 폴더 구조맵 `opal/tools/` 행 18종 → **19종**. 태스크별 코드 작업공간 격리(`--worktree`/`--wt` 축) 집행 도구 (Task 092) |
-| 2026-09-04 23:05 | §프로젝트 구조 `opal/skills/` 셀 스킬 수 42종 → **45종** 정합 — 실측(`find opal/skills -mindepth 1 -maxdepth 1 -type d | wc -l`) 대조 결과 신설 `opal-code-map-builder` 반영 전에도 이미 2건 드리프트 상태였다(문서 42 vs 실측 44). 신설분 +1을 더해 45로 확정 (106) |
-| 2026-08-11 13:26 | 문서 최신화 — 실측 1:1 대조 반영. 폴더 구조맵에서 루트 `agents/`(부재) 행 제거하고 누락 7폴더(`opal/agents/`·`opal/tools/`·`opal/bootstrapper/`·`opal/templates/`·`dashboard/`·`cursor-rules/`·`memory/`) 추가 + `.opal/` 설명을 실제 범위(브레인·메모리·코드맵 설정·로컬 설정)로 확장. 태스크 폴더 형식을 `{NNN}-{YYMMDD}-{스킬약어}-{태스크명}`으로 교체하고 실존 예시로 갱신(태스크명 한글 기본·앞 3요소 ASCII·공백 금지 명문화). **§주요 컴포넌트 (Dev 파이프라인) 신설** — 오케스트레이터 6종(opd/opds/opdw/opp/opwt/oppd)·`op-dev-*` 단계 스킬 7종·Dev 계열 워커 에이전트 10종이 SSOT에서 통째로 누락돼 있던 것을 등재. `brain-tool` 8→**10 서브명령**(`analyze`·`ingest-scan`) 정합. §프로젝트 구성 Framework 경로에서 `agents/` 제거. §프로젝트 문서 레지스트리 4행 추가 — 아키텍처 다이어그램 HTML(태스크 086 산출, 구조 시각 SSOT)·`SECURITY.md`(본문이 이미 참조 중이던 내부 모순 해소)·`proposals/` 설계 SSOT 2종 (Task 089) |
-| 2026-08-04 | 코드맵 샤드 정책 확장 — `split`(제안 `--plan`/집행 `--groups`)·`init`(`.opal/code-scan.json` 비대화형 초안 생성, 차단 게이트 앞 배치) 2서브명령 신설(13→15). 과대 매니페스트 판정을 `shardPolicy` 3단 우선순위(프로젝트 `.opal/code-scan.json` > 전역 `~/.opal/setting.json` > 코드 상수 `maxBytes` 10240/`minFiles` 40, **셀 단위 머지**) 기반 **바이트 초과(`>`) AND 엔트리 수 이상(`>=`) 2축**으로 정교화(전면 비차단, 초과만으로는 exit 0). `split --plan`은 **5단계 제안 사다리**(첫 토큰 → 1~2토큰 결합 → 전체 토큰 → 마지막 토큰 → `depends` 공유, 각 단계는 직전 단계 미분류분만 입력)로 분류하고 잔여는 `unassigned`로 남긴다(임의 배분 없음 — 의미 경계는 사람의 몫). `op-data-dictionary` 산출물 표준단어사전.md를 **읽기 전용·옵셔널**로 대조(부재·파싱 실패·매칭 0건 전부 비차단 — code-scan이 `.opal/` 밖 문서를 읽는 첫 사례이자 `~/.opal/setting.json`을 읽는 첫 도구). 구 위치 `index.json`의 `manifestMaxBytes`는 값을 읽지 않고 안내만 한다(자동 변환 없음). code-scan v1.6.0 (Task 083) |
-| 2026-08-03 | 코드맵 매니페스트 샤딩 — 한 소스 디렉토리의 매니페스트를 예약 폴더 `_shards/` 아래 **의미 단위 샤드로 분산**할 수 있게 하고(베이스 매니페스트가 `shards` 라벨 배열로 선언), 샤드 해석·`byKey` 합집합·중복 판정을 `resolveShards` **1곳에 봉인**. `index.json` 최상위 `manifestMaxBytes`(기본 20480바이트)로 **파일당 크기 상한을 비차단 감지·열거** — 초과가 있어도 다른 위반이 없으면 exit 0이라 CLOSE 게이트를 봉쇄하지 않는다. 샤드 미선언 자산은 조회 8커맨드·`target`·`scaffold` stdout이 **바이트 동일**(옵트인). `_shards` 예약어 충돌·라벨 path traversal 차단. code-scan v1.5.0 (Task 082) |
-| 2026-08-02 | 코드 헤더 소스 단일화 — 기록 소스를 전역 `headerSource`(`inline`\|`manifest`) 2택 단일 키로 통일하고 `auto`·`readonly`·스코프별 오버라이드 3종을 폐기. 미설정·무효값은 전 명령 차단(암묵 기본값 금지), CLI `--header-source` > 전역 config 2층 우선순위. `scopes` 객체 형식(`include`/`exclude`) 파일 집합 필터 도입 — 판정 지점을 `resolveHeaderSource`·`isInScope` 각 1곳으로 봉인. code-scan v1.4.0 (Task 080) |
-| 2026-07-23 | 파이프라인 todo 미러 hook 강제 자동화 — state-tool todo_mirror 페이로드 출력(init/advance/mark/block, stdout 전용·비영속) + PostToolUse hook 결정론 트리거(claude-hooks.json) + install merge_hooks 소유권-마커 멱등 upsert(외부 hook clobber 해소) + state.md 정합. prose 의존 → tool 강제(헌법 Enforce). S-9 L3(새 세션 todo 패널 실증) 후속 (Task 076) |
-| 2026-07-23 | 목표-커버 게이트 opds·opsdd 확산 — op-scenario-gate Step 2 pilot 변환기(opds=opd동형/opsdd=SPEC.md FR·AC·EC 소스) + opds STEP 2(producer 확립·op-dev-plan 미접촉)·opsdd Phase 2 REVIEW(수동 커버리지→도구 게이트·self-confirming 해소) 배선. oppl 제외·oppd 2차. 신규 컴포넌트 0(배선만) (Task 075) |
-| 2026-07-23 | TEST-SCENARIO 목표-커버 게이트 섹션 신설 — scenario-gate.md(규칙 SSOT)·op-scenario-gate(단계 스킬)·test-tool scenario-coverage-check(도구 확장)·opal-evaluator-agent scenario-rubric(phase). opd STEP 3.5 pipeline.json 게이트 행 접합(EXECUTE 진입 구조적 차단). 070 목표 미검증 완료 재발 방지, 1차 opd 선적용 (Task 073) |
-| 2026-07-18 | Project Loop 표 backlog-tool(8서브명령 — covers·coverage-check)·test-tool scenario-*(fidelity·conformance 게이트) 정합 — oppl 계약 접합면 검증 강화: 표면 인벤토리(surfaces.json)·증거 충실도 사다리·여정 스모크·워킹 스켈레톤 의무 도입 (Task 069) |
-| 2026-07-17 | Project Loop 표에 opal-loop-action-agent(루프 액션 에이전트) 행 추가 — 태스크당 1회 디스패치·내부 4축·blocked 계약 (Task 065) |
-| 2026-07-17 | Project Loop 표에 oppl-monitor 행 추가 — `.oppl-run/` 파싱 진행 현황판(--json/--watch, 읽기 전용). 내부 채널 stream-json 전환·journal 규약과 함께 도입 (Task 067) |
-| 2026-07-17 | 도구명 리네임 — `oppl-monitor` → `opal-action-monitor`(향후 oppd·opsdd 액션 에이전트 공통 관측 도구로 확장 예정이라 이름 중립화). Project Loop 표 행 갱신, 로직 무변경 (Task 067) |
-| 2026-07-17 | Project Loop 표에 opal-action-status(opas) operator 행 추가 — 액션 에이전트 현황 발동층(자동 탐지+해석 보고, 읽기 전용) (Task 068) |
-| 2026-06-12 | Data Design 파이프라인 섹션 추가 — opal-pilot-data-design(opdd), op-data-* 3종, opal-db-agent (Task 019) |
-| 2026-06-15 | OPAL Console 섹션 추가 — dashboard/frontend(React+shadcn)·backend(FastAPI)·opal-cli console + 프로젝트 구성 Console FE/BE 영역 (Task 021) |
-| 2026-06-18 | SDD 컴포넌트 표 정합 — op-sdd-tasks dangling 제거 + op-sdd-action-plan 등록. opal-brain 유형 오기재 교정 (오케스트레이터/Pilot → operator 멀티모드 라우터, alias opbr 불변) (Task 029) |
-| 2026-06-22 | OPAL Console 6번째 메뉴 "프로젝트 브레인" 추가 — brain 질의(`//opbr query --read-only` 구독 합성·POST 격리·브라우저 localStorage 이력) + opbr SKILL v1.4 비대화형 read-only 계약 (Task 036) |
-| 2026-06-30 | 부트스트랩 2-tier 전환 — 비서(전역 상시)/PM(opi 프로젝트 opt-in) 분리. AGENT.md Eager 2-phase·부트스트래퍼 절 반전·opi Codex AGENTS.md 보강·ARCHITECTURE 2-tier 절 (Task 049) |
-| 2026-07-10 | Project Loop 파이프라인 섹션 추가 — opal-pilot-project-loop(oppl)·opal-evaluator-agent·backlog-tool·test-tool scenario-* 확장 (Task 056) |
-| 2026-07-10 | OPAL Console `opal-cli console` 설명에 scan 서브명령 반영 — console.config.json 생성·머지 + install 1회 자동 실행 (Task 057) |
-| 2026-07-14 | OPAL Console 7번째 화면 "설정" 반영 — 프라임 풀 토글 단일 기능, 설정 라우터 쓰기 격리(화이트리스트), 쓰기 예외 2종 명시 (Task 061) |
-| 2026-07-15 | OPAL Console 프로젝트 브레인 세션 단순화 — 휘발성 단일 세션(localStorage 이력·멀티대화 관리 제거, 진입/새대화마다 새 세션·세션 내 멀티턴 유지), 프라임 풀 크기 1→2 + need 충전(연속 새대화 즉시 웜), 이탈 가드 4경로(메뉴·새로고침·프로젝트 스위처·새 대화 시 세션 소멸 확인) (Task 063) |
-| 2026-07-17 | PM 개선 루프 서브시스템 신설 — opal-improve(opim) 스킬·improve-tool 도구·fw-inbox 수집소·4 pilot CLOSE 회고 하드스텝. 정의 3문서를 단일 SSOT(pm-improvement-loop.md)로 통합, memory-tool enum 확장(improvement/candidate), 로컬/FW 학습 분리 (Task 058) |
-| 2026-07-28 | 코드 헤더 작성층 신설 — code-scan v1.3.2에 discover/scaffold/target/validate/feature 5서브명령 + 인라인·외부 소스 코드 지도(`.opal/code-map/`) 2소스 5단 상속 해석. 기록 위치 4단 자동 판정·워커 권한 경계·PostToolUse hook·`run.sh` 래퍼 신설. CLOSE 게이트는 회귀(`newly_uncovered`)만 차단하고 레거시 미커버는 비차단 보고 (Task 077) |
-| 2026-07-28 | 프로젝트 메모리 SSOT 전환 — 문서 레지스트리 행 `.opal/MEMORY.md` → `.opal/MEMORY.json`(JSON SSOT, 변경은 memory-tool 전용), 참조 시점을 `memory-tool show --brief` 조회로 명시 (Task 078) |

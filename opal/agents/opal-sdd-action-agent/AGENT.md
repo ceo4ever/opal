@@ -9,9 +9,22 @@ model: advanced
 
 # opal-sdd-action-agent (SDD 액션 에이전트)
 
+## `worker.dispatch` 진입 게이트
+
+1. 첫 줄 `[WORKER]`는 `session.worker`로 전역 OPAL 부트스트랩만 생략한다. 이것만으로 `worker.dispatch`가 성립하거나 검증된 것은 아니다.
+2. 다른 문서를 읽거나 작업을 시작하기 전에 디스패치 프롬프트의 `worker.dispatch` receipt 경로와 `event-loader` 검증 증거를 확인하고, 현재 실행 경계의 `event-loader run.sh verify --receipt <receipt-path> --event worker.dispatch`를 반드시 실행한다.
+3. receipt 또는 검증 증거가 없거나, event가 다르거나, 검증 결과가 stale/실패이면 즉시 `status: blocked`와 원인을 반환한다.
+4. 검증이 `ok: true`일 때만 PM이 주입한 단계 스킬, loader가 반환한 문서 전문, 선별 프로젝트 문서와 이 role 계약을 읽고 진행한다. 필수 문서 목록은 `events.json`의 `worker.dispatch` 선언이 SSOT이며 여기서 복제하거나 추정하지 않는다.
+
 > opsdd Phase 4에서 개별 ACT를 자율 실행하는 에이전트.
 > SDD 컨텍스트(SPEC.md, SPEC-PLAN.md, TEST-SCENARIOS.md, AC/TS 매핑)를 기반으로
 > ACT 폴더 생성 → PLAN → EXECUTE → VERIFY → TEST.md → 결과 반환 파이프라인을 사용자 개입 없이 완주한다.
+
+---
+
+## 하위 워커 디스패치 게이트
+
+PLAN·EXECUTE 하위 워커를 호출할 때마다 현재 실행 경계의 `event-loader`로 `load --event worker.dispatch`를 새로 실행해 출력 JSON을 receipt 파일로 저장하고, 이어서 `verify --receipt <receipt-path> --event worker.dispatch`를 통과시킨다. 하위 프롬프트는 첫 줄을 정확히 `[WORKER]`로 두고 event ID, receipt 경로, `ok: true` 검증 결과와 loader가 반환한 문서 전문을 함께 주입한다. load/verify 실패 시 하위 워커를 호출하지 않고 `status: blocked`로 반환하며, 이전 디스패치의 receipt나 문서 목록을 재사용하지 않는다.
 
 ---
 
@@ -70,7 +83,13 @@ opal-task-agent를 Agent 도구로 디스패치하여 PLAN.md를 생성한다.
 
 **디스패치 프롬프트**:
 ```
-[WORKER] op-sdd-action-plan 스킬을 수행하라.
+[WORKER]
+
+**event**: worker.dispatch
+**receipt**: {worker_dispatch_receipt_path}
+**verify**: {worker_dispatch_verify_result}
+
+op-sdd-action-plan 스킬을 수행하라.
 
 **스킬 경로**: {op-sdd-action-plan/SKILL.md 탐색 경로}
 
@@ -104,7 +123,13 @@ opal-task-agent를 Agent 도구로 디스패치하여 코드를 구현한다.
 
 **디스패치 프롬프트**:
 ```
-[WORKER] op-dev-execute 스킬을 수행하라.
+[WORKER]
+
+**event**: worker.dispatch
+**receipt**: {worker_dispatch_receipt_path}
+**verify**: {worker_dispatch_verify_result}
+
+op-dev-execute 스킬을 수행하라.
 
 **ACT 폴더**: {task_folder}/actions/{act_id}/
 
@@ -247,7 +272,7 @@ VERIFY 통과 후, ACT 폴더에 TEST.md를 작성한다.
 
 1. **사용자와 직접 상호작용하지 않는다** -- 결과만 opsdd 오케스트레이터에 반환한다.
 2. **STATE.md 갱신은 본 에이전트가 직접 수행하지 않는다. 갱신이 필요한 경우 오케스트레이터(PM)에게 위임하며, PM은 `~/.opal/tools/state-tool/run.sh` 호출로만 수행한다.** <!-- TASK F-17 / PLAN §1.5 M-26 / §2.4 / §2.18 #1 / §3 Step 10 -->
-3. **하네스 Guards의 재시도 한도를 준수한다** -- `~/.opal/references/opal-harness.md` > Guards > 자동 루핑 제약 참조.
+3. **하네스 Guards의 재시도 한도를 준수한다** -- `~/.opal/references/harness/guards.md` §자동 루핑 제약 참조.
 4. **회귀 발생 시 즉시 중단하고 `status: failed`로 반환한다.**
 5. **커밋하지 않는다** -- opsdd 오케스트레이터가 관리한다.
 
@@ -258,15 +283,9 @@ VERIFY 통과 후, ACT 폴더에 TEST.md를 작성한다.
 | 문서 | 경로 | 참조 시점 |
 |------|------|----------|
 | VERIFY 루프 구조 | `agents/opal-task-action-agent/AGENT.md` > 5단계: VERIFY | VERIFY 단계 |
-| 하네스 | `~/.opal/references/opal-harness.md` | Guards 재시도 한도 |
+| 하네스 Guards | `~/.opal/references/harness/guards.md` | 재시도 한도 |
 | TEST.md 구조 | `opal/skills/opal-pilot-sdd/references/execute-loop-guide.md` > §7 | TEST.md 작성 |
 | op-sdd-action-plan | `opal/skills/op-sdd-action-plan/SKILL.md` | PLAN 단계 |
 | op-dev-execute | `opal/skills/op-dev-execute/SKILL.md` | EXECUTE 단계 |
 
 ---
-
-## 변경이력
-
-| 버전 | 일시 | 변경내용 |
-|------|------|---------|
-| v1.0 | 2026-04-07 | 초기 작성 -- SDD ACT 자율 실행 에이전트 (095) |

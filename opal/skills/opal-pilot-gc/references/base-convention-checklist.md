@@ -66,7 +66,7 @@
 |---------|---------|---------|
 | 공개 함수 주석 누락 | export 함수 + 상위 JSDoc/docstring 없음 | N (작성 제안) |
 | frontmatter 누락 (문서 파일) | .md 파일 YAML frontmatter 유무 | N |
-| 변경이력 섹션 누락 | `## 변경이력` 또는 `## Changelog` 헤더 부재 | N |
+| 수기 누적 이력 절 존재 | `docs/CONVENTIONS.md`가 `opal-doc-standard.md` §5 적용을 지시한 경우 Markdown의 `변경이력`·`Changelog`·`history`·`revisions` 계열 헤더 탐지 | Y (절 전체 제거) |
 
 ## 카테고리 7: import 순서
 
@@ -101,5 +101,6 @@
 5. import 순서 및 그룹화
 6. 문서화 규칙 (JSDoc/docstring 적용 범위)
 7. 코드 품질 가이드라인 (선택)
+8. 문서 이력·버전 기준 (`opal-doc-standard.md` §5 포인터)
 
 > 초안 생성 방식: `opal-project-init` 스킬 재사용 (Phase 2 작성 프로세스 + opi 소유자 승인 프로토콜 준수)

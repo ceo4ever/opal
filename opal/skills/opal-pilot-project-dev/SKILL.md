@@ -22,15 +22,28 @@ version: 4.0.0
 ## Harness
 
 모드: Project Dev (PLAN → WBS → EXECUTE)
-> 부트스트랩에서 로드되지 않은 경우: `~/.opal/references/opal-harness.md`를 Read한다.
+**[MUST — pilot.start 이벤트 게이트]** 파일럿의 첫 작업 전에 아래 순서를 수행한다.
 
-**[MUST]** 스킬 시작 즉시 모드에 따라 서브 하네스를 Read한다. 이 단계를 건너뛰면 안 된다:
-- `--interactive` 플래그 → `~/.opal/references/opal-harness-interactive.md`를 Read한다
-- `--agentic` 플래그 → `~/.opal/references/opal-harness-agentic.md`를 Read한다
-- 모드 플래그 없음 (기본) 또는 `--semi-agentic` → `~/.opal/references/opal-harness-semi-agentic.md`를 Read한다
-- 다중 모드 플래그 동시 사용 시 즉시 사용자에게 보고 + state init도 거부 (`mode_flag_conflict`)
+1. `~/.opal/tools/event-loader/run.sh load --event pilot.start > <pilot-receipt-path>`를 호출한다.
+2. load 응답의 `documents[].content` 전문을 모두 현재 컨텍스트에 적용하고, `modes` 문서가 현재 플래그에 대해 라우팅한 서브 하네스 전문 하나만 Read한다.
+3. `~/.opal/tools/state-tool/run.sh event-verify --event pilot.start --receipt <pilot-receipt-path>`가 성공한 뒤에만 진행한다.
 
-> **[MUST]** 산출물 작성·검증 시 `opal/core/references/harness/citation-rules.md`를 Read하여 규칙(근거 제시 원칙 / 트랙별 매트릭스 / [MUST] 토큰 / 영역 간 용어 일관성 / decision_required 계약)을 준수한다.
+**[MUST — 단계 이벤트 게이트]** 각 실제 단계의 첫 작업이나 `state-tool advance` 직전에 아래 매핑의 이벤트를 load하고, 응답 문서 전문을 적용한 뒤 같은 event id로 `state-tool event-verify`를 통과해야 한다.
+
+| 실제 단계 | 이벤트 |
+|---|---|
+| 태스크 생성 | stage.task |
+| Phase 1 기획 분석 | stage.analysis |
+| Phase 2 WBS | stage.plan |
+| Phase 3 액션 실행 | stage.execute |
+| Phase 3 검증 | stage.test |
+| CLOSE | stage.close |
+
+호출 형식은 `~/.opal/tools/event-loader/run.sh load --event <stage.*> > <stage-receipt-path>` 다음
+`~/.opal/tools/state-tool/run.sh event-verify --event <stage.*> --receipt <stage-receipt-path>`이다.
+문서 집합은 `events.json`만 SSOT로 사용하며 SKILL에 파일 목록을 복제하지 않는다. load 실패,
+필수 문서 누락, stale receipt, wrong-event receipt는 해당 파일럿·단계 진입을 즉시 중단하는
+blocker다. 부트 캐시를 근거로 공통 문서를 직접 재Read하는 우회는 금지한다.
 
 ## 설계 원칙
 
@@ -802,33 +815,3 @@ opal-harness-agentic.md "에스컬레이션 조건" 공통 기준에 추가:
 - 액션 Critical Fail로 전체 WBS 재조정이 필요한 경우
 
 ---
-
-## 변경이력
-
-| 버전 | 날짜 | 변경내용 |
-|------|------|---------|
-| v1.0 | 2026-03-26 | 초기 작성 — 4 Phase 파이프라인 (PRD/TRD/ROADMAP/EXECUTE) |
-| v2.0 | 2026-03-30 | opal-project-dev-pilot → opal-pilot-project-dev 리네이밍. Phase 1~2(PRD/TRD)를 opwt 위임으로 전환. 4→3 Phase 슬림화 (052) |
-| v3.0 | 2026-03-30 | agentic 자율 루핑 + 병렬 실행 + actions 구조 (053) |
-| v3.1 | 2026-03-30 | Phase 3 opd/opds 호출 → opal-task-action-agent 디스패치로 전환 (056) |
-| v3.2 | 2026-03-31 | Agentic Mode 섹션 추가 — 전 Phase 적용 (057) |
-| v3.3 | 2026-03-31 | §7 참조 → opal-harness-agentic.md 참조 전환 (058) |
-| v3.4 | 2026-04-01 | Phase 3 opal-task-action-agent 디스패치 프롬프트에 `[WORKER]` 마커 + harness_guards + reference_docs 파라미터 추가 (063) |
-| v4.0 | 2026-04-02 | ROADMAP → WBS 전면 전환. Phase 2 명칭·산출물·참조 변경. Work Package 계층 도입. `--wbs` 플래그 추가. STATE.md 템플릿 경량화 (액션 상태 추적을 WBS.md로 이관) (075) |
-| v4.1 | 2026-04-24 | citation-rules 트리거 1줄 주입 — SSOT + Trigger 패턴 (130) |
-| v4.2 | 2026-05-01 | state-tool 도입 — STATE.md 직접 편집 금지 + `state-tool` 호출 표현 교체 (P-1~P-8 패턴 적용). 태스크 생성 init 호출 + `--rows-from` SSOT. R-10 비표준 행 구성 `gate-pass` 금지 + mark 4회 개별 호출 필수 블록 추가. Phase 1~3 각 확정/완료 시 mark 호출 명시 (134) |
-| v4.3 | 2026-05-09 11:22 | 3-way 모드 체계 도입 — semi-agentic 기본 채택 + Agentic/Semi-Agentic 모드 절 확장 + Phase 2 WBS 모드 경계 명시(D-DEC-1) + Harness 절 3-way 분기 + state init --mode 추가 (140) |
-| v4.4 | 2026-05-09 18:30 | 개인 식별자 "캡틴" → "소유자"/"사용자" 치환 — 배포 파일 정체성 누설 정정 (139) |
-| v4.5 | 2026-06-07 | R-10 gate-pass deprecated 정합 — State Gate/QA Gate 행 미존재 명시 + PM Gate 단일 mark로 간소화 (014 Phase 4) |
-| v4.6 | 2026-06-11 19:25 | DONE.md 생성 직후 op-brain-ingest 디스패치 훅 삽입 — brain 존재 시 워커 디스패치, 부재 시 no-op, 종료 비중단 (016) |
-| v4.7 | 2026-06-21 16:05 | oppd 개선 — PRD/TRD 태스크폴더 작성+확정 후 docs 승격(F-001/002), WBS 태스크폴더 전용화(F-003), sizing "1~3일"→단일책임+수용시나리오(F-010), §2-3 PM검수 4종 추가(F-015), Phase3 scope 3계층 분기+WBS 2단기준+TRD/PRD 사용자게이트(F-023/024), STATE 재설계 루프 로그 행(F-024) (031) |
-| v4.8 | 2026-06-21 | `npm run lint` → `npm run lint:fix` 정합 — WBS 예시 표(A01·A02) generic `&&` 변형의 lint 명령을 L1 표준(`lint:fix`)으로 교체 (033) |
-| v4.9 | 2026-07-10 13:12 | note 예시의 소유자 확인 표기를 `{owner_name} 확인:` 형식으로 통일 — identity.md owner_name 재해석 규칙(AGENT.md §정체성 적용)과 정합, 오염 차단 (054) |
-| v5.0 | 2026-07-17 | §561-566 "PM 검수 → 학습 루프 연결" 명명 정리 — "학습 루프" → "개선 루프" + SSOT 지칭 추가(`harness/pm-improvement-loop.md`) (058) |
-| v5.1 | 2026-07-17 | DONE.md 생성 직후 op-brain-ingest 디스패치 다음에 "회고(개선 루프) 하드스텝" 삽입 — 궤적 신호→관찰/분류/기록(improve-tool record --scope local\|fw), 개선후보 0건 시 no-op 비차단(brain-ingest 패턴 답습) (058) |
-| v5.2 | 2026-07-28 22:47 | 프로젝트 메모리 동기화 절 정정(기존 결함 교정, memory-tool 도입(045) 이전 관행의 표 편집 서술 잔존분) — `MEMORY.json` + `append --kind history` 도구 호출로 교체, 직접 편집 금지 명시 (078) |
-| v5.3 | 2026-08-13 16:56 | pipeline.json 전환 + init 하드 실패 해소 — references/pipeline.json 신설(13 task-step, SSOT), 파이프라인 현황판 미러 표 13행 신설, --rows-from를 pipeline.json으로 교체하여 기존 skill_md_parse_error(header not found) 해소. `--wbs` 경로 서술을 실동작(`--force --note`) 기준으로 정정 — `mark --na`는 CLI에 미구현이며 TEST S-16에서 검출 (090) |
-| v5.4 | 2026-08-14 09:31 | SKILL.md 감량 — `--row N` 5건을 `--task-step <key>`로 전환(plan.user_confirm/wbs.user_confirm/execute.actions 고정 매핑 3건 + PM Gate 범용 안내문·동적 그룹 행 플레이스홀더 2건), 진행 현황 미러 표 13행 삭제 → `references/pipeline.json` 포인터 1줄로 교체, PM Gate 절차 블록쿼트에 게이트 정의 SSOT 포인터 1줄 추가(기존 판정 절차 산문은 존치) (091) |
-| v5.5 | 2026-08-15 21:48 | `--wbs` 옵션 설명에서 "조건부 행 자동 `na` 처리는 미구현… `na`는 현재 init 시점 agentic 사용자 확인 행에만 부여된다" 괄호 서술 삭제 — 사용자 확인 행이 전 모드 pending/PM으로 초기화되어 사실과 어긋남. CLOSE 진입 게이트 서술 불변 (093) |
-| v5.6 | 2026-08-16 13:31 | STATE.md 저널화 정합 — §세션 복원을 `STATE.md Read` 단일 절차에서 `show`(기계 상태) → `STATE.md Read`(서술 맥락 보완) 2단계 표준 절차로 교체(harness/state.md §세션 복원과 동일 문구). 자체 STATE.md 템플릿에서 `## 현재 상태`(state.json 파생) 삭제 + SSOT 포인터 2줄 추가 — 나머지 5종 표(Phase 진행 현황·WBS 액션·병렬 실행 현황·검증 루프 로그·재설계 루프 로그·PM 검수 로그)는 state.json 파생이 아닌 oppd 고유 자유 기재이므로 존치(094 R-6) |
-| v5.7 | 2026-08-21 15:26 | §3-1 실행 루프 첫 디스패치 절에 `[PM 컨텍스트 주입]` 정규 포인터 블록 신설 — 주입 SSOT 참조 블록을 `pm/dispatch-process.md` §워커 컨텍스트 주입 템플릿으로 신규 연결(`:397` 인접). 기존 `harness_guards` 단계 고유 가드 필드는 무변경 (097) |

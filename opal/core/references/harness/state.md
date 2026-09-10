@@ -147,20 +147,8 @@ STATE.md는 **의사결정 로그·블로커·자유 기재를 담는 저널**�
 
 ```
 워커 완료 (산출물 생성 포함)
-  → 상태 자가 점검 (하네스 §3 참조 — `state-tool show`로 갱신 확인)
+  → 상태 자가 점검 (이 문서 §상태 자가 점검 참조 — `state-tool show`로 갱신 확인)
   → PM Gate (종합 검토 — 문서 QA(요구사항→설계 검토) 흡수)
 ```
 
 ---
-
-## 변경이력
-
-| 버전 | 날짜 | 내용 |
-|------|------|------|
-| v1.6 | 2026-08-16 13:19 | STATE.md 역할을 "파이프라인 현황판"에서 "저널(의사결정 로그·블로커)"로 재정의(094 R-6). 이벤트 표를 `state.json` 파생 개념으로 정합(컬럼명·`--row`→`--task-step`·`show` 행 추가), `marker_missing`/에러 종수 리터럴 삭제 후 `state-tool/README.md` 포인터로 대체(R-9 ①③), `[SSOT 불변]` 자기모순 해소(R-9 ②) — `state.json`이 유일 SSOT, STATE.md는 저널, 충돌 시 `state-tool show`가 이김, §세션 복원을 `STATE.md Read` 단일 절차에서 `show`(기계 상태) → `STATE.md Read`(서술 맥락 보완) 2단계 표준 절차로 교체 + 검증 루프 진행률 보관처(`## 검증 루프` 자유 기재) 명문화(H-12), 상태 자가 점검 프롬프트를 `state-tool show --format json` 조회 기준으로 재작성 (094) |
-| v1.0 | 2026-04-21 | 다운사이징 — opal-harness.md §3 분리. 레거시 호환 노트 3건 제외 (128) |
-| v1.1 | 2026-05-01 | 갱신 이벤트 표에 "갱신 명령" 컬럼 추가 + `[MUST] state-tool 호출만 허용` 블록 추가 — TASK F-7 / PLAN §2.11 G-6 / §1.5 M-1 (134) |
-| v1.2 | 2026-06-07 | QA→PM Gate 통합 + State Gate 행 제거 정합화 — 이벤트 표에서 QA Gate/State Gate/산출물 생성 행 제거(문서 QA는 PM Gate 흡수, 산출물 생성은 작업 행 흡수, state 기록은 행 mark 자체, 단계 건너뛰기는 stage-transition guard). `State Gate` 섹션을 `상태 자가 점검`(PM Gate 직전 PM 절차)으로 재정의. 표준 단계 순서 문구를 `작업→상태 자가 점검→PM Gate`로 갱신. 동작 검증(TEST/verify) 영역 불변 (014 Phase 4-2) |
-| v1.3 | 2026-07-10 13:12 | note 소유자 호칭 참조 1줄 추가 — `{owner_name}` 플레이스홀더 사용 안내 + `opal/core/AGENT.md` §정체성 적용(오염 금지) 참조(재서술 금지) (054) |
-| v1.4 | 2026-07-16 16:04 | 파이프라인 todo 미러 절 추가 — STATE.md 단계를 네이티브 할일 패널에 단계 단위로 미러(능력 감지 게이트, SSOT 불변 읽기 전용 거울). 전 pilot 상속, state-tool 이벤트와 1:1 동반. L2 미적용 (064) |
-| v1.5 | 2026-07-23 17:43 | 파이프라인 todo 미러 hook 강제 정합 — prose 지시 → PostToolUse hook 트리거+state-tool `todo_mirror` 페이로드 방식으로 재서술(SSOT 불변·능력감지 게이트 보존, hook 어댑터 격리 명시), na 중립 파생 명문화, `open`→`pending` 용어 통일, "PM이 직접 재계산" 의존 제거(도구가 결정론 파생) (076) |

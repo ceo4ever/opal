@@ -4,6 +4,22 @@
 
 PM은 워커마다 아래 순서를 다시 수행한다. 과거 디스패치의 문서·capability 목록을 재사용하지 않는다.
 
+## Step 0. worker.dispatch 이벤트 게이트
+
+**[MUST]** 매 워커 디스패치 직전에 다음을 새로 수행한다.
+
+1. manifest가 선언한 predecessor `pilot.start`의 receipt를 `state-tool event-verify`로 재검증한다.
+   현재 receipt가 없으면 `pilot.start` load·전문 적용·검증을 먼저 수행한다.
+2. `~/.opal/tools/event-loader/run.sh load --event worker.dispatch > <worker-receipt-path>`를 호출한다.
+3. 응답의 `documents[].content` 전문을 적용한다. 이 문서도 같은 응답에 포함되므로 직접 다시
+   Read하거나 `worker.dispatch`를 재귀 load하지 않는다.
+4. `~/.opal/tools/event-loader/run.sh verify --event worker.dispatch --receipt <worker-receipt-path>`를
+   호출한다.
+5. predecessor 미충족, load 실패, 필수 문서 누락, stale receipt, wrong-event receipt면 아래 Steps 1~7과 Agent
+   호출을 시작하지 않고 blocker로 반환한다.
+
+manifest의 `worker.dispatch` 문서 집합이 유일한 SSOT다. 이 문서에는 구성 파일 목록을 복제하지 않는다.
+
 ## Step 1. 실행 단위 확정
 
 - sdlc-v2: 현재 PLAN Work item의 담당, 변경 대상, 선행 작업, 실행 그룹, 완료 기준 연결
@@ -79,12 +95,21 @@ PROJECT 프로젝트 구성과 `.opal/AGENT.md`의 전문 에이전트 매핑을
 
 ## Step 7. 디스패치
 
+Step 0에서 현재 디스패치용 `worker.dispatch` receipt가 성공 검증된 경우에만 Agent 도구를
+호출한다. 다른 워커 또는 이전 시점의 receipt는 재사용하지 않는다.
+
 워커 프롬프트는 아래 계약만 가진다.
 
 ### 워커 컨텍스트 주입 템플릿
 
 ```markdown
 [WORKER]
+
+## 이벤트 검증
+- event: `worker.dispatch`
+- receipt: {현재 디스패치용 receipt 절대경로}
+- verification: {`event-loader verify --event worker.dispatch`의 `ok: true` 결과}
+- loaded_documents: {현재 load 응답의 `documents[].content` 전문}
 
 ## 작업
 - 단계·실행 단위: {W/Step/산출물}
@@ -113,18 +138,3 @@ git history를 변경하지 않는다. 디스패치 직전 사용자에게 다�
 ```text
 ⚙️ 워커 디스패치: {단계} — {역할}
 ```
-
-## 변경이력
-
-| 버전 | 날짜 | 변경내용 |
-|---|---|---|
-| v1.0 | - | opal-pm 디스패치 절차 분리 |
-| v1.2 | 2026-06-10 | brain 사전 지식 참조 추가 (015) |
-| v1.4 | 2026-06-11 | code-scan 사전 범위 파악과 폴백 추가 (010) |
-| v1.6 | 2026-08-02 | 실행 배치 분할과 컨텍스트 축소 규율 추가 (081) |
-| v1.7 | 2026-08-15 | worktree 문서·코드 루트 주입 추가 (092) |
-| v1.8 | 2026-08-21 | 워커의 git 이력 변경 금지 주입 (097) |
-| v1.10 | 2026-09-04 | code-scan 뒤 상세 탐색 전환 정합 (106) |
-| v1.11 | 2026-09-09 15:18 KST | PROJECT 레지스트리와 sdlc-v2 Work items 라우팅 반영 (111) |
-| v1.12 | 2026-09-09 15:50 KST | 런타임 capability 주입 계약 추가 (111) |
-| v2.0 | 2026-09-09 15:33 KST | 프로젝트 지식·기존 코드맵 선조회 후 PROJECT 문서를 선별하는 순서로 재구성. 중복 라우팅 예시·사례 산문·고정 파일 수 임계 제거 (task 111/W-13) |

@@ -4,8 +4,9 @@
   "module": "opal_agent",
   "layer": "util",
   "domain": "opal-workspace",
-  "description": "멀티 provider 서브에이전트 호출 라이브러리 + CLI — claude/gemini/codex/grok 등 여러 LLM CLI를 비대화형 서브에이전트로 호출하는 단일 모듈",
-  "exports": ["call_agent", "AgentConfig", "AgentResult", "PROVIDERS", "OpalAgentError", "ClaudeNotFoundError", "OpalAgentTimeout"]
+  "description": "멀티 provider 서브에이전트 호출 라이브러리 + CLI와 OPAL session event 판정 공개 함수",
+  "exports": ["call_agent", "resolve_session_event", "AgentConfig", "AgentResult", "PROVIDERS", "OpalAgentError", "ClaudeNotFoundError", "OpalAgentTimeout"],
+  "task": "059, 067, 113"
 }
 
 opal/tools/opal-agent/opal_agent.py — 멀티 provider 서브에이전트 호출 라이브러리 + CLI
@@ -40,27 +41,11 @@ grok)를 비대화형(headless) 서브에이전트로 프로그래밍적·CLI로
   - 시스템 프롬프트 의미: claude만 '추가(append)', 나머지는 '교체(replace)'.
   - codex는 JSONL 스트림 + resume가 별도 서브커맨드(`codex exec resume`)이며,
     resume와 --json 병용에 알려진 이슈가 있다.
-  - 부트스트랩 마커 3-way: on(마커 없음·풀 부트스트랩) / assistant([ASSISTANT]
-    첫 줄 — 비서 tier(Phase A)만, PM 승격 억제) / off([WORKER] 첫 줄 — 전부 스킵).
+  - 부트스트랩 마커 3-way: on(마커 없음) / assistant([ASSISTANT] 첫 줄) /
+    off([WORKER] 첫 줄). 최종 session event는 resolve_session_event()가 판정한다.
   - cold session id(new_session_id → claude --session-id)는 claude 전용
     (supports_session_assign). session_id(warm --resume)와 상호 배타 — _run이 검증.
 
-변경이력:
-  v1.0 2026-07-12 초기 구현 — claude 전용 call_agent + AgentConfig/AgentResult + CLI
-  v2.0 2026-07-12 멀티 provider 어댑터 계층 — gemini/codex/grok 추가
-  v2.1 2026-07-12 cursor provider 추가 + ProviderAdapter ABC화. Antigravity 보류
-  v2.2 2026-07-12 antigravity(agy) provider 추가 — text-only 2급(실측 반영)
-  v2.3 2026-07-12 effort(추론 강도) 지원 — claude/codex/grok, 미지원 provider 경고
-  v2.4 2026-07-12 --opal-bootstrap on|off — off면 [WORKER] 첫 줄 마커로 부트스트랩
-                  스킵(진입점 게이트 배선과 연동). env 방식 폐기(043 회귀 회피)
-  v2.5 2026-07-13 15:25 --opal-bootstrap 3-way — assistant([ASSISTANT] 비서 tier 캡) 추가
-                  + caller-supplied cold session id(claude --session-id, new_session_id) (059)
-  v2.6 2026-07-17 output_format="stream-json" opt-in 실행 경로 추가(claude 전용,
-                  supports_stream) — build_invocation --verbose 자동 부착(H-2),
-                  parse_result 마지막 result 줄 5필드 추출(H-1), _run_stream()
-                  Popen 증분 passthrough(H-4), 비지원 provider 명시 에러(H-3),
-                  CLI --stream 옵션. 기존 json/text 경로·5필드 계약·종료코드
-                  0/1/2 불변(H-3) (067)
 """
 
 from __future__ import annotations
@@ -110,7 +95,7 @@ class AgentConfig:
     new_session_id: str | None = None             # cold 세션 지정(caller-supplied). claude만 지원(--session-id). session_id와 상호 배타
     output_format: str = "json"                   # "json" | "text" | "stream-json"
     bin: str | None = None                        # CLI 바이너리 오버라이드 (기본: provider별)
-    opal_bootstrap: str = "on"                    # "on"(풀 부트스트랩) | "assistant"([ASSISTANT] Phase A만) | "off"([WORKER] 전부 스킵)
+    opal_bootstrap: str = "on"                    # "on"(무마커) | "assistant"([ASSISTANT]) | "off"([WORKER])
 
 
 @dataclass
@@ -137,8 +122,33 @@ class Invocation:
 
 # ─── provider 어댑터 ──────────────────────────────────────────
 
-# 부트스트랩 스킵 사다리 ↔ 첫 줄 마커 1:1 대응 (core AGENT.md:9 3단 사다리)
+# opal-agent CLI 옵션 ↔ 첫 줄 마커 어댑터. setting의 bootstrap:off와는 별개다.
 _BOOTSTRAP_MARKERS = {"off": "[WORKER]", "assistant": "[ASSISTANT]"}
+
+
+def resolve_session_event(
+    prompt: str,
+    bootstrap_enabled: bool,
+    project_detected: bool,
+) -> str:
+    """설정·첫 줄 marker·프로젝트 감지를 표준 session event로 해석한다.
+
+    우선순위는 disabled > worker > assistant > project > general assistant다.
+    ``bootstrap_enabled=False``는 설정 게이트가 이미 ``bootstrap: off``를
+    확정했다는 뜻이며, marker보다 먼저 순수 ``session.disabled``로 판정한다.
+    """
+    if not bootstrap_enabled:
+        return "session.disabled"
+
+    lines = prompt.splitlines()
+    first_line = lines[0] if lines else ""
+    if first_line == "[WORKER]":
+        return "session.worker"
+    if first_line == "[ASSISTANT]":
+        return "session.assistant"
+    if project_detected:
+        return "session.project"
+    return "session.assistant"
 
 
 class ProviderAdapter(ABC):
@@ -638,8 +648,8 @@ def _run(config: AgentConfig) -> AgentResult:
         )
 
     inv = adapter.build_invocation(config, resolved)
-    # opal_bootstrap=off면 각 어댑터가 프롬프트 첫 줄에 [WORKER] 마커를 붙여
-    # OPAL 부트스트랩을 스킵한다(env가 아니라 진입점 게이트가 마커를 읽음).
+    # opal_bootstrap=off는 호환 CLI 옵션으로 [WORKER] marker를 붙인다.
+    # setting bootstrap:off의 session.disabled와는 의미가 다르다.
     env = {**os.environ, **inv.env} if inv.env else None
 
     if config.output_format == "stream-json":
@@ -761,8 +771,8 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--bin", help="CLI 바이너리 경로 오버라이드")
     parser.add_argument(
         "--opal-bootstrap", choices=("on", "assistant", "off"), default="on",
-        help="서브에이전트 OPAL 부트스트랩 (기본 on). "
-             "assistant=[ASSISTANT] 첫 줄(비서 tier·Phase A만) / off=[WORKER] 첫 줄(전부 스킵)",
+        help="서브에이전트 OPAL marker (기본 on=무마커). "
+             "assistant=[ASSISTANT] 첫 줄 / off=[WORKER] 첫 줄(전역 부트 스킵)",
     )
 
     fmt = parser.add_mutually_exclusive_group()

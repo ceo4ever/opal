@@ -11,13 +11,20 @@ icon: "🌐"
 
 # web-to-markdown 워커 에이전트
 
+## `worker.dispatch` 진입 게이트
+
+1. 첫 줄 `[WORKER]`는 `session.worker`로 전역 OPAL 부트스트랩만 생략한다. 이것만으로 `worker.dispatch`가 성립하거나 검증된 것은 아니다.
+2. 다른 문서를 읽거나 작업을 시작하기 전에 디스패치 프롬프트의 `worker.dispatch` receipt 경로와 `event-loader` 검증 증거를 확인하고, 현재 실행 경계의 `event-loader run.sh verify --receipt <receipt-path> --event worker.dispatch`를 반드시 실행한다.
+3. receipt 또는 검증 증거가 없거나, event가 다르거나, 검증 결과가 stale/실패이면 즉시 `status: blocked`와 원인을 반환한다.
+4. 검증이 `ok: true`일 때만 PM이 주입한 단계 스킬, loader가 반환한 문서 전문, 선별 프로젝트 문서와 이 role 계약을 읽고 진행한다. 필수 문서 목록은 `events.json`의 `worker.dispatch` 선언이 SSOT이며 여기서 복제하거나 추정하지 않는다.
+
 ## 실행 프로세스
 
 오케스트레이터 프롬프트에서 아래 절차를 순서대로 실행한다.
 
 1. **입력 확인**: `url` 또는 `--surface <handle>`, `save_path`, `mode`, `--wait` 값을 파악한다.
 2. **스킬 로드**: `skills/web-to-markdown/SKILL.md`를 Read하여 Phase 폴백 체인, MD 정제 규칙, 산출물 형식을 숙지한다.
-3. **프로젝트 컨텍스트 로드**: 태스크 폴더에서 프로젝트 루트를 추론하고 `docs/PROJECT.md`가 존재하면 Read한다. 없으면 스킵한다.
+3. **프로젝트 컨텍스트 로드**: 오케스트레이터가 주입한 문서만 Read한다. 주입 문서가 없으면 추가 문서를 탐색하지 않는다.
 4. **모드 결정**: `--surface` 명시 여부로 모드를 결정한다.
    - `--surface <handle>` + URL 있음 → C 모드 (surface 재사용 + navigate)
    - `--surface <handle>` + URL 없음 → B 모드 (현재 페이지)
@@ -160,10 +167,3 @@ icon: "🌐"
 - STATE.md 갱신 의무 없음 (web-to-markdown은 파이프라인 단계가 아닌 도구성 워커).
 
 ---
-
-## 변경이력
-
-| 버전 | 일시 | 변경내용 |
-|------|------|---------|
-| v1.0 | 2026-05-12 21:35 KST | 초기 작성 — agents/wtm-agent/ 표준화 이전 + cmux Phase 2 + 사용자 surface 3모드(A/B/C) + JSON 8필드 (표준 5 + 도메인 3) + 안전 가드 3계층 2차 담당 (002) |
-| v1.1 | 2026-05-22 10:00 KST | Phase 1(WebFetch) 완전 제거 → 2단 체인(cmux→playwright) 재배선. silent fallback 분기 명시(`command -v cmux` 단일 분기). `method` 유효값 `webfetch` 삭제. 폴백 트리거 4종 + 입력 정정 5종 에러 코드 명시. 극단 케이스(두 도구 미설치) 처리 추가. 변경이력 v1.1 (007) |

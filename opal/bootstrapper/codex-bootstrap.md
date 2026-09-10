@@ -1,38 +1,38 @@
 # OPAL 부트스트래퍼 (Codex CLI)
 
-> **사용법**: 이 내용이 `~/.codex/AGENTS.md`에 마커 기반으로 자동 삽입된다.
-> `install-mac.sh`에서 OPAL 설치 시 자동 처리.
->
-> **버전**: v1.0 (2026-05-24)
-
----
-
-아래 내용이 `~/.codex/AGENTS.md`에 삽입된다:
-
----
+> 이 문서의 코드 블록은 설치 시 `~/.codex/AGENTS.md`의 OPAL 마커 구간에 삽입된다.
 
 ```markdown
-## OPAL AI Agent — 필수 부트스트랩
+## OPAL AI Agent — 이벤트 부트스트랩
 
-> **[첫 줄 마커 게이트 — 최우선]** 사용자 메시지(디스패치 프롬프트)의 **첫 줄**이 정확히 `[WORKER]`이면 — 아래 스킵 게이트·`[MUST]` 파일 로드를 포함한 OPAL 부트스트랩 전체를 생략하고, 어떤 tier도 로드하지 않은 채 마커 다음 줄부터를 실제 요청으로 즉시 처리한다(아래 `[MUST]`보다 이 규칙이 우선한다). 첫 줄이 `[ASSISTANT]`이면 — 아래 절차는 정상 진행하되 `~/.opal/AGENT.md`의 `[ASSISTANT 규칙]`에 따라 PM(Phase B) 승격만 억제한다. 마커가 없으면 아래를 정상 수행한다.
+**[MUST] 아래 순서를 바꾸거나 생략하지 않는다.**
 
-> **[스킵 게이트 + 프로젝트 설정 머지]** 먼저 Read 도구로 `~/.opal/setting.json`(전역)을 읽고, 현재 작업 디렉토리의 `.opal/setting.local.json`(프로젝트)이 있으면 Read하여 전역 위에 키 단위로 덮어쓴다(로컬 우선, 로컬에 없는 키는 전역 유지). 병합된 effective setting의 `bootstrap` 값이 정확히 `off`이면 — 이하 OPAL 부트스트랩 절차 전체(정체성 포함)를 생략하고, OPAL 없이 순수 동작한다. 전역·로컬 모두 파일이 없거나·`bootstrap` 필드가 없거나·`off`가 아니거나·JSON 파싱에 실패하면 — 게이트를 무시하고 아래 절차를 정상 수행한다(fail-safe).
+1. `~/.opal/setting.json`과, 현재 프로젝트에 있으면
+   `.opal/setting.local.json`을 읽고 로컬 우선으로 병합한다. 둘 다 없거나 파싱에
+   실패하면 bootstrap은 활성으로 간주한다.
+2. effective setting의 `bootstrap`이 정확히 `off`이면
+   `session.disabled`다. 설정 게이트 뒤 OPAL 문서를 하나도 읽지 않고,
+   부트스트랩 보고 없이 실제 요청을 순수 처리한다.
+3. 그 외에는 사용자 메시지의 첫 줄만 판정한다.
+   - 정확히 `[WORKER]`: `session.worker`. 전역 OPAL 부트를 전부 생략하고 다음
+     줄부터 처리한다. 후속 `worker.dispatch` 이벤트 로드는 허용한다.
+   - 정확히 `[ASSISTANT]`: `session.assistant`. 프로젝트 안에서도 PM 승격과
+     project brief를 억제한다.
+   - 마커가 없고 프로젝트 루트에 `.opal/AGENT.md`가 존재:
+     `session.project`.
+   - 그 외: `session.assistant`.
+4. `session.assistant`는 아래 명령을 실행하고 성공 응답의
+   `documents[].content` 전문을 모두 적용한다.
 
-> 이 진입점은 OPAL 에이전트의 비서 tier를 활성화하며, OPAL 프로젝트(`.opal/AGENT.md` 존재) 진입 시 AGENT.md가 PM tier로 자동 승격한다.
+   `~/.opal/tools/event-loader/run.sh load --event session.assistant --project-root <project-root>`
+5. `session.project`는 4번을 먼저 수행한 뒤 같은 loader로
+   `session.project`를 load한다. 프로젝트 `.opal/AGENT.md`,
+   `docs/PROJECT.md`, PM·harness 문서는 읽지 않는다. `.opal/MEMORY.json`이
+   있으면 아래 bounded 출력만 추가한다.
 
-**[MUST]** 사용자의 첫 번째 메시지에 응답하기 전에, 아래 파일들을 Read 도구로 순서대로 읽고 그 내용에 따라 행동해야 한다. 이 단계를 건너뛰면 안 된다.
+   `~/.opal/tools/memory-tool/run.sh show --file <project-root>/.opal/MEMORY.json --boot-brief --max-bytes 1024 --memories 3 --history 0`
+6. loader 실패나 필수 문서 누락 시 OPAL 활성화를 중단하고 오류를 보고한다.
 
-1. `~/.opal/AGENT.md` — 에이전트 정의 및 부트스트랩 절차
-2. `~/.opal/identity.md` — 에이전트 정체성 (없으면 AGENT.md의 온보딩 절차를 따른다)
+프로젝트 존재만으로 PM을 활성화하지 않는다. 프로젝트 작업이나 `//` 커맨드는 로드된
+AGENT.md의 `pm.activate` 계약을 따른다.
 ```
-
----
-
-| 버전 | 날짜 | 변경내용 |
-|------|------|---------|
-| v1.0 | 2026-05-24 | 최초 작성 — Codex CLI 통합 (태스크 009) |
-| v1.0.1 | 2026-06-24 | OPAL_BOOTSTRAP=off skip 게이트 문구 추가 — Eager 부트스트랩 전체 스킵 옵션 (040) |
-| v1.0.2 | 2026-06-24 17:24 | OPAL_BOOTSTRAP 환경변수 게이트 → `~/.opal/setting.json` Read 게이트 전환 (043) |
-| v1.0.3 | 2026-06-28 | 스킵 게이트에 프로젝트 `.opal/setting.local.json` 머지 추가 — 전역 위에 로컬 키 덮어쓰기(로컬 우선), 병합된 effective setting의 `bootstrap`으로 판정. (046) |
-| v1.0.4 | 2026-06-30 16:41 | 비서 tier 진입점 의미 1줄 정합 — PM 승격은 AGENT.md가 `.opal/AGENT.md` 존재 시 자동 수행 (049) |
-| v1.1 | 2026-07-12 | 첫 줄 마커 게이트 신설 — `[WORKER]` 첫 줄이면 부트스트랩 전체 스킵(헤드리스 워커 배선), `[ASSISTANT]` PM 승격 억제 명문화. AGENT.md 마커 사다리를 진입점에 연결. (opal-agent) |

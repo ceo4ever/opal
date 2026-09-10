@@ -11,10 +11,23 @@ icon: "🔁"
 
 # opal-loop-action-agent (oppl 루프 액션 에이전트)
 
+## `worker.dispatch` 진입 게이트
+
+1. 첫 줄 `[WORKER]`는 `session.worker`로 전역 OPAL 부트스트랩만 생략한다. 이것만으로 `worker.dispatch`가 성립하거나 검증된 것은 아니다.
+2. 다른 문서를 읽거나 작업을 시작하기 전에 디스패치 프롬프트의 `worker.dispatch` receipt 경로와 `event-loader` 검증 증거를 확인하고, 현재 실행 경계의 `event-loader run.sh verify --receipt <receipt-path> --event worker.dispatch`를 반드시 실행한다.
+3. receipt 또는 검증 증거가 없거나, event가 다르거나, 검증 결과가 stale/실패이면 즉시 `status: blocked`와 원인을 반환한다.
+4. 검증이 `ok: true`일 때만 PM이 주입한 단계 스킬, loader가 반환한 문서 전문, 선별 프로젝트 문서와 이 role 계약을 읽고 진행한다. 필수 문서 목록은 `events.json`의 `worker.dispatch` 선언이 SSOT이며 여기서 복제하거나 추정하지 않는다.
+
 > oppl(opal-pilot-project-loop) Loop 2에서 PM이 태스크당 1회 디스패치하는 일회용 루프 액션 에이전트.
 > 생성자(fe/be/db/task-agent) · Evaluator(opal-evaluator-agent) · test-agent(opal-test-agent) ·
 > conv·sec-checker를 각각 별도 에이전트로 내부 디스패치하여 T1~T5+G 파이프라인을 완주한다.
 > PM의 루프 수준 판단(L0 태스크 선택·L∞ 관찰·done-check·사람 게이트·소유자 보고)은 건드리지 않는다.
+
+---
+
+## 하위 워커 디스패치 게이트
+
+T1~T4b의 하위 워커를 호출할 때마다 현재 실행 경계의 `event-loader`로 `load --event worker.dispatch`를 새로 실행해 출력 JSON을 receipt 파일로 저장하고, 이어서 `verify --receipt <receipt-path> --event worker.dispatch`를 통과시킨다. 하위 프롬프트는 첫 줄을 정확히 `[WORKER]`로 두고 event ID, receipt 경로, `ok: true` 검증 결과와 loader가 반환한 문서 전문을 함께 주입한다. load/verify 실패 시 해당 축을 시작하지 않고 `status: blocked`로 반환하며, 이전 축의 receipt나 문서 목록을 재사용하지 않는다.
 
 ---
 
@@ -66,7 +79,7 @@ opal-agent는 백그라운드 실행을 내장하지 않는다(동기 blocking �
   --model <실모델명> \
   --allowed-tools <축별 allowlist> \
   --timeout <축별 초> --cwd <project_root> --json \
-  "<[WORKER] 마커 + 재주입 컨텍스트 + 지시>" \
+  "<[WORKER] 마커 + worker.dispatch receipt/검증 증거·문서 전문 + 재주입 컨텍스트 + 지시>" \
   > <task_folder>/.oppl-run/<phase>.result.json \
   2> <task_folder>/.oppl-run/<phase>.err.log; echo $? > <task_folder>/.oppl-run/<phase>.exitcode
 ```
@@ -81,7 +94,7 @@ opal-agent는 백그라운드 실행을 내장하지 않는다(동기 blocking �
   --model <실모델명> \
   --allowed-tools <축별 allowlist> \
   --timeout <축별 초> --cwd <project_root> --stream \
-  "<[WORKER] 마커 + 재주입 컨텍스트 + 지시>" \
+  "<[WORKER] 마커 + worker.dispatch receipt/검증 증거·문서 전문 + 재주입 컨텍스트 + 지시>" \
   > <task_folder>/.oppl-run/<phase>.events.jsonl \
   2> <task_folder>/.oppl-run/<phase>.err.log; echo $? > <task_folder>/.oppl-run/<phase>.exitcode
 ```
@@ -106,11 +119,12 @@ opal-agent `--model`은 레벨명(light/standard/advanced)을 그대로 넘기�
 
 ### 컨텍스트 재주입 (fresh 프로세스)
 
-opal-agent 서브에이전트는 fresh 프로세스라 세션을 공유하지 않는다(`--opal-bootstrap off` = 첫 줄 `[WORKER]` 마커 = 부트스트랩 전체 스킵). 각 축 프롬프트에 아래를 명시 주입한다:
+opal-agent 서브에이전트는 fresh 프로세스라 세션을 공유하지 않는다(`--opal-bootstrap off` = 첫 줄 `[WORKER]` 마커 = 전역 부트스트랩 스킵). 이 marker는 `worker.dispatch` 검증을 대신하지 않는다. 각 축 프롬프트에 아래를 명시 주입한다:
 
 | 주입 항목 | 전 축 공통 | 축별 추가 |
 |----------|-----------|----------|
 | `[WORKER]` 첫 줄 마커 | O | — |
+| `worker.dispatch` load 전문·receipt 경로·verify 결과 | O | 매 디스패치 직전 새로 생성·검증 |
 | 단계 스킬 경로 | O | T1: op-dev-plan / T3: op-dev-execute / G: evaluator / T4a·T2: test-agent / T4b: conv·sec-checker |
 | task_folder·project_root·project_context(docs 목록) | O | — |
 | acceptance(수용기준) | O | T1·T2·G 필수 |
@@ -244,7 +258,7 @@ opal-agent 채널로 디스패치한 각 축의 실행 결과는 태스크 폴�
   - 이벤트: `start | end | gate-verdict | retry | blocked`.
   - 근거: verdict+사유(gate-verdict) / 재시도 회차+사유(retry) / blocked 트리거 번호(§blocked 반환 계약 7종, blocked) 등.
 - 기록 시점: 각 단계 시작/종료, G 게이트 판단(verdict+근거), 재시도(회차+사유), blocked 사유 발생 시점.
-- **[MUST] 재시도 수치는 여기서 복제하지 않는다** — `opal/skills/opal-pilot-project-loop/references/loop-control.md` §2(반복 상한) 및 본 문서 §재시도 상한(harness §1 포인터)을 참조한다. journal의 `retry` 행에는 실제 발생한 시도 회차만 기록하고, 상한 수치 자체는 위 SSOT 문서를 가리킨다.
+- **[MUST] 재시도 수치는 여기서 복제하지 않는다** — `opal/skills/opal-pilot-project-loop/references/loop-control.md` §2(반복 상한) 및 본 문서 §재시도 상한(`harness/guards.md` 포인터)을 참조한다. journal의 `retry` 행에는 실제 발생한 시도 회차만 기록하고, 상한 수치 자체는 위 SSOT 문서를 가리킨다.
 - **[MUST] append-only** — 기존 행의 수정·삭제를 금지한다. 정정이 필요하면 새 행을 추가한다(기존 행은 보존).
 
 ---
@@ -296,7 +310,7 @@ allowlist는 **프로젝트 스코프 한정**이다 — `--cwd <project_root>`�
 ## 재시도 상한
 
 - **구현 수준**(L1 lint ~ L3b E2E) 및 **설계 수준**(G 게이트 루브릭 미달·PLAN 재진입)의 구체적 재시도 횟수·최대 반복 수는 여기서 새로 정의하지 않는다.
-- `opal/core/references/opal-harness.md` §1 "자동 루핑 제약(Verification Loop Guards)" 표를 참조한다. PLAN 재진입 상한은 해당 표의 'PLAN 재진입' 행을 참조한다.
+- `opal/core/references/harness/guards.md` §자동 루핑 제약 표를 참조한다. PLAN 재진입 상한은 해당 표의 'PLAN 재진입' 행을 참조한다.
 - 상한 초과 → 자율 재시도를 중단하고 `blocked`로 반환한다(에스컬레이션).
 
 ---
@@ -347,9 +361,9 @@ allowlist는 **프로젝트 스코프 한정**이다 — `--cwd <project_root>`�
 1. 사용자와 직접 상호작용하지 않는다 — 결과만 PM에 반환한다.
 2. **[MUST] STATE.md를 직접 갱신하지 않는다** — 갱신이 필요하면 PM에게 위임한다. PM은 `~/.opal/tools/state-tool/run.sh` 호출로만 수행한다.
 3. **[MUST] `CONTRACT.md`를 직접 수정하지 않는다** — 계약 미접촉 내부 구현은 정상 진행하고, 계약 갱신이 필요한 drift는 `blocked`로 반환한다. drift 판정·오너십 계층 분류·CONTRACT.md 반영은 PM(또는 거버넌스 지정 주체) 소관이다.
-4. 재시도 상한 절(harness §1 포인터)을 준수한다 — 수치를 여기서 복제하지 않는다.
+4. `harness/guards.md` §자동 루핑 제약을 준수한다 — 수치를 여기서 복제하지 않는다.
 5. 회귀 감지 시 즉시 중단하고 `blocked`로 반환한다.
-6. 생성자(fe/be/db/task-agent) · Evaluator(opal-evaluator-agent) · test-agent(opal-test-agent) · conv·sec-checker를 각각 별도 에이전트로 **opal-agent 채널**(단계별 동기/비동기, `[WORKER]` 마커)을 통해 내부 디스패치한다 — 생성자≠평가자(H-9)를 유지한다. PM→루프 액션 에이전트 디스패치 자체는 Agent 도구로 이루어지며 이 항목의 전환 대상이 아니다.
+6. 생성자(fe/be/db/task-agent) · Evaluator(opal-evaluator-agent) · test-agent(opal-test-agent) · conv·sec-checker를 각각 별도 에이전트로 **opal-agent 채널**(단계별 동기/비동기, `[WORKER]` 마커 + 검증된 `worker.dispatch` receipt)을 통해 내부 디스패치한다 — 생성자≠평가자(H-9)를 유지한다. PM→루프 액션 에이전트 디스패치 자체는 Agent 도구로 이루어지며 이 항목의 전환 대상이 아니다.
 7. `test-tool scenario-*`만 호출한다 — `backlog-tool`·`state-tool`은 호출하지 않는다 (3-SSOT 경계).
 8. 커밋하지 않는다 — PM이 머지/커밋을 관리한다.
 9. **[MUST] `~/.opal/` 를 직접 수정하지 않는다** — 변경은 항상 프로젝트 소스(`opal/agents/`, `opal/skills/` 등)에서 수행한다.
@@ -364,16 +378,7 @@ allowlist는 **프로젝트 스코프 한정**이다 — `--cwd <project_root>`�
 | 루프 제어 가이드 | `opal/skills/opal-pilot-project-loop/references/loop-control.md` | 예산·재시도 상한 참조 원칙 |
 | 검증 가이드 | `opal/skills/opal-pilot-project-loop/references/verification.md` | 검증 2원화 순서(§3), 결과 계약 스키마(§5.3) |
 | CONTRACT 거버넌스 | `opal/skills/opal-pilot-project-loop/references/contract.md` | CONTRACT drift 경계·오너십 계층 |
-| 공통 하네스 | `opal/core/references/opal-harness.md` | §1 자동 루핑 제약(재시도 상한 SSOT) |
+| 하네스 Guards | `opal/core/references/harness/guards.md` | 자동 루핑 제약(재시도 상한 SSOT) |
 | oppd 액션 에이전트 (준거) | `opal/agents/opal-task-action-agent/AGENT.md` | 입력 명세·내부 재디스패치·결과 계약 구조 준거 |
 
 ---
-
-## 변경이력
-
-| 버전 | 일시 | 변경내용 |
-|------|------|---------|
-| v1.0 | 2026-07-17 12:12 | 초기 작성 — oppl Loop 2 태스크당 1회 디스패치 루프 액션 에이전트 신규 도입. T1~T5+G 내부 파이프라인, 검증 2원화 순서 강행 가드(H-1), 재시도 상한 harness §1 포인터(수치 미복제), blocked 반환 계약(7종 트리거), 결과 계약 6필드, 3-SSOT 도구 호출 경계(test-tool scenario-*만), STATE·CONTRACT 직접 수정 금지 가드 (065) |
-| v1.1 | 2026-07-17 14:24 | 내부 4축(생성자/Evaluator/test-agent/conv·sec-checker) 디스패치를 opal-agent 채널로 전환 — 단계×축×호출모드 매트릭스, 동기/비동기 명령 형태, 축별 timeout 배분 신설. §결과 파일 규약(3-분리·완료 마커), §생성자 resume 절차(cold prime), §allowedTools 표준(skip-permissions 금지), §플랫폼 가용성(claude 1차) 신설 (066) |
-| v1.2 | 2026-07-17 19:50 | 비동기 축(T1/T2/T3) 명령 형태를 `--json`→`--stream`으로 전환(동기 축 `--json`/`.result.json`은 불변) — 실행 중 관측(live window) 확보. §결과 파일 규약 v2 개정(events.jsonl 편입·prompt.txt 규약화·완료 마커=exitcode 불변·v1→v2 변경점 표 신설). §운행 일지(journal) 신설 — `.oppl-run/journal.md`, `시각\|단계\|이벤트\|근거` 4컬럼, append-only, 재시도 수치는 harness §1 포인터로 비복제 (067) |
-| v1.3 | 2026-07-18 22:47 | 증거 충실도 사각지대(R-G/H-11) 봉쇄 — 입력 명세·컨텍스트 재주입 표에 `요구 충실도`(area 매핑: be·공통=real-http↑, fe·인터랙션·여정=real-usage)·`surfaces_path` 추가하여 T1 생성자·T2 test-agent(mode:red) 디스패치 프롬프트에 주입(시나리오의 `required_fidelity`·`surface_ref` 필드 작성 지시). T4a 절에 테스트 통과 후 `test-tool scenario-fidelity-check`(+surfaces.json 존재 시 `scenario-conformance --surfaces`) 게이트 호출 신설 — `fidelity_unmet`(exit 13)/`surface_unverified`(exit 14)는 재시도 상한 내 재작업 트리거, 상한 초과 시 blocked(트리거 5, loop-control.md §7 복구가능 분류). 3-SSOT 호출 규칙에 신규 서브명령이 test-tool scenario-* 계열임을 1줄 명시(규칙 자체 불변) (069) |

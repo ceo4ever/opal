@@ -3,11 +3,11 @@
   "module": "state_tool",
   "layer": "util",
   "domain": "opal-pipeline",
-  "description": "OPAL 파이프라인 현황판 JSON SSOT 관리 CLI. 서브커맨드: init/show/advance/mark/block/validate/add-row/status/spec-validate, gate-pass(deprecated). interactive/semi-agentic/agentic 3-way 모드를 지원하며 PLAN-equivalent 이전 단계(TASK/ANALYSIS/PLAN/TEST-SCENARIO/SPEC/REVIEW/DESIGN/WBS/WIREFRAME/DICT/MODEL/DDL·MIGRATION)는 semi-agentic 모드에서 사용자 검토를 강제한다. STATE.md는 state.json에서 파생되는 저널(의사결정 로그+블로커)이며 파이프라인 표·현재 상태·다음 액션 섹션은 없다(레거시 마커 포맷은 하위호환 인식만 유지). mark --step N/M은 N<M이면 in_progress를 유지하고 N==M에서만 done으로 닫는다. can_auto_approve_user_confirmation()은 CLOSE 축과 모드 축 2축 합성으로 사용자 확인 행 자동 승인 가부를 단일 판정하며, cmd_mark 사전검사와 cmd_validate 사후검사가 서로 다른 소비 범위(validate는 CLOSE 축 미평가)로 이를 참조한다. auto_approve_prior_user_confirmations()는 advance/mark가 대상 행 이전 구간의 미완 확인 행을 자동 승인하되 대상 행 자체가 CLOSE면 관여하지 않는다. 행 주소는 task-step 키 체계(--task-step/--task-step-id, --row는 deprecated)로 지정한다. check_gate_artifacts()는 task_steps[].gate.artifacts 존재를 검사하고(정적 경로·글롭 지원, 절대경로·'..' 이탈 토큰은 거부), 미충족 시 gate_artifact_missing으로 막되 --force+--note 조합에만 통과를 허용하며 그 경우 decision 로그에 gate_artifact_force를 강제 기록한다. verify 서브커맨드는 상호 배타적인 6개 검사 라우트를 갖는다 — --red-check(RED 증거 게이트), --fix-mode(+--changed-files/--test-globs, 테스트 불변성 게이트), --clarification-check(TASK 잠금 판정: sdlc-v2 5절 또는 legacy 명확화 4요소), --evidence-check(『명확화 결과』·『확정된 설계 방향』 인용을 근거 등급 4축으로 판정, 두 소스의 분모는 서로 분리 — confirmed_ratio는 명확화 결과 항목 수 기준 불변), --code-scan-citation-check(PLAN.md Work items 또는 legacy §4.2 파일 경로의 code-scan 인용 집행), --plan-contract-check(sdlc-v2 Work items 계약 검사). link_memory_history()는 CLOSE 마지막 행 mark 시 memory_tool.py를 서브프로세스로 호출해 프로젝트 루트 .opal/MEMORY.json에 이력 행을 멱등으로 남기고, 실패는 전부 흡수해 mark 응답은 항상 ok:true다. resolve_owner_placeholder()는 note 작성 경로(advance/mark/add-row/block/status/init)에서 '{owner_name}' 플레이스홀더를 identity.md owner_name으로 write-time 치환한다(부재 시 원문 유지, fail-safe). worker_duration_minutes는 mark --worker-duration-minutes로 선택 기록되고, 워커 디스패치 행을 소요시간 없이 done 처리하면 --worker-duration-unknown 억제 인자가 없는 한 응답 warnings 배열에 worker_duration_missing이 실린다(exit 0 유지). build_todo_mirror()는 stdout 전용 파생 미러(state.json 비접촉)로 PostToolUse hook이 세션에 결정론적으로 주입한다.",
+  "description": "OPAL 파이프라인 현황판 JSON SSOT 관리 CLI. 서브커맨드: init/show/advance/mark/block/validate/add-row/status/spec-validate/event-verify, gate-pass(deprecated). event-verify는 단계 진입 전에 event-loader receipt의 이벤트·manifest·문서 hash 최신성을 검증하고 상태 파일은 변경하지 않는다. interactive/semi-agentic/agentic 3-way 모드를 지원하며 PLAN-equivalent 이전 단계(TASK/ANALYSIS/PLAN/TEST-SCENARIO/SPEC/REVIEW/DESIGN/WBS/WIREFRAME/DICT/MODEL/DDL·MIGRATION)는 semi-agentic 모드에서 사용자 검토를 강제한다. STATE.md는 state.json에서 파생되는 저널(의사결정 로그+블로커)이며 파이프라인 표·현재 상태·다음 액션 섹션은 없다(레거시 마커 포맷은 하위호환 인식만 유지). mark --step N/M은 N<M이면 in_progress를 유지하고 N==M에서만 done으로 닫는다. can_auto_approve_user_confirmation()은 CLOSE 축과 모드 축 2축 합성으로 사용자 확인 행 자동 승인 가부를 단일 판정하며, cmd_mark 사전검사와 cmd_validate 사후검사가 서로 다른 소비 범위(validate는 CLOSE 축 미평가)로 이를 참조한다. auto_approve_prior_user_confirmations()는 advance/mark가 대상 행 이전 구간의 미완 확인 행을 자동 승인하되 대상 행 자체가 CLOSE면 관여하지 않는다. 행 주소는 task-step 키 체계(--task-step/--task-step-id, --row는 deprecated)로 지정한다. check_gate_artifacts()는 task_steps[].gate.artifacts 존재를 검사하고(정적 경로·글롭 지원, 절대경로·'..' 이탈 토큰은 거부), 미충족 시 gate_artifact_missing으로 막되 --force+--note 조합에만 통과를 허용하며 그 경우 decision 로그에 gate_artifact_force를 강제 기록한다. verify 서브커맨드는 상호 배타적인 6개 검사 라우트를 갖는다 — --red-check(RED 증거 게이트), --fix-mode(+--changed-files/--test-globs, 테스트 불변성 게이트), --clarification-check(TASK 잠금 판정: sdlc-v2 5절 또는 legacy 명확화 4요소), --evidence-check(『명확화 결과』·『확정된 설계 방향』 인용을 근거 등급 4축으로 판정, 두 소스의 분모는 서로 분리 — confirmed_ratio는 명확화 결과 항목 수 기준 불변), --code-scan-citation-check(PLAN.md Work items 또는 legacy §4.2 파일 경로의 code-scan 인용 집행), --plan-contract-check(sdlc-v2 Work items 계약 검사). link_memory_history()는 CLOSE 마지막 행 mark 시 memory_tool.py를 서브프로세스로 호출해 프로젝트 루트 .opal/MEMORY.json에 이력 행을 멱등으로 남기고, 실패는 전부 흡수해 mark 응답은 항상 ok:true다. resolve_owner_placeholder()는 note 작성 경로(advance/mark/add-row/block/status/init)에서 '{owner_name}' 플레이스홀더를 identity.md owner_name으로 write-time 치환한다(부재 시 원문 유지, fail-safe). worker_duration_minutes는 mark --worker-duration-minutes로 선택 기록되고, 워커 디스패치 행을 소요시간 없이 done 처리하면 --worker-duration-unknown 억제 인자가 없는 한 응답 warnings 배열에 worker_duration_missing이 실린다(exit 0 유지). build_todo_mirror()는 stdout 전용 파생 미러(state.json 비접촉)로 PostToolUse hook이 세션에 결정론적으로 주입한다.",
   "exports": [
     "cmd_init", "cmd_show", "cmd_advance", "cmd_mark",
     "cmd_block", "cmd_validate", "cmd_add_row", "cmd_status",
-    "cmd_spec_validate", "cmd_gate_pass", "build_todo_mirror",
+    "cmd_spec_validate", "cmd_event_verify", "cmd_gate_pass", "build_todo_mirror",
     "link_memory_history",
     "can_auto_approve_user_confirmation", "auto_approve_prior_user_confirmations",
     "_collect_plan_target_files", "_check_code_scan_citation",
@@ -3692,6 +3692,57 @@ def cmd_verify(args):
     sys.exit(0)
 
 
+def cmd_event_verify(args):
+    """event-loader receipt를 검증하고 결과와 종료 코드를 그대로 전달한다.
+
+    state.json과 STATE.md는 읽거나 쓰지 않는다. 따라서 파일럿이 pilot.start 또는
+    stage.* 이벤트를 검증할 때 기존 파이프라인 상태 API에 영향을 주지 않는다.
+    """
+    loader = pathlib.Path(__file__).resolve().parent.parent / "event-loader" / "event_loader.py"
+    if not loader.is_file():
+        print(json.dumps({
+            "ok": False,
+            "command": "event-verify",
+            "error": "event_loader_not_found",
+            "path": str(loader),
+        }, ensure_ascii=False))
+        sys.exit(1)
+
+    command = [
+        sys.executable,
+        str(loader),
+        "verify",
+        "--receipt",
+        args.receipt,
+        "--event",
+        args.event,
+    ]
+    for option, value in (
+        ("--manifest", args.manifest),
+        ("--source-root", args.source_root),
+        ("--deployed-root", args.deployed_root),
+        ("--project-root", args.project_root),
+    ):
+        if value:
+            command.extend((option, value))
+
+    completed = subprocess.run(command, capture_output=True, text=True)
+    output = completed.stdout.strip()
+    try:
+        payload = json.loads(output)
+    except (TypeError, ValueError):
+        payload = {
+            "ok": False,
+            "command": "event-verify",
+            "error": "event_loader_failed",
+            "detail": completed.stderr.strip() or output or "event-loader returned no JSON",
+        }
+    else:
+        payload["via"] = "state-tool event-verify"
+    print(json.dumps(payload, ensure_ascii=False))
+    sys.exit(completed.returncode if completed.returncode in (0, 1, 2) else 2)
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # argparse 설정 (PLAN §2.19 E-2 매트릭스 그대로)
 # ─────────────────────────────────────────────────────────────────────────────
@@ -3702,7 +3753,7 @@ def build_parser():
         description="OPAL 파이프라인 현황판 JSON SSOT 관리 CLI (PLAN §2.19 E-2)",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
-서브 명령 (10종):
+서브 명령 (11종):
   init          state.json + STATE.md 생성
   show          현황판 출력 (md/json/full)
   advance       ⬜→🔄 전환
@@ -3712,6 +3763,7 @@ def build_parser():
   add-row       추가작업 행 삽입
   status        current_status 명시 전환
   spec-validate pipeline.json 스펙 검증 (070 R-6)
+  event-verify  단계 진입용 event-loader receipt 검증 (상태 비접촉)
   gate-pass     [DEPRECATED] Gate 4행 일괄 ✅ 처리 (레거시 state.json 전용)
 
 행 주소(070): --task-step <key> / --task-step-id <n> / --row <n>[deprecated] 중 하나만 지정.
@@ -3867,6 +3919,24 @@ def build_parser():
     p_spec = sub.add_parser("spec-validate", help="pipeline.json 스펙 검증 (070 R-6, DEC-2)")
     p_spec.add_argument("spec_path", metavar="<pipeline.json>")
     p_spec.set_defaults(func=cmd_spec_validate)
+
+    # ── event-verify ──
+    p_evt = sub.add_parser(
+        "event-verify",
+        help="단계 진입 전 event-loader receipt 최신성 검증 (상태 파일 비접촉)",
+    )
+    p_evt.add_argument("--event", required=True,
+                       help="검증할 정확한 이벤트 id (예: pilot.start, stage.execute)")
+    p_evt.add_argument("--receipt", required=True,
+                       help="event-loader load 응답 또는 receipt object JSON 파일")
+    p_evt.add_argument("--manifest", help="events.json 경로")
+    p_evt.add_argument("--source-root", dest="source_root",
+                       help="framework source checkout root")
+    p_evt.add_argument("--deployed-root", dest="deployed_root",
+                       help="installed OPAL root")
+    p_evt.add_argument("--project-root", dest="project_root",
+                       help="current project root")
+    p_evt.set_defaults(func=cmd_event_verify)
 
     # ── verify ──
     p_vfy = sub.add_parser(
