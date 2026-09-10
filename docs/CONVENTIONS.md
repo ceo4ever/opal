@@ -50,7 +50,7 @@
 |------|--------|
 | opp | opal-pilot-project |
 | opd | opal-pilot-dev |
-| opds | opal-pilot-dev-short |
+| opds | opal-pilot-dev (Short profile) |
 | opdw | opal-pilot-dev-wireframe |
 | opwt | opal-pilot-write-tech |
 | opsdd | opal-pilot-sdd |

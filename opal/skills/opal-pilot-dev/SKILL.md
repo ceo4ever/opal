@@ -43,8 +43,7 @@ TASK 완료 → 사용자 보고.
 > **단계 건너뛰기 차단**: state-tool stage-transition guard가 단계 N의 필수 행이 완료되지 않으면 단계 N+1 진입(mark)을 자동 거부한다 (PLAN §M-A). 행에 의존하지 않는다.
 > 근거: `tasks/134-260501-opp-pipeline-state-tool/TASK.md` F-15 / `PLAN.md` §1.5 M-11 / §3 Step 8 P-1 / P-3
 
-> **[MUST] 트랙 강등 판정**: TASK 완료 직후 1회, `opal/core/references/harness/track-routing.md`(SSOT) 4축 전건(AND) 충족 여부를 판정한다. 하나라도 미충족·판정 불능이면 강등하지 않고 `opd`를 유지한다(fail-safe).
-> 전건 충족 시 소유자 승인 왕복 없이 `opds`로 진입하고, 진입 직후 4축 실측값·판정 결과를 소유자에게 **사후 통보**한다.
+> **[MUST] 트랙 강등 제안**: 사용자가 선택한 `opd`를 기본 수행한다. `ANALYSIS` 완료 직후 `PLAN` 진입 전에 `opal/skills/opal-pilot-dev/references/track-routing.md`(SSOT)의 핵심 질문 — "현재 단계 이후에 외부 영향이 있는 동작·계약·구조 결정을 새로 해야 하는가?" — 을 1회 검토한다. 답이 아니오일 때만 `opds` 강등을 사용자에게 제안하며, 자동 전환하지 않는다. 판단 불능이면 `opd`를 유지한다.
 
 ## STEP 2: ANALYSIS
 워커를 디스패치하여 코드베이스를 분석한다.

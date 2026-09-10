@@ -222,7 +222,7 @@ TASK.md 작성 완료 시점에서 아래 조건이 **명백히** 해당하면, 
 
 > **주의**: 조기 에스컬레이션은 TASK.md만으로 **명백히** 판단 가능한 경우에만 적용한다. 불확실하면 PLAN을 진행하여 정확한 판별을 받는다.
 
-> **참고**: 하향 강등(`opd`→`opds`)은 `opal/core/references/harness/track-routing.md`(SSOT)가 별도로 규정하며, 판정 시점이 TASK 직후(강등)/PLAN 결과(본 절 승격)로 분리되어 상호배타 — 아래 승격 규칙과 충돌하지 않는다.
+> **참고**: 하향 강등(`opd`→`opds`)은 canonical Dev Pilot의 `opal/skills/opal-pilot-dev/references/track-routing.md`(SSOT)가 별도로 규정하며, `ANALYSIS` 완료 직후 PLAN 전 1회 제안한다. 아래 승격 규칙과 충돌하지 않는다.
 
 ### PLAN 결과 에스컬레이션 (기존)
 

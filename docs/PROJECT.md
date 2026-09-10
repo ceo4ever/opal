@@ -67,7 +67,7 @@
 | 컴포넌트 | 약어 | 유형 | 설명 |
 |----------|------|------|------|
 | `opal-pilot-dev` | opd | 오케스트레이터 | Full Task — TASK → ANALYSIS → PLAN → TEST-SCENARIO → EXECUTE → TEST → CLOSE. 대규모 개발 작업용 |
-| `opal-pilot-dev-short` | opds | 오케스트레이터 | Short Task (코드 변경 기본 진입점) — TASK → PLAN → EXECUTE → TEST → CLOSE. PLAN에서 규모 초과 판단 시 opd 에스컬레이션 제안 |
+| `opal-pilot-dev` | opds logical alias | 오케스트레이터 | Short profile (canonical Dev Pilot 내부 선택) — TASK → PLAN → EXECUTE → TEST → CLOSE. PLAN 완료 후 미결정 동작·계약·구조가 발견될 때만 opd 전환 제안 |
 | `opal-pilot-dev-wireframe` | opdw | 오케스트레이터 | Wireframe UI — TASK → WIREFRAME → EXECUTE → CLOSE. 와이어프레임 설계부터 UI 구현까지 |
 | `opal-pilot-project` | opp | 오케스트레이터 | Project Task 범용 (문서 작성·설정 변경·워크플로우) — TASK → PLAN → EXECUTE → CLOSE |
 | `opal-pilot-write-tech` | opwt | 오케스트레이터 | 기획 산출물 네트워크 (PRD·TRD·정책서·IA) — TASK → ANALYSIS → PLAN → EXECUTE → QA → CLOSE. 워커 병렬 디스패치 + 교차 논리 검토·정합성 검증 |
@@ -101,7 +101,7 @@
 
 > 나머지 워커 5종은 각 파이프라인 섹션에 등재된다 — `opal-db-agent`(Data Design) · `opal-evaluator-agent`·`opal-loop-action-agent`(Project Loop) · `opal-security-checker`·`opal-convention-checker`(GC).
 
-> **트랙 라우팅 (Task 098)**: `//opd` 호출이어도 4축(설계 확정률·예상 변경 파일 수·신규 개념 유무·최고 검증 계층)을 전건(AND) 충족하면 `opds`로 자동 강등 진입한다. 판정 시점은 TASK 완료 직후 1회이며, 승격(`opds`→`opd`, PLAN 결과 시점)과 시점·임계가 상호배타여서 왕복 구조가 성립하지 않는다. 판정 불능·`## 확정된 설계 방향` 부재 시 fail-safe는 강등 불발(`opd` 유지)이다. 강등은 소유자 승인 왕복 없이 진입하고 4축 실측값을 사후 통보한다. 접합: opd STEP 1 직후 · opds §에스컬레이션 규칙 포인터. 임계값 수치는 SSOT에만 존치 — SSOT: `opal/core/references/harness/track-routing.md`.
+> **트랙 라우팅**: 사용자가 선택한 `opd`/`opds`를 기본 수행하며, 파일 수·변경량은 전환 기준에서 제외한다. `opd`는 ANALYSIS 완료 직후 PLAN 전에 "외부 영향이 있는 동작·계약·구조 결정을 새로 해야 하는가?"를 1회 검토해, 아니오일 때만 `opds` 강등을 제안한다. `opds`는 PLAN 완료 직후 EXECUTE 전에 같은 핵심 질문을 검토해, 예일 때만 `opd` 강업을 제안한다. 자동 전환하지 않으며 판단 불능은 현재 트랙 유지 또는 강업 제안 쪽의 fail-safe로 처리한다. SSOT: `opal/skills/opal-pilot-dev/references/track-routing.md` · `opal/skills/opal-pilot-dev/references/track-escalation.md`.
 
 > **프로젝트 문서 주입 계약 (Task 111)**: Dev 파이프라인의 PM은 `pm.activate` 이벤트에서 `docs/PROJECT.md`를 읽고 §프로젝트 문서 레지스트리의 적용 범위·참조 시점으로 작업 도메인에 필요한 프로젝트/기획/설계 문서를 선별해 워커에 주입한다. 개발 워커는 주입된 문서만 읽으며, `docs/` 전체나 고정 파일명을 자체 가정하지 않는다. `docs/PROJECT.md`가 없는 프로젝트에서만 기존 영역별 최소 폴백 문서를 허용한다.
 

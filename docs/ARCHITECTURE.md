@@ -110,8 +110,8 @@ OPAL 자산은 Global/Project 2-레이어로 배치되고, 런타임은 세션 �
 
 | 그룹 | 스킬 | 설명 |
 |------|------|------|
-| **오케스트레이터** | opal-pilot-dev (opd) | Full Task: TASK → ANALYSIS → PLAN → TEST-SCENARIO → EXECUTE |
-| | opal-pilot-dev-short (opds) | Short Task (기본): TASK → PLAN → TEST-SCENARIO → EXECUTE |
+| **오케스트레이터** | opal-pilot-dev (opd) | Full profile: TASK → ANALYSIS → PLAN → TEST-SCENARIO → EXECUTE |
+| | opal-pilot-dev (opds logical alias) | Short profile: TASK → PLAN → TEST-SCENARIO → EXECUTE. 별도 물리 스킬 없이 canonical Dev Pilot 내부 선택 |
 | | opal-pilot-dev-wireframe (opdw) | Wireframe UI: TASK → WIREFRAME → EXECUTE |
 | | opal-pilot-write-tech (opwt) | 서비스 기획 산출물: 네트워크형 오케스트레이션 |
 | | opal-pilot-project (opp) | 프로젝트 범용: TASK → PLAN → EXECUTE |
@@ -430,7 +430,7 @@ opal/                                    ← 이 저장소
 │   │   └── requirements.txt             Python 의존성 (venv 관리)
 │   ├── skills/                          OPAL 스킬 (43개)
 │   │   ├── opal-pilot-dev/              오케스트레이터: Full Task (opd)
-│   │   ├── opal-pilot-dev-short/        오케스트레이터: Short Task (opds)
+│   │   ├── opal-pilot-dev/              오케스트레이터: Full profile (opd) + Short profile (opds logical alias)
 │   │   ├── opal-pilot-dev-wireframe/    오케스트레이터: Wireframe UI (opdw)
 │   │   ├── opal-pilot-write-tech/       오케스트레이터: Write-Tech (opwt)
 │   │   ├── opal-pilot-project/          오케스트레이터: Project (opp)

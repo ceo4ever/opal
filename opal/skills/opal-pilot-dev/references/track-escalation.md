@@ -1,47 +1,55 @@
 ---
 module: track-escalation
-role: Short profile에서 Full Task로 승격을 제안하는 규칙 SSOT
-load: `//opds` PLAN.md 수신 직후 승격 판정
-상속: 하향 강등 규칙은 `opal/core/references/harness/track-routing.md`
+role: Short profile에서 Full profile 전환 제안 규칙 SSOT
+load: `//opds`의 PLAN 완료 직후 강업 제안 판정
+상속: 하향 강등 제안 기준은 `opal/skills/opal-pilot-dev/references/track-routing.md`
 ---
 
-# 트랙 승격 — opds→opd 제안 규칙
+# 트랙 승격 — opds→opd 강업 제안
 
-> 이 문서는 `opal-pilot-dev` canonical 구현의 Short profile(`opds`)에서 Full profile(`opd`) 전환을 제안하는 기준만 정의한다.
-> 하향 강등(`opd`→`opds`)은 `opal/core/references/harness/track-routing.md`가 소유한다.
+> 사용자가 선택한 트랙을 기본적으로 수행한다. 강업은 Short 경로로 실행 계획을 완성할 수 없는 미결정 사항이 발견될 때만 제안한다.
 
-## 1. 판정 시점
+## 1. 최우선 규칙
 
-[MUST] Short→Full 승격은 PLAN.md 수신 직후 1회만 판정한다.
+[MUST] 사용자가 `opds`를 선택했으면 Short profile을 기본 유지한다.
 
-[MUST] PLAN.md 작성 전에는 승격 조건을 판정하거나 Full Task 전환을 제안하지 않는다.
+[MUST] 강업은 자동 전환하지 않는다. PM은 근거와 함께 사용자에게 비차단 제안만 한다.
 
-[MUST] PM은 승격 조건이 감지되어도 자동 전환하지 않고 사용자에게 Full Task 전환을 제안한다. 사용자가 `Short로 진행해`라고 응답하면 Short profile을 유지한다.
+[MUST] 파일 수·변경량·모듈 수·예상 소요 시간은 트랙 전환의 판정 기준으로 사용하지 않는다.
 
-## 2. PLAN 결과 승격
+## 2. 판정 시점
 
-op-dev-plan 결과에서 아래 조건이 감지되면 Full Task 전환을 제안한다.
+[MUST] `opds`의 `PLAN.md` 완료 직후, `EXECUTE` 진입 전에 1회 판정한다.
 
-| 조건 | 판별 방법 |
-|------|----------|
-| 예상 변경 파일 >= 10개 | sdlc-v2 Work items 변경 대상의 고유 파일 또는 legacy 변경 계획에서 카운트 |
-| 다단계 기술 의사결정 | 아키텍처 선택, 기술 스택 비교가 필요한 수준 |
-| 다중 모듈 연쇄 영향 | 변경이 3개 이상 독립 모듈에 연쇄 영향 |
+[MUST] PLAN 작성 전에는 강업 조건을 판정하거나 Full profile 전환을 제안하지 않는다.
 
-## 3. 제안 문구
+## 3. 강업 제안 조건
 
-```
-[에스컬레이션 제안]
-이 작업은 Short Task 범위를 초과할 수 있습니다: {해당 조건}
-Full Task(opal-pilot-dev)로 전환할까요?
-- "Full로 해줘" -> Full Task 전환
-- "Short로 진행해" -> Short Task 유지
-```
+다음 질문의 답이 **예**이면 `opd` 전환을 제안한다.
 
-## 4. 강등 규칙과의 관계
+> Short의 실행 계획을 만들기 위해 외부 영향이 있는 동작·계약·구조 결정을 새로 해야 하는가?
 
-[MUST] 하향 강등 판정 시점은 Full profile TASK 완료 직후 1회, 승격 판정 시점은 Short profile PLAN.md 수신 직후 1회다.
+해당하는 미결정은 다음을 포함한다.
 
-[MUST] 강등의 예상 변경 파일 수 임계와 PLAN 결과 승격의 예상 변경 파일 수 임계는 상호배타여야 하며, 두 규칙이 동시에 발동할 수 없어야 한다.
+- 요구사항·수용 기준의 해석이 아직 닫히지 않음
+- 사용자·API·이벤트의 동작 또는 정책을 새로 정해야 함
+- 아키텍처·기술·데이터 구조 선택이 남아 있음
+- 기존 패턴만으로 계획을 완성할 수 없어 임의 가정이 필요함
 
-[MUST] Short profile이 승격 제안 후 Full profile로 전환되면 동일 태스크에서 하향 강등을 다시 수행하지 않는다.
+구현 세부(함수 분해·변수명·파일 내 위치)만 남은 경우는 강업 사유가 아니다.
+
+판단 불능이면 강업을 제안하는 쪽으로 보수적으로 처리하되, 사용자가 유지하면 가능한 범위에서 `opds`를 계속 수행한다. 핵심 결정 없이는 실행 자체가 불가능하면 blocker로 보고한다.
+
+## 4. 제안 후 처리
+
+[MUST] 제안은 태스크당 1회만 한다.
+
+- 사용자가 수락하면 TASK·PLAN 산출물을 인계해 `opd`의 ANALYSIS 이후 경로로 전환한다.
+- 사용자가 거절하면 `opds`를 계속 수행한다.
+- PM은 사용자 응답 없이 트랙을 바꾸지 않는다.
+
+## 5. 강등 규칙과의 관계
+
+[MUST] `opd→opds` 강등 제안은 `opal/skills/opal-pilot-dev/references/track-routing.md`가 소유한다.
+
+[MUST] `opds`에서 강업 제안 후 `opd`로 전환한 동일 태스크에 대해 강등 판정을 다시 수행하지 않는다.

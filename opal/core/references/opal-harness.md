@@ -38,7 +38,6 @@ receipt 계약을 충족한 뒤 진행한다.
 | 분석 코어 | `harness/analysis-core.md` |
 | RED-first | `harness/red-first.md` |
 | 시나리오 게이트 | `harness/scenario-gate.md` |
-| 트랙 라우팅 | `harness/track-routing.md` |
 | 추가작업 | `harness/additional-work.md` |
 | State 템플릿 | `harness/state-template.md` |
 | 모델 매핑 | `opal-model-mapping.md` |
@@ -56,7 +55,7 @@ receipt 계약을 충족한 뒤 진행한다.
 | `opal-harness.md §2` 중 QA·인용·분석 규칙 | `harness/qa-standards.md` · `harness/citation-rules.md` · `harness/analysis-core.md` |
 | `opal-harness.md §2.5 워크스페이스 축` | 축·허브 해석은 `harness/worktree.md`, 생성·설정 부재·복구 절차는 `harness/task-process.md` 스텝 4.5 |
 | `opal-harness.md §3 State` | `harness/state.md` · `harness/state-template.md` · `harness/additional-work.md` |
-| `opal-harness.md §4 TASK 공통 프로세스` | `harness/task-process.md` · `harness/track-routing.md` |
+| `opal-harness.md §4 TASK 공통 프로세스` | `harness/task-process.md` |
 | `opal-harness.md §5 Observability` | `harness/observability.md` |
 | `opal-harness.md §6 Model Mapping` | `opal-model-mapping.md` |
 | `opal-harness.md §7 병렬 처리` | `harness/parallel-execution.md` |
