@@ -1,42 +1,47 @@
 ---
 type: concept
-title: opal-pilot-dev-short — Short Task 오케스트레이터
+title: opal-pilot-dev-short — opds logical Short profile
 tags:
 - skill
 - pilot
 - orchestrator
 - dev-short
+- opds
+- compatibility
 sources:
 - skill:opal-pilot-dev-short
 - task:111
+- task:112
 related:
-- sdlc-v2-development-artifact-contract
+- dev-pilot-profile-unification
 - skill-opal-pilot-dev
+- sdlc-v2-development-artifact-contract
 - op-dev-plan
 - op-dev-test-scenario
 created: '2026-06-11'
-updated: '2026-09-09'
+updated: '2026-09-10'
 status: active
 ---
 ## 개요
 
-소규모 개발 작업을 TASK → PLAN → EXECUTE → TEST → CLOSE로 수행하는 오케스트레이터다.
+Short 개발 표면은 계속 존재하지만, 더 이상 독립 물리 오케스트레이터가 아니다. Task 112 이후 `opal-pilot-dev-short`는 registry의 logical entry와 `opds` alias로 남고, 실제 실행은 canonical [[skill-opal-pilot-dev]]의 Short profile이 맡는다.
 
 ## 현재 계약
 
-- 신규 태스크는 [[sdlc-v2-development-artifact-contract]]를 사용한다.
-- PLAN과 TEST-SCENARIO는 한 묶음으로 검토하지만 PM이 각각 한 번 작성하며 PLAN 워커가 시나리오를 대신 쓰지 않는다.
-- 구현은 PLAN `Work items`의 선행 관계와 실행 그룹을 따른다.
-- 기존 11개 pipeline 행과 interactive, semi-agentic, agentic의 승인 경계를 유지한다.
-- 범위가 커지면 Full Task로 전환을 제안한다.
+- 사용자 호출 `//opds`는 유지한다.
+- state-tool 식별자 `skill=opds`와 기존 11개 pipeline 행은 유지한다.
+- Short pipeline 파일은 `opal/skills/opal-pilot-dev/references/pipeline-short.json`로 이동한다.
+- PLAN 이후 범위가 커졌다고 판단되면 Full profile로 승격을 제안하거나 전환한다.
+- 물리 `opal/skills/opal-pilot-dev-short/` 폴더는 제거 대상이며 설치본에도 재생성되지 않아야 한다.
 
 ## 근거
 
-`opal/skills/opal-pilot-dev-short/SKILL.md:42`, `opal/skills/opal-pilot-dev-short/SKILL.md:83`, task:111.
+`opal/core/references/opal-skills-registry.json`, `opal/skills/opal-pilot-dev/SKILL.md`, `opal/skills/opal-pilot-dev/references/pipeline-short.json`, task:112.
 
 ## 관련 페이지
 
-- [[sdlc-v2-development-artifact-contract]]
+- [[dev-pilot-profile-unification]]
 - [[skill-opal-pilot-dev]]
+- [[sdlc-v2-development-artifact-contract]]
 - [[op-dev-plan]]
 - [[op-dev-test-scenario]]

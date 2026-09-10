@@ -1,33 +1,38 @@
 ---
 type: concept
-title: op-sdd-plan — SDD 아키텍처 설계 + ACT 분해 스킬
+title: op-sdd-plan — SDD 내부 PLAN 단계 스킬
 tags:
 - sdd
 - plan
 - skill
+- internal
 sources:
 - skill:op-sdd-plan
-related: []
+- task:112
+related:
+- skill-opal-pilot-sdd
+- sdd-internal-stage-skill-ownership
+- op-sdd-spec
 created: '2026-06-11'
-updated: '2026-06-11'
-status: draft
+updated: '2026-09-10'
+status: active
 ---
 ## 개념 요약
 
-SPEC.md + TEST-SCENARIOS.md를 기반으로 기능 수준의 아키텍처 설계와 ACT 분해(SPEC-PLAN.md)를 작성하는 SDD DESIGN Phase 스킬.
+SDD PLAN 단계에서 SPEC을 실행 계획으로 전환하는 내부 단계 스킬이다. Task 112 이후 최상위 공개 스킬이 아니라 `opal-pilot-sdd/internal-skills/op-sdd-plan/` 아래에서 SDD Pilot이 디스패치한다.
 
 ## 역할·호출 시점·핵심 규칙
 
-- **역할**: SPEC-PLAN.md 생성 — 아키텍처 설계 + ACT 분해 + 병렬/순서 의존관계 통합; 실행 에이전트 opal-task-agent, model advanced
-- **호출 시점**: 오케스트레이터(opal-pilot-sdd)가 DESIGN Phase를 디스패치할 때
-- **핵심 규칙**: 필수 입력 SPEC.md, TEST-SCENARIOS.md; citation-rules.md 준수 필수
+- 역할: SDD 흐름의 PLAN 산출물을 작성한다.
+- 호출 시점: `opal-pilot-sdd`의 PLAN 단계 worker dispatch.
+- 소유 경계: SDD Pilot 내부 단계 전용. 독립 최상위 skill registry 표면으로 취급하지 않는다.
 
 ## 파일 참조
 
-`file_path: opal/skills/op-sdd-plan/SKILL.md`
+`file_path: opal/skills/opal-pilot-sdd/internal-skills/op-sdd-plan/SKILL.md`
 
 ## 관련
 
-- [[skill-opal-pilot-sdd]] — 이 스킬을 DESIGN Phase에서 디스패치하는 SDD 오케스트레이터
-- [[op-sdd-spec]] — SPEC.md를 생성하는 선행 단계 스킬
-- [[op-sdd-action-plan]] — 이 스킬의 산출물(SPEC-PLAN.md)을 입력으로 받는 ACT 전용 PLAN 스킬
+- [[skill-opal-pilot-sdd]]
+- [[sdd-internal-stage-skill-ownership]]
+- [[op-sdd-spec]]

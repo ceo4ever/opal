@@ -1,0 +1,20 @@
+[
+  {
+    "iteration": 1,
+    "missing": {
+      "requirements": [],
+      "features": [],
+      "hypotheses": []
+    },
+    "scores": {
+      "goal": 2,
+      "adoption": 2,
+      "boundary": 2
+    },
+    "average": 2.0,
+    "gaps": [],
+    "verdict": "pass",
+    "reason": "converged",
+    "recorded_at": "2026-09-09 17:53 KST"
+  }
+]

@@ -397,3 +397,8 @@
 - 갱신: [[skill-opal-pilot-dev]], [[skill-opal-pilot-dev-short]], [[op-dev-analysis]], [[op-dev-plan]], [[op-dev-execute]], [[op-dev-test-scenario]], [[test-tool]], [[test-scenario-pipeline-redesign]], [[scenario-prewrite-goal-series-track]], [[opds-testscenario-producer-establishment]], [[op-dev-todo]], [[skill-opal-next]]
 - 출처: task:111
 
+## [2026-09-10] ingest | CLOSE ingest — 태스크 112 파일럿 전용 스킬 내부화와 Dev Pilot 통합
+- 신규: [[dev-pilot-profile-unification]], [[sdd-internal-stage-skill-ownership]]
+- 갱신: [[skill-opal-pilot-dev]], [[skill-opal-pilot-dev-short]], [[op-sdd-spec]], [[op-sdd-plan]], [[op-sdd-action-plan]], [[op-sdd-verify]]
+- 출처: task:112
+

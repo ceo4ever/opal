@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-09-09 21:22
+> 갱신: 2026-09-10 09:55
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -107,6 +107,7 @@
 - [[delegation-only-file-gate-bypass]] — 위임 전용 파일에 게이트를 두면 우회된다 — 진입경로 역추적 #gate #architecture #lesson #call-graph
 - [[demote-promote-recursion-guard-timing-threshold-split]] — 강등·승격 재귀 차단 — 판정 시점 분리 + 임계 상호배타 #track-routing #recursion #architecture #opds
 - [[deploy-artifact-verification-lesson]] — 동작검증은 배포 산출물+실 브라우저 기준으로 수행해야 한다 #verification #qa #deployment #lesson
+- [[dev-pilot-profile-unification]] — 개발 Pilot Full/Short profile 통합 계약 #pilot #dev #opd #opds #compatibility
 - [[dict-선행-model-ssot]] — DICT가 MODEL을 선행한다 — 사전이 속성명·타입 SSOT #architecture-decision #data-design #ssot #pipeline
 - [[dl-contract-download-verify-target-identity]] — DL-CONTRACT — 검증 대상과 다운로드 대상은 같은 파일이어야 한다 #deploy #release #install #checksum #contract
 - [[e2e-cmux-first-playwright-fallback]] — E2E 도구 우선순위 — cmux 1순위 → playwright 폴백 (에러코드 소비) #testing #e2e #cmux #framework
@@ -185,10 +186,10 @@
 - [[op-dev-test-scenario]] — op-dev-test-scenario — 테스트 시나리오 작성 단계 스킬 #dev #test #skill
 - [[op-dev-todo]] — op-dev-todo — 실행 체크리스트 확장 단계 스킬 #dev #todo #skill
 - [[op-dev-wireframe]] — op-dev-wireframe — 와이어프레임 생성 단계 스킬 #dev #wireframe #skill
-- [[op-sdd-action-plan]] — op-sdd-action-plan — SDD ACT 전용 경량 PLAN 스킬 #sdd #plan #skill
-- [[op-sdd-plan]] — op-sdd-plan — SDD 아키텍처 설계 + ACT 분해 스킬 #sdd #plan #skill
-- [[op-sdd-spec]] — op-sdd-spec — SDD 명세 작성 단계 스킬 #sdd #spec #skill
-- [[op-sdd-verify]] — op-sdd-verify — SDD 명세/태스크 검증 단계 스킬 #sdd #verify #skill
+- [[op-sdd-action-plan]] — op-sdd-action-plan — SDD 내부 Action Plan 단계 스킬 #sdd #action-plan #skill #internal
+- [[op-sdd-plan]] — op-sdd-plan — SDD 내부 PLAN 단계 스킬 #sdd #plan #skill #internal
+- [[op-sdd-spec]] — op-sdd-spec — SDD 내부 SPEC 단계 스킬 #sdd #spec #skill #internal
+- [[op-sdd-verify]] — op-sdd-verify — 제거된 SDD verify 물리 스킬 #sdd #verify #skill #stale
 - [[op-spec-validator]] — op-spec-validator — SDD 명세 검증 워커 스킬 #sdd #validator #skill
 - [[op-task-execute]] — op-task-execute — 범용 실행 단계 스킬 #task #execute #skill
 - [[op-task-plan]] — op-task-plan — 범용 계획 수립 단계 스킬 #task #plan #skill
@@ -267,6 +268,7 @@
 - [[scenario-normalized-contract-pilot-neutral]] — 시나리오 정규화 계약 — pilot-중립 페이로드 설계 #contract #scenario-gate #normalization #multi-pilot #task-073 #task-075
 - [[scenario-prewrite-goal-series-track]] — 목표계열 선작성 트랙 — 도출 입력 2계열 분리와 게이트 계약 경계 #scenario-gate #testing #prewrite #opd #opds #task-095
 - [[score-free-tiered-verdict-ladder]] — 재현 불가한 채점을 하드필터+3단 판정어+순서 있는 사다리로 대체 #verification #decision-pattern #anti-scoring #task-105
+- [[sdd-internal-stage-skill-ownership]] — SDD 내부 단계 스킬 소유권 #sdd #skill #pilot #ownership
 - [[sdlc-v2-development-artifact-contract]] — sdlc-v2 개발 산출물 계약 #sdlc #development #artifact #ssot #pipeline
 - [[section-append-at-tail-preserves-backrefs]] — 절 번호가 주소인 문서는 말미에 추가한다 — 외부 역참조 보존 #documentation #reference-integrity #task-084
 - [[self-confirming-validation-timing-argument]] — 자기확인 검증의 시점 논거 판별 — 개정 대상 무변경 확인으로 순환 논증을 잡는다 #self-confirming #verification #evaluator #scenario-gate #opd
@@ -284,9 +286,9 @@
 - [[skill-opal-brain]] — opal-brain — 프로젝트 브레인 지식 위키 #skill #brain #knowledge #wiki
 - [[skill-opal-next]] — opal-next — OPAL 재진입 가이드 (opal-start 개명) #skill #next #onboarding #guide #rename
 - [[skill-opal-onboarding]] — opal-onboarding — 에이전트 정체성 설정 #skill #onboarding #identity
-- [[skill-opal-pilot-dev-short]] — opal-pilot-dev-short — Short Task 오케스트레이터 #skill #pilot #orchestrator #dev-short
+- [[skill-opal-pilot-dev-short]] — opal-pilot-dev-short — opds logical Short profile #skill #pilot #orchestrator #dev-short #opds #compatibility
 - [[skill-opal-pilot-dev-wireframe]] — opal-pilot-dev-wireframe — Wireframe UI 오케스트레이터 #skill #pilot #orchestrator #wireframe #ui
-- [[skill-opal-pilot-dev]] — opal-pilot-dev — Full Task 오케스트레이터 #skill #pilot #orchestrator #dev
+- [[skill-opal-pilot-dev]] — opal-pilot-dev — Full/Short 개발 오케스트레이터 #skill #pilot #orchestrator #dev #opd #opds
 - [[skill-opal-pilot-gc]] — opal-pilot-gc — GC 진단 오케스트레이터 #skill #pilot #gc #security #convention
 - [[skill-opal-pilot-project-dev]] — opal-pilot-project-dev — 프로젝트 개발 라이프사이클 오케스트레이터 #skill #pilot #orchestrator #project-dev #lifecycle
 - [[skill-opal-pilot-project]] — opal-pilot-project — 프로젝트 범용 오케스트레이터 #skill #pilot #orchestrator #project
