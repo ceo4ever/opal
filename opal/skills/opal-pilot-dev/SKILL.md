@@ -1,14 +1,22 @@
 ---
 name: opal-pilot-dev
 description: |
-  **Full Task 오케스트레이터**. 대규모 개발 작업을 5단계 파이프라인으로 수행한다.
-  반드시 이 스킬을 사용해야 하는 상황: "opal-pilot-dev", "opd".
+  **Dev Task 오케스트레이터**. 하나의 canonical 구현에서 Full Task(opd)와 Short Task(opds)를 profile로 선택해 수행한다.
+  반드시 이 스킬을 사용해야 하는 상황: "opal-pilot-dev", "opd", "opal-pilot-dev-short", "opds".
   코드를 읽기만 하는 설명 요청, API 명세서(api-analyzer), 기획 문서(opal-pilot-write-tech), PR 리뷰, git 작업, 단순 설정 변경은 이 스킬이 아니다.
 ---
-# Full Task 오케스트레이터
+# Dev Task 오케스트레이터
 
 ## Harness
-모드: Full Task (TASK → ANALYSIS → PLAN → TEST-SCENARIO → EXECUTE → TEST → CLOSE)
+프로필: 호출 name/alias로 먼저 확정한다.
+
+| 호출 name/alias | profile | 파이프라인 |
+|---|---|---|
+| `opal-pilot-dev`, `opd` | `full` | Full Task: TASK → ANALYSIS → PLAN → TEST-SCENARIO → EXECUTE → TEST → CLOSE |
+| `opal-pilot-dev-short`, `opds` | `short` | Short Task: TASK → PLAN → EXECUTE → TEST → CLOSE |
+
+[MUST] profile 판정은 state 초기화와 단계 진입보다 먼저 수행한다. `opd`/`opds` 둘 다 이 파일을 실행하더라도 `skill` 식별자와 pipeline row 의미는 각각 `opd`/`opds`로 유지한다.
+
 > 부트스트랩에서 로드되지 않은 경우: `~/.opal/references/opal-harness.md`를 Read한다.
 
 **[MUST]** 스킬 시작 즉시 모드에 따라 서브 하네스를 Read한다. 이 단계를 건너뛰면 안 된다:
@@ -29,10 +37,14 @@ TASK 완료 → 사용자 보고.
 > **단계 건너뛰기 차단**: state-tool stage-transition guard가 단계 N의 필수 행이 완료되지 않으면 단계 N+1 진입(mark)을 자동 거부한다 (PLAN §M-A). 행에 의존하지 않는다.
 > 근거: `tasks/134-260501-opp-pipeline-state-tool/TASK.md` F-15 / `PLAN.md` §1.5 M-11 / §3 Step 8 P-1 / P-3
 
-> **[MUST] 트랙 강등 판정**: TASK 완료 직후 1회, `opal/core/references/harness/track-routing.md`(SSOT) 4축 전건(AND) 충족 여부를 판정한다. 하나라도 미충족·판정 불능이면 강등하지 않고 `opd`를 유지한다(fail-safe).
+> **[MUST] profile=full 트랙 강등 판정**: TASK 완료 직후 1회, `opal/core/references/harness/track-routing.md`(SSOT) 4축 전건(AND) 충족 여부를 판정한다. 하나라도 미충족·판정 불능이면 강등하지 않고 `opd`를 유지한다(fail-safe).
 > 전건 충족 시 소유자 승인 왕복 없이 `opds`로 진입하고, 진입 직후 4축 실측값·판정 결과를 소유자에게 **사후 통보**한다.
 
+> **[MUST] profile=short 승격 판정 금지 구간**: PLAN.md 작성 전에는 Full Task 전환을 판정하거나 제안하지 않는다. Short→Full 승격 판단은 PLAN.md 수신 직후 1회만 수행한다.
+
 ## STEP 2: ANALYSIS
+profile=full 전용 단계다. profile=short는 ANALYSIS.md를 생성하지 않고 STEP 3 PLAN으로 진행한다.
+
 워커를 디스패치하여 코드베이스를 분석한다.
 
 **디스패치 프롬프트**:
@@ -65,12 +77,15 @@ op-dev-analysis 스킬을 수행하라.
 ## STEP 3: PLAN
 
 ### 3-1. PLAN 디스패치
+
+profile=full은 이전 산출물로 TASK.md와 ANALYSIS.md를 주입한다. profile=short는 이전 산출물로 TASK.md만 주입하며, ANALYSIS.md 없이 호출된 op-dev-plan이 필요한 코드 분석을 직접 수행한다. Short Task는 단계를 줄이는 것이지 분석을 줄이는 것이 아니다.
+
 ```
 [WORKER]
 op-dev-plan 스킬을 수행하라.
 **스킬 경로**: {op-dev-plan/SKILL.md 탐색 경로}
 **태스크 폴더**: {tasks/{NNN}-{name}/}
-**이전 산출물**: {TASK.md 경로}, {ANALYSIS.md 경로}
+**이전 산출물**: profile=full은 {TASK.md 경로}, {ANALYSIS.md 경로}; profile=short는 {TASK.md 경로}
 **프로젝트 컨텍스트**: {docs/PROJECT.md + 매칭 참조 문서. 미존재 시 CLAUDE.md 폴백}
 **산출물 저장 경로**: {PLAN.md 경로}
 **하네스 Guards**: PLAN.md에 없는 파일 생성/수정 금지. PLAN 설계를 임의 변경 금지. 블로커 발생 시 즉시 중단 후 보고.
@@ -81,6 +96,22 @@ op-dev-plan 스킬을 수행하라.
 
 > sdlc-v2 신규 경로에서는 PLAN 병렬 TEST-SCENARIO 선작성을 기본 수행하지 않는다. TEST-SCENARIO는 STEP 3.5에서 TASK.md의 AC/C와 PLAN.md의 Risks/Work items를 함께 읽고 한 번에 작성한다. legacy 태스크 재개나 사용자가 명시한 RED-first opt-in에서만 기존 선작성 규칙을 적용한다.
 
+> **[MUST] profile=short PLAN 결과 승격 판정**: PLAN.md 수신 직후 `opal/skills/opal-pilot-dev/references/track-escalation.md`의 승격 조건을 1회 판정한다. 승격 조건이 감지되면 PM이 자동 전환하지 않고 사용자에게 Full Task 전환을 제안한다. `Short로 진행해` 응답이면 short profile을 유지한다.
+
+### 3-2. profile=short TEST-SCENARIO 작성과 목표-커버 게이트
+
+profile=short에서는 TEST-SCENARIO가 별도 단계가 아니라 PLAN 단계 안의 `plan.scenario_gate` 행에 포함된다.
+
+- PLAN 워커는 PLAN.md만 작성한다. PLAN 수신 후 PM이 `op-dev-test-scenario/SKILL.md`를 따라 TEST-SCENARIO.md를 한 번 작성한다.
+- sdlc-v2는 TASK의 AC/C와 PLAN의 실제 H를 `Setup / Scenarios`에 연결한다. PLAN 확정 전 초안이나 임시 마커를 만들지 않는다.
+- legacy 태스크를 재개하면 기존 TEST-SCENARIO를 유지하고 필요한 경우에만 legacy adapter를 적용한다.
+- 작성 완료 후 `~/.opal/tools/state-tool/run.sh advance <task-path> --task-step plan.scenario_gate`를 호출하고 `op-scenario-gate`를 실행한다.
+  - 탐색 경로: `{프로젝트}/.opal/skills/op-scenario-gate/SKILL.md` → `~/.opal/skills/op-scenario-gate/SKILL.md`
+  - 입력: `task_folder`(태스크 폴더 경로), `producer_artifact`(`{task_folder}/TEST-SCENARIO.md`), `pilot: opds`, `iteration`(최초 호출 = 1)
+  - 수신 `verdict: pass` → 게이트 행 mark. coverage-check exit 0과 evaluator pass가 모두 있어야 한다.
+  - 수신 `verdict: rewrite` → PM이 `gaps`를 반영해 TEST-SCENARIO.md를 고친 뒤 `iteration+1`로 재호출한다.
+  - 수신 `verdict: escalate` → 사용자에게 에스컬레이션하고 자율 재시도하지 않음
+
 PLAN 완료
   → **PM Gate** (PLAN.md 직접 검증 — 점검 목록 참조):
     1. `{PLAN.md 경로}` Read — sdlc-v2 `Approach`, `Decisions and contracts`, `Work items`, `Risks`, `Release and recovery` 확인
@@ -90,9 +121,12 @@ PLAN 완료
        - [ ] Risks에 실제 추가 검증 위험만 H-N으로 작성되었거나, 위험 없음이 명시되었는가
        - [ ] Release and recovery에 source→installed 검증, 실제 사례 측정, 실패 복구 기준이 있는가
        - [ ] `state-tool verify <task-folder> --plan-contract-check`와 `--code-scan-citation-check`가 통과 또는 의도된 skip인지 확인했는가
-  → PM Gate 통과 후 해당 행을 단일 mark. 사용자에게 PLAN 보고. 승인 = TEST-SCENARIO 단계 진입 허가.
+  → PM Gate 통과 후 해당 행을 단일 mark. profile=full은 사용자에게 PLAN 보고 후 TEST-SCENARIO 단계 진입 승인을 받는다. profile=short는 PLAN과 TEST-SCENARIO를 함께 보고하며 승인이 EXECUTE 시작 허가다.
+
+> **[MUST] profile=short 사용자 확인 (P-5)**: 이 행은 모드에 따라 주체가 다르다. 자동 승인 구간(agentic 전 구간 / semi-agentic의 EXECUTE-equivalent 이후)은 PM이 호출하지 않고 다음 단계 진입 시 도구가 자동 승인한다. 그 외에는 소유자에게 보고하고 승인 발화를 받은 뒤 `~/.opal/tools/state-tool/run.sh mark <task-path> --task-step plan.user_confirm --done --owner user --note '{owner_name} 확인: ...'`를 호출한다. CLOSE 진입 전 이 행의 `owner=user` 여부를 도구가 자동 검증한다.
 
 ## STEP 3.5: TEST-SCENARIO
+profile=full 전용 단계다. profile=short의 TEST-SCENARIO 작성과 목표-커버 게이트는 STEP 3 PLAN 안에서 `plan.scenario_gate`로 처리한다.
 
 > **[MUST] RED-first**: TEST-SCENARIO 작성 시 RED-first 트랙 적용 여부를 판단하고 기재한다. 규칙 SSOT: `opal/core/references/harness/red-first.md`. 목표계열 선작성 트랙은 동 문서 §1.6.
 
@@ -120,6 +154,7 @@ PLAN 완료
 > 근거: `PLAN.md` §3 Step 8 P-1 / P-5 / §2.16 G-13 / `tasks/073-260723-opd-시나리오-목표커버리지-루프/PLAN.md` §3.5.2 (목표-커버 게이트 접합)
 
 ## STEP 4: EXECUTE
+profile=full에서는 STEP 4, profile=short에서는 STEP 3에 해당한다. 두 profile 모두 PLAN.md `Work items`를 실행 입력으로 사용하고 `execute.implement` 행을 갱신한다.
 
 > **[MUST] RED-first**: EXECUTE 진입 전 RED 증거 확보, fix 루핑 중 테스트 불변. 규칙 SSOT: `opal/core/references/harness/red-first.md`.
 > sdlc-v2는 TEST-SCENARIO의 `시점`을 기준으로 `test-tool scenario-init`의 `red_required`를 설정한다. RED 대상은 opal-test-agent red mode가 실제 실패를 관찰한 뒤 `scenario-red`로 증거를 기록하고, PM은 `scenario-lock` 통과 후에만 GREEN 구현을 시작한다. RED 대상이 없으면 init 직후 lock한다. legacy만 `state-tool verify <task> --red-check`를 사용한다. fix 루핑 시 `--fix-mode --changed-files ... --test-globs ...`로 테스트 불변성을 검사한다.
@@ -179,6 +214,7 @@ PLAN.md Work items의 담당·실행 그룹 필드에 따라 배치를 구성한
 ---
 
 ## STEP 5: TEST
+profile=full에서는 STEP 5, profile=short에서는 STEP 4에 해당한다. 두 profile 모두 TEST-SCENARIO.md를 실행 전 명세로만 읽고 결과·증거는 test-scenario.json에 기록한다.
 
 opal-test-agent 워커 디스패치. TEST-SCENARIO.md를 실행 명세로 읽고, `test-tool scenario-status`로 잠금 상태를 확인한 뒤 각 결과·증거를 `scenario-mark`로 기록하고 PASS/FAIL/BLOCKED를 판정한다. 사용자 행동이 필요한 시나리오는 주입된 capability로 실행할 수 없을 때만 필요한 행동과 기대 결과를 PM에 BLOCKED로 반환한다.
 
@@ -237,6 +273,7 @@ opal-test-agent 워커 디스패치. TEST-SCENARIO.md를 실행 명세로 읽고
 ---
 
 ## STEP 6: CLOSE
+profile=full에서는 STEP 6, profile=short에서는 STEP 5에 해당한다. CLOSE 첫 행은 두 profile 모두 직전 TEST 사용자 확인 행(`test.user_confirm`)의 사용자 승인 소유권을 요구한다. profile=short는 PLAN 사용자 확인 이후 EXECUTE/TEST를 진행하지만 CLOSE 진입 직전에는 TEST 결과 보고와 사용자 승인이 별도로 필요하다.
 
 모든 체크리스트 갱신 완료 확인 후 태스크를 마감한다.
 
@@ -282,22 +319,25 @@ opal-test-agent 워커 디스패치. TEST-SCENARIO.md를 실행 명세로 읽고
 
 ## STATE.md 도메인 치환값
 
-> **[MUST] STATE.md 초기 생성**: `~/.opal/tools/state-tool/run.sh init <task-path> --skill opd --mode <interactive|semi-agentic|agentic> --rows-from opal/skills/opal-pilot-dev/references/pipeline.json` 호출. 기본값: `semi-agentic`. 행 구성 SSOT는 `references/pipeline.json`(task-step key 포함) — `--rows-from`이 확장자로 분기해 파싱한다(070).
+> **[MUST] STATE.md 초기 생성**: profile=full은 `~/.opal/tools/state-tool/run.sh init <task-path> --skill opd --mode <interactive|semi-agentic|agentic> --rows-from opal/skills/opal-pilot-dev/references/pipeline.json`를 호출한다. profile=short는 `~/.opal/tools/state-tool/run.sh init <task-path> --skill opds --mode <interactive|semi-agentic|agentic> --rows-from opal/skills/opal-pilot-dev/references/pipeline-short.json`를 호출한다. 기본값은 `semi-agentic`이다. 행 구성 SSOT는 profile별 pipeline JSON의 `task_steps[]`이며, 기존 Full 16행과 Short 11행 의미를 유지한다.
 > 근거: `tasks/134-260501-opp-pipeline-state-tool/TASK.md` F-15 / `PLAN.md` §2.3 / §2.20.2 / §3 Step 8 (P-3 advance, P-1 mark) / `tasks/070-260720-opd-태스크스텝-키주소-1차/PLAN.md` §3.6.2 (pipeline.json 전환)
 
-> **행 구성 SSOT**: `references/pipeline.json` `task_steps[]`. 현재 행 목록은
-> `~/.opal/tools/state-tool/run.sh show <task-path>` 또는 pipeline.json을 직접 조회한다.
+> **행 구성 SSOT**: profile=full은 `references/pipeline.json`, profile=short는 `references/pipeline-short.json`이다. 현재 행 목록은 `~/.opal/tools/state-tool/run.sh show <task-path>` 또는 profile별 pipeline JSON을 직접 조회한다.
 
-> TASK.md 생성은 `task.task_md` 행에 흡수, ANALYSIS.md 생성은 `analysis.analysis_md` 행에 흡수, PLAN.md 생성은 `plan.plan_md` 행에 흡수, TEST-SCENARIO.md 생성은 `test_scenario.test_scenario_md` 행에 흡수. State Gate 성격의 판정은 개별 행이 아니라 state-tool stage-transition guard(PLAN §M-A)가 자동 수행한다 — 행으로 강제하지 않는다.
-> **[MUST] `test_scenario.scenario_gate` 행(목표-커버 게이트)은 `op-scenario-gate` 스킬 반환 `verdict: pass`일 때만 mark한다** — PM이 산문 판단만으로 mark할 수 없으며, 이 행이 미완이면 stage-transition guard가 EXECUTE(`execute.implement`) 진입을 구조적으로 거부한다(073/F-005, R-5).
-> TEST 루핑 발생 시: `~/.opal/tools/state-tool/run.sh add-row <task-path> --after 15 --stage TEST --item 'fix 작업 (N/3)'` 호출로 동적 추가한다 (P-6 추가작업 행 추가 패턴).
+> TASK.md 생성은 `task.task_md` 행에 흡수한다. profile=full의 ANALYSIS.md 생성은 `analysis.analysis_md`, PLAN.md 생성은 `plan.plan_md`, TEST-SCENARIO.md 생성은 `test_scenario.test_scenario_md` 행에 흡수한다. profile=short의 PLAN.md와 TEST-SCENARIO.md 생성은 `plan.plan_md`와 `plan.scenario_gate`에 연결한다. State Gate 성격의 판정은 개별 행이 아니라 state-tool stage-transition guard(PLAN §M-A)가 자동 수행한다 — 행으로 강제하지 않는다.
+> **[MUST] 목표-커버 게이트 행은 `op-scenario-gate` 스킬 반환 `verdict: pass`일 때만 mark한다** — profile=full은 `test_scenario.scenario_gate`, profile=short는 `plan.scenario_gate`를 사용한다. PM이 산문 판단만으로 mark할 수 없으며, 이 행이 미완이면 stage-transition guard가 EXECUTE(`execute.implement`) 진입을 구조적으로 거부한다.
+> TEST 루핑 발생 시: profile=full은 `~/.opal/tools/state-tool/run.sh add-row <task-path> --after 15 --stage TEST --item 'fix 작업 (N/3)'`, profile=short는 `~/.opal/tools/state-tool/run.sh add-row <task-path> --after-task-step test.pm_gate --stage TEST --item 'fix 작업 (N/3)'` 호출로 동적 추가한다 (P-6 추가작업 행 추가 패턴).
 
 ## PM Gate 점검 목록
 
-> **게이트 정의 SSOT**: `references/pipeline.json` `task_steps[].gate` — 산출물(`artifacts`)과
+> **게이트 정의 SSOT**: profile=full은 `references/pipeline.json`, profile=short는 `references/pipeline-short.json`의 `task_steps[].gate` — 산출물(`artifacts`)과
 > 체크리스트(`checklist`)는 이곳에만 정의한다. `state-tool mark --task-step <게이트 key>` 호출 시
 > artifacts 존재를 도구가 검증하고(미충족 시 `gate_artifact_missing`으로 거부) checklist를
-> stdout `gate_checklist` 페이로드로 반환한다. 각 Phase의 판정 절차·기준은 STEP 2(ANALYSIS)/STEP 3(PLAN)/STEP 3.5(TEST-SCENARIO)/STEP 5(TEST)의 "PM Gate" 절을 따른다.
+> stdout `gate_checklist` 페이로드로 반환한다. 각 Phase의 판정 절차·기준은 profile=full의 STEP 2(ANALYSIS)/STEP 3(PLAN)/STEP 3.5(TEST-SCENARIO)/STEP 5(TEST) 또는 profile=short의 STEP 3(PLAN)/STEP 4(TEST) "PM Gate" 절을 따른다.
+
+## Short profile 승격 규칙
+
+승격 규칙 SSOT는 `opal/skills/opal-pilot-dev/references/track-escalation.md`다. profile=short는 PLAN.md 수신 직후에만 승격 조건을 1회 확인한다. PLAN.md 작성 전에는 승격 판단을 수행하지 않는다. PM은 승격 조건을 감지해도 자동 전환하지 않고 사용자에게 Full Task 전환을 제안한다. `track-routing.md`의 하향 강등은 profile=full TASK 직후 1회만 수행하므로 PLAN 결과 승격과 시점이 분리되어 왕복 재귀가 성립하지 않는다.
 
 ---
 
@@ -307,18 +347,22 @@ opal-harness-agentic.md / opal-harness-semi-agentic.md 참조. 본 절은 이 �
 
 ### 기본 모드 (semi-agentic)
 
-기본 호출(`//opd {작업}`)은 semi-agentic 모드. TEST-SCENARIO-equivalent까지 사용자 검토, EXECUTE-equivalent 이후 PM 자율, CLOSE 진입은 사용자 승인 필수.
+기본 호출(`//opd {작업}`, `//opds {작업}`)은 semi-agentic 모드. profile=full은 TEST-SCENARIO-equivalent까지 사용자 검토, profile=short는 PLAN-equivalent까지 사용자 검토, EXECUTE-equivalent 이후 PM 자율, CLOSE 진입은 사용자 승인 필수.
 
 **모드 경계** (이 시점부터 PM 자율):
-- TEST-SCENARIO 사용자 확인 행 통과 후 → EXECUTE 작업 행부터 PM 자율
+- profile=full: TEST-SCENARIO 사용자 확인 행 통과 후 → EXECUTE 작업 행부터 PM 자율
+- profile=short: PLAN 사용자 확인 행 통과 후 → EXECUTE 작업 행부터 PM 자율
 
 ### 명시 모드
 
 | 호출 | 모드 |
 |------|------|
 | `//opd 작업` | semi-agentic (기본) |
+| `//opds 작업` | semi-agentic (기본) |
 | `//opd --interactive 작업` | interactive — 모든 단계 사용자 승인 |
+| `//opds --interactive 작업` | interactive — 모든 단계 사용자 승인 |
 | `//opd --agentic 작업` | agentic — 모든 단계 PM 자율 (CLOSE 진입 제외) |
+| `//opds --agentic 작업` | agentic — 모든 단계 PM 자율 (CLOSE 진입 제외) |
 
 ### 활성화
 
@@ -330,14 +374,25 @@ opal-harness-agentic.md / opal-harness-semi-agentic.md 참조. 본 절은 이 �
 
 ### 자율 게이트 흐름 (semi-agentic)
 
+profile=full:
+
 ```
 TASK → ANALYSIS Gate → PLAN Gate → TEST-SCENARIO Gate → EXECUTE Gate → TEST Gate → CLOSE
 사용자   사용자 승인     사용자 승인    사용자 승인              PM 자율        PM 자율     사용자 승인 필수
                                       (모드 경계)
 ```
 
-- TASK→ANALYSIS→PLAN→TEST-SCENARIO Gate까지 사용자 승인 필수 (interactive 동작)
-- TEST-SCENARIO 사용자 확인 행 통과 후 EXECUTE/TEST Gate는 PM 자율 통과
+profile=short:
+
+```
+TASK → PLAN Gate → EXECUTE Gate → TEST Gate → CLOSE
+사용자   사용자 승인    PM 자율         PM 자율     사용자 승인 필수
+         (모드 경계)
+```
+
+- profile=full은 TASK→ANALYSIS→PLAN→TEST-SCENARIO Gate까지 사용자 승인 필수 (interactive 동작)
+- profile=short는 TASK→PLAN Gate까지 사용자 승인 필수 (interactive 동작)
+- profile별 모드 경계 통과 후 EXECUTE/TEST Gate는 PM 자율 통과
 - EXECUTE 진입 = PM이 대행 승인 (구현 금지 원칙의 "실행 허가"를 PM이 판단)
 - CLOSE 진입은 사용자 승인 필수 (공통 게이트)
 - 각 게이트에서 opal-harness-agentic.md "Gate 루핑 규칙" 적용
@@ -351,59 +406,3 @@ semi-agentic / agentic 모두 CLOSE 첫 행 `--auto-pass` 거부 (`agentic_close
 
 - agentic: TASK 시작 시점
 - semi-agentic: EXECUTE-equivalent 첫 행 advance 시점에 PM이 생성
-
-## 변경이력
-| 버전 | 날짜 | 변경내용 |
-|------|------|---------|
-| v1.0 | 2026-03-26 | 초기 작성 — dev-task-pilot 컴포지션 전환 |
-| v1.1 | 2026-03-28 | TEST-SCENARIO를 TODO STEP에 통합, EXECUTE 후 커밋 규칙 추가 |
-| v1.2 | 2026-03-28 | TODO를 PLAN에 흡수하여 5→4 STEP, TEST-SCENARIO를 PLAN STEP에 통합, TEST-SCENARIO 스킵 조건 추가 |
-| v1.3 | 2026-03-28 | Harness 참조 전환으로 슬림화 (265→105줄) |
-| v1.4 | 2026-03-29 | 컴포넌트 리네이밍 (042) |
-| v1.5 | 2026-03-29 | model override를 레벨 기반으로 전환 (044) |
-| v1.6 | 2026-03-31 | Agentic Mode 섹션 추가 (057) |
-| v1.7 | 2026-03-31 | §7 참조 → opal-harness-agentic.md 참조 전환. EXECUTE 후 PM Gate + QA 체크리스트 갱신 추가 (058) |
-| v1.8 | 2026-04-01 | 전체 워커 디스패치 프롬프트에 `[WORKER]` 마커 + 하네스 Guards + 참조 문서 주입 지침 추가 (063) |
-| v1.9 | 2026-04-02 | PLAN PM Gate에 TASK.md 체크박스 갱신 명시 (072) |
-| v2.0 | 2026-04-05 | QA Gate에 체크리스트 갱신 포함 + PM Gate에 갱신 상태 확인 + QA 재소환 절차 추가 (085) |
-| v2.1 | 2026-04-05 | EXECUTE 후 추가작업 참조 가이드 추가 — 하네스 §3 추가작업 프로세스 (087) |
-| v2.2 | 2026-04-07 | TASK/ANALYSIS/PLAN/EXECUTE 각 단계 Gate 순서에 State Gate 추가 (094) |
-| v2.3 | 2026-04-07 | State Gate를 PM Gate 전 1개 → 각 Gate 직후로 재배치 (097) |
-| v2.4 | 2026-04-08 | TEST-SCENARIO를 Gates 앞으로 이동 + TEST 단계 공식화 + TEST 루핑 구현 (100) |
-| v2.5 | 2026-04-09 | STATE.md 도메인 설정 — 진행 현황 행 예시에 산출물 생성 행 추가 (101) |
-| v2.6 | 2026-04-10 | ANALYSIS Gate 슬림화 — QA·PM Gate 제거, State Gate + Artifact Gate만 유지. PLAN QA 범위 확대 — ANALYSIS.md 포함 통합 검토 (107) |
-| v2.7 | 2026-04-10 | Artifact Gate 제거 + PM Gate 점검 목록 섹션 추가 + 파이프라인 현황판 이름 변경 (106) |
-| v2.8 | 2026-04-11 | PM Gate 점검 목록 — PLAN-equivalent Phase에 TASK.md 요구사항 추가 (108) |
-| v2.9 | 2026-04-13 | STEP 3에서 TEST-SCENARIO 별도 디스패치 + QA Gate 제거. PLAN 워커가 TEST-SCENARIO.md 통합 작성. PM Gate에 PLAN.md+TEST-SCENARIO.md Read + 검증 체크리스트 추가. STEP 5 TEST QA Gate 제거, PM Gate에 TEST-SCENARIO.md Read + 검증 체크리스트 추가. Agentic Mode 흐름도 갱신. STATE.md 행 예시 31→24행 갱신 (115) |
-| v3.0 | 2026-04-15 | ANALYSIS/PLAN/EXECUTE 디스패치 프롬프트에 `**핵심 제약**:` 필드 추가 — `[MUST] <문서명> §N: <인용문>` 원문 인용 포맷 명시 (120) |
-| v3.1 | 2026-04-15 | STEP 6 CLOSE 단계 신설 + TEST PM Gate 후 State Gate/사용자 확인 추가 + 진행 현황 행 CLOSE 2행 구조 반영 + 보고 형식 C안 적용 (121) |
-| v3.2 | 2026-04-23 11:39 | STEP 4 EXECUTE에 PLAN.md §4.2 agent 필드 기반 분배 디스패치 절차 추가 — FE/BE 병렬 섹션 agent 필드 기반 일반화·담당 Step/Scope 제한 필드 추가·execution-plan.json 폴백 유지 (129) |
-| v3.3 | 2026-04-24 | citation-rules 트리거 1줄 주입 — SSOT + Trigger 패턴 (130) |
-| v3.4 | 2026-05-01 | state-tool 도입 — STATE.md 직접 편집 금지 + `state-tool` 호출 표현 교체 (P-1~P-8 패턴 적용). "STATE.md 도메인 치환값" SSOT 보존 + `--rows-from` 파싱 SSOT 명시. agentic 활성화에 `--auto-pass` + CLOSE 진입 게이트 거부 정책(§2.16 G-13) 추가 (134) |
-| v3.5 | 2026-05-08 | PM Gate 점검 목록 TEST 행 산출물에 GC-CONVENTION-*.md 추가 + STEP 5 TEST PM Gate 검증 체크리스트에 6번째 항목 '컨벤션 자동 진단 PASS' 신설 (136) |
-| v3.6 | 2026-05-09 11:22 | 3-way 모드 체계 도입 — semi-agentic 기본 채택 + Agentic/Semi-Agentic 모드 절 확장 + Harness 절 3-way 분기 + state init choices 갱신 (140) |
-| v3.7 | 2026-05-09 18:30 | 개인 식별자 "캡틴" → "소유자"/"사용자" 치환 — 배포 파일 정체성 누설 정정 (139) |
-| v3.8 | 2026-05-15 16:40 | 5단계 파이프라인 재편 — STEP 3.5 TEST-SCENARIO 신설(PM 직접 작성, self-confirming 방지) + PLAN에서 TEST-SCENARIO.md 생성 제거 + STATE.md 28행 구조 갱신 + 모드 경계 이동(PLAN→TEST-SCENARIO) + 자율 게이트 흐름도 갱신 + EXECUTE 디스패치 scenario_source·완료기준·자가점검 필드 추가 + PM Gate TEST-SCENARIO Phase 행 추가 + STEP 5 L3 협업 게이트 신설 (004) |
-| v3.9 | 2026-05-19 17:05 | PM Gate TEST-SCENARIO 행 체크리스트 7항목으로 확장 (⑦ 실행 방식 명시) + STEP 3.5 절차에 M1/M2/M3 결정 명시 (004 추가작업) |
-| v4.0 | 2026-06-07 | STATE 행 재구성 — State Gate 행 제거(guard 이전)+QA Gate 행 제거(PM Gate 통합)+산출물 행 흡수+gate-pass→단일 mark (014 Phase 4) |
-| v4.1 | 2026-06-10 10:13 | STEP 3.5/4에 RED-first 참조 + RED 게이트 절차 (016) |
-| v4.2 | 2026-06-11 19:25 | STEP 6 CLOSE에 op-brain-ingest 디스패치 훅 삽입 — DONE.md 생성 직후 brain 존재 시 태스크 산출물 누적, brain 부재 시 no-op, 어떤 status도 CLOSE 비중단 (016-brain, 별도 PC 016과 중복 채번) |
-| v4.3 | 2026-06-24 | CLOSE 단계 op-brain-ingest 디스패치 직전에 "관련 문서 업데이트" 스텝 삽입 — PROJECT.md 레지스트리 + changed_files 종합으로 관련 문서 최신화 후 ingest (없으면 no-op). 후속 항목 번호 재정렬 (042) |
-| v4.4 | 2026-07-10 13:12 | note 예시(산문)의 소유자 확인 표기를 `{owner_name} 확인:` 형식으로 통일 — identity.md owner_name 재해석 규칙(AGENT.md §정체성 적용)과 정합, 오염 차단 (054) |
-| v4.5 | 2026-07-17 13:05 | STEP 2 ANALYSIS 워커 model 레벨 상향 — light → standard (소유자 지시, L2) |
-| v4.6 | 2026-07-17 | STEP 6 CLOSE에 "회고(개선 루프) 하드스텝" 삽입 — op-brain-ingest 직후·완료보고 직전, 궤적 신호→관찰/분류/기록(improve-tool record --scope local\|fw), 개선후보 0건 시 no-op 비차단(brain-ingest 패턴 답습) (058) |
-| v4.7 | 2026-07-20 15:45 | task-step 키 주소 체계 도입 — `references/pipeline.json` 신설(15 task-step, SSOT), `--rows-from` 호출 경로를 SKILL.md에서 pipeline.json으로 교체(`.md` 파싱은 하위호환 폴백으로 존치), 표는 사람 열람용 미러로 축소 (070) |
-| v4.8 | 2026-07-23 | STEP 3.5 목표-커버 게이트 접합 — `references/pipeline.json`에 `test_scenario.scenario_gate` 행 신설(id 10, 이후 11~16 재부여, 15→16 task-step), TEST-SCENARIO.md 작성 mark 후 `op-scenario-gate` 스킬 호출 절차 배선(verdict pass만 게이트 행 mark, rewrite=재작성 루프, escalate=사용자 에스컬레이션), 사람 열람 미러 표 16행 갱신 + 게이트 mark 조건 주석 추가. state-tool 소스 무변경(pipeline.json만 편집) (073) |
-| v4.8 | 2026-07-23 09:56 | 본문 state-tool 명령 예시를 task-step key 주소로 전환(--row→--task-step, --step→--action-step). pipeline.json key 기준. (070 후속) |
-| v4.9 | 2026-08-14 09:23 | pipeline.json 중복 정리 — STATE.md 진행 현황 미러 표 삭제 + 산문 `행 N` 참조를 task-step key로 전환, 모드·단계 목록 표 제거(meta 중복), PM Gate 점검 목록 표를 `references/pipeline.json` `task_steps[].gate` SSOT 포인터로 교체 (091) |
-| v5.0 | 2026-08-15 16:30 | STEP 6 CLOSE에 "worktree 정리 안내" 스텝 삽입 — `--worktree`/`--wt` 태스크에서만 `worktree-tool status` 조회 결과를 근거로 "머지 대기" 안내(자동 제거하지 않음), 미사용 태스크는 no-op 비차단(op-brain-ingest·회고와 동일 패턴). 기존 "5. 완료 보고"를 6으로 재조정 (092) |
-| v5.1 | 2026-08-15 21:48 | 사용자 확인 행 자동 승인 계약 반영 — agentic STATE 갱신 지시에서 PM `--auto-pass` 명시 호출 삭제, 다음 단계 진입 시 도구 자동 승인으로 전환하고 계약 본문은 하네스 SSOT(`opal-harness-agentic.md §4` / `opal-harness-semi-agentic.md §5`) 참조로 정리. CLOSE 진입 게이트 서술 불변 (093) |
-| v5.2 | 2026-08-16 13:30 | 사용자 확인 (P-5) 3건(analysis/test_scenario/test) 산문을 모드 무분기 명령형 → 모드 분기 서술로 교체 — 자동 승인 구간(agentic 전 구간 / semi-agentic EXECUTE-equivalent 이후)은 PM 미호출·도구 자동 승인, 그 외 구간은 기존 mark 호출 유지. 지점별 --task-step 키·근거 인용 보존 (094 R-11 G-4). STEP 1 "[MUST] 행 갱신" 서술의 표 전제("LLM이 STATE.md 마크다운 표를 직접 편집하는 것은 금지된다")를 표준 문구 A("파이프라인 행 상태 변경은 `state-tool`로만 수행, `state.json` 직접 편집 금지, 조회는 `state-tool show`")로 치환 — STATE.md가 파생 표를 렌더하지 않는 저널로 재정의됨에 따른 정합(094 R-6/R-7, Step 8) |
-| v5.3 | 2026-08-19 21:10 | STEP 3(PLAN) §3-1에 목표계열 선작성 병렬 착수 지시 + STEP 3.5 절차 1을 Block B 보강으로 재작성·4에 보강 완료 판정·5에 게이트 1회 전제 및 test_scenario.scenario_gate mark 시점 명시. STEP 2(ANALYSIS)·STEP 4(EXECUTE)·pipeline.json 무변경 (095) |
-| v5.4 | 2026-08-21 15:19 | §[PM 컨텍스트 주입] 블록을 `pm/dispatch-process.md` §워커 컨텍스트 주입 템플릿 포인터로 일원화 — 주입 항목 열거(하네스 Guards·참조 문서·기술 스택 3항목)를 제거하고 SSOT 참조 1줄로 대체. 전 워커 공통 고정(git 이력 변경 금지 포함)이 파일럿 종류와 무관하게 도달하도록 함 (097) |
-| v5.5 | 2026-08-21 22:15 | STEP 1(TASK) 직후에 트랙 강등 판정 호출 지점 배선 — `opal/core/references/harness/track-routing.md`(SSOT) 포인터 + 소유자 승인 왕복 없이 진입·사후 통보 명시. 임계값 수치는 SSOT에만 존치(복제 0건) (098) |
-| v5.6 | 2026-08-23 12:45 | STEP 2(ANALYSIS) 디스패치 프롬프트에 `**분석 질문**:` 슬롯 1줄 추가 — 워커가 전방위 스캔 대신 PM 지정 질문에 답하도록 유도, `op-dev-analysis/SKILL.md`「지정 분석 질문」 섹션과 대응. PM Gate checklist 문구 복제 없음(SSOT는 pipeline.json 유지) (100) |
-| v5.7 | 2026-09-02 17:22 | 에이전트명·소유자 호칭 리터럴 제거 — 규범 산문은 역할어(`PM`/`사용자`/`소유자`)로, 산출물·보고 문면은 `{owner_name}` 플레이스홀더로 전환해 런타임에 소유자 호칭으로 대체된다. 프레임워크 재사용성 확보 (L2 직접 수정) |
-| v5.8 | 2026-09-09 14:18 KST | sdlc-v2 문서 계약 접합 — PLAN PM Gate를 Work items/Risks/Release and recovery와 plan-contract-check 기준으로 갱신하고, TEST-SCENARIO 선작성 기본값을 해제하며 EXECUTE 분배를 Work items 기준으로 전환. 진행 모드 승인 경계는 변경하지 않음 (task 111/W-6) |
-| v5.9 | 2026-09-09 15:35 KST | sdlc-v2 TEST 단계 결과 저장 경계를 `test-scenario.json`으로 정합하고, TEST-SCENARIO.md는 불변 검증 명세로 유지하도록 STEP 5와 pipeline gate를 갱신 (111) |
-| v6.0 | 2026-09-09 15:33 KST | TEST-SCENARIO 작성 단계의 중복 coverage build/check를 제거하고 op-scenario-gate 한 곳에서 실행하도록 일원화. PLAN H는 실제 위험이 있을 때만 요구 (task 111/W-13) |

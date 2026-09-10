@@ -12,7 +12,7 @@ EXECUTE-LOOP는 SPEC-PLAN.md에 정의된 ACT를 의존 순서에 따라 반복 
 
 **핵심 원칙**:
 - opds/opd 위임 없음 — opal-sdd-action-agent에 단일 디스패치
-- 에이전트 내부에서 op-sdd-action-plan + op-dev-execute + VERIFY 루프를 순차 수행
+- 에이전트 내부에서 internal-skills/op-sdd-action-plan + op-dev-execute + VERIFY 루프를 순차 수행
 - SPEC-PLAN.md의 의존관계 그래프가 ACT 실행 순서를 결정
 - SDD 컨텍스트(SPEC.md, SPEC-PLAN.md, TEST-SCENARIOS.md, AC/TS 매핑)를 디스패치 시 주입
 - 재시도 루프: PM 관리, opal-sdd-action-agent 재디스패치
@@ -429,14 +429,5 @@ Group 3 (순차): ACT-004  ← ACT-002, ACT-003 완료 후
 - `verify-guide.md` — REVIEW Phase PM 직접 검증 가이드
 - `spec-guide.md` — SPEC.md 구조 참조
 - `spec-plan-guide.md` — SPEC-PLAN.md 구조 (ACT 분해 섹션 포함)
+- `opal/skills/opal-pilot-sdd/internal-skills/op-sdd-action-plan/SKILL.md` — ACT PLAN 단계 내부 스킬
 - `~/.opal/references/opal-harness.md` — §1 자동 루핑 제약 (재시도 한도 기준)
-
----
-
-## 변경이력
-
-| 날짜 | 버전 | 변경내용 |
-|------|------|---------|
-| 2026-04-10 | R-3 | ACT 목록 테이블 L1/L2 컬럼 추가 (의존, 코드, L1 lint, L2 build, 시작, 완료) + L1/L2 검증 루프 규칙 섹션 추가 + 9-3 갱신 시점 테이블에 L1/L2 이벤트 행 추가 |
-| 2026-05-01 | R-4 | state-tool 도입 — §2 실행 흐름 + §2-1 단일 ACT 실행에 `state mark` 호출 표기. §9 ACT 상태 관리에 `[MUST]` state-tool 호출 블록 + R-10 비표준 행 구성 표기(gate-pass 금지). §10 전체 흐름 예시 STATE.md 갱신 표현 → `state mark` 호출 표기. ACT 목록 SSOT는 SKILL.md 보존 — TASK F-18 / PLAN §1.5 M-31 / §3 Step 11 (134) |
-| 2026-08-16 13:40 | v1.1 | STATE.md 저널화 정합 — §2·§9·§9-2에서 "STATE.md 행 갱신"·"[MUST] LLM이 STATE.md를 직접 편집하는 것은 금지된다"·"## EXECUTE-LOOP 현황"(Phase/진행/상태 표 전제)를 표준 문구 A(도구 규율) + `state.json` SSOT 포인터로 교체. ACT 목록·TS 상태 표는 state.json 파생이 아닌 opsdd 고유 자유 기재로 명시 존치(094 R-6) (094) |

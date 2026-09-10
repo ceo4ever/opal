@@ -5070,16 +5070,16 @@ _OPDW_PIPELINE_SPEC = json.loads("""
 }
 """)
 
-# (skill, 픽스처 스펙, 픽스처 행 수, 실파일 행 수, 실파일 스킬 디렉토리)
+# (skill, 픽스처 스펙, 픽스처 행 수, 실파일 행 수, 실파일 스킬 디렉토리, 실파일명)
 # - 픽스처 행 수: PLAN 070 §3.6.2 전문 인용 시점의 고정값. 실파일이 진화해도 바꾸지 않는다.
 # - 실파일 행 수: 현행 pipeline.json 기준. 파이프라인 행 추가/삭제 시 함께 갱신한다.
 #   073(opd `test_scenario.scenario_gate`)·075(opds `plan.scenario_gate`) 목표-커버 게이트 행
 #   추가로 두 값이 분기했다.
 _GROUP_A_SPECS = [
-    ("opp",  _OPP_PIPELINE_SPEC,  9,  9,  "opal-pilot-project"),
-    ("opd",  _OPD_PIPELINE_SPEC,  15, 16, "opal-pilot-dev"),
-    ("opds", _OPDS_PIPELINE_SPEC, 10, 11, "opal-pilot-dev-short"),
-    ("opdw", _OPDW_PIPELINE_SPEC, 9,  9,  "opal-pilot-dev-wireframe"),
+    ("opp",  _OPP_PIPELINE_SPEC,  9,  9,  "opal-pilot-project", "pipeline.json"),
+    ("opd",  _OPD_PIPELINE_SPEC,  15, 16, "opal-pilot-dev", "pipeline.json"),
+    ("opds", _OPDS_PIPELINE_SPEC, 10, 11, "opal-pilot-dev", "pipeline-short.json"),
+    ("opdw", _OPDW_PIPELINE_SPEC, 9,  9,  "opal-pilot-dev-wireframe", "pipeline.json"),
 ]
 
 
@@ -5220,23 +5220,29 @@ class TestPipelineSpecValidate(unittest.TestCase):
         gate 검사가 없는 현재도 우연히 통과할 수 있으나(비검사=무해), Step 8 GREEN 이후에도
         계속 참이어야 하는 회귀 앵커다."""
         repo_root = _TOOL_DIR.parent.parent.parent
-        real_skill_dirs = [
-            "opal-pilot-project", "opal-pilot-dev", "opal-pilot-dev-short",
-            "opal-pilot-dev-wireframe", "opal-pilot-write-tech", "opal-pilot-sdd",
-            "opal-pilot-data-design", "opal-pilot-project-dev", "opal-pilot-project-loop",
-            "opal-pilot-gc",
+        real_pipeline_specs = [
+            ("opal-pilot-project", "opal-pilot-project/references/pipeline.json"),
+            ("opal-pilot-dev", "opal-pilot-dev/references/pipeline.json"),
+            ("opal-pilot-dev-short", "opal-pilot-dev/references/pipeline-short.json"),
+            ("opal-pilot-dev-wireframe", "opal-pilot-dev-wireframe/references/pipeline.json"),
+            ("opal-pilot-write-tech", "opal-pilot-write-tech/references/pipeline.json"),
+            ("opal-pilot-sdd", "opal-pilot-sdd/references/pipeline.json"),
+            ("opal-pilot-data-design", "opal-pilot-data-design/references/pipeline.json"),
+            ("opal-pilot-project-dev", "opal-pilot-project-dev/references/pipeline.json"),
+            ("opal-pilot-project-loop", "opal-pilot-project-loop/references/pipeline.json"),
+            ("opal-pilot-gc", "opal-pilot-gc/references/pipeline.json"),
         ]
-        for skill_dir in real_skill_dirs:
-            spec_path = repo_root / "opal" / "skills" / skill_dir / "references" / "pipeline.json"
-            with self.subTest(skill=skill_dir):
+        for skill_label, rel_path in real_pipeline_specs:
+            spec_path = repo_root / "opal" / "skills" / rel_path
+            with self.subTest(skill=skill_label):
                 self.assertTrue(spec_path.exists(), f"실 pipeline.json 부재: {spec_path}")
                 spec = json.loads(spec_path.read_text(encoding="utf-8"))
                 violations = ST.validate_pipeline_spec(spec)
                 self.assertEqual(violations, [],
-                                  f"{skill_dir} pipeline.json이 유효해야 하는데 violations: {violations}")
+                                  f"{skill_label} pipeline spec이 유효해야 하는데 violations: {violations}")
                 code, stdout, stderr, data = _run070(["spec-validate", str(spec_path)])
-                self.assertEqual(code, 0, f"{skill_dir} spec-validate exit!=0 (stdout={stdout!r})")
-                self.assertTrue(data.get("ok"), f"{skill_dir} spec-validate ok:false: {data}")
+                self.assertEqual(code, 0, f"{skill_label} spec-validate exit!=0 (stdout={stdout!r})")
+                self.assertTrue(data.get("ok"), f"{skill_label} spec-validate ok:false: {data}")
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -5848,7 +5854,7 @@ class TestGroupAPipelineSpecs(unittest.TestCase):
     def test_all_four_fixtures_row_counts_and_keys(self):
         """[T070/S-1] opp/opd/opds/opdw 임시 픽스처 json init → 행 수 9/15/10/9 + 전 행 key
         존재·유일 (직접 호출, PLAN §3.6.2 전문 인용)."""
-        for skill, spec, expected_count, _real_count, _skill_dir in _GROUP_A_SPECS:
+        for skill, spec, expected_count, _real_count, _skill_dir, _pipeline_file in _GROUP_A_SPECS:
             with self.subTest(skill=skill):
                 spec_path = self.tmpdir / f"{skill}.pipeline.json"
                 spec_path.write_text(json.dumps(spec, ensure_ascii=False), encoding="utf-8")
@@ -5870,7 +5876,7 @@ class TestGroupAPipelineSpecs(unittest.TestCase):
 
     def test_all_four_fixtures_spec_validate_ok(self):
         """[T070/S-1] 그룹 A 4종 임시 픽스처 모두 spec-validate ok:true (직접 호출)."""
-        for skill, spec, _count, _real_count, _skill_dir in _GROUP_A_SPECS:
+        for skill, spec, _count, _real_count, _skill_dir, _pipeline_file in _GROUP_A_SPECS:
             with self.subTest(skill=skill):
                 violations = ST.validate_pipeline_spec(_deepcopy_json(spec))
                 self.assertEqual(violations, [], f"{skill} 스펙 위반 발견: {violations}")
@@ -5886,8 +5892,8 @@ class TestGroupAPipelineSpecs(unittest.TestCase):
         활성화된다(skip에서 실행으로 전환).
         """
         skills_root = _TOOL_DIR.parent.parent / "skills"
-        for skill, _spec, _fixture_count, real_count, skill_dir in _GROUP_A_SPECS:
-            real_path = skills_root / skill_dir / "references" / "pipeline.json"
+        for skill, _spec, _fixture_count, real_count, skill_dir, pipeline_file in _GROUP_A_SPECS:
+            real_path = skills_root / skill_dir / "references" / pipeline_file
             if not real_path.exists():
                 self.skipTest(
                     f"그룹 A 실파일 부재({real_path}) — GREEN(F-006/Step 8) 이전 의도된 "

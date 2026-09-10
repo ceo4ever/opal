@@ -36,7 +36,7 @@
 | `op-task-*` | 범용 단계 스킬 | op-task, op-task-qa, op-task-plan, op-task-execute |
 | `opal-task-*` | 범용 워커 에이전트 | opal-task-agent |
 | `opal-{domain}-agent` | 전문 워커 에이전트 | opal-fe-agent, opal-be-agent, opal-db-agent, opal-plan-agent, opal-test-agent, opal-planning-agent |
-| `op-sdd-*` | SDD 단계 스킬 | op-sdd-spec, op-sdd-verify, op-sdd-plan, op-sdd-action-plan |
+| `op-sdd-*` | opsdd 내부 단계 스킬 | opal-pilot-sdd/internal-skills/op-sdd-spec, op-sdd-plan, op-sdd-action-plan |
 | `opal-*` | OPAL 프레임워크 전용 | opal-project-init, opal-onboarding |
 
 ### 약어 (Alias)
@@ -50,7 +50,7 @@
 |------|--------|
 | opp | opal-pilot-project |
 | opd | opal-pilot-dev |
-| opds | opal-pilot-dev-short |
+| opds | opal-pilot-dev Short profile (registry logical name: opal-pilot-dev-short) |
 | opdw | opal-pilot-dev-wireframe |
 | opwt | opal-pilot-write-tech |
 | opsdd | opal-pilot-sdd |
@@ -125,20 +125,9 @@ icon: {이모지}         # 에이전트만 (선택, 디폴트: ✨)
 ---
 ```
 
-### 변경이력
+### 문서 이력 표준
 
-스킬, 에이전트, 참조 문서의 변경이력은 일시(KST)를 포함한다:
-
-```markdown
-## 변경이력
-
-| 버전 | 일시 | 변경내용 |
-|------|------|---------|
-| v1.0 | 2026-03-30 14:00 | 초기 작성 |
-```
-
-- 일시 형식: `YYYY-MM-DD HH:mm` (KST 기준)
-- 버전: semver (`vX.Y.Z`)
+Markdown 문서의 이력·버전 소유권은 `opal/core/references/opal-doc-standard.md` §4~§5를 따른다. 스킬, 에이전트, 하네스, 참조 문서와 git 관리 프로젝트 문서에는 수기 누적 이력 절을 만들지 않는다.
 
 ### 태스크 산출물 구조
 
@@ -214,7 +203,6 @@ OPAL 본체(스킬·에이전트·도구·하네스)를 작성할 때 따라야 
 - 코드 파일을 생성·수정할 때 파일 상단에 @header 블록을 작성한다 (해당 확장자에 한해).
 - **기록 위치는 `code-scan target <file>` 판정을 따른다** — 인라인 주석 또는 외부 소스 코드 지도(`.opal/code-map/`) 2소스 중 하나이며, 사람·워커가 임의 선택하지 않는다(전역 `headerSource`가 `manifest`이면 code-map 강제).
 - **기록 소스는 `.opal/code-scan.json`의 전역 `headerSource` 단일 키가 결정한다** — `inline` \| `manifest` 2택이며 스코프별 오버라이드는 없다. 미설정·무효값이면 code-scan 전 명령이 exit 1로 차단된다 (Task 080).
-- 변경이력은 스킬·에이전트·참조 문서의 "## 변경이력" 표로 갱신한다.
 - **코드 `@header`에는 이력을 기재하지 않는다** — `@header`는 현재 시점의 사실만 담고, 이력은 git 로그와 `tasks/{NNN}-*/DONE.md`가 갖는다. 원칙 원문은 `opal/core/references/header-standard.md` §2.1이 소유한다. `code-scan validate`의 `header_history` 비차단 경고가 이를 관측한다 (Task 107).
 - 근거: `opal/core/references/harness/header-rules.md`, `opal/core/references/header-standard.md` §7(2소스 표현)
 
@@ -242,11 +230,10 @@ OPAL 본체(스킬·에이전트·도구·하네스)를 작성할 때 따라야 
 - **전체 목록: `opal/tools/` (19종)** — 위 6종 외 `xlsx-tool`, `skill-registry`, `playwright-tool`, `improve-tool`, `cmux-tool`, `git-sync-tool`, `worktree-tool`, `date`, `doctor`, `tool-scan`, `opal-cli`, `opal-agent`, `opal-action-monitor`.
 - 근거: `opal/core/references/opal-harness.md` §9 OPAL Tools
 
-### 변경이력 작성 의무
+### 문서 이력 계약
 
-- 스킬·에이전트·참조 문서를 변경하면 "## 변경이력" 표에 행을 추가한다.
-- 일시는 `YYYY-MM-DD HH:mm` (KST), 버전은 semver, 변경내용은 태스크 번호를 괄호로 포함 — 예: `(138)`.
-- 배포 시 `install-mac.sh`가 변경이력 섹션을 자동 strip 한다 (소스에는 유지, 배포본에서는 제거).
+- git 관리 Markdown 문서에는 수기 누적 이력 절을 만들지 않는다.
+- 이력은 git과 태스크 기록이 소유하며, 세부 기준은 `opal/core/references/opal-doc-standard.md` §4~§5가 소유한다.
 
 ### 배포 경계
 
@@ -274,22 +261,3 @@ OPAL 본체(스킬·에이전트·도구·하네스)를 작성할 때 따라야 
 > 다중 구성(FE/BE/Batch/Mobile 등) 프로젝트는 허브+링크 모델 적용 가능 —
 > 영역별 상세 문서(`FE-CONVENTIONS.md`, `BE-CONVENTIONS.md` 등)를 분리하고 본 허브에서 링크로 연결한다.
 > 규약: `opal/core/references/conventions-hub-model.md` 참조.
-
----
-
-## 변경이력
-
-| 버전 | 일시 | 변경내용 |
-|------|------|---------|
-| v1.1.0 | 2026-08-11 13:26 | 실측 대조 기반 전면 최신화 — 태스크 폴더·에이전트 경로 네이밍 정정, 에이전트 15종·alias 27종·도구 18종 인벤토리 반영, 브랜치·커밋·State·배포 경계를 현행 관행에 정합, 변경이력 절 신설 (089) |
-| v1.2.0 | 2026-08-13 17:19 | §State 관리에 행 원천 규칙 1줄 추가 — `init --rows-from`은 pilot `references/pipeline.json`을 지정하며 SKILL.md 마크다운 파싱(`build_rows_from_skill_md`)은 deprecated·신규 지시 사용 금지. 미전환 6 pilot(opdd·opgc·opwt·opsdd·oppl·oppd) 이관으로 10/10 전환 완료, deprecated 경로 호출자 0건 (090) |
-| v1.3.0 | 2026-08-14 09:38 | §State 관리에 PM Gate 정의 SSOT 규칙 추가 — 게이트 산출물·체크리스트의 원천을 pilot `references/pipeline.json` `task_steps[].gate`로 확정하고 SKILL.md 표 중복 게재를 금지. `mark`의 `artifacts` 결정론 존재 검증(`gate_artifact_missing` 거부)·`checklist` stdout 반환(`gate_checklist`)·`--force --note` 우회 시 `gate_artifact_force` 의사결정 로그 강제를 명문화. artifacts 적격 토큰을 "게이트 시점 필재 상대 경로/글롭"으로 한정(조건부 산출물·논리 개념은 checklist로 — 오등재 시 영구 차단) (091) |
-| v1.4.0 | 2026-08-15 16:35 | 도구 인벤토리 18종 → **19종**(`worktree-tool` 추가) + §브랜치 전략에 **적용 범위 명시** — 본 절 규칙은 OPAL 저장소 자체 전용이고, worktree 대상 프로젝트의 코드 브랜치는 `{프로젝트}/.opal/worktree.json` `branchTemplate`(기본 `feat/OP-TASK-{NNN}`)을 따른다. 두 규칙의 충돌이 아니라 적용 범위 미표기가 문제였다 (092 DEC-1) |
-| v1.5.0 | 2026-08-15 21:48 | §State 관리에 사용자 확인 행 자동 승인 계약 1줄 추가 — 전 모드 `pending/owner=PM` 초기화, 다음 단계 진입 시 state-tool 자동 승인(`done/owner=auto/timestamp`), 자동 승인 불가 구간(CLOSE 직전·interactive·semi-agentic `MODE_BOUNDARY_STAGES`)의 `user_confirmation_required` 거부와 캡틴 `mark --owner user` 승인 명문화 (093) |
-| v1.6.0 | 2026-08-16 13:36 | STATE.md 저널화 반영 — §State 관리 첫 항목을 도구 규율 표준 문구로 교체("마크다운 표 직접 편집 금지" 서술 제거 + `state-tool show <task-path>` 조회 경로 명시), §태스크 산출물 구조의 STATE.md 행 설명을 "의사결정 로그·블로커 저널"로 정정, "상태 SSOT는 state.json이며 STATE.md는 이를 렌더한 읽기용 뷰다" 서술을 "STATE.md는 의사결정 로그·블로커·자유 기재를 담는 저널이며 파이프라인 현황의 SSOT는 state.json, 조회는 state-tool show"로 교체 — STATE.md는 더 이상 state.json의 렌더 뷰가 아니다 (094) |
-| v1.6.1 | 2026-08-16 15:05 | §태스크 산출물 구조 STATE.md 행 말미 정정 — "두 파일 모두 `state-tool`이 갱신한다"(부정확, 블로커·자유 기재는 도구 미접촉)를 코드 실측(`state_tool.py` `ensure_journal_skeleton`/`append_decision_log`/`cmd_block`) 기준으로 "state.json은 state-tool 전량 갱신, STATE.md는 저널 골격·의사결정 로그만 자동 갱신, 블로커·자유 기재는 PM 수동"으로 세분화 (094 Step 14) |
-| v1.7.0 | 2026-08-21 15:30 | 커밋 실행 시점 규칙의 원문 복제 2건을 하네스 포인터로 축약 — §커밋 규칙 §규칙 첫 항목과 §구현 규칙 §Guards 커밋 항목을 제거하고, 규칙 소유권이 `opal/core/references/opal-harness.md` §1 Guards에 있음을 명시. 본 문서는 커밋 **메시지 형식·단위**만 규정한다. 에이전트 행동 Guard를 코드 컨벤션 문서에 복제하면 프로젝트마다 존재 여부가 갈리는 우발 경로가 되므로, 워커 도달은 `pm/dispatch-process.md` §워커 컨텍스트 주입 템플릿의 전 워커 공통 고정 항목이 담당한다 (097) |
-| v1.8.0 | 2026-08-21 22:18 | §Citation Rules에 근거 등급·관할 SSOT 포인터 1줄 추가 — 등급 5단계(E1~E5)와 AS-IS/TO-BE 관할 2축의 원문 소유권이 `opal/core/references/harness/citation-rules.md` §9임을 명시. 본 문서는 포인터만 두어 등급표 복제를 차단한다 (098) |
-| v1.6.0 | 2026-09-04 22:44 | §약어 (Alias) 사본 정합 회복 — 「프레임워크 운영」 표에 신설 `opcmb`(opal-code-map-builder) 1건 등재 + **실측 결손 2건 보정**(`opgr`/opal-grill · `opeli5`/opal-eli5 — 레지스트리에는 있으나 사본 표에 누락되어 있었다). 도입문 총계를 27종 → **30종**으로 정정하여 레지스트리(v3.14.0, alias 30종) 실측값과 1:1 일치시켰다. 본 표가 스스로 "레지스트리의 사본"임을 선언하므로 사본 정합 회복은 규정 집행이다 (106) |
-| v1.9.0 | 2026-09-06 13:35 | §@header 규칙 — 코드 `@header`에 이력을 남기도록 허용하던 구형 어구를 제거하고 이력 비기재 원칙으로 교체(원문 소유권은 `opal/core/references/header-standard.md` §2.1, 관측은 `code-scan validate` `header_history` 비차단 경고). 직전 행이 v1.8.0 뒤에 v1.6.0으로 기재된 것은 106의 버전 표기 오류이며 본 행은 실제 최신인 v1.8.0을 기준으로 채번했다 (107) |
-| v1.10.0 | 2026-09-07 17:14 | §구현 규칙에 `허브 루트 해석` 항목 신설 — 워크트리에서 허브 고정 데이터(`tasks/`·`.opal/`)를 참조하는 경로 판정 규칙(5항 + 부칙 4건)의 원문 소유권이 `opal/core/references/opal-harness.md` §2.5 (4)에 있음을 명시하고, 실행 가능한 대조 기준이 골든 케이스 표 `hub-root-cases.json`(C-1~C-7)임을 함께 기재한다. 본 문서는 **주제만 나열하고 규칙 내용은 재서술하지 않는다** — v1.8.0(Citation Rules 등급표) 선례와 동일 형태다 (109) |

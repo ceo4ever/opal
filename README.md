@@ -282,8 +282,8 @@ OPAL 에이전트는 **비서**와 **PM** 두 가지 역할을 수행한다.
 
 | Pilot | 이름 | 적합한 작업 규모 | 파이프라인 | 주요 산출물 |
 |-------|------|----------------|-----------|------------|
-| `//opds` | Short Task Dev | 소~중 (단일 기능 단위) | TASK → PLAN(+테스트 시나리오) → EXECUTE → TEST | TASK, PLAN, DONE |
-| `//opd` | Full Task Dev | 중~대 (멀티 모듈) | TASK → ANALYSIS → PLAN(+테스트 시나리오) → EXECUTE → TEST | + ANALYSIS |
+| `//opds` | Short Task Dev (`opal-pilot-dev` Short profile) | 소~중 (단일 기능 단위) | TASK → PLAN(+테스트 시나리오) → EXECUTE → TEST | TASK, PLAN, DONE |
+| `//opd` | Full Task Dev (`opal-pilot-dev` Full profile) | 중~대 (멀티 모듈) | TASK → ANALYSIS → PLAN(+테스트 시나리오) → EXECUTE → TEST | + ANALYSIS |
 | `//opdw` | Wireframe UI | 소~중 (화면 단위) | TASK → WIREFRAME → EXECUTE | wireframe.md, UI 컴포넌트 |
 | `//opp` | 범용 Project | 제한 없음 | TASK → PLAN → EXECUTE | TASK, PLAN, DONE |
 | `//opsdd` | SDD 개발 | 중~대 (명세 복잡) | TASK → SPEC → REVIEW → DESIGN → EXECUTE-LOOP → VERIFY → CLOSE | SPEC, TEST-SCENARIOS, SPEC-PLAN, STATE |
@@ -465,6 +465,8 @@ PRD, TRD, 서비스 정책서, IA 등 **기획 문서를 작성하거나 최신�
 
 **파이프라인**: `TASK → PLAN(+테스트 시나리오) → EXECUTE → TEST`
 
+**구현 정본**: `//opds`는 별도 물리 오케스트레이터가 아니라 `opal-pilot-dev`의 Short profile이다. 호출 alias와 `skill=opds` 상태 식별자는 유지하며 Short 전용 11행 pipeline을 사용한다.
+
 **산출물**: `TASK.md`, `PLAN.md`(테스트 시나리오 포함), `DONE.md`
 
 #### 진행 흐름
@@ -517,6 +519,8 @@ Full Task(opd)로 전환할까요?
 **언제 쓰나**: 대규모 기능 개발, 여러 모듈에 걸친 변경, 아키텍처 수준의 작업.
 
 **파이프라인**: `TASK → ANALYSIS → PLAN(+테스트 시나리오) → EXECUTE → TEST`
+
+**구현 정본**: `//opd`는 `opal-pilot-dev`의 Full profile이다. 같은 canonical Dev Pilot 안에서 `//opds` Short profile과 분기하되 Full 전용 16행 pipeline을 사용한다.
 
 **산출물**: `TASK.md`, `ANALYSIS.md`, `PLAN.md`(테스트 시나리오 포함), `DONE.md`
 
@@ -575,6 +579,8 @@ Full Task(opd)로 전환할까요?
 **언제 쓰나**: "무엇을 만들지"를 먼저 엄밀하게 정의한 뒤 개발하고 싶을 때. 기능 명세(SPEC)를 SSOT로 삼아 테스트 시나리오 → 설계 → 구현까지 파이프라인을 관리한다.
 
 **파이프라인**: `TASK → SPEC → REVIEW → DESIGN → EXECUTE-LOOP → VERIFY → CLOSE`
+
+**내부 단계**: SPEC, DESIGN/SPEC-PLAN, ACT PLAN은 `opal-pilot-sdd/internal-skills/` 내부 단계 스킬이 담당한다. REVIEW 검증 규칙은 별도 최상위 verify 단계 스킬이 아니라 `opal-pilot-sdd/references/verify-guide.md`가 소유한다.
 
 **산출물**:
 

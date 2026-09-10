@@ -42,6 +42,7 @@ const { spawnSync } = require('node:child_process');
 // ─── 유틸 ────────────────────────────────────────────────────────────────────
 
 const SKILL_REGISTRY_JS = path.resolve(__dirname, '..', 'skill-registry.js');
+const REPO_ROOT = path.resolve(__dirname, '..', '..', '..', '..');
 
 /**
  * 배포 환경(모사)을 위한 fixture를 생성한다.
@@ -390,4 +391,30 @@ test('[T602/L1-F6] user-registry.json 파손 → CLI 다운 없이 무시, exit 
   assert.strictEqual(exitCode, 0,
     `user-registry 파손 시에도 exit 0 이어야 함(CLI 다운 금지) but got ${exitCode}. stderr: ${stderr}`);
   assert.ok(Array.isArray(result), `stdout은 여전히 유효한 JSON 배열이어야 함. got: ${JSON.stringify(result)}`);
+});
+
+// ─── [T112/S-2,S-3] //opd·//opds → shared canonical SKILL path ────────────
+
+test('[T112/S-2] `//opd` match → canonical opal-pilot-dev/SKILL.md', () => {
+  const { exitCode, result, stderr } = runCli(['match', '//opd'], os.homedir(), REPO_ROOT);
+
+  assert.strictEqual(exitCode, 0, `exit code should be 0 but got ${exitCode}. stderr: ${stderr}`);
+  assert.ok(result !== null, 'stdout should be valid JSON');
+  assert.strictEqual(result.found, true, `found should be true. result: ${JSON.stringify(result)}`);
+  assert.strictEqual(result.name, 'opal-pilot-dev');
+  assert.strictEqual(result.alias, 'opd');
+  assert.ok(String(result.path || '').endsWith(path.join('opal-pilot-dev', 'SKILL.md')),
+    `opd path should point to canonical opal-pilot-dev/SKILL.md, got: ${result.path}`);
+});
+
+test('[T112/S-3] `//opds` match → logical opds entry uses shared canonical SKILL.md', () => {
+  const { exitCode, result, stderr } = runCli(['match', '//opds'], os.homedir(), REPO_ROOT);
+
+  assert.strictEqual(exitCode, 0, `exit code should be 0 but got ${exitCode}. stderr: ${stderr}`);
+  assert.ok(result !== null, 'stdout should be valid JSON');
+  assert.strictEqual(result.found, true, `found should be true. result: ${JSON.stringify(result)}`);
+  assert.strictEqual(result.name, 'opal-pilot-dev-short');
+  assert.strictEqual(result.alias, 'opds');
+  assert.ok(String(result.path || '').endsWith(path.join('opal-pilot-dev', 'SKILL.md')),
+    `opds path should point to canonical opal-pilot-dev/SKILL.md, got: ${result.path}`);
 });

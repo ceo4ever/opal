@@ -28,6 +28,8 @@ REVIEW Phase는 SPEC.md를 SSOT(단일 진실 원천)로 확정하는 단계다.
 
 ## 2. 구조 검증 체크리스트 (S-1~S-6)
 
+현행 REVIEW 구조 검증의 SSOT는 이 절이다. 제거된 `op-sdd-verify` 단계나 SPEC-VERIFY/TASKS-VERIFY Phase를 호출 가능한 현행 단계로 해석하지 않는다.
+
 SPEC.md를 Read하여 아래 항목을 체크한다. 규칙 기반이므로 빠르게 수행 가능.
 
 | # | 항목 | 기준 | 실패 시 |
@@ -182,15 +184,6 @@ PM이 TS 작성 과정에서 자연스럽게 수행하게 되는 검증. 별도 
 ## 관련 문서
 
 - `opal-pilot-sdd/SKILL.md` — opsdd 오케스트레이터 메인 (Phase 2: REVIEW 개요)
-- `op-sdd-verify/SKILL.md` — 구조 검증 항목 참조 (S-1~S-6 상세)
+- `verify-guide.md` §2 — 현행 REVIEW 구조 검증 항목(S-1~S-6) SSOT
 - `execute-loop-guide.md` — EXECUTE-LOOP ACT 루프 구조
 - `spec-guide.md` — SPEC.md 구조 (REVIEW 검증 대상)
-
----
-
-## 변경이력
-
-| 버전 | 일자 | 변경 내용 |
-|------|------|----------|
-| v1.1 | 2026-07-23 | §4 수동 FR↔TS 커버리지 → scenario-coverage-check 게이트 대체, §2 S-1~S-6 존치 (075) |
-| v1.2 | 2026-08-16 13:40 | STATE.md 저널화 전수 점검(치환 #1~#3 대상 재확인) — §5 `:154` "Warning을 STATE.md 의사결정 로그에 기록"은 이미 저널 모델(의사결정 로그)과 정합하여 표 전제·마커·현황판 문구 0건 확인, 본문 변경 없음 (094) |
