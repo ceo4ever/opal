@@ -1,8 +1,8 @@
 ---
 name: opal-pilot-dev
 description: |
-  **Full Task 오케스트레이터**. 대규모 개발 작업을 5단계 파이프라인으로 수행한다.
-  반드시 이 스킬을 사용해야 하는 상황: "opal-pilot-dev", "opd".
+  **Dev Pilot 오케스트레이터**. `opd` Full profile과 `opds` Short profile을 하나의 canonical 스킬로 수행한다.
+  반드시 이 스킬을 사용해야 하는 상황: "opal-pilot-dev", "opd", "opds".
   코드를 읽기만 하는 설명 요청, API 명세서(api-analyzer), 기획 문서(opal-pilot-write-tech), PR 리뷰, git 작업, 단순 설정 변경은 이 스킬이 아니다.
 ---
 # Full Task 오케스트레이터
@@ -32,6 +32,29 @@ description: |
 문서 집합은 `events.json`만 SSOT로 사용하며 SKILL에 파일 목록을 복제하지 않는다. load 실패,
 필수 문서 누락, stale receipt, wrong-event receipt는 해당 파일럿·단계 진입을 즉시 중단하는
 blocker다. 부트 캐시를 근거로 공통 문서를 직접 재Read하는 우회는 금지한다.
+
+## 프로필 선택
+
+[MUST] 사용자가 선택한 프로필을 기본 수행한다. `//opd`는 Full profile, `//opds`는 Short profile이다.
+
+- Full profile은 아래 STEP 1~6을 수행한다.
+- Short profile은 `references/pipeline-short.json`을 상태 행 SSOT로 사용하고, TASK 후 아래 Short PLAN 절을 거쳐 Full profile의 STEP 4~6(EXECUTE·TEST·CLOSE 공통 절차)을 재사용한다.
+- 프로필 전환은 자동으로 수행하지 않는다. 강등·강업은 해당 기준 문서에 따른 사용자 제안으로만 처리한다.
+
+### Short profile PLAN
+
+Short profile(`opds`)은 Full profile의 ANALYSIS를 생략하고, `op-dev-plan` 워커가 TASK와 프로젝트 문서를 직접 분석해 PLAN을 작성한다.
+
+1. `references/pipeline-short.json`으로 STATE를 초기화한다.
+2. `stage.plan` 이벤트 게이트 통과 후 `op-dev-plan`을 디스패치한다.
+3. PLAN 수신 후 PM이 TEST-SCENARIO를 작성하고 `plan.scenario_gate`와 `plan.pm_gate`를 통과시킨다.
+4. PLAN 완료 직후, EXECUTE 진입 전에 [track-escalation.md](references/track-escalation.md)의 핵심 질문을 1회 검토한다.
+   - 미결정 동작·계약·구조가 없으면 `opds`를 계속한다.
+   - 미결정 사항이 있으면 사용자에게 `opd` 전환을 제안한다.
+   - 사용자가 거절하면 `opds`를 계속하고, 결정 없이는 실행할 수 있을 때만 blocker로 보고한다.
+5. 사용자 확인 또는 agentic 자동 승인 후 Full profile의 STEP 4 EXECUTE로 진입한다. 강업 제안을 사용자가 수락하면 TASK·PLAN을 인계해 Full profile의 STEP 2 ANALYSIS부터 재개한다.
+
+강업 제안은 `track-escalation.md`의 판정 시점·1회 제안·사용자 선택 계약을 따른다. 파일 수·변경량은 판정에 사용하지 않는다.
 
 ## STEP 1: TASK
 `stage.task`가 전달한 `task-process` 전문을 따른다.
