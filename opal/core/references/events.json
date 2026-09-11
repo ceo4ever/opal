@@ -334,6 +334,11 @@
           "id": "memory-learning",
           "source": "{source_root}/opal/core/references/harness/memory-learning.md",
           "deployed": "{deployed_root}/references/harness/memory-learning.md"
+        },
+        {
+          "id": "proposal-lifecycle",
+          "source": "{source_root}/opal/core/references/harness/proposal-lifecycle.md",
+          "deployed": "{deployed_root}/references/harness/proposal-lifecycle.md"
         }
       ],
       "optional_docs": [],
