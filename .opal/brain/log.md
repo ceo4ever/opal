@@ -402,3 +402,7 @@
 - 갱신: [[skill-opal-pilot-dev]], [[skill-opal-pilot-dev-short]], [[op-sdd-spec]], [[op-sdd-plan]], [[op-sdd-action-plan]], [[op-sdd-verify]]
 - 출처: task:112
 
+## [2026-09-11] ingest | CLOSE ingest — 태스크 116 부트스트랩 행동 필요 브리핑
+- 신규: [[session-project-action-needed-briefing]]
+- 출처: task:116
+

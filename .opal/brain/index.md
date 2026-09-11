@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-09-10 09:55
+> 갱신: 2026-09-11 11:35
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -274,6 +274,7 @@
 - [[self-confirming-validation-timing-argument]] — 자기확인 검증의 시점 논거 판별 — 개정 대상 무변경 확인으로 순환 논증을 잡는다 #self-confirming #verification #evaluator #scenario-gate #opd
 - [[self-edit-line-anchor-drift]] — 자기 편집 파일의 행번호 앵커는 드리프트한다 #verification #anchor #test-scenario #regression
 - [[self-modifying-tool-deploy-unit-coupling]] — 자기 자신을 고치는 도구의 배포 단위 결합 원칙 #deploy #gate-design #pattern #task-093
+- [[session-project-action-needed-briefing]] — 프로젝트 세션 행동 필요 브리핑 #bootstrap #session #state #memory
 - [[shard-policy-block-vs-nonblock-fallback-criterion]] — 미설정 시 차단 vs 비차단 폴백 판정 기준 #code-scan #configuration #backward-compat #task-080 #task-083
 - [[shared-ssot-procedure-artifact-role-split]] — 분석 코어 공유 SSOT — 절차와 산출물의 역할 분리 #ssot #analysis-core #role-separation #architecture #opd
 - [[side-effect-observation-enables-runtime-verification]] — 부작용 관측이 실행-시간 검증을 자동화한다 #verification #testing #skill-wizard #task-114
