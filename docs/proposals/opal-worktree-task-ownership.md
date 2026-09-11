@@ -1,6 +1,6 @@
 # OPAL 워크트리 태스크 소유권 전환 제안서
 
-> 상태: 4차 개정 제안
+> 상태: 5차 개정 제안
 > 작성: 알투(PM)
 > 작성일: 2026-09-11
 > 개정 기준일: 2026-09-12
@@ -28,7 +28,7 @@ sparse 패턴은 사용하지 않는다.
 2. PM과 워커는 같은 canonical task path를 사용한다.
 3. 기존 태스크 폴더는 checkout돼 있어도 읽기 전용이며 현재 태스크 폴더만 생성·변경한다.
 4. 코드, 태스크 문서, `state.json`, 표준 실행 로그와 태스크 락은 같은 브랜치 수명주기를 따른다.
-5. `.opal`은 worktree에 checkout하고 브랜치 규범·brain·설정을 그 작업본에서 사용한다.
+5. `.opal`은 worktree에 checkout해 규범·설정·brain snapshot을 사용하되, 회고적 brain 학습은 후보만 남기고 merge 후 허브에서 수행한다.
 6. 활성 실행 중 허브 공용 쓰기는 `last_task_number`와 `.opal-worktrees/.meta/` registry 두 가지뿐이다.
 7. merge가 확인되기 전에는 워크트리를 제거하거나 태스크를 허브 완료본으로 간주하지 않는다.
 8. `--worktree`를 사용하지 않는 태스크는 계속 허브 `tasks/`를 사용한다.
@@ -100,6 +100,7 @@ sparse 패턴은 사용하지 않는다.
 - monorepo sparse cone에 `tasks`와 `.opal`을 포함해 프로젝트 작업본을 자기완결시킨다.
 - `.opal-worktrees` 세그먼트 기반 허브 정규화와 그 중복 구현·골든표를 제거한다.
 - task root와 allocator root를 분리해 브랜치 설정과 허브 동시 쓰기를 섞지 않는다.
+- 회고적 brain 학습을 merge 후 허브 finalize로 모아 병렬 branch의 page·index·log 충돌을 없앤다.
 - PM과 워커가 같은 `state.json`, run-log, task lock을 사용하게 한다.
 - 기존 태스크 폴더가 함께 checkout되는 정상 Git 동작을 허용하되 비현재 태스크 변경을 차단한다.
 - 태스크 생성, 실행, commit, merge, 정리의 수명주기를 닫는다.
@@ -129,8 +130,9 @@ sparse 패턴은 사용하지 않는다.
 | task home | 현재 태스크의 프로젝트 파일을 해석하는 기준 작업본 |
 | canonical task path | `<task_home>/tasks/<task_folder>`의 정규화된 절대 경로 |
 | 태스크 캡슐 | 현재 태스크 폴더 안의 TASK·PLAN·state·검증·완료·실행 로그 전체 |
-| task root | 태스크 문서·브랜치 설정·brain·코드 스캔의 기준인 현재 작업본 루트 |
-| allocator root | task number와 merge 후 MEMORY history·index 쓰기에만 쓰는 명시적 허브 절대 경로 |
+| task root | 태스크 문서·브랜치 설정·brain 조회·코드 스캔의 기준인 현재 작업본 루트 |
+| allocator root | task number와 merge 후 brain·MEMORY 귀속 쓰기에만 쓰는 명시적 허브 절대 경로 |
+| brain 학습 후보 | 작업 중 발견했지만 태스크의 직접 산출물은 아닌 회고적 지식. 태스크 캡슐에 근거만 남기고 merge 후 허브에서 판정한다. |
 
 ### 4.2 목표 구조
 
@@ -183,15 +185,16 @@ fixture의 가용성이다.
 | 현재 태스크의 `state.json`, `STATE.md` | 태스크 브랜치 | 태스크 폴더와 함께 merge |
 | 현재 태스크의 run-log·검증 산출물 | 태스크 브랜치 | 추적 정책에 따라 merge |
 | 현재 태스크의 `.opal-task.lock` | 태스크 워크트리 runtime | gitignore, merge하지 않음 |
-| `.opal`의 규범·brain page·프로젝트 파일 변경 | 태스크 브랜치 | 실제 변경분만 merge |
-| `.opal/brain/index.md`, `log.md` | 파생·집계 경로 | page merge 후 허브에서 재구성·기록 |
+| `.opal`의 규범·프로젝트 파일과 명세가 직접 요구한 brain 문서 | 태스크 브랜치 | 선언된 변경분만 일반 merge |
+| 회고적 brain 학습 | 태스크 캡슐이 후보·근거를 소유 | merge 후 최신 허브 brain에서 page 생성·갱신 여부 판정 |
+| `.opal/brain/index.md`, `log.md` | 허브 귀속 후처리 | 학습 page 확정 후 허브에서 재구성·기록 |
 | `last_task_number` | 허브 `.opal/MEMORY.json`의 기존 원자적 allocator | 생성 전에 allocator root에서 1회 발급 |
 | 활성 worktree registry | 허브 `.opal-worktrees/.meta/` | runtime SSOT, 브랜치에 복제하지 않음 |
 | CLOSE 후 프로젝트 history 갱신 | merge 확인 후 허브 | merge된 태스크를 가리키는 후처리 |
 
 `.opal`의 추적 파일은 worktree에 실체화하고 현재 브랜치가 사용하는 규범·설정·지식으로 취급한다.
 활성 실행 중 여러 브랜치가 즉시 공유하는 허브 쓰기는 `last_task_number`와 registry뿐이다.
-MEMORY history와 brain 집계 갱신은 active branch의 공유 쓰기가 아니라 merge 뒤 기본 브랜치에서
+MEMORY history와 회고적 brain 학습·집계 갱신은 active branch의 공유 쓰기가 아니라 merge 뒤 기본 브랜치에서
 실행하는 귀속 후처리다.
 
 `state.json.worktree`는 merge 뒤에도 실행 출처를 보존하는 역사 필드로 해석한다. 활성 상태의
@@ -299,7 +302,8 @@ fallback 정책에 따라 허브 비워크트리 태스크를 생성한다. 실�
 - 태스크 문서·state·run-log·락은 `task_path` 아래에서만 읽고 쓴다.
 - 빌드·테스트·코드 스캔은 task branch의 소스 경로를 사용한다.
 - 현재 태스크 외 `tasks/*` 변경은 기본적으로 conformance gate가 거부한다.
-- 현재 태스크가 프로젝트 공용 docs나 `.opal/brain`을 변경하는 것은 일반 branch diff로 허용한다.
+- 프로젝트 공용 docs와 TASK/PLAN이 직접 산출물로 선언한 `.opal/brain` 경로만 일반 branch diff로 허용한다.
+- 회고적 brain 학습은 worktree의 brain 파일을 바꾸지 않고 `DONE.md`의 표준 학습 후보 절에 제목·요약·근거를 남긴다.
 
 ### 6.3 완료와 merge
 
@@ -311,7 +315,7 @@ pipeline CLOSE와 worktree 회수는 같은 사건이 아니다.
 4. 사용자가 선택한 방식으로 branch를 기본 브랜치에 merge한다.
 5. 도구가 merge commit 또는 ancestor 관계로 해당 branch 귀속을 확인한다.
 6. 허브에서 merge된 `tasks/{현재 태스크}`의 hash와 registry의 완료 hash를 대조한다.
-7. merge된 brain page를 기준으로 `brain-tool index`를 재생성하고 log entry를 허브에서 append한다.
+7. merge된 태스크의 brain 학습 후보를 최신 허브 brain과 대조해 page 생성·갱신·생략을 판정하고, index 재생성과 log 기록까지 수행한다.
 8. 최신 허브 MEMORY에 현재 태스크의 memory index 요청과 history를 적용하고 history FIFO를 정리한다.
 9. 7·8단계가 만든 추적 변경을 merge commit에 포함하거나 직후 단일 finalize commit으로 확정한다.
 10. 미처리 memory index 요청 0건과 허브의 미커밋 귀속 변경 0건을 검증한다.
@@ -333,13 +337,14 @@ HEAD가 이미 branch 끝으로 이동하므로 첫 경로로 판정하지 않�
 후처리는 `completed_unmerged → attribution_pending → closed` 상태를 따른다. commit 생성이나
 clean 검증이 실패하면 `attribution_pending`에 머물며 closed 판정, worktree remove, 다음 귀속
 후처리를 허용하지 않는다. 도구가 사용자의 다른 미커밋 변경을 함께 stage하거나 commit하지
-않으며, 추적 후처리 파일인 `.opal/MEMORY.json`, `.opal/brain/index.md`, `.opal/brain/log.md`와
-해당 task ID로 생성된 diff만 정확히 선별한다.
+않으며, 추적 후처리 파일인 `.opal/MEMORY.json`, 해당 후보로 생성·갱신한 `.opal/brain/pages/*`,
+`.opal/brain/index.md`, `.opal/brain/log.md`와 memory index 요청 처리에 필요한 현재 task diff만
+정확히 선별한다.
 
 귀속 후처리와 새 task-number 발급은 registry의 프로젝트 finalize lock으로 직렬화한다. 진입 시
-brain index/log에는 다른 미커밋 변경이 없어야 하며, MEMORY의 선행 diff는 allocator가 만든
+brain pages/index/log에는 다른 미커밋 변경이 없어야 하며, MEMORY의 선행 diff는 allocator가 만든
 `last_task_number` 변경만 허용한다. 그 밖의 dirty 변경은 `attribution_commit_blocked`로 거부한다.
-finalize commit은 현재 task의 index/log/history·memory index 요청과 그 시점의 유효한
+finalize commit은 현재 task의 brain page/index/log·MEMORY history·memory index 요청과 그 시점의 유효한
 allocator 값을 함께 확정한다.
 lock 해제 후 다음 채번이 MEMORY를 다시 dirty하게 만들 수 있으므로 R-18의 clean 판정은 전체
 `git status`가 아니라 미커밋 brain 집계와 `.opal/MEMORY.json` 귀속 변경이 0건인지를 검사한다.
@@ -410,7 +415,7 @@ metadata에 기록하지 않는다. 두 SHA-256은 `copy2` 직후 계산해 일�
 2. `.opal-worktrees/.meta/` registry: Git 추적 대상이 아니며 활성 슬롯·task path·allocator root·merge 상태를 소유한다.
 
 runtime lock은 위 두 자산 각각의 도구 내부 구현이며 별도의 업무 데이터 SSOT로 세지 않는다.
-MEMORY history와 brain 집계 갱신은 활성 중 허브 공유 쓰기가 아니라 merge가 확인된 뒤 기본
+MEMORY history와 회고적 brain 학습·집계 갱신은 활성 중 허브 공유 쓰기가 아니라 merge가 확인된 뒤 기본
 브랜치에서 수행하는 귀속 후처리다.
 
 ### 7.3 append·집계 파일 처리
@@ -420,20 +425,26 @@ MEMORY history와 brain 집계 갱신은 활성 중 허브 공유 쓰기가 아�
 
 | 자산 | SSOT 여부 | worktree 실행 | merge 후 처리 |
 |---|---|---|---|
-| brain page | 원본 | branch에 새 page 작성·수정 | 일반 merge |
-| `brain/index.md` | pages에서 재생성 가능한 파생물 | 로컬 조회용 생성 허용 | merge된 pages 기준 `brain-tool index`로 재생성 |
-| `brain/log.md` | 현행 append-only 원본 | 직접 append 금지 | merge 귀속 단계에서 허브 `brain-tool log` 1회 append |
+| 명세가 직접 요구한 brain 문서 | 태스크 산출물 | TASK/PLAN에 선언된 경로만 작성·수정 | 일반 merge |
+| 회고적 brain 학습 후보 | 판단 근거 | `DONE.md` 표준 절에 제목·요약·근거 기록, brain 파일 변경 금지 | 최신 허브 brain 기준 page 생성·갱신·생략 판정 |
+| 회고적 brain page | 학습 원본 | 자동 생성·수정 금지 | 후보 채택 시 허브에서 생성·갱신 |
+| `brain/index.md` | pages에서 재생성 가능한 파생물 | 생성·수정 금지 | 최종 pages 기준 `brain-tool index`로 재생성 |
+| `brain/log.md` | 현행 append-only 원본 | 직접 append 금지 | 후보 판정과 page 변경을 허브에서 1회 기록 |
 | `MEMORY.json.history[]` | 프로젝트 history | worktree 사본에 append 금지 | merge 확인 뒤 allocator root에서 1회 append |
 | tracked `.opal/memory/*.md` | 메모리 본문 원본 | 신규 본문은 branch에 작성; 기존 본문 변경·삭제는 Phase 1에서 거부 | 신규 본문은 일반 merge, 기존 본문 변경은 허브 명시 작업 |
 | `MEMORY.json.memories[]` | 메모리 index | 사본 변경 금지, 신규 등록은 최소 index 요청으로 기록 | finalize가 최신 allocator root 문서에 적용 |
 | `.opal/memory/*.local.md` | machine-local 메모리 | 생성·수정·삭제·copy[] 전달 금지 | 허브에서만 memory-tool로 관리, Git merge 제외 |
 
-`brain/log.md`는 현행 도구에서 pages로 재생성할 수 있는 파생물이 아니므로 index와 동일하게
-취급하지 않는다. 1차 구현은 worktree log append를 연기하고 merge 후 한 번 기록한다. 향후
-태스크별 log shard를 원본으로 만들고 `log.md`를 재생성 view로 바꾸려면 별도 스키마 승인을 받는다.
+`DONE.md`의 brain 학습 후보는 실행할 operation이 아니라 merge 후 판단할 근거다. 각 후보는
+제목·요약·근거 파일 또는 검증 결과를 기록하며, 후보가 없으면 `없음`을 명시한다. coordinator는
+최신 허브 brain에서 중복과 기존 내용을 확인해 `create`, `update`, `skip` 중 하나를 결정하고 그
+결과·대상 page·원천 task를 `brain/log.md`에 남긴다. 별도 operation journal이나 worktree
+overlay는 두지 않는다.
 
-worktree에서 brain page 변경 때문에 생성된 `index.md` diff는 merge 결과의 원천으로 신뢰하지
-않는다. merge 귀속 명령은 최종 pages를 기준으로 index를 재생성하고 그 결과를 검증한다.
+`brain/log.md`는 pages로 재생성할 수 있는 파생물이 아니므로 후보 판정과 실제 page 변경을
+귀속 단계에서 1회 기록한다. `brain/index.md`는 같은 단계의 최종 pages에서 재생성한다. 태스크
+명세가 특정 brain 문서 자체를 산출물로 요구한 경우만 예외적으로 branch에서 변경하며, 이때도
+index와 log는 worktree에서 갱신하지 않는다.
 
 ### 7.4 memory index 요청
 
@@ -470,6 +481,7 @@ Phase 1은 범용 operation journal이나 MEMORY overlay를 만들지 않는다.
 
 - 같은 논리 자산을 허브와 worktree에 동시에 갱신하지 않는다.
 - worktree 실행 중 허브 `.opal/brain`에 직접 쓰지 않는다.
+- 태스크 명세에 선언되지 않은 회고적 학습을 worktree의 brain page·index·log에 직접 쓰지 않는다.
 - worktree `MEMORY.json`의 `last_task_number`, `history[]`, `memories[]`를 직접 갱신하지 않는다.
 - worktree에서 기존 memory 행·본문이나 `.opal/memory/*.local.md`를 변경하지 않는다.
 - CLOSE mark가 조상 탐색으로 MEMORY 위치를 정해 history를 즉시 append하지 않는다.
@@ -545,12 +557,12 @@ worktree 설정에 `task_artifacts.repo`를 명시한다.
 | run-log-tool | 전달받은 canonical task path 아래 lock·segment 사용 |
 | `code-scan` | `hubRootFromPath` 제거, worktree의 `.opal`을 찾은 `findProjectRoot`를 task root로 사용 |
 | `event-loader` | `.opal-worktrees` 우선 허브 분기 제거, 명시 project root 또는 현재 `.git + .opal/AGENT.md` 사용 |
-| `brain-tool` | `hub_root/_hub_cwd` 제거, task root의 brain 사용; index 재생성과 log append의 merge 후 경로 제공 |
+| `brain-tool` | `hub_root/_hub_cwd` 제거, task root에서는 조회와 선언된 직접 산출물만 허용; 회고적 학습의 page/index/log 쓰기는 명시 allocator root의 finalize 경로로 제한 |
 | Console/backend | `paths.py:hub_root` 제거, hub `tasks/`와 active registry의 worktree task를 합쳐 조회하되 task ID 중복 거부 |
 | `scanner.resolve_task_dir` | 허용 루트를 hub tasks root와 registry가 등록한 active task root의 realpath 화이트리스트로 확장; 요청값 기반 루트 추가 금지 |
 | `routers/doctor.py` | 입력 경로의 리터럴 상태를 보는 동작은 유지하고 폐기된 “허브 정규화 예외” 주석·계약만 제거 |
 | memory-tool | worktree MEMORY 직접 쓰기 거부, 신규 memory index 요청 기록·pending_requests 조회, title 동등성 기반 finalize; 기존 행 변경과 local memory는 worktree에서 거부 |
-| merge 귀속 명령 | branch merge·task hash 확인 후 brain index/log, MEMORY index 요청·history·prune을 확정하고 허용 diff만 단일 commit 처리 |
+| merge 귀속 명령 | branch merge·task hash 확인 후 brain 후보 판정·page/index/log와 MEMORY index 요청·history·prune을 확정하고 허용 diff만 단일 commit 처리 |
 
 ### 10.2 문서 SSOT
 
@@ -562,6 +574,7 @@ worktree 설정에 `task_artifacts.repo`를 명시한다.
 | `pm/dispatch-process.md` | project_root/task_home/task_path/source path 구분 전달 |
 | `harness/observability.md` | merge 후 MEMORY history 갱신 시점 정의 |
 | `harness/memory-learning.md` | worktree의 tracked 본문/index 요청 분리, 기존 행 변경·local memory의 허브 전용 경계, merge 후 finalize 정의 |
+| brain 학습 owner 문서·DONE template | 직접 brain 산출물과 회고적 학습 후보 분리, 후보 필드·create/update/skip 판정·merge 후 finalize 정의 |
 | memory/worktree tool README·schema | memory-index-request·pending_requests·copied[] create-time hash·오류 코드·finalize 공개 인터페이스 반영 |
 | 각 `opal-pilot-*` | task path를 허브 상대 경로로 가정하는 지시 제거 |
 | `docs/PROJECT.md` | tasks·worktree·`.opal` 소유권과 문서 위치 등록 |
@@ -611,7 +624,7 @@ OR
 실체화나 drain 없이 Phase 1에 진입할 수 없다.
 
 1. `hub-root-cases.json`과 `.opal-worktrees` 세그먼트 수렴 규칙 제거
-2. code-scan·event-loader·brain-tool·Console의 허브 강제 보정 제거
+2. code-scan·event-loader·brain-tool·Console의 허브 강제 보정 제거; brain-tool의 조회·직접 산출물과 allocator-root finalize 쓰기 분리
 3. state-tool의 `find_project_root`를 task root와 allocator root 경로로 분리
 4. CLOSE 시 MEMORY 즉시 append를 중단하고 merge 후 귀속 명령으로 이동
 5. worktree metadata에 `allocator_root`, `task_home`, `task_folder`, `task_path`, `artifact_repo`, ownership version 추가
@@ -631,7 +644,7 @@ task fixture 기준선이 새 계약으로 전부 통과하는 것이다.
 1. `opds` 한 프로필에서 번호→worktree→task folder→TASK→state init 순서 활성화
 2. task folder·state·로그를 worktree branch 안에 생성
 3. PM과 worker의 동일 task path/lock 검증
-4. brain page 변경과 index 재생성, log append 연기 계약 검증
+4. 직접 brain 산출물의 branch merge와 회고적 후보의 worktree 무쓰기·merge 후 page/index/log 반영 검증
 5. tracked memory 본문 merge, 신규 index 요청 반영, 기존 행 변경·prune·local memory의 worktree 거부 검증
 6. CLOSE → commit → merge 확인 → finalize lock → brain 집계 → MEMORY index/history·prune → 귀속 commit → remove 수명주기 검증
 7. `--no-ff --no-commit` merge와 FF 후 finalize commit 두 경로를 실제 Git fixture로 검증
@@ -677,7 +690,7 @@ pilot 실패 시 신규 태스크만 hub-owned 방식으로 명시 fallback하�
 | R-15 | run-log의 락과 segment가 task branch 수명주기를 따른다 | PM/worker 동시 append와 merge 후 로그 hash 일치 |
 | R-16 | 세그먼트 기반 허브 보정은 활성 계약에 잔존하지 않는다 | 4런타임 구현·header/주석/import·골든표·3스위트·현행 규범의 참조 0건; 역사 tasks/archive 제외 |
 | R-17 | task root와 allocator root를 혼용하지 않는다 | code-scan은 branch 설정, CLOSE는 worktree MEMORY 무변경, merge 후 허브 history 1건 |
-| R-18 | 귀속 집계가 충돌·미커밋 상태로 유실되지 않는다 | pages merge 후 index 재생성·log/history/memory index 요청 적용·허브 미커밋 귀속 변경 0건 |
+| R-18 | 귀속 학습·집계가 충돌·미커밋 상태로 유실되지 않는다 | 후보별 create/update/skip 기록, 최종 pages 기준 index 재생성·log/history/memory index 요청 적용, 허브 미커밋 귀속 변경 0건 |
 | R-19 | untracked `.opal` 설정은 명시적으로 단방향 전달된다 | create 직후 copied[] 상대경로·양끝 hash 일치, 이후 불일치 비위반, 디렉터리·local memory 입력 경고 |
 | R-20 | hub-root 제거가 active legacy worktree를 깨뜨리지 않는다 | Phase 1 전 legacy 0건 또는 슬롯별 cone·root·설정 회귀 증거 |
 | R-21 | 일반적인 신규 memory 학습이 MEMORY 공유 쓰기 없이 보존된다 | tracked 본문 merge + index 요청 1건; 동일 title 재실행은 동등 처리, 불일치는 차단 |
@@ -704,7 +717,9 @@ pilot 실패 시 신규 태스크만 hub-owned 방식으로 명시 fallback하�
 - [ ] show/review는 MEMORY를 overlay하지 않고 같은 태스크의 `pending_requests`를 별도로 표시한다.
 - [ ] 동일 title·file·본문 hash의 재실행은 적용 완료로 판정하고, 같은 title의 불일치는 `memory_title_duplicate`로 차단한다.
 - [ ] update/promote/delete/prune과 `.local.md` 변경은 worktree에서 허용되지 않으며 prune은 history 반영 뒤 허브 finalize가 수행한다.
-- [ ] brain pages를 merge한 뒤 index가 재생성되고 log가 허브에서 정확히 1회 append된다.
+- [ ] 회고적 brain 학습은 worktree에서 후보만 남기며 brain page·index·log를 변경하지 않는다.
+- [ ] merge 후 각 brain 후보가 최신 허브 기준으로 create/update/skip 판정되고 page·index·log와 판정 기록이 단일 귀속 commit에 포함된다.
+- [ ] TASK/PLAN이 직접 요구한 brain 문서만 branch 산출물로 merge되며 index·log는 허브 finalize가 처리한다.
 - [ ] `.opal-worktrees` 세그먼트 기반 hub-root 구현·골든표·규칙 문서가 제거된다.
 - [ ] 활성 코드의 header·주석·import와 현행 테스트에 stale `opal-harness.md §2.5 (4)` 포인터가 없다.
 - [ ] 비워크트리 실행 결과는 기존과 바이트 동일하고 worktree 회귀 기준선은 구조적 실패 없이 재수립된다.
@@ -733,7 +748,7 @@ pilot 실패 시 신규 태스크만 hub-owned 방식으로 명시 fallback하�
 6. worktree metadata schema를 allocator root와 canonical task path의 SSOT로 확장한다.
 7. untracked `.opal`의 create-time hashed 단방향 copy 계약과 Console registry realpath 화이트리스트를 구현한다.
 8. memory-tool의 신규 index 요청·pending_requests·title 동등성 finalize 계약을 구현한다.
-9. brain index/log와 MEMORY index/history·prune의 merge 후 귀속·단일 commit 명령을 구현한다.
+9. brain 후보 판정·page/index/log와 MEMORY index/history·prune의 merge 후 귀속·단일 commit 명령을 구현한다.
 10. `--no-ff --no-commit`과 FF+finalize 두 merge 경로를 실제 Git으로 검증한다.
 11. run-log 제안서의 lock 경로와 R-4를 새 resolver 기준으로 개정한다.
 12. monorepo 한 프로필에서 실제 branch merge pilot을 통과시킨다.
