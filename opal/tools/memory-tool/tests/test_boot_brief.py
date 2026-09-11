@@ -99,6 +99,60 @@ class TestBootBrief(unittest.TestCase):
         self.assertEqual(payload.get("history_rows", []), [], payload)
         self.assertNotIn("긴 작업 결과", result.stdout)
 
+    def _run_boot(self, memories, max_bytes=1024):
+        document = {"version": 1, "last_task_number": 116,
+                    "memories": memories, "history": []}
+        with tempfile.TemporaryDirectory() as tmp:
+            memory_path = pathlib.Path(tmp) / "MEMORY.json"
+            memory_path.write_text(json.dumps(document, ensure_ascii=False), encoding="utf-8")
+            return subprocess.run(
+                [sys.executable, str(_TOOL_PY), "show", "--file", str(memory_path),
+                 "--boot-brief", "--max-bytes", str(max_bytes), "--memories", "3", "--history", "0"],
+                capture_output=True, text=True,
+            )
+
+    @staticmethod
+    def _row(title, date, row_type="project", status="active", summary="요약"):
+        return {"title": title, "date": date, "type": row_type, "status": status,
+                "file": "memory/%s.md" % title, "summary": summary}
+
+    def test_review_rows_prioritize_candidate_then_actionable_types(self):
+        result = self._run_boot([
+            self._row("일반 최신", "2026-09-11"),
+            self._row("개선", "2026-09-11", "improvement"),
+            self._row("이슈", "2026-09-12", "issues"),
+            self._row("후보", "2026-09-01", "project", "candidate"),
+            self._row("피드백", "2026-09-13", "feedback"),
+            self._row("죽은 후보", "2026-09-20", "feedback", "dead"),
+        ])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        payload = json.loads(result.stdout)
+        review = payload["review_rows"]
+        self.assertEqual([row["title"] for row in review], ["후보", "피드백"])
+        self.assertEqual(payload["history_rows"], [])
+        self.assertIn("index_rows", payload)
+
+    def test_review_rows_equal_dates_are_stable_and_empty_when_no_candidates(self):
+        result = self._run_boot([
+            self._row("첫 이슈", "2026-09-10", "issues"),
+            self._row("둘 이슈", "2026-09-10", "issues"),
+            self._row("일반", "2026-09-12", "preferences"),
+        ])
+        payload = json.loads(result.stdout)
+        self.assertEqual([row["title"] for row in payload["review_rows"]], ["첫 이슈", "둘 이슈"])
+        result = self._run_boot([self._row("일반", "2026-09-12")])
+        self.assertEqual(json.loads(result.stdout)["review_rows"], [])
+
+    def test_long_review_data_still_respects_byte_cap(self):
+        result = self._run_boot([
+            self._row("후보1", "2026-09-11", status="candidate", summary="가" * 80),
+            self._row("후보2", "2026-09-10", status="candidate", summary="나" * 80),
+        ])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertLessEqual(len(result.stdout.encode("utf-8")), 1024)
+        payload = json.loads(result.stdout)
+        self.assertIn("review_rows", payload)
+
 
 if __name__ == "__main__":
     unittest.main()

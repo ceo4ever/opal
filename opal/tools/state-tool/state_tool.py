@@ -2217,6 +2217,103 @@ def cmd_status(args):
     ok(command, **{"from": from_status, "to": to_status}, timestamp=now_str,
        **(_jw or {}))
 
+
+# ── boot summary (read-only) ─────────────────────────────────────────────────
+
+def _boot_current_stage(state):
+    """Return the stage at the current pipeline frontier.
+
+    ``current_status`` is the task-level authority for selecting a task; rows
+    provide the most useful stage signal.  Malformed rows are deliberately
+    ignored so a single damaged state file cannot affect the project summary.
+    """
+    rows = state.get("rows")
+    if not isinstance(rows, list):
+        return ""
+    for status in ("in_progress", "failed", "pending"):
+        for row in rows:
+            if isinstance(row, dict) and row.get("status") == status:
+                stage = row.get("stage")
+                if isinstance(stage, str) and stage:
+                    return stage
+    return ""
+
+
+def collect_boot_summary(project_root):
+    """Collect at most one unfinished task below *project_root* (read-only).
+
+    Only direct task directories under ``<root>/tasks`` are considered.  State
+    files are parsed defensively and must have a valid task-level status and
+    timestamp; done/additional-work and malformed or missing files are skipped.
+    """
+    root = pathlib.Path(project_root).resolve()
+    tasks_root = root / "tasks"
+    candidates = []
+    if not tasks_root.is_dir():
+        return []
+    try:
+        entries = sorted(tasks_root.iterdir())
+    except OSError:
+        return []
+    for task_dir in entries:
+        if not task_dir.is_dir() or task_dir.is_symlink():
+            continue
+        state_file = task_dir / "state.json"
+        if not state_file.is_file() or state_file.is_symlink():
+            continue
+        try:
+            state = json.loads(state_file.read_text(encoding="utf-8"))
+            status = state.get("current_status")
+            updated = state.get("updated_at")
+            if status not in {"in_progress", "blocked"} or not isinstance(updated, str):
+                continue
+            # Fixed-width KST timestamps sort chronologically; reject arbitrary
+            # values so malformed input cannot win the latest-item selection.
+            if not (TS_PATTERN_MIN.match(updated) or TS_PATTERN_SEC.match(updated)):
+                continue
+            task_id = state.get("task_id")
+            if not isinstance(task_id, str) or not task_id:
+                task_id = task_dir.name
+            next_action = state.get("next_action", "")
+            if not isinstance(next_action, str):
+                next_action = ""
+            candidates.append((updated, {
+                "title": task_id,
+                "stage": _boot_current_stage(state),
+                "next_action": next_action,
+            }))
+        except (OSError, UnicodeError, json.JSONDecodeError, AttributeError, TypeError):
+            continue
+    if not candidates:
+        return []
+    candidates.sort(key=lambda item: item[0], reverse=True)
+    return [candidates[0][1]]
+
+
+def cmd_boot_summary(args):
+    """Emit a bounded, read-only summary for session.project bootstrap."""
+    command = "boot-summary"
+    items = collect_boot_summary(args.project_root)
+    payload = {"ok": True, "command": command, "items": items}
+    encoded = json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
+    # Keep the public result bounded even for adversarially long state fields.
+    if len(encoded.encode("utf-8")) > 1024 and items:
+        item = items[0]
+        item["title"] = item["title"][:120]
+        item["stage"] = item["stage"][:40]
+        item["next_action"] = item["next_action"][:120]
+        encoded = json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
+        # The values may contain multi-byte characters; trim by encoded size,
+        # never by slicing the JSON string (which could produce invalid JSON).
+        while len(encoded.encode("utf-8")) > 1024:
+            field = max(("title", "stage", "next_action"),
+                        key=lambda name: len(item[name]))
+            if not item[field]:
+                break
+            item[field] = item[field][:-1]
+            encoded = json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
+    print(encoded)
+
 # ── 9. gate-pass ──────────────────────────────────────────────────────────────
 
 def cmd_gate_pass(args):
@@ -3906,6 +4003,20 @@ def build_parser():
                                 "additional_work","additional_work_done"])
     p_sts.add_argument("--note")
     p_sts.set_defaults(func=cmd_status)
+
+    # ── boot-summary ──
+    p_boot = sub.add_parser(
+        "boot-summary",
+        help="프로젝트 하위 미완료 태스크 1건의 읽기 전용 부트 요약",
+    )
+    p_boot.add_argument("project_root", metavar="<project-root>")
+    p_boot.set_defaults(func=cmd_boot_summary)
+
+    # Friendly alias used by bootstrap integrations; both routes share the
+    # exact same implementation and output contract.
+    p_boot_alias = sub.add_parser("boot-brief", help=argparse.SUPPRESS)
+    p_boot_alias.add_argument("project_root", metavar="<project-root>")
+    p_boot_alias.set_defaults(func=cmd_boot_summary)
 
     # ── gate-pass ──
     p_gp = sub.add_parser("gate-pass",

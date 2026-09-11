@@ -800,6 +800,8 @@ bash ~/.opal/tools/tool-scan/run.sh check <도구>               # 설치/실행
 ~/.opal/tools/memory-tool/run.sh show --file <path>
 ~/.opal/tools/memory-tool/run.sh show --file <path> --brief          # active 메모리만 5필드 축약 + 히스토리 최신 3건
 ~/.opal/tools/memory-tool/run.sh show --file <path> --history <N>   # 히스토리 반환 건수 재정의(단독 지정 가능)
+~/.opal/tools/memory-tool/run.sh show --file <path> --boot-brief --max-bytes 1024 --memories 3 --history 0
+  # index_rows/history_rows 유지 + review_rows(candidate→feedback→issues→improvement) 최대 2건
 
 # 자가검토 단독 health 명령 — violations[] + 라이프사이클 후보 반환
 ~/.opal/tools/memory-tool/run.sh review --file <path>
