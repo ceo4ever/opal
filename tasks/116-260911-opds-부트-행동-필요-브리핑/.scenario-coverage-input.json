@@ -1,0 +1,92 @@
+{
+  "goal": "세션 첫 응답에 진행 재개가 필요한 작업과 우선 검토가 필요한 메모리만 조건부로 간결하게 표시된다. 표시할 항목이 없으면 기존의 짧은 부트스트랩 응답을 유지한다.",
+  "requirements": [
+    "AC-1",
+    "AC-2",
+    "AC-3",
+    "AC-4",
+    "AC-5",
+    "AC-6",
+    "C-1",
+    "C-2",
+    "C-3",
+    "C-4",
+    "C-5"
+  ],
+  "features": [],
+  "hypotheses": [
+    "H-1",
+    "H-2",
+    "H-3"
+  ],
+  "scenarios": [
+    {
+      "id": "S-1",
+      "covers_requirements": [
+        "AC-1",
+        "AC-3",
+        "AC-4",
+        "C-1",
+        "C-2",
+        "C-3",
+        "C-5"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [
+        "H-1"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-2",
+      "covers_requirements": [
+        "AC-2",
+        "AC-3",
+        "AC-4",
+        "C-1",
+        "C-2",
+        "C-3"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-3",
+      "covers_requirements": [
+        "AC-1",
+        "AC-2",
+        "AC-3",
+        "AC-4",
+        "C-2",
+        "C-3",
+        "C-4"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [
+        "H-2",
+        "H-3"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-4",
+      "covers_requirements": [
+        "AC-5",
+        "AC-6",
+        "C-4"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    }
+  ]
+}

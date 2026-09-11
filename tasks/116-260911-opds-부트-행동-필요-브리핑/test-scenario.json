@@ -1,0 +1,73 @@
+{
+  "schema_version": "1.0",
+  "task_id": "116-260911-opds-부트-행동-필요-브리핑",
+  "locked": false,
+  "created_at": "2026-09-11T10:57:35+09:00",
+  "locked_at": null,
+  "scenarios": [
+    {
+      "id": "S-1",
+      "acceptance_ref": null,
+      "type": null,
+      "expected": null,
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "mock",
+      "surface_ref": null,
+      "result": null,
+      "evidence": null,
+      "marked_at": null,
+      "fidelity": "mock"
+    },
+    {
+      "id": "S-2",
+      "acceptance_ref": null,
+      "type": null,
+      "expected": null,
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "mock",
+      "surface_ref": null,
+      "result": null,
+      "evidence": null,
+      "marked_at": null,
+      "fidelity": "mock"
+    },
+    {
+      "id": "S-3",
+      "acceptance_ref": null,
+      "type": null,
+      "expected": null,
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "mock",
+      "surface_ref": null,
+      "result": null,
+      "evidence": null,
+      "marked_at": null,
+      "fidelity": "mock"
+    },
+    {
+      "id": "S-4",
+      "acceptance_ref": null,
+      "type": null,
+      "expected": null,
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "mock",
+      "surface_ref": null,
+      "result": null,
+      "evidence": null,
+      "marked_at": null,
+      "fidelity": "mock"
+    }
+  ]
+}
