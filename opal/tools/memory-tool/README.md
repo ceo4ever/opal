@@ -161,8 +161,9 @@ run.sh show --file MEMORY.json --boot-brief --max-bytes 1024 --memories 3 --hist
 - (인자 없음): `index_rows`(전체 memories) + `history_rows`(전체 history) + `version`/`last_task_number` 반환
 - `--brief`: `status=="active"` 메모리만 5필드(`title/date/type/file/summary`)로 축약 반환(날짜 내림차순), 히스토리는 기본 최신 3건으로 절단
 - `--history N`: 히스토리 반환 건수를 N으로 재정의(단독 지정도 가능, `--brief` 없이도 동작). 절단 발생 시 `history_truncated: true`
-- `--boot-brief`: project-aware assistant 부트 전용 계약. active memory를 날짜 내림차순 최대 3건으로 제한하고, UTF-8로 직렬화한 최종 stdout 전체(개행 포함)를 최대 1024 bytes로 제한한다. 기본값은 `--max-bytes 1024 --memories 3 --history 0`이다.
+- `--boot-brief`: project-aware assistant 부트 전용 계약. active memory를 날짜 내림차순 최대 3건으로 제한하고, 검토 후보 `review_rows`를 최대 2건 추가한다. 후보는 `candidate` 상태를 먼저, 이후 active `feedback` → `issues` → `improvement` 순으로 선택하며 각 그룹은 최신 날짜·원래 배열 순서로 정렬한다. UTF-8로 직렬화한 최종 stdout 전체(개행 포함)는 최대 1024 bytes로 제한한다. 기본값은 `--max-bytes 1024 --memories 3 --history 0`이다.
 - boot brief에는 memory 본문과 history의 `result`를 싣지 않는다. byte 상한 초과 시 오래된 history 행 → memory의 `file` 필드 → `title` 필드 → 오래된 memory 행 순으로 줄인다. 모든 성공 출력은 유효한 단일 JSON이며 `ok:true`, `index_rows`, `history_rows`를 유지한다.
+- `review_rows`에는 검토 후보의 `title/date/type/status/file/summary`가 포함된다. `promoted/superseded/dead` 및 일반 `project/architecture/preferences/task` 행은 검토 후보에서 제외한다. byte 상한에서는 낮은 우선순위·오래된 후보와 선택적 상세 필드가 먼저 축약된다.
 - boot 전용 `--max-bytes` 허용 범위는 최소 성공 JSON 크기인 81~1024, `--memories`는 1~3, `--history`는 0 이상이다. 범위 밖·정수가 아닌 값, `--brief`와의 동시 사용, boot 전용 옵션의 단독 사용은 기존 구조화 `invalid_args` 오류로 거부한다.
 
 공통 응답 키(하위호환 유지, H-4): `index_rows`/`history_rows`/`active_count`/`total_count`/`history_count`/`migration`

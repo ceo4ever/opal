@@ -1291,6 +1291,8 @@ def _map_category_to_type(category):
 # ─────────────────────────────────────────────────────────────────────────────
 
 _BRIEF_MEMORY_FIELDS = ("title", "date", "type", "file", "summary")
+_REVIEW_MEMORY_FIELDS = ("title", "date", "type", "status", "file", "summary")
+_REVIEW_TYPE_PRIORITY = {"feedback": 1, "issues": 2, "improvement": 3}
 _BOOT_HISTORY_FIELDS = ("title", "date", "stage", "path")
 _BOOT_MAX_BYTES = 1024
 _BOOT_MAX_MEMORIES = 3
@@ -1331,6 +1333,27 @@ def _emit_boot_brief(index_rows, history_rows, max_bytes, memory_limit, history_
     active_rows.sort(key=lambda row: row.get("date", ""), reverse=True)
     active_rows = active_rows[:memory_limit]
 
+    # candidate rows take precedence, followed by actionable active types.
+    # Stable sorting preserves MEMORY.json order when dates tie.
+    review_candidates = []
+    for position, row in enumerate(index_rows):
+        status = row.get("status")
+        row_type = row.get("type")
+        if status == "candidate":
+            priority = 0
+        elif status == "active" and row_type in _REVIEW_TYPE_PRIORITY:
+            priority = _REVIEW_TYPE_PRIORITY[row_type]
+        else:
+            continue
+        review_candidates.append((priority, row.get("date", ""), position, row))
+    review_candidates.sort(key=lambda item: item[2])
+    review_candidates.sort(key=lambda item: item[1], reverse=True)
+    review_candidates.sort(key=lambda item: item[0])
+    review_rows = [
+        {field: row.get(field) for field in _REVIEW_MEMORY_FIELDS}
+        for _, _, _, row in review_candidates[:2]
+    ]
+
     brief_history = [
         {field: row.get(field) for field in _BOOT_HISTORY_FIELDS}
         for row in sorted(history_rows, key=lambda row: row.get("date", ""), reverse=True)
@@ -1342,6 +1365,7 @@ def _emit_boot_brief(index_rows, history_rows, max_bytes, memory_limit, history_
         "boot_brief": True,
         "index_rows": active_rows,
         "history_rows": brief_history,
+        "review_rows": review_rows,
     }
 
     def fits():
@@ -1349,6 +1373,16 @@ def _emit_boot_brief(index_rows, history_rows, max_bytes, memory_limit, history_
 
     while payload["history_rows"] and not fits():
         payload["history_rows"].pop()
+
+    # Preserve actionable candidates under the shared byte cap.  Drop the
+    # lower-priority candidate first, then optional detail fields.
+    while payload["review_rows"] and not fits():
+        payload["review_rows"].pop()
+    for field in ("file", "summary"):
+        if fits():
+            break
+        for row in payload["review_rows"]:
+            row.pop(field, None)
 
     for field in ("file", "title"):
         if fits():

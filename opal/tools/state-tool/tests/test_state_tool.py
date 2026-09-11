@@ -165,6 +165,50 @@ SIMPLE_ROWS_SPEC = json.dumps([
 ])
 
 
+class TestBootSummary(unittest.TestCase):
+    """W-2: read-only project boot summary (AC-1/AC-3/AC-4/C-5)."""
+
+    def _state(self, task_dir, status, updated, stage="EXECUTE", next_action="계속 진행"):
+        task_dir.mkdir(parents=True)
+        (task_dir / "state.json").write_text(json.dumps({
+            "task_id": task_dir.name,
+            "current_status": status,
+            "updated_at": updated,
+            "next_action": next_action,
+            "rows": [{"stage": stage, "status": "in_progress"}],
+        }), encoding="utf-8")
+
+    def test_latest_unfinished_only_and_fields(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = pathlib.Path(d)
+            self._state(root / "tasks" / "101-old", "in_progress", "2026-09-10 10:00")
+            self._state(root / "tasks" / "102-new", "blocked", "2026-09-11 10:00", "QA", "수정 필요")
+            self._state(root / "tasks" / "103-done", "done", "2026-09-11 11:00")
+            before = (root / "tasks" / "102-new" / "state.json").read_bytes()
+            result = ST.collect_boot_summary(root)
+            self.assertEqual(result, [{"title": "102-new", "stage": "QA", "next_action": "수정 필요"}])
+            self.assertEqual(before, (root / "tasks" / "102-new" / "state.json").read_bytes())
+
+    def test_missing_and_corrupt_states_are_ignored(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = pathlib.Path(d)
+            tasks = root / "tasks"
+            (tasks / "missing").mkdir(parents=True)
+            (tasks / "broken").mkdir(parents=True)
+            (tasks / "broken" / "state.json").write_text("{bad", encoding="utf-8")
+            self.assertEqual(ST.collect_boot_summary(root), [])
+
+    def test_cli_output_is_bounded(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = pathlib.Path(d)
+            self._state(root / "tasks" / "long", "in_progress", "2026-09-11 10:00",
+                        next_action="x" * 10000)
+            cmd = ["bash", str(_RUN_SH), "boot-summary", str(root)]
+            result = subprocess.run(cmd, capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0)
+            self.assertLessEqual(len(result.stdout.strip().encode("utf-8")), 1024)
+
+
 def _mock_now():
     """date.js 호출을 모킹하는 패치 컨텍스트."""
     return patch.object(ST, "get_kst_datetime", return_value="2026-05-01 23:00")
