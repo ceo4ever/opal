@@ -135,7 +135,7 @@ llm-wiki 사상을 융합한 프로젝트 지식 위키 — 프로젝트의 WHY�
 | `op-brain-ingest` | - | 단계 스킬 | CLOSE 자동 ingest 워커 (pilot CLOSE 훅에서 디스패치, brain 부재 시 no-op) |
 | `brain-tool` | - | 도구 | 지식 위키 결정론적 집행 CLI (10 서브명령 init/add-page/index/log/search/sync-header/lint/validate/**analyze**/**ingest-scan**). index·log·링크 무결성 집행, @header 단방향 시드. `analyze`는 code-scan @header 정량 집계(init 제안 입력), `ingest-scan`은 docs/skills/tasks 스캔 후 멱등 skip 판정 |
 
-> brain은 `.opal/brain/`에 저장되는 **프로젝트 자산**이며 `//opbr init`으로 생성한다. code-scan(WHAT)·MEMORY(운영 기억)와 역할이 분리된다(WHY/HOW). 설계 SSOT: `docs/proposals/opal-brain-design.md`.
+> brain은 `.opal/brain/`에 저장되는 **프로젝트 자산**이며 `//opbr init`으로 생성한다. code-scan(WHAT)·MEMORY(운영 기억)와 역할이 분리된다(WHY/HOW).
 
 ## 주요 컴포넌트 (Data Design 파이프라인)
 
@@ -229,5 +229,4 @@ TEST-SCENARIO 단계를 "목표 달성 검증"으로 재정의 — 루브릭 채
 | `README.md` | 프레임워크 공개 소개 문서 | Pilot 개념, 사용 사례, 프레임워크 철학 정의 | Framework | Pilot 추가/변경 시, 사용자 대면 문서 작업 시, 프레임워크 철학/방향 관련 작업 시 |
 | `docs/architecture-diagram/opal_framework_architecture.html` | 프레임워크 구조 다이어그램 (시각 SSOT) | 3층 구조·파이프라인·도구 관계 시각화 (태스크 086 산출) | Framework | 구조 설명·온보딩 시 |
 | `docs/SECURITY.md` | 프로젝트 보안 기준 | opal-security-checker가 OWASP/CWE/SANS Base에 병합하는 프로젝트 누적 기준 | Framework | 보안 체크(opgc CHECK) 시 |
-| `docs/proposals/opal-brain-design.md` | Project Brain 설계 SSOT | brain 구조·모드·도구 계약 설계 근거 | Framework | Brain 관련 변경 시 |
-| `docs/proposals/opal-data-design.md` | Data Design 파이프라인 설계 SSOT | 사전·ERD·DDL 흐름 설계 근거 | Framework | Data Design 관련 변경 시 |
+| `docs/proposals/` | 미적용 제안서 | 채택 전 설계 제안. 적용 완료분은 `archives/`로 이관되며 규범 원문은 owner 문서가 소유한다 | Framework | 제안 검토·결정 시 |

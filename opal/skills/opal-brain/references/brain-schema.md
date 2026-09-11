@@ -2,7 +2,7 @@
 
 > 원본 SSOT: `opal/tools/brain-tool/templates/schema-template.md` (brain-tool init 시 `.opal/brain/SCHEMA.md`로 복사)
 > 이 문서는 opal-brain 스킬 운용자를 위한 사람용 요약본이다.
-> 설계 근거: `docs/proposals/opal-brain-design.md` §5, `tasks/015-260610-opp-opal-brain/PLAN.md` 결정7
+> 설계 근거: `tasks/015-260610-opp-opal-brain/PLAN.md` 결정7
 
 ---
 

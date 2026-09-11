@@ -16,7 +16,7 @@ version: 1.0
 
 > **[MUST]** 산출물 작성·검증 시 `opal/core/references/harness/citation-rules.md`를 Read하여 규칙(근거 제시 원칙 / 트랙별 매트릭스 / [MUST] 토큰 / 영역 간 용어 일관성 / decision_required 계약)을 준수한다.
 
-> **[MUST]** `docs/proposals/opal-data-design.md` §3.2.2: "수정은 md에서만. xlsx는 op-data-dictionary가 xlsx-tool로 md→xlsx export하여 생성하는 파생물(원본 아님). 역방향(xlsx 수정→md) 금지 — SSOT 혼선 방지."
+> **[MUST]** 수정은 md에서만 한다. xlsx는 op-data-dictionary가 xlsx-tool로 md→xlsx export하여 생성하는 파생물(원본 아님)이며, 역방향(xlsx 수정→md)은 금지한다 — SSOT 혼선 방지.
 
 > **[MUST]** 사전 저장 경로는 하드코딩하지 않는다. `docs/PROJECT.md`에 등록된 `{설계}` 변수(설계 산출물 루트)를 읽어 `{설계}/사전/`으로 해소한다. PROJECT.md에 경로가 미등록된 경우: ① 루트에 `200.설계/` 디렉토리 탐색 → ② 없으면 default `200.설계/210.사전/` 제안 후 사용자 확인. 결과를 TASK.md "산출물 저장 경로" 항목과 PROJECT.md에 등록한다.
 

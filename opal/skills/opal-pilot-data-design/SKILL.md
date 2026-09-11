@@ -65,7 +65,7 @@ blocker다. 부트 캐시를 근거로 공통 문서를 직접 재Read하는 우
 
 **확정 후 TASK.md "산출물 저장 경로" 섹션에 기록, `docs/PROJECT.md`에 `{설계}` 루트로 등록한다.**
 
-### 인풋 컨텍스트 주입 (`docs/proposals/opal-data-design.md §3.3` 준수)
+### 인풋 컨텍스트 주입
 
 TASK 단계에서 다음을 자동 감지·주입한다:
 
@@ -131,9 +131,9 @@ MODEL 단계의 모드 순차 실행 방식을 결정하는 **트랙**을 TASK �
 
 ## STEP 2: DICT
 
-**[MUST]** `docs/proposals/opal-data-design.md §3.2`: "DICT가 MODEL을 **선행**한다 — 표준사전·코드가 논리/물리 모델링의 속성명·타입을 결정하는 SSOT이기 때문."
+**[MUST]** DICT가 MODEL을 **선행**한다 — 표준사전·코드가 논리/물리 모델링의 속성명·타입을 결정하는 SSOT이기 때문이다.
 
-`opal-db-agent` 단일 에이전트에 op-data-dictionary 스킬을 디스패치한다 (`docs/proposals/opal-data-design.md §3.1` 단일 도메인 원칙).
+`opal-db-agent` 단일 에이전트에 op-data-dictionary 스킬을 디스패치한다 (단일 도메인 원칙).
 
 > **[PM 컨텍스트 주입]** 디스패치 프롬프트 첫 줄에 `[WORKER]` 삽입. 주입 항목·핵심 제약(전 워커 공통 고정 포함)은 `opal/core/references/pm/dispatch-process.md` §워커 컨텍스트 주입 템플릿을 따른다 — 본 스킬은 항목을 열거하지 않는다.
 
@@ -163,11 +163,11 @@ op-data-dictionary 스킬을 수행하라.
 
 ## STEP 3: MODEL
 
-**[MUST]** `docs/proposals/opal-data-design.md §3.2`: "DDL/MIGRATION은 MODEL의 물리(DBML) 산출 이후에만 실행 가능(캡틴 명시). state-tool stage-transition guard가 자동 차단."
+**[MUST]** DDL/MIGRATION은 MODEL의 물리(DBML) 산출 이후에만 실행 가능하다. state-tool stage-transition guard가 자동 차단한다.
 
 `opal-db-agent` 단일 에이전트에 op-data-model 스킬을 디스패치한다.
 
-**[MUST]** `docs/proposals/opal-data-design.md` §3.2.1: "pilot은 MODEL 단계에서 **트랙에 따라 모드를 순차 실행**한다 — 신규(greenfield) 트랙은 개념→논리→물리 3모드, 역공학(reverse) 트랙은 물리→논리 2모드(개념 모드 제외)다."
+**[MUST]** pilot은 MODEL 단계에서 **트랙에 따라 모드를 순차 실행**한다 — 신규(greenfield) 트랙은 개념→논리→물리 3모드, 역공학(reverse) 트랙은 물리→논리 2모드(개념 모드 제외)다.
 
 **디스패치 프롬프트**:
 ```
@@ -200,7 +200,7 @@ op-data-model 스킬을 수행하라.
 
 ## STEP 4: DDL/MIGRATION
 
-**[MUST]** `docs/proposals/opal-data-design.md §3.2`: "DDL/MIGRATION은 MODEL의 물리(DBML) 산출 이후에만 실행 가능." — 물리 모드(DBML) 산출물이 없으면 이 단계를 시작하지 않는다.
+**[MUST]** DDL/MIGRATION은 MODEL의 물리(DBML) 산출 이후에만 실행 가능하다 — 물리 모드(DBML) 산출물이 없으면 이 단계를 시작하지 않는다.
 
 `opal-db-agent` 단일 에이전트에 op-data-ddl 스킬을 디스패치한다.
 
@@ -231,7 +231,7 @@ op-data-ddl 스킬을 수행하라.
 
 ## STEP 5: QA
 
-PM Gate — QA 검증 항목 직접 수행 (`docs/proposals/opal-data-design.md §3.4` 준수).
+PM Gate — QA 검증 항목 직접 수행.
 
 **QA 검증 항목**:
 - [ ] 단계 간 정합 — 신규 트랙: 개념 ERD ↔ 논리 ↔ 물리 / 역공학 트랙: 물리 ↔ 논리 (엔티티/관계 보존)

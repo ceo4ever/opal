@@ -19,8 +19,8 @@ dispatched_by:
 DB 설계 파이프라인의 MODEL 단계를 담당한다. 개념/논리/물리 3모드를 분리 발동하며, 각 모드는 독립적으로도 호출 가능하다.
 산출물 경로는 `{설계}` 변수(PROJECT.md 등록 또는 인터뷰 확정)로 해소하며 하드코딩하지 않는다.
 
-> **인용 의무** (`docs/proposals/opal-data-design.md` §3.2.1):
-> - "논리는 개념, 물리는 논리 산출물을 입력으로 한다(증분). 기존 ERD가 인풋으로 주입되면 해당 모드부터 시작 가능."
+> **[MUST]** 모드 간 입력 계약:
+> - 논리는 개념, 물리는 논리 산출물을 입력으로 한다(증분). 기존 ERD가 인풋으로 주입되면 해당 모드부터 시작 가능하다.
 > - 각 모드 산출물 양식은 이 스킬 `references/mermaid-guide.md`(개념/논리)·`op-data-ddl/references/dbml-guide.md`(물리)를 참조한다.
 
 ---
@@ -28,7 +28,7 @@ DB 설계 파이프라인의 MODEL 단계를 담당한다. 개념/논리/물리 
 ## 실행 컨텍스트
 
 - **호출자**: `opal-pilot-data-design`(opdd) 파이프라인 MODEL 단계, 또는 단독 호출(`//erm` alias 포함)
-- **실행 주체**: `opal-db-agent` (`docs/proposals/opal-data-design.md` §3.1 단일 에이전트 확정)
+- **실행 주체**: `opal-db-agent` (단일 에이전트)
 - **입력**:
   - `mode`: `concept` / `logical` / `physical` (pilot 파이프라인에서는 순차 3모드, 단독 호출 시 특정 모드)
   - 기획서·TASK.md·사용자 대화 (엔티티·관계 도출 근거)
@@ -46,8 +46,6 @@ DB 설계 파이프라인의 MODEL 단계를 담당한다. 개념/논리/물리 
 ---
 
 ## 3모드 분리 발동 + 산출물 양식
-
-> 인용: `docs/proposals/opal-data-design.md` §3.2.1 MODEL 3모드 양식표
 
 ### 모드 선택 규칙
 

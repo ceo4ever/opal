@@ -2,7 +2,7 @@
 
 > OPAL Project Brain 지식 위키 결정론적 집행 CLI
 > 소스: `opal/tools/brain-tool/` | 배포: `~/.opal/tools/brain-tool/`
-> 설계 근거: `docs/proposals/opal-brain-design.md` §5·§7, `tasks/015-260610-opp-opal-brain/PLAN.md` 결정3·결정7
+> 설계 근거: `tasks/015-260610-opp-opal-brain/PLAN.md` 결정3·결정7
 
 ## 개요
 

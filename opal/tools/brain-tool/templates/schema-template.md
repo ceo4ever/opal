@@ -1,7 +1,7 @@
 # Project Brain SCHEMA
 
 > brain의 "헌법" — 모든 페이지가 따르는 규약. `//opbr init` 시 프로젝트별로 복사 생성된다.
-> 근거: `docs/proposals/opal-brain-design.md` §5, PLAN 결정7
+> 근거: PLAN 결정7
 
 본 SCHEMA는 Karpathy llm-wiki 사상("영속·복리 지식 아티팩트")을 OPAL 네이티브로 구현한 위키 규약이다.
 페이지 본문은 LLM이 작성하되, `index.md`·`log.md`·인덱싱·frontmatter 검증은 **brain-tool이 집행**한다 (enforce, don't advise).

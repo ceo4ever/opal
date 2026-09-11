@@ -125,6 +125,23 @@ icon: {이모지}         # 에이전트만 (선택, 디폴트: ✨)
 ---
 ```
 
+### 제안서 생명주기
+
+`docs/proposals/`는 **채택 전 제안**만 보관한다. 제안서는 소비형 입력물이며 규범 SSOT가 될 수 없다 — 적용된 규칙의 원문은 해당 스킬·에이전트·harness owner 문서가 소유한다.
+
+| 상태 | 의미 | 위치 |
+|------|------|------|
+| `제안` | 작성 완료, 검토 전 | `docs/proposals/` |
+| `검토` | 결정 대기 | `docs/proposals/` |
+| `적용완료` | 구현·배포 완료 | `docs/proposals/archives/` |
+| `폐기` | 미채택 확정 | `docs/proposals/archives/` |
+
+- 상태는 문서 상단 `> 상태:` 행에 위 4개 어휘로만 표기한다.
+- **[MUST] 아카이브 이동의 선행 조건은 잔여 인용 0건이다.** 이동 전에 규범 문장을 owner 문서로 이관하고, 설계 이유(WHY)는 Project Brain에 남기며, `docs/PROJECT.md` 레지스트리 행을 제거한다.
+- 잔여 인용 확인: `grep -rn "proposals/{파일명}" --include="*.md" opal/ docs/` — 0건이 아니면 이동하지 않는다.
+- 삭제하지 않고 이동한다. 과거 태스크의 TASK·PLAN·DONE이 제안서를 근거로 인용하고 있어 원문이 사라지면 근거가 끊긴다.
+- 제안서를 소비한 태스크는 CLOSE에서 아카이브 여부를 판정한다.
+
 ### 문서 이력과 버전
 
 git 관리 Markdown의 이력과 상단 버전 적용 여부는 `opal/core/references/opal-doc-standard.md` §5를 따른다.

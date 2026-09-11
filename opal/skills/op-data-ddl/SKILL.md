@@ -16,7 +16,7 @@ version: 1.0
 이 스킬은 `opal-db-agent` 워커 에이전트의 컨텍스트에서 실행된다.
 오케스트레이터(`opal-pilot-data-design`)가 DDL/MIGRATION 단계를 디스패치하면, `opal-db-agent`가 이 스킬을 읽고 프로세스를 따른다.
 
-> **[MUST]** `docs/proposals/opal-data-design.md` §3.2: "DDL/MIGRATION은 MODEL의 물리(DBML) 산출 이후에만 실행 가능(캡틴 명시). state-tool stage-transition guard가 자동 차단." — 물리 DBML 파일이 존재하지 않으면 즉시 블로커 보고.
+> **[MUST]** DDL/MIGRATION은 MODEL의 물리(DBML) 산출 이후에만 실행 가능하다. state-tool stage-transition guard가 자동 차단한다 — 물리 DBML 파일이 존재하지 않으면 즉시 블로커 보고.
 
 > **[MUST]** 산출물 작성·검증 시 `opal/core/references/harness/citation-rules.md`를 Read하여 규칙(근거 제시 원칙 / [MUST] 토큰 / 영역 간 용어 일관성)을 준수한다.
 
