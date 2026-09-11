@@ -4,7 +4,7 @@
   "mode": "agentic",
   "schema_version": "1.1",
   "created_at": "2026-09-10 23:58:35",
-  "updated_at": "2026-09-11 07:48:24",
+  "updated_at": "2026-09-11 22:28:56",
   "current_status": "in_progress",
   "rows": [
     {
@@ -14,9 +14,9 @@
       "key": "task.task_md",
       "status": "done",
       "status_label": "✅",
-      "timestamp": "2026-09-11 00:01:30",
+      "timestamp": "2026-09-11 10:50:40",
       "owner": "PM",
-      "note": null
+      "note": "다른 PC 세션에서 완료됨(재초기화로 복원)"
     },
     {
       "row_id": 2,
@@ -25,7 +25,7 @@
       "key": "task.user_confirm",
       "status": "done",
       "status_label": "✅",
-      "timestamp": "2026-09-11 00:03:18",
+      "timestamp": "2026-09-11 10:50:40",
       "owner": "auto",
       "note": "auto-approved on WIREFRAME entry"
     },
@@ -36,11 +36,10 @@
       "key": "wireframe.wireframe_md",
       "status": "done",
       "status_label": "✅",
-      "timestamp": "2026-09-11 07:45:36",
+      "timestamp": "2026-09-11 10:50:40",
       "owner": "PM",
-      "note": null,
-      "conditional": true,
-      "worker_duration_unknown": true
+      "note": "다른 PC 세션에서 완료됨(재초기화로 복원)",
+      "conditional": true
     },
     {
       "row_id": 4,
@@ -49,9 +48,9 @@
       "key": "wireframe.pm_gate",
       "status": "done",
       "status_label": "✅",
-      "timestamp": "2026-09-11 07:47:24",
+      "timestamp": "2026-09-11 10:50:41",
       "owner": "PM",
-      "note": null,
+      "note": "다른 PC 세션에서 완료됨(재초기화로 복원)",
       "conditional": true,
       "gate": {
         "artifacts": [
@@ -72,7 +71,7 @@
       "key": "wireframe.user_confirm",
       "status": "done",
       "status_label": "✅",
-      "timestamp": "2026-09-11 07:48:24",
+      "timestamp": "2026-09-11 10:50:41",
       "owner": "auto",
       "note": "auto-approved on EXECUTE entry",
       "conditional": true
@@ -82,22 +81,22 @@
       "stage": "EXECUTE",
       "item": "작업",
       "key": "execute.implement",
-      "status": "in_progress",
-      "status_label": "🔄",
-      "timestamp": "2026-09-11 07:48:24",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-11 11:25:36",
       "owner": "PM",
-      "note": null
+      "note": "W-1~W-6 + F-1~F-5 완료, 워크트리 task_115에서 구현"
     },
     {
       "row_id": 7,
       "stage": "EXECUTE",
       "item": "PM Gate",
       "key": "execute.pm_gate",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-11 11:25:36",
       "owner": "PM",
-      "note": null,
+      "note": "빌드/린트/테스트 PM 재실행 통과, wireframe 대조 완료, 컨벤션 Critical·High 0건, AC-1·AC-7 실렌더 증거 확보",
       "gate": {
         "artifacts": [],
         "checklist": [
@@ -114,14 +113,201 @@
       "stage": "EXECUTE",
       "item": "사용자 확인",
       "key": "execute.user_confirm",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
-      "owner": "PM",
-      "note": null
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-11 14:19:53",
+      "owner": "auto",
+      "note": "auto-approved on EXECUTE entry"
     },
     {
       "row_id": 9,
+      "stage": "EXECUTE",
+      "item": "개편 설계 (wireframe.md 개정)",
+      "key": "execute.redesign_spec",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-11 14:32:32",
+      "owner": "PM",
+      "note": "wireframe.md v2 개정 (R-1~R-4 + 미결 4건 해소), v1 원본 보존"
+    },
+    {
+      "row_id": 10,
+      "stage": "EXECUTE",
+      "item": "개편 설계 PM Gate",
+      "key": "execute.redesign_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-11 14:32:32",
+      "owner": "PM",
+      "note": "D-1 Activity 배치 5개 절 정합, D-2 제목·내용 일치 및 (가)/(나) 양안+§8 형태 제시, v1 원본 무변경, 코드 무수정"
+    },
+    {
+      "row_id": 11,
+      "stage": "EXECUTE",
+      "item": "개편 설계 v2 (범위 축소 반영)",
+      "key": "execute.redesign_spec_v2",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-11 14:52:22",
+      "owner": "PM",
+      "note": "pinned 4탭·Activity 폐기, TASK.md v2 반영, 51KB→40KB 축소"
+    },
+    {
+      "row_id": 12,
+      "stage": "EXECUTE",
+      "item": "개편 설계 v2 PM Gate",
+      "key": "execute.redesign_gate_v2",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-11 14:52:22",
+      "owner": "PM",
+      "note": "§8 12행·결번 미기재 확인, 폐기 대상 잔존 없음(전부 명시적 부정문), v1 원본 바이트 동일, 코드 무수정, 신규 의존성 불요 실측 일치"
+    },
+    {
+      "row_id": 13,
+      "stage": "EXECUTE",
+      "item": "개편 설계 사용자 확인",
+      "key": "execute.redesign_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-11 15:04:32",
+      "owner": "user",
+      "note": "캡틴 승인: 설계 v2 확정 + 탭 드래그·split 구현 방식 B(HTML5 native drag) 채택"
+    },
+    {
+      "row_id": 14,
+      "stage": "EXECUTE",
+      "item": "개편 구현",
+      "key": "execute.redesign_impl",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-11 15:17:52",
+      "owner": "PM",
+      "note": "W-1~W-8 완료, src/workbench 전면 재작성. AC 증거는 PM이 오프스크린 capturePage로 확보"
+    },
+    {
+      "row_id": 15,
+      "stage": "EXECUTE",
+      "item": "개편 구현 PM Gate",
+      "key": "execute.redesign_impl_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-11 15:23:29",
+      "owner": "PM",
+      "note": "typecheck/test128/build/lint 신규0 통과, @header 3파일 실제 export와 완전 일치, 컨벤션 Critical·High 0건, AC 실렌더 증거 확보"
+    },
+    {
+      "row_id": 16,
+      "stage": "EXECUTE",
+      "item": "사이드바 토글·트리 개선 설계",
+      "key": "execute.rail_spec",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-11 17:52:29",
+      "owner": "PM",
+      "note": "wireframe v4.0 — R-5·R-6·a·c·d 설계, §7 타입 확장, §8 14행(AC-17·18 신설)"
+    },
+    {
+      "row_id": 17,
+      "stage": "EXECUTE",
+      "item": "사이드바 토글·트리 개선 설계 PM Gate",
+      "key": "execute.rail_spec_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-11 17:52:29",
+      "owner": "PM",
+      "note": "v1 보존 바이트동일·코드무수정·결번 미재사용·미채택 b/e/f/g 혼입없음 확인. 의존성 주장 실측 검증(collapsible/collapsedSize prop, lucide 8종). §4.5 펼침상태 문구 불일치 PM 정정. TASK.md AC-10·15 확장 + AC-17·18 신설 적용"
+    },
+    {
+      "row_id": 18,
+      "stage": "EXECUTE",
+      "item": "사이드바 토글·트리 개선 구현",
+      "key": "execute.rail_impl",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-11 18:05:32",
+      "owner": "PM",
+      "note": "W-1~W-5 완료, 테스트 128→133"
+    },
+    {
+      "row_id": 19,
+      "stage": "EXECUTE",
+      "item": "사이드바 토글·트리 개선 PM Gate",
+      "key": "execute.rail_impl_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-11 18:05:32",
+      "owner": "PM",
+      "note": "typecheck/test133/build/lint신규0, @header 3파일 일치, 영속v4, AC-1 회귀없음(PM Electron 캡처), W-1~W-5 실렌더 확인"
+    },
+    {
+      "row_id": 20,
+      "stage": "EXECUTE",
+      "item": "설정 화면·탭 드롭 설계",
+      "key": "execute.settings_spec",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-11 21:41:17",
+      "owner": "PM",
+      "note": "wireframe v5.0 — R-7~R-10 설계, SCR-003 재정의, Settings 타입 분리"
+    },
+    {
+      "row_id": 21,
+      "stage": "EXECUTE",
+      "item": "설정 화면·탭 드롭 설계 PM Gate",
+      "key": "execute.settings_spec_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-11 21:41:17",
+      "owner": "PM",
+      "note": "v1 보존·코드무수정·결번 미재사용·미채택 혼입 0건(배제문만)·내부정합 이상무. §8 15행 AC-19 신설 확인. TASK.md AC-4 문구 개정 + AC-19 신설 적용"
+    },
+    {
+      "row_id": 22,
+      "stage": "EXECUTE",
+      "item": "설정 화면·탭 드롭 구현",
+      "key": "execute.settings_impl",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-11 21:56:47",
+      "owner": "PM",
+      "note": "W-1~W-4 완료, 테스트 133→138"
+    },
+    {
+      "row_id": 23,
+      "stage": "EXECUTE",
+      "item": "설정 화면·탭 드롭 PM Gate",
+      "key": "execute.settings_impl_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-11 21:56:47",
+      "owner": "PM",
+      "note": "typecheck/test138/build/lint신규0, @header 3파일 일치, 탭바-본문 드롭타깃 분리·삽입인덱스·caret 코드확인, Agents버튼/AgentSheet 0건, 설정화면·탭 실렌더 확인"
+    },
+    {
+      "row_id": 24,
+      "stage": "EXECUTE",
+      "item": "탭 추가 버튼·Task 추가 동선 조정",
+      "key": "execute.affordance_impl",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-11 22:28:56",
+      "owner": "PM",
+      "note": "R-11 + 인라인화, R-12 New Task 제거·TASKS 헤더 + 모달 직행, wireframe v5.1 동기화, 테스트 138→140"
+    },
+    {
+      "row_id": 25,
+      "stage": "EXECUTE",
+      "item": "탭 추가 버튼·Task 추가 동선 PM Gate",
+      "key": "execute.affordance_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-11 22:28:56",
+      "owner": "PM",
+      "note": "typecheck/test140/build/lint신규0, 사이드바 전폭 New Task 제거·보드 내 버튼 유지(AC-3), TASKS 헤더 + 확인, SelectItem value=\"\" 잠재결함 동반 수정, 실렌더 확인"
+    },
+    {
+      "row_id": 26,
       "stage": "CLOSE",
       "item": "DONE.md 생성",
       "key": "close.done_md",
@@ -132,5 +318,6 @@
       "note": null
     }
   ],
-  "next_action": "EXECUTE 작업 진행 중"
+  "next_action": "CLOSE DONE.md 생성 진입",
+  "worktree": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_115"
 }
