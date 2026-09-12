@@ -77,7 +77,7 @@ MVP 완료는 위 흐름이 하나의 실제 Project에서 처음부터 끝까�
 | ID | 마일스톤 | 기능 | 사용자 결과 | 우선순위 | 상태 | 의존성 | 실행 태스크 |
 |---|---|---|---|---|---|---|---|
 | WS-F001 | WS-M0 | 독립 WorkStudio 목업 | 전체 제품 구조와 주요 동선을 체험한다 | P0 | `done` | 없음 | `tasks/126-260912-opds-워크스튜디오-독립앱-구축/` |
-| WS-F101 | WS-M1 | Project Registry | 등록한 Project와 최근 접근 순서가 재실행 후에도 유지된다 | P0 | `in_progress` | WS-F001 | `tasks/128-260913-opds-워크스튜디오-프로젝트-레지스트리/` |
+| WS-F101 | WS-M1 | Project Registry | 등록한 Project와 최근 접근 순서가 재실행 후에도 유지된다 | P0 | `done` | WS-F001 | `tasks/128-260913-opds-워크스튜디오-프로젝트-레지스트리/` |
 | WS-F102 | WS-M1 | Project 열기·생성 | 기존 폴더를 열거나 새 Project 폴더를 실제로 만든다 | P0 | `candidate` | WS-F101 | - |
 | WS-F103 | WS-M1 | PM Agent 발견·등록 | `.opal/AGENT.md`에서 Project PM을 발견하고 실행 후보로 등록한다 | P0 | `candidate` | WS-F102 | - |
 | WS-F104 | WS-M1 | 실제 PTY Terminal | Project cwd에서 실제 shell Terminal을 생성·입력·resize·종료한다 | P0 | `candidate` | WS-F102 | - |

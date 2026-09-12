@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-09-12 22:48
+> 갱신: 2026-09-13 00:49
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -32,6 +32,7 @@
 - [[state-tool]] — state-tool #tool #pipeline
 - [[test-tool]] — test-tool #tool #testing #pipeline
 - [[tool-scan]] — tool-scan #tool #opal-tools #discovery #usage #capability
+- [[workstudio-project-registry]] — WorkStudio Project Registry #desktop #workstudio #project-registry
 - [[worktree-tool]] — worktree-tool #tool #workspace #git #pipeline
 
 ## 개념
@@ -117,6 +118,7 @@
 - [[dict-선행-model-ssot]] — DICT가 MODEL을 선행한다 — 사전이 속성명·타입 SSOT #architecture-decision #data-design #ssot #pipeline
 - [[dl-contract-download-verify-target-identity]] — DL-CONTRACT — 검증 대상과 다운로드 대상은 같은 파일이어야 한다 #deploy #release #install #checksum #contract
 - [[e2e-cmux-first-playwright-fallback]] — E2E 도구 우선순위 — cmux 1순위 → playwright 폴백 (에러코드 소비) #testing #e2e #cmux #framework
+- [[electron-main-owned-project-registry]] — Electron main-owned Project Registry #electron #security #workstudio
 - [[enforce-rule-legacy-data-surfacing-lesson]] — enforce 규칙 신설 시 잔존 데이터 표면화 — 배포 전 실 데이터 스캔 필요 교훈 #lesson #enforce #validate #brain-tool
 - [[enforcement-basis-must-be-structural-not-voluntary]] — 강제의 판정 근거는 자발적 표시가 아니라 구조여야 한다 — 3회 우회 후 행 기반 판정 + CLOSE 차단 #enforcement #governance #state-tool #worker #measurement #lesson-learned
 - [[erd-modeler-deprecation]] — erd-modeler deprecate — op-data-model/ddl로 분해, //erm 하위호환 #architecture-decision #deprecation #erd-modeler #migration
