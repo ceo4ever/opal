@@ -33,6 +33,14 @@
       "status": "candidate",
       "file": "memory/파일럿_태스크_설계_시_주제_규모와_파이프라인_프로필을_함께_결정한다.md",
       "summary": "태스크 119의 파일럿(태스크 121)에 opd 풀 파이프라인 16행을 붙였으나 제안서 §11 Phase 2는 opds 한 프로필을 지정했고,…"
+    },
+    {
+      "title": "OPAL WorkStudio 제품 개발 방향",
+      "date": "2026-09-12",
+      "type": "architecture",
+      "status": "active",
+      "file": "memory/OPAL_WorkStudio_제품_개발_방향.md",
+      "summary": "백로그 SSOT와 MVP Agent 대화 흐름, Orca Terminal 참조 원칙"
     }
   ],
   "history": [
