@@ -230,3 +230,4 @@ TEST-SCENARIO 단계를 "목표 달성 검증"으로 재정의 — 루브릭 채
 | `docs/architecture-diagram/opal_framework_architecture.html` | 프레임워크 구조 다이어그램 (시각 SSOT) | 3층 구조·파이프라인·도구 관계 시각화 (태스크 086 산출) | Framework | 구조 설명·온보딩 시 |
 | `docs/SECURITY.md` | 프로젝트 보안 기준 | opal-security-checker가 OWASP/CWE/SANS Base에 병합하는 프로젝트 누적 기준 | Framework | 보안 체크(opgc CHECK) 시 |
 | `docs/proposals/` | 미적용 제안서 | 채택 전 설계 제안. 적용 완료분은 `archives/`로 이관되며 규범 원문은 owner 문서가 소유한다 | Framework | 제안 검토·결정 시 |
+| `opal/core/references/harness/done-template.md` | 표준 CLOSE DONE.md 템플릿 (SSOT) | DONE.md 절 구성 + `## 회고적 학습 후보` 절 계약(레포 상대 page 경로 1행 1건, finalize 재진입 판정의 선언 집합). 오케스트레이터 SKILL은 포인터만 두고 템플릿 본문을 복제하지 않는다 | Framework | CLOSE 단계에서 DONE.md를 작성할 때, merge 후 귀속·worktree finalize 판단 시 |

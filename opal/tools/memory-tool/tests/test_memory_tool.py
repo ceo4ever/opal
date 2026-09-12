@@ -18,7 +18,9 @@
     "TestTaskNumberDocs",
     "TestUpdateBackCompat", "TestUpdateKindHistory",
     "TestUpdateKindArgGuard", "TestUpdateHistoryLossless",
-    "TestReviewReferenceIntegrity", "TestDeleteOrphan", "TestLifecycleDocParity"
+    "TestReviewReferenceIntegrity", "TestDeleteOrphan", "TestLifecycleDocParity",
+    "TestS12WorktreeWriteRejection", "TestS13WorktreeMemoryAppendCapsule",
+    "TestS14FinalizeTitleEquivalence"
   ]
 }
 
@@ -39,6 +41,7 @@
 """
 
 # [MUST] 표준 라이브러리만 import
+import hashlib
 import importlib.util
 import json
 import os
@@ -3102,11 +3105,16 @@ class TestUpdateKindArgGuard(unittest.TestCase):
         self.assertEqual(missing, set(),
                          f"079 원본 ERROR_CODES 중 삭제·개명된 키: {sorted(missing)}")
 
-        # (2) 추가분이 정확히 096의 3종과 일치 — 그 이상·이하도 아님
+        # (2) 추가분이 정확히 096의 3종 + 118의 2종과 일치 — 그 이상·이하도 아님
+        #     [118 갱신] PLAN W-5(D-2/D-7, AC-8/AC-9)가 설계로 지정한 2종
+        #     `WORKTREE_WRITE_REJECTED`/`MEMORY_TITLE_DUPLICATE`를 추가하면서 26→28이 됐다.
+        #     이 갱신은 위 독스트링이 지시한 "새 태스크가 코드를 추가했다면 이 단언을
+        #     의도적으로 갱신하라"에 해당한다 — (1)의 기존 23종 부분집합 단언은 무변경이다.
         added = code_keys - self._T079_ORIGINAL_ERROR_CODES
         self.assertEqual(
             added,
-            {"memory_file_exists", "orphan_ref_missing", "memory_file_unresolvable"},
+            {"memory_file_exists", "orphan_ref_missing", "memory_file_unresolvable",
+             "WORKTREE_WRITE_REJECTED", "MEMORY_TITLE_DUPLICATE"},
             f"079 원본 23종 이후 추가된 키가 096이 문서화한 3종과 불일치(의도치 않은 "
             f"드리프트 의심 — 새 태스크가 코드를 추가했다면 이 단언을 의도적으로 "
             f"갱신하라): {sorted(added)}",
@@ -3841,6 +3849,462 @@ class TestLifecycleDocParity(unittest.TestCase):
         text = _MEMORY_LEARNING.read_text(encoding="utf-8")
         for row in _EXPECTED_LIFECYCLE_ROWS_096:
             self.assertIn(row, text, f"기존 라이프사이클 행 텍스트가 변경됨: {row!r}")
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# T118 RED: TestS12WorktreeWriteRejection / TestS13WorktreeMemoryAppendCapsule /
+# TestS14FinalizeTitleEquivalence
+# (118-260912-opd-워크트리-태스크-소유권-루트분리 TEST-SCENARIO.md S-12/S-13/S-14,
+#  PLAN D-7/D-2/D-2c, AC-8/AC-9/AC-11).
+# [MUST] red-first.md §2/§4: 공개 인터페이스(memory_tool.py subprocess stdout/
+# exit code) + 실 파일 상태로만 검증한다. 내부 private 함수 결합 검증 금지.
+# 작성자(opal-test-agent red mode, T118 W-EX/RED-B) ≠ 구현자(opal-task-agent,
+# PLAN W-5). 이 파일은 테스트만 추가하며 memory_tool.py는 건드리지 않는다.
+# GREEN 구현 전까지 아래는 전부 실패해야 정상이다(완화·삭제 금지) — 단,
+# 각 클래스 docstring이 명시한 "회귀 보호"(허브 동작·미지정 응답 바이트 동일)
+# 하위 단정만은 지금도 통과해야 정상이다(TASK.md C-1).
+# ═════════════════════════════════════════════════════════════════════════════
+
+def _s12_memory_doc():
+    """S-12 fixture — update/promote/delete/prune/task-number/append(--kind
+    history) 6개 연산이 전부 '실행 시 무언가를 실제로 바꾸는' 상태를 갖도록
+    구성한다(history 6건 > HISTORY_FIFO_LIMIT=5로 prune이 실제 트림을
+    일으키게 한다)."""
+    return {
+        "version": 1,
+        "last_task_number": 5,
+        "memories": [
+            {"title": "S12 갱신 대상", "date": "2026-09-01", "type": "project",
+             "status": "active", "file": "memory/s12-update.md",
+             "summary": "S12 update 대상"},
+            {"title": "S12 승격 대상", "date": "2026-09-01", "type": "project",
+             "status": "active", "file": "memory/s12-promote.md",
+             "summary": "S12 promote 대상"},
+            {"title": "S12 삭제 대상", "date": "2026-09-01", "type": "project",
+             "status": "dead", "file": "memory/s12-delete.md",
+             "summary": "S12 delete 대상"},
+        ],
+        "history": [
+            {"title": f"S12 히스토리 {i}", "date": f"2026-09-{7 - i:02d}",
+             "stage": "완료", "path": f"tasks/s12-h{i}/", "result": f"결과{i}"}
+            for i in range(1, 7)
+        ],
+    }
+
+
+class TestS12WorktreeWriteRejection(unittest.TestCase):
+    """[T118 RED] S-12 (AC-8, C-1) — `.opal-worktrees/` 세그먼트 하위 `--file`에
+    대해 update/promote/delete/prune/task-number/append(--kind history)가 전부
+    `WORKTREE_WRITE_REJECTED`로 거부되고 파일이 변경되지 않아야 한다(PLAN D-7,
+    `_is_worktree_target` 공통 헬퍼 신설, memory_lock/load_document 호출 전
+    판정). 각 연산에서 `.opal/memory/*.local.md` 파일도 부수효과 없이 그대로
+    보존되어야 한다.
+
+    허브(비워크트리) `--file` 대상 동일 연산은 이 태스크 이전에도 이미 정상
+    동작해야 하는 **회귀 보호 케이스**다(TASK.md C-1) — 각 테스트 메서드의
+    "허브 —" 단정은 구현 전에도 통과해야 정상이고, `WORKTREE_WRITE_REJECTED`
+    단정만 RED다.
+
+    RED 근거: memory_tool.py 어디에도 `.opal-worktrees` 세그먼트를 검사하는
+    코드가 없다(ANALYSIS Q5 — "워크트리 인지 로직이 전혀 없다", 9개 서브명령
+    전부 `--file` 경로를 그대로 받는다). 따라서 워크트리 경로의 --file을 줘도
+    각 명령은 허브와 동일하게 정상 수행되어 파일이 실제로 변경되고,
+    `WORKTREE_WRITE_REJECTED`라는 에러 코드 자체가 코드 어디에도 없다."""
+
+    def setUp(self):
+        self.tmpdir = pathlib.Path(tempfile.mkdtemp())
+        self.hub_dir = self.tmpdir / "hub"
+        self.wt_root = self.hub_dir / ".opal-worktrees" / "task_999"
+        self._install_fixture(self.hub_dir)
+        self._install_fixture(self.wt_root)
+
+    def tearDown(self):
+        shutil.rmtree(self.tmpdir, ignore_errors=True)
+
+    @staticmethod
+    def _install_fixture(root):
+        memory_dir = root / ".opal" / "memory"
+        memory_dir.mkdir(parents=True, exist_ok=True)
+        (memory_dir / "s12-promote.md").write_text("# 승격 대상 본문\n", encoding="utf-8")
+        (memory_dir / "note.local.md").write_text("machine-local 노트 원본\n", encoding="utf-8")
+        (root / ".opal" / "MEMORY.json").write_text(
+            json.dumps(_s12_memory_doc(), ensure_ascii=False, indent=2), encoding="utf-8")
+
+    @staticmethod
+    def _memory_file(root):
+        return root / ".opal" / "MEMORY.json"
+
+    @staticmethod
+    def _local_md(root):
+        return root / ".opal" / "memory" / "note.local.md"
+
+    @staticmethod
+    def _sha(path):
+        return hashlib.sha256(path.read_bytes()).hexdigest()
+
+    def _assert_worktree_rejected(self, argv_builder, label):
+        """워크트리 --file 대상 실행 → WORKTREE_WRITE_REJECTED + MEMORY.json·
+        local.md 무변경(RED)."""
+        memfile = self._memory_file(self.wt_root)
+        localmd = self._local_md(self.wt_root)
+        before_hash = self._sha(memfile)
+        before_local_hash = self._sha(localmd)
+
+        result = _run(argv_builder(memfile))
+        self.assertEqual(
+            result.get("error"), "WORKTREE_WRITE_REJECTED",
+            f"[{label}] 워크트리 --file은 WORKTREE_WRITE_REJECTED로 거부되어야 함(D-7) "
+            f"— 실제: {result}")
+        self.assertFalse(result.get("ok", True), f"[{label}] 거부 응답은 ok:false여야 함: {result}")
+        self.assertEqual(before_hash, self._sha(memfile),
+                         f"[{label}] 거부된 명령이 워크트리 MEMORY.json을 변경함(D-7 위반)")
+        self.assertEqual(before_local_hash, self._sha(localmd),
+                         f"[{label}] 거부된 명령이 .opal/memory/*.local.md를 변경함")
+
+    def test_s12_update_worktree_rejected_hub_regression_ok(self):
+        argv = lambda memfile: ["update", "--file", str(memfile),
+                                 "--title", "S12 갱신 대상", "--status", "dead"]
+
+        hub_memfile = self._memory_file(self.hub_dir)
+        hub_result = _run(argv(hub_memfile))
+        self.assertTrue(hub_result.get("ok"), f"허브 — update 실패(회귀): {hub_result}")
+        row = next(r for r in json.loads(hub_memfile.read_text(encoding="utf-8"))["memories"]
+                   if r["title"] == "S12 갱신 대상")
+        self.assertEqual(row["status"], "dead", "허브 — update가 status를 바꾸지 못함(회귀)")
+
+        self._assert_worktree_rejected(argv, "update")
+
+    def test_s12_promote_worktree_rejected_hub_regression_ok(self):
+        argv = lambda memfile: ["promote", "--file", str(memfile),
+                                 "--title", "S12 승격 대상", "--to", "docs",
+                                 "--ref", "docs/CONVENTIONS.md#S12"]
+
+        hub_memfile = self._memory_file(self.hub_dir)
+        hub_result = _run(argv(hub_memfile))
+        self.assertTrue(hub_result.get("ok"), f"허브 — promote 실패(회귀): {hub_result}")
+        hub_doc = json.loads(hub_memfile.read_text(encoding="utf-8"))
+        self.assertFalse(any(r["title"] == "S12 승격 대상" for r in hub_doc["memories"]),
+                         "허브 — promote가 인덱스 행을 제거하지 못함(회귀)")
+        self.assertFalse((self.hub_dir / ".opal" / "memory" / "s12-promote.md").exists(),
+                         "허브 — promote가 본문 파일을 삭제하지 못함(회귀)")
+
+        self._assert_worktree_rejected(argv, "promote")
+        wt_doc = json.loads(self._memory_file(self.wt_root).read_text(encoding="utf-8"))
+        self.assertTrue(any(r["title"] == "S12 승격 대상" for r in wt_doc["memories"]),
+                        "거부된 promote가 워크트리 인덱스 행을 지움(D-7 위반)")
+        self.assertTrue((self.wt_root / ".opal" / "memory" / "s12-promote.md").exists(),
+                        "거부된 promote가 워크트리 본문 파일을 지움(D-7 위반)")
+
+    def test_s12_delete_worktree_rejected_hub_regression_ok(self):
+        argv = lambda memfile: ["delete", "--file", str(memfile), "--title", "S12 삭제 대상"]
+
+        hub_memfile = self._memory_file(self.hub_dir)
+        hub_result = _run(argv(hub_memfile))
+        self.assertTrue(hub_result.get("ok"), f"허브 — delete 실패(회귀): {hub_result}")
+        hub_doc = json.loads(hub_memfile.read_text(encoding="utf-8"))
+        self.assertFalse(any(r["title"] == "S12 삭제 대상" for r in hub_doc["memories"]),
+                         "허브 — delete가 인덱스 행을 제거하지 못함(회귀)")
+
+        self._assert_worktree_rejected(argv, "delete")
+        wt_doc = json.loads(self._memory_file(self.wt_root).read_text(encoding="utf-8"))
+        self.assertTrue(any(r["title"] == "S12 삭제 대상" for r in wt_doc["memories"]),
+                        "거부된 delete가 워크트리 인덱스 행을 지움(D-7 위반)")
+
+    def test_s12_prune_worktree_rejected_hub_regression_ok(self):
+        argv = lambda memfile: ["prune", "--file", str(memfile)]
+
+        hub_memfile = self._memory_file(self.hub_dir)
+        hub_result = _run(argv(hub_memfile))
+        self.assertTrue(hub_result.get("ok"), f"허브 — prune 실패(회귀): {hub_result}")
+        hub_doc = json.loads(hub_memfile.read_text(encoding="utf-8"))
+        self.assertEqual(len(hub_doc["history"]), 5,
+                         f"허브 — prune이 FIFO=5로 트림하지 못함(회귀): {hub_doc['history']}")
+
+        wt_memfile = self._memory_file(self.wt_root)
+        before_len = len(json.loads(wt_memfile.read_text(encoding="utf-8"))["history"])
+        self._assert_worktree_rejected(argv, "prune")
+        after_len = len(json.loads(wt_memfile.read_text(encoding="utf-8"))["history"])
+        self.assertEqual(before_len, 6, "픽스처 전제 오류 — 워크트리 history는 6건이어야 함")
+        self.assertEqual(after_len, 6,
+                         "거부된 prune이 워크트리 history를 트림함(D-7 위반)")
+
+    def test_s12_task_number_worktree_rejected_hub_regression_ok(self):
+        argv = lambda memfile: ["task-number", "--file", str(memfile), "--bump"]
+
+        hub_memfile = self._memory_file(self.hub_dir)
+        hub_result = _run(argv(hub_memfile))
+        self.assertTrue(hub_result.get("ok"), f"허브 — task-number --bump 실패(회귀): {hub_result}")
+        hub_doc = json.loads(hub_memfile.read_text(encoding="utf-8"))
+        self.assertEqual(hub_doc["last_task_number"], 6,
+                         "허브 — task-number --bump이 반영되지 않음(회귀)")
+
+        self._assert_worktree_rejected(argv, "task-number --bump")
+        wt_doc = json.loads(self._memory_file(self.wt_root).read_text(encoding="utf-8"))
+        self.assertEqual(wt_doc["last_task_number"], 5,
+                         "거부된 task-number --bump이 워크트리 last_task_number를 바꿈(D-7 위반)")
+
+    def test_s12_append_history_worktree_rejected_hub_regression_ok(self):
+        argv = lambda memfile: ["append", "--file", str(memfile), "--kind", "history",
+                                 "--title", "S12 히스토리 추가", "--stage", "완료",
+                                 "--path", "tasks/s12-신규/", "--summary", "S12 신규 결과"]
+
+        hub_memfile = self._memory_file(self.hub_dir)
+        hub_result = _run(argv(hub_memfile))
+        self.assertTrue(hub_result.get("ok"), f"허브 — append --kind history 실패(회귀): {hub_result}")
+        hub_doc = json.loads(hub_memfile.read_text(encoding="utf-8"))
+        self.assertEqual(hub_doc["history"][0]["title"], "S12 히스토리 추가",
+                         "허브 — append --kind history가 history[0]에 반영되지 않음(회귀)")
+
+        self._assert_worktree_rejected(argv, "append --kind history")
+        wt_doc = json.loads(self._memory_file(self.wt_root).read_text(encoding="utf-8"))
+        self.assertNotEqual(wt_doc["history"][0]["title"], "S12 히스토리 추가",
+                            "거부된 append --kind history가 워크트리 history[0]을 바꿈(D-7 위반)")
+
+
+_S13_TASK_DIR = "118-260912-opd-s13-fixture"
+_S13_EMPTY_MEMORY_DOC = {"version": 1, "last_task_number": 0, "memories": [], "history": []}
+
+
+def _s13_capsule_request():
+    body_text = "S13 pending 요청 검증용 본문"
+    return {
+        "task_id": _S13_TASK_DIR,
+        "title": "S13 회고 후보",
+        "type": "project",
+        "status": "pending",
+        "file": "memory/s13_회고_후보.md",
+        "summary": "S13 pending 요청 검증용",
+        "body_sha256": hashlib.sha256(body_text.encode("utf-8")).hexdigest(),
+        "requested_at": "2026-09-12 10:00:00",
+    }
+
+
+class TestS13WorktreeMemoryAppendCapsule(unittest.TestCase):
+    """[T118 RED] S-13 (AC-8, AC-11) — 워크트리 경로에서
+    `memory-tool append --kind memory`는 `memories[]`를 직접 append하지 않고
+    `{task_path}/memory-index-request.json`에 요청 1건(D-2 8필드, status:
+    "pending")을 기록해야 한다. `show`/`review`는 `--task-path` 인자가 주어지고
+    캡슐 파일이 존재할 때만 응답에 `pending_requests`를 병합하며, 인자
+    미지정 응답은 캡슐 파일 존재 여부와 무관하게 현행과 바이트 동일해야
+    한다(D-2c).
+
+    [설계 가정] `append --kind memory`가 캡슐 파일 위치(`{task_path}`)를 알아야
+    하므로, `show`/`review`에 이미 추가되는 `--task-path <abs>`(D-2c)를
+    `append`에도 동일하게 재사용한다고 가정한다 — PLAN 원문이 이 인자 전달
+    경로까지 명시하지 않아(ANALYSIS Handoff 미확정), 기존 결정과 가장
+    정합적인 최소 확장으로 고정했다. GREEN 구현이 다른 인자명을 택하면 이
+    가정 부분만 조정 대상이다.
+
+    RED 근거: (a) `append`/`show`/`review` 어느 서브파서에도 `--task-path`가
+    등록되어 있지 않다(9개 서브명령 전수, ANALYSIS Q5) — 부여 시 argparse
+    "unrecognized arguments"로 즉시 실패한다. (b) 워크트리 판정 자체가 없으므로
+    현재 `append --kind memory`는 항상 `doc["memories"].append`(:975)를
+    수행해 인덱스가 늘어난다."""
+
+    def setUp(self):
+        self.tmpdir = pathlib.Path(tempfile.mkdtemp())
+        self.wt_root = self.tmpdir / "hub" / ".opal-worktrees" / "task_998"
+        self.task_path = self.wt_root / "tasks" / _S13_TASK_DIR
+        self.task_path.mkdir(parents=True)
+        (self.wt_root / ".opal" / "memory").mkdir(parents=True)
+        self.memory_file = self.wt_root / ".opal" / "MEMORY.json"
+        self.memory_file.write_text(
+            json.dumps(_S13_EMPTY_MEMORY_DOC, ensure_ascii=False, indent=2), encoding="utf-8")
+        self.capsule_file = self.task_path / "memory-index-request.json"
+
+    def tearDown(self):
+        shutil.rmtree(self.tmpdir, ignore_errors=True)
+
+    def test_s13a_worktree_append_memory_defers_to_capsule_request(self):
+        result = _run([
+            "append", "--file", str(self.memory_file), "--kind", "memory",
+            "--title", "S13 회고 후보", "--type", "project", "--status", "candidate",
+            "--summary", "S13 신규 회고 후보",
+            "--task-path", str(self.task_path),
+        ])
+        self.assertTrue(result.get("ok"),
+                        f"워크트리 append --kind memory는 ok:true(캡슐 기록 성공)여야 함: {result}")
+
+        doc = json.loads(self.memory_file.read_text(encoding="utf-8"))
+        self.assertEqual(doc.get("memories"), [],
+                         "워크트리 append --kind memory가 memories[]에 직접 append하면 안 됨(D-2)")
+
+        self.assertTrue(self.capsule_file.exists(),
+                        f"{self.capsule_file}에 memory-index-request.json이 생성되어야 함")
+        capsule = json.loads(self.capsule_file.read_text(encoding="utf-8"))
+        self.assertEqual(capsule.get("schema_version"), 1)
+        requests = capsule.get("requests", [])
+        self.assertEqual(len(requests), 1, f"요청이 정확히 1건이어야 함, 실제: {requests}")
+        req = requests[0]
+        self.assertEqual(
+            set(req.keys()),
+            {"task_id", "title", "type", "status", "file", "summary",
+             "body_sha256", "requested_at"},
+            f"요청 필드는 D-2 8필드와 정확히 일치해야 함, 실제 키: {sorted(req.keys())}")
+        self.assertEqual(req.get("status"), "pending")
+        self.assertEqual(req.get("title"), "S13 회고 후보")
+
+    def test_s13b_show_review_pending_requests_gated_by_task_path(self):
+        baseline_show = _run_raw(["show", "--file", str(self.memory_file)])
+        baseline_review = _run_raw(["review", "--file", str(self.memory_file)])
+
+        capsule_doc = {"schema_version": 1, "requests": [_s13_capsule_request()]}
+        self.capsule_file.write_text(
+            json.dumps(capsule_doc, ensure_ascii=False, indent=2), encoding="utf-8")
+
+        # (미지정) — 캡슐이 존재해도 --task-path 없으면 바이트 동일해야 함
+        # (회귀 보호 — 구현 전에도 통과해야 정상, D-2c)
+        after_show = _run_raw(["show", "--file", str(self.memory_file)])
+        after_review = _run_raw(["review", "--file", str(self.memory_file)])
+        self.assertEqual(baseline_show.stdout, after_show.stdout,
+                         "--task-path 미지정 show 응답은 캡슐 존재 여부와 무관하게 "
+                         "바이트 동일해야 함(D-2c)")
+        self.assertEqual(baseline_review.stdout, after_review.stdout,
+                         "--task-path 미지정 review 응답은 캡슐 존재 여부와 무관하게 "
+                         "바이트 동일해야 함(D-2c)")
+
+        # (지정) — --task-path 지정 시에만 pending_requests 노출 (RED)
+        show_with_path = _run_raw(["show", "--file", str(self.memory_file),
+                                    "--task-path", str(self.task_path)])
+        self.assertEqual(
+            show_with_path.returncode, 0,
+            f"--task-path 지정 show는 성공해야 함(D-2c) — 실제: "
+            f"code={show_with_path.returncode}, stderr={show_with_path.stderr!r}")
+        show_data = json.loads(show_with_path.stdout.strip().splitlines()[-1])
+        pending = show_data.get("pending_requests")
+        self.assertIsInstance(pending, list, f"pending_requests가 응답에 있어야 함: {show_data}")
+        self.assertEqual(len(pending), 1, f"pending_requests가 1건이어야 함: {pending}")
+
+        review_with_path = _run_raw(["review", "--file", str(self.memory_file),
+                                      "--task-path", str(self.task_path)])
+        self.assertEqual(
+            review_with_path.returncode, 0,
+            f"--task-path 지정 review는 성공해야 함(D-2c) — 실제: "
+            f"code={review_with_path.returncode}, stderr={review_with_path.stderr!r}")
+        review_data = json.loads(review_with_path.stdout.strip().splitlines()[-1])
+        pending_r = review_data.get("pending_requests")
+        self.assertIsInstance(pending_r, list, f"review 응답에도 pending_requests가 있어야 함: {review_data}")
+        self.assertEqual(len(pending_r), 1)
+
+
+def _s14_filename_for_title(title):
+    """`_title_to_filename`(memory_tool.py:797)과 동일한 슬러그 변환 규칙을
+    테스트에서 예측하기 위해 그대로 복제한다 — 내부 함수를 호출하는 것이
+    아니라 규칙을 복제하는 것이며, test_state_tool.py의
+    `_HL_EXPECTED_TITLE`(derive_history_title 규칙 복제)과 동형이다."""
+    slug = re.sub(r"[^\w가-힣]", "_", title).strip("_")
+    slug = re.sub(r"_+", "_", slug)
+    return f"memory/{slug}.md"
+
+
+class TestS14FinalizeTitleEquivalence(unittest.TestCase):
+    """[T118 RED] S-14 (AC-9) — 허브 MEMORY에 대한 title 동등성 판정:
+    (a) 같은 title 없음 → index row 1건 추가.
+    (b) 같은 title + 같은 file + 같은 본문 hash → 적용 완료로 간주(중복 추가
+        없음, 멱등).
+    (c) 같은 title이나 file 또는 본문 hash가 다름 → `MEMORY_TITLE_DUPLICATE`로
+        차단.
+
+    [설계 가정] "finalize 전용 신규 함수"(PLAN W-5)가 재사용하는 경로가
+    proposal §7.4 원문("기존 memory-tool append --kind memory 경로로
+    추가한다")과 일치하므로, 이 판정을 `append --kind memory`의 신규 선택
+    인자 `--body-sha256 <hex>`로 노출한다고 가정한다 — 인자를 지정했을 때만
+    동등성 판정이 실행되고, 미지정(기존 호출)은 현행 동작을 그대로 유지해야
+    한다(회귀 보전, 이 클래스에서는 항상 지정하므로 별도 회귀 테스트는 두지
+    않는다 — 미지정 회귀는 append의 기존 happy-path 테스트들이 이미 보장).
+    GREEN 구현이 별도 서브커맨드를 택하면 이 인터페이스 부분만 조정 대상이다.
+
+    RED 근거: `--body-sha256`가 append 서브파서에 등록되어 있지 않고
+    (argparse unrecognized arguments), title 중복 검사 자체가 `cmd_append`에
+    전혀 없다(ANALYSIS Q5 — "title 사전조회 없이 바로 doc["memories"].append").
+    `MEMORY_TITLE_DUPLICATE` 에러 코드도 현재 ERROR_CODES에 없다."""
+
+    def setUp(self):
+        self.tmpdir = pathlib.Path(tempfile.mkdtemp())
+        self.memory_dir = self.tmpdir / "memory"
+        self.memory_dir.mkdir()
+        self.memory_file = self.tmpdir / "MEMORY.json"
+
+    def tearDown(self):
+        shutil.rmtree(self.tmpdir, ignore_errors=True)
+
+    def _write_doc(self, memories):
+        doc = {"version": 1, "last_task_number": 0, "memories": list(memories), "history": []}
+        self.memory_file.write_text(json.dumps(doc, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    def _doc(self):
+        return json.loads(self.memory_file.read_text(encoding="utf-8"))
+
+    def test_s14a_title_absent_adds_new_index_row(self):
+        self._write_doc([])
+        title = "S14 신규 회고 후보"
+        body_hash = hashlib.sha256("S14 신규 본문".encode("utf-8")).hexdigest()
+
+        result = _run([
+            "append", "--file", str(self.memory_file), "--kind", "memory",
+            "--title", title, "--type", "project", "--status", "candidate",
+            "--summary", "S14 (a) 신규 추가", "--body-sha256", body_hash,
+        ])
+        self.assertTrue(result.get("ok"), f"title 부재 시 정상 추가되어야 함: {result}")
+
+        rows = [r for r in self._doc()["memories"] if r.get("title") == title]
+        self.assertEqual(len(rows), 1, f"신규 title은 1건만 추가되어야 함: {rows}")
+
+    def test_s14b_same_title_file_and_hash_is_idempotent_no_duplicate(self):
+        title = "S14 기존 메모리"
+        file_field = _s14_filename_for_title(title)
+        body_text = "S14 기존 본문 내용"
+        (self.memory_dir / pathlib.Path(file_field).name).write_text(body_text, encoding="utf-8")
+        body_hash = hashlib.sha256(body_text.encode("utf-8")).hexdigest()
+        self._write_doc([{
+            "title": title, "date": "2026-09-01", "type": "project", "status": "candidate",
+            "file": file_field, "summary": "기존 요약",
+        }])
+
+        result = _run([
+            "append", "--file", str(self.memory_file), "--kind", "memory",
+            "--title", title, "--type", "project", "--status", "candidate",
+            "--summary", "재적용 시도", "--body-sha256", body_hash,
+        ])
+        self.assertTrue(result.get("ok"),
+                        f"file·hash가 같은 재요청은 '적용 완료'로 간주되어 ok:true여야 함: {result}")
+
+        rows = [r for r in self._doc()["memories"] if r.get("title") == title]
+        self.assertEqual(len(rows), 1,
+                         f"동일 title/file/hash 재요청은 중복 추가하면 안 됨(멱등): {rows}")
+
+    def test_s14c_same_title_hash_or_file_mismatch_rejected(self):
+        title = "S14 충돌 메모리"
+        file_field = _s14_filename_for_title(title)
+        body_text = "S14 충돌 원본 본문"
+        (self.memory_dir / pathlib.Path(file_field).name).write_text(body_text, encoding="utf-8")
+        original_hash = hashlib.sha256(body_text.encode("utf-8")).hexdigest()
+
+        cases = (
+            ("hash_mismatch", file_field, hashlib.sha256("다른 본문".encode("utf-8")).hexdigest()),
+            ("file_mismatch", "memory/다른_파일.md", original_hash),
+        )
+        for label, existing_file, request_hash in cases:
+            with self.subTest(label=label):
+                self._write_doc([{
+                    "title": title, "date": "2026-09-01", "type": "project",
+                    "status": "candidate", "file": existing_file, "summary": "기존 요약",
+                }])
+                before = self._doc()
+
+                result = _run([
+                    "append", "--file", str(self.memory_file), "--kind", "memory",
+                    "--title", title, "--type", "project", "--status", "candidate",
+                    "--summary", "충돌 재시도", "--body-sha256", request_hash,
+                ])
+                self.assertEqual(
+                    result.get("error"), "MEMORY_TITLE_DUPLICATE",
+                    f"[{label}] file 또는 hash 불일치는 MEMORY_TITLE_DUPLICATE로 "
+                    f"차단되어야 함: {result}")
+                self.assertFalse(result.get("ok", True),
+                                 f"[{label}] 거부 응답은 ok:false여야 함: {result}")
+                self.assertEqual(self._doc(), before,
+                                 f"[{label}] 거부된 요청이 MEMORY.json을 변경하면 안 됨")
 
 
 if __name__ == "__main__":

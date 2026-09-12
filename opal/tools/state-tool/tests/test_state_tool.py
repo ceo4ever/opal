@@ -22,7 +22,9 @@
     "TestR11Invariants", "TestT098Add2RootDerivation",
     "TestT100DirectionEvidence", "TestT103WorkerDuration",
     "TestT103WorkerDurationWarning",
-    "TestT106CodeScanCitationBehavior", "TestT111SdlcV2Contracts"
+    "TestT106CodeScanCitationBehavior", "TestT111SdlcV2Contracts",
+    "TestS9CloseMarkNoImmediateMemoryAppend", "TestS10FinalizeAttribution",
+    "TestFinalizeAttributionHistoryLink"
   ]
 }
 
@@ -37,6 +39,7 @@
 # TASK T-11: 표준 라이브러리만 import
 import argparse
 import ast
+import hashlib
 import json
 import os
 import pathlib
@@ -713,8 +716,10 @@ class TestMark(BaseTestCase):
         self.assertIn("> 최종 갱신: 2026-05-01 23:00", md)
 
     def test_mark_close_last_row_status_done(self):
-        """[T094 수정] G-6: CLOSE 마지막 행 mark → current_status=done (PLAN §2.11
-        G-6). '- 상태: 완료' STATE.md 렌더는 D-1로 제거되었다 — 동일 정보는
+        """[T094 수정 / T118 D-4b 갱신] G-6: CLOSE 마지막 행 mark →
+        current_status=completed_unmerged (PLAN §2.11 G-6 + 118 D-4b/AC-4 —
+        CLOSE mark는 완료를 확정하되 허브 MEMORY 귀속은 하지 않는다).
+        '- 상태: 완료' STATE.md 렌더는 D-1로 제거되었다 — 동일 정보는
         `state.json.current_status`(기존에도 검증하던 필드)로 충분히 커버되므로
         MD 렌더 확인만 제거한다(정보 손실 0, 조회 경로는 `show --format md`의
         `STATUS_TEXT` 매핑으로 이관 — TestShowAsQueryStandard가 별도 검증)."""
@@ -726,7 +731,7 @@ class TestMark(BaseTestCase):
         self._mark(1, owner="user")  # 사용자 확인 → done/user
         self._mark(2)  # CLOSE State Gate → done
         state = self._state()
-        self.assertEqual(state["current_status"], "done")
+        self.assertEqual(state["current_status"], "completed_unmerged")
 
     def test_mark_auto_pass_owner_auto(self):
         """G-12: mark --auto-pass → owner=auto 자동 저장 (PLAN §2.15 G-12)"""
@@ -2196,8 +2201,8 @@ class TestNextActionAutoDerive(BaseTestCase):
     # ── S-3 (R-2/M-2): 전체 완료 시 "태스크 완료" 경계 ──
 
     def test_r2_m2_all_rows_complete_next_action_task_complete(self):
-        """[T072/L1-R2,M-2][T094 수정] S-3 — 마지막 행까지 모두 완료
-        (current_status=done)되면 프론티어(다음 대기 행)가 부재하므로
+        """[T072/L1-R2,M-2][T094 수정][T118 D-4b] S-3 — 마지막 행까지 모두 완료
+        (current_status=completed_unmerged)되면 프론티어(다음 대기 행)가 부재하므로
         `next_action == "태스크 완료"`여야 한다.
 
         STATE.md 첫 줄 렌더 확인은 D-1로 '## 다음 액션' 섹션이 완전히
@@ -2214,11 +2219,11 @@ class TestNextActionAutoDerive(BaseTestCase):
             f"row2 mark 전 프론티어 파생값 불일치: {state_mid.get('next_action')!r}"
         )
 
-        code2 = self._mark(2)  # CLOSE State Gate → done, current_status=done
+        code2 = self._mark(2)  # CLOSE State Gate → done, current_status=completed_unmerged
         self.assertEqual(code2, 0, "row2(CLOSE State Gate) mark 실패")
 
         state_final = self._state()
-        self.assertEqual(state_final.get("current_status"), "done")
+        self.assertEqual(state_final.get("current_status"), "completed_unmerged")
         self.assertEqual(
             state_final.get("next_action"), "태스크 완료",
             f"전체 완료 후 next_action 불일치: {state_final.get('next_action')!r}"
@@ -2567,6 +2572,11 @@ class TestErrorCodesCompleteness(unittest.TestCase):
         "code_scan_citation_unmet",
         # 111 신규 1종 — sdlc-v2 PLAN Work items 계약 위반
         "plan_contract_unmet",
+        # 118 W-4 신규 4종 (AC-4 — finalize-attribution 전용, allocator_root 추론 금지 집행)
+        "allocator_root_required",
+        "allocator_root_not_absolute",
+        "allocator_root_invalid",
+        "finalize_attribution_failed",
     ]
 
     def test_error_codes_count(self):
@@ -2578,8 +2588,8 @@ class TestErrorCodesCompleteness(unittest.TestCase):
         갱신 근거: 신규 에러 코드 등재가 종수 단언을 같이 깨므로 등재 태스크가
         기대값을 함께 옮긴다. 111 W-1은 PLAN Work items 계약을 차단형 게이트로
         집행하므로 전용 에러 코드를 추가한다."""
-        self.assertEqual(len(ST.ERROR_CODES), 47,
-                         "[111] plan_contract_unmet 등재 후 47종 기대")
+        self.assertEqual(len(ST.ERROR_CODES), 51,
+                         "[118 W-4] finalize-attribution 전용 4종 등재 후 51종 기대")
 
     def test_all_28_codes_registered(self):
         """[098 H-10 선갱신 + 106 종수 갱신 + 111 갱신] 47종 각각이 ERROR_CODES에 등재됨."""
@@ -2619,13 +2629,13 @@ class TestErrorCodesCompleteness(unittest.TestCase):
         self.assertEqual(readme_count, actual_count,
                          f"README 기재 종수({readme_count})와 실측 len(ERROR_CODES)"
                          f"({actual_count})가 불일치함(D-5 ① 정합 위반)")
-        # [111] 종수 47 하드 기대 — W-1 plan_contract_unmet 등재 반영
-        self.assertEqual(actual_count, 47,
-                         "[111] len(ERROR_CODES)==47 기대 — plan_contract_unmet "
-                         "등재가 유실되면 46으로 실패")
-        self.assertEqual(readme_count, 47,
-                         "[111] README 헤더 종수==47 기대 — 카탈로그 정정이 누락되면 "
-                         "46으로 실패")
+        # [118 W-4] 종수 51 하드 기대 — finalize-attribution 전용 4종 등재 반영
+        self.assertEqual(actual_count, 51,
+                         "[118 W-4] len(ERROR_CODES)==51 기대 — allocator_root_* / "
+                         "finalize_attribution_failed 등재가 유실되면 47로 실패")
+        self.assertEqual(readme_count, 51,
+                         "[118 W-4] README 헤더 종수==51 기대 — 카탈로그 정정이 "
+                         "누락되면 47로 실패")
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -2990,19 +3000,19 @@ class TestVerify(BaseTestCase):
         실행하면 worktree 자체의 루트를 가리켜, `tasks/`가 분기되지 않고
         허브에 고정되는 092 경로 계약(`opal-harness.md` §2.5)과 어긋나
         `tasks/034-*`를 못 찾는다. [MUST] 신규 헬퍼를 만들지 않고
-        `find_project_root()`(state_tool.py:553 — `.opal/MEMORY.json` 보유
+        `task_root()`(state_tool.py:553 — `.opal/MEMORY.json` 보유
         조상 탐색, 088 §2.3에서 이미 검증된 패턴)를 재사용한다 — 이 함수는
         worktree/허브(전체 체크아웃) 양쪽에서 정확히 허브 루트를 반환한다."""
         import io
         from contextlib import redirect_stdout
 
-        # 092 경로 계약(tasks/는 허브 고정) — find_project_root()로 허브 루트를
+        # 092 경로 계약(tasks/는 허브 고정) — task_root()로 허브 루트를
         # 찾는다. worktree에서 실행돼도 `.opal/MEMORY.json` 보유 조상(허브)까지
         # 거슬러 올라가므로 정확하다(088 §2.3 선례 재사용, 신규 헬퍼 미신설).
-        repo_root = ST.find_project_root(str(_TOOL_DIR))
+        repo_root = ST.task_root(str(_TOOL_DIR))
         self.assertIsNotNone(
             repo_root,
-            f"find_project_root({_TOOL_DIR})가 None을 반환함 — .opal/MEMORY.json "
+            f"task_root({_TOOL_DIR})가 None을 반환함 — .opal/MEMORY.json "
             "보유 조상을 찾지 못함(허브 경로 계약 위반 의심)"
         )
         # 034는 tasks/backup/으로 이관됐으므로 두 위치를 모두 탐색한다.
@@ -3340,7 +3350,8 @@ NEW_OPDS_ROWS_SPEC = json.dumps([
 class TestNewStandardRowStructure(BaseTestCase):
     """014 Phase 4: 새 표준 행 구조(QA Gate/State Gate 행 없음)에서 도구가 정상 동작하는지 검증.
     - guard가 새 구조에서 단계 건너뛰기를 정상 차단 (기능 약화 금지)
-    - CLOSE 마지막 행이 "DONE.md 생성"이어도 current_status=done 정상 전환
+    - CLOSE 마지막 행이 "DONE.md 생성"이어도 완료 전환 정상 동작
+      (118 D-4b: current_status=completed_unmerged)
     - QA Gate/State Gate 행이 없어도 전체 플로우가 끝까지 완주
     """
 
@@ -3358,7 +3369,7 @@ class TestNewStandardRowStructure(BaseTestCase):
 
     def test_new_structure_full_sequential_flow_completes(self):
         """[T094 수정] 새 10행 구조 전체 순차 완주: 모든 행 순서대로 mark →
-        current_status=done. guard가 정상 통과하고 CLOSE "DONE.md 생성" 행에서
+        current_status=completed_unmerged. guard가 정상 통과하고 CLOSE "DONE.md 생성" 행에서
         완료 전환 (014 Phase 4). '- 상태: 완료' STATE.md 렌더는 D-1로 제거되어
         `state.json.current_status` 검증만으로 충분하다(정보 손실 0, 조회
         경로는 `show --format md`로 이관)."""
@@ -3384,10 +3395,11 @@ class TestNewStandardRowStructure(BaseTestCase):
         self.assertEqual(self._mark(10), 0)
 
         state = self._state()
-        self.assertEqual(state["current_status"], "done")
+        self.assertEqual(state["current_status"], "completed_unmerged")
 
     def test_new_structure_close_done_row_triggers_done_status(self):
-        """새 구조: CLOSE 마지막 행 항목이 'DONE.md 생성'이어도 current_status=done 전환.
+        """새 구조: CLOSE 마지막 행 항목이 'DONE.md 생성'이어도 완료 전환
+        (118 D-4b: current_status=completed_unmerged).
         (레거시는 'State Gate'였음 — 항목명 비의존 판정 검증) (014 Phase 4)"""
         # 최소 구조: CLOSE 직전 사용자 확인 → CLOSE DONE.md 생성
         rows = json.dumps([
@@ -3399,7 +3411,7 @@ class TestNewStandardRowStructure(BaseTestCase):
         code = self._mark(2)         # CLOSE DONE.md 생성 → 마지막 행
         self.assertEqual(code, 0)
         state = self._state()
-        self.assertEqual(state["current_status"], "done")
+        self.assertEqual(state["current_status"], "completed_unmerged")
 
     def test_new_structure_guard_blocks_skip(self):
         """새 구조에서도 guard가 단계 건너뛰기를 차단 (기능 약화 금지) (014 Phase 4 / §M-A).
@@ -4629,10 +4641,10 @@ class TestT098EvidenceCheck(BaseTestCase):
         실파일) → exit 0 + citation_missing 0건(4셀 전건 백틱 경로 스팬 보유)
         + confirmed_ratio == 3/4 (목표 행만 디렉토리 없는 파일명 단독이라
         unknown). tmp_path 합성 픽스처(S-7)로 대신할 수 없는 목표달성 검증."""
-        repo_root = ST.find_project_root(str(_TOOL_DIR))
+        repo_root = ST.task_root(str(_TOOL_DIR))
         self.assertIsNotNone(
             repo_root,
-            "find_project_root가 None을 반환함 — .opal/MEMORY.json 보유 조상을 찾지 못함"
+            "task_root가 None을 반환함 — .opal/MEMORY.json 보유 조상을 찾지 못함"
         )
         task_dir = _find_repo_task_dir(repo_root, "098-")
         task_md_path = task_dir / "TASK.md"
@@ -4667,8 +4679,8 @@ class TestT098EvidenceCheck(BaseTestCase):
         전건 `-`인 레거시 다수 포함) → 전건 exit 0
         (`evidence_check:'skipped'` 또는 미확정 반환이되 차단 없음).
         예외·차단 0건."""
-        repo_root = ST.find_project_root(str(_TOOL_DIR))
-        self.assertIsNotNone(repo_root, "find_project_root가 None을 반환함")
+        repo_root = ST.task_root(str(_TOOL_DIR))
+        self.assertIsNotNone(repo_root, "task_root가 None을 반환함")
         task_md_files = sorted((repo_root / "tasks").glob("*/TASK.md"))
         self.assertGreater(len(task_md_files), 0,
                            "[RED] 저장소 실측 TASK.md 파일이 0건 — 픽스처 불가")
@@ -6226,19 +6238,21 @@ _HL_EMPTY_MEMORY_DOC = {
 }
 
 
-class TestCloseHistoryLink(BaseTestCase):
-    """088 R-1~R-5: CLOSE 마지막 행 mark 시 state-tool이 memory-tool을 호출해
-    `<프로젝트루트>/.opal/MEMORY.json` history[0]에 작업 히스토리 행을 자동 생성한다.
+class TestFinalizeAttributionHistoryLink(BaseTestCase):
+    """088 R-1~R-5의 히스토리 귀속 계약 — 118 D-4b(AC-4)로 **발동 지점만 이전**됐다.
 
-    픽스처는 BaseTestCase의 평면 tmpdir 대신 **프로젝트 루트 형태**를 구성한다:
-        <tmpdir>/.opal/MEMORY.json    ← 앵커 (조상 탐색 대상, PLAN §2.3)
+    088 시점에는 CLOSE 마지막 행 mark가 즉시 memory-tool을 호출했으나, 118은 그
+    즉시 호출을 제거하고(`TestS9CloseMarkNoImmediateMemoryAppend`가 이를 고정)
+    `state-tool finalize-attribution <task-path> --allocator-root <abs>`를 유일한
+    귀속 경로로 삼는다. 아래 TS-1~TS-7은 088이 지키던 관찰 가능한 계약
+    (생성/멱등/부재/손상/선택성/리마인더/영속경계)을 **새 발동 지점 기준으로 그대로
+    보존**한 것이다 — 계약을 약화하지 않고 트리거만 옮겼다.
+
+    픽스처는 BaseTestCase의 평면 tmpdir 대신 **허브(allocator_root) 형태**를 구성한다:
+        <tmpdir>/.opal/MEMORY.json    ← allocator_root 앵커
         <tmpdir>/tasks/<태스크폴더>/  ← task_path
-    기존 262건은 앵커 없는 평면 tmpdir에서 돌아 무발동이며(PLAN §2.8),
-    이 클래스만 실제 연동 경로를 탄다.
-
-    CLOSE 진입 게이트(check_close_gate, state_tool.py:558-595)는 직전 '사용자 확인'
-    행이 status=done/owner=user일 것을 요구하므로, 기존 픽스처 패턴
-    (test_state_tool.py:433-447)을 그대로 재사용한다.
+    allocator_root는 명시 인자로만 전달하며 도구가 추론하지 않는다(worktree.md
+    §task root와 allocator root 계약).
     """
 
     CLOSE_ROWS_SPEC = json.dumps([
@@ -6248,7 +6262,7 @@ class TestCloseHistoryLink(BaseTestCase):
 
     def setUp(self):
         super().setUp()
-        # BaseTestCase가 만든 평면 task_path는 사용하지 않는다 — 프로젝트 루트 구조로 교체
+        # BaseTestCase가 만든 평면 task_path는 사용하지 않는다 — 허브 루트 구조로 교체
         self.project_root = self.tmpdir
         self.memory_file  = self.project_root / ".opal" / "MEMORY.json"
         self.memory_file.parent.mkdir(parents=True, exist_ok=True)
@@ -6277,16 +6291,25 @@ class TestCloseHistoryLink(BaseTestCase):
         self.assertEqual(code, 0, f"픽스처 오류 — 사용자 확인 행 mark 실패: {result}")
         return self._mark_capture(2)
 
+    def _finalize(self, allocator_root=None):
+        """finalize-attribution 공개 CLI 호출 → (code, stdout, stderr, parsed)."""
+        argv = ["finalize-attribution", str(self.task_path)]
+        if allocator_root is not None:
+            argv += ["--allocator-root", str(allocator_root)]
+        return _run094(argv)
+
     # ── TS-1 (R-1/R-2) ──────────────────────────────────────────────────────
 
-    def test_ts1_close_last_mark_creates_history_row(self):
-        """TS-1 (R-1/R-2): CLOSE 마지막 행 mark → MEMORY.json history[0]에 1건 생성.
-        title/path/stage/result는 도구 파생값, date는 memory-tool이 채운 KST 당일."""
+    def test_ts1_finalize_attribution_creates_history_row(self):
+        """TS-1 (R-1/R-2, 118 D-4b): finalize-attribution → MEMORY.json history[0]에
+        1건 생성. title/path/stage/result는 도구 파생값, date는 memory-tool이 채운
+        KST 당일. 088과 동일한 행 계약이며 발동 지점만 mark → finalize로 옮겼다."""
         self._init(rows_spec=self.CLOSE_ROWS_SPEC)
-        code, result = self._mark_close_last()
+        code, stdout, stderr, data = self._finalize(self.project_root)
 
-        self.assertEqual(code, 0, f"CLOSE 마지막 행 mark 실패: {result}")
-        self.assertTrue(result.get("ok"), f"mark 응답이 ok:true여야 함: {result}")
+        self.assertEqual(code, 0,
+                         f"finalize-attribution 실패: stdout={stdout!r} stderr={stderr!r}")
+        self.assertTrue(data.get("ok"), f"응답이 ok:true여야 함: {data}")
 
         history = self._history()
         self.assertEqual(len(history), 1,
@@ -6295,7 +6318,7 @@ class TestCloseHistoryLink(BaseTestCase):
         self.assertEqual(row.get("title"), _HL_EXPECTED_TITLE,
                          f"title은 task_id에서 파생되어야 함(§2.6), 실제: {row.get('title')!r}")
         self.assertEqual(row.get("path"), _HL_EXPECTED_PATH,
-                         f"path는 프로젝트 루트 상대경로여야 함, 실제: {row.get('path')!r}")
+                         f"path는 allocator_root 상대경로여야 함, 실제: {row.get('path')!r}")
         self.assertEqual(row.get("stage"), _HL_STAGE_DONE,
                          f"stage는 '완료'여야 함(D-6), 실제: {row.get('stage')!r}")
         self.assertRegex(str(row.get("date")), r"^\d{4}-\d{2}-\d{2}$",
@@ -6303,88 +6326,83 @@ class TestCloseHistoryLink(BaseTestCase):
         self.assertEqual(row.get("result"), _HL_RESULT_PLACEHOLDER,
                          f"result는 플레이스홀더여야 함(§2.6), 실제: {row.get('result')!r}")
 
-        link = result.get("history_link")
+        link = data.get("attribution")
         self.assertIsInstance(link, dict,
-                              f"mark 응답에 history_link 객체가 있어야 함: {result}")
+                              f"응답에 attribution 객체가 있어야 함: {data}")
         self.assertEqual(link.get("status"), "created",
                          f"최초 생성은 status=created여야 함, 실제: {link.get('status')!r}")
 
     # ── TS-2 (R-3 멱등) ─────────────────────────────────────────────────────
 
-    def test_ts2_duplicate_mark_is_idempotent(self):
-        """TS-2 (R-3): 동일 CLOSE 마지막 행을 2회 mark해도 해당 path 행은 정확히 1건.
-        2회차 응답은 status=duplicate_skipped."""
+    def test_ts2_duplicate_finalize_is_idempotent(self):
+        """TS-2 (R-3): 동일 인자로 finalize-attribution을 2회 실행해도 해당 path 행은
+        정확히 1건. 2회차 응답은 attribution.status=duplicate_skipped."""
         self._init(rows_spec=self.CLOSE_ROWS_SPEC)
-        code1, result1 = self._mark_close_last()
-        self.assertEqual(code1, 0, f"1회차 mark 실패: {result1}")
+        code1, stdout1, stderr1, _ = self._finalize(self.project_root)
+        self.assertEqual(code1, 0, f"1회차 실패: stdout={stdout1!r} stderr={stderr1!r}")
 
-        code2, result2 = self._mark_capture(2)
-        self.assertEqual(code2, 0, f"2회차 mark 실패: {result2}")
-        self.assertTrue(result2.get("ok"), f"2회차 mark도 ok:true여야 함: {result2}")
+        code2, stdout2, stderr2, data2 = self._finalize(self.project_root)
+        self.assertEqual(code2, 0, f"2회차 실패: stdout={stdout2!r} stderr={stderr2!r}")
+        self.assertTrue(data2.get("ok"), f"2회차도 ok:true여야 함: {data2}")
 
         history = self._history()
         same_path = [r for r in history if r.get("path") == _HL_EXPECTED_PATH]
         self.assertEqual(len(same_path), 1,
                          f"동일 path 행이 정확히 1건이어야 함(멱등), 실제 history: {history}")
 
-        link = result2.get("history_link")
-        self.assertIsInstance(link, dict,
-                              f"2회차 mark 응답에도 history_link가 있어야 함: {result2}")
+        link = data2.get("attribution")
+        self.assertIsInstance(link, dict, f"2회차 응답에도 attribution이 있어야 함: {data2}")
         self.assertEqual(link.get("status"), "duplicate_skipped",
                          f"2회차는 duplicate_skipped여야 함, 실제: {link.get('status')!r}")
 
-    # ── TS-3 (R-4a 부재 → 비차단 skipped) ───────────────────────────────────
+    # ── TS-3 (R-4a 부재 → 명시적 거부) ──────────────────────────────────────
 
-    def test_ts3_missing_memory_json_is_non_blocking_skip(self):
-        """TS-3 (R-4a): MEMORY.json 부재 상태로 mark → mark는 ok:true를 유지하고
-        history_link.status=skipped + 비공백 warning으로 표면화된다."""
+    def test_ts3_missing_memory_json_is_explicit_error(self):
+        """TS-3 (R-4a 이전분, 118 D-4b): allocator_root에 .opal/MEMORY.json이 없으면
+        추론으로 다른 루트를 찾지 않고 명시적으로 거부한다.
+
+        088에서는 mark 부수효과였으므로 비차단 skip이 옳았으나, 118에서 귀속은 전용
+        커맨드의 **본 목적**이므로 조용한 skip이 아니라 exit 1 + ok:false로 표면화한다
+        (mark의 ok:true 비차단 계약은 S-9가 별도로 고정한다)."""
         self._init(rows_spec=self.CLOSE_ROWS_SPEC)
         self.memory_file.unlink()   # 블랙박스 결함 주입 — 앵커 제거
 
-        code, result = self._mark_close_last()
-        self.assertEqual(code, 0, f"MEMORY.json 부재가 mark를 실패시키면 안 됨: {result}")
-        self.assertTrue(result.get("ok"),
-                        f"MEMORY.json 부재에도 ok:true여야 함(R-4): {result}")
-
-        link = result.get("history_link")
-        self.assertIsInstance(link, dict,
-                              f"부재 상황도 history_link로 표면화되어야 함: {result}")
-        self.assertEqual(link.get("status"), "skipped",
-                         f"앵커 미탐지는 skipped여야 함, 실제: {link.get('status')!r}")
-        self.assertTrue(str(link.get("warning", "")).strip(),
-                        f"warning이 비공백이어야 함, 실제: {link.get('warning')!r}")
+        code, stdout, stderr, data = self._finalize(self.project_root)
+        self.assertEqual(code, 1,
+                         f"MEMORY.json 부재는 exit 1이어야 함 — stdout={stdout!r} stderr={stderr!r}")
+        self.assertIs(data.get("ok"), False, f"ok:false여야 함: {data}")
+        self.assertEqual(data.get("error"), "allocator_root_invalid",
+                         f"에러 코드가 allocator_root_invalid여야 함: {data}")
         self.assertFalse(self.memory_file.exists(), "MEMORY.json이 새로 생성되면 안 됨")
 
-    # ── TS-4 (R-4b 손상 → 비차단 failed) ────────────────────────────────────
+    # ── TS-4 (R-4b 손상 → 명시적 실패, 파일 무변경) ─────────────────────────
 
-    def test_ts4_corrupt_memory_json_is_non_blocking_failure(self):
-        """TS-4 (R-4b): MEMORY.json이 손상 JSON일 때 mark → ok:true 유지 +
-        history_link.status=failed + 비공백 warning. 결함 주입은 파일 덮어쓰기(블랙박스)."""
+    def test_ts4_corrupt_memory_json_fails_without_mutating_file(self):
+        """TS-4 (R-4b 이전분): MEMORY.json이 손상 JSON이면 exit 1 + ok:false로 실패하고
+        파일은 바이트 그대로 남는다. 결함 주입은 파일 덮어쓰기(블랙박스)."""
         self._init(rows_spec=self.CLOSE_ROWS_SPEC)
-        self.memory_file.write_text("{ this is not valid json ", encoding="utf-8")
+        corrupt = "{ this is not valid json "
+        self.memory_file.write_text(corrupt, encoding="utf-8")
 
-        code, result = self._mark_close_last()
-        self.assertEqual(code, 0, f"손상 MEMORY.json이 mark를 실패시키면 안 됨: {result}")
-        self.assertTrue(result.get("ok"),
-                        f"손상 MEMORY.json에도 ok:true여야 함(R-4): {result}")
+        code, stdout, stderr, data = self._finalize(self.project_root)
+        self.assertEqual(code, 1,
+                         f"손상 MEMORY.json은 exit 1이어야 함 — stdout={stdout!r} stderr={stderr!r}")
+        self.assertIs(data.get("ok"), False, f"ok:false여야 함: {data}")
+        self.assertEqual(data.get("error"), "finalize_attribution_failed",
+                         f"에러 코드가 finalize_attribution_failed여야 함: {data}")
+        self.assertTrue(str(data.get("message", "")).strip(),
+                        f"message가 비공백이어야 함, 실제: {data.get('message')!r}")
+        self.assertEqual(self.memory_file.read_text(encoding="utf-8"), corrupt,
+                         "실패한 귀속이 MEMORY.json을 변경하면 안 됨")
 
-        link = result.get("history_link")
-        self.assertIsInstance(link, dict,
-                              f"손상 상황도 history_link로 표면화되어야 함: {result}")
-        self.assertEqual(link.get("status"), "failed",
-                         f"손상 JSON은 failed여야 함, 실제: {link.get('status')!r}")
-        self.assertTrue(str(link.get("warning", "")).strip(),
-                        f"warning이 비공백이어야 함, 실제: {link.get('warning')!r}")
+    # ── TS-5 (회귀: mark는 어떤 행에서도 귀속하지 않는다) ───────────────────
 
-    # ── TS-5 (회귀: 비CLOSE 행 무발동) ──────────────────────────────────────
+    def test_ts5_no_mark_path_links_but_finalize_does(self):
+        """TS-5 (회귀/선택성, 118 D-4b 갱신): 088에서는 '비CLOSE 행만 무발동'이었으나
+        118에서는 **비CLOSE 행도 CLOSE 마지막 행도** MEMORY를 건드리지 않는다.
 
-    def test_ts5_non_close_row_mark_does_not_link(self):
-        """TS-5 (회귀/선택성): 비CLOSE 행 mark는 무발동이고, **같은 태스크의** CLOSE
-        마지막 행 mark는 발동한다.
-
-        무발동만 단언하면 기능이 아예 없어도 통과하는 공허한 가드가 되므로,
-        동일 픽스처 안에서 발동/무발동을 대조해 '무발동이 선택적임'을 확증한다.
-        """
+        무발동만 단언하면 기능이 아예 없어도 통과하는 공허한 가드가 되므로, 동일
+        픽스처 안에서 finalize-attribution이 실제로 발동함을 대조군으로 확증한다."""
         self._init(rows_spec=self.CLOSE_ROWS_SPEC)
         before = self._history()
 
@@ -6392,29 +6410,37 @@ class TestCloseHistoryLink(BaseTestCase):
         code, result = self._mark_capture(1, owner="user")   # TASK/사용자 확인 (비CLOSE)
         self.assertEqual(code, 0, f"비CLOSE 행 mark 실패: {result}")
         self.assertNotIn("history_link", result,
-                         f"비CLOSE mark 응답에는 history_link 키가 없어야 함: {result}")
+                         f"mark 응답에는 history_link 키가 없어야 함(118 D-4b): {result}")
         self.assertEqual(len(self._history()), len(before),
                          "비CLOSE mark는 history를 변경하면 안 됨")
 
-        # (2) 대조군 — CLOSE 마지막 행 → 발동 (무발동이 선택적임을 확증)
+        # (2) CLOSE 마지막 행 → 118에서도 무발동
         code, close_result = self._mark_capture(2)
         self.assertEqual(code, 0, f"CLOSE 마지막 행 mark 실패: {close_result}")
-        self.assertIn("history_link", close_result,
-                      f"CLOSE 마지막 행 mark는 발동해야 함(대조군): {close_result}")
+        self.assertNotIn("history_link", close_result,
+                         f"CLOSE mark 응답에도 history_link가 없어야 함(118 D-4b): {close_result}")
+        self.assertEqual(len(self._history()), len(before),
+                         "CLOSE 마지막 행 mark도 history를 변경하면 안 됨(118 AC-4)")
+
+        # (3) 대조군 — finalize-attribution은 발동한다(무발동이 선택적임을 확증)
+        fcode, fstdout, fstderr, _ = self._finalize(self.project_root)
+        self.assertEqual(fcode, 0,
+                         f"finalize-attribution 실패: stdout={fstdout!r} stderr={fstderr!r}")
         self.assertEqual(len(self._history()), len(before) + 1,
-                         "CLOSE 마지막 행 mark는 history를 1건 늘려야 함(대조군)")
+                         "finalize-attribution은 history를 1건 늘려야 함(대조군)")
 
     # ── TS-6 (R-5 리마인더) ─────────────────────────────────────────────────
 
     def test_ts6_reminder_contains_actionable_update_command(self):
-        """TS-6 (R-5): history_link.reminder에 보강 명령의 구성요소가 모두 포함된다 —
+        """TS-6 (R-5): attribution.reminder에 보강 명령의 구성요소가 모두 포함된다 —
         `update`, `--kind history`, `--result`, 그리고 실제 사용된 title."""
         self._init(rows_spec=self.CLOSE_ROWS_SPEC)
-        code, result = self._mark_close_last()
-        self.assertEqual(code, 0, f"CLOSE 마지막 행 mark 실패: {result}")
+        code, stdout, stderr, data = self._finalize(self.project_root)
+        self.assertEqual(code, 0,
+                         f"finalize-attribution 실패: stdout={stdout!r} stderr={stderr!r}")
 
-        link = result.get("history_link")
-        self.assertIsInstance(link, dict, f"history_link가 있어야 함: {result}")
+        link = data.get("attribution")
+        self.assertIsInstance(link, dict, f"attribution이 있어야 함: {data}")
         reminder = link.get("reminder")
         self.assertIsInstance(reminder, str,
                               f"reminder는 문자열이어야 함, 실제: {reminder!r}")
@@ -6424,26 +6450,242 @@ class TestCloseHistoryLink(BaseTestCase):
 
     # ── TS-7 (H-3 영속 경계) ────────────────────────────────────────────────
 
-    def test_ts7_history_link_not_persisted_schema_passes(self):
-        """TS-7 (H-3 영속 경계, 076 TS-007 패턴): mark 후 state.json 어디에도
-        history_link 키가 없고 state.schema.json 검증을 통과한다."""
+    def test_ts7_attribution_not_persisted_schema_passes(self):
+        """TS-7 (H-3 영속 경계, 076 TS-007 패턴): finalize-attribution 후 state.json
+        어디에도 attribution/history_link 키가 없고 state.schema.json 검증을 통과한다."""
         self._init(rows_spec=self.CLOSE_ROWS_SPEC)
-        code, result = self._mark_close_last()
-        self.assertEqual(code, 0, f"CLOSE 마지막 행 mark 실패: {result}")
+        code, stdout, stderr, data = self._finalize(self.project_root)
+        self.assertEqual(code, 0,
+                         f"finalize-attribution 실패: stdout={stdout!r} stderr={stderr!r}")
         # 선행 조건 — 발동 자체는 일어나야 한다(무발동으로 인한 위양성 통과 차단)
-        self.assertIn("history_link", result,
-                      f"CLOSE 마지막 행 mark 응답에 history_link가 있어야 함: {result}")
+        self.assertIn("attribution", data, f"응답에 attribution이 있어야 함: {data}")
 
         state = self._state()
-        self.assertNotIn("history_link", state,
-                         "history_link는 state.json에 영속되면 안 됨")
-        for row in state["rows"]:
-            self.assertNotIn("history_link", row,
-                             "history_link는 rows[]에도 영속되면 안 됨")
+        for key in ("attribution", "history_link"):
+            self.assertNotIn(key, state, f"{key}는 state.json에 영속되면 안 됨")
+            for row in state["rows"]:
+                self.assertNotIn(key, row, f"{key}는 rows[]에도 영속되면 안 됨")
 
         validated = self._validate()
         self.assertTrue(validated["ok"], f"state.schema.json 검증 실패: {validated}")
         self.assertEqual(validated["violations_count"], 0)
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# T118 RED: TestS9CloseMarkNoImmediateMemoryAppend / TestS10FinalizeAttribution
+# (118-260912-opd-워크트리-태스크-소유권-루트분리 TEST-SCENARIO.md S-9/S-10,
+#  PLAN D-4/D-4b, AC-4/H-1/C-4).
+# [MUST] red-first.md §2/§4: 공개 인터페이스(cmd_mark 직접 호출 + 실 파일 상태,
+# 또는 run.sh subprocess stdout/exit code)로만 검증한다. 내부 private 함수·구현
+# 결합 검증 금지. 작성자(opal-test-agent red mode, 118 W-EX/RED-B)와 구현자
+# (opal-task-agent, PLAN W-4)를 분리한다 — 이 파일은 테스트만 추가하며
+# state_tool.py는 건드리지 않는다. GREEN 구현 전까지 아래는 전부 실패해야
+# 정상이다(완화·삭제 금지).
+# ═════════════════════════════════════════════════════════════════════════════
+
+_S9_TASK_DIR = "118-260912-opd-close-무변경"
+
+_S9_CLOSE_ROWS_SPEC = json.dumps([
+    {"stage": "TASK",  "item": "사용자 확인"},
+    {"stage": "CLOSE", "item": "DONE.md 생성"},
+])
+
+
+class TestS9CloseMarkNoImmediateMemoryAppend(BaseTestCase):
+    """[T118 RED] S-9 (AC-4, H-1, C-4) — CLOSE 마지막 행 mark는 더 이상
+    `.opal/MEMORY.json`을 즉시 변경하지 않아야 한다(D-4b: cmd_mark의 CLOSE
+    마지막 행 분기에서 link_memory_history() 즉시호출을 제거). mark 응답은
+    현행대로 ok:true를 유지하고, state.json의 current_status는
+    "completed_unmerged"로 확정되어야 한다(history append는 신규
+    `finalize-attribution` 서브커맨드가 전담 — TestS10FinalizeAttribution).
+
+    RED 근거: 현재 cmd_mark(state_tool.py:1953-1958)는 CLOSE 마지막 행 완료 시
+    link_memory_history()를 즉시 호출해 MEMORY.json history에 1건을 append한다
+    (바로 위 TestCloseHistoryLink.test_ts1_close_last_mark_creates_history_row가
+    이 현행 동작을 이미 양성으로 고정하고 있다). 또한 CLOSE 마지막 행 분기는
+    `state["current_status"] = "done"`만 확정할 뿐(§2.11 G-6 계열),
+    "completed_unmerged"라는 값 자체가 현재 코드 어디에도 존재하지 않는다.
+    따라서 아래 해시 불변·history 불변·current_status 세 단정이 전부 실패한다."""
+
+    def setUp(self):
+        super().setUp()
+        self.project_root = self.tmpdir
+        self.memory_file = self.project_root / ".opal" / "MEMORY.json"
+        self.memory_file.parent.mkdir(parents=True, exist_ok=True)
+        self.memory_file.write_text(
+            json.dumps(_HL_EMPTY_MEMORY_DOC, ensure_ascii=False, indent=2),
+            encoding="utf-8")
+        self.task_path = self.project_root / "tasks" / _S9_TASK_DIR
+        self.task_path.mkdir(parents=True)
+        self._init(rows_spec=_S9_CLOSE_ROWS_SPEC)
+
+    def _sha256(self):
+        return hashlib.sha256(self.memory_file.read_bytes()).hexdigest()
+
+    def _mark_close_last(self):
+        with _mock_now():
+            args = make_args(task_path=str(self.task_path), row=1, done=True, owner="user")
+            code0, result0 = self._call_cmd(ST.cmd_mark, args)
+        self.assertEqual(code0, 0, f"픽스처 오류 — 사용자 확인 행 mark 실패: {result0}")
+        with _mock_now():
+            args = make_args(task_path=str(self.task_path), row=2, done=True)
+            return self._call_cmd(ST.cmd_mark, args)
+
+    def test_s9_close_mark_leaves_memory_json_byte_identical(self):
+        """S-9 — mark 실행 전후 .opal/MEMORY.json sha256이 바이트 동일해야 하고,
+        history 배열도 변하면 안 된다."""
+        before_hash = self._sha256()
+        before_doc = json.loads(self.memory_file.read_text(encoding="utf-8"))
+
+        code, result = self._mark_close_last()
+
+        self.assertEqual(code, 0, f"CLOSE 마지막 행 mark 실패: {result}")
+        self.assertTrue(result.get("ok"),
+                        f"mark 응답은 현행대로 ok:true여야 함(D-4b): {result}")
+
+        after_hash = self._sha256()
+        self.assertEqual(
+            before_hash, after_hash,
+            "CLOSE mark 전후 .opal/MEMORY.json sha256이 달라짐 — "
+            "즉시 history append 제거(D-4b) 위반")
+
+        after_doc = json.loads(self.memory_file.read_text(encoding="utf-8"))
+        self.assertEqual(after_doc.get("history", []), before_doc.get("history", []),
+                         "CLOSE mark가 MEMORY.json history를 append하면 안 됨(D-4b)")
+
+    def test_s9_close_mark_confirms_completed_unmerged_status(self):
+        """S-9 — mark 응답은 ok:true 유지, state.json current_status는
+        "completed_unmerged"로 확정된다(D-4b, `link_memory_history` 호출 제거
+        + `completed_unmerged` 확정)."""
+        code, result = self._mark_close_last()
+
+        self.assertEqual(code, 0, f"CLOSE 마지막 행 mark 실패: {result}")
+        self.assertTrue(result.get("ok"), f"mark 응답은 ok:true여야 함: {result}")
+
+        state = self._state()
+        self.assertEqual(
+            state.get("current_status"), "completed_unmerged",
+            f"CLOSE mark 후 current_status는 completed_unmerged로 확정되어야 함"
+            f"(D-4b) — 실제: {state.get('current_status')!r}")
+
+
+_S10_TASK_DIR = "119-260913-opd-테스트-귀속"
+_S10_EXPECTED_TITLE = "119 테스트 귀속"
+_S10_EXPECTED_PATH = f"tasks/{_S10_TASK_DIR}/"
+
+
+class TestS10FinalizeAttribution(BaseTestCase):
+    """[T118 RED] S-10 (AC-4, H-1) — 신규 서브커맨드
+    `state-tool finalize-attribution <task-path> --allocator-root <abs>`.
+    CLOSE mark에서 분리된 MEMORY history append를 이 커맨드가 전담한다(D-4b).
+
+    (a) 정상 1회 실행 → 허브 MEMORY history에 정확히 1건 append.
+    (b) 동일 인자로 재실행 → 중복 append 없음(멱등).
+    (c) `--allocator-root` 미지정 또는 상대경로 → 추론 없이 거부.
+
+    RED 근거: `finalize-attribution` 서브커맨드 자체가 state_tool.py의 argparse
+    서브파서에 아직 등록되어 있지 않다. `run.sh finalize-attribution ...`은
+    현재 argparse "invalid choice" usage 에러(exit 2, stdout에 JSON 미출력)로
+    끝나므로, 아래 (a)/(b)는 exit 0·ok:true·history 1건 단정에서 실패하고,
+    (c)는 이 도구의 기존 에러 응답 관례(`err()` 기본 exit_code=1 + 단일 라인
+    JSON `ok:false`+`error` 키, state_tool.py:242-253)와 다른 exit 2/빈 stdout이
+    나오므로 실패한다."""
+
+    def setUp(self):
+        super().setUp()
+        self.project_root = self.tmpdir
+        self.memory_file = self.project_root / ".opal" / "MEMORY.json"
+        self.memory_file.parent.mkdir(parents=True, exist_ok=True)
+        self._write_memory(_HL_EMPTY_MEMORY_DOC)
+        self.task_path = self.project_root / "tasks" / _S10_TASK_DIR
+        self.task_path.mkdir(parents=True)
+        self._init(rows_spec=SIMPLE_ROWS_SPEC)
+
+    def _write_memory(self, doc):
+        self.memory_file.write_text(
+            json.dumps(doc, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    def _history(self):
+        return json.loads(self.memory_file.read_text(encoding="utf-8"))["history"]
+
+    def test_s10a_first_run_appends_history_exactly_once(self):
+        """S-10 (a) — 정상 1회 실행 → history에 정확히 1건, title/path는 기존
+        derive_history_title 파생 규칙(§2.6)과 동일해야 한다."""
+        code, stdout, stderr, data = _run094([
+            "finalize-attribution", str(self.task_path),
+            "--allocator-root", str(self.project_root),
+        ])
+        self.assertEqual(
+            code, 0,
+            f"finalize-attribution 정상 실행이 실패함: stdout={stdout!r} stderr={stderr!r}")
+        self.assertTrue(data.get("ok"), f"응답은 ok:true여야 함: {data}")
+
+        history = self._history()
+        self.assertEqual(len(history), 1,
+                         f"history에 정확히 1건이 append되어야 함, 실제: {history}")
+        row = history[0]
+        self.assertEqual(row.get("title"), _S10_EXPECTED_TITLE,
+                         f"title은 기존 파생 규칙(§2.6)과 동일해야 함, 실제: {row.get('title')!r}")
+        self.assertEqual(row.get("path"), _S10_EXPECTED_PATH,
+                         f"path는 project_root 상대경로여야 함, 실제: {row.get('path')!r}")
+
+    def test_s10b_rerun_with_same_args_is_idempotent(self):
+        """S-10 (b) — 동일 인자로 재실행해도 중복 append가 없어야 한다(멱등)."""
+        argv = [
+            "finalize-attribution", str(self.task_path),
+            "--allocator-root", str(self.project_root),
+        ]
+        code1, stdout1, stderr1, data1 = _run094(argv)
+        self.assertEqual(
+            code1, 0,
+            f"1회차 finalize-attribution 실패: stdout={stdout1!r} stderr={stderr1!r}")
+
+        code2, stdout2, stderr2, data2 = _run094(argv)
+        self.assertEqual(
+            code2, 0,
+            f"2회차(재실행) finalize-attribution도 실패하면 안 됨(멱등): "
+            f"stdout={stdout2!r} stderr={stderr2!r}")
+        self.assertTrue(data2.get("ok"), f"2회차 응답도 ok:true여야 함: {data2}")
+
+        history = self._history()
+        same_path = [r for r in history if r.get("path") == _S10_EXPECTED_PATH]
+        self.assertEqual(len(same_path), 1,
+                         f"재실행 후에도 동일 path 행이 정확히 1건이어야 함(멱등), "
+                         f"실제 history: {history}")
+
+    def test_s10c_missing_or_relative_allocator_root_rejected_without_inference(self):
+        """S-10 (c) — `--allocator-root` 미지정 또는 상대경로는 추론 없이
+        거부되어야 한다. 이 도구의 기존 에러 응답 관례(err(), state_tool.py:242)를
+        따라 exit 1 + 단일 라인 JSON `ok:false`+`error` 키를 기대한다."""
+        # (c-1) --allocator-root 미지정
+        code1, stdout1, stderr1, data1 = _run094([
+            "finalize-attribution", str(self.task_path),
+        ])
+        self.assertEqual(
+            code1, 1,
+            f"--allocator-root 미지정은 exit 1(명시적 에러)이어야 함 — "
+            f"실제: code={code1}, stdout={stdout1!r}, stderr={stderr1!r}")
+        self.assertIs(data1.get("ok"), False,
+                      f"미지정 시 ok:false 단일 라인 JSON이어야 함: {data1}")
+        self.assertIn("error", data1, f"에러 코드 키가 있어야 함: {data1}")
+
+        # (c-2) --allocator-root 상대경로
+        code2, stdout2, stderr2, data2 = _run094([
+            "finalize-attribution", str(self.task_path),
+            "--allocator-root", "relative/path/only",
+        ])
+        self.assertEqual(
+            code2, 1,
+            f"상대경로 --allocator-root는 exit 1(명시적 에러)이어야 함 — "
+            f"실제: code={code2}, stdout={stdout2!r}, stderr={stderr2!r}")
+        self.assertIs(data2.get("ok"), False,
+                      f"상대경로 시 ok:false 단일 라인 JSON이어야 함: {data2}")
+        self.assertIn("error", data2, f"에러 코드 키가 있어야 함: {data2}")
+
+        # 두 거부 케이스 모두 MEMORY.json history를 건드리면 안 됨(추론 금지 +
+        # 부수효과 없음의 교차 확인)
+        self.assertEqual(self._history(), [],
+                         "거부된 호출이 MEMORY.json history를 변경하면 안 됨")
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -8902,6 +9144,12 @@ class TestR11Invariants(_T093Base):
             declared_new_codes = {
                 "code_scan_citation_unmet",  # 106 F-004 R-4
                 "plan_contract_unmet",       # 111 W-1
+                # 118 W-4 (AC-4) — finalize-attribution 전용. allocator_root를
+                # 추론하지 않고 명시 인자로만 받는 계약을 에러 코드로 집행한다.
+                "allocator_root_required",
+                "allocator_root_not_absolute",
+                "allocator_root_invalid",
+                "finalize_attribution_failed",
             }
             head_src = subprocess.run(
                 ["git", "show", "HEAD:./state_tool.py"],
@@ -8936,12 +9184,12 @@ class TestR11Invariants(_T093Base):
 
 class TestT098Add2RootDerivation(unittest.TestCase):
     """098 ADD-2 RED — `_resolve_citation_exists()`(`state_tool.py:2400`)가 프로젝트
-    루트를 `find_project_root(str(pathlib.Path(__file__).resolve()))`로, 즉
+    루트를 `task_root(str(pathlib.Path(__file__).resolve()))`로, 즉
     `task_md_path`가 아니라 스크립트 자기 위치에서 파생하는 결함의 배포 경로
     등가성 실패 테스트.
 
     결함 재현: `state_tool.py`를 프로젝트 밖(조상에 `.opal/MEMORY.json`이 없는
-    임시 디렉토리)으로 복사한 사본으로 실행하면 `find_project_root`가 None을
+    임시 디렉토리)으로 복사한 사본으로 실행하면 `task_root`가 None을
     반환해 `_resolve_citation_exists`가 조기 반환 False를 내놓고, 정규 인용을
     갖춘 항목까지 전건 `citation_path_not_found`로 오강등된다(PM 실측: 프로젝트
     소스 실행 confirmed_ratio=0.75 vs 배포본 `~/.opal/tools/state-tool/run.sh`
@@ -8955,12 +9203,12 @@ class TestT098Add2RootDerivation(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         # 109 — 자기 저장소 루트 가정 + 폴더명 하드코딩 결함 수정: 워크트리에서도
-        # 허브를 가리키는 find_project_root + Step 7 `_find_repo_task_dir`(접두사
+        # 허브를 가리키는 task_root + Step 7 `_find_repo_task_dir`(접두사
         # 탐색, tasks/ 직속·tasks/backup/ 모두 커버)로 대상을 동적 해석한다.
         # 0건·2건은 헬퍼가 AssertionError로 fail시킨다 — skipTest로 강등하지 않는다.
-        repo_root = ST.find_project_root(str(_TOOL_DIR))
+        repo_root = ST.task_root(str(_TOOL_DIR))
         assert repo_root is not None, (
-            "find_project_root가 None을 반환함 — .opal/MEMORY.json 보유 조상을 찾지 못함"
+            "task_root가 None을 반환함 — .opal/MEMORY.json 보유 조상을 찾지 못함"
         )
         cls._task_path = _find_repo_task_dir(repo_root, "098-")
         assert (cls._task_path / "TASK.md").is_file(), (
@@ -9709,8 +9957,8 @@ class TestT103WorkerDuration(_T093Base):
         등재분은 103 축과 무관하다."""
         self.assertNotIn("worker_duration_invalid", ST.ERROR_CODES,
                          "103이 ERROR_CODES를 신설했음 — 카탈로그 종수 계약 위반")
-        self.assertEqual(len(ST.ERROR_CODES), 47,
-                         f"ERROR_CODES 종수가 변했음: {len(ST.ERROR_CODES)}")
+        self.assertEqual(len(ST.ERROR_CODES), 51,
+                         f"ERROR_CODES 종수가 변했음(118 W-4 기준 51): {len(ST.ERROR_CODES)}")
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -9965,8 +10213,8 @@ class TestT103WorkerDurationWarning(_T093Base):
         111 W-1 등재분이며 R-21 축과 무관하다."""
         self.assertNotIn(self._CODE, ST.ERROR_CODES,
                          "R-21이 ERROR_CODES를 늘렸음 — 카탈로그 종수 계약 위반")
-        self.assertEqual(len(ST.ERROR_CODES), 47,
-                         f"ERROR_CODES 종수가 변했음: {len(ST.ERROR_CODES)}")
+        self.assertEqual(len(ST.ERROR_CODES), 51,
+                         f"ERROR_CODES 종수가 변했음(118 W-4 기준 51): {len(ST.ERROR_CODES)}")
         self.assertIn(self._CODE, ST.WARNING_CODES,
                       "WARNING_CODES에 worker_duration_missing 미등재")
 
@@ -10168,7 +10416,7 @@ class TestT106CodeScanCitationBehavior(_T093Base):
     def setUp(self):
         super().setUp()
         # 실 파일 픽스처 — tmpdir을 프로젝트 루트로 만든다.
-        # `find_project_root`는 조상 중 `.opal/MEMORY.json` 보유 첫 디렉토리를 루트로 잡으므로
+        # `task_root`는 조상 중 `.opal/MEMORY.json` 보유 첫 디렉토리를 루트로 잡으므로
         # 이 파일 없이는 게이트 ③이 무조건 이탈해 관찰이 불가능하다.
         opal_dir = self.tmpdir / ".opal"
         opal_dir.mkdir(parents=True, exist_ok=True)

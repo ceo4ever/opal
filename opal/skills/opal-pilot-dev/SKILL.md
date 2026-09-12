@@ -277,6 +277,7 @@ opal-test-agent 워커 디스패치. TEST-SCENARIO.md를 실행 명세로 읽고
 모든 체크리스트 갱신 완료 확인 후 태스크를 마감한다.
 
 1. DONE.md 생성 후 행 mark (`~/.opal/tools/state-tool/run.sh mark <task-path> --task-step close.done_md --done` 호출 — P-1). 행을 mark하는 것 자체가 state 기록이다.
+   - **DONE.md 템플릿 SSOT**: `opal/core/references/harness/done-template.md`. 절 구성과 `## 회고적 학습 후보` 계약을 그 문서에서 읽는다 — 여기에 템플릿 본문을 복제하지 않는다.
 2. **관련 문서 업데이트** (op-brain-ingest 디스패치 직전 실행):
    - `<프로젝트-루트>/docs/PROJECT.md`의 "프로젝트 문서" 레지스트리와 이번 태스크의 `changed_files`(EXECUTE 산출)를 양쪽 종합하여, 태스크 결과로 내용이 달라진 관련 문서(ARCHITECTURE.md·기획서 등)를 식별한다.
    - 갱신 대상이 있으면 PM이 판단하여 직접 수정하거나 적합한 워커를 디스패치해 최신화한다. 갱신 대상이 없으면 자연 스킵(no-op) — CLOSE를 중단시키지 않는다.
@@ -300,6 +301,7 @@ opal-test-agent 워커 디스패치. TEST-SCENARIO.md를 실행 명세로 읽고
    - `~/.opal/tools/worktree-tool/run.sh status --project-root <프로젝트 루트> --task <NNN>`으로 현재 상태를 조회해 보고한다.
    - **[MUST] 자동 제거하지 않는다.** CLOSE 시점에 미머지 커밋이 남아 있는 것이 정상이다 — 커밋·머지는 사용자의 권한이며 PM이 대행하지 않는다.
    - 안내 문구: "worktree `{worktree_root}`는 **머지 대기** 상태입니다. 머지·PR 처리 후 `~/.opal/tools/worktree-tool/run.sh remove --project-root <루트> --task <NNN>`으로 회수하세요."
+   - **회수 거부 사유 안내**: `remove`는 미처리 memory index 요청이 남아 있으면 `MEMORY_INDEX_REQUEST_PENDING`으로 먼저 거부하고, 이어서 dirty→unpushed→unmerged 3중 가드를 적용한다. `MEMORY_INDEX_REQUEST_PENDING`의 해소 경로는 `--force` 우회가 아니라 merge 후 `worktree-tool finalize` 실행이다.
    - `status` 호출 실패·메타 부재·worktree 부재는 전부 **no-op** — op-brain-ingest(스텝 3)·회고(스텝 4)와 동일하게 **CLOSE를 중단시키지 않는다**.
 6. 완료 보고
 

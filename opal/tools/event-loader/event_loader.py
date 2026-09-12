@@ -81,15 +81,15 @@ def _script_source_root() -> Path:
     return Path.cwd().resolve()
 
 
-def _hub_root(path: Path) -> Path:
+def _project_root(path: Path) -> Path:
+    """cwd에서 `.git`과 `.opal/AGENT.md`를 함께 가진 첫 조상을 task root로 반환한다.
+
+    루트 소유권 계약의 원문은 `harness/worktree.md` §task root와 allocator root
+    계약이며 여기서 복제하지 않는다. 임의 조상의 ~/.opal 설치본을 프로젝트로
+    오인하지 않도록 탐색 상한은 가장 가까운 Git 경계이고, 비-Git 프로젝트는
+    호출자가 --project-root를 명시해야 한다.
+    """
     resolved = path.resolve()
-    parts = resolved.parts
-    if ".opal-worktrees" in parts:
-        index = parts.index(".opal-worktrees")
-        return Path(*parts[:index])
-    # Worktree 밖에서는 임의 조상의 ~/.opal 설치본을 프로젝트로 오인하지 않는다.
-    # 기본 탐색은 가장 가까운 Git 경계까지만 허용하며, 비-Git 프로젝트는 호출자가
-    # --project-root를 명시해야 한다.
     for candidate in (resolved, *resolved.parents):
         if (candidate / ".git").exists():
             if (candidate / ".opal" / "AGENT.md").is_file():
@@ -114,7 +114,7 @@ def _roots(args: argparse.Namespace) -> dict[str, Path]:
     project = (
         Path(args.project_root).expanduser().resolve()
         if args.project_root
-        else _hub_root(Path.cwd())
+        else _project_root(Path.cwd())
     )
     return {"source_root": source, "deployed_root": deployed, "project_root": project}
 

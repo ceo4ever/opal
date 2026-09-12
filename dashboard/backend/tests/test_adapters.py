@@ -5,14 +5,12 @@
   "domain": "console",
   "description": "도구 어댑터 RED-first 테스트 — S-2 시나리오 (L1+L2/M1). 실 도구 호출, mock 대체 금지",
   "exports": ["[T021/L1-R2] test_run_tool_ok", "[T021/L1-R2] test_run_tool_exit_nonzero", "[T021/L1-R2] test_run_tool_timeout", "[T021/L1-R2] test_run_tool_ok_false", "[T021/L1-R2] test_state_adapter_real_tool"],
-  "depends": ["adapters.base", "adapters.state_adapter", "adapters.scan_adapter", "adapters.skill_adapter", "paths.hub_root"]
+  "depends": ["adapters.base", "adapters.state_adapter", "adapters.scan_adapter", "adapters.skill_adapter"]
 }
 """
 import os
 import pytest
 from pathlib import Path
-
-from dashboard.backend.paths import hub_root
 
 
 def _find_repo_task_dir(repo_root: Path, prefix: str) -> Path:
@@ -101,7 +99,8 @@ def test_state_adapter_real_tool() -> None:
     """[T021/L1-R2] 실 state-tool 호출 → dict 반환 (실 도구, mock 금지)"""
     from dashboard.backend.adapters.state_adapter import get_state
 
-    repo_root = Path(hub_root(str(Path(__file__).parents[3])))
+    # 118: 자기위치 계산 — 이 테스트가 사는 작업본이 기준 루트다(허브 수렴 없음).
+    repo_root = Path(__file__).resolve().parents[3]
     task_dir = str(_find_repo_task_dir(repo_root, "021-"))
 
     result = get_state(task_dir)

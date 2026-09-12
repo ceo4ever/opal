@@ -3,7 +3,7 @@
   "module": "test_worktree_tool",
   "layer": "test",
   "domain": "opal-workspace",
-  "description": "worktree-tool 공개 인터페이스 회귀 테스트. 092 TEST-SCENARIO.md S-4~S-17,S-21~S-28과 112 TEST-SCENARIO.md S-8 hub-fixed worktree 계약을 검증한다. S-1/S-2는 state-tool 측 전용이라 test_state_tool.py에 있다. S-3/S-15는 각각 git working-tree diff의 일과성/~/.opal 배포본 변경 금지 때문에 이 파일에서 제외했다. CLI(subprocess) 공개 인터페이스로만 검증하고, mock/patch 없이 실 git 저장소 fixture(conftest.py)를 사용한다.",
+  "description": "worktree-tool 공개 인터페이스 회귀 테스트. 092 TEST-SCENARIO.md S-4~S-17,S-21~S-28과 112 TEST-SCENARIO.md S-8 hub-fixed worktree 계약을 검증한다. S-1/S-2는 state-tool 측 전용이라 test_state_tool.py에 있다. S-3/S-15는 각각 git working-tree diff의 일관성/~/.opal 배포본 변경 금지 때문에 이 파일에서 제외했다(092/112 번호 체계). CLI(subprocess) 공개 인터페이스로만 검증하고, mock/patch 없이 실 git 저장소 fixture(conftest.py)를 사용한다. 118 TEST-SCENARIO.md S-3~S-8,S-11,S-15(taskCapsuleCone·canonical metadata 6필드·TASK_PATH_AMBIGUOUS·finalize 재진입 path-scoped 판정·memory-index-request 가드)를 RED-first로 추가한다 — S-3만 구현 전에도 PASS해야 하는 회귀 보호 케이스이고 나머지는 구현 전 FAIL이 정상이다.",
   "exports": [],
   "depends": ["conftest.py", "worktree_tool.py", "opal/tools/state-tool/state_tool.py"]
 }
@@ -27,6 +27,7 @@ from conftest import (
     WORKTREE_TOOL_PATH,
     ProjectA,
     ProjectB,
+    add_worktree,
     build_guard_repo,
     clone_repo,
     make_bare_remote,
@@ -36,6 +37,7 @@ from conftest import (
     run_state_cli,
     run_worktree_cli,
     write_json,
+    write_meta,
 )
 
 
@@ -513,29 +515,45 @@ def test_s16_cache_volume_mismatch_warns_but_never_blocks(project_a: ProjectA):
 
 
 # ═════════════════════════════════════════════════════════════════════════════
-# S-17: opal-harness.md §2.5 신설 + 전역 인용 dangling 없음 (H-13)
+# S-17: opal-harness.md 전역 §N 인용에 dangling 없음 + 기존 절 번호 불변 (H-13)
 # ═════════════════════════════════════════════════════════════════════════════
 
 
-def test_s17_harness_section_2_5_exists_and_citations_resolve():
-    """[T092/L1-F3] S-17 — `## 2.5` 절이 신설돼야 한다(Step 9 GREEN 이전에는 존재하지
-    않아 이 단언이 실패하는 것이 RED 증거다). 그리고 `opal-harness.md §N` 형태의 전역
-    인용이 전부 실존 절을 가리켜야 하며, 기존 §3·§4·§9 번호는 불변이어야 한다."""
+def test_s17_harness_citations_resolve_and_existing_sections_are_stable():
+    """[T092/L1-F3 → T118/AC-12] S-17 — `opal-harness.md §N` 형태의 전역 인용이 전부 실존
+    절을 가리켜야 하며(dangling 0건), 기존 §3·§4·§9 번호는 불변이어야 한다.
+
+    [T118 변경] 원래 이 테스트는 `## 2.5` 절의 **존재**도 함께 단언했으나(태스크 092 Step 9의
+    RED 증거), 태스크 118 AC-12가 그 §2.5 포인터를 제거하기로 확정하면서 존재 단언이 계약과
+    정면 충돌하게 됐다. 존재 단언만 제거하고, 실제 가드로 유용한 dangling 인용 검사와 기존
+    절 번호 불변 단언은 그대로 보존한다 — §2.5를 가리키던 인용이 남아 있으면 dangling 검사가
+    잡아낸다."""
     harness_path = OPAL_DIR / "core" / "references" / "opal-harness.md"
     harness_md = harness_path.read_text(encoding="utf-8")
-    assert "## 2.5" in harness_md, "opal-harness.md에 ## 2.5 절이 신설돼야 한다(Step 9)"
 
     cited_numbers = set()
     for md_path in OPAL_DIR.rglob("*.md"):
         text = md_path.read_text(encoding="utf-8", errors="ignore")
         for m in re.finditer(r"opal-harness\.md\s*§(\d+(?:\.\d+)?)", text):
             cited_numbers.add(m.group(1))
-    existing_headings = set(re.findall(r"^##\s+(\d+(?:\.\d+)?)", harness_md, flags=re.MULTILINE))
 
-    dangling = cited_numbers - existing_headings
-    assert not dangling, f"dangling §번호 인용 발견: {dangling}"
+    # 해소 가능한 번호 = 이 파일에 실존하는 `## N` 절 ∪ `## 구형 절 참조 호환 매핑` 표가
+    # 새 SSOT로 안내하는 구형 번호. opal-harness.md는 번호 절을 owner 문서로 분해하고 그
+    # 호환 매핑 표만 남기는 구조로 이미 전환됐으므로(허브·워크트리 동일), 인용 해소 대상은
+    # 두 출처의 합집합이다. 표에서 행이 사라진 번호를 누군가 계속 인용하면 여기서 걸린다.
+    existing_headings = set(re.findall(r"^##\s+(\d+(?:\.\d+)?)", harness_md, flags=re.MULTILINE))
+    mapping_section = harness_md.split("## 구형 절 참조 호환 매핑", 1)[-1]
+    mapped_numbers = set(
+        re.findall(r"opal-harness\.md\s*§(\d+(?:\.\d+)?)", mapping_section)
+    )
+    resolvable = existing_headings | mapped_numbers
+
+    dangling = cited_numbers - resolvable
+    assert not dangling, f"dangling §번호 인용 발견(절도 호환 매핑도 없음): {dangling}"
     for must_have in ("3", "4", "9"):
-        assert must_have in existing_headings, f"기존 §{must_have} 번호가 사라짐(H-13 위반)"
+        assert must_have in resolvable, (
+            f"기존 §{must_have} 번호가 절에서도 호환 매핑에서도 사라짐(H-13 위반)"
+        )
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -1511,3 +1529,535 @@ def test_s31_5_copy_candidates_detected_at_same_deeper_level(tmp_path):
     assert cfg.get("copy") == [], (
         "깊은 탐지가 추가돼도 copy[]는 여전히 추측 없이 빈 배열이어야 한다(DEC-8)"
     )
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# 118 TEST-SCENARIO.md S-3~S-8, S-11, S-15 — taskCapsuleCone·canonical metadata·
+# TASK_PATH_AMBIGUOUS·finalize 재진입 path-scoped 판정·memory-index-request 가드
+# (PLAN D-1/D-2/D-2b/D-3b, ANALYSIS Q2/Q6/Q7). RED-first — S-3만 구현 전에도 PASS
+# 해야 하는 회귀 보호 케이스이고, 나머지는 구현 전 FAIL이 정상이다(TASK.md C-1).
+# ═════════════════════════════════════════════════════════════════════════════
+
+
+def _write_repo_file(repo: pathlib.Path, relpath: str, content: str) -> None:
+    """S-11 fixture 전용 — conftest.py를 건드리지 않기 위해 이 파일 안에 로컬 복제한다."""
+    path = repo / relpath
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(content, encoding="utf-8")
+
+
+def _payload_mentions(payload: dict, needle: str) -> bool:
+    """응답 JSON 어디든(키 이름을 가정하지 않고) needle 문자열이 나타나는지 확인한다."""
+    return needle in json.dumps(payload, ensure_ascii=False)
+
+
+def test_t118_s3_missing_task_capsule_cone_key_is_byte_identical_regression(
+    project_b: ProjectB,
+):
+    """[T118/S-3] `taskCapsuleCone` 키 미지정 시 `sparse-checkout set` 인자가 현행(`repos`만)과
+    바이트 동일함을 고정하는 회귀 테스트(AC-6, C-1, PLAN D-1).
+
+    [MUST] TASK.md C-1 — 이 케이스는 구현 전에도 PASS해야 정상이다: 현재 monorepo 분기
+    (`worktree_tool.py:814`)가 이미 `sparse-checkout set *cfg["repos"]`만 실행하며
+    `taskCapsuleCone`을 전혀 읽지 않기 때문이다. 키 미지정 no-op이 구현 후에도 보전돼야
+    하므로(C-1) 회귀 가드로 유지한다.
+    """
+    result = run_worktree_cli(
+        ["create", "--project-root", str(project_b.root), "--task", "118"]
+    )
+    payload = parse_json_stdout(result, "create(S-3)")
+    assert payload.get("ok") is True, f"S-3 create 실패: {payload}"
+
+    config = json.loads(project_b.config_path.read_text(encoding="utf-8"))
+    assert "taskCapsuleCone" not in config, "S-3 전제 위반: fixture 설정에 키가 있으면 안 됨"
+
+    wt_root = project_b.root / ".opal-worktrees" / "task_118"
+    list_result = run_git(["sparse-checkout", "list"], cwd=wt_root)
+    cone_lines = [line for line in list_result.stdout.splitlines() if line.strip()]
+    assert cone_lines == config["repos"], (
+        f"S-3: taskCapsuleCone 키 미지정 시 cone이 repos({config['repos']})와 바이트 동일해야 "
+        f"함(C-1 회귀): {cone_lines}"
+    )
+
+
+def test_t118_s4_task_capsule_cone_adds_tasks_and_opal_to_monorepo_cone(
+    project_b: ProjectB,
+):
+    """[T118/S-4] 구현 전 RED — `taskCapsuleCone: ["tasks", ".opal"]` 지정 시 cone에 두 항목이
+    추가되고 실체화된다(AC-6, PLAN D-1). project_b의 origin_mono는 `tasks/README.md`,
+    `.opal/README.md`를 이미 커밋하고 있어 실체화를 직접 관측할 수 있다.
+    """
+    config = json.loads(project_b.config_path.read_text(encoding="utf-8"))
+    config["taskCapsuleCone"] = ["tasks", ".opal"]
+    write_json(project_b.config_path, config)
+
+    result = run_worktree_cli(
+        ["create", "--project-root", str(project_b.root), "--task", "118"]
+    )
+    payload = parse_json_stdout(result, "create(S-4)")
+    assert payload.get("ok") is True, f"S-4 create 실패: {payload}"
+
+    wt_root = project_b.root / ".opal-worktrees" / "task_118"
+    list_result = run_git(["sparse-checkout", "list"], cwd=wt_root)
+    cone_lines = {line.strip() for line in list_result.stdout.splitlines() if line.strip()}
+    assert {"workspace", "tasks", ".opal"} <= cone_lines, (
+        f"S-4: cone에 tasks/.opal이 추가되지 않음(taskCapsuleCone 미적용): {cone_lines}"
+    )
+    assert (wt_root / "tasks" / "README.md").exists(), "S-4: tasks/가 실체화되지 않음"
+    assert (wt_root / ".opal" / "README.md").exists(), "S-4: .opal/이 실체화되지 않음"
+
+
+def test_t118_s5_multi_repo_layout_ignores_task_capsule_cone(project_a: ProjectA):
+    """[T118/S-5] 구현 전 RED — `layout: multi-repo`에서는 `taskCapsuleCone`이 적용되지 않고
+    `repos`의 독립 저장소 의미가 보존된다(AC-6, C-6, PLAN D-1 — multi-repo 분기 `:773-792`
+    무변경).
+
+    [주의] project_a의 backend/frontend 레포 자체에는 애초에 `tasks/`·`.opal/`이 존재하지
+    않으므로(별개 독립 저장소), 이 조건에서는 "cone 미적용"과 "현재 코드가 이 키를 아예
+    모르는 것"이 관측상 구분되지 않는다 — 즉 이 케이스는 구현 전에도 이미 PASS할 수 있다
+    (S-3과 동형의 회귀 보호 성격). 그래도 PLAN AC-6·C-6이 명시한 계약이므로 고정한다.
+    """
+    config = json.loads(project_a.config_path.read_text(encoding="utf-8"))
+    config["taskCapsuleCone"] = ["tasks", ".opal"]
+    write_json(project_a.config_path, config)
+
+    result = run_worktree_cli(
+        ["create", "--project-root", str(project_a.root), "--task", "118"]
+    )
+    payload = parse_json_stdout(result, "create(S-5)")
+    assert payload.get("ok") is True, f"S-5 create 실패: {payload}"
+
+    wt_root = project_a.root / ".opal-worktrees" / "task_118"
+    for name in ("backend", "frontend"):
+        repo_wt = wt_root / "workspace" / name
+        assert not (repo_wt / "tasks").exists(), f"S-5: {name}에 tasks/가 나타남(cone 오적용)"
+        assert not (repo_wt / ".opal").exists(), f"S-5: {name}에 .opal/이 나타남(cone 오적용)"
+
+
+def test_t118_s6a_task_capsule_cone_non_string_element_gives_config_invalid_type(
+    tmp_path,
+):
+    """[T118/S-6] 구현 전 RED — `taskCapsuleCone`에 비문자열 원소가 있으면
+    `CONFIG_INVALID_TYPE(key="taskCapsuleCone")`로 거부된다(AC-6, PLAN D-1 — 신규 에러
+    코드를 만들지 않는다)."""
+    root = _minimal_project(
+        tmp_path,
+        {
+            "layout": "monorepo",
+            "repos": ["workspace"],
+            "taskCapsuleCone": ["tasks", 123],
+        },
+        "proj_t118_s6a",
+    )
+    result = run_worktree_cli(["list", "--project-root", str(root)])
+    payload = parse_json_stdout(result, "list(S-6a)")
+    assert payload.get("ok") is False, f"S-6a: 비문자열 원소가 통과함: {payload}"
+    assert payload.get("error") == "CONFIG_INVALID_TYPE", f"S-6a 에러 코드 불일치: {payload}"
+    assert payload.get("key") == "taskCapsuleCone", (
+        f"S-6a: 에러의 key가 taskCapsuleCone이어야 함: {payload}"
+    )
+
+
+def test_t118_s6b_task_capsule_cone_path_escape_gives_config_path_escape(tmp_path):
+    """[T118/S-6] 구현 전 RED — `taskCapsuleCone`에 상위 이탈 경로(`../x`)가 있으면
+    `CONFIG_PATH_ESCAPE`로 거부된다(AC-6, PLAN D-1 — 신규 에러 코드를 만들지 않는다)."""
+    root = _minimal_project(
+        tmp_path,
+        {
+            "layout": "monorepo",
+            "repos": ["workspace"],
+            "taskCapsuleCone": ["../escape"],
+        },
+        "proj_t118_s6b",
+    )
+    result = run_worktree_cli(["list", "--project-root", str(root)])
+    payload = parse_json_stdout(result, "list(S-6b)")
+    assert payload.get("ok") is False, f"S-6b: 상위 이탈 경로가 통과함: {payload}"
+    assert payload.get("error") == "CONFIG_PATH_ESCAPE", f"S-6b 에러 코드 불일치: {payload}"
+
+
+def test_t118_s6_error_codes_stay_within_existing_set(tmp_path):
+    """[T118/S-6] 신규 에러 코드가 추가되지 않았는지 교차 확인 — S-6a/S-6b가 각각
+    기존에도 존재하던 `CONFIG_INVALID_TYPE`/`CONFIG_PATH_ESCAPE`만 반환해야 한다."""
+    for cfg, expected in (
+        (
+            {
+                "layout": "monorepo",
+                "repos": ["workspace"],
+                "taskCapsuleCone": [None],
+            },
+            "CONFIG_INVALID_TYPE",
+        ),
+        (
+            {
+                "layout": "monorepo",
+                "repos": ["workspace"],
+                "taskCapsuleCone": ["..", "nested/../../escape"],
+            },
+            "CONFIG_PATH_ESCAPE",
+        ),
+    ):
+        root = _minimal_project(tmp_path, cfg, f"proj_t118_s6_{expected.lower()}")
+        result = run_worktree_cli(["list", "--project-root", str(root)])
+        payload = parse_json_stdout(result, f"list(S-6 {expected})")
+        assert payload.get("error") == expected, f"S-6 교차확인 실패: {payload}"
+
+
+def test_t118_s7_create_response_and_meta_have_task_ownership_fields(
+    project_b: ProjectB,
+):
+    """[T118/S-7] 구현 전 RED — `create` 성공 응답과
+    `.opal-worktrees/.meta/task_<NNN>.json`이 `allocator_root`·`task_home`·`task_folder`·
+    `task_path`·`artifact_repo`·`task_ownership_version` 6필드를 갖고
+    `realpath(task_path) == realpath(task_home/tasks/task_folder)`가 성립한다
+    (AC-5, PLAN D-1 §5.1, 제안서 §5.1).
+
+    [설계 가정] `task_folder`는 PM/allocator가 이미 확정한 태스크 문서 폴더명을 `create`에
+    `--task-folder`로 명시 전달한다고 가정한다(제안서 §6.1 생성 순서: task folder 이름을
+    worktree 생성 전에 메모리에서 확정). GREEN 구현이 다른 인자명을 택하면 이 테스트의
+    CLI 인자 이름만 맞춰 조정하면 된다 — 응답·메타 필드 계약(6필드, realpath 동치)은
+    제안서 §5.1 원문 그대로다.
+    """
+    result = run_worktree_cli(
+        [
+            "create",
+            "--project-root",
+            str(project_b.root),
+            "--task",
+            "118",
+            "--task-folder",
+            "118-260912-opd-fixture",
+        ]
+    )
+    payload = parse_json_stdout(result, "create(S-7)")
+    assert payload.get("ok") is True, f"S-7 create 실패: {payload}"
+
+    required_fields = (
+        "allocator_root",
+        "task_home",
+        "task_folder",
+        "task_path",
+        "artifact_repo",
+        "task_ownership_version",
+    )
+    for field in required_fields:
+        assert field in payload, f"S-7: 응답에 {field} 필드 누락: {payload}"
+
+    meta_path = project_b.root / ".opal-worktrees" / ".meta" / "task_118.json"
+    meta = json.loads(meta_path.read_text(encoding="utf-8"))
+    for field in required_fields:
+        assert field in meta, f"S-7: 메타 파일에 {field} 필드 누락: {meta}"
+
+    expected_task_path = os.path.realpath(
+        os.path.join(str(meta["task_home"]), "tasks", str(meta["task_folder"]))
+    )
+    assert os.path.realpath(str(meta["task_path"])) == expected_task_path, (
+        f"S-7: realpath(task_path) != realpath(task_home/tasks/task_folder): {meta}"
+    )
+
+
+@pytest.mark.parametrize(
+    "bad_task_folder",
+    ["sub/dir", "..", "../escape", "a/../../b", "nul\x00byte"],
+)
+def test_t118_s7_create_rejects_unsafe_task_folder(
+    project_b: ProjectB, bad_task_folder: str
+):
+    """[T118/S-7] 구현 전 RED — `task_folder`에 `/`·`..`·NUL이 포함되면 basename만 허용하는
+    계약에 따라 거부된다(AC-5, 제안서 §5.1 "task_folder는 basename만 허용").
+
+    [NUL 케이스의 관측 지점] NUL 바이트는 `execve(2)` 인자 경계에서 이미 거부되므로 CLI
+    프로세스에 도달할 수 없다(`subprocess`가 `ValueError: embedded null byte`를 올린다).
+    거부 계약 자체는 보전되며 관측 지점만 OS 경계로 내려간다 — 어느 쪽이든 "NUL이 포함된
+    task_folder로는 create가 성사되지 않는다"가 증명된다. GREEN 구현도 `_validate_task_folder`
+    에서 NUL을 독립적으로 거부한다(방어적 이중화).
+    """
+    try:
+        result = run_worktree_cli(
+            [
+                "create",
+                "--project-root",
+                str(project_b.root),
+                "--task",
+                "118",
+                "--task-folder",
+                bad_task_folder,
+            ]
+        )
+    except ValueError:
+        assert "\x00" in bad_task_folder, (
+            f"ValueError는 NUL 케이스에서만 허용된다: {bad_task_folder!r}"
+        )
+        assert not (project_b.root / ".opal-worktrees" / "task_118").exists(), (
+            "NUL task_folder로 create가 성사되어서는 안 된다"
+        )
+        return
+    payload = parse_json_stdout(result, f"create(S-7 unsafe={bad_task_folder!r})")
+    assert payload.get("ok") is False, (
+        f"S-7: 안전하지 않은 task_folder({bad_task_folder!r})가 통과함: {payload}"
+    )
+
+
+def test_t118_s8_status_blocks_when_hub_task_folder_collides_with_worktree_task(
+    project_b: ProjectB,
+):
+    """[T118/S-8] 구현 전 RED — 등록된 worktree 태스크와 같은 `task_folder`가 허브
+    `tasks/`에도 존재하면 canonical task path 해석이 자동 선택 없이 `TASK_PATH_AMBIGUOUS`로
+    차단된다(AC-7, 제안서 §5.1 "동시에 있으면 ... task_path_ambiguous로 차단").
+
+    [설계 가정] canonical task path를 해석하는 진입점을 `status`로 가정한다(등록된 태스크의
+    현재 위치를 조회하는 기존 서브커맨드). GREEN 구현이 별도 진입점(예: `resolve`)을 새로
+    만들면 이 테스트의 서브커맨드만 조정하면 된다 — 판정 자체(`TASK_PATH_AMBIGUOUS`, 자동
+    선택 금지)는 AC-7 원문 그대로다.
+    """
+    create_result = run_worktree_cli(
+        [
+            "create",
+            "--project-root",
+            str(project_b.root),
+            "--task",
+            "118",
+            "--task-folder",
+            "118-260912-opd-fixture",
+        ]
+    )
+    create_payload = parse_json_stdout(create_result, "create(S-8 setup)")
+    assert create_payload.get("ok") is True, f"S-8 사전 create 실패: {create_payload}"
+
+    hub_dup = project_b.root / "tasks" / "118-260912-opd-fixture"
+    hub_dup.mkdir(parents=True, exist_ok=True)
+    (hub_dup / "TASK.md").write_text("# 허브 쪽 중복 폴더\n", encoding="utf-8")
+
+    result = run_worktree_cli(
+        ["status", "--project-root", str(project_b.root), "--task", "118"]
+    )
+    payload = parse_json_stdout(result, "status(S-8)")
+    assert payload.get("ok") is False, (
+        f"S-8: 허브·워크트리 양쪽에 같은 task_folder가 있는데 자동 선택으로 통과함: {payload}"
+    )
+    assert payload.get("error") == "TASK_PATH_AMBIGUOUS", f"S-8 에러 코드 불일치: {payload}"
+
+
+def _build_finalize_fixture(tmp_path: pathlib.Path, name: str):
+    """S-11 전용 — 허브(project_root)와 task_118 worktree(브랜치 체크아웃에 `.opal/brain`,
+    `tasks/{task_folder}/DONE.md` 포함)를 raw git으로 구성한다. `finalize` 서브커맨드가
+    아직 없으므로(RED) `create`를 거치지 않고 `add_worktree`/`write_meta`(conftest 기존
+    헬퍼, S-092 트랙에서 이미 같은 목적으로 쓰던 패턴)로 선행 상태를 직접 조립한다.
+    반환: (project_root, wt_root, task_path, task_folder)"""
+    remotes_dir = tmp_path / f"_remotes_{name}"
+    remotes_dir.mkdir()
+    origin = make_bare_remote(remotes_dir, f"origin_{name}")
+    project_root = clone_repo(origin, tmp_path, f"hub_{name}")
+
+    task_folder = "118-260912-opd-fixture"
+    branch = "feat/OP-TASK-118"
+    wt_root = project_root / ".opal-worktrees" / "task_118"
+    add_worktree(project_root, branch, wt_root, base="main")
+
+    _write_repo_file(wt_root, ".opal/brain/index.md", "# index\n")
+    _write_repo_file(wt_root, ".opal/brain/log.md", "# log\n")
+    _write_repo_file(
+        wt_root,
+        ".opal/MEMORY.json",
+        json.dumps({"last_task_number": 118, "history": [], "memories": []}),
+    )
+    _write_repo_file(
+        wt_root,
+        f"tasks/{task_folder}/DONE.md",
+        "## 회고적 학습 후보\n- .opal/brain/pages/concept/declared-page.md\n",
+    )
+    _write_repo_file(wt_root, ".opal/brain/pages/concept/declared-page.md", "# declared\n")
+    _write_repo_file(
+        wt_root, ".opal/brain/pages/concept/undeclared-page.md", "# undeclared\n"
+    )
+    run_git(["add", "-A"], cwd=wt_root)
+    run_git(["commit", "-m", "seed S-11 finalize fixture"], cwd=wt_root)
+
+    task_path = wt_root / "tasks" / task_folder
+    write_meta(
+        project_root,
+        "118",
+        layout="monorepo",
+        branch=branch,
+        entries=[
+            {
+                "repo": str(project_root),
+                "path": str(wt_root),
+                "branch": branch,
+                "base_ref": "main",
+            }
+        ],
+        worktree_root=wt_root,
+    )
+    meta_path = project_root / ".opal-worktrees" / ".meta" / "task_118.json"
+    meta = json.loads(meta_path.read_text(encoding="utf-8"))
+    meta.update(
+        {
+            "allocator_root": str(project_root),
+            "task_home": str(wt_root),
+            "task_folder": task_folder,
+            "task_path": str(task_path),
+            "artifact_repo": ".",
+            "task_ownership_version": 2,
+        }
+    )
+    write_json(meta_path, meta)
+
+    return project_root, wt_root, task_path, task_folder
+
+
+def test_t118_s11_finalize_reentry_allowed_when_dirty_is_subset_of_declared(tmp_path):
+    """[T118/S-11] 구현 전 RED — 양방향 케이스 (1/2, 허용): 1차 실행이 DONE.md에 선언된
+    brain page(`declared-page.md`)를 미커밋 상태로 남긴 채 중단된 뒤 재실행하면, 관측
+    집합이 선언 집합의 부분집합(`S ⊆ D`)이므로 재개가 허용된다(AC-10, PLAN D-3b).
+
+    [설계 가정] `finalize` 서브커맨드가 `--project-root`/`--task`로 meta를 읽어 task_path의
+    DONE.md와 worktree_root의 `git status --porcelain`을 대조한다고 가정한다."""
+    project_root, wt_root, task_path, _task_folder = _build_finalize_fixture(
+        tmp_path, "s11_allow"
+    )
+
+    # 1차 실행 중단 재현 — 선언된 brain page만 미커밋 상태로 남긴다.
+    _write_repo_file(
+        wt_root, ".opal/brain/pages/concept/declared-page.md", "# declared (수정됨)\n"
+    )
+
+    result = run_worktree_cli(
+        ["finalize", "--project-root", str(project_root), "--task", "118"]
+    )
+    payload = parse_json_stdout(result, "finalize(S-11 allow)")
+    assert payload.get("error") != "ATTRIBUTION_COMMIT_BLOCKED", (
+        f"S-11: 선언된 page만 dirty인데 차단됨(S⊆D 위반): {payload}"
+    )
+    assert payload.get("ok") is True, f"S-11: 선언 집합 부분집합인데 재개가 허용되지 않음: {payload}"
+
+
+def test_t118_s11_finalize_reentry_blocked_when_undeclared_page_is_dirty(tmp_path):
+    """[T118/S-11] 구현 전 RED — 양방향 케이스 (2/2, 차단): DONE.md에 선언되지 않은
+    brain page(`undeclared-page.md`)가 미커밋 상태이면, 관측 집합이 선언 집합을 벗어나므로
+    (`S ⊄ D`) `ATTRIBUTION_COMMIT_BLOCKED`가 위반 경로 목록과 함께 반환된다(AC-10, PLAN
+    D-3b)."""
+    project_root, wt_root, task_path, _task_folder = _build_finalize_fixture(
+        tmp_path, "s11_block"
+    )
+
+    # 선언되지 않은 page를 미커밋 상태로 남긴다(declared-page.md는 건드리지 않는다).
+    _write_repo_file(
+        wt_root, ".opal/brain/pages/concept/undeclared-page.md", "# undeclared (수정됨)\n"
+    )
+
+    result = run_worktree_cli(
+        ["finalize", "--project-root", str(project_root), "--task", "118"]
+    )
+    payload = parse_json_stdout(result, "finalize(S-11 block)")
+    assert payload.get("ok") is False, (
+        f"S-11: 선언되지 않은 page가 dirty인데 차단되지 않음(S⊆D 오판정): {payload}"
+    )
+    assert payload.get("error") == "ATTRIBUTION_COMMIT_BLOCKED", f"S-11 에러 코드 불일치: {payload}"
+    assert _payload_mentions(payload, "undeclared-page.md"), (
+        f"S-11: 위반 경로 목록에 undeclared-page.md가 동봉돼야 함: {payload}"
+    )
+
+
+def test_t118_s15_remove_blocked_by_pending_memory_index_request(tmp_path):
+    """[T118/S-15] 구현 전 RED — 미처리 memory-index-request가 있으면 `remove`가
+    `MEMORY_INDEX_REQUEST_PENDING`으로 거부된다(AC-11, PLAN D-2b). 3중 가드는 모두
+    clean(`build_guard_repo(..., "clean")`)이므로 이 거부는 신규 memory-index 가드만의
+    효과다."""
+    g = build_guard_repo(tmp_path, "clean", name_suffix="_s15pending")
+    task_path = g.project_root / "tasks" / "118-260912-opd-fixture"
+    task_path.mkdir(parents=True)
+    write_json(
+        task_path / "memory-index-request.json",
+        {
+            "schema_version": 1,
+            "requests": [
+                {
+                    "task_id": g.task,
+                    "title": "예시 학습 후보",
+                    "type": "concept",
+                    "status": "pending",
+                    "file": ".opal/brain/pages/concept/example.md",
+                    "summary": "예시 요약",
+                    "body_sha256": "a" * 64,
+                    "requested_at": "2026-09-12 00:00",
+                }
+            ],
+        },
+    )
+    meta_path = g.project_root / ".opal-worktrees" / ".meta" / f"task_{g.task}.json"
+    meta = json.loads(meta_path.read_text(encoding="utf-8"))
+    meta["task_path"] = str(task_path)
+    meta["memory_index_requests_resolved"] = []
+    write_json(meta_path, meta)
+
+    result = run_worktree_cli(
+        ["remove", "--project-root", str(g.project_root), "--task", g.task]
+    )
+    payload = parse_json_stdout(result, "remove(S-15 pending)")
+    assert payload.get("ok") is False, f"S-15: 미처리 요청이 있는데 remove가 통과함: {payload}"
+    assert payload.get("error") == "MEMORY_INDEX_REQUEST_PENDING", (
+        f"S-15 에러 코드 불일치: {payload}"
+    )
+
+
+def test_t118_s15_remove_allowed_when_all_requests_applied(tmp_path):
+    """[T118/S-15] 전부 `applied` 처리된 경우 기존 dirty·unpushed·unmerged 3중 가드만
+    적용되고(clean 상태이므로) `remove`가 성공한다(AC-11, PLAN D-2b).
+
+    [MUST] 이 케이스는 신규 memory-index 가드가 없어도(현재 코드) clean 상태이므로 이미
+    PASS한다 — S-3/S-5와 동형인 회귀 보호 성격이며 순수 RED는 아니다. 그래도 계약을
+    고정하기 위해 유지한다."""
+    g = build_guard_repo(tmp_path, "clean", name_suffix="_s15applied")
+    task_path = g.project_root / "tasks" / "118-260912-opd-fixture"
+    task_path.mkdir(parents=True)
+    body_sha = "b" * 64
+    write_json(
+        task_path / "memory-index-request.json",
+        {
+            "schema_version": 1,
+            "requests": [
+                {
+                    "task_id": g.task,
+                    "title": "예시 학습 후보",
+                    "type": "concept",
+                    "status": "applied",
+                    "file": ".opal/brain/pages/concept/example.md",
+                    "summary": "예시 요약",
+                    "body_sha256": body_sha,
+                    "requested_at": "2026-09-12 00:00",
+                }
+            ],
+        },
+    )
+    meta_path = g.project_root / ".opal-worktrees" / ".meta" / f"task_{g.task}.json"
+    meta = json.loads(meta_path.read_text(encoding="utf-8"))
+    meta["task_path"] = str(task_path)
+    meta["memory_index_requests_resolved"] = [body_sha]
+    write_json(meta_path, meta)
+
+    result = run_worktree_cli(
+        ["remove", "--project-root", str(g.project_root), "--task", g.task]
+    )
+    payload = parse_json_stdout(result, "remove(S-15 applied)")
+    assert payload.get("ok") is True, f"S-15: 전부 applied인데 remove가 거부됨: {payload}"
+
+
+def test_t118_s15_remove_no_capsule_file_is_noop_pass(tmp_path):
+    """[T118/S-15] 캡슐 파일(`memory-index-request.json`) 자체가 없으면 no-op으로
+    통과하고 기존 가드만 적용된다(AC-11, PLAN D-2b).
+
+    [MUST] 이 케이스도 현재 코드에서 이미 PASS한다(신규 가드 부재 + clean 상태) — S-15의
+    "applied" 케이스와 동형인 회귀 보호 성격이며 순수 RED는 아니다."""
+    g = build_guard_repo(tmp_path, "clean", name_suffix="_s15nocaps")
+    meta_path = g.project_root / ".opal-worktrees" / ".meta" / f"task_{g.task}.json"
+    meta = json.loads(meta_path.read_text(encoding="utf-8"))
+    meta["task_path"] = str(g.project_root / "tasks" / "118-260912-opd-nofixture")
+    meta["memory_index_requests_resolved"] = []
+    write_json(meta_path, meta)
+
+    result = run_worktree_cli(
+        ["remove", "--project-root", str(g.project_root), "--task", g.task]
+    )
+    payload = parse_json_stdout(result, "remove(S-15 no-capsule)")
+    assert payload.get("ok") is True, f"S-15: 캡슐 파일 부재인데 거부됨: {payload}"

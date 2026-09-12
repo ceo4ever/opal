@@ -3,13 +3,13 @@
   "module": "brain_tool",
   "layer": "util",
   "domain": "opal-brain",
-  "description": "OPAL Project Brain 지식 위키 결정론적 집행 CLI — 11개 서브 명령(init/add-page/update-page/index/log/search/sync-header/lint/validate/analyze/ingest-scan). index/log/링크 무결성을 brain-tool이 집행(LLM 직접 편집 금지). 페이지 타입은 SCHEMA §1.5·init의 schema-template.md에서 동적 로드(하드코딩 없음). frontmatter 파싱은 PyYAML, KST 타임스탬프는 date.js subprocess. sync-header는 code-scan @header → brain entity frontmatter 단방향 동기화만 수행. analyze는 code-scan @header 정량 집계 → JSON. ingest-scan은 docs/skills/tasks 목록 반환. lint는 term 일관성 위반 2종(term_duplicate·alias_collision)과 frontmatter_invalid kind(validate_frontmatter를 lint 경로에서도 호출하며 related 붕괴 페이지의 missing_link 중복 보고를 억제)를 판정하고, speculative kind를 SPECULATIVE_MARKERS 구조적 헤딩 탐지로 검사한다. search는 draft 필터(--include-draft, R-6 term 한정)를 지원한다. validate_frontmatter는 선택 필드(tags/sources/related)의 평탄성(flat string[])을 검사해 중첩 리스트·비문자열 요소를 frontmatter_invalid violation으로 집행하고, 링크필드(related) 값을 검사해 '[[', ']]', '.md' 포함 슬러그를 frontmatter_invalid로 집행한다. add-page는 --related(CSV→평탄 리스트) 플래그와 미실체 거부 게이트(--body-file/--force/--note, speculative_content)를 갖는다. update-page는 기존 페이지 갱신 도구 경로다(부분 갱신·created 보존·updated 자동). hub_root()는 경로 문자열을 허브 루트로 수렴시키는 순수 함수이며(규칙 SSOT: opal/core/references/opal-harness.md §2.5 (4), 골든 케이스: opal/core/references/hub-root-cases.json), cwd 파생 경로 조립 지점(_load_code_scan_json·ingest-scan 스캔 루트·--brain-path 기본값)에 적용된다. --brain-path 명시값은 _DefaultBrainPath 센티넬로 기본값과 구분해 수렴 대상에서 제외한다.",
+  "description": "OPAL Project Brain 지식 위키 결정론적 집행 CLI — 11개 서브 명령(init/add-page/update-page/index/log/search/sync-header/lint/validate/analyze/ingest-scan). index/log/링크 무결성을 brain-tool이 집행(LLM 직접 편집 금지). 페이지 타입은 SCHEMA §1.5·init의 schema-template.md에서 동적 로드(하드코딩 없음). frontmatter 파싱은 PyYAML, KST 타임스탬프는 date.js subprocess. sync-header는 code-scan @header → brain entity frontmatter 단방향 동기화만 수행. analyze는 code-scan @header 정량 집계 → JSON. ingest-scan은 docs/skills/tasks 목록 반환. lint는 term 일관성 위반 2종(term_duplicate·alias_collision)과 frontmatter_invalid kind(validate_frontmatter를 lint 경로에서도 호출하며 related 붕괴 페이지의 missing_link 중복 보고를 억제)를 판정하고, speculative kind를 SPECULATIVE_MARKERS 구조적 헤딩 탐지로 검사한다. search는 draft 필터(--include-draft, R-6 term 한정)를 지원한다. validate_frontmatter는 선택 필드(tags/sources/related)의 평탄성(flat string[])을 검사해 중첩 리스트·비문자열 요소를 frontmatter_invalid violation으로 집행하고, 링크필드(related) 값을 검사해 '[[', ']]', '.md' 포함 슬러그를 frontmatter_invalid로 집행한다. add-page는 --related(CSV→평탄 리스트) 플래그와 미실체 거부 게이트(--body-file/--force/--note, speculative_content)를 갖는다. update-page는 기존 페이지 갱신 도구 경로다(부분 갱신·created 보존·updated 자동). 루트는 용도별로 분리한다(계약 SSOT: opal/core/references/harness/worktree.md §task root와 allocator root 계약): 조회의 cwd 파생 경로 조립 지점(_load_code_scan_json·ingest-scan 스캔 루트·--brain-path 기본값)은 _task_root_cwd()로 cwd 작업본(task_root) 기준으로 해석하며 허브로 수렴하지 않는다. 회고적 학습 쓰기(add-page·update-page)는 require_write_root/finalize_brain_root가 명시 allocator_root(허브 절대 경로)만 받고 cwd 추론을 거부한다(allocator_root_required). --brain-path 명시값은 _DefaultBrainPath 센티넬로 기본값과 구분해 cwd 파생 해석 대상에서 제외한다.",
   "exports": [
     "cmd_init", "cmd_add_page", "cmd_update_page", "cmd_index", "cmd_log",
     "cmd_search", "cmd_sync_header", "cmd_lint", "cmd_validate",
     "cmd_analyze", "cmd_ingest_scan",
     "load_page_types", "DEFAULT_PAGE_TYPES", "detect_speculative_markers",
-    "hub_root"
+    "finalize_brain_root", "require_write_root"
   ]
 }
 """
@@ -154,6 +154,7 @@ ERROR_CODES = {
     "brain_already_initialized":  "brain이 이미 초기화됨: {brain_path}. --force로만 재초기화 가능",
     "brain_path_invalid":         "brain-path가 유효하지 않음: {brain_path}",
     "brain_not_initialized":      "brain이 초기화되지 않음 (.opal/brain/SCHEMA.md 부재): {brain_path}",
+    "allocator_root_required":    "회고적 학습 쓰기에는 명시 allocator_root가 필요함 — cwd 추론 금지 (harness/worktree.md §task root와 allocator root 계약)",
     "invalid_page_type":          "유효하지 않은 페이지 타입: {page_type} (허용: {allowed})",
     "frontmatter_invalid":        "frontmatter 표준 위반: {detail}",
     "duplicate_page":             "동일 경로의 페이지가 이미 존재: {page}. 갱신은 update-page를 사용",
@@ -222,37 +223,33 @@ def get_kst_date(command="(unknown)"):
     return get_kst_datetime(command).split(" ")[0]
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 허브 루트 수렴 (워크트리 → 허브)
+# 루트 해석 — 조회는 task_root, 회고적 학습 쓰기는 명시 allocator_root
+# 계약 원문(SSOT): opal/core/references/harness/worktree.md
+#                  §task root와 allocator root 계약
 # ─────────────────────────────────────────────────────────────────────────────
 
 # git 워크트리 컨테이너 디렉터리 이름.
 WORKTREE_SEGMENT = ".opal-worktrees"
 
 
-def hub_root(path):
-    """워크트리 하위 경로를 허브 루트로 수렴한 문자열을 반환한다.
+def _task_root_cwd():
+    """cwd 파생 경로 조립의 단일 진입점. cwd가 속한 작업본(task_root)을 그대로 쓴다.
 
-    규칙: opal/core/references/opal-harness.md §2.5 (4)
-    골든 케이스: opal/core/references/hub-root-cases.json (C-1~C-7)
-
-    파일시스템·환경변수·cwd에 접근하지 않는 순수 문자열 함수다.
-    비워크트리 입력은 입력 문자열을 그대로(바이트 동일) 반환한다.
+    워크트리 실행에서도 허브로 수렴하지 않는다 — 워크트리 자신이 task_root이며
+    조회(`--brain-path` 기본값·`_load_code_scan_json`·ingest-scan 스캔 루트)는
+    그 작업본의 `.opal`을 읽는다.
+    비워크트리 실행에서는 cwd 자신이므로 동작이 변경 전과 동일하다.
     """
-    s = str(path)
-    segments = s.split("/")
-    for i, seg in enumerate(segments):
-        if seg == WORKTREE_SEGMENT:
-            prefix = "/".join(segments[:i])
-            if prefix:
-                return prefix
-            # 세그먼트가 경로 선두인 경우: 절대경로면 루트, 상대경로면 cwd 자신.
-            return "/" if s.startswith("/") else "."
-    return s
+    return pathlib.Path.cwd()
 
 
-def _hub_cwd():
-    """cwd를 허브 루트로 수렴한 Path. cwd 파생 경로 조립의 단일 진입점."""
-    return pathlib.Path(hub_root(str(pathlib.Path.cwd())))
+def _inside_worktree(path):
+    """path가 워크트리 슬롯 안인지 판정한다 — 쓰기 거부 판정 전용.
+
+    [MUST] 이 판정은 allocator_root를 추론하지 않는다. 명시 인자 없는 회고적 학습
+    쓰기를 거부할지만 정하며, 쓸 루트는 오직 명시 allocator_root로만 정해진다.
+    """
+    return WORKTREE_SEGMENT in str(path).split("/")
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -262,24 +259,25 @@ def _hub_cwd():
 class _DefaultBrainPath(str):
     """argparse `--brain-path` 기본값 전용 str 마커. 사용자가 값을 명시하면
     argparse가 평범한 str로 덮어쓰므로, isinstance로 기본값(cwd 파생)과
-    명시값을 구분한다. 명시값은 허브 수렴 대상이 아니다."""
+    명시값을 구분한다. 명시값은 cwd 파생 해석 대상이 아니다."""
 
 
 DEFAULT_BRAIN_PATH = _DefaultBrainPath(".")
 
 
 def resolve_brain_path(brain_path_str):
-    """brain-path 정규화. 기본값이면 허브 루트 기준 .opal/brain 으로 해석.
+    """brain-path 정규화. 기본값이면 task_root 기준 .opal/brain 으로 해석.
 
     규칙:
     - 인자가 .opal/brain 으로 끝나거나 SCHEMA.md를 포함하면 그 경로를 brain 루트로.
     - 그 외 디렉토리면 <dir>/.opal/brain 을 brain 루트로 본다.
-    - 기본값(DEFAULT_BRAIN_PATH)만 허브 루트 기준으로 해석한다
-      (규칙: opal/core/references/opal-harness.md §2.5 (4)).
+    - 기본값(DEFAULT_BRAIN_PATH)만 task_root(cwd 작업본) 기준으로 해석한다
+      (계약: opal/core/references/harness/worktree.md
+       §task root와 allocator root 계약).
       --brain-path 명시값은 받은 그대로 해석한다.
     """
     if isinstance(brain_path_str, _DefaultBrainPath):
-        p = (_hub_cwd() / brain_path_str).resolve()
+        p = (_task_root_cwd() / brain_path_str).resolve()
     else:
         p = pathlib.Path(brain_path_str).resolve()
     if p.name == "brain" and p.parent.name == ".opal":
@@ -301,6 +299,39 @@ def require_brain(command, brain_path_str):
     if not is_brain_initialized(brain_root):
         err(command, "brain_not_initialized", brain_path=str(brain_root))
     return brain_root
+
+
+def finalize_brain_root(command, allocator_root):
+    """회고적 학습(finalize) 쓰기 전용 brain 루트 해석 — allocator_root는 명시 인자 필수.
+
+    계약: opal/core/references/harness/worktree.md §task root와 allocator root 계약
+    - [MUST] cwd, task path의 조상, `.opal-worktrees` 문자열로 추론하지 않는다.
+    - 허브 절대 경로만 받는다. 미지정·빈 값·상대 경로는 거부한다.
+    """
+    if (allocator_root is None
+            or isinstance(allocator_root, _DefaultBrainPath)
+            or not str(allocator_root).strip()):
+        err(command, "allocator_root_required", reason="missing")
+    if not pathlib.Path(str(allocator_root)).is_absolute():
+        err(command, "allocator_root_required", reason="relative",
+            allocator_root=str(allocator_root))
+    return require_brain(command, str(allocator_root))
+
+
+def require_write_root(command, args):
+    """페이지 쓰기 명령(회고적 학습 쓰기)의 brain 루트 결정.
+
+    - `--allocator-root` 명시: finalize 쓰기 경로(`finalize_brain_root`).
+    - 그 외: 조회와 동일 해석. 단 워크트리 안에서 `--brain-path` 기본값(cwd 파생)으로
+      쓰는 것은 거부한다 — 명시 루트 없는 쓰기는 수행하지 않는다.
+    """
+    allocator_root = getattr(args, "allocator_root", None)
+    if allocator_root:
+        return finalize_brain_root(command, allocator_root)
+    if isinstance(args.brain_path, _DefaultBrainPath) and _inside_worktree(_task_root_cwd()):
+        err(command, "allocator_root_required", reason="cwd_inference_in_worktree",
+            cwd=str(_task_root_cwd()))
+    return require_brain(command, args.brain_path)
 
 
 def read_template(name, command):
@@ -539,7 +570,7 @@ def cmd_init(args):
 def cmd_add_page(args):
     """페이지 생성(템플릿 기반) + frontmatter 검증 + index 자동 등록."""
     command = "add-page"
-    brain_root = require_brain(command, args.brain_path)
+    brain_root = require_write_root(command, args)
 
     # --type 검증: argparse choices 제거 후 명령 내부에서 동적 타입 목록으로 검증
     page_type = args.type
@@ -631,7 +662,7 @@ def cmd_update_page(args):
     created는 보존하고 updated만 오늘로 갱신한다. 지정한 필드만 바뀐다.
     """
     command = "update-page"
-    brain_root = require_brain(command, args.brain_path)
+    brain_root = require_write_root(command, args)
     dyn_types, type_to_cat = load_page_types(brain_root)
 
     # 갱신 대상 탐색 — 슬러그 또는 pages/<type>/<name>.md 어느 쪽으로도 지목 가능
@@ -916,7 +947,7 @@ def _load_code_scan_json(command):
     @header 시드를 흡수하려면 스캔 결과가 필요하므로, code-scan을 직접 실행해
     @header 맵을 얻는다. code-scan.json 부재 시 code_scan_json_missing.
     """
-    cwd = _hub_cwd()
+    cwd = _task_root_cwd()
     config_path = cwd / ".opal" / "code-scan.json"
     if not config_path.exists():
         err(command, "code_scan_json_missing", path=str(config_path))
@@ -1299,7 +1330,7 @@ def cmd_ingest_scan(args):
     brain_root = require_brain(command, args.brain_path)
 
     source = getattr(args, "source", "all") or "all"
-    cwd = _hub_cwd()
+    cwd = _task_root_cwd()
 
     # 이미 ingest된 sources 수집 (멱등 skip 판정용)
     pages = scan_pages(brain_root)
@@ -1433,6 +1464,8 @@ def build_parser():
     p_add.add_argument("--body-file", dest="body_file",
                         help="본문 파일 경로 — 지정 시 템플릿 본문 대신 이 파일 본문으로 페이지 생성 (071)")
     p_add.add_argument("--brain-path", dest="brain_path", default=DEFAULT_BRAIN_PATH)
+    p_add.add_argument("--allocator-root", dest="allocator_root", default=None,
+                        help="회고적 학습 쓰기 대상 루트(허브 절대 경로). 명시 인자 전용 — cwd 추론 금지")
     p_add.set_defaults(func=cmd_add_page)
 
     # ── update-page ──
@@ -1449,6 +1482,8 @@ def build_parser():
     p_upd.add_argument("--body-file", dest="body_file",
                         help="본문 파일 경로 — 지정 시 본문을 이 파일 내용으로 교체")
     p_upd.add_argument("--brain-path", dest="brain_path", default=DEFAULT_BRAIN_PATH)
+    p_upd.add_argument("--allocator-root", dest="allocator_root", default=None,
+                        help="회고적 학습 쓰기 대상 루트(허브 절대 경로). 명시 인자 전용 — cwd 추론 금지")
     p_upd.set_defaults(func=cmd_update_page)
 
     # ── index ──

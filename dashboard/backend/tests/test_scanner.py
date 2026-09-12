@@ -156,3 +156,66 @@ def test_scan_marks_non_opal(opal_workspace: Path) -> None:
     assert plain is not None
     assert plain.is_opal is False
     assert plain.task_count == 0
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# [RED-118][S-16] resolve_task_dir 다중 허용 루트 (D-5, task 118)
+#
+# S-16(a) — 회귀 보호: `extra_task_roots` 미지정 호출은 현행과 완전히 동일해야 한다.
+#   구현 전에도 통과해야 정상이다 (TASK.md C-1).
+# S-16(b) — RED: `extra_task_roots`로 넘긴 realpath 화이트리스트 안의 태스크는
+#   찾아야 하고 화이트리스트 밖은 거부해야 한다. 현재 `resolve_task_dir(project_path,
+#   task_id)`는 `extra_task_roots` 키워드 인자 자체를 받지 않으므로(D-5 keyword-only
+#   계약 미구현) TypeError로 실패하는 것이 RED 정상 상태다.
+# ─────────────────────────────────────────────────────────────────────────────
+
+def test_resolve_task_dir_without_extra_roots_unchanged(tmp_path: Path) -> None:
+    """[RED-118][S-16a] 회귀 보호 — `extra_task_roots` 미지정 호출은 현행과 동일하다.
+    구현 전에도 통과해야 정상(회귀 가드)."""
+    from dashboard.backend.scanner import resolve_task_dir
+
+    project = tmp_path / "fx-project"
+    (project / "tasks" / "001-task").mkdir(parents=True)
+
+    resolved = resolve_task_dir(str(project), "001-task")
+    assert resolved == os.path.realpath(str(project / "tasks" / "001-task")), (
+        "extra_task_roots 미지정 호출이 현행과 달라졌다"
+    )
+
+    # 경로 이탈 입력은 extra_task_roots 유무와 무관하게 현행처럼 거부된다.
+    assert resolve_task_dir(str(project), "../etc") is None
+    assert resolve_task_dir(str(project), "nonexistent-task") is None
+
+
+def test_resolve_task_dir_extra_task_roots_whitelists_worktree_task(tmp_path: Path) -> None:
+    """[RED-118][S-16b] D-5 keyword-only `extra_task_roots`— 화이트리스트 안의
+    워크트리 태스크(registry active worktree `task_path`에서 파생한 루트)는 찾고,
+    화이트리스트 밖 경로는 거부한다.
+
+    RED 기대: 현재 `resolve_task_dir` 시그니처에는 `extra_task_roots`가 없으므로
+    이 호출 자체가 TypeError(unexpected keyword argument)로 실패한다."""
+    from dashboard.backend.scanner import resolve_task_dir
+
+    project = tmp_path / "fx-project"
+    (project / "tasks").mkdir(parents=True)
+
+    worktree_tasks_root = tmp_path / "fx-worktree" / "tasks"
+    worktree_tasks_root.mkdir(parents=True)
+    (worktree_tasks_root / "118-worktree-task").mkdir(parents=True)
+
+    outside_tasks_root = tmp_path / "fx-outside-not-whitelisted"
+    (outside_tasks_root / "999-outside-task").mkdir(parents=True)
+
+    whitelist = [os.path.realpath(str(worktree_tasks_root))]
+
+    resolved = resolve_task_dir(
+        str(project), "118-worktree-task", extra_task_roots=whitelist,
+    )
+    assert resolved == os.path.realpath(str(worktree_tasks_root / "118-worktree-task")), (
+        "화이트리스트 안의 워크트리 태스크를 찾지 못했다"
+    )
+
+    rejected = resolve_task_dir(
+        str(project), "999-outside-task", extra_task_roots=whitelist,
+    )
+    assert rejected is None, "화이트리스트 밖 경로가 거부되지 않았다"

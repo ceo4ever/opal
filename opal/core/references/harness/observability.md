@@ -14,29 +14,33 @@
 
 ### 스킬 탐색 경로
 
+아래 `{task_root}`는 실행 중인 태스크의 `.opal` 설정을 소유하는 루트다. 워크트리 태스크에서는 허브가 아니라 **작업본 자신**이 `{task_root}`일 수 있다. 결정 방법의 원문은 `harness/worktree.md` §task root와 allocator root 계약이며 여기서 복제하지 않는다.
+
 dev 단계 스킬:
-1. `{프로젝트}/.opal/skills/op-dev-{stage}/SKILL.md`
+1. `{task_root}/.opal/skills/op-dev-{stage}/SKILL.md`
 2. `~/.opal/skills/op-dev-{stage}/SKILL.md`
 
 범용 단계 스킬:
-1. `{프로젝트}/.opal/skills/op-task{-suffix}/SKILL.md`
+1. `{task_root}/.opal/skills/op-task{-suffix}/SKILL.md`
 2. `~/.opal/skills/op-task{-suffix}/SKILL.md`
 
 에이전트:
-1. `{프로젝트}/.opal/agents/{agent-name}/AGENT.md`
+1. `{task_root}/.opal/agents/{agent-name}/AGENT.md`
 2. `~/.opal/agents/{agent-name}/AGENT.md`
 
 ### 프로젝트 메모리 동기화
 
-`{프로젝트}/.opal/MEMORY.json`이 존재하면, 단계 완료 시 작업 히스토리를 memory-tool로 갱신한다:
+작업 히스토리는 **허브(allocator root)의 `.opal/MEMORY.json`만** 소유한다. merge 확인 후 귀속 명령으로 갱신한다:
 
 ```
-~/.opal/tools/memory-tool/run.sh append --file .opal/MEMORY.json --kind history \
-  --title "<태스크명>" --stage "<단계>" --path "tasks/<폴더>/" --summary "<핵심결과>"
+~/.opal/tools/state-tool/run.sh finalize-attribution <task-path> --allocator-root <허브 절대경로>
 ```
 
 - [MUST] 표·파일 직접 편집 금지 — 도구 호출만 사용한다.
+- **[MUST] 워크트리에서 `memory-tool append --kind history`를 호출하지 않는다.** 워크트리 경로의 MEMORY 쓰기는 `WORKTREE_WRITE_REJECTED`로 거부되며, 워크트리의 `.opal/MEMORY.json`은 읽기 snapshot이다. 워커 디스패치가 단계 완료마다 히스토리를 append하던 흐름은 폐지되었다.
+- **[MUST] 허브 경로를 추론하지 않는다** — `--allocator-root`는 worktree registry 발급값을 명시 인자로 전달한다. 미지정·상대경로는 거부된다.
 - **FIFO 규칙**: 히스토리는 **최대 5개**이며 도구가 추가 시점에 결정론적으로 집행한다(`prune` 불필요).
+- 계약 원문: `harness/memory-learning.md` §워크트리에서의 memory 명령 경계 · §merge 후 귀속 연결.
 
 #### 타임스탬프 취득 규칙 (필수)
 

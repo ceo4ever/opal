@@ -1,6 +1,7 @@
 # OPAL 워크트리 태스크 소유권 전환 제안서
 
-> 상태: 5차 개정 제안
+> 상태: 제안
+> 적용 범위: Phase 0·Phase 1 적용 완료(태스크 118). Phase 2~4 미적용
 > 작성: 알투(PM)
 > 작성일: 2026-09-11
 > 개정 기준일: 2026-09-12
@@ -166,11 +167,22 @@ tasks
 .opal
 ```
 
+이 확장은 `repos`와 분리된 신규 optional 설정 키 `taskCapsuleCone`(`list[str]`, 기본값 `[]`)이
+소유한다. monorepo 분기의 `sparse-checkout set`에만 `repos`에 이어 전개하고 multi-repo 분기에는
+적용하지 않는다 — `repos`의 "독립 저장소 목록"이라는 의미를 보존해야 하기 때문이다. 타입 위반은
+기존 `CONFIG_INVALID_TYPE`, 경로 이탈은 기존 `CONFIG_PATH_ESCAPE`로 보고하며 신규 에러 코드를
+만들지 않는다. 기본값 `[]`의 전개는 no-op이므로 비워크트리·기존 워크트리 동작을 바이트 동일하게
+보전한다. 위 두 항목을 담은 운영 권고값 `["tasks", ".opal"]`은 Phase 2 활성화 값이며 이 키가
+도입되는 단계의 기본값이 아니다. 계약 원문은 `harness/worktree.md` §cone 확장 계약이 소유한다.
+
 전체 `tasks/`를 선택하는 이유는 과거 태스크 인용과 실파일 fixture를 유지하기 위해서다. 현재
 태스크 폴더만 선택하면 비현재 태스크 변경은 구조적으로 막을 수 있지만, 과거 TASK·PLAN·DONE을
-참조하는 표준 프로세스와 회귀 테스트가 계속 실패한다. 이 저장소 기준 `tasks/**` 1,111개 중
-Markdown은 885개이므로 파일 수보다 기존 계약의 완전성을 우선한다. 비현재 태스크 무변경은
-R-2 gate로 집행한다.
+참조하는 표준 프로세스와 회귀 테스트가 계속 실패한다. 이 저장소의 git-tracked `tasks/**`는
+파일 1,114개, 그중 Markdown 888개다(2026-09-12, `feat/OP-TASK-118` 기준). 측정은
+`git ls-files tasks`의 출력 행 수와 그중 `.md`로 끝나는 행 수로 한다 — `find tasks -type f`
+기준은 활성 태스크의 미커밋 파일 때문에 같은 세션 안에서도 값이 계속 변해 재현되지 않으므로
+근거 수치로 쓰지 않는다. 어느 기준이든 파일 수보다 기존 계약의 완전성을 우선한다. 비현재
+태스크 무변경은 R-2 gate로 집행한다.
 
 현재 `.opal/code-scan.json`은 `tasks`를 이미 exclude한다. 따라서 cone에 `tasks`를 추가해도
 code-scan의 스캔 대상과 탐색 비용은 늘지 않는다. 변화하는 것은 과거 태스크 인용과 실파일
@@ -337,15 +349,35 @@ HEAD가 이미 branch 끝으로 이동하므로 첫 경로로 판정하지 않�
 후처리는 `completed_unmerged → attribution_pending → closed` 상태를 따른다. commit 생성이나
 clean 검증이 실패하면 `attribution_pending`에 머물며 closed 판정, worktree remove, 다음 귀속
 후처리를 허용하지 않는다. 도구가 사용자의 다른 미커밋 변경을 함께 stage하거나 commit하지
-않으며, 추적 후처리 파일인 `.opal/MEMORY.json`, 해당 후보로 생성·갱신한 `.opal/brain/pages/*`,
-`.opal/brain/index.md`, `.opal/brain/log.md`와 memory index 요청 처리에 필요한 현재 task diff만
-정확히 선별한다.
+않으며, 추적 후처리 파일인 `.opal/MEMORY.json`과 해당 후보로 생성·갱신한
+`.opal/brain/pages/*`, `.opal/brain/index.md`, `.opal/brain/log.md`만 정확히 선별한다.
 
-귀속 후처리와 새 task-number 발급은 registry의 프로젝트 finalize lock으로 직렬화한다. 진입 시
-brain pages/index/log에는 다른 미커밋 변경이 없어야 하며, MEMORY의 선행 diff는 allocator가 만든
-`last_task_number` 변경만 허용한다. 그 밖의 dirty 변경은 `attribution_commit_blocked`로 거부한다.
-finalize commit은 현재 task의 brain page/index/log·MEMORY history·memory index 요청과 그 시점의 유효한
-allocator 값을 함께 확정한다.
+memory index 요청 파일은 이 선별 대상이 아니다. 요청 파일은 태스크 브랜치가 소유하는 추적
+파일이므로 그 처리 완료 전이(`status: applied`)는 태스크 커밋에 들어가고, finalize commit은
+brain page·index·log와 MEMORY 귀속분만 확정한다. 요청을 처리 완료로 표시하는 시점이 귀속 commit
+확정 이후라는 §7.4 계약과, 캡슐 파일 변경을 같은 finalize commit에 넣는다는 서술은 양립하지
+않는다 — 유효한 계약은 전자다. finalize의 clean 검증 범위도 같은 이유로 `.opal/brain/**`과
+`.opal/MEMORY.json`에 한정한다. 캡슐의 dirty는 이 게이트의 판정 대상이 아니며, 이후 `remove`가
+기존 dirty guard(`GUARD_DIRTY`)로 막아 coordinator가 그 변경을 태스크 커밋에 포함하도록
+유도한다.
+
+귀속 후처리와 새 task-number 발급은 registry의 프로젝트 finalize lock으로 직렬화한다. 진입
+판정은 "미커밋이 하나라도 있으면 차단"이 아니라 선언된 집합에 대한 부분집합 판정이다. 선언
+집합은 DONE.md `## 회고적 학습 후보`에 선언된 page 경로에 `.opal/brain/index.md`,
+`.opal/brain/log.md`, `.opal/MEMORY.json`을 더한 것이고, 관측 집합은
+`git status --porcelain -z -uall` 결과 중 `.opal/brain/**`과 `.opal/MEMORY.json`에 해당하는
+경로다. 관측 집합이 선언 집합의 부분집합이면 재개를 허용하고, 아니면 위반 경로 목록과 함께
+`ATTRIBUTION_COMMIT_BLOCKED`로 거부한다. `.opal/MEMORY.json`의 선행 diff는 allocator가 만든
+`last_task_number` 변경만 허용한다. 판정 범위 밖(소스·태스크 문서)의 dirty는 이 게이트의 판정
+대상이 아니다.
+
+선언과 관측은 양쪽 모두 레포 루트 상대 POSIX 경로로 정규화해 비교한다. NUL 구분 출력이
+비ASCII 경로의 따옴표 감싸기를 구조적으로 제거하고, rename·copy는 신·구 경로를 모두 관측한다.
+이 정규화가 어긋나면 부분집합 판정이 늘 거짓이 되어, 1차 실행이 남긴 미커밋 brain page가
+재실행 자신을 영구히 차단한다. 선언 집합의 거처는 `harness/done-template.md`가 소유한다.
+
+finalize commit은 현재 task의 brain page/index/log와 MEMORY history·index 반영분, 그리고 그 시점의
+유효한 allocator 값을 함께 확정한다.
 lock 해제 후 다음 채번이 MEMORY를 다시 dirty하게 만들 수 있으므로 R-18의 clean 판정은 전체
 `git status`가 아니라 미커밋 brain 집계와 `.opal/MEMORY.json` 귀속 변경이 0건인지를 검사한다.
 
@@ -461,10 +493,20 @@ Phase 1은 범용 operation journal이나 MEMORY overlay를 만들지 않는다.
 | `append/update --kind history` | 직접 실행 금지 | CLOSE/finalize가 merge된 task 기준으로 1회 수행 |
 | `task-number` | worktree 호출 금지 | 생성 전 allocator root에서만 실행 |
 
-`memory-index-request`는 현재 태스크 캡슐의 추적 파일에 `task_id`, `title`, `type`, `status`,
-`file`, `summary`, `body_sha256`, `requested_at`만 기록한다. 메모리 본문이나 범용 명령 payload,
-`op_id`, 기대 행 hash는 넣지 않는다. `show/review`는 MEMORY snapshot을 가상 변경하지 않고
-기존 index와 같은 태스크의 `pending_requests` 목록을 구분해 반환한다.
+요청은 태스크 캡슐의 추적 파일 `{task_path}/memory-index-request.json`에 `task_id`, `title`,
+`type`, `status`, `file`, `summary`, `body_sha256`, `requested_at` 8필드만 기록한다. 메모리
+본문이나 범용 명령 payload, `op_id`, 기대 행 hash는 넣지 않는다.
+
+요청의 "내용"과 "처리 완료" 상태는 거처가 다르다. 내용은 위 캡슐 추적 파일이 소유하고, 처리
+완료 상태는 registry meta의 `memory_index_requests_resolved`(처리한 `body_sha256` 목록)가
+소유한다. registry는 Git 비추적이라 merge로 허브에 전달되지 않으므로 내용의 거처가 될 수 없고,
+`state.json`은 state-tool 전용 소유라 배제한다. 반대로 처리 완료 상태는 허브 로컬에서만 의미가
+있고 merge로 전달할 필요가 없다. `remove` guard는 meta의 `task_path`로 캡슐 파일을 읽어
+`memory_index_requests_resolved`에 없는 `body_sha256`이 하나라도 남아 있으면 미처리 요청으로
+판정해 거부한다.
+
+`show/review`는 MEMORY snapshot을 가상 변경하지 않고 기존 index와 같은 태스크의
+`pending_requests` 목록을 구분해 반환한다.
 
 현행 memory-tool에는 title 중복 차단이 없으므로 finalize 경로에 이를 추가한다. finalize lock
 안에서 최신 허브 MEMORY와 merge된 본문을 다시 읽어 다음처럼 판정한다.
@@ -548,7 +590,7 @@ worktree 설정에 `task_artifacts.repo`를 명시한다.
 
 | 대상 | 변경 |
 |---|---|
-| `worktree-tool create` | monorepo cone에 `tasks`·`.opal` 추가, task folder 생성 전 worktree 생성, allocator_root/task_home/task_path 발급, copied[] 상대경로·create 직후 SHA-256·시각 metadata 기록, 디렉터리 copy와 local memory 전달 경고 |
+| `worktree-tool create` | monorepo cone 확장 키 `taskCapsuleCone`(`list[str]`, 기본 `[]`, 운영 권고값 `["tasks", ".opal"]`은 Phase 2 활성화 값) 신설, task folder 생성 전 worktree 생성, allocator_root/task_home/task_path 발급, copied[] 상대경로·create 직후 SHA-256·시각 metadata 기록, 디렉터리 copy와 local memory 전달 경고 |
 | `worktree-tool status/list` | task ownership, canonical path, merge 귀속 상태 표시 |
 | `worktree-tool remove` | task capsule commit·push·merge·hash guard 추가 |
 | `state-tool` | `find_project_root`를 `task_root`와 명시적 allocator root 소비 경로로 분리; CLOSE history append를 merge 후 명령으로 이전 |

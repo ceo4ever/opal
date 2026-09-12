@@ -50,7 +50,7 @@
      - 오류가 `CONFIG_NOT_FOUND`이면 `~/.opal/tools/worktree-tool/run.sh init --project-root <프로젝트> [--dry-run]`을 안내한다. `init`은 독립 `.git` 발견 시 multi-repo, 없으면 monorepo 초안을 만들 뿐 자동 확정하지 않으므로 사용자가 검토·수정한다. 수동 작성은 `~/.opal/templates/worktree-multi-repo.json` 또는 `worktree-monorepo.json`을 복사해 시작한다.
    - 도구는 부분 실패 시 자기가 만든 worktree·브랜치만 스스로 되돌린다(all-or-nothing) — 파이프라인이 정리할 잔여물은 없다.
    - 축 정의 SSOT: `opal/core/references/harness/worktree.md`.
-   - 워크트리에서 허브 고정 데이터(`tasks/`·`.opal/`)를 참조하는 경로 판정 규칙은 `opal/core/references/harness/worktree.md` §허브 루트 해석 규칙이 SSOT다.
+   - 태스크 문서·설정을 해석하는 `task_root`와 채번·귀속 쓰기에만 쓰는 `allocator_root`의 판정 규칙은 `opal/core/references/harness/worktree.md` §task root와 allocator root 계약이 SSOT다. canonical task path의 기계 계약은 worktree-tool metadata/schema가 소유한다.
 
 5. **[필수] `state init`을 호출하여 STATE.md를 생성한다**. 이 단계를 건너뛰면 세션 복원과 상태 추적이 불가능하다. LLM이 직접 작성하는 것은 금지된다 (`harness/state-template.md` §[MUST] 블록).
 
