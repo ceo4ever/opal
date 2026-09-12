@@ -1,0 +1,52 @@
+{
+  "check": "convention",
+  "status": "pass",
+  "check_status": "pass",
+  "scope": "Console FE",
+  "element": "dashboard",
+  "baseline": "none",
+  "checked_files": [
+    "dashboard/frontend/src/App.tsx",
+    "dashboard/frontend/electron/main.cjs"
+  ],
+  "target_files": [
+    "dashboard/frontend/src/App.tsx",
+    "dashboard/frontend/electron/main.cjs"
+  ],
+  "findings": [],
+  "summary": {
+    "total": 0,
+    "severity_counts": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0,
+      "info": 0
+    },
+    "disposition_counts": {
+      "blocking": 0,
+      "advisory": 0,
+      "informational": 0
+    }
+  },
+  "evidence": [
+    "event-loader verify ok:true for /tmp/opal-worker-dispatch-convention-dashboard.json",
+    "npx eslint src/App.tsx electron/main.cjs exited 0 in dashboard/frontend",
+    "node --check dashboard/frontend/electron/main.cjs exited 0",
+    "rg workbench residual search over dashboard/frontend/src and dashboard/frontend/electron returned no matches",
+    "rg trailing whitespace search over target files returned no matches",
+    "target file line counts: App.tsx 25, main.cjs 39",
+    "npm run lint -- src/App.tsx electron/main.cjs expanded to eslint . and reproduced 14 pre-existing out-of-scope errors; not counted against this fixed target set"
+  ],
+  "references": [
+    "docs/CONVENTIONS.md",
+    "docs/PROJECT.md",
+    "dashboard/frontend/eslint.config.js",
+    "/Users/iskang/.opal/references/harness/gc-finding-schema.md",
+    "/Users/iskang/.opal/references/conventions-hub-model.md",
+    "/Users/iskang/.opal/skills/op-gc-convention/references/convention-categories.md"
+  ],
+  "missing_capabilities": [],
+  "blockers": [],
+  "report_path": "tasks/126-260912-opds-워크스튜디오-독립앱-구축/GC-CONVENTION-2026-09-12T21-07-31-dashboard.md"
+}

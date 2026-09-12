@@ -1,10 +1,10 @@
 /**
  * @header {
- *   "module": "workbench-types",
+ *   "module": "workstudio-types",
  *   "layer": "domain",
- *   "domain": "workbench",
- *   "description": "Desktop Workbench v9 목업의 필터 없는 Project→진행 TASK→Agent 트리, TASK별 PM Coordination Room, PM/Worker Workspace, Repository Component, 동적 Surface·Files/Changes 계약",
- *   "exports": ["Boundary", "TaskStatus", "Pilot", "SplitDirection", "SurfaceKind", "SessionStatus", "GitFileStatus", "ThemeMode", "FontScale", "RepositoryComponentKind", "CoordinationEventType", "Project", "RepositoryComponent", "Task", "CoordinationEvent", "CoordinationRoom", "Environment", "AgentDefinition", "RuntimeBinding", "SurfaceTab", "SplitNode", "SurfaceLayout", "FileNode", "ChangeEntry", "Settings", "PersistedUI", "WorkbenchState"]
+ *   "domain": "workstudio",
+ *   "description": "OPAL WorkStudio 독립 앱의 Project→TASK→Agent 트리, PM Coordination Room, PM/Worker Workspace, terminal scrollback, read-only file tree 계약",
+ *   "exports": ["Boundary", "TaskStatus", "Pilot", "SplitDirection", "SurfaceKind", "SessionStatus", "GitFileStatus", "ThemeMode", "FontScale", "RepositoryComponentKind", "CoordinationEventType", "Project", "RepositoryComponent", "Task", "CoordinationEvent", "CoordinationRoom", "Environment", "AgentDefinition", "RuntimeBinding", "TerminalEntry", "SurfaceTab", "SplitNode", "SurfaceLayout", "FileLoadState", "FileErrorCode", "FileNode", "ChangeEntry", "Settings", "PersistedUI", "WorkStudioState", "WorkbenchState"]
  * }
  */
 
@@ -19,7 +19,7 @@ export type SessionStatus = "idle" | "running" | "completed" | "failed"; // AC-1
 export interface Project {
   id: string;
   name: string;
-  repositoryPath: string;
+  repositoryPath?: string;
   parentProjectId?: string; // 신규(v6.0) — 없으면 최상위. 정본 부모 하나만 가짐(다중 부모 없음)
   pmAgentId: string; // 신규(v6.0) — Project당 PM Agent 1명
   repositoryComponentIds: string[]; // 신규(v6.0) — 관리 대상 Repository Component
@@ -88,6 +88,9 @@ export interface AgentDefinition {
   source: "project" | "framework" | "user";
   path: string;
   status: "ready" | "idle" | "offline";
+  avatarLabel?: string;
+  colorToken?: string;
+  projectId?: string;
 }
 
 export interface RuntimeBinding {
@@ -97,6 +100,15 @@ export interface RuntimeBinding {
   mode: string;
   permission: "ask" | "allow";
   boundary: "simulated";
+}
+
+export interface TerminalEntry {
+  id: string;
+  kind: "input" | "output" | "system";
+  text: string;
+  timestamp: string;
+  cwd?: string;
+  exitCode?: number;
 }
 
 export interface SurfaceTab {
@@ -112,6 +124,7 @@ export interface SurfaceTab {
   closable: true;
   sessionStatus: SessionStatus;
   failureSummary?: string;
+  terminalEntries?: TerminalEntry[];
   messages?: { author: string; body: string }[];
 }
 
@@ -125,14 +138,21 @@ export interface SurfaceLayout {
 }
 
 export type GitFileStatus = "modified" | "untracked" | "ignored" | "clean"; // a·R-6 — 트리 행 우측 배지(M/U/⊘, clean은 배지 없음)
+export type FileLoadState = "loaded" | "empty" | "loading" | "error" | "too_large";
+export type FileErrorCode = "read_failed" | "too_large" | "outside_registered_root" | "not_supported";
 
 export interface FileNode {
   id: string;
   projectId: string;
+  sourceRootId: string;
   path: string;
+  absolutePath?: string;
   kind: "file" | "folder";
   children?: FileNode[];
   gitStatus: GitFileStatus;
+  loadState: FileLoadState;
+  errorCode?: FileErrorCode;
+  readonly: true;
 }
 
 export interface ChangeEntry {
@@ -160,7 +180,7 @@ export interface PersistedUI {
   activeRepositoryComponentId?: string; // 신규(v6.0) — Repository Component가 여럿인 Project의 현재 Files/Changes 대상(AW-AC-5)
 }
 
-// R-8/W-4: 화면 상태 스냅샷(PersistedUI)과 분리된 사용자 기본값. localStorage 키도 별도(opal.workbench.settings.v1).
+// R-8/W-4: 화면 상태 스냅샷(PersistedUI)과 분리된 사용자 기본값. localStorage 키도 별도(opal.workstudio.settings.v1).
 export type ThemeMode = "system" | "light" | "dark";
 export type FontScale = "sm" | "md" | "lg";
 
@@ -174,7 +194,7 @@ export interface Settings {
   treeIndentPx: number; // 12~16
 }
 
-export interface WorkbenchState {
+export interface WorkStudioState {
   activeProjectId: string;
   taskId?: string;
   projects: Project[];
@@ -200,3 +220,5 @@ export interface WorkbenchState {
   failureMode: boolean;
   settings: Settings;
 }
+
+export type WorkbenchState = WorkStudioState;

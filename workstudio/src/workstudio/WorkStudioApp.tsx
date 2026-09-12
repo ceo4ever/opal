@@ -1,10 +1,10 @@
 /**
  * @header {
- *   "module": "workbench-app",
+ *   "module": "workstudio-app",
  *   "layer": "component",
- *   "domain": "workbench",
- *   "description": "SCR-001~003·005~008을 한 데스크톱 shell에서 연결하는 순수 동적 Surface 탭 + split 인터랙티브 목업. 좌측 사이드바는 필터 없이 재귀 Project→진행 TASK→실행 Agent 트리를 표시하고, PROJECTS +는 TASK 추가를 연다. Project 생성/연결은 설정 > 프로젝트에서 처리하며, 중앙 Execution Workspace는 TASK별 PM Coordination Room·Sub PM Workspace·Worker Terminal·독립 Terminal을 구분한다 (wireframe.md v9.0)",
- *   "exports": ["WorkbenchApp"],
+ *   "domain": "workstudio",
+ *   "description": "OPAL WorkStudio 독립 앱 shell. WorkStudio v9 목업을 기반으로 재귀 Project→진행 TASK→실행 Agent 트리와 TASK별 PM Coordination Room·Sub PM Workspace·Worker Terminal·독립 Terminal을 렌더한다.",
+ *   "exports": ["WorkStudioApp"],
  *   "depends": ["mock-workbench-adapter", "shadcn-ui"]
  * }
  */
@@ -33,7 +33,8 @@ import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { collectLeaves, isDescendantProject, MockWorkbenchAdapter } from "./mock-adapter";
+import { collectLeaves, isDescendantProject, MockWorkbenchAdapter, WORKSTUDIO_STORAGE_KEY } from "./mock-adapter";
+import type { IpcErrorCode, ProjectDirectorySelection, ProjectFileNode } from "./ipc";
 import type {
   ChangeEntry, CoordinationEvent, CoordinationEventType, FileNode, FontScale, GitFileStatus, Pilot, Project, RuntimeBinding, SessionStatus, Settings, SplitDirection, SplitNode, SurfaceKind, SurfaceTab, Task, TaskStatus, ThemeMode, WorkbenchState,
 } from "./types";
@@ -145,7 +146,7 @@ function TaskBoard({ state, commit, onClose }: { state: WorkbenchState; commit: 
         </div>
         <div className="flex gap-2">
           <Button onClick={() => setOpen(true)}><Plus data-icon="inline-start" />New Task</Button>
-          <Button variant="outline" onClick={onClose}>Workbench로 돌아가기</Button>
+          <Button variant="outline" onClick={onClose}>WorkStudio로 돌아가기</Button>
         </div>
       </div>
       <div className="grid min-h-0 flex-1 grid-cols-4 gap-3">
@@ -186,6 +187,50 @@ function TaskBoard({ state, commit, onClose }: { state: WorkbenchState; commit: 
 function TaskParticipantChip({ project }: { project: Project | undefined }) {
   if (!project) return null;
   return <Badge variant="outline" className="rounded-none px-1 text-[10px] font-semibold">{project.name.toUpperCase()}</Badge>;
+}
+
+function FirstRunWelcome({ notice, onOpenExisting, onCreateNew, onOpenDemo }: {
+  notice: { kind: "success" | "info" | "error"; title: string; message: string } | null;
+  onOpenExisting: () => void;
+  onCreateNew: () => void;
+  onOpenDemo: () => void;
+}) {
+  return (
+    <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/95 p-8 backdrop-blur" role="dialog" aria-modal="true" aria-labelledby="first-run-title">
+      <section className="grid w-full max-w-4xl grid-cols-[1.15fr_0.85fr] overflow-hidden rounded-lg border bg-card shadow-2xl">
+        <div className="flex min-h-[420px] flex-col justify-between border-r p-8">
+          <div className="flex flex-col gap-5">
+            <div className="flex items-center gap-3">
+              <div className="flex size-10 items-center justify-center rounded-md border bg-muted"><Boxes className="size-5" /></div>
+              <div>
+                <p className="text-xs font-semibold uppercase text-muted-foreground">OPAL WorkStudio</p>
+                <h1 id="first-run-title" className="text-2xl font-semibold">OPAL WorkStudio에 오신 것을 환영합니다</h1>
+              </div>
+            </div>
+            <div className="grid gap-2">
+              <Button className="h-12 justify-start gap-3" onClick={onOpenExisting}><Folder className="size-4" />기존 프로젝트 열기</Button>
+              <Button className="h-12 justify-start gap-3" variant="outline" onClick={onCreateNew}><FolderPlus className="size-4" />새 프로젝트 만들기</Button>
+              <Button className="h-12 justify-start gap-3" variant="secondary" onClick={onOpenDemo}><Boxes className="size-4" />데모 둘러보기</Button>
+            </div>
+          </div>
+          {notice && (
+            <Alert variant={notice.kind === "error" ? "destructive" : "default"}>
+              <AlertTitle>{notice.title}</AlertTitle>
+              <AlertDescription className="flex flex-col gap-0.5">
+                {notice.message.split(" · ").map((part) => <span key={part}>{part}</span>)}
+              </AlertDescription>
+            </Alert>
+          )}
+        </div>
+        <aside className="flex min-h-[420px] flex-col gap-4 bg-muted/25 p-6">
+          <div>
+            <h2 className="text-sm font-semibold">최근 프로젝트</h2>
+            <p className="mt-3 rounded-md border border-dashed bg-background/60 p-4 text-sm text-muted-foreground">최근 프로젝트가 없습니다</p>
+          </div>
+        </aside>
+      </section>
+    </div>
+  );
 }
 
 const coordinationEventLabel: Record<CoordinationEventType, string> = {
@@ -362,25 +407,81 @@ function NewOrLinkProjectDialog({ state, commit, open, onOpenChange, parentProje
   );
 }
 
-function EventRow({ event }: { event: CoordinationEvent }) {
+const coordinationEventIcon: Record<CoordinationEventType, React.ReactElement> = {
+  instruction: <MessageSquarePlus className="size-3.5" />,
+  invitation: <MessageSquarePlus className="size-3.5" />,
+  assignment: <CircleDot className="size-3.5" />,
+  status: <CircleDot className="size-3.5" />,
+  coordination: <MessageSquarePlus className="size-3.5" />,
+  blocker: <CircleDot className="size-3.5" />,
+  decision: <CircleDot className="size-3.5" />,
+  result: <CircleDot className="size-3.5" />,
+  worker_spawn: <Bot className="size-3.5" />,
+};
+
+const speakerColorClass: Record<string, string> = {
+  "pm-slate": "border-slate-500/40 bg-slate-500/10",
+  "pm-cyan": "border-cyan-500/40 bg-cyan-500/10",
+  "pm-amber": "border-amber-500/40 bg-amber-500/10",
+  "pm-rose": "border-rose-500/40 bg-rose-500/10",
+  "pm-violet": "border-violet-500/40 bg-violet-500/10",
+  "pm-emerald": "border-emerald-500/40 bg-emerald-500/10",
+  "pm-sky": "border-sky-500/40 bg-sky-500/10",
+  "pm-orange": "border-orange-500/40 bg-orange-500/10",
+};
+
+function EventRow({ event, state }: { event: CoordinationEvent; state: WorkbenchState }) {
+  const isUserAuthored = event.pmAgentId === "user" || event.summary.startsWith("User →");
+  const actor = isUserAuthored
+    ? { name: "User", avatarLabel: "U", colorToken: "pm-violet" }
+    : state.agents.find((agent) => agent.id === event.pmAgentId);
+  const targetProject = state.projects.find((project) => project.id === event.projectId);
+  const target = targetProject ? state.agents.find((agent) => agent.id === targetProject.pmAgentId) : undefined;
   const isMessage = event.type === "instruction" || event.type === "coordination" || event.type === "status";
   if (isMessage) {
-    const isUser = event.pmAgentId === "user";
+    const isUser = isUserAuthored;
+    const colorToken = actor?.colorToken ?? "pm-slate";
     return (
       <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
-        <div className={`max-w-[78%] rounded-lg border px-3 py-2 text-xs ${isUser ? "bg-primary text-primary-foreground" : "bg-muted/40"}`}>
-          <p>{event.summary}</p>
-          <p className={`mt-1 text-[10px] ${isUser ? "text-primary-foreground/70" : "text-muted-foreground"}`}>{event.timestamp}</p>
+        <div
+          aria-label={`speaker ${actor?.name ?? event.pmAgentId}`}
+          data-speaker-color={`pm-color-${colorToken.replace(/^pm-/, "")}`}
+          className={`flex max-w-[82%] gap-2 rounded-lg border px-3 py-2 text-xs ${speakerColorClass[colorToken] ?? "bg-muted/40"} ${isUser ? "flex-row-reverse" : ""}`}
+        >
+          <Avatar className="size-7 border">
+            <AvatarFallback className="text-[10px]">{actor?.avatarLabel && actor.avatarLabel.length > 1 ? actor.avatarLabel : actor?.name?.slice(0, 2).toUpperCase() ?? "PM"}</AvatarFallback>
+          </Avatar>
+          <div className="min-w-0">
+            <div className={`mb-1 flex items-center gap-2 ${isUser ? "justify-end" : ""}`}>
+              <span className="font-semibold">{actor?.name ?? event.pmAgentId}</span>
+              <span className="text-[10px] text-muted-foreground">{event.timestamp}</span>
+            </div>
+            <p>{event.summary}</p>
+          </div>
         </div>
       </div>
     );
   }
+  const actorColor = actor?.colorToken ?? "pm-slate";
+  const targetColor = target?.colorToken ?? "pm-slate";
   return (
-    <div className="flex items-start gap-2 rounded border bg-background p-2 text-xs">
-      <Badge variant="outline" className="shrink-0">{coordinationEventLabel[event.type]}</Badge>
+    <div className="flex items-start gap-2 rounded border bg-background p-2 text-xs" data-testid={`coordination-event-${event.type}`}>
+      <Badge variant="outline" className="flex shrink-0 items-center gap-1">{coordinationEventIcon[event.type]}{coordinationEventLabel[event.type]}</Badge>
       <div className="min-w-0 flex-1">
         <p className="truncate">{event.summary}</p>
-        <p className="text-[10px] text-muted-foreground">{event.timestamp}</p>
+        <div className="mt-1 flex flex-wrap items-center gap-2 text-[10px] text-muted-foreground">
+          <span>행위자</span>
+          <span data-speaker-color={`pm-color-${actorColor.replace(/^pm-/, "")}`} className="rounded border px-1">{actor?.name ?? event.pmAgentId}</span>
+          <span>대상</span>
+          <span
+            aria-label={target?.name === "Blend PM" && event.type === "assignment" ? "speaker Blend PM" : undefined}
+            data-speaker-color={`pm-color-${targetColor.replace(/^pm-/, "")}`}
+            className="rounded border px-1"
+          >
+            {target?.name ?? targetProject?.name ?? event.projectId}
+          </span>
+          <span>{event.timestamp}</span>
+        </div>
       </div>
     </div>
   );
@@ -408,7 +509,7 @@ function PmCoordinationSurface({ state, task, onSelectProject, onAssign, onInstr
   const assignFirstInvited = () => { if (!draft.trim() || participants.length === 0) return; onAssign(participants[0].id, draft.trim(), "opd"); setDraft(""); };
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-3 overflow-auto p-4">
+    <div className="flex h-full min-h-0 flex-col gap-3 overflow-auto p-4" data-testid="pm-coordination-room">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <h3 className="text-sm font-semibold">PM Coordination Room</h3>
@@ -451,7 +552,7 @@ function PmCoordinationSurface({ state, task, onSelectProject, onAssign, onInstr
       <ScrollArea className="min-h-0 flex-1">
         <div className="flex flex-col gap-2 pr-2">
           {events.length === 0 && <p className="text-xs text-muted-foreground">아직 조율 기록이 없습니다.</p>}
-          {events.map((event) => <EventRow key={event.id} event={event} />)}
+          {events.map((event) => <EventRow key={event.id} event={event} state={state} />)}
         </div>
       </ScrollArea>
       {subResults.length > 0 && (
@@ -576,7 +677,7 @@ function AppearanceSection({ settings, updateSettings }: { settings: Settings; u
 }
 
 /** R-8: 새 Task 진입 시 기본값. 이미 저장된 PersistedUI의 현재 접힘 상태는 덮어쓰지 않는다. */
-function WorkbenchSection({ settings, updateSettings }: { settings: Settings; updateSettings: (partial: Partial<Settings>) => void }) {
+function WorkStudioSection({ settings, updateSettings }: { settings: Settings; updateSettings: (partial: Partial<Settings>) => void }) {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-2">
@@ -667,7 +768,7 @@ function ProjectSection({ state, commit }: { state: WorkbenchState; commit: (nex
                 {editingId === project.id ? (
                   <>
                     <Button size="sm" variant="outline" onClick={() => setEditingId(null)}>취소</Button>
-                    <Button size="sm" onClick={() => { commit(adapter.updateProjectPath(state, project.id, pathDraft.trim() || project.repositoryPath)); setEditingId(null); }}>저장</Button>
+                    <Button size="sm" onClick={() => { commit(adapter.updateProjectPath(state, project.id, pathDraft.trim() || project.repositoryPath || "")); setEditingId(null); }}>저장</Button>
                   </>
                 ) : parentEditingId === project.id ? (
                   <>
@@ -688,7 +789,7 @@ function ProjectSection({ state, commit }: { state: WorkbenchState; commit: (nex
                   </>
                 ) : (
                   <>
-                    <Button size="sm" variant="outline" onClick={() => { setEditingId(project.id); setPathDraft(project.repositoryPath); }}>경로 변경</Button>
+                    <Button size="sm" variant="outline" onClick={() => { setEditingId(project.id); setPathDraft(project.repositoryPath ?? ""); }}>경로 변경</Button>
                     <Button size="sm" variant="outline" onClick={() => setParentEditingId(project.id)}>부모 변경</Button>
                     <Button size="sm" variant="outline" onClick={() => setRemoveTargetId(project.id)}>제거</Button>
                   </>
@@ -739,7 +840,7 @@ type SettingsSectionKey = "agent" | "appearance" | "workbench" | "project" | "mo
 const settingsNavItems: { key: SettingsSectionKey; label: string }[] = [
   { key: "agent", label: "Agent" },
   { key: "appearance", label: "외관" },
-  { key: "workbench", label: "Workbench" },
+  { key: "workbench", label: "WorkStudio" },
   { key: "project", label: "프로젝트" },
   { key: "mock", label: "목업" },
 ];
@@ -753,7 +854,7 @@ function SettingsDialog({ open, onOpenChange, state, commit, updateSettings, onO
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex h-[75vh] max-w-4xl flex-col">
-        <DialogHeader><DialogTitle>설정</DialogTitle><DialogDescription>Agent·외관·Workbench·프로젝트·목업 설정을 확인하고 변경합니다.</DialogDescription></DialogHeader>
+        <DialogHeader><DialogTitle>설정</DialogTitle><DialogDescription>Agent·외관·WorkStudio·프로젝트·목업 설정을 확인하고 변경합니다.</DialogDescription></DialogHeader>
         <div className="flex min-h-0 flex-1 gap-4">
           <nav className="flex w-[140px] shrink-0 flex-col gap-1 border-r pr-2">
             {settingsNavItems.map((item) => (
@@ -763,7 +864,7 @@ function SettingsDialog({ open, onOpenChange, state, commit, updateSettings, onO
           <div className="min-h-0 min-w-0 flex-1 overflow-auto pr-1">
             {section === "agent" && <AgentSection state={state} commit={commit} onOpenSurface={onOpenSurface} />}
             {section === "appearance" && <AppearanceSection settings={state.settings} updateSettings={updateSettings} />}
-            {section === "workbench" && <WorkbenchSection settings={state.settings} updateSettings={updateSettings} />}
+            {section === "workbench" && <WorkStudioSection settings={state.settings} updateSettings={updateSettings} />}
             {section === "project" && <ProjectSection state={state} commit={commit} />}
             {section === "mock" && <MockSection onReset={onReset} />}
           </div>
@@ -786,16 +887,82 @@ function SidebarBottomBar({ onOpenSettings }: { onOpenSettings: () => void }) {
 
 function SurfaceView({ tab, onSend, onSpawnWorker, coordinationView }: { tab: SurfaceTab; onSend: (body: string) => void; onSpawnWorker: (tabId: string) => void; coordinationView?: React.ReactNode }) {
   const [draft, setDraft] = useState("");
+  const [historyIndex, setHistoryIndex] = useState<number | null>(null);
   const send = () => { if (!draft.trim()) return; onSend(draft.trim()); setDraft(""); };
   if (tab.kind === "coordination") return coordinationView ?? <div className="p-4 text-sm text-muted-foreground">조율 TASK를 선택하세요.</div>;
-  if (tab.kind === "terminal" || tab.kind === "agent_cli") {
-    const isAgentWorkspace = tab.kind === "agent_cli" && tab.readOnly && tab.title.includes("Workspace");
+  if (tab.kind === "terminal") {
+    const cwd = "/workspace";
+    const shellName = "zsh";
+    const history = (tab.terminalEntries ?? []).filter((entry) => entry.kind === "input").map((entry) => entry.text);
+    const handleTerminalKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+      if (event.key === "Enter") {
+        send();
+        setHistoryIndex(null);
+        return;
+      }
+      if (event.key === "ArrowUp") {
+        event.preventDefault();
+        if (history.length === 0) return;
+        const nextIndex = historyIndex === null ? history.length - 1 : Math.max(0, historyIndex - 1);
+        setHistoryIndex(nextIndex);
+        setDraft(history[nextIndex] ?? "");
+      }
+      if (event.key === "ArrowDown") {
+        event.preventDefault();
+        if (history.length === 0 || historyIndex === null) return;
+        const nextIndex = historyIndex + 1;
+        if (nextIndex >= history.length) {
+          setHistoryIndex(null);
+          setDraft("");
+        } else {
+          setHistoryIndex(nextIndex);
+          setDraft(history[nextIndex] ?? "");
+        }
+      }
+    };
+    return (
+      <div className="flex h-full flex-col bg-[#050507] p-3 font-mono text-xs text-zinc-100">
+        <div className="mb-2 flex items-center justify-between gap-2 border-b border-zinc-800 pb-2">
+          <div className="flex min-w-0 items-center gap-2">
+            <TerminalIcon className="size-3.5 text-emerald-300" />
+            <span className="font-sans text-[11px] font-medium text-zinc-300">독립 Terminal</span>
+            <span aria-label="shell name" className="rounded bg-zinc-900 px-1.5 py-0.5 text-[10px] text-zinc-400">{shellName}</span>
+            <span aria-label="current working directory" className="truncate rounded bg-zinc-900 px-1.5 py-0.5 text-[10px] text-zinc-400">{cwd}</span>
+          </div>
+          <BoundaryBadge type="simulated" />
+        </div>
+        <ScrollArea className="min-h-0 flex-1" data-testid="terminal-scrollback">
+          <div className="flex flex-col gap-1 pr-2">
+            {(tab.terminalEntries ?? []).map((entry) => (
+              <div key={entry.id} className={entry.kind === "output" ? "text-zinc-300" : entry.kind === "system" ? "text-zinc-500" : "text-emerald-200"}>
+                {entry.kind === "input" ? `$ ${entry.text}` : entry.text}
+              </div>
+            ))}
+          </div>
+        </ScrollArea>
+        <div className="mt-2 flex items-center gap-2 border-t border-zinc-800 pt-2">
+          <span className="text-emerald-300">$</span>
+          <Input
+            aria-label="독립 Terminal command"
+            value={draft}
+            onChange={(event) => { setDraft(event.target.value); setHistoryIndex(null); }}
+            onKeyDown={handleTerminalKeyDown}
+            className="h-8 border-zinc-800 bg-transparent font-mono text-xs text-zinc-100"
+            autoCapitalize="off"
+            spellCheck={false}
+          />
+        </div>
+      </div>
+    );
+  }
+  if (tab.kind === "agent_cli") {
+    const isAgentWorkspace = tab.title.includes("Workspace");
     return (
       <div className="flex h-full flex-col gap-2 p-3">
         <div className="flex items-center justify-between gap-2">
-          <span className="text-xs font-medium">{tab.title}{tab.kind === "terminal" ? " · 독립 Terminal" : " · Agent Terminal"}</span>
+          <span className="text-xs font-medium">{tab.title} · Agent Terminal</span>
           <div className="flex items-center gap-2">
-            {tab.readOnly && <Badge variant="outline">관찰 전용 Terminal</Badge>}
+            <Badge variant="outline">관찰 전용 Terminal</Badge>
             <BoundaryBadge type="simulated" />
           </div>
         </div>
@@ -805,16 +972,9 @@ function SurfaceView({ tab, onSend, onSpawnWorker, coordinationView }: { tab: Su
             {(tab.messages ?? []).length === 0 && <span className="text-muted-foreground">아직 출력이 없습니다.</span>}
           </div>
         </ScrollArea>
-        {tab.readOnly ? (
-          <div className="flex justify-end">
-            {isAgentWorkspace && <Button size="sm" variant="outline" onClick={() => onSpawnWorker(tab.id)}>Worker 호출 시뮬레이션</Button>}
-          </div>
-        ) : (
-          <div className="flex gap-2">
-            <Input aria-label={`${tab.title} 입력`} value={draft} onChange={(e) => setDraft(e.target.value)} placeholder={tab.kind === "terminal" ? "명령을 입력하세요" : "메시지를 입력하세요"} onKeyDown={(e) => { if (e.key === "Enter") send(); }} />
-            <Button aria-label={`${tab.title} 전송`} onClick={send}>Send</Button>
-          </div>
-        )}
+        <div className="flex justify-end">
+          {isAgentWorkspace && <Button size="sm" variant="outline" onClick={() => onSpawnWorker(tab.id)}>Worker 호출 시뮬레이션</Button>}
+        </div>
       </div>
     );
   }
@@ -976,9 +1136,9 @@ function GitStatusBadge({ status }: { status: GitFileStatus }) {
 }
 
 /** R-6·a: 셰브론/아이콘/라벨/배지/삭제 한 줄. FileTree 재귀는 이 행의 형제로 렌더된다. */
-function FileTreeRow({ node, depth, expanded, indentPx, onToggleExpand, onSelectDiff, onDelete }: {
+function FileTreeRow({ node, depth, expanded, indentPx, onToggleExpand, onSelectDiff }: {
   node: FileNode; depth: number; expanded: boolean; indentPx: number;
-  onToggleExpand: (node: FileNode) => void; onSelectDiff: (node: FileNode) => void; onDelete: (node: FileNode) => void;
+  onToggleExpand: (node: FileNode) => void; onSelectDiff: (node: FileNode) => void;
 }) {
   const isFolder = node.kind === "folder";
   const label = node.path.split("/").pop();
@@ -999,25 +1159,29 @@ function FileTreeRow({ node, depth, expanded, indentPx, onToggleExpand, onSelect
         {label}
       </button>
       <GitStatusBadge status={node.gitStatus} />
-      <button aria-label={`${node.path} 삭제`} className="shrink-0 opacity-0 group-hover:opacity-100" onClick={() => onDelete(node)}><Trash2 className="size-3" /></button>
+      {node.loadState === "error" && <span className="text-[10px] text-destructive">{node.errorCode === "read_failed" ? "읽기 실패" : node.errorCode}</span>}
+      {node.loadState === "too_large" && <span className="text-[10px] text-amber-500">too large</span>}
     </div>
   );
 }
 
 /** R-6: 노드 wrapper(flex-col) 안에서 행(FileTreeRow)과 자식 재귀(FileTree)가 형제로 세로로 쌓인다. */
-function FileTree({ nodes, expandedFolderIds, indentPx, onToggleExpand, onSelectDiff, onDelete, depth = 0 }: {
+function FileTree({ nodes, expandedFolderIds, indentPx, onToggleExpand, onSelectDiff, depth = 0, ariaLabel }: {
   nodes: FileNode[]; expandedFolderIds: string[]; indentPx: number;
-  onToggleExpand: (node: FileNode) => void; onSelectDiff: (node: FileNode) => void; onDelete: (node: FileNode) => void; depth?: number;
+  onToggleExpand: (node: FileNode) => void; onSelectDiff: (node: FileNode) => void; depth?: number; ariaLabel?: string;
 }) {
   return (
-    <div className="flex flex-col gap-0.5">
+    <div className="flex flex-col gap-0.5" role={depth === 0 ? "tree" : undefined} aria-label={depth === 0 ? ariaLabel : undefined}>
       {nodes.map((node) => {
         const expanded = expandedFolderIds.includes(node.id);
         return (
-          <div key={node.id} className="flex flex-col">
-            <FileTreeRow node={node} depth={depth} expanded={expanded} indentPx={indentPx} onToggleExpand={onToggleExpand} onSelectDiff={onSelectDiff} onDelete={onDelete} />
+          <div key={node.id} className="flex flex-col" role={depth === 0 ? "treeitem" : undefined} aria-label={depth === 0 ? node.path : undefined}>
+            <FileTreeRow node={node} depth={depth} expanded={expanded} indentPx={indentPx} onToggleExpand={onToggleExpand} onSelectDiff={onSelectDiff} />
+            {expanded && node.kind === "folder" && node.loadState === "empty" && <div className="py-1 text-xs text-muted-foreground" style={{ paddingLeft: (depth + 1) * indentPx }}>빈 폴더</div>}
+            {expanded && node.kind === "folder" && node.loadState === "error" && <div className="py-1 text-xs text-destructive" style={{ paddingLeft: (depth + 1) * indentPx }}>{node.errorCode === "read_failed" ? "권한이 없습니다." : node.errorCode}</div>}
+            {expanded && node.kind === "folder" && node.loadState === "too_large" && <div className="py-1 text-xs text-amber-500" style={{ paddingLeft: (depth + 1) * indentPx }}>항목이 너무 많습니다.</div>}
             {expanded && node.children && (
-              <FileTree nodes={node.children} expandedFolderIds={expandedFolderIds} indentPx={indentPx} onToggleExpand={onToggleExpand} onSelectDiff={onSelectDiff} onDelete={onDelete} depth={depth + 1} />
+              <FileTree nodes={node.children} expandedFolderIds={expandedFolderIds} indentPx={indentPx} onToggleExpand={onToggleExpand} onSelectDiff={onSelectDiff} depth={depth + 1} />
             )}
           </div>
         );
@@ -1039,6 +1203,40 @@ function DiffStatLabel({ linesAdded, linesRemoved }: { linesAdded: number; lines
 function dirOf(path: string): string {
   const idx = path.lastIndexOf("/");
   return idx === -1 ? "(root)" : path.slice(0, idx);
+}
+
+function ipcErrorMessage(code: IpcErrorCode, fallback: string): string {
+  if (code === "cancelled") return "Project 선택이 취소되었습니다.";
+  if (code === "duplicate_path") return fallback || "이미 등록된 Project입니다.";
+  if (code === "invalid_path") return fallback || "선택한 경로를 Project로 등록할 수 없습니다.";
+  return fallback || "Project 등록 중 오류가 발생했습니다.";
+}
+
+function projectNameFromPath(path: string): string {
+  return path.split("/").filter(Boolean).pop() ?? "Project";
+}
+
+function fileNodeFromIpc(input: ProjectFileNode, projectId: string, sourceRootId: string): FileNode {
+  return {
+    id: `${sourceRootId}:${input.path}`,
+    projectId,
+    sourceRootId,
+    path: input.path,
+    absolutePath: input.path,
+    kind: input.kind,
+    children: input.kind === "folder" ? undefined : undefined,
+    gitStatus: "clean",
+    loadState: input.kind === "folder" && input.hasChildren === false ? "empty" : "loaded",
+    readonly: true,
+  };
+}
+
+function setNodeChildren(nodes: FileNode[], nodeId: string, children: FileNode[], loadState: FileNode["loadState"], errorCode?: FileNode["errorCode"]): FileNode[] {
+  return nodes.map((node) => {
+    if (node.id === nodeId) return { ...node, children, loadState, errorCode };
+    if (node.children) return { ...node, children: setNodeChildren(node.children, nodeId, children, loadState, errorCode) };
+    return node;
+  });
 }
 
 /** W-4: 디렉터리별 그룹 + 건수 배지, `변경 사항 N`/`추적되지 않은 파일 N` 2섹션. */
@@ -1092,16 +1290,19 @@ function ChangeGroupList({ changes, collapsedGroups, onToggleGroup, onSelectDiff
   );
 }
 
-export function WorkbenchApp() {
-  const [{ state: initialState, recovered }] = useState(() => adapter.load());
+export function WorkStudioApp() {
+  const [{ state: initialState, recovered, shouldShowFirstRun }] = useState(() => {
+    const hasStoredState = localStorage.getItem(WORKSTUDIO_STORAGE_KEY) !== null;
+    return { ...adapter.load(), shouldShowFirstRun: !hasStoredState };
+  });
   const [state, setState] = useState<WorkbenchState>(initialState);
+  const [firstRunOpen, setFirstRunOpen] = useState(shouldShowFirstRun);
   const [board, setBoard] = useState(false);
   const [newTaskOpen, setNewTaskOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [recoveryAlert, setRecoveryAlert] = useState(recovered);
-  const [newFileOpen, setNewFileOpen] = useState(false);
-  const [newFileName, setNewFileName] = useState("");
-  const [deleteTarget, setDeleteTarget] = useState<FileNode | null>(null);
+  const [projectAddNotice, setProjectAddNotice] = useState<{ kind: "success" | "info" | "error"; title: string; message: string } | null>(null);
+  const [ipcFileNodesByScope, setIpcFileNodesByScope] = useState<Record<string, FileNode[]>>({});
   const [commitMessage, setCommitMessage] = useState("");
   const [collapsedChangeGroups, setCollapsedChangeGroups] = useState<Set<string>>(new Set());
   const sidebarPanelRef = useRef<ImperativePanelHandle>(null);
@@ -1113,12 +1314,29 @@ export function WorkbenchApp() {
   const task = state.tasks.find((item) => item.id === state.taskId);
   const activeProject = state.projects.find((p) => p.id === state.activeProjectId);
   const activeRepositoryComponents = state.repositoryComponents.filter((component) => activeProject?.repositoryComponentIds.includes(component.id));
+  const activeRepositoryComponent = state.repositoryComponents.find((component) => component.id === state.activeRepositoryComponentId);
   const layout = task ? (state.surfaceLayoutByTask[task.id] ?? { taskId: task.id, root: { type: "leaf" as const, paneId: `pane_${task.id}`, tabIds: [], activeTabId: "" } }) : undefined;
   const tabsById = useMemo(() => new Map(state.surfaceTabs.filter((tab) => tab.taskId === task?.id).map((tab) => [tab.id, tab])), [state.surfaceTabs, task?.id]);
   const hasSurfaces = layout ? collectLeaves(layout.root).some((leaf) => leaf.tabIds.length > 0) : false;
   const activeRepoId = state.activeRepositoryComponentId ?? (activeRepositoryComponents.length === 1 ? activeRepositoryComponents[0].id : undefined);
   const filesScopeKey = activeRepoId ?? state.activeProjectId;
-  const files = state.fileNodesByProject[filesScopeKey] ?? state.fileNodesByProject[state.activeProjectId] ?? [];
+  const scopeRootPath = activeRepositoryComponent?.path ?? activeProject?.repositoryPath;
+  const childProjectRoots = activeProject && !activeProject.repositoryPath
+    ? state.projects.filter((project) => project.parentProjectId === activeProject.id && project.repositoryPath).map((project) => ({
+        id: `virtual-root-${project.id}`,
+        projectId: project.id,
+        sourceRootId: project.id,
+        path: `${project.name} Project root`,
+        absolutePath: project.repositoryPath,
+        kind: "folder" as const,
+        gitStatus: "clean" as const,
+        loadState: "loaded" as const,
+        readonly: true as const,
+      }))
+    : [];
+  const files = childProjectRoots.length > 0
+    ? (ipcFileNodesByScope[filesScopeKey] ?? childProjectRoots)
+    : (ipcFileNodesByScope[filesScopeKey] ?? state.fileNodesByProject[filesScopeKey] ?? state.fileNodesByProject[state.activeProjectId] ?? []);
   const changes = state.changesByProject[filesScopeKey] ?? state.changesByProject[state.activeProjectId] ?? [];
 
   useEffect(() => {
@@ -1126,7 +1344,115 @@ export function WorkbenchApp() {
     return () => clearInterval(timer);
   }, []);
 
+  useEffect(() => {
+    const api = globalThis.opalWorkStudio ?? window.opalWorkStudio;
+    if (!api?.project?.listFiles || !scopeRootPath || activeProject?.id === "project_opal" || childProjectRoots.length > 0 || ipcFileNodesByScope[filesScopeKey]) return;
+    let cancelled = false;
+    void Promise.resolve(api.project.listFiles({ rootPath: scopeRootPath })).then((result) => {
+      if (cancelled) return;
+      if (!result) return;
+      if (result.ok) {
+        setIpcFileNodesByScope((current) => ({
+          ...current,
+          [filesScopeKey]: result.value.map((node) => fileNodeFromIpc(node, state.activeProjectId, filesScopeKey)),
+        }));
+        return;
+      }
+      setIpcFileNodesByScope((current) => ({
+        ...current,
+        [filesScopeKey]: [{
+          id: `${filesScopeKey}:error`,
+          projectId: state.activeProjectId,
+          sourceRootId: filesScopeKey,
+          path: result.code === "too_large" ? "항목이 너무 많습니다." : result.message,
+          kind: "folder",
+          gitStatus: "clean",
+          loadState: result.code === "too_large" ? "too_large" : "error",
+          errorCode: result.code === "too_large" ? "too_large" : "read_failed",
+          readonly: true,
+        }],
+      }));
+    });
+    return () => { cancelled = true; };
+  }, [activeProject?.id, childProjectRoots.length, filesScopeKey, ipcFileNodesByScope, scopeRootPath, state.activeProjectId]);
+
   const openSurface = (kind: SurfaceKind, title: string, agentId?: string) => { if (task) commit(adapter.openSurface(state, task.id, kind, title, agentId)); };
+
+  const registerDirectorySelection = (current: WorkbenchState, selection: ProjectDirectorySelection): WorkbenchState => {
+    const path = selection.realPath ?? selection.path;
+    const normalizedPath = path.trim().replace(/\\/g, "/").replace(/\/+/g, "/").replace(/\/$/, "");
+    if (!normalizedPath || current.projects.some((project) => project.repositoryPath === normalizedPath)) return current;
+    const stamp = Date.now();
+    const projectId = `project_ipc_${stamp}`;
+    const pmAgentId = selection.isOpalProject ? `pm_ipc_${stamp}` : "opal-pm";
+    const project: Project = {
+      id: projectId,
+      name: selection.name || projectNameFromPath(normalizedPath),
+      repositoryPath: normalizedPath,
+      pmAgentId,
+      repositoryComponentIds: [],
+    };
+    const pmAgent = selection.isOpalProject ? [{
+      id: pmAgentId,
+      name: selection.pmName || `${project.name} PM`,
+      role: "Project PM",
+      source: "project" as const,
+      path: selection.agentPath || `${normalizedPath}/.opal/AGENT.md`,
+      status: "ready" as const,
+      avatarLabel: (selection.pmName || project.name).slice(0, 2).toUpperCase(),
+      colorToken: "pm-emerald",
+      projectId,
+    }] : [];
+    return {
+      ...current,
+      activeProjectId: projectId,
+      taskId: undefined,
+      projects: [...current.projects, project],
+      agents: [...current.agents, ...pmAgent],
+      expandedProjectIds: [...new Set([...current.expandedProjectIds, projectId])],
+      fileNodesByProject: { ...current.fileNodesByProject, [projectId]: [] },
+      changesByProject: { ...current.changesByProject, [projectId]: [] },
+    };
+  };
+
+  const handleProjectAdd = async (): Promise<boolean> => {
+    const api = globalThis.opalWorkStudio ?? window.opalWorkStudio;
+    if (!api?.project?.chooseDirectory) {
+      setSettingsOpen(true);
+      setProjectAddNotice({ kind: "info", title: "Project 추가", message: "native folder picker가 없어 설정의 Project 생성/연결 화면을 열었습니다." });
+      return false;
+    }
+    const chosen = await api.project.chooseDirectory();
+    if (!chosen.ok) {
+      setProjectAddNotice({ kind: chosen.code === "cancelled" ? "info" : "error", title: "Project 추가", message: ipcErrorMessage(chosen.code, chosen.message) });
+      return false;
+    }
+    const registered = api.project.registerFromSelection ? await api.project.registerFromSelection(chosen.value) : chosen;
+    if (!registered.ok) {
+      setProjectAddNotice({ kind: "error", title: "Project 추가", message: ipcErrorMessage(registered.code, registered.message) });
+      return false;
+    }
+    const next = registerDirectorySelection(state, registered.value);
+    commit(next);
+    setProjectAddNotice({
+      kind: "success",
+      title: registered.value.isOpalProject ? "OPAL Project 감지" : "Project 등록 완료",
+      message: registered.value.isOpalProject
+        ? `${registered.value.name} · ${registered.value.pmName ?? `${registered.value.name} PM`}`
+        : `${registered.value.name} Project가 추가되었습니다.`,
+    });
+    return true;
+  };
+
+  const enterFirstRunProjectFlow = async () => {
+    const completed = await handleProjectAdd();
+    if (completed) setFirstRunOpen(false);
+  };
+
+  const enterDemoWorkspace = () => {
+    commit(state);
+    setFirstRunOpen(false);
+  };
 
   /** R-10 (W-1): 탭 바 드롭 — 같은 pane이면 순서 변경, 다른 pane이면 삽입 인덱스로 탭을 편입한다. */
   const handleTabBarDrop = (targetPaneId: string, event: React.DragEvent, index: number) => {
@@ -1147,6 +1473,62 @@ export function WorkbenchApp() {
     const result = computeEdge(event, rect);
     if (result === "center") return;
     commit(adapter.splitSurface(state, task.id, tabId, targetPaneId, result.direction, result.edge));
+  };
+
+  const handleSurfaceSend = (tabId: string, body: string) => {
+    const targetTab = state.surfaceTabs.find((tab) => tab.id === tabId);
+    if (targetTab?.kind !== "terminal") {
+      commit(adapter.sendSurfaceMessage(state, tabId, body));
+      return;
+    }
+    const cwd = "/workspace/ai-framework";
+    const stamp = Date.now();
+    const output = body.trim() === "pwd" ? cwd : body.trim() === "ls" ? "workstudio  dashboard  docs  tasks" : `mock: ${body.trim()} [Simulated]`;
+    commit({
+      ...state,
+      surfaceTabs: state.surfaceTabs.map((tab) => tab.id === tabId ? {
+        ...tab,
+        sessionStatus: "completed",
+        terminalEntries: [
+          ...(tab.terminalEntries ?? []),
+          { id: `term_${stamp}_input`, kind: "input" as const, text: body.trim(), timestamp: new Date(stamp).toISOString(), cwd },
+          { id: `term_${stamp}_output`, kind: "output" as const, text: output, timestamp: new Date(stamp + 1).toISOString(), cwd, exitCode: 0 },
+        ].slice(-100),
+      } : tab),
+    });
+  };
+
+  const handleToggleFileNode = (node: FileNode) => {
+    const isExpanded = state.expandedFolderIds.includes(node.id);
+    commit(adapter.toggleFolderExpanded(state, node.id));
+    if (isExpanded || node.kind !== "folder") return;
+    const api = globalThis.opalWorkStudio ?? window.opalWorkStudio;
+    if (!api?.project?.listFiles) return;
+    const rootPath = node.absolutePath && node.id.startsWith("virtual-root-") ? node.absolutePath : scopeRootPath;
+    if (!rootPath) return;
+    void Promise.resolve(api.project.listFiles({ rootPath, relativePath: node.id.startsWith("virtual-root-") ? undefined : node.path, path: node.id.startsWith("virtual-root-") ? undefined : node.path })).then((result) => {
+      if (!result) return;
+      setIpcFileNodesByScope((current) => {
+        const currentNodes = node.id.startsWith("virtual-root-") ? files : (current[filesScopeKey] ?? files);
+        if (result.ok) {
+          const children = result.value.map((child) => fileNodeFromIpc(child, node.projectId, node.sourceRootId));
+          return {
+            ...current,
+            [filesScopeKey]: setNodeChildren(currentNodes, node.id, children, children.length === 0 ? "empty" : "loaded"),
+          };
+        }
+        return {
+          ...current,
+          [filesScopeKey]: setNodeChildren(
+            currentNodes,
+            node.id,
+            [],
+            result.code === "too_large" ? "too_large" : "error",
+            result.code === "too_large" ? "too_large" : "read_failed",
+          ),
+        };
+      });
+    });
   };
 
   const toggleChangeGroup = (key: string) => {
@@ -1196,8 +1578,19 @@ export function WorkbenchApp() {
             </div>
             <div className="flex items-center justify-between">
               <p className="text-xs font-semibold text-muted-foreground">PROJECTS</p>
-              <Button aria-label="TASK 추가" title="TASK 추가" size="sm" variant="ghost" onClick={() => setNewTaskOpen(true)}><Plus className="size-3.5" /></Button>
+              <div className="flex items-center gap-1">
+                <Button aria-label="Project 추가" title="Project 추가" size="sm" variant="ghost" onClick={() => void handleProjectAdd()}><FolderPlus className="size-3.5" /></Button>
+                <Button aria-label="TASK 추가" title="TASK 추가" size="sm" variant="ghost" onClick={() => setNewTaskOpen(true)}><Plus className="size-3.5" /></Button>
+              </div>
             </div>
+            {projectAddNotice && !firstRunOpen && (
+              <Alert variant={projectAddNotice.kind === "error" ? "destructive" : "default"} className="mt-2 p-2 text-xs">
+                <AlertTitle className="text-xs">{projectAddNotice.title}</AlertTitle>
+                <AlertDescription className="flex flex-col gap-0.5">
+                  {projectAddNotice.message.split(" · ").map((part) => <span key={part}>{part}</span>)}
+                </AlertDescription>
+              </Alert>
+            )}
             <ScrollArea className="mt-1 min-h-0 flex-1">
               <ProjectTree
                 state={state}
@@ -1241,7 +1634,7 @@ export function WorkbenchApp() {
                       tabsById={tabsById}
                       onFocus={(paneId, tabId) => commit(adapter.focusSurfaceTab(state, task.id, paneId, tabId))}
                       onClose={(tabId) => commit(adapter.closeSurfaceTab(state, task.id, tabId))}
-                      onSend={(tabId, body) => commit(adapter.sendSurfaceMessage(state, tabId, body))}
+                      onSend={handleSurfaceSend}
                       onSpawnWorker={(tabId) => commit(adapter.spawnWorkerFromWorkspace(state, tabId))}
                       onTabBarDrop={handleTabBarDrop}
                       onBodyDrop={handleBodyDrop}
@@ -1293,23 +1686,14 @@ export function WorkbenchApp() {
             )}
             {state.railTab === "files" ? (
               <div className="flex min-h-0 flex-1 flex-col p-2">
-                <div className="mb-2 flex gap-1">
-                  <Button size="sm" variant="outline" onClick={() => setNewFileOpen(true)}><FolderPlus className="size-3.5" data-icon="inline-start" />새 파일</Button>
-                </div>
-                {newFileOpen && (
-                  <div className="mb-2 flex gap-1">
-                    <Input aria-label="새 파일 이름" value={newFileName} onChange={(e) => setNewFileName(e.target.value)} placeholder="파일 이름" />
-                    <Button size="sm" onClick={() => { if (newFileName.trim()) { commit(adapter.createFileNode(state, filesScopeKey, undefined, newFileName.trim(), "file")); setNewFileName(""); setNewFileOpen(false); } }}>추가</Button>
-                  </div>
-                )}
                 <ScrollArea className="min-h-0 flex-1">
                   <FileTree
+                    ariaLabel={`Files: ${activeProject?.name ?? "Project"}`}
                     nodes={files}
                     expandedFolderIds={state.expandedFolderIds}
                     indentPx={state.settings.treeIndentPx}
-                    onToggleExpand={(node) => commit(adapter.toggleFolderExpanded(state, node.id))}
+                    onToggleExpand={handleToggleFileNode}
                     onSelectDiff={(node) => task && commit(adapter.openDiffSurface(state, task.id, { id: node.id, projectId: state.activeProjectId, path: node.path, status: "unstaged", diffPreview: `${node.path} 변경 내용 mock`, linesAdded: 0, linesRemoved: 0 }))}
-                    onDelete={(node) => setDeleteTarget(node)}
                   />
                 </ScrollArea>
               </div>
@@ -1343,12 +1727,14 @@ export function WorkbenchApp() {
         onOpenSurface={(agentId, agentName) => { setSettingsOpen(false); openSurface("agent_cli", `${agentName} Agent Terminal`, agentId); }}
         onReset={() => { const { state: fresh } = adapter.resetMockState(); setState(fresh); setSettingsOpen(false); }}
       />
-      <AlertDialog open={Boolean(deleteTarget)} onOpenChange={(open) => !open && setDeleteTarget(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader><AlertDialogTitle>파일을 삭제할까요?</AlertDialogTitle><AlertDialogDescription>{deleteTarget?.path}</AlertDialogDescription></AlertDialogHeader>
-          <AlertDialogFooter><AlertDialogCancel>취소</AlertDialogCancel><AlertDialogAction onClick={() => { if (deleteTarget) commit(adapter.deleteFileNode(state, filesScopeKey, deleteTarget.id)); setDeleteTarget(null); }}>삭제</AlertDialogAction></AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {firstRunOpen && (
+        <FirstRunWelcome
+          notice={projectAddNotice}
+          onOpenExisting={() => void enterFirstRunProjectFlow()}
+          onCreateNew={() => void enterFirstRunProjectFlow()}
+          onOpenDemo={enterDemoWorkspace}
+        />
+      )}
     </main>
   );
 }

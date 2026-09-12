@@ -1,16 +1,16 @@
 /**
  * @header {
- *   "module": "workbench-app-test",
+ *   "module": "workstudio-app-test",
  *   "layer": "test",
- *   "domain": "workbench",
- *   "description": "재귀 Project→TASK→실행 Agent 트리와 필터 없는 진행 TASK 탐색, TASK 빠른 추가, Execution Workspace, 동적 Surface 탭·split·설정 Project 생성/연결, TASK별 PM Coordination Room을 검증하는 wireframe v9 DOM 테스트",
+ *   "domain": "workstudio",
+ *   "description": "OPAL WorkStudio 독립 앱의 재귀 Project→TASK→실행 Agent 트리와 Execution Workspace, 동적 Surface 탭·split, 설정 Project 생성/연결, TASK별 PM Coordination Room을 검증하는 DOM 테스트",
  *   "exports": []
  * }
  */
 
 import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { WorkbenchApp } from "./WorkbenchApp";
+import { WorkStudioApp } from "./WorkStudioApp";
 
 function dragTransfer() {
   const store = new Map<string, string>();
@@ -20,12 +20,12 @@ function dragTransfer() {
   } as unknown as DataTransfer;
 }
 
-describe("Desktop Workbench mock flow (wireframe v9.0)", () => {
+describe("OPAL WorkStudio mock flow (wireframe v9.0)", () => {
   beforeEach(() => localStorage.clear());
   afterEach(() => { cleanup(); vi.useRealTimers(); });
 
   it("switches Project without TASK filters and hides done TASK nodes only from the tree (AW-AC-14)", async () => {
-    render(<WorkbenchApp />);
+    render(<WorkStudioApp />);
 
     expect(await screen.findByRole("treeitem", { name: "TASK 빈 Task 상태" })).toBeInTheDocument();
     expect(screen.queryByRole("combobox", { name: "상태 필터" })).not.toBeInTheDocument();
@@ -42,7 +42,7 @@ describe("Desktop Workbench mock flow (wireframe v9.0)", () => {
   });
 
   it("adds, focuses, and closes dynamic Surface tabs with no pinned system tabs (AC-6)", async () => {
-    render(<WorkbenchApp />);
+    render(<WorkStudioApp />);
 
     // seeded task already has Developer Agent Terminal / 독립 Terminal / Browser dynamic tabs
     expect(screen.getByText("Execution Workspace")).toBeInTheDocument();
@@ -67,7 +67,7 @@ describe("Desktop Workbench mock flow (wireframe v9.0)", () => {
   });
 
   it("splits a Surface tab into a new pane by dropping on the pane body edge (AC-14, R-10)", async () => {
-    render(<WorkbenchApp />);
+    render(<WorkStudioApp />);
     const terminalTab = screen.getByRole("tab", { name: /독립 Terminal/ });
     const targetTab = screen.getByRole("tab", { name: /Developer/ });
     const targetPane = targetTab.closest('[data-testid="surface-pane"]') as HTMLElement;
@@ -105,7 +105,7 @@ describe("Desktop Workbench mock flow (wireframe v9.0)", () => {
   });
 
   it("moves a tab into a different pane by dropping on that pane's tab bar (AC-14 regression, R-10/W-1)", async () => {
-    render(<WorkbenchApp />);
+    render(<WorkStudioApp />);
     const developerTab = screen.getByRole("tab", { name: /Developer/ });
     const terminalTab = screen.getByRole("tab", { name: /독립 Terminal/ });
     const developerPane = developerTab.closest('[data-testid="surface-pane"]') as HTMLElement;
@@ -122,7 +122,7 @@ describe("Desktop Workbench mock flow (wireframe v9.0)", () => {
   });
 
   it("keeps the Surface 추가 button inside the tab bar without breaking drop-index calculation (W-1/R-11)", async () => {
-    render(<WorkbenchApp />);
+    render(<WorkStudioApp />);
     const developerTab = screen.getByRole("tab", { name: /Developer/ });
     const terminalTab = screen.getByRole("tab", { name: /독립 Terminal/ });
     const developerPane = developerTab.closest('[data-testid="surface-pane"]') as HTMLElement;
@@ -147,7 +147,7 @@ describe("Desktop Workbench mock flow (wireframe v9.0)", () => {
   });
 
   it("opens the Task creation dialog directly from the TASKS header + without going through the Board (W-2/R-12)", async () => {
-    render(<WorkbenchApp />);
+    render(<WorkStudioApp />);
 
     expect(screen.queryByRole("button", { name: /^New Task$/ })).not.toBeInTheDocument();
 
@@ -167,7 +167,7 @@ describe("Desktop Workbench mock flow (wireframe v9.0)", () => {
 
   it("shows session status on the tab itself: running spinner, completed dot, failed badge (AC-16)", async () => {
     vi.useFakeTimers();
-    render(<WorkbenchApp />);
+    render(<WorkStudioApp />);
 
     const developerTab = screen.getByRole("tab", { name: /Developer/ });
     expect(within(developerTab).getByLabelText("진행 중")).toBeInTheDocument();
@@ -180,18 +180,18 @@ describe("Desktop Workbench mock flow (wireframe v9.0)", () => {
   });
 
   it("restores active Project, Task, and Surface split layout after a remount (AC-10)", async () => {
-    const { unmount } = render(<WorkbenchApp />);
+    const { unmount } = render(<WorkStudioApp />);
     fireEvent.click(screen.getByRole("button", { name: "Beta Console" }));
     unmount();
 
-    render(<WorkbenchApp />);
+    render(<WorkStudioApp />);
     expect(await screen.findByRole("treeitem", { name: "TASK 초기 설정" })).toBeInTheDocument();
   });
 
   it("renders the file tree as a nested hierarchy, not a flattened row (W-1 regression)", async () => {
-    render(<WorkbenchApp />);
+    render(<WorkStudioApp />);
     const fileLabel = await screen.findByText("types.ts");
-    const workbenchRow = (await screen.findByText("workbench")).closest("div.group");
+    const workbenchRow = (await screen.findByText("workstudio")).closest("div.group");
     const typesRow = fileLabel.closest("div.group");
     expect(workbenchRow).toBeTruthy();
     expect(typesRow).toBeTruthy();
@@ -203,7 +203,7 @@ describe("Desktop Workbench mock flow (wireframe v9.0)", () => {
   });
 
   it("shows git status badges and marks ignored entries in italics (AC-17)", async () => {
-    render(<WorkbenchApp />);
+    render(<WorkStudioApp />);
     expect((await screen.findAllByLabelText("git status: modified")).length).toBeGreaterThan(0);
     expect((await screen.findAllByLabelText("git status: untracked")).length).toBeGreaterThan(0);
     const ignoredLabel = await screen.findByText("node_modules");
@@ -211,7 +211,7 @@ describe("Desktop Workbench mock flow (wireframe v9.0)", () => {
   });
 
   it("toggles left and right sidebars collapsed and expanded (AC-15/R-5)", async () => {
-    render(<WorkbenchApp />);
+    render(<WorkStudioApp />);
     expect(screen.getByText("PROJECTS")).toBeInTheDocument();
 
     fireEvent.click(screen.getByLabelText("좌측 사이드바 접기"));
@@ -227,19 +227,19 @@ describe("Desktop Workbench mock flow (wireframe v9.0)", () => {
   });
 
   it("persists folder expanded state in PersistedUI.expandedFolderIds after a remount (AC-10)", async () => {
-    const { unmount } = render(<WorkbenchApp />);
+    const { unmount } = render(<WorkStudioApp />);
     await screen.findByText("types.ts");
     fireEvent.click(screen.getByLabelText("src 접기"));
     expect(screen.queryByText("types.ts")).not.toBeInTheDocument();
     unmount();
 
-    render(<WorkbenchApp />);
+    render(<WorkStudioApp />);
     expect(screen.queryByText("types.ts")).not.toBeInTheDocument();
     expect(await screen.findByLabelText("src 펼치기")).toBeInTheDocument();
   });
 
   it("groups Changes by directory with count badges and shows +n -m diff stats (AC-18)", async () => {
-    render(<WorkbenchApp />);
+    render(<WorkStudioApp />);
     fireEvent.click(screen.getByRole("button", { name: "Changes" }));
 
     expect(await screen.findByText("변경 사항 2")).toBeInTheDocument();
@@ -252,7 +252,7 @@ describe("Desktop Workbench mock flow (wireframe v9.0)", () => {
   });
 
   it("opens the Settings dialog from the left sidebar bottom bar and switches sections (AC-19)", async () => {
-    render(<WorkbenchApp />);
+    render(<WorkStudioApp />);
     expect(screen.queryByRole("button", { name: "Agents" })).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "설정" }));
@@ -264,7 +264,7 @@ describe("Desktop Workbench mock flow (wireframe v9.0)", () => {
     fireEvent.click(screen.getByRole("button", { name: "외관" }));
     expect(await screen.findByLabelText("테마")).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "Workbench" }));
+    fireEvent.click(screen.getByRole("button", { name: "WorkStudio" }));
     expect(await screen.findByLabelText("파일 트리 들여쓰기(px)")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "프로젝트" }));
@@ -275,7 +275,7 @@ describe("Desktop Workbench mock flow (wireframe v9.0)", () => {
   });
 
   it("opens an Agent Surface tab from the Settings Agent section (C-4)", async () => {
-    render(<WorkbenchApp />);
+    render(<WorkStudioApp />);
     fireEvent.click(screen.getByRole("button", { name: "설정" }));
     await screen.findByRole("heading", { name: "설정" });
 
@@ -287,7 +287,7 @@ describe("Desktop Workbench mock flow (wireframe v9.0)", () => {
   });
 
   it("renders the recursive Project tree with StoreLinkStudio nesting Pug/Blend/MAMS (AW-AC-3, AW-AC-10)", async () => {
-    render(<WorkbenchApp />);
+    render(<WorkStudioApp />);
     // expanded by default seed (expandedProjectIds includes project_storelinkstudio) — no need to click to expand
     const tree = within(await screen.findByTestId("project-tree"));
     expect(await tree.findByRole("button", { name: "Pug" })).toBeInTheDocument();
@@ -296,9 +296,9 @@ describe("Desktop Workbench mock flow (wireframe v9.0)", () => {
     expect(tree.getByText("PM:Pug PM")).toBeInTheDocument();
   });
 
-  it("uses PROJECTS + for TASK creation and manages top-level or child Projects from Settings (AW-AC-19·20)", async () => {
-    render(<WorkbenchApp />);
-    expect(screen.queryByRole("button", { name: "Project 추가" })).not.toBeInTheDocument();
+  it("separates sidebar Project add from TASK creation while Settings can still manage Projects (S-3, AW-AC-19·20)", async () => {
+    render(<WorkStudioApp />);
+    expect(screen.getByRole("button", { name: "Project 추가" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "TASK 추가" }));
     expect(await screen.findByRole("heading", { name: "새 Task" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "취소" }));
@@ -317,8 +317,126 @@ describe("Desktop Workbench mock flow (wireframe v9.0)", () => {
     expect((await screen.findAllByText("새 스튜디오")).length).toBeGreaterThan(0);
   });
 
+  it("runs sidebar Project add through the typed preload folder flow and handles success, cancel, and errors (S-3)", async () => {
+    const chooseDirectory = vi.fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        value: {
+          path: "/tmp/opal-project",
+          name: "opal-project",
+          isOpalProject: true,
+          agentPath: "/tmp/opal-project/.opal/AGENT.md",
+          pmName: "opal-project PM",
+        },
+      })
+      .mockResolvedValueOnce({ ok: false, code: "cancelled", message: "사용자가 선택을 취소했습니다." })
+      .mockResolvedValueOnce({ ok: false, code: "duplicate_path", message: "이미 등록된 Project입니다." });
+    vi.stubGlobal("opalWorkStudio", {
+      project: {
+        chooseDirectory,
+        inspectDirectory: vi.fn(),
+        registerFromSelection: vi.fn(async (selection) => ({ ok: true, value: selection })),
+        listFiles: vi.fn(),
+      },
+    });
+
+    render(<WorkStudioApp />);
+    fireEvent.click(screen.getByRole("button", { name: "Project 추가" }));
+    expect(await screen.findByText("OPAL Project 감지")).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "opal-project" })).toBeInTheDocument();
+    expect(await screen.findByText("opal-project PM")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Project 추가" }));
+    expect(await screen.findByText("Project 선택이 취소되었습니다.")).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: "opal-project" })).toHaveLength(1);
+
+    fireEvent.click(screen.getByRole("button", { name: "Project 추가" }));
+    expect(await screen.findByText(/이미 등록된 Project/)).toBeInTheDocument();
+    expect(chooseDirectory).toHaveBeenCalledTimes(3);
+  });
+
+  it("renders PM Coordination messages with speaker identity, avatar or initials, stable color token, and structured system cards (S-5)", async () => {
+    render(<WorkStudioApp />);
+    fireEvent.click(await screen.findByRole("treeitem", { name: "TASK 재귀형 프로젝트 관리 구축" }));
+
+    const room = await screen.findByTestId("pm-coordination-room");
+    expect(within(room).getByLabelText("speaker User")).toHaveTextContent("User");
+    expect(within(room).getByLabelText("speaker Pug PM")).toHaveTextContent("Pug PM");
+    expect(within(room).getByText("PU")).toBeInTheDocument();
+    expect(within(room).getByLabelText("speaker Blend PM")).toHaveAttribute("data-speaker-color", expect.stringMatching(/^pm-color-/));
+
+    const blockerCard = within(room).getByTestId("coordination-event-blocker");
+    expect(blockerCard).toHaveTextContent("행위자");
+    expect(blockerCard).toHaveTextContent("대상");
+    expect(blockerCard).toHaveTextContent("블로커");
+  });
+
+  it("makes independent Terminal shell-like while Agent CLI remains read-only (S-6)", async () => {
+    render(<WorkStudioApp />);
+    const terminalTab = await screen.findByRole("tab", { name: /독립 Terminal/ });
+    fireEvent.click(terminalTab);
+
+    expect(screen.getByLabelText("current working directory")).toHaveTextContent(/\/workspace/);
+    expect(screen.getByLabelText("shell name")).toHaveTextContent(/zsh|bash|sh/);
+    const terminalInput = screen.getByLabelText("독립 Terminal command");
+    fireEvent.change(terminalInput, { target: { value: "pwd" } });
+    fireEvent.keyDown(terminalInput, { key: "Enter" });
+
+    const scrollback = await screen.findByTestId("terminal-scrollback");
+    expect(within(scrollback).getByText("$ pwd")).toBeInTheDocument();
+    expect(within(scrollback).getByText(/\/workspace\/ai-framework/)).toBeInTheDocument();
+
+    fireEvent.keyDown(terminalInput, { key: "ArrowUp" });
+    expect(terminalInput).toHaveValue("pwd");
+
+    fireEvent.click(screen.getByRole("tab", { name: /Developer Agent Terminal/ }));
+    expect(screen.getByText("관찰 전용 Terminal")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Developer Agent Terminal 입력")).not.toBeInTheDocument();
+  });
+
+  it("renders selected simple Project Files from read-only IPC states without create or delete actions (S-7)", async () => {
+    const listFiles = vi.fn()
+      .mockResolvedValueOnce({ ok: true, value: [{ id: "root-src", name: "src", path: "src", kind: "folder", hasChildren: true }] })
+      .mockResolvedValueOnce({ ok: true, value: [] })
+      .mockResolvedValueOnce({ ok: false, code: "read_failed", message: "권한이 없습니다." })
+      .mockResolvedValueOnce({ ok: false, code: "too_large", message: "항목이 너무 많습니다." });
+    vi.stubGlobal("opalWorkStudio", { project: { chooseDirectory: vi.fn(), inspectDirectory: vi.fn(), registerFromSelection: vi.fn(), listFiles } });
+
+    render(<WorkStudioApp />);
+    fireEvent.click(await screen.findByRole("button", { name: "Pug" }));
+
+    expect(await screen.findByRole("tree", { name: "Files: Pug" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /새 파일/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /삭제/ })).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "src 펼치기" }));
+    expect(await screen.findByText("빈 폴더")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "src 접기" }));
+    fireEvent.click(screen.getByRole("button", { name: "src 펼치기" }));
+    expect(await screen.findByText(/권한이 없습니다/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "src 접기" }));
+    fireEvent.click(screen.getByRole("button", { name: "src 펼치기" }));
+    expect(await screen.findByText(/항목이 너무 많습니다/)).toBeInTheDocument();
+  });
+
+  it("shows composite Project Files as child Project and repository roots instead of an empty tree (S-8)", async () => {
+    const listFiles = vi.fn(async () => ({ ok: true, value: [{ id: "package", name: "package.json", path: "package.json", kind: "file" }] }));
+    vi.stubGlobal("opalWorkStudio", { project: { chooseDirectory: vi.fn(), inspectDirectory: vi.fn(), registerFromSelection: vi.fn(), listFiles } });
+
+    render(<WorkStudioApp />);
+    fireEvent.click(await screen.findByRole("button", { name: "StoreLinkStudio" }));
+
+    const filesTree = await screen.findByRole("tree", { name: "Files: StoreLinkStudio" });
+    expect(within(filesTree).getByRole("treeitem", { name: "Pug Project root" })).toBeInTheDocument();
+    expect(within(filesTree).getByRole("treeitem", { name: "Blend Project root" })).toBeInTheDocument();
+    expect(within(filesTree).getByRole("treeitem", { name: "MAMS Project root" })).toBeInTheDocument();
+
+    fireEvent.click(within(filesTree).getByRole("button", { name: "Pug Project root 펼치기" }));
+    expect(await within(filesTree).findByText("package.json")).toBeInTheDocument();
+  });
+
   it("links an existing OPAL Project as a child from Settings (AW-AC-2·20)", async () => {
-    render(<WorkbenchApp />);
+    render(<WorkStudioApp />);
     fireEvent.click(screen.getByRole("button", { name: "설정" }));
     fireEvent.click(await screen.findByRole("button", { name: "프로젝트" }));
     fireEvent.click(screen.getByRole("button", { name: "Project 생성/연결" }));
@@ -334,7 +452,7 @@ describe("Desktop Workbench mock flow (wireframe v9.0)", () => {
   });
 
   it("shows a RepoScopeSelect for a Project with multiple Repository Components and scopes Files/Changes (AW-AC-5)", async () => {
-    render(<WorkbenchApp />);
+    render(<WorkStudioApp />);
     fireEvent.click(await screen.findByRole("button", { name: "StoreLinkStudio" }));
     fireEvent.click(await screen.findByRole("button", { name: "Pug" }));
 
@@ -348,7 +466,7 @@ describe("Desktop Workbench mock flow (wireframe v9.0)", () => {
   });
 
   it("opens the coordination timeline for a coordination TASK showing Main PM judgement, rollup, and events without Agent Run internals (AW-AC-7·8·9, C-10)", async () => {
-    render(<WorkbenchApp />);
+    render(<WorkStudioApp />);
     fireEvent.click(await screen.findByRole("button", { name: "StoreLinkStudio" }));
     fireEvent.click(await screen.findByRole("treeitem", { name: "TASK 재귀형 프로젝트 관리 구축" }));
 
@@ -359,7 +477,7 @@ describe("Desktop Workbench mock flow (wireframe v9.0)", () => {
   });
 
   it("renders a TASK-scoped PM Coordination Room where the user can only instruct Main PM (AW-AC-23·24·26)", async () => {
-    render(<WorkbenchApp />);
+    render(<WorkStudioApp />);
     fireEvent.click(await screen.findByRole("treeitem", { name: "TASK 재귀형 프로젝트 관리 구축" }));
 
     expect(await screen.findByText("PM Coordination Room")).toBeInTheDocument();
@@ -378,7 +496,7 @@ describe("Desktop Workbench mock flow (wireframe v9.0)", () => {
   });
 
   it("invites a Sub PM through Main PM and atomically opens its read-only Workspace (AW-AC-25)", async () => {
-    render(<WorkbenchApp />);
+    render(<WorkStudioApp />);
     fireEvent.click(await screen.findByRole("treeitem", { name: "TASK 재귀형 프로젝트 관리 구축" }));
 
     expect(screen.queryByText("MAMS PM · Workspace running")).not.toBeInTheDocument();
@@ -392,7 +510,7 @@ describe("Desktop Workbench mock flow (wireframe v9.0)", () => {
   });
 
   it("spawns a read-only Worker Terminal under a Sub PM Workspace and exposes it in the Agent tree (AW-AC-27)", async () => {
-    render(<WorkbenchApp />);
+    render(<WorkStudioApp />);
     fireEvent.click(await screen.findByRole("treeitem", { name: "TASK 재귀형 프로젝트 관리 구축" }));
 
     fireEvent.click(await screen.findByRole("tab", { name: /Pug PM Workspace/ }));
@@ -406,7 +524,7 @@ describe("Desktop Workbench mock flow (wireframe v9.0)", () => {
   });
 
   it("marks a coordination TASK row with invited Project chips (AW-AC-6)", async () => {
-    render(<WorkbenchApp />);
+    render(<WorkStudioApp />);
     fireEvent.click(await screen.findByRole("button", { name: "StoreLinkStudio" }));
     const coordButton = await screen.findByRole("treeitem", { name: "TASK 재귀형 프로젝트 관리 구축" });
     expect(within(coordButton).getByText("PUG")).toBeInTheDocument();
@@ -415,7 +533,7 @@ describe("Desktop Workbench mock flow (wireframe v9.0)", () => {
   });
 
   it("creates a TASK with a selected Pilot and shows its execution Agent in the Project tree (AW-AC-6·15)", async () => {
-    render(<WorkbenchApp />);
+    render(<WorkStudioApp />);
     fireEvent.click(screen.getByRole("button", { name: "TASK 추가" }));
     fireEvent.change(screen.getByLabelText("제목 *"), { target: { value: "Pilot 선택 작업" } });
     fireEvent.change(screen.getByLabelText("설명 *"), { target: { value: "oppl 작업" } });
@@ -427,7 +545,7 @@ describe("Desktop Workbench mock flow (wireframe v9.0)", () => {
   });
 
   it("creates a coordination Room for a new complex Project TASK without user-selected participants (AW-AC-23)", async () => {
-    render(<WorkbenchApp />);
+    render(<WorkStudioApp />);
     fireEvent.click(await screen.findByRole("button", { name: "StoreLinkStudio" }));
     fireEvent.click(screen.getByRole("button", { name: "TASK 추가" }));
     fireEvent.change(screen.getByLabelText("제목 *"), { target: { value: "새 조율 TASK" } });
@@ -442,7 +560,7 @@ describe("Desktop Workbench mock flow (wireframe v9.0)", () => {
   });
 
   it("assigns a Sub PM from the PM Coordination Room and atomically creates its TASK and Agent Surface (AW-AC-16·17)", async () => {
-    render(<WorkbenchApp />);
+    render(<WorkStudioApp />);
     fireEvent.click(await screen.findByRole("treeitem", { name: "TASK 재귀형 프로젝트 관리 구축" }));
     expect(await screen.findByRole("tab", { name: /PM Coordination/ })).toBeInTheDocument();
     fireEvent.change(screen.getByLabelText("Main PM에게 지시"), { target: { value: "결제 API 계약 정리" } });
@@ -453,7 +571,7 @@ describe("Desktop Workbench mock flow (wireframe v9.0)", () => {
   });
 
   it("restores Project tree expansion and creates/links Projects across a remount (AW-AC-11)", async () => {
-    const { unmount } = render(<WorkbenchApp />);
+    const { unmount } = render(<WorkStudioApp />);
     fireEvent.click(screen.getByRole("button", { name: "설정" }));
     fireEvent.click(await screen.findByRole("button", { name: "프로젝트" }));
     fireEvent.click(screen.getByRole("button", { name: "Project 생성/연결" }));
@@ -463,24 +581,24 @@ describe("Desktop Workbench mock flow (wireframe v9.0)", () => {
     await act(async () => {});
     unmount();
 
-    render(<WorkbenchApp />);
+    render(<WorkStudioApp />);
     expect(await screen.findByRole("button", { name: "영속 확인" })).toBeInTheDocument();
     expect(await screen.findByRole("button", { name: "Pug" })).toBeInTheDocument();
   });
 
   it("resets mock state from the Settings 목업 section, clearing both storage keys (R-8)", async () => {
-    render(<WorkbenchApp />);
+    render(<WorkStudioApp />);
     fireEvent.click(screen.getByRole("button", { name: "설정" }));
-    fireEvent.click(await screen.findByRole("button", { name: "Workbench" }));
+    fireEvent.click(await screen.findByRole("button", { name: "WorkStudio" }));
     fireEvent.click(await screen.findByLabelText("우측 rail 기본 접힘"));
-    expect(localStorage.getItem("opal.workbench.settings.v1")).toContain("railCollapsedDefault\":true");
+    expect(localStorage.getItem("opal.workstudio.settings.v1")).toContain("railCollapsedDefault\":true");
 
     fireEvent.click(screen.getByRole("button", { name: "목업" }));
     fireEvent.click(await screen.findByRole("button", { name: "상태 초기화" }));
     fireEvent.click(await screen.findByRole("button", { name: "초기화" }));
 
     await act(async () => {});
-    expect(localStorage.getItem("opal.workbench.mock.v4")).toBeNull();
-    expect(localStorage.getItem("opal.workbench.settings.v1")).toBeNull();
+    expect(localStorage.getItem("opal.workstudio.mock.v1")).toBeNull();
+    expect(localStorage.getItem("opal.workstudio.settings.v1")).toBeNull();
   });
 });

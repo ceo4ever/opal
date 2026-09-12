@@ -1,10 +1,10 @@
 /**
  * @header {
- *   "module": "mock-workbench-adapter",
+ *   "module": "mock-workstudio-adapter",
  *   "layer": "adapter",
- *   "domain": "workbench",
- *   "description": "Workbench v9의 필터 없는 Project/진행 TASK/Agent 트리, TASK별 PM Coordination Room, PM/Worker Workspace, 동적 Surface, repo별 Files/Changes와 localStorage 스냅샷을 제공하는 mock adapter",
- *   "exports": ["MockWorkbenchAdapter", "WORKBENCH_STORAGE_KEY", "SETTINGS_STORAGE_KEY", "findPaneForTab", "collectLeaves", "isDescendantProject"]
+ *   "domain": "workstudio",
+ *   "description": "OPAL WorkStudio의 Project/진행 TASK/Agent 트리, PM Coordination Room, PM별 시각 토큰, terminal scrollback, read-only file tree와 localStorage 스냅샷을 제공하는 mock adapter",
+ *   "exports": ["MockWorkbenchAdapter", "WORKSTUDIO_STORAGE_KEY", "WORKBENCH_STORAGE_KEY", "SETTINGS_STORAGE_KEY", "normalizeOpalProjectPath", "hasDuplicateProjectPath", "findPaneForTab", "collectLeaves", "isDescendantProject"]
  * }
  */
 
@@ -26,13 +26,52 @@ import type {
   SurfaceKind,
   SurfaceLayout,
   SurfaceTab,
+  TerminalEntry,
   Task,
   TaskStatus,
   WorkbenchState,
 } from "./types";
 
-export const WORKBENCH_STORAGE_KEY = "opal.workbench.mock.v4";
-export const SETTINGS_STORAGE_KEY = "opal.workbench.settings.v1";
+export const WORKSTUDIO_STORAGE_KEY = "opal.workstudio.mock.v1";
+export const WORKBENCH_STORAGE_KEY = WORKSTUDIO_STORAGE_KEY;
+export const SETTINGS_STORAGE_KEY = "opal.workstudio.settings.v1";
+
+export function normalizeOpalProjectPath(input: string): string {
+  return input.trim().replace(/\\/g, "/").replace(/\/+/g, "/").replace(/\/$/, "");
+}
+
+export function hasDuplicateProjectPath(projects: Project[], candidatePath: string): boolean {
+  const normalizedCandidate = normalizeOpalProjectPath(candidatePath);
+  if (!normalizedCandidate) return false;
+  return projects.some((project) => project.repositoryPath && normalizeOpalProjectPath(project.repositoryPath) === normalizedCandidate);
+}
+
+function sanitizedProject(project: Project & { kind?: unknown }): Project {
+  const { repositoryPath, ...rest } = project;
+  delete (rest as { kind?: unknown }).kind;
+  return { ...rest, ...(repositoryPath ? { repositoryPath: normalizeOpalProjectPath(repositoryPath) } : {}) };
+}
+
+function fileNode(input: Omit<FileNode, "sourceRootId" | "loadState" | "readonly"> & Partial<Pick<FileNode, "sourceRootId" | "loadState" | "readonly">>): FileNode {
+  return {
+    sourceRootId: input.sourceRootId ?? input.projectId,
+    loadState: input.loadState ?? (input.kind === "folder" && input.children?.length === 0 ? "empty" : "loaded"),
+    readonly: true,
+    ...input,
+  };
+}
+
+function terminalEntry(kind: TerminalEntry["kind"], text: string, timestamp: string, cwd?: string): TerminalEntry {
+  return { id: `term_${timestamp}_${kind}_${text.slice(0, 12)}`, kind, text, timestamp, cwd };
+}
+
+function mockTerminalOutput(command: string): string {
+  const normalized = command.trim();
+  if (normalized === "pwd") return "/workspace";
+  if (normalized === "ls") return "workstudio  dashboard  docs  tasks";
+  if (!normalized) return "";
+  return `mock: ${normalized} [Simulated]`;
+}
 
 const defaultSettings: Settings = {
   version: 1,
@@ -48,7 +87,7 @@ const seedProjects: Project[] = [
   { id: "project_opal", name: "OPAL", repositoryPath: "/workspace/ai-framework", pmAgentId: "opal-pm", repositoryComponentIds: [] },
   { id: "project_beta", name: "Beta Console", repositoryPath: "/workspace/beta-console", pmAgentId: "opal-pm", repositoryComponentIds: [] },
   // v7.0(W-8) — 실측 대표 구조: StoreLinkStudio Project 아래 Pug·Blend·MAMS 연결(AW-AC-10). StoreLinkStudio는 Main PM 조율용 상위 Project라 실 경로가 없다.
-  { id: "project_storelinkstudio", name: "StoreLinkStudio", repositoryPath: "(가상, 실 경로 없음 — Main PM 조율용 상위 Project)", pmAgentId: "main-pm", repositoryComponentIds: [] },
+  { id: "project_storelinkstudio", name: "StoreLinkStudio", pmAgentId: "main-pm", repositoryComponentIds: [] },
   { id: "project_pug", name: "Pug", repositoryPath: "/Volumes/Data/StoreLinkStudio/pug", parentProjectId: "project_storelinkstudio", pmAgentId: "pug-pm", repositoryComponentIds: ["repo_pug_app_android", "repo_pug_app_ios", "repo_pug_backend", "repo_pug_frontend", "repo_pug_frontend_admin", "repo_pug_frontend_app"] },
   { id: "project_blend", name: "Blend", repositoryPath: "/Volumes/Data/StoreLinkStudio/blend", parentProjectId: "project_storelinkstudio", pmAgentId: "blend-pm", repositoryComponentIds: ["repo_blend_backend", "repo_blend_batch", "repo_blend_frontend_admin", "repo_blend_frontend_monitor"] },
   { id: "project_mams", name: "MAMS", repositoryPath: "/Volumes/Data/StoreLinkStudio/mams", parentProjectId: "project_storelinkstudio", pmAgentId: "mams-pm", repositoryComponentIds: ["repo_mams_backend", "repo_mams_docker", "repo_mams_frontend", "repo_mams_frontend_test", "repo_mams_frontend_wireframe"] },
@@ -113,17 +152,17 @@ const seedCoordinationEvents: CoordinationEvent[] = [
 ];
 
 const seedAgents: AgentDefinition[] = [
-  { id: "opal-pm", name: "OPAL PM", role: "Product lead", source: "project", path: ".opal/AGENT.md", status: "ready" },
-  { id: "developer", name: "Developer", role: "구현 담당", source: "framework", path: "framework/agents/developer.md", status: "idle" },
-  { id: "reviewer", name: "Reviewer", role: "검토 담당", source: "framework", path: "framework/agents/reviewer.md", status: "idle" },
-  { id: "ui-coach", name: "UI Coach", role: "UI 코칭", source: "user", path: "user/agents/ui-coach.md", status: "offline" },
-  { id: "main-pm", name: "Main PM", role: "StoreLinkStudio 조율 PM", source: "project", path: ".opal/AGENT.md", status: "ready" },
-  { id: "pug-pm", name: "Pug PM", role: "Pug Project PM", source: "project", path: ".opal/AGENT.md", status: "ready" },
-  { id: "blend-pm", name: "Blend PM", role: "Blend Project PM", source: "project", path: ".opal/AGENT.md", status: "ready" },
-  { id: "mams-pm", name: "MAMS PM", role: "MAMS Project PM", source: "project", path: ".opal/AGENT.md", status: "ready" },
-  { id: "pug-worker", name: "Pug Worker", role: "Pug PM 호출 Worker", source: "framework", path: "framework/agents/worker.md", status: "idle" },
-  { id: "blend-worker", name: "Blend Worker", role: "Blend PM 호출 Worker", source: "framework", path: "framework/agents/worker.md", status: "idle" },
-  { id: "mams-worker", name: "MAMS Worker", role: "MAMS PM 호출 Worker", source: "framework", path: "framework/agents/worker.md", status: "idle" },
+  { id: "opal-pm", name: "OPAL PM", role: "Product lead", source: "project", path: ".opal/AGENT.md", status: "ready", avatarLabel: "OP", colorToken: "pm-slate", projectId: "project_opal" },
+  { id: "developer", name: "Developer", role: "구현 담당", source: "framework", path: "framework/agents/developer.md", status: "idle", avatarLabel: "DV", colorToken: "pm-cyan" },
+  { id: "reviewer", name: "Reviewer", role: "검토 담당", source: "framework", path: "framework/agents/reviewer.md", status: "idle", avatarLabel: "RV", colorToken: "pm-amber" },
+  { id: "ui-coach", name: "UI Coach", role: "UI 코칭", source: "user", path: "user/agents/ui-coach.md", status: "offline", avatarLabel: "UI", colorToken: "pm-rose" },
+  { id: "main-pm", name: "Main PM", role: "StoreLinkStudio 조율 PM", source: "project", path: ".opal/AGENT.md", status: "ready", avatarLabel: "M", colorToken: "pm-violet", projectId: "project_storelinkstudio" },
+  { id: "pug-pm", name: "Pug PM", role: "Pug Project PM", source: "project", path: ".opal/AGENT.md", status: "ready", avatarLabel: "P", colorToken: "pm-emerald", projectId: "project_pug" },
+  { id: "blend-pm", name: "Blend PM", role: "Blend Project PM", source: "project", path: ".opal/AGENT.md", status: "ready", avatarLabel: "B", colorToken: "pm-sky", projectId: "project_blend" },
+  { id: "mams-pm", name: "MAMS PM", role: "MAMS Project PM", source: "project", path: ".opal/AGENT.md", status: "ready", avatarLabel: "M", colorToken: "pm-orange", projectId: "project_mams" },
+  { id: "pug-worker", name: "Pug Worker", role: "Pug PM 호출 Worker", source: "framework", path: "framework/agents/worker.md", status: "idle", avatarLabel: "PW", colorToken: "pm-emerald" },
+  { id: "blend-worker", name: "Blend Worker", role: "Blend PM 호출 Worker", source: "framework", path: "framework/agents/worker.md", status: "idle", avatarLabel: "BW", colorToken: "pm-sky" },
+  { id: "mams-worker", name: "MAMS Worker", role: "MAMS PM 호출 Worker", source: "framework", path: "framework/agents/worker.md", status: "idle", avatarLabel: "MW", colorToken: "pm-orange" },
 ];
 
 const seedBindings: RuntimeBinding[] = seedAgents.map((agent) => ({
@@ -152,6 +191,9 @@ const seedSurfaceTabs: SurfaceTab[] = [
   { id: "surface_term_01", taskId: "task_login_fix", kind: "terminal", title: "독립 Terminal", boundary: "simulated", closable: true, sessionStatus: "completed", messages: [
     { author: "system", body: "$ npm run dev" },
     { author: "system", body: "> ready [Simulated]" },
+  ], terminalEntries: [
+    terminalEntry("input", "npm run dev", "2026-09-12T07:29:00.000Z", "/workspace/ai-framework"),
+    terminalEntry("output", "> ready [Simulated]", "2026-09-12T07:29:01.000Z", "/workspace/ai-framework"),
   ] },
   { id: "surface_browser_01", taskId: "task_login_fix", kind: "browser", title: "Browser", boundary: "simulated", closable: true, sessionStatus: "completed" },
 ];
@@ -185,30 +227,30 @@ const seedSurfaceLayoutByTask: Record<string, SurfaceLayout> = {
 
 const seedFileNodesByProject: Record<string, FileNode[]> = {
   project_opal: [
-    {
+    fileNode({
       id: "file_src", projectId: "project_opal", path: "src", kind: "folder", gitStatus: "modified", children: [
-        {
-          id: "file_workbench", projectId: "project_opal", path: "src/workbench", kind: "folder", gitStatus: "modified", children: [
-            { id: "file_types", projectId: "project_opal", path: "src/workbench/types.ts", kind: "file", gitStatus: "untracked" },
-            { id: "file_adapter", projectId: "project_opal", path: "src/workbench/mock-adapter.ts", kind: "file", gitStatus: "modified" },
-            { id: "file_app", projectId: "project_opal", path: "src/workbench/WorkbenchApp.tsx", kind: "file", gitStatus: "modified" },
+        fileNode({
+          id: "file_workbench", projectId: "project_opal", path: "src/workstudio", kind: "folder", gitStatus: "modified", children: [
+            fileNode({ id: "file_types", projectId: "project_opal", path: "src/workstudio/types.ts", kind: "file", gitStatus: "untracked" }),
+            fileNode({ id: "file_adapter", projectId: "project_opal", path: "src/workstudio/mock-adapter.ts", kind: "file", gitStatus: "modified" }),
+            fileNode({ id: "file_app", projectId: "project_opal", path: "src/workstudio/WorkStudioApp.tsx", kind: "file", gitStatus: "modified" }),
           ],
-        },
-        {
+        }),
+        fileNode({
           id: "file_components", projectId: "project_opal", path: "src/components", kind: "folder", gitStatus: "clean", children: [],
-        },
+        }),
       ],
-    },
-    { id: "file_node_modules", projectId: "project_opal", path: "node_modules", kind: "folder", gitStatus: "ignored", children: [] },
+    }),
+    fileNode({ id: "file_node_modules", projectId: "project_opal", path: "node_modules", kind: "folder", gitStatus: "ignored", children: [], loadState: "empty" }),
   ],
   project_beta: [
-    { id: "file_beta_src", projectId: "project_beta", path: "src", kind: "folder", gitStatus: "clean", children: [] },
+    fileNode({ id: "file_beta_src", projectId: "project_beta", path: "src", kind: "folder", gitStatus: "clean", children: [], loadState: "empty" }),
   ],
 };
 
 const seedChangesByProject: Record<string, ChangeEntry[]> = {
   project_opal: [
-    { id: "change_1", projectId: "project_opal", path: "dashboard/frontend/src/workbench/WorkbenchApp.tsx", status: "staged", diffPreview: "- pinned tabs\n+ dynamic surfaces", linesAdded: 12, linesRemoved: 3 },
+    { id: "change_1", projectId: "project_opal", path: "workstudio/src/workstudio/WorkStudioApp.tsx", status: "staged", diffPreview: "- pinned tabs\n+ dynamic surfaces", linesAdded: 12, linesRemoved: 3 },
     { id: "change_2", projectId: "project_opal", path: "tasks/115-…/wireframe.md", status: "staged", diffPreview: "+ 좌우 사이드바 토글 설계", linesAdded: 80, linesRemoved: 6 },
     { id: "change_3", projectId: "project_opal", path: "docs/proposals/new-file.md", status: "unstaged", diffPreview: "+ splitSurface / moveSurfaceTab", linesAdded: 40, linesRemoved: 0 },
   ],
@@ -219,7 +261,7 @@ function cloneSeed(): WorkbenchState {
   const fileNodesByProject: Record<string, FileNode[]> = JSON.parse(JSON.stringify(seedFileNodesByProject));
   const changesByProject: Record<string, ChangeEntry[]> = JSON.parse(JSON.stringify(seedChangesByProject));
   for (const component of seedRepositoryComponents) {
-    fileNodesByProject[component.id] = [{ id: `file_${component.id}`, projectId: component.id, path: component.name, kind: "folder", gitStatus: "clean", children: [] }];
+    fileNodesByProject[component.id] = [fileNode({ id: `file_${component.id}`, projectId: component.id, sourceRootId: component.id, path: component.name, absolutePath: component.path, kind: "folder", gitStatus: "clean", children: [], loadState: "empty" })];
     changesByProject[component.id] = [];
   }
   return {
@@ -277,7 +319,7 @@ function persistedFromState(state: WorkbenchState): StoredSnapshot {
     expandedFolderIds: state.expandedFolderIds,
     expandedProjectIds: state.expandedProjectIds,
     activeRepositoryComponentId: state.activeRepositoryComponentId,
-    projects: state.projects,
+    projects: state.projects.map(sanitizedProject),
     repositoryComponents: state.repositoryComponents,
     tasks: state.tasks,
     coordinationEvents: state.coordinationEvents,
@@ -361,7 +403,7 @@ export class MockWorkbenchAdapter {
           expandedFolderIds: Array.isArray(persisted.expandedFolderIds) ? persisted.expandedFolderIds : base.expandedFolderIds,
           expandedProjectIds: Array.isArray(persisted.expandedProjectIds) ? persisted.expandedProjectIds : base.expandedProjectIds,
           activeRepositoryComponentId: persisted.activeRepositoryComponentId,
-          projects: Array.isArray(persisted.projects) ? persisted.projects : base.projects,
+          projects: Array.isArray(persisted.projects) ? persisted.projects.map((project) => sanitizedProject(project as Project & { kind?: unknown })) : base.projects,
           repositoryComponents: Array.isArray(persisted.repositoryComponents) ? persisted.repositoryComponents : base.repositoryComponents,
           tasks: Array.isArray(persisted.tasks) ? persisted.tasks : base.tasks,
           coordinationEvents: Array.isArray(persisted.coordinationEvents) ? persisted.coordinationEvents : base.coordinationEvents,
@@ -413,7 +455,9 @@ export class MockWorkbenchAdapter {
   }
 
   updateProjectPath(state: WorkbenchState, projectId: string, repositoryPath: string): WorkbenchState {
-    return { ...state, projects: state.projects.map((project) => project.id === projectId ? { ...project, repositoryPath } : project) };
+    const normalizedPath = normalizeOpalProjectPath(repositoryPath);
+    if (hasDuplicateProjectPath(state.projects.filter((project) => project.id !== projectId), normalizedPath)) return state;
+    return { ...state, projects: state.projects.map((project) => project.id === projectId ? { ...project, repositoryPath: normalizedPath || undefined } : project) };
   }
 
   updateProjectPm(state: WorkbenchState, projectId: string, pmAgentId: string): WorkbenchState {
@@ -439,7 +483,9 @@ export class MockWorkbenchAdapter {
 
   /** v6.0(SCR-007 신규 생성 탭, AW-AC-1): 실제 폴더·Git·`.opal` 생성 없이 mock Project 레코드만 추가한다. */
   createProject(state: WorkbenchState, name: string, repositoryPath: string, pmAgentId: string, parentProjectId?: string): WorkbenchState {
-    const project: Project = { id: `project_${Date.now()}`, name, repositoryPath, parentProjectId, pmAgentId, repositoryComponentIds: [] };
+    const normalizedPath = normalizeOpalProjectPath(repositoryPath);
+    if (normalizedPath && hasDuplicateProjectPath(state.projects, normalizedPath)) return state;
+    const project: Project = { id: `project_${Date.now()}`, name, repositoryPath: normalizedPath || undefined, parentProjectId, pmAgentId, repositoryComponentIds: [] };
     const expandedProjectIds = parentProjectId && !state.expandedProjectIds.includes(parentProjectId)
       ? [...state.expandedProjectIds, parentProjectId]
       : state.expandedProjectIds;
@@ -448,12 +494,14 @@ export class MockWorkbenchAdapter {
 
   /** v6.0(SCR-007 기존 연결 탭, AW-AC-2): `.opal/AGENT.md` mock 발견 결과로 기존 OPAL Project를 연결한다. */
   linkProject(state: WorkbenchState, repositoryPath: string, discoveredPmAgentId: string, parentProjectId?: string): WorkbenchState {
-    const name = repositoryPath.split("/").filter(Boolean).pop() ?? repositoryPath;
+    const normalizedPath = normalizeOpalProjectPath(repositoryPath);
+    if (!normalizedPath || hasDuplicateProjectPath(state.projects, normalizedPath)) return state;
+    const name = normalizedPath.split("/").filter(Boolean).pop() ?? normalizedPath;
     const stamp = Date.now();
     const projectId = `project_${stamp}`;
     const componentId = `repo_${stamp}`;
-    const project: Project = { id: projectId, name, repositoryPath, parentProjectId, pmAgentId: discoveredPmAgentId, repositoryComponentIds: [componentId] };
-    const component: RepositoryComponent = { id: componentId, projectId, name, path: repositoryPath, kind: "repo" };
+    const project: Project = { id: projectId, name, repositoryPath: normalizedPath, parentProjectId, pmAgentId: discoveredPmAgentId, repositoryComponentIds: [componentId] };
+    const component: RepositoryComponent = { id: componentId, projectId, name, path: normalizedPath, kind: "repo" };
     return {
       ...state,
       projects: [...state.projects, project],
@@ -466,7 +514,8 @@ export class MockWorkbenchAdapter {
 
   /** v6.0(W-4/AW-AC-5): Repository Component 추가·제거. */
   addRepositoryComponent(state: WorkbenchState, projectId: string, name: string, path: string, kind: RepositoryComponent["kind"]): WorkbenchState {
-    const component: RepositoryComponent = { id: `repo_${Date.now()}`, projectId, name, path, kind };
+    const normalizedPath = normalizeOpalProjectPath(path);
+    const component: RepositoryComponent = { id: `repo_${Date.now()}`, projectId, name, path: normalizedPath, kind };
     return {
       ...state,
       repositoryComponents: [...state.repositoryComponents, component],
@@ -786,6 +835,7 @@ export class MockWorkbenchAdapter {
 
   /** 새 Surface 탭을 만들어 활성 pane(없으면 새 leaf)에 추가한다. */
   openSurface(state: WorkbenchState, taskId: string, kind: SurfaceKind, title: string, agentId?: string): WorkbenchState {
+    const now = new Date().toISOString();
     const tab: SurfaceTab = {
       id: `surface_${Date.now()}`,
       taskId,
@@ -796,6 +846,7 @@ export class MockWorkbenchAdapter {
       closable: true,
       sessionStatus: "idle",
       messages: [],
+      terminalEntries: kind === "terminal" ? [terminalEntry("system", "OPAL WorkStudio terminal ready", now, "/workspace")] : undefined,
     };
     const layout = this.layoutFor(state, taskId);
     const root = layout.root;
@@ -889,12 +940,20 @@ export class MockWorkbenchAdapter {
 
   /** wireframe.md v3.0 §7: mock timer가 sendSurfaceMessage 이후 sessionStatus를 running→completed(또는 failureMode에서 failed)로 진행시킨다. */
   sendSurfaceMessage(state: WorkbenchState, tabId: string, body: string): WorkbenchState {
+    const now = new Date().toISOString();
     return {
       ...state,
       surfaceTabs: state.surfaceTabs.map((tab) => {
         if (tab.id !== tabId) return tab;
         const messages = [...(tab.messages ?? []), { author: "You", body }].slice(-50);
-        return { ...tab, sessionStatus: "running", messages };
+        const terminalEntries = tab.kind === "terminal"
+          ? [
+              ...(tab.terminalEntries ?? []),
+              terminalEntry("input", body, now, "/workspace"),
+              terminalEntry("output", mockTerminalOutput(body), new Date(Date.now() + 1).toISOString(), "/workspace"),
+            ].slice(-100)
+          : tab.terminalEntries;
+        return { ...tab, sessionStatus: "running", messages, terminalEntries };
       }),
     };
   }
@@ -916,7 +975,7 @@ export class MockWorkbenchAdapter {
 
   createFileNode(state: WorkbenchState, projectId: string, parentPath: string | undefined, name: string, kind: "file" | "folder"): WorkbenchState {
     const path = parentPath ? `${parentPath}/${name}` : name;
-    const node: FileNode = { id: `file_${Date.now()}`, projectId, path, kind, gitStatus: "untracked", children: kind === "folder" ? [] : undefined };
+    const node: FileNode = fileNode({ id: `file_${Date.now()}`, projectId, path, kind, gitStatus: "untracked", children: kind === "folder" ? [] : undefined });
     const insert = (nodes: FileNode[]): FileNode[] => {
       if (!parentPath) return [...nodes, node];
       return nodes.map((item) => {
