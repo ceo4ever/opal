@@ -1,0 +1,117 @@
+{
+  "check": "convention",
+  "status": "pass",
+  "checked_files": [
+    ".opal/worktree.json",
+    "workstudio/BACKLOG.md",
+    "workstudio/electron/project-registry.cjs",
+    "workstudio/electron/main.cjs",
+    "workstudio/electron/preload.cjs",
+    "workstudio/electron/main.test.mjs",
+    "workstudio/src/workstudio/ipc.ts",
+    "workstudio/src/workstudio/WorkStudioApp.tsx",
+    "workstudio/src/workstudio/ipc.test.ts",
+    "workstudio/src/workstudio/FirstRunWelcome.test.tsx",
+    "workstudio/src/workstudio/WorkStudioApp.test.tsx"
+  ],
+  "findings": [
+    {
+      "id": "GC-001",
+      "fingerprint": "09686015fdf3280b",
+      "category": "naming",
+      "severity": "low",
+      "confidence": "high",
+      "disposition": "advisory",
+      "rule_id": "CONVENTIONS.md §네이밍 규칙/파일·폴더",
+      "source_tier": "T0",
+      "location": { "file": "workstudio/BACKLOG.md", "line": 1 },
+      "evidence": "대상 문서의 파일명이 대문자 BACKLOG.md이며 프로젝트 기준은 파일명을 English kebab-case로 규정한다.",
+      "impact": "프로젝트 파일명 규칙과 실제 SSOT 경로가 불일치한다.",
+      "remediation": {
+        "guidance": "참조 체인을 검토하는 별도 태스크에서 kebab-case로 전환하거나 표준 산출물 예외를 기준 문서에 명시한다.",
+        "reference": "docs/CONVENTIONS.md §네이밍 규칙/파일·폴더",
+        "auto_fixable": false
+      },
+      "verification": "변경 후 파일명과 모든 참조가 일치하고 전체 테스트가 통과하는지 확인한다.",
+      "suppression": null
+    },
+    {
+      "id": "GC-002",
+      "fingerprint": "7fc8e5bf883664ee",
+      "category": "naming",
+      "severity": "low",
+      "confidence": "high",
+      "disposition": "advisory",
+      "rule_id": "CONVENTIONS.md §네이밍 규칙/파일·폴더",
+      "source_tier": "T0",
+      "location": { "file": "workstudio/src/workstudio/WorkStudioApp.tsx", "line": 1 },
+      "evidence": "대상 React 컴포넌트의 파일명이 PascalCase이며 프로젝트 기준은 파일명을 English kebab-case로 규정한다.",
+      "impact": "문서에 선언된 파일 탐색·생성 규칙과 실제 컴포넌트 경로가 달라진다.",
+      "remediation": {
+        "guidance": "import 체인을 포함해 workstudio-app.tsx로 전환하거나 React 컴포넌트 파일 예외를 기준 문서에 명시한다.",
+        "reference": "docs/CONVENTIONS.md §네이밍 규칙/파일·폴더",
+        "auto_fixable": false
+      },
+      "verification": "파일명·import 참조를 확인하고 typecheck와 전체 테스트를 실행한다.",
+      "suppression": null
+    },
+    {
+      "id": "GC-003",
+      "fingerprint": "0398901c02f3fe11",
+      "category": "naming",
+      "severity": "low",
+      "confidence": "high",
+      "disposition": "advisory",
+      "rule_id": "CONVENTIONS.md §네이밍 규칙/파일·폴더",
+      "source_tier": "T0",
+      "location": { "file": "workstudio/src/workstudio/FirstRunWelcome.test.tsx", "line": 1 },
+      "evidence": "대상 테스트 파일명이 PascalCase 기반이며 프로젝트 기준은 파일명을 English kebab-case로 규정한다.",
+      "impact": "테스트 파일 명명 관례가 프로젝트 기준과 불일치한다.",
+      "remediation": {
+        "guidance": "first-run-welcome.test.tsx로 전환하거나 테스트 파일 예외를 기준 문서에 명시한다.",
+        "reference": "docs/CONVENTIONS.md §네이밍 규칙/파일·폴더",
+        "auto_fixable": false
+      },
+      "verification": "파일명·참조를 확인하고 Vitest 전체 테스트를 실행한다.",
+      "suppression": null
+    },
+    {
+      "id": "GC-004",
+      "fingerprint": "0398901c02f3fe11",
+      "category": "naming",
+      "severity": "low",
+      "confidence": "high",
+      "disposition": "advisory",
+      "rule_id": "CONVENTIONS.md §네이밍 규칙/파일·폴더",
+      "source_tier": "T0",
+      "location": { "file": "workstudio/src/workstudio/WorkStudioApp.test.tsx", "line": 1 },
+      "evidence": "대상 테스트 파일명이 PascalCase 기반이며 프로젝트 기준은 파일명을 English kebab-case로 규정한다.",
+      "impact": "테스트 파일 명명 관례가 프로젝트 기준과 불일치한다.",
+      "remediation": {
+        "guidance": "workstudio-app.test.tsx로 전환하거나 테스트 파일 예외를 기준 문서에 명시한다.",
+        "reference": "docs/CONVENTIONS.md §네이밍 규칙/파일·폴더",
+        "auto_fixable": false
+      },
+      "verification": "파일명·참조를 확인하고 Vitest 전체 테스트를 실행한다.",
+      "suppression": null
+    }
+  ],
+  "evidence": [
+    "state-tool event-verify worker.dispatch: ok=true",
+    "all 11 target_files exist inside project_root",
+    "code-scan validate: OK",
+    "git diff --check: clean",
+    "workstudio npm lint: exit 0",
+    "workstudio npm typecheck: exit 0",
+    "workstudio vitest: 4 files / 52 tests passed"
+  ],
+  "references": [
+    "docs/CONVENTIONS.md",
+    "docs/PROJECT.md",
+    "workstudio/eslint.config.js",
+    "workstudio/tsconfig.json",
+    "workstudio/vitest.config.ts"
+  ],
+  "missing_capabilities": [],
+  "report_path": "tasks/128-260913-opds-워크스튜디오-프로젝트-레지스트리/GC-CONVENTION-2026-09-13T00-36-30-WorkStudio.md"
+}

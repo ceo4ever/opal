@@ -52,4 +52,20 @@ describe("WorkStudio typed preload IPC contract (S-4)", () => {
     expect(mainSource).toContain("chooseDirectory");
     expect(mainSource).toContain("listFiles");
   });
+
+  it("S-1 through S-5 expose persistent recent-project operations only through the typed preload bridge", () => {
+    const ipcSource = readFileSync(ipcPath, "utf8");
+    const preloadSource = readFileSync(preloadPath, "utf8");
+    const mainSource = readFileSync(mainPath, "utf8");
+
+    for (const operation of ["listRecent", "openRecent", "repairRecent", "removeRecent"]) {
+      expect(ipcSource).toContain(operation);
+      expect(preloadSource).toContain(operation);
+    }
+    expect(ipcSource).toContain('"available" | "missing"');
+    expect(ipcSource).toContain("lastAccessedAt");
+    expect(ipcSource).toContain("recovery");
+    expect(mainSource).toContain('app.getPath("userData")');
+    expect(mainSource).not.toMatch(/nodeIntegration:\s*true/);
+  });
 });

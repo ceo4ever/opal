@@ -34,7 +34,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { collectLeaves, isDescendantProject, MockWorkbenchAdapter, WORKSTUDIO_STORAGE_KEY } from "./mock-adapter";
-import type { IpcErrorCode, ProjectDirectorySelection, ProjectFileNode } from "./ipc";
+import type { IpcErrorCode, ProjectDirectorySelection, ProjectFileNode, RecentProject } from "./ipc";
 import type {
   ChangeEntry, CoordinationEvent, CoordinationEventType, FileNode, FontScale, GitFileStatus, Pilot, Project, RuntimeBinding, SessionStatus, Settings, SplitDirection, SplitNode, SurfaceKind, SurfaceTab, Task, TaskStatus, ThemeMode, WorkbenchState,
 } from "./types";
@@ -189,11 +189,16 @@ function TaskParticipantChip({ project }: { project: Project | undefined }) {
   return <Badge variant="outline" className="rounded-none px-1 text-[10px] font-semibold">{project.name.toUpperCase()}</Badge>;
 }
 
-function FirstRunWelcome({ notice, onOpenExisting, onCreateNew, onOpenDemo }: {
+function FirstRunWelcome({ notice, recentProjects, recentLoading, onOpenExisting, onCreateNew, onOpenDemo, onOpenRecent, onRepairRecent, onRemoveRecent }: {
   notice: { kind: "success" | "info" | "error"; title: string; message: string } | null;
+  recentProjects: RecentProject[];
+  recentLoading: boolean;
   onOpenExisting: () => void;
   onCreateNew: () => void;
   onOpenDemo: () => void;
+  onOpenRecent: (project: RecentProject) => void;
+  onRepairRecent: (project: RecentProject) => void;
+  onRemoveRecent: (project: RecentProject) => void;
 }) {
   return (
     <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/95 p-8 backdrop-blur" role="dialog" aria-modal="true" aria-labelledby="first-run-title">
@@ -225,7 +230,36 @@ function FirstRunWelcome({ notice, onOpenExisting, onCreateNew, onOpenDemo }: {
         <aside className="flex min-h-[420px] flex-col gap-4 bg-muted/25 p-6">
           <div>
             <h2 className="text-sm font-semibold">최근 프로젝트</h2>
-            <p className="mt-3 rounded-md border border-dashed bg-background/60 p-4 text-sm text-muted-foreground">최근 프로젝트가 없습니다</p>
+            {recentLoading ? (
+              <p className="mt-3 flex items-center gap-2 rounded-md border border-dashed bg-background/60 p-4 text-sm text-muted-foreground"><Loader2 className="size-4 animate-spin" />불러오는 중</p>
+            ) : recentProjects.length === 0 ? (
+              <p className="mt-3 rounded-md border border-dashed bg-background/60 p-4 text-sm text-muted-foreground">최근 프로젝트가 없습니다</p>
+            ) : (
+              <div className="mt-3 flex flex-col gap-2">
+                {recentProjects.map((project) => (
+                  <div key={project.id} className="rounded-md border bg-background/70 p-2">
+                    <div className="flex items-start gap-2">
+                      <Button
+                        variant="ghost"
+                        className="h-auto min-w-0 flex-1 justify-start px-2 py-1 text-left"
+                        disabled={project.status === "missing"}
+                        onClick={() => onOpenRecent(project)}
+                      >
+                        <span className="min-w-0">
+                          <span className="block truncate font-medium">{project.name}</span>
+                          <span className="block truncate text-xs font-normal text-muted-foreground">{project.path}</span>
+                        </span>
+                      </Button>
+                      {project.status === "missing" && <Badge variant="destructive">경로 유실</Badge>}
+                    </div>
+                    <div className="mt-1 flex justify-end gap-1">
+                      {project.status === "missing" && <Button size="sm" variant="outline" aria-label="경로 복구" onClick={() => onRepairRecent(project)}>경로 복구</Button>}
+                      <Button size="sm" variant="ghost" aria-label="목록에서 제거" onClick={() => onRemoveRecent(project)}>목록에서 제거</Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </aside>
       </section>
@@ -1302,6 +1336,10 @@ export function WorkStudioApp() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [recoveryAlert, setRecoveryAlert] = useState(recovered);
   const [projectAddNotice, setProjectAddNotice] = useState<{ kind: "success" | "info" | "error"; title: string; message: string } | null>(null);
+  const [recentProjects, setRecentProjects] = useState<RecentProject[]>([]);
+  const [recentLoading, setRecentLoading] = useState(() => Boolean(
+    shouldShowFirstRun && (globalThis.opalWorkStudio ?? window.opalWorkStudio)?.project?.listRecent,
+  ));
   const [ipcFileNodesByScope, setIpcFileNodesByScope] = useState<Record<string, FileNode[]>>({});
   const [commitMessage, setCommitMessage] = useState("");
   const [collapsedChangeGroups, setCollapsedChangeGroups] = useState<Set<string>>(new Set());
@@ -1346,6 +1384,29 @@ export function WorkStudioApp() {
 
   useEffect(() => {
     const api = globalThis.opalWorkStudio ?? window.opalWorkStudio;
+    if (!firstRunOpen || !api?.project?.listRecent) return;
+    let cancelled = false;
+    void Promise.resolve(api.project.listRecent()).then((result) => {
+      if (cancelled) return;
+      setRecentLoading(false);
+      if (!result.ok) {
+        setProjectAddNotice({ kind: "error", title: "최근 Project", message: ipcErrorMessage(result.code, result.message) });
+        return;
+      }
+      setRecentProjects(result.value.projects);
+      if (result.value.recovery) {
+        setProjectAddNotice({
+          kind: "info",
+          title: "Project 목록 복구",
+          message: "저장된 Project 목록을 읽지 못해 빈 목록으로 안전하게 시작했습니다. 원본 데이터는 보존했습니다.",
+        });
+      }
+    });
+    return () => { cancelled = true; };
+  }, [firstRunOpen]);
+
+  useEffect(() => {
+    const api = globalThis.opalWorkStudio ?? window.opalWorkStudio;
     if (!api?.project?.listFiles || !scopeRootPath || activeProject?.id === "project_opal" || childProjectRoots.length > 0 || ipcFileNodesByScope[filesScopeKey]) return;
     let cancelled = false;
     void Promise.resolve(api.project.listFiles({ rootPath: scopeRootPath })).then((result) => {
@@ -1383,7 +1444,7 @@ export function WorkStudioApp() {
     const normalizedPath = path.trim().replace(/\\/g, "/").replace(/\/+/g, "/").replace(/\/$/, "");
     if (!normalizedPath || current.projects.some((project) => project.repositoryPath === normalizedPath)) return current;
     const stamp = Date.now();
-    const projectId = `project_ipc_${stamp}`;
+    const projectId = selection.id ?? `project_ipc_${stamp}`;
     const pmAgentId = selection.isOpalProject ? `pm_ipc_${stamp}` : "opal-pm";
     const project: Project = {
       id: projectId,
@@ -1434,6 +1495,10 @@ export function WorkStudioApp() {
     }
     const next = registerDirectorySelection(state, registered.value);
     commit(next);
+    if (registered.value.id && "lastAccessedAt" in registered.value) {
+      const registeredRecent = registered.value as RecentProject;
+      setRecentProjects((current) => [registeredRecent, ...current.filter((project) => project.id !== registeredRecent.id)]);
+    }
     setProjectAddNotice({
       kind: "success",
       title: registered.value.isOpalProject ? "OPAL Project 감지" : "Project 등록 완료",
@@ -1447,6 +1512,53 @@ export function WorkStudioApp() {
   const enterFirstRunProjectFlow = async () => {
     const completed = await handleProjectAdd();
     if (completed) setFirstRunOpen(false);
+  };
+
+  const openRecentProject = async (project: RecentProject) => {
+    const api = globalThis.opalWorkStudio ?? window.opalWorkStudio;
+    if (!api?.project?.openRecent || project.status === "missing") return;
+    const opened = await api.project.openRecent(project.id);
+    if (!opened.ok) {
+      setProjectAddNotice({ kind: "error", title: "Project 열기", message: ipcErrorMessage(opened.code, opened.message) });
+      return;
+    }
+    const next = registerDirectorySelection(state, opened.value);
+    commit(next);
+    setRecentProjects((current) => [opened.value, ...current.filter((item) => item.id !== opened.value.id)]);
+    setProjectAddNotice({
+      kind: "success",
+      title: "Project 열기",
+      message: `${opened.value.name} · ${opened.value.pmName ?? `${opened.value.name} PM`}`,
+    });
+    setFirstRunOpen(false);
+  };
+
+  const repairRecentProject = async (project: RecentProject) => {
+    const api = globalThis.opalWorkStudio ?? window.opalWorkStudio;
+    if (!api?.project?.chooseDirectory || !api.project.repairRecent) return;
+    const chosen = await api.project.chooseDirectory();
+    if (!chosen.ok) {
+      setProjectAddNotice({ kind: chosen.code === "cancelled" ? "info" : "error", title: "Project 경로 복구", message: ipcErrorMessage(chosen.code, chosen.message) });
+      return;
+    }
+    const repaired = await api.project.repairRecent(project.id, chosen.value.realPath ?? chosen.value.path);
+    if (!repaired.ok) {
+      setProjectAddNotice({ kind: "error", title: "Project 경로 복구", message: ipcErrorMessage(repaired.code, repaired.message) });
+      return;
+    }
+    setRecentProjects((current) => [repaired.value, ...current.filter((item) => item.id !== repaired.value.id)]);
+    setProjectAddNotice({ kind: "success", title: "Project 경로 복구", message: `${repaired.value.name} Project 경로를 복구했습니다.` });
+  };
+
+  const removeRecentProject = async (project: RecentProject) => {
+    const api = globalThis.opalWorkStudio ?? window.opalWorkStudio;
+    if (!api?.project?.removeRecent) return;
+    const removed = await api.project.removeRecent(project.id);
+    if (!removed.ok) {
+      setProjectAddNotice({ kind: "error", title: "최근 Project 제거", message: ipcErrorMessage(removed.code, removed.message) });
+      return;
+    }
+    setRecentProjects((current) => current.filter((item) => item.id !== project.id));
   };
 
   const enterDemoWorkspace = () => {
@@ -1730,9 +1842,14 @@ export function WorkStudioApp() {
       {firstRunOpen && (
         <FirstRunWelcome
           notice={projectAddNotice}
+          recentProjects={recentProjects}
+          recentLoading={recentLoading}
           onOpenExisting={() => void enterFirstRunProjectFlow()}
-          onCreateNew={() => void enterFirstRunProjectFlow()}
+          onCreateNew={() => setProjectAddNotice({ kind: "info", title: "새 Project 만들기", message: "새 폴더 생성과 OPAL 초기화는 다음 기능에서 지원합니다. 지금은 기존 Project를 열어주세요." })}
           onOpenDemo={enterDemoWorkspace}
+          onOpenRecent={(project) => void openRecentProject(project)}
+          onRepairRecent={(project) => void repairRecentProject(project)}
+          onRemoveRecent={(project) => void removeRecentProject(project)}
         />
       )}
     </main>
