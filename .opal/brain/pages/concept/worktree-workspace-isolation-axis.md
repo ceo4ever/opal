@@ -9,16 +9,24 @@ tags:
 - isolation
 sources:
 - task:092
+- task:118
 related:
 - worktree-tool
 - worktree-slot-existence-to-occupancy-judgment
+- worktree-task-root-allocator-root-split
 created: '2026-08-15'
-updated: '2026-08-15'
+updated: '2026-09-12'
 status: draft
 ---
 ## 개요
 
 OPAL 태스크 파이프라인에 실행 모드 축(`--interactive`/`--semi-agentic`/`--agentic`)과 **직교하는** 별도의 작업공간 축(`--worktree`/`--wt`)을 신설했다. 플래그를 쓰지 않으면 현행 동작이 그대로 유지되고, 쓰면 태스크별 코드 작업본이 `{프로젝트}/.opal-worktrees/task_{NNN}/`에 git worktree로 격리된다.
+
+## 현행 계약 (대체됨)
+
+이 페이지가 기록한 격리 경계 중 **"문서는 허브에 고정하고 코드만 분기한다"는 위치 기준 원칙은 태스크 118이 대체했다.** 태스크 캡슐과 `.opal` 설정의 위치는 더 이상 디렉터리 경로 문자열로 정해지지 않고, 용도별로 갈린 두 루트의 소유권으로 정해진다 — 해석용 루트가 태스크 문서·설정·branch source를 소유하고, 허브 쓰기용 루트가 허브 메모리 이력 귀속을 소유한다. 현행 계약은 [[worktree-task-root-allocator-root-split]]과 그 원문(`opal/core/references/harness/worktree.md` §task root와 allocator root 계약)이다.
+
+아래 절들은 작업공간 축 신설 당시(태스크 092)의 결정 기록으로 유지한다. 축이 모드 축과 직교한다는 정의, 코드 작업본 경로, 의존성 지연 설치, 회수 시점은 그대로 유효하다.
 
 ## 결정 배경 (WHY)
 
@@ -47,3 +55,4 @@ OPAL 태스크 파이프라인에 실행 모드 축(`--interactive`/`--semi-agen
 
 - [[worktree-tool]]
 - [[worktree-slot-existence-to-occupancy-judgment]]
+- [[worktree-task-root-allocator-root-split]] — 이 페이지의 위치 기준 원칙을 대체한 현행 루트 소유권 계약

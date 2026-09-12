@@ -406,3 +406,7 @@
 - 신규: [[session-project-action-needed-briefing]]
 - 출처: task:116
 
+## [2026-09-12] ingest | CLOSE ingest — 태스크 118 워크트리 태스크 소유권 루트분리
+- 신규: [[pages/concept/worktree-task-root-allocator-root-split.md]], [[pages/concept/absence-assertion-is-enforcement-not-residue.md]], [[pages/concept/byte-identical-proof-requires-data-root-fixed.md]], [[pages/concept/rename-without-alias-surfaces-missed-callers.md]]
+- 출처: task:118
+

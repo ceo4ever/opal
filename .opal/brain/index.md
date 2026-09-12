@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-09-11 11:35
+> 갱신: 2026-09-12 12:19
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -34,6 +34,7 @@
 
 ## 개념
 - [[070-derivation-engine-perspective-bias-lesson]] — 070 사건 근본원인 — 도출 엔진 관점 편향과 게이트 집행 #lesson-learned #testing #scenario-gate #root-cause #task-073
+- [[absence-assertion-is-enforcement-not-residue]] — 부재 단언은 잔재가 아니라 집행 장치다 — 제거 전수 검사의 명시 예외 #removal #verification #test-design #lesson
 - [[ac-infeasible-from-start-requires-preexisting-baseline-diff]] — AC가 착수 시점부터 실현 불가일 수 있다 #verification #ac #task-114
 - [[active-platform-dir-install-target-lesson]] — 활성 Claude 플랫폼 디렉토리가 ~/.claude 기본이 아닐 수 있다 — install 타겟 정합 교훈 (032 P2) #install #deploy #platform #dispatch #lesson-learned
 - [[adapter-body-model-level-substitution]] — 어댑터 본문 model 레벨 치환 — frontmatter 비대칭 해소 (032) #adapter #install #model #platform #sub-dispatch #constitution
@@ -64,6 +65,7 @@
 - [[brain-search-whitespace-insensitive]] — brain-tool search 공백 무시 매칭 — 한국어 복합명사 띄어쓰기 편차 흡수 #architecture #brain #search #korean #normalization
 - [[brain-validate-flatness-enforcement]] — brain validate 선택 필드 평탄성 집행 (tags/sources/related flat string[]) #brain-tool #validate #enforce #flatness #frontmatter
 - [[business-terminology-first-principle]] — 기획 산출물 비즈니스 용어 우선 원칙 #citation-rules #opal-writing #opwt #brain-ingest #document-standard
+- [[byte-identical-proof-requires-data-root-fixed]] — 바이트 동일 증명은 데이터 루트를 고정하고 코드만 스왑해야 성립한다 #regression #verification #test-design #evidence
 - [[clarification-gate-backward-compat]] — 명확화 게이트 하위호환 정책 A — graceful skip #pipeline #enforcement #backward-compat #state-tool
 - [[clarification-gate]] — 명확화 게이트 — TASK 4요소 잠금 기계 집행 #pipeline #enforcement #state-tool #clarification
 - [[close-history-auto-link-enforce-conversion]] — CLOSE 완료 히스토리 자동 연결 — 산문 트리거에서 도구 집행으로 전환 #opal-pipeline #close #memory #state-tool #memory-tool #enforce-not-advise
@@ -257,6 +259,7 @@
 - [[regulation-tool-four-way-mismatch]] — 규정-도구 4방향 불일치 — 같은 태스크 안에서도 발생한다 #header-standard #code-scan #convention
 - [[release-asset-presence-single-signal]] — 릴리즈 자산 존재 판정 — 체크섬 목록 수신 성공을 단일 신호로 쓴다 #deploy #release #install #checksum #decision
 - [[removal-task-boundary-unification]] — 제거형 태스크의 판정 경계 통일 기법 — 배포 strip 식 재사용 #verification #removal #install-script #technique
+- [[rename-without-alias-surfaces-missed-callers]] — 별칭 없는 개명이 미갱신 호출을 즉시 드러낸다 #refactoring #api-design #silent-failure #lesson
 - [[replacement-ac-must-target-artifact-not-source]] — 교체형 AC는 산출물을 판정해야 한다 — 소스 grep은 자기모순을 만든다 #test-scenario #acceptance-criteria #gate-design #lesson #migration
 - [[replacement-edit-new-path-before-old-path-removal]] — 교체형 개정은 신형 완결 후 구형을 제거한다 — 도달 경로 0개 구간 차단 #ssot #migration #governance #phase-ordering #lesson
 - [[replacement-goal-verification-scope-gap]] — 교체형 목표의 검증 범위 함정 — 주장의 범위와 검증의 범위를 맞춰야 한다 #lesson #verification #gate-design #scenario-gate #task-090 #task-091
@@ -342,6 +345,7 @@
 - [[worker-bypassed-blocked-tool-filename-trigger]] — 워커가 차단된 도구를 우회한 사례 — 원인은 파일명 트리거 + 규율 부재 #worker-discipline #tool-bypass #pm-prompt #dispatch
 - [[worker-role-boundary-exposes-pm-measurement-error]] — 워커 역할경계 준수가 PM 측정식 결함을 드러낸다 #lesson #worker #governance #opds
 - [[worktree-slot-existence-to-occupancy-judgment]] — 워크트리 슬롯 판정 — 존재에서 점유로 #worktree #git #lesson #non-trivial-resolution
+- [[worktree-task-root-allocator-root-split]] — 워크트리 태스크 루트 분리 — 해석용 task root와 발급용 allocator root #worktree #architecture #workspace #ownership #root-resolution
 - [[worktree-tasks-fixture-structural-limit]] — 워크트리 tasks 픽스처 구조적 한계 — 절대 수치 대신 기준선 대비 증분 #worktree #test-design #harness
 - [[worktree-workspace-isolation-axis]] — 워크트리 격리 축 — 문서는 허브 고정, 코드만 분기 #architecture #workspace #worktree #git #isolation
 - [[wtm-agent-cmux-integration]] — wtm-agent OPAL 표준화 + cmux-tool 신설 #tool #agent #wtm #cmux #task
