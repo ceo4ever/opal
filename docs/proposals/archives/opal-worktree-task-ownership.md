@@ -1,7 +1,10 @@
 # OPAL 워크트리 태스크 소유권 전환 제안서
 
-> 상태: 제안
-> 적용 범위: Phase 0·Phase 1 적용 완료(태스크 118). Phase 2~4 미적용
+> 상태: 적용완료
+> 적용 범위: Phase 0·Phase 1(태스크 118). 규범 원문은 `opal/core/references/harness/worktree.md`가 소유한다 —
+> §task root와 allocator root 계약 · §canonical path 발급 계약 · §cone 확장 계약 · §Phase 1 진입 legacy gate 절차.
+> **미이관**: §8 multi-repo 계약(`task_artifacts.repo`)은 아직 owner 문서로 옮기지 않았다. Phase 4 착수 시
+> 이 절을 `harness/worktree.md`로 이관한 뒤 소비한다. Phase 2·3은 롤아웃 로드맵이며 후속 태스크가 재계획한다.
 > 작성: 알투(PM)
 > 작성일: 2026-09-11
 > 개정 기준일: 2026-09-12
@@ -578,9 +581,11 @@ worktree 설정에 `task_artifacts.repo`를 명시한다.
 - worktree 태스크의 run-log segment는 태스크 캡슐에 포함돼 branch와 함께 merge된다.
 - `.oppl-run/`이나 raw 로그의 추적 여부는 각 로그 제안의 보존 정책을 따른다.
 
-`docs/proposals/opal-task-run-log.md`의 task path와 R-4 fixture는 본 제안이 채택되면 허브 강제
-정규화가 아니라 canonical task path resolver를 참조하도록 개정한다. 동시성 fixture는 허브 PM과
-워크트리 worker가 registry를 통해 같은 워크트리 lock을 획득하는 것을 검증한다.
+`docs/proposals/opal-task-run-log.md`의 task path와 R-4 fixture는 허브 강제 정규화가 아니라
+canonical task path resolver를 참조한다. Phase 1 적용(태스크 118)으로 세그먼트 기반 허브 강제
+정규화가 활성 계약에서 제거됐으므로 이 참조는 `harness/worktree.md` §task root와 allocator root
+계약을 따른다. 동시성 fixture는 허브 PM과 워크트리 worker가 registry를 통해 같은 워크트리 lock을
+획득하는 것을 검증한다.
 
 ---
 
