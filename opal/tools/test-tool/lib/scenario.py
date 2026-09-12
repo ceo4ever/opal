@@ -4,7 +4,7 @@
   "task": "056,069,073,111",
   "layer": "util",
   "domain": "opal-tools",
-  "description": "test-tool scenario-* 서브명령(scenario-init/scenario-lock/scenario-mark/scenario-status/scenario-red/scenario-fidelity-check/scenario-conformance/scenario-coverage-check/scenario-coverage-build) 핸들러. test-scenario.json SSOT(spec존/result존) 관리 — RED-first 동결 게이트(scenario-lock은 red_required 시나리오의 red_confirmed만 요구하며 필드가 없는 기존 시나리오는 RED 대상으로 간주) + scenario-mark는 locked==true 이후에만 허용. 증거 충실도 사다리(mock<real-http<real-usage) 필드(required_fidelity/fidelity)와 시나리오별 부분 게이트(scenario-fidelity-check) + 표면(surface) 전수 conformance 판정(scenario-conformance, surfaces.json 분모)을 제공한다. scenario-coverage-check는 scenario-gate.md §3 정규화 페이로드(pilot-중립, test-scenario.json SSOT 미접촉)의 R/F/H↔시나리오 매핑 커버리지(루브릭 ②③④)를 결정론 판정한다. scenario-coverage-build는 sdlc-v2 TASK/PLAN/TEST-SCENARIO의 AC/C/S와 optional H를 결정론적으로 .scenario-coverage-input.json으로 변환하고 중복 S-ID를 입력 오류로 거부한다. resolver/runner/e2e_adapter와 완전 격리되어 기존 4서브명령(resolve/check/unit/integration) 로직에 간섭하지 않는다. 타 도구의 SSOT는 일절 미접촉(축 분리, H-7).",
+  "description": "test-tool scenario-* 서브명령 핸들러. test-scenario.json spec/result SSOT와 RED 동결, v2 E2E verdict-json/handoff runtime validation, fidelity/conformance/coverage gate를 관리한다.",
   "exports": [
     "SCENARIO_ERROR_CODES",
     "FIDELITY_ORDER",
@@ -20,7 +20,7 @@
     "cmd_scenario_coverage_check",
     "cmd_scenario_coverage_build"
   ],
-  "depends": []
+  "depends": ["lib.e2e_contract"]
 }
 
 test-tool scenario-* 핸들러 — test-scenario.json SSOT (spec존/result존 분리).
@@ -77,6 +77,18 @@ import sys
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional, Sequence, Set
 
+from lib.e2e_contract import (
+    E2E_CONTRACT_SCHEMA_VERSION,
+    FINAL_STATUSES,
+    HANDOFF_REQUIRED_FIELDS,
+    OPERATIONAL_STATUSES,
+    build_verdict,
+    status_to_error,
+    status_to_exit,
+    validate_pass_requirements,
+    validate_scenario_contract,
+)
+
 _KST = timezone(timedelta(hours=9))
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -95,6 +107,8 @@ SCENARIO_ERROR_CODES: Dict[str, str] = {
     "surfaces_file_not_found":  "surfaces.json 부재(명시적 --surfaces 경로 포함) — applicable:false로 스킵(069/M-5, 정보용 배정)",
     "coverage_unmet":           "요구/기능/가설 미커버 존재 — scenario-coverage-check 거부(073/R-2)",
     "coverage_input_invalid":   "--coverage-input JSON 파싱/스키마 실패 — scenario-coverage-check 거부(073)",
+    "scenario_contract_invalid": "test-scenario.json v2 계약 위반 — profile/executor/status/schema 검증 실패",
+    "resume_verification_failed": "human handoff resume token/run/evidence 검증 실패",
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -189,13 +203,112 @@ def _normalize_scenario(raw: Dict[str, Any]) -> Dict[str, Any]:
         "required_fidelity": required_fidelity,
         # spec존 — 검증 대상 표면 id (069/F-006, nullable)
         "surface_ref": raw.get("surface_ref"),
+        "surface_kind": raw.get("surface_kind"),
+        "profile": raw.get("profile"),
+        "actors": raw.get("actors", []),
+        "steps": raw.get("steps", []),
+        "assertions": raw.get("assertions", []),
+        "required_evidence": raw.get("required_evidence", []),
+        "handoff": raw.get("handoff"),
         # result존
         "result": raw.get("result"),
+        "operational_status": raw.get("operational_status"),
+        "observed_executors": raw.get("observed_executors", []),
+        "assertion_results": raw.get("assertion_results", []),
+        "observed_evidence": raw.get("observed_evidence", []),
+        "handoff_state": raw.get("handoff_state"),
+        "run_id": raw.get("run_id"),
         "evidence": raw.get("evidence"),
         "marked_at": raw.get("marked_at"),
         # result존 — 실제 관찰된 충실도 (069/F-005, scenario-mark --fidelity로 기록)
         "fidelity": raw.get("fidelity", "mock"),
     }
+
+
+def _complete_handoff_state(target: Dict[str, Any], state: Optional[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+    """Merge scenario handoff defaults into runtime handoff_state and require all fields."""
+    if state is not None and not isinstance(state, dict):
+        return None
+    merged: Dict[str, Any] = {}
+    scenario_handoff = target.get("handoff")
+    if isinstance(scenario_handoff, dict):
+        merged.update(scenario_handoff)
+    if state:
+        merged.update(state)
+    missing = [field for field in HANDOFF_REQUIRED_FIELDS if merged.get(field) in (None, "", [])]
+    if missing:
+        return None
+    return merged
+
+
+def _scenario_mark_mode(args: argparse.Namespace) -> Dict[str, Any]:
+    result_present = getattr(args, "result", None) is not None
+    verdict_present = getattr(args, "verdict_json", None) is not None
+    resume_values = {
+        "resume_run_id": getattr(args, "resume_run_id", None),
+        "resume_token": getattr(args, "resume_token", None),
+        "submission": getattr(args, "submission", None),
+    }
+    resume_present = any(value is not None for value in resume_values.values())
+    resume_complete = all(value is not None for value in resume_values.values())
+    if resume_present and not resume_complete:
+        return {"ok": False, "error": "resume_verification_failed", "exit": 6}
+    selected = sum(1 for value in (result_present, verdict_present, resume_present) if value)
+    if selected != 1:
+        return {"ok": False, "error": "scenario_contract_invalid", "exit": 17}
+    if result_present:
+        return {"ok": True, "mode": "result"}
+    if verdict_present:
+        return {"ok": True, "mode": "verdict"}
+    return {"ok": True, "mode": "resume"}
+
+
+def _ensure_scenario_contract(spec: Dict[str, Any], command: str, *, legacy_defaults: bool = True) -> None:
+    if spec.get("schema_version") == E2E_CONTRACT_SCHEMA_VERSION:
+        root_keys = ("schema_version", "task_id", "locked", "created_at", "locked_at", "scenarios")
+        missing_root = [key for key in root_keys if key not in spec]
+        if missing_root:
+            _error("scenario_contract_invalid", command, 17, detail=f"missing required root keys {missing_root}")
+        if not isinstance(spec.get("scenarios"), list):
+            _error("scenario_contract_invalid", command, 17, detail="scenarios must be a list")
+        scenario_keys = (
+            "id",
+            "acceptance_ref",
+            "type",
+            "expected",
+            "red_required",
+            "red_confirmed",
+            "red_evidence",
+            "red_at",
+            "surface_ref",
+            "surface_kind",
+            "profile",
+            "actors",
+            "steps",
+            "assertions",
+            "required_evidence",
+            "handoff",
+            "result",
+            "operational_status",
+            "observed_executors",
+            "assertion_results",
+            "observed_evidence",
+            "handoff_state",
+            "evidence",
+            "marked_at",
+        )
+        for scenario in spec.get("scenarios") or []:
+            missing = [key for key in scenario_keys if key not in scenario]
+            if missing:
+                _error(
+                    "scenario_contract_invalid",
+                    command,
+                    17,
+                    detail=f"{scenario.get('id')}: missing required scenario keys {missing}",
+                )
+    contract = validate_scenario_contract(spec, legacy_defaults=legacy_defaults)
+    if not contract["ok"]:
+        _error("scenario_contract_invalid", command, 17, detail=str(contract.get("detail")))
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -228,13 +341,14 @@ def cmd_scenario_init(args: argparse.Namespace) -> None:
 
     now = _now_kst()
     spec = {
-        "schema_version": "1.0",
+        "schema_version": E2E_CONTRACT_SCHEMA_VERSION,
         "task_id": task_path.name,
         "locked": False,
         "created_at": now,
         "locked_at": None,
         "scenarios": scenarios,
     }
+    _ensure_scenario_contract(spec, "scenario-init", legacy_defaults=False)
     _save_spec(task_path, spec)
 
     resp: Dict[str, Any] = {
@@ -258,6 +372,7 @@ def cmd_scenario_lock(args: argparse.Namespace) -> None:
     if spec is None:
         _error("scenario_not_initialized", "scenario-lock", 10)
         return
+    _ensure_scenario_contract(spec, "scenario-lock", legacy_defaults=True)
 
     scenarios = spec.get("scenarios", [])
     unconfirmed = [
@@ -291,6 +406,7 @@ def cmd_scenario_mark(args: argparse.Namespace) -> None:
     if spec is None:
         _error("scenario_not_initialized", "scenario-mark", 10)
         return
+    _ensure_scenario_contract(spec, "scenario-mark", legacy_defaults=True)
 
     if not spec.get("locked"):
         _error("scenario_not_locked", "scenario-mark", 9)
@@ -303,7 +419,129 @@ def cmd_scenario_mark(args: argparse.Namespace) -> None:
         return
 
     now = _now_kst()
-    target["result"] = args.result
+    mode_result = _scenario_mark_mode(args)
+    if not mode_result["ok"]:
+        _error(mode_result["error"], "scenario-mark", mode_result["exit"])
+        return
+    mode = mode_result["mode"]
+    verdict_path_arg = getattr(args, "verdict_json", None)
+    if mode == "verdict":
+        try:
+            with open(pathlib.Path(verdict_path_arg), encoding="utf-8") as f:
+                verdict_input = json.load(f)
+        except (OSError, json.JSONDecodeError) as e:
+            _error("scenario_contract_invalid", "scenario-mark", 17, detail=str(e))
+            return
+        verdict = build_verdict(verdict_input)
+        status = verdict["status"]
+        if status == "pass":
+            pass_gate = validate_pass_requirements(target, verdict_input)
+            if not pass_gate["ok"]:
+                _respond({
+                    "ok": False,
+                    "command": "scenario-mark",
+                    "error": pass_gate["error"],
+                    "status": pass_gate["status"],
+                    "detail": pass_gate["detail"],
+                }, status_to_exit(pass_gate["status"] or "fail"))
+                return
+            target["result"] = "pass"
+            target["operational_status"] = None
+            target["fidelity"] = verdict_input.get("fidelity", target.get("required_fidelity", "mock"))
+        elif status == "awaiting_human":
+            handoff_state = _complete_handoff_state(target, verdict_input.get("handoff_state"))
+            if handoff_state is None or not verdict_input.get("run_id"):
+                _error("scenario_contract_invalid", "scenario-mark", 17, detail="complete handoff_state and run_id required")
+                return
+            target["result"] = None
+            target["operational_status"] = "awaiting_human"
+            target["handoff_state"] = handoff_state
+            target["run_id"] = verdict_input.get("run_id")
+        else:
+            if status in FINAL_STATUSES:
+                target["result"] = status
+            target["operational_status"] = None
+        target["observed_executors"] = verdict_input.get("observed_executors", [])
+        target["assertion_results"] = verdict_input.get("assertion_results", [])
+        target["observed_evidence"] = verdict_input.get("observed_evidence", [])
+        target["evidence"] = verdict_input.get("evidence")
+        target["marked_at"] = now
+        _save_spec(task_path, spec)
+        _respond({
+            "ok": status == "pass" or status == "awaiting_human",
+            "command": "scenario-mark",
+            "scenario_id": scenario_id,
+            "status": status,
+            "error": status_to_error(status),
+            "final_statuses": list(FINAL_STATUSES),
+            "operational_statuses": list(OPERATIONAL_STATUSES),
+        }, status_to_exit(status))
+        return
+
+    resume_token = getattr(args, "resume_token", None)
+    if mode == "resume":
+        try:
+            with open(pathlib.Path(args.submission), encoding="utf-8") as f:
+                submission = json.load(f)
+        except (OSError, json.JSONDecodeError) as e:
+            _error("resume_verification_failed", "scenario-mark", 6, detail=str(e))
+            return
+        expected_run = target.get("run_id")
+        expected_handoff = target.get("handoff_state") or {}
+        expected_token = expected_handoff.get("resume_token")
+        if (
+            target.get("operational_status") != "awaiting_human"
+            or args.resume_run_id != expected_run
+            or resume_token != expected_token
+            or submission.get("run_id") != expected_run
+            or submission.get("resume_token") != expected_token
+        ):
+            _error("resume_verification_failed", "scenario-mark", 6)
+            return
+        result_payload = dict(submission)
+        result_payload["status"] = "pass"
+        result_payload["profile"] = target.get("profile")
+        pass_gate = validate_pass_requirements(target, result_payload)
+        if not pass_gate["ok"]:
+            _respond({
+                "ok": False,
+                "command": "scenario-mark",
+                "error": pass_gate["error"],
+                "status": pass_gate["status"],
+                "detail": pass_gate["detail"],
+            }, status_to_exit(pass_gate["status"] or "fail"))
+            return
+        target["result"] = "pass"
+        target["operational_status"] = None
+        target["observed_executors"] = submission.get("observed_executors", [])
+        target["assertion_results"] = submission.get("assertion_results", [])
+        target["observed_evidence"] = submission.get("observed_evidence", [])
+        target["fidelity"] = submission.get("fidelity", target.get("required_fidelity", "mock"))
+        target["marked_at"] = now
+        _save_spec(task_path, spec)
+        _respond({
+            "ok": True,
+            "command": "scenario-mark",
+            "scenario_id": scenario_id,
+            "status": "pass",
+        }, 0)
+        return
+
+    result_arg = getattr(args, "result", None)
+    if (
+        result_arg == "pass"
+        and (target.get("profile") is not None or target.get("required_fidelity") == "real-usage")
+    ):
+        _respond({
+            "ok": False,
+            "command": "scenario-mark",
+            "error": "assertion_required",
+            "status": "fail",
+            "detail": "pass/real-usage requires --verdict-json structured assertions and evidence",
+        }, 6)
+        return
+
+    target["result"] = result_arg
     target["evidence"] = getattr(args, "evidence", None)
     target["marked_at"] = now
     # (069/M-5) --fidelity 미지정 시 "mock" 기본값(관대한 기본값, 실제 충실도 미기록 결과는
@@ -315,7 +553,7 @@ def cmd_scenario_mark(args: argparse.Namespace) -> None:
         "ok": True,
         "command": "scenario-mark",
         "scenario_id": scenario_id,
-        "result": args.result,
+        "result": result_arg,
     }, 0)
 
 
@@ -363,6 +601,8 @@ def cmd_scenario_status(args: argparse.Namespace) -> None:
         _error("scenario_not_initialized", "scenario-status", 10)
         return
 
+    _ensure_scenario_contract(spec, "scenario-status", legacy_defaults=True)
+
     scenarios = spec.get("scenarios", [])
     total = len(scenarios)
     red_confirmed = sum(1 for s in scenarios if s.get("red_confirmed") is True)
@@ -374,6 +614,14 @@ def cmd_scenario_status(args: argparse.Namespace) -> None:
     passed = sum(1 for s in scenarios if s.get("result") == "pass")
     failed = sum(1 for s in scenarios if s.get("result") == "fail")
     blocked = sum(1 for s in scenarios if s.get("result") == "blocked")
+    status_counts = {
+        "pass": passed,
+        "fail": failed,
+        "executor_unavailable": sum(1 for s in scenarios if s.get("result") == "executor_unavailable"),
+        "infra_error": sum(1 for s in scenarios if s.get("result") == "infra_error"),
+        "blocked": blocked,
+        "awaiting_human": sum(1 for s in scenarios if s.get("operational_status") == "awaiting_human"),
+    }
 
     _respond({
         "ok": True,
@@ -386,6 +634,8 @@ def cmd_scenario_status(args: argparse.Namespace) -> None:
         "passed": passed,
         "failed": failed,
         "blocked": blocked,
+        "awaiting_human": status_counts["awaiting_human"],
+        "status_counts": status_counts,
     }, 0)
 
 
@@ -400,6 +650,7 @@ def cmd_scenario_fidelity_check(args: argparse.Namespace) -> None:
     if spec is None:
         _error("scenario_not_initialized", "scenario-fidelity-check", 10)
         return
+    _ensure_scenario_contract(spec, "scenario-fidelity-check", legacy_defaults=True)
 
     scenarios = spec.get("scenarios", [])
     unmet: List[str] = []
@@ -439,6 +690,12 @@ def cmd_scenario_conformance(args: argparse.Namespace) -> None:
     surfaces_arg = getattr(args, "surfaces", None)
     surfaces_path = pathlib.Path(surfaces_arg) if surfaces_arg else (task_path / "surfaces.json")
 
+    spec = _load_spec(task_path)
+    if spec is None:
+        _error("scenario_not_initialized", "scenario-conformance", 10)
+        return
+    _ensure_scenario_contract(spec, "scenario-conformance", legacy_defaults=True)
+
     if not surfaces_path.exists():
         _respond({
             "ok": True,
@@ -449,11 +706,6 @@ def cmd_scenario_conformance(args: argparse.Namespace) -> None:
 
     with open(surfaces_path, encoding="utf-8") as f:
         surfaces_doc = json.load(f)
-
-    spec = _load_spec(task_path)
-    if spec is None:
-        _error("scenario_not_initialized", "scenario-conformance", 10)
-        return
 
     scenarios = spec.get("scenarios", [])
     surfaces = surfaces_doc.get("surfaces", [])
@@ -814,12 +1066,16 @@ def add_scenario_subparsers(subparsers: "argparse._SubParsersAction") -> None:
     p_mark = subparsers.add_parser("scenario-mark", help="locked 후 result존 기록")
     p_mark.add_argument("--task-path", required=True, metavar="PATH", help="태스크 폴더 경로")
     p_mark.add_argument("--id", required=True, metavar="S", help="시나리오 id")
-    p_mark.add_argument("--result", required=True, choices=["pass", "fail", "blocked"], help="판정 결과")
+    p_mark.add_argument("--result", choices=["pass", "fail", "blocked"], help="판정 결과")
     p_mark.add_argument("--evidence", metavar="E", help="증거 문자열 (선택)")
     p_mark.add_argument(
         "--fidelity", choices=["mock", "real-http", "real-usage"],
         help="실제 관찰된 증거 충실도 (선택, 미지정 시 mock — 069/M-5)",
     )
+    p_mark.add_argument("--verdict-json", metavar="PATH", help="구조화 E2E verdict JSON 경로")
+    p_mark.add_argument("--resume-run-id", metavar="RUN", help="awaiting_human 재개 run id")
+    p_mark.add_argument("--resume-token", metavar="TOKEN", help="awaiting_human 재개 token")
+    p_mark.add_argument("--submission", metavar="PATH", help="human submission JSON 경로")
 
     p_status = subparsers.add_parser("scenario-status", help="spec/result 요약 (RED 확인·통과율)")
     p_status.add_argument("--task-path", required=True, metavar="PATH", help="태스크 폴더 경로")

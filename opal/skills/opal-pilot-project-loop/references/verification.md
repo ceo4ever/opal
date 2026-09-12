@@ -27,7 +27,7 @@ oppl의 검증은 두 개의 서로 직교하는 축으로 구성된다.
 |------|------|
 | `mock` | 목(mock) 상대 테스트 코드 — 단위(unit) 수준. 실 네트워크·실 서버·실 브라우저 미개입. |
 | `real-http` | 실 서버 기동 + 계약 spec(예: OpenAPI/스웨거) 기반 실 HTTP 전수 conformance. auth 표면은 실 로그인 토큰 체인(로그인 → 토큰 → Authorization 헤더)을 포함해야 한다. |
-| `real-usage` | 실 브라우저(cmux browser 우선 / playwright 폴백) E2E — 실 진입점(entry point)·실 데이터 흐름을 통해 사용자와 동일한 경로로 관찰한다. |
+| `real-usage` | `test-tool` E2E contract가 정의한 profile별 실제 공개 표면 실행 — Browser·API·Hybrid·Collaborative·Manual 각각의 필수 executor, 구조화 assertion expected/actual, required/observed evidence를 충족해야 한다. |
 
 사다리 순서는 `mock(0) < real-http(1) < real-usage(2)`이며, 상위 단계가 하위 단계를 포함(subsume)한다.
 
@@ -69,7 +69,7 @@ oppl 프레임워크 도구는 규범·게이트만 정의하며, 실 HTTP 호�
 | Lint/Format | binary — 오류 0 | L1 · test-tool |
 | Build/Type | binary — pass | L2 |
 | Unit/Integration | binary — 100% green | L3a · test-tool |
-| E2E(L3b) | binary — pass, 실행 환경=실 브라우저(cmux-tool 우선/playwright 폴백) | L3b |
+| E2E(L3b) | `test-tool` E2E final status 기준 — `pass`만 통과, `awaiting_human`은 재개 가능한 대기, 그 외 final status는 실패·환경·차단 의미를 보존 | L3b |
 | 계약 conformance | binary — 표면 인벤토리 전수(분모=surfaces.json) 실 서버·실 HTTP 대조, `surface_unverified` exit 시 fail (상세 §2.1.1) | test-agent + `test-tool scenario-conformance` (`contract.md` §2.2 기계검증절) |
 | 커버리지 | threshold — ≥ N% | test-tool |
 | 보안·정적분석 | threshold — critical 0 | security-checker |

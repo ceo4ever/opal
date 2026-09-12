@@ -123,11 +123,17 @@ tiers:
           real_db: true        # [MUST] 실 DB — mock 금지 (헌법 §4)
           required: true
     fe: {}                     # FE 통합 단위는 E2E로 흡수
-    # E2E는 FE/BE 공통 — cmux 1순위 → playwright 폴백.
-    # cmux 미가용은 cmux-tool 에러코드 소비로 폴백 트리거(플랫폼 가드 자연 흡수).
+    # E2E는 FE/BE 공통 — profile/verdict 의미는 test-tool lib/e2e_contract.py가 소유한다.
+    # Browser 후보 전환은 provider_unavailable에서만 허용한다.
     e2e:
-      - { name: cmux, priority: 1, via: cmux-tool }
-      - { name: playwright, priority: 2, fallback: true }
+      - { name: cmux, executor: browser, profiles: [browser, hybrid, collaborative], priority: 1, via: cmux-tool, candidate_on: provider_unavailable }
+      - { name: playwright, executor: browser, profiles: [browser, hybrid, collaborative], priority: 2, candidate_on: provider_unavailable }
+    e2e_profiles:
+      browser: { required: [browser], allowed: [browser] }
+      api: { required: [api], allowed: [api] }
+      hybrid: { required: [api, browser], allowed: [api, browser] }
+      collaborative: { required: [human], allowed: [browser, api, human] }
+      manual: { required: [human], allowed: [human] }
     # 사용자 수동 검증 [SUPERVISOR]
     supervisor:
       - { name: captain-manual }

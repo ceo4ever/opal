@@ -3,7 +3,7 @@
   "module": "test_tool",
   "layer": "util",
   "domain": "opal-tools",
-  "description": "test-tool CLI — 4서브명령(resolve/check/unit/integration) argparse 라우터 + ERROR_CODES 카탈로그 + JSON 출력 헬퍼. 얇은 래퍼: yaml 해석→명령 실행(subprocess 위임)→JSON 증거 반환. 루프 한도 비보유(opal-harness.md §1 포인터).",
+  "description": "test-tool CLI — resolve/check/unit/integration 및 scenario-* argparse 라우터 + ERROR_CODES 카탈로그 + JSON 출력 헬퍼.",
   "exports": [
     "main",
     "ERROR_CODES"
@@ -11,11 +11,13 @@
   "depends": [
     "lib.resolver",
     "lib.runner",
-    "lib.e2e_adapter"
+    "lib.e2e_adapter",
+    "lib.e2e_contract",
+    "lib.scenario"
   ]
 }
 
-test-tool — 4서브명령 CLI 라우터.
+test-tool — test-tool public CLI router.
 
 [MUST] 헌법 §2 단순성: 러너(pytest/vitest/cmux/eslint) 재구현 금지.
   yaml 해석 → 명령 실행(subprocess) → JSON 증거 반환하는 얇은 래퍼.
@@ -37,6 +39,7 @@ sys.path.insert(0, str(_TOOL_DIR))
 from lib.resolver import resolve_test_tools
 from lib.runner import run_check, run_unit_layers
 from lib.e2e_adapter import run_integration as _run_integration
+from lib.e2e_contract import status_to_exit
 from lib.scenario import add_scenario_subparsers, SCENARIO_DISPATCH
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -52,6 +55,10 @@ ERROR_CODES: Dict[str, str] = {
     "layer_failed":       "unit 계층 실패 (stop-on-fail) — lint/typecheck/unit 중 한 계층 실패",
     "e2e_failed":         "E2E 테스트 실패 — cmux/playwright 모두 실패",
     "escalation":         "cmux-tool 에스컬레이션 에러코드 — 폴백 금지, 호출자 수정 필요",
+    "e2e_infra_error":    "E2E 실행 인프라 오류 — provider 오류 또는 환경 오류",
+    "executor_unavailable": "E2E executor 후보 소진 — 실행 수단 없음",
+    "e2e_blocked":        "E2E 외부 조건 차단",
+    "e2e_awaiting_human": "E2E 사람 입력 대기 — 재개 가능한 중간 상태",
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -177,17 +184,9 @@ def cmd_integration(args: argparse.Namespace) -> None:
     )
     result["command"] = "integration"
 
-    if result.get("escalate"):
-        print(json.dumps(result, ensure_ascii=False))
-        sys.exit(7)
-
-    if not result.get("ok"):
-        # e2e 실패(폴백도 실패한 경우)
-        result.setdefault("error", "e2e_failed")
-        print(json.dumps(result, ensure_ascii=False))
-        sys.exit(6)
-
-    _respond(result, 0)
+    status = result.get("status") or result.get("e2e", {}).get("status")
+    print(json.dumps(result, ensure_ascii=False))
+    sys.exit(status_to_exit(status or ("pass" if result.get("ok") else "fail")))
 
 
 # ─────────────────────────────────────────────────────────────────────────────

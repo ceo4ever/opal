@@ -199,7 +199,7 @@ D7 사용자 확정 게이트 — 4요소 잠김 확인 → docs/ 승격
 
 **D5 백로그 생성**: PM이 PRD/TRD/CONTRACT을 얇은 수직 슬라이스로 분해하여 backlog-tool로 등록한다 (USER_JOURNEY.md가 있으면 "여정 단계 → 슬라이스" 매핑을 분해 기준으로 사용).
 
-[MUST] D5 백로그의 의존 루트(P0) 태스크로 "실행 스켈레톤" 슬라이스를 의무화한다 — 구성: (a) BE 서버 기동+스웨거(OpenAPI) UI 노출(surfaces.json 연동), (b) FE dev 서버 기동, (c) 실 브라우저(cmux browser)에서 FE→BE 실 호출 1개 관통, (d) auth 표면 존재 시 로그인 관통. 이후 전 태스크의 real-http/real-usage 검증이 이 환경 위에서 실행된다(목 개발의 "실 BE 부재" 사유 원천 제거).
+[MUST] D5 백로그의 의존 루트(P0) 태스크로 "실행 스켈레톤" 슬라이스를 의무화한다 — 구성: (a) BE 서버 기동+스웨거(OpenAPI) UI 노출(surfaces.json 연동), (b) FE dev 서버 기동, (c) `test-tool` E2E contract의 해당 profile에서 FE→BE 실 호출 1개 관통, (d) auth 표면 존재 시 로그인 관통. 이후 전 태스크의 real-http/real-usage 검증이 이 환경 위에서 실행된다(목 개발의 "실 BE 부재" 사유 원천 제거).
 
 ```
 ~/.opal/tools/backlog-tool/run.sh init <task-path> --project-title "{프로젝트명}" --mode <m> --goal "{목표 요약}"

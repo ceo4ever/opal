@@ -68,6 +68,7 @@ PLAN·QA·TEST-SCENARIO·EXECUTE·TEST 하위 워커를 호출할 때마다 현�
    → 실패 시 triage 분류 → 구현 수준: EXECUTE 수정 루프(한도 내)
    → 설계 수준: 3계층 라우팅(action 재설계 루프 / wbs PM / trd 사용자)
    → 회귀: 즉시 중단 status: failed
+   → E2E는 `test-tool` final status 5종과 `awaiting_human`을 보존
 
 6. TEST
    → opal-test-agent 디스패치
@@ -126,7 +127,7 @@ PLAN·QA·TEST-SCENARIO·EXECUTE·TEST 하위 워커를 호출할 때마다 현�
 | L1: lint/format | 코드 스타일, import 정리 | 제한 없음 | - |
 | L2: build/type | 컴파일 오류, 타입 불일치 | 최대 2회 | triage 분류 후 라우팅 |
 | L3a: unit/integration | 단위/통합 테스트 | 최대 3회 | triage 분류 후 라우팅 |
-| L3b: E2E | 브라우저 기반 시나리오 | 최대 1회 | triage 분류 후 라우팅 |
+| L3b: E2E | `test-tool` E2E profile 계약 기반 시나리오 | 최대 1회 | status별 분기 후 triage |
 
 #### 실행 순서
 
@@ -178,8 +179,11 @@ FAIL 발생 시 에이전트가 1차 분류한다:
 
 #### L3b(E2E) 특수 규칙
 
-- 1회만 재실행 (flaky 대응) — 워커에게 수정 지시하지 않고 동일 코드로 재실행.
-- 2회 연속 FAIL → triage 분류 → 설계 수준이면 3계층 라우팅, 구현 수준이면 `status: failed` 반환.
+- 1회만 재실행(flaky 대응) — 워커에게 수정 지시하지 않고 동일 코드로 재실행한다. 단, `executor_unavailable`은 필수 실행자 부재, `infra_error`는 실행 인프라 오류, `blocked`는 외부 승인·인증·사람 입력 차단, `awaiting_human`은 재개 가능한 대기 상태로 보존한다.
+- `provider_unavailable`은 Browser 후보 내부 상태로만 소비한다. 모든 후보 소진 후 final `executor_unavailable`이 되면 재시도가 아니라 환경·capability 조치가 필요하다.
+- E2E `pass`와 `real-usage`는 구조화 assertion `expected`/`actual`과 profile 또는 시나리오의 required/observed evidence가 모두 충족될 때만 인정한다.
+- 사람 협업은 자유 형식 완료 선언으로 pass 처리하지 않는다. `awaiting_human` handoff를 만들고, 동일 run-id/resume token의 structured submission을 verifier가 검증한 뒤 final status로 전이한다.
+- 2회 연속 `fail` → triage 분류 → 설계 수준이면 3계층 라우팅, 구현 수준이면 `status: failed` 반환.
 
 ### 6단계: TEST
 
@@ -190,6 +194,7 @@ FAIL 발생 시 에이전트가 1차 분류한다:
    - `All Pass` → `status: completed`, `verdict: All Pass`
    - `Partial Fail` → `status: completed`, `verdict: Partial Fail`
    - `Critical Fail` → `status: failed`, `verdict: Critical Fail`
+   - E2E 시나리오별 `status` / `operational_status`는 별도 필드로 보존하며 위 3단계 verdict로 덮어쓰지 않는다.
 
 ---
 
@@ -202,6 +207,7 @@ FAIL 발생 시 에이전트가 1차 분류한다:
   "action_id": "A01-db-schema",
   "status": "completed",
   "verdict": "All Pass",
+  "e2e_statuses": [{"scenario_id": "S1", "status": "pass|fail|executor_unavailable|infra_error|blocked", "operational_status": "awaiting_human|null"}],
   "artifact_path": "tasks/NNN/actions/A01-xxx/",
   "summary": "작업 요약 1-2줄",
   "changed_files": ["변경된 파일 경로 목록"],

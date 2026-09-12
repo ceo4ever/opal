@@ -519,14 +519,14 @@ node ~/.opal/tools/code-scan/code-scan.js scan src/auth/auth.service.ts --json
 ### 트리거 조건
 
 PM이 아래 사용자 문장을 수신하면 cmux-tool을 우선 선택한다.  
-cmux 미설치 시 wtm-agent 경유 호출은 silent fallback → playwright-tool. 단독 호출 시 에러 JSON 반환.
+cmux 미설치 시 wtm-agent 경유 웹 수집은 호환 대체 경로를 사용할 수 있다. 단독 호출 시 에러 JSON 반환. `test-tool` E2E 출력은 아래 raw cmux vocabulary를 그대로 공개하지 않고 E2E contract v2로 정규화한다.
 
 | 사용 시점 | 대표 사용자 문장 | 우선 명령 (cmux-tool) | 폴백 |
 |----------|----------------|----------------------|------|
 | **웹 크롤링** (HTML 본문 추출) | "URL 읽어줘", "사이트 내용 정리", "이 페이지 마크다운" | `bash run.sh extract <url>` | playwright-tool |
 | **정보 수집** (구조화된 데이터 조회) | "스냅샷 떠줘", "현재 페이지 구조 보여줘" | `bash run.sh snapshot --surface <h>` | (정보 조회만 — 폴백 없음) |
 | **웹 테스트** (단일 상호작용) | "로그인 버튼 눌러", "이메일 칸에 입력해" | `bash run.sh click <sel>` / `bash run.sh fill <sel> --text <v>` | playwright-tool |
-| **E2E 자동화** (다단계 시나리오) | "회원가입 폼 테스트", "결제 흐름 자동화" | `examples/e2e-form-fill.sh` 또는 fill + click + wait + snapshot 조합 | playwright-tool |
+| **E2E 자동화** (다단계 시나리오) | "회원가입 폼 테스트", "결제 흐름 자동화" | `examples/e2e-form-fill.sh` 또는 fill + click + wait + snapshot 조합 | `test-tool` E2E contract 상태로 정규화 |
 | **로컬 SPA·동적 페이지** | "localhost:3000 분석", "Next.js 화면 확인" | `bash run.sh extract <url>` (localhost URL 자동 감지) | playwright-tool |
 
 ### 커맨드 (12+1종)
@@ -637,7 +637,7 @@ bash ~/.opal/tools/cmux-tool/examples/e2e-branch-auto.sh https://localhost:3000
 **용도**: 테스트 단계별 도구 결정론적 집행 — 4서브명령(`resolve`/`check`/`unit`/`integration`)으로 `test-tools.yaml`을 읽어 단계(단위=EXECUTE / 통합=TEST)별 도구를 실행·판정하고 JSON 증거를 반환  
 **실행 경로**: `bash ~/.opal/tools/test-tool/run.sh`  
 **소스 경로**: `opal/tools/test-tool/`  
-**의존성**: `~/.opal/.venv/bin/python` + PyYAML + cmux-tool (E2E 어댑터)
+**의존성**: `~/.opal/.venv/bin/python` + PyYAML + E2E contract가 요구한 executor capability
 
 ### 트리거 조건
 
@@ -648,7 +648,7 @@ bash ~/.opal/tools/cmux-tool/examples/e2e-branch-auto.sh https://localhost:3000
 | `resolve` | `test-tools.yaml` resolution_order(project→global→추론) 해석 → tier×scope 도구셋 JSON 반환 | 단위/통합 공통 |
 | `check` | required/optional 게이트 — required 미설치 차단, optional 미설치 skip | 단위/통합 공통 |
 | `unit` | lint→build/type→unit 계층 stop-on-fail 단발 실행 | 단위 (EXECUTE) |
-| `integration` | cmux-tool 호출→에러코드 소비→playwright 폴백 결정 + 실DB API 통합 | 통합 (TEST) |
+| `integration` | E2E contract v2 상태·증적 판정 + 실DB/API 통합 | 통합 (TEST) |
 
 ### 커맨드
 
@@ -662,9 +662,24 @@ bash ~/.opal/tools/test-tool/run.sh check [--category C] [--tier unit|integratio
 # 단위 계층 stop-on-fail 단발 실행 (lint→build→unit)
 bash ~/.opal/tools/test-tool/run.sh unit [--scope fe|be] [--changed-files ...] [--project-root PATH]
 
-# 통합 — cmux 1순위→playwright 폴백 (E2E) + 실DB API
+# 통합 — E2E contract status/evidence + 실DB API
 bash ~/.opal/tools/test-tool/run.sh integration [--scope fe|be] [--url URL] [--project-root PATH]
 ```
+
+### E2E contract v2 요약
+
+`integration`과 `scenario-mark --verdict-json`은 profile `browser` / `api` / `hybrid` / `collaborative` / `manual`을 보존한다. final status는 `pass` / `fail` / `executor_unavailable` / `infra_error` / `blocked`이며, `awaiting_human`은 exit 20을 갖는 operational state다. `provider_unavailable`은 Browser 후보 내부 상태로만 쓰고 모든 후보 소진 시 final `executor_unavailable`이 된다.
+
+| status | exit | 처리 |
+|---|---:|---|
+| `pass` | 0 | 성공 |
+| `fail` | 6 | 제품 동작 또는 assertion 실패 |
+| `infra_error` | 7 | 서버·포트·driver·증적 저장 등 인프라 오류 |
+| `executor_unavailable` | 18 | 필수 executor 또는 후보 소진 |
+| `blocked` | 19 | 인증·승인 등 외부 조건 차단 |
+| `awaiting_human` | 20 | 사람 handoff 대기, 같은 run으로 재개 |
+
+`pass`와 `real-usage`는 구조화 assertion `expected`/`actual` 및 profile/시나리오의 required/observed evidence를 요구한다. open/navigate/close만 수행한 Browser 결과, API-only UI 우회, 자유 형식 사람 완료 선언은 통과 증거가 아니다. legacy `fallback`/`escalated`/`escalate`/`escalation`은 입력 호환으로만 정규화하며 신규 출력으로 만들지 않는다.
 
 ### 출력 형식
 
