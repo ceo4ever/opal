@@ -11,6 +11,8 @@
 # OPAL 범용 E2E 하네스 설계 제안서
 
 > 상태: 검토
+> 진행: 구현 태스크 1/9 완료 — 태스크 125 `E2E profile·verdict 계약`; 태스크 2~9 미착수
+> 선행본: `docs/proposals/archives/opal-agent-browser-e2e-harness.md`를 범용 E2E 계약으로 확장·대체
 > 작성: 알투(PM)
 > 작성일: 2026-09-12
 > 목적: main repo와 worktree의 실제 소스를 격리 실행하고 Browser·API·Hybrid·사용자 협업형 E2E를 공통 판정·증적 계약으로 수행하는 하네스 제안

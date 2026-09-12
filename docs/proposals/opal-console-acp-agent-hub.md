@@ -1,6 +1,7 @@
 # OPAL Console ACP 에이전트 허브 구현 스펙
 
-> 상태: 제안 | 작성일: 2026-09-10
+> 상태: 제안
+> 작성일: 2026-09-10
 > 범위: ACP 런타임 등록, 프로젝트 에이전트 자동 발견, 멘션 기반 대화·위임, 태스크 칸반 생성과 실행 추적
 
 ---
@@ -19,7 +20,7 @@ OPAL Console을 프로젝트 현황 조회 화면에서 **프로젝트 에이전
 6. 태스크 칸반에서 새 태스크를 만들고 PM 또는 전문 에이전트에게 업무를 지시할 수 있다.
 7. 태스크 생성·상태 변경은 기존 OPAL pilot·skill·tool 계약을 사용하며 Console이 상태 파일을 직접 편집하지 않는다.
 
-이 설계는 기존 `docs/proposals/opal-console-agent-channel.md`의 A안인 **Console 자체 ACP 호스트**를 채택한다. Buzz 연동은 핵심 경로에서 제외한다.
+이 설계는 기존 `docs/proposals/archives/opal-console-agent-channel.md`의 A안인 **Console 자체 ACP 호스트**를 채택한다. Buzz 연동은 핵심 경로에서 제외한다.
 
 ---
 

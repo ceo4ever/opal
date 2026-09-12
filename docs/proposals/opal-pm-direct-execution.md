@@ -3,7 +3,7 @@
 > 상태: 제안
 > 작성일: 2026-09-10
 > 범위: Pilot의 PM 실행 주체와 대화형 PM 직접 수행 계약
-> 동반 제안: [GC 공통 Capability 분리·고도화](./opal-gc-capability-refactor.md)
+> 동반 제안: [GC 공통 Capability 분리·고도화](./archives/opal-gc-capability-refactor.md)
 
 ---
 
