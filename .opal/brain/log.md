@@ -422,3 +422,7 @@
 - 신규: [[pages/concept/gc-finding-schema.md]]
 - 출처: task:120
 
+## [2026-09-12] ingest | CLOSE ingest — 태스크 122 PM 직접 수행 모델(actor 축 신설과 L2 대체) 회고적 학습 후보 6건
+- 신규: [[pages/concept/actor-axis-orthogonal-to-mode.md]], [[pages/concept/count-notation-scattered-across-docs.md]], [[pages/concept/verification-only-workitem-needs-remediation-owner.md]], [[pages/concept/fork-agent-inherits-pm-role.md]], [[pages/entity/opal-self-pm.md]], [[pages/entity/self-pm-tool.md]]
+- 출처: task:122
+
