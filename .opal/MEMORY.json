@@ -37,6 +37,13 @@
   ],
   "history": [
     {
+      "title": "126 워크스튜디오 독립앱 구축",
+      "date": "2026-09-12",
+      "stage": "완료",
+      "path": "tasks/126-260912-opds-워크스튜디오-독립앱-구축/",
+      "result": "Dashboard Workbench를 독립 Electron 앱 OPAL WorkStudio로 분리하고 Project·PM Coordination·Terminal·Files·최초 실행 Welcome을 구현했다. WorkStudio 42개와 Dashboard 123개 테스트를 통과했다."
+    },
+    {
       "title": "122 PM 직접수행 모델",
       "date": "2026-09-12",
       "stage": "완료",
@@ -63,13 +70,6 @@
       "stage": "완료",
       "path": "tasks/120-260912-opds-검사-공통-역량-분리/",
       "result": "GC 검사 절차를 op-gc-security·op-gc-convention·op-gc-report 3종 단계 스킬로 분리하고 opal-pilot-gc를 thin wrapper로 전환. 세 곳에 중복되던 규칙을 gc-finding-schema.md 단일 SSOT로 수렴, checker 2종은 기준 미보유 role로 축소(212→69·250→87행). 기준 문서 부재 시 검사 생략을 advisory+partial로 교체해 결측과 통과를 분리. 시나리오 17/17 PASS, pipeline.json 무변경으로 기존 GC 동작 회귀 없음."
-    },
-    {
-      "title": "119 워크트리 태스크캡슐 소유권 파일럿",
-      "date": "2026-09-12",
-      "stage": "완료",
-      "path": "tasks/119-260912-opd-워크트리-태스크캡슐-소유권-파일럿/",
-      "result": "생성 순서 전환·cone 활성화·상태 의존 canonical path 해석. 파일럿 태스크 121이 실환경 수명주기 완주(hub_merged 관측). 시나리오 30/30, 스위트 710 passed"
     }
   ]
 }
