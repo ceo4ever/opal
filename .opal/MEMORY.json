@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_task_number": 126,
+  "last_task_number": 127,
   "memories": [
     {
       "title": "변경이력 제거 검토 결정 — A안 확정",
@@ -37,6 +37,13 @@
   ],
   "history": [
     {
+      "title": "122 PM 직접수행 모델",
+      "date": "2026-09-12",
+      "stage": "완료",
+      "path": "tasks/122-260912-opds-PM-직접수행-모델/",
+      "result": "--pm actor 축 신설(harness/actor.md SSOT·pilot.start required 5종)·opal-self-pm(//oppm)·self-pm-tool 도입, L2 경량 트랙 owner 문서에서 제거. 기본 경로 무변경 회귀 확인, 시나리오 22/22 PASS"
+    },
+    {
       "title": "125 E2E 프로필 판정 계약",
       "date": "2026-09-12",
       "stage": "완료",
@@ -63,13 +70,6 @@
       "stage": "완료",
       "path": "tasks/119-260912-opd-워크트리-태스크캡슐-소유권-파일럿/",
       "result": "생성 순서 전환·cone 활성화·상태 의존 canonical path 해석. 파일럿 태스크 121이 실환경 수명주기 완주(hub_merged 관측). 시나리오 30/30, 스위트 710 passed"
-    },
-    {
-      "title": "121 하네스 구형절 참조 정리",
-      "date": "2026-09-12",
-      "stage": "완료",
-      "path": "tasks/121-260912-opd-하네스-구형절-참조-정리/",
-      "result": "인용 2곳을 owner 문서로 전환 후 opal-harness.md §2.5 매핑 행 제거. 워크트리 캡슐 소유권 계약의 첫 실사용 태스크"
     }
   ]
 }
