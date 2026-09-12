@@ -166,6 +166,23 @@ adapter가 완료 알림 전에 실제 수신한 별도 message·stream·tool/pr
 `run-log-tool validate-worker`와 `state-tool mark`가 channel capability와 source provenance를 함께
 검사해 집행한다.
 
+#### 4.2.1 계약 경계와 profile 배정 원천
+
+completion profile은 **계약(메커니즘)과 데이터(배정값)를 분리해 소유**한다. 한 문서가 둘을 함께
+소유하면 스파이크 실측 전에는 계약을 확정할 수 없고, 실측 후에는 계약 자체를 되돌려야 한다.
+
+| 소유 대상 | 소유 문서 | 확정 시점 |
+|---|---|---|
+| profile enum 3종, profile별 완료 게이트 조건, self-test receipt 스키마, active 허용 조건 | 계약 문서(본 제안서 §4.2·§4.3·§6.1) | 스파이크 이전 — 실측과 무관 |
+| 채널별 profile 배정값, adapter·receipt hash, 판정 증거 경로 | Phase 0 산출 `profiles.json` | 스파이크 이후 |
+
+- `profiles.json`은 채널 id, `completion_profile`, `adapter_id`, `adapter_sha256`, `receipt_sha256`,
+  증거 상대 경로를 갖는 기계가독 파일이다.
+- `state-tool init --run-log-mode active`는 이 파일의 항목을 읽어 `completion_profile_receipt`에
+  고정하며, 항목이 없는 채널의 active init을 거부한다.
+- 배정값 변경은 계약 개정이 아니라 재스파이크로 처리하며 계약 재확정 절차를 발동하지 않는다.
+- 따라서 계약은 스파이크보다 먼저 확정·잠금할 수 있고, 스파이크는 계약을 소비하는 첫 작업이 된다.
+
 ### 4.3 기록 주체와 증거 신뢰
 
 `actor`는 사건을 수행한 의미상 주체이고 `recorded_by`는 파일에 기록한 주체다. 둘을 섞지 않는다.
@@ -590,13 +607,32 @@ outbox로 중개하고 같은 gate ID의 유일성과 순서를 검사한다.
 
 legacy/active 판정, 현재 run 선택, restart 허용 여부는 `state-tool`만 소유한다.
 
+### 9.1 표면 인벤토리
+
+위 인터페이스는 기계가독 표면 인벤토리(`surfaces.json`)의 표면으로 등재한다. 이 프로젝트는 HTTP API가
+아니므로 OpenAPI 파생 경로를 쓰지 않고 표면 목록을 직접 작성한다. 표면 id는 커버리지·conformance
+게이트가 태스크와 매핑하는 유일한 키다.
+
+| 표면군 | 표면 | `kind` | `auth` |
+|---|---|---|---|
+| `run-log-tool` | `init`, `begin-worker`, `append`, `validate-worker`, `validate-run`, `reconcile`, `reconcile-duration`, `import-agentic`, `import-oppl`, `show`, `export` | `cli` | `none` |
+| `state-tool` 신규 | `restart-run`, `log-event`, `gate-request`, `gate-resolve` | `cli` | `none` |
+| `state-tool` 개정 | `init --run-log-mode`, `mark`(완료 게이트·override) | `cli` | `none` |
+| adapter | Phase 0에서 active로 판정된 채널별 변환 경로 | `adapter` | `none` |
+
+- `request_shape`는 CLI 인자 집합, `response_shape`는 JSON 응답 계약으로 선언한다.
+- `origins`는 웹 클라이언트가 없으므로 선언하지 않는다.
+- adapter 표면의 실제 항목 수는 Phase 0 `profiles.json`의 active 채널 수로 확정된다.
+- 모든 구현 태스크는 자기가 커버하는 표면 id를 선언해야 설계 루프의 커버리지 게이트를 통과한다.
+
 ---
 
 ## 10. 단계별 도입
 
 ### Phase 0 — Agent 채널 capability spike
 
-구현 기반 태스크보다 먼저 읽기·실험 전용 소규모 태스크를 수행한다. 플랫폼 Agent 도구와
+구현 기반 태스크보다 먼저 수행하는 읽기·실험 전용 슬라이스이며, 백로그의 P0 의존 루트 태스크로
+배치한다. 후속 구현 태스크는 모두 이 태스크에 의존으로 묶인다. 플랫폼 Agent 도구와
 `opal-agent` CLI를 각각 실제 1회 이상 호출하여 adapter가 모델 지시 없이 확보할 수 있는
 `call/start ID`, 중간 message·stream·tool result, terminal envelope·exitcode, monotonic 측정 구간을
 원본 증거로 남긴다. PM→oppl 루프 액션 에이전트 외부 호출과 oppl 내부 CLI 축을 별도로 판정한다.
@@ -611,9 +647,22 @@ legacy/active 판정, 현재 run 선택, restart 허용 여부는 `state-tool`�
 궤적 관측을 달성했다고 보고하지 않으며, 플랫폼 adapter가 start·terminal 원본을 검증할 수 있을 때만
 active를 허용한다.
 
+산출물은 채널별 판정을 담은 `profiles.json`(§4.2.1)과 그 근거인 원본 증거 파일이다. 도구·adapter
+구현은 이 단계의 범위가 아니다.
+
+**Phase 1A 승인 게이트(사람)**: 이 태스크 완료 직후 PM은 `profiles.json`의 채널별 배정과 증거를
+사용자에게 보고하고 승인을 받는다. 승인 전에는 어떤 구현 태스크에도 진입하지 않는다. 이 게이트는
+백로그 의존 관계로 대체되지 않으며 자율 진행 모드에서도 유지한다.
+
 ### Phase 1A — foundation + shadow pilot
 
-단일 기반 태스크로 다음만 구현한다.
+**워킹 스켈레톤(P0)**: Phase 1A의 첫 슬라이스는 관통 1건이다 — `state-tool init --run-log-mode shadow`가
+`state.json` 1.2와 첫 segment를 만들고, `run-log-tool append`가 표준 이벤트 1건을 기록하며,
+`run-log-tool validate-run`이 그 경로를 통과시킨다. 이 프로젝트는 CLI·프레임워크이므로 서버·브라우저
+관통이 아니라 이 CLI 관통이 워킹 스켈레톤이다. 이후 전 태스크의 검증은 이 경로 위에서 실행하며,
+스켈레톤 부재를 이유로 한 목(mock) 검증을 허용하지 않는다.
+
+나머지는 단일 기반 태스크로 다음만 구현한다.
 
 1. 폐쇄 enum·공통 provenance·request ID 멱등성·서로 다른 시점 증거를 검증하는 `run-log-core/tool`
 2. task transaction lock, SQLite runtime index, run-global sequence, 동시 segment roll
@@ -700,6 +749,30 @@ Phase 2·3은 Phase 1C 실제 로그 표본으로 필요성과 비용을 검증�
 | R-19 | append 응답 유실 뒤 재시도가 사건을 중복하지 않는다 | request ID dedupe | 동일 payload는 기존 event 반환, 다른 payload 재사용은 충돌 거부 |
 | R-20 | worker 쓰기 capability를 다른 run·event에 재사용할 수 없다 | capability issued/revoked 사건 + runtime projection | registry 전량 재구축, scope·만료·terminal/restart revoke와 constant-time 검증 |
 | R-21 | 프롬프트 준수율만으로 active를 켜지 않는다 | Phase 0 completion profile + shadow 정량 gate | trajectory/terminal profile별 포착률·false-block·reconcile 기준 통과, cooperative active 거부 |
+
+### 11.1 백로그 매핑 규칙
+
+R-ID는 Phase를 거쳐 백로그 슬라이스에 매핑된다. 슬라이스 식별자 자체는 설계 루프의 백로그 생성
+단계에서 확정하며 본 제안서가 고정하지 않는다.
+
+| Phase | 슬라이스 | 대응 R-ID |
+|---|---|---|
+| 0 | 채널 capability 스파이크 | R-2, R-21 |
+| 1A | 워킹 스켈레톤(CLI 관통) | R-1 |
+| 1A | run-log-core/tool 스키마·멱등성 | R-3, R-5, R-12, R-14, R-17, R-19 |
+| 1A | task transaction lock·runtime index·동시 roll | R-4 |
+| 1A | state 1.2 outbox·중단 가능 init/reconcile | R-6 |
+| 1A | redactor·raw 상한·gitignore·시간계 | R-8, R-18 |
+| 1A | opds·oppl shadow adapter | R-10 |
+| 1B | 완료 게이트·gate 사건·worker capability | R-2, R-13, R-20, R-21 |
+| 1B | duration 투영·1.0/1.1 CLI 호환 | R-7 |
+| 1B | outbox reconcile·override·restart-run | R-16 |
+| 1B | 조건부 계약 개정(active/legacy·shadow 분기) | R-9 |
+| 1C | pilot 4배치 확산 | R-11 |
+| 1C | 규범·하네스 문서 개정 | R-15 |
+
+- Phase 2·3은 백로그 범위에서 제외한다. 실행 루프의 종료 판정은 Phase 1C까지로 닫는다.
+- R-2와 R-21은 Phase 0에서 profile 판정으로, Phase 1B에서 게이트 집행으로 두 번 판정한다.
 
 ### 검증 주체
 
