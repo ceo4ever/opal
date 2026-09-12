@@ -1,89 +1,89 @@
 {
   "schema_version": "1.0",
   "task_id": "119-260912-opd-워크트리-태스크캡슐-소유권-파일럿",
-  "locked": false,
-  "created_at": "2026-09-12T15:27:54+09:00",
-  "locked_at": null,
+  "locked": true,
+  "created_at": "2026-09-12T16:31:21+09:00",
+  "locked_at": "2026-09-12T16:31:21+09:00",
   "scenarios": [
     {
       "id": "S-1",
       "acceptance_ref": null,
       "type": null,
       "expected": null,
-      "red_required": true,
+      "red_required": false,
       "red_confirmed": false,
       "red_evidence": null,
       "red_at": null,
       "required_fidelity": "mock",
       "surface_ref": null,
-      "result": null,
-      "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "result": "pass",
+      "evidence": "[인용] REGRESSION-EVIDENCE.md §1.2 — 데이터루트 고정·코드만 스왑 설계로 6명령×(stdout·stderr·exit)=18/18 바이트 동일, 정규화 0회. §1.3 non-vacuity: 배포 6파일 해시 전부 DIFF인 상태에서 출력 동일. [인용] FIXTURE-EVIDENCE.md §9 S-18(b) — 비워크트리 state init 결과 state.json에 worktree 키 부재(현행 스키마 100%). [실행] git -C <hub> diff 20c38a4 feat/OP-TASK-119 -- harness/task-process.md → 비-wt 경로에 '현행 순서(폴더→TASK.md→state init) 100% 유지, 어떤 조건부 분기도 실행되지 않는다' 명시 분기 확인",
+      "marked_at": "2026-09-12T16:32:19+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-2",
       "acceptance_ref": null,
       "type": null,
       "expected": null,
-      "red_required": true,
+      "red_required": false,
       "red_confirmed": false,
       "red_evidence": null,
       "red_at": null,
       "required_fidelity": "mock",
       "surface_ref": null,
-      "result": null,
-      "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "result": "pass",
+      "evidence": "[인용] FIXTURE-EVIDENCE.md §1 — 새 순서 전 구간 실행. worktree-tool create --task-folder 응답 6필드 발급, create 직후 task_path 디렉토리 NOT EXISTS(D-2 근거 재확인), mkdir→TASK.md→state-tool init {ok:true,rows_count:0}. 관측: 워크트리 안 state.json YES / 허브 tasks/121-* 없음 / 워크트리 tasks/121-260912-opd-픽스처-수명주기 존재",
+      "marked_at": "2026-09-12T16:32:19+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-3",
       "acceptance_ref": null,
       "type": null,
       "expected": null,
-      "red_required": true,
+      "red_required": false,
       "red_confirmed": false,
       "red_evidence": null,
       "red_at": null,
       "required_fidelity": "mock",
       "surface_ref": null,
-      "result": null,
-      "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "result": "pass",
+      "evidence": "[인용] FIXTURE-EVIDENCE.md §1 S-3 — cwd=워크트리에서 memory-tool task-number 호출. --file <허브 절대경로>/.opal/MEMORY.json → {ok:true,last_task_number:122} / --file .opal/MEMORY.json(상대) → {ok:false,error:WORKTREE_WRITE_REJECTED,rejected:task-number}. D-2b 절대경로 명시가 새 순서 1스텝 실패를 막는다",
+      "marked_at": "2026-09-12T16:32:20+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-4",
       "acceptance_ref": null,
       "type": null,
       "expected": null,
-      "red_required": true,
+      "red_required": false,
       "red_confirmed": false,
       "red_evidence": null,
       "red_at": null,
       "required_fidelity": "mock",
       "surface_ref": null,
-      "result": null,
-      "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "result": "pass",
+      "evidence": "[인용] FIXTURE-EVIDENCE.md §2 — 실패 주입 2건. (a) CONFIG_NOT_FOUND: create 실패 직후 허브·워크트리 양쪽 캡슐 없음, D-10 fallback 실행 후 허브에만 존재(state.json에 worktree 키 부재). (b) 경로 충돌: {ok:false,GIT_COMMAND_FAILED,rolled_back:1} — 허브 폴더 없음·워크트리 캡슐 없음·브랜치 feat/OP-TASK-126 미생성(all-or-nothing 롤백). 양쪽 모두 폴더가 한 위치에만",
+      "marked_at": "2026-09-12T16:32:20+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-5",
       "acceptance_ref": null,
       "type": null,
       "expected": null,
-      "red_required": true,
+      "red_required": false,
       "red_confirmed": false,
       "red_evidence": null,
       "red_at": null,
       "required_fidelity": "mock",
       "surface_ref": null,
-      "result": null,
-      "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "result": "pass",
+      "evidence": "[인용] FIXTURE-EVIDENCE.md §3 S-5 — git -C <wt> sparse-checkout list에 .opal·tasks 포함(8항목). 실체화 실측: .opal/AGENT.md(file), .opal/MEMORY.json(file), .opal/brain(dir, pages/concept 317건), tasks(dir, 22항목)",
+      "marked_at": "2026-09-12T16:32:20+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-6",
@@ -96,10 +96,10 @@
       "red_at": null,
       "required_fidelity": "mock",
       "surface_ref": null,
-      "result": null,
-      "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "result": "pass",
+      "evidence": "[인용] FIXTURE-EVIDENCE.md §3 S-6 — taskCapsuleCone 키 제거 설정으로 create. sparse-checkout list == 설정 repos 목록(cursor-rules dashboard docs opal scripts skills), .opal 미실체화·tasks 미실체화. 키 미지정이 여전히 no-op이며 키 제거만으로 전환 전 동작 복귀",
+      "marked_at": "2026-09-12T16:32:20+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-7",
@@ -112,10 +112,10 @@
       "red_at": null,
       "required_fidelity": "mock",
       "surface_ref": null,
-      "result": null,
-      "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "result": "pass",
+      "evidence": "[인용] FIXTURE-EVIDENCE.md §4 — 허브 사본과 워크트리 캡슐 동시 존재 상태에서 registry attribution_state 3값 순회. 키 부재/completed_unmerged/attribution_pending 세 상태 모두 status·finalize 양쪽 {ok:false,error:TASK_PATH_AMBIGUOUS}. PM 재정의 기준('active 3상태에서 여전히 차단') 충족 — 118 단일 복사본 불변식 무약화(C-9)",
+      "marked_at": "2026-09-12T16:32:40+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-8",
@@ -124,30 +124,30 @@
       "expected": null,
       "red_required": true,
       "red_confirmed": true,
-      "red_evidence": "pytest -k t119_s8: closed 상태인데 TASK_PATH_AMBIGUOUS로 차단됨(candidates 2건). status/finalize 2케이스 FAIL → 구현 후 8 passed",
-      "red_at": "2026-09-12T15:27:54+09:00",
+      "red_evidence": "pytest -k t119_s8: closed 상태인데 TASK_PATH_AMBIGUOUS로 차단(candidates 2건), status/finalize 2케이스 FAIL → 구현 후 8 passed",
+      "red_at": "2026-09-12T16:31:21+09:00",
       "required_fidelity": "mock",
       "surface_ref": null,
-      "result": null,
-      "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "result": "pass",
+      "evidence": "[인용] FIXTURE-EVIDENCE.md §4 — attribution_state=closed일 때만 status {ok:true, task_path_source:hub_merged, task_path:<허브>/tasks/{folder}}, finalize {ok:true,state:closed,idempotent:true}. finalize 재진입 커밋 무생성 실증: HEAD a5bfb77→a5bfb77 무변경, 커밋수 503→503. RED 증거는 test-scenario.json red_evidence에 기록됨(pytest -k t119_s8 2케이스 FAIL → 구현 후 8 passed)",
+      "marked_at": "2026-09-12T16:32:40+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-9",
       "acceptance_ref": null,
       "type": null,
       "expected": null,
-      "red_required": true,
+      "red_required": false,
       "red_confirmed": false,
       "red_evidence": null,
       "red_at": null,
       "required_fidelity": "mock",
       "surface_ref": null,
-      "result": null,
-      "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "result": "pass",
+      "evidence": "[인용] FIXTURE-EVIDENCE.md §5 — worktree-tool status가 canonical task_path 발급(task_path_source: worktree_registered). 두 프로세스가 그 경로로 realpath(<task_path>/state.json) 관측: PM(cwd=허브)과 워커(cwd=워크트리) 모두 /private/tmp/op119w9/hub/.opal-worktrees/task_121/tasks/121-260912-opd-픽스처-수명주기/state.json 동일 문자열. PLAN D-7 재정의 AC-4 기준(.opal-task.lock inode 조항 폐기, realpath 동일성) 충족",
+      "marked_at": "2026-09-12T16:32:40+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-10",
@@ -160,10 +160,10 @@
       "red_at": null,
       "required_fidelity": "mock",
       "surface_ref": null,
-      "result": null,
-      "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "result": "pass",
+      "evidence": "[인용] FIXTURE-EVIDENCE.md §7 S-10 — git -C <hub> diff --stat a5bfb77 HEAD -- tasks/ 실행. 현재 태스크 제외 커밋 diff 0건, 워킹트리 변경 0건, 대상 기존 태스크 폴더 22개",
+      "marked_at": "2026-09-12T16:32:40+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-11",
@@ -176,10 +176,10 @@
       "red_at": null,
       "required_fidelity": "mock",
       "surface_ref": null,
-      "result": null,
-      "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "result": "pass",
+      "evidence": "[인용] FIXTURE-EVIDENCE.md §7 S-11 — fixture 경로 B-1: 커밋 2a3690b에 코드(docs/PROJECT.md) + 캡슐 4파일 동일 커밋, merge 후 허브에서 마커 grep 1건. [실행] 파일럿 실물 재확인 — git -C <hub> show --stat --name-only 86d8dcd: 코드 3파일(opal-harness.md·tools.md·opal-project-init/SKILL.md) + 캡슐 8파일이 단일 커밋에 함께 있고 main merge 결과에 둘 다 존재",
+      "marked_at": "2026-09-12T16:32:40+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-12",
@@ -192,10 +192,10 @@
       "red_at": null,
       "required_fidelity": "mock",
       "surface_ref": null,
-      "result": null,
-      "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "result": "pass",
+      "evidence": "[인용] FIXTURE-EVIDENCE.md §6 경로 B-1/B-2 — CLOSE mark 후 current_status=completed_unmerged, 허브 tasks/122-*·123-* 없음, 허브 MEMORY history 5→5 무변경. [인용] PILOT-EVIDENCE.md §3 — 실환경 태스크 121도 동일: CLOSE 후 허브 tasks/121-* 0건, MEMORY history 121행 0건",
+      "marked_at": "2026-09-12T16:32:40+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-13",
@@ -208,26 +208,26 @@
       "red_at": null,
       "required_fidelity": "mock",
       "surface_ref": null,
-      "result": null,
-      "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "result": "pass",
+      "evidence": "[인용] FIXTURE-EVIDENCE.md §6 — (a) finalize-attribution --allocator-root <허브> → {status:created}, 허브 MEMORY history head에 1건 append(FIFO=5 목록 확인). (b) 동일 인자 재실행 → {status:duplicate_skipped}, history 행 증가 0(멱등). (c) --allocator-root 미지정 → allocator_root_required / 상대경로 '.' → allocator_root_not_absolute — 추론 없이 거부. [인용] PILOT §3에서 실환경 121도 created→duplicate_skipped 동일",
+      "marked_at": "2026-09-12T16:33:09+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-14",
       "acceptance_ref": null,
       "type": null,
       "expected": null,
-      "red_required": true,
+      "red_required": false,
       "red_confirmed": false,
       "red_evidence": null,
       "red_at": null,
       "required_fidelity": "mock",
       "surface_ref": null,
-      "result": null,
-      "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "result": "pass",
+      "evidence": "[인용] FIXTURE-EVIDENCE.md §6 — PLAN D-6 재정의 기준(두 경로)으로 판정. B-1 git merge --ff-only(태스크122): finalize(merge 전) {state:closed, memory_index_requests_resolved 1건} → 캡슐 커밋 2a3690b → ff-only 성공 → hub_merged → 귀속 → done → remove{bypassed_guards:[]}. B-2 git merge --no-ff(태스크123, main 선행 커밋 a6ae4a2로 divergence 주입, FF 가능 여부 NO): merge 커밋 4ceff06 부모 2개, 동일 완주. 두 경로 모두 귀속이 merge 전 브랜치 finalize에서 확정. [인용] §4 D-6 반증 — --no-ff --no-commit 단일 merge 커밋 경로는 attribution_state가 closed가 아닌 시점이라 TASK_PATH_AMBIGUOUS 차단이 정상 판정이며, 현행 계약 아님이 harness/worktree.md §merge 경로에 [MUST]로 명시됨",
+      "marked_at": "2026-09-12T16:33:09+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-15",
@@ -240,10 +240,10 @@
       "red_at": null,
       "required_fidelity": "mock",
       "surface_ref": null,
-      "result": null,
-      "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "result": "pass",
+      "evidence": "[인용] FIXTURE-EVIDENCE.md §8 S-15 — 워크트리에서 add-page --allocator-root 미지정→{allocator_root_required,reason:cwd_inference_in_worktree}, 상대경로→{reason:relative}. 워크트리 brain 전 구간 무변경: pages/concept 317→317, index.md md5 81f449d2 고정, log.md md5 e44c13b4 고정, git status -- .opal/brain 0건. merge 후 허브에서 add-page{ok:true,indexed:true}=create, 동일 슬러그 재실행 duplicate_page=skip, update-page{updated_fields:[title]}=update, index{pages_scanned:349}, log{logged:true}; 허브 pages 317→318, log.md md5 변경. ★AC-10 한계(차단 아님, DONE 후속 이월): [실행] opal/tools/brain-tool/brain_tool.py finalize_brain_root()가 allocator_root의 is_absolute()만 검사하고 .opal-worktrees/ 거부 분기가 없어 워크트리 절대경로도 수용한다(_inside_worktree() 판정은 cwd 추론 분기 전용). 따라서 '워크트리 brain 쓰기 불가'는 구조적 불변식이 아니다. 다만 AC-10이 집행하는 경로(CLOSE가 DONE.md §회고적 학습 후보에 후보만 선언 → merge 후 허브에서 판정)는 정상 동작하므로 PASS 유지",
+      "marked_at": "2026-09-12T16:33:09+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-16",
@@ -256,10 +256,10 @@
       "red_at": null,
       "required_fidelity": "mock",
       "surface_ref": null,
-      "result": null,
-      "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "result": "pass",
+      "evidence": "[인용] FIXTURE-EVIDENCE.md §8 S-16 — cwd=워크트리에서 append --kind memory → {ok:true,deferred:true,index_request:<task_path>/memory-index-request.json,pending_count:1}. 거부 6연산(append --kind history, update, promote, delete, prune, task-number) 전부 WORKTREE_WRITE_REJECTED. .opal/memory/note.local.md md5 2349fa25… 6연산 전후 무변경, .gitignore:14:*.local.md 확인. finalize 1회 반영: memory_index_requests_applied 1건·resolved 1건, 요청 status pending→applied, closed 재진입 시 applied 빈 배열",
+      "marked_at": "2026-09-12T16:33:09+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-17",
@@ -272,10 +272,10 @@
       "red_at": null,
       "required_fidelity": "mock",
       "surface_ref": null,
-      "result": null,
-      "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "result": "pass",
+      "evidence": "[인용] FIXTURE-EVIDENCE.md §6·§8 — 미처리 index 요청 잔존 시 worktree-tool remove → {ok:false,error:MEMORY_INDEX_REQUEST_PENDING,pending:[e3b0c442…]}. finalize로 해소 후 재실행 → {ok:true,forced:false,bypassed_guards:[]} — 우회 0건, 기존 3중 가드(dirty·unpushed·unmerged)만 적용. [인용] PILOT §3 실환경 121 remove도 forced:false, bypassed_guards:[]",
+      "marked_at": "2026-09-12T16:33:09+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-18",
@@ -288,10 +288,10 @@
       "red_at": null,
       "required_fidelity": "mock",
       "surface_ref": null,
-      "result": null,
-      "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "result": "pass",
+      "evidence": "[인용] FIXTURE-EVIDENCE.md §9 — (a) meta에서 task_ownership_version 제거 후 허브 사본·워크트리 캡슐 동시 존재 상태로 status → {ok:true, task_path_source:null, task_path:null}: 모호성 판정 자체를 건너뛰고 차단도 canonical 발급도 하지 않으며 자동 이동 없음. (b) 비워크트리 태스크: state.json 키 8개로 현행 스키마 100% 유지(worktree 키 없음), 위치 허브 tasks/ 유지·워크트리 사본 없음, registry 등록 태스크 목록에 미포함",
+      "marked_at": "2026-09-12T16:33:09+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-19",
@@ -304,10 +304,10 @@
       "red_at": null,
       "required_fidelity": "mock",
       "surface_ref": null,
-      "result": null,
-      "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "result": "pass",
+      "evidence": "[인용] REGRESSION-EVIDENCE.md §1~§2 — 단일 고정 배포경로(home_swap/.opal)에 base(20c38a4)→캡처6 / after(a5bfb77)→캡처6 스왑 후 cmp 18쌍: state-tool show·validate, worktree-tool list, memory-tool show --boot-brief, code-scan scan, event-loader load --event session.project 전부 stdout·stderr·exit 바이트 동일, 정규화 0회. §1.3 non-vacuity 배포 6파일 해시 전부 DIFF. §1.4 데이터루트 git status 0줄(입력 불변). §2.2 배포 누락 621파일 중 0건. §2.3 변경 6파일 source↔installed BYTE-EQ. 신규 CLI 표면 제외 규칙은 실제로는 불필요했음도 실측(--help·인자없음·create --help 전부 바이트 동일, add_argument 변경 0건)",
+      "marked_at": "2026-09-12T16:33:43+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-20",
@@ -320,10 +320,10 @@
       "red_at": null,
       "required_fidelity": "mock",
       "surface_ref": null,
-      "result": null,
-      "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "result": "pass",
+      "evidence": "[인용] PILOT-EVIDENCE.md §1~§4 — 파일럿 대상은 tasks/121-260912-opd-하네스-구형절-참조-정리(119 자신은 구 순서 생성이라 파일럿 불가). 새 순서 생성(채번→create --task-folder→mkdir→TASK.md→state init), 6필드 발급, cone 자동 실체화, create가 task_path 미생성 재확인, 생성 전 구간 허브 tasks/121-* no matches. CLOSE→finalize(committed:false)→캡슐 커밋 11파일 1커밋→git merge --ff-only→status task_path_source:hub_merged→finalize-attribution created/duplicate_skipped→status --set done→remove(forced:false,bypassed_guards:[]) 완주. [실행] 결과물 재검증: main(86d8dcd)에 tasks/121-* 캡슐 7파일 존재, 86d8dcd가 코드3+캡슐8 단일 커밋, .opal/MEMORY.json history head에 '121 하네스 구형절 참조 정리|완료' 1행, .opal-worktrees/에 task_121 부재(회수 완료), 121/test-scenario.json locked:true S-1~S-6 전건 pass. 가드 우회 0건·운영 저장소 침범 0건. 118 상태에서 영구 차단되던 TASK_PATH_AMBIGUOUS 연쇄가 실환경에서 풀림",
+      "marked_at": "2026-09-12T16:33:43+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-21",
@@ -336,10 +336,10 @@
       "red_at": null,
       "required_fidelity": "mock",
       "surface_ref": null,
-      "result": null,
-      "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "result": "pass",
+      "evidence": "[실행] 118 확정 4계약 기존 테스트 재실행. pytest opal/tools/worktree-tool/tests/ -q → 83 passed(선존재 실패 1건은 092 stale 문서 단언으로 119에서 해소). pytest opal/tools/state-tool/tests/ -q → 425 passed, 3 skipped, 111 subtests passed. pytest opal/tools/memory-tool/tests -q → 202 passed, 33 subtests(워크트리 MEMORY 쓰기 거부 계약). 4계약 타겟 실행 pytest worktree-tool/tests state-tool/tests -k 'task_root or allocator_root or canonical or worktree_write or WORKTREE_WRITE or finalize' → 16 passed, 495 deselected. 합계 710 passed, 실패 0건 — 상태 인지가 더해졌을 뿐 불변식 무약화",
+      "marked_at": "2026-09-12T16:33:43+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-22",
@@ -352,10 +352,10 @@
       "red_at": null,
       "required_fidelity": "mock",
       "surface_ref": null,
-      "result": null,
-      "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "result": "pass",
+      "evidence": "[인용] FIXTURE-EVIDENCE.md §2 S-22 — 새 순서 4개 중단 지점별 실측. 채번 직후(허브 없음/워크트리 없음), create 직후(없음/없음), mkdir 직후(허브 없음/워크트리 존재), TASK.md 작성 직후(허브 없음/워크트리 존재). 어느 지점에서도 두 위치 동시 존재 0건 — 폴더를 나중에 만드는 새 순서에서는 구조적으로 불가능(D-10 근거 재확인)",
+      "marked_at": "2026-09-12T16:33:44+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-23",
@@ -368,10 +368,10 @@
       "red_at": null,
       "required_fidelity": "mock",
       "surface_ref": null,
-      "result": null,
-      "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "result": "pass",
+      "evidence": "[인용] FIXTURE-EVIDENCE.md §9 S-23 — cone 활성 워크트리에서 5도구 호출. state_tool.task_root(<wt task_path>)→워크트리 자신, task_root(<hub>/tasks/119-…)→허브(대조군). memory-tool 거부 게이트 6연산 WORKTREE_WRITE_REJECTED. code-scan scan --project-root 허브 vs 워크트리 양쪽 127 file(s), 루트 경로 정규화 후 diff 0줄 — .opal/code-scan.json 사본이 스캔 결과를 바꾸지 않음. worktree-tool list --project-root <워크트리> → {ok:true,entries:[]}로 워크트리가 자기를 허브로 간주하지 않음(읽기 snapshot), 실제 호출은 전 구간 --project-root <허브> 명시. event-loader 루트 해석은 .opal/AGENT.md 실체화 실측(§3 S-5)으로 확인",
+      "marked_at": "2026-09-12T16:33:44+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-24",
@@ -384,10 +384,10 @@
       "red_at": null,
       "required_fidelity": "mock",
       "surface_ref": null,
-      "result": null,
-      "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "result": "pass",
+      "evidence": "[실행] git -C <허브> rev-parse main → 86d8dcd, rev-parse feat/OP-TASK-119 → 25b8a8c, git log --oneline main..feat/OP-TASK-119 | wc -l → 0(119 완전 머지, 배포 선결 조건 충족). [실행] 배포 반영 실측: ~/.opal/tools/worktree-tool/worktree_tool.py의 _resolve_canonical_task_path 3건, ~/.opal/references/harness/worktree.md의 '상태 의존 해석' 3건, ~/.opal/references/harness/task-process.md의 task-folder 1건. [실행] REGRESSION §3.2가 정량화한 태스크 120 롤백 위험(배포 경로 17파일)은 미발생 — ~/.opal/skills/op-gc-* 3건 보존 확인. H-4 절차(main 체크아웃에서만 install)가 지켜졌다",
+      "marked_at": "2026-09-12T16:33:44+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-25",
@@ -400,10 +400,10 @@
       "red_at": null,
       "required_fidelity": "mock",
       "surface_ref": null,
-      "result": null,
-      "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "result": "pass",
+      "evidence": "[실행] 경로 대조. git -C <허브> diff --name-only 20c38a4 feat/OP-TASK-119 → 119 변경 11파일(.opal/worktree.json, harness/task-process.md, harness/worktree.md, pm/dispatch-process.md, opal-pilot-dev{,-short}/SKILL.md, worktree_tool.py, test_worktree_tool.py, 제안서 4파일). git -C <허브> show --name-only 86d8dcd | grep -v '^tasks/' → 121 변경 3파일(opal-harness.md, tools.md, opal-project-init/SKILL.md). comm -12로 대조 → 겹침 0건. 파일럿이 119 산출물을 덮어쓰지 않았다",
+      "marked_at": "2026-09-12T16:34:15+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-27",
@@ -416,10 +416,10 @@
       "red_at": null,
       "required_fidelity": "mock",
       "surface_ref": null,
-      "result": null,
-      "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "result": "pass",
+      "evidence": "[실행] state-tool validate — 119 {ok:true,violations_count:0}, 121 {ok:true,violations_count:0}. test-scenario.json 워킹트리 변경 0건(git status --porcelain), 121은 locked:true에 S-1~S-6 전건 pass로 도구 경유 기록 확인. state.json 워킹트리 diff 라인 유형 분류 결과 119는 status/status_label/timestamp/note/step/next_action/updated_at, 121은 current_status/updated_at 뿐 — 전부 state-tool mark/status 형상이며 수기 편집 흔적 0건. [인용] FIXTURE-EVIDENCE.md §11 — W-9도 fixture 안에서 state-tool/test-tool 경유만 사용, 두 파일 직접 편집 0건. 본 TEST 워커도 결과를 scenario-mark로만 기록했다",
+      "marked_at": "2026-09-12T16:34:15+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-28",
@@ -432,10 +432,10 @@
       "red_at": null,
       "required_fidelity": "mock",
       "surface_ref": null,
-      "result": null,
-      "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "result": "pass",
+      "evidence": "[실행] 119 변경 7개 배포·설정 파일 각각에 대해 git -C <허브> diff 20c38a4 feat/OP-TASK-119 -- <file> | grep '^+' | grep -icE 'darwin|platform.system|uname|sys.platform|Cursor|Gemini|claude_desktop|if.*macos' 실행. task-process.md 0, worktree.md 0, dispatch-process.md 0, opal-pilot-dev/SKILL.md 0, opal-pilot-dev-short/SKILL.md 0, worktree_tool.py 0, .opal/worktree.json 0 — 어댑터 계층(install-mac.sh·opal/bootstrapper/) 밖 플랫폼 조건 분기 신규 추가 0건",
+      "marked_at": "2026-09-12T16:34:16+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-29",
@@ -448,10 +448,10 @@
       "red_at": null,
       "required_fidelity": "mock",
       "surface_ref": null,
-      "result": null,
-      "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "result": "pass",
+      "evidence": "[실행] git -C <허브> diff 20c38a4 feat/OP-TASK-119 | grep -E '^\\+.*(변경이력|Changelog|changelog|개정 이력|Revision History)' → 0건. 121 커밋도 git show 86d8dcd | grep -E '^\\+.*(변경이력|Changelog|개정 이력)' → 매치 1건이나 내용이 121 TEST-SCENARIO.md의 S-5 시나리오 설명 행(이력 절 신규 생성을 금지하는 검사 그 자체)이라 오탐. 신규 수기 누적 이력 절 0건, 선재 이력 표는 증분 없음",
+      "marked_at": "2026-09-12T16:34:16+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-30",
@@ -464,10 +464,10 @@
       "red_at": null,
       "required_fidelity": "mock",
       "surface_ref": null,
-      "result": null,
-      "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "result": "pass",
+      "evidence": "[실행] PM의 블로커 해소 후 재판정. ls -1d /private/tmp/op119* → 'no matches found'(exit 1), 잔여물 0건 — 1차 판정에서 FAIL 근거였던 /private/tmp/op119-scen.json(15:15)·op119-scen2.json(15:27) 2건이 삭제됨. 두 파일은 이 태스크의 scenario-init --rows-from 입력(내용이 본 태스크 S-1~S-30 행, mtime이 test-scenario.json created_at 15:27:54 및 AGENTIC-LOG #23 scenario-init 재호출 시점과 일치)이었고, FIXTURE-EVIDENCE.md §12가 'W-9 네임스페이스 밖 선재 파일'이라며 모수에서 제외한 것이 판정 오류였다(S-30의 대상은 '이 태스크가 만든 모든 임시 fixture'). [실행] 나머지 절 재확인: git -C <허브> worktree list → 허브(86d8dcd,main) + .opal-worktrees/task_119(25b8a8c) 2건으로 작업 전 동일, ls .opal-worktrees/ → task_119 1건으로 fixture worktree 흔적 0건, git branch --list 신규는 feat/OP-TASK-121 1건뿐이며 이는 파일럿(S-20)의 정당한 산출물이지 fixture 아님. [인용] FIXTURE §12 — 전 구간 git -C 사용, cd <dir> && git 패턴 0건",
+      "marked_at": "2026-09-12T16:34:16+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-26",
@@ -480,10 +480,10 @@
       "red_at": null,
       "required_fidelity": "mock",
       "surface_ref": null,
-      "result": null,
-      "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "result": "pass",
+      "evidence": "[실행] grep -rn 'opal-task.lock' opal/ scripts/ → 0건(구현 부재 확인, 제안서 docs/proposals/opal-task-run-log.md:457,503에만 존재). 재정의·이연 기재 확인: PLAN.md:30 D-7(AC-4를 동일 canonical task_path + 동일 realpath(state.json)로 재정의, lock 도입은 실행 로그 제안서 구현 태스크로 이연), PLAN.md:64 H-5(AC-9의 --no-ff --no-commit 단일 merge 커밋 경로는 finalize --no-commit 모드 신설이 필요한 별도 태스크로 이연), PLAN.md:14 범위 밖 명시, ANALYSIS.md:47/79/87 미충족 판정 근거. [인용] 재정의 기준의 실제 관측 가능성은 FIXTURE §5(S-9 동일 realpath 문자열)·§6(S-14 두 merge 경로 완주)이 실증",
+      "marked_at": "2026-09-12T16:34:15+09:00",
+      "fidelity": "real-usage"
     }
   ]
 }

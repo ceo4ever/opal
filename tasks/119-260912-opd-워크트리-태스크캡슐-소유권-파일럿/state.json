@@ -4,8 +4,8 @@
   "mode": "agentic",
   "schema_version": "1.1",
   "created_at": "2026-09-12 14:44:36",
-  "updated_at": "2026-09-12 15:15:45",
-  "current_status": "in_progress",
+  "updated_at": "2026-09-12 16:47:32",
+  "current_status": "completed_unmerged",
   "rows": [
     {
       "row_id": 1,
@@ -175,31 +175,34 @@
       "stage": "EXECUTE",
       "item": "작업",
       "key": "execute.implement",
-      "status": "in_progress",
-      "status_label": "🔄",
-      "timestamp": "2026-09-12 15:15:45",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-12 16:47:31",
       "owner": "PM",
-      "note": null
+      "note": "W-9 Git fixture 수명주기·회귀 실증 완료 (FIXTURE-EVIDENCE.md) — 담당 S 19건 전건 PASS",
+      "step": "9/10",
+      "worker_duration_minutes": 51
     },
     {
       "row_id": 13,
       "stage": "TEST",
       "item": "작업",
       "key": "test.run_tests",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-12 16:42:57",
       "owner": "PM",
-      "note": null
+      "note": null,
+      "worker_duration_minutes": 8
     },
     {
       "row_id": 14,
       "stage": "TEST",
       "item": "PM Gate",
       "key": "test.pm_gate",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-12 16:42:58",
       "owner": "PM",
       "note": null,
       "gate": {
@@ -220,24 +223,24 @@
       "stage": "TEST",
       "item": "사용자 확인",
       "key": "test.user_confirm",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
-      "owner": "PM",
-      "note": null
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-12 16:45:59",
+      "owner": "user",
+      "note": "캡틴 확인: CLOSE 진입 승인"
     },
     {
       "row_id": 16,
       "stage": "CLOSE",
       "item": "DONE.md 생성",
       "key": "close.done_md",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-12 16:47:32",
       "owner": "PM",
       "note": null
     }
   ],
-  "next_action": "EXECUTE 작업 진행 중",
+  "next_action": "태스크 완료",
   "worktree": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_119"
 }

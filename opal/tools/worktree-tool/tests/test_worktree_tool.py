@@ -3,7 +3,7 @@
   "module": "test_worktree_tool",
   "layer": "test",
   "domain": "opal-workspace",
-  "description": "worktree-tool 공개 인터페이스 회귀 테스트. 092 TEST-SCENARIO.md S-4~S-17,S-21~S-28과 112 TEST-SCENARIO.md S-8 hub-fixed worktree 계약을 검증한다. S-1/S-2는 state-tool 측 전용이라 test_state_tool.py에 있다. S-3/S-15는 각각 git working-tree diff의 일관성/~/.opal 배포본 변경 금지 때문에 이 파일에서 제외했다(092/112 번호 체계). CLI(subprocess) 공개 인터페이스로만 검증하고, mock/patch 없이 실 git 저장소 fixture(conftest.py)를 사용한다. 118 TEST-SCENARIO.md S-3~S-8,S-11,S-15(taskCapsuleCone·canonical metadata 6필드·TASK_PATH_AMBIGUOUS·finalize 재진입 path-scoped 판정·memory-index-request 가드)를 RED-first로 추가한다 — S-3만 구현 전에도 PASS해야 하는 회귀 보호 케이스이고 나머지는 구현 전 FAIL이 정상이다.",
+  "description": "worktree-tool 공개 인터페이스 회귀 테스트. 092 TEST-SCENARIO.md S-4~S-17,S-21~S-28과 112 TEST-SCENARIO.md S-8 hub-fixed worktree 계약을 검증한다. S-1/S-2는 state-tool 측 전용이라 test_state_tool.py에 있다. S-3/S-15는 각각 git working-tree diff의 일관성/~/.opal 배포본 변경 금지 때문에 이 파일에서 제외했다(092/112 번호 체계). CLI(subprocess) 공개 인터페이스로만 검증하고, mock/patch 없이 실 git 저장소 fixture(conftest.py)를 사용한다. 118 TEST-SCENARIO.md S-3~S-8,S-11,S-15(taskCapsuleCone·canonical metadata 6필드·TASK_PATH_AMBIGUOUS·finalize 재진입 path-scoped 판정·memory-index-request 가드)와 119 TEST-SCENARIO.md S-7·S-8(상태 의존 canonical path 해석 — registry attribution_state가 closed일 때만 허브 merge 사본을 반환하고 active 3상태는 차단 유지)을 검증한다. 118 S-3·119 S-7은 불변식 보존형이라 구현 전에도 PASS하는 회귀 보호 케이스다. 119는 태스크 092의 stale 문서 단언 3건(opal-harness.md §2.5 존재·pm/dispatch-process.md ## 작업 경로 블록·worktree-tool create 연속 문자열)을 현재 문면으로 교체했다.",
   "exports": [],
   "depends": ["conftest.py", "worktree_tool.py", "opal/tools/state-tool/state_tool.py"]
 }

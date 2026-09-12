@@ -1,10 +1,17 @@
 # OPAL 워크트리 태스크 소유권 전환 제안서
 
 > 상태: 적용완료
-> 적용 범위: Phase 0·Phase 1(태스크 118). 규범 원문은 `opal/core/references/harness/worktree.md`가 소유한다 —
-> §task root와 allocator root 계약 · §canonical path 발급 계약 · §cone 확장 계약 · §Phase 1 진입 legacy gate 절차.
+> 적용 범위: Phase 0·Phase 1(태스크 118) · Phase 2(태스크 119, 파일럿 태스크 121로 실환경 완주).
+> 규범 원문은 `opal/core/references/harness/worktree.md`가 소유한다 — §task root와 allocator root 계약(§merge 경로 포함) ·
+> §canonical path 발급 계약(§상태 의존 해석 포함) · §cone 확장 계약 · §Phase 1 진입 legacy gate 절차.
+> 생성 순서는 `harness/task-process.md`가 소유한다.
+> **계약 정정**: §6.3의 `--no-ff --no-commit` 단일 merge 커밋 경로는 현행 도구 계약이 아니다 — finalize 시점에 허브 사본이
+> 이미 존재하는데 `attribution_state`가 아직 `closed`가 아니라 상태 의존 해석에서도 차단이 정상 판정이며, 단일 복사본
+> 불변식과 구조적으로 충돌한다(태스크 119 실측). 허용 경로는 `--ff-only`와 `--no-ff` 두 가지다.
+> **Phase 3**: `--wt` 플래그 축 게이팅을 채택해(태스크 119 D-4) 프로필별 batch 확산 개념이 성립하지 않는다. 잔여 항목 없음.
 > **미이관**: §8 multi-repo 계약(`task_artifacts.repo`)은 아직 owner 문서로 옮기지 않았다. Phase 4 착수 시
-> 이 절을 `harness/worktree.md`로 이관한 뒤 소비한다. Phase 2·3은 롤아웃 로드맵이며 후속 태스크가 재계획한다.
+> 이 절을 `harness/worktree.md`로 이관한 뒤 소비한다. 실사용 대상은 `/Volumes/Data/StoreLinkStudio/pug`(독립 repo 6개)이며,
+> repo별 baseBranch 차이(`main`/`develop`)는 §8이 다루지 않은 설계 공백이다.
 > 작성: 알투(PM)
 > 작성일: 2026-09-11
 > 개정 기준일: 2026-09-12

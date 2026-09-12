@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_task_number": 120,
+  "last_task_number": 121,
   "memories": [
     {
       "title": "변경이력 제거 검토 결정 — A안 확정",
@@ -25,9 +25,24 @@
       "status": "candidate",
       "file": "memory/워커_디스패치_시_worker_dispatch_receipt_블록_누락.md",
       "summary": "태스크 118 TEST 단계에서 PM이 opal-convention-checker 디스패치 프롬프트에 worker.dispatch receip…"
+    },
+    {
+      "title": "파일럿 태스크 설계 시 주제 규모와 파이프라인 프로필을 함께 결정한다",
+      "date": "2026-09-12",
+      "type": "improvement",
+      "status": "candidate",
+      "file": "memory/파일럿_태스크_설계_시_주제_규모와_파이프라인_프로필을_함께_결정한다.md",
+      "summary": "태스크 119의 파일럿(태스크 121)에 opd 풀 파이프라인 16행을 붙였으나 제안서 §11 Phase 2는 opds 한 프로필을 지정했고,…"
     }
   ],
   "history": [
+    {
+      "title": "121 하네스 구형절 참조 정리",
+      "date": "2026-09-12",
+      "stage": "완료",
+      "path": "tasks/121-260912-opd-하네스-구형절-참조-정리/",
+      "result": "인용 2곳을 owner 문서로 전환 후 opal-harness.md §2.5 매핑 행 제거. 워크트리 캡슐 소유권 계약의 첫 실사용 태스크"
+    },
     {
       "title": "118 워크트리 태스크 소유권 루트분리",
       "date": "2026-09-12",
@@ -55,13 +70,6 @@
       "stage": "완료",
       "path": "tasks/115-260910-opdw-데스크톱-워크벤치-인터랙티브-목업/",
       "result": "재귀형 프로젝트 계층과 Main/Sub PM 조율 대화방, PM·에이전트·독립 터미널 실행 워크스페이스를 목업에 구현했다. 153개 테스트·타입체크·빌드·검증을 통과하고 main에 병합했다."
-    },
-    {
-      "title": "113 부트스트랩 이벤트 하네스 경량화",
-      "date": "2026-09-10",
-      "stage": "완료",
-      "path": "tasks/113-260909-opd-부트스트랩-이벤트-하네스-경량화/",
-      "result": "세션·PM·파일럿·단계·워커 부트를 14개 이벤트와 receipt 검증으로 분리하고 공통 하네스를 owner 문서로 경량화했다. 일반 비서 payload 77.52%, 프로젝트 인지 비서 payload 91.86% 감소. S1-S12 12 pass, macOS 설치 parity 15/15, 컨벤션·code-scan·state 검증 통과."
     }
   ]
 }
