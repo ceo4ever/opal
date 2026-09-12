@@ -1,6 +1,6 @@
 {
   "$schema": "opal-skills-registry-v1",
-  "version": "3.17.0",
+  "version": "3.18.0",
   "updated_at": "2026-09-12",
   "groups": {
     "opal-pilot": [
@@ -770,6 +770,20 @@
           "{project}/.opal/skills/opal-skill-wizard/SKILL.md",
           "~/.opal/skills/opal-skill-wizard/SKILL.md"
         ]
+      },
+      {
+        "name": "opal-self-pm",
+        "alias": "oppm",
+        "description": "대화형 PM 직접 수행 루프 — 질문 1개→조회·정리 반복으로 범위를 확정하고 PM이 직접 조회·작성·수정·검증을 수행, 완료 전 8영역 지식 동기화 판정 후 사용자 최종 확인을 받고 종료",
+        "triggers": [
+          "^oppm$",
+          "^opal-self-pm$"
+        ],
+        "paths": [
+          "{project}/.opal/skills/opal-self-pm/SKILL.md",
+          "~/.opal/skills/opal-self-pm/SKILL.md"
+        ],
+        "domain": "pm"
       }
     ],
     "op-brain": [
@@ -793,6 +807,15 @@
     ]
   },
   "changelog": [
+    {
+      "version": "3.18.0",
+      "date": "2026-09-12 KST",
+      "task": "122",
+      "changes": [
+        "opal-self-pm 신규 등재 (alias oppm, group opal) — 대화형 PM 직접 수행 루프. groups.opal 말미 append, 기존 항목·triggers 무변경",
+        "domain: pm — pipeline 필드 미부여(파이프라인 없는 operator 유형, D-13). --pm은 actor 플래그이며 trigger로 표현하지 않음(D-2)"
+      ]
+    },
     {
       "version": "3.17.0",
       "date": "2026-09-12 KST",

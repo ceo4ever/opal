@@ -1,6 +1,6 @@
 # OPAL PM 직접 수행 모델 설계 제안서
 
-> 상태: 제안
+> 상태: 적용완료
 > 작성일: 2026-09-10
 > 범위: Pilot의 PM 실행 주체와 대화형 PM 직접 수행 계약
 > 동반 제안: [GC 공통 Capability 분리·고도화](./archives/opal-gc-capability-refactor.md)

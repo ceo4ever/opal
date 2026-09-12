@@ -38,9 +38,9 @@
 | (a) | 파일 변경과 **같은 자리에서** | 워커 | `target` 판정 결과에 따라 인라인 또는 매니페스트를 즉시 기록 |
 | (b) | **CLOSE 진입 전** 게이트 | PM | `validate --changed <changed_files>` — exit≠0(`counts.newly_uncovered` ≥1건 또는 다른 위반 존재)이면 CLOSE 진입을 차단. `uncovered:pre_existing`(HEAD 버전에도 원래 헤더가 없던 레거시 파일)만 있으면 비차단(exit 0) — 레거시 소급 부여는 이 게이트가 아니라 `discover`/`scaffold`의 몫이다 |
 | (c) | **PostToolUse hook** | 도구 | 파일 변경 감지 시 기록 위치 미갱신을 경고로 감지 |
-| (d) | **L2 경량 트랙 완료 시점** | PM | `git diff --name-only HEAD`(+ untracked)로 변경 파일을 재구성해 `code-scan validate --changed <목록>` 실행 — exit≠0이면 **L2 종료 선언 전에** @header를 같은 자리에 기록한다 |
+| (d) | **`opal-self-pm` 완료 시점** | PM | `git diff --name-only HEAD`(+ untracked)로 변경 파일을 재구성해 `code-scan validate --changed <목록>` 실행 — exit≠0이면 **`opal-self-pm` 종료 선언 전에** @header를 같은 자리에 기록한다 |
 
-#### (d) L2 완료 시점 — 폴백(미발동) 조건 3종
+#### (d) `opal-self-pm` 완료 시점 — 폴백(미발동) 조건 3종
 
 **[MUST] 아래 3종은 `validate` 판정보다 앞에 평가한다** — 순서 자체가 계약이다(`opal/tools/code-scan/code-map-hook.js:121-124`의 조기 이탈 순서 재사용). 게이트를 자산 로딩·판정 아래로 내리면 조용히 통과해야 할 트리에서 출력·거부가 발생한다.
 
@@ -50,7 +50,7 @@
 
 #### (d) 미수행 탐지 조건
 
-(d) 미수행은 그 파일이 다음 태스크의 변경 대상이 될 때 **(b) CLOSE 게이트의 `validate --changed` exit≠0**으로 누적 탐지된다 — L2가 헤더를 남기지 않은 파일은 다음 태스크에서 기록 위치가 비어 있으므로 (b)의 판정에 걸린다. 즉 (d)는 (b)의 **선행 방어선**이며, 두 시점의 판정 수단은 동일 명령이다.
+(d) 미수행은 그 파일이 다음 태스크의 변경 대상이 될 때 **(b) CLOSE 게이트의 `validate --changed` exit≠0**으로 누적 탐지된다 — `opal-self-pm`이 헤더를 남기지 않은 파일은 다음 태스크에서 기록 위치가 비어 있으므로 (b)의 판정에 걸린다. 즉 (d)는 (b)의 **선행 방어선**이며, 두 시점의 판정 수단은 동일 명령이다.
 
 모드별 차단 사유는 2종이며, **둘 중 하나라도 성립하면 (b)가 차단한다**:
 

@@ -44,7 +44,7 @@
 ### 약어 (Alias)
 
 > **SSOT: `opal/core/references/opal-skills-registry.json`** — 약어의 등록·변경은 레지스트리에서만 수행한다.
-> 아래 표는 레지스트리의 사본이며, 불일치 시 레지스트리가 우선한다. 현재 **30종**.
+> 아래 표는 레지스트리의 사본이며, 불일치 시 레지스트리가 우선한다. 현재 **31종**.
 
 **오케스트레이터 (파일럿)**
 
@@ -78,6 +78,7 @@
 | opgr | opal-grill |
 | opeli5 | opal-eli5 |
 | opcmb | opal-code-map-builder |
+| oppm | opal-self-pm |
 
 **독립 스킬**
 
@@ -213,8 +214,8 @@ OPAL 본체(스킬·에이전트·도구·하네스)를 작성할 때 따라야 
 
 ### 디스패치 의무
 
-- 오케스트레이터 SKILL.md에서 "워커 디스패치"로 정의된 단계(ANALYSIS/PLAN/EXECUTE 등)는 반드시 서브에이전트를 디스패치한다. PM이 직접 실행으로 대체하지 않는다.
-- 근거: `opal/core/references/harness/guards.md` §디스패치 의무 원칙
+- 오케스트레이터 SKILL.md에서 "워커 디스패치"로 정의된 단계(ANALYSIS/PLAN/EXECUTE 등)는 `actor=worker`(기본)에서 반드시 서브에이전트를 디스패치하며, `actor=pm`(사용자 명시 `--pm`)에서만 PM이 해당 단계 스킬을 직접 읽고 수행할 수 있다 — 어느 actor에서도 독립 검증 경계는 생략할 수 없다.
+- 근거: `opal/core/references/harness/guards.md` §디스패치 의무 원칙, `opal/core/references/harness/actor.md` §독립 검증 경계와 GC 호출 지점
 
 ### @header 규칙
 
@@ -245,7 +246,7 @@ OPAL 본체(스킬·에이전트·도구·하네스)를 작성할 때 따라야 
 
 - 파일 처리·데이터 변환 작업이 필요할 때, 직접 코드를 작성하기 전에 OPAL 도구(`~/.opal/tools/`)를 우선 검토한다.
 - 상시 사용 핵심 도구: `state-tool`, `code-scan`, `memory-tool`, `brain-tool`, `test-tool`, `backlog-tool`.
-- **전체 목록: `opal/tools/` (20종)** — 위 6종 외 `event-loader`, `xlsx-tool`, `skill-registry`, `playwright-tool`, `improve-tool`, `cmux-tool`, `git-sync-tool`, `worktree-tool`, `date`, `doctor`, `tool-scan`, `opal-cli`, `opal-agent`, `opal-action-monitor`.
+- **전체 목록: `opal/tools/` (21종)** — 위 6종 외 `event-loader`, `xlsx-tool`, `skill-registry`, `playwright-tool`, `improve-tool`, `cmux-tool`, `git-sync-tool`, `worktree-tool`, `date`, `doctor`, `tool-scan`, `opal-cli`, `opal-agent`, `opal-action-monitor`, `self-pm-tool`.
 - 근거: `opal/core/references/harness/capability.md`, 각 도구 README
 
 ### 배포 경계
