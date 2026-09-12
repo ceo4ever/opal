@@ -10,10 +10,12 @@ tags:
 sources:
 - task:092
 - task:118
+- task:119
 related:
 - worktree-tool
 - worktree-slot-existence-to-occupancy-judgment
 - worktree-task-root-allocator-root-split
+- switch-first-plumbing-later-verification
 created: '2026-08-15'
 updated: '2026-09-12'
 status: draft
@@ -24,7 +26,7 @@ OPAL 태스크 파이프라인에 실행 모드 축(`--interactive`/`--semi-agen
 
 ## 현행 계약 (대체됨)
 
-이 페이지가 기록한 격리 경계 중 **"문서는 허브에 고정하고 코드만 분기한다"는 위치 기준 원칙은 태스크 118이 대체했다.** 태스크 캡슐과 `.opal` 설정의 위치는 더 이상 디렉터리 경로 문자열로 정해지지 않고, 용도별로 갈린 두 루트의 소유권으로 정해진다 — 해석용 루트가 태스크 문서·설정·branch source를 소유하고, 허브 쓰기용 루트가 허브 메모리 이력 귀속을 소유한다. 현행 계약은 [[worktree-task-root-allocator-root-split]]과 그 원문(`opal/core/references/harness/worktree.md` §task root와 allocator root 계약)이다.
+이 페이지가 기록한 격리 경계 중 **"문서는 허브에 고정하고 코드만 분기한다"는 위치 기준 원칙은 태스크 118이 대체했다.** 태스크 캡슐과 `.opal` 설정의 위치는 더 이상 디렉터리 경로 문자열로 정해지지 않고, 용도별로 갈린 두 루트의 소유권으로 정해진다 — 해석용 루트가 태스크 문서·설정·branch source를 소유하고, 허브 쓰기용 루트가 허브 메모리 이력 귀속을 소유한다. 현행 계약은 [[worktree-task-root-allocator-root-split]]과 그 원문(`opal/core/references/harness/worktree.md` §task root와 allocator root 계약)이다. 다만 118 시점에는 캡슐 실체화 범위 설정이 비어 있어 새 계약이 실행되지 않았고, 그 값을 켠 태스크 119에서 대체가 실제로 완결됐다 — 워크트리 태스크의 문서·설정이 워크트리 안에 생성되고 코드 변경과 같은 브랜치 커밋에 담기는 것이 실환경 파일럿에서 확인됐다(근거: task:119 PILOT-EVIDENCE §1·§3).
 
 아래 절들은 작업공간 축 신설 당시(태스크 092)의 결정 기록으로 유지한다. 축이 모드 축과 직교한다는 정의, 코드 작업본 경로, 의존성 지연 설치, 회수 시점은 그대로 유효하다.
 
@@ -56,3 +58,4 @@ OPAL 태스크 파이프라인에 실행 모드 축(`--interactive`/`--semi-agen
 - [[worktree-tool]]
 - [[worktree-slot-existence-to-occupancy-judgment]]
 - [[worktree-task-root-allocator-root-split]] — 이 페이지의 위치 기준 원칙을 대체한 현행 루트 소유권 계약
+- [[switch-first-plumbing-later-verification]] — 대체가 완결된 시점과 그 조건

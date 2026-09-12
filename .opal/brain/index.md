@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-09-12 13:55
+> 갱신: 2026-09-12 16:53
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -254,6 +254,7 @@
 - [[red-first-hybrid-verification-track]] — RED-first 하이브리드 검증 트랙 — 도구 계약 변경 한정 적용 #verification #red-first #opal-agent #testing
 - [[red-test-commit-coercion-guard-lesson]] — RED 테스트가 실저장소 git archive 검증 시 커밋을 구조적으로 강요하는 결함 #red-first #test #git #lesson #guard
 - [[red-test-determinism-abort-trap]] — RED 테스트 결정론성 함정 — neverResolve fetch 대역의 abort 무반응 #testing #red-first #determinism #abort #fetch-mock
+- [[red-timing-follows-implementation-subject]] — 시나리오 검증 시점은 작업 항목의 구현 주체를 따른다 #testing #red-first #test-scenario #lesson #pm-discipline
 - [[regression-only-coverage-gate]] — 회귀만 차단하는 커버리지 게이트 — 레거시 소급 부여는 게이트의 몫이 아니다 #code-scan #gate #close
 - [[regression-pin-of-task-time-fact]] — 태스크 시점 사실의 영구 회귀 단언 고정 — 3연속 재현 #regression #test-design #header-standard
 - [[regulation-tool-four-way-mismatch]] — 규정-도구 4방향 불일치 — 같은 태스크 안에서도 발생한다 #header-standard #code-scan #convention
@@ -309,6 +310,8 @@
 - [[skill-rename-validate-pattern]] — 스킬 rename 후 레지스트리 정합 검증 패턴 #skill-registry #validate #rename #drift-detection #lesson
 - [[source-measured-figures-over-stale-docs]] — 규모 수치의 SSOT는 문서가 아니라 소스 실측이다 #ssot #documentation #drift #measurement #discipline
 - [[split-return-contract-no-denominator-expansion]] — 분리형 반환 계약 — 기존 키의 분모를 확대하지 않는다 #api-contract #return-value #denominator #silent-break #opd
+- [[stale-doc-assertions-outlive-restructuring]] — 문서 문면 단언은 재구조화를 따라가지 못하고 조용히 stale이 된다 #testing #documentation #drift #lesson #assertion
+- [[state-aware-path-resolution-unblocks-merge]] — 상태 인지 경로 해석이 병합 후 차단 연쇄를 푼다 #worktree #ownership #guard #lifecycle #state-machine
 - [[state-md-journal-redefinition]] — STATE.md 저널 재정의 — 파생 섹션 제거 + state.json 단일 SSOT #state-tool #ssot #journal #architecture #task-094
 - [[state-tool-import-existing-key-reattachment]] — state-tool import-existing key 재접합 #state-tool #import #key-address #task-074
 - [[state-tool-mock-guard-skill-false-positive]] — state-tool mock 가드 정규식 ↔ SKILL 표준 문구 false positive #state-tool #mock-guard #false-positive #skill #bug #framework
@@ -317,6 +320,7 @@
 - [[state-tool-task-step-key-address]] — state-tool task-step 키 주소 체계 #state-tool #pipeline #key-address #task-070
 - [[strip-deploy-runtime-token-neutral]] — strip_deploy_md 런타임 토큰 영향 0 — 변경이력 trim 측정 정정 교훈 #deploy-pipeline #token #install #measurement #lesson
 - [[subsection-number-insertion-preserves-citations]] — 하위 절 번호 삽입으로 외부 인용 보존 — 의미 위치와 주소 안정성 동시 확보 #documentation #reference-integrity #harness #task-095
+- [[switch-first-plumbing-later-verification]] — 배관을 먼저 깔고 스위치를 나중에 켜면 계약은 스위치 전까지 검증되지 않는다 #worktree #rollout #verification #contract #phasing
 - [[tag-removal-is-not-history-removal]] — 태그 제거는 이력 제거가 아니다 — 문장이 무엇을 말하는가 #header-standard #test-design
 - [[template-precedence-over-prose-norms]] — 템플릿 우위 법칙 — 규범은 산문보다 템플릿이 이긴다 #template-precedence #prose-norms #framework-norm #governance #harness-design
 - [[test-path-layer-gap-masks-deployment-defect]] — 테스트 소스 경로와 배포본 경로의 계층 차이가 실사용 불가를 덮는다 #testing #deployment #layered-verification #task-105

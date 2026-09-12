@@ -9,12 +9,15 @@ tags:
 - root-resolution
 sources:
 - task:118
+- task:119
 related:
 - worktree-workspace-isolation-axis
 - worktree-tasks-fixture-structural-limit
 - worktree-slot-existence-to-occupancy-judgment
 - worktree-tool
 - three-layer-memory-architecture
+- state-aware-path-resolution-unblocks-merge
+- switch-first-plumbing-later-verification
 created: '2026-09-12'
 updated: '2026-09-12'
 status: draft
@@ -45,6 +48,9 @@ status: draft
 - 재진입 가드는 [[worktree-slot-existence-to-occupancy-judgment]]의 "존재가 아니라 점유로 판정" 전환과 동형으로 설계됐다 — 워크트리 전체의 미커밋 여부가 아니라, 미커밋 대상 경로 집합이 완료 문서가 선언한 학습 후보 집합의 부분집합인지로 판정한다(PLAN D-3b).
 - 네 런타임의 보정 함수와 세 런타임이 공유하던 골든표가 제거되고 각 런타임의 착지 계약 테스트로 교체됐다.
 
+- 이 결정이 만든 장치는 태스크 118 시점에는 실행되지 않았다. 캡슐 실체화 범위를 선언하는 설정 키가 비어 있어 해석용 루트가 워크트리가 아니라 허브로 탈출했고, 값이 들어간 태스크 119에서야 계약이 실제로 성립했다 — 경위는 [[switch-first-plumbing-later-verification]].
+- 태스크 119는 이 결정의 단일 복사본 차단 위에 귀속 진행 상태를 판정에 더해, 병합 이후 정상 상황까지 막던 연쇄를 풀었다. 차단은 진행 중 상태에만 적용되도록 좁혀졌을 뿐 사라지지 않았다 — [[state-aware-path-resolution-unblocks-merge]].
+
 ## 관련 페이지
 
 - [[worktree-workspace-isolation-axis]]
@@ -52,3 +58,5 @@ status: draft
 - [[worktree-slot-existence-to-occupancy-judgment]]
 - [[worktree-tool]]
 - [[three-layer-memory-architecture]]
+- [[state-aware-path-resolution-unblocks-merge]]
+- [[switch-first-plumbing-later-verification]]

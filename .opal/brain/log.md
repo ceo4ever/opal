@@ -414,3 +414,7 @@
 - 신규: [[pages/entity/opal-console.md]]
 - 출처: task:115
 
+## [2026-09-12] ingest | CLOSE ingest — 태스크 119 워크트리 태스크캡슐 소유권 파일럿
+- 신규: [[pages/concept/state-aware-path-resolution-unblocks-merge.md]], [[pages/concept/switch-first-plumbing-later-verification.md]], [[pages/concept/red-timing-follows-implementation-subject.md]], [[pages/concept/stale-doc-assertions-outlive-restructuring.md]]
+- 출처: task:119
+

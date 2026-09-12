@@ -8,10 +8,12 @@ tags:
 - evidence
 sources:
 - task:118
+- task:119
 related:
 - regression-pin-of-task-time-fact
 - parser-drift-silent-longevity-lesson
 - worktree-task-root-allocator-root-split
+- switch-first-plumbing-later-verification
 created: '2026-09-12'
 updated: '2026-09-12'
 status: draft
@@ -36,8 +38,12 @@ status: draft
 
 도구 코드와 그 도구가 소비하는 설정·규범 데이터를 한 태스크에서 함께 바꾸는 모든 회귀 증명에 적용된다. 각 축 담당자가 개별로 증명한 바이트 동일은 통합 대조를 대체하지 않는다 — 태스크 118은 축별 선행 증거를 인용으로 병기하되 전 축 통합 대조를 별도 작업 단위로 두었다(근거: task:118 REGRESSION-EVIDENCE §1.2).
 
+- 태스크 119가 같은 설계를 **제외 표면 없이** 성립시켰다. 인터페이스 표면을 하나도 늘리지 않은 변경이었으므로 사용법·도움말 출력까지 대조 대상에 남길 수 있었고, 6개 명령의 표준 출력·오류 출력·종료 코드 18항목이 전부 바이트 동일했으며 정규화는 한 번도 쓰지 않았다. 즉 제외 목록은 이 설계의 구성 요소가 아니라 신설 표면이 있을 때만 붙는 예외다(근거: task:119 DONE §검증, REGRESSION-EVIDENCE).
+- 같은 태스크가 비공허성도 함께 실증했다 — 교체된 배포본 6파일의 해시가 전부 다른 상태에서 출력이 동일했으므로, 동일성이 "아무것도 바뀌지 않아서"가 아님이 증명된다(근거: 같은 문서).
+
 ## 관련 페이지
 
 - [[regression-pin-of-task-time-fact]]
 - [[parser-drift-silent-longevity-lesson]]
 - [[worktree-task-root-allocator-root-split]]
+- [[switch-first-plumbing-later-verification]]
