@@ -1,6 +1,7 @@
 # OPAL Project Brain 설계 제안서
 
-> 상태: **적용완료 · 아카이브** (015 코어 + 016 지능화) | 작성: 알투(PM) | 작성일: 2026-06-09
+> 상태: 적용완료 | 작성: 알투(PM) | 작성일: 2026-06-09
+> 적용 범위: 태스크 015 코어 + 태스크 016 지능화
 > 이 문서는 규범 SSOT가 아니다 — 실행 규칙은 `opal-brain` 스킬과 `brain-tool`이 소유한다.
 > 근거: Karpathy llm-wiki + OPAL 프레임워크 융합
 > 015: brain-tool·opal-brain·op-brain-ingest 코어 완성 / 016: 지능화(init 분석·ingest --all 문서·3계층·index 비상주·이름 확정·git 추적)

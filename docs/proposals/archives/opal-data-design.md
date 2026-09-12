@@ -1,6 +1,7 @@
 # 설계 검토서: opal-pilot-data-design — DB 설계 업무의 OPAL 내재화
 
-> 상태: **적용완료 · 아카이브** (opdd 파이프라인 구현·배포 완료) | 작성일: 2026-06-12 | 작성: 알투[PM]
+> 상태: 적용완료 | 작성일: 2026-06-12 | 작성: 알투[PM]
+> 적용 범위: opdd 파이프라인 구현·배포 완료
 > 이 문서는 규범 SSOT가 아니다 — 실행 규칙은 `opal-pilot-data-design`·`op-data-*` 스킬이 소유한다.
 > 트리거: 캡틴 지시 — "DB 설계 업무를 OPAL framework로 내재화. opal-pilot-data-design(opdd), op-data-model 등 스킬 구조 조정 검토"
 > 성격: 아키텍처 결정 제안 — 승인 시 구현 태스크로 전개
