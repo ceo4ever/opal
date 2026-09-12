@@ -16,10 +16,10 @@
       "red_at": null,
       "required_fidelity": "mock",
       "surface_ref": null,
-      "result": null,
-      "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "result": "pass",
+      "evidence": "ls exit0 3파일 존재 확인; node skill-registry.js validate → valid:true errors:[] unregistered:[] (dangling은 errors에 병합, 0건)",
+      "marked_at": "2026-09-12T16:06:35+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-2",
@@ -32,10 +32,10 @@
       "red_at": null,
       "required_fidelity": "mock",
       "surface_ref": null,
-      "result": null,
-      "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "result": "pass",
+      "evidence": "opal-security-checker 실제 디스패치(agent aa2dd150287e895b9), skill_path=~/.opal/skills/op-gc-security/SKILL.md, target_files=[opal/skills/opal-pilot-gc/SKILL.md] 1건. 산출: GC-SECURITY-2026-09-12T16-12-00.md(8789B) + gc-findings-security-2026-09-12T16-12-00.json(finding 4건, checked_files=target_files 정확히 일치, status:pass). Pilot 태스크 채번·state.json 생성 없음(git status에 .test-run/만 신규 추가)",
+      "marked_at": "2026-09-12T16:16:45+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-3",
@@ -48,10 +48,10 @@
       "red_at": null,
       "required_fidelity": "mock",
       "surface_ref": null,
-      "result": null,
-      "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "result": "pass",
+      "evidence": "git diff --exit-code pipeline.json → exit0(무변경); grep 3문구(close.done_md/--owner user/CLOSE로 진행할까요) 전건 매칭(line 349,359,368 등); unittest discover -s opal/tools/state-tool/tests -t opal/tools/state-tool/tests → Ran 428 tests OK(skipped=3), 0 failures",
+      "marked_at": "2026-09-12T16:08:11+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-4",
@@ -64,10 +64,10 @@
       "red_at": null,
       "required_fidelity": "mock",
       "surface_ref": null,
-      "result": null,
-      "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "result": "pass",
+      "evidence": "grep 구형 파일명 4종(opal/ docs/ scripts/) → 0건(exit1); grep OWASP/CWE-/SANS/fingerprint/auto_fixable in 두 AGENT.md → 0건(exit1); skill_path grep → security 3건, convention 3건(신형 채택 확인)",
+      "marked_at": "2026-09-12T16:08:26+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-5",
@@ -80,10 +80,10 @@
       "red_at": null,
       "required_fidelity": "mock",
       "surface_ref": null,
-      "result": null,
-      "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "result": "pass",
+      "evidence": "opal-security-checker 디스패치(target_files 2건: not-staged 추적 파일 opal/skills/op-gc-security/SKILL.md + untracked 신규 파일 .test-run/s5-untracked-sample.md). 산출 JSON checked_files가 입력 target_files 2건과 순서까지 정확히 일치, status:pass, missing_capabilities:[] — git 상태로 축소되지 않음(AC-4 충족)",
+      "marked_at": "2026-09-12T16:18:57+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-6",
@@ -96,10 +96,10 @@
       "red_at": null,
       "required_fidelity": "mock",
       "surface_ref": null,
-      "result": null,
-      "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "result": "pass",
+      "evidence": "재검증(fix 이후 회귀 확인): opal-security-checker·opal-convention-checker를 소스 SKILL.md(op-gc-security, op-gc-convention 미배포 프로젝트본)로 각 1회 실제 디스패치, 대상 opal/skills/opal-pilot-gc/SKILL.md 1건. 산출 gc-findings-security(finding 5건)와 gc-findings-convention(finding 3건) JSON 실측 비교: top-level envelope 키 완전 일치([check,checked_files,evidence,findings,missing_capabilities,references,report_path,status]), finding 객체 키 집합 완전 일치([category,confidence,disposition,evidence,fingerprint,id,impact,location,remediation,rule_id,severity,source_tier,suppression,verification]). severity·confidence·disposition·source_tier 모두 독립 필드로 양쪽에 존재. 회귀 없음",
+      "marked_at": "2026-09-12T16:46:45+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-7",
@@ -112,10 +112,10 @@
       "red_at": null,
       "required_fidelity": "mock",
       "surface_ref": null,
-      "result": null,
-      "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "result": "pass",
+      "evidence": "op-gc-report 실제 디스패치, 입력=S-2 security(status:pass, missing_capabilities 1건)+S-9 convention(status:partial, missing_capabilities 2건), baseline:none. 산출 gc-report.json verdict=INCOMPLETE(PASS 계열 아님), GC-REPORT.md §3 '검사 결측'이 독립 절로 표시(3건), §4 차단 항목과 분리 기술",
+      "marked_at": "2026-09-12T16:24:26+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-8",
@@ -128,10 +128,10 @@
       "red_at": null,
       "required_fidelity": "mock",
       "surface_ref": null,
-      "result": null,
-      "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "result": "pass",
+      "evidence": "op-gc-report 실제 디스패치, 통제된 fixture 입력(current: aaaa..(persisting)+cccc..(new), baseline: aaaa..(동일)+eeee..(resolved)). gc-report.json delta 실측: new=[cccc3333dddd4444], persisting=[aaaa1111bbbb2222], resolved=[eeee5555ffff6666], suppressed=[] — 3분류 기대값과 정확히 일치. verdict=FAIL(blocking 1건, missing_capabilities 없음)도 §6 판정표와 부합",
+      "marked_at": "2026-09-12T16:24:15+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-9",
@@ -144,10 +144,10 @@
       "red_at": null,
       "required_fidelity": "mock",
       "surface_ref": null,
-      "result": null,
-      "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "result": "pass",
+      "evidence": "재검증(fix 이후 회귀 확인): opal-convention-checker를 소스 op-gc-convention/SKILL.md로 docs/CONVENTIONS.md 없는 격리 임시 루트(.retest-run/s9-isolated-root)에 fixture 파일 1건(src/sample.js) 실제 디스패치. 산출 JSON 실측: status=partial, finding 6건 전건 disposition=advisory, missing_capabilities에 'docs/CONVENTIONS.md 부재' 등 3건 기록. 검사 중단 없이 완주. 회귀 없음",
+      "marked_at": "2026-09-12T16:46:46+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-10",
@@ -160,10 +160,10 @@
       "red_at": null,
       "required_fidelity": "mock",
       "surface_ref": null,
-      "result": null,
-      "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "result": "pass",
+      "evidence": "docs/PROJECT.md:118-131 GC 파이프라인 표에 op-gc-security/convention/report 3종·opal-pilot-gc(thin wrapper)·두 checker(thin role) 전건 등재; docs/ARCHITECTURE.md:122,127-129,178-179,444-481 스킬·에이전트 목록과 디렉토리 트리에 동일 반영; 실제 파일트리(ls opal/skills/op-gc-*, opal/agents/opal-*-checker) 대조 결과 표에 없는 유령 컴포넌트 0건, 표에 있는데 실재하지 않는 항목 0건",
+      "marked_at": "2026-09-12T16:11:16+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-11",
@@ -176,10 +176,10 @@
       "red_at": null,
       "required_fidelity": "mock",
       "surface_ref": null,
-      "result": null,
-      "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "result": "pass",
+      "evidence": "S-2 실행 직전/직후 git status --porcelain diff → 유일한 변화는 '?? tasks/120.../.test-run/'(지정 출력 디렉터리) 추가뿐. 검사 대상 소스(opal/skills/opal-pilot-gc/SKILL.md 등) 변경 0건",
+      "marked_at": "2026-09-12T16:16:45+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-12",
@@ -192,10 +192,10 @@
       "red_at": null,
       "required_fidelity": "mock",
       "surface_ref": null,
-      "result": null,
-      "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "result": "pass",
+      "evidence": "재검증(회귀 확인): op-gc-security SKILL.md §2 기준 선택 순서 1순위 docs/SECURITY.md(source_tier T0, 변경 없음); op-gc-convention SKILL.md 기준 선택 순서 1순위 docs/CONVENTIONS.md(변경 없음). 두 문서 모두 '상위 기준과 하위 기준이 충돌하면 상위가 이긴다' 유지, 공식 표준이 프로젝트 기준을 대체한다는 문안 없음. fix 3파일 중 op-gc-security·op-gc-convention 모두 포함됐으나 §2/기준선택순서 섹션은 무변경 확인",
+      "marked_at": "2026-09-12T16:46:46+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-13",
@@ -208,10 +208,10 @@
       "red_at": null,
       "required_fidelity": "mock",
       "surface_ref": null,
-      "result": null,
-      "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "result": "pass",
+      "evidence": "재검증(fix 1/3 이후): grep curl/npm install/pip install/실행한다 3개 SKILL.md → 0건(exit1, 설치·실행 지시 없음). [MUST] 외부 자료 read-only 안전장치가 3개 파일 모두에 신설 확인: op-gc-security:80(§7 항목5), op-gc-convention:84(§[MUST] 항목7), op-gc-report:24. security의 구 비태그 중복 문구'읽기 전용 기준으로만'는 제거 확인(grep 0건). 이전 FAIL 사유(태그 미부착·convention/report 전무) 해소됨",
+      "marked_at": "2026-09-12T16:46:45+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-14",
@@ -224,10 +224,10 @@
       "red_at": null,
       "required_fidelity": "mock",
       "surface_ref": null,
-      "result": null,
-      "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "result": "pass",
+      "evidence": "git show --name-only 81363d1 → 27개 경로 전부 docs/·opal/·scripts/·tasks/ 하위(변경 파일 전건 확인, 배포본 ~/.opal/ 직접 편집 0건). 관찰 불가 명시: install-mac.sh가 이미 실행된 상태라 'install 실행 전 배포본에 신설 스킬 없음' 조건은 이 실행 시점에서 직접 관찰할 수 없음(~/.opal/skills/op-gc-* 현재 3종 존재 확인, 이는 정상 배포 결과이며 C-7 위반 근거 아님) — PM 오케스트레이터 지침에 따라 파일 경로 범위로 대체 판정",
+      "marked_at": "2026-09-12T16:09:27+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-15",
@@ -240,10 +240,10 @@
       "red_at": null,
       "required_fidelity": "mock",
       "surface_ref": null,
-      "result": null,
-      "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "result": "pass",
+      "evidence": "python3 scripts/tests/task113_bootstrap_audit.py --mode source → exit0, ok:true, changed_markdown_history_sections files:7 hits:0(이관된 convention-categories.md 등 이력절 잔존 없음, 정상 읽음)",
+      "marked_at": "2026-09-12T16:09:06+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-16",
@@ -256,10 +256,10 @@
       "red_at": null,
       "required_fidelity": "mock",
       "surface_ref": null,
-      "result": null,
-      "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "result": "pass",
+      "evidence": "python3 -m unittest discover -s opal/tools/memory-tool/tests -t opal/tools/memory-tool/tests → Ran 202 tests OK, 0 failures(TS-041 task-number --bump 문구 케이스 포함 전건 통과)",
+      "marked_at": "2026-09-12T16:09:06+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-17",
@@ -272,10 +272,10 @@
       "red_at": null,
       "required_fidelity": "mock",
       "surface_ref": null,
-      "result": null,
-      "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "result": "pass",
+      "evidence": "PM 지시에 따라 --scope staged(공집합) 대신 --scope commit:81363d1로 대체 실행, 신규 task 채번 없이 배포본 opal-pilot-gc/SKILL.md의 SCAN→CHECK→REPORT 경로를 수동 재현. (a) 배포본과 커밋 소스 opal-pilot-gc/SKILL.md diff 0줄(STEP1 SCAN/STEP2 CHECK/STEP3 REPORT/STEP4 CLOSE 순서·Gate 문안 동일, 전환 전과 무변경 — S-3에서 이미 확인된 값과 동일 파일). (b) opal-security-checker·opal-convention-checker 실제 디스패치가 각각 ~/.opal/skills/op-gc-security/SKILL.md, op-gc-convention/SKILL.md를 스킬 부재 없이 로드(sha256 소스-배포 일치 확인). (c) SCAN 확정 목록(git diff --name-only 81363d1^ 81363d1, 29건)과 두 CHECK checked_files(각 29/29 일치) 및 최종 op-gc-report의 gc-report.json checks[].checked_files 합집합이 SCAN 목록과 완전히 일치(union==scan: True). verdict=INCOMPLETE(missing_capabilities 2건, blocking 0건)로 §6 판정표와 부합. 대체 실행 사실과 사유는 위에 명시",
+      "marked_at": "2026-09-12T16:36:14+09:00",
+      "fidelity": "real-usage"
     }
   ]
 }

@@ -37,6 +37,13 @@
   ],
   "history": [
     {
+      "title": "120 검사 공통 역량 분리",
+      "date": "2026-09-12",
+      "stage": "완료",
+      "path": "tasks/120-260912-opds-검사-공통-역량-분리/",
+      "result": "GC 검사 절차를 op-gc-security·op-gc-convention·op-gc-report 3종 단계 스킬로 분리하고 opal-pilot-gc를 thin wrapper로 전환. 세 곳에 중복되던 규칙을 gc-finding-schema.md 단일 SSOT로 수렴, checker 2종은 기준 미보유 role로 축소(212→69·250→87행). 기준 문서 부재 시 검사 생략을 advisory+partial로 교체해 결측과 통과를 분리. 시나리오 17/17 PASS, pipeline.json 무변경으로 기존 GC 동작 회귀 없음."
+    },
+    {
       "title": "119 워크트리 태스크캡슐 소유권 파일럿",
       "date": "2026-09-12",
       "stage": "완료",
@@ -63,13 +70,6 @@
       "stage": "완료",
       "path": "tasks/117-260912-opd-세션-브리핑-출력-집행/",
       "result": "event-loader가 상태·메모리를 완성 Markdown으로 조립하고 네 플랫폼이 stdout을 그대로 출력하도록 강화; 소스·설치본 감사 및 시나리오 6/6 통과"
-    },
-    {
-      "title": "116 부트 행동 필요 브리핑",
-      "date": "2026-09-11",
-      "stage": "완료",
-      "path": "tasks/116-260911-opds-부트-행동-필요-브리핑/",
-      "result": "프로젝트 부트스트랩에 최신 미완료 작업 1건과 우선 검토 메모리 최대 2건을 조건부 bounded 브리핑으로 추가했다. memory/state 도구와 4개 플랫폼 bootstrapper, 문서 계약 및 회귀 감사를 갱신했으며 전체 검증을 통과했다."
     }
   ]
 }

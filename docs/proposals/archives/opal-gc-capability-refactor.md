@@ -1,9 +1,10 @@
 # OPAL GC 공통 Capability 분리·고도화 제안서
 
-> 상태: 제안
+> 상태: 적용완료
 > 작성일: 2026-09-12
 > 범위: `opal-pilot-gc` 검사 본체 분리, 검사 품질 고도화, 외부 기준 공급망
-> 동반 제안: [PM 직접 수행 모델](./opal-pm-direct-execution.md)
+> 적용 범위: §11 마이그레이션 1~5·8단계 적용 완료(태스크 120). 6단계(`opal-self-pm` 연결)·7단계(reference registry) 미적용
+> 동반 제안: [PM 직접 수행 모델](../opal-pm-direct-execution.md)
 
 ---
 

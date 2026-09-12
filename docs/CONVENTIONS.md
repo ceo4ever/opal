@@ -37,6 +37,8 @@
 | `opal-task-*` | 범용 워커 에이전트 | opal-task-agent |
 | `opal-{domain}-agent` | 전문 워커 에이전트 | opal-fe-agent, opal-be-agent, opal-db-agent, opal-plan-agent, opal-test-agent, opal-planning-agent |
 | `op-sdd-*` | SDD 단계 스킬 | op-sdd-spec, op-sdd-verify, op-sdd-plan, op-sdd-action-plan |
+| `op-gc-*` | GC 도메인 단계 스킬 | op-gc-security, op-gc-convention, op-gc-report |
+| `op-data-*` | 데이터 설계 단계 스킬 | op-data-dictionary, op-data-model, op-data-ddl |
 | `opal-*` | OPAL 프레임워크 전용 | opal-project-init, opal-onboarding |
 
 ### 약어 (Alias)

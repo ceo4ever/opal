@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-09-12 16:53
+> 갱신: 2026-09-12 17:05
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -132,6 +132,7 @@
 - [[fixture-ownership-separation-closes-reward-hacking]] — 픽스처 소유권을 구현자와 분리하면 reward hacking 표면이 닫힌다 #testing #fixture-design #reward-hacking #task-105
 - [[fixture-vs-real-blind-spot-lesson]] — fixture-vs-real 맹점 — 테스트 픽스처 통과·실데이터 버그 반복 교훈 #lesson #testing #bug #fixture
 - [[force-flag-side-effect-trial-run-first]] — --force류는 1건 시험 실행 후 확대한다 — 시각 덮어쓰기로 6행 손상 #tooling #state-tool #incident #discipline #lesson-learned
+- [[gc-finding-schema]] — GC finding schema — 검사 결과 계약 SSOT #gc #security #convention #schema #ssot #architecture
 - [[global-deploy-after-verification-ordering]] — 검증 미완 규칙의 전역 배포 차단 — 배포는 검증의 결과여야 한다 #deploy #install #pipeline-order #framework #task-095
 - [[governance-single-owner-rule-mapping]] — 규칙 1소유자 매핑 — Governance 중복 기재 방지 설계 #governance #ssot #design-pattern #dispatch
 - [[grandfather-by-creation-time-not-by-result-state]] — 유예 기준은 결과 상태가 아니라 생성 시각으로 잡는다 — 「기록 0건이면 유예」의 자기무력화 #enforcement #migration #backward-compat #state-tool #lesson-learned

@@ -4,8 +4,8 @@
   "mode": "agentic",
   "schema_version": "1.1",
   "created_at": "2026-09-12 14:50:01",
-  "updated_at": "2026-09-12 15:06:33",
-  "current_status": "in_progress",
+  "updated_at": "2026-09-12 17:19:43",
+  "current_status": "done",
   "rows": [
     {
       "row_id": 1,
@@ -97,30 +97,32 @@
       "key": "execute.implement",
       "status": "done",
       "status_label": "✅",
-      "timestamp": "2026-09-12 15:06:33",
+      "timestamp": "2026-09-12 17:01:18",
       "owner": "PM",
       "note": null,
-      "step": "1/1"
+      "step": "1/1",
+      "worker_duration_minutes": 18
     },
     {
       "row_id": 8,
       "stage": "TEST",
       "item": "작업",
       "key": "test.run_tests",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-12 16:37:28",
       "owner": "PM",
-      "note": null
+      "note": null,
+      "worker_duration_minutes": 31
     },
     {
       "row_id": 9,
       "stage": "TEST",
       "item": "PM Gate",
       "key": "test.pm_gate",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-12 16:55:51",
       "owner": "PM",
       "note": null,
       "gate": {
@@ -141,23 +143,23 @@
       "stage": "TEST",
       "item": "사용자 확인",
       "key": "test.user_confirm",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
-      "owner": "PM",
-      "note": null
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-12 16:58:41",
+      "owner": "user",
+      "note": "캡틴 확인: CLOSE 진행 승인 (재배포 포함)"
     },
     {
       "row_id": 11,
       "stage": "CLOSE",
       "item": "DONE.md 생성",
       "key": "close.done_md",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-12 17:01:28",
       "owner": "PM",
       "note": null
     }
   ],
-  "next_action": "TEST 작업 진입"
+  "next_action": "태스크 완료"
 }

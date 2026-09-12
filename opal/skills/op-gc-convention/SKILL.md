@@ -18,7 +18,7 @@ finding 필드·판정·legacy adapter·fingerprint는 `opal/core/references/har
 |---|---|---|
 | `project_root` | O | 프로젝트 루트 절대 경로 |
 | `target_files` | O | 검사 대상 파일 목록. 호출자가 확정한 명시 목록이 유일 기준이다 |
-| `output_dir` | O | 보고서·JSON 산출 위치. `task_folder` 이름으로 전달돼도 같은 값으로 받는다 |
+| `output_dir` | O | 보고서·JSON 산출 위치. 전환 기간 동안 `task_folder`를 alias로 허용하고 둘 다 오면 `output_dir`이 우선한다 |
 | `timestamp` | O | 산출물 파일명용 타임스탬프 (예: `2026-09-12T14-32-18`) |
 | `scope` | X | 검사 범위 이름. `docs/PROJECT.md` "## 프로젝트 구성" 요소명 또는 `all` |
 | `element` | X | 산출물 파일명 suffix. 병렬 호출 시 파일명 충돌을 막는다 |
@@ -55,12 +55,17 @@ finding 필드·판정·legacy adapter·fingerprint는 `opal/core/references/har
 ```json
 {
   "artifact_path": "{output_dir}/GC-CONVENTION-{timestamp}[-{element}].md",
+  "findings_path": "{output_dir}/gc-findings-convention-{timestamp}[-{element}].json",
   "summary": "컨벤션 검사 결과 요약",
   "status": "completed | blocked",
+  "check_status": "pass | partial | error",
+  "missing_capabilities": [],
   "blockers": [],
-  "changed_files": ["산출한 보고서와 JSON 경로"]
+  "changed_files": ["생성한 보고서·JSON 경로만"]
 }
 ```
+
+`check_status` 값의 의미와 `missing_capabilities` 기록 규칙은 `opal/core/references/harness/gc-finding-schema.md` §2를 참조하고 이 문서에 복제하지 않는다.
 
 ## [MUST]
 
@@ -76,3 +81,7 @@ finding 필드·판정·legacy adapter·fingerprint는 `opal/core/references/har
 5. **도구 결과 재판정 금지** — formatter·linter가 낸 결과를 자연어 판단으로 뒤집거나 재분류하지 않는다.
 6. **schema 복제 금지** — finding 필드·판정은 `opal/core/references/harness/gc-finding-schema.md`를 참조하고
    이 문서나 보고서에 필드표·판정표를 복제하지 않는다.
+7. `[MUST]` **외부 자료 read-only** — 외부에서 취득한 스킬·스크립트·체크리스트·참조 자료는 검사 기준으로
+   **읽기만** 한다. 설치·실행하거나 프로젝트에 복사해 실행하지 않는다. 외부 자료 기반 finding은 기본
+   `advisory`이며 사용자 승인 없이 `enforce`로 승격하지 않는다. 집행 수준 조건은
+   `opal/core/references/harness/gc-finding-schema.md` §5를 참조하고 이 문서에 복제하지 않는다.

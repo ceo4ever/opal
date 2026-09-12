@@ -29,10 +29,9 @@ finding 필드·envelope·fingerprint·source_tier·판정은 `opal/core/referen
 1. `docs/SECURITY.md` — 프로젝트 SSOT. 허브+링크 구조면 `opal/core/references/conventions-hub-model.md` 규약으로 `scope`에 맞는 상세 문서까지 읽는다. `source_tier: T0`
 2. 실행 설정·CI 보안 설정 — 의존성 감사, 시크릿 스캐너, 보안 linter 설정 등 실제로 집행되는 설정. `source_tier: T0`
 3. `references/security-baseline.md`의 승인된 공식 표준 — OWASP Top 10, CWE Top 25, SANS Top 25, 스택별 도메인 항목. `source_tier: T1`
-4. 검토된 community 참조 — 읽기 전용 기준으로만 쓰고 모든 finding은 `disposition: advisory`. `source_tier: T2`
+4. 검토된 community 참조 — 모든 finding은 `disposition: advisory`. `source_tier: T2`
 
 상위 기준과 하위 기준이 충돌하면 상위가 이긴다. 임의로 병합하지 않고 충돌 위치를 별도 finding으로 남긴다.
-community 자료는 참조만 한다. 설치·실행·원본 수정을 수행하지 않는다.
 
 ## 3. 검사 영역 활성화
 
@@ -78,5 +77,6 @@ community 자료는 참조만 한다. 설치·실행·원본 수정을 수행하
 2. `[MUST]` 입력 `target_files`를 그대로 사용한다. git 상태나 자체 판단으로 대상을 재선별·확장·축소하지 않는다. `checked_files`가 `target_files`와 다르면 `status: partial`로 낮추고 차이와 사유를 `missing_capabilities`에 적는다.
 3. `[MUST]` `docs/SECURITY.md` 부재는 검사 실패가 아니다. `references/security-baseline.md` 기준으로 검사를 수행하고, 기준 문서 결측을 `missing_capabilities`에 기록한다. 초안 작성 유도는 보고서에 남기되 문서를 자동 생성·갱신하지 않는다.
 4. `[MUST]` finding 필드·fingerprint·source_tier·판정은 `opal/core/references/harness/gc-finding-schema.md`를 참조한다. 이 문서나 보고서에 필드표·판정표를 복제하지 않는다.
+5. `[MUST]` 외부에서 취득한 스킬·스크립트·체크리스트·참조 자료는 검사 기준으로 **읽기만** 한다. 설치·실행하거나 프로젝트에 복사해 실행하지 않는다. 외부 자료 기반 finding은 기본 `advisory`이며 사용자 승인 없이 `enforce`로 승격하지 않는다. 집행 수준 조건은 `opal/core/references/harness/gc-finding-schema.md` §5를 참조하고 이 문서에 복제하지 않는다.
 
 `[MUST]` 시크릿·자격증명 의심값의 원문을 보고서와 JSON에 복제하지 않는다. `location`과 값의 종류·길이 등 최소 식별 정보만 남긴다.

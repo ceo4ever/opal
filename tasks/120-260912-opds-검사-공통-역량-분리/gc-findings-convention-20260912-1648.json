@@ -1,0 +1,85 @@
+{
+  "check": "convention",
+  "status": "pass",
+  "checked_files": [
+    "opal/core/references/harness/gc-finding-schema.md",
+    "opal/skills/op-gc-security/SKILL.md",
+    "opal/skills/op-gc-convention/SKILL.md",
+    "opal/skills/op-gc-report/SKILL.md",
+    "opal/skills/op-gc-report/references/report-template.md",
+    "opal/skills/opal-pilot-gc/SKILL.md",
+    "opal/agents/opal-security-checker/AGENT.md",
+    "opal/agents/opal-convention-checker/AGENT.md",
+    "opal/core/references/agents.md",
+    "opal/core/references/opal-skills-registry.json",
+    "scripts/tests/task113_bootstrap_audit.py",
+    "docs/PROJECT.md",
+    "docs/ARCHITECTURE.md"
+  ],
+  "findings": [
+    {
+      "id": "GC-001",
+      "fingerprint": "5815bc5578ef2b89",
+      "category": "문서화",
+      "severity": "medium",
+      "confidence": "high",
+      "disposition": "advisory",
+      "rule_id": "opal-doc-standard.md §5 (CONVENTIONS.md §문서 이력과 버전 포인터 경유)",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/core/references/opal-skills-registry.json",
+        "line": "795-934 (최상위 changelog 배열, 15개 버전 항목 누적)"
+      },
+      "evidence": "795행 \"changelog\": [ 부터 시작하는 배열이 버전별 변경 요약을 수기로 누적한다. 797행 \"version\": \"3.17.0\"이 이번 태스크(120)가 추가한 최신 항목이며, 그 아래 3.16.0 등 과거 항목이 그대로 유지된다. python3 -c \"json.load(...)['changelog']\" 확인 결과 15건.",
+      "impact": "opal-doc-standard.md §5는 SKILL/AGENT/harness/reference 문서에서 이름과 무관하게(변경이력·Changelog·history·revisions) 수기 누적 이력 절 생성을 금지하며, 이력은 git과 태스크 기록이 소유해야 한다고 규정한다. opal-skills-registry.json은 opal/core/references/ 소속 reference 문서이므로 이 규정의 적용 대상이다. 배열이 매 태스크마다 계속 늘어나면 SSOT 파일이 비대해지고 실행 지시문 원칙(§3 필요한 내용만 유지)에서 벗어난다.",
+      "remediation": {
+        "guidance": "최상위 changelog 배열을 제거하고 최상위 version 필드만 유지한다. 변경 근거는 git 커밋 로그(태스크 번호 기반, 예: 이번 태스크 120 커밋)로 충분히 추적 가능하다. 기존 15건을 즉시 삭제할지 별도 아카이브 문서로 이관할지는 소유자 결정이 필요하다.",
+        "reference": "opal/core/references/opal-doc-standard.md §5",
+        "auto_fixable": false
+      },
+      "verification": "opal-skills-registry.json 최상위 키에 changelog가 없고 version 필드만 존재하는지 확인",
+      "suppression": null
+    },
+    {
+      "id": "GC-002",
+      "fingerprint": "4911deb3087d5f95",
+      "category": "문서화",
+      "severity": "low",
+      "confidence": "medium",
+      "disposition": "advisory",
+      "rule_id": "opal-doc-standard.md §2 (공통 작성 규칙 — 같은 사실은 일관되게 기술)",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/skills/op-gc-security/SKILL.md",
+        "line": 20
+      },
+      "evidence": "op-gc-security/SKILL.md 20행: \"output_dir | O | 산출물 디렉토리. 전환 기간 동안 task_folder를 alias로 허용하고 둘 다 오면 output_dir이 우선한다\". 대칭 스킬인 op-gc-convention/SKILL.md 21행: \"output_dir | O | 보고서·JSON 산출 위치. task_folder 이름으로 전달돼도 같은 값으로 받는다\" — 두 값이 동시에 전달될 때의 우선순위 문구가 없다.",
+      "impact": "두 스킬은 opal-pilot-gc CHECK 단계가 동일한 패턴(요소×체커)으로 병렬 디스패치하는 대칭 쌍이며 같은 파라미터 별칭 규칙을 공유해야 한다. 우선순위 문구가 한쪽에만 있으면 구현자가 output_dir/task_folder 충돌 처리를 스킬별로 다르게 해석할 위험이 있다.",
+      "remediation": {
+        "guidance": "op-gc-convention/SKILL.md의 output_dir 입력 설명에 op-gc-security와 동일한 우선순위 문구(\"둘 다 오면 output_dir이 우선한다\")를 추가해 대칭을 맞춘다.",
+        "reference": "TBD — 전용 스타일 가이드 없음, 대칭 스킬 쌍 대조로 발견",
+        "auto_fixable": true
+      },
+      "verification": "op-gc-convention/SKILL.md 입력 표의 output_dir 설명에 op-gc-security와 동일한 우선순위 문구가 포함되는지 확인",
+      "suppression": null
+    }
+  ],
+  "evidence": [
+    "13개 대상 파일 전문 Read",
+    "grep -niE '변경이력|changelog|change log|revision history|## history|revisions' — 9개 대상 마크다운 파일 전건 0건",
+    "git diff 81363d1^ 81363d1 -- <각 대상 파일> — 태스크 120의 실제 변경분과 현재 상태 대조",
+    "python3 -c \"json.load(open('opal-skills-registry.json'))\" — JSON 유효성 확인 (VALID)",
+    "python3 -m py_compile scripts/tests/task113_bootstrap_audit.py — 컴파일 확인 (OK)",
+    "grep -cP '\\t' / ' +$' + tail -c1 — 13개 파일 탭 문자·trailing whitespace·EOF 개행 확인 (전건 tabs=0, trailing=0, final_newline=1)",
+    "grep -n 'op-data|op-gc' docs/CONVENTIONS.md — 컴포넌트 네이밍 체계 표에 두 접두사 모두 미등재 확인 (§4 참조)"
+  ],
+  "references": [
+    "docs/CONVENTIONS.md",
+    "opal/core/references/opal-doc-standard.md",
+    "opal/skills/op-gc-convention/references/convention-categories.md",
+    "opal/skills/op-gc-convention/references/report-template.md",
+    "opal/core/references/harness/gc-finding-schema.md"
+  ],
+  "missing_capabilities": [],
+  "report_path": "tasks/120-260912-opds-검사-공통-역량-분리/GC-CONVENTION-20260912-1648.md"
+}

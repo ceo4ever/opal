@@ -418,3 +418,7 @@
 - 신규: [[pages/concept/state-aware-path-resolution-unblocks-merge.md]], [[pages/concept/switch-first-plumbing-later-verification.md]], [[pages/concept/red-timing-follows-implementation-subject.md]], [[pages/concept/stale-doc-assertions-outlive-restructuring.md]]
 - 출처: task:119
 
+## [2026-09-12] ingest | CLOSE ingest — 태스크 120 GC 검사 역량의 공통 스킬 분리
+- 신규: [[pages/concept/gc-finding-schema.md]]
+- 출처: task:120
+

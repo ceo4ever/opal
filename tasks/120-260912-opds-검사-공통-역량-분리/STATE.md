@@ -1,6 +1,6 @@
 # STATE: GC 검사 역량의 공통 스킬 분리
 
-> 최종 갱신: 2026-09-12 15:06:33
+> 최종 갱신: 2026-09-12 17:19:43
 > 파이프라인 현황(rows/상태/다음 액션)의 SSOT는 `state.json`입니다.
 > 조회: `~/.opal/tools/state-tool/run.sh show <task-path>`
 
@@ -13,6 +13,7 @@
 | 4 | 2026-09-12 15:19 | `opal-skills-registry.json` changelog를 말미가 아니라 맨 앞에 삽입 | 기존 배열이 최신 우선 정렬. PLAN 문구보다 파일의 실제 정렬 규약 우선 |
 | 5 | 2026-09-12 15:27 | W-9 ②③④의 `unittest discover -t .`를 `-t <tests dir>`로 정정 실행 | Python 3.14에서 하이픈 경로가 importable하지 않아 `ImportError`. 명령 표기 오류이며 범위 변경 아님 |
 | 6 | 2026-09-12 15:30 | 이동한 컨벤션 파일 3종의 stale 헤더(`module`/`domain`/`description`/템플릿 참조)를 PM이 직접 정정 | W-3이 H-1 문안 보존을 우선하며 헤더를 남겨 AC-3 grep 잔존 3건 발생. W-2 보안 파일과 동일 처리로 정합 |
+| 7 | 2026-09-12 17:19:43 | current_status changed: completed_unmerged → done | 허브 MEMORY 귀속 완료 (finalize-attribution + result 보강) |
 
 ## 검증 결과 (W-9)
 
