@@ -2,7 +2,8 @@
 name: opal-pilot-dev-short
 description: |
   **Short Task 오케스트레이터 (기본 모드)**. 코드 변경이 수반되는 작은 개발 작업을 TASK → PLAN → EXECUTE → TEST → CLOSE로 수행한다.
-  반드시 이 스킬을 사용해야 하는 상황: "opal-pilot-dev-short", "opds".
+  반드시 이 스킬을 사용해야 하는 상황: "opal-pilot-dev-short".
+  `opds` short profile은 canonical Dev Pilot(`opal-pilot-dev`)이 소유하므로 `opds` 요청은 이 스킬이 아니라 `opal-pilot-dev`로 라우팅한다.
   PLAN 단계에서 규모가 크다고 판단되면 Full Task(opal-pilot-dev) 에스컬레이션을 제안한다.
   코드를 읽기만 하는 설명 요청, API 명세서(api-analyzer), 기획 문서(opal-pilot-write-tech), PR 리뷰, git 작업, 단순 설정 변경은 이 스킬이 아니다.
 ---

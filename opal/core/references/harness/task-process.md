@@ -19,12 +19,15 @@
 신규 태스크 생성 시:
 1. 아래를 호출한다 — 도구가 원자적으로 증가·저장한다. **LLM 직접 편집 금지.**
    ```bash
-   ~/.opal/tools/memory-tool/run.sh task-number --file .opal/MEMORY.json --bump
+   ~/.opal/tools/memory-tool/run.sh task-number --file <허브 절대경로>/.opal/MEMORY.json --bump
    ```
+   - **[MUST] allocator는 항상 허브 절대경로다. cwd에서 추론하거나 상대경로로 전달하지 않는다.** 상대경로는 cwd가 워크트리일 때 cone 사본을 가리켜 `WORKTREE_WRITE_REJECTED`로 이 스텝에서 즉시 실패한다.
 2. 응답 JSON의 `last_task_number` 값이 이번 태스크 번호다 (계산하지 않는다).
-3. 태스크 폴더를 생성한다 (`tasks/{NNN}-{YYMMDD}-{스킬약어}-{태스크명}/`)
+3. 폴더명 `{NNN}-{YYMMDD}-{스킬약어}-{태스크명}`을 확정한다 (아직 만들지 않는다)
    - `{YYMMDD}`: `node ~/.opal/tools/date/date.js yymmdd` 실행하여 KST 기준 취득
-4. TASK.md를 작성한다
+4. 폴더 생성과 TASK.md 작성 순서는 **`--worktree`/`--wt` 유무로만** 갈린다.
+   - **`--wt` 없음(기본)**: 허브 `tasks/{폴더명}/`을 생성하고 TASK.md를 작성한 뒤 5번으로 간다. **현행 순서(폴더 → TASK.md → `state init`) 100% 유지 — 어떤 조건부 분기도 실행되지 않는다.**
+   - **`--wt` 있음**: 폴더를 만들지 않고 4.5로 간다. worktree를 먼저 만들고, `create` 응답의 `task_path`를 생성한 뒤 그 경로에 TASK.md를 작성한다.
 
 > `.opal/MEMORY.json`이 없고 `.opal/MEMORY.md`만 있으면 도구가 자동 변환 후 처리한다.
 > 둘 다 없으면 `memory_json_not_found` — `memory-tool init`을 먼저 실행한다.
@@ -39,14 +42,21 @@
 
    ```bash
    ~/.opal/tools/worktree-tool/run.sh create \
-     --project-root <프로젝트 절대경로> \
+     --project-root <허브 절대경로> \
      --task <NNN> \
+     --task-folder {NNN}-{YYMMDD}-{스킬약어}-{태스크명} \
      [--slug <태스크명>] \
      [--skill <약어>]
    ```
 
-   - `ok: true` → 응답의 `worktree_root` 값을 아래 5번 `state init`의 `--worktree <path>`에 전달한다. `warnings[]`가 있으면 그대로 사용자에게 전달한다(**차단하지 않는다**).
-   - `ok: false` → **태스크 폴더·TASK.md를 롤백하지 않는다.** `--wt` 없이 5번으로 진행하고(=`--worktree`를 전달하지 않으므로 `state.json`이 현행 스키마와 동일해진다), 실패 사유(`error` 코드)를 사용자에게 보고한다. agentic 모드에서는 사용자 확인을 요구하지 않고 자동 계속하되 AGENTIC-LOG.md에 실패 사유를 기록한다.
+   - **[MUST] `create`는 `task_path` 디렉토리를 만들지 않는다 — 경로 계약만 확정한다.** 폴더 생성은 아래 `ok: true` 1의 별도 스텝이며, 건너뛰면 TASK.md 쓰기가 실패한다.
+   - `ok: true` → 순서대로 수행한다.
+     1. 응답의 `task_path`를 `mkdir -p <task_path>`로 생성한다.
+     2. 그 `task_path`에 TASK.md를 작성한다(채번 규칙 4항).
+     3. 응답의 `worktree_root` 값을 아래 5번 `state init`의 `--worktree <path>`에 전달한다.
+
+     `warnings[]`가 있으면 그대로 사용자에게 전달한다(**차단하지 않는다**).
+   - `ok: false` → **허브 `tasks/{폴더명}/`에 폴더를 생성하고 TASK.md를 작성한 뒤 `--worktree` 없이 5번으로 진행한다**(=`--worktree`를 전달하지 않으므로 `state.json`이 현행 스키마와 동일해진다). 이 시점에는 어느 위치에도 폴더가 없으므로 롤백할 대상이 없고 폴더는 한 위치에만 생긴다. 실패 사유(`error` 코드)를 사용자에게 보고한다. agentic 모드에서는 사용자 확인을 요구하지 않고 자동 계속하되 AGENTIC-LOG.md에 실패 사유를 기록한다.
      - 오류가 `CONFIG_NOT_FOUND`이면 `~/.opal/tools/worktree-tool/run.sh init --project-root <프로젝트> [--dry-run]`을 안내한다. `init`은 독립 `.git` 발견 시 multi-repo, 없으면 monorepo 초안을 만들 뿐 자동 확정하지 않으므로 사용자가 검토·수정한다. 수동 작성은 `~/.opal/templates/worktree-multi-repo.json` 또는 `worktree-monorepo.json`을 복사해 시작한다.
    - 도구는 부분 실패 시 자기가 만든 worktree·브랜치만 스스로 되돌린다(all-or-nothing) — 파이프라인이 정리할 잔여물은 없다.
    - 축 정의 SSOT: `opal/core/references/harness/worktree.md`.
@@ -63,6 +73,7 @@
      [--worktree <worktree_root 절대경로>]      ← 4.5가 ok:true를 반환한 경우에만 전달
    ```
 
+   - `<task-path>`: `--wt` 태스크는 4.5가 발급한 **워크트리 안 canonical `task_path`**(허브 `tasks/` 아래가 아니다), 그 외에는 허브 `tasks/{폴더명}` 경로다. cwd나 `.opal-worktrees` 문자열로 추측하지 않는다.
    - `--task-title`: STATE.md 1행 제목 (생략 시 task-path 마지막 디렉토리명)
    - `--next-action`: `state.json` `next_action` 필드 초기값 (조회: `state-tool show`) (생략 시 `"PLAN 단계 진입"`) — 이후 `advance`/`mark`에서도 파이프라인 프론티어 기준으로 자동 갱신되며, 전이 시 동일 플래그로 1회성 오버라이드 가능하다(072)
    - 행 구성의 SSOT는 오케스트레이터 `references/pipeline.json`이며 `--rows-from`으로 지정한다(`--rows-spec`은 인라인 JSON 직접 지정용). SKILL.md 행 표는 사람 열람용 미러이며 `.md` 파싱은 deprecated(090)

@@ -132,8 +132,11 @@ Step 0에서 현재 디스패치용 `worker.dispatch` receipt가 성공 검증�
 - status, changed_files, validation, blockers
 ```
 
-worktree 태스크는 문서 루트와 코드 루트를 각각 절대경로로 추가한다. 워커는 배정 범위 밖 파일과
-git history를 변경하지 않는다. 디스패치 직전 사용자에게 다음 한 줄을 알린다.
+worktree 태스크는 문서 루트와 코드 루트를 각각 절대경로로 추가한다. 이때 문서 루트는
+`worktree-tool`이 발급한 canonical `task_path`(워크트리 안)를 그대로 주입하며, PM은 cwd나
+`.opal-worktrees` 문자열로 추측해 구성하지 않는다 — 해석 규칙 원문은
+`opal/core/references/harness/worktree.md` §canonical path 발급 계약이 소유한다.
+워커는 배정 범위 밖 파일과 git history를 변경하지 않는다. 디스패치 직전 사용자에게 다음 한 줄을 알린다.
 
 ```text
 ⚙️ 워커 디스패치: {단계} — {역할}

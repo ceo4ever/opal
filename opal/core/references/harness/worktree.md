@@ -43,6 +43,13 @@ load: pilot.start
 - CLOSE 마지막 mark는 MEMORY history를 즉시 append하지 않고 `completed_unmerged`만 확정한다. history append는 merge 확인 후 귀속 명령만 수행한다.
 - 워크트리의 `.opal/MEMORY.json`은 읽기 snapshot이며 state-tool의 쓰기 대상이 아니다.
 
+### merge 경로
+
+- 귀속은 merge **전** 브랜치에서 실행한 `finalize` 커밋으로 확정된다. merge는 그 커밋을 포함한 브랜치를 옮길 뿐이며 귀속을 새로 만들지 않는다.
+- 허용 merge 경로는 두 가지다 — FF 가능 시 `git merge --ff-only`, merge 커밋을 남길 때 `git merge --no-ff`. 어느 쪽이든 귀속 결과는 동일하다.
+- **[MUST] `git merge --no-ff --no-commit` 후 merge 커밋 안에서 귀속 후처리를 확정하는 단일 merge 커밋 경로는 현행 도구 계약이 아니다.** 그 시점에는 허브 `tasks/{task_folder}` 사본이 이미 존재하는데 `attribution_state`는 아직 `closed`가 아니므로 §상태 의존 해석에서도 차단이 정상 판정이고, 단일 복사본 불변식과 구조적으로 충돌한다.
+- 생성·회수 절차의 원문은 `harness/task-process.md` §오케스트레이터 공통 영역이 소유한다. 이 절은 귀속 확정 시점과 허용 경로만 정의하고 절차를 복제하지 않는다.
+
 ## canonical path 발급 계약
 
 canonical task path의 **기계 계약은 worktree-tool metadata/schema가 소유한다.** 이 문서는 인터페이스와 의미만 참조하고 경로 판정 알고리즘을 복제하지 않는다.
@@ -51,15 +58,30 @@ canonical task path의 **기계 계약은 worktree-tool metadata/schema가 소�
 - **불변식**: `task_path == realpath(task_home/tasks/task_folder)`.
 - `task_folder`는 **basename만 허용**한다. `/`, `..`, NUL과 경로 구분자를 포함하면 거부한다.
 - PM·워커·state-tool·run-log-tool은 이 발급값을 전달받아 사용한다. cwd에서 `.opal-worktrees` 문자열을 찾아 task path를 추측하지 않는다.
-- **[MUST] 등록된 worktree 태스크에 허브 `tasks/{task_folder}`가 동시에 존재하면 자동 선택하지 않고 `task_path_ambiguous`로 차단한다.**
+- **[MUST] 등록된 worktree 태스크에 허브 `tasks/{task_folder}`가 동시에 존재하면 자동 선택하지 않고 `task_path_ambiguous`로 차단한다.** 이 차단의 적용 범위는 아래 §상태 의존 해석이 정한다.
 - `task_ownership_version`이 없는 태스크는 legacy다. 실행 중 태스크 위치를 자동 이동하지 않고 기존 허브 task path를 유지한다. legacy worktree가 허브 자산을 필요로 하면 registry/meta의 명시 `project_root`를 전달한다.
+
+### 상태 의존 해석
+
+canonical path 판정은 registry meta의 `attribution_state` 한 값을 **더 본다**. 차단 계약을 제거하는 완화가 아니라 적용 상태를 한정하는 확장이다.
+
+| `attribution_state` | canonical task path | 허브 사본이 동시에 존재할 때 |
+|---|---|---|
+| 키 부재 · `completed_unmerged` · `attribution_pending` (= active) | 등록된 worktree task path | `task_path_ambiguous`로 차단한다 |
+| `closed` (= merge 확인 후) | 허브에 merge된 `tasks/{task_folder}` | 차단하지 않는다 |
+
+- **[MUST] `task_path_ambiguous` 차단은 active 상태에만 적용한다.** active 3상태의 판정은 무변경이며, 통과가 열리는 값은 `closed` 하나뿐이다.
+- `closed`는 `finalize` 성공 경로에서만 기록된다. merge 뒤 허브 사본은 정상 결과이므로 이를 차단하면 `finalize`·`status` 재진입이 영구 차단된다.
+- `task_ownership_version` 부재 legacy 메타는 이 판정에 들어가지 않는다(위 legacy 항 유지).
 
 ## cone 확장 계약
 
 - 설정 키 `taskCapsuleCone`, 타입 `list[str]`, **기본값 `[]`**.
 - monorepo 분기에서만 `repos`에 이어 sparse-checkout cone에 전개한다. **multi-repo 분기에는 적용하지 않는다.**
 - 기본값 `[]`의 전개는 no-op이므로 비워크트리·기존 워크트리 동작은 바이트 동일하게 보전된다.
-- 운영 권고값 `["tasks", ".opal"]`은 **Phase 2 활성화 값**이다. 이 단계의 기본값이 아니며, 운영 worktree의 기본 cone을 지금 이 값으로 바꾸지 않는다.
+- **현행 운영값은 `["tasks", ".opal"]`이다.** 허브 `.opal/worktree.json`이 `taskCapsuleCone`으로 이 값을 선언하며, 새 worktree는 `.opal`과 `tasks`가 실체화된 상태로 생성된다. 스키마 기본값은 여전히 `[]`이고, 키를 제거하면 즉시 전환 전 동작으로 돌아간다.
+- 워크트리에 내려온 `.opal/worktree.json`은 **읽기 snapshot**이다. 이 사본을 근거로 워크트리가 자기를 허브로 간주하지 않는다.
+- **[MUST] `worktree-tool` 호출은 항상 허브 `--project-root <허브 절대경로>`를 명시한다.** cwd나 워크트리 사본으로 프로젝트 루트를 추론하지 않는다.
 
 ## Phase 1 진입 legacy gate 절차
 

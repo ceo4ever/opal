@@ -8,6 +8,10 @@
     "scripts",
     "skills"
   ],
+  "taskCapsuleCone": [
+    ".opal",
+    "tasks"
+  ],
   "branchTemplate": "feat/OP-TASK-{NNN}",
   "baseBranch": "main",
   "copy": [],

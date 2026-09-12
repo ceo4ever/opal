@@ -298,11 +298,22 @@ opal-test-agent 워커 디스패치. TEST-SCENARIO.md를 실행 명세로 읽고
    - **no-op 안전 [MUST]**: 궤적 신호에서 개선 후보가 **없으면** 기록 없이 "개선후보 0건" 보고 — op-brain-ingest의 skipped와 동일하게 **CLOSE를 중단시키지 않는다**.
    - 개선 루프 프로세스 SSOT: `opal/core/references/harness/pm-improvement-loop.md`.
 5. **worktree 정리 안내** (`--worktree`/`--wt` 태스크에서만 — 미사용 시 자연 스킵):
-   - `~/.opal/tools/worktree-tool/run.sh status --project-root <프로젝트 루트> --task <NNN>`으로 현재 상태를 조회해 보고한다.
-   - **[MUST] 자동 제거하지 않는다.** CLOSE 시점에 미머지 커밋이 남아 있는 것이 정상이다 — 커밋·머지는 사용자의 권한이며 PM이 대행하지 않는다.
-   - 안내 문구: "worktree `{worktree_root}`는 **머지 대기** 상태입니다. 머지·PR 처리 후 `~/.opal/tools/worktree-tool/run.sh remove --project-root <루트> --task <NNN>`으로 회수하세요."
-   - **회수 거부 사유 안내**: `remove`는 미처리 memory index 요청이 남아 있으면 `MEMORY_INDEX_REQUEST_PENDING`으로 먼저 거부하고, 이어서 dirty→unpushed→unmerged 3중 가드를 적용한다. `MEMORY_INDEX_REQUEST_PENDING`의 해소 경로는 `--force` 우회가 아니라 merge 후 `worktree-tool finalize` 실행이다.
-   - `status` 호출 실패·메타 부재·worktree 부재는 전부 **no-op** — op-brain-ingest(스텝 3)·회고(스텝 4)와 동일하게 **CLOSE를 중단시키지 않는다**.
+   - **(a) PM이 CLOSE 안에서 수행 — merge _전_ finalize**:
+     - 회고(스텝 4) 직후 `~/.opal/tools/worktree-tool/run.sh finalize --project-root <허브 절대경로> --task <NNN>`을 실행한다. `--project-root`는 **항상 허브 절대경로**로 명시한다 — 워크트리에 내려온 `.opal/worktree.json` 사본은 읽기 snapshot이며 워크트리를 허브로 오인하지 않는다.
+     - finalize는 DONE.md `## 회고적 학습 후보` 선언 집합을 `S ⊆ D` 판정의 입력으로 쓴다. 선언 계약 원문은 `opal/core/references/harness/done-template.md` §회고적 학습 후보 계약이 소유한다 — 여기에 복제하지 않는다.
+     - finalize가 성공하면 태스크 캡슐이 dirty해진다(`memory-index-request.json`의 해당 요청 `status`가 `applied`로 전이). **이 캡슐 변경을 태스크 커밋(merge 대상 브랜치)에 포함**하도록 안내한다 — merge 결과에 코드 변경과 태스크 캡슐이 함께 나타나야 한다.
+     - 이어서 `~/.opal/tools/worktree-tool/run.sh status --project-root <허브 절대경로> --task <NNN>`으로 현재 상태를 조회해 보고한다.
+     - finalize가 `ATTRIBUTION_COMMIT_BLOCKED`를 반환하면 동봉된 **위반 경로를 그대로 보고**하되 **CLOSE를 막지 않는다**.
+     - finalize·`status` 호출 실패·메타 부재·worktree 부재는 전부 **no-op** — op-brain-ingest(스텝 3)·회고(스텝 4)와 동일하게 **CLOSE를 중단시키지 않는다**.
+   - **(b) 사용자 merge 이후 실행 명령 안내**:
+     - **[MUST] 자동 제거하지 않는다.** CLOSE 시점에 미머지 커밋이 남아 있는 것이 정상이다 — 커밋·머지는 사용자의 권한이며 PM이 대행하지 않는다.
+     - 안내 문구: "worktree `{worktree_root}`는 **머지 대기** 상태입니다. 아래 순서로 마감하세요."
+       1. 허브에서 `git merge --ff-only feat/OP-TASK-{NNN}` 또는 `git merge --no-ff feat/OP-TASK-{NNN}` (허용 merge 경로는 이 둘뿐이다)
+       2. `~/.opal/tools/state-tool/run.sh finalize-attribution <task-path> --allocator-root <허브 절대경로>`
+       3. `~/.opal/tools/state-tool/run.sh status <task-path> --set done`
+       4. `~/.opal/tools/worktree-tool/run.sh remove --project-root <허브 절대경로> --task <NNN>`
+     - `<task-path>`는 `worktree-tool`이 발급한 canonical task path다(merge 확인 뒤에는 허브에 merge된 task path). 해석 규칙 원문은 `opal/core/references/harness/worktree.md` §canonical path 발급 계약이 소유한다.
+     - **회수 거부 사유 안내**: `remove`는 미처리 memory index 요청이 남아 있으면 `MEMORY_INDEX_REQUEST_PENDING`으로 먼저 거부하고, 이어서 dirty→unpushed→unmerged 3중 가드를 적용한다. 해소 경로는 `--force` 우회가 아니라 **(a)의 merge _전_ `worktree-tool finalize`** 실행이다 — merge 후 실행이 아니다.
 6. 완료 보고
 
 > **CLOSE 진입 게이트 자동 검증**: CLOSE 단계 첫 행 mark 시 도구가 직전 단계 사용자 확인 행의 `owner=user` 여부를 자동 검증한다. 미통과 시 `close_gate_violation` 에러 반환 — agentic 모드의 `--auto-pass`도 거부됨 (§2.16 G-13 / PLAN §3 Step 8 P-8).

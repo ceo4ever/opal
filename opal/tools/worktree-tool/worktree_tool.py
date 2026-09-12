@@ -3,7 +3,7 @@
   "module": "worktree_tool",
   "layer": "util",
   "domain": "opal-workspace",
-  "description": "태스크별 코드 작업본을 git worktree로 격리하는 CLI. `.opal/worktree.json`(multi-repo/monorepo 2유형)을 선언 기반으로 읽어 create/list/status/remove/finalize/init 6서브명령을 제공한다. create의 슬롯·브랜치 판정은 '존재'가 아니라 '점유'다(DEC-7) — 대상 경로가 `git worktree list --porcelain`에 실제 등록돼 있으면 WORKTREE_EXISTS, 브랜치가 다른 worktree에 체크아웃 중이면 BRANCH_EXISTS로 거부하고, 브랜치가 존재하지만 미점유면 `worktree add <path> <branch>` 단일 명령으로 재사용한다(빈 디렉토리 잔존은 차단 사유가 아니다). pre-flight(대상 미점유·repos 경로 실재·git 레포 여부) 전부 통과 후에만 worktree를 생성하고(all-or-nothing), 중간 실패 시 자기 생성물만 롤백한다(DEC-2, 신규 브랜치 경로에만 적용). base-ref는 create 시점에 1회 해석해 `.opal-worktrees/.meta/task_{NNN}.json`(worktree 밖)에 동결 기록하고 remove/status는 그 값만 읽는다(DEC-3, 재해석 없음). create는 canonical task path 6필드(`allocator_root`·`task_home`·`task_folder`·`task_path`·`artifact_repo`·`task_ownership_version`)를 응답과 메타에 additive로 발급하고 불변식 `task_path == realpath(task_home/tasks/task_folder)`를 발급 시점에 검증한다 — `task_folder`는 basename만 허용한다. 계약 원문은 `opal/core/references/harness/worktree.md`가 소유한다. optional 설정 키 `taskCapsuleCone`(list[str], 기본 `[]`)은 monorepo 분기에서만 `repos`에 이어 sparse-checkout cone에 전개하며 multi-repo 분기에는 적용하지 않는다. status는 등록된 worktree 태스크와 같은 `task_folder`가 허브 `tasks/`에도 있으면 자동 선택 없이 TASK_PATH_AMBIGUOUS로 차단한다(`task_ownership_version` 부재 메타는 legacy로 판정을 건너뛴다). remove는 미처리 memory index 요청(캡슐 파일 `memory-index-request.json`의 body_sha256 중 메타 `memory_index_requests_resolved`에 없는 건)을 MEMORY_INDEX_REQUEST_PENDING으로 먼저 거부한 뒤 dirty→unpushed→unmerged 순서로 3중 가드를 적용하고 worktree 디렉토리 + 슬롯 루트(`task_{NNN}/`)를 회수한다(브랜치 보존, user sovereignty. `.opal-worktrees/`·`.meta/`는 남긴다). `.gitignore`·캐시 볼륨·code-scan exclude·동시 슬롯 수는 전부 비차단 진단이다. finalize(PLAN D-3b, 제안서 §6.3)는 merge 후 귀속 후처리를 확정한다 — DONE.md `## 회고적 학습 후보` 선언 집합 D(∪ `.opal/brain/index.md`·`.opal/brain/log.md`·`.opal/MEMORY.json`)와 `git status --porcelain -z -uall`을 `.opal/brain/**`·`.opal/MEMORY.json`으로 필터한 관측 집합 S를 레포 루트 상대 POSIX 경로로 정규화해 대조하고, `S ⊆ D`이면 재개를 허용하고 아니면 ATTRIBUTION_COMMIT_BLOCKED(위반 경로 동봉)로 거부한다. `.opal/MEMORY.json`의 선행 diff는 allocator의 `last_task_number` 변경만 허용한다. 판정 범위 밖(소스·태스크 문서)의 dirty는 판정 대상이 아니며 remove의 이진 dirty 가드(check_guards)는 finalize 경로에서 쓰지 않는다. 관측 경로만 stage해 단일 귀속 commit으로 확정한 뒤 registry meta의 `memory_index_requests_resolved`에 처리한 body_sha256을 append하고 캡슐 파일의 해당 요청 status를 applied로 바꾼다. 상태 전이는 `completed_unmerged → attribution_pending → closed`이고 commit·clean 검증 실패 시 `attribution_pending`에 머문다. init(DEC-8, ADD-1)은 `.opal/worktree.json`을 탐지 기반으로 초안 생성한다(자동 생성이 아니다) — 루트 이하 최대 3 depth에서 독립 `.git` 디렉토리를 찾아 ≥1개면 multi-repo(그 경로들이 repos), 0개면 root 자체가 git 레포일 때만 루트 레포가 추적하는 최상위 디렉토리 중 하위에 코드 manifest를 가진 것을 monorepo repos로 채운다(둘 다 실패하면 LAYOUT_UNDETERMINED). `copy`는 항상 빈 배열·`portOffset`은 항상 0으로 두고 추측하지 않으며(로컬 설정 후보는 `_copy_candidates` 주석 키로만 제시), 기존 파일이 있으면 `--force` 없이는 `CONFIG_EXISTS`로 거부해 파일을 건드리지 않고, `--dry-run`은 쓰지 않고 최상위 `draft` 키로만 반환한다.",
+  "description": "태스크별 코드 작업본을 git worktree로 격리하는 CLI. `.opal/worktree.json`(multi-repo/monorepo 2유형)을 선언 기반으로 읽어 create/list/status/remove/finalize/init 6서브명령을 제공한다. create의 슬롯·브랜치 판정은 '존재'가 아니라 '점유'다(DEC-7) — 대상 경로가 `git worktree list --porcelain`에 실제 등록돼 있으면 WORKTREE_EXISTS, 브랜치가 다른 worktree에 체크아웃 중이면 BRANCH_EXISTS로 거부하고, 브랜치가 존재하지만 미점유면 `worktree add <path> <branch>` 단일 명령으로 재사용한다(빈 디렉토리 잔존은 차단 사유가 아니다). pre-flight(대상 미점유·repos 경로 실재·git 레포 여부) 전부 통과 후에만 worktree를 생성하고(all-or-nothing), 중간 실패 시 자기 생성물만 롤백한다(DEC-2, 신규 브랜치 경로에만 적용). base-ref는 create 시점에 1회 해석해 `.opal-worktrees/.meta/task_{NNN}.json`(worktree 밖)에 동결 기록하고 remove/status는 그 값만 읽는다(DEC-3, 재해석 없음). create는 canonical task path 6필드(`allocator_root`·`task_home`·`task_folder`·`task_path`·`artifact_repo`·`task_ownership_version`)를 응답과 메타에 additive로 발급하고 불변식 `task_path == realpath(task_home/tasks/task_folder)`를 발급 시점에 검증한다 — `task_folder`는 basename만 허용한다. 계약 원문은 `opal/core/references/harness/worktree.md`가 소유한다. optional 설정 키 `taskCapsuleCone`(list[str], 기본 `[]`)은 monorepo 분기에서만 `repos`에 이어 sparse-checkout cone에 전개하며 multi-repo 분기에는 적용하지 않는다. canonical task path 해석은 registry meta의 `attribution_state`에 의존한다(제안서 §4.3) — active 3상태(키 부재·`completed_unmerged`·`attribution_pending`)에서는 등록된 worktree task path가 canonical이며 허브 `tasks/{task_folder}`가 동시에 실재하면 자동 선택 없이 TASK_PATH_AMBIGUOUS로 차단하고(단일 복사본 불변식), merge 확인 뒤 `closed`에서는 허브에 merge된 사본을 `task_path_source="hub_merged"`로 반환하고 차단하지 않는다. 차단은 active에만 적용되며 가드가 사라진 것이 아니다. `task_ownership_version` 부재 메타는 legacy로 판정을 건너뛰고 해석 결과를 출력에 싣지 않는다. status는 해석된 canonical 경로를 `task_path`·`task_path_source`로 보고하고, finalize는 `closed` 상태에서 커밋 없이 `idempotent: true`로 멱등 반환한다. remove는 해석기를 호출하지 않는다. remove는 미처리 memory index 요청(캡슐 파일 `memory-index-request.json`의 body_sha256 중 메타 `memory_index_requests_resolved`에 없는 건)을 MEMORY_INDEX_REQUEST_PENDING으로 먼저 거부한 뒤 dirty→unpushed→unmerged 순서로 3중 가드를 적용하고 worktree 디렉토리 + 슬롯 루트(`task_{NNN}/`)를 회수한다(브랜치 보존, user sovereignty. `.opal-worktrees/`·`.meta/`는 남긴다). `.gitignore`·캐시 볼륨·code-scan exclude·동시 슬롯 수는 전부 비차단 진단이다. finalize(PLAN D-3b, 제안서 §6.3)는 merge 후 귀속 후처리를 확정한다 — DONE.md `## 회고적 학습 후보` 선언 집합 D(∪ `.opal/brain/index.md`·`.opal/brain/log.md`·`.opal/MEMORY.json`)와 `git status --porcelain -z -uall`을 `.opal/brain/**`·`.opal/MEMORY.json`으로 필터한 관측 집합 S를 레포 루트 상대 POSIX 경로로 정규화해 대조하고, `S ⊆ D`이면 재개를 허용하고 아니면 ATTRIBUTION_COMMIT_BLOCKED(위반 경로 동봉)로 거부한다. `.opal/MEMORY.json`의 선행 diff는 allocator의 `last_task_number` 변경만 허용한다. 판정 범위 밖(소스·태스크 문서)의 dirty는 판정 대상이 아니며 remove의 이진 dirty 가드(check_guards)는 finalize 경로에서 쓰지 않는다. 관측 경로만 stage해 단일 귀속 commit으로 확정한 뒤 registry meta의 `memory_index_requests_resolved`에 처리한 body_sha256을 append하고 캡슐 파일의 해당 요청 status를 applied로 바꾼다. 상태 전이는 `completed_unmerged → attribution_pending → closed`이고 commit·clean 검증 실패 시 `attribution_pending`에 머문다. init(DEC-8, ADD-1)은 `.opal/worktree.json`을 탐지 기반으로 초안 생성한다(자동 생성이 아니다) — 루트 이하 최대 3 depth에서 독립 `.git` 디렉토리를 찾아 ≥1개면 multi-repo(그 경로들이 repos), 0개면 root 자체가 git 레포일 때만 루트 레포가 추적하는 최상위 디렉토리 중 하위에 코드 manifest를 가진 것을 monorepo repos로 채운다(둘 다 실패하면 LAYOUT_UNDETERMINED). `copy`는 항상 빈 배열·`portOffset`은 항상 0으로 두고 추측하지 않으며(로컬 설정 후보는 `_copy_candidates` 주석 키로만 제시), 기존 파일이 있으면 `--force` 없이는 `CONFIG_EXISTS`로 거부해 파일을 건드리지 않고, `--dry-run`은 쓰지 않고 최상위 `draft` 키로만 반환한다.",
   "exports": [
     "load_config", "validate_worktree_config", "resolve_base_ref", "check_guards",
     "ensure_gitignore_entry", "diagnose_cache_volume", "diagnose_code_scan_exclude",
@@ -1032,24 +1032,35 @@ def cmd_list(args) -> None:
     )
 
 
-def _assert_task_path_unambiguous(project_root: pathlib.Path, meta: dict) -> None:
-    """등록된 worktree 태스크와 같은 `task_folder`가 허브 `tasks/`에도 존재하면 자동 선택
-    없이 `TASK_PATH_AMBIGUOUS`로 차단한다(AC-7, harness/worktree.md §canonical path 발급 계약).
+def _resolve_canonical_task_path(project_root: pathlib.Path, meta: dict) -> tuple:
+    """registry meta의 `attribution_state`를 판정에 넣어 canonical task path를 해석하고
+    `(path, source)`를 돌려준다(PLAN D-1, 제안서 §4.3 "registry가 `active`일 때는 등록된
+    worktree task path를, merge 확인 뒤 `closed`일 때는 허브에 merge된 task path를 반환한다").
 
-    `task_ownership_version`이 없는 메타는 legacy이므로 판정 자체를 하지 않는다 — 기존 활성
-    슬롯의 태스크 위치를 실행 중 자동 이동하지 않는다는 D-9·TASK.md C-5의 직접 집행이다.
+    - active 3상태(`attribution_state` 부재·`completed_unmerged`·`attribution_pending`):
+      허브 `tasks/{task_folder}`가 워크트리 캡슐과 동시에 존재하면 자동 선택 없이
+      `TASK_PATH_AMBIGUOUS`로 차단한다(AC-7, C-9, harness/worktree.md §canonical path 발급 계약).
+      이 절은 118이 확정한 단일 복사본 불변식 그대로이며 약화되지 않는다.
+    - `closed`(merge 확인 후): 허브 사본이 실재하면 그 경로를 `source="hub_merged"`로 반환하고
+      차단하지 않는다. 가드를 없애는 게 아니라 적용 상태를 `active`로 한정하는 것이다(D-1).
+
+    `task_ownership_version`이 없는 메타는 legacy이므로 판정 자체를 하지 않고 `(None, None)`을
+    돌려준다 — 기존 활성 슬롯의 태스크 위치를 실행 중 자동 이동하지 않는다는 D-9·TASK.md C-5의
+    직접 집행이며, 호출부 출력도 그만큼 변하지 않는다(C-1).
     """
     if meta.get("task_ownership_version") is None:
-        return
+        return None, None
     task_folder = meta.get("task_folder")
     task_path = meta.get("task_path")
     if not task_folder or not task_path:
-        return
+        return None, None
     hub_candidate = project_root / "tasks" / str(task_folder)
     if not hub_candidate.exists():
-        return
+        return str(task_path), "worktree_registered"
     if os.path.realpath(str(hub_candidate)) == os.path.realpath(str(task_path)):
-        return
+        return str(task_path), "worktree_registered"
+    if meta.get(ATTRIBUTION_STATE_KEY) == ATTRIBUTION_STATE_CLOSED:
+        return str(hub_candidate), "hub_merged"
     err_response(
         "TASK_PATH_AMBIGUOUS",
         task_folder=task_folder,
@@ -1060,7 +1071,9 @@ def _assert_task_path_unambiguous(project_root: pathlib.Path, meta: dict) -> Non
 def cmd_status(args) -> None:
     project_root = _resolve_project_root(args.project_root)
     meta = _load_meta(project_root, args.task)
-    _assert_task_path_unambiguous(project_root, meta)
+    canonical_task_path, canonical_source = _resolve_canonical_task_path(
+        project_root, meta
+    )
 
     entries_out = []
     for entry in meta.get("entries", []):
@@ -1097,6 +1110,13 @@ def cmd_status(args) -> None:
             }
         )
 
+    # canonical task path는 `task_ownership_version` 보유 메타에서만 해석된다 — legacy·
+    # 비워크트리 경로의 출력은 변경 전과 바이트 동일하게 유지한다(TASK.md C-1).
+    canonical_out = {}
+    if canonical_task_path:
+        canonical_out["task_path"] = canonical_task_path
+        canonical_out["task_path_source"] = canonical_source
+
     ok_response(
         command="status",
         task=args.task,
@@ -1104,6 +1124,7 @@ def cmd_status(args) -> None:
         worktree_root=meta.get("worktree_root"),
         entries=entries_out,
         pending_setup=meta.get("pending_setup", []),
+        **canonical_out,
     )
 
 
@@ -1396,7 +1417,28 @@ def cmd_finalize(args) -> None:
     """
     project_root = _resolve_project_root(args.project_root)
     meta = _load_meta(project_root, args.task)
-    _assert_task_path_unambiguous(project_root, meta)
+    canonical_task_path, canonical_source = _resolve_canonical_task_path(
+        project_root, meta
+    )
+
+    # 이미 `closed`면 귀속은 merge 전 브랜치 커밋으로 확정돼 있다 — 새 커밋을 만들지 않고
+    # 멱등 반환한다(PLAN D-1b, AC-8 "재실행이 중복을 만들지 않는다"의 브랜치 커밋 축).
+    if meta.get(ATTRIBUTION_STATE_KEY) == ATTRIBUTION_STATE_CLOSED:
+        ok_response(
+            command="finalize",
+            task=args.task,
+            state=ATTRIBUTION_STATE_CLOSED,
+            previous_state=ATTRIBUTION_STATE_CLOSED,
+            idempotent=True,
+            committed=False,
+            task_path=canonical_task_path or meta.get("task_path"),
+            task_path_source=canonical_source,
+            memory_index_requests_applied=[],
+            memory_index_requests_resolved=list(
+                meta.get("memory_index_requests_resolved") or []
+            ),
+        )
+        return
 
     raw_task_path = meta.get("task_path")
     if not raw_task_path:
@@ -1504,6 +1546,7 @@ def cmd_finalize(args) -> None:
         task=args.task,
         state=ATTRIBUTION_STATE_CLOSED,
         previous_state=previous_state,
+        idempotent=False,
         task_path=str(task_path),
         worktree_root=str(wt_root),
         declared=declared,

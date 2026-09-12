@@ -728,17 +728,26 @@ def test_s24_pipeline_flag_flows_from_create_into_state(project_a: ProjectA, tmp
         OPAL_DIR / "core" / "references" / "harness" / "task-process.md"
     ).read_text(encoding="utf-8")
     assert "4.5" in task_process_md, "harness/task-process.md에 스텝 4.5가 있어야 한다"
-    assert "worktree-tool create" in task_process_md, "스텝 4.5에 worktree-tool create 호출 문안이 있어야 한다"
+    # [T119] 문서의 실제 문안은 `~/.opal/tools/worktree-tool/run.sh create`다 — 경로 구분자 때문에
+    # "worktree-tool create" 연속 문자열로는 092 시점부터 한 번도 매칭된 적이 없다(단언 자체의 결함).
+    # 검사 의도("스텝 4.5가 create를 호출한다")를 유지하면서 실제 문안을 판정하도록 교체한다.
+    assert "worktree-tool/run.sh create" in task_process_md, "스텝 4.5에 worktree-tool create 호출 문안이 있어야 한다"
     assert "--worktree" in task_process_md, "스텝 4.5~5에 --worktree 전달 문안이 있어야 한다"
 
     dispatch_md = (
         OPAL_DIR / "core" / "references" / "pm" / "dispatch-process.md"
     ).read_text(encoding="utf-8")
-    assert "## 작업 경로" in dispatch_md, "pm/dispatch-process.md에 '## 작업 경로' 블록이 있어야 한다"
+    # [T119] 092 시점의 `## 작업 경로` 블록은 문서 재구조화로 사라졌고, 같은 계약이
+    # 워커 컨텍스트 주입 템플릿과 worktree 경로 주입 문장으로 옮겨갔다. 의도(PM이 워커에
+    # 작업 경로를 절대경로로 전달한다)를 현재 문면으로 판정한다.
+    assert "worktree 태스크는" in dispatch_md, "pm/dispatch-process.md에 worktree 경로 주입 계약이 있어야 한다"
     assert "절대경로" in dispatch_md, "pm/dispatch-process.md에 '절대경로' 문구가 있어야 한다"
 
+    # [T119] `opal-harness.md`의 `## N` 번호 절은 owner 문서 분리로 전부 사라졌고(태스크 118
+    # 실측), 현재는 구형 절 참조 호환 매핑 표만 남아 legacy 인용을 해석한다. 절 번호 존재가
+    # 아니라 그 매핑이 살아 있는지를 판정한다.
     harness_md = (OPAL_DIR / "core" / "references" / "opal-harness.md").read_text(encoding="utf-8")
-    assert "§2.5" in harness_md or "## 2.5" in harness_md, "opal-harness.md에 §2.5 절이 있어야 한다"
+    assert "구형 절 참조 호환 매핑" in harness_md, "opal-harness.md에 구형 절 참조 호환 매핑이 있어야 한다"
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -2061,3 +2070,126 @@ def test_t118_s15_remove_no_capsule_file_is_noop_pass(tmp_path):
     )
     payload = parse_json_stdout(result, "remove(S-15 no-capsule)")
     assert payload.get("ok") is True, f"S-15: 캡슐 파일 부재인데 거부됨: {payload}"
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# T119 S-7/S-8: 상태 의존 canonical path 해석 (PLAN D-1/D-1b, AC-4, C-9)
+# ═════════════════════════════════════════════════════════════════════════════
+
+
+def _set_meta_attribution_state(project_root: pathlib.Path, task: str, state):
+    """registry meta의 `attribution_state`를 직접 설정한다(S-7/S-8 선행 상태 조립).
+    `state`가 None이면 키 자체를 제거해 "부재" 상태를 재현한다."""
+    meta_path = project_root / ".opal-worktrees" / ".meta" / f"task_{task}.json"
+    meta = json.loads(meta_path.read_text(encoding="utf-8"))
+    if state is None:
+        meta.pop("attribution_state", None)
+    else:
+        meta["attribution_state"] = state
+    write_json(meta_path, meta)
+    return meta_path
+
+
+def _make_hub_merged_copy(project_root: pathlib.Path, task_folder: str) -> pathlib.Path:
+    """merge로 허브 `tasks/{task_folder}`가 생긴 상태를 재현한다 — 워크트리 캡슐과 같은
+    이름의 폴더가 허브에도 실재하는 조건(단일 복사본 불변식 판정의 입력)."""
+    hub_copy = project_root / "tasks" / task_folder
+    hub_copy.mkdir(parents=True, exist_ok=True)
+    (hub_copy / "TASK.md").write_text("# merge된 허브 사본\n", encoding="utf-8")
+    return hub_copy
+
+
+@pytest.mark.parametrize(
+    "attribution_state",
+    [None, "completed_unmerged", "attribution_pending"],
+    ids=["absent", "completed_unmerged", "attribution_pending"],
+)
+@pytest.mark.parametrize("command", ["status", "finalize"])
+def test_t119_s7_active_states_still_block_task_path_ambiguous(
+    tmp_path, attribution_state, command
+):
+    """[T119/S-7] 구현 전 RED — registry `attribution_state`가 active 3상태(부재·
+    `completed_unmerged`·`attribution_pending`)이면 허브 사본과 워크트리 캡슐이 동시에
+    존재할 때 `status`·`finalize`가 여전히 `TASK_PATH_AMBIGUOUS`로 차단된다.
+
+    D-1은 가드를 없애는 것이 아니라 상태를 하나 더 보는 변경이므로, 단일 복사본 불변식
+    (C-9, harness/worktree.md §canonical path 발급 계약)은 active에서 그대로다."""
+    project_root, _wt_root, _task_path, task_folder = _build_finalize_fixture(
+        tmp_path, f"s7_{command}_{attribution_state or 'absent'}"
+    )
+    _set_meta_attribution_state(project_root, "118", attribution_state)
+    _make_hub_merged_copy(project_root, task_folder)
+
+    result = run_worktree_cli(
+        [command, "--project-root", str(project_root), "--task", "118"]
+    )
+    payload = parse_json_stdout(result, f"{command}(S-7 {attribution_state})")
+    assert payload.get("ok") is False, (
+        f"S-7: active 상태({attribution_state})인데 자동 선택으로 통과함: {payload}"
+    )
+    assert payload.get("error") == "TASK_PATH_AMBIGUOUS", (
+        f"S-7 에러 코드 불일치({attribution_state}, {command}): {payload}"
+    )
+
+
+def test_t119_s8_closed_state_resolves_hub_merged_path_in_status(tmp_path):
+    """[T119/S-8] 구현 전 RED — `attribution_state`가 `closed`(merge 확인 후)이면
+    `status`는 차단하지 않고 허브에 merge된 task path를 canonical로 보고한다
+    (PLAN D-1/D-1b, 제안서 §4.3)."""
+    project_root, _wt_root, _task_path, task_folder = _build_finalize_fixture(
+        tmp_path, "s8_status"
+    )
+    _set_meta_attribution_state(project_root, "118", "closed")
+    hub_copy = _make_hub_merged_copy(project_root, task_folder)
+
+    result = run_worktree_cli(
+        ["status", "--project-root", str(project_root), "--task", "118"]
+    )
+    payload = parse_json_stdout(result, "status(S-8 closed)")
+    assert payload.get("error") != "TASK_PATH_AMBIGUOUS", (
+        f"S-8: closed 상태인데 차단됨: {payload}"
+    )
+    assert payload.get("ok") is True, f"S-8: closed 상태 status가 실패함: {payload}"
+    assert os.path.realpath(str(payload.get("task_path"))) == os.path.realpath(
+        str(hub_copy)
+    ), f"S-8: canonical task_path가 허브 merge 사본이 아님: {payload}"
+
+
+def test_t119_s8_closed_state_finalize_is_idempotent_without_new_commit(tmp_path):
+    """[T119/S-8] 구현 전 RED — `closed` 상태에서 `finalize`를 재호출하면 차단되지 않고
+    커밋을 새로 만들지 않은 채 멱등 반환한다(PLAN D-1b, AC-8의 "재실행이 중복을 만들지
+    않는다"를 브랜치 커밋 축에서 보존)."""
+    project_root, wt_root, _task_path, task_folder = _build_finalize_fixture(
+        tmp_path, "s8_finalize"
+    )
+    _set_meta_attribution_state(project_root, "118", "closed")
+    _make_hub_merged_copy(project_root, task_folder)
+
+    head_before = run_git(["rev-parse", "HEAD"], cwd=wt_root).stdout.strip()
+
+    result = run_worktree_cli(
+        ["finalize", "--project-root", str(project_root), "--task", "118"]
+    )
+    payload = parse_json_stdout(result, "finalize(S-8 closed)")
+    assert payload.get("error") != "TASK_PATH_AMBIGUOUS", (
+        f"S-8: closed 상태인데 finalize가 차단됨: {payload}"
+    )
+    assert payload.get("ok") is True, f"S-8: closed 상태 finalize가 실패함: {payload}"
+    assert payload.get("state") == "closed", f"S-8: 상태가 closed로 유지돼야 함: {payload}"
+    assert payload.get("idempotent") is True, (
+        f"S-8: 재진입이 멱등 반환으로 표시돼야 함: {payload}"
+    )
+    assert payload.get("committed") is not True, (
+        f"S-8: closed 재진입이 새 커밋을 만들면 안 됨: {payload}"
+    )
+
+    head_after = run_git(["rev-parse", "HEAD"], cwd=wt_root).stdout.strip()
+    assert head_after == head_before, (
+        f"S-8: finalize 재진입이 브랜치 HEAD를 움직임 {head_before} -> {head_after}"
+    )
+
+    meta_path = project_root / ".opal-worktrees" / ".meta" / "task_118.json"
+    meta_after = json.loads(meta_path.read_text(encoding="utf-8"))
+    assert meta_after.get("attribution_state") == "closed", (
+        f"S-8: 멱등 재진입이 상태를 되돌리면 안 됨: {meta_after}"
+    )
