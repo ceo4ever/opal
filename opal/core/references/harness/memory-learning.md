@@ -13,7 +13,7 @@
 - **저장하지 않는 것**: 일회성 작업 내용, 임시 상태, 검증되지 않은 추측
 - **활용 방법**: 새 작업을 시작할 때 `show --brief`로 조회하고, 관련 메모리를 선택적으로 로드
 - **소유자 요청 시**: "이거 기억해둬" → 즉시 해당 유형의 메모리 파일에 기록 (없으면 생성)
-- **갱신 트리거**: 태스크 단계 전환, 태스크 완료(CLOSE 마지막 행 mark 시 state-tool이 히스토리 행을 도구 집행으로 자동 생성 — 아래 §CLOSE 자동 연결 참조. PM의 수동 append가 아니다), 아키텍처 결정, 소유자 명시 요청, 반복 이슈, 패턴 인식
+- **갱신 트리거**: 태스크 단계 전환, 태스크 완료 후 merge 귀속(`state-tool finalize-attribution`이 히스토리 행을 도구 집행으로 생성 — 아래 §merge 후 귀속 연결 참조. PM의 수동 append가 아니다), 아키텍처 결정, 소유자 명시 요청, 반복 이슈, 패턴 인식
 - **인덱스·히스토리 형식**: SSOT는 `opal/tools/memory-tool/schema/memory.schema.json`의 `$defs.memoryRow` / `$defs.historyRow` (필드·길이캡은 스키마 참조).
 - **타임스탬프 취득**: 시작일시/완료일시 기록 시 `node ~/.opal/tools/date/date.js datetime` 실행 필수 (bash 생략 금지).
 - **타임존**: 모든 일시는 **KST(한국 표준시, UTC+9)** 기준으로 기록한다. 시스템 시간이 UTC인 경우 소유자에게 현재 시간을 확인한다.
@@ -78,22 +78,42 @@ memory-tool의 모든 변경 명령(`init`/`append`/`update`/`promote`/`prune`/`
 
 ---
 
-## CLOSE 자동 연결
+## 워크트리에서의 memory 명령 경계
 
-CLOSE 마지막 행 mark 시점에 작업 히스토리 행이 **도구에 의해 결정론적으로 생성**된다(088 확정 방향 D-1). PM이 별도 히스토리 커밋으로 갱신하던 흐름은 폐지되었다.
+워크트리(`{프로젝트}/.opal-worktrees/task_{NNN}/`) 경로를 `--file`로 지정한 MEMORY 쓰기는 **허브가 소유**한다. memory-tool은 락·문서 로드 이전 게이트에서 판정하므로 거부 시 파일은 무변경이다.
 
-① **트리거**: CLOSE 단계의 마지막 행을 `state-tool mark`로 완료(`done`) 처리하는 순간. 판정·집행 모두 `state-tool`(`opal/tools/state-tool/state_tool.py` `link_memory_history()`)이 수행하며, PM이 별도 명령을 실행할 필요가 없다.
+| 명령 | 워크트리 동작 |
+|------|--------------|
+| `update` · `promote` · `delete` · `prune` · `task-number` | `WORKTREE_WRITE_REJECTED`로 거부 |
+| `append --kind history` | `WORKTREE_WRITE_REJECTED`로 거부 — 히스토리 귀속은 merge 후 허브에서만 한다 |
+| `append --kind memory` | 거부하지 않고 **index 요청으로 지연**한다 |
+| `show` · `review` | 읽기 허용. `--task-path` 지정 시에만 `pending_requests`를 병합해 보고한다 |
+
+- **[MUST] 워크트리의 `.opal/MEMORY.json`은 읽기 snapshot이다.** 워크트리에서 이 파일을 직접 편집하거나 도구로 갱신하지 않는다.
+- `append --kind memory`는 `memories[]`에 직접 추가하지 않고 `{task_path}/memory-index-request.json`에 `status: pending` 요청 1건을 기록한다. 본문은 이미 tracked인 `.opal/memory/<slug>.md`가 소유하고, 요청에는 그 본문의 `body_sha256`이 실린다. 같은 title·file·본문 해시의 재기록은 멱등이다.
+- **[MUST] 미처리 요청이 남은 워크트리는 회수되지 않는다.** `worktree-tool remove`가 `MEMORY_INDEX_REQUEST_PENDING`으로 먼저 거부한다. 요청 적용은 merge 후 `worktree-tool finalize`가 수행하며, 처리한 `body_sha256`을 registry meta에 기록하고 캡슐 요청의 `status`를 `applied`로 바꾼다.
+- 허브에서 `append --body-sha256`을 지정하면 **title 동등성 판정**이 선행한다 — 같은 title 행이 없으면 추가, `file`과 본문 해시까지 같으면 멱등 통과, 어느 하나라도 다르면 `MEMORY_TITLE_DUPLICATE`로 거부해 중복 추가를 차단한다(무손실).
+
+---
+
+## merge 후 귀속 연결
+
+작업 히스토리 행은 merge 확인 후 귀속 명령 시점에 **도구에 의해 결정론적으로 생성**된다. PM이 별도 히스토리 커밋으로 갱신하던 흐름은 폐지되었다.
+
+① **트리거**: merge 확인 후 `state-tool finalize-attribution <task-path> --allocator-root <절대경로>`를 실행하는 순간. CLOSE 단계의 마지막 행 `mark`는 `current_status`를 `completed_unmerged`로만 확정하고 MEMORY.json을 건드리지 않는다. 집행은 `state-tool`(`opal/tools/state-tool/state_tool.py` `link_memory_history()`)이 수행하되, 호출자는 `finalize-attribution` 하나뿐이다.
+
+> **[MUST] `--allocator-root`는 명시 인자 전용이다.** 허브 `.opal/MEMORY.json`의 위치를 cwd·task path의 조상·`.opal-worktrees` 문자열로 추론하지 않는다. 미지정은 `allocator_root_required`, 상대경로는 `allocator_root_not_absolute`로 거부한다. 계약 원문은 `harness/worktree.md` §task root와 allocator root 계약이다.
 
 ② **역할 분담 — 생성=도구 / result 보강=PM**: title·date·stage·path는 판단이 개입하지 않는 필드이므로 state-tool이 state.json에서 확정적으로 파생해 채운다. `result`(핵심결과)는 LLM 판단의 산출물이라 도구가 대신 채울 수 없으므로 `"(PM 보강 대기)"` 플레이스홀더로 생성되고, PM이 이어서 보강한다.
 
-③ **단계값 `완료` 규약**: 히스토리 기록 시점이 커밋 이전으로 당겨졌으므로 `stage`는 항상 `"완료"`로 기재된다. 하네스 커밋 규칙상 커밋은 CLOSE 밖의 행위이므로, 과거에 쓰던 `"완료·커밋"` 표기는 폐기되었다 — 신규 행에는 더 이상 등장하지 않는다.
+③ **단계값 `완료` 규약**: `stage`는 항상 `"완료"`로 기재된다. 커밋·머지는 CLOSE 밖의 사용자 행위이며 히스토리 행이 그 수행 여부를 표기하지 않으므로, 과거에 쓰던 `"완료·커밋"` 표기는 폐기되었다 — 신규 행에는 더 이상 등장하지 않는다.
 
-④ **보강 명령**: PM은 mark 응답(stdout `history_link.reminder`) 또는 PostToolUse 훅 리마인더에 안내된 명령을 그대로 실행해 `result`를 보강한다.
+④ **보강 명령**: PM은 `finalize-attribution` 응답의 `attribution` 필드가 보고한 행을 근거로 아래 명령을 실행해 `result`를 보강한다.
 ```
 "$HOME/.opal/tools/memory-tool/run.sh" update --file <MEMORY.json 경로> --kind history --title "<title>" --result "<무엇을 바꿨는지 + 결과>"
 ```
 
-⑤ **실패는 비차단**: `.opal/MEMORY.json` 미탐지·손상·memory-tool 실패·타임아웃 등 어떤 이유로 히스토리 생성이 실패해도 `mark` 명령 자체는 항상 성공(`ok:true`)한다. 실패 사유는 mark 응답의 `history_link.warning`으로만 표면화되며, state.json에는 영속되지 않는다(비영속·stdout 전용 페이로드).
+⑤ **mark는 귀속과 분리된다**: CLOSE 마지막 행 `mark`는 MEMORY history를 시도하지 않으므로 귀속 실패로 막히지 않고 항상 성공(`ok:true`)한다. 귀속의 성공·실패는 `finalize-attribution` 응답의 `attribution`(`status`·`warning`)과 위 두 에러 코드로만 표면화되며, state.json에는 영속되지 않는다(비영속·stdout 전용 페이로드). 같은 `path`의 행이 이미 있으면 건너뛰므로 재실행은 멱등이다.
 
 ---
 

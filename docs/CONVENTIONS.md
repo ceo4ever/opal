@@ -252,6 +252,7 @@ OPAL 본체(스킬·에이전트·도구·하네스)를 작성할 때 따라야 
 - 변경 후 `./scripts/install-mac.sh`(또는 후속 `opal install`)로 재배포하여 검증한다.
 - **런타임 사용자 데이터 쓰기는 이 금지의 대상이 아니다** — skill-manager가 스킬 설치/제거 시 `~/.opal/community-skills/`(스킬 본체·`user-registry.json`)를 갱신하는 것은 사용자 요청 기반 런타임 데이터 조작이며, 프레임워크 파일 직접 편집과 구분된다.
 - **커뮤니티 스킬 레지스트리 이원 경계**: 프레임워크 카탈로그는 소스 `opal/core/references/community-skills-registry.json`에만 실재하며(루트 `community-skills/` 디렉토리는 없다), 배포본(`~/.opal/references/community-skills-registry.json`)은 install이 덮어써 갱신을 전파하고, 사용자 설치 등록분은 `~/.opal/community-skills/user-registry.json`(install 불가침 — 142 D-4)에 기록한다. 사용자 등록분을 references 쪽에 기록하지 않는다 (Task 064).
+- **[MUST] allocator_root 명시 전달**: 허브 `.opal/MEMORY.json`에 쓰는 명령은 허브 경로를 **명시 인자로만** 받는다. cwd, task path의 조상, 경로에 포함된 `.opal-worktrees` 문자열 중 무엇으로도 추론하지 않는다 — 값은 worktree registry 발급값(`allocator_root`)이며 호출자가 전달한다. 미지정·상대경로는 추론으로 보정하지 않고 거부한다(`state-tool finalize-attribution`의 `allocator_root_required`·`allocator_root_not_absolute`). 설정·gate 해석에 쓰는 `task_root`와 서로 대체하지 않는다. 계약 원문은 `opal/core/references/harness/worktree.md` §task root와 allocator root 계약이 소유한다.
 
 ### 플랫폼 분기 격리
 
@@ -260,10 +261,11 @@ OPAL 본체(스킬·에이전트·도구·하네스)를 작성할 때 따라야 
 
 ---
 
-### 허브 루트 해석
+### 루트 해석
 
-- 워크트리(`{프로젝트}/.opal-worktrees/task_{NNN}/`)에서 **허브 고정 데이터**(`tasks/`·`.opal/`)를 참조하는 경로 판정 규칙의 원문은 `opal/core/references/harness/worktree.md`가 소유한다. 본 문서는 포인터만 두어 규칙 복제를 차단한다.
-- 실행 가능한 대조 기준은 골든 케이스 표 `opal/core/references/hub-root-cases.json`(C-1~C-7)이다. 런타임별 구현도 규칙 원문을 재서술하지 않고 `harness/worktree.md` 포인터 주석만 둔다.
+- 워크트리(`{프로젝트}/.opal-worktrees/task_{NNN}/`)에서 `tasks/`·`.opal/`의 위치를 정하는 **루트 소유권** 규칙의 원문은 `opal/core/references/harness/worktree.md`가 소유한다. 본 문서는 포인터만 두어 규칙 복제를 차단한다.
+- 루트는 용도별로 둘이며 서로 대체하지 않는다 — 설정·gate 해석은 `task_root`, 허브 MEMORY 쓰기는 `allocator_root`다. 경로 세그먼트(`.opal-worktrees`)로 허브에 수렴시키지 않는다.
+- 계약 절은 `harness/worktree.md` §task root와 allocator root 계약 · §canonical path 발급 계약 · §cone 확장 계약이다. 런타임별 구현도 규칙 원문을 재서술하지 않고 `harness/worktree.md` 포인터 주석만 둔다.
 
 ---
 

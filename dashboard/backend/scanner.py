@@ -3,7 +3,7 @@
   "module": "scanner",
   "layer": "service",
   "domain": "console",
-  "description": "scan_roots 하위를 os.walk + maxdepth 가드로 탐색. .opal/AGENT.md 마커로 OPAL 프로젝트 발견. exclude 목록 진입 금지(H-4). 태스크 열거는 iter_task_dirs 단일 함수가 담당 — tasks/ + tasks/backup/ 2단 고정 깊이, 이름 정렬로 결정론적. resolve_task_dir는 realpath 접두 검사로 tasks/ 트리 이탈을 차단하고, 경로로 쓸 수 없는 입력(널 바이트)은 realpath 앞단에서 거른다. 읽기 전용 — mtime 불변",
+  "description": "scan_roots 하위를 os.walk + maxdepth 가드로 탐색. .opal/AGENT.md 마커로 OPAL 프로젝트 발견. exclude 목록 진입 금지(H-4). 태스크 열거는 iter_task_dirs 단일 함수가 담당 — tasks/ + tasks/backup/ 2단 고정 깊이, 이름 정렬로 결정론적. resolve_task_dir는 realpath 접두 검사로 tasks/ 트리 이탈을 차단하고, 경로로 쓸 수 없는 입력(널 바이트)은 realpath 앞단에서 거른다. keyword-only `extra_task_roots`(기본 None)로 프로젝트 tasks/ 외 허용 tasks root를 추가할 수 있으며(registry 등록 active worktree의 태스크 루트), 검사 루트 목록 `[<project_path>/tasks] + extra_task_roots`를 순서대로 보며 각 루트에 같은 realpath 접두 검사를 적용해 첫 일치를 반환한다 — 사전 거부(단일 세그먼트·`..`·NUL·절대경로)는 루트 순회 이전에 1회만 수행한다. 미지정 시 동작은 확장 전과 동일하다. 읽기 전용 — mtime 불변",
   "exports": ["scan_projects", "ProjectInfo", "iter_task_dirs", "resolve_task_dir"],
   "depends": ["config"]
 }
@@ -73,36 +73,12 @@ def iter_task_dirs(tasks_dir: str) -> Iterator[tuple[os.DirEntry[str], bool]]:
         yield entry, True
 
 
-def resolve_task_dir(project_path: str, task_id: str) -> str | None:
-    """task_id를 실제 태스크 디렉토리 경로로 해석한다.
+def _resolve_in_tasks_root(tasks_root: str, task_id: str) -> str | None:
+    """단일 tasks root 안에서 task_id를 해석한다 (realpath 접두 검사 포함).
 
-    Args:
-        project_path: 프로젝트 루트 절대경로
-        task_id: 태스크 디렉토리 이름 (단일 경로 세그먼트)
-
-    Returns:
-        해석된 디렉토리의 realpath. `tasks/` 직속 → `tasks/backup/` 순으로
-        찾고, 없거나 경로 이탈 입력이면 None.
-
-    보안:
-        해석 결과가 `tasks/` 트리 **내부**임을 realpath 접두 검사로 확인한다.
-        문자열 조립만으로는 `..` 세그먼트가 조립 단계에서 흡수되어
-        트리 밖 디렉토리가 200으로 응답된다. 트리 내부 확인이 경계이며,
-        단일 세그먼트 요구는 그 앞단의 정규화 조건이다.
+    보안 판정의 단일 소유자다 — 허용 루트가 여러 개여도 검사 로직의 사본은
+    만들지 않고 루트마다 이 함수를 다시 적용한다.
     """
-    if not task_id or task_id in (os.curdir, os.pardir):
-        return None
-    # 단일 세그먼트만 허용 — 구분자가 섞이면 정규화 전에 거른다
-    if task_id != os.path.basename(task_id.rstrip("/\\")):
-        return None
-    if os.path.isabs(task_id) or "/" in task_id or "\\" in task_id:
-        return None
-    # 널 바이트는 경로로 쓸 수 없는 입력 — realpath가 ValueError를 던지므로 그 앞에서 거른다.
-    # 보안 판정은 여전히 아래 realpath 트리 내부 확인이 담당한다.
-    if "\x00" in task_id:
-        return None
-
-    tasks_root = os.path.join(project_path, "tasks")
     tasks_root_real = os.path.realpath(tasks_root)
 
     candidates = []
@@ -116,6 +92,59 @@ def resolve_task_dir(project_path: str, task_id: str) -> str | None:
         if not resolved.startswith(tasks_root_real + os.sep):
             continue
         if os.path.isdir(resolved):
+            return resolved
+
+    return None
+
+
+def resolve_task_dir(
+    project_path: str,
+    task_id: str,
+    *,
+    extra_task_roots: list[str] | None = None,
+) -> str | None:
+    """task_id를 실제 태스크 디렉토리 경로로 해석한다.
+
+    Args:
+        project_path: 프로젝트 루트 절대경로
+        task_id: 태스크 디렉토리 이름 (단일 경로 세그먼트)
+        extra_task_roots: 프로젝트 `tasks/` 외에 추가로 허용할 tasks root의
+            realpath 화이트리스트 (keyword-only). registry에 등록된 active
+            worktree의 태스크 루트를 호출부가 모아서 넘긴다. 기본값 `None`은
+            "추가 루트 없음"이며, 이때 동작은 확장 전과 완전히 동일하다.
+
+    Returns:
+        해석된 디렉토리의 realpath. 검사 루트 목록
+        `[<project_path>/tasks] + (extra_task_roots or [])`를 순서대로 보며
+        각 루트에서 `tasks/` 직속 → `tasks/backup/` 순으로 찾아 첫 일치를
+        반환한다. 없거나 경로 이탈 입력이면 None.
+
+    보안:
+        해석 결과가 허용된 tasks root 트리 **내부**임을 realpath 접두 검사로
+        확인한다. 문자열 조립만으로는 `..` 세그먼트가 조립 단계에서 흡수되어
+        트리 밖 디렉토리가 200으로 응답된다. 트리 내부 확인이 경계이며,
+        단일 세그먼트 요구는 그 앞단의 정규화 조건이다. 그 사전 거부는 루트
+        목록 순회 **이전에 1회** 수행한다 — 루트가 늘어나도 거부 판정이
+        루트 수만큼 갈라지지 않게 하기 위함이다.
+    """
+    if not task_id or task_id in (os.curdir, os.pardir):
+        return None
+    # 단일 세그먼트만 허용 — 구분자가 섞이면 정규화 전에 거른다
+    if task_id != os.path.basename(task_id.rstrip("/\\")):
+        return None
+    if os.path.isabs(task_id) or "/" in task_id or "\\" in task_id:
+        return None
+    # 널 바이트는 경로로 쓸 수 없는 입력 — realpath가 ValueError를 던지므로 그 앞에서 거른다.
+    # 보안 판정은 여전히 아래 realpath 트리 내부 확인이 담당한다.
+    if "\x00" in task_id:
+        return None
+
+    tasks_roots = [os.path.join(project_path, "tasks")]
+    tasks_roots.extend(extra_task_roots or [])
+
+    for tasks_root in tasks_roots:
+        resolved = _resolve_in_tasks_root(tasks_root, task_id)
+        if resolved is not None:
             return resolved
 
     return None

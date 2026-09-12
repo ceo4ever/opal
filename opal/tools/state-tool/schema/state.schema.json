@@ -66,9 +66,10 @@
         "done",
         "blocked",
         "additional_work",
-        "additional_work_done"
+        "additional_work_done",
+        "completed_unmerged"
       ],
-      "description": "태스크 전체 상태 — §2.11 G-7 전이 그래프 참조"
+      "description": "태스크 전체 상태 — §2.11 G-7 전이 그래프 참조. completed_unmerged는 CLOSE 마지막 행 mark가 확정하는 완료 상태로, 허브 MEMORY 귀속(finalize-attribution) 전임을 뜻한다(118 D-4b/AC-4)"
     },
     "rows": {
       "type": "array",

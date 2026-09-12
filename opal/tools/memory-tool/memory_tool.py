@@ -3,12 +3,13 @@
   "module": "memory_tool",
   "layer": "util",
   "domain": "opal-pipeline",
-  "description": "OPAL 메모리 관리 CLI — MEMORY.json SSOT + 9서브명령 init/append/update/promote/prune/show/review/delete/task-number. lazy 자동 마이그레이션(MEMORY.md→MEMORY.json, .bak 보존)·표준 라이브러리 전용 스키마 런타임 검증기(validate_document)·파일 락 기반 원자적 쓰기(memory_lock/atomic_write_json)·요약 길이캡(≤80)·히스토리 FIFO=5·promote 무손실 이전(--to docs|brain --ref 필수)·자가검토(review) 매 변경 명령 자동 첨부. show --boot-brief는 active memory 최대 3건과 UTF-8 stdout 최대 1024 bytes를 보장하고 history result를 제외한다. update --kind history로 작업 히스토리 행 정정(무손실·행수 불변, FIFO 미적용). state-tool ok/err/ERROR_CODES 패턴 재사용. 표준 라이브러리만. delete --orphan --ref로 본문 부재 고아 행 정리(본문 실재 시 거부 — 무손실 가드 유지, provenance summary 보존)·review 참조 무결성 검사(memory_file_missing).",
+  "description": "OPAL 메모리 관리 CLI — MEMORY.json SSOT + 9서브명령 init/append/update/promote/prune/show/review/delete/task-number. lazy 자동 마이그레이션(MEMORY.md→MEMORY.json, .bak 보존)·표준 라이브러리 전용 스키마 런타임 검증기(validate_document)·파일 락 기반 원자적 쓰기(memory_lock/atomic_write_json)·요약 길이캡(≤80)·히스토리 FIFO=5·promote 무손실 이전(--to docs|brain --ref 필수)·자가검토(review) 매 변경 명령 자동 첨부. show --boot-brief는 active memory 최대 3건과 UTF-8 stdout 최대 1024 bytes를 보장하고 history result를 제외한다. update --kind history로 작업 히스토리 행 정정(무손실·행수 불변, FIFO 미적용). state-tool ok/err/ERROR_CODES 패턴 재사용. 표준 라이브러리만. delete --orphan --ref로 본문 부재 고아 행 정리(본문 실재 시 거부 — 무손실 가드 유지, provenance summary 보존)·review 참조 무결성 검사(memory_file_missing). 워크트리(.opal-worktrees/) 경로 --file은 update/promote/delete/prune/task-number·append --kind history를 WORKTREE_WRITE_REJECTED로 거부하고(_is_worktree_target, 락·로드 이전 게이트), append --kind memory만 memories[] 직접 추가 대신 {task_path}/memory-index-request.json에 index 요청 1건(8필드, status pending)을 기록한다. 허브 append --body-sha256 지정 시 title 동등성 판정(finalize_title_equivalence — 부재 추가/동일 멱등/불일치 MEMORY_TITLE_DUPLICATE)을 수행하고, show·review --task-path 지정 시에만 pending_requests를 병합한다.",
   "exports": [
     "cmd_init", "cmd_append", "cmd_update", "cmd_promote",
     "cmd_prune", "cmd_show", "cmd_review", "cmd_delete", "cmd_task_number",
     "build_review_block", "load_document", "atomic_write_json",
-    "memory_lock", "validate_document", "_migrate_md_to_json"
+    "memory_lock", "validate_document", "_migrate_md_to_json",
+    "_is_worktree_target", "finalize_title_equivalence"
   ]
 }
 
@@ -27,11 +28,20 @@
                   신설(본문 실재 시 memory_file_exists / 경로 해석 실패 시 memory_file_unresolvable
                   거부 — 확인 불가는 부재가 아님), promote의 해석 불가 반환도 동일 코드로 정합,
                   ERROR_CODES 3종 추가(23→26)
+  v2.3 2026-09-12 워크트리 태스크 소유권 루트분리(118 W-5) — `_is_worktree_target` 공통 게이트로
+                  워크트리 경로 쓰기 5종 + append --kind history 거부(WORKTREE_WRITE_REJECTED),
+                  append --kind memory는 `{task_path}/memory-index-request.json` index 요청
+                  기록으로 대체(--task-path 신설, D-2 8필드·status pending·중복 요청 멱등),
+                  finalize_title_equivalence + append --body-sha256(optional, 미지정 시 tracked
+                  본문에서 직접 계산)로 title 동등성 판정(MEMORY_TITLE_DUPLICATE),
+                  show/review --task-path로 pending_requests 조건부 병합(미지정 시 응답 키 추가
+                  없음 — 비워크트리 동작·출력 바이트 동일 C-1), ERROR_CODES 2종 추가(26→28)
 """
 
 # 표준 라이브러리만 (state-tool 동형)
 import argparse
 import contextlib
+import hashlib
 import json
 import os
 import pathlib
@@ -155,6 +165,9 @@ ERROR_CODES = {
     "migration_failed":           "MEMORY.md → MEMORY.json 변환 실패 ({reason}) — 원본 무변경, MEMORY.json 미생성",
     "task_number_regression":     "--set {value}는 현재값 {current}보다 작음 — 채번 역행 거부 (무손실)",
     "invalid_args":               "인자 조합이 올바르지 않음: {detail}",
+    # ── 118 신설 (PLAN D-2/D-7, AC-8/AC-9) ──
+    "WORKTREE_WRITE_REJECTED":    "워크트리(.opal-worktrees/) 경로의 MEMORY 쓰기는 허브가 소유함 — 거부된 연산: {rejected} (file={path})",
+    "MEMORY_TITLE_DUPLICATE":     "동일 title '{title}'의 인덱스 행이 이미 있고 file 또는 본문 hash가 요청과 다름 — 중복 추가 거부 (무손실)",
 }
 
 # 락 파라미터 (PLAN §3.2.2)
@@ -831,6 +844,114 @@ def _path_has_traversal(path_str):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# 워크트리 판정·index 요청 캡슐 (118 — PLAN D-2/D-2b/D-2c/D-7, AC-8/AC-9/AC-11)
+# ─────────────────────────────────────────────────────────────────────────────
+
+WORKTREE_SEGMENT = ".opal-worktrees"
+MEMORY_INDEX_REQUEST_FILENAME = "memory-index-request.json"
+MEMORY_INDEX_REQUEST_SCHEMA_VERSION = 1
+# D-2: 요청 1건의 필드 집합 — 메모리 본문·범용 명령 payload·op_id·기대 행 hash는 넣지 않는다.
+MEMORY_INDEX_REQUEST_FIELDS = (
+    "task_id", "title", "type", "status", "file", "summary", "body_sha256", "requested_at",
+)
+
+
+def _is_worktree_target(file_path):
+    """`--file` 경로가 `.opal-worktrees` 세그먼트 하위인지 판정한다 (D-7).
+
+    memory_lock/load_document 호출 **이전**에 각 cmd_* 진입부에서 호출한다 —
+    거부된 명령이 락 파일·마이그레이션 등 어떤 부수효과도 남기지 않아야 한다.
+    심볼릭 링크로 워크트리에 진입하는 경로도 잡기 위해 원본 경로와 resolve()
+    결과를 모두 검사한다.
+    """
+    if not file_path:
+        return False
+    candidate = pathlib.Path(str(file_path))
+    if WORKTREE_SEGMENT in candidate.parts:
+        return True
+    try:
+        return WORKTREE_SEGMENT in candidate.resolve().parts
+    except (OSError, RuntimeError):
+        return False
+
+
+def _reject_if_worktree(command, file_path, rejected):
+    """워크트리 경로면 WORKTREE_WRITE_REJECTED로 즉시 종료한다(파일 무변경)."""
+    if _is_worktree_target(file_path):
+        err(command, "WORKTREE_WRITE_REJECTED", rejected=rejected, path=str(file_path))
+
+
+def _memory_body_sha256(json_path, file_field):
+    """인덱스 행의 `file` 포인터가 가리키는 tracked 본문의 sha256(hex).
+
+    경로 해석 실패·본문 부재는 None을 반환한다(확인 불가는 일치가 아니다).
+    """
+    if not file_field:
+        return None
+    target = _resolve_memory_file(json_path, file_field)
+    if target is None or not target.exists():
+        return None
+    return hashlib.sha256(target.read_bytes()).hexdigest()
+
+
+def finalize_title_equivalence(doc, json_path, title, request_sha256):
+    """허브 finalize 전용 title 동등성 판정 (PLAN W-5, AC-9).
+
+    - `"absent"`   : 동일 title 없음 → 기존 append 경로로 인덱스 행을 추가한다.
+    - `"applied"`  : 동일 title + 동일 `file` + 동일 본문 hash → 이미 적용 완료(멱등, 무변경).
+    - `"conflict"` : 동일 title이나 `file` 또는 본문 hash가 다름 → MEMORY_TITLE_DUPLICATE.
+    """
+    expected_file = _title_to_filename(title)
+    existing = [
+        r for r in doc.get("memories", [])
+        if (r.get("title") or "").strip() == title
+    ]
+    if not existing:
+        return "absent"
+    for row in existing:
+        row_file = (row.get("file") or "").strip().strip("`").strip()
+        if row_file != expected_file:
+            return "conflict"
+        if _memory_body_sha256(json_path, row_file) != request_sha256:
+            return "conflict"
+    return "applied"
+
+
+def _capsule_path(task_path):
+    return pathlib.Path(str(task_path)) / MEMORY_INDEX_REQUEST_FILENAME
+
+
+def _load_index_requests(capsule_path, command):
+    """캡슐 파일의 requests[]를 읽는다. 부재는 요청 0건과 동치(no-op, D-2)."""
+    if not capsule_path.exists():
+        return []
+    try:
+        loaded = json.loads(capsule_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        err(command, "invalid_json", path=str(capsule_path))
+    requests = loaded.get("requests") if isinstance(loaded, dict) else None
+    return requests if isinstance(requests, list) else []
+
+
+def _read_pending_requests(task_path_raw):
+    """`--task-path`가 주어지고 캡슐 파일이 존재할 때만 requests[]를 반환한다 (D-2c).
+
+    미지정·부재·파싱 실패는 None — 호출부가 응답에 키를 **추가하지 않는다**(C-1).
+    """
+    if not task_path_raw:
+        return None
+    capsule_path = _capsule_path(task_path_raw)
+    if not capsule_path.exists():
+        return None
+    try:
+        loaded = json.loads(capsule_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return None
+    requests = loaded.get("requests") if isinstance(loaded, dict) else None
+    return requests if isinstance(requests, list) else None
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # 자가검토 헬퍼 (F-010)
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -937,6 +1058,74 @@ def cmd_init(args):
 # cmd_append (F-003, F-004)
 # ─────────────────────────────────────────────────────────────────────────────
 
+def _append_worktree_index_request(args, json_path, title):
+    """워크트리 `append --kind memory` — `memories[]` 직접 추가 대신 index 요청 1건 기록 (D-2).
+
+    MEMORY.json은 읽지도 쓰지도 않는다(워크트리 MEMORY 쓰기는 허브 소유, AC-8).
+    tracked 본문은 이미 `.opal/memory/<slug>.md`에 있고, 이 함수는 그 본문의
+    해시를 포함한 요청만 `{task_path}/memory-index-request.json`에 남긴다.
+    """
+    rtype = (args.type or "").strip()
+    if rtype not in VALID_TYPES:
+        err("append", "invalid_type", value=rtype)
+
+    status = (args.status or "active").strip()
+    if status not in VALID_STATUSES:
+        err("append", "invalid_status", value=status)
+
+    summary = (args.summary or "").strip()
+    if len(summary) > SUMMARY_MAX_LENGTH:
+        err("append", "summary_too_long", length=len(summary))
+
+    task_path_raw = (getattr(args, "task_path", None) or "").strip()
+    if not task_path_raw:
+        err("append", "invalid_args",
+            detail="워크트리 경로의 append --kind memory는 --task-path <abs>가 필요함 (D-2)")
+    task_dir = pathlib.Path(task_path_raw)
+    if not task_dir.is_dir():
+        err("append", "invalid_args", detail=f"--task-path가 디렉토리가 아님: {task_dir}")
+
+    file_field = _title_to_filename(title)
+    # --body-sha256은 optional — 미지정 시 tracked 본문에서 직접 계산한다(호출자가
+    # 해시를 지어낼 여지를 없앤다). 본문이 아직 없으면 빈 본문 해시로 고정한다.
+    body_sha256 = (getattr(args, "body_sha256", None) or "").strip()
+    if not body_sha256:
+        body_sha256 = _memory_body_sha256(json_path, file_field)
+        if body_sha256 is None:
+            body_sha256 = hashlib.sha256(b"").hexdigest()
+
+    capsule_path = _capsule_path(task_dir)
+    requests = _load_index_requests(capsule_path, "append")
+
+    request = {
+        "task_id":      task_dir.name,
+        "title":        title,
+        "type":         rtype,
+        "status":       "pending",
+        "file":         file_field,
+        "summary":      summary,
+        "body_sha256":  body_sha256,
+        "requested_at": _kst_now().strftime("%Y-%m-%d %H:%M:%S"),
+    }
+
+    # 같은 본문·같은 행을 가리키는 요청 재기록은 멱등 — 중복 요청을 쌓지 않는다.
+    duplicate = any(
+        r.get("title") == title
+        and r.get("file") == file_field
+        and r.get("body_sha256") == body_sha256
+        for r in requests if isinstance(r, dict)
+    )
+    if not duplicate:
+        requests.append(request)
+        atomic_write_json(
+            capsule_path,
+            {"schema_version": MEMORY_INDEX_REQUEST_SCHEMA_VERSION, "requests": requests},
+        )
+
+    ok("append", kind="memory", title=title, deferred=True, index_request=str(capsule_path),
+       body_sha256=body_sha256, pending_count=len(requests), duplicate=duplicate)
+
+
 def cmd_append(args):
     """메모리/히스토리 행 추가 (MEMORY.json).
     --kind memory: type/status enum + summary ≤80 검증. 갯수 무제한.
@@ -951,8 +1140,18 @@ def cmd_append(args):
     if kind not in ("memory", "history"):
         err("append", "invalid_kind", kind=kind)
 
+    # 워크트리 게이트 — memory_lock/load_document 이전 (D-7).
+    # --kind history는 거부, --kind memory만 index 요청 기록으로 대체한다(D-2).
+    if _is_worktree_target(json_path):
+        if kind == "history":
+            err("append", "WORKTREE_WRITE_REJECTED",
+                rejected="append --kind history", path=str(json_path))
+        _append_worktree_index_request(args, json_path, title)
+        return
+
     today = get_kst_date()
     migration = None
+    append_extra = {}
 
     with memory_lock(json_path, "append"):
         doc = load_document(json_path, "append", already_locked=True)
@@ -973,20 +1172,32 @@ def cmd_append(args):
 
             file_field = _title_to_filename(title)
 
-            doc["memories"].append({
-                "title":   title,
-                "date":    today,
-                "type":    rtype,
-                "status":  status,
-                "file":    file_field,
-                "summary": summary,
-            })
+            # finalize title 동등성 판정 (AC-9) — --body-sha256 지정 시에만 활성화.
+            # 미지정(기존 호출)은 현행 동작을 그대로 유지한다(C-1).
+            body_sha256 = (getattr(args, "body_sha256", None) or "").strip()
+            already_applied = False
+            if body_sha256:
+                verdict = finalize_title_equivalence(doc, json_path, title, body_sha256)
+                if verdict == "conflict":
+                    err("append", "MEMORY_TITLE_DUPLICATE", title=title)
+                already_applied = (verdict == "applied")
+                append_extra["already_applied"] = already_applied
 
-            violations = validate_document(doc)
-            if violations:
-                err("append", "schema_validation_failed", violations=violations)
+            if not already_applied:
+                doc["memories"].append({
+                    "title":   title,
+                    "date":    today,
+                    "type":    rtype,
+                    "status":  status,
+                    "file":    file_field,
+                    "summary": summary,
+                })
 
-            atomic_write_json(json_path, doc)
+                violations = validate_document(doc)
+                if violations:
+                    err("append", "schema_validation_failed", violations=violations)
+
+                atomic_write_json(json_path, doc)
             active_count = sum(1 for r in doc["memories"] if r.get("status") == "active")
 
         else:  # kind == "history"
@@ -1012,7 +1223,8 @@ def cmd_append(args):
 
     review = build_review_block(doc, json_path)
     if kind == "memory":
-        ok("append", kind=kind, title=title, active_count=active_count, review=review, migration=migration)
+        ok("append", kind=kind, title=title, active_count=active_count, review=review,
+           migration=migration, **append_extra)
     else:
         ok("append", kind=kind, title=title, history_count=len(doc["history"]), review=review, migration=migration)
 
@@ -1088,6 +1300,7 @@ def cmd_update(args):
     dead/superseded 전이 = 행 보존(추적), 로드 제외.
     """
     json_path = pathlib.Path(args.file)
+    _reject_if_worktree("update", json_path, "update")  # D-7 — 락·로드 이전 게이트
     title = (args.title or "").strip()
     if not title:
         err("update", "title_required")
@@ -1154,6 +1367,7 @@ def cmd_promote(args):
     brain 경로: brain-tool 재사용 전제 — 자체 brain 쓰기 없음(H-9).
     """
     json_path = pathlib.Path(args.file)
+    _reject_if_worktree("promote", json_path, "promote")  # D-7 — 락·로드 이전 게이트
     to_target = (getattr(args, "to", None) or "").strip()
     if to_target not in ("docs", "brain"):
         err("promote", "invalid_promote_target", value=to_target)
@@ -1235,6 +1449,7 @@ def cmd_promote(args):
 def cmd_prune(args):
     """히스토리 FIFO=5 결정론 정리 (MEMORY.json). 이미 ≤5면 no-op."""
     json_path = pathlib.Path(args.file)
+    _reject_if_worktree("prune", json_path, "prune")  # D-7 — 락·로드 이전 게이트
     with memory_lock(json_path, "prune"):
         doc = load_document(json_path, "prune", already_locked=True)
         migration = _pop_migration_report()
@@ -1488,6 +1703,12 @@ def cmd_show(args):
         extra["version"] = doc.get("version")
         extra["last_task_number"] = doc.get("last_task_number")
 
+    # D-2c — --task-path가 주어지고 캡슐 파일이 존재할 때만 병합한다.
+    # 미지정 시 키를 추가하지 않는다(현행 응답과 바이트 동일, C-1).
+    pending = _read_pending_requests((getattr(args, "task_path", None) or "").strip())
+    if pending is not None:
+        extra["pending_requests"] = pending
+
     ok(
         "show",
         file=str(json_path),
@@ -1516,6 +1737,7 @@ def cmd_delete(args):
     성공 시 review 블록 첨부.
     """
     json_path = pathlib.Path(args.file)
+    _reject_if_worktree("delete", json_path, "delete")  # D-7 — 락·로드 이전 게이트
     title = (args.title or "").strip()
     if not title:
         err("delete", "title_required")
@@ -1604,11 +1826,19 @@ def cmd_review(args):
     doc = load_document(json_path, "review")
     migration = _pop_migration_report()
     review = build_review_block(doc, json_path)
+
+    # D-2c — show와 동일 규칙. 미지정 시 키 추가 없음(C-1).
+    extra = {}
+    pending = _read_pending_requests((getattr(args, "task_path", None) or "").strip())
+    if pending is not None:
+        extra["pending_requests"] = pending
+
     ok(
         "review",
         file=str(json_path),
         migration=migration,
         **review,
+        **extra,
     )
 
 
@@ -1622,6 +1852,7 @@ def cmd_task_number(args):
     --bump/--set 동시 지정은 invalid_args.
     """
     json_path = pathlib.Path(args.file)
+    _reject_if_worktree("task-number", json_path, "task-number")  # D-7 — 채번은 허브 소유
     bump = bool(getattr(args, "bump", False))
     set_value = getattr(args, "set_value", None)
 
@@ -1691,6 +1922,10 @@ def main():
     p_append.add_argument("--summary", default="", help="요약/핵심결과 (≤80자)")
     p_append.add_argument("--stage", default="", help="단계 (history 전용)")
     p_append.add_argument("--path", default="", help="경로 (history 전용)")
+    p_append.add_argument("--task-path", default=None, dest="task_path",
+                          help="태스크 폴더 절대경로 — 워크트리 --kind memory의 index 요청 기록 위치 (D-2)")
+    p_append.add_argument("--body-sha256", default=None, dest="body_sha256",
+                          help="본문 sha256(hex) — 지정 시 title 동등성 판정 활성화, 미지정 시 tracked 본문에서 계산 (AC-9)")
     p_append.set_defaults(func=cmd_append)
 
     # ── update ──
@@ -1735,6 +1970,8 @@ def main():
                         help="boot brief UTF-8 stdout 상한(1~1024, 기본 1024)")
     p_show.add_argument("--memories", default=None,
                         help="boot brief active memory 상한(1~3, 기본 3)")
+    p_show.add_argument("--task-path", default=None, dest="task_path",
+                        help="태스크 폴더 절대경로 — 캡슐 파일 존재 시에만 pending_requests 병합 (D-2c)")
     p_show.add_argument("--history", default=None, dest="history",
                         help="히스토리 반환 건수 재정의 (brief 기본 3)")
     p_show.set_defaults(func=cmd_show)
@@ -1742,6 +1979,8 @@ def main():
     # ── review ──
     p_review = sub.add_parser("review", help="자가검토 단독 health 명령")
     p_review.add_argument("--file", required=True, help="MEMORY.json 경로")
+    p_review.add_argument("--task-path", default=None, dest="task_path",
+                          help="태스크 폴더 절대경로 — 캡슐 파일 존재 시에만 pending_requests 병합 (D-2c)")
     p_review.set_defaults(func=cmd_review)
 
     # ── delete ──

@@ -133,7 +133,7 @@
   - 경고가 없으면 `warnings` 키 자체를 만들지 않는다 — 기존 호출의 응답 키 집합은 종전과 완전히 동일하다
   - 이 경고가 필요한 이유: 워커 완료 알림의 `duration_ms`는 세션과 함께 사라지고 행에는 완료 시각만 남아 시작 시각을 되살릴 수 없다. 그 자리에서 적지 않으면 소요는 **영구히 소실**되고 통계에서 PM 몫으로 잘못 귀속된다(소급 복구 경로 없음)
   - 오탐을 막는 4관문: ① 값이 이미 실림 ② `--worker-duration-unknown` 억제 ③ 워커 신호 부재(PM 직접 수행 행) ④ `--action-step N/M`에서 `N<M`(행이 `in_progress`로 남는 중간 진행 보고). 추가로 `owner = "user"`인 사용자 확인 행과 `--auto-pass` 재호출 멱등 no-op(093 F-005) 경로도 제외된다
-  - 경고 코드는 `ERROR_CODES`가 아니라 별도 사전 `WARNING_CODES`에 산다 — 경고는 에러가 아니며, **103은 에러 코드를 늘리지 않았다**(103 시점 45종 유지. 이후 106 F-004가 `code_scan_citation_unmet` 1종, 111 W-1이 `plan_contract_unmet` 1종을 등재해 현재 실측은 **47종**이며, 경고/에러 사전 분리 자체는 불변이다)
+  - 경고 코드는 `ERROR_CODES`가 아니라 별도 사전 `WARNING_CODES`에 산다 — 경고는 에러가 아니며, **103은 에러 코드를 늘리지 않았다**(103 시점 45종 유지. 이후 106 F-004가 `code_scan_citation_unmet` 1종, 111 W-1이 `plan_contract_unmet` 1종, 118 W-4가 finalize-attribution 전용 4종을 등재해 현재 실측은 **51종**이며, 경고/에러 사전 분리 자체는 불변이다)
 - `--worker-duration-unknown`(103 R-21)은 그 행의 워커 소요를 **알 수 없음을 명시**한다(중단된 워커·PM 직접 수행·소급 불가 과거 데이터). 경고를 억제하며 행에는 필드를 만들지 않는다 — 기록 결과는 인자 미지정과 완전히 동형이므로 "미측정"이 `0`("측정했으나 1분 미만")으로 오독되지 않는다
   - `--worker-duration-minutes`와 **배타적**이다(값과 미상 선언은 동시에 성립할 수 없음). 둘 다 지정하면 argparse가 exit 2로 거부한다 — `--owner`/`--auto-pass` 배타와 동일 계열이므로 전용 에러 코드는 신설하지 않았다
 - `--auto-pass` 사용 시 `owner = "auto"`, note에 "agentic auto-pass" 자동 기재
@@ -451,7 +451,7 @@
 
 ---
 
-## 에러 코드 카탈로그 (47종 실측 SSOT — PLAN §2.18 E-1 + 070 R-1/R-4/R-9 + 091 F-004 R-10/R-11 + 093 F-004 R-4 + 094 R-3/R-4/R-9 + 098 F-003 R-4 + 106 F-004 R-4 + 111 W-1)
+## 에러 코드 카탈로그 (51종 실측 SSOT — PLAN §2.18 E-1 + 070 R-1/R-4/R-9 + 091 F-004 R-10/R-11 + 093 F-004 R-4 + 094 R-3/R-4/R-9 + 098 F-003 R-4 + 106 F-004 R-4 + 111 W-1 + 118 W-4)
 
 > 종수는 `len(ERROR_CODES)`(`state_tool.py`) 실측값이 기준이다 — 이 헤더 숫자를 리터럴로 신뢰하지 말고 코드 실측으로 재검증할 것(094 R-9 ①, S-7/S-15).
 
@@ -504,6 +504,10 @@
 | 45 | `evidence_check_flag_conflict` | verify --evidence-check | 1 | `--evidence-check`와 `--clarification-check` 동시 지정 — 두 게이트 계약 충돌 (098) |
 | 46 | `code_scan_citation_unmet` | verify --code-scan-citation-check / advance·mark(EXECUTE 첫 행 자동 훅) | 1 | `PLAN.md` §4.2 대상 파일에 코드 확장자가 있는데 §4.2 본문에 code-scan 결과 인용 토큰이 0건 — 또는 EXECUTE 첫 행 진입에 `--auto-pass`가 실려 우회 시도 (106) |
 | 47 | `plan_contract_unmet` | verify --plan-contract-check | 1 | sdlc-v2 `PLAN.md` Work items 필수 열/W-ID/내용/선행/P그룹/파일 충돌/AC-C 연결 계약 위반 (111 W-1) |
+| 48 | `allocator_root_required` | finalize-attribution | 1 | `--allocator-root` 미지정 — allocator_root는 cwd·task path 조상·`.opal-worktrees` 문자열로 추론하지 않는다 (118 W-4, AC-4) |
+| 49 | `allocator_root_not_absolute` | finalize-attribution | 1 | `--allocator-root`가 상대경로 — 절대경로만 허용 (118 W-4, AC-4) |
+| 50 | `allocator_root_invalid` | finalize-attribution | 1 | `--allocator-root` 하위에 `.opal/MEMORY.json`이 없음 (118 W-4, AC-4) |
+| 51 | `finalize_attribution_failed` | finalize-attribution | 1 | 허브 MEMORY history append 실패(memory-tool 부재·손상 JSON·호출 실패) — 파일은 변경되지 않는다 (118 W-4, AC-4) |
 
 > `spec-validate` 서브 명령 자체의 violations[] 내부 코드(`spec_missing_field`/`spec_skill_invalid`/`spec_stage_invalid`/`spec_key_format_invalid`/`spec_key_duplicate`/`spec_id_sequence_invalid`/`spec_key_stage_mismatch`)는 `cmd_validate`의 `schema_violation`처럼 인라인 문자열로 쓰이며 ERROR_CODES 템플릿을 거치지 않는다(070 §3.1.2). (`spec_gate_*` 4종은 동일하게 violations[]에 인라인 append되지만 ERROR_CODES에 등록되어 있어 위 카탈로그에 포함된다 — 091이 만든 예외.)
 

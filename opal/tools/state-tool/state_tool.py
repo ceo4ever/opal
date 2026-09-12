@@ -3,12 +3,12 @@
   "module": "state_tool",
   "layer": "util",
   "domain": "opal-pipeline",
-  "description": "OPAL 파이프라인 현황판 JSON SSOT 관리 CLI. 서브커맨드: init/show/advance/mark/block/validate/add-row/status/spec-validate/event-verify, gate-pass(deprecated). event-verify는 단계 진입 전에 event-loader receipt의 이벤트·manifest·문서 hash 최신성을 검증하고 상태 파일은 변경하지 않는다. interactive/semi-agentic/agentic 3-way 모드를 지원하며 PLAN-equivalent 이전 단계(TASK/ANALYSIS/PLAN/TEST-SCENARIO/SPEC/REVIEW/DESIGN/WBS/WIREFRAME/DICT/MODEL/DDL·MIGRATION)는 semi-agentic 모드에서 사용자 검토를 강제한다. STATE.md는 state.json에서 파생되는 저널(의사결정 로그+블로커)이며 파이프라인 표·현재 상태·다음 액션 섹션은 없다(레거시 마커 포맷은 하위호환 인식만 유지). mark --step N/M은 N<M이면 in_progress를 유지하고 N==M에서만 done으로 닫는다. can_auto_approve_user_confirmation()은 CLOSE 축과 모드 축 2축 합성으로 사용자 확인 행 자동 승인 가부를 단일 판정하며, cmd_mark 사전검사와 cmd_validate 사후검사가 서로 다른 소비 범위(validate는 CLOSE 축 미평가)로 이를 참조한다. auto_approve_prior_user_confirmations()는 advance/mark가 대상 행 이전 구간의 미완 확인 행을 자동 승인하되 대상 행 자체가 CLOSE면 관여하지 않는다. 행 주소는 task-step 키 체계(--task-step/--task-step-id, --row는 deprecated)로 지정한다. check_gate_artifacts()는 task_steps[].gate.artifacts 존재를 검사하고(정적 경로·글롭 지원, 절대경로·'..' 이탈 토큰은 거부), 미충족 시 gate_artifact_missing으로 막되 --force+--note 조합에만 통과를 허용하며 그 경우 decision 로그에 gate_artifact_force를 강제 기록한다. verify 서브커맨드는 상호 배타적인 6개 검사 라우트를 갖는다 — --red-check(RED 증거 게이트), --fix-mode(+--changed-files/--test-globs, 테스트 불변성 게이트), --clarification-check(TASK 잠금 판정: sdlc-v2 5절 또는 legacy 명확화 4요소), --evidence-check(『명확화 결과』·『확정된 설계 방향』 인용을 근거 등급 4축으로 판정, 두 소스의 분모는 서로 분리 — confirmed_ratio는 명확화 결과 항목 수 기준 불변), --code-scan-citation-check(PLAN.md Work items 또는 legacy §4.2 파일 경로의 code-scan 인용 집행), --plan-contract-check(sdlc-v2 Work items 계약 검사). link_memory_history()는 CLOSE 마지막 행 mark 시 memory_tool.py를 서브프로세스로 호출해 프로젝트 루트 .opal/MEMORY.json에 이력 행을 멱등으로 남기고, 실패는 전부 흡수해 mark 응답은 항상 ok:true다. resolve_owner_placeholder()는 note 작성 경로(advance/mark/add-row/block/status/init)에서 '{owner_name}' 플레이스홀더를 identity.md owner_name으로 write-time 치환한다(부재 시 원문 유지, fail-safe). worker_duration_minutes는 mark --worker-duration-minutes로 선택 기록되고, 워커 디스패치 행을 소요시간 없이 done 처리하면 --worker-duration-unknown 억제 인자가 없는 한 응답 warnings 배열에 worker_duration_missing이 실린다(exit 0 유지). build_todo_mirror()는 stdout 전용 파생 미러(state.json 비접촉)로 PostToolUse hook이 세션에 결정론적으로 주입한다.",
+  "description": "OPAL 파이프라인 현황판 JSON SSOT 관리 CLI. 서브커맨드: init/show/advance/mark/block/validate/add-row/status/finalize-attribution/spec-validate/event-verify, gate-pass(deprecated). event-verify는 단계 진입 전에 event-loader receipt의 이벤트·manifest·문서 hash 최신성을 검증하고 상태 파일은 변경하지 않는다. interactive/semi-agentic/agentic 3-way 모드를 지원하며 PLAN-equivalent 이전 단계(TASK/ANALYSIS/PLAN/TEST-SCENARIO/SPEC/REVIEW/DESIGN/WBS/WIREFRAME/DICT/MODEL/DDL·MIGRATION)는 semi-agentic 모드에서 사용자 검토를 강제한다. STATE.md는 state.json에서 파생되는 저널(의사결정 로그+블로커)이며 파이프라인 표·현재 상태·다음 액션 섹션은 없다(레거시 마커 포맷은 하위호환 인식만 유지). mark --step N/M은 N<M이면 in_progress를 유지하고 N==M에서만 done으로 닫는다. can_auto_approve_user_confirmation()은 CLOSE 축과 모드 축 2축 합성으로 사용자 확인 행 자동 승인 가부를 단일 판정하며, cmd_mark 사전검사와 cmd_validate 사후검사가 서로 다른 소비 범위(validate는 CLOSE 축 미평가)로 이를 참조한다. auto_approve_prior_user_confirmations()는 advance/mark가 대상 행 이전 구간의 미완 확인 행을 자동 승인하되 대상 행 자체가 CLOSE면 관여하지 않는다. 행 주소는 task-step 키 체계(--task-step/--task-step-id, --row는 deprecated)로 지정한다. check_gate_artifacts()는 task_steps[].gate.artifacts 존재를 검사하고(정적 경로·글롭 지원, 절대경로·'..' 이탈 토큰은 거부), 미충족 시 gate_artifact_missing으로 막되 --force+--note 조합에만 통과를 허용하며 그 경우 decision 로그에 gate_artifact_force를 강제 기록한다. verify 서브커맨드는 상호 배타적인 6개 검사 라우트를 갖는다 — --red-check(RED 증거 게이트), --fix-mode(+--changed-files/--test-globs, 테스트 불변성 게이트), --clarification-check(TASK 잠금 판정: sdlc-v2 5절 또는 legacy 명확화 4요소), --evidence-check(『명확화 결과』·『확정된 설계 방향』 인용을 근거 등급 4축으로 판정, 두 소스의 분모는 서로 분리 — confirmed_ratio는 명확화 결과 항목 수 기준 불변), --code-scan-citation-check(PLAN.md Work items 또는 legacy §4.2 파일 경로의 code-scan 인용 집행), --plan-contract-check(sdlc-v2 Work items 계약 검사). task_root()는 task path 조상에서 .opal/MEMORY.json 앵커를 찾는 task root 목적 전용 탐색이며(118 D-4), 허브 쓰기 대상인 allocator root는 이 탐색으로 추론하지 않고 worktree registry 발급값을 명시 인자로만 받는다. CLOSE 마지막 행 mark는 current_status를 completed_unmerged로만 확정하고 MEMORY.json을 건드리지 않으며(118 D-4b, AC-4), 허브 .opal/MEMORY.json 이력 append는 finalize-attribution <task-path> --allocator-root <abs>가 전담한다 — link_memory_history()가 그 구현이고 동일 path 행이 있으면 건너뛰어 멱등이며, --allocator-root 미지정·상대경로는 추론 없이 exit 1로 거부된다. resolve_owner_placeholder()는 note 작성 경로(advance/mark/add-row/block/status/init)에서 '{owner_name}' 플레이스홀더를 identity.md owner_name으로 write-time 치환한다(부재 시 원문 유지, fail-safe). worker_duration_minutes는 mark --worker-duration-minutes로 선택 기록되고, 워커 디스패치 행을 소요시간 없이 done 처리하면 --worker-duration-unknown 억제 인자가 없는 한 응답 warnings 배열에 worker_duration_missing이 실린다(exit 0 유지). build_todo_mirror()는 stdout 전용 파생 미러(state.json 비접촉)로 PostToolUse hook이 세션에 결정론적으로 주입한다.",
   "exports": [
     "cmd_init", "cmd_show", "cmd_advance", "cmd_mark",
     "cmd_block", "cmd_validate", "cmd_add_row", "cmd_status",
     "cmd_spec_validate", "cmd_event_verify", "cmd_gate_pass", "build_todo_mirror",
-    "link_memory_history",
+    "cmd_finalize_attribution", "link_memory_history", "task_root",
     "can_auto_approve_user_confirmation", "auto_approve_prior_user_confirmations",
     "_collect_plan_target_files", "_check_code_scan_citation",
     "_check_sdlc_v2_task_contract", "_check_plan_contract",
@@ -97,6 +97,11 @@ STATUS_LABEL_MAP = {
 }
 LABEL_STATUS_MAP = {v: k for k, v in STATUS_LABEL_MAP.items()}
 
+# 118 D-4b(AC-4): CLOSE 마지막 행 mark가 확정하는 완료 상태. 귀속(허브 MEMORY
+#   history append)이 아직 수행되지 않았음을 뜻하며, merge 확인 뒤
+#   `finalize-attribution`이 `done`으로 닫는다.
+STATUS_COMPLETED_UNMERGED = "completed_unmerged"
+
 # 094 F-003: current_status → 한글 라벨 (cmd_show '- 상태:' 라인 전용 SSOT)
 STATUS_TEXT = {
     "in_progress":          "진행 중",
@@ -104,7 +109,12 @@ STATUS_TEXT = {
     "blocked":              "블로커",
     "additional_work":      "추가작업중",
     "additional_work_done": "추가작업완료",
+    STATUS_COMPLETED_UNMERGED: "완료(미귀속)",
 }
+
+# 118 D-4b: 이미 `done`으로 기록된 기존 state.json은 그대로 둔다 — 아래 집합은
+#   "태스크가 완료 상태인가"를 묻는 소비처가 두 값을 동등하게 보게 하는 SSOT다.
+TASK_COMPLETE_STATUSES = {"done", STATUS_COMPLETED_UNMERGED}
 
 # PLAN §2.2 G-4 표준 항목 상수
 # 새 표준 행 구조에서는 "작업 / PM Gate / 사용자 확인 / DONE.md 생성"만 사용한다.
@@ -150,6 +160,18 @@ ERROR_CODES = {
     "rows_spec_invalid_json":         "--rows-spec 인자가 유효한 JSON 배열이 아님",
     "skill_md_parse_error":           "--rows-from SKILL.md에서 행 추출 실패: {reason}",
     "task_path_not_found":            "<task-path> 디렉토리가 존재하지 않음: {path}",
+    # 118 D-4b(AC-4): finalize-attribution — allocator_root는 명시 인자 전용이며 추론하지 않는다
+    "allocator_root_required":
+        "finalize-attribution에는 --allocator-root <절대경로>가 필수입니다 — "
+        "cwd·task path 조상·'.opal-worktrees' 문자열로 추론하지 않습니다 "
+        "(worktree.md §task root와 allocator root 계약). "
+        "worktree-tool create가 발급한 allocator_root 값을 그대로 전달하세요",
+    "allocator_root_not_absolute":
+        "--allocator-root는 절대경로여야 합니다 (추론·상대해석 금지): {path}",
+    "allocator_root_invalid":
+        "--allocator-root에 .opal/MEMORY.json이 없습니다: {path}",
+    "finalize_attribution_failed":
+        "귀속 history append 실패: {detail}",
     "worker_stage_required":          "--as-worker 사용 시 --worker-stage 필수",
     "rows_input_conflict":            "--rows-spec과 --rows-from은 동시 사용 불가",
     "rows_acts_not_implemented":      "--rows-acts는 본 태스크 범위 밖 (시그니처만 정의 — R-13)",
@@ -223,12 +245,16 @@ LEGACY_FROZEN_BANNER = (
 )
 
 # current_status 전이 그래프 (PLAN §2.11 G-7)
+# 118 D-4b: completed_unmerged는 CLOSE mark가 확정하는 완료 상태이며,
+#   귀속(finalize-attribution) 후 done으로 닫힌다.
 ALLOWED_TRANSITIONS = {
-    "in_progress":          {"done", "blocked", "additional_work"},
+    "in_progress":          {"done", "blocked", "additional_work",
+                             STATUS_COMPLETED_UNMERGED},
     "done":                 {"additional_work", "blocked"},
-    "blocked":              {"in_progress", "done"},
+    "blocked":              {"in_progress", "done", STATUS_COMPLETED_UNMERGED},
     "additional_work":      {"additional_work_done", "blocked", "in_progress"},
     "additional_work_done": {"additional_work", "blocked"},
+    STATUS_COMPLETED_UNMERGED: {"done", "additional_work", "blocked"},
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -701,9 +727,16 @@ HISTORY_TITLE_PATTERN = re.compile(r"^(\d{3})-\d{6}-[a-z]+-(.+)$")
 _MEMORY_TOOL = pathlib.Path(__file__).resolve().parent.parent / "memory-tool" / "memory_tool.py"
 
 
-def find_project_root(task_path):
+def task_root(task_path):
     """task_path의 조상 중 .opal/MEMORY.json을 파일로 가진 첫 디렉토리를 반환한다(§2.3).
-    없으면 None — 호출자는 subprocess를 아예 띄우지 말고 조기 반환해야 한다."""
+    없으면 None — 호출자는 subprocess를 아예 띄우지 말고 조기 반환해야 한다.
+
+    118 D-4: 이 탐색은 **task root 목적 전용**이다(설정·gate·인용 판정). 허브
+    `.opal/MEMORY.json` 쓰기 대상인 allocator root는 이 함수로 구하지 않는다 —
+    worktree registry 발급값을 명시 인자로만 전달받는다. 계약 원문은
+    `opal/core/references/harness/worktree.md` §task root와 allocator root 계약이다.
+    하위호환 alias는 두지 않는다 — 미갱신 호출이 NameError로 즉시 드러나야 한다(118 H-1).
+    """
     p = pathlib.Path(task_path).resolve()
     for cand in (p, *p.parents):
         if (cand / ".opal" / "MEMORY.json").is_file():
@@ -753,24 +786,40 @@ def _run_memory_tool(argv):
     return result.returncode, parsed
 
 
-def link_memory_history(task_path, state):
-    """CLOSE 마지막 행 mark 성공 시 memory-tool history 행을 자동 생성한다(§2.1/§2.4/§2.5).
+def link_memory_history(task_path, state, allocator_root):
+    """허브 `.opal/MEMORY.json`에 작업 히스토리 행을 멱등으로 append한다(§2.1/§2.4/§2.5).
+
+    118 D-4/D-4b: 호출자는 `finalize-attribution` 서브커맨드 **하나뿐**이다. CLOSE
+    마지막 행 mark는 더 이상 이 함수를 호출하지 않는다. `allocator_root`는 **명시
+    인자**이며 이 함수는 조상 탐색으로 이를 추론하지 않는다 — cwd, task path의 조상,
+    `.opal-worktrees` 문자열 어느 것도 근거로 쓰지 않는다(worktree.md §task root와
+    allocator root 계약).
 
     항상 payload dict를 반환하고 예외를 전파하지 않는다 — err()를 호출하지 않으며,
-    memory-tool 부재/실패/타임아웃이 있어도 mark 자체를 실패시키지 않는다(R-4).
+    memory-tool 부재/실패/타임아웃이 있어도 호출자를 예외로 끊지 않는다(R-4).
     판정 키는 path(§2.4) — show로 사전 조회해 동일 path 행이 있으면 append를 건너뛴다.
     """
     try:
-        project_root = find_project_root(task_path)
-        if project_root is None:
+        if allocator_root is None:
             return {"status": "skipped",
-                    "warning": f"프로젝트 루트(.opal/MEMORY.json)를 찾지 못함: {task_path}"}
+                    "warning": "allocator_root가 전달되지 않음 — 추론하지 않는다(118 D-4)"}
+        project_root = pathlib.Path(allocator_root).resolve()
+        if not (project_root / ".opal" / "MEMORY.json").is_file():
+            return {"status": "skipped",
+                    "warning": f"allocator_root에 .opal/MEMORY.json이 없음: {project_root}"}
         if not _MEMORY_TOOL.is_file():
             return {"status": "skipped",
                     "warning": f"memory_tool.py를 찾지 못함: {_MEMORY_TOOL}"}
 
         memory_file = project_root / ".opal" / "MEMORY.json"
-        rel_path = pathlib.Path(task_path).resolve().relative_to(project_root).as_posix() + "/"
+        resolved_task = pathlib.Path(task_path).resolve()
+        try:
+            rel_path = resolved_task.relative_to(project_root).as_posix() + "/"
+        except ValueError:
+            # 워크트리 작업본의 task path는 허브(allocator_root) 하위가 아니다.
+            # 허브 기준 표준 위치(tasks/{task_folder}/)로 기록한다 — allocator_root를
+            # task path 조상에서 되추론하지 않기 위한 폴백이다(118 D-4).
+            rel_path = f"tasks/{resolved_task.name}/"
         title = derive_history_title(state.get("task_id", ""))
 
         rc, show_result = _run_memory_tool(["show", "--file", str(memory_file)])
@@ -1899,9 +1948,11 @@ def cmd_mark(args):
         (row_index == len(state["rows"]) - 1 or
          state["rows"][row_index + 1]["stage"] != "CLOSE")
     )
-    # 017: in_progress(N<M)로 남긴 행은 current_status=done 전환에서 제외 — 다중 Step CLOSE 마지막 행 오판 방지
+    # 017: in_progress(N<M)로 남긴 행은 완료 전환에서 제외 — 다중 Step CLOSE 마지막 행 오판 방지
+    # 118 D-4b(AC-4): CLOSE 마지막 행은 `completed_unmerged`만 확정한다. 귀속(MEMORY
+    #   history append)은 merge 확인 뒤 `finalize-attribution`이 전담한다.
     if is_close_last and row["status"] == "done":
-        state["current_status"] = "done"
+        state["current_status"] = STATUS_COMPLETED_UNMERGED
 
     # 072 F-002/F-003: '다음 액션' 자동 파생(프론티어) + --next-action 오버라이드(비지속, M-3)
     state["next_action"] = getattr(args, "next_action", None) or _derive_next_action(state)
@@ -1950,19 +2001,17 @@ def cmd_mark(args):
     _jw = sync_state_md(task_path, state, now_str, command,
                         decision=decision, reason=reason_text)
 
-    # 088 §2.1: CLOSE 마지막 행 완료 시 메모리 히스토리 자동 연결 (R-1~R-5)
-    # state.json·STATE.md 영속화가 완전히 끝난 뒤에만 실행 — 실패해도 mark 응답은
-    # 항상 ok:true를 유지한다(비영속·stdout 전용 페이로드, §2.5/§2.9).
-    history_link = None
-    if is_close_last and row["status"] == "done":
-        history_link = link_memory_history(task_path, state)
+    # 118 D-4b(AC-4): 088 §2.1의 "CLOSE 마지막 행 mark 시 즉시 history append"는
+    #   제거됐다. mark는 허브 `.opal/MEMORY.json`을 어떤 경로로도 건드리지 않으며
+    #   `completed_unmerged` 확정까지만 책임진다. history append는 merge 확인 뒤
+    #   `state-tool finalize-attribution <task-path> --allocator-root <abs>`가 전담한다
+    #   (worktree.md §task root와 allocator root 계약).
+    #   mark 응답이 항상 ok:true인 현행 계약은 그대로 유지한다.
 
     _ok_kwargs = dict(row_id=row["row_id"], stage=row["stage"], item=row["item"],
                       status=row["status"], timestamp=now_str, owner=row["owner"],
                       auto_approved=auto_approved,
                       todo_mirror=build_todo_mirror(state, "update"))
-    if history_link is not None:
-        _ok_kwargs["history_link"] = history_link
     # 103 R-15: 기록한 경우에만 응답에 실어 PM이 반영값을 확인할 수 있게 한다.
     #   미지정 호출의 응답 키 집합은 종전과 완전히 동일하다(H-11 하위호환).
     if _worker_minutes is not None:
@@ -2162,7 +2211,8 @@ def cmd_add_row(args):
 
     # current_status 자동 전환 (G-9 단계 8, G-7)
     prev_status = state["current_status"]
-    if prev_status == "done":
+    # 118 D-4b: completed_unmerged도 완료 상태이므로 done과 동일하게 추가작업으로 연다.
+    if prev_status in TASK_COMPLETE_STATUSES:
         state["current_status"] = "additional_work"
     elif prev_status == "additional_work_done":
         state["current_status"] = "additional_work"
@@ -2216,6 +2266,48 @@ def cmd_status(args):
 
     ok(command, **{"from": from_status, "to": to_status}, timestamp=now_str,
        **(_jw or {}))
+
+
+# ── 8b. finalize-attribution (118 D-4b / AC-4) ───────────────────────────────
+
+def cmd_finalize_attribution(args):
+    """`finalize-attribution <task-path> --allocator-root <abs>` — 귀속 전담 커맨드.
+
+    118 D-4b: CLOSE 마지막 행 mark에서 분리된 허브 `.opal/MEMORY.json` history
+    append를 이 커맨드 하나가 전담한다. merge 확인 뒤 허브 PM이 worktree registry
+    발급값(`allocator_root`)을 **명시 인자**로 넘겨 호출한다.
+
+    [MUST] allocator_root는 추론하지 않는다 — cwd, task path의 조상,
+    `.opal-worktrees` 문자열 어느 것도 근거로 쓰지 않는다. 미지정·상대경로는
+    이 도구의 기존 에러 관례(err(), 단일 라인 JSON `ok:false`+`error`, exit 1)로
+    거부한다(worktree.md §task root와 allocator root 계약).
+
+    멱등: 동일 path 행이 이미 있으면 append를 건너뛰고 `duplicate_skipped`로
+    응답한다(exit 0, ok:true).
+    """
+    command = "finalize-attribution"
+    task_path = resolve_task_path(args.task_path, command)
+    state     = load_state_json(task_path, command)
+
+    raw_root = getattr(args, "allocator_root", None)
+    if raw_root is None or not str(raw_root).strip():
+        err(command, "allocator_root_required")
+    raw_root = str(raw_root).strip()
+    if not os.path.isabs(raw_root):
+        err(command, "allocator_root_not_absolute", path=raw_root)
+    allocator_root = pathlib.Path(raw_root).resolve()
+    if not (allocator_root / ".opal" / "MEMORY.json").is_file():
+        err(command, "allocator_root_invalid", path=str(allocator_root))
+
+    result = link_memory_history(task_path, state, allocator_root)
+    status = result.get("status")
+    if status not in ("created", "duplicate_skipped"):
+        err(command, "finalize_attribution_failed",
+            detail=str(result.get("warning") or status),
+            attribution=result, allocator_root=str(allocator_root))
+
+    ok(command, attribution=result, allocator_root=str(allocator_root),
+       task_id=state.get("task_id", ""))
 
 
 # ── boot summary (read-only) ─────────────────────────────────────────────────
@@ -3067,7 +3159,7 @@ def _run_code_scan_citation_hook(task_path, state, row_index, command,
     #    code-map 자산(manifest) 존재는 요구하지 않는다: headerSource=inline +
     #    code-map 부재는 정상 상태이며, 이를 조건으로 걸면 inline 프로젝트 전건이
     #    스킵되어 R-4가 무력화된다(PLAN §3.5.2).
-    root = find_project_root(task_path)
+    root = task_root(task_path)
     if root is None:
         return
     cfg_path = root / ".opal" / "code-scan.json"
@@ -3484,8 +3576,8 @@ def _check_evidence_gate(task_md_path):
     프로젝트 안에 있으므로 정상 판정), 실패 시 기존 `__file__` 기준 파생으로
     폴백한다(테스트 픽스처처럼 태스크 경로가 프로젝트 밖 임시 디렉토리인
     경우의 하위호환)."""
-    root = (find_project_root(task_md_path)
-            or find_project_root(str(pathlib.Path(__file__).resolve())))
+    root = (task_root(task_md_path)
+            or task_root(str(pathlib.Path(__file__).resolve())))
     lines = task_md_path.read_text(encoding="utf-8").splitlines()
     located = _locate_clarification_table(lines)
     if located is None:
@@ -3689,7 +3781,7 @@ def cmd_verify(args):
     if code_scan_citation_check:
         plan_md = pathlib.Path(task_path) / "PLAN.md"
         reason = None
-        root = find_project_root(task_path)
+        root = task_root(task_path)
         config = None
         cfg_path = (root / ".opal" / "code-scan.json") if root is not None else None
         if cfg_path is not None and cfg_path.is_file():
@@ -3859,6 +3951,7 @@ def build_parser():
   validate      정합성 검증 → violations[]
   add-row       추가작업 행 삽입
   status        current_status 명시 전환
+  finalize-attribution  merge 확인 후 허브 MEMORY history 귀속 (--allocator-root 필수)
   spec-validate pipeline.json 스펙 검증 (070 R-6)
   event-verify  단계 진입용 event-loader receipt 검증 (상태 비접촉)
   gate-pass     [DEPRECATED] Gate 4행 일괄 ✅ 처리 (레거시 state.json 전용)
@@ -4000,9 +4093,21 @@ def build_parser():
     p_sts.add_argument("task_path", metavar="<task-path>")
     p_sts.add_argument("--set", dest="set", required=True,
                        choices=["in_progress","done","blocked",
-                                "additional_work","additional_work_done"])
+                                "additional_work","additional_work_done",
+                                STATUS_COMPLETED_UNMERGED])
     p_sts.add_argument("--note")
     p_sts.set_defaults(func=cmd_status)
+
+    # ── finalize-attribution (118 D-4b / AC-4) ──
+    p_fin = sub.add_parser(
+        "finalize-attribution",
+        help="merge 확인 후 허브 .opal/MEMORY.json history 귀속 (118 AC-4)")
+    p_fin.add_argument("task_path", metavar="<task-path>")
+    # required=True로 두지 않는다 — 미지정도 이 도구의 err() 관례(exit 1 + 단일 라인
+    # JSON)로 거부해야 하기 때문이다(argparse의 exit 2/usage 출력 회피).
+    p_fin.add_argument("--allocator-root", dest="allocator_root", metavar="<abs>",
+                       help="worktree registry가 발급한 허브 절대 경로 (추론하지 않음)")
+    p_fin.set_defaults(func=cmd_finalize_attribution)
 
     # ── boot-summary ──
     p_boot = sub.add_parser(

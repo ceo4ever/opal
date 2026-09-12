@@ -3,12 +3,12 @@
   "module": "worktree_tool",
   "layer": "util",
   "domain": "opal-workspace",
-  "description": "태스크별 코드 작업본을 git worktree로 격리하는 CLI. `.opal/worktree.json`(multi-repo/monorepo 2유형)을 선언 기반으로 읽어 create/list/status/remove/init 5서브명령을 제공한다. create의 슬롯·브랜치 판정은 '존재'가 아니라 '점유'다(DEC-7) — 대상 경로가 `git worktree list --porcelain`에 실제 등록돼 있으면 WORKTREE_EXISTS, 브랜치가 다른 worktree에 체크아웃 중이면 BRANCH_EXISTS로 거부하고, 브랜치가 존재하지만 미점유면 `worktree add <path> <branch>` 단일 명령으로 재사용한다(빈 디렉토리 잔존은 차단 사유가 아니다). pre-flight(대상 미점유·repos 경로 실재·git 레포 여부) 전부 통과 후에만 worktree를 생성하고(all-or-nothing), 중간 실패 시 자기 생성물만 롤백한다(DEC-2, 신규 브랜치 경로에만 적용). base-ref는 create 시점에 1회 해석해 `.opal-worktrees/.meta/task_{NNN}.json`(worktree 밖)에 동결 기록하고 remove/status는 그 값만 읽는다(DEC-3, 재해석 없음). remove는 dirty→unpushed→unmerged 순서로 3중 가드를 적용하고 worktree 디렉토리 + 슬롯 루트(`task_{NNN}/`)를 회수한다(브랜치 보존, user sovereignty. `.opal-worktrees/`·`.meta/`는 남긴다). `.gitignore`·캐시 볼륨·code-scan exclude·동시 슬롯 수는 전부 비차단 진단이다. init(DEC-8, ADD-1)은 `.opal/worktree.json`을 탐지 기반으로 초안 생성한다(자동 생성이 아니다) — 루트 이하 최대 3 depth에서 독립 `.git` 디렉토리를 찾아 ≥1개면 multi-repo(그 경로들이 repos), 0개면 root 자체가 git 레포일 때만 루트 레포가 추적하는 최상위 디렉토리 중 하위에 코드 manifest를 가진 것을 monorepo repos로 채운다(둘 다 실패하면 LAYOUT_UNDETERMINED). `copy`는 항상 빈 배열·`portOffset`은 항상 0으로 두고 추측하지 않으며(로컬 설정 후보는 `_copy_candidates` 주석 키로만 제시), 기존 파일이 있으면 `--force` 없이는 `CONFIG_EXISTS`로 거부해 파일을 건드리지 않고, `--dry-run`은 쓰지 않고 최상위 `draft` 키로만 반환한다.",
+  "description": "태스크별 코드 작업본을 git worktree로 격리하는 CLI. `.opal/worktree.json`(multi-repo/monorepo 2유형)을 선언 기반으로 읽어 create/list/status/remove/finalize/init 6서브명령을 제공한다. create의 슬롯·브랜치 판정은 '존재'가 아니라 '점유'다(DEC-7) — 대상 경로가 `git worktree list --porcelain`에 실제 등록돼 있으면 WORKTREE_EXISTS, 브랜치가 다른 worktree에 체크아웃 중이면 BRANCH_EXISTS로 거부하고, 브랜치가 존재하지만 미점유면 `worktree add <path> <branch>` 단일 명령으로 재사용한다(빈 디렉토리 잔존은 차단 사유가 아니다). pre-flight(대상 미점유·repos 경로 실재·git 레포 여부) 전부 통과 후에만 worktree를 생성하고(all-or-nothing), 중간 실패 시 자기 생성물만 롤백한다(DEC-2, 신규 브랜치 경로에만 적용). base-ref는 create 시점에 1회 해석해 `.opal-worktrees/.meta/task_{NNN}.json`(worktree 밖)에 동결 기록하고 remove/status는 그 값만 읽는다(DEC-3, 재해석 없음). create는 canonical task path 6필드(`allocator_root`·`task_home`·`task_folder`·`task_path`·`artifact_repo`·`task_ownership_version`)를 응답과 메타에 additive로 발급하고 불변식 `task_path == realpath(task_home/tasks/task_folder)`를 발급 시점에 검증한다 — `task_folder`는 basename만 허용한다. 계약 원문은 `opal/core/references/harness/worktree.md`가 소유한다. optional 설정 키 `taskCapsuleCone`(list[str], 기본 `[]`)은 monorepo 분기에서만 `repos`에 이어 sparse-checkout cone에 전개하며 multi-repo 분기에는 적용하지 않는다. status는 등록된 worktree 태스크와 같은 `task_folder`가 허브 `tasks/`에도 있으면 자동 선택 없이 TASK_PATH_AMBIGUOUS로 차단한다(`task_ownership_version` 부재 메타는 legacy로 판정을 건너뛴다). remove는 미처리 memory index 요청(캡슐 파일 `memory-index-request.json`의 body_sha256 중 메타 `memory_index_requests_resolved`에 없는 건)을 MEMORY_INDEX_REQUEST_PENDING으로 먼저 거부한 뒤 dirty→unpushed→unmerged 순서로 3중 가드를 적용하고 worktree 디렉토리 + 슬롯 루트(`task_{NNN}/`)를 회수한다(브랜치 보존, user sovereignty. `.opal-worktrees/`·`.meta/`는 남긴다). `.gitignore`·캐시 볼륨·code-scan exclude·동시 슬롯 수는 전부 비차단 진단이다. finalize(PLAN D-3b, 제안서 §6.3)는 merge 후 귀속 후처리를 확정한다 — DONE.md `## 회고적 학습 후보` 선언 집합 D(∪ `.opal/brain/index.md`·`.opal/brain/log.md`·`.opal/MEMORY.json`)와 `git status --porcelain -z -uall`을 `.opal/brain/**`·`.opal/MEMORY.json`으로 필터한 관측 집합 S를 레포 루트 상대 POSIX 경로로 정규화해 대조하고, `S ⊆ D`이면 재개를 허용하고 아니면 ATTRIBUTION_COMMIT_BLOCKED(위반 경로 동봉)로 거부한다. `.opal/MEMORY.json`의 선행 diff는 allocator의 `last_task_number` 변경만 허용한다. 판정 범위 밖(소스·태스크 문서)의 dirty는 판정 대상이 아니며 remove의 이진 dirty 가드(check_guards)는 finalize 경로에서 쓰지 않는다. 관측 경로만 stage해 단일 귀속 commit으로 확정한 뒤 registry meta의 `memory_index_requests_resolved`에 처리한 body_sha256을 append하고 캡슐 파일의 해당 요청 status를 applied로 바꾼다. 상태 전이는 `completed_unmerged → attribution_pending → closed`이고 commit·clean 검증 실패 시 `attribution_pending`에 머문다. init(DEC-8, ADD-1)은 `.opal/worktree.json`을 탐지 기반으로 초안 생성한다(자동 생성이 아니다) — 루트 이하 최대 3 depth에서 독립 `.git` 디렉토리를 찾아 ≥1개면 multi-repo(그 경로들이 repos), 0개면 root 자체가 git 레포일 때만 루트 레포가 추적하는 최상위 디렉토리 중 하위에 코드 manifest를 가진 것을 monorepo repos로 채운다(둘 다 실패하면 LAYOUT_UNDETERMINED). `copy`는 항상 빈 배열·`portOffset`은 항상 0으로 두고 추측하지 않으며(로컬 설정 후보는 `_copy_candidates` 주석 키로만 제시), 기존 파일이 있으면 `--force` 없이는 `CONFIG_EXISTS`로 거부해 파일을 건드리지 않고, `--dry-run`은 쓰지 않고 최상위 `draft` 키로만 반환한다.",
   "exports": [
     "load_config", "validate_worktree_config", "resolve_base_ref", "check_guards",
     "ensure_gitignore_entry", "diagnose_cache_volume", "diagnose_code_scan_exclude",
     "diagnose_concurrent_slots", "cmd_create", "cmd_list", "cmd_status", "cmd_remove",
-    "cmd_init"
+    "cmd_init", "cmd_finalize"
   ],
   "depends": ["git CLI 2.25+"]
 }
@@ -20,6 +20,7 @@ import argparse
 import json
 import os
 import pathlib
+import posixpath
 import shutil
 import subprocess
 import sys
@@ -49,8 +50,44 @@ ERROR_CODES = {
     "GUARD_UNMERGED": "base 브랜치에 아직 병합되지 않았습니다.",
     "CONFIG_EXISTS": "'.opal/worktree.json' 파일이 이미 존재합니다. --force로만 덮어쓸 수 있습니다.",
     "LAYOUT_UNDETERMINED": "layout을 결정할 수 없습니다 — 독립 저장소도, manifest를 가진 최상위 디렉토리도 찾지 못했습니다.",
+    "TASK_FOLDER_INVALID": "task_folder는 basename만 허용됩니다 — 경로 구분자·'..'·NUL을 포함할 수 없습니다.",
+    "TASK_ARTIFACT_REPO_MISSING": "multi-repo layout에서는 태스크 캡슐을 소유할 repo가 결정되지 않아 local task ownership을 활성화할 수 없습니다.",
+    "TASK_PATH_AMBIGUOUS": "등록된 worktree 태스크와 같은 task_folder가 허브 tasks/에도 존재합니다 — 자동 선택하지 않습니다.",
+    "MEMORY_INDEX_REQUEST_PENDING": "처리되지 않은 memory index 요청이 남아 있습니다.",
+    "ATTRIBUTION_COMMIT_BLOCKED": "선언되지 않은 귀속 대상 변경이 남아 있어 finalize를 진행할 수 없습니다.",
+    "ATTRIBUTION_COMMIT_FAILED": "귀속 commit 생성 또는 clean 검증에 실패했습니다.",
+    "TASK_PATH_MISSING": "메타에 canonical task_path가 없어 finalize 대상을 결정할 수 없습니다.",
     "INTERNAL_ERROR": "예상하지 못한 오류가 발생했습니다.",
 }
+
+# 태스크 소유권 계약 버전 (harness/worktree.md §canonical path 발급 계약).
+# 이 키가 메타에 없는 태스크는 legacy이며 실행 중 위치를 자동 이동하지 않는다(D-9, TASK.md C-5).
+TASK_OWNERSHIP_VERSION = 2
+
+# 태스크 캡슐의 memory index 요청 추적 파일 (PLAN D-2) — {task_path}/ 아래 고정 이름.
+MEMORY_INDEX_REQUEST_FILE = "memory-index-request.json"
+
+# finalize 재진입 판정(PLAN D-3b) 상수.
+# DONE.md의 선언 절 제목 — 형식 계약 원문은 `harness/done-template.md`가 소유한다.
+DONE_FILE = "DONE.md"
+LEARNING_CANDIDATE_HEADING = "회고적 학습 후보"
+# 선언 없이도 항상 선언 집합 D에 포함되는 귀속 산출물.
+ATTRIBUTION_ALWAYS_DECLARED = (
+    ".opal/brain/index.md",
+    ".opal/brain/log.md",
+    ".opal/MEMORY.json",
+)
+# 관측 집합 S의 판정 범위 — 이 범위 밖(소스·태스크 문서)의 dirty는 판정 대상이 아니다.
+ATTRIBUTION_SCOPE_PREFIX = ".opal/brain/"
+ATTRIBUTION_MEMORY_FILE = ".opal/MEMORY.json"
+# MEMORY.json의 선행 diff에서 허용되는 유일한 변경 키(제안서 §6.3 — allocator 채번).
+ATTRIBUTION_MEMORY_ALLOWED_DIFF_KEYS = frozenset({"last_task_number"})
+# 귀속 후처리 상태 전이(제안서 §6.3, R-7).
+ATTRIBUTION_STATE_KEY = "attribution_state"
+ATTRIBUTION_STATE_UNMERGED = "completed_unmerged"
+ATTRIBUTION_STATE_PENDING = "attribution_pending"
+ATTRIBUTION_STATE_CLOSED = "closed"
+ATTRIBUTION_COMMIT_TEMPLATE = "chore(opal): finalize task {task} attribution"
 
 GITIGNORE_ENTRY = ".opal-worktrees/"
 
@@ -179,7 +216,8 @@ def validate_worktree_config(cfg: dict, project_root: pathlib.Path) -> dict:
 
     검증 순서(첫 위반에서 즉시 반환 — 결정론): dict 타입 → 필수 키(layout/repos) →
     layout 유효값 → repos 타입/공백 → repos 경로 이탈 → copy 타입/경로 이탈 →
-    branchTemplate/baseBranch 타입 → setup 타입 → portOffset 타입.
+    taskCapsuleCone 타입/경로 이탈 → branchTemplate/baseBranch 타입 → setup 타입 →
+    portOffset 타입.
     """
     if not isinstance(cfg, dict):
         err_response("CONFIG_INVALID_TYPE", key="root")
@@ -208,6 +246,18 @@ def validate_worktree_config(cfg: dict, project_root: pathlib.Path) -> dict:
     if not isinstance(copy, list) or not all(isinstance(c, str) for c in copy):
         err_response("CONFIG_INVALID_TYPE", key="copy")
     for rel in copy:
+        if not _is_inside(project_root, rel):
+            err_response("CONFIG_PATH_ESCAPE", value=rel)
+
+    # taskCapsuleCone — optional, 기본값 [] (PLAN D-1, harness/worktree.md §cone 확장 계약).
+    # 검증 패턴은 copy와 완전 동형이며 신규 에러 코드를 만들지 않는다. 기본값 []의 전개는
+    # no-op이라 키 미지정 시 sparse-checkout 인자가 현행과 바이트 동일하다(TASK.md C-1).
+    task_capsule_cone = cfg.get("taskCapsuleCone", [])
+    if not isinstance(task_capsule_cone, list) or not all(
+        isinstance(c, str) for c in task_capsule_cone
+    ):
+        err_response("CONFIG_INVALID_TYPE", key="taskCapsuleCone")
+    for rel in task_capsule_cone:
         if not _is_inside(project_root, rel):
             err_response("CONFIG_PATH_ESCAPE", value=rel)
 
@@ -240,6 +290,7 @@ def validate_worktree_config(cfg: dict, project_root: pathlib.Path) -> dict:
         "branchTemplate": branch_template,
         "baseBranch": base_branch,
         "copy": copy,
+        "taskCapsuleCone": task_capsule_cone,
         "setup": setup,
         "portOffset": port_offset,
     }
@@ -613,8 +664,80 @@ def _meta_path(project_root: pathlib.Path, task: str) -> pathlib.Path:
     return project_root / ".opal-worktrees" / ".meta" / f"task_{task}.json"
 
 
+def _validate_task_folder(value: str) -> str:
+    """task_folder는 basename만 허용한다 — `/`·`\\`·`..`·NUL·경로 구분자를 거부한다
+    (harness/worktree.md §canonical path 발급 계약, 제안서 §5.1)."""
+    if not isinstance(value, str) or not value.strip():
+        err_response("TASK_FOLDER_INVALID", value=value, reason="empty")
+    if "\x00" in value:
+        err_response("TASK_FOLDER_INVALID", value=value, reason="nul_byte")
+    separators = {"/", "\\", os.sep, os.altsep or "/"}
+    if any(sep in value for sep in separators):
+        err_response("TASK_FOLDER_INVALID", value=value, reason="path_separator")
+    if value in (".", ".."):
+        err_response("TASK_FOLDER_INVALID", value=value, reason="dot_segment")
+    if value != os.path.basename(value):
+        err_response("TASK_FOLDER_INVALID", value=value, reason="not_basename")
+    return value
+
+
+def _issue_task_ownership(
+    project_root: pathlib.Path,
+    wt_root: pathlib.Path,
+    cfg: dict,
+    task_folder: str | None,
+) -> dict:
+    """canonical task path 6필드를 발급한다(AC-5). 불변식
+    `task_path == realpath(task_home/tasks/task_folder)`를 발급 시점에 검증한다.
+
+    - monorepo: 슬롯 worktree 자신이 `task_home`, `artifact_repo`는 `"."`.
+    - multi-repo: 태스크 캡슐을 소유할 repo가 설정으로 정해지지 않았으므로(제안서 §8)
+      local task ownership을 활성화하지 않는다 — 위치 필드는 발급하지 않고(None),
+      `--task-folder`가 명시되면 추측 대신 `TASK_ARTIFACT_REPO_MISSING`으로 중단한다.
+    - `allocator_root`는 허브 절대 경로이며 registry가 소유한다. 소비자는 이 발급값을
+      전달받아 쓰고 cwd·`.opal-worktrees` 문자열로 추론하지 않는다.
+    """
+    allocator_root = str(project_root)
+    if cfg["layout"] != "monorepo":
+        if task_folder is not None:
+            err_response("TASK_ARTIFACT_REPO_MISSING", layout=cfg["layout"])
+        return {
+            "allocator_root": allocator_root,
+            "task_home": None,
+            "task_folder": None,
+            "task_path": None,
+            "artifact_repo": None,
+            "task_ownership_version": TASK_OWNERSHIP_VERSION,
+        }
+
+    task_home = str(wt_root)
+    task_path = None
+    if task_folder is not None:
+        task_path = os.path.realpath(os.path.join(task_home, "tasks", task_folder))
+        expected = os.path.realpath(os.path.join(task_home, "tasks", task_folder))
+        home_real = os.path.realpath(task_home)
+        # 불변식 + 심볼릭 링크로 task_home 밖을 가리키지 않는지 함께 검증한다.
+        if task_path != expected or os.path.commonpath([task_path, home_real]) != home_real:
+            err_response(
+                "TASK_FOLDER_INVALID",
+                value=task_folder,
+                reason="path_escape",
+                task_path=task_path,
+                task_home=home_real,
+            )
+
+    return {
+        "allocator_root": allocator_root,
+        "task_home": task_home,
+        "task_folder": task_folder,
+        "task_path": task_path,
+        "artifact_repo": ".",
+        "task_ownership_version": TASK_OWNERSHIP_VERSION,
+    }
+
+
 def _write_meta(
-    project_root, task, cfg, branch, created, base_refs, pending_setup
+    project_root, task, cfg, branch, created, base_refs, pending_setup, ownership=None
 ) -> None:
     wt_root = project_root / ".opal-worktrees" / f"task_{task}"
     meta = {
@@ -634,6 +757,11 @@ def _write_meta(
         ],
         "pending_setup": pending_setup,
     }
+    # 신규 소유권 필드는 additive다 — 기존 키를 제거·개명하지 않는다(remove/status가 읽는다).
+    # 처리 완료 상태(D-2b)의 거처도 registry meta가 소유한다.
+    if ownership:
+        meta.update(ownership)
+        meta.setdefault("memory_index_requests_resolved", [])
     meta_path = _meta_path(project_root, task)
     meta_path.parent.mkdir(parents=True, exist_ok=True)
     meta_path.write_text(
@@ -723,6 +851,12 @@ def cmd_create(args) -> None:
     branch = _render_branch(cfg["branchTemplate"], args.task, args.slug, args.skill)
     wt_root = project_root / ".opal-worktrees" / f"task_{args.task}"
 
+    # ── (0) 소유권 발급값 사전 확정 — 부수 효과 이전에 검증한다(DEC-2 all-or-nothing) ──
+    task_folder = getattr(args, "task_folder", None)
+    if task_folder is not None:
+        _validate_task_folder(task_folder)
+    ownership = _issue_task_ownership(project_root, wt_root, cfg, task_folder)
+
     # ── (1) pre-flight — 여기서 실패하면 아무것도 만들지 않는다 (DEC-2)
     # 슬롯·브랜치 판정 기준은 '존재'가 아니라 '점유'다(DEC-7) — 빈 디렉토리 잔존은
     # 차단 사유가 아니며, 재생성이 영구 차단되는 결함(H-22)을 이 판정 전환으로 없앤다. ──
@@ -811,7 +945,12 @@ def cmd_create(args) -> None:
                     ],
                 )
             _git_or_raise(wt_root, ["sparse-checkout", "init", "--cone"])
-            _git_or_raise(wt_root, ["sparse-checkout", "set", *cfg["repos"]])
+            # taskCapsuleCone은 monorepo 분기에서만 repos에 이어 전개한다(PLAN D-1).
+            # 기본값 []의 전개는 no-op이라 키 미지정 시 인자가 현행과 바이트 동일하다(C-1).
+            _git_or_raise(
+                wt_root,
+                ["sparse-checkout", "set", *cfg["repos"], *cfg["taskCapsuleCone"]],
+            )
             if not reuse:
                 _git_or_raise(wt_root, ["checkout", "-b", branch])
             # `--no-checkout`로 만든 worktree는 인덱스가 비어 있어 detached HEAD(신규)나 이미
@@ -829,10 +968,20 @@ def cmd_create(args) -> None:
     # ── (6) setup[]은 실행하지 않는다 (C-7 lazy) — 열거만 ──
     pending_setup = cfg["setup"]
 
-    _write_meta(project_root, args.task, cfg, branch, created, base_refs, pending_setup)
+    _write_meta(
+        project_root,
+        args.task,
+        cfg,
+        branch,
+        created,
+        base_refs,
+        pending_setup,
+        ownership=ownership,
+    )
     ok_response(
         command="create",
         task=args.task,
+        **ownership,
         layout=cfg["layout"],
         worktree_root=str(wt_root),
         branch=branch,
@@ -883,9 +1032,35 @@ def cmd_list(args) -> None:
     )
 
 
+def _assert_task_path_unambiguous(project_root: pathlib.Path, meta: dict) -> None:
+    """등록된 worktree 태스크와 같은 `task_folder`가 허브 `tasks/`에도 존재하면 자동 선택
+    없이 `TASK_PATH_AMBIGUOUS`로 차단한다(AC-7, harness/worktree.md §canonical path 발급 계약).
+
+    `task_ownership_version`이 없는 메타는 legacy이므로 판정 자체를 하지 않는다 — 기존 활성
+    슬롯의 태스크 위치를 실행 중 자동 이동하지 않는다는 D-9·TASK.md C-5의 직접 집행이다.
+    """
+    if meta.get("task_ownership_version") is None:
+        return
+    task_folder = meta.get("task_folder")
+    task_path = meta.get("task_path")
+    if not task_folder or not task_path:
+        return
+    hub_candidate = project_root / "tasks" / str(task_folder)
+    if not hub_candidate.exists():
+        return
+    if os.path.realpath(str(hub_candidate)) == os.path.realpath(str(task_path)):
+        return
+    err_response(
+        "TASK_PATH_AMBIGUOUS",
+        task_folder=task_folder,
+        candidates=[str(task_path), str(hub_candidate)],
+    )
+
+
 def cmd_status(args) -> None:
     project_root = _resolve_project_root(args.project_root)
     meta = _load_meta(project_root, args.task)
+    _assert_task_path_unambiguous(project_root, meta)
 
     entries_out = []
     for entry in meta.get("entries", []):
@@ -932,6 +1107,37 @@ def cmd_status(args) -> None:
     )
 
 
+def _pending_memory_index_requests(meta: dict) -> list:
+    """메타의 `task_path`로 태스크 캡슐 추적 파일을 읽어, 아직 처리 완료로 기록되지 않은
+    요청의 `body_sha256` 목록을 돌려준다(PLAN D-2/D-2b).
+
+    요청 "내용"은 캡슐 파일(`{task_path}/memory-index-request.json`)이, "처리 완료" 상태는
+    registry meta의 `memory_index_requests_resolved`가 소유한다. 캡슐 파일 부재는 요청 0건과
+    동치이므로 no-op으로 통과한다 — legacy 메타(`task_path` 없음)도 같은 경로로 통과한다.
+    """
+    task_path = meta.get("task_path")
+    if not task_path:
+        return []
+    request_file = pathlib.Path(str(task_path)) / MEMORY_INDEX_REQUEST_FILE
+    if not request_file.is_file():
+        return []
+    try:
+        doc = json.loads(request_file.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return []
+    if not isinstance(doc, dict):
+        return []
+    resolved = meta.get("memory_index_requests_resolved") or []
+    pending = []
+    for request in doc.get("requests") or []:
+        if not isinstance(request, dict):
+            continue
+        body_sha = request.get("body_sha256")
+        if body_sha and body_sha not in resolved and body_sha not in pending:
+            pending.append(body_sha)
+    return pending
+
+
 def cmd_remove(args) -> None:
     project_root = _resolve_project_root(args.project_root)
     meta = _load_meta(project_root, args.task)
@@ -939,6 +1145,21 @@ def cmd_remove(args) -> None:
 
     # ── (1) 가드 판정 — 첫 위반에서 즉시 반환. --force면 우회하고 계속 ──
     bypassed_guards = []
+
+    # memory index 요청 가드 — worktree를 회수하면 캡슐 파일도 함께 사라지므로, 미처리 요청이
+    # 남아 있으면 기존 3중 가드보다 먼저 거부한다(AC-11). 기존 가드와 같은 규율로 --force만
+    # 우회할 수 있고, 우회하면 bypassed_guards에 기록된다.
+    pending_requests = _pending_memory_index_requests(meta)
+    if pending_requests:
+        if args.force:
+            bypassed_guards.append("MEMORY_INDEX_REQUEST_PENDING")
+        else:
+            err_response(
+                "MEMORY_INDEX_REQUEST_PENDING",
+                task_path=meta.get("task_path"),
+                pending=pending_requests,
+            )
+
     for entry in entries:
         git_root = pathlib.Path(entry["repo"])
         wt_path = pathlib.Path(entry["path"])
@@ -995,6 +1216,308 @@ def cmd_remove(args) -> None:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# finalize 서브명령 — 재진입 path-scoped 판정 (PLAN D-3b, AC-10·AC-11)
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+def _normalize_repo_relative(raw: str) -> str | None:
+    """선언 집합과 관측 집합을 같은 표기로 맞춘다 — 레포 루트 상대 POSIX 경로(H-4).
+
+    표기가 어긋나면 부분집합 판정이 늘 거짓이 되어 재진입이 영구 차단되므로, 양쪽 입력을
+    반드시 이 함수 하나로 통과시킨다. 백슬래시 구분자·`./` 접두·중복 슬래시·`..` 세그먼트를
+    정규화하고, 레포 밖을 가리키거나 빈 경로가 되면 None을 돌려준다.
+    """
+    if not isinstance(raw, str):
+        return None
+    value = raw.strip().replace("\\", "/")
+    if not value:
+        return None
+    value = value.lstrip("/")
+    value = posixpath.normpath(value)
+    if value in (".", "..") or value.startswith("../"):
+        return None
+    return value
+
+
+def _parse_learning_candidates(done_text: str) -> list:
+    """DONE.md `## 회고적 학습 후보` 절의 선언 경로를 읽는다(harness/done-template.md).
+
+    형식 계약: 레포 루트 상대 POSIX 경로 1행 1건, 후보가 없으면 `없음` 한 줄. 경로 외 본문은
+    이 절에 오지 않으므로, 목록 마커(`-`/`*`/`+`)와 인라인 코드 백틱만 벗겨 정규화한다.
+    """
+    candidates = []
+    in_section = False
+    for line in done_text.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("#"):
+            heading = stripped.lstrip("#").strip()
+            in_section = heading == LEARNING_CANDIDATE_HEADING
+            continue
+        if not in_section or not stripped:
+            continue
+        entry = stripped
+        for marker in ("- ", "* ", "+ "):
+            if entry.startswith(marker):
+                entry = entry[len(marker) :].strip()
+                break
+        entry = entry.strip("`").strip()
+        if not entry or entry == "없음":
+            continue
+        normalized = _normalize_repo_relative(entry)
+        if normalized and normalized not in candidates:
+            candidates.append(normalized)
+    return candidates
+
+
+def _declared_attribution_paths(task_path: pathlib.Path) -> tuple:
+    """선언 집합 D = DONE.md 선언 경로 ∪ 항상 선언된 귀속 산출물 3종. (D, DONE.md 존재 여부)."""
+    done_file = task_path / DONE_FILE
+    declared = []
+    if done_file.is_file():
+        try:
+            declared = _parse_learning_candidates(done_file.read_text(encoding="utf-8"))
+        except OSError:
+            declared = []
+    for always in ATTRIBUTION_ALWAYS_DECLARED:
+        normalized = _normalize_repo_relative(always)
+        if normalized and normalized not in declared:
+            declared.append(normalized)
+    return declared, done_file.is_file()
+
+
+def _in_attribution_scope(path: str) -> bool:
+    """판정 범위는 `.opal/brain/**`와 `.opal/MEMORY.json`뿐이다 — 소스·태스크 문서의 dirty는
+    이 게이트의 판정 대상이 아니다(PLAN D-3b)."""
+    return path == ATTRIBUTION_MEMORY_FILE or path.startswith(ATTRIBUTION_SCOPE_PREFIX)
+
+
+def _observed_attribution_paths(wt_root: pathlib.Path) -> list:
+    """관측 집합 S — `git status --porcelain -z -uall` 결과를 판정 범위로 필터한다.
+
+    `-z`(NUL 구분)는 비ASCII 경로의 따옴표 감싸기를 구조적으로 없앤다(H-4). rename/copy
+    엔트리(`R`/`C`)는 NUL 토큰 2개(신규 경로 다음에 원본 경로)를 쓰므로 양쪽 모두 관측
+    대상으로 잡는다 — 선언된 page를 선언되지 않은 경로로 옮긴 변경을 놓치지 않기 위함이다.
+    `-uall`은 미추적 디렉토리를 파일 단위로 펼쳐 `dir/` 표기가 판정에 섞이지 않게 한다.
+    기존 이진 dirty 판정(`check_guards`)은 remove 경로 전용이며 여기서 쓰지 않는다.
+    """
+    result = _run_git(["status", "--porcelain", "-z", "-uall"], wt_root)
+    if result.returncode != 0:
+        raise GitFailure(result.stderr)
+    tokens = [token for token in result.stdout.split("\0")]
+    observed = []
+    index = 0
+    while index < len(tokens):
+        token = tokens[index]
+        index += 1
+        if not token:
+            continue
+        # 각 엔트리는 `XY <path>` — 상태 코드 2글자 + 공백 1개 뒤가 경로다.
+        if len(token) < 4 or token[2] != " ":
+            continue
+        status_code = token[:2]
+        paths = [token[3:]]
+        if "R" in status_code or "C" in status_code:
+            if index < len(tokens):
+                paths.append(tokens[index])
+                index += 1
+        for raw_path in paths:
+            normalized = _normalize_repo_relative(raw_path)
+            if not normalized or not _in_attribution_scope(normalized):
+                continue
+            if normalized not in observed:
+                observed.append(normalized)
+    return observed
+
+
+def _memory_json_unallowed_diff_keys(wt_root: pathlib.Path) -> list:
+    """`.opal/MEMORY.json`의 선행 diff에서 allocator의 `last_task_number` 외 변경 키를 돌려준다
+    (제안서 §6.3). HEAD 사본이나 작업본을 JSON으로 읽을 수 없으면 판정 불능이므로 전체를
+    위반으로 본다 — 조용한 통과를 만들지 않는다."""
+    head = _run_git(["show", f"HEAD:{ATTRIBUTION_MEMORY_FILE}"], wt_root)
+    if head.returncode != 0:
+        return ["<untracked>"]
+    try:
+        before = json.loads(head.stdout)
+        after = json.loads(
+            (wt_root / ATTRIBUTION_MEMORY_FILE).read_text(encoding="utf-8")
+        )
+    except (json.JSONDecodeError, OSError):
+        return ["<unparsable>"]
+    if not isinstance(before, dict) or not isinstance(after, dict):
+        return ["<not_an_object>"]
+    changed = [
+        key
+        for key in sorted(set(before) | set(after))
+        if before.get(key) != after.get(key)
+    ]
+    return [key for key in changed if key not in ATTRIBUTION_MEMORY_ALLOWED_DIFF_KEYS]
+
+
+def _mark_requests_applied(task_path: pathlib.Path, applied: list) -> bool:
+    """캡슐 파일의 해당 요청 `status`를 `applied`로 바꾼다(D-2b). 요청 "내용"은 캡슐 파일이,
+    "처리 완료" 상태는 registry meta가 소유하므로 이 쓰기는 캡슐 쪽 표시일 뿐이다."""
+    if not applied:
+        return False
+    request_file = task_path / MEMORY_INDEX_REQUEST_FILE
+    if not request_file.is_file():
+        return False
+    try:
+        doc = json.loads(request_file.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return False
+    if not isinstance(doc, dict):
+        return False
+    touched = False
+    for request in doc.get("requests") or []:
+        if isinstance(request, dict) and request.get("body_sha256") in applied:
+            request["status"] = "applied"
+            touched = True
+    if touched:
+        request_file.write_text(
+            json.dumps(doc, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
+    return touched
+
+
+def _save_meta(project_root: pathlib.Path, task: str, meta: dict) -> None:
+    meta_path = _meta_path(project_root, task)
+    meta_path.parent.mkdir(parents=True, exist_ok=True)
+    meta_path.write_text(
+        json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+
+
+def cmd_finalize(args) -> None:
+    """merge 후 귀속 후처리를 확정한다(제안서 §6.3, PLAN D-3b).
+
+    `S ⊆ D`이면 재개를 허용하고, 아니면 `ATTRIBUTION_COMMIT_BLOCKED`로 위반 경로 목록과 함께
+    거부한다. 상태 전이는 `completed_unmerged → attribution_pending → closed`이며, commit 생성이나
+    clean 검증이 실패하면 `attribution_pending`에 머문다.
+    """
+    project_root = _resolve_project_root(args.project_root)
+    meta = _load_meta(project_root, args.task)
+    _assert_task_path_unambiguous(project_root, meta)
+
+    raw_task_path = meta.get("task_path")
+    if not raw_task_path:
+        err_response("TASK_PATH_MISSING", task=args.task, meta_path=str(_meta_path(project_root, args.task)))
+    task_path = pathlib.Path(str(raw_task_path))
+    wt_root = pathlib.Path(
+        str(meta.get("task_home") or meta.get("worktree_root") or "")
+    )
+    if not wt_root or not wt_root.exists():
+        err_response("WORKTREE_NOT_FOUND", path=str(wt_root))
+
+    # ── (1) attribution_pending 진입 — 아래 검증이 하나라도 실패하면 이 상태에 머문다 ──
+    previous_state = meta.get(ATTRIBUTION_STATE_KEY) or ATTRIBUTION_STATE_UNMERGED
+    meta[ATTRIBUTION_STATE_KEY] = ATTRIBUTION_STATE_PENDING
+    _save_meta(project_root, args.task, meta)
+
+    declared, done_found = _declared_attribution_paths(task_path)
+    try:
+        observed = _observed_attribution_paths(wt_root)
+    except GitFailure as exc:
+        err_response(
+            "GIT_COMMAND_FAILED",
+            stderr=str(exc),
+            state=ATTRIBUTION_STATE_PENDING,
+        )
+
+    # ── (2) S ⊆ D 판정 — 선언·관측 양쪽이 이미 같은 정규화를 통과했다 ──
+    violations = [path for path in observed if path not in declared]
+    if ATTRIBUTION_MEMORY_FILE in observed and ATTRIBUTION_MEMORY_FILE not in violations:
+        unallowed = _memory_json_unallowed_diff_keys(wt_root)
+        if unallowed:
+            violations.append(ATTRIBUTION_MEMORY_FILE)
+    if violations:
+        err_response(
+            "ATTRIBUTION_COMMIT_BLOCKED",
+            task=args.task,
+            state=ATTRIBUTION_STATE_PENDING,
+            previous_state=previous_state,
+            declared=declared,
+            observed=observed,
+            violations=violations,
+            done_file=str(task_path / DONE_FILE),
+            done_file_found=done_found,
+        )
+
+    # ── (3) 귀속 commit — 관측된 대상만 정확히 stage한다(사용자의 다른 변경은 건드리지 않는다) ──
+    committed = False
+    if observed:
+        # observed 경로만 정확히 stage한다 — 사용자의 다른 미커밋 변경은 건드리지 않는다.
+        # `-A`로 추가·수정·삭제를 함께 잡되 경로마다 따로 호출한다: rename으로 이미 staged
+        # deletion이 된 원본 경로는 index·worktree 어디에도 없어 pathspec 불일치로 실패하는데
+        # (실측), 그 변경은 이미 index에 있으므로 무시해도 커밋에 포함된다.
+        for path in observed:
+            add = _run_git(["add", "-A", "--", path], wt_root)
+            if add.returncode != 0 and "did not match any files" not in add.stderr:
+                err_response(
+                    "ATTRIBUTION_COMMIT_FAILED",
+                    state=ATTRIBUTION_STATE_PENDING,
+                    stage="add",
+                    path=path,
+                    stderr=add.stderr,
+                )
+        commit = _run_git(
+            ["commit", "-m", ATTRIBUTION_COMMIT_TEMPLATE.format(task=args.task), "--", *observed],
+            wt_root,
+        )
+        if commit.returncode != 0:
+            err_response(
+                "ATTRIBUTION_COMMIT_FAILED",
+                state=ATTRIBUTION_STATE_PENDING,
+                stage="commit",
+                stderr=commit.stderr,
+            )
+        committed = True
+
+    # ── (4) clean 검증 — 전체 git status가 아니라 판정 범위의 잔여 0건만 확인한다 ──
+    try:
+        remaining = _observed_attribution_paths(wt_root)
+    except GitFailure as exc:
+        err_response(
+            "GIT_COMMAND_FAILED", stderr=str(exc), state=ATTRIBUTION_STATE_PENDING
+        )
+    if remaining:
+        err_response(
+            "ATTRIBUTION_COMMIT_FAILED",
+            state=ATTRIBUTION_STATE_PENDING,
+            stage="clean",
+            remaining=remaining,
+        )
+
+    # ── (5) 처리 완료 기록 — index row commit 확정 뒤에만 append한다(D-2b) ──
+    applied = _pending_memory_index_requests(meta)
+    resolved = list(meta.get("memory_index_requests_resolved") or [])
+    for body_sha in applied:
+        if body_sha not in resolved:
+            resolved.append(body_sha)
+    meta["memory_index_requests_resolved"] = resolved
+    capsule_updated = _mark_requests_applied(task_path, applied)
+
+    meta[ATTRIBUTION_STATE_KEY] = ATTRIBUTION_STATE_CLOSED
+    _save_meta(project_root, args.task, meta)
+
+    ok_response(
+        command="finalize",
+        task=args.task,
+        state=ATTRIBUTION_STATE_CLOSED,
+        previous_state=previous_state,
+        task_path=str(task_path),
+        worktree_root=str(wt_root),
+        declared=declared,
+        observed=observed,
+        violations=[],
+        committed=committed,
+        done_file_found=done_found,
+        memory_index_requests_applied=applied,
+        memory_index_requests_resolved=resolved,
+        capsule_updated=capsule_updated,
+    )
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # CLI
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -1008,6 +1531,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_create.add_argument("--task", required=True)
     p_create.add_argument("--slug", default=None)
     p_create.add_argument("--skill", default=None)
+    p_create.add_argument("--task-folder", default=None, dest="task_folder")
     p_create.set_defaults(func=cmd_create)
 
     p_list = subparsers.add_parser("list")
@@ -1024,6 +1548,11 @@ def build_parser() -> argparse.ArgumentParser:
     p_remove.add_argument("--task", required=True)
     p_remove.add_argument("--force", action="store_true")
     p_remove.set_defaults(func=cmd_remove)
+
+    p_finalize = subparsers.add_parser("finalize")
+    p_finalize.add_argument("--project-root", required=True)
+    p_finalize.add_argument("--task", required=True)
+    p_finalize.set_defaults(func=cmd_finalize)
 
     p_init = subparsers.add_parser("init")
     p_init.add_argument("--project-root", required=True)

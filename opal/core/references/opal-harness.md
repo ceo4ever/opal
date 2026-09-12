@@ -24,7 +24,7 @@ receipt 계약을 충족한 뒤 진행한다.
 |------|------------|
 | Guards·승인 경계·자동 루핑 상한 | `harness/guards.md` |
 | 모드 판정과 서브 하네스 라우팅 | `harness/modes.md` |
-| 워크트리 축과 허브 루트 해석 | `harness/worktree.md` |
+| 워크트리 축과 task/allocator root 계약 | `harness/worktree.md` |
 | 런타임 capability 주입 | `harness/capability.md` |
 | PM 활성화 | `pm/activation.md` |
 | State | `harness/state.md` |

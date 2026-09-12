@@ -5,7 +5,7 @@
   "domain": "console",
   "description": "파서 RED-first 테스트 — S-4 시나리오 (L2/M1). memory_parser는 fixture_doc_populated.json(MEMORY.json 원본) 1:1 대조를 검증 기준으로 삼는다(H-5: 현행 오프바이원 출력을 기준선으로 잡지 않음). 그 외 파서는 실 파일 + mtime 불변 검증",
   "exports": ["[T021/L2-R3] test_memory_parser_returns_structure", "[T021/L2-R3] test_memory_parser_mtime_invariant", "[T021/L2-R3] test_memory_file_parser", "[T021/L2-R3] test_project_parser", "[T021/L2-R3] test_markdown_reader"],
-  "depends": ["parsers.memory_parser", "parsers.memory_file_parser", "parsers.project_parser", "parsers.markdown_reader", "paths.hub_root"],
+  "depends": ["parsers.memory_parser", "parsers.memory_file_parser", "parsers.project_parser", "parsers.markdown_reader"],
   "task": "078"
 }
 """
@@ -14,13 +14,12 @@ import os
 import pytest
 from pathlib import Path
 
-from dashboard.backend.paths import hub_root
-
 
 # ─── 실 프로젝트 경로 ─────────────────────────────────────────
-# 109: 워크트리에서도 `.opal/AGENT.md` 등 허브 고정 자산을 보도록 hub_root()로 정규화.
-# 허브 실행 시엔 항등이므로 결과가 변하지 않는다 (opal-harness.md §2.5 (4)).
-AI_FRAMEWORK_ROOT = Path(hub_root(str(Path(__file__).parents[3])))
+# 118: 자기위치 계산 — 이 테스트 파일이 사는 작업본이 곧 기준 루트다. 워크트리
+# 안에서 실행하면 그 워크트리가 기준이 된다(허브로 수렴시키지 않는다).
+# 루트 소유권 계약: opal/core/references/harness/worktree.md §task root와 allocator root 계약
+AI_FRAMEWORK_ROOT = Path(__file__).resolve().parents[3]
 MEMORY_MD = AI_FRAMEWORK_ROOT / ".opal" / "MEMORY.md"
 MEMORY_DIR = AI_FRAMEWORK_ROOT / ".opal" / "memory"
 PROJECT_MD = AI_FRAMEWORK_ROOT / "docs" / "PROJECT.md"

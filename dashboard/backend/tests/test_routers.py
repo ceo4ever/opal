@@ -76,8 +76,7 @@
     "config",
     "adapters.brain_session",
     "cache",
-    "stats",
-    "paths"
+    "stats"
   ],
   "task": "061",
   "scenarios": [
@@ -1005,13 +1004,11 @@ class TestConsoleConfigEndpoints:
 import statistics
 import urllib.parse
 
-from dashboard.backend.paths import hub_root
-
-# [109 ①] 워크트리에서 실행하면 parents[3]은 워크트리 루트가 되고 그 아래엔 tasks/가
-# 없다 — hub_root()로 정규화해 항상 허브 루트를 가리키게 한다. test_config.py·
-# test_deploy_smoke.py는 소스 트리 내용(설정 기본값·설치 스크립트) 자체를 검증하므로
-# 정규화하면 안 된다(H-7, opal-harness.md §2.5 (4) 4항) — 그 두 파일은 손대지 않는다.
-_T103_ROOT = hub_root(str(Path(__file__).resolve().parents[3]))
+# [118 ①] 자기위치 계산 — parents[3]은 이 테스트 파일이 사는 작업본의 루트다.
+# 워크트리 안에서 실행하면 그 워크트리 자신이 기준 루트가 된다(허브로 수렴시키지
+# 않는다). 태스크 캡슐의 거처는 허브 고정이 아니라 루트 소유권으로 정해지기 때문이다
+# — 계약 원문: opal/core/references/harness/worktree.md §task root와 allocator root 계약.
+_T103_ROOT = str(Path(__file__).resolve().parents[3])
 
 
 def _t103_find_task_id(root: str, prefix: str) -> str:

@@ -38,6 +38,8 @@ manifest 문서는 다음 root token만 사용한다.
 
 - `{source_root}`: framework source checkout
 - `{deployed_root}`: 설치된 OPAL root(기본 `~/.opal`)
-- `{project_root}`: 현재 프로젝트 hub root
+- `{project_root}`: 현재 태스크의 task root
 
 CLI의 `--source-root`, `--deployed-root`, `--project-root`, `--manifest`로 테스트/설치 경계를 명시할 수 있다. 토큰 경로가 root 밖으로 탈출하면 거부한다. OS나 AI 플랫폼 이름에 따른 분기는 없다.
+
+`--project-root`가 없으면 cwd에서 `.git`과 `.opal/AGENT.md`를 **함께** 가진 가장 가까운 조상을 task root로 쓴다. 경로에 `.opal-worktrees` 세그먼트가 있다는 이유로 허브에 수렴하지 않으므로, 자기완결 워크트리(자신의 `.opal/AGENT.md` 보유)는 그 워크트리 자신이 `{project_root}`다. 탐색 상한은 가장 가까운 Git 경계이며 — 임의 조상의 `~/.opal` 설치본을 프로젝트로 오인하지 않기 위함이다 — 비-Git 프로젝트는 `--project-root`를 명시해야 한다. 루트 소유권 계약의 원문은 `opal/core/references/harness/worktree.md` §task root와 allocator root 계약이 소유한다.
