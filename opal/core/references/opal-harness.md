@@ -53,7 +53,6 @@ receipt 계약을 충족한 뒤 진행한다.
 | `opal-harness.md §1.5 RED-first` | `harness/red-first.md` |
 | `opal-harness.md §2 모듈 구조` 중 모드 라우팅 | `harness/modes.md` |
 | `opal-harness.md §2` 중 QA·인용·분석 규칙 | `harness/qa-standards.md` · `harness/citation-rules.md` · `harness/analysis-core.md` |
-| `opal-harness.md §2.5 워크스페이스 축` | 축·허브 해석은 `harness/worktree.md`, 생성·설정 부재·복구 절차는 `harness/task-process.md` 스텝 4.5 |
 | `opal-harness.md §3 State` | `harness/state.md` · `harness/state-template.md` · `harness/additional-work.md` |
 | `opal-harness.md §4 TASK 공통 프로세스` | `harness/task-process.md` |
 | `opal-harness.md §5 Observability` | `harness/observability.md` |

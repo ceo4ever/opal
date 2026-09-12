@@ -81,7 +81,7 @@ docs/ 하위 문서를 수정(Write/Edit)하기 직전에, 해당 파일이 이�
 5. `.gitignore`에 `.opal-worktrees/` 한 줄을 **멱등 보장**한다 — 없으면 추가, 이미 있으면 파일을 변경하지 않는다.
    - 초기화·최신화 두 모드 모두에서 수행한다(아직 `--wt`를 쓰지 않는 기존 프로젝트도 선반영).
    - 이유: 미비 시 `--wt` 사용 순간 루트 레포가 worktree 사본 전체를 변경분으로 인식한다.
-   - 축 정의: `opal/core/references/opal-harness.md` §2.5.
+   - 축 정의: `opal/core/references/harness/worktree.md` §모드 축과 직교하는 별개 축.
 
 ---
 

@@ -1025,7 +1025,7 @@ bash ~/.opal/tools/tool-scan/run.sh check <도구>               # 설치/실행
 
 - `remove`의 가드 판정 순서는 dirty→unpushed→unmerged 고정, 첫 위반에서 즉시 반환. `--force` 지정 시 위반을 우회하고 `bypassed_guards[]`에 코드를 수집하며 `forced:true`가 stdout에 기록된다.
 - exit code: `ok:true` → 0 / `ok:false`(err_response 경유) → 1.
-- 축 정의·`--wt` 미사용 시 현행 동작 100% 유지 등 하네스 규약의 SSOT는 `opal/core/references/opal-harness.md` §2.5.
+- 축 정의와 `--wt` 미사용 시 현행 동작 보장은 `opal/core/references/harness/worktree.md` §모드 축과 직교하는 별개 축 · §`--wt` 미사용 시 = 현행 동작 100% 유지가 소유한다. 생성·복구 절차는 `harness/task-process.md` 스텝 4.5다.
 
 ---
 
