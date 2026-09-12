@@ -3,8 +3,8 @@
   "module": "event_loader",
   "layer": "util",
   "domain": "opal-tools",
-  "description": "이벤트 manifest의 문서 전문을 로드하고 해시 receipt를 생성·검증·정적 검사·측정하는 플랫폼 독립 CLI",
-  "exports": ["main", "load_event", "verify_receipt", "static_check", "measure_event"]
+  "description": "이벤트 manifest 문서·receipt와 session.project 사용자 브리핑을 결정론적으로 생성·검증하는 플랫폼 독립 CLI",
+  "exports": ["main", "load_event", "verify_receipt", "static_check", "measure_event", "compose_project_brief", "project_brief"]
 }
 """
 
@@ -17,6 +17,7 @@ import json
 import os
 from pathlib import Path
 import re
+import subprocess
 import sys
 import time
 from typing import Any, Iterable
@@ -493,6 +494,134 @@ def measure_event(args: argparse.Namespace) -> dict[str, Any]:
     }
 
 
+def _run_tool_json(command: list[str]) -> dict[str, Any] | None:
+    """Run a read-only sibling tool and discard failed or malformed results."""
+    try:
+        completed = subprocess.run(
+            command,
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=5,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    if completed.returncode != 0:
+        return None
+    try:
+        payload = json.loads(completed.stdout)
+    except json.JSONDecodeError:
+        return None
+    if not isinstance(payload, dict) or payload.get("ok") is not True:
+        return None
+    return payload
+
+
+def _brief_value(value: Any) -> str:
+    """Normalize tool-owned values to one user-visible Markdown line."""
+    return " ".join(str(value or "").split())
+
+
+def compose_project_brief(
+    state_payload: dict[str, Any] | None,
+    memory_payload: dict[str, Any] | None,
+    *,
+    max_bytes: int = 1024,
+) -> str:
+    """Compose the exact bounded prefix for a session.project first response."""
+    state: dict[str, str] | None = None
+    if isinstance(state_payload, dict) and state_payload.get("ok") is True:
+        items = state_payload.get("items")
+        if isinstance(items, list) and items and isinstance(items[0], dict):
+            candidate = {
+                "title": _brief_value(items[0].get("title")),
+                "stage": _brief_value(items[0].get("stage")),
+                "next_action": _brief_value(items[0].get("next_action")),
+            }
+            if all(candidate.values()):
+                state = candidate
+
+    reviews: list[dict[str, str]] = []
+    if isinstance(memory_payload, dict) and memory_payload.get("ok") is True:
+        rows = memory_payload.get("review_rows")
+        if isinstance(rows, list):
+            for row in rows[:2]:
+                if not isinstance(row, dict):
+                    continue
+                candidate = {
+                    "title": _brief_value(row.get("title")),
+                    "summary": _brief_value(row.get("summary")),
+                }
+                if all(candidate.values()):
+                    reviews.append(candidate)
+
+    def render() -> str:
+        lines = ["[부트스트랩] ✅ session.project ⏳ PM"]
+        if state is not None:
+            lines.extend([
+                "",
+                "📌 이어보기",
+                f"- {state['title']} — {state['stage']} · 다음: {state['next_action']}",
+            ])
+        if reviews:
+            lines.extend(["", "📌 우선 검토"])
+            lines.extend(f"- {row['title']} — {row['summary']}" for row in reviews)
+        return "\n".join(lines)
+
+    markdown = render()
+    mutable = ([state] if state is not None else []) + reviews
+    while len(markdown.encode("utf-8")) > max_bytes:
+        candidates = [
+            (len(value.encode("utf-8")), row, key)
+            for row in mutable
+            for key, value in row.items()
+            if value
+        ]
+        if not candidates:
+            break
+        _, row, key = max(candidates, key=lambda item: item[0])
+        row[key] = row[key][:-1]
+        markdown = render()
+    return markdown
+
+
+def project_brief(args: argparse.Namespace) -> dict[str, Any]:
+    """Build a ready-to-emit session.project briefing from the two SSOT tools."""
+    roots = _roots(args)
+    project_root = roots["project_root"]
+    tools_root = Path(__file__).resolve().parents[1]
+    state_payload = _run_tool_json([
+        sys.executable,
+        str(tools_root / "state-tool" / "state_tool.py"),
+        "boot-summary",
+        str(project_root),
+    ])
+    memory_file = project_root / ".opal" / "MEMORY.json"
+    memory_payload = None
+    if memory_file.is_file():
+        memory_payload = _run_tool_json([
+            sys.executable,
+            str(tools_root / "memory-tool" / "memory_tool.py"),
+            "show",
+            "--file",
+            str(memory_file),
+            "--boot-brief",
+            "--max-bytes",
+            "1024",
+            "--memories",
+            "3",
+            "--history",
+            "0",
+        ])
+    markdown = compose_project_brief(state_payload, memory_payload)
+    return {
+        "ok": True,
+        "command": "project-brief",
+        "markdown": markdown,
+        "bytes": len(markdown.encode("utf-8")),
+    }
+
+
 def _add_context_options(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--manifest", help="events.json 경로")
     parser.add_argument("--source-root", help="framework source checkout root")
@@ -527,6 +656,14 @@ def _parser() -> argparse.ArgumentParser:
     measure_parser.add_argument("--iterations", type=int, default=3)
     _add_context_options(measure_parser)
     measure_parser.set_defaults(handler=measure_event)
+
+    brief_parser = subparsers.add_parser(
+        "project-brief",
+        help="session.project 첫 응답용 상태·검토 브리핑 렌더",
+    )
+    brief_parser.add_argument("--json", action="store_true", help="Markdown 대신 JSON envelope 출력")
+    _add_context_options(brief_parser)
+    brief_parser.set_defaults(handler=project_brief)
     return parser
 
 
@@ -548,7 +685,10 @@ def main(argv: list[str] | None = None) -> int:
     except OSError as exc:
         _emit({"ok": False, "command": args.command, "error": "io_error", "detail": str(exc)})
         return 1
-    _emit(payload)
+    if args.command == "project-brief" and not args.json:
+        print(payload["markdown"])
+    else:
+        _emit(payload)
     return 0 if payload.get("ok") else 1
 
 

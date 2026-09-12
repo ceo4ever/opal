@@ -225,7 +225,7 @@ TEST-SCENARIO 단계를 "목표 달성 검증"으로 재정의 — 루브릭 채
 | `docs/PROJECT.md` | 프로젝트 정의·문서 레지스트리 (SSOT) | 프로젝트 개요, 원칙, 문서 허브, PM 컨텍스트 선별 기준 | Framework | `pm.activate` 이벤트. 세션 부트에서는 로드 금지, 이후 워커 디스패치 문서 선별에 사용 |
 | `docs/ARCHITECTURE.md` | 시스템 아키텍처 | 구조, 컴포넌트 관계, 배포 모델 | Framework | PROJECT.md 레지스트리가 구조 변경·영향 분석에 필요하다고 지시할 때 |
 | `docs/CONVENTIONS.md` | 코드 및 문서 컨벤션 | 네이밍, 파일 구조, 커밋 **메시지 형식·단위**, 구현 규칙(디스패치/@header/Citation/State/도구·배포 경계·플랫폼 분기). 실행 규칙 원문은 `opal/core/references/harness/`의 owner 문서, 문서 이력 규칙은 `opal/core/references/opal-doc-standard.md` §5가 소유 | Framework | `pm.activate` 후 PROJECT 레지스트리가 구현·문서 컨벤션 판단에 필요하다고 지시할 때 |
-| `.opal/MEMORY.json` | 프로젝트 메모리 인덱스 (JSON SSOT) | 메모리·작업 히스토리·피드백 추적 (`memory/` 하위 메모리 파일 인덱스). 변경은 `memory-tool`만 수행 | Framework | `session.project`에서 `memory-tool show --boot-brief --max-bytes 1024 --memories 3 --history 0` 출력만 선택 로드. 본문·전체 history는 로드 금지 |
+| `.opal/MEMORY.json` | 프로젝트 메모리 인덱스 (JSON SSOT) | 메모리·작업 히스토리·피드백 추적 (`memory/` 하위 메모리 파일 인덱스). 변경은 `memory-tool`만 수행 | Framework | `session.project`에서 `event-loader project-brief`가 `memory-tool show --boot-brief`를 통해 검토 후보만 선택 로드. 본문·전체 history는 로드 금지 |
 | `README.md` | 프레임워크 공개 소개 문서 | Pilot 개념, 사용 사례, 프레임워크 철학 정의 | Framework | Pilot 추가/변경 시, 사용자 대면 문서 작업 시, 프레임워크 철학/방향 관련 작업 시 |
 | `docs/architecture-diagram/opal_framework_architecture.html` | 프레임워크 구조 다이어그램 (시각 SSOT) | 3층 구조·파이프라인·도구 관계 시각화 (태스크 086 산출) | Framework | 구조 설명·온보딩 시 |
 | `docs/SECURITY.md` | 프로젝트 보안 기준 | opal-security-checker가 OWASP/CWE/SANS Base에 병합하는 프로젝트 누적 기준 | Framework | 보안 체크(opgc CHECK) 시 |

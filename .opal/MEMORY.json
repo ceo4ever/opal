@@ -21,6 +21,13 @@
   ],
   "history": [
     {
+      "title": "117 세션 브리핑 출력 집행",
+      "date": "2026-09-12",
+      "stage": "완료",
+      "path": "tasks/117-260912-opd-세션-브리핑-출력-집행/",
+      "result": "event-loader가 상태·메모리를 완성 Markdown으로 조립하고 네 플랫폼이 stdout을 그대로 출력하도록 강화; 소스·설치본 감사 및 시나리오 6/6 통과"
+    },
+    {
       "title": "116 부트 행동 필요 브리핑",
       "date": "2026-09-11",
       "stage": "완료",
@@ -47,13 +54,6 @@
       "stage": "완료",
       "path": "tasks/112-260909-opd-파일럿-스킬-구조통합/",
       "result": "SDD 전용 단계 3종을 opal-pilot-sdd 내부로 이동하고 stale verify를 REVIEW 계약으로 흡수; opd/opds를 canonical opal-pilot-dev Full/Short profile로 통합하면서 16/11행 상태·alias 호환 유지; 변경 문서 수기 이력 제거와 실제 설치본 검증 9/9 PASS"
-    },
-    {
-      "title": "114 스킬위저드 신설",
-      "date": "2026-09-09",
-      "stage": "완료",
-      "path": "tasks/114-260903-opd-스킬위저드-신설/",
-      "result": "프로젝트 적합 커뮤니티 스킬을 제안하고 프로젝트 스코프(`{project}/.opal/community-skills/`)에 설치하는 opal-skill-wizard(osw)를 신설했다. 전역은 opal-skill-manager가 계속 담당하고 wizard는 manager를 호출하지 않으며 검색·clone·scan-risk 검사·복사·registry 기록을 직접 수행한다. skill-registry.js의 loadAllSkills()를 main→community→user→project 4소스로 additive 확장(기존 3소스 무수정)하고 findProjectRoot(walk-up, 마커는 `.opal/` 디렉토리·홈 경계 정지·homedir realpath) / loadProjectRegistry(파손 시 null) / resolveProjectSkillPath(CWE-22 루트 하위 검증) 신설 + matchCommand project 분기(scope 필드) + getCommand resolved_path additive + validate project 분기를 추가했다(+102/-2). 신규 테스트 11 pass·회귀 41 pass·시나리오 35/35 PASS·목표-커버 게이트 iteration 2 수렴(평균 1.67)·컨벤션 Critical/High 0. 최대 산출은 검증 2원화의 실효 입증 — 작성자≠검증자 분리 지점마다 결함이 나왔고 PM 귀책 3건이 독립 검증자에게 적발됐다(PLAN 내부 자기모순: 「동일한 마커」라 쓰고 파일 vs 디렉토리로 갈림 / 게이트 iteration 1 fail: 보안 게이트조차 정적 grep / 매핑 표의 존재하지 않는 테스트 케이스 인용). 테스트는 PLAN 설계 갭도 검출(validate에 project 분기 부재로 R-7 AC 원천 성립 불가). 방법론 2건 — 부작용 관측(파일 생성 유무로 실행-시간 검증 M1 자동화, 설치 전후 전역 무변화가 manager 경로 미사용 증거)과 음성 통제 3회. 사고 — PLAN 워커 API 529 3회 연속 빈손 종료 후 7시간 뒤 4차 성공, 캡틴 질문으로 모델 강등 권고 철회, **채번 오류**: 로컬 MEMORY.json이 stale(105)인 상태에서 106을 발급받아 커밋까지 갔으나 원격은 이미 113이었다 — 커밋 해제·pull·106→114 전수 재채번(23파일 145건)·재커밋으로 교정했다. 미수행: TS-021·022 인터뷰 M3 수동 확인. 이월 5건(op-scenario-gate 미등재는 원격 111이 이미 해소)."
     }
   ]
 }

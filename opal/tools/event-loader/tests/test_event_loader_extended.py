@@ -3,7 +3,7 @@
   "module": "test_event_loader_extended",
   "layer": "test",
   "domain": "opal-tools",
-  "description": "14개 이벤트의 load/verify, zero-payload session, project-root 격리 계약 회귀",
+  "description": "이벤트 load/verify, zero-payload session, project-root 격리와 ready-to-emit 프로젝트 브리핑 계약 회귀",
   "exports": [],
   "depends": ["event_loader"]
 }
@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+import runpy
 import subprocess
 import sys
 import tempfile
@@ -204,6 +205,124 @@ class EventLoaderExtendedContractTest(unittest.TestCase):
         self.assertEqual(payload["document"], "project-agent")
         self.assertEqual(Path(payload["path"]), cwd / ".opal" / "AGENT.md")
         self.assertNotEqual(Path(payload["path"]), home / ".opal" / "AGENT.md")
+
+    def test_project_brief_renders_ready_to_emit_markdown(self):
+        with tempfile.TemporaryDirectory() as directory:
+            fixture = Path(directory)
+            task_dir = fixture / "tasks" / "999-fixture"
+            task_dir.mkdir(parents=True)
+            (task_dir / "state.json").write_text(
+                json.dumps({
+                    "task_id": "999-fixture",
+                    "current_status": "in_progress",
+                    "updated_at": "2026-09-12 08:00:00",
+                    "next_action": "계속 진행",
+                    "rows": [{"status": "in_progress", "stage": "EXECUTE"}],
+                }, ensure_ascii=False),
+                encoding="utf-8",
+            )
+            memory = fixture / ".opal" / "MEMORY.json"
+            memory.parent.mkdir()
+            memory.write_text(json.dumps({
+                "version": 1,
+                "last_task_number": 999,
+                "memories": [{
+                    "title": "검토 후보",
+                    "date": "2026-09-12",
+                    "type": "improvement",
+                    "status": "candidate",
+                    "file": "memory/candidate.md",
+                    "summary": "출력 계약 확인",
+                }],
+                "history": [],
+            }, ensure_ascii=False), encoding="utf-8")
+
+            completed = subprocess.run(
+                [sys.executable, str(LOADER), "project-brief",
+                 "--source-root", str(REPO_ROOT),
+                 "--project-root", str(fixture)],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        self.assertEqual(
+            completed.stdout.rstrip("\n"),
+            "[부트스트랩] ✅ session.project ⏳ PM\n\n"
+            "📌 이어보기\n"
+            "- 999-fixture — EXECUTE · 다음: 계속 진행\n\n"
+            "📌 우선 검토\n"
+            "- 검토 후보 — 출력 계약 확인",
+        )
+
+    def test_project_brief_empty_project_keeps_short_prefix(self):
+        with tempfile.TemporaryDirectory() as directory:
+            completed = subprocess.run(
+                [sys.executable, str(LOADER), "project-brief",
+                 "--source-root", str(REPO_ROOT),
+                 "--project-root", directory],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        self.assertEqual(
+            completed.stdout,
+            "[부트스트랩] ✅ session.project ⏳ PM\n",
+        )
+
+    def test_project_brief_output_is_bounded_to_1024_utf8_bytes(self):
+        with tempfile.TemporaryDirectory() as directory:
+            fixture = Path(directory)
+            task_dir = fixture / "tasks" / "999-fixture"
+            task_dir.mkdir(parents=True)
+            (task_dir / "state.json").write_text(
+                json.dumps({
+                    "task_id": "긴제목" * 300,
+                    "current_status": "in_progress",
+                    "updated_at": "2026-09-12 08:00:00",
+                    "next_action": "긴다음행동" * 300,
+                    "rows": [{"status": "in_progress", "stage": "EXECUTE"}],
+                }, ensure_ascii=False),
+                encoding="utf-8",
+            )
+            completed = subprocess.run(
+                [sys.executable, str(LOADER), "project-brief",
+                 "--source-root", str(REPO_ROOT),
+                 "--project-root", str(fixture)],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        self.assertLessEqual(len(completed.stdout.rstrip("\n").encode("utf-8")), 1024)
+        self.assertTrue(completed.stdout.startswith("[부트스트랩] ✅ session.project ⏳ PM"))
+
+    def test_project_brief_omits_only_the_failed_query_block(self):
+        compose = runpy.run_path(str(LOADER))["compose_project_brief"]
+        state_payload = {
+            "ok": True,
+            "items": [{
+                "title": "999-fixture",
+                "stage": "TEST",
+                "next_action": "검증 계속",
+            }],
+        }
+        memory_payload = {
+            "ok": True,
+            "review_rows": [{"title": "검토 후보", "summary": "확인 필요"}],
+        }
+
+        state_only = compose(state_payload, None)
+        memory_only = compose(None, memory_payload)
+
+        self.assertIn("📌 이어보기", state_only)
+        self.assertNotIn("📌 우선 검토", state_only)
+        self.assertNotIn("📌 이어보기", memory_only)
+        self.assertIn("📌 우선 검토", memory_only)
 
 
 if __name__ == "__main__":

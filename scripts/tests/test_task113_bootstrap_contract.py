@@ -3,7 +3,7 @@
   "module": "test_task113_bootstrap_contract",
   "layer": "test",
   "domain": "opal-bootstrap",
-  "description": "태스크 113 source-only 통합 감사 CLI의 자동 회귀 진입점",
+  "description": "source-only 부트·사용자 브리핑 통합 감사 CLI의 자동 회귀 진입점",
   "exports": [],
   "depends": ["task113_bootstrap_audit"]
 }

@@ -4,7 +4,7 @@
   "module": "task113_bootstrap_audit",
   "layer": "test",
   "domain": "opal-bootstrap",
-  "description": "태스크 113 이벤트 부트, 문서 표준, payload/time, 설치 parity 결정론 감사",
+  "description": "이벤트 부트, 사용자 브리핑, 문서 표준, payload/time, 설치 parity 결정론 감사",
   "exports": ["main", "run_source_audit", "snapshot_installed", "run_installed_parity", "measure_boot_payloads"]
 }
 """
@@ -263,7 +263,7 @@ def measure_boot_payloads(project_root: Path, iterations: int = 3) -> dict[str, 
     metrics = {
         "method": {
             "baseline": "git HEAD blobs materialized once, then read three times",
-            "after": "event-loader measure plus bounded memory-tool subprocess, three times",
+            "after": "event-loader measure plus bounded project-brief queries, three times",
             "identity": "user-specific identity.md excluded from both sides",
             "project_before": "legacy automatic PM Eager chain",
         },
@@ -409,11 +409,10 @@ def run_source_audit(project_root: Path, iterations: int = 3) -> dict[str, Any]:
         "session.worker",
         "session.assistant",
         "session.project",
-        "state-tool/run.sh boot-summary <project-root>",
         "load --event session.assistant",
-        "--boot-brief --max-bytes 1024 --memories 3 --history 0",
-        "상태 요약이 성공한 뒤",
-        "review_rows 최대 2건",
+        "event-loader/run.sh project-brief --project-root <project-root>",
+        "stdout 전문을 byte-for-byte 첫 응답 맨 앞에 출력",
+        "내부 컨텍스트로만 소비하거나 다시 요약하지 않는다",
         "UTF-8 1,024바이트",
         "session.project`에서만 수행",
     )
@@ -424,6 +423,8 @@ def run_source_audit(project_root: Path, iterations: int = 3) -> dict[str, Any]:
         "load --event pm.activate",
         "load --event pilot.start",
         "load --event worker.dispatch",
+        "state-tool/run.sh boot-summary <project-root>",
+        "memory-tool/run.sh show --file <project-root>",
         "Read ~/.opal/references/opal-harness.md",
         "Read ~/.opal/references/opal-pm.md",
         "Read docs/PROJECT.md",
@@ -433,9 +434,8 @@ def run_source_audit(project_root: Path, iterations: int = 3) -> dict[str, Any]:
         raise AuditFailure(f"Eager-forbidden bootstrap commands present: {present}")
     order = (
         body.index("load --event session.assistant"),
-        body.index("state-tool/run.sh boot-summary"),
-        body.index("memory-tool/run.sh show"),
-        body.index("첫 응답에 조건부"),
+        body.index("event-loader/run.sh project-brief"),
+        body.index("stdout 전문을 byte-for-byte"),
     )
     if order != tuple(sorted(order)):
         raise AuditFailure(f"project boot actions are out of order: {order}")
@@ -455,6 +455,12 @@ def run_source_audit(project_root: Path, iterations: int = 3) -> dict[str, Any]:
         )
         if no_tasks.get("items") != []:
             raise AuditFailure(f"empty project boot summary is not a no-op: {no_tasks}")
+        empty_brief = _run([
+            sys.executable, str(EVENT_LOADER), "project-brief",
+            "--source-root", str(REPO_ROOT), "--project-root", str(fixture),
+        ]).stdout
+        if empty_brief != "[부트스트랩] ✅ session.project ⏳ PM\n":
+            raise AuditFailure(f"empty project brief changed the short prefix: {empty_brief!r}")
         task_dir = fixture / "tasks" / "999-fixture"
         task_dir.mkdir(parents=True)
         (task_dir / "state.json").write_text(json.dumps({
@@ -484,7 +490,23 @@ def run_source_audit(project_root: Path, iterations: int = 3) -> dict[str, Any]:
             raise AuditFailure(f"actionable memory priority drift: {memory_result}")
         if len(memory_result.get("review_rows", [])) > 2:
             raise AuditFailure("boot brief returned more than two review rows")
-    checks.append({"name": "project_boot_brief_fixtures", "cases": ["absence", "unfinished", "review_priority"]})
+        rendered = _run([
+            sys.executable, str(EVENT_LOADER), "project-brief",
+            "--source-root", str(REPO_ROOT), "--project-root", str(fixture),
+        ]).stdout.rstrip("\n")
+        required_output = (
+            "📌 이어보기",
+            "- 999 fixture — EXECUTE · 다음: resume",
+            "📌 우선 검토",
+            "- 후보 — 검토",
+            "- 피드백 — 확인",
+        )
+        missing_output = [fragment for fragment in required_output if fragment not in rendered]
+        if missing_output:
+            raise AuditFailure(f"ready-to-emit project brief omitted output: {missing_output}")
+        if len(rendered.encode("utf-8")) > 1024:
+            raise AuditFailure("rendered project brief exceeds 1024 UTF-8 bytes")
+    checks.append({"name": "project_boot_brief_fixtures", "cases": ["absence", "unfinished", "review_priority", "rendered_stdout"]})
 
     module = _load_opal_agent_module()
     resolver_cases = (

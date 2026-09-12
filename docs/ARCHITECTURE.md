@@ -60,7 +60,7 @@ OPAL 자산은 Global/Project 2-레이어로 배치되고, 런타임은 세션 �
 | `session.disabled` | effective setting의 `bootstrap`이 정확히 `off` | 설정 게이트 뒤 OPAL 문서 0건·0 bytes |
 | `session.worker` | 첫 줄 `[WORKER]` | 전역 세션 문서 0건. 이후 PM이 주입한 `worker.dispatch` receipt 계약만 적용 |
 | `session.assistant` | 첫 줄 `[ASSISTANT]` 또는 비프로젝트 세션 | 최소 비서 커널·PRINCIPLES·선택적 identity |
-| `session.project` | 무마커 + `.opal/AGENT.md` 존재 | `session.assistant`에 더해 프로젝트 존재와 `memory-tool`의 최대 1KB boot brief만 인지 |
+| `session.project` | 무마커 + `.opal/AGENT.md` 존재 | `session.assistant`에 더해 `event-loader project-brief`가 조립한 최대 1KB 사용자 브리핑만 인지 |
 | `pm.activate` | 프로젝트 작업 요청 또는 프로젝트 내 `//` 커맨드 | PM 프로세스, PM 활성화 규칙, 프로젝트 `.opal/AGENT.md`, `docs/PROJECT.md`를 JIT 로드 |
 | `pilot.start` / `stage.*` / `worker.dispatch` | 파일럿·단계·워커 경계 | 해당 이벤트의 owner 문서 전문을 JIT 로드하고 receipt 검증 후 진행 |
 
@@ -84,7 +84,7 @@ OPAL 자산은 Global/Project 2-레이어로 배치되고, 런타임은 세션 �
 | `agents/` | 서브에이전트 15개 (전문 8 + 범용 7) |
 | `community-skills/` | 커뮤니티 스킬 — clone-copy(git)로 사용자가 온디맨드 설치 (검색은 `npx skills find`). 사용자 등록분 `user-registry.json` 포함, install 불가침 |
 | `references/` | 레지스트리·표준·운영 문서 **21 엔트리**(최상위 19파일 + 하위 디렉토리 2). `events.json`이 이벤트별 필수 문서 집합을 소유하고 `opal-harness.md`는 호환 인덱스만 제공한다. 하위 디렉토리는 `harness/`(실행 규칙 owner 23파일)와 `pm/`(PM 프로세스 owner 7파일)이다. |
-| `tools/` | CLI 도구 **20종**(도구 디렉토리 기준). 파이프라인 집행(`state-tool`, `test-tool`, `backlog-tool`, `opal-action-monitor`), 이벤트 전문·해시·receipt 집행(`event-loader`), 환경·배포, 탐색·연동, 지식·코드 지도 도구로 구성된다. 세부 공개 계약은 각 도구의 README가 소유한다. |
+| `tools/` | CLI 도구 **20종**(도구 디렉토리 기준). 파이프라인 집행(`state-tool`, `test-tool`, `backlog-tool`, `opal-action-monitor`), 이벤트 전문·해시·receipt와 프로젝트 부트 브리핑 집행(`event-loader`), 환경·배포, 탐색·연동, 지식·코드 지도 도구로 구성된다. 세부 공개 계약은 각 도구의 README가 소유한다. |
 | `.venv/` | Python 가상환경 (openpyxl, pandas, playwright 등 — requirements.txt로 관리) |
 | `templates/` | 프로젝트 에이전트 템플릿 |
 
@@ -96,7 +96,7 @@ OPAL 자산은 Global/Project 2-레이어로 배치되고, 런타임은 세션 �
 |--------------|------|
 | `CLAUDE.md` / `.cursorrules` / `GEMINI.md` | 플랫폼 부트스트래퍼 (에이전트 로드 트리거) |
 | `.opal/AGENT.md` | `pm.activate`에서 JIT 로드하는 PM 프로필 (역할, 검토 기준, 금지사항) |
-| `.opal/MEMORY.json` + `memory/` | 프로젝트 메모리. `session.project`는 최대 1KB boot brief만 소비하고 본문은 해당 작업 시점에 로드 |
+| `.opal/MEMORY.json` + `memory/` | 프로젝트 메모리. `session.project`는 `event-loader project-brief`를 통해 검토 후보만 소비하고 본문은 해당 작업 시점에 로드 |
 | `docs/PROJECT.md` | `pm.activate`에서 JIT 로드하는 프로젝트 정의 SSOT + 문서 허브 |
 | `docs/ARCHITECTURE.md` | 아키텍처 (개발 프로젝트) |
 | `docs/CONVENTIONS.md` | 컨벤션 (개발 프로젝트) |
@@ -407,7 +407,7 @@ opal/                                    ← 이 저장소
 │   │   ├── mcps/                        MCP 설정 4종 (context7, playwright, shadcn, sequential-thinking)
 │   │   └── hooks/                       Claude Code hooks 설정
 │   ├── tools/                           CLI 도구 20종 (+ check-env.js 보조 스크립트, requirements.txt)
-│   │   ├── event-loader/                이벤트 전문·해시·receipt 로드·검증
+│   │   ├── event-loader/                이벤트 전문·해시·receipt 검증 + 프로젝트 부트 브리핑
 │   │   ├── state-tool/                  파이프라인 현황판 JSON SSOT (서브명령 11종)
 │   │   ├── test-tool/                   테스트 단계 결정론 집행 (resolve/check/unit/integration + scenario-*)
 │   │   ├── backlog-tool/                oppl 백로그 backlog.json SSOT

@@ -334,54 +334,28 @@ PM이 작업 중 아래 유형의 가치 있는 지식을 감지하면 brain ing
 > **소유권**: 세션 최초 브리핑은 `session.project`가 소유한다. PM 활성화 후에는
 > 이 절의 부트 브리핑을 재생성하거나 재출력하지 않는다.
 
-프로젝트 진입 시 `session.project`는 상태와 메모리의 읽기 전용 bounded 조회 결과를 사용해
-조건부 행동 필요 브리핑을 만든다. 조회 결과가 모두 비어 있으면 기존의 짧은 부트 응답을
-그대로 유지한다. 이 동작은 프로젝트 본문·PM 문서 로딩을 대신하지 않으며, PM 활성화는
-별도의 `pm.activate` 계약에 따른다.
+프로젝트 진입 시 `session.project`는 아래 명령이 완성한 bounded Markdown을 첫 응답 맨
+앞에 byte-for-byte 출력한다. JSON을 모델이 별도로 해석하거나 다시 요약하지 않는다.
+이 동작은 프로젝트 본문·PM 문서 로딩을 대신하지 않으며, PM 활성화는 별도의
+`pm.activate` 계약에 따른다.
 
 소유자가 세션 중 최신 브리핑을 명시적으로 요청하는 경우에도 같은 조회 계약을 적용할 수
 있지만, PM 활성화의 부수 동작으로 이를 다시 실행하지 않는다.
 
-### 절차
-
-1. `~/.opal/tools/state-tool/run.sh boot-summary {프로젝트}`를 호출하여 `in_progress` 또는
-   `blocked`인 최신 미완료 태스크를 최대 1건 조회한다. 결과에는 태스크 제목·현재 단계·
-   `next_action`을 사용한다.
-2. 상태 조회가 성공하면
-   `~/.opal/tools/memory-tool/run.sh show --file {프로젝트}/.opal/MEMORY.json --boot-brief --max-bytes 1024 --memories 3 --history 0`를 호출한다.
-   메모리 파일이 없거나 결과가 비어 있으면 메모리 블록을 생략한다.
-3. 메모리 결과의 `review_rows`에서 검토 후보를 최대 2건 사용한다. 후보는 `candidate`를
-   우선하고, 다음으로 active `feedback`·`issues`·`improvement`를 사용한다.
-4. 성공한 JSON 결과만 사용해 첫 응답에 조건부로 `이어보기`(상태 최대 1건)와 `우선 검토`
-   (`review_rows` 최대 2건)를 포함한다. 실패·파싱 오류 결과는 버린다.
-5. 두 블록과 JSON 소비에 필요한 정보는 합쳐 UTF-8 1,024바이트 이내로 결정론적으로
-   축약한다. 기존 `index_rows`·`history_rows` 키와 history 0 계약은 유지하며, 메모리 본문과
-   history의 `result`는 포함하지 않는다.
-
-### 브리핑 형식
-
+```bash
+~/.opal/tools/event-loader/run.sh project-brief --project-root {프로젝트}
 ```
-[부트스트랩] ✅ session.project ⏳ PM
 
-📌 이어보기
-- {title} — {stage} · 다음: {next_action}
-
-📌 우선 검토
-- {title} — {summary}
-
-{기존 session.project 부트 응답}
-```
+상태·메모리 조회, 후보 선택, 형식과 UTF-8 1,024바이트 상한은 `event-loader
+project-brief`의 공개 계약이 소유한다.
 
 ### 규칙
 
-- 상태 행은 최대 1건, `review_rows`는 최대 2건이다.
 - `session.project`에서만 브리핑을 표시한다. `[ASSISTANT]`, `[WORKER]`,
   `session.disabled`에는 표시하지 않는다.
 - PM 활성화 시 `pm.activate` 문서·프로젝트 문서를 다시 부트 로딩하거나 이 브리핑을
   재생성·재출력하지 않는다.
-- 상태와 메모리는 각자의 SSOT 도구가 읽으며, 브리핑은 어느 저장소도 갱신하지 않는다.
-- 두 결과가 모두 비어 있거나 어느 조회가 실패하면 해당 블록을 생략하고, 결과가 모두 없을
-  때는 기존 짧은 부트 응답을 byte-identical하게 유지한다.
+- 브리핑은 어느 저장소도 갱신하지 않으며, 명령 stdout을 내부 소비로 끝내지 않는다.
 
 ---
 
@@ -405,11 +379,8 @@ PM이 작업 중 아래 유형의 가치 있는 지식을 감지하면 brain ing
 
 > 출처: `opal/core/AGENT.md §프로젝트 컨텍스트` (050 이관)
 
-프로젝트 진입의 `session.project`는 PM 문서를 읽지 않고, 상태 요약과 1KB 이하 memory boot
-brief의 성공한 bounded 결과만 소비해 행동 필요 브리핑을 조건부로 표시한다. 상태 요약은
-미완료 태스크 최대 1건, 메모리 `review_rows`는 최대 2건으로 제한한다. 두 결과와 기존
-부트 응답을 합친 브리핑은 UTF-8 1,024바이트 이내로 결정론적으로 축약하며, 기존
-`index_rows`·`history_rows` 키와 `history 0` 계약을 보존한다.
+프로젝트 진입의 `session.project`는 PM 문서를 읽지 않고 `event-loader project-brief`가
+상태·메모리 SSOT에서 조립한 UTF-8 1,024바이트 이하 Markdown을 첫 응답에 그대로 표시한다.
 
 `pm.activate` 이벤트가 `.opal/AGENT.md`와 `docs/PROJECT.md`를 전달하면 그때 PM 역할과 문서
 레지스트리를 적용한다. 이 전환은 이미 표시된 session.project 브리핑을 재생성하거나

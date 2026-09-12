@@ -34,14 +34,16 @@
   그 응답의 receipt로 현재 이벤트는 이미 충족된 것이다. 같은 이벤트를 재귀 호출하지 않는다.
 - `session.project`는 먼저 `session.assistant`, 다음으로 `session.project`를 load한다.
   프로젝트 `.opal/AGENT.md`와 `docs/PROJECT.md` 본문은 아직 읽지 않는다.
-- `session.project`에서 `.opal/MEMORY.json`이 있으면 아래 bounded brief만 추가한다.
-  본문 파일과 전체 history를 직접 읽지 않는다.
+- `session.project`는 아래 명령이 반환한 bounded Markdown 전문을 첫 응답 맨 앞에
+  byte-for-byte 출력한다. 내부 컨텍스트로만 소비하거나 다시 요약하지 않는다.
 
 ```bash
-~/.opal/tools/memory-tool/run.sh show \
-  --file <project-root>/.opal/MEMORY.json \
-  --boot-brief --max-bytes 1024 --memories 3 --history 0
+~/.opal/tools/event-loader/run.sh project-brief --project-root <project-root>
 ```
+
+도구는 상태·메모리 SSOT의 성공한 bounded JSON만 내부 소비해 `이어보기` 최대 1건과
+`우선 검토` 최대 2건을 렌더링한다. 결과가 없거나 개별 조회가 실패하면 해당 블록을
+생략하며, 전체 출력은 UTF-8 1,024바이트 이하다. 메모리 본문과 전체 history를 직접 읽지 않는다.
 
 ### PM 활성화
 
@@ -66,7 +68,8 @@
 | 메모리 쓰기 요청 | `harness/memory-learning.md` |
 | PM 상태에서 AS-IS 분석 요청 | `pm/asis-analysis.md` |
 
-세션 첫 응답에는 `[부트스트랩] ✅ <session-event> ⏳ PM` 한 줄을 포함한다.
+`session.project`의 첫 응답 접두부는 위 `project-brief` 출력이 소유한다.
+`session.assistant`의 첫 응답에는 `[부트스트랩] ✅ session.assistant ⏳ PM` 한 줄을 포함한다.
 `session.disabled`와 `session.worker`는 이 보고를 하지 않는다.
 
 ## 정체성 적용
