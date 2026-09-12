@@ -1,19 +1,22 @@
 # OPAL Product OS 데스크톱 Workbench — 와이어프레임
 
-> 작성일: 2026-09-11 | 작성자: AI | 버전: v5.1 (Surface 추가 버튼 탭 바 내장 배치, TASKS 헤더 `+`의 Dialog 직행 진입)
-> 대조 기준: `wireframe-v1.md` (1차 EXECUTE 6~8행이 이미 통과한 설계). 본 문서는 그 이후 네 차례 개정을 거쳐 확정된 최종본이며 중간 변경 이력은 서술하지 않는다(개정 근거는 `TASK.md` Constraints/AC와 §9 미결 배치 요약 참조).
+> 작성일: 2026-09-12 | 작성자: AI | 버전: v9.0 (TASK별 PM Coordination Room·PM/Worker Workspace 계층 반영 — `ADDITIONAL-WORK-PROJECT-HIERARCHY.md` 44~49행)
+> 대조 기준: `wireframe-v1.md` (1차 EXECUTE 6~8행이 이미 통과한 설계). 본 문서는 그 이후 다섯 차례 개정을 거쳐 확정된 최종본이며 중간 변경 이력은 서술하지 않는다(개정 근거는 `TASK.md`·`ADDITIONAL-WORK-PROJECT-HIERARCHY.md` Constraints/AC와 §9 미결 배치 요약 참조).
+> SSOT 2원화: 기존 범위는 `TASK.md`(C-1~C-10, AC-1~19), 27~49행 추가 요구사항은 `ADDITIONAL-WORK-PROJECT-HIERARCHY.md`(AW-AC-1~27)가 기준이다. 충돌 시 후자의 §기존 계약과의 적용 규칙을 따른다.
 
 ## 1. 서비스 개요
 - **서비스명**: OPAL Product OS Desktop Workbench
 - **서비스 유형**: Electron 기반 로컬 데스크톱 개발 도구 목업(Local desktop development tool mockup)
 - **대상 사용자**: 여러 프로젝트·LLM CLI Agent에게 업무를 맡기고 결과를 검토하는 1인 개발자
 - **핵심 기능**:
-  1. 여러 Project를 전환하고, Project 아래 자유 태스크 그룹으로 묶인 Task를 탐색·Kanban 관리
-  2. 본문을 **동적 Surface 탭 + split**으로 확장해 Terminal·Browser·Markdown·모바일 에뮬레이터·LLM 에이전트 세션을 자유롭게 배치. LLM과의 대화는 별도 화면이 아니라 이 Surface 탭 안에서 일어난다
-  3. Surface 탭 자체에 실행 중 세션의 진행·완료·실패 상태를 표시(AC-16)
-  4. 우측 사이드바 **Files / Changes** 2탭으로 파일 탐색·추가·삭제와 git 변경·커밋 mock 관리, 좌우 리사이즈
-  5. Agent Definition 확인과 Runtime Binding 목업 설정, 추가한 Agent를 Surface 탭 세션으로 여는 경로
-  6. 좌측 사이드바 하단 진입점으로 여는 **설정 화면**이 Agent·외관·Workbench·프로젝트·목업 상태 초기화를 한 곳에서 다룬다
+  1. 좌측 사이드바를 **재귀 Project 트리**로 탐색한다. Project를 펼치면 하위 Project → 진행 TASK → 실행 Agent 순서로 드러나고 완료 TASK는 자동으로 숨긴다(AW-AC-3·14). `PROJECTS +`는 현재 선택 Project의 TASK 생성 Dialog를 연다(AW-AC-19)
+  2. TASK는 `Project → TASK → 실행 Agent` 탐색 계층과 `TASK → Surface → Files/Changes` 작업 문맥을 유지한다. TaskGroup과 별도 TASK 필터 UI는 두지 않는다
+  3. 본문 **Execution Workspace(실행 작업공간)**에 TASK별 PM Coordination Room·Sub PM Workspace·Worker Terminal·독립 Terminal과 기타 Surface를 동적 탭 + split으로 배치한다
+  4. Surface 탭 자체에 실행 중 세션의 진행·완료·실패 상태를 표시(AC-16)
+  5. 우측 사이드바 **Files / Changes** 2탭으로 파일 탐색·추가·삭제와 git 변경·커밋 mock 관리, 좌우 리사이즈. Repository Component가 여럿인 Project는 대상 repo를 먼저 선택한다(AW-AC-5)
+  6. Agent Definition 확인과 Runtime Binding 목업 설정, 추가한 Agent를 Surface 탭 세션으로 여는 경로
+  7. **PM Coordination Room**에서 사용자→Main PM 단일 지시, Main PM의 Sub PM 초대, PM 간 다자 대화, TASK 배정과 결과 취합을 처리한다. 초대 시 Sub PM Workspace가, Sub PM의 Worker 호출 시 관찰 전용 Worker Terminal이 열린다(AW-AC-23~27)
+  8. 좌측 사이드바 하단 진입점으로 여는 **설정 화면**이 Agent·외관·Workbench·프로젝트·목업 상태 초기화를 한 곳에서 다룬다. 프로젝트 섹션은 최상위·하위 Project 생성·연결과 사후 관리를 함께 담당한다(AW-AC-20)
 
 ### 1.1 구현 경계와 원칙
 | 구분 | 이번 목업 동작 | UI 표시 | 향후 교체 경계 |
@@ -22,14 +25,15 @@
 | 시뮬레이션(Simulated) | Agent/터미널 세션 출력, 세션 상태 전이(진행→완료/실패), Browser 조작, git 스테이징·커밋 | 항목별 `Simulated` 배지와 점선 테두리 | `MockWorkbenchAdapter`를 Runtime Adapter로 교체 |
 | 미구현(Not connected) | ACP/LLM CLI, PTY, CDP/agent-browser, Git/Worktree, SQLite, 실제 파일시스템 쓰기 | 관련 패널 `Runtime not connected` 안내 | 실제 Runtime 연결 |
 
-- `Project → TaskGroup(선택) → Task → Surface(터미널·에이전트·브라우저) → Files/Changes` 흐름을 유지한다(TASK.md C-2). Run 위임 추적·검증·결과 승인 UI는 이번 범위에서 제외한다(C-10) — 결과 검토는 우측 `Changes`(git)가 담당한다.
+- `Project(재귀 트리) → 진행 TASK → 실행 Agent`를 좌측 탐색 계층으로 실제 렌더한다. TaskGroup과 별도 필터 UI는 제거하고 완료 TASK를 자동으로 숨긴다. `oppl`·`opsdd` 내부 backlog·ACT는 트리에 추가하지 않는다(AW-AC-13~15).
+- Agent Run 원본·도구 로그·검증 상세·승인 UI는 제외한다(C-10). Room에는 PM 수준 대화와 요약 이벤트만 표시하며 원본 실행은 관찰 전용 Sub PM/Worker Terminal에 둔다(§4.7).
 - Terminal·Browser·Files(sidebar)·Diff는 Run이 아니라 `Execution Environment`가 소유하는 것으로 표시한다. 본문 Surface 탭도 활성 Task의 Environment 문맥 안에서 열린다.
 - Agent Definition(`.opal/AGENT.md`)과 Runtime Binding(runtime/model/mode/permission)은 별도 데이터와 UI로 다룬다.
 - 터미널·에이전트 세션의 원본 출력은 기본 화면에 무제한 노출하지 않는다(C-5) — scrollback은 최근 N줄만 렌더링하고 전문은 목업 범위에서 제공하지 않는다.
 
 ## 2. 전체 구조
 ### 2.1 레이아웃 유형
-고정 3열 Desktop Shell: 좌측 Project/TaskGroup/Task, 중앙 Workbench(순수 동적 Surface 탭 + split), 우측 Files/Changes. 최소 창 크기 `1280×760`.
+고정 3열 Desktop Shell: 좌측 Project/TASK/실행 Agent 트리, 중앙 Execution Workspace(PM Coordination Room + Sub PM/Worker Workspace + 독립 Terminal), 우측 Files/Changes. 최소 창 크기 `1280×760`.
 
 `ResizablePanelGroup`(기존 `resizable.tsx` = react-resizable-panels 래퍼)로 3열 전체를 감싼다.
 - 좌측 패널: 240~360px 리사이즈 가능. 패널 상단 우측 모서리에 접기 아이콘(R-5)으로 완전히 접을 수 있다. 패널 최하단에는 별도 바텀 바(`SidebarBottomBar`, R-7)가 고정되어 설정 아이콘(⚙️) 하나만 놓인다 — Orca의 도움말·위치찾기·레이아웃 아이콘은 캡틴이 요청 범위에서 제외했으므로 넣지 않는다.
@@ -41,12 +45,12 @@
 좁은 창에서는 우측을 Sheet로 접되 모바일 레이아웃은 범위 밖이다.
 
 ### 2.2 네비게이션 구조
-- **Project selector**: 좌측 사이드바 최상단 Select — 등록된 Project 목록 중 하나로 activeProjectId 전환. 전환 시 TaskGroup·Task·본문 Surface 배치·우측 rail이 해당 Project의 저장된 PersistedUI로 교체된다.
-  - TaskGroups: 자유 생성 태그(`+ 그룹 추가`) → Task 목록 필터. "전체"(그룹 미지정 포함) 기본 뷰.
-  - Tasks: Task 행 → 선택 Task로 본문 교체
-  - TASKS 헤더 `+`(TASK GROUPS와 같은 패턴) → 보드를 거치지 않고 SCR-002의 Task 생성 Dialog를 직접 연다(W-2/R-12). Kanban 보드 자체는 헤더 `Board` 버튼으로 별도 진입한다.
+- **Project 트리**(v8.0): `PROJECTS +` 아래 Project→진행 TASK→실행 Agent를 한 트리에서 재귀 렌더한다. Project 행 클릭은 문맥 전환, TASK 행 클릭은 Execution Workspace 전환, Agent 행 클릭은 해당 실행 Surface 포커스다. 별도 필터 바는 없고 완료 TASK는 자동으로 숨긴다.
+  - `PROJECTS +`는 현재 선택 Project에 TASK를 만들며 Pilot과 담당 PM/Agent를 선택한다. 참여 Project는 사용자가 선택하지 않고 Main PM이 Room에서 초대한다.
+  - Project 생성·연결은 설정 화면의 프로젝트 섹션에서 최상위 또는 부모 Project를 지정해 수행한다.
 - **본문 Surface 탭 바**: 탭 목록 + 마지막 탭 옆에 고정된 `+` 버튼(새 Surface, W-1/R-11) + 우측 `⌘K`(명령) + 오버플로 메뉴 + 검색 입력("열린 탭, 방문 기록, 파일, URL, agent 검색…"). **닫히지 않는 탭은 없다** — pinned 시스템 탭 개념 자체가 존재하지 않는다.
-  - `+` 메뉴 항목: `Terminal`(⌘T) / `Browser`(⌘B) / `Markdown`(⌘M) / `모바일 에뮬레이터`(⌘E), 그 아래 LLM 에이전트 목록(Agent Catalog에 등록된 Agent별 1행)
+  - `+` 메뉴 항목: `PM Coordination` / `Terminal` / `Browser` / `Markdown` / `모바일 에뮬레이터`, 그 아래 LLM 에이전트 목록
+  - `Terminal`은 사용자가 직접 조작하는 독립 셸이다. 조율 TASK의 Sub PM/Worker Agent Terminal은 해당 Agent가 제어하고 사용자는 관찰만 한다.
   - LLM과의 대화는 `Terminal`(예: CLI에서 직접 `claude`류 명령 실행) 또는 LLM 에이전트 Surface 탭 **안에서** 일어난다. 대화 전용 별도 화면은 없다.
   - 탭 드래그 → 본문 영역 좌/우/상/하 25% 가장자리에 드롭 시 해당 방향으로 split, 중앙 드롭 시 같은 pane 안에서 탭 순서 재배치. split된 pane 사이의 탭 드래그 이동도 지원한다.
   - 각 탭에 세션 상태 표시(진행/완료/실패)가 항상 붙는다(§4.1 인터랙션, §5 `SurfaceTabStatusIndicator`, AC-16).
@@ -55,37 +59,43 @@
 
 ### 2.3 화면 흐름도
 ```text
-[앱 시작/복원] → SCR-001 Shell ── 헤더 Board ──→ SCR-002 Kanban(내부 New Task → Dialog)
+[앱 시작/복원] → SCR-001 Shell(Project 트리) ── 헤더 Board ──→ SCR-002 Kanban(내부 New Task → Dialog)
        ↑               │                                  │ 생성/카드 클릭
-       │               ├── TASKS 헤더 `+` ──────→ SCR-002 Task 생성 Dialog(보드 미경유, W-2)
-       │               ├── Project 전환 ────────→ activeProject 갱신, 그룹/Task/탭 재로드
-       │               ├── 좌측 하단 설정(⚙️) ────→ SCR-003 설정 Dialog(Agent 섹션) ── Surface에서 열기 ─┐
+       │               ├── PROJECTS `+` ──────→ SCR-002 Task 생성 Dialog(현재 선택 Project)
+       │               ├── Project/TASK/Agent 트리 선택 ─→ 문맥 전환 또는 실행 Surface 포커스
+       │               ├── 조율 TASK 행 클릭 ────→ SCR-008 PM Coordination Surface
+       │               ├── 좌측 하단 설정(⚙️) ────→ SCR-003 설정 Dialog ─┬─ Project 생성/연결(SCR-007)
+       │               │                                                └─ Agent Surface에서 열기 ─┐
        │               │                                  │ 저장/닫기                        │
        │               ├── 본문 `+` → Surface 탭 추가/드래그 split ─→ SCR-005 Surface 배치 ←──┘
        │               │        (Terminal 또는 Agent 탭 안에서 LLM 대화 발동, 탭에 상태 표시)
-       │               ├── 우측 Files/Changes 전환 ─→ SCR-006 파일·git 패널(결과 검토 위치)
-       └── 복원 ───────┴── Surface 탭/split 배치 복원
+       │               ├── 우측 Files/Changes 전환 ─→ SCR-006 파일·git 패널(선택 repo 범위, 결과 검토 위치)
+       └── 복원 ───────┴── Project 트리 펼침·선택 Project/TASK·Surface 탭/split 배치 복원
 ```
 
 ### 2.4 대표 클릭 시나리오
 0. 좌측 사이드바 최하단 설정 아이콘을 클릭해 설정 화면을 열고, 외관 섹션에서 테마를 `다크`로 바꾼 뒤 닫는다(R-7·R-8).
-1. Project selector에서 `OPAL`을 선택하고, `Development` 태스크 그룹을 선택한 뒤 TASKS 헤더 `+`에서 제목·설명·lead Agent를 입력해 `todo` 카드를 만든다.
-2. 카드를 `In Progress`로 이동하고 클릭해 Workbench에 진입한다. 진입 시 본문은 빈 상태이며 `첫 Surface 열기` CTA만 보인다.
-3. 본문 `+`에서 `Developer` LLM 에이전트를 선택해 Surface 탭을 열고 "로그인 오류를 구현해줘"를 대화로 보낸다. 탭에 `진행 중` 상태 표시가 붙는다.
-4. 추가로 `Terminal`·`Browser`를 열고, `Terminal` 탭을 화면 하단 가장자리로 드래그해 아래쪽으로 split한다. 이어서 `Developer` 탭을 같은 pane의 탭 바 위 `Terminal` 옆으로 드래그해 탭 순서를 바꾼다(R-10).
-5. Agent 탭의 세션 상태가 `완료`로 바뀌는 것을 탭에서 바로 확인한다.
-6. 우측 사이드바를 `Files`로 전환해 변경된 파일을 확인하고, `Changes`로 전환해 스테이징 상태와 diff를 검토한 뒤 `커밋 mock`을 남긴다.
-7. 앱 재실행 시 마지막 Project·TaskGroup·Task·Surface 탭 배치(split 포함)가 복원됨을 확인한다.
+1. 설정의 프로젝트 섹션에서 `/Volumes/Data/StoreLinkStudio/pug`·`blend`·`mams`를 연결한다. 이어서 `StoreLinkStudio`를 신규 생성하고 세 Project의 부모로 지정해 복합 Project 구조를 만든다(AW-AC-1·2·3·10·20).
+2. Project 트리에서 `Pug`를 선택하고 `PROJECTS +`를 눌러 제목·설명·Pilot·담당 Agent를 입력해 `todo` TASK를 만든다(AW-AC-19).
+3. 카드를 `In Progress`로 이동하고 클릭해 Workbench에 진입한다. 진입 시 본문은 빈 상태이며 `첫 Surface 열기` CTA만 보인다.
+4. 본문 `+`에서 `Developer` LLM 에이전트를 선택해 Surface 탭을 열고 "로그인 오류를 구현해줘"를 대화로 보낸다. 탭에 `진행 중` 상태 표시가 붙는다.
+5. 추가로 Agent에 귀속되지 않은 독립 `Terminal`·`Browser`를 열고, `Terminal` 탭을 화면 하단 가장자리로 드래그해 아래쪽으로 split한다. 이어서 `Developer` Agent Terminal 탭을 같은 pane의 탭 바 위 `Terminal` 옆으로 드래그해 탭 순서를 바꾼다(R-10, AW-AC-21·22).
+6. Agent 탭의 세션 상태가 `완료`로 바뀌는 것을 탭에서 바로 확인한다.
+7. 우측 사이드바를 `Files`로 전환해 변경된 파일을 확인하고, `Changes`로 전환해 스테이징 상태와 diff를 검토한 뒤 `커밋 mock`을 남긴다.
+8. `StoreLinkStudio` 조율 TASK의 PM Coordination Surface에서 Main PM이 `Pug PM`에게 업무를 배정한다. Pug Project에 연결 TASK와 Pug PM Terminal이 생성되는 것을 확인하고, Sub PM의 상태·블로커·결과가 조율 대화로 상향되는 것을 확인한다.
+9. 앱 재실행 시 마지막 Project 트리 펼침·선택 Project/TASK·Surface 탭 배치(split 포함)가 복원됨을 확인한다.
 
 ## 3. 화면 목록
 | ID | 화면명 | 유형 | 경로 | 메뉴그룹 | 설명 |
 |---|---|---|---|---|---|
-| SCR-001 | Desktop Workbench Shell | detail | `/workbench/:projectId/:taskId` | Project | 3열 shell, Project selector, 순수 동적 Surface 탭 |
-| SCR-002 | Task 생성 Dialog/Kanban | crud | `/workbench/:projectId?view=board&dialog=new-task` | TaskGroup | Task 생성과 Kanban 이동 후 진입 |
-| SCR-003 | 설정 화면(Agent·외관·Workbench·프로젝트·목업) | settings | `/workbench/:projectId?settings=agent\|appearance\|workbench\|project\|mock` | Global | **재정의(v5.0)**: 기존 Agent Catalog·Binding Sheet 기능 전부를 Agent 섹션으로 흡수하고, 외관·Workbench 기본값·프로젝트 목록·목업 상태 초기화 섹션을 더한 좌측 사이드바 하단 설정 진입점의 단일 화면(R-7·R-8) |
+| SCR-001 | Desktop Workbench Shell | detail | `/workbench/:projectId/:taskId` | Project | 3열 shell, 좌측 재귀 Project 트리(v6.0), 순수 동적 Surface 탭 |
+| SCR-002 | Task 생성 Dialog/Kanban | crud | `/workbench/:projectId?view=board&dialog=new-task` | Task | 제목·설명·Pilot·담당 Main PM을 선택해 Task 생성, Kanban 상태 이동. 참여 Project 선택은 없음 |
+| SCR-003 | 설정 화면(Agent·외관·Workbench·프로젝트·목업) | settings | `/workbench/:projectId?settings=agent\|appearance\|workbench\|project\|mock` | Global | Agent Catalog·Binding, 외관·Workbench 기본값·프로젝트 관리·목업 초기화를 다룬다. **v8.0**: 프로젝트 섹션에서 최상위/하위 Project 신규 생성·기존 연결과 사후 관리를 함께 제공한다(AW-AC-20) |
 | *(SCR-004 결번)* | — | — | — | — | 위임·Run 추적·검증·결과 승인 화면이었으나 C-10으로 범위 제외. 번호를 재사용하지 않는다 |
 | SCR-005 | Surface 탭 배치·Split Workbench | detail | `/workbench/:projectId/:taskId?surfaces=...` | Task | Terminal/Browser/Markdown/Emulator/Agent Surface의 동적 탭·split·세션 상태 관리 |
-| SCR-006 | Files/Changes 사이드바 | monitor/crud | `/workbench/:projectId/:taskId?rail=files\|changes` | Task | 프로젝트 파일 탐색·추가/삭제, git 변경·커밋과 결과 검토 |
+| SCR-006 | Files/Changes 사이드바 | monitor/crud | `/workbench/:projectId/:taskId?rail=files\|changes` | Task | 프로젝트(선택 repo 범위) 파일 탐색·추가/삭제, git 변경·커밋과 결과 검토 |
+| SCR-007(신규 v6.0) | Project 생성/연결 Dialog | form | `/workbench/:projectId?dialog=new-project\|link-project&parent=<projectId?>` | Project | 최상위 또는 선택 Project의 자식으로 신규 생성/기존 OPAL Project 연결(AW-AC-1·2·3) |
+| SCR-008(v7.0 재정의) | PM Coordination Surface | detail/action | `/workbench/:projectId/:taskId?surface=coordination` | Task | Main/Sub PM 대화, 구조화 이벤트, Sub PM 배정으로 하위 TASK·실행 Surface 생성(AW-AC-7~9·16~18) |
 
 ## 4. 화면별 상세 설계
 ### 4.1 Desktop Workbench Shell (SCR-001)
@@ -96,26 +106,26 @@
 
 #### 레이아웃
 ```text
-┌ [OPAL ▾] ─ Development / Login fix ─ [Interactive mock] ───────── [⌘K] ┐
+┌ [Pug ▾] ─ Development / Login fix ─ [Interactive mock] ───────── [⌘K] ┐
 ├───────────────┬───────────────────────────────────────────┬───────────────┤
-│ PROJECT    [«]│ Developer① ⣾  Terminal② ●  Browser③ ✓ [+]│ FILES CHANGES[»]│
-│ [OPAL      ▾]│┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈split┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈│ v src/  [M]   │
-├──────────────┤ Developer① [Simulated]        │ Terminal②    │   v workbench/[3]│
-│ TASK GROUPS  │ > 로그인 오류를 구현해줘        │ $ npm run dev│    📄WorkbenchApp.tsx [M]│
-│ [+ 그룹추가] │ Developer: 원인을 분석합니다    │ > ready [Sim]│    📄types.ts   [U]│
-│ ○ 전체    6  │ [입력............] [Send]       ├──────────────┤    📄mock-adapter.ts│
-│ ● Development│                                  │ Browser③     │  > components/  │
-│   3          │                                  │ localhost:5173│  node_modules/ *ignored*│
-│ ○ Product 2  │                                  │ (canvas mock) │              │
-│              │                                  │              │              │
-│ TASKS    [+] │                                  │              │              │
-│ ● Login fix  │                                  │              │              │
-│ ○ Empty task │                                  │              │              │
+│ PROJECTS  [+]│ Developer① ⣾  Terminal② ●  Browser③ ✓ [+]│ FILES CHANGES[»]│
+│[«]           │┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈split┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈│ v src/  [M]   │
+│v StoreLinkStudio│ Developer① [Simulated]        │ Terminal②    │   v workbench/[3]│
+│  PM:Main·TASK 1│ > 로그인 오류를 구현해줘        │ $ npm run dev│    📄WorkbenchApp.tsx [M]│
+│ v ●Pug  PM:PugPM│ Developer: 원인을 분석합니다    │ > ready [Sim]│    📄types.ts   [U]│
+│   ▾ TASKS [+] │ [입력............] [Send]       ├──────────────┤    📄mock-adapter.ts│
+│   [상태][Pilot]│                                  │ Browser③     │  > components/  │
+│   ●Login fix  │                                  │ localhost:5173│  node_modules/ *ignored*│
+│     └Developer│                                  │ (canvas mock) │              │
+│   ○Empty task │                                  │              │              │
+│  >Blend PM:BlendPM│                                  │              │              │
+│  >MAMS PM:MamsPM │                                  │              │              │
 ├──────────────┤                                  │              │              │
 │ [⚙️ 설정]    │                                  │              │              │
 └──────────────┴────────────────────────────────────────────┴──────────────┘
    ↔ 리사이즈, [«]접기   ↔ split 경계 리사이즈 가능(react-resizable-panels)  ↔ 리사이즈, [»]접기
    (⣾=진행중 스피너 ●=완료 점 ✓=완료 배지, §4.4 세션 상태 표시 참조)
+   (Project 트리: v/>=Project 펼침/접힘 셰브론, ●=블로커 있음/○=없음, PM: 행에 고정 표시, §4.6a)
    (Files 트리: v/>=폴더 펼침/접힘 셰브론, 📄=파일 아이콘, 우측 [M]수정/[U]미추적/[⊘]무시, ignored 이탤릭, 그룹 헤더 우측 건수 배지)
    ([⚙️ 설정] = 좌측 사이드바 바텀 바, 클릭 시 SCR-003 설정 화면 Dialog가 열린다. R-7)
 
@@ -124,52 +134,62 @@
 │   │ Developer① ⣾  Terminal② ●  Browser③ ✓  [+]│ FILES CHANGES│
 ```
 좌측 패널이 접히면 바텀 바(설정 아이콘)도 함께 접혀 숨겨진다. 펼치기 아이콘을 눌러 패널을 복원해야 설정에 접근할 수 있다.
+Project 트리 셰브론(`v`/`>`)은 §4.6a에서 정의한 `ProjectTreeRow`가 소유하며, 펼침 상태는 `PersistedUI.expandedProjectIds`로 저장·복원한다(AW-AC-11). 트리에서 선택한 Project가 헤더 브레드크럼(`[Pug ▾]`)과 본문 문맥을 함께 결정한다.
 
 #### Component hierarchy
 ```text
 WorkbenchShell
 ├─ AppHeader(ProjectBreadcrumb, MockBadge, CommandButton)
 ├─ ResizablePanelGroup(direction=horizontal)
-│  ├─ ResizablePanel(collapsible, WorkbenchSidebar(SidebarCollapseToggle, ProjectSelector, TaskGroupNav, TaskListHeader(AddTaskButton → NewTaskDialog 직접, W-2/R-12), TaskList, SidebarBottomBar(SettingsButton)))
+│  ├─ ResizablePanel(collapsible, WorkbenchSidebar(
+│  │    SidebarCollapseToggle,
+│  │    ProjectTreeHeader(Label"PROJECTS", AddTaskButton→SCR-002),
+│  │    ProjectTree(ProjectTreeRow*(ProjectTree 재귀, ActiveTaskTreeRow*(AgentTreeRow*)) — §4.6a),
+│  │    SidebarBottomBar(SettingsButton)))
 │  ├─ ResizableHandle
-│  ├─ ResizablePanel(TaskWorkspace)
-│  │  └─ SurfaceWorkspace
+│  ├─ ResizablePanel(ExecutionWorkspace)
+│  │  └─ SurfaceWorkspace(PM Coordination | Agent Terminal | Independent Terminal | 기타 Surface)
 │  │     └─ SurfaceSplitRoot(ResizablePanelGroup 재귀 — SurfacePane*)
-│  │        └─ SurfacePane(SurfaceTabBar-local[DynamicTabs+StatusIndicator, 탭 드롭 타깃, 마지막 탭 옆 NewSurfaceMenu — W-1/R-11], SurfaceBody[가장자리 split 드롭 타깃], ActiveSurfaceView)
+│  │        └─ SurfacePane(SurfaceTabBar-local[DynamicTabs+StatusIndicator], SurfaceBody[가장자리 split 드롭 타깃], ActiveSurfaceView | PmCoordinationSurface[§4.7])
 │  ├─ ResizableHandle
-│  └─ ResizablePanel(collapsible, RightRail(RailCollapseToggle, FilesTab | ChangesTab))
-├─ NewTaskDialog(TaskBoard의 Dialog와 공유 — Sidebar `+`와 Kanban `New Task` 두 진입점이 동일 컴포넌트 사용)
+│  └─ ResizablePanel(collapsible, RightRail(RailCollapseToggle, RepoScopeSelect[Repository Component 2개 이상일 때만, §4.5], FilesTab | ChangesTab))
+├─ NewTaskDialog(TaskBoard의 Dialog와 공유 — `PROJECTS +`와 Kanban `New Task` 두 진입점이 동일 컴포넌트 사용)
+├─ NewOrLinkProjectDialog(SCR-007 — SettingsDialog Project 섹션에서 신규/연결 모드와 parentProjectId를 지정)
 └─ SettingsDialog(SettingsNav(AgentTab, AppearanceTab, WorkbenchTab, ProjectTab, MockTab), SettingsPanel)
 ```
-`AgentButton`은 헤더에서 폐기되고(R-9), `SettingsDialog`는 `WorkbenchShell` 바로 아래 오버레이로 붙어 `SidebarBottomBar`의 설정 아이콘 클릭으로 열린다(R-7). `SurfacePane`은 v5.0에서 탭 바와 본문을 **별도 드롭 타깃**으로 분리한다(R-10, §4.4). `NewSurfaceMenu`는 별도 행이 아니라 Surface를 받는 pane(항상 첫 leaf)의 로컬 탭 바 안, 마지막 탭 옆에 고정 배치된다(W-1/R-11).
+`ProjectTree`는 Project만 그리는 컨테이너가 아니다. 펼친 Project 바로 아래에 해당 Project의 TASK, 각 TASK 아래에 현재 실행 Agent를 렌더하고, 자식 Project도 같은 규칙으로 재귀 렌더한다. `oppl`·`opsdd` 내부 backlog·ACT만 제외한다(AW-AC-13·15). PM Coordination도 닫기·이동·split 가능한 정식 Surface다.
 
 #### 구성 요소
 | 영역 | UI 요소 | shadcn 컴포넌트 | 데이터/설명 |
 |---|---|---|---|
 | header | Project breadcrumb·목업 배지 | Button, Separator, Badge | 선택 project와 현재 group/task. `Agents` 버튼 폐기(R-9) |
-| sidebar | Project selector·TaskGroup 목록·Task 목록·생성·접기 아이콘·바텀 바 설정 아이콘 | Select, Sidebar, ScrollArea, Badge, Button | R-1 Project 전환, R-2 자유 그룹, R-5 접기(collapsible ResizablePanel), R-7 바텀 바 설정 진입점 |
+| sidebar | Project→진행 TASK→실행 Agent 재귀 트리·TASK 생성·접기·설정 | Sidebar, ScrollArea, Badge, Button, Collapsible | AW-AC-14·15·19 |
 | surface tab bar | 동적 탭 전부, `+` 메뉴, 검색, 명령, 오버플로, 탭별 상태 표시 | Tabs(커스텀 확장), Command, Dialog, Input, Button, DropdownMenu | pinned 개념 없음. HTML5 native drag(`draggable`/`dragstart`/`dragover`/`drop`) 소스·타깃 |
 | surface pane | split 레이아웃, 각 pane 로컬 탭 바 | Resizable(ResizablePanelGroup/Panel/Handle) | 기존 설치된 `resizable.tsx` 재사용 |
 | right rail | Files/Changes 2탭·접기 아이콘 | Tabs, ScrollArea, Badge, Button, Dialog(추가), AlertDialog(삭제) | 결과 검토는 이 rail이 최종 위치, R-5 접기 |
 
 #### 기능
-1. Project selector로 등록된 Project를 전환하면 TaskGroup·Task·본문 Surface 배치·우측 rail이 해당 Project 기준으로 교체된다.
-2. TaskGroup은 사용자가 자유롭게 생성·삭제하는 태그이며 Task는 그룹 0~1개에 속하거나 미지정일 수 있다.
+1. Project 행은 Project 문맥, TASK 행은 TASK Workbench, Agent 행은 해당 실행 Surface로 전환한다.
+1a. Project 행을 셰브론으로 펼치면 하위 Project(있으면) → TASK 목록 → 실행 Agent 노드가 단계적으로 드러난다. 자식이 없는 Project는 단순 Project로, 있으면 복합 Project로 표시되며 이 구분은 `parentProjectId`/자식 존재 여부에서 파생하고 별도 필드로 저장하지 않는다(AW-AC-3, §7).
+2. TaskGroup과 TASK 필터는 데이터·UI에서 제거한다. `status === done`인 TASK는 좌측 트리에서 제외하되 Board와 저장 데이터에는 유지한다.
 3. 본문 Surface 탭은 전부 동적이며 닫을 수 있다. Task 진입 시 기본으로 열리는 탭은 없다(빈 상태에서 사용자가 `+`로 시작).
 4. LLM 대화는 Terminal Surface 또는 LLM 에이전트 Surface 탭 안에서 발생한다. 별도 Conversation 화면·`@mention` 위임 경로는 없다.
 5. 동적 탭을 드래그해 본문 영역 가장자리에 드롭하면 `ResizablePanelGroup`이 재귀적으로 분할되고, split된 pane 사이에서도 탭을 드래그로 옮길 수 있다.
 6. 모든 Surface 탭은 세션 상태(idle/running/completed/failed)를 탭 자체에 표시한다(AC-16, §4.4).
 7. 우측 사이드바는 Files(트리 네비게이션+추가/삭제)와 Changes(git 스테이징/diff/커밋) 2탭이며 좌우로 리사이즈된다.
-8. 좌측(Project/TaskGroup/Task)과 우측(Files/Changes) 사이드바는 각 패널 상단 우측 모서리 아이콘으로 독립적으로 접고 펼칠 수 있다(R-5). 접힘 상태는 `PersistedUI`에 저장되어 앱 재실행 후 복원된다(AC-10 확장).
+8. 좌측(Project/TASK/Agent)과 우측(Files/Changes) 사이드바는 독립적으로 접고 펼칠 수 있고 상태를 복원한다.
 9. Files 트리는 폴더 노드를 셰브론(`>`펼침/`v`접힘)으로 접고 펼치며, 각 행은 폴더·파일 아이콘과 우측 정렬 git 상태 배지(`M`/`U`/`⊘`)를 표시한다. ignored 항목은 이탤릭으로 표기하고 들여쓰기는 깊이당 12~16px로 좁게 유지한다(a).
 10. Changes는 파일을 디렉터리별로 그룹핑하고 그룹 헤더에 건수 배지를 단다. `변경 사항 N`(staged)과 `추적되지 않은 파일 N`(unstaged) 두 섹션으로 나누며, 각 파일 행에 `+n -m` 추가/삭제 라인 수를 표시한다(c, d).
+11. 조율 TASK 행은 참여 Project 칩을 표시하고, 클릭 시 저장된 Surface 배치 중 `PM Coordination` 탭을 포커스한다(AW-AC-7·16).
 
 #### 인터랙션
 | 이벤트 | 동작 | 결과 |
 |---|---|---|
-| Project selector 변경 | activeProjectId 갱신, 그룹/Task/Surface 재로드 | 좌측 목록·본문·rail 전부 교체 |
-| TaskGroup `+` | 그룹명 입력 Dialog | 새 그룹 생성, Task 없이도 존재 가능 |
-| TASKS 헤더 `+` (W-2/R-12) | `NewTaskDialog` 즉시 오픈 | 보드를 거치지 않는다. 생성된 Task는 현재 `taskGroupFilter` 맥락을 그대로 따른다 |
+| Project 트리 행 클릭 | activeProjectId 갱신, 그룹/Task/Surface 재로드 | 좌측 목록·본문·rail 전부 교체 |
+| Project 행 셰브론 클릭 | 해당 Project 펼침/접힘 토글 | 자식 Project·TASK 노드 렌더 여부 전환, `PersistedUI.expandedProjectIds` 갱신(AW-AC-11) |
+| `PROJECTS +` 클릭 | `NewTaskDialog` 오픈 | 현재 선택 Project에 제목·설명·Pilot·담당 Agent, 조율 TASK이면 참여 Project 저장 |
+| 설정 > 프로젝트 > 생성/연결 | `NewOrLinkProjectDialog` 오픈 | 최상위 또는 부모 Project를 선택해 신규 생성·기존 연결 |
+| TASK/Agent 트리 행 클릭 | TASK 선택 또는 Surface 포커스 | 중앙 Execution Workspace와 우측 repo 문맥 전환 |
 | Surface `+` 클릭(탭 바 안, 마지막 탭 옆, W-1/R-11) | 메뉴 오픈(터미널/브라우저/Markdown/에뮬레이터 + Agent 목록) | 선택 항목으로 새 동적 탭 생성, 활성 pane에 추가, 초기 상태 `idle` |
 | Terminal/Agent 탭 안에서 메시지 전송 | mock 응답 스크립트 재생, 탭 상태 `running`으로 전환 | 응답 완료 시 `completed`, 실패 toggle 시 `failed` |
 | 동적 탭 드래그→pane 본문 가장자리 드롭 | split 방향 결정(top/bottom/left/right) | 새 `SurfacePane` 생성, 기존 탭 이동 |
@@ -200,14 +220,14 @@ WorkbenchShell
 
 #### 레이아웃
 ```text
-┌ OPAL / (그룹: Development) Tasks ────────────────────────── [+ New Task] ┐
+┌ OPAL Tasks ─────────────────────────────────────────── [+ New Task] ┐
 │ TODO (2)           IN PROGRESS (1)       REVIEW (1)       DONE (3)    │
 │ ┌Login empty┐      ┌API login fix┐       ┌Check diff┐     ┌Setup┐     │
 │ └───────────┘      └─────────────┘       └──────────┘     └─────┘     │
 │        ┌ 새 Task ────────────────────────────────────────────┐         │
-│        │ 제목* [________________]  태스크 그룹 [Development▾ 새로 만들기] │
+│        │ 제목* [________________]  Pilot* [opd_________▾]    │
 │        │ 설명* [..........................................] │         │
-│        │ Lead Agent [OPAL PM▾]  초기 상태 [Todo▾]           │         │
+│        │ Lead Agent* [OPAL PM▾]  초기 상태 [Todo▾]           │         │
 │        │                         [취소] [Task 만들기]         │         │
 │        └────────────────────────────────────────────────────┘         │
 └──────────────────────────────────────────────────────────────────────┘
@@ -215,28 +235,27 @@ WorkbenchShell
 
 #### Component hierarchy
 ```text
-TaskBoard(TaskBoardHeader, TaskGroupFilterSelect, KanbanColumns(TaskCard*))
-└─ NewTaskDialog(NativeForm(Label, Input, Textarea, Select(TaskGroup 생성 옵션 포함)), DialogFooter)
+TaskBoard(KanbanColumns(TaskCard*))
+└─ NewTaskDialog(NativeForm(Label, Input, Textarea, PilotSelect, AgentSelect), DialogFooter)
 ```
 
 #### 구성 요소
 | 영역 | UI 요소 | shadcn 컴포넌트 | 데이터/설명 |
 |---|---|---|---|
-| content | 4열 Kanban·Task card, TaskGroup 필터 | Card, Badge, ScrollArea, Select | todo/in_progress/review/done, activeProject 범위 |
-| modal | 제목·설명·TaskGroup(선택 또는 신규)·lead·상태 | Dialog, Label, Input, Textarea, Select | native form; title/description/taskGroupId(nullable)/leadAgentId/status |
+| content | 4열 Kanban·TASK card | Card, Badge, ScrollArea | activeProject 범위 |
+| modal | 제목·설명·Pilot·lead·상태 | Dialog, Label, Input, Textarea, Select | 참여 Project는 Main PM이 Room에서 초대하므로 사용자 입력에서 제외 |
 | feedback | validation·생성 완료 | Alert | 필수값과 mock 저장 성공을 inline Alert로 표시 |
 
 #### 기능 및 인터랙션
 | 이벤트 | 동작 | 결과 |
 |---|---|---|
 | 빈 제목/설명으로 제출 | client validation | field error, Dialog 유지 |
-| TaskGroup Select에서 `새로 만들기` | 그룹명 인라인 입력 | 새 그룹 생성 후 즉시 선택 |
-| 유효 제출 | Task mock 생성 | Todo 카드 추가·inline Alert, Dialog 닫힘 |
+| 유효 제출 | Task mock 생성 | 선택 Pilot·담당 Main PM을 보존하고 Todo 카드 추가; 참여 Project는 소유 Project만 초기화 |
 | 카드 drag/drop | 허용 열로 status 변경 | 카드 이동·localStorage 저장 |
 | 카드 클릭 | Task 선택 | SCR-001 진입(빈 Surface 상태) |
 
 #### Empty/loading/error states
-- 빈 TaskGroup: `Task가 없습니다`와 `첫 Task 만들기`; 생성 중에는 submit spinner/중복 클릭 방지.
+- Project에 TASK가 없으면 `첫 TASK 만들기`를 표시한다.
 - mock 저장 실패 toggle이 켜지면 Alert와 `다시 시도`; 입력값과 카드 원상태를 보존한다.
 
 ### 4.3 설정 화면 — Agent·외관·Workbench·프로젝트·목업 (SCR-003, v5.0 재정의)
@@ -277,9 +296,11 @@ TaskBoard(TaskBoardHeader, TaskGroupFilterSelect, KanbanColumns(TaskCard*))
 │ │              │  좌측 사이드바 기본 접힘  [ ]   우측 rail 기본 접힘 [ ]        │
 │ │              │  파일 트리 들여쓰기(px)  [14]                                 │
 
-예: 프로젝트:
-│ │ 프로젝트◀    │  OPAL   /Volumes/.../ai-framework                            │
-│ │              │  Sample /Users/.../sample-project      [경로 변경] [제거]     │
+예: 프로젝트(v6.0: 사후 관리 전용 — 생성·연결은 제공하지 않는다. 추가문서 대체표 4):
+│ │ 프로젝트◀    │  StoreLinkStudio  (최상위) PM:Main            [부모 변경] [제거]│
+│ │              │   ├ Pug   /Volumes/.../pug     PM:PugPM   [경로 변경] [제거]  │
+│ │              │   ├ Blend /Volumes/.../blend   PM:BlendPM [경로 변경] [제거]  │
+│ │              │   └ MAMS  /Volumes/.../mams    PM:MamsPM  [경로 변경] [제거]  │
 
 예: 목업:
 │ │ 목업◀        │  목업 상태 초기화                                             │
@@ -295,7 +316,7 @@ SettingsDialog
    ├─ AgentSection(CatalogToolbar(SearchInput, SourceFilter), AgentList(AgentListItem*(OpenInSurfaceButton)), BindingForm(DefinitionSummary, RuntimeSelect, ModelSelect, ModeSelect, Actions))
    ├─ AppearanceSection(ThemeRadioGroup, FontSizeRadioGroup)
    ├─ WorkbenchSection(DefaultSurfaceKindSelect, SidebarDefaultSwitch, RailDefaultSwitch, TreeIndentInput)
-   ├─ ProjectSection(ProjectList(ProjectRow*(PathLabel, ChangePathButton, RemoveButton)))
+   ├─ ProjectSection(ProjectTreeList(ProjectRow*(PathLabel, PMLabel, ParentLabel, ChangePathButton, ChangeParentButton, RemoveButton)) — **생성·연결 버튼 없음, 사후 관리 전용(v6.0)**)
    └─ MockSection(ResetMockStateButton, ConfirmAlertDialog)
 ```
 `AgentSection`은 v4.0 `AgentCatalogSheet`의 하위 구조(`CatalogToolbar`/`AgentList`/`BindingForm`)를 그대로 옮긴 것이며 기능 변경은 없다(C-3 Agent 정의·runtime 설정 분리 유지).
@@ -307,7 +328,7 @@ SettingsDialog
 | Agent | 검색·source 필터·목록·binding 폼 | Input, Select, ScrollArea, Badge, Avatar, Button, Label, Switch | v4.0 AgentSheet 구성과 동일(C-3 정의/바인딩 분리 유지) |
 | 외관 | 테마·폰트 크기 | RadioGroup(또는 기존 Select로 대체) | `Settings.theme`/`fontScale`, 즉시 미리보기 적용(로컬) |
 | Workbench | 새 탭 기본 종류·좌우 사이드바 기본 접힘·트리 들여쓰기 | Select, Switch, Input(number) | `Settings.defaultNewSurfaceKind`/`sidebarCollapsedDefault`/`railCollapsedDefault`/`treeIndentPx`. **새 Task 진입 시 기본값**이며 이미 저장된 `PersistedUI`의 현재 접힘 상태를 덮어쓰지 않는다 |
-| 프로젝트 | 등록 Project 목록·경로 | Card/div, Button | `Project.repositoryPath` 읽기 전용 표시 + mock 경로 변경/제거(§7) |
+| 프로젝트 | Project 생성·연결·등록 트리·경로·PM·부모 관계 | Card/div, Button, Dialog | 최상위/하위 Project 생성·기존 OPAL Project 연결 + 경로/부모 변경·제거(§7, AW-AC-20) |
 | 목업 | 상태 초기화 버튼 | Button(destructive), AlertDialog | `localStorage['opal.workbench.mock.v4']`와 `opal.workbench.settings.v1`를 지우고 seed로 복귀 |
 
 #### 기능 및 인터랙션
@@ -320,8 +341,10 @@ SettingsDialog
 | (Agent) 저장 | binding mock 저장 | inline Alert; 이미 열린 세션의 binding snapshot은 불변 |
 | (외관) 테마/폰트 라디오 변경 | 즉시 적용 | `updateSettings` mock 저장, 새로고침 없이 반영 |
 | (Workbench) 값 변경 | 즉시 적용 | `updateSettings` mock 저장, 다음 신규 Task/앱 실행부터 기본값으로 사용 |
+| (프로젝트) `Project 생성`/`기존 Project 연결` | `NewOrLinkProjectDialog` 오픈 | 부모 Project 선택 후 mock Project 추가·트리 갱신 |
 | (프로젝트) `경로 변경` | 경로 입력 Dialog | mock으로 `Project.repositoryPath` 갱신 |
-| (프로젝트) `제거` | 확인 AlertDialog | Project 목록에서 제거(연결된 Task/데이터는 이번 범위에서 함께 정리하지 않음 — 목업 한계 명시) |
+| (프로젝트) `부모 변경`(v6.0) | 부모 Project 선택 Dialog(순환 방지 검증) | mock으로 `Project.parentProjectId` 갱신, Project 트리 재배치. 순환이 되는 선택은 비활성 처리(§7) |
+| (프로젝트) `제거` | 확인 AlertDialog | Project 목록에서 제거(연결된 Task/데이터는 이번 범위에서 함께 정리하지 않음 — 목업 한계 명시). 자식이 있는 Project 제거 시 자식은 최상위로 승격 |
 | (목업) `상태 초기화` | 확인 AlertDialog(`정말 초기화할까요?`) | 승인 시 두 localStorage 키 삭제 후 seed로 재부팅, Dialog 닫고 Workbench 새로고침 |
 | Dialog 바깥/ESC/[X] | 닫기 | 미저장 Agent binding이 있으면 v4.0과 동일하게 `계속 편집/변경 폐기` 확인 |
 
@@ -329,7 +352,7 @@ SettingsDialog
 - Agent 검색 결과 없음: 필터 초기화 버튼. Catalog loading: 4개 row skeleton.
 - Runtime 미연결 Agent: `offline / Runtime not connected`; `Surface에서 열기`는 비활성 처리하고 사유 Tooltip 표시.
 - 설정 저장 실패 mock: 이전 값 유지, inline error와 재시도 버튼.
-- 프로젝트 0건: `등록된 Project가 없습니다`(Project selector와 동일 데이터, 제거 상태 동기화).
+- 프로젝트 0건: `등록된 Project가 없습니다`와 `Project 생성`·`기존 Project 연결` CTA를 표시한다.
 
 ### 4.4 Surface 탭 배치·Split Workbench (SCR-005)
 - **유형**: detail
@@ -406,6 +429,7 @@ v4.0까지 `SurfacePane`은 탭 바를 포함한 pane 전체를 단일 드롭 �
 #### 레이아웃
 ```text
 ┌ FILES  CHANGES        [»]──────────┐   ┌ FILES  CHANGES        [»]──────────┐
+│ Repo [backend        ▾](Pug 6개일 때만)│  │ Repo [backend        ▾]            │
 │ [+ 새 파일] [+ 새 폴더]            │   │ 변경 사항 2                        │
 │ v src/                        [M] │   │  dashboard/frontend        (1)     │
 │   v workbench/            [3][M] │   │   M WorkbenchApp.tsx  +12 -3        │
@@ -419,11 +443,12 @@ v4.0까지 `SurfacePane`은 탭 바를 포함한 pane 전체를 단일 드롭 �
 └────────────────────────────────────┘   └─────────────────────────────────────┘
    ↔ 좌우 리사이즈(전체 rail 폭), [»]로 rail 전체 접기      ↔ 동일 rail 폭 공유
    (v/>=폴더 셰브론, [M]수정/[U]미추적/[⊘]무시, 그룹 헤더 건수 배지, +n -m diff 통계)
+   (Repo 셀렉트는 선택 Project의 `repositoryComponentIds.length > 1`일 때만 표시된다. AW-AC-5, 추가문서 대체표 3)
 ```
 
 #### Component hierarchy
 ```text
-RightRail(RailTabs, RailCollapseToggle)
+RightRail(RailTabs, RailCollapseToggle, RepoScopeSelect[repositoryComponentIds.length>1일 때만, v6.0])
 ├─ FilesTab(FileTreeToolbar(NewFileButton, NewFolderButton), FileTree(FileTreeRow*(Chevron, KindIcon, Label, GitStatusBadge, DeleteButton), FileTree재귀-형제))
 └─ ChangesTab(ChangeGroupList(ChangeGroup*(GroupHeader+CountBadge, ChangeRow*(StatusBadge, Path, DiffStatLabel))), CommitComposer)
 ```
@@ -431,12 +456,14 @@ RightRail(RailTabs, RailCollapseToggle)
 #### 구성 요소
 | 영역 | UI 요소 | shadcn 컴포넌트 | 데이터/설명 |
 |---|---|---|---|
+| repo scope | 현재 대상 repo 선택 | Select | **v6.0 신규**. Project의 Repository Component가 2개 이상이면 표시하고, 1개 이하면 숨긴다. 선택값이 Files/Changes 트리·목록 범위를 결정한다(AW-AC-5, 추가문서 대체표 3) |
 | Files | 셰브론 접기/펼침, 폴더·파일 아이콘, git 상태 배지, ignored 이탤릭, 추가/삭제, rail 접기 | ScrollArea, Button, Input(rename), AlertDialog(삭제 확인) | mock 파일 트리, 실제 파일시스템 미반영(`Not connected`). R-6 구조 수정 대상 |
 | Changes | 디렉터리별 그룹(건수 배지) + `변경 사항 N`/`추적되지 않은 파일 N` 2섹션, 파일별 `+n -m`, 커밋 입력 | ScrollArea, Badge, Textarea, Button | mock git status·diff 통계, 커밋은 `Simulated`. 결과 검토의 최종 위치(C-10) |
 
 #### 기능 및 인터랙션
 | 이벤트 | 동작 | 결과 |
 |---|---|---|
+| Repo 셀렉트 변경(v6.0) | activeRepositoryComponentId 갱신 | Files 트리·Changes 목록이 선택 repo 범위로 재로드(AW-AC-5) |
 | `+ 새 파일/폴더` | 이름 입력 인라인 | mock 트리에 노드 추가 |
 | 폴더 행 셰브론 클릭 | 펼침/접힘 토글 | 자식 `FileTree` 재귀 렌더 여부 전환. 펼침 상태는 `FileNode`가 아니라 `PersistedUI.expandedFolderIds`에 저장되어 재실행 후 복원된다(AC-10) |
 | 노드 우클릭 `삭제` | AlertDialog 확인 | mock 트리에서 제거 |
@@ -462,15 +489,149 @@ RightRail(RailTabs, RailCollapseToggle)
 - 삭제 대상이 존재하지 않을 때(경합): inline error, 목록 새로고침.
 - rail 접힘 상태: FilesTab/ChangesTab 콘텐츠 렌더 생략, 얇은 세로 바 + 펼치기 아이콘만 표시.
 
+### 4.6 Project 트리·생성/연결 Dialog (SCR-007, 신규 v6.0)
+- **유형**: form (트리는 SCR-001 사이드바에 상주, Dialog는 SCR-007)
+- **경로**: `/workbench/:projectId?dialog=new-project|link-project&parent=<projectId?>`
+- **진입점**: 설정 화면의 프로젝트 섹션 `Project 생성` 또는 `기존 Project 연결`; parentProjectId는 Dialog에서 선택한다.
+
+#### 4.6a Project 트리 행 규칙
+- 행 구성: 셰브론(자식 있을 때만) · Project 이름 · PM 배지 · 진행 TASK 수 배지 · 블로커 점(●있음/○없음).
+- 펼치면 자식 Project와 해당 Project의 TASK가 드러나며, TASK를 펼치면 실제 실행 Agent 노드가 드러난다. `oppl`·`opsdd`의 내부 backlog·ACT·단계는 추가하지 않는다(AW-AC-13·15).
+- PM은 Project 행에 고정 표시하고, PM·전문 워커의 실제 실행 세션은 TASK 아래(실행 Agent 노드)에 표시한다(추가문서 §화면 요구사항 Project 탐색).
+- 펼침 상태는 `PersistedUI.expandedProjectIds`(Project id 집합)로 저장·복원한다(AW-AC-11).
+
+#### 레이아웃 (신규 생성 탭)
+```text
+┌ Project 추가 ──────────────────────────────────── [X] ┐
+│ [신규 생성] [기존 연결]                                │
+│ ────────────────────────────────────────────────────  │
+│ 부모: (최상위) 또는 "Pug 아래에 추가"                   │
+│ 이름*  [____________________]                          │
+│ 경로*  [____________________]                          │
+│ PM Agent [OPAL PM ▾]                                   │
+│ ⓘ 관리 repo·OPAL 구조 생성은 실제로 수행하지 않고        │
+│    목업 상태로만 시뮬레이션됩니다.                        │
+│                                    [취소] [Project 만들기]│
+└────────────────────────────────────────────────────────┘
+
+(기존 연결 탭)
+┌ Project 추가 ──────────────────────────────────── [X] ┐
+│ [신규 생성] [기존 연결◀]                               │
+│ 부모: (최상위) 또는 "Pug 아래에 추가"                   │
+│ 경로*  [/Volumes/Data/StoreLinkStudio/blend_______]     │
+│ ⓘ 발견됨: .opal/AGENT.md → PM "Blend PM", repo 4개      │
+│                                       [취소] [연결하기]  │
+└────────────────────────────────────────────────────────┘
+```
+
+#### Component hierarchy
+```text
+NewOrLinkProjectDialog(parentProjectId?)
+├─ DialogTabs(NewProjectTab | LinkProjectTab)
+├─ NewProjectTab(Label, Input[name], Input[path], Select[pmAgentId], MockBoundaryNote)
+└─ LinkProjectTab(Input[path], DiscoveredAgentPreview(PMName, RepoComponentCount), MockBoundaryNote)
+```
+설정 화면 `ProjectSection`이 동일한 `NewOrLinkProjectDialog`를 열며 신규/연결 모드와 `parentProjectId`를 전달한다. 좌측 `PROJECTS +`는 이 Dialog를 호출하지 않고 TASK 생성에 사용한다.
+
+#### 구성 요소
+| 영역 | UI 요소 | shadcn 컴포넌트 | 데이터/설명 |
+|---|---|---|---|
+| 탭 | 신규 생성 / 기존 연결 | Tabs | 진입 시 기본은 신규 생성 |
+| 신규 생성 | 이름·경로·PM 선택, 안내 문구 | Label, Input, Select, Alert | 실제 폴더·Git·`.opal` 생성 없이 mock `Project` 레코드만 추가(제외 범위) |
+| 기존 연결 | 경로 입력, 발견된 PM·repo 구성 미리보기 | Input, Card, Badge | `.opal/AGENT.md` 존재를 mock으로 가정하고 PM·Repository Component 후보를 표시 |
+
+#### 기능 및 인터랙션
+| 이벤트 | 동작 | 결과 |
+|---|---|---|
+| 이름/경로 미입력 제출(신규) | client validation | field error, Dialog 유지 |
+| 신규 생성 제출 | mock `Project` 추가(`parentProjectId` 지정값 반영) | Project 트리에 즉시 반영, 부모가 있으면 그 아래 펼침 상태로 포커스(AW-AC-1) |
+| 경로 입력 후(연결) | mock 발견 결과 조회 | PM·repo 구성 미리보기 갱신, 경로 미존재 mock 처리 시 안내 |
+| 연결하기 제출 | mock `Project` 추가(연결) | Project 트리에 반영(AW-AC-2), `repositoryComponentIds` seed 반영 |
+| Dialog 바깥/ESC/[X] | 닫기 | 입력값 폐기 |
+
+#### Empty/loading/error states
+- 연결 경로에서 `.opal/AGENT.md`를 mock 상 발견하지 못한 경우: `OPAL Project를 찾을 수 없습니다` + 재입력 유도.
+- 순환 발생 부모 선택(자기 자신의 하위를 부모로 지정 등): 제출 버튼 비활성 + 사유 Tooltip(§7 순환 금지).
+
+### 4.7 PM Coordination Room (SCR-008, v9.0 재정의)
+- **유형**: detail/action Surface
+- **경로**: `/workbench/:projectId/:taskId?surface=coordination`
+- **진입점**: 조율 TASK 선택 시 기본 탭으로 포커스. 일반 Surface와 동일하게 이동·닫기·split 가능
+- **경계**: 사용자 입력은 Main PM에게만 전달한다. Main PM이 Room을 소유하고 Sub PM을 초대·조율한다. Sub PM/Worker Terminal은 Agent가 제어하고 사용자는 관찰만 한다.
+
+#### 레이아웃
+```text
+┌ PM Coordination Room — 재귀형 프로젝트 관리 ──────────────────────┐
+│ Owner: Main PM   Invited: Pug PM ●  Blend PM ●   [PM 초대 요청]    │
+│ Workspace: Pug PM ●running  Blend PM ●running                     │
+├───────────────────────────────────────────────────────────────────┤
+│ User → Main PM  "스토어링크 통합 작업을 진행해줘"                    │
+│ Main PM         "Pug·Blend PM을 초대해 역할을 나누겠습니다"          │
+│ [초대] Pug PM·Blend PM → Sub PM Workspace Terminal 자동 생성       │
+│ Pug PM ↔ Blend PM  "공통 ProjectTree 계약 합의"                    │
+│ [배정] Main PM → Pug PM "재귀 트리 UI"                             │
+├───────────────────────────────────────────────────────────────────┤
+│ Main PM에게 지시 [____________________________________] [지시 전송] │
+└───────────────────────────────────────────────────────────────────┘
+
+초대 후 Execution Workspace
+┌ PM Room ─────────┬ Pug PM Workspace ─────────┐
+│ PM 다자 대화      │ 관찰 전용 · PM Agent 실행  │
+│                  │ ├ FE Agent Terminal        │
+│                  │ └ Test Agent Terminal      │
+└──────────────────┴────────────────────────────┘
+```
+
+#### Component hierarchy
+```text
+PmCoordinationRoomSurface
+├─ RoomHeader(MainPmOwner, InvitedSubPmChip*, WorkspaceStatus*, InviteRequestButton)
+├─ MainPmFinalJudgement(Badge, Text) — Sub PM 결과와 시각적으로 구분(카드 배경/라벨)
+├─ SubTaskStatusRollup(StatusDot*, ProjectLabel*) — 하위 TASK 상태 상향 집계
+├─ RoomMessageList(UserBubble | PmBubble | SystemEventCard)
+└─ MainPmComposer(MessageInput, SendInstructionButton)
+
+SubPmWorkspaceSurface(readOnlyForUser=true)
+├─ WorkspaceHeader(SubPm, Status, ObserverBadge)
+├─ AgentSessionOutput
+└─ WorkerWorkspaceList(WorkerTerminal*)
+```
+
+#### 구성 요소
+| 영역 | UI 요소 | shadcn 컴포넌트 | 데이터/설명 |
+|---|---|---|---|
+| 헤더 | Owner Main PM·초대된 Sub PM·Workspace 상태·PM 초대 요청 | Badge, Button, Dialog | `CoordinationRoom` |
+| Main PM 판단 | 최종 통합 판단 카드 | Card, Badge | `Task.ownerProjectId`가 Main PM인 TASK에서만 표시, Sub PM 결과 카드와 스타일로 구분(AW-AC-9) |
+| 상태 집계 | Project별 하위 TASK 상태 점 | Badge, Tooltip | `coordinationTaskId`로 연결된 하위 TASK들의 상태를 상향 집계 |
+| 대화 | User/Main/Sub PM 버블 + 초대·배정·상태·블로커·결정·결과 카드 | ScrollArea, Badge, Separator | `CoordinationEvent[]`; 발신자와 이벤트를 한 흐름에 표시 |
+| 입력 | `Main PM에게 지시` 본문 | Input, Button | 대상·유형·Pilot 선택 없음. 항상 User→Main PM `instruction` 기록 |
+| PM Workspace | Sub PM 세션 출력·Worker Terminal 목록 | Tabs, ScrollArea, Badge | 초대 시 자동 생성, 사용자 관찰 전용 |
+
+#### 기능 및 인터랙션
+| 이벤트 | 동작 | 결과 |
+|---|---|---|
+| 조율 TASK 행 클릭 | 저장된 `coordination` Surface 포커스 | 기존 split 배치와 함께 표시 |
+| 사용자 지시 전송 | User→Main PM `instruction` 추가 | Room 대화에 표시, Sub PM 직접 대상 지정 불가 |
+| `PM 초대 요청` | User 요청→Main PM `invitation` 처리 | Room 멤버 추가 + Sub PM Agent 발동 + 관찰 전용 Workspace Terminal 생성 |
+| Main PM 배정 | 대상 Project TASK·Environment·Sub PM Workspace 연결 | 상위 TASK에 `coordinationTaskId`로 연결 |
+| Sub PM Worker 호출 | `parentAgentId=Sub PM` Worker Terminal 생성 | Sub PM Workspace 및 Project→TASK→Agent 트리에 표시 |
+| Agent 노드 클릭 | 연결된 실행 Surface 포커스 | 대상 Project/TASK Workbench로 이동 |
+
+#### Empty/loading/error states
+- Room 이벤트 0건: `Main PM에게 첫 지시를 보내세요`.
+- 초대된 Sub PM 0명: `Main PM이 아직 PM을 초대하지 않았습니다`.
+- Workspace 생성 실패 mock: 초대 카드에 실패 상태와 Main PM 재시도 표시.
+
 ## 5. 공통 컴포넌트
 | 컴포넌트 | shadcn 기반 | UI kit 상태 | 사용 화면 | 설명 |
 |---|---|---|---|---|
 | `RuntimeBoundaryBadge` | Badge, Tooltip | 기존(Existing) | 전체 | Actual/Simulated/Not connected를 일관되게 표시 |
-| `EntityContext` | Card, Button, Separator | 기존 | SCR-001 | Project→TaskGroup→Task→Environment 관계 |
+| `EntityContext` | Card, Button, Separator | 기존 | SCR-001 | Project(재귀)→TASK→실행 Agent→Surface 관계 표시 |
 | `EmptyState` | Card, Button | 기존 | 전체 | 상태 설명과 단일 회복 CTA |
 | `MockFailureToggle` | Switch, Tooltip | 기존 | 전체 | 제품 검토용 실패/대기 상태 전환; 개발 환경에서만 표시 |
-| `ProjectSelector`(신규 조합) | Select | 기존 요소 조합 | SCR-001 | 신규 primitive 아님, Select 재사용 |
-| `TaskGroupChip`(신규 조합) | Badge, Button | 기존 요소 조합 | SCR-001, 002 | 자유 그룹 태그 표시/생성 |
+| `ProjectTree`(신규 조합, v6.0 — `ProjectSelector` 폐기) | Sidebar, ScrollArea, Collapsible | 기존 primitive 조합, 로직 신규 | SCR-001 | 재귀 Project 트리 렌더. 자식은 `ProjectTreeRow` 재귀 |
+| `ProjectTreeRow`(신규 조합, v6.0) | Button/div + lucide `ChevronRight`/`ChevronDown`, Badge(PM/TASK 수/블로커) | 기존 primitive 조합, 로직 신규 | SCR-001 | Project 행: 이름·PM·진행 TASK 수·블로커 상태, 셰브론 펼침/접힘, hover 시 하위 추가 `+` |
+| `TaskParticipantChip`(신규 조합, v6.0) | Badge(square) | 기존 primitive 조합, 로직 신규 | SCR-001, 008 | TASK 행의 참여 Project 칩(`▢PUG▢`), 조율 TASK는 복수 표시 |
 | `SurfaceTabBar`(신규 조합, R-10 갱신) | Tabs 확장 + DropdownMenu + Command | 기존 primitive 조합, 로직 신규 | SCR-001, 005 | 동적 탭만 존재, `+` 메뉴. **v5.0부터 자체 드롭 타깃**(탭 삽입 인덱스 계산)을 가지며 pane 본문의 가장자리 split 드롭 타깃과 분리된다(R-10) |
 | `SurfaceTabStatusIndicator`(신규 조합, AC-16) | Badge/spinner(lucide `Loader2` 등 기존 아이콘) + Tooltip | 기존 primitive 조합, 로직 신규 | SCR-001, 005 | 탭 라벨 옆 idle/running/completed/failed 표시. **`RunStatusBadge`·`ActivityTimeline`을 대체** — Run/Activity 화면이 폐기됨에 따라 세션 상태를 탭 자체로 옮긴 것 |
 | `SplitPaneHost`(신규 사용) | `resizable.tsx`(react-resizable-panels) | **이미 설치된 기존 의존성** | SCR-005 | 재귀적 split 레이아웃, 신규 npm 설치 없음 |
@@ -479,9 +640,12 @@ RightRail(RailTabs, RailCollapseToggle)
 | `FileTreeRow`(신규 조합, R-6·a) | Button/div + lucide `ChevronRight`/`ChevronDown`(셰브론), `Folder`/`FileText`(아이콘), Badge(git 상태) | 기존 primitive 조합, 로직 신규 | SCR-001, 006 | 셰브론 접기/펼침, 아이콘, 우측 정렬 `M`/`U`/`⊘` 배지, ignored 이탤릭. `FileTree` 재귀는 이 행의 형제로 렌더(R-6 구조 수정) |
 | `ChangeGroupList`(신규 조합, c·d) | Card/div + Badge(건수), 기존 텍스트 스타일(diff 통계) | 기존 primitive 조합, 로직 신규 | SCR-006 | 디렉터리별 그룹 + 건수 배지, `변경 사항 N`/`추적되지 않은 파일 N` 2섹션, 파일별 `+n -m` |
 | `SidebarBottomBar`(신규 조합, R-7) | Button + lucide `Settings` | 기존 primitive 조합, 로직 신규 | SCR-001 | 좌측 사이드바 최하단 고정 바, 설정 아이콘 1개만 배치. 좌측 패널 접힘과 함께 숨겨짐 |
-| `SettingsDialog`(신규 조합, R-8) | Dialog(large) + `SettingsNav`(Button 목록) + `SettingsPanel` | 기존 primitive 조합, 로직 신규 | SCR-003 | Agent·외관·Workbench·프로젝트·목업 5섹션을 좌측 목록 + 우측 패널로 표시. v4.0 `AgentCatalogSheet`를 Agent 섹션으로 흡수(§4.3) |
+| `SettingsDialog`(신규 조합, R-8) | Dialog(large) + `SettingsNav`(Button 목록) + `SettingsPanel` | 기존 primitive 조합, 로직 신규 | SCR-003 | Agent·외관·Workbench·프로젝트·목업 5섹션을 좌측 목록 + 우측 패널로 표시. v4.0 `AgentCatalogSheet`를 Agent 섹션으로 흡수(§4.3). **v6.0**: 프로젝트 섹션은 사후 관리 전용, 생성·연결 버튼 없음 |
+| `NewOrLinkProjectDialog`(신규 조합, v6.0) | Dialog + Tabs + Label/Input/Select + Alert | 기존 primitive 조합, 로직 신규 | SCR-007 | 신규 생성/기존 연결 2탭, `parentProjectId` prop으로 최상위·하위 추가 겸용(§4.6) |
+| `RepoScopeSelect`(신규 조합, v6.0) | Select | 기존 요소 조합 | SCR-006 | Repository Component가 2개 이상인 Project에서만 표시, Files/Changes 범위 선택(AW-AC-5) |
+| `PmCoordinationRoomSurface`(v9.0) | Card, Badge, ScrollArea, Dialog, Input, Button | 기존 primitive 조합, 로직 신규 | SCR-008 | 사용자→Main PM 단일 입력, Sub PM 초대, 다자 PM 대화·구조화 이벤트. 일반 Surface와 동일하게 탭·split 지원 |
 
-> 폐기: `RunStatusBadge`, `ActivityTimeline`(Run 없음, Activity Log 없음 — C-10), `AgentCatalogSheet`(Sheet 컨테이너, 로직은 `SettingsDialog`의 Agent 섹션으로 이동 — R-8). 대체물은 `SurfaceTabStatusIndicator`(탭 상태)와 `SettingsDialog`(Agent 설정) 두 항목이다.
+> 폐기: `RunStatusBadge`, `ActivityTimeline`(Run 없음, Activity Log 없음 — C-10), `AgentCatalogSheet`(Sheet 컨테이너, 로직은 `SettingsDialog`의 Agent 섹션으로 이동 — R-8), `ProjectSelector`(평면 Select, `ProjectTree`로 전면 교체 — v6.0, 추가문서 대체표 1). 대체물은 `SurfaceTabStatusIndicator`(탭 상태)·`SettingsDialog`(Agent 설정)·`ProjectTree`(Project 탐색) 세 항목이다.
 
 ## 6. shadcn 설치 목록
 | 구분 | 컴포넌트 | 사용 화면 | 조치 |
@@ -512,18 +676,38 @@ RightRail(RailTabs, RailCollapseToggle)
 
 `@dnd-kit/core`는 이미 설치되어 있으나 이번 범위에서 사용하지 않는다. 신규 설치 명령: **없음**.
 
+**v7.0 소요 확인**: Project/TASK/Agent 트리와 `PmCoordinationSurface`는 기존 `ScrollArea`·`Badge`·`Button`·`Select`·`Input`·`Card`를 조합한다. 신규 shadcn 및 npm 의존성은 없다.
+
 ## 7. Mock data contract와 상태 규칙
 ```ts
 type Boundary = 'actual'|'simulated'|'not_connected';
 type TaskStatus = 'todo'|'in_progress'|'review'|'done';
 type SplitDirection = 'horizontal'|'vertical';
-type SurfaceKind = 'terminal'|'browser'|'markdown'|'mobile_emulator'|'agent_cli'|'diff';
+type SurfaceKind = 'coordination'|'terminal'|'browser'|'markdown'|'mobile_emulator'|'agent_cli'|'diff';
 type SessionStatus = 'idle'|'running'|'completed'|'failed'; // AC-16 — 탭 자체 상태 표시
 
-interface Project { id:string; name:string; repositoryPath:string; taskGroupIds:string[] }
-interface TaskGroup { id:string; projectId:string; name:string; taskIds:string[] }
-interface Task { id:string; projectId:string; taskGroupId?:string; title:string; description:string; status:TaskStatus; leadAgentId:string; environmentId:string }
+// v6.0: Project는 재귀 트리 노드다(추가문서 §목업 데이터 계약). 단순/복합 유형은 parentProjectId·자식 존재 여부로 파생하며 별도 필드로 저장하지 않는다. 계층은 순환을 허용하지 않는다.
+interface Project {
+  id:string; name:string; repositoryPath:string;
+  parentProjectId?:string;            // 신규(v6.0) — 없으면 최상위. 정본 부모 하나만 가짐(다중 부모 없음)
+  pmAgentId:string;                   // 신규(v6.0) — Project당 PM Agent 1명
+  repositoryComponentIds:string[];    // 신규(v6.0) — 관리 대상 Repository Component
+}
+// 신규(v6.0): Repository Component 는 Project가 관리하는 실제 repo/monorepo 영역이다. 독립 PM·TASK·의사결정을 갖지 않는다.
+interface RepositoryComponent { id:string; projectId:string; name:string; path:string; kind:'repo'|'monorepo-area' }
+type Pilot = 'opp'|'opd'|'opds'|'opdw'|'oppl'|'opsdd';
+interface Task {
+  id:string; projectId:string; title:string; description:string; status:TaskStatus; leadAgentId:string; environmentId:string;
+  ownerProjectId:string;              // 신규(v6.0) — TASK를 소유하는 단일 Project
+  pilot:Pilot;
+  participantProjectIds:string[];     // v9.0 — Main PM이 Room에 초대한 Project 집합. 사용자 Task 생성 입력에는 노출하지 않음
+  coordinationTaskId?:string;         // 신규(v6.0) — 이 TASK가 상위 조율 TASK에 속할 때 그 TASK id
+}
 interface Environment { id:string; taskId:string; worktreeLabel:string; terminalSessionIds:string[]; browserSessionId?:string; boundary:Boundary }
+// 신규(v6.0): Project PM 수준 조율 이벤트. Agent Run 원본·도구 로그·검증 상세·승인 조작 필드는 두지 않는다(추가문서 113행).
+type CoordinationEventType = 'instruction'|'invitation'|'assignment'|'status'|'coordination'|'blocker'|'decision'|'result'|'worker_spawn';
+interface CoordinationEvent { id:string; taskId:string; projectId:string; pmAgentId:string; type:CoordinationEventType; summary:string; timestamp:string }
+interface CoordinationRoom { id:string; taskId:string; mainProjectId:string; mainPmAgentId:string; invitedProjectIds:string[] }
 interface AgentDefinition { id:string; name:string; role:string; source:'project'|'framework'|'user'; path:string; status:'ready'|'idle'|'offline' }
 interface RuntimeBinding { agentId:string; runtime:string; model:string; mode:string; permission:'ask'|'allow'; boundary:'simulated' }
 
@@ -531,11 +715,13 @@ interface RuntimeBinding { agentId:string; runtime:string; model:string; mode:st
 interface SurfaceTab {
   id:string; taskId:string; kind:SurfaceKind; title:string;
   agentId?:string;                 // kind='agent_cli'일 때 바인딩된 Agent
+  parentAgentId?:string;           // v9.0 — Worker를 호출한 Sub PM Agent
+  readOnlyForUser?:boolean;        // v9.0 — PM/Worker Workspace Terminal은 true
   boundary:Boundary;
   closable:true;
   sessionStatus:SessionStatus;     // AC-16 — 탭 라벨의 상태 표시
   failureSummary?:string;          // sessionStatus='failed'일 때 hover 1줄 요약
-  messages?: { author:string; body:string }[]; // terminal/agent_cli 세션의 mock 대화 로그(scrollback 상한 적용)
+  messages?: { author:string; body:string }[]; // terminal/agent_cli 세션 로그. coordination은 CoordinationEvent[] 사용
 }
 type SplitNode =
   | { type:'leaf'; paneId:string; tabIds:string[]; activeTabId:string }
@@ -574,43 +760,94 @@ interface Settings {
 interface PersistedUI {
   version:4;
   activeProjectId:string;
-  taskGroupFilter?:string;
+  taskStatusFilter?:TaskStatus;
+  taskPilotFilter?:Pilot;
+  taskAssigneeFilter?:string;
+  taskParticipantProjectFilter?:string;
+  taskSearch:string;
   taskId?:string;
   surfaceLayoutByTask: Record<string, SurfaceLayout>;
   railTab: 'files'|'changes';
   railWidthPx: number;
   sidebarWidthPx: number;
-  sidebarCollapsed: boolean; // 신규(R-5) — 좌측 Project/TaskGroup/Task 패널 접힘 상태
+  sidebarCollapsed: boolean; // 좌측 Project/TASK/Agent 패널 접힘 상태
   railCollapsed: boolean;    // 신규(R-5) — 우측 Files/Changes 패널 접힘 상태
   expandedFolderIds: string[]; // 신규(a) — 트리 셰브론 펼침 상태 복원(AC-10 확장), 폴더 FileNode.id 집합
+  expandedProjectIds: string[]; // 신규(v6.0) — Project 트리 셰브론 펼침 상태 복원(AW-AC-11), Project.id 집합
+  activeRepositoryComponentId?: string; // 신규(v6.0) — Repository Component가 여럿인 Project의 현재 Files/Changes 대상(AW-AC-5)
 }
 ```
 
-- 단일 `MockWorkbenchAdapter`가 seed 조회와 mutation(`switchProject`, `createTaskGroup`, `createTask`, `moveTask`, `updateBinding`, `openSurface`, `splitSurface`, `moveSurfaceTab`(v5.0: `index` 인자 추가, R-10), `closeSurfaceTab`, `sendSurfaceMessage`, `createFileNode`, `deleteFileNode`, `stageMock`, `commitMock`, `toggleSidebarCollapsed`, `toggleRailCollapsed`, `toggleFolderExpanded`, `updateSettings`, `updateProjectPath`, `removeProject`, `resetMockState`)을 제공한다. 마지막 4개(`updateSettings`~`resetMockState`)가 v5.0 신규다(R-8).
+- 단일 `MockWorkbenchAdapter`가 Project/TASK/Surface/Files/Changes mutation을 제공한다. v7.0에서 TaskGroup mutation을 제거하고 `createTask(pilot, leadAgent, participants)`와 `sendCoordinationMessage`, `assignSubProjectTask`를 추가한다. 배정 mutation은 하위 TASK·Environment·PM Agent Surface·상위 assignment 이벤트를 함께 생성한다.
 - mock timer는 `sendSurfaceMessage` 이후 대상 `SurfaceTab.sessionStatus`를 `running→completed`로 진행하며 failure toggle에서 `running→failed`로 전이시킨다. 이 상태 전이가 Run 상태 추적을 대체한다(C-10).
-- `localStorage['opal.workbench.mock.v4']`에는 `PersistedUI`(activeProjectId·surfaceLayoutByTask·railTab/Width·sidebarCollapsed·railCollapsed·expandedFolderIds 포함)만 저장한다. schema version 불일치/파싱 오류 시 seed로 복구하고 non-blocking Alert를 표시한다. 이전 스키마 키(`v1`~`v3`)는 마이그레이션하지 않고 무시한다 — 목업 범위이므로 신규 seed로 대체. `PersistedUI` 구조는 v5.0에서 변경되지 않아 `version:4`를 유지한다(버전 승격 없음).
-- **신규**: `localStorage['opal.workbench.settings.v1']`에 `Settings`를 별도 저장한다(R-8, 위 타입 주석의 분리 근거 참조). `MockSection`의 `상태 초기화`(R-8)는 `opal.workbench.mock.v4`와 `opal.workbench.settings.v1` **두 키를 모두 삭제**한 뒤 seed로 재부팅한다 — 목업 상태만이 아니라 환경설정도 "처음 상태"로 돌리는 것이 검토자 기대에 맞다는 판단.
+- `localStorage['opal.workbench.mock.v4']`에는 UI 상태뿐 아니라 `Project`/`RepositoryComponent`/`Task`/`CoordinationEvent`/`Environment`/`SurfaceTab`과 repo별 Files/Changes 스냅샷을 함께 저장한다. 생성 TASK가 복원될 때 Environment나 실행 Surface가 유실되지 않아야 한다.
+- **`PersistedUI.version` 승격 여부(v6.0 판단)**: **승격하지 않는다, `version:4` 유지.** v5.0에서도 `sidebarCollapsed`·`railCollapsed`·`expandedFolderIds`를 동일한 `version:4` 아래 추가 필드로 도입한 선례를 따른다 — 이 목업의 버전 필드는 "저장 포맷이 이전 키(`v1`~`v3`)와 호환되지 않아 seed로 재시작해야 하는 파괴적 변경"에만 쓰고, 필드 추가처럼 비파괴적 확장에는 쓰지 않는다는 기존 관례를 유지한다. `expandedProjectIds`/`activeRepositoryComponentId` 부재는 로드 시 빈 배열/undefined로 안전하게 채워진다.
+- **신규**: `localStorage['opal.workbench.settings.v1']`에 `Settings`를 별도 저장한다(R-8, 위 타입 주석의 분리 근거 참조). `MockSection`의 `상태 초기화`(R-8)는 `opal.workbench.mock.v4`와 `opal.workbench.settings.v1` **두 키를 모두 삭제**한 뒤 seed로 재부팅한다 — 목업 상태만이 아니라 환경설정도 "처음 상태"로 돌리는 것이 검토자 기대에 맞다는 판단. seed 복귀 시 Pug·Blend·MAMS 대표 구조(§4.6 실측 seed)도 초기 상태로 되돌아간다.
 - `SplitNode` 트리는 leaf(pane)와 split(방향+비율+자식) 재귀 구조이며, pane의 `tabIds`가 비면 부모 split에서 해당 leaf를 제거하고 형제가 공간을 흡수한다.
 - 터미널/에이전트 세션의 `messages`는 최근 N개(예: 50)만 유지해 렌더링한다(C-5) — 원본 전문은 목업 범위에서 별도로 저장하지 않는다.
+- Project 계층은 순환을 허용하지 않는다. `updateProjectParent`/`createProject`는 지정하려는 부모가 자기 자신이거나 자신의 자손이면 mutation을 거부한다(§4.6 Empty/error states).
+
+### 7.1 대표 seed 데이터 (v7.0)
+Project 트리의 seed는 실측 구조를 그대로 반영한다(캡틴 지시 원문, §9 근거 참조).
+
+| Project | 부모 | 경로 | PM | Repository Component |
+|---|---|---|---|---|
+| StoreLinkStudio | (최상위) | (가상, 실 경로 없음 — Main PM 조율용 상위 Project) | Main PM | 없음(자식이 Component 소유) |
+| Pug | StoreLinkStudio | `/Volumes/Data/StoreLinkStudio/pug` | Pug PM | `app_android`·`app_ios`·`backend`·`frontend`·`frontend_admin`·`frontend_app` (kind=`repo` ×6) |
+| Blend | StoreLinkStudio | `/Volumes/Data/StoreLinkStudio/blend` | Blend PM | `backend`·`batch`·`frontend_admin`·`frontend_monitor` (kind=`repo` ×4) |
+| MAMS | StoreLinkStudio | `/Volumes/Data/StoreLinkStudio/mams` | MAMS PM | `backend`·`docker`·`frontend`·`frontend_test`·`frontend_wireframe` (kind=`monorepo-area` ×5) |
+
+조율 TASK `coord-storelinkstudio-hierarchy`는 `coordination` 기본 Surface와 Pug·Blend·MAMS 연결 TASK를 가지며 §4.7 대화·배정 흐름의 seed다.
 
 ## 8. Acceptance criteria traceability
 | AC | 화면/상태 | 구현·검토 지점 |
 |---|---|---|
 | AC-1 | SCR-001 | Electron 창에서 React 3열 Shell과 Actual/Mock 배지 표시 |
-| AC-2 | SCR-001, 002 | Project selector로 다중 Project 전환, TaskGroup 자유 목록으로 Task 상태 확인 |
+| AC-2 | SCR-001, 002 | 재귀 Project→진행 TASK→Agent 트리에서 문맥을 전환하고 완료 TASK가 자동으로 숨겨지는 것을 확인 |
 | AC-3 | SCR-002→001 | Dialog 생성, DnD 상태 이동, 카드로 Workbench 진입 |
 | AC-4 | SCR-003 (Agent 섹션) | 프레임워크 제공 Agent·user Agent와 Definition/Binding 분리, 상태 확인·목업 설정 변경. **진입 경로가 좌측 사이드바 설정 아이콘 → 설정 화면으로 변경**(R-7·R-9, §10 TASK.md 개정 제안 참조) |
 | AC-5 | SCR-001, 005 | 본문에서 Terminal 또는 LLM 에이전트 Surface 탭을 열어 세션을 발동하고 대화를 주고받는 흐름 시뮬레이션 |
 | AC-6 | SCR-005 | Terminal·Browser·Markdown·모바일 에뮬레이터·LLM 에이전트 Surface 탭 추가(`+`)·닫기·전환 |
-| AC-10 | SCR-001 | activeProjectId·TaskGroup·Task·surfaceLayoutByTask(split 배치 포함)·**sidebarCollapsed·railCollapsed·expandedFolderIds** PersistedUI v4 복원 시나리오 |
-| AC-12 | SCR-001→002→001→003→005→006 | end-to-end 클릭 흐름, Project·TaskGroup·Task·Surface·Environment 관계, 파일·git 검토 위치 판단 |
+| AC-10 | SCR-001 | 선택 Project·TASK·Surface split·트리/폴더 펼침·repo 범위와 생성된 실행 환경을 복원 |
+| AC-12 | SCR-001→002→005→008 | Project→TASK→Agent→Surface 흐름과 PM 대화→Sub PM 배정→하위 TASK 생성→결과 상향 흐름 |
 | AC-13 | 전체 | 변경 프런트엔드 lint·typecheck·build 통과와 생성→Surface 오픈→세션 상태 전이→git 검토 핵심 흐름 테스트, split·drag·rail 리사이즈 회귀 테스트 포함 |
 | AC-14 | SCR-005 | 동적 Surface 탭을 드래그해 pane 본문 가장자리에 드롭하면 split, **탭 바에 드롭하면 같은 pane 내 순서 변경 또는 다른 pane으로 편입**(v5.0: 탭 바/본문 드롭 타깃 분리로 결함 수정, R-10) |
-| AC-15 | SCR-001, SCR-006 | Files 추가/삭제, Changes 스테이징/커밋 mock 동작, rail 폭 드래그 조정, **좌·우 사이드바 접기/펼치기(R-5)** |
+| AC-15 | SCR-001, SCR-006 | Files 추가/삭제, Changes 스테이징/커밋 mock 동작, rail 폭 드래그 조정, **좌·우 사이드바 접기/펼치기(R-5)**. **v6.0(추가문서 대체표 3)**: Repository Component가 여럿인 Project는 `RepoScopeSelect`로 현재 repo를 먼저 구분한 뒤 선택 repo 범위의 Files/Changes를 표시 |
 | AC-16 | SCR-005 | Surface 탭 라벨의 idle/running/completed/failed 상태 표시(스피너·점·배지), failed hover 요약 |
 | AC-17 | SCR-006 | Files 트리가 셰브론 펼침/접힘·폴더/파일 아이콘·우측 git 상태 배지(`M`/`U`/`⊘`)·ignored 이탤릭으로 렌더되고, 자식 트리가 행의 형제로 올바르게 계단형 배치된다(R-6·a) |
 | AC-18 | SCR-006 | Changes가 디렉터리별 그룹(건수 배지)과 `변경 사항 N`/`추적되지 않은 파일 N` 2섹션으로 표시되고, 파일별 `+n -m` diff 통계를 확인할 수 있다(c·d) |
-| **AC-19(신규)** | SCR-001, SCR-003 | 사용자가 좌측 사이드바 하단 설정 아이콘(R-7)으로 설정 화면에 진입해 Agent·외관·Workbench·프로젝트·목업 5섹션을 확인하고, 외관(테마/폰트 크기)·Workbench 기본값(새 탭 기본 종류/좌우 사이드바 기본 접힘/파일 트리 들여쓰기)을 변경하며, 목업 상태를 초기화(localStorage 리셋 후 seed 복귀)할 수 있다(R-8) |
+| **AC-19(신규)** | SCR-001, SCR-003 | 사용자가 설정 화면에서 Agent·외관·Workbench·프로젝트·목업 5섹션을 확인하고 설정·초기화를 수행한다. **v8.0**: 프로젝트 섹션은 최상위/하위 Project 생성·연결과 사후 관리를 함께 담당한다 |
+
+### AW-AC 추적표 (추가문서 27~49행, 별도 네임스페이스)
+| AW-AC | 화면/상태 | 구현·검토 지점 |
+|---|---|---|
+| AW-AC-1 | SCR-003, SCR-007 | 설정의 프로젝트 섹션에서 최상위 Project를 만들고 Project 트리에서 확인 |
+| AW-AC-2 | SCR-003, SCR-007 | 설정에서 기존 OPAL Project를 최상위 또는 선택 Project의 자식으로 연결 |
+| AW-AC-3 | SCR-001 (§4.6a) | 복합 Project 안에 복합 Project를 중첩(StoreLinkStudio→Pug/Blend/MAMS)하고 재귀 트리로 펼쳐 탐색 |
+| AW-AC-4 | SCR-001 (§4.6a) | 모든 Project 행에 PM 배지가 고정 표시됨 |
+| AW-AC-5 | SCR-003, SCR-006 | Component 추가·제거·목록과 선택 repo마다 분리된 Files/Changes 확인 |
+| AW-AC-6 | SCR-001, SCR-002 | TASK 생성 시 Pilot을 선택하고 트리·카드에서 구분 |
+| AW-AC-7 | SCR-001, SCR-008 | Main PM의 조율 TASK(`participantProjectIds`)가 하위 Project의 수행 TASK(`coordinationTaskId`)와 연결됨 |
+| AW-AC-8 | SCR-008 | Coordination Surface의 `coordination` 이벤트로 Sub PM 간 조율 내용이 상위에 요약됨 |
+| AW-AC-9 | SCR-008 | `MainPmFinalJudgement` 카드와 개별 `result` 이벤트가 스타일로 구분되어 최종 판단·Sub PM 결과를 분리 확인 |
+| AW-AC-10 | SCR-001 (§7.1 seed) | Pug·Blend·MAMS가 StoreLinkStudio Project 아래 연결된 대표 구조를 트리에서 검토 |
+| AW-AC-11 | SCR-001 | `PersistedUI.expandedProjectIds`·`activeProjectId`·`taskId`와 생성·연결된 Project 엔티티 스냅샷이 앱 재실행 후 복원(§7 근거) |
+| AW-AC-12 | SCR-001, SCR-005, SCR-006 | 기존 Surface 추가/닫기/split/탭 이동(§4.4)과 사이드바 리사이즈(§4.1)가 v6.0 변경 후에도 회귀하지 않음(AC-13 테스트 범위에 포함) |
+| AW-AC-13 | SCR-001 (§4.6a) | `oppl`·`opsdd` TASK의 내부 backlog·ACT·단계가 Project 트리에 추가 노드로 나타나지 않고, 해당 TASK의 Workbench 상세에서만 확인됨 |
+| AW-AC-14 | SCR-001, SCR-002 | TaskGroup·필터 UI가 없고 완료 TASK가 트리에서 자동으로 숨겨짐 |
+| AW-AC-15 | SCR-001 | 펼친 Project 아래 TASK, 펼친 TASK 아래 실행 Agent가 실제 트리 노드로 표시 |
+| AW-AC-16 | SCR-005, SCR-008 | Main/Sub PM 대화와 구조화 이벤트가 `coordination` Surface 탭 안에서 동작 |
+| AW-AC-17 | SCR-008→001 | Main PM 배정이 대상 Project의 연결 TASK·Environment·PM 실행 Surface를 생성 |
+| AW-AC-18 | SCR-001, SCR-005, SCR-008 | Sub PM TASK의 여러 실행 Surface와 Main PM의 요약 대화를 분리해 동시 확인 |
+| AW-AC-19 | SCR-001, SCR-002 | `PROJECTS +`로 선택 Project의 TASK 생성 Dialog를 즉시 열기 |
+| AW-AC-20 | SCR-003, SCR-007 | 설정의 프로젝트 섹션에서 최상위·하위 Project 생성·연결 수행 |
+| AW-AC-21 | SCR-005, SCR-008 | Execution Workspace에 PM Coordination과 여러 Agent Terminal pane 동시 배치 |
+| AW-AC-22 | SCR-005 | Agent에 귀속되지 않은 독립 Terminal pane 추가·split·이동·닫기 |
+| AW-AC-23 | SCR-008 | 조율 TASK마다 Main PM 소유 PM Coordination Room 하나 생성 |
+| AW-AC-24 | SCR-008, SCR-005 | 사용자 입력은 Main PM composer에만 존재하고 Sub PM/Worker Terminal은 관찰 전용 |
+| AW-AC-25 | SCR-008→005 | Main PM의 Sub PM 초대 처리로 Room 참여자와 Sub PM Workspace Terminal 동시 생성 |
+| AW-AC-26 | SCR-008 | User/Main/Sub PM 발신자별 다자 대화와 구조화 시스템 이벤트를 한 Room에서 확인 |
+| AW-AC-27 | SCR-005, SCR-001 | Sub PM의 Worker 호출로 부모 PM에 연결된 관찰 전용 Worker Terminal과 Agent 트리 노드 생성 |
 
 ## 9. 미결 배치 요약 (현재 상태)
 
@@ -625,11 +862,17 @@ interface PersistedUI {
 | 7 | SCR-003 결번 vs 재정의(R-8) | v5.0에서 **재정의**로 확정. Agent Catalog·Binding 기능이 폐기가 아니라 설정 화면의 한 섹션으로 이동했으므로 번호를 유지해 AC-4 추적성을 지킨다(§4.3 표현 형식 선택 근거). |
 | 8 | 설정 항목 저장 위치(R-8) | v5.0에서 확정. `PersistedUI`(화면 상태 스냅샷)와 분리된 별도 `Settings` 타입·별도 localStorage 키(`opal.workbench.settings.v1`)로 관리한다(§7). `PersistedUI.version`은 4로 유지, 승격하지 않는다. |
 | 9 | 탭 바/pane 드롭 타깃 분리(R-10) | v5.0에서 확정. AC-14 안에서 결함 수정으로 처리하며 새 AC를 만들지 않는다(§4.4). |
+| 10 | MAMS Repository Component 실측값 불일치(v6.0) | 추가문서 43행은 MAMS 영역을 `backend·frontend·batch`로 적었으나, 실측(`/Volumes/Data/StoreLinkStudio/mams/workspace/`)은 `backend·docker·frontend·frontend_test·frontend_wireframe` 5개이고 `batch`는 없다. 본 문서 §7.1 seed는 실측값을 채택했다. 추가문서 자체는 캡틴 소유이므로 수정하지 않는다. |
+| 11 | Project 생성/연결 Dialog 진입점(v8.0 갱신) | 설정 화면의 프로젝트 섹션으로 일원화한다. `PROJECTS +`는 선택 Project의 TASK 추가로 사용한다. |
+| 12 | `PersistedUI.version` 승격 여부(v6.0) | 승격하지 않음. `expandedProjectIds`·`activeRepositoryComponentId` 필드 추가는 v5.0의 `sidebarCollapsed` 등과 동일하게 비파괴적 확장이라 `version:4`를 유지한다(§7 근거). |
+| 13 | 신규 의존성 필요 여부(v6.0) | 불필요. Project 트리·Dialog·조율 타임라인 모두 기존 shadcn primitive(Sidebar/ScrollArea/Collapsible/Dialog/Tabs/Card/Badge)로 구성되며 신규 npm 설치는 없다(§6). |
+| 14 | TASK GROUPS·PM 조율 작업공간(v7.0) | TaskGroup 제거, PM Coordination을 정식 Surface로 채택, Main PM 배정이 하위 TASK·실행 Surface를 생성하는 것으로 캡틴 승인(2026-09-12). |
+| 15 | 실행 작업공간 UX(v8.0) | 필터 UI 제거·완료 TASK 자동 숨김, `PROJECTS +`의 TASK 빠른 추가 전환, 중앙 명칭을 Execution Workspace로 확정하고 PM Coordination/Agent Terminal/독립 Terminal을 구분한다. Project 생성·연결은 설정으로 이동한다. |
+| 16 | PM Coordination Room(v9.0) | 조율 TASK별 Room, 사용자→Main PM 단일 입력, Main PM의 Sub PM 초대, 초대 시 Sub PM Workspace 자동 발동, Sub PM→Worker Terminal 계층, Agent Terminal 관찰 전용을 확정한다. |
 
 ## 10. TASK.md 개정 제안 (실제 TASK.md는 미수정 — PM이 캡틴 결정으로 적용)
 
-- **AC-15 문구 확장 제안**: 현재 "우측 사이드바 `Files` 탭에서 …, `Changes` 탭에서 …. 사이드바 폭은 드래그로 조절된다."는 우측 rail만 언급한다. 이번 R-5는 **좌측**(Project/TaskGroup/Task) 사이드바 접기도 포함하므로, AC-15에 "좌·우 사이드바는 각각 접고 펼칠 수 있다"를 추가하거나, 별도로 신설한 AC-17이 커버하도록 AC-15는 현행 유지 중 택일이 필요하다. 본 문서는 AC-17을 신설해 트리 구조·표기(R-6·a)를 담당시키고, 접기/펼치기(R-5)는 AC-15 문구 확장으로 흡수하는 안을 제안한다(AC-10은 복원 시나리오만 다루고 상호작용 자체는 AC-15가 다루는 기존 분담과 일치).
-- **AC-10 복원 대상 명시 제안**: 현재 "선택한 Project·TaskGroup·Task·Surface 탭 구성과 split 배치가 앱 재실행 후 복원"에 사이드바 토글 상태·트리 펼침 상태가 포함되는지 불명확하다. "사이드바 접힘 상태와 파일 트리 펼침 상태를 포함해"를 추가하는 문구 확장을 제안한다.
+- **v7.0 적용**: 좌측 탐색은 Project/TASK/Agent이며 TaskGroup은 제거한다. 복원 대상은 선택 Project·TASK·Surface 탭/split·사이드바·트리/폴더 펼침·repo 범위와 생성된 실행 환경이다.
 - **신규 AC 채택 여부**: 위 두 문구 확장이 받아들여지면 AC-17(트리 구조·표기)·AC-18(Changes 그룹핑·diff 통계)만 신규로 남는다. TASK.md AC 목록에 AC-17·AC-18을 추가하고 결번 주석("AC-7·8·9·11")은 그대로 유지한다.
 - 위 제안은 캡틴 결정 사항이며, 이 문서(wireframe.md)의 §8 추적표는 제안이 그대로 채택된다는 가정 하에 작성했다. 캡틴이 AC-15/AC-10 문구를 확장하지 않기로 하면 AC-17·AC-18 대신 R-5도 별도 AC로 분리해야 한다.
 

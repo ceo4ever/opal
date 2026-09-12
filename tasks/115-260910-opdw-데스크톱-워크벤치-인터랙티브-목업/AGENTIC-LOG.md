@@ -6,12 +6,12 @@
 
 | 항목 | 건수 |
 |------|------|
-| 게이트 판단 | 16회 (Pass: 12 / Fail: 4) |
+| 게이트 판단 | 28회 (Pass: 24 / Fail: 4) |
 | 3회 초과 Gate | 0건 (Critical: 0 / Normal: 0 / Minor: 0) — EXECUTE Gate 루핑 2회로 종결 |
-| 오류 발견 | 15건 |
-| 수정 지시 | 15건 (반영: 15 / 미반영: 0) |
-| PM 의사결정 | 10건 |
-| 개선 사항 | 1건 (@header 정합 도구 집행 — CLOSE 시 제안) |
+| 오류 발견 | 14건 |
+| 수정 지시 | 13건 (반영: 13 / 미반영: 0) |
+| PM 의사결정 | 22건 |
+| 개선 사항 | 2건 |
 | 에스컬레이션 | 0건 |
 
 ## 대행 일지
@@ -82,3 +82,13 @@
 | 62 | 2026-09-11 22:29 | EXECUTE | DECISION | 캡틴이 실앱 사용 후 낸 조정 2건(R-11 `+` 탭바 인라인화, R-12 `New Task` 제거·`TASKS` 헤더 `+` 모달 직행)을 **별도 설계 라운드 없이 구현으로 직행** 결정 — 근거: 새 화면·새 기능이 아니라 확정 화면의 배치·동선 조정이며 신규 AC가 불필요하다(AC-3·AC-6 안에서 성립). 단 C-9 정합을 위해 `wireframe.md` 해당 절 동기화를 같은 라운드에 포함시켰다 | 24~25행 추가, 설계 라운드 생략 |
 | 63 | 2026-09-11 22:29 | EXECUTE | GATE | 조정 검증 — typecheck 0 / test **140 pass**(138→140) / build 486ms / lint 신규 0건. 사이드바 전폭 `New Task` 제거 확인, 보드 내 생성 버튼은 AC-3(Kanban 이동) 보존 목적으로 의도적 유지, `TASKS` 헤더 `+`(`aria-label="Task 추가"`)가 `TASK GROUPS`와 동일 패턴으로 적용. 탭 바 `+`가 마지막 탭 옆 인라인 배치되고 별도 행 소멸, `role="tab"` 미보유로 드롭 인덱스 계산에서 자동 배제. wireframe v5.1 동기화 확인 | **Pass** |
 | 64 | 2026-09-11 22:29 | EXECUTE | IMPROVE | 워커가 작업 중 기존 잠재 결함 발견·수정 — `<SelectItem value="">`가 Radix에서 렌더 시 throw하는 문제. `NewTaskDialog`를 상시 마운트하는 구조로 바꾸면서 드러났다. `value="__none__"` 센티널로 교체. 지시 범위 밖이나 동일 컴포넌트의 필수 수정이라 수용 | 반영, 잔존 0건 확인 |
+| 65 | 2026-09-12 09:12 | EXECUTE | DECISION | Project를 단순·복합 고정 유형이 아닌 재귀 계층으로 표현하고, repository 내 구성은 Project가 아닌 Repository Component로 분리. Main/Sub PM은 상대적 역할로 확정 | wireframe v6·AW-AC-1~13 반영 |
+| 66 | 2026-09-12 09:27 | EXECUTE | GATE | v6 설계·구현 대조, 재귀 Project 트리·PM 조율·Repository Component 범위, typecheck·test 147·build·lint 검증 | Pass |
+| 67 | 2026-09-12 09:53 | EXECUTE | DECISION | TaskGroup과 미니 프로젝트 엔티티를 제거하고 모든 실행 단위를 TASK로 단일화. 규모는 Pilot 속성으로 표현 | wireframe v7·AW-AC-14~18 반영 |
+| 68 | 2026-09-12 10:05 | EXECUTE | GATE | Project→TASK→Agent 트리, PM Coordination Surface, 배정→하위 TASK/Surface 원자 생성, 전체 test 149 검증 | Pass |
+| 69 | 2026-09-12 11:40 | EXECUTE | DECISION | 완료 TASK 자동 숨김·필터 제거, `PROJECTS +`를 TASK 추가로 전환하고 중앙을 Execution Workspace로 명명 | wireframe v8·AW-AC-19~22 반영 |
+| 70 | 2026-09-12 12:00 | EXECUTE | GATE | v8 UI·DOM 대조, test 149·typecheck·build·lint·Electron syntax, 컨벤션 전 등급 0건 | Pass |
+| 71 | 2026-09-12 12:42 | EXECUTE | DECISION | 조율 TASK마다 Main PM 소유 Room을 두고 사용자는 Main PM에게만 지시. Sub PM 초대→Workspace 발동, Sub PM→Worker Terminal 계층을 확정 | wireframe v9·AW-AC-23~27 반영 |
+| 72 | 2026-09-12 12:42 | EXECUTE | GATE | v9 설계가 입력 권한·Room 소유권·초대 원자 생성·PM→Worker 계층·독립 Terminal 경계와 일치 | Pass |
+| 73 | 2026-09-12 12:54 | EXECUTE | GATE | RED 5→GREEN 5, 전체 test 153·typecheck·build·lint·Electron syntax·diff check, 컨벤션 전 등급 0건·state validate 0건 | Pass |
+| 74 | 2026-09-12 13:50 | CLOSE | GATE | 캡틴이 v9 실사용 확인 후 CLOSE와 커밋을 명시 승인 | CLOSE 진입 게이트 Pass |

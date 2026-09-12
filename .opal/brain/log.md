@@ -410,3 +410,7 @@
 - 신규: [[pages/concept/worktree-task-root-allocator-root-split.md]], [[pages/concept/absence-assertion-is-enforcement-not-residue.md]], [[pages/concept/byte-identical-proof-requires-data-root-fixed.md]], [[pages/concept/rename-without-alias-surfaces-missed-callers.md]]
 - 출처: task:118
 
+## [2026-09-12] ingest | CLOSE ingest - task 115 OPAL Product OS desktop workbench mockup
+- 신규: [[pages/entity/opal-console.md]]
+- 출처: task:115
+

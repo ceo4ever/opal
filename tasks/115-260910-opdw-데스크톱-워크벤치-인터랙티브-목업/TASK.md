@@ -5,11 +5,11 @@ template: sdlc-v2
 
 ## Problem
 
-OPAL Product OS의 제안 범위는 Project·Workstream·Task·Run과 Agent·Terminal·Browser·Files·Diff·Result를 한 Workbench에 결합한다. 현재는 이 구조를 설명하는 제안서만 있고, 사용자가 실제 데스크톱 화면에서 정보 구조·멘션·위임·Run 상태·검증 흐름을 클릭하며 검토할 수 없다. 이 상태에서 ACP·PTY·Browser·Worktree Runtime을 먼저 구현하면 화면과 사용 흐름이 바뀐 때 고비용 재작업이 발생한다 (`docs/proposals/opal-product-os-desktop-workbench.md` §16 MVP와 단계별 구현).
+OPAL Product OS의 제안 범위는 Project·Workstream·Task·Run과 Agent·Terminal·Browser·Files·Diff·Result를 한 Workbench에 결합한다. 현재는 이 구조를 설명하는 제안서만 있고, 사용자가 실제 데스크톱 화면에서 정보 구조·멘션·위임·Run 상태·검증 흐름을 클릭하며 검토할 수 없다. 이 상태에서 ACP·PTY·Browser·Worktree Runtime을 먼저 구현하면 화면과 사용 흐름이 바뀐 때 고비용 재작업이 발생한다 (`docs/proposals/archives/opal-product-os-desktop-workbench.md` §16 MVP와 단계별 구현).
 
 ## Proposed outcome
 
-실제 Electron 창에서 실행되는 React 기반 인터랙티브 목업을 만든다. 사용자는 OPAL 프로젝트의 대표 Task를 생성하고, `@OPAL PM`에게 지시하고, PM이 전문 Agent에게 위임하고, Agent Run의 진행·Terminal·Browser·파일 변경·Git Diff·검증·결과를 하나의 Workbench에서 확인한다. 모든 실행 결과는 목업 데이터로 제공하고 Runtime 연동 전에 제품 구조와 인터랙션을 확정할 수 있게 한다 (`docs/proposals/opal-product-os-desktop-workbench.md` §5 주요 사용자 흐름, §10 Workbench UX).
+실제 Electron 창에서 실행되는 React 기반 인터랙티브 목업을 만든다. 사용자는 OPAL 프로젝트의 대표 Task를 생성하고, `@OPAL PM`에게 지시하고, PM이 전문 Agent에게 위임하고, Agent Run의 진행·Terminal·Browser·파일 변경·Git Diff·검증·결과를 하나의 Workbench에서 확인한다. 모든 실행 결과는 목업 데이터로 제공하고 Runtime 연동 전에 제품 구조와 인터랙션을 확정할 수 있게 한다 (`docs/proposals/archives/opal-product-os-desktop-workbench.md` §5 주요 사용자 흐름, §10 Workbench UX).
 
 ## Affected users and systems
 
@@ -22,7 +22,7 @@ OPAL Product OS의 제안 범위는 Project·Workstream·Task·Run과 Agent·Ter
 
 - C-1: 목업은 Runtime 연동 완료를 주장하지 않고, 목업·시뮬레이션·미구현 상태를 UI에서 명확히 구분한다.
 - C-2: 대표 흐름은 `Project → TaskGroup(선택) → Task → Surface(터미널·에이전트·브라우저) → Files/Changes`로 유지한다. TaskGroup은 Project 아래 고정 분류축이 아니라 Task를 묶는 선택적 태그이며 사용자가 자유롭게 만들고 지운다. Run보다 오래 살아있는 도구 상태는 Execution Environment 개념으로 표현한다.
-- C-3: `.opal/AGENT.md`는 OPAL PM으로 발견된 목업 Agent Definition으로 표현하고, Agent 정의와 runtime·model 연결 설정을 분리한다 (`docs/proposals/opal-product-os-desktop-workbench.md` §9 Agent 모델).
+- C-3: `.opal/AGENT.md`는 OPAL PM으로 발견된 목업 Agent Definition으로 표현하고, Agent 정의와 runtime·model 연결 설정을 분리한다 (`docs/proposals/archives/opal-product-os-desktop-workbench.md` §9 Agent 모델).
 - C-4: 사용자 지정 Agent를 추가하고, 추가한 Agent를 본문 Surface 탭에서 세션으로 열 수 있는 경로를 포함한다.
 - C-5: 터미널·에이전트 세션의 원본 출력을 기본 화면에 무제한으로 노출하지 않는다.
 - C-6: 기존 Console의 주요 화면과 스타일 자산을 재사용할 수 있게 하고, 목업 검증을 위해 관계없는 Console 기능을 제거하지 않는다 (`docs/PROJECT.md` §주요 컴포넌트 (OPAL Console)).
@@ -54,3 +54,7 @@ OPAL Product OS의 제안 범위는 Project·Workstream·Task·Run과 Agent·Ter
 ## Open questions
 
 없음. 시각 스타일·상세 레이아웃·상호작용 배치는 WIREFRAME 단계에서 제안하고 사용자 검토로 확정한다.
+
+## 추가 작업 연결
+
+- [재귀형 프로젝트 관리와 PM 조율](./ADDITIONAL-WORK-PROJECT-HIERARCHY.md) — 파이프라인 27~37행의 추가 요구사항·수용 기준 SSOT. 기존 계약과 충돌하는 항목(C-2·AC-2·C-10·AC-15·AC-18·AC-19)은 연결 문서의 대체표를 우선 적용한다.
