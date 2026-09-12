@@ -92,4 +92,73 @@ describe("OPAL WorkStudio first-run welcome", () => {
     expect(await screen.findByRole("button", { name: "opal-first-run" })).toBeInTheDocument();
     expect(await screen.findByText("first-run PM")).toBeInTheDocument();
   });
+
+  it("S-2 loads recent Projects and opens a selected item into the workspace", async () => {
+    const recent = {
+      id: "recent-1",
+      path: "/tmp/recent-one",
+      realPath: "/tmp/recent-one",
+      name: "recent-one",
+      isOpalProject: true,
+      pmName: "recent-one PM",
+      createdAt: "2026-09-12T00:00:00.000Z",
+      lastAccessedAt: "2026-09-13T00:00:00.000Z",
+      status: "available",
+    };
+    const openRecent = vi.fn(async () => ({ ok: true, value: recent }));
+    vi.stubGlobal("opalWorkStudio", {
+      project: {
+        listRecent: vi.fn(async () => ({ ok: true, value: { projects: [recent] } })),
+        openRecent,
+      },
+    });
+
+    render(<WorkStudioApp />);
+    fireEvent.click(await screen.findByRole("button", { name: /recent-one/ }));
+    await act(async () => {});
+
+    expect(openRecent).toHaveBeenCalledWith("recent-1");
+    expect(screen.queryByRole("dialog", { name: "OPAL WorkStudio에 오신 것을 환영합니다" })).not.toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "recent-one" })).toBeInTheDocument();
+    expect(await screen.findByText("recent-one PM")).toBeInTheDocument();
+  });
+
+  it("S-3 marks a missing recent Project, blocks normal open, and repairs the same item", async () => {
+    const missing = {
+      id: "missing-1",
+      path: "/tmp/missing-one",
+      realPath: "/tmp/missing-one",
+      name: "missing-one",
+      isOpalProject: false,
+      createdAt: "2026-09-12T00:00:00.000Z",
+      lastAccessedAt: "2026-09-12T00:00:00.000Z",
+      status: "missing",
+    };
+    const openRecent = vi.fn();
+    const repairRecent = vi.fn(async () => ({
+      ok: true,
+      value: { ...missing, path: "/tmp/repaired", realPath: "/tmp/repaired", status: "available", isOpalProject: true },
+    }));
+    vi.stubGlobal("opalWorkStudio", {
+      project: {
+        listRecent: vi.fn(async () => ({ ok: true, value: { projects: [missing] } })),
+        openRecent,
+        chooseDirectory: vi.fn(async () => ({
+          ok: true,
+          value: { path: "/tmp/repaired", realPath: "/tmp/repaired", name: "repaired", isOpalProject: true },
+        })),
+        repairRecent,
+      },
+    });
+
+    render(<WorkStudioApp />);
+    expect(await screen.findByText("경로 유실")).toBeInTheDocument();
+    const missingButton = screen.getByRole("button", { name: /missing-one/ });
+    expect(missingButton).toBeDisabled();
+    expect(openRecent).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole("button", { name: /경로 복구/ }));
+    await act(async () => {});
+    expect(repairRecent).toHaveBeenCalledWith("missing-1", "/tmp/repaired");
+  });
 });

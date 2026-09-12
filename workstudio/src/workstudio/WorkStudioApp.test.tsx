@@ -24,6 +24,35 @@ describe("OPAL WorkStudio mock flow (wireframe v9.0)", () => {
   beforeEach(() => localStorage.clear());
   afterEach(() => { cleanup(); vi.useRealTimers(); });
 
+  it("S-4 removes a recent Project from the welcome list through typed IPC", async () => {
+    const recent = {
+      id: "remove-1",
+      path: "/tmp/remove-one",
+      realPath: "/tmp/remove-one",
+      name: "remove-one",
+      isOpalProject: false,
+      createdAt: "2026-09-12T00:00:00.000Z",
+      lastAccessedAt: "2026-09-13T00:00:00.000Z",
+      status: "available",
+    };
+    const removeRecent = vi.fn(async () => ({ ok: true, value: { id: recent.id } }));
+    vi.stubGlobal("opalWorkStudio", {
+      project: {
+        listRecent: vi.fn(async () => ({ ok: true, value: { projects: [recent] } })),
+        removeRecent,
+      },
+    });
+
+    render(<WorkStudioApp />);
+    expect(await screen.findByRole("button", { name: /remove-one/ })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /목록에서 제거/ }));
+    await act(async () => {});
+
+    expect(removeRecent).toHaveBeenCalledWith("remove-1");
+    expect(screen.queryByRole("button", { name: /remove-one/ })).not.toBeInTheDocument();
+    expect(screen.getByText("최근 프로젝트가 없습니다")).toBeInTheDocument();
+  });
+
   it("switches Project without TASK filters and hides done TASK nodes only from the tree (AW-AC-14)", async () => {
     render(<WorkStudioApp />);
 

@@ -3,7 +3,7 @@
  *   "module": "workstudio-electron-main",
  *   "layer": "desktop",
  *   "domain": "workstudio",
- *   "description": "보안 격리된 BrowserWindow와 OPAL WorkStudio project/file IPC를 소유하는 Electron main",
+ *   "description": "보안 격리된 BrowserWindow와 영속 Project Registry 및 project/file IPC를 소유하는 Electron main",
  *   "exports": ["createWindow", "inspectDirectory", "listFiles", "registerProjectRoot"]
  * }
  */
@@ -12,6 +12,7 @@ const { app, BrowserWindow, dialog, ipcMain } = require("electron");
 const fs = require("node:fs/promises");
 const path = require("node:path");
 const { pathToFileURL } = require("node:url");
+const { createProjectRegistry } = require("./project-registry.cjs");
 
 const WORKSTUDIO_WINDOW_TITLE = "OPAL WorkStudio";
 const OPAL_AGENT_MARKER = ".opal/AGENT.md";
@@ -32,6 +33,16 @@ const EXCLUDED_DIRECTORY_NAMES = new Set([
   "coverage",
 ]);
 const registeredRoots = new Map();
+let projectRegistry;
+
+function getProjectRegistry() {
+  if (!projectRegistry) {
+    projectRegistry = createProjectRegistry({
+      registryPath: path.join(app.getPath("userData"), "project-registry.json"),
+    });
+  }
+  return projectRegistry;
+}
 
 function ok(value) {
   return { ok: true, value };
@@ -97,18 +108,38 @@ async function registerProjectRoot(selection) {
   if (!isRecord(selection)) {
     return err("invalid_path", "Project selection is invalid.");
   }
-  const resolved = await realpathDirectory(selection.realPath ?? selection.path);
-  if (!resolved.ok) return resolved;
-  if (registeredRoots.has(resolved.value)) {
-    return err("duplicate_path", "This Project path is already registered.");
-  }
-  const hasAgent = await hasOpalAgent(resolved.value);
+  const registered = await getProjectRegistry().register(selection.realPath ?? selection.path);
+  if (!registered.ok) return registered;
   const value = {
-    ...toProjectSelection(resolved.value, hasAgent),
-    name: typeof selection.name === "string" && selection.name.trim() ? selection.name.trim() : path.basename(resolved.value),
+    ...registered.value,
+    name: typeof selection.name === "string" && selection.name.trim() ? selection.name.trim() : registered.value.name,
   };
-  registeredRoots.set(resolved.value, value);
+  registeredRoots.set(value.realPath, value);
   return ok(value);
+}
+
+async function listRecentProjects() {
+  return getProjectRegistry().list();
+}
+
+async function openRecentProject(id) {
+  const opened = await getProjectRegistry().open(id);
+  if (opened.ok) registeredRoots.set(opened.value.realPath, opened.value);
+  return opened;
+}
+
+async function repairRecentProject(id, directoryPath) {
+  const repaired = await getProjectRegistry().repair(id, directoryPath);
+  if (repaired.ok) registeredRoots.set(repaired.value.realPath, repaired.value);
+  return repaired;
+}
+
+async function removeRecentProject(id) {
+  const listed = await getProjectRegistry().list();
+  const project = listed.ok ? listed.value.projects.find((item) => item.id === id) : undefined;
+  const removed = await getProjectRegistry().remove(id);
+  if (removed.ok && project) registeredRoots.delete(project.realPath);
+  return removed;
 }
 
 function findRegisteredRoot(realTargetPath) {
@@ -198,7 +229,7 @@ async function listFiles(scope) {
 async function chooseDirectory(browserWindow) {
   const result = await dialog.showOpenDialog(browserWindow, {
     title: "Project folder",
-    properties: ["openDirectory", "createDirectory"],
+    properties: ["openDirectory"],
   });
   if (result.canceled || result.filePaths.length === 0) {
     return err("cancelled", "Directory selection was cancelled.");
@@ -210,6 +241,10 @@ function registerIpcHandlers() {
   ipcMain.handle("workstudio:project:chooseDirectory", (event) => chooseDirectory(BrowserWindow.fromWebContents(event.sender)));
   ipcMain.handle("workstudio:project:inspectDirectory", (_event, directoryPath) => inspectDirectory(directoryPath));
   ipcMain.handle("workstudio:project:registerFromSelection", (_event, selection) => registerProjectRoot(selection));
+  ipcMain.handle("workstudio:project:listRecent", () => listRecentProjects());
+  ipcMain.handle("workstudio:project:openRecent", (_event, id) => openRecentProject(id));
+  ipcMain.handle("workstudio:project:repairRecent", (_event, id, directoryPath) => repairRecentProject(id, directoryPath));
+  ipcMain.handle("workstudio:project:removeRecent", (_event, id) => removeRecentProject(id));
   ipcMain.handle("workstudio:project:listFiles", (_event, scope) => listFiles(scope));
 }
 
