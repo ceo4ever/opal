@@ -3,30 +3,26 @@
   "module": "e2e_adapter",
   "layer": "util",
   "domain": "opal-tools",
-  "description": "cmux-tool subprocess 호출 → JSON error 소비 → 폴백/에스컬레이션 결정 + mode A 시퀀스(open→navigate→close). uname/cmux --version 하드코딩 분기 금지 — cmux-tool 에러코드 소비(어댑터)로만 플랫폼 가드 흡수.",
+  "description": "cmux-tool raw 결과를 provider 후보 결과로 번역하고 공통 E2E contract verdict를 소비하는 integration adapter.",
   "exports": [
     "run_integration"
   ],
-  "depends": ["cmux-tool (OPAL_CMUX_TOOL_CMD env → ~/.opal/tools/cmux-tool/run.sh 기본 경로)"]
+  "depends": [
+    "lib.e2e_contract",
+    "cmux-tool (OPAL_CMUX_TOOL_CMD env → ~/.opal/tools/cmux-tool/run.sh 기본 경로)"
+  ]
 }
 
-e2e_adapter — cmux-tool 에러코드 소비 어댑터.
+e2e_adapter — cmux-tool raw provider adapter.
 
 [MUST] cmux 분기는 cmux-tool 에러코드 소비로만 — uname/cmux --version 하드코딩 분기 금지 (헌법 플랫폼 독립).
-[MUST] FALLBACK_CODES → playwright (phase2)
-[MUST] ESCALATE_CODES → escalate=true, 폴백 금지
+[MUST] provider_unavailable일 때만 다음 Browser 후보 전환을 허용한다.
+[MUST] final status/exit/error/pass gate는 lib.e2e_contract 공통 계약을 소비한다.
 [MUST] mode A — --surface 미전달(신규 surface 강제), B/C 재사용 금지
 
-cmux-tool README §에러코드 테이블 (README.md:148-161) SSOT:
-  usage          → 에스컬레이션 (인자 오류)
-  not_in_cmux    → 폴백 (CMUX_SURFACE_ID 미설정)
-  cmux_not_installed → 폴백 (cmux 명령 없음)
-  invalid_surface → 에스컬레이션 (surface 핸들 형식 오류)
-  open_failed    → 폴백 (cmux browser open 실패)
-  surface_parse_failed → 폴백 (open 출력 파싱 실패)
-  goto_failed    → 에스컬레이션 (URL 오류 — 폴백 금지)
-  wait_failed    → 에스컬레이션 (네트워크 문제 — 폴백 금지)
-  eval_failed    → 에스컬레이션 (명령 오류 — 폴백 금지)
+Legacy cmux-tool error vocabulary is accepted only as adapter input and normalized
+through lib.e2e_contract.  New public JSON does not emit generic fallback,
+escalated, escalate, or escalation keys.
 """
 
 import json
@@ -35,22 +31,23 @@ import pathlib
 import subprocess
 from typing import Any, Dict, List, Optional
 
+from lib.e2e_contract import build_verdict, normalize_legacy_verdict, status_to_error
 
-# ─── cmux-tool 에러코드 분류 (PLAN §3.3.3 [MUST]) ────────────────────────────
-# cmux-tool/README.md:148-161 SSOT
+
+# ─── legacy cmux-tool raw error buckets (input normalization only) ───────────
 FALLBACK_CODES = {
-    "not_in_cmux",          # CMUX_SURFACE_ID 미설정 → playwright
-    "cmux_not_installed",   # cmux 명령 없음 → playwright
-    "surface_parse_failed", # open 출력 파싱 실패 → playwright
-    "open_failed",          # cmux browser open 실패 → playwright
+    "not_in_cmux",          # provider_unavailable candidate result
+    "cmux_not_installed",   # provider_unavailable candidate result
+    "surface_parse_failed", # infra_error via common contract
+    "open_failed",          # infra_error via common contract
 }
 
 ESCALATE_CODES = {
-    "usage",            # 인자 오류 → 에스컬레이션 (호출자 수정 필요)
-    "invalid_surface",  # surface 핸들 형식 오류 → 에스컬레이션
-    "goto_failed",      # URL/navigate 오류 → 에스컬레이션 (폴백 금지)
-    "wait_failed",      # 페이지 로드 타임아웃 → 에스컬레이션 (폴백 금지)
-    "eval_failed",      # 명령 실행 실패 → 에스컬레이션 (폴백 금지)
+    "usage",            # infra_error via common contract
+    "invalid_surface",  # infra_error via common contract
+    "goto_failed",      # infra_error via common contract
+    "wait_failed",      # infra_error or fail with wait_kind=assertion_condition
+    "eval_failed",      # infra_error via common contract
 }
 
 # cmux-tool 기본 실행 경로 — OPAL 설치 기준 절대 경로
@@ -116,21 +113,16 @@ def _call_cmux_tool(args: List[str], env=None) -> Dict[str, Any]:
         }
 
 
-def _run_playwright_fallback(
-    url: Optional[str],
-    fallback_reason: str,
-) -> Dict[str, Any]:
-    """
-    폴백 결정 + opal-test-agent가 소비할 playwright MCP 액션(`mcp_action`/`mcp_url`)을 반환.
-    실제 MCP 실행은 opal-test-agent 책임(AGENT.md M2 절차).
-    """
+def _integration_response(status: str, *, e2e: Optional[Dict[str, Any]] = None, detail: Any = None) -> Dict[str, Any]:
     return {
-        "driver": "playwright",
-        "fallback_reason": fallback_reason,
-        "status": "fallback",
-        "url": url,
-        "mcp_action": "browser_navigate",
-        "mcp_url": url,
+        "ok": status == "pass",
+        "command": "integration",
+        "status": status,
+        "error": status_to_error(status),
+        "detail": detail,
+        "e2e": e2e or {"status": status},
+        "api_db": {"status": "skip"},
+        "contract_version": "2.0",
     }
 
 
@@ -142,20 +134,21 @@ def run_integration(
     env=None,
 ) -> Dict[str, Any]:
     """
-    integration 서브명령 실행 — cmux-tool 에러코드 소비 → 폴백/에스컬레이션 결정.
+    integration 서브명령 실행 — cmux-tool raw result를 공통 E2E verdict로 정규화한다.
 
     mode A (격리 신규 surface):
       cmux-tool open <url> → surface 획득 (신규, --surface 미전달)
-      → navigate → 증거 캡처
+      → navigate
       → cmux-tool close
 
     반환 dict:
         ok: bool
+        status: pass|fail|infra_error|executor_unavailable|blocked|awaiting_human
         command: str
-        e2e: {driver, fallback_reason, status}
+        e2e: {driver, status}
         api_db: {status}
-        escalate: bool
-        error: str (에스컬레이션 시)
+        error: status_to_error(status)
+        contract_version: str
     """
     integration_data = tiers_data.get("integration", {})
     e2e_config = integration_data.get("e2e", [])
@@ -166,19 +159,12 @@ def run_integration(
         for t in e2e_config
     )
 
-    # api_db 검사 (기본 skip)
-    api_db_result = {"status": "skip"}
-
     if not has_cmux:
-        # cmux 없으면 playwright 직접
-        e2e_result = _run_playwright_fallback(url, "cmux not configured")
-        return {
-            "ok": e2e_result.get("status") in ("pass", "fallback"),
-            "command": "integration",
-            "e2e": e2e_result,
-            "api_db": api_db_result,
-            "escalate": False,
-        }
+        return _integration_response(
+            "executor_unavailable",
+            e2e={"driver": None, "status": "executor_unavailable", "url": url},
+            detail="no configured E2E executor is available",
+        )
 
     # mode A: cmux-tool open (--surface 미전달 — 신규 surface 강제)
     open_args = ["open"]
@@ -189,38 +175,22 @@ def run_integration(
     error_code = open_result.get("error")
 
     if not open_result.get("ok") and error_code:
-        if error_code in FALLBACK_CODES:
-            # 폴백 트리거 → playwright
-            e2e_result = _run_playwright_fallback(url, error_code)
-            return {
-                "ok": True,
-                "command": "integration",
-                "e2e": e2e_result,
-                "api_db": api_db_result,
-                "escalate": False,
-            }
-        elif error_code in ESCALATE_CODES:
-            # 에스컬레이션 → 폴백 금지
-            return {
-                "ok": False,
-                "command": "integration",
-                "e2e": {"driver": None, "status": "escalated", "error": error_code},
-                "api_db": api_db_result,
-                "escalate": True,
-                "error": "escalation",
-                "detail": f"cmux-tool returned escalation error: {error_code}",
-            }
-        else:
-            # 알 수 없는 에러 → 에스컬레이션
-            return {
-                "ok": False,
-                "command": "integration",
-                "e2e": {"driver": None, "status": "escalated", "error": error_code},
-                "api_db": api_db_result,
-                "escalate": True,
-                "error": "escalation",
-                "detail": f"cmux-tool returned unknown error: {error_code}",
-            }
+        payload = {
+            "status": "fallback" if error_code in FALLBACK_CODES else "escalated",
+            "fallback_reason": error_code,
+            "error": error_code,
+        }
+        if "wait_kind" in open_result:
+            payload["wait_kind"] = open_result.get("wait_kind")
+        normalized = normalize_legacy_verdict(payload)
+        status = normalized["status"]
+        if status == "provider_unavailable":
+            status = "executor_unavailable"
+        return _integration_response(
+            status,
+            e2e={"driver": "cmux", "status": status, "url": url},
+            detail=normalized.get("detail"),
+        )
 
     # cmux open 성공 — surface 획득
     surface_id = open_result.get("surface")
@@ -230,32 +200,32 @@ def run_integration(
         nav_result = _call_cmux_tool(["navigate", url], env=env)
         nav_error = nav_result.get("error")
         if nav_error and nav_error in ESCALATE_CODES:
-            # navigate 에스컬레이션 → close 후 에스컬레이션
             _call_cmux_tool(["close"], env=env)
-            return {
-                "ok": False,
-                "command": "integration",
-                "e2e": {"driver": "cmux", "status": "escalated", "error": nav_error},
-                "api_db": api_db_result,
-                "escalate": True,
-                "error": "escalation",
-                "detail": f"cmux navigate failed: {nav_error}",
-            }
+            payload = {"status": "escalated", "error": nav_error}
+            if "wait_kind" in nav_result:
+                payload["wait_kind"] = nav_result.get("wait_kind")
+            normalized = normalize_legacy_verdict(payload)
+            return _integration_response(
+                normalized["status"],
+                e2e={"driver": "cmux", "status": normalized["status"], "url": url},
+                detail=normalized.get("detail"),
+            )
 
     # mode A close (신규 surface 정리 — 사용자 surface 미훼손)
     _call_cmux_tool(["close"], env=env)
 
-    e2e_result = {
-        "driver": "cmux",
+    verdict = build_verdict({
         "status": "pass",
-        "url": url,
-        "surface": surface_id,
-    }
-
-    return {
-        "ok": True,
-        "command": "integration",
-        "e2e": e2e_result,
-        "api_db": api_db_result,
-        "escalate": False,
-    }
+        "profile": "browser",
+        "observed_executors": ["browser"],
+        "events": ["open", "navigate", "close"],
+        "assertion_results": [],
+        "required_evidence": ["semantic_assertion"],
+        "observed_evidence": [],
+    })
+    status = verdict["status"] if not verdict["ok"] else "pass"
+    return _integration_response(
+        status,
+        e2e={"driver": "cmux", "status": status, "url": url, "surface": surface_id},
+        detail=verdict.get("detail"),
+    )

@@ -345,7 +345,7 @@ allowlist는 **프로젝트 스코프 한정**이다 — `--cwd <project_root>`�
 {
   "task_id": "T01",
   "verdict": "All Pass | Partial Fail | Critical Fail | blocked",
-  "scenario_results": [{"id": "S1", "result": "pass", "evidence": "…"}],
+  "scenario_results": [{"id": "S1", "result": "pass|fail|executor_unavailable|infra_error|blocked", "operational_status": "awaiting_human|null", "evidence": "…"}],
   "changed_files": ["…"],
   "done_md_path": "tasks/{NNN}-oppl-…/tasks/T01-…/DONE.md",
   "blockers": []
@@ -353,6 +353,7 @@ allowlist는 **프로젝트 스코프 한정**이다 — `--cwd <project_root>`�
 ```
 
 > `scenario_results`는 시나리오별 공통 결과 계약 `{대상, 결과, 사유, 시점}`을 담는다.
+> E2E 시나리오는 `All Pass` / `Partial Fail` / `Critical Fail` 요약 판정과 별도로 `test-tool` final status 5종과 operational `awaiting_human`을 보존한다. 사람 협업 제출은 자유 형식 완료 선언만으로 pass가 아니며, 구조화 submission을 verifier가 검증한 뒤 final status로 전이한다.
 
 ---
 

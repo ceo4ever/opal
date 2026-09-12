@@ -1,0 +1,401 @@
+{
+  "check": "convention",
+  "status": "pass",
+  "checked_files": [
+    "opal/agents/opal-loop-action-agent/AGENT.md",
+    "opal/agents/opal-task-action-agent/AGENT.md",
+    "opal/agents/opal-test-agent/AGENT.md",
+    "opal/core/references/test-tools-schema.yaml",
+    "opal/core/references/tools.md",
+    "opal/skills/op-dev-test-scenario/references/test-scenario-guide.md",
+    "opal/skills/opal-pilot-dev-short/SKILL.md",
+    "opal/skills/opal-pilot-dev/SKILL.md",
+    "opal/skills/opal-pilot-project-dev/SKILL.md",
+    "opal/skills/opal-pilot-project-dev/references/verification-loop-guide.md",
+    "opal/skills/opal-pilot-project-loop/SKILL.md",
+    "opal/skills/opal-pilot-project-loop/references/journey-flow.md",
+    "opal/skills/opal-pilot-project-loop/references/verification.md",
+    "opal/templates/test-tools.yaml",
+    "opal/tools/test-tool/README.md",
+    "opal/tools/test-tool/lib/e2e_adapter.py",
+    "opal/tools/test-tool/lib/e2e_contract.py",
+    "opal/tools/test-tool/lib/resolver.py",
+    "opal/tools/test-tool/lib/scenario.py",
+    "opal/tools/test-tool/schema/test-scenario.schema.json",
+    "opal/tools/test-tool/test_tool.py",
+    "opal/tools/test-tool/tests/test_e2e_contract.py",
+    "opal/tools/test-tool/tests/test_scenario.py",
+    "opal/tools/test-tool/tests/test_test_tool.py"
+  ],
+  "findings": [
+    {
+      "id": "GC-001",
+      "fingerprint": "0edf6b9ddc28ec62",
+      "category": "platform-isolation",
+      "severity": "high",
+      "confidence": "high",
+      "disposition": "blocking",
+      "rule_id": "CONVENTIONS.md §플랫폼 분기 격리",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/agents/opal-loop-action-agent/AGENT.md",
+        "line": 55,
+        "symbol": "실행 프로세스 / 플랫폼 가용성"
+      },
+      "evidence": "현재 55, 78, 93, 272-273행의 claude 채널 및 --provider claude 계약은 HEAD 같은 행에도 동일하며 현재 diff hunk는 348행과 356행뿐이다.",
+      "impact": "핵심 에이전트 로직이 특정 플랫폼에 결합된다.",
+      "remediation": {
+        "guidance": "provider 선택, 모델 치환, 세션, 출력 파싱과 가용성 분기를 어댑터 계층으로 옮긴다.",
+        "reference": "docs/CONVENTIONS.md §플랫폼 분기 격리",
+        "auto_fixable": false
+      },
+      "verification": "핵심 AGENT 본문에 provider별 조건과 플랫폼 고정 토큰이 없고 어댑터만 분기를 소유하는지 확인한다.",
+      "suppression": {
+        "active": true,
+        "reason": "HEAD에 동일 위반이 존재하고 현재 diff가 해당 줄 또는 계약을 건드리지 않은 pre-existing baseline이다.",
+        "scope": "task-introduced regression gate only"
+      }
+    },
+    {
+      "id": "GC-002",
+      "fingerprint": "98f9cbea82c569cf",
+      "category": "platform-isolation",
+      "severity": "medium",
+      "confidence": "high",
+      "disposition": "blocking",
+      "rule_id": "CONVENTIONS.md §플랫폼 분기 격리",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/skills/opal-pilot-dev/SKILL.md",
+        "line": 81,
+        "symbol": "ANALYSIS/PLAN/EXECUTE 디스패치 템플릿"
+      },
+      "evidence": "현재 81, 110, 188행과 HEAD의 CLAUDE.md 폴백이 동일하며 현재 diff hunk는 219행뿐이다.",
+      "impact": "공통 Dev 스킬이 특정 플랫폼 파일명에 결합된다.",
+      "remediation": {
+        "guidance": "플랫폼 중립 프로젝트 문서 선택 계약을 사용한다.",
+        "reference": "docs/CONVENTIONS.md §플랫폼 분기 격리",
+        "auto_fixable": false
+      },
+      "verification": "공통 SKILL 본문에서 플랫폼 고정 문서명 폴백이 제거됐는지 확인한다.",
+      "suppression": {
+        "active": true,
+        "reason": "HEAD에 동일 위반이 존재하고 현재 diff가 해당 줄 또는 계약을 건드리지 않은 pre-existing baseline이다.",
+        "scope": "task-introduced regression gate only"
+      }
+    },
+    {
+      "id": "GC-003",
+      "fingerprint": "4cec5024112051f3",
+      "category": "documentation-frontmatter",
+      "severity": "medium",
+      "confidence": "high",
+      "disposition": "blocking",
+      "rule_id": "CONVENTIONS.md §파일 구조 > YAML Frontmatter",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/skills/opal-pilot-dev-short/SKILL.md",
+        "line": 1
+      },
+      "evidence": "현재와 HEAD frontmatter가 동일하게 name과 description만 가지며 현재 diff hunk는 140행뿐이다.",
+      "impact": "스킬 라우팅 및 버전 메타데이터 계약이 불완전하다.",
+      "remediation": {
+        "guidance": "소비 계약에 맞는 triggers와 version을 추가한다.",
+        "reference": "docs/CONVENTIONS.md §파일 구조 > YAML Frontmatter",
+        "auto_fixable": true
+      },
+      "verification": "frontmatter YAML에 triggers와 version이 존재하는지 확인한다.",
+      "suppression": {
+        "active": true,
+        "reason": "HEAD에 동일 위반이 존재하고 현재 diff가 해당 줄 또는 계약을 건드리지 않은 pre-existing baseline이다.",
+        "scope": "task-introduced regression gate only"
+      }
+    },
+    {
+      "id": "GC-004",
+      "fingerprint": "0867e060f7595d99",
+      "category": "documentation-frontmatter",
+      "severity": "medium",
+      "confidence": "high",
+      "disposition": "blocking",
+      "rule_id": "CONVENTIONS.md §파일 구조 > YAML Frontmatter",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/skills/opal-pilot-dev/SKILL.md",
+        "line": 1
+      },
+      "evidence": "현재와 HEAD frontmatter가 동일하게 name과 description만 가지며 현재 diff hunk는 219행뿐이다.",
+      "impact": "canonical Dev Pilot의 라우팅 및 버전 메타데이터 계약이 불완전하다.",
+      "remediation": {
+        "guidance": "opd/opds 라우팅에 맞는 triggers와 version을 추가한다.",
+        "reference": "docs/CONVENTIONS.md §파일 구조 > YAML Frontmatter",
+        "auto_fixable": true
+      },
+      "verification": "frontmatter YAML에 triggers와 version이 존재하는지 확인한다.",
+      "suppression": {
+        "active": true,
+        "reason": "HEAD에 동일 위반이 존재하고 현재 diff가 해당 줄 또는 계약을 건드리지 않은 pre-existing baseline이다.",
+        "scope": "task-introduced regression gate only"
+      }
+    },
+    {
+      "id": "GC-005",
+      "fingerprint": "8cadbef0960464cf",
+      "category": "documentation-manual-history",
+      "severity": "low",
+      "confidence": "high",
+      "disposition": "blocking",
+      "rule_id": "opal-doc-standard.md §5",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/core/references/tools.md",
+        "line": 1157
+      },
+      "evidence": "HEAD 1142행부터 같은 수기 이력 절이 존재하고 최신 diff의 마지막 hunk는 669행이다.",
+      "impact": "문서 이력 SSOT가 git/tasks와 중복된다.",
+      "remediation": {
+        "guidance": "수기 이력 절을 제거하고 git/tasks를 이력 SSOT로 사용한다.",
+        "reference": "opal/core/references/opal-doc-standard.md §5",
+        "auto_fixable": true
+      },
+      "verification": "수기 이력 헤더가 없는지 확인한다.",
+      "suppression": {
+        "active": true,
+        "reason": "HEAD에 동일 위반이 존재하고 현재 diff가 이력 절을 건드리지 않은 pre-existing baseline이다.",
+        "scope": "task-introduced regression gate only"
+      }
+    },
+    {
+      "id": "GC-006",
+      "fingerprint": "9520422e52906ee0",
+      "category": "documentation-manual-history",
+      "severity": "low",
+      "confidence": "high",
+      "disposition": "blocking",
+      "rule_id": "opal-doc-standard.md §5",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/skills/op-dev-test-scenario/references/test-scenario-guide.md",
+        "line": 92
+      },
+      "evidence": "HEAD 79행부터 같은 수기 이력 절이 존재하고 최신 diff는 33-45행 추가뿐이다.",
+      "impact": "문서 이력 SSOT가 git/tasks와 중복된다.",
+      "remediation": {
+        "guidance": "수기 이력 절을 제거한다.",
+        "reference": "opal/core/references/opal-doc-standard.md §5",
+        "auto_fixable": true
+      },
+      "verification": "수기 이력 헤더가 없는지 확인한다.",
+      "suppression": {
+        "active": true,
+        "reason": "HEAD에 동일 위반이 존재하고 현재 diff가 이력 절을 건드리지 않은 pre-existing baseline이다.",
+        "scope": "task-introduced regression gate only"
+      }
+    },
+    {
+      "id": "GC-007",
+      "fingerprint": "ce4e08aaf67c671f",
+      "category": "documentation-manual-history",
+      "severity": "low",
+      "confidence": "high",
+      "disposition": "blocking",
+      "rule_id": "opal-doc-standard.md §5",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/skills/opal-pilot-project-dev/references/verification-loop-guide.md",
+        "line": 582
+      },
+      "evidence": "HEAD 578행부터 같은 수기 이력 절이 존재하고 최신 diff hunk는 272-304행에 한정된다.",
+      "impact": "문서 이력 SSOT가 git/tasks와 중복된다.",
+      "remediation": {
+        "guidance": "수기 이력 절을 제거한다.",
+        "reference": "opal/core/references/opal-doc-standard.md §5",
+        "auto_fixable": true
+      },
+      "verification": "수기 이력 헤더가 없는지 확인한다.",
+      "suppression": {
+        "active": true,
+        "reason": "HEAD에 동일 위반이 존재하고 현재 diff가 이력 절을 건드리지 않은 pre-existing baseline이다.",
+        "scope": "task-introduced regression gate only"
+      }
+    },
+    {
+      "id": "GC-008",
+      "fingerprint": "0d65ac1342cb42bc",
+      "category": "documentation-manual-history",
+      "severity": "low",
+      "confidence": "high",
+      "disposition": "blocking",
+      "rule_id": "opal-doc-standard.md §5",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/skills/opal-pilot-project-loop/references/journey-flow.md",
+        "line": 103
+      },
+      "evidence": "HEAD와 현재 모두 103행에 같은 수기 이력 절이 있고 최신 diff hunk는 89행뿐이다.",
+      "impact": "문서 이력 SSOT가 git/tasks와 중복된다.",
+      "remediation": {
+        "guidance": "수기 이력 절을 제거한다.",
+        "reference": "opal/core/references/opal-doc-standard.md §5",
+        "auto_fixable": true
+      },
+      "verification": "수기 이력 헤더가 없는지 확인한다.",
+      "suppression": {
+        "active": true,
+        "reason": "HEAD에 동일 위반이 존재하고 현재 diff가 이력 절을 건드리지 않은 pre-existing baseline이다.",
+        "scope": "task-introduced regression gate only"
+      }
+    },
+    {
+      "id": "GC-009",
+      "fingerprint": "0d65ac1342cb42bc",
+      "category": "documentation-manual-history",
+      "severity": "low",
+      "confidence": "high",
+      "disposition": "blocking",
+      "rule_id": "opal-doc-standard.md §5",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/skills/opal-pilot-project-loop/references/verification.md",
+        "line": 201
+      },
+      "evidence": "HEAD와 현재 모두 201행에 같은 이력 절이 있다. 최신 diff는 30행과 72행만 변경하며 initial에서 관측된 이력 행 변경은 제거됐다.",
+      "impact": "문서 이력 SSOT가 git/tasks와 중복된다.",
+      "remediation": {
+        "guidance": "수기 이력 절을 제거한다.",
+        "reference": "opal/core/references/opal-doc-standard.md §5",
+        "auto_fixable": true
+      },
+      "verification": "수기 이력 헤더가 없는지 확인한다.",
+      "suppression": {
+        "active": true,
+        "reason": "잔존 위반은 HEAD 기원이고, 이번 태스크가 이력 행을 변경했던 initial 회귀는 최신 diff에서 해소됐다.",
+        "scope": "task-introduced regression gate only"
+      }
+    },
+    {
+      "id": "GC-010",
+      "fingerprint": "0d65ac1342cb42bc",
+      "category": "documentation-manual-history",
+      "severity": "low",
+      "confidence": "high",
+      "disposition": "blocking",
+      "rule_id": "opal-doc-standard.md §5",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/tools/test-tool/README.md",
+        "line": 445
+      },
+      "evidence": "HEAD 419행부터 같은 이력 절이 존재한다. 앞선 문서 추가로 현재 위치만 이동했으며 diff는 이력 헤더와 행 내용을 수정하지 않는다.",
+      "impact": "문서 이력 SSOT가 git/tasks와 중복된다.",
+      "remediation": {
+        "guidance": "수기 이력 절을 제거한다.",
+        "reference": "opal/core/references/opal-doc-standard.md §5",
+        "auto_fixable": true
+      },
+      "verification": "수기 이력 헤더가 없는지 확인한다.",
+      "suppression": {
+        "active": true,
+        "reason": "HEAD에 동일 위반이 존재하고 현재 diff가 이력 절 내용을 건드리지 않은 pre-existing baseline이다.",
+        "scope": "task-introduced regression gate only"
+      }
+    }
+  ],
+  "evidence": [
+    "event-loader verify --event worker.dispatch: ok=true, documents=4",
+    "target validation: 24/24 exist and resolve inside project_root",
+    "git diff --check on exact target_files: no output",
+    "Python AST parse: 8/8 pass",
+    "AGENT/SKILL frontmatter YAML parse: 7/7 pass",
+    "YAML targets parse: 2/2 pass",
+    "test-scenario.schema.json parse and Draft7Validator.check_schema: pass",
+    "code-scan target: 8/8 inline/header_source_inline",
+    "code-scan validate --changed: ok=true, coverage 8/8, exports_not_found=0, header_history=0, violations=0",
+    "independent header AST comparison: declared export missing=0, unlisted Test class=0, direct lib import missing from depends=0",
+    "manual HEAD/diff history comparison: six residual sections pre-existing; GC-009 initial row change removed",
+    "caller-provided source suite result 78 tests pass was not rerun or re-adjudicated"
+  ],
+  "references": [
+    "docs/CONVENTIONS.md",
+    "docs/PROJECT.md",
+    "opal/core/references/header-standard.md",
+    "opal/core/references/opal-doc-standard.md",
+    "tasks/125-260912-opd-E2E-프로필-판정-계약/GC-CONVENTION-2026-09-12T19-22.md",
+    "tasks/125-260912-opd-E2E-프로필-판정-계약/gc-findings-convention-2026-09-12T19-22.json"
+  ],
+  "missing_capabilities": [],
+  "report_path": "tasks/125-260912-opd-E2E-프로필-판정-계약/GC-CONVENTION-2026-09-12T19-46.md",
+  "task_delta": {
+    "baseline": {
+      "type": "git_head_plus_initial_report",
+      "git_revision": "HEAD",
+      "initial_report": "tasks/125-260912-opd-E2E-프로필-판정-계약/GC-CONVENTION-2026-09-12T19-22.md"
+    },
+    "verdict": "PASS",
+    "introduced_findings": [],
+    "regressed_findings": [],
+    "introduced_severity_counts": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0,
+      "info": 0,
+      "total": 0
+    },
+    "current_regression_counts": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0,
+      "info": 0,
+      "blocking": 0,
+      "total": 0
+    },
+    "pre_existing_findings": [
+      "GC-001",
+      "GC-002",
+      "GC-003",
+      "GC-004",
+      "GC-005",
+      "GC-006",
+      "GC-007",
+      "GC-008",
+      "GC-009",
+      "GC-010"
+    ],
+    "pre_existing_counts": {
+      "critical": 0,
+      "high": 1,
+      "medium": 3,
+      "low": 6,
+      "info": 0,
+      "total": 10
+    },
+    "resolved_initial_findings": [
+      "GC-011",
+      "GC-012",
+      "GC-013",
+      "GC-014",
+      "GC-015",
+      "GC-016",
+      "GC-017",
+      "GC-018"
+    ],
+    "resolved_introduced_current_count": 8,
+    "blocking_regressions": 0,
+    "gc_009_regression_component": "resolved; manual history section remains pre-existing"
+  },
+  "blockers": [],
+  "duration": {
+    "started_at": "2026-09-12 19:44:00 KST",
+    "finished_at": "2026-09-12 19:49:57 KST",
+    "seconds": 357,
+    "human": "5분 57초",
+    "basis": "최초 date-tool 분 단위 시작값 19:44를 19:44:00으로 정규화하고 최종 date-tool 초 단위 시각까지 계산"
+  },
+  "artifact_timestamp": "2026-09-12T19-46",
+  "changed_files": [
+    "tasks/125-260912-opd-E2E-프로필-판정-계약/GC-CONVENTION-2026-09-12T19-46.md",
+    "tasks/125-260912-opd-E2E-프로필-판정-계약/gc-findings-convention-2026-09-12T19-46.json"
+  ]
+}

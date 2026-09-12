@@ -146,6 +146,9 @@ icon: "🧪"
 | Partial Fail | 일부 시나리오 Fail이지만 핵심 기능은 Pass |
 | Critical Fail | 핵심 기능 Fail 또는 보안 Fail |
 
+E2E mode에서는 위 3단계 판정으로 `test-tool` E2E 계약의 상태를 소실하지 않는다.
+시나리오별 결과에는 final status `pass` / `fail` / `executor_unavailable` / `infra_error` / `blocked`와 operational status `awaiting_human`을 그대로 보존한다. `provider_unavailable`은 Browser 후보 내부 상태이며, 후보 소진 후에만 final `executor_unavailable`로 소비한다.
+
 ---
 
 ## 자체 탐색 절차
@@ -170,6 +173,7 @@ PM이 dispatch-process에서 현재 런타임에 사용 가능한 capability와 
   "summary": "테스트 요약",
   "status": "completed",
   "verdict": "All Pass | Partial Fail | Critical Fail",
+  "e2e_statuses": [{"scenario_id": "S1", "status": "pass|fail|executor_unavailable|infra_error|blocked", "operational_status": "awaiting_human|null"}],
   "pass_count": 0,
   "fail_count": 0,
   "skip_count": 0
@@ -189,8 +193,9 @@ PM이 dispatch-process에서 현재 런타임에 사용 가능한 capability와 
   - **M1 (테스트 도구)**: 시나리오 "실행 명령" 또는 `test-tool resolve` 결과의 명령을 Bash로 실행 → 결과 캡처 → `scenario-mark`로 PASS/FAIL/BLOCKED + 출력 요약 기록
   - **M2 (E2E 자동화)**: `test_mode`가 e2e 또는 fe인 경우 `test-tool integration --scope fe|be`을 호출한다. 결과 JSON이 완료 상태와 실행 증거를 반환하면 `scenario-mark`로 기록한다. 결과 JSON이 특정 브라우저/E2E capability 사용을 지시할 때는 PM이 주입한 실제 사용 가능 capability와 일치하는 경우에만 수행한다.
     - Swagger 검증은 TEST-SCENARIO.md When/Then에 명시된 API 엔드포인트, 요청값, 기대 응답을 실제 Swagger/API 응답으로 확인하고 증거를 기록한다.
-    - `escalate == true`, 실행 URL/명령 부재, 또는 필요한 capability 미주입 시 즉시 PM에 반환한다. 자동 우회·임시 mock 도입 금지.
-  - **M3 (사용자 협업)**: 주입 capability로 실행할 수 없는 사용자 행동이 필요하면 필요한 행동·기대 결과를 PM에 BLOCKED로 반환한다. PM이 받은 실제 관찰 결과만 `scenario-mark`로 기록한다.
+    - `scenario-mark --verdict-json <path>`를 우선 사용하고, 구조화 assertion `expected`/`actual`과 `required_evidence`/`observed_evidence` 없이 `pass` 또는 `real-usage`로 기록하지 않는다.
+    - E2E 결과의 `status`가 `executor_unavailable`, `infra_error`, `blocked`, `awaiting_human`이면 같은 이름으로 PM에 반환한다. legacy 입력의 `fallback`/`escalated` 계열은 `test-tool` 계약의 migration 결과로만 소비하고 신규 출력으로 만들지 않는다.
+  - **M3 (사용자 협업)**: 주입 capability로 실행할 수 없는 사용자 행동이 필요하면 구조화 handoff를 만들고 `awaiting_human`으로 반환한다. PM이 받은 사람 제출은 완료 선언이 아니라 증적 입력이며, 동일 run-id/resume token으로 재개해 deterministic verifier가 확인한 뒤에만 final status로 기록한다.
 - M2 자동 실행이 환경·도구 미비로 불가 시 즉시 PM 반환. 강제 우회·임시 mock 도입 금지.
 
 ---

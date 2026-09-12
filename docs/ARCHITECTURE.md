@@ -412,7 +412,7 @@ opal/                                    ← 이 저장소
 │   ├── tools/                           CLI 도구 20종 (+ check-env.js 보조 스크립트, requirements.txt)
 │   │   ├── event-loader/                이벤트 전문·해시·receipt 검증 + 프로젝트 부트 브리핑
 │   │   ├── state-tool/                  파이프라인 현황판 JSON SSOT (서브명령 11종)
-│   │   ├── test-tool/                   테스트 단계 결정론 집행 (resolve/check/unit/integration + scenario-*)
+│   │   ├── test-tool/                   테스트 단계 결정론 집행 (resolve/check/unit/integration + scenario-* + E2E profile/verdict 계약)
 │   │   ├── backlog-tool/                oppl 백로그 backlog.json SSOT
 │   │   ├── opal-action-monitor/         루프 액션 에이전트 진행 현황판 (읽기 전용)
 │   │   ├── brain-tool/                  프로젝트 브레인 지식 위키 집행

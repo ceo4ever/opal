@@ -269,13 +269,13 @@ lint 오류 {N}건을 수정하라:
 
 **재시도 한도**: 최대 1회 — 2회 연속 실패 시 사용자 에스컬레이션
 
-E2E 테스트는 실제 브라우저를 띄워 시나리오를 실행하므로, unit/integration과 다른 전략이 필요하다.
+E2E 테스트는 `test-tool` E2E contract의 profile(Browser·API·Hybrid·Collaborative·Manual)에 따라 실제 공개 표면을 실행하므로, unit/integration과 다른 전략이 필요하다.
 
 **L3a와의 차이**:
 
 | 항목 | L3a (unit/integration) | L3b (E2E) |
 |------|----------------------|-----------|
-| 실행 환경 | Node (브라우저 없음) | 실제 브라우저 (Playwright, Cypress) |
+| 실행 환경 | Node 또는 테스트 러너 | profile별 실제 executor(Browser/API/Human 조합) |
 | 소요 시간 | 수십 초 | 수 분 |
 | 결정성 | 높음 (결과 재현 가능) | 낮음 (타이밍, 네트워크 이슈로 flaky) |
 | 자동 수정 가능성 | 중간 | 낮음 (실패 원인 특정 어려움) |
@@ -283,21 +283,25 @@ E2E 테스트는 실제 브라우저를 띄워 시나리오를 실행하므로, 
 
 **적용 조건**: WBS.md 액션의 검증 명령에 E2E 명령이 명시된 경우에만 실행한다. E2E 검증 명령이 없으면 L3b를 SKIP하고 L4로 진행한다.
 
-**도메인별 E2E 도구 예시**:
+**E2E contract 처리**:
 
-| 도메인 | 도구 | 검증 명령 예시 |
-|--------|------|--------------|
-| FE (React/Next.js) | Playwright | `npx playwright test --project=auth` |
-| FE (React/Next.js) | Cypress | `npx cypress run --spec "cypress/e2e/auth/**"` |
-| 풀스택 | Playwright | `npm run test:e2e` |
+| 결과 | 의미 | 처리 |
+|---|---|---|
+| `pass` | assertion expected/actual과 required/observed evidence 충족 | 다음 계층 또는 완료 |
+| `fail` | 제품 동작 또는 assertion 실패 | 1회 재실행 후 2연속 fail이면 triage |
+| `executor_unavailable` | 필수 executor 또는 후보 소진 | 환경·capability 조치로 보고 |
+| `infra_error` | 서버·포트·driver·증적 저장 등 인프라 오류 | 중단 후 원인 보고 |
+| `blocked` | 인증·외부 승인 등 자동 진행 불가 | 사용자 결정 필요 |
+| `awaiting_human` | 사람 handoff 대기 | 같은 run-id/resume token으로 재개 |
 
 **자동 수정 흐름**:
 
 1. L3a 통과 후, E2E 검증 명령을 실행한다
-2. FAIL 시 **1회만 재시도** — flaky 테스트 대응
+2. `fail` 시 **1회만 재시도** — flaky 테스트 대응
    - 재시도 전 워커에게 수정 지시하지 않음 (동일 코드로 재실행)
-3. 2회 연속 FAIL → 에스컬레이션
+3. 2회 연속 `fail` → 에스컬레이션
    - E2E 실패는 FE/BE 어느 쪽 원인인지 특정이 어려우므로 사람 판단이 효율적
+4. `awaiting_human`은 실패가 아니라 pause/resume 상태다. 구조화 submission이 verifier를 통과한 뒤에만 final status로 전이한다.
 
 **에스컬레이션 형식**:
 

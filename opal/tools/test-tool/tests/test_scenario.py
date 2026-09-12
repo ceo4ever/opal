@@ -1,11 +1,11 @@
 """
 @header {
   "module": "test_scenario",
-  "task": "056,069,073,111",
+  "task": "056,069,073,111,125",
   "layer": "test",
   "domain": "opal-tools",
-  "description": "test-tool scenario-* 서브명령(scenario-init/scenario-lock/scenario-mark/scenario-status/scenario-red/scenario-fidelity-check/scenario-conformance/scenario-coverage-check/scenario-coverage-build) 행위 계약 테스트. 공개 CLI(exit code + stdout JSON)만 검증하며 sdlc-v2 coverage-build 중복 S-ID와 선택적 RED 잠금 계약을 회귀 보호한다.",
-  "scenarios": ["S-011", "S-012", "S-007", "S-014", "T069/S-5", "T069/S-6", "T069/S-7", "T073/S-1", "T073/S-2", "T111/S-6", "T111/S-7", "T111/S-8", "T111/S-9", "T111/S-10", "T111/S-11", "T111/S-18"],
+  "description": "test-tool scenario-* public CLI regression tests for RED locking, coverage, fidelity, conformance, E2E v2 schema/runtime validation, status preservation, and human handoff/resume.",
+  "scenarios": ["S-011", "S-012", "S-007", "S-014", "T069/S-5", "T069/S-6", "T069/S-7", "T073/S-1", "T073/S-2", "T111/S-6", "T111/S-7", "T111/S-8", "T111/S-9", "T111/S-10", "T111/S-11", "T111/S-18", "T125/S-2", "T125/S-5", "T125/S-7", "T125/S-8"],
   "exports": [
     "TestScenarioLockRedGate",
     "TestScenarioMarkLockGate",
@@ -20,7 +20,16 @@
     "TestScenarioCoverageCheckUnmet",
     "TestScenarioCoverageCheckComplete",
     "TestScenarioCoverageInputInvalid",
-    "TestScenarioCoverageCheckRegression"
+    "TestScenarioCoverageCheckRegression",
+    "TestScenarioCoverageBuildSdlcV2",
+    "TestScenarioCoverageBuildInvalidSdlcV2",
+    "TestScenarioV2PassGate",
+    "TestScenarioV2StatusExitMapping",
+    "TestScenarioHumanHandoffResume",
+    "TestScenarioV1V2Boundary",
+    "TestScenarioHandoffSchemaCorrection",
+    "TestScenarioRuntimeValidationCorrection",
+    "TestScenarioStatusCountsCorrection"
   ]
 }
 
@@ -28,21 +37,17 @@
 게이트 루프, F-007). test-tool `scenario-coverage-check --coverage-input <path>`는 scenario-gate.md
 §3 정규화 페이로드({goal, requirements[], features[], hypotheses[], scenarios[]})의 R/F/H↔시나리오
 매핑 누락을 결정론 판정한다(루브릭 ②③④, ①⑤⑥은 opal-evaluator-agent 소관 — 본 서브명령 미판정).
-현재 lib/scenario.py에 미구현(SCENARIO_DISPATCH에 키 부재) — 신규 케이스 전부 자연 RED 예상.
-GREEN 전환은 EXECUTE 구현 워커(opal-be-agent, F-002)가 담당한다(작성자≠구현자, red-first.md §2).
-기존 클래스(TestScenarioLockRedGate ~ TestScenarioConformance)는 수정하지 않았다 — 아래 4개 클래스만
-신규 추가. exit 16(coverage_unmet)/17(coverage_input_invalid)은 기존 8~14와 충돌 없이 배정
+현재 구현된 `scenario-coverage-check`와 `scenario-coverage-build`의 공개 CLI 계약을 회귀 보호한다.
+exit 16(coverage_unmet)/17(coverage_input_invalid)은 기존 8~14와 충돌 없이 배정된다
 (PLAN.md §3.2.2, 15는 정보용 예약이라 회피).
 
 [T069] 069 태스크 추가분: scenario-fidelity-check(fidelity_unmet exit 13) + scenario-conformance
 (surface_unverified exit 14 / surfaces_file_not_found exit 15) 신규 서브명령 RED-first 테스트.
-두 서브명령은 lib/scenario.py에 미구현 — 자연 RED 예상. GREEN 전환은 EXECUTE 구현 워커 담당
-(작성자≠구현자, red-first.md §2). 기존 클래스는 불변.
+두 서브명령의 구현 완료 계약과 기존 시나리오 호환성을 공개 CLI에서 회귀 보호한다.
 
-[T056/ADD1] scenario-red 서브명령 신설 RED-first 추가 테스트 — RED 상태(미구현, lib/scenario.py에
-  scenario-red 부재) 전부 FAIL 예상. GREEN 전환은 EXECUTE 구현 워커 담당. 기존 케이스(S-011/S-012/
-  S-007/S-014)는 수정하지 않았다 — 아래 TestScenarioRedToolGated·TestScenarioInitSeedNeutralized만
-  신규 추가. 배경: `.opal/brain/pages/concept/oppl-scenario-red-confirmed-gap.md`
+[T056/ADD1] scenario-red 서브명령과 시드 무력화 계약을 회귀 보호한다. 기존 케이스(S-011/S-012/
+  S-007/S-014)와 TestScenarioRedToolGated·TestScenarioInitSeedNeutralized가 함께 검증한다. 배경:
+  `.opal/brain/pages/concept/oppl-scenario-red-confirmed-gap.md`
   (red_confirmed를 증거 없이 scenario-init 시드로 선언하는 우회 경로 봉쇄 — enforce-don't-advise 보강).
 
 [T056] test-tool scenario-* 4서브명령 행위 계약 — RED-first TDD
@@ -472,11 +477,10 @@ class TestScenarioInitSeedNeutralized(BaseScenarioTestCase):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# [T069] scenario-fidelity-check / scenario-conformance 신규 서브명령 RED-first 테스트
+# [T069] scenario-fidelity-check / scenario-conformance 공개 CLI 회귀 테스트
 # 검증 대상: opal/tools/test-tool/run.sh 공개 인터페이스(exit code + stdout JSON)만
 # 단언 — 내부 함수 직접 import 금지(red-first.md §4). PLAN.md §3.5.2/§3.6.2 근거.
-# 두 서브명령은 현재 lib/scenario.py에 미구현 — 자연 RED 예상.
-# 기존 클래스(TestScenarioLockRedGate ~ TestScenarioInitSeedNeutralized)는 수정하지 않았다.
+# 구현된 두 서브명령의 fidelity/conformance 경계와 기존 호환성을 보호한다.
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _scenario_fidelity_check(task_path):
@@ -641,11 +645,10 @@ class TestScenarioConformance(BaseScenarioTestCase):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# [T073] scenario-coverage-check 신규 서브명령 RED-first 테스트
+# [T073] scenario-coverage-check 공개 CLI 회귀 테스트
 # 검증 대상: run.sh 공개 인터페이스(exit code + stdout JSON)만 단언 — 내부 함수 직접
 # import 금지(red-first.md §4). PLAN.md §3.2.2 / scenario-gate.md §3 정규화 계약 근거.
-# 현재 lib/scenario.py에 미구현 — 신규 케이스 전부 자연 RED 예상.
-# 기존 클래스(TestScenarioLockRedGate ~ TestScenarioConformance)는 수정하지 않았다.
+# 구현된 커버리지 판정과 기존 scenario-* dispatch/exit 계약을 보호한다.
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _write_coverage_fixture(dest_dir, payload):
@@ -1143,6 +1146,482 @@ template: sdlc-v2
         self.assertFalse(data.get("ok"))
         self.assertEqual(data.get("error"), "coverage_input_invalid")
         self.assertIn("scenario", str(data.get("detail")).lower())
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# [T125] E2E verdict/scenario v2 public CLI contract — S-5, S-7, S-8
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _write_json_fixture(path, payload):
+    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    return path
+
+
+def _scenario_mark_verdict(task_path, scenario_id, verdict_path):
+    return _run([
+        "scenario-mark", "--task-path", str(task_path), "--id", scenario_id,
+        "--verdict-json", str(verdict_path),
+    ])
+
+
+def _scenario_resume(task_path, scenario_id, run_id, token, submission_path):
+    return _run([
+        "scenario-mark", "--task-path", str(task_path), "--id", scenario_id,
+        "--resume-run-id", run_id, "--resume-token", token,
+        "--submission", str(submission_path),
+    ])
+
+
+def _v2_browser_scenario(red_required=False):
+    return {
+        "id": "S1",
+        "acceptance_ref": "AC-5",
+        "type": "e2e",
+        "expected": "Dashboard heading is visible",
+        "red_required": red_required,
+        "required_fidelity": "real-usage",
+        "surface_ref": "dashboard",
+        "surface_kind": "web_ui",
+        "profile": "browser",
+        "actors": ["user"],
+        "steps": [{"id": "open-dashboard", "executor": "browser"}],
+        "assertions": [{"id": "heading", "expected": "Dashboard"}],
+        "required_evidence": ["screenshot", "trace"],
+        "handoff": None,
+    }
+
+
+def _v2_human_scenario(red_required=False):
+    return {
+        "id": "S1",
+        "acceptance_ref": "AC-7",
+        "type": "e2e",
+        "expected": "Human approval is deterministically verified",
+        "red_required": red_required,
+        "required_fidelity": "real-usage",
+        "surface_ref": "approval",
+        "surface_kind": "collaborative",
+        "profile": "collaborative",
+        "actors": ["human", "agent"],
+        "steps": [{"id": "approve", "executor": "human"}],
+        "assertions": [{"id": "approved", "expected": True}],
+        "required_evidence": ["approval_record"],
+        "handoff": {
+            "handoff_id": "handoff-7",
+            "instruction": "Approve the observed result",
+            "expected_observation": "approval is recorded",
+            "required_evidence": ["approval_record"],
+            "timeout_seconds": 300,
+            "resume_token": "resume-7",
+            "server_policy": "keep",
+            "submission_path": "submission.json",
+        },
+    }
+
+
+def _v2_manual_scenario(red_required=False):
+    scenario = json.loads(json.dumps(_v2_human_scenario(red_required)))
+    scenario.update({
+        "surface_ref": "manual-approval",
+        "surface_kind": "manual",
+        "profile": "manual",
+        "actors": ["human"],
+    })
+    scenario["handoff"]["handoff_id"] = "handoff-manual"
+    scenario["handoff"]["resume_token"] = "resume-manual"
+    return scenario
+
+
+class TestScenarioV2PassGate(BaseScenarioTestCase):
+    """[T125/S-5] scenario-mark cannot persist pass/real-usage without verdict evidence."""
+
+    def setUp(self):
+        super().setUp()
+        code, stdout, data = _scenario_init(self.task_path, [_v2_browser_scenario()])
+        self.assertEqual(code, 0, stdout)
+        lock_code, lock_stdout, _ = _scenario_lock(self.task_path)
+        self.assertEqual(lock_code, 0, lock_stdout)
+
+    def test_legacy_pass_real_usage_without_structured_verdict_is_rejected(self):
+        code, stdout, data = _run([
+            "scenario-mark", "--task-path", str(self.task_path), "--id", "S1",
+            "--result", "pass", "--fidelity", "real-usage", "--evidence", "done",
+        ])
+        self.assertNotEqual(code, 0, stdout)
+        self.assertFalse(data.get("ok"), data)
+        spec = json.loads((self.task_path / "test-scenario.json").read_text(encoding="utf-8"))
+        self.assertNotEqual(spec["scenarios"][0].get("result"), "pass", spec)
+
+    def test_structured_assertion_and_evidence_verdict_is_the_only_pass_path(self):
+        verdict_path = _write_json_fixture(self.tmpdir / "verdict.json", {
+            "status": "pass",
+            "profile": "browser",
+            "fidelity": "real-usage",
+            "observed_executors": ["browser"],
+            "assertion_results": [
+                {"id": "heading", "expected": "Dashboard", "actual": "Dashboard"}
+            ],
+            "observed_evidence": ["screenshot", "trace"],
+        })
+        code, stdout, data = _scenario_mark_verdict(self.task_path, "S1", verdict_path)
+        self.assertEqual(code, 0, stdout)
+        self.assertTrue(data.get("ok"), data)
+        self.assertEqual(data.get("status"), "pass", data)
+        spec = json.loads((self.task_path / "test-scenario.json").read_text(encoding="utf-8"))
+        scenario = spec["scenarios"][0]
+        self.assertEqual(scenario.get("result"), "pass")
+        self.assertEqual(scenario.get("fidelity"), "real-usage")
+        self.assertEqual(scenario.get("observed_executors"), ["browser"])
+        self.assertEqual(scenario.get("observed_evidence"), ["screenshot", "trace"])
+
+
+class TestScenarioV2StatusExitMapping(BaseScenarioTestCase):
+    """[T125/S-2] public scenario verdict path preserves all status exit mappings."""
+
+    def test_public_cli_status_to_exit_mapping(self):
+        exits = {
+            "pass": 0,
+            "fail": 6,
+            "infra_error": 7,
+            "executor_unavailable": 18,
+            "blocked": 19,
+            "awaiting_human": 20,
+        }
+        for index, (status, expected_exit) in enumerate(exits.items()):
+            with self.subTest(status=status):
+                task_path = self.tmpdir / f"status-{index}"
+                task_path.mkdir()
+                init_code, init_stdout, _ = _scenario_init(task_path, [_v2_human_scenario()])
+                self.assertEqual(init_code, 0, init_stdout)
+                lock_code, lock_stdout, _ = _scenario_lock(task_path)
+                self.assertEqual(lock_code, 0, lock_stdout)
+                verdict = {
+                    "status": status,
+                    "profile": "collaborative",
+                    "observed_executors": ["human"],
+                    "assertion_results": [
+                        {"id": "approved", "expected": True, "actual": True}
+                    ],
+                    "observed_evidence": ["approval_record"],
+                }
+                if status == "awaiting_human":
+                    verdict.update({
+                        "operational_status": "awaiting_human",
+                        "run_id": f"run-{index}",
+                        "handoff_state": {
+                            "handoff_id": "handoff-7",
+                            "resume_token": "resume-7",
+                            "expected_observation": "approval is recorded",
+                            "required_evidence": ["approval_record"],
+                        },
+                    })
+                verdict_path = _write_json_fixture(
+                    self.tmpdir / f"status-{index}.json", verdict,
+                )
+                code, stdout, data = _scenario_mark_verdict(task_path, "S1", verdict_path)
+                self.assertEqual(code, expected_exit, stdout)
+                self.assertEqual(data.get("status"), status, data)
+                self.assertNotIn("awaiting_human", data.get("final_statuses", []), data)
+
+
+class TestScenarioHumanHandoffResume(BaseScenarioTestCase):
+    """[T125/S-7] awaiting_human is resumable; only verified structured submission finalizes."""
+
+    def setUp(self):
+        super().setUp()
+        code, stdout, _ = _scenario_init(self.task_path, [_v2_human_scenario()])
+        self.assertEqual(code, 0, stdout)
+        lock_code, lock_stdout, _ = _scenario_lock(self.task_path)
+        self.assertEqual(lock_code, 0, lock_stdout)
+        self.awaiting_path = _write_json_fixture(self.tmpdir / "awaiting.json", {
+            "status": "awaiting_human",
+            "operational_status": "awaiting_human",
+            "run_id": "run-7",
+            "profile": "collaborative",
+            "handoff_state": {
+                "handoff_id": "handoff-7",
+                "resume_token": "resume-7",
+                "expected_observation": "approval is recorded",
+                "required_evidence": ["approval_record"],
+            },
+        })
+
+    def _mark_awaiting(self):
+        code, stdout, data = _scenario_mark_verdict(self.task_path, "S1", self.awaiting_path)
+        self.assertEqual(code, 20, stdout)
+        self.assertEqual(data.get("status"), "awaiting_human", data)
+
+    def test_initial_handoff_exits_20_and_free_form_done_is_not_pass(self):
+        self._mark_awaiting()
+        code, stdout, data = _run([
+            "scenario-mark", "--task-path", str(self.task_path), "--id", "S1",
+            "--result", "pass", "--evidence", "done",
+        ])
+        self.assertNotEqual(code, 0, stdout)
+        self.assertFalse(data.get("ok"), data)
+        spec = json.loads((self.task_path / "test-scenario.json").read_text(encoding="utf-8"))
+        scenario = spec["scenarios"][0]
+        self.assertEqual(scenario.get("operational_status"), "awaiting_human")
+        self.assertNotEqual(scenario.get("result"), "pass")
+
+    def test_matching_run_token_and_structured_evidence_resume_to_final_pass(self):
+        self._mark_awaiting()
+        submission = _write_json_fixture(self.tmpdir / "submission.json", {
+            "run_id": "run-7",
+            "resume_token": "resume-7",
+            "assertion_results": [
+                {"id": "approved", "expected": True, "actual": True}
+            ],
+            "observed_executors": ["human"],
+            "observed_evidence": ["approval_record"],
+        })
+        code, stdout, data = _scenario_resume(
+            self.task_path, "S1", "run-7", "resume-7", submission,
+        )
+        self.assertEqual(code, 0, stdout)
+        self.assertEqual(data.get("status"), "pass", data)
+        spec = json.loads((self.task_path / "test-scenario.json").read_text(encoding="utf-8"))
+        scenario = spec["scenarios"][0]
+        self.assertEqual(scenario.get("result"), "pass")
+        self.assertIsNone(scenario.get("operational_status"))
+
+    def test_mismatched_resume_token_is_rejected(self):
+        self._mark_awaiting()
+        submission = _write_json_fixture(self.tmpdir / "bad-submission.json", {
+            "run_id": "run-7",
+            "resume_token": "wrong-token",
+            "assertion_results": [{"id": "approved", "expected": True, "actual": True}],
+            "observed_executors": ["human"],
+            "observed_evidence": ["approval_record"],
+        })
+        code, stdout, data = _scenario_resume(
+            self.task_path, "S1", "run-7", "wrong-token", submission,
+        )
+        self.assertNotEqual(code, 0, stdout)
+        self.assertFalse(data.get("ok"), data)
+        self.assertNotEqual(data.get("status"), "pass", data)
+
+
+class TestScenarioV1V2Boundary(BaseScenarioTestCase):
+    """[T125/S-8] legacy v1 read compatibility and strict v2 schema/runtime validation."""
+
+    def test_new_init_writes_v2_structured_spec_while_v1_status_still_reads(self):
+        code, stdout, _ = _scenario_init(self.task_path, [_v2_browser_scenario()])
+        self.assertEqual(code, 0, stdout)
+        v2 = json.loads((self.task_path / "test-scenario.json").read_text(encoding="utf-8"))
+        self.assertEqual(v2.get("schema_version"), "2.0", v2)
+        scenario = v2["scenarios"][0]
+        for key in (
+            "surface_kind", "profile", "actors", "steps", "assertions", "required_evidence",
+            "operational_status", "observed_executors", "assertion_results",
+            "observed_evidence", "handoff_state",
+        ):
+            self.assertIn(key, scenario, v2)
+
+        legacy_path = self.tmpdir / "legacy-task"
+        legacy_path.mkdir()
+        legacy = {
+            "schema_version": "1.0",
+            "task_id": "legacy-task",
+            "locked": True,
+            "created_at": "2026-09-12T00:00:00+09:00",
+            "locked_at": "2026-09-12T00:01:00+09:00",
+            "scenarios": [{
+                "id": "S1", "acceptance_ref": "AC1", "type": "unit",
+                "expected": "legacy", "red_confirmed": True,
+                "red_evidence": "old red", "red_at": "2026-09-12T00:00:30+09:00",
+                "result": "pass", "evidence": "old pass",
+                "marked_at": "2026-09-12T00:02:00+09:00",
+            }],
+        }
+        _write_json_fixture(legacy_path / "test-scenario.json", legacy)
+        status_code, status_stdout, status = _scenario_status(legacy_path)
+        self.assertEqual(status_code, 0, status_stdout)
+        self.assertEqual(status.get("passed"), 1)
+
+    def test_schema_accepts_valid_v2_and_schema_and_runtime_reject_invalid_v2(self):
+        from jsonschema import Draft7Validator
+
+        schema_path = _TOOL_DIR / "schema" / "test-scenario.schema.json"
+        schema = json.loads(schema_path.read_text(encoding="utf-8"))
+        code, stdout, _ = _scenario_init(self.task_path, [_v2_browser_scenario()])
+        self.assertEqual(code, 0, stdout)
+        valid_v2 = json.loads((self.task_path / "test-scenario.json").read_text(encoding="utf-8"))
+        Draft7Validator(schema).validate(valid_v2)
+
+        invalid_v2 = json.loads(json.dumps(valid_v2))
+        invalid_v2["scenarios"][0]["profile"] = "desktop"
+        self.assertTrue(list(Draft7Validator(schema).iter_errors(invalid_v2)))
+        _write_json_fixture(self.task_path / "test-scenario.json", invalid_v2)
+        status_code, status_stdout, status = _scenario_status(self.task_path)
+        self.assertNotEqual(status_code, 0, status_stdout)
+        self.assertFalse(status.get("ok"), status)
+        self.assertEqual(status.get("error"), "scenario_contract_invalid", status)
+
+
+class TestScenarioHandoffSchemaCorrection(BaseScenarioTestCase):
+    """[T125/S-7] Draft7 requires the complete eight-field human handoff shape."""
+
+    REQUIRED_HANDOFF_FIELDS = (
+        "handoff_id",
+        "instruction",
+        "expected_observation",
+        "required_evidence",
+        "timeout_seconds",
+        "resume_token",
+        "server_policy",
+        "submission_path",
+    )
+
+    def test_collaborative_and_manual_handoff_and_state_require_all_fields(self):
+        from jsonschema import Draft7Validator
+
+        schema_path = _TOOL_DIR / "schema" / "test-scenario.schema.json"
+        schema = json.loads(schema_path.read_text(encoding="utf-8"))
+        validator = Draft7Validator(schema)
+
+        for profile, scenario_factory in (
+            ("collaborative", _v2_human_scenario),
+            ("manual", _v2_manual_scenario),
+        ):
+            with self.subTest(profile=profile, phase="valid"):
+                task_path = self.tmpdir / f"schema-{profile}"
+                task_path.mkdir()
+                code, stdout, _ = _scenario_init(task_path, [scenario_factory()])
+                self.assertEqual(code, 0, stdout)
+                valid = json.loads((task_path / "test-scenario.json").read_text(encoding="utf-8"))
+                item = valid["scenarios"][0]
+                item["handoff_state"] = dict(item["handoff"])
+                item["operational_status"] = "awaiting_human"
+                validator.validate(valid)
+
+            for container in ("handoff", "handoff_state"):
+                for field in self.REQUIRED_HANDOFF_FIELDS:
+                    with self.subTest(profile=profile, container=container, missing=field):
+                        invalid = json.loads(json.dumps(valid))
+                        invalid["scenarios"][0][container].pop(field)
+                        errors = list(validator.iter_errors(invalid))
+                        self.assertTrue(
+                            errors,
+                            f"Draft7 must reject {profile} {container} without {field}",
+                        )
+
+
+class TestScenarioRuntimeValidationCorrection(BaseScenarioTestCase):
+    """[T125/S-8] scenario-status rejects malformed v2 root/result state via exit 17."""
+
+    def _new_v2_task(self, name, scenario=None):
+        task_path = self.tmpdir / name
+        task_path.mkdir()
+        code, stdout, _ = _scenario_init(task_path, [scenario or _v2_browser_scenario()])
+        self.assertEqual(code, 0, stdout)
+        return task_path
+
+    def _load_spec(self, task_path):
+        return json.loads((task_path / "test-scenario.json").read_text(encoding="utf-8"))
+
+    def _save_spec(self, task_path, spec):
+        _write_json_fixture(task_path / "test-scenario.json", spec)
+
+    def _assert_status_contract_invalid(self, task_path, label):
+        code, stdout, data = _scenario_status(task_path)
+        self.assertEqual(
+            code,
+            17,
+            f"{label}: expected exit 17 scenario_contract_invalid, stdout={stdout!r}",
+        )
+        self.assertFalse(data.get("ok"), data)
+        self.assertEqual(data.get("error"), "scenario_contract_invalid", data)
+
+    def test_status_rejects_invalid_v2_enums_and_executor_values(self):
+        invalid_values = (
+            ("type", "static"),
+            ("required_fidelity", "synthetic"),
+            ("result", "success"),
+            ("operational_status", "paused"),
+            ("observed_executors", ["shell"]),
+        )
+        for index, (field, value) in enumerate(invalid_values):
+            with self.subTest(field=field, value=value):
+                task_path = self._new_v2_task(f"invalid-{index}")
+                spec = self._load_spec(task_path)
+                spec["scenarios"][0][field] = value
+                self._save_spec(task_path, spec)
+                self._assert_status_contract_invalid(task_path, field)
+
+    def test_status_rejects_result_and_awaiting_human_collision(self):
+        task_path = self._new_v2_task("state-collision", _v2_human_scenario())
+        spec = self._load_spec(task_path)
+        item = spec["scenarios"][0]
+        item["result"] = "pass"
+        item["operational_status"] = "awaiting_human"
+        item["handoff_state"] = dict(item["handoff"])
+        item["run_id"] = "run-collision"
+        self._save_spec(task_path, spec)
+        self._assert_status_contract_invalid(task_path, "result+awaiting_human")
+
+    def test_status_rejects_missing_v2_root_required_key(self):
+        task_path = self._new_v2_task("missing-root-key")
+        spec = self._load_spec(task_path)
+        spec.pop("task_id")
+        self._save_spec(task_path, spec)
+        self._assert_status_contract_invalid(task_path, "missing root task_id")
+
+
+class TestScenarioStatusCountsCorrection(BaseScenarioTestCase):
+    """[T125/S-2] scenario-status preserves every final and operational state."""
+
+    def test_status_counts_preserve_final_five_and_awaiting_human(self):
+        final_statuses = ("pass", "fail", "executor_unavailable", "infra_error", "blocked")
+        scenarios = []
+        for index, status in enumerate(final_statuses, start=1):
+            scenario = json.loads(json.dumps(_v2_browser_scenario()))
+            scenario["id"] = f"S{index}"
+            scenarios.append(scenario)
+        awaiting = _v2_human_scenario()
+        awaiting["id"] = "S6"
+        scenarios.append(awaiting)
+
+        code, stdout, _ = _scenario_init(self.task_path, scenarios)
+        self.assertEqual(code, 0, stdout)
+        spec = self._load_status_spec()
+        for item, status in zip(spec["scenarios"][:5], final_statuses):
+            item["result"] = status
+            item["operational_status"] = None
+            item["observed_executors"] = ["browser"]
+            item["assertion_results"] = [
+                {"id": "heading", "expected": "Dashboard", "actual": "Dashboard"}
+            ]
+            item["observed_evidence"] = ["screenshot", "trace"]
+        waiting_item = spec["scenarios"][5]
+        waiting_item["result"] = None
+        waiting_item["operational_status"] = "awaiting_human"
+        waiting_item["observed_executors"] = ["human"]
+        waiting_item["handoff_state"] = dict(waiting_item["handoff"])
+        waiting_item["run_id"] = "run-status-counts"
+        _write_json_fixture(self.task_path / "test-scenario.json", spec)
+
+        code, stdout, data = _scenario_status(self.task_path)
+        self.assertEqual(code, 0, stdout)
+        self.assertEqual(data.get("passed"), 1, data)
+        self.assertEqual(data.get("failed"), 1, data)
+        self.assertEqual(data.get("blocked"), 1, data)
+        self.assertEqual(data.get("awaiting_human"), 1, data)
+        self.assertEqual(
+            data.get("status_counts"),
+            {
+                "pass": 1,
+                "fail": 1,
+                "executor_unavailable": 1,
+                "infra_error": 1,
+                "blocked": 1,
+                "awaiting_human": 1,
+            },
+            data,
+        )
+
+    def _load_status_spec(self):
+        return json.loads((self.task_path / "test-scenario.json").read_text(encoding="utf-8"))
 
 
 if __name__ == "__main__":

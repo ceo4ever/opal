@@ -216,7 +216,7 @@ PLAN.md Work items의 담당·실행 그룹 필드에 따라 배치를 구성한
 
 ## STEP 5: TEST
 
-opal-test-agent 워커 디스패치. TEST-SCENARIO.md를 실행 명세로 읽고, `test-tool scenario-status`로 잠금 상태를 확인한 뒤 각 결과·증거를 `scenario-mark`로 기록하고 PASS/FAIL/BLOCKED를 판정한다. 사용자 행동이 필요한 시나리오는 주입된 capability로 실행할 수 없을 때만 필요한 행동과 기대 결과를 PM에 BLOCKED로 반환한다.
+opal-test-agent 워커 디스패치. TEST-SCENARIO.md를 실행 명세로 읽고, `test-tool scenario-status`로 잠금 상태를 확인한 뒤 각 결과·증거를 `scenario-mark`로 기록하고 PASS/FAIL/BLOCKED를 판정한다. E2E 결과는 `test-tool` E2E contract의 final status `pass` / `fail` / `executor_unavailable` / `infra_error` / `blocked`와 operational `awaiting_human`을 보존한다. 사용자 행동이 필요한 시나리오는 구조화 handoff로 `awaiting_human`을 반환하고, 사람 제출을 verifier가 검증한 뒤 final status로 전이한다.
 
 > **[PM 컨텍스트 주입]** 디스패치 프롬프트 첫 줄에 `[WORKER]` 삽입. 주입 항목·핵심 제약(전 워커 공통 고정 포함)은 `opal/core/references/pm/dispatch-process.md` §워커 컨텍스트 주입 템플릿을 따른다 — 본 스킬은 항목을 열거하지 않는다. 단계 추가 전달: TEST-SCENARIO.md 경로 · changed_files.
 
