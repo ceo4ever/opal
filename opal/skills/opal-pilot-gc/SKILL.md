@@ -99,13 +99,21 @@ tasks/{NNN}-{YYMMDD}-opgc-{short-summary}/
 
 ### 1.1 범위 파싱 및 파일 선별
 
-```bash
-# --scope staged (기본)
-git diff --name-only --staged
+범위 해석은 아래 5경로 중 하나로만 확정한다.
 
-# --scope all
-git ls-files
-```
+| 범위 | 해석 | 대상 파일 확정 방법 |
+|------|------|--------------------|
+| `staged` (기본) | git staged 변경 | `git diff --name-only --staged` |
+| `all` | 프로젝트 전체 추적 파일 | `git ls-files` |
+| `untracked` | 추적되지 않은 신규 파일 | `git ls-files --others --exclude-standard` |
+| `commit` / `commit:<ref>` | 특정 커밋의 변경 파일 (`<ref>` 생략 시 `HEAD`) | `git diff --name-only <ref>^ <ref>` |
+| explicit | 호출자가 명시한 파일 목록 | git 조회 없이 전달받은 목록을 그대로 사용 |
+
+- 호출자가 명시 목록(explicit)을 전달한 경우 git 조회를 수행하지 않는다. 명시 목록이 `--scope`보다 우선한다.
+- `commit:<ref>`에서 `<ref>^`가 없는 최초 커밋이면 `git show --name-only --pretty=format: <ref>`로 대체한다.
+- 어느 경로든 조회 결과에서 실재하지 않는 경로(삭제된 파일)만 제외하고 나머지를 `target_files`로 확정한다.
+
+> **[MUST] 대상 고정**: SCAN이 확정한 파일 목록을 **그대로** CHECK 디스패치의 `target_files`로 전달한다. 하위 스킬(`op-gc-security`·`op-gc-convention`)은 git 상태나 자체 판단으로 대상을 재선별·확장·축소하지 않는다. §1.5 요소별 분할은 확정 목록의 분배일 뿐이며, 분할 결과의 합집합은 확정 목록과 같아야 한다. 분배되지 않고 남는 파일이 있으면 fallback 요소로 함께 전달한다.
 
 ### 1.2 기술 스택 감지
 
@@ -163,6 +171,21 @@ else:
 | batch | `batch/` | `batch/daily_report.py` | opal-be-agent (Backend 상속) |
 
 > **[MUST] 하위호환**: "프로젝트 구성" 섹션이 없는 기존 프로젝트에서는 fallback(프로젝트 전체 × 체커)으로 진행하여 1+1 단일 디스패치와 동일하게 동작한다.
+
+### 1.6 baseline 탐색
+
+직전 opgc 실행 결과를 이번 실행의 delta 비교 기준으로 확정한다.
+
+```
+후보 = glob("tasks/*-opgc-*/gc-report.json")
+후보 중 태스크 폴더 접두 NNN이 현재 태스크의 NNN보다 작은 것만 남긴다
+남은 후보 중 NNN 최대값 1건 → baseline = 해당 gc-report.json 경로
+후보가 없으면 → baseline = none
+```
+
+- 확정한 `baseline` 값은 CHECK 디스패치(§2.3)와 REPORT 위임(§3.2)에 같은 값으로 전달한다.
+- `baseline: none`이면 이번 실행의 finding을 전건 신규로 표기한다.
+- 비교 키와 delta 분류 규칙은 `opal/core/references/harness/gc-finding-schema.md` §7이 소유한다. 본 스킬은 규칙을 복제하지 않는다.
 
 **산출물**: PM이 STATE.md 저널(자유 기재 영역)에 디스패치 매트릭스 요약 직접 기록 (분할 결과는 내부 참조용, `state.json` 비접촉 — state.json 파생이 아닌 opgc 고유 서술 정보)
 
@@ -237,17 +260,20 @@ Case D — Fallback (프로젝트 구성 섹션 부재):
 - [MUST] 진단 전담 — 소스 파일 수정 금지(Edit/Write 도구 미할당)
 
 ## 입력 파라미터
-- task_folder: {task_folder}
-- target_files: {element_targets[element.요소명] 또는 전체 target_files}
-- timestamp: {ts}
-- checklist_path: ~/.opal/skills/opal-pilot-gc/references/base-{security|convention}-checklist.md
-- template_path: ~/.opal/skills/opal-pilot-gc/references/report-{security|convention}-template.md
+- skill_path: ~/.opal/skills/op-gc-{security|convention}/SKILL.md
 - project_root: {project_root}
+- target_files: {element_targets[element.요소명] 또는 전체 target_files}   # SCAN 확정 목록 그대로 — 재선별 금지
+- output_dir: {task_folder}
+- timestamp: {ts}
 - scope: {element.요소명 또는 "all"}      # 허브+링크 모델에서 상세 문서 선택
+- element: {element.요소명 또는 미지정}    # 산출물 파일명 접미사 (요소 1개·fallback이면 생략)
+- baseline: {§1.6에서 확정한 gc-report.json 경로 또는 none}
+- project_documents: {docs/PROJECT.md 레지스트리에서 선별한 기준·설계 문서 경로 목록}
 - docs/SECURITY.md 존재: {true|false}      # 보안 에이전트만
 - docs/CONVENTIONS.md 존재: {true|false}   # 컨벤션 에이전트만
 
 ## 참조 문서 경로
+- opal/core/references/harness/gc-finding-schema.md (finding 필드·envelope·fingerprint·판정 SSOT)
 - docs/CONVENTIONS.md (컨벤션 에이전트 허브)
 - docs/SECURITY.md (보안 에이전트 허브)
 - docs/ARCHITECTURE.md (시스템 구조 참조)
@@ -257,13 +283,13 @@ Case D — Fallback (프로젝트 구성 섹션 부재):
 - {element.전문_에이전트} (선정 근거 — 보고서 §3 출력 시 참조)
 ```
 
-> **보고서 파일명 충돌 방지**: 요소가 여러 개인 경우 timestamp 뒤에 `-{요소명}` 접미사를 추가한다. 예: `GC-SECURITY-{ts}-frontend.md`, `GC-CONVENTION-{ts}-backend.md`. 요소가 1개(또는 fallback)인 경우 기존 포맷 유지.
+> **보고서 파일명 충돌 방지**: 요소가 여러 개인 경우 timestamp 뒤에 `-{요소명}` 접미사를 추가한다. 예: `GC-SECURITY-{ts}-frontend.md`, `GC-CONVENTION-{ts}-backend.md`. 요소가 1개(또는 fallback)인 경우 기존 포맷 유지. 같은 규칙이 finding JSON(`gc-findings-{security|convention}-{ts}[-{요소명}].json`)에도 동일하게 적용된다.
 
 ### 2.4 완료 확인 게이트
 
 모든 디스패치 결과의 `status: completed` 확인.
 
-**산출물**: 각 (요소 × 체커) 보고서 임시 결과 (STATE 로그)
+**산출물**: 각 (요소 × 체커)의 `GC-{SECURITY|CONVENTION}-{ts}[-{요소명}].md`와 `gc-findings-{security|convention}-{ts}[-{요소명}].json` (REPORT 입력)
 
 **게이트**: 워커 완료 확인
 
@@ -271,35 +297,34 @@ Case D — Fallback (프로젝트 구성 섹션 부재):
 
 ## STEP 3: REPORT
 
-**목적**: 에이전트 결과 수합, 빈도/심각도 트리거 감지, STATE.md 요약 테이블 갱신
+**목적**: check 산출물 수합, `op-gc-report` 위임으로 통합 판정·baseline delta·문서 업데이트 트리거 산출, STATE.md 요약 테이블 갱신
 
-### 3.1 결과 수합
+### 3.1 결과 수합 입력 구성
 
-각 에이전트가 생성한 보고서 파일 확인:
-- `{task_folder}/GC-SECURITY-{ts}[-{요소명}].md` (요소별 N개)
-- `{task_folder}/GC-CONVENTION-{ts}[-{요소명}].md` (요소별 N개)
+각 (요소 × 체커) 디스패치 반환에서 아래 산출물 경로를 모은다. 누락된 산출물이 있으면 해당 조합을 통과로 간주하지 않고 결측으로 표기한다.
 
-### 3.2 빈도 분석 상수
+- 보고서: `{task_folder}/GC-SECURITY-{ts}[-{요소명}].md`, `{task_folder}/GC-CONVENTION-{ts}[-{요소명}].md` (요소별 N개)
+- finding JSON: `{task_folder}/gc-findings-security-{ts}[-{요소명}].json`, `{task_folder}/gc-findings-convention-{ts}[-{요소명}].json` (요소별 N개)
 
-```
-FREQ_THRESHOLD = 3  # 파일 수 기준 (향후 --freq-threshold로 오버라이드 가능성은 있으나 이번 구현 범위 아님)
-```
+### 3.2 op-gc-report 위임
 
-### 3.3 트리거 감지 (독립 판정)
+중복 병합·baseline delta·차단 계산·최종 판정·문서 업데이트 트리거는 `op-gc-report`가 소유한다. 본 스킬은 판정 조건·임계값·fingerprint 산출을 보유하지 않는다.
 
-```
-// 빈도 트리거 (N=3, 파일 수 기준)
-동일 fingerprint가 FREQ_THRESHOLD개 이상 파일 → "[빈도 트리거]" 제안 생성
+- 스킬 탐색 경로:
+  1. `{프로젝트}/.opal/skills/op-gc-report/SKILL.md`
+  2. `~/.opal/skills/op-gc-report/SKILL.md`
+- 디스패치 입력:
+  - `project_root`: {project_root}
+  - `output_dir`: {task_folder}
+  - `timestamp`: {ts}
+  - `findings_inputs`: §3.1에서 모은 finding JSON 경로 전건
+  - `baseline`: §1.6에서 확정한 `gc-report.json` 경로 또는 `none`
+- 산출 수합: `{task_folder}/GC-REPORT-{ts}.md`, `{task_folder}/gc-report.json`
+- 반환의 `verdict`·`delta`·`blocking`·`missing_capabilities`를 STATE 요약과 사용자 보고의 근거로 쓴다.
 
-// 심각도 트리거 (Critical 또는 High — 빈도 트리거와 완전 독립 판정)
-Critical 또는 High 이슈 1건 이상 → "[심각도 트리거]" 제안 생성
-// 두 트리거는 별개 §4 항목으로 분리 표기한다
+> **[MUST]** finding JSON을 하나도 읽지 못했거나 `op-gc-report`가 `status: blocked`로 반환하면 PM이 판정을 임의로 생성하지 않고 REPORT를 중단한다.
 
-// 새 카테고리 트리거
-기존 CONVENTIONS.md/SECURITY.md에 없는 카테고리 → "[새 카테고리 트리거]" 제안 생성
-```
-
-### 3.4 STATE.md 실행 요약 테이블 갱신
+### 3.3 STATE.md 실행 요약 테이블 갱신
 
 > 아래 표는 `state.json` 파생이 아닌 opgc 고유 자유 기재이며, PM이 STATE.md 저널에 직접 기록한다(094 R-6).
 
@@ -319,7 +344,7 @@ Critical 또는 High 이슈 1건 이상 → "[심각도 트리거]" 제안 생�
 
 단일 요소(Fallback)인 경우 기존 2행 + 합계 포맷 유지.
 
-**산출물**: `GC-SECURITY-{ts}[-{element}].md` × N, `GC-CONVENTION-{ts}[-{element}].md` × N, PM이 STATE.md 저널(자유 기재)에 실행 요약 직접 기록
+**산출물**: `GC-SECURITY-{ts}[-{element}].md` × N, `GC-CONVENTION-{ts}[-{element}].md` × N, `GC-REPORT-{ts}.md`, `gc-report.json`, PM이 STATE.md 저널(자유 기재)에 실행 요약과 `op-gc-report` 판정(`verdict`·delta 건수) 직접 기록
 
 **게이트**: 사용자 확인 (기본, 대화형 — pipeline.json 행 아님) — Agentic 모드에서 자율 통과. 이 확인의 결과는 별도 행으로 기록되지 않고 CLOSE 첫 행(`close.done_md`) `--owner user` mark로 집행된다(R-11 G-2, §4.2 참조).
 
@@ -490,37 +515,16 @@ Agentic 모드 특수 규칙:
 
 ---
 
-## Fingerprint 알고리즘 (설계 참조)
-
-에이전트 내부 집계용 — 보고서 미노출:
-
-```
-fingerprint_input = "{category_id}|{normalized_tokens}"
-fingerprint = sha1(fingerprint_input).hex()[:16]
-
-정규화 순서:
-1. 코드 스니펫 ±3줄 추출
-2. 주석 제거
-3. 문자열 리터럴 → STR
-4. 숫자 리터럴 → NUM
-5. 식별자 → ID (언어별 정규식 — base-security-checklist.md 참조)
-6. 연속 공백 → 단일 스페이스
-7. 파일 경로·라인 번호 제외
-```
-
----
-
 ## 관련 references
 
 | 파일 | 역할 |
 |------|------|
-| `references/report-security-template.md` | 보안 보고서 템플릿 |
-| `references/report-convention-template.md` | 컨벤션 보고서 템플릿 |
-| `references/base-security-checklist.md` | OWASP+CWE+SANS+도메인 체크리스트 |
-| `references/base-convention-checklist.md` | 컨벤션 카테고리 체크리스트 |
+| `references/pipeline.json` | 파이프라인 행 구성 SSOT (편집 금지) |
 | `references/done-template.md` | DONE.md 템플릿 |
-| `references/sample-report-security.md` | 보안 샘플 보고서 (참조용) |
-| `references/sample-report-convention.md` | 컨벤션 샘플 보고서 (참조용) |
+| `~/.opal/skills/op-gc-security/SKILL.md` | 보안 검사 단계 스킬 — 검사 기준·보고서 형식 소유 (CHECK 디스패치 대상) |
+| `~/.opal/skills/op-gc-convention/SKILL.md` | 컨벤션 검사 단계 스킬 — 검사 기준·보고서 형식 소유 (CHECK 디스패치 대상) |
+| `~/.opal/skills/op-gc-report/SKILL.md` | 결과 정규화·판정·baseline delta·문서 업데이트 트리거 (REPORT 위임 대상) |
+| `opal/core/references/harness/gc-finding-schema.md` | finding 필드·envelope·fingerprint·source_tier·판정표·delta SSOT |
 | `opal/core/references/conventions-hub-model.md` | 허브+링크 체이닝 규약 (체커 scope 매칭) |
 | `opal/core/references/pm/context-injection.md` | PROJECT.md 프로젝트 구성 기반 라우팅 규약 |
 

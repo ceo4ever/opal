@@ -119,11 +119,14 @@ OPAL 자산은 Global/Project 2-레이어로 배치되고, 런타임은 세션 �
 | | opal-pilot-sdd (opsdd) | SDD 기반 오케스트레이터: TASK → SPEC → REVIEW → DESIGN → EXECUTE-LOOP → VERIFY → CLOSE (7 Phase, Phase 4는 ACT 루프) |
 | | opal-pilot-project-loop (oppl) | 루프 기반 프로젝트 오케스트레이터: 설계 루프(인터뷰→PRD→TRD→CONTRACT→백로그) → 실행 루프(태스크 반복, 종료조건 5종·3-SSOT tool-gated) |
 | | opal-pilot-data-design (opdd) | DB 설계 파이프라인: 데이터 사전 확립 → 모델링(개념/논리/물리) → DDL·마이그레이션 6단계 |
-| | opal-pilot-gc (opgc) | 경량 Pilot — 커밋 전 보안·컨벤션 진단 4단계 (진단 전담, 수정 없음) |
+| | opal-pilot-gc (opgc) | 경량 Pilot (thin wrapper) — 커밋 전 보안·컨벤션 진단 4단계. 범위·상태·Gate·CLOSE만 소유하고 검사는 op-gc-* 스킬에 위임 (진단 전담, 수정 없음) |
 | **dev 단계** | op-dev-analysis | 코드베이스 분석 + 기술 컨텍스트 수집 |
 | | op-dev-plan | 구현 계획 (PLAN+TODO 통합) |
 | | op-dev-test-scenario | 테스트 시나리오 생성 |
 | | op-dev-execute | 코드 실행 (체크포인트 기반) |
+| **gc 단계** | op-gc-security | 보안 검사 — read-only finding 생성 (단독 호출 가능) |
+| | op-gc-convention | 컨벤션 검사 — read-only finding 생성 (단독 호출 가능) |
+| | op-gc-report | 검사 결과 정규화·중복 병합·baseline delta·릴리스 판정 |
 | | op-dev-wireframe | 와이어프레임 생성 |
 | | op-dev-qa | Dev QA 검증 (코드 개발 산출물) |
 | **데이터 단계** | op-data-dictionary | 표준사전·표준코드 관리(CRUD) — 표준단어/도메인/코드 사전 3종 md SSOT + xlsx 단방향 export |
@@ -172,8 +175,8 @@ OPAL 자산은 Global/Project 2-레이어로 배치되고, 런타임은 세션 �
 | opal-task-action-agent | advanced | 액션 에이전트 — oppd Phase 3 자율 실행 |
 | opal-sdd-action-agent | advanced | SDD 액션 에이전트 |
 | opal-wtm-agent | light | web-to-markdown 워커 (2단 폴백 — Phase 1 cmux-tool → Phase 2 playwright-tool CLI) |
-| opal-security-checker | advanced | 보안 체크 — OWASP Top 10 / CWE Top 25 / SANS Top 25 Base + `docs/SECURITY.md` 누적 |
-| opal-convention-checker | standard | 컨벤션 체크 — 프로젝트 `docs/CONVENTIONS.md` 유일 기준 (부재 시 초안 유도) |
+| opal-security-checker | advanced | thin role — `op-gc-security`를 독립 컨텍스트에서 실행 (검사 기준 미보유) |
+| opal-convention-checker | standard | thin role — `op-gc-convention`을 독립 컨텍스트에서 실행 (검사 기준 미보유) |
 
 **전문 에이전트 (Specialist)**
 
@@ -443,6 +446,8 @@ opal/                                    ← 이 저장소
 │   │   │                                dev 단계 스킬 (6개)
 │   │   ├── op-data-{dictionary,model,ddl}/
 │   │   │                                데이터 설계 단계 스킬 (3개)
+│   │   ├── op-gc-{security,convention,report}/
+│   │   │                                GC 단계 스킬 (3개)
 │   │   ├── op-task{,-plan,-execute,-qa}/ 범용 단계 스킬 (4개)
 │   │   ├── op-sdd-{spec,verify,plan,action-plan}/
 │   │   │                                SDD 단계 스킬 (4개)
@@ -472,8 +477,8 @@ opal/                                    ← 이 저장소
 │   │   ├── opal-task-action-agent/      액션 에이전트 (oppd)
 │   │   ├── opal-sdd-action-agent/       SDD 액션 에이전트
 │   │   ├── opal-wtm-agent/              웹→마크다운 워커 (cmux → playwright 2단 폴백)
-│   │   ├── opal-security-checker/       보안 체크 (OWASP/CWE/SANS + docs/SECURITY.md)
-│   │   └── opal-convention-checker/     컨벤션 체크 (docs/CONVENTIONS.md 유일 기준)
+│   │   ├── opal-security-checker/       thin role — op-gc-security 실행
+│   │   └── opal-convention-checker/     thin role — op-gc-convention 실행
 │   └── templates/                       프로젝트 에이전트 템플릿
 ├── dashboard/                           OPAL Console (로컬 프로젝트 관리 대시보드 — 태스크 021)
 │   ├── frontend/                        React + TS + Vite + shadcn/ui (7개 화면 — 설정 포함, 태스크 061)

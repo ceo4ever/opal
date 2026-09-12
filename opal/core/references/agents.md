@@ -52,30 +52,30 @@ opal-pilot 오케스트레이터(opal-pilot-dev, opal-pilot-dev-short, opal-pilo
 
 ## opal-pilot-gc 서브에이전트
 
-`opal-pilot-gc`(opgc) 경량 Pilot이 **CHECK 단계에서 병렬 디스패치**하는 서브에이전트. 각 에이전트는 독립 컨텍스트에서 실행되어 **자기완결 보고서**(체크리스트 내장, 5단계 상태 모델)를 생성한다.
+`opal-pilot-gc`(opgc) 경량 Pilot이 **CHECK 단계에서 병렬 디스패치**하는 서브에이전트. 두 에이전트는 검사 기준을 자체 보유하지 않는 thin role이며, 디스패처가 지정한 `skill_path`의 단계 스킬을 Read하여 그 프로세스를 수행한다. 검사 항목·기준 선택 순서·보고서 구성·finding 필드는 해당 스킬과 스킬이 참조하는 `opal/core/references/harness/gc-finding-schema.md`가 소유한다.
 
 ### opal-security-checker
 
-- **역할**: 코드 보안 체크 전담 — OWASP Top 10 (2021) / CWE Top 25 / SANS Top 25 기준의 Base 원칙 강제 적용 + `docs/SECURITY.md`가 있으면 병합하여 시크릿·인증/인가·입력 검증·의존성·로깅·암호화·설정을 점검. 부재 시 초안 생성을 유도(opi 재사용)
+- **역할**: 보안 검사 전담 thin role — 자체 검사 기준을 보유하지 않고, 지정된 `op-gc-security` 스킬을 Read하여 그 프로세스를 수행하는 read-only 진단 전담
 - **호출 시점**: opal-pilot-gc의 CHECK 단계 (병렬)
 - **단계**: CHECK (opal-pilot-gc 내부 단계)
 - **영역**: 보안
 - **model**: advanced
-- **자체 로드 문서**: `~/.opal/skills/opal-pilot-gc/references/base-security-checklist.md`, `~/.opal/skills/opal-pilot-gc/references/report-security-template.md`, `docs/SECURITY.md`(허브, 있는 경우 — 허브+링크 체이닝), 커뮤니티 스킬 래핑(`openai/security-best-practices`)
-- **입력**: 대상 파일 목록, 범위(`staged`/`all`), 기술 스택 감지 결과, `docs/SECURITY.md` 경로(있는 경우), `scope`(`frontend`/`backend`/`batch`/`mobile`/`all` — 선택, 허브+링크 상세 문서 매칭용)
-- **출력**: `GC-SECURITY-{타임스탬프}[-{element}].md` — 체크리스트 내장 자기완결 보고서 (요약 지표 + 5단계 상태 + 카테고리/심각도/Base vs 프로젝트 출처 + 문서 업데이트 제안). 진단 전담이므로 `changed_files`에 소스 파일 포함 금지(보고서만)
+- **자체 로드 문서**: `~/.opal/skills/op-gc-security/SKILL.md`(지정된 `skill_path`. 기준 문서·보고서 형식은 이 스킬이 지시한다)
+- **입력**: `skill_path`, `project_root`, `target_files`(호출자가 확정한 유일 기준), `output_dir`, `timestamp`, `scope`(선택), `element`(선택), `baseline`(선택), `project_documents`(선택)
+- **출력**: `GC-SECURITY-{타임스탬프}[-{element}].md` + `gc-findings-security-{타임스탬프}[-{element}].json`. 진단 전담이므로 `changed_files`에 소스 파일 포함 금지(보고서·JSON만)
 - **에이전트 경로**: `opal/agents/opal-security-checker/`
 
 ### opal-convention-checker
 
-- **역할**: 코드 컨벤션 체크 전담 — 프로젝트 `docs/CONVENTIONS.md`를 **유일 기준**으로 네이밍·들여쓰기·파일 구조·죽은 코드·미사용 import·문서화 규칙을 점검. 문서 부재 시 초안 생성을 유도(opi 재사용). **프레임워크 내장 공통 기본값 없음**
+- **역할**: 컨벤션 검사 전담 thin role — 자체 규칙을 보유하지 않고, 지정된 `op-gc-convention` 스킬을 Read하여 그 프로세스를 수행하는 read-only 진단 전담
 - **호출 시점**: opal-pilot-gc의 CHECK 단계 (병렬)
 - **단계**: CHECK (opal-pilot-gc 내부 단계)
 - **영역**: 컨벤션
 - **model**: standard
-- **자체 로드 문서**: `docs/CONVENTIONS.md`(허브, 필수 — 부재 시 초안 유도. 허브+링크 체이닝), `~/.opal/skills/opal-pilot-gc/references/base-convention-checklist.md`, `~/.opal/skills/opal-pilot-gc/references/report-convention-template.md`
-- **입력**: 대상 파일 목록, 범위(`staged`/`all`), `docs/CONVENTIONS.md` 경로, `scope`(`frontend`/`backend`/`batch`/`mobile`/`all` — 선택, 허브+링크 상세 문서 매칭용)
-- **출력**: `GC-CONVENTION-{타임스탬프}[-{element}].md` — 체크리스트 내장 자기완결 보고서. 진단 전담이므로 `changed_files`에 소스 파일 포함 금지(보고서만)
+- **자체 로드 문서**: `~/.opal/skills/op-gc-convention/SKILL.md`(지정된 `skill_path`. 기준 선택 순서·기준 문서 부재 시 동작은 이 스킬이 지시한다)
+- **입력**: `skill_path`, `project_root`, `target_files`(호출자가 확정한 유일 기준), `output_dir`, `timestamp`, `scope`(선택), `element`(선택), `baseline`(선택), `project_documents`(선택)
+- **출력**: `GC-CONVENTION-{타임스탬프}[-{element}].md` + `gc-findings-convention-{타임스탬프}[-{element}].json`. 진단 전담이므로 `changed_files`에 소스 파일 포함 금지(보고서·JSON만)
 - **에이전트 경로**: `opal/agents/opal-convention-checker/`
 
 ## 전문 에이전트 (Specialist)
@@ -168,8 +168,8 @@ PM이 단계+영역으로 에이전트를 선택하고, opal-plan-agent가 sdlc-
 | opal-planning-agent | EXECUTE | 기획 | advanced | PM 주입 기획/설계 산출물 (PROJECT 레지스트리 기반) |
 | opal-evaluator-agent | 명세 리뷰 (oppl G/D6) | 평가 | advanced | SPEC §4 루브릭 Base, CONTRACT.md 루브릭절 |
 | opal-test-agent | TEST | 공통 | standard | PM 주입 검증 문서 (PROJECT 레지스트리 기반) |
-| opal-security-checker | CHECK (opgc) | 보안 | advanced | base-security-checklist, SECURITY.md (허브+링크 체이닝 — conventions-hub-model.md 참조) |
-| opal-convention-checker | CHECK (opgc) | 컨벤션 | standard | CONVENTIONS.md, base-convention-checklist (허브+링크 체이닝 — conventions-hub-model.md 참조) |
+| opal-security-checker | CHECK (opgc) | 보안 | advanced | `op-gc-security/SKILL.md` (지정된 skill_path — 기준 문서는 스킬이 소유) |
+| opal-convention-checker | CHECK (opgc) | 컨벤션 | standard | `op-gc-convention/SKILL.md` (지정된 skill_path — 기준 문서는 스킬이 소유) |
 
 ## 플랫폼 sub-agent 어댑터 변환 규칙
 

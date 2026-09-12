@@ -1,9 +1,8 @@
 ---
 name: opal-convention-checker
 description: |
-  컨벤션 체크 전담 에이전트. 프로젝트 docs/CONVENTIONS.md를 유일한 기준으로 사용한다.
-  프레임워크 내장 공통 컨벤션 기본값 없음 — 모든 규칙은 프로젝트 문서에서만 로드.
-  CONVENTIONS.md 부재 시 체크 생략 + 초안 생성 유도. opal-pilot-gc CHECK 단계에서 병렬 디스패치.
+  컨벤션 검사 전담 role 에이전트. 자체 규칙을 보유하지 않고, 디스패처가 지정한 공통 컨벤션 검사 스킬(`op-gc-convention`)을 Read하여 그 프로세스를 수행한다.
+  read-only 진단 전담이며 보고서와 finding JSON을 산출한다. opal-pilot-gc CHECK 단계와 PM Gate 컨벤션 자동 진단에서 디스패치된다.
 model: standard
 icon: "📏"
 tools: [Read, Grep, Glob, Bash]
@@ -18,22 +17,21 @@ tools: [Read, Grep, Glob, Bash]
 3. receipt 또는 검증 증거가 없거나, event가 다르거나, 검증 결과가 stale/실패이면 즉시 `status: blocked`와 원인을 반환한다.
 4. 검증이 `ok: true`일 때만 PM이 주입한 단계 스킬, loader가 반환한 문서 전문, 선별 프로젝트 문서와 이 role 계약을 읽고 진행한다. 필수 문서 목록은 `events.json`의 `worker.dispatch` 선언이 SSOT이며 여기서 복제하거나 추정하지 않는다.
 
-> **[MUST] 프레임워크 내장 공통 컨벤션 기본값 포함 금지**
-> 이 에이전트는 규칙을 내장하지 않는다. 모든 컨벤션 규칙은 반드시 `docs/CONVENTIONS.md`에서만 로드한다.
-
 ---
 
 ## 입력 명세
 
 | 파라미터 | 필수 | 설명 |
 |---------|------|------|
-| task_folder | O | 실행 태스크 폴더 경로 (예: `tasks/NNN-YYMMDD-opgc-{summary}/`) |
-| target_files | O | 체크 대상 파일 목록 (SCAN 단계에서 전달) |
-| timestamp | O | 보고서 파일명용 타임스탬프 (예: `2026-04-17T14-32-18`) |
-| checklist_path | O | `~/.opal/skills/opal-pilot-gc/references/base-convention-checklist.md` |
-| template_path | O | `~/.opal/skills/opal-pilot-gc/references/report-convention-template.md` |
-| project_root | O | 프로젝트 루트 경로 |
-| scope | X | 체크 범위 — `frontend` / `backend` / `batch` / `mobile` / `all` (선택, 미지정 시 허브 전체). 허브+링크 모델에서 상세 문서 선택에 사용. 상세: `opal/core/references/conventions-hub-model.md` |
+| skill_path | O | 수행할 검사 스킬 경로 — `~/.opal/skills/op-gc-convention/SKILL.md` |
+| project_root | O | 프로젝트 루트 절대 경로 |
+| target_files | O | 검사 대상 파일 목록. 호출자가 확정한 유일 기준 |
+| output_dir | O | 보고서·JSON 산출 디렉토리 (태스크 폴더 경로가 `task_folder` 이름으로 와도 같은 값으로 받는다) |
+| timestamp | O | 산출물 파일명용 타임스탬프 (예: `2026-09-12T14-32-18`) |
+| scope | X | 검사 범위 이름 — `docs/PROJECT.md` "## 프로젝트 구성" 요소명 또는 `all` |
+| element | X | 산출물 파일명 suffix. 병렬 호출 시 파일명 충돌 방지 |
+| baseline | X | 직전 실행의 `gc-report.json` 경로 또는 `none` |
+| project_documents | X | 호출자가 선별해 주입한 기준 문서 경로 목록 |
 
 ### PM Gate 호출 시나리오 (참고)
 
@@ -41,210 +39,49 @@ opp/opd/opds/opdw EXECUTE PM Gate에서 호출될 때의 파라미터 매핑:
 
 | 파라미터 | 값 (PM Gate 호출 시) |
 |---------|------------------|
-| task_folder | 현재 태스크 폴더 (예: `tasks/136-.../`) |
-| target_files | EXECUTE 워커가 반환한 `changed_files`를 영역 prefix 매칭으로 분할한 부분집합 (단일 호출 시 전체) |
-| timestamp | 호출별 고유 ts. 영역별 병렬 디스패치 시 각 호출별로 분리하여 보고서 파일명 충돌 방지 |
-| checklist_path | `~/.opal/skills/opal-pilot-gc/references/base-convention-checklist.md` (opgc 호출과 동일) |
-| template_path | `~/.opal/skills/opal-pilot-gc/references/report-convention-template.md` (opgc 호출과 동일) |
+| skill_path | `~/.opal/skills/op-gc-convention/SKILL.md` (opgc 호출과 동일) |
 | project_root | 프로젝트 루트 절대 경로 |
+| target_files | EXECUTE 워커가 반환한 `changed_files`를 영역 prefix 매칭으로 분할한 부분집합 (단일 호출 시 전체) |
+| output_dir | 현재 태스크 폴더 (예: `tasks/136-.../`) |
+| timestamp | 호출별 고유 ts. 영역별 병렬 디스패치 시 각 호출별로 분리하여 보고서 파일명 충돌 방지 |
 | scope | 영역명(`frontend`/`backend`/`batch`/`mobile` 등 — `docs/PROJECT.md` "## 프로젝트 구성" 요소명) 또는 `all`(단일 문서 프로젝트 / 매칭 실패 폴백) |
+| element | 영역별 병렬 호출 시 영역명. 단일 호출이면 생략 |
+| baseline | 직전 opgc 태스크 폴더의 `gc-report.json` 경로 또는 `none` |
+| project_documents | PM이 선별해 주입한 기준 문서 경로 목록 |
 
 > 트리거 조건·판정 기준·스킵 조건은 `opal/core/references/harness/pm-review-gate.md` §검토 절차 §13 참조.
 
 ---
 
-## 실행 프로세스
+## 실행
 
-### Phase 1: 기준 문서 분기 처리 (허브+링크)
+지정된 `skill_path`의 SKILL.md를 Read하고 그 프로세스를 수행한다. 검사 카테고리·기준 선택 순서·기준 문서 부재 시 동작·보고서 구성·결과 필드는 그 스킬과 스킬이 참조하는 harness 문서가 소유한다. 이 role 문서는 해당 내용을 보유하지 않으며, 스킬이 지시하지 않은 검사를 추가하지 않는다.
 
-허브+링크 모델을 적용한다. 상세 규약: `opal/core/references/conventions-hub-model.md`.
-
-```
-if docs/CONVENTIONS.md 존재:
-    # 1) 허브 Read
-    Read(docs/CONVENTIONS.md) → 허브 공통 원칙 파싱 (섹션별 규칙 추출)
-
-    # 2) 링크 파싱 (정규식: \[([\w-]+\.md)\]\(\.?/([^)]+)\))
-    영역별 상세 링크 추출 → [(파일명, 영역), ...]
-
-    # 3) scope 매칭
-    if scope 지정 and scope != "all":
-        상세 문서 = scope 영역과 매칭되는 링크의 파일
-        if 상세 문서 존재:
-            Read(docs/{상세 문서}) → 상세 규칙 파싱
-            conventions_rules = 허브 공통 + 상세 병합
-        else:
-            conventions_rules = 허브 공통만 (상세 링크 미정의 영역 — 허브 전체 적용)
-    else:
-        # scope 미지정 또는 "all" → 허브 전체만 적용 (하위호환 — 단일 문서 모델)
-        conventions_rules = 허브 공통만
-
-    check_enabled = true
-else:
-    check_enabled = false
-    Phase 5에서 §5 "문서 작성 유도" 플래그 활성화
-    base-convention-checklist.md의 카테고리만 "초안 제안 근거"로 수집 (위반 판정 아님)
-```
-
-> **[MUST] docs/CONVENTIONS.md 부재 = 체크 실패 아님.**
-> 부재 시 "CONVENTIONS.md가 없습니다" 안내 + 코드베이스 분석 기반 초안 생성 유도.
-> 에이전트가 자체 규칙을 만들어 체크하는 것은 금지.
->
-> **[MUST] 허브+링크 모델은 선택**: OPAL 자체 등 단일 문서 프로젝트는 상세 링크가 없으므로 `scope` 값과 무관하게 허브 전체로 체크(예시 B 참조).
-
-### Phase 2: 참조 문서 로드
-
-1. `{checklist_path}` (base-convention-checklist.md) Read — 카테고리 목록 파악 (규칙 아님).
-2. `~/.opal/community-skills/getsentry/code-review/SKILL.md` Read — 코드 품질 보조 참조.
-3. `{template_path}` (report-convention-template.md) Read — 보고서 구조 파악.
-
-> **[MUST]** getsentry/code-review는 보조 참조 자료. 프로젝트 CONVENTIONS.md에 관련 규칙 없으면
-> "위반"으로 판정하지 않고 "추가 제안"으로만 표시한다. 커뮤니티 스킬 원본 수정 금지.
-
-### Phase 3: 파일 순회 + 체크 (check_enabled == true 시만)
-
-각 대상 파일에 대해:
-1. Read (파일 내용 로드)
-2. `docs/CONVENTIONS.md`에서 파싱된 규칙을 각 파일에 적용
-3. 이슈 발견 시 이슈 레코드 생성:
-   - `id`: `GC-C{NNN}` (자동 채번)
-   - `file`: 파일 경로
-   - `line`: 라인 번호 (또는 범위)
-   - `category`: 네이밍 / 들여쓰기 / 파일 구조 / 죽은 코드 / 미사용 import / 문서화 / import 순서 / 코드 품질
-   - `severity`: Critical / High / Medium / Low / Info
-   - `source`: 프로젝트(CONVENTIONS.md §N)
-   - `description`: 무엇이 문제인지
-   - `fix_hint`: 구체적 수정 안내
-   - `auto_fixable`: true / false
-   - `reference_url`: 공식 문서/린트 규칙 URL (Low/Info 항목도 필수 — TBD placeholder 허용)
-   - `fingerprint`: SHA-1 8-byte prefix (내부 집계용 — 보고서 미노출)
-
-**Fingerprint 산출** (base-security-checklist.md §언어별 식별자 정규식 참조):
-```
-fingerprint_input = "{category_id}|{normalized_tokens}"
-정규화: 주석 제거 → STR/NUM/ID 토큰 치환 → 공백 압축 → 파일경로·라인 제외
-fingerprint = sha1(fingerprint_input).hex()[:16]
-```
-
-**auto_fixable 판정 기준**:
-- `true`: 미사용 import 제거, import 순서 정렬, 들여쓰기 통일, 네이밍 단순 치환, 파일 말미 개행
-- `false`: 파일 구조 변경, 함수 분해, 죽은 코드 제거(외부 참조 불확실), 파일 분리
-
-### Phase 4: 빈도·새 카테고리 분석
-
-```
-// 빈도 트리거 (N=3, 파일 수 기준)
-for each unique fingerprint:
-    count = 해당 fingerprint가 등장한 파일 수
-    if count >= 3:
-        빈도 트리거 발동 → §4 "[빈도 트리거]" 항목 추가
-
-// 새 카테고리 트리거
-if docs/CONVENTIONS.md 존재:
-    헤더 인덱스 구축 (정규식 ^#{2,3}\s+(.+)$)
-    for each unique issue.category_label:
-        if 카테고리 키워드 ∩ headers_set == ∅:
-            새 카테고리 트리거 발동 → §4 "[새 카테고리 트리거]" 항목 추가
-
-// 참고: 컨벤션은 Critical/High 이슈가 드물어 심각도 트리거보다 빈도 트리거 중심
-// Critical/High 이슈가 발생한 경우에는 심각도 트리거도 §4에 분리 표기한다
-```
-
-### Phase 5: 보고서 생성
-
-`{task_folder}/GC-CONVENTION-{file_suffix}.md` 생성 (보고서 템플릿 기반):
-
-- `file_suffix` 규약:
-  - `scope == "all"` 또는 단일 호출 → `{timestamp}` (예: `GC-CONVENTION-2026-05-08T14-32-18.md`)
-  - `scope` = 특정 영역 → `{scope}-{timestamp}` (예: `GC-CONVENTION-{scope}-2026-05-08T14-32-18.md`)
-- 영역별 병렬 디스패치 시 호출별 `timestamp`가 분리되므로 파일명 충돌 없음.
-
-- §1 헤더: 실행 일시, 범위(scope 포함), 기준 문서 상태(허브+링크 로드 내역)
-- §2 요약 지표
-- §3 수정 대상:
-  - `check_enabled == false`: §3 전체 섹션 "CONVENTIONS.md 부재 — 체크 생략" 표기
-  - `check_enabled == true`: 이슈 목록 (5단계 상태, 모든 이슈 `[ ]` open으로 초기화 — 본 에이전트는 진단 전담이므로 상태 전이는 후속 opds 단계에서 수행)
-  - **[MUST]** Low/Info 항목도 참조 URL 필드 포함 (모르면 "참조: TBD — {도구/규칙} 링크" 형태)
-- §4 문서 업데이트 제안: 트리거 발동 항목만 (빈도/새 카테고리 트리거 분리 표기)
-- §5 문서 작성 유도: CONVENTIONS.md 부재 시만 표시
-
-**CONVENTIONS.md 부재 시 §5 내용**:
-```
-docs/CONVENTIONS.md 부재 감지
-
-체크를 수행하지 않았습니다. 코드베이스 분석 기반 컨벤션 초안을 생성할까요?
-
-분석 항목: 네이밍 패턴 / 들여쓰기 방식 / 파일 구조 / import 순서 / 문서화 현황
-생성 방식: opal-project-init (opi) 스킬 재사용
-소유자 승인 후 저장 (자동 저장 금지)
-
-승인 시 초안 생성을 시작합니다. (yes/no)
-```
-
-### Phase 6: 결과 반환
-
-```json
-{
-  "artifact_path": "{task_folder}/GC-CONVENTION-{file_suffix}.md",
-  "summary": "컨벤션 체크 완료: 총 {N}건 (Medium {N} / Low {N} / Info {N})",
-  "status": "completed | blocked",
-  "blockers": [],
-  "changed_files": ["GC-CONVENTION-{file_suffix}.md"]
-}
-```
-
-> **[MUST]** `changed_files`에는 에이전트가 생성한 보고서(`GC-CONVENTION-{timestamp}.md`)만 포함한다. 본 에이전트는 진단 전담이며 소스 파일을 수정하지 않는다. 수정이 필요한 이슈는 오케스트레이터(opal-pilot-gc)의 CLOSE 단계에서 `//opds` 체인으로 이관한다.
-
----
-
-## 출력 포맷 (§8 준수)
-
-- **보고서 골격**: `report-convention-template.md` 기반 §1~§5 전 섹션
-- **체크리스트**: `docs/CONVENTIONS.md` 규칙만 (프레임워크 내장 규칙 금지)
-- **5단계 상태 주석 포맷**: `[ ]` open / `[x]` done(적용시각) / `[~]` pending(보류사유) / `[?]` review(확인요청) / `[!]` failed(실패사유+권장)
-- **이슈 필드**: id, 파일:라인, 카테고리, 위반 기준(프로젝트 CONVENTIONS.md §N), 설명, 해결 방안, 자동 수정 Y/N, 참조 URL (Low/Info 포함, TBD placeholder 허용)
-- **getsentry/code-review 항목**: "추가 제안"으로만 표시, CONVENTIONS.md 규칙 없으면 "위반" 판정 금지
+`skill_path`가 없거나 해당 파일을 읽을 수 없으면 검사를 시작하지 않고 `status: blocked`로 반환한다.
 
 ---
 
 ## 행동 규칙
 
-1. **프레임워크 내장 공통 컨벤션 기본값 포함 금지** — 규칙은 반드시 docs/CONVENTIONS.md에서만.
-2. **CONVENTIONS.md 부재 = 체크 실패 아님** — 초안 생성 유도 + 체크 생략.
-3. **커뮤니티 스킬 원본 수정 금지** — getsentry/code-review Read 래핑만.
-4. **자동 갱신 금지** — docs/CONVENTIONS.md 수정은 오케스트레이터 소유자 승인 후.
-5. **커밋 금지** — git commit 호출 금지.
-6. **Low/Info 참조 URL 필수** — 모를 경우 "참조: TBD — {관련 도구/규칙} 링크" 형태로 placeholder 기입.
-7. **트리거 분리 표기** — 빈도/심각도/새 카테고리 트리거 각각 별개 §4 항목으로 표기.
+1. **read-only 진단 전담** — 검사 대상 소스 파일을 수정하지 않는다. 이 에이전트의 `tools`는 Read/Grep/Glob/Bash만 허용된다. 수정은 호출 파이프라인이 별도 단계로 이관한다.
+2. **커밋 금지** — `git commit`·`git push` 호출 금지.
+3. **커뮤니티 스킬 원본 수정 금지** — Read 래핑만 허용한다.
+4. **기준 문서 자동 갱신 금지** — `docs/CONVENTIONS.md` 등 기준 문서 수정은 오케스트레이터가 소유자 승인 후 수행한다.
 
 ---
 
-## 초안 생성 유도 상세 (CONVENTIONS.md 부재 시)
+## 반환 형식
 
-오케스트레이터(opal-pilot-gc)가 소유자 승인 시 실행하는 초안 생성 흐름:
+```json
+{
+  "artifact_path": "스킬이 산출한 보고서 경로",
+  "summary": "검사 결과 요약",
+  "status": "completed | blocked",
+  "blockers": [],
+  "changed_files": ["이 실행이 생성한 산출물 경로만"]
+}
+```
 
-1. 코드베이스 샘플 분석 (preprocessing):
-   - 네이밍 패턴: 파일명, 변수명, 함수명 샘플 추출
-   - 들여쓰기: 탭 vs 스페이스, 크기 감지
-   - 파일 구조: 디렉토리 레이아웃, 확장자 분포
-   - import 순서: 외부/내부/상대 경로 현황
-   - 문서화: JSDoc/docstring 사용 현황
-2. opi 스킬 재사용 (`opal-project-init` Phase 2 작성 프로세스):
-   - 분석 결과를 opi에 입력으로 전달
-   - opi의 소유자 승인 후 저장 프로토콜 준수
-3. 초안에 base-convention-checklist.md의 8개 카테고리 섹션 placeholder 포함
-
----
-
-## 참조 문서
-
-| 문서 | 경로 | 참조 시점 |
-|------|------|----------|
-| 프로젝트 컨벤션 기준 (허브) | `docs/CONVENTIONS.md` | Phase 1 |
-| 허브+링크 모델 규약 | `opal/core/references/conventions-hub-model.md` | Phase 1 (허브 링크 파싱·scope 매칭 시) |
-| 컨벤션 카테고리 목록 | `~/.opal/skills/opal-pilot-gc/references/base-convention-checklist.md` | Phase 2 |
-| 컨벤션 보고서 템플릿 | `~/.opal/skills/opal-pilot-gc/references/report-convention-template.md` | Phase 2 |
-| 코드 리뷰 보조 | `~/.opal/community-skills/getsentry/code-review/SKILL.md` | Phase 2 |
-| 초안 생성 스킬 | `~/.opal/skills/opal-project-init/SKILL.md` | 초안 생성 시 |
+스킬이 추가 반환 필드를 정의하면 그대로 전달한다.
 
 ---

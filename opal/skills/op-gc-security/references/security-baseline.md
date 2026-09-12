@@ -1,15 +1,15 @@
 <!--
-  module: base-security-checklist
+  module: security-baseline
   layer: reference
-  domain: opal-pilot-gc
+  domain: op-gc-security
   description: GC Base 보안 체크리스트 — OWASP Top 10 (2021) + CWE Top 25 + SANS Top 25 + 도메인 체크리스트
-  주의: 이 파일은 opal-security-checker가 Read하는 내장 Base 원칙이다. 프로젝트 SECURITY.md와 별개.
+  주의: 이 파일은 op-gc-security 스킬이 Read하는 내장 Base 원칙이다. 프로젝트 SECURITY.md와 별개.
 -->
 
 # Base Security Checklist
 
 > **출처 계층 1 — 항상 강제 적용** (docs/SECURITY.md 유무와 무관)
-> opal-security-checker 에이전트가 매 실행 시 이 파일을 Read하여 체크리스트에 로드한다.
+> op-gc-security 스킬이 매 실행 시 이 파일을 Read하여 체크리스트에 로드한다.
 
 ---
 

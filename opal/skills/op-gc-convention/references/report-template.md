@@ -1,8 +1,8 @@
 <!--
-  module: report-convention-template
+  module: report-template
   layer: reference
-  domain: opal-pilot-gc
-  description: GC 컨벤션 보고서 템플릿 — opal-convention-checker가 생성하는 자기완결 보고서 (체크리스트 내장)
+  domain: op-gc-convention
+  description: GC 컨벤션 보고서 템플릿 — op-gc-convention 스킬이 생성하는 자기완결 보고서 (체크리스트 내장)
 -->
 
 # GC CONVENTION REPORT — {타임스탬프}
@@ -50,7 +50,7 @@
   형식 (각 이슈 필드):
   - [ ] GC-CNNN [{파일}:{라인}] {이슈 요약}
     - 카테고리: {네이밍 | 들여쓰기 | 파일 구조 | 죽은 코드 | 미사용 import | 문서화 | import 순서 | 코드 품질}
-    - 위반 기준: 프로젝트(CONVENTIONS.md §N) | 프레임워크 base-convention-checklist (참조용)
+    - 위반 기준: 프로젝트(CONVENTIONS.md §N) | 프레임워크 convention-categories (참조용)
     - 설명: {무엇이 문제인지}
     - 해결 방안: {구체적 수정 안내}
     - 자동 수정: Y | N

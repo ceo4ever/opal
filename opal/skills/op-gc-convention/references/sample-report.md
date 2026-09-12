@@ -1,9 +1,9 @@
 <!--
-@module opal-pilot-gc
+@module sample-report
 @layer reference
-@domain convention
-@description opal-convention-checker가 생성하는 GC-CONVENTION 보고서 샘플
-@audience opal-pilot-gc 개발자 / 보고서 포맷 검수자
+@domain op-gc-convention
+@description op-gc-convention 스킬이 생성하는 GC-CONVENTION 보고서 샘플
+@audience op-gc-convention 개발자 / 보고서 포맷 검수자
 -->
 
 # GC CONVENTION REPORT — 샘플

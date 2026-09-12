@@ -1,8 +1,8 @@
 <!--
-  module: base-convention-checklist
+  module: convention-categories
   layer: reference
-  domain: opal-pilot-gc
-  description: GC 컨벤션 카테고리 체크리스트 — opal-convention-checker의 참조용 카테고리 목록 (규칙은 프로젝트 CONVENTIONS.md에서 로드)
+  domain: op-gc-convention
+  description: GC 컨벤션 카테고리 체크리스트 — op-gc-convention 스킬의 참조용 카테고리 목록 (규칙은 프로젝트 CONVENTIONS.md에서 로드)
   주의: 이 파일은 카테고리 가이드이지 규칙 목록이 아니다. 모든 규칙은 docs/CONVENTIONS.md에서만 로드한다.
 -->
 

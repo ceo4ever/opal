@@ -1,14 +1,14 @@
 <!--
-@module opal-pilot-gc
+@module sample-report
 @layer reference
-@domain security
-@description opal-security-checker가 생성하는 GC-SECURITY 보고서 샘플
-@audience opal-pilot-gc 개발자 / 보고서 포맷 검수자
+@domain op-gc-security
+@description op-gc-security가 생성하는 GC-SECURITY 보고서 샘플
+@audience op-gc-security 개발자 / 보고서 포맷 검수자
 -->
 
 # GC SECURITY REPORT — 샘플
 
-> 본 문서는 `opal-pilot-gc` CHECK 단계에서 `opal-security-checker`가 생성하는 보안 보고서의 **샘플**입니다.
+> 본 문서는 CHECK 단계에서 `op-gc-security`가 생성하는 보안 보고서의 **샘플**입니다.
 > 실사용 시 `tasks/{NNN}-opgc-{요약}/GC-SECURITY-{타임스탬프}.md`로 저장됩니다.
 
 ## 1. 헤더

@@ -587,7 +587,7 @@ def run_source_audit(project_root: Path, iterations: int = 3) -> dict[str, Any]:
     policy_files = {
         "CONVENTIONS": REPO_ROOT / "docs/CONVENTIONS.md",
         "skill_creator": REPO_ROOT / "opal/skills/opal-skill-creator/SKILL.md",
-        "gc_checklist": REPO_ROOT / "opal/skills/opal-pilot-gc/references/base-convention-checklist.md",
+        "gc_checklist": REPO_ROOT / "opal/skills/op-gc-convention/references/convention-categories.md",
     }
     for label, path in policy_files.items():
         text = path.read_text(encoding="utf-8")

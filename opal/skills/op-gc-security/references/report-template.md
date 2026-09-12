@@ -1,8 +1,8 @@
 <!--
-  module: report-security-template
+  module: report-template
   layer: reference
-  domain: opal-pilot-gc
-  description: GC 보안 보고서 템플릿 — opal-security-checker가 생성하는 자기완결 보고서 (체크리스트 내장)
+  domain: op-gc-security
+  description: GC 보안 보고서 템플릿 — op-gc-security가 생성하는 자기완결 보고서 (체크리스트 내장)
 -->
 
 # GC SECURITY REPORT — {타임스탬프}
