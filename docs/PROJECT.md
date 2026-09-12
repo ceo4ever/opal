@@ -41,6 +41,7 @@
 | `opal/bootstrapper/` | 부트스트래퍼 | 플랫폼별 부트스트랩 진입점 (claude/codex/cursor/gemini) |
 | `opal/templates/` | 템플릿 | 배포 시 참조하는 설정 템플릿 |
 | `dashboard/` | OPAL Console 소스 | `frontend/`(React) + `backend/`(FastAPI) |
+| `workstudio/` | OPAL WorkStudio 소스 | React+TypeScript+Vite+Electron 기반 독립 데스크톱 작업 앱 |
 | `cursor-rules/` | Cursor 규칙 | Cursor 플랫폼용 `.mdc` 규칙 파일 |
 | `memory/` | 메모리 본문 | `.opal/MEMORY.json`이 인덱싱하는 메모리 파일 |
 | `scripts/` | 설치 스크립트 | install-mac.sh 등 |
@@ -176,7 +177,7 @@ llm-wiki 사상을 융합한 프로젝트 지식 위키 — 프로젝트의 WHY�
 
 ## 주요 컴포넌트 (OPAL Console)
 
-로컬 OPAL 프로젝트를 한 웹 화면에서 조망하는 읽기 전용 관리 대시보드 (2026-06 신설, 태스크 021). 상세 구조: `docs/ARCHITECTURE.md §OPAL Console`.
+로컬 OPAL 프로젝트를 한 웹 화면에서 조망하는 읽기 전용 관리 대시보드 (2026-06 신설, 태스크 021). 실행 작업 공간과 네이티브 폴더 기반 PM Coordination UI는 별도 데스크톱 앱인 `OPAL WorkStudio`가 소유한다. 상세 구조: `docs/ARCHITECTURE.md §OPAL Console`.
 
 | 컴포넌트 | 유형 | 설명 |
 |----------|------|------|
@@ -185,6 +186,14 @@ llm-wiki 사상을 융합한 프로젝트 지식 위키 — 프로젝트의 WHY�
 | `opal-cli console` | CLI | 데몬 기동/관리 서브커맨드 (start/stop/status/open/scan) — scan은 `console.config.json`(스캔 루트 설정)을 생성·머지 갱신하며 install이 1회 자동 실행 |
 
 > 소스는 `dashboard/`, 배포는 install 경유 `~/.opal/dashboard-server/`. 읽기 전용(쓰기/편집·브레인 화면은 2차). 시그니처 3색은 `:root` 전역 CSS 변수로 교체 용이.
+
+## 주요 컴포넌트 (OPAL WorkStudio)
+
+OPAL WorkStudio는 로컬 프로젝트 폴더를 선택해 작업 공간, PM Coordination, 독립 Terminal, 파일 트리를 다루는 별도 Electron 데스크톱 앱이다. Dashboard/Console 코드와 실행 경로를 공유하지 않고 `workstudio/`가 UI와 Electron preload/IPC 경계를 소유한다.
+
+| 컴포넌트 | 유형 | 설명 |
+|----------|------|------|
+| `workstudio` | Desktop 앱 | React+TypeScript+Vite+Electron — 프로젝트 등록, PM Coordination, 실행 workspace, read-only 파일 트리 |
 
 ## 주요 컴포넌트 (PM 개선 루프)
 
@@ -234,6 +243,7 @@ TEST-SCENARIO 단계를 "목표 달성 검증"으로 재정의 — 루브릭 채
 | Framework | `opal/`, `skills/` | Markdown, YAML, Bash, Node.js | opal-task-agent (범용) |
 | Console FE | `dashboard/frontend/` | React, TypeScript, Vite, Tailwind, shadcn/ui | opal-fe-agent |
 | Console BE | `dashboard/backend/` | Python, FastAPI, uvicorn | opal-be-agent |
+| WorkStudio | `workstudio/` | React, TypeScript, Vite, Electron, Tailwind, shadcn/ui | opal-fe-agent |
 
 ## 프로젝트 문서
 

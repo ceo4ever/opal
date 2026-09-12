@@ -1,3 +1,12 @@
+/**
+ * @header {
+ *   "module": "ui-badge",
+ *   "layer": "component",
+ *   "domain": "dashboard",
+ *   "description": "Dashboard badge UI primitive. shadcn/ui 기반 스타일과 접근성 계약을 제공한다.",
+ *   "exports": ["Badge","badgeVariants"]
+ * }
+ */
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 
@@ -33,4 +42,5 @@ function Badge({ className, variant, ...props }: BadgeProps) {
   )
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export { Badge, badgeVariants }

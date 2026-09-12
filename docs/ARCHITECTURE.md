@@ -265,7 +265,7 @@ opal/core/mcps/*    ──── install ─→  claude mcp add --scope user (Cl
 
 ## OPAL Console (로컬 프로젝트 관리 대시보드)
 
-로컬에서 OPAL로 작업하는 모든 프로젝트를 한 웹 화면에서 조망하는 **읽기 전용 대시보드**(태스크 021 신설). 데이터 SSOT를 새로 만들지 않고, OPAL 도구의 read-only 커맨드 + 마크다운 파서로 각 프로젝트 데이터를 수집·렌더한다.
+로컬에서 OPAL로 작업하는 모든 프로젝트를 한 웹 화면에서 조망하는 **읽기 전용 대시보드**(태스크 021 신설). 데이터 SSOT를 새로 만들지 않고, OPAL 도구의 read-only 커맨드 + 마크다운 파서로 각 프로젝트 데이터를 수집·렌더한다. 네이티브 폴더 선택, PM Coordination 작업 공간, 독립 Terminal, 파일 트리 UI는 Console이 아니라 `workstudio/`의 **OPAL WorkStudio** 데스크톱 앱이 소유한다.
 
 ```
 ┌─ Web UI (React + shadcn/ui, 7개 화면) ──────────────────┐
@@ -332,6 +332,7 @@ opal/core/mcps/*    ──── install ─→  claude mcp add --scope user (Cl
 | 기동 | `opal-cli console {start\|stop\|status\|open\|scan\|log}` (127.0.0.1:7823) — `log`는 데몬 로그 조회 |
 | 프로젝트 식별 | `.opal/AGENT.md` 마커 디스크 스캔 (`~/.opal/console.config.json` scan_roots/depth/exclude) — config는 `opal-cli console scan [기준경로...]`이 생성·머지 갱신(기존 roots 보존, `--prune` 옵트인)하며 install(`install_dashboard`)이 1회 자동 실행. `start`는 config 부재 시 scan 안내 출력 |
 | 원칙 | 읽기 전용(쓰기/편집은 2차) · 데이터 SSOT는 각 프로젝트 파일 · 데몬은 도구 오케스트레이터 |
+| WorkStudio 경계 | `{프로젝트}/workstudio/` (React+TS+Vite+Electron) — Console 조회 화면과 분리된 데스크톱 실행 앱 |
 | 디자인 토큰 | 시그니처 3색(`--brand-primary/secondary/tertiary`)을 `:root` 1곳 전역 CSS 변수화 (교체 용이) |
 
 ## 외부 의존 서비스
@@ -485,6 +486,9 @@ opal/                                    ← 이 저장소
 ├── dashboard/                           OPAL Console (로컬 프로젝트 관리 대시보드 — 태스크 021)
 │   ├── frontend/                        React + TS + Vite + shadcn/ui (7개 화면 — 설정 포함, 태스크 061)
 │   └── backend/                         FastAPI 데몬 (스캐너 + read-only 어댑터 + 파서)
+├── workstudio/                          OPAL WorkStudio (Electron + React 작업 앱)
+│   ├── electron/                         main/preload IPC 경계
+│   └── src/                              WorkStudio renderer
 ├── cursor-rules/                        Cursor 프로젝트 규칙 템플릿
 ├── scripts/                             설치 스크립트
 │   ├── install.sh                       One-liner installer 진입점 (mac / linux)

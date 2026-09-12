@@ -999,7 +999,8 @@ describe("사용자 호칭", () => {
   });
 
   it("owner_term 부재 시 「사용자」로 폴백한다 [T103/L1-TS-151]", async () => {
-    const { owner_term: _drop, ...noTerm } = FX_DASH_WORKER_LABELS as Record<string, unknown>;
+    const noTerm = { ...FX_DASH_WORKER_LABELS } as Record<string, unknown>;
+    delete noTerm.owner_term;
     dashFixture = noTerm;
     await renderDashboard();
 
