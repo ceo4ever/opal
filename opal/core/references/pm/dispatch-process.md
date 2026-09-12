@@ -2,6 +2,9 @@
 
 > Lazy 트리거: 워커 디스패치 직전
 
+Steps 1~3(실행 단위 확정·프로젝트 지식/코드맵 선조회·PROJECT 레지스트리 문서 선별)은 `actor=pm` 직접 작업의 preflight로 그대로 재사용한다.
+Step 0(이벤트 게이트)과 Steps 4~7(에이전트·모델 선택·슬라이싱·capability 주입·디스패치)은 독립 검증자(§독립 검증 경계, `harness/guards.md`·`harness/actor.md` 참조)를 실제로 호출할 때만 적용한다.
+
 PM은 워커마다 아래 순서를 다시 수행한다. 과거 디스패치의 문서·capability 목록을 재사용하지 않는다.
 
 ## Step 0. worker.dispatch 이벤트 게이트

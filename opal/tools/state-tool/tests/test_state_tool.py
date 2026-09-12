@@ -2509,7 +2509,10 @@ class TestErrorCodesCompleteness(unittest.TestCase):
     `--import-existing` 파싱 분기 삭제로 `import_failed`가 ERROR_CODES에서
     소멸(44→42)하고, 명시적 거부 코드 `import_existing_removed`가 신규
     등재(42→43)되어 실측 39→43(070 GREEN 후속 정정)이 아니라 44→43으로
-    갱신됐다. 목록·카운트 둘 다 실측값(43)에 맞춰 동기화한다."""
+    갱신됐다. 목록·카운트 둘 다 실측값(43)에 맞춰 동기화한다.
+
+    [122 W-2] --actor 미지원 skill 거부 코드 1종 등재로 51→52. PM 승인(카탈로그
+    정합 보존)."""
 
     EXPECTED_CODES = [
         # 기존 25종 (PLAN §2.18 + 이전 추가분) 중 23종 존치
@@ -2577,22 +2580,28 @@ class TestErrorCodesCompleteness(unittest.TestCase):
         "allocator_root_not_absolute",
         "allocator_root_invalid",
         "finalize_attribution_failed",
+        # 122 W-2 신규 1종 (--actor pm이 opd/opds 외 skill과 결합 시 거부 게이트)
+        "actor_unsupported_for_skill",
     ]
 
     def test_error_codes_count(self):
-        """[098 H-10 선갱신 + 106 종수 갱신 + 111 갱신] ERROR_CODES 47종 — 093 시점 44종에서
-        098 F-003이 `evidence_check_flag_conflict` 1종을 등재해 45종이 되고,
-        106 F-004가 `code_scan_citation_unmet` 1종을 등재해 46종, 111 W-1이
-        `plan_contract_unmet` 1종을 등재해 47종이다.
+        """[098 H-10 선갱신 + 106 종수 갱신 + 111 갱신 + 122 W-2 갱신] ERROR_CODES 52종 —
+        093 시점 44종에서 098 F-003이 `evidence_check_flag_conflict` 1종을 등재해
+        45종이 되고, 106 F-004가 `code_scan_citation_unmet` 1종을 등재해 46종,
+        111 W-1이 `plan_contract_unmet` 1종을 등재해 47종, 118 W-4가
+        finalize-attribution 전용 4종을 등재해 51종, 122 W-2가
+        `actor_unsupported_for_skill` 1종을 등재해 52종이다.
 
         갱신 근거: 신규 에러 코드 등재가 종수 단언을 같이 깨므로 등재 태스크가
         기대값을 함께 옮긴다. 111 W-1은 PLAN Work items 계약을 차단형 게이트로
-        집행하므로 전용 에러 코드를 추가한다."""
-        self.assertEqual(len(ST.ERROR_CODES), 51,
-                         "[118 W-4] finalize-attribution 전용 4종 등재 후 51종 기대")
+        집행하므로 전용 에러 코드를 추가한다. 122 W-2는 `--actor pm`이 opd/opds
+        외 skill과 결합될 때 전용 에러 코드로 거부한다(PM 승인, 카탈로그 정합
+        보존)."""
+        self.assertEqual(len(ST.ERROR_CODES), 52,
+                         "[122 W-2] --actor 미지원 skill 거부 코드 등재 후 52종 기대")
 
     def test_all_28_codes_registered(self):
-        """[098 H-10 선갱신 + 106 종수 갱신 + 111 갱신] 47종 각각이 ERROR_CODES에 등재됨."""
+        """[098 H-10 선갱신 + 106 종수 갱신 + 111 갱신 + 122 W-2 갱신] 52종 각각이 ERROR_CODES에 등재됨."""
         for code in self.EXPECTED_CODES:
             self.assertIn(code, ST.ERROR_CODES, f"에러 코드 {code} 미등재")
         self.assertEqual(len(self.EXPECTED_CODES), len(ST.ERROR_CODES),
@@ -2629,13 +2638,14 @@ class TestErrorCodesCompleteness(unittest.TestCase):
         self.assertEqual(readme_count, actual_count,
                          f"README 기재 종수({readme_count})와 실측 len(ERROR_CODES)"
                          f"({actual_count})가 불일치함(D-5 ① 정합 위반)")
-        # [118 W-4] 종수 51 하드 기대 — finalize-attribution 전용 4종 등재 반영
-        self.assertEqual(actual_count, 51,
-                         "[118 W-4] len(ERROR_CODES)==51 기대 — allocator_root_* / "
-                         "finalize_attribution_failed 등재가 유실되면 47로 실패")
-        self.assertEqual(readme_count, 51,
-                         "[118 W-4] README 헤더 종수==51 기대 — 카탈로그 정정이 "
-                         "누락되면 47로 실패")
+        # [122 W-2] 종수 52 하드 기대 — actor_unsupported_for_skill 신규 등재 반영
+        self.assertEqual(actual_count, 52,
+                         "[122 W-2] len(ERROR_CODES)==52 기대 — allocator_root_* / "
+                         "finalize_attribution_failed / actor_unsupported_for_skill "
+                         "등재가 유실되면 47 이하로 실패")
+        self.assertEqual(readme_count, 52,
+                         "[122 W-2] README 헤더 종수==52 기대 — 카탈로그 정정이 "
+                         "누락되면 47 이하로 실패")
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -9150,6 +9160,7 @@ class TestR11Invariants(_T093Base):
                 "allocator_root_not_absolute",
                 "allocator_root_invalid",
                 "finalize_attribution_failed",
+                "actor_unsupported_for_skill",  # 122 W-2
             }
             head_src = subprocess.run(
                 ["git", "show", "HEAD:./state_tool.py"],
@@ -9948,17 +9959,20 @@ class TestT103WorkerDuration(_T093Base):
                       "행 스키마의 additionalProperties: false는 유지되어야 함")
 
     def test_s10_error_codes_untouched(self):
-        """[T103/R-15 + 106/111 종수 갱신] 값 검증은 argparse가 파싱 시점에 수행하므로
-        ERROR_CODES는 건드리지 않는다 — 카탈로그 종수 고정 테스트(S-7/S-15)와
-        충돌하지 않는다.
+        """[T103/R-15 + 106/111 종수 갱신 + 122 W-2 종수 갱신] 값 검증은 argparse가
+        파싱 시점에 수행하므로 ERROR_CODES는 건드리지 않는다 — 카탈로그 종수
+        고정 테스트(S-7/S-15)와 충돌하지 않는다.
 
         [106/111] 이 케이스의 계약은 "103 축이 종목을 늘리지 않았다"이며(첫 단언),
         종수 리터럴은 실측 SSOT를 따라 45→47로 옮긴다 — 106 F-004와 111 W-1
-        등재분은 103 축과 무관하다."""
+        등재분은 103 축과 무관하다.
+
+        [122 W-2] 종수 리터럴을 51→52로 옮긴다 — `actor_unsupported_for_skill`
+        등재분이며 103 축과 무관하다."""
         self.assertNotIn("worker_duration_invalid", ST.ERROR_CODES,
                          "103이 ERROR_CODES를 신설했음 — 카탈로그 종수 계약 위반")
-        self.assertEqual(len(ST.ERROR_CODES), 51,
-                         f"ERROR_CODES 종수가 변했음(118 W-4 기준 51): {len(ST.ERROR_CODES)}")
+        self.assertEqual(len(ST.ERROR_CODES), 52,
+                         f"ERROR_CODES 종수가 변했음(122 W-2 기준 52): {len(ST.ERROR_CODES)}")
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -10204,17 +10218,20 @@ class TestT103WorkerDurationWarning(_T093Base):
     # ── (5) 카탈로그 경계 ────────────────────────────────────────────────
 
     def test_w13_warning_catalog_is_separate_from_error_codes(self):
-        """[T103/R-21 + 106/111 종수 갱신] 경고는 에러가 아니다 — 경고 코드는 별도
-        사전(`WARNING_CODES`)에 살고 R-21은 `ERROR_CODES`를 늘리지 않는다.
-        카탈로그를 공유하면 `err()`가 sys.exit로 끝나는 탓에 '경고인데 차단'이라는
-        오용 경로가 생긴다.
+        """[T103/R-21 + 106/111 종수 갱신 + 122 W-2 종수 갱신] 경고는 에러가 아니다 —
+        경고 코드는 별도 사전(`WARNING_CODES`)에 살고 R-21은 `ERROR_CODES`를
+        늘리지 않는다. 카탈로그를 공유하면 `err()`가 sys.exit로 끝나는 탓에
+        '경고인데 차단'이라는 오용 경로가 생긴다.
 
         [106/111] 종수 리터럴은 실측 SSOT를 따라 45→47로 옮긴다 — 106 F-004와
-        111 W-1 등재분이며 R-21 축과 무관하다."""
+        111 W-1 등재분이며 R-21 축과 무관하다.
+
+        [122 W-2] 종수 리터럴을 51→52로 옮긴다 — `actor_unsupported_for_skill`
+        등재분이며 R-21 축과 무관하다."""
         self.assertNotIn(self._CODE, ST.ERROR_CODES,
                          "R-21이 ERROR_CODES를 늘렸음 — 카탈로그 종수 계약 위반")
-        self.assertEqual(len(ST.ERROR_CODES), 51,
-                         f"ERROR_CODES 종수가 변했음(118 W-4 기준 51): {len(ST.ERROR_CODES)}")
+        self.assertEqual(len(ST.ERROR_CODES), 52,
+                         f"ERROR_CODES 종수가 변했음(122 W-2 기준 52): {len(ST.ERROR_CODES)}")
         self.assertIn(self._CODE, ST.WARNING_CODES,
                       "WARNING_CODES에 worker_duration_missing 미등재")
 
@@ -10906,3 +10923,157 @@ class TestT111SdlcV2StateContracts(_T093Base):
                          (True, None))
         self.assertEqual(tuple(ST.can_auto_approve_user_confirmation("CLOSE", "agentic")),
                          (False, "close_requires_user"))
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# 122(RED-first, mode:red): TestActorFlag 신설 — `state-tool init --actor pm`
+# TEST-SCENARIO.md S-1~S-4 (AC-1, AC-4, AC-14, C-3, H-1) — PLAN D-4 "actor는
+# state.json 최상위 선택 키이며 미지정 시 키를 생성하지 않는다"의 state-tool 측 계약.
+# 작성자(opal-test-agent, mode:red) ≠ 구현자(EXECUTE 워커) — red-first.md §2.
+# 현재 state_tool.py의 argparse/cmd_init에는 --actor 처리가 전혀 없으므로(W-2 GREEN
+# 이전), 아래 단언들이 실패하는 것이 RED 증거다. 092 TestWorktreeFlag(§`--worktree`
+# 조건부 영속화, 동일 구현 패턴 — PLAN D-4 참조)의 구성을 그대로 답습한다: 공개
+# 인터페이스(ST.cmd_init 직접 호출 + 실 state.json 파일 내용 + exit code/JSON)로만
+# 검증하고 mock/patch는 date.js(_mock_now)에만 한정한다. 기존 테스트는 수정하지
+# 않았다(파일 끝 append).
+#
+# S-1 기준 스냅샷: PM이 W-2 적용 전 소스로
+#   `state-tool init --skill opds --mode agentic --rows-from pipeline-short.json`
+# 를 실행해 확보한 rows[] 11행을 fixtures/s1_baseline_rows.json에 그대로 보존했다
+# (row_id/stage/item/key/status/status_label/timestamp/owner/note/gate — 실행마다
+# 달라지는 top-level created_at/updated_at/task_id만 비교에서 제외한다).
+# ═════════════════════════════════════════════════════════════════════════════
+
+_OPDS_REAL_PIPELINE_SHORT_JSON = (
+    _TOOL_DIR.parent.parent / "skills" / "opal-pilot-dev" / "references" / "pipeline-short.json"
+)
+
+_S1_BASELINE_ROWS_FIXTURE = pathlib.Path(__file__).parent / "fixtures" / "s1_baseline_rows.json"
+
+
+class TestActorFlag(BaseTestCase):
+    """122: `state-tool init --actor pm` — TEST-SCENARIO.md S-1~S-4 (PLAN D-4/W-2)."""
+
+    def setUp(self):
+        super().setUp()
+        self.assertTrue(
+            _OPDS_REAL_PIPELINE_SHORT_JSON.exists(),
+            f"실 pipeline-short.json이 없음: {_OPDS_REAL_PIPELINE_SHORT_JSON}",
+        )
+        self.assertTrue(
+            _S1_BASELINE_ROWS_FIXTURE.exists(),
+            f"S-1 기준 스냅샷 fixture가 없음: {_S1_BASELINE_ROWS_FIXTURE}",
+        )
+
+    def _new_task_path(self, name):
+        p = self.tmpdir / name
+        p.mkdir()
+        return p
+
+    def _init_opds(self, task_path, actor=None):
+        """`--skill opds --mode agentic --rows-from pipeline-short.json`(실 파일)로
+        init. actor가 주어지면 --actor 값으로 함께 전달한다(현재 argparse/cmd_init에는
+        --actor 처리가 없으므로 그대로 무시되는 것이 RED 증거)."""
+        kwargs = dict(
+            task_path=str(task_path),
+            skill="opds",
+            mode="agentic",
+            rows_from=str(_OPDS_REAL_PIPELINE_SHORT_JSON),
+            force=False,
+            note=None,
+            import_existing=False,
+            next_action=None,
+            task_title=None,
+        )
+        if actor is not None:
+            kwargs["actor"] = actor
+        with _mock_now():
+            args = make_args(**kwargs)
+            return self._call_cmd(ST.cmd_init, args)
+
+    # ── S-1: --actor 미전달 시 actor 키 부재 + rows[] 11행이 기준과 동일 ────
+
+    def test_s1_actor_unspecified_no_actor_key_and_rows_match_baseline(self):
+        """[T122/S-1] --actor 미전달로 opds init 실행 → state.json에 "actor" 키가
+        부재하고, rows[] 11행이 W-2 적용 전 기준 스냅샷(fixtures/s1_baseline_rows.json)
+        과 (row_id/stage/item/key/status/owner/gate 등) 정규화 후 동일해야 한다."""
+        task_path = self._new_task_path("s1_no_actor")
+        exit_code, _ = self._init_opds(task_path)
+        self.assertEqual(exit_code, 0, "--actor 미전달 init은 exit 0이어야 한다")
+
+        state = json.loads((task_path / "state.json").read_text(encoding="utf-8"))
+        self.assertNotIn("actor", state, "미지정인데 actor 키가 생성됨(AC-4/H-1 위반)")
+
+        baseline_rows = json.loads(_S1_BASELINE_ROWS_FIXTURE.read_text(encoding="utf-8"))
+        rows = state.get("rows")
+        self.assertEqual(len(rows), 11, "task_steps[] 는 11행이어야 한다")
+        self.assertEqual(len(baseline_rows), 11, "기준 스냅샷도 11행이어야 한다(fixture 자체 점검)")
+
+        # 실행마다 달라지는 필드는 없다 — rows[] 항목은 created_at/updated_at/task_id에
+        # 의존하지 않으므로 정규화 없이 바로 비교 가능(정규화 대상은 top-level 3필드뿐).
+        self.assertEqual(
+            rows, baseline_rows,
+            "rows[] 11행의 key·순서·상태가 W-2 적용 전 기준 스냅샷과 달라짐(C-3 위반)",
+        )
+
+    # ── S-2: --actor pm --skill opds → state["actor"] == "pm", 행 11개 유지 ──
+
+    def test_s2_actor_pm_skill_opds_sets_actor_key_rows_unchanged(self):
+        """[T122/S-2] `--actor pm --skill opds` → state["actor"] == "pm"이고
+        rows[]는 S-1과 동일하게 11행이어야 한다."""
+        task_path = self._new_task_path("s2_actor_pm")
+        exit_code, _ = self._init_opds(task_path, actor="pm")
+        self.assertEqual(exit_code, 0, "--actor pm --skill opds init은 exit 0이어야 한다")
+
+        state = json.loads((task_path / "state.json").read_text(encoding="utf-8"))
+        self.assertEqual(
+            state.get("actor"), "pm",
+            "--actor pm 지정 시 state['actor']가 'pm'이어야 한다(AC-1 위반 — GREEN 이전 RED)",
+        )
+        rows = state.get("rows")
+        self.assertEqual(len(rows), 11, "actor 지정과 무관하게 rows[]는 11행이어야 한다(AC-4)")
+
+        baseline_rows = json.loads(_S1_BASELINE_ROWS_FIXTURE.read_text(encoding="utf-8"))
+        self.assertEqual(
+            rows, baseline_rows,
+            "actor 지정이 rows[] key·순서·상태를 바꾸면 안 된다(AC-4 위반)",
+        )
+
+    # ── S-3: --actor pm --skill opwt → exit 1, ok:false / actor_unsupported_for_skill ──
+
+    def test_s3_actor_pm_skill_opwt_rejected_with_dedicated_error(self):
+        """[T122/S-3] `--actor pm --skill opwt` → exit 1 + stdout JSON
+        `ok:false`·`error == "actor_unsupported_for_skill"`. traceback(미포착 예외)이
+        발생하지 않아야 한다 — SystemExit 이외의 예외가 나면 이 테스트 자체가 에러로
+        실패해 그 사실을 드러낸다."""
+        task_path = self._new_task_path("s3_actor_pm_opwt")
+        kwargs = dict(
+            task_path=str(task_path),
+            skill="opwt",
+            mode="agentic",
+            rows_spec=SIMPLE_ROWS_SPEC,
+            force=False,
+            note=None,
+            import_existing=False,
+            next_action=None,
+            task_title=None,
+            actor="pm",
+        )
+        with _mock_now():
+            args = make_args(**kwargs)
+            exit_code, result = self._call_cmd(ST.cmd_init, args)
+
+        self.assertEqual(
+            exit_code, 1,
+            f"--actor pm --skill opwt는 exit 1로 거부되어야 한다(현재 결과: {result!r})",
+        )
+        self.assertFalse(result.get("ok"), f"ok:false여야 한다: {result!r}")
+        self.assertEqual(
+            result.get("error"), "actor_unsupported_for_skill",
+            f"error 코드가 actor_unsupported_for_skill이어야 한다: {result!r}",
+        )
+
+    # ── S-4: 신설 3건 + 기존 전건 회귀 0건은 `python3 -m pytest`(별도 프로세스)로
+    #         AGENTIC-LOG/validation에 실제 실행 출력으로 기록한다(이 파일 자체가
+    #         "기존 테스트"이므로 자기 자신을 이 클래스 안에서 재실행하지 않는다).
+

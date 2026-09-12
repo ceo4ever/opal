@@ -78,7 +78,7 @@ STATE.md는 **의사결정 로그·블로커·자유 기재를 담는 저널**�
 - **갱신**: `init` 직후 state-tool이 distinct 단계 목록으로 `todo_mirror`(`action=create`)를 출력하고 hook이 주입 → PM이 일괄 생성한다. 이후 `advance`/`mark`/`block` 호출 직후 state-tool이 재파생한 `todo_mirror`(`action=update`)를 출력하고 hook이 주입 → PM이 갱신한다. state-tool 호출과 1:1로 동반하며 별도 트리거를 만들지 않는다.
 - **블로커**: `block`(행 ❌) 시 해당 단계 todo는 `in_progress`를 유지한다(todo에 실패 상태 없음 — `failed`는 파생에서 `in_progress`로 귀결). 블로커 자체는 STATE.md·보고로 표면화한다.
 
-> L2 경량 트랙은 파이프라인·state-tool을 쓰지 않으므로 이 절이 적용되지 않는다(todo 미러 없음).
+> `opal-self-pm`은 파이프라인·state-tool을 쓰지 않으므로 이 절이 적용되지 않는다(todo 미러 없음).
 
 ### STATE.md 공통 템플릿
 

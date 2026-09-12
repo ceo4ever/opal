@@ -448,7 +448,7 @@ html,body{background:var(--bg);font-family:'Inter Tight',sans-serif;-webkit-font
         <div class="boxes boxes-3">
           <div class="node"><div class="node-head"><div class="node-title">PRINCIPLES.md <span class="badge badge-core">CORE</span></div><div class="node-tag">헌법</div></div><div class="node-desc">행동 SSOT. <b style="color:var(--accent)">사용자 주권 · Done=검증된 동작 · 조언 말고 집행 · 플랫폼 독립</b>. 하위 문서는 복제 없이 참조 상속.</div><div class="node-tech"><span class="chip">Core Stance</span><span class="chip">inherited-by-ref</span><span class="chip">eager-load</span></div></div>
           <div class="node"><div class="node-head"><div class="node-title">identity.md <span class="badge badge-stable">안정</span></div><div class="node-tag">정체성</div></div><div class="node-desc">알투(R2) — 캡틴을 소유자로 호칭. 차분·꼼꼼·솔직·따뜻. YAML frontmatter로 톤/성격 주입.</div><div class="node-tech"><span class="chip">YAML frontmatter</span><span class="chip">알투 / R2</span></div></div>
-          <div class="node"><div class="node-head"><div class="node-title">역할 체계 <span class="badge badge-core">CORE</span></div><div class="node-tag">상태기계</div></div><div class="node-desc"><code>.opal/AGENT.md</code> 유무로 비서 ↔ PM 자동 전환. 파일 1~2개 단순 수정은 L2 경량 트랙으로 파이프라인 우회.</div><div class="node-tech"><span class="chip">비서 / PM</span><span class="chip">L2 경량트랙</span><span class="chip">PM 컨텍스트</span></div></div>
+          <div class="node"><div class="node-head"><div class="node-title">역할 체계 <span class="badge badge-core">CORE</span></div><div class="node-tag">상태기계</div></div><div class="node-desc"><code>.opal/AGENT.md</code> 유무로 비서 ↔ PM 자동 전환. actor 축(<code>--pm</code>)은 이 전환과 직교 — 지원 Pilot(<code>opd</code>/<code>opds</code>)에서 PM이 단계를 직접 수행하거나 <code>//oppm</code> 대화형 루프로 직접 처리한다.</div><div class="node-tech"><span class="chip">비서 / PM</span><span class="chip">actor 축(--pm)</span><span class="chip">PM 컨텍스트</span></div></div>
         </div>
       </div>
       <div class="connector"></div>
@@ -465,7 +465,7 @@ html,body{background:var(--bg);font-family:'Inter Tight',sans-serif;-webkit-font
         <div class="layer-label"><div class="layer-num">LAYER 04</div><div class="layer-name">라우팅</div><div class="layer-tag">요청을 스킬·파이프라인으로 분배하는 진입 분기</div></div>
         <div class="boxes boxes-3">
           <div class="node"><div class="node-head"><div class="node-title">// 커맨드 <span class="badge badge-core">CORE</span></div><div class="node-tag">task-mode</div></div><div class="node-desc"><code>//opp</code>·<code>//opd</code> 등 쌍슬래시 → PM(태스크) 강제 진입 + 하네스 전체 적용. 약어를 정식 스킬로 매칭.</div><div class="node-tech"><span class="chip">skill-commands.md</span><span class="chip">//opi · //opd</span></div></div>
-          <div class="node"><div class="node-head"><div class="node-title">자연어 요청 <span class="badge badge-stable">안정</span></div><div class="node-tag">dialog-mode</div></div><div class="node-desc">분석·읽기·설명·토론은 비서 / PM(대화)로 직접 수행. "그냥 해" 발화 시 L2 경량 트랙 진입.</div><div class="node-tech"><span class="chip">PM(대화)</span><span class="chip">읽기 선제</span></div></div>
+          <div class="node"><div class="node-head"><div class="node-title">자연어 요청 <span class="badge badge-stable">안정</span></div><div class="node-tag">dialog-mode</div></div><div class="node-desc">분석·읽기·설명·토론은 비서 / PM(대화)로 직접 수행. "그냥 해" / 직접 수행 발화는 <code>//oppm</code>(opal-self-pm) 대화형 루프 또는 지원 Pilot의 <code>--pm</code> actor로 처리한다.</div><div class="node-tech"><span class="chip">PM(대화)</span><span class="chip">읽기 선제</span></div></div>
           <div class="node"><div class="node-head"><div class="node-title">skill-registry <span class="badge badge-stable">안정</span></div><div class="node-tag">resolver</div></div><div class="node-desc">트리거 정규식으로 입력 → 스킬 해소(match / get / list). Node.js 미설치 시 skills.md 폴백.</div><div class="node-tech"><span class="chip">Node.js</span><span class="chip">regex triggers</span><span class="chip">skill-registry.js</span></div></div>
         </div>
       </div>
@@ -612,8 +612,8 @@ const NODE_DATA = {
     chips:["YAML frontmatter","알투 / R2","존댓말+친근"]},
   roles:{t:"역할 체계",badge:"core",layer:"L2 · 거버넌스·정체성",tag:"상태기계",
     desc:".opal/AGENT.md 유무로 비서 ↔ PM이 자동 전환된다. PM은 다시 대화/태스크 모드로 나뉜다.",
-    detail:["비서 = 프로젝트 밖, PM = .opal/AGENT.md 존재","파일 1~2개 + 동작검증 불요 → L2 경량 트랙(파이프라인 우회)","동작검증 필요 작업은 L2 금지 → 풀 파이프라인"],
-    chips:["비서 / PM","L2 경량트랙","3-way 모드"]},
+    detail:["비서 = 프로젝트 밖, PM = .opal/AGENT.md 존재","actor 축(`--pm`)은 모드 축과 직교 — 지원 Pilot(`opd`/`opds`)에서만 PM이 단계 스킬을 직접 수행","대화형 직접 수행은 `//oppm`(opal-self-pm) 루프가 전담 — 둘 다 독립 검증 경계는 생략 불가"],
+    chips:["비서 / PM","actor 축(--pm)","3-way 모드"]},
   /* ---- L3 지식 자산 (횡단) ---- */
   codemap:{t:"코드맵 (Code Map)",badge:"core",layer:"L3 · 지식 자산 (횡단)",tag:"WHAT · 전수·실시간",
     desc:"코드 구조·exports·depends의 전수·실시간 사실을 담는 자산. WHAT을 답하며, brain(WHY·HOW)과 역할이 겹치지 않는다.",
@@ -634,8 +634,8 @@ const NODE_DATA = {
     chips:["skill-commands.md","//opi · //opd","arguments"]},
   nl:{t:"자연어 요청",badge:"stable",layer:"L4 · 라우팅",tag:"dialog-mode",
     desc:"분석·읽기·설명·토론처럼 파일 수정이 없는 요청은 비서 / PM(대화)로 직접 처리한다.",
-    detail:["읽기·분석·탐색 도구는 사용자 요청 없이 선제 사용","'그냥 해' / '직접 수행' 발화 → L2 경량 트랙 진입"],
-    chips:["PM(대화)","읽기 선제","L2 진입"]},
+    detail:["읽기·분석·탐색 도구는 사용자 요청 없이 선제 사용","'그냥 해' / '직접 수행' 발화 → `//oppm`(opal-self-pm) 대화형 루프 또는 지원 Pilot `--pm` actor로 처리"],
+    chips:["PM(대화)","읽기 선제","//oppm"]},
   registry:{t:"skill-registry",badge:"stable",layer:"L4 · 라우팅",tag:"resolver",
     desc:"트리거 정규식으로 입력을 스킬로 해소한다(match / get / list). 결정론적 CLI라 환각 없이 매칭.",
     detail:["Node.js 미설치 시 skills.md Read 폴백","스킬 그룹: opal-pilot / op-* / opal(operator) / standalone / community"],

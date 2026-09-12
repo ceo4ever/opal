@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "requests": [
+    {
+      "task_id": "122-260912-opds-PM-직접수행-모델",
+      "title": "PM 전달용으로 fork를 쓰지 않는다",
+      "type": "improvement",
+      "status": "applied",
+      "file": "memory/PM_전달용으로_fork를_쓰지_않는다.md",
+      "summary": "fork는 PM 컨텍스트를 상속해 PM으로 행동 — 워커 후속 지시는 SendMessage",
+      "body_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "requested_at": "2026-09-12 20:55:15"
+    },
+    {
+      "task_id": "122-260912-opds-PM-직접수행-모델",
+      "title": "install은 세션 간 공유 자원 경합을 전제한다",
+      "type": "improvement",
+      "status": "applied",
+      "file": "memory/install은_세션_간_공유_자원_경합을_전제한다.md",
+      "summary": "~/.opal은 공유 자원 — 워크트리 태스크는 검증 1회 외 install 반복 금지",
+      "body_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "requested_at": "2026-09-12 20:55:15"
+    },
+    {
+      "task_id": "122-260912-opds-PM-직접수행-모델",
+      "title": "타임스탬프는 date 도구로만 취득한다",
+      "type": "improvement",
+      "status": "applied",
+      "file": "memory/타임스탬프는_date_도구로만_취득한다.md",
+      "summary": "AGENTIC-LOG 18건 시각을 추정 기재해 미래 시각이 섞였다 — bash 생략 금지",
+      "body_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "requested_at": "2026-09-12 20:55:15"
+    },
+    {
+      "task_id": "122-260912-opds-PM-직접수행-모델",
+      "title": "도구 인자 형식은 --help로 먼저 확인한다",
+      "type": "improvement",
+      "status": "applied",
+      "file": "memory/도구_인자_형식은_help로_먼저_확인한다.md",
+      "summary": "code-scan --changed에 공백 목록을 넘겨 exit 0 위양성을 받았다 — CSV 계약",
+      "body_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "requested_at": "2026-09-12 20:55:15"
+    }
+  ]
+}

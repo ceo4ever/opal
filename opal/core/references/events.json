@@ -141,6 +141,11 @@
           "id": "capability",
           "source": "{source_root}/opal/core/references/harness/capability.md",
           "deployed": "{deployed_root}/references/harness/capability.md"
+        },
+        {
+          "id": "actor",
+          "source": "{source_root}/opal/core/references/harness/actor.md",
+          "deployed": "{deployed_root}/references/harness/actor.md"
         }
       ],
       "optional_docs": [
