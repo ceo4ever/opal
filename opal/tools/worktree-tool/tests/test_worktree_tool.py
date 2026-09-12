@@ -3,7 +3,7 @@
   "module": "test_worktree_tool",
   "layer": "test",
   "domain": "opal-workspace",
-  "description": "worktree-tool 공개 인터페이스 회귀 테스트. 092 TEST-SCENARIO.md S-4~S-17,S-21~S-28과 112 TEST-SCENARIO.md S-8 hub-fixed worktree 계약을 검증한다. S-1/S-2는 state-tool 측 전용이라 test_state_tool.py에 있다. S-3/S-15는 각각 git working-tree diff의 일관성/~/.opal 배포본 변경 금지 때문에 이 파일에서 제외했다(092/112 번호 체계). CLI(subprocess) 공개 인터페이스로만 검증하고, mock/patch 없이 실 git 저장소 fixture(conftest.py)를 사용한다. 118 TEST-SCENARIO.md S-3~S-8,S-11,S-15(taskCapsuleCone·canonical metadata 6필드·TASK_PATH_AMBIGUOUS·finalize 재진입 path-scoped 판정·memory-index-request 가드)와 119 TEST-SCENARIO.md S-7·S-8(상태 의존 canonical path 해석 — registry attribution_state가 closed일 때만 허브 merge 사본을 반환하고 active 3상태는 차단 유지)을 검증한다. 118 S-3·119 S-7은 불변식 보존형이라 구현 전에도 PASS하는 회귀 보호 케이스다. 119는 태스크 092의 stale 문서 단언 3건(opal-harness.md §2.5 존재·pm/dispatch-process.md ## 작업 경로 블록·worktree-tool create 연속 문자열)을 현재 문면으로 교체했다.",
+  "description": "worktree-tool 공개 인터페이스 회귀 테스트. 092 TEST-SCENARIO.md S-4~S-17,S-21~S-28과 112 TEST-SCENARIO.md S-8 hub-fixed worktree 계약을 검증한다. S-1/S-2는 state-tool 측 전용이라 test_state_tool.py에 있다. S-3/S-15는 각각 git working-tree diff의 일관성/~/.opal 배포본 변경 금지 때문에 이 파일에서 제외했다(092/112 번호 체계). CLI(subprocess) 공개 인터페이스로만 검증하고, mock/patch 없이 실 git 저장소 fixture(conftest.py)를 사용한다. 118 TEST-SCENARIO.md S-3~S-8,S-11,S-15(taskCapsuleCone·canonical metadata 6필드·TASK_PATH_AMBIGUOUS·finalize 재진입 path-scoped 판정·memory-index-request 가드)와 119 TEST-SCENARIO.md S-7·S-8(상태 의존 canonical path 해석 — registry attribution_state가 closed일 때만 허브 merge 사본을 반환하고 active 3상태는 차단 유지)을 검증한다. 118 S-3·119 S-7은 불변식 보존형이라 구현 전에도 PASS하는 회귀 보호 케이스다. 119는 태스크 092의 stale 문서 단언 3건(opal-harness.md §2.5 존재·pm/dispatch-process.md ## 작업 경로 블록·worktree-tool create 연속 문자열)을 현재 문면으로 교체했다. 124 TEST-SCENARIO.md S-1~S-17·S-24·S-26~S-28(multi-repo 루트 캡슐 소유권 — 루트+자식 worktree 등록, 소유권 불변식, 루트 Git 적격 R-1~R-5 차단과 부수 효과 부재, init 초안의 task_artifacts 제시 조건, repo별 base-ref 동결과 baseBranchOverrides 키 검증, 추적 범위 겹침 차단, 회수·롤백의 자식→루트 역순, 2축 멱등 재시도와 불일치 시 자동 복구 금지, multi-repo create의 sparse-checkout 미호출)을 검증한다.",
   "exports": [],
   "depends": ["conftest.py", "worktree_tool.py", "opal/tools/state-tool/state_tool.py"]
 }
@@ -16,6 +16,7 @@ import json
 import os
 import pathlib
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -2192,4 +2193,846 @@ def test_t119_s8_closed_state_finalize_is_idempotent_without_new_commit(tmp_path
     meta_after = json.loads(meta_path.read_text(encoding="utf-8"))
     assert meta_after.get("attribution_state") == "closed", (
         f"S-8: 멱등 재진입이 상태를 되돌리면 안 됨: {meta_after}"
+    )
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# 태스크 124 — multi-repo 캡슐 소유권(`task_artifacts.repo: "."`)
+# TEST-SCENARIO.md S-1~S-17·S-24·S-26~S-28 / AC-1~AC-11·AC-15·AC-16.
+# RED-first(PLAN W-1) — S-8(기존 MISSING 계약 보존)과 S-27(R-5 필요성 대조군)만 구현 전에도
+# PASS해야 하는 회귀 보호·반증 케이스이고, 나머지는 구현 전 FAIL이 정상이다.
+# fixture 빌더는 conftest.py가 아니라 이 파일의 모듈 지역 헬퍼로 둔다(PLAN D-19,
+# `_build_independent_repo` 선례). 모든 도구 호출은 CLI(subprocess) 공개 인터페이스다.
+# ═════════════════════════════════════════════════════════════════════════════
+
+T124_TASK = "900"
+T124_TASK_FOLDER = "900-260912-multirepo-capsule"
+
+
+class RootOwnedMultiRepo:
+    """루트 저장소가 태스크 캡슐을 소유하는 multi-repo fixture(M0 및 그 변형)."""
+
+    def __init__(self, root, alpha, beta, config_path, remotes_dir):
+        self.root = root
+        self.alpha = alpha
+        self.beta = beta
+        self.config_path = config_path
+        self.remotes_dir = remotes_dir
+
+    @property
+    def slot_root(self):
+        return self.root / ".opal-worktrees" / f"task_{T124_TASK}"
+
+    @property
+    def meta_path(self):
+        return self.root / ".opal-worktrees" / ".meta" / f"task_{T124_TASK}.json"
+
+
+def _t124_config(drop=(), **overrides) -> dict:
+    """M0 설정 원형 — `.opal/worktree.json`. `drop`으로 키를 제거해 변형을 만든다."""
+    cfg = {
+        "layout": "multi-repo",
+        "repos": ["workspace/alpha", "workspace/beta"],
+        "task_artifacts": {"repo": "."},
+        "baseBranch": "main",
+        "baseBranchOverrides": {"workspace/beta": "develop"},
+        "branchTemplate": "feat/OP-TASK-{NNN}",
+        "copy": [],
+        "setup": [],
+        "portOffset": 0,
+    }
+    cfg.update(overrides)
+    for key in drop:
+        cfg.pop(key, None)
+    return cfg
+
+
+def _make_dual_branch_bare_remote(remotes_dir: pathlib.Path, name: str) -> pathlib.Path:
+    """`main`·`develop` 두 브랜치를 갖고 `HEAD`(= clone의 `origin/HEAD`)가 `develop`을
+    가리키는 bare remote. S-6에서 "자기 origin/HEAD"가 repo마다 다름을 관측하기 위해
+    beta만 이 형상으로 만든다."""
+    origin = make_bare_remote(remotes_dir, name)
+    seed = remotes_dir / f"{name}-seed"
+    run_git(["checkout", "-b", "develop"], cwd=seed)
+    run_git(["push", "origin", "develop"], cwd=seed)
+    run_git(["symbolic-ref", "HEAD", "refs/heads/develop"], cwd=origin)
+    return origin
+
+
+def _build_root_owned_multirepo(
+    tmp_path: pathlib.Path,
+    name: str,
+    *,
+    config: dict | None = None,
+    track_tasks: bool = True,
+    track_agent: bool = True,
+    track_memory: bool = True,
+    ignore_workspace: bool = True,
+    root_git: bool = True,
+    overlap: bool = False,
+) -> RootOwnedMultiRepo:
+    """제안서 §2 pug 실측 형상과 동형인 multi-repo fixture(H-5).
+
+    루트가 Git 저장소이면서 `tasks/.gitkeep`·`.opal/AGENT.md`·`.opal/MEMORY.json`을 추적하고
+    (R-2~R-4), `workspace/`를 `.gitignore`에 등재해(R-5) 하위 독립 repo를 추적하지 않는다.
+    각 플래그는 조건 하나만 단독으로 깨뜨린다 — `root_git=False`→R-1, `track_tasks=False`→R-2,
+    `track_agent=False`→R-3, `track_memory=False`→R-4, `ignore_workspace=False`→R-5,
+    `overlap=True`→루트가 `repos[]` 경로를 추적(§4.4).
+    """
+    remotes_dir = tmp_path / f"_remotes_{name}"
+    remotes_dir.mkdir()
+    project_root = tmp_path / name
+    project_root.mkdir()
+    run_git(["init", "-b", "main"], cwd=project_root)
+
+    gitignore_lines = [".opal-worktrees/"]
+    if ignore_workspace:
+        gitignore_lines.append("workspace/")
+    (project_root / ".gitignore").write_text(
+        "\n".join(gitignore_lines) + "\n", encoding="utf-8"
+    )
+    _write_repo_file(project_root, "tasks/.gitkeep", "")
+    _write_repo_file(project_root, ".opal/AGENT.md", "# project agent\n")
+    _write_repo_file(project_root, ".opal/MEMORY.json", '{"history": []}\n')
+    config_path = project_root / ".opal" / "worktree.json"
+    write_json(config_path, config if config is not None else _t124_config())
+
+    tracked = [".gitignore", ".opal/worktree.json"]
+    if track_tasks:
+        tracked.append("tasks/.gitkeep")
+    if track_agent:
+        tracked.append(".opal/AGENT.md")
+    if track_memory:
+        tracked.append(".opal/MEMORY.json")
+
+    if overlap:
+        # 루트가 `repos[]` 경로 안의 파일을 추적하는 상태를 만든다. 중첩 Git 저장소 안의
+        # 파일은 `git add -f`로도 추가되지 않으므로(git 실측), alpha가 저장소가 되기 전에
+        # 먼저 추적시킨 뒤 그 자리에서 `git init`한다.
+        _write_repo_file(project_root, "workspace/alpha/OWNED_BY_ROOT.md", "root owns\n")
+
+    run_git(["add", *tracked], cwd=project_root)
+    if overlap:
+        run_git(["add", "-f", "workspace/alpha/OWNED_BY_ROOT.md"], cwd=project_root)
+    run_git(["commit", "-m", "root capsule owner"], cwd=project_root)
+
+    if overlap:
+        alpha = project_root / "workspace" / "alpha"
+        run_git(["init", "-b", "main"], cwd=alpha)
+        _write_repo_file(alpha, "app.py", "# alpha\n")
+        run_git(["add", "-A"], cwd=alpha)
+        run_git(["commit", "-m", "alpha initial"], cwd=alpha)
+    else:
+        alpha = clone_repo(
+            make_bare_remote(remotes_dir, f"origin_alpha_{name}"),
+            project_root / "workspace",
+            "alpha",
+        )
+
+    beta = clone_repo(
+        _make_dual_branch_bare_remote(remotes_dir, f"origin_beta_{name}"),
+        project_root / "workspace",
+        "beta",
+    )
+    # clone은 원격 HEAD(develop)만 로컬 브랜치로 만든다 — `main` 기준 해석도 관측할 수 있게
+    # 로컬 `main`을 함께 둔다.
+    run_git(["branch", "main", "origin/main"], cwd=beta)
+
+    if not root_git:
+        shutil.rmtree(project_root / ".git")
+
+    return RootOwnedMultiRepo(project_root, alpha, beta, config_path, remotes_dir)
+
+
+_T124_ROOT_VIOLATIONS = {
+    "R-1": {"root_git": False},
+    "R-2": {"track_tasks": False},
+    "R-3": {"track_agent": False},
+    "R-4": {"track_memory": False},
+    "R-5": {"ignore_workspace": False},
+}
+
+
+def _t124_create_args(project: RootOwnedMultiRepo) -> list:
+    return [
+        "create",
+        "--project-root",
+        str(project.root),
+        "--task",
+        T124_TASK,
+        "--task-folder",
+        T124_TASK_FOLDER,
+    ]
+
+
+def _real(path) -> str:
+    return os.path.realpath(str(path))
+
+
+def _registered_worktrees(git_root: pathlib.Path) -> list:
+    """`git worktree list --porcelain`에 등록된 worktree 절대경로(메인 작업본 포함)."""
+    out = run_git(["worktree", "list", "--porcelain"], cwd=git_root).stdout
+    return [
+        _real(line[len("worktree ") :])
+        for line in out.splitlines()
+        if line.startswith("worktree ")
+    ]
+
+
+def _slot_worktrees(git_root: pathlib.Path) -> list:
+    """메인 작업본을 제외한 등록 worktree 목록."""
+    return [p for p in _registered_worktrees(git_root) if p != _real(git_root)]
+
+
+def _install_git_tracer(tmp_path: pathlib.Path, name: str):
+    """PATH 앞단에 `git` 래퍼를 깔아 도구가 실제로 호출한 git 명령을 기록한다.
+    `worktree_tool.py`는 `["git", ...]`를 PATH로 해석하므로(`_run_git`) 내부를 건드리지
+    않고 공개 실행 경계에서 호출 로그를 관측할 수 있다(S-13·S-14·S-17·S-24)."""
+    bin_dir = tmp_path / f"_gitshim_{name}"
+    bin_dir.mkdir()
+    log_path = bin_dir / "git-calls.log"
+    real_git = shutil.which("git")
+    assert real_git, "PATH에서 git 실행 파일을 찾지 못했다"
+    shim = bin_dir / "git"
+    shim.write_text(
+        "#!/bin/sh\n"
+        'printf "%s\\n" "$*" >> "' + str(log_path) + '"\n'
+        'exec "' + real_git + '" "$@"\n',
+        encoding="utf-8",
+    )
+    shim.chmod(0o755)
+    return bin_dir, log_path
+
+
+def _run_worktree_cli_traced(args: list, bin_dir: pathlib.Path):
+    env = dict(os.environ)
+    env["PATH"] = f"{bin_dir}{os.pathsep}{env.get('PATH', '')}"
+    return subprocess.run(
+        [sys.executable, str(WORKTREE_TOOL_PATH), *args],
+        capture_output=True,
+        text=True,
+        env=env,
+    )
+
+
+def _git_calls(log_path: pathlib.Path) -> list:
+    if not log_path.exists():
+        return []
+    return [
+        line for line in log_path.read_text(encoding="utf-8").splitlines() if line.strip()
+    ]
+
+
+def _worktree_remove_order(calls: list) -> list:
+    """git 호출 로그에서 `worktree remove`의 대상 경로를 호출 순서대로 뽑는다."""
+    order = []
+    for line in calls:
+        parts = line.split()
+        if len(parts) >= 3 and parts[0] == "worktree" and parts[1] == "remove":
+            operands = [p for p in parts[2:] if not p.startswith("-")]
+            if operands:
+                order.append(_real(operands[0]))
+    return order
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# S-1·S-2·S-10 — 생성 성공과 소유권 발급
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+def test_t124_s1_create_registers_root_and_child_worktrees(tmp_path):
+    """[T124] S-1 (AC-1) — `task_artifacts.repo: "."` multi-repo에서 create가 성공하고
+    루트·alpha·beta 3건이 `git worktree list`에 등록된다. slot root 자체가 루트 저장소의
+    worktree이고 코드 저장소 worktree는 그 아래 `workspace/*`에 착지한다."""
+    project = _build_root_owned_multirepo(tmp_path, "m0_s1")
+    result = run_worktree_cli(_t124_create_args(project))
+    payload = parse_json_stdout(result, "create(T124 S-1)")
+
+    assert payload.get("ok") is True, f"S-1: 루트 소유 multi-repo create가 실패: {payload}"
+    assert payload.get("layout") == "multi-repo"
+    assert _real(payload.get("worktree_root")) == _real(project.slot_root)
+
+    entries = payload.get("entries") or []
+    assert len(entries) == 3, f"S-1: 루트 포함 3 entry여야 한다: {entries}"
+    assert {_real(e["repo"]) for e in entries} == {
+        _real(project.root),
+        _real(project.alpha),
+        _real(project.beta),
+    }, f"S-1: 루트가 entry에 포함돼야 한다: {entries}"
+
+    assert _real(project.slot_root) in _slot_worktrees(project.root), (
+        "S-1: slot root가 루트 저장소의 worktree로 등록되지 않았다"
+    )
+    for repo, rel in ((project.alpha, "workspace/alpha"), (project.beta, "workspace/beta")):
+        dest = project.slot_root / rel
+        assert dest.is_dir(), f"S-1: 자식 worktree 경로 미생성: {dest}"
+        assert _real(dest) in _slot_worktrees(repo), (
+            f"S-1: {rel} worktree가 자기 저장소에 등록되지 않았다"
+        )
+
+
+def test_t124_s2_issued_task_path_satisfies_ownership_invariant(tmp_path):
+    """[T124] S-2 (AC-2) — 발급된 소유권이 `task_home == slot root`·`artifact_repo == "."`이고
+    불변식 `task_path == realpath(task_home/tasks/task_folder)`를 만족한다. 응답과 메타가
+    같은 값을 싣는다."""
+    project = _build_root_owned_multirepo(tmp_path, "m0_s2")
+    payload = parse_json_stdout(
+        run_worktree_cli(_t124_create_args(project)), "create(T124 S-2)"
+    )
+    assert payload.get("ok") is True, f"S-2: create 실패: {payload}"
+
+    assert _real(payload.get("task_home")) == _real(project.slot_root)
+    assert payload.get("artifact_repo") == "."
+    assert payload.get("task_folder") == T124_TASK_FOLDER
+    expected = os.path.realpath(
+        os.path.join(str(payload.get("task_home")), "tasks", T124_TASK_FOLDER)
+    )
+    assert payload.get("task_path") == expected, (
+        f"S-2: 불변식 위반 — task_path={payload.get('task_path')} expected={expected}"
+    )
+    assert _real(payload.get("allocator_root")) == _real(project.root)
+
+    meta = json.loads(project.meta_path.read_text(encoding="utf-8"))
+    for key in ("task_home", "task_path", "artifact_repo", "task_folder"):
+        assert meta.get(key) == payload.get(key), (
+            f"S-2: 메타와 응답의 {key}가 다르다: {meta.get(key)} != {payload.get(key)}"
+        )
+
+
+def test_t124_s10_preflight_entry_set_equals_created_worktree_set(tmp_path):
+    """[T124] S-10 (AC-7) — pre-flight 대상 집합과 실제 생성된 worktree 집합이 정확히
+    일치한다. 생성 국면이 `cfg["repos"]`를 독립 순회하면 루트가 검사 대상이면서 생성되지
+    않아 두 집합이 갈라진다(제안서 §4.5)."""
+    project = _build_root_owned_multirepo(tmp_path, "m0_s10")
+    payload = parse_json_stdout(
+        run_worktree_cli(_t124_create_args(project)), "create(T124 S-10)"
+    )
+    assert payload.get("ok") is True, f"S-10: create 실패: {payload}"
+
+    declared = {_real(e["path"]) for e in payload.get("entries") or []}
+    observed = set()
+    for repo in (project.root, project.alpha, project.beta):
+        observed.update(_slot_worktrees(repo))
+
+    assert declared == observed, (
+        f"S-10: 선언 집합과 등록 집합 불일치 — 선언에만={declared - observed} "
+        f"등록에만={observed - declared}"
+    )
+    assert len(declared) == 3, f"S-10: 루트 포함 3건이어야 한다: {declared}"
+    assert _real(project.slot_root) in declared, "S-10: 루트 entry가 빠졌다"
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# S-3·S-4·S-5 — 루트 Git 적격 R-1~R-5와 init 초안
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+@pytest.mark.parametrize("condition", sorted(_T124_ROOT_VIOLATIONS))
+def test_t124_s3_root_eligibility_violation_is_blocked_with_condition_number(
+    tmp_path, condition
+):
+    """[T124] S-3 (AC-3, AC-16) — R-1~R-5를 각각 단독 위반하는 fixture 5종이
+    `TASK_ARTIFACT_REPO_INVALID`로 차단되고, payload `violations`가 해당 조건 **1건만**
+    담는다. 합산 판정(1건 통과)을 허용하면 `.opal/`을 ignore하는 프로젝트가 통과한다(D-4)."""
+    project = _build_root_owned_multirepo(
+        tmp_path, f"v_{condition.replace('-', '').lower()}_s3",
+        **_T124_ROOT_VIOLATIONS[condition],
+    )
+    payload = parse_json_stdout(
+        run_worktree_cli(_t124_create_args(project)), f"create(T124 S-3 {condition})"
+    )
+
+    assert payload.get("ok") is False, f"S-3({condition}): 차단되지 않았다: {payload}"
+    assert payload.get("error") == "TASK_ARTIFACT_REPO_INVALID", (
+        f"S-3({condition}): 오류 코드가 다르다: {payload}"
+    )
+    assert payload.get("violations") == [condition], (
+        f"S-3({condition}): violations가 위반 조건 1건만 담아야 한다: {payload.get('violations')}"
+    )
+
+
+@pytest.mark.parametrize("condition", sorted(_T124_ROOT_VIOLATIONS))
+def test_t124_s4_root_eligibility_block_has_no_side_effects(tmp_path, condition):
+    """[T124] S-4 (AC-3, C-2) — R 위반 차단은 부수 효과 이전이다(DEC-2 all-or-nothing).
+    worktree 0건이고 slot 디렉토리가 만들어지지 않는다."""
+    project = _build_root_owned_multirepo(
+        tmp_path, f"v_{condition.replace('-', '').lower()}_s4",
+        **_T124_ROOT_VIOLATIONS[condition],
+    )
+    payload = parse_json_stdout(
+        run_worktree_cli(_t124_create_args(project)), f"create(T124 S-4 {condition})"
+    )
+    assert payload.get("error") == "TASK_ARTIFACT_REPO_INVALID", (
+        f"S-4({condition}): S-3 전제(INVALID 차단)가 성립하지 않는다: {payload}"
+    )
+
+    assert not project.slot_root.exists(), (
+        f"S-4({condition}): 차단됐는데 slot 디렉토리가 생성됐다: {project.slot_root}"
+    )
+    repos = [project.alpha, project.beta]
+    if condition != "R-1":
+        repos.append(project.root)
+    for repo in repos:
+        assert _slot_worktrees(repo) == [], (
+            f"S-4({condition}): {repo}에 worktree가 생성됐다: {_slot_worktrees(repo)}"
+        )
+
+
+@pytest.mark.parametrize("condition", sorted(_T124_ROOT_VIOLATIONS))
+def test_t124_s5_init_draft_omits_task_artifacts_for_root_violations(tmp_path, condition):
+    """[T124] S-5 (AC-4) — R-1~R-5 중 하나라도 불만족이면 `init` 초안에 `task_artifacts`
+    키를 제시하지 않는다(쓸 수 없는 설정을 초안으로 내지 않는다, §5.3). R-1 위반에서는
+    `baseBranch`·`_baseBranch_candidates`도 넣지 않는다 — 루트가 저장소가 아니면 관측값이
+    빈 문자열이 되기 때문이다(H-4)."""
+    project = _build_root_owned_multirepo(
+        tmp_path, f"v_{condition.replace('-', '').lower()}_s5",
+        **_T124_ROOT_VIOLATIONS[condition],
+    )
+    payload = parse_json_stdout(
+        run_worktree_cli(["init", "--project-root", str(project.root), "--dry-run"]),
+        f"init(T124 S-5 {condition})",
+    )
+    assert payload.get("ok") is True, f"S-5({condition}): init 실패: {payload}"
+    draft = payload.get("draft") or {}
+    assert draft.get("layout") == "multi-repo", f"S-5({condition}): layout 오탐: {draft}"
+    assert "task_artifacts" not in draft, (
+        f"S-5({condition}): 불만족 프로젝트 초안에 task_artifacts가 나타났다: {draft}"
+    )
+    if condition == "R-1":
+        assert "baseBranch" not in draft and "_baseBranch_candidates" not in draft, (
+            f"S-5(R-1): 루트 비-Git인데 baseBranch 키가 초안에 있다: {draft}"
+        )
+
+
+def test_t124_s5_init_draft_offers_task_artifacts_when_root_is_eligible(tmp_path):
+    """[T124] S-5 대조 (AC-4) — R-1~R-5를 모두 만족하는 M0에서는 `init` 초안이
+    `task_artifacts: {"repo": "."}`와 `baseBranch`를 제시한다. 위반 fixture의 "키 부재"는
+    이 present 케이스와 대비될 때만 계약을 고정한다."""
+    project = _build_root_owned_multirepo(tmp_path, "m0_s5")
+    payload = parse_json_stdout(
+        run_worktree_cli(["init", "--project-root", str(project.root), "--dry-run"]),
+        "init(T124 S-5 M0)",
+    )
+    assert payload.get("ok") is True, f"S-5(M0): init 실패: {payload}"
+    draft = payload.get("draft") or {}
+    assert draft.get("task_artifacts") == {"repo": "."}, (
+        f"S-5(M0): 적격 루트 초안에 task_artifacts가 없다: {draft}"
+    )
+    assert draft.get("baseBranch"), f"S-5(M0): baseBranch 관측값이 비어 있다: {draft}"
+    assert "_baseBranch_candidates" in draft, (
+        f"S-5(M0): `_baseBranch_candidates` 주석 키가 없다: {draft}"
+    )
+    assert "baseBranchOverrides" not in draft, (
+        f"S-5(M0): 추측 금지 — baseBranchOverrides를 초안에 넣지 않는다: {draft}"
+    )
+
+
+def test_t124_s6_child_base_refs_resolve_from_own_origin_head_when_base_branch_absent(
+    tmp_path,
+):
+    """[T124] S-6 (AC-4 후단, H-4) — `baseBranch` 미선언 설정에서 각 repo의 base-ref가
+    **자기** `origin/HEAD`(없으면 자기 `HEAD`)로 해석되고 빈 문자열이 나오지 않는다.
+    R-1 위반 fixture 자체는 create가 R-1에서 차단되므로(S-3), 같은 자식 구성을 가진 적격
+    루트에서 R-1 위반 초안(= `baseBranch` 키 생략)이 만드는 해석 결과를 관측한다.
+    beta의 `origin/HEAD`는 develop이라 repo마다 값이 갈리는 것이 관측된다."""
+    project = _build_root_owned_multirepo(
+        tmp_path,
+        "m0_s6",
+        config=_t124_config(drop=("baseBranch", "baseBranchOverrides")),
+    )
+    payload = parse_json_stdout(
+        run_worktree_cli(_t124_create_args(project)), "create(T124 S-6)"
+    )
+    assert payload.get("ok") is True, f"S-6: create 실패: {payload}"
+
+    by_repo = {_real(e["repo"]): e["base_ref"] for e in payload.get("entries") or []}
+    for repo, base_ref in by_repo.items():
+        assert base_ref, f"S-6: {repo}의 base_ref가 빈 문자열이다"
+    assert by_repo[_real(project.alpha)] == "origin/main", (
+        f"S-6: alpha가 자기 origin/HEAD로 해석되지 않았다: {by_repo}"
+    )
+    assert by_repo[_real(project.beta)] == "origin/develop", (
+        f"S-6: beta가 자기 origin/HEAD(develop)로 해석되지 않았다: {by_repo}"
+    )
+    assert by_repo[_real(project.root)] == "main", (
+        f"S-6: 원격 없는 루트가 자기 HEAD로 폴백하지 않았다: {by_repo}"
+    )
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# S-7·S-8·S-9·S-12 — 설정 계층 차단 계약
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+def test_t124_s7_non_dot_artifact_repo_is_unsupported(tmp_path):
+    """[T124] S-7 (AC-5) — 1차 도입은 `task_artifacts.repo: "."`만 허용한다.
+    `repos[]` 원소를 지정하면 `TASK_ARTIFACT_REPO_UNSUPPORTED`로 차단한다 —
+    canonical path resolver가 그 경로를 보지 않으므로 조용히 동작시키지 않는다(§4.1)."""
+    project = _build_root_owned_multirepo(
+        tmp_path, "m0_s7", config=_t124_config(task_artifacts={"repo": "workspace/alpha"})
+    )
+    payload = parse_json_stdout(
+        run_worktree_cli(_t124_create_args(project)), "create(T124 S-7)"
+    )
+    assert payload.get("ok") is False, f"S-7: 차단되지 않았다: {payload}"
+    assert payload.get("error") == "TASK_ARTIFACT_REPO_UNSUPPORTED", (
+        f"S-7: 오류 코드가 다르다: {payload}"
+    )
+
+
+def test_t124_s8_missing_task_artifacts_keeps_existing_missing_contract(tmp_path):
+    """[T124] S-8 (AC-5) — `task_artifacts` 미설정 multi-repo는 **기존 그대로**
+    `TASK_ARTIFACT_REPO_MISSING`으로 차단된다. 신규 계약이 기존 차단을 삼키지 않는지
+    보는 보존형 회귀 케이스라 구현 전에도 PASS한다(118 S-3과 같은 성격)."""
+    project = _build_root_owned_multirepo(
+        tmp_path, "m0_s8", config=_t124_config(drop=("task_artifacts",))
+    )
+    payload = parse_json_stdout(
+        run_worktree_cli(_t124_create_args(project)), "create(T124 S-8)"
+    )
+    assert payload.get("ok") is False, f"S-8: 차단되지 않았다: {payload}"
+    assert payload.get("error") == "TASK_ARTIFACT_REPO_MISSING", (
+        f"S-8: 기존 MISSING 계약이 바뀌었다: {payload}"
+    )
+
+
+def test_t124_s9_root_tracking_overlap_is_blocked_before_any_worktree(tmp_path):
+    """[T124] S-9 (AC-6) — 루트가 `repos[]` 경로를 1파일이라도 추적하면
+    `TASK_ARTIFACT_REPO_OVERLAP`으로 차단하고 worktree를 하나도 만들지 않는다. 겹치면
+    루트 full checkout과 코드 repo worktree가 같은 경로에 착지해 승자가 정의되지 않는다(§4.4)."""
+    project = _build_root_owned_multirepo(tmp_path, "v6_s9", overlap=True)
+    payload = parse_json_stdout(
+        run_worktree_cli(_t124_create_args(project)), "create(T124 S-9)"
+    )
+    assert payload.get("ok") is False, f"S-9: 차단되지 않았다: {payload}"
+    assert payload.get("error") == "TASK_ARTIFACT_REPO_OVERLAP", (
+        f"S-9: 오류 코드가 다르다: {payload}"
+    )
+    assert _payload_mentions(payload, "workspace/alpha"), (
+        f"S-9: payload에 위반 경로가 실리지 않았다: {payload}"
+    )
+    assert not project.slot_root.exists(), "S-9: 차단됐는데 slot 디렉토리가 생겼다"
+    for repo in (project.root, project.alpha, project.beta):
+        assert _slot_worktrees(repo) == [], f"S-9: {repo}에 worktree가 생성됐다"
+
+
+def test_t124_s12_unknown_base_branch_override_key_is_rejected(tmp_path):
+    """[T124] S-12 (AC-8) — `baseBranchOverrides` 키가 `repos[]`∪`{"."}`에 없으면
+    `CONFIG_UNKNOWN_REPO`로 차단한다. 오타가 조용히 전역값으로 폴백하면 잘못된 base에서
+    브랜치가 갈라진다(§5.1)."""
+    project = _build_root_owned_multirepo(
+        tmp_path,
+        "m0_s12",
+        config=_t124_config(
+            baseBranchOverrides={"workspace/beta": "develop", "workspace/gamma": "develop"}
+        ),
+    )
+    payload = parse_json_stdout(
+        run_worktree_cli(_t124_create_args(project)), "create(T124 S-12)"
+    )
+    assert payload.get("ok") is False, f"S-12: 차단되지 않았다: {payload}"
+    assert payload.get("error") == "CONFIG_UNKNOWN_REPO", (
+        f"S-12: 오류 코드가 다르다: {payload}"
+    )
+    assert _payload_mentions(payload, "workspace/gamma"), (
+        f"S-12: payload에 위반 키가 실리지 않았다: {payload}"
+    )
+
+
+def test_t124_s11_base_refs_are_frozen_per_repo_with_overrides(tmp_path):
+    """[T124] S-11 (AC-8) — `baseBranchOverrides`로 저장소별 base branch가 각각 해석되어
+    `.meta/task_900.json`에 동결 기록된다. 루트·alpha는 `main`, beta는 override `develop`."""
+    project = _build_root_owned_multirepo(tmp_path, "m0_s11")
+    payload = parse_json_stdout(
+        run_worktree_cli(_t124_create_args(project)), "create(T124 S-11)"
+    )
+    assert payload.get("ok") is True, f"S-11: create 실패: {payload}"
+
+    meta = json.loads(project.meta_path.read_text(encoding="utf-8"))
+    frozen = {_real(e["repo"]): e["base_ref"] for e in meta.get("entries") or []}
+    assert frozen.get(_real(project.root)) == "main", f"S-11: 루트 base_ref: {frozen}"
+    assert frozen.get(_real(project.alpha)) == "main", f"S-11: alpha base_ref: {frozen}"
+    assert frozen.get(_real(project.beta)) == "develop", (
+        f"S-11: beta가 override(develop)로 동결되지 않았다: {frozen}"
+    )
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# S-13~S-17 — 회수·롤백 순서, 실패 관측, 2축 멱등 판정
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+def test_t124_s13_remove_without_force_completes_child_to_root_in_reverse_order(tmp_path):
+    """[T124] S-13 (AC-9, AC-16) — `--force` 없는 remove가 `GUARD_DIRTY` 없이 완주하고
+    git 호출 순서가 자식(beta·alpha) → 루트다. 자식이 남은 채로는 루트 worktree를 제거할 수
+    없으므로 회수는 생성의 역순이어야 한다(§6.1)."""
+    project = _build_root_owned_multirepo(tmp_path, "m0_s13")
+    bin_dir, log_path = _install_git_tracer(tmp_path, "s13")
+    created = parse_json_stdout(
+        _run_worktree_cli_traced(_t124_create_args(project), bin_dir), "create(T124 S-13)"
+    )
+    assert created.get("ok") is True, f"S-13: create 실패: {created}"
+
+    log_path.write_text("", encoding="utf-8")
+    removed = parse_json_stdout(
+        _run_worktree_cli_traced(
+            ["remove", "--project-root", str(project.root), "--task", T124_TASK], bin_dir
+        ),
+        "remove(T124 S-13)",
+    )
+    assert removed.get("ok") is True, f"S-13: --force 없는 remove가 실패: {removed}"
+    assert removed.get("forced") is False
+    assert removed.get("bypassed_guards") == [], (
+        f"S-13: 가드를 우회하지 않고 통과해야 한다: {removed}"
+    )
+
+    order = _worktree_remove_order(_git_calls(log_path))
+    expected = [
+        _real(project.slot_root / "workspace/beta"),
+        _real(project.slot_root / "workspace/alpha"),
+        _real(project.slot_root),
+    ]
+    assert order == expected, f"S-13: 회수 순서가 자식→루트 역순이 아니다: {order}"
+    assert not project.slot_root.exists(), "S-13: slot root가 회수되지 않았다"
+    assert not project.meta_path.exists(), "S-13: 전건 성공인데 메타가 남았다"
+
+
+def test_t124_s14_mid_create_failure_rolls_back_children_before_root(tmp_path):
+    """[T124] S-14 (AC-9) — 생성 중간(beta)에서 실패하면 롤백이 자식 → 루트 역순으로
+    수행되고 잔여물이 0건이다. beta의 base를 존재하지 않는 ref로 두어 pre-flight를 통과한 뒤
+    생성 국면에서만 실패하게 한다."""
+    project = _build_root_owned_multirepo(
+        tmp_path,
+        "m0_s14",
+        config=_t124_config(baseBranchOverrides={"workspace/beta": "no-such-base"}),
+    )
+    bin_dir, log_path = _install_git_tracer(tmp_path, "s14")
+    payload = parse_json_stdout(
+        _run_worktree_cli_traced(_t124_create_args(project), bin_dir), "create(T124 S-14)"
+    )
+    assert payload.get("ok") is False, f"S-14: 중간 실패가 성공으로 보고됐다: {payload}"
+
+    order = _worktree_remove_order(_git_calls(log_path))
+    assert order == [
+        _real(project.slot_root / "workspace/alpha"),
+        _real(project.slot_root),
+    ], f"S-14: 롤백이 자식 → 루트 역순이 아니다: {order}"
+
+    for repo in (project.root, project.alpha, project.beta):
+        assert _slot_worktrees(repo) == [], f"S-14: {repo}에 잔여 worktree가 있다"
+    assert not project.slot_root.exists(), "S-14: slot 디렉토리 잔여물이 남았다"
+
+
+def _t124_create_and_block_child(tmp_path, name):
+    """S-15·S-16 공통 선행 상태 — create 성공 후 alpha worktree를 `git worktree lock`으로
+    제거 불가 상태로 만든다. 가드(dirty/unpushed/unmerged)는 전부 깨끗한 채 `git worktree
+    remove`만 실패하므로, 가드 거부가 아니라 **제거 실패** 경로를 단독으로 관측할 수 있다."""
+    project = _build_root_owned_multirepo(tmp_path, name)
+    bin_dir, log_path = _install_git_tracer(tmp_path, name)
+    created = parse_json_stdout(
+        _run_worktree_cli_traced(_t124_create_args(project), bin_dir), f"create({name})"
+    )
+    assert created.get("ok") is True, f"{name}: 선행 create 실패: {created}"
+    alpha_wt = project.slot_root / "workspace" / "alpha"
+    run_git(["worktree", "lock", str(alpha_wt)], cwd=project.alpha)
+    return project, bin_dir, log_path, alpha_wt
+
+
+def test_t124_s15_blocked_child_removal_reports_failure_and_preserves_meta(tmp_path):
+    """[T124] S-15 (AC-10, C-6) — 자식 하나가 제거 불가면 `WORKTREE_REMOVE_FAILED`로
+    반환하고 메타와 slot root를 **보존**한다. 현행은 `git worktree remove`의 반환값을 버려
+    자식이 남은 채 메타만 사라지고 복구 경로가 소멸한다(§6.2)."""
+    project, bin_dir, log_path, alpha_wt = _t124_create_and_block_child(tmp_path, "m0_s15")
+    payload = parse_json_stdout(
+        _run_worktree_cli_traced(
+            ["remove", "--project-root", str(project.root), "--task", T124_TASK], bin_dir
+        ),
+        "remove(T124 S-15)",
+    )
+    assert payload.get("ok") is False, f"S-15: 제거 실패가 성공으로 보고됐다: {payload}"
+    assert payload.get("error") == "WORKTREE_REMOVE_FAILED", (
+        f"S-15: 오류 코드가 다르다: {payload}"
+    )
+    assert _payload_mentions(payload, str(alpha_wt)), (
+        f"S-15: 실패 repo·경로가 payload에 실리지 않았다: {payload}"
+    )
+    assert project.meta_path.exists(), "S-15: 실패했는데 메타가 삭제됐다(복구 경로 소멸)"
+    assert project.slot_root.exists(), "S-15: 실패했는데 slot root가 삭제됐다"
+    assert alpha_wt.is_dir(), "S-15: 제거 실패한 worktree 디렉토리가 사라졌다"
+
+
+def test_t124_s16_remove_retry_without_force_skips_already_removed_entries(tmp_path):
+    """[T124] S-16 (AC-10) — 부분 회수 이후 차단을 해소하고 `--force` **없이** 재호출하면
+    이미 회수된 entry는 skip되고 남은 entry부터 진행된다. 재시도가 가드 우회를 요구해서는
+    안 된다(§6.3)."""
+    project, bin_dir, log_path, alpha_wt = _t124_create_and_block_child(tmp_path, "m0_s16")
+    first = parse_json_stdout(
+        _run_worktree_cli_traced(
+            ["remove", "--project-root", str(project.root), "--task", T124_TASK], bin_dir
+        ),
+        "remove#1(T124 S-16)",
+    )
+    assert first.get("error") == "WORKTREE_REMOVE_FAILED", (
+        f"S-16: 선행 부분 회수 상태가 만들어지지 않았다: {first}"
+    )
+    beta_wt = project.slot_root / "workspace" / "beta"
+    assert not beta_wt.exists(), "S-16: 자식(beta)이 먼저 회수되지 않아 부분 회수가 아니다"
+
+    run_git(["worktree", "unlock", str(alpha_wt)], cwd=project.alpha)
+    log_path.write_text("", encoding="utf-8")
+    second = parse_json_stdout(
+        _run_worktree_cli_traced(
+            ["remove", "--project-root", str(project.root), "--task", T124_TASK], bin_dir
+        ),
+        "remove#2(T124 S-16)",
+    )
+    assert second.get("ok") is True, f"S-16: --force 없는 재호출이 실패: {second}"
+    assert second.get("forced") is False, "S-16: 재시도가 --force를 요구하면 안 된다"
+
+    order = _worktree_remove_order(_git_calls(log_path))
+    assert _real(beta_wt) not in order, (
+        f"S-16: 이미 회수된 entry를 다시 제거하려 했다: {order}"
+    )
+    assert order == [_real(alpha_wt), _real(project.slot_root)], (
+        f"S-16: 남은 entry부터 자식→루트 역순으로 진행해야 한다: {order}"
+    )
+    assert not project.slot_root.exists(), "S-16: 재시도 후에도 slot root가 남았다"
+    assert not project.meta_path.exists(), "S-16: 전건 성공인데 메타가 남았다"
+
+
+@pytest.mark.parametrize("mismatch", ["path_missing_registration_left", "path_left_unregistered"])
+def test_t124_s17_registration_path_mismatch_is_blocked_without_auto_recovery(
+    tmp_path, mismatch
+):
+    """[T124] S-17 (AC-11, C-6) — 경로/Git 등록 2축 불일치 2종은 모두
+    `WORKTREE_REMOVE_FAILED`로 차단·보존된다. 도구는 `git worktree prune`을 호출하지 않고
+    (prune 대상은 해당 repo의 **모든** stale 정보라 다른 슬롯을 함께 파괴한다) 미등록 잔여
+    디렉토리도 삭제하지 않는다(사용자 파일일 수 있다, §6.3)."""
+    project = _build_root_owned_multirepo(tmp_path, f"m0_s17_{mismatch[:12]}")
+    bin_dir, log_path = _install_git_tracer(tmp_path, f"s17_{mismatch[:12]}")
+    created = parse_json_stdout(
+        _run_worktree_cli_traced(_t124_create_args(project), bin_dir), "create(T124 S-17)"
+    )
+    assert created.get("ok") is True, f"S-17: 선행 create 실패: {created}"
+
+    alpha_wt = project.slot_root / "workspace" / "alpha"
+    if mismatch == "path_missing_registration_left":
+        shutil.rmtree(alpha_wt)
+    else:
+        run_git(["worktree", "remove", str(alpha_wt)], cwd=project.alpha)
+        alpha_wt.mkdir(parents=True)
+        (alpha_wt / "user-file.txt").write_text("사용자 파일\n", encoding="utf-8")
+
+    log_path.write_text("", encoding="utf-8")
+    payload = parse_json_stdout(
+        _run_worktree_cli_traced(
+            ["remove", "--project-root", str(project.root), "--task", T124_TASK], bin_dir
+        ),
+        f"remove(T124 S-17 {mismatch})",
+    )
+    assert payload.get("ok") is False, f"S-17({mismatch}): 차단되지 않았다: {payload}"
+    assert payload.get("error") == "WORKTREE_REMOVE_FAILED", (
+        f"S-17({mismatch}): 오류 코드가 다르다: {payload}"
+    )
+    assert project.meta_path.exists(), f"S-17({mismatch}): 메타가 보존되지 않았다"
+    assert project.slot_root.exists(), f"S-17({mismatch}): slot root가 보존되지 않았다"
+
+    calls = _git_calls(log_path)
+    assert not any(
+        line.split()[:2] == ["worktree", "prune"] for line in calls
+    ), f"S-17({mismatch}): 도구가 git worktree prune을 호출했다: {calls}"
+    if mismatch == "path_left_unregistered":
+        assert (alpha_wt / "user-file.txt").is_file(), (
+            "S-17: 미등록 잔여 디렉토리를 도구가 삭제했다"
+        )
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# S-24·S-26·S-27·S-28 — cone 미적용, R-5 필요성, fixture 대표성
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+def test_t124_s24_multi_repo_create_never_calls_sparse_checkout(tmp_path):
+    """[T124] S-24 (C-5, D-11) — multi-repo 경로에서 `sparse-checkout` 호출이 0건이다.
+    `taskCapsuleCone`은 monorepo 전용 스위치이며(태스크 118 결정) 루트가 `repos[]`를
+    추적하지 않으므로 full checkout해도 코드 repo와 겹치지 않는다(§4.3)."""
+    project = _build_root_owned_multirepo(tmp_path, "m0_s24")
+    bin_dir, log_path = _install_git_tracer(tmp_path, "s24")
+    payload = parse_json_stdout(
+        _run_worktree_cli_traced(_t124_create_args(project), bin_dir), "create(T124 S-24)"
+    )
+    assert payload.get("ok") is True, f"S-24: create 실패: {payload}"
+
+    sparse = [line for line in _git_calls(log_path) if "sparse-checkout" in line]
+    assert sparse == [], f"S-24: multi-repo 경로에서 sparse-checkout이 호출됐다: {sparse}"
+
+
+def test_t124_s26_root_slot_stays_clean_after_child_worktrees_are_created(tmp_path):
+    """[T124] S-26 (H-1, AC-16) — R-5를 만족하면 자식 worktree 생성 직후에도 루트 slot의
+    `git status --porcelain`이 비어 있다. 이 값이 그대로 dirty로 읽히므로(`_inspect`),
+    비어 있지 않으면 루트 entry가 항상 `GUARD_DIRTY`가 되어 `--force` 없는 remove가
+    영구 차단된다."""
+    project = _build_root_owned_multirepo(tmp_path, "m0_s26")
+    payload = parse_json_stdout(
+        run_worktree_cli(_t124_create_args(project)), "create(T124 S-26)"
+    )
+    assert payload.get("ok") is True, f"S-26: create 실패: {payload}"
+
+    status = run_git(["status", "--porcelain"], cwd=project.slot_root).stdout
+    assert status.strip() == "", f"S-26: 루트 slot이 dirty다: {status!r}"
+
+
+def test_t124_s27_control_root_slot_becomes_dirty_when_repos_are_not_ignored(tmp_path):
+    """[T124] S-27 (H-1 반증 대조군) — R-5를 만족하지 않는 형상(V5)에서 pre-flight를 거치지
+    않고 raw git으로 같은 중첩 배치를 만들면 루트 slot에 `?? workspace/`가 나타난다.
+    R-5가 없으면 루트가 항상 dirty가 됨을 고정하는 대조군이므로, 구현 경로가 아니라 조건의
+    필요성을 증명한다 — 구현 전후 모두 같은 관측이 나오는 것이 정상이다."""
+    project = _build_root_owned_multirepo(tmp_path, "v5_s27", ignore_workspace=False)
+    slot = project.slot_root
+    branch = f"feat/OP-TASK-{T124_TASK}"
+    run_git(["worktree", "add", str(slot), "-b", branch, "main"], cwd=project.root)
+    run_git(
+        ["worktree", "add", str(slot / "workspace" / "alpha"), "-b", branch, "main"],
+        cwd=project.alpha,
+    )
+
+    status = run_git(["status", "--porcelain"], cwd=slot).stdout
+    assert "?? workspace/" in status, (
+        f"S-27: R-5 미충족인데 루트 slot이 dirty가 되지 않았다: {status!r}"
+    )
+
+
+def test_t124_s28_fixture_matches_pug_observed_shape_and_is_supported(tmp_path):
+    """[T124] S-28 (H-5) — M0 fixture가 제안서 §2 pug 실측표의 세 축(루트가 `tasks`+`.opal`
+    추적 · `workspace/` 0파일 추적 · 자식 base branch 상이)과 일치하고, **그 형상이 실제로
+    도구가 지원하는 형상**임을 함께 고정한다. 실환경을 대표하지 못하는 fixture는 AC 전건의
+    판정 근거가 되지 못한다(태스크 092 실측 교훈)."""
+    project = _build_root_owned_multirepo(tmp_path, "m0_s28")
+
+    tracked_tasks = run_git(["ls-files", "--", "tasks"], cwd=project.root).stdout
+    assert tracked_tasks.strip(), "S-28 축1: 루트가 tasks/를 추적하지 않는다"
+    for rel in (".opal/AGENT.md", ".opal/MEMORY.json"):
+        assert run_git(["ls-files", "--", rel], cwd=project.root).stdout.strip(), (
+            f"S-28 축1: 루트가 {rel}을 추적하지 않는다"
+        )
+
+    tracked_workspace = run_git(["ls-files", "--", "workspace"], cwd=project.root).stdout
+    assert tracked_workspace.strip() == "", (
+        f"S-28 축2: 루트가 workspace/ 아래를 추적한다: {tracked_workspace!r}"
+    )
+    assert run_git(
+        ["check-ignore", "-q", "workspace/alpha"], cwd=project.root, check=False
+    ).returncode == 0, "S-28 축2: 루트 .gitignore가 repos[] 경로를 등재하지 않았다(R-5)"
+
+    cfg = json.loads(project.config_path.read_text(encoding="utf-8"))
+    assert cfg["baseBranch"] == "main"
+    assert cfg["baseBranchOverrides"]["workspace/beta"] == "develop", (
+        f"S-28 축3: 자식 base branch가 서로 달라야 한다: {cfg}"
+    )
+
+    payload = parse_json_stdout(
+        run_worktree_cli(_t124_create_args(project)), "create(T124 S-28)"
+    )
+    assert payload.get("ok") is True, (
+        f"S-28: pug 동형 fixture가 도구에 지원되지 않으면 대표성이 없다: {payload}"
     )

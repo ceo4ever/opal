@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "requests": [
+    {
+      "task_id": "124-260912-opds-워크트리-멀티레포-캡슐-소유권",
+      "title": "워커 디스패치마다 worker.dispatch receipt를 새로 발급한다",
+      "type": "feedback",
+      "status": "applied",
+      "file": "memory/워커_디스패치마다_worker_dispatch_receipt를_새로_발급한다.md",
+      "summary": "receipt 재사용은 금지 — 배포로 manifest가 바뀌면 stale이 된다",
+      "body_sha256": "d7156efc3d549b574160c1e52f9af53b93f73486426ce8f3a0ae779480392289",
+      "requested_at": "2026-09-12 20:11:35"
+    },
+    {
+      "task_id": "124-260912-opds-워크트리-멀티레포-캡슐-소유권",
+      "title": "test-tool scenario-init 재호출은 RED 증거를 파괴한다",
+      "type": "feedback",
+      "status": "applied",
+      "file": "memory/test_tool_scenario_init_재호출은_RED_증거를_파괴한다.md",
+      "summary": "red_confirmed가 false로 강제됨 — 재기록은 scenario-red --id",
+      "body_sha256": "e7072060b60954efdeb99b4265b7cbe1933d71be190da2fd65fd68b3d5f5d4dd",
+      "requested_at": "2026-09-12 20:11:35"
+    }
+  ]
+}

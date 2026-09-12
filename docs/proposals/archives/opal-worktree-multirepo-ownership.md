@@ -1,11 +1,15 @@
 # OPAL 워크트리 multi-repo 캡슐 소유권 제안서
 
-> 상태: 제안
+> 상태: 적용완료
 > 작성: 알투(PM)
 > 작성일: 2026-09-12
+> 적용 태스크: 124 (opds 워크트리 멀티레포 캡슐 소유권)
+> 규범 원문 소유자: `opal/core/references/harness/worktree.md` §multi-repo 캡슐 소유권 계약 —
+> 이 문서는 소비형 입력물이며 규범 SSOT가 아니다. 현재 계약은 owner 문서를 인용한다.
+> 태스크 진행 중 2건 개정: R-5(루트의 `repos[]` ignore) 신설과 판정 순서 R-1~R-4 → 추적 겹침 → R-5 확정 — 둘 다 본문에 반영돼 있다.
 > 범위: multi-repo 프로젝트에서 태스크 캡슐을 소유할 저장소 지목, repo별 base branch 해석,
 > 중첩 worktree의 생성·회수 순서
-> 선행: [워크트리 태스크 소유권 전환 제안서](./archives/opal-worktree-task-ownership.md) §8 — 본 제안서가 §8을 대체한다
+> 선행: [워크트리 태스크 소유권 전환 제안서](./opal-worktree-task-ownership.md) §8 — 본 제안서가 §8을 대체한다
 > 규범 목적지: `opal/core/references/harness/worktree.md`
 
 ---
@@ -156,7 +160,7 @@ repo마다 다르게 탐지됐다. **이 항목은 본 제안서 범위에서 �
 
 **[MUST] `"."`의 전제 조건 — multi-repo라고 루트가 항상 Git 저장소인 것은 아니다.**
 현행 `init`은 하위 독립 repo가 1개 이상이면 루트 `.git` 유무를 보지 않고 multi-repo로
-판정한다(`worktree_tool.py:613-617`). 따라서 다음 4개 조건을 `create` pre-flight에서 검사하고,
+판정한다(`worktree_tool.py:613-617`). 따라서 다음 5개 조건을 `create` pre-flight에서 검사하고,
 하나라도 불만족이면 `TASK_ARTIFACT_REPO_INVALID`로 차단한다.
 
 | # | 조건 | 판정 |
@@ -165,13 +169,48 @@ repo마다 다르게 탐지됐다. **이 항목은 본 제안서 범위에서 �
 | R-2 | 루트가 `tasks/`를 추적한다 | `git -C <root> ls-files -- tasks` 비어 있지 않음 |
 | R-3 | 루트가 `.opal/AGENT.md`를 추적한다 | `git -C <root> ls-files -- .opal/AGENT.md` 비어 있지 않음 |
 | R-4 | 루트가 `.opal/MEMORY.json`을 추적한다 | `git -C <root> ls-files -- .opal/MEMORY.json` 비어 있지 않음 |
+| R-5 | 루트가 각 `repos[]` 경로를 **ignore한다** | 각 `rel ∈ repos`에 대해 `git -C <root> check-ignore -q <rel>` 성공 |
 
 **[MUST] R-2~R-4는 각각 판정한다.** 합산 결과 1건으로 통과시키면 `tasks/`만 추적하고
 `.opal/`은 ignore하는 프로젝트가 통과해 merge 시 귀속 대상(`.opal/brain/**`·
 `.opal/MEMORY.json`)이 브랜치에 담기지 않는다. 오류 응답에 불만족 조건 번호를 동봉한다.
 
+**R-5는 추적(R-2~R-4)과 다른 축이다 — 미추적만으로는 부족하다.** §4.2가 slot root를 루트
+저장소의 full checkout으로 두므로, 자식 worktree가 그 안에 생성되는 순간 루트 slot의
+`git status --porcelain`이 `?? workspace/`를 반환한다. `_inspect`가 이 값을 그대로 dirty로
+읽고(`worktree_tool.py:799`) `cmd_remove`는 제거 이전에 전 entry의 가드를 먼저 돌므로
+(`:1184-1202`), 역순 회수를 도입해도 루트 entry가 항상 `GUARD_DIRTY`로 걸려 `--force` 없는
+`remove`가 영구 차단된다. §6.4의 "루트 포함 전건 통과"가 도달 불가가 된다.
+
+ignore 여부는 §4.4의 추적 겹침 판정(`ls-files`)이 보지 못하는 축이다. 미추적이면서 ignore되지
+않은 경로가 정확히 이 구멍이다. 실사용 대상 pug는 루트 `.gitignore:3`이 `workspace/`를
+"하위는 각자 독립 git 레포 → 루트에서 추적하지 않음"이라는 근거와 함께 이미 등재하고 있어
+R-5를 만족한다 — 이 형상에서 자연스러운 관례를 조건으로 고정하는 것이다.
+
+**대안(슬롯 dirty 판정에서 `repos[]` 경로 제외)을 채택하지 않는다.** `_inspect`는 layout과
+무관하게 `status`·`remove`가 공유하는 단일 판정기이므로, 여기에 경로 예외를 넣으면 (a) 루트가
+실제로 보는 그 경로의 사용자 변경까지 조용히 무시되고 (b) monorepo·비워크트리 경로의 dirty
+판정에 조건 분기가 생겨 C-2·C-3의 구조적 근거가 약해진다. 안전 가드를 깎는 대신 전제를 명시
+차단하는 쪽이 이 제안서의 일관된 입장이다(§4.4·§6.3과 같은 규율).
+
 컨테이너 디렉토리만 있고 루트가 저장소가 아닌 multi-repo는 `"."` 모델의 대상이 아니다 —
 이 경우 기존 `TASK_ARTIFACT_REPO_MISSING` 차단이 유지된다.
+
+**[MUST] 판정 순서는 R-1~R-4 → §4.4 추적 겹침 → R-5다.** `git check-ignore -q <rel>`은 그 경로
+아래에 추적 파일이 하나라도 있으면 rc=1(미ignore)을 반환한다(git 실측). 따라서 R-5를 겹침보다
+먼저 판정하면 겹침 위반이 `TASK_ARTIFACT_REPO_INVALID`(R-5)로 먼저 걸려
+`TASK_ARTIFACT_REPO_OVERLAP`에 도달하지 못한다.
+
+두 조건은 배타적 원인이므로 원인별 전용 오류를 준다.
+
+| 루트가 그 경로를 | 원인 | 오류 |
+|---|---|---|
+| 추적한다 | full checkout이 코드 repo worktree와 같은 경로에 착지 | `TASK_ARTIFACT_REPO_OVERLAP`(경로 동봉) |
+| 추적하지 않고 ignore도 하지 않는다 | 루트 slot이 `?? <rel>`로 영구 dirty | `TASK_ARTIFACT_REPO_INVALID`(`violations: ["R-5"]`) |
+
+`check-ignore --no-index`로 R-5를 판정하는 대안은 쓰지 않는다. `--no-index`는 추적 중인 경로도
+rc=0으로 통과시켜 R-5의 의미를 "실효 ignore"에서 "ignore 규칙 존재"로 약화시킨다. 순서를 정하는
+쪽이 판정기 의미를 건드리지 않는다.
 
 ### 4.2 slot root 배치
 
@@ -207,6 +246,7 @@ full checkout해도 코드 repo와 겹치지 않는다. cone을 도입하면 118
   어느 쪽이 이기는지 정의되지 않는다. 자동 해소 대신 명시 차단한다.
 - 오류 응답에 위반 경로를 동봉한다.
 - 판정 시점은 worktree 생성 **전**이다 — 위반 시 아무것도 만들지 않는다(DEC-2 all-or-nothing).
+- **[MUST] 이 판정은 R-1~R-4 뒤, R-5 앞에 둔다**(§4.1 판정 순서). 추적 겹침은 R-5 판정을 오염시키므로 먼저 걸러야 한다.
 
 ### 4.5 ordered `plan_entries` 단일 소비 [MUST]
 
@@ -282,13 +322,13 @@ multi-repo 초안에만 다음을 추가한다.
 - `_baseBranch_candidates` — repo별 현재 HEAD 관측값만 제시하는 주석 키. 값을 채우지 않는
   이유는 현재 HEAD가 작업 중 브랜치일 수 있어 base로 삼을 근거가 못 되기 때문이다
   (DEC-8 "추측하지 않는 것").
-- `task_artifacts` — `{"repo": "."}` 초안. **§4.1의 R-1~R-4를 모두 만족할 때만 제시한다.**
+- `task_artifacts` — `{"repo": "."}` 초안. **§4.1의 R-1~R-5를 모두 만족할 때만 제시한다.**
   불만족이면 이 키를 초안에 넣지 않고 `_help`에 "이 프로젝트는 캡슐 소유 repo를 결정할 수
   없어 local task ownership을 쓸 수 없다"고 적는다 — 쓸 수 없는 설정을 초안으로 제시하지
   않는다.
 
 정리하면 초안의 키 추가 조건은 두 단이다 — `baseBranch`·`_baseBranch_candidates`는 R-1,
-`task_artifacts`는 R-1~R-4 전건이다.
+`task_artifacts`는 R-1~R-5 전건이다.
 
 `baseBranchOverrides`는 초안에 넣지 않는다 — 추측 금지 원칙의 직접 적용이다.
 
@@ -387,7 +427,7 @@ multi-repo 추가 조건:
 | 지점 | 변경 |
 |---|---|
 | `validate_worktree_config` | `task_artifacts` 타입·키 검증(`"."` 외 거부), `baseBranchOverrides` 타입·키 일치 검증 — **둘 다 multi-repo 분기 전용** |
-| `cmd_create` pre-flight | `task_artifacts` 해석, §4.1 R-1~R-4, `TASK_ARTIFACT_REPO_OVERLAP` 판정 |
+| `cmd_create` pre-flight | `task_artifacts` 해석, §4.1 R-1~R-5, `TASK_ARTIFACT_REPO_OVERLAP` 판정 |
 | `plan_entries` 구성(`:867-870`) | 루트 repo 항목을 **맨 앞**에 추가(생성 정순) |
 | **worktree 생성 루프(`:907-908`)** | **`cfg["repos"]` 재순회를 `plan_entries` 순회로 교체**(§4.5) |
 | base-ref 해석(`:888-891`) | `overrides.get(rel, cfg["baseBranch"])`로 교체. `resolve_base_ref`의 3단 폴백은 불변 |
@@ -418,14 +458,17 @@ multi-repo 추가 조건:
       `task_path == realpath(task_home/tasks/task_folder)`를 만족한다.
 - [ ] `task_artifacts.repo`에 `"."` 외 값을 넣으면 `TASK_ARTIFACT_REPO_UNSUPPORTED`로 차단된다.
 - [ ] `task_artifacts` 미설정 multi-repo는 기존대로 `TASK_ARTIFACT_REPO_MISSING`으로 차단된다.
-- [ ] 루트 repo가 `repos[]` 경로를 추적하는 fixture에서 `TASK_ARTIFACT_REPO_OVERLAP`으로
+- [ ] 루트 repo가 `repos[]` 경로를 추적하는 fixture에서 R-5가 아니라 `TASK_ARTIFACT_REPO_OVERLAP`으로
       차단되고 worktree가 하나도 생성되지 않는다.
-- [ ] R-1~R-4 각각을 단독으로 위반하는 fixture 4종에서 `TASK_ARTIFACT_REPO_INVALID`로
+- [ ] R-1~R-5 각각을 단독으로 위반하는 fixture 5종에서 `TASK_ARTIFACT_REPO_INVALID`로
       차단되고, 오류 payload에 위반 조건 번호가 실린다.
-- [ ] 같은 4종 fixture에서 `init` 초안에 `task_artifacts` 키가 **나타나지 않는다**.
+- [ ] 같은 5종 fixture에서 `init` 초안에 `task_artifacts` 키가 **나타나지 않는다**.
       R-1 위반 fixture에서는 `baseBranch`·`_baseBranch_candidates`도 나타나지 않는다.
 - [ ] R-1 위반 fixture에서 각 자식 repo의 base-ref가 자기 `origin/HEAD`(없으면 자기 `HEAD`)로
       해석되고 빈 문자열이 나오지 않는다.
+- [ ] R-5를 만족하는 fixture에서 자식 worktree 생성 직후 루트 slot의
+      `git status --porcelain`이 비어 있고, `--force` 없는 `remove`가 `GUARD_DIRTY` 없이
+      자식 → 루트 역순으로 완주한다.
 - [ ] pre-flight를 통과한 entry 집합과 실제 생성된 worktree 집합이 일치한다 —
       루트를 포함한 `plan_entries` 전건이 `git worktree list`에 등록된다(§4.5).
 

@@ -3,7 +3,7 @@
   "module": "worktree_tool",
   "layer": "util",
   "domain": "opal-workspace",
-  "description": "태스크별 코드 작업본을 git worktree로 격리하는 CLI. `.opal/worktree.json`(multi-repo/monorepo 2유형)을 선언 기반으로 읽어 create/list/status/remove/finalize/init 6서브명령을 제공한다. create의 슬롯·브랜치 판정은 '존재'가 아니라 '점유'다(DEC-7) — 대상 경로가 `git worktree list --porcelain`에 실제 등록돼 있으면 WORKTREE_EXISTS, 브랜치가 다른 worktree에 체크아웃 중이면 BRANCH_EXISTS로 거부하고, 브랜치가 존재하지만 미점유면 `worktree add <path> <branch>` 단일 명령으로 재사용한다(빈 디렉토리 잔존은 차단 사유가 아니다). pre-flight(대상 미점유·repos 경로 실재·git 레포 여부) 전부 통과 후에만 worktree를 생성하고(all-or-nothing), 중간 실패 시 자기 생성물만 롤백한다(DEC-2, 신규 브랜치 경로에만 적용). base-ref는 create 시점에 1회 해석해 `.opal-worktrees/.meta/task_{NNN}.json`(worktree 밖)에 동결 기록하고 remove/status는 그 값만 읽는다(DEC-3, 재해석 없음). create는 canonical task path 6필드(`allocator_root`·`task_home`·`task_folder`·`task_path`·`artifact_repo`·`task_ownership_version`)를 응답과 메타에 additive로 발급하고 불변식 `task_path == realpath(task_home/tasks/task_folder)`를 발급 시점에 검증한다 — `task_folder`는 basename만 허용한다. 계약 원문은 `opal/core/references/harness/worktree.md`가 소유한다. optional 설정 키 `taskCapsuleCone`(list[str], 기본 `[]`)은 monorepo 분기에서만 `repos`에 이어 sparse-checkout cone에 전개하며 multi-repo 분기에는 적용하지 않는다. canonical task path 해석은 registry meta의 `attribution_state`에 의존한다(제안서 §4.3) — active 3상태(키 부재·`completed_unmerged`·`attribution_pending`)에서는 등록된 worktree task path가 canonical이며 허브 `tasks/{task_folder}`가 동시에 실재하면 자동 선택 없이 TASK_PATH_AMBIGUOUS로 차단하고(단일 복사본 불변식), merge 확인 뒤 `closed`에서는 허브에 merge된 사본을 `task_path_source="hub_merged"`로 반환하고 차단하지 않는다. 차단은 active에만 적용되며 가드가 사라진 것이 아니다. `task_ownership_version` 부재 메타는 legacy로 판정을 건너뛰고 해석 결과를 출력에 싣지 않는다. status는 해석된 canonical 경로를 `task_path`·`task_path_source`로 보고하고, finalize는 `closed` 상태에서 커밋 없이 `idempotent: true`로 멱등 반환한다. remove는 해석기를 호출하지 않는다. remove는 미처리 memory index 요청(캡슐 파일 `memory-index-request.json`의 body_sha256 중 메타 `memory_index_requests_resolved`에 없는 건)을 MEMORY_INDEX_REQUEST_PENDING으로 먼저 거부한 뒤 dirty→unpushed→unmerged 순서로 3중 가드를 적용하고 worktree 디렉토리 + 슬롯 루트(`task_{NNN}/`)를 회수한다(브랜치 보존, user sovereignty. `.opal-worktrees/`·`.meta/`는 남긴다). `.gitignore`·캐시 볼륨·code-scan exclude·동시 슬롯 수는 전부 비차단 진단이다. finalize(PLAN D-3b, 제안서 §6.3)는 merge 후 귀속 후처리를 확정한다 — DONE.md `## 회고적 학습 후보` 선언 집합 D(∪ `.opal/brain/index.md`·`.opal/brain/log.md`·`.opal/MEMORY.json`)와 `git status --porcelain -z -uall`을 `.opal/brain/**`·`.opal/MEMORY.json`으로 필터한 관측 집합 S를 레포 루트 상대 POSIX 경로로 정규화해 대조하고, `S ⊆ D`이면 재개를 허용하고 아니면 ATTRIBUTION_COMMIT_BLOCKED(위반 경로 동봉)로 거부한다. `.opal/MEMORY.json`의 선행 diff는 allocator의 `last_task_number` 변경만 허용한다. 판정 범위 밖(소스·태스크 문서)의 dirty는 판정 대상이 아니며 remove의 이진 dirty 가드(check_guards)는 finalize 경로에서 쓰지 않는다. 관측 경로만 stage해 단일 귀속 commit으로 확정한 뒤 registry meta의 `memory_index_requests_resolved`에 처리한 body_sha256을 append하고 캡슐 파일의 해당 요청 status를 applied로 바꾼다. 상태 전이는 `completed_unmerged → attribution_pending → closed`이고 commit·clean 검증 실패 시 `attribution_pending`에 머문다. init(DEC-8, ADD-1)은 `.opal/worktree.json`을 탐지 기반으로 초안 생성한다(자동 생성이 아니다) — 루트 이하 최대 3 depth에서 독립 `.git` 디렉토리를 찾아 ≥1개면 multi-repo(그 경로들이 repos), 0개면 root 자체가 git 레포일 때만 루트 레포가 추적하는 최상위 디렉토리 중 하위에 코드 manifest를 가진 것을 monorepo repos로 채운다(둘 다 실패하면 LAYOUT_UNDETERMINED). `copy`는 항상 빈 배열·`portOffset`은 항상 0으로 두고 추측하지 않으며(로컬 설정 후보는 `_copy_candidates` 주석 키로만 제시), 기존 파일이 있으면 `--force` 없이는 `CONFIG_EXISTS`로 거부해 파일을 건드리지 않고, `--dry-run`은 쓰지 않고 최상위 `draft` 키로만 반환한다.",
+  "description": "태스크별 코드 작업본을 git worktree로 격리하는 CLI. `.opal/worktree.json`(multi-repo/monorepo 2유형)을 선언 기반으로 읽어 create/list/status/remove/finalize/init 6서브명령을 제공한다. create의 슬롯·브랜치 판정은 '존재'가 아니라 '점유'다(DEC-7) — 대상 경로가 `git worktree list --porcelain`에 실제 등록돼 있으면 WORKTREE_EXISTS, 브랜치가 다른 worktree에 체크아웃 중이면 BRANCH_EXISTS로 거부하고, 브랜치가 존재하지만 미점유면 `worktree add <path> <branch>` 단일 명령으로 재사용한다(빈 디렉토리 잔존은 차단 사유가 아니다). pre-flight(대상 미점유·repos 경로 실재·git 레포 여부) 전부 통과 후에만 worktree를 생성하고(all-or-nothing), 중간 실패 시 자기 생성물만 롤백한다(DEC-2, 신규 브랜치 경로에만 적용). base-ref는 create 시점에 1회 해석해 `.opal-worktrees/.meta/task_{NNN}.json`(worktree 밖)에 동결 기록하고 remove/status는 그 값만 읽는다(DEC-3, 재해석 없음). create는 canonical task path 6필드(`allocator_root`·`task_home`·`task_folder`·`task_path`·`artifact_repo`·`task_ownership_version`)를 응답과 메타에 additive로 발급하고 불변식 `task_path == realpath(task_home/tasks/task_folder)`를 발급 시점에 검증한다 — `task_folder`는 basename만 허용한다. 계약 원문은 `opal/core/references/harness/worktree.md`가 소유한다. optional 설정 키 `taskCapsuleCone`(list[str], 기본 `[]`)은 monorepo 분기에서만 `repos`에 이어 sparse-checkout cone에 전개하며 multi-repo 분기에는 적용하지 않는다. multi-repo에서는 optional 키 `task_artifacts.repo`(1차 도입은 예약값 `'.'`=루트 저장소만 허용하고 그 외 값은 TASK_ARTIFACT_REPO_UNSUPPORTED)로 루트 저장소가 태스크 캡슐을 소유한다 — 이때 slot root 자체가 루트 저장소의 worktree이자 `task_home`이고 `artifact_repo`는 `'.'`다. `task_artifacts` 미설정 multi-repo는 위치 필드를 발급하지 않고 `--task-folder`가 명시되면 TASK_ARTIFACT_REPO_MISSING으로 중단한다. create는 부수 효과·소유권 발급 이전에 루트 Git 적격 R-1(루트가 git 저장소)·R-2(`tasks` 추적)·R-3(`.opal/AGENT.md` 추적)·R-4(`.opal/MEMORY.json` 추적)를 **각각** 판정하고(R-1 불만족이면 R-2~R-4는 판정 자체가 불가하므로 `['R-1']`만 보고한다), 판정 순서는 R-1~R-4 → 추적 범위 겹침 → R-5다 — 루트가 `repos[]` 경로를 1파일이라도 추적하면 TASK_ARTIFACT_REPO_OVERLAP, 루트가 `repos[]`를 ignore하지 않으면 violations `['R-5']`를 실은 TASK_ARTIFACT_REPO_INVALID로 거부한다. R-5는 `git check-ignore -q`의 '실효 ignore' 축이며 `--no-index`를 쓰지 않는다 — 추적 중인 경로는 rc=1이 되므로 R-5를 겹침 판정보다 앞에 두면 겹침 위반이 전용 오류에 도달하지 못한다. 루트를 포함한 전 entry 목록은 ordered `plan_entries`(`(rel, git_root, dest)`, 루트가 `'.'`로 먼저 오고 `repos[]`가 뒤따른다) **하나**가 소유하며 pre-flight·base-ref 해석·worktree 생성·메타 `entries`·롤백이 모두 이 목록만 소비한다(생성부가 `repos`를 따로 순회하지 않는다). 생성은 루트 → 자식 순이고 롤백은 생성의 역순(자식 → 루트)이며, multi-repo 롤백은 회수 실패 시 slot을 지워 흔적을 없애지 않고 잔존 entry를 `residual`로 보고한다(monorepo는 무조건 정리한다). `baseBranchOverrides`(`dict[str,str]`, 키는 `repos[]`∪`{'.'}`이며 벗어나면 CONFIG_UNKNOWN_REPO)도 multi-repo 분기 전용이고, `resolve_base_ref`의 `declared` 자리에 값을 넣을 뿐 3단 폴백 순서를 바꾸지 않는다. `init` 초안은 R-1~R-5 전건을 만족할 때만 `task_artifacts`를 제시하고 `baseBranchOverrides`는 추측하지 않는다. multi-repo 캡슐 소유권 경로의 오류 코드는 TASK_ARTIFACT_REPO_INVALID·TASK_ARTIFACT_REPO_UNSUPPORTED·TASK_ARTIFACT_REPO_OVERLAP·CONFIG_UNKNOWN_REPO·WORKTREE_REMOVE_FAILED 5종이다. canonical task path 해석은 registry meta의 `attribution_state`에 의존한다(제안서 §4.3) — active 3상태(키 부재·`completed_unmerged`·`attribution_pending`)에서는 등록된 worktree task path가 canonical이며 허브 `tasks/{task_folder}`가 동시에 실재하면 자동 선택 없이 TASK_PATH_AMBIGUOUS로 차단하고(단일 복사본 불변식), merge 확인 뒤 `closed`에서는 허브에 merge된 사본을 `task_path_source=\"hub_merged\"`로 반환하고 차단하지 않는다. 차단은 active에만 적용되며 가드가 사라진 것이 아니다. `task_ownership_version` 부재 메타는 legacy로 판정을 건너뛰고 해석 결과를 출력에 싣지 않는다. status는 해석된 canonical 경로를 `task_path`·`task_path_source`로 보고하고, finalize는 `closed` 상태에서 커밋 없이 `idempotent: true`로 멱등 반환한다. remove는 해석기를 호출하지 않는다. remove는 미처리 memory index 요청(캡슐 파일 `memory-index-request.json`의 body_sha256 중 메타 `memory_index_requests_resolved`에 없는 건)을 MEMORY_INDEX_REQUEST_PENDING으로 먼저 거부한 뒤 dirty→unpushed→unmerged 순서로 3중 가드를 적용하고 worktree 디렉토리 + 슬롯 루트(`task_{NNN}/`)를 회수한다(브랜치 보존, user sovereignty. `.opal-worktrees/`·`.meta/`는 남긴다). 이 회수 계약은 메타에 동결된 `layout: multi-repo` 분기 **전용**이다 — monorepo·비워크트리는 경로 부재 시 WORKTREE_NOT_FOUND(`--force`면 skip)를 반환하고, 반환값을 검사하지 않는 무조건 회수를 수행한다. multi-repo에서만 entry를 생성의 역순(자식 → 루트)으로 순회하고 **경로 실재 × Git 등록** 2축으로 판정한다 — 둘 다 없으면 이미 회수된 것으로 보고 skip하고(오류가 아니며 `--force`를 요구하지 않는다), 한쪽만 있으면 mismatch(`registration_without_path` 또는 `path_without_registration`)를 실은 WORKTREE_REMOVE_FAILED로 차단·보존하며 자동 복구하지 않는다(`git worktree prune`을 호출하지 않고 미등록 잔여 디렉토리를 삭제하지 않는다). 전 entry의 `git worktree remove`가 성공한 뒤에만 메타와 슬롯 루트를 삭제하고, 하나라도 실패하면 WORKTREE_REMOVE_FAILED로 반환하며 메타·슬롯을 보존해 재시도와 수동 복구 여지를 남긴다. `--force`는 가드 우회에만 적용되며 이 실패 판정을 우회하지 않는다. `.gitignore`·캐시 볼륨·code-scan exclude·동시 슬롯 수는 전부 비차단 진단이다. finalize(PLAN D-3b, 제안서 §6.3)는 merge 후 귀속 후처리를 확정한다 — DONE.md `## 회고적 학습 후보` 선언 집합 D(∪ `.opal/brain/index.md`·`.opal/brain/log.md`·`.opal/MEMORY.json`)와 `git status --porcelain -z -uall`을 `.opal/brain/**`·`.opal/MEMORY.json`으로 필터한 관측 집합 S를 레포 루트 상대 POSIX 경로로 정규화해 대조하고, `S ⊆ D`이면 재개를 허용하고 아니면 ATTRIBUTION_COMMIT_BLOCKED(위반 경로 동봉)로 거부한다. `.opal/MEMORY.json`의 선행 diff는 allocator의 `last_task_number` 변경만 허용한다. 판정 범위 밖(소스·태스크 문서)의 dirty는 판정 대상이 아니며 remove의 이진 dirty 가드(check_guards)는 finalize 경로에서 쓰지 않는다. 관측 경로만 stage해 단일 귀속 commit으로 확정한 뒤 registry meta의 `memory_index_requests_resolved`에 처리한 body_sha256을 append하고 캡슐 파일의 해당 요청 status를 applied로 바꾼다. 상태 전이는 `completed_unmerged → attribution_pending → closed`이고 commit·clean 검증 실패 시 `attribution_pending`에 머문다. init(DEC-8, ADD-1)은 `.opal/worktree.json`을 탐지 기반으로 초안 생성한다(자동 생성이 아니다) — 루트 이하 최대 3 depth에서 독립 `.git` 디렉토리를 찾아 ≥1개면 multi-repo(그 경로들이 repos), 0개면 root 자체가 git 레포일 때만 루트 레포가 추적하는 최상위 디렉토리 중 하위에 코드 manifest를 가진 것을 monorepo repos로 채운다(둘 다 실패하면 LAYOUT_UNDETERMINED). `copy`는 항상 빈 배열·`portOffset`은 항상 0으로 두고 추측하지 않으며(로컬 설정 후보는 `_copy_candidates` 주석 키로만 제시), 기존 파일이 있으면 `--force` 없이는 `CONFIG_EXISTS`로 거부해 파일을 건드리지 않고, `--dry-run`은 쓰지 않고 최상위 `draft` 키로만 반환한다.",
   "exports": [
     "load_config", "validate_worktree_config", "resolve_base_ref", "check_guards",
     "ensure_gitignore_entry", "diagnose_cache_volume", "diagnose_code_scan_exclude",
@@ -52,6 +52,11 @@ ERROR_CODES = {
     "LAYOUT_UNDETERMINED": "layout을 결정할 수 없습니다 — 독립 저장소도, manifest를 가진 최상위 디렉토리도 찾지 못했습니다.",
     "TASK_FOLDER_INVALID": "task_folder는 basename만 허용됩니다 — 경로 구분자·'..'·NUL을 포함할 수 없습니다.",
     "TASK_ARTIFACT_REPO_MISSING": "multi-repo layout에서는 태스크 캡슐을 소유할 repo가 결정되지 않아 local task ownership을 활성화할 수 없습니다.",
+    "TASK_ARTIFACT_REPO_UNSUPPORTED": "task_artifacts.repo는 1차 도입에서 예약값 '.'(루트 저장소)만 허용됩니다.",
+    "TASK_ARTIFACT_REPO_INVALID": "캡슐 소유 루트 저장소가 적격 조건(R-1~R-5)을 만족하지 않습니다.",
+    "TASK_ARTIFACT_REPO_OVERLAP": "루트 저장소가 repos[] 경로를 추적하고 있어 worktree 배치가 겹칩니다.",
+    "CONFIG_UNKNOWN_REPO": "baseBranchOverrides의 키가 repos[] 또는 '.'와 일치하지 않습니다.",
+    "WORKTREE_REMOVE_FAILED": "일부 worktree 회수에 실패했습니다 — 메타와 슬롯을 보존합니다.",
     "TASK_PATH_AMBIGUOUS": "등록된 worktree 태스크와 같은 task_folder가 허브 tasks/에도 존재합니다 — 자동 선택하지 않습니다.",
     "MEMORY_INDEX_REQUEST_PENDING": "처리되지 않은 memory index 요청이 남아 있습니다.",
     "ATTRIBUTION_COMMIT_BLOCKED": "선언되지 않은 귀속 대상 변경이 남아 있어 finalize를 진행할 수 없습니다.",
@@ -261,6 +266,46 @@ def validate_worktree_config(cfg: dict, project_root: pathlib.Path) -> dict:
         if not _is_inside(project_root, rel):
             err_response("CONFIG_PATH_ESCAPE", value=rel)
 
+    # task_artifacts / baseBranchOverrides — **multi-repo 분기 전용**
+    # (harness/worktree.md §multi-repo 캡슐 소유권 계약). monorepo는 값이 있어도 읽지 않고
+    # 검증하지 않으므로 monorepo 6명령 출력이 변경 전과 바이트 동일하게 유지된다(TASK C-2).
+    task_artifacts = None
+    base_branch_overrides: dict = {}
+    if layout == "multi-repo":
+        raw_artifacts = cfg.get("task_artifacts")
+        if raw_artifacts is not None:
+            if not isinstance(raw_artifacts, dict):
+                err_response("CONFIG_INVALID_TYPE", key="task_artifacts")
+            if "repo" not in raw_artifacts:
+                err_response("CONFIG_MISSING_KEY", key="task_artifacts.repo")
+            artifact_repo = raw_artifacts["repo"]
+            if not isinstance(artifact_repo, str):
+                err_response("CONFIG_INVALID_TYPE", key="task_artifacts.repo")
+            # 1차 도입은 예약값 "."(루트 저장소)만 허용한다 — `repos[]` 원소를 캡슐 소유 repo로
+            # 쓰려면 canonical resolver의 허브 후보 경로 고정을 먼저 확장해야 한다.
+            if artifact_repo != ".":
+                err_response(
+                    "TASK_ARTIFACT_REPO_UNSUPPORTED",
+                    value=artifact_repo,
+                    required=".",
+                    prerequisite=(
+                        "canonical task path 불변식과 resolver의 허브 후보 경로 고정을 "
+                        "먼저 확장해야 repos[] 원소를 캡슐 소유 repo로 지정할 수 있습니다."
+                    ),
+                )
+            task_artifacts = {"repo": artifact_repo}
+
+        raw_overrides = cfg.get("baseBranchOverrides", {})
+        if not isinstance(raw_overrides, dict) or not all(
+            isinstance(k, str) and isinstance(v, str) for k, v in raw_overrides.items()
+        ):
+            err_response("CONFIG_INVALID_TYPE", key="baseBranchOverrides")
+        known = set(repos) | {"."}
+        unknown = sorted(k for k in raw_overrides if k not in known)
+        if unknown:
+            err_response("CONFIG_UNKNOWN_REPO", keys=unknown, known=sorted(known))
+        base_branch_overrides = dict(raw_overrides)
+
     branch_template = cfg.get("branchTemplate", "feat/OP-TASK-{NNN}")
     if not isinstance(branch_template, str):
         err_response("CONFIG_INVALID_TYPE", key="branchTemplate")
@@ -293,6 +338,9 @@ def validate_worktree_config(cfg: dict, project_root: pathlib.Path) -> dict:
         "taskCapsuleCone": task_capsule_cone,
         "setup": setup,
         "portOffset": port_offset,
+        # additive — 기존 8키를 제거·개명하지 않는다. 어떤 명령 출력도 cfg를 통째로 싣지 않는다.
+        "task_artifacts": task_artifacts,
+        "baseBranchOverrides": base_branch_overrides,
     }
 
 
@@ -584,7 +632,116 @@ def _detect_copy_candidates(project_root: pathlib.Path, repos: list) -> list:
     return sorted(candidates)
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# multi-repo 캡슐 소유권 — 루트 Git 적격 R-1~R-5 / 추적 범위 겹침
+# (harness/worktree.md §multi-repo 캡슐 소유권 계약). 전부 multi-repo 분기 전용이다.
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+def _root_owns_capsule(cfg: dict) -> bool:
+    """`layout: multi-repo` + `task_artifacts.repo == "."`일 때만 참. 정규화 cfg 기준이며
+    `"."` 외 값은 validate 단계에서 이미 TASK_ARTIFACT_REPO_UNSUPPORTED로 차단된다."""
+    artifacts = cfg.get("task_artifacts")
+    return (
+        cfg.get("layout") == "multi-repo"
+        and isinstance(artifacts, dict)
+        and artifacts.get("repo") == "."
+    )
+
+
+def _root_tracks(project_root: pathlib.Path, pathspec: str) -> bool:
+    result = _run_git(["ls-files", "--", pathspec], project_root)
+    return result.returncode == 0 and bool(result.stdout.strip())
+
+
+def _root_eligibility_violations(project_root: pathlib.Path) -> list:
+    """R-1~R-4를 **각각** 판정한다. 합산 1건 통과를 허용하면 `tasks/`만 추적하고 `.opal/`은
+    ignore하는 프로젝트가 통과해 merge 시 귀속 대상이 브랜치에 담기지 않는다.
+    R-1 불만족이면 R-2~R-4는 판정 자체가 불가하므로 `["R-1"]`만 돌려준다."""
+    if not (project_root / ".git").exists():
+        return ["R-1"]
+    if _run_git(["rev-parse", "--git-dir"], project_root).returncode != 0:
+        return ["R-1"]
+    violations = []
+    for condition, pathspec in (
+        ("R-2", "tasks"),
+        ("R-3", ".opal/AGENT.md"),
+        ("R-4", ".opal/MEMORY.json"),
+    ):
+        if not _root_tracks(project_root, pathspec):
+            violations.append(condition)
+    return violations
+
+
+def _root_overlap_paths(project_root: pathlib.Path, repos: list) -> list:
+    """루트가 `repos[]` 경로를 1파일이라도 추적하면 그 경로들을 돌려준다(§추적 범위 겹침 차단).
+    겹치면 루트 full checkout과 코드 repo worktree가 같은 경로에 착지해 승자가 정의되지 않는다."""
+    return [rel for rel in repos if _root_tracks(project_root, rel)]
+
+
+def _repos_not_ignored(project_root: pathlib.Path, repos: list) -> list:
+    """R-5 — 루트가 각 `repos[]` 경로를 ignore하는지. `check-ignore -q`의 '실효 ignore' 의미를
+    유지한다(`--no-index`를 쓰지 않는다). 추적 중인 경로는 rc=1이 되므로 이 판정은 반드시
+    §추적 범위 겹침 차단 **뒤에** 놓는다."""
+    return [
+        rel
+        for rel in repos
+        if _run_git(["check-ignore", "-q", rel], project_root).returncode != 0
+    ]
+
+
+def _root_capsule_violations(project_root: pathlib.Path, repos: list) -> list:
+    """R-1~R-5 전건 판정(`init` 초안 제시 조건용). 순서 의존을 피하려고 overlap 판정은
+    포함하지 않으며, R-5는 R-1~R-4가 성립할 때만 의미를 갖는다."""
+    violations = _root_eligibility_violations(project_root)
+    if violations:
+        return violations
+    if _repos_not_ignored(project_root, repos):
+        violations.append("R-5")
+    return violations
+
+
+def _root_base_branch_candidates(project_root: pathlib.Path, repos: list) -> list:
+    """관측된 base-ref 후보 — 루트와 각 코드 저장소가 스스로 해석한 값을 그대로 모은다.
+    추측하지 않는다(초안 주석 키 전용)."""
+    observed = {resolve_base_ref(project_root, None)}
+    for rel in repos:
+        repo_dir = project_root / rel
+        if (repo_dir / ".git").exists():
+            observed.add(resolve_base_ref(repo_dir, None))
+    return sorted(value for value in observed if value)
+
+
 def _build_init_draft(project_root: pathlib.Path, layout: str, repos: list) -> dict:
+    draft = _build_init_draft_base(project_root, layout, repos)
+    if layout != "multi-repo":
+        return draft
+
+    # multi-repo 분기에서만 키를 늘린다(§repo별 base branch). `baseBranch`는 R-1을 만족할 때만,
+    # `task_artifacts`는 R-1~R-5 전건을 만족할 때만 제시한다 — 루트가 저장소가 아니면 관측
+    # base-ref가 빈 문자열이 되고(H-4), 적격하지 않은 루트의 `task_artifacts`는 쓸 수 없다.
+    violations = _root_capsule_violations(project_root, repos)
+    if "R-1" not in violations:
+        base_branch = resolve_base_ref(project_root, None)
+        if base_branch:
+            draft["baseBranch"] = base_branch
+            draft["_baseBranch_candidates"] = _root_base_branch_candidates(
+                project_root, repos
+            )
+    if not violations:
+        draft["task_artifacts"] = {"repo": "."}
+    else:
+        draft["_help"] += (
+            " 루트 저장소가 캡슐 소유 적격 조건을 만족하지 않아(위반: "
+            + ", ".join(violations)
+            + ") task_artifacts를 제시하지 않았습니다 — 캡슐 소유 repo를 결정할 수 없어 "
+            "local task ownership을 쓸 수 없습니다."
+        )
+    # baseBranchOverrides는 추측하지 않으므로 초안에 넣지 않는다.
+    return draft
+
+
+def _build_init_draft_base(project_root: pathlib.Path, layout: str, repos: list) -> dict:
     return {
         "layout": layout,
         "repos": repos,
@@ -691,14 +848,16 @@ def _issue_task_ownership(
     `task_path == realpath(task_home/tasks/task_folder)`를 발급 시점에 검증한다.
 
     - monorepo: 슬롯 worktree 자신이 `task_home`, `artifact_repo`는 `"."`.
-    - multi-repo: 태스크 캡슐을 소유할 repo가 설정으로 정해지지 않았으므로(제안서 §8)
+    - multi-repo + `task_artifacts.repo: "."`: slot root 자체가 루트 저장소의 worktree이고 곧
+      `task_home`이다 — monorepo와 동일 경로를 타며 `artifact_repo`는 `"."`.
+    - multi-repo(task_artifacts 미설정): 태스크 캡슐을 소유할 repo가 설정으로 정해지지 않았으므로
       local task ownership을 활성화하지 않는다 — 위치 필드는 발급하지 않고(None),
       `--task-folder`가 명시되면 추측 대신 `TASK_ARTIFACT_REPO_MISSING`으로 중단한다.
     - `allocator_root`는 허브 절대 경로이며 registry가 소유한다. 소비자는 이 발급값을
       전달받아 쓰고 cwd·`.opal-worktrees` 문자열로 추론하지 않는다.
     """
     allocator_root = str(project_root)
-    if cfg["layout"] != "monorepo":
+    if cfg["layout"] != "monorepo" and not _root_owns_capsule(cfg):
         if task_folder is not None:
             err_response("TASK_ARTIFACT_REPO_MISSING", layout=cfg["layout"])
         return {
@@ -836,13 +995,39 @@ def check_guards(
 # ─────────────────────────────────────────────────────────────────────────────
 
 
-def _rollback(created: list, wt_root: pathlib.Path) -> None:
-    """자기 생성물만 회수한다(DEC-2 all-or-nothing) — worktree remove --force + branch -D."""
-    for git_root, path, branch in created:
-        _run_git(["worktree", "remove", "--force", str(path)], git_root)
+def _rollback(
+    created: list, wt_root: pathlib.Path, preserve_on_failure: bool = False
+) -> list:
+    """자기 생성물만 회수한다(DEC-2 all-or-nothing) — worktree remove --force + branch -D.
+
+    [MUST] 회수는 생성의 **역순**(자식 → 루트)이다 — 자식이 남아 있으면 루트 worktree를 제거할
+    수 없다. 역순 순회는 monorepo에서 `created`가 1건이라 관측 가능한 차이가 없으므로 분기하지
+    않는다.
+
+    `preserve_on_failure`는 **multi-repo 분기 전용**이다(harness/worktree.md §multi-repo 캡슐
+    소유권 계약). 참이면 역순 회수 중 실패했을 때 slot을 지워 흔적을 없애지 않고 잔존
+    entry(경로·repo·branch)를 돌려준다 — 흔적을 지우면 수동 복구 대상이 사라진다. 거짓이면
+    monorepo의 기존 동작 그대로 반환값을 검사하지 않고 항상 `branch -D`와 slot 삭제를 수행한다.
+    """
+    residual = []
+    for git_root, path, branch in reversed(created):
+        result = _run_git(["worktree", "remove", "--force", str(path)], git_root)
+        if preserve_on_failure and result.returncode != 0:
+            residual.append(
+                {
+                    "repo": str(git_root),
+                    "path": str(path),
+                    "branch": branch,
+                    "stderr": result.stderr.strip(),
+                }
+            )
+            continue
         _run_git(["branch", "-D", branch], git_root)
+    if residual:
+        return residual
     if wt_root.exists():
         shutil.rmtree(wt_root, ignore_errors=True)
+    return []
 
 
 def cmd_create(args) -> None:
@@ -850,6 +1035,36 @@ def cmd_create(args) -> None:
     cfg = validate_worktree_config(load_config(project_root), project_root)
     branch = _render_branch(cfg["branchTemplate"], args.task, args.slug, args.skill)
     wt_root = project_root / ".opal-worktrees" / f"task_{args.task}"
+
+    # ── (0a) 루트 캡슐 소유 적격 — 부수 효과 이전, 소유권 발급 이전에 판정한다.
+    # [MUST] 판정 순서는 R-1~R-4 → 추적 범위 겹침 → R-5다(harness/worktree.md §multi-repo
+    # 캡슐 소유권 계약). `check-ignore -q`는 추적 파일이 있는 경로에 rc=1을 돌려주므로, R-5를
+    # 겹침보다 먼저 두면 겹침 위반이 R-5로 먼저 걸려 TASK_ARTIFACT_REPO_OVERLAP에 도달하지
+    # 못한다. 두 조건은 배타적 원인이며 원인별 전용 오류를 준다. ──
+    root_owned = _root_owns_capsule(cfg)
+    if root_owned:
+        violations = _root_eligibility_violations(project_root)
+        if violations:
+            err_response(
+                "TASK_ARTIFACT_REPO_INVALID",
+                violations=violations,
+                root=str(project_root),
+            )
+        overlapped = _root_overlap_paths(project_root, cfg["repos"])
+        if overlapped:
+            err_response(
+                "TASK_ARTIFACT_REPO_OVERLAP",
+                paths=overlapped,
+                root=str(project_root),
+            )
+        not_ignored = _repos_not_ignored(project_root, cfg["repos"])
+        if not_ignored:
+            err_response(
+                "TASK_ARTIFACT_REPO_INVALID",
+                violations=["R-5"],
+                paths=not_ignored,
+                root=str(project_root),
+            )
 
     # ── (0) 소유권 발급값 사전 확정 — 부수 효과 이전에 검증한다(DEC-2 all-or-nothing) ──
     task_folder = getattr(args, "task_folder", None)
@@ -864,13 +1079,17 @@ def cmd_create(args) -> None:
         src = project_root / rel
         if not src.is_dir():
             err_response("REPO_NOT_FOUND", path=rel)
-    plan_entries = (
-        [(project_root / rel, wt_root / rel) for rel in cfg["repos"]]
-        if cfg["layout"] == "multi-repo"
-        else [(project_root, wt_root)]
-    )
-    git_roots = [git_root for git_root, _dest in plan_entries]
-    for git_root, dest in plan_entries:
+    # [MUST] 루트를 포함한 전 entry 목록은 `plan_entries` 하나가 소유한다 — pre-flight·
+    # base-ref 해석·worktree 생성·metadata `entries`·rollback이 모두 이 목록만 소비하며
+    # 생성부가 `cfg["repos"]`를 따로 순회하지 않는다. 목록이 둘로 갈라지면 pre-flight 통과
+    # 결과가 생성 결과를 보장하지 못한다. entry는 base-ref override 조회 키인 `rel`을 함께
+    # 들고 다닌다(`rel`은 파생값이 아니라 설정 원문이며 루트는 `"."`).
+    if cfg["layout"] == "multi-repo":
+        plan_entries = [(".", project_root, wt_root)] if root_owned else []
+        plan_entries += [(rel, project_root / rel, wt_root / rel) for rel in cfg["repos"]]
+    else:
+        plan_entries = [(".", project_root, wt_root)]
+    for _rel, git_root, dest in plan_entries:
         if not (git_root / ".git").exists():
             err_response("NOT_A_GIT_REPO", path=str(git_root))
         if _dest_registered(git_root, dest):
@@ -885,9 +1104,14 @@ def cmd_create(args) -> None:
     warnings += diagnose_concurrent_slots(project_root)
 
     # ── (3) base-ref 해석 + 동결 (DEC-3) ──
+    # override는 `declared` 자리에 값을 넣을 뿐이며 `resolve_base_ref`의 3단 폴백 순서를 바꾸지
+    # 않는다. monorepo는 overrides를 소비하지 않으므로 식이 현행과 동치다(TASK C-2).
+    overrides = cfg["baseBranchOverrides"] if cfg["layout"] == "multi-repo" else {}
     base_refs = {
-        str(git_root): resolve_base_ref(git_root, cfg.get("baseBranch"))
-        for git_root in git_roots
+        str(git_root): resolve_base_ref(
+            git_root, overrides.get(rel, cfg.get("baseBranch"))
+        )
+        for rel, git_root, _dest in plan_entries
     }
 
     # ── (4) worktree 생성 — 실패 시 자기 생성물만 롤백 (DEC-2)
@@ -905,13 +1129,14 @@ def cmd_create(args) -> None:
     created = []
     try:
         if cfg["layout"] == "multi-repo":
-            for rel in cfg["repos"]:
-                git_root = project_root / rel
-                dest = wt_root / rel
+            # 생성 순서는 루트 → 자식이다 — 자식 worktree의 부모 디렉토리가 루트 worktree 안에
+            # 있어야 한다. `created`에는 `worktree add`가 실제로 성공한 entry만 넣는다(롤백이
+            # 만들지 않은 대상을 회수하려 들면 회수 순서 관측이 오염된다).
+            for _rel, git_root, dest in plan_entries:
                 dest.parent.mkdir(parents=True, exist_ok=True)
-                created.append((git_root, dest, branch))
                 if _branch_exists(git_root, branch):
                     _git_or_raise(git_root, ["worktree", "add", str(dest), branch])
+                    created.append((git_root, dest, branch))
                 else:
                     _git_or_raise(
                         git_root,
@@ -923,6 +1148,7 @@ def cmd_create(args) -> None:
                             base_refs[str(git_root)],
                         ],
                     )
+                    created.append((git_root, dest, branch))
                     _git_or_raise(dest, ["checkout", "-b", branch])
         else:  # monorepo — 순서 [MUST]: --no-checkout → init --cone → set → checkout(-b)/materialize
             git_root = project_root
@@ -959,7 +1185,16 @@ def cmd_create(args) -> None:
             # reset --hard로 강제 반영한다.
             _git_or_raise(wt_root, ["reset", "--hard", "HEAD"])
     except GitFailure as exc:
-        _rollback(created, wt_root)
+        residual = _rollback(
+            created, wt_root, preserve_on_failure=(cfg["layout"] == "multi-repo")
+        )
+        if residual:
+            err_response(
+                "GIT_COMMAND_FAILED",
+                detail=exc.stderr,
+                rolled_back=len(created) - len(residual),
+                residual=residual,
+            )
         err_response("GIT_COMMAND_FAILED", detail=exc.stderr, rolled_back=len(created))
 
     # ── (5) copy[] — 원본 부재는 비차단 경고 ──
@@ -1181,13 +1416,46 @@ def cmd_remove(args) -> None:
                 pending=pending_requests,
             )
 
-    for entry in entries:
+    # ── 신규 계약의 적용 범위는 `layout: "multi-repo"` 분기 하나다
+    # (harness/worktree.md §multi-repo 캡슐 소유권 계약 첫 줄). monorepo·비워크트리 경로는 이
+    # 절의 어떤 항목도 소비하지 않으며 기존 판정·출력·실패 표면을 그대로 유지한다(TASK C-2·C-3).
+    # 판정 기준은 create 시점에 메타로 동결된 layout이다 — remove는 설정을 다시 읽지 않는다.
+    multi_repo = meta.get("layout") == "multi-repo"
+
+    # [MUST] 회수는 생성의 역순(자식 → 루트)이다 — 자식이 남아 있으면 루트를 제거할 수 없다.
+    # entry별로 **경로 실재**와 **Git 등록** 두 축을 따로 보고 판정한다(멱등 재시도):
+    #   (없음, 없음) → 이미 회수됨, skip(오류 아님)   (없음, 있음) → 등록 고아, 차단·보존
+    #   (있음, 없음) → 미등록 잔여 디렉토리, 차단·보존 (있음, 있음) → 가드 판정 후 회수
+    # 등록 판정은 create pre-flight가 쓰는 기존 판정기를 재사용하며 새 기준을 만들지 않는다.
+    # 이 판정은 `--force` 없이 동작한다 — 재시도가 가드 우회를 요구하지 않는다.
+    pending = []
+    for entry in (reversed(entries) if multi_repo else entries):
         git_root = pathlib.Path(entry["repo"])
         wt_path = pathlib.Path(entry["path"])
         branch = entry["branch"]
         base_ref = entry["base_ref"]
 
-        if not wt_path.exists():
+        if multi_repo:
+            path_exists = wt_path.exists()
+            registered = _dest_registered(git_root, wt_path)
+            if not path_exists and not registered:
+                continue  # 이미 회수됨
+            if path_exists != registered:
+                # [MUST] 불일치 2종을 도구가 자동 복구하지 않는다 — `git worktree prune`을
+                # 호출하지 않고(대상이 해당 repo의 모든 stale 관리정보라 다른 태스크 슬롯까지
+                # 지운다) 미등록 잔여 디렉토리를 삭제하지 않는다(내용이 사용자 파일일 수 있다).
+                err_response(
+                    "WORKTREE_REMOVE_FAILED",
+                    repo=str(git_root),
+                    path=str(wt_path),
+                    mismatch=(
+                        "registration_without_path"
+                        if registered
+                        else "path_without_registration"
+                    ),
+                )
+        elif not wt_path.exists():
+            # monorepo·비워크트리는 기존 WORKTREE_NOT_FOUND 경로를 그대로 유지한다.
             if args.force:
                 continue
             err_response("WORKTREE_NOT_FOUND", path=str(wt_path))
@@ -1199,18 +1467,30 @@ def cmd_remove(args) -> None:
                     bypassed_guards.append(code)
             else:
                 err_response(code, **info)
+        pending.append(entry)
 
     # ── (2) 실제 제거 — worktree 디렉토리만 회수, 브랜치는 삭제하지 않는다 ──
+    # [MUST] multi-repo 분기에 한해, 전 entry의 `git worktree remove`가 성공한 뒤에만 메타와
+    # slot root를 삭제한다(monorepo는 반환값 미검사 + 무조건 삭제인 기존 동작을 유지한다).
+    # 하나라도 실패하면 WORKTREE_REMOVE_FAILED로 반환하고 메타 삭제와 slot 삭제를 실행하지
+    # 않는다 — 메타가 남아 있어야 재시도와 수동 복구가 가능하다. `--force`는 가드 우회에만
+    # 적용되며 이 실패 판정을 우회하지 않는다.
     removed = []
-    for entry in entries:
+    for entry in pending:
         git_root = pathlib.Path(entry["repo"])
         wt_path = pathlib.Path(entry["path"])
-        if not wt_path.exists():
-            continue
         remove_args = ["worktree", "remove", str(wt_path)]
         if args.force:
             remove_args.append("--force")
-        _run_git(remove_args, git_root)
+        result = _run_git(remove_args, git_root)
+        if multi_repo and result.returncode != 0:
+            err_response(
+                "WORKTREE_REMOVE_FAILED",
+                repo=str(git_root),
+                path=str(wt_path),
+                detail=result.stderr.strip(),
+                removed=removed,
+            )
         removed.append(entry["path"])
 
     _delete_meta(project_root, args.task)

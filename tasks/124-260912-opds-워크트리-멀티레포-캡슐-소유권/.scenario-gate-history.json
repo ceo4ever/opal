@@ -1,0 +1,15 @@
+[
+  {
+    "iteration": 1,
+    "missing": {"requirements": [], "features": [], "hypotheses": []},
+    "scores": {"goal": 2, "adoption": 2, "boundary": 2},
+    "gaps": [],
+    "verdict": "pass",
+    "reason": "converged",
+    "evidence": {
+      "coverage_check_exit": 0,
+      "counts": {"requirements": 25, "features": 0, "hypotheses": 5, "scenarios": 28},
+      "evaluator": "opal-evaluator-agent scenario-rubric"
+    }
+  }
+]
