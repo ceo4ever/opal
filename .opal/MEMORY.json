@@ -45,6 +45,13 @@
   ],
   "history": [
     {
+      "title": "130 PM 하단 액션 의도 명확화",
+      "date": "2026-09-14",
+      "stage": "완료",
+      "path": "tasks/130-260913-opds-PM-하단-액션-의도-명확화/",
+      "result": "PM 결과 보고 하단을 PM 다음 작업과 사용자 결정 필요로 분리하고, 결정 요청의 판단 정보·명시 질문 계약을 통일했다. 독립 시나리오 8/8과 보고 재현 5/5를 통과했다."
+    },
+    {
       "title": "126 워크스튜디오 독립앱 구축",
       "date": "2026-09-12",
       "stage": "완료",
@@ -71,13 +78,6 @@
       "stage": "완료",
       "path": "tasks/124-260912-opds-워크트리-멀티레포-캡슐-소유권/",
       "result": "multi-repo 루트 저장소 캡슐 소유권 구현 — R-1~R-5 적격·판정순서·2축 멱등 회수. 28/28 PASS, 회귀 42쌍 동일"
-    },
-    {
-      "title": "120 검사 공통 역량 분리",
-      "date": "2026-09-12",
-      "stage": "완료",
-      "path": "tasks/120-260912-opds-검사-공통-역량-분리/",
-      "result": "GC 검사 절차를 op-gc-security·op-gc-convention·op-gc-report 3종 단계 스킬로 분리하고 opal-pilot-gc를 thin wrapper로 전환. 세 곳에 중복되던 규칙을 gc-finding-schema.md 단일 SSOT로 수렴, checker 2종은 기준 미보유 role로 축소(212→69·250→87행). 기준 문서 부재 시 검사 생략을 advisory+partial로 교체해 결측과 통과를 분리. 시나리오 17/17 PASS, pipeline.json 무변경으로 기존 GC 동작 회귀 없음."
     }
   ]
 }
