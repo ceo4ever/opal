@@ -1,0 +1,167 @@
+{
+  "task_id": "130-260913-opds-PM-하단-액션-의도-명확화",
+  "skill": "opds",
+  "mode": "agentic",
+  "schema_version": "1.1",
+  "created_at": "2026-09-13 20:37:53",
+  "updated_at": "2026-09-13 21:07:32",
+  "current_status": "completed_unmerged",
+  "rows": [
+    {
+      "row_id": 1,
+      "stage": "TASK",
+      "item": "작업",
+      "key": "task.task_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-13 20:38:00",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 2,
+      "stage": "TASK",
+      "item": "사용자 확인",
+      "key": "task.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-13 20:38:21",
+      "owner": "auto",
+      "note": "auto-approved on PLAN entry"
+    },
+    {
+      "row_id": 3,
+      "stage": "PLAN",
+      "item": "작업",
+      "key": "plan.plan_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-13 20:45:47",
+      "owner": "PM",
+      "note": null,
+      "worker_duration_unknown": true
+    },
+    {
+      "row_id": 4,
+      "stage": "PLAN",
+      "item": "목표-커버 게이트",
+      "key": "plan.scenario_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-13 20:50:21",
+      "owner": "PM",
+      "note": "coverage-check exit 0 + evaluator pass(2/2/2)",
+      "worker_duration_unknown": true
+    },
+    {
+      "row_id": 5,
+      "stage": "PLAN",
+      "item": "PM Gate",
+      "key": "plan.pm_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-13 20:50:43",
+      "owner": "PM",
+      "note": "PLAN PM Gate PASS; Short 트랙 유지",
+      "gate": {
+        "artifacts": [
+          "TASK.md",
+          "PLAN.md",
+          "TEST-SCENARIO.md"
+        ],
+        "checklist": [
+          "sdlc-v2 TASK/PLAN/TEST-SCENARIO first frontmatter template=sdlc-v2; 기존 문서는 legacy 재개 경로로 판정",
+          "sdlc-v2 TASK.md AC/C → PLAN.md Work items 완료 기준 연결",
+          "sdlc-v2 PLAN.md Work items 필수 열·W-ID·선행 작업·실행 그룹·파일 충돌 없음 — state-tool verify <태스크폴더> --plan-contract-check 통과",
+          "sdlc-v2 PLAN.md Risks 절 존재, 실제 위험은 H-N 사용 또는 위험 없음 명시",
+          "sdlc-v2 PLAN.md Release and recovery 존재",
+          "sdlc-v2 TEST-SCENARIO.md Setup / Scenarios 존재, 모든 AC/C와 존재하는 H의 연결 완전 — op-scenario-gate pass",
+          "code-scan 결과 인용 — state-tool verify <태스크폴더> --code-scan-citation-check 통과"
+        ]
+      }
+    },
+    {
+      "row_id": 6,
+      "stage": "PLAN",
+      "item": "사용자 확인",
+      "key": "plan.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-13 20:50:43",
+      "owner": "auto",
+      "note": "auto-approved on EXECUTE entry"
+    },
+    {
+      "row_id": 7,
+      "stage": "EXECUTE",
+      "item": "작업",
+      "key": "execute.implement",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-13 20:56:40",
+      "owner": "PM",
+      "note": "문서 계약 구현 시작",
+      "step": "3/3",
+      "worker_duration_unknown": true
+    },
+    {
+      "row_id": 8,
+      "stage": "TEST",
+      "item": "작업",
+      "key": "test.run_tests",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-13 21:02:42",
+      "owner": "PM",
+      "note": "독립 TEST 시작",
+      "worker_duration_unknown": true
+    },
+    {
+      "row_id": 9,
+      "stage": "TEST",
+      "item": "PM Gate",
+      "key": "test.pm_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-13 21:03:37",
+      "owner": "PM",
+      "note": "TEST PM Gate PASS: 8/8, 독립 보고 재현 5/5",
+      "gate": {
+        "artifacts": [
+          "TEST-SCENARIO.md",
+          "test-scenario.json"
+        ],
+        "checklist": [
+          "TEST-SCENARIO.md는 실행 전 명세로만 읽고 결과·증거를 기록하지 않음",
+          "test-scenario.json의 모든 필수 시나리오가 PASS이고 FAIL/BLOCKED가 없으며 실제 실행 증거가 존재",
+          "PLAN.md Work items에 정의된 필수 검증 PASS",
+          "컨벤션 자동 진단 PASS (GC-CONVENTION-*.md Critical/High 0건 — 컨벤션 적용 대상 ≥1건 시 발동)"
+        ]
+      }
+    },
+    {
+      "row_id": 10,
+      "stage": "TEST",
+      "item": "사용자 확인",
+      "key": "test.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-13 21:06:35",
+      "owner": "user",
+      "note": "사용자 CLOSE 승인"
+    },
+    {
+      "row_id": 11,
+      "stage": "CLOSE",
+      "item": "DONE.md 생성",
+      "key": "close.done_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-13 21:07:32",
+      "owner": "PM",
+      "note": "DONE.md 생성; 사용자 승인 후 CLOSE"
+    }
+  ],
+  "next_action": "태스크 완료",
+  "worktree": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_130"
+}
