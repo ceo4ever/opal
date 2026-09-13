@@ -1388,6 +1388,13 @@ install_opal() {
             success "self-pm-tool run.sh 실행 권한 설정"
         fi
 
+        # ── oppl-runtime-tool 실행 권한 (131) ──
+        local oppl_runtime_run="$opal_home/tools/oppl-runtime-tool/run.sh"
+        if [[ -f "$oppl_runtime_run" ]]; then
+            chmod +x "$oppl_runtime_run"
+            success "oppl-runtime-tool run.sh 실행 권한 설정"
+        fi
+
         # cmux 의존성 안내 (정보성 — 설치 강제 없음, silent fallback 정책)
         if ! command -v cmux &>/dev/null; then
             info "cmux 미감지 — cmux-tool 사용 시 https://cmux.com/ 또는 https://github.com/manaflow-ai/cmux 에서 설치 필요"

@@ -231,6 +231,24 @@
 
 ---
 
+### 8a. `run-start` — 새 run_id 발급 (131 D8)
+
+```bash
+~/.opal/tools/state-tool/run.sh run-start <task-path>
+```
+
+- 새 `run_id`를 발급해 `state.json.run_id`에 기록한다.
+- 형식: `run-<UTC YYYYMMDDHHMMSS>-<8자리 소문자 hex>` (정규식 `^run-[0-9]{14}-[0-9a-f]{8}$`). 타임스탬프만 UTC이며 `created_at`/`updated_at`의 KST 표기와 다르다.
+- 현재 run은 항상 1개다. 재호출하면 새 id로 **교체**하며 이력을 누적하지 않는다(`runs`/`run_ids` 같은 목록을 만들지 않는다).
+- `run_id`는 optional 필드다. `init`은 만들지 않고, 스키마 `required` 8필드는 불변이며, `run_id` 없는 기존 `state.json`도 계속 `validate`를 통과한다.
+- `show --format json`의 `data.run_id`로 통과한다. `run_id`를 소유·발급하는 것은 `state-tool`이며 다른 도구는 외래 참조로만 복제한다.
+
+```json
+{"ok": true, "command": "run-start", "run_id": "run-20260914081530-3f9a1c7e", "previous_run_id": null}
+```
+
+---
+
 ### 9. `gate-pass` — Gate 4행 일괄 ✅ 처리
 
 ```bash
