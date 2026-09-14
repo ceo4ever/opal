@@ -6,7 +6,8 @@ description: |
   구동하며, 검증을 Evaluator(구현 전 명세 심판)와 test-agent(구현 후 동작 검증)로 2원화한다. 3-SSOT
   tool-gated(backlog.json/state.json/test-scenario.json)로 백로그·진행상태·테스트결과 축을 분리한다.
   반드시 이 스킬을 사용해야 하는 상황: "opal-pilot-project-loop", "oppl", "루프 오케스트레이터", "수렴 루프", "프로젝트 루프".
-  oppd와 목적(규모 있는 프로젝트 완주)은 같으나 구동 방식(수렴 루프)이 다른 후계 후보 — oppd 병행 유지, 즉시 대체 아님.
+  목표·계약·백로그를 한 번에 잠글 수 없고 실행 증거에 따라 반복 재구성해야 하는 수렴형 프로젝트에 사용한다.
+  확정된 계약의 실행 효율화가 주목적인 프로젝트 Pilot과는 독립된 선택지이며 대체·후계 관계가 아니다.
 triggers:
   - "^opal-pilot-project-loop$"
   - "^oppl$"
@@ -20,6 +21,18 @@ version: 1.0.0
 Loop 2(실행 수렴: 태스크 선택~완료, 전 수용기준 GREEN까지 반복)가 순서대로 구동되며, 각 루프 내부는 매 회전(round)마다
 목표 달성 여부를 도구 결과로 판정한다. 검증은 **Evaluator(명세 심판, 구현 전)** 와 **test-agent(동작 검증, 구현 후)** 로 2원화하고,
 백로그·진행상태·테스트결과는 각각 전용 도구가 관리하는 JSON(3-SSOT)으로 축을 분리한다.
+
+## 사용 기준
+
+다음 질문에 `아니요`일 때 OPPL을 선택한다.
+
+> 한 번의 설계 승인 후 목표·계약·백로그를 잠그고, 이후 변경을 예외로 처리할 수 있는가?
+
+- `아니요`: 실행 증거가 목표·계약·백로그를 바꾸는 것이 정상 흐름이므로 OPPL을 사용한다.
+- `예`: 고정된 실행 계약을 처리하는 프로젝트 Pilot을 사용한다.
+- 단순 정보 결측, 파일 수, 프로젝트 규모, 높은 기술 난이도만으로 OPPL을 선택하지 않는다.
+- 안정성 목표·실험형 품질 개선·탐색형 제품처럼 실패 증거가 다음 설계와 작업 순서를 결정하면
+  OPPL 대상이다.
 
 ## Harness
 
@@ -162,6 +175,19 @@ state-tool을 호출하여 초기화한다:
 
 **목적**: 명확화 4요소(PRD/TRD/CONTRACT/BACKLOG)를 확정한다. **종료조건**: 4요소 잠김 + Evaluator D6 미해결 이슈 0 (미충족 시 D1~D6를 재회전).
 
+**[MUST — 런타임 admission 진입]** Loop 1 진입 시, 그리고 **매 D1~D6 재회전 직전**에 PM은 아래 순서를 그대로 실행한다. 순서를 바꾸거나 어느 단계도 생략하지 않는다.
+
+```
+1) ~/.opal/tools/state-tool/run.sh run-start <task-path>
+   → state.json.run_id 발급·교체 (run identity SSOT)
+2) ~/.opal/tools/oppl-runtime-tool/run.sh init --run-id <run_id>
+   → .oppl-run/runtime.json 초기화 (run identity는 외래 참조로 복제만 한다)
+3) ~/.opal/tools/oppl-runtime-tool/run.sh admit --scope round
+   → 허가된 경우에만 회전 진입. 거부 시 회전하지 않는다.
+```
+
+1)·2)는 run 1회당 1회이며, 이후 회전은 3) `admit --scope round`만 반복한다. `admit`이 거부 코드를 반환하면 PM은 재해석·우회 없이 그 코드를 사유로 에스컬레이션한다(§루프 제어).
+
 ```
 D1 인터뷰 (사용자 명확화 4요소)
   ↓
@@ -176,7 +202,7 @@ D4 CONTRACT 작성 [워커 디스패치] — 스키마·시그니처·경계 + �
 D5 백로그 생성 — backlog-tool init + add-task (얇은 수직 슬라이스로 분해)
   ↓
 D6 Evaluator 설계 검토 [워커 디스패치, phase: design-review]
-  ↓ (미해결 있음) ─── D2~D5 재작업 회전 (반복상한 — loop-control.md §2)
+  ↓ (미해결 있음) ─── D2~D5 재작업 회전 (진입 전 `admit --scope round` 허가 필수 — 거부 시 회전 없음)
   ↓ (미해결 0)
 D7 사용자 확정 게이트 — 4요소 잠김 확인 → docs/ 승격
 ```
@@ -261,6 +287,14 @@ L✓ 종료 판정 — backlog-tool done-check
 ```
 `depends[]` 충족 + `priority` 최상위 pending 태스크를 반환한다. `next_task_id: null`이면 L✓로 직행한다.
 
+**[MUST — 런타임 admission 진입]** Loop 1을 거치지 않고 Loop 2로 직접 진입한 run(재개 포함)이면 먼저 `state-tool run-start <task-path>` → `oppl-runtime-tool init --run-id <run_id>`를 수행한다. 그리고 **선택된 태스크를 `opal-loop-action-agent`에 디스패치하기 직전**에 아래를 호출한다.
+
+```
+~/.opal/tools/oppl-runtime-tool/run.sh admit --scope dispatch --task-id T{NN}
+```
+
+허가된 경우에만 디스패치한다. 거부 응답에는 항상 `scope` 필드가 동반되며 — 예컨대 프로젝트 dispatch 상한 초과는 `attempt_limit_exceeded` + `scope:"dispatch"`다 — PM은 거부 코드 8종(`active_attempt`·`round_limit_exceeded`·`attempt_limit_exceeded`·`resume_limit_exceeded`·`budget_exceeded`·`timeout_limit_exceeded`·`no_progress`·`decision_required`)을 재해석·조건부 무시·재시도 우회 없이 그대로 에스컬레이션 사유로 사용한다. 태스크 내부 phase·resume의 `admit`→`attempt-start`→실행→`attempt-finish` 순서는 `opal/agents/opal-loop-action-agent/AGENT.md` §실행 admission이 소유한다.
+
 **L∞ 관찰**: 태스크 완주 후 결과에 따라 상태를 반영한다.
 ```
 ~/.opal/tools/backlog-tool/run.sh mark <task-path> --id T{NN} --status done
@@ -294,12 +328,12 @@ T1 명세·설계 — PLAN.md (+ USER_FLOW.md*, 인터랙션 슬라이스만) [o
 T2 테스트시나리오 — test-tool scenario-init, RED-first [opal-agent 채널 — 동기/비동기]
   ↓
 G 명세 리뷰 게이트 — Evaluator, 구현 전 (phase: spec-review) [opal-agent 채널 — 동기/비동기] ★검증 2원화 ①
-  ↓ (verdict: fail) → T1 재작업 (반복상한 — loop-control.md §2)
+  ↓ (verdict: fail) → T1 새 attempt (`oppl-runtime-tool admit` 허가 시에만 — 거부 코드 반환 시 blocked)
   ↓ (verdict: pass)
 T3 구현 [opal-agent 채널 — 동기/비동기]
   ↓
 T4a 테스트 — test-agent, 구현 후 [opal-agent 채널 — 동기/비동기] ★검증 2원화 ②
-  ↓ (fail) → T3 재작업 (하네스 §1 재시도 한도)
+  ↓ (fail) → T3 새 attempt (`oppl-runtime-tool admit` 허가 시에만)
   ↓ (pass)
 T4b 규칙검사 — conv/sec-checker, 변경 파일 대상 [저위험 인라인 경량화 / 고위험 디스패치 — opal-agent 채널 — 동기/비동기]
   ↓
@@ -329,7 +363,7 @@ project_root: {프로젝트 루트}
 ```
 verdict `fail` → T3에 진입하지 않고 T1로 되돌린다. verdict `pass` → T3 진입.
 
-**T3 구현 [루프 액션 에이전트→생성자 재개 지시]**: G verdict pass 후에만 루프 액션 에이전트가 생성자에게 구현 재개를 지시한다. 하네스 §1 자동 루핑 제약(lint/build/test 재시도 한도)을 따른다.
+**T3 구현 [루프 액션 에이전트→생성자 재개 지시]**: G verdict pass 후에만 루프 액션 에이전트가 생성자에게 구현 재개를 지시한다. 재개는 `oppl-runtime-tool admit --scope resume` 허가 후에만 성립하고, lint/build/test 재작업은 매 회 `admit --scope task-phase` 허가를 받은 새 attempt로 수행한다 — 상한 수치는 `opal/core/references/harness/guards.md` §자동 루핑 제약이 SSOT이며, 도달 판정은 도구가 집행한다.
 
 **T4a 테스트 [루프 액션 에이전트→test-agent 내부 디스패치, 구현 후]**: 루프 액션 에이전트가 opal-test-agent를 내부 디스패치하여 test-scenario.json의 시나리오를 실행하고 result존을 기록한다.
 ```
@@ -402,6 +436,8 @@ Loop 1·Loop 2·태스크 내부 파이프라인 모두 아래 **5종 종료조�
 4. **목표 달성 체크** — 도구 결과(`backlog-tool done-check`, `test-tool scenario-status`)로만 판정, 주관적 판단 배제 (`references/loop-control.md` §5)
 5. **사람 게이트** — 배포·DB·TRD/PRD 확정·외부 계약 등 비가역 행동 전 항상 사용자 승인 (`references/loop-control.md` §9)
 
+> **[MUST] 집행 주체**: 문서는 상한의 *종류와 의미*를 정의하고, 도달 여부의 *판정과 차단*은 `oppl-runtime-tool admit`이 수행한다. PM·루프 액션 에이전트는 회전 수·비용·시간을 스스로 기억해 차단하지 않으며, 자체 카운터로 상한을 우회하지 않는다. 거부 코드 8종(`active_attempt`·`round_limit_exceeded`·`attempt_limit_exceeded`·`resume_limit_exceeded`·`budget_exceeded`·`timeout_limit_exceeded`·`no_progress`·`decision_required`)은 재해석·조건부 무시·재시도 우회 없이 그대로 에스컬레이션·`blocked` 사유가 된다.
+
 경로 분리(성공/실패/에스컬레이션)·에러 처리(복구가능 vs 하드블로커)·컨텍스트 관리(압축 작업기억)는 위 5종 종료조건을 안전하게 운용하기 위한 보조 장치이며 `references/loop-control.md` §6·§7·§8에서 상세히 다룬다.
 
 ---
@@ -453,7 +489,7 @@ TASK (사용자 승인)
 
 ### G 게이트 재작업 루핑
 
-명세 리뷰(G) verdict `fail` → T1 재지시 (재시도 한도: `references/loop-control.md` §2와 `pilot.start`가 전달한 `guards`의 PLAN 재진입 규칙). 한도 초과 → 사용자 에스컬레이션.
+명세 리뷰(G) verdict `fail` → T1 재지시. 재지시는 `oppl-runtime-tool admit` 허가를 받은 새 attempt로만 성립하며, 상한 수치는 `references/loop-control.md` §2와 `pilot.start`가 전달한 `guards`의 PLAN 재진입 규칙이 SSOT다. `admit`이 거부 코드를 반환하면 → 사용자 에스컬레이션.
 
 ### CLOSE 진입 게이트 (공통)
 
@@ -469,7 +505,7 @@ semi-agentic / agentic 모두 CLOSE 첫 행(#19) `--auto-pass` 거부 (`agentic_
 opal-harness-agentic.md 공통 기준에 추가:
 - Evaluator drift 판정이 오너십 계층 #4(외부 노출)로 분류된 경우 (`references/contract.md` §4)
 - 무진전 감지(`references/loop-control.md` §4) 신호가 관찰된 경우
-- 반복 상한 초과 (`references/loop-control.md` §2)
+- `oppl-runtime-tool admit`이 거부 코드 8종 중 하나를 반환한 경우 (상한·예산·무진전·결정대기 도달의 유일한 판정 경로)
 
 ---
 

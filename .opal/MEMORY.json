@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_task_number": 126,
+  "last_task_number": 132,
   "memories": [
     {
       "title": "변경이력 제거 검토 결정 — A안 확정",
@@ -33,43 +33,51 @@
       "status": "candidate",
       "file": "memory/파일럿_태스크_설계_시_주제_규모와_파이프라인_프로필을_함께_결정한다.md",
       "summary": "태스크 119의 파일럿(태스크 121)에 opd 풀 파이프라인 16행을 붙였으나 제안서 §11 Phase 2는 opds 한 프로필을 지정했고,…"
+    },
+    {
+      "title": "OPAL WorkStudio 제품 개발 방향",
+      "date": "2026-09-12",
+      "type": "architecture",
+      "status": "active",
+      "file": "memory/OPAL_WorkStudio_제품_개발_방향.md",
+      "summary": "백로그 SSOT와 MVP Agent 대화 흐름, Orca Terminal 참조 원칙"
     }
   ],
   "history": [
+    {
+      "title": "131 루프파일럿 실행안정화",
+      "date": "2026-09-14",
+      "stage": "완료",
+      "path": "tasks/131-260914-opd-루프파일럿-실행안정화/",
+      "result": "OPPL 상한·완료판정을 도구 집행으로 전환. oppl-runtime-tool 신설(admit ledger), opal-agent에 process group·독립 watchdog·terminal framing·출력 writer 소유권. tools.md를 1212행 카탈로그에서 92행 레지스트리로 재정의하고 출력 규범을 harness owner 문서로 분리해 stage.execute에 편입. 도구 README 13→22종 전수. 검증 1239 passed"
+    },
+    {
+      "title": "130 PM 하단 액션 의도 명확화",
+      "date": "2026-09-14",
+      "stage": "완료",
+      "path": "tasks/130-260913-opds-PM-하단-액션-의도-명확화/",
+      "result": "PM 결과 보고 하단을 PM 다음 작업과 사용자 결정 필요로 분리하고, 결정 요청의 판단 정보·명시 질문 계약을 통일했다. 독립 시나리오 8/8과 보고 재현 5/5를 통과했다."
+    },
+    {
+      "title": "126 워크스튜디오 독립앱 구축",
+      "date": "2026-09-12",
+      "stage": "완료",
+      "path": "tasks/126-260912-opds-워크스튜디오-독립앱-구축/",
+      "result": "Dashboard Workbench를 독립 Electron 앱 OPAL WorkStudio로 분리하고 Project·PM Coordination·Terminal·Files·최초 실행 Welcome을 구현했다. WorkStudio 42개와 Dashboard 123개 테스트를 통과했다."
+    },
+    {
+      "title": "122 PM 직접수행 모델",
+      "date": "2026-09-12",
+      "stage": "완료",
+      "path": "tasks/122-260912-opds-PM-직접수행-모델/",
+      "result": "--pm actor 축 신설(harness/actor.md SSOT·pilot.start required 5종)·opal-self-pm(//oppm)·self-pm-tool 도입, L2 경량 트랙 owner 문서에서 제거. 기본 경로 무변경 회귀 확인, 시나리오 22/22 PASS"
+    },
     {
       "title": "125 E2E 프로필 판정 계약",
       "date": "2026-09-12",
       "stage": "완료",
       "path": "tasks/125-260912-opd-E2E-프로필-판정-계약/",
       "result": "E2E 프로필·판정 상태·증거·handoff 계약과 test-tool 검증을 추가하고 전체 84개 테스트 및 시나리오 11건을 통과함"
-    },
-    {
-      "title": "124 워크트리 멀티레포 캡슐 소유권",
-      "date": "2026-09-12",
-      "stage": "완료",
-      "path": "tasks/124-260912-opds-워크트리-멀티레포-캡슐-소유권/",
-      "result": "multi-repo 루트 저장소 캡슐 소유권 구현 — R-1~R-5 적격·판정순서·2축 멱등 회수. 28/28 PASS, 회귀 42쌍 동일"
-    },
-    {
-      "title": "120 검사 공통 역량 분리",
-      "date": "2026-09-12",
-      "stage": "완료",
-      "path": "tasks/120-260912-opds-검사-공통-역량-분리/",
-      "result": "GC 검사 절차를 op-gc-security·op-gc-convention·op-gc-report 3종 단계 스킬로 분리하고 opal-pilot-gc를 thin wrapper로 전환. 세 곳에 중복되던 규칙을 gc-finding-schema.md 단일 SSOT로 수렴, checker 2종은 기준 미보유 role로 축소(212→69·250→87행). 기준 문서 부재 시 검사 생략을 advisory+partial로 교체해 결측과 통과를 분리. 시나리오 17/17 PASS, pipeline.json 무변경으로 기존 GC 동작 회귀 없음."
-    },
-    {
-      "title": "119 워크트리 태스크캡슐 소유권 파일럿",
-      "date": "2026-09-12",
-      "stage": "완료",
-      "path": "tasks/119-260912-opd-워크트리-태스크캡슐-소유권-파일럿/",
-      "result": "생성 순서 전환·cone 활성화·상태 의존 canonical path 해석. 파일럿 태스크 121이 실환경 수명주기 완주(hub_merged 관측). 시나리오 30/30, 스위트 710 passed"
-    },
-    {
-      "title": "121 하네스 구형절 참조 정리",
-      "date": "2026-09-12",
-      "stage": "완료",
-      "path": "tasks/121-260912-opd-하네스-구형절-참조-정리/",
-      "result": "인용 2곳을 owner 문서로 전환 후 opal-harness.md §2.5 매핑 행 제거. 워크트리 캡슐 소유권 계약의 첫 실사용 태스크"
     }
   ]
 }

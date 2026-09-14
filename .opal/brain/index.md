@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-09-12 17:05
+> 갱신: 2026-09-14 01:52
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -22,14 +22,17 @@
 - [[opal-evaluator-agent]] — opal-evaluator-agent #agent #checker #verification #oppl
 - [[opal-improve]] — opal-improve (//opim) #skill #operator #improvement #pm-loop #tool-gated
 - [[opal-loop-action-agent]] — opal-loop-action-agent #agent #oppl #executor #action-agent
+- [[opal-self-pm]] — opal-self-pm #skill #operator #pm #task-122
 - [[opal-skill-wizard]] — opal-skill-wizard (osw) #skill #skill-registry #project-scope #task-114
 - [[opal-workspace-sync]] — opal-workspace-sync (alias opws) #skill #workspace #git #operator
 - [[pipeline-json-spec]] — pipeline.json (pilot 파이프라인 정의 SSOT) #state-tool #pipeline #schema #task-070
+- [[self-pm-tool]] — self-pm-tool #tool #cli #pm #task-122
 - [[skill-opal-pilot-data-design]] — opal-pilot-data-design (opdd) #pilot #orchestrator #data-design #db
 - [[skill-registry-project-scope-4source-merge]] — skill-registry 프로젝트 스코프 4소스 병합 #tool #skill-registry #project-scope #task-114
 - [[state-tool]] — state-tool #tool #pipeline
 - [[test-tool]] — test-tool #tool #testing #pipeline
 - [[tool-scan]] — tool-scan #tool #opal-tools #discovery #usage #capability
+- [[workstudio-project-registry]] — WorkStudio Project Registry #desktop #workstudio #project-registry
 - [[worktree-tool]] — worktree-tool #tool #workspace #git #pipeline
 
 ## 개념
@@ -37,6 +40,7 @@
 - [[absence-assertion-is-enforcement-not-residue]] — 부재 단언은 잔재가 아니라 집행 장치다 — 제거 전수 검사의 명시 예외 #removal #verification #test-design #lesson
 - [[ac-infeasible-from-start-requires-preexisting-baseline-diff]] — AC가 착수 시점부터 실현 불가일 수 있다 #verification #ac #task-114
 - [[active-platform-dir-install-target-lesson]] — 활성 Claude 플랫폼 디렉토리가 ~/.claude 기본이 아닐 수 있다 — install 타겟 정합 교훈 (032 P2) #install #deploy #platform #dispatch #lesson-learned
+- [[actor-axis-orthogonal-to-mode]] — 실행 주체(actor) 축은 모드 축과 직교한다 #actor #mode #orthogonal-axis #task-122 #pattern
 - [[adapter-body-model-level-substitution]] — 어댑터 본문 model 레벨 치환 — frontmatter 비대칭 해소 (032) #adapter #install #model #platform #sub-dispatch #constitution
 - [[additive-field-extension-over-schema-replacement]] — 레지스트리 확장은 스키마 교체보다 additive 필드 추가가 기능 후퇴를 막는다 #registry #schema-evolution #skill-registry #task-105
 - [[agent-md-digest-pattern]] — AGENT.md 다이제스트 패턴 — 비서 코어 lean 분리 #bootstrap #digest #lean-core #assistant-tier #pm-tier #architecture
@@ -101,6 +105,7 @@
 - [[console-settings-incremental-scope-policy]] — 콘솔 설정 화면 점진 확장 방침 #product-decision #console #scope #security
 - [[console-write-exception-router-isolation]] — 콘솔 쓰기 예외 라우터 격리 패턴 #architecture #console #security #pattern #write-isolation
 - [[context-tag-suppresses-false-positive-without-removing-hit]] — 오탐 억제는 hit를 배열에서 빼지 않고 context 태그로 분류한다 #false-positive #pattern-scan #risk-detection #task-105
+- [[count-notation-scattered-across-docs]] — 개수·열거 표기는 문서 여러 곳에 흩어져 조용히 낡는다 #documentation #drift #task-122 #lesson
 - [[daemon-as-tool-orchestrator]] — 데몬은 도구 오케스트레이터 — 데이터 SSOT는 프로젝트 파일 #architecture #dashboard #ssot
 - [[decision-vs-fact-claim-separation]] — 결정과 사실 주장의 분리 — 결정은 근거 판정 대상이 아니다 #evidence #citation #decision #opds
 - [[dedup-pointer-over-copy]] — dedup 원칙 — 목적지 기존 존재 시 표 복사 금지·포인터 단일화 #dedup #ssot #pointer #architecture #principles
@@ -113,6 +118,7 @@
 - [[dict-선행-model-ssot]] — DICT가 MODEL을 선행한다 — 사전이 속성명·타입 SSOT #architecture-decision #data-design #ssot #pipeline
 - [[dl-contract-download-verify-target-identity]] — DL-CONTRACT — 검증 대상과 다운로드 대상은 같은 파일이어야 한다 #deploy #release #install #checksum #contract
 - [[e2e-cmux-first-playwright-fallback]] — E2E 도구 우선순위 — cmux 1순위 → playwright 폴백 (에러코드 소비) #testing #e2e #cmux #framework
+- [[electron-main-owned-project-registry]] — Electron main-owned Project Registry #electron #security #workstudio
 - [[enforce-rule-legacy-data-surfacing-lesson]] — enforce 규칙 신설 시 잔존 데이터 표면화 — 배포 전 실 데이터 스캔 필요 교훈 #lesson #enforce #validate #brain-tool
 - [[enforcement-basis-must-be-structural-not-voluntary]] — 강제의 판정 근거는 자발적 표시가 아니라 구조여야 한다 — 3회 우회 후 행 기반 판정 + CLOSE 차단 #enforcement #governance #state-tool #worker #measurement #lesson-learned
 - [[erd-modeler-deprecation]] — erd-modeler deprecate — op-data-model/ddl로 분해, //erm 하위호환 #architecture-decision #deprecation #erd-modeler #migration
@@ -132,6 +138,7 @@
 - [[fixture-ownership-separation-closes-reward-hacking]] — 픽스처 소유권을 구현자와 분리하면 reward hacking 표면이 닫힌다 #testing #fixture-design #reward-hacking #task-105
 - [[fixture-vs-real-blind-spot-lesson]] — fixture-vs-real 맹점 — 테스트 픽스처 통과·실데이터 버그 반복 교훈 #lesson #testing #bug #fixture
 - [[force-flag-side-effect-trial-run-first]] — --force류는 1건 시험 실행 후 확대한다 — 시각 덮어쓰기로 6행 손상 #tooling #state-tool #incident #discipline #lesson-learned
+- [[fork-agent-inherits-pm-role]] — fork 서브에이전트는 PM 컨텍스트를 상속해 PM으로 행동한다 #fork #pm-role #agent-tool-choice #task-122 #lesson
 - [[gc-finding-schema]] — GC finding schema — 검사 결과 계약 SSOT #gc #security #convention #schema #ssot #architecture
 - [[global-deploy-after-verification-ordering]] — 검증 미완 규칙의 전역 배포 차단 — 배포는 검증의 결과여야 한다 #deploy #install #pipeline-order #framework #task-095
 - [[governance-single-owner-rule-mapping]] — 규칙 1소유자 매핑 — Governance 중복 기재 방지 설계 #governance #ssot #design-pattern #dispatch
@@ -341,6 +348,7 @@
 - [[usage-ssot-live-help-principle]] — 사용법 SSOT는 도구 자신의 live --help #design-principle #tool-scan #usage #drift #ssot
 - [[verdict-tool-fail-safe-direction-design]] — 판정 도구 오작동 방향 고정 — unknown 미확정 계상 + 강등 4축 AND #evidence #tooling #fail-safe #opds
 - [[verification-command-4-standard]] — 검증 명령 4종 표준 (SSOT — verification-loop-guide) #verification #lint #build #test #watch-mode #ssot #standard
+- [[verification-only-workitem-needs-remediation-owner]] — 검증 전용 Work item은 실패 시 보정 주체를 함께 정의해야 한다 #process-gap #verification #work-item #task-122 #lesson
 - [[version-stamp-export-subst-decision]] — 버전 결정 모델 전환 — 설치 시점 API 조회 → 릴리스 시점 export-subst 각인 #version #install #git #export-subst #architecture
 - [[vertical-writing-rotation-glyph-flip]] — 세로쓰기에 회전을 겹치면 글리프가 뒤집힌다 — grep도 축소 캡처도 못 잡는 결함 #lesson #css #render-verification #visual-artifact #verification-blind-spot
 - [[warm-handle-single-entry-injection]] — 웜 핸들 단일 진입점 주입 결정 #brain #session #api-compat #dependency-injection

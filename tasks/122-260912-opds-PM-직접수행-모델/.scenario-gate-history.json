@@ -1,0 +1,34 @@
+[
+  {
+    "iteration": 1,
+    "missing": {
+      "requirements": [],
+      "features": [],
+      "hypotheses": []
+    },
+    "scores": {
+      "goal": 2,
+      "adoption": 2,
+      "boundary": 2
+    },
+    "gaps": [],
+    "verdict": "pass",
+    "note": "비차단 관전 지점 — AC-1의 3중 조합 //opd --pm --agentic --wt 실호출이 미실행. PM이 S-14 강화로 반영 후 iteration 2 재호출."
+  },
+  {
+    "iteration": 2,
+    "missing": {
+      "requirements": [],
+      "features": [],
+      "hypotheses": []
+    },
+    "scores": {
+      "goal": 2,
+      "adoption": 2,
+      "boundary": 2
+    },
+    "gaps": [],
+    "verdict": "pass",
+    "note": "S-14를 3축(--pm --agentic --wt) 동시 투입으로 강화. evaluator 확인: AC-1이 문서 대조에서 런타임 관측으로 승격, AC-2·AC-3 희석 없음, 타 축 회귀 없음. 잔여 비차단 2건 — (a) AC-2 비교 격리를 위해 plain //opds --pm 실행을 TEST에서 선행할 것, (b) worktree 키의 기대값 정밀도는 TEST 실측 시 확정."
+  }
+]

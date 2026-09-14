@@ -34,13 +34,14 @@
 | `docs/` | 프로젝트 문서 | 아키텍처, 컨벤션 등 프로젝트 레벨 문서 |
 | `tasks/` | 태스크 산출물 | `{NNN}-{YYMMDD}-{스킬약어}-{태스크명}/` 형식의 작업 단위 폴더 |
 | `skills/` | 독립 스킬 소스 | 파이프라인 없이 단독 사용하는 스킬 (8종) |
-| `opal/skills/` | OPAL 스킬 소스 | 오케스트레이터, 단계 스킬 등 OPAL 전용 (43종) |
+| `opal/skills/` | OPAL 스킬 소스 | 오케스트레이터, 단계 스킬 등 OPAL 전용 (44종) |
 | `opal/agents/` | 워커 에이전트 소스 | 모든 서브에이전트 정의 (15종) |
-| `opal/tools/` | OPAL 도구 소스 | 결정론 집행 CLI (20종, `event-loader` 포함) |
+| `opal/tools/` | OPAL 도구 소스 | 결정론 집행 CLI (21종, `event-loader` 포함) |
 | `opal/core/` | 프레임워크 코어 | 레퍼런스, MCP 설정, 도구 |
 | `opal/bootstrapper/` | 부트스트래퍼 | 플랫폼별 부트스트랩 진입점 (claude/codex/cursor/gemini) |
 | `opal/templates/` | 템플릿 | 배포 시 참조하는 설정 템플릿 |
 | `dashboard/` | OPAL Console 소스 | `frontend/`(React) + `backend/`(FastAPI) |
+| `workstudio/` | OPAL WorkStudio 소스 | React+TypeScript+Vite+Electron 기반 독립 데스크톱 작업 앱 |
 | `cursor-rules/` | Cursor 규칙 | Cursor 플랫폼용 `.mdc` 규칙 파일 |
 | `memory/` | 메모리 본문 | `.opal/MEMORY.json`이 인덱싱하는 메모리 파일 |
 | `scripts/` | 설치 스크립트 | install-mac.sh 등 |
@@ -72,6 +73,8 @@
 | `opal-pilot-project` | opp | 오케스트레이터 | Project Task 범용 (문서 작성·설정 변경·워크플로우) — TASK → PLAN → EXECUTE → CLOSE |
 | `opal-pilot-write-tech` | opwt | 오케스트레이터 | 기획 산출물 네트워크 (PRD·TRD·정책서·IA) — TASK → ANALYSIS → PLAN → EXECUTE → QA → CLOSE. 워커 병렬 디스패치 + 교차 논리 검토·정합성 검증 |
 | `opal-pilot-project-dev` | oppd | 오케스트레이터 | 프로젝트 개발 라이프사이클 3 Phase — PLAN → WBS → EXECUTE. 기획은 opwt, 코드 실행은 opal-task-action-agent에 위임하고 PM이 조율 |
+
+> **actor 축**: `--pm`은 모드 축과 직교하는 별도 실행 주체(actor) 축이다 — 지원 Pilot 폐쇄 목록은 `opal-pilot-dev`(alias `opd`·`opds`) 하나뿐이며, `//opds --pm ...`처럼 조합하면 PM이 각 단계 skill을 워커 디스패치 없이 직접 수행한다. 정의·지원 범위·실행 계약 원문 SSOT는 `opal/core/references/harness/actor.md`.
 
 **단계 스킬 (`op-dev-*` 6종)**
 
@@ -158,7 +161,7 @@ llm-wiki 사상을 융합한 프로젝트 지식 위키 — 프로젝트의 WHY�
 
 ## 주요 컴포넌트 (Project Loop 파이프라인)
 
-루프 기반 프로젝트 오케스트레이션 — 선형 Phase(oppd) 대신 종료조건 있는 2-루프 수렴 구조로 규모 있는 프로젝트를 완주 (2026-07 신설, 태스크 056. oppd 병행 유지, 검증 후 deprecate 검토).
+루프 기반 프로젝트 오케스트레이션 — 목표·계약·백로그를 실행 전에 잠글 수 없고 실행 증거에 따라 반복 재구성해야 하는 수렴형 프로젝트를 종료조건 있는 2-루프로 완주한다. 고정된 실행 계약을 처리하는 프로젝트 Pilot과는 독립된 선택지이며 대체·후계·deprecate 관계가 아니다 (2026-07 신설, 태스크 056).
 
 | 컴포넌트 | 약어 | 유형 | 설명 |
 |----------|------|------|------|
@@ -167,14 +170,15 @@ llm-wiki 사상을 융합한 프로젝트 지식 위키 — 프로젝트의 WHY�
 | `opal-loop-action-agent` | - | 서브에이전트 | Loop 2 루프 액션 에이전트 — PM이 태스크당 1회 디스패치, T1~T5+G를 내부 디스패치(생성자·Evaluator·test-agent·checker 4축)로 완주 후 소멸. 결과 계약 6필드 반환, 비가역·계약갱신 drift는 blocked 반환(PM 에스컬레이션) |
 | `backlog-tool` | - | 도구 | backlog.json SSOT 관리 CLI (8서브명령 init/add-task/select-next/mark/update-task/done-check/coverage-check/show, BACKLOG.md 자동 렌더). `covers` 필드 + `coverage-check`(표면 커버리지·통합 태스크 게이트 — surfaces.json 소비) |
 | `test-tool scenario-*` | - | 도구 확장 | test-scenario.json SSOT — RED-first 동결 게이트(scenario-init/red/lock/mark/status) + 충실도·표면 게이트(scenario-fidelity-check/scenario-conformance — required_fidelity·fidelity·surface_ref 필드, 증거 충실도 사다리 mock<real-http<real-usage) + 목표-커버 게이트(scenario-coverage-check — R/F/H 매핑 결정론, exit 16/17, 073) + E2E profile·executor·final/operational status·구조화 assertion/evidence/handoff 판정 계약. 실제 executor와 Runtime Manager는 별도 구현 범위 |
-| `opal-action-monitor` | - | 도구 | 루프 액션 에이전트 진행 현황판 — `.oppl-run/`(events.jsonl·journal.md·exitcode) 파싱, 단계×축 상태 렌더 + `--json`/`--watch` (읽기 전용) |
+| `oppl-runtime-tool` | - | 도구 | `.oppl-run/runtime.json` 운영 ledger 관리 CLI — round·project dispatch·task attempt·resume·예산 admission과 실패 지문 무진전 판정을 소유한다. 3-SSOT(backlog/state/test-scenario)와 별개의 런타임 가드 축이며 업무·파이프라인·검증 상태를 복제하지 않는다. attempt 원문(PID·PGID·heartbeat·terminal result)은 `opal-agent`의 attempt record가 소유하고 ledger는 `attempt_id`·경로만 외래 참조한다 |
+| `opal-action-monitor` | - | 도구 | 루프 액션 에이전트 진행 현황판 — `.oppl-run/`(events.jsonl·journal.md·exitcode) 파싱, 단계×축 상태 렌더 + `--json`/`--watch`. 7상태와 잔여 상한 표시는 `oppl-runtime-tool` ledger에 위임한다 (읽기 전용) |
 | `opal-action-status` | opas | operator | 액션 에이전트 현황 발동층 — `//opas [태스크폴더]` 자동 탐지 + opal-action-monitor/backlog-tool 소비 + 해석 보고 (읽기 전용). 커버리지 oppl 한정, 069/070 전환 시 무변경 확장 |
 
 > 3-SSOT tool-gated: backlog.json(backlog-tool) · state.json(state-tool) · test-scenario.json(test-tool) — 손편집 금지. 사람 뷰는 도구가 제공한다: `BACKLOG.md`는 자동 렌더, `state.json` 현황 조회는 `state-tool show`(094 저널화 이후 STATE.md는 렌더 뷰가 아니라 의사결정 로그·블로커 저널이다).
 
 ## 주요 컴포넌트 (OPAL Console)
 
-로컬 OPAL 프로젝트를 한 웹 화면에서 조망하는 읽기 전용 관리 대시보드 (2026-06 신설, 태스크 021). 상세 구조: `docs/ARCHITECTURE.md §OPAL Console`.
+로컬 OPAL 프로젝트를 한 웹 화면에서 조망하는 읽기 전용 관리 대시보드 (2026-06 신설, 태스크 021). 실행 작업 공간과 네이티브 폴더 기반 PM Coordination UI는 별도 데스크톱 앱인 `OPAL WorkStudio`가 소유한다. 상세 구조: `docs/ARCHITECTURE.md §OPAL Console`.
 
 | 컴포넌트 | 유형 | 설명 |
 |----------|------|------|
@@ -183,6 +187,14 @@ llm-wiki 사상을 융합한 프로젝트 지식 위키 — 프로젝트의 WHY�
 | `opal-cli console` | CLI | 데몬 기동/관리 서브커맨드 (start/stop/status/open/scan) — scan은 `console.config.json`(스캔 루트 설정)을 생성·머지 갱신하며 install이 1회 자동 실행 |
 
 > 소스는 `dashboard/`, 배포는 install 경유 `~/.opal/dashboard-server/`. 읽기 전용(쓰기/편집·브레인 화면은 2차). 시그니처 3색은 `:root` 전역 CSS 변수로 교체 용이.
+
+## 주요 컴포넌트 (OPAL WorkStudio)
+
+OPAL WorkStudio는 로컬 프로젝트 폴더를 선택해 작업 공간, PM Coordination, 독립 Terminal, 파일 트리를 다루는 별도 Electron 데스크톱 앱이다. Dashboard/Console 코드와 실행 경로를 공유하지 않고 `workstudio/`가 UI와 Electron preload/IPC 경계를 소유한다.
+
+| 컴포넌트 | 유형 | 설명 |
+|----------|------|------|
+| `workstudio` | Desktop 앱 | React+TypeScript+Vite+Electron — 프로젝트 등록, PM Coordination, 실행 workspace, read-only 파일 트리 |
 
 ## 주요 컴포넌트 (PM 개선 루프)
 
@@ -195,6 +207,17 @@ PM의 학습·자기개선을 tool-gated로 집행하는 서브시스템 — 정
 | 회고 하드스텝 | - | pilot CLOSE 훅 | opd·opwt·opgc·oppd CLOSE에 삽입 — 태스크/세션 궤적 신호로 개선후보 도출→기록, 개선후보 0건 시 no-op(CLOSE 비차단) |
 
 > 학습 2분류: 로컬 PM 개선 → 프로젝트 `.opal/`(memory) / FW 개선 → 전역 `~/.opal/fw-inbox/`(출처메타 자기완결 항목, install 배포 경유 반영). SSOT: `opal/core/references/harness/pm-improvement-loop.md` — 정의 3문서(구 `pm-learning-loop.md`·`self-improvement.md`·opal-pm §5 stub)를 단일 SSOT로 통합. hook 미채택(플랫폼 독립).
+
+## 주요 컴포넌트 (PM 직접 수행)
+
+PM이 직접 조회·작성·수정·검증을 수행하는 대화형 operator 스킬 — `opal-brain`과 같은 유형(단계 파이프라인·워커 디스패치 없음)이며, Dev 파이프라인 actor 축(`--pm`)과는 별개 진입 경로다 (2026-09 신설, 태스크 122).
+
+| 컴포넌트 | 약어 | 유형 | 설명 |
+|----------|------|------|------|
+| `opal-self-pm` | oppm | operator (대화형 루프) | 종료 조건을 가진 질문 반복형 PM 직접 수행 루프 — 질문 1개→조회·정리 반복으로 범위 확정 → 작업 계약 승인 → PM 직접 수행·검증 → 8영역(기획·설계·프로젝트 문서·CONVENTIONS·SECURITY·brain·memory·code-scan) 지식 동기화 판정 → 사용자 최종 확인 |
+| `self-pm-tool` | - | 도구 | `opal-self-pm` 실행 기록(8필드 JSON) 전담 CLI. `state.json`·`test-scenario.json`·`backlog.json` 3-SSOT는 읽지도 쓰지도 않는다 |
+
+> 독립 검증 경계(생성자≠평가자 예외)와 GC 3종(`op-gc-security`·`op-gc-convention`·`op-gc-report`) 호출 지점의 공유 계약은 `opal/core/references/harness/actor.md` §독립 검증 경계와 GC 호출 지점이 소유한다.
 
 ## 주요 컴포넌트 (TEST-SCENARIO 목표-커버 게이트)
 
@@ -221,6 +244,7 @@ TEST-SCENARIO 단계를 "목표 달성 검증"으로 재정의 — 루브릭 채
 | Framework | `opal/`, `skills/` | Markdown, YAML, Bash, Node.js | opal-task-agent (범용) |
 | Console FE | `dashboard/frontend/` | React, TypeScript, Vite, Tailwind, shadcn/ui | opal-fe-agent |
 | Console BE | `dashboard/backend/` | Python, FastAPI, uvicorn | opal-be-agent |
+| WorkStudio | `workstudio/` | React, TypeScript, Vite, Electron, Tailwind, shadcn/ui | opal-fe-agent |
 
 ## 프로젝트 문서
 
@@ -234,5 +258,6 @@ TEST-SCENARIO 단계를 "목표 달성 검증"으로 재정의 — 루브릭 채
 | `README.md` | 프레임워크 공개 소개 문서 | Pilot 개념, 사용 사례, 프레임워크 철학 정의 | Framework | Pilot 추가/변경 시, 사용자 대면 문서 작업 시, 프레임워크 철학/방향 관련 작업 시 |
 | `docs/architecture-diagram/opal_framework_architecture.html` | 프레임워크 구조 다이어그램 (시각 SSOT) | 3층 구조·파이프라인·도구 관계 시각화 (태스크 086 산출) | Framework | 구조 설명·온보딩 시 |
 | `docs/SECURITY.md` | 프로젝트 보안 기준 | `op-gc-security`가 공식 표준 baseline보다 우선 적용하는 프로젝트 누적 기준 | Framework | 보안 체크(opgc CHECK) 시 |
+| `opal/core/references/harness/actor.md` | 실행 주체(actor) 축 SSOT | 모드 축과 직교하는 `--pm` 정의, 지원 Pilot 폐쇄 목록, `--pm` 실행 계약, 독립 검증 경계·GC 호출 지점 | Framework | `pilot.start` 이벤트 |
 | `docs/proposals/` | 미적용 제안서 | 채택 전 설계 제안. 적용 완료분은 `archives/`로 이관되며 규범 원문은 owner 문서가 소유한다 | Framework | 제안 검토·결정 시 |
 | `opal/core/references/harness/done-template.md` | 표준 CLOSE DONE.md 템플릿 (SSOT) | DONE.md 절 구성 + `## 회고적 학습 후보` 절 계약(레포 상대 page 경로 1행 1건, finalize 재진입 판정의 선언 집합). 오케스트레이터 SKILL은 포인터만 두고 템플릿 본문을 복제하지 않는다 | Framework | CLOSE 단계에서 DONE.md를 작성할 때, merge 후 귀속·worktree finalize 판단 시 |

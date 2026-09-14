@@ -69,6 +69,7 @@ OPAL 자산은 Global/Project 2-레이어로 배치되고, 런타임은 세션 �
 - **project-aware 경계**: `.opal/AGENT.md` 존재는 프로젝트 감지 신호일 뿐 PM 승격 신호가 아니다. 전체 `docs/PROJECT.md`, `opal-pm.md`, `opal-harness.md`는 세션 부트에서 읽지 않는다.
 - **JIT 검증**: receipt가 필요한 이벤트는 `event-loader load`가 반환한 모든 `documents[].content`를 소비하고 `verify`가 성공한 뒤에만 다음 행동을 시작한다.
 - **`//opi` 불변식**: 비프로젝트 세션도 비서 커널에서 `//` 진입을 해석할 수 있으므로 새 프로젝트 초기화 경로가 유지된다.
+- **actor 축**: `--pm`은 위 다이어그램의 `PM JIT 활성화`(오케스트레이터) 층에 속하는 실행 주체 선택 축이다 — 하네스 적용(Guards/Gates/State)과 서브에이전트 디스패치 층은 그대로 두고 각 단계 skill을 누가 수행하는지만 바꾼다. 원문 SSOT는 `opal/core/references/harness/actor.md`.
 
 ## 2-레이어 모델
 
@@ -80,11 +81,11 @@ OPAL 자산은 Global/Project 2-레이어로 배치되고, 런타임은 세션 �
 |----------|------|
 | `AGENT.md` | 세션 이벤트 판정과 최소 비서 커널. PM·pilot·stage·worker 규칙은 JIT 포인터만 보유 |
 | `identity.md` | 에이전트 정체성 (이름, 성격, 톤) |
-| `skills/` | 독립 스킬 8개 + OPAL 스킬 43개 |
+| `skills/` | 독립 스킬 8개 + OPAL 스킬 44개 |
 | `agents/` | 서브에이전트 15개 (전문 8 + 범용 7) |
 | `community-skills/` | 커뮤니티 스킬 — clone-copy(git)로 사용자가 온디맨드 설치 (검색은 `npx skills find`). 사용자 등록분 `user-registry.json` 포함, install 불가침 |
 | `references/` | 레지스트리·표준·운영 문서 **21 엔트리**(최상위 19파일 + 하위 디렉토리 2). `events.json`이 이벤트별 필수 문서 집합을 소유하고 `opal-harness.md`는 호환 인덱스만 제공한다. 하위 디렉토리는 `harness/`(실행 규칙 owner 23파일)와 `pm/`(PM 프로세스 owner 7파일)이다. |
-| `tools/` | CLI 도구 **20종**(도구 디렉토리 기준). 파이프라인 집행(`state-tool`, `test-tool`, `backlog-tool`, `opal-action-monitor`), 이벤트 전문·해시·receipt와 프로젝트 부트 브리핑 집행(`event-loader`), 환경·배포, 탐색·연동, 지식·코드 지도 도구로 구성된다. 세부 공개 계약은 각 도구의 README가 소유한다. |
+| `tools/` | CLI 도구 **21종**(도구 디렉토리 기준). 파이프라인 집행(`state-tool`, `test-tool`, `backlog-tool`, `opal-action-monitor`), 이벤트 전문·해시·receipt와 프로젝트 부트 브리핑 집행(`event-loader`), 환경·배포, 탐색·연동, 지식·코드 지도 도구로 구성된다. 세부 공개 계약은 각 도구의 README가 소유한다. |
 | `.venv/` | Python 가상환경 (openpyxl, pandas, playwright 등 — requirements.txt로 관리) |
 | `templates/` | 프로젝트 에이전트 템플릿 |
 
@@ -157,6 +158,7 @@ OPAL 자산은 Global/Project 2-레이어로 배치되고, 런타임은 세션 �
 | | opal-onboarding | 에이전트 온보딩 |
 | | opal-skill-manager | 스킬 관리 |
 | | opal-brain (opbr) | 프로젝트 브레인 — 영속 지식 위키 생성·누적·질의·정비 |
+| | opal-self-pm (oppm) | PM 직접 수행 대화형 루프 — 질문 반복형 범위 확정 + PM 직접 조회·작성·수정·검증 + 8영역 지식 동기화 판정 (opal-brain과 동일 유형, 단계 파이프라인·워커 디스패치 없음) |
 | | opal-help (help) | 스킬 카탈로그 & 사용법 안내 (목록 Mode 1 / 개별 안내 Mode 2) |
 | | opal-improve (opim) | PM 개선 루프 — 관찰→분류→기록→보고→승인 5단계 (로컬 `.opal/` / FW `~/.opal/fw-inbox`) |
 | | opal-action-status (opas) | 루프 액션 에이전트 진행 현황 발동층 — 자동 탐지 + 해석 보고 |
@@ -222,7 +224,7 @@ OPAL 자산은 Global/Project 2-레이어로 배치되고, 런타임은 세션 �
 소스 (이 저장소)                    배포 대상 (~/.opal/)
 ─────────────────                  ──────────────────
 skills/* (독립 8개) ──┐
-opal/skills/* (43개)──┼─ install ─→  ~/.opal/skills/
+opal/skills/* (44개)──┼─ install ─→  ~/.opal/skills/
 opal/agents/* (15개)──┤              ~/.opal/agents/  (source 캐시 — 어댑터 재생성용)
 opal/core/          ──┤              ~/.opal/AGENT.md
   references/       ──┤              ~/.opal/references/
@@ -263,7 +265,7 @@ opal/core/mcps/*    ──── install ─→  claude mcp add --scope user (Cl
 
 ## OPAL Console (로컬 프로젝트 관리 대시보드)
 
-로컬에서 OPAL로 작업하는 모든 프로젝트를 한 웹 화면에서 조망하는 **읽기 전용 대시보드**(태스크 021 신설). 데이터 SSOT를 새로 만들지 않고, OPAL 도구의 read-only 커맨드 + 마크다운 파서로 각 프로젝트 데이터를 수집·렌더한다.
+로컬에서 OPAL로 작업하는 모든 프로젝트를 한 웹 화면에서 조망하는 **읽기 전용 대시보드**(태스크 021 신설). 데이터 SSOT를 새로 만들지 않고, OPAL 도구의 read-only 커맨드 + 마크다운 파서로 각 프로젝트 데이터를 수집·렌더한다. 네이티브 폴더 선택, PM Coordination 작업 공간, 독립 Terminal, 파일 트리 UI는 Console이 아니라 `workstudio/`의 **OPAL WorkStudio** 데스크톱 앱이 소유한다.
 
 ```
 ┌─ Web UI (React + shadcn/ui, 7개 화면) ──────────────────┐
@@ -330,6 +332,7 @@ opal/core/mcps/*    ──── install ─→  claude mcp add --scope user (Cl
 | 기동 | `opal-cli console {start\|stop\|status\|open\|scan\|log}` (127.0.0.1:7823) — `log`는 데몬 로그 조회 |
 | 프로젝트 식별 | `.opal/AGENT.md` 마커 디스크 스캔 (`~/.opal/console.config.json` scan_roots/depth/exclude) — config는 `opal-cli console scan [기준경로...]`이 생성·머지 갱신(기존 roots 보존, `--prune` 옵트인)하며 install(`install_dashboard`)이 1회 자동 실행. `start`는 config 부재 시 scan 안내 출력 |
 | 원칙 | 읽기 전용(쓰기/편집은 2차) · 데이터 SSOT는 각 프로젝트 파일 · 데몬은 도구 오케스트레이터 |
+| WorkStudio 경계 | `{프로젝트}/workstudio/` (React+TS+Vite+Electron) — Console 조회 화면과 분리된 데스크톱 실행 앱 |
 | 디자인 토큰 | 시그니처 3색(`--brand-primary/secondary/tertiary`)을 `:root` 1곳 전역 CSS 변수화 (교체 용이) |
 
 ## 외부 의존 서비스
@@ -409,7 +412,7 @@ opal/                                    ← 이 저장소
 │   │   ├── references/                  레지스트리·표준 21 엔트리 (harness/ 23파일 · pm/ 7파일 포함)
 │   │   ├── mcps/                        MCP 설정 4종 (context7, playwright, shadcn, sequential-thinking)
 │   │   └── hooks/                       Claude Code hooks 설정
-│   ├── tools/                           CLI 도구 20종 (+ check-env.js 보조 스크립트, requirements.txt)
+│   ├── tools/                           CLI 도구 21종 (+ check-env.js 보조 스크립트, requirements.txt)
 │   │   ├── event-loader/                이벤트 전문·해시·receipt 검증 + 프로젝트 부트 브리핑
 │   │   ├── state-tool/                  파이프라인 현황판 JSON SSOT (서브명령 11종)
 │   │   ├── test-tool/                   테스트 단계 결정론 집행 (resolve/check/unit/integration + scenario-* + E2E profile/verdict 계약)
@@ -431,7 +434,7 @@ opal/                                    ← 이 저장소
 │   │   ├── date/                        현재 일시 취득 (date.js)
 │   │   ├── check-env.js                 Node.js 환경 체크
 │   │   └── requirements.txt             Python 의존성 (venv 관리)
-│   ├── skills/                          OPAL 스킬 (43개)
+│   ├── skills/                          OPAL 스킬 (44개)
 │   │   ├── opal-pilot-dev/              오케스트레이터: Full Task (opd)
 │   │   ├── opal-pilot-dev/              오케스트레이터: Full profile (opd) + Short profile (opds logical alias)
 │   │   ├── opal-pilot-dev-wireframe/    오케스트레이터: Wireframe UI (opdw)
@@ -483,6 +486,9 @@ opal/                                    ← 이 저장소
 ├── dashboard/                           OPAL Console (로컬 프로젝트 관리 대시보드 — 태스크 021)
 │   ├── frontend/                        React + TS + Vite + shadcn/ui (7개 화면 — 설정 포함, 태스크 061)
 │   └── backend/                         FastAPI 데몬 (스캐너 + read-only 어댑터 + 파서)
+├── workstudio/                          OPAL WorkStudio (Electron + React 작업 앱)
+│   ├── electron/                         main/preload IPC 경계
+│   └── src/                              WorkStudio renderer
 ├── cursor-rules/                        Cursor 프로젝트 규칙 템플릿
 ├── scripts/                             설치 스크립트
 │   ├── install.sh                       One-liner installer 진입점 (mac / linux)

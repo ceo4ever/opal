@@ -1,3 +1,13 @@
+/**
+ * @header {
+ *   "module": "ui-sidebar",
+ *   "layer": "component",
+ *   "domain": "dashboard",
+ *   "description": "Dashboard sidebar UI primitive. shadcn/ui 기반 레이아웃, 메뉴, 접힘 상태, 모바일 시트를 제공한다.",
+ *   "exports": ["Sidebar","SidebarContent","SidebarFooter","SidebarGroup","SidebarGroupAction","SidebarGroupContent","SidebarGroupLabel","SidebarHeader","SidebarInput","SidebarInset","SidebarMenu","SidebarMenuAction","SidebarMenuBadge","SidebarMenuButton","SidebarMenuItem","SidebarMenuSkeleton","SidebarMenuSub","SidebarMenuSubButton","SidebarMenuSubItem","SidebarProvider","SidebarRail","SidebarSeparator","SidebarTrigger","useSidebar"]
+ * }
+ */
+/* eslint-disable react-refresh/only-export-components */
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
@@ -658,10 +668,7 @@ const SidebarMenuSkeleton = React.forwardRef<
     showIcon?: boolean
   }
 >(({ className, showIcon = false, ...props }, ref) => {
-  // Random width between 50 to 90%.
-  const width = React.useMemo(() => {
-    return `${Math.floor(Math.random() * 40) + 50}%`
-  }, [])
+  const width = "72%"
 
   return (
     <div

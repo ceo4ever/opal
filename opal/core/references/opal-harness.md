@@ -22,6 +22,7 @@ receipt 계약을 충족한 뒤 진행한다.
 
 | 주제 | owner 문서 |
 |------|------------|
+| 실행 주체(actor) 축과 PM 직접 수행 계약 | `harness/actor.md` |
 | Guards·승인 경계·자동 루핑 상한 | `harness/guards.md` |
 | 모드 판정과 서브 하네스 라우팅 | `harness/modes.md` |
 | 워크트리 축과 task/allocator root 계약 | `harness/worktree.md` |
@@ -33,6 +34,7 @@ receipt 계약을 충족한 뒤 진행한다.
 | 병렬 실행 | `harness/parallel-execution.md` |
 | EXECUTE @header | `harness/header-rules.md` |
 | Coding Principles | `harness/coding-principles.md` |
+| 도구 공통 출력 계약 | `harness/tool-output-contract.md` |
 | QA 표준 | `harness/qa-standards.md` |
 | 인용 규칙 | `harness/citation-rules.md` |
 | 분석 코어 | `harness/analysis-core.md` |
