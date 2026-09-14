@@ -1,0 +1,177 @@
+---
+template: sdlc-v2
+---
+# PLAN: OPPB 프로젝트 빌드 Pilot 신설
+
+> 입력: [TASK.md](TASK.md), [ANALYSIS.md](ANALYSIS.md)
+
+## Approach
+
+제안서 `docs/proposals/opal-oppb-project-build-pilot.md`를 설계 SSOT로 고정하고(C-1), 그 §14의 G1~G5를 실행 순서로 분해한다. 재설계하지 않는다.
+
+세 가지가 이 PLAN의 골격을 결정한다.
+
+1. **additive-only.** 기존 Pilot(`//oppd`·`//oppl`·`//opsdd`)·에이전트·레지스트리 항목을 제거하거나 수정하지 않는다(C-2). 공용 자산 확장은 `opal-agent`와 `state-tool` 2건뿐이고 둘 다 하위 호환 append다.
+2. **그룹 경계 = 중간 merge 지점.** G1~G5 각 그룹 끝에 회귀·merge 체크포인트 Work item을 두어 단일 태스크가 main과 장기 분기되지 않게 한다(C-8). state-tool `--plan-contract-check`가 같은 실행 그룹 내 선행 의존을 금지하므로, 그룹 산출물은 홀수 `Pn`에, 체크포인트는 그다음 `Pn`에 둔다. 실행 그룹과 제안서 그룹의 대응은 각 Work item 제목의 `[G1]`~`[G5]` 표기가 소유한다.
+3. **신규 코드는 `oppb-runtime-tool` 한 디렉토리로 수렴.** `code-scan scan opal/tools` 결과 현행 21개 도구는 모두 `[util] <tool>.py + [test] tests/test_*.py` 단일 패턴을 따르고 `state_tool.py`의 `ok/err/ERROR_CODES` 계약을 복제한다. `oppb-runtime-tool`도 같은 layer·depends 관례를 따르되, 같은 실행 그룹에서 파일 충돌 없이 병렬 구현하기 위해 Controller·Supervisor·Evidence·Lease·Probe·Checkpoint·Cache를 별도 모듈 파일로 나눈다.
+4. **테스트 작성은 전부 P1로 전진 배치한다.** `test-tool scenario-lock`은 `red_required`인 시나리오가 **전부** `red_confirmed`여야 잠기고 잠금 전에는 GREEN 구현을 시작할 수 없다(`harness/red-first.md` §1.5-4). `test-scenario.json` 22건 중 17건이 `red_required`이므로, 테스트 스위트를 구현 그룹별로 흩어 놓으면 잠금이 성립하지 않는다. 테스트 작성은 구현 의존이 없고 **모듈이 없어서 실패하는 것이 RED의 정상 상태**이므로, W-2·W-10·W-17·W-28을 P1에 모은다. C-7의 그룹 선후 규율("앞 그룹의 공개 API와 회귀가 통과한 뒤 다음 그룹 시작")은 **구현 Work item에만** 적용하며, 제안서 그룹 대응은 계속 각 Work item 제목의 `[G1]`~`[G5]` 표기가 소유하고 `Pn`은 실행 순서만 표현한다.
+
+범위 밖: OPPD 폐기, `opal-task-action-agent` 제거, OPPD 대비 성능 benchmark(TASK §Affected users and systems가 이미 제외).
+
+## Decisions and contracts
+
+| 결정 | 변경 후 계약 | 선택 이유·근거 |
+|---|---|---|
+| **run root·cache root는 `<allocator_root>` 유지.** 제안서를 고치지 않는다 | `oppb-runtime-tool init`이 `<allocator_root>/.opal-runs/<run_id>/`와 `<allocator_root>/.opal-cache/oppb/`를 생성하고 allocator Git repo의 `.git/info/exclude`에 멱등 등록한다. 등록 후 실제 ignore 판정을 확인하지 못하면 run 시작을 거부한다 | PM 확정 사항. `worktree-tool`이 이미 허브 루트에 `.opal-worktrees/.meta/task_NNN.json`을 쓰고 있고 미추적이며 `.opal/` 바깥이다. `worktree.md`의 두 `[MUST]`는 (1) allocator_root 경로 추론 금지 (2) 워커에게 allocator write 권한 부여 금지이며, Controller-tier 도구가 자기 소유 미추적 루트를 쓰는 것은 어느 쪽도 위반하지 않는다 |
+| 위 오독의 재발 방지를 문서로 닫는다 | `opal/core/references/harness/worktree.md` §task root와 allocator root 계약에 적용 범위 한정 1행 추가 — 표의 "쓰기 대상"은 태스크 귀속 계약(채번·merge history)의 범위이며, 도구가 소유하는 허브 루트 미추적 디렉토리(`.opal-worktrees/`, `.opal-runs/`, `.opal-cache/`)는 이 조항의 적용 대상이 아니다. 기존 두 `[MUST]`는 문구 무변경 | ANALYSIS Q8(b)가 이 표를 "허브 루트 전체 쓰기 금지"로 읽어 착수 차단을 올렸다. 원문을 바꾸지 않고 적용 범위만 한정하면 같은 오독이 닫힌다. W-4가 소유 |
+| **D1. `opal-plan-agent`의 project-slice는 신규 단계 스킬 신설만으로 흡수한다.** `AGENT.md`는 무변경 | `opal/skills/op-oppb-project-slice/SKILL.md`를 신설하고 OPPB Product Flow가 그 경로를 디스패치 프롬프트에 주입한다. `opal-plan-agent/AGENT.md`는 바이트 무변경 | ANALYSIS Q6 실측 — AGENT.md에 profile 개념이 없고, 에이전트는 주입받은 스킬 프로세스를 그대로 따르는 thin worker다. AGENT.md에 분기를 넣으면 `//opd` PLAN 경로까지 조건문이 생겨 C-2를 위태롭게 한다. DAG·계약·완료조건 역인덱스는 `op-dev-plan`과 산출물 형식이 근본적으로 다르므로 신규 스킬이 정답이다 |
+| **D2. Verifier evidence 연결은 외부 adapter 전담.** `opal-test-agent`·`op-gc-security`·`op-gc-convention`은 무변경 | `opal/tools/oppb-runtime-tool/verifier_adapter.py`가 (a) 세 워커의 기존 입력 계약(`mode`/`test_mode`, `project_root`/`target_files`/`output_dir`/`timestamp`)만 채워 호출하고 (b) 산출 보고서를 Evidence schema(`scope_hash`·`code_head`·`evidence_id`)로 변환해 Evidence Tool에 제출한다 | 세 워커의 입력 계약이 이미 범용이라 스킬 파일을 고칠 이유가 없고, 고치면 기존 `//opgc`·`//oppd` 경로가 회귀 대상이 되어 C-2와 충돌한다. scope hash는 워커가 아니라 lease를 소유한 Controller만 계산할 수 있으므로 변환 지점은 논리적으로도 adapter다. 예외는 `op-scenario-gate` 하나 — acceptance cluster normalizer는 스킬 안에 additive 분기로 추가한다(W-25), 기존 OPPD 분기 무변경 |
+| **D3. G2 "API 동결" 완료조건 = 아래 4종 전부 green + 스키마 hash 고정** | (1) `opal/tools/oppb-runtime-tool/schema/` 4개 JSON Schema(state·event·command·evidence)가 존재하고 `schema/api-freeze.md`에 각 파일의 sha256이 기록된다. (2) `tests/test_controller.py` — `state.json`↔`workgraph.json` 상호 직접 쓰기 0 단언. (3) `tests/test_supervisor.py` — process 상한 포화 시 첫 반환 slot이 Verifier에 배정 + 비정상 종료·재시작 fixture에서 attempt 재부착/수확 후 자동 tick 재개. (4) `tests/test_evidence.py` — schema·code head·scope hash 불일치 evidence를 색인 전 거부. 여기에 W-2 회귀(OPPL 무변경)가 붙어야 G2가 끝난 것으로 본다 | ANALYSIS Q7 — 제안서는 "API 동결"을 문구로만 규정하고 판정 기준이 없어 중간 merge 지점이 성립하지 않았다. 스키마 파일 + sha256 고정은 리뷰 가능한 단일 커밋 산출물이고, 세 테스트는 G2 소유 수용기준 9·10·25·28과 1:1로 대응한다. 이 기준을 통과하면 G2+G3를 한 커밋으로 묶지 않아도 된다 |
+| **D4. OPPB `pipeline.json`은 P0~P5 22행.** 초안은 아래 §Appendix A | `opal/skills/opal-pilot-project-build/references/pipeline.json`이 `spec_version`/`skill`/`meta`/`task_steps[].{id,key,stage,item,gate?}` 스키마를 그대로 따른다. 형식 준거는 `opal/skills/opal-pilot-project-loop/references/pipeline.json` | `state-tool init --rows-from`이 이 스키마만 소비한다(ANALYSIS §Change boundary). gate는 제안서 §11이 정한 6개 호출 시점에만 배치하고, 일반 미니 태스크 완료·Repair·상태 확인에는 행을 만들지 않는다 |
+| **D5. `state-tool` additive enum 2건은 W-3(G1)이 소유한다** | `init --skill` choices에 `"oppb"` 추가, `STAGE_ENUM`에 `"P0".."P5"` 추가. 둘 다 append-only이며 기존 값·검증 로직·`opd`/`oppd`/`oppl` 경로는 무변경 | 제안서는 state 관련을 G2·G4에 두었지만, enum이 없으면 G4의 `pipeline.json` 검증조차 실행할 수 없다. 070 R-8이 `opdd` stage 3종을 같은 additive 패턴으로 추가한 선례가 있고, G1은 어차피 공용 도구 확장 그룹이라 소유권이 일관된다. `state.json` 직접 편집은 어느 Work item도 하지 않는다(C-6) |
+| **D6. `opal-agent` 하위 호환 회귀 기준 = CLI 계약 + 4종 파일 바이트 동일성** | (a) `call_agent()`/`AgentConfig`/`AgentResult`/`resolve_session_event` 시그니처 무변경. (b) CLI 플래그 `--provider --model --effort --timeout --resume --session-id --opal-bootstrap --json/--text/--stream` 무변경. (c) 동일 입력에서 `.result.json`·`.events.jsonl`·`.err.log`·`.exitcode` 4종이 바이트 동일. (d) 응답 필드 `result`·`session_id`·`is_error`·`total_cost_usd`·`duration_ms`의 의미·타입 무변경. attempt record는 이 4종을 대체하지 않고 run root에 **추가로** 원자 저장하는 신규 파일이다 | ANALYSIS Q1 실측 — OPPL은 Python API가 아니라 `run.sh` CLI만 호출하고 완료 판정을 호출측 셸 리다이렉트로 수행한다. 따라서 회귀는 이 4종 파일의 바이트 동일성으로 기계 판정 가능하다. W-2가 이 기준을 테스트로 고정한다 |
+| 신규 owner 에이전트는 `opal-capability-agent` 1종 | 나머지 전문·검증 역할은 제안서 §4.2 매핑표의 기존 에이전트를 재사용한다. `opal-task-action-agent`는 호출하지 않을 뿐 제거하지 않는다 | 제안서 §4.2·§15. AC-20이 이를 직접 요구한다 |
+| 이 태스크의 실행 주체에 `opal-capability-agent`를 쓰지 않는다 | Work items의 담당은 `opal-task-agent`·`opal-be-agent`·`opal-test-agent`만 사용한다 | `opal-capability-agent`는 이 태스크의 **산출물**이지 실행 주체가 아니다. 산출물 디렉토리는 Python CLI + Markdown 계약 문서뿐이므로 FE·DB 담당은 배정하지 않는다 |
+| 커밋·merge는 소유자 명시 요청 시에만 | 각 그룹 체크포인트 Work item은 회귀를 실행하고 merge **요청**까지만 수행한다. 실제 커밋·merge 실행은 소유자 승인 후 | C-9. C-8의 "중간 merge"와 C-9의 "명시 요청 시 커밋"은 충돌하지 않는다 — 체크포인트가 merge 가능 상태를 만들고 소유자가 트리거한다 |
+
+## Work items
+| 작업 | 담당 | 변경 대상 | 구체적 변경 | 선행 작업 | 실행 그룹 | 완료 기준 연결 |
+|---|---|---|---|---|---|---|
+| W-2. [G1] opal-agent attempt·OPPL 하위 호환 회귀 스위트 | opal-test-agent | `opal/tools/opal-agent/tests/test_opal_agent_attempt.py`, `opal/tools/opal-agent/tests/test_oppl_compat.py` | D6 회귀 기준을 RED-first로 고정한다. 전자는 process group 생성·무출력 watchdog 발화·PGID 회수·terminal framing·attempt record 원자성·재부착/고아 판정을 검증한다. 후자는 동일 입력에서 `.result.json`·`.events.jsonl`·`.err.log`·`.exitcode` 4종의 바이트 동일성과 CLI 플래그 집합·공개 함수 시그니처 무변경을 golden 비교로 고정한다. mock 금지, 실제 프로세스만 사용한다 | 없음 | P1 | AC-11, AC-19, C-3 |
+| W-10. [G2] 스케줄러 kernel 테스트 스위트 | opal-test-agent | `opal/tools/oppb-runtime-tool/tests/test_controller.py`, `opal/tools/oppb-runtime-tool/tests/test_supervisor.py`, `opal/tools/oppb-runtime-tool/tests/test_evidence.py`, `opal/tools/oppb-runtime-tool/tests/test_oppb_init.py` | D3이 정의한 3종 테스트를 RED-first로 작성한다 — state/workgraph 상호 직접 쓰기 0, process 상한 포화 시 Verifier 우선 배정, Supervisor 비정상 종료·재시작 fixture의 재부착/수확 후 자동 tick 재개, schema·code head·scope hash 불일치 evidence 색인 전 거부. 여기에 TEST-SCENARIO S-7을 `test_oppb_init.py`로 함께 고정한다 — `oppb-runtime-tool init`이 run root와 cache root를 생성하고, allocator Git repo의 `.git/info/exclude`에 `.opal-runs/`·`.opal-cache/oppb/`를 멱등 등록한 뒤 실제 ignore 판정을 확인하며, 확인 실패 시 run 시작을 거부하고, allocator_root 미지정·상대경로를 추론 없이 거부한다. mock 금지, 실제 프로세스·실제 파일만 사용한다 | 없음 | P1 | AC-9, AC-10, AC-11, C-6 |
+| W-17. [G3] 격리·검증 runtime 테스트 스위트 | opal-test-agent | `opal/tools/oppb-runtime-tool/tests/test_lease.py`, `opal/tools/oppb-runtime-tool/tests/test_probe.py`, `opal/tools/oppb-runtime-tool/tests/test_checkpoint.py`, `opal/tools/oppb-runtime-tool/tests/test_cache.py`, `opal/tools/oppb-runtime-tool/tests/test_recovery.py` | 동시 lease 충돌 0, Runner Git 상태 변경 위반 fixture의 checkpoint 거부, 검증 실패 candidate의 branch·HEAD·타 lease path hash 무변경과 `reset --hard` 호출 0, stale parent candidate 반영 0, ignored 봉인·1 batch 무과금 재실행·반복 시 `scope_violation` 승격, replayable fixture의 두 overlay 잔존과 cold fallback 0, 작은 cache cap·만료 retention fixture의 active node 삭제 0·closed node LRU 회수·`disk_budget_exceeded`를 RED-first로 고정한다. 실제 git 저장소 fixture만 사용하고 mock을 쓰지 않는다 | 없음 | P1 | AC-4, AC-5, AC-6, AC-7, AC-8, AC-13, AC-14 |
+| W-28. [G4] Product Flow 테스트 스위트 | opal-test-agent | `opal/tools/oppb-runtime-tool/tests/test_product_flow.py`, `opal/tools/oppb-runtime-tool/tests/test_revalidation.py` | 기존 OPAL 프로젝트 fixture에서 PRD·TRD 신규 생성 0건과 `INTENT.md` 단일 실행 계약 확정, 프로젝트 worktree 1개·미니 태스크 worktree/branch 0개, Fast 미니 태스크 상시 산출물이 packet·result·evidence뿐임, contract revision 변경 fixture에서 직접 consumer만 `needs_revalidation`이고 무관 태스크 재검증 0, 프로젝트 완료 전 MEMORY·brain 반영 0과 CLOSE 후 batch 정확히 1회를 RED-first로 고정한다 | 없음 | P1 | AC-2, AC-3, AC-12, AC-15 |
+| W-4. [G1] worktree.md 계약 적용 범위 한정 | opal-task-agent | `opal/core/references/harness/worktree.md` | §task root와 allocator root 계약의 표 바로 아래에 적용 범위 한정 1행을 추가한다 — 표의 "쓰기 대상"은 태스크 귀속 계약(채번·merge history)의 범위이며, 도구가 소유하는 허브 루트 미추적 디렉토리(`.opal-worktrees/`, `.opal-runs/`, `.opal-cache/`)는 이 조항의 적용 대상이 아니다. 기존 두 `[MUST]` 문구와 merge 경로·canonical path 절은 무변경 | 없음 | P1 | C-1 |
+| W-37. [G1] 제안서 §13.2 배정표 정정 | opal-task-agent | `docs/proposals/opal-oppb-project-build-pilot.md` | §13.2 "Work item 그룹 → 소유 수용기준" 배정표를 PLAN §Acceptance mapping의 `### 제안서 배정 정정` 소절 내용으로 갱신한다 — 기준 3을 G3에서 G4로, 기준 24를 G1에서 G2로 옮기고, 기준 25의 선행 `state-tool` enum 확장이 G1 소관임을 배정표 각주로 명시한다. 기준 25의 소유 그룹(G2)과 나머지 30개 기준의 배정, §13.2 수용기준 33개 본문, §14 그룹 표는 변경하지 않는다 | 없음 | P1 | C-1 |
+| W-1. [G1] opal-agent 공용 attempt runtime 확장 | opal-be-agent | `opal/tools/opal-agent/opal_agent.py` | sync(`subprocess.run`)·stream(`Popen`) 두 경로에 `start_new_session=True`로 process group을 생성하고 PGID를 기록한다. stdout 수신 루프와 분리된 독립 watchdog을 추가해 무출력 상태에서도 deadline을 집행하고 종료 시 PGID 전체를 회수한다. stream terminal framing을 "마지막 result만 채택 + epilogue allowlist"로 재작성한다. attempt ID·PID·PGID·heartbeat·종료 사유·비용·실패 지문을 run root에 원자 저장하는 attempt record writer를 추가한다. 재시작 시 재부착/고아 판정 진입점을 공개한다. D6의 (a)~(d)는 변경하지 않는다 | W-2 | P2 | AC-11, C-3 |
+| W-3. [G1] state-tool additive enum 확장 | opal-be-agent | `opal/tools/state-tool/state_tool.py`, `opal/tools/state-tool/tests/test_state_tool.py` | `init --skill` choices에 `"oppb"`를 추가하고 `STAGE_ENUM`에 `"P0"`~`"P5"` 6종을 추가한다. 기존 choices·stage 값과 검증 분기는 건드리지 않는다. 테스트에 `--skill oppb` + P0~P5 행 init·advance·mark 왕복과 기존 skill 값 무변경 단언을 추가한다 | W-2 | P2 | AC-1, C-6 |
+| W-5. [G1-CP] G1 회귀·중간 merge 체크포인트 | opal-task-agent | 코드 변경 없음 — G1 산출물 회귀 실행과 merge 요청 | W-1~W-4의 테스트를 전부 실행하고 D6 회귀 기준 4항목이 green인지 확인한다. `//oppd`·`//oppl`·`//opsdd`의 스킬·상태·회귀 무변경을 diff로 확인한다. 통과하면 허브 merge 가능 상태를 보고하고 소유자 승인을 요청한다. 승인 없이 커밋·merge를 실행하지 않는다 | W-1, W-2, W-3, W-4 | P3 | AC-19, C-8, C-9 |
+| W-6. [G2] oppb-runtime-tool 골격·run root·cache root init | opal-be-agent | `opal/tools/oppb-runtime-tool/oppb_runtime_tool.py`, `opal/tools/oppb-runtime-tool/run.sh`, `opal/tools/oppb-runtime-tool/README.md` | 기존 도구 관례(`ok`/`err` 헬퍼, `ERROR_CODES` SSOT, 표준 라이브러리 전용, JSON stdout 계약)를 따르는 CLI 진입점을 만든다. `init`이 `<allocator_root>/.opal-runs/<run_id>/`와 `<allocator_root>/.opal-cache/oppb/`를 생성하고 allocator Git repo의 `.git/info/exclude`에 `.opal-runs/`·`.opal-cache/oppb/`를 멱등 등록한 뒤 실제 ignore 판정을 확인한다. 확인 실패 시 run 시작을 거부한다. allocator_root는 명시 인자로만 받고 cwd·경로 세그먼트로 추론하지 않는다. 플랫폼 분기를 넣지 않는다 | W-5 | P4 | AC-1, C-4, C-5 |
+| W-7. [G2] Controller — workgraph·acceptance·revision lock | opal-be-agent | `opal/tools/oppb-runtime-tool/controller.py` | run root에 `workgraph.json`(P3 내부 DAG·미니 태스크·계약·예산·상태)과 `acceptance.json`(완료조건·기여 태스크·증거 역인덱스)을 revision lock 아래 생성·갱신한다. `execution-packet.json` 생성과 event loop, 프로젝트 예산 차감을 소유한다. `state.json`을 직접 쓰지 않는다 — P0~P5 전이는 Product Flow가 state-tool로만 수행한다 | W-6 | P5 | AC-1, C-6 |
+| W-8. [G2] Runtime Supervisor — process admission·crash recovery | opal-be-agent | `opal/tools/oppb-runtime-tool/supervisor.py` | `max_active_runners=2`·`max_active_executors=2`·`max_total_agent_processes=4` 상한을 집행하고, 상한 포화 상태에서 candidate가 준비되면 첫 반환 slot을 신규 Runner가 아니라 Verifier에 배정한다. W-1의 attempt record를 읽어 비정상 종료·재시작 시 attempt 재부착 또는 수확 후 자동 tick을 재개한다. PM tick·수동 재촉·강제 resume 경로를 만들지 않는다 | W-6 | P5 | AC-10, AC-11 |
+| W-9. [G2] Evidence Tool | opal-be-agent | `opal/tools/oppb-runtime-tool/evidence.py` | `evidence/<scope>/<evidence-id>.json`을 schema 검증 후 불변 색인한다. schema 불일치·code head 불일치·scope hash 불일치 evidence를 **색인 전에** 거부한다. 미니 태스크 accepted 판정은 schema 검증을 통과한 독립 검증 증거가 존재할 때만 허용한다 | W-6 | P5 | AC-9 |
+| W-11. [G2-CP] G2 API 동결·회귀·중간 merge 체크포인트 | opal-be-agent | `opal/tools/oppb-runtime-tool/schema/api-freeze.md`, `opal/tools/oppb-runtime-tool/schema/oppb-state.schema.json`, `opal/tools/oppb-runtime-tool/schema/oppb-event.schema.json`, `opal/tools/oppb-runtime-tool/schema/oppb-command.schema.json`, `opal/tools/oppb-runtime-tool/schema/oppb-evidence.schema.json` | state·event·command·evidence 4종 JSON Schema를 확정하고 각 파일의 sha256을 `api-freeze.md`에 기록한다. W-10의 3종 테스트와 W-2의 OPPL 회귀가 전부 green인지 확인한다. 이 5개 파일이 G3 착수의 유일한 입력 계약이며, G3 진행 중 변경하려면 이 Work item으로 돌아와 재동결한다. 통과 후 merge 가능 상태를 보고하고 소유자 승인을 요청한다 | W-7, W-8, W-9, W-10 | P6 | AC-9, AC-10, C-7, C-8 |
+| W-12. [G3] Scope Lease Tool | opal-be-agent | `opal/tools/oppb-runtime-tool/lease.py` | tracked write·ephemeral write·contract·runtime resource lease를 발급·회수한다. 동일 대상의 동시 lease를 0으로 집행하고, 병렬 태스크의 tracked/ephemeral write·contract·business rule·acceptance·runtime resource·global output 교집합을 dispatch 전에 거부한다. Verifier에는 전용 runtime resource lease를 발급해 Runner와 port·DB·service가 충돌하지 않게 한다 | W-11 | P7 | AC-5, AC-6 |
+| W-13. [G3] Environment Probe Tool | opal-be-agent | `opal/tools/oppb-runtime-tool/probe.py` | 격리된 probe snapshot에서 bootstrap·build·test·검증 명령을 단독 실행해 ignored 생성·수정·삭제 경로, cache·dependency 위치, 실행 자원을 관측한다. `shared_immutable`·`attempt_namespaced`·`exclusive` 정책과 adapter를 배정하고 `.opal/oppb-environment.json`에 command/config/lockfile/toolchain input hash와 함께 원자 봉인한다. late discovery는 contract revision당 1 batch만 `environment-deltas/<fingerprint>.json`으로 무과금 재실행하고, 같은 revision의 두 번째 미봉인 쓰기·probe 불일치·lease 교차·프로젝트 밖 경로·정책 분류 불가는 `scope_violation`으로 승격한다. 이 파일은 Controller maintenance lane이 소유하고 Runner write lease로 주지 않는다 | W-11 | P7 | AC-4 |
+| W-14. [G3] Checkpoint Tool | opal-be-agent | `opal/tools/oppb-runtime-tool/checkpoint.py` | 프로젝트 worktree의 유일한 Git writer로 동작한다. candidate 생성은 ref를 바꾸지 않는 임시 index + `commit-tree`로 병렬 수행하고, project branch를 전진시키는 publication 구간만 짧은 전역 lock으로 직렬화한다. 검증 통과 candidate만 expected parent 비교 뒤 fast-forward하고 stale parent candidate는 거부한다. Runner의 Git 상태 변경(HEAD·index tree·reflog fingerprint 비교)과 공유 지식 쓰기를 감지하면 checkpoint를 거부한다. `git archive <candidate_commit>`으로 검증 snapshot을 만들고 `reset --hard`를 사용하지 않는다. `worktree-tool finalize` 호출 **전에** active lease 0·미처리 result 0·checkpoint 밖 dirty source 0·MEMORY/brain diff 0을 외부 사전 검사로 확인한다. `worktree_tool.py`는 수정하지 않는다 | W-11 | P7 | AC-3, AC-6, AC-7, AC-8 |
+| W-15. [G3] Cache CAS·용량 관리·adapter conformance suite | opal-be-agent | `opal/tools/oppb-runtime-tool/cache.py`, `opal/tools/oppb-runtime-tool/cache_adapter_conformance.py` | source·dependency·build 3계층을 cache root의 content-addressed immutable object로 저장하고 mutable 작업은 candidate별 overlay에서만 수행한다. 같은 parent의 병렬 candidate 두 overlay가 모두 CAS에 남고, 첫 publication 뒤 stale sibling이 결정론적 seed에 intervening delta를 replay해 cold fallback 0으로 복구한다. conformance suite를 통과하지 못한 adapter는 `non_reusable`로 강등한다. soft cap 10 GiB와 최소 여유 `max(5 GiB, filesystem 10%)`를 집행하고, active·실행 중 candidate·publication 대기 node만 pin한 뒤 closed node는 warm retention 7일 후 last-access LRU로 회수한다. 공간 부족 시 cacheless 강등 또는 `disk_budget_exceeded`를 반환한다 | W-11 | P7 | AC-13, AC-14 |
+| W-16. [G3] scope_violation 회수·path-scoped 복구 | opal-be-agent | `opal/tools/oppb-runtime-tool/recovery.py` | 위반 경로·계약·자원과 겹치는 active attempt의 연결 성분을 계산해 신규 dispatch와 checkpoint를 중단한다. 단독 이탈이면 declared+actual path 합집합을 attempt preimage로 복구하고, 귀속 불가이면 연결 성분 process를 모두 종료한 뒤 마지막 accepted head 또는 봉인 preimage로 path-scoped 복구한다. worktree 전체 reset·clean을 사용하지 않고 복구 전후 path hash와 종료 process 목록을 receipt로 남긴다. 무관한 accepted 결과와 lease는 불변이다. 다른 active lease가 dirty인 PROVE 실패는 자기 candidate snapshot에서 즉시 재검증해 대기 굶주림·오귀속을 0으로 만든다 | W-11 | P7 | AC-4, AC-7 |
+| W-18. [G3-CP] G3 회귀·중간 merge 체크포인트 | opal-task-agent | 코드 변경 없음 — G3 격리 계약 회귀 실행과 merge 요청 | W-12~W-17을 전부 실행하고 격리 계약 전체가 green인지 확인한다. W-11이 동결한 5개 스키마 파일의 sha256이 변하지 않았는지 재확인한다. 기존 Pilot 무변경을 diff로 재확인하고 merge 가능 상태를 보고해 소유자 승인을 요청한다 | W-12, W-13, W-14, W-15, W-16, W-17 | P8 | AC-19, C-7, C-8 |
+| W-19. [G4] opal-pilot-project-build 스킬 신설 | opal-task-agent | `opal/skills/opal-pilot-project-build/SKILL.md` | `//oppb` 진입점 Product Flow를 작성한다. P0~P5 단계 정의, 기존 OPAL 프로젝트에서 `PROJECT.md` 레지스트리가 등록한 현재 범위 관련 문서만 읽고 PRD·TRD를 신규 생성하지 않는 조건부 라우팅, greenfield 분기, 실행 계약을 `INTENT.md` 하나로 확정하는 절차를 담는다. 실행 방식 선택 옵션·라우터를 만들지 않고 `opal-capability-agent` 경로만 호출하며 `opal-task-action-agent`를 직접 호출하지 않는다 | W-18 | P9 | AC-1, AC-2, AC-20 |
+| W-20. [G4] OPPB pipeline.json P0~P5 행 정의 | opal-task-agent | `opal/skills/opal-pilot-project-build/references/pipeline.json` | §Appendix A의 22행 초안을 확정 형식으로 작성한다. `spec_version`/`skill`/`meta.stages`/`task_steps[].{id,key,stage,item,gate?}` 스키마는 `opal-pilot-project-loop`의 동명 파일을 준거로 한다. gate는 제안서 §11이 정한 사용자 호출 시점에만 배치한다. `state-tool init --skill oppb --rows-from`으로 왕복 검증한다 | W-18 | P9 | AC-1, C-6 |
+| W-21. [G4] opal-capability-agent 신설 | opal-task-agent | `opal/agents/opal-capability-agent/AGENT.md` | 제안서 §4.3 계약을 그대로 구현한다 — 입력(identity·contract·scope·execution), 출력(result·changes·proof·coordination·knowledge), 행동 계약 6항(RUN·PROVE 한 dispatch 수행, 승인된 FE·BE·DB·task agent만 조건부 호출, 자체 문서 파이프라인·PM 게이트 금지, Git·Controller state·MEMORY·brain 수정 금지, 무한 resume 금지, ACCEPT 판정 외부 위임). 하위 PL·범용 오케스트레이터를 생성하지 않는다 | W-18 | P9 | AC-20 |
+| W-22. [G4] project-slice 단계 스킬 신설 | opal-task-agent | `opal/skills/op-oppb-project-slice/SKILL.md` | D1에 따라 `opal-plan-agent`가 주입받아 실행할 신규 단계 스킬을 만든다. capability 단위 슬라이싱 기준(동일 비즈니스 개념·변경 이유·정책을 공유하며 사용자가 끝까지 사용할 수 있는 응집된 capability), 수평 레이어 분할 금지, 병렬 sibling 선행 조건, DAG·계약·완료조건 역인덱스 구조화 출력 계약을 정의한다. `opal/agents/opal-plan-agent/AGENT.md`는 변경하지 않는다 | W-18 | P9 | AC-20, C-2 |
+| W-23. [G4] opal-evaluator-agent acceptance phase 추가 | opal-task-agent | `opal/agents/opal-evaluator-agent/AGENT.md` | §입력명세 phase 열거값에 5번째 값 `acceptance`를 추가하고, `scenario-rubric` 선례와 동일한 패턴으로 Phase 1/5/6에 병렬 분기와 전용 결과 계약(완료조건↔증거 대응 판정)을 추가한다. 기존 `design-review`·`spec-review`·`drift-recheck`·`scenario-rubric` 4개 분기는 바이트 무변경을 유지한다 | W-18 | P9 | AC-20, C-2 |
+| W-24. [G4] Verifier evidence adapter | opal-be-agent | `opal/tools/oppb-runtime-tool/verifier_adapter.py` | D2에 따라 `opal-test-agent`(E2E·BE·FE mode)·`op-gc-security`·`op-gc-convention`을 기존 입력 계약 그대로 호출하고, 산출 보고서를 Evidence schema(scope hash·code head 포함)로 변환해 W-9의 Evidence Tool에 제출한다. 조건부 Verifier 호출 시점(위험 ACCEPT·계약 폐쇄·PROJECT VERIFY)을 판정한다. 세 워커의 AGENT.md·SKILL.md는 변경하지 않는다 | W-18 | P9 | AC-9, AC-20 |
+| W-25. [G4] op-scenario-gate acceptance cluster normalizer 추가 | opal-task-agent | `opal/skills/op-scenario-gate/SKILL.md` | OPPB acceptance cluster와 Evidence Tool 입력을 정규화하는 분기를 additive로 추가한다. 기존 OPPD 분기는 무변경으로 유지한다 | W-18 | P9 | AC-9, C-2 |
+| W-26. [G4] needs_revalidation 전파 | opal-be-agent | `opal/tools/oppb-runtime-tool/revalidation.py` | 외부 계약 revision이 바뀌면 해당 계약의 **직접 consumer만** `needs_revalidation`으로 전환하고 consumer의 수용 시나리오·계약 테스트만 실행한다. 통과 시 즉시 `accepted` 복귀, 실패 시 그 consumer의 Repair를 연다. Repair가 다시 출력 계약을 바꾼 경우에만 다음 1-hop consumer로 전파한다. 무관하거나 실행 전인 태스크는 재검증하지 않는다 | W-18 | P9 | AC-12 |
+| W-27. [G4] Project Knowledge Finalizer 단계 스킬 신설 | opal-task-agent | `opal/skills/op-oppb-knowledge-finalize/SKILL.md` | 프로젝트 CLOSE에서 1회만 실행되는 지식 반영 스킬을 만든다. 미니 태스크별 `op-brain-ingest`·`opal-improve` hook 호출을 만들지 않고, 실패·폐기 후보를 제거한 뒤 기존 memory-tool·brain-tool을 프로젝트 batch로 정확히 한 번 호출한다. 프로젝트 완료 전까지 MEMORY·brain은 읽기 전용이다 | W-18 | P9 | AC-15 |
+| W-29. [G4-CP] G4 회귀·중간 merge 체크포인트 | opal-task-agent | 코드 변경 없음 — G4 Product Flow 회귀 실행과 merge 요청 | W-19~W-28을 전부 실행하고 `//oppb` 진입점이 P0~P5로 기동되는지 확인한다. G3 회귀 통과 후에만 실제 ACCEPT 연결을 켠다. 기존 에이전트·레지스트리 항목 제거 0건을 diff로 확인하고 merge 가능 상태를 보고해 소유자 승인을 요청한다 | W-19, W-20, W-21, W-22, W-23, W-24, W-25, W-26, W-27, W-28 | P10 | AC-19, C-7, C-8 |
+| W-30. [G5] 스킬·에이전트 레지스트리 등재 | opal-task-agent | `opal/core/references/opal-skills-registry.json`, `opal/core/references/agents.md` | 레지스트리에 `oppb` alias·description·triggers·paths·domain·pipeline 6필드 항목을 oppd/oppl 항목과 같은 스키마로 추가한다. `agents.md`에 `opal-capability-agent` 행을 추가한다. 기존 항목은 수정·제거하지 않는다 | W-29 | P11 | AC-1, AC-21, C-2 |
+| W-31. [G5] 프로젝트 문서 동기화 | opal-task-agent | `docs/PROJECT.md`, `docs/ARCHITECTURE.md`, `docs/CONVENTIONS.md`, `README.md` | oppd/oppl 대응 행이 이미 있는 위치에 oppb 행을 추가한다 — `docs/PROJECT.md` 오케스트레이터 표와 서브에이전트 표, `docs/ARCHITECTURE.md` Pilot 표·에이전트 표·구조 트리, `docs/CONVENTIONS.md` alias 표, `README.md` TOC와 Pilot 비교 표. Pilot 선택 기준(수렴형은 OPPL, 확정 실행 계약의 무인 소화는 OPPB)을 명시한다. 기존 OPPD 서술은 삭제하지 않는다 | W-29 | P11 | AC-21, C-2 |
+| W-32. [G5] actor.md --pm 미지원 명시 | opal-task-agent | `opal/core/references/harness/actor.md` | `--pm` 지원 폐쇄 목록의 제외 주석에 `oppb`를 추가한다. OPPB는 고정 Product Flow + headless worker 구조라 `--pm`을 지원하지 않는다는 문서 명확화이며 동작 변경은 없다 | W-29 | P11 | AC-21, C-2 |
+| W-33. [G5] 설치 스크립트 배포 배선 | opal-task-agent | `scripts/install-mac.sh` | 기존 도구의 개별 `chmod +x` 패턴을 그대로 따라 `oppb-runtime-tool/run.sh` 블록 1개를 추가한다. skills·agents 디렉토리는 기존 전체 스캔 루프가 자동 배포하므로 추가 수정이 없음을 확인한다. 플랫폼 분기는 어댑터 계층인 이 스크립트에만 둔다 | W-29 | P11 | AC-21, C-4, C-5 |
+| W-34. [G5] fixture 3종 구축·cold 9회 warm 9회 무인 실행 | opal-test-agent | `opal/tools/oppb-runtime-tool/tests/fixtures/oppb-fixtures.md` | 독립 capability 묶음·공유 모듈 순차 변경·외부 I/O 인증 경계 3종 fixture를 각 30~60분·capability 3~6개 규모로 고정한다. 공유 모듈 fixture의 각 cold run은 P2 profile에 없던 새 command가 안전한 ignored 경로를 만드는 capability를 정확히 1개 포함한다. 각 fixture를 cold 3회·warm 3회, 총 18회 무인 headless로 실행하고 중앙값을 기록한다. cold 1회가 섞인 warm 중앙값을 쓰지 않는다. 실행 전 예상 시간·모델 비용을 소유자에게 보고하고 승인받는다 | W-30, W-33 | P12 | AC-16, AC-17 |
+| W-35. [G5] 기존 Pilot 무변경·복구 계약 실증 | opal-test-agent | `opal/tools/oppb-runtime-tool/tests/test_pilot_isolation.py` | OPPB 도입 전후로 `//oppd`·`//oppl`·`//opsdd`의 스킬·상태·회귀가 무변경이고 기존 에이전트·레지스트리 항목 제거가 0건임을 기계 단언한다. OPPB 차단 결함을 주입한 fixture에서 `//oppd` 경로가 영향 없이 정상 완주하는지 검증해 복구 계약을 실증한다 | W-30, W-31, W-32, W-33 | P12 | AC-18, AC-19, C-2 |
+| W-36. [G5-CP] 최종 회귀·출시 판정·허브 merge | opal-task-agent | 코드 변경 없음 — 전체 회귀·출시 판정 evidence 취합과 최종 merge 요청 | W-34·W-35 결과로 차단 지표 5종(수용 시나리오·전체 회귀·보안·컨벤션 All Pass와 신규 차단 결함 0, 무인 실행, runtime 안전성, 병렬 안전성, cache 정확성)을 판정한다. cold/warm 최종 tree와 검증 결과 동일·stale cache 오수용 0·warm이 cold보다 느린 fixture 0을 확인한다. 시간·token은 관찰 지표로만 기록하고 출시를 막지 않는다. 통과하면 최종 허브 merge 가능 상태를 보고하고 소유자 승인을 요청한다 | W-34, W-35 | P13 | AC-16, AC-17, AC-18, C-8, C-9 |
+
+## Acceptance mapping
+
+제안서 §13.2의 33개 수용기준은 TASK의 AC-1~AC-21을 더 세밀한 입도로 쓴 것이다. 제안서 §13.2 배정표 서문("수용기준의 구현·증거 owner는 §14의 Work item 그룹에 **단일 배정**한다. 뒤 그룹은 앞 그룹의 evidence를 다시 소유하지 않고 게이트에서 소비한다")에 따라 **한 기준에 소유 그룹은 정확히 하나**이며, 소유 Work item은 그 기준의 증거를 최종 확정하는 하나만 적는다. 같은 그룹에서 구현으로 기여하지만 증거를 소유하지 않는 Work item은 `기여(비소유)` 열에 적는다. 뒤 그룹의 체크포인트는 이 표의 소유 그룹 열로 "이 그룹에서 어떤 기준이 닫혔는가"를 판정한다.
+
+| 제안서 §13.2 기준 | 소유 그룹 | 소유 Work item | 기여(비소유) | 연결 TASK AC |
+|---|---|---|---|---|
+| 1. PRD·TRD 신규 생성 0 | G4 | W-28 | W-19 | AC-2 |
+| 2. INTENT 하나로 실행 계약 확정 | G4 | W-28 | W-19 | AC-2 |
+| 3. 프로젝트 worktree 1, 미니 태스크 worktree·branch 0 | G4 | W-28 | W-19, W-21 | AC-3 |
+| 4. 단독 environment probe 봉인과 1 batch 무과금 재실행 | G3 | W-17 | W-13, W-16 | AC-4 |
+| 5. 비충돌 두 태스크 동시 실행·동시 lease 0 | G3 | W-17 | W-12 | AC-5 |
+| 6. Runner Git 상태 변경·공유 지식 쓰기 0, 위반 시 checkpoint 거부 | G3 | W-17 | W-14, W-12 | AC-6 |
+| 7. 다른 Runner 미완료 변경의 candidate commit 포함 0 | G3 | W-17 | W-14 | AC-6 |
+| 8. Fast 미니 태스크 상시 산출물은 packet·result·evidence뿐 | G4 | W-28 | W-19, W-21 | AC-3 |
+| 9. 미니 태스크 accepted 전 독립 검증 증거 존재 | G2 | W-10 | W-9 | AC-9 |
+| 10. Supervisor start 뒤 무인 실행·포화 시 Verifier 우선 배정 | G2 | W-10 | W-8 | AC-10 |
+| 11. 프로젝트 완료 전 MEMORY·brain 반영 0 | G4 | W-28 | W-27 | AC-15 |
+| 12. 최종 허브 merge 후 MEMORY·brain batch 정확히 1회 | G4 | W-28 | W-27 | AC-15 |
+| 13. fixture 3종 All Pass·신규 차단 결함 0·cold/warm 정확성 | G5 | W-36 | W-34 | AC-16 |
+| 14. 미니 태스크마다 capability ID·응집 acceptance cluster·독립 검증 | G4 | W-28 | W-22, W-21 | AC-3 |
+| 15. 병렬 태스크의 write·contract·acceptance·resource 교집합 0 | G3 | W-17 | W-12 | AC-5 |
+| 16. Runner의 하위 PL·범용 오케스트레이터 생성 0 | G4 | W-28 | W-21 | AC-20 |
+| 17. Repair는 새 attempt·압축 packet 사용, 강제 resume 0 | G4 | W-28 | W-21 | AC-10 |
+| 18. 단독 가치 없는 수평 레이어 분할 0 | G4 | W-28 | W-22 | AC-3 |
+| 19. 변경 교집합 시 영향 연결 성분만 중단·path-scoped 복구 | G3 | W-17 | W-16 | AC-7 |
+| 20. 신규 owner는 `opal-capability-agent` 1종뿐 | G4 | W-21 | W-19, W-24 | AC-20 |
+| 21. `//oppb`가 `opal-capability-agent` 경로만 호출, 직접 호출 0 | G5 | W-35 | W-19 | AC-20 |
+| 22. 기존 3 Pilot 스킬·상태·회귀 무변경, 항목 제거 0 | G5 | W-35 | W-2, W-5 | AC-19 |
+| 23. 차단 결함 주입 fixture에서 `//oppd` 정상 완주 | G5 | W-35 | — | AC-18 |
+| 24. Supervisor 비정상 종료·재시작 시 재부착/수확 후 자동 tick 재개 | G2 | W-10 | W-8, W-1 | AC-11 |
+| 25. `state.json`은 P0~P5만, `workgraph.json`은 미니 태스크만, 상호 직접 쓰기 0 | G2 | W-10 | W-7, W-3 | AC-1, C-6 |
+| 26. contract revision 변경 시 직접 consumer만 `needs_revalidation` | G4 | W-28 | W-26 | AC-12 |
+| 27. 타 lease dirty인 PROVE 실패의 자기 snapshot 즉시 재검증 | G3 | W-17 | W-16 | AC-7 |
+| 28. schema·code head·scope hash 불일치 evidence 색인 전 거부 | G2 | W-10 | W-9 | AC-9 |
+| 29. replayable fixture의 두 overlay 잔존·stale sibling replay·cold fallback 0 | G3 | W-17 | W-15 | AC-13 |
+| 30. 검증 실패 candidate의 branch·HEAD·타 lease hash 변경 0, `reset --hard` 0 | G3 | W-17 | W-14 | AC-7 |
+| 31. 통과 candidate만 expected parent 비교 뒤 FF, stale parent 반영 0 | G3 | W-17 | W-14 | AC-8 |
+| 32. Verifier가 `git archive`·환경 manifest·전용 resource lease로 실행 | G3 | W-17 | W-12, W-14 | AC-5 |
+| 33. 작은 cap·만료 fixture에서 active 삭제 0·closed LRU·`disk_budget_exceeded` | G3 | W-17 | W-15 | AC-14 |
+
+제안서 33개 기준에 대응 항목이 없는 TASK AC 2건은 별도로 소유한다 — AC-17(cold/warm 최종 tree·검증 결과 동일, warm이 cold보다 느린 fixture 0)은 G5의 W-36이, AC-21(레지스트리·문서·설치 동기화)은 G5의 W-30·W-31·W-32·W-33이 소유하며 W-36이 게이트에서 소비한다.
+
+### 제안서 배정 정정
+
+C-1은 "제안서를 설계 SSOT로 삼고 본문과 어긋나는 구현을 하지 않는다. 변경이 필요하면 제안서를 먼저 고친다"이다. 아래 3건은 위 표가 제안서 §13.2 배정표와 달라지는 지점이며, 제안서 본문 갱신은 W-37이 소유한다. 나머지 30개 기준은 제안서 배정과 동일하다.
+
+| 기준 번호 | 제안서 배정 | PLAN 배정 | 정정 근거 |
+|---|---|---|---|
+| 3. 프로젝트 worktree 1, 미니 태스크 worktree·branch 0 | G3 격리·검증 runtime | G4 Product Flow | 미니 태스크에 worktree·branch·OPAL 번호를 만들지 않는다는 결정은 Product Flow의 실행 계약이지 격리 runtime의 산출물이 아니다. G3(W-12·W-14)는 이미 만들어진 단일 worktree **안에서의** lease 격리와 Git 단일 writer만 집행하며, worktree 개수 자체를 관측·단언하는 것은 G4의 W-28 fixture다. G3에 남겨두면 W-18 체크포인트가 자기 그룹 산출물만으로 이 기준을 닫을 수 없다 |
+| 24. Supervisor 비정상 종료·재시작 시 재부착/수확 후 자동 tick 재개 | G1 공용 attempt runtime | G2 스케줄러 kernel | 기준 본문의 주어가 **Supervisor**다. G1(W-1)이 만드는 것은 재부착 판정에 필요한 attempt record와 그 진입점이라는 원시 기능이고, 재시작 후 실제로 재부착·수확하고 tick을 재개하는 상태기계는 G2의 W-8 Supervisor가 소유한다. G1에 남겨두면 W-5 체크포인트가 존재하지도 않는 Supervisor의 회복을 판정해야 해 성립하지 않는다. G1은 W-1·W-2로 attempt record 계약만 닫는다 |
+| 25. `state.json`·`workgraph.json` 상호 직접 쓰기 0 | G2 스케줄러 kernel | G2 스케줄러 kernel (소유 불변) | 기준의 소유 그룹은 정정하지 않는다. 정정되는 것은 **선행 조건의 그룹**이다 — D5에 따라 `state-tool`의 additive enum 확장(`--skill` choices `oppb`, `STAGE_ENUM` `P0`~`P5`)을 제안서가 암묵적으로 둔 G2·G4가 아니라 G1의 W-3이 소유한다. enum 없이는 G4의 `pipeline.json`을 `state-tool init --rows-from`으로 검증조차 할 수 없고, G1이 이미 공용 도구 확장 그룹이라 소유권이 일관된다. 제안서 §13.2 배정표에 이 선행 분리를 각주로 명시한다 |
+
+
+## Risks
+
+| 위험 | 깨질 수 있는 동작·계약 | 영향 | 설계 대응 |
+|---|---|---|---|
+| H-1. `opal-agent`에 process group·watchdog을 넣어도 OPPL이 소비하는 4종 파일이 바이트 동일하게 유지된다 | D6 (c) — `.result.json`·`.events.jsonl`·`.err.log`·`.exitcode`. watchdog이 timeout 경로에서 추가 stderr를 흘리거나 종료 코드를 바꾸면 OPPL의 호출측 셸 완료 판정이 깨진다 | OPPL 실행이 전부 실패로 오판정되어 운영 중인 유일한 수렴형 Pilot이 정지한다 | W-2가 golden 바이트 비교를 RED-first로 먼저 고정하고, W-5 체크포인트가 merge 전 게이트로 집행한다 |
+| H-2. Controller-tier 도구의 허브 루트 미추적 쓰기가 harness 계약과 병존한다 | `opal/core/references/harness/worktree.md` §task root와 allocator root 계약의 두 `[MUST]` | 틀리면 `oppb-runtime-tool init`의 경로 계약 전체를 task_root 기준으로 재작성해야 하고 G2~G3 전부가 재작업된다 | W-4가 적용 범위 한정 1행으로 계약을 명문화한다. W-6은 allocator_root를 명시 인자로만 받고 추론하지 않으며 ignore 판정 확인 실패 시 run 시작을 거부해 오염을 차단한다 |
+| H-3. D3의 4종 기준을 통과한 G2 API가 G3 구현 중 변경 요구를 받지 않는다 | C-7 — 앞 그룹의 공개 API 동결 후 다음 그룹 시작 | API가 흔들리면 W-11의 중간 merge 지점이 사후 무효가 되고 G2·G3가 사실상 하나의 커밋으로 합쳐져 복구 지점이 사라진다 | W-11이 스키마 4종의 sha256을 `api-freeze.md`에 고정하고, W-18 체크포인트가 그 해시 무변경을 재확인한다. 변경이 필요하면 W-11로 되돌아가 재동결한다(Work item 재진입 경로 명시) |
+| H-4. cache adapter conformance suite를 통과하는 replayable adapter가 실제 fixture 3종에서 확보된다 | AC-17 — warm이 cold보다 느린 fixture 0 | 전 adapter가 `non_reusable`로 강등되면 warm cohort의 이득이 0이 되어 출시 차단 기준에 걸린다 | W-15가 conformance suite를 구현 산출물로 포함하고, W-17이 replayable fixture의 두 overlay 잔존·cold fallback 0을 선행 검증한다. W-34는 이 검증이 green인 뒤에만 18회 실행에 진입한다 |
+| H-5. 18회 무인 실행의 벽시계·모델 비용이 소유자 승인 예산 안에 들어온다 | AC-16 — fixture 3종 cold 3회·warm 3회 총 18회 무인 실행 | 예산 초과 시 출시 판정 evidence를 완성하지 못해 G5가 닫히지 않는다 | W-34가 실행 **전에** 예상 시간·모델 비용을 보고하고 승인받는 절차를 포함한다. 제안서 §11의 게이트 4(예산 초과·반복 무진전)가 실행 중 재호출 경로를 이미 소유한다 |
+| H-6. P1에 전진 배치한 테스트가 W-11의 G2 API 동결을 견딘다 | D3 — `oppb-runtime-tool`의 state·event·command·evidence 4종 스키마와 공개 CLI 계약. 테스트가 아직 확정되지 않은 내부 함수 시그니처에 결합하면 동결 시점에 대량 수정이 발생한다 | RED로 잠근 17건이 API 동결과 함께 무더기로 깨져 `scenario-lock`을 다시 열어야 하고, 구현 그룹 전체가 정지한다 | W-10·W-17·W-28을 **공개 CLI(run.sh 인자·JSON stdout 계약)와 run root 파일 계약 수준에서만** 작성하고 내부 함수·클래스 시그니처를 import하지 않는다(기존 도구의 CLI 블랙박스 테스트 관례와 동일). W-11은 스키마를 확정할 뿐 CLI·파일 계약을 바꾸지 않는 것을 동결 조건에 포함한다 |
+
+## Release and recovery
+
+- **적용 순서**: P1→P13. P1은 RED 테스트 스위트(W-2·W-10·W-17·W-28)와 문서 정정(W-4·W-37)이며 구현이 없다. **P1 완료 후 `test-tool scenario-red`로 `red_required` 17건을 기록하고 `test-tool scenario-lock`이 통과한 뒤에만 P2 구현에 착수한다.** 이후 구현 그룹(P2·P4·P5·P7·P9·P11·P12)과 체크포인트(P3·P6·P8·P10·P13)를 교차한다 — P2~P3 G1, P4~P6 G2, P7~P8 G3, P9~P10 G4, P11~P13 G5. 체크포인트에서 회귀가 통과하면 허브 merge 가능 상태를 보고하고, 실제 커밋·merge는 소유자 승인 후에만 실행한다(C-8·C-9). G4의 실제 ACCEPT 연결은 W-18(G3 회귀) 통과 뒤에 켠다.
+- **검증 범위**: 결정론 회귀는 W-2·W-10·W-17·W-28·W-35의 pytest 스위트(mock 금지, 실제 프로세스·실제 git fixture). 실제 연동 검증은 W-34의 fixture 3종 cold 9회·warm 9회 무인 실행. 각 체크포인트는 `//oppd`·`//oppl`·`//opsdd` 무변경을 diff로 재확인한다.
+- **배포**: 프로젝트 소스만 수정하고 `~/.opal/`을 직접 편집하지 않는다(C-4). W-33 이후 `scripts/install-mac.sh`로 배포하며, W-34의 fixture 실행은 배포된 자산으로 수행한다.
+- **실측 경계**: W-34는 각 fixture·cohort 3회 중앙값으로 판정하고 cold 1회가 섞인 warm 중앙값을 쓰지 않는다. delta probe·lease 확장·재실행 비용을 cold 활성 시간에서 빼지 않는다. 시간·token은 관찰 지표이며 출시를 막지 않는다.
+- **실패 시**: OPPB에 중대한 결함이 발견되면 flag를 내리거나 revert하지 않는다. `//oppd`를 그대로 사용하고 `//oppb`만 수정한다(제안서 §4.4). 그룹 단위 복구 지점은 각 체크포인트의 중간 merge 커밋이다. 배포 후 롤백이 필요하면 install 이전 `~/.opal/` 스냅샷 복원이 아니라 프로젝트 소스를 직전 체크포인트로 되돌린 뒤 재설치한다.
+
+## Appendix A. OPPB pipeline.json task_steps 초안 (D4)
+
+`meta.stages = ["P0","P1","P2","P3","P4","P5"]`, `skill = "oppb"`. `gate`는 제안서 §11이 정한 사용자 호출 시점에만 둔다.
+
+| id | key | stage | item | gate |
+|---:|---|---|---|---|
+| 1 | `p0.context_probe` | P0 | OPAL 프로젝트 여부·프로젝트 태스크 번호·기존 문서·입력 충분성 판정 | — |
+| 2 | `p0.task_capsule` | P0 | 프로젝트 태스크 캡슐과 P0~P5 `state.json` 생성 (`state-tool init --skill oppb --rows-from`) | — |
+| 3 | `p1.intent_draft` | P1 | `INTENT.md` 작성 — 목표·제외 범위·완료조건·비가역 제약·예산 | — |
+| 4 | `p1.conditional_prd` | P1 | 조건부 PRD 판정 — 기존 문서 충분 시 requirement ID 선택만, 부족 시에만 `opwt`·planning agent 호출 | — |
+| 5 | `p1.user_gate` | P1 | 사용자 게이트 — INTENT 승인 | artifacts: `INTENT.md` / checklist: 목표·제외 범위·완료조건·비가역 제약 4요소 승인, PRD 신규 생성 여부 확정 |
+| 6 | `p2.project_design` | P2 | `PROJECT-DESIGN.md` 작성 — `op-oppb-project-slice` 주입 슬라이스 초안 | — |
+| 7 | `p2.workgraph` | P2 | `workgraph.json`·`acceptance.json` 생성과 Controller 기계 검증 | — |
+| 8 | `p2.critical_review` | P2 | 조건부 Critical 설계 검토 (`opal-evaluator-agent` design-review) | — |
+| 9 | `p2.environment_seal` | P2 | Environment Probe 실행과 `.opal/oppb-environment.json` 봉인 | — |
+| 10 | `p2.user_gate` | P2 | 사용자 게이트 — 중대한 신규 기술 결정 승인 (조건부, TRD delta 있을 때만) | artifacts: `PROJECT-DESIGN.md` / checklist: DAG·계약·완료조건 역인덱스 유효, probe 봉인 완료, 병렬 lease 교집합 0 |
+| 11 | `p3.supervisor_start` | P3 | Runtime Supervisor 기동과 process 예산 배정 | — |
+| 12 | `p3.continuous_execution` | P3 | 미니 태스크 연속 실행 — RUN·PROVE·ACCEPT 무인 진행 | — |
+| 13 | `p3.pm_gate` | P3 | PM Gate — 모든 필수 미니 태스크 accepted 또는 구조화 blocked | checklist: PM tick·수동 재촉·강제 resume 0, 미처리 result 0, `scope_violation` 회수 완료 |
+| 14 | `p4.project_checkpoint` | P4 | 모든 write lease 종료 후 최종 project checkpoint 생성 | — |
+| 15 | `p4.three_verifiers` | P4 | Integration·Security·Convention Verifier 실행 | — |
+| 16 | `p4.acceptance` | P4 | Acceptance Evaluator 완료조건↔증거 대응 판정 (`phase: acceptance`) | — |
+| 17 | `p4.pm_gate` | P4 | PM Gate — 전체 회귀·통합 보안·컨벤션·완료조건 통과 | checklist: 차단 지표 All Pass, 신규 차단 결함 0, 귀속 불명 실패 0 |
+| 18 | `p5.pre_finalize_guard` | P5 | project-run pre-finalize guard — active lease 0·미처리 result 0·checkpoint 밖 dirty source 0·MEMORY/brain diff 0 | — |
+| 19 | `p5.user_merge_gate` | P5 | 사용자 게이트 — 최종 project head 허브 merge 승인 | checklist: pre-finalize guard 4항목 통과, Git 조상 관계 검사 통과 |
+| 20 | `p5.knowledge_batch` | P5 | Project Knowledge Finalizer — MEMORY·brain 프로젝트 batch 1회 | — |
+| 21 | `p5.done_md` | P5 | 프로젝트 `DONE.md`·evidence manifest 렌더 | artifacts: `DONE.md` |
+| 22 | `p5.worktree_finalize` | P5 | `worktree-tool finalize`·귀속 확정·worktree 회수 | — |
