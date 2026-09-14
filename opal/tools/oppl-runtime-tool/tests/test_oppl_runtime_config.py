@@ -16,7 +16,7 @@
 
   성공: {"ok":true,"command":"<sub>", ...}      exit 0
   실패: {"ok":false,"command":"<sub>","error":"<코드>", ...}  exit != 0
-  (docs/CONVENTIONS.md §도구 출력 계약 — 단일 라인 JSON + exit code만)
+  (opal/core/references/harness/tool-output-contract.md — 단일 라인 JSON + exit code만)
 
 설정 주입 경로 (테스트가 고정한다)
   전역: $OPAL_HOME/setting.json   — OPAL_HOME 미설정 시 ~/.opal.

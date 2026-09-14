@@ -25,7 +25,7 @@
   run.sh show           --task-path <t>   → {"ok":true,"command":"show","runtime":{...}}
 
   성공 {"ok":true,...} exit 0 / 실패 {"ok":false,"error":"<코드>",...} exit != 0
-  (docs/CONVENTIONS.md §도구 출력 계약 — 단일 라인 JSON + exit code만)
+  (opal/core/references/harness/tool-output-contract.md — 단일 라인 JSON + exit code만)
 
   admit이 카운터를 증가시키고 active attempt를 예약한다(제안서 §6.2 "허가된 경우에만
   카운터를 증가"). attempt-start는 attempt-id·attempt record 경로를 ledger에 외래 참조로

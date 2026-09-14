@@ -1,5 +1,7 @@
 # opal-action-monitor
 
+> 소스: `opal/tools/opal-action-monitor/` | 배포: `~/.opal/tools/opal-action-monitor/`
+
 루프 액션 에이전트(opal-agent 채널)의 `<task_folder>/.oppl-run/` 산출물을 파싱해
 **단계(phase) × 축(axis) 진행 현황판**을 렌더하는 읽기 전용 CLI.
 
@@ -165,6 +167,15 @@ top-level `runtime`과 phase의 `attempt_count`/`resume_count`는 **위임 경�
 {"ok": false, "error": "<메시지>"}
 ```
 
+## 종료 코드
+
+읽기 전용 도구이므로 세부 분류가 없다 — 실패는 단일 코드로 닫힌다.
+
+| 코드 | 의미 |
+|------|------|
+| `0` | 성공 (텍스트·`--json` 렌더 완료, `--watch` 정상 종료 포함) |
+| `1` | 태스크 폴더 부재 또는 `<task_folder>/.oppl-run/` 부재 (위 §에러 계약) |
+
 ## 관련 소스
 
 - opal-agent(비동기 축 stream-json 실행 경로): `opal/tools/opal-agent/` — opal-action-monitor는
@@ -176,4 +187,5 @@ top-level `runtime`과 phase의 `attempt_count`/`resume_count`는 **위임 경�
 
 - v1.0 (2026-07-17 19:55 KST, 067) 최초 구현 — `.oppl-run/` 파서(phase 6종·재시도 접미사 최신 채택), 6상태 판정, R-NEST 최근 이벤트 요약(방어적 파싱), 텍스트 현황판·`--json`·`--watch`(2초 폴링·상한 3종)·에러계약
 - v1.1 (2026-07-17 23:04 KST, 067) 도구명 리네임 — `oppl-monitor` → `opal-action-monitor`(향후 oppd·opsdd 액션 에이전트 공통 관측 도구로 확장 예정이라 이름 중립화). 로직 무변경, `.oppl-run/` 규약명 유지
+- v1.3 (2026-09-14, 131 W-14) `tools.md` opal-action-monitor 절 흡수 — §종료 코드(0/1, 단일 실패 코드) 신설 + 상단 소스·배포 경로 1줄 추가. 커맨드·`--json` 스키마·상태 판정·opal-agent 경계 주석은 이미 README가 보유해 중복 흡수 없음. 도구 동작 무변경
 - v1.2 (2026-09-14, 131) 상태 판정 위임 — `.oppl-run/runtime.json`(oppl-runtime-tool ledger) 존재 시 phase status 7종(`timed_out` 추가)과 잔여 상한을 재판정 없이 렌더하고 `--json`에 top-level `runtime` 블록 노출. `runtime.json` 부재 시 기존 6상태 휴리스틱 유지·`timed_out` 미출력·`runtime` 블록 미생성. `TERMINAL_STATUSES`에 `timed_out` 추가(`--watch` 종료 판정). 두 경로 모두 쓰기 0건 유지 (PLAN 131 D7 / W-8 / S-21)

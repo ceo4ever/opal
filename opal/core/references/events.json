@@ -287,6 +287,11 @@
           "id": "red-first",
           "source": "{source_root}/opal/core/references/harness/red-first.md",
           "deployed": "{deployed_root}/references/harness/red-first.md"
+        },
+        {
+          "id": "tool-output-contract",
+          "source": "{source_root}/opal/core/references/harness/tool-output-contract.md",
+          "deployed": "{deployed_root}/references/harness/tool-output-contract.md"
         }
       ],
       "optional_docs": [],

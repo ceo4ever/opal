@@ -748,15 +748,15 @@
       "assertions": [],
       "required_evidence": [],
       "handoff": null,
-      "result": null,
+      "result": "pass",
       "operational_status": null,
       "observed_executors": [],
       "assertion_results": [],
       "observed_evidence": [],
       "handoff_state": null,
       "run_id": null,
-      "evidence": null,
-      "marked_at": null,
+      "evidence": "커밋 d2db762 상태에서 ./scripts/install-mac.sh 실행(exit 0). 배포본 실호출 검증: ~/.opal/tools/opal-agent/run.sh --help에 신규 플래그 7종 노출(매치 16), 실셸 상한 거부 timeout_limit_exceeded + 생성파일 0건, ~/.opal/tools/oppl-runtime-tool/run.sh config가 단일 라인 JSON 계약대로 config_invalid 반환. 두 run.sh 모두 -rwxr-xr-x. ~/.opal/ 직접 편집 0건 — install 경유만 수행",
+      "marked_at": "2026-09-14T07:46:06+09:00",
       "fidelity": "mock"
     },
     {
@@ -929,8 +929,8 @@
       "observed_evidence": [],
       "handoff_state": null,
       "run_id": null,
-      "evidence": "git log --oneline main..HEAD → 0건. 소유자 명시 요청 없는 커밋 0건",
-      "marked_at": "2026-09-14T02:13:08+09:00",
+      "evidence": "git log --oneline main..HEAD → 1건 d2db762(author iskang, 2026-09-14 07:41). 소유자가 '승인' 발화로 커밋을 명시 요청한 뒤 생성한 커밋이다. 기대 결과 '소유자 명시 요청 없이 생성된 커밋 0건'은 충족. [정정] 이전 증거의 '0건'은 커밋 생성 이전 시점 캡처였다",
+      "marked_at": "2026-09-14T07:56:19+09:00",
       "fidelity": "mock"
     },
     {
@@ -987,8 +987,8 @@
       "observed_evidence": [],
       "handoff_state": null,
       "run_id": null,
-      "evidence": "산문 집행 13행 전부 admit 호출 결과 판정으로 교체. 잔존 10건은 SSOT 참조·절 제목·TOC·frontmatter·변경이력. 신형 채택 admit 47·attempt-start 9·attempt-finish 14·run-start 4(변경 전 전부 0)",
-      "marked_at": "2026-09-14T02:13:09+09:00",
+      "evidence": "산문 집행 13행 전부 admit 호출 결과 판정으로 교체. 잔존 11행(AGENT.md 4·SKILL.md 2·loop-control.md 5)은 행별 판정 결과 전부 면제 사유 — SSOT 참조·비복제 [MUST]·절 제목·TOC·frontmatter description·변경이력. 산문 집행 행 0건이며 각 절 본문(AGENT.md:388·SKILL.md:426·loop-control.md:44)이 상한 판정을 admit 호출 결과로만 명시. 신형 채택 admit 47·attempt-start 9·attempt-finish 14·run-start 존재(변경 전 전부 0). [정정] 이전 증거의 잔존 10행은 오기이며 실측은 11행",
+      "marked_at": "2026-09-14T07:56:19+09:00",
       "fidelity": "mock"
     },
     {

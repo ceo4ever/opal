@@ -11,7 +11,7 @@
 - **축 분리(D3)**: `runtime.json`은 3-SSOT(`backlog.json`·`state.json`·`test-scenario.json`)와 별개인 **런타임 가드 축**이다. 업무·파이프라인·검증 상태를 복제하지 않는다.
 - **소유권 분리(D4)**: ledger는 **집계값만** 보유한다. attempt별 PID·PGID·시작 fingerprint·heartbeat·terminal result 원문은 저장하지 않고 `attempt_id`와 attempt record **파일 경로만 외래 참조**로 갖는다.
 - **run identity(D8)**: `run_id`는 `state-tool`이 발급한다. 이 도구는 발급하지 않고 외래 참조로만 복제한다.
-- **출력 계약**: 모든 응답은 **단일 라인 JSON + exit code**(`docs/CONVENTIONS.md` §도구 출력 계약).
+- **출력 계약**: 모든 응답은 **단일 라인 JSON + exit code**(`opal/core/references/harness/tool-output-contract.md`).
 
 ## 호출 형식
 

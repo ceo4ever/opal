@@ -3,8 +3,16 @@
 OPAL 프로젝트 메모리 인덱스·히스토리 결정론적 집행 CLI.
 `MEMORY.json` 단독 SSOT (v2.0, 078) — 9서브명령 `init/append/update/promote/prune/show/review/delete/task-number`.
 
+> 소스: `opal/tools/memory-tool/` | 배포: `~/.opal/tools/memory-tool/`
 > **원칙**: 메모리는 임시 보관소. 성숙한 지식은 `promote`로 영구 거처(`docs`/`brain`)로 졸업한다.
 > **참조**: `opal/core/references/harness/memory-learning.md` — 형식·라이프사이클 SSOT
+> **의존성**: `~/.opal/.venv/bin/python` (표준 라이브러리만 — `json`/`argparse`/`pathlib`/`re`/`sys`/`datetime`/`os`) + `node ~/.opal/tools/date/date.js`(KST 시점)
+
+---
+
+## 트리거 조건
+
+메모리 등록·정리·이관 시 호출한다 — `append`(신규 지식), `update`(상태 전이), `promote`(졸업), `review`(health 점검), `task-number`(태스크 번호 발급).
 
 ---
 
@@ -296,7 +304,7 @@ run.sh task-number --file MEMORY.json --set 80    # 복구·보정 (역행 거�
 | `invalid_json` | `MEMORY.json` 파싱 실패(손상된 JSON) |
 | `unsupported_version` | 문서 `version`이 지원 상한을 초과 |
 | `schema_validation_failed` | 문서가 스키마를 위반(파일 변경 없음, `violations[]` 참조) |
-| `schema_load_failed` | 스키마 파일(`schema/memory.schema.json`) 로드 실패 — CLI 기동 자체 중단 |
+| `schema_load_failed` | 스키마 파일(`schema/memory.schema.json`) 로드 실패(부재·파손) — 전 서브명령 결정론 거부(CLI 기동 자체 중단, H-13 관측 지점) |
 | `schema_unsupported_keyword` | 검증기가 지원하지 않는 스키마 키워드 사용 |
 | `migration_failed` | md→json 변환 실패(원본 `.md` 무변경, `.json` 미생성) |
 | `lock_timeout` | 메모리 락 획득 시간 초과(다른 프로세스 점유 중) |

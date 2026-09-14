@@ -13,7 +13,7 @@
 실 파일 상태(state.json / schema/state.schema.json)만 단언한다.
 내부 함수 mock/patch 금지(red-first.md §4) — subprocess 실호출만 사용한다.
 
-[MUST] CONVENTIONS 도구 출력 계약: 모든 서브명령은 단일 라인 JSON + exit code.
+[MUST] opal/core/references/harness/tool-output-contract.md: 모든 서브명령은 단일 라인 JSON + exit code.
 [MUST] CONVENTIONS State 관리: state.json을 직접 편집하지 않는다 — 픽스처도 `state-tool init` 경유로만 만들고
        테스트는 읽기만 한다.
 [MUST] TASK T-11(기존 규약 계승): 표준 라이브러리만 import.
@@ -82,7 +82,7 @@ class TestT131RunStart(_TaskFolderCase):
     """S-3 / PLAN D8 — `state-tool run-start <task-path>` 발급 계약."""
 
     def test_run_start_returns_single_line_json_ok(self):
-        """run-start는 exit 0 + 단일 라인 JSON으로 run_id를 반환한다 (CONVENTIONS 도구 출력 계약)."""
+        """run-start는 exit 0 + 단일 라인 JSON으로 run_id를 반환한다 (harness/tool-output-contract.md)."""
         rc, raw, data = _run(["run-start", self.task_path])
         self.assertEqual(rc, 0, f"run-start가 실패했다: {data}")
         self.assertEqual(

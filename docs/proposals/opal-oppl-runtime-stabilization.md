@@ -190,6 +190,16 @@ Loop 1 회전, Loop 2 task 선택, 태스크 내부 phase 시작과 resume 직�
 `oppl-runtime-tool admit`을 호출한다. 도구는 같은 lock 안에서 다음을 검사하고 허가된 경우에만 카운터를
 증가시킨다.
 
+호출 주체는 범위별로 갈린다. PM은 `state-tool run-start` → `oppl-runtime-tool init --run-id`로 run을
+초기화하고 Loop 1 회전과 Loop 2 task 선택 경계에서 `admit`을 호출한다. 태스크 내부 phase 시작과
+resume 경계에서는 `opal-loop-action-agent`가 `admit` → `attempt-start` → 실행 → `attempt-finish`를
+직접 호출한다. phase 전환 시점과 상한 판정 시점을 분리할 수 없고, PM만 호출하게 하면 phase마다 왕복이
+생겨 태스크당 PM 개입 1회 구조가 무너지기 때문이다.
+
+이 허용은 업무 SSOT 경계를 넓히지 않는다. `runtime.json`은 `backlog.json`·`state.json`·
+`test-scenario.json` 3축과 별개의 런타임 가드 축이며, `opal-loop-action-agent`의 `backlog-tool`·
+`state-tool`·`oppl-runtime-tool init` 호출 금지는 그대로다.
+
 1. 같은 범위에 active attempt가 없는가
 2. 설계 회전·프로젝트 dispatch·task attempt 상한이 남아 있는가
 3. 동일 컨텍스트 resume 상한이 남아 있는가
