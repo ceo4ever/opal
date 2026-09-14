@@ -3,7 +3,7 @@
   "module": "test_tool",
   "layer": "util",
   "domain": "opal-tools",
-  "description": "test-tool CLI — resolve/check/unit/integration 및 scenario-* argparse 라우터 + ERROR_CODES 카탈로그 + JSON 출력 헬퍼.",
+  "description": "test-tool CLI for resolution, unit checks, priority-ordered browser integration, and scenario evidence routing.",
   "exports": [
     "main",
     "ERROR_CODES"
@@ -161,7 +161,7 @@ def cmd_unit(args: argparse.Namespace) -> None:
 
 
 def cmd_integration(args: argparse.Namespace) -> None:
-    """integration 서브명령 — cmux-tool 에러코드 소비 → 폴백/에스컬레이션."""
+    """integration 서브명령 — Ego Lite→cmux→Playwright 후보 계약 실행."""
     project_root = pathlib.Path(args.project_root) if args.project_root else None
     resolved = resolve_test_tools(project_root=project_root)
     if not resolved.get("ok"):
@@ -171,6 +171,8 @@ def cmd_integration(args: argparse.Namespace) -> None:
     tiers_data = resolved.get("tiers", {})
     scope = getattr(args, "scope", "be") or "be"
     url = getattr(args, "url", None)
+    expect_text = getattr(args, "expect_text", None)
+    ego_install_choice = getattr(args, "ego_install_choice", None)
 
     import os
     env = os.environ.copy()
@@ -181,6 +183,8 @@ def cmd_integration(args: argparse.Namespace) -> None:
         url=url,
         project_root=project_root,
         env=env,
+        expect_text=expect_text,
+        ego_install_choice=ego_install_choice,
     )
     result["command"] = "integration"
 
@@ -218,9 +222,15 @@ def _build_parser() -> argparse.ArgumentParser:
     p_unit.add_argument("--project-root", metavar="PATH", help="프로젝트 루트 경로")
 
     # integration
-    p_integration = subparsers.add_parser("integration", help="cmux-tool → playwright 폴백 E2E + api_db")
+    p_integration = subparsers.add_parser("integration", help="Ego Lite → cmux → Playwright E2E + api_db")
     p_integration.add_argument("--scope", choices=["fe", "be"], default="be", help="실행 범위 (fe|be)")
     p_integration.add_argument("--url", metavar="URL", help="SUT URL (dev서버/localhost)")
+    p_integration.add_argument("--expect-text", metavar="TEXT", help="브라우저에서 확인할 의미 문자열")
+    p_integration.add_argument(
+        "--ego-install-choice",
+        choices=["manual", "r2", "cancel"],
+        help="Ego Lite 미설치 handoff에 대한 사용자 선택",
+    )
     p_integration.add_argument("--project-root", metavar="PATH", help="프로젝트 루트 경로")
 
     # scenario-init / scenario-lock / scenario-mark / scenario-status (lib/scenario.py로 격리)

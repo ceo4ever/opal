@@ -23,7 +23,7 @@ bash ~/.opal/tools/test-tool/run.sh <서브명령> [옵션]
 bash opal/tools/test-tool/run.sh <서브명령> [옵션]
 ```
 
-**의존**: `.venv python` (OPAL 설치) + PyYAML. E2E executor는 `test-tools.yaml`와 E2E contract의 profile/executor 선언을 따른다.
+**의존**: `.venv python` (OPAL 설치) + PyYAML. E2E executor는 `test-tools.yaml`와 E2E contract의 profile/executor 선언을 따른다. 브라우저 후보 기본 순서는 Ego Lite → cmux → Playwright다.
 
 ---
 
@@ -114,7 +114,8 @@ bash run.sh unit [--scope fe|be] [--changed-files FILE...] [--project-root PATH]
 E2E contract v2 결과를 반환한다. profile은 요구사항의 공개 표면으로 결정되며, 도구 가용성으로 UI 행동을 API-only 실행으로 낮추지 않는다.
 
 ```bash
-bash run.sh integration [--scope fe|be] [--url URL] [--project-root PATH]
+bash run.sh integration [--scope fe|be] [--url URL] [--expect-text TEXT] \
+  [--ego-install-choice manual|r2|cancel] [--project-root PATH]
 ```
 
 **출력 JSON**:
@@ -125,7 +126,7 @@ bash run.sh integration [--scope fe|be] [--url URL] [--project-root PATH]
   "status": "fail",
   "error": "e2e_failed",
   "e2e": {
-    "driver": "cmux",
+    "driver": "ego-lite",
     "status": "fail",
     "url": "http://localhost:3000"
   },
@@ -137,6 +138,8 @@ bash run.sh integration [--scope fe|be] [--url URL] [--project-root PATH]
 **[MUST] mode A**: `--surface` 미전달 → 신규 surface 강제 (사용자 surface B/C 재사용 금지).  
 **[MUST] SUT 경계**: 앱 가동 전제 검사만 — 기동 책임 비보유.
 **[MUST] pass gate**: `pass`와 `real-usage`는 구조화 assertion `expected`/`actual`과 profile 또는 시나리오의 `required_evidence`/`observed_evidence`를 모두 요구한다. open/navigate/close 또는 자유 형식 사람 완료 선언만으로 통과하지 않는다.
+
+설정의 `priority` 순서로 Ego Lite, cmux, Playwright를 실제 호출한다. 다음 후보 전환은 현재 후보가 `provider_unavailable`일 때만 허용된다. Ego Lite 미설치는 자동으로 건너뛰지 않고 `awaiting_human`과 `manual`·`r2`·`cancel`, URL/assertion resume 정보를 반환한다. 사용자가 `cancel`을 명시한 경우에만 Ego 후보가 `provider_unavailable`이 되어 cmux로 이어진다.
 
 | status | exit | 의미 |
 |---|---:|---|

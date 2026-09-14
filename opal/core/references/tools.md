@@ -508,6 +508,26 @@ node ~/.opal/tools/code-scan/code-scan.js scan src/auth/auth.service.ts --json
 
 ---
 
+## ego-browser-tool
+
+**용도**: Ego Lite의 설치 상태, 검증된 macOS 설치, 실제 브라우저 텍스트 assertion을 JSON 계약으로 제공
+**실행 경로**: `bash ~/.opal/tools/ego-browser-tool/run.sh`
+**소스 경로**: `opal/tools/ego-browser-tool/`
+**의존성**: macOS arm64/x86_64, 선택 설치 Ego Lite 앱과 `ego-browser` CLI
+
+```bash
+bash ~/.opal/tools/ego-browser-tool/run.sh status
+bash ~/.opal/tools/ego-browser-tool/run.sh install
+bash ~/.opal/tools/ego-browser-tool/run.sh smoke https://example.com --expect-text "Example Domain"
+bash ~/.opal/tools/ego-browser-tool/run.sh smoke https://example.com --expect-text "Example Domain" --install-choice manual|r2|cancel
+```
+
+Ego Lite가 없으면 자동 대체하지 않고 `awaiting_human`과 `manual`·`r2`·`cancel`, 원래 URL/assertion resume 정보를 반환한다. 명시적 `cancel` 또는 비지원 플랫폼의 `provider_unavailable`만 상위 소비자가 cmux로 전환할 수 있다. R2 설치는 고정 DMG의 `hdiutil`, SHA-256, 코드서명, Gatekeeper 평가를 모두 통과한 뒤에만 수행하며 quarantine을 제거하지 않는다. 앱은 OPAL에 번들하지 않는다.
+
+실행 결과는 `pass`, `fail`, `infra_error`, `provider_unavailable`, `blocked`, `awaiting_human` 중 하나다. 출력에는 제한된 expected/actual과 Space id만 포함하며 비밀번호·cookie·token은 포함하지 않는다. MFA·결제·게시·삭제 같은 부작용은 사람에게 넘긴다.
+
+---
+
 ## cmux-tool
 
 **용도**: cmux browser 자동화 래퍼 — 12+1종 서브명령으로 웹 자동화·추출·상호작용을 단일 도구로 처리  
@@ -518,8 +538,7 @@ node ~/.opal/tools/code-scan/code-scan.js scan src/auth/auth.service.ts --json
 
 ### 트리거 조건
 
-PM이 아래 사용자 문장을 수신하면 cmux-tool을 우선 선택한다.  
-cmux 미설치 시 wtm-agent 경유 웹 수집은 호환 대체 경로를 사용할 수 있다. 단독 호출 시 에러 JSON 반환. `test-tool` E2E 출력은 아래 raw cmux vocabulary를 그대로 공개하지 않고 E2E contract v2로 정규화한다.
+브라우저 추출·상호작용·E2E는 Ego Lite를 먼저 사용하고, Ego 후보가 `provider_unavailable`일 때 cmux-tool을 선택한다. 사용자가 `--surface`를 명시한 작업은 해당 cmux surface를 바로 사용한다. `test-tool` E2E 출력은 아래 raw cmux vocabulary를 그대로 공개하지 않고 E2E contract v2로 정규화한다.
 
 | 사용 시점 | 대표 사용자 문장 | 우선 명령 (cmux-tool) | 폴백 |
 |----------|----------------|----------------------|------|
@@ -584,8 +603,8 @@ bash ~/.opal/tools/cmux-tool/run.sh --help
 |------|--------|---------------|
 | `not_in_cmux` | 2 | 자동 폴백 (phase2) |
 | `cmux_not_installed` | 3 | 자동 폴백 (phase2) |
-| `surface_parse_failed` | 5 | 자동 폴백 (phase2) |
-| `open_failed` | 5 | 자동 폴백 (phase2) |
+| `surface_parse_failed` | 5 | `infra_error` — 폴백 금지 |
+| `open_failed` | 5 | `infra_error` — 폴백 금지 |
 | `usage` | 1 | 폴백 금지 — 호출자 수정 |
 | `invalid_surface` | 4 | 폴백 금지 — 핸들 수정 |
 | `goto_failed` | 6 | 폴백 금지 — URL 오류 |
@@ -663,12 +682,12 @@ bash ~/.opal/tools/test-tool/run.sh check [--category C] [--tier unit|integratio
 bash ~/.opal/tools/test-tool/run.sh unit [--scope fe|be] [--changed-files ...] [--project-root PATH]
 
 # 통합 — E2E contract status/evidence + 실DB API
-bash ~/.opal/tools/test-tool/run.sh integration [--scope fe|be] [--url URL] [--project-root PATH]
+bash ~/.opal/tools/test-tool/run.sh integration [--scope fe|be] [--url URL] [--expect-text TEXT] [--ego-install-choice manual|r2|cancel] [--project-root PATH]
 ```
 
 ### E2E contract v2 요약
 
-`integration`과 `scenario-mark --verdict-json`은 profile `browser` / `api` / `hybrid` / `collaborative` / `manual`을 보존한다. final status는 `pass` / `fail` / `executor_unavailable` / `infra_error` / `blocked`이며, `awaiting_human`은 exit 20을 갖는 operational state다. `provider_unavailable`은 Browser 후보 내부 상태로만 쓰고 모든 후보 소진 시 final `executor_unavailable`이 된다.
+`integration`과 `scenario-mark --verdict-json`은 profile `browser` / `api` / `hybrid` / `collaborative` / `manual`을 보존한다. 브라우저 후보는 설정 priority에 따라 Ego Lite → cmux → Playwright 순서로 실제 실행한다. final status는 `pass` / `fail` / `executor_unavailable` / `infra_error` / `blocked`이며, `awaiting_human`은 exit 20을 갖는 operational state다. `provider_unavailable`은 Browser 후보 내부 상태로만 쓰고 모든 후보 소진 시 final `executor_unavailable`이 된다.
 
 | status | exit | 처리 |
 |---|---:|---|

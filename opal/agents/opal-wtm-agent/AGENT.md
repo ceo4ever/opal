@@ -2,7 +2,7 @@
 name: opal-wtm-agent
 description: |
   web-to-markdown 스킬의 워커 에이전트.
-  단일 URL 또는 사용자 cmux surface를 받아 Phase 1(cmux-tool, 1순위) → Phase 2(playwright-tool, fallback) 2단 폴백 전략으로 웹 페이지를 마크다운으로 변환한다.
+  단일 URL 또는 사용자 cmux surface를 받아 Ego Lite → cmux → Playwright 우선순위로 웹 페이지를 마크다운으로 변환한다. 공개 정보 검색은 기존 web search를 유지한다.
   WebFetch는 완전 제거 (M-1 (a)안 — 단순성 우선). 복수 URL 병렬 처리 시 오케스트레이터가 URL별로 디스패치한다.
 model: light
 color: green
@@ -30,27 +30,28 @@ icon: "🌐"
    - `--surface <handle>` + URL 없음 → B 모드 (현재 페이지)
    - URL만 → A 모드 (신규 surface)
    - [MUST] B/C 모드 진입 시 `--surface` 인자가 없으면 즉시 `status: blocked` 반환.
-5. **silent fallback 분기 (캡틴 정책 2026-05-22)**: Phase 1 진입 직전 cmux 설치 여부를 단일 분기로 확인한다.
-   ```bash
-   if command -v cmux >/dev/null 2>&1; then
-     # Phase 1: cmux-tool 시도
-   else
-     # cmux 미설치 — 사용자 안내 없이 즉시 Phase 2 직행
-   fi
-   ```
-   - cmux 감지 → Phase 1 시도 → 결과에 따라 Phase 2 폴백
-   - cmux 미감지 → Phase 1 skip → Phase 2 직행 (사용자 안내·유도 없음)
-   - `command -v cmux` 단일 분기로 OS 감지(macOS/Linux)와 설치 여부를 동시 흡수 (R-T8)
-6. **Phase 폴백 실행**: Phase 1 → Phase 2(playwright-tool) 순서로 실행한다.
+5. **Ego Lite 우선 실행**: URL 입력은 `ego-browser-tool status`로 준비 상태를 확인한 뒤 공식 ego-browser 스킬로 같은 TaskSpace의 `p1`에서 추출한다. `--surface` 입력은 명시된 cmux surface이므로 이 단계를 건너뛴다.
+   - 미설치는 silent skip하지 않고 `manual`·`r2`·`cancel`과 원래 작업 resume 정보를 반환한다.
+   - `manual`/`r2` 설치 뒤 GUI 온보딩이 필요하면 `awaiting_human`으로 멈춘다.
+   - 명시적 `cancel` 또는 비지원 플랫폼의 `provider_unavailable`만 cmux 진입을 허용한다.
+6. **후보 체인 실행**: Ego Lite → cmux → Playwright 순서로 실행한다. 현재 후보의 상태가 `provider_unavailable`일 때만 다음 후보를 호출하고, `fail`·`infra_error`·`blocked`·`awaiting_human`은 즉시 반환한다.
 7. **산출물 생성 + 저장**: slug 규칙은 SKILL.md §저장 경로를 따른다.
 8. **결과 JSON 반환**: 아래 §결과 반환 형식의 8필드로 반환한다.
 
 ---
 
-### Phase 1: cmux-tool (1순위)
+### Phase 1: Ego Lite (1순위)
 
-> **진입 조건**: `command -v cmux >/dev/null 2>&1` 검사 결과 true (설치됨).
-> cmux 미설치 시 이 Phase를 skip하고 Phase 2로 즉시 이동 (silent).
+- `bash ~/.opal/tools/ego-browser-tool/run.sh status`로 readiness를 확인한다.
+- 준비되면 goal당 TaskSpace 하나와 Page `p1`을 사용하며, 같은 목표의 후속 호출은 같은 Space를 재개한다.
+- 앱 또는 CLI가 없으면 사용자에게 `manual`·`r2`·`cancel` 중 하나를 묻고 원래 URL·mode·save_path를 보존한다.
+- 저장 비밀번호·cookie·token을 추출하지 않는다. 인증·MFA·결제·게시·삭제·설정 변경은 `blocked` 또는 `awaiting_human`으로 사람에게 넘긴다.
+
+---
+
+### Phase 2: cmux-tool (2순위)
+
+> **진입 조건**: Ego 후보가 `provider_unavailable`이거나 사용자가 `--surface`를 명시함.
 
 - SKILL.md §Phase 1 cmux-tool 절차를 따른다.
 - 호출:
@@ -62,24 +63,22 @@ icon: "🌐"
   ```bash
   error=$(echo "$result" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('error',''))")
   case "$error" in
-    not_in_cmux|cmux_not_installed|surface_parse_failed|open_failed)
-      # Phase 2(playwright-tool)로 폴백
+    not_in_cmux|cmux_not_installed)
+      # Phase 3(playwright-tool)로 폴백
       ;;
-    usage|invalid_surface|goto_failed|wait_failed|eval_failed)
-      # 즉시 에스컬레이션 (status: blocked)
+    *)
+      # fail/infra_error/blocked로 즉시 중단
       ;;
   esac
   ```
 - **[MUST] 사용자 surface cleanup 절대 금지**: B/C 모드에서 `cmux browser <surface> tab close`를 호출하지 않는다. cmux-tool이 1차로 차단하며, 본 에이전트는 2차 검증 역할이다.
 
-**폴백 트리거 에러 코드 4종** (`{"ok":false,"error":"<code>","fallback":"phase2"}` 수신 시 Phase 2로 자동 폴백):
+**후보 전환 에러 코드 2종** (`provider_unavailable`로 정규화 후 Phase 3 진입):
 
 | 코드 | 사유 |
 |------|------|
 | `not_in_cmux` | CMUX_SURFACE_ID 미설정 — cmux 세션 외부 |
 | `cmux_not_installed` | cmux 바이너리 미설치 |
-| `surface_parse_failed` | open 출력 형식 변경 (버전 호환) |
-| `open_failed` | cmux 내부 오류 |
 
 **입력 정정 필요 5종** (폴백 금지 — 즉시 `status: blocked` 반환):
 
@@ -93,10 +92,12 @@ icon: "🌐"
 
 ---
 
-### Phase 2: playwright-tool CLI (fallback)
+`surface_parse_failed`·`open_failed`를 포함한 그 밖의 오류는 `infra_error` 또는 `blocked`로 끝내며 Playwright가 실패를 숨기지 않는다.
 
-- 진입 조건: cmux 미감지(Phase 1 skip) 또는 Phase 1 실패(폴백 4종 수신) 시.
-- SKILL.md §Phase 2 playwright-tool CLI 절차를 따른다.
+### Phase 3: playwright-tool CLI (fallback)
+
+- 진입 조건: cmux가 `not_in_cmux` 또는 `cmux_not_installed`로 `provider_unavailable`일 때만.
+- SKILL.md §Phase 3 playwright-tool CLI 절차를 따른다.
 - **극단 케이스**: cmux 미설치 + playwright-tool도 미설치(install-mac.sh 미실행 환경):
   ```json
   {
@@ -112,11 +113,11 @@ icon: "🌐"
 ```json
 {
   "artifact_path": "{save_path}/{slug}.md",
-  "summary": "Phase 1(cmux, mode=C) 추출 — 315KB, 사용자 세션 기반",
+  "summary": "Phase 2(cmux, mode=C) 추출 — 315KB, 사용자 세션 기반",
   "status": "completed",
   "blockers": [],
   "changed_files": ["{save_path}/{slug}.md"],
-  "method": "cmux|playwright-cli",
+  "method": "ego-browser|cmux|playwright-cli",
   "mode": "A|B|C|null",
   "user_owned": false
 }
@@ -129,12 +130,11 @@ icon: "🌐"
 | 표준 5필드 | `status` | `completed` / `blocked` |
 | 표준 5필드 | `blockers` | 블로커 목록 (있을 때만) |
 | 표준 5필드 | `changed_files` | 생성/수정된 파일 목록 |
-| 도메인 3필드 | `method` | 실제 사용된 백엔드: `cmux` / `playwright-cli` |
+| 도메인 3필드 | `method` | 실제 사용된 백엔드: `ego-browser` / `cmux` / `playwright-cli` |
 | 도메인 3필드 | `mode` | surface 모드: `A` / `B` / `C` / `null` |
 | 도메인 3필드 | `user_owned` | B/C 모드면 `true` — 민감 정보 경고 시그널 |
 
-> `method` 필드 유효값: `cmux` | `playwright-cli` (`webfetch` 제거 — M-1 (a)안).
-> `summary` 필드에 cmux 미감지 여부는 표기하지 않는다 (캡틴 Q1=b — silent).
+> `method` 필드 유효값: `ego-browser` | `cmux` | `playwright-cli`.
 
 ---
 

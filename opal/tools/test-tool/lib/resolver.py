@@ -3,7 +3,7 @@
   "module": "resolver",
   "layer": "util",
   "domain": "opal-tools",
-  "description": "test-tools.yaml resolution_order(project→global→추론) 해석 모듈. PyYAML 6.0.3 사용.",
+  "description": "test-tools.yaml project→global→inference resolver with a consistent Ego Lite, cmux, Playwright provider chain.",
   "exports": [
     "resolve_test_tools"
   ],
@@ -96,10 +96,18 @@ def _infer_from_package_json(project_root: pathlib.Path) -> Optional[Dict[str, A
         "integration": {
             "e2e": [
                 {
-                    "name": "cmux",
+                    "name": "ego-lite",
                     "executor": "browser",
                     "profiles": ["browser", "hybrid", "collaborative"],
                     "priority": 1,
+                    "via": "ego-browser-tool",
+                    "candidate_on": "provider_unavailable",
+                },
+                {
+                    "name": "cmux",
+                    "executor": "browser",
+                    "profiles": ["browser", "hybrid", "collaborative"],
+                    "priority": 2,
                     "via": "cmux-tool",
                     "candidate_on": "provider_unavailable",
                 },
@@ -107,7 +115,8 @@ def _infer_from_package_json(project_root: pathlib.Path) -> Optional[Dict[str, A
                     "name": "playwright",
                     "executor": "browser",
                     "profiles": ["browser", "hybrid", "collaborative"],
-                    "priority": 2,
+                    "priority": 3,
+                    "via": "playwright-tool",
                     "candidate_on": "provider_unavailable",
                 },
             ]
@@ -146,10 +155,18 @@ def _infer_from_pyproject(project_root: pathlib.Path) -> Optional[Dict[str, Any]
         "integration": {
             "e2e": [
                 {
-                    "name": "cmux",
+                    "name": "ego-lite",
                     "executor": "browser",
                     "profiles": ["browser", "hybrid", "collaborative"],
                     "priority": 1,
+                    "via": "ego-browser-tool",
+                    "candidate_on": "provider_unavailable",
+                },
+                {
+                    "name": "cmux",
+                    "executor": "browser",
+                    "profiles": ["browser", "hybrid", "collaborative"],
+                    "priority": 2,
                     "via": "cmux-tool",
                     "candidate_on": "provider_unavailable",
                 },
@@ -157,7 +174,8 @@ def _infer_from_pyproject(project_root: pathlib.Path) -> Optional[Dict[str, Any]
                     "name": "playwright",
                     "executor": "browser",
                     "profiles": ["browser", "hybrid", "collaborative"],
-                    "priority": 2,
+                    "priority": 3,
+                    "via": "playwright-tool",
                     "candidate_on": "provider_unavailable",
                 },
             ],
