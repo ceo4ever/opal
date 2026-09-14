@@ -38,6 +38,8 @@ STAGE_ENUM = [
     "VERIFY", "SCAN", "CHECK", "REPORT", "WBS", "CLOSE",
     # 070 R-8: opdd 드리프트 정정 — opal-pilot-data-design 단계 enum 등록(enum 문자열 추가만, pipeline.json은 2차)
     "DICT", "MODEL", "DDL/MIGRATION",
+    # 132 W-3: opal-pilot-project-build(oppb) 파일럿 신설 — 프로젝트 단계 enum 등록(additive-only, S-6)
+    "P0", "P1", "P2", "P3", "P4", "P5",
 ]
 
 # 070 F-001 R-1/R-6: pipeline.json 스펙 key 형식 — {stage_slug}.{item_slug}(_N)?
@@ -1242,7 +1244,7 @@ def validate_pipeline_spec(spec):
         # 최상위 필수 필드가 없으면 하위 검사(task_steps 순회 등)는 의미가 없다
         return violations
 
-    skill_enum = ["opp", "opd", "opds", "opdw", "opwt", "opgc", "oppd", "opsdd", "oppl", "opdd"]
+    skill_enum = ["opp", "opd", "opds", "opdw", "opwt", "opgc", "oppd", "opsdd", "oppl", "opdd", "oppb"]  # 132 W-3보강: oppb spec-validate 허용 (P9 pipeline.json skill='oppb')
     if spec.get("skill") not in skill_enum:
         violations.append({"code": "spec_skill_invalid", "detail": f"skill '{spec.get('skill')}' not in enum"})
 
@@ -3982,7 +3984,7 @@ def build_parser():
     p_init = sub.add_parser("init", help="state.json + STATE.md 생성 (§2.11 G-8)")
     p_init.add_argument("task_path", metavar="<task-path>")
     p_init.add_argument("--skill", required=True,
-                        choices=["opp","opd","opds","opdw","opwt","opgc","oppd","opsdd","oppl","opdd"])
+                        choices=["opp","opd","opds","opdw","opwt","opgc","oppd","opsdd","oppl","opdd","oppb"])
     p_init.add_argument("--mode", required=True,
                         choices=["interactive","semi-agentic","agentic"])
     p_init.add_argument("--task-title")

@@ -38,6 +38,7 @@ load: pilot.start
 | `task_root` | canonical task path에서 가장 가까운 `.git`·`.opal` 작업본 또는 명시 `task_home` | code-scan, event-loader, brain-tool, state의 설정·gate | branch의 `.opal`, `tasks`, source |
 | `allocator_root` | worktree registry가 발급한 허브 절대 경로 | task-number, merge 후 history | 허브 `.opal/MEMORY.json` |
 
+- 표의 "쓰기 대상" 열은 태스크 귀속 계약(채번·merge history)의 범위를 정의한다. 도구가 소유하는 허브 루트 미추적 디렉토리(`.opal-worktrees/`, `.opal-runs/`, `.opal-cache/`)는 이 조항의 적용 대상이 아니다.
 - **[MUST] `allocator_root`는 cwd, task path의 조상, `.opal-worktrees` 문자열로 추론하지 않는다.** 허브 PM이 worktree 생성 시 registry에 기록하고, merge 귀속 단계가 명시 인자로 전달한다.
 - 워커와 일반 state 변경 명령에는 allocator write 권한을 주지 않는다.
 - CLOSE 마지막 mark는 MEMORY history를 즉시 append하지 않고 `completed_unmerged`만 확정한다. history append는 merge 확인 후 귀속 명령만 수행한다.

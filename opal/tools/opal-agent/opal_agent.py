@@ -4,9 +4,9 @@
   "module": "opal_agent",
   "layer": "util",
   "domain": "opal-workspace",
-  "description": "멀티 provider 서브에이전트 호출 라이브러리 + CLI와 OPAL session event 판정 공개 함수",
-  "exports": ["call_agent", "resolve_session_event", "AgentConfig", "AgentResult", "PROVIDERS", "OpalAgentError", "ClaudeNotFoundError", "OpalAgentTimeout"],
-  "task": "059, 067, 113"
+  "description": "멀티 provider 서브에이전트 호출 라이브러리 + CLI, OPAL session event 판정 공개 함수, 공용 attempt runtime(process group 생성·독립 watchdog·PGID 회수·attempt record·재부착/고아 판정)",
+  "exports": ["call_agent", "resolve_session_event", "AgentConfig", "AgentResult", "PROVIDERS", "OpalAgentError", "ClaudeNotFoundError", "OpalAgentTimeout", "AttemptRecorder", "attempt_run_root", "load_attempt_records", "classify_attempt", "reconcile_attempts", "STREAM_EPILOGUE_ALLOWLIST", "RUN_ROOT_ENV"],
+  "task": "059, 067, 113, 132"
 }
 
 opal/tools/opal-agent/opal_agent.py — 멀티 provider 서브에이전트 호출 라이브러리 + CLI
@@ -21,6 +21,10 @@ grok)를 비대화형(headless) 서브에이전트로 프로그래밍적·CLI로
   - 단발(single-shot) 기본 + session_id로 resume 이어가기(다중 턴)
   - JSON 출력 우선 → provider별 파싱 격리, stream-json 확장 여지 유지
   - 표준 에이전트 구성: prompt · system_prompt · allowed_tools · model · cwd · timeout
+  - 공용 attempt runtime — 자식을 새 process group 리더로 띄우고(start_new_session),
+    stdout 수신과 분리된 독립 watchdog이 deadline을 집행하며 PGID 전체를 회수한다.
+    `OPAL_AGENT_RUN_ROOT`가 주어지면 attempt record를 원자 저장하고,
+    reconcile_attempts()가 재시작 시 재부착/고아 판정 진입점을 제공한다.
 
 지원 provider(공식 CLI 문서 기준, 2026-07 확인):
   claude  claude -p            --append-system-prompt(추가)   --output-format json  --resume
@@ -51,13 +55,17 @@ grok)를 비대화형(headless) 서브에이전트로 프로그래밍적·CLI로
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import shutil
+import signal
 import subprocess
 import sys
 import tempfile
+import threading
 import time
+import uuid
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Any
@@ -535,27 +543,435 @@ def _loads(stdout: str, provider: str) -> dict[str, Any]:
     return data
 
 
+# stream terminal framing — result 이벤트 뒤에 와도 "작업이 끝났음"을 뒤집지 않는
+# 후행(epilogue) 이벤트 allowlist. 이 집합 밖의 이벤트가 마지막 result 뒤에 남으면
+# 미종료 작업이 있다는 뜻이므로 성공으로 판정하지 않는다(S-3).
+STREAM_EPILOGUE_ALLOWLIST: frozenset[str] = frozenset({
+    "background_tasks_changed",
+    "task_updated",
+})
+
+
 def _last_stream_result(stdout: str, provider: str) -> dict[str, Any]:
-    """stream-json(JSONL) 출력에서 마지막 비어있지 않은 줄을 파싱하고
-    `type == "result"`인지 검증한다(최소 보장 집합, R-H). 실패 시 명시 에러."""
-    last_line = ""
-    for line in stdout.splitlines():
-        line = line.strip()
-        if line:
-            last_line = line
-    if not last_line:
+    """stream-json(JSONL) 출력에서 **마지막 result 이벤트**를 채택한다.
+
+    terminal framing 규칙(S-3):
+      1. result 이벤트가 여러 번 오면 마지막 것만 채택한다.
+      2. 채택된 result 뒤에는 `STREAM_EPILOGUE_ALLOWLIST` 이벤트만 허용한다.
+      3. result가 하나도 없거나 allowlist 밖 이벤트가 뒤에 남으면 명시 에러다.
+
+    "마지막 줄이 곧 result"라는 이전 가정은 provider가 result 이후에도 무해한
+    epilogue 이벤트를 흘리면 성공을 실패로 오판했고, 반대로 미종료 작업 이벤트를
+    구분할 수단이 없었다. allowlist를 명시해 두 오판을 동시에 닫는다.
+    """
+    events: list[tuple[str, dict[str, Any] | None]] = []
+    for raw in stdout.splitlines():
+        line = raw.strip()
+        if not line:
+            continue
+        try:
+            data = json.loads(line)
+        except json.JSONDecodeError:
+            data = None
+        events.append((line, data if isinstance(data, dict) else None))
+
+    if not events:
         raise OpalAgentError(f"{provider} stream-json 출력이 비어 있습니다.")
-    try:
-        data = json.loads(last_line)
-    except json.JSONDecodeError as exc:
+
+    last_idx = -1
+    for idx, (_line, data) in enumerate(events):
+        if data is not None and data.get("type") == "result":
+            last_idx = idx
+    if last_idx < 0:
         raise OpalAgentError(
-            f"{provider} stream-json 마지막 줄 파싱 실패: {exc}\n원본: {last_line[:500]}"
-        ) from exc
-    if not isinstance(data, dict) or data.get("type") != "result":
-        raise OpalAgentError(
-            f"{provider} stream-json 마지막 줄이 result 이벤트가 아닙니다: {last_line[:500]}"
+            f"{provider} stream-json 출력에 result 이벤트가 없습니다: "
+            f"{events[-1][0][:500]}"
         )
-    return data
+
+    for line, data in events[last_idx + 1:]:
+        if data is None or data.get("type") not in STREAM_EPILOGUE_ALLOWLIST:
+            raise OpalAgentError(
+                f"{provider} stream-json의 result 이후에 미종료 이벤트가 남았습니다: "
+                f"{line[:500]}"
+            )
+
+    return events[last_idx][1]      # type: ignore[return-value]
+
+
+# ─── 공용 attempt runtime ─────────────────────────────────────
+#
+# OPPL·OPPB 공용 계약(TASK 132 W-1). 세 가지를 provider 무관하게 보장한다.
+#   (1) provider 자식을 항상 **새 process group(session) 리더**로 띄운다.
+#   (2) stdout 수신과 **분리된 독립 watchdog**이 deadline을 집행하고, 종료 시
+#       자식 1개가 아니라 **PGID 전체**를 회수해 손자 고아를 0으로 만든다.
+#   (3) `OPAL_AGENT_RUN_ROOT`가 주어지면 attempt record를 run root에 원자 저장한다.
+#
+# attempt record는 `.result.json`·`.events.jsonl`·`.err.log`·`.exitcode` 4종을
+# 대체하지 않는 **추가** 산출물이다(PLAN D6). 환경변수가 없으면 아무것도 쓰지
+# 않아 기존 OPPL 호출 경로의 바이트 출력이 그대로 유지된다.
+
+RUN_ROOT_ENV = "OPAL_AGENT_RUN_ROOT"
+ATTEMPT_SUBDIR = "attempts"
+
+# watchdog이 deadline과 무관하게 record를 갱신하는 주기(초).
+ATTEMPT_HEARTBEAT_INTERVAL = 1.0
+# heartbeat가 이보다 오래 멈추면 소유 opal-agent가 죽은 것으로 본다(초).
+ATTEMPT_STALE_AFTER = 60.0
+# SIGTERM으로 PGID를 회수한 뒤 SIGKILL까지 주는 유예(초).
+ATTEMPT_TERM_GRACE = 2.0
+
+EXIT_REASON_RUNNING = "running"
+EXIT_REASON_COMPLETED = "completed"
+EXIT_REASON_TIMEOUT = "timeout"
+EXIT_REASON_FAILED = "failed"
+EXIT_REASON_ORPHAN_REAPED = "orphan_reaped"
+
+_TERMINAL_EXIT_REASONS = frozenset({
+    EXIT_REASON_COMPLETED, EXIT_REASON_TIMEOUT,
+    EXIT_REASON_FAILED, EXIT_REASON_ORPHAN_REAPED,
+})
+
+
+def attempt_run_root() -> str | None:
+    """`OPAL_AGENT_RUN_ROOT`가 지정되어 있으면 그 경로, 아니면 None.
+
+    D6 (b)가 CLI 플래그 집합을 동결했으므로 run root는 환경변수로만 받는다.
+    """
+    raw = (os.environ.get(RUN_ROOT_ENV) or "").strip()
+    return raw or None
+
+
+def _now() -> float:
+    return time.time()
+
+
+def _failure_fingerprint(provider: str, kind: str, message: str) -> str:
+    """같은 실패가 같은 지문을 갖도록 숫자·경로 변동분을 지운 안정 해시."""
+    head = (message or "").strip().splitlines()
+    normalized = "".join(
+        "#" if ch.isdigit() else ch for ch in (head[0] if head else "")
+    )
+    seed = f"{provider}|{kind}|{normalized}"
+    return hashlib.sha256(seed.encode("utf-8")).hexdigest()[:16]
+
+
+def _process_alive(pid: int | None) -> bool:
+    if not pid or pid <= 0:
+        return False
+    try:
+        os.kill(int(pid), 0)
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        return True
+    except OSError:
+        return False
+    return True
+
+
+def _group_alive(pgid: int | None) -> bool:
+    if not pgid or pgid <= 0:
+        return False
+    try:
+        os.killpg(int(pgid), 0)
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        return True
+    except OSError:
+        return False
+    return True
+
+
+def _signal_group(pgid: int | None, sig: int) -> bool:
+    """PGID 전체에 시그널을 보낸다. 자기 자신의 group은 절대 건드리지 않는다."""
+    if not pgid or pgid <= 0 or int(pgid) == os.getpgrp():
+        return False
+    try:
+        os.killpg(int(pgid), sig)
+    except (ProcessLookupError, PermissionError, OSError):
+        return False
+    return True
+
+
+class AttemptRecorder:
+    """attempt record 원자 writer.
+
+    run root 하위 `attempts/<attempt_id>.json` 하나만 소유하고, 매 갱신마다
+    같은 디렉토리의 `.tmp`에 쓴 뒤 `os.replace`로 교체한다(원자 저장).
+    """
+
+    def __init__(self, run_root: str, provider: str, timeout: int) -> None:
+        self.run_root = run_root
+        self.dir = os.path.join(run_root, ATTEMPT_SUBDIR)
+        self.attempt_id = uuid.uuid4().hex
+        self.path = os.path.join(self.dir, f"{self.attempt_id}.json")
+        self._lock = threading.Lock()
+        self._started = time.monotonic()
+        self._warned = False
+        now = _now()
+        self._data: dict[str, Any] = {
+            "attempt_id": self.attempt_id,
+            "pid": None,
+            "pgid": None,
+            "exit_reason": EXIT_REASON_RUNNING,
+            "provider": provider,
+            "owner_pid": os.getpid(),
+            "timeout_s": timeout,
+            "started_at": now,
+            "heartbeat_at": now,
+            "finished_at": None,
+            "exit_code": None,
+            "cost_usd": None,
+            "duration_ms": None,
+            "failure_fingerprint": None,
+        }
+
+    @classmethod
+    def create(cls, config: AgentConfig) -> "AttemptRecorder | None":
+        run_root = attempt_run_root()
+        if not run_root:
+            return None
+        return cls(run_root, config.provider, config.timeout)
+
+    # 내부 ---------------------------------------------------------------
+
+    def _write_locked(self) -> None:
+        tmp = f"{self.path}.tmp"
+        try:
+            os.makedirs(self.dir, exist_ok=True)
+            with open(tmp, "w", encoding="utf-8") as fh:
+                json.dump(self._data, fh, ensure_ascii=False, indent=2,
+                          default=str)
+                fh.write("\n")
+                fh.flush()
+                os.fsync(fh.fileno())
+            os.replace(tmp, self.path)
+        except OSError as exc:
+            try:
+                os.unlink(tmp)
+            except OSError:
+                pass
+            if not self._warned:
+                self._warned = True
+                print(
+                    f"[opal-agent 경고] attempt record 기록 실패({self.path}): {exc}",
+                    file=sys.stderr,
+                )
+
+    def _update(self, **fields: Any) -> None:
+        with self._lock:
+            self._data.update(fields)
+            self._data["heartbeat_at"] = _now()
+            self._write_locked()
+
+    # 공개 ---------------------------------------------------------------
+
+    def attach(self, pid: int, pgid: int) -> None:
+        """자식 생성 직후 PID·PGID를 기록한다(재부착·고아 판정의 근거)."""
+        self._update(pid=int(pid), pgid=int(pgid))
+
+    def heartbeat(self) -> None:
+        self._update()
+
+    def finish(
+        self,
+        exit_reason: str,
+        *,
+        exit_code: int | None = None,
+        result: "AgentResult | None" = None,
+        error: BaseException | None = None,
+    ) -> None:
+        fields: dict[str, Any] = {
+            "exit_reason": exit_reason,
+            "finished_at": _now(),
+            "exit_code": exit_code,
+            "duration_ms": int((time.monotonic() - self._started) * 1000),
+        }
+        if result is not None:
+            fields["cost_usd"] = result.cost_usd
+            if result.duration_ms is not None:
+                fields["duration_ms"] = result.duration_ms
+        if error is not None:
+            fields["failure_fingerprint"] = _failure_fingerprint(
+                self._data.get("provider", ""),
+                type(error).__name__,
+                str(error),
+            )
+        elif exit_reason == EXIT_REASON_TIMEOUT:
+            fields["failure_fingerprint"] = _failure_fingerprint(
+                self._data.get("provider", ""), "timeout",
+                f"deadline {self._data.get('timeout_s')}s",
+            )
+        self._update(**fields)
+
+
+class _AttemptGuard:
+    """stdout 수신과 분리된 독립 watchdog + PGID 전체 회수.
+
+    `subprocess.run(timeout=...)`이나 stdout 루프 안의 deadline 검사와 달리,
+    자식이 한 줄도 내보내지 않아도 deadline이 집행된다. 회수 대상은 직계 자식이
+    아니라 자식이 리더인 process group 전체다.
+    """
+
+    def __init__(self, proc: subprocess.Popen, timeout: int,
+                 recorder: AttemptRecorder | None = None) -> None:
+        self.proc = proc
+        self.timeout = timeout
+        self.recorder = recorder
+        self.pgid = self._resolve_pgid(proc)
+        self.expired = False
+        self._stop = threading.Event()
+        self._thread = threading.Thread(
+            target=self._watch, name="opal-agent-watchdog", daemon=True,
+        )
+
+    @staticmethod
+    def _resolve_pgid(proc: subprocess.Popen) -> int:
+        # start_new_session=True이므로 PGID == 자식 PID가 계약이다.
+        # 자식이 이미 종료했으면 getpgid가 실패하므로 PID로 폴백한다.
+        try:
+            return os.getpgid(proc.pid)
+        except (ProcessLookupError, PermissionError, OSError):
+            return proc.pid
+
+    def start(self) -> "_AttemptGuard":
+        if self.recorder is not None:
+            self.recorder.attach(self.proc.pid, self.pgid)
+        self._thread.start()
+        return self
+
+    def stop(self) -> None:
+        self._stop.set()
+        self._thread.join(timeout=ATTEMPT_TERM_GRACE + 5.0)
+
+    def reclaim(self) -> None:
+        """PGID 전체를 SIGTERM → (유예) → SIGKILL로 회수한다."""
+        _signal_group(self.pgid, signal.SIGTERM)
+        deadline = time.monotonic() + ATTEMPT_TERM_GRACE
+        while time.monotonic() < deadline:
+            if self.proc.poll() is not None:
+                break
+            time.sleep(0.05)
+        # 자식이 죽어도 손자가 group에 남아 있을 수 있다 — 항상 한 번 더 쓸어낸다.
+        _signal_group(self.pgid, signal.SIGKILL)
+        if self.proc.poll() is None:
+            try:
+                self.proc.kill()
+            except OSError:
+                pass
+
+    def _watch(self) -> None:
+        deadline = time.monotonic() + self.timeout
+        while not self._stop.is_set():
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                self.expired = True
+                self.reclaim()
+                return
+            if self.recorder is not None:
+                self.recorder.heartbeat()
+            self._stop.wait(min(remaining, ATTEMPT_HEARTBEAT_INTERVAL))
+
+
+# ─── 재부착 / 고아 판정 (Supervisor 진입점) ───────────────────
+
+def load_attempt_records(run_root: str) -> list[dict[str, Any]]:
+    """run root에 저장된 attempt record를 전부 읽는다(손상 파일은 건너뛴다)."""
+    directory = os.path.join(run_root, ATTEMPT_SUBDIR)
+    records: list[dict[str, Any]] = []
+    try:
+        names = sorted(os.listdir(directory))
+    except OSError:
+        return records
+    for name in names:
+        if not name.endswith(".json"):
+            continue
+        path = os.path.join(directory, name)
+        try:
+            with open(path, "r", encoding="utf-8") as fh:
+                data = json.load(fh)
+        except (OSError, json.JSONDecodeError):
+            continue
+        if isinstance(data, dict):
+            data["_path"] = path
+            records.append(data)
+    return records
+
+
+def classify_attempt(
+    record: dict[str, Any], *, now: float | None = None,
+    stale_after: float = ATTEMPT_STALE_AFTER,
+) -> str:
+    """attempt 하나를 재시작 관점에서 분류한다.
+
+    반환값:
+      `finished`      — 종료 사유가 확정된 record. 할 일 없음.
+      `reattachable`  — process group이 살아 있고 heartbeat가 신선하다.
+                        소유 opal-agent가 아직 살아 있으므로 재부착 대상이다.
+      `orphan`        — process group은 살아 있는데 heartbeat가 끊겼다.
+                        소유자가 죽은 고아이므로 회수 대상이다.
+      `abandoned`     — process가 이미 사라졌는데 record가 확정되지 않았다.
+    """
+    if record.get("exit_reason") in _TERMINAL_EXIT_REASONS:
+        return "finished"
+    pgid = record.get("pgid")
+    pid = record.get("pid")
+    alive = _group_alive(pgid) or _process_alive(pid)
+    if not alive:
+        return "abandoned"
+    reference = _now() if now is None else now
+    heartbeat = record.get("heartbeat_at") or record.get("started_at") or 0.0
+    owner_alive = _process_alive(record.get("owner_pid"))
+    if owner_alive and (reference - float(heartbeat)) <= stale_after:
+        return "reattachable"
+    return "orphan"
+
+
+def reconcile_attempts(
+    run_root: str, *, reap: bool = False,
+    stale_after: float = ATTEMPT_STALE_AFTER,
+) -> dict[str, list[dict[str, Any]]]:
+    """재시작 시 attempt 재부착/고아 정리를 판정하는 공개 진입점.
+
+    `reap=True`이면 `orphan`으로 판정된 attempt의 PGID 전체를 회수하고 record를
+    `orphan_reaped`로 확정한다. `reattachable` attempt는 절대 건드리지 않는다.
+    """
+    buckets: dict[str, list[dict[str, Any]]] = {
+        "finished": [], "reattachable": [], "orphan": [], "abandoned": [],
+    }
+    for record in load_attempt_records(run_root):
+        verdict = classify_attempt(record, stale_after=stale_after)
+        buckets[verdict].append(record)
+        if verdict == "orphan" and reap:
+            _reap_orphan(record)
+    return buckets
+
+
+def _reap_orphan(record: dict[str, Any]) -> None:
+    pgid = record.get("pgid")
+    _signal_group(pgid, signal.SIGTERM)
+    deadline = time.monotonic() + ATTEMPT_TERM_GRACE
+    while time.monotonic() < deadline and _group_alive(pgid):
+        time.sleep(0.05)
+    _signal_group(pgid, signal.SIGKILL)
+    record["exit_reason"] = EXIT_REASON_ORPHAN_REAPED
+    record["finished_at"] = _now()
+    path = record.get("_path")
+    if not path:
+        return
+    payload = {k: v for k, v in record.items() if k != "_path"}
+    tmp = f"{path}.tmp"
+    try:
+        with open(tmp, "w", encoding="utf-8") as fh:
+            json.dump(payload, fh, ensure_ascii=False, indent=2, default=str)
+            fh.write("\n")
+        os.replace(tmp, path)
+    except OSError:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
 
 
 # ─── 공개 API ─────────────────────────────────────────────────
@@ -652,9 +1068,11 @@ def _run(config: AgentConfig) -> AgentResult:
     # setting bootstrap:off의 session.disabled와는 의미가 다르다.
     env = {**os.environ, **inv.env} if inv.env else None
 
+    recorder = AttemptRecorder.create(config)
+
     if config.output_format == "stream-json":
         try:
-            return _run_stream(config, adapter, inv, env)
+            return _run_stream(config, adapter, inv, env, recorder)
         finally:
             for path in inv.tempfiles:
                 try:
@@ -662,41 +1080,76 @@ def _run(config: AgentConfig) -> AgentResult:
                 except OSError:
                     pass
 
+    # start_new_session=True로 자식을 새 process group 리더로 띄운다. deadline은
+    # subprocess.run의 timeout이 아니라 독립 watchdog이 집행하고, 회수 대상은
+    # 직계 자식이 아니라 PGID 전체다(손자 고아 0).
+    proc = subprocess.Popen(
+        inv.cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        cwd=config.cwd,
+        env=env,
+        start_new_session=True,
+    )
+    guard = _AttemptGuard(proc, config.timeout, recorder).start()
     try:
-        proc = subprocess.run(
-            inv.cmd,
-            capture_output=True,
-            text=True,
-            cwd=config.cwd,
-            env=env,
-            timeout=config.timeout,
-        )
-    except subprocess.TimeoutExpired as exc:
-        raise OpalAgentTimeout(
-            f"{config.provider} 실행이 {config.timeout}초를 초과했습니다."
-        ) from exc
+        stdout, stderr = proc.communicate()
     finally:
+        guard.stop()
         for path in inv.tempfiles:
             try:
                 os.unlink(path)
             except OSError:
                 pass
 
-    if proc.returncode != 0:
-        raise OpalAgentError(
-            f"{config.provider} 비정상 종료 (exit {proc.returncode})\n"
-            f"stderr: {proc.stderr.strip()}"
+    if guard.expired:
+        if recorder is not None:
+            recorder.finish(EXIT_REASON_TIMEOUT, exit_code=proc.returncode)
+        raise OpalAgentTimeout(
+            f"{config.provider} 실행이 {config.timeout}초를 초과했습니다."
         )
 
-    return adapter.parse_result(config, proc.stdout)
+    if proc.returncode != 0:
+        error = OpalAgentError(
+            f"{config.provider} 비정상 종료 (exit {proc.returncode})\n"
+            f"stderr: {(stderr or '').strip()}"
+        )
+        if recorder is not None:
+            recorder.finish(EXIT_REASON_FAILED, exit_code=proc.returncode,
+                            error=error)
+        raise error
+
+    return _finalize(config, adapter, stdout, proc.returncode, recorder)
+
+
+def _finalize(
+    config: AgentConfig, adapter: ProviderAdapter, stdout: str,
+    exit_code: int | None, recorder: AttemptRecorder | None,
+) -> AgentResult:
+    """파싱 결과와 종료 사유를 attempt record에 확정한다."""
+    try:
+        result = adapter.parse_result(config, stdout)
+    except OpalAgentError as exc:
+        if recorder is not None:
+            recorder.finish(EXIT_REASON_FAILED, exit_code=exit_code, error=exc)
+        raise
+    if recorder is not None:
+        recorder.finish(EXIT_REASON_COMPLETED, exit_code=exit_code,
+                        result=result)
+    return result
 
 
 def _run_stream(
     config: AgentConfig, adapter: ProviderAdapter, inv: Invocation,
-    env: dict[str, str] | None,
+    env: dict[str, str] | None, recorder: AttemptRecorder | None = None,
 ) -> AgentResult:
     """stream-json 전용 실행 경로 — Popen으로 증분 소비하며 자기 stdout으로
-    line-buffered passthrough한다(H-4). stderr는 상속(호출측 셸 `2>` 캡처)."""
+    line-buffered passthrough한다(H-4). stderr는 상속(호출측 셸 `2>` 캡처).
+
+    deadline은 stdout 줄 수신 루프가 아니라 `_AttemptGuard`의 독립 watchdog이
+    집행한다 — 자식이 한 줄도 내보내지 않아도 timeout이 발화한다(S-2).
+    """
     proc = subprocess.Popen(
         inv.cmd,
         stdout=subprocess.PIPE,
@@ -705,31 +1158,38 @@ def _run_stream(
         bufsize=1,
         cwd=config.cwd,
         env=env,
+        start_new_session=True,
     )
-    deadline = time.monotonic() + config.timeout
+    guard = _AttemptGuard(proc, config.timeout, recorder).start()
     lines: list[str] = []
     try:
         for line in proc.stdout:
             sys.stdout.write(line)
             sys.stdout.flush()
             lines.append(line)
-            if time.monotonic() > deadline:
-                proc.kill()
-                proc.wait()
-                raise OpalAgentTimeout(
-                    f"{config.provider} stream 실행이 {config.timeout}초를 초과했습니다."
-                )
         proc.wait()
     finally:
         if proc.stdout:
             proc.stdout.close()
+        guard.stop()
 
-    if proc.returncode != 0:
-        raise OpalAgentError(
-            f"{config.provider} stream 비정상 종료 (exit {proc.returncode})"
+    if guard.expired:
+        if recorder is not None:
+            recorder.finish(EXIT_REASON_TIMEOUT, exit_code=proc.returncode)
+        raise OpalAgentTimeout(
+            f"{config.provider} stream 실행이 {config.timeout}초를 초과했습니다."
         )
 
-    return adapter.parse_result(config, "".join(lines))
+    if proc.returncode != 0:
+        error = OpalAgentError(
+            f"{config.provider} stream 비정상 종료 (exit {proc.returncode})"
+        )
+        if recorder is not None:
+            recorder.finish(EXIT_REASON_FAILED, exit_code=proc.returncode,
+                            error=error)
+        raise error
+
+    return _finalize(config, adapter, "".join(lines), proc.returncode, recorder)
 
 
 # ─── CLI 진입점 ───────────────────────────────────────────────

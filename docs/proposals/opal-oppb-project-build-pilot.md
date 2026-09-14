@@ -962,11 +962,13 @@ fixture를 다시 통과하기 전에는 출시하지 않는다.
 
 | Work item 그룹 | 소유 수용기준 |
 |---|---|
-| G1 공용 attempt runtime | 24 |
-| G2 스케줄러 kernel | 9·10·25·28 |
-| G3 격리·검증 runtime | 3~7·15·19·27·29~33 |
-| G4 Product Flow | 1·2·8·11·12·14·16~18·20·26 |
+| G1 공용 attempt runtime | 없음* |
+| G2 스케줄러 kernel | 9·10·24·25*·28 |
+| G3 격리·검증 runtime | 4~7·15·19·27·29~33 |
+| G4 Product Flow | 1~3·8·11·12·14·16~18·20·26 |
 | G5 출시 검증 | 13·21·22·23 및 전체 회귀 |
+
+\* 기준 25의 소유 그룹은 G2다. 선행 조건인 `state-tool`의 additive enum 확장(`init --skill` choices에 `oppb`, `STAGE_ENUM`에 `P0`~`P5`)만 G1이 소관한다.
 
 ## 14. 구현 순서
 
