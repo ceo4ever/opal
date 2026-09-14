@@ -30,6 +30,19 @@ substitute 결과는 실제 integration, E2E, manual 증거를 대신하지 않�
 | 방법·환경 | 실제 사용할 unit, integration, E2E, manual 방법과 환경 |
 | 시점 | 구현 전 RED, 구현 후, 설치 후, 배포 후 중 필요한 시점 |
 
+E2E 시나리오는 `test-scenario.json` 변환 시 구조화 계약을 함께 가져야 한다.
+
+- `surface_kind`: `web_ui`, `api`, `hybrid`, `collaborative`, `manual` 중 하나
+- `profile`: `browser`, `api`, `hybrid`, `collaborative`, `manual` 중 하나. 도구 가용성으로 낮추지 않는다.
+- `actors`: `user`, `service`, `human`, `agent` 등 검증 주체
+- `steps[]`: 각 step의 `id`와 `executor`(`browser`, `api`, `human`)
+- `assertions[]`: semantic assertion의 `id`와 `expected`
+- `required_evidence[]`: pass 또는 `real-usage`에 필요한 증적 이름
+- `handoff`: Collaborative/Manual 대기·재개가 필요한 경우 `handoff_id`, `instruction`, `expected_observation`, `required_evidence`, `timeout_seconds`, `resume_token`, `server_policy`, `submission_path` 8개 필드를 모두 가진다.
+
+`pass`와 `real-usage`는 assertion expected/actual과 required/observed evidence가 모두 충족된 구조화 verdict로만 기록한다.
+사람 협업은 자유형식 완료 선언으로 pass가 되지 않으며, 최초 대기는 `awaiting_human`이고 구조화 submission 검증 뒤 최종 상태로 전이한다. 실행 전 result zone의 `handoff_state`는 `null`일 수 있다. `scenario-mark --verdict-json`이 `awaiting_human`을 기록할 때 `handoff` 기본값과 runtime `handoff_state`를 병합해 위 8개 필드를 완성하고 `run_id`를 함께 저장한다. 재개는 같은 run-id/resume-token의 `--submission`으로만 수행하며, submission은 사람의 완료 선언이 아니라 verifier가 검사할 expected/actual과 observed evidence 입력이다.
+
 한 시나리오가 여러 AC/C/H를 함께 검증해도 된다. 별도 매핑표를 만들지 않고 `검증 대상` 열을
 단일 연결 지점으로 사용한다. 복잡한 절차만 `### S-N` 하위 절로 펼친다.
 `시점`에 `구현 전 RED`를 적은 행만 실행 전에 `test-scenario.json`의 `red_required: true`로 변환된다.

@@ -6,7 +6,8 @@
   "description": "test-tools.yaml resolution_order(project→global→추론) 해석 모듈. PyYAML 6.0.3 사용.",
   "exports": [
     "resolve_test_tools"
-  ]
+  ],
+  "depends": ["lib.e2e_contract"]
 }
 
 test-tool resolver — test-tools.yaml 3단계 resolution_order 집행.
@@ -25,6 +26,8 @@ try:
     _YAML_AVAILABLE = True
 except ImportError:
     _YAML_AVAILABLE = False
+
+from lib.e2e_contract import EXECUTOR_MATRIX, PROFILES
 
 
 def _load_yaml(path: pathlib.Path) -> Optional[Dict[str, Any]]:
@@ -92,8 +95,21 @@ def _infer_from_package_json(project_root: pathlib.Path) -> Optional[Dict[str, A
         },
         "integration": {
             "e2e": [
-                {"name": "cmux", "priority": 1, "via": "cmux-tool"},
-                {"name": "playwright", "priority": 2, "fallback": True},
+                {
+                    "name": "cmux",
+                    "executor": "browser",
+                    "profiles": ["browser", "hybrid", "collaborative"],
+                    "priority": 1,
+                    "via": "cmux-tool",
+                    "candidate_on": "provider_unavailable",
+                },
+                {
+                    "name": "playwright",
+                    "executor": "browser",
+                    "profiles": ["browser", "hybrid", "collaborative"],
+                    "priority": 2,
+                    "candidate_on": "provider_unavailable",
+                },
             ]
         },
     }
@@ -129,8 +145,21 @@ def _infer_from_pyproject(project_root: pathlib.Path) -> Optional[Dict[str, Any]
         },
         "integration": {
             "e2e": [
-                {"name": "cmux", "priority": 1, "via": "cmux-tool"},
-                {"name": "playwright", "priority": 2, "fallback": True},
+                {
+                    "name": "cmux",
+                    "executor": "browser",
+                    "profiles": ["browser", "hybrid", "collaborative"],
+                    "priority": 1,
+                    "via": "cmux-tool",
+                    "candidate_on": "provider_unavailable",
+                },
+                {
+                    "name": "playwright",
+                    "executor": "browser",
+                    "profiles": ["browser", "hybrid", "collaborative"],
+                    "priority": 2,
+                    "candidate_on": "provider_unavailable",
+                },
             ],
             "be": {
                 "api_db": [{"name": "pytest", "check": "pytest", "real_db": True, "required": True}]
@@ -142,6 +171,21 @@ def _infer_from_pyproject(project_root: pathlib.Path) -> Optional[Dict[str, Any]
         "source_label": "infer",
         "stack": {"language": "python", "framework": "unknown", "runtime": "python"},
         "tiers": tiers,
+    }
+
+
+def _e2e_profile_metadata() -> Dict[str, Any]:
+    return {
+        "contract_version": "2.0",
+        "profiles": list(PROFILES),
+        "executor_matrix": {
+            profile: {
+                "required": list(matrix["required"]),
+                "allowed": list(matrix["allowed"]),
+            }
+            for profile, matrix in EXECUTOR_MATRIX.items()
+        },
+        "candidate_switch_on": ["provider_unavailable"],
     }
 
 
@@ -174,6 +218,7 @@ def resolve_test_tools(
                 "ok": True,
                 "command": "resolve",
                 "tiers": tiers,
+                "e2e_profile": _e2e_profile_metadata(),
                 "source": "project",
                 "stack": stack or data.get("stack", {}),
             }
@@ -204,6 +249,7 @@ def resolve_test_tools(
                 "ok": True,
                 "command": "resolve",
                 "tiers": tiers,
+                "e2e_profile": _e2e_profile_metadata(),
                 "source": "global",
                 "stack": stack or data.get("stack", {}),
             }
@@ -222,6 +268,7 @@ def resolve_test_tools(
             "ok": True,
             "command": "resolve",
             "tiers": inferred.get("tiers", {}),
+            "e2e_profile": _e2e_profile_metadata(),
             "source": "infer",
             "stack": stack or inferred.get("stack", {}),
         }

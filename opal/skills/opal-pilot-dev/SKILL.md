@@ -33,6 +33,12 @@ description: |
 필수 문서 누락, stale receipt, wrong-event receipt는 해당 파일럿·단계 진입을 즉시 중단하는
 blocker다. 부트 캐시를 근거로 공통 문서를 직접 재Read하는 우회는 금지한다.
 
+### actor 축
+
+[MUST] actor 축 정의·지원 Pilot 폐쇄 목록(본 스킬 `opd`/`opds` 포함)·`--pm` 실행 계약·독립 검증 경계는 `opal/core/references/harness/actor.md`(SSOT)를 따른다. 원문을 이 스킬에 복제하지 않는다.
+
+사용자가 `--pm`을 명시하면 이 파일럿은 `actor=pm`으로 진행한다 — 최초 단계 보고 시 `harness/observability.md` §행위 주체 표시 형식(`📋 {name}[PM] 직접:`)으로 actor=pm 선언 1행을 포함한다. `--pm` 미지정 시 `actor=worker`(기본)이며 이 스킬의 기존 절차·산출물 경로·디스패치 프롬프트는 바이트 수준으로 무변경이다.
+
 ## 프로필 선택
 
 [MUST] 사용자가 선택한 프로필을 기본 수행한다. `//opd`는 Full profile, `//opds`는 Short profile이다.
@@ -69,9 +75,11 @@ TASK 완료 → 사용자 보고.
 > **[MUST] 트랙 강등 제안**: 사용자가 선택한 `opd`를 기본 수행한다. `ANALYSIS` 완료 직후 `PLAN` 진입 전에 `opal/skills/opal-pilot-dev/references/track-routing.md`(SSOT)의 핵심 질문 — "현재 단계 이후에 외부 영향이 있는 동작·계약·구조 결정을 새로 해야 하는가?" — 을 1회 검토한다. 답이 아니오일 때만 `opds` 강등을 사용자에게 제안하며, 자동 전환하지 않는다. 판단 불능이면 `opd`를 유지한다.
 
 ## STEP 2: ANALYSIS
-워커를 디스패치하여 코드베이스를 분석한다.
 
-**디스패치 프롬프트**:
+**actor=worker(기본)**: 워커를 디스패치하여 코드베이스를 분석한다(아래 디스패치 프롬프트).
+**actor=pm**: PM이 `op-dev-analysis/SKILL.md`를 직접 Read하고 아래 디스패치 프롬프트와 같은 입력·출력·산출물 경로 계약(태스크 폴더·이전 산출물·프로젝트 컨텍스트·산출물 저장 경로·하네스 Guards·참조 문서·분석 질문)을 적용해 ANALYSIS.md를 직접 작성한다. `worker.dispatch` load·verify는 생략한다(`harness/actor.md` §`--pm` 실행 계약).
+
+**디스패치 프롬프트** (actor=worker):
 ```
 [WORKER]
 op-dev-analysis 스킬을 수행하라.
@@ -101,6 +109,10 @@ op-dev-analysis 스킬을 수행하라.
 ## STEP 3: PLAN
 
 ### 3-1. PLAN 디스패치
+
+**actor=worker(기본)**: 워커를 디스패치한다(아래 디스패치 프롬프트).
+**actor=pm**: PM이 `op-dev-plan/SKILL.md`를 직접 Read하고 아래 디스패치 프롬프트와 같은 입력·출력·산출물 경로 계약을 적용해 PLAN.md를 직접 작성한다. `worker.dispatch` load·verify는 생략한다(`harness/actor.md` §`--pm` 실행 계약). 이때 PLAN.md `Work items`의 `담당` 열은 `PM`으로 기록한다.
+
 ```
 [WORKER]
 op-dev-plan 스킬을 수행하라.
@@ -147,6 +159,8 @@ PLAN 완료
    - `test_scenario.scenario_gate` 행 mark 시점은 문서 작성 완료(3) 후 `verdict: pass` 수신 이후다.
 5. 사용자에게 TEST-SCENARIO 보고 — 승인 = EXECUTE 시작 허가
 
+> **[MUST] actor 무관 유지**: 목표-커버 게이트(`op-scenario-gate` 디스패치와 `verdict: pass` 요건)는 `actor` 값과 무관하게 항상 동일하게 적용된다 — `actor=pm`에서도 PM 산문 판단만으로 `test_scenario.scenario_gate` 행을 mark할 수 없다(`harness/actor.md` §독립 검증 경계).
+
 > **사용자 확인 (P-5)**: 이 행은 **모드에 따라 주체가 다르다**.
 > - 자동 승인 구간(agentic 전 구간 / semi-agentic의 EXECUTE-equivalent 이후) — **PM은 호출하지 않는다.**
 >   다음 단계 진입 시 도구가 자동 승인한다. 계약 SSOT: `opal-harness-agentic.md §4` / `opal-harness-semi-agentic.md §5`.
@@ -156,6 +170,8 @@ PLAN 완료
 > 근거: `PLAN.md` §3 Step 8 P-1 / P-5 / §2.16 G-13 / `tasks/073-260723-opd-시나리오-목표커버리지-루프/PLAN.md` §3.5.2 (목표-커버 게이트 접합)
 
 ## STEP 4: EXECUTE
+
+**actor 분기**: PLAN.md `Work items`의 `담당`이 `PM`인 행은 `actor=pm`이며, PM이 `op-dev-execute/SKILL.md`를 직접 Read하고 아래 4-2 디스패치 프롬프트와 같은 입력·출력(checklist_source·scenario_source·완료 기준·자가 점검 절차·Scope 제한)을 적용해 직접 구현한다. `worker.dispatch` load·verify는 생략한다(`harness/actor.md` §`--pm` 실행 계약). `담당`이 전문 워커 역할명인 행은 `actor=worker`(기본)로 아래 4-1~4-3의 서브에이전트 디스패치 절차를 그대로 적용한다.
 
 > **[MUST] RED-first**: EXECUTE 진입 전 RED 증거 확보, fix 루핑 중 테스트 불변. 규칙 SSOT: `opal/core/references/harness/red-first.md`.
 > sdlc-v2는 TEST-SCENARIO의 `시점`을 기준으로 `test-tool scenario-init`의 `red_required`를 설정한다. RED 대상은 opal-test-agent red mode가 실제 실패를 관찰한 뒤 `scenario-red`로 증거를 기록하고, PM은 `scenario-lock` 통과 후에만 GREEN 구현을 시작한다. RED 대상이 없으면 init 직후 lock한다. legacy만 `state-tool verify <task> --red-check`를 사용한다. fix 루핑 시 `--fix-mode --changed-files ... --test-globs ...`로 테스트 불변성을 검사한다.
@@ -216,7 +232,9 @@ PLAN.md Work items의 담당·실행 그룹 필드에 따라 배치를 구성한
 
 ## STEP 5: TEST
 
-opal-test-agent 워커 디스패치. TEST-SCENARIO.md를 실행 명세로 읽고, `test-tool scenario-status`로 잠금 상태를 확인한 뒤 각 결과·증거를 `scenario-mark`로 기록하고 PASS/FAIL/BLOCKED를 판정한다. 사용자 행동이 필요한 시나리오는 주입된 capability로 실행할 수 없을 때만 필요한 행동과 기대 결과를 PM에 BLOCKED로 반환한다.
+opal-test-agent 워커 디스패치. TEST-SCENARIO.md를 실행 명세로 읽고, `test-tool scenario-status`로 잠금 상태를 확인한 뒤 각 결과·증거를 `scenario-mark`로 기록하고 PASS/FAIL/BLOCKED를 판정한다. E2E 결과는 `test-tool` E2E contract의 final status `pass` / `fail` / `executor_unavailable` / `infra_error` / `blocked`와 operational `awaiting_human`을 보존한다. 사용자 행동이 필요한 시나리오는 구조화 handoff로 `awaiting_human`을 반환하고, 사람 제출을 verifier가 검증한 뒤 final status로 전이한다.
+
+> **[MUST] actor 무관 유지**: TEST 단계(`opal-test-agent` 디스패치·`test.run_tests`+`test.pm_gate`의 실제 실행 증거 요건)는 `actor` 값과 무관하게 항상 서브에이전트가 수행한다 — `actor=pm`에서도 생략되지 않는다(`harness/actor.md` §독립 검증 경계).
 
 > **[PM 컨텍스트 주입]** 디스패치 프롬프트 첫 줄에 `[WORKER]` 삽입. 주입 항목·핵심 제약(전 워커 공통 고정 포함)은 `opal/core/references/pm/dispatch-process.md` §워커 컨텍스트 주입 템플릿을 따른다 — 본 스킬은 항목을 열거하지 않는다. 단계 추가 전달: TEST-SCENARIO.md 경로 · changed_files.
 
@@ -332,6 +350,7 @@ opal-test-agent 워커 디스패치. TEST-SCENARIO.md를 실행 명세로 읽고
 ## STATE.md 도메인 치환값
 
 > **[MUST] STATE.md 초기 생성**: `~/.opal/tools/state-tool/run.sh init <task-path> --skill opd --mode <interactive|semi-agentic|agentic> --rows-from opal/skills/opal-pilot-dev/references/pipeline.json` 호출. 기본값: `semi-agentic`. 행 구성 SSOT는 `references/pipeline.json`(task-step key 포함) — `--rows-from`이 확장자로 분기해 파싱한다(070).
+> **[MUST] actor 전달**: 사용자가 `--pm`을 명시했으면 위 호출에 `--actor pm`을 추가로 전달한다. 미지정 시 `--actor`를 전달하지 않는다(`state.json`에 `actor` 키 미생성, 현행 유지). 지원 범위·거부 조건(`actor_unsupported_for_skill`)은 `harness/actor.md`(SSOT)를 따른다.
 > 근거: `tasks/134-260501-opp-pipeline-state-tool/TASK.md` F-15 / `PLAN.md` §2.3 / §2.20.2 / §3 Step 8 (P-3 advance, P-1 mark) / `tasks/070-260720-opd-태스크스텝-키주소-1차/PLAN.md` §3.6.2 (pipeline.json 전환)
 
 > **행 구성 SSOT**: `references/pipeline.json` `task_steps[]`. 현재 행 목록은
@@ -395,6 +414,8 @@ TASK → ANALYSIS Gate → PLAN Gate → TEST-SCENARIO Gate → EXECUTE Gate →
 ### CLOSE 진입 게이트 (공통)
 
 semi-agentic / agentic 모두 CLOSE 첫 행 `--auto-pass` 거부 (`agentic_close_gate_requires_user`). 소유자 발화 후 직전 사용자 확인 행 `--owner user` mark 필수.
+
+> **[MUST] actor 무관 유지**: 이 게이트는 `actor` 값과 무관하게 항상 동일하게 적용된다 — `actor=pm`에서도 `--auto-pass`가 거부되고 `--owner user` mark가 필수다(`harness/actor.md` §독립 검증 경계).
 
 ### AGENTIC-LOG.md 생성 시점
 

@@ -4,9 +4,9 @@
   "module": "opal_agent",
   "layer": "util",
   "domain": "opal-workspace",
-  "description": "멀티 provider 서브에이전트 호출 라이브러리 + CLI와 OPAL session event 판정 공개 함수",
-  "exports": ["call_agent", "resolve_session_event", "AgentConfig", "AgentResult", "PROVIDERS", "OpalAgentError", "ClaudeNotFoundError", "OpalAgentTimeout"],
-  "task": "059, 067, 113"
+  "description": "멀티 provider 서브에이전트 호출 라이브러리 + CLI, OPAL session event 판정 공개 함수, attempt 실행 원시 기능(process group watchdog·stream terminal framing·attempt 산출물 소유)",
+  "exports": ["call_agent", "resolve_session_event", "analyze_stream", "AgentConfig", "AgentResult", "StreamVerdict", "PROVIDERS", "EXIT_CLASSES", "EPILOGUE_ALLOWLIST", "OpalAgentError", "ClaudeNotFoundError", "OpalAgentTimeout"],
+  "task": "059, 067, 113, 131"
 }
 
 opal/tools/opal-agent/opal_agent.py — 멀티 provider 서브에이전트 호출 라이브러리 + CLI
@@ -46,17 +46,34 @@ grok)를 비대화형(headless) 서브에이전트로 프로그래밍적·CLI로
   - cold session id(new_session_id → claude --session-id)는 claude 전용
     (supports_session_assign). session_id(warm --resume)와 상호 배타 — _run이 검증.
 
+attempt 실행 원시 기능(131):
+  - 루트 프로세스를 항상 별도 process group(start_new_session)으로 띄우고,
+    stdout read loop와 독립된 monotonic watchdog 스레드가 hard timeout과
+    (stream 전용) heartbeat timeout을 감시한다. 만료 시 PGID 전체에
+    SIGTERM → terminate_grace_sec → SIGKILL을 보내고, PGID 소멸을 확인한
+    뒤에만 timed_out을 확정한다.
+  - run_dir·phase(+attempt)가 주어지면 opal-agent가 attempt 산출물의 단일
+    writer가 된다. 세 인자가 모두 없으면 기존 stdout passthrough 동작 그대로다.
+  - stream 판정은 analyze_stream()이 소유한다 — 마지막 유효 result가 terminal
+    candidate이고, 그 앞 result는 같은 session_id + 단조 증가 result_index일
+    때만 선행 turn으로 인정한다. 이 도구는 phase 의미론(round·수렴·백로그)을
+    모르며, 호출자가 준 timeout·출력 경로·mode만 안다.
+
 """
 
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
+import pathlib
 import shutil
+import signal
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
@@ -66,7 +83,15 @@ from typing import Any
 # ─── 예외 ────────────────────────────────────────────────────
 
 class OpalAgentError(Exception):
-    """opal-agent 공통 예외 베이스."""
+    """opal-agent 공통 예외 베이스.
+
+    ``code``는 호출자가 문자열 매칭 없이 실패 사유를 분기할 수 있게 하는
+    안정적 식별자다(예: ``timeout_limit_exceeded``, ``output_format_invalid``).
+    """
+
+    def __init__(self, message: str, code: str | None = None):
+        super().__init__(message)
+        self.code = code
 
 
 class ClaudeNotFoundError(OpalAgentError):
@@ -96,6 +121,16 @@ class AgentConfig:
     output_format: str = "json"                   # "json" | "text" | "stream-json"
     bin: str | None = None                        # CLI 바이너리 오버라이드 (기본: provider별)
     opal_bootstrap: str = "on"                    # "on"(무마커) | "assistant"([ASSISTANT]) | "off"([WORKER])
+    # ── attempt 실행 원시 기능(131) ──
+    # run_dir + phase가 함께 주어질 때만 opal-agent가 산출물 writer가 된다.
+    # 셋 다 없으면 기존 stdout passthrough 동작이 그대로 유지된다(C-8).
+    run_dir: str | None = None                    # attempt 산출물 디렉토리
+    phase: str | None = None                      # 산출물 파일명 접두 문자열(의미론은 호출자 소유)
+    attempt: str | None = None                    # 재시도 접미 (예: "a2")
+    heartbeat_timeout_sec: int | None = None      # stream 전용 — 무출력 허용 상한(D10)
+    terminate_grace_sec: int = 5                  # SIGTERM 후 SIGKILL까지 유예
+    max_timeout_sec: int | None = None            # 전역 hard timeout 상한
+    phase_timeout_limit_sec: int | None = None    # 호출자가 계산한 phase별 상한
 
 
 @dataclass
@@ -118,6 +153,163 @@ class Invocation:
     cmd: list[str]                                # 실행할 인자 배열
     env: dict[str, str] = field(default_factory=dict)   # os.environ에 병합할 오버라이드
     tempfiles: list[str] = field(default_factory=list)  # 실행 후 정리할 임시 파일
+
+
+# ─── stream terminal framing 판정 ─────────────────────────────
+
+# attempt 종료 분류(D9). 호출자는 이 6종 밖의 값을 받지 않는다.
+EXIT_CLASSES = (
+    "ok",                       # terminal result가 성공
+    "impl_failure",             # 에이전트 구현/실행 실패
+    "api_error",                # provider API 측 실패(429 등) — 재시도 대상이 다름
+    "timed_out",                # hard/heartbeat timeout으로 회수됨
+    "output_format_invalid",    # 확장자와 실제 직렬화 불일치(1행 1객체 위반 포함)
+    "framing_error",            # terminal 앞뒤 프레이밍 계약 위반
+)
+
+# terminal candidate 뒤에 허용되는 epilogue — `type`이 아니라 `subtype` 기준이다
+# (실측 형태: {"type":"system","subtype":"background_tasks_changed"| ...}).
+EPILOGUE_ALLOWLIST = (
+    "background_tasks_changed",
+    "task_updated",
+    "task_notification",
+)
+
+# 자식 작업이 닫혔다고 인정하는 상태값.
+_CHILD_TERMINAL_STATUSES = frozenset(
+    {"completed", "killed", "stopped", "failed", "cancelled"}
+)
+
+
+@dataclass
+class StreamVerdict:
+    """stream-json 전체를 읽어 만든 단일 판정 결과."""
+
+    status: str                                   # "done" | "running" | "error"
+    exit_class: str                               # EXIT_CLASSES 중 하나
+    terminal: dict | None = None                  # terminal candidate result 이벤트
+    cost_used: float | None = None                # terminal candidate의 total_cost_usd(합산 아님, C-10)
+    origin: Any = None                            # 진단 전용 — 판정 분기에 쓰지 않는다(D5)
+    unterminated_children: list[str] = field(default_factory=list)
+
+
+def _loads_event(line: str) -> dict | None:
+    """JSONL 한 줄을 이벤트 dict로 읽는다. 실패하면 None."""
+    try:
+        event = json.loads(line)
+    except json.JSONDecodeError:
+        return None
+    return event if isinstance(event, dict) else None
+
+
+def _parse_jsonl(stdout: str) -> tuple[list[dict], bool]:
+    """1행 1객체 계약으로 stdout을 읽는다. 반환: (이벤트 목록, 계약 위반 여부).
+
+    한 사건이 여러 물리 행에 걸치면 첫 조각에서 파싱이 깨지므로 위반으로 본다.
+    """
+    events: list[dict] = []
+    for raw in stdout.splitlines():
+        line = raw.strip()
+        if not line:
+            continue
+        event = _loads_event(line)
+        if event is None:
+            return events, True
+        events.append(event)
+    return events, False
+
+
+def _is_ascending(earlier: Any, later: Any) -> bool:
+    """선행 turn 판정용 단조 증가 검사 — 둘 중 하나라도 없으면 인정하지 않는다."""
+    return isinstance(earlier, int) and isinstance(later, int) and earlier < later
+
+
+def _reduce_children(events: list[dict]) -> list[str]:
+    """이벤트를 순서대로 reduce해 stream 종료 시점의 미종료 자식 task를 남긴다.
+
+    중간에 실행 중 task가 있어도 뒤 사건에서 닫히면(빈 task 집합 또는
+    completed/killed/stopped) 허용한다(제안서 §7.2-4).
+    """
+    open_ids: set[str] = set()
+    closed: set[str] = set()
+    for event in events:
+        subtype = event.get("subtype")
+        if subtype == "background_tasks_changed":
+            listed = {t.get("task_id") for t in event.get("tasks") or []}
+            open_ids = {tid for tid in listed if tid not in closed}
+        elif subtype in ("task_updated", "task_notification"):
+            patch = event.get("patch") or {}
+            status = event.get("status") or patch.get("status")
+            if status in _CHILD_TERMINAL_STATUSES:
+                task_id = event.get("task_id")
+                closed.add(task_id)
+                open_ids.discard(task_id)
+    return sorted(tid for tid in open_ids if tid)
+
+
+def _classify_terminal(event: dict) -> str:
+    """terminal candidate의 terminal_reason·api_error_status로 exit_class를 정한다(D9)."""
+    if not event.get("is_error"):
+        return "ok"
+    if event.get("terminal_reason") == "api_error" or event.get("api_error_status") is not None:
+        return "api_error"
+    return "impl_failure"
+
+
+def analyze_stream(stdout: str) -> StreamVerdict:
+    """stream-json 출력 전체를 terminal framing 계약으로 판정한다(제안서 §7.2).
+
+    1. 마지막 유효 result가 terminal candidate다 — 마지막 물리 줄이 아니다.
+    2. 그 앞 result는 같은 session_id이고 result_index가 단조 증가할 때만
+       선행 turn으로 인정한다. 하나라도 깨지면 error다.
+    3. candidate 뒤에는 EPILOGUE_ALLOWLIST의 subtype만 허용한다.
+    4. epilogue reduce 후 종료 시점 미종료 자식이 0이어야 한다.
+
+    ``origin``은 판정에 쓰지 않고 진단 값으로만 싣는다(D5).
+    """
+    events, malformed = _parse_jsonl(stdout)
+    if malformed:
+        return StreamVerdict(status="error", exit_class="output_format_invalid")
+
+    results = [e for e in events if e.get("type") == "result"]
+    children = _reduce_children(events)
+
+    # 진단 값 수집 — 분기 조건이 아니라 대입으로만 다룬다(D5).
+    diagnostic = None
+    for event in results:
+        diagnostic = event.get("origin") or diagnostic
+
+    if not results:
+        return StreamVerdict(
+            status="running", exit_class="ok",
+            origin=diagnostic, unterminated_children=children,
+        )
+
+    terminal = results[-1]
+    terminal_pos = max(i for i, e in enumerate(events) if e.get("type") == "result")
+    session = terminal.get("session_id")
+    indices = [e.get("result_index") for e in results]
+
+    turns_ok = (
+        all(e.get("session_id") == session for e in results)
+        and all(_is_ascending(a, b) for a, b in zip(indices, indices[1:]))
+    )
+    framing_ok = all(
+        e.get("type") == "system" and e.get("subtype") in EPILOGUE_ALLOWLIST
+        for e in events[terminal_pos + 1:]
+    )
+
+    verdict = StreamVerdict(
+        status="error", exit_class="framing_error",
+        terminal=terminal, cost_used=terminal.get("total_cost_usd"),
+        origin=diagnostic, unterminated_children=children,
+    )
+    if not turns_ok or not framing_ok or children:
+        return verdict
+
+    verdict.exit_class = _classify_terminal(terminal)
+    verdict.status = "error" if verdict.exit_class != "ok" else "done"
+    return verdict
 
 
 # ─── provider 어댑터 ──────────────────────────────────────────
@@ -222,7 +414,7 @@ class ClaudeAdapter(ProviderAdapter):
         if config.output_format == "text":
             return AgentResult(text=stdout.strip(), provider=self.name)
         if config.output_format == "stream-json":
-            data = _last_stream_result(stdout, self.name)
+            data = _terminal_event(analyze_stream(stdout), self.name)
             return AgentResult(
                 text=data.get("result", ""),
                 provider=self.name,
@@ -535,27 +727,22 @@ def _loads(stdout: str, provider: str) -> dict[str, Any]:
     return data
 
 
-def _last_stream_result(stdout: str, provider: str) -> dict[str, Any]:
-    """stream-json(JSONL) 출력에서 마지막 비어있지 않은 줄을 파싱하고
-    `type == "result"`인지 검증한다(최소 보장 집합, R-H). 실패 시 명시 에러."""
-    last_line = ""
-    for line in stdout.splitlines():
-        line = line.strip()
-        if line:
-            last_line = line
-    if not last_line:
-        raise OpalAgentError(f"{provider} stream-json 출력이 비어 있습니다.")
-    try:
-        data = json.loads(last_line)
-    except json.JSONDecodeError as exc:
+def _terminal_event(verdict: StreamVerdict, provider: str) -> dict[str, Any]:
+    """판정 결과에서 terminal candidate를 꺼낸다. 소비할 수 없으면 명시 에러.
+
+    마지막 물리 줄이 아니라 마지막 유효 result를 쓴다(제안서 §7.2-1).
+    """
+    if verdict.exit_class == "output_format_invalid":
         raise OpalAgentError(
-            f"{provider} stream-json 마지막 줄 파싱 실패: {exc}\n원본: {last_line[:500]}"
-        ) from exc
-    if not isinstance(data, dict) or data.get("type") != "result":
-        raise OpalAgentError(
-            f"{provider} stream-json 마지막 줄이 result 이벤트가 아닙니다: {last_line[:500]}"
+            f"{provider} stream-json이 1행 1객체 직렬화 계약을 위반했습니다.",
+            code="output_format_invalid",
         )
-    return data
+    if verdict.terminal is None:
+        raise OpalAgentError(
+            f"{provider} stream-json 출력에 소비할 result 이벤트가 없습니다.",
+            code="framing_error",
+        )
+    return verdict.terminal
 
 
 # ─── 공개 API ─────────────────────────────────────────────────
@@ -575,6 +762,13 @@ def call_agent(
     output_format: str = "json",
     bin: str | None = None,
     opal_bootstrap: str = "on",
+    run_dir: str | None = None,
+    phase: str | None = None,
+    attempt: str | None = None,
+    heartbeat_timeout_sec: int | None = None,
+    terminate_grace_sec: int = 5,
+    max_timeout_sec: int | None = None,
+    phase_timeout_limit_sec: int | None = None,
 ) -> AgentResult:
     """
     지정한 provider CLI를 서브에이전트로 1회 실행하고 결과를 반환한다.
@@ -582,10 +776,14 @@ def call_agent(
     다중 턴이 필요하면 반환된 AgentResult.session_id를 다음 호출의
     session_id로 넘겨 대화를 이어간다.
 
+    run_dir와 phase를 함께 주면 opal-agent가 attempt 산출물(`<phase>[.aN].*`)의
+    단일 writer가 된다. 둘 다 없으면 기존 stdout passthrough 동작 그대로다.
+
     예외:
       ClaudeNotFoundError — provider CLI 미설치(PATH 부재)
-      OpalAgentTimeout    — timeout 초과
-      OpalAgentError      — 비정상 종료 / 파싱 실패 / 알 수 없는 provider 등
+      OpalAgentTimeout    — hard timeout 또는 (stream 전용) heartbeat timeout
+      OpalAgentError      — 비정상 종료 / 파싱 실패 / 알 수 없는 provider /
+                            timeout_limit_exceeded / output_format_invalid 등
 
     주의: JSON의 is_error=true는 예외를 던지지 않고 결과에 담아 반환한다.
     """
@@ -607,8 +805,202 @@ def call_agent(
         output_format=output_format,
         bin=bin,
         opal_bootstrap=opal_bootstrap,
+        run_dir=run_dir,
+        phase=phase,
+        attempt=attempt,
+        heartbeat_timeout_sec=heartbeat_timeout_sec,
+        terminate_grace_sec=terminate_grace_sec,
+        max_timeout_sec=max_timeout_sec,
+        phase_timeout_limit_sec=phase_timeout_limit_sec,
     )
     return _run(config)
+
+
+# ─── process group watchdog · attempt 산출물 소유 ──────────────
+
+_WATCHDOG_TICK_SEC = 0.05
+_PGID_REAP_TIMEOUT_SEC = 10.0
+
+
+def _killpg(pgid: int, sig: int) -> None:
+    """process group 전체에 시그널을 보낸다. 이미 소멸했으면 무시한다."""
+    try:
+        os.killpg(pgid, sig)
+    except (ProcessLookupError, PermissionError, OSError):
+        pass
+
+
+def _pgid_alive(pgid: int) -> bool:
+    """PGID 생존 여부 — 소멸은 ProcessLookupError로만 확정한다."""
+    try:
+        os.killpg(pgid, 0)
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        return True
+    except OSError:
+        return False
+    return True
+
+
+def _await_pgid_gone(pgid: int, timeout: float) -> bool:
+    """PGID 소멸을 확인한다. timed_out 확정 전에 반드시 통과해야 한다(제안서 §7.1)."""
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        if not _pgid_alive(pgid):
+            return True
+        time.sleep(_WATCHDOG_TICK_SEC)
+    return not _pgid_alive(pgid)
+
+
+class _Watchdog(threading.Thread):
+    """stdout read loop와 독립된 monotonic timer.
+
+    줄 도착과 무관하게 tick하므로 무출력 프로세스도 정확한 시점에 만료된다.
+    만료 시 PGID 전체에 SIGTERM → terminate_grace_sec → SIGKILL을 보낸다.
+    """
+
+    def __init__(
+        self, pgid: int, timeout_sec: float,
+        heartbeat_timeout_sec: float | None, grace_sec: float,
+    ):
+        super().__init__(daemon=True)
+        self._pgid = pgid
+        self._deadline = time.monotonic() + timeout_sec
+        self._heartbeat_timeout = heartbeat_timeout_sec
+        self._grace = grace_sec
+        self._last_beat = time.monotonic()
+        self._cancel = threading.Event()
+        self._reaped = threading.Event()
+        self.reason: str | None = None          # None | "hard" | "heartbeat"
+        self.beats = 0
+        self.last_beat_at: float | None = None
+
+    def beat(self) -> None:
+        """stdout 한 줄이 도착했음을 알린다(stream 전용 heartbeat 갱신)."""
+        self._last_beat = time.monotonic()
+        self.last_beat_at = time.time()
+        self.beats += 1
+
+    def cancel(self) -> None:
+        self._cancel.set()
+
+    def mark_reaped(self) -> None:
+        """루트 프로세스가 wait()로 회수됐음을 알린다.
+
+        회수 전에는 좀비가 PGID를 살아 있게 만들어 grace 단축 판정이 불가능하다.
+        """
+        self._reaped.set()
+
+    def run(self) -> None:
+        while not self._cancel.wait(_WATCHDOG_TICK_SEC):
+            now = time.monotonic()
+            if now >= self._deadline:
+                self._expire("hard")
+                return
+            limit = self._heartbeat_timeout
+            if limit and now - self._last_beat >= limit:
+                self._expire("heartbeat")
+                return
+
+    def _expire(self, reason: str) -> None:
+        self.reason = reason
+        _killpg(self._pgid, signal.SIGTERM)
+        # grace는 cancel로 단축하지 않는다 — TERM에 응답하지 않는 손자를 기다린다.
+        # 단, 루트 회수 후 PGID가 실제로 비었으면 더 기다리지 않는다.
+        deadline = time.monotonic() + self._grace
+        while time.monotonic() < deadline:
+            if self._reaped.is_set() and not _pgid_alive(self._pgid):
+                break
+            time.sleep(_WATCHDOG_TICK_SEC)
+        _killpg(self._pgid, signal.SIGKILL)
+
+
+@dataclass
+class _AttemptSink:
+    """opal-agent가 단일 writer로 소유하는 attempt 산출물 경로 묶음(D1)."""
+
+    directory: pathlib.Path
+    stem: str
+
+    def path(self, ext: str) -> pathlib.Path:
+        return self.directory / f"{self.stem}.{ext}"
+
+
+def _attempt_sink(config: AgentConfig) -> _AttemptSink | None:
+    """run_dir과 phase가 함께 주어질 때만 writer 소유권을 가진다.
+
+    셋 다 없으면 None을 돌려 기존 stdout passthrough 경로를 그대로 쓴다(C-8).
+    `phase`는 파일명 문자열일 뿐이며 opal-agent는 phase 목록도 의미론도 모른다.
+    """
+    if not config.run_dir or not config.phase:
+        return None
+    suffix = f".{config.attempt}" if config.attempt else ""
+    directory = pathlib.Path(config.run_dir)
+    directory.mkdir(parents=True, exist_ok=True)
+    return _AttemptSink(directory=directory, stem=f"{config.phase}{suffix}")
+
+
+def _atomic_write(path: pathlib.Path, text: str) -> None:
+    """temp write · fsync · atomic rename으로 파일을 확정한다(제안서 §7.3)."""
+    fd, tmp = tempfile.mkstemp(
+        dir=str(path.parent), prefix=f".{path.name}.", suffix=".tmp"
+    )
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as fh:
+            fh.write(text)
+            fh.flush()
+            os.fsync(fh.fileno())
+        os.replace(tmp, path)
+    except BaseException:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+        raise
+
+
+def _enforce_timeout_limits(config: AgentConfig) -> None:
+    """요청 timeout이 상한을 넘으면 프로세스를 만들기 전에 거부한다.
+
+    상한값은 호출자가 인자로 전달한다 — opal-agent는 그 값이 어느 phase
+    정책에서 왔는지 모른다.
+    """
+    limits = [
+        ("phase_timeout_limit_sec", config.phase_timeout_limit_sec),
+        ("max_timeout_sec", config.max_timeout_sec),
+    ]
+    for name, limit in limits:
+        if limit is not None and config.timeout > limit:
+            raise OpalAgentError(
+                f"timeout_limit_exceeded: 요청 timeout {config.timeout}초가 "
+                f"{name}={limit}초를 초과합니다.",
+                code="timeout_limit_exceeded",
+            )
+
+
+def _process_group(proc: subprocess.Popen) -> int:
+    """start_new_session으로 만든 루트 프로세스의 PGID."""
+    try:
+        return os.getpgid(proc.pid)
+    except OSError:
+        return proc.pid
+
+
+def _fingerprint(config: AgentConfig, inv: Invocation, resolved_bin: str) -> dict:
+    """attempt 시작 지문 — 프롬프트 원문 대신 argv 해시를 남긴다."""
+    argv = json.dumps(inv.cmd, ensure_ascii=False)
+    return {
+        "provider": config.provider,
+        "bin": resolved_bin,
+        "cwd": config.cwd,
+        "output_format": config.output_format,
+        "argv_len": len(inv.cmd),
+        "argv_sha256": hashlib.sha256(argv.encode("utf-8")).hexdigest(),
+        "timeout_sec": config.timeout,
+        "heartbeat_timeout_sec": config.heartbeat_timeout_sec,
+        "terminate_grace_sec": config.terminate_grace_sec,
+    }
 
 
 def _run(config: AgentConfig) -> AgentResult:
@@ -638,6 +1030,9 @@ def _run(config: AgentConfig) -> AgentResult:
             f"provider '{config.provider}'는 stream-json 실행 경로를 지원하지 않습니다."
         )
 
+    # 상한 초과 요청은 프로세스를 만들기 전, 산출물을 만들기 전에 거부한다(S-6).
+    _enforce_timeout_limits(config)
+
     bin_name = config.bin or adapter.default_bin
 
     resolved = shutil.which(bin_name)
@@ -652,29 +1047,9 @@ def _run(config: AgentConfig) -> AgentResult:
     # setting bootstrap:off의 session.disabled와는 의미가 다르다.
     env = {**os.environ, **inv.env} if inv.env else None
 
-    if config.output_format == "stream-json":
-        try:
-            return _run_stream(config, adapter, inv, env)
-        finally:
-            for path in inv.tempfiles:
-                try:
-                    os.unlink(path)
-                except OSError:
-                    pass
-
+    sink = _attempt_sink(config)
     try:
-        proc = subprocess.run(
-            inv.cmd,
-            capture_output=True,
-            text=True,
-            cwd=config.cwd,
-            env=env,
-            timeout=config.timeout,
-        )
-    except subprocess.TimeoutExpired as exc:
-        raise OpalAgentTimeout(
-            f"{config.provider} 실행이 {config.timeout}초를 초과했습니다."
-        ) from exc
+        return _execute(config, adapter, inv, env, sink, _fingerprint(config, inv, resolved))
     finally:
         for path in inv.tempfiles:
             try:
@@ -682,54 +1057,248 @@ def _run(config: AgentConfig) -> AgentResult:
             except OSError:
                 pass
 
-    if proc.returncode != 0:
-        raise OpalAgentError(
-            f"{config.provider} 비정상 종료 (exit {proc.returncode})\n"
-            f"stderr: {proc.stderr.strip()}"
-        )
 
-    return adapter.parse_result(config, proc.stdout)
+def _consume_stream(
+    proc: subprocess.Popen, dog: _Watchdog, pgid: int,
+    events_handle: Any, passthrough: bool,
+) -> tuple[str, bool]:
+    """stream stdout을 증분 소비한다. 반환: (원문, 1행 1객체 위반 여부).
+
+    sink가 있으면 events.jsonl에 줄 단위 append+flush로 쓴다 — 실행 중 증분
+    관측이 목적이므로 atomic rename을 쓰지 않는다(H-4).
+    """
+    chunks: list[str] = []
+    malformed = False
+    for line in proc.stdout:
+        dog.beat()
+        chunks.append(line)
+        if events_handle is not None:
+            events_handle.write(line)
+            events_handle.flush()
+            stripped = line.strip()
+            if stripped and _loads_event(stripped) is None:
+                malformed = True
+                break
+        elif passthrough:
+            sys.stdout.write(line)
+            sys.stdout.flush()
+    if malformed:
+        _killpg(pgid, signal.SIGTERM)
+    return "".join(chunks), malformed
 
 
-def _run_stream(
+def _execute(
     config: AgentConfig, adapter: ProviderAdapter, inv: Invocation,
-    env: dict[str, str] | None,
+    env: dict[str, str] | None, sink: _AttemptSink | None, fingerprint: dict,
 ) -> AgentResult:
-    """stream-json 전용 실행 경로 — Popen으로 증분 소비하며 자기 stdout으로
-    line-buffered passthrough한다(H-4). stderr는 상속(호출측 셸 `2>` 캡처)."""
+    """두 mode 공통 실행 경로 — spawn → watchdog → 소비 → PGID 회수 → 산출물 확정.
+
+    sink가 None이면 산출물을 만들지 않고 기존 동작(sync 캡처 / stream
+    passthrough + stderr 상속)을 그대로 유지한다(C-8).
+    """
+    streaming = config.output_format == "stream-json"
+    err_tmp: str | None = None
+    err_handle = None
+    events_handle = None
+
+    if sink is not None:
+        fd, err_tmp = tempfile.mkstemp(
+            dir=str(sink.directory), prefix=f".{sink.stem}.err.", suffix=".tmp"
+        )
+        err_handle = os.fdopen(fd, "w", encoding="utf-8")
+        stderr_target: Any = err_handle
+        if streaming:
+            events_handle = open(sink.path("events.jsonl"), "a", encoding="utf-8")
+    elif streaming:
+        stderr_target = None            # 기존 동작 — 호출측 셸 `2>`가 캡처
+    else:
+        stderr_target = subprocess.PIPE
+
+    started_at = time.time()
+    started = time.monotonic()
+    # 두 경로 모두 별도 process group으로 띄운다 — 손자까지 회수 가능해야 한다.
     proc = subprocess.Popen(
         inv.cmd,
         stdout=subprocess.PIPE,
-        stderr=None,
+        stderr=stderr_target,
         text=True,
         bufsize=1,
         cwd=config.cwd,
         env=env,
+        start_new_session=True,
     )
-    deadline = time.monotonic() + config.timeout
-    lines: list[str] = []
-    try:
-        for line in proc.stdout:
-            sys.stdout.write(line)
-            sys.stdout.flush()
-            lines.append(line)
-            if time.monotonic() > deadline:
-                proc.kill()
-                proc.wait()
-                raise OpalAgentTimeout(
-                    f"{config.provider} stream 실행이 {config.timeout}초를 초과했습니다."
-                )
-        proc.wait()
-    finally:
-        if proc.stdout:
-            proc.stdout.close()
+    pgid = _process_group(proc)
+    heartbeat_timeout = config.heartbeat_timeout_sec if streaming else None
+    dog = _Watchdog(pgid, config.timeout, heartbeat_timeout, config.terminate_grace_sec)
+    dog.start()
 
-    if proc.returncode != 0:
-        raise OpalAgentError(
-            f"{config.provider} stream 비정상 종료 (exit {proc.returncode})"
+    stdout_text = ""
+    stderr_text = ""
+    malformed = False
+    try:
+        if streaming:
+            stdout_text, malformed = _consume_stream(
+                proc, dog, pgid, events_handle, passthrough=sink is None
+            )
+            proc.wait()
+        else:
+            stdout_text, captured = proc.communicate()
+            stderr_text = captured or ""
+    finally:
+        if proc.poll() is not None:
+            dog.mark_reaped()
+        dog.cancel()
+        dog.join(timeout=config.terminate_grace_sec + _PGID_REAP_TIMEOUT_SEC)
+        for handle in (events_handle, err_handle, proc.stdout):
+            try:
+                if handle is not None:
+                    handle.close()
+            except OSError:
+                pass
+
+    exit_code = proc.returncode
+    timed_out = dog.reason is not None
+    if timed_out:
+        reclaimed = _await_pgid_gone(pgid, _PGID_REAP_TIMEOUT_SEC)
+    else:
+        reclaimed = not _pgid_alive(pgid)
+
+    verdict: StreamVerdict | None = None
+    result: AgentResult | None = None
+    failure: OpalAgentError | None = None
+
+    if timed_out:
+        status, exit_class = "timed_out", "timed_out"
+        failure = OpalAgentTimeout(_timeout_message(config, dog.reason), code="timed_out")
+    elif malformed:
+        status, exit_class = "error", "output_format_invalid"
+        failure = OpalAgentError(
+            f"{config.provider} stream-json이 1행 1객체 직렬화 계약을 "
+            f"위반했습니다(output_format_invalid).",
+            code="output_format_invalid",
+        )
+    elif exit_code != 0:
+        status, exit_class = "error", "impl_failure"
+        failure = OpalAgentError(_nonzero_exit_message(config, exit_code, stderr_text))
+    else:
+        status, exit_class = "done", "ok"
+        if streaming:
+            verdict = analyze_stream(stdout_text)
+            status, exit_class = verdict.status, verdict.exit_class
+        try:
+            result = adapter.parse_result(config, stdout_text)
+        except OpalAgentError as exc:
+            status = "error"
+            exit_class = exc.code or "framing_error"
+            failure = exc
+
+    if sink is not None:
+        _finalize_sink(
+            sink, config, stdout_text, err_tmp, exit_code,
+            _attempt_record(
+                config, fingerprint, proc.pid, pgid, started_at, started,
+                streaming, dog, heartbeat_timeout, reclaimed, exit_code,
+                status, exit_class, verdict,
+            ),
         )
 
-    return adapter.parse_result(config, "".join(lines))
+    if failure is not None:
+        raise failure
+    return result
+
+
+def _timeout_message(config: AgentConfig, reason: str | None) -> str:
+    if reason == "heartbeat":
+        return (
+            f"{config.provider} stream 무출력이 heartbeat "
+            f"{config.heartbeat_timeout_sec}초를 초과했습니다."
+        )
+    if config.output_format == "stream-json":
+        return f"{config.provider} stream 실행이 {config.timeout}초를 초과했습니다."
+    return f"{config.provider} 실행이 {config.timeout}초를 초과했습니다."
+
+
+def _nonzero_exit_message(config: AgentConfig, exit_code: int, stderr_text: str) -> str:
+    if config.output_format == "stream-json":
+        return f"{config.provider} stream 비정상 종료 (exit {exit_code})"
+    return (
+        f"{config.provider} 비정상 종료 (exit {exit_code})\n"
+        f"stderr: {stderr_text.strip()}"
+    )
+
+
+def _attempt_record(
+    config: AgentConfig, fingerprint: dict, pid: int, pgid: int,
+    started_at: float, started: float, streaming: bool, dog: _Watchdog,
+    heartbeat_timeout: int | None, reclaimed: bool, exit_code: int | None,
+    status: str, exit_class: str, verdict: StreamVerdict | None,
+) -> dict:
+    """ledger가 경로로만 외래 참조하는 attempt record(D4)."""
+    empty = StreamVerdict(status=status, exit_class=exit_class)
+    observed = verdict or empty
+    return {
+        "phase": config.phase,
+        "attempt": config.attempt,
+        "mode": "stream" if streaming else "sync",
+        "provider": config.provider,
+        "status": status,
+        "exit_class": exit_class,
+        "pid": pid,
+        "pgid": pgid,
+        "pgid_reclaimed": reclaimed,
+        "exit_code": exit_code,
+        "timeout_reason": dog.reason,
+        "started_at": started_at,
+        "ended_at": time.time(),
+        "duration_ms": int((time.monotonic() - started) * 1000),
+        "fingerprint": fingerprint,
+        "heartbeat": {
+            "timeout_sec": heartbeat_timeout,
+            "count": dog.beats,
+            "last_at": dog.last_beat_at,
+            "expired": dog.reason == "heartbeat",
+        },
+        "terminal": observed.terminal,
+        "cost_used": observed.cost_used,
+        "unterminated_children": observed.unterminated_children,
+        "origin": observed.origin,
+    }
+
+
+def _finalize_sink(
+    sink: _AttemptSink, config: AgentConfig, stdout_text: str,
+    err_tmp: str | None, exit_code: int | None, record: dict,
+) -> None:
+    """err.log → result.json → exitcode → attempt.json 순으로 확정한다.
+
+    `.exitcode`는 atomic rename이라 프로세스 생존 중에는 나타나지 않는다 —
+    관측자는 그 부재를 `running`의 근거로 쓴다(S-23).
+    """
+    outputs: dict[str, str] = {}
+
+    if err_tmp is not None:
+        os.replace(err_tmp, sink.path("err.log"))
+        outputs["err"] = str(sink.path("err.log"))
+
+    if config.output_format == "stream-json":
+        outputs["events"] = str(sink.path("events.jsonl"))
+    elif config.output_format == "json":
+        payload = _loads_event(stdout_text.strip())
+        if payload is not None:
+            _atomic_write(
+                sink.path("result.json"),
+                json.dumps(payload, ensure_ascii=False, indent=2) + "\n",
+            )
+            outputs["result"] = str(sink.path("result.json"))
+
+    _atomic_write(sink.path("exitcode"), f"{exit_code}\n")
+    outputs["exitcode"] = str(sink.path("exitcode"))
+
+    record["outputs"] = outputs
+    _atomic_write(
+        sink.path("attempt.json"),
+        json.dumps(record, ensure_ascii=False, indent=2, default=str) + "\n",
+    )
 
 
 # ─── CLI 진입점 ───────────────────────────────────────────────
@@ -769,6 +1338,35 @@ def _build_parser() -> argparse.ArgumentParser:
         help="신규(cold) 세션에 지정할 caller-supplied session id (claude만, 유효 UUID)",
     )
     parser.add_argument("--bin", help="CLI 바이너리 경로 오버라이드")
+    # --run-dir + --phase를 함께 주면 opal-agent가 attempt 산출물의 단일 writer가
+    # 된다. 셋 다 생략하면 기존 stdout passthrough 동작이 그대로다(C-8).
+    parser.add_argument(
+        "--run-dir", dest="run_dir",
+        help="attempt 산출물 디렉토리. --phase와 함께 줘야 산출물을 소유한다 "
+             "(<phase>[.aN].events.jsonl | .result.json | .err.log | .exitcode | .attempt.json)",
+    )
+    parser.add_argument(
+        "--phase", help="산출물 파일명 접두 문자열. opal-agent는 phase 의미론을 모른다.",
+    )
+    parser.add_argument("--attempt", help="재시도 접미 (예: a2)")
+    # watchdog 조절 인자. 상한값은 호출자가 계산해 넘긴다 — opal-agent는 phase별
+    # 상한 표를 갖지 않는다. 넷 다 생략하면 기존 동작이 그대로다(C-8).
+    parser.add_argument(
+        "--heartbeat-timeout-sec", dest="heartbeat_timeout_sec", type=int,
+        help="무출력 허용 상한(초). stream mode 전용 — sync에는 적용하지 않는다.",
+    )
+    parser.add_argument(
+        "--terminate-grace-sec", dest="terminate_grace_sec", type=int, default=5,
+        help="timeout 회수 시 SIGTERM 후 SIGKILL까지 유예(초, 기본 5)",
+    )
+    parser.add_argument(
+        "--max-timeout-sec", dest="max_timeout_sec", type=int,
+        help="전역 hard timeout 상한. --timeout이 넘으면 프로세스를 만들지 않고 거부한다.",
+    )
+    parser.add_argument(
+        "--phase-timeout-limit-sec", dest="phase_timeout_limit_sec", type=int,
+        help="호출자가 계산한 phase별 상한. --timeout이 넘으면 프로세스를 만들지 않고 거부한다.",
+    )
     parser.add_argument(
         "--opal-bootstrap", choices=("on", "assistant", "off"), default="on",
         help="서브에이전트 OPAL marker (기본 on=무마커). "
@@ -836,6 +1434,13 @@ def main(argv: list[str] | None = None) -> int:
             output_format=output_format,
             bin=args.bin,
             opal_bootstrap=args.opal_bootstrap,
+            run_dir=args.run_dir,
+            phase=args.phase,
+            attempt=args.attempt,
+            heartbeat_timeout_sec=args.heartbeat_timeout_sec,
+            terminate_grace_sec=args.terminate_grace_sec,
+            max_timeout_sec=args.max_timeout_sec,
+            phase_timeout_limit_sec=args.phase_timeout_limit_sec,
         )
     except OpalAgentError as exc:
         print(f"[opal-agent 오류] {exc}", file=sys.stderr)

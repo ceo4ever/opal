@@ -4,9 +4,8 @@
   "task": "039",
   "layer": "test",
   "domain": "opal-tools",
-  "description": "test-tool 4서브명령(resolve/check/unit/integration) 행위 계약 RED-first 테스트. RED 상태(미구현) — 전부 FAIL 예상. GREEN 전환은 opal-be-agent(Step 3) 담당(작성자≠구현자).",
-  "scenarios": "S-1~S-9",
-  "track": "RED-first (red-first.md §1~§4)",
+  "description": "test-tool resolve/check/unit/integration public CLI regression tests for resolver precedence, execution gates, E2E migration/status behavior, and error catalog stability.",
+  "scenarios": ["S-1", "S-2", "S-3", "S-4", "S-5", "S-6", "S-7", "S-8", "S-9"],
   "exports": [
     "TestResolve",
     "TestUnit",
@@ -18,15 +17,7 @@
   ]
 }
 
-변경이력:
-  v1.1 2026-08-20 TestResolve.setUp에 OPAL_TEST_TOOLS_GLOBAL 제거 env(isolated_env) 신설 —
-                  resolver.py:188-191이 이 변수의 부재를 "테스트 환경" 신호로 삼는데
-                  install-mac.sh:915가 shell rc에 자동 등록하므로(041) 개발자 셸에서는
-                  항상 설정돼 전제가 깨졌다. 실 시스템 글로벌 템플릿이 2순위로 개입해
-                  test_resolve_infer_fallback_when_no_yaml이 source='global'로 FAIL하고
-                  3순위(infer) 폴백 경로가 검증되지 않았다. env 유무 양쪽에서 통과 확인 (096 후속)
-
-[T039] test-tool 4서브명령 행위 계약 — RED-first TDD
+[T039] test-tool 4서브명령 공개 행위 계약 회귀 테스트
 검증 대상: opal/tools/test-tool/run.sh 의 공개 인터페이스(exit code + stdout JSON)만 단언.
 내부 구현/private 결합 금지(red-first.md §4).
 
@@ -49,7 +40,7 @@ import sys
 import tempfile
 import unittest
 
-# test-tool run.sh 위치 (산출 예정 — Step3 구현 전이므로 부재 상태)
+# test-tool run.sh 공개 진입점
 _TOOL_DIR = pathlib.Path(__file__).parent.parent
 _RUN_SH = _TOOL_DIR / "run.sh"
 
@@ -102,7 +93,7 @@ def _env_with_cmux_cmd(stub_path, base_env=None):
     """OPAL_CMUX_TOOL_CMD 환경변수로 cmux-tool stub 절대경로를 주입한 환경 dict 반환.
     S-15 실검증 발견: OPAL cmux-tool은 PATH 명령이 아니라 절대 경로로 호출해야 하는
     실제 호출 계약을 반영한다. e2e_adapter는 OPAL_CMUX_TOOL_CMD env를 우선 사용하고,
-    없으면 ~/.opal/tools/cmux-tool/run.sh를 기본값으로 사용한다(구현자 담당).
+    없으면 ~/.opal/tools/cmux-tool/run.sh를 기본값으로 사용한다.
     """
     env = (base_env or os.environ).copy()
     env["OPAL_CMUX_TOOL_CMD"] = str(stub_path)
@@ -395,8 +386,7 @@ tiers:
 
     def test_unit_no_watch_mode(self):
         """[T039/L1-unit] S-4 H-2: 실행 명령 문자열에 watch 플래그(--watch/-w) 없음(단발)
-        RED 조건: run.sh 미구현 → exit 127 + layers=[] → 선행 단언(exit 0 및 layers 존재)에서 FAIL.
-        GREEN 조건: unit 명령이 JSON layers를 반환하고 각 명령에 watch 플래그 없음.
+        회귀 조건: unit 명령이 exit 0의 JSON layers를 반환하고 각 명령에 watch 플래그가 없음.
         """
         self._make_normal_yaml()
         env = _env_with_stub_path(self.stub_dir)
@@ -523,21 +513,14 @@ tiers:
 # ─────────────────────────────────────────────────────────────────────────────
 
 class TestIntegrationCmuxFallback(unittest.TestCase):
-    """[T039/L1-integration] test-tool integration cmux 폴백 4종 — S-6
+    """Legacy fallback input is normalized to the v2 verdict contract (task 125 S-3)."""
 
-    교정(S-15 실검증): cmux-tool 스텁 주입을 PATH 주입에서 OPAL_CMUX_TOOL_CMD 환경변수로 변경.
-    e2e_adapter가 OPAL_CMUX_TOOL_CMD(env) → ~/.opal/tools/cmux-tool/run.sh(기본) 순으로
-    cmux-tool을 호출해야 하는 실제 OPAL 호출 계약을 반영한다.
-    기대 결과(driver=playwright on fallback)는 변경 없음 — 호출 메커니즘만 수정.
-    """
-
-    # cmux-tool 스텁이 반환할 폴백 트리거 에러코드 4종
-    FALLBACK_CODES = [
-        "not_in_cmux",
-        "cmux_not_installed",
-        "surface_parse_failed",
-        "open_failed",
-    ]
+    LEGACY_REASON_MATRIX = {
+        "not_in_cmux": ("executor_unavailable", 18),
+        "cmux_not_installed": ("executor_unavailable", 18),
+        "surface_parse_failed": ("infra_error", 7),
+        "open_failed": ("infra_error", 7),
+    }
 
     def setUp(self):
         self.tmpdir = pathlib.Path(tempfile.mkdtemp())
@@ -554,9 +537,6 @@ tiers:
       - name: cmux
         priority: 1
         via: cmux-tool
-      - name: playwright
-        priority: 2
-        fallback: true
 """
         )
         self.stub_dir = self.tmpdir / "stubs"
@@ -573,7 +553,7 @@ tiers:
         stub_json = {"ok": False, "command": "open", "error": error_code}
         return _make_stub_script(self.stub_dir, "cmux-tool-stub", stub_json, exit_code=1)
 
-    def _assert_playwright_fallback(self, error_code):
+    def _assert_v2_verdict(self, error_code, expected_status, expected_exit):
         stub_path = self._make_cmux_tool_stub(error_code)
         # PATH 주입 대신 OPAL_CMUX_TOOL_CMD로 stub 절대경로 주입
         env = _env_with_cmux_cmd(stub_path)
@@ -582,34 +562,20 @@ tiers:
              "--project-root", str(self.project_root)],
             env=env,
         )
-        e2e = data.get("e2e", {})
-        self.assertEqual(
-            e2e.get("driver"), "playwright",
-            f"error_code={error_code}: e2e.driver should be playwright. data={data}"
-        )
-        self.assertIn(
-            "fallback_reason", e2e,
-            f"error_code={error_code}: fallback_reason 필드 없음. data={data}"
-        )
-        # fallback_reason에 에러 코드가 기록되어야 함
-        self.assertIn(
-            error_code, str(e2e.get("fallback_reason", "")),
-            f"fallback_reason에 {error_code} 미포함. data={data}"
-        )
-        # opal-test-agent가 소비할 playwright MCP 액션 필드 검증
-        self.assertEqual(e2e.get("mcp_action"), "browser_navigate")
-        self.assertIn("mcp_url", e2e)
+        self.assertEqual(code, expected_exit, f"stdout={stdout}")
+        self.assertEqual(data.get("status"), expected_status, data)
+        self.assertEqual(data.get("e2e", {}).get("status"), expected_status, data)
+        serialized = json.dumps(data, ensure_ascii=False)
+        for legacy_key in ("fallback_reason", '"fallback"', '"escalated"', '"escalate"'):
+            self.assertNotIn(legacy_key, serialized, data)
 
-    def test_integration_cmux_fallback_4codes(self):
-        """[T039/L1-integration] S-6 H-3: cmux-tool stub이 폴백 4종 반환 시 e2e.driver=playwright
-        OPAL_CMUX_TOOL_CMD 환경변수 경유로 stub 주입 (실제 OPAL 호출 계약 반영).
-        subTest 외에 실패 카운트를 추적하여 메인 테스트도 FAIL 처리.
-        """
+    def test_integration_normalizes_legacy_fallback_4codes(self):
+        """Provider absence exhausts candidates; open/parse faults are infra errors."""
         failures = []
-        for error_code in self.FALLBACK_CODES:
+        for error_code, (status, exit_code) in self.LEGACY_REASON_MATRIX.items():
             with self.subTest(error_code=error_code):
                 try:
-                    self._assert_playwright_fallback(error_code)
+                    self._assert_v2_verdict(error_code, status, exit_code)
                 except AssertionError as e:
                     failures.append(f"{error_code}: {e}")
         if failures:
@@ -617,12 +583,8 @@ tiers:
                 f"폴백 4종 중 {len(failures)}건 실패:\n" + "\n".join(failures)
             )
 
-    def test_integration_cmux_not_configured_fallback(self):
-        """[T041/L1-fallback] cmux tier 미구성 시 playwright 직접 폴백 + mcp_action 동봉.
-        e2e config에 cmux가 없으면 e2e_adapter.run_integration은 has_cmux=False
-        경로(:170-179)로 _run_playwright_fallback을 호출 — cmux-tool 호출 없이
-        opal-test-agent가 소비할 mcp_action=browser_navigate를 반환해야 한다.
-        """
+    def test_integration_cmux_not_configured_is_not_successful_fallback(self):
+        """A configured name is not execution evidence and cannot produce success."""
         # cmux tier 없는 신규 project_root 구성 (기존 setUp 픽스처는 cmux 포함)
         no_cmux_root = self.tmpdir / "project-no-cmux"
         no_cmux_root.mkdir()
@@ -643,15 +605,9 @@ tiers:
             ["integration", "--url", "http://localhost:3000",
              "--project-root", str(no_cmux_root)],
         )
-        e2e = data.get("e2e", {})
-        self.assertEqual(
-            e2e.get("driver"), "playwright",
-            f"cmux 미구성: e2e.driver should be playwright. data={data}"
-        )
-        self.assertEqual(
-            e2e.get("mcp_action"), "browser_navigate",
-            f"cmux 미구성: mcp_action should be browser_navigate. data={data}"
-        )
+        self.assertEqual(code, 18, f"stdout={stdout}")
+        self.assertEqual(data.get("status"), "executor_unavailable", data)
+        self.assertNotIn("fallback", json.dumps(data, ensure_ascii=False), data)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -659,11 +615,7 @@ tiers:
 # ─────────────────────────────────────────────────────────────────────────────
 
 class TestIntegrationCmuxEscalate(unittest.TestCase):
-    """[T039/L1-integration] test-tool integration cmux 에스컬레이션 5종 — S-7
-
-    교정(S-15 실검증): cmux-tool 스텁 주입을 PATH 주입에서 OPAL_CMUX_TOOL_CMD 환경변수로 변경.
-    기대 결과(escalate=true, playwright 폴백 금지, exit=7)는 변경 없음 — 호출 메커니즘만 수정.
-    """
+    """Legacy escalated input becomes fail or infra_error without legacy keys (S-3)."""
 
     ESCALATE_CODES = [
         "usage",
@@ -699,16 +651,18 @@ tiers:
     def tearDown(self):
         shutil.rmtree(self.tmpdir, ignore_errors=True)
 
-    def _make_cmux_tool_stub(self, error_code):
+    def _make_cmux_tool_stub(self, error_code, wait_kind=None):
         """지정 error_code를 반환하는 cmux-tool stub 생성.
         스텁은 PATH 이름이 아닌 절대 경로(stub_dir/cmux-tool-stub)에 위치 —
         OPAL_CMUX_TOOL_CMD 환경변수로 주입.
         """
         stub_json = {"ok": False, "command": "open", "error": error_code}
+        if wait_kind is not None:
+            stub_json["wait_kind"] = wait_kind
         return _make_stub_script(self.stub_dir, "cmux-tool-stub", stub_json, exit_code=1)
 
-    def _assert_escalate(self, error_code):
-        stub_path = self._make_cmux_tool_stub(error_code)
+    def _assert_v2_failure(self, error_code, expected_status="infra_error", expected_exit=7, wait_kind=None):
+        stub_path = self._make_cmux_tool_stub(error_code, wait_kind=wait_kind)
         # PATH 주입 대신 OPAL_CMUX_TOOL_CMD로 stub 절대경로 주입
         env = _env_with_cmux_cmd(stub_path)
         code, stdout, data = _run(
@@ -716,39 +670,32 @@ tiers:
              "--project-root", str(self.project_root)],
             env=env,
         )
-        # exit code는 escalation(7)
-        self.assertEqual(
-            code, 7,
-            f"error_code={error_code}: exit should be 7(escalation). got={code}. stdout={stdout}"
-        )
-        # escalate=true
-        self.assertTrue(
-            data.get("escalate"),
-            f"error_code={error_code}: escalate should be true. data={data}"
-        )
-        # e2e.driver는 playwright여서는 안 됨(폴백 금지)
-        e2e = data.get("e2e", {})
-        self.assertNotEqual(
-            e2e.get("driver"), "playwright",
-            f"error_code={error_code}: 에스컬레이션 코드에 playwright 폴백 발생(헌법 위반). data={data}"
-        )
+        self.assertEqual(code, expected_exit, f"error_code={error_code}: stdout={stdout}")
+        self.assertEqual(data.get("status"), expected_status, data)
+        serialized = json.dumps(data, ensure_ascii=False)
+        for legacy_key in ('"fallback"', '"escalated"', '"escalate"', '"escalation"'):
+            self.assertNotIn(legacy_key, serialized, data)
 
-    def test_integration_cmux_escalate_5codes(self):
-        """[T039/L1-integration] S-7 H-3: 에스컬레이션 5종 → escalate=true + playwright 폴백 금지 + exit=7
-        OPAL_CMUX_TOOL_CMD 환경변수 경유로 stub 주입 (실제 OPAL 호출 계약 반영).
-        subTest 외에 실패 카운트를 추적하여 메인 테스트도 FAIL 처리.
-        """
+    def test_integration_normalizes_legacy_escalation_codes(self):
         failures = []
         for error_code in self.ESCALATE_CODES:
             with self.subTest(error_code=error_code):
                 try:
-                    self._assert_escalate(error_code)
+                    self._assert_v2_failure(error_code)
                 except AssertionError as e:
                     failures.append(f"{error_code}: {e}")
         if failures:
             self.fail(
                 f"에스컬레이션 5종 중 {len(failures)}건 실패:\n" + "\n".join(failures)
             )
+
+    def test_wait_failed_assertion_condition_is_product_fail(self):
+        self._assert_v2_failure(
+            "wait_failed",
+            expected_status="fail",
+            expected_exit=6,
+            wait_kind="assertion_condition",
+        )
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -841,11 +788,9 @@ esac
              "--project-root", str(self.project_root)],
             env=env,
         )
-        # exit code는 0 또는 e2e_failed(6) — stub은 정상 응답
-        self.assertIn(
-            code, [0, 6],
-            f"mode A 실행 후 exit 0 또는 6 expected. got={code}. stdout={stdout}"
-        )
+        # open/navigate/close는 semantic assertion이나 필수 증적이 아니므로 pass 금지.
+        self.assertEqual(code, 6, f"assertion 없는 mode A는 fail이어야 함. stdout={stdout}")
+        self.assertEqual(data.get("status"), "fail", data)
 
         # 로그 파일로 호출 시퀀스 검증
         if not self.call_log.exists():
@@ -909,6 +854,10 @@ class TestErrorCodesInCatalog(unittest.TestCase):
         "layer_failed",      # unit: 계층 실패
         "e2e_failed",        # integration: e2e 실패
         "escalation",        # integration: 에스컬레이션
+        "e2e_infra_error",   # integration: 실행 인프라 오류
+        "executor_unavailable", # integration: 후보 소진
+        "e2e_blocked",       # integration/scenario: 외부 조건 차단
+        "e2e_awaiting_human", # scenario: 재개 가능한 사람 입력 대기
     }
 
     def setUp(self):
@@ -932,8 +881,7 @@ class TestErrorCodesInCatalog(unittest.TestCase):
 
     def test_error_codes_in_catalog(self):
         """[T039/L1-check][T039/L1-integration] S-9: 에러 경로에서 반환된 error 값이 카탈로그 키에 포함
-        RED 조건: run.sh 미구현 → exit 127 + error=None → assertIsNotNone에서 FAIL.
-        GREEN 조건: 각 에러 경로가 카탈로그 키 중 하나를 error 필드로 반환.
+        회귀 조건: 각 에러 경로가 카탈로그 키 중 하나를 error 필드로 반환.
         """
         # 1) resolve: yaml 파싱 실패 유도 (깨진 yaml)
         broken_yaml_root = self.tmpdir / "broken"

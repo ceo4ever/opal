@@ -45,6 +45,8 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MarkdownView } from "@/components/markdown-view";
 
+/* eslint-disable react-refresh/only-export-components */
+
 /** 3경로 공통 이탈 확인 문구 (R-8) — AppShell 프로젝트 스위처 가드와 동일 문구 유지 */
 export const BRAIN_LEAVE_GUARD_TITLE = "화면을 나가면 이 대화 세션이 사라집니다";
 export const BRAIN_LEAVE_GUARD_DESCRIPTION = "나가시겠어요?";

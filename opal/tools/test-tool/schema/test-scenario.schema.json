@@ -1,93 +1,212 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "OPAL test-scenario.json Schema",
-  "description": "test-tool scenario-* 4서브명령이 관리하는 태스크별 테스트 시나리오 SSOT. spec존(RED-first 동결 대상)과 result존(구현 후 판정 기록)을 분리한다. PLAN.md §3.2.2 (056/F-002).",
+  "description": "test-tool scenario-* SSOT with E2E profile/verdict v2 fields.",
   "type": "object",
   "required": ["schema_version", "task_id", "locked", "created_at", "locked_at", "scenarios"],
   "additionalProperties": false,
+  "definitions": {
+    "handoffSpec": {
+      "type": "object",
+      "required": [
+        "handoff_id",
+        "instruction",
+        "expected_observation",
+        "required_evidence",
+        "timeout_seconds",
+        "resume_token",
+        "server_policy",
+        "submission_path"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "handoff_id": {"type": "string", "minLength": 1},
+        "instruction": {"type": "string", "minLength": 1},
+        "expected_observation": {"type": "string", "minLength": 1},
+        "required_evidence": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "timeout_seconds": {"type": "number"},
+        "resume_token": {"type": "string", "minLength": 1},
+        "server_policy": {"type": "string", "minLength": 1},
+        "submission_path": {"type": "string", "minLength": 1}
+      }
+    }
+  },
   "properties": {
     "schema_version": {
-      "const": "1.0",
-      "description": "스키마 버전"
+      "enum": ["1.0", "2.0"]
     },
     "task_id": {
-      "type": "string",
-      "description": "태스크 폴더명"
+      "type": "string"
     },
     "locked": {
-      "type": "boolean",
-      "description": "scenario-lock 통과 여부 — true가 되면 spec존(red_confirmed 등)이 동결되고 scenario-mark가 허용된다"
+      "type": "boolean"
     },
     "created_at": {
-      "type": "string",
-      "description": "test-scenario.json 최초 생성 시점 (KST ISO 8601)"
+      "type": "string"
     },
     "locked_at": {
-      "type": ["string", "null"],
-      "description": "scenario-lock 통과 시점 (KST ISO 8601). locked==false면 null"
+      "type": ["string", "null"]
     },
     "scenarios": {
       "type": "array",
-      "description": "시나리오 목록",
       "items": {
         "type": "object",
-        "required": ["id", "acceptance_ref", "type", "expected", "red_confirmed", "red_evidence", "red_at", "result", "evidence", "marked_at"],
+        "required": [
+          "id",
+          "acceptance_ref",
+          "type",
+          "expected",
+          "red_required",
+          "red_confirmed",
+          "red_evidence",
+          "red_at",
+          "required_fidelity",
+          "surface_ref",
+          "surface_kind",
+          "profile",
+          "actors",
+          "steps",
+          "assertions",
+          "required_evidence",
+          "handoff",
+          "result",
+          "operational_status",
+          "observed_executors",
+          "assertion_results",
+          "observed_evidence",
+          "handoff_state",
+          "evidence",
+          "marked_at",
+          "fidelity"
+        ],
         "additionalProperties": false,
-        "description": "069: required_fidelity/fidelity/surface_ref는 optional additive 필드(required 배열 미포함) — 기존 파일 무파손(H-6). 런타임 미검증(스키마는 참조용, scenario.py 게이트 로직이 `.get(...,\"mock\")` 방어 접근으로 실질 기본값을 부여한다).",
         "properties": {
           "id": {
             "type": "string",
-            "pattern": "^S[0-9A-Za-z-]*$",
-            "description": "시나리오 id (예: S001, S1)"
+            "pattern": "^S[0-9A-Za-z-]*$"
           },
           "acceptance_ref": {
-            "type": ["string", "null"],
-            "description": "수용기준/계약 참조"
+            "type": ["string", "null"]
           },
           "type": {
-            "enum": ["unit", "integration", "contract", "regression", "e2e"],
-            "description": "시나리오 유형"
+            "enum": ["unit", "integration", "contract", "regression", "e2e"]
           },
           "expected": {
-            "type": ["string", "null"],
-            "description": "기대 결과 서술"
+            "type": ["string", "null"]
+          },
+          "red_required": {
+            "type": "boolean"
           },
           "red_confirmed": {
-            "type": "boolean",
-            "description": "spec존 — 구현 전 실패(RED) 확인 여부. scenario-lock 게이트 판단 기준(H-2). scenario-init 시드 입력과 무관하게 항상 false로 생성되며, scenario-red(RED 증거 tool-gated 갱신) 서브명령으로만 true가 될 수 있다(056/ADD-1)"
+            "type": "boolean"
           },
           "red_evidence": {
-            "type": ["string", "null"],
-            "description": "spec존 — scenario-red로 기록되는 RED 실패 증거(로그/명령 출력 요약). red_confirmed=false면 null(056/ADD-1)"
+            "type": ["string", "null"]
           },
           "red_at": {
+            "type": ["string", "null"]
+          },
+          "required_fidelity": {
+            "enum": ["mock", "real-http", "real-usage"]
+          },
+          "surface_ref": {
+            "type": ["string", "null"]
+          },
+          "surface_kind": {
             "type": ["string", "null"],
-            "description": "spec존 — scenario-red 기록 시점 (KST ISO 8601). red_confirmed=false면 null(056/ADD-1)"
+            "enum": ["web_ui", "api", "hybrid", "collaborative", "manual", null]
+          },
+          "profile": {
+            "type": ["string", "null"],
+            "enum": ["browser", "api", "hybrid", "collaborative", "manual", null]
+          },
+          "actors": {
+            "type": "array",
+            "items": {"type": "string"}
+          },
+          "steps": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["id", "executor"],
+              "additionalProperties": true,
+              "properties": {
+                "id": {"type": "string"},
+                "executor": {"enum": ["browser", "api", "human"]}
+              }
+            }
+          },
+          "assertions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["id", "expected"],
+              "additionalProperties": true,
+              "properties": {
+                "id": {"type": "string"},
+                "expected": {}
+              }
+            }
+          },
+          "required_evidence": {
+            "type": "array",
+            "items": {"type": "string"}
+          },
+          "handoff": {
+            "anyOf": [
+              {"$ref": "#/definitions/handoffSpec"},
+              {"type": "null"}
+            ]
           },
           "result": {
             "type": ["string", "null"],
-            "enum": ["pass", "fail", null],
-            "description": "result존 — scenario-mark로 기록되는 판정 결과. locked 전에는 null"
+            "enum": ["pass", "fail", "blocked", "infra_error", "executor_unavailable", null]
+          },
+          "operational_status": {
+            "type": ["string", "null"],
+            "enum": ["awaiting_human", null]
+          },
+          "observed_executors": {
+            "type": "array",
+            "items": {"enum": ["browser", "api", "human"]}
+          },
+          "assertion_results": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true,
+              "properties": {
+                "id": {"type": "string"},
+                "expected": {},
+                "actual": {}
+              }
+            }
+          },
+          "observed_evidence": {
+            "type": "array",
+            "items": {"type": "string"}
+          },
+          "handoff_state": {
+            "anyOf": [
+              {"$ref": "#/definitions/handoffSpec"},
+              {"type": "null"}
+            ]
+          },
+          "run_id": {
+            "type": ["string", "null"]
           },
           "evidence": {
-            "type": ["string", "null"],
-            "description": "result존 — 판정 근거(로그/명령 출력 요약 등)"
+            "type": ["string", "null"]
           },
           "marked_at": {
-            "type": ["string", "null"],
-            "description": "result존 — scenario-mark 기록 시점 (KST ISO 8601)"
-          },
-          "required_fidelity": {
-            "enum": ["mock", "real-http", "real-usage"],
-            "description": "spec존(069) — 시나리오가 반드시 검증돼야 할 증거 충실도(사다리: mock<real-http<real-usage). 미지정 시 mock(H-6, 관대한 기본값). scenario-fidelity-check 부분 게이트의 요구값"
+            "type": ["string", "null"]
           },
           "fidelity": {
-            "enum": ["mock", "real-http", "real-usage"],
-            "description": "result존(069) — scenario-mark --fidelity로 기록되는 실제 관찰된 증거 충실도. 미지정 시 mock(M-5, 목 수준으로 간주)"
-          },
-          "surface_ref": {
-            "type": ["string", "null"],
-            "description": "spec존(069, nullable) — 시나리오가 검증하는 표면(surface) id. scenario-conformance가 surfaces.json 표면과 대조하는 라벨"
+            "enum": ["mock", "real-http", "real-usage"]
           }
         }
       }

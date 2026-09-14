@@ -12,7 +12,7 @@ PLAN.md(T02) §테스트 시나리오 초안 근거:
   - S-1 state-tool.init.run-log-mode shadow — state.json schema_version==1.2 + run_log 7필드 +
     첫 조각(run/run-log-{run_id}-0001.jsonl) 1줄(run.started, sequence==1, actor_sequence==1)
   - S-2 (C-3) --run-log-mode 미지정 init은 개정 전(git show HEAD:./state_tool.py)과 state.json 바이트 동일
-  - S-9 (C-2) 기존 state-tool 회귀 0건 — pytest 425 passed/3 skipped/111 subtests passed 재현,
+  - S-9 (C-2) 기존 state-tool 회귀 0건 — pytest 실패 0건·종료 코드 0 재현(통과 개수는 형제 태스크가 이동시키므로 상수로 고정하지 않는다),
     tests/test_state_tool.py·schema/state.schema.json 미변경
 """
 
@@ -189,10 +189,17 @@ class TestExistingRegressionBaseline(unittest.TestCase):
             cwd=str(_REPO_ROOT), capture_output=True, text=True,
         )
         combined = result.stdout + result.stderr
-        self.assertIn("425 passed", combined, f"S-9 회귀 기준선(425 passed) 불일치 — 출력 말미: {combined[-2000:]}")
-        self.assertIn("3 skipped", combined, f"S-9 회귀 기준선(3 skipped) 불일치 — 출력 말미: {combined[-2000:]}")
-        self.assertIn("111 subtests passed", combined,
-                       f"S-9 회귀 기준선(111 subtests passed) 불일치 — 출력 말미: {combined[-2000:]}")
+        # [불안정 기준선 제거 — 123 opd 전환] 통과 **개수**를 상수로 박으면 형제 태스크가
+        # 테스트를 늘릴 때마다 구현이 정상인데도 거짓 실패가 난다(실제 발생: 425→441,
+        # main의 122·131 유입). 더구나 개수 단언은 누군가 테스트를 지우고 수를 맞춰도
+        # 통과시켜 계약을 지키지 못한다. 이 단언이 지키려는 계약은 "기존 테스트가 깨지지
+        # 않았다"이므로 **실패 0건**이라는 불변 조건으로 판정한다.
+        self.assertNotIn("failed", combined,
+                         f"S-9 회귀 실패 — 기존 테스트가 깨졌다. 출력 말미: {combined[-2000:]}")
+        self.assertIn("passed", combined,
+                      f"S-9 테스트가 수집되지 않았다(스위트 자체 실패 의심). 출력 말미: {combined[-2000:]}")
+        self.assertEqual(0, result.returncode,
+                         f"S-9 pytest 종료 코드 비정상({result.returncode}). 출력 말미: {combined[-2000:]}")
 
         # T02의 동결 대상(`tests/test_state_tool.py`·`schema/state.schema.json`)은
         # T05(AC-4)가 스키마 1.2 등재를 인계받으면서 해제됐다 — 등재는 두 파일을

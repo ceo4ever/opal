@@ -1,0 +1,151 @@
+{
+  "check": "convention",
+  "status": "pass",
+  "checked_files": [
+    "workstudio/tsconfig.node.json",
+    "workstudio/tsconfig.app.json",
+    "workstudio/package-lock.json",
+    "workstudio/package.json",
+    "workstudio/components.json",
+    "workstudio/tsconfig.json",
+    "workstudio/eslint.config.js",
+    "workstudio/vite.config.ts",
+    "workstudio/vitest.config.ts",
+    "workstudio/electron/preload.cjs",
+    "workstudio/electron/main.cjs",
+    "workstudio/electron/main.test.mjs",
+    "workstudio/src/workstudio/WorkStudioApp.test.tsx",
+    "workstudio/src/workstudio/ipc.test.ts",
+    "workstudio/src/workstudio/WorkStudioApp.tsx",
+    "workstudio/src/workstudio/types.ts",
+    "workstudio/src/workstudio/mock-adapter.ts",
+    "workstudio/src/workstudio/ipc.ts",
+    "workstudio/src/main.tsx",
+    "workstudio/src/test/setup.ts",
+    "workstudio/src/components/ui/alert-dialog.tsx",
+    "workstudio/src/components/ui/tabs.tsx",
+    "workstudio/src/components/ui/card.tsx",
+    "workstudio/src/components/ui/progress.tsx",
+    "workstudio/src/components/ui/sheet.tsx",
+    "workstudio/src/components/ui/scroll-area.tsx",
+    "workstudio/src/components/ui/resizable.tsx",
+    "workstudio/src/components/ui/label.tsx",
+    "workstudio/src/components/ui/accordion.tsx",
+    "workstudio/src/components/ui/drawer.tsx",
+    "workstudio/src/components/ui/tooltip.tsx",
+    "workstudio/src/components/ui/alert.tsx",
+    "workstudio/src/components/ui/switch.tsx",
+    "workstudio/src/components/ui/command.tsx",
+    "workstudio/src/components/ui/toggle-group.tsx",
+    "workstudio/src/components/ui/avatar.tsx",
+    "workstudio/src/components/ui/dialog.tsx",
+    "workstudio/src/components/ui/badge.tsx",
+    "workstudio/src/components/ui/sidebar.tsx",
+    "workstudio/src/components/ui/table.tsx",
+    "workstudio/src/components/ui/separator.tsx",
+    "workstudio/src/components/ui/button.tsx",
+    "workstudio/src/components/ui/toggle.tsx",
+    "workstudio/src/components/ui/dropdown-menu.tsx",
+    "workstudio/src/components/ui/select.tsx",
+    "workstudio/src/components/ui/textarea.tsx",
+    "workstudio/src/components/ui/input.tsx",
+    "workstudio/src/components/ui/skeleton.tsx",
+    "workstudio/src/vite-env.d.ts",
+    "workstudio/src/hooks/use-mobile.ts",
+    "workstudio/src/lib/utils.ts"
+  ],
+  "findings": [
+    {
+      "id": "GC-C001",
+      "fingerprint": "2e0313969b18eb96",
+      "category": "file-naming",
+      "severity": "low",
+      "confidence": "high",
+      "disposition": "advisory",
+      "rule_id": "CONVENTIONS.md:file-folder-kebab-case",
+      "source_tier": "T0",
+      "location": {
+        "file": "workstudio/src/workstudio/WorkStudioApp.tsx",
+        "line": 1,
+        "symbol": "WorkStudioApp"
+      },
+      "evidence": "File basename contains uppercase letters while docs/CONVENTIONS.md states file/folder names use English kebab-case. Adjacent Dashboard React files use PascalCase component filenames, so this is a convention conflict rather than an execution failure.",
+      "impact": "Without an explicit React component filename exception, WorkStudio may drift from the repository-wide file naming rule.",
+      "remediation": {
+        "guidance": "Either document a React component filename exception or rename to work-studio-app.tsx and update imports.",
+        "reference": "docs/CONVENTIONS.md §파일/폴더",
+        "auto_fixable": false
+      },
+      "verification": "Confirm the naming decision, then either update docs/CONVENTIONS.md or verify imports after renaming with npm run lint and npm run typecheck in workstudio/.",
+      "suppression": null
+    },
+    {
+      "id": "GC-C002",
+      "fingerprint": "909af136cd277383",
+      "category": "file-naming",
+      "severity": "low",
+      "confidence": "high",
+      "disposition": "advisory",
+      "rule_id": "CONVENTIONS.md:file-folder-kebab-case",
+      "source_tier": "T0",
+      "location": {
+        "file": "workstudio/src/workstudio/WorkStudioApp.test.tsx",
+        "line": 1,
+        "symbol": "WorkStudioApp test"
+      },
+      "evidence": "Test file basename contains uppercase letters while docs/CONVENTIONS.md states file/folder names use English kebab-case. Adjacent Dashboard React tests preserve PascalCase page/component names.",
+      "impact": "Test file naming may remain ambiguous between repository-wide kebab-case and React component pairing conventions.",
+      "remediation": {
+        "guidance": "Either document a React component/test filename exception or rename to work-studio-app.test.tsx and update imports.",
+        "reference": "docs/CONVENTIONS.md §파일/폴더",
+        "auto_fixable": false
+      },
+      "verification": "Confirm the naming decision, then either update docs/CONVENTIONS.md or verify imports after renaming with npm run test and npm run typecheck in workstudio/.",
+      "suppression": null
+    }
+  ],
+  "evidence": [
+    "event-loader verify --receipt /tmp/opal-worker-dispatch-convention-workstudio.json --event worker.dispatch returned ok:true",
+    "Loaded role contract /Users/iskang/.opal/agents/opal-convention-checker/AGENT.md",
+    "Loaded skill /Users/iskang/.opal/skills/op-gc-convention/SKILL.md",
+    "Loaded /Users/iskang/.opal/references/harness/gc-finding-schema.md",
+    "Loaded /Users/iskang/.opal/skills/op-gc-convention/references/convention-categories.md",
+    "Loaded /Users/iskang/.opal/skills/op-gc-convention/references/report-template.md",
+    "Loaded /Users/iskang/.opal/skills/op-gc-convention/references/sample-report.md",
+    "Loaded docs/CONVENTIONS.md and docs/PROJECT.md",
+    "Validated all 51 target files exist under project_root",
+    "Scanned target files for tab characters, trailing whitespace, missing final newline, and @header absence; no matches",
+    "Detected uppercase basenames only in WorkStudioApp.tsx and WorkStudioApp.test.tsx",
+    "Observed adjacent Dashboard React PascalCase component/test filenames",
+    "PM provided execution evidence: npm lint/typecheck/test(38)/build/electron syntax PASS and code-scan inline 42/42 PASS"
+  ],
+  "references": [
+    "docs/CONVENTIONS.md",
+    "docs/PROJECT.md",
+    "workstudio/eslint.config.js",
+    "workstudio/tsconfig.json",
+    "workstudio/tsconfig.app.json",
+    "workstudio/tsconfig.node.json",
+    "/Users/iskang/.opal/references/harness/gc-finding-schema.md",
+    "/Users/iskang/.opal/skills/op-gc-convention/references/convention-categories.md",
+    "/Users/iskang/.opal/skills/op-gc-convention/references/report-template.md",
+    "/Users/iskang/.opal/skills/op-gc-convention/references/sample-report.md"
+  ],
+  "missing_capabilities": [],
+  "report_path": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_126/tasks/126-260912-opds-워크스튜디오-독립앱-구축/GC-CONVENTION-2026-09-12T21-07-30-workstudio.md",
+  "summary": {
+    "severity_counts": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 2,
+      "info": 0
+    },
+    "disposition_counts": {
+      "blocking": 0,
+      "advisory": 2,
+      "informational": 0
+    },
+    "blockers": []
+  }
+}

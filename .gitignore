@@ -31,6 +31,9 @@ venv/
 env/
 .env
 
+# Node.js
+node_modules/
+
 # MCP / tooling temp
 .playwright-mcp/
 

@@ -1,3 +1,12 @@
+/**
+ * @header {
+ *   "module": "ui-button",
+ *   "layer": "component",
+ *   "domain": "dashboard",
+ *   "description": "Dashboard button UI primitive. shadcn/ui 기반 스타일과 접근성 계약을 제공한다.",
+ *   "exports": ["Button","buttonVariants"]
+ * }
+ */
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
@@ -53,4 +62,5 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 )
 Button.displayName = "Button"
 
+// eslint-disable-next-line react-refresh/only-export-components
 export { Button, buttonVariants }

@@ -1552,7 +1552,7 @@ class TestExistingRegressionSuiteUnaffected(unittest.TestCase):
 
     def test_state_tool_regression_baseline(self):
         """PLAN.md 원안은 이 수치를 "428 passed"로 적었으나, T05가 state-tool 테스트를
-        확장한 이후의 실측 기준선은 425 passed/3 skipped/111 subtests passed다
+        확장한 이후의 판정은 실패 0건·종료 코드 0이다(통과 개수는 형제 태스크가 이동시키므로 고정하지 않는다)
         (opal/tools/state-tool/tests/test_state_tool_run_log.py S-9와 동일 기준선·동일
         --ignore 관례 — 자기 자신을 포함해 discover하면 S-9가 이 스위트를 재귀 기동한다)."""
         self_referential = (_PROJECT_ROOT / "opal" / "tools" / "state-tool" / "tests"
@@ -1562,7 +1562,17 @@ class TestExistingRegressionSuiteUnaffected(unittest.TestCase):
              f"--ignore={self_referential}"],
             cwd=str(_PROJECT_ROOT), capture_output=True, text=True)
         combined = result.stdout + result.stderr
-        self.assertIn("425 passed", combined, f"S-28 회귀 기준선(425 passed) 불일치 — {combined[-2000:]}")
+        # [불안정 기준선 제거 — 123 opd 전환] 통과 **개수**를 상수로 박으면 형제 태스크가
+        # 테스트를 늘릴 때마다 구현이 정상인데도 거짓 실패가 난다(실제 발생: 425→441,
+        # main의 122·131 유입). 더구나 개수 단언은 누군가 테스트를 지우고 수를 맞춰도
+        # 통과시켜 계약을 지키지 못한다. 이 단언이 지키려는 계약은 "기존 테스트가 깨지지
+        # 않았다"이므로 **실패 0건**이라는 불변 조건으로 판정한다.
+        self.assertNotIn("failed", combined,
+                         f"S-28 회귀 실패 — 기존 테스트가 깨졌다. 출력 말미: {combined[-2000:]}")
+        self.assertIn("passed", combined,
+                      f"S-28 테스트가 수집되지 않았다(스위트 자체 실패 의심). 출력 말미: {combined[-2000:]}")
+        self.assertEqual(0, result.returncode,
+                         f"S-28 pytest 종료 코드 비정상({result.returncode}). 출력 말미: {combined[-2000:]}")
         self.assertIn("3 skipped", combined, f"S-28 회귀 기준선(3 skipped) 불일치 — {combined[-2000:]}")
         self.assertNotIn(" failed", combined, f"S-28 state-tool 회귀에 실패가 있음 — {combined[-2000:]}")
 

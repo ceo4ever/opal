@@ -14,6 +14,10 @@
 - **KST 타임스탬프**: `node ~/.opal/tools/date/date.js datetime` subprocess
 - **단방향 동기화**: `sync-header`는 code-scan @header → brain entity frontmatter 방향만 (역방향 금지)
 
+## 트리거 조건
+
+`//opbr` 호출 또는 brain 참조(과거 결정·설계 맥락 조회) 시 사용한다. `.opal/brain/` 부재 프로젝트에서는 no-op이다.
+
 ## 호출 형식
 
 ```bash
@@ -23,6 +27,10 @@
 > 개발 중에는 소스 경로로 직접 호출:
 > `bash opal/tools/brain-tool/run.sh <command> [options]`
 
+> 서브명령별 상세 플래그는 live로도 확인한다: `run.sh <subcommand> --help`
+
+**의존성**: `~/.opal/.venv/bin/python` (표준 라이브러리 우선 + frontmatter 파싱용 PyYAML)
+
 ## 종료 코드
 
 | 코드 | 의미 |
@@ -31,7 +39,9 @@
 | `1` | 위반 / 검증 실패 / 에러 |
 | `2` | 내부 오류 (subprocess 실패 / 템플릿 부재) |
 
-## 8개 서브 명령
+## 11개 서브 명령
+
+`init` · `add-page` · `update-page` · `index` · `log` · `search` · `sync-header` · `lint` · `validate` · `analyze` · `ingest-scan` (SSOT: `brain_tool.py`의 `add_parser` 등록)
 
 ### 1. `init` — brain 골격 생성
 
@@ -143,6 +153,29 @@ brain 구조(필수 파일·디렉토리)와 페이지 frontmatter 표준 준수
 
 - 출력: `{ok, valid:bool, violations:[{page, rule, detail}]}`
 
+### 9. `analyze` — @header 정량 집계
+
+```bash
+run.sh analyze
+```
+
+`.opal/code-scan.json`의 @header에서 domain·layer·exports 분포와 피의존도를 결정론으로 집계해 JSON으로 반환한다(요약·제안은 LLM 담당 — 도구는 수치만 낸다). `init` 제안 입력용.
+
+- 출력: `{ok, total_files, domain_counts, layer_counts, exports_distribution, seed_candidates:[{path, module, layer, domain, exports_count, dependents_count}], seed_thresholds}`
+- `seed_candidates`: `SEED_THRESHOLDS`(exports 수 / 피의존도 / seed layer) 중 하나라도 만족하는 모듈
+- 에러: `code_scan_json_missing`
+
+### 10. `ingest-scan` — ingest 대상 스캔 (멱등 skip 판정)
+
+```bash
+run.sh ingest-scan [--source docs|skills|tasks|all] [--brain-path .]
+```
+
+`docs/**/*.md` · `SKILL.md` · `tasks/NNN-*`를 스캔해 ingest 대상 목록을 반환한다. 기존 페이지 frontmatter의 `sources`와 `source_ref`가 일치하면 `skip:true`로 표시해 재수집을 막는다(멱등). 본문 요약은 LLM이 담당하고 이 명령은 목록만 낸다.
+
+- `--source`: 스캔 범위(기본 `all`)
+- 출력: `{ok, source, total, skip_count, pending_count, items:[{kind, path, source_ref, skip, ...}]}` — `kind=="task"` 행은 `task_num`/`has_done`/`has_plan`을 추가로 싣는다
+
 ## 집행 경계
 
 - `index.md` / `log.md`는 **brain-tool로만** 갱신한다 (LLM 직접 편집 금지).
@@ -153,6 +186,7 @@ brain 구조(필수 파일·디렉토리)와 페이지 frontmatter 표준 준수
 
 | 버전 | 일시 | 변경내용 |
 |------|------|---------|
+| v1.14 | 2026-09-14 | `tools.md` brain-tool 절 흡수 + 서브명령 종수 정정 — §트리거 조건(`//opbr`·brain 참조, `.opal/brain/` 부재 시 no-op)·의존성·`--help` 안내 추가. 절 제목 "8개"는 소스 실측(`brain_tool.py` `add_parser` 11건)과 어긋나 **11개**로 정정하고, README에 없던 `analyze`·`ingest-scan` 2개 절을 신설했다(`tools.md`도 8종으로 stale였다). 도구 동작 무변경 (131 W-14) |
 | v1.13 | 2026-08-27 | `update-page` 신설 + `lint` frontmatter 검사 편입 — (1) 기존 페이지 갱신 도구 경로 부재가 LLM 직접 편집을 강제했고 그때 `related`가 중첩 리스트로 붕괴했다(9페이지 실측). `update-page`가 부분 갱신·`created` 보존·`updated` 자동 갱신을 집행하며 `add-page`와 동일한 frontmatter·미실체 계약을 적용한다. 에러 2종 신설(`page_not_found`·`no_update_fields`). (2) `cmd_lint`가 `validate_frontmatter`를 호출해 `frontmatter_invalid` kind를 표면화한다 — 종전에는 붕괴된 `related`가 `missing_link`라는 다른 이름으로 뭉개져 원인이 3회차 정비까지 가려졌다. `related` 붕괴 페이지의 `missing_link` 중복 보고는 억제한다. 테스트 127→142 |
 | v1.0 | 2026-06-10 | 초기 구현 — 8 서브 명령(init/add-page/index/log/search/sync-header/lint/validate) (015) |
 | v1.1 | 2026-06-16 18:15 | search 공백 무시 매칭 — 한국어 복합명사 띄어쓰기 편차 흡수(검색 시점 정규화, 저장 문서 불변, 스니펫 원문 노출) (025) |

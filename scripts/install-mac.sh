@@ -46,6 +46,7 @@
 #   v4.6 2026-09-02 18:00 KST: install_codex_config — legacy 키 max_threads → max_concurrent_threads_per_session 전량 교체(리터럴·주석·변경이력 포함) + 멱등 판정 2분기 → 3분기 확장(append/migrate-in-place/skip), 기존 설치 머신의 [agents] 블록 내 legacy 키를 값 보존한 채 in-place 치환, [mcp_servers] 등 타 블록 무손상 (105)
 #   v4.7 2026-09-02 21:40 KST: 플랫폼 sub-agent 어댑터 확장 필드 통로 신설 — 센티넬 주석으로 감싼 OPAL_ADAPTER_FIELD_SPEC JSON 상수(name/description/model/effort × 4플랫폼) 도입, emit_platform_agent_adapter의 인라인 mapping dict·out_lines 3줄 고정과 install_codex_agents의 codex_model_map·4줄 고정 write를 build_pairs()+serialize_yaml()/serialize_toml() 스펙 순회로 교체(값 인용은 기존 yaml_escape/toml_escape 재사용, 플랫폼명 리터럴 비교 없이 mode 값에만 분기). effort를 Claude(독립 key)/Codex(model_reasoning_effort, max→xhigh 축약)에 첫 적용, Cursor는 예약(omit)·Gemini는 미지원(omit). 미정의 effort 값은 stderr 경고 후 필드만 생략(종료코드 0). 기존 3필드 emit 결과는 바이트 동일 유지(TS-001) (105)
 #   v4.8 2026-09-02 22:40 KST: emit_platform_agent_adapter/install_codex_agents의 `OPAL_ADAPTER_FIELD_SPEC="$spec_json" "$py" ...` 커맨드 prefix-assignment가 전역 `readonly OPAL_ADAPTER_FIELD_SPEC`(v4.7)와 이름이 같아 대입 자체가 거부되어 install-mac.sh 실행이 즉시 중단되던 결함 fix — 두 호출부 모두 `env OPAL_ADAPTER_FIELD_SPEC=... "$py"`로 전환(env(1) 인자 경유라 셸 readonly 판정을 거치지 않음). 폴백 스펙 리터럴 바이트는 무변경. 부수 원인 fix — 테스트 하네스(test_agent_adapter_fields.sh)가 함수 본문만 추출해 전역 readonly 선언 없이 실행했기 때문에 이 결함이 기존 14케이스를 통과했었다 → extract_sentinel() 신설로 전역 센티넬 블록을 함수보다 먼저 source하도록 seam을 프로덕션과 정합, TS-024(strict set -euo pipefail 기동 검증) 신규 추가 (105 fix)
+#   v4.9 2026-09-12 KST: self-pm-tool run.sh 실행 권한 chmod 블록 추가(worktree-tool 블록 직후, improve-tool/backlog-tool 패턴 답습) — opal-self-pm 스킬용 경량 실행 기록 도구 배포. 스킬·레지스트리·references는 기존 자동 복사 루프가 처리하므로 추가 분기 없음 (122)
 #
 
 set -euo pipefail
@@ -1385,6 +1386,20 @@ install_opal() {
         if [[ -f "$worktree_run" ]]; then
             chmod +x "$worktree_run"
             success "worktree-tool run.sh 실행 권한 설정"
+        fi
+
+        # ── self-pm-tool 실행 권한 (122) ──
+        local self_pm_run="$opal_home/tools/self-pm-tool/run.sh"
+        if [[ -f "$self_pm_run" ]]; then
+            chmod +x "$self_pm_run"
+            success "self-pm-tool run.sh 실행 권한 설정"
+        fi
+
+        # ── oppl-runtime-tool 실행 권한 (131) ──
+        local oppl_runtime_run="$opal_home/tools/oppl-runtime-tool/run.sh"
+        if [[ -f "$oppl_runtime_run" ]]; then
+            chmod +x "$oppl_runtime_run"
+            success "oppl-runtime-tool run.sh 실행 권한 설정"
         fi
 
         # cmux 의존성 안내 (정보성 — 설치 강제 없음, silent fallback 정책)

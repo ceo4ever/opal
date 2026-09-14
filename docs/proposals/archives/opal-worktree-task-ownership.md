@@ -9,9 +9,7 @@
 > 이미 존재하는데 `attribution_state`가 아직 `closed`가 아니라 상태 의존 해석에서도 차단이 정상 판정이며, 단일 복사본
 > 불변식과 구조적으로 충돌한다(태스크 119 실측). 허용 경로는 `--ff-only`와 `--no-ff` 두 가지다.
 > **Phase 3**: `--wt` 플래그 축 게이팅을 채택해(태스크 119 D-4) 프로필별 batch 확산 개념이 성립하지 않는다. 잔여 항목 없음.
-> **미이관**: §8 multi-repo 계약(`task_artifacts.repo`)은 아직 owner 문서로 옮기지 않았다. Phase 4 착수 시
-> 이 절을 `harness/worktree.md`로 이관한 뒤 소비한다. 실사용 대상은 `/Volumes/Data/StoreLinkStudio/pug`(독립 repo 6개)이며,
-> repo별 baseBranch 차이(`main`/`develop`)는 §8이 다루지 않은 설계 공백이다.
+> **§8 대체**: §8 multi-repo 계약은 [multi-repo 캡슐 소유권 제안서](./opal-worktree-multirepo-ownership.md)가 축소 대체했고(태스크 124), 규범 원문은 `harness/worktree.md` §multi-repo 캡슐 소유권 계약이 소유한다 — 아래 §8은 기록으로만 보존한다.
 > 작성: 알투(PM)
 > 작성일: 2026-09-11
 > 개정 기준일: 2026-09-12

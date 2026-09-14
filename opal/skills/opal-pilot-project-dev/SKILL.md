@@ -452,7 +452,7 @@ opal-task-action-agent는 `status`와 `verdict`를 반환한다:
 | `failed` | `Critical Fail` | `failure_context.scope`로 분기 처리 (아래 참조) |
 | `failed` | - | `failure_context.scope`로 분기 처리 (아래 참조) |
 
-에이전트가 반환하는 `verification_log`는 STATE.md의 "검증 루프 로그" 섹션에 기록한다.
+에이전트가 반환하는 `verification_log`는 STATE.md의 "검증 루프 로그" 섹션에 기록한다. E2E가 포함된 액션은 위 3단계 verdict와 별도로 `test-tool` E2E final status 5종과 operational `awaiting_human`을 보존한다.
 
 #### failure_context.scope별 PM 처리 분기
 
@@ -493,7 +493,7 @@ EXECUTE 완료
   → L1: lint/format 검증  → FAIL → 에이전트가 워커에 수정 지시 (제한 없음)
   → L2: build/type 검증   → FAIL → 에이전트가 워커에 수정 지시 (최대 2회)
   → L3a: unit/integration → FAIL → 에이전트가 워커에 수정 지시 (최대 3회)
-  → L3b: E2E (해당 시)    → FAIL → 1회 재실행 → 2연속 FAIL → status: failed 반환
+  → L3b: E2E (해당 시)    → test-tool status별 처리 → fail은 1회 재실행 → 2연속 fail → status: failed 반환
   → 전체 PASS → TEST 단계 → 결과 반환
 ```
 
@@ -504,7 +504,7 @@ EXECUTE 완료
 
 **핵심 규칙**:
 - 하위 계층 통과 후에만 상위 계층으로 진행 (L1 → L2 → L3a → L3b)
-- **L3b(E2E)**: WBS.md에 E2E 검증 명령이 명시된 액션에만 실행. 병렬 그룹에서는 머지 후 일괄 실행도 가능
+- **L3b(E2E)**: WBS.md에 E2E 검증 명령이 명시된 액션에만 실행. 병렬 그룹에서는 머지 후 일괄 실행도 가능. `pass`만 통과이며, `executor_unavailable`은 실행자 부재, `infra_error`는 인프라 오류, `blocked`는 외부 조건 차단, `awaiting_human`은 재개 가능한 사람 대기 상태로 보고한다.
 - **회귀 방지**: 에이전트가 자동 수정 후 이전 통과 테스트 재실행. 회귀 발생 시 루프 즉시 중단 + `status: failed` 반환
 - **에스컬레이션**: 에이전트가 `status: failed`로 반환 → oppd가 사용자에게 보고 (하네스 "자동 루핑 제약" Guards 준수)
 

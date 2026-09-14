@@ -1,0 +1,128 @@
+{
+  "check": "convention",
+  "status": "pass",
+  "checked_files": [
+    "opal/tools/worktree-tool/worktree_tool.py",
+    "opal/tools/worktree-tool/tests/test_worktree_tool.py",
+    "opal/core/references/harness/worktree.md",
+    "docs/proposals/archives/opal-worktree-multirepo-ownership.md",
+    "docs/proposals/archives/opal-worktree-task-ownership.md",
+    "tasks/124-260912-opds-워크트리-멀티레포-캡슐-소유권/TASK.md",
+    "tasks/124-260912-opds-워크트리-멀티레포-캡슐-소유권/PLAN.md",
+    "tasks/124-260912-opds-워크트리-멀티레포-캡슐-소유권/TEST-SCENARIO.md",
+    "tasks/124-260912-opds-워크트리-멀티레포-캡슐-소유권/TEST.md",
+    "tasks/124-260912-opds-워크트리-멀티레포-캡슐-소유권/STATE.md",
+    "tasks/124-260912-opds-워크트리-멀티레포-캡슐-소유권/AGENTIC-LOG.md",
+    "tasks/124-260912-opds-워크트리-멀티레포-캡슐-소유권/REGRESSION-EVIDENCE.md"
+  ],
+  "findings": [
+    {
+      "id": "GC-001",
+      "fingerprint": "54afde143c674ba9",
+      "category": "문서화",
+      "severity": "medium",
+      "confidence": "high",
+      "disposition": "advisory",
+      "rule_id": "opal/core/references/header-standard.md §2.1",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/tools/worktree-tool/worktree_tool.py",
+        "line": 6,
+        "symbol": "@header.description"
+      },
+      "evidence": "`description`에 변경 이력 서술이 있다. 대표 문장: \"오류 코드 5종 TASK_ARTIFACT_REPO_INVALID·TASK_ARTIFACT_REPO_UNSUPPORTED·TASK_ARTIFACT_REPO_OVERLAP·CONFIG_UNKNOWN_REPO·WORKTREE_REMOVE_FAILED가 신설됐고 기존 코드의 문구·의미는 바뀌지 않았다.\" 같은 축의 변경 상대 서술이 3건 더 있다 — \"`task_artifacts` 미설정 multi-repo는 **종전대로** …\", \"monorepo는 **기존** 무조건 정리 동작 유지\", \"monorepo·비워크트리는 … **그대로 유지**한다\". git diff 관측: 이번 태스크는 기존 description을 제자리 교체하지 않고 문장을 삽입·추가했다(3,263자 → 5,487자, 삭제 0문장).",
+      "impact": "@header가 현재 사실 스냅샷이 아니라 태스크별 변경 누적 로그가 된다. code-scan으로 구조를 조회하는 소비자가 '무엇이 신설됐는지'를 읽게 되고, 다음 태스크도 같은 방식으로 덧붙여 description이 계속 성장한다.",
+      "remediation": {
+        "guidance": "변경 상대 서술을 제거하고 현재 계약만 남긴다. '신설됐고', '종전대로', '기존 … 유지', '그대로 유지'가 붙은 문장은 현재 사실 문장으로 바꾸거나 삭제한다. 이번 태스크의 변경 서술은 tasks/124-*/DONE.md가 갖는다.",
+        "reference": "opal/core/references/header-standard.md §2.1",
+        "auto_fixable": false
+      },
+      "verification": "`code-scan search '신설|종전대로|그대로 유지' `가 worktree_tool.py를 반환하지 않고, description이 현재 계약 서술만 담는다.",
+      "suppression": null
+    },
+    {
+      "id": "GC-002",
+      "fingerprint": "0b4a173a33410196",
+      "category": "문서화",
+      "severity": "low",
+      "confidence": "high",
+      "disposition": "advisory",
+      "rule_id": "opal/core/references/header-standard.md §2 필드 정의",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/tools/worktree-tool/worktree_tool.py",
+        "line": 6,
+        "symbol": "@header.description"
+      },
+      "evidence": "header-standard.md §2는 `description`을 \"파일의 역할 **한 줄 요약**\"으로 정의한다. 실측 5,487자 단일 문자열이며 문장 40개 이상이다. 파일 내 100자 초과 행은 이 행 하나뿐이다.",
+      "impact": "@header의 목적(파일 전체 Read 없이 구조 파악, §1)이 역전된다 — description 한 행이 파일 본문의 상당 비중을 차지해 code-scan 조회가 토큰을 절약하지 못한다.",
+      "remediation": {
+        "guidance": "description은 역할 요약으로 줄이고, 계약 상세는 이미 소유자가 있는 `opal/core/references/harness/worktree.md`를 가리킨다(해당 포인터 문장은 이미 존재한다).",
+        "reference": "opal/core/references/header-standard.md §2 필드 정의",
+        "auto_fixable": false
+      },
+      "verification": "description이 역할 요약 1~2문장이고 계약 원문은 worktree.md 참조로 남는다.",
+      "suppression": null
+    },
+    {
+      "id": "GC-003",
+      "fingerprint": "54f803f94fda6574",
+      "category": "문서화",
+      "severity": "medium",
+      "confidence": "high",
+      "disposition": "advisory",
+      "rule_id": "opal/core/references/header-standard.md §2.1",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/tools/worktree-tool/tests/test_worktree_tool.py",
+        "line": 6,
+        "symbol": "@header.description"
+      },
+      "evidence": "`description`이 태스크 번호별 절을 누적한다 — 092 · 112 · 118 · 119 · 124가 각각 한 절씩 이어 붙어 있다. 과거 변경 서술도 있다: \"119는 태스크 092의 stale 문서 단언 3건(…)을 현재 문면으로 교체했다\", \"118 S-3·119 S-7은 불변식 보존형이라 구현 전에도 PASS하는 회귀 보호 케이스다\". 이번 태스크는 124 절을 append했다(826자 → 1,134자, 삭제 0문장).",
+      "impact": "테스트 파일의 @header가 태스크별 이력 로그가 된다. 현재 이 파일이 무엇을 검증하는지보다 어느 태스크가 무엇을 덧붙였는지가 앞서 읽히고, 태스크마다 절이 하나씩 늘어난다.",
+      "remediation": {
+        "guidance": "태스크 번호별 누적 절을 현재 커버리지 서술로 통합한다 — 검증 대상 시나리오 집합과 검증 방식(CLI subprocess·실 git fixture·mock 금지)만 남기고, 어느 태스크가 언제 무엇을 바꿨는지는 git log와 DONE.md에 맡긴다.",
+        "reference": "opal/core/references/header-standard.md §2.1",
+        "auto_fixable": false
+      },
+      "verification": "description에 태스크 번호별 변경 서술이 없고 현재 검증 범위만 기재된다.",
+      "suppression": null
+    }
+  ],
+  "evidence": [
+    "git status --porcelain / git diff --stat — 변경 5건 확인",
+    "~/.opal/tools/code-scan/run.sh validate --changed → OK (exit 0)",
+    "~/.opal/tools/code-scan/run.sh scan opal/tools/worktree-tool/ → 3 file(s), @header 파싱 정상",
+    "grep -rn 'opal-worktree-multirepo-ownership' — 제안서 아카이브 이관 잔여 인용 검사: opal/**·docs/** 규범 인용 0건",
+    "문자 기준 행 길이 검사 — 추가 1,151행 중 100자 초과 2행(둘 다 @header description)",
+    "trailing whitespace 0 / 탭 문자 0 / EOF 개행 정상 (변경 5파일 전건)",
+    "포매터·린터 설정 부재 확인 — pyproject.toml·setup.cfg·.flake8·ruff.toml·.editorconfig 없음",
+    "AST 기반 미사용 import 검사 — 실질 0건(`__future__.annotations` 제외)",
+    "추가 def 전건 snake_case, 테스트 명명 t{NNN}_s{N} 인접 패턴(t118·t119)과 일치",
+    "태스크 폴더 .md 7건 — doc-standard §5 수기 누적 이력 절 0건, 버전 사본 파일 0건, STATE.md가 state.json SSOT 포인터 유지"
+  ],
+  "references": [
+    "docs/CONVENTIONS.md",
+    "opal/core/references/header-standard.md",
+    "opal/core/references/opal-doc-standard.md",
+    "opal/core/references/harness/gc-finding-schema.md",
+    "docs/PROJECT.md",
+    "~/.opal/skills/op-gc-convention/references/convention-categories.md"
+  ],
+  "missing_capabilities": [],
+  "report_path": "tasks/124-260912-opds-워크트리-멀티레포-캡슐-소유권/GC-CONVENTION-2026-09-12T19-51-08-124.md",
+  "scope": "all",
+  "baseline": "none",
+  "baseline_delta": {
+    "new": [
+      "54afde143c674ba9",
+      "0b4a173a33410196",
+      "54f803f94fda6574"
+    ],
+    "persisting": [],
+    "resolved": [],
+    "suppressed": []
+  },
+  "verdict": "PASS_WITH_ADVISORIES",
+  "timestamp": "2026-09-12T19-51-08"
+}

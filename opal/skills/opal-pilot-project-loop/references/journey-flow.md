@@ -86,7 +86,7 @@ flowchart LR
 
 ## 6. 여정 스모크 게이트
 
-**[MUST]** user-facing 프로젝트는 L✓ 회귀에 USER_JOURNEY 첫 접촉 경로(예: 로그인→핵심 1기능)를 실 브라우저(cmux-tool 우선/playwright 폴백)로 실환경 E2E 1회 실행한다 — CORS·쿠키·리다이렉트 등 브라우저 계층 결함의 최종 안전망. 비 user-facing(인프라/라이브러리/CLI 내부)은 스킵하고 근거를 STATE.md 저널(`## 의사결정 로그`)/VERIFICATION.md에 1줄 기록. 결과는 VERIFICATION.md에 결과 계약(대상/결과/사유/시점)으로 기록한다.
+**[MUST]** user-facing 프로젝트는 L✓ 회귀에 USER_JOURNEY 첫 접촉 경로(예: 로그인→핵심 1기능)를 `test-tool` E2E contract의 해당 profile로 실환경 1회 실행한다 — CORS·쿠키·리다이렉트 등 사용자 접촉 계층 결함의 최종 안전망. 비 user-facing(인프라/라이브러리/CLI 내부)은 스킵하고 근거를 STATE.md 저널(`## 의사결정 로그`)/VERIFICATION.md에 1줄 기록. 결과는 VERIFICATION.md에 결과 계약(대상/결과/사유/시점)으로 기록한다.
 
 **적용 대상·스킵 조건**: §2 트리거 조건(user-facing 여부 판단)을 그대로 재사용한다 — 별도 기준을 두지 않는다.
 

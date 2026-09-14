@@ -328,6 +328,11 @@
           }
         }
       }
+    },
+    "run_id": {
+      "type": "string",
+      "pattern": "^run-[0-9]{14}-[0-9a-f]{8}$",
+      "description": "현재 실행 run 식별자 `run-<UTC YYYYMMDDHHMMSS>-<8자리 hex>`. `state-tool run-start` 발급 시에만 존재하는 optional 필드이며 재호출하면 새 id로 교체된다(현재 run은 항상 1개, 이력 누적 없음). required에는 넣지 않는다 — run_id 없는 기존 state.json이 계속 validate를 통과해야 한다 (131 D8)"
     }
   }
 }

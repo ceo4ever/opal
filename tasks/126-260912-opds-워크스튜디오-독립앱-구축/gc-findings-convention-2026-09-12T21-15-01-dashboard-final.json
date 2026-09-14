@@ -1,0 +1,79 @@
+{
+  "check": "convention",
+  "status": "pass",
+  "check_status": "pass",
+  "scope": "Console FE",
+  "element": "dashboard-final",
+  "baseline": "tasks/126-260912-opds-워크스튜디오-독립앱-구축/gc-findings-convention-2026-09-12T21-07-31-dashboard.json",
+  "checked_files": [
+    "dashboard/frontend/electron/main.cjs",
+    "dashboard/frontend/src/App.tsx",
+    "dashboard/frontend/src/components/ui/badge.tsx",
+    "dashboard/frontend/src/components/ui/button.tsx",
+    "dashboard/frontend/src/components/ui/sidebar.tsx",
+    "dashboard/frontend/src/components/ui/textarea.tsx",
+    "dashboard/frontend/src/components/ui/toggle.tsx",
+    "dashboard/frontend/src/hooks/use-mobile.tsx",
+    "dashboard/frontend/src/pages/brain/BrainPage.tsx",
+    "dashboard/frontend/src/pages/dashboard/DashboardPage.stats.test.tsx"
+  ],
+  "target_files": [
+    "dashboard/frontend/electron/main.cjs",
+    "dashboard/frontend/src/App.tsx",
+    "dashboard/frontend/src/components/ui/badge.tsx",
+    "dashboard/frontend/src/components/ui/button.tsx",
+    "dashboard/frontend/src/components/ui/sidebar.tsx",
+    "dashboard/frontend/src/components/ui/textarea.tsx",
+    "dashboard/frontend/src/components/ui/toggle.tsx",
+    "dashboard/frontend/src/hooks/use-mobile.tsx",
+    "dashboard/frontend/src/pages/brain/BrainPage.tsx",
+    "dashboard/frontend/src/pages/dashboard/DashboardPage.stats.test.tsx"
+  ],
+  "findings": [],
+  "summary": {
+    "total": 0,
+    "severity_counts": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0,
+      "info": 0
+    },
+    "disposition_counts": {
+      "blocking": 0,
+      "advisory": 0,
+      "informational": 0
+    },
+    "baseline_delta": {
+      "new": 0,
+      "persisting": 0,
+      "resolved": 0,
+      "suppressed": 0
+    }
+  },
+  "evidence": [
+    "event-loader verify ok:true for /tmp/opal-worker-dispatch-convention-dashboard-final.json",
+    "caller evidence: npm lint/typecheck/task 123 tests/build PASS",
+    "caller evidence: code-scan 8/8 PASS",
+    "target manifest contained exactly 10 newline-delimited paths and checked_files matches target_files",
+    "all target files exist inside project_root",
+    "rg trailing whitespace search over target files returned no matches",
+    "rg @header over target files returned 10/10 matches",
+    "target file line counts: main.cjs 39, App.tsx 25, badge.tsx 46, button.tsx 66, sidebar.tsx 778, textarea.tsx 32, toggle.tsx 53, use-mobile.tsx 31, BrainPage.tsx 851, DashboardPage.stats.test.tsx 1010",
+    "large TSX files observed but no line-count threshold is defined in docs/CONVENTIONS.md; no finding emitted",
+    "shadcn-style no-semicolon primitives observed; eslint config does not enforce semicolon policy and caller evidence reports lint PASS; no finding emitted"
+  ],
+  "references": [
+    "docs/CONVENTIONS.md",
+    "docs/PROJECT.md",
+    "dashboard/frontend/eslint.config.js",
+    "dashboard/frontend/package.json",
+    "/Users/iskang/.opal/references/harness/gc-finding-schema.md",
+    "/Users/iskang/.opal/references/conventions-hub-model.md",
+    "/Users/iskang/.opal/skills/op-gc-convention/references/convention-categories.md",
+    "/Users/iskang/.opal/skills/op-gc-convention/references/report-template.md"
+  ],
+  "missing_capabilities": [],
+  "blockers": [],
+  "report_path": "tasks/126-260912-opds-워크스튜디오-독립앱-구축/GC-CONVENTION-2026-09-12T21-15-01-dashboard-final.md"
+}

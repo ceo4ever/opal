@@ -1,6 +1,7 @@
 # test-tool
 
 > OPAL 테스트 단계별 도구 결정론적 집행기 — 4서브명령(resolve/check/unit/integration) + scenario-* 서브명령(scenario-init/scenario-lock/scenario-mark/scenario-status/scenario-red/scenario-fidelity-check/scenario-conformance/scenario-coverage-check/scenario-coverage-build)
+> 소스: `opal/tools/test-tool/` | 배포: `~/.opal/tools/test-tool/`
 
 ## 개요
 
@@ -8,7 +9,7 @@
 러너(pytest/vitest/cmux/eslint 등)를 재구현하지 않는다 — yaml 해석 → 명령 실행(subprocess) → JSON 증거 반환.
 
 - **단계1 (단위/EXECUTE)**: `unit` 서브명령 — lint→typecheck→unit stop-on-fail
-- **단계2 (통합/TEST)**: `integration` 서브명령 — cmux-tool 에러코드 소비 → playwright 폴백
+- **단계2 (통합/TEST)**: `integration` 서브명령 — E2E contract 상태·증적 판정 + API/DB 통합 증거 반환
 
 > **[MUST] 루프 한도 비보유**: test-tool은 1회 실행·판정만 수행한다.  
 > 재시도 루프는 오케스트레이터 책임이다. 한도 수치는 `opal-harness.md §1` 참조.
@@ -23,7 +24,7 @@ bash ~/.opal/tools/test-tool/run.sh <서브명령> [옵션]
 bash opal/tools/test-tool/run.sh <서브명령> [옵션]
 ```
 
-**의존**: `.venv python` (OPAL 설치) + PyYAML + `cmux-tool` (E2E, PATH에 있어야 함)
+**의존**: `.venv python` (OPAL 설치) + PyYAML. E2E executor는 `test-tools.yaml`와 E2E contract의 profile/executor 선언을 따른다.
 
 ---
 
@@ -111,7 +112,9 @@ bash run.sh unit [--scope fe|be] [--changed-files FILE...] [--project-root PATH]
 
 ### `integration`
 
-cmux-tool 에러코드 소비 → playwright 폴백 결정 + E2E mode A 실행.
+E2E contract v2 결과를 반환한다. profile은 요구사항의 공개 표면으로 결정되며, 도구 가용성으로 UI 행동을 API-only 실행으로 낮추지 않는다.
+
+`integration`과 `scenario-mark --verdict-json`은 profile `browser` / `api` / `hybrid` / `collaborative` / `manual` 5종을 보존한다(SSOT: `lib/e2e_contract.py`의 `PROFILES`).
 
 ```bash
 bash run.sh integration [--scope fe|be] [--url URL] [--project-root PATH]
@@ -120,22 +123,34 @@ bash run.sh integration [--scope fe|be] [--url URL] [--project-root PATH]
 **출력 JSON**:
 ```json
 {
-  "ok": true,
+  "ok": false,
   "command": "integration",
+  "status": "fail",
+  "error": "e2e_failed",
   "e2e": {
     "driver": "cmux",
-    "status": "pass",
+    "status": "fail",
     "url": "http://localhost:3000"
   },
   "api_db": { "status": "skip" },
-  "escalate": false
+  "contract_version": "2.0"
 }
 ```
 
 **[MUST] mode A**: `--surface` 미전달 → 신규 surface 강제 (사용자 surface B/C 재사용 금지).  
-**[MUST] SUT 경계**: 앱 가동 전제 검사만 — 기동 책임 비보유. `open_failed`/`wait_failed` 시 에스컬레이션.
+**[MUST] SUT 경계**: 앱 가동 전제 검사만 — 기동 책임 비보유.
+**[MUST] pass gate**: `pass`와 `real-usage`는 구조화 assertion `expected`/`actual`과 profile 또는 시나리오의 `required_evidence`/`observed_evidence`를 모두 요구한다. open/navigate/close 또는 자유 형식 사람 완료 선언만으로 통과하지 않는다.
 
-**exit code**: `0` / `e2e_failed(6)` / `escalation(7)`
+| status | exit | 의미 |
+|---|---:|---|
+| `pass` | 0 | 모든 assertion과 증적 조건 통과 |
+| `fail` | 6 | 제품 동작 또는 assertion 실패 |
+| `infra_error` | 7 | 서버·포트·driver·증적 저장 등 인프라 오류 |
+| `executor_unavailable` | 18 | 필수 executor 또는 모든 허용 후보 부재 |
+| `blocked` | 19 | 인증·외부 승인 등 자동 진행 불가 |
+| `awaiting_human` | 20 | operational state: 사람 handoff 대기, 같은 run으로 재개 |
+
+`provider_unavailable`은 Browser 후보 내부 상태이며 process exit으로 직접 노출하지 않는다. 후보 소진 시 final `executor_unavailable`이 된다.
 
 ---
 
@@ -157,11 +172,13 @@ bash run.sh scenario-init --task-path <PATH> [--scenarios <JSON배열>]
 { "ok": true, "command": "scenario-init", "task_id": "056-dryrun", "scenarios_count": 1, "warning": "red_confirmed seed ignored (forced false): ['S1'] — RED 증거는 scenario-red로만 기록할 수 있다(056/ADD-1)" }
 ```
 
+v2 시나리오 계약(profile/executor/status/schema) 검증에 실패하면 `scenario_contract_invalid(17)`로 거부한다.
+
 **[MUST] red_confirmed 시드 무력화(056/ADD-1)**: `--scenarios` 입력에 `red_confirmed: true`가 있어도 항상 `false`로 강제 생성한다 — RED 미관찰 상태를 init 시드로 우회 선언하는 경로를 봉쇄한다. 시드 시도가 있었으면 응답에 `warning` 필드를 추가한다(무시하되 침묵하지 않음). `red_confirmed`는 오직 `scenario-red`로만 true가 될 수 있다.
 
 `red_required`는 구현 전 RED가 필요한 시나리오에만 `true`로 준다. 필드가 없는 기존 입력은 호환성을 위해 `true`로 처리한다.
 
-**exit code**: `0` / `scenario_spec_invalid_json(11)`
+**exit code**: `0` / `scenario_spec_invalid_json(11)` / `scenario_contract_invalid(17)`
 
 ---
 
@@ -206,10 +223,12 @@ bash run.sh scenario-lock --task-path <PATH>
 
 ### `scenario-mark`
 
-`locked==true` 이후에만 result존(`result`/`evidence`/`marked_at`) 기록을 허용한다.
+`locked==true` 이후에만 result존(`result`/`evidence`/`marked_at`) 기록을 허용한다. E2E v2 결과는 `--verdict-json`을 우선 사용한다.
 
 ```bash
 bash run.sh scenario-mark --task-path <PATH> --id <S-ID> --result pass|fail|blocked [--evidence <문자열>] [--fidelity mock|real-http|real-usage]
+bash run.sh scenario-mark --task-path <PATH> --id <S-ID> --verdict-json <JSON>
+bash run.sh scenario-mark --task-path <PATH> --id <S-ID> --resume-run-id <RUN> --resume-token <TOKEN> --submission <JSON>
 ```
 
 **출력 JSON**:
@@ -218,8 +237,10 @@ bash run.sh scenario-mark --task-path <PATH> --id <S-ID> --result pass|fail|bloc
 ```
 
 **[MUST] `--fidelity` 미지정 시 `mock` 기본값(069/M-5)**: 실제 관찰된 증거 충실도를 기록하는 result존 필드. 실제 충실도를 기록하지 않은 결과는 목(mock) 수준으로 간주한다(보수적 기본값).
+**[MUST] real-usage gate**: `required_fidelity=real-usage`인 pass는 `--verdict-json` 또는 resume submission의 구조화 assertion/evidence 검증을 통과해야 한다.
+**[MUST] human resume**: `awaiting_human`은 operational state이며 exit 20으로 반환된다. 사람 제출은 `run_id`와 `resume_token`이 일치하고 verifier가 expected/actual 및 evidence를 확인한 뒤 final status로 전이한다.
 
-**exit code**: `0` / `scenario_not_initialized(10)` / `scenario_not_locked(9)`
+**exit code**: `0` / `e2e_failed(6)` / `e2e_infra_error(7)` / `resume_verification_failed(6)` / `scenario_not_locked(9)` / `scenario_not_initialized(10)` / `scenario_contract_invalid(17)` / `executor_unavailable(18)` / `e2e_blocked(19)` / `e2e_awaiting_human(20)`
 
 ---
 
@@ -233,10 +254,12 @@ bash run.sh scenario-status --task-path <PATH>
 
 **출력 JSON**:
 ```json
-{ "ok": true, "command": "scenario-status", "locked": true, "total": 2, "red_confirmed": 1, "red_required": 1, "red_confirmed_required": 1, "passed": 1, "failed": 0, "blocked": 0 }
+{ "ok": true, "command": "scenario-status", "locked": true, "total": 2, "red_confirmed": 1, "red_required": 1, "red_confirmed_required": 1, "passed": 1, "failed": 0, "blocked": 0, "awaiting_human": 1, "status_counts": { "pass": 1, "fail": 0, "executor_unavailable": 0, "infra_error": 0, "blocked": 0, "awaiting_human": 1 } }
 ```
 
-**exit code**: `0` / `scenario_not_initialized(10)`
+기존 `passed` / `failed` / `blocked` 필드는 호환을 위해 유지한다. v2 상태 요약은 additive `status_counts`와 top-level `awaiting_human` count로 확인한다. v2 계약 검증에 실패하면 `scenario_contract_invalid(17)`로 거부한다.
+
+**exit code**: `0` / `scenario_not_initialized(10)` / `scenario_contract_invalid(17)`
 
 ---
 
@@ -360,8 +383,8 @@ bash run.sh scenario-coverage-check --coverage-input <PATH>
 | `no_runner` | 3 | yaml 없음 + 추론 불가 | test-tools.yaml 생성 |
 | `required_missing` | 4 | required 도구 미설치 | 도구 설치 후 재시도 |
 | `layer_failed` | 5 | unit 계층 stop-on-fail | 실패 계층 수정 후 재시도 |
-| `e2e_failed` | 6 | E2E 실패 (폴백도 실패) | SUT 상태·네트워크 확인 |
-| `escalation` | 7 | cmux 에스컬레이션 에러코드 (폴백 금지) | 에러코드별 원인 수정 |
+| `e2e_failed` | 6 | 제품 동작 또는 assertion 실패 | 실패 시나리오 수정·재검증 |
+| `e2e_infra_error` | 7 | E2E 서버·포트·driver·증적 저장 등 인프라 오류 | 실행 환경·로그 확인 |
 | `red_not_confirmed` | 8 | scenario-lock 시 RED 대상의 red_confirmed 미충족 | 해당 RED 대상의 구현 전 실패 확인 후 재시도 |
 | `scenario_not_locked` | 9 | scenario-mark 호출 시점에 locked==false | scenario-lock 선행 후 재시도 |
 | `scenario_not_initialized` | 10 | test-scenario.json 부재 | scenario-init 선행 |
@@ -372,23 +395,29 @@ bash run.sh scenario-coverage-check --coverage-input <PATH>
 | `surfaces_file_not_found` | 15 | (정보용 배정) surfaces.json 부재 — 069/M-5 결정에 따라 실제로는 오류가 아닌 `applicable:false` 스킵으로 처리됨 | 해당 없음(스킵 정상 동작) |
 | `coverage_unmet` | 16 | scenario-coverage-check 시 요구/기능/가설 미커버 존재 | TEST-SCENARIO 매핑 보강 후 재시도 |
 | `coverage_input_invalid` | 17 | scenario-coverage-build/check 입력 문서·JSON 파싱/스키마 실패 | TASK/PLAN/TEST-SCENARIO 또는 coverage input 수정 후 재시도 |
+| `scenario_contract_invalid` | 17 | test-scenario.json v2 profile/executor/status/schema 계약 위반 | scenario spec/result 계약 수정 후 재시도 |
+| `executor_unavailable` | 18 | 필수 E2E executor 또는 허용 후보 소진 | executor 설정·설치·capability 확인 |
+| `e2e_blocked` | 19 | 인증·외부 승인·사람 입력 등 자동 진행 불가 | 필요한 외부 조치 후 재개 |
+| `e2e_awaiting_human` | 20 | 사람 handoff 대기 | structured submission으로 같은 run 재개 |
+| `resume_verification_failed` | 6 | human handoff resume token/run/evidence 검증 실패 | 같은 run-id/resume-token과 구조화 submission 확인 |
 
 > `scenario-*` 에러코드는 `lib/scenario.py`의 `SCENARIO_ERROR_CODES`(전용 SSOT)에서 관리하며, 5~12는 기존 0~7 계열과 충돌 없이 배정됐고(격리 원칙 — PLAN.md §3.2.2, 056/ADD-1), 069는 13~15, 073/111은 16~17을 이어서 배정한다.
 
-### cmux-tool 에러코드 분류
+### Legacy E2E 입력 변환
 
-**폴백 트리거 4종** (→ playwright 자동 전환):
-- `not_in_cmux` — CMUX_SURFACE_ID 미설정
-- `cmux_not_installed` — cmux 명령 없음
-- `surface_parse_failed` — open 출력 파싱 실패
-- `open_failed` — cmux browser open 실패
+기존 cmux/browser adapter 입력의 `fallback`, `escalated`, `escalate`, `escalation`은 신규 출력이 아니라 migration 입력 alias다.
 
-**에스컬레이션 5종** (→ 폴백 금지, exit 7):
-- `usage` — 인자 오류
-- `invalid_surface` — surface 핸들 형식 오류
-- `goto_failed` — URL/navigate 오류
-- `wait_failed` — 페이지 로드 타임아웃
-- `eval_failed` — 명령 실행 실패
+| legacy 입력 | 신규 상태 |
+|---|---|
+| `fallback` + `not_in_cmux` / `cmux_not_installed` | Browser 후보 `provider_unavailable` |
+| `fallback` + `open_failed` / `surface_parse_failed` | `infra_error` |
+| `has_cmux=false` | `infra_error` |
+| `escalated` + `usage` / `invalid_surface` / `goto_failed` / `eval_failed` | `infra_error` |
+| `escalated` + `wait_failed` + `wait_kind=assertion_condition` | `fail` |
+| `escalated` + `wait_failed` + 기타 `wait_kind` 또는 누락 | `infra_error` |
+| 알 수 없는 error 또는 reason 없는 generic `fallback` | `infra_error` |
+
+신규 E2E JSON에는 generic fallback/escalation 의미의 키를 만들지 않는다.
 
 > SSOT: `cmux-tool/README.md §에러코드` 테이블.
 
@@ -427,3 +456,4 @@ bash run.sh scenario-coverage-check --coverage-input <PATH>
 | v1.4 | 2026-09-09 14:18 KST | `scenario-coverage-build --task-folder ... --template sdlc-v2` 추가 — sdlc-v2 TASK AC/C, PLAN H, TEST S를 `.scenario-coverage-input.json`으로 결정론 변환하고 W를 features에서 제외. 기존 `scenario-coverage-check` 입력·exit 계약은 유지 (task 111/W-5) |
 | v1.5 | 2026-09-09 14:58 KST | sdlc-v2 builder가 중복 S-ID를 `coverage_input_invalid`로 거부하도록 계약을 보강하고, Setup의 test substitute 기록이 실제 integration/E2E/manual 증거를 대체하지 못함을 명시 (task 111/W-5 보완) |
 | v1.6 | 2026-09-09 15:07 KST | sdlc-v2 PLAN Risks H를 optional로 변경. H 0건은 정상 build/check 통과하고, H가 존재하는 경우의 미커버 실패 계약은 유지 (task 111/W-5 보완) |
+| v1.7 | 2026-09-14 | `tools.md` test-tool 절 흡수 — `integration` 절에 E2E contract v2 profile 5종(`browser`/`api`/`hybrid`/`collaborative`/`manual`, SSOT `lib/e2e_contract.py` `PROFILES`) 명시 + 상단 소스·배포 경로 1줄 추가. 나머지 절 내용(트리거 조건·루프 한도 비보유·status/exit 표·legacy 입력 변환)은 이미 README가 보유해 중복 흡수 없음 (131 W-14) |
