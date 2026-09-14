@@ -46,6 +46,10 @@
 #   v4.6 2026-09-02 18:00 KST: install_codex_config — legacy 키 max_threads → max_concurrent_threads_per_session 전량 교체(리터럴·주석·변경이력 포함) + 멱등 판정 2분기 → 3분기 확장(append/migrate-in-place/skip), 기존 설치 머신의 [agents] 블록 내 legacy 키를 값 보존한 채 in-place 치환, [mcp_servers] 등 타 블록 무손상 (105)
 #   v4.7 2026-09-02 21:40 KST: 플랫폼 sub-agent 어댑터 확장 필드 통로 신설 — 센티넬 주석으로 감싼 OPAL_ADAPTER_FIELD_SPEC JSON 상수(name/description/model/effort × 4플랫폼) 도입, emit_platform_agent_adapter의 인라인 mapping dict·out_lines 3줄 고정과 install_codex_agents의 codex_model_map·4줄 고정 write를 build_pairs()+serialize_yaml()/serialize_toml() 스펙 순회로 교체(값 인용은 기존 yaml_escape/toml_escape 재사용, 플랫폼명 리터럴 비교 없이 mode 값에만 분기). effort를 Claude(독립 key)/Codex(model_reasoning_effort, max→xhigh 축약)에 첫 적용, Cursor는 예약(omit)·Gemini는 미지원(omit). 미정의 effort 값은 stderr 경고 후 필드만 생략(종료코드 0). 기존 3필드 emit 결과는 바이트 동일 유지(TS-001) (105)
 #   v4.8 2026-09-02 22:40 KST: emit_platform_agent_adapter/install_codex_agents의 `OPAL_ADAPTER_FIELD_SPEC="$spec_json" "$py" ...` 커맨드 prefix-assignment가 전역 `readonly OPAL_ADAPTER_FIELD_SPEC`(v4.7)와 이름이 같아 대입 자체가 거부되어 install-mac.sh 실행이 즉시 중단되던 결함 fix — 두 호출부 모두 `env OPAL_ADAPTER_FIELD_SPEC=... "$py"`로 전환(env(1) 인자 경유라 셸 readonly 판정을 거치지 않음). 폴백 스펙 리터럴 바이트는 무변경. 부수 원인 fix — 테스트 하네스(test_agent_adapter_fields.sh)가 함수 본문만 추출해 전역 readonly 선언 없이 실행했기 때문에 이 결함이 기존 14케이스를 통과했었다 → extract_sentinel() 신설로 전역 센티넬 블록을 함수보다 먼저 source하도록 seam을 프로덕션과 정합, TS-024(strict set -euo pipefail 기동 검증) 신규 추가 (105 fix)
+#   v4.9 2026-09-13: console_autostart() 기존 데몬 종료 폴백을 전역 프로세스 이름 패턴 종료(ASGI 경로 문자열 기준
+#     광역 종료, RK-1)에서 opal-cli/run.sh console stop 소스 트리 위임(FRAMEWORK_ROOT, 3분기: 배포본 우선 →
+#     소스 run.sh 위임 → 안전 실패)으로 교체 — E2E backend와 사용자 Console이 동일 ASGI 경로 문자열로 뜰 때
+#     서로를 오탐 종료하던 RK-1의 2지점 중 1지점 제거(TASK.md AC-3, CONTRACT.md §B.4 변경 지점 2, PLAN.md D-13, MV-21) (127-T02)
 #
 
 set -euo pipefail
@@ -1836,12 +1840,24 @@ console_autostart() {
         return
     fi
 
-    # ── 기존 데몬 종료 ──
-    # opal-cli console stop 우선, 미존재 시 pkill 폴백
+    # ── 기존 데몬 종료 (D-13) ──
+    # 배포본 opal-cli console stop 우선, 미존재 시 소스 트리 opal-cli/run.sh console stop 위임(FRAMEWORK_ROOT),
+    # 둘 다 없으면 아무것도 죽이지 않는 안전 실패(전역 프로세스 이름 패턴 종료는 RK-1이라 MV-21로 제거됨).
+    # 종료 로직을 1벌(console.sh 판정표)로만 유지해 두 지점의 drift 재발을 구조적으로 막는다.
     if [[ -x "$opal_cli" ]]; then
-        "$opal_cli" console stop 2>/dev/null || true
+        local stop_output
+        stop_output="$("$opal_cli" console stop 2>/dev/null)" || true
+        if echo "$stop_output" | grep -q 'stopped=false'; then
+            warn "기존 데몬을 종료하지 못했습니다 ($(echo "$stop_output" | grep -o 'reason=[a-z_]*' | head -1))"
+        fi
+    elif [[ -f "$FRAMEWORK_ROOT/opal/tools/opal-cli/run.sh" ]]; then
+        local stop_output
+        stop_output="$(OPAL_HOME="$opal_home" bash "$FRAMEWORK_ROOT/opal/tools/opal-cli/run.sh" console stop 2>/dev/null)" || true
+        if echo "$stop_output" | grep -q 'stopped=false'; then
+            warn "기존 데몬을 종료하지 못했습니다 ($(echo "$stop_output" | grep -o 'reason=[a-z_]*' | head -1))"
+        fi
     else
-        pkill -f "dashboard.backend.main:app" 2>/dev/null || true
+        warn "opal-cli 배포본과 소스 run.sh를 모두 찾을 수 없습니다 — 기존 데몬 종료를 건너뜁니다."
     fi
     # 프로세스 종료 대기 (최대 3초)
     local waited=0

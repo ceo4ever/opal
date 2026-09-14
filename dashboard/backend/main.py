@@ -3,7 +3,7 @@
   "module": "main",
   "layer": "router",
   "domain": "console",
-  "description": "FastAPI app 진입점. uvicorn host=127.0.0.1:7823(외부 노출 금지, H-7/S-5). CORS dev=localhost:5173 / prod=동일 오리진. /health. 7개 라우터 등록(5개 read-only + brain POST + config POST/GET). StaticFiles SPA 서빙(dist 존재 시): 알 수 없는 경로 → index.html fallback. lifespan asynccontextmanager — 기동 시 load_config().prewarm_projects를 순회하며 brain_session_registry.prewarm(project_path)를 호출한다(비블로킹, daemon 스레드 내부 분리 — lifespan 본문은 즉시 yield). prewarm_projects 미지정 시 생략 로그만 남긴다.",
+  "description": "FastAPI app 진입점. uvicorn host=127.0.0.1:7823(외부 노출 금지, H-7/S-5). CORS dev=localhost:5173 + 127.0.0.1:5173(기본 2종, 불변) + OPAL_CONSOLE_CORS_ORIGINS(쉼표 구분) 환경 변수로 추가 허용된 정확한 origin 문자열(T01 W-2, TRD.md TD-7) / prod=동일 오리진. /health. 7개 라우터 등록(5개 read-only + brain POST + config POST/GET). StaticFiles SPA 서빙(dist 존재 시): 알 수 없는 경로 → index.html fallback. lifespan asynccontextmanager — 기동 시 load_config().prewarm_projects를 순회하며 brain_session_registry.prewarm(project_path)를 호출한다(비블로킹, daemon 스레드 내부 분리 — lifespan 본문은 즉시 yield). prewarm_projects 미지정 시 생략 로그만 남긴다.",
   "exports": ["app"],
   "depends": ["routers.dashboard", "routers.projects", "routers.tasks", "routers.memory", "routers.doctor", "routers.brain", "routers.config", "config", "adapters.brain_session"],
   "task": "061"
@@ -12,6 +12,8 @@
 from __future__ import annotations
 
 import logging
+import os
+import re
 import threading
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -73,10 +75,44 @@ app = FastAPI(
 # ── CORS 설정 ────────────────────────────────────────────────────────────────
 # dev 모드: Vite 개발 서버(localhost:5173) 허용
 # prod 모드: 동일 오리진(정적 서빙)이므로 CORS 불요 — allow_origins=[""] 로 제한
-CORS_ORIGINS = [
+# T01 W-2 (TRD.md TD-7, CONTRACT.md §C.9): 기본 2종은 코드에 남기고 OPAL_CONSOLE_CORS_ORIGINS
+# (쉼표 구분)로 주입된 정확한 origin 문자열만 추가 허용한다. 와일드카드·정규식·전체 허용은
+# 도입하지 않는다(NR-4). allow_credentials/allow_methods/allow_headers는 변경하지 않는다(D-6).
+_DEFAULT_DEV_ORIGINS = [
     "http://localhost:5173",   # Vite dev server
     "http://127.0.0.1:5173",
 ]
+
+_ORIGIN_PATTERN = re.compile(r"^https?://[^/,\s]+$")
+
+
+def _parse_extra_origins(raw: str | None) -> list[str]:
+    """OPAL_CONSOLE_CORS_ORIGINS 값을 파싱한다 (D-5).
+
+    쉼표 split → strip → 빈 문자열 제거 → 순서 유지 중복 제거. `^https?://[^/,\\s]+$`를
+    만족하지 않는 항목(와일드카드 `*`, 미치환 플레이스홀더 `${...}`, 공백만인 항목 등)은
+    조용히 버리지 않고 로그 경고 후 제외한다(MV-27).
+    """
+    if not raw:
+        return []
+
+    result: list[str] = []
+    seen: set[str] = set()
+    for candidate in raw.split(","):
+        entry = candidate.strip()
+        if not entry:
+            continue
+        if not _ORIGIN_PATTERN.match(entry) or "*" in entry or "${" in entry:
+            logger.warning("[cors] OPAL_CONSOLE_CORS_ORIGINS 무효 항목 제외: %r", entry)
+            continue
+        if entry in seen:
+            continue
+        seen.add(entry)
+        result.append(entry)
+    return result
+
+
+CORS_ORIGINS = _DEFAULT_DEV_ORIGINS + _parse_extra_origins(os.getenv("OPAL_CONSOLE_CORS_ORIGINS"))
 
 app.add_middleware(
     CORSMiddleware,
