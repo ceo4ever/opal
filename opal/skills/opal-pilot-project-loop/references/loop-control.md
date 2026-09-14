@@ -41,6 +41,10 @@ oppl은 선형 Phase가 아니라 **종료조건이 있는 수렴 루프**로 �
 > [MUST] **구체적 재시도 횟수·최대 반복 수는 여기서 새로 정의하지 않는다.** `opal/core/references/opal-harness.md` §1 "자동 루핑 제약(Verification Loop Guards)" 표를 **참조**하고 수치를 **복제하지 않는다** (opal-harness.md §1 "본 표를 참조" 원칙). 구현 수준 실패(L1 lint~L3b E2E)는 하네스 §1 표의 기존 재시도 한도를 그대로 따르며, 설계 수준 실패(G 게이트 루브릭 미달·PLAN 재진입)는 하네스 §1 "PLAN 재진입" 행의 상한을 따른다.
 > oppl 고유 추가 상한(Loop 1/Loop 2 전체 회전 수)은 하네스 §1에 대응 행이 없으므로 **태스크 단위로 backlog.json `goal`(목표 요약) 대비 진행률을 관찰하며 무진전 감지(§4)와 결합해 판단**한다 — 별도 고정 수치를 SKILL 본문에 하드코딩하지 않는다.
 
+**[MUST] 집행 주체**: 이 절은 상한의 *종류와 의미*만 정의하고, 도달 여부의 *판정과 차단*은 `oppl-runtime-tool admit`이 수행한다. PM·루프 액션 에이전트는 회전 수를 스스로 세어 차단하지 않으며 자체 카운터로 상한을 우회하지 않는다. 진입 순서는 run 시작 시 `state-tool run-start` → `oppl-runtime-tool init --run-id <run_id>`, 이후 매 회전·디스패치·phase·resume 직전 `admit`이다. 태스크 내부 phase는 `admit` → `attempt-start` → 실행 → `attempt-finish` 순서를 지킨다.
+
+거부 코드 8종(`active_attempt`·`round_limit_exceeded`·`attempt_limit_exceeded`·`resume_limit_exceeded`·`budget_exceeded`·`timeout_limit_exceeded`·`no_progress`·`decision_required`)은 재해석·조건부 무시·재시도 우회 없이 그대로 §6 에스컬레이션 경로의 트리거이자 `blocked` 사유가 된다. 모든 거부 응답에는 `scope` 필드가 동반되므로 사유와 함께 보존한다.
+
 ---
 
 ## 3. 토큰/비용 예산
@@ -49,7 +53,7 @@ run(설계 루프 1회 진입 ~ 실행 루프 종료까지) 단위로 비용 예
 
 - PM은 각 태스크 파이프라인 완주(T1~T5)를 하나의 비용 단위로 취급하고, **태스크당 `opal-loop-action-agent` 1회 디스패치**를 기준으로 관찰한다. 루프 액션 에이전트 내부 재디스패치(생성자·Evaluator·test-agent)는 루프 액션 에이전트 자체 예산 관리 대상이며, 루프 액션 에이전트가 반복 재디스패치로 상한을 초과하면 `blocked` 반환 → PM이 예산 소진 신호로 관찰한다.
 - 저위험 슬라이스는 루프 액션 에이전트 내부에서 생성자·Evaluator 인라인 경량화(디스패치 생략)로 예산을 절약한다 (SPEC §03 note).
-- 예산 소진이 감지되면 **경로 분리(§6)**의 에스컬레이션 경로로 전환한다 — 남은 예산 내 강행하지 않는다.
+- 예산 소진 판정은 `oppl-runtime-tool admit`의 `budget_exceeded` 반환으로만 이루어진다. 반환 시 **경로 분리(§6)**의 에스컬레이션 경로로 전환한다 — 남은 예산 내 강행하지 않는다.
 - 절대 토큰 수·달러 한도는 프로젝트/사용자 협의로 결정하는 가변 값이며, oppl SKILL 본문에 고정 수치를 하드코딩하지 않는다(플랫폼·모델별 상이 — 하드코딩 금지 원칙 준용).
 
 ---
@@ -65,7 +69,7 @@ run(설계 루프 1회 진입 ~ 실행 루프 종료까지) 단위로 비용 예
 | 검증 왕복 | Evaluator verdict가 fail↔pass를 오가지 않고 fail에 고정된 채 회전 소진 |
 | drift 반복 재콜백 | Evaluator drift 재콜백(§04 "구현/테스트 중 계약 drift 발견 시에만")이 동일 계약 항목에 대해 반복 발생 |
 
-무진전 판정 시 **경로 분리(§6)**의 "실패" 또는 "에스컬레이션" 경로로 즉시 전환한다 — 동일 방식으로 재시도를 늘리지 않는다.
+위 신호는 관찰 대상이며, 무진전의 **판정과 차단**은 `oppl-runtime-tool`이 실패 지문 반복을 근거로 수행해 `admit`에서 `no_progress`를 반환하는 것으로 이루어진다. 반환 시 **경로 분리(§6)**의 "에스컬레이션" 경로로 즉시 전환한다 — 동일 방식으로 재시도를 늘리지 않는다.
 
 ---
 
@@ -90,8 +94,8 @@ run(설계 루프 1회 진입 ~ 실행 루프 종료까지) 단위로 비용 예
 | 경로 | 트리거 | 처리 |
 |------|--------|------|
 | 성공 | §5 목표 달성 체크 충족 | 다음 단계 진행 (Loop 종료 → 다음 Loop, 또는 T5 마무리 → BACKLOG 갱신) |
-| 실패 (복구가능) | §7 "복구가능" 에러 유형, 반복 상한(§2) 미도달 | 하네스 §1 재시도 한도 내 재작업 루프 |
-| 에스컬레이션 | §2 반복 상한 초과 / §3 예산 소진 / §4 무진전 감지 / §7 "하드블로커" | 즉시 사용자 보고, 자율 재시도 중단 |
+| 실패 (복구가능) | §7 "복구가능" 에러 유형이고 `oppl-runtime-tool admit`이 허가한 경우 | 허가받은 새 attempt로 재작업 루프 |
+| 에스컬레이션 | `admit`이 거부 코드 8종 중 하나를 반환 / §7 "하드블로커" | 즉시 사용자 보고, 자율 재시도 중단 |
 
 > 에스컬레이션 경로는 "실패"의 하위가 아니라 독립 경로다 — 복구가능 실패의 재시도 누적이 상한을 넘으면 실패 경로에서 에스컬레이션 경로로 전환되지만, 하드블로커나 사람 게이트(§9) 대상 행동은 처음부터 에스컬레이션 경로로 직행한다.
 
@@ -101,10 +105,11 @@ run(설계 루프 1회 진입 ~ 실행 루프 종료까지) 단위로 비용 예
 
 | 구분 | 정의 | 예 | 처리 |
 |------|------|-----|------|
-| 복구가능 (recoverable) | 재작업으로 해결 가능, 계약/설계를 부정하지 않음 | lint/format, build/type, unit/integration test FAIL, RED 미확인(`red_not_confirmed`), `surface_uncovered`·`integration_task_missing`·`fidelity_unmet`·`surface_unverified`(069 — 완결성·충실도 갭. 재작업(add-task/더 높은 충실도 재검증)으로 해결, 계약/설계 부정 아님. blocked 전환은 §4 무진전·§2 상한 경로로만) | 하네스 §1 재시도 한도 내 자동 fix 루프 |
+| 복구가능 (recoverable) | 재작업으로 해결 가능, 계약/설계를 부정하지 않음 | lint/format, build/type, unit/integration test FAIL, RED 미확인(`red_not_confirmed`), `surface_uncovered`·`integration_task_missing`·`fidelity_unmet`·`surface_unverified`(069 — 완결성·충실도 갭. 재작업(add-task/더 높은 충실도 재검증)으로 해결, 계약/설계 부정 아님. blocked 전환은 §4 무진전·§2 상한 경로로만) | `admit` 허가를 받은 새 attempt로 자동 fix 루프 |
 | 하드블로커 (hard blocker) | 재작업 불가, 계약/설계 자체가 부정되거나 헌법 위반 | Evaluator readonly 계약 위반(H-4), 검증 2원화 순서 역전(H-9), backlog.json/test-scenario.json 손상, 사람 게이트 대상 행동을 승인 없이 진행 시도 | 즉시 중단 + 사용자 에스컬레이션 (0회 재시도) |
 
 - 도구 결과 계약 위반(H-5 — 단일라인 JSON·exit code 불일치)은 도구 자체 버그로 간주해 **하드블로커**로 취급한다 — 파싱 실패를 추측으로 넘기지 않는다.
+- T4b 규칙검사 실패는 3분기(구현 결함 → T3 새 attempt / 테스트·검증 계약 결함 → 계약 변경 승인 후 T2 새 attempt / 정책 자체 충돌·귀속 불가 → 즉시 `blocked`) 중 정확히 하나로만 전이한다 — 분기 정의 SSOT는 `opal/agents/opal-loop-action-agent/AGENT.md` §T4b 실패 전이다. 어느 분기든 task attempt와 project dispatch 상한을 함께 차감하며, 차감은 `admit` 호출로 도구가 수행한다.
 - 설계 수준 실패(G 게이트에서 Evaluator가 명세 자체의 결함을 지적)는 `opal/core/references/opal-harness.md` §1 "PLAN 재진입" 행의 scope별 분기(action→에이전트 자율 재설계 / wbs→PM 에스컬레이션 / trd→즉시 사용자 에스컬레이션)를 따른다.
 
 ---
@@ -153,3 +158,4 @@ run(설계 루프 1회 진입 ~ 실행 루프 종료까지) 단위로 비용 예
 | v1.0 | 2026-07-10 16:33 | 초기 작성 — 종료조건 8요소(반복상한·예산·무진전·목표체크·경로분리·에러처리·컨텍스트관리·사람게이트) 정의, harness §1 참조·비복제 원칙 반영 (056) |
 | v1.1 | 2026-07-17 KST | §3 예산 관찰 단위를 "디스패치 하이브리드 C(~2~3회)"에서 "태스크당 루프 액션 에이전트(opal-loop-action-agent) 1회 디스패치, 내부 재디스패치는 루프 액션 에이전트 자체 예산"으로 정합 — §2 상한 참조 원칙(수치 비복제)은 불변 (065) |
 | v1.2 | 2026-07-18 22:49 | §7 복구가능(recoverable) 분류에 신규 게이트 에러 4종(`surface_uncovered`·`integration_task_missing`·`fidelity_unmet`·`surface_unverified`) 추가 — 완결성·충실도 갭은 재작업으로 해결, 계약/설계 부정 아님. blocked 전환은 §4 무진전·§2 상한 경로로만 (069) |
+| v1.3 | 2026-09-14 KST | 상한·예산·무진전의 집행 주체를 `oppl-runtime-tool admit`으로 고정 — §2 진입 순서(`run-start`→`init`→`admit`)와 거부 코드 8종, §3 `budget_exceeded`, §4 `no_progress`, §6 경로 트리거, §7 T4b 3분기 포인터 반영. 수치는 여전히 복제하지 않는다 (131) |

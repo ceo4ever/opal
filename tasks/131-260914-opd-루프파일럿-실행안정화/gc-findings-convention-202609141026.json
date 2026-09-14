@@ -1,0 +1,236 @@
+{
+  "check": "convention",
+  "status": "pass",
+  "verdict": "PASS_WITH_ADVISORIES",
+  "gate_condition": "Critical/High 0 — MET",
+  "run_kind": "partial-recheck",
+  "baseline": "tasks/131-260914-opd-루프파일럿-실행안정화/gc-findings-convention-202609140754.json",
+  "report_path": "tasks/131-260914-opd-루프파일럿-실행안정화/GC-CONVENTION-202609141026.md",
+  "missing_capabilities": [],
+  "disposition_note": "1차 JSON은 Medium 3건(GC-002/003/004)의 disposition을 blocking으로 두었다. 디스패처가 명시한 게이트 규칙(Critical/High만 차단, Medium 이하는 보고하되 차단하지 않음)에 맞춰 2차에서는 Medium 이하 전건을 advisory로 정렬했다. severity는 변경하지 않았다.",
+  "references": [
+    "docs/CONVENTIONS.md",
+    "opal/core/references/tools.md",
+    "opal/core/references/opal-doc-standard.md",
+    "opal/core/references/harness/citation-rules.md",
+    "opal/core/references/harness/proposal-lifecycle.md",
+    "opal/core/references/harness/gc-finding-schema.md"
+  ],
+  "evidence": [
+    "grep -rn 'CONVENTIONS.md.*도구 출력 계약|CONVENTIONS 도구 출력 계약' opal/ docs/ scripts/ -> 0 hits",
+    "grep -n '^## ' opal/core/references/tools.md -> :8 공통 도구 출력 계약, :1188 oppl-runtime-tool both present",
+    "set comparison of docs/CONVENTIONS.md:249 enumeration (22) against os.listdir('opal/tools') (22) -> both difference sets empty",
+    "awk hard-break census across 13 tool sections in tools.md -> existing 12 sections 3-4 label lines each; new oppl-runtime-tool section 0 of 6",
+    "error-code catalog census across 22 tools -> 8 declare one, 14 do not (oppl-runtime-tool among the 14)",
+    "cmd_mark ok() call verified to emit row_id/stage -> tools.md:17 success example is accurate; run_identity_missing verified emitted at oppl_runtime_tool.py:166",
+    "grep -rn '제안서 §' opal/tools/ -> 48 hits, unchanged",
+    "git diff --stat -> remediation touches 6 source/doc files plus task-folder artifacts, 0 lines of source logic",
+    "node ~/.opal/tools/date/date.js datetime -> 2026-09-14 10:26 KST"
+  ],
+  "rechecked_scope": [
+    "opal/core/references/tools.md",
+    "docs/CONVENTIONS.md",
+    "opal/tools/oppl-runtime-tool/oppl_runtime_tool.py",
+    "opal/tools/oppl-runtime-tool/README.md",
+    "opal/tools/oppl-runtime-tool/tests/test_oppl_runtime_config.py",
+    "opal/tools/oppl-runtime-tool/tests/test_oppl_runtime_admission.py",
+    "opal/tools/state-tool/tests/test_run_identity.py",
+    "docs/proposals/opal-oppl-runtime-stabilization.md",
+    "opal/tools/oppl-runtime-tool/ledger.py"
+  ],
+  "excluded_scope": {
+    "reason": "디스패처 지시 — 1차 PASS 항목 재검사 제외",
+    "items": ["중점 1 @header", "중점 3 수치 비복제", "중점 4 수기 누적 이력", "중점 5 배포 경계", "중점 6 네이밍", "중점 7 테스트 명명·배치"]
+  },
+  "severity_counts": {
+    "critical": 0, "high": 0, "medium": 4, "low": 2, "info": 0, "pre_existing": 4,
+    "delta_vs_baseline": {"critical": 0, "high": -1, "medium": 1, "low": 1, "pre_existing": 0}
+  },
+  "baseline_delta": {
+    "resolved": ["3a10afe03f4fca69", "5c61e3fe8ed09055"],
+    "new": ["abcb980430d88a89", "3b92aaf2b07c5507"],
+    "persisting": ["62a91996072a4083", "d6fcd181526f1be3", "0eea9f280e93f9f8", "9077153f45a972df", "32f117fe75a9ab0c", "8862d40dfd9dc289", "281fa79f20c7c088"],
+    "suppressed": []
+  },
+  "findings": [
+    {
+      "id": "GC-R001",
+      "fingerprint": "3b92aaf2b07c5507",
+      "category": "documentation",
+      "severity": "low",
+      "confidence": "high",
+      "disposition": "advisory",
+      "rule_id": "tools.md 기존 12개 도구 절 관례 (Markdown hard break)",
+      "source_tier": "T0",
+      "delta": "new",
+      "location": {"file": "opal/core/references/tools.md", "line": 1190, "symbol": "## oppl-runtime-tool"},
+      "evidence": "Every one of the 12 pre-existing tool sections in tools.md terminates its bold label lines (**용도**/**실행 경로**/**소스 경로**/**의존성**) with a two-space Markdown hard break — measured 3 of 4 for xlsx-tool, state-tool, code-scan, test-tool, brain-tool, tool-scan, memory-tool, improve-tool, opal-action-monitor and 4 of 4 for cmux-tool, git-sync-tool, worktree-tool. The new oppl-runtime-tool section has 0 hard breaks across its 6 label lines (tools.md:1190-1195, all no-break).",
+      "impact": "On render the six label lines collapse into one run-on paragraph, breaking visual parity with the other twelve sections and reducing scannability of the registry entry for both human and agent readers.",
+      "remediation": {
+        "guidance": "Append two trailing spaces to tools.md:1190 through :1194. The final label line (:1195) is followed by a blank line and needs none, matching the 3-of-4 pattern of the sibling sections.",
+        "reference": "opal/core/references/tools.md",
+        "auto_fixable": true
+      },
+      "verification": "awk 'NR>=1190 && NR<=1194 && !/  $/' opal/core/references/tools.md produces no output.",
+      "suppression": null
+    },
+    {
+      "id": "GC-R002",
+      "fingerprint": "abcb980430d88a89",
+      "category": "tool-contract",
+      "severity": "medium",
+      "confidence": "high",
+      "disposition": "advisory",
+      "rule_id": "tools.md §공통 도구 출력 계약 §오류 코드",
+      "source_tier": "T0",
+      "delta": "new",
+      "location": {"file": "opal/core/references/tools.md", "line": 26, "symbol": "### 오류 코드"},
+      "additional_locations": [
+        {"file": "opal/tools/oppl-runtime-tool/oppl_runtime_tool.py", "line": 74, "symbol": "fail"},
+        {"file": "opal/tools/oppl-runtime-tool/README.md", "line": 102}
+      ],
+      "evidence": "The newly added rule at tools.md:26 states that a failure response's `error` value must be a key of a code list the tool declares in its module, and that per-code meanings are owned as a table in that tool's README. Two observations. (1) In scope: oppl_runtime_tool.py:74 `fail(command, error, message='', ...)` takes `error` as a free string and emits it without checking it against any declared set; ledger.py declares REGISTERED_PHASES:34, REQUIRED_CONFIG_KEYS:37, PHASE_STATUSES:58, FAILURE_STATUSES:61 but no error-code list. Contrast backlog_tool.py:44 ERROR_CODES + err():74-80 and state_tool.py:136 ERROR_CODES + err():272-278. README.md:102 lists the 8 rejection codes as prose, not a table, and non-rejection codes (run_identity_missing, config_invalid) are not catalogued at all. (2) Fleet conflict: of 22 tools only 8 declare an error-code catalog (backlog-tool, brain-tool, git-sync-tool, memory-tool, state-tool, test-tool, tool-scan, worktree-tool); 14 do not, oppl-runtime-tool among them.",
+      "impact": "Callers branch on codes, but with no closed-set validation at the emitting side a typo or drift ships symptom-free — the two comparison tools pin their code sets with completeness regression tests. Separately, a newly minted T0 rule is stricter than the fleet it governs, so 14 tools become flaggable from the next convention run onward.",
+      "remediation": {
+        "guidance": "In scope: declare an error-code constant in oppl_runtime_tool.py (the 8 rejection codes plus run_identity_missing, config_invalid and any other emitted code) and narrow fail() to accept only those keys; promote README.md:97-102 from prose to a code/meaning table. Rule axis: either relax tools.md:26 to match the current fleet, or keep it and split migration of the 14 undeclared tools into a separate task. Which way to go is an owner decision — per skill [MUST] 4 this report states the conflict without arbitrating it.",
+        "reference": "opal/core/references/tools.md",
+        "auto_fixable": false
+      },
+      "verification": "oppl_runtime_tool.py declares an error-code constant and fail() rejects unregistered codes; or the requirement level at tools.md:26 changes.",
+      "suppression": null
+    },
+    {
+      "id": "GC-002",
+      "fingerprint": "62a91996072a4083",
+      "category": "citation",
+      "severity": "medium",
+      "confidence": "high",
+      "disposition": "advisory",
+      "rule_id": "CONVENTIONS.md §Citation Rules",
+      "source_tier": "T0",
+      "delta": "persisting",
+      "location": {"file": "opal/tools/oppl-runtime-tool/ledger.py", "line": 36},
+      "evidence": "Not a remediation target; unchanged. grep -rn '제안서 §' opal/tools/ -> 48 hits (the first report enumerated representative sites and gave '~30' as an estimate; the machine count is 48, corrected here — the violation itself did not grow). oppl_runtime_tool.py:7 still carries 제안서 §6.2 and 제안서 §6.4 inside the @header description.",
+      "impact": "Section numbers alone are ambiguous between the two proposals added by the same commit, and all 48 references break together once the proposal moves.",
+      "remediation": {"guidance": "State the full path docs/proposals/opal-oppl-runtime-stabilization.md §N once per file before using the shorthand, or expand each citation.", "reference": "opal/core/references/harness/citation-rules.md", "auto_fixable": true},
+      "verification": "Every file containing '제안서 §' carries a preceding full-path definition.",
+      "suppression": null
+    },
+    {
+      "id": "GC-003",
+      "fingerprint": "d6fcd181526f1be3",
+      "category": "proposal-lifecycle",
+      "severity": "medium",
+      "confidence": "high",
+      "disposition": "advisory",
+      "rule_id": "CONVENTIONS.md §제안서 생명주기",
+      "source_tier": "T0",
+      "delta": "persisting",
+      "location": {"file": "opal/tools/oppl-runtime-tool/oppl_runtime_tool.py", "line": 185},
+      "evidence": "Not a remediation target; unchanged. docs/proposals/opal-oppl-runtime-stabilization.md:3 still reads '상태: 검토'. The PM's +10-line addition (a caller-ownership paragraph before §6.2) changed neither the status nor the normative attribution. Closed sets remain attributed to proposal sections.",
+      "impact": "CONVENTIONS.md:142 makes '잔여 인용 0건' a [MUST] precondition for archiving. With 48 live citations the proposal cannot move to docs/proposals/archives/, blocking the stage.close proposal-lifecycle procedure.",
+      "remediation": {"guidance": "Move the normative text of the closed sets into owner documents (oppl-runtime-tool/README.md, opal-loop-action-agent/AGENT.md §T4b 실패 전이 at AGENT.md:227) and leave proposal references as design rationale only.", "reference": "opal/core/references/harness/proposal-lifecycle.md", "auto_fixable": false},
+      "verification": "On flipping the proposal to 적용완료 and archiving it, grep -rn 'opal-oppl-runtime-stabilization' opal/ scripts/ returns 0.",
+      "suppression": null
+    },
+    {
+      "id": "GC-005",
+      "fingerprint": "0eea9f280e93f9f8",
+      "category": "citation",
+      "severity": "low",
+      "confidence": "high",
+      "disposition": "advisory",
+      "rule_id": "CONVENTIONS.md §Citation Rules",
+      "source_tier": "T0",
+      "delta": "persisting",
+      "location": {"file": "opal/tools/oppl-runtime-tool/ledger.py", "line": 129, "symbol": "opal_home"},
+      "evidence": "Not a remediation target; unchanged. ledger.py:129 still reads '# state_tool.py:403 선례를 그대로 따른다' while the cited precedent sits at opal/tools/state-tool/state_tool.py:404.",
+      "impact": "Single-line drift in the citation-accuracy class that reverted this gate twice.",
+      "remediation": {"guidance": "Change to '# opal/tools/state-tool/state_tool.py:404 선례를 그대로 따른다'.", "reference": "opal/core/references/harness/citation-rules.md", "auto_fixable": true},
+      "verification": "sed -n '404p' opal/tools/state-tool/state_tool.py returns the OPAL_HOME fallback line.",
+      "suppression": null
+    },
+    {
+      "id": "GC-006",
+      "fingerprint": "9077153f45a972df",
+      "category": "documentation",
+      "severity": "low",
+      "confidence": "high",
+      "disposition": "informational",
+      "rule_id": "opal-doc-standard.md §5",
+      "source_tier": "T0",
+      "delta": "persisting",
+      "location": {"file": "opal/tools/opal-action-monitor/README.md", "line": 175, "symbol": "## 변경이력"},
+      "evidence": "Pre-existing (blame e0a580b / 067). Unchanged by the remediation.",
+      "impact": "Manual cumulative history duplicates git and DONE.md.",
+      "remediation": {"guidance": "Out of scope; belongs to a doc-standard cleanup task.", "auto_fixable": false},
+      "verification": "n/a — pre-existing.",
+      "suppression": null
+    },
+    {
+      "id": "GC-007",
+      "fingerprint": "32f117fe75a9ab0c",
+      "category": "citation",
+      "severity": "low",
+      "confidence": "high",
+      "disposition": "informational",
+      "rule_id": "CONVENTIONS.md §Citation Rules",
+      "source_tier": "T0",
+      "delta": "persisting",
+      "location": {"file": "opal/skills/opal-pilot-project-loop/references/loop-control.md", "line": 41},
+      "evidence": "Pre-existing (blame 5c380a3). Deprecated shim reference opal-harness.md §1, resolvable via the compat table at opal-harness.md:52. Unchanged by the remediation.",
+      "impact": "Mixed notation prolongs the deprecated shim's life.",
+      "remediation": {"guidance": "Repoint lines 41 and 148 to opal/core/references/harness/guards.md §자동 루핑 제약.", "auto_fixable": true},
+      "verification": "n/a — pre-existing.",
+      "suppression": null
+    },
+    {
+      "id": "GC-008",
+      "fingerprint": "8862d40dfd9dc289",
+      "category": "citation",
+      "severity": "low",
+      "confidence": "high",
+      "disposition": "informational",
+      "rule_id": "CONVENTIONS.md §Citation Rules",
+      "source_tier": "T0",
+      "delta": "persisting",
+      "location": {"file": "opal/tools/state-tool/README.md", "line": 549},
+      "evidence": "Pre-existing (blame 5c380a3). Cites opal/tools/xlsx-tool/run.sh:1-12; the file has 11 lines. Unchanged.",
+      "impact": "Out-of-range line span in a reference table.",
+      "remediation": {"guidance": "Change to :1-11 or drop the span.", "auto_fixable": true},
+      "verification": "n/a — pre-existing.",
+      "suppression": null
+    },
+    {
+      "id": "GC-009",
+      "fingerprint": "281fa79f20c7c088",
+      "category": "citation",
+      "severity": "low",
+      "confidence": "high",
+      "disposition": "informational",
+      "rule_id": "CONVENTIONS.md §Citation Rules",
+      "source_tier": "T0",
+      "delta": "persisting",
+      "location": {"file": "opal/tools/state-tool/state_tool.py", "line": 3081},
+      "evidence": "Pre-existing (blame dd09b9f / 106). code-scan.js:43 and :351 references drifted; DEFAULT_CONFIG is at :97 and the extensions substitution at :441. Unchanged.",
+      "impact": "Readers following the references land on unrelated code.",
+      "remediation": {"guidance": "Repoint to opal/tools/code-scan/code-scan.js:97 and :441.", "auto_fixable": true},
+      "verification": "n/a — pre-existing.",
+      "suppression": null
+    }
+  ],
+  "resolved_findings": [
+    {
+      "id": "GC-001",
+      "fingerprint": "3a10afe03f4fca69",
+      "severity": "high",
+      "resolution": "All 6 citations repointed from the non-existent docs/CONVENTIONS.md §도구 출력 계약 to opal/core/references/tools.md §공통 도구 출력 계약, which now exists at tools.md:8. Repo-wide grep for the old form returns 0. Citation format satisfies CONVENTIONS.md:228-234 — 5 of 6 sites give the full repo-relative path, and test_run_identity.py:85's shorthand is preceded by the full path at :16 in the same file. The new section's worked examples were fact-checked against real tool output (cmd_mark emits row_id/stage; oppl_runtime_tool.py:166 emits run_identity_missing)."
+    },
+    {
+      "id": "GC-004",
+      "fingerprint": "5c61e3fe8ed09055",
+      "severity": "medium",
+      "resolution": "docs/CONVENTIONS.md:249 updated 21종 -> 22종 with oppl-runtime-tool appended. Set comparison against os.listdir('opal/tools') shows both difference sets empty (22/22 exact). A normative-ownership pointer was added at :250, and tools.md:1188 registers the tool section."
+    }
+  ]
+}

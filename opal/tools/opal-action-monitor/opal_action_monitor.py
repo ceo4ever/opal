@@ -4,9 +4,9 @@
   "module": "opal_action_monitor",
   "layer": "util",
   "domain": "opal-workspace",
-  "description": "루프 액션 에이전트(opal-agent 채널) `.oppl-run/` 산출물을 파싱해 단계×축 현황판을 렌더하는 CLI — 텍스트/--json/--watch 3모드, 표준 라이브러리 전용",
+  "description": "루프 액션 에이전트(opal-agent 채널) `.oppl-run/` 산출물을 파싱해 단계×축 현황판을 렌더하는 CLI — 텍스트/--json/--watch 3모드, 표준 라이브러리 전용. `.oppl-run/runtime.json`(oppl-runtime-tool ledger)이 있으면 phase status 7종과 잔여 상한을 재판정 없이 위임해 렌더하고, 없으면 기존 6상태 휴리스틱으로 폴백한다(timed_out 미출력)",
   "exports": ["scan_task_folder", "render_text", "render_json", "main"],
-  "depends": ["opal-loop-action-agent/AGENT.md#결과-파일-규약"]
+  "depends": ["opal-loop-action-agent/AGENT.md#결과-파일-규약", "oppl-runtime-tool/.oppl-run/runtime.json#ledger-schema"]
 }
 
 opal/tools/opal-action-monitor/opal_action_monitor.py — 루프 액션 에이전트 진행 현황 모니터
@@ -21,6 +21,12 @@ opal/tools/opal-action-monitor/opal_action_monitor.py — 루프 액션 에이�
 완료 마커(★): `.exitcode` 파일의 존재. `.events.jsonl`/`.result.json`의
 존재/비존재로 완료를 판정하지 않는다
 (opal/agents/opal-loop-action-agent/AGENT.md §결과 파일 규약 v2, [066계승][MUST]).
+
+상태 판정 위임(PLAN 131 D7): `.oppl-run/runtime.json`(oppl-runtime-tool ledger)이 있으면
+monitor는 자체 재판정을 하지 않고 ledger의 phase별 status(7종)와 잔여 상한만 읽어 렌더한다
+(제안서 §7.2 "`opal-agent`와 monitor는 동일 adapter의 terminal 판정 결과만 소비한다").
+`runtime.json`이 없으면(비-OPPL·legacy `.oppl-run`) 아래 6상태 휴리스틱을 그대로 쓰고
+`timed_out`을 출력하지 않는다.
 """
 
 from __future__ import annotations
@@ -37,7 +43,7 @@ from typing import Any
 
 PHASES = ["t1", "t2", "g", "t3", "t4a", "t4b"]
 SUFFIXES = ("events.jsonl", "result.json", "err.log", "exitcode", "prompt.txt")
-TERMINAL_STATUSES = {"done", "failed", "error", "blocked"}
+TERMINAL_STATUSES = {"done", "failed", "error", "blocked", "timed_out"}
 JOURNAL_TAIL_DEFAULT = 8
 WATCH_INTERVAL_DEFAULT = 2
 WATCH_TIMEOUT_DEFAULT = 1800
@@ -128,7 +134,53 @@ def _last_result_event(lines: list[str]) -> dict[str, Any] | None:
     return None
 
 
-def _scan_phase(run_dir: Path, journal_blocked_phases: set[str], phase: str) -> dict[str, Any]:
+def _read_runtime_ledger(run_dir: Path) -> dict[str, Any] | None:
+    """`.oppl-run/runtime.json`(oppl-runtime-tool ledger)을 읽는다.
+    부재하거나 읽을 수 없으면 None — 호출부는 기존 6상태 휴리스틱으로 폴백한다."""
+    path = run_dir / "runtime.json"
+    if not path.exists():
+        return None
+    try:
+        obj = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    return obj if isinstance(obj, dict) else None
+
+
+def _ledger_phase_records(ledger: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    """`counters.<task_id>.phases`에서 phase 레코드 맵을 꺼낸다.
+    phase 레코드는 `admit` 시점에 처음 생성되므로(거부 경로는 레코드를 만들지 않는다)
+    부재 phase는 호출부가 pending·카운터 0으로 읽는다."""
+    counters = ledger.get("counters")
+    if not isinstance(counters, dict):
+        return {}
+    for task in counters.values():
+        phases = task.get("phases") if isinstance(task, dict) else None
+        if isinstance(phases, dict):
+            return {k: v for k, v in phases.items() if isinstance(v, dict)}
+    return {}
+
+
+def _runtime_block(ledger: dict[str, Any]) -> dict[str, Any]:
+    """`--json` top-level `runtime` 위임 블록 — ledger의 run 식별자와 예산 축을 그대로 노출한다."""
+    return {
+        "run_id": ledger.get("run_id"),
+        "status": ledger.get("status"),
+        "revision": ledger.get("revision"),
+        "design_round": ledger.get("design_round"),
+        "project_dispatch_count": ledger.get("project_dispatch_count"),
+        "cost_used": ledger.get("cost_used"),
+        "wall_time_used": ledger.get("wall_time_used"),
+        "budget_snapshot": ledger.get("budget_snapshot"),
+    }
+
+
+def _scan_phase(
+    run_dir: Path,
+    journal_blocked_phases: set[str],
+    phase: str,
+    ledger_status: str | None = None,
+) -> dict[str, Any]:
     prefix = _latest_attempt_prefix(run_dir, phase)
     events_path = run_dir / f"{prefix}.events.jsonl"
     result_path = run_dir / f"{prefix}.result.json"
@@ -177,8 +229,11 @@ def _scan_phase(run_dir: Path, journal_blocked_phases: set[str], phase: str) -> 
             session_id = result_obj.get("session_id")
             is_error = result_obj.get("is_error")
 
-    # 상태 판정(6상태, H-7) — journal blocked가 exitcode 체계 밖 신호이므로 최우선.
-    if phase in journal_blocked_phases:
+    # 상태 판정. ledger 위임 경로(D7)에서는 재판정 없이 7종 status를 그대로 쓴다.
+    # 폴백 경로는 기존 6상태 휴리스틱(H-7) — journal blocked가 exitcode 체계 밖 신호이므로 최우선.
+    if ledger_status is not None:
+        status = ledger_status
+    elif phase in journal_blocked_phases:
         status = "blocked"
     elif exitcode == 0:
         status = "done"
@@ -260,16 +315,33 @@ def scan_task_folder(task_folder: Path) -> dict[str, Any]:
     blocked_phases = {r["phase"] for r in journal_rows if r["event"] == "blocked"}
     blocked = len(blocked_phases) > 0 or any(r["event"] == "blocked" for r in journal_rows)
 
-    phases = [_scan_phase(run_dir, blocked_phases, phase) for phase in PHASES]
+    ledger = _read_runtime_ledger(run_dir)
+    records = _ledger_phase_records(ledger) if ledger is not None else {}
 
-    return {
+    phases = []
+    for phase in PHASES:
+        record = records.get(phase)
+        ledger_status = None
+        if ledger is not None:
+            # 레코드 부재 = 아직 admit되지 않음 → pending·카운터 0.
+            ledger_status = (record.get("status") if record else None) or "pending"
+        phase_data = _scan_phase(run_dir, blocked_phases, phase, ledger_status)
+        if ledger is not None:
+            phase_data["attempt_count"] = record.get("attempt_count", 0) if record else 0
+            phase_data["resume_count"] = record.get("resume_count", 0) if record else 0
+        phases.append(phase_data)
+
+    data: dict[str, Any] = {
         "ok": True,
         "task_folder": str(task_folder.resolve()),
         "generated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "blocked": blocked,
-        "phases": phases,
-        "journal_tail": journal_rows[-JOURNAL_TAIL_DEFAULT:],
     }
+    if ledger is not None:
+        data["runtime"] = _runtime_block(ledger)
+    data["phases"] = phases
+    data["journal_tail"] = journal_rows[-JOURNAL_TAIL_DEFAULT:]
+    return data
 
 
 # ─── 렌더 ─────────────────────────────────────────────────────
@@ -311,18 +383,36 @@ def _format_cost_session(phase_data: dict[str, Any]) -> str:
     return " / ".join(parts) if parts else "-"
 
 
+def _format_runtime_line(runtime: dict[str, Any]) -> str:
+    """위임 경로 머리말 — run 식별자와 `사용/상한` 잔여 상한을 한 줄로 렌더한다(D7)."""
+    budget = runtime.get("budget_snapshot") or {}
+    parts = [f"runtime: {runtime.get('run_id')} ({runtime.get('status')})"]
+    parts.append(f"round {runtime.get('design_round')}/{budget.get('max_design_rounds')}")
+    parts.append(
+        f"dispatch {runtime.get('project_dispatch_count')}/{budget.get('max_project_dispatches')}"
+    )
+    parts.append(f"attempt≤{budget.get('max_task_attempts')}")
+    parts.append(f"identical-fail≤{budget.get('max_identical_failures')}")
+    if budget.get("max_cost_usd") is not None:
+        parts.append(f"cost {runtime.get('cost_used')}/{budget.get('max_cost_usd')}")
+    parts.append(f"wall {runtime.get('wall_time_used')}/{budget.get('max_wall_time_sec')}s")
+    return "  ".join(parts)
+
+
 def render_text(data: dict[str, Any]) -> str:
     lines = []
     lines.append(f"opal-action-monitor — {data['task_folder']}")
     lines.append(f"generated_at: {data['generated_at']}" + ("  [BLOCKED]" if data["blocked"] else ""))
+    if data.get("runtime"):
+        lines.append(_format_runtime_line(data["runtime"]))
     lines.append("")
 
-    header = f"{'축':<6} {'상태':<8} {'경과':<8} {'최근 이벤트 요약':<32} {'비용/세션'}"
+    header = f"{'축':<6} {'상태':<10} {'경과':<8} {'최근 이벤트 요약':<32} {'비용/세션'}"
     lines.append(header)
     lines.append("-" * len(header))
     for p in data["phases"]:
         row = (
-            f"{p['phase']:<6} {p['status']:<8} {_format_elapsed(p['elapsed_sec']):<8} "
+            f"{p['phase']:<6} {p['status']:<10} {_format_elapsed(p['elapsed_sec']):<8} "
             f"{_format_last_event(p['last_event']):<32} {_format_cost_session(p)}"
         )
         lines.append(row)

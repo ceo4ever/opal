@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_task_number": 131,
+  "last_task_number": 132,
   "memories": [
     {
       "title": "변경이력 제거 검토 결정 — A안 확정",
@@ -45,6 +45,13 @@
   ],
   "history": [
     {
+      "title": "131 루프파일럿 실행안정화",
+      "date": "2026-09-14",
+      "stage": "완료",
+      "path": "tasks/131-260914-opd-루프파일럿-실행안정화/",
+      "result": "OPPL 상한·완료판정을 도구 집행으로 전환. oppl-runtime-tool 신설(admit ledger), opal-agent에 process group·독립 watchdog·terminal framing·출력 writer 소유권. tools.md를 1212행 카탈로그에서 92행 레지스트리로 재정의하고 출력 규범을 harness owner 문서로 분리해 stage.execute에 편입. 도구 README 13→22종 전수. 검증 1239 passed"
+    },
+    {
       "title": "130 PM 하단 액션 의도 명확화",
       "date": "2026-09-14",
       "stage": "완료",
@@ -71,13 +78,6 @@
       "stage": "완료",
       "path": "tasks/125-260912-opd-E2E-프로필-판정-계약/",
       "result": "E2E 프로필·판정 상태·증거·handoff 계약과 test-tool 검증을 추가하고 전체 84개 테스트 및 시나리오 11건을 통과함"
-    },
-    {
-      "title": "124 워크트리 멀티레포 캡슐 소유권",
-      "date": "2026-09-12",
-      "stage": "완료",
-      "path": "tasks/124-260912-opds-워크트리-멀티레포-캡슐-소유권/",
-      "result": "multi-repo 루트 저장소 캡슐 소유권 구현 — R-1~R-5 적격·판정순서·2축 멱등 회수. 28/28 PASS, 회귀 42쌍 동일"
     }
   ]
 }

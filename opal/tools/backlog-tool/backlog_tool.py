@@ -3,7 +3,7 @@
   "module": "backlog_tool",
   "layer": "util",
   "domain": "opal-pipeline",
-  "description": "oppl 2-루프 오케스트레이터의 백로그(backlog.json) SSOT 관리 CLI — 8개 서브 명령(init/add-task/select-next/mark/done-check/show/update-task/coverage-check). state-tool 패턴(ok/err 헬퍼, date.js KST 시점, 마크다운 마커 렌더/치환, ERROR_CODES SSOT)을 복제한다. backlog.json은 state.json/test-scenario.json과 축 분리되어 상호 참조하지 않는다. BACKLOG.md는 도구가 렌더한 미러이며 손편집 금지 구조(마커 <!-- backlog:start/end -->)로 구현한다. mark/add-task/update-task는 fcntl 배타 락으로 read-modify-write를 직렬화해 동시 쓰기 무손상(H-3)을 보장한다. update-task는 손편집 없이 tool-gated로 태스크 속성을 수정하는 경로다(status는 갱신 불가 — mark 전용, done 태스크는 수정 거부). tasks[]에 `covers`(표면 id 배열, additive optional) 필드가 있다. 읽기 전용 서브명령 `coverage-check`는 backlog.json(자기 SSOT)+surfaces.json(CONTRACT 도메인, 읽기 전용)만 읽어 미커버 표면·통합 태스크 부재를 거부하며, test-scenario.json은 접촉하지 않아 축 분리를 유지한다.",
+  "description": "oppl 2-루프 오케스트레이터의 백로그(backlog.json) SSOT 관리 CLI — 8개 서브 명령(init/add-task/select-next/mark/done-check/show/update-task/coverage-check). state-tool 패턴(ok/err 헬퍼, date.js KST 시점, 마크다운 마커 렌더/치환, ERROR_CODES SSOT)을 복제한다. backlog.json은 state.json/test-scenario.json과 축 분리되어 상호 참조하지 않는다. BACKLOG.md는 도구가 렌더한 미러이며 손편집 금지 구조(마커 <!-- backlog:start/end -->)로 구현한다. mark/add-task/update-task는 fcntl 배타 락으로 read-modify-write를 직렬화해 동시 쓰기 무손상(H-3)을 보장한다. update-task는 손편집 없이 tool-gated로 태스크 속성을 수정하는 경로다(status는 갱신 불가 — mark 전용, done 태스크는 수정 거부). `_rerender_backlog_md`(add-task/mark/update-task 공통 경로)는 마커 영역 교체와 함께 머리말 `최종 갱신` 라인도 backlog.json.updated_at으로 동기화하며, 머리말 라인이 없는 기존 파일에는 삽입하지 않는다(하위호환). tasks[]에 `covers`(표면 id 배열, additive optional) 필드가 있다. 읽기 전용 서브명령 `coverage-check`는 backlog.json(자기 SSOT)+surfaces.json(CONTRACT 도메인, 읽기 전용)만 읽어 미커버 표면·통합 태스크 부재를 거부하며, test-scenario.json은 접촉하지 않아 축 분리를 유지한다.",
   "exports": [
     "cmd_init", "cmd_add_task", "cmd_select_next",
     "cmd_mark", "cmd_done_check", "cmd_show", "cmd_update_task",
@@ -18,6 +18,7 @@ import fcntl
 import json
 import os
 import pathlib
+import re
 import subprocess
 import sys
 
@@ -234,11 +235,19 @@ def replace_backlog_section(md_content, new_table_content):
     return f"{before}{BACKLOG_MARKER_START}\n{new_table_content}\n{BACKLOG_MARKER_END}{after}"
 
 
+BACKLOG_HEADER_PREFIX = "> 최종 갱신: "
+
+
+def _backlog_header_line(now_str):
+    """머리말 `최종 갱신` 라인 포맷 SSOT — 신규 생성과 재렌더 동기화가 공유한다."""
+    return f"{BACKLOG_HEADER_PREFIX}{now_str}"
+
+
 def _build_new_backlog_md(project_title, now_str, mode, goal, table_str):
     """신규 BACKLOG.md 템플릿 생성."""
     return f"""# BACKLOG: {project_title}
 
-> 최종 갱신: {now_str}
+{_backlog_header_line(now_str)}
 > 모드: {mode}
 > 목표: {goal or "(미지정)"}
 
@@ -246,6 +255,14 @@ def _build_new_backlog_md(project_title, now_str, mode, goal, table_str):
 {table_str}
 {BACKLOG_MARKER_END}
 """
+
+
+def _sync_backlog_header(md, now_str):
+    """머리말 `최종 갱신` 라인을 now_str로 치환. 라인이 없으면 삽입하지 않고 원본 그대로 반환(하위호환)."""
+    pattern = re.compile(rf"^{re.escape(BACKLOG_HEADER_PREFIX)}.*$", re.MULTILINE)
+    if not pattern.search(md):
+        return md
+    return pattern.sub(lambda _m: _backlog_header_line(now_str), md, count=1)
 
 
 def _rerender_backlog_md(task_path, backlog, now_str):
@@ -257,6 +274,7 @@ def _rerender_backlog_md(task_path, backlog, now_str):
             backlog.get("project_title"), now_str, backlog.get("mode"), backlog.get("goal"), table_str
         )
     else:
+        md = _sync_backlog_header(md, now_str)
         replaced = replace_backlog_section(md, table_str)
         if replaced is None:
             new_md = md.rstrip("\n") + f"\n\n{BACKLOG_MARKER_START}\n{table_str}\n{BACKLOG_MARKER_END}\n"

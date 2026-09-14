@@ -10,16 +10,16 @@ tags:
 - blocked-contract
 sources:
 - task:065
+- task:131
 related:
 - opal-loop-action-agent
 - oppl-two-loop-orchestrator
 - oppl-3-ssot-tool-gated-separation
 - oppl-scenario-red-confirmed-gap
 created: '2026-07-17'
-updated: '2026-07-17'
+updated: '2026-09-14'
 status: active
 ---
-
 ## 개념 요약
 
 oppl Loop 2의 태스크 내부 파이프라인(T1~T5+G)을 태스크당 1회 디스패치되는 일회용 루프 액션 에이전트(`opal-loop-action-agent`)에 위임하기로 한 설계 결정 묶음. 목적은 태스크당 노미널 3~4회였던 PM 개입을 결과 보고 1건으로 압축해, 소유자(PM)의 롱런 워크플로우 컨텍스트 누적을 태스크 단위로 격리하는 것이다.
@@ -32,7 +32,7 @@ oppl Loop 2의 태스크 내부 파이프라인(T1~T5+G)을 태스크당 1회 �
 
 - **계층 구조**: PM은 L0 태스크 선택·L∞ 관찰·done-check·사람 게이트·소유자 보고를 유지하고, 태스크 내부(T1~T5+G)만 루프 액션 에이전트에게 위임한다. 루프 액션 에이전트는 태스크 1개 수명의 일회용 인스턴스다 — 상주형 부-PM은 누적 문제를 루프 액션 에이전트로 이전할 뿐이므로 배제한다.
 - **내부 디스패치 토폴로지 4축 분리**: 생성자(T1/T3)·Evaluator(G)·test-agent(T2 RED/T4a GREEN)·컨벤션·보안 체커(T4b)를 각각 별도 에이전트로 내부 디스패치하여 생성자≠평가자(H-9)를 유지한다.
-- **3-SSOT 도구 호출 경계**: 루프 액션 에이전트는 `test-tool scenario-*`만 호출하고, `backlog-tool`·`state-tool`은 호출하지 않는다 — 백로그(L∞)와 STATE는 PM 단독 갱신 오너십으로 남긴다.
+- **도구 호출 경계 — 3-SSOT + 런타임 가드 축(task:131 절충)**: 루프 액션 에이전트는 `test-tool scenario-*`와 `oppl-runtime-tool`의 `admit`·`attempt-start`·`attempt-finish` 세 서브명령을 호출한다. `backlog-tool`·`state-tool`·`oppl-runtime-tool init` 호출 금지는 불변이며 백로그(L∞)와 STATE는 여전히 PM 단독 갱신 오너십이다. **3-SSOT 정의 자체는 3축 그대로 두고 4축으로 넓히지 않는다** — `runtime.json`은 업무 SSOT가 아니라 다음 실행의 허가만 결정하는 별개의 런타임 가드 축이다. **절충 근거**: 상한 판정은 프로세스 시작 직전 경계에서만 의미가 있어 판정 시점과 호출 시점을 분리할 수 없고, PM만 호출하게 하면 단계 전환마다 왕복이 생겨 이 페이지가 세운 '태스크당 PM 개입 1회' 구조가 되돌아간다.
 - **CONTRACT drift 경계**: 루프 액션 에이전트는 `CONTRACT.md`를 직접 수정하지 않는다. 계약 미접촉은 정상 진행하되, 계약 갱신이 필요한 drift를 감지하면 blocked로 반환하고 PM이 오너십 계층 분류·반영·에스컬레이션을 수행한다.
 - **검증 2원화 순서 강행**: G(구현 전, Evaluator)는 항상 T3 이전에 완료되어야 하며, T4a(구현 후, test-agent)는 T3 완료 후에만 진입한다. 순서 증거는 QA-SPEC.md(G) 시점 < test-scenario.json result 존재(T4a) 시점으로 남긴다. `scenario-lock`이 `red_not_confirmed`를 반환하면 G 진입을 거부해 self-confirming RED를 차단한다.
 - **재시도 상한 SSOT 비복제**: 루프 액션 에이전트 문서는 하네스 §1 자동 루핑 제약 표를 참조만 하고 구체 수치를 복제하지 않는다.

@@ -905,9 +905,13 @@ class TestOutputArtifacts(unittest.TestCase):
         )
 
     def test_registry_parity(self):
-        """[T044/TS-050] F-006 구현 후: tools.md 섹션 집합 == harness §9 표 도구 집합 (둘 다 7도구).
+        """[T044/TS-050] tools.md 레지스트리 표 행 집합 == harness §9 표 도구 집합 (둘 다 7도구).
         H-5: drift 정합. 두 표 도구 집합이 동일해야 함.
-        RED 조건: brain-tool/code-scan/cmux-tool/tool-scan 미추가 → 집합 불일치 → FAIL.
+
+        131 W-16: tools.md는 도구별 '## <도구>' 절을 걷어내고 레지스트리 표
+        (첫 열이 백틱 감싼 도구명인 행) 1개로 축소됐다. 검사 의도(하네스 도구
+        집합과 tools.md 등재 집합의 정합)는 그대로 두고, 검사 대상만 절 헤더에서
+        표 행으로 옮긴다.
         """
         self.assertTrue(
             _TOOLS_MD.exists(),
@@ -927,17 +931,18 @@ class TestOutputArtifacts(unittest.TestCase):
             "test-tool", "test", "brain-tool", "brain", "tool-scan"
         }
 
-        # tools.md에서 7도구 섹션 헤더 추출
-        # "## brain-tool" 또는 "## brain" 패턴으로 섹션 확인
+        # tools.md 레지스트리 표에서 7도구 행 추출
+        # "| `brain-tool` |" 형태의 첫 열로 행 확인 (절 헤더가 아니다)
         tools_found = set()
         for tool_name in ["xlsx", "state", "code-scan", "cmux", "test", "brain", "tool-scan"]:
             import re
-            if re.search(rf"#+\s+{re.escape(tool_name)}", tools_content, re.IGNORECASE):
+            if re.search(rf"^\|\s*`{re.escape(tool_name)}[a-z-]*`\s*\|",
+                         tools_content, re.IGNORECASE | re.MULTILINE):
                 tools_found.add(tool_name)
 
         self.assertEqual(
             len(tools_found), 7,
-            f"[TS-050] tools.md에서 7도구 섹션 미확인. found={tools_found}"
+            f"[TS-050] tools.md 레지스트리 표에서 7도구 행 미확인. found={tools_found}"
         )
 
         # harness §9 표에서 도구 행 추출
@@ -955,12 +960,15 @@ class TestOutputArtifacts(unittest.TestCase):
         # 두 집합 동일
         self.assertEqual(
             tools_found, harness_tools_found,
-            f"[TS-050] tools.md 집합과 harness §9 집합 불일치. tools={tools_found}, harness={harness_tools_found}"
+            f"[TS-050] tools.md 레지스트리 집합과 harness §9 집합 불일치. "
+            f"tools={tools_found}, harness={harness_tools_found}"
         )
 
     def test_drift_entries(self):
-        """[T044/TS-051] F-006 구현 후: tools.md에 brain-tool 섹션, harness §9에 code-scan·cmux-tool 행.
-        RED 조건: brain-tool/code-scan/cmux-tool 미추가 → FAIL.
+        """[T044/TS-051] tools.md 레지스트리 표에 brain-tool 행, harness §9에 code-scan·cmux-tool 행.
+
+        131 W-16: tools.md 쪽 검사 대상을 '## brain-tool' 절 헤더에서 레지스트리
+        표 행으로 옮긴다. harness §9 쪽 단언은 그대로다.
         """
         self.assertTrue(
             _TOOLS_MD.exists(),
@@ -974,12 +982,13 @@ class TestOutputArtifacts(unittest.TestCase):
         tools_content = _TOOLS_MD.read_text()
         harness_content = _HARNESS_MD.read_text()
 
-        # tools.md에 brain-tool 섹션
+        # tools.md 레지스트리 표에 brain-tool 행
         import re
-        brain_section = re.search(r"#+\s+brain.?tool", tools_content, re.IGNORECASE)
+        brain_row = re.search(r"^\|\s*`brain.?tool`\s*\|", tools_content,
+                              re.IGNORECASE | re.MULTILINE)
         self.assertIsNotNone(
-            brain_section,
-            f"[TS-051] tools.md에 brain-tool 섹션 없음. path={_TOOLS_MD}"
+            brain_row,
+            f"[TS-051] tools.md 레지스트리 표에 brain-tool 행 없음. path={_TOOLS_MD}"
         )
 
         # harness §9에 code-scan 행

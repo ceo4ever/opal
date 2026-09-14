@@ -3213,7 +3213,6 @@ class TestUpdateHistoryLossless(unittest.TestCase):
 _MEMORY_LEARNING = _REPO_ROOT / "opal/core/references/harness/memory-learning.md"
 _MEMORY_SCHEMA_PATH = _TOOL_DIR / "schema" / "memory.schema.json"
 _README_PATH = _TOOL_DIR / "README.md"
-_TOOLS_MD_PATH = _REPO_ROOT / "opal/core/references/tools.md"
 _NEW_ERROR_CODES_096 = ("memory_file_exists", "orphan_ref_missing", "memory_file_unresolvable")
 
 
@@ -3827,20 +3826,22 @@ class TestLifecycleDocParity(unittest.TestCase):
         for i, col in enumerate(row_match.groups(), start=1):
             self.assertTrue(col.strip(), f"candidate 행 {i}번째 열이 비어있음")
 
-    def test_qa017_new_error_codes_documented_in_readme_and_toolsmd(self):
+    def test_qa017_new_error_codes_documented_in_readme(self):
         """QA-017 (TS-017, H-9): ERROR_CODES 신규 3종
         (memory_file_exists/orphan_ref_missing/memory_file_unresolvable)이
-        README.md·tools.md 에러 코드 표에 모두 등재된다."""
+        README.md 에러 코드 표에 등재된다.
+
+        131 W-16: `tools.md`는 도구 절을 걷어내고 레지스트리 표(도구·용도·실행
+        경로·README)로 축소됐고 오류 코드를 더는 보유하지 않는다. 따라서 오류 코드
+        문서화의 유일한 owner는 이 도구의 README다 — 아래 단언이 그 단일 검사다."""
         module = _load_tool_module(_TOOL_PY, "memory_tool_qa017")
         codes = set(module.ERROR_CODES)
         for code in _NEW_ERROR_CODES_096:
             self.assertIn(code, codes, f"ERROR_CODES에 신규 코드 '{code}' 부재 — GREEN 미구현")
 
         readme_text = _README_PATH.read_text(encoding="utf-8")
-        tools_text = _TOOLS_MD_PATH.read_text(encoding="utf-8")
         for code in _NEW_ERROR_CODES_096:
             self.assertIn(f"`{code}`", readme_text, f"README.md 에러 코드 표에 '{code}' 누락")
-            self.assertIn(f"`{code}`", tools_text, f"tools.md 에러 코드 표에 '{code}' 누락")
 
     def test_qa018_existing_four_rows_text_unchanged(self):
         """QA-018 (TS-018, 불변식 가드 — RED 시점에도 통과 가능): 기존 4개 상태 행

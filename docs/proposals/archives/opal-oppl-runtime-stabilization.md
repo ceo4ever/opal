@@ -1,6 +1,6 @@
 # OPPL 독립 Pilot 실행 안정화 제안서
 
-> 상태: 검토
+> 상태: 적용완료
 > 작성: 알투(PM)
 > 작성일: 2026-09-13
 > 목적: 수렴형 프로젝트에 사용하는 독립 Pilot인 OPPL의 장시간 실행, 반복 상한, 완료 판정을 도구로 집행한다.
@@ -85,9 +85,11 @@ dispatch를 거부하는 도구가 없다. Loop 1·Loop 2의 회전 수, task at
 
 ### 3.5 파생 뷰 시각 불일치
 
-`backlog-tool`은 JSON의 `updated_at`을 갱신하지만 기존 `BACKLOG.md`에서는 마커 영역만 교체하므로
-머리말의 `최종 갱신` 시각이 init 값으로 남는다
-(`opal/tools/backlog-tool/backlog_tool.py:251-265`).
+`backlog-tool`은 JSON의 `updated_at`을 갱신하지만 기존 `BACKLOG.md`에서는 마커 영역만 교체해
+머리말의 `최종 갱신` 시각이 init 값으로 남았다(`_rerender_backlog_md`
+`opal/tools/backlog-tool/backlog_tool.py:268-283`, 신규 템플릿은 `_build_new_backlog_md` `:246-257`,
+머리말 라인 `:250`). 현재는 `_sync_backlog_header` `:260-265`가 재렌더 경로에서 같은 `updated_at`으로
+머리말을 치환하며, 머리말 라인이 없는 기존 파일에는 삽입하지 않아 하위호환을 유지한다.
 
 ## 4. 집행 구조
 
@@ -108,20 +110,24 @@ dispatch를 거부하는 도구가 없다. Loop 1·Loop 2의 회전 수, task at
 `oppl-runtime-tool`은 태스크 폴더의 `.oppl-run/runtime.json`을 현재 실행 상태의 운영 SSOT로 관리한다.
 모든 갱신은 lock 안에서 revision 확인 후 temp write·fsync·atomic replace로 수행한다.
 
-ledger 최소 필드는 다음과 같다.
+ledger 최상위 필드는 `schema_version`, `run_id`, `revision`, `status`, `started_at`, `deadline_at`,
+`design_round`, `project_dispatch_count`, `cost_used`, `wall_time_used`, `budget_snapshot`, `counters`
+12종이다. phase 레코드는 `counters.<task_id>.phases.<phase>` 경로에 있고 `attempt_count`,
+`resume_count`, `active_attempt_id`, `status`, `record_path`, `last_failure_fingerprint`,
+`identical_failure_count` 7종을 갖는다.
 
-- `run_id`, `revision`, `status`, `started_at`, `deadline_at`
-- `design_round`, `project_dispatch_count`
-- task·phase별 `attempt_count`, `resume_count`, `active_attempt_id`
-- `cost_used`, `wall_time_used`, `budget_snapshot`
-- 최근 실패 지문과 연속 발생 횟수
-- attempt ID 참조와 집계 상태. PID·PGID·시작 fingerprint·heartbeat·result·exitcode 원문은
-  `opal-agent`의 attempt record만 소유
+attempt 1건의 PID·PGID·시작 fingerprint·heartbeat·terminal result·exit code 원문은 ledger가 아니라
+`opal-agent`가 `<run-dir>/<phase>[.aN].attempt.json`에 원자 기록한다. ledger는 `attempt_id`와 그
+파일 경로(`active_attempt_id`, `record_path`)만 외래 참조로 갖고 원문을 중복 저장하지 않는다. OPPD
+Controller도 같은 attempt record를 소비하므로 원문 owner는 공용 쪽에 둔다
+(`docs/proposals/opal-oppb-project-build-pilot.md:379-380`).
 
 `opal-agent`는 attempt 한 건의 실행 record primitive를, `oppl-runtime-tool`은 여러 attempt의
-round·resume·예산·상한 집계를 소유한다. `runtime.json`은 attempt ID와 집계값만 보유하며 process 원문을
-복제하지 않는다. OPPD가 같은 primitive를 사용하더라도 OPPL의 round 상태기계와 Controller를 공유하지
-않는다.
+round·resume·예산·상한 집계를 소유한다. OPPD가 같은 primitive를 사용하더라도 OPPL의 round
+상태기계와 Controller를 공유하지 않는다.
+
+`cost_used`는 terminal candidate의 `total_cost_usd` 값을 그대로 쓰고 stream 안 result마다 합산하지
+않는다. 같은 stream의 복수 result가 싣는 비용은 누적값이라 합산하면 이중 계상된다.
 
 `run_id`는 `state-tool`이 발급해 `state.json`의 현재 run으로 저장한다. `oppl-runtime-tool`은 이 값을
 외래 참조로 복제할 뿐 새 ID를 발급하거나 현재 run을 바꾸지 않는다. `state.json`에 현재 run이 없으면
@@ -158,10 +164,14 @@ runtime 초기화를 거부하며, run-log 활성화 전이라면 state-tool의 
 - `max_task_attempts`
 - `max_identical_failures`
 - `max_wall_time_sec`
-- `heartbeat_timeout_sec`
+- `heartbeat_timeout_sec` (stream mode 전용)
 - `hard_timeout_sec_by_phase`
 - `max_hard_timeout_sec`
 - `terminate_grace_sec`
+
+`heartbeat_timeout_sec`는 stream mode에만 적용한다. sync mode는 출력을 줄 단위로 관측하지 않으므로
+hard timeout만 적용하고 heartbeat 부재를 `timed_out` 사유로 쓰지 않는다. hard timeout과 PGID 회수는
+두 mode에 동일하게 적용한다.
 
 동일 컨텍스트 resume 상한은 설정값이 아니라 Guards의 고정값 `1`을 사용한다. provider가 비용을
 신뢰성 있게 보고할 때는 `max_cost_usd` 또는 동등 비용 단위를 추가로 설정하며 이 값도 유한한 양수여야
@@ -184,6 +194,16 @@ Loop 1 회전, Loop 2 task 선택, 태스크 내부 phase 시작과 resume 직�
 `oppl-runtime-tool admit`을 호출한다. 도구는 같은 lock 안에서 다음을 검사하고 허가된 경우에만 카운터를
 증가시킨다.
 
+호출 주체는 범위별로 갈린다. PM은 `state-tool run-start` → `oppl-runtime-tool init --run-id`로 run을
+초기화하고 Loop 1 회전과 Loop 2 task 선택 경계에서 `admit`을 호출한다. 태스크 내부 phase 시작과
+resume 경계에서는 `opal-loop-action-agent`가 `admit` → `attempt-start` → 실행 → `attempt-finish`를
+직접 호출한다. phase 전환 시점과 상한 판정 시점을 분리할 수 없고, PM만 호출하게 하면 phase마다 왕복이
+생겨 태스크당 PM 개입 1회 구조가 무너지기 때문이다.
+
+이 허용은 업무 SSOT 경계를 넓히지 않는다. `runtime.json`은 `backlog.json`·`state.json`·
+`test-scenario.json` 3축과 별개의 런타임 가드 축이며, `opal-loop-action-agent`의 `backlog-tool`·
+`state-tool`·`oppl-runtime-tool init` 호출 금지는 그대로다.
+
 1. 같은 범위에 active attempt가 없는가
 2. 설계 회전·프로젝트 dispatch·task attempt 상한이 남아 있는가
 3. 동일 컨텍스트 resume 상한이 남아 있는가
@@ -193,7 +213,12 @@ Loop 1 회전, Loop 2 task 선택, 태스크 내부 phase 시작과 resume 직�
 
 거부 응답은 단일 JSON과 비영(非零) exit code로 `active_attempt`, `round_limit_exceeded`,
 `attempt_limit_exceeded`, `resume_limit_exceeded`, `budget_exceeded`, `timeout_limit_exceeded`,
-`no_progress`, `decision_required` 중 하나를 반환한다. 에이전트는 이를 재해석해 우회하지 않는다.
+`no_progress`, `decision_required` 중 하나를 반환한다. 이 8종은 폐쇄 집합이고
+`max_project_dispatches` 전용 코드는 없다. 모든 거부 응답은 어느 범위에서 걸렸는지를 나타내는
+`scope` 필드를 동반하며, dispatch 상한 초과는 `attempt_limit_exceeded` + `scope: "dispatch"`로
+구분한다. `timeout_limit_exceeded`는 집합에 있으나 `oppl-runtime-tool`이 아니라 attempt wrapper가
+요청 timeout을 phase 상한·`max_hard_timeout_sec`와 대조해 반환한다. 에이전트는 이를 재해석해
+우회하지 않는다.
 
 동일 컨텍스트 resume은 Guards 계약대로 최대 1회다. 그 뒤에는 남은 예산 안에서 압축 실행 입력을 받은
 새 attempt만 허용한다. 새 attempt도 전체 task·project 상한을 우회하지 못한다.
@@ -210,6 +235,16 @@ Loop 1 회전, Loop 2 task 선택, 태스크 내부 phase 시작과 resume 직�
 자유 텍스트, timestamp, 임시 경로, PID, 토큰 수는 지문에서 제외한다. 같은 지문이
 `max_identical_failures`에 도달하면 추가 dispatch를 거부하고 `blocked/no_progress`로 전이한다.
 
+`exit_class`는 provider adapter가 terminal candidate의 `terminal_reason`과 `api_error_status`를 읽어
+`ok`, `impl_failure`, `api_error`, `timed_out`, `output_format_invalid`, `framing_error` 중 하나로
+분류한 값이다. 지문 payload의 1급 필드이므로 provider API 오류 반복은 구현 실패(`impl_failure`)
+지문과 섞이지 않는다.
+
+`api_error`로 끝난 attempt는 무진전 카운터를 증가시키지도 초기화하지도 않는다. provider rate limit
+재시도는 시간 경과만으로 해소될 수 있어 "같은 시도가 목표에 가까워지지 않음"과 성격이 다르기
+때문이다. 따라서 provider 장애는 `no_progress`가 아니라 attempt·dispatch·비용·벽시계 상한으로만
+제한된다.
+
 ### 6.4 T4b 실패 전이
 
 - 제품 코드·설정·방어 구현 결함: T3 새 attempt
@@ -222,7 +257,11 @@ Loop 1 회전, Loop 2 task 선택, 태스크 내부 phase 시작과 resume 직�
 ### 7.1 watchdog과 자식 회수
 
 attempt wrapper는 루트 프로세스를 별도 process group으로 시작하고 PID·PGID·시작 fingerprint를
-ledger에 기록한다. watchdog은 stdout read loop와 독립된 monotonic timer로 동작한다.
+attempt record에 기록한다(ledger가 아니다 — §4.1). watchdog은 stdout read loop와 독립된 monotonic
+timer로 동작한다.
+
+heartbeat timeout은 stream mode에만 적용한다. sync mode는 hard timeout만 적용하며 heartbeat 부재를
+`timed_out` 사유로 쓰지 않는다.
 
 hard timeout 또는 heartbeat timeout이면 process group 전체에 TERM을 보내고 `terminate_grace_sec` 뒤
 남은 프로세스에 KILL을 보낸다. PGID 소멸을 확인하기 전에는 `timed_out` terminal 기록과 다음 attempt
@@ -233,10 +272,15 @@ hard timeout 또는 heartbeat timeout이면 process group 전체에 TERM을 보�
 provider adapter가 전체 stream을 분류한다.
 
 1. stream의 마지막 유효한 result를 현재 attempt의 terminal candidate로 선택한다.
-2. 그 앞 result는 adapter가 같은 `session_id`와 더 작은 `result_index`로 resume replay임을 증명할 때만
-   허용하고 현재 결과로 소비하지 않는다. replay를 증명할 수 없는 복수 result는 `error`다.
-3. terminal candidate 뒤에는 `background_tasks_changed`, `task_updated`, `task_notification` 등
-   adapter가 명시한 terminal epilogue allowlist만 허용한다.
+2. 그 앞 result는 같은 `session_id`이고 `result_index`가 단조 증가할 때만 선행 turn으로 인정하며
+   현재 결과로 소비하지 않는다. 둘 중 하나라도 깨진 복수 result는 `error`다. 선행 result는 이전
+   결과의 재생이 아니라 백그라운드 작업 알림 등이 유발한 별도 turn이다 — 태스크 123 실측에서 선행
+   result는 `origin.kind = task-notification`·`num_turns 0`·`total_cost_usd 0`이었고, 본 작업 result
+   뒤에 같은 origin으로 15 turn짜리 후속 작업이 이어진 사례도 있다.
+3. terminal candidate 뒤에는 adapter가 명시한 terminal epilogue allowlist만 허용한다. allowlist는
+   `type`이 아니라 `subtype` 기준이다 — 실측 형태는
+   `{"type":"system","subtype":"background_tasks_changed"|"task_updated"|"task_notification"}`이며,
+   판정은 `type == "system"`이고 `subtype`이 allowlist에 있을 때만 통과한다.
 4. epilogue를 순서대로 reduce한 **stream 종료 시점**에 등록된 모든 자식 작업이 terminal이어야 한다.
    중간 이벤트에 실행 중 task가 있어도 뒤 사건에서 `killed/completed/stopped` 또는 빈 task 집합으로
    닫히면 허용한다.
@@ -245,21 +289,32 @@ provider adapter가 전체 stream을 분류한다.
 6. 루트 프로세스 exit 0, PGID 소멸, 최종 자식 terminal, 마지막 result schema 성공이 모두 성립해야
    `done`이다.
 
+`origin`은 어떤 판정 분기에도 쓰지 않는다. attempt record에 진단 정보로만 싣고 `origin` 부재는
+오류로 다루지 않는다.
+
 따라서 마지막 줄만 보는 규칙과 “어디든 result가 있으면 성공” 규칙을 모두 폐기한다.
 `opal-agent`와 monitor는 동일 adapter의 terminal 판정 결과만 소비한다.
 
 ### 7.3 출력 경로와 직렬화
 
-호출 에이전트는 shell redirect로 결과 파일 이름과 형식을 결정하지 않는다. attempt wrapper가 호출
-mode에 따라 경로를 만들고 닫는다.
+호출 에이전트는 shell redirect로 결과 파일 이름과 형식을 결정하지 않는다. `opal-agent`가
+`--run-dir <dir> --phase <name> [--attempt aN]`을 받으면 attempt 산출물의 단일 writer가 되어 호출
+mode에 따라 경로를 만들고 닫는다. 세 인자가 모두 없으면 기존 stdout passthrough 동작이 그대로다.
 
 - stream mode: `<phase>[.aN].events.jsonl` — UTF-8 compact JSON 객체 1행 1건
 - sync mode: `<phase>[.aN].result.json` — UTF-8 단일 JSON 객체
-- 공통: `<phase>[.aN].err.log`, `<phase>[.aN].exitcode`
+- 공통: `<phase>[.aN].err.log`, `<phase>[.aN].exitcode`, `<phase>[.aN].attempt.json`
 
-wrapper는 result·exitcode를 temp write·fsync·atomic rename으로 확정한다. 확장자와 실제 직렬화가
-다르거나 JSONL 한 사건이 여러 물리 행에 걸치면 `output_format_invalid`로 처리하며 `done`을 기록하지
-않는다.
+stream 파일은 줄 단위 append 후 flush로 쓴다 — 실행 중 증분 관측을 유지해야 monitor가 진행 상황을
+읽을 수 있기 때문이다. sync `result.json`, `.exitcode`, `.err.log`는 temp write·fsync·atomic
+rename으로 확정한다. 확장자와 실제 직렬화가 다르거나 JSONL 한 사건이 여러 물리 행에 걸치면
+`output_format_invalid`로 처리하며 `done`을 기록하지 않는다.
+
+watchdog 조절은 `--heartbeat-timeout-sec`(stream mode 전용), `--terminate-grace-sec`(기본 5초 —
+기본값이 있는 것은 유예 시간뿐이다), `--max-timeout-sec`, `--phase-timeout-limit-sec` 네 인자로
+받는다. `--phase-timeout-limit-sec`는 호출자가 계산해 넘기는 값이고 `opal-agent`는 phase별 상한 표를
+갖지 않는다 — phase 의미론과 상한 표는 공용 owner인 `oppl-runtime-tool` 설정 계약에 있다. `--timeout`이
+전달된 상한을 넘으면 프로세스를 만들지 않고 거부한다. 네 인자를 모두 생략하면 기존 동작이 그대로다.
 
 ## 8. 파생 뷰와 검증 경계
 
@@ -277,7 +332,7 @@ wrapper는 result·exitcode를 temp write·fsync·atomic rename으로 확정한�
 | ID | 검증 시나리오 | 통과 증거 |
 |---|---|---|
 | AC-01 | phase 상한이 서로 다른 무출력 process 둘과 상한 초과 요청 실행 | 각 phase deadline에 PGID 소멸·`timed_out`; 초과 요청은 process 0·`timeout_limit_exceeded` |
-| AC-02 | 이전 result가 replay된 warm resume에서 마지막 result 뒤 허용된 자식 종료 epilogue 출력 | 마지막 result만 소비, 종료 시점 자식 0, exit 0·`done` |
+| AC-02 | terminal candidate 앞에 같은 `session_id`·단조 증가 `result_index`의 선행 turn result가 있고, 뒤에 허용된 자식 종료 epilogue가 붙은 stream | 마지막 result만 소비, 종료 시점 자식 0, exit 0·`done` |
 | AC-03 | result 뒤 알 수 없는 이벤트 또는 epilogue 종료 시점까지 실행 중 자식 유지 | `done` 거부, `running` 또는 `error` |
 | AC-04 | 같은 context를 두 번 resume | 첫 resume만 허가, 두 번째 `resume_limit_exceeded` |
 | AC-05 | 필수 상한 누락·0·음수·무한대 설정 | OPPL 시작 전 설정 오류로 거부 |
@@ -295,7 +350,7 @@ wrapper는 result·exitcode를 temp write·fsync·atomic rename으로 확정한�
 
 ## 10. 구현 순서
 
-1. task 123의 resume replay·result 후속 이벤트·잘못된 JSONL 사례를 비식별 회귀 fixture로 고정
+1. task 123의 복수 result turn·result 후속 이벤트·잘못된 JSONL 사례를 비식별 회귀 fixture로 고정
 2. state-tool run identity 계약과 `oppl.runtime` effective-setting loader 구현
 3. `opal-agent` process group·독립 watchdog·phase timeout·terminal adapter·출력 writer 구현
 4. `oppl-runtime-tool` ledger·lock·admission·실패 지문 구현
