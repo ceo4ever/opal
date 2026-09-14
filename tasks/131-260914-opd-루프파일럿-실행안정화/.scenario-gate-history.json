@@ -1,0 +1,5 @@
+[
+  {"iteration": 1, "missing": [], "scores": {"goal": 2, "adoption": 1, "boundary": 2}, "average": 1.67, "gaps": ["출력 writer 교체 구형 잔존 미검증", "완료 판정 교체 구형 문면 미검증", "Setup 대역 한계 보완 주장이 시나리오와 불일치", "S-20 시점이 red-first §1과 불일치", "S-19 시점 혼재", "S-30 과잉·중복"], "verdict": "pass"},
+  {"iteration": 2, "missing": [], "scores": {"goal": 2, "adoption": 1, "boundary": 2}, "average": 1.67, "gaps": ["상한 집행 주체 교체의 구형 잔존 미검증 + W-7 ②③④ 신형 채택 무검증", "S-32 ② grep 조건이 :212 한 곳만 매치", "S-32 ① 패턴이 동기 축 stdout 리다이렉트 누락"], "verdict": "pass"},
+  {"iteration": 3, "missing": [], "scores": {"goal": 2, "adoption": 2, "boundary": 2}, "average": 2.0, "gaps": [], "verdict": "pass"}
+]

@@ -1,6 +1,7 @@
 # test-tool
 
 > OPAL 테스트 단계별 도구 결정론적 집행기 — 4서브명령(resolve/check/unit/integration) + scenario-* 서브명령(scenario-init/scenario-lock/scenario-mark/scenario-status/scenario-red/scenario-fidelity-check/scenario-conformance/scenario-coverage-check/scenario-coverage-build)
+> 소스: `opal/tools/test-tool/` | 배포: `~/.opal/tools/test-tool/`
 
 ## 개요
 
@@ -112,6 +113,8 @@ bash run.sh unit [--scope fe|be] [--changed-files FILE...] [--project-root PATH]
 ### `integration`
 
 E2E contract v2 결과를 반환한다. profile은 요구사항의 공개 표면으로 결정되며, 도구 가용성으로 UI 행동을 API-only 실행으로 낮추지 않는다.
+
+`integration`과 `scenario-mark --verdict-json`은 profile `browser` / `api` / `hybrid` / `collaborative` / `manual` 5종을 보존한다(SSOT: `lib/e2e_contract.py`의 `PROFILES`).
 
 ```bash
 bash run.sh integration [--scope fe|be] [--url URL] [--project-root PATH]
@@ -453,3 +456,4 @@ bash run.sh scenario-coverage-check --coverage-input <PATH>
 | v1.4 | 2026-09-09 14:18 KST | `scenario-coverage-build --task-folder ... --template sdlc-v2` 추가 — sdlc-v2 TASK AC/C, PLAN H, TEST S를 `.scenario-coverage-input.json`으로 결정론 변환하고 W를 features에서 제외. 기존 `scenario-coverage-check` 입력·exit 계약은 유지 (task 111/W-5) |
 | v1.5 | 2026-09-09 14:58 KST | sdlc-v2 builder가 중복 S-ID를 `coverage_input_invalid`로 거부하도록 계약을 보강하고, Setup의 test substitute 기록이 실제 integration/E2E/manual 증거를 대체하지 못함을 명시 (task 111/W-5 보완) |
 | v1.6 | 2026-09-09 15:07 KST | sdlc-v2 PLAN Risks H를 optional로 변경. H 0건은 정상 build/check 통과하고, H가 존재하는 경우의 미커버 실패 계약은 유지 (task 111/W-5 보완) |
+| v1.7 | 2026-09-14 | `tools.md` test-tool 절 흡수 — `integration` 절에 E2E contract v2 profile 5종(`browser`/`api`/`hybrid`/`collaborative`/`manual`, SSOT `lib/e2e_contract.py` `PROFILES`) 명시 + 상단 소스·배포 경로 1줄 추가. 나머지 절 내용(트리거 조건·루프 한도 비보유·status/exit 표·legacy 입력 변환)은 이미 README가 보유해 중복 흡수 없음 (131 W-14) |

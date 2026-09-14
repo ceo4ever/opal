@@ -319,7 +319,9 @@ const RULE_DOCS = {
   headerRules: path.join(CORE_REF, 'harness', 'header-rules.md'),
   codeScanMgmt: path.join(CORE_REF, 'pm', 'code-scan-management.md'),
   pmReviewGate: path.join(CORE_REF, 'harness', 'pm-review-gate.md'),
-  toolsMd: path.join(CORE_REF, 'tools.md'),
+  // 131: tools.md가 레지스트리 표로 축소되면서 code-scan 사용법 절이 도구 README로 이관됐다.
+  // @header 규칙 서술의 owner는 이제 code-scan README다.
+  toolsMd: path.join(REPO_ROOT, 'opal', 'tools', 'code-scan', 'README.md'),
 };
 const DOCS_TARGETS = {
   conventions: path.join(DOCS, 'CONVENTIONS.md'),

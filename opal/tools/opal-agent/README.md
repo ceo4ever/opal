@@ -113,10 +113,13 @@ follow = call_agent("방금 결과에서 가장 취약한 모듈은?",
 | 예외 | 발생 조건 |
 |------|----------|
 | `ClaudeNotFoundError` | provider CLI 미설치(PATH 부재) |
-| `OpalAgentTimeout` | `timeout` 초과 |
+| `OpalAgentTimeout` | hard timeout, 또는 stream 모드의 heartbeat timeout |
 | `OpalAgentError` | 비정상 종료 / 파싱 실패 / 알 수 없는 provider 등 |
 
 `is_error=true`는 예외가 아니라 결과에 담겨 반환된다.
+
+세 예외 모두 `code` 속성으로 안정적 실패 식별자를 노출한다(문자열 매칭 불필요) —
+`timeout_limit_exceeded`, `output_format_invalid`, `timed_out`, `framing_error`.
 
 ## CLI로 사용
 
@@ -146,6 +149,13 @@ echo "긴 프롬프트..." | opal-agent --provider gemini --json
 | `--resume ID` | 이어갈 세션 ID (warm resume, `--session-id`와 상호배타) |
 | `--session-id ID` | 신규(cold) 세션에 지정할 caller-supplied session id — **claude만** 지원(`--resume`과 상호배타) |
 | `--bin PATH` | CLI 바이너리 경로 오버라이드 |
+| `--run-dir DIR` | attempt 산출물 디렉토리. `--phase`와 **함께** 줘야 opal-agent가 산출물 writer가 된다(§attempt 산출물 소유) |
+| `--phase NAME` | 산출물 파일명 접두 문자열. opal-agent는 phase 의미론을 모른다 |
+| `--attempt aN` | 재시도 접미 — `<phase>.aN.*` |
+| `--heartbeat-timeout-sec SEC` | 무출력 허용 상한. **stream mode 전용**(D10) — sync에는 적용하지 않으며 heartbeat 부재를 `timed_out` 사유로 쓰지 않는다. 기본 없음 |
+| `--terminate-grace-sec SEC` | timeout 회수 시 SIGTERM 후 SIGKILL까지 유예(기본 `5`) |
+| `--max-timeout-sec SEC` | 전역 hard timeout 상한. `--timeout`이 넘으면 프로세스를 만들지 않고 `timeout_limit_exceeded`로 거부. 기본 없음 |
+| `--phase-timeout-limit-sec SEC` | **호출자가 계산해 넘기는** phase별 상한. 초과 시 동일하게 거부. opal-agent는 phase별 상한 표를 갖지 않는다. 기본 없음 |
 | `--opal-bootstrap on\|assistant\|off` | 서브에이전트 첫 줄 마커 어댑터(기본 `on`). `assistant`는 `[ASSISTANT]`→`session.assistant`, `off`는 `[WORKER]`→`session.worker`로 해석된다. setting의 `bootstrap: off`→`session.disabled`와는 다른 계약이다. |
 | `--json` / `--text` / `--stream` | 출력 형식 (기본 `--text`). `--json`/`--text`/`--stream`은 상호배타. `--stream`은 claude 전용(§stream 모드 참조) |
 
@@ -153,7 +163,7 @@ echo "긴 프롬프트..." | opal-agent --provider gemini --json
 
 ## stream 모드 (`--stream`, claude 전용, opt-in)
 
-기본 `--json`/`--text` 경로는 프로세스 종료까지 블로킹(`subprocess.run`)한 뒤 결과를 일괄 반환한다 — 장시간 실행 중에는 진행 상황을 볼 수 없다. `--stream`은 claude CLI의 `--output-format stream-json`을 이용해 **실행 중에도** 이벤트를 흘려보내는 opt-in 경로다. 기존 `--json` 경로(단일 JSON 일괄 반환)는 **불변** — `--stream`을 지정하지 않으면 동작이 전혀 바뀌지 않는다.
+기본 `--json`/`--text` 경로는 프로세스 종료까지 블로킹한 뒤 결과를 일괄 반환한다 — 장시간 실행 중에는 진행 상황을 볼 수 없다. `--stream`은 claude CLI의 `--output-format stream-json`을 이용해 **실행 중에도** 이벤트를 흘려보내는 opt-in 경로다. 기존 `--json` 경로(단일 JSON 일괄 반환)는 **불변** — `--stream`을 지정하지 않으면 동작이 전혀 바뀌지 않는다.
 
 ### 사용법
 
@@ -164,16 +174,103 @@ echo "긴 프롬프트..." | opal-agent --provider gemini --json
 echo $? > events.exitcode
 ```
 
-- opal-agent 자신은 `events.jsonl` 같은 내부 파일을 열지 않는다 — claude stream-json 각 줄을 opal-agent의 **자기 stdout으로 그대로(line-buffered) passthrough**할 뿐이다. 파일 증분 기록은 호출측 셸의 `>` 리다이렉트가 담당한다(단일 writer).
+- `--run-dir`·`--phase`·`--attempt`를 **하나도 주지 않으면** opal-agent는 내부 파일을 열지 않는다 — claude stream-json 각 줄을 opal-agent의 **자기 stdout으로 그대로(line-buffered) passthrough**할 뿐이다. 파일 증분 기록은 호출측 셸의 `>` 리다이렉트가 담당한다(단일 writer). `--run-dir`+`--phase`를 주면 대신 opal-agent가 산출물을 소유한다(§attempt 산출물 소유).
 - `--stream`을 지정하면 내부적으로 `--output-format stream-json --verbose`가 **항상 자동 부착**된다. claude CLI는 `--verbose` 없이 `--output-format stream-json`을 쓰면 exit 1(사용법 에러)로 항상 실패하므로, 호출자가 별도로 `--verbose`를 챙길 필요가 없다.
 - `--stream`은 **claude 전용**이다(`ClaudeAdapter.supports_stream = True`, 타 어댑터는 미지원). `--provider`가 claude가 아닌 상태로 `--stream`을 쓰면 즉시 `OpalAgentError`("provider '...'는 stream-json 실행 경로를 지원하지 않습니다")로 명시 실패한다 — 조용한 폴백은 없다.
-- 실행이 끝나면 리다이렉트된 파일의 **마지막 비어있지 않은 줄**이 claude stream-json의 `type: "result"` 이벤트다. 이 줄에서 기존 `--json` 경로와 동일한 5필드(`result`, `session_id`, `is_error`, `total_cost_usd`, `duration_ms`)를 그대로 추출할 수 있다 — 마지막 줄이 `result` 타입이 아니면 파싱 실패로 간주해 `OpalAgentError`를 던진다.
+- 실행이 끝나면 **마지막 유효한 `type: "result"` 이벤트**(마지막 물리 줄이 아니다)가 terminal candidate다. 여기서 기존 `--json` 경로와 동일한 5필드(`result`, `session_id`, `is_error`, `total_cost_usd`, `duration_ms`)를 추출한다 — 소비할 result가 하나도 없으면 `OpalAgentError`를 던진다. 판정 규칙은 §stream terminal framing 참조.
 - CLI에서 `--stream`을 쓰면 실행 중 passthrough로 이미 전량 출력이 끝난 상태이므로, `main()`은 별도 dump 없이 `result.is_error` 기준 종료 코드(0/1)만 반환한다. 실행 오류는 기존과 동일하게 `2`.
 - 라이브러리로 쓸 때는 `call_agent(..., output_format="stream-json")` — 호출측이 `sys.stdout`을 파일로 리다이렉트하거나 자체적으로 캡처해야 증분 기록이 이뤄진다.
 
 ### `--json`과의 관계
 
 `--stream`은 `--json`을 대체하지 않는 **opt-in 별도 경로**다. 실행 중 진행 상황 관측이 필요한 장시간 비동기 작업에만 `--stream`을 쓰고, 그 외 일반 호출은 기존 `--json`/`--text`를 그대로 쓴다. 두 경로는 `_run()` 디스패치 단계에서 분기되며 서로의 동작에 영향을 주지 않는다.
+
+## 실행 원시 기능 (attempt)
+
+opal-agent는 호출자가 준 **timeout·출력 경로·mode**만 안다. round·수렴 판정·백로그·태스크
+파이프라인 같은 상위 정책은 호출자 소유이며 이 도구에 들어오지 않는다. `phase`는 파일명
+문자열일 뿐이라 opal-agent는 phase 목록도 phase별 정책도 갖지 않는다.
+
+### process group과 watchdog
+
+두 실행 경로 모두 루트 프로세스를 `start_new_session=True`로 **별도 process group**에 띄우고
+PID·PGID를 attempt record에 남긴다. watchdog은 stdout read loop와 **독립된 monotonic timer
+스레드**라, 출력이 전혀 없는 프로세스도 정확한 시점에 만료된다.
+
+만료 시 `os.killpg(PGID, SIGTERM)` → `terminate_grace_sec` 대기 → `os.killpg(PGID, SIGKILL)`
+순으로 그룹 전체(손자 포함)를 회수하고, **PGID 소멸을 확인한 뒤에만** `timed_out`을 확정한다.
+
+| 인자 | 기본 | 의미 |
+|------|------|------|
+| `timeout` | 300 | hard timeout(초) — 두 mode 공통 |
+| `heartbeat_timeout_sec` | `None` | 무출력 허용 상한. **stream 모드 전용** — sync에는 적용하지 않으며 heartbeat 부재를 `timed_out` 사유로 쓰지 않는다 |
+| `terminate_grace_sec` | 5 | SIGTERM 후 SIGKILL까지 유예 |
+| `max_timeout_sec` | `None` | 전역 hard timeout 상한 |
+| `phase_timeout_limit_sec` | `None` | 호출자가 계산한 phase별 상한 |
+
+`timeout` 요청값이 `phase_timeout_limit_sec`나 `max_timeout_sec`를 넘으면 **프로세스를 만들지
+않고** `OpalAgentError(code="timeout_limit_exceeded")`로 거부한다. 상한값은 호출자가 인자로
+넘긴다 — opal-agent는 그 값이 어느 정책에서 왔는지 모른다.
+
+다섯 인자 모두 CLI에도 있다(`--timeout`, `--heartbeat-timeout-sec`, `--terminate-grace-sec`,
+`--max-timeout-sec`, `--phase-timeout-limit-sec`). 실제 호출 경로가 `run.sh` 셸 호출이므로
+라이브러리 전용 인자로 두면 상한 거부와 heartbeat 경계가 실제 경로에서 도달 불가해진다.
+`--heartbeat-timeout-sec`는 CLI에서도 stream mode에서만 적용된다.
+
+### attempt 산출물 소유
+
+`run_dir`와 `phase`를 **함께** 주면 opal-agent가 파일명을 스스로 만들고 열고 닫는다. 파일 1개의
+writer는 항상 opal-agent 프로세스 1개다. 셋 다 없으면 기존 stdout passthrough 동작이 그대로다.
+
+| 파일 | mode | 기록 방식 |
+|------|------|----------|
+| `<phase>[.aN].events.jsonl` | stream | 줄 단위 **append + flush** — 실행 중 증분 관측이 목적이라 atomic rename을 쓰지 않는다 |
+| `<phase>[.aN].result.json` | sync(`json`) | 단일 JSON 객체, temp write·fsync·atomic rename |
+| `<phase>[.aN].err.log` | 공통 | atomic rename |
+| `<phase>[.aN].exitcode` | 공통 | atomic rename — 프로세스 생존 중에는 **나타나지 않는다**. 관측자는 그 부재를 `running`의 근거로 쓴다 |
+| `<phase>[.aN].attempt.json` | 공통 | atomic rename |
+
+확장자와 실제 직렬화가 불일치하거나 JSONL 한 사건이 여러 물리 행에 걸치면
+`OpalAgentError(code="output_format_invalid")`로 종료하고 `done`을 기록하지 않는다.
+
+`attempt.json`은 PID·PGID·시작 fingerprint·heartbeat·terminal result·exit code 원문을 담는다.
+외부 ledger는 이 파일을 **경로로만** 외래 참조한다(내용을 복제하지 않는다).
+
+| 필드 | 의미 |
+|------|------|
+| `phase` / `attempt` / `mode` / `provider` | 호출 식별 (`mode`: `stream` \| `sync`) |
+| `status` | `done` \| `running` \| `error` \| `timed_out` |
+| `exit_class` | `ok` \| `impl_failure` \| `api_error` \| `timed_out` \| `output_format_invalid` \| `framing_error` |
+| `pid` / `pgid` | 루트 프로세스와 그 process group |
+| `pgid_reclaimed` | PGID 소멸 확인 여부 — `timed_out` 확정의 전제 |
+| `exit_code` | 루트 exit code 원문 (시그널 종료는 음수) |
+| `timeout_reason` | `null` \| `hard` \| `heartbeat` |
+| `started_at` / `ended_at` / `duration_ms` | 실행 구간 |
+| `fingerprint` | `provider`·`bin`·`cwd`·`output_format`·`argv_len`·`argv_sha256`·`timeout_sec`·`heartbeat_timeout_sec`·`terminate_grace_sec` (프롬프트 원문 대신 argv 해시) |
+| `heartbeat` | `timeout_sec`·`count`·`last_at`·`expired` |
+| `terminal` | terminal candidate result 이벤트 원본 (없으면 `null`) |
+| `cost_used` | terminal candidate의 `total_cost_usd` — **합산이 아니다** |
+| `unterminated_children` | stream 종료 시점 미종료 자식 task_id 목록 |
+| `origin` | 진단 전용 |
+| `outputs` | 실제로 기록한 산출물 경로 맵 |
+
+### stream terminal framing
+
+`analyze_stream(stdout) -> StreamVerdict`가 stream 전체를 단일 판정한다. "마지막 줄만 본다"와
+"어디든 result가 있으면 성공" 두 규칙은 모두 폐기됐다.
+
+1. 마지막 **유효 result**가 terminal candidate다.
+2. 그 앞 result는 `session_id`가 같고 `result_index`가 **단조 증가**할 때만 선행 turn으로
+   인정하며, 현재 결과로 소비하지 않는다. 둘 중 하나라도 깨지면 `error`다.
+3. candidate 뒤에는 `EPILOGUE_ALLOWLIST`만 허용한다 — `type`이 아니라 **`subtype` 기준**으로
+   `background_tasks_changed` / `task_updated` / `task_notification`이다.
+4. epilogue를 순서대로 reduce한 **stream 종료 시점**에 등록된 모든 자식이 terminal이어야 한다.
+   중간에 실행 중 task가 있다가 뒤에서 닫히면 허용한다.
+5. 루트 exit 0 + PGID 소멸 + 최종 자식 terminal + result schema 성공이 모두 성립해야 `done`이다.
+
+`StreamVerdict`는 `status`·`exit_class`·`terminal`·`cost_used`·`origin`·`unterminated_children`을
+노출한다. `origin`은 **진단 정보로만 기록**하며 판정 분기 조건에 쓰지 않는다 — `origin`이 없는
+stream도 정상이다.
 
 ## 스킬에서 호출
 

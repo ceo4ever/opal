@@ -231,13 +231,64 @@
 
 ---
 
-### 9. `gate-pass` — Gate 4행 일괄 ✅ 처리
+### 8a. `run-start` — 새 run_id 발급 (131 D8)
+
+```bash
+~/.opal/tools/state-tool/run.sh run-start <task-path>
+```
+
+- 새 `run_id`를 발급해 `state.json.run_id`에 기록한다.
+- 형식: `run-<UTC YYYYMMDDHHMMSS>-<8자리 소문자 hex>` (정규식 `^run-[0-9]{14}-[0-9a-f]{8}$`). 타임스탬프만 UTC이며 `created_at`/`updated_at`의 KST 표기와 다르다.
+- 현재 run은 항상 1개다. 재호출하면 새 id로 **교체**하며 이력을 누적하지 않는다(`runs`/`run_ids` 같은 목록을 만들지 않는다).
+- `run_id`는 optional 필드다. `init`은 만들지 않고, 스키마 `required` 8필드는 불변이며, `run_id` 없는 기존 `state.json`도 계속 `validate`를 통과한다.
+- `show --format json`의 `data.run_id`로 통과한다. `run_id`를 소유·발급하는 것은 `state-tool`이며 다른 도구는 외래 참조로만 복제한다.
+
+```json
+{"ok": true, "command": "run-start", "run_id": "run-20260914081530-3f9a1c7e", "previous_run_id": null}
+```
+
+---
+
+### 8b. `finalize-attribution` — 허브 MEMORY history 귀속 (118 D-4b / AC-4)
+
+```bash
+~/.opal/tools/state-tool/run.sh finalize-attribution <task-path> \
+  --allocator-root <절대경로>
+```
+
+- CLOSE 마지막 행 `mark`에서 분리된 허브 `.opal/MEMORY.json` history append를 이 명령이 전담한다. merge 확인 뒤 허브 PM이 worktree registry 발급값을 `--allocator-root`로 넘겨 호출한다.
+- **[MUST] `allocator_root`는 추론하지 않는다** — cwd·task path 조상·`.opal-worktrees` 문자열 어느 것도 근거로 쓰지 않는다. 미지정은 `allocator_root_required`, 상대경로는 `allocator_root_not_absolute`, 하위에 `.opal/MEMORY.json`이 없으면 `allocator_root_invalid`로 거부한다(모두 exit 1).
+- **멱등**: 동일 `path` 행이 이미 있으면 append를 건너뛰고 `duplicate_skipped`로 응답한다(exit 0).
+- append 실패(memory-tool 부재·손상 JSON·호출 실패)는 `finalize_attribution_failed` — 파일은 변경되지 않는다.
+
+---
+
+### 8c. `boot-summary` (별칭 `boot-brief`) — 부트 요약 (read-only)
+
+```bash
+~/.opal/tools/state-tool/run.sh boot-summary <project-root>
+```
+
+- `session.project` 부트스트랩용으로 프로젝트 하위 미완료 태스크의 **읽기 전용** 요약을 낸다. task-path가 아니라 **project-root**를 받는다.
+- 출력은 UTF-8 1024 bytes 이하로 제한된다 — 초과 시 `title`/`stage`/`next_action`을 길이 순으로 잘라 줄이며, 잘라도 항상 유효한 단일 JSON을 유지한다.
+- `boot-brief`는 동일 구현·동일 출력 계약의 별칭이다.
+- 상태 파일을 쓰지 않는다.
+
+```json
+{"ok": true, "command": "boot-summary", "items": [{"title": "...", "stage": "...", "next_action": "..."}]}
+```
+
+---
+
+### 9. `gate-pass` — Gate 4행 일괄 ✅ 처리 **[deprecated — 레거시 전용]**
 
 ```bash
 ~/.opal/tools/state-tool/run.sh gate-pass <task-path> \
   --start <N> \
   [--note <text>]
 ```
+
+> **[deprecated] 신규 태스크에서 사용하지 않는다** (014 Phase 4). 새 표준 행 구조에는 "QA Gate"/"State Gate" 행이 없어 `[QA Gate, State Gate, PM Gate, State Gate]` 4행 패턴 자체가 성립하지 않는다 — PM Gate는 통과 후 **단일 `mark`**로 닫는다. 레거시 `state.json`(해당 4행이 실재하는 태스크)에서만 동작하며, 성공 응답에 `deprecated: true`와 `deprecation_note`가 실린다. 후속 버전에서 제거 예정.
 
 - 행 N부터 4행이 `[QA Gate, State Gate, PM Gate, State Gate]` 패턴이어야 함
 - 4행 모두 동일 stage여야 함
@@ -447,6 +498,44 @@
     {"stage": "CLOSE", "item": "DONE.md 생성"},
     {"stage": "CLOSE", "item": "State Gate"}
   ]'
+```
+
+---
+
+## 사용 예시
+
+행 주소는 `--task-step <key>` / `--task-step-id <n>` 중 하나를 쓴다(`--row`는 deprecated 별칭).
+
+```bash
+# TASK 단계 시작 — pipeline.json에서 행 구성 자동 파싱
+~/.opal/tools/state-tool/run.sh init tasks/134-.../ \
+  --skill opp --mode interactive \
+  --task-title "파이프라인 state-tool 도입" \
+  --rows-from ~/.opal/skills/opal-pilot-project/references/pipeline.json
+
+# 단계 시작 (⬜→🔄) / 단계 완료 (→✅)
+~/.opal/tools/state-tool/run.sh advance tasks/134-.../ --task-step plan.work
+~/.opal/tools/state-tool/run.sh mark    tasks/134-.../ --task-step plan.work --done
+
+# 워커 EXECUTE Step 완료 (→✅, 권한 게이트 + 소요 기록)
+~/.opal/tools/state-tool/run.sh mark tasks/134-.../ \
+  --task-step execute.work --done --as-worker --worker-stage EXECUTE \
+  --action-step 3/8 --worker-duration-minutes 12
+
+# 사용자 확인 행 처리
+~/.opal/tools/state-tool/run.sh mark tasks/134-.../ \
+  --task-step plan.user_confirm --done --owner user \
+  --note "{owner_name} 확인: PLAN 단계 검토 완료"
+
+# PM Gate 전 정합성 검증 / 파이프라인 행 현황 출력(기본 마크다운)
+~/.opal/tools/state-tool/run.sh validate tasks/134-.../
+~/.opal/tools/state-tool/run.sh show     tasks/134-.../
+
+# 추가작업 행 삽입 → 완료 상태 전환
+~/.opal/tools/state-tool/run.sh add-row tasks/134-.../ \
+  --after-task-step close.done_md --stage CLOSE --item "추가 검증" --note "추가작업 진입"
+~/.opal/tools/state-tool/run.sh status tasks/134-.../ \
+  --set additional_work_done --note "추가작업 완료"
 ```
 
 ---

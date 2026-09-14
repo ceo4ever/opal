@@ -1,6 +1,7 @@
 # cmux-tool
 
-cmux browser 자동화 래퍼: 12+1종 서브명령 디스패처
+> cmux browser 자동화 래퍼: 12+1종 서브명령 디스패처
+> 소스: `opal/tools/cmux-tool/` | 배포: `~/.opal/tools/cmux-tool/`
 
 ## 개요
 
@@ -16,6 +17,20 @@ cmux browser 명령을 캡슐화한 OPAL 도구 래퍼. 단일 진입점(`run.sh
 | 환경 변수 | `$CMUX_SURFACE_ID` (cmux 터미널 내 자동 설정) |
 | Python | 3.x (JSON 직렬화 — macOS 내장) |
 | 설치 위치 | `~/.opal/tools/cmux-tool/run.sh` (install-mac.sh 자동 배포) |
+
+## 트리거 조건
+
+PM이 아래 사용자 문장을 수신하면 cmux-tool을 우선 선택한다.
+cmux 미설치 시 wtm-agent 경유 웹 수집은 호환 대체 경로를 사용할 수 있다. 단독 호출 시에는 에러 JSON을 반환한다(위 §개요 단독 호출 경계).
+`test-tool`의 E2E 출력은 아래 raw cmux vocabulary를 그대로 공개하지 않고 E2E contract v2로 정규화한다(`opal/tools/test-tool/README.md` §Legacy E2E 입력 변환).
+
+| 사용 시점 | 대표 사용자 문장 | 우선 명령 (cmux-tool) | 폴백 |
+|----------|----------------|----------------------|------|
+| **웹 크롤링** (HTML 본문 추출) | "URL 읽어줘", "사이트 내용 정리", "이 페이지 마크다운" | `bash run.sh extract <url>` | playwright-tool |
+| **정보 수집** (구조화된 데이터 조회) | "스냅샷 떠줘", "현재 페이지 구조 보여줘" | `bash run.sh snapshot --surface <h>` | (정보 조회만 — 폴백 없음) |
+| **웹 테스트** (단일 상호작용) | "로그인 버튼 눌러", "이메일 칸에 입력해" | `bash run.sh click <sel>` / `bash run.sh fill <sel> --text <v>` | playwright-tool |
+| **E2E 자동화** (다단계 시나리오) | "회원가입 폼 테스트", "결제 흐름 자동화" | `examples/e2e-form-fill.sh` 또는 fill + click + wait + snapshot 조합 | `test-tool` E2E contract 상태로 정규화 |
+| **로컬 SPA·동적 페이지** | "localhost:3000 분석", "Next.js 화면 확인" | `bash run.sh extract <url>` (localhost URL 자동 감지) | playwright-tool |
 
 ## 사용법
 
@@ -75,6 +90,19 @@ bash ~/.opal/tools/cmux-tool/run.sh press "Enter" --surface surface:3
 bash ~/.opal/tools/cmux-tool/run.sh get title --surface surface:3
 bash ~/.opal/tools/cmux-tool/run.sh get "#link" --attr href --surface surface:3
 ```
+
+### E2E 레시피 실행 (`examples/`)
+
+```bash
+# 폼 채우기 E2E — 사용법: e2e-form-fill.sh <url> --email <email> --password <pw> [--surface <handle>]
+bash ~/.opal/tools/cmux-tool/examples/e2e-form-fill.sh https://example.com/login \
+  --email user@example.com --password secret
+
+# A/B/C 분기 자동 결정 — 사용법: e2e-branch-auto.sh <URL> [--target <surface>]
+bash ~/.opal/tools/cmux-tool/examples/e2e-branch-auto.sh http://localhost:3000
+```
+
+두 스크립트 모두 `CMUX_TOOL_PATH`로 `run.sh` 경로를 재정의할 수 있고, `e2e-branch-auto.sh`는 비대화 환경에서 `CMUX_BROWSER_DECISION=A|B|C`로 분기를 강제 지정한다. selector·URL은 예시이므로 대상 서비스에 맞게 수정해 쓴다.
 
 ### 옵션 표
 
@@ -160,6 +188,24 @@ bash ~/.opal/tools/cmux-tool/run.sh get "#link" --attr href --surface surface:3
 > **wtm-agent 폴백 트리거 4종**: `not_in_cmux` / `cmux_not_installed` / `surface_parse_failed` / `open_failed`  
 > 나머지 5종은 입력 정정 필요 — 즉시 에스컬레이션.
 
+> 에러 코드 SSOT는 `run.sh` / `lib/dispatch.sh`다. 신규 추가 순서: (1) `run.sh` / `lib/dispatch.sh` → (2) 이 README → (3) 소비자 문서(`AGENT.md` 등).
+
+## 종료 코드
+
+`0`이 아닌 값은 위 에러 코드와 1:1 대응한다(같은 종료값을 공유하는 `open_failed`/`surface_parse_failed` 제외).
+
+| 코드 | 의미 |
+|------|------|
+| `0` | 성공 |
+| `1` | 사용법 오류 / 알 수 없는 서브명령 (`usage`) |
+| `2` | 환경 오류 — `CMUX_SURFACE_ID` 미설정 (`not_in_cmux`) |
+| `3` | cmux 미설치 (`cmux_not_installed`) |
+| `4` | surface 핸들 형식 오류 (`invalid_surface`) |
+| `5` | browser open 실패 / surface 파싱 실패 (`open_failed`, `surface_parse_failed`) |
+| `6` | URL 이동 실패 (`goto_failed`) |
+| `7` | 로드 타임아웃 (`wait_failed`) |
+| `8` | 명령 실행 실패 (`eval_failed`) |
+
 ## 안전 가드
 
 ### B/C 모드 cleanup 절대 금지
@@ -222,4 +268,5 @@ opal/tools/cmux-tool/
 |------|------|---------|
 | v1.0 | 2026-05-12 21:35 KST | 초기 작성 — cmux browser 래퍼 3모드(A/B/C) + cleanup 가드 + user_owned 시그널 (002) |
 | v1.1 | 2026-05-22 10:00 KST | 디스패처 재설계 — 12+1종 서브명령 + lib/ 공통 헬퍼 4파일 + examples/ E2E 레시피 + docs/ 통합 참조 + fallback 라벨 phase3→phase2 + 흡수 자산 출처 표 (007) |
+| v1.3 | 2026-09-14 | `tools.md` cmux-tool 절 흡수 — §트리거 조건(5행 사용 시점 매트릭스 + `test-tool` E2E contract v2 정규화 경계), §종료 코드(0~8 세부 분류), 에러 코드 신규 추가 순서 주석, `examples/` E2E 레시피 실행 예시, 상단 소스·배포 경로 1줄 추가. 도구 동작·에러 코드 계약 무변경 (131 W-14) |
 | v1.2 | 2026-09-02 17:22 KST | 에이전트명·소유자 호칭 리터럴 제거 — 규범 산문은 역할어(`PM`/`사용자`/`소유자`)로, 산출물·보고 문면은 `{owner_name}` 플레이스홀더로 전환해 런타임에 소유자 호칭으로 대체된다. 프레임워크 재사용성 확보 (L2 직접 수정) |

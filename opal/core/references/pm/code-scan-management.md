@@ -115,7 +115,7 @@ PM은 유효성 검증을 사전에 대신할 필요가 없다 — 도구가 실
 
 PM Gate 검토 절차 8번(`pm-review-gate.md`)에서 `status`가 `"draft"`인 채로 방치된 code-map을 발견하면, PM 임의 확정 없이 소유자에게 리뷰 필요 사실을 보고한다.
 
-> 상세 도구 사용법: `~/.opal/references/tools.md` code-scan 섹션 참조
+> 상세 도구 사용법: `opal/tools/code-scan/README.md` 참조
 
 ## 변경이력
 

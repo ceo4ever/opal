@@ -34,6 +34,7 @@ receipt 계약을 충족한 뒤 진행한다.
 | 병렬 실행 | `harness/parallel-execution.md` |
 | EXECUTE @header | `harness/header-rules.md` |
 | Coding Principles | `harness/coding-principles.md` |
+| 도구 공통 출력 계약 | `harness/tool-output-contract.md` |
 | QA 표준 | `harness/qa-standards.md` |
 | 인용 규칙 | `harness/citation-rules.md` |
 | 분석 코어 | `harness/analysis-core.md` |

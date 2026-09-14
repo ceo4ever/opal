@@ -79,12 +79,14 @@ opal-agent는 백그라운드 실행을 내장하지 않는다(동기 blocking �
   --model <실모델명> \
   --allowed-tools <축별 allowlist> \
   --timeout <축별 초> --cwd <project_root> --json \
-  "<[WORKER] 마커 + worker.dispatch receipt/검증 증거·문서 전문 + 재주입 컨텍스트 + 지시>" \
-  > <task_folder>/.oppl-run/<phase>.result.json \
-  2> <task_folder>/.oppl-run/<phase>.err.log; echo $? > <task_folder>/.oppl-run/<phase>.exitcode
+  --run-dir <task_folder>/.oppl-run --phase <phase> [--attempt aN] \
+  --terminate-grace-sec <초> [--max-timeout-sec <초>] [--phase-timeout-limit-sec <초>] \
+  "<[WORKER] 마커 + worker.dispatch receipt/검증 증거·문서 전문 + 재주입 컨텍스트 + 지시>"
 ```
 
-동기 축은 Bash 반환 stdout·exit code로 즉시 수거하되, 결과 파일도 동일하게 남겨 증거 형식을 균일하게 유지한다(§결과 파일 규약).
+**[MUST] 호출측 셸 리다이렉트(`>`·`2>`·`echo $?`)로 산출물을 만들지 않는다.** 산출물 경로·형식·원자적 확정은 opal-agent attempt wrapper가 `--run-dir`·`--phase`·`--attempt`로 소유한다. `--phase`는 파일명 접두 문자열일 뿐이며 opal-agent는 phase 의미론을 해석하지 않는다 — phase별 timeout 상한은 루프 액션 에이전트가 계산해 `--phase-timeout-limit-sec`로 넘긴다. `--heartbeat-timeout-sec`는 stream mode 전용이므로 동기 축에는 적용하지 않는다.
+
+동기 축은 Bash 반환 stdout·exit code로 즉시 수거하되, wrapper가 남긴 결과 파일도 동일하게 증거로 사용해 형식을 균일하게 유지한다(§결과 파일 규약).
 
 **비동기 축 명령 형태** (T1·T2·T3 — Bash `run_in_background: true`로 실행). Bash 타임아웃(기본 2분·최대 10분)은 동기 호출의 상한이므로, 장시간 축(T1/T2/T3)은 반드시 이 형태로 호출하고 완료 여부는 §결과 파일 규약의 완료 마커로 판정한다(Bash 반환을 기다리지 않는다).
 
@@ -94,12 +96,51 @@ opal-agent는 백그라운드 실행을 내장하지 않는다(동기 blocking �
   --model <실모델명> \
   --allowed-tools <축별 allowlist> \
   --timeout <축별 초> --cwd <project_root> --stream \
-  "<[WORKER] 마커 + worker.dispatch receipt/검증 증거·문서 전문 + 재주입 컨텍스트 + 지시>" \
-  > <task_folder>/.oppl-run/<phase>.events.jsonl \
-  2> <task_folder>/.oppl-run/<phase>.err.log; echo $? > <task_folder>/.oppl-run/<phase>.exitcode
+  --run-dir <task_folder>/.oppl-run --phase <phase> [--attempt aN] \
+  --heartbeat-timeout-sec <초> --terminate-grace-sec <초> [--max-timeout-sec <초>] [--phase-timeout-limit-sec <초>] \
+  "<[WORKER] 마커 + worker.dispatch receipt/검증 증거·문서 전문 + 재주입 컨텍스트 + 지시>"
 ```
 
+비동기 축도 동일하게 산출물 소유권은 opal-agent wrapper에 있다 — 호출측은 `>`·`2>`·`echo $?`를 쓰지 않는다. `--heartbeat-timeout-sec`는 stream mode에서만 유효하며, 무출력 정체를 wrapper가 감지해 process group을 종료한다(`--terminate-grace-sec` 경과 후 KILL 승격). `--max-timeout-sec`를 초과하는 `--timeout` 요청은 프로세스 생성 없이 `timeout_limit_exceeded`로 거부된다.
+
 v2 변경 근거(1줄): 스트림의 가치는 장시간 비동기 축(T1/T2/T3)의 실행 중 관측(live window)에 있다 — 동기 축(G/T4a/T4b)은 foreground로 이미 즉시 수거되어 `--json`/`.result.json`을 그대로 유지한다.
+
+### 실행 admission (`oppl-runtime-tool`)
+
+상한 집행은 문서나 에이전트 산문 판단이 아니라 도구가 수행한다. 루프 액션 에이전트는 횟수·비용·시간을 스스로 기억해 차단하지 않으며, 자체 카운터로 상한을 우회하지 않는다.
+
+**[MUST] 모든 phase 시작과 모든 resume 직전에 아래 3단 순서를 지킨다. 순서를 바꾸거나 어느 단계도 생략하지 않는다.**
+
+```bash
+# 1) 허가 — 거부되면 프로세스를 생성하지 않는다
+~/.opal/tools/oppl-runtime-tool/run.sh admit --scope task-phase --task-id <task_id> --phase <phase>
+~/.opal/tools/oppl-runtime-tool/run.sh admit --scope resume     --task-id <task_id> --phase <phase>   # resume 직전
+
+# 2) attempt 개시 등록
+~/.opal/tools/oppl-runtime-tool/run.sh attempt-start --attempt-id <attempt_id> --record-path <task_folder>/.oppl-run/<phase>[.aN].attempt.json
+
+# 3) 실행 (§호출 모드별 명령 형태)
+
+# 4) attempt 종료 수확
+~/.opal/tools/oppl-runtime-tool/run.sh attempt-finish --attempt-id <attempt_id> \
+  --status <done|error|timed_out|blocked> --cost-usd <n> --exit-class <class> \
+  [--verifier-id <id>] [--command-id <id>] [--failing-scenarios <ids>] [--error-code <code>] [--contract-revision <rev>] [--t4b-branch <impl_defect|contract_defect|policy_conflict>]
+```
+
+**거부 코드 처리**: `admit`이 비영 exit code와 함께 아래 8종 중 하나를 반환하면, 해당 코드를 **그대로** `blocked` 반환 사유로 사용한다. 재해석·조건부 무시·재시도 우회·다른 scope로의 재호출은 금지한다. 모든 거부 응답에는 `scope` 필드가 동반되므로 사유와 함께 보존한다.
+
+| 거부 코드 | 의미 | 처리 |
+|----------|------|------|
+| `active_attempt` | 같은 범위에 실행 중 attempt 존재 | 즉시 `blocked` (중복 프로세스 생성 금지) |
+| `round_limit_exceeded` | 설계 회전 상한 도달 | 즉시 `blocked` |
+| `attempt_limit_exceeded` | task attempt 또는 project dispatch 상한 도달(`scope`로 구분 — dispatch 상한 초과는 `scope:"dispatch"`) | 즉시 `blocked` |
+| `resume_limit_exceeded` | 동일 컨텍스트 resume 상한 도달 | 즉시 `blocked` — 남은 예산 안의 새 attempt만 `admit`으로 재요청한다 |
+| `budget_exceeded` | 비용·벽시계 예산 소진 | 즉시 `blocked` |
+| `timeout_limit_exceeded` | 요청 timeout이 허용 상한 초과 (attempt wrapper 반환) | 즉시 `blocked` |
+| `no_progress` | 동일 실패 지문 반복이 무진전 기준 도달 | 즉시 `blocked` |
+| `decision_required` | 사용자 결정·비가역 행동 대기 | 즉시 `blocked` |
+
+`admit` 없이 실행하거나 `attempt-finish` receipt 없이 단계를 완료로 기록하는 경로는 존재하지 않는다.
 
 ### 축별 timeout 배분
 
@@ -152,23 +193,24 @@ opal-agent 서브에이전트는 fresh 프로세스라 세션을 공유하지 �
 3. G 명세 리뷰 게이트 (Evaluator, 동기, 구현 전) ★검증 2원화 ①
    → 루프 액션 에이전트 → opal-evaluator-agent opal-agent 채널 동기 디스패치 (phase: spec-review, contract_path 전달)
    → 루프 액션 에이전트: Evaluator verdict·근거를 태스크 폴더에 `QA-SPEC.md`로 산출한다 (verification.md §4 산출물 규칙 — 순서 evidence의 timestamp 원천)
-   → verdict fail → T1 재작업 (상한: 재시도 상한 절 참조)
+   → verdict fail → T1 새 attempt (`admit --scope task-phase --phase t1` 허가 시에만; 거부 코드 반환 시 그대로 `blocked`)
    → verdict pass → T3
 
 4. T3 구현 (생성자, 비동기, warm resume)
-   → 루프 액션 에이전트 → 생성자(T1과 동일 에이전트) opal-agent 채널 `--resume`으로 비동기 재개 (op-dev-execute)
-   → 재시도 상한 절 내 자체 검증(lint/build/test)
+   → `admit --scope resume` 허가 후 루프 액션 에이전트 → 생성자(T1과 동일 에이전트) opal-agent 채널 `--resume`으로 비동기 재개 (op-dev-execute)
+   → 자체 검증(lint/build/test) 재시도는 매 회 `admit --scope task-phase` 허가를 받아 새 attempt로 수행한다
    → changed_files 반환
 
 5. T4a 테스트 (test-agent축, 동기, 구현 후) ★검증 2원화 ②
    → 루프 액션 에이전트 → opal-test-agent opal-agent 채널 동기 디스패치 → test-scenario.json 시나리오 실행
    → 루프 액션 에이전트: scenario-mark(result) → scenario-status
-   → fail → T3 재작업(재시도 상한 절 내) / 회귀 → 즉시 blocked
-   → 테스트 통과 후 충실도·표면 게이트 호출(069/F-005·F-006, test-tool scenario-* 계열 — 3-SSOT 경계 불변): `test-tool scenario-fidelity-check` 실행 → `fidelity_unmet`(exit 13) 반환 시 T2/T3 재작업 트리거(재시도 상한 절 내). surfaces_path 존재 시 `test-tool scenario-conformance --surfaces <surfaces_path>` 추가 실행 → `surface_unverified`(exit 14) 반환 시 동일 재작업 트리거. surfaces.json 부재 시 `surfaces_file_not_found`로 스킵(applicable:false, 기존 프로젝트 무영향, M-5).
-   → 두 게이트 모두 loop-control.md §7 복구가능(recoverable) 분류를 따른다 — 재작업으로 해소되면 다음 단계 진행, 재시도 상한 초과 시 `blocked`(§blocked 반환 계약 트리거 5)
+   → fail → T3 새 attempt(`admit --scope task-phase --phase t3` 허가 시에만) / 회귀 → 즉시 blocked
+   → 테스트 통과 후 충실도·표면 게이트 호출(069/F-005·F-006, test-tool scenario-* 계열 — 3-SSOT 경계 불변): `test-tool scenario-fidelity-check` 실행 → `fidelity_unmet`(exit 13) 반환 시 T2/T3 재작업 트리거. surfaces_path 존재 시 `test-tool scenario-conformance --surfaces <surfaces_path>` 추가 실행 → `surface_unverified`(exit 14) 반환 시 동일 재작업 트리거. 재작업은 매 회 `admit` 허가를 받은 새 attempt로만 수행한다. surfaces.json 부재 시 `surfaces_file_not_found`로 스킵(applicable:false, 기존 프로젝트 무영향, M-5).
+   → 두 게이트 모두 loop-control.md §7 복구가능(recoverable) 분류를 따른다 — 재작업으로 해소되면 다음 단계 진행, `admit`이 거부 코드를 반환하면 그대로 `blocked`(§blocked 반환 계약 트리거 5)
 
 6. T4b 규칙검사 (checker축, 동기)
    → 루프 액션 에이전트가 규모 판정: 저위험 = 인라인 요약 / 고위험 = conv·sec-checker opal-agent 채널 동기 디스패치
+   → 실패 시 §T4b 실패 전이의 3분기 중 정확히 하나로 분기한다
 
 7. T5 마무리
    → 루프 액션 에이전트가 DONE.md 작성 → 결과 계약 반환
@@ -182,6 +224,20 @@ opal-agent 서브에이전트는 fresh 프로세스라 세션을 공유하지 �
 - `scenario-lock`이 `red_not_confirmed`를 반환하면 G 진입을 금지한다 (self-confirming RED 차단, H-7).
 - drift 재콜백(구현/테스트 중 CONTRACT 불일치 발견)은 2원화 순서의 유일한 예외이나, 루프 액션 에이전트는 계약 갱신을 직접 수행하지 않고 `blocked`로 반환한다.
 
+### T4b 실패 전이
+
+T4b 규칙검사(conv·sec)가 실패를 반환하면 원인 귀속에 따라 아래 **3분기 중 정확히 하나**로 전이한다. 분기는 상호배타이며 누락·중복을 허용하지 않는다 — 귀속이 결정되지 않으면 ③으로 간다.
+
+| # | 원인 귀속 | 전이 | `attempt-finish --t4b-branch` |
+|---|----------|------|------------------------------|
+| ① | 제품 코드·설정·방어 구현의 결함 | T3 새 attempt (`admit --scope task-phase --phase t3` 허가 후) | `impl_defect` |
+| ② | 테스트 시나리오·검증 계약의 결함 | 계약 변경 승인을 받은 뒤 T2 새 attempt (`admit --scope task-phase --phase t2` 허가 후) | `contract_defect` |
+| ③ | 보안·컨벤션 정책 자체의 충돌, 또는 원인 귀속 불가 | 즉시 `blocked` (재시도 없음) | `policy_conflict` |
+
+- **[MUST] 어느 분기든 task attempt와 project dispatch 상한을 함께 차감한다** — 차감은 `admit` 호출로 도구가 수행하며, 루프 액션 에이전트가 차감 여부를 판단하지 않는다.
+- ②의 계약 변경 승인은 루프 액션 에이전트가 직접 수행하지 않는다 — CONTRACT 갱신이 필요하면 `blocked`로 반환하고 PM이 승인 주체다(§행동 규칙 3).
+- 각 분기의 `admit` 호출이 거부 코드를 반환하면 전이를 시도하지 않고 그 코드를 그대로 `blocked` 사유로 반환한다.
+
 ---
 
 ## 결과 파일 규약 (v2)
@@ -191,25 +247,41 @@ opal-agent 채널로 디스패치한 각 축의 실행 결과는 태스크 폴�
 ### 경로 규약
 
 ```
-비동기 축(t1, t2, t3): <task_folder>/.oppl-run/<phase>.events.jsonl  ← stdout (claude stream-json 원본 JSONL; 마지막 줄=result 이벤트)
-동기 축(g, t4a, t4b):  <task_folder>/.oppl-run/<phase>.result.json   ← stdout (claude raw JSON; exit 2 시 공백 가능)  [066계승 불변]
-공통:                   <task_folder>/.oppl-run/<phase>.err.log      ← stderr ([opal-agent 오류] 메시지 등)  [066계승 불변]
-공통:                   <task_folder>/.oppl-run/<phase>.exitcode     ← 종료 코드 (★완료 마커)  [066계승 불변]
-공통:                   <task_folder>/.oppl-run/<phase>.prompt.txt   ← 디스패치 프롬프트 원문 (v2 규약화 — 066 실증에서 자발 생성되었으나 규약 미명문이던 산출물)
+비동기 축(t1, t2, t3): <task_folder>/.oppl-run/<phase>[.aN].events.jsonl  ← stdout (stream JSONL — 1행 1 JSON 객체, 증분 append)
+동기 축(g, t4a, t4b):  <task_folder>/.oppl-run/<phase>[.aN].result.json   ← stdout (단일 JSON 객체; exit 2 시 공백 가능)  [066계승 불변]
+공통:                   <task_folder>/.oppl-run/<phase>[.aN].err.log      ← stderr ([opal-agent 오류] 메시지 등)  [066계승 불변]
+공통:                   <task_folder>/.oppl-run/<phase>[.aN].exitcode     ← 종료 코드 (★완료 마커)  [066계승 불변]
+공통:                   <task_folder>/.oppl-run/<phase>[.aN].attempt.json ← attempt record (`attempt-start --record-path` 대상)
+공통:                   <task_folder>/.oppl-run/<phase>[.aN].prompt.txt   ← 디스패치 프롬프트 원문 (v2 규약화 — 066 실증에서 자발 생성되었으나 규약 미명문이던 산출물)
 ```
 
-`<phase>` ∈ `{t1, t2, g, t3, t4a, t4b}`.
+`<phase>` ∈ `{t1, t2, g, t3, t4a, t4b}`. 이 경로들은 전부 opal-agent attempt wrapper가 `--run-dir`·`--phase`·`--attempt`로 생성·확정한다(temp write·fsync·atomic rename). 확장자와 실제 직렬화가 어긋나거나 JSONL 한 사건이 여러 물리 행에 걸치면 wrapper가 `output_format_invalid`로 처리하며 `done`을 기록하지 않는다.
 
-**완료 마커** = `.exitcode` 파일의 **존재**. `echo $? > …exitcode`는 opal-agent 명령 종료 후에만 실행되므로, 파일 존재가 프로세스 완료의 결정론적 신호다. `.result.json`의 존재/비존재로 완료를 판정하지 않는다.
+**완료 마커** = `.exitcode` 파일의 **존재**. wrapper가 대상 프로세스 종료를 수확한 뒤에만 이 파일을 확정하므로, 파일 존재가 프로세스 완료의 결정론적 신호다. `.result.json`의 존재/비존재로 완료를 판정하지 않는다.
 
 **[066계승][MUST] v2에서도 위 완료 마커 판정 원칙은 불변이다** — `.events.jsonl`의 존재/비존재로도 완료를 판정하지 않는다(H-10).
+
+### terminal 판정 위임
+
+**[MUST] 루프 액션 에이전트는 stream을 스스로 재해석하지 않는다.** 완료 판정은 opal-agent provider adapter가 수행하며, 루프 액션 에이전트는 adapter의 terminal 판정 결과만 소비한다.
+
+adapter의 판정 규칙(요지):
+
+1. stream 전체에서 **마지막 유효 result**를 현재 attempt의 terminal candidate로 선택한다.
+2. 그 앞의 result는 같은 `session_id`와 단조 증가 `result_index`를 만족할 때만 선행 turn으로 인정하고 현재 결과로 소비하지 않는다. 두 조건 중 하나라도 깨지면 `error`다.
+3. terminal candidate 뒤에는 terminal epilogue allowlist만 허용한다 — `{"type":"system","subtype":"background_tasks_changed"|"task_updated"|"task_notification"}`(판정 기준은 `subtype`이다).
+4. epilogue를 순서대로 reduce한 **stream 종료 시점**에 등록된 자식 작업이 전부 terminal이어야 한다. 중간 이벤트에 실행 중 작업이 있어도 뒤 사건에서 `killed`/`completed`/`stopped` 또는 빈 작업 집합으로 닫히면 허용한다.
+5. 알 수 없는 이벤트, epilogue 안의 신규 작업 시작, 종료 시점의 미종료 자식은 성공으로 판정하지 않는다.
+6. 루트 프로세스 exit 0 · PGID 소멸 · 최종 자식 terminal · terminal candidate schema 성공이 모두 성립해야 `done`이다.
+
+단일 최종 행만 읽는 규칙과 “어디든 result가 있으면 성공” 규칙은 모두 폐기됐다. monitor도 동일 adapter 판정 결과만 소비한다.
 
 ### 결과 스키마 (5필드 소비)
 
 축별로 파싱 대상만 분기하고 필드 정의 자체는 불변이다:
 
-- 동기 축(g/t4a/t4b): `.result.json`(claude 원문 JSON 단일 객체)을 직접 파싱한다.
-- 비동기 축(t1/t2/t3): `.events.jsonl`의 **마지막 비어있지 않은 줄**(`type:result`)을 파싱한다. 미보장 필드에는 의존하지 않는다(R-H).
+- 동기 축(g/t4a/t4b): `.result.json`(단일 JSON 객체)을 직접 파싱한다.
+- 비동기 축(t1/t2/t3): `.events.jsonl`에서 **adapter가 확정한 terminal candidate**를 파싱한다. 미보장 필드에는 의존하지 않는다(R-H).
 
 두 경로 모두 opal-agent가 명시적으로 소비/보장하는 필드만 참조한다: `result`(텍스트)·`session_id`·`is_error`·`total_cost_usd`·`duration_ms`. 문서화되지 않은 claude CLI 자체 필드에는 의존하지 않는다.
 
@@ -217,16 +289,16 @@ opal-agent 채널로 디스패치한 각 축의 실행 결과는 태스크 폴�
 
 | exitcode | 의미 | 처리 |
 |----------|------|------|
-| `0` | 성공 | 동기 축은 `.result.json`, 비동기 축은 `.events.jsonl` 마지막 줄에서 `result`/`session_id` 파싱 → 다음 단계 |
-| `1` | is_error(에이전트 자체 실패, 프로세스 정상) | 해당 단계 fail로 취급 → 재작업(재시도 상한 내) |
-| `2` | 하드에러(CLI 실행 실패) | `.err.log` 확인 → 재시도 상한 내 재시도, 초과 시 blocked |
-| (파일 없음, 타임아웃 경과) | 미완료/무진전 | no-progress → blocked (트리거 #4) |
+| `0` | 성공 | 동기 축은 `.result.json`, 비동기 축은 adapter가 확정한 terminal candidate에서 `result`/`session_id` 파싱 → `attempt-finish --status done` → 다음 단계 |
+| `1` | is_error(에이전트 자체 실패, 프로세스 정상) | 해당 단계 fail → `attempt-finish --status error` 후 `admit` 허가를 받은 새 attempt로만 재작업 |
+| `2` | 하드에러(CLI 실행 실패) | `.err.log` 확인 → `attempt-finish --status error` 후 `admit` 재요청. `admit` 거부 코드 반환 시 그 코드를 그대로 blocked 사유로 반환 |
+| (파일 없음, 타임아웃 경과) | 미완료/무진전 | `attempt-finish --status timed_out` → 다음 `admit`이 `no_progress`를 반환하면 blocked (트리거 #4) |
 
-> 표 구조는 v1과 동일 — v2에서 변경된 것은 exitcode `0` 행의 파싱 대상(축별 분기)뿐이다.
+> 표 구조는 v1과 동일 — v2에서 변경된 것은 exitcode `0` 행의 파싱 대상(축별 분기)과 재작업 허가 주체(`oppl-runtime-tool admit`)다.
 
 ### 재시도 접미사
 
-재시도는 이전 증거를 보존하기 위해 시도 접미사를 붙인다: 동기 축 `<phase>.a<N>.result.json`, 비동기 축 `<phase>.a<N>.events.jsonl`(N=2부터, err.log·exitcode·prompt.txt도 동일 접미사 규칙). 최신 시도 = 최대 N. 단계는 의존 체인(T1→T2→G→T3→T4a→T4b)으로 순차 실행되고 태스크마다 `task_folder`가 격리되므로 경로 충돌은 발생하지 않는다.
+재시도는 이전 증거를 보존하기 위해 시도 접미사를 붙인다: 동기 축 `<phase>.a<N>.result.json`, 비동기 축 `<phase>.a<N>.events.jsonl`(N=2부터, err.log·exitcode·attempt.json·prompt.txt도 동일 접미사 규칙). 접미사는 opal-agent `--attempt aN`으로 전달하며 호출측이 파일명을 직접 짓지 않는다. 최신 시도 = 최대 N. 단계는 의존 체인(T1→T2→G→T3→T4a→T4b)으로 순차 실행되고 태스크마다 `task_folder`가 격리되므로 경로 충돌은 발생하지 않는다.
 
 ### 수거 실패 처리
 
@@ -238,11 +310,11 @@ opal-agent 채널로 디스패치한 각 축의 실행 결과는 태스크 폴�
 
 | 항목 | v1(066) | v2(067) |
 |------|---------|---------|
-| 비동기 축(t1/t2/t3) stdout 산출물 | `.result.json`(단일 JSON) | `.events.jsonl`(stream JSONL, 마지막 줄=result 이벤트) |
+| 비동기 축(t1/t2/t3) stdout 산출물 | `.result.json`(단일 JSON) | `.events.jsonl`(stream JSONL, 1행 1객체) |
 | 동기 축(g/t4a/t4b) stdout 산출물 | `.result.json` | `.result.json` (불변) |
 | prompt.txt | 066 실증에서 자발 생성, 규약 미명문 | 경로 규약에 명문 편입 |
 | 완료 마커 | `.exitcode` 존재 | `.exitcode` 존재 (불변) |
-| 5필드 소비 위치 | `.result.json` 단일 파싱 | 동기=`.result.json` / 비동기=`.events.jsonl` 마지막 줄 (파싱 대상만 분기, 필드 정의 불변) |
+| 5필드 소비 위치 | `.result.json` 단일 파싱 | 동기=`.result.json` / 비동기=adapter terminal candidate (파싱 대상만 분기, 필드 정의 불변) |
 
 ---
 
@@ -291,6 +363,8 @@ T1(cold prime)에서 T3(warm resume)까지 생성자 세션을 이어가기 위�
 
 **[MUST] `--dangerously-skip-permissions`는 어떤 축의 명령에서도 사용하지 않는다** — 자동 실행 제어는 오직 `--allowed-tools` allowlist로만 수행한다.
 
+`oppl-runtime-tool`(`admit`/`attempt-start`/`attempt-finish`)은 축 allowlist에 넣지 않는다 — 루프 액션 에이전트 자신이 축 디스패치 바깥에서 호출하는 도구다(§도구 호출 규칙).
+
 allowlist는 **프로젝트 스코프 한정**이다 — `--cwd <project_root>`로 작업 디렉토리를 프로젝트 루트에 고정하고, MCP·외부 네트워크 도구는 포함하지 않는다.
 
 ---
@@ -309,9 +383,10 @@ allowlist는 **프로젝트 스코프 한정**이다 — `--cwd <project_root>`�
 
 ## 재시도 상한
 
-- **구현 수준**(L1 lint ~ L3b E2E) 및 **설계 수준**(G 게이트 루브릭 미달·PLAN 재진입)의 구체적 재시도 횟수·최대 반복 수는 여기서 새로 정의하지 않는다.
-- `opal/core/references/harness/guards.md` §자동 루핑 제약 표를 참조한다. PLAN 재진입 상한은 해당 표의 'PLAN 재진입' 행을 참조한다.
-- 상한 초과 → 자율 재시도를 중단하고 `blocked`로 반환한다(에스컬레이션).
+- **구현 수준**(L1 lint ~ L3b E2E) 및 **설계 수준**(G 게이트 루브릭 미달·PLAN 재진입)의 구체적 재시도 횟수·최대 반복 수, 그리고 동일 컨텍스트 재개 상한은 여기서 새로 정의하거나 복제하지 않는다.
+- `opal/core/references/harness/guards.md` §자동 루핑 제약 표를 참조한다. PLAN 재진입 상한은 해당 표의 'PLAN 재진입' 행을, 재개 상한은 같은 절의 재개 행을 참조한다.
+- **[MUST] 상한 도달 판정은 루프 액션 에이전트의 산문 판단이 아니라 `oppl-runtime-tool admit` 호출 결과로만 이루어진다.** 에이전트는 자체 카운터를 유지하지 않는다.
+- `admit`이 거부 코드를 반환하면 자율 재시도를 중단하고 그 코드를 사유로 `blocked`를 반환한다(에스컬레이션).
 
 ---
 
@@ -323,7 +398,7 @@ allowlist는 **프로젝트 스코프 한정**이다 — `--cwd <project_root>`�
 2. 에스컬레이션 대상 상황
 3. 계약 갱신이 필요한 CONTRACT drift (#2 내부조정~#4 외부노출)
 4. 무진전(no-progress) 감지
-5. 반복 상한 초과 (재시도 상한 절) — T4a 충실도·표면 게이트(`fidelity_unmet`/`surface_unverified`) 재작업이 이 상한을 초과한 경우를 포함한다(069/F-005·F-006, loop-control.md §7 복구가능 분류)
+5. `oppl-runtime-tool admit` 거부 (8종 코드 중 하나 — §실행 admission) — T4a 충실도·표면 게이트(`fidelity_unmet`/`surface_unverified`) 재작업이 `admit` 거부에 도달한 경우를 포함한다(069/F-005·F-006, loop-control.md §7 복구가능 분류). 거부 코드와 동반 `scope`를 `blockers[]`에 그대로 싣는다
 6. 하드블로커 (순서 역전·SSOT 손상·readonly 위반)
 7. `decision_required` (용어 불일치 — citation-rules §7.5)
 
@@ -331,11 +406,24 @@ allowlist는 **프로젝트 스코프 한정**이다 — `--cwd <project_root>`�
 
 ---
 
-## 3-SSOT 도구 호출 규칙
+## 도구 호출 규칙 (3-SSOT 경계 + 런타임 가드 축)
+
+**3-SSOT 축** (`backlog.json` / `state.json` / `test-scenario.json`) — 경계는 불변이다:
 
 - 루프 액션 에이전트는 `test-tool scenario-*`(init/red/lock/mark/status)만 호출한다.
 - `backlog-tool`·`state-tool`은 호출하지 않는다 — backlog(L∞)·STATE는 PM 단독 갱신 오너십이다.
 - `scenario-fidelity-check`·`scenario-conformance`(069/F-005·F-006)도 `test-tool scenario-*` 계열이므로 본 규칙은 변경 없이 그대로 적용된다.
+
+**런타임 가드 축** — `.oppl-run/runtime.json`은 업무 SSOT가 아니라 3-SSOT와 **별개의 런타임 가드 축**이다. 3-SSOT는 3축 그대로이며 4축이 되지 않는다.
+
+| 도구·서브명령 | 호출 |
+|--------------|------|
+| `oppl-runtime-tool admit` | 허용 (모든 phase 시작·resume 직전 필수) |
+| `oppl-runtime-tool attempt-start` | 허용 |
+| `oppl-runtime-tool attempt-finish` | 허용 |
+| `oppl-runtime-tool init` | **금지** — run 초기화는 PM 소관이다 |
+| `oppl-runtime-tool show` / `config` | 조회 목적에 한해 허용 (ledger 수정 없음) |
+| `backlog-tool` · `state-tool` | **금지** (위 3-SSOT 경계) |
 
 ---
 
@@ -362,12 +450,14 @@ allowlist는 **프로젝트 스코프 한정**이다 — `--cwd <project_root>`�
 1. 사용자와 직접 상호작용하지 않는다 — 결과만 PM에 반환한다.
 2. **[MUST] STATE.md를 직접 갱신하지 않는다** — 갱신이 필요하면 PM에게 위임한다. PM은 `~/.opal/tools/state-tool/run.sh` 호출로만 수행한다.
 3. **[MUST] `CONTRACT.md`를 직접 수정하지 않는다** — 계약 미접촉 내부 구현은 정상 진행하고, 계약 갱신이 필요한 drift는 `blocked`로 반환한다. drift 판정·오너십 계층 분류·CONTRACT.md 반영은 PM(또는 거버넌스 지정 주체) 소관이다.
-4. `harness/guards.md` §자동 루핑 제약을 준수한다 — 수치를 여기서 복제하지 않는다.
+4. `harness/guards.md` §자동 루핑 제약을 준수한다 — 수치를 여기서 복제하지 않으며, 준수 여부는 `oppl-runtime-tool admit` 결과로 집행된다.
 5. 회귀 감지 시 즉시 중단하고 `blocked`로 반환한다.
 6. 생성자(fe/be/db/task-agent) · Evaluator(opal-evaluator-agent) · test-agent(opal-test-agent) · conv·sec-checker를 각각 별도 에이전트로 **opal-agent 채널**(단계별 동기/비동기, `[WORKER]` 마커 + 검증된 `worker.dispatch` receipt)을 통해 내부 디스패치한다 — 생성자≠평가자(H-9)를 유지한다. PM→루프 액션 에이전트 디스패치 자체는 Agent 도구로 이루어지며 이 항목의 전환 대상이 아니다.
-7. `test-tool scenario-*`만 호출한다 — `backlog-tool`·`state-tool`은 호출하지 않는다 (3-SSOT 경계).
+7. 업무 SSOT 도구는 `test-tool scenario-*`만 호출한다 — `backlog-tool`·`state-tool`은 호출하지 않는다 (3-SSOT 경계). 런타임 가드 축의 `oppl-runtime-tool admit`/`attempt-start`/`attempt-finish`는 허용하되 `init`은 호출하지 않는다 (§도구 호출 규칙).
 8. 커밋하지 않는다 — PM이 머지/커밋을 관리한다.
 9. **[MUST] `~/.opal/` 를 직접 수정하지 않는다** — 변경은 항상 프로젝트 소스(`opal/agents/`, `opal/skills/` 등)에서 수행한다.
+10. **[MUST] 모든 phase 시작·resume 직전 `admit` → `attempt-start` → 실행 → `attempt-finish` 순서를 지킨다** — `admit` 거부 코드 8종을 재해석·조건부 무시·우회 재시도하지 않고 그대로 `blocked` 사유로 반환한다.
+11. **[MUST] 산출물 리다이렉트를 직접 구성하지 않는다** — `>`·`2>`·`echo $?` 대신 opal-agent `--run-dir`·`--phase`·`--attempt`에 위임한다.
 
 ---
 
@@ -380,6 +470,7 @@ allowlist는 **프로젝트 스코프 한정**이다 — `--cwd <project_root>`�
 | 검증 가이드 | `opal/skills/opal-pilot-project-loop/references/verification.md` | 검증 2원화 순서(§3), 결과 계약 스키마(§5.3) |
 | CONTRACT 거버넌스 | `opal/skills/opal-pilot-project-loop/references/contract.md` | CONTRACT drift 경계·오너십 계층 |
 | 하네스 Guards | `opal/core/references/harness/guards.md` | 자동 루핑 제약(재시도 상한 SSOT) |
+| 런타임 가드 도구 | `opal/tools/oppl-runtime-tool/README.md` | `admit`·`attempt-start`·`attempt-finish` 서브커맨드와 거부 코드 계약 |
 | oppd 액션 에이전트 (준거) | `opal/agents/opal-task-action-agent/AGENT.md` | 입력 명세·내부 재디스패치·결과 계약 구조 준거 |
 
 ---
