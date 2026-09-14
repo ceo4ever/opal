@@ -1,0 +1,34 @@
+[WORKER]
+
+## 이벤트 검증
+- event: `worker.dispatch`
+- receipt: `/private/tmp/claude-501/-Volumes-Data-AIStudio-workspace-ai-framework/4c738893-9f8b-4d01-82b1-70b9ed0631bc/scratchpad/worker_dispatch_t01.json`
+- verification: `~/.opal/tools/event-loader/run.sh verify --receipt <위 경로> --event worker.dispatch` → `ok: true`, verified_document_count=4. 문서 전문은 그 receipt 파일의 `documents[].content`에 있다.
+
+## 역할
+너는 Evaluator다. **읽기 전용·verdict only**. 어떤 파일도 수정하지 마라. 산출물을 고치지 말고 판정만 반환하라.
+
+## 단계
+G — 구현 전 명세 리뷰 (spec-review). 대상은 T01의 PLAN.md와 수용기준이다.
+
+## 대상
+- PLAN: `/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_123/tasks/123-260912-oppl-태스크-실행로그-표준화/tasks/T01-채널-관측-능력-실측/PLAN.md`
+- CONTRACT: `/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_123/docs/run-log/CONTRACT.md` (§1.5 등급 enum·self-test receipt 구조, §1.6 profiles.json 구조, §5 루브릭절)
+- TRD `docs/run-log/TRD.md` §채널 등급 모델 / PRD `docs/run-log/PRD.md` §Phase 0
+
+## 수용기준 (판정 기준 원천)
+- AC-1: `profiles.json`이 두 축 각각에 대해 채널 id, 완료 판정 등급, 변환기 id, 변환기 hash, receipt hash, 증거 상대 경로를 담는다. 구조는 CONTRACT §1.6이 소유한다.
+- AC-2: 등급 판정 근거가 프롬프트 준수율이 아니라 **실제 관측 원본**이며, 판정마다 근거 증거 파일을 가리킨다.
+- AC-3: 두 축을 **별도 판정**하며 한쪽 결과를 다른 쪽에 전용하지 않는다.
+
+## 판정 요청
+1. PLAN이 AC-1/AC-2/AC-3을 각각 충족 가능한 설계인가? 미달이면 어느 절이 어떻게 미달인지 지적하라.
+2. PLAN §3 등급 파생 절차가 CONTRACT §1.5의 파생 규칙(`start∧intermediate∧terminal`→trajectory / `start∧terminal`→terminal / 그 외 cooperative)과 정확히 일치하는가?
+3. PLAN §3-6이 `adapter_id`/`adapter_sha256`을 "Phase 0 실측 probe 스크립트"로 채우겠다고 한다. CONTRACT §1.6(`completion_profile ≠ cooperative`면 필수)과 PRD §Phase 0 "변환기 구현은 범위 밖"이 충돌하는가? 충돌이면 어떤 처리가 계약 위반이 아닌가?
+4. PLAN이 관측되지 않은 것을 관측됐다고 선언할 여지를 남기는가? (등급 인플레이션 위험)
+5. 범위 밖 침범(`~/.opal/` 수정, 3-SSOT 손편집, CONTRACT 수정) 지시가 PLAN에 있는가?
+
+## 반환 형식
+- `verdict`: pass | fail
+- 항목별 판정(1~5) 각각 근거를 `문서 §절` 또는 `경로:줄번호`로 인용
+- fail이면 반드시 재작업 지시를 구체적으로 적어라

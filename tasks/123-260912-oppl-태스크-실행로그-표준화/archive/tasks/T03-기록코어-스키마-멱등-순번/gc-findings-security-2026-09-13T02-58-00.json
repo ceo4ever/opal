@@ -1,0 +1,295 @@
+{
+  "check": "security",
+  "status": "pass",
+  "report_path": "tasks/123-260912-oppl-태스크-실행로그-표준화/tasks/T03-기록코어-스키마-멱등-순번/GC-SECURITY-2026-09-13T02-58-00.md",
+  "checked_files": [
+    "opal/tools/run-log-tool/run_log_core.py",
+    "opal/tools/run-log-tool/run_log_tool.py",
+    "opal/tools/run-log-tool/tests/test_run_log_tool.py"
+  ],
+  "findings": [
+    {
+      "id": "GC-201",
+      "fingerprint": "6031f79739a82894",
+      "category": "CWE-59 Link Following / CWE-22 Path Traversal",
+      "severity": "high",
+      "confidence": "high",
+      "disposition": "blocking",
+      "rule_id": "SECURITY.md §1 (CWE-22)",
+      "source_tier": "T0",
+      "location": { "file": "opal/tools/run-log-tool/run_log_core.py", "line": 1063, "symbol": "import_agentic" },
+      "evidence": "1063-1067에서 source_path.exists()와 read_text()가 모두 심볼릭 링크를 추종한다. O_NOFOLLOW도, resolve() 후 task_dir 경계 확인도 없다. 동일 모듈의 조각 경로는 _resolved_segments()(:295-311)에서 is_symlink() 거부 + resolve()/relative_to() 경계 확인을, 열기는 O_NOFOLLOW(:731, :826)를 쓴다. 실측: AGENTIC-LOG.md를 /tmp 외부 파일로 심볼릭 링크한 뒤 import-agentic 실행 시 ok:true, imported:1이며 외부 내용 'SECRET-OUTSIDE'가 조각에 1건 적재됐다.",
+      "impact": "태스크 디렉터리에 쓰기가 가능한 주체가 링크 1개를 심으면 task_path 경계 밖 임의 파일의 내용이 append-only 실행 로그로 흘러든다. 신뢰 기준이 호출자가 넘긴 task_path가 아니라 링크 대상이 되며, 이는 T02 GC-103이 조각 경로에서 바로잡은 결함의 재발이다.",
+      "remediation": {
+        "guidance": "AGENTIC-LOG.md를 os.open(..., os.O_RDONLY | os.O_NOFOLLOW)로 열고, resolve() 결과가 task_dir.resolve() 하위인지 relative_to로 확인한다. _resolved_segments()가 이미 쓰는 패턴을 재사용한다.",
+        "reference": "https://cwe.mitre.org/data/definitions/59.html",
+        "auto_fixable": false
+      },
+      "verification": "심볼릭 링크 재현 명령이 run_log_write_failed(또는 링크 거부 코드)를 반환하고 조각에 외부 내용이 0건이면 해결.",
+      "suppression": null
+    },
+    {
+      "id": "GC-202",
+      "fingerprint": "b794812f015c5f5c",
+      "category": "CWE-59 Link Following / CWE-22 Path Traversal",
+      "severity": "high",
+      "confidence": "high",
+      "disposition": "blocking",
+      "rule_id": "SECURITY.md §1 (CWE-22)",
+      "source_tier": "T0",
+      "location": { "file": "opal/tools/run-log-tool/run_log_core.py", "line": 1294, "symbol": "import_oppl / _all_oppl_candidates" },
+      "evidence": ":1295 oppl_dir.exists()와 is_dir()가 링크를 추종한다. 이후 journal.md(:1201), *.result.json(:1215), *.events.jsonl(:1229), *.exitcode(:1260) 읽기 전부 경계 검사가 없다. relative_to(task_dir)(:1200,:1213,:1230,:1258)는 미해석 경로에 적용되므로 glob 결과가 문자열상 항상 task_dir 하위라 무조건 성공하며 경계 검사로 기능하지 않는다. 실측: .oppl-run을 외부 디렉터리로 심볼릭 링크 후 import-oppl 실행 시 imported:1이며 sources[].path가 '.oppl-run/PLAN.result.json'으로 내부인 것처럼 보고됐다.",
+      "impact": "외부 디렉터리 내용이 로그에 적재되고, 출처(sources[].path)가 태스크 내부 경로로 기록되어 사후 감사로도 외부 출처임을 식별할 수 없다. 이 태스크의 목적인 출처(provenance) 검증이 무력화된다.",
+      "remediation": {
+        "guidance": "(a) oppl_dir.is_symlink()면 거부, (b) 각 glob 결과를 resolve() 후 task_dir.resolve() 하위인지 확인해 이탈 항목 제외, (c) relative_to를 해석된 경로로 계산해 sources[].path가 실제 위치를 반영하게 한다.",
+        "reference": "https://cwe.mitre.org/data/definitions/59.html",
+        "auto_fixable": false
+      },
+      "verification": "심볼릭 링크 .oppl-run 재현이 거부 봉투를 반환하고 조각에 외부 내용이 0건이면 해결.",
+      "suppression": null
+    },
+    {
+      "id": "GC-208",
+      "fingerprint": "087bad5ccca7a814",
+      "category": "CWE-522 Insufficiently Protected Credentials",
+      "severity": "high",
+      "confidence": "high",
+      "disposition": "advisory",
+      "rule_id": "CONTRACT.md §1.1.3",
+      "source_tier": "T0",
+      "location": { "file": "opal/tools/run-log-tool/run_log_core.py", "line": 556, "symbol": "validate_event" },
+      "evidence": "validate_event()는 최상위 키만 폐쇄형으로 검사하고(:540), provenance에 대해서는 isinstance(dict)만 본다(:556-557). redact()(:228-237)는 pass-through라 마스킹도 없다. 실측: §2.6 인프로세스 append()에 provenance.worker_log_token='SUPER-SECRET-RAW-TOKEN-VALUE'를 넣자 ok:True로 통과했고 원문이 조각에 평문으로 1건 기록됐다.",
+      "impact": "CONTRACT §1.1.3이 '어떤 사건 필드에도 평문 금지'로 절대 금지한 worker_log_token 원문이, 호출자가 필드명을 worker_log_token_id 대신 worker_log_token으로 쓰는 것만으로 append-only 로그에 영구 기록된다. append 전용이라 사후 삭제가 불가능하다.",
+      "remediation": {
+        "guidance": "권장(a): provenance / provenance.recorded_by / provenance.source에 CONTRACT §1.1.2 표대로 허용 키 집합을 정의하고 그 밖의 키를 schema_invalid로 거부한다(fail-closed, 코어에서 종결). 대안(b): T06 redact()가 worker_log_token 키를 마스킹하도록 요구사항을 명시 인계. CONTRACT:49의 폐쇄형 선언은 '최상위 키' 한정이므로 어느 쪽으로 닫을지는 소유자 판단이 필요해 advisory로 둔다.",
+        "reference": "https://cwe.mitre.org/data/definitions/522.html",
+        "auto_fixable": false
+      },
+      "verification": "provenance에 미정의 키를 넣은 append가 schema_invalid로 거부되고 조각에 원문이 없으면 해결.",
+      "suppression": null
+    },
+    {
+      "id": "GC-203",
+      "fingerprint": "4f667b250a5fed98",
+      "category": "CWE-20 Improper Input Validation / CWE-248 Uncaught Exception",
+      "severity": "medium",
+      "confidence": "high",
+      "disposition": "blocking",
+      "rule_id": "CWE-20",
+      "source_tier": "T1",
+      "location": { "file": "opal/tools/run-log-tool/run_log_core.py", "line": 987, "symbol": "_build_legacy_event / _legacy_kst_to_utc_ms" },
+      "evidence": "_LEGACY_TIMESTAMP_RE(:189)는 자릿수만 검사하므로 '2026-13-45 99:99'가 :973 필터를 통과한다. 이어 :987 -> :353 datetime.strptime()이 ValueError를 던지며 import_agentic()에 try/except가 없어 프로세스 밖으로 나간다. 실측: CLI가 전체 스택 트레이스를 출력하고 exit=1로 종료했다(봉투 미반환).",
+      "impact": "사람이 손으로 쓴 legacy 마크다운의 오타 한 줄이 전체 가져오기를 중단시키고, CONTRACT §2.1 봉투 대신 스택 트레이스를 내보내 봉투를 소비하는 호출자의 파싱을 깨뜨린다. 트레이스가 내부 경로·런타임 버전을 노출한다.",
+      "remediation": {
+        "guidance": "_legacy_kst_to_utc_ms() 호출을 try/except ValueError로 감싸 해당 행을 건너뛰거나 봉투 오류로 변환한다. _parse_legacy_agentic_log()에서 strptime 성공 여부까지 후보 조건에 넣는 편이 파서 책임 경계에 맞다.",
+        "reference": "https://cwe.mitre.org/data/definitions/20.html",
+        "auto_fixable": false
+      },
+      "verification": "달력상 불가능한 시각을 가진 표로 import-agentic 실행 시 {\"ok\":...} 봉투가 반환되고 스택 트레이스가 없으면 해결.",
+      "suppression": null
+    },
+    {
+      "id": "GC-204",
+      "fingerprint": "fb13746b3df27026",
+      "category": "CWE-20 Improper Input Validation / CWE-248 Uncaught Exception",
+      "severity": "medium",
+      "confidence": "high",
+      "disposition": "blocking",
+      "rule_id": "CWE-20",
+      "source_tier": "T1",
+      "location": { "file": "opal/tools/run-log-tool/run_log_core.py", "line": 1140, "symbol": "_build_oppl_result_event" },
+      "evidence": ":1216 json.loads() 결과의 타입을 검사하지 않고 _build_oppl_result_event()로 넘기며, 그 첫 줄 :1140이 obj.get('uuid')를 호출한다. :1217의 except는 (OSError, UnicodeDecodeError, JSONDecodeError)만 잡아 문법상 유효하지만 object가 아닌 JSON을 놓친다. *.events.jsonl 경로의 :1241 rec.get('type')도 동일. 실측: PLAN.result.json에 '[1,2,3]'을 넣자 AttributeError: 'list' object has no attribute 'get'로 죽었다.",
+      "impact": "신뢰 불가 .oppl-run 원본이 배열·문자열·숫자 JSON이면 가져오기 전체가 봉투 없이 예외로 중단된다.",
+      "remediation": {
+        "guidance": ":1216 직후 `if not isinstance(obj, dict): continue`(파일 단위), :1241 직전 `if not isinstance(rec, dict): continue`(줄 단위)를 추가한다. 파서가 비적격 항목을 건너뛰는 기존 패턴(:1218, :1240)과 일관된다.",
+        "reference": "https://cwe.mitre.org/data/definitions/20.html",
+        "auto_fixable": false
+      },
+      "verification": "비-object JSON 원본으로 import-oppl 실행 시 봉투(scanned:0)가 반환되고 트레이스가 없으면 해결.",
+      "suppression": null
+    },
+    {
+      "id": "GC-205",
+      "fingerprint": "e936915b9b5b3d9f",
+      "category": "CWE-20 / CWE-674 Uncontrolled Recursion",
+      "severity": "medium",
+      "confidence": "high",
+      "disposition": "blocking",
+      "rule_id": "CWE-674",
+      "source_tier": "T1",
+      "location": { "file": "opal/tools/run-log-tool/run_log_core.py", "line": 1217, "symbol": "_all_oppl_candidates" },
+      "evidence": ":1217 except 절에 RecursionError가 없다. 같은 누락이 *.events.jsonl 경로(:1239 except json.JSONDecodeError)와 조각 파서 _iter_records_from_bytes()(:327)에도 있다. 실측: '['*200000 + ']'*200000 페이로드로 RecursionError: Stack overflow (used 16352 kB) while decoding a JSON array 발생, 봉투 미반환.",
+      "impact": "깊게 중첩된 JSON 원본이 가져오기를 죽인다. 조각 파서(:327)까지 같은 누락이 있어 손상·악성 조각 1줄이 validate_run과 append의 순번 스캔도 함께 죽이므로 결함이 가져오기 밖으로 번진다.",
+      "remediation": {
+        "guidance": "세 곳(:1217, :1239, :327)의 except에 RecursionError를 추가해 해당 줄/파일을 손상으로 집계한다. 조각 파서는 이미 None yield -> 손상 집계 경로가 있으므로 그 경로로 보낸다. 깊이 상한을 명시하려면 원본 바이트 상한(GC-207)과 함께 설계한다.",
+        "reference": "https://cwe.mitre.org/data/definitions/674.html",
+        "auto_fixable": false
+      },
+      "verification": "깊은 중첩 페이로드로 import-oppl이 봉투를 반환하고, 같은 페이로드를 조각에 넣은 validate-run이 malformed_line 위반으로 보고하면 해결.",
+      "suppression": null
+    },
+    {
+      "id": "GC-206",
+      "fingerprint": "56a9368c04fc88b1",
+      "category": "CWE-20 Improper Input Validation / CWE-248 Uncaught Exception",
+      "severity": "medium",
+      "confidence": "high",
+      "disposition": "blocking",
+      "rule_id": "CWE-20",
+      "source_tier": "T1",
+      "location": { "file": "opal/tools/run-log-tool/run_log_core.py", "line": 1067, "symbol": "import_agentic / _all_oppl_candidates" },
+      "evidence": "두 곳이 방어 없이 read_text(encoding='utf-8')를 호출한다 — :1067(AGENTIC-LOG.md), :1201(journal.md). 대조적으로 같은 함수의 .result.json(:1217)과 *.events.jsonl(:1229)은 UnicodeDecodeError/OSError를 잡는다(방어 불일치). 실측: b'\\xff\\xfe bad' 원본으로 두 경로 모두 UnicodeDecodeError로 죽었다.",
+      "impact": "편집기·로케일이 제각각인 환경에서 생성된 legacy 원본의 비-UTF-8 바이트가 가져오기를 봉투 없이 중단시킨다.",
+      "remediation": {
+        "guidance": "두 호출을 read_bytes() + decode('utf-8', errors='replace')로 바꾸거나 try/except (OSError, UnicodeDecodeError)로 감싸 run_log_missing/schema_invalid 봉투로 변환한다. .result.json·*.events.jsonl이 이미 쓰는 방어와 형태를 맞춘다.",
+        "reference": "https://cwe.mitre.org/data/definitions/20.html",
+        "auto_fixable": false
+      },
+      "verification": "비-UTF-8 AGENTIC-LOG.md와 journal.md 재현이 모두 봉투를 반환하면 해결.",
+      "suppression": null
+    },
+    {
+      "id": "GC-207",
+      "fingerprint": "b73739bb6c4c369e",
+      "category": "CWE-400 Uncontrolled Resource Consumption / CWE-789",
+      "severity": "medium",
+      "confidence": "high",
+      "disposition": "blocking",
+      "rule_id": "CWE-400",
+      "source_tier": "T1",
+      "location": { "file": "opal/tools/run-log-tool/run_log_core.py", "line": 1067, "symbol": "import_agentic / _all_oppl_candidates / import_oppl" },
+      "evidence": "가져오기 원본 읽기 5곳이 상한 없이 파일 전체를 메모리에 올린다 — :1067, :1201, :1215, :1229, :1305. §1.1의 16 KiB 상한은 append()(:818)에서 사건 1건당 적용되며 원본 파일 읽기에는 걸리지 않는다. 실측: 64 MiB AGENTIC-LOG.md로 import-agentic 실행 시 maximum resident set size 158,515,200 bytes(약 158 MB), 거부 없이 ok:true 반환.",
+      "impact": "거대 legacy 로그가 기록 도구의 메모리를 고갈시킨다. GC-201과 결합 시 악화된다 — 링크 추종 방어가 없으므로 AGENTIC-LOG.md를 /dev/zero 같은 무한 스트림으로 링크하면 읽기가 끝나지 않는다.",
+      "remediation": {
+        "guidance": "가져오기 원본별 바이트 상한을 정해 초과 시 event_too_large 계열 봉투로 거부하고 줄 단위 스트리밍 읽기로 전환한다. 상한 값의 확정은 T06(원본 상한 소관)과 조율하되, 이번 태스크에서는 '상한 없음'이 아니게 만드는 하드 가드가 필요하다. 소유자가 전량 T06 이관을 택하면 advisory로 강등 가능하다.",
+        "reference": "https://cwe.mitre.org/data/definitions/400.html",
+        "auto_fixable": false
+      },
+      "verification": "거대 원본 재현이 거부 봉투를 반환하고 RSS가 상한에 비례해 머무르면 해결.",
+      "suppression": null
+    },
+    {
+      "id": "GC-209",
+      "fingerprint": "a6893d37a1068154",
+      "category": "CWE-754 Improper Check for Unusual Conditions",
+      "severity": "low",
+      "confidence": "high",
+      "disposition": "advisory",
+      "rule_id": "CWE-754",
+      "source_tier": "T1",
+      "location": { "file": "opal/tools/run-log-tool/run_log_core.py", "line": 1034, "symbol": "_run_import_batch" },
+      "evidence": ":1034-1036에서 append() 실패 시 return result로 배치 전체를 즉시 중단한다. 앞서 성공한 append는 디스크에 남는다. 실패 원인이 입력 고유(event_too_large)면 재실행해도 같은 행에서 멈춘다. 실측: 3행(작은A/20KB거대B/작은C) 원본에서 A만 적재되고 event_too_large로 중단, 재실행해도 C는 영구히 미적재.",
+      "impact": "16 KiB를 넘는 원본 행 1개가 해당 태스크의 가져오기를 영구 실패 상태로 고착시켜, AC-15의 '단방향·멱등 가져오기 능력'이 특정 원본에서 달성 불가가 된다. 멱등 설계 덕에 중복 적재는 없으나 진행도 불가능하다.",
+      "remediation": {
+        "guidance": "행 단위 실패를 배치 중단이 아니라 skipped_invalid 같은 별도 집계로 계상하고 나머지를 계속 처리한다. 반환 봉투에 실패 행의 locator를 실어 원본 수정을 돕는다. scanned == imported + skipped_idempotent 불변식(D-T03-12)을 확장해야 하므로 계약 변경을 수반한다 — 소유자 판단 필요.",
+        "reference": "https://cwe.mitre.org/data/definitions/754.html",
+        "auto_fixable": false
+      },
+      "verification": "거대 행을 포함한 3행 원본에서 작은 행 2건이 모두 적재되고 거대 행만 집계로 보고되면 해결.",
+      "suppression": null
+    },
+    {
+      "id": "GC-210",
+      "fingerprint": "709ac49adefd5710",
+      "category": "CWE-367 TOCTOU Race Condition",
+      "severity": "low",
+      "confidence": "high",
+      "disposition": "advisory",
+      "rule_id": "CWE-367",
+      "source_tier": "T1",
+      "location": { "file": "opal/tools/run-log-tool/run_log_core.py", "line": 1305, "symbol": "import_oppl" },
+      "evidence": "_all_oppl_candidates()가 파싱 중 이미 원본 sha256을 계산해 사건에 싣는다(:1219, :1244, :1264). 그런데 import_oppl()(:1304-1308)은 같은 파일들을 다시 읽어 sources[].sha256을 계산한다. 이 재읽기는 락 밖에서 일어난다(락은 :1311 _run_import_batch 안에서 획득). :1305에는 try/except가 없어 파싱 이후 원본이 삭제되면 OSError가 밖으로 나간다.",
+      "impact": "sources[].sha256은 '이 내용을 이 해시로 가져왔다'는 감사 근거인데, 두 읽기 사이 원본이 바뀌면 실제 적재 사건의 해시(:1219 등)와 다른 값이 되어 출처 기록의 신뢰성이 깨진다. 동시 편집·중단 시 현실적으로 발생한다.",
+      "remediation": {
+        "guidance": "_all_oppl_candidates()가 파싱 시 계산한 파일별 sha256을 반환해 재사용한다(원본 읽기 1회). 부수적으로 GC-207의 재읽기 비용도 사라진다.",
+        "reference": "https://cwe.mitre.org/data/definitions/367.html",
+        "auto_fixable": false
+      },
+      "verification": "import_oppl이 원본을 파일당 1회만 읽고 sources[].sha256이 사건의 source.sha256과 동일 값에서 파생되며 :1305 재읽기가 사라지면 해결.",
+      "suppression": null
+    },
+    {
+      "id": "GC-211",
+      "fingerprint": "104a6d42785aa5ef",
+      "category": "CWE-732 Incorrect Permission Assignment",
+      "severity": "low",
+      "confidence": "high",
+      "disposition": "informational",
+      "rule_id": "CWE-732",
+      "source_tier": "T1",
+      "location": { "file": "opal/tools/run-log-tool/run_log_core.py", "line": 370, "symbol": "_acquire_lock" },
+      "evidence": ":370 lock_path.parent.mkdir(parents=True, exist_ok=True)에 mode 인자가 없어 umask 기본값(관측 0755)이 적용된다. 모든 공개 함수가 _with_lock을 거치므로 읽기 전용 validate_run도 존재하지 않는 경로 전체를 생성한다. 대조적으로 run/은 0700(:273), 락 파일·조각은 0600으로 명시 관리된다. 실측: validate_run('/tmp/newtree/a/b/c','run_x')가 run_log_missing을 반환하면서도 drwxr-xr-x 트리를 생성했다.",
+      "impact": "run/만 0700이고 부모 태스크 디렉터리가 0755면 다중 사용자 호스트에서 디렉터리 목록이 노출된다. 읽기 전용 명령의 쓰기 부작용은 최소 권한 원칙에 어긋나고, 오타 난 --task 경로에 빈 트리를 남긴다. 실제 침해로 이어지려면 다른 결함이 필요해 informational로 둔다.",
+      "remediation": {
+        "guidance": "mkdir(parents=True, exist_ok=True, mode=0o700)으로 모드를 명시한다(mode는 최말단에만 적용되므로 중간 경로가 필요하면 명시적 생성이 필요하다). 나아가 읽기 전용 명령은 태스크 디렉터리 부재 시 생성 대신 run_log_missing으로 거부하는 편이 계약에 맞다.",
+        "reference": "https://cwe.mitre.org/data/definitions/732.html",
+        "auto_fixable": false
+      },
+      "verification": "존재하지 않는 경로로 validate_run 실행 시 디렉터리를 만들지 않거나, 만든다면 0700이면 해결.",
+      "suppression": null
+    }
+  ],
+  "evidence": [
+    "run.sh / run_log_tool.py 실제 subprocess 실행 + 디스크 조각 파일 검사로만 판정(required_fidelity=real-usage). mock/patch/스텁/가짜 파일시스템 미사용.",
+    "V1 실측: 달력상 불가능한 legacy 시각 -> ValueError 스택 트레이스, exit=1 (GC-203)",
+    "V2 실측: 비-object .result.json -> AttributeError at run_log_core.py:1140 (GC-204)",
+    "V3 실측: 200,000 깊이 중첩 JSON -> RecursionError: Stack overflow (used 16352 kB) (GC-205)",
+    "V4/V5 실측: 비-UTF-8 journal.md 및 AGENTIC-LOG.md -> UnicodeDecodeError (GC-206)",
+    "V6 실측: AGENTIC-LOG.md 심볼릭 링크 -> imported:1, 외부 내용 조각 적재 확인 (GC-201)",
+    "V7 실측: .oppl-run 디렉터리 심볼릭 링크 -> imported:1, sources[].path가 내부 경로로 오보고 (GC-202)",
+    "V8 실측(대조군): run/ 심볼릭 링크에 대해 validate-run이 run_log_missing으로 거부 — T02 GC-101/102/103 조각 경로 방어는 유지됨",
+    "V9 실측: 16 KiB 초과 행이 배치를 중단하고 재실행해도 동일 지점에서 실패, 후속 행 영구 미적재 (GC-209). 동시에 16 KiB 상한이 가져오기 경로에 정상 적용됨을 확인",
+    "V10 실측: provenance.worker_log_token 원문이 append 통과 후 조각에 평문 기록 (GC-208)",
+    "V11 실측: validate_run이 읽기 전용임에도 0755 디렉터리 트리 생성 (GC-211)",
+    "V12 실측: 모듈 정규식 5종을 80,005자 적대적 입력으로 측정 — 전부 0.002초 이하, ReDoS 없음. SECURITY.md §6 임계값 전부 통과",
+    "V13 실측: 64 MiB 원본 import 시 maximum resident set size 158,515,200 bytes — 원본 읽기 상한 부재 확정 (GC-207)",
+    "정적 확인: run_log_core.py/run_log_tool.py에 state_tool·state.json 문자열 0건 — D-5 단방향 의존 위반 없음",
+    "정적 확인: tests/test_run_log_tool.py에 mock/patch/MagicMock 사용 0건(헤더 산문 매치 1건 제외), subprocess 실호출 7곳",
+    "참고(T4a 소관): ~/.opal/.venv/bin/python -m pytest tests/ -q -> 31 passed in 166.53s",
+    "redact() 초크포인트 확인: import_agentic/import_oppl -> _run_import_batch(:1034) -> append() -> :815 redact() — 가져오기가 D-9 단일 초크포인트에 올라타 있어 T06 수정이 자동 적용됨",
+    "락 중첩 확인: _run_import_batch가 _with_lock으로 획득 후 내부 append에 lock_held=True(:1034) 전달 — 이중 획득/자기 교착 없음",
+    "비활성 영역: 웹/네트워크·인증인가·SQL·암호구현·의존성 감사 — 대상 3파일이 표준 라이브러리 전용 로컬 파일 I/O CLI이며 프로젝트에 Python 매니페스트(pyproject.toml/requirements.txt/setup.py)가 없어 근거 없이 켜지 않음"
+  ],
+  "references": [
+    "docs/SECURITY.md §1 위협 모델 (CWE-22/78/94/377/829/1333)",
+    "docs/SECURITY.md §6 ReDoS 방어 임계값 · path 정규화(CWE-22)",
+    "docs/run-log/CONTRACT.md §1.1 폐쇄형 스키마 · §1.1.2 provenance · §1.1.3 워커 쓰기 권한 식별자 3종",
+    "docs/run-log/TRD.md D-5 단방향 의존 · D-9 마스킹 단일 초크포인트",
+    "OWASP Top 10 (2021) A01 Broken Access Control / A03 Injection / A05 Security Misconfiguration",
+    "CWE Top 25: CWE-20, CWE-22, CWE-59, CWE-248, CWE-367, CWE-400, CWE-522, CWE-674, CWE-732, CWE-754"
+  ],
+  "missing_capabilities": [],
+  "verdict": "FAIL",
+  "verdict_basis": "checked_files == target_files, missing_capabilities 비어 있음이므로 INCOMPLETE 조건 불성립. disposition: blocking finding 7건 -> gc-finding-schema.md §6에 따라 FAIL.",
+  "baseline": "none",
+  "baseline_delta": {
+    "new": ["GC-201","GC-202","GC-203","GC-204","GC-205","GC-206","GC-207","GC-208","GC-209","GC-210","GC-211"],
+    "persisting": [],
+    "resolved": [],
+    "suppressed": []
+  },
+  "out_of_scope_notes": [
+    "redact() 본문 pass-through(:228-237) — T06 소관, 설계대로이므로 finding 미계상",
+    "가져오기 원본 상한 값의 확정 — T06 소관 (GC-207은 '상한 존재'만 요구)",
+    "조각 전량 메모리 적재(:492, :867) 및 색인 부재(:491) — T04 소관",
+    "가져온 사건의 완료 게이트 불기여 집행 — T11 소관",
+    "최종 조합 판정의 게이트 집행 — T08 소관",
+    "begin-worker·워커 token 발급·worker_token_invalid — 범위 밖, 미구현이 정상",
+    "opal/tools/state-tool/ 전체 — T05 소유, 읽지 않음",
+    "docs/run-log/ 계약 3자산 — PM 소유, 기준으로만 참조하고 변경 제안은 보고서 §4로 분리"
+  ],
+  "doc_update_proposals": [
+    {
+      "id": "GC-DP-301",
+      "trigger": "severity",
+      "basis": "High 이슈 3건(GC-201/202/208) — 심각도 트리거는 빈도 트리거와 독립 판정",
+      "proposal": "docs/SECURITY.md §1 위협 모델에 CWE-59 Link Following을 명시 추가한다. 현재 §1은 CWE-22만 열거하나 실제 발생한 결함 5건(T02 GC-101/102/103, T03 GC-201/202)은 모두 심볼릭 링크 선점이었다. 신규 파일 읽기 경로 추가 시 O_NOFOLLOW + resolve() 경계 확인을 의무화하는 규칙을 둔다."
+    },
+    {
+      "id": "GC-DP-302",
+      "trigger": "new_category",
+      "basis": "기존 SECURITY.md에 외부 데이터 파일 파싱 카테고리가 없다(§4는 스킬 fetch, §6은 ReDoS). 이 카테고리로 blocking 5건(GC-203~207) 발생.",
+      "proposal": "docs/SECURITY.md §9 '신뢰 불가 원본 파싱' 신설 — (a) 원본 파일당 바이트 상한 의무, (b) 디코딩 실패·타입 불일치·중첩 초과는 예외를 밖으로 던지지 않고 손상 집계로 흡수, (c) 파서가 잡아야 할 예외 최소 집합을 OSError, UnicodeDecodeError, json.JSONDecodeError, ValueError, RecursionError로 명문화, (d) 원본은 1회만 읽고 해시를 재사용."
+    }
+  ]
+}

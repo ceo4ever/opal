@@ -1,0 +1,313 @@
+{
+  "probe_version": "1.0",
+  "channel_id": "oppl-headless-cli",
+  "command": [
+    "/Users/iskang/.opal/tools/opal-agent/run.sh",
+    "--provider",
+    "claude",
+    "--opal-bootstrap",
+    "off",
+    "--resume",
+    "f663dee0-2e73-412c-a814-be28cdbb3dc8",
+    "--model",
+    "sonnet",
+    "--allowed-tools",
+    "Read,Grep,Glob,Write,Edit",
+    "--timeout",
+    "600",
+    "--cwd",
+    "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_123",
+    "--stream",
+    "[WORKER]\n\nG 게이트(Evaluator, 별도 세션) 판정 결과 **verdict: fail**이다. 네가 방금 쓴 PLAN.md를 아래 지시대로 개정하라. 판정 원문 전문은 `<task_folder>/QA-SPEC.md`에 있으니 먼저 읽어라.\n\ntask_folder: /Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_123/tasks/123-260912-oppl-태스크-실행로그-표준화/tasks/T01-채널-관측-능력-실측\n\n## 재작업 지시 7건 (전부 반영)\n1. §5 산출물에 self-test receipt 파일 추가 — 축별 `evidence/<axis>/self-test-receipt.json`을 CONTRACT §1.5의 8필드(`receipt_version`/`channel_id`/`adapter_id`/`adapter_sha256`/`observed`/`claimed_profile`/`evidence`/`produced_at`)로 정의하고, `profiles.json.receipt_sha256`은 \"그 receipt 파일 바이트의 SHA-256\"으로 명시하라.\n2. VS-1에 receipt 검증 추가 — 8필드 존재 + `claimed_profile`이 `observed{}` 파생과 일치 + `receipt_sha256`이 receipt 파일 실제 해시와 일치. non-null 검사로 대체 금지.\n3. §3-1 관측 판정 근거 강화 — `observed.X = (칸의 observed 필드가 true) ∧ (evidence_path가 그 관측을 실제로 담은 원본) ∧ (관측 불가 note가 아님)`. VS-2를 \"존재·비공백\"에서 \"칸이 주장하는 관측 항목이 그 파일 안에서 확인됨\"으로 강화하라.\n4. VS-3을 칸 단위로 — `observed=true`로 선언된 **모든 칸**이 각자의 evidence_path로 뒷받침됨을 판정하라.\n5. §3-6에 잠정 변환기 채택 조건 명문화 — (a) 이 profiles.json은 태스크 폴더 원본이며 배포 위치로 승격하지 않는다 (b) 승격 전 `state-tool init --run-log-mode active`를 호출하지 않는다 (c) Phase 1A 실변환기 확정 시 `adapter_id`/`adapter_sha256`/`receipt_sha256`을 재발급한다.\n6. §1 축 B에 probe 실행 안전 제약 추가 — opal-agent 실호출의 작업 디렉터리·프롬프트 제약을 고정하고, 실행 후 `git status`로 워크트리 무변경(태스크 폴더 산출물 제외)을 확인하는 항목을 VS-4에 넣어라.\n7. `evidence_paths` 상대 경로의 기준점을 **태스크 폴더 기준**으로 한 줄로 고정하고 VS-2 해석 규칙을 거기에 맞춰라.\n\n## 실측으로 이미 확정된 사실 (PLAN §1의 \"미확인\" 항목을 사실로 갱신하라 — 등급 값은 여전히 적지 마라)\n- 축 A transcript 구조: PM 세션 `.jsonl`과 서브에이전트 transcript는 **분리된 파일**이다. 서브에이전트는 `<세션디렉터리>/subagents/agent-<agentId>.jsonl`, 시작 메타는 같은 폴더의 `agent-<agentId>.meta.json`(하네스가 기록, 필드: agentType·description·toolUseId·parentAgentId·spawnDepth·requestShape·model)이다. 상관 키는 `toolUseId`다.\n- 축 A 종료 봉투: 호출자 transcript에 `type=attachment` 항목으로 `<task-notification>`(task-id·tool-use-id·output-file·status·usage.duration_ms)이 하네스에 의해 기록된다.\n- 축 A 단조 구간: 외부 프로브가 자기 `time.monotonic()`으로 시작~종료 관측 구간을 잴 수 있음이 실측되었다. 단, 호출자 세션의 디스크 flush 지연이 포함되어 구간이 느슨하다는 사실을 PLAN에 caveat로 적어라.\n- 축 B: `--stream` 모드는 실행 중 증분 수신(중간 사건 관측 가능), `--json` 모드는 stdout 전량이 종료 직전 한꺼번에 도착(중간 사건 관측 불가)이 실측되었다. **호출 모드가 관측 능력을 좌우한다**는 사실과, 그래서 등급 배정에 \"어떤 모드 전제인가\"를 반드시 병기해야 한다는 조항을 PLAN에 추가하라.\n\n## 제약\n- **[MUST]** PLAN.md 외의 파일을 만들거나 고치지 마라. `~/.opal/`·`opal/`·3-SSOT·CONTRACT.md·QA-SPEC.md 수정 금지.\n- **[MUST]** 등급 값(`observed_trajectory`/`observed_terminal`/`cooperative`)을 PLAN에서 축에 배정하지 마라. PLAN은 절차만 정한다.\n- 관측되지 않은 것을 관측됐다고 쓰지 마라.\n\n완료 시 개정 항목 7건이 각각 PLAN.md 어느 절에 반영됐는지 절 번호로 반환하라."
+  ],
+  "start": {
+    "pid": 84030,
+    "started_at_wall": "2026-09-12T10:41:55.381Z",
+    "monotonic_origin": true
+  },
+  "stream_lines": [
+    {
+      "monotonic_offset_ms": 579.59,
+      "observed_at": "2026-09-12T10:41:55.961Z",
+      "type": "system",
+      "bytes": 336,
+      "line_sha256": "361c58229a3120a43b9221e46d518a50ad2b45c902c281e1ffbf9bf14423ba02"
+    },
+    {
+      "monotonic_offset_ms": 2546.811,
+      "observed_at": "2026-09-12T10:41:57.928Z",
+      "type": "system",
+      "bytes": 4446,
+      "line_sha256": "4cecb4693dea8dd8a82ae8ac658ca4a327b06624cce68ce18da146c15edd880e"
+    },
+    {
+      "monotonic_offset_ms": 2547.022,
+      "observed_at": "2026-09-12T10:41:57.928Z",
+      "type": "result",
+      "bytes": 1113,
+      "line_sha256": "8ffafbf606c176523673f837b2c2f261e3c922de9e8e0cb174de373126f5177a"
+    },
+    {
+      "monotonic_offset_ms": 2554.244,
+      "observed_at": "2026-09-12T10:41:57.935Z",
+      "type": "system",
+      "bytes": 4446,
+      "line_sha256": "587a6f5c1817862c89773e18391f4fa42276c5bcb657b06622f77cdf80c20566"
+    },
+    {
+      "monotonic_offset_ms": 4024.422,
+      "observed_at": "2026-09-12T10:41:59.405Z",
+      "type": "assistant",
+      "bytes": 1265,
+      "line_sha256": "c6931f256660f046dc9eabd11b4e4151153bc3960a507c6d4f4350d13df7f60b"
+    },
+    {
+      "monotonic_offset_ms": 5440.152,
+      "observed_at": "2026-09-12T10:42:00.821Z",
+      "type": "assistant",
+      "bytes": 1014,
+      "line_sha256": "14d378b9b5f9a7e9352bb0eabc541b7d8858961a4041eb068ae89ae101bd7fdb"
+    },
+    {
+      "monotonic_offset_ms": 5449.39,
+      "observed_at": "2026-09-12T10:42:00.831Z",
+      "type": "user",
+      "bytes": 9907,
+      "line_sha256": "357b12d23999408a2b065156f733d76e435df63e1b40f572c768ee89443a8802"
+    },
+    {
+      "monotonic_offset_ms": 5454.128,
+      "observed_at": "2026-09-12T10:42:00.835Z",
+      "type": "rate_limit_event",
+      "bytes": 435,
+      "line_sha256": "97d49a970cd6af1dbc867a0bec4673d188c37cec1036562c1d2fac4820cba7bb"
+    },
+    {
+      "monotonic_offset_ms": 7097.066,
+      "observed_at": "2026-09-12T10:42:02.478Z",
+      "type": "system",
+      "bytes": 194,
+      "line_sha256": "a9c3894757d1e9ac1453ccb0ffa9576cb52d1197c084fed35dbc0333a84df165"
+    },
+    {
+      "monotonic_offset_ms": 8246.168,
+      "observed_at": "2026-09-12T10:42:03.627Z",
+      "type": "system",
+      "bytes": 196,
+      "line_sha256": "3411106ade6fb34d82d1fc05b9990149a9122450e3425d6a1fba406c44c35a86"
+    },
+    {
+      "monotonic_offset_ms": 9295.078,
+      "observed_at": "2026-09-12T10:42:04.676Z",
+      "type": "system",
+      "bytes": 196,
+      "line_sha256": "2f8db6844eca97c201677b52c3fb6acc3ad09b2e3486cb0eacc4e3752b85ece6"
+    },
+    {
+      "monotonic_offset_ms": 10565.239,
+      "observed_at": "2026-09-12T10:42:05.946Z",
+      "type": "system",
+      "bytes": 196,
+      "line_sha256": "d10aeef5e1f4bbab83ccbff19cd566968d6546846d0f18accf46733df6e9a4df"
+    },
+    {
+      "monotonic_offset_ms": 11663.156,
+      "observed_at": "2026-09-12T10:42:07.045Z",
+      "type": "system",
+      "bytes": 196,
+      "line_sha256": "f5e2a2f26740267c2439e62cf471be04c810e0b732a7f9d59bfd0572068ae2c7"
+    },
+    {
+      "monotonic_offset_ms": 12883.45,
+      "observed_at": "2026-09-12T10:42:08.265Z",
+      "type": "system",
+      "bytes": 196,
+      "line_sha256": "1975aea00e15997ccc4a3b7b0221b7f71238af35cbccb3fe094115e624a5d66a"
+    },
+    {
+      "monotonic_offset_ms": 14290.679,
+      "observed_at": "2026-09-12T10:42:09.672Z",
+      "type": "system",
+      "bytes": 196,
+      "line_sha256": "f69cd8cd3f91084cc779412f4c89c05d916f60c72b678c2ef0532806a2929946"
+    },
+    {
+      "monotonic_offset_ms": 15470.885,
+      "observed_at": "2026-09-12T10:42:10.852Z",
+      "type": "system",
+      "bytes": 196,
+      "line_sha256": "4a29595550aa225a5de39f727d55217f6a82b3950dccedee74bc22d0d05c710a"
+    },
+    {
+      "monotonic_offset_ms": 16715.478,
+      "observed_at": "2026-09-12T10:42:12.097Z",
+      "type": "system",
+      "bytes": 196,
+      "line_sha256": "379a5db557e52fdb62578b22dc6e1ff48280893bc46b6eca51d52ae8070624c1"
+    },
+    {
+      "monotonic_offset_ms": 17791.701,
+      "observed_at": "2026-09-12T10:42:13.173Z",
+      "type": "system",
+      "bytes": 197,
+      "line_sha256": "6fad95619610e0735826725dd14bf51f16c25142c285ad4db50045a7fb8c459e"
+    },
+    {
+      "monotonic_offset_ms": 18968.476,
+      "observed_at": "2026-09-12T10:42:14.350Z",
+      "type": "system",
+      "bytes": 197,
+      "line_sha256": "6366a4d6b7d6194a1b8e1aa380a4b8d41fbba44219f7456b01d47c9763bf9e92"
+    },
+    {
+      "monotonic_offset_ms": 20069.996,
+      "observed_at": "2026-09-12T10:42:15.451Z",
+      "type": "system",
+      "bytes": 197,
+      "line_sha256": "6e3f2e9bda249793a783789c9cde7004bd0e016f2a550b4e9dc7c0ea47ba9b80"
+    },
+    {
+      "monotonic_offset_ms": 21197.348,
+      "observed_at": "2026-09-12T10:42:16.579Z",
+      "type": "system",
+      "bytes": 197,
+      "line_sha256": "af3924a4ee77c498dcdc1eac9d393a38f36865c124e6a9a54bce7de297b94628"
+    },
+    {
+      "monotonic_offset_ms": 22241.039,
+      "observed_at": "2026-09-12T10:42:17.622Z",
+      "type": "system",
+      "bytes": 196,
+      "line_sha256": "0d1087827da43d530002ed687895c824a9c2bf3232b33bab3f5c3f0b4d04bbf3"
+    },
+    {
+      "monotonic_offset_ms": 23615.166,
+      "observed_at": "2026-09-12T10:42:18.997Z",
+      "type": "system",
+      "bytes": 197,
+      "line_sha256": "02b7cdba3bcd0913e275a7602f01e75b41b3983ffbf8fe02de597de38278f85e"
+    },
+    {
+      "monotonic_offset_ms": 24740.805,
+      "observed_at": "2026-09-12T10:42:20.122Z",
+      "type": "system",
+      "bytes": 196,
+      "line_sha256": "4cb0df20084b6bf210fc3799a2263af482d8af8ad47d66383a1e79d125039db5"
+    },
+    {
+      "monotonic_offset_ms": 25787.932,
+      "observed_at": "2026-09-12T10:42:21.169Z",
+      "type": "system",
+      "bytes": 197,
+      "line_sha256": "30f4bf0d4e37244014fe4824d1ff59b53b1926734a0cc88c85c66161055c6bd2"
+    },
+    {
+      "monotonic_offset_ms": 27239.303,
+      "observed_at": "2026-09-12T10:42:22.621Z",
+      "type": "system",
+      "bytes": 197,
+      "line_sha256": "8fa4a7bb29e39116c48029fbff70eedd75937b5112cd3a32d57f072169c57a39"
+    },
+    {
+      "monotonic_offset_ms": 28513.502,
+      "observed_at": "2026-09-12T10:42:23.895Z",
+      "type": "system",
+      "bytes": 197,
+      "line_sha256": "e1a85674592bf42bf48635069839e1d38445b7a6383dfb25bcfbd8668b8cebd9"
+    },
+    {
+      "monotonic_offset_ms": 29649.282,
+      "observed_at": "2026-09-12T10:42:25.031Z",
+      "type": "system",
+      "bytes": 197,
+      "line_sha256": "c311060ccf59401f5d49d05d7147673e8783ac3bb667f5a6056928dc8a5a8e8d"
+    },
+    {
+      "monotonic_offset_ms": 30976.53,
+      "observed_at": "2026-09-12T10:42:26.358Z",
+      "type": "system",
+      "bytes": 197,
+      "line_sha256": "aff9efda4f68573296dd09039de49ef0a77733b05d13447eebbf0834fd31b9af"
+    },
+    {
+      "monotonic_offset_ms": 32065.821,
+      "observed_at": "2026-09-12T10:42:27.447Z",
+      "type": "system",
+      "bytes": 197,
+      "line_sha256": "81b4d0a90248f61416e2a9b647a23a2ee40d065b6a02d66f545eb7035def299d"
+    },
+    {
+      "monotonic_offset_ms": 33286.518,
+      "observed_at": "2026-09-12T10:42:28.668Z",
+      "type": "system",
+      "bytes": 197,
+      "line_sha256": "bfef230f7452845ae1243f5ef4ccd4b30ae79c5b8d79e2511b725334e2eb0538"
+    },
+    {
+      "monotonic_offset_ms": 34514.296,
+      "observed_at": "2026-09-12T10:42:29.896Z",
+      "type": "system",
+      "bytes": 197,
+      "line_sha256": "208aef9d139da02eb6d6c978a25bc52a3fa1a444671a82586d585c351bea3a3c"
+    },
+    {
+      "monotonic_offset_ms": 35114.927,
+      "observed_at": "2026-09-12T10:42:30.497Z",
+      "type": "assistant",
+      "bytes": 10881,
+      "line_sha256": "aab71460b362bbbcf2a54e88b4f04431c785223c74a613ceb121868418d09bac"
+    },
+    {
+      "monotonic_offset_ms": 115836.247,
+      "observed_at": "2026-09-12T10:43:51.220Z",
+      "type": "assistant",
+      "bytes": 11503,
+      "line_sha256": "c60f5785be93777126961d5f0ae048ff16c3e174aebf45e291639a5d4d8ead1a"
+    },
+    {
+      "monotonic_offset_ms": 115854.974,
+      "observed_at": "2026-09-12T10:43:51.238Z",
+      "type": "user",
+      "bytes": 33403,
+      "line_sha256": "9cfc479adbd20e4fe865d262b2ec9997bae759920e66ce6b59a028b5b4546a1e"
+    },
+    {
+      "monotonic_offset_ms": 126000.861,
+      "observed_at": "2026-09-12T10:44:01.384Z",
+      "type": "assistant",
+      "bytes": 1850,
+      "line_sha256": "9c695471111c1a83c7386e93579e7c7e36f98a55c97afea0cf7a440d278a956b"
+    },
+    {
+      "monotonic_offset_ms": 126002.83,
+      "observed_at": "2026-09-12T10:44:01.386Z",
+      "type": "rate_limit_event",
+      "bytes": 435,
+      "line_sha256": "0f93aa895a13bd202ecb535b8297246b82237214b97c12aec597b07a1055cd32"
+    },
+    {
+      "monotonic_offset_ms": 126007.496,
+      "observed_at": "2026-09-12T10:44:01.391Z",
+      "type": "result",
+      "bytes": 2861,
+      "line_sha256": "c8bbbbe24d781e0d32c755fd40be80711bffa5d1dac334e2a1d823d28d6fb0aa"
+    }
+  ],
+  "terminal": {
+    "exitcode": 0,
+    "source_kind": "process_exit",
+    "ended_at_wall": "2026-09-12T10:44:02.331Z",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stderr_bytes": 0
+  },
+  "monotonic_span": {
+    "duration_ms": 126947.816,
+    "duration_source": "adapter_monotonic",
+    "clock": "time.monotonic"
+  },
+  "counts": {
+    "total_lines": 38,
+    "lines_before_result": 36,
+    "result_lines": 2
+  }
+}

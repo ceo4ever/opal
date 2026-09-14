@@ -1352,6 +1352,13 @@ install_opal() {
             success "backlog-tool run.sh 실행 권한 설정"
         fi
 
+        # ── run-log-tool 실행 권한 (123 T02) ──
+        local run_log_run="$opal_home/tools/run-log-tool/run.sh"
+        if [[ -f "$run_log_run" ]]; then
+            chmod +x "$run_log_run"
+            success "run-log-tool run.sh 실행 권한 설정"
+        fi
+
         # ── opal-action-monitor 실행 권한 (067) ──
         local opal_action_monitor_run="$opal_home/tools/opal-action-monitor/run.sh"
         if [[ -f "$opal_action_monitor_run" ]]; then

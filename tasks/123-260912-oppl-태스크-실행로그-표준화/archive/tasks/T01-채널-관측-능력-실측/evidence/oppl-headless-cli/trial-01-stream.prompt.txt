@@ -1,0 +1,31 @@
+[WORKER]
+
+## 이벤트 검증
+- event: `worker.dispatch`
+- receipt: `/private/tmp/claude-501/-Volumes-Data-AIStudio-workspace-ai-framework/4c738893-9f8b-4d01-82b1-70b9ed0631bc/scratchpad/worker_dispatch_t01.json`
+- verification: `~/.opal/tools/event-loader/run.sh verify --receipt <위 경로> --event worker.dispatch` → `ok: true`, verified_document_count=4 (agent-registry · dispatch-process · context-injection · observability). 위 receipt 파일의 `documents[].content`가 문서 전문이다. 필요 시 그 파일을 읽어 소비하라.
+
+## 단계
+T1 명세·설계 (op-dev-plan 성격). 산출물은 PLAN.md 1건이다.
+
+## 태스크
+- task_id: T01 / task_area: 공통
+- task_folder: /Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_123/tasks/123-260912-oppl-태스크-실행로그-표준화/tasks/T01-채널-관측-능력-실측
+- project_root: /Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_123
+- contract_path: <project_root>/docs/run-log/CONTRACT.md (§1.5 등급 enum·self-test receipt, §1.6 profiles.json 구조가 SSOT)
+- 목표: 두 호출 축(A: PM이 플랫폼 Agent 도구로 서브에이전트를 부르는 축 `pm-agent-tool`, B: `~/.opal/tools/opal-agent/` 헤드리스 CLI 축 `oppl-headless-cli`)이 **모델 협조 없이 기계적으로** 확보 가능한 관측 원본 범위를 실측하고, 채널별 완료 판정 등급을 `profiles.json`으로 확정한다.
+- 범위: 읽기·실험 전용. `opal/` 아래 도구 소스를 만들거나 고치지 않는다. 산출물은 증거 파일 + profiles.json + 태스크 문서뿐이다.
+- 관측 4항목: (1) 시작 식별자 (2) 완료 알림보다 앞선 중간 사건 (3) 종료 봉투 (4) 단조 시계 구간.
+
+## 지시
+1. `<project_root>/docs/run-log/CONTRACT.md` §1.5·§1.6, `TRD.md` §채널 등급 모델, `PRD.md` §Phase 0을 읽어라.
+2. `<task_folder>/PLAN.md`를 작성하라. 포함할 것:
+   - 축별 실측 설계(무엇을 호출하고 어떤 원본을 어디에서 수집하는가)
+   - 관측 4항목 × 2축 = 8칸 판정 매트릭스의 **빈 틀**(값은 실측이 채운다 — 추정값을 미리 적지 마라)
+   - 등급 배정 규칙(§1.5 enum 3종)을 실측 결과에 적용하는 결정 절차
+   - 검증 시나리오 3~5건(각각 `id`·`대상`·`기대`·`required_fidelity: real-usage`) — profiles.json 구조 검증과 증거 파일 실재·비공백 검증을 포함
+   - 산출물 목록과 범위 밖 항목
+3. **[MUST]** `~/.opal/`을 수정하지 마라. 3-SSOT(backlog.json·state.json·test-scenario.json) 손편집 금지. CONTRACT.md 수정 금지.
+4. 관측되지 않은 것을 관측됐다고 적지 마라. 등급값을 PLAN에서 미리 배정하지 마라.
+
+완료 시 PLAN.md 절대경로와 핵심 설계 3줄을 반환하라.

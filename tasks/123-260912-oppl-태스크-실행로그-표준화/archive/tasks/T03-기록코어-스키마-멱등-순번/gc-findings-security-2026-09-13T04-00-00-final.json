@@ -1,0 +1,218 @@
+{
+  "check": "security",
+  "status": "pass",
+  "verdict": "PASS_WITH_ADVISORIES",
+  "scope": "final-confirmation",
+  "scope_note": "전수 재검사 아님 — 직전 잔여 blocking 1건(GC-212) + advisory 1건(GC-213) 폐쇄 확인 + 회귀·부작용 확인으로 한정",
+  "timestamp": "2026-09-13T04-00-00",
+  "element": "final",
+  "report_path": "tasks/123-260912-oppl-태스크-실행로그-표준화/tasks/T03-기록코어-스키마-멱등-순번/GC-SECURITY-2026-09-13T04-00-00-final.md",
+  "checked_files": [
+    "opal/tools/run-log-tool/run_log_core.py",
+    "opal/tools/run-log-tool/run_log_tool.py",
+    "opal/tools/run-log-tool/tests/test_run_log_tool.py"
+  ],
+  "missing_capabilities": [],
+  "blocking_count": 0,
+  "findings": [
+    {
+      "id": "GC-214",
+      "fingerprint": "ede8b89478507254",
+      "category": "CWE-1120",
+      "severity": "medium",
+      "confidence": "high",
+      "disposition": "advisory",
+      "rule_id": "TASK.md C-2 / red-first.md §4",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/tools/run-log-tool/tests/test_run_log_tool.py",
+        "line": 1,
+        "symbol": "S-3~S-29"
+      },
+      "evidence": "테스트 파일 전수 grep: symlink·심볼릭·hard·nlink·fifo·mkfifo·S_ISREG·정규 파일·traversal·escape 전건 0 매치. 시나리오 S-3~S-29는 스키마·멱등·순번·가져오기 의미론만 덮고 링크·파일종류 경계 방어는 하나도 덮지 않는다.",
+      "impact": "3회 검사에서 나온 blocking 4건(GC-201·202·212·213)이 전부 이 계열인데, _safe_read_bytes()를 리팩터링하며 os.fstat 게이트나 O_NONBLOCK을 떨어뜨려도 31건 테스트가 전부 통과한다. 보안 제어가 회귀 감지 장치 없이 서 있다.",
+      "remediation": {
+        "guidance": "S-30(가칭) 시나리오 1개 추가 — run.sh import-agentic/import-oppl에 대해 (a) 심볼릭 링크, (b) 하드 링크(os.link), (c) FIFO(os.mkfifo, subprocess timeout 단언 포함), (d) 정상 파일 대조군을 각각 넣고 거부 봉투 + 조각 적재 0건 + 대조군 통과를 판정한다. 기존 subprocess 실호출 관례 그대로, 새 의존성 없음.",
+        "auto_fixable": false
+      },
+      "verification": "새 시나리오가 현재 구현에서 통과하고, os.fstat 게이트 3줄을 임시 제거하면 실패해야 한다(RED 확인).",
+      "suppression": null
+    },
+    {
+      "id": "GC-215",
+      "fingerprint": "ef3b472b1c0d4574",
+      "category": "CWE-775",
+      "severity": "low",
+      "confidence": "high",
+      "disposition": "informational",
+      "rule_id": "CWE-400",
+      "source_tier": "T1",
+      "location": {
+        "file": "opal/tools/run-log-tool/run_log_core.py",
+        "line": 411,
+        "symbol": "_safe_read_bytes"
+      },
+      "evidence": "os.fdopen(fd,'rb') 자체가 raise하면 with 블록에 진입하지 못해 fd가 누수된다. 바로 위 fstat 블록은 모든 분기에서 os.close(fd)를 수행하므로 이 경로만 비대칭이다.",
+      "impact": "이번 수정이 만든 문제가 아니다(fdopen 경로는 이전부터 동일). fdopen 실패는 메모리 고갈 등 극히 드문 조건에서만 발생하고 CLI는 단발 프로세스라 OS가 회수한다. §2.6 인프로세스 장기 호출자에서만 이론적으로 누적된다.",
+      "remediation": {
+        "guidance": "fstat 블록과 fdopen을 하나의 try ... finally로 묶거나, except 블록에서 os.close(fd)를 수행해 fd 소유권을 모든 분기에서 이전·해제한다.",
+        "auto_fixable": false
+      },
+      "verification": "fdopen 실패 주입은 real-usage 재현이 어렵다 — 코드 검토로 fd 소유권이 모든 분기에서 이전·해제됨을 확인하는 것으로 족하다.",
+      "suppression": null
+    },
+    {
+      "id": "GC-216",
+      "fingerprint": "303c20499b71cd89",
+      "category": "CWE-1059",
+      "severity": "low",
+      "confidence": "high",
+      "disposition": "informational",
+      "rule_id": "docs/CONVENTIONS.md @header",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/tools/run-log-tool/run_log_core.py",
+        "line": 6,
+        "symbol": "@header.description"
+      },
+      "evidence": ":6 @header.description과 :1353 _all_oppl_candidates() docstring이 방어를 O_NOFOLLOW까지만 기술하고, 이번 추가된 os.fstat 게이트(S_ISREG·st_nlink)와 O_NONBLOCK을 언급하지 않는다. 함수 본문 docstring(:377-390)은 정확하므로 모듈 최상단 요약만 낡았다.",
+      "impact": "다음 작업자가 @header만 읽고 '이 경로의 방어는 O_NOFOLLOW뿐'이라고 판단하면 GC-214가 지적한 회귀가 더 쉽게 일어난다. 컨벤션 축과 중첩되는 지적이다.",
+      "remediation": {
+        "guidance": "두 문장을 현재 사실로 제자리 교체 — '심볼릭 링크·하드 링크·비정규 파일·경계 이탈 방어(_reject_symlink_or_escape·_safe_read_bytes, O_NOFOLLOW|O_NONBLOCK + os.fstat S_ISREG·st_nlink 게이트)'. 이력 서술·GC 번호 나열 금지.",
+        "auto_fixable": false
+      },
+      "verification": "@header.description에 하드 링크·정규 파일 판정이 언급되고 이력 서술·태스크 번호 이력이 없는지 확인한다.",
+      "suppression": null
+    },
+    {
+      "id": "GC-207",
+      "fingerprint": "39aa904f0294805b",
+      "category": "CWE-400",
+      "severity": "medium",
+      "confidence": "high",
+      "disposition": "advisory",
+      "transferred_to": "T06",
+      "rule_id": "CWE-400",
+      "source_tier": "T1",
+      "location": {
+        "file": "opal/tools/run-log-tool/run_log_core.py",
+        "line": 1210,
+        "symbol": "import 원본 읽기"
+      },
+      "evidence": "st_size·MAX_*_BYTES grep 0건 — 원본 크기 상한 여전히 없음. 단, /dev/zero 등 device 증폭 벡터는 이번 S_ISREG 게이트로 차단됨(실측 0.06초 종료).",
+      "impact": "태스크 안의 진짜 큰 정규 파일 하나로 잔존 위험이 좁혀졌다.",
+      "remediation": {"guidance": "T06이 원본 바이트 상한을 소유한다.", "auto_fixable": false},
+      "verification": "T06 소관.",
+      "suppression": null
+    },
+    {
+      "id": "GC-210",
+      "fingerprint": "94c178725d084c11",
+      "category": "CWE-367",
+      "severity": "low",
+      "confidence": "high",
+      "disposition": "advisory",
+      "transferred_to": "T06",
+      "rule_id": "CWE-367",
+      "source_tier": "T1",
+      "location": {
+        "file": "opal/tools/run-log-tool/run_log_core.py",
+        "line": 1490,
+        "symbol": "import_oppl"
+      },
+      "evidence": "import_oppl()이 _safe_read_bytes(task_dir / p)로 같은 파일을 락 밖에서 재읽기하는 구조 잔존(sources[].sha256 산출).",
+      "impact": "sources[].sha256이 실제 소비한 바이트와 시점상 어긋날 수 있다.",
+      "remediation": {"guidance": "T06이 '원본 1회 읽고 해시 재사용'을 소유한다.", "auto_fixable": false},
+      "verification": "T06 소관.",
+      "suppression": null
+    },
+    {
+      "id": "GC-211",
+      "fingerprint": "fcb6319ed80e8963",
+      "category": "CWE-732",
+      "severity": "low",
+      "confidence": "high",
+      "disposition": "informational",
+      "rule_id": "CWE-732",
+      "source_tier": "T1",
+      "location": {
+        "file": "opal/tools/run-log-tool/run_log_core.py",
+        "line": 430,
+        "symbol": "락 획득 시 디렉터리 생성"
+      },
+      "evidence": "실측 재확인 — /tmp/f3/nt, /a, /a/b는 0755, 최말단 /a/b/c와 run/은 0700. pathlib.Path.mkdir(mode=)는 최말단에만 모드를 적용한다.",
+      "impact": "중간 경로가 umask 기본값으로 남는다. 조각(0600)·run/(0700) 자체는 보호된다.",
+      "remediation": {"guidance": "이번 범위에서 추가 조치 불필요. 근본 해결(읽기 전용 명령의 트리 생성 금지)은 계약 §2.6 변경을 수반하므로 소유자 판단 사항.", "auto_fixable": false},
+      "verification": "소유자 판단 사항.",
+      "suppression": null
+    }
+  ],
+  "resolved_this_run": [
+    {"id": "GC-212", "prior_disposition": "blocking", "evidence": "하드 링크 import-agentic → run_log_write_failed(nlink=2) 거부, 조각 적재 0건, source.id 위장 0건. 같은 inode·nlink=2를 ls -li로 확인."},
+    {"id": "GC-213", "prior_disposition": "advisory", "evidence": "FIFO AGENTIC-LOG.md → 0.06s 거부 봉투, FIFO .oppl-run/journal.md → 0.07s {\"ok\":true,\"scanned\":0}. 직전 >8s HUNG에서 정지 소멸."}
+  ],
+  "regression_verified": [
+    {"id": "GC-201", "result": "유지", "evidence": "심볼릭 링크 AGENTIC-LOG.md → 거부, leak 0"},
+    {"id": "GC-202", "result": "유지", "evidence": ".oppl-run 디렉터리 링크 거부 / 하위 개별 링크 sources: [], leak 0"},
+    {"id": "GC-203", "result": "유지", "evidence": "2026-13-45 99:99 불량 행 + 정상 행 → exit 0, scanned 1 imported 1"},
+    {"id": "GC-204", "result": "유지", "evidence": "[1,2,3] 비-object result.json → exit 0, scanned 0"},
+    {"id": "GC-205", "result": "유지", "evidence": "'['*200000 중첩 → exit 0, scanned 0"},
+    {"id": "GC-206", "result": "유지(되돌리지 않음)", "evidence": "b'\\xff\\xfe bad' 양쪽 경로 → exit 0, scanned 0"},
+    {"id": "GC-208", "result": "유지", "evidence": "중첩 키 4집합 전부 schema_invalid, RAW SECRET 조각 출현 0회"},
+    {"id": "GC-209", "result": "유지(되돌리지 않음)", "evidence": "21KB 거대 행 + 작은 행 2개 → scanned 2 imported 2, 재실행 skipped_idempotent 2, A·C 적재 확인"}
+  ],
+  "side_effect_checks": [
+    {
+      "question": "st_nlink == 1이 정상 파일을 막는가",
+      "answer": "막지 않는다",
+      "evidence": "실제 AGENTIC-LOG.md 2건 + .oppl-run 산출물 19건 + git 워크트리 파일 전건 nlink=1. APFS clonefile(cp -c) nlink=1. 원자적 쓰기(mkstemp+os.replace) nlink=1. 실제 산출물 end-to-end: import-agentic scanned 33 imported 33, import-oppl scanned 18 imported 18, validate-run verdict pass event_count 51 violations 0.",
+      "opinion": "macOS·APFS에서 nlink!=1인 정상 사례는 사실상 cp -al 하드링크 아카이브 복원뿐이다. 하드 링크는 원본과 링크가 구조적으로 구분 불가하므로(둘 다 nlink=2) 안전 측 실패가 정답이다. 거부 메시지가 nlink=N을 명시해 진단이 즉시 가능하다."
+    },
+    {
+      "question": "O_NONBLOCK이 정규 파일 읽기를 훼손하는가 (short read → source.sha256 훼손)",
+      "answer": "훼손하지 않는다",
+      "evidence": "크기 경계 8종(1B/4096/65536/65537/1MiB/8MiB/64MiB/64MiB+12345) 전건 바이트수·SHA-256 디스크 일치. 결정적 증거: 19,309,034바이트(60,001줄) BIG.events.jsonl의 유일한 후보를 마지막 줄에 두고 import-oppl → scanned 1 imported 1, 조각 locator=.oppl-run/BIG.events.jsonl#L60001. 실제 .oppl-run 5개 원본 sources[].sha256이 shasum -a 256과 전건 일치.",
+      "opinion": "POSIX상 정규 파일의 read()는 O_NONBLOCK 유무와 무관하게 즉시 완료되며 EAGAIN을 반환하지 않는다. 구현 주석이 이 근거를 정확히 기술하고 실측이 뒷받침한다."
+    },
+    {
+      "question": "파일 종류 전수 — 게이트가 무엇을 막는가",
+      "answer": "directory·FIFO·/dev/zero·/dev/null 전부 '정규 파일이 아닙니다' 거부, 하드 링크 'nlink=2' 거부, 부재 파일 (None,None) 무개입, 일반 정규 파일 정상 읽기",
+      "evidence": "_safe_read_bytes() 인프로세스 7종 입력 실측",
+      "opinion": "부수 효과(유리): /dev/zero 거부로 GC-207의 device 증폭 벡터가 함께 차단됐다."
+    },
+    {
+      "question": "D-5 단방향 의존 / MV-30 3자산 / 권한 / 테스트",
+      "answer": "전건 이상 없음",
+      "evidence": "state_tool·state.json 문자열 0건(state.changed 사건명 제외 후 grep). 새 오류 코드 0건 — run_log_write_failed 재사용, RUN_LOG_ERROR_CODES 9건 전부 surfaces.json err 집합에 존재 → 계약 3자산 개정 불필요. 조각 0600, run/ 0700. opal/tools/run-log-tool/tests/ 31 passed in 135.60s exit 0."
+    }
+  ],
+  "document_proposals": [
+    {"id": "GC-DP-303", "status": "재제출", "target": "docs/SECURITY.md §1", "summary": "링크 추종 전반 + fd 기준 3검사(O_NOFOLLOW|O_NONBLOCK / os.fstat S_ISREG / st_nlink==1) 규칙화. 같은 계열 4회 반복."},
+    {"id": "GC-DP-302", "status": "재제출", "target": "docs/SECURITY.md §9 신설", "summary": "신뢰 불가 원본 파싱 — 바이트 상한·예외 흡수 최소 집합·1회 읽기·sha256 기준(원본 바이트/치환 후 텍스트/매칭 줄) 명시."}
+  ],
+  "evidence": [
+    "bash opal/tools/run-log-tool/run.sh init|append|import-agentic|import-oppl|validate-run 실제 subprocess 실행 + 디스크 조각 파일 검사",
+    "ln(하드 링크)·ln -s(심볼릭)·os.mkfifo(FIFO)·/dev/zero·directory 실제 파일시스템 객체로 재현",
+    "python3 subprocess timeout=10/15 로 정지 회귀 판정",
+    "실제 태스크 산출물(AGENTIC-LOG.md 72행, .oppl-run 29파일) end-to-end 가져오기",
+    "19MB 꼬리 카나리아 파일로 short read 판정",
+    "python3 -m pytest opal/tools/run-log-tool/tests/ -q → 31 passed"
+  ],
+  "references": [
+    "docs/SECURITY.md",
+    "docs/run-log/CONTRACT.md",
+    "docs/run-log/TRD.md",
+    "docs/run-log/surfaces.json",
+    "docs/CONVENTIONS.md",
+    "opal/core/references/harness/gc-finding-schema.md"
+  ],
+  "out_of_scope": [
+    {"observation": "redact() 본문 pass-through, 원본 상한, sources[].sha256 이중 읽기, 시간대", "owner": "T06"},
+    {"observation": "조각 경계·런타임 색인·조각 전량 메모리 적재", "owner": "T04"},
+    {"observation": "skipped_invalid 집계 필드, source.sha256 기준 명문화", "owner": "PM / 계약 3자산"},
+    {"observation": "가져온 사건의 완료 게이트 불기여 집행", "owner": "T11"},
+    {"observation": "최종 조합 판정 게이트 집행", "owner": "T08"},
+    {"observation": "begin-worker·워커 token 발급·worker_token_invalid", "owner": "범위 밖 (미구현이 정상)"},
+    {"observation": "opal/tools/state-tool/ 전체", "owner": "T05 (읽지 않았다)"}
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "receipt_version": "1.0",
+  "channel_id": "pm-agent-tool",
+  "adapter_id": "pm-agent-tool-phase0-probe",
+  "adapter_sha256": "13fe18eae0c68c7113ac9fe8a8d11ad4e14abc4d559658f47bef4523726570f1",
+  "observed": {
+    "start": true,
+    "intermediate": true,
+    "terminal": true,
+    "monotonic_span": true
+  },
+  "claimed_profile": "observed_trajectory",
+  "evidence": [
+    "evidence/pm-agent-tool/adapter-probe.py",
+    "evidence/pm-agent-tool/trial-01.dispatch-tooluse.json",
+    "evidence/pm-agent-tool/trial-01.start-meta.json",
+    "evidence/pm-agent-tool/trial-01.probe.json",
+    "evidence/pm-agent-tool/trial-01.transcript-index.jsonl",
+    "evidence/pm-agent-tool/trial-01.terminal-envelope.json",
+    "evidence/observation-matrix.json"
+  ],
+  "produced_at": "2026-09-12T10:49:09.597Z"
+}
