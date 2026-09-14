@@ -99,8 +99,8 @@ dispatch를 거부하는 도구가 없다. Loop 1·Loop 2의 회전 수, task at
 | 구성요소 | 책임 | 금지 책임 |
 |---|---|---|
 | OPPL skill·loop-control·Guards | 상태 의미·상한 종류·에스컬레이션 정책 | 횟수 기억·프로세스 감시·dispatch 허가 판정 |
-| `oppl-runtime-tool` | round·attempt·resume·예산 ledger, admission, 무진전 판정, 상태 전이 | 자연어 설계·코드 구현 |
-| `opal-agent` attempt wrapper | process group 시작·heartbeat·phase timeout·출력 경로·stream framing·종료 수확 | 프로젝트 우선순위·다음 태스크 선택 |
+| `oppl-runtime-tool` | round·resume·예산 집계, admission, 무진전 판정, 상태 전이와 attempt ID 색인 | 자연어 설계·코드 구현·PID/PGID/heartbeat 원문 복제 |
+| `opal-agent` attempt wrapper | attempt 1건의 process group·heartbeat·phase timeout·출력·stream framing·종료 record | 프로젝트 우선순위·다음 태스크 선택·Pilot 상한 집계 |
 | `opal-loop-action-agent` | T1~T5+G 작업 조율, 도구 결정 소비 | 자체 카운터로 상한 우회·직접 성공 판정 |
 | `opal-action-monitor` | runtime ledger와 실행 증거의 읽기 전용 표시 | 상태·예산·attempt 변경, 신규 dispatch 차단 |
 | `backlog-tool` | 업무 백로그와 `BACKLOG.md` 파생 뷰 | 프로세스 수명주기·attempt ledger |
@@ -121,6 +121,10 @@ attempt 1건의 PID·PGID·시작 fingerprint·heartbeat·terminal result·exit 
 파일 경로(`active_attempt_id`, `record_path`)만 외래 참조로 갖고 원문을 중복 저장하지 않는다. OPPD
 Controller도 같은 attempt record를 소비하므로 원문 owner는 공용 쪽에 둔다
 (`docs/proposals/opal-oppd-v3-lean-project-execution.md:344-345`).
+
+`opal-agent`는 attempt 한 건의 실행 record primitive를, `oppl-runtime-tool`은 여러 attempt의
+round·resume·예산·상한 집계를 소유한다. OPPD가 같은 primitive를 사용하더라도 OPPL의 round
+상태기계와 Controller를 공유하지 않는다.
 
 `cost_used`는 terminal candidate의 `total_cost_usd` 값을 그대로 쓰고 stream 안 result마다 합산하지
 않는다. 같은 stream의 복수 result가 싣는 비용은 누적값이라 합산하면 이중 계상된다.
