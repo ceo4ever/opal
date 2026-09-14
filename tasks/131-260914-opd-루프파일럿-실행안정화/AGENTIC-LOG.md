@@ -6,13 +6,13 @@
 
 | 항목 | 건수 |
 |------|------|
-| 게이트 판단 | 20회 (Pass: 15 / Fail: 5) |
+| 게이트 판단 | 28회 (Pass: 22 / Fail: 6) |
 | 3회 초과 Gate | 0건 (Critical: 0 / Normal: 0 / Minor: 0) |
-| 오류 발견 | 13건 |
-| 수정 지시 | 8건 (반영: 8 / 미반영: 0) |
-| PM 의사결정 | 24건 |
-| 개선 사항 | 2건 (적용: 0 / 후속: 2) |
-| 에스컬레이션 | 1건 (배포 승인 — AC-19·S-24) |
+| 오류 발견 | 19건 |
+| 수정 지시 | 11건 (반영: 11 / 미반영: 0) |
+| PM 의사결정 | 34건 |
+| 개선 사항 | 7건 (적용: 0 / 후속: 7) |
+| 에스컬레이션 | 3건 (배포 승인 · tools.md 재정의 방향 · 범위 복원) |
 
 ## 대행 일지
 
@@ -109,3 +109,8 @@
 | 89 | 2026-09-14 11:52 | TEST | ERROR | W-16이 범위 밖이라 손대지 않고 보고한 파손 2건을 PM이 실재 확인했다 — `pm/code-scan-management.md:118`의 dangling 인용, `code-scan/tests/test-regression.js`의 `RULE_DOCS.toolsMd` 타깃 소실로 TS-068 신규 실패. | PM 직접 시정 |
 | 90 | 2026-09-14 11:55 | TEST | FIX | 엔트리 89 시정 — 인용을 `opal/tools/code-scan/README.md`로 재지정하고 테스트 타깃도 같은 README로 교체했다. 재실행 결과 작업본 실패 11건 = main 실패 11건으로 **증분 0건** 확인. | 반영 |
 | 91 | 2026-09-14 11:56 | TEST | DECISION | S-27 재검사에서 `dangerously-skip` 추가 4건이 잡혔으나 전부 태스크 산출물의 금지 문면(TASK C-7 규정, PLAN W-7 지시, TEST-SCENARIO S-27 검사 명령, test-scenario.json 증거)임을 확인했다. 코드·스킬·에이전트 문서 추가는 0건이다. 규칙을 적은 문장이 규칙 위반으로 잡히는 자기참조 사례이며 위반이 아니다. | 위반 아님 |
+| 92 | 2026-09-14 13:06 | CLOSE | GATE | 소유자 승인으로 CLOSE 진입. `test.user_confirm`을 `--owner user`로 mark하고 `stage.close` 이벤트 3문서(`additional-work`·`memory-learning`·`proposal-lifecycle`) 로드·verify 통과. 전체 회귀 1239 passed·3 skipped, 실패 4건은 main 동일 재현 선재분. | Pass |
+| 93 | 2026-09-14 13:07 | CLOSE | DECISION | 제안서 아카이브 판정에서 **기계 판정과 계약 의도가 갈렸다.** `proposal-lifecycle.md`의 판정 명령(`grep -rn "proposals/<파일명>"`)은 잔여 0건을 반환하지만, 경로 없는 `제안서 §N` 형태 규범 인용이 24개소 남아 있다. 명령만 따르면 문면은 충족하고 의도("제안서가 SSOT처럼 인용되는 상태를 걷어낸다")는 위반된다. §3 잔여 1건 이상 경로로 처리해 이동하지 않고 DONE.md에 잔여 건수와 이관 대상을 기록했다. | 아카이브 보류 |
+| 94 | 2026-09-14 13:07 | CLOSE | IMPROVE | 엔트리 93의 근본 원인은 판정 명령의 사각지대다. 경로를 포함하지 않는 인용 형태를 잡지 못한다. 계약이 "PM이 눈으로 세지 않는다"고 명시해 기계 판정에 위임했는데 그 기계가 불완전하다. 판정 명령에 `제안서 §` 계열 패턴을 추가하거나, 제안서 인용 시 경로 포함을 컨벤션으로 강제해야 한다. | 후속 과제 |
+| 95 | 2026-09-14 13:08 | CLOSE | ERROR | `close.done_md` mark가 `worker_duration_undeclared`로 차단됐다. 워커 디스패치 규범 단계 4행(ANALYSIS·PLAN·TEST-SCENARIO·TEST 작업)이 소요를 기록하지도 미측정을 선언하지도 않았다. | 정당한 차단 |
+| 96 | 2026-09-14 13:08 | CLOSE | DECISION | 엔트리 95를 `--force` 우회 없이 실제 값으로 해소했다. 완료 알림의 `duration_ms`로 ANALYSIS 7분·PLAN 9분·TEST 8분을 기록하고, TEST-SCENARIO는 PM 직접 작성이라 워커 소요가 없으므로 `--worker-duration-unknown`으로 선언했다. 도구가 침묵을 통과시키지 않는 설계가 정확히 의도대로 작동했다 — 이 태스크가 만들려던 것과 같은 성질의 집행이다. | 파이프라인 16/16 완료 |
