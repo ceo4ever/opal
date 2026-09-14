@@ -50,7 +50,7 @@ OPPL의 장시간 실행·반복 상한·완료 판정이 문서 규칙에서 �
 - `opal/skills/opal-pilot-project-loop/references/loop-control.md`
 - `docs/CONVENTIONS.md`
 - `docs/PROJECT.md`
-- `docs/proposals/opal-oppl-runtime-stabilization.md`
+- `docs/proposals/archives/opal-oppl-runtime-stabilization.md` (갱신 후 아카이브 이동)
 
 도구 README 22종 — 신규 9(`code-scan`·`xlsx-tool`·`worktree-tool`·`improve-tool`·`git-sync-tool`·`tool-scan`·`date`·`playwright-tool`·`skill-registry`), 갱신 7(`state-tool`·`test-tool`·`memory-tool`·`brain-tool`·`cmux-tool`·`opal-action-monitor`·`oppl-runtime-tool`)
 
@@ -79,13 +79,11 @@ brain
 
 ## 참고
 
-**제안서 아카이브 판정 — 이동하지 않음**
+**제안서 아카이브 판정 — `docs/proposals/archives/`로 이동, 상태 `적용완료`**
 
-`proposal-lifecycle.md`의 판정 명령(`grep -rn "proposals/<파일명>"`)은 `opal-oppl-runtime-stabilization.md` 잔여 0건을 반환한다. 그러나 경로를 포함하지 않는 `제안서 §N` 형태의 규범 인용이 **24개소** 남아 있다(`opal/tools/oppl-runtime-tool/ledger.py`·`oppl_runtime_tool.py` 주석과 테스트 docstring 다수). 판정 명령이 이 형태를 잡지 못하는 사각지대이며, 기계 판정만 따르면 문면은 충족하고 의도("제안서가 SSOT처럼 인용되는 상태를 걷어낸다")는 위반된다. 따라서 §3 잔여 1건 이상 경로로 처리해 이동하지 않는다.
+`proposal-lifecycle.md`의 판정 명령(`grep -rn "proposals/<파일명>"`)이 잔여 0건을 반환했고, 이동 후 재판정도 0건이다. `docs/PROJECT.md` 문서 레지스트리에는 등재돼 있지 않아 제거할 행이 없다.
 
-이관 대상: 24개소가 인용하는 §5(상태 7종)·§6.1(필수 설정 키)·§6.2(admission)·§6.3(실패 지문)·§6.4(T4b 전이) 규범 문장을 `opal/tools/oppl-runtime-tool/README.md`와 `opal/core/references/harness/tool-output-contract.md`로 이관한 뒤 인용을 재지정해야 아카이브할 수 있다.
-
-`opal-oppd-v3-lean-project-execution.md`는 잔여 1건이며 그 인용처가 이 태스크의 제안서 본문(`:123`)이다. 별건 제안서이므로 이번 판정 대상이 아니다.
+PM이 초기에 경로 없는 `제안서 §N` 형태 인용을 근거로 보류했으나 오판이었다. 이 형태는 여러 도구가 각기 다른 제안서를 가리키는 프로젝트 전역 관행이며, `worktree-tool`이 `제안서 §6.3`으로 인용하는 제안서가 이미 `archives/`에 있다. 즉 판정 명령이 경로 형태만 세는 것은 사각지대가 아니라 의도된 설계이고, 계약의 "판정은 명령이 소유하며 PM이 눈으로 세지 않는다"를 PM이 어긴 것이다.
 
 **후속 과제**
 
