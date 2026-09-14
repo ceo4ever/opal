@@ -26,19 +26,27 @@
 # - 표준 라이브러리만 사용 (pytest는 러너로만 쓴다).
 
 ===============================================================================
-계약 가정 (W-1이 확정해야 하는 항목)
+확정 계약 (태스크 131 구현 — W-2가 정합한 기준)
 ===============================================================================
-1. run root 전달 채널 = 환경변수 `OPAL_AGENT_RUN_ROOT`.
-   D6 (b)가 CLI 플래그 집합을 동결했으므로 신규 플래그를 쓸 수 없고, run root는
-   `<allocator_root>/.opal-runs/<run_id>/`(PLAN §Decisions)에서 호출측이 정한다.
-   따라서 환경변수가 유일하게 하위 호환을 깨지 않는 채널이다.
-2. attempt record = run root 하위의 JSON 파일(경로·파일명은 W-1 자유).
-   필수 키: `attempt_id`, `pid`, `pgid`, `exit_reason`.
-   `exit_reason` 값: 정상 종료 `"completed"`, deadline 집행 `"timeout"`.
-3. epilogue allowlist = `{"background_tasks_changed", "task_updated"}`
-   (TEST-SCENARIO S-3 본문이 예시로 지정한 두 이벤트).
+1. attempt 산출물 전달 채널 = CLI `--run-dir` + `--phase`(+ `--attempt`)
+   = `call_agent`의 동명 kwonly 인자. 132가 RED 시점에 가정한 환경변수
+   `OPAL_AGENT_RUN_ROOT` 채널은 **폐기됐다**. D6 (b)가 동결한 플래그 집합은
+   "기존 플래그 무변경"이며 신규 플래그 추가를 금지하지 않는다.
+2. attempt record 경로 = `<run_dir>/<phase>[.aN].attempt.json`.
+   스키마는 README §attempt 산출물 소유가 SSOT다 — 132가 가정한
+   `attempt_id`·`exit_reason` 4키는 폐기되고, 종료 사유는
+   `status`·`exit_class`·`timeout_reason`(`None`|`hard`|`heartbeat`)가 담는다.
+3. epilogue allowlist = `EPILOGUE_ALLOWLIST` — `type`이 아니라 **`subtype`** 기준의
+   `background_tasks_changed` / `task_updated` / `task_notification`이다.
+4. **stream framing 판정의 관측 채널은 프로세스 종료 코드가 아니라 attempt record다.**
+   opal-agent의 종료 코드는 D6 (b)(c)가 동결했고(정상 0 / `is_error` 1 / 실행 오류 2),
+   framing 판정은 `analyze_stream`의 `StreamVerdict`가 만들어 record의
+   `status`·`exit_class`·`unterminated_children`으로 기록된다
+   (README §stream terminal framing 5: "루트 exit 0 + PGID 소멸 + 최종 자식 terminal
+   + result schema 성공이 모두 성립해야 `done`"). 소비할 result가 아예 없을 때만
+   `_terminal_event`가 실행 오류(종료 코드 2)로 승격한다.
 
-위 3항이 W-1에서 다르게 확정되면 이 파일이 아니라 PLAN/계약을 먼저 고친다.
+위 4항이 바뀌면 이 파일이 아니라 PLAN/계약을 먼저 고친다.
 
 프로세스 관측 방법
 -----------------
@@ -62,9 +70,20 @@ _TESTS_DIR = pathlib.Path(__file__).resolve().parent
 _TOOL_DIR = _TESTS_DIR.parent
 _AGENT_PY = _TOOL_DIR / "opal_agent.py"
 
-_RUN_ROOT_ENV = "OPAL_AGENT_RUN_ROOT"
 _PROBE_ENV = "OPAL_TEST_PROBE_FILE"
 _STREAM_FIXTURE_ENV = "OPAL_TEST_STREAM_FIXTURE"
+
+# attempt 산출물 계약(131). `--run-dir`+`--phase`가 함께 주어질 때만 opal-agent가
+# 산출물 writer가 되고, record는 `<run_dir>/<phase>[.aN].attempt.json`에 기록된다.
+_ATTEMPT_PHASE = "probe"
+
+# 131 attempt record 스키마 — README §attempt 산출물 소유.
+_ATTEMPT_RECORD_KEYS = (
+    "phase", "attempt", "mode", "provider", "status", "exit_class",
+    "pid", "pgid", "pgid_reclaimed", "exit_code", "timeout_reason",
+    "started_at", "ended_at", "duration_ms", "fingerprint", "heartbeat",
+    "terminal", "cost_used", "unterminated_children", "origin",
+)
 
 _AGENT_TIMEOUT = 2          # opal-agent에 주는 --timeout (초)
 _GUARD = 20                 # 테스트가 opal-agent를 기다리는 상한 (초)
@@ -124,6 +143,8 @@ def _result_event(is_error: bool, text: str) -> str:
 
 _EV_EPILOGUE_BG = '{"type":"background_tasks_changed","tasks":[]}'
 _EV_EPILOGUE_TASK = '{"type":"task_updated","task_id":"t-1","state":"done"}'
+# 131 EPILOGUE_ALLOWLIST의 실제 판정 형태 — `type`이 아니라 `subtype` 기준이다.
+_EV_EPILOGUE_SYS_BG = '{"type":"system","subtype":"background_tasks_changed","tasks":[]}'
 # allowlist 밖 — result 이후에도 끝나지 않은 작업이 남아 있음을 알리는 이벤트
 _EV_UNFINISHED = '{"type":"background_task_started","task_id":"t-2","state":"running"}'
 
@@ -149,6 +170,11 @@ _FIXTURES = {
     "unfinished_after_result": [
         _EV_INIT, _EV_ASSISTANT, _result_event(False, "done"), _EV_UNFINISHED,
     ],
+    # (c') (c)의 대조군 — 131 형태의 allowlist epilogue만 뒤따르는 정상 framing.
+    #      (c)의 단언이 "무조건 error"가 아님을 같은 실행 경로로 증명한다.
+    "clean_framing_after_result": [
+        _EV_INIT, _EV_ASSISTANT, _result_event(False, "done"), _EV_EPILOGUE_SYS_BG,
+    ],
 }
 
 
@@ -173,7 +199,8 @@ class _AgentRun:
 
 
 def _run_agent(stub: pathlib.Path, display: str, workdir: pathlib.Path,
-               env_extra: dict, timeout: int = _AGENT_TIMEOUT) -> _AgentRun:
+               env_extra: dict, timeout: int = _AGENT_TIMEOUT,
+               extra_args=None) -> _AgentRun:
     cmd = [
         sys.executable, str(_AGENT_PY),
         "--provider", "claude",
@@ -181,11 +208,12 @@ def _run_agent(stub: pathlib.Path, display: str, workdir: pathlib.Path,
         "--timeout", str(timeout),
         "--cwd", str(workdir),
         "--bin", str(stub),
+        *(extra_args or []),
         display,
         "[WORKER] attempt runtime probe",
     ]
     env = {k: v for k, v in os.environ.items()
-           if k not in (_RUN_ROOT_ENV, _PROBE_ENV, _STREAM_FIXTURE_ENV)}
+           if k not in (_PROBE_ENV, _STREAM_FIXTURE_ENV)}
     env.update(env_extra)
 
     started = time.monotonic()
@@ -247,20 +275,44 @@ def _wait_probe(path: pathlib.Path, limit: float = 10.0) -> dict:
     raise AssertionError(f"stub probe 파일이 생성되지 않았다: {path}")
 
 
-def _attempt_records(run_root: pathlib.Path) -> list[pathlib.Path]:
-    return [p for p in run_root.rglob("*.json") if p.is_file()]
+def _sink_args(run_dir: pathlib.Path, attempt: str | None = None) -> list[str]:
+    """attempt 산출물 writer 소유권을 넘기는 CLI 인자(131 계약)."""
+    args = ["--run-dir", str(run_dir), "--phase", _ATTEMPT_PHASE]
+    if attempt:
+        args += ["--attempt", attempt]
+    return args
+
+
+def _record_path(run_dir: pathlib.Path, attempt: str | None = None) -> pathlib.Path:
+    stem = f"{_ATTEMPT_PHASE}.{attempt}" if attempt else _ATTEMPT_PHASE
+    return run_dir / f"{stem}.attempt.json"
+
+
+def _read_record(case: unittest.TestCase, run_dir: pathlib.Path,
+                 attempt: str | None = None) -> dict:
+    path = _record_path(run_dir, attempt)
+    case.assertTrue(
+        path.is_file(),
+        f"attempt record가 계약 경로에 없다: {path} "
+        f"(실제: {sorted(p.name for p in run_dir.rglob('*'))})",
+    )
+    record = json.loads(path.read_text(encoding="utf-8"))
+    for key in _ATTEMPT_RECORD_KEYS:
+        case.assertIn(key, record, f"attempt record에 {key}가 없다")
+    return record
 
 
 class _SilentTreeCase(unittest.TestCase):
     """무출력 자식·손자 트리를 띄우는 S-2 공통 셋업."""
 
     display = "--json"
+    sink = False        # True면 opal-agent가 attempt 산출물 writer가 된다
 
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
         self.work = pathlib.Path(self._tmp.name)
-        self.run_root = self.work / ".opal-runs" / "run-s2"
-        self.run_root.mkdir(parents=True)
+        self.run_dir = self.work / ".opal-runs" / "run-s2"
+        self.run_dir.mkdir(parents=True)
         self.probe_path = self.work / "probe.json"
         self.stub = _write_stub(self.work, _STUB_SILENT_TREE, "stub_silent_tree.py")
         self.probe = None
@@ -273,7 +325,8 @@ class _SilentTreeCase(unittest.TestCase):
     def execute(self):
         run = _run_agent(
             self.stub, self.display, self.work,
-            {_PROBE_ENV: str(self.probe_path), _RUN_ROOT_ENV: str(self.run_root)},
+            {_PROBE_ENV: str(self.probe_path)},
+            extra_args=_sink_args(self.run_dir) if self.sink else None,
         )
         self.probe = _wait_probe(self.probe_path)
         return run
@@ -383,41 +436,76 @@ class TestS2PgidReclaimNoOrphans(_SilentTreeCase):
 
 
 class TestS2AttemptRecordExitReason(_SilentTreeCase):
-    """S-2 RED. deadline 집행 사유가 attempt record에 기록된다.
+    """S-2. deadline 집행 사유·PID·PGID가 attempt record에 기록된다(131 스키마).
 
-    현행 opal_agent.py에는 attempt record writer가 없다 (ANALYSIS Q1 실측).
+    132 RED가 가정한 `exit_reason` 단일 키는 폐기됐다 — 131은 같은 사실을
+    `status`·`exit_class`·`timeout_reason`로 나눠 기록한다. 검증 의도(무엇이
+    프로세스를 죽였는지와 무엇을 죽였는지가 record에 남는다)는 그대로다.
     """
+
+    sink = True
 
     def test_timeout_reason_is_recorded_with_pid_and_pgid(self):
         self.display = "--json"
-        self.execute()
-        records = _attempt_records(self.run_root)
-        self.assertTrue(
-            records,
-            f"{_RUN_ROOT_ENV}={self.run_root} 인데 attempt record가 없다",
+        run = self.execute()
+        self.assertFalse(
+            run.timed_out_by_guard,
+            "opal-agent가 deadline을 집행하지 못해 하네스가 정리했다 — record 판정 불가",
         )
-        record = json.loads(records[0].read_text(encoding="utf-8"))
-        for key in ("attempt_id", "pid", "pgid", "exit_reason"):
-            self.assertIn(key, record, f"attempt record에 {key}가 없다")
+        record = _read_record(self, self.run_dir)
+
+        # (1) 종료 사유 — watchdog hard deadline이 집행했다.
         self.assertEqual(
-            record["exit_reason"], "timeout",
-            f"종료 사유가 timeout으로 기록되지 않았다: {record.get('exit_reason')!r}",
+            record["status"], "timed_out",
+            f"종료 상태가 timed_out이 아니다: {record['status']!r}",
         )
-        self.assertEqual(record["pid"], self.probe["child_pid"])
-        self.assertEqual(record["pgid"], self.probe["child_pgid"])
+        self.assertEqual(
+            record["exit_class"], "timed_out",
+            f"exit_class가 timed_out이 아니다: {record['exit_class']!r}",
+        )
+        self.assertEqual(
+            record["timeout_reason"], "hard",
+            f"hard deadline 집행이 timeout_reason에 남지 않았다: "
+            f"{record['timeout_reason']!r}",
+        )
+        self.assertIs(
+            record["heartbeat"]["expired"], False,
+            "sync 경로인데 heartbeat 만료로 기록됐다",
+        )
+        self.assertNotEqual(
+            record["exit_code"], 0, "timeout 회수인데 exit_code가 0이다",
+        )
+
+        # (2) 무엇을 죽였는지 — 실제 자식 프로세스의 PID·PGID가 기록된다.
+        self.assertEqual(
+            record["pid"], self.probe["child_pid"],
+            "record의 pid가 실제 provider 자식 pid와 다르다",
+        )
+        self.assertEqual(
+            record["pgid"], self.probe["child_pgid"],
+            "record의 pgid가 실제 provider 자식 pgid와 다르다",
+        )
+        self.assertIs(
+            record["pgid_reclaimed"], True,
+            "PGID 회수 완료가 record에 기록되지 않았다 — 고아 잔존 가능",
+        )
+
+        # (3) timeout이므로 소비 가능한 terminal result가 없다.
+        self.assertIsNone(record["terminal"])
+        self.assertEqual(record["unterminated_children"], [])
 
     def test_no_partial_attempt_record_after_timeout(self):
-        """원자 저장 — 중간 산출물(.tmp/.partial)이 남지 않는다."""
+        """원자 저장 — timeout 회수 중에도 중간 산출물(.tmp/.partial)이 남지 않는다."""
         self.display = "--json"
         self.execute()
         leftovers = sorted(
-            p.name for p in self.run_root.rglob("*")
-            if p.is_file() and (p.suffix in (".tmp", ".partial") or p.name.startswith("."))
+            p.name for p in self.run_dir.rglob("*")
+            if p.is_file() and (p.suffix in (".tmp", ".partial")
+                                or p.name.startswith("."))
         )
         self.assertEqual(leftovers, [], f"원자 저장 잔여 파일: {leftovers}")
-        records = _attempt_records(self.run_root)
-        self.assertTrue(records, "attempt record 미생성")
-        json.loads(records[0].read_text(encoding="utf-8"))
+        # 완결된 JSON만 남는다 — 부분 기록이면 여기서 깨진다.
+        _read_record(self, self.run_dir)
 
 
 # ─── S-3 ────────────────────────────────────────────────────────────────────
@@ -444,12 +532,19 @@ class TestS3TerminalFraming(unittest.TestCase):
     def tearDown(self):
         self._tmp.cleanup()
 
-    def _run(self, fixture: str) -> _AgentRun:
+    def _run(self, fixture: str, run_dir: pathlib.Path | None = None) -> _AgentRun:
+        """fixture를 stream으로 재생한다.
+
+        run_dir을 주면 opal-agent가 attempt 산출물 writer가 되어 framing 판정이
+        `<run_dir>/<phase>.attempt.json`에 기록된다(헤더 §확정 계약 1·4).
+        주지 않으면 기존 passthrough 경로 그대로다(C-8).
+        """
         path = self.work / f"{fixture}.jsonl"
         path.write_text("\n".join(_FIXTURES[fixture]) + "\n", encoding="utf-8")
         run = _run_agent(
             self.stub, "--stream", self.work,
             {_STREAM_FIXTURE_ENV: str(path)}, timeout=30,
+            extra_args=_sink_args(run_dir) if run_dir else None,
         )
         self.assertFalse(run.timed_out_by_guard, "stream replay가 종료하지 않았다")
         return run
@@ -492,12 +587,45 @@ class TestS3TerminalFraming(unittest.TestCase):
         self._passthrough_intact(run, "no_result")
 
     def test_unfinished_work_after_result_is_never_success(self):
-        run = self._run("unfinished_after_result")
+        """result 뒤 미종료 작업이 남은 stream은 결코 성공으로 판정되지 않는다.
+
+        [W-2 ③ 정합] 판정 채널은 프로세스 종료 코드가 아니라 attempt record다.
+        131은 종료 코드를 D6 (b)(c)대로 동결하고(정상 0 / `is_error` 1 / 실행 오류 2),
+        framing 판정은 `analyze_stream`의 `StreamVerdict`가 만들어 record의
+        `status`·`exit_class`·`unterminated_children`으로 낸다
+        (README §stream terminal framing 5). 따라서 "성공으로 처리하지 않는다"는
+        record가 `done`/`ok`가 **아님**으로 단언한다 — 단언 강도는 낮추지 않는다.
+        """
+        run_dir = self.work / ".opal-runs" / "unfinished"
+        run_dir.mkdir(parents=True)
+        self._run("unfinished_after_result", run_dir=run_dir)
+        record = _read_record(self, run_dir)
+
         self.assertNotEqual(
-            run.exitcode, 0,
-            "result 뒤 미종료 작업(background_task_started)이 남았는데 성공으로 처리했다 "
+            record["status"], "done",
+            "result 뒤 미종료 작업(background_task_started)이 남았는데 done으로 판정했다 "
             "— epilogue allowlist가 과도하게 넓다",
         )
+        self.assertNotEqual(
+            record["exit_class"], "ok",
+            "미종료 작업이 남은 stream을 exit_class=ok로 판정했다",
+        )
+        self.assertEqual(
+            record["exit_class"], "framing_error",
+            f"framing 위반이 framing_error로 분류되지 않았다: {record['exit_class']!r}",
+        )
+
+        # 대조군 — 같은 실행 경로에서 정상 framing은 done/ok로 판정된다.
+        # (이 단언이 없으면 위 단언은 "어떤 stream이든 error"로도 통과한다.)
+        clean_dir = self.work / ".opal-runs" / "clean"
+        clean_dir.mkdir(parents=True)
+        self._run("clean_framing_after_result", run_dir=clean_dir)
+        clean = _read_record(self, clean_dir)
+        self.assertEqual(
+            clean["status"], "done",
+            f"정상 framing stream이 done으로 판정되지 않았다: {clean['status']!r}",
+        )
+        self.assertEqual(clean["exit_class"], "ok")
 
 
 if __name__ == "__main__":

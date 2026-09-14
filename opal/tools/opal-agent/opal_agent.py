@@ -4,9 +4,9 @@
   "module": "opal_agent",
   "layer": "util",
   "domain": "opal-workspace",
-  "description": "멀티 provider 서브에이전트 호출 라이브러리 + CLI, OPAL session event 판정 공개 함수, attempt 실행 원시 기능(process group watchdog·stream terminal framing·attempt 산출물 소유)",
-  "exports": ["call_agent", "resolve_session_event", "analyze_stream", "AgentConfig", "AgentResult", "StreamVerdict", "PROVIDERS", "EXIT_CLASSES", "EPILOGUE_ALLOWLIST", "OpalAgentError", "ClaudeNotFoundError", "OpalAgentTimeout"],
-  "task": "059, 067, 113, 131"
+  "description": "멀티 provider 서브에이전트 호출 라이브러리 + CLI, OPAL session event 판정 공개 함수, attempt 실행 원시 기능(process group watchdog·stream terminal framing·attempt 산출물 소유·재부착/고아 판정)",
+  "exports": ["call_agent", "resolve_session_event", "analyze_stream", "reconcile_attempts", "classify_attempt", "load_attempt_record", "AgentConfig", "AgentResult", "StreamVerdict", "PROVIDERS", "EXIT_CLASSES", "EPILOGUE_ALLOWLIST", "ATTEMPT_DISPOSITIONS", "SUBCOMMANDS", "OpalAgentError", "ClaudeNotFoundError", "OpalAgentTimeout"],
+  "task": "059, 067, 113, 131, 132"
 }
 
 opal/tools/opal-agent/opal_agent.py — 멀티 provider 서브에이전트 호출 라이브러리 + CLI
@@ -54,10 +54,19 @@ attempt 실행 원시 기능(131):
     뒤에만 timed_out을 확정한다.
   - run_dir·phase(+attempt)가 주어지면 opal-agent가 attempt 산출물의 단일
     writer가 된다. 세 인자가 모두 없으면 기존 stdout passthrough 동작 그대로다.
+    record는 attempt **시작 시점과 finalize 시점 두 번** 같은 경로에 같은
+    스키마로 원자 기록된다 — 시작 record는 status "running" · terminal/exit_code
+    미확정으로 실행 중임을 나타내고, 완료 판정은 파일 존재가 아니라 이 필드와
+    `.exitcode`가 소유한다.
   - stream 판정은 analyze_stream()이 소유한다 — 마지막 유효 result가 terminal
     candidate이고, 그 앞 result는 같은 session_id + 단조 증가 result_index일
     때만 선행 turn으로 인정한다. 이 도구는 phase 의미론(round·수렴·백로그)을
     모르며, 호출자가 준 timeout·출력 경로·mode만 안다.
+  - 재부착·고아 판정은 reconcile_attempts()가 소유한다 — run_dir의 attempt
+    산출물과 record를 **읽기만 해서** reattach / harvest / orphan으로 분류한다.
+    record를 쓰거나 고치지 않으며, attempt 집계·round·수렴 상한은 Pilot
+    도구(oppl ledger, OPPB Controller)가 소유한다. CLI는 서브명령
+    `reconcile-attempts <run_dir>`로 노출한다.
 
 """
 
@@ -1136,6 +1145,16 @@ def _execute(
     stderr_text = ""
     malformed = False
     try:
+        # attempt 시작 record — 실행 중에도 재부착 근거가 존재해야 한다(132 W-39).
+        # sink가 없으면 아무 파일도 쓰지 않는다(C-8).
+        if sink is not None:
+            _write_attempt_record(
+                sink,
+                _attempt_start_record(
+                    config, fingerprint, proc.pid, pgid, started_at,
+                    streaming, heartbeat_timeout,
+                ),
+            )
         if streaming:
             stdout_text, malformed = _consume_stream(
                 proc, dog, pgid, events_handle, passthrough=sink is None
@@ -1227,6 +1246,61 @@ def _nonzero_exit_message(config: AgentConfig, exit_code: int, stderr_text: str)
     )
 
 
+def _attempt_start_record(
+    config: AgentConfig, fingerprint: dict, pid: int, pgid: int,
+    started_at: float, streaming: bool, heartbeat_timeout: int | None,
+) -> dict:
+    """attempt 개시 시점 record — finalize record와 **같은 20필드 스키마**다(132 W-39).
+
+    131은 finalize 경로에서만 record를 썼기 때문에 실행 중 attempt에는 읽을
+    record가 없었고, 그래서 classify_attempt()의 `reattach` 분기가 도달 불가였다.
+    시작 시점에도 같은 경로에 같은 스키마로 기록해 S-4 ①(살아 있는 프로세스
+    재부착)을 실제로 판정 가능하게 만든다.
+
+    진행 중임은 새 필드가 아니라 **기존 필드의 미확정 값**으로 나타낸다 —
+    `status: "running"`(StreamVerdict가 이미 쓰는 값), `terminal: None`,
+    `exit_code: None`. classify_attempt()의 `terminal_settled`가 이 둘을 보므로,
+    살아 있고 동일성이 증명된 프로세스는 `reattach`로 판정된다. `outputs`는
+    finalize가 소유하므로 시작 record에는 없다 — 프로세스가 죽은 뒤라면
+    `record_incomplete` 고아로 잡히는 것이 맞는 동작이다.
+    """
+    return {
+        "phase": config.phase,
+        "attempt": config.attempt,
+        "mode": "stream" if streaming else "sync",
+        "provider": config.provider,
+        "status": "running",
+        "exit_class": None,
+        "pid": pid,
+        "pgid": pgid,
+        "pgid_reclaimed": False,
+        "exit_code": None,
+        "timeout_reason": None,
+        "started_at": started_at,
+        "ended_at": None,
+        "duration_ms": None,
+        "fingerprint": fingerprint,
+        "heartbeat": {
+            "timeout_sec": heartbeat_timeout,
+            "count": 0,
+            "last_at": None,
+            "expired": False,
+        },
+        "terminal": None,
+        "cost_used": None,
+        "unterminated_children": [],
+        "origin": None,
+    }
+
+
+def _write_attempt_record(sink: _AttemptSink, record: dict) -> None:
+    """attempt record를 계약 경로에 원자 기록한다(시작·finalize 공통)."""
+    _atomic_write(
+        sink.path("attempt.json"),
+        json.dumps(record, ensure_ascii=False, indent=2, default=str) + "\n",
+    )
+
+
 def _attempt_record(
     config: AgentConfig, fingerprint: dict, pid: int, pgid: int,
     started_at: float, started: float, streaming: bool, dog: _Watchdog,
@@ -1294,11 +1368,373 @@ def _finalize_sink(
     _atomic_write(sink.path("exitcode"), f"{exit_code}\n")
     outputs["exitcode"] = str(sink.path("exitcode"))
 
+    # 시작 record가 이미 있는 같은 경로를 원자적으로 갱신한다(132 W-39).
     record["outputs"] = outputs
-    _atomic_write(
-        sink.path("attempt.json"),
-        json.dumps(record, ensure_ascii=False, indent=2, default=str) + "\n",
-    )
+    _write_attempt_record(sink, record)
+
+
+# ─── 재부착·고아 판정 (132 W-1, 읽기 전용) ────────────────────
+
+# attempt 1건의 처분(disposition). 호출자는 이 3종 밖의 값을 받지 않는다.
+ATTEMPT_DISPOSITIONS = ("reattach", "harvest", "orphan")
+
+# _finalize_sink가 쓰는 sink 확장자. 긴 것부터 봐야 stem을 정확히 떼어낸다.
+_SINK_EXTENSIONS = ("attempt.json", "events.jsonl", "result.json", "err.log", "exitcode")
+
+# ps etime 1초 granularity + spawn latency를 흡수하는 PID 동일성 허용 오차(초).
+_PID_IDENTITY_TOLERANCE_SEC = 5.0
+
+
+def _pid_alive(pid: int) -> bool:
+    """PID 생존 여부 — 소멸은 ProcessLookupError로만 확정한다(_pgid_alive와 동일 규약)."""
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        return True
+    except OSError:
+        return False
+    return True
+
+
+def _pid_pgid(pid: int) -> int | None:
+    """살아 있는 PID의 현재 PGID. 확인 불가면 None."""
+    try:
+        return os.getpgid(pid)
+    except OSError:
+        return None
+
+
+def _pid_elapsed_sec(pid: int) -> float | None:
+    """POSIX `ps -o etime`으로 PID의 경과 시간(초)을 읽는다.
+
+    etime은 POSIX ps 명세의 표준 필드라 플랫폼 분기 없이 같은 명령을 쓴다.
+    형식 `[[DD-]HH:]MM:SS`. ps가 없거나 파싱이 실패하면 None을 돌려
+    호출자가 '확인 불가'로 다루게 한다 — 추정 값을 만들지 않는다.
+    """
+    try:
+        proc = subprocess.run(
+            ["ps", "-p", str(pid), "-o", "etime="],
+            capture_output=True, text=True, timeout=5,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    raw = (proc.stdout or "").strip()
+    if proc.returncode != 0 or not raw:
+        return None
+    days = 0
+    if "-" in raw:
+        head, _, raw = raw.partition("-")
+        try:
+            days = int(head)
+        except ValueError:
+            return None
+    parts = raw.split(":")
+    if not 1 <= len(parts) <= 3:
+        return None
+    try:
+        units = [int(p) for p in parts]
+    except ValueError:
+        return None
+    while len(units) < 3:
+        units.insert(0, 0)
+    hours, minutes, seconds = units
+    return float(days * 86400 + hours * 3600 + minutes * 60 + seconds)
+
+
+def _probe_identity(record: dict) -> dict:
+    """기록된 pid/pgid가 '우리 attempt 그 프로세스'인지 확인한다.
+
+    단순 PID 생존만으로는 재부착을 확정할 수 없다 — 커널이 PID를 재사용하면
+    무관한 프로세스에 재부착한다. 그래서 3중으로 본다.
+      1. pid 생존 (os.kill(pid, 0))
+      2. 현재 PGID == record.pgid — 재사용 PID는 거의 확실히 다른 group에 속한다.
+         syscall만 쓰므로 어느 POSIX에서나 같게 동작한다(1차 방어).
+      3. ps etime으로 역산한 시작 시각 ≈ record.started_at — PID 재사용을
+         시간 축으로 반증한다(2차 방어). ps를 못 쓰면 `unverified`로 남기고
+         판정을 뒤집지 않는다. 반대로 ps가 **불일치를 말하면** 재사용으로 본다.
+    """
+    pid = record.get("pid")
+    pgid = record.get("pgid")
+    probe = {
+        "pid_alive": False,
+        "pgid_alive": False,
+        "pgid_match": None,
+        "age_check": "unverified",
+        "age_delta_sec": None,
+        "identity": "dead",
+    }
+    if not isinstance(pid, int) or pid <= 0:
+        probe["identity"] = "unknown"
+        return probe
+
+    probe["pid_alive"] = _pid_alive(pid)
+    if isinstance(pgid, int) and pgid > 0:
+        probe["pgid_alive"] = _pgid_alive(pgid)
+
+    if not probe["pid_alive"]:
+        return probe
+
+    observed_pgid = _pid_pgid(pid)
+    if isinstance(pgid, int) and pgid > 0:
+        probe["pgid_match"] = observed_pgid == pgid if observed_pgid is not None else None
+
+    started_at = record.get("started_at")
+    elapsed = _pid_elapsed_sec(pid)
+    if elapsed is not None and isinstance(started_at, (int, float)):
+        delta = abs((time.time() - elapsed) - float(started_at))
+        probe["age_delta_sec"] = round(delta, 3)
+        probe["age_check"] = "match" if delta <= _PID_IDENTITY_TOLERANCE_SEC else "mismatch"
+
+    if probe["pgid_match"] is False or probe["age_check"] == "mismatch":
+        probe["identity"] = "pid_reused"
+    elif probe["pgid_match"] is True and probe["age_check"] == "match":
+        probe["identity"] = "confirmed"
+    elif probe["pgid_match"] is True:
+        probe["identity"] = "pgid_match"        # ps 미확인 — 약한 확증
+    else:
+        probe["identity"] = "unverified"
+    return probe
+
+
+def load_attempt_record(path: str | os.PathLike) -> dict:
+    """attempt.json 1건을 읽는다. 판정은 하지 않고 파일 내용만 돌려준다.
+
+    읽기 전용이다 — 이 모듈의 판정 경로는 record를 쓰거나 고치지 않는다.
+    """
+    target = pathlib.Path(path)
+    try:
+        text = target.read_text(encoding="utf-8")
+    except OSError as exc:
+        raise OpalAgentError(
+            f"attempt record를 읽을 수 없습니다: {target} ({exc})",
+            code="attempt_record_unreadable",
+        ) from exc
+    try:
+        record = json.loads(text)
+    except json.JSONDecodeError as exc:
+        raise OpalAgentError(
+            f"attempt record가 유효한 JSON이 아닙니다: {target} ({exc})",
+            code="attempt_record_unreadable",
+        ) from exc
+    if not isinstance(record, dict):
+        raise OpalAgentError(
+            f"attempt record 최상위가 객체가 아닙니다: {target}",
+            code="attempt_record_unreadable",
+        )
+    return record
+
+
+def classify_attempt(record: dict, *, source: str | None = None) -> dict:
+    """attempt record 1건을 reattach / harvest / orphan으로 판정한다.
+
+    판정 순서와 근거(제안서 §4.6 Supervisor 실행 모델, PLAN W-1).
+    **생존 확인이 먼저다** — record 완결성은 프로세스가 죽은 뒤에만 의미가 있다.
+    진행 중인 attempt의 record는 원래 미완결이므로, 완결성을 먼저 보면 살아 있는
+    프로세스를 고아로 오판하고 중복 실행을 만든다.
+
+      1. 프로세스가 살아 있고 **동일성이 증명**되면(identity confirmed|pgid_match)
+         - terminal 미확정 + heartbeat 미만료 → `reattach`. 새로 띄우지 말고 붙는다.
+         - 그 외(종료가 이미 기록됐는데 살아 있음, heartbeat 만료) → `orphan`.
+           회수되지 않은 잔재이므로 `reclaim_required: true`.
+      2. 프로세스가 살아 있지만 **동일성을 증명하지 못하면** → `orphan`
+         (`identity_unverified`). 재부착 오판은 남의 프로세스에 상태를 묶어
+         복구 불가능한 손상을 만들고, 고아 오판은 회수·재기동으로 회복된다.
+         따라서 증명되지 않은 생존은 재부착하지 않는 쪽으로 기운다.
+      3. 프로세스가 죽었다.
+         - `unterminated_children`이 남았거나, 131이 종료 시 PGID 소멸을 확인하지
+           못한 채(`pgid_reclaimed: false`) 지금도 그 PGID가 살아 있으면
+           → `orphan` + `reclaim_required: true`.
+         - `heartbeat.expired`가 true면 무출력으로 회수된 attempt라 결과를
+           신뢰할 수 없다 → `orphan`.
+         - record가 미완결(`exit_code` 없음 또는 `outputs` 없음)이면 writer가
+           finalize 전에 죽은 것이라 수확할 결과가 없다 → `orphan`.
+         - 종료 정보(`terminal` 또는 `exit_code`)와 산출물이 모두 있으면
+           → `harvest`. 결과만 가져가면 된다.
+
+    `pgid_reclaimed: true`는 131이 종료 시점에 PGID 소멸을 실제로 확인했다는
+    뜻이다. 그때 이미 비었던 group 번호가 지금 살아 있다면 그건 잔존 자식이
+    아니라 PGID 번호 재사용이므로 잔존 근거로 쓰지 않는다.
+
+    이 함수는 record를 읽기만 한다 — 쓰거나 고치지 않는다.
+    """
+    probe = _probe_identity(record)
+    heartbeat = record.get("heartbeat") or {}
+    children = list(record.get("unterminated_children") or [])
+    heartbeat_expired = heartbeat.get("expired") is True
+    terminal_settled = record.get("terminal") is not None or record.get("exit_code") is not None
+    outputs_present = isinstance(record.get("outputs"), dict) and bool(record.get("outputs"))
+    record_complete = record.get("exit_code") is not None and outputs_present
+    reclaimed = record.get("pgid_reclaimed") is True
+
+    verdict = {
+        "source": source,
+        "phase": record.get("phase"),
+        "attempt": record.get("attempt"),
+        "disposition": None,
+        "reason": None,
+        "reclaim_required": False,
+        "record_complete": bool(record_complete),
+        "status": record.get("status"),
+        "exit_class": record.get("exit_class"),
+        "exit_code": record.get("exit_code"),
+        "timeout_reason": record.get("timeout_reason"),
+        "terminal_recorded": record.get("terminal") is not None,
+        "heartbeat_expired": heartbeat_expired,
+        "pid": record.get("pid"),
+        "pgid": record.get("pgid"),
+        "pgid_reclaimed": record.get("pgid_reclaimed"),
+        "unterminated_children": children,
+        "started_at": record.get("started_at"),
+        "ended_at": record.get("ended_at"),
+        "probe": probe,
+    }
+
+    if probe["identity"] in ("confirmed", "pgid_match"):
+        # 1. 살아 있고 우리 프로세스임이 증명됐다.
+        if terminal_settled:
+            verdict["disposition"] = "orphan"
+            verdict["reason"] = "process_alive_after_terminal"
+            verdict["reclaim_required"] = True
+        elif heartbeat_expired:
+            verdict["disposition"] = "orphan"
+            verdict["reason"] = "heartbeat_expired_process_alive"
+            verdict["reclaim_required"] = True
+        else:
+            verdict["disposition"] = "reattach"
+            verdict["reason"] = f"live_process_identity_{probe['identity']}"
+    elif probe["pid_alive"] and probe["identity"] != "pid_reused":
+        # 2. 살아 있으나 우리 것임을 증명하지 못했다 — 재부착하지 않는다.
+        verdict["disposition"] = "orphan"
+        verdict["reason"] = "identity_unverified"
+        verdict["reclaim_required"] = True
+    elif children:
+        verdict["disposition"] = "orphan"
+        verdict["reason"] = "unterminated_children"
+        verdict["reclaim_required"] = True
+    elif probe["pgid_alive"] and not reclaimed:
+        verdict["disposition"] = "orphan"
+        verdict["reason"] = "pgid_residue"
+        verdict["reclaim_required"] = True
+    elif heartbeat_expired:
+        verdict["disposition"] = "orphan"
+        verdict["reason"] = "heartbeat_expired"
+    elif not record_complete:
+        verdict["disposition"] = "orphan"
+        verdict["reason"] = "record_incomplete"
+    elif terminal_settled:
+        verdict["disposition"] = "harvest"
+        verdict["reason"] = (
+            "pid_reused_result_recorded" if probe["identity"] == "pid_reused"
+            else "process_gone_result_recorded"
+        )
+    else:
+        verdict["disposition"] = "orphan"
+        verdict["reason"] = "terminal_unsettled"
+
+    return verdict
+
+
+def _sink_stems(directory: pathlib.Path) -> dict[str, set[str]]:
+    """run_dir 안의 attempt sink stem → 존재하는 확장자 집합."""
+    stems: dict[str, set[str]] = {}
+    for entry in sorted(directory.iterdir()):
+        if not entry.is_file() or entry.name.startswith("."):
+            continue
+        for ext in _SINK_EXTENSIONS:
+            if entry.name.endswith(f".{ext}"):
+                stem = entry.name[: -(len(ext) + 1)]
+                if stem:
+                    stems.setdefault(stem, set()).add(ext)
+                break
+    return stems
+
+
+def reconcile_attempts(
+    run_dir: str | os.PathLike, *,
+    phase: str | None = None,
+    attempt: str | None = None,
+) -> dict:
+    """run_dir의 attempt를 reattach / harvest / orphan으로 일괄 판정한다(읽기 전용).
+
+    `phase`(+선택적 `attempt`)를 주면 `<phase>[.aN]` stem 1건만 판정한다.
+    record가 아예 없는 sink stem도 결과에 포함한다 — writer가 finalize 전에
+    죽으면 `.attempt.json`이 생기지 않으므로, 그 부재 자체가 고아의 근거다.
+
+    이 함수는 원시 판정만 소유한다. attempt 집계·round·수렴 상한은
+    Pilot 도구(`oppl-runtime-tool` ledger, OPPB Controller)가 소유하며
+    여기서 복제하지 않는다.
+    """
+    directory = pathlib.Path(run_dir)
+    if not directory.is_dir():
+        raise OpalAgentError(
+            f"run_dir이 디렉토리가 아닙니다: {directory}",
+            code="run_dir_not_found",
+        )
+
+    stems = _sink_stems(directory)
+    if phase:
+        wanted = f"{phase}.{attempt}" if attempt else phase
+        stems = {k: v for k, v in stems.items() if k == wanted}
+    elif attempt:
+        raise OpalAgentError(
+            "attempt는 phase와 함께 지정해야 합니다.",
+            code="attempt_requires_phase",
+        )
+
+    attempts: list[dict] = []
+    for stem in sorted(stems):
+        record_path = directory / f"{stem}.attempt.json"
+        if "attempt.json" not in stems[stem]:
+            # sink 산출물은 있는데 record가 없다 — writer가 finalize 전에 죽었다.
+            attempts.append({
+                "source": str(record_path),
+                "stem": stem,
+                "phase": None,
+                "attempt": None,
+                "disposition": "orphan",
+                "reason": "record_missing",
+                "reclaim_required": False,
+                "record_complete": False,
+                "artifacts": sorted(stems[stem]),
+            })
+            continue
+        try:
+            record = load_attempt_record(record_path)
+        except OpalAgentError as exc:
+            attempts.append({
+                "source": str(record_path),
+                "stem": stem,
+                "phase": None,
+                "attempt": None,
+                "disposition": "orphan",
+                "reason": "record_unreadable",
+                "error": str(exc),
+                "reclaim_required": False,
+                "record_complete": False,
+                "artifacts": sorted(stems[stem]),
+            })
+            continue
+        verdict = classify_attempt(record, source=str(record_path))
+        verdict["stem"] = stem
+        verdict["artifacts"] = sorted(stems[stem])
+        attempts.append(verdict)
+
+    counts = {name: 0 for name in ATTEMPT_DISPOSITIONS}
+    for item in attempts:
+        counts[item["disposition"]] += 1
+
+    return {
+        "ok": True,
+        "run_dir": str(directory),
+        "scanned": len(attempts),
+        "counts": counts,
+        "reclaim_required": [
+            item["stem"] for item in attempts if item.get("reclaim_required")
+        ],
+        "attempts": attempts,
+    }
 
 
 # ─── CLI 진입점 ───────────────────────────────────────────────
@@ -1392,7 +1828,45 @@ def _build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+# 서브명령 — 기존 flat 파서(첫 위치인자 = prompt)를 바꾸지 않기 위해 argv[0]
+# 토큰으로만 분기한다. 기존 플래그는 하나도 건드리지 않는다(D6 (b)).
+SUBCOMMANDS = ("reconcile-attempts",)
+
+
+def _build_reconcile_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        prog="opal-agent reconcile-attempts",
+        description="run_dir의 attempt를 reattach/harvest/orphan으로 판정 (읽기 전용)",
+    )
+    parser.add_argument("run_dir", help="attempt 산출물 디렉토리 (--run-dir과 동일 경로)")
+    parser.add_argument("--phase", help="지정 시 해당 phase 1건만 판정")
+    parser.add_argument("--attempt", help="재시도 접미 (예: a2). --phase와 함께만 유효")
+    return parser
+
+
+def _main_reconcile(argv: list[str]) -> int:
+    args = _build_reconcile_parser().parse_args(argv)
+    try:
+        report = reconcile_attempts(
+            args.run_dir, phase=args.phase, attempt=args.attempt,
+        )
+    except OpalAgentError as exc:
+        json.dump(
+            {"ok": False, "error_code": exc.code or "error", "error": str(exc)},
+            sys.stdout, ensure_ascii=False, indent=2,
+        )
+        sys.stdout.write("\n")
+        return 2
+    json.dump(report, sys.stdout, ensure_ascii=False, indent=2, default=str)
+    sys.stdout.write("\n")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
+    raw = list(sys.argv[1:]) if argv is None else list(argv)
+    if raw and raw[0] in SUBCOMMANDS:
+        return _main_reconcile(raw[1:])
+
     parser = _build_parser()
     args = parser.parse_args(argv)
 

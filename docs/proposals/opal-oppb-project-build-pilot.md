@@ -854,9 +854,12 @@ candidate가 준비되면 Verifier admission이 신규 Runner·Executor보다 �
 1. INTENT와 중대한 신규 기술 결정 승인
 2. 기능 범위·외부 계약 변경
 3. 비가역 작업·실제 배포
-4. 예산 초과·반복 무진전
+4. 예산 초과·반복 무진전\*
 5. 귀속되지 않은 외부 workspace 변경
 6. 최종 project head 허브 merge와 CLOSE
+
+\* OPPB v1은 §9.3의 동시성 예산 3종(`max_active_runners`·`max_active_executors`·`max_total_agent_processes`)만
+집행한다. 비용·벽시계 예산과 무진전(실패 지문 반복) 판정은 후속 태스크가 소유한다.
 
 일반 미니 태스크 완료·Repair·상태 확인에는 사용자를 호출하지 않는다.
 

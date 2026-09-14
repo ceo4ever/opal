@@ -6,13 +6,13 @@
 
 | 항목 | 건수 |
 |------|------|
-| 게이트 판단 | 12회 (Pass: 11 / Fail: 1) |
+| 게이트 판단 | 20회 (Pass: 19 / Fail: 1) |
 | 3회 초과 Gate | 0건 (Critical: 0 / Normal: 0 / Minor: 0) |
-| 오류 발견 | 11건 |
+| 오류 발견 | 14건 |
 | 수정 지시 | 4건 (반영: 2 / 미반영: 2) |
-| PM 의사결정 | 12건 |
-| 개선 사항 | 9건 |
-| 에스컬레이션 | 1건 |
+| PM 의사결정 | 20건 |
+| 개선 사항 | 10건 |
+| 에스컬레이션 | 2건 |
 
 ## 대행 일지
 
@@ -65,3 +65,20 @@
 | 45 | 2026-09-14 15:52 | EXECUTE | GATE | **W-5 G1 체크포인트 통과.** D6 4항을 AST 시그니처 추출로 소스 대조 — 공개 심볼 제거 0·시그니처 변경 0·신규 추가 25, argparse option string HEAD 14개 = 현재 14개 동일 집합, `AgentResult` 필드 블록 텍스트 동일, `main()` 출력 경로 라인 단위 동일. 회귀 `57 passed` / `418 passed·3 skipped·111 subtests` 기대치 정확 일치. 기존 3 Pilot 8개 경로 `git diff HEAD` 0줄 | Pass |
 | 46 | 2026-09-14 15:52 | EXECUTE | ERROR | W-5가 merge 범위 문제 제기 — `opal/tools/oppb-runtime-tool/`의 RED 스위트는 설계상 `32 failed, 67 errors`이며 이대로 허브에 올리면 **main에 빨간 테스트가 상주**한다. C-8의 "깨끗한 중간 merge" 취지와 충돌한다 | 소유자 판단 필요 |
 | 47 | 2026-09-14 15:52 | EXECUTE | ERROR | W-5 환경 결손 보고 — 테스트 실행 인터프리터에 `jsonschema`·`PyYAML` 미설치로 test-tool 2건 실패·brain-tool 수집 불가. PM이 재확인했고 해당 소스는 HEAD 대비 무변경이라 G1 결함이 아니다. 그러나 **이후 체크포인트에서 진짜 실패를 가릴 수 있다** | 이월 |
+| 48 | 2026-09-14 17:18 | EXECUTE | ESCALATION | **허브 merge 직전 병렬 세션 충돌 발견.** 다른 세션이 태스크 131을 진행해 main에 merge(분기점 이후 7커밋). 131이 `opal_agent.py`를 759줄 고쳐 process group·watchdog·terminal framing·epilogue allowlist를 이미 구현했고 `oppl-runtime-tool`도 신설했다. 제안서도 구판이 복원돼 두 판본 공존. PM이 임의 판단하지 않고 소유자에게 3개 선택지로 보고 | 소유자 1안 선택 |
+| 49 | 2026-09-14 17:18 | EXECUTE | DECISION | 1안(main 131 구현 기준 G1 재설계) 실행 — `git merge main` 후 충돌 1파일(`opal_agent.py`)을 main 버전으로 확정. `state_tool.py`는 자동 병합돼 131의 48줄과 132의 oppb·P0~P5가 공존(452 passed). 132 W-1의 554줄은 폐기 | 완료 |
+| 50 | 2026-09-14 17:18 | EXECUTE | DECISION | 제안서 SSOT 확정 — `opal-oppb-project-build-pilot.md`(1034행)가 최신. 131 복원본(926행)은 "전면 교체" 프레이밍 5곳·OPPB 언급 0·신규 3개 절 부재로 개정 이전 구판임을 실측 확인. 131이 흡수했다는 고유 기여 2건은 1034행본 §4.6에 동일 문장으로 존재. 구판 제거 후 archives의 깨진 인용 1건을 새 경로로 복구 | 완료 |
+| 51 | 2026-09-14 17:18 | EXECUTE | ERROR | **131이 attempt record까지 이미 구현.** `_attempt_record()`가 `<run_dir>/<phase>[.aN].attempt.json`에 원자 기록하며 스키마가 132 것보다 풍부(`pgid_reclaimed`·`exit_class`·`timeout_reason`·`heartbeat{count,last_at,expired}`·`unterminated_children`·`fingerprint`). 전달 채널도 환경변수가 아닌 `run_dir`·`phase`·`attempt` kwonly 인자다. **PM이 확정했던 `OPAL_AGENT_RUN_ROOT` 계약(로그 28)은 폐기한다** | 계약 폐기 |
+| 52 | 2026-09-14 17:18 | EXECUTE | DECISION | G1 잔여 범위를 2건으로 축소 — (1) 재부착·고아 판정 진입점 신설(`opal-agent`·`oppl-runtime-tool` 양쪽에 부재, S-4가 요구) (2) D6(a)를 "시그니처 무변경"에서 "기존 호출 호환성 유지"로 재정의(131이 추가한 kwonly 7개는 전부 기본값이라 호출 호환은 불변). 132 회귀 스위트는 폐기하지 않는다 — 131 구현 위에서 87 passed이고 golden 바이트 동일성이 그대로 유효하다 | PLAN 개정 지시 |
+| 53 | 2026-09-14 17:44 | EXECUTE | GATE | W-2 정합 Pass — `94 passed, 0 failed`. ③ framing은 **131의 의도된 설계 차이**로 판정(결함 아님). 결정적 근거: D6(c)가 `.exitcode` 바이트 동일성을 회귀 기준으로 못박았으므로 framing 사유로 종료 코드를 바꾸는 것이 오히려 OPPL 계약 파괴다. 워커가 단언을 record 채널로 옮기면서 **같은 실행 경로에 정상 framing 대조군**을 넣어 "어떤 stream이든 error"로 통과하는 구멍을 스스로 막았다 | Pass |
+| 54 | 2026-09-14 17:44 | EXECUTE | GATE | W-1 Pass — 재부착·고아 3분류 진입점 신설. **생존 확인을 record 완결성보다 먼저** 두어 실행 중 attempt의 오분류(중복 실행)를 차단했고, PID 재사용 방어를 `os.kill`→`getpgid` 일치→`ps etime` 역산 3중으로 쌓되 플랫폼 분기 0. 신원 미증명 시 재부착하지 않는 비대칭 판단(잘못된 재부착은 복구 불가, 잘못된 고아는 재기동으로 복구)이 옳다 | Pass |
+| 55 | 2026-09-14 17:44 | EXECUTE | ERROR | W-1이 설계 공백 발견 — `_attempt_record()` 호출 지점이 finalize 1곳뿐이라 **실행 중 attempt는 record가 없고 `reattach` 분기가 도달 불가**. S-4 ①이 검증 불가 상태였다. 잠긴 시나리오라 기대를 못 바꾸므로 구현이 따라와야 한다 | W-39 신설 |
+| 56 | 2026-09-14 17:44 | EXECUTE | DECISION | W-39 배치를 P2로 지시했으나 `--plan-contract-check`가 `file conflict W-1/W-39`로 거부. 같은 그룹·같은 파일·상호 선행 없음은 충돌이고 그룹 내 선행 선언도 금지된다. P3·선행 W-1로 재배치. **도구가 PM 판단 오류를 잡은 사례** — tool-gated 설계의 의도대로 작동했다 | 수용 |
+| 57 | 2026-09-14 17:44 | EXECUTE | GATE | W-39 Pass — `reconcile-attempts`가 살아 있는 attempt에 `disposition: reattach`, `identity: confirmed`(PID 생존+PGID 일치+`ps etime` 역산 0.349초 차)를 실측 반환. 회귀 `94 passed` 유지, C-8 무영향(run_dir/phase 미지정 시 `ls -A` 공백) 실측 확인 | Pass |
+| 58 | 2026-09-14 17:44 | EXECUTE | DECISION | W-39가 새 필드를 발명하지 않고 기존 20필드의 미확정 값(`status="running"`·`terminal=None`·`exit_code=None`)으로 진행 중 상태를 표현한 것을 채택. `StreamVerdict.status` 주석이 이미 `running`을 선언하고 있어 스키마 확장이 아니다. `outputs`를 시작 record에서 뺀 것도 옳다 — 죽은 뒤 시작 record만 남으면 `orphan/record_incomplete`로 올바르게 잡힌다 | 채택 |
+| 59 | 2026-09-14 17:44 | EXECUTE | GATE | H-8 해소 확인 — PM이 워커 주장을 재검증. `opal-loop-action-agent/AGENT.md:253,260`이 완료 마커를 `.exitcode` **존재**로 못박고 `.result.json`·`.events.jsonl`로 판정하지 않음을 명시. `ledger.py`의 `json.load`·`is_file()` 5건은 전부 자기 `runtime.json`·config 대상이고, `record_path`는 `oppl_runtime_tool.py:339`에서 **문자열 외래 참조로만** 보관. OPPL에 "파일 존재 = 완료" 가정 없음 | Pass |
+| 60 | 2026-09-14 17:52 | EXECUTE | GATE | W-38 Pass — `oppl-runtime-tool` 공개 표면 전수 실측 후 13축 대조. 중복 2건·고유 6건·공용 4건·정책 충돌 1건. **우려했던 "OPPL이 만든 걸 OPPB가 다시 만든다"는 사실상 없었고**, 진짜 위험은 W-8이 `opal-agent`의 프로세스 생존 판정 340줄을 다시 쓰는 것이었다. PLAN W-8 문구 "record를 **읽어**"가 파일 직접 파싱으로 읽혀 W-1 사고가 반복될 뻔했다 | Pass |
+| 61 | 2026-09-14 17:52 | EXECUTE | DECISION | **P-5 run identity — 현 RED 표면 유지**(OPPB `init` 자체 발급). OPPL D8로 정렬하지 않는다. 근거: OPPL run root는 태스크 폴더 안 `.oppl-run/`이라 태스크 종속이 자연스럽지만, OPPB run root는 허브 `.opal-runs/`이고 제안서 `:269`가 "worktree 회수와 함께 삭제하지 않는다"를 요구한다 — **태스크보다 오래 살아남는 것이 설계 요구**라 state.json에 묶으면 깨진다. 정책 차이는 사고가 아니라 의도다 | 확정 |
+| 62 | 2026-09-14 17:52 | EXECUTE | DECISION | **P-8 예산 게이트 — 현 범위 유지.** 제안서 §11 게이트 4를 집행하는 Work item이 없다는 실측을 수용하되, 태스크가 이미 40건이라 v1은 동시성 예산 3종만 집행하고 비용·무진전은 후속이 소유한다. C-1 준수를 위해 PLAN §Approach와 제안서 §11 양쪽에 명시 | 확정 |
+| 63 | 2026-09-14 17:52 | EXECUTE | GATE | W-40 Pass — diff가 §11 구간 4줄 추가에만 존재(`git diff --stat` 4+/1-), §9.3·§13.2·§14 무변경, 게이트 항목 6개 유지. W-37의 `\*` 각주 스타일을 그대로 따랐다 | Pass |
+| 64 | 2026-09-14 17:52 | EXECUTE | IMPROVE | W-40의 file conflict 회피가 정확했다 — W-37과 같은 파일이라 같은 그룹 불가. W-37이 P1에서 완료됐으므로 W-40을 P2로 내리고 선행에 W-37을 선언해 충돌 규칙과 dependency group order를 동시에 만족시켰다 | 수용 |
