@@ -45,6 +45,13 @@
   ],
   "history": [
     {
+      "title": "133 부트 요약 실행경로 통합",
+      "date": "2026-09-15",
+      "stage": "완료",
+      "path": "tasks/133-260914-opds-부트-요약-실행경로-통합/",
+      "result": "직접 수행 태스크와 registry canonical worktree 태스크를 부트 요약에서 통합하고, 최신 3건·잔여 건수·경로 이상·실행 모드를 1,024바이트 이내로 표시"
+    },
+    {
       "title": "134 agentic 모드 지속성 복원",
       "date": "2026-09-15",
       "stage": "완료",
@@ -71,13 +78,6 @@
       "stage": "완료",
       "path": "tasks/130-260913-opds-PM-하단-액션-의도-명확화/",
       "result": "PM 결과 보고 하단을 PM 다음 작업과 사용자 결정 필요로 분리하고, 결정 요청의 판단 정보·명시 질문 계약을 통일했다. 독립 시나리오 8/8과 보고 재현 5/5를 통과했다."
-    },
-    {
-      "title": "126 워크스튜디오 독립앱 구축",
-      "date": "2026-09-12",
-      "stage": "완료",
-      "path": "tasks/126-260912-opds-워크스튜디오-독립앱-구축/",
-      "result": "Dashboard Workbench를 독립 Electron 앱 OPAL WorkStudio로 분리하고 Project·PM Coordination·Terminal·Files·최초 실행 Welcome을 구현했다. WorkStudio 42개와 Dashboard 123개 테스트를 통과했다."
     }
   ]
 }

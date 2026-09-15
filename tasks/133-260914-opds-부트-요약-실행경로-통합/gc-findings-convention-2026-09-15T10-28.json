@@ -1,0 +1,150 @@
+{
+  "check": "convention",
+  "status": "pass",
+  "checked_files": [
+    "opal/tools/state-tool/state_tool.py",
+    "opal/tools/state-tool/tests/test_state_tool.py",
+    "opal/tools/state-tool/README.md",
+    "opal/tools/event-loader/event_loader.py",
+    "opal/tools/event-loader/tests/test_event_loader_extended.py",
+    "opal/tools/event-loader/README.md"
+  ],
+  "findings": [
+    {
+      "id": "GC-001", "fingerprint": "aa1d78a9cbcd58c6", "category": "naming", "severity": "low", "confidence": "high", "disposition": "advisory", "rule_id": "Ruff E741", "source_tier": "T1",
+      "location": {"file": "opal/tools/state-tool/state_tool.py", "line": 515},
+      "evidence": "Ruff E741: list comprehension variable `l` is ambiguous.", "impact": "The single-letter name can be confused with `1` or `I`, reducing readability.",
+      "remediation": {"guidance": "Rename `l` to a descriptive name such as `line`.", "reference": "https://docs.astral.sh/ruff/rules/ambiguous-variable-name", "auto_fixable": false},
+      "verification": "Run `ruff check opal/tools/state-tool/state_tool.py` and confirm E741 is absent.", "suppression": null
+    },
+    {
+      "id": "GC-002", "fingerprint": "26e0da190e879eac", "category": "dead-code", "severity": "low", "confidence": "high", "disposition": "advisory", "rule_id": "Ruff F841", "source_tier": "T1",
+      "location": {"file": "opal/tools/state-tool/state_tool.py", "line": 1196},
+      "evidence": "Ruff F841: local variable `status` is assigned but never used.", "impact": "The unused assignment adds dead code and obscures intent.",
+      "remediation": {"guidance": "Remove the assignment or consume the value if it is part of the intended validation.", "reference": "https://docs.astral.sh/ruff/rules/unused-variable", "auto_fixable": false},
+      "verification": "Run Ruff and confirm F841 is absent at this location.", "suppression": null
+    },
+    {
+      "id": "GC-003", "fingerprint": "7737910b8a718bc6", "category": "dead-code", "severity": "low", "confidence": "high", "disposition": "advisory", "rule_id": "Ruff F841", "source_tier": "T1",
+      "location": {"file": "opal/tools/state-tool/state_tool.py", "line": 2071},
+      "evidence": "Ruff F841: local variable `prev_status` is assigned but never used.", "impact": "The unused assignment adds dead code and may mislead maintainers about state-transition handling.",
+      "remediation": {"guidance": "Remove the assignment or use it in the intended transition check.", "reference": "https://docs.astral.sh/ruff/rules/unused-variable", "auto_fixable": false},
+      "verification": "Run Ruff and confirm F841 is absent at this location.", "suppression": null
+    },
+    {
+      "id": "GC-004", "fingerprint": "c7a3b347d9cfd3bd", "category": "dead-code", "severity": "info", "confidence": "high", "disposition": "advisory", "rule_id": "Ruff F541", "source_tier": "T1",
+      "location": {"file": "opal/tools/state-tool/state_tool.py", "line": 2122},
+      "evidence": "Ruff F541: f-string has no placeholders.", "impact": "The redundant prefix suggests interpolation where none occurs.",
+      "remediation": {"guidance": "Use a normal string literal.", "reference": "https://docs.astral.sh/ruff/rules/f-string-missing-placeholders", "auto_fixable": true},
+      "verification": "Run Ruff and confirm F541 is absent at this location.", "suppression": null
+    },
+    {
+      "id": "GC-005", "fingerprint": "874187b2f7afcc73", "category": "unused-import", "severity": "low", "confidence": "high", "disposition": "advisory", "rule_id": "Ruff F401", "source_tier": "T1",
+      "location": {"file": "opal/tools/state-tool/tests/test_state_tool.py", "line": 53},
+      "evidence": "Ruff F401: `unittest.mock.MagicMock` is imported but unused.", "impact": "The unused import adds noise and implies a dependency the test does not use.",
+      "remediation": {"guidance": "Remove `MagicMock` from the import.", "reference": "https://docs.astral.sh/ruff/rules/unused-import", "auto_fixable": true},
+      "verification": "Run Ruff and confirm F401 is absent at this location.", "suppression": null
+    },
+    {
+      "id": "GC-006", "fingerprint": "50dac6fbdb46c500", "category": "import-order", "severity": "low", "confidence": "high", "disposition": "advisory", "rule_id": "Ruff E402", "source_tier": "T1",
+      "location": {"file": "opal/tools/state-tool/tests/test_state_tool.py", "line": 58},
+      "evidence": "Ruff E402: module-level `import state_tool as ST` appears after executable path setup.", "impact": "A non-top-level import makes module initialization order less conventional and harder to scan.",
+      "remediation": {"guidance": "Refactor the test loader or explicitly suppress E402 with a documented reason if path setup must precede import.", "reference": "https://docs.astral.sh/ruff/rules/module-import-not-at-top-of-file", "auto_fixable": false},
+      "verification": "Run Ruff and confirm E402 is absent or explicitly suppressed.", "suppression": null
+    },
+    {
+      "id": "GC-007", "fingerprint": "5fbdee02e8f80443", "category": "dead-code", "severity": "low", "confidence": "high", "disposition": "advisory", "rule_id": "Ruff F841", "source_tier": "T1",
+      "location": {"file": "opal/tools/state-tool/tests/test_state_tool.py", "line": 1025},
+      "evidence": "Ruff F841: `original_ids` is assigned but never used.", "impact": "The unused fixture value obscures what the test actually asserts.",
+      "remediation": {"guidance": "Remove the assignment or add the intended assertion.", "reference": "https://docs.astral.sh/ruff/rules/unused-variable", "auto_fixable": false},
+      "verification": "Run Ruff and confirm F841 is absent at this location.", "suppression": null
+    },
+    {
+      "id": "GC-008", "fingerprint": "b5eaac8b66ae6105", "category": "dead-code", "severity": "low", "confidence": "high", "disposition": "advisory", "rule_id": "Ruff F841", "source_tier": "T1",
+      "location": {"file": "opal/tools/state-tool/tests/test_state_tool.py", "line": 1289},
+      "evidence": "Ruff F841: exception context variable `cm` is assigned but never used.", "impact": "The unused binding adds noise to the assertion context.",
+      "remediation": {"guidance": "Remove `as cm` or assert against the captured exception.", "reference": "https://docs.astral.sh/ruff/rules/unused-variable", "auto_fixable": false},
+      "verification": "Run Ruff and confirm F841 is absent at this location.", "suppression": null
+    },
+    {
+      "id": "GC-009", "fingerprint": "db139d68a7fee9f7", "category": "dead-code", "severity": "low", "confidence": "high", "disposition": "advisory", "rule_id": "Ruff F841", "source_tier": "T1",
+      "location": {"file": "opal/tools/state-tool/tests/test_state_tool.py", "line": 1375},
+      "evidence": "Ruff F841: exception context variable `cm` is assigned but never used.", "impact": "The unused binding adds noise to the assertion context.",
+      "remediation": {"guidance": "Remove `as cm` or assert against the captured exception.", "reference": "https://docs.astral.sh/ruff/rules/unused-variable", "auto_fixable": false},
+      "verification": "Run Ruff and confirm F841 is absent at this location.", "suppression": null
+    },
+    {
+      "id": "GC-010", "fingerprint": "db139d68a7fee9f7", "category": "dead-code", "severity": "low", "confidence": "high", "disposition": "advisory", "rule_id": "Ruff F841", "source_tier": "T1",
+      "location": {"file": "opal/tools/state-tool/tests/test_state_tool.py", "line": 1403},
+      "evidence": "Ruff F841: exception context variable `cm` is assigned but never used.", "impact": "The unused binding adds noise to the assertion context.",
+      "remediation": {"guidance": "Remove `as cm` or assert against the captured exception.", "reference": "https://docs.astral.sh/ruff/rules/unused-variable", "auto_fixable": false},
+      "verification": "Run Ruff and confirm F841 is absent at this location.", "suppression": null
+    },
+    {
+      "id": "GC-011", "fingerprint": "78f1999675fb939b", "category": "dead-code", "severity": "low", "confidence": "high", "disposition": "advisory", "rule_id": "Ruff F841", "source_tier": "T1",
+      "location": {"file": "opal/tools/state-tool/tests/test_state_tool.py", "line": 1821},
+      "evidence": "Ruff F841: `log_rows_before` is assigned but never used.", "impact": "The unused fixture value obscures the test's effective assertions.",
+      "remediation": {"guidance": "Remove the assignment or add the intended before/after assertion.", "reference": "https://docs.astral.sh/ruff/rules/unused-variable", "auto_fixable": false},
+      "verification": "Run Ruff and confirm F841 is absent at this location.", "suppression": null
+    },
+    {
+      "id": "GC-012", "fingerprint": "77af80da681530a1", "category": "dead-code", "severity": "low", "confidence": "high", "disposition": "advisory", "rule_id": "Ruff F841", "source_tier": "T1",
+      "location": {"file": "opal/tools/state-tool/tests/test_state_tool.py", "line": 1823},
+      "evidence": "Ruff F841: `md_after` is assigned but never used.", "impact": "The unused fixture value obscures the test's effective assertions.",
+      "remediation": {"guidance": "Remove the assignment or assert against the resulting Markdown.", "reference": "https://docs.astral.sh/ruff/rules/unused-variable", "auto_fixable": false},
+      "verification": "Run Ruff and confirm F841 is absent at this location.", "suppression": null
+    },
+    {
+      "id": "GC-013", "fingerprint": "0f1662b4fbe03957", "category": "import-order", "severity": "low", "confidence": "high", "disposition": "advisory", "rule_id": "Ruff E401", "source_tier": "T1",
+      "location": {"file": "opal/tools/state-tool/tests/test_state_tool.py", "line": 3419},
+      "evidence": "Ruff E401: `tempfile`, `shutil`, and `pathlib` are imported on one line.", "impact": "Multiple imports on one line reduce scanability and complicate isolated edits.",
+      "remediation": {"guidance": "Put each import on its own line.", "reference": "https://docs.astral.sh/ruff/rules/multiple-imports-on-one-line", "auto_fixable": true},
+      "verification": "Run Ruff and confirm E401 is absent at this location.", "suppression": null
+    },
+    {
+      "id": "GC-014", "fingerprint": "3ad34ccd659f80f7", "category": "unused-import", "severity": "low", "confidence": "high", "disposition": "advisory", "rule_id": "Ruff F401", "source_tier": "T1",
+      "location": {"file": "opal/tools/state-tool/tests/test_state_tool.py", "line": 4041},
+      "evidence": "Ruff F401: local import `tempfile` is unused.", "impact": "The unused import adds noise and implies a dependency the test does not use.",
+      "remediation": {"guidance": "Remove the local import.", "reference": "https://docs.astral.sh/ruff/rules/unused-import", "auto_fixable": true},
+      "verification": "Run Ruff and confirm F401 is absent at this location.", "suppression": null
+    },
+    {
+      "id": "GC-015", "fingerprint": "c83523f615869a53", "category": "dead-code", "severity": "low", "confidence": "high", "disposition": "advisory", "rule_id": "Ruff F841", "source_tier": "T1",
+      "location": {"file": "opal/tools/state-tool/tests/test_state_tool.py", "line": 4921},
+      "evidence": "Ruff F841: `exit_code` is assigned in an exception handler but never used.", "impact": "The unused assignment obscures whether the exception code matters to the test.",
+      "remediation": {"guidance": "Remove the assignment or assert the captured exit code.", "reference": "https://docs.astral.sh/ruff/rules/unused-variable", "auto_fixable": false},
+      "verification": "Run Ruff and confirm F841 is absent at this location.", "suppression": null
+    },
+    {
+      "id": "GC-016", "fingerprint": "00b6dba85b3f0f60", "category": "naming", "severity": "low", "confidence": "high", "disposition": "advisory", "rule_id": "Ruff E741", "source_tier": "T1",
+      "location": {"file": "opal/tools/state-tool/tests/test_state_tool.py", "line": 8887},
+      "evidence": "Ruff E741: comprehension variable `l` is ambiguous.", "impact": "The single-letter name can be confused with `1` or `I`, reducing readability.",
+      "remediation": {"guidance": "Rename `l` to a descriptive name such as `line`.", "reference": "https://docs.astral.sh/ruff/rules/ambiguous-variable-name", "auto_fixable": false},
+      "verification": "Run Ruff and confirm E741 is absent at this location.", "suppression": null
+    },
+    {
+      "id": "GC-017", "fingerprint": "62912a6682cbc275", "category": "dead-code", "severity": "low", "confidence": "high", "disposition": "advisory", "rule_id": "Ruff F841", "source_tier": "T1",
+      "location": {"file": "opal/tools/state-tool/tests/test_state_tool.py", "line": 9042},
+      "evidence": "Ruff F841: `qa_data` is assigned but never used.", "impact": "The unused fixture value obscures the test's effective assertions.",
+      "remediation": {"guidance": "Remove the assignment or assert against `qa_data`.", "reference": "https://docs.astral.sh/ruff/rules/unused-variable", "auto_fixable": false},
+      "verification": "Run Ruff and confirm F841 is absent at this location.", "suppression": null
+    }
+  ],
+  "evidence": [
+    "worker.dispatch receipt verified: ok=true, verified_document_count=4",
+    "python3 -m py_compile <4 target Python files>: exit 0",
+    "ruff check --output-format json <4 target Python files>: 17 diagnostics",
+    "bash opal/tools/code-scan/run.sh validate --scope framework: validate OK, coverage 25.7% (78/303)",
+    "python3 opal/tools/state-tool/tests/test_state_tool.py TestBootSummary: 7 tests passed",
+    "python3 -m unittest opal/tools/event-loader/tests/test_event_loader_extended.py: 11 tests passed",
+    "all 6 targets: UTF-8 readable, EOF newline present, no tab indentation, no trailing whitespace"
+  ],
+  "references": [
+    "docs/CONVENTIONS.md",
+    ".opal/code-scan.json",
+    "/Users/iskang/.opal/skills/op-gc-convention/references/convention-categories.md",
+    "https://docs.astral.sh/ruff/rules/"
+  ],
+  "missing_capabilities": [],
+  "report_path": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_133/tasks/133-260914-opds-부트-요약-실행경로-통합/GC-CONVENTION-2026-09-15T10-28.md"
+}

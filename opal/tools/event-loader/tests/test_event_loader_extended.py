@@ -3,7 +3,7 @@
   "module": "test_event_loader_extended",
   "layer": "test",
   "domain": "opal-tools",
-  "description": "이벤트 load/verify, zero-payload session, project-root 격리와 ready-to-emit 프로젝트 브리핑 계약 회귀",
+  "description": "이벤트 load/verify, zero-payload session, project-root 격리와 다건 bounded 프로젝트 브리핑 계약 회귀",
   "exports": [],
   "depends": ["event_loader"]
 }
@@ -302,6 +302,89 @@ class EventLoaderExtendedContractTest(unittest.TestCase):
         self.assertEqual(completed.returncode, 0, completed.stderr)
         self.assertLessEqual(len(completed.stdout.rstrip("\n").encode("utf-8")), 1024)
         self.assertTrue(completed.stdout.startswith("[부트스트랩] ✅ session.project ⏳ PM"))
+
+    def test_project_brief_renders_many_items_remainder_and_anomaly_count_bounded(self):
+        """Task 133 S-5 / PLAN D-5, H-2: multi-item public rendering stays bounded."""
+        compose = runpy.run_path(str(LOADER))["compose_project_brief"]
+        state_payload = {
+            "ok": True,
+            "items": [
+                {
+                    "title": f"40{number}-" + "긴 다국어 제목 " * 60,
+                    "stage": "EXECUTE",
+                    "next_action": "긴 다음 행동 " * 60,
+                }
+                for number in (5, 4, 3)
+            ],
+            "other_count": 2,
+            "anomalies": [{"code": "registry_meta_corrupt"}],
+        }
+        memory_payload = {
+            "ok": True,
+            "review_rows": [{
+                "title": "장문 검토 후보 " * 40,
+                "summary": "장문 검토 요약 " * 40,
+            }],
+        }
+
+        markdown = compose(state_payload, memory_payload)
+
+        for title in ("405-", "404-", "403-"):
+            self.assertIn(title, markdown)
+        self.assertIn("그 외 2건", markdown)
+        self.assertIn("경로 이상 1건", markdown)
+        self.assertLessEqual(len(markdown.encode("utf-8")), 1024)
+
+    def test_project_brief_cli_preserves_inputs_and_multitask_counts(self):
+        """Task 133 S-5 / AC-6, AC-8: CLI observes the same bounded contract read-only."""
+        with tempfile.TemporaryDirectory() as directory:
+            fixture = Path(directory)
+            for number in range(1, 6):
+                task_dir = fixture / "tasks" / f"40{number}-fixture"
+                task_dir.mkdir(parents=True)
+                (task_dir / "state.json").write_text(json.dumps({
+                    "task_id": f"40{number}-" + "다국어 제목 " * 70,
+                    "current_status": "in_progress",
+                    "updated_at": f"2026-09-13 {number + 10:02d}:00:00",
+                    "next_action": "다국어 다음 행동 " * 70,
+                    "rows": [{"status": "in_progress", "stage": "EXECUTE"}],
+                }, ensure_ascii=False), encoding="utf-8")
+            meta = fixture / ".opal-worktrees" / ".meta"
+            meta.mkdir(parents=True)
+            (meta / "task_499.json").write_text("{broken", encoding="utf-8")
+            memory = fixture / ".opal" / "MEMORY.json"
+            memory.parent.mkdir(exist_ok=True)
+            memory.write_text(json.dumps({
+                "version": 1,
+                "last_task_number": 499,
+                "memories": [{
+                    "title": "검토 후보 " * 60,
+                    "date": "2026-09-13",
+                    "type": "improvement",
+                    "status": "candidate",
+                    "file": "memory/candidate.md",
+                    "summary": "검토 요약 " * 60,
+                }],
+                "history": [],
+            }, ensure_ascii=False), encoding="utf-8")
+            inputs = {path: path.read_bytes() for path in fixture.rglob("*") if path.is_file()}
+
+            completed = subprocess.run(
+                [sys.executable, str(LOADER), "project-brief",
+                 "--source-root", str(REPO_ROOT),
+                 "--project-root", str(fixture)],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+
+            after = {path: path.read_bytes() for path in inputs}
+
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        self.assertIn("그 외 2건", completed.stdout)
+        self.assertIn("경로 이상 1건", completed.stdout)
+        self.assertLessEqual(len(completed.stdout.rstrip("\n").encode("utf-8")), 1024)
+        self.assertEqual(inputs, after)
 
     def test_project_brief_omits_only_the_failed_query_block(self):
         compose = runpy.run_path(str(LOADER))["compose_project_brief"]

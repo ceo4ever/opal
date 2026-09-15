@@ -282,13 +282,14 @@
 ~/.opal/tools/state-tool/run.sh boot-summary <project-root>
 ```
 
-- `session.project` 부트스트랩용으로 프로젝트 하위 미완료 태스크의 **읽기 전용** 요약을 낸다. task-path가 아니라 **project-root**를 받는다.
-- 출력은 UTF-8 1024 bytes 이하로 제한된다 — 초과 시 `title`/`stage`/`next_action`을 길이 순으로 잘라 줄이며, 잘라도 항상 유효한 단일 JSON을 유지한다.
+- `session.project` 부트스트랩용으로 허브 `tasks/`의 직접 수행 태스크와 worktree registry가 발급한 canonical `task_path`의 진행 태스크를 합친 **읽기 전용** 요약을 낸다. task-path가 아니라 허브 **project-root**를 받는다.
+- 후보는 `updated_at` 최신순이며 최대 3건을 `items`로 반환한다. 표시 밖의 유효 후보는 `other_count`, canonical 경로를 확정할 수 없는 registry 상태는 정상 후보와 분리된 bounded `anomalies`로 반환한다. worktree 경로·상태 판정의 원문은 `opal/core/references/harness/worktree.md` §canonical path 발급 계약·§상태 의존 해석이 소유한다.
+- 출력은 UTF-8 1024 bytes 이하로 제한된다 — 초과 시 `title`/`stage`/`next_action`과 anomaly detail을 길이 순으로 줄이며, 항목 구조·잔여 건수·anomaly code와 유효한 단일 JSON을 유지한다.
 - `boot-brief`는 동일 구현·동일 출력 계약의 별칭이다.
 - 상태 파일을 쓰지 않는다.
 
 ```json
-{"ok": true, "command": "boot-summary", "items": [{"title": "...", "stage": "...", "next_action": "..."}]}
+{"ok": true, "command": "boot-summary", "items": [{"title": "...", "stage": "...", "next_action": "..."}], "other_count": 2, "anomalies": [{"code": "task_path_ambiguous"}]}
 ```
 
 ---

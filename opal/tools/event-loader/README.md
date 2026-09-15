@@ -28,7 +28,7 @@ opal/tools/event-loader/run.sh project-brief --project-root /path/to/project --j
 
 `project-brief` 성공은 첫 응답에 그대로 붙일 UTF-8 1,024바이트 이하 Markdown을 반환하며, `--json`이면 `markdown`과 `bytes`를 담은 단일 JSON object를 반환한다. 그 외 성공/실패는 stdout의 단일 JSON object다. 실패는 non-zero이며 `error`에 기계 판독 가능한 코드를 둔다. `load`의 `documents[].content`가 전문이고, receipt는 manifest 및 문서의 현재 `sha256`/`bytes`를 고정한다. `verify`는 receipt 누락, event 불일치, manifest 변경, 문서 누락·경로 변경·hash 변경을 거부한다.
 
-`project-brief`는 `state-tool boot-summary`와 `memory-tool show --boot-brief`를 읽기 전용으로 호출한다. 성공한 결과의 미완료 태스크 최대 1건과 `review_rows` 최대 2건만 렌더링하며, 개별 조회 실패는 해당 블록만 생략한다. 두 결과가 모두 비면 `[부트스트랩] ✅ session.project ⏳ PM`을 byte-identical하게 유지한다.
+`project-brief`는 `state-tool boot-summary`와 `memory-tool show --boot-brief`를 읽기 전용으로 호출한다. 성공한 상태 결과의 direct+registry 통합 진행 태스크를 최신순 최대 3건 렌더링하고, 표시 밖 후보는 `그 외 N건`, canonical 경로 이상은 `경로 이상 N건`으로 드러낸다. `review_rows`는 최대 2건을 유지하며, 개별 조회 실패는 해당 블록만 생략한다. 두 결과가 모두 비면 `[부트스트랩] ✅ session.project ⏳ PM`을 byte-identical하게 유지한다.
 
 `session.disabled`는 `bootstrap: off`의 순수 모드다. 이 이벤트는 required/optional 문서를 모두 0건으로 선언하며 `load`와 `measure`가 `document_count: 0`, `payload_bytes: 0`을 반환한다. `[WORKER]`는 별도 `session.worker` 이벤트다.
 
