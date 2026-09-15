@@ -1,0 +1,57 @@
+[
+ {
+  "iteration": 1,
+  "missing": {
+   "requirements": [],
+   "features": [],
+   "hypotheses": []
+  },
+  "scores": {
+   "goal": 2,
+   "adoption": 2,
+   "boundary": 2
+  },
+  "gaps": [
+   "S-9 조건 칸에 infra_error 상황 부재",
+   "S-7 redaction 실패 주입 조건 부재",
+   "S-11 timeout 분기 미분리"
+  ],
+  "verdict": "pass",
+  "reason": "converged",
+  "note": "pass이나 보완 권고 3건 — PM이 반영 후 2회차 재판정"
+ },
+ {
+  "iteration": 2,
+  "missing": {
+   "requirements": [],
+   "features": [],
+   "hypotheses": []
+  },
+  "scores": {
+   "goal": 2,
+   "adoption": 2,
+   "boundary": 2
+  },
+  "gaps": [],
+  "verdict": "pass",
+  "reason": "converged",
+  "note": "권고 3건 전건 해소 확인. 재량 권고 2건(S-26/S-27 후보2 가용화 명시, S-11 timeout 문장 이관)은 PM이 반영 — 시나리오 수·covers 불변, coverage-check exit 0 재확인"
+ },
+ {
+  "iteration": 3,
+  "missing": {
+   "requirements": [],
+   "features": [],
+   "hypotheses": []
+  },
+  "scores": {
+   "goal": 2,
+   "adoption": 2,
+   "boundary": 2
+  },
+  "gaps": [],
+  "verdict": "pass",
+  "reason": "converged",
+  "note": "표면 전수 conformance 엔트리 S-29~S-60 추가(28→60건) 후 재판정. coverage-check exit 0(all_covered, requirements 25/hypotheses 5/scenarios 60) + evaluator 3축 2/2/2. 평가자 권고 2건 PM 반영 — S-7 required_fidelity real-http→real-usage, S-13 profile null→api·required_evidence 5종(scenario.py:530-542 assertion_required 분기 진입). 시나리오 수·covers 불변이라 4회차 미호출"
+ }
+]

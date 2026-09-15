@@ -29,6 +29,9 @@
 #   v1.0 2026-09-13 신규 작성 — RED 단계 1회차 (opal-test-agent, mode: red) (127-T02)
 #   v2.0 2026-09-13 G ① fail 반영 전면 재작성 — F-1~F-9,F-11 수정, S-10~S-14 신설,
 #        픽스처 수명주기 규약·RED 관측 규약(pgrep 중첩+pkill 스텁) 도입 (127-T02)
+#   v2.1 2026-09-14 [B-신규] S-14를 구현 후 회귀 가드로 재정의해 2케이스 신설 —
+#        (a) 부팅-이후 started_at 왕복, (b) started_at 손상·공백 fail-open.
+#        기존 20 케이스와 [B-신규] S-13은 문언·기대값 무변경 (127-W-2)
 # =============================================================================
 
 set -euo pipefail
@@ -851,6 +854,152 @@ else
         kill -0 "$S7_P2_PID" 2>/dev/null && kill -KILL "$S7_P2_PID" 2>/dev/null || true
     fi
 fi
+
+# =============================================================================
+# 배치 B 신규 — task-127 배치 B (test-scenario.json S-13/S-14/S-16, AC-15/AC-16)
+# 주의: 위 (가)(나)(다) 그룹의 S-13/S-14 라벨은 T02 구scenario 트랙(PLAN.md 개정판)
+# 소속이며, 아래 섹션은 별도 SSOT(현재 태스크 test-scenario.json)의 동명 ID다.
+# 혼동 방지를 위해 아래 TC 문자열에 "[B-신규]"와 AC 번호를 명시한다.
+# =============================================================================
+printf '\n== [B-신규] AC-15/AC-16 (test-scenario.json S-13, S-14, S-16) ==\n\n'
+
+# --- [B-신규] S-13 (AC-15, C-2, H-1, 구현 전 RED) ---
+# 격리 OPAL_HOME에 started_at을 과거(부팅 이전이 확실한 값)로 둔 identity-일치
+# 생존 센티넬 레코드를 만들고 console stop을 호출한다. 기대(GREEN): 센티넬 생존,
+# stopped=false pid=<pid> reason=stale_record. 현재(RED): console.sh stop 분기가
+# started_at을 전혀 읽지 않으므로(console.sh:234-236) identity 일치+kill -0 생존
+# 판정표 #5/#6으로 빠져 센티넬을 실제로 SIGTERM한다 — stopped=true가 나와야 정상
+# RED로 관측된다.
+TC="[B-신규] S-13(AC-15): 부팅-이전 started_at + 생존 센티넬 → console stop 실행 시 센티넬 생존 유지 + stopped=false pid=<pid> reason=stale_record 기대"
+B13_USER_HEALTH_BEFORE="$(http_code "$USER_HEALTH_URL")"
+B13_HOME="$SCRATCH/b13-home/.opal"
+B13_APP_DIR="$B13_HOME/dashboard-server"
+mkdir -p -m 700 "$B13_HOME/run" "$B13_APP_DIR"
+bash -c 'while :; do sleep 1; done' &
+B13_SENTINEL_PID=$!
+SERVER_PIDS+=("$B13_SENTINEL_PID")
+sleep 0.3
+B13_RECORD="$B13_HOME/run/console.pid"
+# started_at은 console.sh의 실제 기록 포맷(date +%Y-%m-%dT%H:%M:%S%z)을 그대로 따르되
+# 값 자체는 시스템 부팅 시각보다 확실히 이른 과거로 둔다(부팅 시각 파싱 로직 부재
+# 하에서도 레코드 자체는 identity 판정에 유효해야 하므로 pid/app_dir/host/port는
+# 정상 값으로 채운다).
+printf '{"pid": %s, "opal_home": "%s", "app_dir": "%s", "host": "127.0.0.1", "port": 9990, "started_at": "2000-01-01T00:00:00+0000"}' \
+    "$B13_SENTINEL_PID" "$B13_HOME" "$B13_APP_DIR" > "$B13_RECORD"
+chmod 600 "$B13_RECORD"
+run_stop_stub "$B13_HOME"
+b13_alive=0
+kill -0 "$B13_SENTINEL_PID" 2>/dev/null && b13_alive=1
+B13_USER_HEALTH_AFTER="$(http_code "$USER_HEALTH_URL")"
+if [ "$b13_alive" -eq 1 ] \
+    && echo "$STOP_STDOUT" | grep -q 'stopped=false' \
+    && echo "$STOP_STDOUT" | grep -q "pid=$B13_SENTINEL_PID" \
+    && echo "$STOP_STDOUT" | grep -q 'reason=stale_record' \
+    && [ "$B13_USER_HEALTH_BEFORE" = "$B13_USER_HEALTH_AFTER" ]; then
+    pass "$TC"
+else
+    fail "$TC" "sentinel_alive=$b13_alive stdout='$STOP_STDOUT' user_health_before=$B13_USER_HEALTH_BEFORE user_health_after=$B13_USER_HEALTH_AFTER (RED 정상: started_at 부팅비교 미구현 — 센티넬이 실제 종료됨)"
+fi
+kill -9 "$B13_SENTINEL_PID" 2>/dev/null || true
+
+# --- [B-신규] S-14 (AC-15, H-1) — 구현 후 회귀 가드 ---
+# RED 단계에서는 "started_at을 해석하는 공개 인터페이스 부재로 실패를 관측할 수
+# 없다"는 사유로 BLOCKED 반환되었다. PM이 S-14를 RED 대상에서 제외하고 구현 후
+# 회귀 가드로 재정의함에 따라, 부팅-이전 판정이 구현된 지금 아래 2케이스로
+# 되살린다. 단언은 전적으로 `console stop`의 stdout key=value와 프로세스 생존
+# 으로만 한다 — 비공개 헬퍼명(_console_boot_epoch 등)에 의존하지 않는다.
+
+# (a) 왕복: console.sh 자신의 writer가 기록한 started_at(= 부팅 이후)은 stale로
+#     오판정되지 않고 기존 판정 #5로 내려가 실제 종료에 도달해야 한다.
+TC="[B-신규] S-14(a): writer가 기록한 부팅-이후 started_at 레코드 + 생존 센티넬 → stopped=true + 센티넬 종료 (기록 포맷 왕복, 부팅-이후 오판정 없음)"
+B14A_HOME="$SCRATCH/b14a-home/.opal"
+B14A_APP_DIR="$B14A_HOME/dashboard-server"
+mkdir -p "$B14A_APP_DIR"
+bash -c 'while :; do sleep 1; done' &
+B14A_PID=$!
+SERVER_PIDS+=("$B14A_PID")
+sleep 0.3
+write_record "$B14A_HOME" "$B14A_APP_DIR" 127.0.0.1 9989 "$B14A_PID" || true
+B14A_RECORD="$B14A_HOME/run/console.pid"
+if [ ! -f "$B14A_RECORD" ]; then
+    fail "$TC" "픽스처 레코드 생성 실패: $B14A_RECORD"
+else
+    run_stop_stub "$B14A_HOME"
+    sleep 1
+    b14a_alive=0; kill -0 "$B14A_PID" 2>/dev/null && b14a_alive=1
+    # 신규 reason 토큰 0건: stopped=true 경로는 reason= 를 출력하지 않으며,
+    # console.sh 전체의 reason 토큰 집합도 기존 5종을 벗어나지 않아야 한다.
+    b14a_reason_tokens="$(grep -o 'reason=[a-z_]*' "$CONSOLE_SH" | sort -u | tr '\n' ',' || true)"
+    b14a_expected_tokens="reason=identity_mismatch,reason=no_record,reason=stale_record,reason=terminate_timeout,reason=unreadable_record,"
+    if [ "$b14a_alive" -eq 0 ] \
+        && echo "$STOP_STDOUT" | grep -q 'stopped=true' \
+        && echo "$STOP_STDOUT" | grep -q "pid=$B14A_PID" \
+        && ! echo "$STOP_STDOUT" | grep -q 'reason=' \
+        && [ ! -f "$B14A_RECORD" ] \
+        && [ "$b14a_reason_tokens" = "$b14a_expected_tokens" ]; then
+        pass "$TC"
+    else
+        fail "$TC" "sentinel_alive=$b14a_alive(expect0) stdout='$STOP_STDOUT' record_exists=$([ -f "$B14A_RECORD" ] && echo yes || echo no) reason_tokens='$b14a_reason_tokens' (expected='$b14a_expected_tokens')"
+    fi
+fi
+kill -9 "$B14A_PID" 2>/dev/null || true
+
+# (b) fail-open: started_at이 손상되었거나 공백이면 부팅-이전 판정을 내리지 못하므로
+#     stale로 오판정하지 않고 기존 판정 경로(#5)를 그대로 유지해야 한다(D-8).
+TC="[B-신규] S-14(b): started_at 손상·공백 레코드 + 생존 센티넬 → 파싱 실패 fail-open으로 기존 판정 유지 → stopped=true (stale 오판정 없음)"
+b14b_all_ok=1
+b14b_detail=""
+for b14b_case in corrupt blank; do
+    b14b_home="$SCRATCH/b14b-$b14b_case-home/.opal"
+    b14b_app_dir="$b14b_home/dashboard-server"
+    mkdir -p -m 700 "$b14b_home/run" "$b14b_app_dir"
+    bash -c 'while :; do sleep 1; done' &
+    b14b_pid=$!
+    SERVER_PIDS+=("$b14b_pid")
+    sleep 0.3
+    if [ "$b14b_case" = "corrupt" ]; then
+        b14b_started="not-a-timestamp"
+    else
+        b14b_started="   "
+    fi
+    b14b_record="$b14b_home/run/console.pid"
+    printf '{"pid": %s, "opal_home": "%s", "app_dir": "%s", "host": "127.0.0.1", "port": 9988, "started_at": "%s"}' \
+        "$b14b_pid" "$b14b_home" "$b14b_app_dir" "$b14b_started" > "$b14b_record"
+    chmod 600 "$b14b_record"
+    run_stop_stub "$b14b_home"
+    sleep 1
+    b14b_alive=0; kill -0 "$b14b_pid" 2>/dev/null && b14b_alive=1
+    if [ "$b14b_alive" -eq 0 ] \
+        && echo "$STOP_STDOUT" | grep -q 'stopped=true' \
+        && echo "$STOP_STDOUT" | grep -q "pid=$b14b_pid" \
+        && ! echo "$STOP_STDOUT" | grep -q 'reason=stale_record'; then
+        :
+    else
+        b14b_all_ok=0
+        b14b_detail="$b14b_detail [$b14b_case] alive=$b14b_alive(expect0) stdout='$STOP_STDOUT';"
+    fi
+    kill -9 "$b14b_pid" 2>/dev/null || true
+done
+if [ "$b14b_all_ok" -eq 1 ]; then
+    pass "$TC"
+else
+    fail "$TC" "$b14b_detail"
+fi
+
+# --- [B-신규] S-16 (AC-16, C-7 — 전제 불일치, RED 아님) ---
+# 근거: 현재 .gitignore(REPO_ROOT/.gitignore)에 이미 `.oppl-run/` 항목이 존재한다
+# (커밋 710800d "feat(126): OPAL WorkStudio 독립 앱 구축"에서 도입, 이 태스크
+# 범위 밖). 디스패치 지시가 금지한 .gitignore 수정 없이 실측한 결과, 신규
+# .oppl-run/ 산출물을 만들어도 git status --porcelain에 나타나지 않아 AC-16이
+# 이미 충족된 상태다 — RED(실패)를 관측할 수 없다(전제 불일치). 아래는 그 실측
+# 재현 절차이며 결과를 PASS로 기록하지 않고 시나리오 전제 불일치로 PM에 보고한다.
+TC="[B-신규] S-16(AC-16, 전제불일치): .oppl-run/ 산출물이 git status --porcelain에 나타나지 않음 — 이미 충족, RED 관측 불가"
+B16_TESTDIR="$REPO_ROOT/.oppl-run/batchB-probe-$$"
+mkdir -p "$B16_TESTDIR"
+echo probe > "$B16_TESTDIR/file.txt"
+B16_STATUS_OUT="$(cd "$REPO_ROOT" && git status --porcelain | grep -c 'oppl-run' || true)"
+rm -rf "$B16_TESTDIR"
+echo "[BLOCKED-전제불일치] $TC — git status --porcelain 매치 수: $B16_STATUS_OUT (0이면 이미 충족)"
 
 # ---------------- C-2 가드: 사용자 7823 health 스위트 종료 시점 기록 ----------------
 USER_HEALTH_AFTER="$(http_code "$USER_HEALTH_URL")"

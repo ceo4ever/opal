@@ -103,13 +103,6 @@ def _infer_from_package_json(project_root: pathlib.Path) -> Optional[Dict[str, A
                     "via": "cmux-tool",
                     "candidate_on": "provider_unavailable",
                 },
-                {
-                    "name": "playwright",
-                    "executor": "browser",
-                    "profiles": ["browser", "hybrid", "collaborative"],
-                    "priority": 2,
-                    "candidate_on": "provider_unavailable",
-                },
             ]
         },
     }
@@ -151,13 +144,6 @@ def _infer_from_pyproject(project_root: pathlib.Path) -> Optional[Dict[str, Any]
                     "profiles": ["browser", "hybrid", "collaborative"],
                     "priority": 1,
                     "via": "cmux-tool",
-                    "candidate_on": "provider_unavailable",
-                },
-                {
-                    "name": "playwright",
-                    "executor": "browser",
-                    "profiles": ["browser", "hybrid", "collaborative"],
-                    "priority": 2,
                     "candidate_on": "provider_unavailable",
                 },
             ],

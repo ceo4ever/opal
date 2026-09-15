@@ -21,15 +21,11 @@ oppl의 검증은 두 개의 서로 직교하는 축으로 구성된다.
 
 > 검증 3-tier(§2)·2원화(§3)가 "무엇을·언제·누가" 판정하는지를 규정한다면, 본 절은 "어떤 실행 환경에서 관찰된 결과라야 인정하는가"를 규정한다 — 목(mock) 상대 GREEN과 실 서버·실 브라우저 GREEN을 동일한 "verified"로 집계하는 갭을 봉쇄한다(069).
 
-### 1.5.1 충실도 3단계 정의
+### 1.5.1 충실도 단계 — 정의 소유권
 
-| 단계 | 정의 |
-|------|------|
-| `mock` | 목(mock) 상대 테스트 코드 — 단위(unit) 수준. 실 네트워크·실 서버·실 브라우저 미개입. |
-| `real-http` | 실 서버 기동 + 계약 spec(예: OpenAPI/스웨거) 기반 실 HTTP 전수 conformance. auth 표면은 실 로그인 토큰 체인(로그인 → 토큰 → Authorization 헤더)을 포함해야 한다. |
-| `real-usage` | `test-tool` E2E contract가 정의한 profile별 실제 공개 표면 실행 — Browser·API·Hybrid·Collaborative·Manual 각각의 필수 executor, 구조화 assertion expected/actual, required/observed evidence를 충족해야 한다. |
+[MUST] 충실도 단계의 **정의와 순서는 `test-tool` fidelity 계약이 단독 소유한다** — 공개 상수 `opal/tools/test-tool/lib/scenario.py`의 `FIDELITY_ORDER`와 `test-tool` E2E contract가 SSOT다. 본 문서는 그 계약을 **참조만** 하며 단계의 의미·순서·승격 조건을 여기서 정의하지 않는다.
 
-사다리 순서는 `mock(0) < real-http(1) < real-usage(2)`이며, 상위 단계가 하위 단계를 포함(subsume)한다.
+각 단계가 무엇을 요구하는지(필수 executor, 구조화 assertion `expected`/`actual`, `required_evidence`/`observed_evidence`, 승격 차단 조건)는 계약 문서와 `opal/tools/test-tool/README.md`에서 확인한다. 본 절 이하는 그 단계들을 oppl 루프의 **어디에 적용하는가**만 규정한다.
 
 ### 1.5.2 BE/FE 매핑
 
@@ -40,7 +36,7 @@ oppl의 검증은 두 개의 서로 직교하는 축으로 구성된다.
 
 ### 1.5.3 [MUST] done 규범
 
-완료(done)의 최종 증거는 사용자가 실제 접촉하는 방식과 같은 충실도에서 관찰된 것만 인정한다. 사용자 접촉 표면·여정은 real-usage PASS ≥1 없이 done을 인정하지 않는다.
+완료(done)의 최종 증거는 사용자가 실제 접촉하는 방식과 같은 충실도에서 관찰된 것만 인정한다. 사용자 접촉 표면·여정은 `test-tool` fidelity 계약이 정의한 최상위 단계(`real-usage`) PASS ≥1 없이 done을 인정하지 않는다. 그 단계의 충족 여부 판정은 계약 소유자인 `test-tool`이 내리며, 본 문서는 판정 결과를 done 게이트에 적용할 뿐 승격 조건을 재정의하지 않는다.
 
 ### 1.5.4 [MUST] 실행 주체
 

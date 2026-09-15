@@ -19,7 +19,6 @@ SAMPLE_DOCTOR_OUTPUT = """[OPAL Doctor]
   ✓ Node.js v25.8.2
   ✓ python3 3.14.3
   ✓ curl 8.7.1
-  ✓ playwright (npx @playwright/mcp)
 
 [2/4] OPAL Paths
   ✓ /Users/test/.opal/AGENT.md
@@ -28,14 +27,14 @@ SAMPLE_DOCTOR_OUTPUT = """[OPAL Doctor]
   ⚠ agents dir missing
 
 [3/4] MCP Registration
-  ✓ Claude: context7,playwright,shadcn
+  ✓ Claude: context7,shadcn,sequential-thinking
   ✗ Cursor: not registered
 
 [4/4] Bootstrappers
   ✓ /Users/test/.claude/CLAUDE.md (OPAL marker)
   ✓ /Users/test/.cursor/rules/000-opal-agent.mdc
 
-판정: 1 ✗ found (19 ✓, 1 ⚠, 1 ✗ / 총 21건)
+판정: 1 ✗ found (18 ✓, 1 ⚠, 1 ✗ / 총 20건)
 """
 
 

@@ -3,7 +3,7 @@
   "module": "test_tool",
   "layer": "util",
   "domain": "opal-tools",
-  "description": "test-tool CLI — resolve/check/unit/integration 및 scenario-* argparse 라우터 + ERROR_CODES 카탈로그 + JSON 출력 헬퍼.",
+  "description": "test-tool CLI — resolve/check/unit/integration · e2e · scenario-* argparse 라우터 + ERROR_CODES 카탈로그 + JSON 출력 헬퍼.",
   "exports": [
     "main",
     "ERROR_CODES"
@@ -41,6 +41,7 @@ from lib.runner import run_check, run_unit_layers
 from lib.e2e_adapter import run_integration as _run_integration
 from lib.e2e_contract import status_to_exit
 from lib.scenario import add_scenario_subparsers, SCENARIO_DISPATCH
+from lib.e2e.target import TARGET_KINDS
 
 # ─────────────────────────────────────────────────────────────────────────────
 # ERROR_CODES 카탈로그 (SSOT) — 모든 error 응답 값은 이 키를 사용한다.
@@ -53,12 +54,32 @@ ERROR_CODES: Dict[str, str] = {
     "no_runner":          "test-tools.yaml 없음 + package.json/pyproject.toml 추론 불가",
     "required_missing":   "required 도구 미설치 — check 게이트 차단",
     "layer_failed":       "unit 계층 실패 (stop-on-fail) — lint/typecheck/unit 중 한 계층 실패",
-    "e2e_failed":         "E2E 테스트 실패 — cmux/playwright 모두 실패",
+    "e2e_failed":         "E2E 테스트 실패 — browser executor 후보 전건 실패",
     "escalation":         "cmux-tool 에스컬레이션 에러코드 — 폴백 금지, 호출자 수정 필요",
     "e2e_infra_error":    "E2E 실행 인프라 오류 — provider 오류 또는 환경 오류",
     "executor_unavailable": "E2E executor 후보 소진 — 실행 수단 없음",
     "e2e_blocked":        "E2E 외부 조건 차단",
     "e2e_awaiting_human": "E2E 사람 입력 대기 — 재개 가능한 중간 상태",
+    # e2e run 진입 오류 — 최종 status·error·exit는 e2e_contract가 소유하므로, 아래 키는
+    # run.json/stdout의 `detail_code`에만 실린다(CONTRACT.md 계약 규칙 C-125-1).
+    "e2e_target_invalid":            "--target이 3종 enum도 실재 디렉터리도 아님",
+    "e2e_opal_home_required":        "--target=installed인데 --opal-home 미지정",
+    "e2e_opal_home_unprepared":      "--opal-home 트리 미준비 — 하네스는 install을 호출하지 않음",
+    "e2e_opal_home_is_user_owned":   "--opal-home이 사용자 실제 ~/.opal과 동일 — 거부",
+    "e2e_port_lease_failed":         "포트 임대 실패 — allocator lock 또는 가용 포트 소진",
+    "e2e_run_id_exhausted":          "당일 run_id 순번 소진",
+    "e2e_scenario_not_found":        "test-scenario.json 또는 해당 시나리오 id 없음",
+    "e2e_scenario_contract_invalid": "시나리오가 schema_version 2.0 계약을 만족하지 않음",
+    "e2e_sut_startup_failed":        "임대 포트 위 SUT 기동·health 실패",
+    "e2e_no_executor_registered":    "등록된 executor 후보 0 — 후보 소진",
+    "e2e_scenario_runner_absent":    "시나리오 step 실행기 미등록",
+    "e2e_executor_contract_mismatch": "profile이 요구하는 executor를 시나리오 step이 갖지 않음 — 실행 전 정적 거부(CONTRACT.md §C.4)",
+    "e2e_step_executor_not_selected": "시나리오 step이 요구한 executor가 선택된 후보에 없음",
+    "e2e_core_ui_behavior_substituted_by_api": "핵심 UI 행동의 검증을 step_role=verify API step이 대체 — real-usage 미승격(§C.4)",
+    # §B.1.3 조회 명령의 대상 부재. 새 exit 값을 배정하지 않고 기존 usage 오류 코드를 쓴다.
+    "run_not_found":                 "지정한 run_id·artifact-dir에 해당하는 run 산출물 없음",
+    "e2e_resume_state_not_found":    "재개 대상 run의 handoff 색인 없음 — awaiting_human 정지 이력 부재",
+    "e2e_resume_token_expired":      "resume token 만료 — timeout은 fail이 아니라 blocked (C-HUM-2)",
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -189,6 +210,75 @@ def cmd_integration(args: argparse.Namespace) -> None:
     sys.exit(status_to_exit(status or ("pass" if result.get("ok") else "fail")))
 
 
+def cmd_e2e(args: argparse.Namespace) -> None:
+    """e2e 서브명령군 라우터 — `run`·`resume`·`status`·`clean`(§B.1.1~§B.1.4).
+
+    `run`·`resume`의 exit은 `status_to_exit()` 결과로만 결정한다. 재시도 루프를 내장하지
+    않는다. `status`·`clean`은 조회·정리 명령이므로 exit `0`이며(§B.1.3·§B.1.4) 새 exit
+    값을 배정하지 않는다 — `clean`의 `infra_error` 승격도 payload로만 알린다.
+    """
+    from lib.e2e.orchestrator import run_e2e
+
+    if args.e2e_command == "status":
+        from lib.e2e.orchestrator import run_status
+
+        found = run_status(
+            run_id=getattr(args, "run_id", None),
+            artifact_dir=getattr(args, "artifact_dir", None),
+            artifact_root=getattr(args, "artifact_root", None),
+        )
+        if found.get("error"):
+            # §B.1.3 — 대상 부재는 기존 도구의 usage 오류 코드를 쓴다.
+            _error(found["error"], detail=f"run_id={found.get('run_id')!r}", command="e2e status")
+            return
+        _respond(found, 0)
+        return
+
+    if args.e2e_command == "clean":
+        from lib.e2e.orchestrator import run_clean
+
+        cleaned = run_clean(
+            run_id=getattr(args, "run_id", None),
+            stale=bool(getattr(args, "stale", False)),
+            artifact_root=getattr(args, "artifact_root", None),
+            dry_run=bool(getattr(args, "dry_run", False)),
+        )
+        if cleaned.get("error") == "run_not_found":
+            _error(cleaned["error"], detail=f"run_id={cleaned.get('run_id')!r}", command="e2e clean")
+            return
+        _respond(cleaned, 0)
+        return
+
+    if args.e2e_command == "resume":
+        # §B.1.2 — 판정은 여기서 만들지 않는다. human executor가 scenario.py의 기존
+        # resume 검증(:482-528)을 호출하고 그 결과를 payload로 옮긴다(TRD.md TD-18).
+        from lib.e2e.executors.human import run_resume
+
+        resumed = run_resume(
+            run_id=args.run_id,
+            token=args.token,
+            submission=args.submission,
+            artifact_root=getattr(args, "artifact_root", None),
+        )
+        _respond(resumed, resumed["exit_code"])
+        return
+
+    if args.e2e_command != "run":
+        _error("no_runner", detail=f"unknown e2e subcommand: {args.e2e_command}", command="e2e")
+        return
+
+    payload = run_e2e(
+        target=args.target,
+        scenario_id=args.scenario,
+        task_path=args.task_path,
+        worktree_root=getattr(args, "worktree_root", None),
+        opal_home=getattr(args, "opal_home", None),
+        artifact_root=getattr(args, "artifact_root", None),
+        run_id=getattr(args, "run_id", None),
+    )
+    _respond(payload, payload["exit_code"])
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # argparse 설정
 # ─────────────────────────────────────────────────────────────────────────────
@@ -218,10 +308,60 @@ def _build_parser() -> argparse.ArgumentParser:
     p_unit.add_argument("--project-root", metavar="PATH", help="프로젝트 루트 경로")
 
     # integration
-    p_integration = subparsers.add_parser("integration", help="cmux-tool → playwright 폴백 E2E + api_db")
+    p_integration = subparsers.add_parser("integration", help="cmux-tool 우선 browser 후보 전환 E2E + api_db")
     p_integration.add_argument("--scope", choices=["fe", "be"], default="be", help="실행 범위 (fe|be)")
     p_integration.add_argument("--url", metavar="URL", help="SUT URL (dev서버/localhost)")
     p_integration.add_argument("--project-root", metavar="PATH", help="프로젝트 루트 경로")
+
+    # e2e — 임대 SUT 위 1회 실행·판정 (CONTRACT.md §B.1)
+    p_e2e = subparsers.add_parser("e2e", help="E2E 하네스 — 임대 포트 SUT 위 1회 실행·판정")
+    e2e_sub = p_e2e.add_subparsers(dest="e2e_command", required=True)
+    p_e2e_run = e2e_sub.add_parser("run", help="대상 소스를 해석하고 포트를 임대해 1회 실행한다")
+    # §B.1.1 표 — --scenario·--task-path·--target 필수, 나머지 조건부/선택.
+    p_e2e_run.add_argument("--scenario", required=True, metavar="ID",
+                           help="test-scenario.json의 시나리오 id (schema_version 2.0)")
+    p_e2e_run.add_argument("--task-path", required=True, metavar="PATH", help="태스크 폴더 절대경로")
+    p_e2e_run.add_argument("--target", required=True, choices=list(TARGET_KINDS),
+                           help="대상 소스 3종")
+    p_e2e_run.add_argument("--worktree-root", metavar="PATH",
+                           help="--target=source-worktree일 때 (미지정 시 git rev-parse --show-toplevel)")
+    p_e2e_run.add_argument("--opal-home", metavar="PATH", help="--target=installed일 때 준비된 격리 OPAL_HOME")
+    p_e2e_run.add_argument("--artifact-root", metavar="PATH", help="산출물·lease 루트 (기본 ${TMPDIR}/opal-e2e-runs)")
+    p_e2e_run.add_argument("--run-id", metavar="ID", help="run_id 지정 (미지정 시 생성)")
+
+    # §B.1.2 표 — --run-id·--token·--submission 필수, --artifact-root만 선택.
+    p_e2e_resume = e2e_sub.add_parser(
+        "resume", help="awaiting_human으로 정지한 run을 동일 run-id·resume token으로 재개한다"
+    )
+    p_e2e_resume.add_argument("--run-id", required=True, metavar="ID", help="정지한 run의 run_id")
+    p_e2e_resume.add_argument("--token", required=True, metavar="TOKEN", help="handoff가 발행한 resume token")
+    p_e2e_resume.add_argument("--submission", required=True, metavar="PATH",
+                              help="CONTRACT.md §A.10 스키마 제출물 JSON 경로")
+    p_e2e_resume.add_argument("--artifact-root", metavar="PATH", help="산출물·lease 루트 (기본 ${TMPDIR}/opal-e2e-runs)")
+
+    # §B.1.3 표 — (--run-id | --artifact-dir) 택일 + --artifact-root 선택. 조회 명령이므로
+    # 아무것도 변경하지 않으며 exit은 0이다.
+    p_e2e_status = e2e_sub.add_parser(
+        "status", help="지정 run의 상태·증적 경로·소유 자원을 조회한다 (변경 없음)"
+    )
+    status_target = p_e2e_status.add_mutually_exclusive_group(required=True)
+    status_target.add_argument("--run-id", metavar="ID", help="조회할 run의 run_id")
+    status_target.add_argument("--artifact-dir", metavar="PATH", help="run 산출물 디렉터리 직접 지정")
+    p_e2e_status.add_argument("--artifact-root", metavar="PATH", help="산출물·lease 루트 (기본 ${TMPDIR}/opal-e2e-runs)")
+
+    # §B.1.4 표 — (--run-id | --stale) 택일 + --artifact-root·--dry-run 선택.
+    # [MUST] 회수 대상은 owned.json 대장에 오른 자원뿐이며(TD-15) 프로세스 이름 패턴
+    # 매칭을 쓰지 않고 opal-cli의 console PID 파일을 보지 않는다(§C.1).
+    p_e2e_clean = e2e_sub.add_parser(
+        "clean", help="owned.json 대장에 오른 자원만 회수한다 (user_owned=true는 제외)"
+    )
+    clean_target = p_e2e_clean.add_mutually_exclusive_group(required=True)
+    clean_target.add_argument("--run-id", metavar="ID", help="정리할 run의 run_id")
+    clean_target.add_argument(
+        "--stale", action="store_true", help="owner_pid가 죽은 lease record와 그에 딸린 프로세스 그룹 회수"
+    )
+    p_e2e_clean.add_argument("--artifact-root", metavar="PATH", help="산출물·lease 루트 (기본 ${TMPDIR}/opal-e2e-runs)")
+    p_e2e_clean.add_argument("--dry-run", action="store_true", help="회수 대상만 계산하고 실제로 회수하지 않는다")
 
     # scenario-init / scenario-lock / scenario-mark / scenario-status (lib/scenario.py로 격리)
     add_scenario_subparsers(subparsers)
@@ -242,6 +382,7 @@ def main() -> None:
         "check": cmd_check,
         "unit": cmd_unit,
         "integration": cmd_integration,
+        "e2e": cmd_e2e,
         **SCENARIO_DISPATCH,
     }
 

@@ -1027,24 +1027,8 @@ function Install-OpalVenv {
         Write-OpalWarn "pip install 부분 실패 (upgrade=$pipUpgradeExit, install=$pipInstallExit) — 일부 패키지 누락 가능"
     }
 
-    # Playwright 브라우저 — chromium 미설치 시에만 안내 (자동 설치 안 함, 다운로드 시간/대역폭 부담)
-    $playwrightExe = [IO.Path]::Combine($venvDir, 'Scripts', 'playwright.exe')
-    if (Test-Path $playwrightExe) {
-        $pwBrowsersDir = if ($env:PLAYWRIGHT_BROWSERS_PATH) {
-            $env:PLAYWRIGHT_BROWSERS_PATH
-        } else {
-            Join-Path $env:LOCALAPPDATA 'ms-playwright'
-        }
-        $hasChromium = $false
-        if (Test-Path $pwBrowsersDir) {
-            $chromiumDir = Get-ChildItem -Path $pwBrowsersDir -Filter 'chromium-*' -Directory -ErrorAction SilentlyContinue | Select-Object -First 1
-            if ($chromiumDir) { $hasChromium = $true }
-        }
-        if (-not $hasChromium) {
-            Write-OpalInfo 'Playwright 브라우저 설치 (선택, 약 200MB):'
-            Write-OpalInfo "  & `"$playwrightExe`" install chromium"
-        }
-    }
+    # Playwright 브라우저는 기본 설치 대상이 아니다 (opt-in) — 안내도 하지 않는다.
+    # 이미 캐시를 보유한 사용자의 자산($env:LOCALAPPDATA\ms-playwright)은 그대로 보존한다.
 }
 
 # ─── Install-Dashboard (install-mac.sh install_dashboard 이식) ─────────────

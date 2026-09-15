@@ -63,7 +63,7 @@ Phase 3: DESIGN    워커       op-sdd-plan → SPEC-PLAN.md (아키텍처 + ACT
                               PM Gate → 사용자 Gate
 Phase 4: EXECUTE   ACT 루프   사용자 Gate → opal-sdd-action-agent 디스패치
                               → 결과 수신 → DONE.md
-Phase 5: VERIFY    PM 직접    Playwright E2E → TEST-SCENARIOS.md 추적 매트릭스 갱신
+Phase 5: VERIFY    PM 직접    test-tool E2E → TEST-SCENARIOS.md 추적 매트릭스 갱신
                               → 전체 TS Green 확인 → 사용자 Gate (= CLOSE 진입 게이트)
 Phase 6: CLOSE     PM 직접    최종 확인 → DONE.md 생성
 ```
@@ -286,7 +286,7 @@ ACT 완료마다 state-tool을 호출하여 파이프라인 행(`state.json`)을
 - Gate: PM Gate → 사용자 Gate
 
 ### 수행 절차
-1. TEST-SCENARIOS.md의 모든 시나리오를 Playwright E2E로 수행
+1. TEST-SCENARIOS.md의 모든 시나리오를 `test-tool` E2E로 수행 (browser executor 후보 선택은 test-tool E2E contract가 소유한다)
 2. 각 시나리오 Pass/Fail 확인 즉시 TEST-SCENARIOS.md 추적 매트릭스 갱신 (배치 금지)
 3. STATE.md TS 현황 요약 갱신 (Green/Red/Fail/Skip 건수)
 
@@ -429,7 +429,7 @@ TASK (사용자 승인)
   → REVIEW           -- 사용자 승인 (구조검증 + TS작성 + 커버리지)
   → DESIGN Gate      -- 사용자 승인 (모드 경계)
   → EXECUTE-LOOP     -- PM 자율 관리 (ACT별 Gate + L1/L2 검증 포함)
-  → VERIFY           -- PM 직접 수행 (Playwright E2E + TS 전체 Green 확인 + 사용자 Gate = CLOSE 진입 게이트)
+  → VERIFY           -- PM 직접 수행 (test-tool E2E + TS 전체 Green 확인 + 사용자 Gate = CLOSE 진입 게이트)
   → CLOSE            -- (사용자 승인 후) DONE.md 생성 + 최종 보고
 ```
 
@@ -441,7 +441,7 @@ TASK (PM 직접)
   → REVIEW           -- PM 직접 수행 (구조검증 + TS작성 + 커버리지)
   → DESIGN Gate      -- PM 자율 검토
   → EXECUTE-LOOP     -- PM 자율 관리 (ACT별 Gate + L1/L2 검증 포함)
-  → VERIFY           -- PM 직접 수행 (Playwright E2E + TS 전체 Green 확인 + 사용자 Gate = CLOSE 진입 게이트)
+  → VERIFY           -- PM 직접 수행 (test-tool E2E + TS 전체 Green 확인 + 사용자 Gate = CLOSE 진입 게이트)
   → CLOSE            -- (사용자 승인 후) DONE.md 생성 + 최종 보고
 ```
 

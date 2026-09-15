@@ -137,7 +137,7 @@ tiers:
             runner 후보는 Browser executor provider이며, `provider_unavailable`
             결과에서만 다음 후보를 시도할 수 있다.
           item_fields:
-            name:     "도구 이름 (예: cmux | playwright)"
+            name:     "도구 이름 (기본 후보는 cmux. 추가 browser provider는 opt-in 선언)"
             executor: "executor type (browser | api | human)"
             profiles: "이 후보가 지원하는 profile 목록"
             priority: "동일 executor 내 우선순위"
@@ -217,7 +217,7 @@ scenario_type_mapping:
     - scenario_type: 브라우저 UI / E2E 검증
       tier: integration
       category: e2e
-      note: cmux 1순위 → playwright 폴백
+      note: cmux 1순위. 추가 browser provider는 opt-in 선언 시 후보 전환
     - scenario_type: 린트
       tier: unit
       category: lint

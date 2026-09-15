@@ -32,7 +32,7 @@
 - 컴포넌트 렌더링 및 스냅샷 테스트
 - 사용자 인터랙션 시나리오 (클릭, 입력, 탐색)
 - 접근성(Accessibility) 검사 — 프로젝트가 채택한 접근성 기준과 테스트 러너로 확인한다
-- 브라우저 기반 E2E (Playwright / Cypress)
+- 브라우저 기반 E2E (`test-tool` E2E contract의 browser executor 후보)
 - 스킵: API 직접 호출, DB 레벨 검증
 
 ### E2E mode 집중 영역

@@ -127,7 +127,9 @@ tiers:
     # Browser 후보 전환은 provider_unavailable에서만 허용한다.
     e2e:
       - { name: cmux, executor: browser, profiles: [browser, hybrid, collaborative], priority: 1, via: cmux-tool, candidate_on: provider_unavailable }
-      - { name: playwright, executor: browser, profiles: [browser, hybrid, collaborative], priority: 2, candidate_on: provider_unavailable }
+      # [opt-in] 추가 browser provider는 기본 생성하지 않는다. 별도 설치 후 아래 형태로
+      # 직접 선언하면 cmux 실패(provider_unavailable) 시 다음 후보로 참여한다.
+      # - { name: playwright, executor: browser, profiles: [browser, hybrid, collaborative], priority: 2, candidate_on: provider_unavailable }
     e2e_profiles:
       browser: { required: [browser], allowed: [browser] }
       api: { required: [api], allowed: [api] }

@@ -146,7 +146,9 @@ TRD가 "무엇을 어디에 만들지"까지 정했고(`TRD.md` §범위 경계:
 | `excluded_by` | string \| null | 필수(nullable) | `outcome=excluded`일 때 `minimum_version` \| `capability_missing`. **`tested_range` 밖 binary의 probe 실패는 `excluded`가 아니라 `outcome=infra_error`다**(§A.15·§C.7·제안서 §11) |
 | `reason` | string \| null | 필수(nullable) | 후보가 반환한 error code 원문. 하네스가 재작문하지 않는다(NR-7) |
 
-[MUST] `outcome=selected`인 원소는 **정확히 0개 또는 1개**다. 0개이면 `status`는 `executor_unavailable`이어야 한다(`e2e_contract.py:269-273` `can_try_next_provider` 소진 경로).
+[MUST] `outcome=selected`인 원소는 **필요 executor 타입마다 정확히 0개 또는 1개**다. 필요 타입 집합은 `e2e_contract.EXECUTOR_MATRIX[profile]["required"]`가 소유한다 — 단일 타입 profile(`browser`·`api`·`manual`)에서는 배열 전체가 0개 또는 1개이고, `hybrid`(`api`+`browser`)처럼 복수 타입을 요구하는 profile에서는 타입별로 1개씩이므로 배열에 2개가 올 수 있다. 필요 타입 중 하나라도 selected가 0개이면 `status`는 `executor_unavailable`이어야 한다(`e2e_contract.py:269-273` `can_try_next_provider` 소진 경로).
+
+> **개정 경위(PM, 2026-09-15)**: 최초 문언은 배열 전체를 0/1로 규정해 `EXECUTOR_MATRIX["hybrid"]["required"] == ("api","browser")`와 충돌했다. `EXECUTOR_MATRIX`는 `e2e_contract.py:57`에 있고 C-1이 이 파일을 변경 0으로 동결하므로 hybrid의 2종 요구는 움직일 수 없다. 태스크 125가 확정한 상위 계약이 이 태스크 문서보다 우선하므로 이 문서를 타입별 규정으로 정정한다. 타입별 상한 1개라는 제약 자체는 약화되지 않는다.
 
 `run.json`에 새 상태값이나 새 exit 값이 등장하지 않는 것이 NR-1 준수의 관측 지점이다(`TRD.md` §5.1).
 
@@ -858,7 +860,7 @@ Console FE가 웹 클라이언트이므로 허용 origin을 선언한다([MUST] 
 | MV-38 | `run.json.candidates[]`(A.1.2)에서 `outcome=infra_error`인 원소의 `order`보다 **큰 `order`를 가진 원소가 존재하지 않는다** — 즉 `infra_error` 이후 후보 시도 기록이 0건이다 | `candidates[]` order 검사 | `TRD.md` TD-13, C-3, A.1.2 |
 | MV-39 | `user_owned==true`인 자원이 `cleanup.json.released[]`에 없고 `skipped_user_owned[]`에 있다 | 집합 검사 | C-2, R-8 |
 | MV-40 | `hybrid` run에서 `observed_executors`에 `browser`가 없으면 `pass`가 되지 않는다 | 부정 케이스 | R-12, AC-8, `e2e_contract.py:311-321` |
-| MV-41 | `run.json.candidates[]`에서 `outcome=="selected"`인 원소가 **0개 또는 1개**이고, 0개이면 `run.json.status == "executor_unavailable"`이다 | 개수·상호 검사 | A.1.2 [MUST], `e2e_contract.py:269-273` |
+| MV-41 | `run.json.candidates[]`에서 `outcome=="selected"`인 원소가 **필요 executor 타입마다 0개 또는 1개**이고(필요 타입 집합은 `EXECUTOR_MATRIX[profile]["required"]`), 필요 타입 중 하나라도 0개이면 `run.json.status == "executor_unavailable"`이다 | 타입별 개수·상호 검사 | A.1.2 [MUST], `e2e_contract.py:269-273` |
 | MV-42 | `lib/e2e/drivers/manifest.json`이 `schema_version`과 `drivers.<name>.{minimum_version, tested_range, ci_pin}`를 갖고, 세 버전 값이 semver로 파싱된다 | 키 존재 + semver 파싱 | A.15 [MUST] |
 
 ### D.3 게이트 실행 시점

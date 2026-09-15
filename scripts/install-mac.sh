@@ -1291,13 +1291,6 @@ install_opal() {
         install_dir "$opal_dir/tools" "$opal_home/tools" "OPAL 도구"
         strip_deploy_md_recursive "$opal_home/tools"
 
-        # ── playwright-tool 실행 권한 ──
-        local playwright_run="$opal_home/tools/playwright-tool/run.sh"
-        if [[ -f "$playwright_run" ]]; then
-            chmod +x "$playwright_run"
-            success "playwright-tool run.sh 실행 권한 설정"
-        fi
-
         # ── state-tool 실행 권한 (TASK F-20 / PLAN §1.5 M-41 / §1 D-16 / §3 Step 15) ──
         local state_run="$opal_home/tools/state-tool/run.sh"
         if [[ -f "$state_run" ]]; then
@@ -1716,7 +1709,8 @@ install_opal_venv() {
     "$venv_dir/bin/pip" install --quiet --no-cache-dir -r "$req_src"
     success "Python 패키지 설치 완료 (requirements.txt)"
 
-    # playwright 브라우저 확인 및 설치
+    # Playwright 브라우저는 기본 설치 대상이 아니다 (opt-in).
+    # 이미 캐시를 보유한 사용자의 자산은 사용자 소유이므로 삭제·정리하지 않고 그대로 둔다.
     # Playwright 캐시 경로: macOS ~/Library/Caches, Linux ~/.cache (XDG 표준)
     # 출처: https://playwright.dev/docs/browsers#managing-browser-binaries
     local pw_cache
@@ -1725,31 +1719,10 @@ install_opal_venv() {
     else
         pw_cache="$USER_HOME/Library/Caches/ms-playwright"
     fi
-    local missing_browsers=()
 
     if [[ -d "$pw_cache" ]] && [[ -n "$(ls -A "$pw_cache" 2>/dev/null)" ]]; then
-        success "Playwright 브라우저 이미 설치됨 (스킵)"
-        echo -e "  ${CYAN}설치된 브라우저:${NC} $(ls "$pw_cache" | tr '\n' ' ')"
-
-        ls "$pw_cache" | grep -q "^chromium"  || missing_browsers+=("chromium")
-        ls "$pw_cache" | grep -q "^firefox"   || missing_browsers+=("firefox")
-        ls "$pw_cache" | grep -q "^webkit"    || missing_browsers+=("webkit")
-    else
-        info "Playwright 브라우저 설치 (기본: Chromium)..."
-        if "$venv_dir/bin/playwright" install chromium 2>/dev/null; then
-            success "Chromium 설치 완료"
-        else
-            warn "Chromium 설치 실패 — 수동 실행: ~/.opal/.venv/bin/playwright install chromium"
-        fi
-        missing_browsers+=("firefox" "webkit")
-    fi
-
-    if [[ ${#missing_browsers[@]} -gt 0 ]]; then
-        echo ""
-        echo -e "  ${CYAN}미설치 브라우저 설치 명령어:${NC}"
-        for browser in "${missing_browsers[@]}"; do
-            echo "    ~/.opal/.venv/bin/playwright install $browser"
-        done
+        info "기존 Playwright 브라우저 캐시 보존: $pw_cache"
+        echo -e "  ${CYAN}보존된 브라우저:${NC} $(ls "$pw_cache" | tr '\n' ' ')"
     fi
     echo ""
 }
@@ -2037,9 +2010,12 @@ install_mcp() {
         fi
     fi
 
-    # playwright cache 디렉토리 사전 생성 (args의 ~/.opal/cache/playwright-mcp 경로 보장)
-    mkdir -p "$USER_HOME/.opal/cache/playwright-mcp"
-    chmod 700 "$USER_HOME/.opal/cache"
+    # playwright MCP는 opt-in이다. 정의가 존재할 때만 output-dir을 0700으로 사전 생성한다
+    # (docs/SECURITY.md의 --output-dir 0700 요건 유지). 정의가 없으면 아무것도 만들지 않는다.
+    if [[ -f "$mcp_src/playwright.json" ]]; then
+        mkdir -p "$USER_HOME/.opal/cache/playwright-mcp"
+        chmod 700 "$USER_HOME/.opal/cache"
+    fi
 
     local count=0
     for mcp_file in "$mcp_src"/*.json; do

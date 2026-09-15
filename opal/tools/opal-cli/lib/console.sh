@@ -30,6 +30,11 @@
 #     레코드 identity(app_dir 일치 + kill -0 생존) 검증 후에만 종료. status에 소유권(pid/app_dir 등) 노출 추가.
 #     E2E backend와 사용자 Console이 동일 ASGI 경로 문자열로 뜰 때 서로를 오탐 종료하던 결함 제거
 #     (TASK.md AC-3, CONTRACT.md §A.13·§B.4, PLAN.md D-1~D-18, MV-21) (127-T02)
+#   v1.6 2026-09-14 stop에 PID 재사용 방어 추가 — 레코드 started_at이 마지막 부팅보다 이전이면
+#     생존 여부와 무관하게 기존 판정 #4(stale_record)로 합류시켜 kill 0회로 레코드만 정리한다.
+#     부팅 시각·ISO8601 파싱의 플랫폼 분기는 _console_boot_epoch·_console_record_predates_boot
+#     두 헬퍼에 격리하고, 파싱 실패는 fail-open으로 기존 판정 경로를 유지한다.
+#     (TASK.md AC-15, PLAN.md D-5~D-8) (127-W-2)
 #
 
 # ─── PID 레코드 헬퍼 (§A.13, D-2·D-12) ─────────────────────────
@@ -62,6 +67,52 @@ _console_pid_value_unsafe() {
 _console_pid_sane() {
     case "$1" in ''|*[!0-9]*) return 1 ;; esac
     [ "$1" -ge 2 ] 2>/dev/null
+}
+
+# _console_boot_epoch — 마지막 시스템 부팅 시각을 epoch 초로 stdout에 출력한다. 판정 불가 시 return 1.
+# D-5: 플랫폼 분기(macOS sysctl kern.boottime / Linux /proc/stat btime)를 이 함수 하나에만 격리한다
+# (CONVENTIONS §플랫폼 분기 격리) — 호출부에 하드코딩된 분기를 흩뿌리지 않는다.
+_console_boot_epoch() {
+    local raw sec
+    # macOS/BSD: "{ sec = 1788413634, usec = 147331 } Thu Sep  3 14:33:54 2026"
+    if raw="$(sysctl -n kern.boottime 2>/dev/null)" && [[ -n "$raw" && "$raw" == *"sec = "* ]]; then
+        sec="${raw#*sec = }"
+        sec="${sec%%,*}"
+        sec="${sec%% *}"
+        case "$sec" in
+            ''|*[!0-9]*) : ;;
+            *) printf '%s' "$sec"; return 0 ;;
+        esac
+    fi
+    # Linux: /proc/stat 의 "btime <epoch>" 줄
+    if [[ -r /proc/stat ]]; then
+        sec="$(sed -n 's/^btime[[:space:]][[:space:]]*\([0-9][0-9]*\).*/\1/p' /proc/stat 2>/dev/null | head -1)"
+        case "$sec" in
+            ''|*[!0-9]*) : ;;
+            *) printf '%s' "$sec"; return 0 ;;
+        esac
+    fi
+    return 1
+}
+
+# _console_record_predates_boot <started_at> — D-6·D-7: 레코드의 started_at이 마지막 부팅보다
+# 이전이면 참(0)을 반환한다. 리부팅으로 커널 pid 공간이 초기화된 뒤에는 레코드의 pid를 지금 점유한
+# 프로세스가 임의의 타인일 수 있으므로(PID 재사용), 이런 레코드는 생존 여부와 무관하게 stale로 본다.
+# D-8 fail-open: 부팅 시각이나 started_at을 해석할 수 없으면 참을 반환하지 않는다(return 1) —
+# stale로 오판정해 레코드를 지우는 대신 기존 판정 경로(#4~#6)를 그대로 유지한다.
+# started_at 파싱도 플랫폼 분기(BSD date -j -f / GNU date -d)를 이 함수 안에만 둔다.
+_console_record_predates_boot() {
+    local value="$1" boot rec
+    [[ -n "$value" ]] || return 1
+    boot="$(_console_boot_epoch)" || return 1
+
+    # console_write_pid_record 가 쓰는 포맷: date +%Y-%m-%dT%H:%M:%S%z
+    rec="$(date -j -f '%Y-%m-%dT%H:%M:%S%z' "$value" +%s 2>/dev/null)" \
+        || rec="$(date -d "$value" +%s 2>/dev/null)" \
+        || return 1
+    case "$rec" in ''|*[!0-9]*) return 1 ;; esac
+
+    [ "$rec" -lt "$boot" ] 2>/dev/null
 }
 
 # console_write_pid_record <opal_home> <app_dir> <host> <port> <pid>
@@ -231,9 +282,11 @@ cmd_console() {
 
             local record_content
             record_content="$(cat "$record_path" 2>/dev/null)"
-            local rec_pid rec_app_dir
+            local rec_pid rec_app_dir rec_started_at
             rec_pid="$(console_read_pid_field "$record_content" pid)" || rec_pid=""
             rec_app_dir="$(console_read_pid_field "$record_content" app_dir)" || rec_app_dir=""
+            # D-6: 부팅 이전 레코드 판정용. 파싱 실패(빈 값 포함)는 fail-open으로 기존 경로를 유지한다(D-8).
+            rec_started_at="$(console_read_pid_field "$record_content" started_at)" || rec_started_at=""
 
             # 판정표 #2 — 파싱 실패 또는 pid가 kill(1) 대상으로 안전하지 않음(T4b B-1: 0/1/음수/비정수는
             # unreadable_record로 합류시킨다 — 새 분기를 만들지 않는다): 레코드 보존, kill 0회
@@ -247,6 +300,18 @@ cmd_console() {
                 # 판정표 #3 — identity 불일치: 레코드 보존, kill 0회
                 warn "레코드의 app_dir가 현재 OPAL_HOME과 일치하지 않습니다: $rec_app_dir (기대: $dashboard_server)"
                 echo "stopped=false pid=- reason=identity_mismatch"
+                return 0
+            fi
+
+            # 판정표 #4 합류 — D-6·D-7 PID 재사용 방어: 레코드가 마지막 부팅 이전에 기록됐다면
+            # 그 pid를 지금 점유한 프로세스는 리부팅 후 재할당된 타인이다(레코드의 데몬은 부팅과 함께
+            # 이미 사라졌다). 생존 여부를 묻지 않고 stale로 합류시킨다 — 새 reason 토큰을 만들지 않는다.
+            # install-mac.sh가 이 경로를 무인 호출하므로, 리부팅 후 첫 설치가 임의 사용자 프로세스를
+            # 종료하지 않게 하는 것이 이 분기의 목적이다(AC-15).
+            if _console_record_predates_boot "$rec_started_at"; then
+                warn "레코드가 마지막 부팅 이전에 기록되었습니다 (PID: $rec_pid) — PID 재사용 가능성이 있어 종료하지 않고 stale 레코드를 정리합니다."
+                rm -f "$record_path"
+                echo "stopped=false pid=$rec_pid reason=stale_record"
                 return 0
             fi
 

@@ -23,7 +23,6 @@ opal-cli doctor
   ✓ Node.js v18.x
   ✓ python3 3.11.x
   ✓ curl 8.x
-  ⚠ playwright — 옵션, 미설치 (npx @playwright/mcp@latest)
 
 [2/4] OPAL Paths
   ✓ ~/.opal/AGENT.md
@@ -33,16 +32,16 @@ opal-cli doctor
   ✓ ~/.opal/bin/opal-cli  →  ~/.opal/tools/opal-cli/run.sh
 
 [3/4] MCP Registration
-  ✓ Claude: context7, playwright, shadcn, sequential-thinking
-  ✓ Cursor: context7, playwright, shadcn, sequential-thinking
-  ✓ Gemini: context7, playwright, shadcn, sequential-thinking
+  ✓ Claude: context7, shadcn, sequential-thinking
+  ✓ Cursor: context7, shadcn, sequential-thinking
+  ✓ Gemini: context7, shadcn, sequential-thinking
 
 [4/4] Bootstrappers
   ✓ ~/.claude/CLAUDE.md (OPAL marker)
   ✓ ~/.cursor/rules/000-opal-agent.mdc
   ✓ ~/.gemini/GEMINI.md (OPAL + HARDENING markers)
 
-판정: All Pass (14 ✓, 0 ⚠, 0 ✗ / 총 14건)
+판정: All Pass (13 ✓, 0 ⚠, 0 ✗ / 총 13건)
 ```
 
 ## 심각도
@@ -71,7 +70,6 @@ opal-cli doctor
 | Node.js | 필수 | v18+ 여부 |
 | python3 | 필수 | 설치 여부 |
 | curl | 필수 | 설치 여부 |
-| playwright | 옵션 | npx @playwright/mcp@latest 사용 가능 여부 |
 
 ### [2/4] OPAL Paths
 
@@ -85,7 +83,8 @@ opal-cli doctor
 
 ### [3/4] MCP Registration
 
-OPAL 공식 MCP 서버 (context7, playwright, shadcn, sequential-thinking)의 플랫폼별 등록 상태를 확인한다.
+OPAL 공식 MCP 서버 (context7, shadcn, sequential-thinking)의 플랫폼별 등록 상태를 확인한다.
+playwright MCP는 opt-in이므로 이 분모에 포함하지 않는다 — 미등록이어도 경고하지 않는다.
 
 | 플랫폼 | 확인 방법 |
 |--------|---------|
