@@ -7,12 +7,14 @@ description: |
 ---
 # Full Task 오케스트레이터
 
+**[MUST — effective mode 선결]** 태스크 경로를 확정한 뒤 `state-tool resolve-mode`를 서브 하네스 로드보다 먼저 호출한다. 우선순위는 **명시 플래그 > 유효한 state mode > 신규 태스크 semi-agentic 기본값**이며, 신규 태스크에만 `--new-task`를 붙인다. 기존 태스크 재호출·세션 재개·사용자 검토 왕복은 무플래그면 저장 mode를 상속하고, 명시 플래그가 있으면 resolver가 mode만 갱신한 결과를 사용한다.
+
 ## Harness
 모드: Full Task (TASK → ANALYSIS → PLAN → TEST-SCENARIO → EXECUTE → TEST → CLOSE)
 **[MUST — pilot.start 이벤트 게이트]** 파일럿의 첫 작업 전에 아래 순서를 수행한다.
 
 1. `~/.opal/tools/event-loader/run.sh load --event pilot.start > <pilot-receipt-path>`를 호출한다.
-2. load 응답의 `documents[].content` 전문을 모두 현재 컨텍스트에 적용하고, `modes` 문서가 현재 플래그에 대해 라우팅한 서브 하네스 전문 하나만 Read한다.
+2. load 응답의 `documents[].content` 전문을 모두 현재 컨텍스트에 적용하고, 위 `resolve-mode <task-path> [--mode ...] [--new-task]` 결과로 `modes` 문서가 라우팅한 서브 하네스 전문 하나만 Read한다.
 3. `~/.opal/tools/state-tool/run.sh event-verify --event pilot.start --receipt <pilot-receipt-path>`가 성공한 뒤에만 진행한다.
 
 **[MUST — 단계 이벤트 게이트]** 각 실제 단계의 첫 작업이나 `state-tool advance` 직전에 아래 매핑의 이벤트를 load하고, 응답 문서 전문을 적용한 뒤 같은 event id로 `state-tool event-verify`를 통과해야 한다.

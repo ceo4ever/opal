@@ -41,7 +41,7 @@
         "semi-agentic",
         "agentic"
       ],
-      "description": "OPAL 실행 모드 — 3-way (interactive/semi-agentic/agentic)"
+      "description": "OPAL 실행 모드 — 3-way (interactive/semi-agentic/agentic). 누락·비문자·enum 밖 값은 validate 위반이며 effective mode는 interactive fail-closed로 해석한다."
     },
     "schema_version": {
       "enum": [

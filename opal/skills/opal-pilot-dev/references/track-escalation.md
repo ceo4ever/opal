@@ -44,7 +44,7 @@ load: `//opds`의 PLAN 완료 직후 강업 제안 판정
 
 [MUST] 제안은 태스크당 1회만 한다.
 
-- 사용자가 수락하면 TASK·PLAN 산출물을 인계해 `opd`의 ANALYSIS 이후 경로로 전환한다.
+- 사용자가 수락하면 TASK·PLAN 산출물과 현재 **effective mode**를 인계해 `opd --interactive|--semi-agentic|--agentic` 중 판정값에 대응하는 명시 플래그로 ANALYSIS 이후 경로로 전환한다. 이 전달은 mode 변경이 아니며 파이프라인 강제 재초기화를 금지한다.
 - 사용자가 거절하면 `opds`를 계속 수행한다.
 - PM은 사용자 응답 없이 트랙을 바꾸지 않는다.
 

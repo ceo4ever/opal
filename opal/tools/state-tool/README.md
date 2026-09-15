@@ -22,6 +22,19 @@
 `event-verify`는 상태를 다루지 않으므로 `<task-path>` 없이 호출한다. 개발 중에는 소스 경로로 직접 호출:
 > `bash opal/tools/state-tool/run.sh <command> <task-path> [options]`
 
+### `resolve-mode` — 신규 시작·재개 모드 단일 판정
+
+```bash
+~/.opal/tools/state-tool/run.sh resolve-mode <task-path> \
+  [--mode <interactive|semi-agentic|agentic>] \
+  [--new-task]
+```
+
+- 우선순위: 명시 `--mode` > 유효한 기존 `state.json.mode` > 신규 태스크(`--new-task`)의 `semi-agentic` 기본값.
+- 기존 태스크의 무플래그 재개는 저장 mode를 상속한다. 명시값이 다르면 rows·`created_at`을 보존하고 mode만 원자 갱신하며 STATE.md에 결정을 기록한다.
+- 기존 mode 누락·비문자·허용값 밖 값은 파일을 고치지 않고 `interactive` / `fail_closed`로 반환한다. 명시값으로만 복구할 수 있다.
+- JSON 문법 오류나 top-level 비객체는 `state_json_malformed`로 차단한다. 프로젝트 브리프의 mode 문구는 표시 전용이며 이 JSON 응답이 판정 SSOT다.
+
 ## 종료 코드
 
 | 코드 | 의미 |
@@ -54,7 +67,7 @@
 - `--next-action`: `state.json` `next_action` 필드로 영속화된다(기본값 `"PLAN 단계 진입"`). 이후 `advance`/`mark` 시 파이프라인 프론티어(첫 미완료 행)에서 자동 파생·갱신된다(072) — PM 수동 갱신 불필요. **094부터 이를 렌더하는 STATE.md 전용 섹션은 없다**(저널화로 `## 다음 액션` 자동 파생 섹션 삭제) — 현재 값은 `show`(md의 `- 다음 액션:` 줄 또는 json의 `next_action` 필드)로 조회한다
 - `--force` 사용 시 `--note` 필수 (`note_required_for_force`)
 - 구 STATE.md 표 흡수 옵션(`import`+`existing` 합성명, 094 이전 사용): **094(STATE.md 저널화)에서 제거됨** — 호출 시 rows 파싱 없이 항상 `import_existing_removed`로 거부된다(exit 1). 파싱 대상이던 파이프라인 표 자체가 STATE.md에서 소멸했기 때문이다. 행 구성은 `--rows-from <pipeline.json>` 또는 `--rows-spec`을 사용한다. (해당 인자는 argparse에 `help=argparse.SUPPRESS`로만 존치 — 완전히 삭제하면 미인식 인자로 exit 2 비-JSON 출력이 발생해 stdout 계약이 깨지므로, 인자는 받되 즉시 거부하는 방식을 택했다. 이 문서는 SUPPRESS 취지에 따라 정확한 플래그 철자를 의도적으로 노출하지 않는다)
-- agentic 모드에서 CLOSE 단계가 아닌 사용자 확인 행은 자동으로 `na`(-) 처리 (`.json`/`.md`/`--rows-spec` 공통)
+- 모든 모드의 사용자 확인 행은 `pending`으로 초기화된다. agentic 자동 승인은 다음 단계 진입 시 저장 mode를 읽는 단일 판정 훅이 수행하며 CLOSE는 제외한다.
 - `--note`(`--force` 시 기재)에 `{owner_name}` 플레이스홀더를 쓰면 `~/.opal/identity.md`의 `owner_name`으로 write-time 치환된다. identity.md 부재/`owner_name` 공란/파싱 실패 시 원문(`{owner_name}`) 그대로 유지(fail-safe) — 054
 
 **성공 응답 예시**:
@@ -133,7 +146,7 @@
   - 경고가 없으면 `warnings` 키 자체를 만들지 않는다 — 기존 호출의 응답 키 집합은 종전과 완전히 동일하다
   - 이 경고가 필요한 이유: 워커 완료 알림의 `duration_ms`는 세션과 함께 사라지고 행에는 완료 시각만 남아 시작 시각을 되살릴 수 없다. 그 자리에서 적지 않으면 소요는 **영구히 소실**되고 통계에서 PM 몫으로 잘못 귀속된다(소급 복구 경로 없음)
   - 오탐을 막는 4관문: ① 값이 이미 실림 ② `--worker-duration-unknown` 억제 ③ 워커 신호 부재(PM 직접 수행 행) ④ `--action-step N/M`에서 `N<M`(행이 `in_progress`로 남는 중간 진행 보고). 추가로 `owner = "user"`인 사용자 확인 행과 `--auto-pass` 재호출 멱등 no-op(093 F-005) 경로도 제외된다
-  - 경고 코드는 `ERROR_CODES`가 아니라 별도 사전 `WARNING_CODES`에 산다 — 경고는 에러가 아니며, **103은 에러 코드를 늘리지 않았다**(103 시점 45종 유지. 이후 106 F-004가 `code_scan_citation_unmet` 1종, 111 W-1이 `plan_contract_unmet` 1종, 118 W-4가 finalize-attribution 전용 4종, 122 W-2가 `actor_unsupported_for_skill` 1종을 등재해 현재 실측은 **52종**이며, 경고/에러 사전 분리 자체는 불변이다)
+  - 경고 코드는 `ERROR_CODES`가 아니라 별도 사전 `WARNING_CODES`에 산다 — 경고는 에러가 아니며, **103은 에러 코드를 늘리지 않았다**(103 시점 45종 유지. 이후 106 F-004가 `code_scan_citation_unmet` 1종, 111 W-1이 `plan_contract_unmet` 1종, 118 W-4가 finalize-attribution 전용 4종, 122 W-2가 `actor_unsupported_for_skill` 1종, 134 W-2가 `state_json_malformed` 1종을 등재해 현재 실측은 **53종**이며, 경고/에러 사전 분리 자체는 불변이다)
 - `--worker-duration-unknown`(103 R-21)은 그 행의 워커 소요를 **알 수 없음을 명시**한다(중단된 워커·PM 직접 수행·소급 불가 과거 데이터). 경고를 억제하며 행에는 필드를 만들지 않는다 — 기록 결과는 인자 미지정과 완전히 동형이므로 "미측정"이 `0`("측정했으나 1분 미만")으로 오독되지 않는다
   - `--worker-duration-minutes`와 **배타적**이다(값과 미상 선언은 동시에 성립할 수 없음). 둘 다 지정하면 argparse가 exit 2로 거부한다 — `--owner`/`--auto-pass` 배타와 동일 계열이므로 전용 에러 코드는 신설하지 않았다
 - `--auto-pass` 사용 시 `owner = "auto"`, note에 "agentic auto-pass" 자동 기재
@@ -540,7 +553,7 @@
 
 ---
 
-## 에러 코드 카탈로그 (52종 실측 SSOT — PLAN §2.18 E-1 + 070 R-1/R-4/R-9 + 091 F-004 R-10/R-11 + 093 F-004 R-4 + 094 R-3/R-4/R-9 + 098 F-003 R-4 + 106 F-004 R-4 + 111 W-1 + 118 W-4 + 122 W-2)
+## 에러 코드 카탈로그 (53종 실측 SSOT — PLAN §2.18 E-1 + 070 R-1/R-4/R-9 + 091 F-004 R-10/R-11 + 093 F-004 R-4 + 094 R-3/R-4/R-9 + 098 F-003 R-4 + 106 F-004 R-4 + 111 W-1 + 118 W-4 + 122 W-2 + 134 W-2)
 
 > 종수는 `len(ERROR_CODES)`(`state_tool.py`) 실측값이 기준이다 — 이 헤더 숫자를 리터럴로 신뢰하지 말고 코드 실측으로 재검증할 것(094 R-9 ①, S-7/S-15).
 
@@ -598,6 +611,7 @@
 | 50 | `allocator_root_invalid` | finalize-attribution | 1 | `--allocator-root` 하위에 `.opal/MEMORY.json`이 없음 (118 W-4, AC-4) |
 | 51 | `finalize_attribution_failed` | finalize-attribution | 1 | 허브 MEMORY history append 실패(memory-tool 부재·손상 JSON·호출 실패) — 파일은 변경되지 않는다 (118 W-4, AC-4) |
 | 52 | `actor_unsupported_for_skill` | init | 1 | `--actor pm`이 `--skill` opd/opds 외 값과 함께 지정됨 — `--actor pm`은 opd/opds에서만 지원 (122 W-2, D-4/AC-1) |
+| 53 | `state_json_malformed` | resolve-mode | 1 | `state.json`이 유효한 JSON 객체가 아니어서 저장 mode를 신뢰할 수 없음 — 명시 모드로도 자동 덮어쓰지 않고 복구를 요구 (134 W-2) |
 
 > `spec-validate` 서브 명령 자체의 violations[] 내부 코드(`spec_missing_field`/`spec_skill_invalid`/`spec_stage_invalid`/`spec_key_format_invalid`/`spec_key_duplicate`/`spec_id_sequence_invalid`/`spec_key_stage_mismatch`)는 `cmd_validate`의 `schema_violation`처럼 인라인 문자열로 쓰이며 ERROR_CODES 템플릿을 거치지 않는다(070 §3.1.2). (`spec_gate_*` 4종은 동일하게 violations[]에 인라인 append되지만 ERROR_CODES에 등록되어 있어 위 카탈로그에 포함된다 — 091이 만든 예외.)
 

@@ -60,7 +60,7 @@ OPAL 자산은 Global/Project 2-레이어로 배치되고, 런타임은 세션 �
 | `session.disabled` | effective setting의 `bootstrap`이 정확히 `off` | 설정 게이트 뒤 OPAL 문서 0건·0 bytes |
 | `session.worker` | 첫 줄 `[WORKER]` | 전역 세션 문서 0건. 이후 PM이 주입한 `worker.dispatch` receipt 계약만 적용 |
 | `session.assistant` | 첫 줄 `[ASSISTANT]` 또는 비프로젝트 세션 | 최소 비서 커널·PRINCIPLES·선택적 identity |
-| `session.project` | 무마커 + `.opal/AGENT.md` 존재 | `session.assistant`에 더해 `event-loader project-brief`가 조립한 최대 1KB 사용자 브리핑만 인지 |
+| `session.project` | 무마커 + `.opal/AGENT.md` 존재 | `session.assistant`에 더해 `event-loader project-brief`가 활성 태스크 mode를 포함해 조립한 최대 1KB 사용자 브리핑만 인지 |
 | `pm.activate` | 프로젝트 작업 요청 또는 프로젝트 내 `//` 커맨드 | PM 프로세스, PM 활성화 규칙, 프로젝트 `.opal/AGENT.md`, `docs/PROJECT.md`를 JIT 로드 |
 | `pilot.start` / `stage.*` / `worker.dispatch` | 파일럿·단계·워커 경계 | 해당 이벤트의 owner 문서 전문을 JIT 로드하고 receipt 검증 후 진행 |
 
@@ -68,6 +68,7 @@ OPAL 자산은 Global/Project 2-레이어로 배치되고, 런타임은 세션 �
 - **worker 분리**: `[WORKER]`는 순수 모드가 아니라 전역 부트만 건너뛰는 디스패치 경로다. receipt가 없거나 stale/wrong-event이면 워커가 blocked로 반환한다.
 - **project-aware 경계**: `.opal/AGENT.md` 존재는 프로젝트 감지 신호일 뿐 PM 승격 신호가 아니다. 전체 `docs/PROJECT.md`, `opal-pm.md`, `opal-harness.md`는 세션 부트에서 읽지 않는다.
 - **JIT 검증**: receipt가 필요한 이벤트는 `event-loader load`가 반환한 모든 `documents[].content`를 소비하고 `verify`가 성공한 뒤에만 다음 행동을 시작한다.
+- **모드 복원**: Pilot은 서브 하네스를 읽기 전에 `state-tool resolve-mode`를 호출한다. 명시 플래그가 저장값보다 우선하고, 기존 태스크의 무플래그 재개는 저장 mode를 상속한다. project-brief의 mode 표시는 안내이며 구조화 resolver 응답이 SSOT다.
 - **`//opi` 불변식**: 비프로젝트 세션도 비서 커널에서 `//` 진입을 해석할 수 있으므로 새 프로젝트 초기화 경로가 유지된다.
 - **actor 축**: `--pm`은 위 다이어그램의 `PM JIT 활성화`(오케스트레이터) 층에 속하는 실행 주체 선택 축이다 — 하네스 적용(Guards/Gates/State)과 서브에이전트 디스패치 층은 그대로 두고 각 단계 skill을 누가 수행하는지만 바꾼다. 원문 SSOT는 `opal/core/references/harness/actor.md`.
 
