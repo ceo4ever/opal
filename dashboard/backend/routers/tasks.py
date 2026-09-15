@@ -570,13 +570,13 @@ def get_task_detail(
 
     # 야간 제외 구간(집계 기준 17)은 **라우터가 읽어 stats.py에 주입**한다 —
     # stats.py는 파일 I/O를 하지 않는다(TS-008). 프로젝트 로컬 설정이 전역을 덮는다.
-    # load_quiet_hours()는 QuietHours(3필드: 시작 분·끝 분·시간대)를 반환한다.
-    # 시간대 해석은 여기서 끝난다 — stats.py에는 (시작 분, 끝 분)만 좁혀 넘긴다
-    # (CONTRACT.md §2.8.1 B-1~B-3, stats.py 공개 함수 시그니처 불변).
+    # load_quiet_hours()는 QuietHours(3필드: 시작 분·끝 분·시간대)를 반환하지만
+    # 평범한 2-tuple(레거시 monkeypatch 등)도 그대로 받는다. 시간대 해석은
+    # 여기서 끝난다 — stats.py에는 (시작 분, 끝 분)만 좁혀 넘긴다(인덱싱은
+    # QuietHours·2-tuple 양쪽에서 동일하게 동작한다) (CONTRACT.md §2.8.1 B-1~B-3,
+    # stats.py 공개 함수 시그니처 불변).
     quiet_hours = load_quiet_hours(project_path)
-    quiet_window = (
-        (quiet_hours.start_minute, quiet_hours.end_minute) if quiet_hours is not None else None
-    )
+    quiet_window = (quiet_hours[0], quiet_hours[1]) if quiet_hours is not None else None
 
     # 사용자 호칭도 **라우터가 읽는다** — 요청당 1회 읽어 행마다 파일을 다시 열지
     # 않는다. identity.md는 전역 1개라 프로젝트별로 갈리지 않는다.

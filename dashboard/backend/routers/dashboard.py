@@ -120,13 +120,13 @@ def get_dashboard(project: str = Query(default="")) -> DashboardSummaryResponse:
     # 야간 제외 구간(집계 기준 17)은 라우터가 읽어 stats.py에 주입한다.
     # 개별 프로젝트 모드면 그 프로젝트의 로컬 설정이 전역을 덮고, 전체 모드는
     # 어느 프로젝트 하나를 편들 수 없으므로 전역 설정만 쓴다.
-    # load_quiet_hours()는 QuietHours(3필드: 시작 분·끝 분·시간대)를 반환한다.
-    # 시간대 해석은 여기서 끝난다 — stats.py에는 (시작 분, 끝 분)만 좁혀 넘긴다
-    # (CONTRACT.md §2.8.1 B-1~B-3, stats.py 공개 함수 시그니처 불변).
+    # load_quiet_hours()는 QuietHours(3필드: 시작 분·끝 분·시간대)를 반환하지만
+    # 평범한 2-tuple(레거시 monkeypatch 등)도 그대로 받는다. 시간대 해석은
+    # 여기서 끝난다 — stats.py에는 (시작 분, 끝 분)만 좁혀 넘긴다(인덱싱은
+    # QuietHours·2-tuple 양쪽에서 동일하게 동작한다) (CONTRACT.md §2.8.1 B-1~B-3,
+    # stats.py 공개 함수 시그니처 불변).
     quiet_hours = load_quiet_hours(project or None)
-    quiet_window = (
-        (quiet_hours.start_minute, quiet_hours.end_minute) if quiet_hours is not None else None
-    )
+    quiet_window = (quiet_hours[0], quiet_hours[1]) if quiet_hours is not None else None
 
     # 캐시 키에 구간 서명을 실어 설정 변경이 곧바로 갈리게 한다. QuietHours
     # 3필드를 그대로 넘겨 timeZone도 서명에 싣는다(quiet_hours_token → "start-end@tz").
