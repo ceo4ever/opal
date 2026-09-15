@@ -430,3 +430,7 @@
 - 신규: [[pages/entity/workstudio-project-registry.md]], [[pages/concept/electron-main-owned-project-registry.md]]
 - 출처: task:128
 
+## [2026-09-15] ingest | CLOSE ingest — 태스크 133 부트 요약 실행 경로 통합
+- 갱신: [[pages/concept/session-project-action-needed-briefing.md]]
+- 출처: task:133
+

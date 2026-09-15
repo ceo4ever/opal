@@ -5,7 +5,7 @@
   "domain": "opal-pipeline",
   "description": "state-tool 단위 테스트 — 9개 명령 happy path + 23종 에러 코드 × 최소 1건 + G-5~G-15 시나리오. 공개 인터페이스(직접 함수 호출 또는 run.sh subprocess 실호출)와 실 파일 상태(state.json/STATE.md/MEMORY.json/pipeline.json)만으로 판정하며 내부 함수 mock은 사용하지 않는다(블랙박스 방식). 신규 계약은 RED-first로 작성하며 작성자와 구현자를 분리해 검증 이원화를 유지한다.",
   "exports": [
-    "TestInit", "TestShow", "TestAdvance", "TestMark",
+    "TestBootSummary", "TestInit", "TestShow", "TestAdvance", "TestMark",
     "TestBlock", "TestValidate", "TestAddRow", "TestStatus", "TestGatePass",
     "TestErrorCodes", "TestFreeTextPreservation", "TestClarificationGate",
     "TestOwnerNamePlaceholder", "TestOpplSkillInit",
@@ -170,17 +170,44 @@ SIMPLE_ROWS_SPEC = json.dumps([
 
 
 class TestBootSummary(unittest.TestCase):
-    """W-2: read-only project boot summary (AC-1/AC-3/AC-4/C-5)."""
+    """W-1 RED: direct + canonical worktree boot summary contracts."""
 
-    def _state(self, task_dir, status, updated, stage="EXECUTE", next_action="계속 진행"):
+    def _state(self, task_dir, status, updated, stage="EXECUTE", next_action="계속 진행",
+               task_id=None):
         task_dir.mkdir(parents=True)
         (task_dir / "state.json").write_text(json.dumps({
-            "task_id": task_dir.name,
+            "task_id": task_id or task_dir.name,
             "current_status": status,
             "updated_at": updated,
             "next_action": next_action,
             "rows": [{"stage": stage, "status": "in_progress"}],
-        }), encoding="utf-8")
+        }, ensure_ascii=False), encoding="utf-8")
+
+    def _registry_meta(self, root, name, task_dir, *, task_folder=None,
+                       attribution_state="attribution_pending"):
+        meta_dir = root / ".opal-worktrees" / ".meta"
+        meta_dir.mkdir(parents=True, exist_ok=True)
+        meta = {
+            "task_path": str(task_dir.resolve()),
+            "task_folder": task_folder or task_dir.name,
+            "allocator_root": str(root.resolve()),
+        }
+        if attribution_state is not None:
+            meta["attribution_state"] = attribution_state
+        path = meta_dir / name
+        path.write_text(json.dumps(meta, ensure_ascii=False), encoding="utf-8")
+        return path
+
+    def _boot_cli(self, root, *, cwd=None):
+        completed = subprocess.run(
+            ["bash", str(_RUN_SH), "boot-summary", str(root)],
+            cwd=cwd,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        return completed, json.loads(completed.stdout)
 
     def test_latest_unfinished_only_and_fields(self):
         with tempfile.TemporaryDirectory() as d:
@@ -211,6 +238,139 @@ class TestBootSummary(unittest.TestCase):
             result = subprocess.run(cmd, capture_output=True, text=True)
             self.assertEqual(result.returncode, 0)
             self.assertLessEqual(len(result.stdout.strip().encode("utf-8")), 1024)
+
+    def test_registry_only_uses_canonical_task_path_independent_of_cwd(self):
+        """Task 133 S-2 / PLAN D-2: registry path is authority, not cwd/layout inference."""
+        with tempfile.TemporaryDirectory() as d, tempfile.TemporaryDirectory() as other:
+            root = pathlib.Path(d) / "hub"
+            root.mkdir()
+            canonical = pathlib.Path(d) / "allocator-issued-location" / "tasks" / "202-wt"
+            self._state(canonical, "in_progress", "2026-09-13 12:00", "EXECUTE", "GREEN 구현")
+            self._registry_meta(root, "task_202.json", canonical)
+
+            before = (canonical / "state.json").read_bytes()
+            first, first_payload = self._boot_cli(root, cwd=pathlib.Path(other))
+            second, second_payload = self._boot_cli(root, cwd=root)
+
+            self.assertEqual(first_payload, second_payload)
+            self.assertEqual(
+                first_payload["items"][0],
+                {
+                    "title": "202-wt",
+                    "stage": "EXECUTE",
+                    "next_action": "GREEN 구현",
+                    "mode": "interactive",
+                    "mode_source": "fail_closed",
+                },
+            )
+            self.assertNotIn(str(canonical), first.stdout)
+            self.assertEqual(before, (canonical / "state.json").read_bytes())
+
+    def test_registry_missing_attribution_state_key_is_active(self):
+        """Task 133 S-2: worktree §상태 의존 해석 defines a missing key as active."""
+        with tempfile.TemporaryDirectory() as d:
+            root = pathlib.Path(d) / "hub"
+            root.mkdir()
+            canonical = pathlib.Path(d) / "issued" / "tasks" / "203-key-absent"
+            self._state(canonical, "in_progress", "2026-09-13 12:30", "EXECUTE", "계속")
+            meta_path = self._registry_meta(
+                root,
+                "task_203.json",
+                canonical,
+                attribution_state=None,
+            )
+            before = {
+                meta_path: meta_path.read_bytes(),
+                canonical / "state.json": (canonical / "state.json").read_bytes(),
+            }
+
+            _, payload = self._boot_cli(root)
+
+            self.assertEqual(
+                [item["title"] for item in payload["items"]],
+                ["203-key-absent"],
+            )
+            self.assertNotIn(
+                "registry_meta_missing_fields",
+                json.dumps(payload["anomalies"], ensure_ascii=False),
+            )
+            self.assertEqual(before, {path: path.read_bytes() for path in before})
+
+    def test_mixed_sources_sort_dedupe_and_separate_registry_anomalies(self):
+        """Task 133 S-3 / PLAN D-1~D-4, H-1: canonical candidates and anomalies differ."""
+        with tempfile.TemporaryDirectory() as d:
+            root = pathlib.Path(d) / "hub"
+            root.mkdir()
+            self._state(root / "tasks" / "301-direct", "in_progress", "2026-09-13 09:00")
+
+            canonical = pathlib.Path(d) / "issued-a" / "tasks" / "302-shared"
+            self._state(canonical, "in_progress", "2026-09-13 11:00", task_id="302-canonical")
+            self._registry_meta(root, "task_302.json", canonical, task_folder="302-shared")
+            self._state(root / "tasks" / "302-shared", "in_progress", "2026-09-13 12:00",
+                        task_id="302-hub-copy")
+
+            duplicate_a = pathlib.Path(d) / "issued-b" / "tasks" / "303-duplicate"
+            duplicate_b = pathlib.Path(d) / "issued-c" / "tasks" / "303-duplicate"
+            self._state(duplicate_a, "in_progress", "2026-09-13 13:00")
+            self._state(duplicate_b, "in_progress", "2026-09-13 14:00")
+            self._registry_meta(root, "task_303_a.json", duplicate_a)
+            self._registry_meta(root, "task_303_b.json", duplicate_b)
+
+            meta_dir = root / ".opal-worktrees" / ".meta"
+            (meta_dir / "task_304.json").write_text(
+                json.dumps({"task_folder": "304-missing-fields"}), encoding="utf-8")
+            (meta_dir / "task_305.json").write_text(json.dumps({
+                "task_path": str(pathlib.Path(d) / "gone" / "tasks" / "305-gone"),
+                "task_folder": "305-gone",
+                "allocator_root": str(root),
+                "attribution_state": "attribution_pending",
+            }), encoding="utf-8")
+            (meta_dir / "task_306.json").write_text("{broken", encoding="utf-8")
+
+            _, payload = self._boot_cli(root)
+            self.assertEqual(
+                [item["title"] for item in payload["items"]],
+                ["302-canonical", "301-direct"],
+            )
+            self.assertEqual(
+                [item["title"] for item in payload["items"]].count("302-canonical"), 1)
+            self.assertNotIn("302-hub-copy", [item["title"] for item in payload["items"]])
+
+            anomalies = json.dumps(payload["anomalies"], ensure_ascii=False)
+            for code in (
+                "task_path_ambiguous",
+                "registry_meta_missing_fields",
+                "registry_task_path_missing",
+                "registry_active_duplicate",
+                "registry_meta_corrupt",
+            ):
+                with self.subTest(code=code):
+                    self.assertIn(code, anomalies)
+
+    def test_many_multibyte_candidates_are_bounded_and_inputs_are_immutable(self):
+        """Task 133 S-5 / PLAN D-5, H-2: JSON preserves counts within 1 KiB."""
+        with tempfile.TemporaryDirectory() as d:
+            root = pathlib.Path(d)
+            for number in range(1, 6):
+                self._state(
+                    root / "tasks" / f"40{number}-fixture",
+                    "in_progress",
+                    f"2026-09-13 {number + 10:02d}:00",
+                    next_action="다국어 다음 행동 " * 80,
+                    task_id=f"40{number}-" + "아주 긴 제목 " * 80,
+                )
+            meta_dir = root / ".opal-worktrees" / ".meta"
+            meta_dir.mkdir(parents=True)
+            (meta_dir / "task_499.json").write_text("{broken", encoding="utf-8")
+            inputs = {path: path.read_bytes() for path in root.rglob("*") if path.is_file()}
+
+            completed, payload = self._boot_cli(root)
+
+            self.assertEqual(len(payload["items"]), 3)
+            self.assertEqual(payload["other_count"], 2)
+            self.assertEqual(len(payload["anomalies"]), 1)
+            self.assertLessEqual(len(completed.stdout.strip().encode("utf-8")), 1024)
+            self.assertEqual(inputs, {path: path.read_bytes() for path in inputs})
 
 
 def _mock_now():
