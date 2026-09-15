@@ -3,7 +3,7 @@
   "module": "test_checkpoint",
   "layer": "test",
   "domain": "oppb-runtime",
-  "description": "oppb-runtime-tool checkpoint 공개 CLI 계약 RED 테스트. 132 TEST-SCENARIO.md S-12 checkpoint 구간(AC-6)과 S-13(AC-7, AC-8)을 검증한다 — Runner가 lease 밖 파일을 수정하거나 commit·checkout·reset을 실행하면 checkpoint가 거부되고, 검증 실패 candidate는 폐기만 되어 project branch·HEAD·공유 index와 다른 Runner lease path hash가 불변이며, 통과 candidate만 expected parent 비교 뒤 fast-forward되고, stale parent candidate는 반영되지 않고 새 parent에서 재생성된다. reset --hard·worktree 전체 restore 호출 0을 PATH 앞단 git audit shim 호출 추적과 reflog 대조라는 두 독립 기제로 기계 단언한다(제안서 §4.5). PLAN H-6에 따라 내부 함수·클래스를 import하지 않고 공개 CLI(run.sh)와 run root 파일 계약으로만 검증한다. mock/patch 금지 — 실제 git 저장소 fixture만 사용한다(PLAN W-17).",
+  "description": "oppb-runtime-tool checkpoint 공개 CLI 계약 RED 테스트. 132 TEST-SCENARIO.md S-12 checkpoint 구간(AC-6)과 S-13(AC-7, AC-8)을 검증한다 — Runner가 lease 밖 파일을 수정하거나 commit·checkout·reset을 실행하면 checkpoint가 거부되고, 공유 지식(MEMORY·brain) 쓰기는 lease 쓰기보다 앞서든 뒤서든 쓰기 순서와 무관하게 거부되며, 검증 실패 candidate는 폐기만 되어 project branch·HEAD·공유 index와 다른 Runner lease path hash가 불변이며, 통과 candidate만 expected parent 비교 뒤 fast-forward되고, stale parent candidate는 반영되지 않고 새 parent에서 재생성된다. reset --hard·worktree 전체 restore 호출 0을 PATH 앞단 git audit shim 호출 추적과 reflog 대조라는 두 독립 기제로 기계 단언한다(제안서 §4.5). PLAN H-6에 따라 내부 함수·클래스를 import하지 않고 공개 CLI(run.sh)와 run root 파일 계약으로만 검증한다. mock/patch 금지 — 실제 git 저장소 fixture만 사용한다(PLAN W-17).",
   "exports": [],
   "depends": ["opal/tools/oppb-runtime-tool/run.sh", "git CLI 2.x", "opal/tools/worktree-tool/tests/conftest.py(패턴 원천)"]
 }
@@ -427,6 +427,37 @@ def test_s12_3_shared_knowledge_write_is_rejected(cp_env):
     assert payload.get("error") == "CHECKPOINT_REJECTED", payload
     assert "shared_knowledge_write" in payload.get("reasons", []), payload
     assert_no_destructive_git(log, "S-12 공유 지식 쓰기 거부")
+
+
+def test_s12_3a_shared_knowledge_write_before_lease_write_is_rejected(cp_env):
+    """[T132/S-12] 공유 지식 축은 **쓰기 순서와 무관하게** 닫힌다. attempt가 MEMORY·brain을
+    **먼저** 쓰고 자기 lease 경로를 나중에 써도 거부된다 — Runner가 공유 지식을 정당하게
+    쓰는 경우 자체가 없으므로(제안서 §4.3 capability agent 행동 계약, §5 P5는 지식 반영을
+    Project Knowledge Finalizer 1회로 한정) 귀속 판정 이전에 dirty 존재만으로 위반이다.
+    lease 밖 **소스** 경로에 남는 mtime 순서 역전 한계와 달리 이 축에는 한계가 없다
+    (수용기준 6)."""
+    repo, run_root, env, log = cp_env["repo"], cp_env["run_root"], cp_env["env"], cp_env["log"]
+    before = git_fingerprint(repo)
+
+    # 순서 역전 — 공유 지식을 **먼저**, 자기 lease 경로를 **나중에** 쓴다.
+    _write(repo, "MEMORY.md", "# memory\nrunner wrote here first\n")
+    _write(repo, "brain/notes.md", "runner wrote brain first\n")
+    _write(repo, "src/users/service.py", "USERS = 2\n")
+
+    payload = make_candidate(run_root, repo, "T01", "a1", env)
+    assert payload.get("ok") is False, f"공유 지식 선행 쓰기 후 candidate가 만들어졌다: {payload}"
+    assert payload.get("error") == "CHECKPOINT_REJECTED", payload
+    assert "shared_knowledge_write" in payload.get("reasons", []), payload
+    violating = payload.get("violating_paths", [])
+    assert "MEMORY.md" in violating, f"MEMORY.md가 violating_paths에 없다: {payload}"
+    assert "brain/notes.md" in violating, f"brain/notes.md가 violating_paths에 없다: {payload}"
+
+    after = git_fingerprint(repo)
+    assert after["branch_sha"] == before["branch_sha"], "거부가 project branch를 움직였다."
+    assert after["head_sha"] == before["head_sha"], "거부가 HEAD를 움직였다."
+    assert after["index"] == before["index"], "거부가 공유 index를 바꿨다."
+    assert after["reflog"] == before["reflog"], "거부가 reflog를 남겼다(되돌림 흔적)."
+    assert_no_destructive_git(log, "S-12 공유 지식 선행 쓰기 거부")
 
 
 def test_s12_4_candidate_creation_does_not_move_ref_or_head(cp_env):
