@@ -3,7 +3,7 @@
   "module": "event_loader",
   "layer": "util",
   "domain": "opal-tools",
-  "description": "이벤트 manifest 문서·receipt와 session.project 사용자 브리핑을 결정론적으로 생성·검증하는 플랫폼 독립 CLI",
+  "description": "이벤트 manifest 문서·receipt와 복수 진행 태스크·경로 이상·메모리를 포함한 bounded session.project 브리핑을 결정론적으로 생성·검증하는 플랫폼 독립 CLI",
   "exports": ["main", "load_event", "verify_receipt", "static_check", "measure_event", "compose_project_brief", "project_brief"]
 }
 """
@@ -529,17 +529,28 @@ def compose_project_brief(
     max_bytes: int = 1024,
 ) -> str:
     """Compose the exact bounded prefix for a session.project first response."""
-    state: dict[str, str] | None = None
+    states: list[dict[str, str]] = []
+    other_count = 0
+    anomaly_count = 0
     if isinstance(state_payload, dict) and state_payload.get("ok") is True:
         items = state_payload.get("items")
-        if isinstance(items, list) and items and isinstance(items[0], dict):
-            candidate = {
-                "title": _brief_value(items[0].get("title")),
-                "stage": _brief_value(items[0].get("stage")),
-                "next_action": _brief_value(items[0].get("next_action")),
-            }
-            if all(candidate.values()):
-                state = candidate
+        if isinstance(items, list):
+            for item in items[:3]:
+                if not isinstance(item, dict):
+                    continue
+                candidate = {
+                    "title": _brief_value(item.get("title")),
+                    "stage": _brief_value(item.get("stage")),
+                    "next_action": _brief_value(item.get("next_action")),
+                }
+                if all(candidate.values()):
+                    states.append(candidate)
+        raw_other_count = state_payload.get("other_count", 0)
+        if isinstance(raw_other_count, int) and not isinstance(raw_other_count, bool):
+            other_count = max(0, raw_other_count)
+        anomalies = state_payload.get("anomalies")
+        if isinstance(anomalies, list):
+            anomaly_count = len(anomalies)
 
     reviews: list[dict[str, str]] = []
     if isinstance(memory_payload, dict) and memory_payload.get("ok") is True:
@@ -557,19 +568,23 @@ def compose_project_brief(
 
     def render() -> str:
         lines = ["[부트스트랩] ✅ session.project ⏳ PM"]
-        if state is not None:
-            lines.extend([
-                "",
-                "📌 이어보기",
-                f"- {state['title']} — {state['stage']} · 다음: {state['next_action']}",
-            ])
+        if states or other_count or anomaly_count:
+            lines.extend(["", "📌 이어보기"])
+            lines.extend(
+                f"- {state['title']} — {state['stage']} · 다음: {state['next_action']}"
+                for state in states
+            )
+            if other_count:
+                lines.append(f"- 그 외 {other_count}건")
+            if anomaly_count:
+                lines.append(f"- 경로 이상 {anomaly_count}건")
         if reviews:
             lines.extend(["", "📌 우선 검토"])
             lines.extend(f"- {row['title']} — {row['summary']}" for row in reviews)
         return "\n".join(lines)
 
     markdown = render()
-    mutable = ([state] if state is not None else []) + reviews
+    mutable = states + reviews
     while len(markdown.encode("utf-8")) > max_bytes:
         candidates = [
             (len(value.encode("utf-8")), row, key)

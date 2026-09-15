@@ -1,15 +1,18 @@
+# -*- coding: utf-8 -*-
 """
 @header {
   "module": "state_tool",
   "layer": "util",
   "domain": "opal-pipeline",
   "description": "OPAL 파이프라인 현황판 JSON SSOT 관리 CLI. 서브커맨드: init/show/advance/mark/block/validate/add-row/status/run-start/finalize-attribution/spec-validate/event-verify, gate-pass(deprecated). run-start <task-path>는 `run-<UTC YYYYMMDDHHMMSS>-<8자리 hex>` 형식의 새 run_id를 발급해 state.json.run_id에 기록하고 단일 라인 JSON으로 반환한다 — 현재 run은 항상 1개라 재호출 시 교체되며 이력을 누적하지 않고, run_id는 schema properties에만 있는 optional 필드라 init은 만들지 않으며 required 8필드는 불변이다(run_id 없는 기존 state.json도 계속 validate를 통과한다). event-verify는 단계 진입 전에 event-loader receipt의 이벤트·manifest·문서 hash 최신성을 검증하고 상태 파일은 변경하지 않는다. interactive/semi-agentic/agentic 3-way 모드를 지원하며 PLAN-equivalent 이전 단계(TASK/ANALYSIS/PLAN/TEST-SCENARIO/SPEC/REVIEW/DESIGN/WBS/WIREFRAME/DICT/MODEL/DDL·MIGRATION)는 semi-agentic 모드에서 사용자 검토를 강제한다. STATE.md는 state.json에서 파생되는 저널(의사결정 로그+블로커)이며 파이프라인 표·현재 상태·다음 액션 섹션은 없다(레거시 마커 포맷은 하위호환 인식만 유지). mark --step N/M은 N<M이면 in_progress를 유지하고 N==M에서만 done으로 닫는다. can_auto_approve_user_confirmation()은 CLOSE 축과 모드 축 2축 합성으로 사용자 확인 행 자동 승인 가부를 단일 판정하며, cmd_mark 사전검사와 cmd_validate 사후검사가 서로 다른 소비 범위(validate는 CLOSE 축 미평가)로 이를 참조한다. auto_approve_prior_user_confirmations()는 advance/mark가 대상 행 이전 구간의 미완 확인 행을 자동 승인하되 대상 행 자체가 CLOSE면 관여하지 않는다. 행 주소는 task-step 키 체계(--task-step/--task-step-id, --row는 deprecated)로 지정한다. check_gate_artifacts()는 task_steps[].gate.artifacts 존재를 검사하고(정적 경로·글롭 지원, 절대경로·'..' 이탈 토큰은 거부), 미충족 시 gate_artifact_missing으로 막되 --force+--note 조합에만 통과를 허용하며 그 경우 decision 로그에 gate_artifact_force를 강제 기록한다. verify 서브커맨드는 상호 배타적인 6개 검사 라우트를 갖는다 — --red-check(RED 증거 게이트), --fix-mode(+--changed-files/--test-globs, 테스트 불변성 게이트), --clarification-check(TASK 잠금 판정: sdlc-v2 5절 또는 legacy 명확화 4요소), --evidence-check(『명확화 결과』·『확정된 설계 방향』 인용을 근거 등급 4축으로 판정, 두 소스의 분모는 서로 분리 — confirmed_ratio는 명확화 결과 항목 수 기준 불변), --code-scan-citation-check(PLAN.md Work items 또는 legacy §4.2 파일 경로의 code-scan 인용 집행), --plan-contract-check(sdlc-v2 Work items 계약 검사). task_root()는 task path 조상에서 .opal/MEMORY.json 앵커를 찾는 task root 목적 전용 탐색이며, 허브 쓰기 대상인 allocator root는 이 탐색으로 추론하지 않고 worktree registry 발급값을 명시 인자로만 받는다. CLOSE 마지막 행 mark는 current_status를 completed_unmerged로만 확정하고 MEMORY.json을 건드리지 않으며, 허브 .opal/MEMORY.json 이력 append는 finalize-attribution <task-path> --allocator-root <abs>가 전담한다 — link_memory_history()가 그 구현이고 동일 path 행이 있으면 건너뛰어 멱등이며, --allocator-root 미지정·상대경로는 추론 없이 exit 1로 거부된다. resolve_owner_placeholder()는 note 작성 경로(advance/mark/add-row/block/status/init)에서 '{owner_name}' 플레이스홀더를 identity.md owner_name으로 write-time 치환한다(부재 시 원문 유지, fail-safe). worker_duration_minutes는 mark --worker-duration-minutes로 선택 기록되고, 워커 디스패치 행을 소요시간 없이 done 처리하면 --worker-duration-unknown 억제 인자가 없는 한 응답 warnings 배열에 worker_duration_missing이 실린다(exit 0 유지). build_todo_mirror()는 stdout 전용 파생 미러(state.json 비접촉)로 PostToolUse hook이 세션에 결정론적으로 주입한다. init --actor pm은 --skill opd/opds에서만 지원되며(그 외 skill과 조합 시 actor_unsupported_for_skill로 exit 1) 지정 시에만 state.json에 actor 키를 조건부 영속화한다.",
+  "note": "boot-summary는 허브 direct 태스크와 registry 발급 canonical task_path를 통합해 최신 3건, 잔여 건수, bounded 경로 이상을 읽기 전용 JSON으로 반환한다.",
   "exports": [
     "cmd_init", "cmd_show", "cmd_advance", "cmd_mark",
     "cmd_block", "cmd_validate", "cmd_add_row", "cmd_status",
     "cmd_run_start", "new_run_id",
     "cmd_spec_validate", "cmd_event_verify", "cmd_gate_pass", "build_todo_mirror",
     "cmd_finalize_attribution", "link_memory_history", "task_root",
+    "collect_boot_summary",
     "can_auto_approve_user_confirmation", "auto_approve_prior_user_confirmations",
     "_collect_plan_target_files", "_check_code_scan_citation",
     "_check_sdlc_v2_task_contract", "_check_plan_contract",
@@ -2381,79 +2384,197 @@ def _boot_current_stage(state):
     return ""
 
 
-def collect_boot_summary(project_root):
-    """Collect at most one unfinished task below *project_root* (read-only).
+BOOT_SUMMARY_ITEM_LIMIT = 3
+BOOT_SUMMARY_ANOMALY_LIMIT = 8
+ACTIVE_ATTRIBUTION_STATES = {"attribution_pending", "completed_unmerged"}
 
-    Only direct task directories under ``<root>/tasks`` are considered.  State
-    files are parsed defensively and must have a valid task-level status and
-    timestamp; done/additional-work and malformed or missing files are skipped.
-    """
-    root = pathlib.Path(project_root).resolve()
-    tasks_root = root / "tasks"
-    candidates = []
-    if not tasks_root.is_dir():
-        return []
+
+def _boot_candidate(task_dir):
+    """Return one validated state candidate without changing its source file."""
+    state_file = task_dir / "state.json"
+    if not state_file.is_file() or state_file.is_symlink():
+        return None
     try:
-        entries = sorted(tasks_root.iterdir())
+        state = json.loads(state_file.read_text(encoding="utf-8"))
+        if not isinstance(state, dict):
+            return None
+        status = state.get("current_status")
+        updated = state.get("updated_at")
+        if status not in {"in_progress", "blocked"} or not isinstance(updated, str):
+            return None
+        if not (TS_PATTERN_MIN.match(updated) or TS_PATTERN_SEC.match(updated)):
+            return None
+        task_id = state.get("task_id")
+        if not isinstance(task_id, str) or not task_id:
+            task_id = task_dir.name
+        next_action = state.get("next_action", "")
+        if not isinstance(next_action, str):
+            next_action = ""
+        return updated, {
+            "title": task_id,
+            "stage": _boot_current_stage(state),
+            "next_action": next_action,
+        }
+    except (OSError, UnicodeError, json.JSONDecodeError, AttributeError, TypeError):
+        return None
+
+
+def _boot_anomaly(code, detail=""):
+    anomaly = {"code": code}
+    if detail:
+        anomaly["detail"] = detail
+    return anomaly
+
+
+def _collect_boot_summary_details(project_root):
+    """Collect direct and registry-issued canonical candidates read-only."""
+    root = pathlib.Path(project_root).resolve()
+    direct = {}
+    tasks_root = root / "tasks"
+    if tasks_root.is_dir():
+        try:
+            entries = sorted(tasks_root.iterdir())
+        except OSError:
+            entries = []
+        for task_dir in entries:
+            if not task_dir.is_dir() or task_dir.is_symlink():
+                continue
+            candidate = _boot_candidate(task_dir)
+            if candidate is not None:
+                direct[task_dir.name] = candidate
+
+    anomalies = []
+    registry_rows = []
+    meta_root = root / ".opal-worktrees" / ".meta"
+    try:
+        meta_files = sorted(meta_root.glob("task_*.json")) if meta_root.is_dir() else []
     except OSError:
-        return []
-    for task_dir in entries:
-        if not task_dir.is_dir() or task_dir.is_symlink():
+        meta_files = []
+    required = {"task_path", "task_folder", "allocator_root"}
+    for meta_file in meta_files:
+        try:
+            meta = json.loads(meta_file.read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, json.JSONDecodeError):
+            anomalies.append(_boot_anomaly("registry_meta_corrupt", meta_file.name))
             continue
-        state_file = task_dir / "state.json"
-        if not state_file.is_file() or state_file.is_symlink():
+        if not isinstance(meta, dict) or any(
+                key not in meta or not isinstance(meta[key], str) or not meta[key]
+                for key in required):
+            anomalies.append(_boot_anomaly("registry_meta_missing_fields", meta_file.name))
+            continue
+        attribution_state = meta.get("attribution_state")
+        if "attribution_state" in meta and (
+                not isinstance(attribution_state, str) or not attribution_state):
+            anomalies.append(_boot_anomaly("registry_attribution_state_invalid", meta_file.name))
+            continue
+        if attribution_state == "closed":
+            continue
+        if (attribution_state is not None
+                and attribution_state not in ACTIVE_ATTRIBUTION_STATES):
+            anomalies.append(_boot_anomaly("registry_attribution_state_invalid", meta_file.name))
+            continue
+        task_folder = meta["task_folder"]
+        if pathlib.PurePath(task_folder).name != task_folder or task_folder in {".", ".."}:
+            anomalies.append(_boot_anomaly("registry_task_folder_invalid", meta_file.name))
             continue
         try:
-            state = json.loads(state_file.read_text(encoding="utf-8"))
-            status = state.get("current_status")
-            updated = state.get("updated_at")
-            if status not in {"in_progress", "blocked"} or not isinstance(updated, str):
+            task_path = pathlib.Path(meta["task_path"])
+            allocator_root = pathlib.Path(meta["allocator_root"])
+            if not task_path.is_absolute() or not allocator_root.is_absolute():
+                anomalies.append(_boot_anomaly("registry_meta_path_not_absolute", meta_file.name))
                 continue
-            # Fixed-width KST timestamps sort chronologically; reject arbitrary
-            # values so malformed input cannot win the latest-item selection.
-            if not (TS_PATTERN_MIN.match(updated) or TS_PATTERN_SEC.match(updated)):
+            if allocator_root.resolve() != root:
+                anomalies.append(_boot_anomaly("registry_allocator_root_mismatch", meta_file.name))
                 continue
-            task_id = state.get("task_id")
-            if not isinstance(task_id, str) or not task_id:
-                task_id = task_dir.name
-            next_action = state.get("next_action", "")
-            if not isinstance(next_action, str):
-                next_action = ""
-            candidates.append((updated, {
-                "title": task_id,
-                "stage": _boot_current_stage(state),
-                "next_action": next_action,
-            }))
-        except (OSError, UnicodeError, json.JSONDecodeError, AttributeError, TypeError):
+            if not task_path.is_dir() or task_path.is_symlink():
+                anomalies.append(_boot_anomaly("registry_task_path_missing", task_folder))
+                continue
+            canonical_path = task_path.resolve()
+        except (OSError, RuntimeError, ValueError):
+            anomalies.append(_boot_anomaly("registry_task_path_missing", task_folder))
             continue
-    if not candidates:
-        return []
-    candidates.sort(key=lambda item: item[0], reverse=True)
-    return [candidates[0][1]]
+        if canonical_path.name != task_folder:
+            anomalies.append(_boot_anomaly("registry_task_path_mismatch", task_folder))
+            continue
+        registry_rows.append({
+            "task_folder": task_folder,
+            "task_path": canonical_path,
+            "meta_name": meta_file.name,
+        })
+
+    folder_counts = {}
+    path_counts = {}
+    for row in registry_rows:
+        folder_counts[row["task_folder"]] = folder_counts.get(row["task_folder"], 0) + 1
+        path_key = str(row["task_path"])
+        path_counts[path_key] = path_counts.get(path_key, 0) + 1
+
+    candidates = []
+    active_registry_folders = {row["task_folder"] for row in registry_rows}
+    duplicate_folders = set()
+    for row in registry_rows:
+        path_key = str(row["task_path"])
+        if folder_counts[row["task_folder"]] > 1 or path_counts[path_key] > 1:
+            duplicate_folders.add(row["task_folder"])
+            continue
+        candidate = _boot_candidate(row["task_path"])
+        if candidate is not None:
+            candidates.append(candidate)
+
+    for task_folder in sorted(duplicate_folders):
+        anomalies.append(_boot_anomaly("registry_active_duplicate", task_folder))
+    for task_folder in sorted(active_registry_folders.intersection(direct)):
+        anomalies.append(_boot_anomaly("task_path_ambiguous", task_folder))
+    for task_folder, candidate in direct.items():
+        if task_folder not in active_registry_folders:
+            candidates.append(candidate)
+
+    candidates.sort(key=lambda entry: (entry[0], entry[1]["title"]), reverse=True)
+    items = [entry[1] for entry in candidates[:BOOT_SUMMARY_ITEM_LIMIT]]
+    return {
+        "items": items,
+        "other_count": max(0, len(candidates) - len(items)),
+        "anomalies": anomalies[:BOOT_SUMMARY_ANOMALY_LIMIT],
+    }
+
+
+def collect_boot_summary(project_root):
+    """Return the newest direct/canonical item using the legacy list shape."""
+    return _collect_boot_summary_details(project_root)["items"][:1]
 
 
 def cmd_boot_summary(args):
     """Emit a bounded, read-only summary for session.project bootstrap."""
     command = "boot-summary"
-    items = collect_boot_summary(args.project_root)
-    payload = {"ok": True, "command": command, "items": items}
+    details = _collect_boot_summary_details(args.project_root)
+    items = details["items"]
+    payload = {"ok": True, "command": command, **details}
     encoded = json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
     # Keep the public result bounded even for adversarially long state fields.
-    if len(encoded.encode("utf-8")) > 1024 and items:
-        item = items[0]
-        item["title"] = item["title"][:120]
-        item["stage"] = item["stage"][:40]
-        item["next_action"] = item["next_action"][:120]
+    mutable = [
+        (row, key)
+        for row in items
+        for key in ("title", "stage", "next_action")
+    ] + [
+        (row, "detail")
+        for row in payload["anomalies"]
+        if "detail" in row
+    ]
+    for row, key in mutable:
+        limit = 120 if key != "stage" else 40
+        row[key] = row[key][:limit]
+    encoded = json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
+    # Counts, item structure, and anomaly codes are immutable while values trim.
+    while len(encoded.encode("utf-8")) > 1024:
+        populated = [(row, key) for row, key in mutable if row.get(key)]
+        if not populated:
+            break
+        row, key = max(
+            populated,
+            key=lambda pair: len(pair[0][pair[1]].encode("utf-8")),
+        )
+        row[key] = row[key][:-1]
         encoded = json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
-        # The values may contain multi-byte characters; trim by encoded size,
-        # never by slicing the JSON string (which could produce invalid JSON).
-        while len(encoded.encode("utf-8")) > 1024:
-            field = max(("title", "stage", "next_action"),
-                        key=lambda name: len(item[name]))
-            if not item[field]:
-                break
-            item[field] = item[field][:-1]
-            encoded = json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
     print(encoded)
 
 # ── 9. gate-pass ──────────────────────────────────────────────────────────────
