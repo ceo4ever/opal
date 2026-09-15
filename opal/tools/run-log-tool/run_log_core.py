@@ -3,7 +3,7 @@
   "module": "run_log_core",
   "layer": "util",
   "domain": "opal-tools",
-  "description": "태스크 실행 로그 기록 코어 — append 전용 줄 단위 기록 조각(run/run-log-{run_id}-{segment}.jsonl) 관리. init/append/validate_run/import_agentic/import_oppl 5개 공개 함수가 CONTRACT.md §2.6 인프로세스 호출 형태(task_path, run_id, ..., *, lock_held=False, lock_timeout_ms=30000)를 따른다. 상태 원천 파일을 읽지도 쓰지도 않으며 상태 도구 모듈을 import하지 않는다(TRD D-5 단방향 의존, AC-19/MV-24). append()는 §1.1/§1.2 폐쇄형 스키마(validate_event)와 §1.3 4축 허용 조합·필수 증거(validate_provenance)를 조각 스캔 전에 순수 인메모리로 판정하고, 표 밖 조합·명시적 거부·사건별 actor 제약 위반을 provenance_invalid로, 폐쇄형 스키마·조건부 필수 필드 위반을 schema_invalid로 나눈다. COMBINATION_TABLE(A1~A8)과 iter_all_combinations()가 §1.3 조합 판정의 단일 원천이며 전수 열거가 그 표에서만 파생된다. 요청 식별자 멱등(AC-7)은 canonical_digest()가 발급 필드(event_id/sequence/actor_sequence/timestamp)를 제외한 정규 직렬화 SHA-256으로 판정하며, scan_run() 1회 조각 스캔에서 순번 발급과 함께 수행한다. actor_sequence 범위는 actor.kind=worker면 worker_run_id, 그 외에는 (actor.kind, actor.id)다. append()의 명시적 키워드 전용 mode 인자(None|shadow|active)는 active 전용 source.kind 제약(§1.3 말미)을 게이트하며, 코어는 이 값을 인자로만 받고 상태 원천에서 읽지 않는다. 직렬화 상한 16 KiB는 redact() 통과 후 최종 줄의 UTF-8 바이트로 잰다. import_agentic()/import_oppl()은 legacy AGENTIC-LOG.md·Project Loop .oppl-run/ 원본을 각각 형식별 규칙으로 표준 activity 사건(조합 A8)으로 정규화해 append()로 위임하며, 멱등 키는 원본 식별자·위치자·정규화 해시로 파생한 request_id로 환원해 append()의 멱등 판정을 그대로 탄다(역변환 금지, 완료 게이트 불기여). 가져오기 원본 읽기는 조각 경로와 동일한 심볼릭 링크·경계 이탈 방어(_reject_symlink_or_escape·_safe_read_bytes, O_NOFOLLOW)를 거치고, 신뢰 불가 원본의 디코딩 실패·타입 불일치·중첩 초과·달력 오류는 예외를 던지지 않고 해당 행·파일만 건너뛴다. 배타 락은 <task-path>/.opal-task.lock 1개이고 fcntl.flock(LOCK_EX+LOCK_NB) 재시도 루프로 30,000ms 기본 상한을 집행하며 초과 시 task_lock_timeout을 반환한다(§2.7). task_lock()은 이 락을 상태 도구와 공유하는 공개 컨텍스트매니저다. 락 파일·조각 파일은 0600, run/ 디렉터리는 0700으로 생성한다. run_id는 화이트리스트 정규식(RUN_ID_PATTERN)으로 검증한 뒤에만 파일명 보간·glob 패턴에 사용하고 glob.escape()·resolve() 포함 관계 확인을 덧댄다. 조각 생성은 O_CREAT|O_EXCL|O_NOFOLLOW, append는 O_WRONLY|O_APPEND|O_NOFOLLOW 단일 open()으로 TOCTOU·심볼릭 링크 추종 간극을 없앤다. 순번은 색인 없이 조각 전량 스캔으로 발급하며, 디코딩·파싱 실패 줄은 예외를 던지지 않고 위반/손상 신호로 집계한다. 사건 시각은 Python 표준 라이브러리 UTC로 발급하고 날짜 도구를 타지 않는다(§1.1) — legacy 가져오기만 예외로 KST(+09:00) 고정 오프셋을 UTC로 옮긴다. redact()는 디스크 직렬화 직전 공통 마스킹 초크포인트이며 멱등 계약을 갖는다 — 본문은 아직 pass-through다(D-9, writer별 개별 마스킹 금지). RUN_LOG_ERROR_CODES는 run-log 계열 오류 코드의 자기 SSOT다(상태 도구의 오류 코드 테이블과 물리 분리) — profile_not_found는 §3.1 소유 경계에 따라 이 테이블에 없다(상태 도구 쪽 소유). err()는 미등록 코드에 대해 .format() 호출을 건너뛴다. 런타임 색인·조각 경계 전환·락 정책, 상태 보관함·복구, 원본 상한·마스킹 규칙 본문, 채널 변환기, 가져온 사건의 완료 게이트 불기여 집행은 이 모듈이 다루지 않는다 — 소유 배정은 `tasks/{NNN}-*/PLAN.md` 범위 경계표를 참조한다.",
+  "description": "태스크 실행 로그 기록 코어 — append 전용 줄 단위 기록 조각(run/run-log-{run_id}-{segment}.jsonl) 관리. init/append/validate_run/import_agentic/import_oppl/reconcile_duration/reconcile_duration_check 7개 공개 함수가 CONTRACT.md §2.6 인프로세스 호출 형태(task_path, run_id, ..., *, lock_held=False, lock_timeout_ms=30000)를 따른다. reconcile_duration(task_path, run_id, worker_run_id)은 같은 worker_run_id의 terminal 사건에서 duration_ms·floor(duration_ms/60000)(duration_minutes)을 조회하는 단일 대상 점조회이며, reconcile_duration_check(task_path, run_id=None, worker_run_id=None)은 run-log-tool reconcile-duration CLI 표면이 쓰는 범위 감사 조회다(worker_run_id 지정 시 불일치를 worker_duration_conflict로 즉시 거부, 미지정 시 {checked, mismatches}로 보고) — 둘 다 상태 원천 파일을 읽지 않는다(W-6, TASK C-4). 상태 원천 파일을 읽지도 쓰지도 않으며 상태 도구 모듈을 import하지 않는다(TRD D-5 단방향 의존, AC-19/MV-24). append()는 §1.1/§1.2 폐쇄형 스키마(validate_event)와 §1.3 4축 허용 조합·필수 증거(validate_provenance)를 조각 스캔 전에 순수 인메모리로 판정하고, 표 밖 조합·명시적 거부·사건별 actor 제약 위반을 provenance_invalid로, 폐쇄형 스키마·조건부 필수 필드 위반을 schema_invalid로 나눈다. COMBINATION_TABLE(A1~A8)과 iter_all_combinations()가 §1.3 조합 판정의 단일 원천이며 전수 열거가 그 표에서만 파생된다. 요청 식별자 멱등(AC-7)은 canonical_digest()가 발급 필드(event_id/sequence/actor_sequence/timestamp)를 제외한 정규 직렬화 SHA-256으로 판정하며, scan_run() 1회 조각 스캔에서 순번 발급과 함께 수행한다. actor_sequence 범위는 actor.kind=worker면 worker_run_id, 그 외에는 (actor.kind, actor.id)다. append()의 명시적 키워드 전용 mode 인자(None|shadow|active)는 active 전용 source.kind 제약(§1.3 말미)을 게이트하며, 코어는 이 값을 인자로만 받고 상태 원천에서 읽지 않는다. 직렬화 상한 16 KiB는 redact() 통과 후 최종 줄의 UTF-8 바이트로 잰다. import_agentic()/import_oppl()은 legacy AGENTIC-LOG.md·Project Loop .oppl-run/ 원본을 각각 형식별 규칙으로 표준 activity 사건(조합 A8)으로 정규화해 append()로 위임하며, 멱등 키는 원본 식별자·위치자·정규화 해시로 파생한 request_id로 환원해 append()의 멱등 판정을 그대로 탄다(역변환 금지, 완료 게이트 불기여). 가져오기 원본 읽기는 조각 경로와 동일한 심볼릭 링크·경계 이탈 방어(_reject_symlink_or_escape·_safe_read_bytes, O_NOFOLLOW)를 거치고, 신뢰 불가 원본의 디코딩 실패·타입 불일치·중첩 초과·달력 오류는 예외를 던지지 않고 해당 행·파일만 건너뛴다. 배타 락은 <task-path>/.opal-task.lock 1개이고 fcntl.flock(LOCK_EX+LOCK_NB) 재시도 루프로 30,000ms 기본 상한을 집행하며 초과 시 task_lock_timeout을 반환한다(§2.7). task_lock()은 이 락을 상태 도구와 공유하는 공개 컨텍스트매니저다. 락 파일·조각 파일은 0600, run/ 디렉터리는 0700으로 생성한다. run_id는 화이트리스트 정규식(RUN_ID_PATTERN)으로 검증한 뒤에만 파일명 보간·glob 패턴에 사용하고 glob.escape()·resolve() 포함 관계 확인을 덧댄다. 조각 생성은 O_CREAT|O_EXCL|O_NOFOLLOW, append는 O_WRONLY|O_APPEND|O_NOFOLLOW 단일 open()으로 TOCTOU·심볼릭 링크 추종 간극을 없앤다. 조각 상한(SEGMENT_MAX_BYTES, 4 MiB)에 다음 단일 사건의 최대 크기(MAX_EVENT_BYTES, 16 KiB) 여유가 남지 않으면 append()가 상한 검사·다음 번호 선택·새 조각 생성을 같은 `_with_lock()` 구간 안에서 연속 수행해 다음 번호 조각으로 전환한다(D-P5, W-5) — 새 조각 자리도 조각 경로와 같은 심볼릭 링크·경계 이탈 방어(`_reject_symlink_or_escape`)를 거치고, 이미 닫힌(이전 번호) 조각은 다시 열지 않는다. `scan_run()`은 번호 순 전 조각을 열거하므로 전환 이후에도 run 전역 순번·요청 식별자 멱등 판정 범위가 유지된다(D-P6). 순번은 색인 없이 조각 전량 스캔으로 발급하며, 디코딩·파싱 실패 줄은 예외를 던지지 않고 위반/손상 신호로 집계한다. 사건 시각은 Python 표준 라이브러리 UTC로 발급하고 날짜 도구를 타지 않는다(§1.1) — legacy 가져오기만 예외로 KST(+09:00) 고정 오프셋을 UTC로 옮긴다. redact()는 디스크 직렬화 직전 공통 마스킹 초크포인트이며 멱등 계약을 갖는다 — 환경변수형 비밀값·Bearer/token·API key·private key 블록 4종을 문자열 값 안에서만 규칙 기반 치환하고 키 집합·타입·중첩 구조는 보존한다(D-9, writer별 개별 마스킹 금지). 마스킹을 안전하게 판정할 수 없는 입력(적대적으로 깊은 중첩)은 저장을 거부하고 redaction_failed 오류 봉투만 반환한다. RUN_LOG_ERROR_CODES는 run-log 계열 오류 코드의 자기 SSOT다(상태 도구의 오류 코드 테이블과 물리 분리) — profile_not_found는 §3.1 소유 경계에 따라 이 테이블에 없다(상태 도구 쪽 소유). err()는 미등록 코드에 대해 .format() 호출을 건너뛴다. 런타임 색인·락 정책, 상태 보관함·복구, 원본 상한·마스킹 규칙 본문, 채널 변환기, 가져온 사건의 완료 게이트 불기여 집행은 이 모듈이 다루지 않는다 — 소유 배정은 `tasks/{NNN}-*/PLAN.md` 범위 경계표를 참조한다.",
   "exports": [
     "ok", "err", "redact", "require_absolute", "task_lock",
     "new_event_id", "new_run_id", "utc_now_ms", "segment_path",
@@ -11,7 +11,8 @@
     "ALLOWED_EVENTS", "ALLOWED_TOP_LEVEL_KEYS", "EVENT_ACTOR_CONSTRAINTS",
     "COMBINATION_TABLE", "combination_of", "iter_all_combinations",
     "canonical_digest", "scan_run", "validate_event", "validate_provenance",
-    "init", "append", "validate_run", "import_agentic", "import_oppl"
+    "init", "append", "validate_run", "import_agentic", "import_oppl",
+    "reconcile_duration", "reconcile_duration_check"
   ]
 }
 """
@@ -45,6 +46,8 @@ RUN_LOG_ERROR_CODES = {
     "provenance_invalid":     "§1.3 허용 조합·출처 증거 위반: {detail}",
     "request_id_conflict":    "request_id가 재사용됐으나 payload가 다릅니다: {detail}",
     "event_too_large":        "직렬화 크기가 16 KiB 상한을 초과했습니다: {detail}",
+    "redaction_failed":       "마스킹할 수 없는 원본으로 판정되어 저장을 거부합니다: {detail}",
+    "worker_duration_conflict": "저장된 duration_ms가 파생값과 일치하지 않습니다: {detail}",
 }
 
 # run_id 형식 화이트리스트 (GC-003) — 파일명 보간·glob 패턴에 넣기 전 검증한다.
@@ -236,19 +239,93 @@ def err(code, message=None, **detail):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 마스킹 초크포인트 (D-9 / TASK C-8) — T02는 pass-through
+# 마스킹 초크포인트 (D-9 / TASK C-8 / W-2) — 값 문자열 안에서만 규칙 기반 치환.
+# docs/SECURITY.md 점검 결과(2026-09-15) 마스킹 패턴 추가 등재 없음 — 환경변수형·
+# Bearer/token·API key·private key 블록 4종 기본 패턴만 적용한다.
 # ─────────────────────────────────────────────────────────────────────────────
+
+_PRIVATE_KEY_BLOCK_RE = re.compile(
+    r"-----BEGIN [A-Z0-9 ]+-----.*?-----END [A-Z0-9 ]+-----", re.DOTALL)
+_BEARER_TOKEN_RE = re.compile(r"\bBearer\s+\S+", re.IGNORECASE)
+_API_KEY_RE = re.compile(r"\bapi[_-]?key\s*[=:]\s*\S+", re.IGNORECASE)
+# env var형 비밀값 — 이름에 아래 지표 단어가 들어간 KEY=value만 대상으로 한다
+# (범용 KEY=value 전수 치환은 event_id·sha256 같은 보존 대상까지 건드릴 위험이
+# 있어 H-5 위반이다 — 지표 단어 매치로 범위를 좁힌다). API key는 위 전용 패턴이
+# 이미 담당하므로 여기서는 제외한다.
+_ENV_SECRET_INDICATOR = r"(?:PASSWORD|PASSWD|SECRET|TOKEN|ACCESS_?KEY|PRIVATE_?KEY|CREDENTIAL)"
+_ENV_SECRET_RE = re.compile(
+    rf"\b(?P<key>[A-Za-z][A-Za-z0-9_]*{_ENV_SECRET_INDICATOR}[A-Za-z0-9_]*)=\S+",
+    re.IGNORECASE,
+)
+
+_MASK_PLACEHOLDER = "[REDACTED]"
+_MAX_REDACT_DEPTH = 200  # GC-205와 같은 이유의 방어 — 적대적으로 깊은 중첩은 redaction_failed
+
+
+def _mask_private_key(_match):
+    return "[REDACTED_PRIVATE_KEY_BLOCK]"
+
+
+def _mask_bearer(_match):
+    return f"Bearer {_MASK_PLACEHOLDER}"
+
+
+def _mask_api_key(_match):
+    return f"api_key={_MASK_PLACEHOLDER}"
+
+
+def _mask_env_secret(match):
+    return f"{match.group('key')}={_MASK_PLACEHOLDER}"
+
+
+def _mask_secret_string(text):
+    """문자열 값 하나에 4종 패턴을 순서대로 적용한다. 치환 결과 자리표시자는
+    어떤 패턴과도 다시 일치하지 않으므로 재적용해도 동일 결과다(멱등, S-2)."""
+    text = _PRIVATE_KEY_BLOCK_RE.sub(_mask_private_key, text)
+    text = _BEARER_TOKEN_RE.sub(_mask_bearer, text)
+    text = _API_KEY_RE.sub(_mask_api_key, text)
+    text = _ENV_SECRET_RE.sub(_mask_env_secret, text)
+    return text
+
+
+class _RedactionFailure(Exception):
+    """redact()가 안전하게 마스킹할 수 없다고 판정했을 때만 발생한다(내부 전용).
+    append()가 이를 받아 redaction_failed 오류 봉투로 옮긴다."""
+
+
+def _redact_value(value, _depth=0):
+    if _depth > _MAX_REDACT_DEPTH:
+        raise _RedactionFailure("payload 중첩 깊이가 마스킹 처리 한도를 초과했습니다")
+    if isinstance(value, str):
+        return _mask_secret_string(value)
+    if isinstance(value, dict):
+        return {k: _redact_value(v, _depth + 1) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_redact_value(v, _depth + 1) for v in value]
+    return value
+
 
 def redact(payload):
     """디스크 직렬화 **직전** 모든 writer가 통과하는 공통 마스킹 경로 (D-9).
 
-    아직 마스킹 규칙을 갖지 않으므로 입력을 그대로 반환하는 pass-through다.
-    T06이 이 함수 **본문만** 채운다 — writer별 개별 마스킹을 추가하지 않는다.
+    환경변수형 비밀값·Bearer/token·API key·private key 블록을 규칙 기반으로
+    찾아 **문자열 값 안에서만** 치환한다. 문자열이 아닌 값과 dict/list의 키
+    집합·타입·중첩 구조는 그대로 보존한다(W-2) — `event_id`·`sha256`·
+    `worker_log_token_id`처럼 비밀값과 형태가 비슷한 식별자도 위 4종 패턴에
+    걸리지 않으므로 값 그대로 남는다(H-5).
 
     [MUST] **멱등 계약**: 이미 이 함수를 통과한 payload를 다시 통과시켜도 결과가
-    같아야 한다(같은 payload에 두 번 적용 == 한 번 적용).
+    같아야 한다(같은 payload에 두 번 적용 == 한 번 적용) — 치환 자리표시자
+    (`[REDACTED]` 계열)는 위 4종 패턴 중 어느 것과도 다시 일치하지 않는다.
+
+    마스킹을 안전하게 판정할 수 없을 만큼(예: 적대적으로 깊은 중첩) 입력이
+    구성돼 있으면 원본을 그대로 반환하지 않고 `_RedactionFailure`를 발생시킨다
+    — 호출자(`append()`)가 이를 `redaction_failed` 오류 봉투로 옮긴다.
     """
-    return payload
+    try:
+        return _redact_value(payload)
+    except RecursionError:
+        raise _RedactionFailure("payload 중첩 깊이가 마스킹 처리 한도를 초과했습니다")
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -323,6 +400,21 @@ def _resolved_segments(task_dir, run_id):
             continue
         segments.append(seg)
     return segments
+
+
+_SEGMENT_NUMBER_SUFFIX_RE = re.compile(r"-(\d+)\.jsonl$")
+
+
+def _active_segment_number(task_dir, run_id):
+    """run의 현재 활성(가장 큰 번호) 조각 번호. 조각이 아직 하나도 없으면 첫 조각
+    관례(D-H)에 따라 1을 반환한다. `init()`·`append()` 양쪽이 이 함수로 활성 조각을
+    찾아 하드코딩된 `segment_path(..., 1)`을 대체한다(W-5)."""
+    numbers = []
+    for seg in _resolved_segments(task_dir, run_id):
+        m = _SEGMENT_NUMBER_SUFFIX_RE.search(seg.name)
+        if m:
+            numbers.append(int(m.group(1)))
+    return max(numbers) if numbers else 1
 
 
 def _iter_records_from_bytes(raw_bytes):
@@ -443,8 +535,17 @@ def _legacy_kst_to_utc_ms(value):
 
 
 def segment_path(task_path, run_id, n):
-    """조각 경로 — D-1 패턴, 첫 조각은 0001(D-H). 4 MiB 경계 전환은 T04 소관."""
+    """조각 경로 — D-1 패턴, 첫 조각은 0001(D-H). 4 MiB 경계 전환은 SEGMENT_MAX_BYTES와
+    `_select_write_segment()`가 이 모듈 안에서 담당한다(W-5)."""
     return pathlib.Path(task_path) / "run" / f"run-log-{run_id}-{n:04d}.jsonl"
+
+
+# 조각 상한(D-P5/AC-8/H-2) — 4 MiB. 여유는 사건 직렬화 상한(MAX_EVENT_BYTES)만큼
+# 남겨 두고 전환해, 상한 검사 시점에 이번 사건의 최종 직렬화 크기를 아직 몰라도
+# (redact()·sequence 발급 전) 다음 단일 append가 항상 새 조각 없이 상한 안에
+# 들어가도록 보장한다.
+SEGMENT_MAX_BYTES = 4 * 1024 * 1024
+MAX_EVENT_BYTES = 16384
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -715,6 +816,39 @@ def validate_event(event):
             return err("schema_invalid",
                        detail=f"{event_type}는 duration_ms와 함께 duration_source가 필요합니다")
 
+        # W-6 — data.duration_spans[]는 {source_id, duration_ms} 배열이며 duration_ms는
+        # span 합과 같아야 하고 같은 source_id 중복은 거부한다(§1.2 terminal 공통 조건,
+        # PLAN.md D-P7·TRD.md §시간 모델 — 시각 차분으로 시간을 만들지 않는다). span
+        # 필드는 선택이므로 event.data에 실려 있을 때만 판정한다.
+        spans = (data or {}).get("duration_spans") if data is not None else None
+        if spans is not None:
+            if not isinstance(spans, list):
+                return err("schema_invalid",
+                           detail=f"{event_type}의 data.duration_spans는 array여야 합니다")
+            seen_source_ids = set()
+            span_sum = 0
+            for span in spans:
+                if not isinstance(span, dict):
+                    return err("schema_invalid",
+                               detail="duration_spans 원소는 object여야 합니다")
+                source_id = span.get("source_id")
+                span_ms = span.get("duration_ms")
+                if not isinstance(source_id, str) or not source_id:
+                    return err("schema_invalid",
+                               detail="duration_spans[].source_id가 유효하지 않습니다")
+                if not isinstance(span_ms, int) or isinstance(span_ms, bool) or span_ms < 0:
+                    return err("schema_invalid",
+                               detail="duration_spans[].duration_ms가 유효하지 않습니다")
+                if source_id in seen_source_ids:
+                    return err("schema_invalid",
+                               detail=f"duration_spans에 같은 source_id가 중복됩니다: {source_id!r}")
+                seen_source_ids.add(source_id)
+                span_sum += span_ms
+            if has_ms and span_sum != event.get("duration_ms"):
+                return err("schema_invalid",
+                           detail=f"duration_ms({event.get('duration_ms')})가 "
+                                  f"duration_spans 합({span_sum})과 다릅니다")
+
     # reason 조건부 필수 — worker.failed/worker.blocked/run.completed.
     if event_type in _REASON_REQUIRED_EVENTS and not event.get("reason"):
         return err("schema_invalid", detail=f"{event_type}는 reason이 필수입니다")
@@ -847,7 +981,9 @@ def init(task_path, run_id, *, lock_held=False, lock_timeout_ms=DEFAULT_LOCK_TIM
         run_dir, dir_err = _ensure_run_dir(task_dir)
         if dir_err:
             return dir_err
-        segment = segment_path(task_dir, run_id, 1)
+        # 현재 활성 조각 번호를 쓴다(하드코딩된 1번 제거, W-5) — 정상 경로에서는
+        # run/이 방금 만들어졌거나 비어 있으므로 1을 반환해 기존 동작과 같다.
+        segment = segment_path(task_dir, run_id, _active_segment_number(task_dir, run_id))
         created = False
         try:
             fd = os.open(str(segment),
@@ -862,6 +998,50 @@ def init(task_path, run_id, *, lock_held=False, lock_timeout_ms=DEFAULT_LOCK_TIM
         return ok(run_id=run_id, segment=str(segment), created=created)
 
     return _with_lock(task_dir, lock_held, lock_timeout_ms, _do)
+
+
+def _select_write_segment(task_dir, run_id):
+    """append()가 이번 사건을 쓸 활성 조각을 고른다(D-P5, W-5). 현재 활성 조각의
+    상한(SEGMENT_MAX_BYTES) 여유가 다음 단일 사건의 최대 크기(MAX_EVENT_BYTES)보다
+    작으면 — 이 시점에는 아직 redact()·sequence 발급 전이라 이번 사건의 정확한
+    직렬화 크기를 모르므로 최댓값(16 KiB)을 보수적으로 예약한다 — 다음 번호 조각을
+    새로 만들어 그쪽으로 전환한다. 새 조각 자리는 기존 조각 경로와 같은 심볼릭
+    링크·경계 이탈 방어(`_reject_symlink_or_escape`, GC-201/202)를 거치고
+    O_CREAT|O_EXCL|O_NOFOLLOW 0600으로만 생성한다(C-8 — 기존 방어 재사용, 새로
+    만들지 않는다). 이미 닫힌(이전 번호) 조각은 이 함수가 절대 다시 열지 않는다 —
+    반환하는 조각은 이번 호출이 그대로 쓸 활성 조각 1개뿐이다.
+
+    호출자는 이 함수를 `_with_lock()`이 이미 잡은 락 구간 **안에서** 호출해야
+    한다 — 상한 검사·다음 번호 선택·새 조각 생성 사이에 락을 놓지 않는다(D-4 단일성).
+
+    반환: `(segment_path, None)` 성공, `(None, err봉투)` 실패."""
+    n = _active_segment_number(task_dir, run_id)
+    segment = segment_path(task_dir, run_id, n)
+    try:
+        current_size = segment.stat().st_size
+    except FileNotFoundError:
+        return None, err("run_log_missing", detail=f"segment not found: {segment}")
+    except OSError as e:
+        return None, err("run_log_write_failed", detail=str(e))
+
+    if current_size + MAX_EVENT_BYTES <= SEGMENT_MAX_BYTES:
+        return segment, None
+
+    # 상한 여유 부족 — 다음 번호로 전환한다.
+    next_segment = segment_path(task_dir, run_id, n + 1)
+    boundary_err = _reject_symlink_or_escape(task_dir, next_segment)
+    if boundary_err:
+        return None, boundary_err
+    try:
+        fd = os.open(str(next_segment),
+                     os.O_CREAT | os.O_EXCL | os.O_WRONLY | os.O_NOFOLLOW, 0o600)
+    except FileExistsError:
+        return None, err("run_log_write_failed",
+                          detail=f"다음 조각 자리가 이미 점유돼 있습니다(거부): {next_segment}")
+    except OSError as e:
+        return None, err("run_log_write_failed", detail=str(e))
+    os.close(fd)
+    return next_segment, None
 
 
 def append(task_path, run_id, event, *, lock_held=False, lock_timeout_ms=DEFAULT_LOCK_TIMEOUT_MS,
@@ -910,7 +1090,12 @@ def append(task_path, run_id, event, *, lock_held=False, lock_timeout_ms=DEFAULT
             return err("run_log_write_failed",
                        detail=f"run/이 심볼릭 링크입니다(거부): {run_dir}")
 
-        segment = segment_path(task_dir, run_id, 1)
+        # D-P5/W-5 — 상한 검사·다음 번호 선택·새 조각 생성을 이 락 구간 안에서
+        # 연속 수행한다(중간에 락을 놓지 않는다). 하드코딩된 segment_path(...,1) 대신
+        # 현재 활성 조각 번호를 쓰고, 상한 여유가 부족하면 다음 번호로 전환한다.
+        segment, segment_err = _select_write_segment(task_dir, run_id)
+        if segment_err:
+            return segment_err
 
         next_seq, next_actor_seq, malformed, idempotent_match = scan_run(task_dir, run_id, full_event)
         if malformed:
@@ -935,15 +1120,20 @@ def append(task_path, run_id, event, *, lock_held=False, lock_timeout_ms=DEFAULT
         full_event["sequence"] = next_seq
         full_event["actor_sequence"] = next_actor_seq
 
-        safe_event = redact(full_event)
+        try:
+            safe_event = redact(full_event)
+        except _RedactionFailure as e:
+            # 마스킹 불가 판정 원본은 저장하지 않는다 — 메타데이터(사유)만 담은
+            # 오류 봉투를 반환하고 조각에는 아무 줄도 추가하지 않는다(§2.2 redaction_failed).
+            return err("redaction_failed", detail=str(e))
         line = json.dumps(safe_event, ensure_ascii=False, default=str)
         line_bytes = line.encode("utf-8")
-        if len(line_bytes) > 16384:
-            # §1.1 — 직렬화 상한 16 KiB. redact() 통과 후 최종 줄로 재므로 디스크
-            # 크기와 판정이 정확히 일치한다. 순번은 디스크에 아직 확정되지 않았으므로
-            # 거부해도 다음 append가 같은 번호를 재계산한다(빈 번호 없음).
+        if len(line_bytes) > MAX_EVENT_BYTES:
+            # §1.1 — 직렬화 상한 16 KiB(MAX_EVENT_BYTES). redact() 통과 후 최종 줄로
+            # 재므로 디스크 크기와 판정이 정확히 일치한다. 순번은 디스크에 아직
+            # 확정되지 않았으므로 거부해도 다음 append가 같은 번호를 재계산한다(빈 번호 없음).
             return err("event_too_large",
-                       detail=f"직렬화 크기 {len(line_bytes)} bytes > 16384")
+                       detail=f"직렬화 크기 {len(line_bytes)} bytes > {MAX_EVENT_BYTES}")
 
         try:
             fd = os.open(str(segment), os.O_WRONLY | os.O_APPEND | os.O_NOFOLLOW)
@@ -1050,6 +1240,132 @@ def _resolve_import_run_id(task_dir, explicit_run_id):
         return None, err("schema_invalid",
                          detail=f"run_id가 여럿입니다({sorted(found)}) — --run-id를 명시하세요")
     return next(iter(found)), None
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 시간 파생 일치 조회·감사 (W-6, CONTRACT.md §1.2/§2.3 run-log-tool.reconcile-duration,
+# TRD.md §시간 모델 — 단조 시계 구간 합만 쓰고 시각 차분으로 시간을 만들지 않는다)
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _duration_span_sum(spans):
+    """duration_spans[] 중 정수 duration_ms를 가진 항목만 합산한다. validate_event()가
+    이미 폐쇄형으로 판정한 정상 payload뿐 아니라, 그 검증을 거치지 않고 조각에 실렸을
+    수 있는 원본(legacy·수동 편집)도 방어적으로 다룬다."""
+    total = 0
+    for span in spans or ():
+        if isinstance(span, dict):
+            span_ms = span.get("duration_ms")
+            if isinstance(span_ms, int) and not isinstance(span_ms, bool):
+                total += span_ms
+    return total
+
+
+def reconcile_duration(task_path, run_id, worker_run_id, *, lock_held=False,
+                        lock_timeout_ms=DEFAULT_LOCK_TIMEOUT_MS):
+    """같은 worker_run_id의 terminal(worker.completed/failed/blocked) 사건에서
+    duration_ms와 그 파생값 floor(duration_ms / 60000)(duration_minutes)을 조회한다
+    (PLAN.md W-6 §2). task_path·run_id·worker_run_id만 인자로 받으며 상태 원천
+    파일을 읽지 않는다(TASK C-4, TRD.md D-5 단방향 의존) — 다른
+    도구(state-tool)가 이 함수를 인프로세스로 호출해 자신이 보유한 값과 비교한다.
+    저장된 duration_ms가 자기 자신의 data.duration_spans[] 합과 다르면(append()
+    이후 조각이 변조됐거나 검증 이전 시점의 legacy 사건이면) worker_duration_conflict로
+    거부한다 — append()가 이미 이 조건을 막으므로 정상 경로에서는 발생하지 않는다."""
+    path_err = require_absolute(task_path)
+    if path_err:
+        return path_err
+    run_id_err = _validate_run_id(run_id)
+    if run_id_err:
+        return run_id_err
+    task_dir = pathlib.Path(task_path)
+
+    def _do():
+        record = None
+        for seg in _resolved_segments(task_dir, run_id):
+            for rec in _iter_records_from_bytes(seg.read_bytes()):
+                if rec is None:
+                    continue
+                if rec.get("event") in _TERMINAL_EVENTS and rec.get("worker_run_id") == worker_run_id:
+                    record = rec
+                    break
+            if record is not None:
+                break
+
+        if record is None:
+            return err("run_log_missing",
+                       detail=f"worker_run_id={worker_run_id!r}의 terminal 사건이 없습니다")
+
+        duration_ms = record.get("duration_ms")
+        if duration_ms is None:
+            # duration_unknown_reason 경로 — 파생할 값이 없다(schema_invalid 대상이 아님).
+            return ok(duration_ms=None, duration_minutes=None)
+
+        spans = (record.get("data") or {}).get("duration_spans")
+        if isinstance(spans, list):
+            span_sum = _duration_span_sum(spans)
+            if span_sum != duration_ms:
+                return err("worker_duration_conflict",
+                           detail=f"worker_run_id={worker_run_id!r}의 저장된 "
+                                  f"duration_ms({duration_ms})가 duration_spans 합"
+                                  f"({span_sum})과 다릅니다")
+
+        return ok(duration_ms=duration_ms, duration_minutes=duration_ms // 60000)
+
+    return _with_lock(task_dir, lock_held, lock_timeout_ms, _do)
+
+
+def reconcile_duration_check(task_path, run_id=None, worker_run_id=None, *, lock_held=False,
+                              lock_timeout_ms=DEFAULT_LOCK_TIMEOUT_MS):
+    """`run-log-tool reconcile-duration` CLI 표면의 조회 로직 — 지정 범위(run_id로
+    좁히고, worker_run_id를 더 주면 단일 대상)의 terminal 사건을 훑어 저장된
+    duration_ms가 자기 자신의 data.duration_spans[] 합과 일치하는지 감사한다.
+    worker_run_id까지 지정하면 단일 대상 판정이 되어 불일치를 즉시
+    worker_duration_conflict로 거부하고(자동화 소비자용 엄격 모드), 지정하지 않으면
+    범위 내 전건을 훑어 {checked, mismatches}로 보고한다(감사 모드 — 개별 불일치
+    하나로 전체 호출을 실패시키지 않는다). duration_spans가 없는 terminal 사건은
+    감사할 근거가 없으므로 checked에 넣지 않는다. run_id 생략 시
+    `_resolve_import_run_id()`와 같은 규칙으로 조각에서 유일 run_id를 찾는다."""
+    path_err = require_absolute(task_path)
+    if path_err:
+        return path_err
+    task_dir = pathlib.Path(task_path)
+
+    def _do():
+        resolved_run_id, resolve_err = _resolve_import_run_id(task_dir, run_id)
+        if resolve_err:
+            return resolve_err
+
+        checked = 0
+        mismatches = []
+        for seg in _resolved_segments(task_dir, resolved_run_id):
+            for rec in _iter_records_from_bytes(seg.read_bytes()):
+                if rec is None:
+                    continue
+                if rec.get("event") not in _TERMINAL_EVENTS:
+                    continue
+                rec_worker_run_id = rec.get("worker_run_id")
+                if worker_run_id is not None and rec_worker_run_id != worker_run_id:
+                    continue
+                duration_ms = rec.get("duration_ms")
+                spans = (rec.get("data") or {}).get("duration_spans")
+                if duration_ms is None or not isinstance(spans, list):
+                    continue
+                checked += 1
+                span_sum = _duration_span_sum(spans)
+                if span_sum != duration_ms:
+                    if worker_run_id is not None:
+                        return err("worker_duration_conflict",
+                                   detail=f"worker_run_id={worker_run_id!r}의 "
+                                          f"duration_ms({duration_ms})가 duration_spans 합"
+                                          f"({span_sum})과 다릅니다")
+                    mismatches.append({
+                        "worker_run_id": rec_worker_run_id,
+                        "duration_ms": duration_ms,
+                        "span_sum": span_sum,
+                    })
+
+        return ok(checked=checked, mismatches=mismatches)
+
+    return _with_lock(task_dir, lock_held, lock_timeout_ms, _do)
 
 
 # ─────────────────────────────────────────────────────────────────────────────

@@ -3,7 +3,7 @@
   "module": "test_run_log_tool",
   "layer": "test",
   "domain": "opal-tools",
-  "description": "run-log-tool 서브명령(init/append/validate-run/import-agentic/import-oppl) 계약 테스트. §1.1/§1.2 폐쇄형 스키마, §1.3 4축 조합 전수·명시적 거부·사건별 actor 제약, 요청 식별자 멱등, 16 KiB 직렬화 상한, actor_sequence 범위, legacy·oppl 가져오기 멱등·구조 정규화, active 모드 source 제약, 기존 회귀 무손상을 S-3~S-29 시나리오로 판정한다. 이와 별개로 가져오기 읽기 경로의 심볼릭 링크·하드 링크·비정규 파일(FIFO) 거부와 정상 입력 비차단을 잠긴 시나리오 목록 밖에서 회귀 고정한다(보안 검사가 실측한 방어 대상). run.sh subprocess 실호출 + 디스크 조각 파일 검사만으로 판정하며, mock/patch/MagicMock/스텁/가짜 파일시스템은 사용하지 않는다(opal/tools/backlog-tool/tests/test_backlog_tool.py 관례 복제, red-first.md §4). state.json·state_tool 결합 0건을 정적+동적으로 함께 판정한다(AC-19/MV-24, TRD D-5).",
+  "description": "run-log-tool 서브명령(init/append/validate-run/import-agentic/import-oppl) 계약 테스트. §1.1/§1.2 폐쇄형 스키마, §1.3 4축 조합 전수·명시적 거부·사건별 actor 제약, 요청 식별자 멱등, 16 KiB 직렬화 상한, actor_sequence 범위, legacy·oppl 가져오기 멱등·구조 정규화, active 모드 source 제약, 기존 회귀 무손상을 S-3~S-29 시나리오로 판정한다. 이와 별개로 가져오기 읽기 경로의 심볼릭 링크·하드 링크·비정규 파일(FIFO) 거부와 정상 입력 비차단을 잠긴 시나리오 목록 밖에서 회귀 고정한다(보안 검사가 실측한 방어 대상). run.sh subprocess 실호출 + 디스크 조각 파일 검사만으로 판정하며, mock/patch/MagicMock/스텁/가짜 파일시스템은 사용하지 않는다(opal/tools/backlog-tool/tests/test_backlog_tool.py 관례 복제, red-first.md §4). state.json·state_tool 결합 0건을 정적+동적으로 함께 판정한다(AC-19/MV-24, TRD D-5). 시크릿 마스킹 3경로·redact 멱등과 크기 순서·마스킹과 보존 식별자 공존·세그먼트 경계 동시성 배리어·심볼릭 링크 방어 재사용·닫힌 세그먼트 불변성과 세그먼트 간 시퀀스·duration span 산출과 reconcile을 S1~S7 클래스로 회귀 고정한다.",
   "exports": [
     "TestInitIdempotent", "TestAppendEvent", "TestValidateRunPass",
     "TestPathContractRejection", "TestSchemaRejection", "TestStateAssetIndependence",
@@ -16,7 +16,11 @@
     "TestLegacyStructuralVariantNormalization", "TestOpplDualStructureNormalization",
     "TestOpplImportIdempotent", "TestDryRunNoWrite", "TestRunIdResolutionAmbiguity",
     "TestStateAssetIndependenceExtended", "TestExistingRegressionSuiteUnaffected",
-    "TestActiveModeSourceConstraint", "TestImportReadPathDefenses"
+    "TestActiveModeSourceConstraint", "TestImportReadPathDefenses",
+    "TestS1SecretMaskingAcrossThreePaths", "TestS2RedactIdempotentAndSizeOrder",
+    "TestS3PreservedIdentifiersSurviveMaskingAlongsideSecrets", "TestS4SegmentBoundaryConcurrentBarrier",
+    "TestS5SegmentBoundarySymlinkDefenseReuse", "TestS6ClosedSegmentImmutabilityCrossSegmentSequence",
+    "TestS7DurationSpansAndReconcile"
   ],
   "scenarios": [
     "S-3", "S-4", "S-5", "S-6", "S-7", "S-8",
@@ -1806,6 +1810,732 @@ class TestImportReadPathDefenses(unittest.TestCase):
             self.assertTrue(data.get("ok"), f"정상 AGENTIC-LOG.md ok:false — {data}")
             self.assertGreater(data.get("data", {}).get("imported", 0), 0,
                                 "정상 AGENTIC-LOG.md인데 imported<=0 — 방어가 정상 입력까지 막음")
+
+
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# 태스크 123 신규 시나리오 — TEST-SCENARIO.md
+#   (tasks/123-260912-oppl-태스크-실행로그-표준화/TEST-SCENARIO.md) S-1~S-7, RED-a 분할
+#   (opal-test-agent, test_mode=red). 위쪽 S-3~S-29는 이전 하위 태스크(T02/T03) PLAN
+#   기준 시나리오 번호이며 이번 태스크의 S-1~S-7과 ID가 겹치지만 서로 다른 시나리오다 —
+#   클래스명을 `TestS{n}...` 접두로 구분해 혼동을 막는다. GREEN(redact() 본문 — W-2,
+#   조각 경계 전환 — W-5, terminal duration_spans 검증·reconcile-duration — W-6)은 이
+#   배치가 구현하지 않는다(작성자≠구현자, red-first.md §1.5). 아래 각 테스트는 공개
+#   인터페이스(run-log-tool CLI·run_log_core 공개 함수·실제 state-tool CLI)만으로
+#   판정하며 mock/patch/MagicMock/가짜 파일시스템을 쓰지 않는다.
+# ═════════════════════════════════════════════════════════════════════════════
+
+import hashlib
+import multiprocessing
+import stat as _stat_module
+import uuid
+
+_STATE_TOOL_DIR = _TOOL_DIR.parent / "state-tool"
+_STATE_RUN_SH = _STATE_TOOL_DIR / "run.sh"
+
+
+def _run_state_tool(args, cwd=None):
+    """state-tool run.sh를 subprocess로 실행한다(외부 실호출 — state_tool.py는 읽기만
+    하고 수정하지 않는다. 본 RED 배치의 변경 범위는 test_run_log_tool.py 1개 파일뿐)."""
+    cmd = ["bash", str(_STATE_RUN_SH)] + args
+    result = subprocess.run(cmd, capture_output=True, text=True, cwd=cwd)
+    stdout = result.stdout.strip()
+    try:
+        data = json.loads(stdout) if stdout else {}
+    except json.JSONDecodeError:
+        data = {"_raw": stdout}
+    return result.returncode, stdout, result.stderr, data
+
+
+# secret fixture 4종 (Setup 공통 데이터) — 환경변수형·Bearer 토큰·API key·private key 블록.
+_SECRET_ENV_VAR = "DB_PASSWORD=Sup3rSecretP@ssw0rd_9x!"
+_SECRET_BEARER = "Bearer sk-live-4f9a1c2b8e7d4a6f9b0c1d2e3f4a5b6c"
+_SECRET_API_KEY = "api_key=AKIAIOSFODNN7EXAMPLE1234567890AB"
+# [MUST] 줄바꿈 문자를 넣지 않는다 — JSON 직렬화는 개행을 `\n` 2문자로 이스케이프하므로,
+# 원본 문자열에 실제 개행이 섞이면 디스크에 쓰인 텍스트와 파이썬 문자열 리터럴이
+# 바이트 단위로 달라져 `in` 부분일치 판정이 거짓 통과(false negative)를 낸다.
+_SECRET_PRIVATE_KEY_BLOCK = (
+    "-----BEGIN PRIVATE KEY-----"
+    + ("MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC7" * 40)
+    + "-----END PRIVATE KEY-----"
+)
+_SECRET_FIXTURES = {
+    "env_var": _SECRET_ENV_VAR,
+    "bearer_token": _SECRET_BEARER,
+    "api_key": _SECRET_API_KEY,
+    "private_key_block": _SECRET_PRIVATE_KEY_BLOCK,
+}
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# S-1 (AC-13) — secret fixture 4종 → 표준 append·상태 보관함 커밋·legacy 가져오기
+# 3경로 산출물에 평문 0건. redact()가 pass-through라 현재는 3경로 모두 평문이 남는다.
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestS1SecretMaskingAcrossThreePaths(unittest.TestCase):
+    """redact()가 아직 본문 미구현(pass-through, D-9)이므로 아래 3경로 전부 평문이
+    디스크에 남아 이 클래스의 테스트가 실패한다 — W-2 GREEN 대상의 RED 증거."""
+
+    def test_standard_append_path_leaves_no_plaintext(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            task_path = _abs_task_dir(tmp, "s1-append-task")
+            run_id = "run_s1append"
+            code0, out0, err0, _ = _run(
+                ["init", "--task", str(task_path), "--run-id", run_id, "--format", "json"])
+            self.assertEqual(code0, 0, f"S-1 선행 init 실패 — stdout={out0!r} stderr={err0!r}")
+
+            for idx, (kind, secret) in enumerate(_SECRET_FIXTURES.items()):
+                args = _append_activity_args(
+                    task_path, run_id, f"req_s1_append_{idx}",
+                    f"S-1 {kind} 표준 append 투입: {secret}")
+                code, out, err, data = _run(args)
+                self.assertEqual(code, 0, f"S-1 {kind} append 실패 — stdout={out!r} stderr={err!r}")
+
+            segment_text = _segment_of(task_path, run_id).read_text(encoding="utf-8")
+            for kind, secret in _SECRET_FIXTURES.items():
+                self.assertNotIn(
+                    secret, segment_text,
+                    f"S-1 표준 append: 조각 파일에 {kind} 평문이 남아있음(redact() 미구현)")
+
+    def test_legacy_import_path_leaves_no_plaintext(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            task_path = _abs_task_dir(tmp, "s1-import-task")
+            run_id = "run_s1import"
+            code0, out0, err0, _ = _run(
+                ["init", "--task", str(task_path), "--run-id", run_id, "--format", "json"])
+            self.assertEqual(code0, 0, f"S-1 선행 init 실패 — stdout={out0!r} stderr={err0!r}")
+
+            rows = []
+            for i, (kind, secret) in enumerate(_SECRET_FIXTURES.items(), start=1):
+                rows.append(
+                    f"| {i} | 2026-09-12 10:{i:02d} | EXECUTE | DECISION | "
+                    f"S-1 {kind}: {secret} | 반영 |")
+            log_text = (
+                "# AGENTIC-LOG: S-1 secret fixture\n\n"
+                "## 대행 일지\n\n"
+                "| # | 시점 | 단계 | 카테고리 | 내용 | 결과 |\n"
+                "|---|------|------|----------|------|------|\n"
+                + "\n".join(rows) + "\n"
+            )
+            (task_path / "AGENTIC-LOG.md").write_text(log_text, encoding="utf-8")
+
+            code, out, err, data = _run(
+                ["import-agentic", "--task", str(task_path), "--run-id", run_id, "--format", "json"])
+            self.assertEqual(code, 0, f"S-1 legacy 가져오기 실패 — stdout={out!r} stderr={err!r}")
+            self.assertTrue(data.get("ok"), f"S-1 legacy 가져오기 ok:false — {data}")
+            self.assertEqual(
+                data.get("data", {}).get("imported"), len(_SECRET_FIXTURES),
+                f"S-1 legacy 가져오기 imported 수 불일치 — {data}")
+
+            segment_text = _segment_of(task_path, run_id).read_text(encoding="utf-8")
+            for kind, secret in _SECRET_FIXTURES.items():
+                self.assertNotIn(
+                    secret, segment_text,
+                    f"S-1 legacy 가져오기: 조각 파일에 {kind} 평문이 남아있음(redact() 미구현)")
+
+    def test_state_outbox_commit_path_leaves_no_plaintext(self):
+        for kind, secret in _SECRET_FIXTURES.items():
+            with self.subTest(kind=kind):
+                with tempfile.TemporaryDirectory() as tmp:
+                    task_path = _abs_task_dir(tmp, f"s1-outbox-{kind}")
+                    rows_spec = json.dumps(
+                        [{"stage": "EXECUTE", "item": "S-1 outbox 대상"}], ensure_ascii=False)
+                    code0, out0, err0, _ = _run_state_tool([
+                        "init", str(task_path), "--skill", "oppl", "--mode", "agentic",
+                        "--rows-spec", rows_spec, "--run-log-mode", "shadow",
+                    ])
+                    self.assertEqual(
+                        code0, 0,
+                        f"S-1 {kind} 상태 도구 init 실패 — stdout={out0!r} stderr={err0!r}")
+
+                    code, out, err, data = _run_state_tool(
+                        ["advance", str(task_path), "--row", "1", "--note", secret])
+                    self.assertEqual(
+                        code, 0, f"S-1 {kind} advance 실패 — stdout={out!r} stderr={err!r}")
+
+                    # [MUST] 판정 범위는 run_log 계열 writer 산출물(보관함 pending_events +
+                    # 드레인된 조각 파일)만이다 — state.json의 row["note"]는 D-9 마스킹
+                    # 초크포인트(_atomic_write_state_json이 redact()를 거는 대상은
+                    # run_log.pending_events뿐)와 무관한, 원래부터 평문인 별개의 저널
+                    # 기능이라 여기에 포함하면 GREEN 이후에도 영원히 실패하는 거짓 RED가
+                    # 된다(row.note는 STATE.md 의사결정 로그의 원본이며 마스킹 대상이
+                    # 아니다).
+                    state_json = json.loads((task_path / "state.json").read_text(encoding="utf-8"))
+                    pending_text = json.dumps(
+                        (state_json.get("run_log") or {}).get("pending_events") or [],
+                        ensure_ascii=False)
+                    run_dir = task_path / "run"
+                    segment_text = ""
+                    if run_dir.exists():
+                        for seg in sorted(run_dir.glob("run-log-*-*.jsonl")):
+                            segment_text += seg.read_text(encoding="utf-8")
+
+                    self.assertNotIn(
+                        secret, pending_text,
+                        f"S-1 {kind}: state.json run_log.pending_events(상태 보관함)에 "
+                        "평문이 남아있음(redact() 미구현)")
+                    self.assertNotIn(
+                        secret, segment_text,
+                        f"S-1 {kind}: 드레인된 조각 파일에 평문이 남아있음(redact() 미구현)")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# S-2 (AC-13, C-5, H-1) — redact() 멱등성·구조 불변, 16 KiB 상한이 redact() 통과
+# 후 최종 줄에서 측정되는 순서 불변.
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestS2RedactIdempotentAndSizeOrder(unittest.TestCase):
+    def test_redact_masks_all_secret_fixtures(self):
+        core = _import_core()
+        payload = {
+            "event": "activity",
+            "summary": "S-2 redact 대상",
+            "data": {
+                "kind": "progress",
+                "env": _SECRET_ENV_VAR,
+                "bearer": _SECRET_BEARER,
+                "api_key": _SECRET_API_KEY,
+                "private_key": _SECRET_PRIVATE_KEY_BLOCK,
+            },
+        }
+        redacted = core.redact(payload)
+        serialized = json.dumps(redacted, ensure_ascii=False)
+        for kind, secret in _SECRET_FIXTURES.items():
+            self.assertNotIn(
+                secret, serialized,
+                f"S-2 redact() 통과 후에도 {kind} 평문이 남아있음(pass-through 미구현)")
+
+    def test_redact_is_idempotent_and_preserves_structure(self):
+        core = _import_core()
+        payload = {
+            "event": "activity",
+            "summary": "S-2 멱등성",
+            "data": {"kind": "progress", "env": _SECRET_ENV_VAR,
+                     "nested": {"api_key": _SECRET_API_KEY}},
+        }
+        once = core.redact(payload)
+        twice = core.redact(once)
+        self.assertEqual(once, twice, "S-2 redact() 1회/2회 결과가 다름(멱등 계약 위반)")
+
+        def _shape(v):
+            if isinstance(v, dict):
+                return {k: _shape(v2) for k, v2 in v.items()}
+            if isinstance(v, list):
+                return [_shape(v2) for v2 in v]
+            return type(v).__name__
+
+        self.assertEqual(_shape(payload), _shape(once),
+                          "S-2 redact()가 키 집합·타입·중첩 깊이를 바꿈")
+
+    def test_16kib_cap_measured_after_redact_not_before(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            task_path = _abs_task_dir(tmp, "s2-cap-task")
+            run_id = "run_s2cap"
+            code0, out0, err0, _ = _run(
+                ["init", "--task", str(task_path), "--run-id", run_id, "--format", "json"])
+            self.assertEqual(code0, 0, f"S-2 선행 init 실패 — stdout={out0!r} stderr={err0!r}")
+
+            # private key 블록 + 패딩으로 pre-redaction 직렬화를 16 KiB 위로 부풀린다.
+            # redact()가 실동작하면 블록 전체가 짧은 placeholder로 치환돼 post-redaction
+            # 크기는 상한 아래로 줄어야 한다(D-P3 "순서 불변" 계약 — redact() 통과 후
+            # 최종 줄에서 측정).
+            oversized_secret = _SECRET_PRIVATE_KEY_BLOCK + ("A" * 15000)
+            args = _append_activity_args(
+                task_path, run_id, "req_s2_cap", f"S-2 상한 순서: {oversized_secret}")
+            code, out, err, data = _run(args)
+            self.assertEqual(
+                code, 0,
+                "S-2 redact() 통과 후 크기가 상한 아래로 줄어야 하는데 현재 pass-through라 "
+                f"거부됨(W-2 GREEN 대상) — stdout={out!r} stderr={err!r}")
+            self.assertTrue(data.get("ok"), f"S-2 상한 순서 판정 ok:false — {data}")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# S-3 (AC-13, H-5) — event_id·sha256·worker_log_token_id는 비밀값과 형태가 비슷한
+# 16진 문자열이지만 마스킹되면 안 된다. 같은 사건에 진짜 비밀값을 함께 실어, 비밀은
+# 마스킹되고 보존 대상은 그대로인지 함께 판정한다.
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestS3PreservedIdentifiersSurviveMaskingAlongsideSecrets(unittest.TestCase):
+    def test_worker_log_token_id_preserved_while_secret_masked(self):
+        core = _import_core()
+        with tempfile.TemporaryDirectory() as tmp:
+            task_path = _abs_task_dir(tmp, "s3-a2-task")
+            task_path_str = str(task_path)
+            run_id = "run_s3a2"
+            init_result = core.init(task_path_str, run_id)
+            self.assertTrue(init_result.get("ok"), f"S-3 init 실패 — {init_result}")
+
+            token_id = "wlt_" + uuid.uuid4().hex
+            event = {
+                "request_id": "req_s3_a2",
+                "event": "activity",
+                "actor": {"kind": "worker", "id": "w1", "provider": None, "session_id": None},
+                "provenance": {
+                    "type": "direct",
+                    "recorded_by": {"kind": "worker", "id": "w1"},
+                    "worker_log_token_id": token_id,
+                    "source": {"kind": "worker_event", "id": None, "sha256": None,
+                               "observed_at": None, "locator": None, "upstream_event_id": None},
+                },
+                "worker_run_id": "wr_s3a2",
+                "summary": "S-3 A2 combo",
+                "data": {"kind": "progress", "leak": _SECRET_API_KEY},
+            }
+            result = core.append(task_path_str, run_id, event)
+            self.assertTrue(result.get("ok"), f"S-3 append 실패 — {result}")
+
+            segment_text = _segment_of(task_path, run_id).read_text(encoding="utf-8")
+            record = json.loads(segment_text.strip().splitlines()[-1])
+            self.assertEqual(
+                record.get("provenance", {}).get("worker_log_token_id"), token_id,
+                f"S-3 worker_log_token_id가 통과 전후 다름 — {record}")
+            self.assertNotIn(
+                _SECRET_API_KEY, segment_text,
+                "S-3 보존 대상과 함께 실린 진짜 비밀값이 마스킹되지 않음(redact() 미구현)")
+
+    def test_source_sha256_preserved_while_secret_masked(self):
+        core = _import_core()
+        with tempfile.TemporaryDirectory() as tmp:
+            task_path = _abs_task_dir(tmp, "s3-a1-task")
+            task_path_str = str(task_path)
+            run_id = "run_s3a1"
+            init_result = core.init(task_path_str, run_id)
+            self.assertTrue(init_result.get("ok"), f"S-3 init 실패 — {init_result}")
+
+            source_sha = hashlib.sha256(b"s3-adapter-source-fixture").hexdigest()
+            event = {
+                "request_id": "req_s3_a1",
+                "event": "worker.started",
+                "actor": {"kind": "worker", "id": "w1", "provider": None, "session_id": None},
+                "provenance": {
+                    "type": "adapter",
+                    "recorded_by": {"kind": "adapter", "id": "adapter-x"},
+                    "worker_log_token_id": None,
+                    "source": {"kind": "process_start", "id": "proc-1", "sha256": source_sha,
+                               "observed_at": core.utc_now_ms(), "locator": None,
+                               "upstream_event_id": None},
+                },
+                "worker_run_id": "wr_s3a1",
+                "data": {"note": _SECRET_ENV_VAR},
+            }
+            result = core.append(task_path_str, run_id, event)
+            self.assertTrue(result.get("ok"), f"S-3 append 실패 — {result}")
+
+            segment_text = _segment_of(task_path, run_id).read_text(encoding="utf-8")
+            record = json.loads(segment_text.strip().splitlines()[-1])
+            self.assertEqual(
+                record.get("provenance", {}).get("source", {}).get("sha256"), source_sha,
+                f"S-3 source.sha256가 통과 전후 다름 — {record}")
+            self.assertNotIn(
+                _SECRET_ENV_VAR, segment_text,
+                "S-3 source.sha256와 함께 실린 진짜 비밀값이 마스킹되지 않음(redact() 미구현)")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# S-4 (AC-8, H-2) — 조각 상한 직전에서 multiprocessing barrier 동시 해제 → 새 조각
+# 정확히 1개, 순번 중복 0·누락 0, task_lock_timeout 미발생.
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _s4_barrier_worker(task_path_str, run_id, idx, barrier, queue):
+    """barrier 해제 직후 append() 1건을 실행하는 별도 프로세스 대상 함수(모듈
+    최상위 — fork/spawn 양쪽 호환)."""
+    barrier.wait()
+    core = _import_core()
+    event = {
+        "request_id": f"req_s4_barrier_{idx}",
+        "event": "activity",
+        "actor": {"kind": "PM", "id": "pm", "provider": None, "session_id": None},
+        "provenance": {"type": "direct", "recorded_by": {"kind": "PM", "id": "pm"},
+                       "worker_log_token_id": None, "source": None},
+        "summary": f"S-4 barrier append {idx}",
+        "data": {"kind": "progress"},
+    }
+    result = core.append(task_path_str, run_id, event)
+    queue.put((idx, result))
+
+
+class TestS4SegmentBoundaryConcurrentBarrier(unittest.TestCase):
+    """현재 append()는 항상 segment_path(...,1) 고정 대상에 쓰고 조각 전환 자체가
+    없다(W-5 미구현) — barrier 해제 후에도 새 조각이 0개 생겨 RED가 성립한다."""
+
+    def test_barrier_release_creates_exactly_one_new_segment(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            task_path = _abs_task_dir(tmp, "s4-barrier-task")
+            task_path_str = str(task_path)
+            run_id = "run_s4barrier"
+            code0, out0, err0, _ = _run(
+                ["init", "--task", str(task_path), "--run-id", run_id, "--format", "json"])
+            self.assertEqual(code0, 0, f"S-4 선행 init 실패 — stdout={out0!r} stderr={err0!r}")
+
+            segment1 = _segment_of(task_path, run_id)
+            core = _import_core()
+
+            # 조각 상한(4 MiB) 직전까지 유효한 JSON 줄로 채운다 — 실제 append()를
+            # 수천 번 호출하면 barrier 시나리오 준비에만 과도한 시간이 걸리므로,
+            # "이미 거의 찬 조각" 상태를 파일에 직접 만든다(코어 구현 대체가 아니라
+            # barrier 실험을 위한 사전 상태 준비).
+            def _filler(seq):
+                return json.dumps({
+                    "schema_version": "1.0", "event_id": f"evt_filler_{seq}", "request_id": None,
+                    "sequence": seq, "actor_sequence": seq, "timestamp": core.utc_now_ms(),
+                    "task_id": task_path.name, "run_id": run_id, "event": "activity",
+                    "actor": {"kind": "PM", "id": "pm", "provider": None, "session_id": None},
+                    "provenance": {"type": "direct", "recorded_by": {"kind": "PM", "id": "pm"},
+                                   "worker_log_token_id": None, "source": None},
+                    "summary": "S-4 filler", "data": {"kind": "progress", "pad": "x" * 500},
+                }, ensure_ascii=False) + "\n"
+
+            target_bytes = 4 * 1024 * 1024 - 4096  # 4 MiB 상한 직전
+            with open(segment1, "a", encoding="utf-8") as f:
+                seq = 1
+                written = 0
+                while written < target_bytes:
+                    line = _filler(seq)
+                    f.write(line)
+                    written += len(line.encode("utf-8"))
+                    seq += 1
+            filler_count = seq - 1
+
+            n_procs = 3
+            ctx = multiprocessing.get_context("fork")
+            barrier = ctx.Barrier(n_procs)
+            queue = ctx.Queue()
+            procs = [
+                ctx.Process(target=_s4_barrier_worker,
+                            args=(task_path_str, run_id, i, barrier, queue))
+                for i in range(n_procs)
+            ]
+            for p in procs:
+                p.start()
+            for p in procs:
+                # §2.7 락 상한(기본 30,000ms)보다 충분히 짧게 잡는다(과제 지시) —
+                # 그러지 않으면 판정이 task_lock_timeout과 뒤섞인다.
+                p.join(timeout=20)
+            for p in procs:
+                if p.is_alive():
+                    p.terminate()
+                    p.join()
+
+            results = []
+            while not queue.empty():
+                results.append(queue.get())
+            self.assertEqual(
+                len(results), n_procs,
+                f"S-4 프로세스 {n_procs}개 중 일부가 결과를 내지 못함 — {results}")
+            for idx, result in results:
+                self.assertNotEqual(
+                    (result.get("error") or {}).get("code"), "task_lock_timeout",
+                    f"S-4 프로세스 {idx}가 task_lock_timeout — {result}")
+                self.assertTrue(result.get("ok"), f"S-4 프로세스 {idx} append 실패 — {result}")
+
+            run_dir = task_path / "run"
+            segments = sorted(run_dir.glob(f"run-log-{run_id}-*.jsonl"))
+            self.assertEqual(
+                len(segments), 2,
+                f"S-4 barrier 해제 후 새 조각이 정확히 1개 생겨야 하는데 실제 조각 수="
+                f"{len(segments)}(조각 경계 전환 미구현, W-5 GREEN 대상) — {segments}")
+
+            all_sequences = []
+            for seg in segments:
+                for line in seg.read_text(encoding="utf-8").splitlines():
+                    if not line.strip():
+                        continue
+                    all_sequences.append(json.loads(line).get("sequence"))
+            self.assertEqual(
+                len(all_sequences), len(set(all_sequences)),
+                f"S-4 순번 중복 발생 — {sorted(all_sequences)}")
+            expected_total = filler_count + n_procs
+            self.assertEqual(
+                sorted(all_sequences), list(range(1, expected_total + 1)),
+                f"S-4 순번 누락/불연속 — {sorted(all_sequences)}")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# S-5 (AC-8, C-8) — 새 조각 자리의 심볼릭 링크·경계 이탈은 기존 방어 함수를 재사용해
+# 거부해야 한다(D-P12). 조각 0600·run/ 0700 유지.
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestS5SegmentBoundarySymlinkDefenseReuse(unittest.TestCase):
+    """조각 전환 자체가 없어(W-5 미구현) 상한을 넘겨도 새 조각 생성을 시도하지 않고
+    기존 조각에 조용히 계속 쓴다 — 심볼릭 링크가 있어도 거부되지 않고 ok:true가
+    나와 RED가 성립한다."""
+
+    def test_next_segment_symlink_is_rejected_not_followed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            outside_dir = pathlib.Path(tmp) / "outside"
+            outside_dir.mkdir()
+            outside_target = outside_dir / "escape-target.jsonl"
+            outside_target.write_text("", encoding="utf-8")
+
+            task_path = _abs_task_dir(tmp, "s5-symlink-task")
+            task_path_str = str(task_path)
+            run_id = "run_s5symlink"
+            code0, out0, err0, _ = _run(
+                ["init", "--task", str(task_path), "--run-id", run_id, "--format", "json"])
+            self.assertEqual(code0, 0, f"S-5 선행 init 실패 — stdout={out0!r} stderr={err0!r}")
+
+            core = _import_core()
+            segment1 = _segment_of(task_path, run_id)
+
+            def _filler(seq):
+                return json.dumps({
+                    "schema_version": "1.0", "event_id": f"evt_filler_{seq}", "request_id": None,
+                    "sequence": seq, "actor_sequence": seq, "timestamp": core.utc_now_ms(),
+                    "task_id": task_path.name, "run_id": run_id, "event": "activity",
+                    "actor": {"kind": "PM", "id": "pm", "provider": None, "session_id": None},
+                    "provenance": {"type": "direct", "recorded_by": {"kind": "PM", "id": "pm"},
+                                   "worker_log_token_id": None, "source": None},
+                    "summary": "S-5 filler", "data": {"kind": "progress", "pad": "x" * 500},
+                }, ensure_ascii=False) + "\n"
+
+            target_bytes = 4 * 1024 * 1024 - 4096
+            with open(segment1, "a", encoding="utf-8") as f:
+                seq = 1
+                written = 0
+                while written < target_bytes:
+                    line = _filler(seq)
+                    f.write(line)
+                    written += len(line.encode("utf-8"))
+                    seq += 1
+
+            # 다음 조각 자리(0002)에 경계 밖 심볼릭 링크를 미리 심어 둔다.
+            next_segment = task_path / "run" / f"run-log-{run_id}-0002.jsonl"
+            next_segment.symlink_to(outside_target)
+
+            event = {
+                "request_id": "req_s5_symlink",
+                "event": "activity",
+                "actor": {"kind": "PM", "id": "pm", "provider": None, "session_id": None},
+                "provenance": {"type": "direct", "recorded_by": {"kind": "PM", "id": "pm"},
+                               "worker_log_token_id": None, "source": None},
+                "summary": "S-5 링크 위 새 조각 시도",
+                "data": {"kind": "progress"},
+            }
+            result = core.append(task_path_str, run_id, event)
+
+            self.assertFalse(
+                result.get("ok", True),
+                "S-5 상한 초과 + 다음 조각 위치의 심볼릭 링크가 있는데 append()가 ok:true를 "
+                f"반환함(조각 전환·방어 재사용 미구현, W-5 GREEN 대상) — {result}")
+            self.assertEqual(
+                outside_target.read_text(encoding="utf-8"), "",
+                "S-5 경계 밖 링크 대상에 내용이 쓰였음(심볼릭 링크 추종)")
+            self.assertTrue(
+                next_segment.is_symlink(),
+                "S-5 링크가 다른 무언가로 치환됨(원본 상태와 달라짐)")
+
+            run_dir_mode = _stat_module.S_IMODE(os.stat(task_path / "run").st_mode)
+            self.assertEqual(run_dir_mode, 0o700, f"S-5 run/ 권한이 0700이 아님 — {oct(run_dir_mode)}")
+            segment1_mode = _stat_module.S_IMODE(os.stat(segment1).st_mode)
+            self.assertEqual(segment1_mode, 0o600, f"S-5 조각 권한이 0600이 아님 — {oct(segment1_mode)}")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# S-6 (AC-8, H-2) — 조각 2개 이상으로 전환이 끝난 뒤 append를 이어가면 새 사건은
+# 열린 조각에만 붙고, 이미 닫힌 조각의 mtime·바이트는 변하지 않는다.
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestS6ClosedSegmentImmutabilityCrossSegmentSequence(unittest.TestCase):
+    """현재 append()는 항상 segment_path(...,1)에 고정해서 쓰므로(조각 경계 전환
+    미구현), 이미 "닫힌" 것으로 취급돼야 할 조각 1이 다시 열려 변경된다 — RED."""
+
+    def test_append_after_rotation_does_not_touch_closed_segment(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            task_path = _abs_task_dir(tmp, "s6-closed-task")
+            task_path_str = str(task_path)
+            run_id = "run_s6closed"
+            core = _import_core()
+
+            init_result = core.init(task_path_str, run_id)
+            self.assertTrue(init_result.get("ok"), f"S-6 init 실패 — {init_result}")
+
+            segment1 = _segment_of(task_path, run_id)
+            segment2 = task_path / "run" / f"run-log-{run_id}-0002.jsonl"
+
+            def _rec(seq, event_id):
+                return json.dumps({
+                    "schema_version": "1.0", "event_id": event_id, "request_id": None,
+                    "sequence": seq, "actor_sequence": seq, "timestamp": core.utc_now_ms(),
+                    "task_id": task_path.name, "run_id": run_id, "event": "activity",
+                    "actor": {"kind": "PM", "id": "pm", "provider": None, "session_id": None},
+                    "provenance": {"type": "direct", "recorded_by": {"kind": "PM", "id": "pm"},
+                                   "worker_log_token_id": None, "source": None},
+                    "summary": f"S-6 seed {seq}", "data": {"kind": "progress"},
+                }, ensure_ascii=False) + "\n"
+
+            k = 5  # 조각 1(닫힘)에 들어간 사건 수
+            m = 3  # 조각 2(열림)에 들어간 사건 수
+            with open(segment1, "w", encoding="utf-8") as f:
+                for s in range(1, k + 1):
+                    f.write(_rec(s, f"evt_seed1_{s}"))
+            os.chmod(segment1, 0o600)
+            fd = os.open(str(segment2), os.O_CREAT | os.O_EXCL | os.O_WRONLY | os.O_NOFOLLOW, 0o600)
+            with os.fdopen(fd, "w", encoding="utf-8") as f:
+                for s in range(k + 1, k + m + 1):
+                    f.write(_rec(s, f"evt_seed2_{s}"))
+
+            before_stat = os.stat(segment1)
+            before_mtime_ns = before_stat.st_mtime_ns
+            before_size = before_stat.st_size
+
+            time.sleep(0.05)  # mtime 해상도 여유
+
+            new_event = {
+                "request_id": "req_s6_after_rotation",
+                "event": "activity",
+                "actor": {"kind": "PM", "id": "pm", "provider": None, "session_id": None},
+                "provenance": {"type": "direct", "recorded_by": {"kind": "PM", "id": "pm"},
+                               "worker_log_token_id": None, "source": None},
+                "summary": "S-6 rotation 이후 append",
+                "data": {"kind": "progress"},
+            }
+            result = core.append(task_path_str, run_id, new_event)
+            self.assertTrue(result.get("ok"), f"S-6 append 실패 — {result}")
+
+            after_stat = os.stat(segment1)
+            self.assertEqual(
+                (before_mtime_ns, before_size), (after_stat.st_mtime_ns, after_stat.st_size),
+                "S-6 이미 닫힌 조각 1의 mtime·바이트가 바뀜(append()가 segment_path(...,1)에 "
+                "고정 기록 — 조각 경계 전환 미구현, W-5 GREEN 대상)")
+            self.assertEqual(
+                result.get("data", {}).get("sequence"), k + m + 1,
+                f"S-6 순번이 조각을 넘어 단조 증가하지 않음 — {result}")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# S-7 (AC-12, C-4) — terminal 사건의 data.duration_spans[] 합 검증·source_id 중복
+# 거부, duration_ms·floor(duration_ms/60000) 파생 조회, 코어의 state.json 읽기 0건.
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestS7DurationSpansAndReconcile(unittest.TestCase):
+    """§1.2 terminal 공통 조건의 duration_spans 검증과 reconcile-duration 조회
+    표면이 아직 없다(W-6 미구현) — 합 불일치·중복 source_id가 그대로 수용되고,
+    조회 함수·CLI 서브명령 호출은 AttributeError·argparse 오류로 RED가 성립한다."""
+
+    def _terminal_event(self, request_id, spans, duration_ms):
+        return {
+            "request_id": request_id,
+            "event": "worker.completed",
+            "actor": {"kind": "worker", "id": "w1", "provider": None, "session_id": None},
+            "provenance": {"type": "direct", "recorded_by": {"kind": "worker", "id": "w1"},
+                           "worker_log_token_id": "wlt_" + uuid.uuid4().hex,
+                           "source": {"kind": "worker_event", "id": None, "sha256": None,
+                                      "observed_at": None, "locator": None,
+                                      "upstream_event_id": None}},
+            "worker_run_id": "wr_s7",
+            "duration_ms": duration_ms,
+            "duration_source": "adapter_monotonic",
+            "data": {"duration_spans": spans},
+        }
+
+    def test_mismatched_span_sum_is_rejected(self):
+        core = _import_core()
+        with tempfile.TemporaryDirectory() as tmp:
+            task_path = _abs_task_dir(tmp, "s7-mismatch-task")
+            run_id = "run_s7mismatch"
+            init_result = core.init(str(task_path), run_id)
+            self.assertTrue(init_result.get("ok"), f"S-7 init 실패 — {init_result}")
+
+            spans = [{"source_id": "proc-1", "duration_ms": 1000},
+                     {"source_id": "proc-2", "duration_ms": 2000}]
+            event = self._terminal_event("req_s7_mismatch", spans, duration_ms=9999)  # 합(3000)과 불일치
+            result = core.append(str(task_path), run_id, event)
+            self.assertFalse(
+                result.get("ok", True),
+                "S-7 duration_ms가 span 합과 다른데 append()가 ok:true를 반환함"
+                f"(§1.2 terminal 공통 조건 미구현, W-6 GREEN 대상) — {result}")
+
+    def test_duplicate_source_id_span_is_rejected(self):
+        core = _import_core()
+        with tempfile.TemporaryDirectory() as tmp:
+            task_path = _abs_task_dir(tmp, "s7-dup-task")
+            run_id = "run_s7dup"
+            init_result = core.init(str(task_path), run_id)
+            self.assertTrue(init_result.get("ok"), f"S-7 init 실패 — {init_result}")
+
+            spans = [{"source_id": "proc-1", "duration_ms": 1000},
+                     {"source_id": "proc-1", "duration_ms": 1500}]
+            event = self._terminal_event("req_s7_dup", spans, duration_ms=2500)
+            result = core.append(str(task_path), run_id, event)
+            self.assertFalse(
+                result.get("ok", True),
+                "S-7 같은 source_id가 중복된 duration_spans인데 append()가 ok:true를 반환함"
+                f"(§1.2 terminal 공통 조건 미구현, W-6 GREEN 대상) — {result}")
+
+    def test_matching_span_sum_is_accepted_baseline(self):
+        core = _import_core()
+        with tempfile.TemporaryDirectory() as tmp:
+            task_path = _abs_task_dir(tmp, "s7-match-task")
+            run_id = "run_s7match"
+            init_result = core.init(str(task_path), run_id)
+            self.assertTrue(init_result.get("ok"), f"S-7 init 실패 — {init_result}")
+
+            spans = [{"source_id": "proc-1", "duration_ms": 1000},
+                     {"source_id": "proc-2", "duration_ms": 2000}]
+            event = self._terminal_event("req_s7_match", spans, duration_ms=3000)
+            result = core.append(str(task_path), run_id, event)
+            self.assertTrue(result.get("ok"), f"S-7 합이 일치하는 정상 span인데 거부됨 — {result}")
+
+    def test_core_derived_duration_lookup_function_missing(self):
+        """run_log_core에 reconcile_duration 계열 공개 함수가 아직 없다 — 호출 시
+        AttributeError가 그대로 전파되며, 이는 그 자체로 유효한 RED 증거다(파일 상단
+        기존 관례와 동일, red-first.md §4)."""
+        core = _import_core()
+        with tempfile.TemporaryDirectory() as tmp:
+            task_path = _abs_task_dir(tmp, "s7-lookup-task")
+            run_id = "run_s7lookup"
+            init_result = core.init(str(task_path), run_id)
+            self.assertTrue(init_result.get("ok"), f"S-7 init 실패 — {init_result}")
+            spans = [{"source_id": "proc-1", "duration_ms": 1500}]
+            event = self._terminal_event("req_s7_lookup", spans, duration_ms=1500)
+            append_result = core.append(str(task_path), run_id, event)
+            self.assertTrue(append_result.get("ok"), f"S-7 선행 append 실패 — {append_result}")
+
+            lookup = core.reconcile_duration(str(task_path), run_id, "wr_s7")
+            self.assertEqual(lookup.get("data", {}).get("duration_ms"), 1500)
+            self.assertEqual(lookup.get("data", {}).get("duration_minutes"), 0)
+
+    def test_cli_reconcile_duration_subcommand_missing(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            task_path = _abs_task_dir(tmp, "s7-cli-task")
+            run_id = "run_s7cli"
+            code0, out0, err0, _ = _run(
+                ["init", "--task", str(task_path), "--run-id", run_id, "--format", "json"])
+            self.assertEqual(code0, 0, f"S-7 선행 init 실패 — stdout={out0!r} stderr={err0!r}")
+
+            code, out, err, data = _run([
+                "reconcile-duration", "--task", str(task_path), "--run-id", run_id,
+                "--worker-run-id", "wr_s7cli", "--format", "json",
+            ])
+            self.assertEqual(
+                code, 0,
+                "S-7 run-log-tool reconcile-duration 서브명령이 아직 없어 argparse가 "
+                f"거부함(W-6 GREEN 대상) — stdout={out!r} stderr={err!r}")
+
+    def test_core_does_not_read_state_json_during_reconcile(self):
+        """코어는 task_path·run_id·worker_run_id만으로 조회해야 하며 state.json을
+        읽지 않는다(D-5). state.json이 없는 태스크에서도 조회가 성립해야 한다는
+        점으로 이를 실측한다 — 현재는 함수 자체가 없어 AttributeError로 RED다."""
+        core = _import_core()
+        with tempfile.TemporaryDirectory() as tmp:
+            task_path = _abs_task_dir(tmp, "s7-nostate-task")
+            run_id = "run_s7nostate"
+            init_result = core.init(str(task_path), run_id)
+            self.assertTrue(init_result.get("ok"), f"S-7 init 실패 — {init_result}")
+            self.assertFalse((task_path / "state.json").exists(),
+                              "S-7 준비 단계에서 state.json이 생겨서는 안 됨")
+            spans = [{"source_id": "proc-1", "duration_ms": 750}]
+            event = self._terminal_event("req_s7_nostate", spans, duration_ms=750)
+            append_result = core.append(str(task_path), run_id, event)
+            self.assertTrue(append_result.get("ok"), f"S-7 선행 append 실패 — {append_result}")
+
+            lookup = core.reconcile_duration(str(task_path), run_id, "wr_s7")
+            self.assertTrue(lookup.get("ok"), f"S-7 조회 실패 — {lookup}")
+            self.assertFalse(
+                (task_path / "state.json").exists(),
+                "S-7 조회 중 state.json이 생성됨(코어가 상태 파일을 건드림, D-5 위반)")
 
 
 if __name__ == "__main__":

@@ -233,6 +233,7 @@
         ],
         "optional": [
           "--run-id <run_id>",
+          "--worker-run-id <worker_run_id>",
           "--format json"
         ]
       },

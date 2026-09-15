@@ -42,14 +42,9 @@ node_modules/
 .opal-worktrees/
 
 # 태스크 실행 로그 — 추적 경계 (123 T02 / AC-14 · MV-18 · TRD §8.1)
-# 원본 캡처·파생 색인·배타 락은 영구 제외한다.
+# 원본 캡처·파생 색인·배타 락은 영구 제외한다. 마스킹된 조각(run/*.jsonl)은
+# run_log_core.redact()가 디스크 기록 전 4종 패턴(환경변수형·Bearer/token·
+# API key·private key 블록)을 문자열 값에서 치환하므로 추적 대상이다(W-8).
 tasks/**/run/raw/
 tasks/**/run/.runtime/
 .opal-task.lock
-# [한시 제외 — T06 마스킹 구현 완료 시 이 줄을 제거한다]
-# AC-14는 "마스킹된 segment는 추적된다"를 요구하므로 아래 줄은 영구 규칙이 아니다.
-# 다만 현재 run_log_core.redact()가 pass-through이므로 지금 조각을 추적하면
-# 마스킹되지 않은 내용이 git 히스토리에 들어가고, 히스토리 진입 후에는 회수가
-# 불가능하다 — TRD D-9가 사후 스캔(b안)을 기각한 바로 그 이유다.
-# 복귀 조건: T06(마스킹·원본 상한·추적 경계)이 redact() 본문을 구현하면 제거.
-tasks/**/run/*.jsonl

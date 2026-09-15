@@ -3,9 +3,9 @@
   "module": "run_log_tool",
   "layer": "util",
   "domain": "opal-tools",
-  "description": "run-log-tool CLI — init/append/validate-run/import-agentic/import-oppl 5서브명령. surfaces.json의 run-log-tool.* 표면 request_shape를 argparse로 구현하고, 인자를 §1.1 payload dict로 조립해 run_log_core만 호출한다(자체 락 획득, lock_held=False). 응답은 CONTRACT §2.1 중첩 봉투({\"ok\":true,\"data\":{...}} / {\"ok\":false,\"error\":{...}})를 그대로 stdout에 낸다 — 상태 도구의 평면 봉투와는 다른 계열이다(F-1, README.md §응답 봉투 병존 참조). --data는 CLI가 먼저 JSON 파싱해 실패 시 append를 호출하지 않고 schema_invalid를 반환한다(부분 쓰기 방지). append의 --mode(shadow|active, 선택)는 run_log_core.append()의 키워드 전용 mode 인자로 그대로 전달한다(PM 판정② — active 전용 source 제약 게이트). import-agentic/import-oppl은 --task(필수)·--run-id(선택, 생략 시 조각에서 해석)·--dry-run·--format json을 받아 run_log_core의 동명 함수를 호출한다. run_log_core 밖의 상태 원천 파일을 읽거나 쓰지 않는다(D-5, AC-19/MV-24).",
-  "exports": ["cmd_init", "cmd_append", "cmd_validate_run", "cmd_import_agentic",
-              "cmd_import_oppl", "build_parser", "main"]
+  "description": "run-log-tool CLI — init/append/validate-run/reconcile-duration/import-agentic/import-oppl 6서브명령. surfaces.json의 run-log-tool.* 표면 request_shape를 argparse로 구현하고, 인자를 §1.1 payload dict로 조립해 run_log_core만 호출한다(자체 락 획득, lock_held=False). 응답은 CONTRACT §2.1 중첩 봉투({\"ok\":true,\"data\":{...}} / {\"ok\":false,\"error\":{...}})를 그대로 stdout에 낸다 — 상태 도구의 평면 봉투와는 다른 계열이다(F-1, README.md §응답 봉투 병존 참조). --data는 CLI가 먼저 JSON 파싱해 실패 시 append를 호출하지 않고 schema_invalid를 반환한다(부분 쓰기 방지). append의 --mode(shadow|active, 선택)는 run_log_core.append()의 키워드 전용 mode 인자로 그대로 전달한다(PM 판정② — active 전용 source 제약 게이트). reconcile-duration은 --task(필수)·--run-id(선택, 생략 시 조각에서 해석)·--worker-run-id(선택, 단일 대상 좁히기 — surfaces.json 표면 요약에는 아직 없는 추가 선택 인자, W-6)·--format json을 받아 run_log_core.reconcile_duration_check()를 호출한다. import-agentic/import-oppl은 --task(필수)·--run-id(선택, 생략 시 조각에서 해석)·--dry-run·--format json을 받아 run_log_core의 동명 함수를 호출한다. run_log_core 밖의 상태 원천 파일을 읽거나 쓰지 않는다(D-5, AC-19/MV-24).",
+  "exports": ["cmd_init", "cmd_append", "cmd_validate_run", "cmd_reconcile_duration",
+              "cmd_import_agentic", "cmd_import_oppl", "build_parser", "main"]
 }
 """
 
@@ -104,6 +104,11 @@ def cmd_validate_run(args):
     _emit(result, args.format)
 
 
+def cmd_reconcile_duration(args):
+    result = run_log_core.reconcile_duration_check(args.task, args.run_id, args.worker_run_id)
+    _emit(result, args.format)
+
+
 def cmd_import_agentic(args):
     result = run_log_core.import_agentic(args.task, args.run_id, dry_run=args.dry_run)
     _emit(result, args.format)
@@ -162,6 +167,15 @@ def build_parser():
     p_validate_run.add_argument("--run-id", required=True, dest="run_id")
     p_validate_run.add_argument("--format", choices=["json"], default=None)
     p_validate_run.set_defaults(func=cmd_validate_run)
+
+    p_reconcile_duration = sub.add_parser(
+        "reconcile-duration",
+        help="시간 파생 일치 감사 — floor(duration_ms/60000) 불일치 시 worker_duration_conflict")
+    p_reconcile_duration.add_argument("--task", required=True, dest="task")
+    p_reconcile_duration.add_argument("--run-id", dest="run_id", default=None)
+    p_reconcile_duration.add_argument("--worker-run-id", dest="worker_run_id", default=None)
+    p_reconcile_duration.add_argument("--format", choices=["json"], default=None)
+    p_reconcile_duration.set_defaults(func=cmd_reconcile_duration)
 
     p_import_agentic = sub.add_parser("import-agentic", help="legacy AGENTIC-LOG.md 단방향 가져오기")
     p_import_agentic.add_argument("--task", required=True, dest="task")

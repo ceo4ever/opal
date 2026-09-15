@@ -4,8 +4,8 @@
   "mode": "agentic",
   "schema_version": "1.1",
   "created_at": "2026-09-12 17:38:21",
-  "updated_at": "2026-09-14 15:35:15",
-  "current_status": "in_progress",
+  "updated_at": "2026-09-15 14:41:25",
+  "current_status": "completed_unmerged",
   "rows": [
     {
       "row_id": 1,
@@ -34,22 +34,23 @@
       "stage": "ANALYSIS",
       "item": "작업",
       "key": "analysis.analysis_md",
-      "status": "in_progress",
-      "status_label": "🔄",
-      "timestamp": "2026-09-14 15:35:15",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-15 14:41:17",
       "owner": "PM",
-      "note": null
+      "note": "PM 직접 수행(캡틴 승인 actor=pm, ANALYSIS 한정) — 워커 디스패치 없음. 소요 미측정 명시",
+      "worker_duration_unknown": true
     },
     {
       "row_id": 4,
       "stage": "ANALYSIS",
       "item": "PM Gate",
       "key": "analysis.pm_gate",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-14 17:27:12",
       "owner": "PM",
-      "note": null,
+      "note": "PM Gate: 실측 근거 전건 인용, 위험 H-1~H-4 식별, 확정 계약 7건 인용",
       "gate": {
         "artifacts": [
           "ANALYSIS.md"
@@ -69,33 +70,34 @@
       "stage": "ANALYSIS",
       "item": "사용자 확인",
       "key": "analysis.user_confirm",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
-      "owner": "PM",
-      "note": null
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-14 17:27:12",
+      "owner": "auto",
+      "note": "auto-approved on PLAN entry"
     },
     {
       "row_id": 6,
       "stage": "PLAN",
       "item": "작업",
       "key": "plan.plan_md",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-14 17:44:36",
       "owner": "PM",
-      "note": null
+      "note": "opal-plan-agent 디스패치 — PLAN.md 생성, W-1~W-9, 실행그룹 P1~P7, blocker 0건",
+      "worker_duration_minutes": 7
     },
     {
       "row_id": 7,
       "stage": "PLAN",
       "item": "PM Gate",
       "key": "plan.pm_gate",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-14 17:44:44",
       "owner": "PM",
-      "note": null,
+      "note": "PM Gate Pass — plan-contract-check pass(W-1~W-9) / code-scan-citation-check pass(target_files 13) / validate violations 0. 인용 실측 대조 전건 일치: .gitignore:49-55 한시제외 실재, redact() 242행 pass-through, install-mac.sh:1112 SEED_KEYS quietHours 포함, surfaces.json reconcile-duration 기등재, redaction_failed·worker_duration_conflict 계약 2자산 기등재(C-9 대조 판정 정당)",
       "gate": {
         "artifacts": [
           "TASK.md",
@@ -115,33 +117,34 @@
       "stage": "PLAN",
       "item": "사용자 확인",
       "key": "plan.user_confirm",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
-      "owner": "PM",
-      "note": null
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-14 17:44:54",
+      "owner": "auto",
+      "note": "agentic auto-pass: agentic 모드 자동 승인 — PM Gate Pass 직후"
     },
     {
       "row_id": 9,
       "stage": "TEST-SCENARIO",
       "item": "작업",
       "key": "test_scenario.test_scenario_md",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-14 17:53:43",
       "owner": "PM",
-      "note": null
+      "note": "PM 직접 작성 — 워커 디스패치 없음(op-dev-test-scenario 작성자=PM 계약). 소요 미측정 명시",
+      "worker_duration_unknown": true
     },
     {
       "row_id": 10,
       "stage": "TEST-SCENARIO",
       "item": "목표-커버 게이트",
       "key": "test_scenario.scenario_gate",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-14 17:56:16",
       "owner": "PM",
-      "note": null,
+      "note": "게이트 통과 — 두 증거 확보: scenario-coverage-check exit 0(누락 0) + opal-evaluator-agent scenario-rubric verdict pass(목표2·채택2·경계2, 평균 2.0, gaps 0). iteration 1, .scenario-gate-history.json 기록",
       "gate": {
         "artifacts": [
           "TEST-SCENARIO.md"
@@ -154,51 +157,54 @@
           "대역을 쓰면 Setup에 사용 경계·한계를 명시하고 실제 integration 증거를 대체하지 않음",
           "manual 시나리오가 있으면 Setup에 실행자와 실행 조건 명시"
         ]
-      }
+      },
+      "worker_duration_minutes": 1
     },
     {
       "row_id": 11,
       "stage": "TEST-SCENARIO",
       "item": "사용자 확인",
       "key": "test_scenario.user_confirm",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
-      "owner": "PM",
-      "note": null
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-14 18:00:10",
+      "owner": "auto",
+      "note": "auto-approved on EXECUTE entry"
     },
     {
       "row_id": 12,
       "stage": "EXECUTE",
       "item": "작업",
       "key": "execute.implement",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-15 13:15:46",
       "owner": "PM",
-      "note": null
+      "note": "EXECUTE 완료 — W-1~W-10 전건. 스위트: run-log-tool 53/0, state-tool 457 passed·3 skipped, dashboard 348 passed·36 failed(사전 존재 환경 결함, 허브 376/0 교차 확인). PM Gate: code-scan validate ok(커버리지 100%·newly_uncovered 0) / 컨벤션 체커 2영역 Critical·High 0건(Framework Medium 1건은 exports 보정으로 해소) / state validate violations 0 / 계약 오류코드 23건 양방향 일치. 게이트 중 Fail 3건 재지시로 해소: QuietHours 해시계약 위반, state_tool @header JSON 파손, config.py 태스크번호 이력",
+      "worker_duration_minutes": 206
     },
     {
       "row_id": 13,
       "stage": "TEST",
       "item": "작업",
       "key": "test.run_tests",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-15 14:37:24",
       "owner": "PM",
-      "note": null
+      "note": "TEST 완료 — 시나리오 19/19 pass, fail 0·blocked 0. 1차 17/2 중 S-9(벽시계 바이트 비교 경쟁)·S-15(연쇄) fail → 캡틴 승인으로 비교 방법 수정 후 재판정 전건 pass",
+      "worker_duration_minutes": 34
     },
     {
       "row_id": 14,
       "stage": "TEST",
       "item": "PM Gate",
       "key": "test.pm_gate",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-15 14:37:24",
       "owner": "PM",
-      "note": null,
+      "note": "PM Gate Pass — scenario-status 19 pass/0 fail/0 blocked(locked) / 증거 미첨부 pass 0건 / scenario-fidelity-check all_met true(19/19, real-usage 12·mock 7) / coverage-check exit 0 / state validate violations 0. 스위트 실측: state-tool 457 passed·3 skipped, run-log-tool 53/0, dashboard 348 passed·36 failed(사전 존재 환경 결함, 기준선 대비 증가 0)",
       "gate": {
         "artifacts": [
           "TEST-SCENARIO.md",
@@ -217,24 +223,25 @@
       "stage": "TEST",
       "item": "사용자 확인",
       "key": "test.user_confirm",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
-      "owner": "PM",
-      "note": null
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-15 14:38:21",
+      "owner": "user",
+      "note": "캡틴 승인: TEST 결과 확인 및 CLOSE 진입 승인"
     },
     {
       "row_id": 16,
       "stage": "CLOSE",
       "item": "DONE.md 생성",
       "key": "close.done_md",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-15 14:41:25",
       "owner": "PM",
-      "note": null
+      "note": "CLOSE — DONE.md 생성(PM 직접). 회고 하드스텝: 개선 후보 4건을 improve-tool로 허브 MEMORY에 기록(워커 실측 판정 상시화 / test-tool red_required 갱신 경로 / install 시드 하위 키 전파 / Console scan_depth 불일치). 회고적 brain 학습 후보 3건은 DONE.md에 선언만 하고 merge 후 허브 finalize가 판정. 커밋 미수행",
+      "worker_duration_unknown": true
     }
   ],
-  "next_action": "ANALYSIS 작업 진행 중",
+  "next_action": "태스크 완료",
   "worktree": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_123"
 }

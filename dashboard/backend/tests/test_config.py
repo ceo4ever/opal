@@ -4,10 +4,10 @@
   "layer": "test",
   "domain": "console",
   "description": "config.load_config()의 prewarm_projects 파싱·타입 가드 테스트. 5variant: 키 부재/빈 배열/문자열(비-list)/dict(비-list)/정상 배열(경로 2개+비str 원소 혼합) → 부재·빈·비-list는 예외 없이 []로 폴백, 정상 배열은 str 원소만 로드된다(H-4). CONFIG_PATH를 tmp_path로 monkeypatch하여 실제 ~/.opal/console.config.json과 격리. config.save_config(머지 보존, H-3)·config._atomic_write_json(temp+os.replace 원자 쓰기·동시 쓰기 직렬화, H-2) 검증. TestLoadQuietHours — 야간 제외 구간(집계 기준 17)의 2층 머지 계약. 두 층 부재 시 기본 켬(00:00~09:00), 전역 끔·전역 구간 변경·로컬 하위 키 우선(전역 잔존)·로컬 끔·start==end 무효화·형식 위반 9variant 폴백·파손 JSON 무예외·캐시 키 서명 분리. OPAL_SETTING_PATH를 tmp로 monkeypatch해 실제 ~/.opal/setting.json과 격리한다. TestQuietHoursSeedDefault — setting.default.json 시드와 코드 기본값의 일치 + install-mac.sh SEED_KEYS 배선. [호칭] TestLoadOwnerName — config.load_owner_name의 정상 읽기 + 폴백 4경로(파일 부재·키 부재·값 공란·읽기 실패)를 단정한다. IDENTITY_PATH를 tmp로 monkeypatch해 실행 머신의 ~/.opal/identity.md와 격리하며, 폴백값이 특정인이 아니라 중립 호칭(\"사용자\")임을 못박는다.",
-  "exports": ["TestConfigPrewarmProjects", "TestSaveConfigMergePreservation", "TestAtomicWriteJson", "TestLoadQuietHours", "TestQuietHoursSeedDefault"],
+  "exports": ["TestConfigPrewarmProjects", "TestSaveConfigMergePreservation", "TestAtomicWriteJson", "TestLoadQuietHours", "TestQuietHoursSeedDefault", "TestQuietHoursTimeZoneMerge", "TestQuietHoursTokenTimeZoneSignature"],
   "depends": ["config"],
   "task": "061",
-  "scenarios": ["S-2", "S-3", "TS-138"]
+  "scenarios": ["S-2", "S-3", "TS-138", "S-10", "S-11"]
 }
 """
 from __future__ import annotations
@@ -457,3 +457,233 @@ class TestLoadOwnerName:
         from dashboard.backend.config import DEFAULT_OWNER_NAME
 
         assert DEFAULT_OWNER_NAME == "사용자"
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# [S-10/S-11][RED-c][W-3] 조용시간 timeZone 2층 머지·캐시 토큰 (AC-20)
+# CONTRACT.md §2.8·§2.8.1(B-1~B-4)·§3.5 — `QuietHours` NamedTuple(start_minute,
+# end_minute, time_zone) 신설. `load_quiet_hours()`가 `QuietHours`(미적용은 `None`)를
+# 반환하고, `timeZone`도 기존 2층 머지의 하위 키로 해석된다. 무효 IANA 이름은
+# `Asia/Seoul`로 폴백하며 예외를 던지지 않고 설정 파일을 다시 쓰지 않는다(§3.5).
+# `quiet_hours_token()`은 `time_zone`을 서명에 포함해 `timeZone`만 다른 두 설정이
+# 서로 다른 토큰을 만든다(MV-26). GREEN 구현 전이므로 이 시점의 config.py에는
+# `QuietHours` 타입도 `load_quiet_hours()`의 `time_zone` 필드도 없다 — 아래는
+# 전부 RED다(구현 전).
+# ══════════════════════════════════════════════════════════════════════════════
+
+
+def _isolate_quiet_hours(monkeypatch, tmp_path, global_setting=None, local_setting=None):
+    """전역·프로젝트 설정을 tmp로 격리하고 프로젝트 경로를 반환. `TestLoadQuietHours._isolate`와
+    동일한 격리 관례(OPAL_SETTING_PATH monkeypatch, 실제 ~/.opal/setting.json과 격리)를
+    새 테스트 클래스에서도 재사용하기 위한 모듈 레벨 헬퍼. None이면 해당 파일을 만들지 않는다.
+    """
+    import dashboard.backend.config as config_module
+
+    global_path = tmp_path / "setting.json"
+    if global_setting is not None:
+        global_path.write_text(json.dumps(global_setting), encoding="utf-8")
+    monkeypatch.setattr(config_module, "OPAL_SETTING_PATH", global_path)
+
+    project = tmp_path / "project"
+    if local_setting is not None:
+        (project / ".opal").mkdir(parents=True, exist_ok=True)
+        (project / ".opal" / "setting.local.json").write_text(
+            json.dumps(local_setting), encoding="utf-8"
+        )
+    return str(project)
+
+
+class TestQuietHoursTimeZoneMerge:
+    """[S-10/AC-20][RED] `load_quiet_hours()`의 `timeZone` 하위 키 2층 머지 5variant +
+    날짜 경계 fixture에서 legacy 로컬 시각·사건 UTC·quietHours `timeZone` 해석 일치(MV-26).
+
+    대상: `config.QuietHours`(NamedTuple: start_minute, end_minute, time_zone) 신설 +
+    `load_quiet_hours()`의 `time_zone` 필드 해석(미구현 — CONTRACT.md §2.8 대상).
+    현재 `load_quiet_hours()`는 `tuple[int, int]`만 반환하므로 `.time_zone` 접근 시
+    `AttributeError`가 정상(RED)이다.
+    """
+
+    def test_global_only_timezone_applies(self, tmp_path, monkeypatch):
+        """[S-10] 전역만 `timeZone` 지정 → 그대로 적용."""
+        from dashboard.backend.config import load_quiet_hours
+
+        project = _isolate_quiet_hours(
+            monkeypatch,
+            tmp_path,
+            global_setting={
+                "quietHours": {
+                    "enabled": True,
+                    "start": "23:30",
+                    "end": "07:15",
+                    "timeZone": "America/New_York",
+                }
+            },
+        )
+        result = load_quiet_hours(project)
+        assert result.time_zone == "America/New_York"
+
+    def test_local_only_timezone_overrides_default(self, tmp_path, monkeypatch):
+        """[S-10] 로컬만 `timeZone` 지정(전역엔 `timeZone` 없음) → 로컬 값 적용,
+        `start`/`end`는 전역이 하위 키 단위로 유지된다."""
+        from dashboard.backend.config import load_quiet_hours
+
+        project = _isolate_quiet_hours(
+            monkeypatch,
+            tmp_path,
+            global_setting={"quietHours": {"enabled": True, "start": "01:00", "end": "08:00"}},
+            local_setting={"quietHours": {"timeZone": "Europe/London"}},
+        )
+        result = load_quiet_hours(project)
+        assert result.time_zone == "Europe/London"
+        assert (result.start_minute, result.end_minute) == (60, 480)
+
+    def test_both_present_local_timezone_wins(self, tmp_path, monkeypatch):
+        """[S-10] 양쪽 다 `timeZone` 지정 → 로컬이 전역을 하위 키 단위로 덮는다."""
+        from dashboard.backend.config import load_quiet_hours
+
+        project = _isolate_quiet_hours(
+            monkeypatch,
+            tmp_path,
+            global_setting={
+                "quietHours": {
+                    "enabled": True,
+                    "start": "23:30",
+                    "end": "07:15",
+                    "timeZone": "America/New_York",
+                }
+            },
+            local_setting={"quietHours": {"timeZone": "Europe/London"}},
+        )
+        result = load_quiet_hours(project)
+        assert result.time_zone == "Europe/London"
+
+    def test_both_absent_defaults_to_asia_seoul(self, tmp_path, monkeypatch):
+        """[S-10] 양쪽 부재 → 기본 `Asia/Seoul`."""
+        from dashboard.backend.config import load_quiet_hours
+
+        project = _isolate_quiet_hours(monkeypatch, tmp_path)
+        result = load_quiet_hours(project)
+        assert result.time_zone == "Asia/Seoul"
+
+    def test_invalid_iana_name_falls_back_without_exception_or_rewrite(self, tmp_path, monkeypatch):
+        """[S-10] 무효 IANA 이름 → `Asia/Seoul` 폴백, 예외 없음, 설정 파일 재기록 없음(§3.5)."""
+        from dashboard.backend.config import load_quiet_hours
+
+        global_setting = {
+            "quietHours": {
+                "enabled": True,
+                "start": "00:00",
+                "end": "09:00",
+                "timeZone": "Not/AZone",
+            }
+        }
+        project = _isolate_quiet_hours(monkeypatch, tmp_path, global_setting=global_setting)
+
+        global_path = tmp_path / "setting.json"
+        before_text = global_path.read_text(encoding="utf-8")
+        before_mtime = global_path.stat().st_mtime_ns
+
+        result = load_quiet_hours(project)  # 여기서 예외가 나면 테스트가 error로 실패한다
+
+        assert result.time_zone == "Asia/Seoul"
+        assert global_path.read_text(encoding="utf-8") == before_text, (
+            "무효 IANA 폴백이 설정 파일을 다시 썼다"
+        )
+        assert global_path.stat().st_mtime_ns == before_mtime, (
+            "무효 IANA 폴백이 설정 파일 mtime을 바꿨다"
+        )
+
+    def test_date_boundary_local_utc_timezone_interpretation_agree(self, tmp_path, monkeypatch):
+        """[S-10] 날짜 경계(로컬 자정 직전·직후) fixture — legacy 로컬 시각·사건 UTC·
+        quietHours `timeZone` 해석이 일치한다(MV-26).
+
+        quietHours가 자정을 걸치는 `23:30~07:15` `Asia/Seoul`일 때, 로컬 자정 직전
+        (23:59 KST)과 직후(00:01 KST) 두 사건을 UTC로 인코딩해 두고,
+        `load_quiet_hours()`가 반환한 `time_zone`으로 `zoneinfo` 변환한 결과가
+        "legacy 로컬 시각"(고정 KST 오프셋 UTC+9 계산)과 일치해야 하며, 두 사건 모두
+        조용시간 구간 안으로 판정되어야 한다.
+        """
+        from datetime import datetime, timedelta, timezone
+        from zoneinfo import ZoneInfo
+
+        from dashboard.backend.config import load_quiet_hours
+
+        project = _isolate_quiet_hours(
+            monkeypatch,
+            tmp_path,
+            global_setting={
+                "quietHours": {
+                    "enabled": True,
+                    "start": "23:30",
+                    "end": "07:15",
+                    "timeZone": "Asia/Seoul",
+                }
+            },
+        )
+        result = load_quiet_hours(project)
+
+        # 사건 UTC 시각 2벌 — 로컬(KST, UTC+9) 자정 직전·직후
+        before_midnight_utc = datetime(2026, 3, 14, 14, 59, tzinfo=timezone.utc)  # KST 23:59
+        after_midnight_utc = datetime(2026, 3, 14, 15, 1, tzinfo=timezone.utc)  # KST 00:01(다음날)
+
+        tz = ZoneInfo(result.time_zone)
+        legacy_kst = timezone(timedelta(hours=9))
+
+        before_local_via_tz = before_midnight_utc.astimezone(tz)
+        before_local_via_legacy = before_midnight_utc.astimezone(legacy_kst)
+        after_local_via_tz = after_midnight_utc.astimezone(tz)
+        after_local_via_legacy = after_midnight_utc.astimezone(legacy_kst)
+
+        assert (before_local_via_tz.hour, before_local_via_tz.minute) == (23, 59)
+        assert (before_local_via_tz.hour, before_local_via_tz.minute) == (
+            before_local_via_legacy.hour,
+            before_local_via_legacy.minute,
+        )
+        assert (after_local_via_tz.hour, after_local_via_tz.minute) == (0, 1)
+        assert (after_local_via_tz.hour, after_local_via_tz.minute) == (
+            after_local_via_legacy.hour,
+            after_local_via_legacy.minute,
+        )
+
+        def _minute_of_day(dt):
+            return dt.hour * 60 + dt.minute
+
+        def _in_quiet_window(minute_of_day, start, end):
+            if start <= end:
+                return start <= minute_of_day < end
+            return minute_of_day >= start or minute_of_day < end  # 자정 걸침
+
+        assert _in_quiet_window(
+            _minute_of_day(before_local_via_tz), result.start_minute, result.end_minute
+        )
+        assert _in_quiet_window(
+            _minute_of_day(after_local_via_tz), result.start_minute, result.end_minute
+        )
+
+
+class TestQuietHoursTokenTimeZoneSignature:
+    """[S-11/AC-20][RED] `quiet_hours_token()`의 `timeZone` 서명 반영 — `timeZone`만
+    다른 두 설정이 서로 다른 토큰·캐시 키를 만들고, 보정 꺼짐(`None`)은 `off`로 유지된다(MV-26).
+
+    대상: `config.QuietHours` 신설 + `quiet_hours_token()`이 `time_zone`을 서명에
+    포함하도록 개정(미구현 — CONTRACT.md §2.8 대상). 현재는 `QuietHours` 자체가
+    없으므로 `ImportError`가 정상(RED)이다.
+    """
+
+    def test_different_timezone_same_window_produces_different_token(self):
+        """[S-11] `timeZone`만 다른 두 설정이 서로 다른 토큰(=캐시 키)을 만든다."""
+        from dashboard.backend.config import QuietHours, quiet_hours_token
+
+        seoul = QuietHours(start_minute=0, end_minute=540, time_zone="Asia/Seoul")
+        new_york = QuietHours(start_minute=0, end_minute=540, time_zone="America/New_York")
+
+        token_seoul = quiet_hours_token(seoul)
+        token_new_york = quiet_hours_token(new_york)
+
+        assert token_seoul != token_new_york, "timeZone만 다른 두 설정이 같은 캐시 키를 공유함"
+
+    def test_off_stays_off_regardless_of_timezone(self):
+        """[S-11] 보정이 꺼진 상태(`None`)는 시간대와 무관하게 `off`로 유지된다."""
+        from dashboard.backend.config import quiet_hours_token
+
+        assert quiet_hours_token(None) == "off"
