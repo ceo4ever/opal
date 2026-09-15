@@ -533,14 +533,16 @@ def test_s12_7_unattributable_overlap_halts_only_connected_component(rec_env):
         assert set(payload.get("restored_paths", [])) == {"src/shared/contested.py"}, payload
 
         # 연결 성분 process는 실제로 죽어야 한다 — 선언만으로는 부족하다.
+        # 자식 프로세스이므로 종료 판정은 poll()을 쓴다: os.kill(pid, 0)은 부모(pytest)가
+        # 아직 수확하지 않은 좀비에도 성공을 반환해 오탐한다(POSIX 표준 동작).
         deadline = time.time() + 15
         while time.time() < deadline and any(
-            pid_alive(procs[key].pid) for key in ("T01/a1", "T02/b1")
+            procs[key].poll() is None for key in ("T01/a1", "T02/b1")
         ):
             time.sleep(0.1)
         for key in ("T01/a1", "T02/b1"):
-            assert not pid_alive(procs[key].pid), f"연결 성분 process가 종료되지 않았다: {key}"
-        assert pid_alive(procs["T03/c1"].pid), "무관한 attempt process까지 종료됐다."
+            assert procs[key].poll() is not None, f"연결 성분 process가 종료되지 않았다: {key}"
+        assert procs["T03/c1"].poll() is None, "무관한 attempt process까지 종료됐다."
 
         assert (
             path_hash(repo, "src/shared/contested.py")

@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "oppb-command.schema.json",
   "title": "OPPB CLI Command Surface Schema",
-  "description": "`oppb-runtime-tool/run.sh <command> [<subcommand>] [--flag value]`의 공개 표면을 기술한다. 루트는 하나의 호출을 정규화한 object이며, 명령별로 필수 플래그를 oneOf로 못박는다. 응답 봉투와 폐쇄 오류 코드 집합은 $defs에 둔다. 실제 파서(oppb_runtime_tool.parse_argv)는 `--k=v`와 `--k v` 두 양식을 모두 받고 FLAGS 화이트리스트 밖 플래그를 usage_error로 거부하며, 명령 뒤 첫 비플래그 토큰을 subcommand로, 두 번째를 usage_error로 처리한다. 이 문서는 G2 API 동결 대상이며 런타임 검증기가 아니다 — CLI 자체가 이 스키마를 읽지 않는다.",
+  "description": "`oppb-runtime-tool/run.sh <command> [<subcommand>] [--flag value]`의 공개 표면을 기술한다. 루트는 하나의 호출을 정규화한 object이며, 명령별로 필수 플래그를 oneOf로 못박는다. 응답 봉투와 폐쇄 오류 코드 집합은 $defs에 둔다. 실제 파서(oppb_runtime_tool.parse_argv)는 `--k=v`와 `--k v` 두 양식을 모두 받고 FLAGS 화이트리스트 밖 플래그를 usage_error로 거부하며, 명령 뒤 첫 비플래그 토큰을 subcommand로, 두 번째를 usage_error로 처리한다. 이 문서는 G2 API 동결 대상이며 런타임 검증기가 아니다 — CLI 자체가 이 스키마를 읽지 않는다. **동결 범위는 G2 표면이다.** 여기의 command_name·flag_name·error_code 폐쇄 집합은 Controller·Supervisor·Evidence 계약을 여는 명령 표면만 기술하며 CLI 전체 표면의 목록이 아니다. G3·G4가 자기 서브커맨드·플래그·오류 코드를 추가하는 것은 이 동결의 위반이 아니고, 그 표면은 README와 각 모듈 @header가 기술한다(api-freeze.md §3).",
   "type": "object",
   "required": ["command"],
   "additionalProperties": false,
@@ -78,7 +78,7 @@
     },
     "command_name": {
       "enum": ["init", "start", "status", "resume", "workgraph", "evidence", "task"],
-      "description": "oppb_runtime_tool.COMMANDS. DISPATCH의 키 집합과 동일하다."
+      "description": "**G2가 소유하는 명령 7종**이다. 동결 시점 oppb_runtime_tool.COMMANDS·DISPATCH 키와 일치했으나 그 일치는 G2 시점 실측 사실이지 유지해야 할 불변식이 아니다 — 이 enum은 CLI 전체 표면의 목록이 아니다. G3·G4가 추가하는 서브커맨드(`lease`·`probe`·`checkpoint`·`cache`·`recover` 등)는 여기에 들어오지 않으며 이 동결의 대상이 아니다. 런타임 폐쇄 집합의 SSOT는 구현의 COMMANDS다."
     },
     "flag_name": {
       "enum": [
@@ -89,7 +89,7 @@
         "--file",
         "--task-id"
       ],
-      "description": "oppb_runtime_tool.FLAGS 화이트리스트. 밖의 플래그는 usage_error(exit 2)로 거부한다."
+      "description": "**G2 명령 7종이 소유하는 플래그**다. 동결 시점 oppb_runtime_tool.FLAGS 화이트리스트와 일치했고, 화이트리스트 밖 플래그는 usage_error(exit 2)로 거부한다. G3·G4가 자기 명령용으로 추가하는 플래그는 여기에 들어오지 않으며 이 동결의 대상이 아니다. 런타임 화이트리스트의 SSOT는 구현의 FLAGS다."
     },
     "exit_code": {
       "enum": [0, 1, 2],
@@ -120,7 +120,7 @@
       }
     },
     "error_code": {
-      "description": "oppb_runtime_tool.ERROR_CODES 폐쇄 집합 52종 — 진입점 자체 + controller + supervisor + evidence의 합집합.",
+      "description": "**G2가 소유하는 오류 코드 52종** — 진입점 자체 + controller + supervisor + evidence의 합집합이며 동결 시점 oppb_runtime_tool.ERROR_CODES와 일치했다. 이 목록은 CLI 전체 오류 코드의 폐쇄 집합이 아니다. G3·G4가 자기 명령용으로 추가하는 코드는 여기에 들어오지 않으며 이 동결의 대상이 아니다. 런타임 폐쇄 집합의 SSOT는 구현의 ERROR_CODES다.",
       "enum": [
         "acceptance_corrupt",
         "allocator_root_missing",

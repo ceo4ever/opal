@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "oppb-state.schema.json",
   "title": "OPPB workgraph.json Schema",
-  "description": "OPPB run root(`<allocator_root>/.opal-runs/<run_id>/`)의 미니 태스크 DAG·계약·예산·상태 SSOT. 유일한 writer는 controller.py이며 모든 갱신은 workgraph.lock 배타 락 아래 revision 대조 후 원자 교체된다. 프로젝트 태스크 state.json과는 어휘도 소유권도 공유하지 않는다 — P0~P5 전이는 Product Flow가 state-tool로만 수행한다(PLAN D3 / 제안서 §4.5). 이 문서는 G2 API 동결 대상이며 런타임 검증기가 아니다 — 이 저장소 도구는 표준 라이브러리 전용이라 jsonschema로 집행되지 않는다. 루트는 workgraph.json이고, 같은 run root의 나머지 Controller·Supervisor 소유 상태 문서는 $defs에 정의한다.",
+  "description": "OPPB run root(`<allocator_root>/.opal-runs/<run_id>/`)의 미니 태스크 DAG·계약·예산·상태 SSOT. 유일한 writer는 controller.py이며 모든 갱신은 workgraph.lock 배타 락 아래 revision 대조 후 원자 교체된다. 프로젝트 태스크 state.json과는 어휘도 소유권도 공유하지 않는다 — P0~P5 전이는 Product Flow가 state-tool로만 수행한다(PLAN D3 / 제안서 §4.5). 이 문서는 G2 API 동결 대상이며 런타임 검증기가 아니다 — 이 저장소 도구는 표준 라이브러리 전용이라 jsonschema로 집행되지 않는다. 루트는 workgraph.json이고, 같은 run root의 나머지 Controller·Supervisor 소유 상태 문서는 $defs에 정의한다. **동결 범위는 G2가 소유하는 run root 문서뿐이다** — `workgraph.json` · `acceptance.json` · `execution-packet.json` · `result.json`(및 `attempt-spec.json`) · `run.json` · `supervisor.json` · `evidence/`. run root에 있는 다른 문서는 각 그룹이 소유하며 이 동결의 대상이 아니다: `leases.json`(W-12) · `environment-discovery.json`(W-13) · `checkpoint/`(W-14) · cache root(W-15) · `recovery/`(W-16). 그 문서들이 run root에 추가되는 것은 이 동결의 위반이 아니고, 각 소유 모듈의 @header와 README가 기술한다(api-freeze.md §3).",
   "type": "object",
   "required": [
     "schema_version",

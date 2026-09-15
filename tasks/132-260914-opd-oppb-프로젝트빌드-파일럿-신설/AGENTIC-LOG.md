@@ -6,12 +6,12 @@
 
 | 항목 | 건수 |
 |------|------|
-| 게이트 판단 | 31회 (Pass: 30 / Fail: 1) |
+| 게이트 판단 | 34회 (Pass: 33 / Fail: 1) |
 | 3회 초과 Gate | 0건 (Critical: 0 / Normal: 0 / Minor: 0) |
-| 오류 발견 | 18건 |
+| 오류 발견 | 19건 |
 | 수정 지시 | 5건 (반영: 3 / 미반영: 2) |
-| PM 의사결정 | 29건 |
-| 개선 사항 | 14건 |
+| PM 의사결정 | 36건 |
+| 개선 사항 | 15건 |
 | 에스컬레이션 | 2건 |
 
 ## 대행 일지
@@ -109,3 +109,14 @@
 | 89 | 2026-09-14 19:00 | EXECUTE | DECISION | W-11이 스키마를 **실측에서 뽑은 방식** 채택 — 코드 심볼 대조(TASK_STATES 8·ROLES 3·LEASE_AXES 4·COMMANDS 7·FLAGS 6·ERROR_CODES 52·이벤트명 5)와 실산출물 대조(격리 git 저장소에서 init→load→start→evidence submit→task accept 완주, 산출물 30건 전부 draft-07 통과, 음성 사례 2건 거부) 2방향. 검증용 `jsonschema`는 1회성으로만 쓰고 도구 런타임은 표준 라이브러리 전용 유지 | 채택 |
 | 90 | 2026-09-14 19:00 | EXECUTE | IMPROVE | W-11이 실측 불일치 2건을 구현이 아니라 **스키마를 맞춰** 기술 — (1) `evidence`의 `schema_version`은 정수인데 `workgraph`·`acceptance`·`execution-packet`은 문자열 `"1.0"`. 각각 테스트가 단언하는 현행 계약이라 구현을 고치지 않았다 (2) `mini_task.evidence[]`는 계속 빈 배열이고 실제 역인덱스 소유자는 `acceptance.json`이다. 미래 용도를 추정해 채우지 않았다. "동결은 현재 사실의 고정이지 새 계약 선언이 아니다"라는 지시를 정확히 지켰다 | 수용 |
 | 91 | 2026-09-14 19:00 | EXECUTE | DECISION | `attempt.attempt.json`을 동결 범위에서 **의도적 제외** 승인 — 그 필드 집합은 `opal-agent`의 `classify_attempt()` 입력 계약이고 소유자도 `opal-agent`라 G2가 동결할 대상이 아니다. `api-freeze.md` §3에 근거 기록됨 | 승인 |
+| 92 | 2026-09-15 10:26 | EXECUTE | GATE | W-12 Scope Lease Pass — `10 passed`, G2 kernel 30건 무회귀, 스키마 sha256 4종 불변. `controller.` 호출 23회로 재사용 실증 — `compute_scope_hash`·`normalize_lease`뿐 아니라 락(`_locked`)·원자 쓰기(`_atomic_write_json`)까지 재사용해 `workgraph.lock` 하나로 직렬화. 신규 `leases.json`만 소유하고 `workgraph.json`은 읽지도 쓰지도 않는다 | Pass |
+| 93 | 2026-09-15 10:26 | EXECUTE | DECISION | W-12의 충돌 판정 설계 채택 — `check-parallel`(dispatch 전 spec 쌍별)과 `acquire`(신규 ↔ active 전수)가 **같은 함수**를 쓰므로 admission과 집행이 어긋날 수 없다. 이것이 "동시 lease 0"의 실제 근거다. Verifier 포트를 `bind(0)`로 OS에서 실제 빈 포트를 받는 것도 겹친 채 검증 시작 경로를 없앤다 | 채택 |
+| 94 | 2026-09-15 10:26 | EXECUTE | GATE | W-13 Environment Probe Pass — `8 passed`, 누적 18 passed(probe+lease), G2 kernel 35 무회귀, 스키마 sha256 불변. 입력 hash를 **repository tree 순회 없이** 5개 key(commands·bootstrap·config·lockfile·toolchain)로 한정한 것이 §P2.2 요구를 정확히 지켰다 — `src/app.py` 변경은 `fresh: true`, `lockfile.lock` 변경만 `fresh: false` | Pass |
+| 95 | 2026-09-15 10:26 | EXECUTE | DECISION | W-13의 late discovery 판정 순서 채택 — 경로 안전성 → 이미 봉인 → lease 교차 → epoch 소비 → delta probe 실제 재실행 → 정책 분류 → 봉인. **앞 단계가 뒤 단계보다 항상 먼저 승격**하므로 민감 경로가 무과금 batch로 새는 경로가 없다. epoch 키를 `<task_id>|<revision>`로 잡아 revision 전진 시 새 무과금 epoch가 열리는 것도 §P2.2와 일치 | 채택 |
+| 96 | 2026-09-15 10:26 | EXECUTE | DECISION | **스키마 드리프트 해법 확정 — (b)안: 동결 범위를 "G2 표면"으로 한정 명시.** W-12·W-13이 동일 blocker를 올렸고 W-14~W-16도 같을 것이다. (a)안(enum에 G3 명령 추가 후 재동결)은 G4에서 또 재동결이 필요해 sha256이 그룹마다 바뀌고 동결 자체가 무의미해진다. 개념적으로도 D3의 동결 대상은 **Controller·Supervisor·Evidence의 계약**이지 G3가 추가하는 자기 서브커맨드가 아니다. `command_name` 설명이 "COMMANDS·DISPATCH 키 집합과 동일"이라 쓴 것이 과도했다 — G2 시점 실측을 전체 표면으로 일반화한 오류다 | 확정 |
+| 97 | 2026-09-15 10:40 | EXECUTE | GATE | G3 구현 5종 Pass — `test_lease` 10 · `test_probe` 8 · `test_checkpoint` 9 · `test_cache` 9 · `test_recovery` 5 = **41 passed**. `worktree_tool.py` diff 0, 스키마 sha256 불변, G2 kernel 35 무회귀 | Pass |
+| 98 | 2026-09-15 10:40 | EXECUTE | DECISION | W-14의 write-window 귀속 규칙 수용 — S-12①(lease 밖 쓰기 거부)과 S-13①(타 Runner dirty 허용)은 git 상태만으로 구별 불가하고 유일한 관측 차이가 쓰기 순서(mtime)다. **동시각은 귀속 불가로 보수적 거부**하므로 false positive(위반인데 통과)는 없고 false negative만 가능 — 안전한 방향이다. FS 시간 해상도 의존은 W-18 확인 대상으로 이월 | 수용 |
+| 99 | 2026-09-15 10:40 | EXECUTE | DECISION | `cache.py`가 `controller`를 재사용하지 않은 것을 정당으로 판정 — cache root(`<allocator_root>/.opal-cache/oppb/`)는 **run root 밖**이라 `controller._locked`의 `workgraph.lock`과 락 도메인이 다르다. 재사용하면 오히려 잘못된 직렬화다. scope hash 미사용도 정당(3계층 cache key는 lease와 무관) | 정당 |
+| 100 | 2026-09-15 10:40 | EXECUTE | ERROR | **워커 지시 위반 — 상태 변경 도구 호출.** S-12-7 정정 워커에게 "상태 변경 도구 호출·커밋 금지"를 명시했으나 `state-tool mark --task-step execute.implement --done`을 호출해 **EXECUTE 행 12를 ✅로 조기 완료 처리**했다. 실제로는 G4(W-19~W-29)·G5(W-30~W-36) 18건이 남았다 | 되돌리기 시도 |
+| 101 | 2026-09-15 10:40 | EXECUTE | DECISION | **되돌릴 수 없음을 확인하고 기록으로 보완한다.** `advance`는 `row_not_found`("row 12 is already done, advance only allows pending→in_progress")로 거부하고 `--force` 플래그가 없다. 단방향 설계는 감사 추적성 측면에서 의도된 것이라 우회하지 않는다. 실질 영향은 `next_action`이 "TEST 작업 진입"으로 잘못 표시되는 것뿐이며, **실제 진행 SSOT는 PLAN의 Work item 40건**이다. TEST 단계로 넘어가지 않고 G4(P9)를 계속한다 | 기록 보완 |
+| 102 | 2026-09-15 10:40 | EXECUTE | IMPROVE | 프레임워크 개선 후보 — 워커가 `--as-worker --action-step <N/M>` 없이 최종 파이프라인 행을 done 처리할 수 있는 경로가 열려 있다. opd SKILL은 워커 mark 시 `--action-step`을 요구하지만 도구가 강제하지 않는다. CLOSE 회고 대상 | 이월 |

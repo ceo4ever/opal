@@ -7,12 +7,14 @@
   "description": "OPPB(프로젝트 빌드 파일럿) 실행 런타임 CLI 진입점 — 현재 `init`과 `start` 진입 가드를 소유한다. `init`은 allocator Git repository 루트에 run root(`.opal-runs/<run_id>/`)와 cache root(`.opal-cache/oppb/`)를 만들고, `.git/info/exclude`에 두 경로를 멱등 등록한 뒤 `git check-ignore`로 실제 ignore 판정을 확인하며, 확인에 실패하면 run 시작을 거부한다. allocator_root·project_root는 절대경로 명시 인자로만 받고 cwd·경로 세그먼트로 추론하지 않는다(harness/worktree.md §task root와 allocator root 계약 [MUST]). run identity는 `init`이 매 호출 새로 발급하며 기존 run root를 덮어쓰거나 초기화하지 않는다 — OPPB run root는 허브 소유라 태스크보다 오래 살아남는 것이 설계 요구다(제안서 §4.5). 출력은 단일 라인 JSON + exit code 계약을 따른다(harness/tool-output-contract.md). 표준 라이브러리와 git CLI만 사용하고 플랫폼 분기를 두지 않는다.",
   "exports": [
     "ERROR_CODES", "ok", "err", "parse_argv",
-    "cmd_init", "cmd_start", "cmd_workgraph", "cmd_evidence", "cmd_task", "main"
+    "cmd_init", "cmd_start", "cmd_workgraph", "cmd_evidence", "cmd_task", "cmd_lease",
+    "main"
   ],
   "depends": [
     "git CLI 2.x",
     "opal/core/references/harness/tool-output-contract.md",
-    "opal/tools/oppb-runtime-tool/evidence.py"
+    "opal/tools/oppb-runtime-tool/evidence.py",
+    "opal/tools/oppb-runtime-tool/cache.py"
   ]
 }
 """
@@ -33,6 +35,11 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import supervisor  # noqa: E402 — 동일 디렉토리 모듈(supervisor는 이 모듈을 import하지 않는다)
 import controller  # noqa: E402 — 동일 디렉토리 모듈, sys.path 보정 뒤 로드
 import evidence  # noqa: E402 — 동일 디렉토리 모듈, sys.path 보정 뒤 로드
+import cache  # noqa: E402 — 동일 디렉토리 모듈(W-15), sys.path 보정 뒤 로드
+import lease  # noqa: E402 — 동일 디렉토리 모듈, sys.path 보정 뒤 로드
+import checkpoint  # noqa: E402 — 동일 디렉토리 모듈(W-14), sys.path 보정 뒤 로드
+import probe  # noqa: E402 — 동일 디렉토리 모듈, sys.path 보정 뒤 로드
+import recovery  # noqa: E402 — 동일 디렉토리 모듈(W-16), sys.path 보정 뒤 로드
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 출력 계약 — 단일 라인 JSON + exit code
@@ -82,6 +89,11 @@ ERROR_CODES = {
 ERROR_CODES.update(controller.ERROR_CODES)
 ERROR_CODES.update(supervisor.SUPERVISOR_ERROR_CODES)
 ERROR_CODES.update(evidence.ERROR_CODES)
+ERROR_CODES.update(cache.ERROR_CODES)
+ERROR_CODES.update(lease.ERROR_CODES)
+ERROR_CODES.update(probe.ERROR_CODES)
+ERROR_CODES.update(checkpoint.ERROR_CODES)
+ERROR_CODES.update(recovery.ERROR_CODES)
 
 
 class ToolError(Exception):
@@ -122,10 +134,29 @@ def err(command, code, message="", exit_code=EXIT_ERROR, **fields):
 
 FLAGS = (
     "--allocator-root", "--project-root", "--run-root", "--spec",
-    "--file", "--task-id",
+    "--file", "--task-id", "--attempt", "--candidate",
+    "--commands", "--observation",
+    # recover 서브 명령 전용 플래그(W-16) — 본체는 recovery.py가 소유한다.
+    "--task", "--pid", "--violation",
+    # cache 서브 명령 전용 플래그(W-15) — 본체는 cache.py가 소유한다.
+    "--cache-root", "--adapter", "--command", "--parent",
+    "--source-root", "--verification", "--new-head", "--policy",
+    # checkpoint 서브 명령 전용 플래그(W-14) — 본체는 checkpoint.py가 소유한다.
+    "--dest",
+    "--node", "--state", "--last-access", "--size-bytes",
 )
 
-COMMANDS = ("init", "start", "status", "resume", "workgraph", "evidence", "task")
+COMMANDS = (
+    "init", "start", "status", "resume", "workgraph", "evidence", "task", "lease",
+    "probe",
+    "cache",
+    "recover",
+    "checkpoint",
+)
+
+
+# 값을 받지 않는 플래그 — 존재만으로 True다. 기존 값 플래그 처리와 분리한다.
+BOOL_FLAGS = ("--record-baseline", "--regenerate")
 
 
 def parse_argv(argv):
@@ -135,6 +166,10 @@ def parse_argv(argv):
     while index < len(argv):
         token = argv[index]
         if token.startswith("--"):
+            if token in BOOL_FLAGS:
+                opts[token[2:].replace("-", "_")] = True
+                index += 1
+                continue
             if "=" in token:
                 name, value = token.split("=", 1)
                 index += 1
@@ -152,7 +187,9 @@ def parse_argv(argv):
                 raise ToolError(
                     "usage_error", "알 수 없는 옵션 %s" % name, EXIT_USAGE
                 )
-            opts[name[2:].replace("-", "_")] = value
+            key = name[2:].replace("-", "_")
+            opts[key] = value
+            opts.setdefault("_values", {}).setdefault(key, []).append(value)
         else:
             if command is None:
                 command = token
@@ -474,6 +511,46 @@ def cmd_task(opts):
         raise ToolError(exc.code, exc.message, exc.exit_code, **exc.extra) from exc
 
 
+def cmd_lease(opts):
+    """Lease 서브 명령 — 본체와 파일 계약은 lease.py(W-12)가 소유한다."""
+    try:
+        return ok("lease", **lease.lease_command(opts))
+    except controller.ControllerError as exc:
+        raise ToolError(exc.code, exc.message, exc.exit_code, **exc.extra) from exc
+
+
+def cmd_probe(opts):
+    """Probe 서브 명령 — 본체와 파일 계약은 probe.py(W-13)가 소유한다."""
+    try:
+        return ok("probe", **probe.probe_command(opts))
+    except (probe.ProbeError, controller.ControllerError) as exc:
+        raise ToolError(exc.code, exc.message, exc.exit_code, **exc.extra) from exc
+
+
+def cmd_cache(opts):
+    """Cache 서브 명령 — 본체와 cache root 파일 계약은 cache.py(W-15)가 소유한다."""
+    try:
+        return ok("cache", **cache.cache_command(opts))
+    except cache.CacheError as exc:
+        raise ToolError(exc.code, exc.message, exc.exit_code, **exc.extra) from exc
+
+
+def cmd_checkpoint(opts):
+    """Checkpoint 서브 명령 — 본체와 파일 계약은 checkpoint.py(W-14)가 소유한다."""
+    try:
+        return ok("checkpoint", **checkpoint.checkpoint_command(opts))
+    except (checkpoint.CheckpointError, controller.ControllerError) as exc:
+        raise ToolError(exc.code, exc.message, exc.exit_code, **exc.extra) from exc
+
+
+def cmd_recover(opts):
+    """Recovery 서브 명령 — 본체와 파일 계약은 recovery.py(W-16)가 소유한다."""
+    try:
+        return ok("recover", **recovery.recover_command(opts))
+    except (recovery.RecoveryError, controller.ControllerError) as exc:
+        raise ToolError(exc.code, exc.message, exc.exit_code, **exc.extra) from exc
+
+
 DISPATCH = {
     "init": cmd_init,
     "start": cmd_start,
@@ -482,6 +559,11 @@ DISPATCH = {
     "workgraph": cmd_workgraph,
     "evidence": cmd_evidence,
     "task": cmd_task,
+    "lease": cmd_lease,
+    "probe": cmd_probe,
+    "cache": cmd_cache,
+    "recover": cmd_recover,
+    "checkpoint": cmd_checkpoint,
 }
 
 

@@ -8,8 +8,8 @@
 
 | 항목 | 값 |
 |---|---|
-| 동결 시각 (UTC) | `2026-09-14T09:58:42Z` |
-| 동결 기준 commit | `612db93d61ed72961002ca4cfd4431239d4d012e` (`612db93` — `feat(opal-agent): attempt 재부착·고아 판정 진입점과 시작 시점 record`) |
+| 동결 시각 (UTC) | `2026-09-15T01:38:25Z` (재동결 #2 — 범위 한정) |
+| 동결 기준 commit | `9d7dbc6021815a0e81e29b1843e4979a2e3cf984` (`9d7dbc6` — `feat(oppb): G2 스케줄러 kernel — Controller·Supervisor·Evidence와 API 동결`) |
 | 브랜치 / worktree | `.opal-worktrees/task_132` |
 | 상류 main 대조 | `git log --oneline main ^HEAD` 결과 **0건** — main(`3aaca21`)은 HEAD에 전부 포함돼 있고 동결 시점에 앞서간 상류 커밋이 없다 |
 | 동결 대상 구현 | `controller.py` · `supervisor.py` · `evidence.py` · `oppb_runtime_tool.py` (동결 시점 기준 아직 미커밋 — G2 체크포인트 커밋에 함께 들어간다) |
@@ -18,9 +18,9 @@
 
 | 파일 | sha256 | bytes |
 |---|---|---|
-| `oppb-state.schema.json` | `f4edbaba9f85b6f2d6ecca2541b904f071752b918799d77bedc14f89b167133d` | 17300 |
+| `oppb-state.schema.json` | `33fbef283805642f812751f6b5200094d7514ec34ef368953498e919b126c6d3` | 17907 |
 | `oppb-event.schema.json` | `8a78a0c70f04dcea7334d42a20005f9e3ab547a8a4787ecc4c621af91e66fd98` | 5321 |
-| `oppb-command.schema.json` | `875a10785f3221992cbc9879f123fc404202cda381faafec6cfb3377fb91df4c` | 11362 |
+| `oppb-command.schema.json` | `f3fab919b75d3c8c57f474195433a340de13d03abee2874e00d4f5edad42b79e` | 12791 |
 | `oppb-evidence.schema.json` | `2bc84ff52e1860fd917204538bf2243ae2c4ac76f0316eb7f965cfe671a91c22` | 5135 |
 
 재확인 명령 (W-18이 이 값의 무변경을 재확인한다):
@@ -35,10 +35,27 @@ shasum -a 256 oppb-state.schema.json oppb-event.schema.json \
 
 | 스키마 | 동결하는 계약 |
 |---|---|
-| `oppb-state.schema.json` | `workgraph.json`(루트) + `acceptance.json` · `execution-packet.json` · `run.json` · `supervisor.json` · `attempt-spec.json` · `result.json`(`$defs`). 미니 태스크 상태 8종, dispatch 역할 3종, lease 4축, 예산 차감 축, revision lock 규율 |
+| `oppb-state.schema.json` | **G2가 소유하는 run root 문서** — `workgraph.json`(루트) + `acceptance.json` · `execution-packet.json` · `run.json` · `supervisor.json` · `attempt-spec.json` · `result.json`(`$defs`). 미니 태스크 상태 8종, dispatch 역할 3종, lease 4축, 예산 차감 축, revision lock 규율 |
 | `oppb-event.schema.json` | `events.jsonl` 한 줄. 이벤트 이름 5종 폐쇄 집합과 이벤트별 필드 |
-| `oppb-command.schema.json` | CLI 서브커맨드 7종 · 플래그 6종 · 서브커맨드 4종 · 오류 코드 52종 · 응답 봉투 · exit code 3종 · `workgraph load --spec` 입력 형식 |
+| `oppb-command.schema.json` | **G2가 소유하는** CLI 명령 7종 · 플래그 6종 · 서브커맨드 4종 · 오류 코드 52종 · 응답 봉투 · exit code 3종 · `workgraph load --spec` 입력 형식 |
 | `oppb-evidence.schema.json` | `evidence/<scope>/<evidence_id>.json` 필수 필드·형식과 4단 거부 조건, `evidence submit`·`task accept` 응답 필드 |
+
+**동결 범위 = G2 표면.** 이 동결이 거는 것은 Controller·Supervisor·Evidence의
+state·event·command·evidence 계약뿐이다. **CLI 전체 표면이나 run root 전체 파일 목록이 아니다.**
+G3·G4가 자기 서브커맨드·플래그·오류 코드·run root 문서를 추가하는 것은 **이 동결의 위반이 아니며
+재동결 트리거도 아니다.** 스키마가 구현보다 좁은 상태는 의도된 것이다.
+
+**동결 범위 밖 — 다른 그룹 소유**
+
+| 표면 | 소유 W | 문서화 소유자 |
+|---|---|---|
+| `lease` 명령 + `--attempt`·`--candidate` 등 · `leases.json` | W-12 | `lease.py` @header + README |
+| `probe` 명령 + `--commands`·`--observation` 등 · `environment-discovery.json` | W-13 | `probe.py` @header + README |
+| `checkpoint` 명령 + `--task`·`--record-baseline` 등 · `checkpoint/` | W-14 | `checkpoint.py` @header + README |
+| `cache` 명령 + `--dest`·`--regenerate` 등 · cache root 레이아웃 | W-15 | `cache.py` @header + README |
+| `recover` 명령 + `--pid`·`--violation` 등 · `recovery/` | W-16 | `recovery.py` @header + README |
+
+각 모듈의 @header가 이미 자기 표면을 기술한다. **이 문서와 스키마 4종은 그것을 중복 기술하지 않는다.**
 
 **동결 범위 밖 — 의도적 제외**
 
@@ -105,7 +122,15 @@ PLAN **H-7**이 W-11 시점에 요구한 재실측이다. 과거 실측치로 �
 
 ## 6. 재동결 절차 (H-3 경로)
 
-G3(W-12~W-17) 진행 중 이 API를 바꿔야 하는 상황이 오면 **G3에서 즉석으로 고치지 않는다.**
+**재동결 트리거는 하나뿐이다 — Controller·Supervisor·Evidence의 state/event/command/evidence 계약
+자체가 바뀔 때.** 구체적으로 `workgraph.json`·`acceptance.json`·`execution-packet.json`·
+`result.json`·`run.json`·`supervisor.json`·`evidence/`의 필드·불변식이 바뀌거나, 이벤트 5종,
+G2 명령 7종의 인자·응답·오류 계약이 바뀔 때다.
+
+**트리거가 아닌 것:** 다른 그룹이 서브커맨드·플래그·오류 코드를 추가하는 것, run root에 그 그룹
+소유 문서를 추가하는 것. 이 경우 스키마를 고치지 말고 해당 모듈 @header와 README에만 기술한다.
+
+트리거에 해당하면 **G3에서 즉석으로 고치지 않는다.**
 
 1. **중단** — 변경이 필요한 W를 중단하고 사유(어느 스키마의 어느 필드가, 왜 부족한지)를 기록한다.
 2. **W-11 재진입** — PM에 W-11 재진입을 요청한다. 구현 변경이 선행하면 그 구현도 W-11 범위로 들어온다.
@@ -125,3 +150,4 @@ G3(W-12~W-17) 진행 중 이 API를 바꿔야 하는 상황이 오면 **G3에서
 | # | 시각 (UTC) | 기준 commit | 사유 |
 |---|---|---|---|
 | 1 | 2026-09-14T09:58:42Z | `612db93` | 최초 동결 — W-11 / PLAN D3 |
+| 2 | 2026-09-15T01:38:25Z | `9d7dbc6` | **범위 한정 재동결** — W-11 재진입 / PLAN H-3. G3 워커 5명(W-12~W-16)이 동결된 `command_name` enum이 확장된 CLI 표면을 기술하지 못한다고 보고. enum 값을 늘리지 않고 `command_name`·`flag_name`·`error_code`·run root 문서 목록의 description을 **"G2가 소유하는 집합"**으로 한정했다. 최초 동결이 G2 시점 실측을 전체 표면으로 일반화한 오류를 정정한 것이다. 변경은 description 전용 — enum 값·필수 필드·구조 변경 0. |
