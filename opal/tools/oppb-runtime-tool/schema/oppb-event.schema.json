@@ -1,0 +1,114 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "oppb-event.schema.json",
+  "title": "OPPB events.jsonl Event Schema",
+  "description": "run root의 `events.jsonl` 한 줄(JSON object 1개)을 기술한다. Supervisor가 단일 writer이며 append 후 fsync한다(supervisor.append_event). 모든 이벤트는 `ts`·`event` 2개를 공통으로 갖고 이벤트별 추가 필드가 뒤에 병합된다. 이벤트 이름은 현재 구현이 실제로 발행하는 5종 폐쇄 집합이다 — 발행되지 않는 이름을 미리 선언하지 않는다. 이 문서는 G2 API 동결 대상이며 런타임 검증기가 아니다.",
+  "type": "object",
+  "required": ["ts", "event"],
+  "additionalProperties": true,
+  "properties": {
+    "ts": {
+      "type": "number",
+      "description": "time.time() 기반 epoch 초. 단조 증가를 보장하지 않는다 — 순서의 SSOT는 파일의 줄 순서다."
+    },
+    "event": { "$ref": "#/$defs/event_name" }
+  },
+  "oneOf": [
+    { "$ref": "#/$defs/supervisor_started" },
+    { "$ref": "#/$defs/recovery_completed" },
+    { "$ref": "#/$defs/attempt_launched" },
+    { "$ref": "#/$defs/attempt_exited" },
+    { "$ref": "#/$defs/run_completed" }
+  ],
+  "$defs": {
+    "event_name": {
+      "enum": [
+        "supervisor_started",
+        "recovery_completed",
+        "attempt_launched",
+        "attempt_exited",
+        "run_completed"
+      ]
+    },
+    "role": { "enum": ["runner", "executor", "verifier"] },
+    "disposition": {
+      "enum": ["reattach", "harvest", "orphan"],
+      "description": "`opal-agent reconcile-attempts`가 소유하는 3분류. Supervisor는 소비만 하고 재구현하지 않는다."
+    },
+    "supervisor_started": {
+      "description": "Supervisor 데몬이 run lock을 잡고 기동한 직후 1회. 복구보다 먼저 기록된다.",
+      "properties": {
+        "event": { "const": "supervisor_started" },
+        "supervisor_pid": { "type": "integer" }
+      },
+      "required": ["event", "supervisor_pid"]
+    },
+    "recovery_completed": {
+      "description": "재부착·수확·고아 회수가 끝난 직후 1회. 기동 handshake는 이 이벤트 뒤에야 성공을 알린다.",
+      "properties": {
+        "event": { "const": "recovery_completed" },
+        "counts": {
+          "type": "object",
+          "required": ["reattach", "harvest", "orphan"],
+          "additionalProperties": false,
+          "properties": {
+            "reattach": { "type": "integer", "minimum": 0 },
+            "harvest": { "type": "integer", "minimum": 0 },
+            "orphan": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "reclaimed": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "reclaim_required 잔재 process group을 실제로 회수한 attempt_id 목록."
+        }
+      },
+      "required": ["event", "counts", "reclaimed"]
+    },
+    "attempt_launched": {
+      "description": "execution-packet 발급과 attempt 실행기 기동이 끝나고 pid를 확보한 뒤 기록된다.",
+      "properties": {
+        "event": { "const": "attempt_launched" },
+        "attempt_id": {
+          "type": "string",
+          "description": "`<task_id>.<executor_id|role>.<generation>` 형식으로 Supervisor가 발급한다."
+        },
+        "task_id": { "type": "string" },
+        "role": { "$ref": "#/$defs/role" },
+        "executor_id": { "oneOf": [{ "type": "string" }, { "type": "null" }] },
+        "pid": {
+          "oneOf": [{ "type": "integer" }, { "type": "null" }],
+          "description": "result.json에서 읽은 실행기 pid. 대기 한도 안에 관측되지 않으면 null이다."
+        }
+      },
+      "required": ["event", "attempt_id", "task_id", "role", "executor_id", "pid"]
+    },
+    "attempt_exited": {
+      "description": "attempt가 종료로 판정돼 정산(settle)된 시점. poll_live·recover 두 경로 모두 이 이벤트를 남긴다.",
+      "properties": {
+        "event": { "const": "attempt_exited" },
+        "attempt_id": { "type": "string" },
+        "task_id": { "oneOf": [{ "type": "string" }, { "type": "null" }] },
+        "role": {
+          "oneOf": [{ "$ref": "#/$defs/role" }, { "type": "null" }],
+          "description": "result.json도 live 항목도 역할을 주지 못하면 null이다."
+        },
+        "status": {
+          "enum": ["succeeded", "failed"],
+          "description": "정산된 최종 상태. disposition이 orphan이거나 result.json의 status가 succeeded·failed가 아니면 failed로 굳는다."
+        },
+        "exit_code": { "oneOf": [{ "type": "integer" }, { "type": "null" }] },
+        "disposition": {
+          "oneOf": [{ "$ref": "#/$defs/disposition" }, { "type": "null" }],
+          "description": "정상 tick 관측으로 정산하면 null, reconcile-attempts 판정으로 정산하면 3분류 중 하나."
+        }
+      },
+      "required": ["event", "attempt_id", "task_id", "role", "status", "exit_code", "disposition"]
+    },
+    "run_completed": {
+      "description": "live attempt가 0이고 모든 미니 태스크가 accepted·failed·blocked인 시점에 1회. 이 이벤트 뒤 tick loop가 종료된다.",
+      "properties": { "event": { "const": "run_completed" } },
+      "required": ["event"]
+    }
+  }
+}

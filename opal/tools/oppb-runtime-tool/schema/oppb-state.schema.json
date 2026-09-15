@@ -1,0 +1,401 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "oppb-state.schema.json",
+  "title": "OPPB workgraph.json Schema",
+  "description": "OPPB run root(`<allocator_root>/.opal-runs/<run_id>/`)의 미니 태스크 DAG·계약·예산·상태 SSOT. 유일한 writer는 controller.py이며 모든 갱신은 workgraph.lock 배타 락 아래 revision 대조 후 원자 교체된다. 프로젝트 태스크 state.json과는 어휘도 소유권도 공유하지 않는다 — P0~P5 전이는 Product Flow가 state-tool로만 수행한다(PLAN D3 / 제안서 §4.5). 이 문서는 G2 API 동결 대상이며 런타임 검증기가 아니다 — 이 저장소 도구는 표준 라이브러리 전용이라 jsonschema로 집행되지 않는다. 루트는 workgraph.json이고, 같은 run root의 나머지 Controller·Supervisor 소유 상태 문서는 $defs에 정의한다.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "revision",
+    "run_id",
+    "created_at",
+    "updated_at",
+    "budget",
+    "mini_tasks"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "1.0",
+      "description": "controller.SCHEMA_VERSION. 문자열이다 — evidence 문서의 schema_version만 정수임에 유의한다."
+    },
+    "revision": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "낙관적 동시성 토큰. 쓰기마다 1씩 전진하며 기대값과 다르면 workgraph_revision_conflict로 거부한다."
+    },
+    "run_id": {
+      "type": "string",
+      "description": "init이 발급한 run identity. run.json이 있으면 그 값, 없으면 run root 디렉토리명."
+    },
+    "created_at": { "$ref": "#/$defs/timestamp" },
+    "updated_at": {
+      "oneOf": [{ "$ref": "#/$defs/timestamp" }, { "type": "null" }],
+      "description": "쓰기 시점에 채워진다. 메모리상 초기 문서에서만 null이다."
+    },
+    "budget": { "$ref": "#/$defs/budget" },
+    "mini_tasks": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/mini_task" }
+    }
+  },
+  "$defs": {
+    "timestamp": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?Z$",
+      "description": "UTC ISO-8601, `Z` 접미. controller._now() 산출 형식."
+    },
+    "epoch_seconds": {
+      "type": "number",
+      "description": "time.time() 기반 epoch 초(소수 허용). Supervisor 소유 문서만 이 형식을 쓴다."
+    },
+    "sha256_hex": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "sha1_hex": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "task_state": {
+      "enum": [
+        "pending",
+        "ready",
+        "running",
+        "candidate_ready",
+        "verifying",
+        "accepted",
+        "blocked",
+        "failed"
+      ],
+      "description": "controller.TASK_STATES. P0~P5 프로젝트 단계와 어휘를 공유하지 않는다."
+    },
+    "role": {
+      "enum": ["runner", "executor", "verifier"],
+      "description": "controller.ROLES. 예산 차감 축과 1:1 대응한다."
+    },
+    "command": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string" },
+      "description": "shell=False로 실행되는 argv 리스트. 비어 있지 않은 문자열 리스트만 허용한다."
+    },
+    "budget": {
+      "type": "object",
+      "required": ["limits", "debited"],
+      "additionalProperties": false,
+      "properties": {
+        "limits": {
+          "type": "object",
+          "description": "spec.budget이 선언한 값을 그대로 옮긴다. 키 집합은 열려 있고 값은 0 이상의 정수여야 한다. Controller는 max_<role>_dispatches·max_total_dispatches를 예산 집행에 쓰고, Supervisor는 max_active_runners·max_active_executors·max_total_agent_processes·max_attempts_per_task를 동시성 상한으로 읽는다(supervisor.limits_of).",
+          "additionalProperties": { "type": "integer", "minimum": 0 }
+        },
+        "debited": {
+          "type": "object",
+          "required": ["runner", "executor", "verifier", "total"],
+          "additionalProperties": false,
+          "properties": {
+            "runner": { "type": "integer", "minimum": 0 },
+            "executor": { "type": "integer", "minimum": 0 },
+            "verifier": { "type": "integer", "minimum": 0 },
+            "total": { "type": "integer", "minimum": 0 }
+          },
+          "description": "dispatch 1회당 해당 역할과 total을 각각 1 차감한다. limits에 대응 상한이 선언돼 있으면 초과 시 budget_exhausted로 거부한다."
+        }
+      }
+    },
+    "lease": {
+      "type": "object",
+      "required": ["tracked_writes", "ephemeral_writes", "contracts", "runtime_resources"],
+      "additionalProperties": false,
+      "description": "controller.LEASE_AXES 4축. 각 축은 문자열 리스트이며, scope hash 계산 시 축별로 중복 제거 후 정렬된 정규형으로 변환된다(controller.normalize_lease).",
+      "properties": {
+        "tracked_writes": { "type": "array", "items": { "type": "string" } },
+        "ephemeral_writes": { "type": "array", "items": { "type": "string" } },
+        "contracts": { "type": "array", "items": { "type": "string" } },
+        "runtime_resources": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "executor": {
+      "type": "object",
+      "required": ["id", "run_command"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "run_command": { "oneOf": [{ "$ref": "#/$defs/command" }, { "type": "null" }] }
+      }
+    },
+    "contract": {
+      "type": "object",
+      "required": ["lease", "run_command", "verify_command", "executors"],
+      "additionalProperties": false,
+      "description": "미니 태스크의 불변 계약. load 시점에 확정되며 dispatch가 바꾸지 않는다.",
+      "properties": {
+        "lease": { "$ref": "#/$defs/lease" },
+        "run_command": { "oneOf": [{ "$ref": "#/$defs/command" }, { "type": "null" }] },
+        "verify_command": { "oneOf": [{ "$ref": "#/$defs/command" }, { "type": "null" }] },
+        "executors": { "type": "array", "items": { "$ref": "#/$defs/executor" } }
+      }
+    },
+    "attempt_entry": {
+      "type": "object",
+      "required": ["attempt_id", "role", "executor_id"],
+      "additionalProperties": false,
+      "description": "load 시점 공표(declared=true, created_at=null)와 dispatch 시점 기록(created_at 채움) 두 경로로 추가된다.",
+      "properties": {
+        "attempt_id": { "type": "string", "minLength": 1 },
+        "role": { "$ref": "#/$defs/role" },
+        "executor_id": { "oneOf": [{ "type": "string" }, { "type": "null" }] },
+        "created_at": { "oneOf": [{ "$ref": "#/$defs/timestamp" }, { "type": "null" }] },
+        "declared": {
+          "type": "boolean",
+          "description": "pre_state가 candidate를 함의해 load가 공표한 runner attempt에만 붙는다."
+        }
+      }
+    },
+    "mini_task": {
+      "type": "object",
+      "required": [
+        "id",
+        "capability",
+        "depends_on",
+        "state",
+        "scope_hash",
+        "runner_attempt_id",
+        "contract",
+        "attempts",
+        "evidence"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "capability": { "type": "string", "minLength": 1 },
+        "depends_on": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "같은 workgraph의 미니 태스크 id만 허용하며 자기 참조와 순환은 load가 거부한다."
+        },
+        "state": { "$ref": "#/$defs/task_state" },
+        "scope_hash": {
+          "$ref": "#/$defs/sha256_hex",
+          "description": "controller.compute_scope_hash(lease) — 정규화 lease의 sha256. evidence 대조의 기준값이며 Controller만 계산한다."
+        },
+        "runner_attempt_id": {
+          "oneOf": [{ "type": "string", "minLength": 1 }, { "type": "null" }],
+          "description": "이 태스크의 candidate를 만든 runner attempt. POST_RUN_STATES(candidate_ready·verifying·accepted)에서만 선언 가능하고, 실제 runner dispatch가 이 값을 최신 attempt_id로 갱신한다. evidence 독립성 판정의 기준이다."
+        },
+        "contract": { "$ref": "#/$defs/contract" },
+        "attempts": { "type": "array", "items": { "$ref": "#/$defs/attempt_entry" } },
+        "evidence": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "load가 빈 배열로 초기화한다. 현재 구현에서 색인 역인덱스는 acceptance.json이 소유하므로 이 배열은 비어 있는 채로 유지된다."
+        },
+        "runner_attempts": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Supervisor가 추가하는 동적 필드 — runner 세대 카운터. max_attempts_per_task와 비교해 재시도/실패를 가른다."
+        },
+        "verify_attempts": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Supervisor가 추가하는 동적 필드 — verifier 세대 카운터."
+        },
+        "generation_outcomes": {
+          "type": "object",
+          "description": "Supervisor가 추가하는 동적 필드 — 현재 세대의 runner/executor 성패 합산. 세대가 정리되면 빈 object로 되돌아간다.",
+          "additionalProperties": { "type": "boolean" },
+          "properties": {
+            "runner": { "type": "boolean" },
+            "executor": { "type": "boolean" }
+          }
+        }
+      }
+    },
+    "acceptance_document": {
+      "type": "object",
+      "description": "run root의 `acceptance.json` — 완료조건·기여 태스크·증거 역인덱스. workgraph.json과 같은 락·revision 규율을 쓰며 writer도 controller.py 하나다. spec.acceptance가 비어 있으면 미니 태스크 1개당 조건 1개(`ac-<task_id>`)로 유도한다.",
+      "required": [
+        "schema_version",
+        "revision",
+        "run_id",
+        "created_at",
+        "updated_at",
+        "criteria",
+        "evidence_index"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": { "const": "1.0" },
+        "revision": { "type": "integer", "minimum": 1 },
+        "run_id": { "type": "string" },
+        "created_at": { "$ref": "#/$defs/timestamp" },
+        "updated_at": {
+          "oneOf": [{ "$ref": "#/$defs/timestamp" }, { "type": "null" }]
+        },
+        "criteria": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "description", "contributing_tasks", "satisfied", "evidence"],
+            "additionalProperties": false,
+            "properties": {
+              "id": { "type": "string", "minLength": 1 },
+              "description": { "type": "string" },
+              "contributing_tasks": { "type": "array", "items": { "type": "string" } },
+              "satisfied": { "type": "boolean" },
+              "evidence": { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        },
+        "evidence_index": {
+          "type": "object",
+          "description": "evidence_id → 기여한 완료조건·미니 태스크 역인덱스.",
+          "additionalProperties": {
+            "type": "object",
+            "required": ["task_id", "criteria"],
+            "additionalProperties": false,
+            "properties": {
+              "task_id": { "type": "string" },
+              "criteria": { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        }
+      }
+    },
+    "execution_packet": {
+      "type": "object",
+      "description": "`attempts/<task_id>/<attempt_id>/execution-packet.json` — dispatch 시점의 가변 입력. 생성과 예산 차감·attempt 기록이 하나의 revision lock 트랜잭션에서 끝난다. controller.create_execution_packet의 **extra로 추가 필드를 실을 수 있으므로 닫힌 집합이 아니다.",
+      "required": [
+        "schema_version",
+        "run_id",
+        "workgraph_revision",
+        "task_id",
+        "attempt_id",
+        "role",
+        "executor_id",
+        "capability",
+        "depends_on",
+        "lease",
+        "command",
+        "created_at"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "schema_version": { "const": "1.0" },
+        "run_id": { "type": "string" },
+        "workgraph_revision": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "이 packet을 만든 트랜잭션이 확정할 workgraph revision."
+        },
+        "task_id": { "type": "string" },
+        "attempt_id": { "type": "string" },
+        "role": { "$ref": "#/$defs/role" },
+        "executor_id": { "oneOf": [{ "type": "string" }, { "type": "null" }] },
+        "capability": { "type": "string" },
+        "depends_on": { "type": "array", "items": { "type": "string" } },
+        "lease": { "$ref": "#/$defs/lease" },
+        "command": {
+          "oneOf": [{ "$ref": "#/$defs/command" }, { "type": "null" }],
+          "description": "role에 따라 contract의 run_command·verify_command·executors[].run_command 중 하나를 고른다. null이면 Supervisor가 opal-agent CLI 기동 명령으로 대체한다."
+        },
+        "created_at": { "$ref": "#/$defs/timestamp" }
+      }
+    },
+    "run_manifest": {
+      "type": "object",
+      "description": "run root의 `run.json` — `init`이 1회만 쓰고 이후 읽기 전용이다. 재호출은 기존 파일을 다시 쓰지 않는다.",
+      "required": [
+        "schema_version",
+        "run_id",
+        "allocator_root",
+        "project_root",
+        "cache_root",
+        "created_at"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": { "const": "1.0" },
+        "run_id": { "type": "string" },
+        "allocator_root": { "type": "string" },
+        "project_root": { "type": "string" },
+        "cache_root": { "type": "string" },
+        "created_at": { "$ref": "#/$defs/timestamp" }
+      }
+    },
+    "supervisor_state": {
+      "type": "object",
+      "description": "run root의 `supervisor.json` — 기동한 Supervisor의 identity. run 1개당 Supervisor 1개는 `supervisor.lock` flock이 강제한다.",
+      "required": ["schema_version", "supervisor_pid", "started_at"],
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": { "const": "1.0" },
+        "supervisor_pid": { "type": "integer" },
+        "started_at": { "$ref": "#/$defs/epoch_seconds" }
+      }
+    },
+    "attempt_spec": {
+      "type": "object",
+      "description": "`attempts/<task_id>/<attempt_id>/attempt-spec.json` — Supervisor가 attempt 실행기 프로세스에 넘기는 기동 사양.",
+      "required": [
+        "attempt_id",
+        "task_id",
+        "role",
+        "executor_id",
+        "command",
+        "cwd",
+        "attempt_dir",
+        "provider"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "attempt_id": { "type": "string" },
+        "task_id": { "type": "string" },
+        "role": { "$ref": "#/$defs/role" },
+        "executor_id": { "oneOf": [{ "type": "string" }, { "type": "null" }] },
+        "command": { "$ref": "#/$defs/command" },
+        "cwd": {
+          "oneOf": [{ "type": "string" }, { "type": "null" }],
+          "description": "run.json의 project_root. manifest가 없으면 null이다."
+        },
+        "attempt_dir": { "type": "string" },
+        "provider": {
+          "enum": ["command", "opal-agent"],
+          "description": "packet이 명령을 줬으면 command, 아니면 opal-agent CLI 경유."
+        }
+      }
+    },
+    "attempt_result": {
+      "type": "object",
+      "description": "`attempts/<task_id>/<attempt_id>/result.json` — attempt 실행기가 원자 갱신하는 결과. Supervisor의 poll_live·settle·read_status가 이 파일만 읽는다.",
+      "required": [
+        "schema_version",
+        "attempt_id",
+        "task_id",
+        "role",
+        "executor_id",
+        "status",
+        "pid",
+        "exit_code",
+        "started_at",
+        "ended_at",
+        "command"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": { "const": "1.0" },
+        "attempt_id": { "type": "string" },
+        "task_id": { "type": "string" },
+        "role": { "$ref": "#/$defs/role" },
+        "executor_id": { "oneOf": [{ "type": "string" }, { "type": "null" }] },
+        "status": {
+          "enum": ["running", "succeeded", "failed"],
+          "description": "running은 진행 중 상태다. settle()은 succeeded·failed가 아닌 모든 값을 failed로 굳힌다."
+        },
+        "pid": { "oneOf": [{ "type": "integer" }, { "type": "null" }] },
+        "exit_code": { "oneOf": [{ "type": "integer" }, { "type": "null" }] },
+        "started_at": { "$ref": "#/$defs/epoch_seconds" },
+        "ended_at": {
+          "oneOf": [{ "$ref": "#/$defs/epoch_seconds" }, { "type": "null" }]
+        },
+        "command": { "$ref": "#/$defs/command" }
+      }
+    }
+  }
+}

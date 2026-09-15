@@ -1,0 +1,105 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "oppb-evidence.schema.json",
+  "title": "OPPB Evidence Document Schema",
+  "description": "`evidence submit --file`이 읽고, 통과 시 run root의 `evidence/<scope>/<evidence_id>.json`에 불변 색인되는 문서. 색인은 `os.link` CREATE 전용 원자 연산이라 같은 경로의 재작성이 불가능하다(evidence_already_indexed). 검사는 색인보다 먼저 전부 끝난다 — 아래 required/format 위반은 evidence_schema_mismatch, code head 불일치는 evidence_code_head_mismatch, scope hash 불일치는 evidence_scope_hash_mismatch, runner 자기발행은 evidence_not_independent로 거부되며 어느 경우에도 색인 디렉토리에 파일을 남기지 않는다. 이 문서는 G2 API 동결 대상이며 런타임 검증기가 아니다 — 실제 집행은 evidence._validate_schema의 표준 라이브러리 코드가 한다(jsonschema 미설치).",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "evidence_id",
+    "scope",
+    "code_head",
+    "scope_hash",
+    "verifier",
+    "result",
+    "commands"
+  ],
+  "additionalProperties": true,
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "description": "정수다 — bool은 명시적으로 거부된다. workgraph.json·acceptance.json의 schema_version이 문자열 \"1.0\"인 것과 다르다(실측 사실이며 의도적 정정 대상이 아니다)."
+    },
+    "evidence_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "색인 파일명이 된다(`<evidence_id>.json`). 같은 scope에서 재사용하면 evidence_already_indexed로 원자적으로 거부된다. 공백만으로 이뤄진 값은 거부된다."
+    },
+    "scope": {
+      "type": "string",
+      "minLength": 1,
+      "description": "검증 대상 미니 태스크 id. workgraph.json에 없으면 task_not_found로 거부된다. 색인 디렉토리명이 된다."
+    },
+    "code_head": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$",
+      "description": "40자리 소문자 hex. run.json의 allocator_root에서 `git rev-parse HEAD`로 읽은 실제 값과 일치해야 한다."
+    },
+    "scope_hash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "64자리 소문자 hex. workgraph.json의 해당 미니 태스크가 공표한 scope_hash와 일치해야 한다. 계산은 lease를 소유한 Controller(controller.compute_scope_hash)만 한다."
+    },
+    "verifier": {
+      "type": "object",
+      "required": ["kind", "attempt_id"],
+      "additionalProperties": true,
+      "description": "증거를 발행한 검증 주체. attempt_id가 해당 미니 태스크의 runner_attempt_id와 같으면 독립 검증으로 인정하지 않는다(수용기준 9).",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "minLength": 1,
+          "description": "검증 주체 종류. 폐쇄 집합이 아니다 — 현재 구현은 비어 있지 않은 문자열만 요구한다."
+        },
+        "attempt_id": { "type": "string", "minLength": 1 }
+      }
+    },
+    "result": {
+      "type": "string",
+      "description": "검증 결과. 현재 구현은 문자열이라는 것만 요구하고 값을 열거하지 않는다 — 폐쇄 집합을 미리 선언하지 않는다."
+    },
+    "commands": {
+      "type": "array",
+      "description": "검증에 실제로 실행한 명령 목록. 각 원소는 비어 있지 않은 문자열 리스트(argv)여야 한다. 빈 배열 자체는 허용된다.",
+      "items": {
+        "type": "array",
+        "minItems": 1,
+        "items": { "type": "string" }
+      }
+    }
+  },
+  "$defs": {
+    "submit_response": {
+      "type": "object",
+      "description": "`evidence submit` 성공 시 단일 라인 JSON에 병합되는 필드.",
+      "required": ["accepted", "evidence_id", "scope", "path", "content_hash"],
+      "additionalProperties": false,
+      "properties": {
+        "accepted": { "const": true },
+        "evidence_id": { "type": "string" },
+        "scope": { "type": "string" },
+        "path": {
+          "type": "string",
+          "description": "`<run_root>/evidence/<scope>/<evidence_id>.json` 절대경로."
+        },
+        "content_hash": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$",
+          "description": "색인된 바이트 그대로(indent=2 + 개행)의 sha256."
+        }
+      }
+    },
+    "task_accept_response": {
+      "type": "object",
+      "description": "`task accept` 성공 시 단일 라인 JSON에 병합되는 필드. 색인된 증거가 0건이면 task_accept_no_independent_evidence로 거부되며, 그 재확인은 workgraph 트랜잭션 락 안에서 한 번 더 수행된다(TOCTOU 차단).",
+      "required": ["accepted", "task_id", "state", "evidence_count"],
+      "additionalProperties": false,
+      "properties": {
+        "accepted": { "const": true },
+        "task_id": { "type": "string" },
+        "state": { "const": "accepted" },
+        "evidence_count": { "type": "integer", "minimum": 1 }
+      }
+    }
+  }
+}

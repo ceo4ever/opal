@@ -304,10 +304,16 @@ def test_product_flow_state_transition_never_writes_workgraph(tmp_path, marker):
     workgraph_hash_before = sha256_of(workgraph_path)
     workgraph_mtime_before = workgraph_path.stat().st_mtime_ns
 
-    advance = run_state(["advance", str(capsule)])
+    # state-tool advance는 행 주소가 필수다(070: --task-step / --task-step-id /
+    # --row(deprecated) 중 정확히 하나, README.md:11 `task_step_addr_required`).
+    # --rows-spec으로 만든 행은 build_rows_from_spec()이 "key"를 채우지 않으므로
+    # (state_tool.py의 --rows-spec 처리부 참고) --task-step <key>는 쓸 수 없다 —
+    # row_id(1-based, MINIMAL_PROJECT_ROWS 순서상 P0가 1번)로 --task-step-id를 쓴다.
+    advance = run_state(["advance", str(capsule), "--task-step-id", "1"])
     assert advance.returncode == 0, (
-        f"RED: state-tool advance 실패 — W-3 oppb 전이 지원 전 정상 실패. "
-        f"exit={advance.returncode}\nstdout={advance.stdout}\nstderr={advance.stderr}"
+        f"state-tool advance 실패 — 행 주소(--task-step-id 1)가 유효하지 않거나 "
+        f"P0 전이가 거부됐다. exit={advance.returncode}\n"
+        f"stdout={advance.stdout}\nstderr={advance.stderr}"
     )
 
     assert sha256_of(workgraph_path) == workgraph_hash_before, (

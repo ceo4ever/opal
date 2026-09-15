@@ -6,12 +6,12 @@
 
 | 항목 | 건수 |
 |------|------|
-| 게이트 판단 | 20회 (Pass: 19 / Fail: 1) |
+| 게이트 판단 | 31회 (Pass: 30 / Fail: 1) |
 | 3회 초과 Gate | 0건 (Critical: 0 / Normal: 0 / Minor: 0) |
-| 오류 발견 | 14건 |
-| 수정 지시 | 4건 (반영: 2 / 미반영: 2) |
-| PM 의사결정 | 20건 |
-| 개선 사항 | 10건 |
+| 오류 발견 | 18건 |
+| 수정 지시 | 5건 (반영: 3 / 미반영: 2) |
+| PM 의사결정 | 29건 |
+| 개선 사항 | 14건 |
 | 에스컬레이션 | 2건 |
 
 ## 대행 일지
@@ -82,3 +82,30 @@
 | 62 | 2026-09-14 17:52 | EXECUTE | DECISION | **P-8 예산 게이트 — 현 범위 유지.** 제안서 §11 게이트 4를 집행하는 Work item이 없다는 실측을 수용하되, 태스크가 이미 40건이라 v1은 동시성 예산 3종만 집행하고 비용·무진전은 후속이 소유한다. C-1 준수를 위해 PLAN §Approach와 제안서 §11 양쪽에 명시 | 확정 |
 | 63 | 2026-09-14 17:52 | EXECUTE | GATE | W-40 Pass — diff가 §11 구간 4줄 추가에만 존재(`git diff --stat` 4+/1-), §9.3·§13.2·§14 무변경, 게이트 항목 6개 유지. W-37의 `\*` 각주 스타일을 그대로 따랐다 | Pass |
 | 64 | 2026-09-14 17:52 | EXECUTE | IMPROVE | W-40의 file conflict 회피가 정확했다 — W-37과 같은 파일이라 같은 그룹 불가. W-37이 P1에서 완료됐으므로 W-40을 P2로 내리고 선행에 W-37을 선언해 충돌 규칙과 dependency group order를 동시에 만족시켰다 | 수용 |
+| 65 | 2026-09-14 18:08 | EXECUTE | GATE | **W-5 G1 체크포인트 재실행 — 품질 게이트 전부 통과.** D6 4항 AST 소스 대조 4/4(`call_agent` kwonly 7개는 전부 131 소유, 132 자체 델타 0 / `_build_parser` main과 AST 완전 동일). S-4 `reattach` 직접 재현(`identity: confirmed`, `age_delta 0.035s`, kill 후 `harvest` 전이, 고아 0). 기존 3 Pilot + `oppl-runtime-tool` 9/9 무변경. tool-scan 4건 실패는 pristine main 워크트리에서 동일 재현돼 기존 결손 확정 | Pass |
+| 66 | 2026-09-14 18:08 | EXECUTE | ERROR | **PM 기록 누락 — 제안서 926행 삭제가 PLAN에 없다.** 삭제 자체는 소유자 승인을 받은 의도적 조치(로그 50)지만, W-37·W-40처럼 제안서 변경은 Work item이 있는데 삭제만 PM이 직접 수행하고 PLAN에 근거를 남기지 않았다. 워커 지적이 옳다 | PLAN 기록 지시 |
+| 67 | 2026-09-14 18:08 | EXECUTE | ERROR | **PM 판단 착오 — RED 스위트 커밋 순서.** 1차 W-5가 "G1만 merge, RED 스위트 제외"를 권고했는데도 커밋을 `81d890d`(G1) → `74d3766`(RED) 순서로 쌓았다. 브랜치가 선형이라 지금 merge하면 `32 failed + 67 errors`가 main에 상주한다. 범위 분리가 불가능해졌다 | 전략 재판단 |
+| 68 | 2026-09-14 18:08 | EXECUTE | DECISION | **G1 중간 merge 포기, G2 완료 후 merge로 변경(소유자 승인).** 조기 merge의 실익이 소멸했다 — 원래 근거인 "watchdog·PGID 수정의 OPPL 즉시 개선"은 131이 이미 main에 넣었고, G1이 추가하는 재부착 진입점·시작 record는 OPPB가 쓰기 전까지 소비자가 없다. 반면 브랜치 재구성 비용은 이득보다 크다. 미커밋 G1 산출물 5건은 `612db93`으로 커밋 완료 | 확정 |
+| 69 | 2026-09-14 18:18 | EXECUTE | GATE | W-6 Pass — `test_oppb_init.py` 18건 GREEN(착수 시 18 failed), 회귀 546 passed 무영향, RED 테스트 diff 0, 신규 파일 정확히 3개. `init` 검사 순서를 **부작용보다 앞에 전부 배치**해 거부된 호출이 `.opal-runs/`·`.opal-cache/`를 남기지 않는 것이 좋다 | Pass |
+| 70 | 2026-09-14 18:18 | EXECUTE | DECISION | W-6의 `init` 멱등 해법 채택 — 호출마다 run_id를 새로 발급해 **덮어쓰기 경로 자체를 없앴다.** `oppl`의 실패 모드(`cmd_init`이 기존 ledger를 무조건 `new_ledger()`로 덮어써 카운터 0 초기화, `:170-173`)를 구조적으로 복제 불가능하게 만든 설계다. 재개는 `init` 재실행이 아니라 `start --run-root`로 한다 | 채택 |
+| 71 | 2026-09-14 18:18 | EXECUTE | IMPROVE | W-6이 RED에 없는 거부 1건 추가 — `allocator_root_not_repository_root`. allocator_root가 저장소 하위 디렉토리면 `.git/info/exclude`의 상대 패턴이 run root를 가리키지 못해 등록·판정이 성립하지 않으므로 선거부한다. 계약 약화가 아니라 강화이고 근거가 타당해 수용 | 수용 |
+| 72 | 2026-09-14 18:18 | EXECUTE | IMPROVE | W-6이 범위 밖으로 지적한 `install-mac.sh` 배포 등재는 **PLAN W-33(P11)이 이미 소유**함을 확인. 배포 경로 실호출이 필요한 시점은 W-34(P12)의 fixture 실행이고 W-33이 그 앞이라 순서 문제 없음. 추가 조치 불요 | 확인 완료 |
+| 73 | 2026-09-14 18:28 | EXECUTE | GATE | W-7 Controller 구현 검토 — `workgraph load` 표면은 5개 테스트 전부에서 GREEN이고 S-8 파일 계약을 실 git repo·실 CLI로 직접 확인했다(`workgraph.json`에 P0~P5 토큰 0·`task_steps`/`pm_gate`/`STATE.md` 0, 캡슐 누출 0, `.opal-runs` git 노출 0, revision 1→3 전진). `controller.py`에 `state.json` 문자열 자체가 없다. W-6 무회귀, 546 passed 유지 | 부분 Pass |
+| 74 | 2026-09-14 18:28 | EXECUTE | ERROR | W-7이 판정 요청 — `test_controller.py:307`이 `state-tool advance <capsule>`을 **행 주소 없이** 호출해 `task_step_addr_required`로 거부된다. 테스트는 이를 "W-3 oppb 전이 지원 전 정상 실패"로 주석했으나 **오해다** — W-3은 enum만 추가했고 addressless advance와 무관하다 | PM 판정 |
+| 75 | 2026-09-14 18:28 | EXECUTE | DECISION | **테스트 호출 형식을 고친다.** `state-tool advance`는 설계상 행 주소가 필수다 — 070 task-step 키 주소 체계, README `:11` "`advance`/`mark`/`block`/`add-row`는 `--task-step` / `--task-step-id` / `--row` 중 **정확히 하나**를 받는다". 인자 없는 advance는 존재하지 않는 기능이므로 state-tool에 추가하지 않는다(546 green에 영향). S-8의 검증 의도(`state.json` 전이가 `workgraph.json`을 건드리지 않음)는 불변이고, 오히려 **지금은 명령이 실패해 의도를 전혀 검증하지 못한다** — 호출 형식 복구는 약화가 아니라 강화다 | 정정 디스패치 |
+| 76 | 2026-09-14 18:32 | EXECUTE | FIX | S-8 호출 정정 완료 — `advance` 인자 1줄과 주석·에러 메시지만 변경, **단언 2건은 diff에 등장하지 않음**을 PM이 직접 확인. 대상 테스트 GREEN, 나머지 4건은 W-8 대기로 실패(의도), `state-tool 452 passed` 유지로 무수정 증명 | 반영 |
+| 77 | 2026-09-14 18:32 | EXECUTE | IMPROVE | 정정 과정에서 `--rows-spec` 제약 발견 — `build_rows_from_spec()`이 행에 `key` 필드를 채우지 않아 `--task-step <key>` 주소를 쓸 수 없고 `--task-step-id <n>`만 유효하다. W-20이 만들 실제 `pipeline.json` 경로에는 key가 있으므로 `--rows-spec` 경로 한정 제약이다. OPPB Product Flow(W-19)가 `--rows-from`을 쓰므로 실사용에는 영향 없으나, 테스트 fixture가 inline spec을 쓰는 한 이 제약이 계속 적용된다 | 기록 |
+| 78 | 2026-09-14 18:41 | EXECUTE | GATE | W-8 Supervisor Pass — `test_supervisor.py` **5 passed**(2회 재현), `test_controller.py`도 5 passed로 함께 해소. `opal_agent.py` diff 0으로 **호출만** 했음을 증명. 잔존 `OPPB_TEST_*` 프로세스 0 | Pass |
+| 79 | 2026-09-14 18:41 | EXECUTE | DECISION | W-8의 Verifier 우선 배정 설계 채택 — `saturated` 플래그로 **`max_total_agent_processes` 포화를 한 번 관측한 뒤부터만** Verifier를 신규 Runner 앞에 놓는다. 포화 전에 Verifier를 앞세우면 검증 대상이 생기기 전에 slot을 점유해 포화 자체가 성립하지 않는다는 판단이 옳다 — 수용기준 10의 전제("상한 포화 상태에서")를 그대로 코드로 옮긴 형태다. Runner+Executor를 **하나의 admission 단위**로 승인해 반쪽 in-flight를 막은 것도 좋다 | 채택 |
+| 80 | 2026-09-14 18:41 | EXECUTE | GATE | W-9 Evidence Tool Pass — 거부 5단계를 전부 색인 **전**에 배치했고, 불변 색인을 `os.link(tmp, target)`으로 구현해 check-then-write TOCTOU 창을 없앴다. `task accept`도 락 밖 확인 후 트랜잭션 안에서 재확인. 작업 중 `controller.py` 랜딩을 발견하고 두 번째 lock+atomic-write 경로를 만드는 대신 소비자로 재설계한 판단이 옳다 | Pass |
+| 81 | 2026-09-14 18:41 | EXECUTE | ERROR | **PM 실측 오류 — `runner_attempt_id` 판정을 틀렸다.** 내가 `grep ... | head -8`로 잘라 읽어 `test_evidence.py:314-317`을 못 보고 "테스트가 직접 요구하는 필드는 `scope_hash` 하나뿐"이라고 W-7에 지시했다. 실제로는 `scope_hash`와 동일한 형태로 직접 요구한다. 워커가 실측으로 반증했고 지시대로 필드를 추가하지 않고 보고한 것이 옳다 | 정정 |
+| 82 | 2026-09-14 18:41 | EXECUTE | DECISION | `runner_attempt_id` (a)안 승인 — Controller가 공표한다. 파생 불가 근거 3건 실측 확인: 단언 시점이 `workgraph load` 직후라 `attempts[]`가 빈 배열, fixture(`:107,:113`)가 `pre_state: candidate_ready`에 `run_command` 없어 Supervisor 미기동, 따라서 runner attempt가 영원히 생기지 않는다. `pre_state`가 runner attempt 종료를 함의하는 상태에서만 발급하도록 제한했다 — 아무 태스크에나 심으면 W-8이 실제 dispatch할 때 충돌한다 | 승인 |
+| 83 | 2026-09-14 18:41 | EXECUTE | GATE | W-7 애드덤 Pass — `compute_scope_hash`가 도메인 태그(`oppb-scope/v1`) + 4축 정규화(중복 제거·정렬·미선언 축 흡수) + `sort_keys` JSON의 sha256이다. 축 간 이동은 구분하고 표기 차이는 흡수한다. **공개 함수로 노출**해 W-12가 재구현하지 않게 한 것이 지시대로다. `test_evidence.py` 1 passed/6 failed → 6 passed/1 failed로 반전 | Pass |
+| 84 | 2026-09-14 18:49 | EXECUTE | GATE | **G2 kernel 완성 검증.** `test_oppb_init` 18 · `test_controller` 5 · `test_supervisor` 5 · `test_evidence` 7 = **35 passed**. 공용 자산 회귀 `546 passed, 3 skipped, 111 subtests` 유지. W-10이 P1에서 선작성한 RED 스위트가 전부 GREEN으로 전환됐다 | Pass |
+| 85 | 2026-09-14 18:49 | EXECUTE | GATE | W-8 주장 PM 재검증 — `supervisor.py`에서 `task["attempts"]`·`task.get("attempts")` **0건**. `attempts`를 다루는 지점은 전부 `reconcile-attempts` 응답 payload다. W-38 B-1이 지목한 재발 위험(340줄 재구현)이 실제로 회피됐다 | Pass |
+| 86 | 2026-09-14 18:49 | EXECUTE | GATE | W-7 애드덤 2차 Pass — `runner_attempt_id` 발급을 `POST_RUN_STATES`(`candidate_ready`·`verifying`·`accepted`) 3종으로 한정. **`running` 제외 근거가 정확하다** — runner 비행 중이고 실제 `attempt_id`는 `create_execution_packet()`이 dispatch 시점에 발급하므로 미리 심으면 충돌한다. spec이 `runner_attempt_id`를 선언했는데 `pre_state`가 범위 밖이면 `spec_invalid` 거부 가드도 추가했다 | Pass |
+| 87 | 2026-09-14 18:49 | EXECUTE | DECISION | 재사용 경계가 코드로 확보됨을 확인 — `controller.py` exports에 `POST_RUN_STATES`·`normalize_lease`·`compute_scope_hash` 노출(`:13,:62,:284,:293`). W-12(Scope Lease Tool)가 scope hash를 재구현할 이유가 없다. 이 태스크에서 두 번 난 중복 구현 사고의 구조적 예방 | 확인 |
+| 88 | 2026-09-14 19:00 | EXECUTE | GATE | **W-11 G2 API 동결 Pass.** sha256 4종을 PM이 재계산해 `api-freeze.md` 기록값과 **전부 일치** 확인. 동결 기준 commit `612db93`, 상류 변경 `git log main ^HEAD` **0건**. 구현·테스트 파일 무변경(schema/ 5파일만 신규) | Pass |
+| 89 | 2026-09-14 19:00 | EXECUTE | DECISION | W-11이 스키마를 **실측에서 뽑은 방식** 채택 — 코드 심볼 대조(TASK_STATES 8·ROLES 3·LEASE_AXES 4·COMMANDS 7·FLAGS 6·ERROR_CODES 52·이벤트명 5)와 실산출물 대조(격리 git 저장소에서 init→load→start→evidence submit→task accept 완주, 산출물 30건 전부 draft-07 통과, 음성 사례 2건 거부) 2방향. 검증용 `jsonschema`는 1회성으로만 쓰고 도구 런타임은 표준 라이브러리 전용 유지 | 채택 |
+| 90 | 2026-09-14 19:00 | EXECUTE | IMPROVE | W-11이 실측 불일치 2건을 구현이 아니라 **스키마를 맞춰** 기술 — (1) `evidence`의 `schema_version`은 정수인데 `workgraph`·`acceptance`·`execution-packet`은 문자열 `"1.0"`. 각각 테스트가 단언하는 현행 계약이라 구현을 고치지 않았다 (2) `mini_task.evidence[]`는 계속 빈 배열이고 실제 역인덱스 소유자는 `acceptance.json`이다. 미래 용도를 추정해 채우지 않았다. "동결은 현재 사실의 고정이지 새 계약 선언이 아니다"라는 지시를 정확히 지켰다 | 수용 |
+| 91 | 2026-09-14 19:00 | EXECUTE | DECISION | `attempt.attempt.json`을 동결 범위에서 **의도적 제외** 승인 — 그 필드 집합은 `opal-agent`의 `classify_attempt()` 입력 계약이고 소유자도 `opal-agent`라 G2가 동결할 대상이 아니다. `api-freeze.md` §3에 근거 기록됨 | 승인 |
