@@ -47,6 +47,14 @@ ceo4ever/opal의 공식 release tag(v*)에서 설치하는 정상 사용자는 s
 
 ---
 
+### Ego Lite 선택 설치
+
+Ego Lite 앱은 OPAL 배포물에 번들하지 않는 개인·비상업 단일 사용자 선택 공급자다. 사용자가 `r2` 설치를 명시한 경우에만 `ego-browser-tool`이 macOS CPU 아키텍처에 맞는 version 0.4.5.9 DMG를 내려받는다. 설치 전 `hdiutil verify`, 고정 SHA-256, `codesign --verify --deep --strict`, `spctl --assess`가 모두 통과해야 하며 quarantine 속성을 제거하지 않는다. 기존 앱이나 검증 실패 대상은 덮어쓰지 않는다.
+
+브라우저 결과에는 assertion에 필요한 제한된 expected/actual과 Space id만 남긴다. 저장 비밀번호·cookie·session token을 내보내지 않으며, 인증·MFA·결제·게시·삭제·설정 변경은 사람 승인 경계로 넘긴다. 조직·상업 사용자는 Citro Enterprise 조건을 먼저 확인한다.
+
+---
+
 ## §3 MCP 등록 신뢰 경계 (GC-DP-002/005)
 
 **적용 파일**: `scripts/install-mac.sh` / `scripts/install/windows.ps1` / `opal/tools/opal-cli/lib/mcp.sh`
@@ -110,6 +118,7 @@ playwright MCP의 `--output-dir`를 `/tmp/playwright-mcp`(임시, 재부팅 시 
 - `$schema: opal-community-skills-registry-v2.1`
 - `commit_sha` 옵션 필드 신설 — 검증 가능한 스킬만 채움
 - v2 호환 유지 (`commit_sha` 미작성 시 `null`로 간주)
+- `citrolabs/ego-browser`는 `citrolabs/ego-lite@skills/ego-browser`, MIT, commit `d01be93325c7ea59d41c2ca9f4c59b58b4be4046`으로 고정하고 설치 전 `scan-risk` SAFE를 요구한다.
 
 ### 동의 prompt 강화 (PLAN Step 6)
 

@@ -1,0 +1,14 @@
+{
+  "$schema": "ego-browser-installer-manifest-v1",
+  "version": "0.4.5.9",
+  "platforms": {
+    "darwin-arm64": {
+      "url": "https://cdn.ego.app/setup/macos/arm64/egolite-fHoqgZ74bOEM.dmg",
+      "sha256": "b83157810a11159ea118b310e9d62475b384d3a7548d5eaf990c426a0d7ab1b0"
+    },
+    "darwin-x86_64": {
+      "url": "https://cdn.ego.app/setup/macos/x64/egolite-fHoqgZ74bOEM.dmg",
+      "sha256": "78862c9a3cb71b0da361ca4e9e44bf5440d8b3bdd95c89eccaaf2a4ed16b4bc0"
+    }
+  }
+}

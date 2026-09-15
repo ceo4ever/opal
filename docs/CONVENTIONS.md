@@ -246,7 +246,7 @@ OPAL 본체(스킬·에이전트·도구·하네스)를 작성할 때 따라야 
 
 - 파일 처리·데이터 변환 작업이 필요할 때, 직접 코드를 작성하기 전에 OPAL 도구(`~/.opal/tools/`)를 우선 검토한다.
 - 상시 사용 핵심 도구: `state-tool`, `code-scan`, `memory-tool`, `brain-tool`, `test-tool`, `backlog-tool`.
-- **전체 목록: `opal/tools/` (22종)** — 위 6종 외 `event-loader`, `xlsx-tool`, `skill-registry`, `playwright-tool`, `improve-tool`, `cmux-tool`, `git-sync-tool`, `worktree-tool`, `date`, `doctor`, `tool-scan`, `opal-cli`, `opal-agent`, `opal-action-monitor`, `self-pm-tool`, `oppl-runtime-tool`.
+- **전체 목록: `opal/tools/` (23종)** — 위 6종 외 `event-loader`, `xlsx-tool`, `skill-registry`, `playwright-tool`, `ego-browser-tool`, `improve-tool`, `cmux-tool`, `git-sync-tool`, `worktree-tool`, `date`, `doctor`, `tool-scan`, `opal-cli`, `opal-agent`, `opal-action-monitor`, `self-pm-tool`, `oppl-runtime-tool`.
 - 도구 응답 형식·오류 코드 출처·종료 코드 성패 구분의 공통 규범은 `opal/core/references/harness/tool-output-contract.md`가 소유한다. 도구별 사용법·오류 코드 의미·종료 코드 세부 분류는 각 도구 README가 소유한다.
 - 근거: `opal/core/references/harness/capability.md`, 각 도구 README
 

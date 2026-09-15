@@ -270,7 +270,7 @@ Codex CLI에서 tool-backed 세션(모델이 도구로 자율 구동되는 세�
 
 ### opal-wtm-agent
 
-- **역할**: web-to-markdown 스킬 워커 — Phase 1(WebFetch) → Phase 2(cmux, 조건부) → Phase 3(playwright-tool CLI) 폴백으로 단일 URL 또는 사용자 cmux surface(B/C 모드)를 마크다운으로 변환
+- **역할**: web-to-markdown 스킬 워커 — 공개 검색은 기존 web search를 유지하고, 브라우저 추출은 Ego Lite → cmux → Playwright 순서와 `provider_unavailable` 전용 후보 전환으로 처리
 - **호출 시점**: web-to-markdown 스킬에서 URL/surface별로 오케스트레이터가 디스패치
 - **단계**: 도구성 워커 (파이프라인 단계 외)
 - **영역**: 공통
@@ -284,7 +284,7 @@ Codex CLI에서 tool-backed 세션(모델이 도구로 자율 구동되는 세�
     "status": "completed",
     "blockers": [],
     "changed_files": ["..."],
-    "method": "cmux|webfetch|playwright-cli",
+    "method": "ego-browser|cmux|playwright-cli",
     "mode": "A|B|C|null",
     "user_owned": false
   }
