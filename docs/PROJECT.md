@@ -259,5 +259,9 @@ TEST-SCENARIO 단계를 "목표 달성 검증"으로 재정의 — 루브릭 채
 | `docs/architecture-diagram/opal_framework_architecture.html` | 프레임워크 구조 다이어그램 (시각 SSOT) | 3층 구조·파이프라인·도구 관계 시각화 (태스크 086 산출) | Framework | 구조 설명·온보딩 시 |
 | `docs/SECURITY.md` | 프로젝트 보안 기준 | `op-gc-security`가 공식 표준 baseline보다 우선 적용하는 프로젝트 누적 기준 | Framework | 보안 체크(opgc CHECK) 시 |
 | `opal/core/references/harness/actor.md` | 실행 주체(actor) 축 SSOT | 모드 축과 직교하는 `--pm` 정의, 지원 Pilot 폐쇄 목록, `--pm` 실행 계약, 독립 검증 경계·GC 호출 지점 | Framework | `pilot.start` 이벤트 |
+| `docs/run-log/PRD.md` | 태스크 실행 로그 제품 요구 | 목표·비목표·요구(R-1~R-21)·Phase 인도 범위·성공 판정 귀속 | Framework | 실행 로그 관련 작업의 범위·우선순위 판단 시 |
+| `docs/run-log/TRD.md` | 태스크 실행 로그 기술 결정 | 아키텍처 결정(D-1~D-9)·구성요소 책임 경계·데이터 흐름·동시성/시간/보안 모델·단계별 도입 순서 | Framework | run-log 구현·확산 태스크의 설계 판단 시 |
+| `docs/run-log/CONTRACT.md` | 태스크 실행 로그 인터페이스 계약 (SSOT) | 사건 스키마·허용 조합·오류 코드·CLI 시그니처·경계·기계검증절(MV)·루브릭절. 구현 전 명세 심판의 판정 기준 원천 | Framework | run-log 관련 구현·검증·명세 리뷰 전 |
+| `docs/run-log/surfaces.json` | 표면 인벤토리 (기계가독) | CLI 17종 + 변환기 2종의 호출 형태·응답·오류 집합. 커버리지·적합성 게이트가 소비하는 유일한 IR | Framework | 백로그 커버리지 판정·오류 코드 대응 검사 시 |
 | `docs/proposals/` | 미적용 제안서 | 채택 전 설계 제안. 적용 완료분은 `archives/`로 이관되며 규범 원문은 owner 문서가 소유한다 | Framework | 제안 검토·결정 시 |
 | `opal/core/references/harness/done-template.md` | 표준 CLOSE DONE.md 템플릿 (SSOT) | DONE.md 절 구성 + `## 회고적 학습 후보` 절 계약(레포 상대 page 경로 1행 1건, finalize 재진입 판정의 선언 집합). 오케스트레이터 SKILL은 포인터만 두고 템플릿 본문을 복제하지 않는다 | Framework | CLOSE 단계에서 DONE.md를 작성할 때, merge 후 귀속·worktree finalize 판단 시 |

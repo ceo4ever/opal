@@ -3,8 +3,8 @@
   "module": "config",
   "layer": "config",
   "domain": "console",
-  "description": "~/.opal/console.config.json 로드 및 기본값 추론. scan_roots/scan_depth/exclude/prewarm_projects 관리. prewarm_projects는 기동 선프라임 대상 프로젝트 절대경로 목록 — _coerce_str_list()로 비-list 값을 안전하게 []로 폴백한다. save_config — 원자적 쓰기(_atomic_write_json: temp write + os.replace) + _WRITE_LOCK(threading.Lock)으로 read-modify-write 사이클 직렬화. 쓰기 대상은 routers/config.py의 POST /api/config/prewarm이 검증한 prewarm_projects 갱신뿐이다. load_quiet_hours — 진행 통계 야간 제외 구간(집계 기준 17)을 OPAL setting 2층 머지로 로드한다. 전역 ~/.opal/setting.json의 quietHours 위에 {프로젝트}/.opal/setting.local.json의 quietHours를 하위 키 단위로 덮어쓰며(로컬 우선), 어느 층에도 없으면 DEFAULT_QUIET_HOURS(enabled true·00:00~09:00)다. enabled != true거나 start == end면 None(보정 끔). 반환값 (시작 분, 끝 분)은 라우터가 stats.py에 인자로 주입한다 — stats.py는 설정을 읽지 않는다. quiet_hours_token은 캐시 키 서명으로, 설정 변경 시 보정 전후 값이 같은 캐시 키를 공유하지 않게 한다. load_owner_name — 화면에 쓸 사용자 호칭의 단일 로더다. 원천은 ~/.opal/identity.md frontmatter의 owner_name(전역 1개, 프로젝트별 분기 없음)이며 파일 부재·frontmatter 부재·키 부재·값 공란·읽기 실패 전건을 DEFAULT_OWNER_NAME(\"사용자\")로 폴백하고 예외를 밖으로 던지지 않는다. 표준 라이브러리 정규식만 쓰며 state-tool을 import하지 않는다(콘솔이 도구에 의존하지 않는다). 호칭은 라우터 층에서 붙으며 stats.py는 이 값을 모른다.",
-  "exports": ["load_config", "ConsoleConfig", "save_config", "load_quiet_hours", "quiet_hours_token", "load_owner_name"],
+  "description": "~/.opal/console.config.json 로드 및 기본값 추론. scan_roots/scan_depth/exclude/prewarm_projects 관리. prewarm_projects는 기동 선프라임 대상 프로젝트 절대경로 목록 — _coerce_str_list()로 비-list 값을 안전하게 []로 폴백한다. save_config — 원자적 쓰기(_atomic_write_json: temp write + os.replace) + _WRITE_LOCK(threading.Lock)으로 read-modify-write 사이클 직렬화. 쓰기 대상은 routers/config.py의 POST /api/config/prewarm이 검증한 prewarm_projects 갱신뿐이다. load_quiet_hours — 진행 통계 야간 제외 구간(집계 기준 17)을 OPAL setting 2층 머지로 로드한다. 전역 ~/.opal/setting.json의 quietHours 위에 {프로젝트}/.opal/setting.local.json의 quietHours를 하위 키 단위로 덮어쓰며(로컬 우선), 어느 층에도 없으면 DEFAULT_QUIET_HOURS(enabled true·00:00~09:00·timeZone Asia/Seoul)다. enabled != true거나 start == end면 None(보정 끔). 반환값은 QuietHours(tuple 서브클래스) — 튜플 값 자체는 (start_minute, end_minute) 2-tuple뿐이고 time_zone은 튜플 성분이 아니라 부착 속성(.time_zone)이다. __eq__·__hash__는 오버라이드하지 않고 tuple 상속 구현 그대로 쓴다 — QuietHours(0,540,\"UTC\") == (0,540)이 자연히 참이고 hash도 일치해(dict 키·set 원소로 안전) 기존 테스트(TestLoadQuietHours)의 2-tuple 비교와 완전히 호환된다. timeZone도 같은 2층 머지의 하위 키이며, 무효 IANA 이름은 예외 없이 Asia/Seoul로 폴백하고 설정 파일을 다시 쓰지 않는다(CONTRACT.md §2.8·§3.5). QuietHours는 config·라우터 계층에서만 흐른다 — 라우터가 stats.py에는 (시작 분, 끝 분)으로 좁혀 인자 주입한다(stats.py는 설정을 읽지 않는다, §2.8.1 B-1~B-3). quiet_hours_token은 캐시 키 서명 — isinstance(x, QuietHours)로 분기해 QuietHours 입력은 \"start-end@time_zone\", 평범한 2-tuple 레거시 입력은 \"start-end\", None은 \"off\". timeZone만 다른 두 설정은 반드시 다른 토큰을 만든다(MV-26). load_owner_name — 화면에 쓸 사용자 호칭의 단일 로더다. 원천은 ~/.opal/identity.md frontmatter의 owner_name(전역 1개, 프로젝트별 분기 없음)이며 파일 부재·frontmatter 부재·키 부재·값 공란·읽기 실패 전건을 DEFAULT_OWNER_NAME(\"사용자\")로 폴백하고 예외를 밖으로 던지지 않는다. 표준 라이브러리 정규식만 쓰며 state-tool을 import하지 않는다(콘솔이 도구에 의존하지 않는다). 호칭은 라우터 층에서 붙으며 stats.py는 이 값을 모른다.",
+  "exports": ["load_config", "ConsoleConfig", "save_config", "load_quiet_hours", "quiet_hours_token", "QuietHours", "load_owner_name"],
   "depends": [],
   "task": "061"
 }
@@ -17,6 +17,7 @@ import re
 import threading
 from pathlib import Path
 from dataclasses import dataclass, field
+from zoneinfo import ZoneInfo
 
 
 CONFIG_PATH = Path.home() / ".opal" / "console.config.json"
@@ -36,7 +37,14 @@ QUIET_HOURS_KEY = "quietHours"
 
 # 캡틴 확정 2026-08-26 — 기본은 **켬**, 제외 구간은 `00:00~09:00`이다.
 # 설정 파일에 키가 아예 없는 기존 설치에서도 이 기본이 적용된다.
-DEFAULT_QUIET_HOURS = {"enabled": True, "start": "00:00", "end": "09:00"}
+# timeZone(집계 기준 17 확장, CONTRACT.md §2.8·§3.5) — 미설정 시 기존 동작과
+# 동일한 `Asia/Seoul`을 적용한다. 하위 키 1개 추가이며 2층 머지 구조는 그대로다.
+DEFAULT_QUIET_HOURS = {
+    "enabled": True,
+    "start": "00:00",
+    "end": "09:00",
+    "timeZone": "Asia/Seoul",
+}
 
 MINUTES_PER_DAY = 24 * 60
 
@@ -157,16 +165,70 @@ def _parse_hhmm(value: object, fallback: int) -> int:
     return offset if offset <= MINUTES_PER_DAY else fallback
 
 
-def load_quiet_hours(project_path: str | None = None) -> tuple[int, int] | None:
-    """진행 통계에서 매일 제외할 야간 구간 → `(시작 분, 끝 분)`. 미적용은 `None`.
+class QuietHours(tuple):
+    """설정 계층의 야간 제외 구간 판정 결과 — 튜플 값은 `(시작 분, 끝 분)`뿐이고
+    `time_zone`은 그 구간에 붙는 **메타데이터 속성**이다(튜플 성분이 아니다).
 
-    2층 머지다 — 전역 `~/.opal/setting.json`의 `quietHours` 위에 프로젝트
-    `{project_path}/.opal/setting.local.json`의 `quietHours`를 **하위 키 단위로**
-    덮어쓴다. 어느 층에도 키가 없으면 `DEFAULT_QUIET_HOURS`(켬, `00:00~09:00`)다.
+    [CONTRACT.md §2.8.1 B-1] `config` 모듈과 라우터 계층 내부에서만 흐른다.
+    `stats.py` 공개 함수 인자로는 나타나지 않는다 — 라우터가 `(start_minute,
+    end_minute)`로 좁혀 넘긴다.
+
+    [동등성·해시 계약] `__eq__`·`__hash__`를 오버라이드하지 않고 `tuple`의
+    상속 구현을 그대로 쓴다 — 튜플 값이 `(시작 분, 끝 분)` 2-tuple뿐이므로
+    `QuietHours(0, 540, "UTC") == (0, 540)`이 **자연히** 참이고 `hash`도
+    일치한다(`a == b ⟹ hash(a) == hash(b)` 불변식 보존, dict 키·set 원소로도
+    안전). 기존 테스트(`TestLoadQuietHours`)의 `== (0, 540)` 비교와
+    `quiet_hours_token((0, 540))` 레거시 2-tuple 호출은 이 상속 동작만으로
+    통과한다 — 특수 오버라이드가 필요하지 않다.
+    """
+
+    def __new__(cls, start_minute: int, end_minute: int, time_zone: str) -> "QuietHours":
+        self = super().__new__(cls, (start_minute, end_minute))
+        self.time_zone = time_zone
+        return self
+
+    @property
+    def start_minute(self) -> int:
+        return self[0]
+
+    @property
+    def end_minute(self) -> int:
+        return self[1]
+
+    def __repr__(self) -> str:
+        return (
+            f"QuietHours(start_minute={self[0]!r}, end_minute={self[1]!r}, "
+            f"time_zone={self.time_zone!r})"
+        )
+
+
+def _resolve_time_zone(value: object) -> str:
+    """`timeZone` 값 → 유효한 IANA 이름이면 그대로, 아니면 기본값으로 폴백.
+
+    무효 이름(오탈자·존재하지 않는 지역)은 `zoneinfo.ZoneInfo`가 예외를 던지므로
+    이를 흡수해 `DEFAULT_QUIET_HOURS["timeZone"]`(`Asia/Seoul`)로 대체한다.
+    예외를 밖으로 던지지 않고, 설정 파일도 다시 쓰지 않는다(§3.5).
+    """
+    if isinstance(value, str) and value:
+        try:
+            ZoneInfo(value)
+            return value
+        except Exception:
+            pass
+    return DEFAULT_QUIET_HOURS["timeZone"]
+
+
+def load_quiet_hours(project_path: str | None = None) -> QuietHours | None:
+    """진행 통계에서 매일 제외할 야간 구간 → `QuietHours(시작 분, 끝 분, 시간대)`.
+
+    미적용은 `None`. 2층 머지다 — 전역 `~/.opal/setting.json`의 `quietHours` 위에
+    프로젝트 `{project_path}/.opal/setting.local.json`의 `quietHours`를
+    **하위 키 단위로** 덮어쓴다(`timeZone`도 같은 머지의 하위 키). 어느 층에도
+    키가 없으면 `DEFAULT_QUIET_HOURS`(켬, `00:00~09:00`, `Asia/Seoul`)다.
 
     `enabled`가 참이 아니면 `None`(보정 끔)이고, `시작 == 끝`이면 제외할 구간이
-    없으므로 역시 `None`이다. 반환값은 `stats` 모듈에 **인자로 주입**된다 —
-    `stats.py`는 설정을 읽지 않는다 (TS-008 파일 I/O 0건).
+    없으므로 역시 `None`이다. 반환값은 라우터가 `stats` 모듈에 **분 구간만 좁혀**
+    인자로 주입한다 — `stats.py`는 설정을 읽지 않는다 (TS-008 파일 I/O 0건).
     """
     merged = dict(DEFAULT_QUIET_HOURS)
 
@@ -182,7 +244,8 @@ def load_quiet_hours(project_path: str | None = None) -> tuple[int, int] | None:
     end = _parse_hhmm(merged.get("end"), _parse_hhmm(DEFAULT_QUIET_HOURS["end"], 0))
     if start == end:
         return None
-    return (start, end)
+    time_zone = _resolve_time_zone(merged.get("timeZone"))
+    return QuietHours(start, end, time_zone)
 
 
 def _quiet_hours_sources(project_path: str | None) -> list[dict]:
@@ -193,14 +256,21 @@ def _quiet_hours_sources(project_path: str | None) -> list[dict]:
     return sources
 
 
-def quiet_hours_token(quiet_hours: tuple[int, int] | None) -> str:
+def quiet_hours_token(quiet_hours: "QuietHours | tuple[int, int] | None") -> str:
     """캐시 키에 실을 제외 구간 서명. 설정이 바뀌면 캐시가 자연히 갈린다.
 
     캐시 무효화 축은 `state.json` mtime뿐이라(cache.py) 설정 변경은 감지되지 않는다.
     구간을 키에 실어 두면 보정 전후 값이 같은 키를 공유하지 않는다.
+
+    `QuietHours`(3필드) 입력은 `timeZone`도 서명에 포함한다(`"start-end@tz"`) —
+    `timeZone`만 다른 두 설정이 같은 캐시 키를 공유하지 않게 한다(CONTRACT §2.8).
+    평범한 `(시작 분, 끝 분)` 2-tuple 입력(기존 레거시 호출)은 기존 포맷
+    (`"start-end"`)을 그대로 유지한다.
     """
     if quiet_hours is None:
         return "off"
+    if isinstance(quiet_hours, QuietHours):
+        return f"{quiet_hours.start_minute}-{quiet_hours.end_minute}@{quiet_hours.time_zone}"
     return f"{quiet_hours[0]}-{quiet_hours[1]}"
 
 

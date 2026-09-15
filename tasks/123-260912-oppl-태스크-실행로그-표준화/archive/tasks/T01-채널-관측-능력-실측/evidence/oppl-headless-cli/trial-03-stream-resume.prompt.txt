@@ -1,0 +1,27 @@
+[WORKER]
+
+G 게이트(Evaluator, 별도 세션) 판정 결과 **verdict: fail**이다. 네가 방금 쓴 PLAN.md를 아래 지시대로 개정하라. 판정 원문 전문은 `<task_folder>/QA-SPEC.md`에 있으니 먼저 읽어라.
+
+task_folder: /Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_123/tasks/123-260912-oppl-태스크-실행로그-표준화/tasks/T01-채널-관측-능력-실측
+
+## 재작업 지시 7건 (전부 반영)
+1. §5 산출물에 self-test receipt 파일 추가 — 축별 `evidence/<axis>/self-test-receipt.json`을 CONTRACT §1.5의 8필드(`receipt_version`/`channel_id`/`adapter_id`/`adapter_sha256`/`observed`/`claimed_profile`/`evidence`/`produced_at`)로 정의하고, `profiles.json.receipt_sha256`은 "그 receipt 파일 바이트의 SHA-256"으로 명시하라.
+2. VS-1에 receipt 검증 추가 — 8필드 존재 + `claimed_profile`이 `observed{}` 파생과 일치 + `receipt_sha256`이 receipt 파일 실제 해시와 일치. non-null 검사로 대체 금지.
+3. §3-1 관측 판정 근거 강화 — `observed.X = (칸의 observed 필드가 true) ∧ (evidence_path가 그 관측을 실제로 담은 원본) ∧ (관측 불가 note가 아님)`. VS-2를 "존재·비공백"에서 "칸이 주장하는 관측 항목이 그 파일 안에서 확인됨"으로 강화하라.
+4. VS-3을 칸 단위로 — `observed=true`로 선언된 **모든 칸**이 각자의 evidence_path로 뒷받침됨을 판정하라.
+5. §3-6에 잠정 변환기 채택 조건 명문화 — (a) 이 profiles.json은 태스크 폴더 원본이며 배포 위치로 승격하지 않는다 (b) 승격 전 `state-tool init --run-log-mode active`를 호출하지 않는다 (c) Phase 1A 실변환기 확정 시 `adapter_id`/`adapter_sha256`/`receipt_sha256`을 재발급한다.
+6. §1 축 B에 probe 실행 안전 제약 추가 — opal-agent 실호출의 작업 디렉터리·프롬프트 제약을 고정하고, 실행 후 `git status`로 워크트리 무변경(태스크 폴더 산출물 제외)을 확인하는 항목을 VS-4에 넣어라.
+7. `evidence_paths` 상대 경로의 기준점을 **태스크 폴더 기준**으로 한 줄로 고정하고 VS-2 해석 규칙을 거기에 맞춰라.
+
+## 실측으로 이미 확정된 사실 (PLAN §1의 "미확인" 항목을 사실로 갱신하라 — 등급 값은 여전히 적지 마라)
+- 축 A transcript 구조: PM 세션 `.jsonl`과 서브에이전트 transcript는 **분리된 파일**이다. 서브에이전트는 `<세션디렉터리>/subagents/agent-<agentId>.jsonl`, 시작 메타는 같은 폴더의 `agent-<agentId>.meta.json`(하네스가 기록, 필드: agentType·description·toolUseId·parentAgentId·spawnDepth·requestShape·model)이다. 상관 키는 `toolUseId`다.
+- 축 A 종료 봉투: 호출자 transcript에 `type=attachment` 항목으로 `<task-notification>`(task-id·tool-use-id·output-file·status·usage.duration_ms)이 하네스에 의해 기록된다.
+- 축 A 단조 구간: 외부 프로브가 자기 `time.monotonic()`으로 시작~종료 관측 구간을 잴 수 있음이 실측되었다. 단, 호출자 세션의 디스크 flush 지연이 포함되어 구간이 느슨하다는 사실을 PLAN에 caveat로 적어라.
+- 축 B: `--stream` 모드는 실행 중 증분 수신(중간 사건 관측 가능), `--json` 모드는 stdout 전량이 종료 직전 한꺼번에 도착(중간 사건 관측 불가)이 실측되었다. **호출 모드가 관측 능력을 좌우한다**는 사실과, 그래서 등급 배정에 "어떤 모드 전제인가"를 반드시 병기해야 한다는 조항을 PLAN에 추가하라.
+
+## 제약
+- **[MUST]** PLAN.md 외의 파일을 만들거나 고치지 마라. `~/.opal/`·`opal/`·3-SSOT·CONTRACT.md·QA-SPEC.md 수정 금지.
+- **[MUST]** 등급 값(`observed_trajectory`/`observed_terminal`/`cooperative`)을 PLAN에서 축에 배정하지 마라. PLAN은 절차만 정한다.
+- 관측되지 않은 것을 관측됐다고 쓰지 마라.
+
+완료 시 개정 항목 7건이 각각 PLAN.md 어느 절에 반영됐는지 절 번호로 반환하라.

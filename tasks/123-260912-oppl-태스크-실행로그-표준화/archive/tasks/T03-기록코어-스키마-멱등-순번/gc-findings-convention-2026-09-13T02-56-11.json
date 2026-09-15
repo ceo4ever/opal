@@ -1,0 +1,100 @@
+{
+  "check": "convention",
+  "status": "pass",
+  "checked_files": [
+    "opal/tools/run-log-tool/run_log_core.py",
+    "opal/tools/run-log-tool/run_log_tool.py",
+    "opal/tools/run-log-tool/tests/test_run_log_tool.py",
+    "opal/tools/run-log-tool/README.md"
+  ],
+  "findings": [
+    {
+      "id": "GC-001",
+      "fingerprint": "46cb5814a87c2794",
+      "category": "documentation",
+      "severity": "medium",
+      "confidence": "high",
+      "disposition": "blocking",
+      "rule_id": "CONVENTIONS.md §@header 규칙 (line 224) / header-standard.md §2.1·§4.2",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/tools/run-log-tool/run_log_core.py",
+        "line": 6,
+        "symbol": "@header.description"
+      },
+      "evidence": "description 말미: \"…색인·조각 경계 전환·락 정책 변경은 T04, 상태 보관함·복구는 T05, redact() 본문·원본 상한은 T06, 채널 변환기는 T07, 가져온 사건의 완료 게이트 불기여 집행은 T11 소관이며 이 모듈은 건드리지 않는다.\" — 서로 다른 태스크 번호 5종(T04/T05/T06/T07/T11) 나열",
+      "impact": "header-standard.md §4.2가 정한 '서로 다른 태스크 번호 2개 이상' 임계값을 초과해 @header가 이력/스코프 로그처럼 누적되는 패턴이며, T02 산출물에서 GC-C001로 2회 지적된 것과 동일 유형이다",
+      "remediation": {
+        "guidance": "태스크 번호 나열 없이 '이 모듈이 다루지 않는 범위'만 사실로 서술하거나, 소유 매핑이 필요하면 PLAN.md 범위 경계 표로 이관한다",
+        "reference": "opal/core/references/header-standard.md §2.1, §4.2",
+        "auto_fixable": false
+      },
+      "verification": "수정 후 description 필드에서 서로 다른 태스크 번호 태그가 1개 이하인지 육안 확인",
+      "suppression": null
+    },
+    {
+      "id": "GC-002",
+      "fingerprint": "5564ecb5ca05fd2d",
+      "category": "documentation",
+      "severity": "medium",
+      "confidence": "medium",
+      "disposition": "advisory",
+      "rule_id": "CONVENTIONS.md §@header 규칙 (line 224) / header-standard.md §4.2",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/tools/run-log-tool/tests/test_run_log_tool.py",
+        "line": 6,
+        "symbol": "@header.description"
+      },
+      "evidence": "description: \"S-3~S-8은 T02 워킹 스켈레톤(...) 판정, S-10~S-29는 T03 문지기(...) 판정이다\" — 서로 다른 태스크 번호 2종(T02/T03)을 시점별로 구분 서술",
+      "impact": "시나리오 배치를 태스크별 시점 순서로 서술하는 형태로, header-standard.md §4.2의 '시점별 변경 단락' 금지 사례와 유사하다. scenarios 필드(이력 금지 예외)가 이미 동일 정보를 구조화해 담고 있어 description의 산문 서술은 중복이자 잠재적 이력 누적이다",
+      "remediation": {
+        "guidance": "description은 태스크 번호 없이 '무엇을 판정하는 테스트인가'만 남기고, 시나리오-태스크 매핑은 PLAN.md/TEST-SCENARIO 자산에 둔다",
+        "reference": "opal/core/references/header-standard.md §4.2",
+        "auto_fixable": false
+      },
+      "verification": "수정 후 description에서 서로 다른 태스크 번호 태그 수 확인",
+      "suppression": null
+    },
+    {
+      "id": "GC-003",
+      "fingerprint": "b08b935b97e9d107",
+      "category": "documentation",
+      "severity": "medium",
+      "confidence": "high",
+      "disposition": "advisory",
+      "rule_id": "adjacent-pattern: README 서브명령 목록 정합성",
+      "source_tier": "T2",
+      "location": {
+        "file": "opal/tools/run-log-tool/README.md",
+        "line": 8,
+        "symbol": null
+      },
+      "evidence": "README.md:8-22 \"## 서브명령 (T02 범위 — 3종)\" 및 \"나머지 8개 서브명령(…import-agentic/import-oppl…)은 후속 태스크(T03~T06)가 채운다\" — 그러나 run_log_tool.py:107-114,166-178에 cmd_import_agentic/cmd_import_oppl 서브파서가 이미 구현됨(run_log_core.py:1050 import_agentic, :1279 import_oppl)",
+      "impact": "README가 실제 구현(5개 서브명령)보다 뒤처진 상태를 서술해, 이 문서만 보는 사용자가 import-agentic/import-oppl을 미구현으로 오인할 수 있다",
+      "remediation": {
+        "guidance": "README §서브명령 절에 import-agentic/import-oppl 사용법을 추가하고 '3종'·'후속 태스크가 채운다' 문구를 현재 상태로 갱신한다",
+        "reference": "opal/tools/run-log-tool/run_log_tool.py:166-178",
+        "auto_fixable": false
+      },
+      "verification": "README의 서브명령 개수·목록이 build_parser()의 서브파서 목록과 일치하는지 대조",
+      "suppression": null
+    }
+  ],
+  "evidence": [
+    "Read: opal/tools/run-log-tool/run_log_core.py (전문)",
+    "Read: opal/tools/run-log-tool/run_log_tool.py (전문)",
+    "Read: opal/tools/run-log-tool/tests/test_run_log_tool.py (헤더 + 클래스 목록)",
+    "Read: opal/tools/run-log-tool/README.md (전문)",
+    "grep '^class ' tests/test_run_log_tool.py → 26개 클래스, @header exports 26개와 1:1 일치 확인",
+    "python3 -m py_compile 3개 파일 → 컴파일 성공",
+    "trailing whitespace / tab / EOF newline 스캔 → 위반 없음"
+  ],
+  "references": [
+    "docs/CONVENTIONS.md",
+    "opal/core/references/header-standard.md",
+    "opal/core/references/opal-doc-standard.md §5"
+  ],
+  "missing_capabilities": [],
+  "report_path": "tasks/123-260912-oppl-태스크-실행로그-표준화/tasks/T03-기록코어-스키마-멱등-순번/GC-CONVENTION-2026-09-13T02-56-11.md"
+}

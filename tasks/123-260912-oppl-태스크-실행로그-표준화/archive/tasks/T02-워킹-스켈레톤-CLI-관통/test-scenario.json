@@ -1,0 +1,631 @@
+{
+  "schema_version": "1.0",
+  "task_id": "T02-워킹-스켈레톤-CLI-관통",
+  "locked": true,
+  "created_at": "2026-09-12T20:19:56+09:00",
+  "locked_at": "2026-09-12T20:37:23+09:00",
+  "scenarios": [
+    {
+      "id": "S-1",
+      "acceptance_ref": "AC-2 / CONTRACT §1.4 §2.5",
+      "type": "integration",
+      "expected": "state-tool init <abs> --run-log-mode shadow exit 0. state.json schema_version==1.2, run_log 7필드(contract_version=1.0, mode=shadow, completion_profile, completion_profile_receipt=None, active_run_id=run_ 접두, status=active, pending_events==[]). run/run-log-{run_id}-0001.jsonl 존재·정확히 1줄, 그 줄이 event==run.started, sequence==1, actor_sequence==1, actor.kind==tool, provenance.type==direct, timestamp가 Z로 끝나는 RFC3339 밀리초",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "실관찰 RED: pytest test_state_tool_run_log.py::TestShadowInitPierce → AssertionError: 2 != 0 : S-1 init exit!=0 — stderr='state-tool: error: unrecognized arguments: --run-log-mode shadow' (--run-log-mode 미구현)",
+      "red_at": "2026-09-12T20:37:15+09:00",
+      "required_fidelity": "real-usage",
+      "surface_ref": "state-tool.init.run-log-mode",
+      "result": "pass",
+      "evidence": "루프 액션 에이전트 독립 실증: python3 state_tool.py init <abs> --skill oppl --mode agentic --run-log-mode shadow → exit 0. state.json schema_version=1.2, run_log={contract_version:1.0, mode:shadow, completion_profile:cooperative, completion_profile_receipt:null, active_run_id:run_200928ba-75fd-48eb-88aa-9b67ea8dcf49, status:active, pending_events:[]}. run/run-log-run_200928ba-...-0001.jsonl 1줄: event=run.started, sequence=1, actor_sequence=1, actor.kind=tool, provenance.type=direct, timestamp=2026-09-12T12:09:28.294Z | [T4b 재작업 후 재실증 2026-09-12] run-log-tool 8 passed, test_state_tool_run_log 3 passed, state-tool 전체 428 passed/3 skipped/111 subtests/0 failed. 보안 수정(GC-001 outbox redact, GC-003 run_id_invalid, GC-004 조각·락 600·run/ 700, GC-005 O_NOFOLLOW, GC-006 malformed_line 봉투, GC-007 importlib, GC-008) 반영 후에도 전건 동일 판정.",
+      "marked_at": "2026-09-12T22:48:21+09:00",
+      "fidelity": "real-usage",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "init_exit_code",
+          "expected": 0,
+          "actual": 0
+        },
+        {
+          "id": "schema_version",
+          "expected": "1.2",
+          "actual": "1.2"
+        },
+        {
+          "id": "run_log_field_count",
+          "expected": 7,
+          "actual": 7
+        },
+        {
+          "id": "run_log.mode",
+          "expected": "shadow",
+          "actual": "shadow"
+        },
+        {
+          "id": "run_log.contract_version",
+          "expected": "1.0",
+          "actual": "1.0"
+        },
+        {
+          "id": "run_log.status",
+          "expected": "active",
+          "actual": "active"
+        },
+        {
+          "id": "run_log.pending_events",
+          "expected": [],
+          "actual": []
+        },
+        {
+          "id": "active_run_id_prefix",
+          "expected": "run_",
+          "actual": "run_"
+        },
+        {
+          "id": "segment_line_count",
+          "expected": 1,
+          "actual": 1
+        },
+        {
+          "id": "event",
+          "expected": "run.started",
+          "actual": "run.started"
+        },
+        {
+          "id": "sequence",
+          "expected": 1,
+          "actual": 1
+        },
+        {
+          "id": "actor_sequence",
+          "expected": 1,
+          "actual": 1
+        },
+        {
+          "id": "actor.kind",
+          "expected": "tool",
+          "actual": "tool"
+        },
+        {
+          "id": "provenance.type",
+          "expected": "direct",
+          "actual": "direct"
+        },
+        {
+          "id": "timestamp_suffix_Z",
+          "expected": true,
+          "actual": true
+        },
+        {
+          "id": "pytest_TestShadowInitPierce",
+          "expected": "PASSED",
+          "actual": "PASSED"
+        },
+        {
+          "id": "outbox_redact_chokepoint_wired",
+          "expected": true,
+          "actual": true
+        }
+      ],
+      "observed_evidence": [
+        "state.json",
+        "run/run-log-{run_id}-0001.jsonl",
+        "pytest test_state_tool_run_log.py::TestShadowInitPierce"
+      ]
+    },
+    {
+      "id": "S-2",
+      "acceptance_ref": "C-3 / TASK.md",
+      "type": "regression",
+      "expected": "--run-log-mode 미지정 init이 개정 전(git show HEAD:./state_tool.py)과 state.json 바이트 동일. 개정본에 run_log 키 부재, run/ 디렉터리 미생성",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "real-usage",
+      "surface_ref": "state-tool.init.run-log-mode",
+      "result": "pass",
+      "evidence": "--run-log-mode 미지정 init이 개정 전(git show HEAD:./state_tool.py) 산출물과 state.json 바이트 동일. run_log 키 부재, run/ 미생성. pytest TestUnflaggedInitByteIdentical PASSED | [T4b 재작업 후 재실증 2026-09-12] run-log-tool 8 passed, test_state_tool_run_log 3 passed, state-tool 전체 428 passed/3 skipped/111 subtests/0 failed. 보안 수정(GC-001 outbox redact, GC-003 run_id_invalid, GC-004 조각·락 600·run/ 700, GC-005 O_NOFOLLOW, GC-006 malformed_line 봉투, GC-007 importlib, GC-008) 반영 후에도 전건 동일 판정.",
+      "marked_at": "2026-09-12T22:48:21+09:00",
+      "fidelity": "real-usage",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "schema_version_without_flag",
+          "expected": "1.0",
+          "actual": "1.0"
+        },
+        {
+          "id": "run_log_key_present",
+          "expected": false,
+          "actual": false
+        },
+        {
+          "id": "run_dir_created",
+          "expected": false,
+          "actual": false
+        },
+        {
+          "id": "bytes_identical_to_HEAD",
+          "expected": true,
+          "actual": true
+        },
+        {
+          "id": "pytest_TestUnflaggedInitByteIdentical",
+          "expected": "PASSED",
+          "actual": "PASSED"
+        }
+      ],
+      "observed_evidence": [
+        "state.json (HEAD 사본 대조)",
+        "pytest test_state_tool_run_log.py::TestUnflaggedInitByteIdentical"
+      ]
+    },
+    {
+      "id": "S-3",
+      "acceptance_ref": "AC-2 / CONTRACT §2.3",
+      "type": "contract",
+      "expected": "run.sh init --task <abs> --run-id run_x --format json 2회 호출. 1회차 ok:true created:true, 2회차 ok:true created:false. 조각 파일 1개이며 2회차 전후 바이트 동일",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "실관찰 RED: pytest test_run_log_tool.py::TestInitIdempotent FAILED — exit=127 stderr='bash: opal/tools/run-log-tool/run.sh: No such file or directory' (run-log-tool 미신설)",
+      "red_at": "2026-09-12T20:37:15+09:00",
+      "required_fidelity": "real-usage",
+      "surface_ref": "run-log-tool.init",
+      "result": "pass",
+      "evidence": "pytest opal/tools/run-log-tool/tests/test_run_log_tool.py::TestInitIdempotent::test_init_twice_is_idempotent_and_segment_unchanged PASSED — run.sh init 실호출 2회, created true→false, 조각 1개·바이트 불변 | [T4b 재작업 후 재실증 2026-09-12] run-log-tool 8 passed, test_state_tool_run_log 3 passed, state-tool 전체 428 passed/3 skipped/111 subtests/0 failed. 보안 수정(GC-001 outbox redact, GC-003 run_id_invalid, GC-004 조각·락 600·run/ 700, GC-005 O_NOFOLLOW, GC-006 malformed_line 봉투, GC-007 importlib, GC-008) 반영 후에도 전건 동일 판정.",
+      "marked_at": "2026-09-12T22:48:22+09:00",
+      "fidelity": "real-usage",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "first_init_ok",
+          "expected": true,
+          "actual": true
+        },
+        {
+          "id": "first_init_created",
+          "expected": true,
+          "actual": true
+        },
+        {
+          "id": "second_init_ok",
+          "expected": true,
+          "actual": true
+        },
+        {
+          "id": "second_init_created",
+          "expected": false,
+          "actual": false
+        },
+        {
+          "id": "segment_file_count",
+          "expected": 1,
+          "actual": 1
+        },
+        {
+          "id": "segment_bytes_unchanged",
+          "expected": true,
+          "actual": true
+        },
+        {
+          "id": "pytest_TestInitIdempotent",
+          "expected": "PASSED",
+          "actual": "PASSED"
+        }
+      ],
+      "observed_evidence": [
+        "run/run-log-*.jsonl",
+        "pytest test_run_log_tool.py::TestInitIdempotent"
+      ]
+    },
+    {
+      "id": "S-4",
+      "acceptance_ref": "AC-2 / CONTRACT §1.1 §2.3",
+      "type": "contract",
+      "expected": "append 1건 exit 0. 응답에 event_id(evt_ 접두)·sequence·actor_sequence·segment·idempotent_hit:false. 조각 줄 수 1 증가, 선행 줄 바이트 불변, 새 줄이 단독 JSON으로 파싱",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "실관찰 RED: pytest test_run_log_tool.py::TestAppendEvent FAILED — 선행 init exit=127, run.sh 부재 (append 서브명령 미구현)",
+      "red_at": "2026-09-12T20:37:15+09:00",
+      "required_fidelity": "real-usage",
+      "surface_ref": "run-log-tool.append",
+      "result": "pass",
+      "evidence": "루프 액션 에이전트 독립 실증: run.sh append --task <abs> --run-id run_200928ba-... --request-id req_pierce1 --event activity --actor-kind PM --actor-id pm --provenance-type direct --recorded-by-kind PM --summary 'pierce check' --data '{\"kind\":\"validation\"}' --format json → {ok:true, data:{event_id:evt_b595d143-d7db-4521-8d31-c9c406e37584, sequence:2, actor_sequence:1, segment:.../run-log-...-0001.jsonl, idempotent_hit:false}} exit 0. 조각 1→2줄, 선행 줄 바이트 불변 | [T4b 재작업 후 재실증 2026-09-12] run-log-tool 8 passed, test_state_tool_run_log 3 passed, state-tool 전체 428 passed/3 skipped/111 subtests/0 failed. 보안 수정(GC-001 outbox redact, GC-003 run_id_invalid, GC-004 조각·락 600·run/ 700, GC-005 O_NOFOLLOW, GC-006 malformed_line 봉투, GC-007 importlib, GC-008) 반영 후에도 전건 동일 판정.",
+      "marked_at": "2026-09-12T22:48:22+09:00",
+      "fidelity": "real-usage",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "append_exit_code",
+          "expected": 0,
+          "actual": 0
+        },
+        {
+          "id": "ok",
+          "expected": true,
+          "actual": true
+        },
+        {
+          "id": "event_id_prefix",
+          "expected": "evt_",
+          "actual": "evt_"
+        },
+        {
+          "id": "sequence",
+          "expected": 2,
+          "actual": 2
+        },
+        {
+          "id": "actor_sequence",
+          "expected": 1,
+          "actual": 1
+        },
+        {
+          "id": "idempotent_hit",
+          "expected": false,
+          "actual": false
+        },
+        {
+          "id": "segment_line_count_after",
+          "expected": 2,
+          "actual": 2
+        },
+        {
+          "id": "preceding_line_unchanged",
+          "expected": true,
+          "actual": true
+        },
+        {
+          "id": "pytest_TestAppendEvent",
+          "expected": "PASSED",
+          "actual": "PASSED"
+        },
+        {
+          "id": "segment_mode_octal",
+          "expected": "600",
+          "actual": "600"
+        },
+        {
+          "id": "run_dir_mode_octal",
+          "expected": "700",
+          "actual": "700"
+        }
+      ],
+      "observed_evidence": [
+        "run/run-log-*.jsonl",
+        "append stdout JSON",
+        "pytest test_run_log_tool.py::TestAppendEvent"
+      ]
+    },
+    {
+      "id": "S-5",
+      "acceptance_ref": "AC-2 / CONTRACT §2.3",
+      "type": "contract",
+      "expected": "validate-run --format json exit 0, verdict==pass, segment_count==1, event_count==2, sequence_gaps==[], violations==[], total_bytes>0",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "실관찰 RED: pytest test_run_log_tool.py::TestValidateRunPass FAILED — 선행 init exit=127, run.sh 부재 (validate-run 서브명령 미구현)",
+      "red_at": "2026-09-12T20:37:15+09:00",
+      "required_fidelity": "real-usage",
+      "surface_ref": "run-log-tool.validate-run",
+      "result": "pass",
+      "evidence": "루프 액션 에이전트 독립 실증: run.sh validate-run --task <abs> --run-id run_200928ba-... --format json → {ok:true, data:{run_id:..., verdict:pass, segment_count:1, event_count:2, total_bytes:1664, sequence_gaps:[], violations:[]}} exit 0. AC-2 종결점 충족 | [T4b 재작업 후 재실증 2026-09-12] run-log-tool 8 passed, test_state_tool_run_log 3 passed, state-tool 전체 428 passed/3 skipped/111 subtests/0 failed. 보안 수정(GC-001 outbox redact, GC-003 run_id_invalid, GC-004 조각·락 600·run/ 700, GC-005 O_NOFOLLOW, GC-006 malformed_line 봉투, GC-007 importlib, GC-008) 반영 후에도 전건 동일 판정.",
+      "marked_at": "2026-09-12T22:48:22+09:00",
+      "fidelity": "real-usage",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "validate_run_exit_code",
+          "expected": 0,
+          "actual": 0
+        },
+        {
+          "id": "verdict",
+          "expected": "pass",
+          "actual": "pass"
+        },
+        {
+          "id": "segment_count",
+          "expected": 1,
+          "actual": 1
+        },
+        {
+          "id": "event_count",
+          "expected": 2,
+          "actual": 2
+        },
+        {
+          "id": "sequence_gaps",
+          "expected": [],
+          "actual": []
+        },
+        {
+          "id": "violations",
+          "expected": [],
+          "actual": []
+        },
+        {
+          "id": "total_bytes_gt_zero",
+          "expected": true,
+          "actual": true
+        },
+        {
+          "id": "pytest_TestValidateRunPass",
+          "expected": "PASSED",
+          "actual": "PASSED"
+        },
+        {
+          "id": "malformed_segment_returns_envelope",
+          "expected": true,
+          "actual": true
+        },
+        {
+          "id": "malformed_violation_code",
+          "expected": "malformed_line",
+          "actual": "malformed_line"
+        }
+      ],
+      "observed_evidence": [
+        "validate-run stdout JSON",
+        "pytest test_run_log_tool.py::TestValidateRunPass"
+      ]
+    },
+    {
+      "id": "S-6",
+      "acceptance_ref": "CONTRACT §3.2 / MV-27",
+      "type": "contract",
+      "expected": "init/append/validate-run 각각에 --task ./relative → ok:false, error.code==task_path_not_absolute, exit≠0. cwd를 바꿔도 동일",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "실관찰 RED: pytest test_run_log_tool.py::TestPathContractRejection FAILED — 'AssertionError: True is not false : S-6 init ok:true — {}' (require_absolute 미구현, task_path_not_absolute 미반환)",
+      "red_at": "2026-09-12T20:37:15+09:00",
+      "required_fidelity": "real-usage",
+      "surface_ref": "run-log-tool.init",
+      "result": "pass",
+      "evidence": "루프 액션 에이전트 독립 실증: run.sh validate-run --task ./rel --run-id run_... --format json → {ok:false, error:{code:task_path_not_absolute, message:'task path가 절대 경로가 아닙니다: ./rel', detail:{path:./rel}}} exit 1. CONTRACT §3.2 / MV-27 준수. pytest TestPathContractRejection PASSED (init/append/validate-run 3서브명령 × cwd 변경) | [T4b 재작업 후 재실증 2026-09-12] run-log-tool 8 passed, test_state_tool_run_log 3 passed, state-tool 전체 428 passed/3 skipped/111 subtests/0 failed. 보안 수정(GC-001 outbox redact, GC-003 run_id_invalid, GC-004 조각·락 600·run/ 700, GC-005 O_NOFOLLOW, GC-006 malformed_line 봉투, GC-007 importlib, GC-008) 반영 후에도 전건 동일 판정.",
+      "marked_at": "2026-09-12T22:48:22+09:00",
+      "fidelity": "real-usage",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "relative_path_ok",
+          "expected": false,
+          "actual": false
+        },
+        {
+          "id": "error_code",
+          "expected": "task_path_not_absolute",
+          "actual": "task_path_not_absolute"
+        },
+        {
+          "id": "exit_code_nonzero",
+          "expected": true,
+          "actual": true
+        },
+        {
+          "id": "cwd_independent",
+          "expected": true,
+          "actual": true
+        },
+        {
+          "id": "pytest_TestPathContractRejection",
+          "expected": "PASSED",
+          "actual": "PASSED"
+        },
+        {
+          "id": "run_id_glob_injection_rejected",
+          "expected": "run_id_invalid",
+          "actual": "run_id_invalid"
+        }
+      ],
+      "observed_evidence": [
+        "validate-run stderr/stdout JSON",
+        "pytest test_run_log_tool.py::TestPathContractRejection"
+      ]
+    },
+    {
+      "id": "S-7",
+      "acceptance_ref": "CONTRACT §1.1 폐쇄형 스키마 / MV-1",
+      "type": "contract",
+      "expected": "--event not_a_real_event → ok:false schema_invalid. §1.1 밖 최상위 키 입력도 schema_invalid. 두 경우 조각 줄 수 미증가(부분 쓰기 없음)",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "실관찰 RED: pytest test_run_log_tool.py::TestSchemaRejection 2건 FAILED (test_unknown_event_enum_value_rejected / test_schema_violating_data_payload_rejected) — 선행 init exit=127, validate_event 미구현",
+      "red_at": "2026-09-12T20:37:15+09:00",
+      "required_fidelity": "real-usage",
+      "surface_ref": "run-log-tool.append",
+      "result": "pass",
+      "evidence": "pytest test_run_log_tool.py::TestSchemaRejection 2건 PASSED — test_unknown_event_enum_value_rejected(--event not_a_real_event → schema_invalid), test_schema_violating_data_payload_rejected. 두 경우 모두 조각 줄 수 미증가(부분 쓰기 없음). CONTRACT §1.1 폐쇄형 스키마 / MV-1 | [T4b 재작업 후 재실증 2026-09-12] run-log-tool 8 passed, test_state_tool_run_log 3 passed, state-tool 전체 428 passed/3 skipped/111 subtests/0 failed. 보안 수정(GC-001 outbox redact, GC-003 run_id_invalid, GC-004 조각·락 600·run/ 700, GC-005 O_NOFOLLOW, GC-006 malformed_line 봉투, GC-007 importlib, GC-008) 반영 후에도 전건 동일 판정.",
+      "marked_at": "2026-09-12T22:48:22+09:00",
+      "fidelity": "real-usage",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "unknown_event_ok",
+          "expected": false,
+          "actual": false
+        },
+        {
+          "id": "unknown_event_error_code",
+          "expected": "schema_invalid",
+          "actual": "schema_invalid"
+        },
+        {
+          "id": "segment_line_count_unchanged",
+          "expected": true,
+          "actual": true
+        },
+        {
+          "id": "malformed_data_error_code",
+          "expected": "schema_invalid",
+          "actual": "schema_invalid"
+        },
+        {
+          "id": "pytest_TestSchemaRejection_count",
+          "expected": 2,
+          "actual": 2
+        },
+        {
+          "id": "pytest_TestSchemaRejection",
+          "expected": "PASSED",
+          "actual": "PASSED"
+        }
+      ],
+      "observed_evidence": [
+        "run/run-log-*.jsonl 줄 수 대조",
+        "pytest test_run_log_tool.py::TestSchemaRejection"
+      ]
+    },
+    {
+      "id": "S-8",
+      "acceptance_ref": "AC-19 / MV-24 / TRD D-5",
+      "type": "integration",
+      "expected": "(a) run-log-tool/tests 전체 실행 후 tmpdir에 state.json 미생성 (b) run_log_core.py·run_log_tool.py 소스에 state_tool import·state.json 문자열 0건 (c) state.json 없는 빈 절대경로 폴더에서 init→append→validate-run 3연속 전건 exit 0",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "실관찰 RED: pytest test_run_log_tool.py::TestStateAssetIndependence 2건 FAILED — 'AssertionError: False is not true : S-8 소스 파일 부재: opal/tools/run-log-tool/run_log_core.py' 및 init exit=127",
+      "red_at": "2026-09-12T20:37:15+09:00",
+      "required_fidelity": "real-usage",
+      "surface_ref": "run-log-tool.validate-run",
+      "result": "pass",
+      "evidence": "pytest TestStateAssetIndependence 2건 PASSED + 루프 액션 에이전트 독립 정적 판정: grep -c 'state_tool|state\\.json' run_log_core.py=0, run_log_tool.py=0. state.json 없는 빈 절대경로 폴더에서 init→append→validate-run 3연속 exit 0. TASK C-4 / AC-19 / MV-24 / TRD D-5 단방향 의존 집행 | [T4b 재작업 후 재실증 2026-09-12] run-log-tool 8 passed, test_state_tool_run_log 3 passed, state-tool 전체 428 passed/3 skipped/111 subtests/0 failed. 보안 수정(GC-001 outbox redact, GC-003 run_id_invalid, GC-004 조각·락 600·run/ 700, GC-005 O_NOFOLLOW, GC-006 malformed_line 봉투, GC-007 importlib, GC-008) 반영 후에도 전건 동일 판정.",
+      "marked_at": "2026-09-12T22:48:22+09:00",
+      "fidelity": "real-usage",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "state_tool_refs_in_run_log_core",
+          "expected": 0,
+          "actual": 0
+        },
+        {
+          "id": "state_tool_refs_in_run_log_tool",
+          "expected": 0,
+          "actual": 0
+        },
+        {
+          "id": "state_json_created_by_run_log_tests",
+          "expected": false,
+          "actual": false
+        },
+        {
+          "id": "lifecycle_without_state_json_exit",
+          "expected": 0,
+          "actual": 0
+        },
+        {
+          "id": "pytest_TestStateAssetIndependence_count",
+          "expected": 2,
+          "actual": 2
+        },
+        {
+          "id": "pytest_TestStateAssetIndependence",
+          "expected": "PASSED",
+          "actual": "PASSED"
+        }
+      ],
+      "observed_evidence": [
+        "grep 정적 판정 출력",
+        "pytest test_run_log_tool.py::TestStateAssetIndependence"
+      ]
+    },
+    {
+      "id": "S-9",
+      "acceptance_ref": "C-2 / AC-20",
+      "type": "regression",
+      "expected": "pytest opal/tools/state-tool/tests/ -q 가 425 passed, 3 skipped, 111 subtests passed 재현. git diff --stat에 tests/test_state_tool.py·schema/state.schema.json 미출현",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "real-usage",
+      "surface_ref": null,
+      "result": "pass",
+      "evidence": "pytest opal/tools/state-tool/tests/ -q → 428 passed, 3 skipped, 111 subtests passed (기준선 425 + 신규 3건, 실패 0건). 루프 액션 에이전트 독립 판정: HEAD의 ERROR_CODES 딕셔너리 리터럴 블록과 현재 블록이 바이트 동일(69 키), git diff --stat에 tests/test_state_tool.py·schema/state.schema.json 미출현. TASK C-2 충족 | [T4b 재작업 후 재실증 2026-09-12] run-log-tool 8 passed, test_state_tool_run_log 3 passed, state-tool 전체 428 passed/3 skipped/111 subtests/0 failed. 보안 수정(GC-001 outbox redact, GC-003 run_id_invalid, GC-004 조각·락 600·run/ 700, GC-005 O_NOFOLLOW, GC-006 malformed_line 봉투, GC-007 importlib, GC-008) 반영 후에도 전건 동일 판정.",
+      "marked_at": "2026-09-12T22:48:22+09:00",
+      "fidelity": "real-usage",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "existing_tests_failed",
+          "expected": 0,
+          "actual": 0
+        },
+        {
+          "id": "passed",
+          "expected": 428,
+          "actual": 428
+        },
+        {
+          "id": "skipped",
+          "expected": 3,
+          "actual": 3
+        },
+        {
+          "id": "subtests_passed",
+          "expected": 111,
+          "actual": 111
+        },
+        {
+          "id": "baseline_before_new_tests",
+          "expected": 425,
+          "actual": 425
+        },
+        {
+          "id": "error_codes_block_identical_to_HEAD",
+          "expected": true,
+          "actual": true
+        },
+        {
+          "id": "error_codes_key_count",
+          "expected": 69,
+          "actual": 69
+        },
+        {
+          "id": "test_state_tool_py_in_diff",
+          "expected": false,
+          "actual": false
+        },
+        {
+          "id": "state_schema_json_in_diff",
+          "expected": false,
+          "actual": false
+        }
+      ],
+      "observed_evidence": [
+        "pytest 회귀 출력",
+        "git diff --stat",
+        "ERROR_CODES 블록 HEAD 대조"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,629 @@
+{
+  "schema_version": "1.0",
+  "note": "OPAL은 HTTP API가 아니므로 OpenAPI 파생 경로를 쓰지 않고 표면 목록을 직접 작성한다. origins는 웹 클라이언트가 없으므로 선언하지 않는다. 표면 id는 백로그 태스크가 --covers로 가리키는 유일한 키이며 명명 규칙은 {component}.{command}다. 근거: docs/proposals/opal-task-run-log.md §9.1",
+  "surfaces": [
+    {
+      "id": "run-log-tool.init",
+      "resource": "run-log-tool init",
+      "kind": "cli",
+      "auth": "none",
+      "request_shape": {
+        "required": [
+          "--task <task-path>",
+          "--run-id <run_id>"
+        ],
+        "optional": [
+          "--format json"
+        ]
+      },
+      "response_shape": {
+        "ok": {
+          "run_id": "string",
+          "segment": "string",
+          "created": "boolean"
+        },
+        "err": [
+          "run_log_write_failed",
+          "task_path_not_absolute",
+          "task_lock_timeout"
+        ]
+      }
+    },
+    {
+      "id": "run-log-tool.begin-worker",
+      "resource": "run-log-tool begin-worker",
+      "kind": "cli",
+      "auth": "none",
+      "request_shape": {
+        "required": [
+          "--task <task-path>",
+          "--run-id <run_id>",
+          "--actor-id <id>"
+        ],
+        "optional": [
+          "--scope <scope>",
+          "--expires-in <seconds>",
+          "--format json"
+        ]
+      },
+      "response_shape": {
+        "ok": {
+          "worker_run_id": "string",
+          "worker_log_token": "string (원문, stdout 1회)",
+          "worker_log_token_id": "string",
+          "event_id": "string"
+        },
+        "err": [
+          "run_log_missing",
+          "capability_scope_invalid",
+          "capability_expiry_invalid",
+          "run_log_write_failed",
+          "task_path_not_absolute",
+          "task_lock_timeout"
+        ]
+      }
+    },
+    {
+      "id": "run-log-tool.append",
+      "resource": "run-log-tool append",
+      "kind": "cli",
+      "auth": "none",
+      "request_shape": {
+        "required": [
+          "--task <task-path>",
+          "--run-id <run_id>",
+          "--request-id <request_id>",
+          "--event <event_type>",
+          "--actor-kind <enum>",
+          "--actor-id <id>",
+          "--provenance-type <enum>",
+          "--recorded-by-kind <enum>"
+        ],
+        "optional": [
+          "--worker-run-id <id>",
+          "--worker-log-token <token>",
+          "--source-kind <enum>",
+          "--source-id <id>",
+          "--source-sha256 <hex>",
+          "--source-observed-at <rfc3339>",
+          "--source-locator <string>",
+          "--upstream-event-id <id>",
+          "--stage <id>",
+          "--task-step <id>",
+          "--work-item <id>",
+          "--gate-id <id>",
+          "--caused-by-event-id <id>",
+          "--summary <text>",
+          "--reason <text>",
+          "--reason-code <enum>",
+          "--duration-ms <int>",
+          "--duration-source <enum>",
+          "--duration-unknown-reason <text>",
+          "--duration-spans <json>",
+          "--refs <path>...",
+          "--data <json>",
+          "--format json",
+          "--mode <active|shadow>"
+        ]
+      },
+      "response_shape": {
+        "ok": {
+          "event_id": "string",
+          "sequence": "integer",
+          "actor_sequence": "integer",
+          "segment": "string",
+          "idempotent_hit": "boolean"
+        },
+        "err": [
+          "schema_invalid",
+          "provenance_invalid",
+          "request_id_conflict",
+          "event_too_large",
+          "worker_token_invalid",
+          "redaction_failed",
+          "run_log_missing",
+          "run_log_write_failed",
+          "task_path_not_absolute",
+          "task_lock_timeout"
+        ]
+      }
+    },
+    {
+      "id": "run-log-tool.validate-worker",
+      "resource": "run-log-tool validate-worker",
+      "kind": "cli",
+      "auth": "none",
+      "request_shape": {
+        "required": [
+          "--task <task-path>",
+          "--worker-run-id <id>"
+        ],
+        "optional": [
+          "--completion-profile <enum>",
+          "--format json"
+        ]
+      },
+      "response_shape": {
+        "ok": {
+          "worker_run_id": "string",
+          "verdict": "pass|fail",
+          "started": "object",
+          "activity_count": "integer",
+          "trusted_activity_count": "integer",
+          "terminal": "object",
+          "duration_ms": "integer|null",
+          "violations": "array"
+        },
+        "err": [
+          "run_log_missing",
+          "run_log_inconsistent",
+          "task_path_not_absolute",
+          "task_lock_timeout"
+        ]
+      }
+    },
+    {
+      "id": "run-log-tool.validate-run",
+      "resource": "run-log-tool validate-run",
+      "kind": "cli",
+      "auth": "none",
+      "request_shape": {
+        "required": [
+          "--task <task-path>",
+          "--run-id <run_id>"
+        ],
+        "optional": [
+          "--format json"
+        ]
+      },
+      "response_shape": {
+        "ok": {
+          "run_id": "string",
+          "verdict": "pass|fail",
+          "segment_count": "integer",
+          "event_count": "integer",
+          "total_bytes": "integer",
+          "sequence_gaps": "array",
+          "violations": "array"
+        },
+        "err": [
+          "run_log_missing",
+          "run_log_inconsistent",
+          "task_path_not_absolute",
+          "task_lock_timeout"
+        ]
+      }
+    },
+    {
+      "id": "run-log-tool.reconcile",
+      "resource": "run-log-tool reconcile",
+      "kind": "cli",
+      "auth": "none",
+      "request_shape": {
+        "required": [
+          "--task <task-path>"
+        ],
+        "optional": [
+          "--format json"
+        ]
+      },
+      "response_shape": {
+        "ok": {
+          "replayed": "integer",
+          "remaining": "integer",
+          "status": "active|pending|overridden",
+          "created_segment": "string|null"
+        },
+        "err": [
+          "run_log_inconsistent",
+          "run_log_write_failed",
+          "task_path_not_absolute",
+          "task_lock_timeout"
+        ]
+      }
+    },
+    {
+      "id": "run-log-tool.reconcile-duration",
+      "resource": "run-log-tool reconcile-duration",
+      "kind": "cli",
+      "auth": "none",
+      "request_shape": {
+        "required": [
+          "--task <task-path>"
+        ],
+        "optional": [
+          "--run-id <run_id>",
+          "--worker-run-id <worker_run_id>",
+          "--format json"
+        ]
+      },
+      "response_shape": {
+        "ok": {
+          "checked": "integer",
+          "mismatches": "array"
+        },
+        "err": [
+          "worker_duration_conflict",
+          "run_log_missing",
+          "task_path_not_absolute",
+          "task_lock_timeout"
+        ]
+      }
+    },
+    {
+      "id": "run-log-tool.import-agentic",
+      "resource": "run-log-tool import-agentic",
+      "kind": "cli",
+      "auth": "none",
+      "request_shape": {
+        "required": [
+          "--task <legacy-task-path>"
+        ],
+        "optional": [
+          "--run-id <run_id>",
+          "--dry-run",
+          "--format json"
+        ]
+      },
+      "response_shape": {
+        "ok": {
+          "scanned": "integer",
+          "imported": "integer",
+          "skipped_idempotent": "integer"
+        },
+        "err": [
+          "run_log_missing",
+          "schema_invalid",
+          "event_too_large",
+          "redaction_failed",
+          "run_log_write_failed",
+          "task_path_not_absolute",
+          "task_lock_timeout"
+        ]
+      }
+    },
+    {
+      "id": "run-log-tool.import-oppl",
+      "resource": "run-log-tool import-oppl",
+      "kind": "cli",
+      "auth": "none",
+      "request_shape": {
+        "required": [
+          "--task <task-path>"
+        ],
+        "optional": [
+          "--run-id <run_id>",
+          "--dry-run",
+          "--format json"
+        ]
+      },
+      "response_shape": {
+        "ok": {
+          "scanned": "integer",
+          "imported": "integer",
+          "skipped_idempotent": "integer",
+          "sources": "array"
+        },
+        "err": [
+          "run_log_missing",
+          "schema_invalid",
+          "event_too_large",
+          "redaction_failed",
+          "run_log_write_failed",
+          "task_path_not_absolute",
+          "task_lock_timeout"
+        ]
+      }
+    },
+    {
+      "id": "run-log-tool.show",
+      "resource": "run-log-tool show",
+      "kind": "cli",
+      "auth": "none",
+      "request_shape": {
+        "required": [
+          "--task <task-path>"
+        ],
+        "optional": [
+          "--run-id <run_id>",
+          "--worker-run-id <id>",
+          "--event <event_type>",
+          "--since <rfc3339>",
+          "--limit <int>",
+          "--format json"
+        ]
+      },
+      "response_shape": {
+        "ok": {
+          "run_id": "string",
+          "events": "array",
+          "truncated": "boolean"
+        },
+        "err": [
+          "run_log_missing",
+          "task_path_not_absolute",
+          "task_lock_timeout"
+        ]
+      }
+    },
+    {
+      "id": "run-log-tool.export",
+      "resource": "run-log-tool export",
+      "kind": "cli",
+      "auth": "none",
+      "request_shape": {
+        "required": [
+          "--task <task-path>",
+          "--sanitize"
+        ],
+        "optional": [
+          "--run-id <run_id>",
+          "--out <path>",
+          "--format json"
+        ]
+      },
+      "response_shape": {
+        "ok": {
+          "out_path": "string",
+          "event_count": "integer",
+          "redacted_field_count": "integer"
+        },
+        "err": [
+          "run_log_missing",
+          "redaction_failed",
+          "task_path_not_absolute",
+          "task_lock_timeout"
+        ]
+      }
+    },
+    {
+      "id": "state-tool.restart-run",
+      "resource": "state-tool restart-run",
+      "kind": "cli",
+      "auth": "none",
+      "request_shape": {
+        "required": [
+          "<task-path>",
+          "--reason <text>"
+        ],
+        "optional": [
+          "--format json"
+        ]
+      },
+      "response_shape": {
+        "ok": {
+          "old_run_id": "string",
+          "new_run_id": "string",
+          "status": "active|pending"
+        },
+        "err": [
+          "run_log_pending",
+          "run_log_outbox_full",
+          "run_log_write_failed",
+          "task_path_not_absolute",
+          "task_lock_timeout"
+        ]
+      }
+    },
+    {
+      "id": "state-tool.log-event",
+      "resource": "state-tool log-event",
+      "kind": "cli",
+      "auth": "none",
+      "request_shape": {
+        "required": [
+          "<task-path>",
+          "--event activity",
+          "--kind <progress|decision|validation|retry>",
+          "--summary <text>"
+        ],
+        "optional": [
+          "--stage <id>",
+          "--task-step <id>",
+          "--work-item <id>",
+          "--refs <path>...",
+          "--format json"
+        ]
+      },
+      "response_shape": {
+        "ok": {
+          "event_id": "string",
+          "status": "active|pending"
+        },
+        "err": [
+          "actor_not_allowed",
+          "run_log_pending",
+          "run_log_outbox_full",
+          "run_log_write_failed",
+          "task_path_not_absolute",
+          "task_lock_timeout"
+        ]
+      }
+    },
+    {
+      "id": "state-tool.gate-request",
+      "resource": "state-tool gate-request",
+      "kind": "cli",
+      "auth": "none",
+      "request_shape": {
+        "required": [
+          "<task-path>",
+          "--gate-id <id>",
+          "--summary <text>"
+        ],
+        "optional": [
+          "--stage <id>",
+          "--task-step <id>",
+          "--format json"
+        ]
+      },
+      "response_shape": {
+        "ok": {
+          "event_id": "string",
+          "gate_id": "string",
+          "status": "active|pending"
+        },
+        "err": [
+          "gate_duplicate",
+          "run_log_outbox_full",
+          "run_log_write_failed",
+          "task_path_not_absolute",
+          "task_lock_timeout"
+        ]
+      }
+    },
+    {
+      "id": "state-tool.gate-resolve",
+      "resource": "state-tool gate-resolve",
+      "kind": "cli",
+      "auth": "none",
+      "request_shape": {
+        "required": [
+          "<task-path>",
+          "--gate-id <id>",
+          "--verdict <approved|rejected|auto>",
+          "--owner <PM|user|auto>"
+        ],
+        "optional": [
+          "--note <text>",
+          "--format json"
+        ]
+      },
+      "response_shape": {
+        "ok": {
+          "event_id": "string",
+          "gate_id": "string",
+          "waited_ms": "integer",
+          "status": "active|pending"
+        },
+        "err": [
+          "gate_not_requested",
+          "gate_duplicate",
+          "run_log_outbox_full",
+          "run_log_write_failed",
+          "task_path_not_absolute",
+          "task_lock_timeout"
+        ]
+      }
+    },
+    {
+      "id": "state-tool.init.run-log-mode",
+      "resource": "state-tool init --run-log-mode",
+      "kind": "cli",
+      "auth": "none",
+      "request_shape": {
+        "required": [
+          "<task-path>",
+          "--run-log-mode <shadow|active>"
+        ],
+        "optional": [
+          "--channel-id <id>",
+          "--profiles <path>",
+          "기존 init 인자 전부"
+        ],
+        "note": "--run-log-mode active는 --channel-id가 필수이며 배포된 profiles.json에 해당 항목이 있어야 한다."
+      },
+      "response_shape": {
+        "ok": {
+          "task_id": "string",
+          "schema_version": "1.2",
+          "run_id": "string",
+          "run_log": "object",
+          "status": "active|pending"
+        },
+        "err": [
+          "profile_not_found",
+          "profile_receipt_mismatch",
+          "cooperative_active_rejected",
+          "run_log_write_failed",
+          "task_path_not_absolute",
+          "task_lock_timeout"
+        ]
+      }
+    },
+    {
+      "id": "state-tool.mark.completion-gate",
+      "resource": "state-tool mark (완료 게이트·우회)",
+      "kind": "cli",
+      "auth": "none",
+      "request_shape": {
+        "required": [
+          "<task-path>",
+          "기존 mark 인자"
+        ],
+        "optional": [
+          "--run-log-override",
+          "--owner user",
+          "--note <text>",
+          "--worker-duration-minutes <int>"
+        ],
+        "note": "--run-log-override는 --owner user와 --note를 동시에 요구한다. --worker-duration-minutes는 1.0/1.1에서만 자유 수용되고 1.2에서는 파생값과 일치해야 한다."
+      },
+      "response_shape": {
+        "ok": {
+          "state": "string",
+          "worker_duration_minutes": "integer|null",
+          "worker_duration_unknown": "boolean",
+          "run_log_status": "active|pending|overridden"
+        },
+        "err": [
+          "run_log_missing",
+          "run_log_pending",
+          "run_log_outbox_full",
+          "run_log_inconsistent",
+          "completion_evidence_missing",
+          "worker_duration_conflict",
+          "run_log_write_failed",
+          "task_path_not_absolute",
+          "task_lock_timeout"
+        ]
+      }
+    },
+    {
+      "id": "adapter.pm-agent-tool",
+      "resource": "PM이 외부 에이전트 도구를 호출하는 축의 변환 경로",
+      "kind": "adapter",
+      "auth": "none",
+      "request_shape": {
+        "inputs": [
+          "채널 원본 호출 시작 식별자",
+          "중간 message/stream/tool_result",
+          "terminal envelope",
+          "monotonic span"
+        ],
+        "note": "변환기는 run-log-tool.append 표면만 사용하며 기록 코어를 직접 링크하지 않는다."
+      },
+      "response_shape": {
+        "emits": [
+          "worker.started",
+          "activity",
+          "worker.completed|worker.failed|worker.blocked"
+        ],
+        "contract": "모든 emit은 provenance.type=adapter, recorded_by.kind=adapter, source.{id,sha256,observed_at} 필수"
+      }
+    },
+    {
+      "id": "adapter.oppl-headless-cli",
+      "resource": "Project Loop 내부 헤드리스 CLI 축(opal-agent)의 변환 경로",
+      "kind": "adapter",
+      "auth": "none",
+      "request_shape": {
+        "inputs": [
+          "프로세스 start",
+          "결과 파일 3종 분리 캡처",
+          "process_exit/exitcode",
+          "monotonic span"
+        ],
+        "note": "변환기는 run-log-tool.append 표면만 사용하며 기록 코어를 직접 링크하지 않는다."
+      },
+      "response_shape": {
+        "emits": [
+          "worker.started",
+          "activity",
+          "worker.completed|worker.failed|worker.blocked"
+        ],
+        "contract": "모든 emit은 provenance.type=adapter, recorded_by.kind=adapter, source.{id,sha256,observed_at} 필수"
+      }
+    }
+  ]
+}

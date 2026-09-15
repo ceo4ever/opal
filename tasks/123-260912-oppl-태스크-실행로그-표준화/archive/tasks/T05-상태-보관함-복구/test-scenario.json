@@ -1,0 +1,417 @@
+{
+  "schema_version": "2.0",
+  "task_id": "T05-상태-보관함-복구",
+  "locked": true,
+  "created_at": "2026-09-13T00:17:43+09:00",
+  "locked_at": "2026-09-13T00:19:45+09:00",
+  "scenarios": [
+    {
+      "id": "S-1",
+      "acceptance_ref": "AC-3",
+      "type": "integration",
+      "expected": "활성 계약 태스크의 run/ 삭제 후 진단이 run_log_missing이고 schema_version 1.2·run_log 블록이 그대로 남는다(legacy 강등 없음)",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "pytest RED: validate 응답 violations=[] — 'run_log_missing' not found in []",
+      "red_at": "2026-09-13T00:19:37+09:00",
+      "required_fidelity": "real-usage",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "diagnosis_code",
+          "expected": "run_log_missing",
+          "actual": "run_log_missing"
+        },
+        {
+          "id": "schema_version_after_delete",
+          "expected": "1.2",
+          "actual": "1.2"
+        },
+        {
+          "id": "run_log_block_present",
+          "expected": "true",
+          "actual": "true"
+        },
+        {
+          "id": "validate_exit",
+          "expected": "1",
+          "actual": "1"
+        }
+      ],
+      "observed_evidence": [
+        "run.sh validate stdout(violations=run_log_missing, exit 1)",
+        "state.json schema_version=1.2 + run_log 블록",
+        "pytest TestRunLogMissingDiagnosis"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": null,
+      "marked_at": "2026-09-13T00:38:33+09:00",
+      "fidelity": "real-usage"
+    },
+    {
+      "id": "S-2",
+      "acceptance_ref": "AC-3",
+      "type": "integration",
+      "expected": "첫 조각 없음 + 보관함 run.started 상태에서 진단이 복구가능이고, 다음 전이가 status=active로 되돌리며 run.started가 조각에 1건만 남는다(멱등)",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "pytest RED: validate 응답 violations=[] — 'run_log_pending' not found in [] (복구 가능 진단 부재)",
+      "red_at": "2026-09-13T00:19:37+09:00",
+      "required_fidelity": "real-usage",
+      "surface_ref": "run-log-tool.reconcile",
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "diagnosis_not_missing",
+          "expected": "run_log_pending(recoverable_init=true)",
+          "actual": "run_log_pending(recoverable_init=true)"
+        },
+        {
+          "id": "status_after_transition",
+          "expected": "active",
+          "actual": "active"
+        },
+        {
+          "id": "pending_after_transition",
+          "expected": "0",
+          "actual": "0"
+        },
+        {
+          "id": "run_started_count_after_two_transitions",
+          "expected": "1",
+          "actual": "1"
+        }
+      ],
+      "observed_evidence": [
+        "run.sh validate stdout(run_log_pending, recoverable_init=true)",
+        "advance 응답 run_log{status:active,pending:0}",
+        "조각 레코드 덤프(run.started 1건)",
+        "pytest TestInterruptedInitRecovery"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": null,
+      "marked_at": "2026-09-13T00:38:33+09:00",
+      "fidelity": "real-usage"
+    },
+    {
+      "id": "S-3",
+      "acceptance_ref": "AC-3",
+      "type": "integration",
+      "expected": "advance/mark 전이가 state.changed 1건을 보관함에 적재한 뒤 같은 원자 쓰기로 커밋하고, append 성공 시 보관함이 비고 status=active를 유지한다",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "pytest RED: 조각의 state.changed 건수 0 != 1 (전이가 사건을 적재하지 않음)",
+      "red_at": "2026-09-13T00:19:37+09:00",
+      "required_fidelity": "real-usage",
+      "surface_ref": "run-log-tool.reconcile",
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "state_changed_count_after_advance",
+          "expected": "1",
+          "actual": "1"
+        },
+        {
+          "id": "data_from_to",
+          "expected": "pending->in_progress",
+          "actual": "pending->in_progress"
+        },
+        {
+          "id": "outbox_after_append",
+          "expected": "0",
+          "actual": "0"
+        },
+        {
+          "id": "state_changed_count_after_mark",
+          "expected": "2",
+          "actual": "2"
+        }
+      ],
+      "observed_evidence": [
+        "조각 state.changed 레코드(data.from/to/row_key)",
+        "advance·mark 응답 run_log 요약",
+        "pytest TestStateChangedAtomicCommit"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": null,
+      "marked_at": "2026-09-13T00:38:33+09:00",
+      "fidelity": "real-usage"
+    },
+    {
+      "id": "S-4",
+      "acceptance_ref": "AC-10",
+      "type": "integration",
+      "expected": "기록 append 강제 실패 상태에서 연속 전이 3건이 모두 성공(교착 없음)하고 보관함에 전건 보존되며 각 항목이 4 KiB 이하다",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "pytest RED: 기록 실패 3회 후 보관함 0건 != 3건 (전건 보존 미구현)",
+      "red_at": "2026-09-13T00:19:37+09:00",
+      "required_fidelity": "real-usage",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "transition_exit_codes",
+          "expected": "0,0,0",
+          "actual": "0,0,0"
+        },
+        {
+          "id": "outbox_preserved",
+          "expected": "3",
+          "actual": "3"
+        },
+        {
+          "id": "max_event_bytes_le_4096",
+          "expected": "true",
+          "actual": "true"
+        },
+        {
+          "id": "total_bytes_le_524288",
+          "expected": "true",
+          "actual": "true"
+        },
+        {
+          "id": "row_states",
+          "expected": "1=done,2=in_progress",
+          "actual": "1=done,2=in_progress"
+        },
+        {
+          "id": "drain_after_permission_restore",
+          "expected": "sequence 1..5",
+          "actual": "sequence 1..5"
+        }
+      ],
+      "observed_evidence": [
+        "chmod 0400 주입 후 3회 전이 stdout(exit 0, warnings run_log_pending)",
+        "state.json pending_events 3건·바이트 측정",
+        "권한 복구 후 조각 순번 1..5 덤프",
+        "pytest TestOutboxPreservesOnWriteFailure"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": null,
+      "marked_at": "2026-09-13T00:38:33+09:00",
+      "fidelity": "real-usage"
+    },
+    {
+      "id": "S-5",
+      "acceptance_ref": "AC-10",
+      "type": "integration",
+      "expected": "보관함이 128건 상한에 도달하면 추가 전이가 run_log_outbox_full로 차단되고 state.json이 변경되지 않는다. 사건당 4 KiB 초과는 event_too_large로 전이 자체를 시작하지 않는다",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "pytest RED: 보관함 128건 상태·4KiB 초과 note 모두 advance exit 0으로 통과 (상한 미집행)",
+      "red_at": "2026-09-13T00:19:37+09:00",
+      "required_fidelity": "real-usage",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "outbox_full_error",
+          "expected": "run_log_outbox_full",
+          "actual": "run_log_outbox_full"
+        },
+        {
+          "id": "outbox_full_exit",
+          "expected": "1",
+          "actual": "1"
+        },
+        {
+          "id": "state_json_unchanged_on_block",
+          "expected": "md5 identical",
+          "actual": "md5 identical"
+        },
+        {
+          "id": "oversized_event_error",
+          "expected": "event_too_large(5916B>4096B)",
+          "actual": "event_too_large(5916B>4096B)"
+        },
+        {
+          "id": "state_json_unchanged_on_oversize",
+          "expected": "md5 identical",
+          "actual": "md5 identical"
+        }
+      ],
+      "observed_evidence": [
+        "advance stdout(run_log_outbox_full, exit 1)",
+        "state.json md5 전후 비교",
+        "advance --note 5000자 stdout(event_too_large)",
+        "pytest TestOutboxLimits"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": null,
+      "marked_at": "2026-09-13T00:38:34+09:00",
+      "fidelity": "real-usage"
+    },
+    {
+      "id": "S-6",
+      "acceptance_ref": "AC-4",
+      "type": "contract",
+      "expected": "state.schema.json에 schema_version 1.2와 run_log 블록(7필드·pending_events 상한)이 등재된다",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "pytest RED: state.schema.json schema_version enum ['1.0','1.1'] — 1.2 미등재",
+      "red_at": "2026-09-13T00:19:37+09:00",
+      "required_fidelity": "real-usage",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "schema_version_enum",
+          "expected": "['1.0','1.1','1.2']",
+          "actual": "['1.0','1.1','1.2']"
+        },
+        {
+          "id": "run_log_required_fields",
+          "expected": "7",
+          "actual": "7"
+        },
+        {
+          "id": "pending_events_maxItems",
+          "expected": "128",
+          "actual": "128"
+        },
+        {
+          "id": "status_enum",
+          "expected": "active,pending,overridden",
+          "actual": "active,pending,overridden"
+        }
+      ],
+      "observed_evidence": [
+        "state.schema.json 파싱 출력",
+        "pytest TestSchema12Registered"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": null,
+      "marked_at": "2026-09-13T00:38:34+09:00",
+      "fidelity": "real-usage"
+    },
+    {
+      "id": "S-7",
+      "acceptance_ref": "C-3",
+      "type": "regression",
+      "expected": "--run-log-mode 미지정(1.0/1.1) 태스크의 전이는 run_log 경로를 타지 않고 state.json에 run_log 키가 없으며 응답 키 집합이 종전과 같다",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": "회귀 보존 시나리오 — 개정 전에도 통과해야 하는 불변 계약이므로 RED 대상이 아니다(C-3)",
+      "red_at": null,
+      "required_fidelity": "real-usage",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "state_json_head_vs_current",
+          "expected": "identical (timestamps normalized)",
+          "actual": "identical (timestamps normalized)"
+        },
+        {
+          "id": "response_key_sets",
+          "expected": "init/advance/mark/validate 모두 동일",
+          "actual": "init/advance/mark/validate 모두 동일"
+        },
+        {
+          "id": "run_log_key_in_1_1_state",
+          "expected": "absent",
+          "actual": "absent"
+        },
+        {
+          "id": "run_dir_created",
+          "expected": "no",
+          "actual": "no"
+        }
+      ],
+      "observed_evidence": [
+        "HEAD 사본 vs 현재본 state.json/응답 키 비교 출력",
+        "pytest TestUnflaggedTransitionUnaffected·TestUnflaggedInitByteIdentical"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": null,
+      "marked_at": "2026-09-13T00:38:34+09:00",
+      "fidelity": "real-usage"
+    }
+  ]
+}

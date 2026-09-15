@@ -46,9 +46,10 @@
     "schema_version": {
       "enum": [
         "1.0",
-        "1.1"
+        "1.1",
+        "1.2"
       ],
-      "description": "스키마 버전 — 1.0(레거시·key 없음) / 1.1(key·conditional 지원) 병행 허용 (070 R-3)"
+      "description": "스키마 버전 — 1.0(레거시·key 없음) / 1.1(key·conditional 지원) / 1.2(run_log 로그 계약 블록 보유) 병행 허용 (070 R-3, 123 T05). 1.2는 run_log 필수, 1.0/1.1은 run_log 부재이며 자동 승격·강등을 하지 않는다(C-3)."
     },
     "created_at": {
       "type": "string",
@@ -239,6 +240,94 @@
     "worktree": {
       "type": "string",
       "description": "worktree 코드 작업본 절대경로. --worktree 지정 시에만 존재하는 optional 필드 — 미지정 태스크의 state.json에는 키 자체가 없다 (092)"
+    },
+    "run_log": {
+      "type": "object",
+      "description": "상태 원천의 로그 계약 블록 — docs/run-log/CONTRACT.md §1.4. schema_version 1.2의 필수 블록이며 별도 매니페스트 파일을 만들지 않는다(TRD D-7). 손편집으로 제거하면 스키마 검증 실패이고, 활성 계약인데 기록이 사라지면 legacy로 강등하지 않고 run_log_missing으로 진단한다. optional (1.0/1.1 태스크에는 키 자체가 없다).",
+      "required": [
+        "contract_version",
+        "mode",
+        "completion_profile",
+        "completion_profile_receipt",
+        "active_run_id",
+        "status",
+        "pending_events"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "contract_version": {
+          "type": "string",
+          "description": "사건 계약 버전 — 현재 \"1.0\" (CONTRACT §1.4)"
+        },
+        "mode": {
+          "enum": [
+            "shadow",
+            "active"
+          ],
+          "description": "기록 모드 — shadow(비차단 병행) / active(완료 게이트 집행)"
+        },
+        "completion_profile": {
+          "enum": [
+            "observed_trajectory",
+            "observed_terminal",
+            "cooperative"
+          ],
+          "description": "완료 판정 등급 — CONTRACT §1.5 enum 3종. 배정값의 SSOT는 profiles.json이다(§1.6)"
+        },
+        "completion_profile_receipt": {
+          "oneOf": [
+            {
+              "type": "object",
+              "required": [
+                "channel_id",
+                "adapter_id",
+                "adapter_sha256",
+                "receipt_sha256"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "channel_id": {
+                  "type": "string"
+                },
+                "adapter_id": {
+                  "type": "string"
+                },
+                "adapter_sha256": {
+                  "type": "string"
+                },
+                "receipt_sha256": {
+                  "type": "string"
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "mode=active에 필수인 self-test receipt 고정값. shadow는 null (CONTRACT §1.4·§1.5)"
+        },
+        "active_run_id": {
+          "type": "string",
+          "pattern": "^run_[A-Za-z0-9_-]+$",
+          "description": "현재 run 식별자 — state-tool init/restart-run이 발급한다"
+        },
+        "status": {
+          "enum": [
+            "active",
+            "pending",
+            "overridden"
+          ],
+          "description": "계약 블록 상태 — 보관함과 전이 규칙으로만 변경된다. pending은 미전송 사건이 남은 상태, overridden은 사용자 우회 1회가 적용된 상태(CONTRACT §1.4·§2.5)"
+        },
+        "pending_events": {
+          "type": "array",
+          "maxItems": 128,
+          "description": "미전송 사건 보관함 — 항목은 §1.1 공통 필드를 그대로 갖는 compact 표준 payload다(별도 축약 형식 없음). 항목당 UTF-8 4 KiB, 전체 128건(최악 512 KiB) 상한이며, 일반 admission 한도는 128 − (보관함에 있는 override 사건 수)다.",
+          "items": {
+            "type": "object"
+          }
+        }
+      }
     },
     "run_id": {
       "type": "string",

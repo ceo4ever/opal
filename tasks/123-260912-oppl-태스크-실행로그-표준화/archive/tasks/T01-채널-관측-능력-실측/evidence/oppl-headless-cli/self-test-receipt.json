@@ -1,0 +1,25 @@
+{
+  "receipt_version": "1.0",
+  "channel_id": "oppl-headless-cli",
+  "adapter_id": "oppl-headless-cli-phase0-probe",
+  "adapter_sha256": "07d3081949adb6ce33b6cb753e20af4ca3dcf79f2bc4db0e48ef8f6a3d0ac7d1",
+  "observed": {
+    "start": true,
+    "intermediate": true,
+    "terminal": true,
+    "monotonic_span": true
+  },
+  "claimed_profile": "observed_trajectory",
+  "evidence": [
+    "evidence/oppl-headless-cli/adapter-probe.py",
+    "evidence/oppl-headless-cli/trial-01-stream.probe.json",
+    "evidence/oppl-headless-cli/trial-01-stream.stdout-raw.jsonl",
+    "evidence/oppl-headless-cli/trial-01-stream.exitcode",
+    "evidence/oppl-headless-cli/trial-01-stream.err.log",
+    "evidence/oppl-headless-cli/trial-02-json.probe.json",
+    "evidence/oppl-headless-cli/trial-03-stream-resume.probe.json",
+    "evidence/oppl-headless-cli/trial-03-stream-resume.exitcode",
+    "evidence/observation-matrix.json"
+  ],
+  "produced_at": "2026-09-12T10:49:09.598Z"
+}

@@ -5632,11 +5632,17 @@ class TestStateSchema11Compat(unittest.TestCase):
             self.schema = json.load(f)
 
     def test_schema_version_enum_allows_1_0_and_1_1(self):
-        """[T070/S-4] schema_version이 enum(["1.0","1.1"])이어야 함 — 현재는 const:"1.0"."""
+        """[T070/S-4] schema_version이 enum이고 1.0/1.1을 함께 허용해야 함.
+
+        123/T05(AC-4)이 로그 계약 블록을 가진 1.2를 같은 enum에 등재했으므로 판정은
+        **완전 일치가 아니라 포함**이다 — 이 단언이 지키는 계약은 "1.1 병행 허용"이지
+        "enum이 정확히 2종"이 아니다. 1.0/1.1 태스크가 계속 유효하다는 C-3 보장은
+        아래 포함 단언으로 그대로 유지된다.
+        """
         version_schema = self.schema["properties"]["schema_version"]
         self.assertIn("enum", version_schema,
                       f"schema_version이 아직 enum이 아님(1.1 병행 미지원): {version_schema}")
-        self.assertEqual(set(version_schema["enum"]), {"1.0", "1.1"})
+        self.assertLessEqual({"1.0", "1.1"}, set(version_schema["enum"]))
 
     def test_rows_key_field_registered_in_schema(self):
         """[T070/S-4, R-A2] rows[].items.properties에 key(pattern) 필드가 등록되어야 함."""

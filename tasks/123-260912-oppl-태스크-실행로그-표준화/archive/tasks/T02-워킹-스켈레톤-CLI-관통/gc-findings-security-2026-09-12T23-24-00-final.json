@@ -1,0 +1,196 @@
+{
+  "check": "security",
+  "status": "pass",
+  "checked_files": [
+    "opal/tools/state-tool/state_tool.py",
+    "opal/tools/run-log-tool/run_log_core.py",
+    "opal/tools/run-log-tool/run_log_tool.py"
+  ],
+  "findings": [
+    {
+      "id": "GC-201",
+      "fingerprint": "f8f8f81afb261e45",
+      "category": "CWE-59 Link Following",
+      "severity": "medium",
+      "confidence": "high",
+      "disposition": "advisory",
+      "rule_id": "CWE-59",
+      "source_tier": "T1",
+      "location": {
+        "file": "opal/tools/run-log-tool/run_log_core.py",
+        "line": 407,
+        "symbol": "init / append"
+      },
+      "evidence": "O_CREAT|O_EXCL|O_NOFOLLOW는 심볼릭 링크만 막는다. 하드링크는 O_NOFOLLOW 대상이 아니고 파일이 존재하므로 O_EXCL은 init을 멱등 분기(created:false)로 보낼 뿐 거부하지 않으며, append는 O_CREAT 없이 그 inode를 연다. macOS 실측: victim(644, JSONL 내용)을 run/run-log-{run_id}-0001.jsonl로 하드링크 선점 → init ok(created:false) → append ok(sequence:2) → victim 파일에 run.started 사건 줄이 관통 추가됨(st_nlink=2). victim이 JSON 파싱 불가면 GC-006 malformed_line 가드가 우발적으로 막지만 이는 방어가 아니다.",
+      "impact": "공격자가 하드링크를 걸 수 있는 임의 파일에 append-only 오염이 가능하다. 기존 내용 덮어쓰기·읽기는 불가. Linux fs.protected_hardlinks=1은 완화하나 macOS는 동등 보호가 없다.",
+      "remediation": {
+        "guidance": "조각 open 직후 os.fstat(fd).st_nlink != 1이면 닫고 거부한다. init·append 양쪽에 동일 적용(약 3줄).",
+        "auto_fixable": false
+      },
+      "verification": "하드링크 선점 재현에서 append가 봉투 오류로 거부되고 victim이 불변이면 닫힘.",
+      "suppression": null
+    },
+    {
+      "id": "GC-202",
+      "fingerprint": "4b9686abe3539353",
+      "category": "CWE-367 TOCTOU",
+      "severity": "medium",
+      "confidence": "high",
+      "disposition": "advisory",
+      "rule_id": "CWE-367",
+      "source_tier": "T1",
+      "location": {
+        "file": "opal/tools/run-log-tool/run_log_core.py",
+        "line": 166,
+        "symbol": "_ensure_run_dir"
+      },
+      "evidence": "_ensure_run_dir()는 os.open(run_dir, O_DIRECTORY|O_NOFOLLOW)로 fd를 얻어 fchmod까지 안전하게 수행한 뒤 fd를 닫고 경로만 반환한다. 호출자(init:399, append:452, _resolved_segments:190)는 경로로 다시 열며 O_NOFOLLOW는 최종 구성요소만 보호한다. 검사 직후 run/을 링크로 치환하는 하네스로 결정론적 재현: init ok, 조각이 태스크 경계 밖 디렉터리에 생성됨. 외부 디렉터리 mode는 0755로 불변(fchmod 부작용은 GC-103 수정으로 소멸).",
+      "impact": "경합을 이긴 공격자가 실행 로그 조각을 태스크 경계 밖으로 유도할 수 있다. 권한 변경 부작용은 더 이상 없다. 구조적 간극 존재는 confidence high, 실전 착취는 경합 의존.",
+      "remediation": {
+        "guidance": "_ensure_run_dir()가 dirfd를 닫지 말고 반환하고, 조각 open을 os.open(basename, flags, dir_fd=dirfd) openat 상대 열기로 바꾼다. _resolved_segments()도 같은 fd 기준으로 통일한다.",
+        "auto_fixable": false
+      },
+      "verification": "run/ 치환 하네스에서 조각이 태스크 경계 밖에 생기지 않으면 닫힘.",
+      "suppression": null
+    },
+    {
+      "id": "GC-203",
+      "fingerprint": "3cc863bf3e4ac7a3",
+      "category": "OWASP-A05 Security Misconfiguration",
+      "severity": "low",
+      "confidence": "high",
+      "disposition": "advisory",
+      "rule_id": "OWASP-A05",
+      "source_tier": "T1",
+      "location": {
+        "file": "opal/tools/state-tool/state_tool.py",
+        "line": 1554,
+        "symbol": "_cmd_init_run_log"
+      },
+      "evidence": "1차 원자 쓰기(status:pending + 보관함 적재) 성공 후 락 획득이 실패하면 err()가 프로세스를 종료하고 state.json이 pending으로 영구히 남는다. run_log.status=='pending'을 회수하는 분기가 전수 grep에서 부재. GC-102 실측에서 관측: task_lock_timeout 후 status=pending, pending_events=1, run/ 조각 0건. 링크 제거 후 재시도는 already_initialized로 거부되어 --force 외 복구 경로가 없다.",
+      "impact": "가용성. 태스크 디렉터리 쓰기 권한을 가진 로컬 공격자가 락 경로에 링크 하나로 해당 태스크의 run-log 초기화를 영구 차단할 수 있고, 정상 사용자도 프로세스 중단·디스크 오류로 같은 반제 상태에 빠진다.",
+      "remediation": {
+        "guidance": "진입 시 run_log.status=='pending'이면 보관함 사건을 조각으로 재적재하고 active로 승격하는 회수 절차를 둔다. redact() 멱등 계약이 재적재를 이미 안전하게 만든다.",
+        "auto_fixable": false
+      },
+      "verification": "락 선점으로 pending을 만든 뒤 선점을 풀고 재실행했을 때 status:active + 조각 1건으로 수렴하면 닫힘.",
+      "suppression": null
+    },
+    {
+      "id": "GC-204",
+      "fingerprint": "f23b0c72fefdccf1",
+      "category": "기준 문서 범위 공백 (T0/T1 충돌)",
+      "severity": "info",
+      "confidence": "high",
+      "disposition": "advisory",
+      "rule_id": "SECURITY.md §1",
+      "source_tier": "T0",
+      "location": {
+        "file": "docs/SECURITY.md",
+        "line": 13,
+        "symbol": "§1 위협 모델"
+      },
+      "evidence": "§1 위협 표면 표는 curl-pipe-bash / fork / third-party skill supply chain / MCP spawn 4항목이며 '태스크 디렉터리 쓰기 권한을 가진 로컬 공격자'를 선언하지 않는다. 채택 CWE 목록에 CWE-377은 있으나 CWE-59·CWE-367이 없다. GC-101·102·103과 GC-201·202는 전부 선언되지 않은 공격자 모델을 전제로 제기·수정됐다.",
+      "impact": "같은 계열 finding의 집행 수준을 결정할 T0 근거가 없어 blocking 승격 판단이 검사자 재량에 맡겨진다. §1에 이 표면이 추가되면 GC-201·202는 즉시 blocking으로 재평가되어야 한다.",
+      "remediation": {
+        "guidance": "§1 표에 로컬 태스크 디렉터리 파일 경합 표면을 추가하고 채택 CWE에 CWE-59·CWE-367을 넣거나, 반대로 '태스크 디렉터리는 소유자 단독 신뢰 경계'를 명시해 해당 계열을 범위 밖으로 확정한다. 소유자 결정 사항이며 이 검사는 문서를 수정하지 않는다.",
+        "auto_fixable": false
+      },
+      "verification": "§1이 이 표면에 대해 포함/제외 중 하나를 명시하면 닫힘.",
+      "suppression": null
+    },
+    {
+      "id": "GC-205",
+      "fingerprint": "d786f73e10f62004",
+      "category": "CWE-755 예외 처리",
+      "severity": "info",
+      "confidence": "high",
+      "disposition": "informational",
+      "rule_id": "CWE-755",
+      "source_tier": "T1",
+      "location": {
+        "file": "opal/tools/run-log-tool/run_log_core.py",
+        "line": 269,
+        "symbol": "_acquire_lock"
+      },
+      "evidence": "except OSError가 ELOOP뿐 아니라 EACCES·ENOTDIR·ENOSPC 등 복구 불가 오류까지 같은 재시도 루프에 넣는다. 영구 실패에서도 30초를 소진한 뒤 task_lock_timeout으로 보고된다.",
+      "impact": "운영자가 영구 실패를 락 경합으로 오인한다. 보안 영향 없음, 진단 품질 문제.",
+      "remediation": {
+        "guidance": "ELOOP·EEXIST 계열만 재시도하고 나머지는 즉시 원인 코드로 반환한다.",
+        "auto_fixable": false
+      },
+      "verification": "권한 거부된 락 경로에서 30초 대기 없이 원인 코드가 반환되면 닫힘.",
+      "suppression": null
+    },
+    {
+      "id": "GC-206",
+      "fingerprint": "418de370d1cff269",
+      "category": "CWE-775 자원 해제 누락",
+      "severity": "info",
+      "confidence": "medium",
+      "disposition": "informational",
+      "rule_id": "CWE-775",
+      "source_tier": "T1",
+      "location": {
+        "file": "opal/tools/state-tool/state_tool.py",
+        "line": 478,
+        "symbol": "_atomic_write_state_json"
+      },
+      "evidence": "mkstemp가 돌려준 fd가 os.fdopen() 자체에서 예외를 만나면 소유권이 파일 객체로 넘어가지 않아 닫히지 않는다. except Exception은 tmp 파일만 unlink한다.",
+      "impact": "단명 CLI이므로 실 영향은 사실상 없다. 인프로세스 반복 호출자가 생기면 fd 고갈로 재평가 대상.",
+      "remediation": {
+        "guidance": "fd를 try 안에서 획득하거나 실패 시 os.close(fd)를 명시한다.",
+        "auto_fixable": false
+      },
+      "verification": "fdopen 실패 주입 시 fd가 닫히면 닫힘.",
+      "suppression": null
+    }
+  ],
+  "evidence": [
+    "event-loader verify --event worker.dispatch → ok:true, verified_document_count=4",
+    "GC-101 재현시도: state.json.tmp.{1..5000}+$$ 전량 victim 심볼릭 링크 선점 → init exit 0, victim 내용·644 불변, state.json 0600, 도구 잔존 tmp 0건 → 닫힘",
+    "GC-102 재현시도: .opal-task.lock을 victim 링크로 선점 → task_lock_timeout, elapsed 30s(상한 준수), victim 644·내용 불변 → 닫힘",
+    "GC-103 재현시도: run/을 외부 디렉터리 링크로 선점 → init/append run_log_write_failed('run/이 심볼릭 링크입니다(거부)'), validate_run run_log_missing(2회차 위조 pass 소멸), 외부 755·파일 0건 → 정적 케이스 닫힘",
+    "GC-103 보조: run/이 정규 파일이면 [Errno 20] Not a directory로 거부",
+    "GC-001 재판정: redact 계수 래퍼 하네스 — pending_events 보유 시 save_state_json에서 redact 1회 호출, run_log 키 부재/pending_events 빈 배열에서는 기록 코어 import 0회 → 닫힘 + S-2 격리 보전",
+    "GC-004 재판정: run-log 경로 state.json 0600·lock 0600·run/ 0700·조각 0600, 미지정 경로 state.json 0644 + run_log 키 부재 + 락/run 미생성 → 닫힘",
+    "GC-005 재판정: run_id 화이트리스트 5종(../../etc/x, *, run_a/../../b, run_$(id), run_;id) 전건 run_id_invalid; 상대경로 task_path_not_absolute; init 없는 append run_log_missing",
+    "GC-201 재현: victim(644, JSONL) 하드링크 선점 → init ok(created:false), append ok(sequence:2), victim에 사건 줄 관통 추가, st_nlink=2 (macOS)",
+    "GC-202 재현: _ensure_run_dir 반환 직후 run/을 링크로 치환하는 하네스 → init ok, 조각이 태스크 경계 밖에 생성, 외부 디렉터리 mode 0755 불변",
+    "GC-203 관측: GC-102 실측 후 state.json status=pending/pending_events=1/run 조각 0건, 재시도는 already_initialized, status=='pending' 회수 분기 전수 grep 부재",
+    "회귀: pytest opal/tools/state-tool/tests/ → 428 passed, 3 skipped, 111 subtests passed (177.43s)",
+    "회귀: pytest test_state_tool_run_log.py → 3 passed (93.75s)",
+    "비활성 영역: 웹/HTTP·인증인가·SQL·직렬화·의존성 감사 — 대상 3파일이 표준 라이브러리 전용 로컬 파일 I/O CLI이고 해당 매니페스트·엔드포인트가 없어 근거 없이 켜지 않음"
+  ],
+  "references": [
+    "docs/SECURITY.md",
+    "opal/core/references/harness/gc-finding-schema.md",
+    "OWASP Top 10 (2021) A01/A05",
+    "CWE Top 25 — CWE-59 / CWE-367 / CWE-377 / CWE-732 / CWE-775",
+    "opal/tools/state-tool/tests/ (428 passed, 3 skipped)"
+  ],
+  "missing_capabilities": [],
+  "report_path": "tasks/123-260912-oppl-태스크-실행로그-표준화/tasks/T02-워킹-스켈레톤-CLI-관통/GC-SECURITY-2026-09-12T23-24-00-final.md",
+  "baseline": "tasks/123-260912-oppl-태스크-실행로그-표준화/tasks/T02-워킹-스켈레톤-CLI-관통/gc-findings-security-2026-09-12T22-52-00.json",
+  "baseline_delta": {
+    "resolved": [
+      "4543d40c10ff0144",
+      "e667b7a77d7de42a",
+      "8d5a7c93d865a105",
+      "39dfca4da12a43d9"
+    ],
+    "persisting": [
+      "39498958fe1c059d"
+    ],
+    "new": [
+      "f8f8f81afb261e45",
+      "4b9686abe3539353",
+      "3cc863bf3e4ac7a3",
+      "f23b0c72fefdccf1",
+      "d786f73e10f62004",
+      "418de370d1cff269"
+    ],
+    "suppressed": []
+  },
+  "verdict": "PASS_WITH_ADVISORIES"
+}

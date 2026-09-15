@@ -1,0 +1,32 @@
+{
+  "transcript_line": 126,
+  "timestamp": "2026-09-12T10:32:53.387Z",
+  "type": "assistant",
+  "uuid": "3eafd259-3eeb-47ed-9c31-779746c966f3",
+  "session_version": "2.1.269",
+  "tool_use": {
+    "id": "toolu_01EtyU8FLdjMWwGfP8pxAovu",
+    "name": "Agent",
+    "input_keys": [
+      "description",
+      "model",
+      "prompt",
+      "subagent_type"
+    ],
+    "subagent_type": "general-purpose",
+    "model": "sonnet",
+    "prompt_sha256": "dd3eece587912500a87eb966852c9bf88db9de84752594cee61cc1e87af52656",
+    "prompt_bytes": 542
+  },
+  "caller": {
+    "type": "direct"
+  },
+  "launch_ack": {
+    "transcript_line": 127,
+    "timestamp": "2026-09-12T10:32:54.603Z",
+    "status": "async_launched",
+    "isAsync": true,
+    "agentId": "afcd6d5c1b5283317",
+    "resolvedModel": "claude-sonnet-5"
+  }
+}

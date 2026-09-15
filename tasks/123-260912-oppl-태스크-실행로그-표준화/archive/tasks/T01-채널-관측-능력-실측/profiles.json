@@ -1,0 +1,56 @@
+{
+  "schema_version": "1.0",
+  "produced_by": "T01",
+  "channels": [
+    {
+      "channel_id": "pm-agent-tool",
+      "completion_profile": "observed_trajectory",
+      "adapter_id": "pm-agent-tool-phase0-probe",
+      "adapter_sha256": "13fe18eae0c68c7113ac9fe8a8d11ad4e14abc4d559658f47bef4523726570f1",
+      "receipt_sha256": "11caa4a31c284b58a3df365eb358df25ddbf875f514681e7e5081a21b4e731a5",
+      "evidence_paths": [
+        "evidence/pm-agent-tool/adapter-probe.py",
+        "evidence/pm-agent-tool/trial-01.dispatch-tooluse.json",
+        "evidence/pm-agent-tool/trial-01.start-meta.json",
+        "evidence/pm-agent-tool/trial-01.probe.json",
+        "evidence/pm-agent-tool/trial-01.transcript-index.jsonl",
+        "evidence/pm-agent-tool/trial-01.terminal-envelope.json",
+        "evidence/observation-matrix.json",
+        "evidence/pm-agent-tool/self-test-receipt.json"
+      ],
+      "observation_preconditions": [
+        {
+          "condition": "하네스가 서브에이전트 실행 파일(시작 메타·증분 전사)을 기록하고 호출자 전사에 종료 알림을 남긴다",
+          "evidence_path": "evidence/pm-agent-tool/trial-01.probe.json",
+          "invalidated_if": "플랫폼이 해당 실행 파일의 위치·형식을 바꾸면 관측 원본이 사라져 배정이 무효가 된다. 이 원본의 안정성 계약은 Phase 0에서 확인 불가로 분리 기록됐다"
+        }
+      ]
+    },
+    {
+      "channel_id": "oppl-headless-cli",
+      "completion_profile": "observed_trajectory",
+      "adapter_id": "oppl-headless-cli-phase0-probe",
+      "adapter_sha256": "07d3081949adb6ce33b6cb753e20af4ca3dcf79f2bc4db0e48ef8f6a3d0ac7d1",
+      "receipt_sha256": "e4ee7c5965124aba697920ea838c334678a9abdea3435fb6b5b560938ee6a6a4",
+      "evidence_paths": [
+        "evidence/oppl-headless-cli/adapter-probe.py",
+        "evidence/oppl-headless-cli/trial-01-stream.probe.json",
+        "evidence/oppl-headless-cli/trial-01-stream.stdout-raw.jsonl",
+        "evidence/oppl-headless-cli/trial-01-stream.exitcode",
+        "evidence/oppl-headless-cli/trial-01-stream.err.log",
+        "evidence/oppl-headless-cli/trial-02-json.probe.json",
+        "evidence/oppl-headless-cli/trial-03-stream-resume.probe.json",
+        "evidence/oppl-headless-cli/trial-03-stream-resume.exitcode",
+        "evidence/observation-matrix.json",
+        "evidence/oppl-headless-cli/self-test-receipt.json"
+      ],
+      "observation_preconditions": [
+        {
+          "condition": "opal-agent를 --stream 모드로 호출한다",
+          "evidence_path": "evidence/oppl-headless-cli/trial-01-stream.probe.json",
+          "invalidated_if": "변환기가 --json 모드로 호출하면 중간 사건이 종료 직전 3.3ms 구간에 전량 도착해 중간 궤적이 성립하지 않는다. 이 경우 배정은 시작·종료만 관측되는 등급으로 낮아지며 재스파이크가 필요하다. 대조 증거: evidence/oppl-headless-cli/trial-02-json.probe.json(분산폭 3.3ms), trial-04-json.probe.json(분산폭 3.2ms)"
+        }
+      ]
+    }
+  ]
+}
