@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_task_number": 132,
+  "last_task_number": 134,
   "memories": [
     {
       "title": "변경이력 제거 검토 결정 — A안 확정",
@@ -45,6 +45,13 @@
   ],
   "history": [
     {
+      "title": "134 agentic 모드 지속성 복원",
+      "date": "2026-09-15",
+      "stage": "완료",
+      "path": "tasks/134-260914-opd-agentic-모드-지속성-복원/",
+      "result": "state-tool effective mode resolver로 사용자 검토 왕복·세션 재개·중첩/트랙 전환의 agentic 상속을 복원하고 S1~S10 및 전체 회귀를 통과함"
+    },
+    {
       "title": "131 루프파일럿 실행안정화",
       "date": "2026-09-14",
       "stage": "완료",
@@ -71,13 +78,6 @@
       "stage": "완료",
       "path": "tasks/126-260912-opds-워크스튜디오-독립앱-구축/",
       "result": "Dashboard Workbench를 독립 Electron 앱 OPAL WorkStudio로 분리하고 Project·PM Coordination·Terminal·Files·최초 실행 Welcome을 구현했다. WorkStudio 42개와 Dashboard 123개 테스트를 통과했다."
-    },
-    {
-      "title": "122 PM 직접수행 모델",
-      "date": "2026-09-12",
-      "stage": "완료",
-      "path": "tasks/122-260912-opds-PM-직접수행-모델/",
-      "result": "--pm actor 축 신설(harness/actor.md SSOT·pilot.start required 5종)·opal-self-pm(//oppm)·self-pm-tool 도입, L2 경량 트랙 owner 문서에서 제거. 기본 경로 무변경 회귀 확인, 시나리오 22/22 PASS"
     }
   ]
 }
