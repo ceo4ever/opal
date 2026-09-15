@@ -176,3 +176,9 @@ run root 파일 계약(테스트가 직접 읽는 것): `workgraph.json`(19회),
 3. 원자 쓰기·파일 락은 `ledger.py:336-377` 패턴을 **형태만 복제**한다. 공용 추출을 이 태스크에서 시도하지 않는다.
 4. `init`은 멱등이어야 하고 재실행이 run 상태를 초기화하지 않는다.
 5. 설정 층을 새로 만들지 않는다 — 예산·정책은 명시 인자 파일 주입.
+
+## 8. 알려진 한계 — Checkpoint 쓰기 귀속의 쓰기 순서 역전
+
+| # | 대상 | 한계 | 근거·처리 |
+|---|---|---|---|
+| L-1 | `opal/tools/oppb-runtime-tool/checkpoint.py` `classify_writes` | attempt가 **lease 밖을 먼저 쓰고 자기 lease를 나중에 쓰면** `foreign_mtime < own_marker`가 되어 lease 밖 쓰기로 귀속되지 않는다. | 구현 결함이 아니라 **mtime 단독 관측의 근본 한계**다. 그 파일시스템 상태는 "다른 Runner가 자기 lease에서 작업 중인 정상 동시 실행"(S-13①)과 완전히 동일하고 차이는 관측되지 않는 쓰기 순서뿐이라, 시작·종료 baseline 봉인으로도 구별되지 않는다. attempt별 격리 worktree는 제안서가 명시 거부하고(worktree 1개), Runner 자기 신고는 §4.5의 사후 탐지 요구와 어긋난다. **v1은 이 한계를 감수한다.** 쓰기 주체를 직접 관측할 수단(파일시스템 감사 이벤트 등)이 생기면 mtime 순서 비교 전체가 교체 대상이다. 같은 내용이 `classify_writes` docstring에 SSOT로 기재돼 있다. |

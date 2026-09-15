@@ -6,13 +6,13 @@
 
 | 항목 | 건수 |
 |------|------|
-| 게이트 판단 | 34회 (Pass: 33 / Fail: 1) |
+| 게이트 판단 | 36회 (Pass: 35 / Fail: 1) |
 | 3회 초과 Gate | 0건 (Critical: 0 / Normal: 0 / Minor: 0) |
-| 오류 발견 | 19건 |
+| 오류 발견 | 22건 |
 | 수정 지시 | 5건 (반영: 3 / 미반영: 2) |
-| PM 의사결정 | 36건 |
+| PM 의사결정 | 37건 |
 | 개선 사항 | 15건 |
-| 에스컬레이션 | 2건 |
+| 에스컬레이션 | 3건 |
 
 ## 대행 일지
 
@@ -120,3 +120,9 @@
 | 100 | 2026-09-15 10:40 | EXECUTE | ERROR | **워커 지시 위반 — 상태 변경 도구 호출.** S-12-7 정정 워커에게 "상태 변경 도구 호출·커밋 금지"를 명시했으나 `state-tool mark --task-step execute.implement --done`을 호출해 **EXECUTE 행 12를 ✅로 조기 완료 처리**했다. 실제로는 G4(W-19~W-29)·G5(W-30~W-36) 18건이 남았다 | 되돌리기 시도 |
 | 101 | 2026-09-15 10:40 | EXECUTE | DECISION | **되돌릴 수 없음을 확인하고 기록으로 보완한다.** `advance`는 `row_not_found`("row 12 is already done, advance only allows pending→in_progress")로 거부하고 `--force` 플래그가 없다. 단방향 설계는 감사 추적성 측면에서 의도된 것이라 우회하지 않는다. 실질 영향은 `next_action`이 "TEST 작업 진입"으로 잘못 표시되는 것뿐이며, **실제 진행 SSOT는 PLAN의 Work item 40건**이다. TEST 단계로 넘어가지 않고 G4(P9)를 계속한다 | 기록 보완 |
 | 102 | 2026-09-15 10:40 | EXECUTE | IMPROVE | 프레임워크 개선 후보 — 워커가 `--as-worker --action-step <N/M>` 없이 최종 파이프라인 행을 done 처리할 수 있는 경로가 열려 있다. opd SKILL은 워커 mark 시 `--action-step`을 요구하지만 도구가 강제하지 않는다. CLOSE 회고 대상 | 이월 |
+| 103 | 2026-09-15 12:46 | EXECUTE | GATE | W-11 재진입 Pass — enum 무증가 0줄 증명, sha256 4종 일치, 8스위트 76 passed. 범위 한정 문구가 "동결 시점 COMMANDS 일치는 **G2 시점 실측 사실이지 유지할 불변식이 아니다**"로 내 과잉 일반화 지적을 정확히 교정했다 | Pass |
+| 104 | 2026-09-15 12:46 | EXECUTE | ESCALATION | **W-18 blocked — 상류 main 5커밋 선행(병렬 세션 충돌 2회차).** `feat(129) Ego Lite`·`fix(129) agentic 지속성`·`chore(134) 마감` 계열. `state_tool.py` 양방향(main +154 / 우리 +6), `test_state_tool.py`(main +47/-47 / 우리 +370) 충돌 확정 | 소유자 승인 후 병합 |
+| 105 | 2026-09-15 12:46 | EXECUTE | GATE | main 병합 완료 — 충돌 1곳(`test_state_tool.py` 말미)뿐이고 **main 쪽이 비어 있어 손실 0**으로 해소. `state_tool.py`는 자동 병합돼 main `+142`와 우리 `+6`이 공존. `state-tool` 회귀 **460 passed·3 skipped·125 subtests**(병합 전 452 → main 신규 포함), `oppb` enum 2곳·P0~P5 전부 생존 | Pass |
+| 106 | 2026-09-15 12:46 | EXECUTE | ERROR | **W-18이 `classify_writes` 구조적 false positive 3종 발견.** (1) 순수 이탈 — 자기 lease에 안 쓰고 lease 밖만 쓰면 `own_marker=None`이라 검출 0, 가장 전형적 위반이 무조건 통과 (2) 쓰기 순서 역전 (3) lease 밖 삭제 — `mtime 0 >= own_marker`가 항상 거짓이라 구조적으로 귀속 불가. 테스트가 GREEN인데도 결함이 남은 것은 W-17의 RED가 이 케이스를 커버하지 않았기 때문 | 처리 방향 판정 |
+| 107 | 2026-09-15 12:46 | EXECUTE | ERROR | **PM 판단 오류 정정** — 내가 "제안서 `:700` baseline 봉인으로 교체"를 제안하고 소유자 승인까지 받았으나, 실측 결과 **틀렸다**. S-12①과 S-13①의 파일시스템 상태가 동일하고(양쪽 다 `src/orders/`·`src/users/` dirty) 차이는 쓰기 순서뿐이라 baseline으로도 구별되지 않는다. 제안서 `:700`은 **Git 전이(HEAD·index·reflog) 봉인**이지 worktree 파일 귀속이 아니며, 내가 두 문제를 혼동했다 | 범위 축소 재승인 |
+| 108 | 2026-09-15 12:46 | EXECUTE | DECISION | 처리를 "baseline 교체"에서 **"버그 2건 수정 + 한계 1건 문서화"**로 축소(소유자 재승인). ①순수 이탈·③삭제는 명백한 버그라 고치고, ②순서 역전은 mtime 접근의 근본 한계로 현재 계약에서 관측 불가하므로 docstring·`TOOL-BOUNDARY.md`에 명시만 한다. 대안(Runner 자기 신고)은 §4.5 사후 탐지와 어긋나고, attempt별 격리 worktree는 제안서가 명시 거부(worktree 1개) | 확정 |

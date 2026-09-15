@@ -3,118 +3,73 @@
   "module": "e2e_adapter",
   "layer": "util",
   "domain": "opal-tools",
-  "description": "cmux-tool raw 결과를 provider 후보 결과로 번역하고 공통 E2E contract verdict를 소비하는 integration adapter.",
-  "exports": [
-    "run_integration"
-  ],
-  "depends": [
-    "lib.e2e_contract",
-    "cmux-tool (OPAL_CMUX_TOOL_CMD env → ~/.opal/tools/cmux-tool/run.sh 기본 경로)"
-  ]
+  "description": "Priority-ordered Ego Lite, cmux, and Playwright adapters with provider-unavailable-only traversal.",
+  "exports": ["run_integration"],
+  "depends": ["lib.e2e_contract", "ego-browser-tool", "cmux-tool", "playwright-tool"]
 }
 
-e2e_adapter — cmux-tool raw provider adapter.
-
-[MUST] cmux 분기는 cmux-tool 에러코드 소비로만 — uname/cmux --version 하드코딩 분기 금지 (헌법 플랫폼 독립).
-[MUST] provider_unavailable일 때만 다음 Browser 후보 전환을 허용한다.
-[MUST] final status/exit/error/pass gate는 lib.e2e_contract 공통 계약을 소비한다.
-[MUST] mode A — --surface 미전달(신규 surface 강제), B/C 재사용 금지
-
-Legacy cmux-tool error vocabulary is accepted only as adapter input and normalized
-through lib.e2e_contract.  New public JSON does not emit generic fallback,
-escalated, escalate, or escalation keys.
+Configured providers are candidates, not success evidence. Only
+provider_unavailable permits traversal to the next candidate.
 """
 
 import json
 import os
 import pathlib
+import shlex
 import subprocess
 from typing import Any, Dict, List, Optional
 
 from lib.e2e_contract import build_verdict, normalize_legacy_verdict, status_to_error
 
+FALLBACK_CODES = {"not_in_cmux", "cmux_not_installed"}
+_EGO_DEFAULT = os.path.expanduser("~/.opal/tools/ego-browser-tool/run.sh")
+_CMUX_DEFAULT = os.path.expanduser("~/.opal/tools/cmux-tool/run.sh")
+_PLAYWRIGHT_DEFAULT = os.path.expanduser("~/.opal/tools/playwright-tool/run.sh")
 
-# ─── legacy cmux-tool raw error buckets (input normalization only) ───────────
-FALLBACK_CODES = {
-    "not_in_cmux",          # provider_unavailable candidate result
-    "cmux_not_installed",   # provider_unavailable candidate result
-    "surface_parse_failed", # infra_error via common contract
-    "open_failed",          # infra_error via common contract
-}
 
-ESCALATE_CODES = {
-    "usage",            # infra_error via common contract
-    "invalid_surface",  # infra_error via common contract
-    "goto_failed",      # infra_error via common contract
-    "wait_failed",      # infra_error or fail with wait_kind=assertion_condition
-    "eval_failed",      # infra_error via common contract
-}
+def _tool_cmd(env, name: str, default: str) -> List[str]:
+    return shlex.split((env or os.environ).get(name) or default)
 
-# cmux-tool 기본 실행 경로 — OPAL 설치 기준 절대 경로
-# OPAL_CMUX_TOOL_CMD 환경변수가 있으면 그 값을 우선 사용 (테스트 스텁 주입 + 오버라이드용)
-_CMUX_TOOL_DEFAULT_PATH = os.path.expanduser("~/.opal/tools/cmux-tool/run.sh")
+
+def _call_json(command: List[str], args: List[str], env=None) -> Dict[str, Any]:
+    try:
+        process = subprocess.run([*command, *args], capture_output=True, text=True, env=env, check=False)
+    except (FileNotFoundError, PermissionError) as exc:
+        return {"ok": False, "status": "provider_unavailable", "detail": str(exc)}
+    stdout = process.stdout.strip()
+    if not stdout:
+        return {
+            "ok": False,
+            "status": "provider_unavailable" if process.returncode in {18, 126, 127} else "infra_error",
+            "detail": process.stderr.strip() or "provider returned empty output",
+        }
+    try:
+        data = json.loads(stdout)
+    except json.JSONDecodeError:
+        return {"ok": False, "status": "infra_error", "detail": "provider returned invalid JSON"}
+    if not isinstance(data, dict):
+        return {"ok": False, "status": "infra_error", "detail": "provider JSON root is not an object"}
+    data.setdefault("_exit_code", process.returncode)
+    return data
 
 
 def _resolve_cmux_tool_cmd(env=None) -> str:
-    """
-    cmux-tool 실행 경로 결정.
-    1. OPAL_CMUX_TOOL_CMD 환경변수 (env dict 또는 현재 프로세스 환경)
-    2. 없으면 ~/.opal/tools/cmux-tool/run.sh 기본 경로
-    """
-    # env dict가 전달된 경우 우선 참조, 없으면 현재 프로세스 환경 확인
-    if env is not None:
-        cmd = env.get("OPAL_CMUX_TOOL_CMD")
-    else:
-        cmd = os.environ.get("OPAL_CMUX_TOOL_CMD")
-    return cmd if cmd else _CMUX_TOOL_DEFAULT_PATH
+    """Compatibility seam retained for existing callers and tests."""
+    return _tool_cmd(env, "OPAL_CMUX_TOOL_CMD", _CMUX_DEFAULT)[0]
 
 
 def _call_cmux_tool(args: List[str], env=None) -> Dict[str, Any]:
-    """
-    cmux-tool을 subprocess로 호출하고 stdout JSON 파싱하여 반환.
-    호출 실패(파일 없음 등) 시 {"ok": False, "error": "cmux_not_installed"} 반환.
-
-    cmux-tool 경로 해석 순서:
-    1. env["OPAL_CMUX_TOOL_CMD"] (테스트 스텁 주입 / 오버라이드)
-    2. os.environ["OPAL_CMUX_TOOL_CMD"]
-    3. ~/.opal/tools/cmux-tool/run.sh (기본 경로)
-    """
-    cmux_tool_cmd = _resolve_cmux_tool_cmd(env)
-    try:
-        result = subprocess.run(
-            ["bash", cmux_tool_cmd] + args,
-            capture_output=True,
-            text=True,
-            env=env,
-        )
-        stdout = result.stdout.strip()
-        if not stdout:
-            # cmux-tool이 설치되지 않았거나 실패한 경우 stderr 확인
-            stderr = result.stderr.strip()
-            return {
-                "ok": False,
-                "error": "cmux_not_installed",
-                "detail": stderr or "cmux-tool returned empty output",
-            }
-        try:
-            data = json.loads(stdout)
-            return data
-        except json.JSONDecodeError:
-            return {
-                "ok": False,
-                "error": "surface_parse_failed",
-                "detail": f"Failed to parse cmux-tool JSON output: {stdout}",
-            }
-    except FileNotFoundError:
-        return {
-            "ok": False,
-            "error": "cmux_not_installed",
-            "detail": f"{cmux_tool_cmd} not found",
-        }
+    command = _tool_cmd(env, "OPAL_CMUX_TOOL_CMD", _CMUX_DEFAULT)
+    if len(command) == 1:
+        command = ["bash", command[0]]
+    data = _call_json(command, args, env=env)
+    if data.get("status") == "provider_unavailable" and not data.get("error"):
+        data["error"] = "cmux_not_installed"
+    return data
 
 
-def _integration_response(status: str, *, e2e: Optional[Dict[str, Any]] = None, detail: Any = None) -> Dict[str, Any]:
-    return {
+def _response(status: str, *, e2e=None, detail=None, handoff=None) -> Dict[str, Any]:
+    output = {
         "ok": status == "pass",
         "command": "integration",
         "status": status,
@@ -124,108 +79,121 @@ def _integration_response(status: str, *, e2e: Optional[Dict[str, Any]] = None, 
         "api_db": {"status": "skip"},
         "contract_version": "2.0",
     }
+    if handoff is not None:
+        output["handoff"] = handoff
+    return output
+
+
+def _asserted(name: str, raw: Dict[str, Any], url: Optional[str], expected: Optional[str]) -> Dict[str, Any]:
+    status = raw.get("status")
+    if status == "provider_unavailable":
+        return {"status": status, "raw": raw}
+    if status not in {"pass", "fail", "infra_error", "blocked", "awaiting_human"}:
+        status = "pass" if raw.get("ok") else "infra_error"
+    actual = raw.get("actual")
+    if status == "pass" and (not expected or actual is None or expected not in str(actual)):
+        status = "fail"
+    return {
+        "status": status,
+        "raw": raw,
+        "e2e": {"driver": name, "status": status, "url": url, "expected": expected, "actual": actual},
+    }
+
+
+def _run_ego(url, expected, install_choice, env=None) -> Dict[str, Any]:
+    if not url:
+        return {"status": "fail", "detail": "URL is required"}
+    args = ["smoke", url]
+    if expected:
+        args += ["--expect-text", expected]
+    if install_choice:
+        args += ["--install-choice", install_choice]
+    raw = _call_json(_tool_cmd(env, "OPAL_EGO_BROWSER_TOOL_CMD", _EGO_DEFAULT), args, env=env)
+    result = _asserted("ego-lite", raw, url, expected)
+    if raw.get("space_id") is not None and result.get("e2e"):
+        result["e2e"]["space_id"] = raw["space_id"]
+    return result
+
+
+def _cmux_error(raw: Dict[str, Any]) -> Dict[str, Any]:
+    error = raw.get("error")
+    payload = {"status": "fallback" if error in FALLBACK_CODES else "escalated", "fallback_reason": error, "error": error}
+    if "wait_kind" in raw:
+        payload["wait_kind"] = raw["wait_kind"]
+    return normalize_legacy_verdict(payload)
+
+
+def _run_cmux(url, expected, env=None) -> Dict[str, Any]:
+    opened = _call_cmux_tool(["open"] + ([url] if url else []), env=env)
+    if not opened.get("ok"):
+        normalized = _cmux_error(opened)
+        return {"status": normalized["status"], "detail": normalized.get("detail"), "raw": opened}
+    surface = opened.get("surface")
+    try:
+        if url and surface:
+            navigated = _call_cmux_tool(["navigate", url], env=env)
+            if not navigated.get("ok"):
+                normalized = _cmux_error(navigated)
+                return {"status": normalized["status"], "detail": normalized.get("detail"), "raw": navigated}
+        actual = None
+        if expected:
+            observed = _call_cmux_tool(["eval", "--surface", str(surface), "--script", "document.body.innerText"], env=env)
+            if not observed.get("ok"):
+                normalized = _cmux_error(observed)
+                return {"status": normalized["status"], "detail": normalized.get("detail"), "raw": observed}
+            actual = observed.get("result")
+        verdict = build_verdict({
+            "status": "pass", "profile": "browser", "observed_executors": ["browser"],
+            "assertion_results": ([{"id": "expect-text", "expected": expected, "actual": expected if expected and expected in str(actual or "") else actual}] if expected else []),
+            "required_evidence": ["semantic_assertion"], "observed_evidence": (["semantic_assertion"] if expected else []),
+        })
+        status = verdict["status"]
+        return {"status": status, "detail": verdict.get("detail"), "e2e": {"driver": "cmux", "status": status, "url": url, "surface": surface, "expected": expected, "actual": actual}}
+    finally:
+        _call_cmux_tool(["close"], env=env)
+
+
+def _run_playwright(candidate, url, expected, env=None) -> Dict[str, Any]:
+    override = (env or os.environ).get("OPAL_PLAYWRIGHT_TOOL_CMD")
+    if not override and candidate.get("via") != "playwright-tool":
+        return {"status": "provider_unavailable", "detail": "playwright adapter is not configured"}
+    if not url:
+        return {"status": "fail", "detail": "URL is required"}
+    raw = _call_json(_tool_cmd(env, "OPAL_PLAYWRIGHT_TOOL_CMD", _PLAYWRIGHT_DEFAULT), [url, "--mode", "clean"], env=env)
+    if raw.get("status") == "provider_unavailable":
+        return {"status": "provider_unavailable", "raw": raw}
+    if not raw.get("ok"):
+        return {"status": raw.get("status") or "infra_error", "raw": raw, "detail": raw.get("detail") or raw.get("error")}
+    raw["actual"] = raw.get("actual") if raw.get("actual") is not None else raw.get("content")
+    raw["status"] = "pass"
+    return _asserted("playwright", raw, url, expected)
 
 
 def run_integration(
-    tiers_data: Dict[str, Any],
-    scope: str = "be",
-    url: Optional[str] = None,
-    project_root: Optional[pathlib.Path] = None,
-    env=None,
+    tiers_data: Dict[str, Any], scope: str = "be", url: Optional[str] = None,
+    project_root: Optional[pathlib.Path] = None, env=None,
+    expect_text: Optional[str] = None, ego_install_choice: Optional[str] = None,
 ) -> Dict[str, Any]:
-    """
-    integration 서브명령 실행 — cmux-tool raw result를 공통 E2E verdict로 정규화한다.
-
-    mode A (격리 신규 surface):
-      cmux-tool open <url> → surface 획득 (신규, --surface 미전달)
-      → navigate
-      → cmux-tool close
-
-    반환 dict:
-        ok: bool
-        status: pass|fail|infra_error|executor_unavailable|blocked|awaiting_human
-        command: str
-        e2e: {driver, status}
-        api_db: {status}
-        error: status_to_error(status)
-        contract_version: str
-    """
-    integration_data = tiers_data.get("integration", {})
-    e2e_config = integration_data.get("e2e", [])
-
-    # cmux가 e2e config에 있는지 확인
-    has_cmux = any(
-        isinstance(t, dict) and t.get("name") == "cmux"
-        for t in e2e_config
-    )
-
-    if not has_cmux:
-        return _integration_response(
-            "executor_unavailable",
-            e2e={"driver": None, "status": "executor_unavailable", "url": url},
-            detail="no configured E2E executor is available",
-        )
-
-    # mode A: cmux-tool open (--surface 미전달 — 신규 surface 강제)
-    open_args = ["open"]
-    if url:
-        open_args.append(url)
-
-    open_result = _call_cmux_tool(open_args, env=env)
-    error_code = open_result.get("error")
-
-    if not open_result.get("ok") and error_code:
-        payload = {
-            "status": "fallback" if error_code in FALLBACK_CODES else "escalated",
-            "fallback_reason": error_code,
-            "error": error_code,
-        }
-        if "wait_kind" in open_result:
-            payload["wait_kind"] = open_result.get("wait_kind")
-        normalized = normalize_legacy_verdict(payload)
-        status = normalized["status"]
+    del scope, project_root
+    candidates = [item for item in tiers_data.get("integration", {}).get("e2e", []) if isinstance(item, dict)]
+    candidates.sort(key=lambda item: (item.get("priority", 999), str(item.get("name", ""))))
+    attempted: List[str] = []
+    for candidate in candidates:
+        name = str(candidate.get("name") or "")
+        if name in {"ego", "ego-lite", "ego-browser"}:
+            result, driver = _run_ego(url, expect_text, ego_install_choice, env), "ego-lite"
+        elif name == "cmux":
+            result, driver = _run_cmux(url, expect_text, env), "cmux"
+        elif name == "playwright":
+            result, driver = _run_playwright(candidate, url, expect_text, env), "playwright"
+        else:
+            result, driver = {"status": "provider_unavailable", "detail": f"unknown provider: {name}"}, name
+        attempted.append(name)
+        status = result.get("status")
         if status == "provider_unavailable":
-            status = "executor_unavailable"
-        return _integration_response(
-            status,
-            e2e={"driver": "cmux", "status": status, "url": url},
-            detail=normalized.get("detail"),
-        )
-
-    # cmux open 성공 — surface 획득
-    surface_id = open_result.get("surface")
-
-    # navigate (mode A)
-    if url and surface_id:
-        nav_result = _call_cmux_tool(["navigate", url], env=env)
-        nav_error = nav_result.get("error")
-        if nav_error and nav_error in ESCALATE_CODES:
-            _call_cmux_tool(["close"], env=env)
-            payload = {"status": "escalated", "error": nav_error}
-            if "wait_kind" in nav_result:
-                payload["wait_kind"] = nav_result.get("wait_kind")
-            normalized = normalize_legacy_verdict(payload)
-            return _integration_response(
-                normalized["status"],
-                e2e={"driver": "cmux", "status": normalized["status"], "url": url},
-                detail=normalized.get("detail"),
-            )
-
-    # mode A close (신규 surface 정리 — 사용자 surface 미훼손)
-    _call_cmux_tool(["close"], env=env)
-
-    verdict = build_verdict({
-        "status": "pass",
-        "profile": "browser",
-        "observed_executors": ["browser"],
-        "events": ["open", "navigate", "close"],
-        "assertion_results": [],
-        "required_evidence": ["semantic_assertion"],
-        "observed_evidence": [],
-    })
-    status = verdict["status"] if not verdict["ok"] else "pass"
-    return _integration_response(
-        status,
-        e2e={"driver": "cmux", "status": status, "url": url, "surface": surface_id},
-        detail=verdict.get("detail"),
-    )
+            continue
+        raw = result.get("raw") or {}
+        e2e = result.get("e2e") or {"driver": driver, "status": status, "url": url, "expected": expect_text, "actual": raw.get("actual")}
+        e2e["attempted"] = attempted
+        return _response(str(status), e2e=e2e, detail=result.get("detail") or raw.get("detail"), handoff=raw.get("handoff"))
+    return _response("executor_unavailable", e2e={"driver": None, "status": "executor_unavailable", "url": url, "attempted": attempted}, detail="configured E2E provider candidates are unavailable")

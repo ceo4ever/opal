@@ -25,6 +25,7 @@ OPAL이 배포하는 도구 전수 목록이다. 이 표는 **어떤 도구가 �
 | `code-scan` | 코드 파일의 `@header` 메타블록 스캔·조회·검증·기록 | `~/.opal/tools/code-scan/run.sh` | `opal/tools/code-scan/README.md` |
 | `date` | KST(Asia/Seoul) 기준 시점 문자열을 평문 한 줄로 출력하는 공용 시점 취득 창구 | `node ~/.opal/tools/date/date.js` | `opal/tools/date/README.md` |
 | `doctor` | OPAL 환경 상태 진단(Dependencies·OPAL Paths·MCP Registration·Bootstrappers) | `~/.opal/tools/doctor/run.sh` | `opal/tools/doctor/README.md` |
+| `ego-browser-tool` | Ego Lite 설치 상태 조회·검증 설치·실제 브라우저 텍스트 assertion을 JSON 계약으로 제공 | `~/.opal/tools/ego-browser-tool/run.sh` | `opal/tools/ego-browser-tool/README.md` |
 | `event-loader` | `events.json` 기준 이벤트 시점 문서 전문·sha256 receipt 반환과 최신성 검증 | `~/.opal/tools/event-loader/run.sh` | `opal/tools/event-loader/README.md` |
 | `git-sync-tool` | 워크스페이스 아래 독립 git 저장소를 순회해 clean + fast-forward 가능한 것만 최신화 | `~/.opal/tools/git-sync-tool/run.sh` | `opal/tools/git-sync-tool/README.md` |
 | `improve-tool` | 개선 후보를 로컬(프로젝트 `.opal/`)·FW(`~/.opal/fw-inbox/`) 2원으로 분기 기록 | `~/.opal/tools/improve-tool/run.sh` | `opal/tools/improve-tool/README.md` |

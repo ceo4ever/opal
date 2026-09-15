@@ -1,16 +1,18 @@
+# -*- coding: utf-8 -*-
 """
 @header {
   "module": "state_tool",
   "layer": "util",
   "domain": "opal-pipeline",
-  "description": "OPAL 파이프라인 현황판 JSON SSOT 관리 CLI. 서브커맨드: init/show/advance/mark/block/validate/add-row/status/run-start/finalize-attribution/spec-validate/event-verify, gate-pass(deprecated). run-start <task-path>는 `run-<UTC YYYYMMDDHHMMSS>-<8자리 hex>` 형식의 새 run_id를 발급해 state.json.run_id에 기록하고 단일 라인 JSON으로 반환한다 — 현재 run은 항상 1개라 재호출 시 교체되며 이력을 누적하지 않고, run_id는 schema properties에만 있는 optional 필드라 init은 만들지 않으며 required 8필드는 불변이다(run_id 없는 기존 state.json도 계속 validate를 통과한다). event-verify는 단계 진입 전에 event-loader receipt의 이벤트·manifest·문서 hash 최신성을 검증하고 상태 파일은 변경하지 않는다. interactive/semi-agentic/agentic 3-way 모드를 지원하며 PLAN-equivalent 이전 단계(TASK/ANALYSIS/PLAN/TEST-SCENARIO/SPEC/REVIEW/DESIGN/WBS/WIREFRAME/DICT/MODEL/DDL·MIGRATION)는 semi-agentic 모드에서 사용자 검토를 강제한다. STATE.md는 state.json에서 파생되는 저널(의사결정 로그+블로커)이며 파이프라인 표·현재 상태·다음 액션 섹션은 없다(레거시 마커 포맷은 하위호환 인식만 유지). mark --step N/M은 N<M이면 in_progress를 유지하고 N==M에서만 done으로 닫는다. can_auto_approve_user_confirmation()은 CLOSE 축과 모드 축 2축 합성으로 사용자 확인 행 자동 승인 가부를 단일 판정하며, cmd_mark 사전검사와 cmd_validate 사후검사가 서로 다른 소비 범위(validate는 CLOSE 축 미평가)로 이를 참조한다. auto_approve_prior_user_confirmations()는 advance/mark가 대상 행 이전 구간의 미완 확인 행을 자동 승인하되 대상 행 자체가 CLOSE면 관여하지 않는다. 행 주소는 task-step 키 체계(--task-step/--task-step-id, --row는 deprecated)로 지정한다. check_gate_artifacts()는 task_steps[].gate.artifacts 존재를 검사하고(정적 경로·글롭 지원, 절대경로·'..' 이탈 토큰은 거부), 미충족 시 gate_artifact_missing으로 막되 --force+--note 조합에만 통과를 허용하며 그 경우 decision 로그에 gate_artifact_force를 강제 기록한다. verify 서브커맨드는 상호 배타적인 6개 검사 라우트를 갖는다 — --red-check(RED 증거 게이트), --fix-mode(+--changed-files/--test-globs, 테스트 불변성 게이트), --clarification-check(TASK 잠금 판정: sdlc-v2 5절 또는 legacy 명확화 4요소), --evidence-check(『명확화 결과』·『확정된 설계 방향』 인용을 근거 등급 4축으로 판정, 두 소스의 분모는 서로 분리 — confirmed_ratio는 명확화 결과 항목 수 기준 불변), --code-scan-citation-check(PLAN.md Work items 또는 legacy §4.2 파일 경로의 code-scan 인용 집행), --plan-contract-check(sdlc-v2 Work items 계약 검사). task_root()는 task path 조상에서 .opal/MEMORY.json 앵커를 찾는 task root 목적 전용 탐색이며, 허브 쓰기 대상인 allocator root는 이 탐색으로 추론하지 않고 worktree registry 발급값을 명시 인자로만 받는다. CLOSE 마지막 행 mark는 current_status를 completed_unmerged로만 확정하고 MEMORY.json을 건드리지 않으며, 허브 .opal/MEMORY.json 이력 append는 finalize-attribution <task-path> --allocator-root <abs>가 전담한다 — link_memory_history()가 그 구현이고 동일 path 행이 있으면 건너뛰어 멱등이며, --allocator-root 미지정·상대경로는 추론 없이 exit 1로 거부된다. resolve_owner_placeholder()는 note 작성 경로(advance/mark/add-row/block/status/init)에서 '{owner_name}' 플레이스홀더를 identity.md owner_name으로 write-time 치환한다(부재 시 원문 유지, fail-safe). worker_duration_minutes는 mark --worker-duration-minutes로 선택 기록되고, 워커 디스패치 행을 소요시간 없이 done 처리하면 --worker-duration-unknown 억제 인자가 없는 한 응답 warnings 배열에 worker_duration_missing이 실린다(exit 0 유지). build_todo_mirror()는 stdout 전용 파생 미러(state.json 비접촉)로 PostToolUse hook이 세션에 결정론적으로 주입한다. init --actor pm은 --skill opd/opds에서만 지원되며(그 외 skill과 조합 시 actor_unsupported_for_skill로 exit 1) 지정 시에만 state.json에 actor 키를 조건부 영속화한다.",
+  "description": "OPAL 파이프라인 현황판 JSON SSOT 관리 CLI. 서브커맨드: init/show/resolve-mode/advance/mark/block/validate/add-row/status/run-start/finalize-attribution/spec-validate/event-verify, gate-pass(deprecated). resolve-mode는 명시 플래그 > 유효 저장 mode > 신규 semi-agentic 기본값으로 effective mode를 판정하고 기존 태스크의 명시 override는 mode만 원자 갱신한다. run-start <task-path>는 `run-<UTC YYYYMMDDHHMMSS>-<8자리 hex>` 형식의 새 run_id를 발급해 state.json.run_id에 기록하고 단일 라인 JSON으로 반환한다 — 현재 run은 항상 1개라 재호출 시 교체되며 이력을 누적하지 않고, run_id는 schema properties에만 있는 optional 필드라 init은 만들지 않으며 required 8필드는 불변이다(run_id 없는 기존 state.json도 계속 validate를 통과한다). event-verify는 단계 진입 전에 event-loader receipt의 이벤트·manifest·문서 hash 최신성을 검증하고 상태 파일은 변경하지 않는다. interactive/semi-agentic/agentic 3-way 모드를 지원하며 PLAN-equivalent 이전 단계(TASK/ANALYSIS/PLAN/TEST-SCENARIO/SPEC/REVIEW/DESIGN/WBS/WIREFRAME/DICT/MODEL/DDL·MIGRATION)는 semi-agentic 모드에서 사용자 검토를 강제한다. STATE.md는 state.json에서 파생되는 저널(의사결정 로그+블로커)이며 파이프라인 표·현재 상태·다음 액션 섹션은 없다(레거시 마커 포맷은 하위호환 인식만 유지). mark --step N/M은 N<M이면 in_progress를 유지하고 N==M에서만 done으로 닫는다. can_auto_approve_user_confirmation()은 CLOSE 축과 모드 축 2축 합성으로 사용자 확인 행 자동 승인 가부를 단일 판정하며, cmd_mark 사전검사와 cmd_validate 사후검사가 서로 다른 소비 범위(validate는 CLOSE 축 미평가)로 이를 참조한다. auto_approve_prior_user_confirmations()는 advance/mark가 대상 행 이전 구간의 미완 확인 행을 자동 승인하되 대상 행 자체가 CLOSE면 관여하지 않는다. 행 주소는 task-step 키 체계(--task-step/--task-step-id, --row는 deprecated)로 지정한다. check_gate_artifacts()는 task_steps[].gate.artifacts 존재를 검사하고(정적 경로·글롭 지원, 절대경로·'..' 이탈 토큰은 거부), 미충족 시 gate_artifact_missing으로 막되 --force+--note 조합에만 통과를 허용하며 그 경우 decision 로그에 gate_artifact_force를 강제 기록한다. verify 서브커맨드는 상호 배타적인 6개 검사 라우트를 갖는다 — --red-check(RED 증거 게이트), --fix-mode(+--changed-files/--test-globs, 테스트 불변성 게이트), --clarification-check(TASK 잠금 판정: sdlc-v2 5절 또는 legacy 명확화 4요소), --evidence-check(『명확화 결과』·『확정된 설계 방향』 인용을 근거 등급 4축으로 판정, 두 소스의 분모는 서로 분리 — confirmed_ratio는 명확화 결과 항목 수 기준 불변), --code-scan-citation-check(PLAN.md Work items 또는 legacy §4.2 파일 경로의 code-scan 인용 집행), --plan-contract-check(sdlc-v2 Work items 계약 검사). task_root()는 task path 조상에서 .opal/MEMORY.json 앵커를 찾는 task root 목적 전용 탐색이며, 허브 쓰기 대상인 allocator root는 이 탐색으로 추론하지 않고 worktree registry 발급값을 명시 인자로만 받는다. CLOSE 마지막 행 mark는 current_status를 completed_unmerged로만 확정하고 MEMORY.json을 건드리지 않으며, 허브 .opal/MEMORY.json 이력 append는 finalize-attribution <task-path> --allocator-root <abs>가 전담한다 — link_memory_history()가 그 구현이고 동일 path 행이 있으면 건너뛰어 멱등이며, --allocator-root 미지정·상대경로는 추론 없이 exit 1로 거부된다. resolve_owner_placeholder()는 note 작성 경로(advance/mark/add-row/block/status/init)에서 '{owner_name}' 플레이스홀더를 identity.md owner_name으로 write-time 치환한다(부재 시 원문 유지, fail-safe). worker_duration_minutes는 mark --worker-duration-minutes로 선택 기록되고, 워커 디스패치 행을 소요시간 없이 done 처리하면 --worker-duration-unknown 억제 인자가 없는 한 응답 warnings 배열에 worker_duration_missing이 실린다(exit 0 유지). build_todo_mirror()는 stdout 전용 파생 미러(state.json 비접촉)로 PostToolUse hook이 세션에 결정론적으로 주입한다. init --actor pm은 --skill opd/opds에서만 지원되며(그 외 skill과 조합 시 actor_unsupported_for_skill로 exit 1) 지정 시에만 state.json에 actor 키를 조건부 영속화한다.",
   "exports": [
-    "cmd_init", "cmd_show", "cmd_advance", "cmd_mark",
+    "cmd_init", "cmd_show", "cmd_resolve_mode", "cmd_advance", "cmd_mark",
     "cmd_block", "cmd_validate", "cmd_add_row", "cmd_status",
     "cmd_run_start", "new_run_id",
     "cmd_spec_validate", "cmd_event_verify", "cmd_gate_pass", "build_todo_mirror",
     "cmd_finalize_attribution", "link_memory_history", "task_root",
-    "can_auto_approve_user_confirmation", "auto_approve_prior_user_confirmations",
+    "normalize_stored_mode", "can_auto_approve_user_confirmation",
+    "auto_approve_prior_user_confirmations",
     "_collect_plan_target_files", "_check_code_scan_citation",
     "_check_sdlc_v2_task_contract", "_check_plan_contract",
     "_run_code_scan_citation_hook"
@@ -27,6 +29,7 @@ import pathlib
 import re
 import subprocess
 import sys
+import tempfile
 from datetime import datetime, timezone
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -63,6 +66,18 @@ MODE_BOUNDARY_STAGES = {
     "DICT", "MODEL", "DDL/MIGRATION",
 }
 
+VALID_MODES = frozenset({"interactive", "semi-agentic", "agentic"})
+
+
+def normalize_stored_mode(mode):
+    """Return the safe effective mode and its source for a stored raw value."""
+    if isinstance(mode, str) and mode in VALID_MODES:
+        return mode, "state", []
+    return "interactive", "fail_closed", [{
+        "code": "invalid_mode_requires_user",
+        "stored_mode": mode,
+    }]
+
 
 # 093 F-003 R-3: '이 사용자 확인 행을 자동 승인해도 되는가' 단일 판정 (PLAN §3.3.2 (1))
 def can_auto_approve_user_confirmation(stage, mode, *, include_close_axis=True):
@@ -70,7 +85,7 @@ def can_auto_approve_user_confirmation(stage, mode, *, include_close_axis=True):
 
     반환: (allowed: bool, deny_reason: str | None)
       deny_reason ∈ {"close_requires_user", "interactive_requires_user",
-                     "semi_agentic_pre_execute"}
+                     "semi_agentic_pre_execute", "invalid_mode_requires_user"}
 
     두 축 합성:
       축1 CLOSE 여부  — 모드 무관 무조건 거부 (check_close_gate와 동일 규범, 별개 상수 규칙)
@@ -84,6 +99,10 @@ def can_auto_approve_user_confirmation(stage, mode, *, include_close_axis=True):
     """
     if include_close_axis and stage == "CLOSE":
         return (False, "close_requires_user")            # 축1 — 최우선
+    _effective_mode, mode_source, _warnings = normalize_stored_mode(mode)
+    if mode_source == "fail_closed":
+        return (False, "invalid_mode_requires_user")
+    mode = _effective_mode
     if mode == "interactive":
         return (False, "interactive_requires_user")      # 축2-a — stage 무관
     if mode == "semi-agentic" and stage in MODE_BOUNDARY_STAGES:
@@ -150,6 +169,7 @@ ERROR_CODES = {
     "gate_pattern_mismatch":          "--start {row} 위치 연속 4행이 [QA Gate, State Gate, PM Gate, State Gate] 패턴과 불일치",
     "gate_stage_mixed":               "gate-pass 4행이 모두 동일 stage가 아님",
     "state_not_initialized":          "state.json이 존재하지 않습니다. state init을 먼저 실행하세요",
+    "state_json_malformed":           "state.json이 유효한 JSON object가 아닙니다",
     "user_confirmation_owner_mismatch": "사용자 확인 행(row {row_id})이 done이지만 owner가 user/auto가 아님",
     "owner_flag_conflict":            "--owner와 --auto-pass는 동시 사용 불가",
     "auto_pass_in_interactive_mode":  "interactive 모드에서 사용자 확인 행(row {row_id})이 owner=auto로 done 처리됨",
@@ -372,6 +392,30 @@ def save_state_json(task_path, state):
     with open(state_file, "w", encoding="utf-8") as f:
         json.dump(state, f, ensure_ascii=False, indent=2)
         f.write("\n")
+
+
+def save_state_json_atomic(task_path, state):
+    """Atomically replace state.json after flushing the complete new payload."""
+    state_file = task_path / "state.json"
+    temp_name = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="w", encoding="utf-8", dir=str(task_path),
+            prefix=".state.json.", suffix=".tmp", delete=False,
+        ) as temp_file:
+            temp_name = temp_file.name
+            json.dump(state, temp_file, ensure_ascii=False, indent=2)
+            temp_file.write("\n")
+            temp_file.flush()
+            os.fsync(temp_file.fileno())
+        os.replace(temp_name, state_file)
+        temp_name = None
+    finally:
+        if temp_name is not None:
+            try:
+                os.unlink(temp_name)
+            except FileNotFoundError:
+                pass
 
 def load_state_md(task_path):
     """STATE.md 텍스트 반환. 없으면 None."""
@@ -899,6 +943,10 @@ def check_stage_transition_guard(state, row_index, command, force=False, scope="
     incomplete = []
     for i in range(check_up_to):
         prev = state["rows"][i]
+        # CLOSE 직전 사용자 확인은 일반 단계 전이 미완료가 아니라
+        # check_close_gate가 owner=user까지 판정하는 소유권 게이트다.
+        if target_stage == "CLOSE" and prev.get("item") == "사용자 확인":
+            continue
         if prev.get("status") not in _COMPLETE_STATUSES:
             incomplete.append(prev["row_id"])
 
@@ -1535,6 +1583,63 @@ def cmd_show(args):
 
 # ── 3. advance ────────────────────────────────────────────────────────────────
 
+def cmd_resolve_mode(args):
+    """Resolve explicit > stored valid mode > new-task semi-agentic default."""
+    command = "resolve-mode"
+    task_path = pathlib.Path(args.task_path).resolve()
+    state_file = task_path / "state.json"
+
+    if not state_file.exists():
+        if not args.new_task:
+            if not task_path.is_dir():
+                err(command, "task_path_not_found", path=str(task_path))
+            err(command, "state_not_initialized")
+        effective_mode = args.mode or "semi-agentic"
+        source = "explicit" if args.mode else "default"
+        ok(command, effective_mode=effective_mode, source=source,
+           persisted=False, previous_mode=None, old_mode=None,
+           new_mode=effective_mode, warnings=[])
+        return
+
+    try:
+        state = json.loads(state_file.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        err(command, "state_json_malformed", message=str(exc))
+    if not isinstance(state, dict):
+        err(command, "state_json_malformed",
+            message="state.json top-level value must be an object")
+
+    previous_mode = state.get("mode")
+    stored_mode, stored_source, warnings = normalize_stored_mode(previous_mode)
+    if args.mode is None:
+        ok(command, effective_mode=stored_mode, source=stored_source,
+           persisted=False, previous_mode=previous_mode,
+           old_mode=previous_mode, new_mode=stored_mode, warnings=warnings)
+        return
+
+    effective_mode = args.mode
+    persisted = previous_mode != effective_mode
+    journal_warning = None
+    if persisted:
+        now_str = get_kst_datetime(command)
+        state["mode"] = effective_mode
+        save_state_json_atomic(task_path, state)
+        journal_warning = sync_state_md(
+            task_path, state, now_str, command,
+            decision=f"mode override: {previous_mode!r} -> {effective_mode}",
+            reason="source=explicit; user --mode flag",
+        )
+
+    payload = dict(
+        effective_mode=effective_mode, source="explicit", persisted=persisted,
+        previous_mode=previous_mode, old_mode=previous_mode,
+        new_mode=effective_mode, warnings=[],
+    )
+    if journal_warning:
+        payload.update(journal_warning)
+    ok(command, **payload)
+
+
 def cmd_advance(args):
     """PLAN §2.1, T-7 — ⬜→🔄 전환"""
     command = "advance"
@@ -1565,7 +1670,7 @@ def cmd_advance(args):
     check_stage_transition_guard(state, row_index, command, force=False,
                                  scope=_guard_scope)
 
-    # CLOSE 진입 게이트 (§2.16 G-13)
+    # CLOSE 진입 게이트 (§2.16 G-13) — 선행 행이 모두 완료된 뒤 판정한다.
     check_close_gate(state, row_index, command)
 
     # 005 명확화 게이트 — TASK→다음 단계 첫 행 진입 차단 (상태 변경 전)
@@ -1856,7 +1961,7 @@ def cmd_mark(args):
     check_stage_transition_guard(state, row_index, command, force=args.force,
                                  scope=_guard_scope)
 
-    # CLOSE 진입 게이트 (§2.16 G-13)
+    # CLOSE 진입 게이트 (§2.16 G-13) — 선행 행이 모두 완료된 뒤 판정한다.
     check_close_gate(state, row_index, command,
                      auto_pass=args.auto_pass, force=args.force, owner=args.owner)
 
@@ -1877,6 +1982,11 @@ def cmd_mark(args):
     # (D-DEC-5, 093 F-003 단일 판정 소비 — PLAN §3.3.2 (2))
     if args.auto_pass:
         _allowed, _deny = can_auto_approve_user_confirmation(row["stage"], state.get("mode"))
+        if not _allowed and _deny == "invalid_mode_requires_user":
+            err(command, "user_confirmation_required",
+                row_id=row["row_id"], stage=row["stage"],
+                mode=state.get("mode"), reason=_deny,
+                required_action="resolve-mode <task-path> --mode <mode>")
         if not _allowed and _deny == "semi_agentic_pre_execute":   # [MUST] 이 사유만 소비 (DEC-E)
             err(command, "semi_agentic_pre_execute_auto_pass_denied",
                 row_id=row["row_id"], stage=row["stage"])
@@ -2099,7 +2209,14 @@ def cmd_validate(args):
 
     # 행 순서 정합성 (완료되지 않은 행 뒤에 완료된 행 존재 여부는 단순 경고)
     # 사용자 확인 행 owner 검증 (§2.15 G-12)
-    mode = state.get("mode", "interactive")
+    raw_mode = state.get("mode")
+    mode, mode_source, _mode_warnings = normalize_stored_mode(raw_mode)
+    if mode_source == "fail_closed":
+        violations.append({
+            "code": "invalid_mode",
+            "row_id": None,
+            "detail": f"invalid stored mode: {raw_mode!r}; user resolution required",
+        })
     for row in state.get("rows", []):
         if row.get("item") == "사용자 확인" and row.get("status") == "done":
             owner = row.get("owner")
@@ -2383,7 +2500,7 @@ def _boot_current_stage(state):
     return ""
 
 
-def collect_boot_summary(project_root):
+def collect_boot_summary(project_root, include_mode=False):
     """Collect at most one unfinished task below *project_root* (read-only).
 
     Only direct task directories under ``<root>/tasks`` are considered.  State
@@ -2421,11 +2538,15 @@ def collect_boot_summary(project_root):
             next_action = state.get("next_action", "")
             if not isinstance(next_action, str):
                 next_action = ""
-            candidates.append((updated, {
+            mode, mode_source, _mode_warnings = normalize_stored_mode(state.get("mode"))
+            item = {
                 "title": task_id,
                 "stage": _boot_current_stage(state),
                 "next_action": next_action,
-            }))
+            }
+            if include_mode:
+                item.update({"mode": mode, "mode_source": mode_source})
+            candidates.append((updated, item))
         except (OSError, UnicodeError, json.JSONDecodeError, AttributeError, TypeError):
             continue
     if not candidates:
@@ -2437,7 +2558,7 @@ def collect_boot_summary(project_root):
 def cmd_boot_summary(args):
     """Emit a bounded, read-only summary for session.project bootstrap."""
     command = "boot-summary"
-    items = collect_boot_summary(args.project_root)
+    items = collect_boot_summary(args.project_root, include_mode=True)
     payload = {"ok": True, "command": command, "items": items}
     encoded = json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
     # Keep the public result bounded even for adversarially long state fields.
@@ -2450,7 +2571,7 @@ def cmd_boot_summary(args):
         # The values may contain multi-byte characters; trim by encoded size,
         # never by slicing the JSON string (which could produce invalid JSON).
         while len(encoded.encode("utf-8")) > 1024:
-            field = max(("title", "stage", "next_action"),
+            field = max(("title", "stage", "next_action", "mode", "mode_source"),
                         key=lambda name: len(item[name]))
             if not item[field]:
                 break
@@ -4049,6 +4170,15 @@ def build_parser():
     p_show.add_argument("task_path", metavar="<task-path>")
     p_show.add_argument("--format", dest="format", choices=["md","json","full"], default="md")
     p_show.set_defaults(func=cmd_show)
+
+    p_mode = sub.add_parser(
+        "resolve-mode",
+        help="effective mode 판정 (explicit > state > new-task default)",
+    )
+    p_mode.add_argument("task_path", metavar="<task-path>")
+    p_mode.add_argument("--mode", choices=sorted(VALID_MODES))
+    p_mode.add_argument("--new-task", action="store_true", dest="new_task")
+    p_mode.set_defaults(func=cmd_resolve_mode)
 
     # ── advance ──
     p_adv = sub.add_parser("advance", help="⬜→🔄 전환 (T-7)")

@@ -60,7 +60,7 @@ OPAL 자산은 Global/Project 2-레이어로 배치되고, 런타임은 세션 �
 | `session.disabled` | effective setting의 `bootstrap`이 정확히 `off` | 설정 게이트 뒤 OPAL 문서 0건·0 bytes |
 | `session.worker` | 첫 줄 `[WORKER]` | 전역 세션 문서 0건. 이후 PM이 주입한 `worker.dispatch` receipt 계약만 적용 |
 | `session.assistant` | 첫 줄 `[ASSISTANT]` 또는 비프로젝트 세션 | 최소 비서 커널·PRINCIPLES·선택적 identity |
-| `session.project` | 무마커 + `.opal/AGENT.md` 존재 | `session.assistant`에 더해 `event-loader project-brief`가 조립한 최대 1KB 사용자 브리핑만 인지 |
+| `session.project` | 무마커 + `.opal/AGENT.md` 존재 | `session.assistant`에 더해 `event-loader project-brief`가 활성 태스크 mode를 포함해 조립한 최대 1KB 사용자 브리핑만 인지 |
 | `pm.activate` | 프로젝트 작업 요청 또는 프로젝트 내 `//` 커맨드 | PM 프로세스, PM 활성화 규칙, 프로젝트 `.opal/AGENT.md`, `docs/PROJECT.md`를 JIT 로드 |
 | `pilot.start` / `stage.*` / `worker.dispatch` | 파일럿·단계·워커 경계 | 해당 이벤트의 owner 문서 전문을 JIT 로드하고 receipt 검증 후 진행 |
 
@@ -68,6 +68,7 @@ OPAL 자산은 Global/Project 2-레이어로 배치되고, 런타임은 세션 �
 - **worker 분리**: `[WORKER]`는 순수 모드가 아니라 전역 부트만 건너뛰는 디스패치 경로다. receipt가 없거나 stale/wrong-event이면 워커가 blocked로 반환한다.
 - **project-aware 경계**: `.opal/AGENT.md` 존재는 프로젝트 감지 신호일 뿐 PM 승격 신호가 아니다. 전체 `docs/PROJECT.md`, `opal-pm.md`, `opal-harness.md`는 세션 부트에서 읽지 않는다.
 - **JIT 검증**: receipt가 필요한 이벤트는 `event-loader load`가 반환한 모든 `documents[].content`를 소비하고 `verify`가 성공한 뒤에만 다음 행동을 시작한다.
+- **모드 복원**: Pilot은 서브 하네스를 읽기 전에 `state-tool resolve-mode`를 호출한다. 명시 플래그가 저장값보다 우선하고, 기존 태스크의 무플래그 재개는 저장 mode를 상속한다. project-brief의 mode 표시는 안내이며 구조화 resolver 응답이 SSOT다.
 - **`//opi` 불변식**: 비프로젝트 세션도 비서 커널에서 `//` 진입을 해석할 수 있으므로 새 프로젝트 초기화 경로가 유지된다.
 - **actor 축**: `--pm`은 위 다이어그램의 `PM JIT 활성화`(오케스트레이터) 층에 속하는 실행 주체 선택 축이다 — 하네스 적용(Guards/Gates/State)과 서브에이전트 디스패치 층은 그대로 두고 각 단계 skill을 누가 수행하는지만 바꾼다. 원문 SSOT는 `opal/core/references/harness/actor.md`.
 
@@ -85,7 +86,7 @@ OPAL 자산은 Global/Project 2-레이어로 배치되고, 런타임은 세션 �
 | `agents/` | 서브에이전트 15개 (전문 8 + 범용 7) |
 | `community-skills/` | 커뮤니티 스킬 — clone-copy(git)로 사용자가 온디맨드 설치 (검색은 `npx skills find`). 사용자 등록분 `user-registry.json` 포함, install 불가침 |
 | `references/` | 레지스트리·표준·운영 문서 **21 엔트리**(최상위 19파일 + 하위 디렉토리 2). `events.json`이 이벤트별 필수 문서 집합을 소유하고 `opal-harness.md`는 호환 인덱스만 제공한다. 하위 디렉토리는 `harness/`(실행 규칙 owner 23파일)와 `pm/`(PM 프로세스 owner 7파일)이다. |
-| `tools/` | CLI 도구 **21종**(도구 디렉토리 기준). 파이프라인 집행(`state-tool`, `test-tool`, `backlog-tool`, `opal-action-monitor`), 이벤트 전문·해시·receipt와 프로젝트 부트 브리핑 집행(`event-loader`), 환경·배포, 탐색·연동, 지식·코드 지도 도구로 구성된다. 세부 공개 계약은 각 도구의 README가 소유한다. |
+| `tools/` | CLI 도구 **22종**(도구 디렉토리 기준). 파이프라인 집행(`state-tool`, `test-tool`, `backlog-tool`, `opal-action-monitor`), 이벤트 전문·해시·receipt와 프로젝트 부트 브리핑 집행(`event-loader`), 환경·배포, 탐색·연동, 지식·코드 지도 도구로 구성된다. 세부 공개 계약은 각 도구의 README가 소유한다. |
 | `.venv/` | Python 가상환경 (openpyxl, pandas, playwright 등 — requirements.txt로 관리) |
 | `templates/` | 프로젝트 에이전트 템플릿 |
 
@@ -176,7 +177,7 @@ OPAL 자산은 Global/Project 2-레이어로 배치되고, 런타임은 세션 �
 | opal-task-qa-agent | light | 범용 QA 워커 — qa_skill로 QA 스킬 동적 실행 |
 | opal-task-action-agent | advanced | 액션 에이전트 — oppd Phase 3 자율 실행 |
 | opal-sdd-action-agent | advanced | SDD 액션 에이전트 |
-| opal-wtm-agent | light | web-to-markdown 워커 (2단 폴백 — Phase 1 cmux-tool → Phase 2 playwright-tool CLI) |
+| opal-wtm-agent | light | web-to-markdown 워커 (공개 검색은 web search, 브라우저 추출은 Ego Lite → cmux → Playwright) |
 | opal-security-checker | advanced | thin role — `op-gc-security`를 독립 컨텍스트에서 실행 (검사 기준 미보유) |
 | opal-convention-checker | standard | thin role — `op-gc-convention`을 독립 컨텍스트에서 실행 (검사 기준 미보유) |
 
@@ -412,7 +413,7 @@ opal/                                    ← 이 저장소
 │   │   ├── references/                  레지스트리·표준 21 엔트리 (harness/ 23파일 · pm/ 7파일 포함)
 │   │   ├── mcps/                        MCP 설정 4종 (context7, playwright, shadcn, sequential-thinking)
 │   │   └── hooks/                       Claude Code hooks 설정
-│   ├── tools/                           CLI 도구 21종 (+ check-env.js 보조 스크립트, requirements.txt)
+│   ├── tools/                           CLI 도구 22종 (+ check-env.js 보조 스크립트, requirements.txt)
 │   │   ├── event-loader/                이벤트 전문·해시·receipt 검증 + 프로젝트 부트 브리핑
 │   │   ├── state-tool/                  파이프라인 현황판 JSON SSOT (서브명령 11종)
 │   │   ├── test-tool/                   테스트 단계 결정론 집행 (resolve/check/unit/integration + scenario-* + E2E profile/verdict 계약)
@@ -429,7 +430,8 @@ opal/                                    ← 이 저장소
 │   │   ├── tool-scan/                   도구 capability 검색·live 사용법
 │   │   ├── opal-agent/                  claude/gemini/codex/grok headless 호출 라이브러리 + CLI
 │   │   ├── cmux-tool/                   cmux browser 래퍼 (run.sh) — 3모드(A/B/C) + user_owned 시그널
-│   │   ├── playwright-tool/             웹 페이지 수집 CLI (wtm 폴백 2단계)
+│   │   ├── ego-browser-tool/            Ego Lite readiness·검증 설치·E2E assertion 어댑터
+│   │   ├── playwright-tool/             웹 페이지 수집 CLI (wtm 3순위 후보)
 │   │   ├── xlsx-tool/                   xlsx 읽기/쓰기 CLI (run.sh)
 │   │   ├── date/                        현재 일시 취득 (date.js)
 │   │   ├── check-env.js                 Node.js 환경 체크
@@ -479,7 +481,7 @@ opal/                                    ← 이 저장소
 │   │   ├── opal-task-qa-agent/          범용 QA 워커
 │   │   ├── opal-task-action-agent/      액션 에이전트 (oppd)
 │   │   ├── opal-sdd-action-agent/       SDD 액션 에이전트
-│   │   ├── opal-wtm-agent/              웹→마크다운 워커 (cmux → playwright 2단 폴백)
+│   │   ├── opal-wtm-agent/              웹→마크다운 워커 (Ego Lite → cmux → Playwright)
 │   │   ├── opal-security-checker/       thin role — op-gc-security 실행
 │   │   └── opal-convention-checker/     thin role — op-gc-convention 실행
 │   └── templates/                       프로젝트 에이전트 템플릿

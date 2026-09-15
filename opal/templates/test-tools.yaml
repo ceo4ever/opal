@@ -126,8 +126,9 @@ tiers:
     # E2E는 FE/BE 공통 — profile/verdict 의미는 test-tool lib/e2e_contract.py가 소유한다.
     # Browser 후보 전환은 provider_unavailable에서만 허용한다.
     e2e:
-      - { name: cmux, executor: browser, profiles: [browser, hybrid, collaborative], priority: 1, via: cmux-tool, candidate_on: provider_unavailable }
-      - { name: playwright, executor: browser, profiles: [browser, hybrid, collaborative], priority: 2, candidate_on: provider_unavailable }
+      - { name: ego-lite, executor: browser, profiles: [browser, hybrid, collaborative], priority: 1, via: ego-browser-tool, candidate_on: provider_unavailable }
+      - { name: cmux, executor: browser, profiles: [browser, hybrid, collaborative], priority: 2, via: cmux-tool, candidate_on: provider_unavailable }
+      - { name: playwright, executor: browser, profiles: [browser, hybrid, collaborative], priority: 3, via: playwright-tool, candidate_on: provider_unavailable }
     e2e_profiles:
       browser: { required: [browser], allowed: [browser] }
       api: { required: [api], allowed: [api] }

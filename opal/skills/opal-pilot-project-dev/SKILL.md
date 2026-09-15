@@ -186,10 +186,10 @@ PRD와 TRD를 opwt(기획 산출물 네트워크 오케스트레이터)에 위�
 
 ### 1-1. opwt 호출
 
-opwt를 "작성" 모드로 호출한다:
+부모 태스크의 **effective mode**를 그대로 상속하여 opwt를 "작성" 모드로 호출한다. 아래 `{effective-mode-flag}`는 `--interactive` / `--semi-agentic` / `--agentic` 중 resolver 결과에 대응하는 정확히 하나이며, 자식의 새 mode 선택으로 재해석하지 않는다:
 
 ```
-//opwt 작성
+//opwt {effective-mode-flag: --interactive|--semi-agentic|--agentic} 작성
 - 대상 문서: PRD, TRD
 - 출력 경로: tasks/{NNN}-oppd-{프로젝트명}/PRD.md, tasks/{NNN}-oppd-{프로젝트명}/TRD.md (작업본)
 - 프로젝트 컨텍스트: docs/PROJECT.md, docs/ARCHITECTURE.md

@@ -64,6 +64,24 @@
       "fallback": null
     },
     {
+      "name": "ego-browser-tool",
+      "kind": "tool",
+      "purpose": "Ego Lite 설치 상태·검증 설치·브라우저 E2E assertion",
+      "when": ["ego", "ego-lite", "ego-browser", "browser", "e2e", "authenticated", "dynamic"],
+      "exec": "run.sh --help",
+      "usage_source": {
+        "type": "self-help",
+        "exec": "run.sh --help",
+        "ref": null,
+        "text": null,
+        "freshness": null
+      },
+      "fallback": [
+        {"on": "provider_unavailable", "allow_fallback": true},
+        {"on": "fail|infra_error|blocked|awaiting_human", "allow_fallback": false}
+      ]
+    },
+    {
       "name": "cmux-tool",
       "kind": "tool",
       "purpose": "브라우저 자동화·웹 크롤링·E2E (12+1 서브명령)",

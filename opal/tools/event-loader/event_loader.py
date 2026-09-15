@@ -522,13 +522,25 @@ def _brief_value(value: Any) -> str:
     return " ".join(str(value or "").split())
 
 
+def _brief_mode_value(value: Any) -> str:
+    """Normalize a resolver-owned mode field without reinterpreting it."""
+    if not isinstance(value, str):
+        return ""
+    return " ".join(value.split())
+
+
 def compose_project_brief(
     state_payload: dict[str, Any] | None,
     memory_payload: dict[str, Any] | None,
     *,
     max_bytes: int = 1024,
 ) -> str:
-    """Compose the exact bounded prefix for a session.project first response."""
+    """Compose the exact bounded prefix for a session.project first response.
+
+    Mode resolution remains state-tool's responsibility. This display-only
+    adapter accepts its structured payload and performs only safe line
+    normalization; it does not infer or repair a mode or source.
+    """
     state: dict[str, str] | None = None
     if isinstance(state_payload, dict) and state_payload.get("ok") is True:
         items = state_payload.get("items")
@@ -537,6 +549,8 @@ def compose_project_brief(
                 "title": _brief_value(items[0].get("title")),
                 "stage": _brief_value(items[0].get("stage")),
                 "next_action": _brief_value(items[0].get("next_action")),
+                "mode": _brief_mode_value(items[0].get("mode")),
+                "mode_source": _brief_mode_value(items[0].get("mode_source")),
             }
             if all(candidate.values()):
                 state = candidate
@@ -561,7 +575,8 @@ def compose_project_brief(
             lines.extend([
                 "",
                 "📌 이어보기",
-                f"- {state['title']} — {state['stage']} · 다음: {state['next_action']}",
+                f"- {state['title']} — {state['stage']} · 다음: {state['next_action']}"
+                f" · 모드: {state['mode']} ({state['mode_source']})",
             ])
         if reviews:
             lines.extend(["", "📌 우선 검토"])

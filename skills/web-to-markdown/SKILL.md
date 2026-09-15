@@ -3,14 +3,14 @@ name: web-to-markdown
 description: |
   **웹 페이지를 마크다운으로 변환하는 스킬**. URL을 입력받아 웹 콘텐츠를 정제된 .md 파일로 변환하여 AI 에이전트가 바로 활용할 수 있게 한다.
   반드시 이 스킬을 사용해야 하는 상황: "URL 읽어줘", "사이트 내용 정리", "웹 페이지 마크다운", "URL 마크다운 변환", "웹 페이지 가져와", "사이트 분석해줘", "링크 내용 정리해줘", "웹 콘텐츠 추출".
-  URL을 주면서 내용을 파악하거나 정리해달라는 요청이 있으면 이 스킬을 사용한다. Phase 1(cmux-tool) → Phase 2(playwright-tool) 2단 폴백 전략으로 안정적으로 처리한다.
+  URL을 주면서 내용을 파악하거나 정리해달라는 요청이 있으면 이 스킬을 사용한다. 브라우저 추출은 Ego Lite → cmux → Playwright 순서로 처리하고 공개 정보 검색은 기존 web search를 유지한다.
 ---
 
 # 웹 페이지 마크다운 변환 스킬
 
 > 작성일: 2026-03-20 | 버전: v2.0
 
-URL을 입력받아 웹 페이지 콘텐츠를 정제된 마크다운(.md)으로 변환한다. Phase 1(cmux-tool) → Phase 2(playwright-tool CLI) 2단 폴백 전략으로 다양한 웹 페이지를 안정적으로 처리하고, 복수 URL은 서브에이전트로 병렬 처리한다. WebFetch는 제거되었다 (M-1 (a)안 — 단순성 우선).
+URL을 입력받아 웹 페이지 콘텐츠를 정제된 마크다운(.md)으로 변환한다. 인증·동적 렌더링·브라우저 상호작용이 필요한 추출은 Ego Lite → cmux → Playwright 순서로 처리하고, 복수 URL은 서브에이전트로 병렬 처리한다. 일반 공개 정보 검색은 이 공급자 체인을 사용하지 않고 기존 web search를 사용한다.
 
 ---
 
@@ -21,9 +21,9 @@ URL을 입력받아 웹 페이지 콘텐츠를 정제된 마크다운(.md)으로
 ### 사용자/PM 호출 (쌍슬래시 커맨드)
 
 ```
-//wtm {url}                                # 단일 URL, full 모드, Phase 1(cmux)→2(playwright)
+//wtm {url}                                # 단일 URL, Ego Lite→cmux→Playwright
 //wtm {url1} {url2} {url3}                 # 복수 URL, 병렬 처리
-//wtm --browser {url}                      # deprecated alias — 기본 동작과 동일 (2단 체인)
+//wtm --browser {url}                      # deprecated alias — 기본 동작과 동일 (3단 체인)
 //wtm --browser {url1} {url2}              # browser 모드 + 복수 URL (deprecated alias)
 //wtm --surface <handle>                   # 현재 페이지(B 모드) — navigate 안 함, cleanup 금지
 //wtm --surface <handle> {url}             # surface 재사용 + navigate(C 모드)
@@ -70,16 +70,16 @@ URL 목록:
 | **full** (기본) | 전체 콘텐츠 보존. nav, sidebar, header, footer 등 구조 요소를 유지한다. 메뉴 구조, 내비게이션 링크 등 유용한 정보가 보존된다. | 사이트 구조 파악, 메뉴/링크 수집, 전체 페이지 아카이빙 |
 | **clean** | 본문만 추출. nav, header, footer, sidebar, 광고 등 비본문 요소를 제거한다. | 본문 콘텐츠만 필요할 때, 문서/블로그 아티클 추출 |
 | **wireframe** | 와이어프레임 분석. 화면 구조, 구성요소, 기능 동작, 네비게이션, 데이터 I/O를 구조화된 기획 관점으로 추출한다. | 와이어프레임 HTML을 기획 문서로 변환할 때, opwt 정책서/IA 작성 시 참조 |
-| **--browser** | **deprecated alias — 기본 동작과 동일 (2단 체인)**. Phase 1(cmux-tool) → Phase 2(playwright-tool CLI). 하위 호환 목적으로 유지. | 기존 --browser 호출 호환성 (신규 사용 불필요) |
-| **--surface \<handle\>** | B 모드 (현재 페이지). Phase 1(cmux-tool)으로 즉시 진입, navigate 안 함, cleanup 절대 금지. | cmux surface 재사용, 인증 세션 활용 |
-| **--surface \<handle\> {url}** | C 모드 (surface 재사용 + navigate). Phase 1(cmux-tool) goto 호출. | surface 재사용하며 다른 URL 이동 |
+| **--browser** | **deprecated alias — 기본 동작과 동일 (3단 체인)**. Ego Lite → cmux → Playwright. 하위 호환 목적으로 유지. | 기존 --browser 호출 호환성 (신규 사용 불필요) |
+| **--surface \<handle\>** | B 모드 (현재 페이지). Phase 2(cmux-tool)으로 즉시 진입, navigate 안 함, cleanup 절대 금지. | cmux surface 재사용, 인증 세션 활용 |
+| **--surface \<handle\> {url}** | C 모드 (surface 재사용 + navigate). Phase 2(cmux-tool) goto 호출. | surface 재사용하며 다른 URL 이동 |
 
 사용자가 모드를 명시하지 않으면 **full** 모드를 적용한다. "본문만", "내용만", "clean" 등의 키워드가 있으면 clean 모드를 적용한다. "와이어프레임", "wireframe", "화면 분석", "기획 분석" 등의 키워드가 있으면 wireframe 모드를 적용한다.
 
 `--browser`, "브라우저로", "browser", "로컬" 등의 키워드가 있거나,
 URL 호스트가 `localhost`, `127.0.0.1`, `[::1]`인 경우 `browser` 모드를 자동 적용한다.
 (`browser`와 `--browser` 둘 다 허용한다 — deprecated alias로 유지, 기본 동작과 동일.)
-browser 모드에서는 기본 동작과 동일하게 Phase 1(cmux-tool) → Phase 2(playwright-tool CLI) 2단 체인을 수행한다.
+browser 모드에서는 기본 동작과 동일하게 Ego Lite → cmux → Playwright 3단 체인을 수행한다. 단, `--surface`는 사용자가 지정한 cmux surface이므로 Ego 단계를 건너뛰고 해당 surface를 그대로 사용한다.
 
 ---
 
@@ -88,24 +88,22 @@ browser 모드에서는 기본 동작과 동일하게 Phase 1(cmux-tool) → Pha
 ```
 URL/--surface 입력 (단일 또는 복수)
   │
-  ├─ 단일 URL/surface → 직접 처리
-  │     │
-  │     ├─ [silent fallback 분기] command -v cmux 검사
-  │     │     ├─ cmux 감지 → Phase 1 시도
-  │     │     └─ cmux 미감지 → Phase 1 skip → Phase 2 직행 (사용자 안내 없음)
-  │     │
-  │     ├─ Phase 1: cmux-tool (1순위)
-  │     │     ├─ bash ~/.opal/tools/cmux-tool/run.sh (모드 A/B/C)
-  │     │     ├─ {"ok": true} → content 정제 → 저장
-  │     │     ├─ {"ok": false, "error": "not_in_cmux|cmux_not_installed|surface_parse_failed|open_failed"}
-  │     │     │       → Phase 2 폴백
-  │     │     └─ {"ok": false, "error": "usage|invalid_surface|goto_failed|wait_failed|eval_failed"}
-  │     │             → 즉시 에스컬레이션 (status: blocked)
-  │     │
-  │     └─ Phase 2: playwright-tool CLI (fallback)
-  │           ├─ bash ~/.opal/tools/playwright-tool/run.sh {url} --mode {mode}
-  │           ├─ {"ok": true} → content 정제 → MD 저장
-  │           └─ run.sh 미설치 → 설치 안내 후 중단
+  ├─ 단일 URL → Phase 1 Ego Lite readiness/추출
+  │     ├─ 준비됨 → ego-browser의 TaskSpace p1에서 추출·저장
+  │     ├─ 미설치 → manual/r2/cancel 선택과 resume 정보를 반환하고 대기
+  │     ├─ cancel 또는 비지원 플랫폼 → Phase 2 cmux
+  │     └─ fail/infra_error/blocked/awaiting_human → 즉시 중단
+  │
+  ├─ Phase 2 cmux-tool
+  │     ├─ 성공 → content 정제·저장
+  │     ├─ not_in_cmux|cmux_not_installed → Phase 3 Playwright
+  │     └─ 그 밖의 오류 → 즉시 중단
+  │
+  ├─ Phase 3 playwright-tool CLI
+  │     ├─ 성공 → content 정제·저장
+  │     └─ 실패/미설치 → 오류 안내 후 중단
+  │
+  ├─ --surface 입력 → 명시된 cmux surface에서 Phase 2부터 처리
   │
   └─ 복수 URL → 서브에이전트 병렬 디스패치
         ├─ URL별 서브에이전트 1개씩 생성
@@ -115,21 +113,26 @@ URL/--surface 입력 (단일 또는 복수)
 
 ---
 
-## Phase 1: cmux-tool (1순위)
+## Phase 1: Ego Lite (1순위)
 
-cmux browser 자동화 래퍼로 URL을 가져온다. cmux 미설치 시 silent fallback으로 Phase 2로 즉시 이동한다.
+`ego-browser-tool status`로 준비 상태를 확인한다. 준비되면 공식 `ego-browser` 스킬 계약에 따라 goal당 TaskSpace 하나와 `p1`을 사용해 URL을 열고 필요한 범위만 추출한다. 저장 비밀번호·cookie·token을 출력하지 않으며, 인증·MFA·결제·게시·삭제·설정 변경은 사람에게 넘긴다.
 
-### silent fallback 분기
-
-Phase 1 진입 직전 `opal-wtm-agent`가 단일 분기로 cmux 감지를 확인한다:
+CLI가 없으면 자동으로 다음 후보로 넘어가지 않는다. `manual`, `r2`, `cancel`과 원래 URL·모드·저장 경로를 resume 정보로 사용자에게 제시한다. `manual`은 공식 설치 안내, `r2`는 검증 installer, `cancel`은 Ego 후보 포기다. 설치 후 GUI 온보딩이 필요하면 `awaiting_human`으로 멈추고 완료 확인 뒤 같은 원래 작업을 재개한다. 명시적 `cancel` 또는 비지원 플랫폼의 `provider_unavailable`만 Phase 2 진입을 허용한다.
 
 ```bash
-if command -v cmux >/dev/null 2>&1; then
-  # Phase 1: cmux-tool 시도
-else
-  # cmux 미감지 → Phase 2 직행 (사용자 안내 없음)
-fi
+bash ~/.opal/tools/ego-browser-tool/run.sh status
+bash ~/.opal/tools/ego-browser-tool/run.sh smoke {url} --expect-text {검증문자열} --install-choice manual|r2|cancel
 ```
+
+### 추출 방식 표기
+
+산출물의 `추출 방식`은 `ego-browser (TaskSpace {id}, Page p1)`로 표기한다.
+
+---
+
+## Phase 2: cmux-tool (2순위)
+
+cmux browser 자동화 래퍼로 URL을 가져온다. Ego 후보가 명시적으로 `provider_unavailable`이거나 사용자가 `--surface`를 지정했을 때만 진입한다.
 
 ### 실행
 
@@ -143,7 +146,8 @@ bash ~/.opal/tools/cmux-tool/run.sh <url|--surface <handle> [url]> [--mode <m>] 
 
 JSON 출력 파싱:
 - `{"ok": true, "content": "..."}` → content 정제 → 저장
-- `{"ok": false, "error": "not_in_cmux|cmux_not_installed|surface_parse_failed|open_failed"}` → Phase 2로 폴백
+- `{"ok": false, "error": "not_in_cmux|cmux_not_installed"}` → Phase 3로 폴백
+- `surface_parse_failed|open_failed` → `infra_error`로 즉시 중단
 - `{"ok": false, "error": "usage|invalid_surface|goto_failed|wait_failed|eval_failed"}` → 즉시 에스컬레이션
 
 ### cmux 설치 안내 (사용자 명시 요청 시만)
@@ -157,9 +161,9 @@ JSON 출력 파싱:
 
 ---
 
-## Phase 2: playwright-tool CLI (fallback)
+## Phase 3: playwright-tool CLI (fallback)
 
-JavaScript 렌더링이 필요한 페이지를 playwright-tool CLI로 처리한다. cmux 미감지(silent) 또는 Phase 1 폴백 트리거 4종 수신 시 진입한다.
+JavaScript 렌더링이 필요한 페이지를 playwright-tool CLI로 처리한다. cmux가 `not_in_cmux` 또는 `cmux_not_installed`로 `provider_unavailable`일 때만 진입한다.
 
 ### CLI 설치 확인
 
@@ -205,8 +209,8 @@ wireframe 모드는 기존 3단계 폴백 위에 분석 레이어를 추가하�
 ```
 URL 입력 (wireframe 모드)
   │
-  ├─ 2단 폴백으로 콘텐츠 취득 (full 모드 기반)
-  │   Phase 1: cmux-tool → Phase 2: playwright-tool CLI (fallback)
+  ├─ 3단 후보 체인으로 콘텐츠 취득 (full 모드 기반)
+  │   Phase 1: Ego Lite → Phase 2: cmux-tool → Phase 3: playwright-tool CLI
   │
   └─ 분석 레이어 적용
         ├─ 화면 개요 추출 (타이틀, 목적, URL 경로)
@@ -439,15 +443,14 @@ URL 목록 수신
         │              URL: {url}
         │              저장 경로: {save-path}
         │              모드: {mode}  ← full | clean | wireframe 중 하나를 명시
-        │              Phase 1(WebFetch) 시도 후 실패하면 Phase 2(playwright-tool CLI)로 폴백.
+        │              Ego Lite→cmux→Playwright 순서와 provider_unavailable 전용 전환을 적용.
         │              wireframe 모드인 경우 취득한 콘텐츠에 분석 레이어를 적용하여 산출물을 생성해줘.
         │              결과를 {save-path}에 저장하고, 성공 여부와 사용한 방식을 보고해줘."
         │     prompt (browser 모드): "다음 URL의 웹 페이지를 마크다운으로 변환해줘.
         │              URL: {url}
         │              저장 경로: {save-path}
         │              모드: {mode}
-        │              browser 모드: playwright-tool CLI를 직접 호출하여 콘텐츠를 추출해줘.
-        │              WebFetch 단계를 생략하고 즉시 CLI를 실행한다.
+        │              browser 모드: Ego Lite를 먼저 사용하고 미설치면 설치 선택을 반환해 대기한다.
         │              결과를 {save-path}에 저장하고, 성공 여부와 사용한 방식을 보고해줘."
         │
         └─ 전체 완료 후 결과 종합
@@ -455,7 +458,7 @@ URL 목록 수신
 
 ### PM 직접 순차 수집 패턴
 
-PM(오케스트레이터)이 WebFetch를 직접 순차 호출하여 콘텐츠를 사전 수집하고,
+PM(오케스트레이터)이 같은 브라우저 후보 체인으로 콘텐츠를 직접 순차 수집하고,
 수집된 Markdown 파일 경로를 워커에게 주입한다.
 
 **동작 흐름:**
@@ -463,8 +466,8 @@ PM(오케스트레이터)이 WebFetch를 직접 순차 호출하여 콘텐츠를
 URL 목록 수신 (동일 호스트, URL 6개 이상)
   │
   ├─ PM이 URL별 순차 처리
-  │     ├─ Phase 1: cmux-tool → 성공 시 Markdown 정제
-  │     ├─ Phase 1 실패 시: bash ~/.opal/tools/playwright-tool/run.sh {url} --mode {mode}
+  │     ├─ Phase 1: Ego Lite → 성공 시 Markdown 정제
+  │     ├─ provider_unavailable일 때만 Phase 2 cmux → Phase 3 Playwright
   │     └─ {task-folder}/collected-refs/{slug}.md 저장
   │
   └─ 수집 완료 후 워커 병렬 디스패치
@@ -513,12 +516,12 @@ A 모드(신규 surface 또는 일반 URL)에서는 경고문을 노출하지 �
 
 | 상황 | 대응 |
 |------|------|
-| 인증 필요 (로그인 페이지 리다이렉트) | "이 URL은 로그인이 필요합니다" 안내 후 중단 |
-| PDF URL | WebFetch로 처리, MD 변환은 제한적임을 안내 |
+| 인증 필요 | Ego Lite의 사용자 로그인 세션을 사용하되 MFA·승인 행동은 사람에게 인계 |
+| PDF URL | 기존 PDF 처리 capability를 사용하고 MD 변환 한계를 안내 |
 | 매우 긴 페이지 (10만자 초과) | 본문을 10만자에서 truncate, 안내 메시지 추가 |
 | 리다이렉트 | 최종 URL을 따라가되, 메타정보에 원본+최종 URL 모두 기록 |
 | robots.txt 차단 | 안내 후 중단 (강제 우회 금지) |
-| 타임아웃 | Phase 1: 15초, Phase 2(playwright-tool CLI): 30초 후 실패 처리 |
+| 타임아웃 | 현재 공급자를 `infra_error`로 중단하며 다른 공급자로 숨기지 않음 |
 
 ---
 
@@ -528,11 +531,12 @@ A 모드(신규 surface 또는 일반 URL)에서는 경고문을 노출하지 �
 
 | 도구 | 필수 여부 | 필요 시점 | 미설치 시 동작 |
 |------|----------|----------|--------------|
-| `cmux` 0.64.3+ | 선택 | Phase 1 진입 시 (`command -v cmux` 감지) | silent fallback → Phase 2 직행 (안내 없음) |
-| `playwright-tool` CLI | 필수 (OPAL 설치) | Phase 2 진입 시 (cmux 미감지 또는 Phase 1 실패) | 설치 안내 메시지 출력 후 즉시 중단 |
+| Ego Lite + `ego-browser` | 선택 | 일반 URL·동적·인증 브라우저 추출 | manual/r2/cancel 선택 후 대기; cancel만 cmux 허용 |
+| `cmux` 0.64.3+ | 선택 | Ego `provider_unavailable` 또는 명시적 surface | 미설치만 Playwright 허용 |
+| `playwright-tool` CLI | OPAL 설치 | Ego와 cmux가 모두 `provider_unavailable` | 설치 안내 메시지 출력 후 즉시 중단 |
 | Agent 도구 | 선택 | 복수 URL 병렬 처리 | — |
 
-**사전 확인 규칙**: Phase 2 진입 전에 아래 Bash 명령으로 `run.sh` 파일 존재 여부를 확인한다. 미설치 확인 시 "playwright-tool 미설치 시" 안내를 즉시 출력하고 실행을 중단한다.
+**사전 확인 규칙**: Phase 3 진입 전에 아래 Bash 명령으로 `run.sh` 파일 존재 여부를 확인한다. 미설치 확인 시 "playwright-tool 미설치 시" 안내를 즉시 출력하고 실행을 중단한다.
 
 ```bash
 ls ~/.opal/tools/playwright-tool/run.sh 2>/dev/null || echo "NOT_FOUND"

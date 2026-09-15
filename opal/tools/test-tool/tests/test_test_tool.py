@@ -4,8 +4,8 @@
   "task": "039",
   "layer": "test",
   "domain": "opal-tools",
-  "description": "test-tool resolve/check/unit/integration public CLI regression tests for resolver precedence, execution gates, E2E migration/status behavior, and error catalog stability.",
-  "scenarios": ["S-1", "S-2", "S-3", "S-4", "S-5", "S-6", "S-7", "S-8", "S-9"],
+  "description": "test-tool resolve/check/unit/integration public CLI regression tests for resolver precedence, execution gates, E2E migration/status behavior, multi-provider traversal, and error catalog stability.",
+  "scenarios": ["S-1", "S-2", "S-3", "S-4", "S-5", "S-6", "S-7", "S-8", "S-9", "task-129:S-1", "task-129:S-2", "task-129:S-3", "task-129:S-6"],
   "exports": [
     "TestResolve",
     "TestUnit",
@@ -13,6 +13,7 @@
     "TestIntegrationCmuxFallback",
     "TestIntegrationCmuxEscalate",
     "TestIntegrationModeA",
+    "TestIntegrationEgoProviderChain",
     "TestErrorCodesInCatalog"
   ]
 }
@@ -97,6 +98,18 @@ def _env_with_cmux_cmd(stub_path, base_env=None):
     """
     env = (base_env or os.environ).copy()
     env["OPAL_CMUX_TOOL_CMD"] = str(stub_path)
+    return env
+
+
+def _env_with_browser_provider_cmds(*, ego=None, cmux=None, playwright=None, base_env=None):
+    """Public command seams used to verify configured provider traversal."""
+    env = (base_env or os.environ).copy()
+    if ego is not None:
+        env["OPAL_EGO_BROWSER_TOOL_CMD"] = str(ego)
+    if cmux is not None:
+        env["OPAL_CMUX_TOOL_CMD"] = str(cmux)
+    if playwright is not None:
+        env["OPAL_PLAYWRIGHT_TOOL_CMD"] = str(playwright)
     return env
 
 
@@ -957,6 +970,178 @@ tiers:
             error_integration, self.EXPECTED_ERROR_CATALOG,
             f"integration 에러 코드 '{error_integration}'가 카탈로그에 없음. catalog={self.EXPECTED_ERROR_CATALOG}"
         )
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Task 129 S-1/S-2/S-3/S-6: Ego → cmux → Playwright provider chain
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestIntegrationEgoProviderChain(unittest.TestCase):
+    """Configured priority and provider-status boundaries through the public CLI."""
+
+    def setUp(self):
+        self.tmpdir = pathlib.Path(tempfile.mkdtemp())
+        self.project_root = self.tmpdir / "project"
+        (self.project_root / ".opal").mkdir(parents=True)
+        self.stub_dir = self.tmpdir / "stubs"
+        self.stub_dir.mkdir()
+        self.call_log = self.tmpdir / "provider-calls.log"
+
+    def tearDown(self):
+        shutil.rmtree(self.tmpdir, ignore_errors=True)
+
+    def _write_config(self, providers=None):
+        providers = providers or [
+            {"name": "playwright", "priority": 30, "via": "playwright-tool"},
+            {"name": "ego-lite", "priority": 10, "via": "ego-browser-tool"},
+            {"name": "cmux", "priority": 20, "via": "cmux-tool"},
+        ]
+        lines = ["version: \"2.0\"", "tiers:", "  integration:", "    e2e:"]
+        for item in providers:
+            lines.extend([
+                f"      - name: {item['name']}",
+                f"        priority: {item['priority']}",
+                f"        via: {item.get('via', item['name'])}",
+                "        candidate_on: provider_unavailable",
+            ])
+        (self.project_root / ".opal" / "test-tools.yaml").write_text(
+            "\n".join(lines) + "\n",
+            encoding="utf-8",
+        )
+
+    def _provider_stub(self, name, payload, exit_code):
+        path = self.stub_dir / f"{name}-stub"
+        script = f'''#!/bin/bash
+printf '%s\\n' "{name}" >> "{self.call_log}"
+printf '%s\\n' '{json.dumps(payload)}'
+exit {exit_code}
+'''
+        path.write_text(script, encoding="utf-8")
+        path.chmod(path.stat().st_mode | stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH)
+        return path
+
+    def _env(self, ego_payload, ego_exit, cmux_payload, cmux_exit, playwright_payload, playwright_exit):
+        ego = self._provider_stub("ego-lite", ego_payload, ego_exit)
+        cmux = self._provider_stub("cmux", cmux_payload, cmux_exit)
+        playwright = self._provider_stub("playwright", playwright_payload, playwright_exit)
+        return _env_with_browser_provider_cmds(ego=ego, cmux=cmux, playwright=playwright)
+
+    def test_priority_sorted_chain_preserves_driver_expected_and_actual(self):
+        self._write_config()
+        env = self._env(
+            {"ok": False, "status": "provider_unavailable"}, 18,
+            {"ok": False, "command": "open", "error": "cmux_not_installed"}, 1,
+            {"ok": True, "status": "pass", "actual": "Example Domain"}, 0,
+        )
+
+        code, stdout, data = _run(
+            ["integration", "--url", "https://example.com", "--expect-text", "Example Domain",
+             "--project-root", str(self.project_root)],
+            env=env,
+        )
+
+        self.assertEqual(code, 0, stdout)
+        self.assertEqual(self.call_log.read_text(encoding="utf-8").splitlines(),
+                         ["ego-lite", "cmux", "playwright"])
+        self.assertEqual(data.get("status"), "pass", data)
+        self.assertEqual(data.get("e2e", {}).get("driver"), "playwright", data)
+        self.assertEqual(data.get("e2e", {}).get("expected"), "Example Domain", data)
+        self.assertEqual(data.get("e2e", {}).get("actual"), "Example Domain", data)
+        self.assertEqual(data.get("contract_version"), "2.0", data)
+
+    def test_missing_ego_handoff_stops_without_silent_fallback_and_preserves_resume(self):
+        self._write_config()
+        handoff = {
+            "choices": ["manual", "r2", "cancel"],
+            "resume_token": "resume-129",
+            "resume": {"url": "https://example.com", "expect_text": "Example Domain"},
+        }
+        env = self._env(
+            {"ok": False, "status": "awaiting_human", "operational_status": "awaiting_human", "handoff": handoff}, 20,
+            {"ok": False, "command": "open", "error": "cmux_not_installed"}, 1,
+            {"ok": True, "status": "pass", "actual": "Example Domain"}, 0,
+        )
+
+        code, stdout, data = _run(
+            ["integration", "--url", "https://example.com", "--expect-text", "Example Domain",
+             "--project-root", str(self.project_root)],
+            env=env,
+        )
+
+        self.assertEqual(code, 20, stdout)
+        self.assertEqual(data.get("status"), "awaiting_human", data)
+        self.assertEqual(data.get("e2e", {}).get("driver"), "ego-lite", data)
+        self.assertEqual(data.get("handoff", {}).get("choices"), ["manual", "r2", "cancel"], data)
+        self.assertEqual(data.get("handoff", {}).get("resume", {}).get("url"), "https://example.com", data)
+        self.assertEqual(self.call_log.read_text(encoding="utf-8").splitlines(), ["ego-lite"])
+
+    def test_only_provider_unavailable_advances_and_exhaustion_is_executor_unavailable(self):
+        self._write_config()
+        terminal_cases = [
+            ("fail", 6),
+            ("infra_error", 7),
+            ("blocked", 19),
+            ("awaiting_human", 20),
+        ]
+        for status, expected_exit in terminal_cases:
+            with self.subTest(status=status):
+                self.call_log.write_text("", encoding="utf-8")
+                env = self._env(
+                    {"ok": False, "status": status}, expected_exit,
+                    {"ok": False, "command": "open", "error": "cmux_not_installed"}, 1,
+                    {"ok": True, "status": "pass", "actual": "Example Domain"}, 0,
+                )
+                code, stdout, data = _run(
+                    ["integration", "--url", "https://example.com", "--expect-text", "Example Domain",
+                     "--project-root", str(self.project_root)],
+                    env=env,
+                )
+                self.assertEqual(code, expected_exit, stdout)
+                self.assertEqual(data.get("status"), status, data)
+                self.assertEqual(self.call_log.read_text(encoding="utf-8").splitlines(), ["ego-lite"])
+
+        self.call_log.write_text("", encoding="utf-8")
+        env = self._env(
+            {"ok": False, "status": "provider_unavailable"}, 18,
+            {"ok": False, "command": "open", "error": "cmux_not_installed"}, 1,
+            {"ok": False, "status": "provider_unavailable"}, 18,
+        )
+        code, stdout, data = _run(
+            ["integration", "--url", "https://example.com", "--expect-text", "Example Domain",
+             "--project-root", str(self.project_root)],
+            env=env,
+        )
+        self.assertEqual(code, 18, stdout)
+        self.assertEqual(data.get("status"), "executor_unavailable", data)
+        self.assertEqual(self.call_log.read_text(encoding="utf-8").splitlines(),
+                         ["ego-lite", "cmux", "playwright"])
+
+    def test_playwright_assertion_failure_is_final_and_no_assertion_is_not_pass(self):
+        self._write_config()
+        env = self._env(
+            {"ok": False, "status": "provider_unavailable"}, 18,
+            {"ok": False, "command": "open", "error": "cmux_not_installed"}, 1,
+            {"ok": True, "status": "pass", "actual": "Different page"}, 0,
+        )
+        code, stdout, data = _run(
+            ["integration", "--url", "https://example.com", "--expect-text", "Example Domain",
+             "--project-root", str(self.project_root)],
+            env=env,
+        )
+        self.assertEqual(code, 6, stdout)
+        self.assertEqual(data.get("status"), "fail", data)
+        self.assertEqual(data.get("e2e", {}).get("driver"), "playwright", data)
+        self.assertEqual(self.call_log.read_text(encoding="utf-8").splitlines(),
+                         ["ego-lite", "cmux", "playwright"])
+
+        self.call_log.write_text("", encoding="utf-8")
+        code, stdout, data = _run(
+            ["integration", "--url", "https://example.com",
+             "--project-root", str(self.project_root)],
+            env=env,
+        )
+        self.assertNotEqual(code, 0, stdout)
+        self.assertNotEqual(data.get("status"), "pass", data)
 
 
 # ─────────────────────────────────────────────────────────────────────────────

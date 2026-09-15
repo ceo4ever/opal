@@ -320,6 +320,56 @@ def test_s12_1_out_of_lease_write_is_rejected(cp_env):
     assert_no_destructive_git(log, "S-12 lease 밖 쓰기 거부")
 
 
+def test_s12_1a_pure_out_of_lease_write_without_own_write_is_rejected(cp_env):
+    """[T132/S-12] 호출 attempt가 **자기 lease 경로를 전혀 건드리지 않고** lease 밖만
+    수정한 경우 — 가장 전형적인 scope_violation — 도 checkpoint가 거부해야 한다.
+    귀속이 자기 lease 쓰기 시점(own_marker)에만 의존하면 own이 공집합일 때 위반이
+    하나도 검출되지 않는다(구조적 false negative). 순수 이탈은 lease 계약상 항상
+    위반이다(수용기준 6·7, 제안서 §4.5)."""
+    repo, run_root, env, log = cp_env["repo"], cp_env["run_root"], cp_env["env"], cp_env["log"]
+    before = git_fingerprint(repo)
+
+    # 자기 lease(src/users/service.py)는 손대지 않는다 — lease 밖만 쓴다.
+    _write(repo, "src/orders/service.py", "ORDERS = 999\n")
+
+    payload = make_candidate(run_root, repo, "T01", "a1", env)
+
+    assert payload.get("ok") is False, (
+        f"자기 lease 쓰기 없이 lease 밖만 썼는데 candidate가 만들어졌다: {payload}"
+    )
+    assert payload.get("error") == "CHECKPOINT_REJECTED", payload
+    assert "out_of_lease_write" in payload.get("reasons", []), payload
+    assert "src/orders/service.py" in payload.get("violating_paths", []), payload
+
+    after = git_fingerprint(repo)
+    assert after == before, f"거부 경로가 Git 상태를 바꿨다: {before} -> {after}"
+    assert_no_destructive_git(log, "S-12 순수 lease 이탈 거부")
+
+
+def test_s12_1b_out_of_lease_delete_is_rejected(cp_env):
+    """[T132/S-12] lease 밖 tracked 파일 **삭제**도 lease 밖 쓰기다. 삭제 경로는 stat이
+    불가능해 mtime 관측이 성립하지 않으므로, mtime 대소 비교에만 의존하는 귀속은
+    삭제를 구조적으로 절대 귀속하지 못한다. 삭제는 그 자체로 거부 사유여야 한다
+    (수용기준 6·7, 제안서 §4.5)."""
+    repo, run_root, env, log = cp_env["repo"], cp_env["run_root"], cp_env["env"], cp_env["log"]
+    before = git_fingerprint(repo)
+
+    _write(repo, "src/users/service.py", "USERS = 2\n")  # 자기 lease — 허용
+    (repo / "src/orders/service.py").unlink()  # 타 Runner lease tracked 파일 삭제 — 위반
+    assert not (repo / "src/orders/service.py").exists()
+
+    payload = make_candidate(run_root, repo, "T01", "a1", env)
+
+    assert payload.get("ok") is False, f"lease 밖 삭제인데 candidate가 만들어졌다: {payload}"
+    assert payload.get("error") == "CHECKPOINT_REJECTED", payload
+    assert "out_of_lease_write" in payload.get("reasons", []), payload
+    assert "src/orders/service.py" in payload.get("violating_paths", []), payload
+
+    after = git_fingerprint(repo)
+    assert after == before, f"거부 경로가 Git 상태를 바꿨다: {before} -> {after}"
+    assert_no_destructive_git(log, "S-12 lease 밖 삭제 거부")
+
+
 @pytest.mark.parametrize(
     "label,git_args",
     [

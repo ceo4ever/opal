@@ -1,0 +1,44 @@
+{
+  "check": "convention",
+  "status": "pass",
+  "checked_files": [
+    "docs/ARCHITECTURE.md",
+    "docs/CONVENTIONS.md",
+    "docs/PROJECT.md",
+    "docs/SECURITY.md",
+    "opal/agents/opal-wtm-agent/AGENT.md",
+    "opal/core/references/agents.md",
+    "opal/core/references/community-skills-registry.json",
+    "opal/core/references/tools.md",
+    "opal/templates/test-tools.yaml",
+    "opal/tools/test-tool/README.md",
+    "opal/tools/test-tool/lib/e2e_adapter.py",
+    "opal/tools/test-tool/lib/resolver.py",
+    "opal/tools/test-tool/test_tool.py",
+    "opal/tools/test-tool/tests/test_test_tool.py",
+    "opal/tools/tool-scan/manifest.json",
+    "scripts/install-mac.sh",
+    "skills/web-to-markdown/SKILL.md",
+    "opal/tools/ego-browser-tool/README.md",
+    "opal/tools/ego-browser-tool/installer-manifest.json",
+    "opal/tools/ego-browser-tool/main.py",
+    "opal/tools/ego-browser-tool/run.sh",
+    "opal/tools/ego-browser-tool/tests/test_ego_browser_tool.py"
+  ],
+  "findings": [],
+  "evidence": [
+    "git diff --check: exit 0",
+    "code-scan validate changed Python files: coverage 100%, violations 0",
+    "python unittest ego-browser-tool: 4/4 pass",
+    "python unittest test-tool: 88/88 pass",
+    "python -m json.tool community-skills-registry.json: exit 0",
+    "bash -n scripts/install-mac.sh: exit 0"
+  ],
+  "references": [
+    "docs/CONVENTIONS.md",
+    "opal/core/references/conventions-hub-model.md",
+    "opal/core/references/harness/gc-finding-schema.md"
+  ],
+  "missing_capabilities": [],
+  "report_path": "tasks/129-260914-opds-ego-lite-브라우저-우선통합/GC-CONVENTION-2026-09-14T23-32-09.md"
+}

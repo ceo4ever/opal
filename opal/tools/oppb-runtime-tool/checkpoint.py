@@ -4,7 +4,7 @@
   "task": "132",
   "layer": "util",
   "domain": "oppb-runtime",
-  "description": "OPPB Checkpoint Tool — 프로젝트 worktree의 유일한 Git writer다. candidate 생성은 `GIT_INDEX_FILE` 임시 index + `write-tree` + `commit-tree`로 수행해 project branch·HEAD·공유 index를 전혀 건드리지 않고 병렬로 돌아간다. project branch를 전진시키는 publication 구간만 run root의 짧은 전역 lock으로 직렬화하고, 검증 통과 candidate만 expected parent 비교 뒤 `update-ref <ref> <new> <old>` compare-and-swap으로 fast-forward한다. parent가 이미 전진한 candidate는 `STALE_PARENT`로 거부하고 반영하지 않는다. Runner의 Git 상태 변경은 HEAD sha·HEAD symbolic ref·공유 index 지문·HEAD reflog 지문 4축 baseline 대조로 감지하며, lease 밖 tracked 쓰기와 공유 지식(MEMORY·brain) 쓰기도 checkpoint 거부 사유다. 검증 snapshot은 `git archive <candidate_commit>`으로 만든다. 실패·거부 경로는 candidate를 폐기할 뿐 branch·HEAD·공유 index를 되돌리지 않으며 `reset --hard`·worktree 전체 restore·`clean`·`worktree remove`를 호출하지 않는다(제안서 §4.5 [MUST]). 복구는 path-scoped 수단만 쓴다. `worktree-tool finalize` 전 사전 검사(active lease 0·미처리 result 0·checkpoint 밖 dirty source 0·MEMORY/brain diff 0)는 `pre-finalize`가 외부에서 수행하며 `worktree_tool.py`를 수정하지 않는다. scope hash·lease 정규화는 controller를 호출하고 재구현하지 않는다. 원자 쓰기는 `ledger.py:336-377` 형태만 복제한다(oppl-runtime-tool import 금지). 표준 라이브러리와 git CLI만 사용하고 플랫폼 분기를 두지 않는다.",
+  "description": "OPPB Checkpoint Tool — 프로젝트 worktree의 유일한 Git writer다. candidate 생성은 `GIT_INDEX_FILE` 임시 index + `write-tree` + `commit-tree`로 수행해 project branch·HEAD·공유 index를 전혀 건드리지 않고 병렬로 돌아간다. project branch를 전진시키는 publication 구간만 run root의 짧은 전역 lock으로 직렬화하고, 검증 통과 candidate만 expected parent 비교 뒤 `update-ref <ref> <new> <old>` compare-and-swap으로 fast-forward한다. parent가 이미 전진한 candidate는 `STALE_PARENT`로 거부하고 반영하지 않는다. Runner의 Git 상태 변경은 HEAD sha·HEAD symbolic ref·공유 index 지문·HEAD reflog 지문 4축 baseline 대조로 감지하며, lease 밖 tracked 쓰기와 공유 지식(MEMORY·brain) 쓰기도 checkpoint 거부 사유다. lease 밖 쓰기 귀속은 자기 lease 마지막 쓰기 시점(mtime) 이후의 lease 밖 변경을 귀속하되, 자기 lease 쓰기가 전혀 없는 순수 이탈은 lease 밖 변경 전부를 귀속하고, mtime이 관측되지 않는 삭제는 순서 비교 대신 존재→부재 전이로 무조건 귀속한다. lease 밖을 먼저 쓰고 자기 lease를 나중에 쓰는 순서 역전은 mtime 단독 관측으로 구별할 수 없어 귀속되지 않는다(알려진 한계, `classify_writes` docstring). 검증 snapshot은 `git archive <candidate_commit>`으로 만든다. 실패·거부 경로는 candidate를 폐기할 뿐 branch·HEAD·공유 index를 되돌리지 않으며 `reset --hard`·worktree 전체 restore·`clean`·`worktree remove`를 호출하지 않는다(제안서 §4.5 [MUST]). 복구는 path-scoped 수단만 쓴다. `worktree-tool finalize` 전 사전 검사(active lease 0·미처리 result 0·checkpoint 밖 dirty source 0·MEMORY/brain diff 0)는 `pre-finalize`가 외부에서 수행하며 `worktree_tool.py`를 수정하지 않는다. scope hash·lease 정규화는 controller를 호출하고 재구현하지 않는다. 원자 쓰기는 `ledger.py:336-377` 형태만 복제한다(oppl-runtime-tool import 금지). 표준 라이브러리와 git CLI만 사용하고 플랫폼 분기를 두지 않는다.",
   "exports": [
     "ERROR_CODES", "CheckpointError", "SUBCOMMANDS",
     "checkpoint_dir", "candidate_receipt_path", "baseline_path", "publication_lock_path",
@@ -389,7 +389,11 @@ def _zsplit(text):
 def dirty_paths(project_root):
     """HEAD 대비 변경된 tracked 경로 + 미추적 경로를 mtime과 함께 돌려준다.
 
-    반환: {relpath: mtime_ns}. 삭제된 경로는 mtime 0으로 남긴다.
+    반환: {relpath: mtime_ns | None}. **부재 경로(삭제)는 `None`**이며 0 같은 수치
+    센티널을 쓰지 않는다. 0을 넣으면 "아주 오래된 쓰기"로 읽혀 mtime 대소 비교에
+    항상 지고, 삭제가 구조적으로 귀속되지 않는다. `None`은 비교 가능한 값이 아니라
+    **관측 불가**를 뜻하므로 `classify_writes`가 순서 비교 대신 존재→부재 전이로
+    따로 판정한다.
     """
     modified = _zsplit(
         _git(["diff", "--name-only", "-z", "HEAD"], cwd=project_root).stdout
@@ -408,7 +412,8 @@ def dirty_paths(project_root):
         try:
             observed[relpath] = full.stat().st_mtime_ns
         except OSError:
-            observed[relpath] = 0
+            # 삭제되었거나 stat 불가 — mtime은 존재하지 않는다.
+            observed[relpath] = None
     return observed
 
 
@@ -430,16 +435,50 @@ def classify_writes(observed, lease_paths):
     미완료 작업이므로 이 attempt의 위반이 아니다 — 그 변경은 소유 lease의
     candidate로 따로 들어간다. 동시각(tie)은 귀속 불가로 보고 보수적으로
     거부한다.
+
+    이 mtime 순서 비교는 **자기 lease 쓰기가 실제로 관측된 경우에만** 성립한다.
+    두 예외는 순서 비교에 맡기지 않고 별도로 판정한다.
+
+    1. **순수 이탈(own 공집합).** 자기 lease 경로에 아무 쓰기도 없이 lease 밖만
+       바꾼 attempt는 비교 기준(`own_marker`)이 아예 없다. 순서로 걸러낼 것이
+       없으므로 lease 밖 dirty 경로를 **전부 귀속**한다. 자기 구간에 기여가 0인
+       attempt에게 lease 밖 변경을 면책할 근거가 없고, 거부 방향이 보수적이다.
+    2. **lease 밖 삭제(존재→부재 전이).** 삭제된 경로는 stat이 불가능해 mtime이
+       존재하지 않는다(`dirty_paths`가 `None`으로 표시). 삭제를 수치 센티널로
+       비교에 끼워 넣으면 항상 기준보다 앞선 것으로 읽혀 구조적으로 귀속되지
+       않는다. 삭제는 순서 비교 대상이 아니라 **전이 자체가 lease 밖 쓰기**이므로
+       lease 밖이면 무조건 귀속한다.
+
+    ## 알려진 한계 — 쓰기 순서 역전은 귀속되지 않는다
+
+    attempt가 **lease 밖을 먼저 쓰고 자기 lease를 나중에 쓰면**
+    `foreign_mtime < own_marker`가 되어 이 규칙을 빠져나간다. 이는 구현 결함이
+    아니라 **mtime 단독 관측의 근본 한계**다: 그 파일시스템 상태는 "다른 Runner가
+    자기 lease에서 작업 중인 정상 동시 실행"(S-13①)과 **완전히 동일**하고, 차이는
+    관측되지 않는 쓰기 순서뿐이다. 시작·종료 baseline 봉인으로도 두 상태는
+    구별되지 않는다. attempt별 격리 worktree(제안서가 명시 거부, worktree 1개)나
+    Runner 자기 신고(§4.5의 사후 탐지 요구와 어긋남) 외의 수단이 없어 v1은 이
+    한계를 감수한다. 쓰기 주체를 직접 관측할 수단(파일시스템 감사 이벤트 등)이
+    생기면 이 mtime 순서 비교 전체가 교체 대상이다.
     """
     lease_set = set(lease_paths)
     own = {p: m for p, m in observed.items() if p in lease_set}
     foreign = {p: m for p, m in observed.items() if p not in lease_set}
 
-    own_marker = max(own.values()) if own else None
+    # 삭제(mtime 관측 불가)는 순서 비교 모집단에서 분리한다.
+    foreign_deleted = {p for p, m in foreign.items() if m is None}
+    foreign_present = {p: m for p, m in foreign.items() if m is not None}
+    own_marks = [m for m in own.values() if m is not None]
+    own_marker = max(own_marks) if own_marks else None
 
-    attributed = []
-    if own_marker is not None:
-        attributed = sorted(p for p, m in foreign.items() if m >= own_marker)
+    if own_marker is None:
+        # 순수 이탈 — 비교 기준이 없다. lease 밖 변경 전부를 귀속한다.
+        attributed = sorted(foreign)
+    else:
+        attributed = sorted(
+            foreign_deleted
+            | {p for p, m in foreign_present.items() if m >= own_marker}
+        )
 
     shared = [p for p in attributed if is_shared_knowledge(p)]
     out_of_lease = [p for p in attributed if not is_shared_knowledge(p)]

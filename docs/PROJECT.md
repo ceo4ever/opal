@@ -36,7 +36,7 @@
 | `skills/` | 독립 스킬 소스 | 파이프라인 없이 단독 사용하는 스킬 (8종) |
 | `opal/skills/` | OPAL 스킬 소스 | 오케스트레이터, 단계 스킬 등 OPAL 전용 (44종) |
 | `opal/agents/` | 워커 에이전트 소스 | 모든 서브에이전트 정의 (15종) |
-| `opal/tools/` | OPAL 도구 소스 | 결정론 집행 CLI (21종, `event-loader` 포함) |
+| `opal/tools/` | OPAL 도구 소스 | 결정론 집행 CLI (22종, `event-loader`와 `ego-browser-tool` 포함) |
 | `opal/core/` | 프레임워크 코어 | 레퍼런스, MCP 설정, 도구 |
 | `opal/bootstrapper/` | 부트스트래퍼 | 플랫폼별 부트스트랩 진입점 (claude/codex/cursor/gemini) |
 | `opal/templates/` | 템플릿 | 배포 시 참조하는 설정 템플릿 |
@@ -100,7 +100,7 @@
 | `opal-test-agent` | - | 서브에이전트 | 테스트 전문 워커 — TEST-SCENARIO.md 기반 동적 검증, BE/FE/E2E 3모드 |
 | `opal-task-action-agent` | - | 서브에이전트 | oppd Phase 3 액션 자율 실행 — PLAN → QA → TEST-SCENARIO → EXECUTE → 검증 루핑(L1~L3b) → TEST 완주 |
 | `opal-sdd-action-agent` | - | 서브에이전트 | opsdd Phase 4 ACT 자율 실행 — PLAN → EXECUTE → VERIFY(L1~L3b) → TEST.md 완주 |
-| `opal-wtm-agent` | wtm | 서브에이전트 | web-to-markdown 워커 — cmux-tool(1순위) → playwright-tool(fallback) 2단 폴백으로 웹 페이지 변환 |
+| `opal-wtm-agent` | wtm | 서브에이전트 | web-to-markdown 워커 — 공개 검색은 기존 web search, 브라우저 추출은 Ego Lite → cmux → Playwright 순서로 변환 |
 
 > 나머지 워커 5종은 각 파이프라인 섹션에 등재된다 — `opal-db-agent`(Data Design) · `opal-evaluator-agent`·`opal-loop-action-agent`(Project Loop) · `opal-security-checker`·`opal-convention-checker`(GC).
 
@@ -169,7 +169,7 @@ llm-wiki 사상을 융합한 프로젝트 지식 위키 — 프로젝트의 WHY�
 | `opal-evaluator-agent` | - | 서브에이전트 | 명세 심판 전담 — CONTRACT 루브릭절 기준 구현 전 판정(verdict-only·readonly). 검증 2원화의 전단(후단은 opal-test-agent). phase 4종(design-review/spec-review/drift-recheck + `scenario-rubric` 목표-커버 판단축, 073) |
 | `opal-loop-action-agent` | - | 서브에이전트 | Loop 2 루프 액션 에이전트 — PM이 태스크당 1회 디스패치, T1~T5+G를 내부 디스패치(생성자·Evaluator·test-agent·checker 4축)로 완주 후 소멸. 결과 계약 6필드 반환, 비가역·계약갱신 drift는 blocked 반환(PM 에스컬레이션) |
 | `backlog-tool` | - | 도구 | backlog.json SSOT 관리 CLI (8서브명령 init/add-task/select-next/mark/update-task/done-check/coverage-check/show, BACKLOG.md 자동 렌더). `covers` 필드 + `coverage-check`(표면 커버리지·통합 태스크 게이트 — surfaces.json 소비) |
-| `test-tool scenario-*` | - | 도구 확장 | test-scenario.json SSOT — RED-first 동결 게이트(scenario-init/red/lock/mark/status) + 충실도·표면 게이트(scenario-fidelity-check/scenario-conformance — required_fidelity·fidelity·surface_ref 필드, 증거 충실도 사다리 mock<real-http<real-usage) + 목표-커버 게이트(scenario-coverage-check — R/F/H 매핑 결정론, exit 16/17, 073) + E2E profile·executor·final/operational status·구조화 assertion/evidence/handoff 판정 계약. 실제 executor와 Runtime Manager는 별도 구현 범위 |
+| `test-tool scenario-*` | - | 도구 확장 | test-scenario.json SSOT — RED-first 동결 게이트(scenario-init/red/lock/mark/status) + 충실도·표면 게이트(scenario-fidelity-check/scenario-conformance — required_fidelity·fidelity·surface_ref 필드, 증거 충실도 사다리 mock<real-http<real-usage) + 목표-커버 게이트(scenario-coverage-check — R/F/H 매핑 결정론, exit 16/17, 073) + E2E profile·executor·final/operational status·구조화 assertion/evidence/handoff 판정 계약. 브라우저 executor는 Ego Lite → cmux → Playwright 순서이며 `provider_unavailable`일 때만 다음 후보를 실행한다. 실제 executor와 Runtime Manager는 별도 구현 범위 |
 | `oppl-runtime-tool` | - | 도구 | `.oppl-run/runtime.json` 운영 ledger 관리 CLI — round·project dispatch·task attempt·resume·예산 admission과 실패 지문 무진전 판정을 소유한다. 3-SSOT(backlog/state/test-scenario)와 별개의 런타임 가드 축이며 업무·파이프라인·검증 상태를 복제하지 않는다. attempt 원문(PID·PGID·heartbeat·terminal result)은 `opal-agent`의 attempt record가 소유하고 ledger는 `attempt_id`·경로만 외래 참조한다 |
 | `opal-action-monitor` | - | 도구 | 루프 액션 에이전트 진행 현황판 — `.oppl-run/`(events.jsonl·journal.md·exitcode) 파싱, 단계×축 상태 렌더 + `--json`/`--watch`. 7상태와 잔여 상한 표시는 `oppl-runtime-tool` ledger에 위임한다 (읽기 전용) |
 | `opal-action-status` | opas | operator | 액션 에이전트 현황 발동층 — `//opas [태스크폴더]` 자동 탐지 + opal-action-monitor/backlog-tool 소비 + 해석 보고 (읽기 전용). 커버리지 oppl 한정, 069/070 전환 시 무변경 확장 |
