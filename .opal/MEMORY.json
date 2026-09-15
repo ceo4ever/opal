@@ -67,12 +67,12 @@
       "summary": "scripts/install-mac.sh의 SEED_KEYS 루프가 'if key in existing: continue'로 판정한다. qui…"
     },
     {
-      "title": "워크트리 scan_depth 실패가 라우터 회귀 32건을 가렸다 — 사전 존재 실패를 기준선에 넣으면 그 범위의 신규 회귀를 못 잡는다",
+      "title": "워크트리 선행 실패가 라우터 회귀 32건을 가렸다",
       "date": "2026-09-15",
       "type": "improvement",
       "status": "candidate",
-      "file": "memory/Console_프로젝트_탐색_scan_depth와_워크트리_깊이_불일치로_test_routers_py_36건이_워크트리에서만_실패.md",
-      "summary": "워크트리 404가 선행 실패해 QuietHours 좁히기 회귀가 병합 후에야 드러났다"
+      "file": "memory/워크트리_선행_실패가_라우터_회귀_32건을_가렸다.md",
+      "summary": "사전 존재 실패를 기준선에 넣으면 그 범위의 신규 회귀를 탐지할 수 없다"
     }
   ],
   "history": [
