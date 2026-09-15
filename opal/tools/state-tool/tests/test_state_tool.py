@@ -2511,8 +2511,9 @@ class TestErrorCodesCompleteness(unittest.TestCase):
     등재(42→43)되어 실측 39→43(070 GREEN 후속 정정)이 아니라 44→43으로
     갱신됐다. 목록·카운트 둘 다 실측값(43)에 맞춰 동기화한다.
 
-    [122 W-2] --actor 미지원 skill 거부 코드 1종 등재로 51→52. PM 승인(카탈로그
-    정합 보존)."""
+    [122 W-2] --actor 미지원 skill 거부 코드 1종 등재로 51→52.
+    [134 W-2] 손상 state.json의 mode 복원 거부 코드 1종 등재로 52→53. PM 승인
+    (카탈로그 정합 보존)."""
 
     EXPECTED_CODES = [
         # 기존 25종 (PLAN §2.18 + 이전 추가분) 중 23종 존치
@@ -2582,26 +2583,29 @@ class TestErrorCodesCompleteness(unittest.TestCase):
         "finalize_attribution_failed",
         # 122 W-2 신규 1종 (--actor pm이 opd/opds 외 skill과 결합 시 거부 게이트)
         "actor_unsupported_for_skill",
+        # 134 W-2 신규 1종 (손상 state.json의 mode 복원 하드 블록)
+        "state_json_malformed",
     ]
 
     def test_error_codes_count(self):
-        """[098 H-10 선갱신 + 106 종수 갱신 + 111 갱신 + 122 W-2 갱신] ERROR_CODES 52종 —
+        """[098 H-10 선갱신 + 106/111/122/134 종수 갱신] ERROR_CODES 53종 —
         093 시점 44종에서 098 F-003이 `evidence_check_flag_conflict` 1종을 등재해
         45종이 되고, 106 F-004가 `code_scan_citation_unmet` 1종을 등재해 46종,
         111 W-1이 `plan_contract_unmet` 1종을 등재해 47종, 118 W-4가
         finalize-attribution 전용 4종을 등재해 51종, 122 W-2가
-        `actor_unsupported_for_skill` 1종을 등재해 52종이다.
+        `actor_unsupported_for_skill` 1종을 등재해 52종, 134 W-2가
+        `state_json_malformed` 1종을 등재해 53종이다.
 
         갱신 근거: 신규 에러 코드 등재가 종수 단언을 같이 깨므로 등재 태스크가
         기대값을 함께 옮긴다. 111 W-1은 PLAN Work items 계약을 차단형 게이트로
         집행하므로 전용 에러 코드를 추가한다. 122 W-2는 `--actor pm`이 opd/opds
         외 skill과 결합될 때 전용 에러 코드로 거부한다(PM 승인, 카탈로그 정합
         보존)."""
-        self.assertEqual(len(ST.ERROR_CODES), 52,
-                         "[122 W-2] --actor 미지원 skill 거부 코드 등재 후 52종 기대")
+        self.assertEqual(len(ST.ERROR_CODES), 53,
+                         "[134 W-2] 손상 state.json 거부 코드 등재 후 53종 기대")
 
     def test_all_28_codes_registered(self):
-        """[098 H-10 선갱신 + 106 종수 갱신 + 111 갱신 + 122 W-2 갱신] 52종 각각이 ERROR_CODES에 등재됨."""
+        """[098 H-10 선갱신 + 106/111/122/134 종수 갱신] 53종 각각이 ERROR_CODES에 등재됨."""
         for code in self.EXPECTED_CODES:
             self.assertIn(code, ST.ERROR_CODES, f"에러 코드 {code} 미등재")
         self.assertEqual(len(self.EXPECTED_CODES), len(ST.ERROR_CODES),
@@ -2638,14 +2642,13 @@ class TestErrorCodesCompleteness(unittest.TestCase):
         self.assertEqual(readme_count, actual_count,
                          f"README 기재 종수({readme_count})와 실측 len(ERROR_CODES)"
                          f"({actual_count})가 불일치함(D-5 ① 정합 위반)")
-        # [122 W-2] 종수 52 하드 기대 — actor_unsupported_for_skill 신규 등재 반영
-        self.assertEqual(actual_count, 52,
-                         "[122 W-2] len(ERROR_CODES)==52 기대 — allocator_root_* / "
+        # [134 W-2] 종수 53 하드 기대 — state_json_malformed 신규 등재 반영
+        self.assertEqual(actual_count, 53,
+                         "[134 W-2] len(ERROR_CODES)==53 기대 — allocator_root_* / "
                          "finalize_attribution_failed / actor_unsupported_for_skill "
-                         "등재가 유실되면 47 이하로 실패")
-        self.assertEqual(readme_count, 52,
-                         "[122 W-2] README 헤더 종수==52 기대 — 카탈로그 정정이 "
-                         "누락되면 47 이하로 실패")
+                         "/ state_json_malformed 등재가 유실되면 실패")
+        self.assertEqual(readme_count, 53,
+                         "[134 W-2] README 헤더 종수==53 기대 — 카탈로그 정정 누락")
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -9161,6 +9164,7 @@ class TestR11Invariants(_T093Base):
                 "allocator_root_invalid",
                 "finalize_attribution_failed",
                 "actor_unsupported_for_skill",  # 122 W-2
+                "state_json_malformed",         # 134 W-2
             }
             head_src = subprocess.run(
                 ["git", "show", "HEAD:./state_tool.py"],
@@ -9968,11 +9972,12 @@ class TestT103WorkerDuration(_T093Base):
         등재분은 103 축과 무관하다.
 
         [122 W-2] 종수 리터럴을 51→52로 옮긴다 — `actor_unsupported_for_skill`
-        등재분이며 103 축과 무관하다."""
+        등재분이며 103 축과 무관하다. [134 W-2] `state_json_malformed` 등재로
+        52→53이며 역시 103 축과 무관하다."""
         self.assertNotIn("worker_duration_invalid", ST.ERROR_CODES,
                          "103이 ERROR_CODES를 신설했음 — 카탈로그 종수 계약 위반")
-        self.assertEqual(len(ST.ERROR_CODES), 52,
-                         f"ERROR_CODES 종수가 변했음(122 W-2 기준 52): {len(ST.ERROR_CODES)}")
+        self.assertEqual(len(ST.ERROR_CODES), 53,
+                         f"ERROR_CODES 종수가 변했음(134 W-2 기준 53): {len(ST.ERROR_CODES)}")
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -10227,11 +10232,12 @@ class TestT103WorkerDurationWarning(_T093Base):
         111 W-1 등재분이며 R-21 축과 무관하다.
 
         [122 W-2] 종수 리터럴을 51→52로 옮긴다 — `actor_unsupported_for_skill`
-        등재분이며 R-21 축과 무관하다."""
+        등재분이며 R-21 축과 무관하다. [134 W-2] `state_json_malformed` 등재로
+        52→53이며 역시 R-21 축과 무관하다."""
         self.assertNotIn(self._CODE, ST.ERROR_CODES,
                          "R-21이 ERROR_CODES를 늘렸음 — 카탈로그 종수 계약 위반")
-        self.assertEqual(len(ST.ERROR_CODES), 52,
-                         f"ERROR_CODES 종수가 변했음(122 W-2 기준 52): {len(ST.ERROR_CODES)}")
+        self.assertEqual(len(ST.ERROR_CODES), 53,
+                         f"ERROR_CODES 종수가 변했음(134 W-2 기준 53): {len(ST.ERROR_CODES)}")
         self.assertIn(self._CODE, ST.WARNING_CODES,
                       "WARNING_CODES에 worker_duration_missing 미등재")
 
@@ -11076,4 +11082,3 @@ class TestActorFlag(BaseTestCase):
     # ── S-4: 신설 3건 + 기존 전건 회귀 0건은 `python3 -m pytest`(별도 프로세스)로
     #         AGENTIC-LOG/validation에 실제 실행 출력으로 기록한다(이 파일 자체가
     #         "기존 테스트"이므로 자기 자신을 이 클래스 안에서 재실행하지 않는다).
-

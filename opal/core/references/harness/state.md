@@ -103,13 +103,17 @@ STATE.md는 **의사결정 로그·블로커·자유 기재를 담는 저널**�
 새 세션에서 태스크를 재개할 때는 아래 순서로 상태를 복원한다(094 §3.3.2 (4)).
 
 ```
-1. `~/.opal/tools/state-tool/run.sh show <task-path> --format json` 을 호출해
-   현재 단계·행 상태·current_status·next_action을 파악한다 (SSOT: state.json).
-2. `tasks/{NNN}-{name}/STATE.md`(저널)를 Read하여 의사결정 로그·블로커·검증 루프
+1. `~/.opal/tools/state-tool/run.sh resolve-mode <task-path> [--mode <명시값>]`를 호출해
+   effective mode를 확정한다. 무플래그 재개는 유효한 `state.json.mode`를 상속하고,
+   명시값은 mode만 원자 갱신한다. invalid mode는 `interactive` fail-closed, 손상 JSON은 차단한다.
+2. resolver 결과가 가리키는 모드 서브 하네스를 읽은 뒤
+   `~/.opal/tools/state-tool/run.sh show <task-path> --format json` 을 호출해 현재 단계·행
+   상태·current_status·next_action을 파악한다 (SSOT: state.json).
+3. `tasks/{NNN}-{name}/STATE.md`(저널)를 Read하여 의사결정 로그·블로커·검증 루프
    기재 등 도구가 담지 못하는 서술 맥락을 보완한다.
 ```
 
-> **[MUST]** 1단계(`show`)가 **기계 상태의 유일 근거**이며, 2단계(STATE.md Read)는 서술 맥락 보완 전용이다. STATE.md에서 행 상태·진행률을 읽어 판단하지 않는다.
+> **[MUST]** `resolve-mode`와 2단계 `show`가 **기계 상태의 유일 근거**이며, 3단계(STATE.md Read)는 서술 맥락 보완 전용이다. STATE.md나 project-brief 문구에서 mode·행 상태·진행률을 파싱해 판단하지 않는다.
 > 이 절차는 플랫폼 분기가 아니라 **모든 플랫폼 공통 경로**다 — `show`는 CLI이므로 Cursor/Gemini/Codex에서도 동일하게 동작한다.
 
 **검증 루프 진행률의 보관처** (H-12): 구 `## 현재 상태`의 `- 진행:`/`- 검증:` 필드는 아래로 대체되었다.

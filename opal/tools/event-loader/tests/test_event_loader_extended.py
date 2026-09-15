@@ -214,6 +214,7 @@ class EventLoaderExtendedContractTest(unittest.TestCase):
             (task_dir / "state.json").write_text(
                 json.dumps({
                     "task_id": "999-fixture",
+                    "mode": "agentic",
                     "current_status": "in_progress",
                     "updated_at": "2026-09-12 08:00:00",
                     "next_action": "계속 진행",
@@ -251,7 +252,7 @@ class EventLoaderExtendedContractTest(unittest.TestCase):
             completed.stdout.rstrip("\n"),
             "[부트스트랩] ✅ session.project ⏳ PM\n\n"
             "📌 이어보기\n"
-            "- 999-fixture — EXECUTE · 다음: 계속 진행\n\n"
+            "- 999-fixture — EXECUTE · 다음: 계속 진행 · 모드: agentic (state)\n\n"
             "📌 우선 검토\n"
             "- 검토 후보 — 출력 계약 확인",
         )
@@ -281,6 +282,7 @@ class EventLoaderExtendedContractTest(unittest.TestCase):
             (task_dir / "state.json").write_text(
                 json.dumps({
                     "task_id": "긴제목" * 300,
+                    "mode": "agentic",
                     "current_status": "in_progress",
                     "updated_at": "2026-09-12 08:00:00",
                     "next_action": "긴다음행동" * 300,
@@ -309,6 +311,8 @@ class EventLoaderExtendedContractTest(unittest.TestCase):
                 "title": "999-fixture",
                 "stage": "TEST",
                 "next_action": "검증 계속",
+                "mode": "agentic",
+                "mode_source": "state",
             }],
         }
         memory_payload = {
@@ -321,6 +325,71 @@ class EventLoaderExtendedContractTest(unittest.TestCase):
 
         self.assertIn("📌 이어보기", state_only)
         self.assertNotIn("📌 우선 검토", state_only)
+        self.assertNotIn("📌 이어보기", memory_only)
+        self.assertIn("📌 우선 검토", memory_only)
+
+    def test_s6_boot_summary_adds_normalized_mode_and_source(self):
+        with tempfile.TemporaryDirectory() as directory:
+            fixture = Path(directory)
+            task_dir = fixture / "tasks" / "999-fixture"
+            task_dir.mkdir(parents=True)
+            (task_dir / "state.json").write_text(json.dumps({
+                "task_id": "999-fixture",
+                "mode": "agentic",
+                "current_status": "in_progress",
+                "updated_at": "2026-09-12 08:00:00",
+                "next_action": "계속 진행",
+                "rows": [{"status": "in_progress", "stage": "EXECUTE"}],
+            }), encoding="utf-8")
+            completed = subprocess.run(
+                [sys.executable, str(REPO_ROOT / "opal/tools/state-tool/state_tool.py"),
+                 "boot-summary", str(fixture)],
+                capture_output=True, text=True, check=False,
+            )
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        payload = json.loads(completed.stdout)
+        self.assertIn("mode", payload["items"][0], payload)
+        self.assertIn("mode_source", payload["items"][0], payload)
+        self.assertEqual(payload["items"][0]["mode"], "agentic")
+        self.assertEqual(payload["items"][0]["mode_source"], "state")
+
+    def test_s6_invalid_legacy_mode_is_visible_as_fail_closed(self):
+        compose = runpy.run_path(str(LOADER))["compose_project_brief"]
+        markdown = compose({
+            "ok": True,
+            "items": [{
+                "title": "legacy",
+                "stage": "PLAN",
+                "next_action": "검토",
+                "mode": "interactive",
+                "mode_source": "fail_closed",
+            }],
+        }, None)
+        self.assertIn("📌 이어보기", markdown)
+        self.assertIn("interactive", markdown)
+        self.assertIn("fail_closed", markdown)
+
+    def test_s6_project_brief_mode_output_remains_bounded_and_partial_failure_isolated(self):
+        compose = runpy.run_path(str(LOADER))["compose_project_brief"]
+        state_payload = {
+            "ok": True,
+            "items": [{
+                "title": "긴태스크" * 300,
+                "stage": "EXECUTE",
+                "next_action": "긴다음행동" * 300,
+                "mode": "agentic",
+                "mode_source": "state",
+            }],
+        }
+        state_only = compose(state_payload, None)
+        self.assertLessEqual(len(state_only.encode("utf-8")), 1024)
+        self.assertIn("📌 이어보기", state_only)
+        self.assertIn("agentic", state_only)
+        self.assertIn("state", state_only)
+        memory_only = compose(None, {
+            "ok": True,
+            "review_rows": [{"title": "검토 후보", "summary": "확인 필요"}],
+        })
         self.assertNotIn("📌 이어보기", memory_only)
         self.assertIn("📌 우선 검토", memory_only)
 
