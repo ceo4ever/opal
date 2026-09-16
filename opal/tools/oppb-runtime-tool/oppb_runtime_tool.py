@@ -8,13 +8,16 @@
   "exports": [
     "ERROR_CODES", "ok", "err", "parse_argv",
     "cmd_init", "cmd_start", "cmd_workgraph", "cmd_evidence", "cmd_task", "cmd_lease",
+    "cmd_verifier", "cmd_revalidate",
     "main"
   ],
   "depends": [
     "git CLI 2.x",
     "opal/core/references/harness/tool-output-contract.md",
     "opal/tools/oppb-runtime-tool/evidence.py",
-    "opal/tools/oppb-runtime-tool/cache.py"
+    "opal/tools/oppb-runtime-tool/cache.py",
+    "opal/tools/oppb-runtime-tool/verifier_adapter.py",
+    "opal/tools/oppb-runtime-tool/revalidation.py"
   ]
 }
 """
@@ -40,6 +43,8 @@ import lease  # noqa: E402 — 동일 디렉토리 모듈, sys.path 보정 뒤 �
 import checkpoint  # noqa: E402 — 동일 디렉토리 모듈(W-14), sys.path 보정 뒤 로드
 import probe  # noqa: E402 — 동일 디렉토리 모듈, sys.path 보정 뒤 로드
 import recovery  # noqa: E402 — 동일 디렉토리 모듈(W-16), sys.path 보정 뒤 로드
+import verifier_adapter  # noqa: E402 — 동일 디렉토리 모듈(W-24), sys.path 보정 뒤 로드
+import revalidation  # noqa: E402 — 동일 디렉토리 모듈(W-26), sys.path 보정 뒤 로드
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 출력 계약 — 단일 라인 JSON + exit code
@@ -94,6 +99,8 @@ ERROR_CODES.update(lease.ERROR_CODES)
 ERROR_CODES.update(probe.ERROR_CODES)
 ERROR_CODES.update(checkpoint.ERROR_CODES)
 ERROR_CODES.update(recovery.ERROR_CODES)
+ERROR_CODES.update(verifier_adapter.ERROR_CODES)
+ERROR_CODES.update(revalidation.ERROR_CODES)
 
 
 class ToolError(Exception):
@@ -144,6 +151,11 @@ FLAGS = (
     # checkpoint 서브 명령 전용 플래그(W-14) — 본체는 checkpoint.py가 소유한다.
     "--dest",
     "--node", "--state", "--last-access", "--size-bytes",
+    # verifier 서브 명령 전용 플래그(W-24) — 본체는 verifier_adapter.py가 소유한다.
+    "--kind", "--trigger", "--signals", "--report", "--output-dir", "--timestamp",
+    "--test-mode", "--mode",
+    # revalidate 서브 명령 전용 플래그(W-26) — 본체는 revalidation.py가 소유한다.
+    "--contract", "--revision",
 )
 
 COMMANDS = (
@@ -152,6 +164,8 @@ COMMANDS = (
     "cache",
     "recover",
     "checkpoint",
+    "verifier",
+    "revalidate",
 )
 
 
@@ -551,6 +565,26 @@ def cmd_recover(opts):
         raise ToolError(exc.code, exc.message, exc.exit_code, **exc.extra) from exc
 
 
+def cmd_verifier(opts):
+    """Verifier adapter 서브 명령 — 본체와 변환 계약은 verifier_adapter.py(W-24)가 소유한다."""
+    try:
+        return ok("verifier", **verifier_adapter.verifier_command(opts))
+    except (
+        verifier_adapter.VerifierAdapterError,
+        evidence.EvidenceError,
+        controller.ControllerError,
+    ) as exc:
+        raise ToolError(exc.code, exc.message, exc.exit_code, **exc.extra) from exc
+
+
+def cmd_revalidate(opts):
+    """Revalidation 서브 명령 — 본체와 전파 규칙은 revalidation.py(W-26)가 소유한다."""
+    try:
+        return ok("revalidate", **revalidation.revalidate_command(opts))
+    except (revalidation.RevalidationError, controller.ControllerError) as exc:
+        raise ToolError(exc.code, exc.message, exc.exit_code, **exc.extra) from exc
+
+
 DISPATCH = {
     "init": cmd_init,
     "start": cmd_start,
@@ -564,6 +598,8 @@ DISPATCH = {
     "cache": cmd_cache,
     "recover": cmd_recover,
     "checkpoint": cmd_checkpoint,
+    "verifier": cmd_verifier,
+    "revalidate": cmd_revalidate,
 }
 
 

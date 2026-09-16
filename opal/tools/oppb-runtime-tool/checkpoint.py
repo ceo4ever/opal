@@ -857,9 +857,11 @@ def _unprocessed_results(run_root):
         return []
     terminal = set()
     document = _read_json(controller.workgraph_path(run_root)) or {}
-    for task in document.get("tasks") or []:
+    # 동결 workgraph 스키마의 최상위 키는 `mini_tasks`이고 식별자 필드는 `id`다.
+    # `tasks`를 읽으면 terminal이 항상 공집합이 되어 사전 검사가 상시 차단된다.
+    for task in document.get("mini_tasks") or []:
         if task.get("state") in ("accepted", "failed", "blocked"):
-            terminal.add(str(task.get("task_id") or task.get("id")))
+            terminal.add(str(task.get("id")))
     pending = []
     for result_path in sorted(attempts.glob("*/*/result.json")):
         task_id = result_path.parent.parent.name

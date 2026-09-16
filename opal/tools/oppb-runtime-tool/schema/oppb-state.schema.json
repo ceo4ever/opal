@@ -34,6 +34,18 @@
       "description": "쓰기 시점에 채워진다. 메모리상 초기 문서에서만 null이다."
     },
     "budget": { "$ref": "#/$defs/budget" },
+    "execution_contract": {
+      "type": "string",
+      "minLength": 1,
+      "description": "이 run의 유일한 실행 계약 문서를 run root 기준 상대 경로로 지목한다. OPPB에서는 항상 `\"INTENT.md\"`다 — run root에 실행 계약 문서가 둘 이상 생기지 않음을 이 필드가 단일 지목으로 고정한다(수용기준 2). 하위 호환을 위해 optional이다: 이 필드가 없는 기존 workgraph.json도 유효하며, controller.build_workgraph는 spec이 값을 주지 않으면 controller.DEFAULT_EXECUTION_CONTRACT를 채운다. scope hash 입력이 아니다 — controller.compute_scope_hash는 lease 4축만 읽으므로 이 필드는 기존 scope hash를 흔들지 않는다.",
+      "default": "INTENT.md"
+    },
+    "contracts": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/contract_declaration" },
+      "description": "이 run이 추적하는 외부 계약 선언 목록 — 계약 id · revision · 생산 미니 태스크. 계약 revision이 바뀌면 그 계약의 **직접 consumer만** needs_revalidation으로 전환한다(제안서 §9.1 · 수용기준 26). 하위 호환을 위해 optional이다: 이 필드가 없는 기존 workgraph.json도 유효하며, controller.build_workgraph는 spec이 값을 주지 않으면 빈 배열을 채운다. scope hash 입력이 아니다 — controller.compute_scope_hash는 lease 4축만 읽으므로 이 필드는 기존 scope hash를 흔들지 않는다.",
+      "default": []
+    },
     "mini_tasks": {
       "type": "array",
       "minItems": 1,
@@ -61,7 +73,9 @@
         "verifying",
         "accepted",
         "blocked",
-        "failed"
+        "failed",
+        "needs_revalidation",
+        "repair"
       ],
       "description": "controller.TASK_STATES. P0~P5 프로젝트 단계와 어휘를 공유하지 않는다."
     },
@@ -74,6 +88,49 @@
       "minItems": 1,
       "items": { "type": "string" },
       "description": "shell=False로 실행되는 argv 리스트. 비어 있지 않은 문자열 리스트만 허용한다."
+    },
+    "contract_declaration": {
+      "type": "object",
+      "required": ["id", "revision", "owner"],
+      "additionalProperties": false,
+      "description": "루트 `contracts[]` 원소 — 외부 계약 1건의 identity·revision·생산자.",
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "revision": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "계약 revision. 이 값이 전진하면 직접 consumer의 재검증이 열린다."
+        },
+        "owner": {
+          "type": "string",
+          "minLength": 1,
+          "description": "이 계약을 생산하는 미니 태스크 id."
+        }
+      }
+    },
+    "contract_ref": {
+      "type": "object",
+      "required": ["id", "revision"],
+      "additionalProperties": false,
+      "description": "미니 태스크가 생산하는 계약 지목 — 루트 `contracts[]`의 한 원소를 id·revision으로 가리킨다.",
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "revision": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "check_command": {
+      "oneOf": [{ "$ref": "#/$defs/command" }, { "type": "string", "minLength": 1 }],
+      "description": "재검증 체크 1건의 실행 명령. 정규형은 `$defs.command`와 같은 argv 리스트다. 실측상 revalidation._run_command는 비어 있지 않은 **단일 문자열**도 받아 `shlex.split`으로 argv로 쪼개므로 그 형식도 허용한다. 두 형식 모두 shell을 거치지 않는다(shell=False)."
+    },
+    "check_entry": {
+      "type": "object",
+      "required": ["id", "command"],
+      "additionalProperties": false,
+      "description": "수용 시나리오·계약 테스트 1건 — 식별자와 실행 명령. 재검증은 이 항목들만 실행한다.",
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "command": { "$ref": "#/$defs/check_command" }
+      }
     },
     "budget": {
       "type": "object",
@@ -165,6 +222,11 @@
       "properties": {
         "id": { "type": "string", "minLength": 1 },
         "capability": { "type": "string", "minLength": 1 },
+        "profile": {
+          "enum": ["fast", "standard", "critical"],
+          "description": "미니 태스크 실행 프로파일 — 제안서 §8의 Fast · Standard · Critical 3종이다. 단계 수(RUN·PROVE·ACCEPT)는 같고 깊이만 다르다: `fast`는 바로 구현·직접 테스트·scope·기본 checkpoint 검증이고 상시 산출물을 execution-packet·result·evidence로 한정한다(수용기준 8). `standard`는 capability micro design · 수직 수용·영향 테스트 · 외부 계약·컨벤션 검증이다. `critical`은 보존할 설계 · 심층 시나리오 · 독립 계약·보안·컨벤션 검증이다. 하위 호환을 위해 optional이다: 이 필드가 없는 기존 workgraph.json도 유효하며, controller._mini_task는 spec이 값을 주지 않으면 controller.DEFAULT_TASK_PROFILE(`standard`)을 채운다. controller.TASK_PROFILES와 1:1 대응한다. scope hash 입력이 아니다 — controller.compute_scope_hash는 lease 4축만 읽으므로 이 필드는 기존 scope hash를 흔들지 않는다.",
+          "default": "standard"
+        },
         "depends_on": {
           "type": "array",
           "items": { "type": "string" },
@@ -185,6 +247,25 @@
           "type": "array",
           "items": { "type": "string" },
           "description": "load가 빈 배열로 초기화한다. 현재 구현에서 색인 역인덱스는 acceptance.json이 소유하므로 이 배열은 비어 있는 채로 유지된다."
+        },
+        "consumes_contracts": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "이 미니 태스크가 소비하는 외부 계약 id 목록. 루트 `contracts[].id`를 가리킨다. 선언한 계약의 revision이 바뀌면 이 태스크가 그 계약의 **직접 consumer**가 되어 needs_revalidation으로 전환된다(제안서 §9.1). optional이며 선언이 없으면 재검증 전파 대상이 아니다. scope hash 입력이 아니다 — contract.lease 밖이다."
+        },
+        "produces_contract": {
+          "oneOf": [{ "$ref": "#/$defs/contract_ref" }, { "type": "null" }],
+          "description": "이 미니 태스크가 생산하는 외부 계약 1개와 그 revision. 어떤 계약도 생산하지 않으면 null이다. Repair가 이 값의 revision을 다시 바꾼 경우에만 다음 1-hop consumer로 재검증이 전파된다(제안서 §9.1). optional이다. scope hash 입력이 아니다 — contract.lease 밖이다."
+        },
+        "acceptance_scenarios": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/check_entry" },
+          "description": "이 미니 태스크의 수용 시나리오 목록. 재검증 범위는 이 배열과 `contract_tests`뿐이다 — 재검증은 태스크 전체를 다시 돌리지 않는다(제안서 §9.1). optional이다. scope hash 입력이 아니다 — contract.lease 밖이다."
+        },
+        "contract_tests": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/check_entry" },
+          "description": "이 미니 태스크의 계약 테스트 목록. `acceptance_scenarios`와 함께 재검증 범위를 이룬다(제안서 §9.1). optional이다. scope hash 입력이 아니다 — contract.lease 밖이다."
         },
         "runner_attempts": {
           "type": "integer",

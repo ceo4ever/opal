@@ -33,24 +33,37 @@
           "repair_opened": [task_id...],        # 재검증 실패 consumer
           "skipped": [task_id...]}`             # 무관·미실행 태스크
 
-2. run root 파일 계약 (seed = 선행 상태 재현, 관측 = 전이 결과)
+2. run root 파일 계약 (seed = 선행 상태 재현, 관측 = 전이 결과) — W-44가 동결한
+   `schema/oppb-state.schema.json`의 `mini_task` shape를 그대로 쓴다(W-45).
    - `<run_root>/workgraph.json`
-       tasks[].{id, state, profile, consumes_contracts[],
-                produces_contract{id, revision},
-                acceptance_scenarios[].{id, command},
-                contract_tests[].{id, command}}
+       mini_tasks[].{id, capability, depends_on[], state, scope_hash,
+                     runner_attempt_id, contract, attempts[], evidence[],
+                     profile, consumes_contracts[],
+                     produces_contract{id, revision} | null,
+                     acceptance_scenarios[].{id, command},
+                     contract_tests[].{id, command}}
        contracts[].{id, revision, owner}
    - `<run_root>/attempts/<task_id>/<attempt_id>/execution-packet.json`
        재검증 attempt는 `mode: "revalidation"`과
        `revalidation_scope.{kinds[], commands[]}`를 갖는다.
      Repair attempt는 `mode: "repair"`를 갖는다.
 
-미니 태스크 상태값은 제안서 §9.1의
-queued / running / verifying / accepted / needs_revalidation / repair / blocked 뿐이다.
+이 스위트가 seed하는 미니 태스크 상태값은 동결 스키마 `task_state`(controller.TASK_STATES,
+10종: pending/ready/running/candidate_ready/verifying/accepted/blocked/failed/
+needs_revalidation/repair)가 유일한 SSOT다(PM 판정). 제안서 §9.1의 `queued`는 추상
+상태기계 어휘이고 구현은 이를 `pending`/`ready`로 세분한 정련이다 — `queued`라는 리터럴
+값은 동결 enum에 없으므로 이 seed는 쓰지 않는다(아직 실행 전인 `t-batch`는 `pending`).
+revalidation.py의 로컬 `TASK_STATES`(§9.1 어휘)를 동결 enum으로 정합시키는 작업은 W-46
+소유다 — W-45는 seed shape만 담당한다.
+
+W-46이 revalidation.py를 `mini_tasks` 읽기로 정합시키기 전까지는, 이 seed가 `tasks`가
+아닌 `mini_tasks`를 쓰므로 `_tasks_of`가 `revalidation_graph_invalid`로 거부해 아래
+7개 테스트가 전부 RED다 — 의도된 상태다.
 """
 
 from __future__ import annotations
 
+import hashlib
 import json
 import pathlib
 import subprocess
@@ -75,10 +88,12 @@ TASK_PRODUCER = "t-orders"      # C-ORDERS 소유자
 TASK_DIRECT = "t-api"           # C-ORDERS 직접 consumer, C-API 생산자
 TASK_TWO_HOP = "t-ui"           # C-API consumer = C-ORDERS 기준 2-hop
 TASK_UNRELATED = "t-report"     # 무관, accepted
-TASK_QUEUED = "t-batch"         # C-ORDERS consumer지만 아직 실행 전
+TASK_QUEUED = "t-batch"         # C-ORDERS consumer지만 아직 실행 전(pending)
 
+# 동결 `task_state` enum(schema/oppb-state.schema.json, 10종) — 단일 SSOT(PM 판정).
 TERMINAL_STATES = {
-    "queued", "running", "verifying", "accepted", "needs_revalidation", "repair", "blocked",
+    "pending", "ready", "running", "candidate_ready", "verifying", "accepted",
+    "blocked", "failed", "needs_revalidation", "repair",
 }
 
 
@@ -139,6 +154,88 @@ def _script_cmd(repo: pathlib.Path, name: str) -> str:
     return f"python3 {repo / 'checks' / name}"
 
 
+def _fake_scope_hash(task_id: str) -> str:
+    """동결 `mini_task.scope_hash`(sha256_hex) shape를 채우는 고정 더미값.
+
+    실제 `controller.compute_scope_hash`는 내부 API라 PLAN H-6이 import를
+    금지한다 — 재검증 로직은 이 필드를 읽지 않으므로 값 자체는 의미가 없고
+    `sha256_hex` 패턴(64자리 16진)만 충족하면 된다.
+    """
+    return hashlib.sha256(task_id.encode("utf-8")).hexdigest()
+
+
+def _empty_contract() -> dict:
+    """동결 `mini_task.contract`(required) — 이 스위트는 재검증 대상 태스크를
+    Supervisor로 실행시키지 않고 완료 상태를 직접 seed하므로 run_command·
+    verify_command·executors는 쓰이지 않는다. 필드 존재·타입만 충족한다.
+    """
+    return {
+        "lease": {
+            "tracked_writes": [],
+            "ephemeral_writes": [],
+            "contracts": [],
+            "runtime_resources": [],
+        },
+        "run_command": None,
+        "verify_command": None,
+        "executors": [],
+    }
+
+
+def _mini_task(
+    task_id: str,
+    *,
+    capability: str,
+    state: str,
+    depends_on: list[str],
+    consumes_contracts: list[str],
+    produces_contract: dict | None,
+    acceptance_scenarios: list[dict],
+    contract_tests: list[dict],
+    profile: str = "fast",
+    already_ran: bool = True,
+) -> dict:
+    """동결 `mini_task` 스키마(schema/oppb-state.schema.json)의 required 9종
+    (id·capability·depends_on·state·scope_hash·runner_attempt_id·contract·
+    attempts·evidence)을 채우고, W-44가 추가한 재검증 필드 4종(consumes_contracts·
+    produces_contract·acceptance_scenarios·contract_tests)을 이어 붙인다.
+
+    `runner_attempt_id`는 POST_RUN_STATES(candidate_ready·verifying·accepted)에서만
+    선언 가능하다 — 이 seed는 `accepted`(already_ran=True)에서만 채우고, 아직
+    실행 전인 태스크(already_ran=False)는 null·attempts=[]로 둔다.
+    """
+    runner_attempt_id = f"attempt-{task_id}-r1" if already_ran else None
+    attempts = (
+        [
+            {
+                "attempt_id": runner_attempt_id,
+                "role": "runner",
+                "executor_id": None,
+                "created_at": "2026-01-01T00:00:00Z",
+                "declared": True,
+            }
+        ]
+        if already_ran
+        else []
+    )
+    return {
+        "id": task_id,
+        "capability": capability,
+        "profile": profile,
+        "depends_on": depends_on,
+        "state": state,
+        "scope_hash": _fake_scope_hash(task_id),
+        "runner_attempt_id": runner_attempt_id,
+        "contract": _empty_contract(),
+        "attempts": attempts,
+        "evidence": [],
+        "consumes_contracts": consumes_contracts,
+        "produces_contract": produces_contract,
+        "acceptance_scenarios": acceptance_scenarios,
+        "contract_tests": contract_tests,
+    }
+
+
 def _build_repo(root: pathlib.Path, direct_consumer_passes: bool) -> pathlib.Path:
     """
     실제 git 저장소 fixture. 계약 테스트·수용 시나리오는 실행 가능한 실제 스크립트다.
@@ -172,7 +269,7 @@ def _seed_workgraph(repo: pathlib.Path) -> dict:
 
         C-ORDERS ──> t-api ──(C-API)──> t-ui
              │
-             └──> t-batch (queued, 실행 전)
+             └──> t-batch (pending, 실행 전)
 
         t-report: 어떤 계약도 소비하지 않는 무관 accepted 태스크
     """
@@ -181,66 +278,77 @@ def _seed_workgraph(repo: pathlib.Path) -> dict:
             {"id": CONTRACT_ORDERS, "revision": 1, "owner": TASK_PRODUCER},
             {"id": CONTRACT_API, "revision": 1, "owner": TASK_DIRECT},
         ],
-        "tasks": [
-            {
-                "id": TASK_PRODUCER,
-                "state": "accepted",
-                "profile": "fast",
-                "consumes_contracts": [],
-                "produces_contract": {"id": CONTRACT_ORDERS, "revision": 1},
-                "acceptance_scenarios": [
+        "mini_tasks": [
+            _mini_task(
+                TASK_PRODUCER,
+                capability="cap.orders",
+                state="accepted",
+                profile="fast",
+                depends_on=[],
+                consumes_contracts=[],
+                produces_contract={"id": CONTRACT_ORDERS, "revision": 1},
+                acceptance_scenarios=[
                     {"id": "A-ORDERS-1", "command": _script_cmd(repo, "orders_acceptance.py")}
                 ],
-                "contract_tests": [],
-            },
-            {
-                "id": TASK_DIRECT,
-                "state": "accepted",
-                "profile": "standard",
-                "consumes_contracts": [CONTRACT_ORDERS],
-                "produces_contract": {"id": CONTRACT_API, "revision": 1},
-                "acceptance_scenarios": [
+                contract_tests=[],
+            ),
+            _mini_task(
+                TASK_DIRECT,
+                capability="cap.api",
+                state="accepted",
+                profile="standard",
+                depends_on=[TASK_PRODUCER],
+                consumes_contracts=[CONTRACT_ORDERS],
+                produces_contract={"id": CONTRACT_API, "revision": 1},
+                acceptance_scenarios=[
                     {"id": "A-API-1", "command": _script_cmd(repo, "api_acceptance.py")}
                 ],
-                "contract_tests": [
+                contract_tests=[
                     {"id": "K-API-1", "command": _script_cmd(repo, "api_contract.py")}
                 ],
-            },
-            {
-                "id": TASK_TWO_HOP,
-                "state": "accepted",
-                "profile": "fast",
-                "consumes_contracts": [CONTRACT_API],
-                "produces_contract": None,
-                "acceptance_scenarios": [
+            ),
+            _mini_task(
+                TASK_TWO_HOP,
+                capability="cap.ui",
+                state="accepted",
+                profile="fast",
+                depends_on=[TASK_DIRECT],
+                consumes_contracts=[CONTRACT_API],
+                produces_contract=None,
+                acceptance_scenarios=[
                     {"id": "A-UI-1", "command": _script_cmd(repo, "ui_acceptance.py")}
                 ],
-                "contract_tests": [
+                contract_tests=[
                     {"id": "K-UI-1", "command": _script_cmd(repo, "ui_contract.py")}
                 ],
-            },
-            {
-                "id": TASK_UNRELATED,
-                "state": "accepted",
-                "profile": "fast",
-                "consumes_contracts": [],
-                "produces_contract": None,
-                "acceptance_scenarios": [
+            ),
+            _mini_task(
+                TASK_UNRELATED,
+                capability="cap.report",
+                state="accepted",
+                profile="fast",
+                depends_on=[],
+                consumes_contracts=[],
+                produces_contract=None,
+                acceptance_scenarios=[
                     {"id": "A-REPORT-1", "command": _script_cmd(repo, "report_acceptance.py")}
                 ],
-                "contract_tests": [],
-            },
-            {
-                "id": TASK_QUEUED,
-                "state": "queued",
-                "profile": "fast",
-                "consumes_contracts": [CONTRACT_ORDERS],
-                "produces_contract": None,
-                "acceptance_scenarios": [
+                contract_tests=[],
+            ),
+            _mini_task(
+                TASK_QUEUED,
+                capability="cap.batch",
+                state="pending",
+                profile="fast",
+                depends_on=[TASK_PRODUCER],
+                consumes_contracts=[CONTRACT_ORDERS],
+                produces_contract=None,
+                acceptance_scenarios=[
                     {"id": "A-BATCH-1", "command": _script_cmd(repo, "batch_acceptance.py")}
                 ],
-                "contract_tests": [],
-            },
+                contract_tests=[],
+                already_ran=False,
+            ),
         ],
     }
 
@@ -262,7 +370,7 @@ def _prepare(tmp_root: pathlib.Path, direct_consumer_passes: bool = True) -> dic
 
 def _states(run_root: pathlib.Path) -> dict[str, str]:
     workgraph = read_json(run_root / "workgraph.json")
-    states = {t["id"]: t["state"] for t in workgraph["tasks"]}
+    states = {t["id"]: t["state"] for t in workgraph["mini_tasks"]}
     unknown = {tid: s for tid, s in states.items() if s not in TERMINAL_STATES}
     assert unknown == {}, f"§9.1에 없는 상태값이 기록됐다: {unknown}"
     return states
@@ -334,7 +442,7 @@ def test_unrelated_and_queued_tasks_are_not_revalidated(passing_graph):
     states = _states(run_root)
 
     assert states[TASK_UNRELATED] == "accepted", "무관 태스크 상태가 바뀌었다"
-    assert states[TASK_QUEUED] == "queued", "실행 전 태스크가 재검증 대상이 됐다"
+    assert states[TASK_QUEUED] == "pending", "실행 전 태스크가 재검증 대상이 됐다"
     assert states[TASK_PRODUCER] == "accepted", "계약 생산자 상태가 바뀌었다"
 
     for tid, count in before.items():
@@ -438,6 +546,6 @@ def test_propagation_is_one_hop_when_output_contract_revision_changes(passing_gr
     assert states[TASK_TWO_HOP] == "accepted", "t-ui 재검증이 통과했는데 accepted로 복귀하지 않았다"
     assert states[TASK_PRODUCER] == "accepted"
     assert states[TASK_UNRELATED] == "accepted"
-    assert states[TASK_QUEUED] == "queued"
+    assert states[TASK_QUEUED] == "pending"
     assert _attempt_dirs(run_root, TASK_UNRELATED) == [], "무관 태스크가 재검증됐다"
     assert _attempt_dirs(run_root, TASK_QUEUED) == [], "미실행 태스크가 재검증됐다"

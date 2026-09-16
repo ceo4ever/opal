@@ -11,7 +11,8 @@
     "read_workgraph", "read_acceptance",
     "workgraph_transaction", "acceptance_transaction",
     "set_task_state", "create_execution_packet", "debit_budget", "POST_RUN_STATES",
-    "index_evidence", "workgraph_command"
+    "index_evidence", "workgraph_command",
+    "TASK_PROFILES", "DEFAULT_TASK_PROFILE", "DEFAULT_EXECUTION_CONTRACT"
   ],
   "depends": ["opal/core/references/harness/tool-output-contract.md"]
 }
@@ -50,10 +51,24 @@ TASK_STATES = (
     "accepted",
     "blocked",
     "failed",
+    # 재검증 어휘(제안서 §9.1) — 소비 계약 revision 변경으로 재검증이 필요한 accepted 태스크와
+    # 그 재검증이 실패해 복구가 열린 태스크. 기존 8종은 값·순서 그대로 보존한다.
+    "needs_revalidation",
+    "repair",
 )
 
 # dispatch 역할 — 예산 차감 축과 1:1 대응한다(§9.3).
 ROLES = ("runner", "executor", "verifier")
+
+# 미니 태스크 실행 프로파일 — 제안서 §8의 Fast · Standard · Critical 3종. 단계 수는 같고 깊이만 다르다.
+# fast는 상시 산출물을 packet·result·evidence로 한정한다(수용기준 8).
+# scope hash 입력이 아니다: compute_scope_hash는 lease 4축만 읽는다.
+TASK_PROFILES = ("fast", "standard", "critical")
+DEFAULT_TASK_PROFILE = "standard"
+
+# 이 run의 유일한 실행 계약 문서(run root 상대 경로). OPPB는 INTENT.md 하나로 확정한다(수용기준 2).
+# scope hash 입력이 아니다.
+DEFAULT_EXECUTION_CONTRACT = "INTENT.md"
 
 # runner attempt가 이미 끝났음을 함의하는 상태 — candidate가 존재해야만 도달한다.
 # 이 상태로 선언된 태스크에만 runner attempt identity를 공표한다. pending·ready는
@@ -276,6 +291,80 @@ def _lease(raw, detail):
     return lease
 
 
+def _check_command(value, detail):
+    """수용 시나리오·계약 테스트 1건의 실행 명령.
+
+    정규형은 argv 리스트(`_command`)이고, 실측상 revalidation._run_command는
+    비어 있지 않은 단일 문자열도 받아 shlex.split으로 argv로 쪼갠다. 두 형식
+    모두 shell을 거치지 않으므로 둘 다 받아 원형 그대로 보존한다.
+    """
+    if isinstance(value, str):
+        _require(value.strip(), "%s는 비어 있지 않은 문자열이어야 합니다." % detail)
+        return value
+    return _command(value, detail)
+
+
+def _check_entries(raw, detail):
+    """`[{id, command}]` 목록 정규화. 선언이 없으면 빈 목록이다."""
+    raw = raw or []
+    _require(isinstance(raw, list), "%s는 리스트여야 합니다." % detail)
+    entries = []
+    for position, item in enumerate(raw):
+        _require(isinstance(item, dict), "%s[%d]는 object여야 합니다." % (detail, position))
+        entry_id = item.get("id")
+        _require(
+            isinstance(entry_id, str) and entry_id.strip(),
+            "%s[%d].id는 비어 있지 않은 문자열이어야 합니다." % (detail, position),
+        )
+        entries.append(
+            {
+                "id": entry_id,
+                "command": _check_command(
+                    item.get("command"), "%s[%s].command" % (detail, entry_id)
+                ),
+            }
+        )
+    return entries
+
+
+def _contract_ref(raw, detail, with_owner=False):
+    """계약 지목 `{id, revision}`(+ owner) 정규화."""
+    _require(isinstance(raw, dict), "%s는 object여야 합니다." % detail)
+    contract_id = raw.get("id")
+    _require(
+        isinstance(contract_id, str) and contract_id.strip(),
+        "%s.id는 비어 있지 않은 문자열이어야 합니다." % detail,
+    )
+    revision = raw.get("revision")
+    _require(
+        isinstance(revision, int) and not isinstance(revision, bool) and revision >= 1,
+        "%s.revision은 1 이상의 정수여야 합니다. 받은 값: %r" % (detail, revision),
+    )
+    ref = {"id": contract_id, "revision": revision}
+    if with_owner:
+        owner = raw.get("owner")
+        _require(
+            isinstance(owner, str) and owner.strip(),
+            "%s.owner는 비어 있지 않은 문자열이어야 합니다." % detail,
+        )
+        ref["owner"] = owner
+    return ref
+
+
+def _contracts(raw):
+    """workgraph 최상위 `contracts[]` 정규화. 선언이 없으면 빈 목록이다."""
+    raw = raw or []
+    _require(isinstance(raw, list), "spec.contracts는 리스트여야 합니다.")
+    declared = []
+    seen = set()
+    for index, item in enumerate(raw):
+        contract = _contract_ref(item, "contracts[%d]" % index, with_owner=True)
+        _require(contract["id"] not in seen, "계약 id 중복: %s" % contract["id"])
+        seen.add(contract["id"])
+        declared.append(contract)
+    return declared
+
+
 SCOPE_HASH_DOMAIN = "oppb-scope/v1"
 
 LEASE_AXES = ("tracked_writes", "ephemeral_writes", "contracts", "runtime_resources")
@@ -337,6 +426,14 @@ def _mini_task(raw, index, known_ids):
         "%s.capability는 비어 있지 않은 문자열이어야 합니다." % task_id,
     )
 
+    # 실행 프로파일 — 선언이 없으면 full. lease와 무관하므로 scope hash에 들어가지 않는다.
+    profile = raw.get("profile", DEFAULT_TASK_PROFILE)
+    _require(
+        profile in TASK_PROFILES,
+        "%s.profile은 %s 중 하나여야 합니다. 받은 값: %r"
+        % (task_id, " · ".join(TASK_PROFILES), profile),
+    )
+
     depends_on = raw.get("depends_on", [])
     _require(
         isinstance(depends_on, list)
@@ -386,6 +483,25 @@ def _mini_task(raw, index, known_ids):
 
     lease = _lease(raw.get("lease"), "%s.lease" % task_id)
 
+    # 재검증 축(제안서 §9.1) — 전부 optional이고 contract.lease 밖이라 scope hash 입력이 아니다.
+    consumes_contracts = raw.get("consumes_contracts", [])
+    _require(
+        isinstance(consumes_contracts, list)
+        and all(isinstance(item, str) and item.strip() for item in consumes_contracts),
+        "%s.consumes_contracts는 비어 있지 않은 문자열의 리스트여야 합니다." % task_id,
+    )
+    produces_contract = raw.get("produces_contract")
+    if produces_contract is not None:
+        produces_contract = _contract_ref(
+            produces_contract, "%s.produces_contract" % task_id
+        )
+    acceptance_scenarios = _check_entries(
+        raw.get("acceptance_scenarios"), "%s.acceptance_scenarios" % task_id
+    )
+    contract_tests = _check_entries(
+        raw.get("contract_tests"), "%s.contract_tests" % task_id
+    )
+
     # pre_state가 candidate를 함의하면 그 candidate를 만든 runner attempt identity를
     # 공표한다 — 독립 검증(수용기준 9)은 verifier attempt가 이 값과 다름을 봐야 한다.
     runner_attempt_id = None
@@ -405,6 +521,8 @@ def _mini_task(raw, index, known_ids):
     return {
         "id": task_id,
         "capability": capability,
+        # 실행 프로파일 — scope_hash 계산 입력이 아니다(아래 compute_scope_hash는 lease만 받는다).
+        "profile": profile,
         "depends_on": list(depends_on),
         "state": state,
         # lease 선언에서 파생한 scope 식별자 — evidence 대조의 기준값이다.
@@ -422,6 +540,11 @@ def _mini_task(raw, index, known_ids):
         },
         "attempts": attempts,
         "evidence": [],
+        # 재검증 축 — scope_hash 계산 입력이 아니다(compute_scope_hash는 lease만 받는다).
+        "consumes_contracts": list(consumes_contracts),
+        "produces_contract": produces_contract,
+        "acceptance_scenarios": acceptance_scenarios,
+        "contract_tests": contract_tests,
     }
 
 
@@ -466,6 +589,20 @@ def build_workgraph(run_id, spec):
         normalized.append(task)
     _check_dependencies(normalized)
 
+    # 실행 계약 문서 지목 — run root 상대 경로 1개. 선언이 없으면 INTENT.md로 확정한다.
+    # scope hash와 무관하다: compute_scope_hash는 lease 4축만 읽는다.
+    execution_contract = spec.get("execution_contract", DEFAULT_EXECUTION_CONTRACT)
+    _require(
+        isinstance(execution_contract, str) and execution_contract.strip(),
+        "spec.execution_contract는 비어 있지 않은 문자열이어야 합니다. 받은 값: %r"
+        % (execution_contract,),
+    )
+    _require(
+        not os.path.isabs(execution_contract),
+        "spec.execution_contract는 run root 기준 상대 경로여야 합니다. 받은 값: %r"
+        % (execution_contract,),
+    )
+
     return {
         "schema_version": SCHEMA_VERSION,
         "revision": 0,
@@ -473,6 +610,10 @@ def build_workgraph(run_id, spec):
         "created_at": _now(),
         "updated_at": None,
         "budget": _budget(spec.get("budget")),
+        "execution_contract": execution_contract,
+        # 이 run이 추적하는 외부 계약 선언. 선언이 없으면 빈 배열이고 재검증 전파 대상이 없다.
+        # scope hash와 무관하다: compute_scope_hash는 lease 4축만 읽는다.
+        "contracts": _contracts(spec.get("contracts")),
         "mini_tasks": normalized,
     }
 

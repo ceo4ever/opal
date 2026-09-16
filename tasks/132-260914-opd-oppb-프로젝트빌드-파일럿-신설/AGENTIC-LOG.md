@@ -133,3 +133,144 @@
 | 113 | 2026-09-15 13:35 | EXECUTE | GATE | 공유 지식 축 수정 Pass — `12 passed`, 6건 공존(`s12_1`·`s12_1a`·`s12_1b`·`s12_3`·`s12_3a`·`s13_1`). `classify_writes` 맨 앞에서 `observed`를 shared/remaining으로 선분리하고 mtime 귀속은 소스에만 남겼다. 한계 문서 범위를 "lease 밖 **소스** 경로 한정"으로 축소 | Pass |
 | 114 | 2026-09-15 13:35 | EXECUTE | ERROR | **PM 절차 오류 — 워커 실행 중 커밋.** W-14 워커가 "completed" 반환 후에도 백그라운드로 전체 스위트를 돌고 있었는데 내가 `a72cc47`을 커밋했다. 워커는 이를 "제3자 커밋"으로 관측했고, baseline 확인용 `git stash pop`이 `No stash entries found`로 실패했다. 내용 유실은 없음을 워커가 확인했다(커밋 트리에 변경 전부 존재, 3파일 stat 일치) | 절차 교정 |
 | 115 | 2026-09-15 13:35 | EXECUTE | IMPROVE | 교정 규율 — **워커가 완료를 반환해도 후속 백그라운드 작업이 남아 있을 수 있으므로, 같은 파일 영역을 건드리는 커밋은 후속 알림까지 확인한 뒤 수행한다.** 특히 워커가 `git stash`를 쓰면 PM 커밋이 그 전제를 깨뜨린다(세션 지침도 bare stash를 금지한다). CLOSE 회고 대상 | 이월 |
+
+## [116] G4 1파 디스패치 — W-19·W-20·W-21·W-22
+- 유형: decision
+- 상류 재확인(H-7): `git log --oneline main ^HEAD` = 0건, 충돌 없음
+- 디스패치 4건 병렬, 파일 상호 배타: SKILL.md / pipeline.json / capability AGENT.md / project-slice SKILL.md
+- 각 프롬프트에 receipt 블록(manifest sha256 `14d5d62f…`, 문서 4종), RED 계약 SSOT(`test_product_flow.py`), 동결 스키마 금지(H-3 blocker 보고), 재사용 강제(`controller.compute_scope_hash`, oppl import 0), 금지사항(배포 소스·state-tool·커밋·bare stash·플랫폼 분기) 포함
+- 2파 예정: W-23·W-25·W-27 / 3파: W-24·W-26 (`oppb_runtime_tool.py` 공유)
+
+## [117] W-20·W-21 완료 — 접합부 미결 1건 등록
+- W-20: `pipeline.json` 22행, gate 6개(5·10·13·17·19·21), pipeline RED 3건 GREEN. 보정 2건은 `state_tool.py:1343,1349` 스키마 강제로 독립 검증됨 — PLAN §Appendix A에 각주 추가
+- W-21: `opal-capability-agent/AGENT.md` 210행, §4.3 입력4·출력5·행동계약6 전 항목 매핑. `worker.dispatch` 대신 execution-packet·lease receipt 진입 게이트 5항(§4.1 headless attempt 경로라 events.json에 oppb 선언 없음)
+- **미결 O-1 (blocker 아님)**: 동결 `oppb-state.schema.json`의 `attempt_result`는 `additionalProperties: false`이고 `changes`/`proof`/`knowledge` 필드가 없다(독립 확인). capability agent 출력 5종 중 3종의 영속 경로가 미정. W-21은 "stdout 구조화 JSON 반환, run root 직접 쓰기 없음"으로 회피. **3파 W-24(Verifier evidence adapter)에 접합 판정을 위임**하고, 스키마 변경이 불가피하면 H-3 blocker로 승격
+
+## [118] W-22 완료 — 미결 O-2 등록, 7축/4축 관계 재확인
+- W-22: `op-oppb-project-slice/SKILL.md` 245행. 슬라이싱 기준·수평 레이어 금지·sibling 5조건·구조화 출력 3종 반영
+- 7축/4축 정합 독립 확인: `lease.OWNERSHIP_AXES`(7)는 판정 축, `controller.LEASE_AXES`(4)는 기계 발급 축이고 나머지는 `unrepresented_global_outputs`로 회수된다 — G2 설계대로이며 모순 아님
+- **미결 O-2 (blocker 아님)**: 동결 스키마 `mini_task`(`additionalProperties: false`)와 `contract`(lease·run_command·verify_command·executors만)에 `business_rules`·`acceptance_cluster`·`parallel_eligible`·`preimage_scope`·`runner_profile` 슬롯이 없음(독립 확인). W-22는 acceptance cluster를 `acceptance[].{id,contributing_tasks}`로, 나머지를 `PROJECT-DESIGN.md`로 라우팅해 회피
+- O-1·O-2는 같은 계열이다 — 동결 G2 state schema는 **런타임 실행 스키마**이고 설계 근거 필드를 담지 않는다. W-29(G4 체크포인트)에서 두 건을 함께 판정한다
+
+## [119] W-19 완료 — **에스컬레이션 E-5: `project-run` 미소유 발견**
+- W-19: `opal-pilot-project-build/SKILL.md` 533행. `test_oppb_entry_point_files_exist` 포함 4 passed
+- **차단 발견**: `test_product_flow.py` 12건이 전부 module fixture `_completed_run`에서 error. 원인 동일 — `oppb-runtime-tool project-run` 서브명령 부재(`COMMANDS`에 없음, 실측 `oppb_runtime_tool.py:149`)
+- fixture는 `project-run --run-root`가 P0~CLOSE를 무인 완주시키고 `project_state == "closed"`를 반환할 것을 요구한다. **PLAN의 어느 Work item도 이 드라이버를 소유하지 않는다** — W-28(RED 작성)이 계약으로 가정만 했다
+- 부수 발견: fixture의 `workgraph["tasks"]`는 실제 스키마·Controller의 `mini_tasks`와 키 이름이 불일치(독립 확인 — schema `workgraph.properties`에 `mini_tasks`만 존재)
+- RED-first §1.5-5에 따라 기대를 약화·삭제할 수 없다. 소유자 판단 필요 → 사용자 에스컬레이션
+
+## [120] W-25 완료 — additive 증명 통과
+- `op-scenario-gate/SKILL.md` +80/-0. `git diff -U0 | grep -c '^-[^-]'` = 0, hunk 2개 모두 `-x,0` 순수 삽입 → 기존 OPPD 분기 바이트 무변경 성립
+- 신규 §5는 `pilot: oppb`에서만 진입, 기존 절은 이 절을 읽지 않음
+- 워커가 제기한 `schema_version` 타입 불일치(evidence=int 1, workgraph/acceptance=문자열 "1.0")는 **동결 스키마 양쪽에 의도적 사실로 이미 명기돼 있음**(독립 확인) — 결함 아님
+
+## [121] W-23 완료 + PM 보정 1건 — phase enum 인라인 추가
+- W-23: `opal-evaluator-agent/AGENT.md` +51/-0. HEAD 원본 189행이 신본 240행에 순서대로 바이트 동일 보존(미보존 0행), 4분기 키워드 보존 3/3·3/3·3/3·14/14
+- 워커는 "바이트 무변경" 제약을 우선해 phase 열거 행을 **수정하지 않고** 아래에 `[MUST]` 블록으로 additive 선언했다
+- **PM 판정**: PLAN 원문은 "§입력명세 phase 열거값에 5번째 값 `acceptance`를 추가"를 명시했고, 바이트 무변경 제약의 대상은 **4개 분기의 서술**이지 열거 행이 아니다. 열거 행이 계약 표면이므로 미갱신은 실질적 결함이다
+- PM이 직접 보정: `:32` 행 끝에 `/ \`acceptance\`(...)` **추가만** 수행. 기존 4개 값 문자열 4/4 부분문자열로 보존, 4분기 절은 무변경. 결과 `+52/-1`이며 유일한 삭제행은 이 열거 행 자체다
+
+## [122] W-27 완료 — 미결 O-3 등록, G4 1·2파 종료
+- W-27: `op-oppb-knowledge-finalize/SKILL.md` 289행. `brain-tool`·`memory-tool` 실측 CLI 7항 대조, 발명 옵션 0
+- 실측 확정 3건: (a) 두 도구에 `batch` 서브명령은 없다 — "프로젝트 batch"는 정해진 순서를 프로젝트당 1회 통과하는 단일 pass로 정의, (b) 쓰기 대상은 허브(allocator root) — `brain_tool.require_write_root`가 worktree cwd 파생 쓰기를 거부하고 `memory_tool._is_worktree_target`이 deferred 요청으로 우회시킨다(pipeline id 18 pre-finalize guard의 "worktree MEMORY/brain diff 0"과 정합), (c) 본문 경로는 `<allocator_root>/.opal/memory/<slug>.md`
+- `op-brain-ingest` 미호출 근거: 그 스킬은 태스크 `DONE.md/PLAN.md/TASK.md`를 입력으로 받는데 OPPB 미니 태스크는 §7.3상 그 문서를 만들지 않는다. `opal-improve`는 기록 대상이 프레임워크·로컬 PM 개선이라 거처가 다르다. 둘 다 무변경(C-2)
+- **미결 O-3**: 동결 `oppb-event.schema.json`은 `required: ["ts","event"]` + `event_name` 5종 폐쇄 enum인데, RED 테스트는 `e["type"]`(`knowledge.batch_started`/`knowledge.batch_applied`/`project.hub_merged`)과 `e["stage"]`를 읽는다. 다만 **`additionalProperties: true`임을 독립 확인** — 스키마는 "Supervisor 단일 writer"이자 "런타임 검증기가 아님"을 본문에 선언하므로 P5 Product Flow 라인을 범위 밖으로 해석하면 H-3 위반 없이 해소 가능
+- **O-1·O-2·O-3·E-5는 같은 뿌리다** — W-28의 RED 계약이 `project-run` 드라이버와 그 이벤트 로그라는 런타임 표면을 가정했는데 G2 동결 스키마가 그것을 모델링하지 않았다. E-5 결정과 함께 일괄 판정한다
+- G4 진척: W-19·W-20·W-21·W-22·W-23·W-25·W-27 = 7/9 완료. 잔여 W-24·W-26(3파, E-5 결정 대기)
+
+## [123] 소유자 승인 — E-5 해소안 4갈래 전부 승인
+- **근본 원인 확정**: `project-run`은 CLI 서브명령이 아니라 제안서 `:278`의 명사구("프로젝트 런의 pre-finalize guard")였다. W-28이 이를 서브명령으로 오독해 존재하지 않는 단일 진입점을 계약으로 가정했다
+- 그 명사구가 가리킨 실물은 **이미 구현돼 있다** — `checkpoint.py:875 pre_finalize_check`, `SUBCOMMANDS`에 `pre-finalize` 포함, `test_checkpoint.py` 12 passed
+- P0~P5 소유자 지도 실측 결과 빈칸 0 — 대화형 세션(P0~P2·P5) + `start` 1회(P3~P4, Supervisor가 `_admit_verifier`로 P4까지 스케줄) + CLI 서브명령. `project-run`은 **만들지 않는다**(만들면 P0~P2 "무인 보장 대상 아님"과 P5 merge 게이트 `--auto-pass` 거부를 위반)
+- 12건 재분류: A 테스트 버그 6 / B 스키마 필드 누락 3 / C 검증 계층 오배치 4
+- 승인 결과: W-41(동결 스키마 additive 확장, H-3) + W-42(fixture 재작성·4건 W-34 이관) 신규 등재. PLAN Work items에 추가
+- **merge 조건 변경 기록**: G4 merge 시점에 AC-2·AC-15의 실증 근거는 없다. 실증 소유자가 W-28 → W-34(G5 실주행)로 이동했다. 소유자가 이 사실을 인지하고 승인했다
+
+## [124] PM 오류 — receipt 파일 경로 누락으로 W-42 blocked (3회째 재발)
+- W-42 워커가 `worker.dispatch` 진입 게이트에서 blocked 반환. **정당한 거부다**
+- 원인: PM이 프롬프트에 receipt의 **인라인 요약**(event/manifest_sha256/문서 4종)만 넣고 `event-verify --receipt`가 요구하는 **실제 파일 경로**를 주지 않았다. 워커가 `/private/tmp` 전역 검색으로 receipt 부재를 확인한 뒤 어떤 문서도 읽지 않고 반환했다
+- 전역 메모리에 "디스패치 receipt 블록 필수 (2회 재발)"이 이미 있었고 이번이 **3회째**다. 요약만으로 충족된다고 오해한 것이 반복 원인
+- 조치: 디스패치 전용 receipt를 새로 발급(`scratchpad/wdr-w42.json`)하고 `state-tool event-verify`로 선검증(`ok: true`, `verified_document_count: 4`) 후 경로를 명시해 재디스패치
+- **교정 규율**: 워커 프롬프트의 receipt 블록은 반드시 (a) receipt **파일 절대경로**, (b) 워커가 직접 실행할 `event-verify` 명령 전문, (c) PM 선검증 결과 3요소를 포함한다. 인라인 요약만으로는 게이트를 통과할 수 없다. CLOSE 회고 대상
+
+## [125] W-41 완료 — 동결 스키마 additive 확장, PM 독립 검증 통과
+- 추가 2필드 확인: `properties.execution_contract`(string, minLength 1), `$defs.mini_task.properties.profile`(enum fast/full). **둘 다 optional** — top `required` 7종·mini_task `required` 9종 무변경
+- 워커 증명: 전 노드 546개 경로 평탄화 대조에서 경로 삭제 0, 기존 dict 키집합 부분집합 보존, enum 값 16→18(기존 16 전수 생존·순서 불변), required 블록 16/16
+- **scope hash 불변 PM 독립 확인**: `controller.py` diff에서 `SCOPE_HASH_DOMAIN`·`LEASE_AXES`·`compute_scope_hash`·`normalize_lease` 관련 변경 **0줄**. 워커 실측도 lease 5종에서 확장 전후 동일 해시(`363320d0…37b5c`)
+- sha256 PM 재계산 대조 일치: state `7fa09f9c…`(변경), event `8a78a0c7…`·command `f3fab919…`·evidence `2bc84ff5…`(무변경 3종)
+- 회귀: 83 passed. 실패 7(W-26 소유)·error 12(W-42 소유)는 확장 전 baseline과 **동일 수치** — 증가 0
+- `oppb-command.schema.json`의 `workgraph_spec`이 `additionalProperties: true`라 command 스키마는 손댈 필요가 없었다(동결 3종 무변경)
+
+## [126] W-24 완료 — 미결 O-1 해소(스키마 변경 0)
+- `verifier_adapter.py` 588행 + `test_verifier_adapter.py` 425행(RED 선작성 17/17 → GREEN 17/17). `oppb_runtime_tool.py`에 `verifier` 서브명령 추가
+- PM 독립 확인: `oppb_runtime_tool.py` diff의 유일한 삭제행은 @header depends 배열 **마지막 원소 뒤 콤마 추가**뿐 — 실질 순수 추가. `controller.py`·`schema/` 변경분은 전부 W-41 소유이며 W-24는 무접촉
+- **O-1 해소**: `oppb-evidence.schema.json`은 최상위 `additionalProperties: true`(PM 재확인)이고 `evidence._validate_schema`는 필수 8필드만 검사한다. capability agent의 `changes`/`proof`/`knowledge`는 `attempt_result`가 아니라 **evidence 문서의 `runner_result` 객체**에 안착한다 — **동결 스키마 0바이트 변경**. W-21의 "구조화 stdout만 반환"과 충돌 없음(Runner는 여전히 run root 미기록, Verifier 경로가 받아 귀속)
+- 증거 독립성 2중 방어: 기본 attempt id를 `<task>-verifier-<kind>-<uuid4[:8]>`로 신규 발급해 runner 규약과 충돌 불가. 명시 `--attempt`가 `runner_attempt_id`와 같으면 **문서 생성 단계에서** 거부해 evidence.py 4번 검사에 도달조차 않음(색인 0건까지 테스트로 확인)
+- 조건부 호출 판정: `accept`+위험신호 → `risk_accept` 승격, 계약폐쇄는 같은 contract를 선언한 peer≥1이고 자신+전 peer가 `POST_RUN_STATES`일 때만. 위험신호는 `lease.runtime_resources` 비어있지 않음이라는 **workgraph 사실**에서만 파생하고 코드 내용 추론 0
+- 부작용 1건 기록: `verifier plan`이 `<run_root>/verify/<task_id>`를 선생성한다(gc 스킬 `output_dir` 계약용). run root 내부이고 `init`이 `.opal-runs/`를 `.git/info/exclude`에 등록하므로 Git 추적 밖 — 유지 판정
+
+## [127] W-42 완료 — 실주행이 타 파일 진짜 버그 2건을 노출
+- `test_product_flow.py` +242/-101. fixture 재작성 완료: `init` → INTENT·spec seed → `workgraph load` → `start`(Supervisor가 P3 Runner → P4 Verifier/acceptance 무인 수행, `status` 폴링) → `checkpoint pre-finalize`. 미니 태스크 2건(fast/full, 실제 run_command·verify_command) 실동작
+- 결과 12노드 중 **11 PASS**(mock 0, 실행 2회 동일). W-41의 `execution_contract`·`profile`이 이미 워크트리에 있어 (C) 항목은 첫 시도에 통과
+- 4건 W-34 이관 기록: 모듈 헤더 `migration_note` + 섹션 주석에 목적지(W-34, G5 cold×9/warm×9 실주행)·이관 수용기준·pytest 불가 사유(대화형 세션 행동 관측 필요, P0~P2 수동 seed 시 항진명제화)를 "삭제가 아닌 검증 계층 이동"으로 명시
+- **버그 A (수정 착수)**: `checkpoint.py:859 _unprocessed_results`가 `document.get("tasks")`를 읽는다 — 실제 키는 `mini_tasks`. terminal이 항상 공집합이라 정상 accept 후에도 `pre-finalize`가 **언제나** `PRE_FINALIZE_BLOCKED`. pipeline id 18 P5 guard가 사실상 상시 차단 상태였다. W-43으로 등재·디스패치(RED 선작성 조건)
+- **버그 B (에스컬레이션)**: `test_fast_mini_task_artifacts_are_packet_result_evidence_only` 1건 RED. `supervisor.py launch()`가 profile과 무관하게 `attempt-spec.json`·`attempt-runner.log`·`attempt.attempt.json`·`capability.out`·`capability.err`를 쓴다. 테스트의 `ALLOWED_ATTEMPT_FILES = {"execution-packet.json","result.json"}`가 이를 위반으로 본다
+- **버그 B는 AC-8과 AC-11의 정면 충돌이다(PM 실측)**: `reconcile-attempts`는 `*.attempt.json`을 읽고 `supervisor.py:443`은 그 **부재를 고아 판정 근거**로 쓴다. 테스트 해석대로 파일을 없애면 이미 GREEN인 AC-11(비정상 종료 복구)이 깨진다. 한편 제안서 §7은 제목이 "미니 태스크 **문서**"이고 §7.1 상시 생성 표는 문서 SSOT 4종이며, §7.3 금지 목록도 TASK/DONE/ANALYSIS/PLAN/QA/CLOSE **문서**다 — 런타임 부기 파일은 대상이 아니다
+- 소유자 판단 요청 중
+
+## [128] W-43·W-26 완료 — 미결 O-4(workgraph.json 이중 계약) 등록
+- **W-43**: `checkpoint.py:859` `document.get("tasks")` → `mini_tasks`, 식별자 `task_id` 폴백 제거(실측상 `id` 단일). RED 선확인 원문 확보(`unprocessed_results: ['attempts/T01/a1/result.json', ...]`) 후 GREEN. `test_checkpoint.py` 12→14 passed. 대조군 테스트(비종료 태스크는 여전히 차단)를 함께 추가해 가드 무력화가 아님을 잠갔다
+- 워커가 자기 변경 무관함을 실측 증명: 스크래치패드 복사본에서 `checkpoint.py`만 HEAD 원본으로 되돌려 잔여 실패 1건이 동일 재현됨을 확인
+- 같은 키 버그 전수 조사 잔여 0건. `controller.py:536`의 `raw.get("tasks", [])`는 사용자 제출 acceptance spec의 별칭 폴백이라 무관
+- **W-26**: `revalidation.py` 486행, `test_revalidation.py` 7/7 통과. 전이적 폐쇄를 계산하지 않아 2-hop이 구조적으로 불가능하고, `REVALIDATABLE_STATES=("accepted",)`로 미실행 태스크를 배제. 자동 재귀를 넣지 않은 것이 "Repair가 출력 계약을 다시 바꾼 경우에만 전파"를 만족시키는 유일한 정직한 구현 — 전파는 명시적 재호출로만 1-hop씩 나아간다
+- W-24 로직 재사용은 근거 있게 거부: `closed_contracts`는 방향 없는 lease `contracts` 축 기반이라 producer까지 끌려들어와 테스트 2를 깬다. 대신 `controller.workgraph_transaction`·`attempt_dir`·`_atomic_write_json`을 재사용해 락·원자쓰기·revision 규율은 재구현 0
+- **미결 O-4 (PM 독립 확인 완료)**: `<run_root>/workgraph.json` 한 경로에 **호환되지 않는 두 문서 계약**이 걸려 있다. 동결 스키마·Controller·W-24·`test_product_flow.py`는 `mini_tasks[]`(상태 8종)를 쓰고, `test_revalidation.py`(:180-257)는 `{"contracts":[...], "tasks":[...]}`에 `consumes_contracts`/`produces_contract`와 재검증 상태 어휘를 쓴다. 실주행에서는 `workgraph load`가 `mini_tasks`를 쓰므로 **AC-12 경로가 실제로는 동작하지 않는다**
+- W-26은 잘못된 shape에 `revalidation_graph_invalid`를 던져 조용한 오독은 막았다. `api-freeze.md` §3이 "스키마가 구현보다 좁은 상태는 의도된 것"을 허용하므로 동결 위반은 아니다
+- O-4 해소 방향(재검증 그래프를 별도 run root 문서로 분리 vs 동결 스키마에 흡수)은 소유자 판단 — W-29 안건
+
+## [129] W-44 완료 — 재검증 그래프 흡수, profile enum 정정
+- 스키마 +74/-4, controller +99/-3. workgraph 최상위 `contracts[]`, `mini_task`에 `consumes_contracts`·`produces_contract`·`acceptance_scenarios`·`contract_tests`, `task_state` 8→10(`needs_revalidation`·`repair` 추가, 기존 8종 보존)
+- 기계 증명 5항목: 노드 557→643 삭제 0 / dict 186개 키집합 위반 0 / enum 소실은 `profile`의 `"full"` 1건뿐(승인된 정정) / required 16블록 축소 0·증가 0 / scalar 334개 중 변경 3건 전부 profile 정정분
+- 워커가 `task_state.description` 보강을 시도했다가 제약 위반으로 **스스로 원문 복구**했다 — 신규 상태 설명은 `api-freeze.md` §9로 이동. 절제 판단으로 기록
+- scope hash 불변: lease 5종 전부 확장 전후 동일. 같은 lease에 profile·재검증 4필드를 채워도 `fb5b732f…70bb6` 고정
+- `profile` 정정 근거: 제안서 §8은 Fast/Standard/Critical 3종이고 `"full"`은 문서 어디에도 없다. `git show HEAD:...schema.json`에 `"profile"` 0건이므로 원 동결본 기준 순수 추가 — 동결 위반 아님. `TASK_PROFILES`·`DEFAULT_TASK_PROFILE`도 `full`→`standard`로 정합
+- 재동결 #4: state `c0532009…`(변경), 나머지 3종 무변경. `jsonschema`로 draft-07 유효성·신규필드 문서 통과·**신규필드 0개 동결당시 문서 통과(하위호환)**·음성사례 `profile:"full"` 거부 4종 확인
+- 회귀 `109 passed, 8 errors` — 8건 전부 `test_product_flow.py:398`의 `"profile": "full"` 단일 원인(`workgraph load`가 `spec_invalid` 거부). W-45 소유라 미접촉
+- **상류 4번째 선행(H-7)**: `main ^HEAD` 7건(태스크 123 계열). 우리 변경 파일과 교집합 **0**, `git merge-tree --write-tree` 탐침 **conflict 없음**
+
+## [130] W-45 완료 — 8 errors 해소, 네 번째 어휘 발산 판정
+- `test_product_flow.py` `:398` `"full"` → `"standard"` 1줄로 **8 errors → 0**. 현재 11 passed / 1 failed(판단 대기 중인 별건)
+- `test_revalidation.py` seed를 `{"contracts", "mini_tasks"}` 동결 shape로 재작성. 각 record가 동결 `mini_task` required 9종을 충족하고 재검증 4필드를 W-44 정의 위치에 담는다. `scope_hash`는 stdlib hashlib 더미(`sha256_hex` 패턴만 충족, 내부 API import 0 — H-6 준수)
+- **단언 강도 무변경 증명**: 7개 테스트 함수 본문이 HEAD 대비 **바이트 동일**, assert 행 diff 0. 변경은 모듈 헤더·seed 빌더·`_states()`의 키 1줄뿐
+- 워커가 W-43의 `checkpoint.py` 수정을 실측 확인한 뒤 stale 주석을 현행화하고, `checkpoint pre-finalize` 호출을 **관측용에서 단언으로 승격**했다(`ok`·`finalize_allowed` 둘 다 true). 승격 후 재실행해도 1 failed/11 passed 유지 — P5 guard가 이제 회귀로 잠겼다
+- **네 번째 발산 판정**: `revalidation.py`의 지역 `TASK_STATES`에 `queued`가 있는데 동결 enum 10종에는 없다. **PM 판정 — 동결 enum이 단일 SSOT다.** 제안서 §9.1의 `queued`는 추상 상태기계 어휘이고 구현의 `pending`/`ready`는 정당한 세분이다(`candidate_ready`·`failed`도 같은 정련). W-46이 지역 재선언을 제거하고, W-45에게 seed `queued`→`pending` 1건을 후속 지시
+- `REVALIDATABLE_STATES=("accepted",)` 유지로 "미실행 태스크 재검증 0" 단언은 그대로 성립
+- 발산 4건 전부 같은 뿌리 — W-28이 RED를 쓸 때 구현·스키마를 참조하지 않고 자기 어휘를 만들었다. CLOSE 회고 대상
+
+## [131] W-46 완료 — **O-4 완전 해소**
+- `revalidation.py`가 `document["mini_tasks"]`를 읽는다(:147). 오류 메시지·`revalidation_graph_invalid` 설명도 새 키로 현행화
+- 지역 `TASK_STATES` 튜플 **완전 삭제**, `controller.TASK_STATES` 직접 참조(:159,:163). PM 독립 확인 — 파일에 지역 재선언 0
+- 재선언 제거 근거 3종(워커 실측): 이미 `import controller` 중이라 추가 결합 0 / 외부에서 `revalidation.TASK_STATES`를 읽는 코드 0건(전수 grep) / `supervisor.py:60`이 같은 패턴("상태 어휘는 controller.TASK_STATES가 SSOT")을 이미 쓴다
+- (C) 4항목 무변경 근거 확인: `direct_consumers`·`revalidation_scope` 본문 바이트 무변경, `"propagated": []` 유지, 자기 호출 0, `workgraph_transaction` 2회·`attempt_dir` 2회·`_atomic_write_json` 1회 호출 지점 무변경
+- `test_revalidation.py` **7/7 GREEN**. 전체 회귀 `1 failed, 116 passed`
+- **O-4 해소 완료**: W-44(스키마 흡수) → W-45(테스트 shape) → W-46(구현 정합) 3단으로 `workgraph.json` 단일 계약 성립. AC-12 경로가 실주행 shape에서 동작한다
+- 잔여 판단 1건: 버그 B(`ALLOWED_ATTEMPT_FILES` vs AC-11 복구 계약). merge 전 마지막 결정
+
+## [132] W-45 후속 완료 — 상태 어휘 정합 마무리
+- seed `queued` → `pending`. `TERMINAL_STATES`도 §9.1 7종 집합에서 동결 10종 enum으로 교체. 모듈 헤더에 "동결 enum이 단일 SSOT, `queued`는 §9.1 추상 어휘를 `pending`/`ready`로 정련한 것" 판정 근거 기록
+- 도구 트리 전체에 `"queued"` 리터럴 **잔여 0**(PM 확인)
+- 7건 본문 중 2줄만 변경 — `assert states[TASK_QUEUED] == "queued"` → `"pending"`. 상태 리터럴 자체가 바뀌었으므로 불가피한 추종이며 **의미는 동일**(미실행 태스크는 `REVALIDATABLE_STATES=("accepted",)` 밖이라 배제). assert 행 전수 diff로 그 외 무변경 확인
+- 워커가 공유 워크트리에서 W-46의 동시 착지를 관측하고 정직하게 보고 — `revalidation.py` 미접촉을 `git status`로 확인. 두 워커의 산출이 독립적으로 맞물려 7/7 GREEN이 된 것이 seed의 구조·의미 정합성을 사후 입증
+
+## [133] W-47 완료 — 117 passed, 0 failed
+- `ALLOWED_ATTEMPT_FILES`를 `_DOCUMENT_ATTEMPT_FILES`(§7.1 SSOT 2종) ∪ `_RUNTIME_BOOKKEEPING_FILES`(5종)로 분리·확장. 각 파일의 계약 출처를 주석으로 고정 — `supervisor.py:48,50-53`, `recovery.py:59`, `opal_agent.py`의 `<stem>.attempt.json` 규약. 내부 API import 0(H-6)
+- **단언 이빨 유지 확인**: `.md` 문서 0건 게이트와 허용 목록 초과 게이트를 추가하고, 워커가 `DESIGN.md`·`unexpected-rogue-file.bin`을 실제 주입해 각각 실패함을 확인한 뒤 제거했다. 무조건 통과 테스트가 아님
+
+## [134] W-29 G4 체크포인트 — merge 가능 판정
+- **oppb 회귀 117 passed, 0 failed** (2회 재현 동일)
+- **공용 자산 회귀 `5 failed, 1305 passed, 3 skipped, 295 subtests`**
+- 5건은 전부 `tool-scan/tests/test_tool_scan.py`이며 **상류 선재 결함으로 확정**: `git archive main`을 스크래치패드에 풀어 동일 테스트 실행 → **동일한 5건이 동일하게 실패**(`test_manifest_entries`·`test_agentmd_cmux_routing`·`test_agentmd_usage_discipline`·`test_drift_entries`·`test_registry_parity`). 실패 내용도 동일(`harness §9 표에서 7도구 행 미확인. found={'state'}`). 태스크 132와 무관
+- **C-7 검증**: 기존 파일 삭제 0건(`--diff-filter=D` 공집합), 레지스트리 2종 diff 0(W-30/G5 소유라 정상), 기존 자산 수정 2건 모두 additive — `opal-evaluator-agent/AGENT.md` +52/-1(유일 삭제행은 PM이 값을 덧붙인 phase 열거 행), `op-scenario-gate/SKILL.md` +80/-0
+- **상류 5번째 확인**: `main ^HEAD` 7건, 우리 변경 파일과 교집합 0, `git merge-tree --write-tree` conflict 없음
+- 산출: 신규 7(capability agent·oppb 파일럿 스킬+pipeline.json·project-slice·knowledge-finalize·verifier_adapter·revalidation·test_verifier_adapter), 수정 10
+- **판정: merge 가능.** 소유자 승인 요청

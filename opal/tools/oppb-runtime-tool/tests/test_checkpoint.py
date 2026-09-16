@@ -587,3 +587,111 @@ def test_s13_3_stale_parent_candidate_is_not_applied_and_is_regenerated(cp_env):
     assert regenerated.get("parent") == advanced_head, regenerated
     assert regenerated.get("candidate_id") != stale["candidate_id"], regenerated
     assert_no_destructive_git(log, "S-13 stale parent 재생성")
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# W-43 pre-finalize: 미처리 result 판정이 workgraph 실제 스키마 키를 읽는지
+# ═════════════════════════════════════════════════════════════════════════════
+
+
+def release_lease(run_root: str, attempt: str, env: dict) -> dict:
+    return parse_json_stdout(
+        run_oppb(["lease", "release", "--run-root", run_root, "--attempt", attempt], env=env),
+        f"lease release({attempt})",
+    )
+
+
+def pre_finalize(run_root: str, repo: pathlib.Path, env: dict) -> dict:
+    return parse_json_stdout(
+        run_oppb(
+            [
+                "checkpoint",
+                "pre-finalize",
+                "--run-root",
+                run_root,
+                "--project-root",
+                str(repo),
+            ],
+            env=env,
+        ),
+        "checkpoint pre-finalize",
+    )
+
+
+def seed_workgraph(run_root: str, mini_tasks: list[dict]) -> pathlib.Path:
+    """동결 workgraph 스키마 최상위 키는 `mini_tasks`다(`tasks`는 존재하지 않는다)."""
+    return write_json(
+        pathlib.Path(run_root) / "workgraph.json",
+        {
+            "schema_version": 1,
+            "revision": 1,
+            "run_id": "run-w43",
+            "created_at": "2026-01-01T00:00:00Z",
+            "updated_at": "2026-01-01T00:00:00Z",
+            "budget": {"limits": {}, "debited": {}},
+            "mini_tasks": mini_tasks,
+            "execution_contract": {},
+        },
+    )
+
+
+def seed_result(run_root: str, task_id: str, attempt_id: str) -> pathlib.Path:
+    """소비 표식이 없는 result.json — 종료 상태 판정에만 의존해 걸러져야 한다."""
+    return write_json(
+        pathlib.Path(run_root) / "attempts" / task_id / attempt_id / "result.json",
+        {"task_id": task_id, "attempt_id": attempt_id, "outcome": "pass"},
+    )
+
+
+def test_w43_pre_finalize_reads_mini_tasks_key_for_terminal_states(cp_env):
+    """[T132/W-43] 종료 상태(accepted) 미니 태스크의 result.json은 미처리로 세지 않는다.
+
+    workgraph 최상위 키는 `mini_tasks`이고 미니 태스크 식별자 필드는 `id`다.
+    `tasks`/`task_id`를 읽으면 terminal 집합이 **항상 공집합**이 되어 정상 accept
+    이후에도 pre-finalize가 언제나 PRE_FINALIZE_BLOCKED를 반환한다(P5 guard 상시 차단).
+    """
+    repo, run_root, env = cp_env["repo"], cp_env["run_root"], cp_env["env"]
+
+    assert release_lease(run_root, "a1", env).get("ok") is not False
+    assert release_lease(run_root, "b1", env).get("ok") is not False
+
+    seed_workgraph(
+        run_root,
+        [
+            {"id": "T01", "capability": "cap-T01", "state": "accepted", "depends_on": []},
+            {"id": "T02", "capability": "cap-T02", "state": "failed", "depends_on": []},
+        ],
+    )
+    seed_result(run_root, "T01", "a1")
+    seed_result(run_root, "T02", "b1")
+
+    payload = pre_finalize(run_root, repo, env)
+
+    assert payload.get("unprocessed_results") == [], (
+        "종료 상태 미니 태스크의 result가 미처리로 분류됐다 — workgraph 키를 "
+        f"`mini_tasks`/`id`로 읽지 않는다: {payload}"
+    )
+    assert payload.get("finalize_allowed") is True, payload
+    assert payload.get("blocking") == [], payload
+
+
+def test_w43_pre_finalize_still_blocks_on_non_terminal_result(cp_env):
+    """[T132/W-43] 키 수정이 사전 검사를 무력화하지 않는다 — 비종료 미니 태스크의
+    소비되지 않은 result는 여전히 미처리로 남아 finalize를 막아야 한다."""
+    repo, run_root, env = cp_env["repo"], cp_env["run_root"], cp_env["env"]
+
+    assert release_lease(run_root, "a1", env).get("ok") is not False
+    assert release_lease(run_root, "b1", env).get("ok") is not False
+
+    seed_workgraph(
+        run_root,
+        [{"id": "T01", "capability": "cap-T01", "state": "candidate_ready", "depends_on": []}],
+    )
+    seed_result(run_root, "T01", "a1")
+
+    payload = pre_finalize(run_root, repo, env)
+
+    assert payload.get("finalize_allowed") is False, payload
+    assert payload.get("error") == "PRE_FINALIZE_BLOCKED", payload
+    assert "unprocessed_results" in payload.get("blocking", []), payload
+    assert payload.get("unprocessed_results") == ["attempts/T01/a1/result.json"], payload
