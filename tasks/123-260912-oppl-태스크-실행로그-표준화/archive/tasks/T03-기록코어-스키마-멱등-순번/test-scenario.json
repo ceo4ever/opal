@@ -1,0 +1,984 @@
+{
+  "schema_version": "2.0",
+  "task_id": "T03-기록코어-스키마-멱등-순번",
+  "locked": true,
+  "created_at": "2026-09-13T00:32:14+09:00",
+  "locked_at": "2026-09-13T00:54:33+09:00",
+  "scenarios": [
+    {
+      "id": "S-10",
+      "acceptance_ref": "AC-6 / MV-2",
+      "type": "integration",
+      "expected": "전건 exit ≠ 0, `ok:false`, `error.code == \"provenance_invalid\"`. 전 호출이 끝난 뒤 조각 파일의 바이트가 `init` 직후와 **동일**(부분 쓰기 0건). 이어서 허용 24 조합 중 `activity`가 성립하는 것들(§1.2 actor 제약과 교차)만 골라 append하면 전건 `ok:true`.",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "실관찰 RED: pytest TestCombinationExhaustiveRejection → AttributeError: module 'run_log_core' has no attribute 'iter_all_combinations' (§1.3 조합 테이블·열거 함수 미구현)",
+      "red_at": "2026-09-13T00:54:19+09:00",
+      "required_fidelity": "real-usage",
+      "surface_ref": "run-log-tool.append",
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "combination_outside_table_rejected",
+          "expected": "all_rejected_provenance_invalid",
+          "actual": "all_rejected_provenance_invalid"
+        },
+        {
+          "id": "segment_bytes_unchanged",
+          "expected": "unchanged",
+          "actual": "unchanged"
+        },
+        {
+          "id": "expected_derived_from_table",
+          "expected": "COMBINATION_TABLE",
+          "actual": "COMBINATION_TABLE"
+        }
+      ],
+      "observed_evidence": [
+        "pytest::TestCombinationExhaustiveRejection",
+        "run.sh subprocess stdout",
+        "on-disk segment jsonl"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "GREEN: TestCombinationExhaustiveRejection PASS. iter_all_combinations() 4축 곱집합 660건 생성 -> combination_of()==None 인 거부 대상 전수를 run.sh 실호출로 판정. 전건 provenance_invalid, 조각 바이트 불변. 기대값은 COMBINATION_TABLE 에서 파생(상수 하드코딩 없음). [suite] pytest opal/tools/run-log-tool/tests/ -q -> 31 passed in 148.72s, 0 failed",
+      "marked_at": "2026-09-13T02:58:27+09:00",
+      "fidelity": "real-usage"
+    },
+    {
+      "id": "S-11",
+      "acceptance_ref": "AC-6 / MV-3",
+      "type": "integration",
+      "expected": "4건 전부 `provenance_invalid`, 조각 불변. (a)는 M-2에서 **현재 통과함을 실측**했으므로 확정적 RED다.",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "실관찰 RED: pytest TestExplicitRejectionCombinations → 명시적 거부 (a) PM 대필(actor.kind=worker + recorded_by.kind=PM)이 ok:true 로 통과함 (거부 미집행)",
+      "red_at": "2026-09-13T00:54:19+09:00",
+      "required_fidelity": "real-usage",
+      "surface_ref": "run-log-tool.append",
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "explicit_rejection_4_kinds",
+          "expected": "all_provenance_invalid",
+          "actual": "all_provenance_invalid"
+        },
+        {
+          "id": "segment_bytes_unchanged",
+          "expected": "unchanged",
+          "actual": "unchanged"
+        }
+      ],
+      "observed_evidence": [
+        "pytest::TestExplicitRejectionCombinations",
+        "run.sh subprocess stdout",
+        "on-disk segment jsonl"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "GREEN: TestExplicitRejectionCombinations PASS. 명시적 거부 4종(PM 대필 / worker direct+token 부재 / adapter+recorded_by=tool / import+recorded_by=adapter) 전건 provenance_invalid. RED 시점에는 PM 대필이 ok:true 로 통과했다. [suite] pytest opal/tools/run-log-tool/tests/ -q -> 31 passed in 148.72s, 0 failed",
+      "marked_at": "2026-09-13T02:58:27+09:00",
+      "fidelity": "real-usage"
+    },
+    {
+      "id": "S-12",
+      "acceptance_ref": "AC-6 / MV-2",
+      "type": "integration",
+      "expected": "`EVENT_ACTOR_CONSTRAINTS[event]`에 없는 45쌍은 `provenance_invalid`, 있는 15쌍은 `ok:true`. 기대값은 상수가 아니라 매핑에서 파생한다.",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "실관찰 RED: pytest TestEventActorConstraintExhaustive → AttributeError: module 'run_log_core' has no attribute 'EVENT_ACTOR_CONSTRAINTS' (§1.2 사건별 actor 제약 미구현)",
+      "red_at": "2026-09-13T00:54:19+09:00",
+      "required_fidelity": "real-usage",
+      "surface_ref": "run-log-tool.append",
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "event_actor_pairs_exhaustive",
+          "expected": "60_pairs_judged",
+          "actual": "60_pairs_judged"
+        },
+        {
+          "id": "disallowed_pairs_rejected",
+          "expected": "provenance_invalid",
+          "actual": "provenance_invalid"
+        },
+        {
+          "id": "allowed_pairs_accepted",
+          "expected": "ok_true",
+          "actual": "ok_true"
+        }
+      ],
+      "observed_evidence": [
+        "pytest::TestEventActorConstraintExhaustive",
+        "run.sh subprocess stdout",
+        "on-disk segment jsonl"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "GREEN: TestEventActorConstraintExhaustive PASS. 사건 12종 x actor.kind 5종 = 60쌍 전수. EVENT_ACTOR_CONSTRAINTS 에 없는 쌍은 provenance_invalid(PM F-3 확정 배정), 있는 쌍은 ok:true. 기대값은 매핑에서 파생. [suite] pytest opal/tools/run-log-tool/tests/ -q -> 31 passed in 148.72s, 0 failed",
+      "marked_at": "2026-09-13T02:58:27+09:00",
+      "fidelity": "real-usage"
+    },
+    {
+      "id": "S-13",
+      "acceptance_ref": "MV-6",
+      "type": "integration",
+      "expected": "11건 전부 `provenance_invalid`, 조각 불변. 증거를 전부 채운 대조군 2건은 `ok:true`.",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "실관찰 RED: pytest TestProvenanceEvidenceViolations → adapter 사건의 source.id 결측이 ok:true 로 통과함 (MV-6 조건부 필수 증거 미검증)",
+      "red_at": "2026-09-13T00:54:19+09:00",
+      "required_fidelity": "real-usage",
+      "surface_ref": "run-log-tool.append",
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "missing_malformed_evidence_rejected",
+          "expected": "provenance_invalid",
+          "actual": "provenance_invalid"
+        },
+        {
+          "id": "evidence_complete_control_accepted",
+          "expected": "ok_true",
+          "actual": "ok_true"
+        }
+      ],
+      "observed_evidence": [
+        "pytest::TestProvenanceEvidenceViolations",
+        "run.sh subprocess stdout",
+        "on-disk segment jsonl"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "GREEN: TestProvenanceEvidenceViolations PASS. adapter/import 필수 증거(source.id/sha256/observed_at/locator) 결측·형식 위반 전건 provenance_invalid, 증거 완비 대조군 ok:true. base_adapter(actor.kind=worker) 픽스처에 worker_run_id 를 보강해 판정 대상(증거 결측)만 격리 — 기대값 불변. [suite] pytest opal/tools/run-log-tool/tests/ -q -> 31 passed in 148.72s, 0 failed",
+      "marked_at": "2026-09-13T02:58:28+09:00",
+      "fidelity": "real-usage"
+    },
+    {
+      "id": "S-14",
+      "acceptance_ref": "AC-6 / MV-1",
+      "type": "integration",
+      "expected": "11건 전부 `schema_invalid`(**`provenance_invalid`가 아님** — D-T03-3 경계), 조각 불변.",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "실관찰 RED: pytest TestConditionalRequiredFieldViolations → gate.requested 에 gate_id 가 없어도 ok:true (§1.2 조건부 필수 미집행). 원안 11건 중 timestamp 형식 위반 1건은 CLI 가 --timestamp 를 노출하지 않아 real-usage 재현 불가로 제외, 10건 판정",
+      "red_at": "2026-09-13T00:54:19+09:00",
+      "required_fidelity": "real-usage",
+      "surface_ref": "run-log-tool.append",
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "conditional_required_violations_rejected",
+          "expected": "schema_invalid",
+          "actual": "schema_invalid"
+        },
+        {
+          "id": "not_provenance_invalid",
+          "expected": "schema_invalid",
+          "actual": "schema_invalid"
+        },
+        {
+          "id": "worker_actor_requires_worker_run_id",
+          "expected": "rejected",
+          "actual": "rejected"
+        }
+      ],
+      "observed_evidence": [
+        "pytest::TestConditionalRequiredFieldViolations",
+        "run.sh subprocess stdout",
+        "on-disk segment jsonl"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "GREEN: TestConditionalRequiredFieldViolations PASS. §1.2 조건부 필수 위반 10건 전건 schema_invalid(provenance_invalid 아님 — D-T03-3 경계). i_worker_no_worker_run_id(actor.kind=worker + event=activity + worker_run_id 부재)가 RED 시점 ok:true 였고 PM 판정① 적용 범위 확대로 닫혔다. [suite] pytest opal/tools/run-log-tool/tests/ -q -> 31 passed in 148.72s, 0 failed",
+      "marked_at": "2026-09-13T02:58:28+09:00",
+      "fidelity": "real-usage"
+    },
+    {
+      "id": "S-15",
+      "acceptance_ref": "AC-7 / MV-5",
+      "type": "integration",
+      "expected": "exit 0, `ok:true`, `data.idempotent_hit == true`, `data.event_id`·`data.sequence`· `data.actor_sequence`가 1회차와 **동일**, 조각 줄 수가 1회차 직후와 **동일**(증가 0), 조각 바이트도 동일. 이어서 `validate-run`의 `event_count`가 1이고 `verdict==\"pass\"`.",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "실관찰 RED: pytest TestIdempotentSamePayloadReplay → 동일 request_id + 동일 payload 2회차가 idempotent_hit=false 로 새 사건을 생성함 (AC-7 멱등 미구현)",
+      "red_at": "2026-09-13T00:54:19+09:00",
+      "required_fidelity": "real-usage",
+      "surface_ref": "run-log-tool.append",
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "idempotent_hit",
+          "expected": "true",
+          "actual": "true"
+        },
+        {
+          "id": "event_id_same_as_first",
+          "expected": "same",
+          "actual": "same"
+        },
+        {
+          "id": "segment_line_count_unchanged",
+          "expected": "unchanged",
+          "actual": "unchanged"
+        }
+      ],
+      "observed_evidence": [
+        "pytest::TestIdempotentSamePayloadReplay",
+        "run.sh subprocess stdout",
+        "on-disk segment jsonl"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "GREEN: TestIdempotentSamePayloadReplay PASS. 동일 request_id + 동일 payload 재호출이 idempotent_hit:true + 1회차와 같은 event_id·sequence 를 반환하고 조각 줄 수 불변. PM 독립 CLI 재현 일치. [suite] pytest opal/tools/run-log-tool/tests/ -q -> 31 passed in 148.72s, 0 failed",
+      "marked_at": "2026-09-13T02:58:28+09:00",
+      "fidelity": "real-usage"
+    },
+    {
+      "id": "S-16",
+      "acceptance_ref": "AC-7 / MV-5",
+      "type": "integration",
+      "expected": "exit ≠ 0, `error.code == \"request_id_conflict\"`, 조각 바이트 불변. `--data` 한 키만 바꾼 경우, `--stage`만 추가한 경우도 같은 판정(3갈래).",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "실관찰 RED: pytest TestIdempotentConflictOnDifferentPayload → 동일 request_id + 다른 payload 재사용이 request_id_conflict 없이 ok:true 로 통과함",
+      "red_at": "2026-09-13T00:54:19+09:00",
+      "required_fidelity": "real-usage",
+      "surface_ref": "run-log-tool.append",
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "error_code",
+          "expected": "request_id_conflict",
+          "actual": "request_id_conflict"
+        },
+        {
+          "id": "segment_bytes_unchanged",
+          "expected": "unchanged",
+          "actual": "unchanged"
+        }
+      ],
+      "observed_evidence": [
+        "pytest::TestIdempotentConflictOnDifferentPayload",
+        "run.sh subprocess stdout",
+        "on-disk segment jsonl"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "GREEN: TestIdempotentConflictOnDifferentPayload PASS. 동일 request_id + 다른 payload 가 request_id_conflict 로 거부되고 조각 바이트 불변. PM 독립 CLI 재현 일치. [suite] pytest opal/tools/run-log-tool/tests/ -q -> 31 passed in 148.72s, 0 failed",
+      "marked_at": "2026-09-13T02:58:28+09:00",
+      "fidelity": "real-usage"
+    },
+    {
+      "id": "S-17",
+      "acceptance_ref": "AC-7 / MV-5",
+      "type": "integration",
+      "expected": "두 경우 모두 `idempotent_hit:true` + 같은 `event_id`. 즉 `sort_keys` 정규화가 키 순서를 흡수하고, 발급 필드(`timestamp`·`event_id`·`sequence`·`actor_sequence`)가 digest에서 제외됨을 **동작으로** 고정한다.",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "실관찰 RED: pytest TestIdempotentNormalizationInvariance → data 키 순서만 바꿔도 idempotent_hit=false (정규화 해시 미구현)",
+      "red_at": "2026-09-13T00:54:19+09:00",
+      "required_fidelity": "real-usage",
+      "surface_ref": "run-log-tool.append",
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "key_order_absorbed",
+          "expected": "idempotent_hit_true",
+          "actual": "idempotent_hit_true"
+        },
+        {
+          "id": "issued_fields_excluded",
+          "expected": "same_event_id",
+          "actual": "same_event_id"
+        }
+      ],
+      "observed_evidence": [
+        "pytest::TestIdempotentNormalizationInvariance",
+        "run.sh subprocess stdout",
+        "on-disk segment jsonl"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "GREEN: TestIdempotentNormalizationInvariance PASS. data 키 순서 변경·발급 4필드(event_id/sequence/actor_sequence/timestamp) 차이가 canonical_digest 에 흡수돼 idempotent_hit:true + 같은 event_id. [suite] pytest opal/tools/run-log-tool/tests/ -q -> 31 passed in 148.72s, 0 failed",
+      "marked_at": "2026-09-13T02:58:28+09:00",
+      "fidelity": "real-usage"
+    },
+    {
+      "id": "S-18",
+      "acceptance_ref": "§1.1 / AC-6",
+      "type": "integration",
+      "expected": "(a)·(c)는 `event_too_large` + 조각 바이트 불변, (b)는 `ok:true` + 줄 +1. (a) 거부 직후 (b)를 호출하면 `sequence`가 **건너뛰지 않는다**(거부가 순번을 소모하지 않음).",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "실관찰 RED: pytest TestSerializationSizeCap → 20,000 바이트 summary 사건이 ok:true 로 기록됨 (§1.1 16 KiB 상한·event_too_large 미집행)",
+      "red_at": "2026-09-13T00:54:19+09:00",
+      "required_fidelity": "real-usage",
+      "surface_ref": "run-log-tool.append",
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "over_cap_rejected",
+          "expected": "event_too_large",
+          "actual": "event_too_large"
+        },
+        {
+          "id": "under_cap_accepted",
+          "expected": "ok_true",
+          "actual": "ok_true"
+        },
+        {
+          "id": "segment_bytes_unchanged_on_reject",
+          "expected": "unchanged",
+          "actual": "unchanged"
+        }
+      ],
+      "observed_evidence": [
+        "pytest::TestSerializationSizeCap",
+        "run.sh subprocess stdout",
+        "on-disk segment jsonl"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "GREEN: TestSerializationSizeCap PASS. 16 KiB(마스킹 후 최종 줄 UTF-8 바이트, D-T03-8) 초과가 event_too_large 로 거부되고 조각 바이트 불변, 경계 이하는 ok:true. [suite] pytest opal/tools/run-log-tool/tests/ -q -> 31 passed in 148.72s, 0 failed",
+      "marked_at": "2026-09-13T02:58:28+09:00",
+      "fidelity": "real-usage"
+    },
+    {
+      "id": "S-19",
+      "acceptance_ref": "MV-10",
+      "type": "integration",
+      "expected": "응답의 `actor_sequence`가 `wrk_a`: 1,2,3 / `wrk_b`: 1,2 / `PM`: 1,2. 즉 **같은 `actor.id`라도 `worker_run_id`가 다르면 범위가 갈린다.** `sequence`는 1..7로 전역 단조. 조각 파일을 직접 읽어 같은 값을 재확인한다.",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "실관찰 RED: pytest TestActorSequenceWorkerRunIdScope → wrk_a 의 actor_sequence 가 [1,2,5] (기대 [1,2,3]). worker 도 (actor.kind, actor.id) 범위로 계산되어 서로 다른 worker_run_id 사건이 한 순번에 섞임 — PM 판정① 대상",
+      "red_at": "2026-09-13T00:54:19+09:00",
+      "required_fidelity": "real-usage",
+      "surface_ref": "run-log-tool.validate-run",
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "worker_a_actor_sequence",
+          "expected": "1,2,3",
+          "actual": "1,2,3"
+        },
+        {
+          "id": "worker_b_actor_sequence",
+          "expected": "1,2",
+          "actual": "1,2"
+        },
+        {
+          "id": "scope_is_worker_run_id",
+          "expected": "per_worker_run_id",
+          "actual": "per_worker_run_id"
+        }
+      ],
+      "observed_evidence": [
+        "pytest::TestActorSequenceWorkerRunIdScope",
+        "run.sh subprocess stdout",
+        "on-disk segment jsonl"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "GREEN: TestActorSequenceWorkerRunIdScope PASS. 같은 actor.id 로 서로 다른 worker_run_id 2건이 각각 1부터 셈(PM 판정①). RED 시점 실관찰은 wrk_a=[1,2,5] 로 (actor.kind,actor.id) 범위 혼입이었다. [suite] pytest opal/tools/run-log-tool/tests/ -q -> 31 passed in 148.72s, 0 failed",
+      "marked_at": "2026-09-13T02:58:28+09:00",
+      "fidelity": "real-usage"
+    },
+    {
+      "id": "S-20",
+      "acceptance_ref": "MV-10",
+      "type": "integration",
+      "expected": "응답 `sequence`가 1..12, `validate-run`의 `verdict==\"pass\"`·`event_count==12`· `sequence_gaps==[]`·`violations==[]`. 조각을 직접 파싱해 `sequence` 집합이 `{1..12}`와 일치.",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "real-usage",
+      "surface_ref": "run-log-tool.validate-run",
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "sequence_monotonic_no_gap",
+          "expected": "1..N",
+          "actual": "1..N"
+        },
+        {
+          "id": "validate_run_verdict",
+          "expected": "pass",
+          "actual": "pass"
+        }
+      ],
+      "observed_evidence": [
+        "pytest::TestSequenceGlobalMonotonic",
+        "run.sh subprocess stdout",
+        "on-disk segment jsonl"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "GREEN: TestSequenceGlobalMonotonic PASS. run 전역 sequence 1..N 중복·누락 0, validate-run verdict=pass. red_required=false — 이미 성립하는 성질이라 소급 RED 선언하지 않았다. [suite] pytest opal/tools/run-log-tool/tests/ -q -> 31 passed in 148.72s, 0 failed",
+      "marked_at": "2026-09-13T02:58:29+09:00",
+      "fidelity": "real-usage"
+    },
+    {
+      "id": "S-21",
+      "acceptance_ref": "AC-15 / MV-19",
+      "type": "integration",
+      "expected": "1회차 `scanned == imported`·`skipped_idempotent == 0`·`imported > 0`. 2회차 `imported == 0`·`skipped_idempotent == 1회차 imported`·`scanned` 동일. 조각 줄 수가 2회차 후에도 1회차 직후와 같다. `validate-run` `verdict==\"pass\"`.",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "실관찰 RED: pytest TestLegacyImportIdempotent → argparse: invalid choice 'import-agentic' (서브명령 부재)",
+      "red_at": "2026-09-13T00:54:20+09:00",
+      "required_fidelity": "real-usage",
+      "surface_ref": "run-log-tool.import-agentic",
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "second_run_imported",
+          "expected": "0",
+          "actual": "0"
+        },
+        {
+          "id": "skipped_idempotent_equals_first_imported",
+          "expected": "equal",
+          "actual": "equal"
+        },
+        {
+          "id": "event_count_unchanged",
+          "expected": "unchanged",
+          "actual": "unchanged"
+        }
+      ],
+      "observed_evidence": [
+        "pytest::TestLegacyImportIdempotent",
+        "run.sh subprocess stdout",
+        "on-disk segment jsonl"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "GREEN: TestLegacyImportIdempotent PASS. import-agentic 2회 실행에서 2회차 imported=0, skipped_idempotent 가 1회차 imported 와 동일, 조각 사건 수 불변(MV-19). [suite] pytest opal/tools/run-log-tool/tests/ -q -> 31 passed in 148.72s, 0 failed",
+      "marked_at": "2026-09-13T02:58:29+09:00",
+      "fidelity": "real-usage"
+    },
+    {
+      "id": "S-22",
+      "acceptance_ref": "AC-15",
+      "type": "integration",
+      "expected": "`scanned == imported == 4`(V1의 시각 정상 행만). 조각을 파싱해 생성된 4건이 전부 `event==\"activity\"`·`actor.kind==\"PM\"`·`provenance.type==\"import\"`· `provenance.recorded_by.kind==\"tool\"`·`provenance.source.kind==\"legacy_line\"`이고, `data.kind`가 `{progress, decision, validation, retry}` 안에 있으며, `timestamp`가 KST 대비 **9시간 뒤로 물러난 UTC**(`2026-09-12 14:49` → `2026-09-12T05:49:00.000Z`)임을 확인한다. `locator`가 `AGENTIC-LOG.md#L<n>` 형식이고 4건이 서로 다르다. `worker.*`·`gate.*`·`run.*`· `state.changed` 사건이 **0건**(D-T03-10).",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "실관찰 RED: pytest TestLegacyStructuralVariantNormalization → argparse: invalid choice 'import-agentic' (서브명령 부재)",
+      "red_at": "2026-09-13T00:54:20+09:00",
+      "required_fidelity": "real-usage",
+      "surface_ref": "run-log-tool.import-agentic",
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "header_matched_table_only",
+          "expected": "v1_6col_only",
+          "actual": "v1_6col_only"
+        },
+        {
+          "id": "scanned_equals_imported_plus_skipped",
+          "expected": "equal",
+          "actual": "equal"
+        }
+      ],
+      "observed_evidence": [
+        "pytest::TestLegacyStructuralVariantNormalization",
+        "run.sh subprocess stdout",
+        "on-disk segment jsonl"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "GREEN: TestLegacyStructuralVariantNormalization PASS. legacy 구조 변종 중 헤더 행 일치 6열 표의 절대시각 행만 사건화하고 나머지 구조는 미인식(D-T03-12). scanned==imported+skipped_idempotent 유지. [suite] pytest opal/tools/run-log-tool/tests/ -q -> 31 passed in 148.72s, 0 failed",
+      "marked_at": "2026-09-13T02:58:29+09:00",
+      "fidelity": "real-usage"
+    },
+    {
+      "id": "S-23",
+      "acceptance_ref": "AC-15 / AC-14",
+      "type": "integration",
+      "expected": "- `imported == 6` — journal 4행 + stream `result` 1건 + 동기 `result.json` 1건. `system`/`assistant`/`user`/`tool_progress`/`rate_limit_event`는 **사건이 되지 않는다.** - `sources` 배열에 `journal.md`·`t1.events.jsonl`·`t4a.result.json`이 있고 `t1.prompt.txt`·`t1.err.log`는 **없다.** 각 항목이 `path`(태스크 상대)·`sha256`·`scanned`를 갖는다. - 조각 파일 전문에 `t1.prompt.txt`의 문자열이 **0건**으로 나타난다(실제 파일 검사). - 생성 6건 전부 A8(`PM`/`import`/`tool`/`oppl_event`)이고 `event==\"activity\"`. - stream `result`에서 온 사건의 `provenance.source.upstream_event_id`가 그 레코드의 `uuid`와 같고, journal 행에서 온 사건은 `upstream_event_id`가 `null`이며 `locator`가 `…journal.md#L<n>`이다. - `data`에 `duration_ms`·`is_error`·`subtype`·`exitcode`가 실리고, 모델 출력 본문(`result` 문자열)은 실리지 않는다.",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "실관찰 RED: pytest TestOpplDualStructureNormalization → argparse: invalid choice 'import-oppl' (서브명령 부재)",
+      "red_at": "2026-09-13T00:54:20+09:00",
+      "required_fidelity": "real-usage",
+      "surface_ref": "run-log-tool.import-oppl",
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "dual_structure_normalized",
+          "expected": "journal+result+exitcode",
+          "actual": "journal+result+exitcode"
+        },
+        {
+          "id": "non_collected_excluded",
+          "expected": "assistant/user/system/prompt/err_excluded",
+          "actual": "assistant/user/system/prompt/err_excluded"
+        }
+      ],
+      "observed_evidence": [
+        "pytest::TestOpplDualStructureNormalization",
+        "run.sh subprocess stdout",
+        "on-disk segment jsonl"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "GREEN: TestOpplDualStructureNormalization PASS. .oppl-run/ 이원 구조 3규칙(journal.md 4열 표 / result.json·events.jsonl 의 type=result 레코드 / exitcode 단독) 정규화, 비수집 경계 준수(AC-14 §8.1 — stdout·stderr·prompt 원문 미수집). [suite] pytest opal/tools/run-log-tool/tests/ -q -> 31 passed in 148.72s, 0 failed",
+      "marked_at": "2026-09-13T02:58:29+09:00",
+      "fidelity": "real-usage"
+    },
+    {
+      "id": "S-24",
+      "acceptance_ref": "AC-15 / MV-19",
+      "type": "integration",
+      "expected": "`imported == 0`, `skipped_idempotent == 6`, `scanned == 6`, 조각 줄 수 불변. 이어서 `journal.md`에 1행을 **추가**한 뒤 3회차를 실행하면 `imported == 1`· `skipped_idempotent == 6`(기존 항목은 계속 건너뜀). MV-19의 판정 형태 그대로다.",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "실관찰 RED: pytest TestOpplImportIdempotent → argparse: invalid choice 'import-oppl' (서브명령 부재)",
+      "red_at": "2026-09-13T00:54:20+09:00",
+      "required_fidelity": "real-usage",
+      "surface_ref": "run-log-tool.import-oppl",
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "second_run_imported",
+          "expected": "0",
+          "actual": "0"
+        },
+        {
+          "id": "skipped_idempotent_equals_first",
+          "expected": "equal",
+          "actual": "equal"
+        },
+        {
+          "id": "line_count_unchanged",
+          "expected": "unchanged",
+          "actual": "unchanged"
+        }
+      ],
+      "observed_evidence": [
+        "pytest::TestOpplImportIdempotent",
+        "run.sh subprocess stdout",
+        "on-disk segment jsonl"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "GREEN: TestOpplImportIdempotent PASS. import-oppl 2회차 imported=0, skipped_idempotent 가 1회차 수와 동일, 조각 줄 수 불변(MV-19). [suite] pytest opal/tools/run-log-tool/tests/ -q -> 31 passed in 148.72s, 0 failed",
+      "marked_at": "2026-09-13T02:58:29+09:00",
+      "fidelity": "real-usage"
+    },
+    {
+      "id": "S-25",
+      "acceptance_ref": "AC-15",
+      "type": "integration",
+      "expected": "두 응답 모두 `ok:true`이고 `scanned`·`imported`가 실제 실행과 같은 수치, 조각 파일 바이트가 **불변**. `validate-run`의 `event_count`가 0.",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "실관찰 RED: pytest TestDryRunNoWrite → argparse: invalid choice 'import-oppl' (서브명령 부재)",
+      "red_at": "2026-09-13T00:54:20+09:00",
+      "required_fidelity": "real-usage",
+      "surface_ref": "run-log-tool.import-oppl",
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "dry_run_counts_match_real",
+          "expected": "equal",
+          "actual": "equal"
+        },
+        {
+          "id": "segment_bytes_unchanged",
+          "expected": "unchanged",
+          "actual": "unchanged"
+        }
+      ],
+      "observed_evidence": [
+        "pytest::TestDryRunNoWrite",
+        "run.sh subprocess stdout",
+        "on-disk segment jsonl"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "GREEN: TestDryRunNoWrite PASS. --dry-run 이 실제 실행과 같은 scanned·imported 수치를 내면서 조각 파일 바이트를 변경하지 않음. [suite] pytest opal/tools/run-log-tool/tests/ -q -> 31 passed in 148.72s, 0 failed",
+      "marked_at": "2026-09-13T02:58:29+09:00",
+      "fidelity": "real-usage"
+    },
+    {
+      "id": "S-26",
+      "acceptance_ref": "AC-15 / §3.2",
+      "type": "integration",
+      "expected": "(a) `run_log_missing`, (b) `ok:true`이며 사건이 `run_x` 조각에 붙는다, (c) `schema_invalid`(detail에 `--run-id` 필요 문구). 이어서 (c)에 `--run-id run_y`를 명시하면 `ok:true`이고 `run_y` 조각에만 줄이 는다. 추가로 상대 경로 `--task`는 두 import 표면 모두 `task_path_not_absolute`(§3.2 / MV-27).",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "실관찰 RED: pytest TestRunIdResolutionAmbiguity → run_log_missing 기대 vs 빈 응답 (import 서브명령 부재로 --run-id 해석 경로 자체가 없음)",
+      "red_at": "2026-09-13T00:54:20+09:00",
+      "required_fidelity": "real-usage",
+      "surface_ref": "run-log-tool.import-agentic",
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "zero_run",
+          "expected": "run_log_missing",
+          "actual": "run_log_missing"
+        },
+        {
+          "id": "one_run",
+          "expected": "resolved_ok",
+          "actual": "resolved_ok"
+        },
+        {
+          "id": "two_or_more",
+          "expected": "schema_invalid",
+          "actual": "schema_invalid"
+        }
+      ],
+      "observed_evidence": [
+        "pytest::TestRunIdResolutionAmbiguity",
+        "run.sh subprocess stdout",
+        "on-disk segment jsonl"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "GREEN: TestRunIdResolutionAmbiguity PASS. --run-id 미지정 시 조각에서 run 발견 — 0개 run_log_missing / 1개 해당 run 사용 / 2개 이상 schema_invalid(D-T03-18). [suite] pytest opal/tools/run-log-tool/tests/ -q -> 31 passed in 148.72s, 0 failed",
+      "marked_at": "2026-09-13T02:58:30+09:00",
+      "fidelity": "real-usage"
+    },
+    {
+      "id": "S-27",
+      "acceptance_ref": "AC-19 / MV-24",
+      "type": "integration",
+      "expected": "전건 exit 0(원본 부재 케이스는 `run_log_missing`을 허용하되 그 외 오류 없음), tmpdir 전역에 `state.json` 0건. 정적 판정 — `run_log_core.py`·`run_log_tool.py` 두 소스에 `state_tool`·`state.json` 문자열 **0건**(기존 S-8b와 같은 검사를 T03 신규 코드 범위까지 확장).",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "real-usage",
+      "surface_ref": "run-log-tool.append",
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "no_state_json_created",
+          "expected": "0",
+          "actual": "0"
+        },
+        {
+          "id": "source_state_coupling_strings",
+          "expected": "0",
+          "actual": "0"
+        }
+      ],
+      "observed_evidence": [
+        "pytest::TestStateAssetIndependenceExtended",
+        "run.sh subprocess stdout",
+        "on-disk segment jsonl"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "GREEN: TestStateAssetIndependenceExtended PASS. 5연속 lifecycle 에서 tmpdir 전역 state.json 0건. run_log_core.py·run_log_tool.py 소스의 state_tool/state.json 문자열 grep -c = 0/0 (PM 실측). AC-19/MV-24/D-5 유지. red_required=false. [suite] pytest opal/tools/run-log-tool/tests/ -q -> 31 passed in 148.72s, 0 failed",
+      "marked_at": "2026-09-13T02:58:30+09:00",
+      "fidelity": "real-usage"
+    },
+    {
+      "id": "S-28",
+      "acceptance_ref": "C-2 / AC-20",
+      "type": "integration",
+      "expected": "기존 8건 전건 통과(파일 미수정), `state-tool` **428 passed / 3 skipped / 0 failed** (T02 DONE 기준선과 동일). 실패 0건이 아니면 T03은 완료가 아니다.",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "real-usage",
+      "surface_ref": "run-log-tool.append",
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "state_tool_failed_count",
+          "expected": "0",
+          "actual": "0"
+        },
+        {
+          "id": "existing_test_file_t03_delta",
+          "expected": "0",
+          "actual": "0"
+        }
+      ],
+      "observed_evidence": [
+        "pytest::TestExistingRegressionSuiteUnaffected",
+        "run.sh subprocess stdout",
+        "on-disk segment jsonl"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "GREEN: TestExistingRegressionSuiteUnaffected PASS. 구속 문언('실패 0건이 아니면 완료가 아니다') 두 조건 충족 — (1) state-tool 436 passed, 3 skipped, 111 subtests passed, **failed 0건**(루프 에이전트 실측 270.61s / PM 실측 247.08s 동일 결론) (2) 기존 테스트 파일 T03 델타 0: git diff --stat opal/tools/state-tool/tests/test_state_tool.py -> 1 file changed, 8 insertions(+), 2 deletions(-) 전량 T05 작업분. expected 의 '428 passed' 는 T02 시점 서술이며 T05 신규 8건으로 436 으로 이동. run-log-tool 기존 S-3~S-8 8건도 전건 통과. red_required=false. [suite] pytest opal/tools/run-log-tool/tests/ -q -> 31 passed in 148.72s, 0 failed",
+      "marked_at": "2026-09-13T02:58:30+09:00",
+      "fidelity": "real-usage"
+    },
+    {
+      "id": "S-29",
+      "acceptance_ref": "PM 판정② / CONTRACT §1.3 말미 · §3.1 (D-5)",
+      "type": "integration",
+      "expected": "명시적 모드 인자에 의한 active 전용 source 제약 집행. (a) --mode 미지정으로 activity + source.kind=process_start 를 A1 증거 완비로 append → ok:true (기본값은 active 전용 제약 미적용). (b) 같은 사건을 --mode active 로 append → exit != 0, error.code == provenance_invalid (activity 는 agent_message|stream_event|tool_result 만 허용). (c) --mode active + activity + source.kind=agent_message → ok:true. (d) --mode shadow 는 (a)와 동일하게 ok:true. 전 케이스에서 코어 소스에 state_tool·state.json 문자열 0건 유지 — 모드는 인자로만 들어오고 어디서도 읽지 않는다.",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "실관찰 RED: pytest TestActiveModeSourceConstraint → --mode 인자가 argparse 미인식 (PM 판정② 명시적 모드 인자 미구현)",
+      "red_at": "2026-09-13T00:54:20+09:00",
+      "required_fidelity": "real-usage",
+      "surface_ref": "run-log-tool.append",
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "mode_unset_not_enforced",
+          "expected": "ok_true",
+          "actual": "ok_true"
+        },
+        {
+          "id": "mode_active_enforced",
+          "expected": "provenance_invalid",
+          "actual": "provenance_invalid"
+        },
+        {
+          "id": "mode_shadow_not_enforced",
+          "expected": "ok_true",
+          "actual": "ok_true"
+        },
+        {
+          "id": "mode_never_read_by_core",
+          "expected": "arg_only",
+          "actual": "arg_only"
+        }
+      ],
+      "observed_evidence": [
+        "pytest::TestActiveModeSourceConstraint",
+        "run.sh subprocess stdout",
+        "on-disk segment jsonl"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "GREEN: TestActiveModeSourceConstraint PASS. PM 판정② — --mode 미지정은 active 전용 source 제약 미적용(ok:true), --mode active 는 사건별 허용 source 집합 밖을 provenance_invalid 로 거부, --mode shadow 는 미적용. 모드는 인자로만 들어오고 코어가 어디서도 조회하지 않음(D-5 정적 검사 동반). PM 독립 CLI 재현 일치. [suite] pytest opal/tools/run-log-tool/tests/ -q -> 31 passed in 148.72s, 0 failed",
+      "marked_at": "2026-09-13T02:58:30+09:00",
+      "fidelity": "real-usage"
+    }
+  ]
+}

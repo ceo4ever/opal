@@ -26,6 +26,7 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 MAC_SCRIPT="$REPO_ROOT/scripts/install-mac.sh"
 WIN_SCRIPT="$REPO_ROOT/scripts/install/windows.ps1"
+HOOKS_JSON="$REPO_ROOT/opal/core/hooks/claude-hooks.json"
 
 PASS_COUNT=0
 FAIL_COUNT=0
@@ -640,6 +641,68 @@ if [ "$TS024_EXIT" -eq 0 ] && [ -f "$TS024_DST" ] && grep -q '^name:' "$TS024_DS
     pass "TS-024: install-mac.sh strict(set -euo pipefail) 기동 — 전역 센티넬 로드 상태에서 emit_platform_agent_adapter 1회 실행, readonly 충돌류 치명 오류 없이 산출물 생성"
 else
     fail "TS-024: install-mac.sh strict 기동 실패 (exit=$TS024_EXIT)" "$(cat "$TS024_ERR" 2>/dev/null)"
+fi
+
+# ─── TS-025~027: Claude Stop guard source/install drift 검출 ───────────────
+# task 136 W-5/S-6/S-7: transition_action=continue 상태에서 Claude Stop이 단순 완료
+# 알림만 내고 끝나는 회귀를 방지한다. 실제 사용자 홈에는 쓰지 않고 source/static
+# contract만 검사한다.
+if [ -f "$HOOKS_JSON" ] \
+    && "$PY_BIN" -m json.tool "$HOOKS_JSON" >/dev/null 2>"$SCRATCH_DIR/ts025_json.err"; then
+    STOP_GUARD_SCAN="$("$PY_BIN" - "$HOOKS_JSON" <<'PYHOOKSCAN'
+import json, sys
+path = sys.argv[1]
+data = json.load(open(path, encoding="utf-8"))
+commands = [
+    hook.get("command", "")
+    for block in data.get("Stop", [])
+    for hook in block.get("hooks", [])
+    if hook.get("type") == "command"
+]
+joined = "\n".join(commands)
+needles = [
+    "transition_action",
+    "continue",
+    "next_action",
+    "decision",
+    "block",
+    "stop_hook_active",
+    "state-tool",
+]
+missing = [n for n in needles if n not in joined]
+print("PASS" if not missing else "FAIL")
+print(",".join(missing))
+PYHOOKSCAN
+)"
+    TS025_STATUS="$(printf '%s\n' "$STOP_GUARD_SCAN" | sed -n '1p')"
+    TS025_DETAIL="$(printf '%s\n' "$STOP_GUARD_SCAN" | sed -n '2p')"
+    if [ "$TS025_STATUS" = "PASS" ]; then
+        pass "TS-025: Claude Stop hook source가 transition_action=continue → decision:block + next_action 안내 + stop_hook_active 루프 방지 계약을 포함"
+    else
+        fail "TS-025: Claude Stop guard source 계약 누락" "missing=$TS025_DETAIL"
+    fi
+else
+    fail "TS-025: claude-hooks.json 부재 또는 JSON invalid" "$(cat "$SCRATCH_DIR/ts025_json.err" 2>/dev/null)"
+fi
+
+if grep -q 'opal/core/hooks/claude-hooks.json' "$MAC_SCRIPT" \
+    && grep -q 'merge_hooks_config "$settings" "$hooks_src"' "$MAC_SCRIPT" \
+    && grep -q 'scripts/merge-hooks.py' "$MAC_SCRIPT"; then
+    pass "TS-026: install-mac.sh가 source Claude hooks를 ~/.claude/settings.json에 merge-hooks.py로 병합"
+else
+    fail "TS-026: install-mac.sh Claude hooks source 병합 경로 누락" \
+         "hooks_src / merge_hooks_config / scripts/merge-hooks.py 확인 필요"
+fi
+
+if grep -q 'function Install-ClaudeHooks' "$WIN_SCRIPT" \
+    && grep -q 'function Merge-ClaudeHooksConfig' "$WIN_SCRIPT" \
+    && grep -q "opal', 'core', 'hooks', 'claude-hooks.json" "$WIN_SCRIPT" \
+    && grep -q "_opal_managed" "$WIN_SCRIPT" \
+    && grep -q 'Install-ClaudeHooks    -RepoRoot $repoRoot' "$WIN_SCRIPT"; then
+    pass "TS-027: install/windows.ps1가 source Claude hooks를 사용자 설정 보존 병합(_opal_managed)으로 설치 흐름에 연결"
+else
+    fail "TS-027: Windows Claude hooks 병합 계약 누락" \
+         "Install-ClaudeHooks / Merge-ClaudeHooksConfig / source path / _opal_managed / main 호출 확인 필요"
 fi
 
 # ─── 요약 ────────────────────────────────────────────────────────────────

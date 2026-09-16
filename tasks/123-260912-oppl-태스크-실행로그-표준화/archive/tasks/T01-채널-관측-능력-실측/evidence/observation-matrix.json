@@ -1,0 +1,100 @@
+{
+  "matrix_version": "1.0",
+  "produced_by": "T01",
+  "produced_at": "2026-09-12T10:48:47.990Z",
+  "note": "관측 4항목 × 2축. 값은 실호출 원본에서만 채웠다. 관측되지 않은 것은 observed=false 또는 unverified 목록으로 분리한다.",
+  "evidence_path_base": "태스크 폴더 기준 상대 경로 (PLAN.md §6)",
+  "channels": {
+    "pm-agent-tool": {
+      "trial": "trial-01 (Agent 도구 실호출 1건, subagent_type=general-purpose, model=sonnet, agentId=afcd6d5c1b5283317)",
+      "invocation_mode": "background(async) — requestShape=background, isAsync=true",
+      "cells": {
+        "start_identifier": {
+          "observed": true,
+          "evidence_path": "evidence/pm-agent-tool/trial-01.dispatch-tooluse.json",
+          "source_kind_candidate": "agent_tool_handshake",
+          "note": "호출자 transcript의 tool_use id `toolu_01EtyU8FLdjMWwGfP8pxAovu`(2026-09-12T10:32:53.387Z)와 하네스 응답 launch_ack(status=async_launched, agentId=afcd6d5c1b5283317, resolvedModel=claude-sonnet-5, 10:32:54.603Z). 하네스가 별도로 `subagents/agent-<id>.meta.json`(toolUseId·parentAgentId·spawnDepth·model)을 기록한다 — evidence/pm-agent-tool/trial-01.start-meta.json. 프로브는 meta.json 출현을 monotonic offset 12869.977ms로 포착했다(trial-01.probe.json.start_events)."
+        },
+        "intermediate_event": {
+          "observed": true,
+          "evidence_path": "evidence/pm-agent-tool/trial-01.probe.json",
+          "source_kind_candidate": "subagent_transcript_append",
+          "note": "외부 프로브가 `subagents/agent-afcd6d5c1b5283317.jsonl`의 증분 append를 8회 포착(monotonic offset 13126.779→58117.882ms, line_count 10→26). 8회 전부 종료 봉투 관측(118236.142ms)보다 앞선다. 분해 금지 불변식 충족: 중간 사건의 출처 파일이 종료 봉투(호출자 transcript attachment)와 다르고, 26개 줄 해시가 전부 상이하며(evidence/pm-agent-tool/trial-01.transcript-index.jsonl), 마지막 중간 사건의 하네스 timestamp 10:33:39.567Z가 종료 봉투 timestamp 10:33:40.847Z보다 앞선다."
+        },
+        "terminal_envelope": {
+          "observed": true,
+          "evidence_path": "evidence/pm-agent-tool/trial-01.terminal-envelope.json",
+          "source_kind_candidate": "task_notification",
+          "note": "호출자 transcript에 `type=attachment` 항목으로 하네스가 기록: `<task-id>`·`<tool-use-id>`(시작 식별자와 상관)·`<output-file>`·`<status>completed</status>`·`<usage><subagent_tokens>45331</subagent_tokens><tool_uses>3</tool_uses><duration_ms>44984</duration_ms></usage>`. 워커 모델이 쓴 것이 아니다."
+        },
+        "monotonic_span": {
+          "observed": true,
+          "evidence_path": "evidence/pm-agent-tool/trial-01.probe.json",
+          "source_kind_candidate": "adapter_monotonic",
+          "note": "프로브 자신의 time.monotonic()으로 시작~종료 관측 구간 118499.728ms를 측정(duration_source=adapter_monotonic). **정밀도 caveat**: 종료 봉투의 하네스 timestamp는 10:33:40.847Z이나 호출자 세션의 디스크 flush 지연으로 프로브가 그것을 본 시점은 약 70초 뒤였다. 따라서 이 축의 adapter_monotonic 구간은 실제 실행 구간이 아니라 **관측 창**이며 과대 측정된다. 타이트한 실행 구간은 종료 봉투 안의 하네스 제공 duration_ms=44984에 있으나 이는 adapter_monotonic 출처가 아니다."
+        }
+      }
+    },
+    "oppl-headless-cli": {
+      "trial": "trial-01-stream (opal-agent --stream, T1 디스패치) / trial-02-json (opal-agent --json, G 게이트 디스패치) / trial-03 (--stream + --resume warm resume 재현)",
+      "invocation_mode": "판정 전제 = `--stream`. `--json` 모드는 중간 사건 관측 불가(아래 note).",
+      "cells": {
+        "start_identifier": {
+          "observed": true,
+          "evidence_path": "evidence/oppl-headless-cli/trial-01-stream.probe.json",
+          "source_kind_candidate": "process_start",
+          "note": "프로브가 subprocess.Popen으로 직접 기동하여 PID를 확보하고 monotonic 기준점을 잡는다(start.pid, start.monotonic_origin). stdout 첫 수신은 offset 1918.191ms이며 `system/init` 줄이 session_id·model·cwd·tool 목록을 싣는다(trial-01-stream.stdout-raw.jsonl)."
+        },
+        "intermediate_event": {
+          "observed": true,
+          "evidence_path": "evidence/oppl-headless-cli/trial-01-stream.probe.json",
+          "source_kind_candidate": "stream_line",
+          "note": "stdout JSONL 205줄을 수신 시점 monotonic offset과 줄 SHA-256과 함께 포착. 204줄이 result 이벤트(offset 388146.302ms)보다 앞서고 수신 구간이 391240.9ms에 걸쳐 분산된다 — 종료 메시지의 분할이 아님이 시간 분산으로 실증된다. 205줄 해시가 전부 상이(205/205). 줄 종류: assistant 36 · user(tool_result) 20 · tool_progress 4 · system 138 · rate_limit_event 6 · result 1."
+        },
+        "terminal_envelope": {
+          "observed": true,
+          "evidence_path": "evidence/oppl-headless-cli/trial-01-stream.exitcode",
+          "source_kind_candidate": "process_exit",
+          "note": "프로세스 종료 코드를 파일로 확보. trial-01-stream은 exitcode=2(하드에러: opal-agent가 stream 마지막 줄이 result 이벤트가 아니라고 거부 — trial-01-stream.err.log에 오류 봉투 원문)이고, trial-02-json과 trial-03은 exitcode=0이다. **하드에러에서도 종료 봉투가 확보된다**는 것이 이 축의 강점이다. 스트림 안의 result 이벤트(subtype=success, is_error=false, duration_ms=385512, session_id)는 종료 봉투의 보조 근거다."
+        },
+        "monotonic_span": {
+          "observed": true,
+          "evidence_path": "evidence/oppl-headless-cli/trial-01-stream.probe.json",
+          "source_kind_candidate": "adapter_monotonic",
+          "note": "프로브가 프로세스를 직접 감싸므로 fork 직전~wait() 직후를 time.monotonic()으로 측정: 393988.166ms(duration_source=adapter_monotonic). 관측 창과 실행 구간이 일치한다(축 A와 달리 flush 지연 없음)."
+        }
+      }
+    }
+  },
+  "mode_dependency_finding": {
+    "claim": "축 B의 중간 사건 관측 가능성은 채널이 아니라 **호출 모드**에 달려 있다.",
+    "evidence": [
+      "evidence/oppl-headless-cli/trial-01-stream.probe.json",
+      "evidence/oppl-headless-cli/trial-02-json.probe.json"
+    ],
+    "measurement": "--stream(trial-01): 205줄, 첫 줄 offset 1918.191ms, 마지막 줄 393159.077ms, 분산 391240.9ms. --json(trial-02): 120줄, 첫 줄 offset 134508.849ms, 마지막 줄 134512.185ms, 분산 3.3ms(전체 구간 134516.779ms의 마지막 0.002%에 전량 도착).",
+    "consequence": "`--json` 전제에서는 이 축이 observed_terminal 이상으로 올라갈 수 없다. profiles.json의 배정은 `--stream` 전제이며, 변환기가 `--json`으로 호출하면 배정이 성립하지 않는다."
+  },
+  "unverified": [
+    {
+      "item": "축 A 실패/차단 경로의 종료 봉투 status enum",
+      "reason": "이번 실측은 정상 완료 표본만 확보했다. status=completed 외의 값(실패·중단·타임아웃)이 어떤 문자열로 오는지, pre_activity_failure 대체 경로가 성립하는지는 호출하지 않았다.",
+      "impact": "CONTRACT §1.5 terminal reason/reason_code 매핑은 Phase 1A 실측이 필요하다."
+    },
+    {
+      "item": "축 A 관측 원본의 안정성 계약",
+      "reason": "`~/.claude_platform_mkt/projects/<slug>/subagents/*.jsonl`·`*.meta.json`과 `type=attachment` task-notification은 플랫폼 내부 산출물이며 공개 계약이 아니다. 관측 시점 버전은 transcript의 `version=2.1.269`다.",
+      "impact": "플랫폼 업데이트로 경로·필드가 바뀌면 축 A 배정이 무효화된다 — 재스파이크 트리거(TRD D-8)."
+    },
+    {
+      "item": "축 A의 타이트한 adapter_monotonic 구간",
+      "reason": "호출자 세션 flush 지연으로 관측 창이 실행 구간보다 길다(이번 표본 약 70초 과대).",
+      "impact": "§1.5 duration_ms를 adapter_monotonic으로 보고할 수는 있으나 값의 의미가 '실행 소요'가 아니라 '관측 소요'다. Phase 1A에서 flush 비의존 종료 신호를 찾지 못하면 이 축의 duration은 상한값으로만 해석해야 한다."
+    },
+    {
+      "item": "축 B 동시 실행·경합 경계",
+      "reason": "단일 프로세스 순차 호출만 실측했다.",
+      "impact": "동시 호출 시 순번·상관 키 충돌 여부는 Phase 1A 정량 게이트 대상."
+    }
+  ]
+}

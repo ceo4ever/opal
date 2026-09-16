@@ -1084,8 +1084,18 @@ def _t103_flat_rows(detail: dict) -> list[dict]:
 
 
 def _t103_live_state(task_id: str) -> dict:
-    """실 state.json 로드 — 불변식 대조용(값 단정 아님)."""
-    with open(os.path.join(_T103_ROOT, "tasks", task_id, "state.json"), encoding="utf-8") as f:
+    """state.json 로드 — 불변식 대조용(값 단정 아님).
+
+    실 `tasks/{task_id}/`를 우선 읽되, 없으면 같은 태스크의 fixture 사본
+    (`fixtures/t103_states/{task_id}.json`)으로 폴백한다. 태스크가 완료·폐기로
+    `tasks/backup/`에 이관되면 실경로가 사라져 이 헬퍼가 FileNotFoundError를
+    내던 것을 막는다 — 대조 대상은 파이프라인 행 구조이지 그 태스크가 현재
+    활성인지 여부가 아니다(135 ADD-2 후속).
+    """
+    live = os.path.join(_T103_ROOT, "tasks", task_id, "state.json")
+    fallback = os.path.join(os.path.dirname(__file__), "fixtures", "t103_states", f"{task_id}.json")
+    path = live if os.path.isfile(live) else fallback
+    with open(path, encoding="utf-8") as f:
         return json.load(f)
 
 

@@ -10,6 +10,8 @@
 
 각 단계 완료 시 사용자에게 보고하고 승인을 받는다.
 
+interactive에서도 전이 판정은 산문이 아니라 `state-tool` 구조화 출력이 소유한다. 일반 단계 완료 후 `transition_action=await_user`, `report_type=decision_request`가 반환될 때만 사용자 응답을 기다린다. `transition_action=continue`와 `report_type=progress_report`가 반환된 경우는 비차단 통지로 취급하며, 도구 출력과 pipeline 정의가 우선한다.
+
 | 응답 | 동작 |
 |------|------|
 | "확인", "다음", "승인" | 다음 단계 진행 |

@@ -1,0 +1,197 @@
+{
+  "task_id": "135-260915-opds-run-log-기록완전성",
+  "skill": "opds",
+  "mode": "agentic",
+  "schema_version": "1.1",
+  "created_at": "2026-09-15 23:30:14",
+  "updated_at": "2026-09-16 21:51:07",
+  "current_status": "completed_unmerged",
+  "rows": [
+    {
+      "row_id": 1,
+      "stage": "TASK",
+      "item": "작업",
+      "key": "task.task_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-15 23:30:14",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 2,
+      "stage": "TASK",
+      "item": "사용자 확인",
+      "key": "task.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-15 23:31:15",
+      "owner": "user",
+      "note": "캡틴 승인: TASK 범위로 PLAN 진행"
+    },
+    {
+      "row_id": 3,
+      "stage": "PLAN",
+      "item": "작업",
+      "key": "plan.plan_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-15 23:47:27",
+      "owner": "PM",
+      "note": "PLAN 계약·code-scan 인용 검증 통과; PM 리뷰 반영 완료",
+      "worker_duration_unknown": true
+    },
+    {
+      "row_id": 4,
+      "stage": "PLAN",
+      "item": "목표-커버 게이트",
+      "key": "plan.scenario_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-15 23:58:11",
+      "owner": "PM",
+      "note": "op-scenario-gate pass: coverage-check all_covered=true; evaluator scenario-rubric goal=2 adoption=2 boundary=2 average=2.0"
+    },
+    {
+      "row_id": 5,
+      "stage": "PLAN",
+      "item": "PM Gate",
+      "key": "plan.pm_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-15 23:58:25",
+      "owner": "PM",
+      "note": "PM Gate pass: state validate ok, PLAN contract pass, code-scan citation pass, scenario coverage pass",
+      "gate": {
+        "artifacts": [
+          "TASK.md",
+          "PLAN.md",
+          "TEST-SCENARIO.md"
+        ],
+        "checklist": [
+          "sdlc-v2 TASK/PLAN/TEST-SCENARIO first frontmatter template=sdlc-v2; 기존 문서는 legacy 재개 경로로 판정",
+          "sdlc-v2 TASK.md AC/C → PLAN.md Work items 완료 기준 연결",
+          "sdlc-v2 PLAN.md Work items 필수 열·W-ID·선행 작업·실행 그룹·파일 충돌 없음 — state-tool verify <태스크폴더> --plan-contract-check 통과",
+          "sdlc-v2 PLAN.md Risks 절 존재, 실제 위험은 H-N 사용 또는 위험 없음 명시",
+          "sdlc-v2 PLAN.md Release and recovery 존재",
+          "sdlc-v2 TEST-SCENARIO.md Setup / Scenarios 존재, 모든 AC/C와 존재하는 H의 연결 완전 — op-scenario-gate pass",
+          "code-scan 결과 인용 — state-tool verify <태스크폴더> --code-scan-citation-check 통과"
+        ]
+      }
+    },
+    {
+      "row_id": 6,
+      "stage": "PLAN",
+      "item": "사용자 확인",
+      "key": "plan.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-16 13:09:00",
+      "owner": "user",
+      "note": "캡틴 승인(a): PM 검토 3건 보정 반영 후 PLAN 승인 — W-0 CONTRACT 선확정, last_observed 3필드 추가, 미구현 표면 표현 정정"
+    },
+    {
+      "row_id": 7,
+      "stage": "EXECUTE",
+      "item": "작업",
+      "key": "execute.implement",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-16 17:57:52",
+      "owner": "PM",
+      "note": "워커 소요 실측 선언: W-0 80s + W-1 839s + W-2 358s + W-3 933s + W-4 2683s + W-5 342s (재지시분 포함, 중복 통보 제외)",
+      "worker_duration_minutes": 87
+    },
+    {
+      "row_id": 8,
+      "stage": "TEST",
+      "item": "작업",
+      "key": "test.run_tests",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-16 17:57:58",
+      "owner": "PM",
+      "note": "워커 소요 실측 선언: W-6 opal-test-agent 894s",
+      "worker_duration_minutes": 15
+    },
+    {
+      "row_id": 9,
+      "stage": "TEST",
+      "item": "PM Gate",
+      "key": "test.pm_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-16 16:15:25",
+      "owner": "PM",
+      "note": "PM Gate pass: state validate violations=0, 시나리오 11/11 pass(real-usage), 3 기준선 스위트 일치, 구현 파일 W-6 무변경 확인, AC-1~AC-8 대조 완료(AC-5는 missing_pm_activity 미집행 공백 명시)",
+      "gate": {
+        "artifacts": [
+          "TEST-SCENARIO.md",
+          "test-scenario.json"
+        ],
+        "checklist": [
+          "TEST-SCENARIO.md는 실행 전 명세로만 읽고 결과·증거를 기록하지 않음",
+          "test-scenario.json의 모든 필수 시나리오가 PASS이고 FAIL/BLOCKED가 없으며 실제 실행 증거가 존재",
+          "PLAN.md Work items에 정의된 필수 검증 PASS",
+          "컨벤션 자동 진단 PASS (GC-CONVENTION-*.md Critical/High 0건 — 컨벤션 적용 대상 ≥1건 시 발동)"
+        ]
+      }
+    },
+    {
+      "row_id": 10,
+      "stage": "TEST",
+      "item": "사용자 확인",
+      "key": "test.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-16 17:55:46",
+      "owner": "user",
+      "note": "캡틴 승인: CLOSE 진입 (시나리오 11/11 pass, 회귀 0, 미완 2건 명시 보고 후 승인)"
+    },
+    {
+      "row_id": 11,
+      "stage": "CLOSE",
+      "item": "DONE.md 생성",
+      "key": "close.done_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-16 17:57:58",
+      "owner": "PM",
+      "note": "DONE.md 작성 완료. 개선 후보 4건 기록(fw 2 + local 2)"
+    },
+    {
+      "row_id": 12,
+      "stage": "CLOSE",
+      "item": "ADD-1 훅 세션 소유권 우선순위",
+      "key": "close.add_1",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-16 18:38:46",
+      "owner": "PM",
+      "note": "훅 세션 소유권 우선순위 적용: declared 플래그로 환경변수 선언 시 디스크 스캔 생략. 4케이스 검증(폴백 차단 유지/완료태스크 선언 통과/재진입 가드/부재경로 통과), merge_hooks 5 passed, 136 계약 3 OK"
+    },
+    {
+      "row_id": 13,
+      "stage": "CLOSE",
+      "item": "ADD-2 pilot run-log 발동 경로",
+      "key": "close.add_2",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-16 21:12:10",
+      "owner": "PM",
+      "note": "state-tool init 기본값 shadow 전환 완료. 계약 7건은 독립 워커가 재타겟(C-3 4건→off 명시 트리거, 103 3건→fixture off 생성). 3개 스위트 전건 통과(29/411+3skip/53), _T103_BASELINE_MARK_KEYS 무변경"
+    },
+    {
+      "row_id": 14,
+      "stage": "CLOSE",
+      "item": "ADD-3 훅 워크트리 태스크 소유권 경계",
+      "key": "close.add_3",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-16 21:51:07",
+      "owner": "PM",
+      "note": "훅에서 .opal-worktrees/.meta 순회 제거 — 허브 세션이 타 세션 소유 워크트리 태스크를 집던 경로 차단. 3케이스 검증(허브 통과/워크트리 차단 유지/재진입 가드), merge_hooks 5 passed, 136 계약 3 OK. ADD-1의 declared 분기는 환경변수 배선 불가 확인되어 미발화 주석 처리"
+    }
+  ],
+  "next_action": "태스크 완료"
+}

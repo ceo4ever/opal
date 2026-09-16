@@ -4,8 +4,8 @@
   "mode": "agentic",
   "schema_version": "1.1",
   "created_at": "2026-09-06 23:37:13",
-  "updated_at": "2026-09-07 23:37:10",
-  "current_status": "in_progress",
+  "updated_at": "2026-09-16 18:08:09",
+  "current_status": "completed_unmerged",
   "rows": [
     {
       "row_id": 1,
@@ -235,13 +235,13 @@
       "stage": "CLOSE",
       "item": "DONE.md 생성",
       "key": "close.done_md",
-      "status": "in_progress",
-      "status_label": "🔄",
-      "timestamp": "2026-09-07 23:37:10",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-16 18:08:09",
       "owner": "PM",
-      "note": null
+      "note": "DONE.md 완결 확인 후 행 마감(9일 지연 — 2026-09-07 세션 중단으로 행만 미마감). 산출물 15종·검증 43건·커밋 5건 모두 존재"
     }
   ],
-  "next_action": "CLOSE DONE.md 생성 진행 중",
+  "next_action": "태스크 완료",
   "worktree": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_109"
 }

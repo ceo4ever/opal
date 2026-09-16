@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_task_number": 134,
+  "last_task_number": 138,
   "memories": [
     {
       "title": "변경이력 제거 검토 결정 — A안 확정",
@@ -41,9 +41,78 @@
       "status": "active",
       "file": "memory/OPAL_WorkStudio_제품_개발_방향.md",
       "summary": "백로그 SSOT와 MVP Agent 대화 흐름, Orca Terminal 참조 원칙"
+    },
+    {
+      "title": "워커 자기보고 부재를 산출물 부재로 간주하지 않는 실측 판정을 PM 절차에 상시화",
+      "date": "2026-09-15",
+      "type": "improvement",
+      "status": "candidate",
+      "file": "memory/워커_자기보고_부재를_산출물_부재로_간주하지_않는_실측_판정을_PM_절차에_상시화.md",
+      "summary": "태스크 123에서 워커가 긴 포그라운드 명령 뒤 '존재하지 않는 알림을 기다린다'는 문구만 반환하고 종료한 사례가 8건 누적됐다. 대부분 산출…"
+    },
+    {
+      "title": "test-tool에 red_required 갱신 경로 부재 — 시나리오 성격 오배정의 되돌림 비용이 전량 재실행",
+      "date": "2026-09-15",
+      "type": "improvement",
+      "status": "candidate",
+      "file": "memory/test_tool에_red_required_갱신_경로_부재_시나리오_성격_오배정의_되돌림_비용이_전량_재실행.md",
+      "summary": "TEST-SCENARIO 작성 시 보존·회귀 가드형 시나리오(S-9)를 '구현 전 RED'로 잘못 배정했다. 구현 전에 이미 통과하는 시나리오…"
+    },
+    {
+      "title": "install-mac.sh 시드 병합이 top-level 키 단위라 신규 하위 키가 기존 사용자에게 전파되지 않음",
+      "date": "2026-09-15",
+      "type": "improvement",
+      "status": "candidate",
+      "file": "memory/install_mac_sh_시드_병합이_top_level_키_단위라_신규_하위_키가_기존_사용자에게_전파되지_않음.md",
+      "summary": "scripts/install-mac.sh의 SEED_KEYS 루프가 'if key in existing: continue'로 판정한다. qui…"
+    },
+    {
+      "title": "워크트리 선행 실패가 라우터 회귀 32건을 가렸다",
+      "date": "2026-09-15",
+      "type": "improvement",
+      "status": "candidate",
+      "file": "memory/워크트리_선행_실패가_라우터_회귀_32건을_가렸다.md",
+      "summary": "사전 존재 실패를 기준선에 넣으면 그 범위의 신규 회귀를 탐지할 수 없다"
+    },
+    {
+      "title": "missing_pm_activity 트리거 조건이 계약에 미정의",
+      "date": "2026-09-16",
+      "type": "improvement",
+      "status": "candidate",
+      "file": "memory/missing_pm_activity_트리거_조건이_계약에_미정의.md",
+      "summary": "state-tool verify --run-log-completeness-check가 반환하는 누락 목록 4종 중 missing_pm_acti…"
+    },
+    {
+      "title": "PM 권고 전 기존 테스트 자산 확인 누락",
+      "date": "2026-09-16",
+      "type": "improvement",
+      "status": "candidate",
+      "file": "memory/PM_권고_전_기존_테스트_자산_확인_누락.md",
+      "summary": "태스크 135에서 PM이 'run_log_core.append에 data 키 집합 폐쇄 검사를 추가하자'를 소유자에게 권고해 승인까지 받았으나…"
     }
   ],
   "history": [
+    {
+      "title": "137 run log 계약 완성",
+      "date": "2026-09-17",
+      "stage": "완료",
+      "path": "tasks/137-260916-opds-run-log-계약-완성/",
+      "result": "missing_pm_activity 트리거를 앵커 2종으로 계약에 정의하고 구현해 빈 배열이 '누락 없음'을 뜻하게 했고, PM activity payload 키 폐쇄를 CLI 표면에서 기록 코어 validate_event()로 내려 모든 A4 생산 경로에 동일 적용했다. 선행 실패 4건(HEAD 대리 기준선 3 + 인터프리터 게이트 1)도 정정해 3스위트 504 passed/0 failed."
+    },
+    {
+      "title": "136 모드별 실행 지속성 계약",
+      "date": "2026-09-16",
+      "stage": "완료",
+      "path": "tasks/136-260916-opds-모드별-실행-지속성-계약/",
+      "result": "3개 실행 모드의 구조화 전이 계약, 전체 Pilot CLOSE tail, Claude Stop guard를 적용하고 S-1~S-7 및 회귀 검증을 통과했다."
+    },
+    {
+      "title": "123 태스크 실행로그 표준화",
+      "date": "2026-09-15",
+      "stage": "완료",
+      "path": "tasks/123-260912-oppl-태스크-실행로그-표준화/",
+      "result": "기록 계층 완성 — redact() 마스킹 4종 실동작(멱등·구조 보존·공통 초크포인트)으로 .gitignore 한시 제외를 제거해 마스킹된 조각이 git 추적 대상이 됐고, 4 MiB 조각 경계 전환을 배타 락 구간 안에서 원자 수행해 동시 append에도 새 조각이 하나만 생기며 순번은 run 전역으로 이어진다. terminal duration_spans 합 검증과 reconcile-duration 파생 조회를 더해 state-tool mark가 분 투영을 자동 기록하고 불일치 수동값은 worker_duration_conflict로 거부한다. 조용시간 설정에 timeZone 2층 머지와 캐시 토큰 서명을 추가했다. 시나리오 19/19 pass, run-log-tool 53/0, state-tool 457 passed·3 skipped, 회귀 0. AC-9 색인과 강제 집행·파이프라인 확산은 후속 이관."
+    },
     {
       "title": "133 부트 요약 실행경로 통합",
       "date": "2026-09-15",
@@ -57,27 +126,6 @@
       "stage": "완료",
       "path": "tasks/134-260914-opd-agentic-모드-지속성-복원/",
       "result": "state-tool effective mode resolver로 사용자 검토 왕복·세션 재개·중첩/트랙 전환의 agentic 상속을 복원하고 S1~S10 및 전체 회귀를 통과함"
-    },
-    {
-      "title": "131 루프파일럿 실행안정화",
-      "date": "2026-09-14",
-      "stage": "완료",
-      "path": "tasks/131-260914-opd-루프파일럿-실행안정화/",
-      "result": "OPPL 상한·완료판정을 도구 집행으로 전환. oppl-runtime-tool 신설(admit ledger), opal-agent에 process group·독립 watchdog·terminal framing·출력 writer 소유권. tools.md를 1212행 카탈로그에서 92행 레지스트리로 재정의하고 출력 규범을 harness owner 문서로 분리해 stage.execute에 편입. 도구 README 13→22종 전수. 검증 1239 passed"
-    },
-    {
-      "title": "129 ego lite 브라우저 우선통합",
-      "date": "2026-09-14",
-      "stage": "완료",
-      "path": "tasks/129-260914-opds-ego-lite-브라우저-우선통합/",
-      "result": "Ego Lite를 브라우저·E2E 1순위로 통합하고 검증 설치·온보딩·공식 스킬·provider_unavailable 전용 폴백을 구현했으며, 92개 테스트와 실제 Ego E2E를 통과함"
-    },
-    {
-      "title": "130 PM 하단 액션 의도 명확화",
-      "date": "2026-09-14",
-      "stage": "완료",
-      "path": "tasks/130-260913-opds-PM-하단-액션-의도-명확화/",
-      "result": "PM 결과 보고 하단을 PM 다음 작업과 사용자 결정 필요로 분리하고, 결정 요청의 판단 정보·명시 질문 계약을 통일했다. 독립 시나리오 8/8과 보고 재현 5/5를 통과했다."
     }
   ]
 }

@@ -1,0 +1,129 @@
+{
+  "check": "security",
+  "status": "pass",
+  "checked_files": [
+    "opal/tools/run-log-tool/run_log_core.py",
+    "opal/tools/run-log-tool/run_log_tool.py",
+    "opal/tools/state-tool/state_tool.py",
+    ".gitignore"
+  ],
+  "findings": [
+    {
+      "id": "GC-101",
+      "fingerprint": "4543d40c10ff0144",
+      "category": "CWE-377 Insecure Temporary File",
+      "severity": "high",
+      "confidence": "high",
+      "disposition": "blocking",
+      "rule_id": "SECURITY.md §1 (CWE-377)",
+      "source_tier": "T0",
+      "location": { "file": "opal/tools/state-tool/state_tool.py", "line": 468, "symbol": "_atomic_write_state_json" },
+      "evidence": "tmp 경로가 state.json.tmp.{os.getpid()}로 예측 가능하고 open(tmp_path,\"w\")에 O_EXCL/O_NOFOLLOW가 없다. 재현: tmp 경로에 심볼릭 링크 선점 후 호출 → victim 파일 내용이 state JSON으로 교체되고, os.replace가 링크를 옮겨 state.json이 victim을 가리키는 심볼릭 링크로 남았다.",
+      "impact": "로컬 쓰기 권한 공격자가 임의 경로를 공격자 영향 하의 JSON으로 덮어쓰고 상태 SSOT를 영구 리다이렉트한다. 이번 수정(GC-001/D-F)이 도입한 신규 writer이며 GC-005의 O_NOFOLLOW 방어가 적용되지 않았다.",
+      "remediation": {
+        "guidance": "tempfile.mkstemp(dir=state_file.parent) 또는 os.open(tmp, O_CREAT|O_EXCL|O_WRONLY|O_NOFOLLOW, 0o600)으로 생성한다.",
+        "auto_fixable": false
+      },
+      "verification": "tmp 경로 심볼릭 링크 선점 재현에서 victim 원문이 불변이고 봉투 오류가 반환되면 닫힘.",
+      "suppression": null
+    },
+    {
+      "id": "GC-102",
+      "fingerprint": "e667b7a77d7de42a",
+      "category": "CWE-59 Link Following",
+      "severity": "high",
+      "confidence": "high",
+      "disposition": "blocking",
+      "rule_id": "CWE-59 / CWE-367",
+      "source_tier": "T1",
+      "location": { "file": "opal/tools/run-log-tool/run_log_core.py", "line": 215, "symbol": "_acquire_lock" },
+      "evidence": "os.open(lock_path, O_CREAT|O_RDWR, 0o600)에 O_NOFOLLOW가 없고 os.chmod(lock_path, 0o600)가 링크 대상에 적용된다. 재현: .opal-task.lock을 0644 victim 파일 심볼릭 링크로 선점 후 init() → victim 권한 0644→0600 변경, init은 ok:true 반환.",
+      "impact": "임의 파일 권한 강제 변경으로 서비스 거부가 가능하고, flock이 공격자 지정 inode에 걸려 D-4 단일 배타 락 보장이 무력화된다(동시 조각 쓰기·순번 충돌).",
+      "remediation": {
+        "guidance": "os.open에 O_NOFOLLOW를 추가하고 chmod는 열린 fd 기준 os.fchmod(fd, 0o600)로 대체한다.",
+        "auto_fixable": false
+      },
+      "verification": "락 심볼릭 링크 선점 재현에서 victim 권한이 불변이고 ELOOP 계열 오류 봉투가 반환되면 닫힘.",
+      "suppression": null
+    },
+    {
+      "id": "GC-103",
+      "fingerprint": "39498958fe1c059d",
+      "category": "CWE-22 Path Traversal",
+      "severity": "medium",
+      "confidence": "high",
+      "disposition": "blocking",
+      "rule_id": "SECURITY.md §6 path 정규화 (CWE-22)",
+      "source_tier": "T0",
+      "location": { "file": "opal/tools/run-log-tool/run_log_core.py", "line": 341, "symbol": "init._do" },
+      "evidence": "run_dir.mkdir(exist_ok=True)가 디렉터리 심볼릭 링크에서도 성공하고 os.chmod(run_dir, 0o700)가 링크 대상에 적용된다. 재현: t3/run을 외부 0755 디렉터리 심볼릭 링크로 선점 후 init() → 외부 디렉터리 0755→0700, 조각이 태스크 폴더 밖에 생성, validate_run은 verdict:\"pass\" 반환.",
+      "impact": "실행 로그가 추적 제외·0700 경계 밖으로 유출되고 외부 디렉터리 권한이 임의 변경된다. GC-003이 넣은 _resolved_segments() 포함 관계 확인은 run_dir.resolve()를 기준으로 삼아 이 공격을 잡지 못한다.",
+      "remediation": {
+        "guidance": "run_dir의 os.path.islink()를 검사해 거부하거나, 포함 관계 기준을 run_dir.resolve()가 아닌 task_dir.resolve()/\"run\"으로 고정한다.",
+        "auto_fixable": false
+      },
+      "verification": "심볼릭 링크 run/에서 init()이 거부되고 외부 디렉터리 권한이 불변이면 닫힘.",
+      "suppression": null
+    },
+    {
+      "id": "GC-104",
+      "fingerprint": "8d5a7c93d865a105",
+      "category": "OWASP A09 Logging Failures",
+      "severity": "medium",
+      "confidence": "high",
+      "disposition": "advisory",
+      "rule_id": "TRD D-9 공통 마스킹 초크포인트",
+      "source_tier": "T1",
+      "location": { "file": "opal/tools/state-tool/state_tool.py", "line": 484, "symbol": "save_state_json" },
+      "evidence": "초크포인트가 _atomic_write_state_json() 안에만 있다. save_state_json()은 run_log.pending_events를 포함한 동일 state를 디스크에 쓰면서 redact()를 타지 않으며 호출처가 6곳(advance/mark/block/add-row/status)이다. 재현: pending_events 심은 뒤 status --set blocked 실행 → state.json 재기록, redact() 호출 0회, 값 잔존.",
+      "impact": "현재는 pending_events 생성자가 _cmd_init_run_log() 하나뿐이고 redact()가 pass-through라 실 유출이 없으나, D-9 '모든 writer 통과'가 구조적으로 미성립이다. T06이 redact() 본문을 채우면 이 경로의 사건이 조용히 마스킹을 건너뛴다.",
+      "remediation": {
+        "guidance": "초크포인트를 save_state_json()에도 적용하거나 두 함수를 단일 직렬화 진입점으로 통합한다.",
+        "auto_fixable": false
+      },
+      "verification": "save_state_json() 경로에서도 redact() 호출이 계수되면 닫힘.",
+      "suppression": null
+    },
+    {
+      "id": "GC-105",
+      "fingerprint": "39dfca4da12a43d9",
+      "category": "CWE-732 Incorrect Permission Assignment",
+      "severity": "low",
+      "confidence": "high",
+      "disposition": "advisory",
+      "rule_id": "CWE-732 / OWASP A05",
+      "source_tier": "T1",
+      "location": { "file": "opal/tools/state-tool/state_tool.py", "line": 468, "symbol": "_atomic_write_state_json" },
+      "evidence": "실제 init 실행 후 stat 실측: state.json 0644, 조각 0600, 락 0600, run/ 0700. tmp를 기본 umask로 만들고 os.replace가 그 mode를 승계한다.",
+      "impact": "GC-004가 조각을 0600으로 좁혔으나 동일한 사건 payload가 보관함(state.json)에도 실려 같은 데이터에 두 권한 경계가 공존한다.",
+      "remediation": {
+        "guidance": "pending_events가 비어 있지 않은 동안 state.json을 0600으로 좁히거나 tmp를 0600으로 생성한다.",
+        "auto_fixable": false
+      },
+      "verification": "pending_events 보유 상태의 state.json 권한이 0600이면 닫힘.",
+      "suppression": null
+    }
+  ],
+  "evidence": [
+    "event-loader verify --event worker.dispatch → ok:true, verified_document_count=4",
+    "validate_run(T,'*') / 'run_../../etc' / None → 전건 run_id_invalid (GC-003 닫힘)",
+    "stat 실측: 조각 0o600, run/ 0o700, .opal-task.lock 0o600, state.json 0o644",
+    "비-UTF-8 조각 주입 → validate_run 봉투 malformed_line, append run_log_write_failed (GC-006 닫힘)",
+    "심볼릭 링크 선점 3종(조각/락/run 디렉터리) — 조각만 차단(GC-005 부분)",
+    "state.json.tmp.<pid> 심볼릭 링크 선점 → victim 내용 교체 (GC-101 신규)",
+    "state-tool init --run-log-mode shadow 실행 → redact() 2회, schema_version 1.2, status active",
+    "status --set blocked 실행 → state.json 재기록, redact() 0회 (GC-104)",
+    "_import_run_log_core() 후 sys.path에 run-log-tool 항목 없음 (GC-007 닫힘)",
+    "git check-ignore 6종 질의 — run/raw/·run/.runtime/·run/*.jsonl·.opal-task.lock 전건 IGNORED (GC-002 닫힘)",
+    "err('weird_{nope}_code') 양쪽 도구 → 예외 없이 code 원문 반환 (GC-008 닫힘)",
+    "비활성 영역: 웹/프론트엔드(A03 인젝션·XSS·CSRF), 인증·세션, 네트워크 통신 — 대상 파일이 로컬 CLI·파일 IO 전용이고 해당 매니페스트·핸들러가 없다"
+  ],
+  "references": [
+    "docs/SECURITY.md",
+    "opal/core/references/harness/gc-finding-schema.md",
+    "OWASP Top 10 2021 A01/A05/A08/A09",
+    "CWE-22, CWE-59, CWE-367, CWE-377, CWE-732"
+  ],
+  "missing_capabilities": [],
+  "report_path": "tasks/123-260912-oppl-태스크-실행로그-표준화/tasks/T02-워킹-스켈레톤-CLI-관통/GC-SECURITY-2026-09-12T22-52-00.md"
+}

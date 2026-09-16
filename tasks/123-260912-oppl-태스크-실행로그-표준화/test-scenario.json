@@ -1,0 +1,817 @@
+{
+  "schema_version": "2.0",
+  "task_id": "123-260912-oppl-태스크-실행로그-표준화",
+  "locked": true,
+  "created_at": "2026-09-14T18:39:39+09:00",
+  "locked_at": "2026-09-15T10:16:09+09:00",
+  "scenarios": [
+    {
+      "id": "S-1",
+      "acceptance_ref": "AC-13",
+      "type": "integration",
+      "expected": "표준 append·상태 보관함·legacy 가져오기 3경로 산출물에 평문 비밀값 0건, 마스킹 호출 지점은 redact() 한 곳",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "python3 -m pytest opal/tools/run-log-tool/tests/test_run_log_tool.py::TestS1SecretMaskingAcrossThreePaths -v | exit=1 | AssertionError: private_key_block 평문이 드레인된 조각 파일에 남아있음(redact() 미구현) — 6 failed, 1 passed",
+      "red_at": "2026-09-15T10:12:58+09:00",
+      "required_fidelity": "real-usage",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "S-1-plaintext-zero",
+          "expected": "pass",
+          "actual": "pass",
+          "detail": "3 write paths (standard append/state-outbox-commit/legacy-import) leave 0 plaintext secrets — TestS1SecretMaskingAcrossThreePaths 3 passed, 4 subtests passed"
+        },
+        {
+          "id": "S-1-single-choke-point",
+          "expected": "pass",
+          "actual": "pass",
+          "detail": "masking occurs only via redact() single choke point, confirmed by test assertions"
+        }
+      ],
+      "observed_evidence": [
+        "python3 -m pytest opal/tools/run-log-tool/tests/test_run_log_tool.py::TestS1SecretMaskingAcrossThreePaths -v | exit=0 | 3 passed, 4 subtests passed"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "python3 -m pytest opal/tools/run-log-tool/tests/test_run_log_tool.py::TestS1SecretMaskingAcrossThreePaths -v | exit=0 | 3 passed, 4 subtests passed",
+      "marked_at": "2026-09-15T13:44:22+09:00",
+      "fidelity": "real-usage"
+    },
+    {
+      "id": "S-2",
+      "acceptance_ref": "AC-13, C-5, H-1",
+      "type": "unit",
+      "expected": "redact() 1회와 2회 결과 동일(멱등), 키 집합·타입·중첩 깊이 불변, 16KiB 상한 측정 순서 불변",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "python3 -m pytest opal/tools/run-log-tool/tests/test_run_log_tool.py::TestS2RedactIdempotentAndSizeOrder -v | exit=1 | AssertionError: redact() 통과 후에도 env_var 평문 남음(pass-through 미구현); 16KiB 상한이 redact 이전 크기로 거부됨 — 2 failed, 1 passed",
+      "red_at": "2026-09-15T10:13:13+09:00",
+      "required_fidelity": "mock",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [],
+      "assertion_results": [],
+      "observed_evidence": [],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "python3 -m pytest opal/tools/run-log-tool/tests/test_run_log_tool.py::TestS2RedactIdempotentAndSizeOrder -v | exit=0 | 3 passed — redact() 1/2회 결과 동일(멱등), 16KiB 상한이 redact 통과 후 최종 줄 기준으로 측정됨 확인",
+      "marked_at": "2026-09-15T13:40:33+09:00",
+      "fidelity": "mock"
+    },
+    {
+      "id": "S-3",
+      "acceptance_ref": "AC-13, H-5",
+      "type": "unit",
+      "expected": "event_id·sha256·worker_log_token_id 통과 전후 동일, 멱등·순번·출처 대조 기준선 일치",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "python3 -m pytest opal/tools/run-log-tool/tests/test_run_log_tool.py::TestS3PreservedIdentifiersSurviveMaskingAlongsideSecrets -v | exit=1 | AssertionError: 보존 대상(worker_log_token_id)과 함께 실린 api_key 비밀값이 마스킹되지 않음(redact() 미구현) — 2 failed",
+      "red_at": "2026-09-15T10:13:28+09:00",
+      "required_fidelity": "mock",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [],
+      "assertion_results": [],
+      "observed_evidence": [],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "python3 -m pytest opal/tools/run-log-tool/tests/test_run_log_tool.py::TestS3PreservedIdentifiersSurviveMaskingAlongsideSecrets -v | exit=0 | 2 passed — worker_log_token_id·source.sha256이 병존 비밀값 마스킹 후에도 통과 전후 동일",
+      "marked_at": "2026-09-15T13:40:35+09:00",
+      "fidelity": "mock"
+    },
+    {
+      "id": "S-4",
+      "acceptance_ref": "AC-8, H-2",
+      "type": "integration",
+      "expected": "barrier 동시 해제에서 새 조각 정확히 1개, 순번 중복 0·누락 0, pending 오탐 0, task_lock_timeout 미발생",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "python3 -m pytest opal/tools/run-log-tool/tests/test_run_log_tool.py::TestS4SegmentBoundaryConcurrentBarrier -v | exit=1 | AssertionError: barrier 해제 후 새 조각이 1개여야 하는데 실제 1개(경계 전환 미구현, W-5 GREEN 대상) — 1 failed",
+      "red_at": "2026-09-15T10:13:44+09:00",
+      "required_fidelity": "real-usage",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "S-4-single-new-segment",
+          "expected": "pass",
+          "actual": "pass",
+          "detail": "exactly 1 new segment after multiprocessing barrier release; no lock timeout — test_barrier_release_creates_exactly_one_new_segment PASSED"
+        }
+      ],
+      "observed_evidence": [
+        "python3 -m pytest opal/tools/run-log-tool/tests/test_run_log_tool.py::TestS4SegmentBoundaryConcurrentBarrier -v | exit=0 | 1 passed"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "python3 -m pytest opal/tools/run-log-tool/tests/test_run_log_tool.py::TestS4SegmentBoundaryConcurrentBarrier -v | exit=0 | 1 passed",
+      "marked_at": "2026-09-15T13:44:22+09:00",
+      "fidelity": "real-usage"
+    },
+    {
+      "id": "S-5",
+      "acceptance_ref": "AC-8, C-8",
+      "type": "integration",
+      "expected": "링크 추종·경계 이탈 거부 후 예외 봉투 환원, 조각 0600·run/ 0700 유지, 기존 방어 함수 재사용",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "python3 -m pytest opal/tools/run-log-tool/tests/test_run_log_tool.py::TestS5SegmentBoundarySymlinkDefenseReuse -v | exit=1 | AssertionError: 다음 조각 위치에 경계 밖 심볼릭 링크가 있는데 append()가 ok:true 반환(심볼릭 링크 거부·재사용 방어 미구현) — 1 failed",
+      "red_at": "2026-09-15T10:14:02+09:00",
+      "required_fidelity": "real-usage",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "S-5-symlink-rejected",
+          "expected": "pass",
+          "actual": "pass",
+          "detail": "symlink at next segment path rejected via exception envelope, not followed — test_next_segment_symlink_is_rejected_not_followed PASSED"
+        }
+      ],
+      "observed_evidence": [
+        "python3 -m pytest opal/tools/run-log-tool/tests/test_run_log_tool.py::TestS5SegmentBoundarySymlinkDefenseReuse -v | exit=0 | 1 passed"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "python3 -m pytest opal/tools/run-log-tool/tests/test_run_log_tool.py::TestS5SegmentBoundarySymlinkDefenseReuse -v | exit=0 | 1 passed",
+      "marked_at": "2026-09-15T13:44:22+09:00",
+      "fidelity": "real-usage"
+    },
+    {
+      "id": "S-6",
+      "acceptance_ref": "AC-8, H-2",
+      "type": "integration",
+      "expected": "닫힌 조각 mtime·바이트 불변, 순번이 조각을 넘어 단조 증가, 멱등 판정 범위 run 전역 유지",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "python3 -m pytest opal/tools/run-log-tool/tests/test_run_log_tool.py::TestS6ClosedSegmentImmutabilityCrossSegmentSequence -v | exit=1 | AssertionError: rotation 이후 append가 이미 닫힌 조각1의 mtime·바이트를 변경함(segment_path 고정 기록 미구현) — 1 failed",
+      "red_at": "2026-09-15T10:14:18+09:00",
+      "required_fidelity": "real-usage",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "S-6-closed-segment-immutable",
+          "expected": "pass",
+          "actual": "pass",
+          "detail": "closed segment mtime/bytes unchanged after rotation, sequence monotonic across segments — test_append_after_rotation_does_not_touch_closed_segment PASSED"
+        }
+      ],
+      "observed_evidence": [
+        "python3 -m pytest opal/tools/run-log-tool/tests/test_run_log_tool.py::TestS6ClosedSegmentImmutabilityCrossSegmentSequence -v | exit=0 | 1 passed"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "python3 -m pytest opal/tools/run-log-tool/tests/test_run_log_tool.py::TestS6ClosedSegmentImmutabilityCrossSegmentSequence -v | exit=0 | 1 passed",
+      "marked_at": "2026-09-15T13:44:22+09:00",
+      "fidelity": "real-usage"
+    },
+    {
+      "id": "S-7",
+      "acceptance_ref": "AC-12, C-4",
+      "type": "integration",
+      "expected": "span 합 일치 수용·불일치와 source_id 중복 거부, 조회가 duration_ms와 floor(ms/60000) 반환, 코어의 state.json 읽기 0건",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "python3 -m pytest opal/tools/run-log-tool/tests/test_run_log_tool.py::TestS7DurationSpansAndReconcile -v | exit=1 | AssertionError: duration_ms가 span 합과 달라도 append()가 ok:true 반환(§1.2 terminal 공통조건·reconcile CLI·derived duration lookup 미구현) — 5 failed, 1 passed",
+      "red_at": "2026-09-15T10:14:34+09:00",
+      "required_fidelity": "real-usage",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "S-7-sum-match-accepted",
+          "expected": "pass",
+          "actual": "pass",
+          "detail": "matching span sum accepted — test_matching_span_sum_is_accepted_baseline PASSED"
+        },
+        {
+          "id": "S-7-sum-mismatch-rejected",
+          "expected": "pass",
+          "actual": "pass",
+          "detail": "mismatched span sum rejected — test_mismatched_span_sum_is_rejected PASSED"
+        },
+        {
+          "id": "S-7-dup-source-id-rejected",
+          "expected": "pass",
+          "actual": "pass",
+          "detail": "duplicate source_id rejected — test_duplicate_source_id_span_is_rejected PASSED"
+        },
+        {
+          "id": "S-7-lookup-returns-duration",
+          "expected": "pass",
+          "actual": "pass",
+          "detail": "reconcile_duration returns duration_ms and floor(duration_ms/60000) — test_core_derived_duration_lookup_function_missing PASSED"
+        },
+        {
+          "id": "S-7-cli-subcommand-works",
+          "expected": "pass",
+          "actual": "pass",
+          "detail": "reconcile-duration CLI subcommand exit 0 — test_cli_reconcile_duration_subcommand_missing PASSED"
+        },
+        {
+          "id": "S-7-no-state-json-read",
+          "expected": "pass",
+          "actual": "pass",
+          "detail": "core does not read state.json during reconcile — test_core_does_not_read_state_json_during_reconcile PASSED"
+        }
+      ],
+      "observed_evidence": [
+        "python3 -m pytest opal/tools/run-log-tool/tests/test_run_log_tool.py::TestS7DurationSpansAndReconcile -v | exit=0 | 6 passed"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "python3 -m pytest opal/tools/run-log-tool/tests/test_run_log_tool.py::TestS7DurationSpansAndReconcile -v | exit=0 | 6 passed",
+      "marked_at": "2026-09-15T13:44:22+09:00",
+      "fidelity": "real-usage"
+    },
+    {
+      "id": "S-8",
+      "acceptance_ref": "AC-12, C-3, H-6",
+      "type": "integration",
+      "expected": "인자 없이 실행 시 파생 분값 자동 기록, 일치값 수용+deprecated, 불일치값 worker_duration_conflict 거부 및 state.json 무변경",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "python3 -m pytest opal/tools/state-tool/tests/test_state_tool_run_log.py::TestWorkerDurationDerivedAndConflict -v | exit=1 | AssertionError: mark가 파생 분값을 자동 기록하지 않고 worker_duration_missing 경고를 발생시킴; 일치값 deprecated 경고도 없음(미구현) — 3 failed",
+      "red_at": "2026-09-15T10:14:50+09:00",
+      "required_fidelity": "real-usage",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "S-8-auto-derived-no-args",
+          "expected": "pass",
+          "actual": "pass",
+          "detail": "mark without args auto-records derived minutes, spans summed without duplication — test_mark_without_args_auto_records_derived_minutes PASSED"
+        },
+        {
+          "id": "S-8-matching-value-accepted-deprecated",
+          "expected": "pass",
+          "actual": "pass",
+          "detail": "explicit matching --worker-duration-minutes accepted with deprecation warning — test_mark_with_matching_value_accepted_with_deprecation_warning PASSED"
+        },
+        {
+          "id": "S-8-conflicting-value-rejected",
+          "expected": "pass",
+          "actual": "pass",
+          "detail": "conflicting explicit value rejected as worker_duration_conflict, state.json unchanged — test_mark_with_conflicting_value_rejected_and_state_unchanged PASSED"
+        }
+      ],
+      "observed_evidence": [
+        "python3 -m pytest opal/tools/state-tool/tests/test_state_tool_run_log.py::TestWorkerDurationDerivedAndConflict -v | exit=0 | 3 passed"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "python3 -m pytest opal/tools/state-tool/tests/test_state_tool_run_log.py::TestWorkerDurationDerivedAndConflict -v | exit=0 | 3 passed",
+      "marked_at": "2026-09-15T13:45:02+09:00",
+      "fidelity": "real-usage"
+    },
+    {
+      "id": "S-9",
+      "acceptance_ref": "C-3, H-6",
+      "type": "integration",
+      "expected": "1.0/1.1 태스크 state.json 산출물과 응답 키 집합이 변경 전과 바이트 동일, 파생 조회 미호출",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "real-usage",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "S-9-byte-identical",
+          "expected": "pass",
+          "actual": "pass",
+          "detail": "TestUnflaggedDurationPathByteIdentical::test_schema_1_0_mark_advance_match_head, test_schema_1_1_mark_advance_match_head 2건 통과. HEAD 빌드 대비 state.json 산출물·응답 키 집합이 구조상 바이트 동일(created_at/updated_at/rows[*].timestamp 3필드는 _normalize_wallclock()로 고정값 치환 후 비교, 필드 존재·타입은 양쪽 계속 단정). 파생 조회 미호출 확인."
+        },
+        {
+          "id": "S-9-full-suite-no-regression",
+          "expected": "pass",
+          "actual": "pass",
+          "detail": "python3 -m pytest opal/tools/state-tool/tests/ -q 전체 스위트 실행에서도 실패 없음 (457 passed, 3 skipped, 0 failed) — 스위트 전체 부하 하에서도 flaky 재발 없음"
+        }
+      ],
+      "observed_evidence": [
+        "python3 -m pytest opal/tools/state-tool/tests/ -q | exit=0 | 457 passed, 3 skipped, 111 subtests passed in 190.97s"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "python3 -m pytest opal/tools/state-tool/tests/ -q | exit=0 | 457 passed, 3 skipped, 111 subtests passed in 190.97s — TestUnflaggedDurationPathByteIdentical 2건 포함 전건 통과, 1초 벽시계 flaky 재발 없음. 테스트 파일에 _normalize_wallclock() 신설(created_at/updated_at/rows[*].timestamp 3필드만 고정값 치환 후 구조 비교, 필드 존재·타입은 양쪽 계속 단정) 확인, 프로덕션 코드(state_tool.py mtime 12:33:49) 무접촉 — 테스트 파일(test_state_tool_run_log.py mtime 14:18:46)만 갱신됨",
+      "marked_at": "2026-09-15T14:36:33+09:00",
+      "fidelity": "real-usage"
+    },
+    {
+      "id": "S-10",
+      "acceptance_ref": "AC-20",
+      "type": "unit",
+      "expected": "로컬이 전역을 하위 키 단위로 덮음, 부재는 Asia/Seoul, 무효 IANA는 폴백하고 예외·재기록 없음, 날짜 경계에서 세 시간계 해석 일치",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "python3 -m pytest dashboard/backend/tests/test_config.py::TestQuietHoursTimeZoneMerge -v | exit=1 | AttributeError: load_quiet_hours()가 tuple을 반환해 result.time_zone 접근 불가(timeZone 병합·zoneinfo 변환 미구현) — 6 failed",
+      "red_at": "2026-09-15T10:15:07+09:00",
+      "required_fidelity": "mock",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [],
+      "assertion_results": [],
+      "observed_evidence": [],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "python3 -m pytest dashboard/backend/tests/test_config.py -k TestQuietHoursTimeZoneMerge -v | exit=0 | 6 passed — 전역/로컬 병합(하위키 단위), 무효 IANA는 Asia/Seoul 폴백(예외 미발생, 파일 재기록 없음), 날짜경계 fixture에서 3개 시간계 해석 일치",
+      "marked_at": "2026-09-15T13:45:19+09:00",
+      "fidelity": "mock"
+    },
+    {
+      "id": "S-11",
+      "acceptance_ref": "AC-20",
+      "type": "unit",
+      "expected": "timeZone만 다른 두 설정이 서로 다른 토큰과 캐시 키를 만들고, 보정 꺼짐은 off 유지",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "python3 -m pytest dashboard/backend/tests/test_config.py::TestQuietHoursTokenTimeZoneSignature -v | exit=1 | ImportError: cannot import name 'QuietHours' from 'dashboard.backend.config'(test_different_timezone_same_window_produces_different_token 실패, test_off_stays_off_regardless_of_timezone는 기존 동작대로 통과) — 1 failed, 1 passed",
+      "red_at": "2026-09-15T10:15:22+09:00",
+      "required_fidelity": "mock",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [],
+      "assertion_results": [],
+      "observed_evidence": [],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "python3 -m pytest dashboard/backend/tests/test_config.py -k TestQuietHoursTokenTimeZoneSignature -v | exit=0 | 2 passed — timeZone만 다른 두 설정이 서로 다른 캐시 토큰 생성, off는 timeZone 무관하게 유지",
+      "marked_at": "2026-09-15T13:45:19+09:00",
+      "fidelity": "mock"
+    },
+    {
+      "id": "S-12",
+      "acceptance_ref": "AC-20, C-1",
+      "type": "unit",
+      "expected": "시드에 timeZone 키와 _help 존재, SEED_KEYS가 quietHours를 객체 단위로 전파, install 미실행 및 ~/.opal/ 무변경",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "mock",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [],
+      "assertion_results": [],
+      "observed_evidence": [],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "python3 -c \"json.load(open('opal/core/setting.default.json'))['quietHours']\" | exit=0 | timeZone=Asia/Seoul + _help 존재 확인; grep SEED_KEYS scripts/install-mac.sh | exit=0 | SEED_KEYS 포함 quietHours; stat ~/.opal/setting.json | exit=0 | mtime=2026-08-26(불변, install 미실행 확인)",
+      "marked_at": "2026-09-15T13:45:20+09:00",
+      "fidelity": "mock"
+    },
+    {
+      "id": "S-13",
+      "acceptance_ref": "C-2, H-3",
+      "type": "integration",
+      "expected": "stats.py quiet_hours 인자 2튜플 유지, 모델·라우터·캐시 import 0건·파일 I/O 0건, 동결 fixture 무수정 전건 통과",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "real-usage",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "S-13-suite-passes",
+          "expected": "pass",
+          "actual": "pass",
+          "detail": "dashboard/backend/tests/test_stats.py 39 passed in 0.09s"
+        },
+        {
+          "id": "S-13-stats-py-unchanged",
+          "expected": "pass",
+          "actual": "pass",
+          "detail": "git diff --stat dashboard/backend/stats.py is empty"
+        },
+        {
+          "id": "S-13-frozen-fixtures-unchanged",
+          "expected": "pass",
+          "actual": "pass",
+          "detail": "git diff --stat on fixtures/t103_states and STATS-BASELINE.md is empty"
+        },
+        {
+          "id": "S-13-quiet-hours-2tuple",
+          "expected": "pass",
+          "actual": "pass",
+          "detail": "quiet_hours param stays tuple[int,int]|None across public functions (signature grep confirmed)"
+        },
+        {
+          "id": "S-13-no-model-router-cache-import",
+          "expected": "pass",
+          "actual": "pass",
+          "detail": "stats.py imports only statistics/datetime, no model/router/cache import, 0 file I/O (grep for open(/.read(/.write(/Path( = 0 matches)"
+        }
+      ],
+      "observed_evidence": [
+        "python3 -m pytest dashboard/backend/tests/test_stats.py -v | exit=0 | 39 passed in 0.09s",
+        "git diff --stat -- dashboard/backend/stats.py dashboard/backend/tests/fixtures/t103_states/ | exit=0 | (empty)"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "python3 -m pytest dashboard/backend/tests/test_stats.py -v | exit=0 | 39 passed; git diff --stat stats.py/frozen fixtures empty; import/signature/file-I/O static check clean",
+      "marked_at": "2026-09-15T13:45:03+09:00",
+      "fidelity": "real-usage"
+    },
+    {
+      "id": "S-14",
+      "acceptance_ref": "AC-14, C-8, H-4",
+      "type": "integration",
+      "expected": "raw/·.runtime/·.opal-task.lock 제외되고 마스킹된 조각은 추적, 추적 조각에 평문 0건, 한시 제외 주석 블록 잔존 0",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "real-usage",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "S-14-permanent-3-rules-ignored",
+          "expected": "pass",
+          "actual": "pass",
+          "detail": "tasks/**/run/raw/, tasks/**/run/.runtime/, .opal-task.lock are git-ignored per git check-ignore -v"
+        },
+        {
+          "id": "S-14-fragment-not-ignored",
+          "expected": "pass",
+          "actual": "pass",
+          "detail": "real created masked segment file run/run-log-run_s14test-0001.jsonl is NOT git-ignored (git check-ignore exit=1); git status shows it addable under the task dir"
+        },
+        {
+          "id": "S-14-no-temp-exclusion-block",
+          "expected": "pass",
+          "actual": "pass",
+          "detail": ".gitignore contains only the permanent 3-rule block; the temporary fragment-exclusion block is gone"
+        },
+        {
+          "id": "S-14-zero-plaintext-in-tracked-fragment",
+          "expected": "pass",
+          "actual": "pass",
+          "detail": "grep for all 4 raw official secret fixture substrings on the real fragment returned 0 matches; [REDACTED]/[REDACTED_PRIVATE_KEY_BLOCK] present instead"
+        }
+      ],
+      "observed_evidence": [
+        "opal/tools/run-log-tool/run.sh init --task <abs temp task> --run-id run_s14test | exit=0 | ok:true, segment created",
+        "opal/tools/run-log-tool/run.sh append ... --data '{4 official secret fixtures}' | exit=0 | ok:true",
+        "git check-ignore -v tasks/foo/run/raw/x.txt tasks/foo/run/.runtime/x.txt .opal-task.lock | exit=0 | 3 permanent rules matched",
+        "git check-ignore -v tasks/zzz-s14-verify-temp/run/run-log-run_s14test-0001.jsonl | exit=1 | not ignored",
+        "grep -c '<4 raw secret substrings>' tasks/zzz-s14-verify-temp/run/run-log-run_s14test-0001.jsonl | exit=1 | 0 matches",
+        "rm -rf tasks/zzz-s14-verify-temp (cleanup performed)"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "run-log-tool init/append 실호출로 실제 조각 생성 후 git check-ignore -v로 영구 3규칙 적용·조각 미적용 확인, 공식 4종 비밀값 fixture 투입 후 grep 0건으로 평문 잔존 없음 확인, 임시 태스크 디렉터리는 검증 후 rm -rf로 정리함",
+      "marked_at": "2026-09-15T13:45:03+09:00",
+      "fidelity": "real-usage"
+    },
+    {
+      "id": "S-15",
+      "acceptance_ref": "AC-21, C-2",
+      "type": "integration",
+      "expected": "3개 스위트 전건 통과, 기준선 대비 실패 증가 0, 기존 테스트 파일 수정 0건",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "real-usage",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "S-15-three-suites-all-pass",
+          "expected": "pass",
+          "actual": "pass",
+          "detail": "run-log-tool 53 passed/0 failed, state-tool 457 passed/3 skipped/0 failed, dashboard 348 passed/36 failed(전건 test_routers.py 소속 사전 존재 환경 결함 — 워크트리 scan_depth 3 vs Console scan_depth 2 불일치, 이 태스크와 무관)"
+        },
+        {
+          "id": "S-15-baseline-no-regression",
+          "expected": "pass",
+          "actual": "pass",
+          "detail": "기준선(run-log-tool 53/0, state-tool 457 passed·3 skipped·0 failed, dashboard 348 passed·36 failed) 대비 실패 증가 0. dashboard 36건은 PM 사전 확인된 기존 결함으로 그대로이며 초과 없음"
+        },
+        {
+          "id": "S-15-no-existing-test-file-modified-to-pass",
+          "expected": "pass",
+          "actual": "pass",
+          "detail": "git diff --stat 및 mtime 대조 결과 이번 재판정 구간에서 프로덕션 코드(state_tool.py, run_log_core.py, run_log_tool.py, config.py, routers/*) 무변경(mtime 12:33~13:11, 최신 아님). 변경은 test_state_tool_run_log.py 1건(mtime 14:18:46)뿐이며, 이 태스크가 신설한 TestUnflaggedDurationPathByteIdentical 클래스의 비교 방법(_normalize_wallclock, wallclock 3필드만 정규화 후 구조 비교)만 수정. 기존·동결 테스트 클래스·assertion 본문은 무변경"
+        }
+      ],
+      "observed_evidence": [
+        "python3 -m pytest opal/tools/run-log-tool/tests/ -q | exit=0 | 53 passed, 4 subtests passed in 152.38s",
+        "python3 -m pytest opal/tools/state-tool/tests/ -q | exit=0 | 457 passed, 3 skipped, 111 subtests passed in 190.97s",
+        "python3 -m pytest dashboard/backend/tests/ -q | exit=1 | 348 passed, 36 failed in 19.44s (전건 test_routers.py, 기준선과 동일 36건)"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "3개 스위트 재실행 — run-log-tool: python3 -m pytest opal/tools/run-log-tool/tests/ -q | exit=0 | 53 passed, 4 subtests passed (기준선 대비 증가 0). state-tool: python3 -m pytest opal/tools/state-tool/tests/ -q | exit=0 | 457 passed, 3 skipped, 0 failed (기준선 대비 실패 증가 0, S-9 flaky 해소). dashboard: python3 -m pytest dashboard/backend/tests/ -q | exit=1 | 348 passed, 36 failed — 전건 test_routers.py 소속, PM 사전확인된 워크트리 scan_depth(3) vs Console scan_depth(2) 불일치로 인한 사전 존재 환경 결함, 기준선(36)과 동일해 실패 증가 0. 기존 테스트 파일 수정 여부: git diff --stat + mtime 대조 결과 프로덕션 코드 mtime 무변경(최신 12:33:49), test_state_tool_run_log.py만 mtime 14:18:46로 갱신 — 이 태스크가 신설한 TestUnflaggedDurationPathByteIdentical 클래스의 비교 방법만 수정, 기존·동결 assertion 본문 무변경. 세 스위트 전건 기준선 대비 실패 증가 0 충족",
+      "marked_at": "2026-09-15T14:36:34+09:00",
+      "fidelity": "real-usage"
+    },
+    {
+      "id": "S-16",
+      "acceptance_ref": "C-5, C-9",
+      "type": "unit",
+      "expected": "CONTRACT §2.2·§2.2.1과 surfaces.json err 집합 양방향 일치(누락 0·초과 0), 계약 3자산 변경 0건",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "mock",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [],
+      "assertion_results": [],
+      "observed_evidence": [],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "CONTRACT.md §2.2/§2.2.1 23개 코드 vs surfaces.json err 23개 코드 양방향 대조 스크립트 실행 | exit=0 | 완전 일치(차집합 0). 구현 코드(run_log_core.py+state_tool.py) 대조에서 계약전용 10건(TASK 제외범위 표면 소속, 미구현)·구현전용 run_id_invalid 1건은 PM 확인 사전존재 격차로 제외 처리. git diff --stat CONTRACT.md/TRD.md/PRD.md | exit=0 | 빈 diff(무변경). surfaces.json 변경은 승인된 --worker-run-id 1건뿐(git diff 확인)",
+      "marked_at": "2026-09-15T13:45:20+09:00",
+      "fidelity": "mock"
+    },
+    {
+      "id": "S-17",
+      "acceptance_ref": "C-1, C-6",
+      "type": "integration",
+      "expected": "~/.opal/ 변경 0건·install 흔적 0건, 3-SSOT 직접 편집 0건",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "real-usage",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "S-17-opal-hub-unchanged",
+          "expected": "pass",
+          "actual": "pass",
+          "detail": "~/.opal/tools/run-log-tool/ (new tool created by this task) is absent from the deployed hub, proving install was not executed for it; ~/.opal/setting.json mtime unchanged since Aug 26 2026"
+        },
+        {
+          "id": "S-17-3ssot-only-via-tools",
+          "expected": "pass",
+          "actual": "pass",
+          "detail": "git status shows only state.json (state-tool managed) and test-scenario.json (test-tool managed, tool-generated structure) changed; no backlog.json changes; no hand-edit anomalies found"
+        }
+      ],
+      "observed_evidence": [
+        "git status --porcelain | exit=0 | 22 entries, all under repo working tree, none under ~/.opal",
+        "find ~/.opal/tools/run-log-tool -type f | exit=1 | (not found)",
+        "stat -f '%Sm %N' ~/.opal/setting.json | exit=0 | Aug 26 15:27:05 2026"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "git status --porcelain 전건 확인 결과 저장소 내부 변경만 존재하고 ~/.opal/ 하위 변경 0건. run-log-tool은 이 태스크가 신설한 도구인데 ~/.opal/tools/에 배포된 사본이 아예 없어 install 미실행이 강하게 뒷받침됨. setting.json mtime도 Aug 26으로 불변. 3-SSOT 파일은 대응 전용 도구가 생성하는 구조와 일치",
+      "marked_at": "2026-09-15T13:45:03+09:00",
+      "fidelity": "real-usage"
+    },
+    {
+      "id": "S-18",
+      "acceptance_ref": "C-7",
+      "type": "unit",
+      "expected": "도구 로직에 플랫폼별 분기 0건, 플랫폼 차이는 변환·어댑터 계층에만 존재",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "mock",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [],
+      "assertion_results": [],
+      "observed_evidence": [],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "grep -n 'sys.platform|platform.system|os.name|win32|darwin|linux' opal/tools/run-log-tool/run_log_core.py dashboard/backend/config.py + git diff opal/tools/state-tool/state_tool.py 대상 동일 패턴 grep | exit=1(무매치) | 도구 로직에 플랫폼별 분기 0건",
+      "marked_at": "2026-09-15T13:45:20+09:00",
+      "fidelity": "mock"
+    },
+    {
+      "id": "S-19",
+      "acceptance_ref": "AC-21",
+      "type": "integration",
+      "expected": "기 충족 AC-1·2·3·6·7·10·15·19 동작 유지, 실제 실행 출력으로 판정, 기존 테스트 파일 무수정",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "real-usage",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "S-19-preexisting-regression-suites-pass",
+          "expected": "pass",
+          "actual": "pass",
+          "detail": "10 pre-existing regression classes covering AC-1/2/3/6/7/10/15/19 (TestShadowInitPierce, TestUnflaggedInitByteIdentical, TestExistingRegressionBaseline, TestRunLogMissingDiagnosis, TestInterruptedInitRecovery, TestStateChangedAtomicCommit, TestOutboxPreservesOnWriteFailure, TestOutboxLimits, TestSchema12Registered, TestUnflaggedTransitionUnaffected) — 11 passed in 98.56s; git diff shows only additive new classes + header manifest updates, no pre-existing assertion bodies altered"
+        }
+      ],
+      "observed_evidence": [
+        "python3 -m pytest opal/tools/state-tool/tests/test_state_tool_run_log.py::TestShadowInitPierce ... ::TestUnflaggedTransitionUnaffected -q | exit=0 | 11 passed in 98.56s",
+        "git diff opal/tools/state-tool/tests/test_state_tool_run_log.py | grep '^-[^-]' | exit=0 | only header/@export metadata lines removed"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "구 AC-1·2·3·6·7·10·15·19를 덮는 사전 존재 회귀 클래스 10개(11 테스트 메서드) 전건 재실행 통과, 기존 테스트 파일은 헤더 메타데이터만 갱신되고 기존 assertion 본문은 수정되지 않음(git diff 확인)",
+      "marked_at": "2026-09-15T13:45:03+09:00",
+      "fidelity": "real-usage"
+    }
+  ]
+}

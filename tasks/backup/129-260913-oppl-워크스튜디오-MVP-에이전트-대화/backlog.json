@@ -1,0 +1,214 @@
+{
+  "schema_version": "1.1",
+  "project_title": "WorkStudio MVP Agent Conversation",
+  "mode": "agentic",
+  "created_at": "2026-09-13 01:35",
+  "updated_at": "2026-09-13 01:38",
+  "goal": "Intro부터 실제 Codex Agent 대화까지 WS-F102~F106 완주",
+  "tasks": [
+    {
+      "id": "T001",
+      "title": "OPPL Electron 실행 스켈레톤 프로필",
+      "slice": "desktop profile-aware D5/D6 계약과 기존 renderer-preload-main 실제 관통",
+      "acceptance_criteria": [
+        "electron-desktop 선언 시 BE/Swagger 강제를 대체하고 기존 web profile 규칙은 유지된다",
+        "Electron app start→renderer preload IPC→main filesystem/PTY 수행→renderer 상태 반영 4항을 증거로 판정한다",
+        "F101 실제 Project IPC가 desktop skeleton의 최초 실제 관통으로 유지된다"
+      ],
+      "area": "공통",
+      "priority": "P0",
+      "depends": [],
+      "status": "pending",
+      "parallel_group": null,
+      "created_at": "2026-09-13 01:36",
+      "done_at": null,
+      "covers": [
+        "intro-first-run",
+        "project-open-existing",
+        "oppl-electron-profile"
+      ]
+    },
+    {
+      "id": "T002",
+      "title": "WS-F102 Project 생성·열기",
+      "slice": "신규 폴더와 최소 .opal/AGENT.md 생성 후 기존 Registry로 활성화",
+      "acceptance_criteria": [
+        "기존 폴더 선택 취소와 invalid 경로를 구분한다",
+        "신규 Project는 폴더와 .opal/AGENT.md만 만들고 .git은 만들지 않는다",
+        "성공 결과는 기존 Project Registry와 workspace에 수렴한다"
+      ],
+      "area": "통합",
+      "priority": "P0",
+      "depends": [
+        "T001"
+      ],
+      "status": "pending",
+      "parallel_group": null,
+      "created_at": "2026-09-13 01:36",
+      "done_at": null,
+      "covers": [
+        "project-open-existing",
+        "project-create-new"
+      ]
+    },
+    {
+      "id": "T003",
+      "title": "WS-F103 PM Agent 발견·등록",
+      "slice": ".opal/AGENT.md 기반 PM 후보와 Codex launcher eligibility 연결",
+      "acceptance_criteria": [
+        "OPAL Project의 Project PM은 context/registration 후보로 발견되며 launcherEligible=false다",
+        "PM 미발견은 Project 실패가 아닌 실행 후보 없음으로 표시된다",
+        "등록 PM context에서 Codex candidate만 launcherEligible=true로 산출된다"
+      ],
+      "area": "통합",
+      "priority": "P0",
+      "depends": [
+        "T002"
+      ],
+      "status": "pending",
+      "parallel_group": null,
+      "created_at": "2026-09-13 01:36",
+      "done_at": null,
+      "covers": [
+        "pm-discover-register"
+      ]
+    },
+    {
+      "id": "T004",
+      "title": "WS-F104 TerminalGateway 및 typed IPC",
+      "slice": "Electron main 실제 PTY 생명주기와 secure preload 계약",
+      "acceptance_criteria": [
+        "등록 Project root cwd에서 실제 PTY가 생성된다",
+        "create/write/resize/interrupt/close와 data/status/exit가 계약대로 동작한다",
+        "cwd containment와 앱 teardown 및 native module build가 검증된다"
+      ],
+      "area": "be",
+      "priority": "P0",
+      "depends": [
+        "T001",
+        "T002"
+      ],
+      "status": "pending",
+      "parallel_group": null,
+      "created_at": "2026-09-13 01:36",
+      "done_at": null,
+      "covers": [
+        "terminal-create",
+        "terminal-io-control",
+        "terminal-events",
+        "app-teardown"
+      ]
+    },
+    {
+      "id": "T005",
+      "title": "WS-F104 실제 Terminal UI 연결",
+      "slice": "simulated terminal surface를 PTY event 기반 xterm-like UI로 전환",
+      "acceptance_criteria": [
+        "mock command output 대신 실제 PTY data가 순서대로 표시된다",
+        "resize interrupt close와 exit 상태를 UI에서 조작·관찰한다",
+        "기존 Files tree와 workspace UI가 회귀하지 않는다"
+      ],
+      "area": "fe",
+      "priority": "P1",
+      "depends": [
+        "T004"
+      ],
+      "status": "pending",
+      "parallel_group": null,
+      "created_at": "2026-09-13 01:36",
+      "done_at": null,
+      "covers": [
+        "terminal-create",
+        "terminal-io-control",
+        "terminal-events"
+      ]
+    },
+    {
+      "id": "T006",
+      "title": "WS-F105 Codex Agent Launcher",
+      "slice": "main-side Codex adapter의 launch와 lifecycle 정규화",
+      "acceptance_criteria": [
+        "renderer 임의 command 없이 Codex adapter가 실행 명령을 구성한다",
+        "starting/running/waiting_input/failed/exited가 구분된다",
+        "Terminal 종료와 Agent stop이 소유 프로세스를 정리한다"
+      ],
+      "area": "be",
+      "priority": "P1",
+      "depends": [
+        "T003",
+        "T004"
+      ],
+      "status": "pending",
+      "parallel_group": null,
+      "created_at": "2026-09-13 01:36",
+      "done_at": null,
+      "covers": [
+        "agent-list-launch",
+        "agent-send-stop",
+        "app-teardown"
+      ]
+    },
+    {
+      "id": "T007",
+      "title": "WS-F106 Agent Conversation",
+      "slice": "실제 Agent 메시지와 lifecycle을 화자별 conversation UI로 연결",
+      "acceptance_criteria": [
+        "사용자 메시지가 실행 중 Codex 세션에 전달된다",
+        "Agent message/progress/exit가 화자별로 표시된다",
+        "Terminal scrollback과 conversation store가 분리되고 종료 시 입력이 비활성화된다"
+      ],
+      "area": "fe",
+      "priority": "P1",
+      "depends": [
+        "T005",
+        "T006"
+      ],
+      "status": "pending",
+      "parallel_group": null,
+      "created_at": "2026-09-13 01:36",
+      "done_at": null,
+      "covers": [
+        "agent-send-stop",
+        "agent-conversation-events"
+      ]
+    },
+    {
+      "id": "T008",
+      "title": "WorkStudio MVP 최종 여정 통합",
+      "slice": "fresh state 신규 Project에서 대화와 teardown까지 실제 Electron E2E",
+      "acceptance_criteria": [
+        "인트로→생성→PM→PTY→Codex→메시지→응답/event→teardown 여정이 통과한다",
+        "핵심 여정 mock boundary가 0건이다",
+        "active Project 기준 우측 Files tree 갱신을 포함해 F101 회귀와 14개 surface conformance가 모두 통과한다"
+      ],
+      "area": "통합",
+      "priority": "P2",
+      "depends": [
+        "T003",
+        "T005",
+        "T006",
+        "T007"
+      ],
+      "status": "pending",
+      "parallel_group": null,
+      "created_at": "2026-09-13 01:36",
+      "done_at": null,
+      "covers": [
+        "intro-first-run",
+        "project-open-existing",
+        "project-create-new",
+        "pm-discover-register",
+        "workspace-files-tree",
+        "terminal-create",
+        "terminal-io-control",
+        "terminal-events",
+        "agent-list-launch",
+        "agent-send-stop",
+        "agent-conversation-events",
+        "app-teardown",
+        "journey-smoke",
+        "oppl-electron-profile"
+      ]
+    }
+  ]
+}

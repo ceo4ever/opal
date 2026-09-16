@@ -1,0 +1,86 @@
+{
+  "check": "convention",
+  "check_enabled": true,
+  "status": "pass",
+  "checked_files": [
+    "opal/core/hooks/claude-hooks.json",
+    "opal/skills/opal-pilot-data-design/references/pipeline.json",
+    "opal/skills/opal-pilot-dev-wireframe/references/pipeline.json",
+    "opal/skills/opal-pilot-dev/references/pipeline-short.json",
+    "opal/skills/opal-pilot-dev/references/pipeline.json",
+    "opal/skills/opal-pilot-gc/references/pipeline.json",
+    "opal/skills/opal-pilot-project-dev/references/pipeline.json",
+    "opal/skills/opal-pilot-project-loop/references/pipeline.json",
+    "opal/skills/opal-pilot-project/references/pipeline.json",
+    "opal/skills/opal-pilot-sdd/references/pipeline.json",
+    "opal/skills/opal-pilot-write-tech/references/pipeline.json",
+    "opal/tools/state-tool/schema/state.schema.json",
+    "opal/tools/state-tool/state_tool.py",
+    "opal/tools/state-tool/tests/test_state_tool.py",
+    "opal/tools/state-tool/tests/test_mode_transition_contract.py",
+    "scripts/install/windows.ps1",
+    "scripts/tests/task134_mode_persistence_contract.py",
+    "scripts/tests/task136_mode_transition_contract.py",
+    "scripts/tests/test_agent_adapter_fields.sh",
+    "scripts/tests/test_archive_contents.sh"
+  ],
+  "findings": [
+    {
+      "id": "GC-001",
+      "fingerprint": "3eac6cd5f503a2b1",
+      "category": "documentation",
+      "severity": "low",
+      "confidence": "high",
+      "disposition": "advisory",
+      "rule_id": "CONVENTIONS.md §구현 규칙/@header 규칙",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/tools/state-tool/state_tool.py",
+        "line": 7,
+        "symbol": "@header.description"
+      },
+      "evidence": "code-scan validate --changed JSON이 header_history 1건(detail: 118,128,136,512; tasks: 4)을 비차단 경고로 반환했다.",
+      "impact": "현재 사실 요약에 변경 이력이 누적되어 헤더가 비대해지고 구조 탐색 신호 대 잡음비가 낮아진다.",
+      "remediation": {
+        "guidance": "태스크 번호와 과거 변경 설명을 제거하고 현재 공개 계약과 책임만 간결하게 남긴다.",
+        "reference": "docs/CONVENTIONS.md §구현 규칙 > @header 규칙",
+        "auto_fixable": true
+      },
+      "verification": "code-scan validate --changed opal/tools/state-tool/state_tool.py --json에서 header_history가 0인지 확인한다.",
+      "suppression": null
+    }
+  ],
+  "evidence": [
+    "git diff --check -- <20 target files>: no errors",
+    "python3 -m json.tool: hook, 10 pipelines, state schema passed",
+    "python3 -m py_compile: 5 Python targets passed",
+    "bash -n: 2 Bash targets passed",
+    "code-scan validate --changed: coverage 5/5, header_history 1, all other counts 0",
+    "state_tool.py header, _is_close_final_row(), state.schema.json cross-check: close.final current fact aligned"
+  ],
+  "references": [
+    "docs/CONVENTIONS.md",
+    "docs/PROJECT.md",
+    ".opal/code-scan.json",
+    "opal/core/references/harness/gc-finding-schema.md",
+    "opal/skills/op-gc-convention/references/convention-categories.md"
+  ],
+  "missing_capabilities": [],
+  "report_path": "tasks/136-260916-opds-모드별-실행-지속성-계약/GC-CONVENTION-2026-09-16T13-45-00-framework.md",
+  "baseline": "tasks/136-260916-opds-모드별-실행-지속성-계약/gc-findings-convention-2026-09-16T13-37-00-framework.json",
+  "delta": {
+    "new": [],
+    "persisting": ["3eac6cd5f503a2b1"],
+    "resolved": ["f98763af0670aaa2"],
+    "suppressed": []
+  },
+  "severity_counts": {
+    "critical": 0,
+    "high": 0,
+    "medium": 0,
+    "low": 1,
+    "info": 0
+  },
+  "blocking_count": 0,
+  "verdict": "PASS_WITH_ADVISORIES"
+}

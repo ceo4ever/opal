@@ -3,7 +3,7 @@
   "module": "routers.dashboard",
   "layer": "router",
   "domain": "console",
-  "description": "GET /api/dashboard — 전 프로젝트 집계 또는 개별 프로젝트 집계(4메트릭·상태분포·활동추이·주의알림·최근활동). project 쿼리 파라미터로 개별/전체 구분. 읽기 전용. 태스크 열거는 scanner.iter_task_dirs 단일 진입점에 위임한다 — 모수는 tasks/ 직속 + tasks/backup/ 아카이브이고, state.json 부재 태스크도 빈 dict로 실려 /api/tasks 열거와 이름 집합이 항등이다(하류 집계는 전부 .get() 폴백으로 읽는다). 아카이브 소재 여부는 state[\"_archived\"] 1키로 싣는다(additive). 최근활동·주의알림 title은 TASK.md H1에서 파생(_resolve_task_title: 'TASK NNN —'/'TASK:' 접두사 제거, 부재 시 폴더명 슬러그 폴백) — state.json에 title 필드가 없어 폴더명 중복 방지. [T103] 워크플로우별 횡단 집계 additive — 모수는 current_status == done인 완료 태스크만이며(집계기준 3) 진행 중은 total_tasks 차이로만 드러난다. stats.workflow_stats(skill 단위 중앙값·2계열·3계열(pm/worker/captain)·단계별)를 호출하기 전 각 state에 _title을 주입한다(stats.py는 파일 I/O를 하지 않는다). 산출물 규모(artifact_total·artifact_by_type 4유형)는 routers.tasks의 _get_artifact_files·classify_artifact를 함수 내부 지연 import로 호출한다(COLUMN_MAP 선례). 캐시는 현행 유지 — 모수에 실시간 성분이 없고 다중 파일 소스라 단일 source_path mtime 무효화가 적용 불가하다. [T103 R-21] 야간 제외 구간(집계 기준 17)은 라우터가 config.load_quiet_hours로 읽어 workflow_stats에 주입한다 — 개별 프로젝트 모드는 그 프로젝트의 로컬 설정이 전역을 덮고, 전체 모드는 어느 프로젝트도 편들 수 없어 전역 설정만 쓴다. 캐시 키 `dashboard:{project|ALL}:{구간서명}`에 서명을 실어 설정 변경 시 보정 전후 값이 같은 키를 공유하지 않게 했다.",
+  "description": "GET /api/dashboard — 전 프로젝트 집계 또는 개별 프로젝트 집계(4메트릭·상태분포·활동추이·주의알림·최근활동). project 쿼리 파라미터로 개별/전체 구분. 읽기 전용. 태스크 열거는 scanner.iter_task_dirs 단일 진입점에 위임한다 — 모수는 tasks/ 직속 + tasks/backup/ 아카이브이고, state.json 부재 태스크도 빈 dict로 실려 /api/tasks 열거와 이름 집합이 항등이다(하류 집계는 전부 .get() 폴백으로 읽는다). 아카이브 소재 여부는 state[\"_archived\"] 1키로 싣는다(additive). 최근활동·주의알림 title은 TASK.md H1에서 파생(_resolve_task_title: 'TASK NNN —'/'TASK:' 접두사 제거, 부재 시 폴더명 슬러그 폴백) — state.json에 title 필드가 없어 폴더명 중복 방지. [T103] 워크플로우별 횡단 집계 additive — 모수는 current_status == done인 완료 태스크만이며(집계기준 3) 진행 중은 total_tasks 차이로만 드러난다. stats.workflow_stats(skill 단위 중앙값·2계열·3계열(pm/worker/captain)·단계별)를 호출하기 전 각 state에 _title을 주입한다(stats.py는 파일 I/O를 하지 않는다). 산출물 규모(artifact_total·artifact_by_type 4유형)는 routers.tasks의 _get_artifact_files·classify_artifact를 함수 내부 지연 import로 호출한다(COLUMN_MAP 선례). 캐시는 현행 유지 — 모수에 실시간 성분이 없고 다중 파일 소스라 단일 source_path mtime 무효화가 적용 불가하다. [T103 R-21] 야간 제외 구간(집계 기준 17)은 라우터가 config.load_quiet_hours로 읽는다 — 반환값은 QuietHours(시작 분·끝 분·시간대) 3필드이며, 라우터가 (시작 분, 끝 분)으로 좁혀 workflow_stats·format_quiet_hours에 주입한다(CONTRACT.md §2.8.1 B-1~B-3) — stats.py는 설정을 읽지 않고 3필드 타입을 알지 못한다. 개별 프로젝트 모드는 그 프로젝트의 로컬 설정이 전역을 덮고, 전체 모드는 어느 프로젝트도 편들 수 없어 전역 설정만 쓴다. quiet_hours_token()에는 QuietHours 3필드를 그대로 넘겨 timeZone도 서명에 싣는다. 캐시 키 `dashboard:{project|ALL}:{구간서명}`에 서명을 실어 설정 변경 시 보정 전후 값이 같은 키를 공유하지 않게 했다.",
   "exports": ["GET /api/dashboard"],
   "depends": ["models", "scanner", "config", "cache", "stats", "adapters.state_adapter"]
 }
@@ -120,9 +120,16 @@ def get_dashboard(project: str = Query(default="")) -> DashboardSummaryResponse:
     # 야간 제외 구간(집계 기준 17)은 라우터가 읽어 stats.py에 주입한다.
     # 개별 프로젝트 모드면 그 프로젝트의 로컬 설정이 전역을 덮고, 전체 모드는
     # 어느 프로젝트 하나를 편들 수 없으므로 전역 설정만 쓴다.
+    # load_quiet_hours()는 QuietHours(3필드: 시작 분·끝 분·시간대)를 반환하지만
+    # 평범한 2-tuple(레거시 monkeypatch 등)도 그대로 받는다. 시간대 해석은
+    # 여기서 끝난다 — stats.py에는 (시작 분, 끝 분)만 좁혀 넘긴다(인덱싱은
+    # QuietHours·2-tuple 양쪽에서 동일하게 동작한다) (CONTRACT.md §2.8.1 B-1~B-3,
+    # stats.py 공개 함수 시그니처 불변).
     quiet_hours = load_quiet_hours(project or None)
+    quiet_window = (quiet_hours[0], quiet_hours[1]) if quiet_hours is not None else None
 
-    # 캐시 키에 구간 서명을 실어 설정 변경이 곧바로 갈리게 한다.
+    # 캐시 키에 구간 서명을 실어 설정 변경이 곧바로 갈리게 한다. QuietHours
+    # 3필드를 그대로 넘겨 timeZone도 서명에 싣는다(quiet_hours_token → "start-end@tz").
     cache_key = f"dashboard:{project or 'ALL'}:{quiet_hours_token(quiet_hours)}"
     cached = cache.get(cache_key)
     if cached is not None:
@@ -222,7 +229,7 @@ def get_dashboard(project: str = Query(default="")) -> DashboardSummaryResponse:
 
     # 워크플로우별 집계 (T103 R-10) — 모수는 완료 태스크만 (집계기준 3)
     completed = [t for t in all_tasks if t.get("current_status") == "done"]
-    workflows = [WorkflowStat(**w) for w in workflow_stats(completed, quiet_hours)]
+    workflows = [WorkflowStat(**w) for w in workflow_stats(completed, quiet_window)]
 
     # 산출물 규모 — 파일시스템 접근이므로 tasks.py 헬퍼를 지연 import한다 (COLUMN_MAP 선례)
     from dashboard.backend.routers.tasks import _get_artifact_files, classify_artifact
@@ -249,7 +256,7 @@ def get_dashboard(project: str = Query(default="")) -> DashboardSummaryResponse:
         artifact_by_type=artifact_by_type,
         workflow_stats=workflows,
         quiet_hours_applied=quiet_hours is not None,
-        quiet_hours_label=format_quiet_hours(quiet_hours),
+        quiet_hours_label=format_quiet_hours(quiet_window),
         # 사용자 호칭 표면화 — 화면 문구·범례가 이 값으로 조립한다 (하드코딩 금지)
         owner_term=load_owner_name(),
     )

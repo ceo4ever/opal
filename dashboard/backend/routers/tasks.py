@@ -3,7 +3,7 @@
   "module": "routers.tasks",
   "layer": "router",
   "domain": "console",
-  "description": "GET /api/tasks, /api/tasks/detail?project=&task_id=, /api/tasks/artifact?project=&task_id=&name= — 칸반 5컬럼 정규화(pending/in_progress/blocked/done/archive) + 산출물 뷰어. 목록 열거는 scanner.iter_task_dirs 단일 진입점이며 archive 컬럼은 그 is_archived 플래그로 판정한다(tasks/backup/ 소재 → archive). detail·artifact의 task_id → 디렉토리 해석은 scanner.resolve_task_dir 단독 책임이다 — 라우터는 경로를 조립하지 않고, 해석 실패(비존재·트리 이탈·경로 구분자)는 404다. 허용 tasks root는 허브 `tasks/` + `_active_worktree_task_roots()`가 registry(`.opal-worktrees/.meta/task_*.json`)에서 읽은 active worktree의 tasks root(발급값 `task_path`의 부모, `task_path` 없는 legacy 슬롯은 건너뜀)이며, 이를 `resolve_task_dir(..., extra_task_roots=...)`로 넘긴다 — 라우터는 경로를 추측하지 않고 화이트리스트 밖 판정도 resolver에 맡긴다. 비워크트리에서는 목록이 비어 동작이 변하지 않는다. state.json 없는 옛 형식 태스크는 산출물(DONE.md/PLAN.md 등)로 컬럼 추론. 완료·아카이브 최근순(task_id desc). 절대경로 식별자는 query param으로 전달(path segment 금지). 읽기 전용. _derive_current_stage: rows에서 도달 단계 파생(①in_progress→②마지막도달단계(done/na/skipped)→③전부pending이면첫행; pending 미시작 단계 제외). _group_pipeline_stages: rows를 stage 단위 PipelineStageGroup으로 그룹핑(total/done_count는 na/skipped 제외 active 기준) + stats.py 파생(행 소요·단계 2계열 + 3계열 pm/worker/captain) 결합. _aggregate_status: 단계 내 행 status 집계(na/skipped 제외→blocked우선→all_done→in_progress/혼재→pending; active없으면done). 상세 응답에 진행 통계가 결합되며, 행 매핑은 원천 키(row_id·timestamp) 기준이다 — 레거시 필드(row·updated_at)에도 같은 값이 채워진다(집계기준 15). 캐시(task_detail:{project}:{task_id})에는 **정적 파생만** 담고 실시간 파생(is_running·current_elapsed_*)은 캐시 밖에서 task_live_stats(now 주입)로 합성한다 — 캐시 저장 시 state.json을 source_path로 넘겨 mtime 무효화를 켠다. 야간 제외 구간(집계 기준 17)은 라우터가 config.load_quiet_hours(project_path)로 읽어 task_static_stats·row_durations·task_live_stats에 인자로 주입한다 — stats.py는 설정을 읽지 않는다. 캐시 키는 `task_detail:{project}:{task_id}:{구간서명}`으로 설정 변경 시 자연히 갈린다(mtime 축은 state.json만 본다). 행 시각 표시 문자열(`time_label`)은 자체 슬라이싱이 아니라 stats.format_timestamp를 호출해 얻는다 — 표시 규칙은 stats.py 단일 소유다(P-7). _get_artifact_files는 화이트리스트 없이 .md 전수를 유형 순(pipeline→verification→log→other)으로 열거하며, classify_artifact가 파일명 기반 4유형을 판정한다(P-3). artifact_count·artifacts[] 값 증가는 P-4가 선언한 회귀 예외다. 행 라벨의 사용자 호칭은 config.load_owner_name()이 원천이다 — _OWNER_ROLE_LABELS는 역할명(PM·자동)만 갖고, _owner_label()이 owner == \"user\"일 때만 호칭을 붙인다. 라우터가 요청당 1회 읽어 _build_static_detail → _group_pipeline_stages → _to_pipeline_row로 주입하며 상세 응답 최상위 owner_term에도 같은 값을 싣는다(FE가 문구를 조립한다). owner_term은 캐시 키에 넣지 않는다 — 행 라벨은 캐시 TTL(30초)만큼 지연될 수 있고 TTL이 스스로 회복한다.",
+  "description": "GET /api/tasks, /api/tasks/detail?project=&task_id=, /api/tasks/artifact?project=&task_id=&name= — 칸반 5컬럼 정규화(pending/in_progress/blocked/done/archive) + 산출물 뷰어. 목록 열거는 scanner.iter_task_dirs 단일 진입점이며 archive 컬럼은 그 is_archived 플래그로 판정한다(tasks/backup/ 소재 → archive). detail·artifact의 task_id → 디렉토리 해석은 scanner.resolve_task_dir 단독 책임이다 — 라우터는 경로를 조립하지 않고, 해석 실패(비존재·트리 이탈·경로 구분자)는 404다. 허용 tasks root는 허브 `tasks/` + `_active_worktree_task_roots()`가 registry(`.opal-worktrees/.meta/task_*.json`)에서 읽은 active worktree의 tasks root(발급값 `task_path`의 부모, `task_path` 없는 legacy 슬롯은 건너뜀)이며, 이를 `resolve_task_dir(..., extra_task_roots=...)`로 넘긴다 — 라우터는 경로를 추측하지 않고 화이트리스트 밖 판정도 resolver에 맡긴다. 비워크트리에서는 목록이 비어 동작이 변하지 않는다. state.json 없는 옛 형식 태스크는 산출물(DONE.md/PLAN.md 등)로 컬럼 추론. 완료·아카이브 최근순(task_id desc). 절대경로 식별자는 query param으로 전달(path segment 금지). 읽기 전용. _derive_current_stage: rows에서 도달 단계 파생(①in_progress→②마지막도달단계(done/na/skipped)→③전부pending이면첫행; pending 미시작 단계 제외). _group_pipeline_stages: rows를 stage 단위 PipelineStageGroup으로 그룹핑(total/done_count는 na/skipped 제외 active 기준) + stats.py 파생(행 소요·단계 2계열 + 3계열 pm/worker/captain) 결합. _aggregate_status: 단계 내 행 status 집계(na/skipped 제외→blocked우선→all_done→in_progress/혼재→pending; active없으면done). 상세 응답에 진행 통계가 결합되며, 행 매핑은 원천 키(row_id·timestamp) 기준이다 — 레거시 필드(row·updated_at)에도 같은 값이 채워진다(집계기준 15). 캐시(task_detail:{project}:{task_id})에는 **정적 파생만** 담고 실시간 파생(is_running·current_elapsed_*)은 캐시 밖에서 task_live_stats(now 주입)로 합성한다 — 캐시 저장 시 state.json을 source_path로 넘겨 mtime 무효화를 켠다. 야간 제외 구간(집계 기준 17)은 라우터가 config.load_quiet_hours(project_path)로 읽는다 — 반환값은 QuietHours(시작 분·끝 분·시간대) 3필드이며, 라우터가 (시작 분, 끝 분)으로 좁혀 task_static_stats·row_durations·task_live_stats에 인자로 주입한다(CONTRACT.md §2.8.1 B-1~B-3) — stats.py는 설정을 읽지 않고 3필드 타입을 알지 못한다. quiet_hours_token()에는 QuietHours 3필드를 그대로 넘겨 timeZone도 캐시 서명에 싣는다. 캐시 키는 `task_detail:{project}:{task_id}:{구간서명}`으로 설정 변경 시 자연히 갈린다(mtime 축은 state.json만 본다). 행 시각 표시 문자열(`time_label`)은 자체 슬라이싱이 아니라 stats.format_timestamp를 호출해 얻는다 — 표시 규칙은 stats.py 단일 소유다(P-7). _get_artifact_files는 화이트리스트 없이 .md 전수를 유형 순(pipeline→verification→log→other)으로 열거하며, classify_artifact가 파일명 기반 4유형을 판정한다(P-3). artifact_count·artifacts[] 값 증가는 P-4가 선언한 회귀 예외다. 행 라벨의 사용자 호칭은 config.load_owner_name()이 원천이다 — _OWNER_ROLE_LABELS는 역할명(PM·자동)만 갖고, _owner_label()이 owner == \"user\"일 때만 호칭을 붙인다. 라우터가 요청당 1회 읽어 _build_static_detail → _group_pipeline_stages → _to_pipeline_row로 주입하며 상세 응답 최상위 owner_term에도 같은 값을 싣는다(FE가 문구를 조립한다). owner_term은 캐시 키에 넣지 않는다 — 행 라벨은 캐시 TTL(30초)만큼 지연될 수 있고 TTL이 스스로 회복한다.",
   "exports": [
     "GET /api/tasks",
     "GET /api/tasks/detail?project=&task_id=",
@@ -570,19 +570,26 @@ def get_task_detail(
 
     # 야간 제외 구간(집계 기준 17)은 **라우터가 읽어 stats.py에 주입**한다 —
     # stats.py는 파일 I/O를 하지 않는다(TS-008). 프로젝트 로컬 설정이 전역을 덮는다.
+    # load_quiet_hours()는 QuietHours(3필드: 시작 분·끝 분·시간대)를 반환하지만
+    # 평범한 2-tuple(레거시 monkeypatch 등)도 그대로 받는다. 시간대 해석은
+    # 여기서 끝난다 — stats.py에는 (시작 분, 끝 분)만 좁혀 넘긴다(인덱싱은
+    # QuietHours·2-tuple 양쪽에서 동일하게 동작한다) (CONTRACT.md §2.8.1 B-1~B-3,
+    # stats.py 공개 함수 시그니처 불변).
     quiet_hours = load_quiet_hours(project_path)
+    quiet_window = (quiet_hours[0], quiet_hours[1]) if quiet_hours is not None else None
 
     # 사용자 호칭도 **라우터가 읽는다** — 요청당 1회 읽어 행마다 파일을 다시 열지
     # 않는다. identity.md는 전역 1개라 프로젝트별로 갈리지 않는다.
     owner_term = load_owner_name()
 
     # 캐시 키에 구간 서명을 실어 설정 변경이 곧바로 갈리게 한다 — mtime 축은
-    # state.json만 보므로 설정 변경을 감지하지 못한다.
+    # state.json만 보므로 설정 변경을 감지하지 못한다. QuietHours 3필드를 그대로
+    # 넘겨 timeZone도 서명에 싣는다(quiet_hours_token이 "start-end@tz" 포맷).
     cache_key = f"task_detail:{project}:{task_id}:{quiet_hours_token(quiet_hours)}"
     static_payload = cache.get(cache_key)
     if static_payload is None:
         static_payload = _build_static_detail(
-            task_id, task_dir, state, quiet_hours, owner_term
+            task_id, task_dir, state, quiet_window, owner_term
         )
         cache.set(
             cache_key,
@@ -590,7 +597,7 @@ def get_task_detail(
             source_path=os.path.join(task_dir, "state.json") if state is not None else None,
         )
 
-    return _compose_task_detail(static_payload, state, quiet_hours, owner_term)
+    return _compose_task_detail(static_payload, state, quiet_window, owner_term)
 
 
 def _build_static_detail(

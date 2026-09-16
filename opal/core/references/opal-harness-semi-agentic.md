@@ -48,6 +48,7 @@
 - AGENTIC-LOG.md 자동 생성 (EXECUTE 등가 첫 행 advance/mark 시점에 PM이 생성)
 - Gate 루핑 규칙: `opal-harness-agentic.md §5` 적용
 - PM 대행 의무(판단 기록/직접 검증/완수/품질 책임/투명성/에스컬레이션/폴백 승인): `opal-harness-agentic.md §3` 적용
+- 각 행 갱신 후 `state-tool` 응답의 `transition_action` / `report_type` / `next_action`을 소비한다. `progress_report`는 비차단 통지이며 `transition_action=continue`이면 사용자 질문 없이 다음 행으로 이어간다. `decision_request`는 `await_user` 또는 `blocked`가 반환된 경우에만 대기 신호로 사용한다.
 
 **사용자 확인 행 — PM 명시 호출 불필요 (도구 자동 승인, 093)**:
 

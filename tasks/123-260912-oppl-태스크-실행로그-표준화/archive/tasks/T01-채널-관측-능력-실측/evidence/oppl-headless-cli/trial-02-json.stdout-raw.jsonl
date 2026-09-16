@@ -1,0 +1,120 @@
+{
+  "duration_api_ms": 128555,
+  "stop_reason": "end_turn",
+  "session_id": "fd309e7f-79cf-4989-b346-d8d778652095",
+  "total_cost_usd": 1.115903,
+  "usage": {
+    "input_tokens": 8,
+    "cache_creation_input_tokens": 80608,
+    "cache_read_input_tokens": 158552,
+    "output_tokens": 9132,
+    "output_tokens_details": {
+      "thinking_tokens": 5148
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 80608,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "not_available",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 8095,
+        "cache_read_input_tokens": 73053,
+        "cache_creation_input_tokens": 19713,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 19713
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard"
+  },
+  "modelUsage": {
+    "claude-haiku-4-5-20251001": {
+      "inputTokens": 2072,
+      "outputTokens": 27,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.002207,
+      "contextWindow": 200000,
+      "maxOutputTokens": 32000,
+      "thinkingTokens": 0,
+      "canonicalModel": "claude-haiku-4-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-opus-5": {
+      "inputTokens": 8,
+      "outputTokens": 9132,
+      "cacheReadInputTokens": 158552,
+      "cacheCreationInputTokens": 80608,
+      "webSearchRequests": 0,
+      "costUSD": 1.113696,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 64000,
+      "thinkingTokens": 5148,
+      "canonicalModel": "claude-opus-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [
+    {
+      "tool_name": "Bash",
+      "tool_use_id": "toolu_01Q8ZURbbdS9UKewAcjP3jEe",
+      "tool_input": {
+        "command": "~/.opal/tools/event-loader/run.sh verify --receipt /private/tmp/claude-501/-Volumes-Data-AIStudio-workspace-ai-framework/4c738893-9f8b-4d01-82b1-70b9ed0631bc/scratchpad/worker_dispatch_t01.json --event worker.dispatch",
+        "description": "Verify dispatch receipt"
+      }
+    }
+  ],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "is_error": false,
+  "num_turns": 7,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "읽기 전용 판정만 수행했고, 어떤 파일도 수정하지 않았다.\n\n## verdict: **fail**\n\n### 1. AC 충족 가능성\n\n**AC-1 — 미달.** `receipt_sha256`의 원천이 설계에 없다.\n- CONTRACT §1.5는 self-test receipt를 8필드(`receipt_version`/`channel_id`/`adapter_id`/`adapter_sha256`/`observed`/`claimed_profile`/`evidence`/`produced_at`) 산출물로 정의하는데(CONTRACT.md:211-220), PLAN은 `PLAN.md:65`에서 `observed{}`를 \"대입한다\"고만 하고 receipt를 **파일로 산출하지 않는다**.\n- `PLAN.md:86-91` 산출물 목록에 receipt 파일이 없다. 따라서 `PLAN.md:72`의 `receipt_sha256`은 무엇의 해시인지 정의되지 않았고, VS-1(`PLAN.md:78`)은 `non-null`만 보므로 임의값도 통과한다.\n\n**AC-2 — 미달.** 등급 판정이 관측 원본이 아니라 **파일 존재 여부**에 묶여 있다.\n- `PLAN.md:62`: `observed.start = (1)칸이 관측됨(비공백 evidence_path 존재)`.\n- 그런데 `PLAN.md:52`의 칸 스키마는 `note`를 \"관측 근거 **또는 관측 불가 사유**\"로 허용한다 — 관측 실패를 적은 메모 파일도 비공백 경로이므로 `observed.start=true`가 된다.\n- VS-2(`PLAN.md:79`)의 판정도 \"존재·0바이트 초과\"뿐이라 이 경로를 막지 못한다. R-21(\"프롬프트 준수율만으로 강제 모드를 켜지 않는다\", PRD.md:122)과 같은 종류의 약한 근거 문제다.\n\n**AC-3 — 충족.** `PLAN.md:9`가 TRD D-6(TRD.md:53 \"한쪽 결과를 다른 쪽에 전용하지 않는다\")을 그대로 승계하고, §1 축 A/B와 §3의 축별 파생이 분리돼 있다.\n\n### 2. §3 등급 파생 vs CONTRACT §1.5 — **일치**\n\n`PLAN.md:67-69`의 3분기가 CONTRACT.md:222(\"셋 다 참이면 `observed_trajectory`, start·terminal만 참이면 `observed_terminal`, 그 외 `cooperative`\")와 정확히 대응한다. `PLAN.md:70`이 `monotonic_span`을 enum 파생에서 제외하고 `mode=active` 채택 불가 사실만 별도 기록하는 것도 CONTRACT.md:203(두 active 등급 공통 조건 `duration_source=adapter_monotonic`)과 정합한다.\n\n### 3. `adapter_id`/`adapter_sha256` 충돌 여부 — **충돌 아님, 단 조건이 PLAN에 미기재**\n\n- CONTRACT.md:252-253은 `completion_profile ≠ cooperative`면 두 hash를 필수로 요구하고, CONTRACT.md:265는 \"배정값 변경은 계약 개정이 아니라 **재스파이크**\"라고 이미 종결 조항을 둔다. PRD.md:143(\"변환기 구현은 범위 밖\")과의 충돌은 **파일이 배포·소비되지 않는 한** 발생하지 않는다.\n- 계약 위반이 아닌 처리: `profiles.json`을 태스크 폴더 원본으로만 두고 `state-tool init --run-log-mode active`가 읽는 배포 위치로 승격하지 않는 것. `PLAN.md:91,99`가 이미 승격을 범위 밖으로 두고 있으므로 현재 설계는 위반이 아니다.\n- 다만 `PLAN.md:72`는 \"Phase 0 실측 probe를 잠정 변환기로 채택\"만 적고 **그것이 허용되는 조건(미승격·Phase 1A 실변환기 확정 시 재발급 필수)을 계약 조항으로 묶지 않았다**. 이대로 배포되면 CONTRACT.md:357 `profile_receipt_mismatch`가 확정적으로 발생한다.\n\n### 4. 등급 인플레이션 여지 — **있다**\n\n- 위 AC-2 지적(`PLAN.md:62` 경로 존재 = 관측)이 1차 경로다.\n- VS-3(`PLAN.md:80`)이 \"(1)~(3) 중 비어 있지 않은 칸을 **최소 하나** 뒷받침\"만 요구해, 칸별 근거 검증 없이 3칸이 함께 승인될 수 있다.\n- 반면 `PLAN.md:18`(축 A 단조 구간 \"미확인 — 확보 불가로 판정될 수 있다\")과 `PLAN.md:32`(기존 산출물 무검증 승격 금지)는 인플레이션을 적극 억제하는 좋은 조항이다.\n\n### 5. 범위 밖 침범 — **없음**\n\n`PLAN.md:5`와 `PLAN.md:93-99`가 `opal/`, `~/.opal/`, 3-SSOT, `CONTRACT.md`를 모두 범위 밖으로 명시한다. `PLAN.md:20`의 `~/.claude/projects/` 접근은 read-only 선언이 있다.\n- 단 `PLAN.md:25`의 `opal-agent` 실호출은 **파일을 쓸 수 있는 서브에이전트를 실제로 기동**하는데, PLAN에 그 실행의 프롬프트·작업 디렉터리 제약이 없다. 침범 지시는 아니나 침범 가능 통로다.\n\n---\n\n## 재작업 지시\n\n1. **§5 산출물에 self-test receipt 파일을 추가하라.** 축별 `evidence/<axis>/self-test-receipt.json`을 CONTRACT §1.5의 8필드로 정의하고, `profiles.json.receipt_sha256`은 \"그 파일 바이트의 SHA-256\"으로 명시하라.\n2. **VS-1에 receipt 검증을 추가하라.** receipt 8필드 존재 + `claimed_profile`이 `observed{}` 파생과 일치 + `receipt_sha256`이 receipt 파일 실제 해시와 일치(non-null 검사로 대체 금지).\n3. **§3-1의 관측 판정 근거를 바꿔라.** `observed.X = (칸의 observed 필드가 true) ∧ (evidence_path가 그 관측을 실제로 담은 원본) ∧ (관측 불가 note가 아님)`으로 정의하고, VS-2를 \"존재·비공백\"에서 \"칸이 주장하는 관측 항목이 그 파일 안에서 확인됨\"으로 강화하라.\n4. **VS-3을 칸 단위로 바꿔라.** \"(1)~(3) 중 하나\"가 아니라, `observed=true`로 선언된 **모든 칸**이 각자의 `evidence_path`로 뒷받침됨을 판정하라.\n5. **§3-6에 잠정 변환기 채택 조건을 명문화하라.** (a) 이 `profiles.json`은 태스크 폴더 원본이며 배포 위치로 승격하지 않는다, (b) 승격 전 `state-tool init --run-log-mode active`를 호출하지 않는다, (c) Phase 1A 실변환기 확정 시 `adapter_id`/`adapter_sha256`/`receipt_sha256`을 재발급한다 — 세 줄을 §3-6 또는 §5에 조항으로 넣어라.\n6. **§1 축 B에 probe 실행 안전 제약을 추가하라.** `opal-agent` 실호출의 작업 디렉터리·프롬프트를 무변경(읽기/에코 수준)으로 고정하고, 실행 후 `git status`로 워크트리 무변경을 확인하는 항목을 VS-4에 넣어라.\n7. **`evidence_paths` 상대 경로의 기준점을 확정하라.** CONTRACT §1.6은 \"상대 경로만\"이라고만 하므로(CONTRACT.md:254), PLAN이 태스크 폴더 기준인지 프로젝트 루트 기준인지 한 줄로 고정하고 VS-2의 해석 규칙을 거기에 맞춰라.",
+  "ttft_ms": 1701,
+  "type": "result",
+  "duration_ms": 127879,
+  "uuid": "a4a27968-c09c-49df-9227-21d21f54882c",
+  "ttft_stream_ms": 1176,
+  "time_to_request_ms": 24,
+  "first_content_frame_ms": 1176,
+  "queued_turn_count": 0,
+  "result_index": 0
+}

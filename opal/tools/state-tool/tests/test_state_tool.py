@@ -5306,10 +5306,10 @@ _OPDW_PIPELINE_SPEC = json.loads("""
 #   073(opd `test_scenario.scenario_gate`)·075(opds `plan.scenario_gate`) 목표-커버 게이트 행
 #   추가로 두 값이 분기했다.
 _GROUP_A_SPECS = [
-    ("opp",  _OPP_PIPELINE_SPEC,  9,  9,  "opal-pilot-project", "pipeline.json"),
-    ("opd",  _OPD_PIPELINE_SPEC,  15, 16, "opal-pilot-dev", "pipeline.json"),
-    ("opds", _OPDS_PIPELINE_SPEC, 10, 11, "opal-pilot-dev", "pipeline-short.json"),
-    ("opdw", _OPDW_PIPELINE_SPEC, 9,  9,  "opal-pilot-dev-wireframe", "pipeline.json"),
+    ("opp",  _OPP_PIPELINE_SPEC,  9,  14, "opal-pilot-project", "pipeline.json"),
+    ("opd",  _OPD_PIPELINE_SPEC,  15, 21, "opal-pilot-dev", "pipeline.json"),
+    ("opds", _OPDS_PIPELINE_SPEC, 10, 16, "opal-pilot-dev", "pipeline-short.json"),
+    ("opdw", _OPDW_PIPELINE_SPEC, 9,  14, "opal-pilot-dev-wireframe", "pipeline.json"),
 ]
 
 
@@ -5633,11 +5633,17 @@ class TestStateSchema11Compat(unittest.TestCase):
             self.schema = json.load(f)
 
     def test_schema_version_enum_allows_1_0_and_1_1(self):
-        """[T070/S-4] schema_version이 enum(["1.0","1.1"])이어야 함 — 현재는 const:"1.0"."""
+        """[T070/S-4] schema_version이 enum이고 1.0/1.1을 함께 허용해야 함.
+
+        123/T05(AC-4)이 로그 계약 블록을 가진 1.2를 같은 enum에 등재했으므로 판정은
+        **완전 일치가 아니라 포함**이다 — 이 단언이 지키는 계약은 "1.1 병행 허용"이지
+        "enum이 정확히 2종"이 아니다. 1.0/1.1 태스크가 계속 유효하다는 C-3 보장은
+        아래 포함 단언으로 그대로 유지된다.
+        """
         version_schema = self.schema["properties"]["schema_version"]
         self.assertIn("enum", version_schema,
                       f"schema_version이 아직 enum이 아님(1.1 병행 미지원): {version_schema}")
-        self.assertEqual(set(version_schema["enum"]), {"1.0", "1.1"})
+        self.assertLessEqual({"1.0", "1.1"}, set(version_schema["enum"]))
 
     def test_rows_key_field_registered_in_schema(self):
         """[T070/S-4, R-A2] rows[].items.properties에 key(pattern) 필드가 등록되어야 함."""
@@ -8072,12 +8078,15 @@ class _T093Base(unittest.TestCase):
         d.mkdir(parents=True, exist_ok=True)
         return d
 
-    def _init(self, task_dir, mode, *, rows_spec=None, rows_from=None, skill="opd"):
+    def _init(self, task_dir, mode, *, rows_spec=None, rows_from=None, skill="opd",
+              run_log_mode=None):
         argv = ["init", str(task_dir), "--skill", skill, "--mode", mode]
         if rows_spec is not None:
             argv += ["--rows-spec", rows_spec]
         if rows_from is not None:
             argv += ["--rows-from", str(rows_from)]
+        if run_log_mode is not None:
+            argv += ["--run-log-mode", run_log_mode]
         code, stdout, stderr, data = _run070(argv)
         self.assertEqual(code, 0, f"init 실패(mode={mode}): {stdout!r} / {stderr!r}")
         return data
@@ -9975,7 +9984,11 @@ class TestT103WorkerDuration(_T093Base):
 
     def _fresh(self, mode="interactive", name="t103"):
         d = self._task_dir(name)
-        self._init(d, mode, rows_spec=_T103_SPEC)
+        # [재타겟] --run-log-mode 기본값이 shadow로 바뀌면서 미지정 init은 더 이상
+        # 레거시(1.0/1.1) 태스크의 응답 형태를 재현하지 않는다. 이 계약(103 R-15/H-11)의
+        # 취지는 "레거시 태스크의 mark 응답 키 집합 불변"이므로, fixture를
+        # --run-log-mode off로 명시해 그 레거시 형태를 재현한다(계약 완화 아님).
+        self._init(d, mode, rows_spec=_T103_SPEC, run_log_mode="off")
         return d
 
     # ── (1) 기록 경로 ────────────────────────────────────────────────────
@@ -10178,7 +10191,9 @@ class TestT103WorkerDurationWarning(_T093Base):
 
     def _fresh(self, name, mode="interactive"):
         d = self._task_dir(name)
-        self._init(d, mode, rows_spec=_T103W_SPEC)
+        # [재타겟] 사유는 TestT103WorkerDuration._fresh와 동일 — 레거시 태스크의
+        # mark 응답/산출물 형태를 재현하려면 --run-log-mode off를 명시해야 한다.
+        self._init(d, mode, rows_spec=_T103W_SPEC, run_log_mode="off")
         # EXECUTE 행에 워커 경로로 접근하기 위한 앞 단계 완료 (prior_stage_only 전제)
         self._assert_ok(self._mark(d, 1), f"{name} prep row1")
         self._assert_ok(self._mark(d, 2), f"{name} prep row2")
@@ -10313,7 +10328,9 @@ class TestT103WorkerDurationWarning(_T093Base):
         """[T103/R-21 오탐 방어] PM 직접 수행 행(`--as-worker`/`--worker-stage` 없음)에는
         경고가 뜨지 않고, 응답 키 집합도 종전과 완전히 동일하다(H-11 하위호환)."""
         d = self._task_dir("w7")
-        self._init(d, "interactive", rows_spec=_T103W_SPEC)
+        # [재타겟] 사유는 TestT103WorkerDuration._fresh와 동일 — 레거시 태스크의
+        # 응답 키 집합을 재현하려면 --run-log-mode off를 명시해야 한다.
+        self._init(d, "interactive", rows_spec=_T103W_SPEC, run_log_mode="off")
         data = self._assert_ok(self._mark(d, 1), "W7 PM 직접")
         self._assert_not_warned(data, "W7 PM 직접")
         self.assertEqual(
@@ -11104,9 +11121,9 @@ class TestT111SdlcV2StateContracts(_T093Base):
 # 검증하고 mock/patch는 date.js(_mock_now)에만 한정한다. 기존 테스트는 수정하지
 # 않았다(파일 끝 append).
 #
-# S-1 기준 스냅샷: PM이 W-2 적용 전 소스로
+# S-1 기준 스냅샷: Task 136 CLOSE tail 반영 소스로
 #   `state-tool init --skill opds --mode agentic --rows-from pipeline-short.json`
-# 를 실행해 확보한 rows[] 11행을 fixtures/s1_baseline_rows.json에 그대로 보존했다
+# 를 실행해 확보한 rows[] 16행을 fixtures/s1_baseline_rows.json에 그대로 보존했다
 # (row_id/stage/item/key/status/status_label/timestamp/owner/note/gate — 실행마다
 # 달라지는 top-level created_at/updated_at/task_id만 비교에서 제외한다).
 # ═════════════════════════════════════════════════════════════════════════════
@@ -11158,11 +11175,11 @@ class TestActorFlag(BaseTestCase):
             args = make_args(**kwargs)
             return self._call_cmd(ST.cmd_init, args)
 
-    # ── S-1: --actor 미전달 시 actor 키 부재 + rows[] 11행이 기준과 동일 ────
+    # ── S-1: --actor 미전달 시 actor 키 부재 + rows[] 16행이 기준과 동일 ────
 
     def test_s1_actor_unspecified_no_actor_key_and_rows_match_baseline(self):
         """[T122/S-1] --actor 미전달로 opds init 실행 → state.json에 "actor" 키가
-        부재하고, rows[] 11행이 W-2 적용 전 기준 스냅샷(fixtures/s1_baseline_rows.json)
+        부재하고, rows[] 16행이 Task 136 CLOSE tail 반영 기준 스냅샷(fixtures/s1_baseline_rows.json)
         과 (row_id/stage/item/key/status/owner/gate 등) 정규화 후 동일해야 한다."""
         task_path = self._new_task_path("s1_no_actor")
         exit_code, _ = self._init_opds(task_path)
@@ -11173,21 +11190,21 @@ class TestActorFlag(BaseTestCase):
 
         baseline_rows = json.loads(_S1_BASELINE_ROWS_FIXTURE.read_text(encoding="utf-8"))
         rows = state.get("rows")
-        self.assertEqual(len(rows), 11, "task_steps[] 는 11행이어야 한다")
-        self.assertEqual(len(baseline_rows), 11, "기준 스냅샷도 11행이어야 한다(fixture 자체 점검)")
+        self.assertEqual(len(rows), 16, "task_steps[] 는 16행이어야 한다")
+        self.assertEqual(len(baseline_rows), 16, "기준 스냅샷도 16행이어야 한다(fixture 자체 점검)")
 
         # 실행마다 달라지는 필드는 없다 — rows[] 항목은 created_at/updated_at/task_id에
         # 의존하지 않으므로 정규화 없이 바로 비교 가능(정규화 대상은 top-level 3필드뿐).
         self.assertEqual(
             rows, baseline_rows,
-            "rows[] 11행의 key·순서·상태가 W-2 적용 전 기준 스냅샷과 달라짐(C-3 위반)",
+            "rows[] 16행의 key·순서·상태가 Task 136 기준 스냅샷과 달라짐(C-3 위반)",
         )
 
-    # ── S-2: --actor pm --skill opds → state["actor"] == "pm", 행 11개 유지 ──
+    # ── S-2: --actor pm --skill opds → state["actor"] == "pm", 행 16개 유지 ──
 
     def test_s2_actor_pm_skill_opds_sets_actor_key_rows_unchanged(self):
         """[T122/S-2] `--actor pm --skill opds` → state["actor"] == "pm"이고
-        rows[]는 S-1과 동일하게 11행이어야 한다."""
+        rows[]는 S-1과 동일하게 16행이어야 한다."""
         task_path = self._new_task_path("s2_actor_pm")
         exit_code, _ = self._init_opds(task_path, actor="pm")
         self.assertEqual(exit_code, 0, "--actor pm --skill opds init은 exit 0이어야 한다")
@@ -11198,7 +11215,7 @@ class TestActorFlag(BaseTestCase):
             "--actor pm 지정 시 state['actor']가 'pm'이어야 한다(AC-1 위반 — GREEN 이전 RED)",
         )
         rows = state.get("rows")
-        self.assertEqual(len(rows), 11, "actor 지정과 무관하게 rows[]는 11행이어야 한다(AC-4)")
+        self.assertEqual(len(rows), 16, "actor 지정과 무관하게 rows[]는 16행이어야 한다(AC-4)")
 
         baseline_rows = json.loads(_S1_BASELINE_ROWS_FIXTURE.read_text(encoding="utf-8"))
         self.assertEqual(

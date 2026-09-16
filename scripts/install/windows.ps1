@@ -1432,6 +1432,116 @@ function Merge-McpConfig {
     return $true
 }
 
+function ConvertTo-PlainHashtable {
+    <#
+    .SYNOPSIS
+        ConvertFrom-Json 결과를 PS 5.1 호환 hashtable/array 로 재귀 변환한다.
+        Claude hooks 병합은 사용자 settings.json의 알 수 없는 형제 키를 보존해야 하므로
+        PSCustomObject 직접 수정 대신 명시 hashtable 로 정규화한다.
+    #>
+    param($InputObject)
+    if ($null -eq $InputObject) { return $null }
+    if (($InputObject -is [System.Collections.IEnumerable]) -and
+        ($InputObject -isnot [string]) -and
+        ($InputObject -isnot [System.Collections.IDictionary])) {
+        $list = @()
+        foreach ($item in $InputObject) { $list += , (ConvertTo-PlainHashtable $item) }
+        return , $list
+    }
+    if ($InputObject -is [System.Management.Automation.PSCustomObject]) {
+        $ht = @{}
+        foreach ($prop in $InputObject.PSObject.Properties) {
+            $ht[$prop.Name] = ConvertTo-PlainHashtable $prop.Value
+        }
+        return $ht
+    }
+    if ($InputObject -is [System.Collections.IDictionary]) {
+        $ht = @{}
+        foreach ($key in $InputObject.Keys) {
+            $ht[$key] = ConvertTo-PlainHashtable $InputObject[$key]
+        }
+        return $ht
+    }
+    return $InputObject
+}
+
+function Merge-ClaudeHooksConfig {
+    <#
+    .SYNOPSIS
+        opal/core/hooks/claude-hooks.json 을 ~/.claude/settings.json hooks에 멱등 병합한다.
+        기존 사용자 hook은 보존하고, _opal_managed:true 블록만 source hook으로 교체한다.
+    #>
+    param(
+        [Parameter(Mandatory)][string]$Target,
+        [Parameter(Mandatory)][string]$HooksJson
+    )
+
+    $marker = '_opal_managed'
+    $targetDir = Split-Path -Parent $Target
+    if (-not (Test-Path $targetDir)) {
+        New-Item -ItemType Directory -Path $targetDir -Force | Out-Null
+    }
+
+    $data = @{}
+    if (Test-Path $Target) {
+        try {
+            $raw = Get-Content -Path $Target -Raw -Encoding UTF8
+            if ($raw -and $raw.Trim()) {
+                $data = ConvertTo-PlainHashtable ($raw | ConvertFrom-Json -ErrorAction Stop)
+            }
+        } catch {
+            Write-OpalWarn "기존 ${Target} 파싱 실패 — hooks 설정을 새로 작성"
+            $data = @{}
+        }
+    }
+    if (-not ($data -is [hashtable])) { $data = @{} }
+    if (-not $data.ContainsKey('hooks') -or -not ($data['hooks'] -is [hashtable])) {
+        $data['hooks'] = @{}
+    }
+
+    $sourceRaw = Get-Content -Path $HooksJson -Raw -Encoding UTF8
+    $sourceHooks = ConvertTo-PlainHashtable ($sourceRaw | ConvertFrom-Json -ErrorAction Stop)
+    foreach ($eventName in $sourceHooks.Keys) {
+        $existing = @()
+        if ($data['hooks'].ContainsKey($eventName) -and $null -ne $data['hooks'][$eventName]) {
+            $existing = @($data['hooks'][$eventName])
+        }
+
+        $preserved = @()
+        foreach ($rule in $existing) {
+            $ruleHash = ConvertTo-PlainHashtable $rule
+            if (($ruleHash -is [hashtable]) -and -not $ruleHash.ContainsKey($marker)) {
+                $preserved += , $ruleHash
+            }
+        }
+
+        $stamped = @()
+        foreach ($rule in @($sourceHooks[$eventName])) {
+            $ruleHash = ConvertTo-PlainHashtable $rule
+            if ($ruleHash -is [hashtable]) {
+                $ruleHash[$marker] = $true
+                $stamped += , $ruleHash
+            }
+        }
+        $data['hooks'][$eventName] = @($preserved + $stamped)
+    }
+
+    Set-ContentNoBom -Path $Target -Value ($data | ConvertTo-Json -Depth 20)
+}
+
+function Install-ClaudeHooks {
+    param([Parameter(Mandatory)][string]$RepoRoot)
+
+    $hooksSrc = [IO.Path]::Combine($RepoRoot, 'opal', 'core', 'hooks', 'claude-hooks.json')
+    if (-not (Test-Path $hooksSrc)) {
+        Write-OpalInfo 'Claude hooks source 없음 — hooks 설치 스킵'
+        return
+    }
+    $settings = Join-Path $env:USERPROFILE '.claude\settings.json'
+    Merge-ClaudeHooksConfig -Target $settings -HooksJson $hooksSrc
+    Write-OpalOk "Claude Code hooks → $settings"
+}
+
 function Install-OpalMcp {
     <#
     .SYNOPSIS
@@ -2017,6 +2127,7 @@ function Invoke-OpalWindowsInstall {
     Register-EnvPath
     Register-Bootstrapper  -RepoRoot $repoRoot
     Install-OpalVenv       -RepoRoot $repoRoot
+    Install-ClaudeHooks    -RepoRoot $repoRoot
     Install-Dashboard      -RepoRoot $repoRoot
     Start-OpalConsole
     Install-OpalMcp        -RepoRoot $repoRoot

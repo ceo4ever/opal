@@ -513,6 +513,10 @@ Agentic 모드 특수 규칙:
   [Agentic CLOSE 게이트] 자율 실행 완료. CLOSE 진입 승인? (y/n)
   ```
 
+### 단계 보고 전이 계약
+
+각 단계 행 mark/advance 직후 `state-tool` stdout의 `transition_action` / `report_type` / `next_action`을 소비한다. `report_type=progress_report`는 비차단 보고이며 `transition_action=continue`이면 같은 응답에서 다음 단계로 이어간다. `report_type=decision_request`는 `transition_action=await_user|blocked`일 때만 사용하고, CLOSE 진입 승인 예외는 유지한다.
+
 ---
 
 ## 관련 references

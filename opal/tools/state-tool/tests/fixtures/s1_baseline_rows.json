@@ -147,5 +147,63 @@
     "timestamp": null,
     "owner": "PM",
     "note": null
+  },
+  {
+    "row_id": 12,
+    "stage": "CLOSE",
+    "item": "관련 문서 동기화 (조건부: 구현으로 문서 사실이 달라진 경우)",
+    "key": "close.docs_sync",
+    "status": "pending",
+    "status_label": "⬜",
+    "timestamp": null,
+    "owner": "PM",
+    "note": null,
+    "conditional": true
+  },
+  {
+    "row_id": 13,
+    "stage": "CLOSE",
+    "item": "brain ingest (조건부: 프로젝트 brain 사용 시)",
+    "key": "close.brain_ingest",
+    "status": "pending",
+    "status_label": "⬜",
+    "timestamp": null,
+    "owner": "PM",
+    "note": null,
+    "conditional": true
+  },
+  {
+    "row_id": 14,
+    "stage": "CLOSE",
+    "item": "회고/개선 후보 기록",
+    "key": "close.retrospective",
+    "status": "pending",
+    "status_label": "⬜",
+    "timestamp": null,
+    "owner": "PM",
+    "note": null
+  },
+  {
+    "row_id": 15,
+    "stage": "CLOSE",
+    "item": "worktree finalize/attribution (조건부: --wt 실행 시)",
+    "key": "close.worktree_finalize",
+    "status": "pending",
+    "status_label": "⬜",
+    "timestamp": null,
+    "owner": "PM",
+    "note": null,
+    "conditional": true
+  },
+  {
+    "row_id": 16,
+    "stage": "CLOSE",
+    "item": "CLOSE 최종 상태 확정",
+    "key": "close.final",
+    "status": "pending",
+    "status_label": "⬜",
+    "timestamp": null,
+    "owner": "PM",
+    "note": null
   }
 ]

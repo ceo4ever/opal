@@ -814,4 +814,8 @@ opal-harness-agentic.md "에스컬레이션 조건" 공통 기준에 추가:
 - PRD/TRD에서 사용자 비즈니스 판단이 필요한 경우
 - 액션 Critical Fail로 전체 WBS 재조정이 필요한 경우
 
+### 단계 보고 전이 계약
+
+각 단계 행 mark/advance 직후 `state-tool` stdout의 `transition_action` / `report_type` / `next_action`을 소비한다. `report_type=progress_report`는 비차단 보고이며 `transition_action=continue`이면 같은 응답에서 다음 단계로 이어간다. `report_type=decision_request`는 `transition_action=await_user|blocked`일 때만 사용하고, CLOSE 진입 승인 예외는 유지한다.
+
 ---

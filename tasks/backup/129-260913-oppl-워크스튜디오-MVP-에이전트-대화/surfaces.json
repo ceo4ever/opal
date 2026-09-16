@@ -1,0 +1,173 @@
+{
+  "schema_version": "1.0",
+  "profile": "electron-desktop",
+  "origins": null,
+  "fidelity_levels": ["mock", "real-http", "real-usage", "real-desktop-ipc"],
+  "execution_profile": {
+    "id": "electron-desktop",
+    "required_fidelity": "real-desktop-ipc",
+    "skeleton_oracle": [
+      "Electron app starts",
+      "renderer calls preload IPC",
+      "Electron main performs filesystem or PTY work",
+      "renderer observes returned value or event and updates UI"
+    ],
+    "web_profile_regression_rule": "web-http remains the default for web/API projects; electron-desktop applies only when declared by this contract."
+  },
+  "surfaces": [
+    {
+      "id": "intro-first-run",
+      "resource": "Renderer UI: FirstRunWelcome",
+      "kind": "electron-ui",
+      "auth": "none",
+      "request_shape": "{storedState?: WorkStudioState}",
+      "response_shape": "{introVisible:boolean, actions:[openExisting,createNew,demo], recentProjects:RecentProject[]}",
+      "required_fidelity": "real-desktop-ipc",
+      "user_surface": "인트로",
+      "covers": ["PRD-AC-01"]
+    },
+    {
+      "id": "project-open-existing",
+      "resource": "preload project.chooseDirectory -> main workstudio:project:chooseDirectory/registerFromSelection/openRecent",
+      "kind": "electron-ipc",
+      "auth": "none",
+      "request_shape": "{userAction:openExisting|openRecent, recentProjectId?:string}",
+      "response_shape": "IpcResult<RecentProject|ProjectDirectorySelection>",
+      "required_fidelity": "real-desktop-ipc",
+      "user_surface": "프로젝트 열기",
+      "covers": ["PRD-AC-02", "PRD-AC-08", "PRD-AC-11"]
+    },
+    {
+      "id": "project-create-new",
+      "resource": "preload project.createProject -> main workstudio:project:createProject",
+      "kind": "electron-ipc",
+      "auth": "none",
+      "request_shape": "{parentPath:string,name:string}",
+      "response_shape": "IpcResult<RecentProject{isOpalProject:true,agentPath:string}>",
+      "required_fidelity": "real-desktop-ipc",
+      "user_surface": "프로젝트 생성",
+      "covers": ["PRD-AC-03", "PRD-AC-08"]
+    },
+    {
+      "id": "pm-discover-register",
+      "resource": "main ProjectRegistry/AgentRegistry .opal/AGENT.md discovery",
+      "kind": "electron-ipc",
+      "auth": "none",
+      "request_shape": "{projectId:string,realPath:string}",
+      "response_shape": "IpcResult<AgentCandidate{role:'Project PM',launcherEligible:false}>",
+      "required_fidelity": "real-desktop-ipc",
+      "user_surface": "PM 등록",
+      "covers": ["PRD-AC-04", "PRD-AC-08"]
+    },
+    {
+      "id": "workspace-files-tree",
+      "resource": "preload project.listFiles -> main workstudio:project:listFiles -> renderer Files tree",
+      "kind": "electron-ipc",
+      "auth": "none",
+      "request_shape": "{rootPath:string,path?:string,relativePath?:string}",
+      "response_shape": "IpcResult<ProjectFileNode[]> -> FileNode[] rendered in active workspace Files tree",
+      "required_fidelity": "real-desktop-ipc",
+      "user_surface": "Files tree",
+      "covers": ["PRD-AC-11"]
+    },
+    {
+      "id": "terminal-create",
+      "resource": "preload terminal.create -> main workstudio:terminal:create",
+      "kind": "electron-ipc",
+      "auth": "none",
+      "request_shape": "{projectId:string,cols:number,rows:number,shell?:string}",
+      "response_shape": "IpcResult<TerminalSession>",
+      "required_fidelity": "real-desktop-ipc",
+      "user_surface": "터미널 생성",
+      "covers": ["PRD-AC-05", "PRD-AC-08"]
+    },
+    {
+      "id": "terminal-io-control",
+      "resource": "preload terminal.write/resize/interrupt/close",
+      "kind": "electron-ipc",
+      "auth": "none",
+      "request_shape": "{terminalId:string,data?:string,cols?:number,rows?:number}",
+      "response_shape": "IpcResult<{sequence?:number}|TerminalSession>",
+      "required_fidelity": "real-desktop-ipc",
+      "user_surface": "터미널 입출력",
+      "covers": ["PRD-AC-05", "PRD-AC-08"]
+    },
+    {
+      "id": "terminal-events",
+      "resource": "preload terminal.onData/onStatus/onExit event subscription",
+      "kind": "electron-event",
+      "auth": "none",
+      "request_shape": "{handler:function} -> unsubscribe:function",
+      "response_shape": "TerminalDataEvent|TerminalStatusEvent|TerminalExitEvent",
+      "required_fidelity": "real-desktop-ipc",
+      "user_surface": "터미널 이벤트",
+      "covers": ["PRD-AC-05", "PRD-AC-08"]
+    },
+    {
+      "id": "agent-list-launch",
+      "resource": "preload agent.listRegistered/launchCodex -> main CodexAgentAdapter",
+      "kind": "electron-ipc",
+      "auth": "none",
+      "request_shape": "{projectId:string,pmContextId:string,terminalId?:string}",
+      "response_shape": "IpcResult<AgentCandidate{role:'Codex',launcherEligible:true}[]|AgentSession>",
+      "required_fidelity": "real-desktop-ipc",
+      "user_surface": "에이전트 발동",
+      "covers": ["PRD-AC-06", "PRD-AC-08"]
+    },
+    {
+      "id": "agent-send-stop",
+      "resource": "preload agent.send/stop -> main CodexAgentAdapter",
+      "kind": "electron-ipc",
+      "auth": "none",
+      "request_shape": "{sessionId:string,message?:string}",
+      "response_shape": "IpcResult<{messageId:string}|AgentSession>",
+      "required_fidelity": "real-desktop-ipc",
+      "user_surface": "에이전트 대화 입력",
+      "covers": ["PRD-AC-07", "PRD-AC-08"]
+    },
+    {
+      "id": "agent-conversation-events",
+      "resource": "preload agent.onEvent -> renderer conversation store/UI",
+      "kind": "electron-event",
+      "auth": "none",
+      "request_shape": "{handler:function} -> unsubscribe:function",
+      "response_shape": "AgentSessionEvent{type:starting|running|waiting_input|message|failed|exited}",
+      "required_fidelity": "real-desktop-ipc",
+      "user_surface": "대화 이벤트",
+      "covers": ["PRD-AC-07", "PRD-AC-08"]
+    },
+    {
+      "id": "app-teardown",
+      "resource": "Electron app before-quit/window-all-closed teardown",
+      "kind": "electron-lifecycle",
+      "auth": "none",
+      "request_shape": "{appLifecycle:before-quit|window-all-closed}",
+      "response_shape": "{terminalSessionsClosed:true,agentSessionsClosed:true,noSessionRestore:true}",
+      "required_fidelity": "real-desktop-ipc",
+      "user_surface": "종료 정리",
+      "covers": ["PRD-AC-09"]
+    },
+    {
+      "id": "journey-smoke",
+      "resource": "E2E: intro -> create project -> PM register -> terminal -> Codex -> conversation -> teardown",
+      "kind": "electron-e2e",
+      "auth": "none",
+      "request_shape": "{freshState:true,projectFixture:temporaryOpalProject,message:string}",
+      "response_shape": "{allStepsPass:true,mockBoundaryCount:0}",
+      "required_fidelity": "real-desktop-ipc",
+      "user_surface": "MVP 여정 스모크",
+      "covers": ["PRD-AC-10", "PRD-AC-11", "PRD-AC-12"]
+    },
+    {
+      "id": "oppl-electron-profile",
+      "resource": "OPPL D5/D6 execution skeleton profile: electron-desktop",
+      "kind": "oppl-contract",
+      "auth": "none",
+      "request_shape": "{profile:electron-desktop,surfacesPath:string}",
+      "response_shape": "{skeletonPass:boolean,webProfileUnchanged:boolean}",
+      "required_fidelity": "real-desktop-ipc",
+      "user_surface": "OPPL 실행 프로필",
+      "covers": ["PRD-AC-12"]
+    }
+  ]
+}

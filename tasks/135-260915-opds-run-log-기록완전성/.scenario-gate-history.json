@@ -1,0 +1,41 @@
+[
+  {
+    "iteration": 1,
+    "missing": {
+      "requirements": [],
+      "features": [],
+      "hypotheses": []
+    },
+    "scores": {
+      "goal": 2,
+      "adoption": 2,
+      "boundary": 2
+    },
+    "average": 2.0,
+    "gaps": [],
+    "verdict": "pass",
+    "reason": "converged",
+    "evidence": {
+      "coverage_build": {
+        "ok": true,
+        "requirements": 15,
+        "features": 0,
+        "hypotheses": 5,
+        "scenarios": 11
+      },
+      "coverage_check": {
+        "ok": true,
+        "all_covered": true
+      },
+      "scenario_rubric": {
+        "verdict": "pass",
+        "scores": {
+          "goal": 2,
+          "adoption": 2,
+          "boundary": 2
+        },
+        "average": 2.0
+      }
+    }
+  }
+]

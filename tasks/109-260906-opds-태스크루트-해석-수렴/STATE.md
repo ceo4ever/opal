@@ -1,6 +1,6 @@
 # STATE: 태스크 루트 해석 수렴 + OPAL_TASKS_ROOT 계약 신설
 
-> 최종 갱신: 2026-09-07 23:37:10
+> 최종 갱신: 2026-09-16 18:08:09
 > 파이프라인 현황(rows/상태/다음 액션)의 SSOT는 `state.json`입니다.
 > 조회: `~/.opal/tools/state-tool/run.sh show <task-path>`
 

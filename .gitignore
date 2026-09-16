@@ -40,3 +40,11 @@ node_modules/
 # oppl 루프 액션 에이전트 실행 캡처 (전송 산출물 — AGENT.md §결과 파일 규약)
 .oppl-run/
 .opal-worktrees/
+
+# 태스크 실행 로그 — 추적 경계 (123 T02 / AC-14 · MV-18 · TRD §8.1)
+# 원본 캡처·파생 색인·배타 락은 영구 제외한다. 마스킹된 조각(run/*.jsonl)은
+# run_log_core.redact()가 디스크 기록 전 4종 패턴(환경변수형·Bearer/token·
+# API key·private key 블록)을 문자열 값에서 치환하므로 추적 대상이다(W-8).
+tasks/**/run/raw/
+tasks/**/run/.runtime/
+.opal-task.lock

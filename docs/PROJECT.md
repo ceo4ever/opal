@@ -41,7 +41,6 @@
 | `opal/bootstrapper/` | 부트스트래퍼 | 플랫폼별 부트스트랩 진입점 (claude/codex/cursor/gemini) |
 | `opal/templates/` | 템플릿 | 배포 시 참조하는 설정 템플릿 |
 | `dashboard/` | OPAL Console 소스 | `frontend/`(React) + `backend/`(FastAPI) |
-| `workstudio/` | OPAL WorkStudio 소스 | React+TypeScript+Vite+Electron 기반 독립 데스크톱 작업 앱 |
 | `cursor-rules/` | Cursor 규칙 | Cursor 플랫폼용 `.mdc` 규칙 파일 |
 | `memory/` | 메모리 본문 | `.opal/MEMORY.json`이 인덱싱하는 메모리 파일 |
 | `scripts/` | 설치 스크립트 | install-mac.sh 등 |
@@ -104,9 +103,11 @@
 
 > 나머지 워커 5종은 각 파이프라인 섹션에 등재된다 — `opal-db-agent`(Data Design) · `opal-evaluator-agent`·`opal-loop-action-agent`(Project Loop) · `opal-security-checker`·`opal-convention-checker`(GC).
 
-> **트랙 라우팅**: 사용자가 선택한 `opd`/`opds`를 기본 수행하며, 파일 수·변경량은 전환 기준에서 제외한다. `opd`는 ANALYSIS 완료 직후 PLAN 전에 "외부 영향이 있는 동작·계약·구조 결정을 새로 해야 하는가?"를 1회 검토해, 아니오일 때만 `opds` 강등을 제안한다. `opds`는 PLAN 완료 직후 EXECUTE 전에 같은 핵심 질문을 검토해, 예일 때만 `opd` 강업을 제안한다. 자동 전환하지 않으며 판단 불능은 현재 트랙 유지 또는 강업 제안 쪽의 fail-safe로 처리한다. SSOT: `opal/skills/opal-pilot-dev/references/track-routing.md` · `opal/skills/opal-pilot-dev/references/track-escalation.md`.
+> **트랙 라우팅**: 사용자가 선택한 `opd`/`opds`를 기본 수행하며, 파일 수·변경량은 전환 기준에서 제외한다. `opd`는 ANALYSIS 완료 직후 PLAN 전에 "외부 영향이 있는 동작·계약·구조 결정을 새로 해야 하는가?"를 1회 검토해, 아니오일 때만 `opds` 강등을 제안한다. `opds`는 PLAN 완료 직후 EXECUTE 전에 같은 핵심 질문을 검토해, 예일 때만 `opd` 강업을 제안한다. 제안은 `report_type=progress_report`, `transition_action=continue`인 비차단 보고이며 자동 전환하지 않는다. 현재 트랙이 실행 불가능할 때만 `decision_request` 또는 `blocked`로 전환하고, 판단 불능은 현재 트랙 유지 또는 강업 제안 쪽의 fail-safe로 처리한다. SSOT: `opal/skills/opal-pilot-dev/references/track-routing.md` · `opal/skills/opal-pilot-dev/references/track-escalation.md`.
 
 > **프로젝트 문서 주입 계약 (Task 111)**: Dev 파이프라인의 PM은 `pm.activate` 이벤트에서 `docs/PROJECT.md`를 읽고 §프로젝트 문서 레지스트리의 적용 범위·참조 시점으로 작업 도메인에 필요한 프로젝트/기획/설계 문서를 선별해 워커에 주입한다. 개발 워커는 주입된 문서만 읽으며, `docs/` 전체나 고정 파일명을 자체 가정하지 않는다. `docs/PROJECT.md`가 없는 프로젝트에서만 기존 영역별 최소 폴백 문서를 허용한다.
+
+> **실행 지속성 계약 (Task 136)**: 모든 Pilot의 단계 경계는 `state-tool`의 `transition_action`(`continue`/`await_user`/`blocked`/`complete`), `report_type`(`progress_report`/`decision_request`), `next_action`을 소비한다. interactive/semi-agentic/agentic 차이는 `opal/core/references/harness/modes.md`와 각 pipeline `transition_contract`가 소유하고, 신규 pipeline CLOSE는 `close.done_md` 뒤 tail 행을 거쳐 `close.final`에서만 완료된다. 플랫폼별 종료 방지·재개 안내는 hook/adapter 계층이 소유한다.
 
 ## 주요 컴포넌트 (SDD 파이프라인)
 
@@ -178,7 +179,7 @@ llm-wiki 사상을 융합한 프로젝트 지식 위키 — 프로젝트의 WHY�
 
 ## 주요 컴포넌트 (OPAL Console)
 
-로컬 OPAL 프로젝트를 한 웹 화면에서 조망하는 읽기 전용 관리 대시보드 (2026-06 신설, 태스크 021). 실행 작업 공간과 네이티브 폴더 기반 PM Coordination UI는 별도 데스크톱 앱인 `OPAL WorkStudio`가 소유한다. 상세 구조: `docs/ARCHITECTURE.md §OPAL Console`.
+로컬 OPAL 프로젝트를 한 웹 화면에서 조망하는 읽기 전용 관리 대시보드 (2026-06 신설, 태스크 021). 상세 구조: `docs/ARCHITECTURE.md §OPAL Console`.
 
 | 컴포넌트 | 유형 | 설명 |
 |----------|------|------|
@@ -187,14 +188,6 @@ llm-wiki 사상을 융합한 프로젝트 지식 위키 — 프로젝트의 WHY�
 | `opal-cli console` | CLI | 데몬 기동/관리 서브커맨드 (start/stop/status/open/scan) — scan은 `console.config.json`(스캔 루트 설정)을 생성·머지 갱신하며 install이 1회 자동 실행 |
 
 > 소스는 `dashboard/`, 배포는 install 경유 `~/.opal/dashboard-server/`. 읽기 전용(쓰기/편집·브레인 화면은 2차). 시그니처 3색은 `:root` 전역 CSS 변수로 교체 용이.
-
-## 주요 컴포넌트 (OPAL WorkStudio)
-
-OPAL WorkStudio는 로컬 프로젝트 폴더를 선택해 작업 공간, PM Coordination, 독립 Terminal, 파일 트리를 다루는 별도 Electron 데스크톱 앱이다. Dashboard/Console 코드와 실행 경로를 공유하지 않고 `workstudio/`가 UI와 Electron preload/IPC 경계를 소유한다.
-
-| 컴포넌트 | 유형 | 설명 |
-|----------|------|------|
-| `workstudio` | Desktop 앱 | React+TypeScript+Vite+Electron — 프로젝트 등록, PM Coordination, 실행 workspace, read-only 파일 트리 |
 
 ## 주요 컴포넌트 (PM 개선 루프)
 
@@ -244,7 +237,6 @@ TEST-SCENARIO 단계를 "목표 달성 검증"으로 재정의 — 루브릭 채
 | Framework | `opal/`, `skills/` | Markdown, YAML, Bash, Node.js | opal-task-agent (범용) |
 | Console FE | `dashboard/frontend/` | React, TypeScript, Vite, Tailwind, shadcn/ui | opal-fe-agent |
 | Console BE | `dashboard/backend/` | Python, FastAPI, uvicorn | opal-be-agent |
-| WorkStudio | `workstudio/` | React, TypeScript, Vite, Electron, Tailwind, shadcn/ui | opal-fe-agent |
 
 ## 프로젝트 문서
 
@@ -259,5 +251,14 @@ TEST-SCENARIO 단계를 "목표 달성 검증"으로 재정의 — 루브릭 채
 | `docs/architecture-diagram/opal_framework_architecture.html` | 프레임워크 구조 다이어그램 (시각 SSOT) | 3층 구조·파이프라인·도구 관계 시각화 (태스크 086 산출) | Framework | 구조 설명·온보딩 시 |
 | `docs/SECURITY.md` | 프로젝트 보안 기준 | `op-gc-security`가 공식 표준 baseline보다 우선 적용하는 프로젝트 누적 기준 | Framework | 보안 체크(opgc CHECK) 시 |
 | `opal/core/references/harness/actor.md` | 실행 주체(actor) 축 SSOT | 모드 축과 직교하는 `--pm` 정의, 지원 Pilot 폐쇄 목록, `--pm` 실행 계약, 독립 검증 경계·GC 호출 지점 | Framework | `pilot.start` 이벤트 |
+| `opal/core/references/harness/modes.md` | 실행 모드 SSOT | interactive/semi-agentic/agentic의 단계 경계·자동 계속·사용자 대기 계약 | Framework | `pilot.start` 이벤트와 기존 태스크 재개, mode 전이 판단 시 |
+| `opal/core/references/harness/state.md` | state-tool 전이 계약 | `transition_action`/`report_type`/`next_action`, CLOSE final, 사용자 확인 자동 승인 예외 | Framework | 상태 전이·재개·CLOSE tail·사용자 확인 행 처리 시 |
+| `opal/core/references/harness/task-process.md` | TASK 단계 전이 계약 | TASK 완료 보고가 구조화 전이 출력을 소비하고, 산문 승인 질문을 전이 판정 근거로 쓰지 않도록 하는 단계 경계 규칙 | Framework | TASK 작성·완료 직후 다음 행동 판정 시 |
+| `opal/core/hooks/claude-hooks.json` | Claude Code hook source | Stop hook에서 active state의 `transition_action=continue`를 감지해 종료 차단·`next_action` 재개 안내를 제공 | Framework | 설치·아카이브 검증과 Claude 플랫폼 실행 지속성 점검 시 |
+| `opal/skills/opal-pilot-*/references/pipeline*.json` | Pilot pipeline fixture | 단계 행 key, gate, `transition_contract`, CLOSE tail(`close.done_md`~`close.final`)의 기계가독 SSOT | Framework | state-tool init, cross-Pilot conformance, 모드 경계·CLOSE 완료 판정 시 |
+| `docs/run-log/PRD.md` | 태스크 실행 로그 제품 요구 | 목표·비목표·요구(R-1~R-21)·Phase 인도 범위·성공 판정 귀속 | Framework | 실행 로그 관련 작업의 범위·우선순위 판단 시 |
+| `docs/run-log/TRD.md` | 태스크 실행 로그 기술 결정 | 아키텍처 결정(D-1~D-9)·구성요소 책임 경계·데이터 흐름·동시성/시간/보안 모델·단계별 도입 순서 | Framework | run-log 구현·확산 태스크의 설계 판단 시 |
+| `docs/run-log/CONTRACT.md` | 태스크 실행 로그 인터페이스 계약 (SSOT) | 사건 스키마·허용 조합·오류 코드·CLI 시그니처·경계·기계검증절(MV)·루브릭절. 구현 전 명세 심판의 판정 기준 원천 | Framework | run-log 관련 구현·검증·명세 리뷰 전 |
+| `docs/run-log/surfaces.json` | 표면 인벤토리 (기계가독) | CLI 17종 + 변환기 2종의 호출 형태·응답·오류 집합. 커버리지·적합성 게이트가 소비하는 유일한 IR | Framework | 백로그 커버리지 판정·오류 코드 대응 검사 시 |
 | `docs/proposals/` | 미적용 제안서 | 채택 전 설계 제안. 적용 완료분은 `archives/`로 이관되며 규범 원문은 owner 문서가 소유한다 | Framework | 제안 검토·결정 시 |
 | `opal/core/references/harness/done-template.md` | 표준 CLOSE DONE.md 템플릿 (SSOT) | DONE.md 절 구성 + `## 회고적 학습 후보` 절 계약(레포 상대 page 경로 1행 1건, finalize 재진입 판정의 선언 집합). 오케스트레이터 SKILL은 포인터만 두고 템플릿 본문을 복제하지 않는다 | Framework | CLOSE 단계에서 DONE.md를 작성할 때, merge 후 귀속·worktree finalize 판단 시 |
