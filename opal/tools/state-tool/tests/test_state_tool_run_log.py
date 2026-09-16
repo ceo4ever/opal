@@ -4,7 +4,7 @@
   "layer": "test",
   "domain": "opal-pipeline",
   "description": "state-tool run-log 계약 RED-first 테스트 — T02 관통분(초기화 관통·미지정 경로 바이트 동일성·기존 회귀 기준선)과 T05 보관함분(활성 계약 기록 삭제의 run_log_missing 진단, 중단된 초기화의 보관함 복구와 멱등 재전송, 상태 전이의 state.changed 원자 커밋, 기록 실패 시 전건 보존과 비교착, 128건·4 KiB 상한 집행, 스키마 1.2 등재, 미지정 경로 무영향)을 함께 판정한다. run.sh subprocess 실호출 + 디스크 산출물 검사만 사용하고 mock/patch/MagicMock은 쓰지 않는다(red-first.md §4). 기록 실패는 조각 파일 권한 제거(0o400)로, 보관함 상한은 state.json fixture 주입으로 실제 유발한다.",
-  "exports": ["TestShadowInitPierce", "TestUnflaggedInitByteIdentical", "TestExistingRegressionBaseline", "TestRunLogMissingDiagnosis", "TestInterruptedInitRecovery", "TestStateChangedAtomicCommit", "TestOutboxPreservesOnWriteFailure", "TestOutboxLimits", "TestSchema12Registered", "TestUnflaggedTransitionUnaffected", "TestWorkerDurationDerivedAndConflict", "TestUnflaggedDurationPathByteIdentical", "TestAutoApprovedRowsEachGetIndependentStateChanged", "TestLogEventSurfaceForPmActivity", "TestPmActivityWhitelistRejection", "TestGateRequestResolvePairing", "TestShadowMissingIsNonBlockingDiagnosis", "TestActiveCompletionEvidenceGate", "TestVerifyCompletenessCheckThreeObservationFields", "TestCompletenessCheckIndependentFromStructuralValidation", "TestModeInventoryEquality"],
+  "exports": ["TestShadowInitPierce", "TestOffModeInitByteIdentical", "TestExistingRegressionBaseline", "TestRunLogMissingDiagnosis", "TestInterruptedInitRecovery", "TestStateChangedAtomicCommit", "TestOutboxPreservesOnWriteFailure", "TestOutboxLimits", "TestSchema12Registered", "TestOffModeTransitionUnaffected", "TestWorkerDurationDerivedAndConflict", "TestOffModeDurationPathByteIdentical", "TestAutoApprovedRowsEachGetIndependentStateChanged", "TestLogEventSurfaceForPmActivity", "TestPmActivityWhitelistRejection", "TestGateRequestResolvePairing", "TestShadowMissingIsNonBlockingDiagnosis", "TestActiveCompletionEvidenceGate", "TestVerifyCompletenessCheckThreeObservationFields", "TestCompletenessCheckIndependentFromStructuralValidation", "TestModeInventoryEquality"],
   "scenarios": ["S-1", "S-2", "S-3", "S-4", "S-5", "S-6", "S-7", "S-9", "TEST-SCENARIO(W-7).S-8", "TEST-SCENARIO(W-7).S-9", "TASK-135.S-1", "TASK-135.S-2", "TASK-135.S-3", "TASK-135.S-4", "TASK-135.S-5", "TASK-135.S-6", "TASK-135.S-7", "TASK-135.S-8", "TASK-135.S-9"]
 }
 
@@ -21,7 +21,7 @@ scenarios 목록의 T02/T05 구간 `S-1..S-9`(run-log-tool 초기 계약)와 **I
     한다는 보존 시나리오. **실측 결과 이 자산은 현재 이미 참이다** —
     state_tool.py가 아직 수정되지 않았으므로(W-7 GREEN 미착수) HEAD 실행과
     현재 빌드 실행이 항상 동일 산출물을 낸다. 이는 이 파일의 기존 동류
-    보존 시나리오(TestUnflaggedInitByteIdentical·TestExistingRegressionBaseline)
+    보존 시나리오(TestOffModeInitByteIdentical·TestExistingRegressionBaseline)
     가 각각 주석에 `red_required=false`로 명시한 것과 동일한 성격이다. 아래
     TestUnflaggedDurationPathByteIdentical은 그래서 **의도적으로 RED가 아닌
     통과 상태로 추가**됐고, PM에는 test-scenario.json의 S-9 `red_required` 값이
@@ -81,12 +81,18 @@ def _run_direct(state_tool_source, args):
     return result.returncode, stdout, result.stderr, data
 
 
-def _run_init_direct(state_tool_source, task_path):
+def _run_init_direct(state_tool_source, task_path, run_log_mode=None):
     """지정된 state_tool.py 소스 파일을 venv python으로 직접 실행해 init 수행.
     HEAD 버전(임시 위치에 풀어놓은 사본)과 현재본을 동일 조건으로 비교하기 위해
-    run.sh 래퍼가 아니라 소스 파일을 직접 지정해 실행한다."""
+    run.sh 래퍼가 아니라 소스 파일을 직접 지정해 실행한다.
+    run_log_mode가 주어지면 --run-log-mode <값>을 덧붙인다 — HEAD 버전은 이 플래그
+    자체가 choices=["shadow","active"]라 "off"를 모르므로 None으로 호출하고,
+    현재본은 기본값이 shadow로 바뀌었으므로 비활성화 경로를 재현하려면 "off"를
+    명시로 호출한다(재타겟: 원래 "미지정"이 하던 역할을 현재본에서는 "off"가 한다)."""
     cmd = [str(_VENV_PYTHON), str(state_tool_source), "init", str(task_path),
            "--skill", "oppl", "--mode", "agentic"]
+    if run_log_mode is not None:
+        cmd.extend(["--run-log-mode", run_log_mode])
     result = subprocess.run(cmd, capture_output=True, text=True)
     return result.returncode, result.stdout, result.stderr
 
@@ -145,11 +151,15 @@ class TestShadowInitPierce(unittest.TestCase):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# S-2 — --run-log-mode 미지정 init이 개정 전과 바이트 동일 (C-3, red_required=false)
+# S-2 — --run-log-mode off 명시 init이 개정 전(미지정)과 바이트 동일 (C-3, red_required=false)
+# [재타겟] 기본값이 shadow로 바뀌면서 "미지정"은 더 이상 비활성화를 뜻하지 않는다.
+# 비활성화 경로의 바이트 동일성이라는 계약의 실질은 그대로이므로, 트리거를
+# 현재본의 "--run-log-mode off" 명시로 옮긴다. HEAD 버전은 이 플래그를 모르므로
+# (choices=["shadow","active"]) 여전히 미지정으로 호출한다.
 # ─────────────────────────────────────────────────────────────────────────────
 
-class TestUnflaggedInitByteIdentical(unittest.TestCase):
-    def test_no_run_log_mode_init_matches_head_byte_for_byte(self):
+class TestOffModeInitByteIdentical(unittest.TestCase):
+    def test_run_log_mode_off_init_matches_head_unflagged_byte_for_byte(self):
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = pathlib.Path(tmp)
 
@@ -184,7 +194,7 @@ class TestUnflaggedInitByteIdentical(unittest.TestCase):
                     d.mkdir()
 
                 code_a, out_a, err_a = _run_init_direct(head_source, task_a)
-                code_b, out_b, err_b = _run_init_direct(_CURRENT_STATE_TOOL, task_b)
+                code_b, out_b, err_b = _run_init_direct(_CURRENT_STATE_TOOL, task_b, run_log_mode="off")
                 self.assertEqual(code_a, 0, f"S-2 HEAD 버전 init 실패 — stdout={out_a!r} stderr={err_a!r}")
                 self.assertEqual(code_b, 0, f"S-2 현재본 init 실패 — stdout={out_b!r} stderr={err_b!r}")
 
@@ -202,8 +212,8 @@ class TestUnflaggedInitByteIdentical(unittest.TestCase):
                 f"S-2 개정 전/후 state.json 바이트 불일치 — head={last_mismatch[0]!r} current={last_mismatch[1]!r}")
 
             state_b = json.loads(bytes_b.decode("utf-8"))
-            self.assertNotIn("run_log", state_b, "S-2 --run-log-mode 미지정인데 run_log 키가 생성됨")
-            self.assertFalse((task_b / "run").exists(), "S-2 --run-log-mode 미지정인데 run/ 디렉터리가 생성됨")
+            self.assertNotIn("run_log", state_b, "S-2 --run-log-mode off인데 run_log 키가 생성됨")
+            self.assertFalse((task_b / "run").exists(), "S-2 --run-log-mode off인데 run/ 디렉터리가 생성됨")
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -518,27 +528,30 @@ class TestSchema12Registered(unittest.TestCase):
                          "T05 S-6 run_log.status enum 불일치")
 
 
-class TestUnflaggedTransitionUnaffected(unittest.TestCase):
-    """T05 S-7 (C-3) — 미지정(1.0/1.1) 태스크의 전이는 run-log 경로를 타지 않는다."""
+class TestOffModeTransitionUnaffected(unittest.TestCase):
+    """T05 S-7 (C-3) — --run-log-mode off로 비활성화한(1.0/1.1 상당) 태스크의 전이는
+    run-log 경로를 타지 않는다. [재타겟] 기본값이 shadow가 되면서 "미지정"은 더 이상
+    비활성화를 뜻하지 않으므로, 계약의 실질(비활성화 경로 무영향)은 그대로 두고
+    트리거만 --run-log-mode off 명시로 옮긴다."""
 
     def test_transition_without_run_log_block_is_unchanged(self):
         with tempfile.TemporaryDirectory() as tmp:
             task = _mktask(tmp)
             code, out, errtxt, data = _run(
                 ["init", str(task), "--skill", "oppl", "--mode", "agentic",
-                 "--rows-spec", _ROWS_SPEC])
+                 "--rows-spec", _ROWS_SPEC, "--run-log-mode", "off"])
             self.assertEqual(code, 0, f"T05 S-7 init 실패 — {out!r}")
 
             code, out, errtxt, data = _run(["advance", str(task), "--row", "1"])
             self.assertEqual(code, 0, f"T05 S-7 advance 실패 — {out!r}")
-            self.assertNotIn("run_log", data, "T05 S-7 미지정 태스크 응답에 run_log 키가 생김")
+            self.assertNotIn("run_log", data, "T05 S-7 off 태스크 응답에 run_log 키가 생김")
 
             state = _read_state(task)
-            self.assertNotIn("run_log", state, "T05 S-7 미지정 태스크 state.json에 run_log 키가 생김")
-            self.assertFalse((task / "run").exists(), "T05 S-7 미지정 태스크에 run/ 생성됨")
+            self.assertNotIn("run_log", state, "T05 S-7 off 태스크 state.json에 run_log 키가 생김")
+            self.assertFalse((task / "run").exists(), "T05 S-7 off 태스크에 run/ 생성됨")
 
             code, out, errtxt, data = _run(["validate", str(task)])
-            self.assertEqual(code, 0, f"T05 S-7 미지정 태스크 validate 실패 — {out!r}")
+            self.assertEqual(code, 0, f"T05 S-7 off 태스크 validate 실패 — {out!r}")
             self.assertEqual(data.get("violations"), [], f"T05 S-7 위반 발생 — {out!r}")
 
 
@@ -726,9 +739,14 @@ class TestWorkerDurationDerivedAndConflict(unittest.TestCase):
                 "S-8③ 거부됐어야 하는데 state.json이 변경됨")
 
 
-class TestUnflaggedDurationPathByteIdentical(unittest.TestCase):
-    """S-9 (C-3, H-6) — run_log 블록이 없는 1.0/1.1 태스크의 `mark`·`advance`가
-    git HEAD와 산출물·응답 키 집합 바이트 동일해야 한다(파생 조회 미호출의 대리 판정).
+class TestOffModeDurationPathByteIdentical(unittest.TestCase):
+    """S-9 (C-3, H-6) — --run-log-mode off로 비활성화한(run_log 블록 없는 1.0/1.1
+    상당) 태스크의 `mark`·`advance`가 git HEAD(미지정)와 산출물·응답 키 집합 바이트
+    동일해야 한다(파생 조회 미호출의 대리 판정). [재타겟] 기본값이 shadow가 되면서
+    "미지정"은 더 이상 비활성화를 뜻하지 않으므로, 현재본만 --run-log-mode off를
+    명시해 호출한다 — HEAD는 이 플래그를 모르므로(choices=["shadow","active"])
+    미지정 그대로 둔다. 계약의 실질(비활성화 경로의 산출물·응답 키 바이트 동일성)은
+    바뀌지 않는다.
 
     self-confirming 금지(PM 하네스 가드) — 현재 빌드 자신의 출력을 정답으로 쓰지
     않고, git HEAD를 별도 프로세스로 실행해 독립적으로 정답을 만든다(S-2와 동일
@@ -738,7 +756,7 @@ class TestUnflaggedDurationPathByteIdentical(unittest.TestCase):
 
     [실측 결과 — 정직한 보고, 조작 없음] 이 두 테스트는 **현재 이미 통과한다**
     (state_tool.py가 W-7 GREEN으로 아직 수정되지 않았으므로 HEAD == 현재 빌드).
-    이는 파일 내 동류 보존 시나리오(TestUnflaggedInitByteIdentical §S-2,
+    이는 파일 내 동류 보존 시나리오(TestOffModeInitByteIdentical §S-2,
     TestExistingRegressionBaseline §구 S-9)가 명시적으로 `red_required=false`인
     것과 같은 성격이며, 이 두 클래스만 유독 test-scenario.json에서
     `red_required=true`로 등재돼 있다 — PM 반환 시 blocker로 보고한다.
@@ -799,10 +817,12 @@ class TestUnflaggedDurationPathByteIdentical(unittest.TestCase):
             task_a.parent.mkdir(parents=True)
             task_b.parent.mkdir(parents=True)
 
-            def _init_args(task):
+            def _init_args(task, off=False):
                 args = ["init", str(task), "--skill", "oppl", "--mode", "agentic"]
                 if rows_spec:
                     args += ["--rows-spec", rows_spec]
+                if off:
+                    args += ["--run-log-mode", "off"]
                 return args
 
             for d in (task_a, task_b):
@@ -812,9 +832,10 @@ class TestUnflaggedDurationPathByteIdentical(unittest.TestCase):
 
             # 재시도 루프 없음: 벽시계 필드를 정규화한 뒤 비교하므로, 두 subprocess가
             # 초 경계를 straddle해도 더 이상 거짓 실패가 나지 않는다(과거 5회 재시도는
-            # 비교 방법 자체의 결함을 완화하려던 우회책이었다).
+            # 비교 방법 자체의 결함을 완화하려던 우회책이었다). 현재본만 --run-log-mode
+            # off를 명시한다 — HEAD는 이 값을 모르므로 미지정 그대로 호출한다.
             code_a, out_a, err_a, _ = _run_direct(head_source, _init_args(task_a))
-            code_b, out_b, err_b, _ = _run_direct(_CURRENT_STATE_TOOL, _init_args(task_b))
+            code_b, out_b, err_b, _ = _run_direct(_CURRENT_STATE_TOOL, _init_args(task_b, off=True))
             self.assertEqual(code_a, 0, f"S-9({label}) HEAD init 실패 — {out_a!r} {err_a!r}")
             self.assertEqual(code_b, 0, f"S-9({label}) 현재본 init 실패 — {out_b!r} {err_b!r}")
 

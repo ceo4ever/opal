@@ -2849,10 +2849,10 @@ def cmd_init(args):
         except Exception:
             pass
 
-    # T02 워킹 스켈레톤 — --run-log-mode 미지정이면 기존 경로를 한 줄도 우회하지
-    # 않는다(D-L, C-3). 지정 시에만 run-log 2단 커밋 경로로 분기한다.
+    # 기본값 shadow(135 ADD-2) — `off`를 명시했을 때만 기존 1.1 경로를 그대로
+    # 타고, 그 외에는 run-log 2단 커밋 경로로 분기한다.
     run_log_response_fields = {}
-    if getattr(args, "run_log_mode", None):
+    if getattr(args, "run_log_mode", None) not in (None, "off"):
         run_log_response_fields = _cmd_init_run_log(task_path, args, state, command)
     else:
         save_state_json(task_path, state)
@@ -5751,10 +5751,13 @@ def build_parser():
                         help=argparse.SUPPRESS)
     p_init.add_argument("--worktree", metavar="<path>",
                         help="worktree 코드 작업본 절대경로 (092). 미지정 시 state.json에 키를 생성하지 않는다.")
-    # T02 워킹 스켈레톤 (CONTRACT §2.5 state-tool.init.run-log-mode) — 미지정 시
-    # 기존 경로를 한 줄도 우회하지 않는다(D-L, C-3).
-    p_init.add_argument("--run-log-mode", dest="run_log_mode", choices=["shadow", "active"],
-                        help="실행 로그 계약 활성화 모드 (T02: shadow만 지원, active는 profile_not_found)")
+    # CONTRACT §2.5 state-tool.init.run-log-mode — 기본값 shadow(135 ADD-2).
+    # 모든 신규 태스크가 기록 계약을 갖게 해 pilot별 적용 여부에 따른 집계 구멍을
+    # 없앤다. `off`는 기존 1.1 경로를 그대로 타는 명시적 비활성화다.
+    p_init.add_argument("--run-log-mode", dest="run_log_mode",
+                        choices=["shadow", "active", "off"], default="shadow",
+                        help="실행 로그 계약 활성화 모드 (기본 shadow. off는 1.1 경로 유지, "
+                             "active는 --profiles의 --channel-id 항목이 있을 때만 수용)")
     p_init.add_argument("--channel-id", dest="channel_id",
                         help="--run-log-mode active 전용 (T02 범위 밖 — profiles.json 미배포)")
     p_init.add_argument("--profiles", dest="profiles",

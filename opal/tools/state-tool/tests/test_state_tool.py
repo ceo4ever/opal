@@ -8077,12 +8077,15 @@ class _T093Base(unittest.TestCase):
         d.mkdir(parents=True, exist_ok=True)
         return d
 
-    def _init(self, task_dir, mode, *, rows_spec=None, rows_from=None, skill="opd"):
+    def _init(self, task_dir, mode, *, rows_spec=None, rows_from=None, skill="opd",
+              run_log_mode=None):
         argv = ["init", str(task_dir), "--skill", skill, "--mode", mode]
         if rows_spec is not None:
             argv += ["--rows-spec", rows_spec]
         if rows_from is not None:
             argv += ["--rows-from", str(rows_from)]
+        if run_log_mode is not None:
+            argv += ["--run-log-mode", run_log_mode]
         code, stdout, stderr, data = _run070(argv)
         self.assertEqual(code, 0, f"init 실패(mode={mode}): {stdout!r} / {stderr!r}")
         return data
@@ -9980,7 +9983,11 @@ class TestT103WorkerDuration(_T093Base):
 
     def _fresh(self, mode="interactive", name="t103"):
         d = self._task_dir(name)
-        self._init(d, mode, rows_spec=_T103_SPEC)
+        # [재타겟] --run-log-mode 기본값이 shadow로 바뀌면서 미지정 init은 더 이상
+        # 레거시(1.0/1.1) 태스크의 응답 형태를 재현하지 않는다. 이 계약(103 R-15/H-11)의
+        # 취지는 "레거시 태스크의 mark 응답 키 집합 불변"이므로, fixture를
+        # --run-log-mode off로 명시해 그 레거시 형태를 재현한다(계약 완화 아님).
+        self._init(d, mode, rows_spec=_T103_SPEC, run_log_mode="off")
         return d
 
     # ── (1) 기록 경로 ────────────────────────────────────────────────────
@@ -10183,7 +10190,9 @@ class TestT103WorkerDurationWarning(_T093Base):
 
     def _fresh(self, name, mode="interactive"):
         d = self._task_dir(name)
-        self._init(d, mode, rows_spec=_T103W_SPEC)
+        # [재타겟] 사유는 TestT103WorkerDuration._fresh와 동일 — 레거시 태스크의
+        # mark 응답/산출물 형태를 재현하려면 --run-log-mode off를 명시해야 한다.
+        self._init(d, mode, rows_spec=_T103W_SPEC, run_log_mode="off")
         # EXECUTE 행에 워커 경로로 접근하기 위한 앞 단계 완료 (prior_stage_only 전제)
         self._assert_ok(self._mark(d, 1), f"{name} prep row1")
         self._assert_ok(self._mark(d, 2), f"{name} prep row2")
@@ -10318,7 +10327,9 @@ class TestT103WorkerDurationWarning(_T093Base):
         """[T103/R-21 오탐 방어] PM 직접 수행 행(`--as-worker`/`--worker-stage` 없음)에는
         경고가 뜨지 않고, 응답 키 집합도 종전과 완전히 동일하다(H-11 하위호환)."""
         d = self._task_dir("w7")
-        self._init(d, "interactive", rows_spec=_T103W_SPEC)
+        # [재타겟] 사유는 TestT103WorkerDuration._fresh와 동일 — 레거시 태스크의
+        # 응답 키 집합을 재현하려면 --run-log-mode off를 명시해야 한다.
+        self._init(d, "interactive", rows_spec=_T103W_SPEC, run_log_mode="off")
         data = self._assert_ok(self._mark(d, 1), "W7 PM 직접")
         self._assert_not_warned(data, "W7 PM 직접")
         self.assertEqual(
