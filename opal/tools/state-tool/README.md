@@ -495,6 +495,27 @@
 - 신규 영속 필드 0건 — `state.json`·`STATE.md`·`schema/*.json`은 변경되지 않는다.
 - 규정 SSOT: `opal/core/references/harness/pm-review-gate.md` §표준 검토 항목 14.
 
+---
+
+#### `--run-log-completeness-check` — run-log 완전성 진단 (135 W-4, read-only·비차단)
+
+```bash
+~/.opal/tools/state-tool/run.sh verify <task-path> --run-log-completeness-check
+```
+
+- `state.json`의 현재 행·자동 승인 흔적과 기록 사건(조각+보관함)을 대조해 자동 승인을 포함한
+  기록 누락을 진단한다. **read-only이며 exit 0 고정** — 완료 여부를 뒤집지 않는다.
+- `run-log-tool validate-run`(조각 자체의 순번·스키마·provenance 검증)과는 별개 축이다.
+  이 검사만 `state.json`과 대조한다 — `run-log-core`가 상태 파일을 읽지 않는 단방향 의존
+  때문에 이 대조는 `state-tool`만 수행할 수 있다(CONTRACT §2.5·§3.1).
+- 반환: 누락 목록 4종(`missing_state_changed`/`missing_pm_activity`/`missing_gate_event`/
+  `unobserved_worker_boundary`)과 관측 지점 3필드(`last_observed_decision`/
+  `last_observed_state_change`/`last_observed_boundary`, 각 `{event_id, ts, ref}` 또는 `null`).
+  3필드는 누락 목록과 무관하게 항상 반환된다. `missing_pm_activity`는 현재 트리거 조건이
+  확정되지 않아 항상 빈 배열이다(CONTRACT §2.5 참조).
+- `run_log` 블록이 없는 1.0/1.1 태스크는 모든 목록이 비고 3필드가 전부 `null`이다.
+- 필드·enum의 계약 원문은 CONTRACT.md §2.5·§1.4/§1.5가 소유한다. 여기서 복제하지 않는다.
+
 ## `--rows-spec` 입력 형식
 
 ```bash

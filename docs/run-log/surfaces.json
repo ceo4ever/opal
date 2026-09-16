@@ -432,6 +432,8 @@
         },
         "err": [
           "actor_not_allowed",
+          "schema_invalid",
+          "refs_invalid",
           "run_log_pending",
           "run_log_outbox_full",
           "run_log_write_failed",

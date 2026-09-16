@@ -4,8 +4,8 @@
   "layer": "test",
   "domain": "opal-pipeline",
   "description": "state-tool run-log 계약 RED-first 테스트 — T02 관통분(초기화 관통·미지정 경로 바이트 동일성·기존 회귀 기준선)과 T05 보관함분(활성 계약 기록 삭제의 run_log_missing 진단, 중단된 초기화의 보관함 복구와 멱등 재전송, 상태 전이의 state.changed 원자 커밋, 기록 실패 시 전건 보존과 비교착, 128건·4 KiB 상한 집행, 스키마 1.2 등재, 미지정 경로 무영향)을 함께 판정한다. run.sh subprocess 실호출 + 디스크 산출물 검사만 사용하고 mock/patch/MagicMock은 쓰지 않는다(red-first.md §4). 기록 실패는 조각 파일 권한 제거(0o400)로, 보관함 상한은 state.json fixture 주입으로 실제 유발한다.",
-  "exports": ["TestShadowInitPierce", "TestUnflaggedInitByteIdentical", "TestExistingRegressionBaseline", "TestRunLogMissingDiagnosis", "TestInterruptedInitRecovery", "TestStateChangedAtomicCommit", "TestOutboxPreservesOnWriteFailure", "TestOutboxLimits", "TestSchema12Registered", "TestUnflaggedTransitionUnaffected", "TestWorkerDurationDerivedAndConflict", "TestUnflaggedDurationPathByteIdentical"],
-  "scenarios": ["S-1", "S-2", "S-3", "S-4", "S-5", "S-6", "S-7", "S-9", "TEST-SCENARIO(W-7).S-8", "TEST-SCENARIO(W-7).S-9"]
+  "exports": ["TestShadowInitPierce", "TestUnflaggedInitByteIdentical", "TestExistingRegressionBaseline", "TestRunLogMissingDiagnosis", "TestInterruptedInitRecovery", "TestStateChangedAtomicCommit", "TestOutboxPreservesOnWriteFailure", "TestOutboxLimits", "TestSchema12Registered", "TestUnflaggedTransitionUnaffected", "TestWorkerDurationDerivedAndConflict", "TestUnflaggedDurationPathByteIdentical", "TestAutoApprovedRowsEachGetIndependentStateChanged", "TestLogEventSurfaceForPmActivity", "TestPmActivityWhitelistRejection", "TestGateRequestResolvePairing", "TestShadowMissingIsNonBlockingDiagnosis", "TestActiveCompletionEvidenceGate", "TestVerifyCompletenessCheckThreeObservationFields", "TestCompletenessCheckIndependentFromStructuralValidation", "TestModeInventoryEquality"],
+  "scenarios": ["S-1", "S-2", "S-3", "S-4", "S-5", "S-6", "S-7", "S-9", "TEST-SCENARIO(W-7).S-8", "TEST-SCENARIO(W-7).S-9", "TASK-135.S-1", "TASK-135.S-2", "TASK-135.S-3", "TASK-135.S-4", "TASK-135.S-5", "TASK-135.S-6", "TASK-135.S-7", "TASK-135.S-8", "TASK-135.S-9"]
 }
 
 W-7 추가분(123 RED-b, AC-12/C-3/H-6) — 아래 두 클래스가 다루는 `S-8`·`S-9`는 위
@@ -860,3 +860,570 @@ class TestUnflaggedDurationPathByteIdentical(unittest.TestCase):
 
     def test_schema_1_1_mark_advance_match_head(self):
         self._assert_schema_variant_matches_head(_ROWS_SPEC_11, "1-1")
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# TASK-135 (opds-run-log-기록완전성) W-1 RED — opal-test-agent red mode
+#
+# 아래 시나리오 ID(`TASK-135.S-1`..`S-9`)는 태스크 135의
+# tasks/135-260915-opds-run-log-기록완전성/TEST-SCENARIO.md 표를 가리키며,
+# 위 T02/T05 구간·W-7 구간의 재사용된 `S-1`..`S-9` 번호와는 별개의 ID 공간이다
+# (파일 내 세 번째로 재사용되는 번호대이므로 접두 `TASK-135.`로 구분한다).
+#
+# 각 클래스는 PLAN.md W-1이 지정한 GREEN 담당 Work item을 주석으로 태깅한다:
+#   ① TASK-135.S-4 자동승인 독립 state.changed  → GREEN: W-2
+#   ② TASK-135.S-2 state-tool log-event 표면    → GREEN: W-3
+#   ③ TASK-135.S-5 gate-request/gate-resolve    → GREEN: W-3
+#   ④ TASK-135.S-6 shadow 누락 비차단 진단       → GREEN: W-4
+#   ⑤ TASK-135.S-7 active completion 증거 게이트 → GREEN: W-4
+#   ⑥ TASK-135.S-8 verify --run-log-completeness-check 3필드 → GREEN: W-4
+#   + TASK-135.S-1 mode별 인벤토리 동일성        → GREEN: W-2/W-3/W-4 종합
+#   + TASK-135.S-3 PM activity 화이트리스트 거부  → GREEN: W-3
+#   + TASK-135.S-9 구조검증/상태대조 분리 + 의존방향 → GREEN: W-4
+#
+# mock/patch/MagicMock 미사용. 공개 CLI(run.sh subprocess)와 실제 파일 I/O만
+# 사용한다(harness/red-first.md §2, TEST-SCENARIO.md Setup).
+# ═════════════════════════════════════════════════════════════════════════════
+
+_ROWS_SPEC_USER_CONFIRM_X2 = json.dumps([
+    {"stage": "EXECUTE", "item": "사용자 확인"},
+    {"stage": "EXECUTE", "item": "사용자 확인"},
+    {"stage": "TEST", "item": "검증"},
+], ensure_ascii=False)
+
+
+class TestAutoApprovedRowsEachGetIndependentStateChanged(unittest.TestCase):
+    """TASK-135.S-4 (AC-3, AC-8, C-1, C-4, C-5, C-6, H-1) — GREEN: W-2.
+
+    자동 승인 2건 + 대상 전이 1건이 각각 독립 `state.changed`로 남고
+    순서·from/to·row_key가 state.json과 일치해야 한다(부분 admission 없음).
+
+    현재 관찰: auto_approve_prior_user_confirmations()는 앞 두 '사용자 확인' 행을
+    in-place로 done 처리하지만, advance 호출부(state_tool.py:2348 부근)는
+    대상 행 전이의 state.changed 1건만 build_state_changed_event()로 만든다.
+    따라서 실제로는 상태 변경 3건이 일어나지만 JSONL에는 1건만 남는다 — 이것이
+    RED로 고정하려는 불일치다.
+    """
+
+    def test_two_auto_approvals_and_target_transition_each_log_state_changed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            task = _mktask(tmp, name="135-auto-approve")
+            code, out, err, data = _run([
+                "init", str(task), "--skill", "oppl", "--mode", "agentic",
+                "--rows-spec", _ROWS_SPEC_USER_CONFIRM_X2,
+                "--run-log-mode", "shadow",
+            ])
+            self.assertEqual(code, 0, f"TASK-135.S-4 init 실패 — {out!r} {err!r}")
+
+            # 대상 행(row_id=3, TEST/검증)으로 advance — 앞의 두 '사용자 확인' 행이
+            # 자동 승인되면서 함께 전이되어야 한다.
+            code, out, err, data = _run(["advance", str(task), "--row", "3"])
+            self.assertEqual(code, 0, f"TASK-135.S-4 advance 실패 — {out!r} {err!r}")
+            self.assertEqual(data.get("auto_approved"), [1, 2],
+                             f"TASK-135.S-4 자동승인 대상이 예상과 다름 — {data!r}")
+
+            state = _read_state(task)
+            rows = state["rows"]
+            self.assertEqual(rows[0]["status"], "done")
+            self.assertEqual(rows[1]["status"], "done")
+            self.assertEqual(rows[2]["status"], "in_progress")
+
+            changed = [r for r in _segment_records(task) if r["event"] == "state.changed"]
+            self.assertEqual(
+                len(changed), 3,
+                f"TASK-135.S-4 state.changed가 3건이 아님(부분 admission) — {len(changed)}건: {changed!r}")
+
+            by_row_key = {c["data"].get("row_key"): c for c in changed}
+            self.assertEqual(len(by_row_key), 3,
+                             f"TASK-135.S-4 row_key 3종이 아님 — {by_row_key.keys()!r}")
+
+            for c in changed:
+                self.assertIn("row_key", c["data"], f"TASK-135.S-4 row_key 누락 — {c!r}")
+                self.assertIn("from", c["data"])
+                self.assertIn("to", c["data"])
+
+            seqs = [c["sequence"] for c in changed]
+            self.assertEqual(seqs, sorted(seqs),
+                             f"TASK-135.S-4 state.changed 순서가 단조 증가가 아님 — {seqs!r}")
+
+
+class TestLogEventSurfaceForPmActivity(unittest.TestCase):
+    """TASK-135.S-2 (AC-2, C-3, C-5, H-2) — GREEN: W-3.
+
+    surfaces.json이 선언한 `state-tool.log-event`로 PM decision/validation/retry를
+    summary·reason·refs와 함께 기록하고 조회할 수 있어야 한다.
+
+    현재 관찰: state_tool.py에 `log-event` 서브파서가 존재하지 않는다
+    (add_parser("log-event") 0건 실측). argparse가 미지정 서브커맨드로 거부한다.
+    """
+
+    def test_log_event_records_pm_decision_activity(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            task = _mktask(tmp, name="135-log-event")
+            code, out, err, data = _init_shadow(task)
+            self.assertEqual(code, 0, f"TASK-135.S-2 init 실패 — {out!r} {err!r}")
+
+            code, out, err, data = _run([
+                "log-event", str(task),
+                "--event", "activity", "--kind", "decision",
+                "--summary", "PM이 W-1 RED 작성을 승인함",
+                "--reason", "TEST-SCENARIO S-2 판정 근거",
+                "--refs", "tasks/135-260915-opds-run-log-기록완전성/PLAN.md",
+            ])
+            self.assertEqual(
+                code, 0,
+                f"TASK-135.S-2 log-event 서브커맨드 부재로 실패(미구현 RED) — "
+                f"exit={code} stdout={out!r} stderr={err!r}")
+
+            activities = [r for r in _segment_records(task)
+                          if r["event"] == "activity" and r["actor"]["kind"] == "PM"]
+            self.assertEqual(len(activities), 1, f"TASK-135.S-2 PM activity 1건이 아님 — {activities!r}")
+            act = activities[0]
+            self.assertEqual(act["data"]["kind"], "decision")
+            self.assertEqual(act["summary"], "PM이 W-1 RED 작성을 승인함")
+            self.assertEqual(act["reason"], "TEST-SCENARIO S-2 판정 근거")
+            self.assertIn("tasks/135-260915-opds-run-log-기록완전성/PLAN.md", act.get("refs") or [])
+
+
+class TestPmActivityWhitelistRejection(unittest.TestCase):
+    """TASK-135.S-3 (C-3, C-5, H-2) — GREEN: W-3.
+
+    CONTRACT §1.3 PM activity 폐쇄 목록 밖의 `data` 키, 절대경로 refs, 비밀값
+    포함 입력을 `log-event`/append 경로가 거부하거나 정규화·redact해야 한다.
+    CONTRACT §1.1 공통 필드는 거부 대상이 아니다(§1.3이 명시).
+
+    현재 관찰: `log-event` 서브커맨드 자체가 없어 화이트리스트 판정 이전
+    단계에서 실패한다(미구현 RED, 위 S-2와 같은 근본 원인이지만 독립 판정 대상).
+    """
+
+    def test_disallowed_data_key_is_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            task = _mktask(tmp, name="135-whitelist-key")
+            self.assertEqual(_init_shadow(task)[0], 0)
+
+            code, out, err, data = _run([
+                "log-event", str(task),
+                "--event", "activity", "--kind", "decision",
+                "--summary", "s",
+                "--data", json.dumps({"kind": "decision", "raw_prompt": "내부 사고 과정 원문"}),
+            ])
+            self.assertNotEqual(
+                code, 0,
+                "TASK-135.S-3 화이트리스트 밖 data 키(raw_prompt)가 거부되지 않음(미구현 RED 기대와 불일치)")
+            self.assertIn(
+                "schema_invalid", (out + err),
+                f"TASK-135.S-3 거부 사유가 schema_invalid로 식별되지 않음 — out={out!r} err={err!r}")
+
+    def test_absolute_path_refs_rejected_or_normalized(self):
+        """PM Gate 보강(루핑 1) — exit code만이 아니라 CONTRACT §2.1 오류 봉투
+        (`{"ok": false, "error": {"code": ...}}`)까지 요구하도록 조인다.
+
+        [BLOCKER] 절대경로 refs 거부 전용 오류 코드는 CONTRACT §2.2 오류 코드 표,
+        surfaces.json의 `state-tool.log-event` err 집합([actor_not_allowed,
+        run_log_pending, run_log_outbox_full, run_log_write_failed,
+        task_path_not_absolute, task_lock_timeout]), RUN_LOG_STATE_ERROR_CODES
+        어디에도 선언되어 있지 않다(2026-09-16 3원천 실측). `schema_invalid`는
+        같은 CONTRACT가 "§1.1 폐쇄형 최상위 키와 개별 필드 enum 위반에만 쓴다"고
+        명시적으로 범위를 좁혀 두어 refs(array<string> 경로 제약)에 임의로
+        전용하면 안 된다. 따라서 여기서는 특정 코드값을 발명하지 않고 **구조화
+        오류 봉투(ok:false + error.code 존재)까지만** 조인다 — 코드값 확정은
+        W-5가 CONTRACT/surfaces.json에서 이 계약 공백을 메운 뒤의 몫이다.
+        """
+        with tempfile.TemporaryDirectory() as tmp:
+            task = _mktask(tmp, name="135-whitelist-refs")
+            self.assertEqual(_init_shadow(task)[0], 0)
+
+            code, out, err, data = _run([
+                "log-event", str(task),
+                "--event", "activity", "--kind", "progress",
+                "--summary", "s",
+                "--refs", "/etc/passwd",
+            ])
+            if code == 0:
+                activities = [r for r in _segment_records(task) if r["event"] == "activity"]
+                self.assertTrue(activities, "TASK-135.S-3 activity가 기록되지 않음")
+                refs = activities[-1].get("refs") or []
+                self.assertNotIn("/etc/passwd", refs,
+                                 f"TASK-135.S-3 절대경로 refs가 원문 그대로 저장됨 — {refs!r}")
+            else:
+                self.assertNotEqual(code, 0,
+                    "TASK-135.S-3 절대경로 refs 거부 확인(미구현 RED — log-event 부재로 실패)")
+                self.assertIsInstance(
+                    data, dict,
+                    f"TASK-135.S-3 stdout이 CONTRACT §2.1 JSON 오류 봉투가 아님 — {out!r}")
+                self.assertEqual(
+                    data.get("ok"), False,
+                    f"TASK-135.S-3 오류 봉투의 ok가 false가 아님 — {data!r}")
+                self.assertIn(
+                    "code", data.get("error", {}) if isinstance(data.get("error"), dict) else {},
+                    f"TASK-135.S-3 오류 봉투에 error.code가 없음(CONTRACT §2.1) — {data!r}")
+
+
+class TestGateRequestResolvePairing(unittest.TestCase):
+    """TASK-135.S-5 (AC-4, C-4, C-5) — GREEN: W-3.
+
+    `gate-request` → `gate-resolve` 정상 쌍은 기록되고, 요청 없는 resolve와
+    중복 resolve는 무변경 구조화 오류(gate_not_requested/gate_duplicate)로
+    거부되어야 한다.
+
+    현재 관찰: `gate-request`/`gate-resolve` 서브파서가 state_tool.py에 없다
+    (add_parser 0건 실측).
+    """
+
+    def test_gate_request_then_resolve_recorded(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            task = _mktask(tmp, name="135-gate-pair")
+            self.assertEqual(_init_shadow(task)[0], 0)
+
+            gate_id = f"gate_{uuid.uuid4()}"
+            code, out, err, data = _run([
+                "gate-request", str(task), "--gate-id", gate_id, "--summary", "PM Gate 요청",
+            ])
+            self.assertEqual(code, 0, f"TASK-135.S-5 gate-request 미구현으로 실패(RED) — {out!r} {err!r}")
+
+            code, out, err, data = _run([
+                "gate-resolve", str(task), "--gate-id", gate_id,
+                "--verdict", "approved", "--owner", "PM",
+            ])
+            self.assertEqual(code, 0, f"TASK-135.S-5 gate-resolve 실패 — {out!r} {err!r}")
+
+            requested = [r for r in _segment_records(task) if r["event"] == "gate.requested"]
+            resolved = [r for r in _segment_records(task) if r["event"] == "gate.resolved"]
+            self.assertEqual(len(requested), 1, f"TASK-135.S-5 gate.requested 1건이 아님 — {requested!r}")
+            self.assertEqual(len(resolved), 1, f"TASK-135.S-5 gate.resolved 1건이 아님 — {resolved!r}")
+            self.assertEqual(requested[0]["gate_id"], gate_id)
+            self.assertEqual(resolved[0]["gate_id"], gate_id)
+
+    def test_resolve_without_request_rejected(self):
+        """PM Gate 보강(루핑 1) — exit code뿐 아니라 `error.code == "gate_not_requested"`
+        까지 단언한다. 코드 확정 근거: CONTRACT §2.2 오류 코드 표
+        ("gate_not_requested | 선행 gate.requested 없는 gate.resolved | 거부 | §4.4",
+        docs/run-log/CONTRACT.md:381) + §2.2.1 오류 코드↔표면 대응
+        ("gate_not_requested | state-tool.gate-resolve", CONTRACT.md:429) +
+        surfaces.json의 `state-tool.gate-resolve` err 배열에 `gate_not_requested`
+        선언(둘 다 계약 확정, RUN_LOG_STATE_ERROR_CODES 구현 테이블은 아직
+        미등재 — 이는 W-3 GREEN의 몫이라 여기서 발명하지 않는다)."""
+        with tempfile.TemporaryDirectory() as tmp:
+            task = _mktask(tmp, name="135-gate-orphan")
+            self.assertEqual(_init_shadow(task)[0], 0)
+
+            gate_id = f"gate_{uuid.uuid4()}"
+            code, out, err, data = _run([
+                "gate-resolve", str(task), "--gate-id", gate_id,
+                "--verdict", "approved", "--owner", "PM",
+            ])
+            self.assertNotEqual(code, 0, "TASK-135.S-5 선행 요청 없는 resolve가 거부되지 않음")
+            gate_events = [r for r in _segment_records(task) if r["event"].startswith("gate.")]
+            self.assertEqual(gate_events, [],
+                             "TASK-135.S-5 거부된 resolve가 무변경이 아니라 gate 사건을 남김")
+            self.assertIsInstance(
+                data, dict,
+                f"TASK-135.S-5 stdout이 CONTRACT §2.1 JSON 오류 봉투가 아님 — {out!r}")
+            self.assertEqual(
+                (data.get("error") or {}).get("code"), "gate_not_requested",
+                f"TASK-135.S-5 오류 코드가 gate_not_requested가 아님(CONTRACT §2.2/§2.2.1, "
+                f"surfaces.json state-tool.gate-resolve) — {data!r} stderr={err!r}")
+
+    def test_duplicate_resolve_rejected(self):
+        """PM Gate 보강(루핑 1) — `error.code == "gate_duplicate"`까지 단언한다.
+        코드 확정 근거: CONTRACT §2.2 오류 코드 표
+        ("gate_duplicate | 같은 gate_id의 중복 requested 또는 중복 resolved | 거부 | §4.4",
+        docs/run-log/CONTRACT.md:382) + §2.2.1
+        ("gate_duplicate | state-tool.gate-request, .gate-resolve", CONTRACT.md:430) +
+        surfaces.json의 `state-tool.gate-request`/`.gate-resolve` err 배열에
+        `gate_duplicate` 선언(계약 확정, 구현 테이블 미등재는 W-3 GREEN의 몫)."""
+        with tempfile.TemporaryDirectory() as tmp:
+            task = _mktask(tmp, name="135-gate-dup")
+            self.assertEqual(_init_shadow(task)[0], 0)
+
+            gate_id = f"gate_{uuid.uuid4()}"
+            _run(["gate-request", str(task), "--gate-id", gate_id, "--summary", "PM Gate"])
+            code1, out1, err1, _ = _run([
+                "gate-resolve", str(task), "--gate-id", gate_id,
+                "--verdict", "approved", "--owner", "PM",
+            ])
+            before = _segment_records(task)
+            code2, out2, err2, data2 = _run([
+                "gate-resolve", str(task), "--gate-id", gate_id,
+                "--verdict", "approved", "--owner", "PM",
+            ])
+            self.assertNotEqual(code2, 0, "TASK-135.S-5 중복 resolve가 거부되지 않음(미구현 RED)")
+            after = _segment_records(task)
+            self.assertEqual(before, after, "TASK-135.S-5 거부된 중복 resolve가 조각을 변경함")
+            self.assertIsInstance(
+                data2, dict,
+                f"TASK-135.S-5 stdout이 CONTRACT §2.1 JSON 오류 봉투가 아님 — {out2!r}")
+            self.assertEqual(
+                (data2.get("error") or {}).get("code"), "gate_duplicate",
+                f"TASK-135.S-5 오류 코드가 gate_duplicate가 아님(CONTRACT §2.2/§2.2.1, "
+                f"surfaces.json state-tool.gate-request/.gate-resolve) — {data2!r} stderr={err2!r}")
+
+
+class TestShadowMissingIsNonBlockingDiagnosis(unittest.TestCase):
+    """TASK-135.S-6 (AC-5, C-1, C-5, H-1) — GREEN: W-4.
+
+    쓰기 불가 조각(권한 제거로 기록 실패 유발)이 있는 shadow run에서 상태 전이는
+    exit 0으로 완료되고, 누락 범위·원인이 `run_log_pending`/완전성 진단으로
+    식별되어야 한다.
+
+    현재 관찰: `verify --run-log-completeness-check` 플래그가 없어 완전성
+    진단 자체를 조회할 수 없다(미구현 RED). 상태 전이의 exit 0 유지는
+    이미 통과하는 기존 성질이므로 이 테스트는 완전성 진단 조회 실패로 RED다.
+    """
+
+    def test_transition_stays_exit0_and_completeness_diagnoses_gap(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            task = _mktask(tmp)
+            self.assertEqual(_init_shadow(task)[0], 0)
+
+            run_dir = task / "run"
+            for seg in run_dir.glob("run-log-*.jsonl"):
+                seg.chmod(0o400)
+            try:
+                code, out, err, data = _run(["advance", str(task), "--row", "1"])
+                self.assertEqual(code, 0, f"TASK-135.S-6 기록 실패에도 exit 0이어야 함 — {out!r} {err!r}")
+            finally:
+                for seg in run_dir.glob("run-log-*.jsonl"):
+                    seg.chmod(0o600)
+
+            code, out, err, data = _run([
+                "verify", str(task), "--run-log-completeness-check",
+            ])
+            self.assertEqual(
+                code, 0,
+                f"TASK-135.S-6 --run-log-completeness-check 미구현으로 실패(RED) — "
+                f"exit={code} stdout={out!r} stderr={err!r}")
+            missing = data.get("missing_state_changed", []) + data.get("missing", {}).get(
+                "missing_state_changed", []) if isinstance(data.get("missing"), dict) else data.get(
+                "missing_state_changed", [])
+            self.assertTrue(missing, f"TASK-135.S-6 누락 진단이 비어 있음 — {data!r}")
+
+
+class TestActiveCompletionEvidenceGate(unittest.TestCase):
+    """TASK-135.S-7 (AC-6, C-2, H-4) — GREEN: W-4.
+
+    completion profile이 요구하는 trusted 증거가 부족·모순인 active fixture는
+    완료 전이를 거부해야 하고, profiles.json에 없는 channel의 active init은
+    `profile_not_found`로 거부되어야 한다(임의 profile 승격 없음).
+
+    현재 관찰: `state-tool init --run-log-mode active`는 채널·profiles.json
+    유효성과 무관하게 무조건 profile_not_found로 거부한다(active 3종 분기
+    미구현, state_tool.py:1990 부근). 따라서 "정당한 채널의 active init 성공"
+    자체가 지금은 항상 실패하며, 이것이 이 테스트가 고정하는 RED다. 반대로
+    "미승인 channel의 profile_not_found 거부"는 이 무조건 거부 때문에 이미
+    참으로 관측되므로(우연히 통과) 별도 메서드로 분리해 회귀 없이 문서화한다.
+    """
+
+    def test_unassigned_channel_active_init_rejected_profile_not_found(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            task = _mktask(tmp, name="135-active-unassigned")
+            task.mkdir(exist_ok=True)
+            code, out, err, data = _run([
+                "init", str(task), "--skill", "oppl", "--mode", "agentic",
+                "--run-log-mode", "active", "--channel-id", "no-such-channel",
+            ])
+            self.assertNotEqual(code, 0, "TASK-135.S-7 미승인 channel의 active init이 거부되지 않음")
+            self.assertIn("profile_not_found", out + err,
+                         f"TASK-135.S-7 거부 사유가 profile_not_found가 아님 — {out!r} {err!r}")
+
+    def test_assigned_channel_active_init_succeeds_then_completion_requires_evidence(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            task = _mktask(tmp, name="135-active-assigned")
+            task.mkdir(exist_ok=True)
+            profiles_path = pathlib.Path(tmp) / "profiles.json"
+            profiles_path.write_text(json.dumps({
+                "schema_version": "1.0",
+                "produced_by": "135-fixture",
+                "channels": [{
+                    "channel_id": "pm-agent-tool",
+                    "completion_profile": "observed_trajectory",
+                    "adapter_id": "agent-tool-adapter",
+                    "adapter_sha256": "0" * 64,
+                    "receipt_sha256": "0" * 64,
+                    "evidence_paths": ["evidence/pm-agent-tool/start.json"],
+                }],
+            }, ensure_ascii=False), encoding="utf-8")
+
+            code, out, err, data = _run([
+                "init", str(task), "--skill", "oppl", "--mode", "agentic",
+                "--run-log-mode", "active", "--channel-id", "pm-agent-tool",
+                "--profiles", str(profiles_path),
+            ])
+            self.assertEqual(
+                code, 0,
+                f"TASK-135.S-7 배정된 channel의 active init이 실패함(active 3종 미구현 RED) — "
+                f"exit={code} stdout={out!r} stderr={err!r}")
+
+            # trusted activity/terminal 증거 없이 완료를 시도하면 completion_evidence_missing이어야 한다.
+            code, out, err, data = _run(["mark", str(task), "--row", "1", "--done"])
+            self.assertNotEqual(
+                code, 0,
+                "TASK-135.S-7 증거 부족한데 active 완료가 통과함(completion gate 약화)")
+            self.assertIn("completion_evidence_missing", out + err,
+                         f"TASK-135.S-7 거부 사유가 completion_evidence_missing이 아님 — {out!r} {err!r}")
+
+
+class TestVerifyCompletenessCheckThreeObservationFields(unittest.TestCase):
+    """TASK-135.S-8 (AC-7, AC-8, C-3) — GREEN: W-4.
+
+    `state-tool verify --run-log-completeness-check`는
+    `last_observed_decision`·`last_observed_state_change`·`last_observed_boundary`
+    3필드를 반환해야 하며, "TASK 보고 후 중단" 재현 fixture에서 서로 다른
+    event_id/ts로 채워지고 다음 stage 진입 행이 missing_state_changed에
+    실려야 한다.
+
+    현재 관찰: `--run-log-completeness-check` 플래그가 verify 서브파서에
+    없다(argparse가 미지정 인자로 거부, 미구현 RED).
+    """
+
+    def test_three_observation_fields_returned_and_missing_next_stage_flagged(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            task = _mktask(tmp, name="135-completeness-fields")
+            code, out, err, data = _run([
+                "init", str(task), "--skill", "oppl", "--mode", "agentic",
+                "--rows-spec", _ROWS_SPEC, "--run-log-mode", "shadow",
+            ])
+            self.assertEqual(code, 0, f"TASK-135.S-8 init 실패 — {out!r} {err!r}")
+
+            # 첫 행 advance+mark로 "의사결정/상태전이"까지는 관측되게 하고,
+            # 다음 stage(행 2) 진입 state.changed는 의도적으로 만들지 않는다
+            # (TASK 보고 후 중단 재현 — advance만 걸고 mark하지 않음).
+            self.assertEqual(_run(["advance", str(task), "--row", "1"])[0], 0)
+            self.assertEqual(_run(["mark", str(task), "--row", "1", "--done"])[0], 0)
+
+            code, out, err, data = _run([
+                "verify", str(task), "--run-log-completeness-check",
+            ])
+            self.assertEqual(
+                code, 0,
+                f"TASK-135.S-8 --run-log-completeness-check 미구현으로 실패(RED) — "
+                f"exit={code} stdout={out!r} stderr={err!r}")
+
+            for field in ("last_observed_decision", "last_observed_state_change", "last_observed_boundary"):
+                self.assertIn(field, data, f"TASK-135.S-8 {field} 필드 부재 — {data!r}")
+
+            decision = data.get("last_observed_decision") or {}
+            state_change = data.get("last_observed_state_change") or {}
+            if decision.get("event_id") and state_change.get("event_id"):
+                self.assertNotEqual(
+                    decision.get("event_id"), state_change.get("event_id"),
+                    "TASK-135.S-8 last_observed_decision/state_change가 같은 event_id를 가리킴")
+
+            missing = data.get("missing_state_changed", [])
+            self.assertTrue(missing, f"TASK-135.S-8 다음 stage 진입 누락이 missing_state_changed에 없음 — {data!r}")
+
+
+class TestCompletenessCheckIndependentFromStructuralValidation(unittest.TestCase):
+    """TASK-135.S-9 (AC-8, C-4, C-5, H-3) — GREEN: W-4.
+
+    순번·스키마·provenance는 유효하지만 자동 승인 `state.changed` 1건을 뺀
+    JSONL에 대해 `run-log-tool validate-run`은 구조만 보므로 통과하고,
+    `state-tool verify --run-log-completeness-check`는 빠진 row/event를
+    정확히 누락으로 보고해야 한다. run-log-core는 state.json을 읽지 않는
+    의존 방향을 유지해야 한다(TRD D-5).
+
+    현재 관찰: --run-log-completeness-check 플래그 부재로 후자 조회가
+    불가능하다(미구현 RED). validate-run 구조 통과와 run_log_core의 state.json
+    비의존은 기존 자산으로 이미 성립하므로 회귀 가드로 함께 판정한다.
+    """
+
+    def test_validate_run_passes_but_completeness_check_flags_missing_row(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            task = _mktask(tmp, name="135-completeness-vs-structural")
+            self.assertEqual(_run([
+                "init", str(task), "--skill", "oppl", "--mode", "agentic",
+                "--rows-spec", _ROWS_SPEC_USER_CONFIRM_X2, "--run-log-mode", "shadow",
+            ])[0], 0)
+
+            code, out, err, data = _run(["advance", str(task), "--row", "3"])
+            self.assertEqual(code, 0, f"TASK-135.S-9 advance 실패 — {out!r} {err!r}")
+
+            state = _read_state(task)
+            run_id = state["run_log"]["active_run_id"]
+
+            # run-log-tool.validate-run은 구조(순번·스키마·provenance)만 보므로
+            # 통과해야 한다(자동승인 state.changed 누락 여부와 무관).
+            rl_run_sh = _STATE_TOOL_DIR.parent / "run-log-tool" / "run.sh"
+            if rl_run_sh.exists():
+                result = subprocess.run(
+                    ["bash", str(rl_run_sh), "validate-run",
+                     "--task", str(task), "--run-id", run_id, "--format", "json"],
+                    capture_output=True, text=True)
+                self.assertEqual(
+                    result.returncode, 0,
+                    f"TASK-135.S-9 validate-run이 구조 유효 로그를 거부함 — "
+                    f"stdout={result.stdout!r} stderr={result.stderr!r}")
+
+            # run-log-core는 state.json을 읽지 않는다(정적 의존 방향 검사).
+            core_src = _STATE_TOOL_DIR.parent / "run-log-tool" / "run_log_core.py"
+            if core_src.exists():
+                core_text = core_src.read_text(encoding="utf-8")
+                self.assertNotIn("state.json", core_text,
+                                 "TASK-135.S-9 run_log_core.py가 state.json을 직접 참조함(TRD D-5 위반)")
+
+            code, out, err, data = _run([
+                "verify", str(task), "--run-log-completeness-check",
+            ])
+            self.assertEqual(
+                code, 0,
+                f"TASK-135.S-9 --run-log-completeness-check 미구현으로 실패(RED) — "
+                f"exit={code} stdout={out!r} stderr={err!r}")
+            self.assertTrue(
+                data.get("missing_state_changed"),
+                f"TASK-135.S-9 자동승인 state.changed 누락이 보고되지 않음 — {data!r}")
+
+
+class TestModeInventoryEquality(unittest.TestCase):
+    """TASK-135.S-1 (AC-1, C-1, C-2, C-4) — GREEN: W-2/W-3/W-4 종합.
+
+    동일한 실행·상태·PM·worker·gate 입력을 갖는 shadow와 검증용 active run이
+    관측 가능한 event 종류·payload 의미에서 동일해야 하며 차이는 provenance
+    신뢰도와 completion enforcement에만 있어야 한다(CONTRACT §1.2).
+
+    현재 관찰: active 3종 분기가 구현되지 않아(state_tool.py:1990 부근 무조건
+    profile_not_found) active run 자체를 만들 수 없다 — mode 동등성 비교 이전
+    단계에서 막힌다(미구현 RED).
+    """
+
+    def test_shadow_and_active_produce_same_event_kind_set(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            shadow_task = _mktask(tmp, name="135-mode-shadow")
+            self.assertEqual(_init_shadow(shadow_task)[0], 0)
+            self.assertEqual(_run(["advance", str(shadow_task), "--row", "1"])[0], 0)
+            self.assertEqual(_run(["mark", str(shadow_task), "--row", "1", "--done"])[0], 0)
+            shadow_kinds = {r["event"] for r in _segment_records(shadow_task)}
+
+            active_task = _mktask(tmp, name="135-mode-active")
+            active_task.mkdir(exist_ok=True)
+            profiles_path = pathlib.Path(tmp) / "profiles-s1.json"
+            profiles_path.write_text(json.dumps({
+                "schema_version": "1.0",
+                "produced_by": "135-fixture",
+                "channels": [{
+                    "channel_id": "pm-agent-tool",
+                    "completion_profile": "observed_trajectory",
+                    "adapter_id": "agent-tool-adapter",
+                    "adapter_sha256": "0" * 64,
+                    "receipt_sha256": "0" * 64,
+                    "evidence_paths": ["evidence/pm-agent-tool/start.json"],
+                }],
+            }, ensure_ascii=False), encoding="utf-8")
+
+            code, out, err, data = _run([
+                "init", str(active_task), "--skill", "oppl", "--mode", "agentic",
+                "--rows-spec", _ROWS_SPEC,
+                "--run-log-mode", "active", "--channel-id", "pm-agent-tool",
+                "--profiles", str(profiles_path),
+            ])
+            self.assertEqual(
+                code, 0,
+                f"TASK-135.S-1 active init이 실패해 동등성 비교 자체가 불가함(RED) — "
+                f"exit={code} stdout={out!r} stderr={err!r}")
+
+            self.assertEqual(_run(["advance", str(active_task), "--row", "1"])[0], 0)
+            active_kinds = {r["event"] for r in _segment_records(active_task)}
+
+            self.assertEqual(
+                shadow_kinds, active_kinds,
+                f"TASK-135.S-1 shadow/active 관측 가능 event 종류 불일치 — "
+                f"shadow={shadow_kinds!r} active={active_kinds!r}")

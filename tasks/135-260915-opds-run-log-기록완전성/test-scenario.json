@@ -1,0 +1,526 @@
+{
+  "schema_version": "2.0",
+  "task_id": "135-260915-opds-run-log-기록완전성",
+  "locked": true,
+  "created_at": "2026-09-16T13:30:53+09:00",
+  "locked_at": "2026-09-16T13:41:04+09:00",
+  "scenarios": [
+    {
+      "id": "S-1",
+      "acceptance_ref": "AC-1, C-1, C-2, C-4",
+      "type": "integration",
+      "expected": "shadow와 active의 관측 가능 event 인벤토리·표준 payload 의미가 동일하고 차이는 provenance 신뢰도와 completion enforcement에만 존재",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "pytest opal/tools/state-tool/tests/test_state_tool_run_log.py::TestModeInventoryEquality -q => 1 failed. active init rejected with profile_not_found even for valid channel-id+profiles.json (state_tool.py init --run-log-mode active unconditional reject, line ~1990), so shadow/active event inventory equality cannot be observed. AssertionError: 1 != 0 ... error: profile_not_found",
+      "red_at": "2026-09-16T13:40:59+09:00",
+      "required_fidelity": "real-usage",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [
+        "opal-test-agent"
+      ],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [
+        "실행 명령",
+        "exit code",
+        "핵심 출력"
+      ],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "shadow_active_event_kind_set_equal",
+          "expected": "pass",
+          "actual": "pass"
+        }
+      ],
+      "observed_evidence": [
+        "실행 명령",
+        "exit code",
+        "핵심 출력"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "python3 -m pytest opal/tools/state-tool/tests/test_state_tool_run_log.py::TestModeInventoryEquality -q => 1 passed (exit 0). 전체 스위트 29 passed, 0 failed.",
+      "marked_at": "2026-09-16T16:12:57+09:00",
+      "fidelity": "real-usage"
+    },
+    {
+      "id": "S-2",
+      "acceptance_ref": "AC-2, C-3, C-5",
+      "type": "integration",
+      "expected": "두 모드 모두 activity 4종이 남고 decision·validation·retry의 요약·사유·근거 참조를 복원할 수 있음",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "pytest opal/tools/state-tool/tests/test_state_tool_run_log.py::TestLogEventSurfaceForPmActivity -q => 1 failed. state-tool has no 'log-event' subcommand (argparse invalid choice, exit 2): stderr='usage: state-tool [-h] <command> ...\\nstate-tool: error: argument command: invalid choice: log-event'",
+      "red_at": "2026-09-16T13:40:59+09:00",
+      "required_fidelity": "real-usage",
+      "surface_ref": "state-tool.log-event",
+      "surface_kind": null,
+      "profile": null,
+      "actors": [
+        "opal-test-agent"
+      ],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [
+        "실행 명령",
+        "exit code",
+        "핵심 출력"
+      ],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "log_event_records_pm_activity",
+          "expected": "pass",
+          "actual": "pass"
+        }
+      ],
+      "observed_evidence": [
+        "실행 명령",
+        "exit code",
+        "핵심 출력"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "pytest ::TestLogEventSurfaceForPmActivity::test_log_event_records_pm_decision_activity => 1 passed (exit 0). 실 CLI: state_tool.py log-event --event activity --kind progress --summary ... (스크래치 태스크) => {\"ok\": true, \"event_id\": ...} JSONL에 decision/progress activity 기록 확인",
+      "marked_at": "2026-09-16T16:13:18+09:00",
+      "fidelity": "real-usage"
+    },
+    {
+      "id": "S-3",
+      "acceptance_ref": "C-3, C-5",
+      "type": "contract",
+      "expected": "CONTRACT 화이트리스트 밖 data 키·enum 밖 kind는 구조화 오류로 거부, 절대경로 refs는 거부 또는 상대 정규화, 비밀값은 redact되어 JSONL에 원문 없음",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "pytest opal/tools/state-tool/tests/test_state_tool_run_log.py::TestPmActivityWhitelistRejection -q => 1 failed (test_disallowed_data_key_is_rejected), 1 passed vacuously via missing-command fallback (test_absolute_path_refs_rejected_or_normalized). log-event absent so whitelist rejection (schema_invalid for raw_prompt key) cannot be exercised.",
+      "red_at": "2026-09-16T13:40:59+09:00",
+      "required_fidelity": "real-usage",
+      "surface_ref": "state-tool.log-event",
+      "surface_kind": null,
+      "profile": null,
+      "actors": [
+        "opal-test-agent"
+      ],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [
+        "실행 명령",
+        "exit code",
+        "핵심 출력"
+      ],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "whitelist_rejection_and_redaction",
+          "expected": "pass",
+          "actual": "pass"
+        }
+      ],
+      "observed_evidence": [
+        "실행 명령",
+        "exit code",
+        "핵심 출력"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "pytest ::TestPmActivityWhitelistRejection (2 tests) => 2 passed (exit 0). 실 CLI: --data invalid key => schema_invalid exit 1; --refs /etc/passwd(절대경로) => refs_invalid exit 1; summary에 api_key=SECRET/Bearer SECRET 삽입 후 JSONL grep => summary=api_key=[REDACTED] Bearer [REDACTED], 원문 SECRET 미검출",
+      "marked_at": "2026-09-16T16:13:18+09:00",
+      "fidelity": "real-usage"
+    },
+    {
+      "id": "S-4",
+      "acceptance_ref": "AC-3, AC-8, C-1, C-4, C-5, C-6",
+      "type": "integration",
+      "expected": "자동 승인 2건과 대상 행 1건이 각각 독립 state.changed로 남고 순서·from/to·row key가 state.json과 일치하며 부분 admission 없음",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "pytest opal/tools/state-tool/tests/test_state_tool_run_log.py::TestAutoApprovedRowsEachGetIndependentStateChanged -q => 1 failed. advance over 2 pending '사용자 확인' rows + 1 target row auto-approves rows 1,2 but only emits 1 state.changed (target row) instead of 3. AssertionError: 'state.changed가 3건이 아님(부분 admission) — 1건'",
+      "red_at": "2026-09-16T13:40:59+09:00",
+      "required_fidelity": "real-usage",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [
+        "opal-test-agent"
+      ],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [
+        "실행 명령",
+        "exit code",
+        "핵심 출력"
+      ],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "auto_approved_rows_independent_state_changed",
+          "expected": "pass",
+          "actual": "pass"
+        }
+      ],
+      "observed_evidence": [
+        "실행 명령",
+        "exit code",
+        "핵심 출력"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "pytest ::TestAutoApprovedRowsEachGetIndependentStateChanged => 1 passed (exit 0), 자동승인 2건+대상행 1건이 각각 독립 state.changed로 기록됨을 확인",
+      "marked_at": "2026-09-16T16:13:18+09:00",
+      "fidelity": "real-usage"
+    },
+    {
+      "id": "S-5",
+      "acceptance_ref": "AC-4, C-4, C-5",
+      "type": "integration",
+      "expected": "정상 순서는 두 모드에서 같은 worker/gate 사건으로 남고 선행 요청 없음·중복 해결은 무변경 구조화 오류로 거부",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "pytest opal/tools/state-tool/tests/test_state_tool_run_log.py::TestGateRequestResolvePairing -q => 1 failed (test_gate_request_then_resolve_recorded), 2 passed (resolve-without-request and duplicate-resolve both already 'rejected' because gate-request/gate-resolve subcommands do not exist at all — argparse invalid choice exit 2). state-tool has no gate-request/gate-resolve subcommands.",
+      "red_at": "2026-09-16T13:40:59+09:00",
+      "required_fidelity": "real-usage",
+      "surface_ref": "state-tool.gate-request",
+      "surface_kind": null,
+      "profile": null,
+      "actors": [
+        "opal-test-agent"
+      ],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [
+        "실행 명령",
+        "exit code",
+        "핵심 출력"
+      ],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "gate_request_resolve_pairing",
+          "expected": "pass",
+          "actual": "pass"
+        }
+      ],
+      "observed_evidence": [
+        "실행 명령",
+        "exit code",
+        "핵심 출력"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "pytest ::TestGateRequestResolvePairing (3 tests: request_then_resolve/resolve_without_request/duplicate_resolve) => 3 passed (exit 0)",
+      "marked_at": "2026-09-16T16:13:18+09:00",
+      "fidelity": "real-usage"
+    },
+    {
+      "id": "S-6",
+      "acceptance_ref": "AC-5, C-1, C-5",
+      "type": "integration",
+      "expected": "상태 전이는 완료되고 exit 0을 유지하며 누락 범위·원인이 run_log_pending 또는 표준 missing 진단으로 식별됨",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "pytest opal/tools/state-tool/tests/test_state_tool_run_log.py::TestShadowMissingIsNonBlockingDiagnosis -q => 1 failed. 'verify --run-log-completeness-check' flag does not exist: stderr='state-tool: error: unrecognized arguments: --run-log-completeness-check' (exit 2). Shadow transition exit-0-on-write-failure itself already holds; the completeness diagnosis surface is what's missing.",
+      "red_at": "2026-09-16T13:40:59+09:00",
+      "required_fidelity": "real-usage",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [
+        "opal-test-agent"
+      ],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [
+        "실행 명령",
+        "exit code",
+        "핵심 출력"
+      ],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "shadow_missing_nonblocking_diagnosis",
+          "expected": "pass",
+          "actual": "pass"
+        }
+      ],
+      "observed_evidence": [
+        "실행 명령",
+        "exit code",
+        "핵심 출력"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "pytest ::TestShadowMissingIsNonBlockingDiagnosis => 1 passed (exit 0), 전이는 exit0 유지하며 run_log_pending/missing 진단으로 식별됨을 확인",
+      "marked_at": "2026-09-16T16:13:18+09:00",
+      "fidelity": "real-usage"
+    },
+    {
+      "id": "S-7",
+      "acceptance_ref": "AC-6, C-2",
+      "type": "integration",
+      "expected": "증거 부족·모순은 completion gate가 완료를 거부하고 미승인 channel은 profile_not_found로 거부되며 임의 profile 승격 없음",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "pytest opal/tools/state-tool/tests/test_state_tool_run_log.py::TestActiveCompletionEvidenceGate -q => 1 failed (test_assigned_channel_active_init_succeeds_then_completion_requires_evidence: exit=1 profile_not_found even with valid profiles.json/channel-id — active 3-way branch unimplemented), 1 passed (unassigned channel already rejected profile_not_found, coincidentally true today).",
+      "red_at": "2026-09-16T13:40:59+09:00",
+      "required_fidelity": "real-usage",
+      "surface_ref": "state-tool.init.run-log-mode",
+      "surface_kind": null,
+      "profile": null,
+      "actors": [
+        "opal-test-agent"
+      ],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [
+        "실행 명령",
+        "exit code",
+        "핵심 출력"
+      ],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "active_completion_evidence_gate",
+          "expected": "pass",
+          "actual": "pass"
+        }
+      ],
+      "observed_evidence": [
+        "실행 명령",
+        "exit code",
+        "핵심 출력"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "pytest ::TestActiveCompletionEvidenceGate (2 tests: assigned_channel_completion_requires_evidence/unassigned_channel_profile_not_found) => 2 passed (exit 0)",
+      "marked_at": "2026-09-16T16:13:18+09:00",
+      "fidelity": "real-usage"
+    },
+    {
+      "id": "S-8",
+      "acceptance_ref": "AC-7, AC-8, C-3",
+      "type": "integration",
+      "expected": "verify --run-log-completeness-check 반환의 last_observed_decision·last_observed_state_change·last_observed_boundary 3필드가 서로 다른 event_id/ts로 채워지고 다음 stage 진입 행이 missing_state_changed에 실림",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "pytest opal/tools/state-tool/tests/test_state_tool_run_log.py::TestVerifyCompletenessCheckThreeObservationFields -q => 1 failed. 'verify --run-log-completeness-check' unrecognized argument (exit 2), so last_observed_decision/last_observed_state_change/last_observed_boundary fields cannot be observed.",
+      "red_at": "2026-09-16T13:40:59+09:00",
+      "required_fidelity": "real-usage",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [
+        "opal-test-agent"
+      ],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [
+        "실행 명령",
+        "exit code",
+        "핵심 출력"
+      ],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "three_observation_fields_always_returned",
+          "expected": "pass",
+          "actual": "pass"
+        }
+      ],
+      "observed_evidence": [
+        "실행 명령",
+        "exit code",
+        "핵심 출력"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "pytest ::TestVerifyCompletenessCheckThreeObservationFields => 1 passed (exit 0). 실 CLI: state_tool.py verify --run-log-completeness-check (스크래치 태스크) => last_observed_decision=null, last_observed_state_change=null, last_observed_boundary={event_id,ts,ref:run.started} 3필드 항상 반환 확인",
+      "marked_at": "2026-09-16T16:13:18+09:00",
+      "fidelity": "real-usage"
+    },
+    {
+      "id": "S-9",
+      "acceptance_ref": "AC-8, C-4, C-5",
+      "type": "integration",
+      "expected": "validate-run은 구조만 유효하므로 통과하고 verify --run-log-completeness-check는 빠진 row/event를 누락으로 보고하며 run-log-core의 단방향 의존 유지",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "pytest opal/tools/state-tool/tests/test_state_tool_run_log.py::TestCompletenessCheckIndependentFromStructuralValidation -q => 1 failed. run-log-tool validate-run structural pass and run_log_core.py not importing state.json both already hold (regression-guarded here); 'verify --run-log-completeness-check' unrecognized argument (exit 2) blocks the missing-row completeness assertion.",
+      "red_at": "2026-09-16T13:41:00+09:00",
+      "required_fidelity": "real-usage",
+      "surface_ref": "run-log-tool.validate-run",
+      "surface_kind": null,
+      "profile": null,
+      "actors": [
+        "opal-test-agent"
+      ],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [
+        "실행 명령",
+        "exit code",
+        "핵심 출력"
+      ],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "validate_run_structural_vs_completeness_independent",
+          "expected": "pass",
+          "actual": "pass"
+        }
+      ],
+      "observed_evidence": [
+        "실행 명령",
+        "exit code",
+        "핵심 출력"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "pytest ::TestCompletenessCheckIndependentFromStructuralValidation => 1 passed (exit 0). 실 CLI: run_log_tool.py validate-run --task <scratch> --run-id <id> => {verdict:pass, event_count:4, sequence_gaps:[], violations:[]} 구조검증과 상태대조검증(state-tool verify) 축 분리 확인, run-log-core는 상태파일 미참조(TRD D-5) 유지",
+      "marked_at": "2026-09-16T16:13:18+09:00",
+      "fidelity": "real-usage"
+    },
+    {
+      "id": "S-10",
+      "acceptance_ref": "AC-8, C-5, C-6",
+      "type": "regression",
+      "expected": "legacy 상태·통계·완료 동작의 응답 계약이 유지되고 append-only·멱등·순번·락·마스킹·경로 방어 회귀가 모두 통과",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "real-usage",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [
+        "opal-test-agent"
+      ],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [
+        "실행 명령",
+        "exit code",
+        "핵심 출력"
+      ],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "regression_baseline_matches",
+          "expected": "pass",
+          "actual": "pass"
+        }
+      ],
+      "observed_evidence": [
+        "실행 명령",
+        "exit code",
+        "핵심 출력"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "test_state_tool_run_log.py: 29 passed(기준선 일치); test_state_tool.py: 411 passed,3 skipped,116 subtests(기준선 일치); run-log-tool test_run_log_tool.py: 53 passed,4 subtests(기준선 일치); 추가 발견 스위트(test_run_identity/test_mode_resolution/test_mode_transition_contract/test_todo_mirror_hook/test_event_verify): 47 passed,71 subtests; scripts/tests/task134_mode_persistence_contract.py 5 tests OK; scripts/tests/task136_mode_transition_contract.py 3 tests OK; scripts/tests/test_task113_bootstrap_contract.py 2 tests OK; scripts/tests/*.sh는 run_log 무관 확인(grep 0건, 스킵). append-only/순번연속성: run 스크래치에서 sequence=[1,2,3,4] 연속 확인. 멱등성: pytest 커버(canonical_digest 기반, request_id 재사용 idempotent_hit). 배타락: pytest fcntl.flock 테스트 커버. 마스킹: 실 CLI log-event로 api_key=SECRET/Bearer SECRET 삽입 후 JSONL grep => [REDACTED]만 남고 원문 미검출(단, 임의 문자열 'token=SECRET'은 4종 규칙 밖이라 미마스킹 - 설계상 의도, H-5 문서화됨). 경로방어: log-event --refs 절대경로 => refs_invalid; task-path 상대경로 => task_path_not_absolute. legacy 1.0/1.1: 스크래치 태스크(run_log 블록 없음)에서 mark --task-step-id 1 --done => 응답 키 집합 기존과 동일(['created_at','current_status','mode','next_action','rows','schema_version','skill','task_id','updated_at']), run_log 키 없음, validate exit0/violations=0 확인.",
+      "marked_at": "2026-09-16T16:13:49+09:00",
+      "fidelity": "real-usage"
+    },
+    {
+      "id": "S-11",
+      "acceptance_ref": "AC-1, AC-2, AC-4, AC-5, AC-8, C-7",
+      "type": "contract",
+      "expected": "PRD/TRD/CONTRACT/surfaces 책임 경계가 분리되고 중복 규범 정의와 구현 드리프트가 없음",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "real-usage",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [
+        "opal-test-agent"
+      ],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [
+        "실행 명령",
+        "exit code",
+        "핵심 출력"
+      ],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "doc_boundary_no_drift",
+          "expected": "pass",
+          "actual": "pass"
+        }
+      ],
+      "observed_evidence": [
+        "실행 명령",
+        "exit code",
+        "핵심 출력"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "grep docs/run-log/surfaces.json => log-event/gate-request/gate-resolve 3개 표면 id 등재 확인; verify --run-log-completeness-check는 CONTRACT.md D-7(PLAN 범위 제약)에 따라 별도 surfaces.json id 미신설이 의도된 설계임을 CONTRACT.md:476, PLAN.md D-6/W-4 행 원문으로 확인 — 드리프트 아님. 실 CLI: state_tool.py verify --run-log-completeness-check 실행 결과가 CONTRACT §1.4/§1.5 서술(4종 누락 목록 + 3필드 항상 반환)과 바이트 일치.",
+      "marked_at": "2026-09-16T16:13:49+09:00",
+      "fidelity": "real-usage"
+    }
+  ]
+}

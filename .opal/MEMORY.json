@@ -73,6 +73,22 @@
       "status": "candidate",
       "file": "memory/워크트리_선행_실패가_라우터_회귀_32건을_가렸다.md",
       "summary": "사전 존재 실패를 기준선에 넣으면 그 범위의 신규 회귀를 탐지할 수 없다"
+    },
+    {
+      "title": "missing_pm_activity 트리거 조건이 계약에 미정의",
+      "date": "2026-09-16",
+      "type": "improvement",
+      "status": "candidate",
+      "file": "memory/missing_pm_activity_트리거_조건이_계약에_미정의.md",
+      "summary": "state-tool verify --run-log-completeness-check가 반환하는 누락 목록 4종 중 missing_pm_acti…"
+    },
+    {
+      "title": "PM 권고 전 기존 테스트 자산 확인 누락",
+      "date": "2026-09-16",
+      "type": "improvement",
+      "status": "candidate",
+      "file": "memory/PM_권고_전_기존_테스트_자산_확인_누락.md",
+      "summary": "태스크 135에서 PM이 'run_log_core.append에 data 키 집합 폐쇄 검사를 추가하자'를 소유자에게 권고해 승인까지 받았으나…"
     }
   ],
   "history": [

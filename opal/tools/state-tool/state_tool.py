@@ -4,7 +4,7 @@
   "module": "state_tool",
   "layer": "util",
   "domain": "opal-pipeline",
-  "description": "OPAL 파이프라인 현황판 JSON SSOT 관리 CLI. 서브커맨드: init/show/resolve-mode/advance/mark/block/validate/add-row/status/run-start/finalize-attribution/spec-validate/event-verify, gate-pass(deprecated). resolve-mode는 명시 플래그 > 유효 저장 mode > 신규 semi-agentic 기본값으로 effective mode를 판정하고 기존 태스크의 명시 override는 mode만 원자 갱신한다. run-start <task-path>는 `run-<UTC YYYYMMDDHHMMSS>-<8자리 hex>` 형식의 새 run_id를 발급해 state.json.run_id에 기록하고 단일 라인 JSON으로 반환한다 — 현재 run은 항상 1개라 재호출 시 교체되며 이력을 누적하지 않고, run_id는 schema properties에만 있는 optional 필드라 init은 만들지 않으며 required 8필드는 불변이다(run_id 없는 기존 state.json도 계속 validate를 통과한다). 이 run_id는 run_log.active_run_id(run-log 계열, `run_<UUIDv4>`)와 서로 다른 축이다. event-verify는 단계 진입 전에 event-loader receipt의 이벤트·manifest·문서 hash 최신성을 검증하고 상태 파일은 변경하지 않는다. interactive/semi-agentic/agentic 3-way 모드를 지원하며 PLAN-equivalent 이전 단계(TASK/ANALYSIS/PLAN/TEST-SCENARIO/SPEC/REVIEW/DESIGN/WBS/WIREFRAME/DICT/MODEL/DDL·MIGRATION)는 semi-agentic 모드에서 사용자 검토를 강제한다. STATE.md는 state.json에서 파생되는 저널(의사결정 로그+블로커)이며 파이프라인 표·현재 상태·다음 액션 섹션은 없다(레거시 마커 포맷은 하위호환 인식만 유지). mark --step N/M은 N<M이면 in_progress를 유지하고 N==M에서만 done으로 닫는다. can_auto_approve_user_confirmation()은 CLOSE 축과 모드 축 2축 합성으로 사용자 확인 행 자동 승인 가부를 단일 판정하며, cmd_mark 사전검사와 cmd_validate 사후검사가 서로 다른 소비 범위(validate는 CLOSE 축 미평가)로 이를 참조한다. auto_approve_prior_user_confirmations()는 advance/mark가 대상 행 이전 구간의 미완 확인 행을 자동 승인하되 대상 행 자체가 CLOSE면 관여하지 않는다. 행 주소는 task-step 키 체계(--task-step/--task-step-id, --row는 deprecated)로 지정한다. check_gate_artifacts()는 task_steps[].gate.artifacts 존재를 검사하고(정적 경로·글롭 지원, 절대경로·'..' 이탈 토큰은 거부), 미충족 시 gate_artifact_missing으로 막되 --force+--note 조합에만 통과를 허용하며 그 경우 decision 로그에 gate_artifact_force를 강제 기록한다. verify 서브커맨드는 상호 배타적인 6개 검사 라우트를 갖는다 — --red-check(RED 증거 게이트), --fix-mode(+--changed-files/--test-globs, 테스트 불변성 게이트), --clarification-check(TASK 잠금 판정: sdlc-v2 5절 또는 legacy 명확화 4요소), --evidence-check(『명확화 결과』·『확정된 설계 방향』 인용을 근거 등급 4축으로 판정, 두 소스의 분모는 서로 분리 — confirmed_ratio는 명확화 결과 항목 수 기준 불변), --code-scan-citation-check(PLAN.md Work items 또는 legacy §4.2 파일 경로의 code-scan 인용 집행), --plan-contract-check(sdlc-v2 Work items 계약 검사). task_root()는 task path 조상에서 .opal/MEMORY.json 앵커를 찾는 task root 목적 전용 탐색이며(118 D-4), 허브 쓰기 대상인 allocator root는 이 탐색으로 추론하지 않고 worktree registry 발급값을 명시 인자로만 받는다. 신규 pipeline은 명시적 close.final 행에서만 current_status를 completed_unmerged로 확정하고, close.final이 없는 legacy pipeline만 마지막 CLOSE 행을 final로 인정하며 MEMORY.json을 건드리지 않는다(118 D-4b, 136 W-2). 허브 .opal/MEMORY.json 이력 append는 finalize-attribution <task-path> --allocator-root <abs>가 전담한다 — link_memory_history()가 그 구현이고 동일 path 행이 있으면 건너뛰어 멱등이며, --allocator-root 미지정·상대경로는 추론 없이 exit 1로 거부된다. resolve_owner_placeholder()는 note 작성 경로(advance/mark/add-row/block/status/init)에서 '{owner_name}' 플레이스홀더를 identity.md owner_name으로 write-time 치환한다(부재 시 원문 유지, fail-safe). worker_duration_minutes는 1.0/1.1(run_log 블록 부재) 태스크에서는 종전과 동일하게 mark --worker-duration-minutes로 선택 기록되고, 워커 디스패치 행을 소요시간 없이 done 처리하면 --worker-duration-unknown 억제 인자가 없는 한 응답 warnings 배열에 worker_duration_missing이 실린다(exit 0 유지). 1.2 태스크(run_log 블록 보유)에서는 mark가 `_reconcile_worker_duration_minutes()`로 `_import_run_log_core()` 경로의 `run_log_core.reconcile_duration()`(W-6)을 호출해 해당 run의 terminal 사건(worker.completed/failed/blocked)에서 파생 분값을 읽는다(W-7, CONTRACT §2.5 시간 절, D-P8) — `--worker-run-id` 표면 인자가 없어 `_resolve_sole_terminal_worker_run_id()`가 `이 run의 terminal에 실린 worker_run_id가 정확히 1개`인 경우에만 그 값을 대상으로 삼고, 0건·2건 이상이면 조회를 건너뛰어 파생값 없음으로 처리한다. 파생값이 있으면 `--worker-duration-minutes` 미지정 시 자동 기록(경고 없음), 명시값이 파생값과 같으면 수용하되 `worker_duration_minutes_deprecated` 경고를 얹고, 다르면 상태 변경 이전 시점에 `worker_duration_conflict`(RUN_LOG_STATE_ERROR_CODES 등재, ERROR_CODES와 물리 분리)로 즉시 거부해 state.json을 손대지 않는다. 파생값을 아직 얻을 수 없으면(terminal 미기록 등) 명시값을 그대로 통과시켜 기존 수동 경로와 응답 키 집합이 바이트 동일하다(H-6, S-9). CONTRACT §2.5의 채널 등급·override 조항은 이번 범위에 포함하지 않는다(D-P9). build_todo_mirror()는 stdout 전용 파생 미러(state.json 비접촉)로 PostToolUse hook이 세션에 결정론적으로 주입한다. init --run-log-mode {shadow,active}(T02)는 CONTRACT §2.5 state-tool.init.run-log-mode를 구현한다 — shadow만 지원하고 active는 profile_not_found로 거부한다(배포된 profiles.json 부재, 후속 태스크 소관). _cmd_init_run_log()가 outbox 2단 원자 쓰기(_atomic_write_state_json, pending→기록 코어 init/append lock_held=True 호출→active)로 state.json schema_version 1.2 + run_log 블록과 첫 run.started 사건을 만든다. --run-log-mode 미지정 경로는 기존 save_state_json()을 그대로 타 바이트 동일성을 유지한다(D-L, C-3). _atomic_write_state_json()은 tmp→fsync→os.replace 원자 쓰기이며, run_log.pending_events가 있으면 쓰기 직전 기록 코어의 redact() 초크포인트를 통과시킨다(D-9, GC-001). _import_run_log_core()는 importlib.util.spec_from_file_location으로 기록 코어를 sys.path 오염 없이 단일 모듈 적재한다(GC-007) — 형제 배치 우선, 없으면 배포본(_run_log_core_dir(), D-C). RUN_LOG_STATE_ERROR_CODES는 run-log 계열 상태 도구 오류 코드(profile_not_found/run_log_missing/run_log_pending/run_log_outbox_full/run_log_write_failed/event_too_large) 전용 별도 테이블이며 ERROR_CODES 딕셔너리 리터럴과 물리 분리된다(D-A, F-6) — err()의 _error_template()가 ERROR_CODES→RUN_LOG_STATE_ERROR_CODES 순으로 조회만 하고, 두 테이블 모두에 없는 코드는 .format() 호출 없이 code 문자열 그대로를 메시지로 쓴다(GC-008). run_log_commit()이 advance/mark/block/add-row/status의 상태 변경과 state.changed 1건(build_state_changed_event, 조합 A7·event_id 사전 확정) 적재를 한 번의 원자 쓰기로 커밋한 뒤 _run_log_drain()의 멱등 append와 보관함 비우기로 잇는다(CONTRACT §1.4, TRD D-2) — append가 실패해도 상태 전이는 이미 커밋돼 교착되지 않고 응답 warnings에 run_log_pending만 실린다. run_log_outbox_admit()은 항목당 4 KiB·전체 128건(최악 512 KiB) 상한을 집행하며 일반 한도는 128 − 보관함 override 사건 수이고, 위반 시 각각 event_too_large·run_log_outbox_full로 전이를 시작하지 않는다. _run_log_drain()은 완전한 사건만 순서대로 재전송하고 첫 실패에서 멈추며 이미 조각에 있는 event_id는 건너뛰고, 보관함에 run.started가 있을 때만 실행 디렉터리·첫 조각을 다시 만든다(복구 가능 초기화). run_log_diagnose()는 validate에 합류해 보관함 잔량을 run_log_pending(recoverable_init 표시)으로, 활성 계약인데 조각·run.started가 없으면 run_log_missing으로 보고하며 스키마를 강등하거나 블록을 지우지 않는다(§1.4, AC-3). run_log 블록이 없는 1.0/1.1 태스크는 run_log_commit()이 곧바로 save_state_json()으로 우회해 산출물·응답 키 집합이 종전과 동일하다(C-3). state.schema.json은 schema_version 1.2와 run_log 블록(필수 7필드·pending_events maxItems 128)을 등재한다. init --actor pm은 --skill opd/opds에서만 지원되며(그 외 skill과 조합 시 actor_unsupported_for_skill로 exit 1) 지정 시에만 state.json에 actor 키를 조건부 영속화한다.",
+  "description": "OPAL 파이프라인 현황판 JSON SSOT 관리 CLI. 서브커맨드: init/show/resolve-mode/advance/mark/block/validate/add-row/status/run-start/finalize-attribution/spec-validate/event-verify/log-event/gate-request/gate-resolve, gate-pass(deprecated). resolve-mode는 명시 플래그 > 유효 저장 mode > 신규 semi-agentic 기본값으로 effective mode를 판정하고 기존 태스크의 명시 override는 mode만 원자 갱신한다. run-start <task-path>는 `run-<UTC YYYYMMDDHHMMSS>-<8자리 hex>` 형식의 새 run_id를 발급해 state.json.run_id에 기록하고 단일 라인 JSON으로 반환한다 — 현재 run은 항상 1개라 재호출 시 교체되며 이력을 누적하지 않고, run_id는 schema properties에만 있는 optional 필드라 init은 만들지 않으며 required 8필드는 불변이다(run_id 없는 기존 state.json도 계속 validate를 통과한다). 이 run_id는 run_log.active_run_id(run-log 계열, `run_<UUIDv4>`)와 서로 다른 축이다. event-verify는 단계 진입 전에 event-loader receipt의 이벤트·manifest·문서 hash 최신성을 검증하고 상태 파일은 변경하지 않는다. interactive/semi-agentic/agentic 3-way 모드를 지원하며 PLAN-equivalent 이전 단계(TASK/ANALYSIS/PLAN/TEST-SCENARIO/SPEC/REVIEW/DESIGN/WBS/WIREFRAME/DICT/MODEL/DDL·MIGRATION)는 semi-agentic 모드에서 사용자 검토를 강제한다. STATE.md는 state.json에서 파생되는 저널(의사결정 로그+블로커)이며 파이프라인 표·현재 상태·다음 액션 섹션은 없다(레거시 마커 포맷은 하위호환 인식만 유지). mark --step N/M은 N<M이면 in_progress를 유지하고 N==M에서만 done으로 닫는다. can_auto_approve_user_confirmation()은 CLOSE 축과 모드 축 2축 합성으로 사용자 확인 행 자동 승인 가부를 단일 판정하며, cmd_mark 사전검사와 cmd_validate 사후검사가 서로 다른 소비 범위(validate는 CLOSE 축 미평가)로 이를 참조한다. auto_approve_prior_user_confirmations()는 advance/mark가 대상 행 이전 구간의 미완 확인 행을 자동 승인하되 대상 행 자체가 CLOSE면 관여하지 않는다. 행 주소는 task-step 키 체계(--task-step/--task-step-id, --row는 deprecated)로 지정한다. check_gate_artifacts()는 task_steps[].gate.artifacts 존재를 검사하고(정적 경로·글롭 지원, 절대경로·'..' 이탈 토큰은 거부), 미충족 시 gate_artifact_missing으로 막되 --force+--note 조합에만 통과를 허용하며 그 경우 decision 로그에 gate_artifact_force를 강제 기록한다. verify 서브커맨드는 상호 배타적인 7개 검사 라우트를 갖는다 — --red-check(RED 증거 게이트), --fix-mode(+--changed-files/--test-globs, 테스트 불변성 게이트), --clarification-check(TASK 잠금 판정: sdlc-v2 5절 또는 legacy 명확화 4요소), --evidence-check(『명확화 결과』·『확정된 설계 방향』 인용을 근거 등급 4축으로 판정, 두 소스의 분모는 서로 분리 — confirmed_ratio는 명확화 결과 항목 수 기준 불변), --code-scan-citation-check(PLAN.md Work items 또는 legacy §4.2 파일 경로의 code-scan 인용 집행), --plan-contract-check(sdlc-v2 Work items 계약 검사), --run-log-completeness-check(135 W-4 run-log 완전성 진단, 비차단). task_root()는 task path 조상에서 .opal/MEMORY.json 앵커를 찾는 task root 목적 전용 탐색이며(118 D-4), 허브 쓰기 대상인 allocator root는 이 탐색으로 추론하지 않고 worktree registry 발급값을 명시 인자로만 받는다. 신규 pipeline은 명시적 close.final 행에서만 current_status를 completed_unmerged로 확정하고, close.final이 없는 legacy pipeline만 마지막 CLOSE 행을 final로 인정하며 MEMORY.json을 건드리지 않는다(118 D-4b, 136 W-2). 허브 .opal/MEMORY.json 이력 append는 finalize-attribution <task-path> --allocator-root <abs>가 전담한다 — link_memory_history()가 그 구현이고 동일 path 행이 있으면 건너뛰어 멱등이며, --allocator-root 미지정·상대경로는 추론 없이 exit 1로 거부된다. resolve_owner_placeholder()는 note 작성 경로(advance/mark/add-row/block/status/init)에서 '{owner_name}' 플레이스홀더를 identity.md owner_name으로 write-time 치환한다(부재 시 원문 유지, fail-safe). worker_duration_minutes는 1.0/1.1(run_log 블록 부재) 태스크에서는 종전과 동일하게 mark --worker-duration-minutes로 선택 기록되고, 워커 디스패치 행을 소요시간 없이 done 처리하면 --worker-duration-unknown 억제 인자가 없는 한 응답 warnings 배열에 worker_duration_missing이 실린다(exit 0 유지). 1.2 태스크(run_log 블록 보유)에서는 mark가 `_reconcile_worker_duration_minutes()`로 `_import_run_log_core()` 경로의 `run_log_core.reconcile_duration()`(W-6)을 호출해 해당 run의 terminal 사건(worker.completed/failed/blocked)에서 파생 분값을 읽는다(W-7, CONTRACT §2.5 시간 절, D-P8) — `--worker-run-id` 표면 인자가 없어 `_resolve_sole_terminal_worker_run_id()`가 `이 run의 terminal에 실린 worker_run_id가 정확히 1개`인 경우에만 그 값을 대상으로 삼고, 0건·2건 이상이면 조회를 건너뛰어 파생값 없음으로 처리한다. 파생값이 있으면 `--worker-duration-minutes` 미지정 시 자동 기록(경고 없음), 명시값이 파생값과 같으면 수용하되 `worker_duration_minutes_deprecated` 경고를 얹고, 다르면 상태 변경 이전 시점에 `worker_duration_conflict`(RUN_LOG_STATE_ERROR_CODES 등재, ERROR_CODES와 물리 분리)로 즉시 거부해 state.json을 손대지 않는다. 파생값을 아직 얻을 수 없으면(terminal 미기록 등) 명시값을 그대로 통과시켜 기존 수동 경로와 응답 키 집합이 바이트 동일하다(H-6, S-9). CONTRACT §2.5의 채널 등급·override 조항은 이번 범위에 포함하지 않는다(D-P9). build_todo_mirror()는 stdout 전용 파생 미러(state.json 비접촉)로 PostToolUse hook이 세션에 결정론적으로 주입한다. init --run-log-mode {shadow,active}는 CONTRACT §2.5 state-tool.init.run-log-mode를 구현한다 — shadow는 항상 지원하고, active는 `_resolve_active_channel()`이 호출자가 명시적으로 넘긴 `--profiles` 파일에서 `--channel-id` 항목을 찾은 경우에만 그 channel의 completion_profile/adapter_id/adapter_sha256/receipt_sha256을 completion_profile_receipt로 고정해 수용하며(135 W-4, H-4 — profiles.json 자체 생성·channel 자동 승격은 하지 않는다), 그 외(미지정 `--profiles`·미승인 channel)는 여전히 profile_not_found로 거부한다. _cmd_init_run_log()가 outbox 2단 원자 쓰기(_atomic_write_state_json, pending→기록 코어 init/append lock_held=True 호출→active)로 state.json schema_version 1.2 + run_log 블록과 첫 run.started 사건을 만든다. `_check_active_completion_evidence()`(135 W-4, CONTRACT §1.5)는 cmd_mark가 완료(--done, --step 최종 단계 포함) 전이를 시도할 때 row 주소 해석보다 먼저 실행되어, active mode + completion_profile≠cooperative인 run에 trusted terminal 사건 정확히 1건(그리고 observed_trajectory면 PM이 아닌 actor의 trusted activity 1건 이상)이 없으면 `completion_evidence_missing`으로 거부하고 state.json을 손대지 않는다. `verify --run-log-completeness-check`(135 W-4, CONTRACT §1.4/§1.5, 7번째 상호 배타 라우트)는 `_run_log_completeness_check()`로 state.json rows와 조각(committed)·보관함(pending) 사건을 대조해 `missing_state_changed`/`missing_pm_activity`/`missing_gate_event`/`unobserved_worker_boundary` 4종 누락 목록과, committed+pending 전 구간에서 조회하는 `last_observed_decision`/`last_observed_state_change`/`last_observed_boundary` 3필드(`{event_id, ts, ref}` 또는 None)를 항상 반환한다 — 구조 검증(run-log-tool validate-run)과 별개 축이며 read-only·비차단(exit 0)이다. --run-log-mode 미지정 경로는 기존 save_state_json()을 그대로 타 바이트 동일성을 유지한다(D-L, C-3). _atomic_write_state_json()은 tmp→fsync→os.replace 원자 쓰기이며, run_log.pending_events가 있으면 쓰기 직전 기록 코어의 redact() 초크포인트를 통과시킨다(D-9, GC-001). _import_run_log_core()는 importlib.util.spec_from_file_location으로 기록 코어를 sys.path 오염 없이 단일 모듈 적재한다(GC-007) — 형제 배치 우선, 없으면 배포본(_run_log_core_dir(), D-C). RUN_LOG_STATE_ERROR_CODES는 run-log 계열 상태 도구 오류 코드(profile_not_found/run_log_missing/run_log_pending/run_log_outbox_full/run_log_write_failed/event_too_large) 전용 별도 테이블이며 ERROR_CODES 딕셔너리 리터럴과 물리 분리된다(D-A, F-6) — err()의 _error_template()가 ERROR_CODES→RUN_LOG_STATE_ERROR_CODES 순으로 조회만 하고, 두 테이블 모두에 없는 코드는 .format() 호출 없이 code 문자열 그대로를 메시지로 쓴다(GC-008). run_log_commit()이 advance/mark/block/add-row/status의 상태 변경과 state.changed 적재(단일 event 또는 event list, build_state_changed_event, 조합 A7·event_id 사전 확정)를 한 번의 원자 쓰기로 커밋한 뒤 _run_log_drain()의 멱등 append와 보관함 비우기로 잇는다(CONTRACT §1.4, TRD D-2, D-3) — advance/mark는 auto_approve_prior_user_confirmations()가 자동 승인한 각 사용자 확인 행과 대상 행 전이를 각각 독립 state.changed로 만들어 event list로 넘기며, 리스트 admission은 순서대로 전부 통과해야만 보관함에 반영되는 전부-아니면-전무다(H-1) — append가 실패해도 상태 전이는 이미 커밋돼 교착되지 않고 응답 warnings에 run_log_pending만 실린다. run_log_outbox_admit()은 항목당 4 KiB·전체 128건(최악 512 KiB) 상한을 집행하며 일반 한도는 128 − 보관함 override 사건 수이고, 위반 시 각각 event_too_large·run_log_outbox_full로 전이를 시작하지 않는다. _run_log_drain()은 완전한 사건만 순서대로 재전송하고 첫 실패에서 멈추며 이미 조각에 있는 event_id는 건너뛰고, 보관함에 run.started가 있을 때만 실행 디렉터리·첫 조각을 다시 만든다(복구 가능 초기화). run_log_diagnose()는 validate에 합류해 보관함 잔량을 run_log_pending(recoverable_init 표시)으로, 활성 계약인데 조각·run.started가 없으면 run_log_missing으로 보고하며 스키마를 강등하거나 블록을 지우지 않는다(§1.4, AC-3). run_log 블록이 없는 1.0/1.1 태스크는 run_log_commit()이 곧바로 save_state_json()으로 우회해 산출물·응답 키 집합이 종전과 동일하다(C-3). state.schema.json은 schema_version 1.2와 run_log 블록(필수 7필드·pending_events maxItems 128)을 등재한다. init --actor pm은 --skill opd/opds에서만 지원되며(그 외 skill과 조합 시 actor_unsupported_for_skill로 exit 1) 지정 시에만 state.json에 actor 키를 조건부 영속화한다. log-event/gate-request/gate-resolve(135 W-3, CONTRACT §2.4)는 run_log_commit()의 같은 outbox/admission/drain 경로를 재사용해 PM activity·gate.requested·gate.resolved 사건을 기록하며 (actor_not_allowed/schema_invalid/refs_invalid/gate_not_requested/gate_duplicate/task_path_not_absolute를 방출), run_log_core는 호출하지 않아 TRD D-5 단방향 의존을 유지한다.",
   "note": "boot-summary는 허브 direct 태스크와 registry 발급 canonical task_path를 통합해 최신 3건, 잔여 건수, bounded 경로 이상을 읽기 전용 JSON으로 반환한다.",
   "exports": [
     "cmd_init", "cmd_show", "cmd_resolve_mode", "cmd_advance", "cmd_mark",
@@ -23,7 +23,13 @@
     "run_log_outbox_admit", "save_state_json_atomic", "run_log_commit", "run_log_diagnose",
     "build_state_changed_event", "_run_log_drain", "_run_log_segment_records",
     "_run_log_block", "_run_log_event_bytes", "_run_log_is_override_event",
-    "_resolve_sole_terminal_worker_run_id", "_reconcile_worker_duration_minutes"
+    "_resolve_sole_terminal_worker_run_id", "_reconcile_worker_duration_minutes",
+    "cmd_log_event", "cmd_gate_request", "cmd_gate_resolve",
+    "_require_absolute_task_path", "_run_log_all_records",
+    "_validate_run_log_refs", "_build_pm_activity_data",
+    "_build_pm_activity_event", "_build_gate_event",
+    "_resolve_active_channel", "_check_active_completion_evidence",
+    "_run_log_completeness_check"
   ]
 }
 """
@@ -303,6 +309,9 @@ RUN_LOG_STATE_ERROR_CODES = {
         "기록 append에 실패했습니다: {detail}",
     "event_too_large":
         "사건이 보관함 항목 상한을 초과했습니다({bytes}B > {limit}B) — 증거는 별도 파일로 분리하고 항목에는 경로·SHA-256만 넣으십시오.",
+    # 135 W-4 (CONTRACT §1.5/§4.2) — active completion 등급이 요구하는 기계 증거 부족.
+    "completion_evidence_missing":
+        "active completion profile이 요구하는 trusted 증거가 부족합니다: {reason}",
     # W-7 (PLAN D-P8, CONTRACT §2.5 시간 절/§2.2): 1.2 태스크의 명시 --worker-duration-minutes가
     #   W-6 코어 조회 파생값과 다르면 거부한다. run_log_core.RUN_LOG_ERROR_CODES에도 같은 코드가
     #   있으나 그쪽은 run-log-tool CLI(reconcile-duration) 표면 전용 별도 테이블이다 — 이 항목은
@@ -311,6 +320,23 @@ RUN_LOG_STATE_ERROR_CODES = {
         "명시한 --worker-duration-minutes({explicit_minutes}분)가 워커 종료 사건에서 파생된 "
         "분값({derived_minutes}분, worker_run_id={worker_run_id})과 다릅니다 — 파생값을 신뢰해 "
         "거부합니다. 인자 없이 다시 mark하면 파생값이 자동 기록됩니다.",
+    # W-3 (135, CONTRACT §2.4 state-tool 신규 3개 서브명령: log-event/gate-request/gate-resolve)
+    "task_path_not_absolute":
+        "task path는 절대 경로여야 합니다(CONTRACT §3.2 M-2): {path}",
+    "task_lock_timeout":
+        "배타 락 대기가 상한을 초과했습니다(CONTRACT §2.7 M-4): {path}",
+    "actor_not_allowed":
+        "이 명령은 PM actor 사건만 기록합니다 — actor.kind={actor_kind}는 허용되지 않습니다.",
+    "gate_not_requested":
+        "gate_id={gate_id}에 선행 gate.requested가 없습니다.",
+    "gate_duplicate":
+        "gate_id={gate_id}에 대해 이미 {event} 사건이 기록되어 있습니다(중복).",
+    # W-1 blocker(2026-09-16) — 소유자 승인 완료: 절대경로 refs 거부 전용 코드 신설.
+    # CONTRACT §2.2 표·surfaces.json state-tool.log-event.err 등재는 W-5의 몫.
+    "refs_invalid":
+        "refs는 프로젝트 상대 경로만 허용합니다(절대 경로·원문 금지, CONTRACT §1.1): {ref}",
+    "schema_invalid":
+        "폐쇄형 스키마 위반(CONTRACT §1.1/§1.3): {detail}",
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -501,6 +527,31 @@ def err(command, code, message=None, exit_code=1, **kwargs):
     payload = {"ok": False, "command": command, "error": code, "message": message}
     payload.update(kwargs)
     print(json.dumps(_with_transition_fields(payload), ensure_ascii=False, default=str))
+    sys.exit(exit_code)
+
+
+def _rl_err(command, code, message=None, exit_code=1, **kwargs):
+    """CONTRACT §2.1 공통 응답 봉투 — run-log 계열 전용 **중첩** 오류 객체.
+
+    기존 22종 도구의 평면 봉투(`err()`, `{"ok": false, "error": "<code>", ...}`)와
+    의도적으로 다르다 — CONTRACT §2.1은 run-log 계열이 `error.code`/`error.message`/
+    `error.detail`로 분리된 객체를 반환하도록 확정했고("기존 도구는 이 형태로
+    이전하지 않는다"), 그 경계는 "run-log 계열 신규 표면인가"다(§2.1). 이 함수는
+    `log-event`/`gate-request`/`gate-resolve` 3개 신규 표면 전용이며, 기존
+    서브커맨드는 여전히 `err()`의 평면 봉투를 그대로 쓴다(C-2 기존 동작 보존).
+    """
+    if message is None:
+        template = _error_template(code)
+        if template is None:
+            message = code
+        else:
+            try:
+                message = template.format(**kwargs)
+            except (KeyError, IndexError):
+                message = template
+    payload = {"ok": False, "command": command,
+               "error": {"code": code, "message": message, "detail": kwargs}}
+    print(json.dumps(payload, ensure_ascii=False, default=str))
     sys.exit(exit_code)
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -1013,14 +1064,22 @@ def build_state_changed_event(state, *, task_id, command, from_status, to_status
 
 
 def run_log_commit(task_path, state, command, event=None):
-    """상태 변경 + 보관함 적재를 **한 번의 원자 쓰기**로 커밋한다 (D-2, §2.5).
+    """상태 변경 + 보관함 적재를 **한 번의 원자 쓰기**로 커밋한다 (D-2, D-3, §2.5).
 
     `run_log` 블록이 없는 태스크(1.0/1.1)는 기존 `save_state_json()`을 그대로 타고
     반환도 없다 — 미지정 경로의 산출물·응답 키 집합이 종전과 동일해야 한다(C-3).
 
+    `event`는 단일 이벤트 dict(하위호환) 또는 이벤트 dict의 list를 받는다(D-3).
+    list인 경우 `advance`/`mark`가 자동 승인한 각 사용자 확인 행의 `state.changed`와
+    대상 행 전이의 `state.changed`를 함께 실어, 여러 상태 변경을 **한 번의
+    admission·원자 쓰기**로 커밋한다(H-1) — admission 판정은 순서대로 전부
+    통과해야만 `block["pending_events"]`에 반영되며, 도중 하나라도 거부되면
+    `err()`가 즉시 종료시켜 그 어떤 이벤트도 보관함에 들어가지 않는다(부분
+    admission 불가, S-4).
+
     순서:
-      ① admission 판정 → 위반이면 `err()`로 전이를 **시작하지 않는다**(state.json 미기록)
-      ② `status=pending` + 보관함 적재 + 상태 변경을 1회 원자 쓰기로 커밋
+      ① admission 판정(리스트 전원) → 위반이면 `err()`로 전이를 **시작하지 않는다**(state.json 미기록)
+      ② `status=pending` + 보관함 일괄 적재 + 상태 변경을 1회 원자 쓰기로 커밋
       ③ 기록 코어 멱등 append(락 보유) — 실패해도 ②는 유지된다(교착 금지)
       ④ 성공분을 보관함에서 비우고 `status`를 확정하는 2차 원자 쓰기
 
@@ -1036,10 +1095,17 @@ def run_log_commit(task_path, state, command, event=None):
     core = _import_run_log_core()
 
     if event is not None:
-        admitted, code, detail = run_log_outbox_admit(block, event)
-        if not admitted:
-            err(command, code, **(detail or {}))
-        block["pending_events"] = list(block.get("pending_events") or []) + [event]
+        events = event if isinstance(event, list) else [event]
+        # H-1: admission 판정을 working copy(pending 스냅샷 누적)로 전부 통과시킨
+        # 뒤에만 block["pending_events"]를 갱신한다 — 전부-아니면-전무.
+        _working_pending = list(block.get("pending_events") or [])
+        for _ev in events:
+            admitted, code, detail = run_log_outbox_admit(
+                {**block, "pending_events": _working_pending}, _ev)
+            if not admitted:
+                err(command, code, **(detail or {}))
+            _working_pending = _working_pending + [_ev]
+        block["pending_events"] = _working_pending
 
     if block.get("pending_events") and block.get("status") != "overridden":
         block["status"] = "pending"
@@ -1118,6 +1184,454 @@ def run_log_diagnose(task_path, state):
             "detail": f"run.started not found in segments for {run_id}",
         })
     return violations
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# W-3 (135, CONTRACT §2.4) — log-event / gate-request / gate-resolve
+#   surfaces.json이 선언한 3개 신규 표면. run_log_commit()의 outbox/admission/
+#   drain 경로를 그대로 재사용한다 — 별도 기록 경로를 만들지 않는다.
+# ─────────────────────────────────────────────────────────────────────────────
+
+_PM_ACTIVITY_KIND_ENUM = {"decision", "validation", "retry", "progress"}
+
+
+def _require_absolute_task_path(task_path_str, command):
+    """CONTRACT §3.2 (M-2) — task path는 절대 경로여야 한다.
+
+    기존 서브커맨드(advance/mark/...)는 `resolve_task_path()`로 상대경로를
+    말없이 절대화하는 관례를 그대로 둔다(PRINCIPLES §3 수술적 변경 — 기존 경로
+    불변). log-event/gate-request/gate-resolve 3개 신규 표면만 이 계약을
+    새로 집행한다.
+    """
+    p = pathlib.Path(task_path_str)
+    if not p.is_absolute():
+        _rl_err(command, "task_path_not_absolute", path=task_path_str)
+    return resolve_task_path(task_path_str, command)
+
+
+def _run_log_all_records(task_path, block):
+    """이미 조각에 기록된 사건 + 아직 드레인되지 않은 보관함 사건을 합쳐 반환한다.
+
+    gate_id 유일성·선행관계 판정은 조각(진실의 원천)뿐 아니라 아직 드레인되지
+    않은 보관함 항목까지 봐야 한다 — 그렇지 않으면 직전 호출이 기록 실패로
+    보관함에만 남아 있는 상태에서 같은 gate_id가 중복 승인될 수 있다.
+    """
+    run_id = block.get("active_run_id")
+    committed = _run_log_segment_records(task_path, run_id) or []
+    pending = list(block.get("pending_events") or [])
+    return committed + pending
+
+
+_RUN_LOG_TERMINAL_EVENTS = ("worker.completed", "worker.failed", "worker.blocked")
+
+
+def _check_active_completion_evidence(task_path, block, command):
+    """135 W-4 (AC-6, C-2, H-4) — active 완료 게이트.
+
+    `completion_profile`이 `cooperative`가 아닌 active run의 완료 전이는
+    trusted terminal 사건 정확히 1건을 요구하고, `observed_trajectory`는
+    추가로 trusted `activity` 1건 이상을 요구한다(CONTRACT §1.5). 증거가
+    부족하면 `completion_evidence_missing`으로 거부해 state.json을 손대지
+    않는다(호출 시점이 아직 원자 쓰기 이전이어야 한다).
+    """
+    if block.get("mode") != "active":
+        return
+    profile = block.get("completion_profile")
+    if profile == "cooperative":
+        return
+
+    records = _run_log_all_records(task_path, block)
+    terminal_events = [r for r in records if r.get("event") in _RUN_LOG_TERMINAL_EVENTS]
+    if len(terminal_events) != 1:
+        err(command, "completion_evidence_missing",
+            reason="terminal_missing_or_multiple", terminal_count=len(terminal_events))
+
+    if profile == "observed_trajectory":
+        activity_events = [
+            r for r in records
+            if r.get("event") == "activity" and (r.get("actor") or {}).get("kind") != "PM"
+        ]
+        if not activity_events:
+            err(command, "completion_evidence_missing", reason="activity_missing")
+
+
+_RUN_LOG_BOUNDARY_EVENTS = (
+    "run.started", "run.completed",
+    "worker.started", "worker.completed", "worker.failed", "worker.blocked",
+)
+
+
+def _run_log_completeness_check(task_path):
+    """135 W-4 (AC-5~AC-8, D-6) — state.json run_log 계약과 JSONL 사건을 대조해
+    완전성 갭을 진단한다(읽기 전용, 비차단, exit 0).
+
+    구조 검증(run-log-tool validate-run)과는 별개 축이다 — 순번·스키마가
+    유효해도 기대되는 상태 전이·PM 활동·gate 쌍·worker 경계가 실제로 관측됐는지는
+    이 함수만이 판정한다(AC-8, C-4/C-5, TASK-135.S-9).
+
+    반환 필드:
+      - `missing_state_changed` / `missing_pm_activity` / `missing_gate_event` /
+        `unobserved_worker_boundary`: 누락 목록 4종
+      - `last_observed_decision` / `last_observed_state_change` / `last_observed_boundary`:
+        관측 지점 3필드(`{event_id, ts, ref}` 또는 없으면 None) — 누락 목록과
+        무관하게 항상 반환한다(AC-7, 사람 판독이 아닌 결정론 조회).
+
+    run_log 블록이 없는 태스크(1.0/1.1)는 모든 목록이 비고 3필드가 전부 None이다
+    (C-3, 완전성 검사 대상이 아님).
+    """
+    result = {
+        "missing_state_changed": [],
+        "missing_pm_activity": [],
+        "missing_gate_event": [],
+        "unobserved_worker_boundary": [],
+        "last_observed_decision": None,
+        "last_observed_state_change": None,
+        "last_observed_boundary": None,
+    }
+
+    state_file = pathlib.Path(task_path) / "state.json"
+    if not state_file.is_file():
+        return result
+    try:
+        state = json.loads(state_file.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return result
+
+    block = _run_log_block(state)
+    if block is None:
+        return result
+
+    run_id = block.get("active_run_id")
+    committed = _run_log_segment_records(task_path, run_id) or []
+    # 관측 지점 3필드는 아직 조각에 드레인되지 않은 보관함 사건까지 포함해 "마지막으로
+    # 관측된 지점"을 결정론적으로 조회한다(AC-7) — _run_log_all_records() 재사용.
+    all_records = _run_log_all_records(task_path, block)
+
+    # ── 누락 ① missing_state_changed — committed(진짜 persist된) 로그만 근거로 삼는다.
+    #   보관함에만 있는 사건은 run_log_pending이 별도로 진단하므로(§1.4), 여기서
+    #   "누락"으로 다시 잡으면 두 진단이 뒤섞인다.
+    committed_transitions = {}
+    for rec in committed:
+        if rec.get("event") == "state.changed" and isinstance(rec.get("data"), dict):
+            row_key = rec["data"].get("row_key")
+            to_status = rec["data"].get("to")
+            committed_transitions.setdefault(row_key, set()).add(to_status)
+
+    rows = state.get("rows") or []
+    missing_state_changed = []
+    for row in rows:
+        row_key = row.get("key") or (f"row:{row['row_id']}" if row.get("row_id") else None)
+        status = row.get("status")
+        observed = committed_transitions.get(row_key, set())
+        if status in ("in_progress", "done") and status not in observed:
+            missing_state_changed.append({
+                "row_id": row.get("row_id"), "row_key": row_key,
+                "stage": row.get("stage"), "expected": status,
+            })
+        elif status == "done" and "in_progress" not in observed:
+            # 자동 승인 등으로 in_progress 체크포인트 없이 곧바로 done에 도달한 경우
+            # (S-9) — 구조적으로는 유효하지만 완전성 관점에서는 관측 중간 지점 갭이다.
+            missing_state_changed.append({
+                "row_id": row.get("row_id"), "row_key": row_key,
+                "stage": row.get("stage"), "expected": "in_progress",
+            })
+
+    # 마지막 done 행 바로 다음 행이 여전히 pending이면(TASK 보고 후 중단 재현,
+    # TASK-135.S-8) 다음 stage 진입 자체가 관측되지 않은 것이다.
+    done_indices = [i for i, r in enumerate(rows) if r.get("status") == "done"]
+    if done_indices:
+        _next_idx = max(done_indices) + 1
+        if _next_idx < len(rows) and rows[_next_idx].get("status") == "pending":
+            _next_row = rows[_next_idx]
+            _next_key = _next_row.get("key") or (
+                f"row:{_next_row['row_id']}" if _next_row.get("row_id") else None)
+            missing_state_changed.append({
+                "row_id": _next_row.get("row_id"), "row_key": _next_key,
+                "stage": _next_row.get("stage"), "expected": "in_progress",
+                "detail": "다음 stage 진입 관측 없음(TASK 보고 후 중단 후보)",
+            })
+    result["missing_state_changed"] = missing_state_changed
+
+    # ── 누락 ② missing_gate_event — gate.requested만 있고 gate.resolved가 없는 경우.
+    requested_ids = {rec.get("gate_id") for rec in all_records if rec.get("event") == "gate.requested"}
+    resolved_ids = {rec.get("gate_id") for rec in all_records if rec.get("event") == "gate.resolved"}
+    result["missing_gate_event"] = [
+        {"gate_id": gid, "expected": "gate.resolved"}
+        for gid in sorted(requested_ids - resolved_ids) if gid
+    ]
+
+    # ── 누락 ③ unobserved_worker_boundary — worker.started만 있고 terminal이 없는 경우.
+    started_ids = {rec.get("worker_run_id") for rec in all_records if rec.get("event") == "worker.started"}
+    terminal_ids = {rec.get("worker_run_id") for rec in all_records
+                    if rec.get("event") in _RUN_LOG_TERMINAL_EVENTS}
+    result["unobserved_worker_boundary"] = [
+        {"worker_run_id": wid} for wid in sorted(started_ids - terminal_ids) if wid
+    ]
+
+    # ── 누락 ④ missing_pm_activity — 최소 구현: 이번 범위 fixture가 요구하지 않아
+    #   비워 둔다(과확장 방지, H-4와 동일한 최소주의). 향후 필요 시 별도 W가 채운다.
+
+    # ── 관측 지점 3필드 (AC-7) — committed+pending 전 구간에서 마지막 레코드를 찾는다.
+    def _observation(rec):
+        if not rec:
+            return None
+        return {"event_id": rec.get("event_id"), "ts": rec.get("timestamp"), "ref": rec.get("event")}
+
+    decisions = [
+        rec for rec in all_records
+        if rec.get("event") == "activity" and isinstance(rec.get("data"), dict)
+        and rec["data"].get("kind") == "decision"
+    ]
+    state_changes = [rec for rec in all_records if rec.get("event") == "state.changed"]
+    boundaries = [rec for rec in all_records if rec.get("event") in _RUN_LOG_BOUNDARY_EVENTS]
+
+    result["last_observed_decision"] = _observation(decisions[-1] if decisions else None)
+    result["last_observed_state_change"] = _observation(state_changes[-1] if state_changes else None)
+    result["last_observed_boundary"] = _observation(boundaries[-1] if boundaries else None)
+
+    return result
+
+
+def _validate_run_log_refs(refs, command):
+    """CONTRACT §1.1 refs 제약 — 프로젝트 상대 경로만 허용, 절대 경로는 거부한다
+    (원문 그대로 저장하지 않는다는 선택 대신, 명시적 거부를 택한다 — 회신에 명시).
+    """
+    if not refs:
+        return None
+    normalized = list(refs)
+    for ref in normalized:
+        if pathlib.Path(ref).is_absolute():
+            _rl_err(command, "refs_invalid", ref=ref)
+    return normalized
+
+
+def _build_pm_activity_data(args, command):
+    """CONTRACT §1.3 PM activity 폐쇄 목록 — `data`는 `kind` 1개 키만 허용하고
+    값은 `{decision, validation, retry, progress}` 4종 enum이다. 위반은
+    `schema_invalid`로 거부한다(§1.1 폐쇄형 스키마 위반 범위).
+    """
+    raw_data = getattr(args, "data", None)
+    if raw_data:
+        try:
+            parsed = json.loads(raw_data)
+        except json.JSONDecodeError as exc:
+            _rl_err(command, "schema_invalid", detail=f"--data가 유효한 JSON이 아님: {exc}")
+        if not isinstance(parsed, dict) or set(parsed.keys()) != {"kind"}:
+            _rl_err(command, "schema_invalid",
+                detail="activity data는 kind 1개 키만 허용합니다(CONTRACT §1.3 폐쇄 목록)")
+        kind = parsed.get("kind")
+    else:
+        kind = args.kind
+    if kind not in _PM_ACTIVITY_KIND_ENUM:
+        _rl_err(command, "schema_invalid",
+            detail=f"data.kind={kind!r}는 4종 enum 밖입니다(CONTRACT §1.3)")
+    return {"kind": kind}
+
+
+def _build_pm_activity_event(state, *, task_id, command, kind, summary, reason, refs,
+                             stage, task_step, work_item):
+    """PM `activity` 사건(조합 A4: actor.kind=PM, provenance.type=direct,
+    recorded_by.kind=PM) — §1.1 공통 필드 전건 + §1.3 폐쇄 목록 준수 payload.
+    """
+    core = _import_run_log_core()
+    block = _run_log_block(state) or {}
+    return {
+        "schema_version": "1.0",
+        "event_id": core.new_event_id(),
+        "request_id": f"req_{uuid.uuid4()}",
+        "task_id": task_id,
+        "run_id": block.get("active_run_id"),
+        "parent_run_id": None,
+        "worker_run_id": None,
+        "caused_by_event_id": None,
+        "stage": stage,
+        "task_step": task_step,
+        "work_item": work_item,
+        "gate_id": None,
+        "event": "activity",
+        "actor": {"kind": "PM", "id": "PM", "provider": None, "session_id": None},
+        "provenance": {
+            "type": "direct",
+            "recorded_by": {"kind": "PM", "id": "PM"},
+            "worker_log_token_id": None,
+            "source": None,
+        },
+        "summary": summary,
+        "reason": reason,
+        "reason_code": None,
+        "duration_ms": None,
+        "duration_source": None,
+        "duration_unknown_reason": None,
+        "refs": refs,
+        "timestamp": core.utc_now_ms(),
+        "data": kind,
+    }
+
+
+def cmd_log_event(args):
+    """state-tool log-event — PM direct activity 기록 (CONTRACT §2.4 state-tool.log-event).
+
+    `actor.kind=worker` 지정은 `actor_not_allowed`로 거부한다(§9) — 이 표면은
+    PM actor 사건만 수용한다. run_log_commit()의 공통 outbox/admission/drain
+    경로를 그대로 재사용한다.
+    """
+    command = "log-event"
+    actor_kind = getattr(args, "actor", None) or "PM"
+    if actor_kind != "PM":
+        _rl_err(command, "actor_not_allowed", actor_kind=actor_kind)
+
+    task_path = _require_absolute_task_path(args.task_path, command)
+    state = load_state_json(task_path, command)
+
+    data_kind = _build_pm_activity_data(args, command)
+    refs = _validate_run_log_refs(getattr(args, "refs", None), command)
+
+    event = _build_pm_activity_event(
+        state, task_id=task_path.name, command=command,
+        kind=data_kind, summary=args.summary, reason=getattr(args, "reason", None),
+        refs=refs, stage=getattr(args, "stage", None),
+        task_step=getattr(args, "task_step", None),
+        work_item=getattr(args, "work_item", None))
+
+    fields = run_log_commit(task_path, state, command, event=event)
+    warnings = fields.get("warnings") or []
+    if any(w.get("code") == "run_log_pending" for w in warnings):
+        pending_count = ((fields.get("run_log") or {}).get("pending") or 0)
+        _rl_err(command, "run_log_pending", count=pending_count)
+
+    status = (fields.get("run_log") or {}).get("status")
+    ok(command, event_id=event["event_id"], status=status)
+
+
+def _build_gate_event(state, *, task_id, command, event_name, gate_id, actor_kind,
+                      summary, reason, data):
+    """`gate.requested`/`gate.resolved` 공통 골격 — §1.1 공통 필드 전건.
+
+    `actor.kind=PM`이면 조합 A4, `user`면 A5, `auto`면 A6이다. 세 조합 모두
+    `recorded_by.kind ∈ {PM, tool}`(A4)·`{PM, tool}`(A5)·`{tool}`(A6)을 허용하므로
+    `recorded_by.kind="tool"`(state-tool 자신)로 통일해도 세 조합 모두에 유효하다.
+    """
+    core = _import_run_log_core()
+    block = _run_log_block(state) or {}
+    return {
+        "schema_version": "1.0",
+        "event_id": core.new_event_id(),
+        "request_id": f"req_{uuid.uuid4()}",
+        "task_id": task_id,
+        "run_id": block.get("active_run_id"),
+        "parent_run_id": None,
+        "worker_run_id": None,
+        "caused_by_event_id": None,
+        "stage": None,
+        "task_step": None,
+        "work_item": None,
+        "gate_id": gate_id,
+        "event": event_name,
+        "actor": {"kind": actor_kind, "id": actor_kind, "provider": None, "session_id": None},
+        "provenance": {
+            "type": "direct",
+            "recorded_by": {"kind": "tool", "id": "state-tool"},
+            "worker_log_token_id": None,
+            "source": None,
+        },
+        "summary": summary,
+        "reason": reason,
+        "reason_code": None,
+        "duration_ms": None,
+        "duration_source": None,
+        "duration_unknown_reason": None,
+        "refs": None,
+        "timestamp": core.utc_now_ms(),
+        "data": data,
+    }
+
+
+def cmd_gate_request(args):
+    """state-tool gate-request — `gate.requested` 기록 (CONTRACT §2.4 state-tool.gate-request).
+
+    같은 `gate_id`의 중복 requested는 `gate_duplicate`로 거부한다(§4.4). 조각 +
+    아직 드레인되지 않은 보관함 양쪽에서 유일성을 판정한다.
+    """
+    command = "gate-request"
+    task_path = _require_absolute_task_path(args.task_path, command)
+    state = load_state_json(task_path, command)
+    block = _run_log_block(state)
+
+    if block is not None:
+        existing = _run_log_all_records(task_path, block)
+        if any(r.get("event") == "gate.requested" and r.get("gate_id") == args.gate_id
+               for r in existing):
+            _rl_err(command, "gate_duplicate", gate_id=args.gate_id, event="gate.requested")
+
+    event = _build_gate_event(
+        state, task_id=task_path.name, command=command,
+        event_name="gate.requested", gate_id=args.gate_id, actor_kind="PM",
+        summary=args.summary, reason=None, data=None)
+
+    fields = run_log_commit(task_path, state, command, event=event)
+    warnings = fields.get("warnings") or []
+    if any(w.get("code") == "run_log_pending" for w in warnings):
+        pending_count = ((fields.get("run_log") or {}).get("pending") or 0)
+        _rl_err(command, "run_log_pending", count=pending_count)
+
+    status = (fields.get("run_log") or {}).get("status")
+    ok(command, event_id=event["event_id"], gate_id=args.gate_id, status=status)
+
+
+def cmd_gate_resolve(args):
+    """state-tool gate-resolve — `gate.resolved` 기록 (CONTRACT §2.4 state-tool.gate-resolve).
+
+    선행 `gate.requested` 없는 resolve는 `gate_not_requested`, 같은 `gate_id`의
+    중복 resolved는 `gate_duplicate`로 거부한다. 대기 시간(`waited_ms`)은 두
+    사건의 UTC timestamp 차분으로만 계산한다(§2.4 계약 불변식) — 벽시계를
+    별도로 다시 재지 않는다.
+    """
+    command = "gate-resolve"
+    task_path = _require_absolute_task_path(args.task_path, command)
+    state = load_state_json(task_path, command)
+    block = _run_log_block(state)
+
+    existing = _run_log_all_records(task_path, block) if block is not None else []
+    requested = [r for r in existing
+                 if r.get("event") == "gate.requested" and r.get("gate_id") == args.gate_id]
+    if not requested:
+        _rl_err(command, "gate_not_requested", gate_id=args.gate_id)
+    if any(r.get("event") == "gate.resolved" and r.get("gate_id") == args.gate_id
+           for r in existing):
+        _rl_err(command, "gate_duplicate", gate_id=args.gate_id, event="gate.resolved")
+
+    actor_kind_map = {"PM": "PM", "user": "user", "auto": "auto"}
+    actor_kind = actor_kind_map.get(args.owner, "PM")
+
+    event = _build_gate_event(
+        state, task_id=task_path.name, command=command,
+        event_name="gate.resolved", gate_id=args.gate_id, actor_kind=actor_kind,
+        summary=getattr(args, "note", None) or f"gate {args.gate_id} resolved: {args.verdict}",
+        reason=getattr(args, "note", None),
+        data={"verdict": args.verdict})
+
+    core = _import_run_log_core()
+    requested_ts = requested[0].get("timestamp")
+    waited_ms = None
+    if requested_ts:
+        try:
+            fmt = "%Y-%m-%dT%H:%M:%S.%fZ"
+            t0 = datetime.strptime(requested_ts, fmt).replace(tzinfo=timezone.utc)
+            t1 = datetime.strptime(event["timestamp"], fmt).replace(tzinfo=timezone.utc)
+            waited_ms = int((t1 - t0).total_seconds() * 1000)
+        except ValueError:
+            waited_ms = None
+
+    fields = run_log_commit(task_path, state, command, event=event)
+    warnings = fields.get("warnings") or []
+    if any(w.get("code") == "run_log_pending" for w in warnings):
+        pending_count = ((fields.get("run_log") or {}).get("pending") or 0)
+        _rl_err(command, "run_log_pending", count=pending_count)
+
+    status = (fields.get("run_log") or {}).get("status")
+    ok(command, event_id=event["event_id"], gate_id=args.gate_id,
+       waited_ms=waited_ms, status=status)
+
 
 def load_state_md(task_path):
     """STATE.md 텍스트 반환. 없으면 None."""
@@ -2091,11 +2605,37 @@ def build_rows_from_pipeline_json(spec_path, command, mode):
 
 # ── 1. init ──────────────────────────────────────────────────────────────────
 
-def _cmd_init_run_log(task_path, args, state, command):
-    """--run-log-mode 처리 (T02 워킹 스켈레톤, CONTRACT §2.5 state-tool.init.run-log-mode).
+def _resolve_active_channel(args, command):
+    """135 W-4 (H-4) — active init의 채널 배정 조회.
 
-    shadow만 지원한다. active는 배포된 profiles.json 배정 파일이 아직 없으므로
-    profile_not_found로 거부한다(PLAN H-4 — active 3종 분기의 완성은 후속 태스크 소관).
+    [MUST 범위] 호출자가 **명시적으로 전달한** `--profiles` 파일에 `--channel-id`
+    항목이 있을 때만 채널을 반환한다. `profiles.json`을 새로 만들거나 배포하지
+    않으며, channel을 자동 승격하지도 않는다 — 미승인 channel(또는 `--profiles`
+    미지정)은 그대로 `profile_not_found`로 거부한다(RED 회귀 가드).
+    """
+    channel_id = getattr(args, "channel_id", None)
+    profiles_arg = getattr(args, "profiles", None)
+    if not profiles_arg or not channel_id:
+        return None
+    try:
+        profiles_data = json.loads(pathlib.Path(profiles_arg).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    if not isinstance(profiles_data, dict):
+        return None
+    for channel in profiles_data.get("channels") or []:
+        if isinstance(channel, dict) and channel.get("channel_id") == channel_id:
+            return channel
+    return None
+
+
+def _cmd_init_run_log(task_path, args, state, command):
+    """--run-log-mode 처리 (CONTRACT §2.5 state-tool.init.run-log-mode).
+
+    shadow는 항상 지원한다. active는 호출자가 명시적으로 넘긴 `--profiles`
+    파일에 `--channel-id` 항목이 있을 때만 수용하고(_resolve_active_channel,
+    H-4), 그 외에는 기존과 동일하게 `profile_not_found`로 거부한다 — 배정
+    자동화·profiles.json 자체 생성은 이 범위에 포함하지 않는다.
 
     성공 시 `state`를 in-place로 갱신하고(schema_version="1.2" + run_log 블록),
     outbox 2단 커밋(TRD 데이터 흐름 (a))을 그대로 밟는다 — 1차 원자 쓰기(status=pending +
@@ -2103,8 +2643,11 @@ def _cmd_init_run_log(task_path, args, state, command):
     2차 원자 쓰기(보관함 비우고 status=active). ok() 응답에 병합할
     {run_id, run_log, status} 딕셔너리를 반환한다.
     """
+    active_channel = None
     if args.run_log_mode == "active":
-        err(command, "profile_not_found", channel_id=args.channel_id or "(미지정)")
+        active_channel = _resolve_active_channel(args, command)
+        if active_channel is None:
+            err(command, "profile_not_found", channel_id=args.channel_id or "(미지정)")
 
     run_log_core = _import_run_log_core()
 
@@ -2145,15 +2688,32 @@ def _cmd_init_run_log(task_path, args, state, command):
         "timestamp": ts,
     }
 
-    run_log_block = {
-        "contract_version": "1.0",
-        "mode": "shadow",
-        "completion_profile": "cooperative",
-        "completion_profile_receipt": None,
-        "active_run_id": run_id,
-        "status": "pending",
-        "pending_events": [started_event],
-    }
+    if active_channel is not None:
+        completion_profile_receipt = {
+            "channel_id": active_channel.get("channel_id"),
+            "adapter_id": active_channel.get("adapter_id"),
+            "adapter_sha256": active_channel.get("adapter_sha256"),
+            "receipt_sha256": active_channel.get("receipt_sha256"),
+        }
+        run_log_block = {
+            "contract_version": "1.0",
+            "mode": "active",
+            "completion_profile": active_channel.get("completion_profile", "cooperative"),
+            "completion_profile_receipt": completion_profile_receipt,
+            "active_run_id": run_id,
+            "status": "pending",
+            "pending_events": [started_event],
+        }
+    else:
+        run_log_block = {
+            "contract_version": "1.0",
+            "mode": "shadow",
+            "completion_profile": "cooperative",
+            "completion_profile_receipt": None,
+            "active_run_id": run_id,
+            "status": "pending",
+            "pending_events": [started_event],
+        }
     state["schema_version"] = "1.2"
     state["run_log"] = run_log_block
 
@@ -2467,6 +3027,9 @@ def cmd_advance(args):
 
     # 093 F-002 R-2: 앞 단계 미완 사용자 확인 행 자동 승인 (stage-transition guard보다 먼저)
     now_str = get_kst_datetime(command)
+    # W-2/D-3: auto_approve_prior_user_confirmations()가 in-place로 status를 done
+    # 갱신하므로, 각 행의 갱신 전 상태(data.from)를 먼저 스냅샷해 둔다.
+    _rl_prior_status_by_row_id = {r["row_id"]: r.get("status") for r in state["rows"][:row_index]}
     auto_approved = auto_approve_prior_user_confirmations(
         state, row_index, command,
         as_worker=getattr(args, "as_worker", False),
@@ -2498,15 +3061,23 @@ def cmd_advance(args):
 
     # 072 F-002/F-003: '다음 액션' 자동 파생(프론티어) + --next-action 오버라이드(비지속, M-3)
     state["next_action"] = getattr(args, "next_action", None) or _derive_next_action(state)
-    # T05: 1.2 태스크는 상태 변경과 state.changed 적재를 한 번의 원자 쓰기로 커밋한다.
+    # T05/D-3: 1.2 태스크는 자동 승인된 각 행 + 대상 행 전이를 각각 독립
+    #   state.changed로 만들어 한 번의 admission·원자 쓰기로 커밋한다(W-2, H-1).
     #   1.0/1.1 태스크는 run_log_commit()이 곧바로 save_state_json()으로 우회하므로
     #   산출물·응답 키 집합이 종전과 동일하다(C-3).
-    _rl_fields = run_log_commit(
-        task_path, state, command,
-        event=build_state_changed_event(
+    _rl_events = [
+        build_state_changed_event(
             state, task_id=task_path.name, command=command,
-            from_status="pending", to_status="in_progress", row=row,
-            note=resolve_owner_placeholder(args.note)))
+            from_status=_rl_prior_status_by_row_id.get(_rid), to_status="done",
+            row=next(r for r in state["rows"] if r["row_id"] == _rid),
+            note=f"auto-approved on {row['stage']} entry")
+        for _rid in auto_approved
+    ]
+    _rl_events.append(build_state_changed_event(
+        state, task_id=task_path.name, command=command,
+        from_status="pending", to_status="in_progress", row=row,
+        note=resolve_owner_placeholder(args.note)))
+    _rl_fields = run_log_commit(task_path, state, command, event=_rl_events)
 
     _jw = sync_state_md(task_path, state, now_str, command)
     ok(command, row_id=row["row_id"], stage=row["stage"], item=row["item"],
@@ -2731,6 +3302,17 @@ def cmd_mark(args):
     task_path = resolve_task_path(args.task_path, command)
     state     = load_state_json(task_path, command)
 
+    # 135 W-4 (AC-6, C-2, H-4): active 완료 전이는 trusted worker 증거가 충분해야
+    #   한다. row 주소 해석 이전에 판정한다 — mark는 --done이 필수 인자이므로
+    #   (--step N/M에서 N<M인 부분 완료를 제외하면) 항상 완료 시도이며, row 해석
+    #   실패(row_not_found 등)가 이 게이트보다 먼저 소비되지 않게 한다.
+    _rl_gate_step_str = getattr(args, "step", None) or getattr(args, "action_step", None)
+    _rl_gate_step_pair = _parse_step(_rl_gate_step_str) if _rl_gate_step_str else None
+    _rl_gate_will_complete = (_rl_gate_step_pair is None) or (_rl_gate_step_pair[0] == _rl_gate_step_pair[1])
+    _rl_gate_block = _run_log_block(state)
+    if _rl_gate_block is not None and _rl_gate_will_complete:
+        _check_active_completion_evidence(task_path, _rl_gate_block, command)
+
     # C-2: --owner / --auto-pass 배타 (§2.19)
     if args.auto_pass and args.owner and args.owner != "auto":
         err(command, "owner_flag_conflict")
@@ -2768,6 +3350,9 @@ def cmd_mark(args):
 
     # 093 F-002 R-2: 앞 단계 미완 사용자 확인 행 자동 승인 (stage-transition guard보다 먼저)
     now_str = get_kst_datetime(command)
+    # W-2/D-3: auto_approve_prior_user_confirmations()가 in-place로 status를 done
+    # 갱신하므로, 각 행의 갱신 전 상태(data.from)를 먼저 스냅샷해 둔다.
+    _rl_prior_status_by_row_id = {r["row_id"]: r.get("status") for r in state["rows"][:row_index]}
     auto_approved = auto_approve_prior_user_confirmations(
         state, row_index, command,
         as_worker=args.as_worker, force=args.force, now_str=now_str)
@@ -2905,12 +3490,24 @@ def cmd_mark(args):
     # 072 F-002/F-003: '다음 액션' 자동 파생(프론티어) + --next-action 오버라이드(비지속, M-3)
     state["next_action"] = getattr(args, "next_action", None) or _derive_next_action(state)
 
-    _rl_fields = run_log_commit(
-        task_path, state, command,
-        event=build_state_changed_event(
+    # 135 W-4: active 완료 게이트는 함수 진입 시점(row 해석 이전)에 이미 판정했다
+    #   (_rl_gate_will_complete) — 여기서 다시 검사하지 않는다(중복 방지).
+
+    # W-2/D-3: 자동 승인된 각 행 + 대상 행 전이를 각각 독립 state.changed로 만들어
+    #   한 번의 admission·원자 쓰기로 커밋한다(H-1).
+    _rl_events = [
+        build_state_changed_event(
             state, task_id=task_path.name, command=command,
-            from_status=_rl_from_status, to_status=row["status"], row=row,
-            note=note_text))
+            from_status=_rl_prior_status_by_row_id.get(_rid), to_status="done",
+            row=next(r for r in state["rows"] if r["row_id"] == _rid),
+            note=f"auto-approved on {row['stage']} entry")
+        for _rid in auto_approved
+    ]
+    _rl_events.append(build_state_changed_event(
+        state, task_id=task_path.name, command=command,
+        from_status=_rl_from_status, to_status=row["status"], row=row,
+        note=note_text))
+    _rl_fields = run_log_commit(task_path, state, command, event=_rl_events)
 
     # TEST stage done 시 verify 자동 훅 (PLAN 013)
     if row["stage"] == "TEST":
@@ -4830,17 +5427,28 @@ def cmd_verify(args):
     evidence_check = getattr(args, "evidence_check", False)
     code_scan_citation_check = getattr(args, "code_scan_citation_check", False)
     plan_contract_check = getattr(args, "plan_contract_check", False)
+    run_log_completeness_check = getattr(args, "run_log_completeness_check", False)
     task_md_arg = getattr(args, "task_md", None)
 
-    # 098/106 — 게이트 플래그 동시 지정 거부 (무성 무시 방지, PLAN §3.3.2 / §3.4.2 (5))
+    # 098/106/135 — 게이트 플래그 동시 지정 거부 (무성 무시 방지, PLAN §3.3.2 / §3.4.2 (5))
     _gate_flags = [_n for _n, _v in (
         ("--clarification-check", clarification_check),
         ("--evidence-check", evidence_check),
         ("--code-scan-citation-check", code_scan_citation_check),
         ("--plan-contract-check", plan_contract_check),
+        ("--run-log-completeness-check", run_log_completeness_check),
     ) if _v]
     if len(_gate_flags) > 1:
         err(command, "evidence_check_flag_conflict", flags=_gate_flags)
+
+    # 135 W-4 (AC-5~AC-8) — run-log 완전성 진단 라우터 (읽기 전용, 비차단)
+    if run_log_completeness_check:
+        result = _run_log_completeness_check(task_path)
+        print(json.dumps({
+            "ok": True, "command": command,
+            **result,
+        }, ensure_ascii=False))
+        sys.exit(0)
 
     # 005 — TASK 4요소 잠금 게이트 (fix_mode와 같은 조기 반환 패턴 — 독립 분기)
     if clarification_check:
@@ -5372,7 +5980,58 @@ def build_parser():
                        help="sdlc-v2 PLAN.md Work items 계약 검사 — 필수 열/W-ID/선행/그룹/"
                             "AC-C 연결/동일 그룹 파일 충돌 미충족 시 plan_contract_unmet(exit 1). "
                             "legacy PLAN은 skipped(exit 0)")
+    # 135 W-4 (AC-5~AC-8) — run-log 완전성 진단 (읽기 전용, 비차단)
+    p_vfy.add_argument("--run-log-completeness-check", action="store_true",
+                       dest="run_log_completeness_check",
+                       help="state.json run_log 계약과 JSONL 사건을 대조해 누락·관측"
+                            "지점을 진단한다(비차단, exit 0 유지). run_log 블록이 없으면"
+                            "skipped 취급")
     p_vfy.set_defaults(func=cmd_verify)
+
+    # ── log-event (135 W-3, CONTRACT §2.4 state-tool.log-event) ──
+    p_log = sub.add_parser(
+        "log-event",
+        help="PM direct activity 기록 (CONTRACT §2.4 state-tool.log-event)")
+    p_log.add_argument("task_path", metavar="<task-path>")
+    p_log.add_argument("--event", required=True, choices=["activity"],
+                       help="현재 activity만 지원")
+    p_log.add_argument("--kind", choices=sorted(_PM_ACTIVITY_KIND_ENUM),
+                       help="--data 미지정 시 필수. data.kind 값(§1.3 4종 enum)")
+    p_log.add_argument("--summary", required=True)
+    p_log.add_argument("--reason")
+    p_log.add_argument("--stage")
+    p_log.add_argument("--task-step", dest="task_step")
+    p_log.add_argument("--work-item", dest="work_item")
+    p_log.add_argument("--refs", nargs="*", default=None)
+    p_log.add_argument("--data",
+                       help="activity data 객체 원문 JSON(§1.3 폐쇄 목록 검증 대상, "
+                            "미지정 시 --kind로 구성)")
+    p_log.add_argument("--format", dest="format", choices=["json"])
+    p_log.set_defaults(func=cmd_log_event)
+
+    # ── gate-request (135 W-3, CONTRACT §2.4 state-tool.gate-request) ──
+    p_greq = sub.add_parser(
+        "gate-request",
+        help="gate.requested 기록 (CONTRACT §2.4 state-tool.gate-request)")
+    p_greq.add_argument("task_path", metavar="<task-path>")
+    p_greq.add_argument("--gate-id", dest="gate_id", required=True)
+    p_greq.add_argument("--summary", required=True)
+    p_greq.add_argument("--stage")
+    p_greq.add_argument("--task-step", dest="task_step")
+    p_greq.add_argument("--format", dest="format", choices=["json"])
+    p_greq.set_defaults(func=cmd_gate_request)
+
+    # ── gate-resolve (135 W-3, CONTRACT §2.4 state-tool.gate-resolve) ──
+    p_gres = sub.add_parser(
+        "gate-resolve",
+        help="gate.resolved 기록 (CONTRACT §2.4 state-tool.gate-resolve)")
+    p_gres.add_argument("task_path", metavar="<task-path>")
+    p_gres.add_argument("--gate-id", dest="gate_id", required=True)
+    p_gres.add_argument("--verdict", required=True, choices=["approved", "rejected", "auto"])
+    p_gres.add_argument("--owner", required=True, choices=["PM", "user", "auto"])
+    p_gres.add_argument("--note")
+    p_gres.add_argument("--format", dest="format", choices=["json"])
+    p_gres.set_defaults(func=cmd_gate_resolve)
 
     return parser
 

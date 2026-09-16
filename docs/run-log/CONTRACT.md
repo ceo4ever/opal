@@ -92,6 +92,8 @@ adapter와 importer는 `actor`가 아니다. 사건을 **수행한 의미상 주
 
 원천: 제안서 §4.1.
 
+`mode`(`shadow` | `active`)는 기록할 사건 종류를 줄이지 않는다. 아래 12종 사건은 shadow·active 두 모드 모두 같은 표준 payload로 기록하며, mode에 따라 관측 가능한 사건 종류나 스키마가 달라지지 않는다. 두 모드의 차이는 §1.5가 정의하는 완료 게이트 기여 여부(active) 대 비차단 진단(shadow)뿐이다.
+
 | `event` | 주체 | 유일성 | 추가 필수 조건 |
 |---|---|---|---|
 | `run.started` | `state-tool` | run마다 1건 | `actor.kind=tool`. `state-tool`이 outbox로 중개 |
@@ -125,6 +127,8 @@ adapter와 importer는 `actor`가 아니다. 사건을 **수행한 의미상 주
 | A6 | `auto` | `direct` | `tool` | `null` | 호출 event ID | 불가 |
 | A7 | `tool` | `direct` | `tool` | `null` | 사전 확정 event ID(= `request_id`) | 해당 없음 |
 | A8 | `PM` \| `user` \| `auto` \| `tool` | `import` | `tool` | `legacy_line` \| `oppl_event` | `source.id` + `source.sha256` + `source.locator` | 불가 |
+
+**PM `activity`의 사건 고유 payload 축 폐쇄 목록**: `actor.kind=PM` ∧ `provenance.type=direct`인 `activity` 사건에서, §1.1 공통 필드(`schema_version`·`event_id`·`timestamp`·`run_id`·`sequence`·`event`·`actor`·`provenance`·`caused_by_event_id`·`worker_run_id`·`stage`·`task_step`·`work_item` 등)는 §1.1 계약 그대로 적용되며 이 조문이 제한하지 않는다. 이 조문이 폐쇄하는 것은 사건 고유 의미 payload 두 축뿐이다: (a) `data` 객체 — `kind` 1개 키만 허용하고 값은 `{decision, validation, retry, progress}` 4종 enum, (b) 사람이 읽는 서술 축 — `summary`·`reason`·`refs` 외의 자유 서술 필드를 새로 만들지 않는다. 원본 프롬프트, chain-of-thought(내부 사고 과정), 비밀값은 `summary`·`reason`·`refs`·`data`를 포함한 어떤 필드에도 저장하지 않는다. `data`에 `kind` 외의 키가 있거나 `kind` 값이 4종 enum 밖이면 `state-tool.log-event`의 입력 검증(`_build_pm_activity_data()`)이 `schema_invalid`로 거부한다. 이 집행 지점은 `state-tool.log-event` CLI를 거치는 PM `activity` 생산 경로에만 적용되며, 이 표면을 거치지 않는 다른 생산 경로(adapter·importer 등)는 이 폐쇄 검사를 받지 않는다. 최상위 키 폐쇄 판정은 §1.1이 소유하므로 여기서 재서술하지 않는다.
 
 **명시적 거부 조합**
 
@@ -380,6 +384,7 @@ adapter와 importer는 `actor`가 아니다. 사건을 **수행한 의미상 주
 | `profile_receipt_mismatch` | `adapter_sha256`·`receipt_sha256` 불일치 | active 초기화 거부 | §6.1 |
 | `cooperative_active_rejected` | `cooperative` 채널에 active 설정 시도 | 거부 | §4.2 |
 | `actor_not_allowed` | 명령이 허용하지 않는 actor(예: `log-event`에 worker actor) | 거부 | §9 |
+| `refs_invalid` | `refs`에 프로젝트 상대 경로가 아닌 값(절대 경로 등)이 있음 | 거부 | §1.1 |
 | `redaction_failed` | 마스킹 불가로 판정된 원본 | 저장 거부, 메타데이터 사건만 기록 | §8.3 |
 | `task_path_not_absolute` | 전달된 task path가 절대 경로가 아님 | 거부 | §3.2 (M-2) |
 | **`task_lock_timeout`** | 배타 락 대기가 상한을 초과 | **오류 반환**(자동 재시도 금지) | **본 계약 §2.7 (M-4)** |
@@ -415,7 +420,7 @@ adapter와 importer는 `actor`가 아니다. 사건을 **수행한 의미상 주
 | `run_log_inconsistent` | `run-log-tool.validate-worker`, `.validate-run`, `.reconcile`, `state-tool.mark.completion-gate` |
 | `request_id_conflict` | `run-log-tool.append` |
 | `event_too_large` | `run-log-tool.append`, `.import-agentic`, `.import-oppl` |
-| `schema_invalid` | `run-log-tool.append`, `.import-agentic`, `.import-oppl` |
+| `schema_invalid` | `run-log-tool.append`, `.import-agentic`, `.import-oppl`, `state-tool.log-event` |
 | `provenance_invalid` | `run-log-tool.append` |
 | `worker_token_invalid` | `run-log-tool.append` |
 | `capability_expiry_invalid` | `run-log-tool.begin-worker` |
@@ -428,6 +433,7 @@ adapter와 importer는 `actor`가 아니다. 사건을 **수행한 의미상 주
 | `profile_receipt_mismatch` | `state-tool.init.run-log-mode` |
 | `cooperative_active_rejected` | `state-tool.init.run-log-mode` |
 | `actor_not_allowed` | `state-tool.log-event` |
+| `refs_invalid` | `state-tool.log-event` |
 | `redaction_failed` | `run-log-tool.append`, `.import-agentic`, `.import-oppl`, `.export` |
 
 - **변환기 표면 2종(`adapter.*`)은 이 대응의 대상이 아니다.** CLI가 아니므로 오류 봉투를 직접 반환하지 않고, 변환기가 관측한 실패는 자기가 호출한 `run-log-tool.append` 표면의 오류로 드러난다. MV-30의 양방향 검사는 `kind=cli`인 17개 표면만 대상으로 한다.
@@ -466,6 +472,10 @@ adapter와 importer는 `actor`가 아니다. 사건을 **수행한 의미상 주
 |---|---|
 | `state-tool.init.run-log-mode` | `--run-log-mode <shadow\|active>` 추가. active는 `--channel-id` 필수이며 배포된 `profiles.json` 항목과 hash를 검증해 `completion_profile_receipt`에 고정한다. 첫 원자 쓰기는 `status=pending` + `run.started` 보관함 적재, 이후 segment 생성·멱등 append·보관함 제거가 성공해야 `status=active` |
 | `state-tool.mark.completion-gate` | 완료 표시 시 채널 등급·provenance·시간 증거를 함께 검사. `--run-log-override`는 `--owner user` + `--note` 동시 필수이며 override bundle 2건을 한 번만 적재하고 `status=overridden`으로 둔다. 이후 해당 전이 1건 뒤에는 reconcile 외 추가 전이를 허용하지 않는다. `--worker-duration-minutes`는 1.0/1.1에서 현행 수용, 1.2에서 파생값 일치 시 수용+deprecated 경고, 불일치 시 `worker_duration_conflict` |
+
+**`state-tool verify --run-log-completeness-check`** (D-6, AC-7·AC-8): 기존 `verify` 명령의 7번째 상호 배타 검사 라우트다. `state.json` 현재 행과 조각(committed)·보관함(pending) 사건을 대조해 자동 승인을 포함한 누락을 진단한다. read-only·비차단(exit 0)이며, `run-log-tool validate-run`의 조각 자체 순번·스키마·provenance 검증과 별개 축이다 — `run-log-core`가 상태 파일을 읽지 않는 단방향 의존(§3.1) 때문에 상태 대조는 `state-tool`만 수행할 수 있다. 반환은 누락 목록 4종(`missing_state_changed`·`missing_pm_activity`·`missing_gate_event`·`unobserved_worker_boundary`)과 관측 지점 3필드(`last_observed_decision`·`last_observed_state_change`·`last_observed_boundary`, 각 `{event_id, ts, ref}` 또는 `null`)이며, 3필드는 누락 목록과 무관하게 항상 반환한다. 이 라우트는 기존 `state-tool.verify` CLI 표면의 플래그 확장이며 `surfaces.json`에 별도 표면 id를 신설하지 않는다(D-7, PLAN 범위 제약 — 신규 id 필요 여부는 PM 판단 대상으로 남긴다).
+
+`missing_pm_activity`는 현재 이 검사가 값을 채우는 조건을 결정론적으로 정의하지 않아 항상 빈 배열을 반환하는 미집행 공백이다. 트리거 조건을 이 계약이 아직 확정하지 않았으므로 임의로 지어내지 않는다 — 조건 확정은 후속 W의 몫이다.
 
 ### 2.6 기록 코어의 인프로세스 호출 형태
 
