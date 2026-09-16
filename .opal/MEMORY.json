@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_task_number": 136,
+  "last_task_number": 138,
   "memories": [
     {
       "title": "변경이력 제거 검토 결정 — A안 확정",
@@ -93,6 +93,13 @@
   ],
   "history": [
     {
+      "title": "137 run log 계약 완성",
+      "date": "2026-09-17",
+      "stage": "완료",
+      "path": "tasks/137-260916-opds-run-log-계약-완성/",
+      "result": "missing_pm_activity 트리거를 앵커 2종으로 계약에 정의하고 구현해 빈 배열이 '누락 없음'을 뜻하게 했고, PM activity payload 키 폐쇄를 CLI 표면에서 기록 코어 validate_event()로 내려 모든 A4 생산 경로에 동일 적용했다. 선행 실패 4건(HEAD 대리 기준선 3 + 인터프리터 게이트 1)도 정정해 3스위트 504 passed/0 failed."
+    },
+    {
       "title": "136 모드별 실행 지속성 계약",
       "date": "2026-09-16",
       "stage": "완료",
@@ -119,13 +126,6 @@
       "stage": "완료",
       "path": "tasks/134-260914-opd-agentic-모드-지속성-복원/",
       "result": "state-tool effective mode resolver로 사용자 검토 왕복·세션 재개·중첩/트랙 전환의 agentic 상속을 복원하고 S1~S10 및 전체 회귀를 통과함"
-    },
-    {
-      "title": "131 루프파일럿 실행안정화",
-      "date": "2026-09-14",
-      "stage": "완료",
-      "path": "tasks/131-260914-opd-루프파일럿-실행안정화/",
-      "result": "OPPL 상한·완료판정을 도구 집행으로 전환. oppl-runtime-tool 신설(admit ledger), opal-agent에 process group·독립 watchdog·terminal framing·출력 writer 소유권. tools.md를 1212행 카탈로그에서 92행 레지스트리로 재정의하고 출력 규범을 harness owner 문서로 분리해 stage.execute에 편입. 도구 README 13→22종 전수. 검증 1239 passed"
     }
   ]
 }
