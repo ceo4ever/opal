@@ -1,0 +1,233 @@
+{
+  "task_id": "137-260916-opds-run-log-계약-완성",
+  "skill": "opds",
+  "mode": "agentic",
+  "schema_version": "1.2",
+  "created_at": "2026-09-16 23:12:30",
+  "updated_at": "2026-09-17 07:31:32",
+  "current_status": "completed_unmerged",
+  "rows": [
+    {
+      "row_id": 1,
+      "stage": "TASK",
+      "item": "작업",
+      "key": "task.task_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-16 23:12:37",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 2,
+      "stage": "TASK",
+      "item": "사용자 확인",
+      "key": "task.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-16 23:14:10",
+      "owner": "auto",
+      "note": "auto-approved on PLAN entry"
+    },
+    {
+      "row_id": 3,
+      "stage": "PLAN",
+      "item": "작업",
+      "key": "plan.plan_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-16 23:23:50",
+      "owner": "PM",
+      "note": null,
+      "worker_duration_minutes": 8
+    },
+    {
+      "row_id": 4,
+      "stage": "PLAN",
+      "item": "목표-커버 게이트",
+      "key": "plan.scenario_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-16 23:33:03",
+      "owner": "PM",
+      "note": null,
+      "worker_duration_minutes": 4
+    },
+    {
+      "row_id": 5,
+      "stage": "PLAN",
+      "item": "PM Gate",
+      "key": "plan.pm_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-16 23:33:24",
+      "owner": "PM",
+      "note": "PM Gate pass: PLAN.md 직접 Read, 인용 근거 4곳 실측 검증(CONTRACT:131/README:514-515/state_tool:1371/run_log_core:801-805), plan-contract-check pass, code-scan-citation-check pass, validate violations 0, 목표-커버 게이트 verdict pass(coverage-check exit 0 + evaluator 2.0)",
+      "gate": {
+        "artifacts": [
+          "TASK.md",
+          "PLAN.md",
+          "TEST-SCENARIO.md"
+        ],
+        "checklist": [
+          "sdlc-v2 TASK/PLAN/TEST-SCENARIO first frontmatter template=sdlc-v2; 기존 문서는 legacy 재개 경로로 판정",
+          "sdlc-v2 TASK.md AC/C → PLAN.md Work items 완료 기준 연결",
+          "sdlc-v2 PLAN.md Work items 필수 열·W-ID·선행 작업·실행 그룹·파일 충돌 없음 — state-tool verify <태스크폴더> --plan-contract-check 통과",
+          "sdlc-v2 PLAN.md Risks 절 존재, 실제 위험은 H-N 사용 또는 위험 없음 명시",
+          "sdlc-v2 PLAN.md Release and recovery 존재",
+          "sdlc-v2 TEST-SCENARIO.md Setup / Scenarios 존재, 모든 AC/C와 존재하는 H의 연결 완전 — op-scenario-gate pass",
+          "code-scan 결과 인용 — state-tool verify <태스크폴더> --code-scan-citation-check 통과"
+        ]
+      }
+    },
+    {
+      "row_id": 6,
+      "stage": "PLAN",
+      "item": "사용자 확인",
+      "key": "plan.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-17 07:12:47",
+      "owner": "auto",
+      "note": "auto-approved on EXECUTE entry"
+    },
+    {
+      "row_id": 7,
+      "stage": "EXECUTE",
+      "item": "작업",
+      "key": "execute.implement",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-17 07:12:47",
+      "owner": "PM",
+      "note": "block: 기준선 선행 실패 4건(test_state_tool_run_log.py의 HEAD 바이트 동일성 가드 3클래스 4테스트)으로 TASK AC-6 '3스위트 전건 통과' 달성 불가. 원인은 커밋 f8aba0a('run-log 기본 활성화')가 머지되며 git show HEAD 비교 기준이 자기무효화된 것. 4건이 W-3 변경 대상 파일에 있어 회귀 탐지 사각과 겹침. 범위 결정(W-7 추가 vs AC-6 축소) 캡틴 대기",
+      "worker_duration_minutes": 55
+    },
+    {
+      "row_id": 8,
+      "stage": "TEST",
+      "item": "작업",
+      "key": "test.run_tests",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-17 07:19:13",
+      "owner": "PM",
+      "note": null,
+      "worker_duration_minutes": 13
+    },
+    {
+      "row_id": 9,
+      "stage": "TEST",
+      "item": "PM Gate",
+      "key": "test.pm_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-17 07:26:09",
+      "owner": "PM",
+      "note": "PM Gate pass: test-scenario.json 13/13 pass·fidelity real-usage 전건, 3스위트 504 passed/0 failed(기준선 4 failed 전건 해소·신규 실패 0), state validate violations 0, 배포본 sha256 무변경, code-scan newly_uncovered 0, 컨벤션 진단 Critical/High 0건(Low 1건 정정 후 회귀 0)",
+      "gate": {
+        "artifacts": [
+          "TEST-SCENARIO.md",
+          "test-scenario.json"
+        ],
+        "checklist": [
+          "TEST-SCENARIO.md는 실행 전 명세로만 읽고 결과·증거를 기록하지 않음",
+          "test-scenario.json의 모든 필수 시나리오가 PASS이고 FAIL/BLOCKED가 없으며 실제 실행 증거가 존재",
+          "PLAN.md Work items에 정의된 필수 검증 PASS",
+          "컨벤션 자동 진단 PASS (GC-CONVENTION-*.md Critical/High 0건 — 컨벤션 적용 대상 ≥1건 시 발동)"
+        ]
+      }
+    },
+    {
+      "row_id": 10,
+      "stage": "TEST",
+      "item": "사용자 확인",
+      "key": "test.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-17 07:27:29",
+      "owner": "user",
+      "note": "캡틴 확인: CLOSE 진입 승인"
+    },
+    {
+      "row_id": 11,
+      "stage": "CLOSE",
+      "item": "DONE.md 생성",
+      "key": "close.done_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-17 07:28:23",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 12,
+      "stage": "CLOSE",
+      "item": "관련 문서 동기화 (조건부: 구현으로 문서 사실이 달라진 경우)",
+      "key": "close.docs_sync",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-17 07:28:42",
+      "owner": "PM",
+      "note": "갱신 대상 없음(no-op): CONTRACT.md·README.md는 W-1·W-6이 이미 갱신. TRD.md는 이번 변경으로 사실이 달라진 서술 0건(D-5 단방향 의존·D-6 어댑터 경계 불변). surfaces.json은 D-8에 따라 신규 표면 id 미신설이므로 변경 없음",
+      "conditional": true
+    },
+    {
+      "row_id": 13,
+      "stage": "CLOSE",
+      "item": "brain ingest (조건부: 프로젝트 brain 사용 시)",
+      "key": "close.brain_ingest",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-17 07:29:03",
+      "owner": "PM",
+      "note": "워크트리 태스크는 실행 중 brain 파일을 직접 바꾸지 않는다(done-template §회고적 학습 후보 계약) — DONE.md에 후보 '없음' 선언. 이번 태스크의 교훈 3건은 도메인 지식이 아니라 프레임워크 프로세스 개선이라 improve-tool fw-inbox가 올바른 귀착처로 판정",
+      "conditional": true
+    },
+    {
+      "row_id": 14,
+      "stage": "CLOSE",
+      "item": "회고/개선 후보 기록",
+      "key": "close.retrospective",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-17 07:31:03",
+      "owner": "PM",
+      "note": "개선 후보 5건 기록 — fw 4건(병렬 배치 의존 폐포 / 게이트 신설 시 하드코딩 동반 개정 / HEAD 대리 기준선 금지 / improve-tool local 워크트리 실패), local 1건(MEMORY 인덱스 고아 행 11건, deferred index request)"
+    },
+    {
+      "row_id": 15,
+      "stage": "CLOSE",
+      "item": "worktree finalize/attribution (조건부: --wt 실행 시)",
+      "key": "close.worktree_finalize",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-17 07:31:25",
+      "owner": "PM",
+      "note": "worktree-tool finalize ok: state closed(previous completed_unmerged), violations 0, memory index request 1건 applied, capsule_updated true. merge 전 실행 — 캡슐 변경을 태스크 커밋에 포함해야 한다",
+      "conditional": true
+    },
+    {
+      "row_id": 16,
+      "stage": "CLOSE",
+      "item": "CLOSE 최종 상태 확정",
+      "key": "close.final",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-17 07:31:32",
+      "owner": "PM",
+      "note": null
+    }
+  ],
+  "next_action": "태스크 완료",
+  "worktree": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_137",
+  "run_log": {
+    "contract_version": "1.0",
+    "mode": "shadow",
+    "completion_profile": "cooperative",
+    "completion_profile_receipt": null,
+    "active_run_id": "run_15583977-2054-4c2a-9311-25ef06432495",
+    "status": "active",
+    "pending_events": []
+  }
+}

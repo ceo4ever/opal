@@ -511,8 +511,12 @@
 - 반환: 누락 목록 4종(`missing_state_changed`/`missing_pm_activity`/`missing_gate_event`/
   `unobserved_worker_boundary`)과 관측 지점 3필드(`last_observed_decision`/
   `last_observed_state_change`/`last_observed_boundary`, 각 `{event_id, ts, ref}` 또는 `null`).
-  3필드는 누락 목록과 무관하게 항상 반환된다. `missing_pm_activity`는 현재 트리거 조건이
-  확정되지 않아 항상 빈 배열이다(CONTRACT §2.5 참조).
+  3필드는 누락 목록과 무관하게 항상 반환된다.
+- `missing_pm_activity`는 앵커 2종을 대조해 대응 PM `activity(decision)`가 없으면 1건씩 싣는다 —
+  ① `status=done`·`owner=auto`·`key` 보유 행에 `task_step` 일치 사건이 없으면 그 행마다 1건,
+  ② `run_log.status=overridden`인데 run 전역에 사건이 0건이면 배열 마지막에 1건. 항목은
+  `row_id`·`row_key`·`stage`·`expected`·`anchor` 5키다. 대조 집합·정렬·범위 한정을 포함한
+  정확한 조문은 CONTRACT §2.5가 소유한다.
 - `run_log` 블록이 없는 1.0/1.1 태스크는 모든 목록이 비고 3필드가 전부 `null`이다.
 - 필드·enum의 계약 원문은 CONTRACT.md §2.5·§1.4/§1.5가 소유한다. 여기서 복제하지 않는다.
 

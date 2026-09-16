@@ -3,7 +3,7 @@
   "module": "test_run_log_tool",
   "layer": "test",
   "domain": "opal-tools",
-  "description": "run-log-tool 서브명령(init/append/validate-run/import-agentic/import-oppl) 계약 테스트. §1.1/§1.2 폐쇄형 스키마, §1.3 4축 조합 전수·명시적 거부·사건별 actor 제약, 요청 식별자 멱등, 16 KiB 직렬화 상한, actor_sequence 범위, legacy·oppl 가져오기 멱등·구조 정규화, active 모드 source 제약, 기존 회귀 무손상을 S-3~S-29 시나리오로 판정한다. 이와 별개로 가져오기 읽기 경로의 심볼릭 링크·하드 링크·비정규 파일(FIFO) 거부와 정상 입력 비차단을 잠긴 시나리오 목록 밖에서 회귀 고정한다(보안 검사가 실측한 방어 대상). run.sh subprocess 실호출 + 디스크 조각 파일 검사만으로 판정하며, mock/patch/MagicMock/스텁/가짜 파일시스템은 사용하지 않는다(opal/tools/backlog-tool/tests/test_backlog_tool.py 관례 복제, red-first.md §4). state.json·state_tool 결합 0건을 정적+동적으로 함께 판정한다(AC-19/MV-24, TRD D-5). 시크릿 마스킹 3경로·redact 멱등과 크기 순서·마스킹과 보존 식별자 공존·세그먼트 경계 동시성 배리어·심볼릭 링크 방어 재사용·닫힌 세그먼트 불변성과 세그먼트 간 시퀀스·duration span 산출과 reconcile을 S1~S7 클래스로 회귀 고정한다.",
+  "description": "run-log-tool 서브명령(init/append/validate-run/import-agentic/import-oppl) 계약 테스트. §1.1/§1.2 폐쇄형 스키마, §1.3 4축 조합 전수·명시적 거부·사건별 actor 제약, 요청 식별자 멱등, 16 KiB 직렬화 상한, actor_sequence 범위, legacy·oppl 가져오기 멱등·구조 정규화, active 모드 source 제약, 기존 회귀 무손상을 S-3~S-29 시나리오로 판정한다. 이와 별개로 가져오기 읽기 경로의 심볼릭 링크·하드 링크·비정규 파일(FIFO) 거부와 정상 입력 비차단을 잠긴 시나리오 목록 밖에서 회귀 고정한다(보안 검사가 실측한 방어 대상). run.sh subprocess 실호출 + 디스크 조각 파일 검사만으로 판정하며, mock/patch/MagicMock/스텁/가짜 파일시스템은 사용하지 않는다(opal/tools/backlog-tool/tests/test_backlog_tool.py 관례 복제, red-first.md §4). state.json·state_tool 결합 0건을 정적+동적으로 함께 판정한다(AC-19/MV-24, TRD D-5). 시크릿 마스킹 3경로·redact 멱등과 크기 순서·마스킹과 보존 식별자 공존·세그먼트 경계 동시성 배리어·심볼릭 링크 방어 재사용·닫힌 세그먼트 불변성과 세그먼트 간 시퀀스·duration span 산출과 reconcile을 S1~S7 클래스로 회귀 고정한다. 태스크 137: CONTRACT §1.3 PM activity payload 축 폐쇄(A4 한정)를 인프로세스 append()와 run-log-tool append CLI 두 생산 경로에서 schema_invalid 거부·조각 바이트 불변으로 판정하고, A8 import·A2 worker direct 조합의 다중 키 data 수용으로 적용 조건 경계가 새지 않음을 함께 고정한다.",
   "exports": [
     "TestInitIdempotent", "TestAppendEvent", "TestValidateRunPass",
     "TestPathContractRejection", "TestSchemaRejection", "TestStateAssetIndependence",
@@ -20,7 +20,9 @@
     "TestS1SecretMaskingAcrossThreePaths", "TestS2RedactIdempotentAndSizeOrder",
     "TestS3PreservedIdentifiersSurviveMaskingAlongsideSecrets", "TestS4SegmentBoundaryConcurrentBarrier",
     "TestS5SegmentBoundarySymlinkDefenseReuse", "TestS6ClosedSegmentImmutabilityCrossSegmentSequence",
-    "TestS7DurationSpansAndReconcile"
+    "TestS7DurationSpansAndReconcile",
+    "TestPmActivityDataClosureInProcess", "TestPmActivityDataClosureCli",
+    "TestPmActivityDataClosureScopeBoundary"
   ],
   "scenarios": [
     "S-3", "S-4", "S-5", "S-6", "S-7", "S-8",
@@ -903,7 +905,11 @@ class TestIdempotentConflictOnDifferentPayload(unittest.TestCase):
                     "--request-id", "req_s16", "--event", "activity",
                     "--actor-kind", "PM", "--actor-id", "pm",
                     "--provenance-type", "direct", "--recorded-by-kind", "PM",
-                    "--summary", "S-16 원본", "--data", '{"kind":"progress","x":1}',
+                    # D-11 — 기준 이벤트 _append_activity_args()는 --data를 넘기지 않아
+                    # data=None이므로 {"kind":"progress"} 하나만으로도 digest가 달라진다.
+                    # 즉 이 variant가 "data 축의 차이"로 충돌을 유발하는 lever는 그대로
+                    # 보존되며, PM activity payload 폐쇄(CONTRACT §1.3)도 준수한다.
+                    "--summary", "S-16 원본", "--data", '{"kind":"progress"}',
                     "--format", "json",
                 ],
                 "diff_stage": [
@@ -938,29 +944,40 @@ class TestIdempotentNormalizationInvariance(unittest.TestCase):
                 ["init", "--task", str(task_path), "--run-id", run_id, "--format", "json"])
             self.assertEqual(code0, 0, f"S-17 선행 init 실패 — stdout={out0!r} stderr={err0!r}")
 
+            # D-12 — 이 시나리오의 축("정규화가 키 순서·발급 필드에 불변")은 다중 키
+            # data가 있어야 성립한다. PM activity의 data는 CONTRACT §1.3 폐쇄로
+            # {"kind"} 단일 키라 키 순서 축 자체가 소멸하므로, 같은 축을 실제 생산
+            # payload로 유지할 수 있는 조합 A7(tool/direct/tool/null)의 state.changed로
+            # 옮긴다 — from/to/row_key 3키가 §1.2 필수이고, 폐쇄 조문의 적용 조건(A4)
+            # 밖이다. 발급 필드(event_id/sequence/timestamp) 불변 축은 actor와 무관해
+            # 그대로 보존된다.
             def _args(data_json):
                 return [
                     "append", "--task", str(task_path), "--run-id", run_id,
-                    "--request-id", "req_s17", "--event", "activity",
-                    "--actor-kind", "PM", "--actor-id", "pm",
-                    "--provenance-type", "direct", "--recorded-by-kind", "PM",
+                    "--request-id", "req_s17", "--event", "state.changed",
+                    "--actor-kind", "tool", "--actor-id", "state-tool",
+                    "--provenance-type", "direct", "--recorded-by-kind", "tool",
                     "--summary", "S-17", "--data", data_json,
                     "--format", "json",
                 ]
 
-            code1, out1, err1, data1 = _run(_args('{"kind":"progress","a":1,"b":2}'))
+            code1, out1, err1, data1 = _run(
+                _args('{"from":"pending","to":"in_progress","row_key":"plan.plan"}'))
             self.assertEqual(code1, 0, f"S-17 1회차 실패 — stdout={out1!r} stderr={err1!r}")
             self.assertTrue(data1.get("ok"), f"S-17 1회차 ok:false — {data1}")
             event_id_1 = data1.get("data", {}).get("event_id")
 
-            code2, out2, err2, data2 = _run(_args('{"b":2,"kind":"progress","a":1}'))
+            # 같은 3키를 다른 순서로 직렬화 — 키 순서 불변 축.
+            code2, out2, err2, data2 = _run(
+                _args('{"row_key":"plan.plan","to":"in_progress","from":"pending"}'))
             self.assertEqual(code2, 0, f"S-17 키순서변경 재호출 실패 — stdout={out2!r} stderr={err2!r}")
             body2 = data2.get("data", {})
             self.assertTrue(body2.get("idempotent_hit"), f"S-17 키순서변경 idempotent_hit!=true — {body2}")
             self.assertEqual(body2.get("event_id"), event_id_1, "S-17 키순서변경 후 event_id 불일치")
 
             time.sleep(1.1)
-            code3, out3, err3, data3 = _run(_args('{"kind":"progress","a":1,"b":2}'))
+            code3, out3, err3, data3 = _run(
+                _args('{"from":"pending","to":"in_progress","row_key":"plan.plan"}'))
             self.assertEqual(code3, 0, f"S-17 시간간격 재호출 실패 — stdout={out3!r} stderr={err3!r}")
             body3 = data3.get("data", {})
             self.assertTrue(body3.get("idempotent_hit"), f"S-17 시간간격 재호출 idempotent_hit!=true — {body3}")
@@ -2536,6 +2553,166 @@ class TestS7DurationSpansAndReconcile(unittest.TestCase):
             self.assertFalse(
                 (task_path / "state.json").exists(),
                 "S-7 조회 중 state.json이 생성됨(코어가 상태 파일을 건드림, D-5 위반)")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# T137 S-3 — PM activity payload 폐쇄: 인프로세스 경로 거부 (AC-4, C-4)
+#
+# CONTRACT §1.3 "PM activity의 사건 고유 payload 축 폐쇄 목록"의 집행 지점은
+# run_log_core.validate_event()다. 따라서 append()를 통과하는 모든 A4 생산 경로가
+# 같은 판정을 받아야 한다. 이 클래스는 CLI를 거치지 않는 인프로세스 호출 경로를
+# 판정한다(= state-tool.log-event의 앞단 검증으로 우회되지 않음).
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestPmActivityDataClosureInProcess(unittest.TestCase):
+    def test_a4_activity_extra_data_key_rejected_without_partial_write(self):
+        core = _import_core()
+        with tempfile.TemporaryDirectory() as tmp:
+            task_path = _abs_task_dir(tmp, "t137-s3-task")
+            task_path_str = str(task_path)
+            run_id = "run_t137s3"
+            init_result = core.init(task_path_str, run_id)
+            self.assertTrue(init_result.get("ok"), f"T137 S-3 선행 init 실패 — {init_result}")
+
+            segment = _segment_of(task_path, run_id)
+            before = segment.read_bytes()
+
+            event = {
+                "request_id": "req_t137_s3",
+                "event": "activity",
+                "actor": {"kind": "PM", "id": "pm", "provider": None, "session_id": None},
+                "provenance": {"type": "direct", "recorded_by": {"kind": "PM", "id": "pm"},
+                               "worker_log_token_id": None, "source": None},
+                "summary": "T137 S-3 폐쇄 위반 payload",
+                "data": {"kind": "progress", "x": 1},
+            }
+            result = core.append(task_path_str, run_id, event)
+
+            self.assertFalse(
+                result.get("ok", True),
+                f"T137 S-3 A4 activity의 data에 kind 외 키가 있는데 수용됨 — {result}")
+            self.assertEqual(
+                result.get("error", {}).get("code"), "schema_invalid",
+                f"T137 S-3 오류 코드가 schema_invalid가 아님(CONTRACT §1.3/§2.2) — {result}")
+            self.assertEqual(
+                segment.read_bytes(), before,
+                "T137 S-3 거부된 사건이 조각 파일을 변경함(부분 쓰기)")
+            self.assertFalse(
+                (task_path / "state.json").exists(),
+                "T137 S-3 코어가 state.json을 생성함(D-5 단방향 의존 위반)")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# T137 S-4 — PM activity payload 폐쇄: run-log-tool append CLI 경로 거부 (AC-4)
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestPmActivityDataClosureCli(unittest.TestCase):
+    def test_a4_activity_extra_data_key_rejected_via_cli(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            task_path = _abs_task_dir(tmp, "t137-s4-task")
+            run_id = "run_t137s4"
+            code0, out0, err0, _ = _run(
+                ["init", "--task", str(task_path), "--run-id", run_id, "--format", "json"])
+            self.assertEqual(code0, 0, f"T137 S-4 선행 init 실패 — stdout={out0!r} stderr={err0!r}")
+
+            segment = _segment_of(task_path, run_id)
+            before = segment.read_bytes()
+
+            code, out, errtext, data = _run([
+                "append", "--task", str(task_path), "--run-id", run_id,
+                "--request-id", "req_t137_s4", "--event", "activity",
+                "--actor-kind", "PM", "--actor-id", "pm",
+                "--provenance-type", "direct", "--recorded-by-kind", "PM",
+                "--summary", "T137 S-4 폐쇄 위반 payload",
+                "--data", '{"kind":"progress","x":1}',
+                "--format", "json",
+            ])
+
+            self.assertNotEqual(
+                code, 0,
+                f"T137 S-4 폐쇄 위반 payload가 exit 0으로 통과함 — stdout={out!r}")
+            self.assertFalse(
+                data.get("ok", True),
+                f"T137 S-4 ok:true — {data} stderr={errtext!r}")
+            self.assertEqual(
+                data.get("error", {}).get("code"), "schema_invalid",
+                f"T137 S-4 오류 코드가 schema_invalid가 아님(CONTRACT §2.1 중첩 봉투) — {data}")
+            self.assertEqual(
+                segment.read_bytes(), before,
+                "T137 S-4 거부된 사건이 조각 파일을 변경함(부분 쓰기)")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# T137 S-5 — 폐쇄의 적용 조건 경계 (AC-4, C-7 / D-10)
+#
+# 폐쇄는 조합 A4(actor.kind=PM ∧ provenance.type=direct)에만 적용된다. A8(import
+# 경로)·A2(worker direct)는 조합 자체가 이 조건을 만족하지 않으므로 다중 키 data가
+# 그대로 수용되어야 한다. 폐쇄가 경계 밖으로 새지 않음을 고정한다.
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestPmActivityDataClosureScopeBoundary(unittest.TestCase):
+    def test_a8_import_activity_multikey_data_accepted(self):
+        core = _import_core()
+        with tempfile.TemporaryDirectory() as tmp:
+            task_path = _abs_task_dir(tmp, "t137-s5a-task")
+            task_path_str = str(task_path)
+            run_id = "run_t137s5a"
+            init_result = core.init(task_path_str, run_id)
+            self.assertTrue(init_result.get("ok"), f"T137 S-5(a) 선행 init 실패 — {init_result}")
+
+            source_sha = hashlib.sha256(b"t137-s5a-import-source").hexdigest()
+            event = {
+                "request_id": "req_t137_s5a",
+                "event": "activity",
+                "actor": {"kind": "PM", "id": "pm", "provider": None, "session_id": None},
+                "provenance": {
+                    "type": "import",
+                    "recorded_by": {"kind": "tool", "id": "run-log-tool"},
+                    "worker_log_token_id": None,
+                    "source": {"kind": "legacy_line", "id": "line-7", "sha256": source_sha,
+                               "observed_at": None,
+                               "locator": "tasks/x/AGENTIC-LOG.md#L7",
+                               "upstream_event_id": None},
+                },
+                "summary": "T137 S-5(a) import 경로",
+                "data": {"kind": "progress", "x": 1},
+            }
+            result = core.append(task_path_str, run_id, event)
+            self.assertTrue(
+                result.get("ok"),
+                f"T137 S-5(a) A8 import 조합의 다중 키 data가 거부됨 — 폐쇄가 적용 조건(A4) "
+                f"밖으로 샜다(D-10) — {result}")
+
+    def test_a2_worker_direct_activity_multikey_data_accepted(self):
+        core = _import_core()
+        with tempfile.TemporaryDirectory() as tmp:
+            task_path = _abs_task_dir(tmp, "t137-s5b-task")
+            task_path_str = str(task_path)
+            run_id = "run_t137s5b"
+            init_result = core.init(task_path_str, run_id)
+            self.assertTrue(init_result.get("ok"), f"T137 S-5(b) 선행 init 실패 — {init_result}")
+
+            event = {
+                "request_id": "req_t137_s5b",
+                "event": "activity",
+                "actor": {"kind": "worker", "id": "w1", "provider": None, "session_id": None},
+                "provenance": {
+                    "type": "direct",
+                    "recorded_by": {"kind": "worker", "id": "w1"},
+                    "worker_log_token_id": "wlt_" + uuid.uuid4().hex,
+                    "source": {"kind": "worker_event", "id": None, "sha256": None,
+                               "observed_at": None, "locator": None,
+                               "upstream_event_id": None},
+                },
+                "worker_run_id": "wr_t137s5b",
+                "summary": "T137 S-5(b) worker direct 경로",
+                "data": {"kind": "progress", "x": 1, "y": 2},
+            }
+            result = core.append(task_path_str, run_id, event)
+            self.assertTrue(
+                result.get("ok"),
+                f"T137 S-5(b) A2 worker 조합의 다중 키 data가 거부됨 — 폐쇄가 적용 조건(A4) "
+                f"밖으로 샜다(D-10) — {result}")
 
 
 if __name__ == "__main__":

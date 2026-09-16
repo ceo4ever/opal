@@ -1,0 +1,55 @@
+{
+  "check": "convention",
+  "status": "pass",
+  "checked_files": [
+    "docs/run-log/CONTRACT.md",
+    "opal/tools/run-log-tool/run_log_core.py",
+    "opal/tools/run-log-tool/tests/test_run_log_tool.py",
+    "opal/tools/state-tool/state_tool.py",
+    "opal/tools/state-tool/tests/test_state_tool_run_log.py",
+    "opal/tools/state-tool/README.md"
+  ],
+  "findings": [
+    {
+      "id": "GC-001",
+      "fingerprint": "a1c3f7e2b6d4890a",
+      "category": "들여쓰기",
+      "severity": "low",
+      "confidence": "high",
+      "disposition": "advisory",
+      "rule_id": "PEP8 blank-lines",
+      "source_tier": "T1",
+      "location": {
+        "file": "opal/tools/state-tool/tests/test_state_tool_run_log.py",
+        "line": 1735
+      },
+      "evidence": "TestSchema10And11WithoutRunLogBlockUnchanged 클래스의 마지막 메서드(test_schema_1_1_task_without_run_log_block) 종료 후 다음 최상위 클래스(TestCompletenessCheckIndependentFromStructuralValidation) 사이에 빈 줄이 3개 있다(파일 내 다른 클래스 경계는 모두 2개).",
+      "impact": "가독성 저하 수준의 경미한 포맷 불일치. 기능·판정에는 영향 없음.",
+      "remediation": {
+        "guidance": "1735번째 줄의 빈 줄 1개를 제거해 최상위 클래스 사이 빈 줄을 2개로 정규화한다.",
+        "reference": "https://peps.python.org/pep-0008/#blank-lines",
+        "auto_fixable": true
+      },
+      "verification": "해당 파일을 다시 읽어 두 클래스 사이 빈 줄이 정확히 2개인지 확인한다.",
+      "suppression": null
+    }
+  ],
+  "evidence": [
+    "git diff -- docs/run-log/CONTRACT.md opal/tools/run-log-tool/run_log_core.py opal/tools/run-log-tool/tests/test_run_log_tool.py opal/tools/state-tool/state_tool.py opal/tools/state-tool/tests/test_state_tool_run_log.py opal/tools/state-tool/README.md",
+    "grep -rn 'mock\\|patch\\|MagicMock' 대상 테스트 파일 diff — 검출 없음",
+    "python3 스크립트로 3연속 빈 줄 패턴 검사 (target_files 전체)"
+  ],
+  "references": [
+    "docs/CONVENTIONS.md",
+    "opal/core/references/harness/header-rules.md",
+    "opal/core/references/harness/tool-output-contract.md",
+    "opal/core/references/opal-doc-standard.md §5",
+    "docs/run-log/CONTRACT.md",
+    "docs/run-log/TRD.md",
+    ".opal/AGENT.md §금지사항",
+    "opal/core/references/harness/gc-finding-schema.md",
+    "opal/skills/op-gc-convention/references/convention-categories.md"
+  ],
+  "missing_capabilities": [],
+  "report_path": "tasks/137-260916-opds-run-log-계약-완성/GC-CONVENTION-20260917-0719.md"
+}

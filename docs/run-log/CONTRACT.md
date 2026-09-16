@@ -128,7 +128,7 @@ adapter와 importer는 `actor`가 아니다. 사건을 **수행한 의미상 주
 | A7 | `tool` | `direct` | `tool` | `null` | 사전 확정 event ID(= `request_id`) | 해당 없음 |
 | A8 | `PM` \| `user` \| `auto` \| `tool` | `import` | `tool` | `legacy_line` \| `oppl_event` | `source.id` + `source.sha256` + `source.locator` | 불가 |
 
-**PM `activity`의 사건 고유 payload 축 폐쇄 목록**: `actor.kind=PM` ∧ `provenance.type=direct`인 `activity` 사건에서, §1.1 공통 필드(`schema_version`·`event_id`·`timestamp`·`run_id`·`sequence`·`event`·`actor`·`provenance`·`caused_by_event_id`·`worker_run_id`·`stage`·`task_step`·`work_item` 등)는 §1.1 계약 그대로 적용되며 이 조문이 제한하지 않는다. 이 조문이 폐쇄하는 것은 사건 고유 의미 payload 두 축뿐이다: (a) `data` 객체 — `kind` 1개 키만 허용하고 값은 `{decision, validation, retry, progress}` 4종 enum, (b) 사람이 읽는 서술 축 — `summary`·`reason`·`refs` 외의 자유 서술 필드를 새로 만들지 않는다. 원본 프롬프트, chain-of-thought(내부 사고 과정), 비밀값은 `summary`·`reason`·`refs`·`data`를 포함한 어떤 필드에도 저장하지 않는다. `data`에 `kind` 외의 키가 있거나 `kind` 값이 4종 enum 밖이면 `state-tool.log-event`의 입력 검증(`_build_pm_activity_data()`)이 `schema_invalid`로 거부한다. 이 집행 지점은 `state-tool.log-event` CLI를 거치는 PM `activity` 생산 경로에만 적용되며, 이 표면을 거치지 않는 다른 생산 경로(adapter·importer 등)는 이 폐쇄 검사를 받지 않는다. 최상위 키 폐쇄 판정은 §1.1이 소유하므로 여기서 재서술하지 않는다.
+**PM `activity`의 사건 고유 payload 축 폐쇄 목록**: `actor.kind=PM` ∧ `provenance.type=direct`인 `activity` 사건에서, §1.1 공통 필드(`schema_version`·`event_id`·`timestamp`·`run_id`·`sequence`·`event`·`actor`·`provenance`·`caused_by_event_id`·`worker_run_id`·`stage`·`task_step`·`work_item` 등)는 §1.1 계약 그대로 적용되며 이 조문이 제한하지 않는다. 이 조문이 폐쇄하는 것은 사건 고유 의미 payload 두 축뿐이다: (a) `data` 객체 — `kind` 1개 키만 허용하고 값은 `{decision, validation, retry, progress}` 4종 enum, (b) 사람이 읽는 서술 축 — `summary`·`reason`·`refs` 외의 자유 서술 필드를 새로 만들지 않는다. 원본 프롬프트, chain-of-thought(내부 사고 과정), 비밀값은 `summary`·`reason`·`refs`·`data`를 포함한 어떤 필드에도 저장하지 않는다. `data`에 `kind` 외의 키가 있거나 `kind` 값이 4종 enum 밖이면 `schema_invalid`로 거부한다. **이 폐쇄의 집행 지점은 기록 코어의 `run_log_core.validate_event()`다.** 따라서 `run_log_core.append()`를 통과하는 **모든 A4 생산 경로**에 동일하게 적용된다 — `run-log-tool append` CLI, `state-tool`을 포함한 인프로세스 호출(§2.6), 그 밖에 코어 append를 거치는 임의의 호출자가 모두 같은 판정을 받는다. 위반의 오류 코드는 `schema_invalid`이며, 이 폐쇄를 위해 새 오류 코드를 신설하지 않는다(§2.2). `state-tool.log-event`의 입력 검증(`_build_pm_activity_data()`)은 제거하지 않고 **같은 규칙의 앞단 중복 방어**로 유지한다. 두 지점의 판정 결과는 항상 일치한다 — 앞단이 수용한 payload를 코어가 거부하거나 그 반대인 경우는 계약 위반이다. 적용 조건은 조합 **A4**(`actor.kind=PM` ∧ `provenance.type=direct`)에 한정한다. A1(adapter 경로)·A8(import 경로)은 조합 자체가 이 조건을 만족하지 않으므로 이 조문의 대상이 아니며, 이는 집행의 빈틈이 아니라 적용 범위의 정의다. 최상위 키 폐쇄 판정은 §1.1이 소유하므로 여기서 재서술하지 않는다.
 
 **명시적 거부 조합**
 
@@ -475,7 +475,24 @@ adapter와 importer는 `actor`가 아니다. 사건을 **수행한 의미상 주
 
 **`state-tool verify --run-log-completeness-check`** (D-6, AC-7·AC-8): 기존 `verify` 명령의 7번째 상호 배타 검사 라우트다. `state.json` 현재 행과 조각(committed)·보관함(pending) 사건을 대조해 자동 승인을 포함한 누락을 진단한다. read-only·비차단(exit 0)이며, `run-log-tool validate-run`의 조각 자체 순번·스키마·provenance 검증과 별개 축이다 — `run-log-core`가 상태 파일을 읽지 않는 단방향 의존(§3.1) 때문에 상태 대조는 `state-tool`만 수행할 수 있다. 반환은 누락 목록 4종(`missing_state_changed`·`missing_pm_activity`·`missing_gate_event`·`unobserved_worker_boundary`)과 관측 지점 3필드(`last_observed_decision`·`last_observed_state_change`·`last_observed_boundary`, 각 `{event_id, ts, ref}` 또는 `null`)이며, 3필드는 누락 목록과 무관하게 항상 반환한다. 이 라우트는 기존 `state-tool.verify` CLI 표면의 플래그 확장이며 `surfaces.json`에 별도 표면 id를 신설하지 않는다(D-7, PLAN 범위 제약 — 신규 id 필요 여부는 PM 판단 대상으로 남긴다).
 
-`missing_pm_activity`는 현재 이 검사가 값을 채우는 조건을 결정론적으로 정의하지 않아 항상 빈 배열을 반환하는 미집행 공백이다. 트리거 조건을 이 계약이 아직 확정하지 않았으므로 임의로 지어내지 않는다 — 조건 확정은 후속 W의 몫이다.
+**`missing_pm_activity`의 트리거 조건**: 이 목록은 아래 **앵커 2종** 각각에 대해 대응 사건이 없으면 1건씩을 싣는다. 앵커는 `state.json`의 현재 상태 사실이므로 이 판정은 `state-tool`이 전담한다 — 상태 원천을 읽지 않는 기록 코어(§3.1 단방향 의존)는 이 판정에 참여하지 않는다.
+
+- **앵커 ① 자동 승인 행**: `rows[]` 중 `status == "done"` ∧ `owner == "auto"` ∧ `key`를 가진 행. 대조 술어는 `event == "activity"` ∧ `actor.kind == "PM"` ∧ `data.kind == "decision"` ∧ `task_step == row.key`를 모두 만족하는 사건이며, 그런 사건이 하나도 없으면 그 행마다 1건을 싣는다.
+- **앵커 ② override**: `run_log.status == "overridden"`. 대조 술어는 `event == "activity"` ∧ `actor.kind == "PM"` ∧ `data.kind == "decision"` 세 조건만이다(run 전역 판정이며 주소 대조를 하지 않는다). run 전체에 그런 사건이 하나도 없으면 1건을 싣는다.
+
+**대조 집합**: 조각에 커밋된 사건과 보관함(pending)에 적재된 사건의 **합집합**이다. 보관함에 적재된 PM `activity`는 이미 생산된 사건으로 본다(§1.4). 보관함 드레인 실패는 `run_log_pending`이 따로 진단하므로 이 목록에서 다시 누락으로 계상하지 않는다.
+
+**범위 한정**: 아래 3항은 이 계약이 **판정하지 않기로 정의한 것**이며 미구현이나 미집행이 아니다. 따라서 이 셋에 해당하는 입력에서 목록이 비는 것은 "판정 대상이 아님"으로 읽고, 판정 대상인 입력에서 목록이 비는 것은 "누락 없음"으로 읽는다.
+
+- (a) `key`가 없는 행(1.0/1.1 주소 체계)은 대조할 주소가 없으므로 앵커 ①의 대상이 아니다.
+- (b) `run_log` 블록이 없는 태스크는 이 검사 전체의 대상이 아니다.
+- (c) `--force` 통과는 `note` 자유 문자열에만 흔적이 남아 결정론적 파싱이 불가하므로 앵커로 삼지 않는다.
+
+**정렬**: 앵커 ① 항목을 `row_id` 오름차순으로 먼저 싣고, 앵커 ② 항목이 있으면 배열 마지막에 1건을 붙인다. 같은 상태·사건 입력에는 순서까지 같은 배열을 반환한다.
+
+**항목 형태**: 모든 항목은 `row_id`·`row_key`·`stage`·`expected`·`anchor` 5키를 갖는다. 앵커 ①은 `{"row_id": <행 id>, "row_key": <row.key>, "stage": <행 stage>, "expected": "activity(decision)", "anchor": "auto_approved_row"}`이고, 앵커 ②는 같은 5키이되 `row_id`·`row_key`·`stage`가 `null`이고 `"anchor": "override_bundle"`이다.
+
+이 조문은 오류 코드도, `surfaces.json` 표면 id도 신설하지 않는다. 이 라우트의 read-only·비차단(exit 0) 규정은 위와 같이 유지된다.
 
 ### 2.6 기록 코어의 인프로세스 호출 형태
 
