@@ -319,6 +319,10 @@ semi-agentic / agentic 모두 CLOSE 첫 행 `--auto-pass` 거부 (`agentic_close
 
 ### 에스컬레이션 규칙
 
-에스컬레이션 규칙(Full Task 전환 제안)은 agentic/semi-agentic mode에서도 유지한다. PM이 판단하여 자동 전환하지 않고, 사용자에게 에스컬레이션으로 보고한다.
+에스컬레이션 규칙(Full Task 전환 제안)은 agentic/semi-agentic mode에서도 유지한다. PM은 비차단 `progress_report`로 전환 제안을 남기고 현재 트랙을 계속한다. 현재 트랙으로 실행 불가할 때만 `decision_request`와 함께 차단 또는 사용자 결정을 요청한다.
+
+### 단계 보고 전이 계약
+
+각 단계 행 mark/advance 직후 `state-tool` stdout의 `transition_action` / `report_type` / `next_action`을 소비한다. `report_type=progress_report`는 비차단 보고이며 `transition_action=continue`이면 같은 응답에서 다음 단계로 이어간다. `report_type=decision_request`는 `transition_action=await_user|blocked`일 때만 사용하고, CLOSE 진입 승인 예외는 유지한다.
 
 ---

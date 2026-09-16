@@ -12,6 +12,8 @@
 
 STATE.md는 **의사결정 로그·블로커·자유 기재를 담는 저널**이다(094 R-6). 파이프라인 현황(행 상태·진행·`current_status`·다음 액션)의 SSOT는 `state.json`이며, 조회는 `state-tool show`로 한다 — STATE.md는 그 값을 파생 렌더하지 않는다.
 
+`state-tool` 응답의 `transition_action` / `report_type` / `next_action`은 런타임 전이 판단의 SSOT다. `transition_action=continue`와 `report_type=progress_report`는 비차단 보고 후 다음 행으로 계속한다는 뜻이고, `transition_action=await_user|blocked`와 `report_type=decision_request`만 사용자 결정 또는 차단 조치가 필요하다는 뜻이다. 이 필드는 stdout 계약이며 `state.json`에 영속하지 않는다.
+
 > **[강제]** 아래 각 이벤트 발생 시 `state-tool` 호출은 **필수**다. 호출 미수행 시 다음 단계 진입이 금지된다. 행 mark 자체가 state 기록이며, 단계 건너뛰기·순서 위반은 state-tool stage-transition guard가 차단한다. PM은 PM Gate 직전에 상태 자가 점검(아래 §상태 자가 점검)으로 갱신 여부를 확인한다.
 
 > **[MUST] 파이프라인 행 상태(⬜/🔄/✅) 변경은 `~/.opal/tools/state-tool/run.sh`로만 수행한다. `state.json` 직접 편집 금지 — 현황 조회는 `state-tool show <task-path>`로 한다.**
@@ -108,7 +110,8 @@ STATE.md는 **의사결정 로그·블로커·자유 기재를 담는 저널**�
    명시값은 mode만 원자 갱신한다. invalid mode는 `interactive` fail-closed, 손상 JSON은 차단한다.
 2. resolver 결과가 가리키는 모드 서브 하네스를 읽은 뒤
    `~/.opal/tools/state-tool/run.sh show <task-path> --format json` 을 호출해 현재 단계·행
-   상태·current_status·next_action을 파악한다 (SSOT: state.json).
+   상태·current_status·next_action과 `transition_action`/`report_type`을 파악한다
+   (SSOT: state-tool 구조화 출력).
 3. `tasks/{NNN}-{name}/STATE.md`(저널)를 Read하여 의사결정 로그·블로커·검증 루프
    기재 등 도구가 담지 못하는 서술 맥락을 보완한다.
 ```

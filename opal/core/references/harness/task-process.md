@@ -80,7 +80,10 @@
 
    근거: `tasks/134-260501-opp-pipeline-state-tool/TASK.md` F-9 / `PLAN.md` §2.11 G-8 / §2.19.1 / §1.5 M-3
 
-6. 사용자에게 보고하고 다음 단계 승인을 받는다.
+6. `state init` 응답의 `transition_action` / `report_type` / `next_action`을 소비해 보고한다.
+   - `report_type=progress_report`이면 비차단 완료 보고만 남기고, `transition_action=continue`에 따라 다음 단계로 즉시 이어간다.
+   - `report_type=decision_request`이면 사용자 결정이 필요한 질문으로 보고하고 대기한다.
+   - `transition_action=blocked`이면 실행 불가 사유와 필요한 조치를 보고한다.
 
 #### 저장 경로 규칙
 
@@ -97,7 +100,8 @@
 📋 [TASK] 완료 보고
 📎 산출물: tasks/{NNN}-{YYMMDD}-{스킬약어}-{태스크명}/TASK.md
 적용 스킬: {약어}
-다음 단계({다음 단계명})로 넘어갈까요?
+전이: {transition_action} / 보고: {report_type}
+다음 액션: {next_action}
 ```
 
 > 도메인별 추가 확인 필드(문서 유형, 출력 모드 등)는 각 opal-pilot SKILL.md에서 정의.

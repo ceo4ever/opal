@@ -2,6 +2,11 @@
   "spec_version": "1.0",
   "skill": "opd",
   "meta": { "mode_label": "Full Task", "stages": ["TASK", "ANALYSIS", "PLAN", "TEST-SCENARIO", "EXECUTE", "TEST", "CLOSE"] },
+  "transition_contract": {
+    "vocabulary": ["continue", "await_user", "blocked", "complete"],
+    "semi_agentic_boundary": "execute.implement",
+    "close_final_key": "close.final"
+  },
   "task_steps": [
     { "id": 1,  "key": "task.task_md",                 "stage": "TASK",          "item": "작업" },
     { "id": 2,  "key": "task.user_confirm",            "stage": "TASK",          "item": "사용자 확인" },
@@ -29,6 +34,11 @@
     { "id": 14, "key": "test.pm_gate",                 "stage": "TEST",          "item": "PM Gate",
       "gate": { "artifacts": ["TEST-SCENARIO.md", "test-scenario.json"], "checklist": ["TEST-SCENARIO.md는 실행 전 명세로만 읽고 결과·증거를 기록하지 않음", "test-scenario.json의 모든 필수 시나리오가 PASS이고 FAIL/BLOCKED가 없으며 실제 실행 증거가 존재", "test-scenario.json 코드품질·보안·회귀 항목 PASS", "컨벤션 자동 진단 PASS (GC-CONVENTION-*.md Critical/High 0건 — 컨벤션 적용 대상 ≥1건 시 발동)"] } },
     { "id": 15, "key": "test.user_confirm",            "stage": "TEST",          "item": "사용자 확인" },
-    { "id": 16, "key": "close.done_md",                "stage": "CLOSE",         "item": "DONE.md 생성" }
+    { "id": 16, "key": "close.done_md",                "stage": "CLOSE",         "item": "DONE.md 생성" },
+    { "id": 17, "key": "close.docs_sync",              "stage": "CLOSE",         "item": "관련 문서 동기화 (조건부: 구현으로 문서 사실이 달라진 경우)", "conditional": true },
+    { "id": 18, "key": "close.brain_ingest",           "stage": "CLOSE",         "item": "brain ingest (조건부: 프로젝트 brain 사용 시)", "conditional": true },
+    { "id": 19, "key": "close.retrospective",          "stage": "CLOSE",         "item": "회고/개선 후보 기록" },
+    { "id": 20, "key": "close.worktree_finalize",      "stage": "CLOSE",         "item": "worktree finalize/attribution (조건부: --wt 실행 시)", "conditional": true },
+    { "id": 21, "key": "close.final",                  "stage": "CLOSE",         "item": "CLOSE 최종 상태 확정" }
   ]
 }

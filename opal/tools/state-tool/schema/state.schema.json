@@ -70,7 +70,7 @@
         "additional_work_done",
         "completed_unmerged"
       ],
-      "description": "태스크 전체 상태 — §2.11 G-7 전이 그래프 참조. completed_unmerged는 CLOSE 마지막 행 mark가 확정하는 완료 상태로, 허브 MEMORY 귀속(finalize-attribution) 전임을 뜻한다(118 D-4b/AC-4)"
+      "description": "태스크 전체 상태 — §2.11 G-7 전이 그래프 참조. completed_unmerged는 명시적 close.final 행 mark가 확정하는 완료 상태로, 허브 MEMORY 귀속(finalize-attribution) 전임을 뜻한다. close.final이 없는 legacy 단일 CLOSE pipeline은 CLOSE 마지막 행 mark를 하위호환 final로 인정한다(118 D-4b/AC-4, 136 W-2)"
     },
     "rows": {
       "type": "array",
@@ -235,7 +235,7 @@
           "type": "null"
         }
       ],
-      "description": "파이프라인 다음 액션 파생값 — advance/mark 시 다음 대기 행에서 자동 파생, init/전이 --next-action 오버라이드 가능 (072). 조회: `state-tool show`(094 — STATE.md는 더 이상 이 값을 렌더하지 않는다). optional (하위호환)"
+      "description": "파이프라인 다음 액션 파생값 — advance/mark 시 다음 대기 행에서 자동 파생, init/전이 --next-action 오버라이드 가능 (072). 조회: `state-tool show`(094 — STATE.md는 더 이상 이 값을 렌더하지 않는다). 런타임 응답의 transition_action/report_type은 이 값과 rows/current_status에서 파생되며 state.json에는 영속하지 않는다. optional (하위호환)"
     },
     "worktree": {
       "type": "string",

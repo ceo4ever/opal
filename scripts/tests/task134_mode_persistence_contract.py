@@ -69,8 +69,15 @@ class Task134ModePersistenceContractTest(unittest.TestCase):
         self.assertIn("owner=user", dev)
         self.assertIn("PRD/TRD", project_dev)
         self.assertRegex(project_dev, r"사용자[^\n]*(소유|확인|승인)")
-        self.assertRegex(routing, r"사용자[^\n]*(수락|승인|확인)")
-        self.assertRegex(escalation, r"사용자[^\n]*(수락|승인|확인)")
+        for label, text in (("routing", routing), ("escalation", escalation)):
+            with self.subTest(track_contract=label):
+                self.assertIn("사용자 응답 없이 트랙을 바꾸지 않는다", text)
+                self.assertIn("현재", text)
+                self.assertIn("트랙", text)
+                self.assertIn("progress_report", text)
+                self.assertIn("transition_action=continue", text)
+                self.assertIn("decision_request", text)
+                self.assertIn("blocked", text)
 
     def test_s7_mode_contract_remains_platform_neutral(self):
         branch = re.compile(r"\b(?:if|when)\b[^\n]*(?:Claude|Cursor|Gemini|Antigravity)", re.I)

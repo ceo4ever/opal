@@ -77,10 +77,11 @@ PLAN 완료
 ```
 📋 [PLAN] 완료 보고
 📎 산출물: tasks/{NNN}-{태스크명}/PLAN.md
-다음 단계(EXECUTE)로 넘어갈까요?
+전이: {transition_action} / 보고: {report_type}
+다음 액션: {next_action}
 ```
 
-**승인 = EXECUTE 시작 허가**
+`report_type=decision_request`인 경우에만 소유자 결정을 기다린다. `progress_report`와 `transition_action=continue`이면 EXECUTE로 이어간다.
 
 ---
 
@@ -121,7 +122,8 @@ op-task-execute 워커 디스패치. **model**: standard. checklist_source: PLAN
 ```
 📋 [EXECUTE] 완료 보고
 📎 변경 파일: {changed_files}
-다음 단계(CLOSE)로 넘어갈까요?
+전이: {transition_action} / 보고: {report_type}
+다음 액션: CLOSE 진입 승인이 필요하면 `decision_request`로 보고한다.
 ```
 
 > TEST-SCENARIO 없음: 범용 작업은 코드 테스트가 불필요하다.
@@ -233,5 +235,9 @@ semi-agentic / agentic 모두 CLOSE 첫 행 `--auto-pass` 거부 (`agentic_close
 
 - agentic: TASK 시작 시점
 - semi-agentic: EXECUTE-equivalent 첫 행 advance 시점에 PM이 생성
+
+### 단계 보고 전이 계약
+
+각 단계 행 mark/advance 직후 `state-tool` stdout의 `transition_action` / `report_type` / `next_action`을 소비한다. `report_type=progress_report`는 비차단 보고이며 `transition_action=continue`이면 같은 응답에서 다음 단계로 이어간다. `report_type=decision_request`는 `transition_action=await_user|blocked`일 때만 사용하고, CLOSE 진입 승인 예외는 유지한다.
 
 ---

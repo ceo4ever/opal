@@ -69,6 +69,8 @@ OPAL 자산은 Global/Project 2-레이어로 배치되고, 런타임은 세션 �
 - **project-aware 경계**: `.opal/AGENT.md` 존재는 프로젝트 감지 신호일 뿐 PM 승격 신호가 아니다. 전체 `docs/PROJECT.md`, `opal-pm.md`, `opal-harness.md`는 세션 부트에서 읽지 않는다.
 - **JIT 검증**: receipt가 필요한 이벤트는 `event-loader load`가 반환한 모든 `documents[].content`를 소비하고 `verify`가 성공한 뒤에만 다음 행동을 시작한다.
 - **모드 복원**: Pilot은 서브 하네스를 읽기 전에 `state-tool resolve-mode`를 호출한다. 명시 플래그가 저장값보다 우선하고, 기존 태스크의 무플래그 재개는 저장 mode를 상속한다. project-brief의 mode 표시는 안내이며 구조화 resolver 응답이 SSOT다.
+- **전이 출력**: 단계 경계의 다음 행동은 `state-tool` stdout의 `transition_action`(`continue`/`await_user`/`blocked`/`complete`), `report_type`(`progress_report`/`decision_request`), `next_action`이 소유한다. 산문 보고와 스킬 문구는 이 구조화 출력을 해석할 뿐이며, `progress_report`는 응답을 멈추는 승인 요청이 아니다.
+- **CLOSE tail**: 신규 Pilot pipeline은 `close.done_md` 뒤에 문서 동기화, brain ingest, 회고, worktree finalize/attribution, `close.final` 행을 둔다. 전체 완료(`complete`/`completed_unmerged`)는 `close.final`에서만 확정하며, `close.final`이 없는 기존 단일 CLOSE pipeline은 하위호환 경로로만 인정한다.
 - **`//opi` 불변식**: 비프로젝트 세션도 비서 커널에서 `//` 진입을 해석할 수 있으므로 새 프로젝트 초기화 경로가 유지된다.
 - **actor 축**: `--pm`은 위 다이어그램의 `PM JIT 활성화`(오케스트레이터) 층에 속하는 실행 주체 선택 축이다 — 하네스 적용(Guards/Gates/State)과 서브에이전트 디스패치 층은 그대로 두고 각 단계 skill을 누가 수행하는지만 바꾼다. 원문 SSOT는 `opal/core/references/harness/actor.md`.
 
@@ -261,6 +263,8 @@ opal/core/mcps/*    ──── install ─→  claude mcp add --scope user (Cl
 **지원 플랫폼 4종**: Claude Code · Cursor · Gemini(Antigravity 포함) · Codex. Codex 경로는 `install_codex_agents()`(어댑터 emit + 모델 매핑 `light`=gpt-5.4-mini / `standard`=gpt-5.4 / `advanced`=gpt-5.5)와 `install_codex_config()`(`~/.codex/config.toml`의 `[agents]` 멱등 작성 — `max_concurrent_threads_per_session`/`max_depth`/`job_max_runtime_seconds`)로 구성되며, 부트스트래퍼는 `~/.codex/AGENTS.md`에 OPAL 마커 구간으로 삽입된다. `install_codex_config()`는 3분기(신규 append / 기존 `[agents]` 블록 내 legacy 키 in-place 치환 / 정식 키 보유 시 스킵)로 동작하여 기존 설치 머신도 정식 키로 마이그레이션한다.
 
 **어댑터 확장 필드 통로**: `emit_platform_agent_adapter()`·`install_codex_agents()`의 frontmatter 재조립은 `OPAL_ADAPTER_FIELD_SPEC`(mac) / `$OpalAdapterFieldSpec`(windows) **JSON 스펙 상수 순회**로 수행된다. OPAL 필드 → 플랫폼 필드 변환은 필드명·값·배치 방식 3중 변환을 이 스펙 하나가 소유하며, emit은 배치 모드 3종(`key` / `model_param` / `omit`)에만 분기하고 플랫폼명 조건문을 두지 않는다. 스펙에 등재되지 않은 필드는 제거된다. 첫 확장 필드는 `effort`(Claude=`effort` / Codex=`model_reasoning_effort` / Cursor·Gemini=생략)이며, 새 필드 추가는 스펙 1행 추가로 끝난다. mac·windows 두 스크립트의 스펙 JSON은 센티넬 주석 구간으로 감싸 **바이트 동일**을 규약으로 하고 테스트가 이를 기계 검증한다. 변환 규칙 SSOT는 `opal/core/references/agents.md` §frontmatter 변환 규칙이다.
+
+**실행 지속성 어댑터 경계**: `transition_action=continue`인데 응답이 종료되는 상황을 막거나 재개 안내를 제공하는 책임은 플랫폼 어댑터와 hook 계층에만 둔다. Claude Code는 `opal/core/hooks/claude-hooks.json`의 Stop hook source를 설치 산출물로 병합해 active task의 `state-tool show` 결과를 확인하고, `continue`이면 `decision:block`과 `next_action` 안내를 반환한다. Cursor/Gemini/Codex 등 동일 Stop 집행 지점이 없는 플랫폼은 state-tool의 `transition_action`/`next_action` stdout 계약을 보존해 재개 정보를 잃지 않는 것을 호환 경계로 삼는다.
 
 **source vs runtime 구분**: `~/.opal/agents/`는 OPAL 표준 형식의 source 캐시이며 LLM 이 직접 읽지 않는다. 런타임에 PM 디스패치가 `Task(subagent_type=…)`로 호출하면 각 플랫폼은 **자기 어댑터 디렉토리**(`~/.claude/agents/` 등)에서 매칭한다. `~/.opal/agents/` 는 install/update 시 어댑터 재생성을 위한 단일 진실 원본 역할을 한다.
 

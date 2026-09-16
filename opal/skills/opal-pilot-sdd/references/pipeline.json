@@ -2,6 +2,11 @@
   "spec_version": "1.0",
   "skill": "opsdd",
   "meta": { "mode_label": "SDD Task", "stages": ["TASK", "SPEC", "REVIEW", "DESIGN", "EXECUTE", "VERIFY", "CLOSE"] },
+  "transition_contract": {
+    "vocabulary": ["continue", "await_user", "blocked", "complete"],
+    "semi_agentic_boundary": "execute.act_run",
+    "close_final_key": "close.final"
+  },
   "task_steps": [
     { "id": 1,  "key": "task.task_md",                 "stage": "TASK",    "item": "TASK.md 작성" },
     { "id": 2,  "key": "task.state_md",                "stage": "TASK",    "item": "STATE.md 생성" },
@@ -27,6 +32,11 @@
     { "id": 22, "key": "verify.ts_green",                "stage": "VERIFY",  "item": "TS 전체 Green 확인" },
     { "id": 23, "key": "verify.pm_gate",                 "stage": "VERIFY",  "item": "PM Gate", "gate": { "artifacts": ["TEST-SCENARIOS.md"], "checklist": ["TEST-SCENARIOS.md 전체 시나리오 E2E 수행 완료 (Pass/Fail 추적 매트릭스 갱신)", "전체 TS Green (또는 Skip + 사유 기록)"] } },
     { "id": 24, "key": "verify.user_confirm",            "stage": "VERIFY",  "item": "사용자 확인" },
-    { "id": 25, "key": "close.done_md",                  "stage": "CLOSE",   "item": "DONE.md 생성" }
+    { "id": 25, "key": "close.done_md",                  "stage": "CLOSE",   "item": "DONE.md 생성" },
+    { "id": 26, "key": "close.docs_sync",                "stage": "CLOSE",   "item": "관련 문서 동기화 (조건부: 구현으로 문서 사실이 달라진 경우)", "conditional": true },
+    { "id": 27, "key": "close.brain_ingest",             "stage": "CLOSE",   "item": "brain ingest (조건부: 프로젝트 brain 사용 시)", "conditional": true },
+    { "id": 28, "key": "close.retrospective",            "stage": "CLOSE",   "item": "회고/개선 후보 기록" },
+    { "id": 29, "key": "close.worktree_finalize",        "stage": "CLOSE",   "item": "worktree finalize/attribution (조건부: --wt 실행 시)", "conditional": true },
+    { "id": 30, "key": "close.final",                    "stage": "CLOSE",   "item": "CLOSE 최종 상태 확정" }
   ]
 }

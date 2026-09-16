@@ -93,16 +93,20 @@ for f in ".gitignore" ".gitattributes"; do
     fi
 done
 
-# ---------------- TC-C: 추적 파일 중 의도 밖 누락이 없어야 한다 ----------------
-# 개별 파일을 열거하는 대신, git 추적 목록에서 "의도된 제외"를 뺀 나머지가
+# ---------------- TC-C: HEAD 추적 파일 중 의도 밖 누락이 없어야 한다 ----------------
+# git archive HEAD 출력과 같은 기준(HEAD tree)으로 대조한다. 작업 중 추가된
+# 사용자 미커밋 파일은 tarball 대상이 아니므로 여기서 false fail로 잡지 않는다(S-7).
+# memory/는 한글 파일명이 archive에서 Unicode 정규화 형태로 달라지는 기존 관측이 있어
+# 설치 산출물 drift 판정에서 제외한다(install 대상 아님).
+# 개별 파일을 열거하는 대신, HEAD 추적 목록에서 "의도된 제외"를 뺀 나머지가
 # 전부 아카이브에 있는지 본다 — 새로 추가되는 과잉 패턴도 여기서 잡힌다.
 
 TRACKED="$SCRATCH_DIR/tracked.txt"
-git ls-files | sort > "$TRACKED"
+git ls-tree -r --name-only HEAD | sort > "$TRACKED"
 
 MISSING="$SCRATCH_DIR/missing.txt"
 comm -23 "$TRACKED" "$LIST" \
-    | grep -vE '^(tasks/|docs/|\.opal/|\.github/|\.gitignore$|\.gitattributes$)' \
+    | grep -vE '^(tasks/|docs/|memory/|\.opal/|\.github/|\.gitignore$|\.gitattributes$)' \
     | grep -vE '(^|/)backup/' \
     > "$MISSING" || true
 
@@ -126,6 +130,26 @@ if in_archive "VERSION"; then
     esac
 else
     fail "TC-D: VERSION 이 아카이브에 없음" "export-ignore 과잉 매칭 의심"
+fi
+
+# ---------------- TC-E: Claude hooks source는 릴리스 아카이브에 포함되어야 한다 ----------------
+# install-mac.sh / install/windows.ps1 이 source hook을 병합하므로, tarball 설치에서도
+# opal/core/hooks/claude-hooks.json 이 빠지면 Stop guard 계약이 배포되지 않는다.
+
+if in_archive "opal/core/hooks/claude-hooks.json"; then
+    HOOK_STOP_CMD="$(cat "$REPO_ROOT/opal/core/hooks/claude-hooks.json" 2>/dev/null || true)"
+    if printf '%s' "$HOOK_STOP_CMD" | grep -q 'transition_action' \
+        && printf '%s' "$HOOK_STOP_CMD" | grep -q 'continue' \
+        && printf '%s' "$HOOK_STOP_CMD" | grep -q 'next_action' \
+        && printf '%s' "$HOOK_STOP_CMD" | grep -q 'stop_hook_active'; then
+        pass "TC-E: Claude Stop guard source 포함 + continue/next_action 계약 문자열 확인"
+    else
+        fail "TC-E: Claude hooks source는 있으나 Stop guard 계약 문자열 누락" \
+             "transition_action=continue / next_action / stop_hook_active 확인 필요"
+    fi
+else
+    fail "TC-E: opal/core/hooks/claude-hooks.json 누락" \
+         "릴리스 tarball 설치 시 Claude Stop guard source를 병합할 수 없음"
 fi
 
 # ---------------- 집계 ----------------

@@ -239,8 +239,9 @@ OPAL 본체(스킬·에이전트·도구·하네스)를 작성할 때 따라야 
 - 행 주소는 `--task-step <key>`(예: `plan.pm_gate`) 우선 사용, `--task-step-id <N>`은 숫자 폴백 — `--row`는 deprecated 별칭(신규 문서·프롬프트에 사용 금지). key 정의는 pilot `references/pipeline.json`이 SSOT.
 - `state-tool init --rows-from`은 pilot `references/pipeline.json`을 지정한다. SKILL.md 마크다운 파싱(`build_rows_from_skill_md`)은 deprecated이며 신규 지시에 사용 금지 — **10/10 pilot 전환 완료(090)**.
 - Pilot의 신규 시작·재개 mode는 `state-tool resolve-mode` 하나로 판정한다. 우선순위는 명시 플래그 > 유효한 저장 mode > 신규 태스크 semi-agentic 기본값이며, invalid 기존 mode는 interactive fail-closed, malformed JSON은 차단한다. 브리프 문구나 LLM 기억으로 mode를 다시 정하지 않는다.
+- 단계 경계의 런타임 행동은 `state-tool`이 내보내는 `transition_action`(`continue`/`await_user`/`blocked`/`complete`), `report_type`(`progress_report`/`decision_request`), `next_action`으로만 판정한다. `progress_report`는 비차단 보고이며 `decision_request`만 사용자 응답 대기를 뜻한다. interactive는 일반 단계 경계마다 사용자 확인, semi-agentic은 Pilot별 `transition_contract.semi_agentic_boundary` 이전 검토 경계, agentic은 공통 예외 외 자동 계속을 기본값으로 한다.
 - **PM Gate 정의의 SSOT는 pilot `references/pipeline.json`의 `task_steps[].gate`**(`artifacts`·`checklist`)다 — SKILL.md에 산출물·체크리스트를 표로 중복 게재하지 않는다. `mark`가 `artifacts` 존재를 결정론 검증하여 미충족 시 `gate_artifact_missing`으로 거부하고, 통과 시 `checklist`를 stdout `gate_checklist`로 반환한다. `artifacts`에는 **해당 게이트 시점에 반드시 존재하는 태스크 폴더 기준 상대 경로/글롭만** 올린다 — 조건부 산출물·논리 개념은 `checklist`에 문안으로 둔다(잘못 올리면 그 게이트가 영구 차단된다). `--force --note`로 우회하면 STATE.md 의사결정 로그에 `gate_artifact_force`가 강제 기록된다 (091).
-- 파이프라인 "사용자 확인" 행은 전 모드 `pending / owner=PM`으로 초기화되며, 다음 단계 진입 시 `state-tool`이 자동 승인한다(`done / owner=auto / timestamp`). 자동 승인 불가 구간(CLOSE 직전·interactive·semi-agentic의 `MODE_BOUNDARY_STAGES`)에서는 `user_confirmation_required` 에러가 반환되며 캡틴 승인(`mark --owner user`)이 필요하다 (093).
+- 파이프라인 "사용자 확인" 행은 전 모드 `pending / owner=PM`으로 초기화되며, 다음 단계 진입 시 `state-tool`이 자동 승인한다(`done / owner=auto / timestamp`). 자동 승인 불가 구간(CLOSE 직전·interactive·semi-agentic의 `MODE_BOUNDARY_STAGES`)에서는 `user_confirmation_required` 에러가 반환되며 캡틴 승인(`mark --owner user`)이 필요하다 (093). 신규 pipeline의 CLOSE는 `close.done_md` 이후 tail 행을 계속 진행하고, 명시 final 행인 `close.final` 완료 전에는 전체 완료로 판정하지 않는다.
 - 근거: `opal/core/references/harness/state.md`
 
 ### 도구 우선 원칙
@@ -263,6 +264,7 @@ OPAL 본체(스킬·에이전트·도구·하네스)를 작성할 때 따라야 
 
 - Claude / Cursor / Gemini / Antigravity 등 플랫폼별 차이는 어댑터 계층(부트스트래퍼·`emit_platform_agent_adapter`·MCP install 분기)에서만 흡수한다.
 - 스킬·에이전트 본문에 플랫폼 조건문을 추가하지 않는다 (행위는 플랫폼 독립적으로 기술하고, 도구명은 어댑터에 위임).
+- 응답 종료 감지·재개 안내도 플랫폼 어댑터·hook 계층 책임이다. Claude Stop hook은 active state의 `transition_action=continue`를 감지하면 종료를 차단하고 `next_action`을 안내하며, Stop hook 집행 지점이 없는 플랫폼은 동일한 `state-tool show` 출력 계약을 보존해 수동 재개가 같은 정보를 소비하게 한다.
 
 ---
 

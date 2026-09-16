@@ -12,6 +12,7 @@
 
 - STATE.md는 **의사결정 로그·블로커·자유 기재를 담는 저널**이다. 파이프라인 현황(행 상태·진행·다음 액션)의 SSOT는 `state.json`이며, 조회는 `state-tool show`로 한다.
 - **출력 형식**: 모든 응답은 단일 라인 JSON
+- **전이 출력 계약**: `show`/`advance`/`mark`/`block`/`add-row`/`status`와 차단 응답은 `transition_action`(`continue`/`await_user`/`blocked`/`complete`), `report_type`(`progress_report`/`decision_request`), `next_action`을 함께 반환한다. `progress_report`는 비차단 통지이고, `decision_request`만 사용자 응답을 기다리는 신호다. 이 필드는 stdout 계약이며 `state.json`에 영속하지 않는다.
 
 ## 호출 형식
 
@@ -153,6 +154,7 @@
 - CLOSE 첫 행 + agentic/semi-agentic 모드 + `--auto-pass` 조합 거부 (`agentic_close_gate_requires_user`)
 - `--force` 사용 시 `--note` 필수 + 의사결정 로그 자동 기재
 - `state.json` `next_action`이 파이프라인 프론티어(첫 미완료 행)에서 자동 파생·갱신된다. `--next-action <text>` 지정 시 해당 값이 파생값보다 우선하며, 이 오버라이드는 **해당 전이 1회에만** 적용된다 — 다음 전이가 `--next-action` 없이 실행되면 자동 파생으로 복귀한다(072). **094부터 STATE.md에 이를 렌더하는 `## 다음 액션` 섹션은 없다** — 현재 상태 조회는 `show`로 한다
+- 신규 CLOSE tail pipeline은 `close.final` 행이 완료될 때만 `current_status=completed_unmerged`를 확정한다. `close.final`이 없는 legacy 단일 CLOSE pipeline은 기존처럼 CLOSE 마지막 행 완료를 final로 인정한다.
 - STATE.md는 `> 최종 갱신:` 헤더 타임스탬프 갱신 + (의사결정 있을 시) `## 의사결정 로그` 표에 1행 자동 추가(저널 후처리, 094)
 - `--note`의 `{owner_name}` 플레이스홀더는 identity.md `owner_name`으로 write-time 치환된다(`--auto-pass` 접두 "agentic auto-pass: " 뒤에도 적용). 부재/공란/파싱 실패 시 원문 유지(fail-safe) — 054
 

@@ -2,6 +2,11 @@
   "spec_version": "1.0",
   "skill": "opgc",
   "meta": { "mode_label": "GC", "stages": ["SCAN", "CHECK", "REPORT", "CLOSE"] },
+  "transition_contract": {
+    "vocabulary": ["continue", "await_user", "blocked", "complete"],
+    "semi_agentic_boundary": "scan.select_targets",
+    "close_final_key": "close.final"
+  },
   "task_steps": [
     { "id": 1, "key": "scan.select_targets",       "stage": "SCAN",   "item": "대상 파일 선별 + 스택 감지 + 프로젝트 구성 파싱" },
     { "id": 2, "key": "check.dispatch_agents",     "stage": "CHECK",  "item": "에이전트 (요소×체커) 병렬 디스패치" },
@@ -9,6 +14,11 @@
     { "id": 4, "key": "report.security_report",    "stage": "REPORT", "item": "GC-SECURITY-{ts}[-{element}].md 생성" },
     { "id": 5, "key": "report.convention_report",  "stage": "REPORT", "item": "GC-CONVENTION-{ts}[-{element}].md 생성" },
     { "id": 6, "key": "report.summary_table",      "stage": "REPORT", "item": "실행 요약 테이블 갱신" },
-    { "id": 7, "key": "close.done_md",             "stage": "CLOSE",  "item": "DONE.md 생성" }
+    { "id": 7,  "key": "close.done_md",             "stage": "CLOSE",  "item": "DONE.md 생성" },
+    { "id": 8,  "key": "close.docs_sync",           "stage": "CLOSE",  "item": "관련 문서 동기화 (조건부: 구현으로 문서 사실이 달라진 경우)", "conditional": true },
+    { "id": 9,  "key": "close.brain_ingest",        "stage": "CLOSE",  "item": "brain ingest (조건부: 프로젝트 brain 사용 시)", "conditional": true },
+    { "id": 10, "key": "close.retrospective",       "stage": "CLOSE",  "item": "회고/개선 후보 기록" },
+    { "id": 11, "key": "close.worktree_finalize",   "stage": "CLOSE",  "item": "worktree finalize/attribution (조건부: --wt 실행 시)", "conditional": true },
+    { "id": 12, "key": "close.final",               "stage": "CLOSE",  "item": "CLOSE 최종 상태 확정" }
   ]
 }

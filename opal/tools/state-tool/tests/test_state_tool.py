@@ -5305,10 +5305,10 @@ _OPDW_PIPELINE_SPEC = json.loads("""
 #   073(opd `test_scenario.scenario_gate`)·075(opds `plan.scenario_gate`) 목표-커버 게이트 행
 #   추가로 두 값이 분기했다.
 _GROUP_A_SPECS = [
-    ("opp",  _OPP_PIPELINE_SPEC,  9,  9,  "opal-pilot-project", "pipeline.json"),
-    ("opd",  _OPD_PIPELINE_SPEC,  15, 16, "opal-pilot-dev", "pipeline.json"),
-    ("opds", _OPDS_PIPELINE_SPEC, 10, 11, "opal-pilot-dev", "pipeline-short.json"),
-    ("opdw", _OPDW_PIPELINE_SPEC, 9,  9,  "opal-pilot-dev-wireframe", "pipeline.json"),
+    ("opp",  _OPP_PIPELINE_SPEC,  9,  14, "opal-pilot-project", "pipeline.json"),
+    ("opd",  _OPD_PIPELINE_SPEC,  15, 21, "opal-pilot-dev", "pipeline.json"),
+    ("opds", _OPDS_PIPELINE_SPEC, 10, 16, "opal-pilot-dev", "pipeline-short.json"),
+    ("opdw", _OPDW_PIPELINE_SPEC, 9,  14, "opal-pilot-dev-wireframe", "pipeline.json"),
 ]
 
 

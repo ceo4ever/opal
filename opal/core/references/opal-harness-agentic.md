@@ -46,6 +46,8 @@ PM이 사용자를 대행하는 만큼, interactive 모드보다 **책임과 의
 
 각 단계 완료 시 PM이 PM Gate를 **강화 검토**로 수행한다. 문서 QA(요구사항→설계 검토)는 별도 QA Gate 단계를 두지 않고 PM Gate가 직접 흡수한다 (검증 기준 라이브러리: `op-dev-qa` / `op-task-qa` SKILL.md를 PM이 참조).
 
+PM Gate와 사용자 확인 행 갱신 직후에는 `state-tool` 응답의 `transition_action` / `report_type` / `next_action`을 소비한다. agentic의 정상 중간 경계는 `transition_action=continue`, `report_type=progress_report`이므로 사용자 질문 없이 다음 행으로 이어간다. `decision_request`는 `await_user` 또는 `blocked`와 함께 반환된 경우에만 사용하며, CLOSE 진입 승인·Critical 에스컬레이션·실행 불가 같은 공통 예외만 대기한다.
+
 **강화 검토 기준**:
 1. TASK.md 요구사항 100% 충족
 2. 문서 QA 검증 결과 All Pass (요구사항 누락·오해·완전성·정합성·명확성·실행가능성 — PM이 직접 검토)

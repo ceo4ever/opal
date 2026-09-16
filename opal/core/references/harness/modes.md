@@ -32,3 +32,18 @@ load: pilot.start
 
 모드별 단계 게이트와 사용자 확인 동작은 각 서브 하네스가 소유한다. 모든 모드에
 공통인 승인·CLOSE·자동 루핑 경계는 `harness/guards.md`가 소유한다.
+
+## 전이 출력 소비 계약
+
+모든 Pilot은 단계 작업·PM Gate·사용자 확인 행을 갱신한 직후 `state-tool` stdout의
+구조화 전이 필드를 소비한다. 산문 보고 문구나 스킬별 관용 표현은 전이 판정 근거가 아니다.
+
+| 필드 | 계약 |
+|------|------|
+| `transition_action` | `continue` / `await_user` / `blocked` / `complete` 중 하나. 다음 행동의 SSOT |
+| `report_type` | `progress_report` 또는 `decision_request`. 사용자에게 보낼 보고의 차단 여부 |
+| `next_action` | 다음 행 또는 재개 행동을 사람이 읽을 수 있게 요약한 안내 |
+
+- `progress_report`는 비차단 통지다. 보고 후 `transition_action=continue`이면 같은 응답 안에서 다음 단계 도구 호출을 이어간다.
+- `decision_request`만 사용자 응답을 기다리는 신호다. 이때 `transition_action`은 `await_user` 또는 `blocked`다.
+- `complete`는 전체 파이프라인의 명시 final 행까지 끝난 뒤에만 반환된다. CLOSE 진입 승인 예외는 각 모드 하네스와 `harness/guards.md`가 유지한다.
