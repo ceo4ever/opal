@@ -11109,9 +11109,9 @@ class TestT111SdlcV2StateContracts(_T093Base):
 # 검증하고 mock/patch는 date.js(_mock_now)에만 한정한다. 기존 테스트는 수정하지
 # 않았다(파일 끝 append).
 #
-# S-1 기준 스냅샷: PM이 W-2 적용 전 소스로
+# S-1 기준 스냅샷: Task 136 CLOSE tail 반영 소스로
 #   `state-tool init --skill opds --mode agentic --rows-from pipeline-short.json`
-# 를 실행해 확보한 rows[] 11행을 fixtures/s1_baseline_rows.json에 그대로 보존했다
+# 를 실행해 확보한 rows[] 16행을 fixtures/s1_baseline_rows.json에 그대로 보존했다
 # (row_id/stage/item/key/status/status_label/timestamp/owner/note/gate — 실행마다
 # 달라지는 top-level created_at/updated_at/task_id만 비교에서 제외한다).
 # ═════════════════════════════════════════════════════════════════════════════
@@ -11163,11 +11163,11 @@ class TestActorFlag(BaseTestCase):
             args = make_args(**kwargs)
             return self._call_cmd(ST.cmd_init, args)
 
-    # ── S-1: --actor 미전달 시 actor 키 부재 + rows[] 11행이 기준과 동일 ────
+    # ── S-1: --actor 미전달 시 actor 키 부재 + rows[] 16행이 기준과 동일 ────
 
     def test_s1_actor_unspecified_no_actor_key_and_rows_match_baseline(self):
         """[T122/S-1] --actor 미전달로 opds init 실행 → state.json에 "actor" 키가
-        부재하고, rows[] 11행이 W-2 적용 전 기준 스냅샷(fixtures/s1_baseline_rows.json)
+        부재하고, rows[] 16행이 Task 136 CLOSE tail 반영 기준 스냅샷(fixtures/s1_baseline_rows.json)
         과 (row_id/stage/item/key/status/owner/gate 등) 정규화 후 동일해야 한다."""
         task_path = self._new_task_path("s1_no_actor")
         exit_code, _ = self._init_opds(task_path)
@@ -11178,21 +11178,21 @@ class TestActorFlag(BaseTestCase):
 
         baseline_rows = json.loads(_S1_BASELINE_ROWS_FIXTURE.read_text(encoding="utf-8"))
         rows = state.get("rows")
-        self.assertEqual(len(rows), 11, "task_steps[] 는 11행이어야 한다")
-        self.assertEqual(len(baseline_rows), 11, "기준 스냅샷도 11행이어야 한다(fixture 자체 점검)")
+        self.assertEqual(len(rows), 16, "task_steps[] 는 16행이어야 한다")
+        self.assertEqual(len(baseline_rows), 16, "기준 스냅샷도 16행이어야 한다(fixture 자체 점검)")
 
         # 실행마다 달라지는 필드는 없다 — rows[] 항목은 created_at/updated_at/task_id에
         # 의존하지 않으므로 정규화 없이 바로 비교 가능(정규화 대상은 top-level 3필드뿐).
         self.assertEqual(
             rows, baseline_rows,
-            "rows[] 11행의 key·순서·상태가 W-2 적용 전 기준 스냅샷과 달라짐(C-3 위반)",
+            "rows[] 16행의 key·순서·상태가 Task 136 기준 스냅샷과 달라짐(C-3 위반)",
         )
 
-    # ── S-2: --actor pm --skill opds → state["actor"] == "pm", 행 11개 유지 ──
+    # ── S-2: --actor pm --skill opds → state["actor"] == "pm", 행 16개 유지 ──
 
     def test_s2_actor_pm_skill_opds_sets_actor_key_rows_unchanged(self):
         """[T122/S-2] `--actor pm --skill opds` → state["actor"] == "pm"이고
-        rows[]는 S-1과 동일하게 11행이어야 한다."""
+        rows[]는 S-1과 동일하게 16행이어야 한다."""
         task_path = self._new_task_path("s2_actor_pm")
         exit_code, _ = self._init_opds(task_path, actor="pm")
         self.assertEqual(exit_code, 0, "--actor pm --skill opds init은 exit 0이어야 한다")
@@ -11203,7 +11203,7 @@ class TestActorFlag(BaseTestCase):
             "--actor pm 지정 시 state['actor']가 'pm'이어야 한다(AC-1 위반 — GREEN 이전 RED)",
         )
         rows = state.get("rows")
-        self.assertEqual(len(rows), 11, "actor 지정과 무관하게 rows[]는 11행이어야 한다(AC-4)")
+        self.assertEqual(len(rows), 16, "actor 지정과 무관하게 rows[]는 16행이어야 한다(AC-4)")
 
         baseline_rows = json.loads(_S1_BASELINE_ROWS_FIXTURE.read_text(encoding="utf-8"))
         self.assertEqual(
