@@ -434,3 +434,7 @@
 - 갱신: [[pages/concept/session-project-action-needed-briefing.md]]
 - 출처: task:133
 
+## [2026-09-16] ingest | CLOSE ingest — task 136 mode-aware execution continuity contract
+- 신규: [[pages/concept/mode-aware-execution-continuity-contract.md]]
+- 출처: task:136
+
