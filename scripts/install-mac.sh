@@ -198,9 +198,11 @@ merge_hooks_config() {
     local target="$1"
     local hooks_json="$2"
 
-    # 소유권-마커(_opal_managed) 기반 멱등 upsert에 위임 — 외부 hook(orca 등) 보존 + OPAL 항목 재삽입,
-    # N회 재배포 시 결과 바이트 동일. 로직은 테스트 가능한 seam(scripts/merge-hooks.py)으로 분리 (task 076)
-    /usr/bin/python3 "$FRAMEWORK_ROOT/scripts/merge-hooks.py" "$target" "$hooks_json"
+    # 소유권을 마커(_opal_managed) ∪ command 내용 일치로 판정하는 멱등 upsert에 위임 — 외부 hook(orca 등)
+    # 보존 + OPAL 항목 재삽입 + 퇴역 command 회수. Claude Code가 settings 저장 시 마커를 버려도 결과 동일.
+    # 로직은 테스트 가능한 seam(scripts/merge-hooks.py)으로 분리 (task 076, 마커 유실 내성 2026-09-17)
+    local retired_json="${hooks_json%.json}.retired.json"
+    /usr/bin/python3 "$FRAMEWORK_ROOT/scripts/merge-hooks.py" "$target" "$hooks_json" "$retired_json"
 }
 
 install_dir() {

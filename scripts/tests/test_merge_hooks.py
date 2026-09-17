@@ -4,7 +4,7 @@
   "module": "test_merge_hooks",
   "layer": "test",
   "domain": "opal-install",
-  "description": "merge-hooks.py 멱등 upsert 단위 테스트 — 외부(orca) 보존·OPAL 스탬프 upsert·2회 멱등·유효 JSON/마커 위치 (TS-020~023)",
+  "description": "merge-hooks.py 멱등 upsert 단위 테스트 — 외부(orca) 보존·OPAL 스탬프 upsert·2회 멱등·유효 JSON/마커 위치 (TS-020~023) + 마커 유실 내성·퇴역 command 회수",
   "exports": ["TestMergeHooks"],
   "depends": ["merge-hooks"]
 }
@@ -128,6 +128,58 @@ class TestMergeHooks(unittest.TestCase):
         merged = merge_hooks({}, copy.deepcopy(SOURCE_HOOKS))
         self.assertIn("PostToolUse", merged["hooks"])
         self.assertEqual(len(merged["hooks"]["PostToolUse"]), 1)
+
+    # ── 마커 유실 내성 (settings.json 훅 9중복 사고, 2026-09-17) ─────────────
+    # Claude Code는 settings.json을 저장할 때 스키마 밖 키(_opal_managed)를 버린다.
+    # 마커만으로 소유권을 판정하면 재배포마다 OPAL 항목이 +1 누적된다.
+
+    def _strip_marker(self, settings):
+        for block in self._iter_matcher_blocks(settings):
+            block.pop(MARKER, None)
+        return settings
+
+    def test_marker_stripped_duplicates_collapse(self):
+        """마커가 지워진 OPAL 사본 N개 → merge 후 정확히 1개(내용 일치로 소유 판정)."""
+        first = merge_hooks(copy.deepcopy(ORCA_SETTINGS), copy.deepcopy(SOURCE_HOOKS))
+        self._strip_marker(first)
+        # 마커 유실 상태에서 2회 더 배포된 상황을 재현
+        second = self._strip_marker(merge_hooks(first, copy.deepcopy(SOURCE_HOOKS)))
+        third = merge_hooks(second, copy.deepcopy(SOURCE_HOOKS))
+        cmds = [h["command"] for b in third["hooks"]["PostToolUse"] for h in b["hooks"]]
+        self.assertEqual(cmds.count("python todo_mirror_hook.py"), 1)
+        self.assertEqual(cmds.count("orca-external-hook"), 1)
+        self.assertEqual(len(third["hooks"]["Stop"]), 1)
+
+    def test_marker_stripped_idempotent_byte_identical(self):
+        """마커를 지운 뒤 재실행해도 결과 바이트가 동일하다(076 멱등 약속의 실제 성립 조건)."""
+        merged = merge_hooks(copy.deepcopy(ORCA_SETTINGS), copy.deepcopy(SOURCE_HOOKS))
+        first = json.dumps(merged, ensure_ascii=False, sort_keys=True)
+        again = merge_hooks(self._strip_marker(copy.deepcopy(merged)), copy.deepcopy(SOURCE_HOOKS))
+        self.assertEqual(first, json.dumps(again, ensure_ascii=False, sort_keys=True))
+
+    def test_retired_command_removed(self):
+        """소스에서 퇴역한 OPAL command(마커 無)는 retired 목록으로 회수된다."""
+        retired_cmd = "osascript -e 'legacy-stop'"
+        settings = {"hooks": {"Stop": [
+            {"matcher": "", "hooks": [{"type": "command", "command": retired_cmd}]},
+            {"matcher": "", "hooks": [{"type": "command", "command": retired_cmd}]},
+            {"matcher": "", "hooks": [{"type": "command", "command": "orca-external-hook"}]},
+        ]}}
+        merged = merge_hooks(settings, copy.deepcopy(SOURCE_HOOKS), {"Stop": [retired_cmd]})
+        cmds = [h["command"] for b in merged["hooks"]["Stop"] for h in b["hooks"]]
+        self.assertNotIn(retired_cmd, cmds)
+        self.assertIn("orca-external-hook", cmds)
+        self.assertIn("osascript -e 'stop'", cmds)
+
+    def test_retired_only_event_is_cleaned(self):
+        """소스에 없는 이벤트라도 retired 목록에 있으면 회수한다(이벤트 자체 퇴역)."""
+        settings = {"hooks": {"Notification": [
+            {"matcher": "", "hooks": [{"type": "command", "command": "old-notify"}]},
+            {"matcher": "", "hooks": [{"type": "command", "command": "orca-external-hook"}]},
+        ]}}
+        merged = merge_hooks(settings, copy.deepcopy(SOURCE_HOOKS), {"Notification": ["old-notify"]})
+        cmds = [h["command"] for b in merged["hooks"]["Notification"] for h in b["hooks"]]
+        self.assertEqual(cmds, ["orca-external-hook"])
 
 
 if __name__ == "__main__":
