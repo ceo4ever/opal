@@ -4,8 +4,8 @@
   "mode": "agentic",
   "schema_version": "1.2",
   "created_at": "2026-09-17 14:31:57",
-  "updated_at": "2026-09-17 16:11:43",
-  "current_status": "completed_unmerged",
+  "updated_at": "2026-09-17 16:29:06",
+  "current_status": "additional_work",
   "rows": [
     {
       "row_id": 1,
@@ -216,6 +216,18 @@
       "timestamp": "2026-09-17 16:11:43",
       "owner": "PM",
       "note": "CLOSE 완료 — 커밋은 캡틴 지시 대기"
+    },
+    {
+      "row_id": 17,
+      "stage": "CLOSE",
+      "item": "추가작업 ADD-1 — 선언 파일 위치 판정·init 컨테이너 가드·deferred 가시화",
+      "key": "close.item_1",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-17 16:29:06",
+      "owner": "PM",
+      "note": "ADD-1 완료 — pytest 49 passed · 실환경 3건 재현 검증 · 배포본 동일",
+      "worker_duration_unknown": true
     }
   ],
   "next_action": "태스크 완료",

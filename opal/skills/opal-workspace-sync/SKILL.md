@@ -53,12 +53,14 @@ git-sync-tool은 `~/.opal/tools/git-sync-tool/run.sh`로 호출한다. 출력이
 
 ### 선언 조회 (조건부)
 
-순회 대상 경로의 **부모 디렉토리**에 `.opal/workspace.json`이 있으면 도구가 선언×디스크를 대조한다. 스킬이 따로 읽을 필요는 없고, 선언 유무에 따라 응답에 판정 필드가 붙는지만 달라진다.
+도구가 선언 파일을 찾아 선언×디스크를 대조한다. 스킬이 따로 읽을 필요는 없고, 선언 유무에 따라 응답에 판정 필드가 붙는지만 달라진다.
+
+**찾는 위치**: 순회 대상 경로에 `.opal/`이 있으면 그 경로 자신의 `.opal/workspace.json`, 없으면 부모의 것. STEP 1이 `<경로>/workspace`를 순회 대상으로 확정하는 기본 형태에서는 `<경로>/.opal/workspace.json`이 된다.
 
 - **선언 파일 없음** → 위 3분기가 그대로 끝이다. 응답에 `declaration`·`repo` 필드가 없고 판정도 수행되지 않는다. 현행 동작 100% 유지.
 - **선언 파일 있음** → 응답에 `workspace_config` 경로와 저장소별 `declaration`·`repo`가 추가된다. STEP 3 보고서에 선언 관련 섹션을 포함한다.
 
-선언 파일이 아직 없는 프로젝트에서 사용자가 선언을 만들고 싶어 하면 `init`으로 초안을 만든다. **초안은 탐지 결과일 뿐이므로 사용자 확인 없이 확정하지 않는다** — `--dry-run`으로 먼저 보여주고 승인 후 기록한다.
+선언 파일이 아직 없는 프로젝트에서 사용자가 선언을 만들고 싶어 하면 `init`으로 초안을 만든다. **`init`에는 STEP 1이 확정한 순회 대상(컨테이너) 경로를 그대로 넘긴다** — 저장소 경로를 주면 도구가 `NOT_A_WORKSPACE_CONTAINER`로 거부한다. **초안은 탐지 결과일 뿐이므로 사용자 확인 없이 확정하지 않는다** — `--dry-run`으로 먼저 보여주고 승인 후 기록한다.
 
 ```bash
 ~/.opal/tools/git-sync-tool/run.sh init <순회 대상 경로> [--dry-run] [--force]
@@ -136,7 +138,7 @@ STEP 1에서 확정된 경로로 도구를 호출한다:
 | `active` | 있음·좌표 불일치 | `mismatch` | `mismatch` | **pull 보류** — 엉뚱한 저장소 방지 |
 | `active`/`deferred` | 있음·환원 불가 | `unknown` | `unknown` | **pull 보류** — 확정 못 하면 일치로 간주하지 않는다 |
 | `active` | 없음 | `not-cloned` | `not-cloned` | 보고 + clone 제안 (승인 필요) |
-| `deferred` | 없음 | — | — | 의도된 상태. 보고하지 않는다 |
+| `deferred` | 없음 | `deferred` | `deferred` | 의도된 상태. **보고는 하되 조치 제안에 올리지 않는다** |
 | `deferred` | 있음 | `undeclared-active` | 순회 판정 그대로 | sync + 선언 어긋남 보고 |
 | 미선언 | 있음 | `undeclared` | `undeclared` | 선언 드리프트 보고, pull 보류 |
 
@@ -180,6 +182,7 @@ root 저장소: <root 경로> 포함              ← root != null일 때만
 | `undeclared` | 디스크에 있지만 선언에 없음 | 실제 좌표(`repo`) — 선언 드리프트다. 선언 추가 또는 디렉토리 정리는 사람 결정 |
 | `mismatch` | 디렉토리는 맞는데 다른 레포 | 선언 좌표와 실제 좌표, **그리고 원격 URL 원문** |
 | `unknown` | 원격 좌표를 확정할 수 없음 | **원격 URL 원문** (없으면 "origin 없음") |
+| `deferred` | 선언상 두지 않기로 한 레포 | 선언 좌표(`repo`)만 한 줄로 표시한다. **조치 제안(⑤)에 올리지 않는다** — 정상 상태이므로 사용자에게 결정을 묻지 않는다. 다만 출력에서 지우지는 않는다: 지우면 선언해 둔 레포가 어디에도 나타나지 않아 "선언은 했는데 아무도 안 본다"가 된다 |
 | `undeclared-active` | `deferred` 선언인데 디스크에 존재 | 선언을 `active`로 고칠지 묻는다 — **도구는 선언을 자동 변경하지 않는다** |
 
 **[MUST] 원격 URL 원문은 `mismatch`·`unknown`에서만, 화면에만 노출한다.** 도구 응답에는 URL이 없으므로 스킬이 렌더 시점에 `git -C <경로> config --get remote.origin.url`로 직접 읽는다. 이 값을 DONE.md·보고 파일 등 영속 산출물에 기록하지 않는다 — 사용자마다 다른 접속 방식이 기록에 굳는다.
@@ -208,6 +211,7 @@ root 저장소: <root 경로> 포함              ← root != null일 때만
 | `fetch-failed` | 네트워크/인증/원격 URL 점검 (수동) |
 | `not-cloned` | `clone` 서브명령으로 클론 (승인 후에만) |
 | `undeclared` | 선언에 추가 / 디렉토리 정리 / 그대로 두기 (사람 결정 — 도구는 선언을 고치지 않는다) |
+| `deferred` | **조치 없음.** 보고서에만 표시하고 제안하지 않는다 |
 | `mismatch` | 디렉토리명 또는 선언 수정 (수동). **자동 조치 없음** — 엉뚱한 저장소를 건드릴 위험이 가장 큰 상태다 |
 | `unknown` | origin 설정 점검 (수동) |
 | `undeclared-active` | 선언을 `active`로 수정 (사람 결정) |

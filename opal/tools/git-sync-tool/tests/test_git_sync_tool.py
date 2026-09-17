@@ -898,11 +898,14 @@ def test_ws_s9_six_states_are_each_judged(git_workspace: GitFixtureWorkspace) ->
     assert absent["reason"] == "not-cloned", absent
     assert absent["status"] == "skipped", absent
 
-    # (3) deferred·없음 → 보고 없는 정상 skip (항목 자체가 없다)
-    names = {r["name"] for r in payload["repositories"]}
-    assert "repo_deferred_absent" not in names, (
-        f"deferred·없음은 의도된 상태이므로 보고하지 않아야 한다: {sorted(names)}"
-    )
+    # (3) deferred·없음 → 조치 없는 정상 상태지만 **보고에는 남는다** (ADD-1)
+    #     경고를 내지 않는 것과 출력에서 지우는 것은 다르다. 지우면 선언해 둔 레포가
+    #     어디에도 나타나지 않아 "선언은 했는데 아무도 안 본다"가 된다.
+    deferred_absent = _find_repo(payload, "repo_deferred_absent")
+    assert deferred_absent["reason"] == "deferred", deferred_absent
+    assert deferred_absent["declaration"] == "deferred", deferred_absent
+    assert deferred_absent["status"] == "skipped", deferred_absent
+    assert deferred_absent["repo"] == "storelink-io/blend-later", deferred_absent
 
     # (4) deferred·있음 → sync + 선언 어긋남 보고
     deferred_present = _find_repo(payload, "repo_current")
@@ -1320,3 +1323,85 @@ def test_ws_s11b_init_reports_foreign_org_children_separately(
     assert {"repo_behind", "repo_current"} <= dirs, draft
     assert {entry["dir"] for entry in payload["other_org"]} == {"repo_dirty"}, payload
     assert payload["other_org"][0]["repo"] == "other-org/outsider", payload
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# ADD-1 — 선언 파일 위치 판정 · init 컨테이너 가드 · deferred 가시화
+#
+# 실사용(blend 워크스페이스) 검증에서 드러난 3건. 스킬 경유(`sync <프로젝트>/workspace`)
+# 로는 어긋나지 않았지만 사람이 프로젝트 경로를 직접 치는 순간 선언 파일이 레포 밖으로
+# 잡혔고, 의도적으로 보류한 레포가 출력에서 사라졌다.
+# ═══════════════════════════════════════════════════════════════════════════
+
+
+# ---------------------------------------------------------------------------
+# A-1: 순회 경로 자체에 `.opal/`이 있으면 그 경로가 프로젝트 루트다
+#      (프로젝트 경로를 직접 준 경우 — 선언 파일이 레포 밖으로 새지 않는다)
+# ---------------------------------------------------------------------------
+def test_add1_project_root_is_the_path_itself_when_it_has_opal(
+    git_workspace: GitFixtureWorkspace,
+) -> None:
+    fx = git_workspace
+    run_git(
+        ["remote", "set-url", "origin", "https://github.com/storelink-io/blend.git"],
+        cwd=fx.repo_behind,
+    )
+    # 컨테이너 자신이 프로젝트 루트인 배치 — workspace/.opal/workspace.json
+    write_workspace_config(fx.workspace, _ws_declare("repo_behind", "blend"))
+
+    payload = _parse_json_stdout(run_sync_cli(fx.workspace))
+    _assert_top_schema(payload)
+
+    assert payload["workspace_config"] == str(
+        fx.workspace / ".opal" / "workspace.json"
+    ), f"순회 경로 자신의 .opal을 두고 부모를 봤다: {payload['workspace_config']}"
+    repo = _find_repo(payload, "repo_behind")
+    assert repo["declaration"] == "match", repo
+
+
+# ---------------------------------------------------------------------------
+# A-2: `.opal/`이 없으면 종전대로 부모를 프로젝트 루트로 본다 (회귀 방지)
+# ---------------------------------------------------------------------------
+def test_add1_project_root_falls_back_to_parent_without_opal(
+    git_workspace: GitFixtureWorkspace,
+) -> None:
+    fx = git_workspace
+    assert not (fx.workspace / ".opal").exists()
+    write_workspace_config(fx.root, _ws_declare("repo_behind", "blend"))
+
+    payload = _parse_json_stdout(run_sync_cli(fx.workspace))
+    assert payload["workspace_config"] == str(
+        fx.root / ".opal" / "workspace.json"
+    ), payload["workspace_config"]
+
+
+# ---------------------------------------------------------------------------
+# A-3: init이 저장소 자체를 받으면 거부한다
+#      (자기 자신을 유일한 자식으로 선언하는 초안은 의미가 없다)
+# ---------------------------------------------------------------------------
+def test_add1_init_rejects_a_repository_path(single_repo_root: pathlib.Path) -> None:
+    payload = _parse_json_stdout(run_tool_cli("init", str(single_repo_root), "--dry-run"))
+
+    assert payload["ok"] is False, f"저장소 경로를 init이 받아들였다: {payload}"
+    assert payload["error"] == "NOT_A_WORKSPACE_CONTAINER", payload
+    assert "draft" not in payload, payload
+
+
+# ---------------------------------------------------------------------------
+# A-4: init은 컨테이너 자신의 `.opal/`에 쓴다 (레포 밖으로 새지 않는다)
+# ---------------------------------------------------------------------------
+def test_add1_init_writes_into_the_container_own_opal(
+    git_workspace: GitFixtureWorkspace,
+) -> None:
+    fx = git_workspace
+    run_git(
+        ["remote", "set-url", "origin", "https://github.com/storelink-io/blend.git"],
+        cwd=fx.repo_behind,
+    )
+    (fx.workspace / ".opal").mkdir()
+
+    payload = _parse_json_stdout(run_tool_cli("init", str(fx.workspace), "--dry-run"))
+    assert payload["ok"] is True, payload
+    assert payload["config_path"] == str(fx.workspace / ".opal" / "workspace.json"), (
+        f"초안 기록 위치가 컨테이너 밖으로 잡혔다: {payload['config_path']}"
+    )

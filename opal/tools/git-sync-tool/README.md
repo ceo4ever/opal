@@ -33,11 +33,13 @@
 
 ### `init` — 선언 초안 생성
 
-기존 `origin`을 정규화해 `{path}/../.opal/workspace.json` 초안을 만든다.
+기존 `origin`을 정규화해 선언 초안을 만든다. 기록 위치는 위 §선언 파일 위치 판정과 같다.
+
+**저장소 경로는 받지 않는다.** 단일 저장소를 훑으면 그 저장소 자신이 유일한 "자식"이 되어 의미 없는 초안이 나오므로, 컨테이너 경로를 추측해 내려가지 않고 거부한다.
 
 | 인자 | 필수 | 설명 |
 |------|------|------|
-| `path` (위치) | O | 순회 대상 경로 |
+| `path` (위치) | O | 순회 대상 **컨테이너** 경로. `<path>/.git`이 있으면 `NOT_A_WORKSPACE_CONTAINER`로 거부한다 |
 | `--dry-run` | X | 파일을 쓰지 않고 최상위 `draft` 키로 초안만 반환한다 |
 | `--force` | X | 기존 파일을 덮어쓴다. 없으면 `CONFIG_EXISTS`로 거부하고 파일을 건드리지 않는다 |
 
@@ -79,7 +81,16 @@
 
 ## 선언 대조 — `workspace.json` (조건부)
 
-순회 경로의 **부모 디렉토리** 기준 `{path}/../.opal/workspace.json`이 있으면, 순회를 시작하기 전에 읽어 선언×디스크를 대조한다. 스키마 계약은 `schema/workspace.schema.json`이 소유한다.
+선언 파일이 있으면 순회를 시작하기 전에 읽어 선언×디스크를 대조한다. 스키마 계약은 `schema/workspace.schema.json`이 소유한다.
+
+**선언 파일 위치 판정**은 두 단계다.
+
+| 조건 | 프로젝트 루트 | 선언 파일 |
+|------|--------------|----------|
+| `<path>/.opal/`이 있다 | `<path>` 자신 | `<path>/.opal/workspace.json` |
+| 없다 | `<path>`의 부모 | `<path>/../.opal/workspace.json` |
+
+`<프로젝트>/workspace`를 순회하는 기본 형태에서는 부모가 프로젝트 루트다. 프로젝트 경로를 직접 주면 그 경로 자신이 루트다 — 부모 고정 규칙만 두면 이 경우 선언 파일이 **레포 밖 한 단계 위**로 잡힌다.
 
 ```json
 {
@@ -179,8 +190,10 @@
 
 - `workspace_config` (최상위): 대조에 사용한 선언 파일 절대경로
 - `repo`: 실제 origin에서 환원한 `org/repo` 좌표. 환원 불가면 `null`
-- `declaration`: `match` | `mismatch` | `unknown` | `not-cloned` | `undeclared` | `undeclared-active` (`--root` 저장소는 `null`)
-- `reason`에 `mismatch` | `unknown` | `not-cloned` | `undeclared` 4종이 추가된다
+- `declaration`: `match` | `mismatch` | `unknown` | `not-cloned` | `deferred` | `undeclared` | `undeclared-active` (`--root` 저장소는 `null`)
+- `reason`에 `mismatch` | `unknown` | `not-cloned` | `deferred` | `undeclared` 5종이 추가된다
+
+**선언됐는데 디스크에 없는 레포는 `state`와 무관하게 전부 보고된다.** `active`는 조치가 필요한 누락(`not-cloned`), `deferred`는 의도된 상태(`deferred`)로 구분될 뿐이다. 경고를 내지 않는 것과 출력에서 지우는 것은 다르다 — 지우면 선언해 둔 레포가 어디에도 나타나지 않아 드리프트 탐지가 절반만 작동한다.
 
 **응답 어디에도 원격 URL 원문을 싣지 않는다.** 도구 출력은 DONE.md·brain·태스크 문서로 흘러가므로, 사용자마다 다른 접속 방식이 영속 기록에 굳을 통로를 만들지 않는다. URL 원문이 필요한 `mismatch`·`unknown` 진단은 호출자가 렌더 시점에 직접 읽어 화면에만 표시한다.
 
@@ -221,6 +234,7 @@
 | `INVALID_DIR` | `clone` | `--dir`가 basename이 아님 |
 | `DIR_EXISTS` | `clone` | 대상 디렉토리가 이미 존재함. 덮어쓰지 않는다 |
 | `CLONE_FAILED` | `clone` | `git clone` 실패. stderr에 URL 원문이 섞이므로 응답에 싣지 않는다 |
+| `NOT_A_WORKSPACE_CONTAINER` | `init` | 경로가 저장소 자체임(`<path>/.git` 존재). 자식을 담은 컨테이너 경로가 필요하다 |
 
 ```json
 {"ok": false, "error": "PATH_NOT_FOUND", "message": "지정한 경로가 존재하지 않습니다: /no/such/dir"}

@@ -3,8 +3,8 @@
   "module": "git_sync_tool",
   "layer": "util",
   "domain": "opal-workspace",
-  "description": "워크스페이스 아래 여러 독립 git 저장소를 순회하며 안전하게 일괄 최신화(clean+ff-only pull)하는 CLI. 대상 결정(단일 git 루트 또는 직속 자식 1단계, 재귀 금지) → 선언 대조(선언 파일이 있을 때만) → 저장소별 판정(detached→no-upstream→dirty→fetch→diverged/ff) → JSON 결과 출력. git 2.22+ 필요 (rev-list --left-right --count). detached HEAD에서는 @{u} 조회 자체가 fatal로 실패해 no-upstream과 구분되지 않으므로 detached 판정을 no-upstream보다 먼저 수행한다. dirty/diverged/detached/no-upstream 저장소에는 stash/rebase/force/commit/push 등 자율 조치를 일절 수행하지 않는다(skip 후 보고만) — 헌법 user sovereignty 원칙. `--root <경로>`는 순회 대상 밖에 있는 상위 root 저장소(예: `<프로젝트>/workspace`를 순회할 때의 `<프로젝트>` 자체)를 대상 선두에 추가한다 — 미전달 시 동작은 현행과 동일하고, `.git` 없는 root는 조용히 제외하며(상위 저장소 오조작 방지) 이미 발견된 대상과 중복되면 계상하지 않는다. `<순회경로>/../.opal/workspace.json` 선언 파일이 있으면 선언×디스크 6상태를 대조해 mismatch/unknown/not-cloned/undeclared를 보고하고 pull을 보류한다 — 선언 파일이 없으면 대조 자체를 수행하지 않아 응답 키 집합이 도입 전과 동일하다. 정체성 비교 키는 org/repo이며 host·프로토콜·대소문자·후행 .git은 판정에서 배제한다. 로컬 파일시스템 경로는 환원 대상이 아니며 unknown으로 보류한다. 도구 응답에 원격 URL 원문을 싣지 않는다.",
-  "exports": ["cmd_sync", "cmd_init", "cmd_clone", "process_repo", "discover_targets", "resolve_root_target", "normalize_repo_coord", "compare_repo_coord", "load_workspace_config", "validate_workspace_config"],
+  "description": "워크스페이스 아래 여러 독립 git 저장소를 순회하며 안전하게 일괄 최신화(clean+ff-only pull)하는 CLI. 대상 결정(단일 git 루트 또는 직속 자식 1단계, 재귀 금지) → 선언 대조(선언 파일이 있을 때만) → 저장소별 판정(detached→no-upstream→dirty→fetch→diverged/ff) → JSON 결과 출력. git 2.22+ 필요 (rev-list --left-right --count). detached HEAD에서는 @{u} 조회 자체가 fatal로 실패해 no-upstream과 구분되지 않으므로 detached 판정을 no-upstream보다 먼저 수행한다. dirty/diverged/detached/no-upstream 저장소에는 stash/rebase/force/commit/push 등 자율 조치를 일절 수행하지 않는다(skip 후 보고만) — 헌법 user sovereignty 원칙. `--root <경로>`는 순회 대상 밖에 있는 상위 root 저장소(예: `<프로젝트>/workspace`를 순회할 때의 `<프로젝트>` 자체)를 대상 선두에 추가한다 — 미전달 시 동작은 현행과 동일하고, `.git` 없는 root는 조용히 제외하며(상위 저장소 오조작 방지) 이미 발견된 대상과 중복되면 계상하지 않는다. 선언 파일(`<순회경로>/.opal/workspace.json` — 없으면 `<순회경로>/../.opal/workspace.json`)이 있으면 선언×디스크 6상태를 대조해 mismatch/unknown/not-cloned/undeclared를 보고하고 pull을 보류한다 — 선언 파일이 없으면 대조 자체를 수행하지 않아 응답 키 집합이 도입 전과 동일하다. 정체성 비교 키는 org/repo이며 host·프로토콜·대소문자·후행 .git은 판정에서 배제한다. 로컬 파일시스템 경로는 환원 대상이 아니며 unknown으로 보류한다. 도구 응답에 원격 URL 원문을 싣지 않는다.",
+  "exports": ["cmd_sync", "cmd_init", "cmd_clone", "process_repo", "discover_targets", "resolve_root_target", "resolve_project_root", "normalize_repo_coord", "compare_repo_coord", "load_workspace_config", "validate_workspace_config"],
   "depends": ["git CLI 2.22+"]
 }
 """
@@ -31,6 +31,7 @@ ERROR_CODES = {
     "DIR_EXISTS": "대상 디렉토리가 이미 존재합니다: {path}",
     "INVALID_DIR": "디렉토리 이름이 basename이 아닙니다: {path}",
     "CLONE_FAILED": "clone에 실패했습니다: {path}",
+    "NOT_A_WORKSPACE_CONTAINER": "경로가 저장소 자체입니다 — 자식 저장소를 담은 컨테이너 경로를 주십시오: {path}",
 }
 
 
@@ -181,8 +182,24 @@ _CONFIG_OPTIONAL_KEYS = {"_help"}
 _ACCEPTED_SCHEMA_VERSIONS = {1, "1", "1.0"}
 
 
+def resolve_project_root(path: pathlib.Path) -> pathlib.Path:
+    """
+    선언 파일이 속한 프로젝트 루트를 판정한다.
+
+    `path/.opal`이 디렉토리면 **path 자체가 프로젝트 루트**다 — 사람이 워크스페이스
+    컨테이너가 아니라 프로젝트 경로를 직접 준 경우다. 아니면 path를 컨테이너로 보고
+    부모를 프로젝트 루트로 쓴다(`<프로젝트>/workspace`를 순회하는 기본 형태).
+
+    부모 고정 규칙만 두면 프로젝트 경로를 직접 준 순간 선언 파일이 **레포 밖 한 단계
+    위**로 잡힌다. 실제로 `init .`이 그렇게 어긋났다.
+    """
+    if (path / ".opal").is_dir():
+        return path
+    return path.parent
+
+
 def workspace_config_path(project_root: pathlib.Path) -> pathlib.Path:
-    """선언 파일 경로. 순회 경로의 부모 디렉토리(= 프로젝트 루트) 기준이다."""
+    """선언 파일 경로. `resolve_project_root`가 판정한 프로젝트 루트 기준이다."""
     return project_root / WORKSPACE_CONFIG_RELPATH
 
 
@@ -512,7 +529,8 @@ def cmd_sync(args):
     path = path.resolve()
 
     # 선언 파일은 순회 시작 전에 읽는다 — 스키마 위반이면 한 저장소도 건드리지 않는다.
-    config = load_workspace_config(path.parent)
+    project_root = resolve_project_root(path)
+    config = load_workspace_config(project_root)
 
     root = resolve_root_target(args.root) if args.root else None
 
@@ -541,15 +559,19 @@ def cmd_sync(args):
                 process_declared_repo(target, declared.get(target.name), config)
             )
 
-        # 선언은 active인데 디스크에 없는 레포 — 조용히 사라지지 않도록 보고한다.
-        # deferred·없음은 의도된 상태이므로 보고하지 않는다.
+        # 선언됐는데 디스크에 없는 레포 — 조용히 사라지지 않도록 전부 보고한다.
+        # `active`는 조치가 필요한 누락(`not-cloned`)이고 `deferred`는 의도된 상태
+        # (`deferred`)다. **의도된 상태도 출력에는 남긴다** — 경고를 내지 않는 것과
+        # 보고에서 지우는 것은 다르다. 지우면 "선언은 했는데 아무도 안 본다"가 되어
+        # 드리프트 탐지가 절반만 작동한다.
         present = {target.name for target in targets}
         for entry in config["repos"]:
-            if entry["dir"] in present or entry.get("state") != "active":
+            if entry["dir"] in present:
                 continue
+            reason = "not-cloned" if entry.get("state") == "active" else "deferred"
             repositories.append(
                 _blocked_entry(
-                    entry["dir"], "not-cloned", "not-cloned", declared_coord(config, entry)
+                    entry["dir"], reason, reason, declared_coord(config, entry)
                 )
             )
 
@@ -568,7 +590,7 @@ def cmd_sync(args):
         "summary": summary,
     }
     if config is not None:
-        payload["workspace_config"] = str(workspace_config_path(path.parent))
+        payload["workspace_config"] = str(workspace_config_path(project_root))
 
     ok_response(**payload)
 
@@ -589,7 +611,13 @@ def cmd_init(args):
         err_response("NOT_A_DIRECTORY", path=str(path))
 
     path = path.resolve()
-    config_path = workspace_config_path(path.parent)
+
+    if (path / ".git").exists():
+        # 단일 저장소를 훑으면 그 저장소 자신이 유일한 "자식"이 되어 의미 없는 초안이
+        # 나온다. 컨테이너 경로를 추측해 내려가지 않고 사람에게 돌려준다.
+        err_response("NOT_A_WORKSPACE_CONTAINER", path=str(path))
+
+    config_path = workspace_config_path(resolve_project_root(path))
 
     # --dry-run은 아무것도 쓰지 않으므로 기존 파일과 충돌하지 않는다. 오히려 선언이
     # 이미 있을 때 현재 디스크와 어떻게 다른지 보려면 이 경로가 열려 있어야 한다.
