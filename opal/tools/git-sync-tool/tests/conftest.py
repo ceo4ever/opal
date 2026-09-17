@@ -3,14 +3,15 @@
   "module": "conftest",
   "layer": "test",
   "domain": "opal-workspace",
-  "description": "git-sync-tool pytest fixture — tmp_path에 로컬 bare remote + 상태별 clone 8종(behind/current/dirty/diverged/detached/noupstream/fetchfail 및 이들을 담는 workspace 컨테이너)을 subprocess로 구성한다. root 저장소 시나리오용으로 자체가 git 저장소인 프로젝트 루트 + 그 아래 workspace/ 컨테이너 구조(project_root_with_workspace)도 제공한다. RED-first 트랙(052) — 실 git 저장소만 사용, mock/patch 금지. 전역 git config 의존 제거를 위해 모든 git 호출에 -c user.email/-c user.name 주입.",
-  "exports": ["run_git", "make_bare_remote", "clone_repo", "GitFixtureWorkspace", "git_workspace", "GitProjectRootFixture", "project_root_with_workspace"],
+  "description": "git-sync-tool pytest fixture — tmp_path에 로컬 bare remote + 상태별 clone 8종(behind/current/dirty/diverged/detached/noupstream/fetchfail 및 이들을 담는 workspace 컨테이너)을 subprocess로 구성한다. root 저장소 시나리오용으로 자체가 git 저장소인 프로젝트 루트 + 그 아래 workspace/ 컨테이너 구조(project_root_with_workspace)도 제공한다. RED-first 트랙(052) — 실 git 저장소만 사용, mock/patch 금지. 전역 git config 의존 제거를 위해 모든 git 호출에 -c user.email/-c user.name 주입. 139(opws)용으로 선언 파일 기록 헬퍼(write_workspace_config — {순회경로}/../.opal/workspace.json)와 sync 외 서브명령 호출 헬퍼(run_tool_cli)를 함께 제공한다.",
+  "exports": ["run_git", "make_bare_remote", "clone_repo", "GitFixtureWorkspace", "git_workspace", "GitProjectRootFixture", "project_root_with_workspace", "write_workspace_config", "run_sync_cli", "run_tool_cli"],
   "depends": ["git CLI 2.22+"]
 }
 """
 
 from __future__ import annotations
 
+import json
 import pathlib
 import subprocess
 import sys
@@ -240,6 +241,20 @@ GIT_SYNC_TOOL_PATH = (
 )
 
 
+def write_workspace_config(parent: pathlib.Path, config: dict) -> pathlib.Path:
+    """
+    139(opws) 시나리오 전용 헬퍼 — `{parent}/.opal/workspace.json`에 선언 파일을 기록한다.
+    139 신규 계약: `sync`의 workspace 인자 경로의 부모 디렉터리에서 `.opal/workspace.json`을 찾는다.
+    """
+    opal_dir = parent / ".opal"
+    opal_dir.mkdir(parents=True, exist_ok=True)
+    config_path = opal_dir / "workspace.json"
+    config_path.write_text(
+        json.dumps(config, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+    return config_path
+
+
 def run_sync_cli(
     workspace_path: pathlib.Path, *extra_args: str
 ) -> subprocess.CompletedProcess:
@@ -255,6 +270,18 @@ def run_sync_cli(
             str(workspace_path),
             *extra_args,
         ],
+        capture_output=True,
+        text=True,
+    )
+
+
+def run_tool_cli(*args: str) -> subprocess.CompletedProcess:
+    """
+    sync 이외 서브명령(init·clone)을 공개 인터페이스(CLI)로 호출한다.
+    내부 함수 import 금지 규율은 동일하게 적용된다.
+    """
+    return subprocess.run(
+        [sys.executable, str(GIT_SYNC_TOOL_PATH), *args],
         capture_output=True,
         text=True,
     )

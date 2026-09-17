@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-09-16 14:04
+> 갱신: 2026-09-17 16:10
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -147,6 +147,7 @@
 - [[grep-ac-layer-judgment]] — grep 판정식은 문자열의 층위를 구분해야 한다 #verification #test-scenario #gate-design #lesson
 - [[guard-precision-none-passthrough-early-return]] — 가드 정밀화가 새 우회로를 만든다 — None 통과는 조기 반환으로 봉쇄한다 #memory-tool #guard-design #none-safety #lesson #task-096
 - [[handoff-contract-table-schema-mismatch]] — 승계 계약과 표 스키마의 불일치 — 원천 재지정으로 해소(스키마 확장 대신 분리) #contract #schema #handoff #verification-gap #opd
+- [[identity-coord-truncation-is-a-miss]] — 정체성 좌표 절단은 정규화가 아니라 미탐이다 #lesson-learned #identity-key #fail-closed #testing #task-139
 - [[inherit-new-boundary-fixed-before-writing]] — 상속·신규 경계를 집필 전에 표로 고정한다 #documentation #ssot #dedup #task-084
 - [[install-hook-ownership-marker-idempotent-upsert]] — install hook 소유권-마커 멱등 upsert (외부 hook clobber 해소) #install #deploy #hook #idempotent #ownership-marker
 - [[install-mac-seed-key-loop-generalization]] — install 시드 키별 루프 일반화 — 조기 종료 시드 함정 #install #configuration #pattern #task-083

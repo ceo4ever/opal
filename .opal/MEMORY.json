@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_task_number": 138,
+  "last_task_number": 139,
   "memories": [
     {
       "title": "변경이력 제거 검토 결정 — A안 확정",
@@ -89,6 +89,14 @@
       "status": "candidate",
       "file": "memory/PM_권고_전_기존_테스트_자산_확인_누락.md",
       "summary": "태스크 135에서 PM이 'run_log_core.append에 data 키 집합 폐쇄 검사를 추가하자'를 소유자에게 권고해 승인까지 받았으나…"
+    },
+    {
+      "title": "brain-tool add-page의 위치 인자는 페이지 슬러그다",
+      "date": "2026-09-17",
+      "type": "improvement",
+      "status": "candidate",
+      "file": "memory/brain_tool_add_page의_위치_인자는_페이지_슬러그다.md",
+      "summary": "139 CLOSE에서 add-page의 위치 인자에 브레인 루트(.opal/brain)를 넘겨 슬러그가 'brain'인 페이지가 만들어졌다.…"
     }
   ],
   "history": [
