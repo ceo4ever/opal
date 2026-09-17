@@ -4,7 +4,7 @@
   "mode": "agentic",
   "schema_version": "1.2",
   "created_at": "2026-09-17 14:31:57",
-  "updated_at": "2026-09-17 16:57:49",
+  "updated_at": "2026-09-17 17:11:15",
   "current_status": "additional_work_done",
   "rows": [
     {
@@ -227,6 +227,18 @@
       "timestamp": "2026-09-17 16:29:06",
       "owner": "PM",
       "note": "ADD-1 완료 — pytest 49 passed · 실환경 3건 재현 검증 · 배포본 동일",
+      "worker_duration_unknown": true
+    },
+    {
+      "row_id": 18,
+      "stage": "CLOSE",
+      "item": "추가작업 ADD-2 — undeclared-active 개명과 declaration 독립 소비 계약 명시",
+      "key": "close.item_2",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-17 17:11:15",
+      "owner": "PM",
+      "note": "ADD-2 완료 — deferred-present 개명 · declaration 독립 소비 계약 명시 · 49 passed · 배포본 동일",
       "worker_duration_unknown": true
     }
   ],

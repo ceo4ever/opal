@@ -497,8 +497,14 @@ def process_declared_repo(repo_path: pathlib.Path, entry, config: dict) -> dict:
     | active | 있음·좌표 일치 | 정상 순회(sync) |
     | active | 있음·좌표 불일치 | `mismatch` — pull 보류 |
     | active/deferred | 있음·환원 불가 | `unknown` — pull 보류 |
-    | deferred | 있음 | 정상 순회 + `undeclared-active` 선언 어긋남 보고 |
+    | deferred | 있음 | 정상 순회 + `deferred-present` 선언 어긋남 보고 |
     | 미선언 | 있음 | `undeclared` — 선언 드리프트 보고, pull 보류 |
+
+    `reason`과 `declaration`은 축이 다르다. `reason`은 **status의 사유**이고
+    `declaration`은 **선언 대조 결과**다. 선언이 곧 status의 사유인 판정
+    (`mismatch`·`unknown`·`not-cloned`·`deferred`·`undeclared`)만 양쪽에 함께 실린다.
+    `deferred-present`는 저장소가 정상 순회되므로 status의 사유가 따로 있고,
+    `declaration`에만 실린다 — **소비자는 `reason`과 별개로 `declaration`을 읽어야 한다.**
     """
     name = repo_path.name
     actual = get_origin_coord(repo_path)
@@ -513,7 +519,7 @@ def process_declared_repo(repo_path: pathlib.Path, entry, config: dict) -> dict:
     result = process_repo(repo_path)
     result["repo"] = actual
     result["declaration"] = (
-        "undeclared-active" if entry.get("state") == "deferred" else "match"
+        "deferred-present" if entry.get("state") == "deferred" else "match"
     )
     return result
 

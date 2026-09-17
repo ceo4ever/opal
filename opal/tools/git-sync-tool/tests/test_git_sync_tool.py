@@ -845,7 +845,7 @@ def test_ws_s8_no_declaration_keeps_response_shape(
         )
         _assert_repo_schema(repo)
         assert repo["reason"] not in (
-            "mismatch", "unknown", "not-cloned", "undeclared", "undeclared-active",
+            "mismatch", "unknown", "not-cloned", "undeclared", "deferred-present",
         ), f"선언 부재인데 선언 대조 판정이 발생함: {repo}"
 
 
@@ -909,7 +909,7 @@ def test_ws_s9_six_states_are_each_judged(git_workspace: GitFixtureWorkspace) ->
 
     # (4) deferred·있음 → sync + 선언 어긋남 보고
     deferred_present = _find_repo(payload, "repo_current")
-    assert deferred_present["declaration"] == "undeclared-active", deferred_present
+    assert deferred_present["declaration"] == "deferred-present", deferred_present
     assert deferred_present["status"] in ("updated", "already-current"), (
         f"deferred·있음은 sync 대상이다: {deferred_present}"
     )

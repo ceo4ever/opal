@@ -130,7 +130,7 @@ STEP 1에서 확정된 경로로 도구를 호출한다:
 |------|------|
 | `workspace_config` (최상위) | 대조에 사용한 선언 파일 절대경로 |
 | `repo` | 실제 origin에서 환원한 `org/repo` 좌표. 환원 불가면 `null`. **원격 URL 원문은 응답에 없다** |
-| `declaration` | enum: `match` \| `mismatch` \| `unknown` \| `not-cloned` \| `undeclared` \| `undeclared-active`. `--root`로 추가된 저장소는 멤버십 선언 대상이 아니므로 `null` |
+| `declaration` | enum: `match` \| `mismatch` \| `unknown` \| `not-cloned` \| `undeclared` \| `deferred-present`. `--root`로 추가된 저장소는 멤버십 선언 대상이 아니므로 `null` |
 
 | 선언 | 디스크 | `declaration` | `reason` | 동작 |
 |------|--------|---------------|----------|------|
@@ -139,10 +139,12 @@ STEP 1에서 확정된 경로로 도구를 호출한다:
 | `active`/`deferred` | 있음·환원 불가 | `unknown` | `unknown` | **pull 보류** — 확정 못 하면 일치로 간주하지 않는다 |
 | `active` | 없음 | `not-cloned` | `not-cloned` | 보고 + clone 제안 (승인 필요) |
 | `deferred` | 없음 | `deferred` | `deferred` | 의도된 상태. **보고는 하되 조치 제안에 올리지 않는다** |
-| `deferred` | 있음 | `undeclared-active` | 순회 판정 그대로 | sync + 선언 어긋남 보고 |
+| `deferred` | 있음 | `deferred-present` | 순회 판정 그대로 | sync + 선언 어긋남 보고 |
 | 미선언 | 있음 | `undeclared` | `undeclared` | 선언 드리프트 보고, pull 보류 |
 
 `mismatch`·`unknown`·`undeclared`는 fetch 이전에 확정되므로 `branch`·`upstream`·`ahead`·`behind`가 `null`이다.
+
+**[MUST] `declaration`을 `reason`과 별개로 읽는다.** 두 필드는 축이 다르다 — `reason`은 `status`의 사유이고 `declaration`은 선언 대조 결과다. `deferred-present`는 저장소가 정상 순회되어 `status`의 사유가 따로 있으므로 `declaration`에만 실린다. `reason`만 훑어 보고서를 만들면 이 드리프트가 화면에서 사라진다.
 
 `ok: false`이면 (예: 경로 부재 `PATH_NOT_FOUND`, 경로가 디렉토리가 아님 `NOT_A_DIRECTORY`, 선언 파일 스키마 위반 `WORKSPACE_CONFIG_INVALID`, 선언 파일 JSON 파싱 실패 `WORKSPACE_CONFIG_MALFORMED`) `error` 필드를 사용자에게 그대로 에스컬레이션하고 STEP 3~4를 진행하지 않는다. 선언 파일 오류는 한 저장소도 건드리지 않은 상태에서 반환된다.
 
@@ -183,7 +185,7 @@ root 저장소: <root 경로> 포함              ← root != null일 때만
 | `mismatch` | 디렉토리는 맞는데 다른 레포 | 선언 좌표와 실제 좌표, **그리고 원격 URL 원문** |
 | `unknown` | 원격 좌표를 확정할 수 없음 | **원격 URL 원문** (없으면 "origin 없음") |
 | `deferred` | 선언상 두지 않기로 한 레포 | 선언 좌표(`repo`)만 한 줄로 표시한다. **조치 제안(⑤)에 올리지 않는다** — 정상 상태이므로 사용자에게 결정을 묻지 않는다. 다만 출력에서 지우지는 않는다: 지우면 선언해 둔 레포가 어디에도 나타나지 않아 "선언은 했는데 아무도 안 본다"가 된다 |
-| `undeclared-active` | `deferred` 선언인데 디스크에 존재 | 선언을 `active`로 고칠지 묻는다 — **도구는 선언을 자동 변경하지 않는다** |
+| `deferred-present` | `deferred` 선언인데 디스크에 존재 (선언 자체는 되어 있다 — `undeclared`와 다르다) | 선언을 `active`로 고칠지 묻는다 — **도구는 선언을 자동 변경하지 않는다**. 이 행은 `reason`이 아니라 `declaration`으로만 식별된다 |
 
 **[MUST] 원격 URL 원문은 `mismatch`·`unknown`에서만, 화면에만 노출한다.** 도구 응답에는 URL이 없으므로 스킬이 렌더 시점에 `git -C <경로> config --get remote.origin.url`로 직접 읽는다. 이 값을 DONE.md·보고 파일 등 영속 산출물에 기록하지 않는다 — 사용자마다 다른 접속 방식이 기록에 굳는다.
 
@@ -214,7 +216,7 @@ root 저장소: <root 경로> 포함              ← root != null일 때만
 | `deferred` | **조치 없음.** 보고서에만 표시하고 제안하지 않는다 |
 | `mismatch` | 디렉토리명 또는 선언 수정 (수동). **자동 조치 없음** — 엉뚱한 저장소를 건드릴 위험이 가장 큰 상태다 |
 | `unknown` | origin 설정 점검 (수동) |
-| `undeclared-active` | 선언을 `active`로 수정 (사람 결정) |
+| `deferred-present` | 선언을 `active`로 수정 (사람 결정) |
 
 **clone 실행 규칙:**
 

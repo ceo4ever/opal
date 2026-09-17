@@ -142,7 +142,7 @@
 | `active`/`deferred` | 있음·환원 불가 | `unknown` | `unknown` | **보류** |
 | `active` | 없음 | `not-cloned` | `not-cloned` | — (`clone` 제안 대상) |
 | `deferred` | 없음 | — | — | 보고하지 않음 (의도된 상태) |
-| `deferred` | 있음 | `undeclared-active` | 순회 판정 | 수행 + 선언 어긋남 보고 |
+| `deferred` | 있음 | `deferred-present` | 순회 판정 | 수행 + 선언 어긋남 보고 |
 | 미선언 | 있음 | `undeclared` | `undeclared` | **보류** |
 
 `--root`로 추가된 저장소는 워크스페이스 멤버십 선언의 대상이 아니므로 `declaration`이 `null`이다.
@@ -190,8 +190,10 @@
 
 - `workspace_config` (최상위): 대조에 사용한 선언 파일 절대경로
 - `repo`: 실제 origin에서 환원한 `org/repo` 좌표. 환원 불가면 `null`
-- `declaration`: `match` | `mismatch` | `unknown` | `not-cloned` | `deferred` | `undeclared` | `undeclared-active` (`--root` 저장소는 `null`)
+- `declaration`: `match` | `mismatch` | `unknown` | `not-cloned` | `deferred` | `undeclared` | `deferred-present` (`--root` 저장소는 `null`)
 - `reason`에 `mismatch` | `unknown` | `not-cloned` | `deferred` | `undeclared` 5종이 추가된다
+
+**`reason`과 `declaration`은 축이 다르다.** `reason`은 `status`가 그렇게 된 사유이고, `declaration`은 선언 대조 결과다. 선언이 곧 `status`의 사유인 판정(`mismatch`·`unknown`·`not-cloned`·`deferred`·`undeclared`)만 양쪽에 함께 실린다. `deferred-present`는 저장소가 정상 순회되어 `status`의 사유가 따로 있으므로 `declaration`에만 실린다 — **호출자는 `reason`과 별개로 `declaration`을 읽어야 하며, `reason`만 훑으면 이 드리프트를 놓친다.**
 
 **선언됐는데 디스크에 없는 레포는 `state`와 무관하게 전부 보고된다.** `active`는 조치가 필요한 누락(`not-cloned`), `deferred`는 의도된 상태(`deferred`)로 구분될 뿐이다. 경고를 내지 않는 것과 출력에서 지우는 것은 다르다 — 지우면 선언해 둔 레포가 어디에도 나타나지 않아 드리프트 탐지가 절반만 작동한다.
 
