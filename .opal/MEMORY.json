@@ -101,6 +101,13 @@
   ],
   "history": [
     {
+      "title": "139 opws 워크스페이스 선언 기반 확장",
+      "date": "2026-09-17",
+      "stage": "완료",
+      "path": "tasks/139-260917-opds-opws-워크스페이스-선언-기반-확장/",
+      "result": "workspace.json 선언×디스크 6상태 대조를 git-sync-tool에 추가하고 init/clone 서브명령을 신설. 정체성 키를 host 제외 경로 전체로 고정해 subgroup 계층 절단 미탐(H-1)을 차단. 선언 부재 시 도입 전 동작 100% 유지. pytest 45 passed, 독립 검증 2회(1차 fail로 미탐 적발 → 2차 pass)"
+    },
+    {
       "title": "137 run log 계약 완성",
       "date": "2026-09-17",
       "stage": "완료",
@@ -127,13 +134,6 @@
       "stage": "완료",
       "path": "tasks/133-260914-opds-부트-요약-실행경로-통합/",
       "result": "직접 수행 태스크와 registry canonical worktree 태스크를 부트 요약에서 통합하고, 최신 3건·잔여 건수·경로 이상·실행 모드를 1,024바이트 이내로 표시"
-    },
-    {
-      "title": "134 agentic 모드 지속성 복원",
-      "date": "2026-09-15",
-      "stage": "완료",
-      "path": "tasks/134-260914-opd-agentic-모드-지속성-복원/",
-      "result": "state-tool effective mode resolver로 사용자 검토 왕복·세션 재개·중첩/트랙 전환의 agentic 상속을 복원하고 S1~S10 및 전체 회귀를 통과함"
     }
   ]
 }
