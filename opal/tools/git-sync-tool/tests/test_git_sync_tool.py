@@ -1405,3 +1405,50 @@ def test_add1_init_writes_into_the_container_own_opal(
     assert payload["config_path"] == str(fx.workspace / ".opal" / "workspace.json"), (
         f"초안 기록 위치가 컨테이너 밖으로 잡혔다: {payload['config_path']}"
     )
+
+
+# ---------------------------------------------------------------------------
+# ADD-3 / S-9b: deferred-present는 **실제로 pull까지 간다**
+#
+# S-9는 deferred·있음의 status가 updated 또는 already-current임을 확인하지만,
+# 실제로 관측된 것은 already-current뿐이었다 — behind > 0에서 ff pull이 수행되는지는
+# 미검증이었다. "sync하되 어긋남을 보고"가 이 판정의 존재 이유이므로 sync 쪽 절반을
+# 실증으로 고정한다.
+# ---------------------------------------------------------------------------
+def test_add3_deferred_present_actually_pulls_when_behind(
+    git_workspace: GitFixtureWorkspace,
+) -> None:
+    fx = git_workspace
+    # repo_behind는 원격이 behind_n 커밋 앞서 있는 상태다.
+    _point_at_remote_coord(
+        fx.repo_behind, _bare_of(fx, "behind"),
+        "https://github.com/storelink-io/blend-ocr.git",
+    )
+    write_workspace_config(
+        fx.root,
+        {
+            "schema_version": 1,
+            "host": "github.com",
+            "org": "storelink-io",
+            # 선언은 deferred인데 디스크에 있다 — 선언 어긋남이지만 sync 대상이다.
+            "repos": [{"dir": "repo_behind", "repo": "blend-ocr", "state": "deferred"}],
+        },
+    )
+
+    prev_head = run_git(["rev-parse", "HEAD"], cwd=fx.repo_behind).stdout.strip()
+
+    payload = _parse_json_stdout(run_sync_cli(fx.workspace))
+    _assert_top_schema(payload)
+
+    repo = _find_repo(payload, "repo_behind")
+    assert repo["declaration"] == "deferred-present", repo
+    assert repo["status"] == "updated", (
+        f"deferred-present가 behind 상태인데 pull되지 않았다 — '어긋남 보고'만 하고 "
+        f"sync를 건너뛰면 판정의 존재 이유가 사라진다: {repo}"
+    )
+    assert repo["behind"] == fx.behind_n, repo
+    assert repo["pulled_commits"] == fx.behind_n, repo
+    assert repo["prev_head"] and repo["new_head"], repo
+
+    new_head = run_git(["rev-parse", "HEAD"], cwd=fx.repo_behind).stdout.strip()
+    assert new_head != prev_head, "HEAD가 전진하지 않았다 — ff pull 미실행"

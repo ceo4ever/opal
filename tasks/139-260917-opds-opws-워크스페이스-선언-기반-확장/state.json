@@ -4,7 +4,7 @@
   "mode": "agentic",
   "schema_version": "1.2",
   "created_at": "2026-09-17 14:31:57",
-  "updated_at": "2026-09-17 17:11:15",
+  "updated_at": "2026-09-17 17:19:42",
   "current_status": "additional_work_done",
   "rows": [
     {
@@ -239,6 +239,18 @@
       "timestamp": "2026-09-17 17:11:15",
       "owner": "PM",
       "note": "ADD-2 완료 — deferred-present 개명 · declaration 독립 소비 계약 명시 · 49 passed · 배포본 동일",
+      "worker_duration_unknown": true
+    },
+    {
+      "row_id": 19,
+      "stage": "CLOSE",
+      "item": "추가작업 ADD-3 — deferred-present pull 실증과 undeclared skip 운영 영향 명시",
+      "key": "close.item_3",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-17 17:19:42",
+      "owner": "PM",
+      "note": "ADD-3 완료 — deferred-present ff pull 실증(50 passed) · undeclared 운영 영향 문서화 · 배포본 동일",
       "worker_duration_unknown": true
     }
   ],
