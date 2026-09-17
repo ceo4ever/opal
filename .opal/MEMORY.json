@@ -19,7 +19,7 @@
       "summary": "010 Phase 2 후속. 워커 7종은 권고 수준(MUST·게이트 없음). 106은 PM측만 도구 판정 승격"
     },
     {
-      "title": "워커 디스패치 시 worker.dispatch receipt 블록 누락",
+      "title": "worker.dispatch receipt 블록 누락",
       "date": "2026-09-12",
       "type": "improvement",
       "status": "candidate",
@@ -27,7 +27,7 @@
       "summary": "태스크 118 TEST 단계에서 PM이 opal-convention-checker 디스패치 프롬프트에 worker.dispatch receip…"
     },
     {
-      "title": "파일럿 태스크 설계 시 주제 규모와 파이프라인 프로필을 함께 결정한다",
+      "title": "태스크 규모와 파이프라인 프로필 동시 결정",
       "date": "2026-09-12",
       "type": "improvement",
       "status": "candidate",
@@ -43,7 +43,7 @@
       "summary": "백로그 SSOT와 MVP Agent 대화 흐름, Orca Terminal 참조 원칙"
     },
     {
-      "title": "워커 자기보고 부재를 산출물 부재로 간주하지 않는 실측 판정을 PM 절차에 상시화",
+      "title": "워커 자기보고 부재 ≠ 산출물 부재",
       "date": "2026-09-15",
       "type": "improvement",
       "status": "candidate",
@@ -51,7 +51,7 @@
       "summary": "태스크 123에서 워커가 긴 포그라운드 명령 뒤 '존재하지 않는 알림을 기다린다'는 문구만 반환하고 종료한 사례가 8건 누적됐다. 대부분 산출…"
     },
     {
-      "title": "test-tool에 red_required 갱신 경로 부재 — 시나리오 성격 오배정의 되돌림 비용이 전량 재실행",
+      "title": "test-tool red_required 갱신 부재",
       "date": "2026-09-15",
       "type": "improvement",
       "status": "candidate",
@@ -59,7 +59,7 @@
       "summary": "TEST-SCENARIO 작성 시 보존·회귀 가드형 시나리오(S-9)를 '구현 전 RED'로 잘못 배정했다. 구현 전에 이미 통과하는 시나리오…"
     },
     {
-      "title": "install-mac.sh 시드 병합이 top-level 키 단위라 신규 하위 키가 기존 사용자에게 전파되지 않음",
+      "title": "install 시드 병합이 top-level 키 단위",
       "date": "2026-09-15",
       "type": "improvement",
       "status": "candidate",
@@ -75,14 +75,6 @@
       "summary": "사전 존재 실패를 기준선에 넣으면 그 범위의 신규 회귀를 탐지할 수 없다"
     },
     {
-      "title": "missing_pm_activity 트리거 조건이 계약에 미정의",
-      "date": "2026-09-16",
-      "type": "improvement",
-      "status": "candidate",
-      "file": "memory/missing_pm_activity_트리거_조건이_계약에_미정의.md",
-      "summary": "state-tool verify --run-log-completeness-check가 반환하는 누락 목록 4종 중 missing_pm_acti…"
-    },
-    {
       "title": "PM 권고 전 기존 테스트 자산 확인 누락",
       "date": "2026-09-16",
       "type": "improvement",
@@ -91,7 +83,7 @@
       "summary": "태스크 135에서 PM이 'run_log_core.append에 data 키 집합 폐쇄 검사를 추가하자'를 소유자에게 권고해 승인까지 받았으나…"
     },
     {
-      "title": "brain-tool add-page의 위치 인자는 페이지 슬러그다",
+      "title": "brain-tool add-page 인자는 슬러그",
       "date": "2026-09-17",
       "type": "improvement",
       "status": "candidate",
