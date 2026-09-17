@@ -78,6 +78,24 @@ opal-pilot 오케스트레이터(opal-pilot-dev, opal-pilot-dev-short, opal-pilo
 - **출력**: `GC-CONVENTION-{타임스탬프}[-{element}].md` + `gc-findings-convention-{타임스탬프}[-{element}].json`. 진단 전담이므로 `changed_files`에 소스 파일 포함 금지(보고서·JSON만)
 - **에이전트 경로**: `opal/agents/opal-convention-checker/`
 
+## opal-pilot-project-build 서브에이전트
+
+`opal-pilot-project-build`(oppb) 프로젝트 Pilot이 **P3 미니 태스크 실행 경로에서만** 사용하는 신규 owner 에이전트. PM Agent의 대화형 디스패치 경로로는 호출하지 않으며, Runtime Supervisor가 `opal-agent` headless attempt로 실행한다. OPPB가 추가하는 owner 에이전트는 이 1종뿐이고, 나머지 전문·검증 역할은 기존 에이전트를 재사용한다.
+
+### opal-capability-agent
+
+- **역할**: OPPB 미니 태스크 capability owner — 하나의 비즈니스 capability를 UI·API·데이터·테스트까지 완성하고 내부 work item 결과를 통합하는 얇은 owner. 한 dispatch에서 RUN과 PROVE를 수행하고 구조화 result만 반환한다. 하위 PL·범용 오케스트레이터를 생성하지 않는다
+- **호출 시점**: oppb P3에서 Runtime Supervisor가 headless attempt로 디스패치 (PM 대화형 디스패치 없음)
+- **단계**: P3 (oppb 내부 단계)
+- **영역**: capability 실행
+- **model**: standard
+- **자체 로드 문서**: `attempts/<task_id>/<attempt_id>/execution-packet.json`(진입 게이트 필수)과 packet이 지정한 동결 contract·범위 문서. `worker.dispatch` receipt 경로를 쓰지 않는다
+- **입력**: execution packet의 identity(`task_id`·`attempt_id`·`capability_id`), contract(`acceptance_cluster`·`business_rules`·동결된 외부 contract revision), scope(tracked_writes·ephemeral_writes·contracts·runtime_resources 4축 lease receipt), execution(profile·budget·허용 전문 Executor 목록)
+- **출력**: stdout 구조화 JSON 1건 — `identity`·`result`·`changes`·`proof`·`coordination`·`knowledge`. run root 파일(`workgraph.json`·`result.json`·`evidence/`·`events.jsonl`) 직접 쓰기 금지
+- **금지**: Git 전진(commit·checkout·reset·index)·Controller state·MEMORY·brain 수정, ACCEPT 판정, 허용 목록 밖 에이전트 호출, 무한 resume
+- **조건부 호출 가능 자식**: execution packet이 허용한 `opal-fe-agent`·`opal-be-agent`·`opal-db-agent`·`opal-task-agent`
+- **에이전트 경로**: `opal/agents/opal-capability-agent/`
+
 ## 전문 에이전트 (Specialist)
 
 PM이 PLAN.md의 단계+영역 조합으로 직접 디스패치하는 전문 워커 에이전트.

@@ -895,8 +895,14 @@ OPPB가 주장하는 가치(무인 실행·lease 비충돌 병렬·Git 단일 wr
 | 공유 모듈 순차 변경 | DAG·계약 폐쇄·`needs_revalidation`, capability 내부 dependency/build-config 변경과 새 command 도입의 배타 구간·late discovery 비용 |
 | 외부 I/O·인증 경계 | 심층 보안·실패 귀속·최종 통합 품질 |
 
-OPPB를 fixture별로 cold 3회, warm replay 3회 실행한다. 총 18회이며 전부 무인 headless 실행이므로 사람이
-세션을 운용하는 구간이 없다. cold는 새 run root·dependency environment·source generation·build cache에서
+OPPB를 fixture별로 cold 3회, warm replay 3회 실행한다. 총 18회다. **측정 대상 구간은 P3~P4다** —
+§4.1이 정한 대로 P0~P2는 대화형 Product Flow가 몰고 가는 bounded planning이고 무인 실행 보장의
+대상이 아니며, P5 `p5.user_merge_gate`는 `--auto-pass`를 거부한다. 따라서 fixture별로 P0~P2 산출물
+(`INTENT.md`·workgraph spec·봉인된 environment profile)을 **한 번 확정해 고정**하고, 18회는 그
+고정 입력에서 `start` 한 번으로 P3~P4를 무인 반복한다. 이 구간이 §13이 차단 지표로 정한
+「사용자 게이트 사이 무인 실행」의 실체이며, 병렬 안전성·lease 비충돌·cache 정확성도 전부 이
+구간에서 발생하므로 측정 목적은 온전히 달성된다. P0~P2 planning 구간의 벽시계는 관찰 지표에서
+제외한다. cold는 새 run root·dependency environment·source generation·build cache에서
 시작한다. warm은 직전 정상 실행의 봉인된 environment profile과 CAS generation을 보존한 상태다. 각
 fixture·cohort 안의 3회 중앙값을 쓰며 cold 1회가 섞인 warm 중앙값으로 판정하지 않는다. 실행 전 예상
 시간·모델 비용을 사용자에게 보고하고 승인받는다.

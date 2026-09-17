@@ -35,7 +35,7 @@
 | `tasks/` | 태스크 산출물 | `{NNN}-{YYMMDD}-{스킬약어}-{태스크명}/` 형식의 작업 단위 폴더 |
 | `skills/` | 독립 스킬 소스 | 파이프라인 없이 단독 사용하는 스킬 (8종) |
 | `opal/skills/` | OPAL 스킬 소스 | 오케스트레이터, 단계 스킬 등 OPAL 전용 (44종) |
-| `opal/agents/` | 워커 에이전트 소스 | 모든 서브에이전트 정의 (15종) |
+| `opal/agents/` | 워커 에이전트 소스 | 모든 서브에이전트 정의 (16종) |
 | `opal/tools/` | OPAL 도구 소스 | 결정론 집행 CLI (22종, `event-loader`와 `ego-browser-tool` 포함) |
 | `opal/core/` | 프레임워크 코어 | 레퍼런스, MCP 설정, 도구 |
 | `opal/bootstrapper/` | 부트스트래퍼 | 플랫폼별 부트스트랩 진입점 (claude/codex/cursor/gemini) |
@@ -72,8 +72,11 @@
 | `opal-pilot-project` | opp | 오케스트레이터 | Project Task 범용 (문서 작성·설정 변경·워크플로우) — TASK → PLAN → EXECUTE → CLOSE |
 | `opal-pilot-write-tech` | opwt | 오케스트레이터 | 기획 산출물 네트워크 (PRD·TRD·정책서·IA) — TASK → ANALYSIS → PLAN → EXECUTE → QA → CLOSE. 워커 병렬 디스패치 + 교차 논리 검토·정합성 검증 |
 | `opal-pilot-project-dev` | oppd | 오케스트레이터 | 프로젝트 개발 라이프사이클 3 Phase — PLAN → WBS → EXECUTE. 기획은 opwt, 코드 실행은 opal-task-action-agent에 위임하고 PM이 조율 |
+| `opal-pilot-project-build` | oppb | 오케스트레이터 | 프로젝트 빌드 — 이미 확정된 실행 계약을 capability 단위 미니 태스크로 소화. P0~P5 6단계·사용자 게이트 6종, 프로젝트 worktree 1개·실행 계약 `INTENT.md` 1개. P0~P2·P5는 대화형 Product Flow가, P3~P4는 `oppb-runtime-tool start` 1회로 Runtime Supervisor가 headless 무인 실행 |
 
 > **actor 축**: `--pm`은 모드 축과 직교하는 별도 실행 주체(actor) 축이다 — 지원 Pilot 폐쇄 목록은 `opal-pilot-dev`(alias `opd`·`opds`) 하나뿐이며, `//opds --pm ...`처럼 조합하면 PM이 각 단계 skill을 워커 디스패치 없이 직접 수행한다. 정의·지원 범위·실행 계약 원문 SSOT는 `opal/core/references/harness/actor.md`.
+
+> **Pilot 선택 기준**: 목표·계약·백로그가 실행 증거에 따라 반복 변경되는 **수렴형 프로젝트는 `oppl`**, 한 번의 설계 승인으로 목표·계약·완료조건을 잠글 수 있는 **확정 실행 계약의 무인 소화는 `oppb`**다. 제품 명세(PRD·TRD) 작성부터 필요하면 `oppd`(또는 `opwt`로 명세를 만든 뒤 `oppb`로 실행), 단일 태스크 규모면 `opd`·`opds`다. 네 Pilot은 병존하며 대체·후계·deprecate 관계가 아니다. `oppb`에서 무인 실행이 보장되는 구간은 P3~P4뿐이며, P0~P2와 P5는 대화형 세션(Product Flow)이 몰고 간다 — P5 merge 게이트는 `--auto-pass`를 거부하고 소유자 발화를 요구한다.
 
 **단계 스킬 (`op-dev-*` 6종)**
 
@@ -86,7 +89,7 @@
 | `op-dev-qa` | - | 기준 라이브러리 | Dev 문서 QA 검증 기준 — 별도 QA 단계 없이 PM Gate가 직접 참조 (검증 ID·QA-{단계}.md 형식) |
 | `op-dev-wireframe` | - | 단계 스킬 | WIREFRAME 단계 — wireframe-builder 스킬에 위임하여 wireframe.md 생성 |
 
-**워커 에이전트 (`opal/agents/` 15종 중 Dev 계열 10종)**
+**워커 에이전트 (`opal/agents/` 16종 중 Dev 계열 11종)**
 
 | 컴포넌트 | 약어 | 유형 | 설명 |
 |----------|------|------|------|
@@ -99,6 +102,7 @@
 | `opal-test-agent` | - | 서브에이전트 | 테스트 전문 워커 — TEST-SCENARIO.md 기반 동적 검증, BE/FE/E2E 3모드 |
 | `opal-task-action-agent` | - | 서브에이전트 | oppd Phase 3 액션 자율 실행 — PLAN → QA → TEST-SCENARIO → EXECUTE → 검증 루핑(L1~L3b) → TEST 완주 |
 | `opal-sdd-action-agent` | - | 서브에이전트 | opsdd Phase 4 ACT 자율 실행 — PLAN → EXECUTE → VERIFY(L1~L3b) → TEST.md 완주 |
+| `opal-capability-agent` | - | 서브에이전트 | oppb P3 미니 태스크 capability owner — Supervisor의 headless attempt로 실행되며 execution packet의 lease 4축 안에서 RUN·PROVE를 수행하고 구조화 result만 반환. Git·Controller state·MEMORY·brain 수정 금지, ACCEPT 판정은 외부 Checkpoint Tool·Verifier 소유 |
 | `opal-wtm-agent` | wtm | 서브에이전트 | web-to-markdown 워커 — 공개 검색은 기존 web search, 브라우저 추출은 Ego Lite → cmux → Playwright 순서로 변환 |
 
 > 나머지 워커 5종은 각 파이프라인 섹션에 등재된다 — `opal-db-agent`(Data Design) · `opal-evaluator-agent`·`opal-loop-action-agent`(Project Loop) · `opal-security-checker`·`opal-convention-checker`(GC).

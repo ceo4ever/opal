@@ -44,7 +44,7 @@ load: pilot.start
 |---|---|
 | `opal-pilot-dev` | `opd`, `opds` |
 
-목록은 이 문서가 소유한다. 지원 범위를 넓히려면 이 표를 갱신하는 별도 태스크가 필요하다(현재 범위 제외: `opwt`·`opsdd`·`oppd`·`oppl` — 제안서·TASK가 확정한 범위 경계).
+목록은 이 문서가 소유한다. 지원 범위를 넓히려면 이 표를 갱신하는 별도 태스크가 필요하다(현재 범위 제외: `opwt`·`opsdd`·`oppd`·`oppl` — 제안서·TASK가 확정한 범위 경계 / `oppb` — 고정 Product Flow와 headless worker 구조라 P3 이후 실행이 Supervisor의 `opal-agent` headless attempt 채널이고, 사용자 대면 세션은 OPPB Product Flow와 PM Agent만 소유하므로 actor 축이 성립하지 않는다).
 
 - **[MUST] 목록 밖 Pilot이 `--pm`을 수신하면 조용히 무시하지 않고 미지원임을 1행으로 통보한 뒤 기본 actor(`worker`)로 진행할지 확인한다.** 예: `//opwt --pm ...` 수신 시 "`opwt`는 `--pm`을 지원하지 않습니다. 기본 워커 실행으로 진행할까요?"와 같이 통보하고 답을 받는다.
 - 이 게이트는 2중이다.

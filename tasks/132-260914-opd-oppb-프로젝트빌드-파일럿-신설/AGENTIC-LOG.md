@@ -274,3 +274,63 @@
 - **상류 5번째 확인**: `main ^HEAD` 7건, 우리 변경 파일과 교집합 0, `git merge-tree --write-tree` conflict 없음
 - 산출: 신규 7(capability agent·oppb 파일럿 스킬+pipeline.json·project-slice·knowledge-finalize·verifier_adapter·revalidation·test_verifier_adapter), 수정 10
 - **판정: merge 가능.** 소유자 승인 요청
+
+## [135] G4 허브 merge 완료 (소유자 승인)
+- 커밋 `186fb1c` — 20 files, +4112/-174
+- main 병합 `89a86d7` — 태스크 123 계열 7건 흡수, 충돌 0. 병합으로 `workstudio/`가 사라졌으나 main의 `eeaedb1 chore: WorkStudio 폐기` 소유이며 태스크 132와 무관(확인)
+- 병합 후 회귀 재확인: oppb **117 passed 0 failed**, 공용(state-tool·opal-agent) **599 passed 3 skipped 187 subtests, 실패 0**
+- `feat/OP-TASK-132` → `main` **fast-forward merge 완료**. main HEAD = `89a86d7`
+- 반영 검증: 신규 7자산 전부 `git cat-file -e HEAD:` OK. 양방향 미병합 커밋 0/0
+- 다음: G5(W-30~W-36). **W-34는 실주행 18회라 PLAN상 실행 전 시간·모델 비용 보고와 소유자 승인이 필요하다** — G5 진입 시 견적 제시
+
+## [136] W-34 범위 정정 — 「18회 전부 무인」은 E-5와 같은 허구였다
+- 소유자 질문("W-34는 실재 스킬로 돌려서 테스트를 하는 건가?")을 계기로 제안서 §13을 재검토해 발견
+- 제안서 `:898` 원문: "총 18회이며 **전부 무인 headless 실행이므로 사람이 세션을 운용하는 구간이 없다**"
+- **이는 `project-run`과 동일한 가정이다** — §4.1은 P0~P2를 "대화형 Product Flow가 호출하는 bounded planning, 무인 실행 보장의 대상이 아니다"로 정하고, `p5.user_merge_gate`는 `--auto-pass`를 거부한다. 명세대로는 18회를 무인으로 돌릴 방법이 없다
+- 정정: **측정 구간을 P3~P4로 한정.** fixture당 P0~P2 산출물(`INTENT.md`·workgraph spec·봉인 profile)을 한 번 확정해 고정하고, 18회는 그 고정 입력에서 `start` 1회로 무인 반복. §13 차단 지표가 실제로 정한 것은 「**사용자 게이트 사이** 무인 실행」이며 병렬 안전성·lease 비충돌·cache 정확성이 전부 이 구간에서 발생하므로 측정 목적은 온전
+- 제안서 §13 본문과 PLAN W-34 행 양쪽 정정. P0~P2 planning 벽시계는 관찰 지표에서 제외
+- E-5(`project-run`)와 같은 뿌리의 **다섯 번째 발산**이다 — 설계 문서 자체가 "전체 무인 완주" 서술을 한 곳 더 갖고 있었다
+
+## [137] W-33 완료 — 설치 배선, `references/` 배포 실증
+- `scripts/install-mac.sh` +8/-0. `oppl-runtime-tool` 블록 직후에 동일 4요소 패턴(주석 라벨+태스크번호 / `local <name>_run=` / `[[ -f ]]` 가드 / `chmod +x`+`success`)으로 삽입
+- **핵심 확인 — `references/pipeline.json` 배포**: 워커가 스크립트의 스킬·에이전트 루프와 `install_dir`·`strip_deploy_md_recursive` 본문을 그대로 추출해 **샌드박스 디렉토리로 실행**(`~/.opal/` 미접촉)했다. 결과 4종 전부 배포되고 `pipeline.json`은 원본과 byte-identical·JSON 파싱 정상. `install_dir`이 `cp -r`/`cp -Rf` 재귀이고 화이트리스트·확장자 필터가 없으며 `strip_deploy_md_recursive`는 `-name "*.md"` 한정이라 `.json`을 건드리지 않는다. **`//oppb` 기동 자산이 기존 루프로 전부 배포된다 — 추가 분기 불필요**
+- `oppb-runtime-tool/run.sh` 실측: `-rwxr-xr-x` 529B, oppl 래퍼 패턴 복제, 소스 플랫폼 분기 0 → C-4·C-5 충족
+- `bash -n` 통과. 관련 테스트: `test_oppb_init` 18 passed, `test_agent_adapter_fields` 18/0, `test_version_stamp` 11/0
+- `test-install-skill-cleanup.sh` FAIL 1건은 **선재 결함 확정** — 워커가 `git show HEAD:scripts/install-mac.sh`로 원본 복원 후 동일 실패 재현(구 `opal-pilot-dev-short` 정리 로직, OPPB 무관). 원본 즉시 복구, numstat 8/0 유지
+
+## [138] W-31·W-32 완료
+- **W-31**: 4파일 순수 삽입 — `README.md` +26/-0, `ARCHITECTURE.md` +7/-0, `PROJECT.md` +4/-0, `CONVENTIONS.md` +1/-0. 기존 OPPD·OPPL·OPSDD 서술 무변경
+- Pilot 선택 기준에 실행 주체 분할을 정확히 명시: "무인 실행이 보장되는 구간은 P3~P4뿐이며, P0~P2와 P5는 대화형 세션이 몰고 간다 — P5 merge 게이트는 `--auto-pass`를 거부하고 소유자 발화를 요구한다". G4에서 걷어낸 "전체 무인 완주" 오해가 문서에 새로 심기지 않았다. 워커가 근거를 전부 `path:line`으로 제시
+- PM 후속 지시 1건: 트리 헤더 개수 표기가 실물과 어긋난다(문서 스킬 44·에이전트 15·도구 22 vs 실제 디렉토리 47/16/25). 그 항목에 한해 삭제행 0 제약 해제. 문서 자체 분류로 재계수하고 **선재 drift와 태스크 132 증가분(스킬 3·에이전트 1)을 구분해 보고**하도록 지시
+- **W-32**: `actor.md` +1/-1. 총 행수 103→103 불변, 차이 행 1개, 그 행에서 제거된 문자는 닫는 `).` 2자뿐이고 신규 행이 구 행을 접두사로 포함(`b.startswith(a[:-2])`) — 목록 말미 삽입 1건 외 삭제·수정 0. 지원 표·`[MUST]` 통보 조항·2중 게이트 서술 전부 바이트 무변경
+- `actor.md` 직접 검사 테스트는 0건이나 `events.json`이 참조하므로 event-loader+state-tool 스위트 실행: **525 passed, 3 skipped, 201 subtests, 실패 0**
+
+## [139] W-31 후속 완료 — 개수 표기 갱신, 선재 drift 4건 분리 보고
+- 최종 numstat: `README.md` +26/-0, `ARCHITECTURE.md` +17/-9, `CONVENTIONS.md` +4/-3, `PROJECT.md` +6/-2. 변경 14행 전부 개수 숫자와 그 숫자를 성립시키는 인벤토리 나열
+- PM 독립 확인: 독립 스킬(루트 `skills/`) 8, OPAL 스킬 47, 에이전트 16, 도구 디렉토리 25 — 워커 수치와 일치
+- 내역 합 검증 통과: 에이전트 전문 9 + 범용 7 = 16, PROJECT.md Dev 11 + 나머지 5 = 16, CONVENTIONS 이름 나열 16개, 도구 6 + 19 = 25
+- 모호 판단 2건을 워커가 명시: (a) `opal-capability-agent`를 전문 에이전트로 귀속(ARCHITECTURE 전문 표 등재 근거), (b) 도구 총수에서 `check-env.js`·`requirements.txt` 2파일 제외(문서의 "디렉토리 기준" 문구 근거)
+- **선재 drift 4건 분리 보고(태스크 132 이전부터 존재)**:
+  1. ARCHITECTURE의 CLI 도구 수가 oppb 추가 이전에 이미 2 뒤처져 있었다(22 vs 실제 24, CONVENTIONS는 24로 정확). 순수 증분만 반영하면 23이라 여전히 틀리므로 **실측값 25를 택해 drift가 함께 해소됐다** — PM 승인: 알면서 틀린 숫자를 쓰는 것이 더 나쁘다
+  2. CONVENTIONS alias 표에 `osw`(`opal-skill-wizard`) 행 누락 — 개수가 아니라 행 누락이라 미접촉
+  3. ARCHITECTURE의 `references/` 엔트리 표기 부정확(문서 21엔트리·harness 23파일 vs 실측 20엔트리·harness 27파일) — 개수 해제 범위 밖이라 미접촉
+  4. 트리의 `opal-pilot-dev/` 행 중복 2행 — 미접촉
+- 2·3·4는 OPPB와 무관한 선재 결함이므로 **태스크 132 범위에 넣지 않는다.** 소유자 판단 대상으로 기록
+- 워커 보고의 "레지스트리 alias 31→32"는 PM이 단순 계수로 재현하지 못했다(레지스트리가 `groups` 중첩 구조, `"alias"` 필드 출현 55). W-30 보고로 확정한다
+
+## [140] W-30 완료 — 레지스트리 등재, `//oppb` 라우팅 성립
+- `agents.md` +18/-0(삭제·수정 0행), `opal-skills-registry.json` +62/-2. 삭제 2행은 **항목이 아니라 파일 메타**(`version` 3.18.0→3.19.0, `updated_at`)이며 이 파일의 자체 관례(3.18.0=태스크 122, 3.17.0=태스크 120)를 따랐다. 기존 skill 항목·그룹·trigger 변경 0
+- `oppb` 항목 키 집합이 `oppd`·`oppl`과 **동일**(name/alias/description/triggers/paths/domain/pipeline). `triggers` 3종은 SKILL.md frontmatter와 문자열 동일, `pipeline`은 `meta.stages` P0~P5와 정합
+- **라우팅 기계 검증**: `skill-registry.js match "//oppb"` → `found: true, name: opal-pilot-project-build, group: opal-pilot, alias: oppb`. `get`도 6필드 반환·`resolved_path` 정상. JS 테스트 5파일 fail 0
+- 워커 재량 1건 승인 — **`op-oppb` 그룹 신설**로 미등재 단계 스킬 2건(`op-oppb-project-slice` P2, `op-oppb-knowledge-finalize` P5)을 등재했다. W-30 문구는 `oppb` 항목만 명시했으나 두 스킬이 폴더만 있고 레지스트리에 없어 validator가 `unregistered` error를 내던 상태였고 AC-21에 직접 걸린다. 스키마는 `op-gc` 그룹과 동일
+- validator error 3건은 전부 `dangling — no SKILL.md at any path`이며 원인은 `~/.opal/skills/` 미배포뿐(W-33 install로 해소). **변경 전 baseline도 error 3건**(같은 3개가 `unregistered`)이라 건수 증가 0, 오류 클래스만 "미등재"→"배포 대기"로 이동
+- `opal-capability-agent`를 `agents.md`의 전문 에이전트 매핑 테이블에 **넣지 않은** 판단 승인 — PM 대화형 디스패치 대상이 아니라 Supervisor headless 전용이다. **PM 선례 확인**: `opal-task-action-agent`도 ARCHITECTURE 전문 표에는 있으나(2건) agents.md 매핑 테이블에는 없다(0건). capability-agent가 정확히 같은 패턴이므로 W-31의 ARCHITECTURE 전문 9 계수와도 모순되지 않는다
+- 회귀 `5 failed, 1520 passed, 3 skipped, 356 subtests`. 실패 5건은 상류 선재 `tool-scan` 결함이며 워커가 **자기 2파일을 `git checkout`으로 되돌린 상태에서 동일 5건 재현**을 확인해 귀속 증명. `test_registry_parity`는 이름과 달리 skills-registry가 아니라 `tools.md` ↔ `opal-harness.md` §9 도구 표 정합 검사다
+
+## [141] W-49 완료 — 파일럿 공용 인프라 상시 가드 (소유자 제안 추가 작업)
+- `opal/tools/state-tool/tests/test_pilot_shared_contract.py` 656행 신규. PM 직접 실행 **20 passed, 152 subtests**
+- **스캔 기반 확인**: `SKILLS_DIR.glob("opal-pilot-*")`로 발견분 전부를 대상으로 삼는다(`:105`). 하드코딩·개수 단언 0. 실제로 **11종**을 잡았다 — data-design·dev-short·dev-wireframe·dev·gc·project-build·project-dev·project-loop·project·sdd·write-tech. 내가 수동 확인한 4종보다 넓다
+- `PILOTS_WITH_PIPELINE`으로 자기 `pipeline.json`을 가진 파일럿만 규격 검사 대상으로 분리
+- **결함 격리(검사 7) 안전성 확인**: `tempfile.mkdtemp(prefix="w49-fault-isolation-")`에 손상 사본을 만들고 원본은 읽기만 한다(`:595,612`). `git status`에 pipeline.json 변경 0건으로 교차 확인. 손상 대상도 이름순 첫 파일럿으로 고르고 특정 파일럿명을 하드코딩하지 않는다
+- **검사 6 기준선은 축소 채택** — 워커가 `.github/workflows` 부재(PM 재확인: 0건)와 얕은 클론·단일 브랜치 클론에서 git ref 가용성이 보장되지 않는다는 근거로, 지시가 명시 허용한 폴백("현재 판 내부 일관성": alias 중복 0 + 필수 7필드 보유)을 택하고 설계 메모를 코드에 남겼다. 판단 근거가 타당하므로 승인
+- 이 가드는 태스크 132 일회성이 아니라 **앞으로 파일럿을 추가·수정할 때마다 공유 인프라 계약을 회귀 판정하는 상시 자산**이다. W-35(OPPB 전용 귀속 검증)와 역할이 다르며 병존한다

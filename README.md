@@ -63,6 +63,7 @@ AI 도구(Claude Code, Cursor 등)를 쓰다 보면 공통적인 한계에 부�
    - [opsdd — SDD 명세 기반 개발](#opsdd--sdd-명세-기반-개발)
    - [opwt — 서비스 기획 산출물](#opwt--서비스-기획-산출물)
    - [oppd — 프로젝트 개발 라이프사이클](#oppd--프로젝트-개발-라이프사이클)
+   - [oppb — 프로젝트 빌드](#oppb--프로젝트-빌드)
    - [opgc — 품질 게이트 (GC)](#opgc--품질-게이트-gc)
    - [opbr — 프로젝트 브레인](#opbr--프로젝트-브레인)
 7. [독립 스킬 사용법](#독립-스킬-사용법)
@@ -292,6 +293,7 @@ OPAL은 파이프라인을 "누가 수행하는가"(**실행 주체**, actor 축
 | `//opsdd` | SDD 개발 | 중~대 (명세 복잡) | TASK → SPEC → REVIEW → DESIGN → EXECUTE-LOOP → VERIFY → CLOSE | SPEC, TEST-SCENARIOS, SPEC-PLAN, STATE |
 | `//opwt` | 기획 산출물 | 제한 없음 | TASK → (ANALYSIS →) PLAN → EXECUTE → QA | PRD, TRD, IA, 정책서, WBS |
 | `//oppd` | 프로젝트 Dev | 대 (전체 라이프사이클) | PLAN(기획) → WBS → EXECUTE(코드) | 기획 산출물 전체 + 코드 |
+| `//oppb` | 프로젝트 빌드 | 대 (확정 계약 · 다중 capability) | P0 ENTRY → P1 INTENT → P2 DESIGN·SLICE → P3 미니 태스크 실행 → P4 VERIFY → P5 MERGE·CLOSE | INTENT, PROJECT-DESIGN, DONE(evidence manifest) |
 | `//opgc` | 품질 게이트 (GC) | 커밋 전 진단 | SCAN → CHECK → REPORT → CLOSE | GC-SECURITY/CONVENTION 보고서, DONE |
 
 ### 선택 가이드
@@ -307,6 +309,8 @@ OPAL은 파이프라인을 "누가 수행하는가"(**실행 주체**, actor 축
        ├─ 문서, 설정, 환경, 스크립트: //opp
        ├─ 기획 문서 (PRD, TRD, IA 등): //opwt
        ├─ 아이디어 → 기획 → 코드 전체: //oppd
+       ├─ 계약이 확정됐고 capability 단위로 소화: //oppb
+       ├─ 목표·계약이 증거에 따라 바뀌는 수렴형: //oppl
        ├─ 커밋 전 보안·컨벤션 진단: //opgc
        └─ 프로젝트 지식 축적·질의: //opbr
 ```
@@ -647,6 +651,28 @@ tasks/{NNN}-{기능명}/
 **파이프라인**: `PLAN(기획 산출물) → WBS → EXECUTE(코드 구현)`
 
 > `docs/PROJECT.md`가 없으면 프로젝트 초기화(`opi`)를 자동 실행한 후 진행한다.
+
+---
+
+### oppb — 프로젝트 빌드
+
+**언제 쓰나**: 한 번의 설계 승인으로 목표·계약·완료조건·백로그를 잠글 수 있고, 그 **확정된 실행 계약**을 capability 단위 미니 태스크로 소화할 때. 실행 증거에 따라 목표·계약·백로그가 반복 변경되는 **수렴형 프로젝트는 `oppl`**, 제품 명세(PRD·TRD) 작성부터 필요하면 `oppd`(또는 `opwt`로 명세를 만든 뒤 `oppb`로 실행)다. 네 Pilot은 병존하며 대체·후계 관계가 아니다.
+
+**파이프라인**: `P0 ENTRY & CONTEXT → P1 INTENT → P2 PROJECT DESIGN & SLICE → P3 CONTINUOUS MINI-TASK EXECUTION → P4 PROJECT VERIFY → P5 MERGE · KNOWLEDGE · CLOSE` (6단계 · 사용자 게이트 6종)
+
+**실행 주체는 구간별로 나뉜다** — 프로젝트 전체를 한 번에 무인 실행하지 않는다.
+
+| 구간 | 주체 | 성격 |
+|------|------|------|
+| P0~P2 | 대화형 세션 (OPPB Product Flow · PM Agent) | 사용자 설계 게이트 앞의 bounded planning — 무인 실행 보장의 대상이 아니다 |
+| P3~P4 | `oppb-runtime-tool start` **1회** 호출 → Runtime Supervisor | headless 무인 구간 — Supervisor가 `opal-capability-agent` attempt를 스케줄·회수한다 |
+| P5 | 대화형 세션 | merge 게이트는 `--auto-pass`를 거부하고 소유자 발화를 요구한다 |
+
+**미니 태스크 profile**: `Fast`(바로 구현·직접 테스트) / `Standard`(capability micro design·수직 수용 및 영향 테스트·외부 계약·컨벤션) / `Critical`(보존할 설계·심층 시나리오·독립 계약/보안/컨벤션 판정).
+
+**산출물**: `INTENT.md`(유일한 실행 계약), `PROJECT-DESIGN.md`, `DONE.md`(evidence manifest 포함)
+
+> 미니 태스크는 OPAL 태스크가 아니다 — 태스크 번호·폴더·worktree·branch 없이 `workgraph.json` record로만 존재하며, 프로젝트 worktree는 1개다.
 
 ---
 

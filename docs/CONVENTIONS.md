@@ -18,7 +18,7 @@
 - **kebab-case** 사용: `user-auth-implementation`, `op-dev-plan` (Python 파일은 **snake_case**: `creative_response.py`, `user_auth.py`)
 - 스킬 폴더: `{그룹}-{역할}` — `opal-pilot-dev`, `op-dev-analysis`, `op-task-qa`
 - 에이전트 폴더: `opal/agents/{agent-name}/` — 에이전트는 모두 이 경로 하나에 둔다 (루트 `agents/` 없음)
-  - 전체 15종: `opal-task-agent`, `opal-task-action-agent`, `opal-task-qa-agent`, `opal-loop-action-agent`, `opal-sdd-action-agent`, `opal-plan-agent`, `opal-planning-agent`, `opal-fe-agent`, `opal-be-agent`, `opal-db-agent`, `opal-test-agent`, `opal-wtm-agent`, `opal-evaluator-agent`, `opal-convention-checker`, `opal-security-checker` (상세: `opal/agents/`)
+  - 전체 16종: `opal-task-agent`, `opal-task-action-agent`, `opal-task-qa-agent`, `opal-loop-action-agent`, `opal-sdd-action-agent`, `opal-plan-agent`, `opal-planning-agent`, `opal-fe-agent`, `opal-be-agent`, `opal-db-agent`, `opal-test-agent`, `opal-wtm-agent`, `opal-evaluator-agent`, `opal-convention-checker`, `opal-security-checker`, `opal-capability-agent` (상세: `opal/agents/`)
 - 전문 에이전트 네이밍: `opal-{domain}-agent` — `opal-fe-agent`, `opal-be-agent`, `opal-db-agent`
 - 태스크 폴더: `{NNN}-{YYMMDD}-{스킬약어}-{태스크명}` — `088-260811-opp-클로즈-메모리히스토리-자동연결`, `080-260801-opd-헤더소스-단일화`
   - `{태스크명}`은 **[기본] 한글**로 작성한다. 영문 kebab-case·혼용은 소유자가 명시 요청할 때만 사용한다.
@@ -44,7 +44,7 @@
 ### 약어 (Alias)
 
 > **SSOT: `opal/core/references/opal-skills-registry.json`** — 약어의 등록·변경은 레지스트리에서만 수행한다.
-> 아래 표는 레지스트리의 사본이며, 불일치 시 레지스트리가 우선한다. 현재 **31종**.
+> 아래 표는 레지스트리의 사본이며, 불일치 시 레지스트리가 우선한다. 현재 **32종**.
 
 **오케스트레이터 (파일럿)**
 
@@ -60,6 +60,7 @@
 | opdd | opal-pilot-data-design |
 | oppd | opal-pilot-project-dev |
 | oppl | opal-pilot-project-loop |
+| oppb | opal-pilot-project-build |
 
 **프레임워크 운영**
 
@@ -248,7 +249,7 @@ OPAL 본체(스킬·에이전트·도구·하네스)를 작성할 때 따라야 
 
 - 파일 처리·데이터 변환 작업이 필요할 때, 직접 코드를 작성하기 전에 OPAL 도구(`~/.opal/tools/`)를 우선 검토한다.
 - 상시 사용 핵심 도구: `state-tool`, `code-scan`, `memory-tool`, `brain-tool`, `test-tool`, `backlog-tool`.
-- **전체 목록: `opal/tools/` (24종)** — 위 6종 외 `event-loader`, `xlsx-tool`, `skill-registry`, `playwright-tool`, `ego-browser-tool`, `improve-tool`, `cmux-tool`, `git-sync-tool`, `worktree-tool`, `date`, `doctor`, `tool-scan`, `opal-cli`, `opal-agent`, `opal-action-monitor`, `run-log-tool`, `self-pm-tool`, `oppl-runtime-tool`.
+- **전체 목록: `opal/tools/` (25종)** — 위 6종 외 `event-loader`, `xlsx-tool`, `skill-registry`, `playwright-tool`, `ego-browser-tool`, `improve-tool`, `cmux-tool`, `git-sync-tool`, `worktree-tool`, `date`, `doctor`, `tool-scan`, `opal-cli`, `opal-agent`, `opal-action-monitor`, `run-log-tool`, `self-pm-tool`, `oppl-runtime-tool`, `oppb-runtime-tool`.
 - 도구 응답 형식·오류 코드 출처·종료 코드 성패 구분의 공통 규범은 `opal/core/references/harness/tool-output-contract.md`가 소유한다. 도구별 사용법·오류 코드 의미·종료 코드 세부 분류는 각 도구 README가 소유한다.
 - 근거: `opal/core/references/harness/capability.md`, 각 도구 README
 
