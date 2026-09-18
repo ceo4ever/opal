@@ -4,8 +4,8 @@
   "mode": "agentic",
   "schema_version": "1.2",
   "created_at": "2026-09-18 16:27:57",
-  "updated_at": "2026-09-18 17:00:03",
-  "current_status": "in_progress",
+  "updated_at": "2026-09-18 17:08:47",
+  "current_status": "completed_unmerged",
   "rows": [
     {
       "row_id": 1,
@@ -199,11 +199,11 @@
       "stage": "CLOSE",
       "item": "worktree finalize/attribution (조건부: --wt 실행 시)",
       "key": "close.worktree_finalize",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-18 17:08:06",
       "owner": "PM",
-      "note": null,
+      "note": "commit 6bcb6ff → worktree-tool finalize(state closed, violations 0) → main FF merge → finalize-attribution(history created, result 보강 완료)",
       "conditional": true
     },
     {
@@ -211,14 +211,14 @@
       "stage": "CLOSE",
       "item": "CLOSE 최종 상태 확정",
       "key": "close.final",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-18 17:08:47",
       "owner": "PM",
       "note": null
     }
   ],
-  "next_action": "CLOSE worktree finalize/attribution (조건부: --wt 실행 시) 진입",
+  "next_action": "태스크 완료",
   "worktree": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_141",
   "run_log": {
     "contract_version": "1.0",

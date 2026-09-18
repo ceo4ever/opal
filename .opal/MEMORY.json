@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_task_number": 140,
+  "last_task_number": 141,
   "memories": [
     {
       "title": "변경이력 제거 검토 결정 — A안 확정",
@@ -93,6 +93,13 @@
   ],
   "history": [
     {
+      "title": "141 E2E 제안서 보강",
+      "date": "2026-09-18",
+      "stage": "완료",
+      "path": "tasks/141-260918-opds-E2E-제안서-보강/",
+      "result": "e2e-journey-fragment-library 제안서(검토) 개정 — §2 착수 선행 조건 열 신설, Q-1 선행 조건 승격, §5 신선도 키에 driver 정체·달성 충실도 추가, §4 redaction 지점 지목, §3 승격 도구 게이트화, Q-5 결번 해소. S-1~S-13 전건 PASS. 제안 자체는 미채택"
+    },
+    {
       "title": "127 E2E 하네스 구현",
       "date": "2026-09-18",
       "stage": "완료",
@@ -119,13 +126,6 @@
       "stage": "완료",
       "path": "tasks/137-260916-opds-run-log-계약-완성/",
       "result": "missing_pm_activity 트리거를 앵커 2종으로 계약에 정의하고 구현해 빈 배열이 '누락 없음'을 뜻하게 했고, PM activity payload 키 폐쇄를 CLI 표면에서 기록 코어 validate_event()로 내려 모든 A4 생산 경로에 동일 적용했다. 선행 실패 4건(HEAD 대리 기준선 3 + 인터프리터 게이트 1)도 정정해 3스위트 504 passed/0 failed."
-    },
-    {
-      "title": "136 모드별 실행 지속성 계약",
-      "date": "2026-09-16",
-      "stage": "완료",
-      "path": "tasks/136-260916-opds-모드별-실행-지속성-계약/",
-      "result": "3개 실행 모드의 구조화 전이 계약, 전체 Pilot CLOSE tail, Claude Stop guard를 적용하고 S-1~S-7 및 회귀 검증을 통과했다."
     }
   ]
 }
