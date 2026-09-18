@@ -78,3 +78,18 @@
 | B-6 | `cleanup.json` 거짓 보고 | `complete`/`leaked:[]`를 보고하고도 프로세스가 남는다. 대장이 거짓이면 수동 회수가 소유권 없이 PID만 보고 판단하게 된다 |
 
 **후속 제안**: `docs/proposals/e2e-journey-fragment-library.md` — `//e2e` operator와 여정·조각 라이브러리. 이 태스크에서 실측된 두 제약(동결 후 시나리오 추가 불가 · 발동층 부재)이 근거다.
+
+## 제안서 아카이브 판정 (CLOSE 스텝)
+
+`harness/proposal-lifecycle.md` 절차 적용 결과.
+
+| 제안서 | 잔여 인용 | 처리 |
+|---|---|---|
+| `docs/proposals/opal-e2e-harness.md` | **0건** | `docs/proposals/archives/`로 이관, 상단 상태를 `검토` → **`적용완료`**로 변경. 구현 태스크 9/9 완료(태스크 1=125 · 태스크 2=127 선행 수행 · 태스크 3~9=127 본 수행) |
+
+판정 명령: `grep -rn "proposals/opal-e2e-harness.md" --include="*.md" opal/ docs/ skills/ README.md | grep -v /archives/ | grep -v /backup/ | grep -v ^tasks/` → 출력 0행. `docs/PROJECT.md` 레지스트리 등재도 0건이라 제거할 행이 없다.
+
+규범 원문 소유는 이관 시 문서 상단에 명시했다 — 실행 계약은 `opal/tools/test-tool/README.md`·`lib/e2e_contract.py`, 충실도 정의는 `lib/scenario.py` `FIDELITY_ORDER`, Console 소유권·E2E 경계는 `docs/ARCHITECTURE.md` §OPAL Console. 제안서는 소비형 입력물이며 규범 SSOT가 아니다.
+
+후속 제안 `docs/proposals/e2e-journey-fragment-library.md`는 상태 `검토`로 `docs/proposals/`에 남는다(미적용).
+
