@@ -3,7 +3,7 @@
   "module": "models",
   "layer": "schema",
   "domain": "console",
-  "description": "Pydantic 응답 스키마. ProjectInfo·ProjectDetail·TaskCard·MemoryIndex·DoctorReport 등 5개 화면 계약 정의. PipelineStageGroup: stage 단위 그룹 스키마(done_count/total/status/rows) — TaskDetailResponse.pipeline 타입. Brain: BrainQueryRequest(project·session_id 필수·빈값→400)·BrainQueryResponse·BrainPrimeResponse·BrainStatusResponse·CitationItem (Phase 2 하드닝 + 대화별 session_id 격리). 비동기 잡 폴링: BrainJobSubmitResponse(job_id 즉시 반환)·BrainJobResponse(job_id·status·answer·citations·error_msg) — PLAN §3.1.2. 설정 쓰기 스키마(범위 축소, 프라임 풀 스위칭 한정): ConsoleConfigResponse(GET /api/config 스냅샷)·ConfigWriteResponse(쓰기 응답 공통)·PrewarmToggleRequest. 태스크 진행 통계 스키마: PipelineGate(artifacts·checklist 객체, 불리언 아님)·TaskStats(정적+실시간 파생 병합)·ArtifactItem(4유형 분류)·WorkflowStat/StageStat/TaskLeadtime(skill 단위 횡단 집계). [MUST] 집계기준 15 — 응답 키는 원천 용어(skill·timestamp·row_id)를 쓰고 workflow 키를 만들지 않으며, 사표 필드 row·updated_at은 deprecated 별칭으로 존치하되 값을 채운다. 소요 3계열 분해 additive — TaskStats·PipelineStageGroup·StageStat·WorkflowStat 4종에 pm_minutes·worker_minutes·captain_minutes·worker_measured를 추가한다(집계기준 16). work·wait는 하위 호환으로 존치하며 work == pm + worker · wait == captain 항등이 성립한다. worker_measured는 「워커 0분」과 「미측정」(필드 부재)을 FE가 구분하기 위한 신호다. 3계열 표시 문자열 additive — 단계 층(PipelineStageGroup·StageStat)·워크플로우 층(WorkflowStat)·태스크 막대(TaskLeadtime)에 pm_label·worker_label·captain_label을 추가하고 — TaskLeadtime은 2계열(work_minutes·wait_minutes)도 태스크 층에서 승계해 워크플로우 층 대기 비중을 태스크 단위로 되짚게 한다 —, StageStat에는 막대 폭의 분모이자 「단계 총」인 누적 total_minutes·total_label(= work + wait)을 함께 둔다. 화면의 구획 호버가 읽을 지표이며 표시 문자열 소유권은 여전히 BE 단일 지점이다(P-7). owner_term — 사용자 호칭을 응답에 실어 FE가 문구를 조립하게 한다. TaskDetailResponse(상세)·DashboardSummaryResponse(대시보드) 최상위 1필드씩이며 원천은 config.load_owner_name(identity.md, 폴백 \"사용자\")다. PipelineRow.owner_label의 owner==user 라벨도 같은 값을 쓴다 — PM·auto는 역할명이라 불변이다.",
+  "description": "Pydantic 응답 스키마. ProjectInfo·ProjectDetail·TaskCard·MemoryIndex·DoctorReport 등 5개 화면 계약 정의. PipelineStageGroup: stage 단위 그룹 스키마(done_count/total/status/rows) — TaskDetailResponse.pipeline 타입. Brain: BrainQueryRequest(project·session_id 필수·빈값→400)·BrainQueryResponse·BrainPrimeResponse·BrainStatusResponse·CitationItem (Phase 2 하드닝 + 대화별 session_id 격리). 비동기 잡 폴링: BrainJobSubmitResponse(job_id 즉시 반환)·BrainJobResponse(job_id·status·answer·citations·error_msg) — PLAN §3.1.2. 설정 쓰기 스키마(범위 축소, 프라임 풀 스위칭 한정): ConsoleConfigResponse(GET /api/config 스냅샷)·ConfigWriteResponse(쓰기 응답 공통)·PrewarmToggleRequest. 태스크 진행 통계 스키마: PipelineGate(artifacts·checklist 객체, 불리언 아님)·TaskStats(정적+실시간 파생 병합)·ArtifactItem(4유형 분류)·WorkflowStat/StageStat/TaskLeadtime(skill 단위 횡단 집계). [MUST] 집계기준 15 — 응답 키는 원천 용어(skill·timestamp·row_id)를 쓰고 workflow 키를 만들지 않으며, 사표 필드 row·updated_at은 deprecated 별칭으로 존치하되 값을 채운다. 소요 3계열 분해 additive — TaskStats·PipelineStageGroup·StageStat·WorkflowStat 4종에 pm_minutes·worker_minutes·captain_minutes·worker_measured를 추가한다(집계기준 16). work·wait는 하위 호환으로 존치하며 work == pm + worker · wait == captain 항등이 성립한다. worker_measured는 「워커 0분」과 「미측정」(필드 부재)을 FE가 구분하기 위한 신호다. 3계열 표시 문자열 additive — 단계 층(PipelineStageGroup·StageStat)·워크플로우 층(WorkflowStat)·태스크 막대(TaskLeadtime)에 pm_label·worker_label·captain_label을 추가하고 — TaskLeadtime은 2계열(work_minutes·wait_minutes)도 태스크 층에서 승계해 워크플로우 층 대기 비중을 태스크 단위로 되짚게 한다 —, StageStat에는 막대 폭의 분모이자 「단계 총」인 누적 total_minutes·total_label(= work + wait)을 함께 둔다. 화면의 구획 호버가 읽을 지표이며 표시 문자열 소유권은 여전히 BE 단일 지점이다(P-7). owner_term — 사용자 호칭을 응답에 실어 FE가 문구를 조립하게 한다. TaskDetailResponse(상세)·DashboardSummaryResponse(대시보드) 최상위 1필드씩이며 원천은 config.load_owner_name(identity.md, 폴백 \"사용자\")다. PipelineRow.owner_label의 owner==user 라벨도 같은 값을 쓴다 — PM·auto는 역할명이라 불변이다. Docs 스킬 문서 계약: SkillDetailResponse는 본문을 슬롯으로 쪼개지 않고 SkillBody(markdown·origin·source_path) 원문 객체 1개로 싣는다(origin은 readme|skill_md, 둘 다 없으면 세 필드 모두 null이고 HTTP는 200). SkillCatalogItem·SkillDetailResponse는 사이드바 노출 여부 listed를 갖는다 — 서버가 registry에서 파생한 값이며 조회를 차단하지 않는다.",
   "exports": [
     "HealthResponse",
     "ProjectInfoResponse",
@@ -36,8 +36,7 @@
     "SkillCatalogListResponse",
     "SkillDetailResponse",
     "SkillSourceInfo",
-    "ArgumentItem",
-    "ExampleBlock",
+    "SkillBody",
     "PipelineSummary",
     "PipelineStep",
     "RelatedSkillRef",
@@ -511,19 +510,15 @@ class SkillSourceInfo(BaseModel):
     content_hash: str | None = None
 
 
-class ArgumentItem(BaseModel):
-    """Arguments/Options 섹션 항목 공통 스키마."""
-    name: str
-    type: str | None = None
-    required: bool = False
-    default: str | None = None
-    description: str | None = None
+class SkillBody(BaseModel):
+    """렌더용 본문 원문 — DEC-1: 서버는 heading을 해석하지 않고 원문을 그대로 싣는다.
 
-
-class ExampleBlock(BaseModel):
-    """Examples 섹션의 코드 펜스 1건, 또는 quick_start의 첫 코드 펜스."""
-    command: str
-    description: str | None = None
+    origin은 본문 출처("readme" | "skill_md")이며 둘 다 없으면 세 필드 모두 null이다.
+    source_path는 corpus root 기준 상대경로다(절대경로 금지).
+    """
+    markdown: str | None = None
+    origin: str | None = None
+    source_path: str | None = None
 
 
 class PipelineStep(BaseModel):
@@ -556,6 +551,7 @@ class SkillCatalogItem(BaseModel):
     display_group: str
     domain: str | None = None
     source_path: str
+    listed: bool = False
 
 
 class SkillCatalogListResponse(BaseModel):
@@ -568,9 +564,10 @@ class SkillCatalogListResponse(BaseModel):
 class SkillDetailResponse(BaseModel):
     """GET /api/docs/skills/{skill_id} 응답 — wireframe §5.3.
 
-    source.available=false(DEC-1)일 때 usage_markdown 등은 null, arguments 등은
-    빈 배열, related_skills도 빈 배열이지만 header metadata(canonical_name·
-    description·display_group·aliases·source_path)는 유지한다.
+    source.available=false(DEC-1)이거나 README·SKILL.md 본문이 모두 없을 때
+    body의 세 필드는 null이고 related_skills도 빈 배열이지만 header
+    metadata(canonical_name·description·display_group·aliases·source_path)는
+    유지하며 HTTP는 200이다(태스크 143 DEC-2).
     """
     canonical_name: str
     aliases: list[str] = []
@@ -579,13 +576,8 @@ class SkillDetailResponse(BaseModel):
     domain: str | None = None
     source_path: str
     source: SkillSourceInfo
-    usage_markdown: str | None = None
-    when_to_use_markdown: str | None = None
-    quick_start: ExampleBlock | None = None
-    arguments: list[ArgumentItem] = []
-    options: list[ArgumentItem] = []
-    examples: list[ExampleBlock] = []
-    use_cases: list[str] = []
+    body: SkillBody = SkillBody()
+    listed: bool = False
     pipeline: PipelineSummary | None = None
     related_skills: list[RelatedSkillRef] = []
     resolved_from: ResolvedFrom

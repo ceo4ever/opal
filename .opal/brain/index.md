@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-09-18 20:08
+> 갱신: 2026-09-18 22:00
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -68,6 +68,7 @@
 - [[brain-search-on-demand]] — brain search 선택 주입 — on-demand 비상주 정책 #architecture #brain #search #context #pm
 - [[brain-search-whitespace-insensitive]] — brain-tool search 공백 무시 매칭 — 한국어 복합명사 띄어쓰기 편차 흡수 #architecture #brain #search #korean #normalization
 - [[brain-validate-flatness-enforcement]] — brain validate 선택 필드 평탄성 집행 (tags/sources/related flat string[]) #brain-tool #validate #enforce #flatness #frontmatter
+- [[bundle-asset-path-needs-real-usage-check]] — 컴포넌트 테스트 GREEN은 화면 부팅을 보장하지 않는다 — 번들 자산 경로는 실측으로만 잡힌다 #lesson #verification #frontend #build #real-usage
 - [[business-terminology-first-principle]] — 기획 산출물 비즈니스 용어 우선 원칙 #citation-rules #opal-writing #opwt #brain-ingest #document-standard
 - [[byte-identical-proof-requires-data-root-fixed]] — 바이트 동일 증명은 데이터 루트를 고정하고 코드만 스왑해야 성립한다 #regression #verification #test-design #evidence
 - [[canonical-identity-from-unique-key-not-shared-attribute]] — canonical identity는 공유 가능한 속성이 아니라 고유 키에서 파생한다 #identity #data-modeling #adapter #lesson
@@ -324,6 +325,7 @@
 - [[skill-registry-validate-extension]] — skill-registry validate 확장 — dangling error 격상 + unregistered 역방향 감지 #skill-registry #validate #drift-detection #tooling
 - [[skill-rename-validate-pattern]] — 스킬 rename 후 레지스트리 정합 검증 패턴 #skill-registry #validate #rename #drift-detection #lesson
 - [[skip-gate-key-must-include-execution-identity]] — 재실행 생략 키는 실행 정체를 포함해야 한다 #e2e #fidelity #cache #gate #evidence
+- [[slot-extraction-needs-corpus-distribution-first]] — 슬롯 추출은 코퍼스 구조 분포를 먼저 집계한다 — 파서 픽스처는 전제를 검증하지 않는다 #lesson #parser #corpus #verification #design
 - [[source-measured-figures-over-stale-docs]] — 규모 수치의 SSOT는 문서가 아니라 소스 실측이다 #ssot #documentation #drift #measurement #discipline
 - [[split-return-contract-no-denominator-expansion]] — 분리형 반환 계약 — 기존 키의 분모를 확대하지 않는다 #api-contract #return-value #denominator #silent-break #opd
 - [[stale-doc-assertions-outlive-restructuring]] — 문서 문면 단언은 재구조화를 따라가지 못하고 조용히 stale이 된다 #testing #documentation #drift #lesson #assertion

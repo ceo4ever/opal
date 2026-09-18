@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_task_number": 142,
+  "last_task_number": 143,
   "memories": [
     {
       "title": "변경이력 제거 검토 결정 — A안 확정",
@@ -113,9 +113,32 @@
       "status": "candidate",
       "file": "memory/워커의_생략_판단을_실동작_영향_검증_없이_수락해_결함을_키웠다.md",
       "summary": "W-2 fixture가 registry name 자리에 frontmatter name을 넣은 부정확성을 PM이 '실동작에 영향 없음'으로 판단…"
+    },
+    {
+      "title": "회귀 검증이 빌드 exit code만 보고 산출물 자산 경로를 보지 않는다",
+      "date": "2026-09-18",
+      "type": "improvement",
+      "status": "candidate",
+      "file": "memory/회귀_검증이_빌드_exit_code만_보고_산출물_자산_경로를_보지_않는다.md",
+      "summary": "DEC-8 6단계의 마지막 npm run build는 exit code만 확인한다. 이번 태스크에서 빌드는 성공했으나 산출 index.html…"
+    },
+    {
+      "title": "태스크 140 상세 화면 공백을 배포 후에야 발견했다",
+      "date": "2026-09-18",
+      "type": "improvement",
+      "status": "candidate",
+      "file": "memory/태스크_140_상세_화면_공백을_배포_후에야_발견했다.md",
+      "summary": "140은 슬롯 7종 파서를 만들고 화면까지 완성했으나 실 코퍼스 55건 전부에서 추출 결과가 0건이었다. 파서 테스트는 파서가 기대하는 형태의…"
     }
   ],
   "history": [
+    {
+      "title": "138 스톱 훅 태스크 소유권 결정론화",
+      "date": "2026-09-18",
+      "stage": "완료",
+      "path": "tasks/138-260916-opds-스톱-훅-태스크-소유권-결정론화/",
+      "result": "Stop 훅이 태스크 소유권을 세션 단위로 결정론 판정하도록 재설계. ownership-tool 신설(14모듈·훅 5종)로 task-side lease·session registry·stop-guard receipt 3축을 분리하고, worktree-launcher로 --wt 전용 세션 기동 경계를 세움. worktree-tool에 execution_ownership·발급값 사본 내려보내기를 추가해 워크트리가 허브를 사본으로 역참조한다. claude-hooks.json을 5개 OPAL 이벤트로 재구성하고 인라인 python -c 원본은 retired로 보존. 결과: 부트스트랩 세션의 무확인 태스크 진입이 해소(forced 후보 0건→allow_inactive), 실제 허브에서 태스크 132가 hub_canonical/forced=True에서 worktree_owned_shadow/forced=False로 전이함을 실측. 테스트 763건 0 failed, 시나리오 29건 중 28 pass(S-25는 배포 후 수동 E2E 이월)."
+    },
     {
       "title": "141 E2E 제안서 보강",
       "date": "2026-09-18",
@@ -143,13 +166,6 @@
       "stage": "완료",
       "path": "tasks/139-260917-opds-opws-워크스페이스-선언-기반-확장/",
       "result": "workspace.json 선언×디스크 6상태 대조를 git-sync-tool에 추가하고 init/clone 서브명령을 신설. 정체성 키를 host 제외 경로 전체로 고정해 subgroup 계층 절단 미탐(H-1)을 차단. 선언 부재 시 도입 전 동작 100% 유지. pytest 45 passed, 독립 검증 2회(1차 fail로 미탐 적발 → 2차 pass)"
-    },
-    {
-      "title": "137 run log 계약 완성",
-      "date": "2026-09-17",
-      "stage": "완료",
-      "path": "tasks/137-260916-opds-run-log-계약-완성/",
-      "result": "missing_pm_activity 트리거를 앵커 2종으로 계약에 정의하고 구현해 빈 배열이 '누락 없음'을 뜻하게 했고, PM activity payload 키 폐쇄를 CLI 표면에서 기록 코어 validate_event()로 내려 모든 A4 생산 경로에 동일 적용했다. 선행 실패 4건(HEAD 대리 기준선 3 + 인터프리터 게이트 1)도 정정해 3스위트 504 passed/0 failed."
     }
   ]
 }

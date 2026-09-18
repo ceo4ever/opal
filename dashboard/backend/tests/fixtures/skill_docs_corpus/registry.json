@@ -96,7 +96,7 @@
       {
         "name": "opal-standard-heading",
         "alias": null,
-        "description": "표준 heading 구조를 가진 fixture 스킬",
+        "description": "README 원문을 가진 fixture 스킬 (S-1: origin=readme, 바이트 동일)",
         "triggers": ["^opal-standard-heading$"],
         "paths": [
           "opal_skills/opal-standard-heading/SKILL.md"
@@ -106,7 +106,7 @@
       {
         "name": "opal-no-heading",
         "alias": null,
-        "description": "heading 구조가 없는 fixture 스킬",
+        "description": "README 없이 SKILL.md 본문만 있는 fixture 스킬 (S-2: origin=skill_md, frontmatter 미포함)",
         "triggers": ["^opal-no-heading$"],
         "paths": [
           "opal_skills/opal-no-heading/SKILL.md"
@@ -116,7 +116,7 @@
       {
         "name": "opal-partial-heading",
         "alias": null,
-        "description": "일부 섹션만 있는 fixture 스킬",
+        "description": "README·SKILL 본문이 모두 없는 fixture 스킬 (S-3: markdown=null, origin=null, HTTP 200)",
         "triggers": ["^opal-partial-heading$"],
         "paths": [
           "opal_skills/opal-partial-heading/SKILL.md"

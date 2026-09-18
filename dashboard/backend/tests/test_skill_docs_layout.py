@@ -12,7 +12,11 @@
     "test_deployed_layout_source_path_relative",
     "test_deployed_layout_shared_path_canonicals_both_present",
     "test_source_repo_source_path_relative_and_prefixed",
-    "test_fixture_layout_still_resolves"
+    "test_fixture_layout_still_resolves",
+    "test_source_repo_listed_true_count_is_33",
+    "test_source_repo_display_group_distribution_matches_e1",
+    "test_source_repo_at_least_one_real_skill_readme_origin_nonempty",
+    "test_source_repo_all_skills_body_origin_never_null"
   ],
   "depends": ["adapters.skill_docs_adapter"]
 }
@@ -20,6 +24,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -157,3 +162,112 @@ def test_fixture_layout_still_resolves():
     """기존 tests/fixtures/skill_docs_corpus는 여전히 해석되어야 한다(회귀 방지)."""
     corpus = build_skill_docs_corpus(FIXTURE_CORPUS_ROOT)
     assert len(corpus.order) >= 1
+
+
+# ── 4. 실자산 단언 (task 143 W-1) ────────────────────────────────────────
+#
+# 합성 fixture 통과만으로는 완료 근거로 인정하지 않는다(fixture-vs-real 맹점,
+# 140 재발 방지). 저장소 루트 corpus를 직접 읽어 DEC-4(listed)·DEC-1(body)
+# 계약을 전수로 검증한다. records 기준으로 집계한다(len(order)는 중복을
+# 가릴 수 있다 — 위 테스트들과 동일한 사유).
+#
+# 구현(W-3) 전까지 `listed`·`body`는 adapter record에 없는 키이므로
+# record.get(...)는 None을 반환해 아래 단언이 실패(RED)한다.
+
+EXPECTED_LISTED_TRUE_COUNT = 33
+EXPECTED_DISPLAY_GROUP_DISTRIBUTION = {
+    "pilot": 12,
+    "operator": 14,
+    "standalone": 8,
+    "internal-stage": 21,
+}
+
+
+def test_source_repo_listed_true_count_is_33():
+    """DEC-4: `display_group != internal-stage` AND `paths[0]` 폴더명이
+    canonical과 같은 엔트리만 listed=true다. 저장소 실 corpus에서 정확히
+    33건이어야 한다(55 - internal-stage 21 - opal-pilot-dev-short 1)."""
+    corpus = build_skill_docs_corpus(REPO_ROOT)
+    listed_count = sum(
+        1 for record in corpus.records.values() if record.get("listed") is True
+    )
+    assert listed_count == EXPECTED_LISTED_TRUE_COUNT, (
+        f"listed=true 개수가 33이어야 한다(records 기준 실측={listed_count})"
+    )
+
+
+def test_source_repo_display_group_distribution_matches_e1():
+    """E-1 실측(PLAN §Approach)과 동일한 분포가 유지되어야 한다. records
+    기준으로 집계하며 합은 55(canonical 총계)와 같아야 한다."""
+    corpus = build_skill_docs_corpus(REPO_ROOT)
+    distribution: dict[str, int] = {}
+    for record in corpus.records.values():
+        key = record["display_group"]
+        distribution[key] = distribution.get(key, 0) + 1
+    for group, expected_count in EXPECTED_DISPLAY_GROUP_DISTRIBUTION.items():
+        assert distribution.get(group) == expected_count, (
+            f"{group} 분포 기대치={expected_count}, 실측={distribution.get(group)}"
+        )
+    assert sum(distribution.values()) == 55
+
+
+def test_source_repo_at_least_one_real_skill_readme_origin_nonempty():
+    """DEC-1·2: 실존 스킬 1건 이상이 README 원문을 그대로 실어야 한다
+    (origin=readme, markdown 비어있지 않음). 표본이 아니라 전수 순회로
+    첫 매치를 찾는다. 하한선 스모크 테스트 — 전수 계약은
+    test_source_repo_all_skills_body_origin_never_null이 소유한다."""
+    corpus = build_skill_docs_corpus(REPO_ROOT)
+    found = None
+    for canonical_name, record in corpus.records.items():
+        body = record.get("body")
+        if body and body.get("origin") == "readme" and body.get("markdown"):
+            found = canonical_name
+            break
+    assert found is not None, (
+        "origin=readme이고 markdown이 비어 있지 않은 실존 스킬이 1건 이상 있어야 한다"
+    )
+
+
+def test_source_repo_all_skills_body_origin_never_null():
+    """S-7 (TEST-SCENARIO.md, SSOT): "corpus의 모든 스킬을 순회해 body를
+    집계한다 — origin이 null인 건수가 0이고, 모든 건의 body.markdown이
+    공백이 아니며, origin이 readme 또는 skill_md 중 하나다. 표본이 아니라
+    전수 집계로 단언한다."
+
+    len(order)가 아니라 corpus.records 기준으로 순회한다(order는 중복을
+    포함할 수 있어 소실을 가릴 수 있다 — 다른 레이아웃 테스트와 동일 사유).
+    위반 스킬은 assertion 메시지에 이름 목록으로 노출해 W-3 구현 디버깅을
+    돕는다.
+    """
+    corpus = build_skill_docs_corpus(REPO_ROOT)
+    assert len(corpus.records) > 0, "corpus.records가 비어 있으면 전수 검증이 성립하지 않는다"
+
+    null_origin: list[str] = []
+    empty_or_blank_markdown: list[str] = []
+    invalid_origin_value: list[tuple[str, Any]] = []
+
+    for canonical_name, record in corpus.records.items():
+        body = record.get("body")
+        origin = body.get("origin") if body else None
+        markdown = body.get("markdown") if body else None
+
+        if origin is None:
+            null_origin.append(canonical_name)
+        elif origin not in ("readme", "skill_md"):
+            invalid_origin_value.append((canonical_name, origin))
+
+        if markdown is None or markdown.strip() == "":
+            empty_or_blank_markdown.append(canonical_name)
+
+    assert null_origin == [], (
+        f"body.origin이 null인 건수는 0이어야 한다(S-7). 위반 스킬"
+        f"({len(null_origin)}건): {sorted(null_origin)}"
+    )
+    assert invalid_origin_value == [], (
+        "body.origin은 'readme' 또는 'skill_md'만 허용된다(S-7). 위반 스킬: "
+        f"{sorted(invalid_origin_value)}"
+    )
+    assert empty_or_blank_markdown == [], (
+        f"모든 스킬의 body.markdown이 비어 있지 않아야 한다(S-7, 공백만도 실패). "
+        f"위반 스킬({len(empty_or_blank_markdown)}건): {sorted(empty_or_blank_markdown)}"
+    )

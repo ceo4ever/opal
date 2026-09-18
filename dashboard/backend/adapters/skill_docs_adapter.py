@@ -3,7 +3,7 @@
   "module": "adapters.skill_docs_adapter",
   "layer": "service",
   "domain": "console",
-  "description": "Docs 스킬 문서 화면용 read-only corpus adapter. corpus_root의 실제 물리 레이아웃(소스 저장소: opal/core/references/opal-skills-registry.json + opal/skills·skills / 배포본: references/opal-skills-registry.json + skills / 테스트 fixture: registry.json + opal_skills·skills)을 순서대로 판정해 registry 위치와 bundled skills root들을 해석한 뒤, canonical 병합해 canonical index·alias index를 만들고, 검색(이름·alias·설명·용도)·그룹/도메인 필터·facet count·related skills 정규화·OPPB pipeline 단계 요약을 제공한다. corpus root는 호출자가 DI로만 주입한다(경로 파라미터화 금지, PLAN DEC-6). 매 호출마다 재구성하며 캐시하지 않는다(DEC-4).",
+  "description": "Docs 스킬 문서 화면용 read-only corpus adapter. corpus_root의 실제 물리 레이아웃(소스 저장소: opal/core/references/opal-skills-registry.json + opal/skills·skills / 배포본: references/opal-skills-registry.json + skills / 테스트 fixture: registry.json + opal_skills·skills)을 순서대로 판정해 registry 위치와 bundled skills root들을 해석한 뒤, canonical 병합해 canonical index·alias index를 만들고, 검색(이름·alias·설명)·그룹/도메인 필터·facet count·related skills 정규화·OPPB pipeline 단계 요약을 제공한다. 본문은 스킬 폴더의 README.md 원문을 _safe_join 경유로 싣고 없으면 SKILL.md 본문(frontmatter 제거분)으로 폴백하며 둘 다 없으면 null이다(태스크 143 DEC-1·2). 사이드바 노출 여부 listed는 display_group != internal-stage AND registry paths[0] 스킬 폴더명 == canonical name 두 조건의 AND로 파생한다(DEC-4). corpus root는 호출자가 DI로만 주입한다(경로 파라미터화 금지, PLAN DEC-6). 매 호출마다 재구성하며 캐시하지 않는다(DEC-4).",
   "exports": [
     "SkillDocsCorpus",
     "SkillDocsCorpusError",
@@ -98,6 +98,58 @@ def _resolve_physical_skill_path(
             return candidate, source_path
     assert fallback is not None  # skills_roots는 항상 1개 이상
     return fallback
+
+
+def _resolve_body(
+    skills_roots: list[tuple[Path, str]],
+    canonical_name: str,
+    skill_md_body: str | None,
+    skill_md_source_path: str,
+) -> dict[str, Any]:
+    """DEC-1·2: 렌더용 본문 원문을 README → SKILL.md 본문 2단으로 해석한다.
+
+    README.md가 있으면 원문을 그대로 싣고 origin="readme"다. 없으면 SKILL.md에서
+    frontmatter를 제거한 본문을 싣고 origin="skill_md"다. 둘 다 없거나 공백뿐이면
+    markdown·origin·source_path 모두 None이며 호출자는 여전히 200을 반환한다.
+    source_path는 corpus root 기준 상대경로이며 절대경로를 싣지 않는다.
+    """
+    for root_dir, public_prefix in skills_roots:
+        candidate = _safe_join(root_dir, f"{canonical_name}/README.md")
+        if not candidate.is_file():
+            continue
+        text = candidate.read_text(encoding="utf-8")
+        if text.strip():
+            return {
+                "markdown": text,
+                "origin": "readme",
+                "source_path": f"{public_prefix}/{canonical_name}/README.md",
+            }
+
+    if skill_md_body and skill_md_body.strip():
+        return {
+            "markdown": skill_md_body,
+            "origin": "skill_md",
+            "source_path": skill_md_source_path,
+        }
+
+    return {"markdown": None, "origin": None, "source_path": None}
+
+
+def _is_listed(display_group: str, entry: dict[str, Any], canonical_name: str) -> bool:
+    """DEC-4: 사이드바 노출 여부를 registry 데이터만으로 파생한다.
+
+    ① internal-stage(사용자가 직접 호출하지 않는 단계 스킬)가 아니고,
+    ② registry 엔트리 paths[0]의 스킬 폴더명이 canonical name과 같아야 한다.
+    ②를 만족하지 못하는 엔트리는 실행 본체가 다른 스킬 폴더에 있는 라우팅
+    프로필이므로 독립 문서로 노출하지 않는다. listed=false여도 상세 조회는
+    정상 200이다(AC-5 후단).
+    """
+    if display_group == "internal-stage":
+        return False
+    paths = entry.get("paths") or []
+    if not paths:
+        return False
+    return Path(str(paths[0])).parent.name == canonical_name
 
 
 class SkillDocsCorpusError(Exception):
@@ -206,6 +258,7 @@ class SkillDocsCorpus:
             "display_group": record["display_group"],
             "domain": record["domain"],
             "source_path": record["source_path"],
+            "listed": record["listed"],
         }
 
     @staticmethod
@@ -217,7 +270,6 @@ class SkillDocsCorpus:
             record["canonical_name"],
             *record["aliases"],
             record.get("description") or "",
-            *(record.get("use_cases") or []),
         ]
         haystack = " ".join(haystack_parts).lower()
         return needle in haystack
@@ -302,6 +354,11 @@ def build_skill_docs_corpus(corpus_root: Path) -> SkillDocsCorpus:
 
         description = entry.get("description") or parsed.get("description")
 
+        body = _resolve_body(
+            skills_roots, canonical_name, parsed.get("body"), source_path
+        )
+        listed = _is_listed(display_group, entry, canonical_name)
+
         record = {
             "canonical_name": canonical_name,
             "source_name": parsed.get("source_name"),
@@ -315,13 +372,8 @@ def build_skill_docs_corpus(corpus_root: Path) -> SkillDocsCorpus:
                 "available": parsed["available"],
                 "content_hash": parsed["content_hash"],
             },
-            "usage_markdown": parsed["usage_markdown"],
-            "when_to_use_markdown": parsed["when_to_use_markdown"],
-            "quick_start": parsed["quick_start"],
-            "arguments": parsed["arguments"],
-            "options": parsed["options"],
-            "examples": parsed["examples"],
-            "use_cases": parsed["use_cases"],
+            "body": body,
+            "listed": listed,
             "pipeline": pipeline,
             "related_skills": [],
             "_dispatched_by": entry.get("dispatched_by") or [],

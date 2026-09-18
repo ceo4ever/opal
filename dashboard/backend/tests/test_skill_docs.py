@@ -9,7 +9,6 @@
     "test_s3_list_search_by_name_fragment",
     "test_s3_list_search_by_alias",
     "test_s3_list_search_by_description_word",
-    "test_s3_list_search_by_use_case_phrase",
     "test_s3_list_group_filter_covers_all_groups",
     "test_s3_list_domain_filter_facet_count_matches",
     "test_s4_folder_vs_frontmatter_name_no_duplicate_card",
@@ -23,14 +22,16 @@
     "test_s8_write_methods_return_405",
     "test_s8_path_traversal_rejected",
     "test_s8_no_absolute_path_in_response",
-    "test_s9_examples_have_no_prompt_chars_or_regex_metachars",
     "test_s9_registry_triggers_not_exposed",
-    "test_s10_standard_heading_extracts_all_sections",
-    "test_s10_no_heading_returns_null_or_empty",
-    "test_s10_partial_heading_extracts_only_available_section",
     "test_s4_shared_path_registry_entries_stay_independent_canonicals",
     "test_s4_shared_path_alias_resolves_to_own_canonical",
-    "test_s4_shared_path_no_duplicate_in_order"
+    "test_s4_shared_path_no_duplicate_in_order",
+    "test_t143_s1_body_readme_byte_identical_and_relative_source_path",
+    "test_t143_s2_body_skill_md_fallback_excludes_frontmatter",
+    "test_t143_s3_body_both_missing_returns_200_null",
+    "test_t143_s4_listed_field_present_and_internal_stage_false",
+    "test_t143_s4_listed_false_for_shared_path_entry_but_detail_200",
+    "test_t143_s5_slot_fields_removed_from_public_contract"
   ],
   "depends": ["routers.docs_skills", "adapters.skill_docs_adapter", "main"]
 }
@@ -113,13 +114,6 @@ def test_s3_list_search_by_description_word(client: TestClient) -> None:
     assert resp.status_code == 200, resp.text
     names = [it["canonical_name"] for it in resp.json()["items"]]
     assert "opal-skill-manager" in names
-
-
-def test_s3_list_search_by_use_case_phrase(client: TestClient) -> None:
-    resp = client.get("/api/docs/skills", params={"q": "신규 사용자"})
-    assert resp.status_code == 200, resp.text
-    names = [it["canonical_name"] for it in resp.json()["items"]]
-    assert "opal-onboarding" in names
 
 
 def test_s3_list_group_filter_covers_all_groups(client: TestClient) -> None:
@@ -253,13 +247,10 @@ def test_s6_source_missing_returns_200_partial(client: TestClient) -> None:
     body = resp.json()
     assert body["source"]["available"] is False
     assert body["source"]["content_hash"] is None
-    assert body["usage_markdown"] is None
-    assert body["when_to_use_markdown"] is None
-    assert body["quick_start"] is None
-    assert body["arguments"] == []
-    assert body["options"] == []
-    assert body["examples"] == []
     assert body["related_skills"] == []
+    # DEC-1/2: 슬롯 필드 대신 body 원문 객체가 부재를 표현한다
+    assert body["body"]["markdown"] is None
+    assert body["body"]["origin"] is None
     # header metadata는 유지된다
     assert body["canonical_name"] == "opal-source-missing"
     assert body["description"]
@@ -331,6 +322,14 @@ def test_s8_no_absolute_path_in_response(client: TestClient) -> None:
     assert not source_path.startswith("/")
     assert str(CORPUS_ROOT) not in source_path
     assert re.match(r"^(opal/skills|skills)/opal-onboarding/SKILL\.md$", source_path), source_path
+    # DEC-1: body 원문 경유로도 corpus root 절대경로가 노출되면 안 된다
+    body_source_path = body.get("body", {}).get("source_path")
+    if body_source_path:
+        assert not body_source_path.startswith("/")
+        assert str(CORPUS_ROOT) not in body_source_path
+    body_markdown = body.get("body", {}).get("markdown") or ""
+    assert str(CORPUS_ROOT) not in body_markdown
+    assert str(Path.home()) not in body_markdown
 
 
 # ── S-9: 예시 원문·트리거 비노출 (C-4) ───────────────────────────────────────
@@ -339,70 +338,126 @@ _PROMPT_PREFIX_RE = re.compile(r"^\s*[$%>]")
 _REGEX_METACHAR_RE = re.compile(r"[\^$]|\(\?[a-zA-Z]|\|")
 
 
-def test_s9_examples_have_no_prompt_chars_or_regex_metachars(client: TestClient) -> None:
-    checked_any = False
-    for canonical in (
-        "opal-standard-heading",
-        "opal-pilot-project-build",
-        "opal-onboarding",
-        "opal-skill-manager",
-    ):
-        resp = client.get(f"/api/docs/skills/{canonical}")
-        assert resp.status_code == 200, resp.text
-        body = resp.json()
-        for example in body["examples"]:
-            checked_any = True
-            command = example["command"]
-            assert not _PROMPT_PREFIX_RE.match(command), command
-            assert not _REGEX_METACHAR_RE.search(command), command
-        if body["quick_start"]:
-            command = body["quick_start"]["command"]
-            assert not _PROMPT_PREFIX_RE.match(command), command
-            assert not _REGEX_METACHAR_RE.search(command), command
-    assert checked_any, "예시가 하나도 검사되지 않았다 — fixture 또는 추출 계약을 확인하라"
-
-
 def test_s9_registry_triggers_not_exposed(client: TestClient) -> None:
     resp = client.get("/api/docs/skills/oppb")
     assert resp.status_code == 200, resp.text
     raw = resp.text
     assert "^oppb$" not in raw
     assert "(?i)" not in raw
+    # DEC-1: body.markdown 경유로도 registry trigger 정규식이 노출되면 안 된다
+    body = resp.json()
+    body_markdown = body.get("body", {}).get("markdown") or ""
+    assert "^oppb$" not in body_markdown
+    assert "(?i)" not in body_markdown
 
 
-# ── S-10: 본문 구조 상이 → 부분 추출 (AC-3, H-2) ────────────────────────────
+# ── T143 W-1: 본문 원문(body)·listed·슬롯 제거 RED (DEC-1·2·3·4) ────────────
+#
+# 아래 6개 시험은 태스크 143 PLAN W-1 계약 ①~⑥을 고정한다. 슬롯 heading 추출
+# 계약(S-10, 위 3건)은 DEC-3으로 폐기됐고, fixture 3개(opal-standard-heading·
+# opal-no-heading·opal-partial-heading)는 README 유무 조합으로 재목적화됐다:
+#   - opal-standard-heading: README.md 보유 (S-1)
+#   - opal-no-heading: README 없음 + SKILL.md 본문 있음 (S-2)
+#   - opal-partial-heading: README·SKILL 본문 모두 없음(공백) (S-3)
+# 구현(W-3) 전까지는 SkillDetailResponse에 `body`·`listed` 필드가 없으므로
+# 전부 실패(RED)해야 한다.
 
-def test_s10_standard_heading_extracts_all_sections(client: TestClient) -> None:
+
+def test_t143_s1_body_readme_byte_identical_and_relative_source_path(
+    client: TestClient,
+) -> None:
     resp = client.get("/api/docs/skills/opal-standard-heading")
     assert resp.status_code == 200, resp.text
     body = resp.json()
-    assert body["usage_markdown"] is not None
-    assert body["when_to_use_markdown"] is not None
-    assert len(body["arguments"]) >= 1
-    assert len(body["options"]) >= 1
-    assert len(body["examples"]) >= 1
+    assert "body" in body, "상세 응답에 body 객체가 있어야 한다(DEC-1)"
+    readme_path = CORPUS_ROOT / "opal_skills" / "opal-standard-heading" / "README.md"
+    expected_bytes = readme_path.read_bytes()
+    markdown = body["body"]["markdown"]
+    assert markdown is not None
+    assert markdown.encode("utf-8") == expected_bytes, "body.markdown이 README 원문과 바이트 동일해야 한다"
+    assert body["body"]["origin"] == "readme"
+    source_path = body["body"]["source_path"]
+    assert source_path is not None
+    assert not source_path.startswith("/")
+    assert str(CORPUS_ROOT) not in source_path
+    assert source_path.endswith("opal-standard-heading/README.md"), source_path
 
 
-def test_s10_no_heading_returns_null_or_empty(client: TestClient) -> None:
+def test_t143_s2_body_skill_md_fallback_excludes_frontmatter(
+    client: TestClient,
+) -> None:
     resp = client.get("/api/docs/skills/opal-no-heading")
     assert resp.status_code == 200, resp.text
     body = resp.json()
-    assert body["usage_markdown"] is None
-    assert body["when_to_use_markdown"] is None
-    assert body["arguments"] == []
-    assert body["options"] == []
-    assert body["examples"] == []
-    assert body["quick_start"] is None
+    assert "body" in body
+    assert body["body"]["origin"] == "skill_md"
+    markdown = body["body"]["markdown"]
+    assert markdown is not None
+    assert markdown.strip() != ""
+    assert "---" not in markdown, "SKILL.md frontmatter 구분선이 본문에 남으면 안 된다"
+    assert "name: opal-no-heading" not in markdown, "frontmatter name: 줄이 본문에 남으면 안 된다"
 
 
-def test_s10_partial_heading_extracts_only_available_section(client: TestClient) -> None:
+def test_t143_s3_body_both_missing_returns_200_null(client: TestClient) -> None:
     resp = client.get("/api/docs/skills/opal-partial-heading")
     assert resp.status_code == 200, resp.text
     body = resp.json()
-    assert body["usage_markdown"] is not None
-    assert "opal-partial-heading go" in body["usage_markdown"]
-    assert body["when_to_use_markdown"] is None
-    assert body["arguments"] == []
-    assert body["options"] == []
-    # 다른 스킬(opal-standard-heading)의 내용이 섞이지 않는다
-    assert "opal-standard-heading" not in body["usage_markdown"]
+    assert "error" not in body, "본문 부재는 오류 envelope가 아니라 200이어야 한다(DEC-2)"
+    assert "body" in body
+    assert body["body"]["markdown"] is None
+    assert body["body"]["origin"] is None
+
+
+def test_t143_s4_listed_field_present_and_internal_stage_false(
+    client: TestClient,
+) -> None:
+    resp_list = client.get("/api/docs/skills")
+    assert resp_list.status_code == 200, resp_list.text
+    items = resp_list.json()["items"]
+    assert len(items) > 0
+    assert all("listed" in it for it in items), "목록 응답 모든 항목에 listed 필드가 있어야 한다(DEC-4)"
+
+    resp_internal = client.get("/api/docs/skills/op-oppb-project-slice")
+    assert resp_internal.status_code == 200, resp_internal.text
+    body_internal = resp_internal.json()
+    assert "listed" in body_internal
+    assert body_internal["listed"] is False
+
+    resp_normal = client.get("/api/docs/skills/opal-onboarding")
+    assert resp_normal.status_code == 200, resp_normal.text
+    body_normal = resp_normal.json()
+    assert body_normal.get("listed") is True
+
+
+def test_t143_s4_listed_false_for_shared_path_entry_but_detail_200(
+    client: TestClient,
+) -> None:
+    # opal-pilot-dev-short는 registry paths[0]의 폴더명("opal-pilot-dev")이
+    # canonical name과 달라 listed=false여야 하지만, 상세 조회는 200이어야 한다
+    # (DEC-4 ②, AC-5 후단).
+    resp = client.get("/api/docs/skills/opal-pilot-dev-short")
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+    assert "listed" in body
+    assert body["listed"] is False
+    assert body["canonical_name"] == "opal-pilot-dev-short"
+
+
+def test_t143_s5_slot_fields_removed_from_public_contract(client: TestClient) -> None:
+    resp = client.get("/api/docs/skills/opal-onboarding")
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+    removed_slot_fields = [
+        "usage_markdown",
+        "when_to_use_markdown",
+        "quick_start",
+        "arguments",
+        "options",
+        "examples",
+        "use_cases",
+    ]
+    for field_name in removed_slot_fields:
+        assert field_name not in body, f"{field_name}는 DEC-3에 따라 공개 계약에서 제거되어야 한다"
+    # 유지 대상은 남아 있어야 한다
+    assert "description" in body
+    assert "pipeline" in body
