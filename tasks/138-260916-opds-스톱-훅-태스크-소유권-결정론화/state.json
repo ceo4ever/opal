@@ -4,8 +4,8 @@
   "mode": "agentic",
   "schema_version": "1.2",
   "created_at": "2026-09-16 23:48:42",
-  "updated_at": "2026-09-18 17:54:18",
-  "current_status": "in_progress",
+  "updated_at": "2026-09-18 20:02:23",
+  "current_status": "completed_unmerged",
   "rows": [
     {
       "row_id": 1,
@@ -201,11 +201,11 @@
       "stage": "CLOSE",
       "item": "worktree finalize/attribution (조건부: --wt 실행 시)",
       "key": "close.worktree_finalize",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-18 20:02:17",
       "owner": "PM",
-      "note": null,
+      "note": "worktree-tool finalize 성공(merge 전 실행) — state completed_unmerged→closed, violations 0, S⊆D 충족(declared 7 ⊇ observed 6), committed true로 귀속 커밋 4c42580 생성. 이어서 W-10~W-22 본작업·문서 동기화·CLOSE 산출물 45파일을 브랜치 내 커밋 9553d3a로 마감. status 조회: branch feat/OP-TASK-138, merged false, unpushed 존재 — merge·remove는 캡틴 권한이라 PM이 대행하지 않는다",
       "conditional": true
     },
     {
@@ -213,14 +213,14 @@
       "stage": "CLOSE",
       "item": "CLOSE 최종 상태 확정",
       "key": "close.final",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-18 20:02:23",
       "owner": "PM",
-      "note": null
+      "note": "CLOSE 완료 — 파이프라인 16행 전부 done. 워크트리 미머지 상태로 마감(completed_unmerged): merge·finalize-attribution·status --set done·worktree remove는 캡틴 권한. 배포 후 S-25 수동 E2E 1건 이월(resume token s25-b3506b030b69)"
     }
   ],
-  "next_action": "CLOSE worktree finalize/attribution (조건부: --wt 실행 시) 진입",
+  "next_action": "태스크 완료",
   "worktree": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_138",
   "run_log": {
     "contract_version": "1.0",
