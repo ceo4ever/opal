@@ -956,6 +956,71 @@ function scanRiskCommand(dir) {
   return { ok: true, verdict, dir: realDir, scanned, hits, skipped };
 }
 
+// === Verify-Bundle Command (태스크 140 W-4, PLAN DEC-2/DEC-3/DEC-5) ===
+
+/**
+ * @function    verifyBundleCommand
+ * @layer       tools
+ * @domain      skill-management
+ * @description 주어진 registry 파일의 canonical set(name)과 주어진 skills-root(들)의 폴더
+ *              basename set을 양방향 대조한다. registry에만 있으면 missing_source, 폴더에만
+ *              있으면 unregistered, 같은 alias가 두 canonical을 가리키면 ambiguous_alias.
+ *              validate()의 validateUnregistered/배포 환경 reverse scan 생략 로직과는 독립된
+ *              경로 — 인자로 받은 registry/skills-root만 사용하며 cwd 고정 경로를 쓰지 않는다.
+ * @param {string}   registryPath - registry JSON 파일 경로
+ * @param {string[]} skillsRoots  - skills 폴더 루트 경로 배열 (반복 인자)
+ * @returns {{ ok: boolean, total: number, missing_source: string[], unregistered: string[], ambiguous_alias: string[] }}
+ */
+function verifyBundleCommand(registryPath, skillsRoots) {
+  if (!registryPath) {
+    return { ok: false, error: 'missing_registry_arg', message: '--registry=<path> is required', total: 0, missing_source: [], unregistered: [], ambiguous_alias: [] };
+  }
+  if (!skillsRoots || skillsRoots.length === 0) {
+    return { ok: false, error: 'missing_skills_root_arg', message: '--skills-root=<path> is required (repeatable)', total: 0, missing_source: [], unregistered: [], ambiguous_alias: [] };
+  }
+
+  let registry;
+  try {
+    registry = loadJsonFile(registryPath);
+  } catch (e) {
+    return { ok: false, error: 'registry_parse_error', message: e.message, total: 0, missing_source: [], unregistered: [], ambiguous_alias: [] };
+  }
+  if (!registry || typeof registry !== 'object' || !registry.groups || typeof registry.groups !== 'object') {
+    return { ok: false, error: 'registry_not_found', message: `registry not found or malformed: ${registryPath}`, total: 0, missing_source: [], unregistered: [], ambiguous_alias: [] };
+  }
+
+  const skillsFlat = flattenGroups(registry, 'main');
+
+  const registryNames = new Set();
+  const aliasToNames = new Map();
+  for (const skill of skillsFlat) {
+    if (skill && skill.name) registryNames.add(skill.name);
+    if (skill && skill.alias) {
+      if (!aliasToNames.has(skill.alias)) aliasToNames.set(skill.alias, new Set());
+      aliasToNames.get(skill.alias).add(skill.name);
+    }
+  }
+
+  const folderNames = new Set();
+  for (const root of skillsRoots) {
+    if (!fs.existsSync(root)) continue;
+    for (const entry of fs.readdirSync(root, { withFileTypes: true })) {
+      if (entry.isDirectory()) folderNames.add(entry.name);
+    }
+  }
+
+  const missing_source = [...registryNames].filter(n => !folderNames.has(n)).sort();
+  const unregistered = [...folderNames].filter(n => !registryNames.has(n)).sort();
+  const ambiguous_alias = [...aliasToNames.entries()]
+    .filter(([, names]) => names.size > 1)
+    .map(([alias]) => alias)
+    .sort();
+
+  const ok = missing_source.length === 0 && unregistered.length === 0 && ambiguous_alias.length === 0;
+
+  return { ok, total: registryNames.size, missing_source, unregistered, ambiguous_alias };
+}
+
 // === CLI Router ===
 
 function main() {
@@ -971,6 +1036,8 @@ function main() {
     console.error('  migrate [--dry-run]    flat→vendor 중첩 레이아웃 이동 (멱등)');
     console.error('  parse-source-repo <source_repo>  owner/repo@subdir 파싱');
     console.error('  scan-risk <dir>        clone 디렉토리 위험 패턴 스캔 (1층 하드 필터)');
+    console.error('  verify-bundle --registry=<path> --skills-root=<path> [--skills-root=<path> ...]');
+    console.error('                         registry canonical set ↔ skills-root 폴더 set 양방향 대조');
     process.exit(1);
   }
 
@@ -1028,6 +1095,19 @@ function main() {
       }
       result = scanRiskCommand(args[1]);
       break;
+
+    case 'verify-bundle': {
+      let registryPath = null;
+      const skillsRoots = [];
+      for (let i = 1; i < args.length; i++) {
+        if (args[i].startsWith('--registry=')) registryPath = args[i].slice('--registry='.length);
+        else if (args[i].startsWith('--skills-root=')) skillsRoots.push(args[i].slice('--skills-root='.length));
+      }
+      const vbResult = verifyBundleCommand(registryPath, skillsRoots);
+      console.log(JSON.stringify(vbResult));
+      process.exit(vbResult.ok ? 0 : 1);
+      break;
+    }
 
     default:
       console.error(`Unknown command: ${command}`);

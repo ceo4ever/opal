@@ -1,0 +1,57 @@
+{
+  "check": "convention",
+  "status": "partial",
+  "checked_files": [
+    "dashboard/backend/main.py",
+    "dashboard/backend/models.py",
+    "dashboard/backend/routers/docs_skills.py",
+    "dashboard/backend/adapters/skill_docs_adapter.py",
+    "dashboard/backend/parsers/skill_parser.py",
+    "dashboard/backend/tests/test_skill_docs.py",
+    "dashboard/backend/tests/test_skill_docs_layout.py"
+  ],
+  "findings": [
+    {
+      "id": "GC-001",
+      "fingerprint": "d58d061a66606787",
+      "category": "문서화",
+      "severity": "high",
+      "confidence": "high",
+      "disposition": "blocking",
+      "rule_id": "CONVENTIONS.md §@header 규칙",
+      "source_tier": "T0",
+      "location": {
+        "file": "dashboard/backend/main.py",
+        "line": 6,
+        "symbol": "module @header"
+      },
+      "evidence": "main.py @header.description은 \"7개 라우터 등록(5개 read-only + brain POST + config POST/GET)\"이라 서술하지만 실제로는 dashboard/projects/tasks/memory/doctor/brain/config/docs_skills 8개 라우터가 include_router로 등록되어 있다(main.py:136-143). 또한 @header.depends 배열에 신설된 \"routers.docs_skills\"가 누락되어 있다(main.py:8, depends 목록에 dashboard/projects/tasks/memory/doctor/brain/config만 존재)."
+      ,
+      "impact": "코드 @header는 현재 사실만 기재해야 하는 T0 규칙(docs/CONVENTIONS.md §@header 규칙, headerSource=inline)의 단일 기록 지점인데, 라우터 수·의존 목록이 실제 코드와 어긋나 있어 header를 근거로 의존 그래프·라우터 인벤토리를 파악하는 후속 작업(코드맵 생성, 온보딩, 리뷰)이 잘못된 전제를 갖게 된다.",
+      "remediation": {
+        "guidance": "description의 라우터 수를 8개로 정정하고 docs_skills 라우터(GET 전용 공개 표면)를 서술에 포함한다. exports/depends 배열에 \"routers.docs_skills\"를 추가한다.",
+        "reference": "opal/core/references/header-standard.md §2.1",
+        "auto_fixable": false
+      },
+      "verification": "main.py @header.description과 include_router 호출 목록(136-143행)을 대조해 라우터 수·목록이 일치하는지, depends 배열에 routers.docs_skills가 존재하는지 확인한다.",
+      "suppression": null
+    }
+  ],
+  "evidence": [
+    "docs/CONVENTIONS.md 전체 Read — 프로젝트 T0 기준(허브 문서, 영역별 BE-CONVENTIONS.md 분리 없음)",
+    ".opal/code-scan.json Read — headerSource: inline, scope console-be: dashboard/backend/, extensions에 .py 포함 → @header 인라인 기록이 이 스코프의 T0 강제 규칙",
+    "dashboard/backend/ 하위 pyproject.toml·ruff/flake8 설정 부재 확인(find 결과 없음) — 포맷터·린터 실행 설정(T0 tier-2) 없음",
+    "target_files 7개 전건 Read — @header 블록, docstring, import 순서, 네이밍(snake_case), 타입힌트 스타일 검토",
+    "main.py:6-10 @header.description·exports·depends 대 main.py:136-143 include_router 실제 등록 목록 대조"
+  ],
+  "references": [
+    "docs/CONVENTIONS.md",
+    "opal/core/references/header-standard.md",
+    ".opal/code-scan.json"
+  ],
+  "missing_capabilities": [
+    "docs/CONVENTIONS.md는 OPAL 프레임워크 저장소 전역 허브 문서이며 Console BE(Python/FastAPI) 전용 상세 문서(BE-CONVENTIONS.md 등)로 분리되어 있지 않다 — 허브+링크 모델(opal/core/references/conventions-hub-model.md) 미적용 상태. Python 코드 스타일(들여쓰기, 포맷, import 정렬 등) 세부 규칙에 대해서는 T0 기준이 존재하지 않아 인접 코드 관측 패턴(T3 tier)으로만 판단했다.",
+    "dashboard/backend/ 스코프에 formatter·linter 실행 설정(pyproject.toml, ruff.toml, .flake8 등)이 존재하지 않아 T1 tier 자동 검증 기준을 적용하지 못했다."
+  ],
+  "report_path": "tasks/140-260917-opdw-스킬-문서-화면/GC-CONVENTION-260918-1610-console-be.md"
+}

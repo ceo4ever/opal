@@ -442,3 +442,9 @@
 - 신규: [[red-corpus-precedes-contract-fabricates-layout]], [[worktree-locates-hub-by-issued-copy]], [[stop-force-requires-state-transition-claim]], [[ownership-tool]]
 - 출처: task:138
 
+## [2026-09-18] ingest | CLOSE ingest — 태스크 140 OPAL Docs 스킬 문서 화면
+- 신규: [[pages/concept/canonical-identity-from-unique-key-not-shared-attribute.md]], [[pages/concept/skill-md-body-is-freeform-not-structured-slots.md]]
+- 출처: task:140
+
+## [2026-09-18] ingest | task:143 — OPAL Docs 사이드바+README 렌더 전환. 시나리오 13/13 pass. 실측에서 결함 F-1(vite base './' → 2단 경로 자산 로드 실패로 백지) 발견·수정. 지식 2건 신설: bundle-asset-path-needs-real-usage-check, slot-extraction-needs-corpus-distribution-first
+

@@ -448,7 +448,7 @@ interface ExampleBlock {
 ```json
 {
   "error": {
-    "code": "skill_not_found | source_missing | registry_unavailable | parse_error",
+    "code": "skill_not_found | registry_unavailable | parse_error",
     "message": "사용자에게 표시할 안전한 메시지",
     "skill_id": "요청값 또는 null",
     "retryable": false
@@ -459,9 +459,10 @@ interface ExampleBlock {
 | HTTP | code | 화면 처리 |
 |---|---|---|
 | 404 | `skill_not_found` | SCR-002 404 상태; 목록 이동 제공 |
-| 409 또는 422 | `source_missing` | 가능한 메타는 유지하고 본문 원본 부재 Alert; 재시도 가능 여부 반영 |
 | 500 | `registry_unavailable` | 목록/상세 오류 상태; 다시 시도 |
 | 500 | `parse_error` | 해당 원본 경로와 일반 메시지만 표시; stack/path 절대값 비노출 |
+
+본문 원본 부재는 오류 응답이 아니라 200 성공 응답의 `source.available=false`로 표현한다(§5.3). 가능한 메타는 유지하고 본문 영역에 원본 부재 Alert를 표시한다.
 
 빈 목록은 오류가 아니다. 전체 소스 집합 자체가 0개이면 `아직 문서화된 스킬이 없습니다`, 검색 결과만 0개이면 `조건에 맞는 스킬이 없습니다`로 구분한다.
 

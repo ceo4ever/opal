@@ -1,0 +1,10 @@
+[
+  {"iteration": 1, "missing": {"requirements": [], "features": [], "hypotheses": []},
+   "scores": {"goal": 1, "adoption": 2, "boundary": 2}, "average": 1.67,
+   "gaps": ["S-7이 표본 단언이라 목표 문장의 정량 조건(55개 전부)을 전수로 보증하지 못함", "축 플래그 3종이 빌더 하드코딩으로 false (도구 한계, 점수 비반영)"],
+   "verdict": "pass", "reason": "converged"},
+  {"iteration": 2, "missing": {"requirements": [], "features": [], "hypotheses": []},
+   "scores": {"goal": 2, "adoption": 2, "boundary": 2}, "average": 2.0,
+   "gaps": ["축 플래그 3종이 scenario.py:905-907 하드코딩 false (도구 개선 필요, 점수 비반영)"],
+   "verdict": "pass", "reason": "converged"}
+]

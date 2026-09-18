@@ -3,9 +3,9 @@
   "module": "main",
   "layer": "router",
   "domain": "console",
-  "description": "FastAPI app 진입점. uvicorn host=127.0.0.1:7823(외부 노출 금지, H-7/S-5). CORS dev=localhost:5173 + 127.0.0.1:5173(기본 2종, 불변) + OPAL_CONSOLE_CORS_ORIGINS(쉼표 구분) 환경 변수로 추가 허용된 정확한 origin 문자열(T01 W-2, TRD.md TD-7) / prod=동일 오리진. /health. 7개 라우터 등록(5개 read-only + brain POST + config POST/GET). StaticFiles SPA 서빙(dist 존재 시): 알 수 없는 경로 → index.html fallback. lifespan asynccontextmanager — 기동 시 load_config().prewarm_projects를 순회하며 brain_session_registry.prewarm(project_path)를 호출한다(비블로킹, daemon 스레드 내부 분리 — lifespan 본문은 즉시 yield). prewarm_projects 미지정 시 생략 로그만 남긴다.",
+  "description": "FastAPI app 진입점. uvicorn host=127.0.0.1:7823(외부 노출 금지, H-7/S-5). CORS dev=localhost:5173 + 127.0.0.1:5173(기본 2종, 불변) + OPAL_CONSOLE_CORS_ORIGINS(쉼표 구분) 환경 변수로 추가 허용된 정확한 origin 문자열(T01 W-2, TRD.md TD-7) / prod=동일 오리진. /health. 8개 라우터 등록(5개 read-only + brain POST + config POST/GET + docs_skills — GET 전용 읽기 전용 공개 표면 GET /api/docs/skills, GET /api/docs/skills/{skill_id}, SPA fallback보다 앞에 등록). StaticFiles SPA 서빙(dist 존재 시): 알 수 없는 경로 → index.html fallback. lifespan asynccontextmanager — 기동 시 load_config().prewarm_projects를 순회하며 brain_session_registry.prewarm(project_path)를 호출한다(비블로킹, daemon 스레드 내부 분리 — lifespan 본문은 즉시 yield). prewarm_projects 미지정 시 생략 로그만 남긴다.",
   "exports": ["app"],
-  "depends": ["routers.dashboard", "routers.projects", "routers.tasks", "routers.memory", "routers.doctor", "routers.brain", "routers.config", "config", "adapters.brain_session"],
+  "depends": ["routers.dashboard", "routers.projects", "routers.tasks", "routers.memory", "routers.doctor", "routers.brain", "routers.config", "routers.docs_skills", "config", "adapters.brain_session"],
   "task": "061"
 }
 """
@@ -25,7 +25,16 @@ from fastapi.staticfiles import StaticFiles
 
 from dashboard.backend.adapters.brain_session import brain_session_registry
 from dashboard.backend.config import load_config
-from dashboard.backend.routers import brain, config, dashboard, doctor, memory, projects, tasks
+from dashboard.backend.routers import (
+    brain,
+    config,
+    dashboard,
+    docs_skills,
+    doctor,
+    memory,
+    projects,
+    tasks,
+)
 
 # 앱 로거 INFO를 로그 파일(/tmp/opal-console.log)로 내보낸다.
 # uvicorn은 root 로거에 핸들러를 두지 않아, basicConfig 없이는 앱 logger.info가 유실된다.
@@ -131,6 +140,7 @@ app.include_router(memory.router)
 app.include_router(doctor.router)
 app.include_router(brain.router)  # Phase 1 스파이크 — POST /api/brain/query + GET /api/brain/auth
 app.include_router(config.router)  # T061 — 설정 쓰기 라우터(화이트리스트 격리, LLM 호출 0회)
+app.include_router(docs_skills.router)  # T140 W-7 — GET 전용 Docs 스킬 문서 화면 공개 표면
 
 
 # ── /health ───────────────────────────────────────────────────────────────────

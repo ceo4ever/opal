@@ -289,8 +289,8 @@ opal/core/mcps/*    ──── install ─→  claude mcp add --scope user (Cl
 로컬에서 OPAL로 작업하는 모든 프로젝트를 한 웹 화면에서 조망하는 **읽기 전용 대시보드**(태스크 021 신설). 데이터 SSOT를 새로 만들지 않고, OPAL 도구의 read-only 커맨드 + 마크다운 파서로 각 프로젝트 데이터를 수집·렌더한다. 네이티브 폴더 선택, PM Coordination 작업 공간, 독립 Terminal, 파일 트리 UI는 Console이 아니라 `workstudio/`의 **OPAL WorkStudio** 데스크톱 앱이 소유한다.
 
 ```
-┌─ Web UI (React + shadcn/ui, 7개 화면) ──────────────────┐
-│  대시보드·프로젝트·태스크(칸반)·메모리·환경·프로젝트 브레인·설정 │
+┌─ Web UI (React + shadcn/ui, 8개 화면) ──────────────────┐
+│  대시보드·프로젝트·태스크(칸반)·메모리·환경·프로젝트 브레인·OPAL Docs·설정 │
 └───────────────┬──────────────────────────────────────────┘
                 │ HTTP (127.0.0.1:7823)
 ┌───────────────▼──────────────────────────────────────────┐
@@ -345,6 +345,21 @@ opal/core/mcps/*    ──── install ─→  claude mcp add --scope user (Cl
 | 표시 문자열 | **BE 소유** — `*_minutes` + `*_label` 쌍으로 내리고 `format_duration`을 `stats.py` 단일 지점에 둔다(FE 무계산) |
 | 캐시 | 정적 파생만 캐시(`source_path`에 태스크 `state.json` 경로 전달), **실시간 파생은 캐시 밖에서 조립**. 이 과정에서 `cache.py`의 mtime 비교가 monotonic 파생값과 epoch를 직접 비교하던 결함을 wall-clock 기준으로 교정했다 |
 | 검증 | 기준일 스냅샷 `STATS-BASELINE.md`(태스크 산출물, 런타임 미배치)와 대조. 모수는 **태스크 ID 목록으로 동결**해 후속 태스크 완료로 중앙값이 이동해도 검증이 깨지지 않는다 |
+
+### 스킬 문서 화면 (태스크 140, 143)
+
+콘솔 8번째 메뉴 `OPAL Docs`(`/docs/skills`·`/docs/skills/:skillId`, 프로젝트 브레인과 설정 사이). 기존 5종 read-only 라우터에 합류하는 **읽기 전용** 화면으로, 좌측 그룹 사이드바에서 스킬을 고르면 우측에 해당 스킬의 `README.md` 원문이 그대로 렌더된다(태스크 143에서 카탈로그 카드+상세 2화면 구조를 대체).
+
+| 항목 | 값 |
+|------|-----|
+| 엔드포인트 | `GET /api/docs/skills`(`q`·`group`·`domain` 쿼리와 facet을 계속 수용하나 화면은 무파라미터로 1회 호출한다) · `GET /api/docs/skills/{skill_id}`(canonical 또는 alias 조회) — 쓰기 메서드 405, 경로 traversal 404 |
+| BE 구성 | `routers/docs_skills.py`(라우터) · `adapters/skill_docs_adapter.py`(레지스트리+소스 corpus 병합·검색·필터·본문 해석·`listed` 파생) · `parsers/skill_parser.py`(frontmatter와 본문 분리) |
+| 데이터 흐름 | 소스 레이아웃(`opal/core/references/opal-skills-registry.json` + `opal/skills` + `skills`)과 배포 레이아웃(`~/.opal/references/opal-skills-registry.json` + `~/.opal/skills`)을 모두 해석해 병합 — 두 레이아웃 어느 쪽에서도 canonical 55건이 조회된다 |
+| 오류 계약 | `skill_not_found`(404, canonical/alias 어디에도 없는 id) · `registry_unavailable`(500, 레지스트리 read 실패) · `parse_error`(500, corpus parse 실패). 원본 부재는 오류가 아니라 200 성공 응답의 `source.available=false`로 표현 |
+| 본문 계약 | 상세 응답의 `body`는 `markdown`·`origin`·`source_path` 3필드다. 스킬 폴더의 `README.md`를 원문 그대로 실어 `origin="readme"`, README가 없으면 SKILL.md의 frontmatter 제거 본문으로 폴백해 `origin="skill_md"`, 둘 다 없으면 세 필드 모두 `null`이며 그래도 HTTP 200이다. `source_path`는 corpus 루트 기준 상대경로로 절대경로를 노출하지 않는다. 태스크 140의 슬롯 필드 7종(`usage_markdown`·`when_to_use_markdown`·`quick_start`·`arguments`·`options`·`examples`·`use_cases`)은 실제 SKILL.md 제목 체계와 맞지 않아 전량 제거했다 |
+| 목록 노출 | 목록·상세 응답의 `listed: bool`은 서버가 두 조건 AND로 파생한다: ① `display_group != "internal-stage"` ② 레지스트리 엔트리 `paths[0]`의 폴더명이 canonical `name`과 일치. 현재 실 corpus 55건 중 33건이 `listed=true`이며(internal-stage 21건, 폴더명 불일치 `opal-pilot-dev-short` 1건 제외), `listed=false`도 URL 직접 접근 상세 조회는 200이다 |
+| FE 구성 | `pages/docs/{SkillDocsPage,types}` — 단일 컴포넌트가 두 라우트를 렌더한다. 좌측은 `listed=true`만 파일럿·오퍼레이터·독립 3그룹으로 묶은 `nav` 사이드바(canonical과 alias 병기, 선택 항목 `aria-current`, 모바일은 Sheet 토글), 우측은 `MarkdownView`로 `body.markdown`을 렌더한다. 검색 입력과 그룹·도메인 Select는 두지 않는다 |
+| 도구 확장 | `skill-registry.js verify-bundle --registry <path> --skills-root <path...>` — registry canonical set과 skills root 폴더 집합을 양방향 대조해 `{ok,total,missing_source,unregistered,ambiguous_alias}` 단일 라인 JSON 출력, 불일치 시 non-zero exit(기존 `validate`의 배포 환경 reverse scan 생략 계약은 불변) |
 
 | 항목 | 값 |
 |------|-----|
@@ -510,8 +525,8 @@ opal/                                    ← 이 저장소
 │   │   └── opal-convention-checker/     thin role — op-gc-convention 실행
 │   └── templates/                       프로젝트 에이전트 템플릿
 ├── dashboard/                           OPAL Console (로컬 프로젝트 관리 대시보드 — 태스크 021)
-│   ├── frontend/                        React + TS + Vite + shadcn/ui (7개 화면 — 설정 포함, 태스크 061)
-│   └── backend/                         FastAPI 데몬 (스캐너 + read-only 어댑터 + 파서)
+│   ├── frontend/                        React + TS + Vite + shadcn/ui (8개 화면 — 설정·OPAL Docs 포함, 태스크 061·140)
+│   └── backend/                         FastAPI 데몬 (스캐너 + read-only 어댑터 + 파서 + 스킬 문서 라우터, 태스크 140)
 ├── cursor-rules/                        Cursor 프로젝트 규칙 템플릿
 ├── scripts/                             설치 스크립트
 │   ├── install.sh                       One-liner installer 진입점 (mac / linux)

@@ -1,0 +1,9 @@
+{
+  "spec_version": "fixture-1",
+  "skill": "opal-pilot-project-build",
+  "meta": {
+    "mode_label": "Project Build",
+    "stages": ["P0", "P1", "P2", "P3", "P4", "P5"]
+  },
+  "task_steps": []
+}

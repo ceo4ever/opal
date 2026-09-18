@@ -44,7 +44,7 @@ node opal/tools/skill-registry/skill-registry.js <command> [args]
 
 커뮤니티 스킬의 설치 경로는 `~/.opal/community-skills/` 아래에서 vendor 중첩(`{vendor}/{basename}/SKILL.md`)을 먼저 찾고, 없으면 flat(`{basename}/SKILL.md`)으로 폴백해 해석한다.
 
-## 7개 서브 명령
+## 8개 서브 명령
 
 ### 1. `match` — 사용자 입력 → 스킬 해석
 
@@ -144,7 +144,25 @@ node ~/.opal/tools/skill-registry/skill-registry.js scan-risk <dir>
 - 파일 1MB 초과, 줄 길이 2000자 초과는 `skipped`로 건너뛴다(ReDoS·성능 방어).
 - 매칭된 줄은 `negated`(부정 토큰 포함) / `comment`(주석 줄) / `fixture`(픽스처 경로) / `active`로 분류되며, **verdict를 올리는 것은 `active`뿐이다.** 나머지는 `hits`에 남지만 판정에 반영되지 않는다.
 
-## 오류 코드
+### 8. `verify-bundle` — registry canonical set ↔ skills-root 폴더 set 양방향 대조
+
+```bash
+node ~/.opal/tools/skill-registry/skill-registry.js verify-bundle --registry=<path> --skills-root=<path> [--skills-root=<path> ...]
+```
+
+주어진 `--registry`(JSON 파일 경로) 하나와 `--skills-root`(반복 가능, `list`의 `--flag=value` 관례와 동일) 하나 이상을 받아, 배포 환경 고정 경로(`validate`/`validateUnregistered`가 쓰는 `opal/skills`·`skills`)와 무관하게 **인자로 받은 경로만** 대조한다. cwd나 배포 여부에 의존하지 않으므로 배포 번들 검증 등 외부 호출 맥락에서 쓴다(태스크 140 W-4, PLAN DEC-2·DEC-3·DEC-5).
+
+- registry JSON은 실제 `opal-skills-registry.json`과 동일한 `groups`(그룹명 → 엔트리 배열, community처럼 중첩 그룹도 가능) 스키마를 기대한다 — 평탄 `skills` 배열이 아니다. 내부적으로 `flattenGroups()`(다른 서브명령과 공유하는 정본 처리기)로 평탄화한 뒤 대조한다. `groups` 키가 없거나 객체가 아니면 `registry_not_found`다.
+- canonical identity는 registry 엔트리의 `name` = 폴더 basename이다.
+- registry에만 있는 `name`(대응 폴더 없음) → `missing_source`.
+- 폴더에만 있는 basename(레지스트리 미등재) → `unregistered`. 여러 `--skills-root`는 합집합으로 본다.
+- 같은 `alias`(scalar) 값이 서로 다른 두 개 이상의 canonical `name`을 가리키면 그 alias가 `ambiguous_alias`에 담긴다.
+- 반환: `{ ok, total, missing_source: [], unregistered: [], ambiguous_alias: [] }`. `total`은 registry canonical 수(중복 제거)다.
+- 셋 중 하나라도 비어있지 않으면 `ok: false`이고 **exit 1**이다. 정합이면 `ok: true`, 세 배열 모두 `[]`, **exit 0**이다.
+- 인자 누락(`--registry` 또는 `--skills-root` 부재), registry 파일 부재·파싱 실패는 `error`(안정 코드 식별자: `missing_registry_arg`/`missing_skills_root_arg`/`registry_parse_error`/`registry_not_found`)와 `message`(사람이 읽는 설명)로 분리해 반환하고 exit 1이다 — 다른 서브명령의 자유 문자열 `error` 관례와 달리 이 서브명령의 `error`는 안정 식별자다.
+- stdout은 항상 **단일 라인** JSON이다(다른 서브명령의 들여쓰기된 다중 라인 출력과 다르다) — 자동화 파서가 줄 수로 실패를 검증할 수 있게 한다.
+
+
 
 **선언 목록 없음.** 이 도구는 오류 코드 카탈로그를 정의하지 않는다. 실패는 `error` 필드에 **사람이 읽는 자유 문자열**로 담기므로(`Skill not found: ...`, `Not a directory: ...`, `Directory not found or inaccessible: ...`), 호출자는 `error` 문자열을 키로 분기하지 말고 존재 여부만 본다.
 
@@ -160,6 +178,8 @@ node ~/.opal/tools/skill-registry/skill-registry.js scan-risk <dir>
 ①②는 JSON을 stdout에 출력한 **뒤** exit 1하고, ③~⑤는 JSON 없이 usage/오류 문구를 stderr에 출력하고 exit 1한다. 즉 **exit 1이라고 stdout에 JSON이 있다고 가정할 수 없다.**
 
 `match`의 미발견(`found: false`)과 `list`의 빈 결과는 실패가 아니므로 exit 0이다.
+
+`verify-bundle`은 자체 exit 로직을 쓴다 — `ok === true`면 exit 0, 그 외(`ok: false`, 인자 누락, registry 파싱 실패 포함)는 모두 exit 1이며, 다른 서브명령과 달리 인자 누락 시에도 usage 문구가 아니라 stdout에 단일 라인 JSON(`error`/`message` 포함)을 출력한다.
 
 ## 제약
 
