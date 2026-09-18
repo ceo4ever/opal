@@ -1,4 +1,26 @@
 {
+  "SessionStart": [
+    {
+      "matcher": "",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "\"$HOME/.opal/.venv/bin/python\" \"$HOME/.opal/tools/ownership-tool/ownership_tool/session_start_hook.py\""
+        }
+      ]
+    }
+  ],
+  "PreToolUse": [
+    {
+      "matcher": "Edit|Write|NotebookEdit|Bash",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "\"$HOME/.opal/.venv/bin/python\" \"$HOME/.opal/tools/ownership-tool/ownership_tool/pretooluse_guard_hook.py\""
+        }
+      ]
+    }
+  ],
   "PostToolUse": [
     {
       "matcher": "Bash",
@@ -15,6 +37,15 @@
         {
           "type": "command",
           "command": "node \"$HOME/.opal/tools/code-scan/code-map-hook.js\""
+        }
+      ]
+    },
+    {
+      "matcher": "",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "\"$HOME/.opal/.venv/bin/python\" \"$HOME/.opal/tools/ownership-tool/ownership_tool/heartbeat_hook.py\""
         }
       ]
     }
@@ -37,6 +68,17 @@
         {
           "type": "command",
           "command": "\"$HOME/.opal/.venv/bin/python\" \"$HOME/.opal/tools/ownership-tool/ownership_tool/stop_hook.py\""
+        }
+      ]
+    }
+  ],
+  "SessionEnd": [
+    {
+      "matcher": "",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "\"$HOME/.opal/.venv/bin/python\" \"$HOME/.opal/tools/ownership-tool/ownership_tool/session_end_hook.py\""
         }
       ]
     }

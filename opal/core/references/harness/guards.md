@@ -56,7 +56,7 @@ legacy TASK는 기존 `## 명확화 결과` 기반 검증을 재개 호환으로
 
 ## 커밋 규칙
 
-기본 원칙은 **커밋은 사용자가 명시적으로 요청할 때만 수행한다**이다. 허브·기본 브랜치 commit, worktree의 merge·push·배포, rebase·reset·amend 등 Git 이력 재작성은 모드와 무관하게 사용자 승인 없이는 수행하지 않는다.
+기본 원칙은 **커밋은 사용자가 명시적으로 요청할 때만 수행한다**이다. 허브·기본 브랜치 commit, worktree의 merge·push·배포, rebase·reset·amend 등 Git 이력 재작성과 worktree 제거는 모드와 무관하게 사용자 승인 없이는 수행하지 않는다.
 
 등록된 전용 worktree에서는 다음의 폐쇄된 체크포인트 예외만 허용한다.
 

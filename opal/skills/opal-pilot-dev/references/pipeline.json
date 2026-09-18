@@ -5,7 +5,8 @@
   "transition_contract": {
     "vocabulary": ["continue", "await_user", "blocked", "complete"],
     "semi_agentic_boundary": "execute.implement",
-    "close_final_key": "close.final"
+    "close_final_key": "close.final",
+    "hub_execution_keys": ["close.worktree_finalize"]
   },
   "task_steps": [
     { "id": 1,  "key": "task.task_md",                 "stage": "TASK",          "item": "작업" },
@@ -38,7 +39,7 @@
     { "id": 17, "key": "close.docs_sync",              "stage": "CLOSE",         "item": "관련 문서 동기화 (조건부: 구현으로 문서 사실이 달라진 경우)", "conditional": true },
     { "id": 18, "key": "close.brain_ingest",           "stage": "CLOSE",         "item": "brain ingest (조건부: 프로젝트 brain 사용 시)", "conditional": true },
     { "id": 19, "key": "close.retrospective",          "stage": "CLOSE",         "item": "회고/개선 후보 기록" },
-    { "id": 20, "key": "close.worktree_finalize",      "stage": "CLOSE",         "item": "worktree finalize/attribution (조건부: --wt 실행 시)", "conditional": true },
+    { "id": 20, "key": "close.worktree_finalize",      "stage": "CLOSE",         "item": "worktree finalize/attribution (조건부: --wt 실행 시, 허브 수행)", "conditional": true },
     { "id": 21, "key": "close.final",                  "stage": "CLOSE",         "item": "CLOSE 최종 상태 확정" }
   ]
 }

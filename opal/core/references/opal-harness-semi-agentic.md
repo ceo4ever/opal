@@ -45,6 +45,7 @@
 ## 5. EXECUTE-equivalent 이후의 동작 (agentic 준용)
 
 - PM 자율 통과 (사용자 확인 행은 도구가 자동 승인 — 아래 참조)
+- 보정 가능한 이슈는 권한 범위 안에서 수정·재검증하고, 통과하면 사용자에게 중간 결정을 요구하지 않고 이어간다. unresolved 실패·계약 충돌·사용자 선택·재시도 한도 초과만 기존 승인·에스컬레이션 경계를 따른다 (`harness/guards.md` §커밋 규칙).
 - 등록된 전용 worktree에서도 EXECUTE·TEST 중간 체크포인트 커밋은 자율 수행하지 않는다. 변경은 누적하고, §6의 기존 CLOSE 진입 사용자 승인을 받은 뒤 구현·테스트 체크포인트를 만든다 (`harness/guards.md` §커밋 규칙).
 - AGENTIC-LOG.md 자동 생성 (EXECUTE 등가 첫 행 advance/mark 시점에 PM이 생성)
 - Gate 루핑 규칙: `opal-harness-agentic.md §5` 적용

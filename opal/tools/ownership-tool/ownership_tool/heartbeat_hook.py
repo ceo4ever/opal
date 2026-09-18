@@ -3,7 +3,7 @@
   "module": "ownership_tool.heartbeat_hook",
   "layer": "util",
   "domain": "opal-pipeline",
-  "description": "PostToolUse hook 어댑터(W-8). matcher 없이 모든 PostToolUse에서 발화해, 해석된 세션이 이미 소유한 lease의 heartbeat_at·lease_expires_at만 lease.heartbeat로 갱신하고 이미 존재하는 세션 registry 엔트리만 session_registry.register로 재등록해 만료를 늦춘다. ownership을 생성·이전하지 않는다 — claim을 호출하지 않으며 봉투가 canonical task를 명시해도 그것을 근거로 소유를 얻지 않고, 소유하지 않은 세션에는 아무 파일도 쓰지 않는다(완전 no-op). 소유 판정은 lease.classify의 current_session_owned 단일 기준이고 후보 task_path는 ownership_core.resolve_roots가 준 발급값(워크트리 사본의 task_path, 허브 registry 발급값)에서만 모은다 — cwd 문자열 자르기·부모 순회·디렉터리 탐색으로 추론하지 않는다. 세션 ID 해석은 ownership_core.resolve_session_id(D-18)에 위임하고 플랫폼 고유 변수명은 갖지 않는다(C-15). 전 경로 fail-safe exit 0.",
+  "description": "PostToolUse hook 어댑터(W-8). matcher 없이 모든 PostToolUse에서 발화해, 해석된 세션이 이미 소유한 lease의 heartbeat_at·lease_expires_at만 lease.heartbeat로 갱신하고 이미 존재하고 status가 session_registry.STATUS_ACTIVE인 세션 registry 엔트리만 session_registry.register로 재등록해 만료를 늦춘다 — register는 status를 무조건 active로 덮어쓰므로 SessionEnd가 closed로 닫은 레코드는 재등록 대상에서 제외해 되살아나지 않게 한다(registry_refreshed 거짓). ownership을 생성·이전하지 않는다 — claim을 호출하지 않으며 봉투가 canonical task를 명시해도 그것을 근거로 소유를 얻지 않고, 소유하지 않은 세션에는 아무 파일도 쓰지 않는다(완전 no-op). 소유 판정은 lease.classify의 current_session_owned 단일 기준이고 후보 task_path는 ownership_core.resolve_roots가 준 발급값(워크트리 사본의 task_path, 허브 registry 발급값)에서만 모은다 — cwd 문자열 자르기·부모 순회·디렉터리 탐색으로 추론하지 않는다. 세션 ID 해석은 ownership_core.resolve_session_id(D-18)에 위임하고 플랫폼 고유 변수명은 갖지 않는다(C-15). 전 경로 fail-safe exit 0.",
   "exports": ["owned_task_paths", "handle", "main"],
   "depends": ["ownership_tool.ownership_core", "ownership_tool.lease", "ownership_tool.session_registry"]
 }
@@ -108,15 +108,26 @@ def handle(payload, project_root=None, env=None, now=None):
     cwd = payload.get("cwd") or project_root
     root = project_root if project_root is not None else cwd
 
-    # 세션 registry는 **이미 있는** 엔트리만 재등록해 만료를 늦춘다. 없는 엔트리를 만들면
-    # 소유하지 않은 세션의 PostToolUse가 no-op이 아니게 되므로 만들지 않는다.
-    if root and ownership_core.read_json(
-        ownership_core.session_registry_path(root, session_id)
-    ).get("ok"):
-        registered = session_registry.register(root, session_id, cwd, now=now)
-        result["registry_refreshed"] = bool(registered.get("ok"))
-        if not registered.get("ok"):
-            result["diagnostics"].append("session_register_failed:{}".format(registered.get("error")))
+    # 세션 registry는 **이미 있는 active 엔트리만** 재등록해 만료를 늦춘다. 없는 엔트리를
+    # 만들면 소유하지 않은 세션의 PostToolUse가 no-op이 아니게 되므로 만들지 않고,
+    # active가 아닌 레코드(SessionEnd가 닫은 closed 등)는 register가 status를 무조건
+    # STATUS_ACTIVE로 덮어쓰므로 호출 자체를 하지 않는다 — 닫힌 세션은 되살아나지 않는다.
+    if root:
+        record = ownership_core.read_json(
+            ownership_core.session_registry_path(root, session_id)
+        )
+        data = record.get("data")
+        if (
+            record.get("ok")
+            and isinstance(data, dict)
+            and data.get("status") == session_registry.STATUS_ACTIVE
+        ):
+            registered = session_registry.register(root, session_id, cwd, now=now)
+            result["registry_refreshed"] = bool(registered.get("ok"))
+            if not registered.get("ok"):
+                result["diagnostics"].append(
+                    "session_register_failed:{}".format(registered.get("error"))
+                )
 
     owned, roots_diagnostic = owned_task_paths(cwd, session_id, now=now)
     if roots_diagnostic:

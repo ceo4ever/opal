@@ -36,7 +36,7 @@
 | `skills/` | 독립 스킬 소스 | 파이프라인 없이 단독 사용하는 스킬 (8종) |
 | `opal/skills/` | OPAL 스킬 소스 | 오케스트레이터, 단계 스킬 등 OPAL 전용 (44종) |
 | `opal/agents/` | 워커 에이전트 소스 | 모든 서브에이전트 정의 (16종) |
-| `opal/tools/` | OPAL 도구 소스 | 결정론 집행 CLI (22종, `event-loader`와 `ego-browser-tool` 포함) |
+| `opal/tools/` | OPAL 도구 소스 | 결정론 집행 CLI (27종, `event-loader`와 `ego-browser-tool` 포함) |
 | `opal/core/` | 프레임워크 코어 | 레퍼런스, MCP 설정, 도구 |
 | `opal/bootstrapper/` | 부트스트래퍼 | 플랫폼별 부트스트랩 진입점 (claude/codex/cursor/gemini) |
 | `opal/templates/` | 템플릿 | 배포 시 참조하는 설정 템플릿 |
@@ -258,7 +258,7 @@ TEST-SCENARIO 단계를 "목표 달성 검증"으로 재정의 — 루브릭 채
 | `opal/core/references/harness/modes.md` | 실행 모드 SSOT | interactive/semi-agentic/agentic의 단계 경계·자동 계속·사용자 대기 계약 | Framework | `pilot.start` 이벤트와 기존 태스크 재개, mode 전이 판단 시 |
 | `opal/core/references/harness/state.md` | state-tool 전이 계약 | `transition_action`/`report_type`/`next_action`, CLOSE final, 사용자 확인 자동 승인 예외 | Framework | 상태 전이·재개·CLOSE tail·사용자 확인 행 처리 시 |
 | `opal/core/references/harness/task-process.md` | TASK 단계 전이 계약 | TASK 완료 보고가 구조화 전이 출력을 소비하고, 산문 승인 질문을 전이 판정 근거로 쓰지 않도록 하는 단계 경계 규칙 | Framework | TASK 작성·완료 직후 다음 행동 판정 시 |
-| `opal/core/hooks/claude-hooks.json` | Claude Code hook source | Stop hook에서 active state의 `transition_action=continue`를 감지해 종료 차단·`next_action` 재개 안내를 제공 | Framework | 설치·아카이브 검증과 Claude 플랫폼 실행 지속성 점검 시 |
+| `opal/core/hooks/claude-hooks.json` | Claude Code hook source | Stop hook은 `ownership-tool`의 stop hook 어댑터에 위임한다 — 세션 소유 태스크를 registry로 판정한 뒤 `transition_action=continue`이면 종료 차단·`next_action` 재개 안내를 반환하고, 무소유·타세션 소유·판정 불능은 통과시킨다 | Framework | 설치·아카이브 검증과 Claude 플랫폼 실행 지속성 점검 시 |
 | `opal/skills/opal-pilot-*/references/pipeline*.json` | Pilot pipeline fixture | 단계 행 key, gate, `transition_contract`, CLOSE tail(`close.done_md`~`close.final`)의 기계가독 SSOT | Framework | state-tool init, cross-Pilot conformance, 모드 경계·CLOSE 완료 판정 시 |
 | `docs/run-log/PRD.md` | 태스크 실행 로그 제품 요구 | 목표·비목표·요구(R-1~R-21)·Phase 인도 범위·성공 판정 귀속 | Framework | 실행 로그 관련 작업의 범위·우선순위 판단 시 |
 | `docs/run-log/TRD.md` | 태스크 실행 로그 기술 결정 | 아키텍처 결정(D-1~D-9)·구성요소 책임 경계·데이터 흐름·동시성/시간/보안 모델·단계별 도입 순서 | Framework | run-log 구현·확산 태스크의 설계 판단 시 |

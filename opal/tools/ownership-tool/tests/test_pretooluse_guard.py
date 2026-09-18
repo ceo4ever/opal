@@ -11,9 +11,19 @@ from __future__ import annotations
 import json
 import shutil
 import tempfile
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 FIXTURES_ROOT = Path(__file__).parent / "fixtures"
+# A: fixtures/runtime/owner-current-session.json의 lease_expires_at은 고정 시각이 아니라
+# "{NOW+1H}" 템플릿이다(값 자체는 파싱 불가 — lease._parse_dt가 None으로 접어 안전하게
+# 무시됨). 이 fixture로 foreign_session_owned를 재현해야 하는 소비 지점(여기)에서만
+# 실행 시점 기준 미래 값으로 명시 계산해 덮어쓴다 — wall-clock에 무관하게 결정적이다.
+_KST = timezone(timedelta(hours=9))
+
+
+def _future_lease_expiry() -> str:
+    return (datetime.now(_KST) + timedelta(hours=1)).isoformat()
 
 
 def _clone_fixtures() -> tuple[Path, Path, Path]:
@@ -92,7 +102,12 @@ def test_foreign_owner_blocks_edit_and_git_commit(monkeypatch):
     )
     owner_record["task_path"] = str(task_dir)
     owner_record["owner_session_id"] = "sess-owner"
-    owner_record["status"] = "hub_owned"
+    # B: lease.py의 실제 status 어휘는 active/released 2종뿐이다(hub_owned는
+    # worktree_tool의 execution_ownership FSM 토큰이며 다른 도메인). live lease를
+    # 표현하려면 lease.claim()이 실제로 쓰는 "active"를 주입해야 한다.
+    owner_record["status"] = "active"
+    # A: 템플릿 lease_expires_at을 실행 시점 기준 미래로 계산해 덮어쓴다.
+    owner_record["lease_expires_at"] = _future_lease_expiry()
     owner_path = task_dir / "run" / ".runtime" / "owner.json"
     owner_path.parent.mkdir(parents=True, exist_ok=True)
     owner_path.write_text(json.dumps(owner_record), encoding="utf-8")
@@ -143,7 +158,12 @@ def test_foreign_owner_allows_read_and_ls_with_diagnostic(monkeypatch):
     )
     owner_record["task_path"] = str(task_dir)
     owner_record["owner_session_id"] = "sess-owner"
-    owner_record["status"] = "hub_owned"
+    # B: lease.py의 실제 status 어휘는 active/released 2종뿐이다(hub_owned는
+    # worktree_tool의 execution_ownership FSM 토큰이며 다른 도메인). live lease를
+    # 표현하려면 lease.claim()이 실제로 쓰는 "active"를 주입해야 한다.
+    owner_record["status"] = "active"
+    # A: 템플릿 lease_expires_at을 실행 시점 기준 미래로 계산해 덮어쓴다.
+    owner_record["lease_expires_at"] = _future_lease_expiry()
     owner_path = task_dir / "run" / ".runtime" / "owner.json"
     owner_path.parent.mkdir(parents=True, exist_ok=True)
     owner_path.write_text(json.dumps(owner_record), encoding="utf-8")

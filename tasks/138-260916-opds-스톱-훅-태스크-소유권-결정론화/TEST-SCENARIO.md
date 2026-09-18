@@ -45,3 +45,36 @@ template: sdlc-v2
 | S-27 | H-8 | 3개 런타임 경로(세션 registry·hub lease·stop receipt)에 파일 생성 | `git status --porcelain` (허브·worktree 양쪽) | 3경로 파일이 출력에 나타나지 않음(`.gitignore:2`·`:49` 커버). 추가 gitignore 편집 0건 | unit — `test_ownership_core.py` | 구현 후 |
 | S-28 | C-11, AC-16 | D-3 enum 정의와 evaluator 반환 전건 | 스키마 검증기로 fixture 전건의 반환값 검사 | `decision_kind` 7종·`diagnostic` 10종 외 값 0건. 정상 완료·대기·비활성·동일 fingerprint 통과가 서로 다른 `decision_kind`로 구분 | unit — `test_decisions.py` | 구현 전 RED |
 | S-29 | H-1, H-2, H-3 | 실제 Claude Code 세션 1회(허브 cwd) + 서브에이전트 1회 디스패치 | 5종 hook 봉투를 파일로 캡처(W-2), 서브에이전트 Bash에서 `echo $OPAL_SESSION_ID`·`echo $CLAUDE_ENV_FILE` | 캡처 파일 5종에 `session_id`·`cwd` 필드 실재 여부 기록. 서브에이전트 Bash의 `OPAL_SESSION_ID` 상속 여부 기록. `CLAUDE_ENV_FILE` 경로 제공 여부 기록. 설치 후 허브 cwd 세션에서 132 계열 shadow 상태(허브 사본 `continue` + registry active 워크트리 canonical)로 Stop 1회 발화 → **비차단 실관측**(S-1 운영 재현). **부재 항목은 해당 W(W-7·W-8·W-9)의 fail-safe 분기를 S-10~S-12의 검증 대상으로 전환**하고 결과를 AGENTIC-LOG에 남긴다 | integration(1회 실캡처) — EXECUTE 첫 검증 | 구현 후(W-2 시점) |
+
+## 수동 E2E 절차 (W-20 보강 — S-25·S-29 실측 심화, 자동화 대상 아님)
+
+이 절은 위 S-1~S-29 표를 재작성하지 않고 추가한다. 실제 Claude TUI·`opal-agent --provider claude --cwd <worktree_root> -p` 경로는 자동화 스위트가 대신 관측할 수 없으므로 소유자 또는 PM이 수동으로 수행하고 아래 체크리스트로 결과를 남긴다(DONE.md 또는 AGENTIC-LOG.md에 항목별 관측값을 기록).
+
+### 1. cwd 전달·session ID 전달·global Stop hook 발화 확인 (PLAN 명시 3종, S-25 실측 심화)
+
+- [ ] 워크트리 루트(`<hub>/.opal-worktrees/task_<NNN>/`, 워크트리 안에 `.opal-worktrees` 없음)에서 실제 Claude TUI를 기동한다.
+- [ ] TUI 안에서 `echo $OPAL_SESSION_ID`를 실행해 값이 비어 있지 않은지 확인하고, 그 값이 세션 registry(`<worktree_root>/.opal/run/.runtime/sessions/<session_id>.json`)에 실제로 기록된 `session_id`와 일치하는지 대조한다.
+- [ ] 최초 SessionStart hook 봉투의 `cwd`가 워크트리 루트와 일치하는지 확인한다(가능하면 hook 로그·디버그 출력을 근거로 삼는다 — 추정 금지).
+- [ ] 응답을 종료(Stop 트리거)해 global Stop hook이 **정확히 1회** 발화하는지 확인하고, 차단/통과 결과가 `stop_evaluator.evaluate()`가 그 시점 state로 계산했을 판정과 일치하는지 대조한다.
+- [ ] 3항목(cwd 전달·session ID 전달·global Stop hook 발화) 각각의 관측값을 기록한다.
+
+### 2. orca 기동 후 SessionStart claim → prompt receipt 승격 확인 (AGENTIC-LOG #94)
+
+- [ ] 허브에서 `--wt` 실행으로 orca 어댑터를 통해 워크트리 세션을 기동한다.
+- [ ] `orca terminal create --json`의 stdout이 prompt 제출 receipt(`prompt_id`·`submitted_at`)를 직접 주는지 관측한다.
+- [ ] `--json`이 주지 않으면(`worktree_launcher.adapters.orca.PROMPT_SOURCE_SESSIONSTART_CLAIM` 대체 경로), registry `execution_ownership.prompt_receipt`가 그 뒤 실제로 채워지는 시점·경로를 관측한다 — **"`orca terminal create`는 제출 receipt를 돌려주지 않아 실사용 receipt가 관측에서 와야 한다"는 전제(AGENTIC-LOG #94)가 실측과 일치하는지**를 이 항목에서 판정한다.
+- [ ] 관측된 실사용 receipt 원문(경로·값 요약)을 기록한다.
+
+### 3. S-29 fixture 교체 절차 (`fixtures/hook-payloads/*.json` 5종 + `orca-json-response.json`)
+
+- [ ] 배포 완료 후 실제 Claude Code 세션 1회(허브 cwd)로 SessionStart·PreToolUse·PostToolUse·Stop·SessionEnd 5종 hook 봉투를 캡처한다(S-29 integration 항목과 공유).
+- [ ] 캡처된 봉투와 `opal/tools/ownership-tool/tests/fixtures/hook-payloads/*.json`(현재 `_fixture.captured: false` 합성)의 스키마를 대조하고, 차이가 있으면 실측 스키마로 fixture를 교체한다(`{HUB}`/`{WT}` 플레이스홀더 규약은 유지, `fixtures/README.md` 갱신).
+- [ ] `opal/tools/ownership-tool/tests/fixtures/launcher/orca-json-response.json`의 stdout 스키마(`--help` 플래그만 근거로 한 가정)를 실제 `orca terminal create --json` 응답으로 교체하거나, 필드가 여전히 미실측이면 그 사실을 `_fixture` 메타에 명시해 둔다.
+- [ ] 교체 후 `~/.opal/.venv/bin/python -m pytest opal/tools/ownership-tool/tests opal/tools/worktree-launcher/tests`를 재실행해 기존·신규 테스트가 여전히 pass하는지 확인한다.
+
+### 4. 부팅 시 조용함 확인 (D-21 passive_ownership)
+
+- [ ] 워크트리에서 세션을 새로 시작해 인사만 하고(상태를 전진시키지 않고) 응답을 종료한다.
+- [ ] 이 시점 Stop hook이 **차단하지 않고 통과**하는지, 그리고 진단에 `passive_ownership`만 남고(강제 후보에서 제외) 소유권 분류(`current_session_owned`) 자체는 유지되는지 확인한다.
+- [ ] 이어서 실제 작업으로 상태를 1단계 이상 전진시켜(`state-tool advance` 등으로 lease `claim_source`가 `session_start`→`state_transition`으로 승격) 다시 응답을 종료하고, 이번에는 Stop hook이 정상적으로 차단(`block_continue`)하는지 확인한다.
+- [ ] 두 결과("조용한 부팅" → "상태 전진 후 정상 차단")를 함께 기록한다 — 하나만 관측하고 완료로 표시하지 않는다.

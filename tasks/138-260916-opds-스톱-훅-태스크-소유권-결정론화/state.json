@@ -4,7 +4,7 @@
   "mode": "agentic",
   "schema_version": "1.2",
   "created_at": "2026-09-16 23:48:42",
-  "updated_at": "2026-09-17 16:00:10",
+  "updated_at": "2026-09-18 17:54:18",
   "current_status": "in_progress",
   "rows": [
     {
@@ -96,34 +96,36 @@
       "stage": "EXECUTE",
       "item": "작업",
       "key": "execute.implement",
-      "status": "in_progress",
-      "status_label": "🔄",
-      "timestamp": "2026-09-17 16:00:10",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-18 17:38:09",
       "owner": "PM",
-      "note": null,
-      "step": "5/20"
+      "note": "Work items 22/22 완료. 워커 소요는 EXECUTE 구간 서브에이전트 38회의 duration_ms 합산치(19,011,939ms≈317분)이며, 다수가 병렬 실행이라 실제 경과 시간은 이보다 짧다",
+      "step": "5/20",
+      "worker_duration_minutes": 317
     },
     {
       "row_id": 8,
       "stage": "TEST",
       "item": "작업",
       "key": "test.run_tests",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-18 17:38:10",
       "owner": "PM",
-      "note": null
+      "note": "시나리오 29건 판정. 워커 소요는 TEST 구간 서브에이전트 4회의 duration_ms 합산치(2,173,118ms≈36분)",
+      "worker_duration_minutes": 36
     },
     {
       "row_id": 9,
       "stage": "TEST",
       "item": "PM Gate",
       "key": "test.pm_gate",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-18 17:30:23",
       "owner": "PM",
-      "note": null,
+      "note": "PM Gate pass — AC 29/29·C 23/23 전건 시나리오 연결 실측(미연결 0). 28 pass, 유일 비-pass는 S-25 awaiting_human으로 install 선행이 구조적 전제이며 캡틴 승인으로 이월. 산출물 직접 확인: TEST.md 101행·표 38행, test-scenario.json은 test-tool 마킹으로만 갱신. TEST에서 구현 코드 변경 0건",
       "gate": {
         "artifacts": [
           "TEST-SCENARIO.md",
@@ -142,33 +144,33 @@
       "stage": "TEST",
       "item": "사용자 확인",
       "key": "test.user_confirm",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
-      "owner": "PM",
-      "note": null
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-18 17:33:42",
+      "owner": "user",
+      "note": "캡틴 확인: TEST 결과 보고 후 '진입해줘'로 CLOSE 진입 승인. S-25는 배포 후 수행으로 이월 승인(awaiting_human)"
     },
     {
       "row_id": 11,
       "stage": "CLOSE",
       "item": "DONE.md 생성",
       "key": "close.done_md",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-18 17:38:16",
       "owner": "PM",
-      "note": null
+      "note": "DONE.md 생성 — done-template.md SSOT 5절 1:1 일치, 회고적 학습 후보 4행이 레포 상대 POSIX 경로 1행 1건 계약 준수, 누적 이력 절 0건"
     },
     {
       "row_id": 12,
       "stage": "CLOSE",
       "item": "관련 문서 동기화 (조건부: 구현으로 문서 사실이 달라진 경우)",
       "key": "close.docs_sync",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-18 17:52:37",
       "owner": "PM",
-      "note": null,
+      "note": "문서 동기화 4건 실측 확인 — docs/PROJECT.md:39 도구 22종→27종(git ls-tree main 25 + ownership-tool·worktree-launcher 2), PROJECT.md:261 claude-hooks.json 행을 stop hook 어댑터 위임으로 갱신, ARCHITECTURE.md:270 실행 지속성 어댑터 경계 동일 갱신, ownership-tool/README.md는 (7)/(10) 개수 서술을 제거하고 decisions.py를 SSOT로 지시. __init__.py @header description도 하위 모듈 나열 대신 디렉터리 SSOT 포인터로 교정(JSON 파싱 확인). 재검증 ownership-tool 56 passed·worktree-launcher 15 passed",
       "conditional": true
     },
     {
@@ -176,11 +178,11 @@
       "stage": "CLOSE",
       "item": "brain ingest (조건부: 프로젝트 brain 사용 시)",
       "key": "close.brain_ingest",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-18 17:52:43",
       "owner": "PM",
-      "note": null,
+      "note": "brain page 4건 생성(brain-tool add-page) — concept 3건(red-corpus-precedes-contract-fabricates-layout, worktree-locates-hub-by-issued-copy, stop-force-requires-state-transition-claim) + entity 1건(ownership-tool). DONE.md '회고적 학습 후보' 선언 4건과 MATCH 4 / MISSING 0 대조, S⊆D 충족. brain-tool lint ok:true, 신규 issue 0건",
       "conditional": true
     },
     {
@@ -188,11 +190,11 @@
       "stage": "CLOSE",
       "item": "회고/개선 후보 기록",
       "key": "close.retrospective",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-18 17:54:18",
       "owner": "PM",
-      "note": null
+      "note": "개선 후보 5건 기록(improve-tool record --scope fw --situation retrospective, fw-inbox 5파일 생성 확인) — (1) RED 코퍼스가 구현 계약보다 먼저 작성되면 레이아웃을 날조(동일 유형 4회 반복, B-3 Critical 포함) → red-first.md 실재-레이아웃 [MUST] 조항, (2) merge-hooks.py가 _help 등 _ 접두 키를 hook 이벤트로 순회, (3) hook 차단은 PM 승격 근거가 아니다 — 부트스트랩 무확인 진입 사고의 규칙 공백, (4) 워커마다 동일 스위트 반복 실행(EXECUTE 38회 317분의 상당 부분) → 완료 기준을 델타 스위트로, (5) 범위 밖 문서 드리프트 4건 잔류 → 개수 서술 금지·SSOT 포인터 조항. 5건 모두 태스크 138 범위 밖이라 본 태스크에서 수정하지 않고 후보로만 기록"
     },
     {
       "row_id": 15,
@@ -218,7 +220,7 @@
       "note": null
     }
   ],
-  "next_action": "EXECUTE 작업 진행 중",
+  "next_action": "CLOSE worktree finalize/attribution (조건부: --wt 실행 시) 진입",
   "worktree": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_138",
   "run_log": {
     "contract_version": "1.0",

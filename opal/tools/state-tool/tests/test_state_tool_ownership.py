@@ -86,22 +86,53 @@ class TestS11OwnershipSessionIntegration(unittest.TestCase):
         )
 
     def test_env_set_run_log_actor_session_id_filled(self):
-        """OPAL_SESSION_ID env 값이 run-log 이벤트 actor.session_id로 채워진다."""
-        init_result = self._init()
+        """OPAL_SESSION_ID env 값이 run-log 사건 actor.session_id로 채워진다.
+
+        [MUST] 1.0/1.1 태스크는 run_log 블록 자체가 없고 run_log_commit()이
+        save_state_json()으로 우회한다(state_tool.py C-3) — 대조할 사건이 애초에
+        생성되지 않는다. `--run-log-mode shadow`로 schema 1.2 + run_log 블록을
+        만들어야 검증이 가능하다. 커밋된 사건은 drain되어 `<task>/run/run-log-*.jsonl`
+        조각에 실리고 pending_events는 비워지므로(state_tool.py _run_log_drain),
+        state.json의 존재한 적 없는 `run_log.events` 키가 아니라 그 조각을 관측한다
+        (같은 태스크의 test_state_tool.py::TestT138W9ActorSessionId._events()와 동일 패턴)."""
+        init_result = _run(
+            [
+                "init",
+                str(self.task_path),
+                "--skill",
+                "opds",
+                "--mode",
+                "agentic",
+                "--task-title",
+                "S-11 RED",
+                "--rows-spec",
+                SIMPLE_ROWS_SPEC,
+                "--run-log-mode",
+                "shadow",
+            ]
+        )
         self.assertEqual(init_result.returncode, 0, init_result.stderr)
 
         env = {"OPAL_SESSION_ID": "sess-s11-red-0002"}
-        _run(["advance", str(self.task_path), "--row", "1"], env=env)
+        advance_result = _run(["advance", str(self.task_path), "--row", "1"], env=env)
+        self.assertEqual(advance_result.returncode, 0, advance_result.stderr)
+
+        events = []
+        for segment in sorted((self.task_path / "run").glob("run-log-*.jsonl")):
+            for line in segment.read_text(encoding="utf-8").splitlines():
+                if line.strip():
+                    events.append(json.loads(line))
 
         state_path = self.task_path / "state.json"
         state = json.loads(state_path.read_text(encoding="utf-8"))
-        run_log = state.get("run_log", {})
-        events = run_log.get("events") or run_log.get("pending_events") or []
+        pending_events = state.get("run_log", {}).get("pending_events") or []
+        events.extend(e for e in pending_events if isinstance(e, dict))
+
         actor_session_ids = [e.get("actor", {}).get("session_id") for e in events if isinstance(e, dict)]
         self.assertIn(
             "sess-s11-red-0002",
             actor_session_ids,
-            f"S-11 RED 기대: run-log actor.session_id 연동 미구현 — events={events!r}",
+            f"run-log 사건(조각+pending_events)에 actor.session_id가 채워져야 한다 — events={events!r}",
         )
 
     def test_env_unset_transition_unchanged_regression_guard(self):

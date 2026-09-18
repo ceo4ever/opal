@@ -1,23 +1,37 @@
 # ownership-tool
 
-태스크 소유권 판정의 런타임 저장소와 폐쇄 enum 계약을 소유하는 도구다. 현재 구현 범위는
-코어(W-1)까지이며 CLI 표면과 hook 어댑터는 후속 Work item이 채운다.
+태스크 소유권 판정의 런타임 저장소·폐쇄 enum 계약과 플랫폼 hook 어댑터를 소유하는 도구다.
+hook 어댑터는 `opal/core/hooks/claude-hooks.json`에 등재돼 Claude Code가 직접 실행한다(등재 지점이 SSOT).
+CLI 표면(`ownership_tool/cli.py`)은 아직 없어 `run.sh`는 패키지 import만 확인하고 `not_implemented`를 반환한다.
 
 ## 패키지 레이아웃 (PLAN D-19)
 
 ```
 opal/tools/ownership-tool/
-├── run.sh                  # OPAL .venv 래퍼 (CLI 미구현 — not_implemented 반환)
+├── run.sh                      # OPAL .venv 래퍼 (CLI 미구현 — not_implemented 반환)
 ├── README.md
-├── ownership_tool/         # 파이썬 패키지
+├── ownership_tool/             # 파이썬 패키지
 │   ├── __init__.py
-│   ├── ownership_core.py   # 경로·스키마·lock·registry 어댑터·세션 ID 해석
-│   ├── decisions.py        # D-3 폐쇄 enum과 구조화 판정 결과
-│   └── claude_adapter.py   # 플랫폼 고유 env 변수명 격리 (D-18, C-15)
+│   ├── ownership_core.py       # 경로·스키마·lock·registry 어댑터·세션 ID 해석
+│   ├── decisions.py            # D-3 폐쇄 enum과 구조화 판정 결과
+│   ├── claude_adapter.py       # 플랫폼 고유 env 변수명 격리 (D-18, C-15)
+│   ├── session_registry.py     # 세션 registry 저장소 기록기
+│   ├── lease.py                # hub task lease claim·heartbeat·release·classify
+│   ├── resolver.py             # worktree/hub 후보 resolver (registry meta 기반)
+│   ├── fingerprint.py          # state 의미 필드 정규화 + SHA-256 fingerprint
+│   ├── stop_evaluator.py       # Stop 판정 조립기 (후보 선택은 resolver에 위임)
+│   ├── stop_hook.py            # Stop hook 어댑터
+│   ├── session_start_hook.py   # SessionStart hook 어댑터
+│   ├── pretooluse_guard_hook.py # PreToolUse hook 어댑터 (D-6 가드)
+│   ├── heartbeat_hook.py       # PostToolUse hook 어댑터 (lease heartbeat)
+│   └── session_end_hook.py     # SessionEnd hook 어댑터 (lease release)
 └── tests/
-    ├── conftest.py         # tool-dir을 sys.path에 삽입
+    ├── conftest.py             # tool-dir을 sys.path에 삽입
     └── fixtures/
 ```
+
+hook 어댑터는 판정 로직을 갖지 않는다 — 봉투 파싱·출력 형식만 소유하고 판정은 `stop_evaluator`·`lease`·
+`resolver`가 맡는다. 어떤 실패에서도 세션을 막지 않는 fail-safe(전 경로 예외 삼킴 + exit 0)가 공통 규약이다.
 
 `ownership-tool`은 하이픈 디렉터리라 패키지명이 될 수 없으므로 `ownership_tool/` 하위 패키지를 둔다.
 테스트는 `from ownership_tool import decisions` 형태로 import하며 `tests/conftest.py`가 경로를 잇는다.
@@ -87,8 +101,10 @@ loaded = core.read_json(path)   # error: not_found | invalid_json | read_failed
 
 | enum | 값 |
 |---|---|
-| `DECISION_KINDS` (7) | `allow_complete` · `allow_await_user` · `allow_inactive` · `allow_no_progress_same_fingerprint` · `allow_block_cap_reached` · `block_continue` · `defer_to_pm` |
-| `DIAGNOSTICS` (10) | `no_owned_task` · `multiple_hub_tasks` · `worktree_owned_shadow` · `foreign_owner` · `invalid_registry` · `invalid_state` · `launch_failed` · `no_progress_same_fingerprint` · `lease_expired` · `foreign_owner_bash_unclassified` |
+| `DECISION_KINDS` | `allow_complete` · `allow_await_user` · `allow_inactive` · `allow_no_progress_same_fingerprint` · `allow_block_cap_reached` · `block_continue` · `defer_to_pm` |
+| `DIAGNOSTICS` | `no_owned_task` · `multiple_hub_tasks` · `worktree_owned_shadow` · `foreign_owner` · `invalid_registry` · `invalid_state` · `launch_failed` · `no_progress_same_fingerprint` · `lease_expired` · `foreign_owner_bash_unclassified` · `passive_ownership` |
+
+값 집합의 SSOT는 `ownership_tool/decisions.py`의 두 튜플이며, 위 표는 그 사본이다.
 
 ## 테스트
 

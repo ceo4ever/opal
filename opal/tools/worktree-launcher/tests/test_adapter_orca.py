@@ -2,31 +2,27 @@
 # module: worktree_launcher.tests.test_adapter_orca
 # layer: test
 # domain: worktree-launcher
-# description: RED-first — worktree_launcher.adapters.orca.launch() 공개 계약 검증 (S-16)
+# description: RED-first — worktree_launcher.adapters.orca.launch() 공개 계약 검증 (S-16). fixtures/README.md 계약대로 `orca-json-response.json`의 `{WT}` 플레이스홀더를 tmp 경로로 치환해 읽고, handle이 `adapter_handle`로 반환됨을 단언한다.
 # exports: (none — pytest module)
 # depends: worktree_launcher.adapters.orca (미구현), ownership-tool fixtures/launcher
 """RED 테스트 — 구현 전."""
 from __future__ import annotations
 
 import json
-import shutil
-from pathlib import Path
 
-FIXTURES_ROOT = (
-    Path(__file__).parent.parent.parent / "ownership-tool" / "tests" / "fixtures" / "launcher"
-)
+from conftest import load_launcher_fixture
 
 
 def test_orca_launch_invokes_expected_argument_shape(monkeypatch, tmp_path):
     """호출 인자가 `terminal create --worktree path:<worktree_root> --command … --json` 형태이고
-    worktree/checkout 생성 서브명령 0건."""
+    worktree/checkout 생성 서브명령 0건. handle은 `adapter_handle`로 반환된다(S-16)."""
     from worktree_launcher.adapters import orca  # RED
 
     recorded = {}
+    response = load_launcher_fixture("orca-json-response.json", hub=tmp_path, wt_parent=tmp_path)
 
     def fake_run(args, **kwargs):
         recorded["args"] = args
-        response = json.loads((FIXTURES_ROOT / "orca-json-response.json").read_text(encoding="utf-8"))
         class _P:
             returncode = 0
             stdout = json.dumps(response)
@@ -34,16 +30,16 @@ def test_orca_launch_invokes_expected_argument_shape(monkeypatch, tmp_path):
         return _P()
 
     monkeypatch.setattr(orca, "_run_subprocess", fake_run)
-    orca.launch(worktree_root=tmp_path, command="claude")
+    result = orca.launch(worktree_root=tmp_path, command="claude")
 
     args = recorded["args"]
     assert "terminal" in args and "create" in args
     assert any(a.startswith("--worktree") or a == "--worktree" for a in args)
     assert "--json" in args
-    forbidden = {"worktree", "checkout"}
     joined = " ".join(args)
     assert "worktree add" not in joined
     assert "checkout -b" not in joined
+    assert result["adapter_handle"] == response["terminal"]["handle"]
 
 
 def test_orca_absent_returns_failure_no_fallback(monkeypatch, tmp_path):

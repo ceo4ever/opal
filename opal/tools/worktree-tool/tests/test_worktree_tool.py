@@ -12,6 +12,7 @@
 
 from __future__ import annotations
 
+import datetime
 import hashlib
 import json
 import os
@@ -3040,31 +3041,269 @@ def test_t124_s28_fixture_matches_pug_observed_shape_and_is_supported(tmp_path):
 
 
 class TestOwnershipSetRed:
-    """태스크 138 S-14 — RED-first. `worktree-tool ownership-set` 서브커맨드는 아직
-    구현되지 않았다(6 허용 조합/금지 조합 전이, atomic replace, legacy 통과).
-    @header exports: [] depends: [conftest.py, worktree_tool.py]"""
+    """태스크 138 S-14. `worktree-tool ownership-set` 서브커맨드의 6 허용 조합/금지 조합
+    전이, legacy 통과를 시나리오 선언(TEST-SCENARIO.md S-14: "임시 registry 메타(v2) +
+    legacy 메타(version 부재)")대로 **등록된 canonical task path**를 대상으로 검증한다.
+    미등록 허브 루트를 그대로 넘겨 `ownership-set`이 원점부터 행을 upsert하게 만드는 배치는
+    쓰지 않는다 — 그 경로는 `session_launching → worktree_session_owned`의 receipt
+    가드(AC-7·AC-8·C-15)를 우회해 직행 전이를 만든다. 허용 조합 케이스는 `create`로 발급한
+    v2 registry 행을 `hub_owned → session_launching → worktree_session_owned`(receipt
+    완비) 순서로 밟아 가드를 우회하지 않고 통과시킨다(GREEN). legacy 케이스는 등록된
+    허브에 실제 legacy 메타(version 부재)를 배치하지만, 그 `worktree_root`가 가리키는
+    디렉터리를 만들지 않는다(legacy 메타는 태스크 138 이전부터 있던 항목이라 이미 회수돼
+    사라진 worktree를 가리킬 수 있다) — `status --task-path`가 대상 경로의 `is_dir()`를
+    요구해 이 경우 `PROJECT_ROOT_NOT_FOUND`로 실패한다(RED, 후속 구현 워커 몫).
+    @header exports: [] depends: [conftest.py, worktree_tool.py]
+
+    receipt 객체화(PLAN W-11): `--launch-receipt`/`--prompt-receipt`는 registry meta에
+    **객체**로만 기록되는 계약이다. launch는 `adapter`·`adapter_handle`·`reported_cwd`·
+    `launched_at`, prompt는 `prompt_id`·`submitted_at` 키를 갖는다(값은
+    `worktree_launcher/launcher_core.py:36-37`의 `LAUNCH_RECEIPT_FIELDS`·
+    `PROMPT_RECEIPT_FIELDS`를 베낀 것이며 이 파일은 도구 경계상 `worktree_launcher`를
+    import하지 않는다). 객체가 아닌 불투명 토큰(JSON이 아닌 문자열)은
+    `ownership_receipt_invalid`로 거부돼야 하지만, 현재 구현(`worktree_tool.py`
+    `_parse_receipt_arg`)은 값이 `{`로 시작할 때만 JSON으로 파싱하고 그 밖의 문자열은
+    그대로 저장해 성공시킨다 — `test_s14_ownership_set_opaque_receipt_string_rejected`가
+    이 틈을 RED로 집행한다.
+    """
+
+    _LAUNCH_RECEIPT_FIELDS = ("adapter", "adapter_handle", "reported_cwd", "launched_at")
+    _PROMPT_RECEIPT_FIELDS = ("prompt_id", "submitted_at")
+
+    @classmethod
+    def _launch_receipt_json(cls, tag: str) -> str:
+        """실행 시점 기준 상대 timestamp로 launch receipt 객체를 만들어 JSON 문자열로
+        직렬화한다(시간 고정값 금지)."""
+        now = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        obj = {
+            "adapter": f"{tag}-adapter",
+            "adapter_handle": f"{tag}-adapter-handle",
+            "reported_cwd": f"/tmp/{tag}-cwd",
+            "launched_at": now,
+        }
+        assert set(obj) == set(cls._LAUNCH_RECEIPT_FIELDS)
+        return json.dumps(obj)
+
+    @classmethod
+    def _prompt_receipt_json(cls, tag: str) -> str:
+        """실행 시점 기준 상대 timestamp로 prompt receipt 객체를 만들어 JSON 문자열로
+        직렬화한다(시간 고정값 금지)."""
+        now = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        obj = {"prompt_id": f"{tag}-prompt-id", "submitted_at": now}
+        assert set(obj) == set(cls._PROMPT_RECEIPT_FIELDS)
+        return json.dumps(obj)
 
     def test_s14_ownership_set_allowed_combo_updates_atomically(self, project_b):
+        create = run_worktree_cli(
+            [
+                "create",
+                "--project-root",
+                str(project_b.root),
+                "--task",
+                "914",
+                "--task-folder",
+                "s14-allowed",
+            ]
+        )
+        create_payload = parse_json_stdout(create, "ownership-set(S-14 setup: create)")
+        assert create_payload.get("ok") is True, f"S-14 setup create 실패: {create_payload}"
+
+        # origin(hub_owned) -> session_launching. receipt 가드는 prior.state가
+        # session_launching일 때만 걸리므로, 이 단계에서는 아직 receipt가 필요 없다.
+        launching = run_worktree_cli(
+            [
+                "ownership-set",
+                "--project-root",
+                str(project_b.root),
+                "--task",
+                "914",
+                "--execution-ownership",
+                "session_launching",
+                "--attribution-state",
+                "active",
+            ]
+        )
+        launching_payload = parse_json_stdout(
+            launching, "ownership-set(S-14 setup: session_launching)"
+        )
+        assert launching_payload.get("ok") is True, (
+            f"S-14 setup session_launching 실패: {launching_payload}"
+        )
+
+        # session_launching -> worktree_session_owned. launch/prompt receipt를 둘 다 갖춰
+        # AC-7/AC-8 receipt 가드를 실제로 만족시킨 뒤 전이한다(우회 금지).
         result = run_worktree_cli(
             [
                 "ownership-set",
-                "--task-path",
+                "--project-root",
                 str(project_b.root),
+                "--task",
+                "914",
                 "--execution-ownership",
                 "worktree_session_owned",
                 "--attribution-state",
                 "active",
+                "--launch-receipt",
+                self._launch_receipt_json("s14-allowed"),
+                "--prompt-receipt",
+                self._prompt_receipt_json("s14-allowed"),
             ]
         )
         payload = parse_json_stdout(result, "ownership-set(S-14 allowed)")
         assert payload.get("ok") is True
 
-    def test_s14_ownership_set_forbidden_combo_rejected(self, project_b):
+    def test_s14_ownership_set_opaque_receipt_string_rejected(self, project_b):
+        """RED — PLAN W-11: 객체가 아닌 불투명 토큰(JSON이 아닌 문자열)은
+        `ownership_receipt_invalid`로 거부돼야 한다. 현재 구현(`worktree_tool.py`
+        `_parse_receipt_arg`)은 `{`로 시작하지 않는 문자열을 그대로 저장해 성공시키므로
+        이 단언은 RED다(후속 구현 워커 몫)."""
+        create = run_worktree_cli(
+            [
+                "create",
+                "--project-root",
+                str(project_b.root),
+                "--task",
+                "917",
+                "--task-folder",
+                "s14-opaque-receipt",
+            ]
+        )
+        create_payload = parse_json_stdout(create, "ownership-set(S-14 opaque setup: create)")
+        assert create_payload.get("ok") is True, f"S-14 opaque setup create 실패: {create_payload}"
+
+        launching = run_worktree_cli(
+            [
+                "ownership-set",
+                "--project-root",
+                str(project_b.root),
+                "--task",
+                "917",
+                "--execution-ownership",
+                "session_launching",
+                "--attribution-state",
+                "active",
+            ]
+        )
+        launching_payload = parse_json_stdout(
+            launching, "ownership-set(S-14 opaque setup: session_launching)"
+        )
+        assert launching_payload.get("ok") is True, (
+            f"S-14 opaque setup session_launching 실패: {launching_payload}"
+        )
+
         result = run_worktree_cli(
             [
                 "ownership-set",
-                "--task-path",
+                "--project-root",
                 str(project_b.root),
+                "--task",
+                "917",
+                "--execution-ownership",
+                "worktree_session_owned",
+                "--attribution-state",
+                "active",
+                "--launch-receipt",
+                "foo",
+                "--prompt-receipt",
+                self._prompt_receipt_json("s14-opaque"),
+            ]
+        )
+        payload = parse_json_stdout(result, "ownership-set(S-14 opaque receipt rejected)")
+        assert payload.get("ok") is False
+        assert payload.get("error") == "ownership_receipt_invalid"
+
+    def test_s14_ownership_set_receipt_registry_type_enforced(self, project_b):
+        """registry 저장 타입 집행 — 정상 객체 receipt를 넘긴 뒤 registry meta를 다시 읽어
+        `execution_ownership.launch_receipt`/`prompt_receipt`가 dict이고 각 필드를 갖는지
+        단언한다(PLAN W-11 receipt 객체 계약의 회귀 가드)."""
+        create = run_worktree_cli(
+            [
+                "create",
+                "--project-root",
+                str(project_b.root),
+                "--task",
+                "918",
+                "--task-folder",
+                "s14-receipt-type",
+            ]
+        )
+        create_payload = parse_json_stdout(create, "ownership-set(S-14 type setup: create)")
+        assert create_payload.get("ok") is True, f"S-14 type setup create 실패: {create_payload}"
+
+        launching = run_worktree_cli(
+            [
+                "ownership-set",
+                "--project-root",
+                str(project_b.root),
+                "--task",
+                "918",
+                "--execution-ownership",
+                "session_launching",
+                "--attribution-state",
+                "active",
+            ]
+        )
+        launching_payload = parse_json_stdout(
+            launching, "ownership-set(S-14 type setup: session_launching)"
+        )
+        assert launching_payload.get("ok") is True, (
+            f"S-14 type setup session_launching 실패: {launching_payload}"
+        )
+
+        result = run_worktree_cli(
+            [
+                "ownership-set",
+                "--project-root",
+                str(project_b.root),
+                "--task",
+                "918",
+                "--execution-ownership",
+                "worktree_session_owned",
+                "--attribution-state",
+                "active",
+                "--launch-receipt",
+                self._launch_receipt_json("s14-type"),
+                "--prompt-receipt",
+                self._prompt_receipt_json("s14-type"),
+            ]
+        )
+        payload = parse_json_stdout(result, "ownership-set(S-14 receipt type enforced)")
+        assert payload.get("ok") is True, f"S-14 receipt type setup 실패: {payload}"
+
+        meta_path = project_b.root / ".opal-worktrees" / ".meta" / "task_918.json"
+        meta = json.loads(meta_path.read_text(encoding="utf-8"))
+        execution_ownership = meta.get("execution_ownership") or {}
+        launch_receipt = execution_ownership.get("launch_receipt")
+        prompt_receipt = execution_ownership.get("prompt_receipt")
+        assert isinstance(launch_receipt, dict), f"launch_receipt가 dict가 아님: {launch_receipt!r}"
+        assert isinstance(prompt_receipt, dict), f"prompt_receipt가 dict가 아님: {prompt_receipt!r}"
+        for field in self._LAUNCH_RECEIPT_FIELDS:
+            assert field in launch_receipt, f"launch_receipt에 {field} 누락: {launch_receipt}"
+        for field in self._PROMPT_RECEIPT_FIELDS:
+            assert field in prompt_receipt, f"prompt_receipt에 {field} 누락: {prompt_receipt}"
+
+    def test_s14_ownership_set_forbidden_combo_rejected(self, project_b):
+        create = run_worktree_cli(
+            [
+                "create",
+                "--project-root",
+                str(project_b.root),
+                "--task",
+                "915",
+                "--task-folder",
+                "s14-forbidden",
+            ]
+        )
+        create_payload = parse_json_stdout(create, "ownership-set(S-14 setup: create)")
+        assert create_payload.get("ok") is True, f"S-14 setup create 실패: {create_payload}"
+
+        result = run_worktree_cli(
+            [
+                "ownership-set",
+                "--project-root",
+                str(project_b.root),
+                "--task",
+                "915",
                 "--execution-ownership",
                 "not_a_real_state",
                 "--attribution-state",
@@ -3076,7 +3315,19 @@ class TestOwnershipSetRed:
         assert payload.get("error") == "ownership_state_invalid"
 
     def test_s14_legacy_meta_without_execution_ownership_passes_status(self, project_b):
-        result = run_worktree_cli(["status", "--task-path", str(project_b.root)])
+        # TEST-SCENARIO S-14 입력의 두 번째 절반 — legacy 메타(version 부재)를 등록된 허브
+        # registry에 실제로 배치하고 `status`가 통과함을 집행한다(미등록 경로가 아니다).
+        wt_root = project_b.root / ".opal-worktrees" / "task_916"
+        write_meta(
+            project_b.root,
+            "916",
+            layout="monorepo",
+            branch="feat/OP-TASK-916",
+            entries=[],
+            worktree_root=wt_root,
+        )
+
+        result = run_worktree_cli(["status", "--task-path", str(wt_root)])
         payload = parse_json_stdout(result, "status(S-14 legacy)")
         assert payload.get("ok") is True
 
@@ -3120,16 +3371,94 @@ class TestCreateSettingsProvisioningRed:
 
 
 class TestCheckpointRed:
-    """태스크 138 S-19 — RED-first. `worktree-tool checkpoint`는 아직 구현되지 않았다
-    (scope violation, mode denied, requires_user_approval, SHA append)."""
+    """태스크 138 S-19 — `worktree-tool checkpoint`(scope violation, mode denied,
+    requires_user_approval, SHA append) 회귀 가드. `cmd_checkpoint`는 이미 구현돼 있다.
+
+    C(W-19 정비): 대상 worktree는 **등록된 v2 registry 행**이다 — C-17("현재 세션이
+    registry canonical task와 worktree를 1:1 소유")을 우회하는 미등록 경로를 시나리오로
+    남기지 않는다(W-11에서 `ownership-set`을 등록 행에만 동작하도록 좁힌 것과 같은 원칙).
+    등록은 `worktree-tool create`와 같은 발급 원천 스키마(allocator_root·task_home·
+    task_folder·task_path·artifact_repo·task_ownership_version 6필드 + execution_ownership)를
+    직접 배치해 재현한다 — 실물 동형 레이아웃(워크트리 루트 `<hub>/.opal-worktrees/task_NNN/`,
+    그 안에 `.opal-worktrees` 없음)을 지킨다. 등록 전환 후에도 소유권·branch 검사가
+    실제로 통과 경로를 타며 4건 전부 그대로 PASS한다(실측 — RED 전환 없음).
+
+    S-20(검증 실패 → 보정 → 재검증 통과 시퀀스, state-tool show current_status 비-blocked
+    확인, unresolved 실패의 경계 유지)도 같은 fixture를 재사용해 이 클래스에 포함한다."""
 
     def _add_worktree(self, project_b, branch: str, task_dirname: str) -> pathlib.Path:
-        dest = project_b.root.parent / task_dirname
+        """실물 동형 레이아웃(harness/worktree.md §canonical path 발급 계약) — 워크트리
+        루트는 허브의 형제가 아니라 `<hub>/.opal-worktrees/task_NNN/`이다."""
+        dest = project_b.root / ".opal-worktrees" / task_dirname
         add_worktree(project_b.root, branch, dest)
         return dest
 
-    def test_s19_checkpoint_commits_owned_scope_and_appends_sha(self, project_b):
+    def _register_v2(
+        self,
+        project_b,
+        wt_root: pathlib.Path,
+        branch: str,
+        task_id: str,
+        owner_session_id: str,
+    ) -> None:
+        """등록된 v2 registry 행 + 발급값 사본(`.opal/task-ownership.json`)을 실물 배치한다.
+        `execution_ownership.state = worktree_session_owned` + `owner_session_id`를
+        환경변수 `OPAL_SESSION_ID`(테스트가 monkeypatch로 설정)와 일치시켜 checkpoint의
+        소유권 1:1 검사(C-17)가 실제로 통과 경로에 들어오게 한다."""
+        task_folder = f"{task_id}-checkpoint-red-fixture"
+        task_home = str(wt_root)
+        task_path = str(wt_root / "tasks" / task_folder)
+        meta = {
+            "task": task_id,
+            "layout": "monorepo",
+            "branch": branch,
+            "created_at": "2026-09-18 00:00",
+            "worktree_root": str(wt_root),
+            "entries": [
+                {
+                    "repo": str(project_b.root),
+                    "path": str(wt_root),
+                    "branch": branch,
+                    "base_ref": "main",
+                }
+            ],
+            "pending_setup": [],
+            "allocator_root": str(project_b.root),
+            "task_home": task_home,
+            "task_folder": task_folder,
+            "task_path": task_path,
+            "artifact_repo": ".",
+            "task_ownership_version": 2,
+            "memory_index_requests_resolved": [],
+            "execution_ownership": {
+                "state": "worktree_session_owned",
+                "owner_session_id": owner_session_id,
+                "adapter": "cli",
+                "adapter_handle": "checkpoint-red-fixture",
+                "generation": 1,
+                "launch_receipt": {"issued_at": "2026-09-18 00:00"},
+                "prompt_receipt": {"issued_at": "2026-09-18 00:00"},
+                "failure_reason": None,
+                "checkpoint_shas": [],
+            },
+        }
+        meta_path = project_b.root / ".opal-worktrees" / ".meta" / f"task_{task_id}.json"
+        write_json(meta_path, meta)
+
+        copy_body = {
+            "allocator_root": str(project_b.root),
+            "task_home": task_home,
+            "task_folder": task_folder,
+            "task_path": task_path,
+            "artifact_repo": ".",
+            "task_ownership_version": 2,
+        }
+        write_json(wt_root / ".opal" / "task-ownership.json", copy_body)
+
+    def test_s19_checkpoint_commits_owned_scope_and_appends_sha(self, project_b, monkeypatch):
+        monkeypatch.setenv("OPAL_SESSION_ID", "sess-checkpoint-red")
         wt = self._add_worktree(project_b, "feat/OP-TASK-s19", "task_s19")
+        self._register_v2(project_b, wt, "feat/OP-TASK-s19", "s19", "sess-checkpoint-red")
         (wt / "owned_file.txt").write_text("hello", encoding="utf-8")
         run_git(["add", "owned_file.txt"], cwd=wt)
 
@@ -3140,8 +3469,12 @@ class TestCheckpointRed:
         assert payload.get("ok") is True
         assert payload.get("checkpoint_shas")
 
-    def test_s19_checkpoint_scope_violation_for_unowned_staged_files(self, project_b):
+    def test_s19_checkpoint_scope_violation_for_unowned_staged_files(self, project_b, monkeypatch):
+        monkeypatch.setenv("OPAL_SESSION_ID", "sess-checkpoint-red")
         wt = self._add_worktree(project_b, "feat/OP-TASK-s19-scope", "task_s19_scope")
+        self._register_v2(
+            project_b, wt, "feat/OP-TASK-s19-scope", "s19_scope", "sess-checkpoint-red"
+        )
         (wt / "unowned_file.txt").write_text("nope", encoding="utf-8")
         run_git(["add", "unowned_file.txt"], cwd=wt)
 
@@ -3162,8 +3495,12 @@ class TestCheckpointRed:
         assert payload.get("ok") is False
         assert payload.get("error") == "checkpoint_scope_violation"
 
-    def test_s19_checkpoint_mode_denied_for_semi_agentic_execute(self, project_b):
+    def test_s19_checkpoint_mode_denied_for_semi_agentic_execute(self, project_b, monkeypatch):
+        monkeypatch.setenv("OPAL_SESSION_ID", "sess-checkpoint-red")
         wt = self._add_worktree(project_b, "feat/OP-TASK-s19-denied", "task_s19_denied")
+        self._register_v2(
+            project_b, wt, "feat/OP-TASK-s19-denied", "s19_denied", "sess-checkpoint-red"
+        )
         (wt / "f.txt").write_text("x", encoding="utf-8")
         run_git(["add", "f.txt"], cwd=wt)
 
@@ -3174,8 +3511,12 @@ class TestCheckpointRed:
         assert payload.get("ok") is False
         assert payload.get("error") == "checkpoint_mode_denied"
 
-    def test_s19_forbidden_git_command_requires_user_approval(self, project_b):
+    def test_s19_forbidden_git_command_requires_user_approval(self, project_b, monkeypatch):
+        monkeypatch.setenv("OPAL_SESSION_ID", "sess-checkpoint-red")
         wt = self._add_worktree(project_b, "feat/OP-TASK-s19-forbidden", "task_s19_forbidden")
+        self._register_v2(
+            project_b, wt, "feat/OP-TASK-s19-forbidden", "s19_forbidden", "sess-checkpoint-red"
+        )
 
         result = run_worktree_cli(
             [
@@ -3193,6 +3534,123 @@ class TestCheckpointRed:
         payload = parse_json_stdout(result, "checkpoint(S-19 forbidden git command)")
         assert payload.get("ok") is False
         assert payload.get("error") == "requires_user_approval"
+
+    def test_s20_checkpoint_scope_violation_then_correction_reverifies_and_commits(
+        self, project_b, monkeypatch
+    ):
+        """[T138/S-20] 검증 실패(scope violation) → 보정(소유 범위 내로 재-stage) → 재검증
+        통과(commit SHA 발급 + checkpoint_shas[] append) 시퀀스를 실측한다. 재검증 통과 후
+        커밋이 사용자 결정 없이 진행되고(mode=agentic, --approved 불필요), state-tool show의
+        current_status가 blocked로 가지 않았음을 확인한다(시나리오 원문 요구). unresolved
+        실패(보정 없이 다시 거부)가 기존 경계(재커밋하지 않음)를 유지하는지도 함께 본다.
+
+        `TestCheckpointRed`에 추가한다 — S-19 checkpoint fixture(`_add_worktree`·
+        `_register_v2`, 등록된 v2 registry 행 + 발급값 사본 실물 배치)를 그대로 재사용해
+        중복 헬퍼를 만들지 않는다(PRINCIPLES §2 Simplicity First).
+        """
+        monkeypatch.setenv("OPAL_SESSION_ID", "sess-checkpoint-red")
+        wt = self._add_worktree(project_b, "feat/OP-TASK-s20", "task_s20")
+        self._register_v2(project_b, wt, "feat/OP-TASK-s20", "s20", "sess-checkpoint-red")
+        meta_path = project_b.root / ".opal-worktrees" / ".meta" / "task_s20.json"
+
+        # S-19 환경 재현에 더해, S-20은 state.json이 실제로 존재하는 태스크가 필요하다
+        # (완료 기준 2 — state-tool show로 current_status를 실측 확인해야 하므로).
+        task_path = wt / "tasks" / "s20-checkpoint-red-fixture"
+        task_path.mkdir(parents=True, exist_ok=True)
+        r_init = run_state_cli(
+            ["init", str(task_path), "--skill", "opd", "--mode", "interactive", "--worktree", str(wt)]
+        )
+        init_payload = parse_json_stdout(r_init, "state init(S-20)")
+        assert init_payload.get("ok") is True, f"S-20 state init 실패: {init_payload}"
+
+        # ① 검증 실패 — staged 경로가 소유 범위(owned_dir) 밖이라 거부된다.
+        (wt / "stray.txt").write_text("out of scope", encoding="utf-8")
+        run_git(["add", "stray.txt"], cwd=wt)
+        r_violation = run_worktree_cli(
+            [
+                "checkpoint",
+                "--worktree-root",
+                str(wt),
+                "--mode",
+                "agentic",
+                "--stage",
+                "execute",
+                "--owned-scope",
+                "owned_dir",
+            ]
+        )
+        p_violation = parse_json_stdout(r_violation, "checkpoint(S-20 scope violation)")
+        assert p_violation.get("ok") is False
+        assert p_violation.get("error") == "checkpoint_scope_violation"
+        meta_after_violation = json.loads(meta_path.read_text(encoding="utf-8"))
+        assert meta_after_violation["execution_ownership"]["checkpoint_shas"] == [], (
+            "검증 실패 시점에는 커밋이 발생하지 않아야 한다"
+        )
+
+        # ② 보정 — 범위 밖 staged를 걷어내고 소유 범위 안으로 다시 stage한다.
+        run_git(["reset", "stray.txt"], cwd=wt)
+        (wt / "owned_dir").mkdir(parents=True, exist_ok=True)
+        (wt / "owned_dir" / "fixed.txt").write_text("in scope", encoding="utf-8")
+        run_git(["add", "owned_dir/fixed.txt"], cwd=wt)
+
+        # ③ 재검증 통과 — checkpoint를 재호출하면 사용자 결정(--approved) 없이(agentic
+        # 모드는 단계 안정 경계 자율) 커밋 SHA가 발급되고 checkpoint_shas[]에 append된다.
+        r_retry = run_worktree_cli(
+            [
+                "checkpoint",
+                "--worktree-root",
+                str(wt),
+                "--mode",
+                "agentic",
+                "--stage",
+                "execute",
+                "--owned-scope",
+                "owned_dir",
+            ]
+        )
+        p_retry = parse_json_stdout(r_retry, "checkpoint(S-20 재검증 통과)")
+        assert p_retry.get("ok") is True, f"S-20 보정 후 재검증 실패: {p_retry}"
+        assert p_retry.get("commit"), "재검증 통과 시 commit SHA가 발급돼야 한다"
+        assert p_retry.get("checkpoint_shas") == [p_retry.get("commit")]
+
+        meta_after_retry = json.loads(meta_path.read_text(encoding="utf-8"))
+        assert meta_after_retry["execution_ownership"]["checkpoint_shas"] == [p_retry.get("commit")]
+
+        # 완료 기준 2 — state-tool show(읽기 전용)로 current_status가 blocked로 가지
+        # 않았음을 확인한다. checkpoint는 state.json을 손대지 않으므로 init이 심은
+        # in_progress가 그대로 유지돼야 한다.
+        r_show = run_state_cli(["show", str(task_path), "--format", "json"])
+        assert r_show.returncode == 0, f"S-20 state show 실패: stdout={r_show.stdout!r}"
+        show_payload = json.loads(r_show.stdout)
+        current_status = show_payload.get("data", show_payload).get("current_status")
+        assert current_status != "blocked", (
+            f"S-20: 재검증 통과 후 current_status가 blocked로 갔다: {show_payload}"
+        )
+
+        # ④ unresolved 실패 — 보정 없이 다시 범위 밖 파일을 stage하면 여전히 거부되고,
+        # 기존 경계(재커밋하지 않음 — checkpoint_shas가 늘지 않음)가 유지된다.
+        (wt / "stray2.txt").write_text("still out of scope", encoding="utf-8")
+        run_git(["add", "stray2.txt"], cwd=wt)
+        r_unresolved = run_worktree_cli(
+            [
+                "checkpoint",
+                "--worktree-root",
+                str(wt),
+                "--mode",
+                "agentic",
+                "--stage",
+                "execute",
+                "--owned-scope",
+                "owned_dir",
+            ]
+        )
+        p_unresolved = parse_json_stdout(r_unresolved, "checkpoint(S-20 unresolved)")
+        assert p_unresolved.get("ok") is False
+        assert p_unresolved.get("error") == "checkpoint_scope_violation"
+        meta_after_unresolved = json.loads(meta_path.read_text(encoding="utf-8"))
+        assert meta_after_unresolved["execution_ownership"]["checkpoint_shas"] == [
+            p_retry.get("commit")
+        ], "unresolved 실패는 기존 경계를 유지해야 한다 — checkpoint_shas가 늘어나면 안 된다"
 
 
 # ═════════════════════════════════════════════════════════════════════════════
