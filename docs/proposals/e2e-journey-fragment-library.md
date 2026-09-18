@@ -140,6 +140,21 @@ postconditions:                           # [MUST] 없으면 등록 불가
 
 ## 7. 선언형 driver wrapper — 새 브라우저를 JSON 한 장으로
 
+### ADD-1 실증 — Ego Lite가 1호 사례가 됐다
+
+태스크 127 ADD-1에서 `ego-lite`를 실제로 driver 계약에 흡수했고, 그 과정에서 이 절의 전제
+두 개가 **실측으로 확인됐다.**
+
+| 확인된 사실 | 이 절에 미치는 영향 |
+|---|---|
+| 새 driver 추가에 실제로 4곳 수정이 필요했다 — `drivers/ego_lite.py`(234줄) · `_BUILTIN_DRIVER_MODULES` · `manifest.json` · `CANDIDATE_ORDER` + **`CONTRACT.md` 3곳 개정**(driver enum 2 + C-DRV-3) | 선언형 wrapper의 동기가 과장이 아니다. 계약 개정까지 끌려 들어간다 |
+| **부분 driver가 생긴다** — `ego-browser-tool`의 `smoke`는 open+텍스트 assert 융합이라 `act`·`wait`·`snapshot`·`capture`를 제공하지 않는다 | §A.8.1 capability 6키로는 "이 시나리오가 `act`를 쓰는가"를 표현할 수 없다. **ops 기반 게이트가 없으면 부분 driver를 1순위에 둘 수 없다**(Q-6) |
+| 순서를 전제한 단언 8건이 즉시 깨졌다 | 선언형 등록으로 추가 문턱을 낮추면 이 파손이 잦아진다. 단언을 **정체 기반**(`_record(candidates, driver, session_mode)`)·**MV-38 형태**로 쓰는 규칙이 함께 필요하다 |
+
+**이미 열린 접합점**: `resolve_candidates(candidate_order=...)`가 ADD-1에서 구현됐다. 순서는
+코드 상수 `CANDIDATE_ORDER`가 **기본값**일 뿐이고 호출자가 재정의할 수 있다. 아래 `order.json`은
+그 인자에 파일 입력을 연결하는 작업으로 축소됐다.
+
 ### 현재 문제
 
 새 driver 추가에 4곳 수정이 필요하다 — `drivers/<name>.py`(8연산 파이썬) + `_BUILTIN_DRIVER_MODULES` + `manifest.json` + `CANDIDATE_ORDER`(+ C-DRV-3 계약 개정). agent browser 제품이 빠르게 늘고 있는데 시도 비용이 너무 높다.
@@ -163,7 +178,8 @@ postconditions:                           # [MUST] 없으면 등록 불가
 
 공용 `DeclarativeDriver`가 이 매니페스트를 읽어 §B.2 8연산을 이행한다. **새 브라우저 = `.opal/e2e/drivers/`에 JSON 한 장.**
 
-- **우선순위도 데이터로**: `CANDIDATE_ORDER`를 코드 상수에서 빼 `.opal/e2e/order.json`으로 옮긴다. 코드는 기본값만 들고, "새로 넣은 걸 1순위로" 가 설정 한 줄이 된다. C-DRV-3을 **"기본 순서 + 프로젝트 재정의 가능"**으로 개정한다.
+- **우선순위도 데이터로**: `.opal/e2e/order.json`을 `resolve_candidates(candidate_order=...)`에 연결한다. **주입 인자와 C-DRV-3의 "기본 순서 + 재정의 가능" 개정은 ADD-1에서 이미 끝났다** — 남은 것은 파일 입력 경로다. 그러면 "새로 넣은 걸 1순위로"가 설정 한 줄이 된다.
+- **[MUST] 부분 driver를 1순위에 두려면 Q-6(ops 게이트)이 선행한다.** ADD-1은 그 게이트가 없어 `ego-lite`를 뒤로 배치했다 — 앞에 두면 UI 조작 시나리오에서도 먼저 `selected`되고 실행 도중 `driver_operation_unimplemented`로 `blocked`가 되어 더 완전한 driver를 가린다.
 - **탈출구 유지**: 선언형으로 표현 안 되는 driver(특수 프로토콜)는 지금처럼 파이썬 모듈로 둔다. **선언형이 기본, 코드가 예외**인 2단 구조다.
 - **전환 조건은 바뀌지 않는다**: 순서를 바꿔도 C-3·`can_try_next_provider()`가 `provider_unavailable`에서만 다음 후보로 넘어가고 `infra_error`·제품 실패에서는 넘어가지 않는다.
 
@@ -190,5 +206,8 @@ postconditions:                           # [MUST] 없으면 등록 불가
 | Q-1 | 조각 전개분과 본문 연산의 **중복 판정 충돌** | 동결 RED S-27 (d-1)이 같은 연산 signature 중복을 재시도로 판정한다. 태스크 127에서 `--version` 2회가 실제로 이 규칙에 걸려 browser step runner가 봉쇄됐다가 driver 인스턴스 메모이즈로 해소됐다. 조각이 `navigate`를 포함하고 본문도 쓰면 재발한다 — **전개분과 본문을 구분 집계**하거나 중복 판정 범위를 좁혀야 한다 |
 | Q-2 | 로그인 **세션 재사용** 여부 | 조각과 별개 축이다. 현재 세션·프로필이 `opal-e2e-{run_id}`라 run마다 새로 만들어진다(`agent_browser.py:334,353`). 지속 프로필을 도입하면 로그인 반복이 사라지지만 **로그인 자체가 미검증**이 된다 — 로그인 여정만 주기적 cold 실행으로 분리하는 보완이 필요하다 |
 | Q-3 | `.e2e/artifacts/` **보존 정책** | 최근 N개 유지가 기본. N과 용량 상한을 정해야 한다 |
-| Q-4 | `.e2e/` **이름 충돌** | 프로젝트가 Playwright·Cypress 설정에 같은 이름을 쓸 가능성. 전량 무시 폴더라 피해는 작다. 걸리면 `.opal-e2e/`가 대안 |
-| Q-5 | `import` 모드의 한계 | `TEST-SCENARIO.md`가 표 형식이라 실행 필드를 담기 비좁다. 여정 명세를 표가 아니라 **블록 형식**으로 두는 편이 낫다 |
+| Q-4 | ~~Ego Lite driver 편입~~ → **해소(ADD-1)** | `drivers/ego_lite.py`로 흡수 완료. `probe`·`open`·`assert`·`close` 구현, 나머지 4연산은 `probed=true`·`available=false`로 없음 선언. 후보 순서는 `agent-browser` → `cmux` → `agent-browser/standalone` → `ego-lite` → `playwright(opt-in)` |
+| Q-6 | **ops 기반 후보 게이트** (신설, ADD-1 발) | 시나리오 step에서 요구 연산(`act`·`wait`·`snapshot`·`capture`)을 뽑아 그것을 제공하지 않는 후보를 **실행 전에** 거르는 장치. 현재 게이트는 capability(§A.8.1 6키)만 보고 연산 요구를 표현할 수 없다. **이것이 없으면 부분 driver를 1순위에 둘 수 없고, 선언형 wrapper로 추가 문턱을 낮출 때 부분 driver가 늘어나 위험이 커진다** — §7의 선행 조건이다 |
+| Q-7 | **순서 의존 단언 규칙** (신설, ADD-1 발) | 새 후보를 넣자 순서를 전제한 단언 8건이 깨졌다. 정체 기반 조회와 MV-38 형태(`infra_error` 원소보다 큰 `order` 부재)를 테스트 작성 규칙으로 명시해야 선언형 등록이 안전해진다 |
+| Q-8 | `.e2e/` **이름 충돌** | 프로젝트가 Playwright·Cypress 설정에 같은 이름을 쓸 가능성. 전량 무시 폴더라 피해는 작다. 걸리면 `.opal-e2e/`가 대안 |
+| Q-9 | `import` 모드의 한계 | `TEST-SCENARIO.md`가 표 형식이라 실행 필드를 담기 비좁다. 여정 명세를 표가 아니라 **블록 형식**으로 두는 편이 낫다 |
