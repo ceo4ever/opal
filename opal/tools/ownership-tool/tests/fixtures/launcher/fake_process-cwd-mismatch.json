@@ -1,0 +1,11 @@
+{
+  "path": "cwd_mismatch",
+  "adapter": "orca",
+  "adapter_handle": "term-handle-0003",
+  "reported_cwd": "{HUB}",
+  "expected_worktree_root": "{WT}/task_220",
+  "launched_at": "2026-09-17 10:30:00+09:00",
+  "prompt_id": "prompt-0003",
+  "submitted_at": "2026-09-17 10:30:05+09:00",
+  "exit_code": 0
+}

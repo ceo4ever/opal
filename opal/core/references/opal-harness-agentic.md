@@ -152,7 +152,7 @@ PM이 자율 진행을 중단하고 사용자에게 올리는 기준:
 | 규칙 | agentic 적용 내용 |
 |------|-----------------|
 | `구현 금지 원칙` | EXECUTE 단계 진입은 PM이 대행 승인하되, 코드 생성/수정은 워커만 수행 |
-| `커밋 규칙` | agentic mode에서도 사용자 명시 요청 시에만 커밋 수행 |
+| `커밋 규칙` | 등록된 전용 worktree의 1:1 소유 세션은 검증된 안정 경계에서 worktree branch 체크포인트를 자율 커밋할 수 있다. 허브·기본 브랜치 commit, merge·push·배포와 이력 재작성은 사용자 승인 경계를 유지한다 (`harness/guards.md` §커밋 규칙). |
 | `디스패치 의무 원칙` | 워커 디스패치로 정의된 단계는 반드시 서브에이전트 사용 |
 | `자동 루핑 제약` | 공통 하네스 §1 Guards의 기존 한도 그대로 적용 |
 | `CLOSE 진입 게이트` | 사용자의 확인된 지시(`승인`/`확인`/`확인완료` 등)가 없으면 CLOSE 단계 진입 불가. agentic / semi-agentic 양쪽 모두 이 규칙은 유지 — 다른 Gate는 PM 자율 통과 허용이나 CLOSE 진입은 예외. CLOSE 첫 행에 `--auto-pass` 시도 시 도구가 `agentic_close_gate_requires_user`로 거부한다 (agentic/semi-agentic 모두 동일 코드). PM은 CLOSE 진입 직전 소유자 보고 후 사용자 발화를 받아 prev_user_row를 `--owner user`로 mark해야 한다 (§4 CLOSE 진입 게이트 절차 참조 / PLAN §2.16 G-13 / R-12). |

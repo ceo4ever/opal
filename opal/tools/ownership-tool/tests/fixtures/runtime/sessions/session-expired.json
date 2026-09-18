@@ -1,0 +1,8 @@
+{
+  "session_id": "sess-expired-0002",
+  "cwd": "{WT}/task_137",
+  "started_at": "2026-09-16 09:00:00+09:00",
+  "heartbeat_at": "2026-09-16 09:10:00+09:00",
+  "expires_at": "2026-09-16 13:00:00+09:00",
+  "status": "expired"
+}

@@ -1,0 +1,20 @@
+{
+  "task": "999",
+  "layout": "monorepo",
+  "branch": "feat/OP-TASK-999",
+  "created_at": "2026-01-01 00:00",
+  "worktree_root": "{WT}/task_999",
+  "entries": [
+    {
+      "repo": "{HUB}",
+      "path": "{WT}/task_999",
+      "branch": "feat/OP-TASK-999",
+      "base_ref": "main"
+    }
+  ],
+  "allocator_root": "{HUB}",
+  "task_home": "{WT}/task_999",
+  "task_folder": "999-legacy-no-ownership-version",
+  "task_path": "{WT}/task_999/tasks/999-legacy-no-ownership-version",
+  "artifact_repo": "."
+}

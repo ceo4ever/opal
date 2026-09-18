@@ -3,7 +3,7 @@
   "module": "test_state_tool",
   "layer": "test",
   "domain": "opal-pipeline",
-  "description": "state-tool 단위 테스트 — 9개 명령 happy path + 23종 에러 코드 × 최소 1건 + G-5~G-15 시나리오. 공개 인터페이스(직접 함수 호출 또는 run.sh subprocess 실호출)와 실 파일 상태(state.json/STATE.md/MEMORY.json/pipeline.json)만으로 판정하며 내부 함수 mock은 사용하지 않는다(블랙박스 방식). 신규 계약은 RED-first로 작성하며 작성자와 구현자를 분리해 검증 이원화를 유지한다.",
+  "description": "state-tool 단위 테스트 — 9개 명령 happy path + 23종 에러 코드 × 최소 1건 + G-5~G-15 시나리오. 공개 인터페이스(직접 함수 호출 또는 run.sh subprocess 실호출)와 실 파일 상태(state.json/STATE.md/MEMORY.json/pipeline.json)만으로 판정하며 내부 함수 mock은 사용하지 않는다(블랙박스 방식). 신규 계약은 RED-first로 작성하며 작성자와 구현자를 분리해 검증 이원화를 유지한다. 138 W-9 두 클래스는 상태 전이 진입 경계의 자동 lease claim(최초 1회·멱등, 타 세션 live lease 비이전, OPAL_SESSION_ID 부재·lease 실패 시 비차단 경고)과 run-log 4개 기록부 actor.session_id 채움/미설정 시 None 회귀를 검증한다.",
   "exports": [
     "TestBootSummary", "TestInit", "TestShow", "TestAdvance", "TestMark",
     "TestBlock", "TestValidate", "TestAddRow", "TestStatus", "TestGatePass",
@@ -24,7 +24,8 @@
     "TestT103WorkerDurationWarning",
     "TestT106CodeScanCitationBehavior", "TestT111SdlcV2Contracts",
     "TestS9CloseMarkNoImmediateMemoryAppend", "TestS10FinalizeAttribution",
-    "TestFinalizeAttributionHistoryLink"
+    "TestFinalizeAttributionHistoryLink",
+    "TestT138W9OwnershipClaimBoundary", "TestT138W9ActorSessionId"
   ]
 }
 
@@ -11259,3 +11260,224 @@ class TestActorFlag(BaseTestCase):
     # ── S-4: 신설 3건 + 기존 전건 회귀 0건은 `python3 -m pytest`(별도 프로세스)로
     #         AGENTIC-LOG/validation에 실제 실행 출력으로 기록한다(이 파일 자체가
     #         "기존 테스트"이므로 자기 자신을 이 클래스 안에서 재실행하지 않는다).
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 138 W-9 — state-tool 허브 자동 claim 경계와 actor.session_id 채움
+# (연결 AC/C: C-9, D-12, AC-12, AC-13, AC-27)
+#
+# 판정은 실 파일 상태(owner.json / state.json / run-log 조각)와 CLI 실호출
+# 종료 코드·stderr만으로 한다(블랙박스). 내부 mock은 ownership-tool 적재 자체가
+# 실패하는 환경(fail-safe 경계)을 재현할 다른 수단이 없는 1건에만 쓴다.
+# ─────────────────────────────────────────────────────────────────────────────
+
+_W9_ROWS_SPEC = json.dumps([
+    {"stage": "TASK", "item": "작업"},
+    {"stage": "PLAN", "item": "작업"},
+    {"stage": "EXECUTE", "item": "작업"},
+    {"stage": "CLOSE", "item": "State Gate"},
+])
+
+
+class TestT138W9OwnershipClaimBoundary(unittest.TestCase):
+    """W-9 — 상태 전이 진입 경계의 자동 claim과 fail-safe."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.task_path = pathlib.Path(self.tmp.name) / "tasks" / "138-w9"
+        self.task_path.mkdir(parents=True)
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    # ── 실행 헬퍼 ────────────────────────────────────────────────────────────
+    def _run(self, args, session_id=None):
+        env = dict(os.environ)
+        env.pop("OPAL_SESSION_ID", None)
+        if session_id is not None:
+            env["OPAL_SESSION_ID"] = session_id
+        return subprocess.run(
+            [sys.executable, str(_TOOL_DIR / "state_tool.py"), *args],
+            capture_output=True, text=True, env=env)
+
+    def _init(self, session_id=None, run_log_mode=None):
+        args = ["init", str(self.task_path), "--skill", "opds", "--mode", "agentic",
+                "--task-title", "138 W-9", "--rows-spec", _W9_ROWS_SPEC]
+        if run_log_mode:
+            args += ["--run-log-mode", run_log_mode]
+        result = self._run(args, session_id=session_id)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        return result
+
+    @property
+    def _lease_file(self):
+        return self.task_path / "run" / ".runtime" / "owner.json"
+
+    def _lease(self):
+        return json.loads(self._lease_file.read_text(encoding="utf-8"))
+
+    def _row_status(self, row_id):
+        state = json.loads((self.task_path / "state.json").read_text(encoding="utf-8"))
+        return next(r for r in state["rows"] if r["row_id"] == row_id)["status"]
+
+    def _run_log_events(self):
+        events = []
+        for segment in sorted((self.task_path / "run").glob("run-log-*.jsonl")):
+            for line in segment.read_text(encoding="utf-8").splitlines():
+                if line.strip():
+                    events.append(json.loads(line))
+        return events
+
+    # ── 1. env 있음 + live lease 없음 → 최초 경계에서 원자 생성 ────────────
+    def test_session_env_set_claims_lease_at_first_transition(self):
+        """AC-12 — init은 claim하지 않고, 첫 상태 전이(advance)에서 lease가 원자 생성된다."""
+        self._init(session_id="sess-w9-0001")
+        self.assertFalse(
+            self._lease_file.exists(),
+            "init은 claim 경계가 아니다 — lease가 생기면 중복 삽입이다")
+
+        result = self._run(["advance", str(self.task_path), "--row", "1"],
+                           session_id="sess-w9-0001")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertTrue(self._lease_file.exists(),
+                        f"첫 전이에서 lease가 생성되어야 한다 — stderr={result.stderr!r}")
+        lease = self._lease()
+        self.assertEqual(lease["owner_session_id"], "sess-w9-0001")
+        self.assertEqual(lease["status"], "active")
+        self.assertEqual(lease["generation"], 1)
+        self.assertEqual(self._row_status(1), "in_progress")
+
+        # 같은 세션의 다음 전이는 멱등 — generation이 늘지 않는다(중복 claim 없음).
+        result2 = self._run(["mark", str(self.task_path), "--row", "1", "--done"],
+                            session_id="sess-w9-0001")
+        self.assertEqual(result2.returncode, 0, result2.stderr)
+        self.assertEqual(self._lease()["generation"], 1)
+        self.assertEqual(self._lease()["claimed_at"], lease["claimed_at"])
+
+    # ── 2. env 있음 + 다른 세션의 live lease → claim 안 함, 전이는 정상 ────
+    def test_foreign_live_lease_is_not_taken_over_but_state_advances(self):
+        """AC-13 — 타 세션 live lease는 이전하지 않으나 state 갱신은 막지 않는다."""
+        self._init(session_id="sess-w9-owner")
+        first = self._run(["advance", str(self.task_path), "--row", "1"],
+                          session_id="sess-w9-owner")
+        self.assertEqual(first.returncode, 0, first.stderr)
+        before = self._lease()
+
+        second = self._run(["mark", str(self.task_path), "--row", "1", "--done"],
+                           session_id="sess-w9-intruder")
+        self.assertEqual(second.returncode, 0, second.stderr)
+        self.assertEqual(self._row_status(1), "done",
+                         "타 세션 lease가 있어도 state 갱신은 차단되지 않는다")
+        after = self._lease()
+        self.assertEqual(after["owner_session_id"], before["owner_session_id"])
+        self.assertEqual(after["generation"], before["generation"])
+        self.assertEqual(after["heartbeat_at"], before["heartbeat_at"])
+        self.assertIn("ownership_claim_skipped", second.stderr)
+        self.assertIn("foreign_owner", second.stderr)
+
+    # ── 3. env 부재 → claim 시도 없음, 차단 없음, 경고만 ───────────────────
+    def test_session_env_absent_skips_claim_without_blocking(self):
+        """C-9 — OPAL_SESSION_ID 부재는 경고만 남기고 기존 전이 계약을 그대로 둔다."""
+        self._init()
+        result = self._run(["advance", str(self.task_path), "--row", "1"])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(self._row_status(1), "in_progress")
+        self.assertFalse(self._lease_file.exists(),
+                         "세션 식별자가 없으면 lease를 만들지 않는다")
+        self.assertIn("ownership_session_id_missing", result.stderr)
+        # 경고는 stdout JSON 계약을 오염시키지 않는다.
+        payload = json.loads(result.stdout)
+        self.assertTrue(payload["ok"])
+        self.assertNotIn("warnings", payload)
+
+    # ── 4-a. lease 도구가 오류를 반환 → 차단 없음, 경고만 ─────────────────
+    def test_lease_write_failure_is_fail_safe(self):
+        """C-9 — lease 기록이 실패해도(런타임 경로 점유) 상태 전이는 통과한다."""
+        self._init(session_id="sess-w9-failsafe")
+        runtime_dir = self.task_path / "run" / ".runtime"
+        runtime_dir.parent.mkdir(parents=True, exist_ok=True)
+        runtime_dir.write_text("lease 디렉터리 자리를 일반 파일이 점유", encoding="utf-8")
+
+        result = self._run(["advance", str(self.task_path), "--row", "1"],
+                           session_id="sess-w9-failsafe")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(self._row_status(1), "in_progress")
+        self.assertTrue(runtime_dir.is_file(), "점유 파일이 그대로 남아야 한다")
+        self.assertRegex(result.stderr,
+                         r"ownership_claim_(skipped|failed)")
+
+    # ── 4-b. ownership-tool 적재 자체가 불가능한 환경 → 예외 없이 경고만 ──
+    def test_ownership_tool_import_failure_is_fail_safe(self):
+        """C-9 — ownership-tool을 적재할 수 없어도 state-tool은 죽지 않는다."""
+        with patch.dict(os.environ, {"OPAL_SESSION_ID": "sess-w9-noimport"}), \
+                patch.object(ST, "_import_ownership_lease",
+                             side_effect=ModuleNotFoundError("ownership_tool")):
+            outcome = ST._claim_task_lease_if_needed(self.task_path)
+        self.assertFalse(outcome["claimed"])
+        self.assertEqual(outcome["warning"], "ownership_claim_failed")
+        self.assertFalse(self._lease_file.exists())
+
+
+class TestT138W9ActorSessionId(unittest.TestCase):
+    """W-9 — run-log 4개 기록부의 actor.session_id 채움 (AC-27, run-log CONTRACT §58 선택 필드)."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.task_path = pathlib.Path(self.tmp.name) / "tasks" / "138-w9-actor"
+        self.task_path.mkdir(parents=True)
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def _run(self, args, session_id=None):
+        env = dict(os.environ)
+        env.pop("OPAL_SESSION_ID", None)
+        if session_id is not None:
+            env["OPAL_SESSION_ID"] = session_id
+        return subprocess.run(
+            [sys.executable, str(_TOOL_DIR / "state_tool.py"), *args],
+            capture_output=True, text=True, env=env)
+
+    def _events(self):
+        events = []
+        for segment in sorted((self.task_path / "run").glob("run-log-*.jsonl")):
+            for line in segment.read_text(encoding="utf-8").splitlines():
+                if line.strip():
+                    events.append(json.loads(line))
+        return events
+
+    def _record_all(self, session_id):
+        """4개 기록부를 모두 지나가는 최소 시나리오."""
+        init = self._run(
+            ["init", str(self.task_path), "--skill", "opds", "--mode", "agentic",
+             "--task-title", "138 W-9 actor", "--run-log-mode", "shadow",
+             "--rows-spec", _W9_ROWS_SPEC],
+            session_id=session_id)                       # run.started 기록부
+        self.assertEqual(init.returncode, 0, init.stderr)
+        for args in (
+            ["advance", str(self.task_path), "--row", "1"],          # state.changed
+            ["log-event", str(self.task_path), "--event", "activity",
+             "--kind", "decision", "--summary", "W-9 activity"],     # PM activity
+            ["gate-request", str(self.task_path), "--gate-id", "g-w9",
+             "--summary", "W-9 gate"],                               # gate.requested
+        ):
+            result = self._run(args, session_id=session_id)
+            self.assertEqual(result.returncode, 0, f"{args}: {result.stderr}")
+        return {e["event"]: e for e in self._events()}
+
+    def test_session_id_filled_in_all_four_record_sites(self):
+        """AC-27 — run.started/state.changed/activity/gate.requested 전부에 채워진다."""
+        by_event = self._record_all("sess-w9-actor")
+        for event_name in ("run.started", "state.changed", "activity", "gate.requested"):
+            self.assertIn(event_name, by_event, f"{event_name} 사건이 기록되지 않았다: {list(by_event)}")
+            self.assertEqual(
+                by_event[event_name]["actor"]["session_id"], "sess-w9-actor",
+                f"{event_name}의 actor.session_id가 OPAL_SESSION_ID 값이어야 한다")
+
+    def test_session_id_stays_none_without_env(self):
+        """회귀 — OPAL_SESSION_ID 부재 시 4개 기록부 모두 종전처럼 None이다(스키마 무변경)."""
+        by_event = self._record_all(None)
+        for event_name in ("run.started", "state.changed", "activity", "gate.requested"):
+            self.assertIn(event_name, by_event)
+            self.assertIsNone(by_event[event_name]["actor"]["session_id"],
+                              f"{event_name}의 actor.session_id는 None이어야 한다")

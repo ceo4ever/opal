@@ -1,0 +1,9 @@
+{
+  "task_path": "{WT}/task_132/tasks/132-260914-opd-oppb-프로젝트빌드-파일럿-신설",
+  "owner_session_id": "sess-live-0001",
+  "generation": 3,
+  "claimed_at": "2026-09-17 09:00:00+09:00",
+  "heartbeat_at": "2026-09-17 09:35:00+09:00",
+  "lease_expires_at": "2026-09-17 19:20:00+09:00",
+  "status": "worktree_session_owned"
+}

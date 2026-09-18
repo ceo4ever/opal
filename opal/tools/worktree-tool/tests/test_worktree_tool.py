@@ -3,9 +3,10 @@
   "module": "test_worktree_tool",
   "layer": "test",
   "domain": "opal-workspace",
-  "description": "worktree-tool 공개 인터페이스 회귀 테스트. 092 TEST-SCENARIO.md S-4~S-17,S-21~S-28과 112 TEST-SCENARIO.md S-8 hub-fixed worktree 계약을 검증한다. S-1/S-2는 state-tool 측 전용이라 test_state_tool.py에 있다. S-3/S-15는 각각 git working-tree diff의 일관성/~/.opal 배포본 변경 금지 때문에 이 파일에서 제외했다(092/112 번호 체계). CLI(subprocess) 공개 인터페이스로만 검증하고, mock/patch 없이 실 git 저장소 fixture(conftest.py)를 사용한다. 118 TEST-SCENARIO.md S-3~S-8,S-11,S-15(taskCapsuleCone·canonical metadata 6필드·TASK_PATH_AMBIGUOUS·finalize 재진입 path-scoped 판정·memory-index-request 가드)와 119 TEST-SCENARIO.md S-7·S-8(상태 의존 canonical path 해석 — registry attribution_state가 closed일 때만 허브 merge 사본을 반환하고 active 3상태는 차단 유지)을 검증한다. 118 S-3·119 S-7은 불변식 보존형이라 구현 전에도 PASS하는 회귀 보호 케이스다. 119는 태스크 092의 stale 문서 단언 3건(opal-harness.md §2.5 존재·pm/dispatch-process.md ## 작업 경로 블록·worktree-tool create 연속 문자열)을 현재 문면으로 교체했다. 124 TEST-SCENARIO.md S-1~S-17·S-24·S-26~S-28(multi-repo 루트 캡슐 소유권 — 루트+자식 worktree 등록, 소유권 불변식, 루트 Git 적격 R-1~R-5 차단과 부수 효과 부재, init 초안의 task_artifacts 제시 조건, repo별 base-ref 동결과 baseBranchOverrides 키 검증, 추적 범위 겹침 차단, 회수·롤백의 자식→루트 역순, 2축 멱등 재시도와 불일치 시 자동 복구 금지, multi-repo create의 sparse-checkout 미호출)을 검증한다.",
+  "description": "worktree-tool 공개 인터페이스 회귀 테스트. 092 TEST-SCENARIO.md S-4~S-17,S-21~S-28과 112 TEST-SCENARIO.md S-8 hub-fixed worktree 계약을 검증한다. S-1/S-2는 state-tool 측 전용이라 test_state_tool.py에 있다. S-3/S-15는 각각 git working-tree diff의 일관성/~/.opal 배포본 변경 금지 때문에 이 파일에서 제외했다(092/112 번호 체계). CLI(subprocess) 공개 인터페이스로만 검증하고, mock/patch 없이 실 git 저장소 fixture(conftest.py)를 사용한다. 118 TEST-SCENARIO.md S-3~S-8,S-11,S-15(taskCapsuleCone·canonical metadata 6필드·TASK_PATH_AMBIGUOUS·finalize 재진입 path-scoped 판정·memory-index-request 가드)와 119 TEST-SCENARIO.md S-7·S-8(상태 의존 canonical path 해석 — registry attribution_state가 closed일 때만 허브 merge 사본을 반환하고 active 3상태는 차단 유지)을 검증한다. 118 S-3·119 S-7은 불변식 보존형이라 구현 전에도 PASS하는 회귀 보호 케이스다. 119는 태스크 092의 stale 문서 단언 3건(opal-harness.md §2.5 존재·pm/dispatch-process.md ## 작업 경로 블록·worktree-tool create 연속 문자열)을 현재 문면으로 교체했다. 124 TEST-SCENARIO.md S-1~S-17·S-24·S-26~S-28(multi-repo 루트 캡슐 소유권 — 루트+자식 worktree 등록, 소유권 불변식, 루트 Git 적격 R-1~R-5 차단과 부수 효과 부재, init 초안의 task_artifacts 제시 조건, repo별 base-ref 동결과 baseBranchOverrides 키 검증, 추적 범위 겹침 차단, 회수·롤백의 자식→루트 역순, 2축 멱등 재시도와 불일치 시 자동 복구 금지, multi-repo create의 sparse-checkout 미호출)을 검증한다. 138 W-21(워크트리 발급값 사본 배달 — create가 registry와 같은 발급 원천으로 `<worktree_root>/.opal/task-ownership.json`을 쓰고, status가 누락·불일치 사본을 멱등 보강하며 연속 호출이 바이트 동일하고, legacy 메타는 사본을 만들지 않으며, ownership_core.resolve_roots의 3분기와 추론 금지 AST 검사)를 검증한다 — resolve_roots 계약 테스트는 `ownership-tool/tests/**`가 RED 자산이라 이 파일이 사본 생산·소비 왕복을 함께 집행한다.",
   "exports": [],
-  "depends": ["conftest.py", "worktree_tool.py", "opal/tools/state-tool/state_tool.py"]
+  "depends": ["conftest.py", "worktree_tool.py", "opal/tools/state-tool/state_tool.py",
+    "opal/tools/ownership-tool/ownership_tool/ownership_core.py"]
 }
 """
 
@@ -3036,3 +3037,404 @@ def test_t124_s28_fixture_matches_pug_observed_shape_and_is_supported(tmp_path):
     assert payload.get("ok") is True, (
         f"S-28: pug 동형 fixture가 도구에 지원되지 않으면 대표성이 없다: {payload}"
     )
+
+
+class TestOwnershipSetRed:
+    """태스크 138 S-14 — RED-first. `worktree-tool ownership-set` 서브커맨드는 아직
+    구현되지 않았다(6 허용 조합/금지 조합 전이, atomic replace, legacy 통과).
+    @header exports: [] depends: [conftest.py, worktree_tool.py]"""
+
+    def test_s14_ownership_set_allowed_combo_updates_atomically(self, project_b):
+        result = run_worktree_cli(
+            [
+                "ownership-set",
+                "--task-path",
+                str(project_b.root),
+                "--execution-ownership",
+                "worktree_session_owned",
+                "--attribution-state",
+                "active",
+            ]
+        )
+        payload = parse_json_stdout(result, "ownership-set(S-14 allowed)")
+        assert payload.get("ok") is True
+
+    def test_s14_ownership_set_forbidden_combo_rejected(self, project_b):
+        result = run_worktree_cli(
+            [
+                "ownership-set",
+                "--task-path",
+                str(project_b.root),
+                "--execution-ownership",
+                "not_a_real_state",
+                "--attribution-state",
+                "active",
+            ]
+        )
+        payload = parse_json_stdout(result, "ownership-set(S-14 forbidden)")
+        assert payload.get("ok") is False
+        assert payload.get("error") == "ownership_state_invalid"
+
+    def test_s14_legacy_meta_without_execution_ownership_passes_status(self, project_b):
+        result = run_worktree_cli(["status", "--task-path", str(project_b.root)])
+        payload = parse_json_stdout(result, "status(S-14 legacy)")
+        assert payload.get("ok") is True
+
+
+class TestCreateSettingsProvisioningRed:
+    """태스크 138 S-18 — RED-first. `.claude/settings.local.json` permissions-only
+    provisioning 계약. 아직 미구현이라 hooks 포함 fixture에서 거부되지 않는다."""
+
+    def test_s18_permissions_only_settings_copied_and_gitignored(self, project_b):
+        hub_settings = project_b.root / ".claude" / "settings.json"
+        hub_settings.parent.mkdir(parents=True, exist_ok=True)
+        hub_settings.write_text(json.dumps({"permissions": {"allow": ["Bash(ls:*)"]}}), encoding="utf-8")
+
+        result = run_worktree_cli(["create", "--task", "s18-perm-only", "--project-root", str(project_b.root)])
+        payload = parse_json_stdout(result, "create(S-18 permissions-only)")
+        assert payload.get("ok") is True
+        worktree_root = pathlib.Path(payload["worktree_root"])
+        local_settings = worktree_root / ".claude" / "settings.local.json"
+        assert local_settings.exists()
+        data = json.loads(local_settings.read_text(encoding="utf-8"))
+        assert "hooks" not in data
+        gitignore_text = (worktree_root / ".gitignore").read_text(encoding="utf-8")
+        assert ".claude/settings.local.json" in gitignore_text
+
+    def test_s18_hooks_present_rejected_settings_hook_key_forbidden(self, project_b):
+        hub_settings = project_b.root / ".claude" / "settings.json"
+        hub_settings.parent.mkdir(parents=True, exist_ok=True)
+        hub_settings.write_text(
+            json.dumps({"permissions": {"allow": []}, "hooks": {"Stop": []}}), encoding="utf-8"
+        )
+
+        result = run_worktree_cli(["create", "--task", "s18-with-hooks", "--project-root", str(project_b.root)])
+        payload = parse_json_stdout(result, "create(S-18 hooks forbidden)")
+        assert payload.get("ok") is False
+        assert payload.get("error") == "settings_hook_key_forbidden"
+
+    def test_s18_missing_settings_file_is_noop_create_succeeds(self, project_b):
+        result = run_worktree_cli(["create", "--task", "s18-no-settings", "--project-root", str(project_b.root)])
+        payload = parse_json_stdout(result, "create(S-18 no settings)")
+        assert payload.get("ok") is True
+
+
+class TestCheckpointRed:
+    """태스크 138 S-19 — RED-first. `worktree-tool checkpoint`는 아직 구현되지 않았다
+    (scope violation, mode denied, requires_user_approval, SHA append)."""
+
+    def _add_worktree(self, project_b, branch: str, task_dirname: str) -> pathlib.Path:
+        dest = project_b.root.parent / task_dirname
+        add_worktree(project_b.root, branch, dest)
+        return dest
+
+    def test_s19_checkpoint_commits_owned_scope_and_appends_sha(self, project_b):
+        wt = self._add_worktree(project_b, "feat/OP-TASK-s19", "task_s19")
+        (wt / "owned_file.txt").write_text("hello", encoding="utf-8")
+        run_git(["add", "owned_file.txt"], cwd=wt)
+
+        result = run_worktree_cli(
+            ["checkpoint", "--worktree-root", str(wt), "--mode", "agentic", "--stage", "execute"]
+        )
+        payload = parse_json_stdout(result, "checkpoint(S-19 owned scope)")
+        assert payload.get("ok") is True
+        assert payload.get("checkpoint_shas")
+
+    def test_s19_checkpoint_scope_violation_for_unowned_staged_files(self, project_b):
+        wt = self._add_worktree(project_b, "feat/OP-TASK-s19-scope", "task_s19_scope")
+        (wt / "unowned_file.txt").write_text("nope", encoding="utf-8")
+        run_git(["add", "unowned_file.txt"], cwd=wt)
+
+        result = run_worktree_cli(
+            [
+                "checkpoint",
+                "--worktree-root",
+                str(wt),
+                "--mode",
+                "agentic",
+                "--stage",
+                "execute",
+                "--owned-scope",
+                "owned_only.txt",
+            ]
+        )
+        payload = parse_json_stdout(result, "checkpoint(S-19 scope violation)")
+        assert payload.get("ok") is False
+        assert payload.get("error") == "checkpoint_scope_violation"
+
+    def test_s19_checkpoint_mode_denied_for_semi_agentic_execute(self, project_b):
+        wt = self._add_worktree(project_b, "feat/OP-TASK-s19-denied", "task_s19_denied")
+        (wt / "f.txt").write_text("x", encoding="utf-8")
+        run_git(["add", "f.txt"], cwd=wt)
+
+        result = run_worktree_cli(
+            ["checkpoint", "--worktree-root", str(wt), "--mode", "semi_agentic", "--stage", "execute"]
+        )
+        payload = parse_json_stdout(result, "checkpoint(S-19 mode denied)")
+        assert payload.get("ok") is False
+        assert payload.get("error") == "checkpoint_mode_denied"
+
+    def test_s19_forbidden_git_command_requires_user_approval(self, project_b):
+        wt = self._add_worktree(project_b, "feat/OP-TASK-s19-forbidden", "task_s19_forbidden")
+
+        result = run_worktree_cli(
+            [
+                "checkpoint",
+                "--worktree-root",
+                str(wt),
+                "--mode",
+                "interactive",
+                "--stage",
+                "execute",
+                "--git-command",
+                "push --force",
+            ]
+        )
+        payload = parse_json_stdout(result, "checkpoint(S-19 forbidden git command)")
+        assert payload.get("ok") is False
+        assert payload.get("error") == "requires_user_approval"
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# W-21: 워크트리 발급값 사본 배달과 hub 루트 해석
+# ═════════════════════════════════════════════════════════════════════════════
+
+_OWNERSHIP_ISSUED_KEYS = (
+    "allocator_root",
+    "task_home",
+    "task_folder",
+    "task_path",
+    "artifact_repo",
+    "task_ownership_version",
+)
+
+
+def _ownership_core():
+    """ownership_tool.ownership_core를 import한다 — tool-dir을 sys.path에 넣는 방식은
+    `opal/tools/ownership-tool/tests/conftest.py`와 동형이다.
+
+    [배치 근거] resolve_roots 계약 테스트는 `ownership-tool/tests/**`가 RED 자산이라 손댈 수
+    없어(W-21 변경 범위) 소유한 이 파일에 둔다. 사본 생산자(worktree-tool)와 소비 해석기
+    (ownership_core)가 같은 발급값 계약의 양끝이므로 한 파일에서 왕복을 집행한다.
+    """
+    tool_dir = str(WORKTREE_TOOL_PATH.parent.parent / "ownership-tool")
+    if tool_dir not in sys.path:
+        sys.path.insert(0, tool_dir)
+    from ownership_tool import ownership_core
+
+    return ownership_core
+
+
+def _copy_path(wt_root: pathlib.Path) -> pathlib.Path:
+    return wt_root / ".opal" / "task-ownership.json"
+
+
+def test_w21_create_writes_issued_ownership_copy_into_worktree(project_b: ProjectB):
+    """[W-21/AC-1] `create` 성공 경로가 `<worktree_root>/.opal/task-ownership.json`에 registry
+    발급 6종을 기록하고, 그 값이 registry meta와 **글자 그대로 동일**하다(재계산 없음).
+
+    워크트리 안에는 `.opal-worktrees`가 없으므로 소비자는 registry를 탐색으로 찾을 수 없다.
+    추론이 아니라 발급으로 해결한다는 계약(harness/worktree.md §task root와 allocator root)의
+    생산자 측 집행이다.
+    """
+    result = run_worktree_cli(
+        [
+            "create",
+            "--project-root",
+            str(project_b.root),
+            "--task",
+            "138",
+            "--task-folder",
+            "138-260916-opds-fixture",
+        ]
+    )
+    payload = parse_json_stdout(result, "create(W-21 사본)")
+    assert payload.get("ok") is True, f"W-21 create 실패: {payload}"
+
+    wt_root = project_b.root / ".opal-worktrees" / "task_138"
+    copy_path = _copy_path(wt_root)
+    assert copy_path.is_file(), f"W-21: 발급값 사본이 없다: {copy_path}"
+
+    copy_data = json.loads(copy_path.read_text(encoding="utf-8"))
+    assert set(copy_data) == set(_OWNERSHIP_ISSUED_KEYS), (
+        f"W-21: 사본 키가 발급 6종과 다르다: {sorted(copy_data)}"
+    )
+
+    meta_path = project_b.root / ".opal-worktrees" / ".meta" / "task_138.json"
+    meta = json.loads(meta_path.read_text(encoding="utf-8"))
+    for key in _OWNERSHIP_ISSUED_KEYS:
+        assert copy_data[key] == meta[key], (
+            f"W-21: {key} 사본값이 registry 발급값과 다르다 — "
+            f"사본={copy_data[key]!r} registry={meta[key]!r}"
+        )
+
+    # 사본은 읽기 snapshot이다 — 워크트리를 허브로 승격시키지 않는다.
+    assert copy_data["allocator_root"] == str(project_b.root)
+    assert not (wt_root / ".opal-worktrees").exists(), (
+        "W-21: 워크트리에 `.opal-worktrees`를 만들면 안 된다(자기 승격 금지)"
+    )
+    # `.opal/worktree.json`은 건드리지 않는 별개 파일이다.
+    assert copy_path.name == "task-ownership.json"
+
+
+def test_w21_status_backfills_missing_copy_idempotently(project_b: ProjectB):
+    """[W-21/AC-2] `status --project-root <허브>`가 누락 사본을 보강하고, 이미 있으면 no-op이며,
+    값이 registry와 다르면 registry 기준으로 덮어쓴다. **2회 연속 호출 결과가 바이트 동일**하다.
+    """
+    create = run_worktree_cli(
+        [
+            "create",
+            "--project-root",
+            str(project_b.root),
+            "--task",
+            "139",
+            "--task-folder",
+            "139-260916-opds-fixture",
+        ]
+    )
+    assert parse_json_stdout(create, "create(W-21 보강)").get("ok") is True
+
+    wt_root = project_b.root / ".opal-worktrees" / "task_139"
+    copy_path = _copy_path(wt_root)
+    issued_body = copy_path.read_text(encoding="utf-8")
+
+    # ① 누락 → 보강
+    copy_path.unlink()
+    first = run_worktree_cli(["status", "--project-root", str(project_b.root), "--task", "139"])
+    assert parse_json_stdout(first, "status(W-21 ①)").get("ok") is True
+    assert copy_path.is_file(), "W-21: status가 누락 사본을 보강하지 않았다"
+    assert copy_path.read_text(encoding="utf-8") == issued_body
+
+    # ② 이미 있으면 no-op — 2회 연속 호출이 파일·stdout 모두 바이트 동일
+    exclude_path = project_b.root / ".git" / "info" / "exclude"
+    exclude_before = exclude_path.read_bytes()
+    assert b".opal/task-ownership.json" in exclude_before, (
+        "W-21: 사본 경로가 git exclude에 등록되지 않았다(워크트리가 영구 dirty가 된다)"
+    )
+    before_bytes = copy_path.read_bytes()
+    before_mtime = copy_path.stat().st_mtime_ns
+    second = run_worktree_cli(["status", "--project-root", str(project_b.root), "--task", "139"])
+    assert parse_json_stdout(second, "status(W-21 ②)").get("ok") is True
+    assert copy_path.read_bytes() == before_bytes, "W-21: 연속 호출이 사본 바이트를 바꿨다"
+    assert copy_path.stat().st_mtime_ns == before_mtime, (
+        "W-21: 본문이 같은데 파일을 다시 썼다(no-op 위반)"
+    )
+    assert second.stdout == first.stdout, "W-21: status 2회 연속 stdout이 바이트 동일하지 않다"
+    assert exclude_path.read_bytes() == exclude_before, (
+        "W-21: 연속 호출이 git exclude에 중복 등록했다"
+    )
+
+    # ③ 값이 registry와 다르면 registry 기준으로 덮어쓴다
+    tampered = json.loads(issued_body)
+    tampered["allocator_root"] = "/tmp/not-the-hub"
+    copy_path.write_text(json.dumps(tampered, ensure_ascii=False, indent=2), encoding="utf-8")
+    third = run_worktree_cli(["status", "--project-root", str(project_b.root), "--task", "139"])
+    assert parse_json_stdout(third, "status(W-21 ③)").get("ok") is True
+    assert copy_path.read_text(encoding="utf-8") == issued_body, (
+        "W-21: registry와 어긋난 사본을 registry 기준으로 덮어쓰지 않았다"
+    )
+
+
+def test_w21_legacy_meta_without_ownership_version_gets_no_copy(tmp_path):
+    """[W-21/AC-6] `task_ownership_version` 부재 legacy 워크트리는 사본 없이도 기존 경로를
+    그대로 통과한다 — 없는 발급값을 지어내지 않는다(`_issue_task_ownership` legacy 계약 무변경).
+    """
+    guard = build_guard_repo(tmp_path, "clean", name_suffix="_w21legacy")
+    meta_path = guard.project_root / ".opal-worktrees" / ".meta" / f"task_{guard.task}.json"
+    meta = json.loads(meta_path.read_text(encoding="utf-8"))
+    assert meta.get("task_ownership_version") is None, "픽스처 전제: legacy 메타"
+
+    result = run_worktree_cli(
+        ["status", "--project-root", str(guard.project_root), "--task", guard.task]
+    )
+    payload = parse_json_stdout(result, "status(W-21 legacy)")
+    assert payload.get("ok") is True, f"W-21: legacy status가 실패했다: {payload}"
+    assert "task_path" not in payload, "W-21: legacy 출력이 변했다(C-1 위반)"
+
+    wt_root = guard.project_root / ".opal-worktrees" / f"task_{guard.task}"
+    assert not _copy_path(wt_root).exists(), (
+        "W-21: legacy 메타에서 발급값 사본을 만들면 안 된다"
+    )
+
+
+def test_w21_resolve_roots_has_exactly_three_branches(project_b: ProjectB, tmp_path):
+    """[W-21/AC-3] `ownership_core.resolve_roots(cwd)` 3분기 — ① 허브(.opal-worktrees/.meta 존재)
+    ② 워크트리(발급값 사본) ③ 미해석(roots_unresolved, 추측 없음).
+    """
+    ownership_core = _ownership_core()
+
+    create = run_worktree_cli(
+        [
+            "create",
+            "--project-root",
+            str(project_b.root),
+            "--task",
+            "140",
+            "--task-folder",
+            "140-260916-opds-fixture",
+        ]
+    )
+    meta_payload = parse_json_stdout(create, "create(W-21 resolve_roots)")
+    assert meta_payload.get("ok") is True
+
+    # ① 허브 세션 — allocator_root는 cwd 자신
+    hub = ownership_core.resolve_roots(project_b.root)
+    assert hub["ok"] is True and hub["kind"] == "hub"
+    assert hub["allocator_root"] == str(project_b.root)
+
+    # ② 워크트리 세션 — 사본이 적어준 값 그대로, 자기를 허브로 승격시키지 않는다
+    wt_root = project_b.root / ".opal-worktrees" / "task_140"
+    wt = ownership_core.resolve_roots(wt_root)
+    assert wt["ok"] is True, f"W-21: 워크트리 분기 미해석: {wt}"
+    assert wt["kind"] == "worktree", "W-21: 사본을 근거로 워크트리를 허브로 승격시켰다"
+    assert wt["allocator_root"] == meta_payload["allocator_root"] == str(project_b.root)
+    assert wt["task_path"] == meta_payload["task_path"]
+
+    # ③ 둘 다 없음 — 추측하지 않고 진단만 남긴다
+    bare = tmp_path / "w21_bare"
+    bare.mkdir()
+    unresolved = ownership_core.resolve_roots(bare)
+    assert unresolved["ok"] is False
+    assert unresolved["diagnostic"] == "roots_unresolved"
+    assert unresolved["allocator_root"] is None and unresolved["task_path"] is None
+
+
+def test_w21_no_inference_in_resolve_roots_source():
+    """[W-21/AC-4] `resolve_roots` 소스가 os.walk/iterdir/.parents 순회를 쓰지 않는다.
+    `test_resolver.py::test_s3_no_filesystem_scan_in_resolver_source`의 AST 검사 방식을 그대로
+    본뜨되, 검사 범위를 `resolve_roots` FunctionDef 하위로 한정한다(모듈 전역의 다른 함수는
+    이 금지의 대상이 아니다).
+    """
+    import ast
+
+    ownership_core = _ownership_core()
+    src = pathlib.Path(ownership_core.__file__).read_text(encoding="utf-8")
+    tree = ast.parse(src)
+
+    target = next(
+        (
+            node
+            for node in ast.walk(tree)
+            if isinstance(node, ast.FunctionDef) and node.name == "resolve_roots"
+        ),
+        None,
+    )
+    assert target is not None, "W-21: resolve_roots 정의를 찾지 못했다"
+
+    forbidden = {"walk", "iterdir", "parents"}
+    found = [
+        node.attr
+        for node in ast.walk(target)
+        if isinstance(node, ast.Attribute) and node.attr in forbidden
+    ]
+    assert not found, f"W-21: resolve_roots에 추론성 파일시스템 순회가 있다: {found}"
+
+    # `.opal-worktrees` 문자열은 ① 분기의 허브 판정에만 쓰인다 — cwd를 잘라 조상을 찾는
+    # 용도가 아니므로, 문자열 조작(split/rsplit/partition/index) 부재로 그 금지를 집행한다.
+    slicing = [
+        node.attr
+        for node in ast.walk(target)
+        if isinstance(node, ast.Attribute)
+        and node.attr in {"split", "rsplit", "partition", "rpartition", "index"}
+    ]
+    assert not slicing, f"W-21: resolve_roots에 cwd 문자열 자르기가 있다: {slicing}"

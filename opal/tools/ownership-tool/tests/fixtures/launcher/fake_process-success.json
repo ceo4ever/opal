@@ -1,0 +1,10 @@
+{
+  "path": "success",
+  "adapter": "generic",
+  "adapter_handle": "term-handle-0001",
+  "reported_cwd": "{WT}/task_220",
+  "launched_at": "2026-09-17 10:10:00+09:00",
+  "prompt_id": "prompt-0001",
+  "submitted_at": "2026-09-17 10:10:05+09:00",
+  "exit_code": 0
+}

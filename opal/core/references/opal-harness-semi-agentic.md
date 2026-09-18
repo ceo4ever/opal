@@ -45,6 +45,7 @@
 ## 5. EXECUTE-equivalent 이후의 동작 (agentic 준용)
 
 - PM 자율 통과 (사용자 확인 행은 도구가 자동 승인 — 아래 참조)
+- 등록된 전용 worktree에서도 EXECUTE·TEST 중간 체크포인트 커밋은 자율 수행하지 않는다. 변경은 누적하고, §6의 기존 CLOSE 진입 사용자 승인을 받은 뒤 구현·테스트 체크포인트를 만든다 (`harness/guards.md` §커밋 규칙).
 - AGENTIC-LOG.md 자동 생성 (EXECUTE 등가 첫 행 advance/mark 시점에 PM이 생성)
 - Gate 루핑 규칙: `opal-harness-agentic.md §5` 적용
 - PM 대행 의무(판단 기록/직접 검증/완수/품질 책임/투명성/에스컬레이션/폴백 승인): `opal-harness-agentic.md §3` 적용
@@ -86,6 +87,9 @@ CLOSE 진입 절차:
      --note "{owner_name} 확인: <발화 요약>"
    ```
 4. 이후 CLOSE 첫 행 mark 시 도구가 prev_user_row 자동 검증을 통과시킨다
+5. 등록된 전용 worktree이면 이 승인이 누적 EXECUTE·TEST 산출물의 체크포인트와 승인된 CLOSE/finalize 범위의 최종 체크포인트를 허용한다.
+   - 새 사용자 Gate를 만들지 않는다.
+   - 허브·기본 브랜치 commit, merge·push·배포, 이력 재작성과 worktree 제거는 포함하지 않으며 별도 사용자 승인을 유지한다.
 
 근거: `opal-harness-agentic.md §4` CLOSE 진입 게이트 / `PLAN.md §2.16 G-13` / D-DEC-5b
 

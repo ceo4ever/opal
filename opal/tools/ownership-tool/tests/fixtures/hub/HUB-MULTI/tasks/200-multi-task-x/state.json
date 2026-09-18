@@ -1,0 +1,24 @@
+{
+  "task_id": "200-multi-task-x",
+  "skill": "opds",
+  "mode": "agentic",
+  "schema_version": "1.2",
+  "created_at": "2026-09-17 09:00:00",
+  "updated_at": "2026-09-17 09:30:00",
+  "current_status": "in_progress",
+  "rows": [
+    {
+      "row_id": 1,
+      "stage": "EXECUTE",
+      "item": "작업",
+      "key": "execute.implement",
+      "status": "in_progress",
+      "status_label": "🔄",
+      "timestamp": "2026-09-17 09:30:00",
+      "owner": "PM",
+      "note": null
+    }
+  ],
+  "next_action": "EXECUTE 작업 진행 중",
+  "worktree": null
+}
