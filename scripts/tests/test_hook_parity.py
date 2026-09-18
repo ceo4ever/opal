@@ -21,6 +21,7 @@ _SCRIPTS_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 _REPO_ROOT = os.path.dirname(_SCRIPTS_DIR)
 MERGE_HOOKS = os.path.join(_SCRIPTS_DIR, "merge-hooks.py")
 INSTALL_SH = os.path.join(_SCRIPTS_DIR, "install-mac.sh")
+WINDOWS_PS1 = os.path.join(_SCRIPTS_DIR, "install", "windows.ps1")
 HOOKS_SRC = os.path.join(_REPO_ROOT, "opal", "core", "hooks", "claude-hooks.json")
 RETIRED_SRC = os.path.join(_REPO_ROOT, "opal", "core", "hooks", "claude-hooks.retired.json")
 
@@ -233,17 +234,138 @@ class TestHookParity(unittest.TestCase):
                     for b in rules if b.get(MARKER)]
             self.assertEqual(opal, [], path)
 
-    def test_installer_targets_home_settings_only(self):
+    def test_installer_targets_home_settings(self):
         """install-mac.sh 배선 parity — 소스/퇴역 경로와 HOME settings 대상이 유지된다."""
         with open(INSTALL_SH, encoding="utf-8") as f:
             script = f.read()
         self.assertIn('opal/core/hooks/claude-hooks.json', script)
         self.assertIn('retired_json="${hooks_json%.json}.retired.json"', script)
-        self.assertIn('merge_hooks_config "$settings" "$hooks_src"', script)
-        self.assertIn('local settings="$USER_HOME/.claude/settings.json"', script)
+        self.assertIn('merge_hooks_config "$target" "$hooks_src"', script)
+        self.assertIn('"$USER_HOME/.claude"', script)
         # retired 경로 파생이 실제 파일과 맞는지 확인
         self.assertEqual(HOOKS_SRC[: -len(".json")] + ".retired.json", RETIRED_SRC)
         self.assertTrue(os.path.isfile(RETIRED_SRC))
+
+    # ── ADD-1: CLAUDE_CONFIG_DIR 대상 확장 ────────────────────────────────
+    # 설치가 ~/.claude/settings.json에만 훅을 쓰면, CLAUDE_CONFIG_DIR로 다른
+    # config 디렉터리를 쓰는 세션은 OPAL 훅이 하나도 없는 채로 돈다. 증상이
+    # "조용한 무동작"이라 배포는 성공으로 보이면서 소유권 집행만 통째로 빠진다
+    # (2026-09-18 S-25 실측). 대상 해석은 hook_settings_targets가 소유한다.
+
+    def _install_source(self):
+        with open(INSTALL_SH, encoding="utf-8") as f:
+            return f.read()
+
+    def test_installer_declares_hook_settings_targets_function(self):
+        """대상 해석이 이름 있는 seam으로 분리돼 있어야 테스트가 붙을 수 있다."""
+        self.assertIn("hook_settings_targets()", self._install_source())
+
+    def test_installer_reads_claude_config_dir(self):
+        """CLAUDE_CONFIG_DIR을 대상 해석에서 실제로 읽어야 한다."""
+        self.assertIn("CLAUDE_CONFIG_DIR", self._install_source())
+
+    @staticmethod
+    def _source_fns(home, *fns):
+        """install-mac.sh에서 지정한 함수 정의만 떼어 eval하는 bash 조각."""
+        evals = "".join(
+            "eval \"$(sed -n '/^%s()/,/^}/p' %s)\"\n" % (fn, INSTALL_SH) for fn in fns
+        )
+        return 'set -e\nUSER_HOME="%s"\n%s' % (home, evals)
+
+    def _targets(self, home, env):
+        """install-mac.sh의 hook_settings_targets를 그대로 source해 호출한다."""
+        script = self._source_fns(
+            home, "claude_config_dirs", "hook_settings_targets"
+        ) + "hook_settings_targets\n"
+        out = subprocess.run(
+            ["/bin/bash", "-c", script],
+            capture_output=True, text=True, env={**os.environ, **env},
+        )
+        self.assertEqual(out.returncode, 0, out.stderr)
+        return [line for line in out.stdout.splitlines() if line.strip()]
+
+    def test_targets_default_is_home_settings_only(self):
+        """CLAUDE_CONFIG_DIR 미설정이면 기존 동작 그대로 HOME 1건이다."""
+        with tempfile.TemporaryDirectory() as home:
+            env = {k: v for k, v in os.environ.items() if k != "CLAUDE_CONFIG_DIR"}
+            env.pop("CLAUDE_CONFIG_DIR", None)
+            script = "unset CLAUDE_CONFIG_DIR\n" + self._source_fns(
+                home, "claude_config_dirs", "hook_settings_targets"
+            ) + "hook_settings_targets\n"
+            out = subprocess.run(
+                ["/bin/bash", "-c", script],
+                capture_output=True, text=True, env=env,
+            )
+            self.assertEqual(out.returncode, 0, out.stderr)
+            targets = [l for l in out.stdout.splitlines() if l.strip()]
+            self.assertEqual(targets, [os.path.join(home, ".claude", "settings.json")])
+
+    def test_targets_include_claude_config_dir(self):
+        """CLAUDE_CONFIG_DIR이 다른 경로면 그 settings.json도 대상에 들어간다."""
+        with tempfile.TemporaryDirectory() as home, tempfile.TemporaryDirectory() as cfg:
+            targets = self._targets(home, {"CLAUDE_CONFIG_DIR": cfg})
+            self.assertIn(os.path.join(home, ".claude", "settings.json"), targets)
+            self.assertIn(os.path.join(cfg, "settings.json"), targets)
+
+    def test_targets_deduplicate_when_config_dir_is_home_claude(self):
+        """CLAUDE_CONFIG_DIR이 ~/.claude를 가리키면 중복 병합하지 않는다."""
+        with tempfile.TemporaryDirectory() as home:
+            cfg = os.path.join(home, ".claude")
+            os.makedirs(cfg, exist_ok=True)
+            targets = self._targets(home, {"CLAUDE_CONFIG_DIR": cfg})
+            self.assertEqual(targets, [os.path.join(home, ".claude", "settings.json")])
+
+    def test_targets_ignore_empty_claude_config_dir(self):
+        """빈 문자열은 미설정과 같게 취급한다."""
+        with tempfile.TemporaryDirectory() as home:
+            targets = self._targets(home, {"CLAUDE_CONFIG_DIR": ""})
+            self.assertEqual(targets, [os.path.join(home, ".claude", "settings.json")])
+
+    def test_installer_declares_claude_config_dirs_function(self):
+        """대상 config 디렉터리 해석이 단일 seam으로 모여 있어야 한다."""
+        self.assertIn("claude_config_dirs()", self._install_source())
+
+    def _config_dirs(self, home, env):
+        script = self._source_fns(home, "claude_config_dirs") + "claude_config_dirs\n"
+        out = subprocess.run(
+            ["/bin/bash", "-c", script],
+            capture_output=True, text=True, env={**os.environ, **env},
+        )
+        self.assertEqual(out.returncode, 0, out.stderr)
+        return [line for line in out.stdout.splitlines() if line.strip()]
+
+    def test_config_dirs_include_claude_config_dir(self):
+        with tempfile.TemporaryDirectory() as home, tempfile.TemporaryDirectory() as cfg:
+            dirs = self._config_dirs(home, {"CLAUDE_CONFIG_DIR": cfg})
+            self.assertEqual(dirs, [os.path.join(home, ".claude"), cfg])
+
+    def test_permissions_agents_bootstrapper_follow_config_dirs(self):
+        """훅만 고치면 CLAUDE_CONFIG_DIR 세션은 부트스트랩·에이전트·권한이 빈 채로 돈다.
+
+        세 지점 전부가 claude_config_dirs를 순회해야 한다 — 하나라도 HOME에
+        고정돼 있으면 그 세션에서 해당 기능이 조용히 빠진다.
+        """
+        script = self._install_source()
+        # settings.json 대상은 hook_settings_targets가, 디렉터리 대상은
+        # claude_config_dirs가 준다 — 둘 다 같은 해석을 공유한다.
+        for fn in ("install_claude_permissions()",
+                   "install_claude_agents()"):
+            start = script.index(fn)
+            body = script[start:start + 600]
+            self.assertTrue(
+                "claude_config_dirs" in body or "hook_settings_targets" in body,
+                f"{fn}가 config dir를 순회하지 않음",
+            )
+        # 부트스트래퍼는 install_opal 본문에서 호출된다.
+        boot = script[script.index("claude-bootstrap.md") - 600:
+                      script.index("claude-bootstrap.md") + 400]
+        self.assertIn("claude_config_dirs", boot, "부트스트래퍼가 config dir를 순회하지 않음")
+
+    def test_windows_installer_reads_claude_config_dir(self):
+        """windows.ps1도 같은 경계를 따른다 — mac만 고치면 플랫폼 비대칭이 남는다."""
+        with open(WINDOWS_PS1, encoding="utf-8") as f:
+            script = f.read()
+        self.assertIn("CLAUDE_CONFIG_DIR", script)
 
 
 if __name__ == "__main__":

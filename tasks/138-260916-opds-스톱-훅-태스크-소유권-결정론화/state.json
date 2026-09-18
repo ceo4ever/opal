@@ -4,8 +4,8 @@
   "mode": "agentic",
   "schema_version": "1.2",
   "created_at": "2026-09-16 23:48:42",
-  "updated_at": "2026-09-18 20:11:20",
-  "current_status": "done",
+  "updated_at": "2026-09-18 21:02:15",
+  "current_status": "additional_work_done",
   "rows": [
     {
       "row_id": 1,
@@ -218,6 +218,17 @@
       "timestamp": "2026-09-18 20:02:23",
       "owner": "PM",
       "note": "CLOSE 완료 — 파이프라인 16행 전부 done. 워크트리 미머지 상태로 마감(completed_unmerged): merge·finalize-attribution·status --set done·worktree remove는 캡틴 권한. 배포 후 S-25 수동 E2E 1건 이월(resume token s25-b3506b030b69)"
+    },
+    {
+      "row_id": 17,
+      "stage": "CLOSE",
+      "item": "ADD-1 CLAUDE_CONFIG_DIR 훅 배포",
+      "key": "close.add_1",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-18 21:02:03",
+      "owner": "PM",
+      "note": "ADD-1 완료 — install이 $USER_HOME/.claude에만 배치해 CLAUDE_CONFIG_DIR 세션이 훅·부트스트래퍼·에이전트·권한 없이 조용히 돌던 결함 수정. install-mac.sh에 claude_config_dirs seam 신설 후 4지점 전부 순회로 교체, windows.ps1에 Get-ClaudeConfigDirs로 동일 경계 적용. RED 11건 선작성 후 GREEN, scripts/tests 31 passed. 실배포 실측: 두 대상 모두 훅 5·권한 2·부트스트래퍼·에이전트 배치 확인, 연속 3회 재설치 바이트 동일. 산출물 ADD_DONE-1.md"
     }
   ],
   "next_action": "태스크 완료",

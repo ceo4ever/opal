@@ -210,6 +210,36 @@ merge_hooks_config() {
     /usr/bin/python3 "$FRAMEWORK_ROOT/scripts/merge-hooks.py" "$target" "$hooks_json" "$retired_json"
 }
 
+# OPAL 산출물을 배치할 Claude config 디렉터리를 1행 1건으로 출력한다.
+#
+# 기본은 $USER_HOME/.claude 하나다. CLAUDE_CONFIG_DIR이 설정돼 있으면 그 디렉터리도
+# 대상에 넣는다 — 이 변수를 쓰는 세션은 ~/.claude를 읽지 않으므로, 대상을 HOME
+# 하나로 고정하면 훅·부트스트래퍼·에이전트 어댑터·권한이 전부 빠진 채로 돈다.
+# 증상이 "조용한 무동작"이라 배포는 성공으로 보이면서 OPAL만 통째로 빠진다
+# (2026-09-18 태스크 138 S-25 실측, ADD-1).
+#
+# 같은 경로를 두 번 처리하지 않는다 — 각 배치는 멱등이지만 요약에 같은 줄이 두 번
+# 뜨면 배포 결과를 오독하게 된다.
+claude_config_dirs() {
+    local home_dir="$USER_HOME/.claude"
+    printf '%s\n' "$home_dir"
+
+    [[ -z "${CLAUDE_CONFIG_DIR:-}" ]] && return 0
+
+    local config_dir="${CLAUDE_CONFIG_DIR%/}"
+    [[ "$config_dir" == "$home_dir" ]] && return 0
+    printf '%s\n' "$config_dir"
+}
+
+# 훅을 병합할 settings.json 대상. 대상 해석은 claude_config_dirs가 소유한다.
+hook_settings_targets() {
+    local dir
+    while IFS= read -r dir; do
+        [[ -z "$dir" ]] && continue
+        printf '%s\n' "$dir/settings.json"
+    done < <(claude_config_dirs)
+}
+
 install_dir() {
     local src="$1"
     local dst="$2"
@@ -389,7 +419,15 @@ install_gemini_hardening() {
 # ─── Claude Permissions ─────────────────────────────────
 
 install_claude_permissions() {
-    local settings="$USER_HOME/.claude/settings.json"
+    local settings
+    while IFS= read -r settings; do
+        [[ -z "$settings" ]] && continue
+        _install_claude_permissions_one "$settings"
+    done < <(hook_settings_targets)
+}
+
+_install_claude_permissions_one() {
+    local settings="$1"
 
     mkdir -p "$(dirname "$settings")"
 
@@ -730,8 +768,16 @@ PYEOF
 }
 
 install_claude_agents() {
+    local dir
+    while IFS= read -r dir; do
+        [[ -z "$dir" ]] && continue
+        _install_claude_agents_one "$dir/agents"
+    done < <(claude_config_dirs)
+}
+
+_install_claude_agents_one() {
     local agents_src="$USER_HOME/.opal/agents"
-    local agents_dst="$USER_HOME/.claude/agents"
+    local agents_dst="$1"
 
     if [[ ! -d "$agents_src" ]]; then
         warn "~/.opal/agents 부재 — Claude 어댑터 스킵"
@@ -1455,18 +1501,26 @@ install_opal() {
     # ── Claude Code hooks ──
     local hooks_src="$FRAMEWORK_ROOT/opal/core/hooks/claude-hooks.json"
     if [[ -f "$hooks_src" ]] && [[ -x /usr/bin/python3 ]]; then
-        local settings="$USER_HOME/.claude/settings.json"
-        mkdir -p "$(dirname "$settings")"
-        merge_hooks_config "$settings" "$hooks_src"
-        success "Claude Code hooks → $settings"
+        local target
+        while IFS= read -r target; do
+            [[ -z "$target" ]] && continue
+            mkdir -p "$(dirname "$target")"
+            merge_hooks_config "$target" "$hooks_src"
+            success "Claude Code hooks → $target"
+        done < <(hook_settings_targets)
     fi
 
     # ── 부트스트래퍼 설치 ──
     echo ""
     info "OPAL 부트스트래퍼 설치..."
 
-    install_opal_section "$opal_dir/bootstrapper/claude-bootstrap.md" \
-        "$USER_HOME/.claude/CLAUDE.md" "Claude"
+    # 부트스트래퍼가 없으면 그 config 디렉터리의 세션은 OPAL을 아예 부팅하지 않는다.
+    local claude_dir
+    while IFS= read -r claude_dir; do
+        [[ -z "$claude_dir" ]] && continue
+        install_opal_section "$opal_dir/bootstrapper/claude-bootstrap.md" \
+            "$claude_dir/CLAUDE.md" "Claude"
+    done < <(claude_config_dirs)
 
     mkdir -p "$USER_HOME/.cursor/rules"
     cp "$opal_dir/bootstrapper/cursor-bootstrap.mdc" "$USER_HOME/.cursor/rules/000-opal-agent.mdc"

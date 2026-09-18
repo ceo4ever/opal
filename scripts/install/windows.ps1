@@ -889,9 +889,13 @@ function Register-Bootstrapper {
 
     # ── Claude ──
     $claudeSnippet = [IO.Path]::Combine($bsDir, 'claude-bootstrap.md')
-    $claudeTarget  = [IO.Path]::Combine($userHome, '.claude', 'CLAUDE.md')
+    # 부트스트래퍼가 없으면 그 config 디렉터리의 세션은 OPAL을 아예 부팅하지 않는다(ADD-1).
+    $claudeTargets = Get-ClaudeConfigDirs | ForEach-Object { Join-Path $_ 'CLAUDE.md' }
+    $claudeTarget  = $claudeTargets[0]
     if (Test-Path $claudeSnippet) {
-        Install-OpalSection -SnippetPath $claudeSnippet -Target $claudeTarget -Label 'Claude'
+        foreach ($claudeTarget in $claudeTargets) {
+            Install-OpalSection -SnippetPath $claudeSnippet -Target $claudeTarget -Label 'Claude'
+        }
     }
 
     # ── Cursor: 단일 .mdc 파일 (CRLF 정규화 + BOM 미부착) ──
@@ -1513,6 +1517,27 @@ function Merge-ClaudeHooksConfig {
     Set-ContentNoBom -Path $Target -Value ($data | ConvertTo-Json -Depth 20)
 }
 
+function Get-ClaudeConfigDirs {
+    <#
+    .SYNOPSIS
+        OPAL 산출물을 배치할 Claude config 디렉터리 목록.
+    .DESCRIPTION
+        기본은 ~/.claude 하나다. CLAUDE_CONFIG_DIR이 설정돼 있으면 그 디렉터리도
+        대상에 넣는다 — 이 변수를 쓰는 세션은 ~/.claude를 읽지 않으므로, 대상을
+        HOME 하나로 고정하면 훅·부트스트래퍼·에이전트 어댑터가 전부 빠진 채로
+        돈다. 증상이 "조용한 무동작"이라 배포는 성공으로 보이면서 OPAL만 통째로
+        빠진다(태스크 138 ADD-1, install-mac.sh claude_config_dirs와 같은 경계).
+    #>
+    $homeDir = Join-Path $env:USERPROFILE '.claude'
+    $dirs = @($homeDir)
+    if (-not [string]::IsNullOrWhiteSpace($env:CLAUDE_CONFIG_DIR)) {
+        $configDir = $env:CLAUDE_CONFIG_DIR.TrimEnd('\', '/')
+        # 같은 경로를 두 번 처리하지 않는다 — 배치는 멱등이지만 요약이 중복된다.
+        if ($configDir -ne $homeDir) { $dirs += $configDir }
+    }
+    return $dirs
+}
+
 function Install-ClaudeHooks {
     param([Parameter(Mandatory)][string]$RepoRoot)
 
@@ -1521,9 +1546,17 @@ function Install-ClaudeHooks {
         Write-OpalInfo 'Claude hooks source 없음 — hooks 설치 스킵'
         return
     }
-    $settings = Join-Path $env:USERPROFILE '.claude\settings.json'
-    Merge-ClaudeHooksConfig -Target $settings -HooksJson $hooksSrc
-    Write-OpalOk "Claude Code hooks → $settings"
+    # 훅 대상은 기본 ~/.claude 하나지만, CLAUDE_CONFIG_DIR을 쓰는 세션은 ~/.claude를
+    # 읽지 않으므로 그 디렉터리의 settings.json도 대상에 넣는다 — 대상을 HOME 하나로
+    # 고정하면 그런 세션은 OPAL 훅이 전혀 없는 채로 돈다. 증상이 "조용한 무동작"이라
+    # 배포는 성공으로 보이면서 소유권 집행만 빠진다(태스크 138 ADD-1, mac 판과 동일 경계).
+    $targets = Get-ClaudeConfigDirs | ForEach-Object { Join-Path $_ 'settings.json' }
+    foreach ($settings in $targets) {
+        $dir = Split-Path -Parent $settings
+        if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Path $dir -Force | Out-Null }
+        Merge-ClaudeHooksConfig -Target $settings -HooksJson $hooksSrc
+        Write-OpalOk "Claude Code hooks → $settings"
+    }
 }
 
 function Install-OpalMcp {
