@@ -1,0 +1,246 @@
+{
+  "task_id": "132-260914-opd-oppb-프로젝트빌드-파일럿-신설",
+  "skill": "opd",
+  "mode": "agentic",
+  "schema_version": "1.1",
+  "created_at": "2026-09-14 13:12:10",
+  "updated_at": "2026-09-18 10:34:49",
+  "current_status": "done",
+  "rows": [
+    {
+      "row_id": 1,
+      "stage": "TASK",
+      "item": "작업",
+      "key": "task.task_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-14 13:12:21",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 2,
+      "stage": "TASK",
+      "item": "사용자 확인",
+      "key": "task.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-14 13:24:29",
+      "owner": "auto",
+      "note": "auto-approved on ANALYSIS entry"
+    },
+    {
+      "row_id": 3,
+      "stage": "ANALYSIS",
+      "item": "작업",
+      "key": "analysis.analysis_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-18 10:34:34",
+      "owner": "PM",
+      "note": "세션 압축 전 구간이라 워커 duration_ms 복구 불가 — 미측정 선언",
+      "worker_duration_unknown": true
+    },
+    {
+      "row_id": 4,
+      "stage": "ANALYSIS",
+      "item": "PM Gate",
+      "key": "analysis.pm_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-14 13:24:29",
+      "owner": "PM",
+      "note": null,
+      "gate": {
+        "artifacts": [
+          "ANALYSIS.md"
+        ],
+        "checklist": [
+          "sdlc-v2는 ANALYSIS.md first frontmatter template=sdlc-v2, 기존 문서는 legacy 재개 경로로 판정",
+          "sdlc-v2 Findings — 설계에 영향을 주는 확인 사실과 근거 존재",
+          "sdlc-v2 Change boundary — 직접 변경 후보·회귀 확인 대상·문서 갱신 후보 확인",
+          "sdlc-v2 Critical assumptions / Handoff — 남은 한계와 PLAN 결정 사항 분리",
+          "docs/PROJECT.md 레지스트리 기반 프로젝트/기획/설계 문서 선별 결과가 필요한 경우 반영됨",
+          "소스코드 원문 블록 0건 (코드펜스는 실행 명령·시그니처 한정)"
+        ]
+      }
+    },
+    {
+      "row_id": 5,
+      "stage": "ANALYSIS",
+      "item": "사용자 확인",
+      "key": "analysis.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-14 13:38:43",
+      "owner": "auto",
+      "note": "auto-approved on PLAN entry"
+    },
+    {
+      "row_id": 6,
+      "stage": "PLAN",
+      "item": "작업",
+      "key": "plan.plan_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-18 10:34:35",
+      "owner": "PM",
+      "note": "세션 압축 전 구간이라 워커 duration_ms 복구 불가 — 미측정 선언",
+      "worker_duration_unknown": true
+    },
+    {
+      "row_id": 7,
+      "stage": "PLAN",
+      "item": "PM Gate",
+      "key": "plan.pm_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-14 13:38:43",
+      "owner": "PM",
+      "note": null,
+      "gate": {
+        "artifacts": [
+          "TASK.md",
+          "PLAN.md"
+        ],
+        "checklist": [
+          "sdlc-v2 TASK.md AC/C → Work items 완료 기준 연결; 기존 문서는 legacy 재개 검사 적용",
+          "sdlc-v2 PLAN.md Work items 필수 열·W-ID·선행 작업·실행 그룹·파일 충돌 없음 — state-tool verify <태스크폴더> --plan-contract-check 통과",
+          "sdlc-v2 PLAN.md Risks 절 존재, 실제 위험은 H-N 사용 또는 위험 없음 명시",
+          "sdlc-v2 PLAN.md Release and recovery 존재",
+          "code-scan 결과 인용 — state-tool verify <태스크폴더> --code-scan-citation-check 통과 (코드 변경 태스크 한정, 문서 태스크는 skipped)"
+        ]
+      }
+    },
+    {
+      "row_id": 8,
+      "stage": "PLAN",
+      "item": "사용자 확인",
+      "key": "plan.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-14 13:41:15",
+      "owner": "auto",
+      "note": "auto-approved on TEST-SCENARIO entry"
+    },
+    {
+      "row_id": 9,
+      "stage": "TEST-SCENARIO",
+      "item": "작업",
+      "key": "test_scenario.test_scenario_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-18 10:34:35",
+      "owner": "PM",
+      "note": "세션 압축 전 구간이라 워커 duration_ms 복구 불가 — 미측정 선언",
+      "worker_duration_unknown": true
+    },
+    {
+      "row_id": 10,
+      "stage": "TEST-SCENARIO",
+      "item": "목표-커버 게이트",
+      "key": "test_scenario.scenario_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-14 13:43:24",
+      "owner": "PM",
+      "note": null,
+      "gate": {
+        "artifacts": [
+          "TEST-SCENARIO.md"
+        ],
+        "checklist": [
+          "sdlc-v2는 TEST-SCENARIO.md first frontmatter template=sdlc-v2, 기존 문서는 legacy 재개 경로로 판정",
+          "sdlc-v2 Setup / Scenarios 섹션 존재",
+          "sdlc-v2 Scenarios ID·검증 대상·조건·행동·기대 결과·방법·환경·시점 필수 열 채움",
+          "모든 AC/C와 존재하는 H의 S 연결 완전 — op-scenario-gate 내부 scenario-coverage-build + scenario-coverage-check 통과",
+          "대역을 쓰면 Setup에 사용 경계·한계를 명시하고 실제 integration 증거를 대체하지 않음",
+          "manual 시나리오가 있으면 Setup에 실행자와 실행 조건 명시"
+        ]
+      }
+    },
+    {
+      "row_id": 11,
+      "stage": "TEST-SCENARIO",
+      "item": "사용자 확인",
+      "key": "test_scenario.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-14 14:54:55",
+      "owner": "auto",
+      "note": "auto-approved on EXECUTE entry"
+    },
+    {
+      "row_id": 12,
+      "stage": "EXECUTE",
+      "item": "작업",
+      "key": "execute.implement",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-15 10:39:06",
+      "owner": "PM",
+      "note": null,
+      "step": "1/1",
+      "worker_duration_unknown": true
+    },
+    {
+      "row_id": 13,
+      "stage": "TEST",
+      "item": "작업",
+      "key": "test.run_tests",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-18 10:34:35",
+      "owner": "PM",
+      "note": "세션 압축 전 구간이라 워커 duration_ms 복구 불가 — 미측정 선언",
+      "worker_duration_unknown": true
+    },
+    {
+      "row_id": 14,
+      "stage": "TEST",
+      "item": "PM Gate",
+      "key": "test.pm_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-18 10:34:17",
+      "owner": "PM",
+      "note": "132 CLOSE — 소유자 승인, W-34·W-36 이월",
+      "gate": {
+        "artifacts": [
+          "TEST-SCENARIO.md",
+          "test-scenario.json"
+        ],
+        "checklist": [
+          "TEST-SCENARIO.md는 실행 전 명세로만 읽고 결과·증거를 기록하지 않음",
+          "test-scenario.json의 모든 필수 시나리오가 PASS이고 FAIL/BLOCKED가 없으며 실제 실행 증거가 존재",
+          "test-scenario.json 코드품질·보안·회귀 항목 PASS",
+          "컨벤션 자동 진단 PASS (GC-CONVENTION-*.md Critical/High 0건 — 컨벤션 적용 대상 ≥1건 시 발동)"
+        ]
+      }
+    },
+    {
+      "row_id": 15,
+      "stage": "TEST",
+      "item": "사용자 확인",
+      "key": "test.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-18 10:34:17",
+      "owner": "user",
+      "note": "132 CLOSE — 소유자 승인, W-34·W-36 이월"
+    },
+    {
+      "row_id": 16,
+      "stage": "CLOSE",
+      "item": "DONE.md 생성",
+      "key": "close.done_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-18 10:34:42",
+      "owner": "user",
+      "note": "소유자 CLOSE 승인 — W-34 실주행·W-36 출시 판정 이월"
+    }
+  ],
+  "next_action": "태스크 완료",
+  "worktree": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_132"
+}

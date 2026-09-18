@@ -1,0 +1,84 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://opal.local/schema/workspace.schema.json",
+  "title": "OPAL workspace declaration",
+  "_help": "{프로젝트}/.opal/workspace.json — 워크스페이스 자식 저장소의 멤버십 선언. git-sync-tool sync가 이 선언과 디스크를 대조한다. 정체성 비교 키는 host를 뺀 경로 전체(org/repo, 계층이 깊으면 org/subgroup/repo)이며 host는 비교에 사용하지 않는다 — 사용자별 SSH 별칭이 판정을 바꾸지 않게 하기 위한 의도적 트레이드오프이며, 그 대가로 github.com/o/r과 gitlab.com/o/r은 같은 좌표로 판정된다. 비교는 대소문자를 구분하지 않는다. state는 도구가 자동으로 바꾸지 않는다 — 선언 변경은 사람 결정이다.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "host",
+    "org",
+    "repos"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "enum": [
+        1,
+        "1",
+        "1.0"
+      ],
+      "_help": "선언 형식 버전. 사람이 손으로 쓰는 파일이라 1·\"1\"·\"1.0\" 표기 차이를 모두 받는다."
+    },
+    "host": {
+      "type": "string",
+      "minLength": 1,
+      "_help": "clone URL 조립에만 쓰는 기본 호스트(예: github.com). 대조 판정에는 사용하지 않는다."
+    },
+    "org": {
+      "type": "string",
+      "minLength": 1,
+      "_help": "최상위 org. repos[].repo는 항상 이 값 아래의 경로로 해석한다."
+    },
+    "repos": {
+      "type": "array",
+      "minItems": 0,
+      "items": {
+        "type": "object",
+        "required": [
+          "dir",
+          "repo",
+          "state"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "dir": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^[^/\\\\]+$",
+            "_help": "워크스페이스 직속 자식 디렉토리 이름. basename만 허용하며 경로 구분자·.·..는 거부한다."
+          },
+          "repo": {
+            "type": "string",
+            "minLength": 1,
+            "_help": "org 아래의 레포 경로. 짧은 이름(blend)이면 org/blend, subgroup이면 team/repo처럼 적어 org/team/repo가 된다. 계층은 잘리지 않는다."
+          },
+          "state": {
+            "enum": [
+              "active",
+              "deferred"
+            ],
+            "_help": "active=워크스페이스에 있어야 한다 / deferred=의도적으로 두지 않는다. 도구가 자동 변경하지 않는다."
+          },
+          "note": {
+            "type": "string",
+            "_help": "사람이 읽는 메모. 판정에 영향을 주지 않는다."
+          },
+          "_help": {
+            "type": "string",
+            "_help": "사람이 읽는 설명. 판정에 영향을 주지 않는다."
+          },
+          "clone_branch": {
+            "type": "string",
+            "minLength": 1,
+            "_help": "clone 시 체크아웃할 브랜치. 대조 판정에는 쓰지 않는다."
+          }
+        }
+      }
+    },
+    "_help": {
+      "type": "string",
+      "_help": "사람이 읽는 설명. 판정에 영향을 주지 않는다."
+    }
+  }
+}

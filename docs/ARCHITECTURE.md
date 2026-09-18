@@ -40,9 +40,10 @@ OPAL 자산은 Global/Project 2-레이어로 배치되고, 런타임은 세션 �
 │            │                                             │
 │            ▼                                             │
 │  ┌──────────────────────────────────────────────────┐   │
-│  │  서브에이전트 15개 (Agent 도구로 디스패치)           │   │
-│  │  ├─ 전문 8: plan / fe / be / db / planning /       │   │
-│  │  │          test / evaluator / loop-action         │   │
+│  │  서브에이전트 16개 (Agent 도구로 디스패치)           │   │
+│  │  ├─ 전문 9: plan / fe / be / db / planning /       │   │
+│  │  │          test / evaluator / loop-action /       │   │
+│  │  │          capability                             │   │
 │  │  └─ 범용 7: task / task-qa / task-action /         │   │
 │  │             sdd-action / wtm /                     │   │
 │  │             security-checker / convention-checker  │   │
@@ -84,11 +85,11 @@ OPAL 자산은 Global/Project 2-레이어로 배치되고, 런타임은 세션 �
 |----------|------|
 | `AGENT.md` | 세션 이벤트 판정과 최소 비서 커널. PM·pilot·stage·worker 규칙은 JIT 포인터만 보유 |
 | `identity.md` | 에이전트 정체성 (이름, 성격, 톤) |
-| `skills/` | 독립 스킬 8개 + OPAL 스킬 44개 |
-| `agents/` | 서브에이전트 15개 (전문 8 + 범용 7) |
+| `skills/` | 독립 스킬 8개 + OPAL 스킬 47개 |
+| `agents/` | 서브에이전트 16개 (전문 9 + 범용 7) |
 | `community-skills/` | 커뮤니티 스킬 — clone-copy(git)로 사용자가 온디맨드 설치 (검색은 `npx skills find`). 사용자 등록분 `user-registry.json` 포함, install 불가침 |
 | `references/` | 레지스트리·표준·운영 문서 **21 엔트리**(최상위 19파일 + 하위 디렉토리 2). `events.json`이 이벤트별 필수 문서 집합을 소유하고 `opal-harness.md`는 호환 인덱스만 제공한다. 하위 디렉토리는 `harness/`(실행 규칙 owner 23파일)와 `pm/`(PM 프로세스 owner 7파일)이다. |
-| `tools/` | CLI 도구 **22종**(도구 디렉토리 기준). 파이프라인 집행(`state-tool`, `test-tool`, `backlog-tool`, `opal-action-monitor`), 이벤트 전문·해시·receipt와 프로젝트 부트 브리핑 집행(`event-loader`), 환경·배포, 탐색·연동, 지식·코드 지도 도구로 구성된다. 세부 공개 계약은 각 도구의 README가 소유한다. |
+| `tools/` | CLI 도구 **25종**(도구 디렉토리 기준). 파이프라인 집행(`state-tool`, `test-tool`, `backlog-tool`, `opal-action-monitor`), 이벤트 전문·해시·receipt와 프로젝트 부트 브리핑 집행(`event-loader`), 환경·배포, 탐색·연동, 지식·코드 지도 도구로 구성된다. 세부 공개 계약은 각 도구의 README가 소유한다. |
 | `.venv/` | Python 가상환경 (openpyxl, pandas, playwright 등 — requirements.txt로 관리) |
 | `templates/` | 프로젝트 에이전트 템플릿 |
 
@@ -122,6 +123,7 @@ OPAL 자산은 Global/Project 2-레이어로 배치되고, 런타임은 세션 �
 | | opal-pilot-project-dev (oppd) | 프로젝트 개발 라이프사이클: opwt → WBS → opd/opds |
 | | opal-pilot-sdd (opsdd) | SDD 기반 오케스트레이터: TASK → SPEC → REVIEW → DESIGN → EXECUTE-LOOP → VERIFY → CLOSE (7 Phase, Phase 4는 ACT 루프) |
 | | opal-pilot-project-loop (oppl) | 루프 기반 프로젝트 오케스트레이터: 설계 루프(인터뷰→PRD→TRD→CONTRACT→백로그) → 실행 루프(태스크 반복, 종료조건 5종·3-SSOT tool-gated) |
+| | opal-pilot-project-build (oppb) | 프로젝트 빌드 오케스트레이터: 확정된 실행 계약(`INTENT.md` 1개)을 capability 미니 태스크로 소화 — P0~P5 6단계(pipeline.json 22행)·사용자 게이트 6종. 수렴형은 oppl, 확정 실행 계약의 무인 소화는 oppb. P3~P4만 Supervisor headless 무인 구간이고 P0~P2·P5는 대화형 Product Flow가 수행 |
 | | opal-pilot-data-design (opdd) | DB 설계 파이프라인: 데이터 사전 확립 → 모델링(개념/논리/물리) → DDL·마이그레이션 6단계 |
 | | opal-pilot-gc (opgc) | 경량 Pilot (thin wrapper) — 커밋 전 보안·컨벤션 진단 4단계. 범위·상태·Gate·CLOSE만 소유하고 검사는 op-gc-* 스킬에 위임 (진단 전담, 수정 없음) |
 | **dev 단계** | op-dev-analysis | 코드베이스 분석 + 기술 컨텍스트 수집 |
@@ -165,7 +167,7 @@ OPAL 자산은 Global/Project 2-레이어로 배치되고, 런타임은 세션 �
 | | opal-help (help) | 스킬 카탈로그 & 사용법 안내 (목록 Mode 1 / 개별 안내 Mode 2) |
 | | opal-improve (opim) | PM 개선 루프 — 관찰→분류→기록→보고→승인 5단계 (로컬 `.opal/` / FW `~/.opal/fw-inbox`) |
 | | opal-action-status (opas) | 루프 액션 에이전트 진행 현황 발동층 — 자동 탐지 + 해석 보고 |
-| | opal-workspace-sync | 워크스페이스 Git 일괄 동기화 — 직속 자식 저장소 안전 최신화(clean+ff-only) |
+| | opal-workspace-sync | 워크스페이스 Git 일괄 동기화 — 직속 자식 저장소 안전 최신화(clean+ff-only) + `workspace.json` 선언 대조 보고·승인 후 clone |
 
 ### 에이전트 (Agents)
 
@@ -195,6 +197,7 @@ OPAL 자산은 Global/Project 2-레이어로 배치되고, 런타임은 세션 �
 | opal-test-agent | standard | TEST | 공통 | 테스트 전문 (BE/FE/E2E 모드) |
 | opal-evaluator-agent | advanced | 명세 리뷰 (oppl G/D6) | 평가 | 계약·설계 루브릭 심판 — CONTRACT.md 루브릭절 기준 구현 전 판정 (verdict-only·readonly) |
 | opal-loop-action-agent | advanced | 태스크 실행 (oppl Loop 2) | 공통 | 루프 액션 에이전트 — PM→루프 액션 에이전트→워커 계층에서 T1~T5+G를 태스크당 1회 디스패치로 완주 (내부 4축 디스패치, 3-SSOT 중 test-tool만 호출) |
+| opal-capability-agent | standard | 미니 태스크 실행 (oppb P3) | 공통 | capability owner — execution packet의 lease 4축 안에서 RUN·PROVE 수행 후 구조화 result 반환. oppb의 유일한 신규 owner 에이전트이며 하위 PL·범용 오케스트레이터를 생성하지 않는다 (ACCEPT·Git·상태 전이는 외부 런타임) |
 
 ### 커뮤니티 스킬 (Community Skills)
 
@@ -416,18 +419,19 @@ opal/                                    ← 이 저장소
 │   │   ├── references/                  레지스트리·표준 21 엔트리 (harness/ 23파일 · pm/ 7파일 포함)
 │   │   ├── mcps/                        MCP 설정 4종 (context7, playwright, shadcn, sequential-thinking)
 │   │   └── hooks/                       Claude Code hooks 설정
-│   ├── tools/                           CLI 도구 22종 (+ check-env.js 보조 스크립트, requirements.txt)
+│   ├── tools/                           CLI 도구 25종 (+ check-env.js 보조 스크립트, requirements.txt)
 │   │   ├── event-loader/                이벤트 전문·해시·receipt 검증 + 프로젝트 부트 브리핑
 │   │   ├── state-tool/                  파이프라인 현황판 JSON SSOT (서브명령 11종)
 │   │   ├── test-tool/                   테스트 단계 결정론 집행 (resolve/check/unit/integration + scenario-* + E2E profile/verdict 계약)
 │   │   ├── backlog-tool/                oppl 백로그 backlog.json SSOT
+│   │   ├── oppb-runtime-tool/           oppb run root·workgraph·lease·checkpoint·evidence 결정론 집행
 │   │   ├── opal-action-monitor/         루프 액션 에이전트 진행 현황판 (읽기 전용)
 │   │   ├── brain-tool/                  프로젝트 브레인 지식 위키 집행
 │   │   ├── memory-tool/                 메모리 인덱스·히스토리 집행 + docs/brain 졸업
 │   │   ├── code-scan/                   @header 조회·작성층 + 매니페스트 샤드 분할층
 │   │   ├── opal-cli/                    update/doctor/uninstall/mcp/console 단일 진입점
 │   │   ├── doctor/                      환경 진단 4섹션
-│   │   ├── git-sync-tool/               워크스페이스 git 일괄 안전 최신화 (clean + ff-only)
+│   │   ├── git-sync-tool/               워크스페이스 git 일괄 안전 최신화 (clean + ff-only) + 선언 대조 (sync/init/clone)
 │   │   ├── improve-tool/                PM 개선 루프 record/list/show (scope local/fw)
 │   │   ├── skill-registry/              스킬 레지스트리 CLI (skill-registry.js)
 │   │   ├── tool-scan/                   도구 capability 검색·live 사용법
@@ -439,7 +443,7 @@ opal/                                    ← 이 저장소
 │   │   ├── date/                        현재 일시 취득 (date.js)
 │   │   ├── check-env.js                 Node.js 환경 체크
 │   │   └── requirements.txt             Python 의존성 (venv 관리)
-│   ├── skills/                          OPAL 스킬 (44개)
+│   ├── skills/                          OPAL 스킬 (47개)
 │   │   ├── opal-pilot-dev/              오케스트레이터: Full Task (opd)
 │   │   ├── opal-pilot-dev/              오케스트레이터: Full profile (opd) + Short profile (opds logical alias)
 │   │   ├── opal-pilot-dev-wireframe/    오케스트레이터: Wireframe UI (opdw)
@@ -447,6 +451,7 @@ opal/                                    ← 이 저장소
 │   │   ├── opal-pilot-project/          오케스트레이터: Project (opp)
 │   │   ├── opal-pilot-project-dev/      오케스트레이터: Project Dev (oppd)
 │   │   ├── opal-pilot-project-loop/     오케스트레이터: Project Loop (oppl)
+│   │   ├── opal-pilot-project-build/    오케스트레이터: Project Build (oppb)
 │   │   ├── opal-pilot-sdd/              오케스트레이터: SDD (opsdd)
 │   │   ├── opal-pilot-data-design/      오케스트레이터: DB 설계 (opdd)
 │   │   ├── opal-pilot-gc/               오케스트레이터: 보안·컨벤션 진단 (opgc)
@@ -459,6 +464,8 @@ opal/                                    ← 이 저장소
 │   │   ├── op-task{,-plan,-execute,-qa}/ 범용 단계 스킬 (4개)
 │   │   ├── op-sdd-{spec,verify,plan,action-plan}/
 │   │   │                                SDD 단계 스킬 (4개)
+│   │   ├── op-oppb-{project-slice,knowledge-finalize}/
+│   │   │                                oppb 단계 스킬 (2개)
 │   │   ├── op-{brain-ingest,scenario-gate,spec-validator}/
 │   │   │                                보조 단계 스킬 (3개)
 │   │   ├── opal-project-init/           프로젝트 초기화 (opi)
@@ -470,8 +477,8 @@ opal/                                    ← 이 저장소
 │   │   ├── opal-help/                   스킬 카탈로그·사용법 안내
 │   │   ├── opal-improve/                PM 개선 루프 (opim)
 │   │   ├── opal-action-status/          루프 액션 진행 현황 (opas)
-│   │   └── opal-workspace-sync/         워크스페이스 Git 일괄 동기화
-│   ├── agents/                          OPAL 에이전트 (15개: 전문 8 + 범용 7)
+│   │   └── opal-workspace-sync/         워크스페이스 Git 일괄 동기화 + 선언 대조 보고
+│   ├── agents/                          OPAL 에이전트 (16개: 전문 9 + 범용 7)
 │   │   ├── opal-plan-agent/             전문: PLAN 설계 (advanced)
 │   │   ├── opal-fe-agent/               전문: FE 구현
 │   │   ├── opal-be-agent/               전문: BE 구현 (advanced)
@@ -480,6 +487,7 @@ opal/                                    ← 이 저장소
 │   │   ├── opal-test-agent/             전문: 테스트 (도메인별 모드)
 │   │   ├── opal-evaluator-agent/        전문: 명세 심판 (advanced, verdict-only)
 │   │   ├── opal-loop-action-agent/      전문: 루프 액션 (advanced, oppl Loop 2)
+│   │   ├── opal-capability-agent/       전문: capability owner (standard, oppb P3 미니 태스크)
 │   │   ├── opal-task-agent/             범용 워커 (advanced, 폴백)
 │   │   ├── opal-task-qa-agent/          범용 QA 워커
 │   │   ├── opal-task-action-agent/      액션 에이전트 (oppd)

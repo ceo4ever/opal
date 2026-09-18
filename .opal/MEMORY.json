@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_task_number": 136,
+  "last_task_number": 140,
   "memories": [
     {
       "title": "변경이력 제거 검토 결정 — A안 확정",
@@ -19,7 +19,7 @@
       "summary": "010 Phase 2 후속. 워커 7종은 권고 수준(MUST·게이트 없음). 106은 PM측만 도구 판정 승격"
     },
     {
-      "title": "워커 디스패치 시 worker.dispatch receipt 블록 누락",
+      "title": "worker.dispatch receipt 블록 누락",
       "date": "2026-09-12",
       "type": "improvement",
       "status": "candidate",
@@ -27,7 +27,7 @@
       "summary": "태스크 118 TEST 단계에서 PM이 opal-convention-checker 디스패치 프롬프트에 worker.dispatch receip…"
     },
     {
-      "title": "파일럿 태스크 설계 시 주제 규모와 파이프라인 프로필을 함께 결정한다",
+      "title": "태스크 규모와 파이프라인 프로필 동시 결정",
       "date": "2026-09-12",
       "type": "improvement",
       "status": "candidate",
@@ -43,7 +43,7 @@
       "summary": "백로그 SSOT와 MVP Agent 대화 흐름, Orca Terminal 참조 원칙"
     },
     {
-      "title": "워커 자기보고 부재를 산출물 부재로 간주하지 않는 실측 판정을 PM 절차에 상시화",
+      "title": "워커 자기보고 부재 ≠ 산출물 부재",
       "date": "2026-09-15",
       "type": "improvement",
       "status": "candidate",
@@ -51,7 +51,7 @@
       "summary": "태스크 123에서 워커가 긴 포그라운드 명령 뒤 '존재하지 않는 알림을 기다린다'는 문구만 반환하고 종료한 사례가 8건 누적됐다. 대부분 산출…"
     },
     {
-      "title": "test-tool에 red_required 갱신 경로 부재 — 시나리오 성격 오배정의 되돌림 비용이 전량 재실행",
+      "title": "test-tool red_required 갱신 부재",
       "date": "2026-09-15",
       "type": "improvement",
       "status": "candidate",
@@ -59,7 +59,7 @@
       "summary": "TEST-SCENARIO 작성 시 보존·회귀 가드형 시나리오(S-9)를 '구현 전 RED'로 잘못 배정했다. 구현 전에 이미 통과하는 시나리오…"
     },
     {
-      "title": "install-mac.sh 시드 병합이 top-level 키 단위라 신규 하위 키가 기존 사용자에게 전파되지 않음",
+      "title": "install 시드 병합이 top-level 키 단위",
       "date": "2026-09-15",
       "type": "improvement",
       "status": "candidate",
@@ -75,23 +75,44 @@
       "summary": "사전 존재 실패를 기준선에 넣으면 그 범위의 신규 회귀를 탐지할 수 없다"
     },
     {
-      "title": "missing_pm_activity 트리거 조건이 계약에 미정의",
-      "date": "2026-09-16",
-      "type": "improvement",
-      "status": "candidate",
-      "file": "memory/missing_pm_activity_트리거_조건이_계약에_미정의.md",
-      "summary": "state-tool verify --run-log-completeness-check가 반환하는 누락 목록 4종 중 missing_pm_acti…"
-    },
-    {
       "title": "PM 권고 전 기존 테스트 자산 확인 누락",
       "date": "2026-09-16",
       "type": "improvement",
       "status": "candidate",
       "file": "memory/PM_권고_전_기존_테스트_자산_확인_누락.md",
       "summary": "태스크 135에서 PM이 'run_log_core.append에 data 키 집합 폐쇄 검사를 추가하자'를 소유자에게 권고해 승인까지 받았으나…"
+    },
+    {
+      "title": "brain-tool add-page 인자는 슬러그",
+      "date": "2026-09-17",
+      "type": "improvement",
+      "status": "candidate",
+      "file": "memory/brain_tool_add_page의_위치_인자는_페이지_슬러그다.md",
+      "summary": "139 CLOSE에서 add-page의 위치 인자에 브레인 루트(.opal/brain)를 넘겨 슬러그가 'brain'인 페이지가 만들어졌다.…"
     }
   ],
   "history": [
+    {
+      "title": "132 oppb 프로젝트빌드 파일럿 신설",
+      "date": "2026-09-18",
+      "stage": "완료",
+      "path": "tasks/132-260914-opd-oppb-프로젝트빌드-파일럿-신설/",
+      "result": "(PM 보강 대기)"
+    },
+    {
+      "title": "139 opws 워크스페이스 선언 기반 확장",
+      "date": "2026-09-17",
+      "stage": "완료",
+      "path": "tasks/139-260917-opds-opws-워크스페이스-선언-기반-확장/",
+      "result": "workspace.json 선언×디스크 6상태 대조를 git-sync-tool에 추가하고 init/clone 서브명령을 신설. 정체성 키를 host 제외 경로 전체로 고정해 subgroup 계층 절단 미탐(H-1)을 차단. 선언 부재 시 도입 전 동작 100% 유지. pytest 45 passed, 독립 검증 2회(1차 fail로 미탐 적발 → 2차 pass)"
+    },
+    {
+      "title": "137 run log 계약 완성",
+      "date": "2026-09-17",
+      "stage": "완료",
+      "path": "tasks/137-260916-opds-run-log-계약-완성/",
+      "result": "missing_pm_activity 트리거를 앵커 2종으로 계약에 정의하고 구현해 빈 배열이 '누락 없음'을 뜻하게 했고, PM activity payload 키 폐쇄를 CLI 표면에서 기록 코어 validate_event()로 내려 모든 A4 생산 경로에 동일 적용했다. 선행 실패 4건(HEAD 대리 기준선 3 + 인터프리터 게이트 1)도 정정해 3스위트 504 passed/0 failed."
+    },
     {
       "title": "136 모드별 실행 지속성 계약",
       "date": "2026-09-16",
@@ -105,27 +126,6 @@
       "stage": "완료",
       "path": "tasks/123-260912-oppl-태스크-실행로그-표준화/",
       "result": "기록 계층 완성 — redact() 마스킹 4종 실동작(멱등·구조 보존·공통 초크포인트)으로 .gitignore 한시 제외를 제거해 마스킹된 조각이 git 추적 대상이 됐고, 4 MiB 조각 경계 전환을 배타 락 구간 안에서 원자 수행해 동시 append에도 새 조각이 하나만 생기며 순번은 run 전역으로 이어진다. terminal duration_spans 합 검증과 reconcile-duration 파생 조회를 더해 state-tool mark가 분 투영을 자동 기록하고 불일치 수동값은 worker_duration_conflict로 거부한다. 조용시간 설정에 timeZone 2층 머지와 캐시 토큰 서명을 추가했다. 시나리오 19/19 pass, run-log-tool 53/0, state-tool 457 passed·3 skipped, 회귀 0. AC-9 색인과 강제 집행·파이프라인 확산은 후속 이관."
-    },
-    {
-      "title": "133 부트 요약 실행경로 통합",
-      "date": "2026-09-15",
-      "stage": "완료",
-      "path": "tasks/133-260914-opds-부트-요약-실행경로-통합/",
-      "result": "직접 수행 태스크와 registry canonical worktree 태스크를 부트 요약에서 통합하고, 최신 3건·잔여 건수·경로 이상·실행 모드를 1,024바이트 이내로 표시"
-    },
-    {
-      "title": "134 agentic 모드 지속성 복원",
-      "date": "2026-09-15",
-      "stage": "완료",
-      "path": "tasks/134-260914-opd-agentic-모드-지속성-복원/",
-      "result": "state-tool effective mode resolver로 사용자 검토 왕복·세션 재개·중첩/트랙 전환의 agentic 상속을 복원하고 S1~S10 및 전체 회귀를 통과함"
-    },
-    {
-      "title": "131 루프파일럿 실행안정화",
-      "date": "2026-09-14",
-      "stage": "완료",
-      "path": "tasks/131-260914-opd-루프파일럿-실행안정화/",
-      "result": "OPPL 상한·완료판정을 도구 집행으로 전환. oppl-runtime-tool 신설(admit ledger), opal-agent에 process group·독립 watchdog·terminal framing·출력 writer 소유권. tools.md를 1212행 카탈로그에서 92행 레지스트리로 재정의하고 출력 규범을 harness owner 문서로 분리해 stage.execute에 편입. 도구 README 13→22종 전수. 검증 1239 passed"
     }
   ]
 }

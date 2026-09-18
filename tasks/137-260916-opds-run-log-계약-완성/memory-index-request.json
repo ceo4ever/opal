@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "requests": [
+    {
+      "task_id": "137-260916-opds-run-log-계약-완성",
+      "title": "MEMORY 인덱스 고아 행 11건",
+      "type": "improvement",
+      "status": "applied",
+      "file": "memory/MEMORY_인덱스_고아_행_11건.md",
+      "summary": "인덱스 행 11건의 file 포인터가 가리키는 본문 부재. delete --orphan --ref가 정식 처방",
+      "body_sha256": "7043dea5c6b23aada486db4e0f91c62467e28b2ecfcd571ce47c46247f8232d1",
+      "requested_at": "2026-09-17 07:30:46"
+    }
+  ]
+}

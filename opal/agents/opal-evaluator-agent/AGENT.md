@@ -29,13 +29,18 @@ tools: [Read, Grep, Glob, Bash]
 | 파라미터 | 필수 | 설명 |
 |---------|------|------|
 | task_folder | O | 태스크 폴더 경로 (예: `tasks/NNN-oppl-{프로젝트명}/tasks/T{NN}-{태스크명}/`) |
-| phase | O | 판정 시점 — `design-review`(설계 루프 D6) / `spec-review`(태스크 파이프라인 G, 구현 전) / `drift-recheck`(구현·테스트 중 계약 drift 발견 시 재콜백) / `scenario-rubric`(op-scenario-gate 루프에서 목표-커버 시나리오 판단축 채점) |
+| phase | O | 판정 시점 — `design-review`(설계 루프 D6) / `spec-review`(태스크 파이프라인 G, 구현 전) / `drift-recheck`(구현·테스트 중 계약 drift 발견 시 재콜백) / `scenario-rubric`(op-scenario-gate 루프에서 목표-커버 시나리오 판단축 채점) / `acceptance`(OPPB P4 `p4.acceptance` — 프로젝트 완료조건↔증거 대응 판정) |
 | target_artifacts | O | 판정 대상 산출물 목록 (예: `PLAN.md`, `USER_FLOW.md`, `test-scenario.json`, `PRD.md`, `TRD.md`, `CONTRACT.md`, `surfaces.json`) |
 | contract_path | O | `CONTRACT.md` 경로 — 루브릭절 기준 원천 (convention-checker가 `docs/CONVENTIONS.md`를 읽듯, 본 에이전트는 `CONTRACT.md` 루브릭절을 읽는다) |
 | timestamp | O | 보고서 파일명용 타임스탬프 (예: `2026-07-10T16-33-00`) |
 | project_root | O | 프로젝트 루트 경로 |
 | iteration | `phase==scenario-rubric`일 때 O | op-scenario-gate 루프 회차(N) — 이력 레코드 식별에 사용 |
 | scenario_source | `phase==scenario-rubric`일 때 O | 정규화 커버리지 페이로드 또는 `TEST-SCENARIO.md` 경로 |
+| acceptance_path | `phase==acceptance`일 때 O | OPPB run root의 `acceptance.json` 경로 — 완료조건(`criteria[]`: `id`·`description`·`contributing_tasks`·`satisfied`·`evidence[]`)과 증거 역인덱스(`evidence_index`)의 원천 |
+| workgraph_path | `phase==acceptance`일 때 O | `workgraph.json` 경로 — 기여 미니 태스크의 상태와 `runner_attempt_id` 대조용(증거 독립성 판정) |
+| evidence_root | `phase==acceptance`일 때 O | 색인된 evidence 루트 경로 — `{run_root}/evidence/{scope}/{evidence_id}.json` (Evidence Tool이 schema·code head·scope hash 검증 후 불변 색인한 문서) |
+
+> **[MUST] `phase` 5번째 값 — `acceptance`(OPPB P4)**: 위 4개 값에 더해 `phase`는 `acceptance`를 받는다 — OPPB Product Flow P4 `p4.acceptance`(pipeline id 16)에서 프로젝트 완료조건↔증거 대응을 판정하는 시점이다. `scenario-rubric`과 동일하게 Base 루브릭 트랙과 분리된 **병렬 전용 트랙**이며, 이때 `target_artifacts`·`contract_path`는 사용하지 않는다(위 `acceptance_path`·`workgraph_path`·`evidence_root`가 대체 입력이다). 기존 4개 phase(`design-review`·`spec-review`·`drift-recheck`·`scenario-rubric`)의 입력·판정·보고 계약은 무변경이다.
 
 ---
 
@@ -73,9 +78,26 @@ tools: [Read, Grep, Glob, Bash]
 
 > **[MUST] verdict 규칙(scenario-rubric 전용)**: 세 축 각 ≥1점(0점 축 없음) **AND** 평균 ≥1.5 → `verdict: pass`, 아니면 `verdict: fail` + 미달 축별 `gaps[]` 반환. (근거: `opal/core/references/harness/scenario-gate.md` §2 6축 정의·§5-1 종료조건 임계)
 
+#### Phase 1-A: acceptance 전용 판정 규칙 (`phase == "acceptance"`)
+
+`phase == "acceptance"`일 때는 Base 루브릭(Likert 1–5)도 Phase 1-S(0~2점)도 적용하지 않고 아래 **완료조건↔증거 대응 4검사**를 적용한다(별도 트랙, 다른 트랙과 분리·비혼용). 판정 단위는 `acceptance.json`의 완료조건(`criteria[]`) 1건이다.
+
+| 검사 | 척도 | 통과 조건 | 근거 |
+|------|------|-----------|------|
+| ⓐ 증거 존재 | binary yes/no | 해당 완료조건의 `evidence[]`가 비어 있지 않고 각 `evidence_id`가 `evidence_root`에 실제 색인되어 있다 | 제안서 §10 "완료조건 → 완료조건↔증거 대응" |
+| ⓑ 증거 독립성 | binary yes/no | 각 증거의 `verifier.attempt_id`가 해당 미니 태스크의 `runner_attempt_id`와 다르다 | 제안서 §13.2 수용기준 9 (미니 태스크 accepted 전 독립 검증 증거 존재) |
+| ⓒ 대응 적합 | binary yes/no | 증거의 `scope`가 `contributing_tasks`에 속하고 `result`가 통과이며, 실제 실행된 `commands`가 완료조건 `description`이 요구하는 검증을 덮는다 | 본 에이전트 소관 — 기계 대조가 아니라 "덮는가"의 주관 판정 |
+| ⓓ 기여 태스크 완결 | binary yes/no | `contributing_tasks` 전원이 `workgraph.json`에서 `accepted` 상태다 | 제안서 §13.2 수용기준 14 (미니 태스크당 응집 acceptance cluster) |
+
+> **[MUST] verdict 규칙(acceptance 전용)**: 완료조건 1건은 ⓐ~ⓓ가 **전부 yes**일 때만 `satisfied: true`다. 전체 `verdict`는 `criteria[]`의 모든 완료조건이 `satisfied: true`이면 `pass`, 하나라도 아니면 `fail` + 미충족 완료조건별 `unmet[]`을 반환한다. ⓐⓑ는 yes인데 ⓒ가 no인 경우(증거는 있으나 완료조건을 덮지 않음)는 증거 부재와 구분해 `reason`에 명시한다 — 이 구분이 Repair 귀속의 근거가 된다.
+
+> **[MUST] `acceptance.json`·`workgraph.json` 쓰기 금지**: 두 문서의 유일한 writer는 OPPB Controller Tool이다. 본 에이전트는 두 문서를 **읽기만** 하고 `satisfied` 갱신·`DONE.md` 렌더를 직접 수행하지 않는다 — 판정 JSON만 반환하고 반영은 Controller·Product Flow의 책임이다(생성자≠평가자 헌법과 동일).
+
 ### Phase 2: CONTRACT.md 루브릭절 병합
 
 > `phase == "scenario-rubric"`은 본 Phase를 건너뛴다 — Phase 1-S 전용 루브릭은 CONTRACT.md 병합 대상이 아니다(별도 트랙).
+
+> `phase == "acceptance"`도 본 Phase를 건너뛴다 — Phase 1-A 전용 4검사는 CONTRACT.md 루브릭절 병합 대상이 아니다(별도 트랙).
 
 ```
 if contract_path 존재 (CONTRACT.md):
@@ -96,6 +118,8 @@ else:
 3. 판정 레코드 생성: `{artifact, dimension, score_or_binary, reason(근거 인용), suggestion}`
 
 > `phase == "scenario-rubric"`은 `target_artifacts` 대신 `scenario_source`(정규화 페이로드 또는 `TEST-SCENARIO.md`)를 Read하여 Phase 1-S 3축(①⑤⑥)을 채점한다. 판정 레코드: `{axis, score(0-2), reason(근거 인용), gap(<1점일 때만)}`.
+
+> `phase == "acceptance"`는 `target_artifacts` 대신 `acceptance_path`(완료조건·증거 역인덱스)·`workgraph_path`(미니 태스크 상태·`runner_attempt_id`)·`evidence_root`(색인된 evidence 문서)를 Read하여, 완료조건 1건마다 Phase 1-A의 4검사(ⓐⓑⓒⓓ)를 적용한다. 판정 레코드: `{criterion_id, check, result(yes|no), reason(evidence_id·commands 인용), gap(no일 때만)}`.
 
 ### Phase 4: 결과 계약 산출
 
@@ -118,12 +142,21 @@ Phase 3의 판정 레코드를 결과 계약 형식으로 정리한다:
 
 verdict은 Phase 1-S의 `[MUST]` 규칙(세 축 각 ≥1점 AND 평균 ≥1.5)을 그대로 적용한다.
 
+**`phase == "acceptance"` 결과 계약 (전용, Base·scenario-rubric 결과 계약과 분리)**:
+
+```json
+{"criteria": [{"id": "ac-{task}", "checks": {"evidence_present": "yes|no", "independent": "yes|no", "covers": "yes|no", "tasks_accepted": "yes|no"}, "satisfied": true, "evidence_ids": ["{evidence_id}"], "contributing_tasks": ["{task_id}"], "reason": "판정 근거(evidence_id·commands 인용)"}], "unmet": ["미충족 완료조건 id와 원인 (satisfied=false인 조건만)"], "verdict": "pass|fail"}
+```
+
+verdict은 Phase 1-A의 `[MUST]` 규칙(완료조건별 ⓐ~ⓓ 전부 yes AND 전 완료조건 `satisfied: true`)을 그대로 적용한다.
+
 ### Phase 5: 자기완결 보고서 생성
 
 - `phase == "spec-review"` → `{task_folder}/QA-SPEC.md`
 - `phase == "design-review"` → `{task_folder}/QA-SPEC-DESIGN-{timestamp}.md` (설계 루프 D6, 산출물별 반복 판정 가능)
 - `phase == "drift-recheck"` → `{task_folder}/QA-SPEC-DRIFT-{timestamp}.md`
 - `phase == "scenario-rubric"` → 파일을 만들지 않고 판정 JSON만 반환한다. op-scenario-gate가 `.scenario-gate-history.json`에 회차별 결과를 기록한다.
+- `phase == "acceptance"` → 파일을 만들지 않고 판정 JSON만 반환한다. OPPB Controller Tool이 `acceptance.json` 갱신과 `DONE.md`·evidence manifest 렌더를 소유한다.
 - 그 외 phase의 기존 보고서 경로 규칙은 유지한다.
 
 보고서 구성:
@@ -134,6 +167,7 @@ verdict은 Phase 1-S의 `[MUST]` 규칙(세 축 각 ≥1점 AND 평균 ≥1.5)�
 
 > 위 보고서 구성은 `design-review`/`spec-review`/`drift-recheck`에만 적용한다.
 > `scenario-rubric`은 Phase 4 결과 계약 JSON만 반환한다.
+> `acceptance`도 보고서를 만들지 않고 Phase 4 전용 결과 계약 JSON만 반환한다.
 
 ### Phase 6: 결과 반환
 
@@ -164,6 +198,21 @@ verdict은 Phase 1-S의 `[MUST]` 규칙(세 축 각 ≥1점 AND 평균 ≥1.5)�
 }
 ```
 
+`phase == "acceptance"` 결과 반환 예시(전용):
+
+```json
+{
+  "artifact_path": null,
+  "summary": "acceptance 판정 완료: verdict={pass|fail}, 완료조건 {M}건 중 satisfied {N}건, 미충족 {K}건",
+  "status": "completed | blocked",
+  "verdict": "pass | fail",
+  "criteria": [],
+  "unmet": [],
+  "blockers": [],
+  "changed_files": []
+}
+```
+
 > **[MUST]** `changed_files`에는 본 에이전트가 생성한 보고서만 포함한다. 본 에이전트는 판정 전담이며 소스 코드·설계 산출물을 수정하지 않는다.
 
 ---
@@ -185,5 +234,7 @@ verdict은 Phase 1-S의 `[MUST]` 규칙(세 축 각 ≥1점 AND 평균 ≥1.5)�
 | 설계 확정 SSOT (루브릭 Base 근거) | 태스크 폴더 `SPEC.html` §04 검증 3-tier + 기준 항목, §05 CONTRACT 거버넌스 | Phase 1, Phase 5 |
 | 코드 컨벤션 (기계검증절, 참고만) | `docs/CONVENTIONS.md` | Phase 3 (컨벤션 정신 차원 참고) |
 | 시나리오 게이트 SSOT (scenario-rubric 판단축·종료조건 근거) | `opal/core/references/harness/scenario-gate.md` §2(6축)·§5(종료조건 임계) | Phase 1-S, Phase 4 |
+| OPPB 완료조건 판정 SSOT (acceptance 4검사 근거) | `docs/proposals/opal-oppb-project-build-pilot.md` §10(검증 시점과 실행 주체)·§13.2 수용기준 9·14 | Phase 1-A, Phase 4 |
+| OPPB 완료조건·증거 문서 (acceptance 입력, 읽기 전용) | `{acceptance_path}`(`acceptance.json`)·`{workgraph_path}`(`workgraph.json`)·`{evidence_root}` | Phase 3 |
 
 ---

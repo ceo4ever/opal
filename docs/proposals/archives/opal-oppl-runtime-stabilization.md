@@ -120,7 +120,7 @@ attempt 1건의 PID·PGID·시작 fingerprint·heartbeat·terminal result·exit 
 `opal-agent`가 `<run-dir>/<phase>[.aN].attempt.json`에 원자 기록한다. ledger는 `attempt_id`와 그
 파일 경로(`active_attempt_id`, `record_path`)만 외래 참조로 갖고 원문을 중복 저장하지 않는다. OPPD
 Controller도 같은 attempt record를 소비하므로 원문 owner는 공용 쪽에 둔다
-(`docs/proposals/opal-oppd-v3-lean-project-execution.md:344-345`).
+(`docs/proposals/opal-oppb-project-build-pilot.md:379-380`).
 
 `opal-agent`는 attempt 한 건의 실행 record primitive를, `oppl-runtime-tool`은 여러 attempt의
 round·resume·예산·상한 집계를 소유한다. OPPD가 같은 primitive를 사용하더라도 OPPL의 round

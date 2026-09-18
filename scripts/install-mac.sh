@@ -47,6 +47,7 @@
 #   v4.7 2026-09-02 21:40 KST: 플랫폼 sub-agent 어댑터 확장 필드 통로 신설 — 센티넬 주석으로 감싼 OPAL_ADAPTER_FIELD_SPEC JSON 상수(name/description/model/effort × 4플랫폼) 도입, emit_platform_agent_adapter의 인라인 mapping dict·out_lines 3줄 고정과 install_codex_agents의 codex_model_map·4줄 고정 write를 build_pairs()+serialize_yaml()/serialize_toml() 스펙 순회로 교체(값 인용은 기존 yaml_escape/toml_escape 재사용, 플랫폼명 리터럴 비교 없이 mode 값에만 분기). effort를 Claude(독립 key)/Codex(model_reasoning_effort, max→xhigh 축약)에 첫 적용, Cursor는 예약(omit)·Gemini는 미지원(omit). 미정의 effort 값은 stderr 경고 후 필드만 생략(종료코드 0). 기존 3필드 emit 결과는 바이트 동일 유지(TS-001) (105)
 #   v4.8 2026-09-02 22:40 KST: emit_platform_agent_adapter/install_codex_agents의 `OPAL_ADAPTER_FIELD_SPEC="$spec_json" "$py" ...` 커맨드 prefix-assignment가 전역 `readonly OPAL_ADAPTER_FIELD_SPEC`(v4.7)와 이름이 같아 대입 자체가 거부되어 install-mac.sh 실행이 즉시 중단되던 결함 fix — 두 호출부 모두 `env OPAL_ADAPTER_FIELD_SPEC=... "$py"`로 전환(env(1) 인자 경유라 셸 readonly 판정을 거치지 않음). 폴백 스펙 리터럴 바이트는 무변경. 부수 원인 fix — 테스트 하네스(test_agent_adapter_fields.sh)가 함수 본문만 추출해 전역 readonly 선언 없이 실행했기 때문에 이 결함이 기존 14케이스를 통과했었다 → extract_sentinel() 신설로 전역 센티넬 블록을 함수보다 먼저 source하도록 seam을 프로덕션과 정합, TS-024(strict set -euo pipefail 기동 검증) 신규 추가 (105 fix)
 #   v4.9 2026-09-12 KST: self-pm-tool run.sh 실행 권한 chmod 블록 추가(worktree-tool 블록 직후, improve-tool/backlog-tool 패턴 답습) — opal-self-pm 스킬용 경량 실행 기록 도구 배포. 스킬·레지스트리·references는 기존 자동 복사 루프가 처리하므로 추가 분기 없음 (122)
+#   v5.0 2026-09-17 KST: oppb-runtime-tool run.sh 실행 권한 chmod 블록 추가(oppl-runtime-tool 블록 직후, 동일 패턴 답습) — OPPB 프로젝트빌드 런타임 도구 배포. OPPB 스킬 3종(opal-pilot-project-build/op-oppb-project-slice/op-oppb-knowledge-finalize, references/ 하위 포함)과 opal-capability-agent는 기존 opal/skills·opal/agents 전체 스캔 루프가 처리하므로 추가 분기 없음 (132)
 #
 
 set -euo pipefail
@@ -198,9 +199,11 @@ merge_hooks_config() {
     local target="$1"
     local hooks_json="$2"
 
-    # 소유권-마커(_opal_managed) 기반 멱등 upsert에 위임 — 외부 hook(orca 등) 보존 + OPAL 항목 재삽입,
-    # N회 재배포 시 결과 바이트 동일. 로직은 테스트 가능한 seam(scripts/merge-hooks.py)으로 분리 (task 076)
-    /usr/bin/python3 "$FRAMEWORK_ROOT/scripts/merge-hooks.py" "$target" "$hooks_json"
+    # 소유권을 마커(_opal_managed) ∪ command 내용 일치로 판정하는 멱등 upsert에 위임 — 외부 hook(orca 등)
+    # 보존 + OPAL 항목 재삽입 + 퇴역 command 회수. Claude Code가 settings 저장 시 마커를 버려도 결과 동일.
+    # 로직은 테스트 가능한 seam(scripts/merge-hooks.py)으로 분리 (task 076, 마커 유실 내성 2026-09-17)
+    local retired_json="${hooks_json%.json}.retired.json"
+    /usr/bin/python3 "$FRAMEWORK_ROOT/scripts/merge-hooks.py" "$target" "$hooks_json" "$retired_json"
 }
 
 install_dir() {
@@ -1407,6 +1410,13 @@ install_opal() {
         if [[ -f "$oppl_runtime_run" ]]; then
             chmod +x "$oppl_runtime_run"
             success "oppl-runtime-tool run.sh 실행 권한 설정"
+        fi
+
+        # ── oppb-runtime-tool 실행 권한 (132) ──
+        local oppb_runtime_run="$opal_home/tools/oppb-runtime-tool/run.sh"
+        if [[ -f "$oppb_runtime_run" ]]; then
+            chmod +x "$oppb_runtime_run"
+            success "oppb-runtime-tool run.sh 실행 권한 설정"
         fi
 
         # cmux 의존성 안내 (정보성 — 설치 강제 없음, silent fallback 정책)

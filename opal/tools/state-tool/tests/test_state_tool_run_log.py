@@ -3,9 +3,9 @@
   "module": "test_state_tool_run_log",
   "layer": "test",
   "domain": "opal-pipeline",
-  "description": "state-tool run-log 계약 RED-first 테스트 — T02 관통분(초기화 관통·미지정 경로 바이트 동일성·기존 회귀 기준선)과 T05 보관함분(활성 계약 기록 삭제의 run_log_missing 진단, 중단된 초기화의 보관함 복구와 멱등 재전송, 상태 전이의 state.changed 원자 커밋, 기록 실패 시 전건 보존과 비교착, 128건·4 KiB 상한 집행, 스키마 1.2 등재, 미지정 경로 무영향)을 함께 판정한다. run.sh subprocess 실호출 + 디스크 산출물 검사만 사용하고 mock/patch/MagicMock은 쓰지 않는다(red-first.md §4). 기록 실패는 조각 파일 권한 제거(0o400)로, 보관함 상한은 state.json fixture 주입으로 실제 유발한다.",
-  "exports": ["TestShadowInitPierce", "TestOffModeInitByteIdentical", "TestExistingRegressionBaseline", "TestRunLogMissingDiagnosis", "TestInterruptedInitRecovery", "TestStateChangedAtomicCommit", "TestOutboxPreservesOnWriteFailure", "TestOutboxLimits", "TestSchema12Registered", "TestOffModeTransitionUnaffected", "TestWorkerDurationDerivedAndConflict", "TestOffModeDurationPathByteIdentical", "TestAutoApprovedRowsEachGetIndependentStateChanged", "TestLogEventSurfaceForPmActivity", "TestPmActivityWhitelistRejection", "TestGateRequestResolvePairing", "TestShadowMissingIsNonBlockingDiagnosis", "TestActiveCompletionEvidenceGate", "TestVerifyCompletenessCheckThreeObservationFields", "TestCompletenessCheckIndependentFromStructuralValidation", "TestModeInventoryEquality"],
-  "scenarios": ["S-1", "S-2", "S-3", "S-4", "S-5", "S-6", "S-7", "S-9", "TEST-SCENARIO(W-7).S-8", "TEST-SCENARIO(W-7).S-9", "TASK-135.S-1", "TASK-135.S-2", "TASK-135.S-3", "TASK-135.S-4", "TASK-135.S-5", "TASK-135.S-6", "TASK-135.S-7", "TASK-135.S-8", "TASK-135.S-9"]
+  "description": "state-tool run-log 계약 RED-first 테스트 — T02 관통분(초기화 관통·미지정 경로 바이트 동일성·기존 회귀 기준선)과 T05 보관함분(활성 계약 기록 삭제의 run_log_missing 진단, 중단된 초기화의 보관함 복구와 멱등 재전송, 상태 전이의 state.changed 원자 커밋, 기록 실패 시 전건 보존과 비교착, 128건·4 KiB 상한 집행, 스키마 1.2 등재, 미지정 경로 무영향)을 함께 판정한다. run.sh subprocess 실호출 + 디스크 산출물 검사만 사용하고 mock/patch/MagicMock은 쓰지 않는다(red-first.md §4). 기록 실패는 조각 파일 권한 제거(0o400)로, 보관함 상한은 state.json fixture 주입으로 실제 유발한다. TASK-137 W-3 추가분은 CONTRACT §2.5 `missing_pm_activity` 트리거 조문(앵커 2종·대조 술어·정렬·항목 형태)을 양방향으로 고정한다 — 자동 승인 행 미대응(TASK-137.S-6), 기록 시 해소와 부분 기록 대조군(TASK-137.S-7), override 앵커와 배열 말미 정렬(TASK-137.S-8)은 W-4·W-5의 `_run_log_completeness_check()` 구현으로 GREEN이며, run_log 블록이 없는 1.0/1.1 경로의 응답 키 집합·산출물 불변(TASK-137.S-9)은 명시 키 집합 리터럴 기준선으로 자기 대조하는 보존 가드다. TASK-137 W-7은 보존 가드 4건의 비교 기준을 정정했다 — 개정 전 동작을 움직이는 `HEAD` 참조로 대리하던 3건은 기본값 전환 커밋 f8aba0a 머지와 동시에 자기무효화됐으므로 고정 커밋 상수 `_PRE_RUN_LOG_DEFAULT_SHA`(=f8aba0a 직전 state_tool.py 빌드, 무플래그 init이 run_log 블록을 만들지 않음을 실측 관측해 고정)로 핀했고, 기존 스위트 회귀 가드 1건은 중첩 pytest 기동을 인터프리터 게이트(15fee62)를 통과하는 OPAL 테스트 인터프리터로 바꿨다. 네 가드 모두 원래 검증 축(비활성화 경로 산출물·응답 키 불변, 기존 스위트 실패 0건)을 그대로 유지한다.",
+  "exports": ["TestShadowInitPierce", "TestOffModeInitByteIdentical", "TestExistingRegressionBaseline", "TestRunLogMissingDiagnosis", "TestInterruptedInitRecovery", "TestStateChangedAtomicCommit", "TestOutboxPreservesOnWriteFailure", "TestOutboxLimits", "TestSchema12Registered", "TestOffModeTransitionUnaffected", "TestWorkerDurationDerivedAndConflict", "TestOffModeDurationPathByteIdentical", "TestAutoApprovedRowsEachGetIndependentStateChanged", "TestLogEventSurfaceForPmActivity", "TestPmActivityWhitelistRejection", "TestGateRequestResolvePairing", "TestShadowMissingIsNonBlockingDiagnosis", "TestActiveCompletionEvidenceGate", "TestVerifyCompletenessCheckThreeObservationFields", "TestCompletenessMissingPmActivityAutoApprovedRows", "TestCompletenessMissingPmActivityClearedByLoggedDecision", "TestCompletenessMissingPmActivityOverrideAnchor", "TestSchema10And11WithoutRunLogBlockUnchanged", "TestCompletenessCheckIndependentFromStructuralValidation", "TestModeInventoryEquality"],
+  "scenarios": ["S-1", "S-2", "S-3", "S-4", "S-5", "S-6", "S-7", "S-9", "TEST-SCENARIO(W-7).S-8", "TEST-SCENARIO(W-7).S-9", "TASK-135.S-1", "TASK-135.S-2", "TASK-135.S-3", "TASK-135.S-4", "TASK-135.S-5", "TASK-135.S-6", "TASK-135.S-7", "TASK-135.S-8", "TASK-135.S-9", "TASK-137.S-6", "TASK-137.S-7", "TASK-137.S-8", "TASK-137.S-9"]
 }
 
 W-7 추가분(123 RED-b, AC-12/C-3/H-6) — 아래 두 클래스가 다루는 `S-8`·`S-9`는 위
@@ -17,21 +17,20 @@ scenarios 목록의 T02/T05 구간 `S-1..S-9`(run-log-tool 초기 계약)와 **I
     거부+state.json 무변경. mark가 아직 W-6 코어 조회를 호출하지 않으므로 세
     경우 모두 현재 실패로 관찰된다(구현 전 RED).
   - S-9 (C-3, H-6, test-scenario.json상 red_required=true로 등재) — run_log
-    블록이 없는 1.0/1.1 태스크의 mark·advance가 git HEAD와 바이트 동일해야
-    한다는 보존 시나리오. **실측 결과 이 자산은 현재 이미 참이다** —
-    state_tool.py가 아직 수정되지 않았으므로(W-7 GREEN 미착수) HEAD 실행과
-    현재 빌드 실행이 항상 동일 산출물을 낸다. 이는 이 파일의 기존 동류
-    보존 시나리오(TestOffModeInitByteIdentical·TestExistingRegressionBaseline)
-    가 각각 주석에 `red_required=false`로 명시한 것과 동일한 성격이다. 아래
-    TestUnflaggedDurationPathByteIdentical은 그래서 **의도적으로 RED가 아닌
-    통과 상태로 추가**됐고, PM에는 test-scenario.json의 S-9 `red_required` 값이
-    이 선례와 불일치한다는 점을 blocker로 보고한다(허위 RED 증거 조작 금지,
-    헌법 §4).
+    블록이 없는 1.0/1.1 태스크의 mark·advance가 **개정 전 빌드**와 바이트
+    동일해야 한다는 보존 시나리오. 개정 전 빌드는 고정 커밋
+    `_PRE_RUN_LOG_DEFAULT_SHA`에서 꺼낸다 — 움직이는 `HEAD` 참조를 기준으로
+    쓰던 원래 방식은 기본값 전환 커밋 `f8aba0a` 머지와 동시에 자기무효화됐다
+    (TASK-137 W-7에서 고정 SHA 핀으로 정정). 이 시나리오는 보존·회귀 가드이며
+    구현 전 RED가 아니다 — 이 파일의 기존 동류 보존 시나리오
+    (TestOffModeInitByteIdentical·TestExistingRegressionBaseline)가 각각 주석에
+    `red_required=false`로 명시한 것과 같은 성격이다.
 
 PLAN.md(T02) §테스트 시나리오 초안 근거:
   - S-1 state-tool.init.run-log-mode shadow — state.json schema_version==1.2 + run_log 7필드 +
     첫 조각(run/run-log-{run_id}-0001.jsonl) 1줄(run.started, sequence==1, actor_sequence==1)
-  - S-2 (C-3) --run-log-mode 미지정 init은 개정 전(git show HEAD:./state_tool.py)과 state.json 바이트 동일
+  - S-2 (C-3) --run-log-mode off init은 개정 전 빌드(고정 커밋
+    _PRE_RUN_LOG_DEFAULT_SHA에서 꺼낸 state_tool.py, 미지정 호출)와 state.json 바이트 동일
   - S-9 (C-2) 기존 state-tool 회귀 0건 — pytest 실패 0건·종료 코드 0 재현(통과 개수는 형제 태스크가 이동시키므로 상수로 고정하지 않는다),
     tests/test_state_tool.py·schema/state.schema.json 미변경
 """
@@ -49,6 +48,55 @@ _REPO_ROOT = _STATE_TOOL_DIR.parent.parent.parent
 _RUN_SH = _STATE_TOOL_DIR / "run.sh"
 _CURRENT_STATE_TOOL = _STATE_TOOL_DIR / "state_tool.py"
 _VENV_PYTHON = pathlib.Path.home() / ".opal" / ".venv" / "bin" / "python"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# [TASK-137 W-7] "개정 전 동작"의 고정 비교 기준 (택 A — 고정 커밋 SHA 핀)
+#
+# 이 파일의 보존 가드 3건(TestOffModeInitByteIdentical,
+# TestOffModeDurationPathByteIdentical 2건)은 C-6이 요구하는 "run_log 블록이 없는
+# 1.0/1.1 경로의 산출물 불변"을 판정하기 위해, 현재 빌드 자신의 출력을 정답으로
+# 쓰지 않고 **개정 전 빌드를 별도 프로세스로 실행해 독립적으로 정답을 만든다**
+# (self-confirming 금지).
+#
+# 그 기준을 원래 `git show` + 움직이는 `HEAD` 참조로 잡았던 것이 결함이었다. HEAD는
+# 움직이는 참조라서, 개정이 머지되는 순간 기준 자신이 개정본이 되어 가드가
+# **자기무효화**된다. 실제로 그렇게 됐다 — `f8aba0a`("chore(135): 추가작업 2건 —
+# 훅 세션 소유권과 run-log 기본 활성화")가 `state-tool init`의 `--run-log-mode`
+# 기본값을 미지정에서 `shadow`로 전환하고 `off`를 명시적 비활성화로 추가하면서,
+# HEAD 쪽 무플래그 init이 `schema_version 1.2` + `run_log` 블록을 내기 시작했다.
+# 그 뒤로 이 3건은 "개정 후 vs 개정 후"를 비교하며 영구 실패했다.
+#
+# 그래서 기준을 **움직이지 않는 커밋**으로 고정한다. `e842f3d`는 `f8aba0a`의
+# 직전 `state_tool.py` 변경 커밋, 즉 기본값 전환이 들어오기 **직전** 빌드다.
+#
+# [H-4 대응 — 고정 전 실측 관측] 이 SHA를 적기 전에 실제로 꺼내 돌려서 확인했다:
+#   $ git show e842f3d:./state_tool.py > <tmp>/state_tool.py
+#   $ python <tmp>/state_tool.py init <task> --skill oppl --mode agentic
+#   → state.json = {"schema_version": "1.0", ...}, `run_log` 키 없음, `run/` 미생성
+# advance·mark 경로도 같은 빌드로 실행해 `run_log` 미생성과 1.0 유지를 확인했다.
+# 관측 없이 SHA만 적으면 가드가 통과해도 아무것도 지키지 않으므로(H-4), 이 SHA를
+# 바꿀 때는 위 관측을 **먼저** 재수행한다.
+_PRE_RUN_LOG_DEFAULT_SHA = "e842f3dc470b3c5ad4cc953ab2fdf8d0d35bb3aa"
+
+
+def _pre_revision_state_tool_source(test_case, dest_dir, scenario):
+    """개정 전(`_PRE_RUN_LOG_DEFAULT_SHA`) state_tool.py를 dest_dir에 풀어 경로를 반환한다.
+
+    HEAD가 아니라 고정 SHA를 쓰는 이유는 위 상수 주석 참조 — 움직이는 참조를 기준으로
+    삼으면 개정이 머지되는 순간 가드가 자기무효화된다."""
+    result = subprocess.run(
+        ["git", "show", f"{_PRE_RUN_LOG_DEFAULT_SHA}:./state_tool.py"],
+        cwd=str(_STATE_TOOL_DIR), capture_output=True, text=True,
+    )
+    test_case.assertEqual(
+        result.returncode, 0,
+        f"{scenario} 개정 전 기준 커밋 {_PRE_RUN_LOG_DEFAULT_SHA[:7]} 추출 실패 — {result.stderr}")
+    test_case.assertTrue(
+        result.stdout,
+        f"{scenario} git show {_PRE_RUN_LOG_DEFAULT_SHA[:7]}:./state_tool.py 결과가 비어 있음")
+    dest = pathlib.Path(dest_dir) / "state_tool.py"
+    dest.write_text(result.stdout, encoding="utf-8")
+    return dest
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -163,17 +211,11 @@ class TestOffModeInitByteIdentical(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = pathlib.Path(tmp)
 
-            head_result = subprocess.run(
-                ["git", "show", "HEAD:./state_tool.py"],
-                cwd=str(_STATE_TOOL_DIR), capture_output=True, text=True,
-            )
-            self.assertEqual(head_result.returncode, 0, f"S-2 git show HEAD 실패 — {head_result.stderr}")
-            self.assertTrue(head_result.stdout, "S-2 git show HEAD:./state_tool.py 결과가 비어 있음")
-
+            # [TASK-137 W-7 — 택 A] 기준을 HEAD가 아니라 고정 SHA로 핀한다.
+            # HEAD 기준은 개정(`f8aba0a`) 머지와 동시에 자기무효화됐다(상수 주석 참조).
             head_copy_dir = tmp_path / "head-copy"
             head_copy_dir.mkdir()
-            head_source = head_copy_dir / "state_tool.py"
-            head_source.write_text(head_result.stdout, encoding="utf-8")
+            head_source = _pre_revision_state_tool_source(self, head_copy_dir, "S-2")
 
             # task_id는 폴더명에서 파생되므로(state_tool.py task_path.name) 두 실행이
             # 같은 리프 디렉터리명을 쓰도록 별도 부모 아래에 둔다 — 이름 차이가
@@ -227,9 +269,17 @@ class TestExistingRegressionBaseline(unittest.TestCase):
         # 자신을 실행하는 pytest를 다시 기동하는 무한 재귀가 된다. 기준선 425
         # passed/3 skipped/111 subtests passed는 tests/ 안의 나머지 3개 파일
         # (test_state_tool.py·test_event_verify.py·test_todo_mirror_hook.py) 합산 실측이다.
+        # [TASK-137 W-7] 중첩 pytest를 `python3`이 아니라 **OPAL 테스트 인터프리터**로
+        # 기동한다. 커밋 `15fee62`("테스트 인터프리터 게이트 신설")가 conftest에
+        # 인터프리터 게이트를 추가한 뒤로, `python3`(homebrew 3.14 — jsonschema·yaml
+        # 미설치)로 들어간 중첩 실행은 테스트를 **수집조차 못 하고** 게이트 오류로
+        # 즉시 종료했다. 그래서 이 가드는 "기존 스위트 회귀 0건"을 판정하지 못한 채
+        # 실패했다 — 제품 회귀가 아니라 하네스 결함이었다.
+        # 이 가드의 검증 축(기존 스위트 실패 0건 + 1.0/1.1 병행 허용 유지)은 그대로
+        # 두고, 기동 인터프리터만 게이트를 통과하는 것으로 바꾼다.
         self_path = pathlib.Path(__file__).resolve()
         result = subprocess.run(
-            ["python3", "-m", "pytest", "opal/tools/state-tool/tests/", "-q",
+            [str(_VENV_PYTHON), "-m", "pytest", "opal/tools/state-tool/tests/", "-q",
              f"--ignore={self_path}"],
             cwd=str(_REPO_ROOT), capture_output=True, text=True,
         )
@@ -741,27 +791,27 @@ class TestWorkerDurationDerivedAndConflict(unittest.TestCase):
 
 class TestOffModeDurationPathByteIdentical(unittest.TestCase):
     """S-9 (C-3, H-6) — --run-log-mode off로 비활성화한(run_log 블록 없는 1.0/1.1
-    상당) 태스크의 `mark`·`advance`가 git HEAD(미지정)와 산출물·응답 키 집합 바이트
-    동일해야 한다(파생 조회 미호출의 대리 판정). [재타겟] 기본값이 shadow가 되면서
-    "미지정"은 더 이상 비활성화를 뜻하지 않으므로, 현재본만 --run-log-mode off를
-    명시해 호출한다 — HEAD는 이 플래그를 모르므로(choices=["shadow","active"])
-    미지정 그대로 둔다. 계약의 실질(비활성화 경로의 산출물·응답 키 바이트 동일성)은
-    바뀌지 않는다.
+    상당) 태스크의 `mark`·`advance`가 개정 전 빌드(미지정 호출)와 산출물·응답 키
+    집합 바이트 동일해야 한다(파생 조회 미호출의 대리 판정). [재타겟] 기본값이
+    shadow가 되면서 "미지정"은 더 이상 비활성화를 뜻하지 않으므로, 현재본만
+    --run-log-mode off를 명시해 호출한다 — 개정 전 빌드는 이 플래그를 모르므로
+    (choices=["shadow","active"]) 미지정 그대로 둔다. 계약의 실질(비활성화 경로의
+    산출물·응답 키 바이트 동일성)은 바뀌지 않는다.
 
     self-confirming 금지(PM 하네스 가드) — 현재 빌드 자신의 출력을 정답으로 쓰지
-    않고, git HEAD를 별도 프로세스로 실행해 독립적으로 정답을 만든다(S-2와 동일
-    기법). `_import_run_log_core()`가 sibling 배치를 우선하므로, HEAD 사본은
+    않고, 개정 전 빌드를 별도 프로세스로 실행해 독립적으로 정답을 만든다(S-2와
+    동일 기법). `_import_run_log_core()`가 sibling 배치를 우선하므로, 개정 전 사본은
     `opal/tools/{state-tool,run-log-tool}` 형제 구조를 그대로 복제해 두지 않으면
     빌드 위치 차이만으로 거짓 실패가 난다 — 아래 `_head_source()`가 그 구조를 만든다.
 
-    [실측 결과 — 정직한 보고, 조작 없음] 이 두 테스트는 **현재 이미 통과한다**
-    (state_tool.py가 W-7 GREEN으로 아직 수정되지 않았으므로 HEAD == 현재 빌드).
-    이는 파일 내 동류 보존 시나리오(TestOffModeInitByteIdentical §S-2,
-    TestExistingRegressionBaseline §구 S-9)가 명시적으로 `red_required=false`인
-    것과 같은 성격이며, 이 두 클래스만 유독 test-scenario.json에서
-    `red_required=true`로 등재돼 있다 — PM 반환 시 blocker로 보고한다.
+    [TASK-137 W-7 — 택 A로 정정] 비교 기준은 고정 커밋
+    `_PRE_RUN_LOG_DEFAULT_SHA`다. 원래는 움직이는 `HEAD`를 기준으로 삼았는데,
+    기본값 전환 커밋 `f8aba0a`가 머지되며 기준 자신이 개정본이 되어 이 두
+    테스트가 영구 실패했다(개정 후 vs 개정 후를 비교). 고정 SHA 핀으로 원래의
+    검증 축(비활성화 경로 산출물·응답 키 불변)을 그대로 유지한 채 자기무효화만
+    제거한다. SHA 선정 근거와 H-4 실측 관측은 상수 주석 참조.
 
-    [벽시계 필드 정규화] HEAD와 현재본은 별도 subprocess로 순차 실행되므로
+    [벽시계 필드 정규화] 두 빌드는 별도 subprocess로 순차 실행되므로
     `created_at`·`updated_at`·`rows[*].timestamp`는 두 실행이 초 경계를 straddle하면
     값 자체가 달라진다. C-3의 바이트 동일성은 구조·키·나머지 값에 대한 계약이지 두
     시점에 찍힌 벽시계가 같아야 한다는 뜻이 아니므로, 이 필드들만 존재·타입을 확인한
@@ -774,12 +824,8 @@ class TestOffModeDurationPathByteIdentical(unittest.TestCase):
         st_dir.mkdir(parents=True)
         rl_dir.mkdir(parents=True)
 
-        head_result = subprocess.run(
-            ["git", "show", "HEAD:./state_tool.py"],
-            cwd=str(_STATE_TOOL_DIR), capture_output=True, text=True)
-        self.assertEqual(head_result.returncode, 0,
-                         f"S-9 git show HEAD 실패 — {head_result.stderr}")
-        (st_dir / "state_tool.py").write_text(head_result.stdout, encoding="utf-8")
+        # [TASK-137 W-7 — 택 A] 기준을 HEAD가 아니라 고정 SHA로 핀한다(상수 주석 참조).
+        _pre_revision_state_tool_source(self, st_dir, "S-9")
 
         current_core = _STATE_TOOL_DIR.parent / "run-log-tool" / "run_log_core.py"
         shutil.copy(current_core, rl_dir / "run_log_core.py")
@@ -1332,6 +1378,360 @@ class TestVerifyCompletenessCheckThreeObservationFields(unittest.TestCase):
 
             missing = data.get("missing_state_changed", [])
             self.assertTrue(missing, f"TASK-135.S-8 다음 stage 진입 누락이 missing_state_changed에 없음 — {data!r}")
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# TASK-137 W-3 — 완전성 진단 `missing_pm_activity` 트리거 양방향
+#
+#   TASK-137.S-6 (AC-3, C-2, C-3) 앵커 ① 충족 방향      → GREEN: W-5 [구현 전 RED]
+#   TASK-137.S-7 (AC-3, C-2, H-2) 앵커 ① 미충족 방향    → GREEN: W-5 [구현 전 RED]
+#   TASK-137.S-8 (AC-3, C-2)      앵커 ② override       → GREEN: W-5 [구현 전 RED]
+#   TASK-137.S-9 (C-6)            1.0/1.1 보존·회귀 가드 → 현 구현에서도 통과
+#
+# 기대값의 유일한 원천은 `docs/run-log/CONTRACT.md` §2.5
+# 『`missing_pm_activity`의 트리거 조건』 조문이다(앵커 2종·대조 술어·대조 집합·
+# 범위 한정 3항·정렬·항목 형태). PLAN D-1~D-6, D-13.
+#
+# 판정은 `run.sh` subprocess 실호출 반환값·exit code와 `state.json` 실제 바이트로만
+# 한다 — `_run_log_completeness_check()`를 직접 import하지 않는다
+# (harness/red-first.md §2). mock/patch/MagicMock 미사용.
+# ═════════════════════════════════════════════════════════════════════════════
+
+_PIPELINE_SPEC_KEYED = {
+    "spec_version": "1.0",
+    "skill": "oppl",
+    "meta": {"name": "137-w3-fixture"},
+    "task_steps": [
+        {"id": 1, "stage": "EXECUTE", "item": "구현 A", "key": "execute.impl_a"},
+        {"id": 2, "stage": "EXECUTE", "item": "구현 B", "key": "execute.impl_b"},
+        {"id": 3, "stage": "TEST", "item": "검증", "key": "test.verify"},
+    ],
+}
+
+_ROWS_SPEC_KEYLESS = json.dumps([
+    {"stage": "EXECUTE", "item": "구현 A"},
+    {"stage": "TEST", "item": "검증"},
+], ensure_ascii=False)
+
+_ANCHOR_ITEM_KEYS = {"row_id", "row_key", "stage", "expected", "anchor"}
+
+
+def _write_keyed_pipeline(tmp):
+    """`key`를 가진 rows[]를 만들기 위한 pipeline.json fixture를 tmp에 쓴다.
+
+    `--rows-spec` 경로는 `key`를 만들지 않아(state_tool.build_rows_from_spec) 앵커 ①의
+    대조 주소가 생기지 않는다(CONTRACT §2.5 범위 한정 (a)). `--rows-from <pipeline.json>`
+    경로만 `key` 보유 행 + schema 1.1/1.2를 만든다.
+    """
+    spec_path = pathlib.Path(tmp) / "pipeline.json"
+    spec_path.write_text(json.dumps(_PIPELINE_SPEC_KEYED, ensure_ascii=False), encoding="utf-8")
+    return spec_path
+
+
+def _init_keyed(task_path, spec_path, run_log_mode="shadow"):
+    args = ["init", str(task_path), "--skill", "oppl", "--mode", "agentic",
+            "--rows-from", str(spec_path)]
+    if run_log_mode is not None:
+        args.extend(["--run-log-mode", run_log_mode])
+    return _run(args)
+
+
+def _state_bytes(task_path):
+    return (pathlib.Path(task_path) / "state.json").read_bytes()
+
+
+def _completeness(task_path):
+    """`verify --run-log-completeness-check`를 실호출하고
+    (exit, data, state.json 바이트 불변 여부)를 함께 돌려준다(C-3 read-only 판정용)."""
+    before = _state_bytes(task_path)
+    code, out, err, data = _run(["verify", str(task_path), "--run-log-completeness-check"])
+    after = _state_bytes(task_path)
+    return code, out, err, data, (before == after)
+
+
+def _make_auto_approved_fixture(tmp, name):
+    """앵커 ① fixture — `status="done"` ∧ `owner="auto"` ∧ `key` 보유 행 2건
+    (row_id 1, 2)을 만들고 3행은 pending으로 남긴다. PM `activity(decision)`은
+    아직 하나도 기록하지 않는다."""
+    spec_path = _write_keyed_pipeline(tmp)
+    task = _mktask(tmp, name=name)
+    code, out, err, _ = _init_keyed(task, spec_path)
+    assert code == 0, f"init 실패 — {out!r} {err!r}"
+    for key in ("execute.impl_a", "execute.impl_b"):
+        code, out, err, _ = _run(["mark", str(task), "--task-step", key, "--done", "--owner", "auto"])
+        assert code == 0, f"mark --owner auto 실패({key}) — {out!r} {err!r}"
+    return task
+
+
+class TestCompletenessMissingPmActivityAutoApprovedRows(unittest.TestCase):
+    """TASK-137.S-6 (AC-3, C-2, C-3) — GREEN: W-5. **구현 전 RED**.
+
+    CONTRACT §2.5 앵커 ①: `rows[]` 중 `status == "done"` ∧ `owner == "auto"` ∧ `key`
+    보유 행에 대해 `event=="activity"` ∧ `actor.kind=="PM"` ∧ `data.kind=="decision"`
+    ∧ `task_step == row.key`인 사건이 하나도 없으면 그 행마다 1건을 싣는다.
+    정렬은 `row_id` 오름차순(§2.5 정렬), 항목은 5키 고정(§2.5 항목 형태).
+
+    현재 관찰: `_run_log_completeness_check()`의 누락 ④ 자리(state_tool.py:1371)가
+    "최소 구현" 주석만 있고 `missing_pm_activity`를 초기화값 `[]`에서 갱신하지
+    않는다. 따라서 이 시나리오는 빈 배열로 실패한다(미구현 RED).
+    """
+
+    def test_auto_approved_rows_without_pm_decision_are_listed_in_row_id_order(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            task = _make_auto_approved_fixture(tmp, "137-s6-auto-approved")
+
+            code, out, err, data, unchanged = _completeness(task)
+
+            self.assertEqual(code, 0, f"TASK-137.S-6 진단이 exit 0이 아님(C-3 비차단 위반) — "
+                                      f"exit={code} stdout={out!r} stderr={err!r}")
+            self.assertTrue(unchanged, "TASK-137.S-6 read-only 진단이 state.json 바이트를 변경함(C-3)")
+
+            missing = data.get("missing_pm_activity")
+            self.assertTrue(
+                missing,
+                f"TASK-137.S-6 자동 승인 행 2건에 대응 PM activity(decision)가 없는데 "
+                f"missing_pm_activity가 비어 있음(미구현 RED) — {data!r}")
+
+            for item in missing:
+                self.assertEqual(
+                    set(item.keys()), _ANCHOR_ITEM_KEYS,
+                    f"TASK-137.S-6 항목 키 집합이 §2.5 항목 형태 5키와 다름 — {item!r}")
+                self.assertEqual(item["expected"], "activity(decision)",
+                                 f"TASK-137.S-6 expected 값 불일치 — {item!r}")
+                self.assertEqual(item["anchor"], "auto_approved_row",
+                                 f"TASK-137.S-6 anchor 값 불일치 — {item!r}")
+
+            self.assertEqual(
+                [item["row_id"] for item in missing], [1, 2],
+                f"TASK-137.S-6 앵커 ① 항목이 row_id 오름차순 2건이 아님(§2.5 정렬) — {missing!r}")
+            self.assertEqual(
+                [item["row_key"] for item in missing], ["execute.impl_a", "execute.impl_b"],
+                f"TASK-137.S-6 row_key가 행 주소와 불일치 — {missing!r}")
+            self.assertEqual(
+                [item["stage"] for item in missing], ["EXECUTE", "EXECUTE"],
+                f"TASK-137.S-6 stage가 행 stage와 불일치 — {missing!r}")
+
+
+class TestCompletenessMissingPmActivityClearedByLoggedDecision(unittest.TestCase):
+    """TASK-137.S-7 (AC-3, C-2, H-2) — GREEN: W-5. **구현 전 RED**.
+
+    "기록하면 신호가 해소된다"는 미충족 방향이다. 현 구현은 `missing_pm_activity`를
+    항상 비워 두므로 아래 `test_all_rows_logged_clears_missing_pm_activity`는
+    **우연히 통과한다** — 그래서 같은 fixture에서 한 행만 기록한 대조군을 함께 두어
+    "기록한 경우에만 빈다"를 실제로 구분한다. 대조군은 현재 실패한다(미구현 RED).
+    """
+
+    @staticmethod
+    def _log_decision(task, row_key):
+        return _run([
+            "log-event", str(task),
+            "--event", "activity", "--kind", "decision",
+            "--summary", f"PM이 {row_key} 자동 승인을 판단함",
+            "--task-step", row_key,
+        ])
+
+    def test_partial_logging_leaves_only_the_unlogged_row(self):
+        """대조군 — 두 자동 승인 행 중 1행만 기록하면 나머지 1행만 남아야 한다.
+        빈 배열이면 "기록 때문에 빈 것"과 "원래 항상 비는 것"을 구분할 수 없다."""
+        with tempfile.TemporaryDirectory() as tmp:
+            task = _make_auto_approved_fixture(tmp, "137-s7-partial")
+
+            code, out, err, _ = self._log_decision(task, "execute.impl_a")
+            self.assertEqual(code, 0, f"TASK-137.S-7 log-event 실패 — {out!r} {err!r}")
+
+            code, out, err, data, unchanged = _completeness(task)
+            self.assertEqual(code, 0, f"TASK-137.S-7 진단이 exit 0이 아님 — {out!r} {err!r}")
+            self.assertTrue(unchanged, "TASK-137.S-7 read-only 진단이 state.json 바이트를 변경함(C-3)")
+
+            missing = data.get("missing_pm_activity")
+            self.assertEqual(
+                [item.get("row_key") for item in (missing or [])], ["execute.impl_b"],
+                f"TASK-137.S-7 기록하지 않은 행 1건만 남아야 하는데 다름(미구현 RED) — {data!r}")
+
+    def test_all_rows_logged_clears_missing_pm_activity(self):
+        """S-7 본 시나리오 — 모든 자동 승인 행에 대응 PM activity(decision)를 기록하면
+        빈 배열이어야 한다. (현 구현에서는 항상 빈 배열이라 우연히 통과한다.)"""
+        with tempfile.TemporaryDirectory() as tmp:
+            task = _make_auto_approved_fixture(tmp, "137-s7-full")
+
+            for row_key in ("execute.impl_a", "execute.impl_b"):
+                code, out, err, _ = self._log_decision(task, row_key)
+                self.assertEqual(code, 0, f"TASK-137.S-7 log-event 실패({row_key}) — {out!r} {err!r}")
+
+            code, out, err, data, unchanged = _completeness(task)
+            self.assertEqual(code, 0, f"TASK-137.S-7 진단이 exit 0이 아님 — {out!r} {err!r}")
+            self.assertTrue(unchanged, "TASK-137.S-7 read-only 진단이 state.json 바이트를 변경함(C-3)")
+            self.assertEqual(
+                data.get("missing_pm_activity"), [],
+                f"TASK-137.S-7 대응 사건을 모두 기록했는데 신호가 해소되지 않음 — {data!r}")
+
+
+class TestCompletenessMissingPmActivityOverrideAnchor(unittest.TestCase):
+    """TASK-137.S-8 (AC-3, C-2) — GREEN: W-5. **구현 전 RED**.
+
+    CONTRACT §2.5 앵커 ②: `run_log.status == "overridden"`인데 run 전역에
+    `event=="activity"` ∧ `actor.kind=="PM"` ∧ `data.kind=="decision"` 사건이
+    하나도 없으면 1건을 싣는다(주소 대조 없음). 항목은 같은 5키이되
+    `row_id`·`row_key`·`stage`가 `null`이고 `anchor == "override_bundle"`이며,
+    §2.5 정렬에 따라 **배열 마지막**에 붙는다.
+
+    `--run-log-override` CLI 표면은 이 범위(T10)가 아니므로 `run_log.status`는
+    state.json fixture 주입으로 만든다(기존 TestOutboxLimits의 주입 관례 재사용).
+
+    현재 관찰: S-6과 같은 원인(누락 ④ 미집행)으로 빈 배열이 반환된다(미구현 RED).
+    """
+
+    @staticmethod
+    def _mark_overridden(task):
+        state = _read_state(task)
+        state["run_log"]["status"] = "overridden"
+        _write_state(task, state)
+
+    def test_overridden_run_without_pm_decision_yields_single_override_item(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            spec_path = _write_keyed_pipeline(tmp)
+            task = _mktask(tmp, name="137-s8-override-only")
+            code, out, err, _ = _init_keyed(task, spec_path)
+            self.assertEqual(code, 0, f"TASK-137.S-8 init 실패 — {out!r} {err!r}")
+            self._mark_overridden(task)
+
+            code, out, err, data, unchanged = _completeness(task)
+            self.assertEqual(code, 0, f"TASK-137.S-8 진단이 exit 0이 아님 — {out!r} {err!r}")
+            self.assertTrue(unchanged, "TASK-137.S-8 read-only 진단이 state.json 바이트를 변경함(C-3)")
+
+            missing = data.get("missing_pm_activity") or []
+            override_items = [i for i in missing if i.get("anchor") == "override_bundle"]
+            self.assertEqual(
+                len(override_items), 1,
+                f"TASK-137.S-8 override 앵커 항목이 정확히 1건이 아님(미구현 RED) — {data!r}")
+
+            item = override_items[0]
+            self.assertEqual(set(item.keys()), _ANCHOR_ITEM_KEYS,
+                             f"TASK-137.S-8 항목 키 집합이 §2.5 5키와 다름 — {item!r}")
+            self.assertIsNone(item["row_id"], f"TASK-137.S-8 row_id가 null이 아님 — {item!r}")
+            self.assertIsNone(item["row_key"], f"TASK-137.S-8 row_key가 null이 아님 — {item!r}")
+            self.assertIsNone(item["stage"], f"TASK-137.S-8 stage가 null이 아님 — {item!r}")
+            self.assertEqual(item["expected"], "activity(decision)",
+                             f"TASK-137.S-8 expected 값 불일치 — {item!r}")
+
+    def test_override_item_is_last_when_anchor_one_items_exist(self):
+        """§2.5 정렬 — 앵커 ① 항목을 row_id 오름차순으로 먼저 싣고 앵커 ②는 마지막 1건."""
+        with tempfile.TemporaryDirectory() as tmp:
+            task = _make_auto_approved_fixture(tmp, "137-s8-override-with-rows")
+            self._mark_overridden(task)
+
+            code, out, err, data, unchanged = _completeness(task)
+            self.assertEqual(code, 0, f"TASK-137.S-8 진단이 exit 0이 아님 — {out!r} {err!r}")
+            self.assertTrue(unchanged, "TASK-137.S-8 read-only 진단이 state.json 바이트를 변경함(C-3)")
+
+            missing = data.get("missing_pm_activity") or []
+            self.assertEqual(
+                [i.get("anchor") for i in missing],
+                ["auto_approved_row", "auto_approved_row", "override_bundle"],
+                f"TASK-137.S-8 앵커 ① 2건 뒤 앵커 ② 1건 순서가 아님(§2.5 정렬, 미구현 RED) — {data!r}")
+            self.assertEqual(
+                [i.get("row_id") for i in missing[:-1]], [1, 2],
+                f"TASK-137.S-8 앵커 ① 항목이 row_id 오름차순이 아님 — {missing!r}")
+
+
+# `--run-log-mode off` 경로(= run_log 블록 없음)의 advance/mark 응답 키 집합 기준선.
+# C-6이 "종전과 동일"을 요구하는 대상이며, 개정 전 동작을 `git show HEAD:`로 대리하면
+# 기준 커밋이 개정본이 되는 순간 가드가 자기무효화되므로(이 파일의 기존 실패 4건)
+# 기준선을 **명시 리터럴로 고정**한다. W-5가 이 키 집합을 바꾸면 여기서 잡힌다.
+_OFF_MODE_ADVANCE_KEYS_KEYLESS = {
+    "ok", "command", "row_id", "stage", "item", "status", "timestamp",
+    "auto_approved", "todo_mirror",
+}
+_OFF_MODE_MARK_KEYS_KEYLESS = _OFF_MODE_ADVANCE_KEYS_KEYLESS | {"owner"}
+_OFF_MODE_ADVANCE_KEYS_KEYED = _OFF_MODE_ADVANCE_KEYS_KEYLESS | {
+    "next_action", "report_type", "transition_action",
+}
+_OFF_MODE_MARK_KEYS_KEYED = _OFF_MODE_ADVANCE_KEYS_KEYED | {"owner"}
+
+
+class TestSchema10And11WithoutRunLogBlockUnchanged(unittest.TestCase):
+    """TASK-137.S-9 (C-6) — 보존·회귀 가드. 현 구현에서도 통과해야 한다.
+
+    (a) `run_log` 블록이 없는 태스크는 완전성 검사 전체의 대상이 아니다
+        (CONTRACT §2.5 범위 한정 (b)) — 누락 목록 4종이 모두 비고 관측 3필드가
+        전부 `null`이며 exit 0이다.
+    (b) `advance`·`mark` 각 1회의 응답 키 집합과 `state.json` 산출물이 종전과
+        동일하다 — 응답 키는 명시 기준선 리터럴과, state.json은 호출 전 자기
+        자신의 최상위 키 집합·schema_version과 대조하고 run 디렉터리·run_log
+        키가 생기지 않음을 확인한다.
+    """
+
+    def _assert_completeness_is_empty(self, task, label):
+        code, out, err, data, unchanged = _completeness(task)
+        self.assertEqual(code, 0, f"TASK-137.S-9 {label} 진단이 exit 0이 아님 — {out!r} {err!r}")
+        self.assertTrue(unchanged, f"TASK-137.S-9 {label} 진단이 state.json 바이트를 변경함(C-3)")
+        for field in ("missing_state_changed", "missing_pm_activity",
+                      "missing_gate_event", "unobserved_worker_boundary"):
+            self.assertEqual(data.get(field), [],
+                             f"TASK-137.S-9 {label} {field}가 비어 있지 않음(§2.5 범위 한정 (b)) — {data!r}")
+        for field in ("last_observed_decision", "last_observed_state_change",
+                      "last_observed_boundary"):
+            self.assertIn(field, data, f"TASK-137.S-9 {label} {field} 필드 부재 — {data!r}")
+            self.assertIsNone(data.get(field),
+                              f"TASK-137.S-9 {label} {field}가 null이 아님 — {data!r}")
+
+    def _assert_transition_path_unchanged(self, task, label, row_args,
+                                          advance_keys, mark_keys, schema_version):
+        state_before = _read_state(task)
+        self.assertNotIn("run_log", state_before,
+                         f"TASK-137.S-9 {label} off 경로인데 run_log 블록이 생성됨 — {state_before.keys()!r}")
+        top_keys_before = set(state_before.keys())
+
+        code, out, err, data = _run(["advance", str(task)] + row_args)
+        self.assertEqual(code, 0, f"TASK-137.S-9 {label} advance 실패 — {out!r} {err!r}")
+        self.assertEqual(set(data.keys()), advance_keys,
+                         f"TASK-137.S-9 {label} advance 응답 키 집합이 기준선과 다름(C-6) — {sorted(data.keys())!r}")
+
+        code, out, err, data = _run(["mark", str(task)] + row_args + ["--done"])
+        self.assertEqual(code, 0, f"TASK-137.S-9 {label} mark 실패 — {out!r} {err!r}")
+        self.assertEqual(set(data.keys()), mark_keys,
+                         f"TASK-137.S-9 {label} mark 응답 키 집합이 기준선과 다름(C-6) — {sorted(data.keys())!r}")
+
+        state_after = _read_state(task)
+        self.assertEqual(set(state_after.keys()), top_keys_before,
+                         f"TASK-137.S-9 {label} state.json 최상위 키 집합이 달라짐(C-6) — "
+                         f"{sorted(set(state_after.keys()) ^ top_keys_before)!r}")
+        self.assertNotIn("run_log", state_after,
+                         f"TASK-137.S-9 {label} 전이 후 run_log 블록이 생김(C-6)")
+        self.assertEqual(state_after.get("schema_version"), schema_version,
+                         f"TASK-137.S-9 {label} schema_version이 승격·강등됨 — {state_after.get('schema_version')!r}")
+        self.assertFalse((pathlib.Path(task) / "run").exists(),
+                         f"TASK-137.S-9 {label} run_log 없는 태스크에 run 디렉터리가 생성됨")
+        self.assertEqual(_segment_records(task), [],
+                         f"TASK-137.S-9 {label} run_log 없는 태스크에 조각 사건이 기록됨")
+
+    def test_schema_1_0_task_without_run_log_block(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            task = _mktask(tmp, name="137-s9-schema-1-0")
+            code, out, err, _ = _run([
+                "init", str(task), "--skill", "oppl", "--mode", "agentic",
+                "--rows-spec", _ROWS_SPEC_KEYLESS, "--run-log-mode", "off",
+            ])
+            self.assertEqual(code, 0, f"TASK-137.S-9 1.0 init 실패 — {out!r} {err!r}")
+            self.assertEqual(_read_state(task).get("schema_version"), "1.0")
+
+            self._assert_completeness_is_empty(task, "1.0")
+            self._assert_transition_path_unchanged(
+                task, "1.0", ["--row", "1"],
+                _OFF_MODE_ADVANCE_KEYS_KEYLESS, _OFF_MODE_MARK_KEYS_KEYLESS, "1.0")
+
+    def test_schema_1_1_task_without_run_log_block(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            spec_path = _write_keyed_pipeline(tmp)
+            task = _mktask(tmp, name="137-s9-schema-1-1")
+            code, out, err, _ = _init_keyed(task, spec_path, run_log_mode="off")
+            self.assertEqual(code, 0, f"TASK-137.S-9 1.1 init 실패 — {out!r} {err!r}")
+            self.assertEqual(_read_state(task).get("schema_version"), "1.1")
+
+            self._assert_completeness_is_empty(task, "1.1")
+            self._assert_transition_path_unchanged(
+                task, "1.1", ["--task-step", "execute.impl_a"],
+                _OFF_MODE_ADVANCE_KEYS_KEYED, _OFF_MODE_MARK_KEYS_KEYED, "1.1")
 
 
 class TestCompletenessCheckIndependentFromStructuralValidation(unittest.TestCase):

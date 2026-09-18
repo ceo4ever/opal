@@ -1,0 +1,267 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "oppb-command.schema.json",
+  "title": "OPPB CLI Command Surface Schema",
+  "description": "`oppb-runtime-tool/run.sh <command> [<subcommand>] [--flag value]`의 공개 표면을 기술한다. 루트는 하나의 호출을 정규화한 object이며, 명령별로 필수 플래그를 oneOf로 못박는다. 응답 봉투와 폐쇄 오류 코드 집합은 $defs에 둔다. 실제 파서(oppb_runtime_tool.parse_argv)는 `--k=v`와 `--k v` 두 양식을 모두 받고 FLAGS 화이트리스트 밖 플래그를 usage_error로 거부하며, 명령 뒤 첫 비플래그 토큰을 subcommand로, 두 번째를 usage_error로 처리한다. 이 문서는 G2 API 동결 대상이며 런타임 검증기가 아니다 — CLI 자체가 이 스키마를 읽지 않는다. **동결 범위는 G2 표면이다.** 여기의 command_name·flag_name·error_code 폐쇄 집합은 Controller·Supervisor·Evidence 계약을 여는 명령 표면만 기술하며 CLI 전체 표면의 목록이 아니다. G3·G4가 자기 서브커맨드·플래그·오류 코드를 추가하는 것은 이 동결의 위반이 아니고, 그 표면은 README와 각 모듈 @header가 기술한다(api-freeze.md §3).",
+  "type": "object",
+  "required": ["command"],
+  "additionalProperties": false,
+  "properties": {
+    "command": { "$ref": "#/$defs/command_name" },
+    "subcommand": { "type": "string" },
+    "allocator_root": { "$ref": "#/$defs/absolute_path" },
+    "project_root": { "$ref": "#/$defs/absolute_path" },
+    "run_root": { "$ref": "#/$defs/absolute_path" },
+    "spec": { "$ref": "#/$defs/absolute_path" },
+    "file": { "$ref": "#/$defs/absolute_path" },
+    "task_id": { "type": "string", "minLength": 1 }
+  },
+  "oneOf": [
+    {
+      "description": "`init --allocator-root <abs> --project-root <abs>` — run root·cache root 생성과 미추적 보장. 검사를 모두 통과한 뒤에만 디렉토리를 만들고, run identity는 호출마다 새로 발급하며 기존 run root를 덮어쓰지 않는다.",
+      "properties": { "command": { "const": "init" } },
+      "required": ["command", "allocator_root", "project_root"]
+    },
+    {
+      "description": "`start --run-root <abs>` — Supervisor 기동. 복구가 끝난 뒤에야 성공을 반환한다.",
+      "properties": { "command": { "const": "start" } },
+      "required": ["command", "run_root"]
+    },
+    {
+      "description": "`resume --run-root <abs>` — 비정상 종료 뒤 재기동. start와 같은 경로이며 상태를 건너뛰는 강제 resume이 아니다.",
+      "properties": { "command": { "const": "resume" } },
+      "required": ["command", "run_root"]
+    },
+    {
+      "description": "`status --run-root <abs>` — 읽기 전용 관측. Supervisor를 기동하지 않는다.",
+      "properties": { "command": { "const": "status" } },
+      "required": ["command", "run_root"]
+    },
+    {
+      "description": "`workgraph load --run-root <abs> --spec <abs>` — spec에서 workgraph.json·acceptance.json 초기 생성. 이미 있으면 workgraph_exists로 거부한다.",
+      "properties": {
+        "command": { "const": "workgraph" },
+        "subcommand": { "const": "load" }
+      },
+      "required": ["command", "subcommand", "run_root", "spec"]
+    },
+    {
+      "description": "`workgraph show --run-root <abs>` — 읽기 전용 요약. revision을 전진시키지 않는다.",
+      "properties": {
+        "command": { "const": "workgraph" },
+        "subcommand": { "const": "show" }
+      },
+      "required": ["command", "subcommand", "run_root"]
+    },
+    {
+      "description": "`evidence submit --run-root <abs> --file <abs>` — schema·code head·scope hash·독립성 4검사를 색인 전에 통과한 evidence만 불변 색인한다.",
+      "properties": {
+        "command": { "const": "evidence" },
+        "subcommand": { "const": "submit" }
+      },
+      "required": ["command", "subcommand", "run_root", "file"]
+    },
+    {
+      "description": "`task accept --run-root <abs> --task-id <id>` — 색인된 독립 검증 증거가 있을 때만 미니 태스크를 accepted로 전이한다.",
+      "properties": {
+        "command": { "const": "task" },
+        "subcommand": { "const": "accept" }
+      },
+      "required": ["command", "subcommand", "run_root", "task_id"]
+    }
+  ],
+  "$defs": {
+    "absolute_path": {
+      "type": "string",
+      "pattern": "^/",
+      "description": "모든 경로 인자는 절대경로 명시만 받는다 — cwd·경로 세그먼트로 추론하지 않는다(harness/worktree.md [MUST])."
+    },
+    "command_name": {
+      "enum": ["init", "start", "status", "resume", "workgraph", "evidence", "task"],
+      "description": "**G2가 소유하는 명령 7종**이다. 동결 시점 oppb_runtime_tool.COMMANDS·DISPATCH 키와 일치했으나 그 일치는 G2 시점 실측 사실이지 유지해야 할 불변식이 아니다 — 이 enum은 CLI 전체 표면의 목록이 아니다. G3·G4가 추가하는 서브커맨드(`lease`·`probe`·`checkpoint`·`cache`·`recover` 등)는 여기에 들어오지 않으며 이 동결의 대상이 아니다. 런타임 폐쇄 집합의 SSOT는 구현의 COMMANDS다."
+    },
+    "flag_name": {
+      "enum": [
+        "--allocator-root",
+        "--project-root",
+        "--run-root",
+        "--spec",
+        "--file",
+        "--task-id"
+      ],
+      "description": "**G2 명령 7종이 소유하는 플래그**다. 동결 시점 oppb_runtime_tool.FLAGS 화이트리스트와 일치했고, 화이트리스트 밖 플래그는 usage_error(exit 2)로 거부한다. G3·G4가 자기 명령용으로 추가하는 플래그는 여기에 들어오지 않으며 이 동결의 대상이 아니다. 런타임 화이트리스트의 SSOT는 구현의 FLAGS다."
+    },
+    "exit_code": {
+      "enum": [0, 1, 2],
+      "description": "0=성공, 1=오류, 2=사용법 오류. 출력은 어느 경로에서도 단일 라인 JSON 하나다(harness/tool-output-contract.md)."
+    },
+    "success_response": {
+      "type": "object",
+      "description": "stdout 단일 라인. 명령별 추가 필드가 병합되므로 닫힌 집합이 아니다. exit code 0.",
+      "required": ["ok", "command"],
+      "additionalProperties": true,
+      "properties": {
+        "ok": { "const": true },
+        "command": { "$ref": "#/$defs/command_name" }
+      }
+    },
+    "error_response": {
+      "type": "object",
+      "description": "stdout 단일 라인. ToolError.extra가 추가 필드로 병합되므로 닫힌 집합이 아니다. exit code 1 또는 2. command는 파싱 실패 시 \"oppb\"가 된다.",
+      "required": ["ok", "command", "error", "message"],
+      "additionalProperties": true,
+      "properties": {
+        "ok": { "const": false },
+        "command": {
+          "oneOf": [{ "$ref": "#/$defs/command_name" }, { "const": "oppb" }]
+        },
+        "error": { "$ref": "#/$defs/error_code" },
+        "message": { "type": "string" }
+      }
+    },
+    "error_code": {
+      "description": "**G2가 소유하는 오류 코드 52종** — 진입점 자체 + controller + supervisor + evidence의 합집합이며 동결 시점 oppb_runtime_tool.ERROR_CODES와 일치했다. 이 목록은 CLI 전체 오류 코드의 폐쇄 집합이 아니다. G3·G4가 자기 명령용으로 추가하는 코드는 여기에 들어오지 않으며 이 동결의 대상이 아니다. 런타임 폐쇄 집합의 SSOT는 구현의 ERROR_CODES다.",
+      "enum": [
+        "acceptance_corrupt",
+        "allocator_root_missing",
+        "allocator_root_not_a_git_repository",
+        "allocator_root_not_absolute",
+        "allocator_root_not_found",
+        "allocator_root_not_repository_root",
+        "budget_exhausted",
+        "evidence_already_indexed",
+        "evidence_code_head_mismatch",
+        "evidence_index_write_failed",
+        "evidence_json_invalid",
+        "evidence_not_independent",
+        "evidence_schema_mismatch",
+        "evidence_scope_hash_mismatch",
+        "exclude_registration_failed",
+        "file_missing",
+        "file_not_absolute",
+        "file_not_found",
+        "git_command_failed",
+        "ignore_verification_failed",
+        "internal_error",
+        "project_root_missing",
+        "project_root_not_absolute",
+        "project_root_not_found",
+        "reconcile_failed",
+        "role_invalid",
+        "run_lock_held",
+        "run_manifest_missing",
+        "run_root_create_failed",
+        "run_root_invalid",
+        "run_root_missing",
+        "run_root_not_absolute",
+        "run_root_not_found",
+        "spec_invalid",
+        "spec_missing",
+        "spec_not_absolute",
+        "spec_not_found",
+        "spec_not_json",
+        "supervisor_handshake_timeout",
+        "supervisor_not_implemented",
+        "supervisor_spawn_failed",
+        "task_accept_no_independent_evidence",
+        "task_id_missing",
+        "task_not_found",
+        "task_state_invalid",
+        "unknown_command",
+        "unknown_subcommand",
+        "usage_error",
+        "workgraph_corrupt",
+        "workgraph_exists",
+        "workgraph_missing",
+        "workgraph_revision_conflict"
+      ]
+    },
+    "workgraph_spec": {
+      "type": "object",
+      "description": "`workgraph load --spec`가 읽는 입력 파일. 검증을 통과하면 workgraph.json·acceptance.json으로 정규화된다. 여기에 없는 필드는 무시된다.",
+      "required": ["mini_tasks"],
+      "additionalProperties": true,
+      "properties": {
+        "mini_tasks": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["id", "capability"],
+            "additionalProperties": true,
+            "properties": {
+              "id": { "type": "string", "minLength": 1 },
+              "capability": { "type": "string", "minLength": 1 },
+              "depends_on": { "type": "array", "items": { "type": "string" } },
+              "pre_state": {
+                "enum": [
+                  "pending",
+                  "ready",
+                  "running",
+                  "candidate_ready",
+                  "verifying",
+                  "accepted",
+                  "blocked",
+                  "failed"
+                ],
+                "description": "생략하면 pending. runner_attempt_id를 선언하려면 candidate_ready·verifying·accepted 중 하나여야 한다."
+              },
+              "runner_attempt_id": { "type": "string", "minLength": 1 },
+              "run_command": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+              "verify_command": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+              "lease": {
+                "type": "object",
+                "additionalProperties": true,
+                "properties": {
+                  "tracked_writes": { "type": "array", "items": { "type": "string" } },
+                  "ephemeral_writes": { "type": "array", "items": { "type": "string" } },
+                  "contracts": { "type": "array", "items": { "type": "string" } },
+                  "runtime_resources": { "type": "array", "items": { "type": "string" } }
+                }
+              },
+              "executors": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["id"],
+                  "additionalProperties": true,
+                  "properties": {
+                    "id": { "type": "string", "minLength": 1 },
+                    "run_command": {
+                      "type": "array",
+                      "items": { "type": "string" },
+                      "minItems": 1
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "budget": {
+          "type": "object",
+          "additionalProperties": { "type": "integer", "minimum": 0 }
+        },
+        "acceptance": {
+          "type": "array",
+          "description": "비었거나 생략하면 미니 태스크 1개당 조건 1개(`ac-<task_id>`)로 유도한다.",
+          "items": {
+            "type": "object",
+            "required": ["id"],
+            "additionalProperties": true,
+            "properties": {
+              "id": { "type": "string", "minLength": 1 },
+              "description": { "type": "string" },
+              "contributing_tasks": { "type": "array", "items": { "type": "string" } },
+              "tasks": {
+                "type": "array",
+                "items": { "type": "string" },
+                "description": "contributing_tasks의 대체 키. 둘 다 없으면 빈 목록으로 본다."
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

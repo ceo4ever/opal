@@ -25,7 +25,8 @@
     "TestT106CodeScanCitationBehavior", "TestT111SdlcV2Contracts",
     "TestS9CloseMarkNoImmediateMemoryAppend", "TestS10FinalizeAttribution",
     "TestFinalizeAttributionHistoryLink",
-    "TestT138W9OwnershipClaimBoundary", "TestT138W9ActorSessionId"
+    "TestT138W9OwnershipClaimBoundary", "TestT138W9ActorSessionId",
+        "TestT132OppbStageEnumExtension"
   ]
 }
 
@@ -11481,3 +11482,371 @@ class TestT138W9ActorSessionId(unittest.TestCase):
             self.assertIn(event_name, by_event)
             self.assertIsNone(by_event[event_name]["actor"]["session_id"],
                               f"{event_name}의 actor.session_id는 None이어야 한다")
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# T132 — OPPB additive enum 확장 RED (PLAN 132 §Work items W-3 / TEST-SCENARIO S-6)
+# ═════════════════════════════════════════════════════════════════════════════
+#
+# W-3은 `init --skill` choices에 "oppb"를, STAGE_ENUM에 "P0"~"P5"를 추가하는
+# RED-first 테스트다. 두 제약 모두 argparse choices 레벨이라 subprocess 실호출로만
+# 재현된다(TestOpddEnumDrift(070 R-8)·TestOpplSkillInit(056) 관례와 동일,
+# red-first.md §4 — 직접 함수 호출은 argparse 파싱을 우회하므로 이 제약을 재현하지
+# 못한다).
+#
+# S-6 원문은 `--rows-from <oppb pipeline.json>`을 쓰지만, 그 파일은 W-20(P9)
+# 산출물이라 이 RED 시점에는 존재하지 않는다. `oppb-runtime-tool/tests/
+# test_controller.py`의 MINIMAL_PROJECT_ROWS가 동일한 이유로 쓰는 것과 같은
+# 우회를 적용한다 — `--rows-spec` 인라인 P0~P5 최소 행(스테이지당 1행)으로
+# 대체한다. 이 클래스는 W-3 구현자와 다른 주체가 작성한 실패 테스트이며
+# `state_tool.py`는 수정하지 않는다(harness/red-first.md §1.5-2).
+#
+# 전 전이는 `run.sh` 공개 CLI(subprocess) 호출로만 수행하고 state.json을 직접
+# 편집하지 않는다(.opal/AGENT.md §업무 수행 지침).
+
+_OPPB_P0_P5_ROWS_SPEC = json.dumps([
+    {"stage": stage, "item": f"{stage} 프로젝트 단계"}
+    for stage in ("P0", "P1", "P2", "P3", "P4", "P5")
+])
+
+# 기존 skill 회귀용 — 기존 STAGE_ENUM 값(TASK/ANALYSIS/PLAN/EXECUTE/CLOSE)만
+# 사용한다. CLOSE 첫 행 진입은 check_close_gate(§2.16 G-13)가 직전 "사용자 확인"
+# 행의 owner=user/status=done을 요구하므로(SAMPLE_ROWS_SPEC/GATE_ROWS_SPEC과
+# 동일 관례) EXECUTE 뒤에 확인 행을 명시적으로 둔다.
+_EXISTING_SKILL_REGRESSION_ROWS_SPEC = json.dumps([
+    {"stage": "TASK",     "item": "작업"},
+    {"stage": "ANALYSIS", "item": "분석"},
+    {"stage": "PLAN",     "item": "계획"},
+    {"stage": "EXECUTE",  "item": "실행"},
+    {"stage": "EXECUTE",  "item": "사용자 확인"},
+    {"stage": "CLOSE",    "item": "종료"},
+])
+_EXISTING_SKILL_REGRESSION_STAGES = ["TASK", "ANALYSIS", "PLAN", "EXECUTE", "EXECUTE", "CLOSE"]
+_EXISTING_SKILL_REGRESSION_ROW_COUNT = len(_EXISTING_SKILL_REGRESSION_STAGES)
+_EXISTING_SKILL_REGRESSION_CONFIRM_ROW_ID = 5  # "사용자 확인" 행 — mark 시 --owner user 필요
+
+
+class TestT132OppbStageEnumExtension(unittest.TestCase):
+    """W-3 [G1] state-tool additive enum 확장 — TEST-SCENARIO S-6(AC-1, C-6).
+
+    현재는 `--skill` choices에 "oppb"가 없고 STAGE_ENUM에 "P0"~"P5"가 없어
+    신규 수용 테스트(test_t132_s6_*)가 RED(실패)한다. 기존 skill(opd/oppd/oppl)
+    회귀 테스트(test_t132_s6_regression_*)는 W-3 적용 전에도 이미 PASS해야 하며,
+    GREEN 이후에도 계속 PASS해야 한다(additive-only 검증 — 기존 분기 무변경).
+    """
+
+    def setUp(self):
+        self.tmpdir = pathlib.Path(tempfile.mkdtemp())
+
+    def tearDown(self):
+        shutil.rmtree(self.tmpdir, ignore_errors=True)
+
+    def _new_task_path(self, name):
+        p = self.tmpdir / name
+        p.mkdir()
+        return p
+
+    def _round_trip_all_rows(self, task_path, row_count, mark_owners=None):
+        """1..row_count까지 순서대로 advance→mark 전이를 `run.sh` subprocess로만
+        수행한다(state.json 직접 편집 금지). 기존 왕복 관례(advance(row)→mark(row)를
+        row_id 오름차순 반복)와 동일 순서를 따른다. `mark_owners`는
+        {row_id: owner} 형태로, CLOSE 게이트가 요구하는 "사용자 확인" 행처럼
+        mark 시 --owner가 필요한 행에만 사용한다(check_close_gate §2.16 G-13)."""
+        mark_owners = mark_owners or {}
+        for row_id in range(1, row_count + 1):
+            code, stdout, stderr, data = _run070([
+                "advance", str(task_path), "--row", str(row_id),
+            ])
+            self.assertEqual(
+                code, 0,
+                f"row{row_id} advance 실패(exit={code}): stdout={stdout!r} stderr={stderr!r}",
+            )
+            mark_args = ["mark", str(task_path), "--row", str(row_id), "--done"]
+            owner = mark_owners.get(row_id)
+            if owner:
+                mark_args += ["--owner", owner]
+            code, stdout, stderr, data = _run070(mark_args)
+            self.assertEqual(
+                code, 0,
+                f"row{row_id} mark 실패(exit={code}): stdout={stdout!r} stderr={stderr!r}",
+            )
+
+    # ── 신규 수용: --skill oppb + P0~P5 (S-6 본체, RED) ──────────────────────
+
+    def test_t132_s6_init_skill_oppb_accepts_p0_p5_rows(self):
+        """[T132/S-6] `init --skill oppb --rows-spec <P0~P5 6행>` → exit 0, ok:true,
+        rows[] 6행 전부 stage P0~P5 순서로 생성된다. 현재는 `--skill` choices에
+        "oppb"가 없어 argparse usage error(exit 2)로 거부된다(정상 RED)."""
+        task_path = self._new_task_path("s6_oppb_init")
+        code, stdout, stderr, data = _run070([
+            "init", str(task_path),
+            "--skill", "oppb", "--mode", "agentic",
+            "--task-title", "OPPB enum 확장 RED fixture",
+            "--rows-spec", _OPPB_P0_P5_ROWS_SPEC,
+        ])
+        self.assertEqual(
+            code, 0,
+            f"RED: state-tool init --skill oppb 실패 — W-3 enum 확장 전 정상 실패. "
+            f"exit={code}\nstdout={stdout!r}\nstderr={stderr!r}",
+        )
+        self.assertTrue(data.get("ok"), f"init 응답 ok 아님: {data}")
+        self.assertTrue((task_path / "state.json").exists(), "state.json 미생성")
+
+        state = json.loads((task_path / "state.json").read_text(encoding="utf-8"))
+        self.assertEqual(state.get("skill"), "oppb", f"skill 필드 불일치: {state.get('skill')!r}")
+        rows = state.get("rows") or []
+        self.assertEqual(len(rows), 6, f"rows[] 6행이어야 함: {len(rows)}행")
+        self.assertEqual(
+            [r.get("stage") for r in rows],
+            ["P0", "P1", "P2", "P3", "P4", "P5"],
+            f"rows[].stage 순서가 P0~P5가 아님: {[r.get('stage') for r in rows]}",
+        )
+
+    def test_t132_s6_oppb_advance_mark_round_trip_all_stages(self):
+        """[T132/S-6] `--skill oppb` P0~P5 6행 전체를 advance→mark 왕복시켜
+        전 행이 done으로 전이되고 validate 위반이 없는지 확인한다. init 단계부터
+        RED다(--skill oppb 미등록)."""
+        task_path = self._new_task_path("s6_oppb_roundtrip")
+        code, stdout, stderr, data = _run070([
+            "init", str(task_path),
+            "--skill", "oppb", "--mode", "agentic",
+            "--rows-spec", _OPPB_P0_P5_ROWS_SPEC,
+        ])
+        self.assertEqual(
+            code, 0,
+            f"RED: state-tool init --skill oppb 실패(왕복 전제 조건) — "
+            f"exit={code}\nstdout={stdout!r}\nstderr={stderr!r}",
+        )
+
+        self._round_trip_all_rows(task_path, 6)
+
+        state = json.loads((task_path / "state.json").read_text(encoding="utf-8"))
+        rows = state.get("rows") or []
+        self.assertTrue(
+            all(r.get("status") == "done" for r in rows),
+            f"P0~P5 전 행이 done으로 전이되지 않음: {[(r.get('stage'), r.get('status')) for r in rows]}",
+        )
+
+        code, stdout, stderr, data = _run070(["validate", str(task_path)])
+        self.assertEqual(
+            code, 0,
+            f"validate 실패(왕복 후 정합성 위반) — exit={code}\nstdout={stdout!r}\nstderr={stderr!r}",
+        )
+        self.assertEqual(
+            data.get("violations"), [],
+            f"P0~P5 왕복 후 violations가 비어있지 않음: {data.get('violations')}",
+        )
+
+    # ── STAGE_ENUM 독립 검증: 기존 skill(opp)에 add-row --stage P0 ──────────
+
+    def test_t132_s6_stage_p0_rejected_independent_of_skill_oppb(self):
+        """[T132/S-6] STAGE_ENUM 확장은 `--skill oppb`와 독립적으로도 검증되어야
+        한다 — 기존 skill(`opp`)에 `add-row --stage P0`를 시도해도 현재는
+        STAGE_ENUM에 P0가 없어 거부된다(TestOpddEnumDrift의 DICT 검증과 동일 패턴,
+        정상 RED)."""
+        task_path = self._new_task_path("s6_stage_p0_add_row")
+        code, stdout, stderr, data = _run070([
+            "init", str(task_path),
+            "--skill", "opp", "--mode", "interactive",
+            "--rows-spec", json.dumps([
+                {"stage": "TASK",  "item": "작업"},
+                {"stage": "CLOSE", "item": "DONE.md 생성"},
+            ]),
+        ])
+        self.assertEqual(code, 0, f"사전 init(opp) 실패: {stdout!r}")
+
+        code, stdout, stderr, data = _run070([
+            "add-row", str(task_path),
+            "--after", "1", "--stage", "P0", "--item", "P0 작업",
+        ])
+        self.assertEqual(
+            code, 0,
+            f"RED: add-row --stage P0 실패 — STAGE_ENUM 확장 전 정상 실패. "
+            f"exit={code}\nstdout={stdout!r}\nstderr={stderr!r}",
+        )
+        self.assertTrue(data.get("ok"), f"add-row 응답 ok 아님: {data}")
+
+    # ── 기존 무변경 회귀: opd·oppd·oppl 왕복 + 기존 stage 값 수용 ────────────
+
+    def _assert_existing_skill_round_trip_unchanged(self, skill):
+        task_path = self._new_task_path(f"s6_regress_{skill}")
+        code, stdout, stderr, data = _run070([
+            "init", str(task_path),
+            "--skill", skill, "--mode", "agentic",
+            "--rows-spec", _EXISTING_SKILL_REGRESSION_ROWS_SPEC,
+        ])
+        self.assertEqual(
+            code, 0,
+            f"기존 skill '{skill}' init이 W-3 enum 확장 전인데도 실패함(회귀) — "
+            f"exit={code}\nstdout={stdout!r}\nstderr={stderr!r}",
+        )
+        self.assertTrue(data.get("ok"), f"'{skill}' init 응답 ok 아님: {data}")
+
+        state = json.loads((task_path / "state.json").read_text(encoding="utf-8"))
+        rows = state.get("rows") or []
+        self.assertEqual(
+            [r.get("stage") for r in rows],
+            _EXISTING_SKILL_REGRESSION_STAGES,
+            f"'{skill}' 기존 stage 값 수용 실패: {[r.get('stage') for r in rows]}",
+        )
+
+        self._round_trip_all_rows(
+            task_path, _EXISTING_SKILL_REGRESSION_ROW_COUNT,
+            mark_owners={_EXISTING_SKILL_REGRESSION_CONFIRM_ROW_ID: "user"},
+        )
+
+        final_state = json.loads((task_path / "state.json").read_text(encoding="utf-8"))
+        final_rows = final_state.get("rows") or []
+        self.assertTrue(
+            all(r.get("status") == "done" for r in final_rows),
+            f"'{skill}' 왕복 후 일부 행이 done 아님(회귀): "
+            f"{[(r.get('stage'), r.get('status')) for r in final_rows]}",
+        )
+
+    def test_t132_s6_regression_opd_round_trip_unchanged(self):
+        """[T132/S-6] 기존 skill `opd` — init·advance·mark 왕복과 기존 stage 값
+        수용이 W-3 적용 전후 무변경이어야 한다(회귀 가드, W-3 적용 전에도 PASS)."""
+        self._assert_existing_skill_round_trip_unchanged("opd")
+
+    def test_t132_s6_regression_oppd_round_trip_unchanged(self):
+        """[T132/S-6] 기존 skill `oppd` — init·advance·mark 왕복과 기존 stage 값
+        수용이 W-3 적용 전후 무변경이어야 한다(회귀 가드, W-3 적용 전에도 PASS)."""
+        self._assert_existing_skill_round_trip_unchanged("oppd")
+
+    def test_t132_s6_regression_oppl_round_trip_unchanged(self):
+        """[T132/S-6] 기존 skill `oppl` — init·advance·mark 왕복과 기존 stage 값
+        수용이 W-3 적용 전후 무변경이어야 한다(회귀 가드, W-3 적용 전에도 PASS)."""
+        self._assert_existing_skill_round_trip_unchanged("oppl")
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# T132 W-3 보강 — validate_pipeline_spec() 로컬 skill_enum 누락 RED
+# (PM 실측 결함 — state_tool.py:1247 skill_enum에 "oppb" 미등록)
+# ═════════════════════════════════════════════════════════════════════════════
+#
+# state_tool.py에는 skill 허용 목록이 두 곳에 있다: ① init --skill argparse
+# choices(W-3이 "oppb" 추가, GREEN 완료) ② validate_pipeline_spec() 로컬 상수
+# skill_enum(:1247, "oppb" 없음). W-20(P9)이 `oppb pipeline.json`을
+# `state-tool init --skill oppb --rows-from`으로 왕복 검증할 때
+# build_rows_from_pipeline_json(:1304) → validate_pipeline_spec(:1312)이
+# spec_skill_invalid로 막는다. 위 TestT132OppbStageEnumExtension은
+# `--rows-spec` 인라인을 써서 이 spec-validate 경로를 타지 않으므로(의도된
+# 설계 — W-20 선행 의존 제거, 바꾸지 않음) 이 결함을 잡지 못한다. 이 클래스는
+# `spec-validate` 공개 CLI(:2140 cmd_spec_validate → :2147
+# validate_pipeline_spec)를 직접 겨냥한다.
+#
+# 이 클래스는 W-3 구현자와 다른 주체가 작성한 실패 테스트이며 state_tool.py는
+# 수정하지 않는다(harness/red-first.md §1.5-2). 위
+# TestT132OppbStageEnumExtension의 기존 6건은 건드리지 않는다(§1.5-5, 추가만).
+
+_OPPB_MIN_PIPELINE_SPEC = json.loads("""
+{
+  "spec_version": "1.0",
+  "skill": "oppb",
+  "meta": { "mode_label": "Project Build Pilot", "stages": ["P0", "P1", "P2", "P3", "P4", "P5"] },
+  "task_steps": [
+    { "id": 1, "key": "p0.kickoff",  "stage": "P0", "item": "P0 작업" },
+    { "id": 2, "key": "p1.discover", "stage": "P1", "item": "P1 작업" },
+    { "id": 3, "key": "p2.design",   "stage": "P2", "item": "P2 작업" },
+    { "id": 4, "key": "p3.build",    "stage": "P3", "item": "P3 작업" },
+    { "id": 5, "key": "p4.verify",   "stage": "P4", "item": "P4 작업" },
+    { "id": 6, "key": "p5.close",    "stage": "P5", "item": "P5 작업" }
+  ]
+}
+""")
+
+
+class TestT132OppbSpecValidateSkillEnum(unittest.TestCase):
+    """W-3 보강 — validate_pipeline_spec() 로컬 skill_enum에 "oppb" 누락 RED.
+
+    PM이 W-3 GREEN 완료 후 실측으로 잡은 결함: state_tool.py:1247의
+    skill_enum(로컬 상수)에는 "oppb"가 없어 `spec-validate`(및 이를 거치는
+    `init --rows-from`)가 spec_skill_invalid로 거부한다. `--skill` argparse
+    choices(별도 목록, GREEN 완료)와는 독립적으로 검증되어야 한다.
+    """
+
+    def setUp(self):
+        self.tmpdir = pathlib.Path(tempfile.mkdtemp())
+
+    def tearDown(self):
+        shutil.rmtree(self.tmpdir, ignore_errors=True)
+
+    def _write_spec(self, name, spec_dict):
+        p = self.tmpdir / name
+        p.write_text(json.dumps(spec_dict, ensure_ascii=False), encoding="utf-8")
+        return p
+
+    # ── 신규 수용(RED): oppb pipeline.json spec-validate ok:true ────────────
+
+    def test_t132_oppb_spec_validate_accepts_skill(self):
+        """[T132/W-3 보강] `skill: "oppb"` + P0~P5 task_steps spec →
+        `spec-validate` exit 0, ok:true, violations_count 0. 지금은
+        validate_pipeline_spec() 로컬 skill_enum에 "oppb"가 없어
+        spec_skill_invalid violation으로 exit 1(정상 RED)."""
+        spec_path = self._write_spec("oppb.json", _OPPB_MIN_PIPELINE_SPEC)
+        code, stdout, stderr, data = _run070(["spec-validate", str(spec_path)])
+        self.assertEqual(
+            code, 0,
+            f"RED: oppb spec-validate가 실패함 — skill_enum에 'oppb' 미등록. "
+            f"exit={code}\nstdout={stdout!r}\nstderr={stderr!r}",
+        )
+        self.assertTrue(data.get("ok"), f"spec-validate 응답 ok 아님: {data}")
+        self.assertEqual(
+            data.get("violations_count"), 0,
+            f"oppb spec인데 violations 발생: {data.get('violations')}",
+        )
+        codes = [v.get("code") for v in (data.get("violations") or [])]
+        self.assertNotIn(
+            "spec_skill_invalid", codes,
+            f"RED: spec_skill_invalid가 남아있음(skill_enum 미확장): {data.get('violations')}",
+        )
+
+    # ── 기존 무변경 회귀(지금 통과해야 함) ───────────────────────────────────
+
+    def test_t132_regression_existing_skill_opd_spec_validate_unchanged(self):
+        """[회귀] 기존 skill `opd`(실 pipeline.json 전문 인용 fixture) spec-validate
+        는 W-3 적용 전후 무변경으로 계속 ok:true여야 한다."""
+        spec_path = self._write_spec("opd.json", _OPD_PIPELINE_SPEC)
+        code, stdout, stderr, data = _run070(["spec-validate", str(spec_path)])
+        self.assertEqual(code, 0, f"opd spec-validate 실패(회귀): stdout={stdout!r}")
+        self.assertTrue(data.get("ok"), f"opd spec-validate ok 아님(회귀): {data}")
+        self.assertEqual(data.get("violations_count"), 0)
+
+    def _assert_existing_skill_variant_still_valid(self, skill):
+        spec = _deepcopy_json(_OPD_PIPELINE_SPEC)
+        spec["skill"] = skill
+        spec_path = self._write_spec(f"{skill}.json", spec)
+        code, stdout, stderr, data = _run070(["spec-validate", str(spec_path)])
+        self.assertEqual(code, 0, f"'{skill}' spec-validate 실패(회귀): stdout={stdout!r}")
+        self.assertTrue(data.get("ok"), f"'{skill}' spec-validate ok 아님(회귀): {data}")
+        codes = [v.get("code") for v in (data.get("violations") or [])]
+        self.assertNotIn(
+            "spec_skill_invalid", codes,
+            f"'{skill}'가 기존 skill_enum에 있는데 spec_skill_invalid 발생(회귀): {data.get('violations')}",
+        )
+
+    def test_t132_regression_existing_skill_oppd_still_valid(self):
+        """[회귀] 기존 skill `oppd`는 spec-validate에서 계속 spec_skill_invalid 없이
+        통과해야 한다(skill_enum 확장은 additive-only)."""
+        self._assert_existing_skill_variant_still_valid("oppd")
+
+    def test_t132_regression_existing_skill_oppl_still_valid(self):
+        """[회귀] 기존 skill `oppl`은 spec-validate에서 계속 spec_skill_invalid 없이
+        통과해야 한다(skill_enum 확장은 additive-only)."""
+        self._assert_existing_skill_variant_still_valid("oppl")
+
+    def test_t132_regression_unknown_skill_still_rejected(self):
+        """[회귀] 존재하지 않는 skill(`nope`)은 계속 spec_skill_invalid로
+        거부되어야 한다(skill_enum 확장이 검증 자체를 무력화하지 않음)."""
+        spec = _deepcopy_json(_OPD_PIPELINE_SPEC)
+        spec["skill"] = "nope"
+        spec_path = self._write_spec("nope.json", spec)
+        code, stdout, stderr, data = _run070(["spec-validate", str(spec_path)])
+        self.assertEqual(code, 1, f"미지정 skill인데 spec-validate가 exit 0(회귀 실패): stdout={stdout!r}")
+        self.assertFalse(data.get("ok"), f"미지정 skill인데 ok=true(회귀 실패): {data}")
+        codes = [v.get("code") for v in (data.get("violations") or [])]
+        self.assertIn(
+            "spec_skill_invalid", codes,
+            f"미지정 skill 'nope'인데 spec_skill_invalid 없음(회귀 실패): {data.get('violations')}",
+        )
+

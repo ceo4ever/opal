@@ -1,7 +1,7 @@
 {
   "$schema": "opal-skills-registry-v1",
-  "version": "3.18.0",
-  "updated_at": "2026-09-12",
+  "version": "3.19.0",
+  "updated_at": "2026-09-17",
   "groups": {
     "opal-pilot": [
       {
@@ -162,6 +162,22 @@
         ],
         "domain": "dev",
         "pipeline": "TASK → ANALYSIS → PLAN → WBS → REVIEW → EXECUTE → VERIFY → CLOSE"
+      },
+      {
+        "name": "opal-pilot-project-build",
+        "alias": "oppb",
+        "description": "프로젝트 빌드 오케스트레이터 (확정된 실행 계약을 capability 단위 미니 태스크로 무인 소화 — worktree 1개·태스크 1건·INTENT.md 1개)",
+        "triggers": [
+          "^opal-pilot-project-build$",
+          "^oppb$",
+          "(?i)(프로젝트\\s*빌드|capability\\s*빌드)"
+        ],
+        "paths": [
+          "{project}/.opal/skills/opal-pilot-project-build/SKILL.md",
+          "~/.opal/skills/opal-pilot-project-build/SKILL.md"
+        ],
+        "domain": "dev",
+        "pipeline": "P0 → P1 → P2 → P3 → P4 → P5"
       }
     ],
     "op-dev": [
@@ -328,6 +344,40 @@
         "stage": "REPORT",
         "dispatched_by": [
           "opal-pilot-gc"
+        ]
+      }
+    ],
+    "op-oppb": [
+      {
+        "name": "op-oppb-project-slice",
+        "alias": null,
+        "description": "OPPB P2 프로젝트 슬라이스 — 승인된 INTENT를 capability 미니 태스크 DAG·계약·완료조건 역인덱스 spec 초안으로 변환",
+        "triggers": [
+          "^op-oppb-project-slice$"
+        ],
+        "paths": [
+          "{project}/.opal/skills/op-oppb-project-slice/SKILL.md",
+          "~/.opal/skills/op-oppb-project-slice/SKILL.md"
+        ],
+        "stage": "P2",
+        "dispatched_by": [
+          "opal-pilot-project-build"
+        ]
+      },
+      {
+        "name": "op-oppb-knowledge-finalize",
+        "alias": null,
+        "description": "OPPB P5 Project Knowledge Finalizer — 지식 후보 정리 후 memory-tool·brain-tool 프로젝트 batch 1회 반영",
+        "triggers": [
+          "^op-oppb-knowledge-finalize$"
+        ],
+        "paths": [
+          "{project}/.opal/skills/op-oppb-knowledge-finalize/SKILL.md",
+          "~/.opal/skills/op-oppb-knowledge-finalize/SKILL.md"
+        ],
+        "stage": "P5",
+        "dispatched_by": [
+          "opal-pilot-project-build"
         ]
       }
     ],
@@ -807,6 +857,16 @@
     ]
   },
   "changelog": [
+    {
+      "version": "3.19.0",
+      "date": "2026-09-17 KST",
+      "task": "132",
+      "changes": [
+        "opal-pilot-project-build 신규 등재 (alias oppb, group opal-pilot) — 확정 실행 계약을 capability 미니 태스크로 무인 소화하는 네 번째 프로젝트 Pilot. groups.opal-pilot 말미 append, 기존 항목·triggers 무변경",
+        "triggers는 SKILL.md frontmatter와 동일한 3종, pipeline은 references/pipeline.json meta.stages(P0~P5)와 정합. oppd/oppl과 동일한 6필드 스키마",
+        "op-oppb 그룹 신설 — op-oppb-project-slice(stage P2)·op-oppb-knowledge-finalize(stage P5) 2개 단계 스킬 등재, dispatched_by opal-pilot-project-build. op-gc 그룹과 동일 스키마, 기존 그룹·항목 무변경"
+      ]
+    },
     {
       "version": "3.18.0",
       "date": "2026-09-12 KST",
