@@ -124,7 +124,7 @@ TRD가 "무엇을 어디에 만들지"까지 정했고(`TRD.md` §범위 경계:
 | 필드 | 타입 | 필수/선택 | 값 |
 |---|---|---|---|
 | `type` | string | 필수 | `EXECUTOR_TYPES` (`browser`\|`api`\|`human`) |
-| `driver` | string \| null | 필수(nullable) | `type=browser`일 때 `agent-browser`\|`cmux`\|`playwright` |
+| `driver` | string \| null | 필수(nullable) | `type=browser`일 때 `ego-lite`\|`agent-browser`\|`cmux`\|`playwright` |
 | `session_mode` | string \| null | 필수(nullable) | `orca-managed` \| `owned-surface` \| `standalone` \| `null` |
 | `driver_version` | string \| null | 필수(nullable) | 후보가 `probe`로 반환한 값. 하네스가 `--version` 문자열을 자체 파싱해 채우지 않는다(NR-7) |
 | `client` | string \| null | 선택 | `type=api`일 때 HTTP 클라이언트 식별자 |
@@ -302,7 +302,7 @@ driver/executor의 `probe` 연산 반환값. 하네스는 이 객체 **외의 �
 
 | 필드 | 타입 | 필수/선택 | 값 |
 |---|---|---|---|
-| `driver` | string | 필수 | `agent-browser` \| `cmux` \| `playwright` \| `opal-http` \| `human` |
+| `driver` | string | 필수 | `ego-lite` \| `agent-browser` \| `cmux` \| `playwright` \| `opal-http` \| `human` |
 | `session_mode` | string \| null | 필수(nullable) | `orca-managed` \| `owned-surface` \| `standalone` \| `null` |
 | `available` | boolean | 필수 | — |
 | `version` | string \| null | 필수(nullable) | 후보가 반환한 원문 |
@@ -562,7 +562,13 @@ test-tool e2e clean (--run-id <id> | --stale) [--artifact-root <path>] [--dry-ru
 
 **계약 규칙 C-DRV-2** [MUST]: 가용성 판정은 `probe` 반환값만 소비한다. 하네스가 `uname`·`--version` 문자열 파싱·번들 파일 존재로 가용성을 추정하지 않는다(NR-7). 이는 `opal/tools/test-tool/lib/e2e_adapter.py:18`이 이미 명문화한 [MUST]이며 새 driver에도 그대로 적용한다.
 
-**계약 규칙 C-DRV-3**: 후보 순서는 `agent-browser/orca-managed` → `cmux/owned surface` → `agent-browser/standalone` → `playwright(opt-in)`이다(`TRD.md` TD-11). 전환 허용은 `can_try_next_provider()`(`e2e_contract.py:269`) 판정에만 의존하며 adapter가 자체 전환 조건을 만들지 않는다(`TASK.md` C-3).
+**계약 규칙 C-DRV-3**: 기본 후보 순서는 `agent-browser/orca-managed` → `cmux/owned surface` → `agent-browser/standalone` → `ego-lite/standalone` → `playwright(opt-in)`이다(`TRD.md` TD-11).
+
+> **개정 경위(PM, ADD-1)**: 최초 순서에는 `ego-lite`가 없었다. main의 태스크 129가 Ego Lite를 브라우저 후보로 도입했으므로 driver 체인에도 등재한다.
+>
+> **1순위가 아니라 `agent-browser/standalone` 다음에 두는 이유**: `ego-lite`는 **부분 driver**다 — `ego-browser-tool`의 `smoke`가 open과 텍스트 assert를 융합해 제공할 뿐 `act`·`wait`·`snapshot`·`capture`가 없다. 앞에 두면 UI 조작이 필요한 시나리오에서도 먼저 `selected`되고 실행 도중 `driver_operation_unimplemented`로 `blocked`가 되어, **더 완전한 driver를 가리는 기본값**이 된다. 현재 후보 게이트는 capability(§A.8.1 6키)만 보고 "이 시나리오가 `act`를 쓰는가"를 표현할 수단이 없으므로 순서로 방어한다. 태스크 129가 legacy `integration` 경로에 둔 Ego Lite 우선순위는 그 경로에서 유지된다 — 그쪽은 애초에 smoke 전용이다.
+>
+> 순서는 **기본값**이며 `resolve_candidates(candidate_order=...)`로 재정의할 수 있다. smoke 형태만 도는 프로젝트는 이 수단으로 `ego-lite`를 1순위에 올린다. 전환 허용 조건(`can_try_next_provider()`)은 순서와 무관하게 불변이다. 전환 허용은 `can_try_next_provider()`(`e2e_contract.py:269`) 판정에만 의존하며 adapter가 자체 전환 조건을 만들지 않는다(`TASK.md` C-3).
 
 **계약 규칙 C-DRV-4**: `open`·`act`만으로는 `pass`가 될 수 없다. `assertion_results`가 비면 `validate_pass_requirements`가 `assertion_required`로 `fail`을 반환한다(`e2e_contract.py:330-337`). cmux driver 이관의 본질은 assertion·증적을 실제로 채우는 것이다(`TRD.md` TD-11).
 

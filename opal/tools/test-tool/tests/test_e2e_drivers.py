@@ -60,6 +60,19 @@ def _all_caps_available():
     }
 
 
+def _record(candidates, driver, session_mode):
+    """후보 목록에서 **정체로** 찾는다.
+
+    `candidates[0]`으로 집으면 기본 후보 순서가 바뀔 때마다 깨진다(ADD-1에서 ego-lite를
+    1순위로 넣자 실제로 깨졌다). 이 테스트들이 검증하려는 것은 순서가 아니라 **그 후보의
+    판정**이므로 정체로 찾는 편이 의도에 맞고 순서 변경에 견딘다.
+    """
+    for item in candidates:
+        if item["driver"] == driver and item["session_mode"] == session_mode:
+            return item
+    raise AssertionError(f"{driver}/{session_mode} not in {[(i['driver'], i['session_mode']) for i in candidates]}")
+
+
 class TestDriverManifest(unittest.TestCase):
     """§A.15 — 버전 정책의 단일 SSOT는 manifest.json 한 곳이다."""
 
@@ -74,7 +87,7 @@ class TestDriverManifest(unittest.TestCase):
 
     def test_manifest_driver_names_are_within_the_contract_enum(self):
         manifest = e2e_drivers.load_manifest()
-        allowed = {"agent-browser", "cmux", "playwright"}
+        allowed = {"ego-lite", "agent-browser", "cmux", "playwright"}
         self.assertTrue(set(manifest["drivers"]) <= allowed, manifest["drivers"])
 
     def test_version_literals_are_not_duplicated_in_driver_code(self):
@@ -220,7 +233,12 @@ class TestCandidateResolution(unittest.TestCase):
         candidates, _ = e2e_drivers.resolve_candidates(registry={}, manifest=self._manifest())
         self.assertEqual(
             [(item["driver"], item["session_mode"]) for item in candidates],
-            [("agent-browser", "orca-managed"), ("cmux", "owned-surface"), ("agent-browser", "standalone")],
+            [
+                ("agent-browser", "orca-managed"),
+                ("cmux", "owned-surface"),
+                ("agent-browser", "standalone"),
+                ("ego-lite", "standalone"),
+            ],
         )
 
     def test_playwright_is_opt_in_only(self):
@@ -236,7 +254,7 @@ class TestCandidateResolution(unittest.TestCase):
             registry={("agent-browser", "orca-managed"): lambda **_: stub},
             manifest=self._manifest(),
         )
-        record = candidates[0]
+        record = _record(candidates, "agent-browser", "orca-managed")
         self.assertEqual(record["outcome"], "excluded")
         self.assertEqual(record["excluded_by"], "minimum_version")
         self.assertEqual(record["version"], "0.26.9")
@@ -273,8 +291,8 @@ class TestCandidateResolution(unittest.TestCase):
             manifest=self._manifest(),
             required_capabilities=["network_har"],
         )
-        self.assertEqual(candidates[0]["outcome"], "excluded")
-        self.assertEqual(candidates[0]["excluded_by"], "capability_missing")
+        self.assertEqual(_record(candidates, "agent-browser", "orca-managed")["outcome"], "excluded")
+        self.assertEqual(_record(candidates, "agent-browser", "orca-managed")["excluded_by"], "capability_missing")
 
     def test_probe_failure_outside_tested_range_is_infra_error_and_stops_candidate_walk(self):
         """§A.15·§C.7 — tested_range 밖 binary의 probe 실패는 excluded가 아니라 infra_error이며,
@@ -288,9 +306,13 @@ class TestCandidateResolution(unittest.TestCase):
             },
             manifest=self._manifest(),
         )
-        self.assertEqual(candidates[0]["outcome"], "infra_error")
-        self.assertEqual(candidates[0]["reason"], "probe_exec_failed")
-        self.assertEqual(len(candidates), 1, "infra_error 이후 다음 후보를 시도해서는 안 된다")
+        self.assertEqual(_record(candidates, "agent-browser", "orca-managed")["outcome"], "infra_error")
+        self.assertEqual(_record(candidates, "agent-browser", "orca-managed")["reason"], "probe_exec_failed")
+        # MV-38 형태로 단언한다 — `len(candidates)`는 앞선 후보 수에 따라 달라지지만
+        # "infra_error 원소보다 큰 order가 없다"는 순서와 무관하게 C-3·§C.7의 본뜻이다.
+        failed = _record(candidates, "agent-browser", "orca-managed")
+        after = [c for c in candidates if c["order"] > failed["order"]]
+        self.assertEqual(after, [], "infra_error 이후 다음 후보를 시도해서는 안 된다")
         self.assertEqual(never.probe_calls, 0)
 
     def test_every_candidate_record_carries_the_a12_field_set(self):

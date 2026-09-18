@@ -1,6 +1,11 @@
 {
   "schema_version": "1.0",
   "drivers": {
+    "ego-lite": {
+      "minimum_version": "0.0.0",
+      "tested_range": "*",
+      "ci_pin": "0.0.0"
+    },
     "agent-browser": {
       "minimum_version": "0.27.0",
       "tested_range": "0.27.x",

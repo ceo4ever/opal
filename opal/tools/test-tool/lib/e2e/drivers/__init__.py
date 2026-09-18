@@ -72,6 +72,18 @@ CANDIDATE_ORDER: Tuple[Dict[str, Any], ...] = (
     {"driver": "agent-browser", "session_mode": "orca-managed", "opt_in": False},
     {"driver": "cmux", "session_mode": "owned-surface", "opt_in": False},
     {"driver": "agent-browser", "session_mode": "standalone", "opt_in": False},
+    # ADD-1: ego-lite는 **부분 driver**다 — `ego-browser-tool`의 `smoke`가 open과 텍스트
+    # assert를 융합해 제공할 뿐 `act`·`wait`·`snapshot`·`capture`가 없다. 이것을 앞에
+    # 두면 UI 조작이 필요한 시나리오에서도 먼저 `selected`되고, 실행 도중
+    # `driver_operation_unimplemented`로 `blocked`가 된다 — 더 완전한 driver를 가리는
+    # 기본값이다. 현재 후보 게이트는 capability(§A.8.1 6키)만 보고 "이 시나리오가 `act`를
+    # 쓰는가"를 표현할 수단이 없으므로, 순서로 방어한다.
+    #
+    # smoke 형태(열고 텍스트 확인)만 도는 프로젝트는 `resolve_candidates(candidate_order=…)`
+    # 또는 제안서 §7의 `order.json`으로 1순위에 올릴 수 있다. 태스크 129가 legacy
+    # `integration` 경로에 둔 Ego Lite 우선순위는 그 경로에서 그대로 유지된다 — 그쪽은
+    # 애초에 smoke 전용 경로다.
+    {"driver": "ego-lite", "session_mode": "standalone", "opt_in": False},
     {"driver": "playwright", "session_mode": "standalone", "opt_in": True},
 )
 
@@ -303,6 +315,7 @@ def resolve_candidates(
     manifest: Optional[Mapping[str, Any]] = None,
     registry: Optional[Mapping[Tuple[str, Optional[str]], Callable[..., "BrowserDriver"]]] = None,
     opt_in_drivers: Sequence[str] = (),
+    candidate_order: Optional[Sequence[Mapping[str, Any]]] = None,
 ) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
     """후보 순서대로 §A.1.2 `candidates[]`와 §A.8 probe 기록을 만든다.
 
@@ -318,7 +331,10 @@ def resolve_candidates(
     selected_found = False
     order = 0
 
-    for entry in CANDIDATE_ORDER:
+    # ADD-1: 순서를 인자로 받는다. 기본값은 `CANDIDATE_ORDER`이고, 호출자가 넘기면 그것을
+    # 쓴다. 새 후보를 앞에 넣을 때 순서를 전제한 테스트가 함께 깨지는 것을 막고,
+    # 프로젝트별 재정의(제안서 §7 `order.json`)의 접합점을 미리 연다.
+    for entry in (candidate_order if candidate_order is not None else CANDIDATE_ORDER):
         driver_name = entry["driver"]
         session_mode = entry["session_mode"]
         if entry["opt_in"] and driver_name not in set(opt_in_drivers):
@@ -454,7 +470,7 @@ def write_probe_json(writer: "e2e_evidence.EvidenceWriter", probes: Sequence[Map
 # 이 블록은 **파일 맨 끝**에 있어야 한다. driver 모듈이 `from lib.e2e import drivers`로
 # 이 패키지의 심볼(`BrowserDriver`·`register_driver`·enum)을 참조하므로, 그 시점에 위
 # 정의가 모두 끝나 있어야 순환 import가 성립한다.
-_BUILTIN_DRIVER_MODULES: Tuple[str, ...] = ("agent_browser", "cmux")
+_BUILTIN_DRIVER_MODULES: Tuple[str, ...] = ("ego_lite", "agent_browser", "cmux")
 
 
 def _load_builtin_drivers() -> None:

@@ -4,7 +4,7 @@
   "mode": "agentic",
   "schema_version": "1.1",
   "created_at": "2026-09-12 21:02:01",
-  "updated_at": "2026-09-18 13:41:05",
+  "updated_at": "2026-09-18 14:05:47",
   "current_status": "completed_unmerged",
   "rows": [
     {
@@ -130,9 +130,10 @@
       "key": "test_scenario.test_scenario_md",
       "status": "done",
       "status_label": "✅",
-      "timestamp": "2026-09-14 17:13:38",
+      "timestamp": "2026-09-18 14:05:38",
       "owner": "PM",
-      "note": null
+      "note": "워커 소요 기록(ADD-1 CLOSE 게이트)",
+      "worker_duration_minutes": 5
     },
     {
       "row_id": 10,
@@ -176,9 +177,10 @@
       "key": "execute.implement",
       "status": "done",
       "status_label": "✅",
-      "timestamp": "2026-09-18 10:32:00",
+      "timestamp": "2026-09-18 14:05:38",
       "owner": "PM",
-      "note": "W-1~W-15 완료 + W-14 적발분 3건 PM 직접 수정(F-4 human executor dispatch 분기·F-6 감시 grep 범위·AC-14 경쟁 정의). test-tool 424 passed, console 23/23 ALL PASS, C-1 diff 0"
+      "note": "워커 소요 기록(ADD-1 CLOSE 게이트)",
+      "worker_duration_minutes": 245
     },
     {
       "row_id": 13,
@@ -187,9 +189,10 @@
       "key": "test.run_tests",
       "status": "done",
       "status_label": "✅",
-      "timestamp": "2026-09-18 10:39:55",
+      "timestamp": "2026-09-18 14:05:38",
       "owner": "PM",
-      "note": "AC 16건 관통 — 충족 14 / blocked 1(AC-12 범위밖) / AC-14 수정완료. C-9: test-tool 424 passed, console 23/23 ALL PASS, pkill 0/0, C-1 diff 0. vitest 131은 main 상속"
+      "note": "워커 소요 기록(ADD-1 CLOSE 게이트)",
+      "worker_duration_minutes": 60
     },
     {
       "row_id": 14,
@@ -230,13 +233,24 @@
       "stage": "CLOSE",
       "item": "DONE.md 생성",
       "key": "close.done_md",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-18 14:05:47",
       "owner": "PM",
-      "note": null
+      "note": "DONE.md 생성 — AC 충족15/blocked1/미충족0, 이월 5건, 회고적 학습 후보 3건"
+    },
+    {
+      "row_id": 17,
+      "stage": "CLOSE",
+      "item": "ADD-1 Ego Lite driver 흡수",
+      "key": "close.add_1",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-18 14:05:47",
+      "owner": "PM",
+      "note": "ADD-1 Ego Lite driver 흡수 — 424 passed, 동결 RED 수정 0, C-1 diff 0"
     }
   ],
-  "next_action": "CLOSE DONE.md 생성 진입",
+  "next_action": "태스크 완료",
   "worktree": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_127"
 }

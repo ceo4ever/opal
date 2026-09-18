@@ -1,6 +1,6 @@
 # STATE: OPAL 범용 E2E 하네스 구현 (제안서 태스크 3~9)
 
-> 최종 갱신: 2026-09-18 13:41:05
+> 최종 갱신: 2026-09-18 14:05:47
 > 파이프라인 현황(rows/상태/다음 액션)의 SSOT는 `state.json`입니다.
 > 조회: `~/.opal/tools/state-tool/run.sh show <task-path>`
 
@@ -12,6 +12,7 @@
 | 3 | 2026-09-14 18:01 | S-14·S-16을 RED 대상에서 제외하고 구현 후 회귀 가드로 전환 | S-14는 비공개 헬퍼를 겨냥해 `red-first.md` §2 검증 경계 위반, S-16은 AC-16이 선행 커밋으로 기충족. §2의 자동 우회 금지에 따라 워커가 BLOCKED 반환, PM이 실측 후 재정의 |
 | 4 | 2026-09-14 18:30 | `CONTRACT.md` §B.1.1을 개정하지 않고 구현을 계약에 맞춘다 | 계약이 SSOT이고 RED 테스트는 그 하위 산출물이다. 구현을 테스트에 맞추면 위계가 뒤집힌다. 재작업 범위는 호출 인자 추가 수준 |
 | 5 | 2026-09-18 13:41:05 | current_status changed: in_progress → completed_unmerged | CLOSE 완료 — main 병합 대기 |
+| 6 | 2026-09-18 13:48:32 | additional row inserted after row 16: stage=CLOSE, item=ADD-1 Ego Lite driver 흡수, key=close.add_1, new_row_id=17 | additional work entry |
 
 ## 블로커
 
