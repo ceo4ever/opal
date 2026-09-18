@@ -93,6 +93,13 @@
   ],
   "history": [
     {
+      "title": "127 E2E 하네스 구현",
+      "date": "2026-09-18",
+      "stage": "완료",
+      "path": "tasks/127-260912-oppl-E2E-하네스-구현/",
+      "result": "test-tool e2e 4서브명령(run/resume/status/clean)과 driver(agent-browser·cmux·ego-lite)·executor(api·human)·증적 단일 관문을 신설. console stop의 부팅시각 stale 판정으로 리부팅 후 첫 설치가 임의 사용자 프로세스를 죽이던 결함을 닫고, Playwright를 기본 설치에서 opt-in으로 강등. AC 충족15/blocked1, test-tool 428 passed."
+    },
+    {
       "title": "132 oppb 프로젝트빌드 파일럿 신설",
       "date": "2026-09-18",
       "stage": "완료",
@@ -119,13 +126,6 @@
       "stage": "완료",
       "path": "tasks/136-260916-opds-모드별-실행-지속성-계약/",
       "result": "3개 실행 모드의 구조화 전이 계약, 전체 Pilot CLOSE tail, Claude Stop guard를 적용하고 S-1~S-7 및 회귀 검증을 통과했다."
-    },
-    {
-      "title": "123 태스크 실행로그 표준화",
-      "date": "2026-09-15",
-      "stage": "완료",
-      "path": "tasks/123-260912-oppl-태스크-실행로그-표준화/",
-      "result": "기록 계층 완성 — redact() 마스킹 4종 실동작(멱등·구조 보존·공통 초크포인트)으로 .gitignore 한시 제외를 제거해 마스킹된 조각이 git 추적 대상이 됐고, 4 MiB 조각 경계 전환을 배타 락 구간 안에서 원자 수행해 동시 append에도 새 조각이 하나만 생기며 순번은 run 전역으로 이어진다. terminal duration_spans 합 검증과 reconcile-duration 파생 조회를 더해 state-tool mark가 분 투영을 자동 기록하고 불일치 수동값은 worker_duration_conflict로 거부한다. 조용시간 설정에 timeZone 2층 머지와 캐시 토큰 서명을 추가했다. 시나리오 19/19 pass, run-log-tool 53/0, state-tool 457 passed·3 skipped, 회귀 0. AC-9 색인과 강제 집행·파이프라인 확산은 후속 이관."
     }
   ]
 }
