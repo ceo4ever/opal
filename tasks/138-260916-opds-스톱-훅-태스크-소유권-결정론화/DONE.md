@@ -69,7 +69,9 @@ Stop 훅이 `cwd.parents`를 거슬러 올라가 허브 `tasks/`를 스캔하고
   - §4 D-21 조용한 부팅 — **pass**. `claim_source=session_start` 상태에서 배포된 Stop hook stdout 빈값(통과), evaluator 실측 `forced=False`·`classification=current_session_owned` 유지·`diagnostics=[passive_ownership]`.
   - §4 상태 전진 후 차단 — **pass**. `claim_source=state_transition`으로 승격 후 같은 훅이 `{"decision":"block", …block_continue…transition_action=continue…}`를 출력. 동일 상태에서 허브 cwd는 통과(worktree_owned_shadow 비강제) — AC-1 설계와 일치.
   - **부수 실측**: 기존 워크트리(`task_138`)에 D-20 발급값 사본이 없었고, 배포된 `worktree-tool status` 1회로 `.opal/task-ownership.json`이 생성됐다. 백필 트리거가 `create`/`status`뿐이라 배포 직후 기존 워크트리에는 사본 공백 구간이 존재한다.
-  - **미수행 2절** — §2 orca `--wt` 실기동 prompt receipt 관측은 실제 터미널 기동과 대상 태스크가 필요하고, S-25 기대결과 (3) `opal-agent --provider claude --cwd <worktree_root> -p`는 **이 머신에 `opal-agent`가 설치돼 있지 않아** 수행 불가다. §3 fixture 실캡처 교체는 S-29 범위다.
+  - **기대결과 (3) `-p` 경로 — pass**. 배포된 `worktree_launcher.adapters.opal_agent_fallback.launch()`로 실행: `exit_code=0`, `adapter_handle=79ff5c43-…`, `reported_cwd`가 워크트리 루트, `prompt_id`·`submitted_at` receipt 채워짐. 그 세션의 registry `session_id`가 `adapter_handle`과 일치하고 `status=closed`(SessionEnd 발화), stop-guard receipt도 생성돼 **Stop hook 발화 기록**까지 확인했다. (`opal-agent`는 CLI 바이너리가 아니라 `opal/tools/opal-agent/opal_agent.py` 모듈이다.)
+  - **배포 결함 실측** — 첫 `-p` 시도는 registry·stop-guard를 전혀 남기지 않았다. 원인은 자식 프로세스가 부모의 `CLAUDE_CONFIG_DIR`을 상속했고 그 디렉터리의 `settings.json`에 hooks가 0건이었기 때문이다. install은 `~/.claude/settings.json`에만 훅을 기록한다. `CLAUDE_CONFIG_DIR` 제거 후 재실행하니 양쪽 다 정상 생성됐다 — 증상이 '조용한 무동작'이라 배포는 성공으로 보이면서 소유권 집행만 통째로 빠진다.
+  - **미수행 2절** — §2 orca `--wt` 실기동은 실제 터미널 기동과 대상 태스크가 필요하고 허브를 타 PM이 점유 중이라 수행하지 않았다(단, prompt receipt가 어댑터 반환으로 직접 채워지는 것은 fallback 경로에서 확인했다). §3 fixture 실캡처 교체는 S-29 범위다.
 - 허브 main이 127 계열로 전진해 **CLOSE 후 main 재병합이 필요**하다.
 - RED 코퍼스를 구현 계약보다 먼저 써서 **실재하지 않는 레이아웃·아키텍처를 전제한 사례가 4회**(shadow 술어·워크트리 registry·receipt 가드 우회·launcher 사설 writer) 나왔다. 매번 fixture를 실물에 맞추고 구현을 계약에 맞췄다.
 - 개선 후보 3건을 남긴다 — ① `scripts/merge-hooks.py`가 `_help` 등 `_` 접두 키를 이벤트로 순회한다 ② "hook 차단은 PM 승격 근거가 아니다"를 하네스에 명문화해야 한다 ③ 워커마다 같은 스위트를 반복 지시해 중복 실행이 발생했다.

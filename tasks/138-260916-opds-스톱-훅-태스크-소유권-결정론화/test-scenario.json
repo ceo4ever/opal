@@ -782,7 +782,7 @@
         "submission_path": "run/.runtime/handoff/S-25.json"
       },
       "result": "blocked",
-      "operational_status": "awaiting_human",
+      "operational_status": null,
       "observed_executors": [],
       "assertion_results": [],
       "observed_evidence": [],
@@ -799,7 +799,7 @@
         "submission_path": "run/.runtime/handoff/S-25.json"
       },
       "run_id": "run-s25-manual-postdeploy",
-      "evidence": "배포 후 수동 E2E 부분 수행(2026-09-18 20:2x) — 8항목 중 4 pass(§1 cwd 전달·§1 Stop 발화·§4 조용한 부팅·§4 전진 후 차단), 1 플랫폼 제약(CLAUDE_ENV_FILE 미제공으로 OPAL_SESSION_ID 빈값), 1 환경 미비(opal-agent 미설치로 -p 경로 불가), 1 미수행(orca --wt 실기동), 1 범위 밖(S-29 fixture 캡처). 제출물 run/.runtime/handoff/S-25.json, 상세 DONE.md §참고",
+      "evidence": "배포 후 수동 E2E 재수행(2026-09-18 20:33) — 8항목 중 6 pass. 추가 pass: 기대결과(3) -p 경로(adapter_handle=79ff5c43-f89b-4ebf-9dd9-5d97e496da13, reported_cwd=워크트리 루트, registry session_id 일치·status=closed, stop-guard receipt 생성). 잔여 2건: §1 OPAL_SESSION_ID(이 Claude Code 빌드가 CLAUDE_ENV_FILE 미제공), §2 orca --wt 실기동(허브를 타 PM이 점유 중이라 미수행). 배포 결함 1건 실측: install이 ~/.claude/settings.json에만 훅을 써서 CLAUDE_CONFIG_DIR을 쓰는 세션은 OPAL 훅 없이 조용히 돈다. 상세는 DONE.md §참고와 run/.runtime/handoff/S-25.json",
       "marked_at": "2026-09-18T20:26:36+09:00",
       "fidelity": "real-usage"
     },
