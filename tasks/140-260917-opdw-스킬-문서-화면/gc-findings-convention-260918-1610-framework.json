@@ -1,0 +1,25 @@
+{
+  "check": "convention",
+  "status": "pass",
+  "checked_files": [
+    "opal/tools/skill-registry/skill-registry.js",
+    "opal/tools/skill-registry/README.md",
+    "opal/tools/skill-registry/tests/test-verify-bundle.js"
+  ],
+  "findings": [],
+  "evidence": [
+    "Read opal/tools/skill-registry/skill-registry.js (full file, 1124 lines)",
+    "Read opal/tools/skill-registry/README.md (full file, 189 lines)",
+    "Read opal/tools/skill-registry/tests/test-verify-bundle.js (full file, 216 lines)",
+    "Read docs/CONVENTIONS.md (full file)",
+    "Read ~/.opal/skills/op-gc-convention/references/convention-categories.md",
+    "grep docs/PROJECT.md for Framework scope element mapping"
+  ],
+  "references": [
+    "docs/CONVENTIONS.md",
+    "opal/core/references/harness/gc-finding-schema.md",
+    "~/.opal/skills/op-gc-convention/references/convention-categories.md"
+  ],
+  "missing_capabilities": [],
+  "report_path": "tasks/140-260917-opdw-스킬-문서-화면/GC-CONVENTION-260918-1610-framework.md"
+}

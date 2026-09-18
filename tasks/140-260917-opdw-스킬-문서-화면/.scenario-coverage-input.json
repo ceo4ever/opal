@@ -1,0 +1,261 @@
+{
+  "goal": "OPAL Console에 `OPAL Docs` 메뉴가 생기고, 사용자는 전체 스킬을 검색·분류해 빠르게 찾은 뒤 각 스킬의 목적, 호출 형식, 옵션, 사용 예시, 파이프라인과 관련 스킬을 shadcn/ui 문서 스타일의 상세 화면에서 확인하고 명령을 복사할 수 있다. 화면에 노출되는 카탈로그는 소스 스킬과 레지스트리 사이의 누락·이름 불일치를 해소한 완전한 레지스트리를 사용한다.",
+  "requirements": [
+    "AC-1",
+    "AC-2",
+    "AC-3",
+    "AC-4",
+    "AC-5",
+    "AC-6",
+    "AC-7",
+    "AC-8",
+    "C-1",
+    "C-2",
+    "C-3",
+    "C-4",
+    "C-5",
+    "C-6",
+    "C-7"
+  ],
+  "features": [],
+  "hypotheses": [
+    "H-1",
+    "H-2",
+    "H-3",
+    "H-4",
+    "H-5"
+  ],
+  "scenarios": [
+    {
+      "id": "S-1",
+      "covers_requirements": [
+        "AC-4",
+        "AC-8",
+        "C-3"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [
+        "H-4"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-2",
+      "covers_requirements": [
+        "AC-4"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [
+        "H-4"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-3",
+      "covers_requirements": [
+        "AC-2",
+        "C-2",
+        "C-3"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-4",
+      "covers_requirements": [
+        "AC-5"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-5",
+      "covers_requirements": [
+        "AC-4"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-6",
+      "covers_requirements": [
+        "AC-3",
+        "AC-6"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-7",
+      "covers_requirements": [
+        "AC-6"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-8",
+      "covers_requirements": [
+        "C-5",
+        "C-7"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-9",
+      "covers_requirements": [
+        "C-4"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-10",
+      "covers_requirements": [
+        "AC-3"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [
+        "H-2"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-11",
+      "covers_requirements": [
+        "AC-6",
+        "C-7"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-12",
+      "covers_requirements": [
+        "AC-2",
+        "AC-3",
+        "AC-6",
+        "C-1",
+        "C-4",
+        "C-7"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-13",
+      "covers_requirements": [
+        "AC-1",
+        "C-1"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-14",
+      "covers_requirements": [
+        "AC-7"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-15",
+      "covers_requirements": [
+        "AC-1",
+        "AC-4",
+        "AC-8",
+        "C-6"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [
+        "H-5"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-16",
+      "covers_requirements": [
+        "AC-1",
+        "AC-2",
+        "AC-3",
+        "AC-5",
+        "AC-6",
+        "C-7"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [
+        "H-3"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-17",
+      "covers_requirements": [
+        "AC-8"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [
+        "H-1"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-18",
+      "covers_requirements": [
+        "C-6"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    }
+  ]
+}

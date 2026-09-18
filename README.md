@@ -883,6 +883,8 @@ Project Layer (프로젝트마다 설정)
 
 코드 파일에 `@header` 주석으로 메타데이터를 기록하고, `code-scan` 도구로 빠르게 탐색한다.
 
+OPAL Console(로컬 대시보드, `http://127.0.0.1:7823`)에는 `OPAL Docs` 스킬 문서 화면(`/docs/skills`, `/docs/skills/{skill}`, 읽기 전용)이 있어 전체 스킬을 검색·분류하고 목적·호출 형식·옵션·예시·파이프라인·관련 스킬을 확인하며 명령을 복사할 수 있다.
+
 상세 아키텍처와 컴포넌트 구조는 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)를 참조한다.
 
 ---

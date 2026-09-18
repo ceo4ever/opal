@@ -1,0 +1,20 @@
+{
+  "$schema": "opal-skills-registry-v1",
+  "version": "0.0.1-fixture",
+  "updated_at": "2026-09-18",
+  "groups": {
+    "opal": [
+      {
+        "name": "opal-broken-yaml",
+        "alias": null,
+        "description": "frontmatter YAML이 깨진 fixture 스킬",
+        "triggers": ["^opal-broken-yaml$"],
+        "paths": [
+          "opal_skills/opal-broken-yaml/SKILL.md"
+        ],
+        "domain": "generic"
+      }
+    ]
+  },
+  "changelog": []
+}

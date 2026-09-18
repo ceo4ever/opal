@@ -31,7 +31,22 @@
     "BrainAuthResponse",
     "ConsoleConfigResponse",
     "ConfigWriteResponse",
-    "PrewarmToggleRequest"
+    "PrewarmToggleRequest",
+    "SkillCatalogItem",
+    "SkillCatalogListResponse",
+    "SkillDetailResponse",
+    "SkillSourceInfo",
+    "ArgumentItem",
+    "ExampleBlock",
+    "PipelineSummary",
+    "PipelineStep",
+    "RelatedSkillRef",
+    "ResolvedFrom",
+    "SkillFacets",
+    "DomainFacet",
+    "SkillListMeta",
+    "ErrorEnvelope",
+    "ErrorDetail"
   ],
   "depends": [],
   "task": "061"
@@ -476,3 +491,111 @@ class PrewarmToggleRequest(BaseModel):
     """POST /api/config/prewarm 요청 스키마."""
     project: str          # 절대경로. 필수 — 빈값/비스캔 400
     enabled: bool
+
+
+# ── Docs 스킬 문서 화면 (T140 W-7) ──────────────────────────────────────────────
+
+class ResolvedFrom(BaseModel):
+    """id 해석 출처 — canonical 직접 히트 vs alias 경유."""
+    kind: str   # "canonical" | "alias"
+    value: str
+
+
+class RelatedSkillRef(BaseModel):
+    canonical_name: str
+
+
+class SkillSourceInfo(BaseModel):
+    """원본 SKILL.md 읽기 가용성 — DEC-1: 부재 시에도 200, available=False."""
+    available: bool
+    content_hash: str | None = None
+
+
+class ArgumentItem(BaseModel):
+    """Arguments/Options 섹션 항목 공통 스키마."""
+    name: str
+    type: str | None = None
+    required: bool = False
+    default: str | None = None
+    description: str | None = None
+
+
+class ExampleBlock(BaseModel):
+    """Examples 섹션의 코드 펜스 1건, 또는 quick_start의 첫 코드 펜스."""
+    command: str
+    description: str | None = None
+
+
+class PipelineStep(BaseModel):
+    id: str
+
+
+class PipelineSummary(BaseModel):
+    mode_label: str | None = None
+    steps: list[PipelineStep] = []
+
+
+class DomainFacet(BaseModel):
+    value: str
+    count: int
+
+
+class SkillFacets(BaseModel):
+    domains: list[DomainFacet] = []
+
+
+class SkillListMeta(BaseModel):
+    total: int
+
+
+class SkillCatalogItem(BaseModel):
+    """GET /api/docs/skills 목록 행 — wireframe §5.2."""
+    canonical_name: str
+    aliases: list[str] = []
+    description: str | None = None
+    display_group: str
+    domain: str | None = None
+    source_path: str
+
+
+class SkillCatalogListResponse(BaseModel):
+    """GET /api/docs/skills 응답 봉투."""
+    items: list[SkillCatalogItem] = []
+    facets: SkillFacets = SkillFacets()
+    meta: SkillListMeta
+
+
+class SkillDetailResponse(BaseModel):
+    """GET /api/docs/skills/{skill_id} 응답 — wireframe §5.3.
+
+    source.available=false(DEC-1)일 때 usage_markdown 등은 null, arguments 등은
+    빈 배열, related_skills도 빈 배열이지만 header metadata(canonical_name·
+    description·display_group·aliases·source_path)는 유지한다.
+    """
+    canonical_name: str
+    aliases: list[str] = []
+    description: str | None = None
+    display_group: str
+    domain: str | None = None
+    source_path: str
+    source: SkillSourceInfo
+    usage_markdown: str | None = None
+    when_to_use_markdown: str | None = None
+    quick_start: ExampleBlock | None = None
+    arguments: list[ArgumentItem] = []
+    options: list[ArgumentItem] = []
+    examples: list[ExampleBlock] = []
+    use_cases: list[str] = []
+    pipeline: PipelineSummary | None = None
+    related_skills: list[RelatedSkillRef] = []
+    resolved_from: ResolvedFrom
+
+
+class ErrorDetail(BaseModel):
+    code: str
+    message: str
+
+
+class ErrorEnvelope(BaseModel):
+    """wireframe §5.4 error envelope 형식(상태 코드는 DEC-1 우선, source_missing 표는 무효)."""
+    error: ErrorDetail

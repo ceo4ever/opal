@@ -1,0 +1,32 @@
+{
+  "check": "convention",
+  "status": "partial",
+  "checked_files": [
+    "dashboard/backend/main.py",
+    "dashboard/backend/models.py",
+    "dashboard/backend/routers/docs_skills.py",
+    "dashboard/backend/adapters/skill_docs_adapter.py",
+    "dashboard/backend/parsers/skill_parser.py",
+    "dashboard/backend/tests/test_skill_docs.py",
+    "dashboard/backend/tests/test_skill_docs_layout.py"
+  ],
+  "findings": [],
+  "evidence": [
+    "재검사 맥락: 1차 검사(GC-CONVENTION-260918-1610-console-be.md) High 1건(GC-001, main.py:6 @header 라우터 수 불일치) 재확인",
+    "main.py @header.description 재Read — \"8개 라우터 등록(5개 read-only + brain POST + config POST/GET + docs_skills)\"으로 정정 확인 — 7개 표기 잔존 여부 확인(0건)",
+    "main.py:136-143 include_router 실제 호출 8건(dashboard, projects, tasks, memory, doctor, brain, config, docs_skills) 대 @header.description 서술 대조 — 수치 일치",
+    "main.py @header.depends 배열 재Read — [\"routers.dashboard\", \"routers.projects\", \"routers.tasks\", \"routers.memory\", \"routers.doctor\", \"routers.brain\", \"routers.config\", \"routers.docs_skills\", \"config\", \"adapters.brain_session\"] — routers.docs_skills 포함 확인",
+    "나머지 6개 파일(models.py, routers/docs_skills.py, adapters/skill_docs_adapter.py, parsers/skill_parser.py, tests/test_skill_docs.py, tests/test_skill_docs_layout.py) mtime을 1차 보고서 산출 시각(2026-09-18 16:13:17)과 대조 — 전부 그 이전(15:13~15:39)에 마지막 수정되어 정정 작업 중 변경되지 않았음을 확인. main.py만 16:14:33으로 보고서 이후 수정됨",
+    "정정된 main.py 전문 재Read — 신규 위반(네이밍, import 순서, docstring, exports 일치 등) 없음 확인"
+  ],
+  "references": [
+    "docs/CONVENTIONS.md",
+    "opal/core/references/header-standard.md",
+    ".opal/code-scan.json"
+  ],
+  "missing_capabilities": [
+    "docs/CONVENTIONS.md는 OPAL 프레임워크 저장소 전역 허브 문서이며 Console BE(Python/FastAPI) 전용 상세 문서(BE-CONVENTIONS.md 등)로 분리되어 있지 않다 — 1차와 동일, 재검사 기간 중 변경 없음.",
+    "dashboard/backend/ 스코프에 formatter·linter 실행 설정(pyproject.toml, ruff.toml, .flake8 등)이 존재하지 않아 T1 tier 자동 검증 기준을 적용하지 못했다 — 1차와 동일."
+  ],
+  "report_path": "tasks/140-260917-opdw-스킬-문서-화면/GC-CONVENTION-260918-1625-console-be-recheck.md"
+}

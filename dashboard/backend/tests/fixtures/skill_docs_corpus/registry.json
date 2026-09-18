@@ -1,0 +1,141 @@
+{
+  "$schema": "opal-skills-registry-v1",
+  "version": "0.0.1-fixture",
+  "updated_at": "2026-09-18",
+  "groups": {
+    "opal-pilot": [
+      {
+        "name": "opal-pilot-project-build",
+        "alias": "oppb",
+        "description": "프로젝트 빌드 오케스트레이터 (fixture)",
+        "triggers": ["^opal-pilot-project-build$", "^oppb$", "(?i)(프로젝트\\s*빌드)"],
+        "paths": [
+          "opal_skills/opal-pilot-project-build/SKILL.md"
+        ],
+        "domain": "dev",
+        "pipeline": "P0 → P1 → P2 → P3 → P4 → P5"
+      },
+      {
+        "name": "opal-pilot-dev",
+        "alias": "opd",
+        "description": "Full Task 오케스트레이터 (fixture)",
+        "triggers": ["^opal-pilot-dev$", "^opd$"],
+        "paths": [
+          "opal_skills/opal-pilot-dev/SKILL.md"
+        ],
+        "domain": "dev",
+        "pipeline": "TASK → ANALYSIS → PLAN → TEST-SCENARIO → EXECUTE → TEST → CLOSE"
+      },
+      {
+        "name": "opal-pilot-dev-short",
+        "alias": "opds",
+        "description": "Short Task 오케스트레이터 (기본 모드) (fixture)",
+        "triggers": ["^opal-pilot-dev-short$", "^opds$"],
+        "paths": [
+          "opal_skills/opal-pilot-dev/SKILL.md"
+        ],
+        "domain": "dev",
+        "pipeline": "TASK → PLAN → EXECUTE → TEST → CLOSE"
+      }
+    ],
+    "op-oppb": [
+      {
+        "name": "op-oppb-project-slice",
+        "alias": null,
+        "description": "OPPB P2 프로젝트 슬라이스 (fixture)",
+        "triggers": ["^op-oppb-project-slice$"],
+        "paths": [
+          "opal_skills/op-oppb-project-slice/SKILL.md"
+        ],
+        "stage": "P2",
+        "dispatched_by": ["opal-pilot-project-build"]
+      },
+      {
+        "name": "op-oppb-knowledge-finalize",
+        "alias": null,
+        "description": "OPPB P5 지식 정리 (fixture)",
+        "triggers": ["^op-oppb-knowledge-finalize$"],
+        "paths": [
+          "opal_skills/op-oppb-knowledge-finalize/SKILL.md"
+        ],
+        "stage": "P5",
+        "dispatched_by": ["opal-pilot-project-build"]
+      }
+    ],
+    "opal": [
+      {
+        "name": "opal-onboarding",
+        "alias": "onb",
+        "description": "신규 사용자 온보딩 가이드 (fixture)",
+        "triggers": ["^opal-onboarding$", "^onboarding$", "^onb$"],
+        "paths": [
+          "opal_skills/opal-onboarding/SKILL.md"
+        ],
+        "domain": "ops"
+      },
+      {
+        "name": "opal-skill-manager",
+        "alias": "osm",
+        "description": "스킬 목록 관리 도구 (fixture)",
+        "triggers": ["^opal-skill-manager$", "^skill-manager$", "^osm$"],
+        "paths": [
+          "opal_skills/opal-skill-manager/SKILL.md"
+        ],
+        "domain": "ops"
+      },
+      {
+        "name": "opal-source-missing",
+        "alias": null,
+        "description": "registry에는 있으나 SKILL.md 파일이 없는 fixture 엔트리",
+        "triggers": ["^opal-source-missing$"],
+        "paths": [
+          "opal_skills/opal-source-missing/SKILL.md"
+        ],
+        "domain": "generic"
+      },
+      {
+        "name": "opal-standard-heading",
+        "alias": null,
+        "description": "표준 heading 구조를 가진 fixture 스킬",
+        "triggers": ["^opal-standard-heading$"],
+        "paths": [
+          "opal_skills/opal-standard-heading/SKILL.md"
+        ],
+        "domain": "generic"
+      },
+      {
+        "name": "opal-no-heading",
+        "alias": null,
+        "description": "heading 구조가 없는 fixture 스킬",
+        "triggers": ["^opal-no-heading$"],
+        "paths": [
+          "opal_skills/opal-no-heading/SKILL.md"
+        ],
+        "domain": "generic"
+      },
+      {
+        "name": "opal-partial-heading",
+        "alias": null,
+        "description": "일부 섹션만 있는 fixture 스킬",
+        "triggers": ["^opal-partial-heading$"],
+        "paths": [
+          "opal_skills/opal-partial-heading/SKILL.md"
+        ],
+        "domain": "generic"
+      }
+    ],
+    "standalone": [
+      {
+        "name": "standalone-example",
+        "alias": null,
+        "description": "독립 실행 예시 스킬 (fixture, skills/ root)",
+        "triggers": ["^standalone-example$"],
+        "paths": [
+          "skills/standalone-example/SKILL.md"
+        ],
+        "domain": "generic"
+      }
+    ]
+  },
+  "changelog": []
+}

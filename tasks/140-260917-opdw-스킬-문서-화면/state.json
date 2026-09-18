@@ -4,7 +4,7 @@
   "mode": "semi-agentic",
   "schema_version": "1.2",
   "created_at": "2026-09-17 23:37:23",
-  "updated_at": "2026-09-18 07:16:10",
+  "updated_at": "2026-09-18 16:19:14",
   "current_status": "in_progress",
   "rows": [
     {
@@ -70,33 +70,34 @@
       "stage": "ANALYSIS",
       "item": "사용자 확인",
       "key": "analysis.user_confirm",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
-      "owner": "PM",
-      "note": null
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-18 14:34:42",
+      "owner": "user",
+      "note": "캡틴 승인: ANALYSIS 국소 재기준화(Q4·Change boundary·인용 3종) 반영 후 승인"
     },
     {
       "row_id": 6,
       "stage": "PLAN",
       "item": "작업",
       "key": "plan.plan_md",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-18 14:43:47",
       "owner": "PM",
-      "note": null
+      "note": "opal-plan-agent — PLAN.md 생성, DEC-1~11 확정, Work items 12건",
+      "worker_duration_minutes": 5
     },
     {
       "row_id": 7,
       "stage": "PLAN",
       "item": "PM Gate",
       "key": "plan.pm_gate",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-18 14:43:47",
       "owner": "PM",
-      "note": null,
+      "note": "Pass — AC/C 15종 전량 연결, DEC 3건 확정, state validate 0건. 이월 2건(brain 인용 경로, W-10 담당)",
       "gate": {
         "artifacts": [
           "TASK.md",
@@ -116,33 +117,33 @@
       "stage": "PLAN",
       "item": "사용자 확인",
       "key": "plan.user_confirm",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
-      "owner": "PM",
-      "note": null
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-18 14:51:27",
+      "owner": "user",
+      "note": "캡틴 승인: (a)안 — W-10 담당 opal-task-agent 교체, brain 인용 경로 pages/ 교정 후 승인"
     },
     {
       "row_id": 9,
       "stage": "TEST-SCENARIO",
       "item": "작업",
       "key": "test_scenario.test_scenario_md",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-18 14:54:21",
       "owner": "PM",
-      "note": null
+      "note": "PM 직접 작성 — S-1~S-18, AC/C/H 20토큰 전량 연결"
     },
     {
       "row_id": 10,
       "stage": "TEST-SCENARIO",
       "item": "목표-커버 게이트",
       "key": "test_scenario.scenario_gate",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-18 14:57:07",
       "owner": "PM",
-      "note": null,
+      "note": "pass — coverage-check exit 0(all_covered) + opal-evaluator-agent scenario-rubric pass(2/2/2, avg 2.0), iteration 1",
       "gate": {
         "artifacts": [
           "TEST-SCENARIO.md"
@@ -162,44 +163,46 @@
       "stage": "TEST-SCENARIO",
       "item": "사용자 확인",
       "key": "test_scenario.user_confirm",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
-      "owner": "PM",
-      "note": null
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-18 15:00:18",
+      "owner": "user",
+      "note": "캡틴 승인: TEST-SCENARIO 승인, EXECUTE 시작 허가"
     },
     {
       "row_id": 12,
       "stage": "EXECUTE",
       "item": "작업",
       "key": "execute.implement",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-18 15:59:53",
       "owner": "PM",
-      "note": null
+      "note": "W-1~W-11 완료(재지시 3회 포함). 결함 4건 정정: registry 스키마·물리 레이아웃·canonical 파생·미사용 import. W-12는 캡틴 install 단계",
+      "worker_duration_minutes": 43
     },
     {
       "row_id": 13,
       "stage": "TEST",
       "item": "작업",
       "key": "test.run_tests",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-18 16:19:14",
       "owner": "PM",
-      "note": null
+      "note": "시나리오 18건 실행: 16 pass / 0 fail / 2 blocked(S-15·S-16 설치 후 소유자 단계). 재판정 3건 포함",
+      "worker_duration_minutes": 18
     },
     {
       "row_id": 14,
       "stage": "TEST",
       "item": "PM Gate",
       "key": "test.pm_gate",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-18 16:19:14",
       "owner": "PM",
-      "note": null,
+      "note": "Pass — 시나리오 16 pass/0 fail, 실행 증거 존재, code-scan newly_uncovered 0, 컨벤션 3영역 Critical·High 0(BE는 재지시 1회 후 해소), state validate 0건",
       "gate": {
         "artifacts": [
           "TEST-SCENARIO.md",
@@ -294,7 +297,7 @@
       "note": null
     }
   ],
-  "next_action": "ANALYSIS 사용자 확인 진입",
+  "next_action": "TEST 사용자 확인 — 설치 검증(W-12) 필요",
   "run_log": {
     "contract_version": "1.0",
     "mode": "shadow",
