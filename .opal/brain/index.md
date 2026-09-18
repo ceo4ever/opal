@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-09-18 17:08
+> 갱신: 2026-09-18 20:08
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -70,6 +70,7 @@
 - [[brain-validate-flatness-enforcement]] — brain validate 선택 필드 평탄성 집행 (tags/sources/related flat string[]) #brain-tool #validate #enforce #flatness #frontmatter
 - [[business-terminology-first-principle]] — 기획 산출물 비즈니스 용어 우선 원칙 #citation-rules #opal-writing #opwt #brain-ingest #document-standard
 - [[byte-identical-proof-requires-data-root-fixed]] — 바이트 동일 증명은 데이터 루트를 고정하고 코드만 스왑해야 성립한다 #regression #verification #test-design #evidence
+- [[canonical-identity-from-unique-key-not-shared-attribute]] — canonical identity는 공유 가능한 속성이 아니라 고유 키에서 파생한다 #identity #data-modeling #adapter #lesson
 - [[clarification-gate-backward-compat]] — 명확화 게이트 하위호환 정책 A — graceful skip #pipeline #enforcement #backward-compat #state-tool
 - [[clarification-gate]] — 명확화 게이트 — TASK 4요소 잠금 기계 집행 #pipeline #enforcement #state-tool #clarification
 - [[close-history-auto-link-enforce-conversion]] — CLOSE 완료 히스토리 자동 연결 — 산문 트리거에서 도구 집행으로 전환 #opal-pipeline #close #memory #state-tool #memory-tool #enforce-not-advise
@@ -299,6 +300,7 @@
 - [[silent-loss-prevention-row-accounting-invariant]] — 무성 유실 차단 — 행 회계 불변식 설계 패턴 #migration #data-integrity #invariant #design-pattern #memory
 - [[silent-render-failure-deterministic-gate]] — 조용히 실패하는 코드는 브라우저 검증을 무력화한다 — 결정론 대조를 차단 게이트로 #lesson #verification #render-verification #gate-design #silent-failure
 - [[silent-success-defect-class]] — '조용한 성공' 결함 클래스 — 실패가 정상 종료로 위장된다 #lesson #defect-class #verification #fail-closed
+- [[skill-md-body-is-freeform-not-structured-slots]] — SKILL.md 본문은 정형 슬롯이 아니라 완결된 자유 형식 문서다 #skill-authoring #parsing #documentation #lesson
 - [[skill-op-task-qa]] — op-task-qa — 범용 문서 QA 검증 기준 #skill #qa #document
 - [[skill-opal-agent-creator]] — opal-agent-creator — OPAL 에이전트 생성 파이프라인 #skill #agent #creator
 - [[skill-opal-brain]] — opal-brain — 프로젝트 브레인 지식 위키 #skill #brain #knowledge #wiki

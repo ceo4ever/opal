@@ -89,6 +89,30 @@
       "status": "candidate",
       "file": "memory/brain_tool_add_page의_위치_인자는_페이지_슬러그다.md",
       "summary": "139 CLOSE에서 add-page의 위치 인자에 브레인 루트(.opal/brain)를 넘겨 슬러그가 'brain'인 페이지가 만들어졌다.…"
+    },
+    {
+      "title": "검증 순서에서 npm run build를 마지막에 두고 dist를 정리한다",
+      "date": "2026-09-18",
+      "type": "improvement",
+      "status": "candidate",
+      "file": "memory/검증_순서에서_npm_run_build를_마지막에_두고_dist를_정리한다.md",
+      "summary": "dashboard/frontend의 api-env-files.test.ts가 '저장소 dist/를 남기지 않는다'를 단언한다. 검증 중 npm…"
+    },
+    {
+      "title": "PM Gate에서 plan-contract-check 실행을 누락했다",
+      "date": "2026-09-18",
+      "type": "improvement",
+      "status": "candidate",
+      "file": "memory/PM_Gate에서_plan_contract_check_실행을_누락했다.md",
+      "summary": "PLAN PM Gate 시 state-tool verify --plan-contract-check를 돌리지 않아 Work items의 실행 그…"
+    },
+    {
+      "title": "워커의 생략 판단을 실동작 영향 검증 없이 수락해 결함을 키웠다",
+      "date": "2026-09-18",
+      "type": "improvement",
+      "status": "candidate",
+      "file": "memory/워커의_생략_판단을_실동작_영향_검증_없이_수락해_결함을_키웠다.md",
+      "summary": "W-2 fixture가 registry name 자리에 frontmatter name을 넣은 부정확성을 PM이 '실동작에 영향 없음'으로 판단…"
     }
   ],
   "history": [

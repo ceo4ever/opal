@@ -438,3 +438,7 @@
 - 신규: [[pages/concept/mode-aware-execution-continuity-contract.md]]
 - 출처: task:136
 
+## [2026-09-18] ingest | CLOSE ingest — 태스크 140 OPAL Docs 스킬 문서 화면
+- 신규: [[pages/concept/canonical-identity-from-unique-key-not-shared-attribute.md]], [[pages/concept/skill-md-body-is-freeform-not-structured-slots.md]]
+- 출처: task:140
+
