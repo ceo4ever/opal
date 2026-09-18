@@ -1,0 +1,24 @@
+[
+ {
+  "iteration": 1,
+  "missing": {
+   "requirements": [],
+   "features": [],
+   "hypotheses": []
+  },
+  "scores": {
+   "goal": 1,
+   "adoption": 2,
+   "boundary": 2
+  },
+  "gaps": [
+   "S-25: --wt 실행→worktree_session_owned 전이 실관측 부재 (보완 반영: S-25 (4) 추가)",
+   "S-1 운영 재현(132 shadow 비차단) 실관측 부재 (보완 반영: S-29에 추가)"
+  ],
+  "verdict": "pass",
+  "reason": "converged",
+  "coverage_check_exit": 0,
+  "evaluator": "opal-evaluator-agent scenario-rubric",
+  "decided_at": "2026-09-17 15:12"
+ }
+]

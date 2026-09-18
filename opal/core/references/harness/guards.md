@@ -40,7 +40,7 @@ load: pilot.start
 - 외부 skill·package 설치와 계정·MCP 연결
 - 프로젝트 밖 또는 외부 시스템 쓰기
 - 파괴적 변경과 비가역 데이터 마이그레이션
-- commit·push·배포
+- 허브·기본 브랜치 commit, merge·push·배포와 Git 이력 재작성. 단, 아래 §커밋 규칙의 등록된 전용 worktree 체크포인트 예외는 허용한다.
 - Pilot과 harness가 정한 사용자 Gate
 
 ## TASK 확정 입력 게이트 (PRINCIPLES §1 집행)
@@ -56,7 +56,19 @@ legacy TASK는 기존 `## 명확화 결과` 기반 검증을 재개 호환으로
 
 ## 커밋 규칙
 
-**커밋은 사용자가 명시적으로 요청할 때만 수행한다.** EXECUTE 완료, DONE.md 생성, 테스트 통과 후에도 자동으로 커밋하지 않는다. 완료 보고만 하고 사용자 지시를 기다린다.
+기본 원칙은 **커밋은 사용자가 명시적으로 요청할 때만 수행한다**이다. 허브·기본 브랜치 commit, worktree의 merge·push·배포, rebase·reset·amend 등 Git 이력 재작성과 worktree 제거는 모드와 무관하게 사용자 승인 없이는 수행하지 않는다.
+
+등록된 전용 worktree에서는 다음의 폐쇄된 체크포인트 예외만 허용한다.
+
+- 현재 세션이 registry의 canonical task와 worktree를 1:1로 소유하고, 현재 브랜치가 registry에 기록된 worktree branch와 일치해야 한다.
+- `agentic` 모드는 사용자 판단이 필요한 미해결 사항이 없고 해당 단계의 필수 Gate·검증이 통과한 안정 경계에서 PM이 worktree 브랜치 커밋을 자율 수행할 수 있다.
+- `interactive` 모드는 기존 각 단계 사용자 승인이 그 단계 산출물의 worktree 체크포인트 커밋 승인도 겸한다. `semi-agentic`은 PLAN-equivalent 사용자 승인 뒤 명세 체크포인트를 만들고, EXECUTE·TEST에서는 자율 커밋하지 않으며, 기존 CLOSE 진입 승인이 누적 구현·테스트 체크포인트와 그 승인 범위 안의 CLOSE/finalize 최종 체크포인트를 허용한다. 어느 모드에도 새 사용자 Gate를 추가하지 않는다.
+- 일시적 오류나 검증 실패는 권한 범위 안에서 보정하고 재검증한다. 보정 뒤 필수 검증이 통과하면 사용자에게 중간 결정을 요구하지 않고 커밋 후 다음 단계로 진행한다.
+- unresolved 실패, 계약 충돌, 사용자 선택 필요, 재시도 한도 초과 상태는 커밋하지 않고 해당 승인·에스컬레이션 경계를 따른다.
+- 커밋에는 해당 canonical task와 worktree 세션이 소유한 변경만 포함한다. 다른 태스크·허브 working tree 변경을 stage하거나 커밋하지 않는다.
+- 성공한 체크포인트의 commit SHA를 task lifecycle 기록에 남긴다. 이미 생성한 체크포인트는 자동 amend·rebase·reset으로 재작성하지 않고 보정 커밋을 추가한다.
+
+체크포인트는 모든 state 행마다 만드는 것이 아니라, 모드가 허용한 명세 Gate, 검증된 독립 구현 단위, 전체 회귀와 CLOSE/finalize처럼 재개 가능한 안정 경계에서만 만든다. semi-agentic의 EXECUTE·TEST 안정 경계는 커밋 조건이 아니라 누적 시점이며 기존 CLOSE 승인 전에는 커밋하지 않는다. `main`·기본 브랜치로의 merge와 그에 수반되는 merge commit은 항상 별도 사용자 승인 후 허브에서 수행한다.
 
 ## 자동 루핑 제약 (Verification Loop Guards)
 

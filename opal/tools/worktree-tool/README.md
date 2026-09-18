@@ -1,6 +1,6 @@
 # worktree-tool
 
-> 태스크별 코드 작업본을 git worktree로 격리하는 결정론 집행 CLI — 6서브명령 `create`/`list`/`status`/`remove`/`finalize`/`init`
+> 태스크별 코드 작업본을 git worktree로 격리하는 결정론 집행 CLI — 8서브명령 `create`/`list`/`status`/`ownership-set`/`checkpoint`/`remove`/`finalize`/`init`
 > 소스: `opal/tools/worktree-tool/` | 배포: `~/.opal/tools/worktree-tool/`
 > 의존성: `~/.opal/.venv/bin/python` (표준 라이브러리만 — `argparse`/`json`/`os`/`pathlib`/`posixpath`/`shutil`/`subprocess`/`sys`/`datetime`) + 로컬 **git 2.25+**(`sparse-checkout --cone` 사용)
 
@@ -10,7 +10,7 @@
 
 - **all-or-nothing 생성** — `create`는 pre-flight 선검사를 전부 통과한 뒤에만 worktree를 만들고, 중간 실패 시 **자기 생성물만** 역순으로 롤백한다.
 - **base-ref 1회 동결** — `create` 시점에 해석해 `.opal-worktrees/.meta/task_{NNN}.json`(worktree 밖)에 기록하고, `status`/`remove`는 그 값만 읽는다(재해석 없음).
-- **브랜치를 삭제하지 않는다** — `remove`는 worktree 디렉토리와 슬롯 루트만 회수한다(user sovereignty). 자동 커밋·자동 머지·자동 제거가 없다.
+- **브랜치를 삭제하지 않는다** — `remove`는 worktree 디렉토리와 슬롯 루트만 회수한다(user sovereignty). 자동 머지·자동 제거·자동 push가 없다. commit은 `checkpoint`(소유 worktree 브랜치 로컬 커밋)와 `finalize`(귀속 커밋) 두 서브명령만 수행하며, 둘 다 게이트를 통과할 때만 커밋한다.
 - **비차단 진단** — `.gitignore` 멱등 보장, 캐시 볼륨, code-scan exclude, 동시 슬롯 수는 전부 `warnings[]`로만 보고하고 차단하지 않는다.
 - `subprocess`는 전부 인자 리스트(`shell=False`)다.
 
@@ -41,9 +41,9 @@
 ~/.opal/tools/worktree-tool/run.sh <command> --project-root <프로젝트 절대경로> [options]
 ```
 
-`--project-root`는 **6서브명령 전부에서 필수**다.
+`--project-root`는 `create`·`list`·`remove`·`finalize`·`init`에서 **필수**다. `status`·`ownership-set`은 `--task-path`로, `checkpoint`는 `--task-path` 또는 `--worktree-root`로도 대상을 지정할 수 있다.
 
-## 6개 서브 명령
+## 8개 서브 명령
 
 ### 1. `init` — 설정 초안 생성
 
@@ -121,7 +121,39 @@ entry별 `dirty`/`unpushed`/`merged`를 보고하며, 해석된 canonical 경로
 
 ---
 
-### 5. `remove` — 슬롯 회수
+### 5. `ownership-set` — 실행 소유권·귀속 상태 전이
+
+```bash
+~/.opal/tools/worktree-tool/run.sh ownership-set --project-root <경로> --task <NNN> \
+  --execution-ownership <hub_owned|session_launching|worktree_session_owned|released> \
+  [--attribution-state <active|completed_unmerged|attribution_pending|closed>] \
+  [--owner-session-id <id>] [--adapter <name>] [--adapter-handle <h>] \
+  [--launch-receipt <path>] [--prompt-receipt <path>] [--generation <n>] \
+  [--failure-reason launch_failed] [--checkpoint-sha <sha>]
+```
+
+registry meta의 `execution_ownership`과 `attribution_state` 두 축을 registry lock + 원자 교체 **한 번** 안에서 함께 전이한다. 허용 조합·receipt 요구·`generation` 단조 증가 규칙은 모듈 `@header`와 `harness/worktree.md`가 소유한다. 미등록 경로·미등록 task는 `ownership_task_unregistered`로 거부하며 행을 만들지 않는다(행 발급은 `create`만 한다).
+
+---
+
+### 6. `checkpoint` — 소유 worktree 브랜치 로컬 체크포인트 커밋
+
+```bash
+~/.opal/tools/worktree-tool/run.sh checkpoint --worktree-root <경로> \
+  --mode <interactive|semi-agentic|agentic> --stage <단계> \
+  [--message <메시지>] [--owned-scope <경로>]... [--approved]
+```
+
+staged 변경의 **로컬 commit 하나**만 수행한다. 검사 순서는 금지 Git 동작 → 소유권 → branch 일치 → staged scope → 모드 경계이며, 전건을 통과할 때만 커밋한다. 커밋 실행 시점 계약(모드별 허용 경계)은 `opal/core/references/harness/guards.md` §커밋 규칙이 소유한다.
+
+- 거부 코드는 `checkpoint_scope_violation`·`checkpoint_mode_denied`·`checkpoint_ownership_denied`·`checkpoint_branch_mismatch`·`checkpoint_nothing_staged`와 `requires_user_approval` 6종이다.
+- `--git-command` 요청은 예외 없이 `requires_user_approval`이다 — 이 서브명령의 수행 범위가 commit 하나뿐이므로 기본 거부다. `main`·`master` 브랜치 commit과 허브 루트 commit도 같은 코드로 거부한다.
+- `--owned-scope` 미지정이면 worktree 경계 자체가 소유 범위다. 성공 SHA는 `execution_ownership.checkpoint_shas[]`에 append하며, 미등록 worktree는 `registered: false`로 이번 커밋만 보고한다.
+- 커밋은 worktree cwd에서만 수행돼 **허브 working tree에 쓰지 않는다**(공유 objects/refs만 사용).
+
+---
+
+### 7. `remove` — 슬롯 회수
 
 ```bash
 ~/.opal/tools/worktree-tool/run.sh remove --project-root <경로> --task <NNN> [--force]
@@ -148,7 +180,7 @@ entry별 `dirty`/`unpushed`/`merged`를 보고하며, 해석된 canonical 경로
 
 ---
 
-### 6. `finalize` — merge 후 귀속 후처리 확정
+### 8. `finalize` — merge 후 귀속 후처리 확정
 
 ```bash
 ~/.opal/tools/worktree-tool/run.sh finalize --project-root <경로> --task <NNN>
@@ -183,7 +215,7 @@ registry meta의 `attribution_state`가 판정에 들어간다.
 
 ## 오류 코드 (ERROR_CODES SSOT)
 
-`worktree_tool.py`의 `ERROR_CODES` 딕셔너리가 SSOT이며 **32종**이다.
+`worktree_tool.py`의 `ERROR_CODES` 딕셔너리가 SSOT이며 **45종**이다. 대문자 32종은 설정·슬롯 lifecycle 축이고, 소문자 13종은 registry 소유권·체크포인트 축이다(아래 표 후반부).
 
 | 코드 | 의미 |
 |------|------|
@@ -219,6 +251,19 @@ registry meta의 `attribution_state`가 판정에 들어간다.
 | `ATTRIBUTION_COMMIT_BLOCKED` | 선언되지 않은 귀속 대상 변경이 남아 `finalize` 진행 불가 |
 | `ATTRIBUTION_COMMIT_FAILED` | 귀속 commit 생성 또는 clean 검증 실패 |
 | `INTERNAL_ERROR` | 예상하지 못한 오류 — traceback 대신 통제된 JSON으로 대체 |
+| `ownership_state_invalid` | execution_ownership과 attribution_state가 허용 조합이 아닙니다. |
+| `ownership_receipt_missing` | worktree_session_owned로 전이하려면 launch/prompt receipt가 둘 다 필요합니다. |
+| `ownership_receipt_invalid` | receipt 인자가 JSON 객체가 아닙니다 — registry meta에는 객체로만 기록합니다. |
+| `ownership_generation_regressed` | generation은 단조 증가해야 합니다. |
+| `ownership_task_unregistered` | registry에 등록되지 않은 태스크입니다 — 행은 create가 발급합니다. |
+| `registry_lock_timeout` | registry 잠금 획득 상한을 초과했습니다. |
+| `settings_hook_key_forbidden` | 허브 `.claude/settings.json`에 `hooks` 키가 있어 워크트리 설정 provisioning을 중단했습니다 — hook은 워크트리로 복제하지 않습니다. |
+| `checkpoint_scope_violation` | staged 경로가 소유 범위를 벗어납니다 — 체크포인트 커밋을 수행하지 않습니다. |
+| `checkpoint_mode_denied` | 현재 모드·단계 조합에서는 자율 체크포인트 커밋이 허용되지 않습니다. |
+| `checkpoint_ownership_denied` | 현재 세션이 이 worktree의 registry 소유자가 아닙니다. |
+| `checkpoint_branch_mismatch` | 현재 branch가 registry에 기록된 branch와 다릅니다. |
+| `checkpoint_nothing_staged` | staged 변경이 없어 체크포인트 커밋할 대상이 없습니다. |
+| `requires_user_approval` | 사용자 승인 경계의 동작입니다 — 이 서브명령은 수행하지 않습니다. |
 
 ```json
 {"ok": false, "error": "<ERROR_CODE>", "message": "<사람이 읽는 설명>", "...": "상황별 부가 필드"}
@@ -229,7 +274,7 @@ registry meta의 `attribution_state`가 판정에 들어간다.
 | 코드 | 의미 |
 |------|------|
 | `0` | `ok: true` |
-| `1` | `err_response()` 경유 전건(위 32종) |
+| `1` | `err_response()` 경유 전건(위 45종) |
 | `2` | argparse 인자 오류(서브명령 누락, `--project-root`/`--task` 누락 등) |
 
 `__main__` 진입점이 예상 밖 예외를 잡아 `INTERNAL_ERROR` JSON + exit 1로 바꾸므로 **traceback이 stdout·stderr로 새지 않는다.** exit 2 경로만 argparse 기본 usage 텍스트를 stderr로 내보낸다. `run.sh`의 venv 부재 메시지도 stderr로 나간다.

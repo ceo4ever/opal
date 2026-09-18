@@ -4,7 +4,7 @@
   "module": "state_tool",
   "layer": "util",
   "domain": "opal-pipeline",
-  "description": "OPAL 파이프라인 현황판 JSON SSOT 관리 CLI. 서브커맨드: init/show/resolve-mode/advance/mark/block/validate/add-row/status/run-start/finalize-attribution/spec-validate/event-verify/log-event/gate-request/gate-resolve, gate-pass(deprecated). resolve-mode는 명시 플래그 > 유효 저장 mode > 신규 semi-agentic 기본값으로 effective mode를 판정하고 기존 태스크의 명시 override는 mode만 원자 갱신한다. run-start <task-path>는 `run-<UTC YYYYMMDDHHMMSS>-<8자리 hex>` 형식의 새 run_id를 발급해 state.json.run_id에 기록하고 단일 라인 JSON으로 반환한다 — 현재 run은 항상 1개라 재호출 시 교체되며 이력을 누적하지 않고, run_id는 schema properties에만 있는 optional 필드라 init은 만들지 않으며 required 8필드는 불변이다(run_id 없는 기존 state.json도 계속 validate를 통과한다). 이 run_id는 run_log.active_run_id(run-log 계열, `run_<UUIDv4>`)와 서로 다른 축이다. event-verify는 단계 진입 전에 event-loader receipt의 이벤트·manifest·문서 hash 최신성을 검증하고 상태 파일은 변경하지 않는다. interactive/semi-agentic/agentic 3-way 모드를 지원하며 PLAN-equivalent 이전 단계(TASK/ANALYSIS/PLAN/TEST-SCENARIO/SPEC/REVIEW/DESIGN/WBS/WIREFRAME/DICT/MODEL/DDL·MIGRATION)는 semi-agentic 모드에서 사용자 검토를 강제한다. STATE.md는 state.json에서 파생되는 저널(의사결정 로그+블로커)이며 파이프라인 표·현재 상태·다음 액션 섹션은 없다(레거시 마커 포맷은 하위호환 인식만 유지). mark --step N/M은 N<M이면 in_progress를 유지하고 N==M에서만 done으로 닫는다. can_auto_approve_user_confirmation()은 CLOSE 축과 모드 축 2축 합성으로 사용자 확인 행 자동 승인 가부를 단일 판정하며, cmd_mark 사전검사와 cmd_validate 사후검사가 서로 다른 소비 범위(validate는 CLOSE 축 미평가)로 이를 참조한다. auto_approve_prior_user_confirmations()는 advance/mark가 대상 행 이전 구간의 미완 확인 행을 자동 승인하되 대상 행 자체가 CLOSE면 관여하지 않는다. 행 주소는 task-step 키 체계(--task-step/--task-step-id, --row는 deprecated)로 지정한다. check_gate_artifacts()는 task_steps[].gate.artifacts 존재를 검사하고(정적 경로·글롭 지원, 절대경로·'..' 이탈 토큰은 거부), 미충족 시 gate_artifact_missing으로 막되 --force+--note 조합에만 통과를 허용하며 그 경우 decision 로그에 gate_artifact_force를 강제 기록한다. verify 서브커맨드는 상호 배타적인 7개 검사 라우트를 갖는다 — --red-check(RED 증거 게이트), --fix-mode(+--changed-files/--test-globs, 테스트 불변성 게이트), --clarification-check(TASK 잠금 판정: sdlc-v2 5절 또는 legacy 명확화 4요소), --evidence-check(『명확화 결과』·『확정된 설계 방향』 인용을 근거 등급 4축으로 판정, 두 소스의 분모는 서로 분리 — confirmed_ratio는 명확화 결과 항목 수 기준 불변), --code-scan-citation-check(PLAN.md Work items 또는 legacy §4.2 파일 경로의 code-scan 인용 집행), --plan-contract-check(sdlc-v2 Work items 계약 검사), --run-log-completeness-check(135 W-4 run-log 완전성 진단, 비차단). task_root()는 task path 조상에서 .opal/MEMORY.json 앵커를 찾는 task root 목적 전용 탐색이며(118 D-4), 허브 쓰기 대상인 allocator root는 이 탐색으로 추론하지 않고 worktree registry 발급값을 명시 인자로만 받는다. 신규 pipeline은 명시적 close.final 행에서만 current_status를 completed_unmerged로 확정하고, close.final이 없는 legacy pipeline만 마지막 CLOSE 행을 final로 인정하며 MEMORY.json을 건드리지 않는다(118 D-4b, 136 W-2). 허브 .opal/MEMORY.json 이력 append는 finalize-attribution <task-path> --allocator-root <abs>가 전담한다 — link_memory_history()가 그 구현이고 동일 path 행이 있으면 건너뛰어 멱등이며, --allocator-root 미지정·상대경로는 추론 없이 exit 1로 거부된다. resolve_owner_placeholder()는 note 작성 경로(advance/mark/add-row/block/status/init)에서 '{owner_name}' 플레이스홀더를 identity.md owner_name으로 write-time 치환한다(부재 시 원문 유지, fail-safe). worker_duration_minutes는 1.0/1.1(run_log 블록 부재) 태스크에서는 종전과 동일하게 mark --worker-duration-minutes로 선택 기록되고, 워커 디스패치 행을 소요시간 없이 done 처리하면 --worker-duration-unknown 억제 인자가 없는 한 응답 warnings 배열에 worker_duration_missing이 실린다(exit 0 유지). 1.2 태스크(run_log 블록 보유)에서는 mark가 `_reconcile_worker_duration_minutes()`로 `_import_run_log_core()` 경로의 `run_log_core.reconcile_duration()`(W-6)을 호출해 해당 run의 terminal 사건(worker.completed/failed/blocked)에서 파생 분값을 읽는다(W-7, CONTRACT §2.5 시간 절, D-P8) — `--worker-run-id` 표면 인자가 없어 `_resolve_sole_terminal_worker_run_id()`가 `이 run의 terminal에 실린 worker_run_id가 정확히 1개`인 경우에만 그 값을 대상으로 삼고, 0건·2건 이상이면 조회를 건너뛰어 파생값 없음으로 처리한다. 파생값이 있으면 `--worker-duration-minutes` 미지정 시 자동 기록(경고 없음), 명시값이 파생값과 같으면 수용하되 `worker_duration_minutes_deprecated` 경고를 얹고, 다르면 상태 변경 이전 시점에 `worker_duration_conflict`(RUN_LOG_STATE_ERROR_CODES 등재, ERROR_CODES와 물리 분리)로 즉시 거부해 state.json을 손대지 않는다. 파생값을 아직 얻을 수 없으면(terminal 미기록 등) 명시값을 그대로 통과시켜 기존 수동 경로와 응답 키 집합이 바이트 동일하다(H-6, S-9). CONTRACT §2.5의 채널 등급·override 조항은 이번 범위에 포함하지 않는다(D-P9). build_todo_mirror()는 stdout 전용 파생 미러(state.json 비접촉)로 PostToolUse hook이 세션에 결정론적으로 주입한다. init --run-log-mode {shadow,active}는 CONTRACT §2.5 state-tool.init.run-log-mode를 구현한다 — shadow는 항상 지원하고, active는 `_resolve_active_channel()`이 호출자가 명시적으로 넘긴 `--profiles` 파일에서 `--channel-id` 항목을 찾은 경우에만 그 channel의 completion_profile/adapter_id/adapter_sha256/receipt_sha256을 completion_profile_receipt로 고정해 수용하며(135 W-4, H-4 — profiles.json 자체 생성·channel 자동 승격은 하지 않는다), 그 외(미지정 `--profiles`·미승인 channel)는 여전히 profile_not_found로 거부한다. _cmd_init_run_log()가 outbox 2단 원자 쓰기(_atomic_write_state_json, pending→기록 코어 init/append lock_held=True 호출→active)로 state.json schema_version 1.2 + run_log 블록과 첫 run.started 사건을 만든다. `_check_active_completion_evidence()`(135 W-4, CONTRACT §1.5)는 cmd_mark가 완료(--done, --step 최종 단계 포함) 전이를 시도할 때 row 주소 해석보다 먼저 실행되어, active mode + completion_profile≠cooperative인 run에 trusted terminal 사건 정확히 1건(그리고 observed_trajectory면 PM이 아닌 actor의 trusted activity 1건 이상)이 없으면 `completion_evidence_missing`으로 거부하고 state.json을 손대지 않는다. `verify --run-log-completeness-check`(135 W-4, CONTRACT §1.4/§1.5, 7번째 상호 배타 라우트)는 `_run_log_completeness_check()`로 state.json rows와 조각(committed)·보관함(pending) 사건을 대조해 `missing_state_changed`/`missing_pm_activity`/`missing_gate_event`/`unobserved_worker_boundary` 4종 누락 목록과, committed+pending 전 구간에서 조회하는 `last_observed_decision`/`last_observed_state_change`/`last_observed_boundary` 3필드(`{event_id, ts, ref}` 또는 None)를 항상 반환한다 — 구조 검증(run-log-tool validate-run)과 별개 축이며 read-only·비차단(exit 0)이다. `missing_pm_activity`는 CONTRACT §2.5 트리거 조문의 상태 앵커 2종(① `status=done` ∧ `owner=auto` ∧ `key` 보유 행에 `task_step` 일치 PM activity(decision)가 없으면 행마다 1건을 row_id 오름차순으로, ② `run_log.status=overridden`인데 run 전역에 PM activity(decision)가 0건이면 배열 마지막에 1건)을 committed+pending 합집합 사건과 대조해 채우며, 항목은 `row_id`·`row_key`·`stage`·`expected`·`anchor` 5키 고정이다(137 W-5). --run-log-mode 미지정 경로는 기존 save_state_json()을 그대로 타 바이트 동일성을 유지한다(D-L, C-3). _atomic_write_state_json()은 tmp→fsync→os.replace 원자 쓰기이며, run_log.pending_events가 있으면 쓰기 직전 기록 코어의 redact() 초크포인트를 통과시킨다(D-9, GC-001). _import_run_log_core()는 importlib.util.spec_from_file_location으로 기록 코어를 sys.path 오염 없이 단일 모듈 적재한다(GC-007) — 형제 배치 우선, 없으면 배포본(_run_log_core_dir(), D-C). RUN_LOG_STATE_ERROR_CODES는 run-log 계열 상태 도구 오류 코드(profile_not_found/run_log_missing/run_log_pending/run_log_outbox_full/run_log_write_failed/event_too_large) 전용 별도 테이블이며 ERROR_CODES 딕셔너리 리터럴과 물리 분리된다(D-A, F-6) — err()의 _error_template()가 ERROR_CODES→RUN_LOG_STATE_ERROR_CODES 순으로 조회만 하고, 두 테이블 모두에 없는 코드는 .format() 호출 없이 code 문자열 그대로를 메시지로 쓴다(GC-008). run_log_commit()이 advance/mark/block/add-row/status의 상태 변경과 state.changed 적재(단일 event 또는 event list, build_state_changed_event, 조합 A7·event_id 사전 확정)를 한 번의 원자 쓰기로 커밋한 뒤 _run_log_drain()의 멱등 append와 보관함 비우기로 잇는다(CONTRACT §1.4, TRD D-2, D-3) — advance/mark는 auto_approve_prior_user_confirmations()가 자동 승인한 각 사용자 확인 행과 대상 행 전이를 각각 독립 state.changed로 만들어 event list로 넘기며, 리스트 admission은 순서대로 전부 통과해야만 보관함에 반영되는 전부-아니면-전무다(H-1) — append가 실패해도 상태 전이는 이미 커밋돼 교착되지 않고 응답 warnings에 run_log_pending만 실린다. run_log_outbox_admit()은 항목당 4 KiB·전체 128건(최악 512 KiB) 상한을 집행하며 일반 한도는 128 − 보관함 override 사건 수이고, 위반 시 각각 event_too_large·run_log_outbox_full로 전이를 시작하지 않는다. _run_log_drain()은 완전한 사건만 순서대로 재전송하고 첫 실패에서 멈추며 이미 조각에 있는 event_id는 건너뛰고, 보관함에 run.started가 있을 때만 실행 디렉터리·첫 조각을 다시 만든다(복구 가능 초기화). run_log_diagnose()는 validate에 합류해 보관함 잔량을 run_log_pending(recoverable_init 표시)으로, 활성 계약인데 조각·run.started가 없으면 run_log_missing으로 보고하며 스키마를 강등하거나 블록을 지우지 않는다(§1.4, AC-3). run_log 블록이 없는 1.0/1.1 태스크는 run_log_commit()이 곧바로 save_state_json()으로 우회해 산출물·응답 키 집합이 종전과 동일하다(C-3). state.schema.json은 schema_version 1.2와 run_log 블록(필수 7필드·pending_events maxItems 128)을 등재한다. init --actor pm은 --skill opd/opds에서만 지원되며(그 외 skill과 조합 시 actor_unsupported_for_skill로 exit 1) 지정 시에만 state.json에 actor 키를 조건부 영속화한다. log-event/gate-request/gate-resolve(135 W-3, CONTRACT §2.4)는 run_log_commit()의 같은 outbox/admission/drain 경로를 재사용해 PM activity·gate.requested·gate.resolved 사건을 기록하며 (actor_not_allowed/schema_invalid/refs_invalid/gate_not_requested/gate_duplicate/task_path_not_absolute를 방출), run_log_core는 호출하지 않아 TRD D-5 단방향 의존을 유지한다.",
+  "description": "OPAL 파이프라인 현황판 JSON SSOT 관리 CLI. 서브커맨드: init/show/resolve-mode/advance/mark/block/validate/add-row/status/run-start/finalize-attribution/spec-validate/event-verify/log-event/gate-request/gate-resolve, gate-pass(deprecated). resolve-mode는 명시 플래그 > 유효 저장 mode > 신규 semi-agentic 기본값으로 effective mode를 판정하고 기존 태스크의 명시 override는 mode만 원자 갱신한다. run-start <task-path>는 `run-<UTC YYYYMMDDHHMMSS>-<8자리 hex>` 형식의 새 run_id를 발급해 state.json.run_id에 기록하고 단일 라인 JSON으로 반환한다 — 현재 run은 항상 1개라 재호출 시 교체되며 이력을 누적하지 않고, run_id는 schema properties에만 있는 optional 필드라 init은 만들지 않으며 required 8필드는 불변이다(run_id 없는 기존 state.json도 계속 validate를 통과한다). 이 run_id는 run_log.active_run_id(run-log 계열, `run_<UUIDv4>`)와 서로 다른 축이다. event-verify는 단계 진입 전에 event-loader receipt의 이벤트·manifest·문서 hash 최신성을 검증하고 상태 파일은 변경하지 않는다. interactive/semi-agentic/agentic 3-way 모드를 지원하며 PLAN-equivalent 이전 단계(TASK/ANALYSIS/PLAN/TEST-SCENARIO/SPEC/REVIEW/DESIGN/WBS/WIREFRAME/DICT/MODEL/DDL·MIGRATION)는 semi-agentic 모드에서 사용자 검토를 강제한다. STATE.md는 state.json에서 파생되는 저널(의사결정 로그+블로커)이며 파이프라인 표·현재 상태·다음 액션 섹션은 없다(레거시 마커 포맷은 하위호환 인식만 유지). mark --step N/M은 N<M이면 in_progress를 유지하고 N==M에서만 done으로 닫는다. can_auto_approve_user_confirmation()은 CLOSE 축과 모드 축 2축 합성으로 사용자 확인 행 자동 승인 가부를 단일 판정하며, cmd_mark 사전검사와 cmd_validate 사후검사가 서로 다른 소비 범위(validate는 CLOSE 축 미평가)로 이를 참조한다. auto_approve_prior_user_confirmations()는 advance/mark가 대상 행 이전 구간의 미완 확인 행을 자동 승인하되 대상 행 자체가 CLOSE면 관여하지 않는다. 행 주소는 task-step 키 체계(--task-step/--task-step-id, --row는 deprecated)로 지정한다. check_gate_artifacts()는 task_steps[].gate.artifacts 존재를 검사하고(정적 경로·글롭 지원, 절대경로·'..' 이탈 토큰은 거부), 미충족 시 gate_artifact_missing으로 막되 --force+--note 조합에만 통과를 허용하며 그 경우 decision 로그에 gate_artifact_force를 강제 기록한다. verify 서브커맨드는 상호 배타적인 7개 검사 라우트를 갖는다 — --red-check(RED 증거 게이트), --fix-mode(+--changed-files/--test-globs, 테스트 불변성 게이트), --clarification-check(TASK 잠금 판정: sdlc-v2 5절 또는 legacy 명확화 4요소), --evidence-check(『명확화 결과』·『확정된 설계 방향』 인용을 근거 등급 4축으로 판정, 두 소스의 분모는 서로 분리 — confirmed_ratio는 명확화 결과 항목 수 기준 불변), --code-scan-citation-check(PLAN.md Work items 또는 legacy §4.2 파일 경로의 code-scan 인용 집행), --plan-contract-check(sdlc-v2 Work items 계약 검사), --run-log-completeness-check(135 W-4 run-log 완전성 진단, 비차단). task_root()는 task path 조상에서 .opal/MEMORY.json 앵커를 찾는 task root 목적 전용 탐색이며(118 D-4), 허브 쓰기 대상인 allocator root는 이 탐색으로 추론하지 않고 worktree registry 발급값을 명시 인자로만 받는다. 신규 pipeline은 명시적 close.final 행에서만 current_status를 completed_unmerged로 확정하고, close.final이 없는 legacy pipeline만 마지막 CLOSE 행을 final로 인정하며 MEMORY.json을 건드리지 않는다(118 D-4b, 136 W-2). 허브 .opal/MEMORY.json 이력 append는 finalize-attribution <task-path> --allocator-root <abs>가 전담한다 — link_memory_history()가 그 구현이고 동일 path 행이 있으면 건너뛰어 멱등이며, --allocator-root 미지정·상대경로는 추론 없이 exit 1로 거부된다. resolve_owner_placeholder()는 note 작성 경로(advance/mark/add-row/block/status/init)에서 '{owner_name}' 플레이스홀더를 identity.md owner_name으로 write-time 치환한다(부재 시 원문 유지, fail-safe). worker_duration_minutes는 1.0/1.1(run_log 블록 부재) 태스크에서는 종전과 동일하게 mark --worker-duration-minutes로 선택 기록되고, 워커 디스패치 행을 소요시간 없이 done 처리하면 --worker-duration-unknown 억제 인자가 없는 한 응답 warnings 배열에 worker_duration_missing이 실린다(exit 0 유지). 1.2 태스크(run_log 블록 보유)에서는 mark가 `_reconcile_worker_duration_minutes()`로 `_import_run_log_core()` 경로의 `run_log_core.reconcile_duration()`(W-6)을 호출해 해당 run의 terminal 사건(worker.completed/failed/blocked)에서 파생 분값을 읽는다(W-7, CONTRACT §2.5 시간 절, D-P8) — `--worker-run-id` 표면 인자가 없어 `_resolve_sole_terminal_worker_run_id()`가 `이 run의 terminal에 실린 worker_run_id가 정확히 1개`인 경우에만 그 값을 대상으로 삼고, 0건·2건 이상이면 조회를 건너뛰어 파생값 없음으로 처리한다. 파생값이 있으면 `--worker-duration-minutes` 미지정 시 자동 기록(경고 없음), 명시값이 파생값과 같으면 수용하되 `worker_duration_minutes_deprecated` 경고를 얹고, 다르면 상태 변경 이전 시점에 `worker_duration_conflict`(RUN_LOG_STATE_ERROR_CODES 등재, ERROR_CODES와 물리 분리)로 즉시 거부해 state.json을 손대지 않는다. 파생값을 아직 얻을 수 없으면(terminal 미기록 등) 명시값을 그대로 통과시켜 기존 수동 경로와 응답 키 집합이 바이트 동일하다(H-6, S-9). CONTRACT §2.5의 채널 등급·override 조항은 이번 범위에 포함하지 않는다(D-P9). build_todo_mirror()는 stdout 전용 파생 미러(state.json 비접촉)로 PostToolUse hook이 세션에 결정론적으로 주입한다. init --run-log-mode {shadow,active}는 CONTRACT §2.5 state-tool.init.run-log-mode를 구현한다 — shadow는 항상 지원하고, active는 `_resolve_active_channel()`이 호출자가 명시적으로 넘긴 `--profiles` 파일에서 `--channel-id` 항목을 찾은 경우에만 그 channel의 completion_profile/adapter_id/adapter_sha256/receipt_sha256을 completion_profile_receipt로 고정해 수용하며(135 W-4, H-4 — profiles.json 자체 생성·channel 자동 승격은 하지 않는다), 그 외(미지정 `--profiles`·미승인 channel)는 여전히 profile_not_found로 거부한다. _cmd_init_run_log()가 outbox 2단 원자 쓰기(_atomic_write_state_json, pending→기록 코어 init/append lock_held=True 호출→active)로 state.json schema_version 1.2 + run_log 블록과 첫 run.started 사건을 만든다. `_check_active_completion_evidence()`(135 W-4, CONTRACT §1.5)는 cmd_mark가 완료(--done, --step 최종 단계 포함) 전이를 시도할 때 row 주소 해석보다 먼저 실행되어, active mode + completion_profile≠cooperative인 run에 trusted terminal 사건 정확히 1건(그리고 observed_trajectory면 PM이 아닌 actor의 trusted activity 1건 이상)이 없으면 `completion_evidence_missing`으로 거부하고 state.json을 손대지 않는다. `verify --run-log-completeness-check`(135 W-4, CONTRACT §1.4/§1.5, 7번째 상호 배타 라우트)는 `_run_log_completeness_check()`로 state.json rows와 조각(committed)·보관함(pending) 사건을 대조해 `missing_state_changed`/`missing_pm_activity`/`missing_gate_event`/`unobserved_worker_boundary` 4종 누락 목록과, committed+pending 전 구간에서 조회하는 `last_observed_decision`/`last_observed_state_change`/`last_observed_boundary` 3필드(`{event_id, ts, ref}` 또는 None)를 항상 반환한다 — 구조 검증(run-log-tool validate-run)과 별개 축이며 read-only·비차단(exit 0)이다. `missing_pm_activity`는 CONTRACT §2.5 트리거 조문의 상태 앵커 2종(① `status=done` ∧ `owner=auto` ∧ `key` 보유 행에 `task_step` 일치 PM activity(decision)가 없으면 행마다 1건을 row_id 오름차순으로, ② `run_log.status=overridden`인데 run 전역에 PM activity(decision)가 0건이면 배열 마지막에 1건)을 committed+pending 합집합 사건과 대조해 채우며, 항목은 `row_id`·`row_key`·`stage`·`expected`·`anchor` 5키 고정이다(137 W-5). --run-log-mode 미지정 경로는 기존 save_state_json()을 그대로 타 바이트 동일성을 유지한다(D-L, C-3). _atomic_write_state_json()은 tmp→fsync→os.replace 원자 쓰기이며, run_log.pending_events가 있으면 쓰기 직전 기록 코어의 redact() 초크포인트를 통과시킨다(D-9, GC-001). _import_run_log_core()는 importlib.util.spec_from_file_location으로 기록 코어를 sys.path 오염 없이 단일 모듈 적재한다(GC-007) — 형제 배치 우선, 없으면 배포본(_run_log_core_dir(), D-C). RUN_LOG_STATE_ERROR_CODES는 run-log 계열 상태 도구 오류 코드(profile_not_found/run_log_missing/run_log_pending/run_log_outbox_full/run_log_write_failed/event_too_large) 전용 별도 테이블이며 ERROR_CODES 딕셔너리 리터럴과 물리 분리된다(D-A, F-6) — err()의 _error_template()가 ERROR_CODES→RUN_LOG_STATE_ERROR_CODES 순으로 조회만 하고, 두 테이블 모두에 없는 코드는 .format() 호출 없이 code 문자열 그대로를 메시지로 쓴다(GC-008). run_log_commit()이 advance/mark/block/add-row/status의 상태 변경과 state.changed 적재(단일 event 또는 event list, build_state_changed_event, 조합 A7·event_id 사전 확정)를 한 번의 원자 쓰기로 커밋한 뒤 _run_log_drain()의 멱등 append와 보관함 비우기로 잇는다(CONTRACT §1.4, TRD D-2, D-3) — advance/mark는 auto_approve_prior_user_confirmations()가 자동 승인한 각 사용자 확인 행과 대상 행 전이를 각각 독립 state.changed로 만들어 event list로 넘기며, 리스트 admission은 순서대로 전부 통과해야만 보관함에 반영되는 전부-아니면-전무다(H-1) — append가 실패해도 상태 전이는 이미 커밋돼 교착되지 않고 응답 warnings에 run_log_pending만 실린다. run_log_outbox_admit()은 항목당 4 KiB·전체 128건(최악 512 KiB) 상한을 집행하며 일반 한도는 128 − 보관함 override 사건 수이고, 위반 시 각각 event_too_large·run_log_outbox_full로 전이를 시작하지 않는다. _run_log_drain()은 완전한 사건만 순서대로 재전송하고 첫 실패에서 멈추며 이미 조각에 있는 event_id는 건너뛰고, 보관함에 run.started가 있을 때만 실행 디렉터리·첫 조각을 다시 만든다(복구 가능 초기화). run_log_diagnose()는 validate에 합류해 보관함 잔량을 run_log_pending(recoverable_init 표시)으로, 활성 계약인데 조각·run.started가 없으면 run_log_missing으로 보고하며 스키마를 강등하거나 블록을 지우지 않는다(§1.4, AC-3). run_log 블록이 없는 1.0/1.1 태스크는 run_log_commit()이 곧바로 save_state_json()으로 우회해 산출물·응답 키 집합이 종전과 동일하다(C-3). state.schema.json은 schema_version 1.2와 run_log 블록(필수 7필드·pending_events maxItems 128)을 등재한다. init --actor pm은 --skill opd/opds에서만 지원되며(그 외 skill과 조합 시 actor_unsupported_for_skill로 exit 1) 지정 시에만 state.json에 actor 키를 조건부 영속화한다. cmd_advance/cmd_mark는 상태 전이 진입 경계(load_state_json 직후)에서 `_claim_task_lease_if_needed()`를 1회 호출해 OPAL_SESSION_ID가 있을 때 `_import_ownership_lease()`(ownership_tool.lease, 형제 배치 우선·sys.path 비오염 패키지 적재)의 claim(claim_source=state_transition — 138 D-21 능동 소유권)으로 `<task>/run/.runtime/owner.json` lease를 원자 생성하거나 기존 session_start lease를 승격한다(138 W-9) — cmd_init은 claim하지 않고, OPAL_SESSION_ID 부재·적재 실패·타 세션 live lease(foreign_owner)는 모두 stderr 경고 1줄만 남긴 채 전이를 그대로 통과시키며(fail-safe) 응답 JSON 키 집합도 바꾸지 않는다. run-log 사건 4개 기록부의 actor.session_id는 `_current_session_id()`(OPAL 중립 변수 OPAL_SESSION_ID 단독, 플랫폼 고유 변수명은 ownership-tool 어댑터가 소유 — C-15)로 채워지며 미설정 시 종전과 동일하게 None이다(run-log CONTRACT §58 선택 필드, 스키마 무변경). log-event/gate-request/gate-resolve(135 W-3, CONTRACT §2.4)는 run_log_commit()의 같은 outbox/admission/drain 경로를 재사용해 PM activity·gate.requested·gate.resolved 사건을 기록하며 (actor_not_allowed/schema_invalid/refs_invalid/gate_not_requested/gate_duplicate/task_path_not_absolute를 방출), run_log_core는 호출하지 않아 TRD D-5 단방향 의존을 유지한다.",
   "note": "boot-summary는 허브 direct 태스크와 registry 발급 canonical task_path를 통합해 최신 3건, 잔여 건수, bounded 경로 이상을 읽기 전용 JSON으로 반환한다.",
   "exports": [
     "cmd_init", "cmd_show", "cmd_resolve_mode", "cmd_advance", "cmd_mark",
@@ -29,7 +29,9 @@
     "_validate_run_log_refs", "_build_pm_activity_data",
     "_build_pm_activity_event", "_build_gate_event",
     "_resolve_active_channel", "_check_active_completion_evidence",
-    "_run_log_completeness_check"
+    "_run_log_completeness_check",
+    "_current_session_id", "_ownership_tool_dir", "_import_ownership_lease",
+    "_claim_task_lease_if_needed"
   ]
 }
 """
@@ -623,6 +625,106 @@ def _import_run_log_core():
     return module
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# 138 W-9 — 세션 소유권 lease 연동 (C-9, AC-12, AC-13, AC-27)
+#
+# 기존 전이 계약은 무변경이다 — 아래 어떤 실패도 state 갱신을 막지 않고 stderr
+# 경고 1줄만 남긴다(fail-safe). 플랫폼 고유 세션 변수명은 ownership-tool의
+# 어댑터가 단독 소유하므로(C-15) 이 모듈은 OPAL 중립 변수 하나만 읽는다.
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _ownership_warn(code, message):
+    """단일 라인 JSON 경고를 stderr로 낸다 (init --rows-from deprecated 경고 선례)."""
+    print(json.dumps({"warning": code, "message": message}, ensure_ascii=False),
+          file=sys.stderr)
+
+
+def _current_session_id():
+    """현재 세션 식별자 — 환경변수 `OPAL_SESSION_ID` 하나만 읽는다. 없으면 None."""
+    value = os.environ.get("OPAL_SESSION_ID")
+    if isinstance(value, str) and value.strip():
+        return value.strip()
+    return None
+
+
+def _ownership_tool_dir():
+    """ownership-tool 실경로 — 형제 배치 우선, 없으면 배포본(`_run_log_core_dir()`와 동일 관례, D-C)."""
+    sibling = os.path.normpath(os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), os.pardir, "ownership-tool"))
+    if os.path.isdir(sibling):
+        return sibling
+    return os.path.expanduser("~/.opal/tools/ownership-tool")
+
+
+_OWNERSHIP_LEASE_MODULE_CACHE = {}
+
+
+def _import_ownership_lease():
+    """`ownership_tool.lease`를 `sys.path` 오염 없이 적재한다 (GC-007 관례).
+
+    `lease.py`는 `from . import ownership_core` 상대 import를 쓰므로 단일 파일
+    적재로는 부족하다 — 패키지 `ownership_tool`을 `submodule_search_locations`와
+    함께 먼저 등록한 뒤 하위 모듈을 적재한다. 디렉터리명에 하이픈이 있어 일반
+    패키지 import가 불가능한 점도 이 방식이 해소한다. 적재 실패는 호출자가
+    예외로 받는다.
+    """
+    pkg_dir = os.path.join(_ownership_tool_dir(), "ownership_tool")
+    cached = _OWNERSHIP_LEASE_MODULE_CACHE.get(pkg_dir)
+    if cached is not None:
+        return cached
+    pkg_spec = importlib.util.spec_from_file_location(
+        "ownership_tool", os.path.join(pkg_dir, "__init__.py"),
+        submodule_search_locations=[pkg_dir])
+    pkg = importlib.util.module_from_spec(pkg_spec)
+    sys.modules["ownership_tool"] = pkg
+    pkg_spec.loader.exec_module(pkg)
+    lease_spec = importlib.util.spec_from_file_location(
+        "ownership_tool.lease", os.path.join(pkg_dir, "lease.py"))
+    lease = importlib.util.module_from_spec(lease_spec)
+    sys.modules["ownership_tool.lease"] = lease
+    lease_spec.loader.exec_module(lease)
+    _OWNERSHIP_LEASE_MODULE_CACHE[pkg_dir] = lease
+    return lease
+
+
+def _claim_task_lease_if_needed(task_path):
+    """상태 전이 진입 경계에서 이 세션의 task lease를 1회 원자 생성한다 (W-9).
+
+    claim 자체가 멱등이라(같은 세션 재-claim은 heartbeat 갱신) 같은 세션의 반복
+    호출은 lease를 새로 만들지 않는다. 다른 세션의 live lease가 있으면 claim은
+    `foreign_owner`로 실패하지만 이 역시 전이를 막지 않는다 — 소유권 집행은 stop
+    hook 축의 책임이고 state-tool은 기록 축이다.
+
+    반환값은 관측용 dict(`{"claimed": bool, "warning": str|None}`)이며 응답 JSON에
+    싣지 않는다 — advance/mark 응답 키 집합을 바꾸지 않기 위해서다(C-3 취지).
+    """
+    session_id = _current_session_id()
+    if session_id is None:
+        warning = "ownership_session_id_missing"
+        _ownership_warn(warning,
+                        "OPAL_SESSION_ID가 없어 task lease를 claim하지 않았습니다. "
+                        "상태 전이는 그대로 진행됩니다.")
+        return {"claimed": False, "warning": warning}
+    try:
+        lease = _import_ownership_lease()
+        result = lease.claim(str(task_path), session_id=session_id,
+                             claim_source="state_transition")
+    except Exception as exc:                      # noqa: BLE001 — fail-safe 경계
+        warning = "ownership_claim_failed"
+        _ownership_warn(warning,
+                        f"task lease claim 실패({exc.__class__.__name__}: {exc}). "
+                        "상태 전이는 그대로 진행됩니다.")
+        return {"claimed": False, "warning": warning}
+    if not isinstance(result, dict) or not result.get("ok"):
+        warning = "ownership_claim_skipped"
+        diagnostic = result.get("diagnostic") if isinstance(result, dict) else None
+        _ownership_warn(warning,
+                        f"task lease를 claim하지 않았습니다(diagnostic={diagnostic}). "
+                        "상태 전이는 그대로 진행됩니다.")
+        return {"claimed": False, "warning": warning, "diagnostic": diagnostic}
+    return {"claimed": True, "warning": None}
+
+
 def _run_date_js(date_js, fmt):
     """date.js 1회 호출 → (returncode, stdout, stderr). 예외는 호출자가 처리한다."""
     result = subprocess.run(
@@ -1035,7 +1137,8 @@ def build_state_changed_event(state, *, task_id, command, from_status, to_status
         "work_item": (row or {}).get("item"),
         "gate_id": None,
         "event": "state.changed",
-        "actor": {"kind": "tool", "id": "state-tool", "provider": None, "session_id": None},
+        "actor": {"kind": "tool", "id": "state-tool", "provider": None,
+                  "session_id": _current_session_id()},  # 138 W-9
         "provenance": {
             "type": "direct",
             "recorded_by": {"kind": "tool", "id": "state-tool"},
@@ -1491,7 +1594,8 @@ def _build_pm_activity_event(state, *, task_id, command, kind, summary, reason, 
         "work_item": work_item,
         "gate_id": None,
         "event": "activity",
-        "actor": {"kind": "PM", "id": "PM", "provider": None, "session_id": None},
+        "actor": {"kind": "PM", "id": "PM", "provider": None,
+                  "session_id": _current_session_id()},  # 138 W-9
         "provenance": {
             "type": "direct",
             "recorded_by": {"kind": "PM", "id": "PM"},
@@ -1569,7 +1673,8 @@ def _build_gate_event(state, *, task_id, command, event_name, gate_id, actor_kin
         "work_item": None,
         "gate_id": gate_id,
         "event": event_name,
-        "actor": {"kind": actor_kind, "id": actor_kind, "provider": None, "session_id": None},
+        "actor": {"kind": actor_kind, "id": actor_kind, "provider": None,
+                  "session_id": _current_session_id()},  # 138 W-9
         "provenance": {
             "type": "direct",
             "recorded_by": {"kind": "tool", "id": "state-tool"},
@@ -2713,7 +2818,8 @@ def _cmd_init_run_log(task_path, args, state, command):
         "work_item": None,
         "gate_id": None,
         "event": "run.started",
-        "actor": {"kind": "tool", "id": "state-tool", "provider": None, "session_id": None},
+        "actor": {"kind": "tool", "id": "state-tool", "provider": None,
+                  "session_id": _current_session_id()},  # 138 W-9
         "provenance": {
             "type": "direct",
             "recorded_by": {"kind": "tool", "id": "state-tool"},
@@ -3052,6 +3158,8 @@ def cmd_advance(args):
     command = "advance"
     task_path = resolve_task_path(args.task_path, command)
     state     = load_state_json(task_path, command)
+    # 138 W-9: 상태 전이 진입 경계에서만 lease를 claim한다(init은 claim하지 않는다).
+    _claim_task_lease_if_needed(task_path)
     row_index = resolve_row_index(state, command,
                                   getattr(args, "task_step", None),
                                   getattr(args, "task_step_id", None),
@@ -3343,6 +3451,8 @@ def cmd_mark(args):
     command = "mark"
     task_path = resolve_task_path(args.task_path, command)
     state     = load_state_json(task_path, command)
+    # 138 W-9: advance와 같은 단일 경계 — 상태 전이 진입 시 1회 claim(멱등).
+    _claim_task_lease_if_needed(task_path)
 
     # 135 W-4 (AC-6, C-2, H-4): active 완료 전이는 trusted worker 증거가 충분해야
     #   한다. row 주소 해석 이전에 판정한다 — mark는 --done이 필수 인자이므로

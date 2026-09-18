@@ -1,0 +1,24 @@
+{
+  "task_id": "220-shared-worktree-task",
+  "skill": "opds",
+  "mode": "agentic",
+  "schema_version": "1.2",
+  "created_at": "2026-09-17 10:00:00",
+  "updated_at": "2026-09-17 10:05:00",
+  "current_status": "in_progress",
+  "rows": [
+    {
+      "row_id": 1,
+      "stage": "EXECUTE",
+      "item": "작업",
+      "key": "execute.implement",
+      "status": "in_progress",
+      "status_label": "🔄",
+      "timestamp": "2026-09-17 10:05:00",
+      "owner": "PM",
+      "note": null
+    }
+  ],
+  "next_action": "EXECUTE 작업 진행 중",
+  "worktree": "{WT}/task_220"
+}

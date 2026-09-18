@@ -1,0 +1,11 @@
+{
+  "path": "prompt_failed",
+  "adapter": "generic",
+  "adapter_handle": "term-handle-0002",
+  "reported_cwd": "{WT}/task_220",
+  "launched_at": "2026-09-17 10:20:00+09:00",
+  "prompt_id": null,
+  "submitted_at": null,
+  "exit_code": 0,
+  "stderr": "handoff prompt submission timed out"
+}

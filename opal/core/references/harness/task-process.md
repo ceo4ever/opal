@@ -85,6 +85,18 @@
    - `report_type=decision_request`이면 사용자 결정이 필요한 질문으로 보고하고 대기한다.
    - `transition_action=blocked`이면 실행 불가 사유와 필요한 조치를 보고한다.
 
+#### `--wt` 체크포인트 커밋과 merge 경계
+
+`--wt` 태스크의 전용 세션은 `harness/guards.md` §커밋 규칙의 폐쇄된 예외만 소비한다. worktree 여부, canonical task, 현재 branch와 세션 소유권을 registry로 확인하지 못하면 일반 사용자 승인 규칙으로 돌아간다.
+
+1. 단계 작업과 필수 Gate·검증을 먼저 완료한다. 검증 중 발견한 이슈가 권한 범위 안에서 보정되고 재검증을 통과하면 해결된 이슈로 기록만 남기고 파이프라인을 중단하지 않는다.
+2. `agentic`은 사용자 판단이 필요한 미해결 사항이 없는 안정 경계에서 PM이 소유 worktree 브랜치에 체크포인트 커밋하고 즉시 다음 단계로 진입한다.
+3. `interactive`는 기존 각 단계 사용자 승인 뒤 그 단계 산출물을 체크포인트 커밋하고 다음 단계로 진입한다. `semi-agentic`은 PLAN-equivalent 승인 뒤 명세 체크포인트를 만들고, EXECUTE·TEST 변경은 커밋하지 않고 누적하며, 기존 CLOSE 진입 승인 뒤 누적 구현·테스트 체크포인트를 만든다. 같은 CLOSE 승인은 승인된 CLOSE/finalize 범위의 최종 체크포인트까지 허용하되 merge·push 승인으로 확장되지 않는다. 새 사용자 Gate를 추가하지 않는다.
+4. 체크포인트 직전 staged 경로가 canonical task와 해당 worktree의 소유 변경으로 폐쇄되는지 검사한다. staged 변경이 0건이면 체크포인트를 만들지 않고 다음 단계로 진행한다. 성공 SHA는 lifecycle record에 기록하며 자동 amend·rebase·reset은 하지 않는다.
+5. `main`·기본 브랜치 commit, worktree branch의 merge·push, 배포와 worktree 제거는 체크포인트 예외 밖이다. 특히 `main`·기본 브랜치 merge는 모드와 무관하게 사용자 승인 뒤 허브에서만 수행한다.
+
+체크포인트 후보 경계는 명세 Gate 완료, 검증된 독립 구현 단위, 전체 회귀 통과와 CLOSE/finalize 직전이며 실제 커밋 여부는 위 모드 규칙이 결정한다. 모든 state 행이나 단순 로그 갱신마다 커밋하지 않는다.
+
 #### 저장 경로 규칙
 
 | 조건 | 저장 경로 |

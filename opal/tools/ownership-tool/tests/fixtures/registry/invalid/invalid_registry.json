@@ -1,0 +1,7 @@
+{
+  "task": "666",
+  "layout": "monorepo",
+  "branch": "feat/OP-TASK-666",
+  "task_ownership_version": 2,
+  "task_path": "{WT}/task_666/tasks/666-broken
+  // 의도적으로 손상된 JSON — 닫히지 않은 문자열·trailing comma로 파싱 실패를 재현한다.

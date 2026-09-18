@@ -1,0 +1,28 @@
+{
+  "task": "127",
+  "layout": "monorepo",
+  "branch": "feat/OP-TASK-127",
+  "created_at": "2026-09-12 21:00",
+  "worktree_root": "{WT}/task_127",
+  "entries": [
+    {
+      "repo": "{HUB}",
+      "path": "{WT}/task_127",
+      "branch": "feat/OP-TASK-127",
+      "base_ref": "main"
+    }
+  ],
+  "pending_setup": [
+    {
+      "cwd": "dashboard/frontend",
+      "run": "npm ci"
+    }
+  ],
+  "allocator_root": "{HUB}",
+  "task_home": "{WT}/task_127",
+  "task_folder": "127-260912-oppl-E2E-하네스-구현",
+  "task_path": "{WT}/task_127/tasks/127-260912-oppl-E2E-하네스-구현",
+  "artifact_repo": ".",
+  "task_ownership_version": 2,
+  "memory_index_requests_resolved": []
+}

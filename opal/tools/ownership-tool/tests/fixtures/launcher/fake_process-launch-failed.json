@@ -1,0 +1,11 @@
+{
+  "path": "launch_failed",
+  "adapter": "generic",
+  "adapter_handle": null,
+  "reported_cwd": null,
+  "launched_at": null,
+  "prompt_id": null,
+  "submitted_at": null,
+  "exit_code": 1,
+  "stderr": "terminal launcher command exited non-zero"
+}

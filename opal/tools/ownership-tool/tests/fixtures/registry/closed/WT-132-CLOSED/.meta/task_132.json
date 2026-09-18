@@ -1,0 +1,29 @@
+{
+  "task": "132",
+  "layout": "monorepo",
+  "branch": "feat/OP-TASK-132",
+  "created_at": "2026-09-14 13:11",
+  "worktree_root": "{WT}/task_132",
+  "entries": [
+    {
+      "repo": "{HUB}",
+      "path": "{WT}/task_132",
+      "branch": "feat/OP-TASK-132",
+      "base_ref": "main"
+    }
+  ],
+  "pending_setup": [
+    {
+      "cwd": "dashboard/frontend",
+      "run": "npm ci"
+    }
+  ],
+  "allocator_root": "{HUB}",
+  "task_home": "{WT}/task_132",
+  "task_folder": "132-260914-opd-oppb-프로젝트빌드-파일럿-신설",
+  "task_path": "{WT}/task_132/tasks/132-260914-opd-oppb-프로젝트빌드-파일럿-신설",
+  "artifact_repo": ".",
+  "task_ownership_version": 2,
+  "attribution_state": "closed",
+  "memory_index_requests_resolved": []
+}

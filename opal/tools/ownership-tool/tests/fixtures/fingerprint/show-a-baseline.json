@@ -1,0 +1,242 @@
+{
+    "ok": true,
+    "command": "show",
+    "format": "json",
+    "marker_present": false,
+    "data": {
+        "task_id": "138-260916-opds-\uc2a4\ud1b1-\ud6c5-\ud0dc\uc2a4\ud06c-\uc18c\uc720\uad8c-\uacb0\uc815\ub860\ud654",
+        "skill": "opds",
+        "mode": "agentic",
+        "schema_version": "1.2",
+        "created_at": "2026-09-16 23:48:42",
+        "updated_at": "2026-09-17 15:10:17",
+        "current_status": "in_progress",
+        "rows": [
+            {
+                "row_id": 1,
+                "stage": "TASK",
+                "item": "\uc791\uc5c5",
+                "key": "task.task_md",
+                "status": "done",
+                "status_label": "\u2705",
+                "timestamp": "2026-09-16 23:50:18",
+                "owner": "PM",
+                "note": null
+            },
+            {
+                "row_id": 2,
+                "stage": "TASK",
+                "item": "\uc0ac\uc6a9\uc790 \ud655\uc778",
+                "key": "task.user_confirm",
+                "status": "done",
+                "status_label": "\u2705",
+                "timestamp": "2026-09-17 14:42:40",
+                "owner": "auto",
+                "note": "auto-approved on PLAN entry"
+            },
+            {
+                "row_id": 3,
+                "stage": "PLAN",
+                "item": "\uc791\uc5c5",
+                "key": "plan.plan_md",
+                "status": "done",
+                "status_label": "\u2705",
+                "timestamp": "2026-09-17 15:01:21",
+                "owner": "PM",
+                "note": "op-dev-plan(opal-plan-agent) \uc0b0\ucd9c PLAN.md \u2014 PM Gate \uc0ac\uc804 \uac80\ud1a0\uc5d0\uc11c Minor 3\u00b7Normal 1 \uad50\uc815 \ud6c4 \uac80\uc0ac 2\uc885 pass",
+                "worker_duration_minutes": 12
+            },
+            {
+                "row_id": 4,
+                "stage": "PLAN",
+                "item": "\ubaa9\ud45c-\ucee4\ubc84 \uac8c\uc774\ud2b8",
+                "key": "plan.scenario_gate",
+                "status": "done",
+                "status_label": "\u2705",
+                "timestamp": "2026-09-17 15:09:55",
+                "owner": "PM",
+                "note": "coverage-check exit 0(all_covered, req 52\u00b7hyp 8\u00b7scen 29) + evaluator pass(1/2/2, avg 1.67). gaps 2\uac74 S-25\u00b7S-29\uc5d0 \ubc18\uc601",
+                "worker_duration_minutes": 2
+            },
+            {
+                "row_id": 5,
+                "stage": "PLAN",
+                "item": "PM Gate",
+                "key": "plan.pm_gate",
+                "status": "done",
+                "status_label": "\u2705",
+                "timestamp": "2026-09-17 15:09:55",
+                "owner": "PM",
+                "note": "PM Gate pass: 3\ubb38\uc11c template=sdlc-v2 \uc2e4\uce21, PLAN 111\ud589 \uc9c1\uc811 Read\u00b7Minor3/Normal1 \uad50\uc815, AC29/C23\u2192W20 \uc804\uac74 \uc5f0\uacb0(plan-contract-check pass), Risks H-1~8, Release and recovery \uc2e4\uc7ac, scenario_gate pass(coverage exit0+evaluator 1.67), code-scan-citation-check pass, validate violations 0",
+                "gate": {
+                    "artifacts": [
+                        "TASK.md",
+                        "PLAN.md",
+                        "TEST-SCENARIO.md"
+                    ],
+                    "checklist": [
+                        "sdlc-v2 TASK/PLAN/TEST-SCENARIO first frontmatter template=sdlc-v2; \uae30\uc874 \ubb38\uc11c\ub294 legacy \uc7ac\uac1c \uacbd\ub85c\ub85c \ud310\uc815",
+                        "sdlc-v2 TASK.md AC/C \u2192 PLAN.md Work items \uc644\ub8cc \uae30\uc900 \uc5f0\uacb0",
+                        "sdlc-v2 PLAN.md Work items \ud544\uc218 \uc5f4\u00b7W-ID\u00b7\uc120\ud589 \uc791\uc5c5\u00b7\uc2e4\ud589 \uadf8\ub8f9\u00b7\ud30c\uc77c \ucda9\ub3cc \uc5c6\uc74c \u2014 state-tool verify <\ud0dc\uc2a4\ud06c\ud3f4\ub354> --plan-contract-check \ud1b5\uacfc",
+                        "sdlc-v2 PLAN.md Risks \uc808 \uc874\uc7ac, \uc2e4\uc81c \uc704\ud5d8\uc740 H-N \uc0ac\uc6a9 \ub610\ub294 \uc704\ud5d8 \uc5c6\uc74c \uba85\uc2dc",
+                        "sdlc-v2 PLAN.md Release and recovery \uc874\uc7ac",
+                        "sdlc-v2 TEST-SCENARIO.md Setup / Scenarios \uc874\uc7ac, \ubaa8\ub4e0 AC/C\uc640 \uc874\uc7ac\ud558\ub294 H\uc758 \uc5f0\uacb0 \uc644\uc804 \u2014 op-scenario-gate pass",
+                        "code-scan \uacb0\uacfc \uc778\uc6a9 \u2014 state-tool verify <\ud0dc\uc2a4\ud06c\ud3f4\ub354> --code-scan-citation-check \ud1b5\uacfc"
+                    ]
+                }
+            },
+            {
+                "row_id": 6,
+                "stage": "PLAN",
+                "item": "\uc0ac\uc6a9\uc790 \ud655\uc778",
+                "key": "plan.user_confirm",
+                "status": "done",
+                "status_label": "\u2705",
+                "timestamp": "2026-09-17 15:10:17",
+                "owner": "auto",
+                "note": "auto-approved on EXECUTE entry"
+            },
+            {
+                "row_id": 7,
+                "stage": "EXECUTE",
+                "item": "\uc791\uc5c5",
+                "key": "execute.implement",
+                "status": "in_progress",
+                "status_label": "\ud83d\udd04",
+                "timestamp": "2026-09-17 15:10:17",
+                "owner": "PM",
+                "note": null
+            },
+            {
+                "row_id": 8,
+                "stage": "TEST",
+                "item": "\uc791\uc5c5",
+                "key": "test.run_tests",
+                "status": "pending",
+                "status_label": "\u2b1c",
+                "timestamp": null,
+                "owner": "PM",
+                "note": null
+            },
+            {
+                "row_id": 9,
+                "stage": "TEST",
+                "item": "PM Gate",
+                "key": "test.pm_gate",
+                "status": "pending",
+                "status_label": "\u2b1c",
+                "timestamp": null,
+                "owner": "PM",
+                "note": null,
+                "gate": {
+                    "artifacts": [
+                        "TEST-SCENARIO.md",
+                        "test-scenario.json"
+                    ],
+                    "checklist": [
+                        "TEST-SCENARIO.md\ub294 \uc2e4\ud589 \uc804 \uba85\uc138\ub85c\ub9cc \uc77d\uace0 \uacb0\uacfc\u00b7\uc99d\uac70\ub97c \uae30\ub85d\ud558\uc9c0 \uc54a\uc74c",
+                        "test-scenario.json\uc758 \ubaa8\ub4e0 \ud544\uc218 \uc2dc\ub098\ub9ac\uc624\uac00 PASS\uc774\uace0 FAIL/BLOCKED\uac00 \uc5c6\uc73c\uba70 \uc2e4\uc81c \uc2e4\ud589 \uc99d\uac70\uac00 \uc874\uc7ac",
+                        "PLAN.md Work items\uc5d0 \uc815\uc758\ub41c \ud544\uc218 \uac80\uc99d PASS",
+                        "\ucee8\ubca4\uc158 \uc790\ub3d9 \uc9c4\ub2e8 PASS (GC-CONVENTION-*.md Critical/High 0\uac74 \u2014 \ucee8\ubca4\uc158 \uc801\uc6a9 \ub300\uc0c1 \u22651\uac74 \uc2dc \ubc1c\ub3d9)"
+                    ]
+                }
+            },
+            {
+                "row_id": 10,
+                "stage": "TEST",
+                "item": "\uc0ac\uc6a9\uc790 \ud655\uc778",
+                "key": "test.user_confirm",
+                "status": "pending",
+                "status_label": "\u2b1c",
+                "timestamp": null,
+                "owner": "PM",
+                "note": null
+            },
+            {
+                "row_id": 11,
+                "stage": "CLOSE",
+                "item": "DONE.md \uc0dd\uc131",
+                "key": "close.done_md",
+                "status": "pending",
+                "status_label": "\u2b1c",
+                "timestamp": null,
+                "owner": "PM",
+                "note": null
+            },
+            {
+                "row_id": 12,
+                "stage": "CLOSE",
+                "item": "\uad00\ub828 \ubb38\uc11c \ub3d9\uae30\ud654 (\uc870\uac74\ubd80: \uad6c\ud604\uc73c\ub85c \ubb38\uc11c \uc0ac\uc2e4\uc774 \ub2ec\ub77c\uc9c4 \uacbd\uc6b0)",
+                "key": "close.docs_sync",
+                "status": "pending",
+                "status_label": "\u2b1c",
+                "timestamp": null,
+                "owner": "PM",
+                "note": null,
+                "conditional": true
+            },
+            {
+                "row_id": 13,
+                "stage": "CLOSE",
+                "item": "brain ingest (\uc870\uac74\ubd80: \ud504\ub85c\uc81d\ud2b8 brain \uc0ac\uc6a9 \uc2dc)",
+                "key": "close.brain_ingest",
+                "status": "pending",
+                "status_label": "\u2b1c",
+                "timestamp": null,
+                "owner": "PM",
+                "note": null,
+                "conditional": true
+            },
+            {
+                "row_id": 14,
+                "stage": "CLOSE",
+                "item": "\ud68c\uace0/\uac1c\uc120 \ud6c4\ubcf4 \uae30\ub85d",
+                "key": "close.retrospective",
+                "status": "pending",
+                "status_label": "\u2b1c",
+                "timestamp": null,
+                "owner": "PM",
+                "note": null
+            },
+            {
+                "row_id": 15,
+                "stage": "CLOSE",
+                "item": "worktree finalize/attribution (\uc870\uac74\ubd80: --wt \uc2e4\ud589 \uc2dc)",
+                "key": "close.worktree_finalize",
+                "status": "pending",
+                "status_label": "\u2b1c",
+                "timestamp": null,
+                "owner": "PM",
+                "note": null,
+                "conditional": true
+            },
+            {
+                "row_id": 16,
+                "stage": "CLOSE",
+                "item": "CLOSE \ucd5c\uc885 \uc0c1\ud0dc \ud655\uc815",
+                "key": "close.final",
+                "status": "pending",
+                "status_label": "\u2b1c",
+                "timestamp": null,
+                "owner": "PM",
+                "note": null
+            }
+        ],
+        "next_action": "EXECUTE \uc791\uc5c5 \uc9c4\ud589 \uc911",
+        "worktree": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_138",
+        "run_log": {
+            "contract_version": "1.0",
+            "mode": "shadow",
+            "completion_profile": "cooperative",
+            "completion_profile_receipt": null,
+            "active_run_id": "run_1e3369da-92bd-4160-b8b9-8d2dcd1ba0e0",
+            "status": "active",
+            "pending_events": []
+        }
+    },
+    "mode": "agentic",
+    "current_status": "in_progress",
+    "transition_action": "continue",
+    "report_type": "progress_report",
+    "next_action": "EXECUTE \uc791\uc5c5 \uc9c4\ud589 \uc911"
+}

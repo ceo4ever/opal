@@ -1,0 +1,11 @@
+{
+  "_fixture_note": "필드명은 실측 --help 플래그(--worktree/--command/--title/--focus/--json) 기준으로 유추한 가정이다. `orca terminal create --json`의 실제 stdout 스키마는 미실측 — README에 명시.",
+  "ok": true,
+  "terminal": {
+    "handle": "orca-term-0001",
+    "worktree_selector": "path:{WT}/task_220",
+    "title": null,
+    "command": "claude",
+    "focused": false
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "_fixture": {"captured": false, "source": "hooks-guide schema", "verify_in": "S-29"},
+  "session_id": "sess-synthetic-0001",
+  "transcript_path": "/tmp/synthetic-transcript.jsonl",
+  "cwd": "{WT}/task_138",
+  "hook_event_name": "PreToolUse",
+  "tool_name": "Edit",
+  "tool_input": {"file_path": "{WT}/task_138/opal/tools/ownership-tool/resolver.py", "old_string": "x", "new_string": "y"}
+}

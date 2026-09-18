@@ -1,0 +1,80 @@
+---
+template: sdlc-v2
+---
+# TEST-SCENARIO: `--wt` 전용 세션·Stop 훅 태스크 소유권 결정론화
+
+> 입력: [TASK.md](TASK.md), [PLAN.md](PLAN.md) | 작성자: PM
+
+## Setup
+
+- 환경: 워크트리 `feat/OP-TASK-138` 소스 트리. 테스트 인터프리터는 `~/.opal/.venv/bin/python -m pytest`로 고정(시스템 python3.14는 OPAL 테스트 게이트에 거부됨). 허브 `/Volumes/Data/AIStudio/workspace/ai-framework`는 registry 메타 읽기와 fixture 원본 확인에만 사용하고 쓰지 않는다.
+- 공통 데이터: `opal/tools/ownership-tool/tests/fixtures/`(W-2) — WT-127/132/138 registry 메타+canonical task, HUB-0, HUB-MULTI, HUB-FOSSIL-AMBIGUOUS(허브 `tasks/132-*` `in_progress`·`continue` 사본 + registry active canonical 워크트리 + `attribution_state` 키 부재), HUB-TWO-SESSIONS, SAME-WORKTREE-TWO-SESSIONS, `attribution_state: closed` 대조군, 5종 hook 봉투 실캡처(`fixtures/hook-payloads/*.json`). 모든 fixture는 임시 디렉터리로 복제해 실행하며 실제 허브·워크트리 registry를 변경하지 않는다.
+- 대역 사용과 한계: (1) `worktree-launcher/tests/fake_process.py`가 `orca`·generic terminal·`opal-agent` 프로세스를 대체한다 — 실제 터미널 기동·TUI cwd·prompt 제출 관측은 대체하지 못하므로 S-25 수동 E2E로 별도 확인한다. (2) hook 봉투 fixture는 캡처 시점의 Claude Code 버전을 반영한다 — `session_id`·`CLAUDE_ENV_FILE` 실재는 S-29 캡처에서 먼저 판정하고, 부재 시 해당 시나리오의 fail-safe 분기를 검증 대상으로 전환한다. (3) `state-tool`·`worktree-tool`·`run_log_core`는 대체하지 않고 실제 모듈을 임시 태스크 폴더에 대해 호출한다.
+- 실행 조건: S-25·S-29를 제외한 전 시나리오 자동 실행. S-25는 소유자 또는 PM이 실제 Claude TUI를 워크트리에서 기동해 수행하는 manual, S-29는 실제 세션에서 봉투를 1회 캡처하는 integration이며 EXECUTE의 첫 검증 대상이다.
+
+## Scenarios
+
+| ID | 검증 대상 | 조건 | 행동 | 기대 결과 | 방법·환경 | 시점 |
+|---|---|---|---|---|---|---|
+| S-1 | AC-10, AC-16, C-7 | HUB-FOSSIL-AMBIGUOUS fixture. 세션 cwd=허브 루트, 현재 세션 lease 없음, `stop_hook_active=false` | Stop evaluator를 fixture 봉투로 호출 | `decision_kind`가 `block_continue`가 아님. diagnostics에 `worktree_owned_shadow` 포함, evidence에 `task_path_ambiguous` 동시 발화 기록. 반환 후보 목록에 132가 "강제 후보"로 없음. 사유문(`reason`) 미출력 | unit(pytest) — `test_stop_evaluator.py` | 구현 전 RED |
+| S-2 | AC-11, C-7 | `attribution_state: closed` + 허브 merge 사본 fixture, 사본 `transition_action=continue`, 현재 세션 lease가 그 태스크 | Stop evaluator 호출 | 사본이 `hub_canonical`로 분류되고 `block_continue` 반환. shadow 진단 없음 | unit — `test_resolver.py`·`test_stop_evaluator.py` | 구현 전 RED |
+| S-3 | AC-9, C-6 | WT-132 fixture(worktree `tasks/`에 100~109 화석 10개 + canonical 132). cwd=worktree root | worktree resolver 호출 | 후보가 registry exact canonical `task_path` 정확히 1건. 소스 정적 검사에서 `os.walk`·`iterdir`·`.parents`·`updated_at` 정렬·mtime 사용 0건. 불일치 fixture(registry task_path와 디스크 불일치)는 `invalid_registry` | unit — `test_resolver.py` + AST 정적 검사 | 구현 전 RED |
+| S-4 | AC-13, C-8 | HUB-TWO-SESSIONS: 세션 A가 태스크 X lease(live), 세션 B 평가. 별도로 세션 A가 X·Y 2건 lease | 세션 B로 hub evaluator 호출 / 세션 A로 classify | B 결과에서 X는 `foreign_session_owned`로 강제 후보 제외(진단에는 남음). A의 2건 lease가 정상 허용되어 `classify`가 둘 다 "현재 세션 소유" | unit — `test_lease.py`·`test_resolver.py` | 구현 전 RED |
+| S-5 | AC-14, C-8, C-11 | HUB-MULTI: 현재 세션 lease 2건 모두 `continue`; 추가로 무소유 1건·`lease_expired` 1건 존재 | Stop evaluator 호출 | `decision_kind=defer_to_pm`, diagnostics에 `multiple_hub_tasks`·`lease_expired`. hook 출력 `{"decision":"block","reason":…}`의 `reason`에 후보 전건의 `task_id`·`transition_action`·`next_action`이 나열됨. 최신 `updated_at` 1건 선택 아님. diagnostics 값은 D-3 폐쇄 enum 밖 값이 없음(스키마 검증) | unit — `test_stop_evaluator.py`·`test_decisions.py` | 구현 전 RED |
+| S-6 | AC-15, AC-16, C-10, H-7 | 직전 receipt 존재, `stop_hook_active=true`. 3변형: (a) 상태 동일 (b) 행 status 의미 변경 (c) `updated_at`·note 자유문·run-log만 변경 | 각 변형으로 evaluator 호출; 별도로 `block_count`가 `CLAUDE_CODE_STOP_HOOK_BLOCK_CAP`(env) 이상인 receipt | (a)·(c) `allow_no_progress_same_fingerprint`, fingerprint 동일. (b) 재차단(`block_continue`), receipt `block_count`+1. 상한 이상은 `allow_block_cap_reached`. env 미설정 시 상한 검사 건너뜀. fingerprint 정규화 dict에 SHA·timestamp·note 자유문·run_log 키가 없음을 테스트가 집행 | unit — `test_fingerprint.py`·`test_stop_evaluator.py` | 구현 전 RED |
+| S-7 | AC-1, AC-26, C-1 | 수정된 `opal/core/hooks/claude-hooks.json` | Stop 항목 command 문자열 검사 + `ownership_tool.stop_evaluator` import | Stop command에 `python -c` 부재, `stop_hook.py` 경로 호출만 존재. evaluator 모듈이 hook 없이 import·단위 테스트 가능. `OPAL_TASK_PATH` 분기·ADD-3 주석 부재 | unit — `scripts/tests/test_hook_parity.py` + import 테스트 | 구현 후 |
+| S-8 | AC-2, C-4 | `merge-hooks.py`로 fixture settings(orca 훅 포함, 구 인라인 Stop 사본 3건)에 소스 병합 | 병합 후 `hooks.Stop` 검사; 임시 worktree의 `.claude/settings.local.json` 검사 | `_opal_managed` Stop evaluator 정확히 1건, orca 훅 보존, 구 인라인 사본 0건. worktree project settings에 OPAL Stop 항목 0건 | unit — `test_merge_hooks.py`·`test_worktree_tool.py` | 설치 후 |
+| S-9 | AC-28, C-16, C-23 | 소스 `claude-hooks.json`(5이벤트) + `claude-hooks.retired.json` + fixture settings | `merge-hooks.py` 2회 연속 실행, 이벤트 집합 대조 | 소스 이벤트 집합 {SessionStart, PreToolUse, PostToolUse, Stop, SessionEnd} == 설치 결과 `_opal_managed` 집합. 2회 결과 바이트 동일. retired command 전건 회수. 비-OPAL 훅 보존. 배포는 `install-mac.sh` 경로만 사용(소스 외 편집 0건 — git diff로 `~/.opal` 미편집 확인 불가하므로 install 로그로 확인) | unit + install 재실행 — `test_hook_parity.py` | 설치 후 |
+| S-10 | AC-12, C-9, H-3 | SessionStart 봉투 fixture 2종(cwd=worktree root / cwd=허브 루트) + 임시 `CLAUDE_ENV_FILE` 경로 | `session_start_hook.py`에 stdin 주입 | 세션 registry에 `{session_id,cwd,started_at,heartbeat_at,expires_at,status}` 기록. env 파일에 `OPAL_SESSION_ID=<id>` 1줄 append. worktree cwd → 해당 canonical task lease `claim` 성공. 허브 cwd → lease 생성 0건. env 파일 미제공·쓰기 실패 → 진단만 남기고 등록 유지, exit 0 | unit — `test_session_start.py` | 구현 전 RED |
+| S-11 | AC-12, AC-27, C-9, H-2 | 임시 태스크 폴더 + `OPAL_SESSION_ID` env 설정/미설정 2경로 | `state-tool init` → 첫 `advance` 호출; 기존 state-tool 회귀 스위트 실행 | env 설정 시 최초 경계 1곳에서만 hub lease 원자 생성(중복 claim 없음), run-log 이벤트 `actor.session_id`가 env 값. env 미설정 시 경고만 남기고 state 전이 결과·`transition_action` 종전과 동일. `ALLOWED_TRANSITIONS`·`_derive_transition`·`cmd_block` 관련 기존 테스트 전건 pass | unit — `opal/tools/state-tool/tests/` | claim 경로 구현 전 RED / 회귀 구현 후 |
+| S-12 | AC-12, C-9, C-23 | 세션 A lease on X. PostToolUse 봉투(A) / 봉투(B) / SessionEnd 봉투(A). TTL을 1초로 설정한 lease | heartbeat hook·session_end hook 호출; TTL 경과 후 classify | A heartbeat → `heartbeat_at`·`lease_expires_at` 갱신. B heartbeat → X 무변경(no-op, 생성·이전 없음). SessionEnd(A) → registry closed, X `released`. TTL 경과 → `lease_expired`→`unowned` 분류 | unit — `test_heartbeat.py`·`test_lease.py` | 구현 전 RED |
+| S-13 | AC-18, C-11, C-13, H-4 | SAME-WORKTREE-TWO-SESSIONS: 세션 1 SessionStart claim 성공 후 세션 2 SessionStart. 이어 세션 2의 PreToolUse 봉투 4종(Edit / Bash `git commit` / Read / Bash `ls`) | session_start(2), stop_evaluator(2), pretooluse_guard(2) 호출 | 세션 2 claim → `foreign_owner` 거부, 소유자 무변경. Stop → 비차단 통과(진단 `foreign_owner`). PreToolUse: Edit·`git commit` 차단, Read 허용, `ls`는 허용 + `foreign_owner_bash_unclassified` 진단. 등록 worktree 밖 cwd에서는 guard가 파일 I/O 없이 즉시 exit 0 | unit — `test_pretooluse_guard.py`·`test_session_start.py` | 구현 전 RED |
+| S-14 | AC-3, AC-17, C-12, C-15 | 임시 registry 메타(v2) + legacy 메타(version 부재) | `worktree-tool ownership-set`으로 6개 허용 조합·금지 조합 전이; legacy 메타로 기존 `status` 호출 | 허용 조합 전이 성공, `execution_ownership`과 `attribution_state`가 한 번의 atomic replace로 함께 기록. 금지 조합 `ownership_state_invalid`. `adapter`·`adapter_handle`·`owner_session_id`·`generation`·receipt·`failure_reason`이 canonical 필드와 분리된 하위 객체에 저장. legacy 메타는 `execution_ownership` 없이 기존 경로 통과 | unit — `test_worktree_tool.py` | 구현 전 RED |
+| S-15 | AC-3, AC-7, AC-8, C-13 | fake_process 4경로: 성공 / launch 실패 / prompt 실패 / `reported_cwd` 불일치 | `launcher_core` lifecycle 실행 후 registry 조회 | 성공: launch·prompt receipt 둘 다 기록된 뒤에만 `worktree_session_owned`. 나머지 3경로: `failure_reason=launch_failed`, `generation`+1, `hub_owned` + `attribution_state` 키 부재로 단일 원자 복귀. 어느 경로도 owner 2건·owner 없는 `session_launching` 잔존 없음 | unit — `test_launcher_core.py` | 구현 전 RED |
+| S-16 | AC-5, C-2, H-6 | fake `orca` 바이너리(인자 기록 + `--json` 응답) 및 orca 부재 환경 | orca adapter 호출 | 호출 인자가 `terminal create --worktree path:<worktree_root> --command … --json` 형태이고 worktree/checkout 생성 서브명령 0건. handle이 `adapter_handle`로 반환. orca 부재·비-0 종료 → adapter 실패 반환(자동 폴백 없음). prompt receipt를 `--json`에서 얻지 못하면 SessionStart claim 관측 대체 경로가 `launch_mode`와 함께 기록됨 | unit — `test_adapter_orca.py` | 구현 전 RED |
+| S-17 | AC-4, AC-6, C-3 | generic launcher 템플릿 설정 있음/없음; fake `call_agent` | generic adapter / opal-agent fallback 호출 | generic: 템플릿 `{cwd}`·`{command}` 치환만, 소스에 OS 이름 분기 0건(정적 검사). fallback: `AgentConfig(provider="claude", cwd=<worktree_root>)` 호출, 반환 session id가 `adapter_handle`에 기록되고 `session_id`로 재호출(resume) 가능. receipt `launch_mode`가 TUI/one-shot 구분. fake가 `reported_cwd≠worktree_root`를 보고하면 S-15의 `launch_failed` 경로 | unit — `test_adapter_generic.py` | 구현 전 RED |
+| S-18 | AC-2, C-4, C-5 | 허브 fixture `.claude/settings.json` 3종: permissions만 / permissions+hooks / 파일 없음 | `worktree-tool create` 후 worktree 검사 | permissions만 → `.claude/settings.local.json`에 permissions만, `.gitignore`에 제외 등록. hooks 포함 → `settings_hook_key_forbidden`, 파일 미생성. 파일 없음 → no-op, create 성공. `taskCapsuleCone` 무변경, `.claude` 디렉터리 복제 0건, worktree settings의 OPAL Stop 항목 0건 | unit — `test_worktree_tool.py` | 구현 전 RED |
+| S-19 | AC-19, AC-20, AC-21, AC-22, C-14, C-17, C-18, C-20 | 임시 허브+worktree git 저장소, registry `worktree_session_owned`(owner=현재 세션), staged 변경 소유/비소유 혼합, 모드 3종 | `worktree-tool checkpoint` 호출 (모드×단계 조합, 금지 명령 요청 포함) | 소유권·branch 일치·scope 폐쇄 통과 시 worktree branch에 커밋, SHA가 `checkpoint_shas[]`에 append. 비소유 staged → `checkpoint_scope_violation`. semi-agentic EXECUTE·TEST → `checkpoint_mode_denied`, PLAN-equivalent·CLOSE 승인 시점 허용. interactive는 단계 승인 후 허용. agentic 안정 경계 허용. main commit·merge·push·rebase·reset·amend·worktree 제거 요청 → `requires_user_approval`. 허브 working tree 파일 무변경, 공유 refs로 `main` diff 조회 성공 | unit — `test_worktree_tool.py` | 구현 전 RED |
+| S-20 | AC-23, C-19 | S-19 환경에서 검증 실패 → 보정 → 재검증 통과 시퀀스 | checkpoint 재호출 및 `state-tool show` | 재검증 통과 후 커밋이 사용자 결정 없이 진행되고 `current_status`가 `blocked`로 가지 않음. unresolved 실패는 기존 경계(`blocked`) 유지 | unit — `test_worktree_tool.py` + `state-tool show` | 구현 후 |
+| S-21 | AC-24, C-21 | 워크트리의 하네스 7문서(`guards.md`·`task-process.md`·agentic·semi-agentic·interactive·`opal-self-pm/SKILL.md`·`docs/CONVENTIONS.md`) | `grep`으로 상충 문구 검색 + C-17~C-20 조항 존재 확인 + PM 직접 Read | 활성 문서에 "사용자 명시 요청 시에만 커밋"류 자동 커밋 금지 문구 0건(W-17 (7)). 체크포인트 예외·모드별 경계·금지 목록·보정-비차단 문구가 각 owner 문서에 1회씩 존재. interactive 추가 문단이 §1 표 아래 올바른 절에 위치. CONVENTIONS의 "하나의 태스크 = 하나의 merge 단위"가 §커밋 형식과 모순 없음 | deterministic grep + manual read | 구현 후 |
+| S-22 | AC-22, C-12 | `pipeline-short.json`·`pipeline.json` | task_steps·transition_contract 비교 | CLOSE 행 개수·key·순서 무변경(`close.done_md`~`close.final`). `close.worktree_finalize` 항목 문구에 허브 수행 경계 명시. `close_final_key`·`semi_agentic_boundary` 무변경. `state-tool init --rows-from` 정상 | unit — 기존 pipeline conformance 테스트 | 구현 후 |
+| S-23 | AC-25, AC-26, C-22 | W-2 fixture 전건 + 신규 테스트 전부 | `~/.opal/.venv/bin/python -m pytest opal/tools/ownership-tool/tests opal/tools/worktree-launcher/tests` | 전건 pass. 실제 Claude TUI를 기동하는 테스트 0건(정적 검사: `subprocess`로 `claude` 실행 문자열 부재) | integration(pytest) | 구현 후 |
+| S-24 | AC-27 | 기존 스위트 | `~/.opal/.venv/bin/python -m pytest opal/tools/state-tool/tests opal/tools/worktree-tool/tests scripts/tests` | 전건 pass (OPDS 상태 전이·mode transition·todo mirror·canonical/attribution·hook 병합·parity) | integration(pytest) | 구현 후 |
+| S-25 | AC-4, AC-29, C-22, H-3 | 설치 완료 머신. 워크트리 루트에서 실제 `claude` TUI 기동; 별도로 `opal-agent --provider claude --cwd <worktree_root> -p` 1회 | (1) TUI에서 `echo $OPAL_SESSION_ID` (2) 응답 종료 시 Stop hook 발화 로그 확인 (3) `-p` 경로 결과의 session id와 Stop hook 발화 확인 | (1) 값이 현재 세션 registry의 `session_id`와 일치, hook 봉투 `cwd`가 worktree root (2) global Stop evaluator가 정확히 1회 발화, 차단/통과가 evaluator 결과와 일치 (3) session id 반환 + Stop hook 발화 기록 (4) 허브에서 `--wt` 1회 실행 → 새 세션이 worktree cwd로 기동되고 handoff prompt가 제출되며 registry `execution_ownership.state`가 `hub_owned → session_launching → worktree_session_owned`로 전이(AC-3·AC-7 실관측). 4항목 체크 결과를 DONE.md에 기록 | manual E2E — 실제 Claude Code | 설치 후 |
+| S-26 | H-5, C-16 | 현재 브랜치 `scripts/merge-hooks.py` | `grep "def _is_owned"` + `test_merge_hooks.py` 실행 | main `cf95125` 흡수(사용자 승인) 시 `_is_owned`·3인자 `merge_hooks` 존재, 마커 유실 테스트 4건 포함 9/9 pass. 미승인 시 W-10 대안(b) 재적용으로 동일 결과 | unit + git 조회 | 구현 후 |
+| S-27 | H-8 | 3개 런타임 경로(세션 registry·hub lease·stop receipt)에 파일 생성 | `git status --porcelain` (허브·worktree 양쪽) | 3경로 파일이 출력에 나타나지 않음(`.gitignore:2`·`:49` 커버). 추가 gitignore 편집 0건 | unit — `test_ownership_core.py` | 구현 후 |
+| S-28 | C-11, AC-16 | D-3 enum 정의와 evaluator 반환 전건 | 스키마 검증기로 fixture 전건의 반환값 검사 | `decision_kind` 7종·`diagnostic` 10종 외 값 0건. 정상 완료·대기·비활성·동일 fingerprint 통과가 서로 다른 `decision_kind`로 구분 | unit — `test_decisions.py` | 구현 전 RED |
+| S-29 | H-1, H-2, H-3 | 실제 Claude Code 세션 1회(허브 cwd) + 서브에이전트 1회 디스패치 | 5종 hook 봉투를 파일로 캡처(W-2), 서브에이전트 Bash에서 `echo $OPAL_SESSION_ID`·`echo $CLAUDE_ENV_FILE` | 캡처 파일 5종에 `session_id`·`cwd` 필드 실재 여부 기록. 서브에이전트 Bash의 `OPAL_SESSION_ID` 상속 여부 기록. `CLAUDE_ENV_FILE` 경로 제공 여부 기록. 설치 후 허브 cwd 세션에서 132 계열 shadow 상태(허브 사본 `continue` + registry active 워크트리 canonical)로 Stop 1회 발화 → **비차단 실관측**(S-1 운영 재현). **부재 항목은 해당 W(W-7·W-8·W-9)의 fail-safe 분기를 S-10~S-12의 검증 대상으로 전환**하고 결과를 AGENTIC-LOG에 남긴다 | integration(1회 실캡처) — EXECUTE 첫 검증 | 구현 후(W-2 시점) |
+
+## 수동 E2E 절차 (W-20 보강 — S-25·S-29 실측 심화, 자동화 대상 아님)
+
+이 절은 위 S-1~S-29 표를 재작성하지 않고 추가한다. 실제 Claude TUI·`opal-agent --provider claude --cwd <worktree_root> -p` 경로는 자동화 스위트가 대신 관측할 수 없으므로 소유자 또는 PM이 수동으로 수행하고 아래 체크리스트로 결과를 남긴다(DONE.md 또는 AGENTIC-LOG.md에 항목별 관측값을 기록).
+
+### 1. cwd 전달·session ID 전달·global Stop hook 발화 확인 (PLAN 명시 3종, S-25 실측 심화)
+
+- [ ] 워크트리 루트(`<hub>/.opal-worktrees/task_<NNN>/`, 워크트리 안에 `.opal-worktrees` 없음)에서 실제 Claude TUI를 기동한다.
+- [ ] TUI 안에서 `echo $OPAL_SESSION_ID`를 실행해 값이 비어 있지 않은지 확인하고, 그 값이 세션 registry(`<worktree_root>/.opal/run/.runtime/sessions/<session_id>.json`)에 실제로 기록된 `session_id`와 일치하는지 대조한다.
+- [ ] 최초 SessionStart hook 봉투의 `cwd`가 워크트리 루트와 일치하는지 확인한다(가능하면 hook 로그·디버그 출력을 근거로 삼는다 — 추정 금지).
+- [ ] 응답을 종료(Stop 트리거)해 global Stop hook이 **정확히 1회** 발화하는지 확인하고, 차단/통과 결과가 `stop_evaluator.evaluate()`가 그 시점 state로 계산했을 판정과 일치하는지 대조한다.
+- [ ] 3항목(cwd 전달·session ID 전달·global Stop hook 발화) 각각의 관측값을 기록한다.
+
+### 2. orca 기동 후 SessionStart claim → prompt receipt 승격 확인 (AGENTIC-LOG #94)
+
+- [ ] 허브에서 `--wt` 실행으로 orca 어댑터를 통해 워크트리 세션을 기동한다.
+- [ ] `orca terminal create --json`의 stdout이 prompt 제출 receipt(`prompt_id`·`submitted_at`)를 직접 주는지 관측한다.
+- [ ] `--json`이 주지 않으면(`worktree_launcher.adapters.orca.PROMPT_SOURCE_SESSIONSTART_CLAIM` 대체 경로), registry `execution_ownership.prompt_receipt`가 그 뒤 실제로 채워지는 시점·경로를 관측한다 — **"`orca terminal create`는 제출 receipt를 돌려주지 않아 실사용 receipt가 관측에서 와야 한다"는 전제(AGENTIC-LOG #94)가 실측과 일치하는지**를 이 항목에서 판정한다.
+- [ ] 관측된 실사용 receipt 원문(경로·값 요약)을 기록한다.
+
+### 3. S-29 fixture 교체 절차 (`fixtures/hook-payloads/*.json` 5종 + `orca-json-response.json`)
+
+- [ ] 배포 완료 후 실제 Claude Code 세션 1회(허브 cwd)로 SessionStart·PreToolUse·PostToolUse·Stop·SessionEnd 5종 hook 봉투를 캡처한다(S-29 integration 항목과 공유).
+- [ ] 캡처된 봉투와 `opal/tools/ownership-tool/tests/fixtures/hook-payloads/*.json`(현재 `_fixture.captured: false` 합성)의 스키마를 대조하고, 차이가 있으면 실측 스키마로 fixture를 교체한다(`{HUB}`/`{WT}` 플레이스홀더 규약은 유지, `fixtures/README.md` 갱신).
+- [ ] `opal/tools/ownership-tool/tests/fixtures/launcher/orca-json-response.json`의 stdout 스키마(`--help` 플래그만 근거로 한 가정)를 실제 `orca terminal create --json` 응답으로 교체하거나, 필드가 여전히 미실측이면 그 사실을 `_fixture` 메타에 명시해 둔다.
+- [ ] 교체 후 `~/.opal/.venv/bin/python -m pytest opal/tools/ownership-tool/tests opal/tools/worktree-launcher/tests`를 재실행해 기존·신규 테스트가 여전히 pass하는지 확인한다.
+
+### 4. 부팅 시 조용함 확인 (D-21 passive_ownership)
+
+- [ ] 워크트리에서 세션을 새로 시작해 인사만 하고(상태를 전진시키지 않고) 응답을 종료한다.
+- [ ] 이 시점 Stop hook이 **차단하지 않고 통과**하는지, 그리고 진단에 `passive_ownership`만 남고(강제 후보에서 제외) 소유권 분류(`current_session_owned`) 자체는 유지되는지 확인한다.
+- [ ] 이어서 실제 작업으로 상태를 1단계 이상 전진시켜(`state-tool advance` 등으로 lease `claim_source`가 `session_start`→`state_transition`으로 승격) 다시 응답을 종료하고, 이번에는 Stop hook이 정상적으로 차단(`block_continue`)하는지 확인한다.
+- [ ] 두 결과("조용한 부팅" → "상태 전진 후 정상 차단")를 함께 기록한다 — 하나만 관측하고 완료로 표시하지 않는다.

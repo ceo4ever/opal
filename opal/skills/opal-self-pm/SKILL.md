@@ -29,7 +29,7 @@ pipeline: "없음 — 대화형 루프(operator 스킬). opal-brain과 동일 �
 
 - 이 스킬이 `opal-self-pm` 대화형 루프 절차의 원문을 소유한다. 질문 루프·계약 승인·지식 동기화·최종 확인의 판정 기준은 이 문서와 `references/`가 정한다.
 - 독립 검증 경계(생성자≠평가자 예외)와 GC 3종 호출 지점의 공유 계약은 `opal/core/references/harness/actor.md` §독립 검증 경계와 GC 호출 지점이 소유한다. 이 문서는 호출 시점만 규정하고 원문을 복제하지 않는다.
-- 권한 경계(외부 skill·package 설치, 프로젝트 밖 쓰기, 비가역 변경, commit·push·배포, 사용자 Gate)는 작업 방식 승인과 별개로 항상 유지된다 — 원문은 `harness/guards.md`가 소유한다.
+- 권한 경계(외부 skill·package 설치, 프로젝트 밖 쓰기, 비가역 변경, 허브·기본 브랜치 commit, merge·push·배포, 사용자 Gate)는 작업 방식 승인과 별개로 항상 유지된다. 등록된 전용 worktree 체크포인트의 모드별 예외를 포함한 원문은 `harness/guards.md`가 소유한다.
 - `opal-self-pm`은 Pilot이 아니다. `state.json`·`test-scenario.json`·`backlog.json` 3-SSOT를 읽지도 쓰지도 않는다. 경량 실행 기록은 별도 `self-pm-tool`이 전담한다(§3).
 
 ## 1. 루프 개요
@@ -197,4 +197,4 @@ PM이 확정 계약에 따라 직접 조회·작성·수정한다. 서브에이�
 
 ## 11. 권한 경계
 
-직접 수행 선택은 작업 방식의 승인이지 다음의 포괄 승인이 아니다 — 외부 skill·package 설치와 계정·MCP 연결, 프로젝트 밖 또는 외부 시스템 쓰기, 파괴적 변경과 비가역 데이터 마이그레이션, commit·push·배포, Pilot과 harness가 정한 사용자 Gate. 원문은 제안서 §3.3·`harness/guards.md`가 소유한다.
+직접 수행 선택은 작업 방식의 승인이지 다음의 포괄 승인이 아니다 — 외부 skill·package 설치와 계정·MCP 연결, 프로젝트 밖 또는 외부 시스템 쓰기, 파괴적 변경과 비가역 데이터 마이그레이션, 허브·기본 브랜치 commit, merge·push·배포, Pilot과 harness가 정한 사용자 Gate. 등록된 전용 worktree 체크포인트의 모드별 예외를 포함한 원문은 제안서 §3.3·`harness/guards.md`가 소유한다.

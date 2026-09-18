@@ -1,0 +1,9 @@
+{
+  "task_path": "{HUB}/tasks/137-260916-opds-run-log-계약-완성",
+  "owner_session_id": "sess-expired-0002",
+  "generation": 2,
+  "claimed_at": "2026-09-16 09:00:00+09:00",
+  "heartbeat_at": "2026-09-16 09:10:00+09:00",
+  "lease_expires_at": "2026-09-16 13:00:00+09:00",
+  "status": "lease_expired"
+}

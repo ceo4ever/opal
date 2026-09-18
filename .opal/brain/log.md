@@ -438,6 +438,10 @@
 - 신규: [[pages/concept/mode-aware-execution-continuity-contract.md]]
 - 출처: task:136
 
+## [2026-09-18] ingest | 태스크 138 CLOSE — 스톱 훅 태스크 소유권 결정론화 회고적 학습 4건
+- 신규: [[red-corpus-precedes-contract-fabricates-layout]], [[worktree-locates-hub-by-issued-copy]], [[stop-force-requires-state-transition-claim]], [[ownership-tool]]
+- 출처: task:138
+
 ## [2026-09-18] ingest | CLOSE ingest — 태스크 140 OPAL Docs 스킬 문서 화면
 - 신규: [[pages/concept/canonical-identity-from-unique-key-not-shared-attribute.md]], [[pages/concept/skill-md-body-is-freeform-not-structured-slots.md]]
 - 출처: task:140

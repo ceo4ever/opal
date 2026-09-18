@@ -1,0 +1,8 @@
+{
+  "_fixture": {"captured": false, "source": "hooks-guide schema", "verify_in": "S-29"},
+  "session_id": "sess-synthetic-0001",
+  "transcript_path": "/tmp/synthetic-transcript.jsonl",
+  "cwd": "{WT}/task_138",
+  "hook_event_name": "SessionEnd",
+  "reason": "exit"
+}

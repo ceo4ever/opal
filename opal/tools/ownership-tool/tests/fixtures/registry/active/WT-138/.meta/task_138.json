@@ -1,0 +1,28 @@
+{
+  "task": "138",
+  "layout": "monorepo",
+  "branch": "feat/OP-TASK-138",
+  "created_at": "2026-09-16 23:47",
+  "worktree_root": "{WT}/task_138",
+  "entries": [
+    {
+      "repo": "{HUB}",
+      "path": "{WT}/task_138",
+      "branch": "feat/OP-TASK-138",
+      "base_ref": "main"
+    }
+  ],
+  "pending_setup": [
+    {
+      "cwd": "dashboard/frontend",
+      "run": "npm ci"
+    }
+  ],
+  "allocator_root": "{HUB}",
+  "task_home": "{WT}/task_138",
+  "task_folder": "138-260916-opds-스톱-훅-태스크-소유권-결정론화",
+  "task_path": "{WT}/task_138/tasks/138-260916-opds-스톱-훅-태스크-소유권-결정론화",
+  "artifact_repo": ".",
+  "task_ownership_version": 2,
+  "memory_index_requests_resolved": []
+}

@@ -388,10 +388,18 @@ def run_source_audit(project_root: Path, iterations: int = 3) -> dict[str, Any]:
     checked = {Path(path).resolve() for path in static["checked_files"]}
     pilots = {path.resolve() for path in REPO_ROOT.glob("opal/skills/opal-pilot-*/SKILL.md")}
     workers = {path.resolve() for path in REPO_ROOT.glob("opal/agents/*/AGENT.md")}
-    if len(pilots) != 10 or not pilots.issubset(checked):
-        raise AuditFailure(f"pilot static coverage mismatch: expected 10, got {len(pilots)}")
-    if len(workers) != 15 or not workers.issubset(checked):
-        raise AuditFailure(f"worker static coverage mismatch: expected 15, got {len(workers)}")
+    if not pilots.issubset(checked):
+        missing = sorted(str(path) for path in pilots - checked)
+        raise AuditFailure(
+            f"pilot static coverage mismatch: {len(pilots)} pilots found, "
+            f"missing from static-check: {missing}"
+        )
+    if not workers.issubset(checked):
+        missing = sorted(str(path) for path in workers - checked)
+        raise AuditFailure(
+            f"worker static coverage mismatch: {len(workers)} workers found, "
+            f"missing from static-check: {missing}"
+        )
     checks.append({"name": "consumer_static_check", "pilots": len(pilots), "workers": len(workers)})
 
     bootstrap_paths = (

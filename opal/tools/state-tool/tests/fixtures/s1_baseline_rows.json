@@ -186,7 +186,7 @@
   {
     "row_id": 15,
     "stage": "CLOSE",
-    "item": "worktree finalize/attribution (조건부: --wt 실행 시)",
+    "item": "worktree finalize/attribution (조건부: --wt 실행 시, 허브 수행)",
     "key": "close.worktree_finalize",
     "status": "pending",
     "status_label": "⬜",
