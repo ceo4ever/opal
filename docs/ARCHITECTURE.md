@@ -167,7 +167,7 @@ OPAL 자산은 Global/Project 2-레이어로 배치되고, 런타임은 세션 �
 | | opal-help (help) | 스킬 카탈로그 & 사용법 안내 (목록 Mode 1 / 개별 안내 Mode 2) |
 | | opal-improve (opim) | PM 개선 루프 — 관찰→분류→기록→보고→승인 5단계 (로컬 `.opal/` / FW `~/.opal/fw-inbox`) |
 | | opal-action-status (opas) | 루프 액션 에이전트 진행 현황 발동층 — 자동 탐지 + 해석 보고 |
-| | opal-workspace-sync | 워크스페이스 Git 일괄 동기화 — 직속 자식 저장소 안전 최신화(clean+ff-only) |
+| | opal-workspace-sync | 워크스페이스 Git 일괄 동기화 — 직속 자식 저장소 안전 최신화(clean+ff-only) + `workspace.json` 선언 대조 보고·승인 후 clone |
 
 ### 에이전트 (Agents)
 
@@ -431,7 +431,7 @@ opal/                                    ← 이 저장소
 │   │   ├── code-scan/                   @header 조회·작성층 + 매니페스트 샤드 분할층
 │   │   ├── opal-cli/                    update/doctor/uninstall/mcp/console 단일 진입점
 │   │   ├── doctor/                      환경 진단 4섹션
-│   │   ├── git-sync-tool/               워크스페이스 git 일괄 안전 최신화 (clean + ff-only)
+│   │   ├── git-sync-tool/               워크스페이스 git 일괄 안전 최신화 (clean + ff-only) + 선언 대조 (sync/init/clone)
 │   │   ├── improve-tool/                PM 개선 루프 record/list/show (scope local/fw)
 │   │   ├── skill-registry/              스킬 레지스트리 CLI (skill-registry.js)
 │   │   ├── tool-scan/                   도구 capability 검색·live 사용법
@@ -477,7 +477,7 @@ opal/                                    ← 이 저장소
 │   │   ├── opal-help/                   스킬 카탈로그·사용법 안내
 │   │   ├── opal-improve/                PM 개선 루프 (opim)
 │   │   ├── opal-action-status/          루프 액션 진행 현황 (opas)
-│   │   └── opal-workspace-sync/         워크스페이스 Git 일괄 동기화
+│   │   └── opal-workspace-sync/         워크스페이스 Git 일괄 동기화 + 선언 대조 보고
 │   ├── agents/                          OPAL 에이전트 (16개: 전문 9 + 범용 7)
 │   │   ├── opal-plan-agent/             전문: PLAN 설계 (advanced)
 │   │   ├── opal-fe-agent/               전문: FE 구현
