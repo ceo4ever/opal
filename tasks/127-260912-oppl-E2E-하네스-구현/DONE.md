@@ -63,7 +63,7 @@
 
 .opal/brain/pages/concept/e2e-integration-gap-pattern.md
 .opal/brain/pages/concept/e2e-frozen-spec-seeding-constraint.md
-.opal/brain/pages/decision/e2e-candidate-order-and-fidelity-ownership.md
+.opal/brain/pages/concept/e2e-candidate-order-and-fidelity-ownership.md
 
 ## 참고
 
@@ -93,3 +93,16 @@
 
 후속 제안 `docs/proposals/e2e-journey-fragment-library.md`는 상태 `검토`로 `docs/proposals/`에 남는다(미적용).
 
+## 회고적 학습 반영 결과 (merge 후)
+
+선언한 3건을 `brain-tool add-page`로 생성·인덱싱했다(`indexed: true`).
+
+| page | type | 내용 |
+|---|---|---|
+| `concept/e2e-integration-gap-pattern` | concept | 워커 자체 테스트는 통과하는데 **연결부만 미검증**인 패턴. 이 태스크에서 4회 관측(driver 미배선 · executor 미배선 · 8연산 3개만 구현 · handoff 미전달)과 방어 수단 3종 |
+| `concept/e2e-frozen-spec-seeding-constraint` | concept | `scenario-lock` 이후 spec 변경 불가 + `scenario-init`이 `red_confirmed`를 초기화 ⇒ **캡슐 안 사후 시나리오 추가가 비가역 차단**. 우회(fixture 자체 작성 · 발행 시점 정규화)와 설계 함의 |
+| `concept/e2e-candidate-order-and-fidelity-ownership` | concept | 후보 순서는 C-DRV-3, 충실도는 `FIDELITY_ORDER`가 단독 소유. 부분 driver를 1순위에 두지 않는 근거와 해제 조건(ops 게이트) |
+
+**세 번째 page의 타입을 `decision` → `concept`으로 조정했다.** `.opal/brain/SCHEMA.md` §2.1이 타입 enum을 `entity`|`concept`|`flow`|`synthesis` 4종으로 확정하므로 `decision`은 유효하지 않다. 위 선언 경로도 실제 경로로 맞췄다.
+
+검사: `brain-tool lint`에서 **이 3건의 이슈 0건**. 전체 26건은 선행 상태이며 `validate`의 `sources` 디렉터리 결손도 선행분이다(이 태스크가 만든 것이 아니다).
