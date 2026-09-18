@@ -25,7 +25,151 @@
 #   v1.2 2026-07-10 컴포넌트 누락·전제 안내를 opal-cli update(재배포)로 교체 — install 서브커맨드 제거에 정합 (055)
 #   v1.3 2026-07-10 18:07 scan 서브명령 신설 — console.config.json 자동 생성/머지 + start 가드 안내 (057)
 #   v1.4 2026-07-13 17:43 log 서브명령 신설 — tail -F 실시간 팔로우(-n N) + 로그 경로 변수 추출 (L2)
+#   v1.5 2026-09-13 Console 프로세스 소유권을 PID 레코드(identity) 기반으로 전환 — start가 $OPAL_HOME/run/console.pid에
+#     6필드 JSON을 기록하고, stop의 전역 프로세스 이름 패턴 종료(ASGI 경로 문자열 기준 광역 종료, RK-1)를 제거해
+#     레코드 identity(app_dir 일치 + kill -0 생존) 검증 후에만 종료. status에 소유권(pid/app_dir 등) 노출 추가.
+#     E2E backend와 사용자 Console이 동일 ASGI 경로 문자열로 뜰 때 서로를 오탐 종료하던 결함 제거
+#     (TASK.md AC-3, CONTRACT.md §A.13·§B.4, PLAN.md D-1~D-18, MV-21) (127-T02)
+#   v1.6 2026-09-14 stop에 PID 재사용 방어 추가 — 레코드 started_at이 마지막 부팅보다 이전이면
+#     생존 여부와 무관하게 기존 판정 #4(stale_record)로 합류시켜 kill 0회로 레코드만 정리한다.
+#     부팅 시각·ISO8601 파싱의 플랫폼 분기는 _console_boot_epoch·_console_record_predates_boot
+#     두 헬퍼에 격리하고, 파싱 실패는 fail-open으로 기존 판정 경로를 유지한다.
+#     (TASK.md AC-15, PLAN.md D-5~D-8) (127-W-2)
 #
+
+# ─── PID 레코드 헬퍼 (§A.13, D-2·D-12) ─────────────────────────
+# 이 함수들은 opal-cli console 서브커맨드와 독립적으로 source·호출 가능해야 한다
+# (test-tool은 이 파일 포맷만 문서 계약으로 공유하며 런타임 의존은 0이다 — CONTRACT §C.1).
+
+# console_record_path <opal_home> — PID 레코드 경로를 stdout으로 출력한다.
+console_record_path() {
+    printf '%s/run/console.pid' "$1"
+}
+
+# _console_pid_value_unsafe <value> — D-2: "·\·제어문자(개행·탭·CR·ESC 등 전체)가 있으면 참(0)을 반환한다.
+# 순수 셸 파서가 이스케이프를 하지 않으므로(F-9(1)), 이 문자들을 포함한 값은 기록 자체를 거부한다.
+# [[ =~ ]]는 파이프를 거치지 않고 전체 문자열을 그대로 정규식과 비교하므로(외부 grep의 줄 단위 소비 문제가 없다),
+# 개행뿐 아니라 ESC 등 모든 제어문자를 [[:cntrl:]] 한 클래스로 검출한다(T4b m-8: 레코드 출력 인젝션 방지 재사용).
+_console_pid_value_unsafe() {
+    local value="$1"
+    case "$value" in
+        *'"'*|*'\'*) return 0 ;;
+    esac
+    if [[ "$value" =~ [[:cntrl:]] ]]; then
+        return 0
+    fi
+    return 1
+}
+
+# _console_pid_sane <value> — T4b B-1: kill(1) 대상으로 안전한 pid인지 검증한다.
+# POSIX kill(1)에서 pid 0은 호출자의 프로세스 그룹 전체, 음수는 그 절대값의 프로세스 그룹 전체를 가리키고
+# pid 1은 init이다. 레코드 identity 판정·종료 대상은 반드시 실제 단일 사용자 프로세스(pid>=2)여야 한다.
+_console_pid_sane() {
+    case "$1" in ''|*[!0-9]*) return 1 ;; esac
+    [ "$1" -ge 2 ] 2>/dev/null
+}
+
+# _console_boot_epoch — 마지막 시스템 부팅 시각을 epoch 초로 stdout에 출력한다. 판정 불가 시 return 1.
+# D-5: 플랫폼 분기(macOS sysctl kern.boottime / Linux /proc/stat btime)를 이 함수 하나에만 격리한다
+# (CONVENTIONS §플랫폼 분기 격리) — 호출부에 하드코딩된 분기를 흩뿌리지 않는다.
+_console_boot_epoch() {
+    local raw sec
+    # macOS/BSD: "{ sec = 1788413634, usec = 147331 } Thu Sep  3 14:33:54 2026"
+    if raw="$(sysctl -n kern.boottime 2>/dev/null)" && [[ -n "$raw" && "$raw" == *"sec = "* ]]; then
+        sec="${raw#*sec = }"
+        sec="${sec%%,*}"
+        sec="${sec%% *}"
+        case "$sec" in
+            ''|*[!0-9]*) : ;;
+            *) printf '%s' "$sec"; return 0 ;;
+        esac
+    fi
+    # Linux: /proc/stat 의 "btime <epoch>" 줄
+    if [[ -r /proc/stat ]]; then
+        sec="$(sed -n 's/^btime[[:space:]][[:space:]]*\([0-9][0-9]*\).*/\1/p' /proc/stat 2>/dev/null | head -1)"
+        case "$sec" in
+            ''|*[!0-9]*) : ;;
+            *) printf '%s' "$sec"; return 0 ;;
+        esac
+    fi
+    return 1
+}
+
+# _console_record_predates_boot <started_at> — D-6·D-7: 레코드의 started_at이 마지막 부팅보다
+# 이전이면 참(0)을 반환한다. 리부팅으로 커널 pid 공간이 초기화된 뒤에는 레코드의 pid를 지금 점유한
+# 프로세스가 임의의 타인일 수 있으므로(PID 재사용), 이런 레코드는 생존 여부와 무관하게 stale로 본다.
+# D-8 fail-open: 부팅 시각이나 started_at을 해석할 수 없으면 참을 반환하지 않는다(return 1) —
+# stale로 오판정해 레코드를 지우는 대신 기존 판정 경로(#4~#6)를 그대로 유지한다.
+# started_at 파싱도 플랫폼 분기(BSD date -j -f / GNU date -d)를 이 함수 안에만 둔다.
+_console_record_predates_boot() {
+    local value="$1" boot rec
+    [[ -n "$value" ]] || return 1
+    boot="$(_console_boot_epoch)" || return 1
+
+    # console_write_pid_record 가 쓰는 포맷: date +%Y-%m-%dT%H:%M:%S%z
+    rec="$(date -j -f '%Y-%m-%dT%H:%M:%S%z' "$value" +%s 2>/dev/null)" \
+        || rec="$(date -d "$value" +%s 2>/dev/null)" \
+        || return 1
+    case "$rec" in ''|*[!0-9]*) return 1 ;; esac
+
+    [ "$rec" -lt "$boot" ] 2>/dev/null
+}
+
+# console_write_pid_record <opal_home> <app_dir> <host> <port> <pid>
+# D-12: 값 제약 위반(따옴표·역슬래시·제어문자) 또는 쓰기 실패 시 return 1 — 파일을 만들지 않는다(D-2·fail-safe).
+# T4b m-5·m-6: run/ 디렉터리 0700 생성 + 심볼릭 링크 대상 거부 + tmp 파일 경유 원자적 교체 + 레코드 파일 0600.
+console_write_pid_record() {
+    local opal_home="$1" app_dir="$2" host="$3" port="$4" pid="$5"
+
+    if _console_pid_value_unsafe "$opal_home" || _console_pid_value_unsafe "$app_dir" \
+        || _console_pid_value_unsafe "$host"; then
+        return 1
+    fi
+    _console_pid_sane "$pid" || return 1
+    case "$port" in
+        ''|*[!0-9]*) return 1 ;;
+    esac
+
+    local run_dir="$opal_home/run"
+    mkdir -p -m 700 "$run_dir" 2>/dev/null || return 1
+
+    local record_path tmp_path started_at
+    record_path="$(console_record_path "$opal_home")"
+    # 레코드 경로가 심볼릭 링크면(예: /tmp 경쟁으로 다른 경로를 가리키도록 선점) 쓰지 않는다.
+    [[ -L "$record_path" ]] && return 1
+    tmp_path="${record_path}.tmp.$$"
+    started_at="$(date +%Y-%m-%dT%H:%M:%S%z)"
+
+    printf '{"pid": %s, "opal_home": "%s", "app_dir": "%s", "host": "%s", "port": %s, "started_at": "%s"}\n' \
+        "$pid" "$opal_home" "$app_dir" "$host" "$port" "$started_at" \
+        > "$tmp_path" 2>/dev/null || { rm -f "$tmp_path" 2>/dev/null; return 1; }
+    chmod 600 "$tmp_path" 2>/dev/null
+    mv -f "$tmp_path" "$record_path" 2>/dev/null || { rm -f "$tmp_path" 2>/dev/null; return 1; }
+    return 0
+}
+
+# console_read_pid_field <content> <field> — 레코드 파일을 1회 읽은 $content 문자열에서 필드값을 추출해
+# stdout으로 출력한다. 미발견 시 return 1. T4b M-1: 호출자가 파일을 1회만 읽어 스냅샷으로 넘기게 해
+# 여러 필드를 각각 재오픈하며 발생하던 TOCTOU(레코드가 그 사이 교체되는) 창을 닫는다.
+# T4b m-4: field는 명시 allowlist만 허용 — sed 스크립트에 임의 문자열이 보간되지 않는다.
+# writer가 이스케이프를 하지 않으므로(D-2) 이 reader도 언이스케이프를 하지 않는다 — 바이트 대칭.
+console_read_pid_field() {
+    local content="$1" field="$2" val
+    case "$field" in
+        pid|port)
+            val="$(printf '%s\n' "$content" | sed -n "s/.*\"$field\"[[:space:]]*:[[:space:]]*\([0-9][0-9]*\).*/\\1/p" 2>/dev/null | head -1)"
+            ;;
+        opal_home|app_dir|host|started_at)
+            val="$(printf '%s\n' "$content" | sed -n "s/.*\"$field\"[[:space:]]*:[[:space:]]*\"\\([^\"]*\\)\".*/\\1/p" 2>/dev/null | head -1)"
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+    [[ -n "$val" ]] || return 1
+    printf '%s' "$val"
+    return 0
+}
 
 # ─── console 서브커맨드 ───────────────────────────────────────
 
@@ -50,9 +194,31 @@ cmd_console() {
                 info "먼저 스캔을 실행하세요: opal-cli console scan <프로젝트-기준경로>"
             fi
 
-            # 이미 기동 중인지 확인
+            # D-8: 3분기 — ① 레코드 기반 "이미 실행 중" ② 레코드 없이 응답(구버전 daemon) ③ 정상 기동
+            local record_path
+            record_path="$(console_record_path "$opal_home")"
+            local pid=""
+            local app_dir=""
+            if [[ -f "$record_path" ]]; then
+                local record_content
+                record_content="$(cat "$record_path" 2>/dev/null)"
+                pid="$(console_read_pid_field "$record_content" pid)" || pid=""
+                app_dir="$(console_read_pid_field "$record_content" app_dir)" || app_dir=""
+            fi
+
+            # ① 레코드 존재 + 생존 + app_dir 일치 → 이미 실행 중 (T4b B-1: pid 0/1은 kill -0 대상에서 배제)
+            if [[ -n "$pid" && -n "$app_dir" ]] \
+                && _console_pid_sane "$pid" \
+                && [[ "$app_dir" == "$dashboard_server" ]] \
+                && kill -0 "$pid" 2>/dev/null; then
+                warn "OPAL Console이 이미 실행 중입니다 (PID: $pid)."
+                return 0
+            fi
+
+            # ② 레코드 없음·stale·불일치인데 health가 응답 — 구버전 daemon(TRD.md:235, H-1)
             if curl -s --max-time 2 "$health_url" >/dev/null 2>&1; then
-                warn "OPAL Console이 이미 ${host}:${port} 에서 실행 중입니다."
+                warn "PID 레코드 없이 ${host}:${port}가 응답 중입니다 — 이 프로세스는 opal-cli가 소유하지 않습니다."
+                info "이 버전은 PID 레코드로 소유 프로세스만 종료합니다. 이전 버전에서 기동한 데몬은 레코드가 없어 종료되지 않습니다 — 'lsof -ti tcp:7823' 로 확인 후 수동 종료하고 'opal-cli console start' 로 재기동하세요."
                 return 0
             fi
 
@@ -68,6 +234,16 @@ cmd_console() {
                 exit 1
             fi
 
+            # ③ 정상 기동 — D-12(가): nohup 이전에 레코드 값 제약(D-2)을 사전 검증한다.
+            # 위반 시 기동하지 않는다 — 레코드 없이 데몬만 뜨면 이후 stop이 영구 stale 경로로 밀린다.
+            # T4b M-3: writer(console_write_pid_record)가 실제로 쓰는 판정(_console_pid_value_unsafe, 제어문자 포함)과
+            # 반드시 같은 기준을 여기서도 적용한다 — 사전검사가 더 느슨하면 그 틈으로 뜬 데몬이 레코드 없이 고아가 된다.
+            if [[ "$opal_home" == *'"'* || "$dashboard_server" == *'"'* ]] \
+                || _console_pid_value_unsafe "$opal_home" || _console_pid_value_unsafe "$dashboard_server"; then
+                error "OPAL_HOME 또는 dashboard-server 경로에 허용되지 않는 문자(\"·\\·제어문자)가 포함되어 있습니다: $opal_home / $dashboard_server"
+                exit 1
+            fi
+
             info "OPAL Console 기동 중 (${host}:${port})..."
             # 백그라운드 기동 — host=127.0.0.1 바인딩(H-7), nohup으로 터미널 종료 후에도 유지
             # --app-dir 는 패키지 루트(dashboard-server/)를 가리킴
@@ -78,29 +254,139 @@ cmd_console() {
                 --host "$host" \
                 --port "$port" \
                 >"$log_file" 2>&1 &
-            success "OPAL Console 기동됨 (PID: $!, 로그: $log_file)"
+            local pid=$!
+            if ! console_write_pid_record "$opal_home" "$dashboard_server" "$host" "$port" "$pid"; then
+                warn "PID 레코드를 기록하지 못했습니다 — 이 데몬은 'opal-cli console stop'으로 종료되지 않습니다."
+                info "이 버전은 PID 레코드로 소유 프로세스만 종료합니다. 이전 버전에서 기동한 데몬은 레코드가 없어 종료되지 않습니다 — 'lsof -ti tcp:7823' 로 확인 후 수동 종료하고 'opal-cli console start' 로 재기동하세요."
+            fi
+            success "OPAL Console 기동됨 (PID: $pid, 로그: $log_file)"
+            info "pid_record_path=$record_path"
+            info "pid=$pid host=$host port=$port log_file=$log_file"
             info "상태 확인: opal-cli console status"
             info "로그 팔로우: opal-cli console log"
             info "브라우저 열기: opal-cli console open"
             ;;
 
         stop)
-            if pkill -f "dashboard.backend.main:app" 2>/dev/null; then
-                success "OPAL Console 데몬 종료됨."
-            else
-                warn "실행 중인 OPAL Console 데몬을 찾을 수 없습니다."
+            # D-11/§변경 후 stop 판정표(PLAN.md) — 전역 이름 패턴 종료 제거, 레코드 identity 기반 종료
+            local record_path
+            record_path="$(console_record_path "$opal_home")"
+
+            if [[ ! -f "$record_path" ]]; then
+                # 판정표 #1
+                warn "실행 중인 OPAL Console 데몬 레코드를 찾을 수 없습니다: $record_path"
+                info "이 버전은 PID 레코드로 소유 프로세스만 종료합니다. 이전 버전에서 기동한 데몬은 레코드가 없어 종료되지 않습니다 — 'lsof -ti tcp:7823' 로 확인 후 수동 종료하고 'opal-cli console start' 로 재기동하세요."
+                echo "stopped=false pid=- reason=no_record"
+                return 0
             fi
+
+            local record_content
+            record_content="$(cat "$record_path" 2>/dev/null)"
+            local rec_pid rec_app_dir rec_started_at
+            rec_pid="$(console_read_pid_field "$record_content" pid)" || rec_pid=""
+            rec_app_dir="$(console_read_pid_field "$record_content" app_dir)" || rec_app_dir=""
+            # D-6: 부팅 이전 레코드 판정용. 파싱 실패(빈 값 포함)는 fail-open으로 기존 경로를 유지한다(D-8).
+            rec_started_at="$(console_read_pid_field "$record_content" started_at)" || rec_started_at=""
+
+            # 판정표 #2 — 파싱 실패 또는 pid가 kill(1) 대상으로 안전하지 않음(T4b B-1: 0/1/음수/비정수는
+            # unreadable_record로 합류시킨다 — 새 분기를 만들지 않는다): 레코드 보존, kill 0회
+            if [[ -z "$rec_pid" || -z "$rec_app_dir" ]] || ! _console_pid_sane "$rec_pid"; then
+                warn "PID 레코드를 해석할 수 없습니다: $record_path"
+                echo "stopped=false pid=- reason=unreadable_record"
+                return 0
+            fi
+
+            if [[ "$rec_app_dir" != "$dashboard_server" ]]; then
+                # 판정표 #3 — identity 불일치: 레코드 보존, kill 0회
+                warn "레코드의 app_dir가 현재 OPAL_HOME과 일치하지 않습니다: $rec_app_dir (기대: $dashboard_server)"
+                echo "stopped=false pid=- reason=identity_mismatch"
+                return 0
+            fi
+
+            # 판정표 #4 합류 — D-6·D-7 PID 재사용 방어: 레코드가 마지막 부팅 이전에 기록됐다면
+            # 그 pid를 지금 점유한 프로세스는 리부팅 후 재할당된 타인이다(레코드의 데몬은 부팅과 함께
+            # 이미 사라졌다). 생존 여부를 묻지 않고 stale로 합류시킨다 — 새 reason 토큰을 만들지 않는다.
+            # install-mac.sh가 이 경로를 무인 호출하므로, 리부팅 후 첫 설치가 임의 사용자 프로세스를
+            # 종료하지 않게 하는 것이 이 분기의 목적이다(AC-15).
+            if _console_record_predates_boot "$rec_started_at"; then
+                warn "레코드가 마지막 부팅 이전에 기록되었습니다 (PID: $rec_pid) — PID 재사용 가능성이 있어 종료하지 않고 stale 레코드를 정리합니다."
+                rm -f "$record_path"
+                echo "stopped=false pid=$rec_pid reason=stale_record"
+                return 0
+            fi
+
+            if ! kill -0 "$rec_pid" 2>/dev/null; then
+                # 판정표 #4 — stale: 레코드 삭제, kill 0회
+                warn "레코드의 프로세스가 이미 종료되어 있습니다 (PID: $rec_pid) — stale 레코드를 정리합니다."
+                rm -f "$record_path"
+                echo "stopped=false pid=$rec_pid reason=stale_record"
+                return 0
+            fi
+
+            # 판정표 #5/#6 — identity 일치 + 생존: SIGTERM 후 최대 5초 폴링(D-6)
+            kill "$rec_pid" 2>/dev/null || true
+            local waited=0
+            while kill -0 "$rec_pid" 2>/dev/null; do
+                if [[ "$waited" -ge 5 ]]; then
+                    warn "종료 신호를 보냈으나 아직 실행 중입니다 (PID: $rec_pid)"
+                    echo "stopped=false pid=$rec_pid reason=terminate_timeout"
+                    return 0
+                fi
+                sleep 1
+                waited=$((waited + 1))
+            done
+
+            rm -f "$record_path"
+            success "OPAL Console 데몬 종료됨 (PID: $rec_pid)."
+            echo "stopped=true pid=$rec_pid"
             ;;
 
         status)
-            local response
+            local record_path
+            record_path="$(console_record_path "$opal_home")"
+            local response curl_rc health_ok=1
             response="$(curl -s --max-time 5 "$health_url" 2>/dev/null)"
-            if [[ $? -eq 0 && -n "$response" ]]; then
+            curl_rc=$?
+            if [[ "$curl_rc" -eq 0 && -n "$response" ]]; then
                 success "OPAL Console 실행 중 (${health_url})"
                 echo "$response"
             else
                 warn "OPAL Console 응답 없음 (${health_url})"
                 info "기동 방법: opal-cli console start"
+                health_ok=0
+            fi
+
+            # D-10: health 성공·실패 양 분기 모두 소유권 레코드 줄을 출력한다. exit code만 health가 결정한다.
+            if [[ -f "$record_path" ]]; then
+                local record_content
+                record_content="$(cat "$record_path" 2>/dev/null)"
+                local rec_pid rec_app_dir rec_opal_home rec_host rec_port rec_started_at
+                rec_pid="$(console_read_pid_field "$record_content" pid)" || rec_pid=""
+                rec_app_dir="$(console_read_pid_field "$record_content" app_dir)" || rec_app_dir=""
+                rec_opal_home="$(console_read_pid_field "$record_content" opal_home)" || rec_opal_home=""
+                rec_host="$(console_read_pid_field "$record_content" host)" || rec_host=""
+                rec_port="$(console_read_pid_field "$record_content" port)" || rec_port=""
+                rec_started_at="$(console_read_pid_field "$record_content" started_at)" || rec_started_at=""
+
+                # T4b B-1: pid 0/1/음수/비정수는 생존 판정에서 제외. T4b m-8: 출력 대상 문자열 필드를
+                # 표시 직전 재검증해 수기 편집된 레코드의 제어문자(터미널 출력 인젝션)가 그대로 echo되지 않게 한다.
+                if [[ -n "$rec_pid" && -n "$rec_app_dir" ]] \
+                    && _console_pid_sane "$rec_pid" \
+                    && ! _console_pid_value_unsafe "$rec_app_dir" \
+                    && ! _console_pid_value_unsafe "$rec_opal_home" \
+                    && ! _console_pid_value_unsafe "$rec_host" \
+                    && ! _console_pid_value_unsafe "$rec_started_at" \
+                    && kill -0 "$rec_pid" 2>/dev/null; then
+                    info "소유 프로세스: pid=$rec_pid app_dir=$rec_app_dir"
+                    info "opal_home=$rec_opal_home host=$rec_host port=$rec_port started_at=$rec_started_at"
+                else
+                    warn "stale 레코드: pid=${rec_pid:--} (종료됨이거나 값이 유효하지 않음)"
+                fi
+            else
+                warn "PID 레코드 없음: $record_path — 이 Console은 opal-cli가 소유하지 않습니다"
+            fi
+
+            if [[ "$health_ok" -eq 0 ]]; then
                 exit 1
             fi
             ;;

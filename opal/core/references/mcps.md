@@ -9,7 +9,7 @@ MCP 의존성이 있는 스킬 목록. 스킬 호출 전 해당 MCP가 등록되
 
 | 스킬명 | 필요 MCP | 용도 | 미등록 시 동작 |
 |--------|----------|------|--------------|
-| web-to-markdown (wtm) | `playwright` | browser 모드 / Phase 2 브라우저 렌더링 | Phase 1(WebFetch) 성공 시 정상 완료. Phase 2 진입 필요 시 등록 안내 후 중단 |
+| web-to-markdown (wtm) | `playwright` (opt-in) | Phase 2 브라우저 렌더링 폴백 | Phase 1(cmux-tool) 성공 시 정상 완료. Phase 2 진입 필요 시 등록 안내 후 중단 |
 
 ## 등록된 MCP 서버
 

@@ -1,0 +1,422 @@
+{
+  "schema_version": "1.1",
+  "project_title": "OPAL 범용 E2E 하네스",
+  "mode": "agentic",
+  "created_at": "2026-09-12 21:54",
+  "updated_at": "2026-09-13 09:28",
+  "goal": "제안서 태스크 2~9를 구현해, 격리된 소스 트리에서 Browser·API·Hybrid·Collaborative·Manual E2E를 공통 판정·증적 계약으로 실행하고 Playwright 기본 설치를 제거한다",
+  "tasks": [
+    {
+      "id": "T01",
+      "title": "실행 스켈레톤 — 주소 주입·CORS 포함, 임대 포트로 Console BE/FE 기동 + FE→BE 실 호출 1건 관통",
+      "slice": "E2E 하네스의 최소 실행 환경을 하나의 수직 슬라이스로 세운다. FE 주소 주입(api.ts + vite-env.d.ts + .env.development 3파일 동시)과 backend CORS 환경 변수 추가 허용이 없으면 FE→BE 관통 자체가 성립하지 않으므로 같은 슬라이스에 둔다. 임대한 포트로 backend(uvicorn)와 frontend(vite dev)를 소스 트리에서 기동하고, health gate 통과 후 브라우저 화면이 그 backend를 실제 호출해 응답받는 것까지 관통한다. [포트 경계] T01은 CONTRACT §A.7 lease record 없이 가용 포트 bind와 strict-port 기동까지만 한다 — allocator lock·lease record·stale 회수·worktree 동시성 일반화는 T03이 소유한다. 이후 전 태스크의 real-http/real-usage 검증이 이 환경 위에서 실행된다.",
+      "acceptance_criteria": [
+        "API_BASE_URL이 import.meta.env.VITE_API_BASE_URL ?? \"\" 형태이고 base에 /api 접두사가 없으며, vite-env.d.ts 추가로 npm run typecheck가 통과하고 .env.development로 npm run dev 개발 흐름이 유지된다",
+        "VITE_API_BASE_URL 미주입 시 빈 문자열 동일 오리진 동작이 유지되어 production/installed 경로가 회귀하지 않는다",
+        "환경 변수로 주입한 frontend origin만 backend 허용 목록에 추가되고, 미주입 시 허용 목록이 변경 전과 동일하며, 와일드카드 전체 허용이 도입되지 않고 allow_credentials=False가 유지된다",
+        "임대한 backend 포트에서 GET /health가 200을 반환하고 OpenAPI 문서 표면이 200으로 노출된다",
+        "임대한 frontend 포트의 vite dev 서버가 그 backend를 가리키고, FE 화면에서 발생한 실제 HTTP 호출 1건이 임대 backend에 도달해 200 응답을 받는다(네트워크 관측 증적 포함)",
+        "기동한 두 프로세스가 run 종료 시 그룹 단위로 회수되고 사용자 7823 Console은 영향받지 않으며 저장소 dist/가 생성·변경되지 않는다"
+      ],
+      "area": "공통",
+      "priority": "P0",
+      "depends": [],
+      "status": "done",
+      "parallel_group": null,
+      "created_at": "2026-09-12 21:54",
+      "done_at": "2026-09-12 23:44",
+      "covers": [
+        "sut-health",
+        "sut-dashboard"
+      ],
+      "note": "8/8 시나리오 pass, real-usage 충족, 회귀 0"
+    },
+    {
+      "id": "T02",
+      "title": "Console 프로세스 소유권 — PID 레코드 전환과 광역 pkill 2지점 제거",
+      "slice": "opal-cli console의 기동·종료·상태를 PID 레코드 기반 identity 검증으로 바꾸고, console.sh:88과 install-mac.sh:1844 두 곳의 pkill -f 패턴 종료를 제거한다. AC-3 양방향 비간섭의 유일한 해결 경로다.",
+      "acceptance_criteria": [
+        "console start가 pid·opal_home·app_dir·host·port·started_at을 담은 PID 레코드를 기록한다",
+        "console stop이 레코드의 pid 생존 + app_dir이 이 OPAL_HOME의 dashboard-server와 일치할 때만 종료하고, 불일치·부재면 아무것도 죽이지 않고 경고로 끝낸다",
+        "console.sh와 install-mac.sh 두 파일 모두에서 pkill -f \"dashboard.backend.main:app\" 문자열이 0건이다",
+        "E2E backend 실행 중 console stop을 호출해도 E2E backend가 살아 있고, E2E 종료 후에도 사용자 Console이 살아 있는 양방향 비간섭 회귀 테스트가 통과한다",
+        "console status가 pid와 app_dir를 출력해 소유권을 관측 가능하게 한다"
+      ],
+      "area": "공통",
+      "priority": "P0",
+      "depends": [
+        "T01"
+      ],
+      "status": "done",
+      "parallel_group": null,
+      "created_at": "2026-09-12 21:54",
+      "done_at": "2026-09-13 09:28",
+      "covers": [
+        "console-start",
+        "console-stop",
+        "console-status"
+      ],
+      "note": "20/20 PASS, 시나리오 14/14 real-usage, 보안 blocker B-1 태스크 내 해소"
+    },
+    {
+      "id": "T03",
+      "title": "Runtime Manager — target 해석·포트 임대·SUT 기동·health·소유 정리와 e2e run CLI",
+      "slice": "lib/e2e 서브패키지를 신설해 target.py(대상 소스 증명)·ports.py(원자적 lockfile 임대와 stale 회수)·process.py(유일 플랫폼 분기)·runtime.py(기동·env 주입·health·로그·종료)·orchestrator.py(run 수명주기·상태 머신)를 구현하고 test-tool e2e run 서브명령으로 노출한다.",
+      "acceptance_criteria": [
+        "source-main·source-worktree·installed 세 target이 각각 지정한 소스 트리의 서버를 기동한다(installed는 사전 준비된 격리 OPAL_HOME 경로를 --opal-home으로 받고 install을 호출하지 않으며, 미준비 시 입력 오류로 거부한다)",
+        "main 1개와 서로 다른 worktree 2개에서 동시에 run을 실행해도 포트·프로세스가 충돌하지 않고 세 run이 독립 종료된다",
+        "run.json에 profile·actors·target·project_root·worktree_root·commit·dirty·urls·executors·candidates·driver_version이 기록된다",
+        "owner_pid가 죽은 lease record를 다음 실행이 회수한다",
+        "run 종료 후 저장소에 신규 추적·미추적 파일이 0건이고 설치본 dashboard-server가 변경되지 않는다",
+        "exit code가 status_to_exit 호출 결과로만 결정되고 신규 exit code를 배정하지 않는다"
+      ],
+      "area": "공통",
+      "priority": "P0",
+      "depends": [
+        "T01",
+        "T02"
+      ],
+      "status": "pending",
+      "parallel_group": null,
+      "created_at": "2026-09-12 21:55",
+      "done_at": null,
+      "covers": [
+        "e2e-run"
+      ]
+    },
+    {
+      "id": "T04",
+      "title": "e2e status·clean 서브명령과 소유 자원 대장 기반 정리",
+      "slice": "owned.json 소유 자원 대장을 기준으로 run 상태 조회와 정리를 제공한다. 패턴 매칭이 아니라 대장 기반으로만 정리하며 user_owned 자원은 제외한다. [병렬 그룹 제외 사유] T03 의존·P1으로 T09·T10과 조건이 같지만 g2에 넣지 않는다 — T04와 T10이 모두 test_tool.py의 e2e 서브파서를 수정하므로 같은 그룹에 두면 동일 파일을 두 워커가 나눠 갖게 된다(dispatch-process Step 1 위반). T10 완료 후 순차 처리한다.",
+      "acceptance_criteria": [
+        "e2e status가 지정 run의 상태·증적 경로·소유 자원을 JSON으로 반환한다",
+        "e2e clean이 owned.json에 등재된 자원만 회수하고 user_owned=true 자원은 건드리지 않는다",
+        "누출된 프로세스·포트가 남으면 cleanup 결과가 infra_error로 승격된다",
+        "정리에 패턴 매칭(pkill 류)을 사용하지 않는다"
+      ],
+      "area": "공통",
+      "priority": "P1",
+      "depends": [
+        "T03",
+        "T10"
+      ],
+      "status": "pending",
+      "parallel_group": null,
+      "created_at": "2026-09-12 21:55",
+      "done_at": null,
+      "covers": [
+        "e2e-status",
+        "e2e-clean"
+      ]
+    },
+    {
+      "id": "T05",
+      "title": "Browser driver·session 계약 + driver manifest + 증적 수집·redaction 관문",
+      "slice": "driver 8연산의 JSON 입출력 계약, session resolver와 후보 순서, capability probe 소비와 probe.json 기록, drivers/manifest.json(minimum_version·tested_range·ci_pin) 신설, evidence.py 단일 관문과 redaction.py를 구현한다. e2e_adapter.py에 wait_kind 발행 경로를 추가한다.",
+      "acceptance_criteria": [
+        "probe·open·snapshot·act·wait·assert·capture·close 8연산이 계약된 최소 출력을 반환하고 probe 결과가 probe.json에 후보별로 기록된다",
+        "wait 연산이 wait_kind를 필수 인자로 받고, navigation_ready·transport는 infra_error, assertion_condition timeout은 fail로 판정된다",
+        "legacy fallback·escalated 결과가 제안서 7.9 표대로 신규 상태로 변환되고 reason 없는 generic fallback은 infra_error가 된다",
+        "drivers/manifest.json이 semver 비교로 판정되고, minimum_version 미만 binary는 probe 없이 제외되어 candidates[]에 excluded_by=minimum_version과 version이 기록된다",
+        "모든 증적 쓰기가 evidence.py를 통과하고, Authorization·Cookie·Set-Cookie·query secret이 저장 전 마스킹되며, redaction 실패 시 원문을 남기지 않고 run이 infra_error로 판정된다"
+      ],
+      "area": "공통",
+      "priority": "P0",
+      "depends": [
+        "T03"
+      ],
+      "status": "pending",
+      "parallel_group": "g2",
+      "created_at": "2026-09-12 21:55",
+      "done_at": null,
+      "covers": [
+        "driver-probe",
+        "driver-open",
+        "driver-snapshot",
+        "driver-act",
+        "driver-wait",
+        "driver-assert",
+        "driver-capture",
+        "driver-close"
+      ]
+    },
+    {
+      "id": "T06",
+      "title": "판정 부정 검증 — 증적·assertion 누락 시 pass 불가 집행",
+      "slice": "R-14/AC-6의 부정 케이스를 통합 단계까지 미루지 않고 이 시점에서 고정한다. 필수 증적이나 assertion을 제거한 실행이 어떤 경로로도 pass·real-usage가 되지 않고 누락 항목이 결과에 명시되는지 부정 테스트로 못박는다.",
+      "acceptance_criteria": [
+        "필수 증적 5종 중 하나를 제거한 run이 pass가 되지 않고 missing_evidence에 항목이 명시된다",
+        "assertion 결과가 비어 있는 run이 pass가 되지 않는다",
+        "expected 또는 actual 키가 없는 assertion이 거부된다",
+        "증적이 불완전한 run이 real-usage 충실도로 기록되지 않는다",
+        "판정이 validate_pass_requirements 단일 관문을 통과하며 우회 경로가 없음을 테스트가 고정한다"
+      ],
+      "area": "공통",
+      "priority": "P0",
+      "depends": [
+        "T03"
+      ],
+      "status": "pending",
+      "parallel_group": "g2",
+      "created_at": "2026-09-12 21:55",
+      "done_at": null,
+      "covers": []
+    },
+    {
+      "id": "T07",
+      "title": "agent-browser 공용 driver — orca-managed·standalone 단일 adapter",
+      "slice": "Orca 번들과 standalone agent-browser를 하나의 driver adapter로 구현하고 세션 소유권 모드로만 구분한다. run 전용 page/profile 격리, explicit config와 allowed domains, 버전 해석 4순위를 집행한다.",
+      "acceptance_criteria": [
+        "Orca 설치 환경에서 실제 UI 조작과 semantic assertion을 포함한 시나리오가 pass한다",
+        "run이 만든 browserPageId와 profile id만 정리되고 같은 worktree의 다른 탭은 남는다",
+        "Orca runtime 부재가 provider_unavailable로 분류되어 standalone mode로 전환되고 같은 시나리오가 pass한다",
+        "standalone 실행이 생성된 explicit config를 --config 절대경로로 지정하고 allowed domains를 임대 localhost와 선언된 외부 origin으로 제한한다",
+        "선택·제외된 전 후보의 binary path·version·resolution_source·제외 사유가 candidates[]에 기록되고, tested range 밖 binary의 probe 실패는 조용한 fallback 없이 infra_error로 승격된다"
+      ],
+      "area": "공통",
+      "priority": "P1",
+      "depends": [
+        "T05"
+      ],
+      "status": "pending",
+      "parallel_group": "g3",
+      "created_at": "2026-09-12 21:55",
+      "done_at": null,
+      "covers": []
+    },
+    {
+      "id": "T08",
+      "title": "cmux driver 이전 — mode A 소유권 유지 + assertion 필수화",
+      "slice": "e2e_adapter.py의 cmux 로직을 drivers/cmux.py로 이관하고 공통 driver 계약에 맞춘다. open·navigate 성공만으로 pass가 되지 않게 하고, 미지원 capability는 none으로 명시한다.",
+      "acceptance_criteria": [
+        "cmux driver가 공통 8연산 계약으로 동작하고 기존 error code 소비 방식(자체 환경 재구현 없음)이 유지된다",
+        "open·navigate만 수행한 결과가 pass로 판정되지 않는다",
+        "자동 E2E 기본이 mode A로 제한되고 user_owned=true surface는 정리되지 않는다",
+        "미지원 capability가 none으로 명시되어 해당 증적을 요구하는 시나리오가 실행 전에 걸러진다",
+        "기존 integration 경로 회귀 테스트가 통과한다"
+      ],
+      "area": "공통",
+      "priority": "P1",
+      "depends": [
+        "T05"
+      ],
+      "status": "pending",
+      "parallel_group": "g3",
+      "created_at": "2026-09-12 21:55",
+      "done_at": null,
+      "covers": []
+    },
+    {
+      "id": "T09",
+      "title": "API executor — 실제 SUT 호출·후속 상태 assertion·owned fixture 정리",
+      "slice": "executors/api.py와 scenario_adapter.py를 구현해 API profile E2E를 성립시킨다. 모의 서버 대체를 금지하고 request/response 증적을 redaction 관문으로 저장한다.",
+      "acceptance_criteria": [
+        "api profile 시나리오가 브라우저 없이 실제 SUT를 호출하고 status·응답 필드·후속 observable state까지 검증해 pass한다",
+        "request method·URL·redacted headers/body·timeout이 action log에 기록된다",
+        "retry가 명시된 transport 오류에만 적용되고 제품 4xx/5xx를 숨기지 않는다",
+        "setup·cleanup API와 검증 대상 API가 구분되어 기록된다",
+        "run-id로 namespace된 fixture만 정리되고 외부 데이터는 건드리지 않는다"
+      ],
+      "area": "공통",
+      "priority": "P1",
+      "depends": [
+        "T03"
+      ],
+      "status": "pending",
+      "parallel_group": "g2",
+      "created_at": "2026-09-12 21:55",
+      "done_at": null,
+      "covers": [
+        "api-executor-probe",
+        "api-executor-prepare",
+        "api-executor-act",
+        "api-executor-assert",
+        "api-executor-capture",
+        "api-executor-cleanup"
+      ]
+    },
+    {
+      "id": "T10",
+      "title": "Human handoff executor — pause·resume·timeout·구조화 증적",
+      "slice": "executors/human.py와 e2e resume 라우팅을 구현한다. scenario.py의 기존 resume 검증을 재사용하고 변경하지 않는다.",
+      "acceptance_criteria": [
+        "collaborative 시나리오가 awaiting_human으로 일시 정지하며 exit 20을 반환하고 run journal과 resume token이 보존된다",
+        "handoff가 instruction·expected_observation·required_evidence·timeout_seconds·resume_token·server_policy·submission_path를 포함한 8필드로 발행된다",
+        "동일 run-id와 resume token으로 재개되어 verifier가 최종 상태를 결정한다",
+        "사용자 제출만으로는 pass가 되지 않고 자동 verifier 통과가 필요하다",
+        "timeout이 fail이 아니라 blocked로 종료되고 토큰 만료 여부가 기록된다",
+        "scenario.py의 resume 검증 코드가 변경되지 않는다"
+      ],
+      "area": "공통",
+      "priority": "P1",
+      "depends": [
+        "T03"
+      ],
+      "status": "pending",
+      "parallel_group": "g2",
+      "created_at": "2026-09-12 21:55",
+      "done_at": null,
+      "covers": [
+        "human-executor-handoff",
+        "human-executor-resume",
+        "e2e-resume"
+      ]
+    },
+    {
+      "id": "T11",
+      "title": "Hybrid profile 연결과 surface fidelity gate",
+      "slice": "API setup → Browser 핵심 행동 → API/state verifier 순서를 연결하고, 핵심 UI 행동을 API 호출로 대체하는 시나리오를 실행 전·후 두 지점에서 거부한다.",
+      "acceptance_criteria": [
+        "hybrid 시나리오가 핵심 UI 결과와 연결된 API/state 결과를 모두 검증해 pass한다",
+        "browser profile 시나리오에 browser step이 없으면 실행 전에 executor contract mismatch로 거부된다",
+        "핵심 UI 행동을 API로 대체한 시나리오가 real-usage로 승격되지 않는다",
+        "setup·cleanup 용도의 API 호출은 우회로 판정되지 않는다"
+      ],
+      "area": "공통",
+      "priority": "P1",
+      "depends": [
+        "T07",
+        "T09"
+      ],
+      "status": "pending",
+      "parallel_group": null,
+      "created_at": "2026-09-12 21:55",
+      "done_at": null,
+      "covers": []
+    },
+    {
+      "id": "T12",
+      "title": "SUT HTTP 표면 전수 E2E 시나리오 스위트 (통합)",
+      "slice": "surfaces.json의 SUT HTTP 표면 16건을 실제 임대 SUT 위에서 관통하는 시나리오를 작성·실행해 표면 커버리지를 GREEN으로 만든다. 병렬 그룹 g2·g3 산출물(driver·API·human)의 머지 후 계약 conformance와 회귀를 담당한다.",
+      "acceptance_criteria": [
+        "surfaces.json의 http 표면 전건이 실제 SUT 호출로 관통되고 scenario-conformance가 all_surfaces_green을 반환한다",
+        "각 시나리오가 assertion expected/actual과 공통 필수 증적 5종을 남긴다",
+        "brain 계열처럼 외부 의존이 있는 표면은 blocked 사유가 구조화되어 기록되고 pass로 승격되지 않는다",
+        "g2·g3 병렬 그룹 산출물 머지 후 기존 단위 테스트 회귀가 0건이다"
+      ],
+      "area": "통합",
+      "priority": "P1",
+      "depends": [
+        "T08",
+        "T10",
+        "T11"
+      ],
+      "status": "pending",
+      "parallel_group": null,
+      "created_at": "2026-09-12 21:56",
+      "done_at": null,
+      "covers": [
+        "sut-dashboard",
+        "sut-projects-list",
+        "sut-projects-detail",
+        "sut-projects-doc",
+        "sut-tasks-list",
+        "sut-tasks-detail",
+        "sut-tasks-artifact",
+        "sut-memory",
+        "sut-doctor",
+        "sut-brain-auth",
+        "sut-brain-status",
+        "sut-brain-prime",
+        "sut-brain-query",
+        "sut-brain-job",
+        "sut-config-get",
+        "sut-config-prewarm"
+      ]
+    },
+    {
+      "id": "T13",
+      "title": "Playwright 소비자 이전 — 9개 area + 추가 발견 7건",
+      "slice": "제안서 8.4의 9개 migration area와 TRD가 추가 발견한 7건(templates 기본 생성·tool-scan 강제 테스트·doctor 파서 픽스처·opsdd 지정·SECURITY·문서 레지스트리·에이전트 역량 서술)에서 Playwright 소비자를 이전하거나 명시적 opt-in으로 격리한다. real-usage·L3b 정의를 test-tool fidelity 계약 참조로 대체한다.",
+      "acceptance_criteria": [
+        "9개 area와 추가 7건 전건에 대해 이전 결과(이전·opt-in·범위제외)가 문서로 확인된다",
+        "tool-scan 회귀 테스트의 문구 강제가 같은 작업 단위에서 갱신되어 RED가 발생하지 않는다",
+        "templates/test-tools.yaml이 신규 프로젝트에 playwright 후보를 기본 생성하지 않는다",
+        "oppl·oppd 문서에 real-usage·L3b를 자체 정의하는 문장이 0건이고 전부 fidelity 계약 참조다",
+        "web-to-markdown과 MCP 등록 경로가 계속 동작한다",
+        "community skill catalog 항목은 범위 제외로 명시되고 변경되지 않는다"
+      ],
+      "area": "공통",
+      "priority": "P2",
+      "depends": [
+        "T07",
+        "T08"
+      ],
+      "status": "pending",
+      "parallel_group": null,
+      "created_at": "2026-09-12 21:56",
+      "done_at": null,
+      "covers": []
+    },
+    {
+      "id": "T14",
+      "title": "Playwright 기본 설치 제거와 clean install 회귀 검증",
+      "slice": "requirements.txt·install-mac.sh·windows.ps1·doctor에서 Playwright package와 Chromium 기본 설치를 제거한다. 기존 사용자 캐시 제거가 사용자 소유 자산을 삭제하지 않도록 migration을 제공한다.",
+      "acceptance_criteria": [
+        "requirements.txt에 playwright 기본 의존성이 없고 install 경로가 Chromium을 자동 설치하지 않는다",
+        "clean install → update → doctor 경로에서 회귀가 0건이다",
+        "doctor의 의존성·공식 MCP 진단에서 playwright 오탐이 0건이다",
+        "기존 사용자 캐시 제거가 사용자 소유 자산을 삭제하지 않는다",
+        "제거 후에도 명시적 opt-in driver 경로가 동작한다"
+      ],
+      "area": "공통",
+      "priority": "P2",
+      "depends": [
+        "T13"
+      ],
+      "status": "pending",
+      "parallel_group": null,
+      "created_at": "2026-09-12 21:56",
+      "done_at": null,
+      "covers": []
+    },
+    {
+      "id": "T15",
+      "title": "전체 통합 검증 — 수용 기준 AC-1~AC-14 관통과 문서 갱신 (통합)",
+      "slice": "전 병렬 그룹 산출물을 머지한 상태에서 TASK.md AC-1~AC-14를 실제 실행으로 관통하고, 코드 변경이 바꾼 현재 사실을 문서 레지스트리에 반영한다.",
+      "acceptance_criteria": [
+        "AC-1~AC-14 전건이 실제 실행 결과로 관측되어 증적과 함께 기록된다",
+        "backlog-tool done-check가 all_done을 반환하고 scenario-conformance가 all_surfaces_green을 반환한다",
+        "전 단위 테스트가 통과하고 회귀 0건이다",
+        "docs/ARCHITECTURE.md·docs/CONVENTIONS.md·docs/PROJECT.md·test-tool README·opal-cli README가 변경된 현재 사실로 갱신된다",
+        "브레인 페이지 e2e-cmux-first-playwright-fallback의 대체 처리가 완료된다"
+      ],
+      "area": "통합",
+      "priority": "P2",
+      "depends": [
+        "T04",
+        "T06",
+        "T12",
+        "T14"
+      ],
+      "status": "pending",
+      "parallel_group": null,
+      "created_at": "2026-09-12 21:56",
+      "done_at": null,
+      "covers": []
+    },
+    {
+      "id": "T16",
+      "title": "PID 재사용 방어 — 부팅 시각 기준 stale 판정과 .oppl-run gitignore",
+      "slice": "T02가 남긴 BLOCKED-3을 닫는다. PID 레코드는 stop 실행 시에만 삭제되므로 크래시·OOM·리부팅 시 무기한 잔존하고, 리부팅 후 PID 공간이 재할당되면 기록된 pid가 무관한 사용자 프로세스를 가리킨다. 이때 app_dir은 레코드 자기 필드라 당연히 일치하고 kill -0도 성공해 판정표 #5(종료)로 직행한다. install-mac.sh가 이 경로를 무인 호출하므로 리부팅 후 첫 설치가 임의 사용자 프로세스를 죽일 수 있다. started_at은 이미 필수 필드로 기록만 되고 읽히지 않으므로 재료가 이미 있다. 부수적으로 .oppl-run/ 전송 산출물을 gitignore한다.",
+      "acceptance_criteria": [
+        "레코드의 started_at이 시스템 부팅 시각보다 이르면 kill 대상으로 삼지 않고 stale 분기로 합류해 레코드를 정리한다(kill 0회)",
+        "리부팅을 모사한 조건(started_at을 부팅 시각 이전으로 조작한 격리 레코드)에서 console stop이 센티넬 프로세스를 죽이지 않음을 실관측한다",
+        "판정표 분기 수와 출력 key=value 계약이 변경되지 않는다(새 reason 토큰을 도입하지 않거나, 도입 시 CONTRACT B.4에 함께 반영한다)",
+        "T02가 세운 회귀 20케이스와 test-tool 88 passed가 그대로 유지된다",
+        ".gitignore에 .oppl-run/이 추가되어 git status에 전송 산출물이 나타나지 않는다",
+        "사용자 Console 7823이 검증 전후 계속 200이다"
+      ],
+      "area": "공통",
+      "priority": "P0",
+      "depends": [
+        "T02"
+      ],
+      "status": "pending",
+      "parallel_group": null,
+      "created_at": "2026-09-13 09:28",
+      "done_at": null,
+      "covers": []
+    }
+  ]
+}

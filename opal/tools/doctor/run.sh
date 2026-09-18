@@ -3,7 +3,7 @@
 # opal/tools/doctor/run.sh — OPAL Doctor 진입점
 #
 # 4개 섹션을 순차 실행하여 OPAL 환경 상태를 진단한다:
-#   1/4 Dependencies   — bash, git, node, python3, curl, playwright(옵션)
+#   1/4 Dependencies   — bash, git, node, python3, curl
 #   2/4 OPAL Paths     — ~/.opal/AGENT.md, identity.md, skills/, agents/, bin/opal-cli
 #   3/4 MCP Registration — claude/cursor/gemini 플랫폼별 MCP 등록 상태
 #   4/4 Bootstrappers  — CLAUDE.md/cursor rules/GEMINI.md 마커 확인

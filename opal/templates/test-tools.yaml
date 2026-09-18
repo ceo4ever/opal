@@ -128,7 +128,9 @@ tiers:
     e2e:
       - { name: ego-lite, executor: browser, profiles: [browser, hybrid, collaborative], priority: 1, via: ego-browser-tool, candidate_on: provider_unavailable }
       - { name: cmux, executor: browser, profiles: [browser, hybrid, collaborative], priority: 2, via: cmux-tool, candidate_on: provider_unavailable }
-      - { name: playwright, executor: browser, profiles: [browser, hybrid, collaborative], priority: 3, via: playwright-tool, candidate_on: provider_unavailable }
+      # [opt-in] playwright는 기본 설치에서 빠졌다(태스크 127 AC-11). 별도 설치 후 아래를
+      # 주석 해제하면 앞 후보가 provider_unavailable일 때 다음 후보로 참여한다.
+      # - { name: playwright, executor: browser, profiles: [browser, hybrid, collaborative], priority: 3, via: playwright-tool, candidate_on: provider_unavailable }
     e2e_profiles:
       browser: { required: [browser], allowed: [browser] }
       api: { required: [api], allowed: [api] }

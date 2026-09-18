@@ -54,7 +54,7 @@ EXECUTE 스텝마다 즉시 검증하여 오류를 조기 차단한다. 워커�
 | L1: lint/format | 코드 스타일, 미사용 변수, import 정리 | `npm run lint:fix`, `npm run format:check` | 수 초 | 매우 높음 |
 | L2: build/type | 컴파일 오류, 타입 불일치 | `npm run build`, `npx tsc --noEmit` | 수 초~수십 초 | 높음 |
 | L3a: unit/integration | 컴포넌트 단위, 함수, API 통합 테스트 | `npm test -- --run` | 수십 초 | 중간 |
-| L3b: E2E | 브라우저 기반 시나리오 테스트 | `npm run test:e2e`, `npx playwright test` | 수 분 | 낮음 (flaky, 느림) |
+| L3b: E2E | 브라우저 기반 시나리오 테스트 | 프로젝트의 E2E 실행 명령(`npm run test:e2e` 등). 드라이버·충실도 등급의 정의와 승격 조건은 `test-tool` fidelity 계약이 소유한다 — 이 표는 참조만 한다 | 수 분 | 낮음 (flaky, 느림) |
 | L4: QA | 설계 원칙, 아키텍처 패턴, 보안 | QA 에이전트 호출 | 수 분 | scope별 분기 (action→재PLAN / wbs→PM / trd→0회·즉시) |
 
 > **[MUST] watch 모드 금지**: L3a/L3b 테스트는 watch 모드를 금지하고 단발(non-watch) 실행만 허용한다 — 자동 검증 루프가 무한 대기에 빠지지 않도록 한다. (러너별 단발 옵션 예: Vitest `-- --run`, Jest `--ci`/`--watchAll=false`)
@@ -95,7 +95,7 @@ OPAL에는 "L번호"를 쓰는 **세 개의 별도 차원(축)**이 존재한다
    - lint: `lint`, `lint:check` 스크립트
    - build: `build`, `typecheck`, `tsc` 스크립트
    - test (L3a): `test`, `test:unit`, `test:api`, `test:integration` 스크립트
-   - E2E (L3b): `test:e2e`, `e2e`, `playwright` 스크립트
+   - E2E (L3b): `test:e2e`, `e2e` 스크립트(프로젝트가 선언한 E2E 실행 스크립트). 특정 드라이버 이름을 이 문서가 고정하지 않는다
 3. 추론 불가 시 해당 계층을 건너뛴다 (SKIP으로 로그 기록)
 4. L3b(E2E)는 WBS.md에 E2E 검증 명령이 명시된 액션에만 실행. 미명시 시 SKIP
 

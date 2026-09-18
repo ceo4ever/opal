@@ -1,0 +1,5130 @@
+{
+  "schema_version": "2.0",
+  "task_id": "127-260912-oppl-E2E-하네스-구현",
+  "locked": true,
+  "created_at": "2026-09-14T18:00:34+09:00",
+  "locked_at": "2026-09-14T18:02:30+09:00",
+  "scenarios": [
+    {
+      "id": "S-1",
+      "acceptance_ref": [
+        "AC-1",
+        "C-5"
+      ],
+      "type": "integration",
+      "expected": "세 run의 포트가 겹치지 않고 각 run이 자기 target 트리를 가리키며 독립 종료·포트 해제",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "pytest tests/test_red_s1_concurrent_port_isolation.py -q exit=1: AssertionError 2==2 'e2e run' subcommand missing (argparse invalid choice: e2e)",
+      "red_at": "2026-09-14T18:02:07+09:00",
+      "required_fidelity": "real-http",
+      "surface_ref": "e2e-run",
+      "surface_kind": "cli",
+      "profile": "api",
+      "actors": [
+        "service"
+      ],
+      "steps": [
+        {
+          "id": "run-3x",
+          "executor": "api"
+        }
+      ],
+      "assertions": [
+        {
+          "id": "S-1-a1",
+          "expected": "세 run의 포트가 겹치지 않고 각 run이 자기 target 트리를 가리키며 독립 종료·포트 해제"
+        }
+      ],
+      "required_evidence": [
+        "metadata",
+        "server_log",
+        "action_log",
+        "assertions",
+        "cleanup"
+      ],
+      "handoff": null,
+      "result": null,
+      "operational_status": null,
+      "observed_executors": [],
+      "assertion_results": [],
+      "observed_evidence": [],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": null,
+      "marked_at": null,
+      "fidelity": "mock"
+    },
+    {
+      "id": "S-2",
+      "acceptance_ref": [
+        "AC-1",
+        "H-3"
+      ],
+      "type": "integration",
+      "expected": "죽은 owner_pid의 stale lease를 회수해 EADDRINUSE 없이 기동하고 회수 사실이 산출물에 기록",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "pytest tests/test_red_s2_stale_lease_reclaim.py -q exit=1: 'e2e run' subcommand missing, stale-lease reclaim path unreachable",
+      "red_at": "2026-09-14T18:02:07+09:00",
+      "required_fidelity": "real-http",
+      "surface_ref": "e2e-run",
+      "surface_kind": "cli",
+      "profile": "api",
+      "actors": [
+        "service"
+      ],
+      "steps": [
+        {
+          "id": "stale-lease",
+          "executor": "api"
+        }
+      ],
+      "assertions": [
+        {
+          "id": "S-2-a1",
+          "expected": "죽은 owner_pid의 stale lease를 회수해 EADDRINUSE 없이 기동하고 회수 사실이 산출물에 기록"
+        }
+      ],
+      "required_evidence": [
+        "metadata",
+        "server_log",
+        "action_log",
+        "assertions",
+        "cleanup"
+      ],
+      "handoff": null,
+      "result": null,
+      "operational_status": null,
+      "observed_executors": [],
+      "assertion_results": [],
+      "observed_evidence": [],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": null,
+      "marked_at": null,
+      "fidelity": "mock"
+    },
+    {
+      "id": "S-3",
+      "acceptance_ref": [
+        "AC-2"
+      ],
+      "type": "integration",
+      "expected": "run.json에 profile·actors·target·project_root·worktree_root·commit(40자)·dirty·dirty_files·urls·executors·candidates·driver_version 전건 존재, commit이 git rev-parse HEAD와 일치",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "pytest tests/test_red_s3_run_json_shape.py -q exit=1: 'e2e run' subcommand missing, no run.json producer",
+      "red_at": "2026-09-14T18:02:07+09:00",
+      "required_fidelity": "real-http",
+      "surface_ref": "e2e-run",
+      "surface_kind": "cli",
+      "profile": "api",
+      "actors": [
+        "service"
+      ],
+      "steps": [
+        {
+          "id": "run-json",
+          "executor": "api"
+        }
+      ],
+      "assertions": [
+        {
+          "id": "S-3-a1",
+          "expected": "run.json에 profile·actors·target·project_root·worktree_root·commit(40자)·dirty·dirty_files·urls·executors·candidates·driver_version 전건 존재, commit이 git rev-parse HEAD와 일치"
+        }
+      ],
+      "required_evidence": [
+        "metadata",
+        "server_log",
+        "action_log",
+        "assertions",
+        "cleanup"
+      ],
+      "handoff": null,
+      "result": null,
+      "operational_status": null,
+      "observed_executors": [],
+      "assertion_results": [],
+      "observed_evidence": [],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": null,
+      "marked_at": null,
+      "fidelity": "mock"
+    },
+    {
+      "id": "S-4",
+      "acceptance_ref": [
+        "AC-13",
+        "C-5"
+      ],
+      "type": "integration",
+      "expected": "실행 전후 git status --porcelain 동일, dist/ 미생성, 설치본 dashboard-server/ 불변",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "pytest tests/test_red_s4_no_repo_pollution.py -q exit=1: 'e2e run' subcommand missing, git-status delta check unreachable",
+      "red_at": "2026-09-14T18:02:08+09:00",
+      "required_fidelity": "real-http",
+      "surface_ref": "e2e-run",
+      "surface_kind": "cli",
+      "profile": "api",
+      "actors": [
+        "service"
+      ],
+      "steps": [
+        {
+          "id": "no-residue",
+          "executor": "api"
+        }
+      ],
+      "assertions": [
+        {
+          "id": "S-4-a1",
+          "expected": "실행 전후 git status --porcelain 동일, dist/ 미생성, 설치본 dashboard-server/ 불변"
+        }
+      ],
+      "required_evidence": [
+        "metadata",
+        "server_log",
+        "action_log",
+        "assertions",
+        "cleanup"
+      ],
+      "handoff": null,
+      "result": null,
+      "operational_status": null,
+      "observed_executors": [],
+      "assertion_results": [],
+      "observed_evidence": [],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": null,
+      "marked_at": null,
+      "fidelity": "mock"
+    },
+    {
+      "id": "S-5",
+      "acceptance_ref": [
+        "AC-6",
+        "C-1"
+      ],
+      "type": "unit",
+      "expected": "필수 증적 5종 각각 결손 시 pass 불가 + missing_evidence 명시, validate_pass_requirements 단일 관문",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "pytest tests/test_red_s5_missing_evidence_gate.py -q exit=1 (1 failed/5 subtests passed): Lists differ ['metadata','server_log','action_log','assertion_evidence','cleanup'] != []",
+      "red_at": "2026-09-14T18:02:08+09:00",
+      "required_fidelity": "mock",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [
+        {
+          "id": "missing-ev",
+          "executor": "api"
+        }
+      ],
+      "assertions": [
+        {
+          "id": "S-5-a1",
+          "expected": "필수 증적 5종 각각 결손 시 pass 불가 + missing_evidence 명시, validate_pass_requirements 단일 관문"
+        }
+      ],
+      "required_evidence": [],
+      "handoff": null,
+      "result": null,
+      "operational_status": null,
+      "observed_executors": [],
+      "assertion_results": [],
+      "observed_evidence": [],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": null,
+      "marked_at": null,
+      "fidelity": "mock"
+    },
+    {
+      "id": "S-6",
+      "acceptance_ref": [
+        "AC-6"
+      ],
+      "type": "unit",
+      "expected": "assertion_results 공백 또는 expected/actual 결손 시 pass·real-usage 불가",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "pytest tests/test_red_s6_assertion_results_gate.py -q exit=1 (1 failed/3 passed): 'fidelity' not found in {'driver':'cmux','status':'fail',...}",
+      "red_at": "2026-09-14T18:02:08+09:00",
+      "required_fidelity": "mock",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [
+        {
+          "id": "bad-assert",
+          "executor": "api"
+        }
+      ],
+      "assertions": [
+        {
+          "id": "S-6-a1",
+          "expected": "assertion_results 공백 또는 expected/actual 결손 시 pass·real-usage 불가"
+        }
+      ],
+      "required_evidence": [],
+      "handoff": null,
+      "result": null,
+      "operational_status": null,
+      "observed_executors": [],
+      "assertion_results": [],
+      "observed_evidence": [],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": null,
+      "marked_at": null,
+      "fidelity": "mock"
+    },
+    {
+      "id": "S-7",
+      "acceptance_ref": [
+        "AC-10",
+        "C-6"
+      ],
+      "type": "e2e",
+      "expected": "증적에 원문 비밀값 0건·마스킹만 존재, 실패 run만으로 증적 5종 확보, redaction 실패 주입 시 원문 미잔존 + infra_error",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "pytest tests/test_red_s7_redaction.py -q exit=1 (2 failed): 'e2e run' missing (secret masking path unreachable); redaction module ModuleNotFoundError (infra_error path unreachable)",
+      "red_at": "2026-09-14T18:02:08+09:00",
+      "required_fidelity": "real-usage",
+      "surface_ref": "api-executor-capture",
+      "surface_kind": "executor-op",
+      "profile": "api",
+      "actors": [
+        "service"
+      ],
+      "steps": [
+        {
+          "id": "redaction",
+          "executor": "api"
+        }
+      ],
+      "assertions": [
+        {
+          "id": "S-7-a1",
+          "expected": "증적에 원문 비밀값 0건·마스킹만 존재, 실패 run만으로 증적 5종 확보, redaction 실패 주입 시 원문 미잔존 + infra_error"
+        }
+      ],
+      "required_evidence": [
+        "metadata",
+        "server_log",
+        "action_log",
+        "assertions",
+        "cleanup"
+      ],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "S-40-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550741Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-41-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550749Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-42-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550754Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-43-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550758Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-44-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550761Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-7-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550764Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-10-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550767Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        }
+      ],
+      "observed_evidence": [
+        "action_log",
+        "assertions",
+        "cleanup",
+        "metadata",
+        "probe",
+        "server_log"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": null,
+      "marked_at": "2026-09-15T21:30:05+09:00",
+      "fidelity": "real-http"
+    },
+    {
+      "id": "S-8",
+      "acceptance_ref": [
+        "AC-4",
+        "C-2",
+        "H-2"
+      ],
+      "type": "e2e",
+      "expected": "실 UI 행동 + semantic assertion pass, 소유 browserPageId·profile id만 정리, candidates/probe 기록, 후보 0이면 blocked",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "real-usage",
+      "surface_ref": "driver-act",
+      "surface_kind": "driver-op",
+      "profile": "browser",
+      "actors": [
+        "browser"
+      ],
+      "steps": [
+        {
+          "id": "orca-ui",
+          "executor": "browser"
+        }
+      ],
+      "assertions": [
+        {
+          "id": "S-8-a1",
+          "expected": "실 UI 행동 + semantic assertion pass, 소유 browserPageId·profile id만 정리, candidates/probe 기록, 후보 0이면 blocked"
+        }
+      ],
+      "required_evidence": [
+        "metadata",
+        "server_log",
+        "action_log",
+        "assertions",
+        "cleanup"
+      ],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "browser"
+      ],
+      "assertion_results": [
+        {
+          "id": "S-34-a1",
+          "expected": "OPAL Console",
+          "actual": "OPAL Console",
+          "passed": true,
+          "verifier": "title",
+          "match": "equals",
+          "executor": "browser",
+          "observed_via_step": "st-ui"
+        },
+        {
+          "id": "S-8-a1",
+          "expected": "OPAL Console",
+          "actual": "OPAL Console",
+          "passed": true,
+          "verifier": "title",
+          "match": "equals",
+          "executor": "browser",
+          "observed_via_step": "st-ui"
+        },
+        {
+          "id": "S-37-a1",
+          "expected": "OPAL Console",
+          "actual": "OPAL Console",
+          "passed": true,
+          "verifier": "title",
+          "match": "equals",
+          "executor": "browser",
+          "observed_via_step": "st-ui"
+        },
+        {
+          "id": "S-38-a1",
+          "expected": "OPAL Console",
+          "actual": "OPAL Console",
+          "passed": true,
+          "verifier": "title",
+          "match": "equals",
+          "executor": "browser",
+          "observed_via_step": "st-ui"
+        },
+        {
+          "id": "S-39-a1",
+          "expected": "OPAL Console",
+          "actual": "OPAL Console",
+          "passed": true,
+          "verifier": "title",
+          "match": "equals",
+          "executor": "browser",
+          "observed_via_step": "st-ui"
+        }
+      ],
+      "observed_evidence": [
+        "action_log",
+        "assertions",
+        "cleanup",
+        "console",
+        "errors",
+        "metadata",
+        "probe",
+        "server_log"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": null,
+      "marked_at": "2026-09-15T21:28:32+09:00",
+      "fidelity": "real-usage"
+    },
+    {
+      "id": "S-9",
+      "acceptance_ref": [
+        "AC-5",
+        "H-2"
+      ],
+      "type": "e2e",
+      "expected": "Orca provider_unavailable → standalone agent-browser 전환 pass, candidates order/outcome/reason 기록, 바이너리 부재 시 executor_unavailable",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "real-usage",
+      "surface_ref": "driver-probe",
+      "surface_kind": "driver-op",
+      "profile": "browser",
+      "actors": [
+        "browser"
+      ],
+      "steps": [
+        {
+          "id": "fallback",
+          "executor": "browser"
+        }
+      ],
+      "assertions": [
+        {
+          "id": "S-9-a1",
+          "expected": "Orca provider_unavailable → standalone agent-browser 전환 pass, candidates order/outcome/reason 기록, 바이너리 부재 시 executor_unavailable"
+        }
+      ],
+      "required_evidence": [
+        "metadata",
+        "server_log",
+        "action_log",
+        "assertions",
+        "cleanup"
+      ],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "browser"
+      ],
+      "assertion_results": [
+        {
+          "id": "S-9-a1",
+          "expected": "OPAL Console",
+          "actual": "OPAL Console",
+          "passed": true,
+          "verifier": "title",
+          "match": "equals",
+          "executor": "browser",
+          "observed_via_step": "st-ui"
+        }
+      ],
+      "observed_evidence": [
+        "action_log",
+        "assertions",
+        "cleanup",
+        "console",
+        "errors",
+        "metadata",
+        "probe",
+        "server_log"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": null,
+      "marked_at": "2026-09-15T21:29:23+09:00",
+      "fidelity": "real-usage"
+    },
+    {
+      "id": "S-10",
+      "acceptance_ref": [
+        "AC-7",
+        "C-3"
+      ],
+      "type": "e2e",
+      "expected": "브라우저 없이 실 SUT 호출로 status·응답 필드·후속 상태 검증 pass, 모의 응답 미사용, 4xx/5xx가 retry로 미은폐, run-id namespace fixture만 정리",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "real-usage",
+      "surface_ref": "sut-health",
+      "surface_kind": "http",
+      "profile": "api",
+      "actors": [
+        "service"
+      ],
+      "steps": [
+        {
+          "id": "api-only",
+          "executor": "api"
+        }
+      ],
+      "assertions": [
+        {
+          "id": "S-10-a1",
+          "expected": "브라우저 없이 실 SUT 호출로 status·응답 필드·후속 상태 검증 pass, 모의 응답 미사용, 4xx/5xx가 retry로 미은폐, run-id namespace fixture만 정리"
+        }
+      ],
+      "required_evidence": [
+        "metadata",
+        "server_log",
+        "action_log",
+        "assertions",
+        "cleanup"
+      ],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "S-40-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550741Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-41-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550749Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-42-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550754Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-43-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550758Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-44-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550761Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-7-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550764Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-10-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550767Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        }
+      ],
+      "observed_evidence": [
+        "action_log",
+        "assertions",
+        "cleanup",
+        "metadata",
+        "probe",
+        "server_log"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": null,
+      "marked_at": "2026-09-15T21:30:05+09:00",
+      "fidelity": "real-http"
+    },
+    {
+      "id": "S-11",
+      "acceptance_ref": [
+        "AC-9"
+      ],
+      "type": "e2e",
+      "expected": "awaiting_human(exit 20) 정지 + handoff 8필드 전건, 동일 run-id·resume token 재개, 사람 제출만으로 pass 불가·verifier 통과 후 최종 판정",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "real-usage",
+      "surface_ref": "human-executor-resume",
+      "surface_kind": "executor-op",
+      "profile": "collaborative",
+      "actors": [
+        "human",
+        "service"
+      ],
+      "steps": [
+        {
+          "id": "handoff",
+          "executor": "human"
+        },
+        {
+          "id": "resume",
+          "executor": "api"
+        }
+      ],
+      "assertions": [
+        {
+          "id": "S-11-a1",
+          "expected": "awaiting_human(exit 20) 정지 + handoff 8필드 전건, 동일 run-id·resume token 재개, 사람 제출만으로 pass 불가·verifier 통과 후 최종 판정"
+        }
+      ],
+      "required_evidence": [
+        "metadata",
+        "server_log",
+        "action_log",
+        "assertions",
+        "cleanup"
+      ],
+      "handoff": {
+        "handoff_id": "HO-S11",
+        "instruction": "Console 화면에서 사람 조작 단계를 수행하고 구조화 submission을 제출한다",
+        "expected_observation": "사람 조작 결과가 SUT 상태에 반영되고 verifier가 이를 독립 확인한다",
+        "required_evidence": [
+          "metadata",
+          "server_log",
+          "action_log",
+          "assertions",
+          "cleanup"
+        ],
+        "timeout_seconds": 900,
+        "resume_token": "RT-S11",
+        "server_policy": "local-only",
+        "submission_path": "submissions/S-11.json"
+      },
+      "result": null,
+      "operational_status": null,
+      "observed_executors": [],
+      "assertion_results": [],
+      "observed_evidence": [],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": null,
+      "marked_at": null,
+      "fidelity": "mock"
+    },
+    {
+      "id": "S-12",
+      "acceptance_ref": [
+        "AC-8",
+        "C-1"
+      ],
+      "type": "integration",
+      "expected": "browser profile에 browser step 부재 시 실행 전 executor contract mismatch 거부, 핵심 UI를 API로 대체한 시나리오는 real-usage 미승격, setup/cleanup API는 우회 미판정",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "pytest tests/test_red_s12_executor_contract.py -q exit=1 (2 failed): (a) core UI assertion via step_role=verify API step promoted incorrectly; (b) 'e2e run' missing for static pre-execution rejection",
+      "red_at": "2026-09-14T18:02:08+09:00",
+      "required_fidelity": "real-http",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": "hybrid",
+      "actors": [
+        "service"
+      ],
+      "steps": [
+        {
+          "id": "api-substitute",
+          "executor": "api"
+        },
+        {
+          "id": "ui-step",
+          "executor": "browser"
+        }
+      ],
+      "assertions": [
+        {
+          "id": "S-12-a1",
+          "expected": "browser profile에 browser step 부재 시 실행 전 executor contract mismatch 거부, 핵심 UI를 API로 대체한 시나리오는 real-usage 미승격, setup/cleanup API는 우회 미판정"
+        }
+      ],
+      "required_evidence": [
+        "metadata",
+        "server_log",
+        "action_log",
+        "assertions",
+        "cleanup"
+      ],
+      "handoff": null,
+      "result": null,
+      "operational_status": null,
+      "observed_executors": [],
+      "assertion_results": [],
+      "observed_evidence": [],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": null,
+      "marked_at": null,
+      "fidelity": "mock"
+    },
+    {
+      "id": "S-13",
+      "acceptance_ref": [
+        "AC-15",
+        "C-2",
+        "H-1"
+      ],
+      "type": "integration",
+      "expected": "부팅 이전 started_at 레코드에서 센티넬 미종료 + stale 정리 + stopped=false reason=stale_record, 신규 토큰 0, 전후 7823 health 200",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "재실행(PM 요청): bash scripts/tests/test_console_ownership.sh, exit=1. [B-신규]S-13 FAIL(신규 관측): 부팅이전 started_at(2000-01-01)+identity일치 생존 센티넬 레코드에 console stop 실행 → stdout='OK OPAL Console 데몬 종료됨 (PID: 27382). stopped=true pid=27382', sentinel_alive=0(실제 SIGTERM으로 사망). 기대(stopped=false pid=<pid> reason=stale_record + 센티넬 생존) 위반 유지. 사용자 7823 health: 실행 전 200 / 실행 후 200(불변, C-2). 기존 20 케이스 20/20 ALL PASS 유지(C-9). PASS:20 FAIL:1 SKIP:0.",
+      "red_at": "2026-09-14T18:02:04+09:00",
+      "required_fidelity": "real-http",
+      "surface_ref": "console-stop",
+      "surface_kind": "cli",
+      "profile": "api",
+      "actors": [
+        "service"
+      ],
+      "steps": [
+        {
+          "id": "stale-pid",
+          "executor": "api"
+        }
+      ],
+      "assertions": [
+        {
+          "id": "S-13-a1",
+          "expected": "부팅 이전 started_at 레코드에서 센티넬 미종료 + stale 정리 + stopped=false reason=stale_record, 신규 토큰 0, 전후 7823 health 200"
+        }
+      ],
+      "required_evidence": [
+        "metadata",
+        "server_log",
+        "action_log",
+        "assertions",
+        "cleanup"
+      ],
+      "handoff": null,
+      "result": null,
+      "operational_status": null,
+      "observed_executors": [],
+      "assertion_results": [],
+      "observed_evidence": [],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": null,
+      "marked_at": null,
+      "fidelity": "mock"
+    },
+    {
+      "id": "S-14",
+      "acceptance_ref": [
+        "AC-15",
+        "H-1"
+      ],
+      "type": "integration",
+      "expected": "console.sh 기록 포맷 started_at의 epoch 변환 왕복 성립, 파싱 실패 입력은 stale 오판정 없이 기존 경로 유지(fail-open)",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "real-http",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [
+        {
+          "id": "roundtrip",
+          "executor": "api"
+        }
+      ],
+      "assertions": [
+        {
+          "id": "S-14-a1",
+          "expected": "console.sh 기록 포맷 started_at의 epoch 변환 왕복 성립, 파싱 실패 입력은 stale 오판정 없이 기존 경로 유지(fail-open)"
+        }
+      ],
+      "required_evidence": [],
+      "handoff": null,
+      "result": null,
+      "operational_status": null,
+      "observed_executors": [],
+      "assertion_results": [],
+      "observed_evidence": [],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": null,
+      "marked_at": null,
+      "fidelity": "mock"
+    },
+    {
+      "id": "S-15",
+      "acceptance_ref": [
+        "AC-3",
+        "C-9"
+      ],
+      "type": "integration",
+      "expected": "test_console_ownership.sh 20/20 ALL PASS 유지, AC-15 신규 케이스 추가 후에도 기존 20건 기대값 불변",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "real-http",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [
+        {
+          "id": "regression",
+          "executor": "api"
+        }
+      ],
+      "assertions": [
+        {
+          "id": "S-15-a1",
+          "expected": "test_console_ownership.sh 20/20 ALL PASS 유지, AC-15 신규 케이스 추가 후에도 기존 20건 기대값 불변"
+        }
+      ],
+      "required_evidence": [],
+      "handoff": null,
+      "result": null,
+      "operational_status": null,
+      "observed_executors": [],
+      "assertion_results": [],
+      "observed_evidence": [],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": null,
+      "marked_at": null,
+      "fidelity": "mock"
+    },
+    {
+      "id": "S-16",
+      "acceptance_ref": [
+        "AC-16",
+        "C-7"
+      ],
+      "type": "unit",
+      "expected": "git status --porcelain에 .oppl-run/ 미출현",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "mock",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [
+        {
+          "id": "gitignore",
+          "executor": "api"
+        }
+      ],
+      "assertions": [
+        {
+          "id": "S-16-a1",
+          "expected": "git status --porcelain에 .oppl-run/ 미출현"
+        }
+      ],
+      "required_evidence": [],
+      "handoff": null,
+      "result": null,
+      "operational_status": null,
+      "observed_executors": [],
+      "assertion_results": [],
+      "observed_evidence": [],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": null,
+      "marked_at": null,
+      "fidelity": "mock"
+    },
+    {
+      "id": "S-17",
+      "acceptance_ref": [
+        "C-9",
+        "H-3"
+      ],
+      "type": "unit",
+      "expected": "e2e 서브파서 4회 확장 각 시점에 pytest 88 passed 이상, 기존 4서브파서 인자·exit 계약 불변",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "mock",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [
+        {
+          "id": "parser-regression",
+          "executor": "api"
+        }
+      ],
+      "assertions": [
+        {
+          "id": "S-17-a1",
+          "expected": "e2e 서브파서 4회 확장 각 시점에 pytest 88 passed 이상, 기존 4서브파서 인자·exit 계약 불변"
+        }
+      ],
+      "required_evidence": [],
+      "handoff": null,
+      "result": null,
+      "operational_status": null,
+      "observed_executors": [],
+      "assertion_results": [],
+      "observed_evidence": [],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": null,
+      "marked_at": null,
+      "fidelity": "mock"
+    },
+    {
+      "id": "S-18",
+      "acceptance_ref": [
+        "AC-11",
+        "H-4"
+      ],
+      "type": "unit",
+      "expected": "TS-040 선-갱신 구간 전체에서 tool-scan 테스트 RED 0, 순서 역전 시 RED 발생 확인",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "mock",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [
+        {
+          "id": "order-dep",
+          "executor": "api"
+        }
+      ],
+      "assertions": [
+        {
+          "id": "S-18-a1",
+          "expected": "TS-040 선-갱신 구간 전체에서 tool-scan 테스트 RED 0, 순서 역전 시 RED 발생 확인"
+        }
+      ],
+      "required_evidence": [],
+      "handoff": null,
+      "result": null,
+      "operational_status": null,
+      "observed_executors": [],
+      "assertion_results": [],
+      "observed_evidence": [],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": null,
+      "marked_at": null,
+      "fidelity": "mock"
+    },
+    {
+      "id": "S-19",
+      "acceptance_ref": [
+        "AC-11",
+        "C-4"
+      ],
+      "type": "integration",
+      "expected": "Playwright 소비자 전건이 이전·opt-in·범위제외로 분류·기록, test-tools.yaml이 신규 프로젝트에 playwright 기본 미생성, skills.md·community-skills-registry.json 불변",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "real-http",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [
+        {
+          "id": "inventory",
+          "executor": "api"
+        }
+      ],
+      "assertions": [
+        {
+          "id": "S-19-a1",
+          "expected": "Playwright 소비자 전건이 이전·opt-in·범위제외로 분류·기록, test-tools.yaml이 신규 프로젝트에 playwright 기본 미생성, skills.md·community-skills-registry.json 불변"
+        }
+      ],
+      "required_evidence": [],
+      "handoff": null,
+      "result": null,
+      "operational_status": null,
+      "observed_executors": [],
+      "assertion_results": [],
+      "observed_evidence": [],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": null,
+      "marked_at": null,
+      "fidelity": "mock"
+    },
+    {
+      "id": "S-20",
+      "acceptance_ref": [
+        "AC-14"
+      ],
+      "type": "integration",
+      "expected": "real-usage·L3b 정의 보유 문장이 test-tool fidelity 계약 1곳에만 존재, 경쟁 정의 0건",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "real-http",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [
+        {
+          "id": "ssot-grep",
+          "executor": "api"
+        }
+      ],
+      "assertions": [
+        {
+          "id": "S-20-a1",
+          "expected": "real-usage·L3b 정의 보유 문장이 test-tool fidelity 계약 1곳에만 존재, 경쟁 정의 0건"
+        }
+      ],
+      "required_evidence": [],
+      "handoff": null,
+      "result": null,
+      "operational_status": null,
+      "observed_executors": [],
+      "assertion_results": [],
+      "observed_evidence": [],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": null,
+      "marked_at": null,
+      "fidelity": "mock"
+    },
+    {
+      "id": "S-21",
+      "acceptance_ref": [
+        "AC-12",
+        "C-2",
+        "H-5"
+      ],
+      "type": "integration",
+      "expected": "격리 OPAL_HOME clean install→update→doctor에서 playwright 오탐 0·MCP 분모 문구 갱신·미등록 경고 0·web-to-markdown 동작, Chromium 설치 0회, 사용자 ~/.opal 미접촉(불가 시 blocked)",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "real-http",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [
+        {
+          "id": "install-3step",
+          "executor": "api"
+        }
+      ],
+      "assertions": [
+        {
+          "id": "S-21-a1",
+          "expected": "격리 OPAL_HOME clean install→update→doctor에서 playwright 오탐 0·MCP 분모 문구 갱신·미등록 경고 0·web-to-markdown 동작, Chromium 설치 0회, 사용자 ~/.opal 미접촉(불가 시 blocked)"
+        }
+      ],
+      "required_evidence": [],
+      "handoff": null,
+      "result": null,
+      "operational_status": null,
+      "observed_executors": [],
+      "assertion_results": [],
+      "observed_evidence": [],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": null,
+      "marked_at": null,
+      "fidelity": "mock"
+    },
+    {
+      "id": "S-22",
+      "acceptance_ref": [
+        "AC-12"
+      ],
+      "type": "integration",
+      "expected": "기존 Playwright 캐시 보유 격리 홈에서 사용자 캐시 미삭제, opt-in driver 경로 동작",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "real-http",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [
+        {
+          "id": "migration",
+          "executor": "api"
+        }
+      ],
+      "assertions": [
+        {
+          "id": "S-22-a1",
+          "expected": "기존 Playwright 캐시 보유 격리 홈에서 사용자 캐시 미삭제, opt-in driver 경로 동작"
+        }
+      ],
+      "required_evidence": [],
+      "handoff": null,
+      "result": null,
+      "operational_status": null,
+      "observed_executors": [],
+      "assertion_results": [],
+      "observed_evidence": [],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": null,
+      "marked_at": null,
+      "fidelity": "mock"
+    },
+    {
+      "id": "S-23",
+      "acceptance_ref": [
+        "C-1",
+        "C-8"
+      ],
+      "type": "unit",
+      "expected": "e2e_contract.py·scenario.py·worktree-tool diff 0, CONTRACT.md·surfaces.json 워커 미수정, 상태·exit·error 문자열이 e2e_contract 호출로만 생성",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "mock",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [
+        {
+          "id": "contract-diff",
+          "executor": "api"
+        }
+      ],
+      "assertions": [
+        {
+          "id": "S-23-a1",
+          "expected": "e2e_contract.py·scenario.py·worktree-tool diff 0, CONTRACT.md·surfaces.json 워커 미수정, 상태·exit·error 문자열이 e2e_contract 호출로만 생성"
+        }
+      ],
+      "required_evidence": [],
+      "handoff": null,
+      "result": null,
+      "operational_status": null,
+      "observed_executors": [],
+      "assertion_results": [],
+      "observed_evidence": [],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": null,
+      "marked_at": null,
+      "fidelity": "mock"
+    },
+    {
+      "id": "S-24",
+      "acceptance_ref": [
+        "C-7"
+      ],
+      "type": "unit",
+      "expected": "lib/e2e/ OS 분기가 process.py 한 곳, console.sh 부팅시각 분기가 전용 헬퍼 2개에 격리, ~/.opal 직접 편집 0건",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "mock",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [
+        {
+          "id": "platform-boundary",
+          "executor": "api"
+        }
+      ],
+      "assertions": [
+        {
+          "id": "S-24-a1",
+          "expected": "lib/e2e/ OS 분기가 process.py 한 곳, console.sh 부팅시각 분기가 전용 헬퍼 2개에 격리, ~/.opal 직접 편집 0건"
+        }
+      ],
+      "required_evidence": [],
+      "handoff": null,
+      "result": null,
+      "operational_status": null,
+      "observed_executors": [],
+      "assertion_results": [],
+      "observed_evidence": [],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": null,
+      "marked_at": null,
+      "fidelity": "mock"
+    },
+    {
+      "id": "S-25",
+      "acceptance_ref": [
+        "AC-1",
+        "AC-16",
+        "C-9"
+      ],
+      "type": "e2e",
+      "expected": "AC-1~AC-16 전건 실행 관측·증적 기록, scenario-conformance all_surfaces_green, test-tool 88+ · console 20/20+AC-15 · vitest 161 · pkill/pgrep/killall 0건",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "real-usage",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": "hybrid",
+      "actors": [
+        "service",
+        "browser"
+      ],
+      "steps": [
+        {
+          "id": "integration-pass",
+          "executor": "api"
+        },
+        {
+          "id": "ui-pass",
+          "executor": "browser"
+        }
+      ],
+      "assertions": [
+        {
+          "id": "S-25-a1",
+          "expected": "AC-1~AC-16 전건 실행 관측·증적 기록, scenario-conformance all_surfaces_green, test-tool 88+ · console 20/20+AC-15 · vitest 161 · pkill/pgrep/killall 0건"
+        }
+      ],
+      "required_evidence": [
+        "metadata",
+        "server_log",
+        "action_log",
+        "assertions",
+        "cleanup"
+      ],
+      "handoff": null,
+      "result": null,
+      "operational_status": null,
+      "observed_executors": [],
+      "assertion_results": [],
+      "observed_evidence": [],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": null,
+      "marked_at": null,
+      "fidelity": "mock"
+    },
+    {
+      "id": "S-26",
+      "acceptance_ref": [
+        "C-3"
+      ],
+      "type": "integration",
+      "expected": "후보1 infra_error 시 가용한 후보2로 전환하지 않고 infra_error 확정, candidates[]에 후보2 시도 기록 없음, exit는 infra_error 대응값",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "pytest tests/test_red_s26_candidate_no_switch_infra_error.py -q exit=1 (1 failed/1 passed precondition): 'e2e run' missing, no candidates[]/orchestrator",
+      "red_at": "2026-09-14T18:02:08+09:00",
+      "required_fidelity": "real-http",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [
+        "service"
+      ],
+      "steps": [
+        {
+          "id": "infra-no-switch",
+          "executor": "api"
+        }
+      ],
+      "assertions": [
+        {
+          "id": "S-26-a1",
+          "expected": "후보1 infra_error 시 가용한 후보2로 전환하지 않고 infra_error 확정, candidates[]에 후보2 시도 기록 없음, exit는 infra_error 대응값"
+        }
+      ],
+      "required_evidence": [
+        "metadata",
+        "server_log",
+        "action_log",
+        "assertions",
+        "cleanup"
+      ],
+      "handoff": null,
+      "result": null,
+      "operational_status": null,
+      "observed_executors": [],
+      "assertion_results": [],
+      "observed_evidence": [],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": null,
+      "marked_at": null,
+      "fidelity": "mock"
+    },
+    {
+      "id": "S-27",
+      "acceptance_ref": [
+        "C-3"
+      ],
+      "type": "integration",
+      "expected": "제품 실패를 다른 mode 성공으로 미은폐, 최초 실패가 최종 verdict(fail|blocked)로 잔존, 후보2 시도 기록 없음, retry 억제와 mode 전환 억제 각각 관측",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "pytest tests/test_red_s27_no_retry_on_product_failure.py -q exit=1 (1 failed/2 passed preconditions): 'e2e run' missing, no retry/mode-switch suppression orchestrator",
+      "red_at": "2026-09-14T18:02:08+09:00",
+      "required_fidelity": "real-http",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [
+        "service"
+      ],
+      "steps": [
+        {
+          "id": "product-fail",
+          "executor": "api"
+        }
+      ],
+      "assertions": [
+        {
+          "id": "S-27-a1",
+          "expected": "제품 실패를 다른 mode 성공으로 미은폐, 최초 실패가 최종 verdict(fail|blocked)로 잔존, 후보2 시도 기록 없음, retry 억제와 mode 전환 억제 각각 관측"
+        }
+      ],
+      "required_evidence": [
+        "metadata",
+        "server_log",
+        "action_log",
+        "assertions",
+        "cleanup"
+      ],
+      "handoff": null,
+      "result": null,
+      "operational_status": null,
+      "observed_executors": [],
+      "assertion_results": [],
+      "observed_evidence": [],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": null,
+      "marked_at": null,
+      "fidelity": "mock"
+    },
+    {
+      "id": "S-28",
+      "acceptance_ref": [
+        "AC-9"
+      ],
+      "type": "e2e",
+      "expected": "handoff timeout 경과 시 fail이 아니라 blocked 종료 + blocked 대응 exit, resume token 만료 기록, 동일 run-id 재개 시 만료 상태 반영",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "real-usage",
+      "surface_ref": "human-executor-handoff",
+      "surface_kind": "executor-op",
+      "profile": "collaborative",
+      "actors": [
+        "human",
+        "service"
+      ],
+      "steps": [
+        {
+          "id": "timeout",
+          "executor": "human"
+        }
+      ],
+      "assertions": [
+        {
+          "id": "S-28-a1",
+          "expected": "handoff timeout 경과 시 fail이 아니라 blocked 종료 + blocked 대응 exit, resume token 만료 기록, 동일 run-id 재개 시 만료 상태 반영"
+        }
+      ],
+      "required_evidence": [
+        "metadata",
+        "server_log",
+        "action_log",
+        "assertions",
+        "cleanup"
+      ],
+      "handoff": {
+        "handoff_id": "HO-S28",
+        "instruction": "재개하지 않고 timeout_seconds 경과까지 방치한다",
+        "expected_observation": "timeout 경과 후 run이 blocked로 종료하고 resume token 만료가 기록된다",
+        "required_evidence": [
+          "metadata",
+          "server_log",
+          "action_log",
+          "assertions",
+          "cleanup"
+        ],
+        "timeout_seconds": 60,
+        "resume_token": "RT-S28",
+        "server_policy": "local-only",
+        "submission_path": "submissions/S-28.json"
+      },
+      "result": null,
+      "operational_status": null,
+      "observed_executors": [],
+      "assertion_results": [],
+      "observed_evidence": [],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": null,
+      "marked_at": null,
+      "fidelity": "mock"
+    },
+    {
+      "id": "S-29",
+      "acceptance_ref": [
+        "AC-1",
+        "AC-2"
+      ],
+      "type": "integration",
+      "expected": "`test-tool e2e resume` 호출 후 결과를 HTTP 관측(health·상태 조회)으로 단언한다 (CONTRACT §C.10 — CLI는 행위, 단언 수단이 profile을 결정)",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "real-http",
+      "surface_ref": "e2e-resume",
+      "surface_kind": "cli",
+      "profile": "api",
+      "actors": [
+        "service"
+      ],
+      "steps": [
+        {
+          "id": "e2e-resume-op",
+          "executor": "api"
+        }
+      ],
+      "assertions": [
+        {
+          "id": "S-29-a1",
+          "expected": "`test-tool e2e resume` 호출 후 결과를 HTTP 관측(health·상태 조회)으로 단언한다 (CONTRACT §C.10 — CLI는 행위, 단언 수단이 profile을 결정)"
+        }
+      ],
+      "required_evidence": [
+        "metadata",
+        "server_log",
+        "action_log",
+        "assertions",
+        "cleanup"
+      ],
+      "handoff": null,
+      "result": null,
+      "operational_status": null,
+      "observed_executors": [],
+      "assertion_results": [],
+      "observed_evidence": [],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": null,
+      "marked_at": null,
+      "fidelity": "mock"
+    },
+    {
+      "id": "S-30",
+      "acceptance_ref": [
+        "AC-1",
+        "AC-2"
+      ],
+      "type": "integration",
+      "expected": "`test-tool e2e status` 호출 후 결과를 HTTP 관측(health·상태 조회)으로 단언한다 (CONTRACT §C.10 — CLI는 행위, 단언 수단이 profile을 결정)",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "real-http",
+      "surface_ref": "e2e-status",
+      "surface_kind": "cli",
+      "profile": "api",
+      "actors": [
+        "service"
+      ],
+      "steps": [
+        {
+          "id": "e2e-status-op",
+          "executor": "api"
+        }
+      ],
+      "assertions": [
+        {
+          "id": "S-30-a1",
+          "expected": "`test-tool e2e status` 호출 후 결과를 HTTP 관측(health·상태 조회)으로 단언한다 (CONTRACT §C.10 — CLI는 행위, 단언 수단이 profile을 결정)"
+        }
+      ],
+      "required_evidence": [
+        "metadata",
+        "server_log",
+        "action_log",
+        "assertions",
+        "cleanup"
+      ],
+      "handoff": null,
+      "result": null,
+      "operational_status": null,
+      "observed_executors": [],
+      "assertion_results": [],
+      "observed_evidence": [],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": null,
+      "marked_at": null,
+      "fidelity": "mock"
+    },
+    {
+      "id": "S-31",
+      "acceptance_ref": [
+        "AC-1",
+        "AC-2"
+      ],
+      "type": "integration",
+      "expected": "`test-tool e2e clean` 호출 후 결과를 HTTP 관측(health·상태 조회)으로 단언한다 (CONTRACT §C.10 — CLI는 행위, 단언 수단이 profile을 결정)",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "real-http",
+      "surface_ref": "e2e-clean",
+      "surface_kind": "cli",
+      "profile": "api",
+      "actors": [
+        "service"
+      ],
+      "steps": [
+        {
+          "id": "e2e-clean-op",
+          "executor": "api"
+        }
+      ],
+      "assertions": [
+        {
+          "id": "S-31-a1",
+          "expected": "`test-tool e2e clean` 호출 후 결과를 HTTP 관측(health·상태 조회)으로 단언한다 (CONTRACT §C.10 — CLI는 행위, 단언 수단이 profile을 결정)"
+        }
+      ],
+      "required_evidence": [
+        "metadata",
+        "server_log",
+        "action_log",
+        "assertions",
+        "cleanup"
+      ],
+      "handoff": null,
+      "result": null,
+      "operational_status": null,
+      "observed_executors": [],
+      "assertion_results": [],
+      "observed_evidence": [],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": null,
+      "marked_at": null,
+      "fidelity": "mock"
+    },
+    {
+      "id": "S-32",
+      "acceptance_ref": [
+        "AC-3"
+      ],
+      "type": "integration",
+      "expected": "`opal-cli console start` 호출 후 결과를 HTTP 관측(health·상태 조회)으로 단언한다 (CONTRACT §C.10 — CLI는 행위, 단언 수단이 profile을 결정)",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "real-http",
+      "surface_ref": "console-start",
+      "surface_kind": "cli",
+      "profile": "api",
+      "actors": [
+        "service"
+      ],
+      "steps": [
+        {
+          "id": "console-start-op",
+          "executor": "api"
+        }
+      ],
+      "assertions": [
+        {
+          "id": "S-32-a1",
+          "expected": "`opal-cli console start` 호출 후 결과를 HTTP 관측(health·상태 조회)으로 단언한다 (CONTRACT §C.10 — CLI는 행위, 단언 수단이 profile을 결정)"
+        }
+      ],
+      "required_evidence": [
+        "metadata",
+        "server_log",
+        "action_log",
+        "assertions",
+        "cleanup"
+      ],
+      "handoff": null,
+      "result": null,
+      "operational_status": null,
+      "observed_executors": [],
+      "assertion_results": [],
+      "observed_evidence": [],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": null,
+      "marked_at": null,
+      "fidelity": "mock"
+    },
+    {
+      "id": "S-33",
+      "acceptance_ref": [
+        "AC-3"
+      ],
+      "type": "integration",
+      "expected": "`opal-cli console status` 호출 후 결과를 HTTP 관측(health·상태 조회)으로 단언한다 (CONTRACT §C.10 — CLI는 행위, 단언 수단이 profile을 결정)",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "real-http",
+      "surface_ref": "console-status",
+      "surface_kind": "cli",
+      "profile": "api",
+      "actors": [
+        "service"
+      ],
+      "steps": [
+        {
+          "id": "console-status-op",
+          "executor": "api"
+        }
+      ],
+      "assertions": [
+        {
+          "id": "S-33-a1",
+          "expected": "`opal-cli console status` 호출 후 결과를 HTTP 관측(health·상태 조회)으로 단언한다 (CONTRACT §C.10 — CLI는 행위, 단언 수단이 profile을 결정)"
+        }
+      ],
+      "required_evidence": [
+        "metadata",
+        "server_log",
+        "action_log",
+        "assertions",
+        "cleanup"
+      ],
+      "handoff": null,
+      "result": null,
+      "operational_status": null,
+      "observed_executors": [],
+      "assertion_results": [],
+      "observed_evidence": [],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": null,
+      "marked_at": null,
+      "fidelity": "mock"
+    },
+    {
+      "id": "S-34",
+      "acceptance_ref": [
+        "AC-4",
+        "AC-5"
+      ],
+      "type": "e2e",
+      "expected": "`browser-driver open`를 실 브라우저 후보로 호출해 driver 계약의 입출력 형태와 관측 가능한 효과를 단언한다",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "real-usage",
+      "surface_ref": "driver-open",
+      "surface_kind": "driver-op",
+      "profile": "browser",
+      "actors": [
+        "browser"
+      ],
+      "steps": [
+        {
+          "id": "driver-open-op",
+          "executor": "browser"
+        }
+      ],
+      "assertions": [
+        {
+          "id": "S-34-a1",
+          "expected": "`browser-driver open`를 실 브라우저 후보로 호출해 driver 계약의 입출력 형태와 관측 가능한 효과를 단언한다"
+        }
+      ],
+      "required_evidence": [
+        "metadata",
+        "server_log",
+        "action_log",
+        "assertions",
+        "cleanup"
+      ],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "browser"
+      ],
+      "assertion_results": [
+        {
+          "id": "S-34-a1",
+          "expected": "OPAL Console",
+          "actual": "OPAL Console",
+          "passed": true,
+          "verifier": "title",
+          "match": "equals",
+          "executor": "browser",
+          "observed_via_step": "st-ui"
+        },
+        {
+          "id": "S-8-a1",
+          "expected": "OPAL Console",
+          "actual": "OPAL Console",
+          "passed": true,
+          "verifier": "title",
+          "match": "equals",
+          "executor": "browser",
+          "observed_via_step": "st-ui"
+        },
+        {
+          "id": "S-37-a1",
+          "expected": "OPAL Console",
+          "actual": "OPAL Console",
+          "passed": true,
+          "verifier": "title",
+          "match": "equals",
+          "executor": "browser",
+          "observed_via_step": "st-ui"
+        },
+        {
+          "id": "S-38-a1",
+          "expected": "OPAL Console",
+          "actual": "OPAL Console",
+          "passed": true,
+          "verifier": "title",
+          "match": "equals",
+          "executor": "browser",
+          "observed_via_step": "st-ui"
+        },
+        {
+          "id": "S-39-a1",
+          "expected": "OPAL Console",
+          "actual": "OPAL Console",
+          "passed": true,
+          "verifier": "title",
+          "match": "equals",
+          "executor": "browser",
+          "observed_via_step": "st-ui"
+        }
+      ],
+      "observed_evidence": [
+        "action_log",
+        "assertions",
+        "cleanup",
+        "console",
+        "errors",
+        "metadata",
+        "probe",
+        "server_log"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": null,
+      "marked_at": "2026-09-15T21:28:32+09:00",
+      "fidelity": "real-usage"
+    },
+    {
+      "id": "S-35",
+      "acceptance_ref": [
+        "AC-4",
+        "AC-5"
+      ],
+      "type": "e2e",
+      "expected": "`browser-driver snapshot`를 실 브라우저 후보로 호출해 driver 계약의 입출력 형태와 관측 가능한 효과를 단언한다",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "real-usage",
+      "surface_ref": "driver-snapshot",
+      "surface_kind": "driver-op",
+      "profile": "browser",
+      "actors": [
+        "browser"
+      ],
+      "steps": [
+        {
+          "id": "driver-snapshot-op",
+          "executor": "browser"
+        }
+      ],
+      "assertions": [
+        {
+          "id": "S-35-a1",
+          "expected": "`browser-driver snapshot`를 실 브라우저 후보로 호출해 driver 계약의 입출력 형태와 관측 가능한 효과를 단언한다"
+        }
+      ],
+      "required_evidence": [
+        "metadata",
+        "server_log",
+        "action_log",
+        "assertions",
+        "cleanup"
+      ],
+      "handoff": null,
+      "result": null,
+      "operational_status": null,
+      "observed_executors": [],
+      "assertion_results": [],
+      "observed_evidence": [],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": null,
+      "marked_at": null,
+      "fidelity": "mock"
+    },
+    {
+      "id": "S-36",
+      "acceptance_ref": [
+        "AC-4",
+        "AC-5"
+      ],
+      "type": "e2e",
+      "expected": "`browser-driver wait`를 실 브라우저 후보로 호출해 driver 계약의 입출력 형태와 관측 가능한 효과를 단언한다",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "real-usage",
+      "surface_ref": "driver-wait",
+      "surface_kind": "driver-op",
+      "profile": "browser",
+      "actors": [
+        "browser"
+      ],
+      "steps": [
+        {
+          "id": "driver-wait-op",
+          "executor": "browser"
+        }
+      ],
+      "assertions": [
+        {
+          "id": "S-36-a1",
+          "expected": "`browser-driver wait`를 실 브라우저 후보로 호출해 driver 계약의 입출력 형태와 관측 가능한 효과를 단언한다"
+        }
+      ],
+      "required_evidence": [
+        "metadata",
+        "server_log",
+        "action_log",
+        "assertions",
+        "cleanup"
+      ],
+      "handoff": null,
+      "result": null,
+      "operational_status": null,
+      "observed_executors": [],
+      "assertion_results": [],
+      "observed_evidence": [],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": null,
+      "marked_at": null,
+      "fidelity": "mock"
+    },
+    {
+      "id": "S-37",
+      "acceptance_ref": [
+        "AC-4",
+        "AC-5"
+      ],
+      "type": "e2e",
+      "expected": "`browser-driver assert`를 실 브라우저 후보로 호출해 driver 계약의 입출력 형태와 관측 가능한 효과를 단언한다",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "real-usage",
+      "surface_ref": "driver-assert",
+      "surface_kind": "driver-op",
+      "profile": "browser",
+      "actors": [
+        "browser"
+      ],
+      "steps": [
+        {
+          "id": "driver-assert-op",
+          "executor": "browser"
+        }
+      ],
+      "assertions": [
+        {
+          "id": "S-37-a1",
+          "expected": "`browser-driver assert`를 실 브라우저 후보로 호출해 driver 계약의 입출력 형태와 관측 가능한 효과를 단언한다"
+        }
+      ],
+      "required_evidence": [
+        "metadata",
+        "server_log",
+        "action_log",
+        "assertions",
+        "cleanup"
+      ],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "browser"
+      ],
+      "assertion_results": [
+        {
+          "id": "S-34-a1",
+          "expected": "OPAL Console",
+          "actual": "OPAL Console",
+          "passed": true,
+          "verifier": "title",
+          "match": "equals",
+          "executor": "browser",
+          "observed_via_step": "st-ui"
+        },
+        {
+          "id": "S-8-a1",
+          "expected": "OPAL Console",
+          "actual": "OPAL Console",
+          "passed": true,
+          "verifier": "title",
+          "match": "equals",
+          "executor": "browser",
+          "observed_via_step": "st-ui"
+        },
+        {
+          "id": "S-37-a1",
+          "expected": "OPAL Console",
+          "actual": "OPAL Console",
+          "passed": true,
+          "verifier": "title",
+          "match": "equals",
+          "executor": "browser",
+          "observed_via_step": "st-ui"
+        },
+        {
+          "id": "S-38-a1",
+          "expected": "OPAL Console",
+          "actual": "OPAL Console",
+          "passed": true,
+          "verifier": "title",
+          "match": "equals",
+          "executor": "browser",
+          "observed_via_step": "st-ui"
+        },
+        {
+          "id": "S-39-a1",
+          "expected": "OPAL Console",
+          "actual": "OPAL Console",
+          "passed": true,
+          "verifier": "title",
+          "match": "equals",
+          "executor": "browser",
+          "observed_via_step": "st-ui"
+        }
+      ],
+      "observed_evidence": [
+        "action_log",
+        "assertions",
+        "cleanup",
+        "console",
+        "errors",
+        "metadata",
+        "probe",
+        "server_log"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": null,
+      "marked_at": "2026-09-15T21:28:32+09:00",
+      "fidelity": "real-usage"
+    },
+    {
+      "id": "S-38",
+      "acceptance_ref": [
+        "AC-4",
+        "AC-5"
+      ],
+      "type": "e2e",
+      "expected": "`browser-driver capture`를 실 브라우저 후보로 호출해 driver 계약의 입출력 형태와 관측 가능한 효과를 단언한다",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "real-usage",
+      "surface_ref": "driver-capture",
+      "surface_kind": "driver-op",
+      "profile": "browser",
+      "actors": [
+        "browser"
+      ],
+      "steps": [
+        {
+          "id": "driver-capture-op",
+          "executor": "browser"
+        }
+      ],
+      "assertions": [
+        {
+          "id": "S-38-a1",
+          "expected": "`browser-driver capture`를 실 브라우저 후보로 호출해 driver 계약의 입출력 형태와 관측 가능한 효과를 단언한다"
+        }
+      ],
+      "required_evidence": [
+        "metadata",
+        "server_log",
+        "action_log",
+        "assertions",
+        "cleanup"
+      ],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "browser"
+      ],
+      "assertion_results": [
+        {
+          "id": "S-34-a1",
+          "expected": "OPAL Console",
+          "actual": "OPAL Console",
+          "passed": true,
+          "verifier": "title",
+          "match": "equals",
+          "executor": "browser",
+          "observed_via_step": "st-ui"
+        },
+        {
+          "id": "S-8-a1",
+          "expected": "OPAL Console",
+          "actual": "OPAL Console",
+          "passed": true,
+          "verifier": "title",
+          "match": "equals",
+          "executor": "browser",
+          "observed_via_step": "st-ui"
+        },
+        {
+          "id": "S-37-a1",
+          "expected": "OPAL Console",
+          "actual": "OPAL Console",
+          "passed": true,
+          "verifier": "title",
+          "match": "equals",
+          "executor": "browser",
+          "observed_via_step": "st-ui"
+        },
+        {
+          "id": "S-38-a1",
+          "expected": "OPAL Console",
+          "actual": "OPAL Console",
+          "passed": true,
+          "verifier": "title",
+          "match": "equals",
+          "executor": "browser",
+          "observed_via_step": "st-ui"
+        },
+        {
+          "id": "S-39-a1",
+          "expected": "OPAL Console",
+          "actual": "OPAL Console",
+          "passed": true,
+          "verifier": "title",
+          "match": "equals",
+          "executor": "browser",
+          "observed_via_step": "st-ui"
+        }
+      ],
+      "observed_evidence": [
+        "action_log",
+        "assertions",
+        "cleanup",
+        "console",
+        "errors",
+        "metadata",
+        "probe",
+        "server_log"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": null,
+      "marked_at": "2026-09-15T21:28:32+09:00",
+      "fidelity": "real-usage"
+    },
+    {
+      "id": "S-39",
+      "acceptance_ref": [
+        "AC-4",
+        "AC-5"
+      ],
+      "type": "e2e",
+      "expected": "`browser-driver close`를 실 브라우저 후보로 호출해 driver 계약의 입출력 형태와 관측 가능한 효과를 단언한다",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "real-usage",
+      "surface_ref": "driver-close",
+      "surface_kind": "driver-op",
+      "profile": "browser",
+      "actors": [
+        "browser"
+      ],
+      "steps": [
+        {
+          "id": "driver-close-op",
+          "executor": "browser"
+        }
+      ],
+      "assertions": [
+        {
+          "id": "S-39-a1",
+          "expected": "`browser-driver close`를 실 브라우저 후보로 호출해 driver 계약의 입출력 형태와 관측 가능한 효과를 단언한다"
+        }
+      ],
+      "required_evidence": [
+        "metadata",
+        "server_log",
+        "action_log",
+        "assertions",
+        "cleanup"
+      ],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "browser"
+      ],
+      "assertion_results": [
+        {
+          "id": "S-34-a1",
+          "expected": "OPAL Console",
+          "actual": "OPAL Console",
+          "passed": true,
+          "verifier": "title",
+          "match": "equals",
+          "executor": "browser",
+          "observed_via_step": "st-ui"
+        },
+        {
+          "id": "S-8-a1",
+          "expected": "OPAL Console",
+          "actual": "OPAL Console",
+          "passed": true,
+          "verifier": "title",
+          "match": "equals",
+          "executor": "browser",
+          "observed_via_step": "st-ui"
+        },
+        {
+          "id": "S-37-a1",
+          "expected": "OPAL Console",
+          "actual": "OPAL Console",
+          "passed": true,
+          "verifier": "title",
+          "match": "equals",
+          "executor": "browser",
+          "observed_via_step": "st-ui"
+        },
+        {
+          "id": "S-38-a1",
+          "expected": "OPAL Console",
+          "actual": "OPAL Console",
+          "passed": true,
+          "verifier": "title",
+          "match": "equals",
+          "executor": "browser",
+          "observed_via_step": "st-ui"
+        },
+        {
+          "id": "S-39-a1",
+          "expected": "OPAL Console",
+          "actual": "OPAL Console",
+          "passed": true,
+          "verifier": "title",
+          "match": "equals",
+          "executor": "browser",
+          "observed_via_step": "st-ui"
+        }
+      ],
+      "observed_evidence": [
+        "action_log",
+        "assertions",
+        "cleanup",
+        "console",
+        "errors",
+        "metadata",
+        "probe",
+        "server_log"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": null,
+      "marked_at": "2026-09-15T21:28:32+09:00",
+      "fidelity": "real-usage"
+    },
+    {
+      "id": "S-40",
+      "acceptance_ref": [
+        "AC-7",
+        "AC-10"
+      ],
+      "type": "e2e",
+      "expected": "`api-executor probe`를 실 SUT 대상으로 호출해 executor 계약의 입출력과 후속 상태를 단언한다",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "real-usage",
+      "surface_ref": "api-executor-probe",
+      "surface_kind": "executor-op",
+      "profile": "api",
+      "actors": [
+        "service"
+      ],
+      "steps": [
+        {
+          "id": "api-executor-probe-op",
+          "executor": "api"
+        }
+      ],
+      "assertions": [
+        {
+          "id": "S-40-a1",
+          "expected": "`api-executor probe`를 실 SUT 대상으로 호출해 executor 계약의 입출력과 후속 상태를 단언한다"
+        }
+      ],
+      "required_evidence": [
+        "metadata",
+        "server_log",
+        "action_log",
+        "assertions",
+        "cleanup"
+      ],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "S-40-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550741Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-41-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550749Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-42-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550754Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-43-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550758Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-44-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550761Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-7-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550764Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-10-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550767Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        }
+      ],
+      "observed_evidence": [
+        "action_log",
+        "assertions",
+        "cleanup",
+        "metadata",
+        "probe",
+        "server_log"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": null,
+      "marked_at": "2026-09-15T21:30:05+09:00",
+      "fidelity": "real-http"
+    },
+    {
+      "id": "S-41",
+      "acceptance_ref": [
+        "AC-7",
+        "AC-10"
+      ],
+      "type": "e2e",
+      "expected": "`api-executor prepare`를 실 SUT 대상으로 호출해 executor 계약의 입출력과 후속 상태를 단언한다",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "real-usage",
+      "surface_ref": "api-executor-prepare",
+      "surface_kind": "executor-op",
+      "profile": "api",
+      "actors": [
+        "service"
+      ],
+      "steps": [
+        {
+          "id": "api-executor-prepare-op",
+          "executor": "api"
+        }
+      ],
+      "assertions": [
+        {
+          "id": "S-41-a1",
+          "expected": "`api-executor prepare`를 실 SUT 대상으로 호출해 executor 계약의 입출력과 후속 상태를 단언한다"
+        }
+      ],
+      "required_evidence": [
+        "metadata",
+        "server_log",
+        "action_log",
+        "assertions",
+        "cleanup"
+      ],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "S-40-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550741Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-41-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550749Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-42-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550754Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-43-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550758Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-44-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550761Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-7-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550764Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-10-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550767Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        }
+      ],
+      "observed_evidence": [
+        "action_log",
+        "assertions",
+        "cleanup",
+        "metadata",
+        "probe",
+        "server_log"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": null,
+      "marked_at": "2026-09-15T21:30:05+09:00",
+      "fidelity": "real-http"
+    },
+    {
+      "id": "S-42",
+      "acceptance_ref": [
+        "AC-7",
+        "AC-10"
+      ],
+      "type": "e2e",
+      "expected": "`api-executor act`를 실 SUT 대상으로 호출해 executor 계약의 입출력과 후속 상태를 단언한다",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "real-usage",
+      "surface_ref": "api-executor-act",
+      "surface_kind": "executor-op",
+      "profile": "api",
+      "actors": [
+        "service"
+      ],
+      "steps": [
+        {
+          "id": "api-executor-act-op",
+          "executor": "api"
+        }
+      ],
+      "assertions": [
+        {
+          "id": "S-42-a1",
+          "expected": "`api-executor act`를 실 SUT 대상으로 호출해 executor 계약의 입출력과 후속 상태를 단언한다"
+        }
+      ],
+      "required_evidence": [
+        "metadata",
+        "server_log",
+        "action_log",
+        "assertions",
+        "cleanup"
+      ],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "S-40-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550741Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-41-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550749Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-42-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550754Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-43-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550758Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-44-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550761Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-7-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550764Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-10-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550767Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        }
+      ],
+      "observed_evidence": [
+        "action_log",
+        "assertions",
+        "cleanup",
+        "metadata",
+        "probe",
+        "server_log"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": null,
+      "marked_at": "2026-09-15T21:30:05+09:00",
+      "fidelity": "real-http"
+    },
+    {
+      "id": "S-43",
+      "acceptance_ref": [
+        "AC-7",
+        "AC-10"
+      ],
+      "type": "e2e",
+      "expected": "`api-executor assert`를 실 SUT 대상으로 호출해 executor 계약의 입출력과 후속 상태를 단언한다",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "real-usage",
+      "surface_ref": "api-executor-assert",
+      "surface_kind": "executor-op",
+      "profile": "api",
+      "actors": [
+        "service"
+      ],
+      "steps": [
+        {
+          "id": "api-executor-assert-op",
+          "executor": "api"
+        }
+      ],
+      "assertions": [
+        {
+          "id": "S-43-a1",
+          "expected": "`api-executor assert`를 실 SUT 대상으로 호출해 executor 계약의 입출력과 후속 상태를 단언한다"
+        }
+      ],
+      "required_evidence": [
+        "metadata",
+        "server_log",
+        "action_log",
+        "assertions",
+        "cleanup"
+      ],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "S-40-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550741Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-41-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550749Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-42-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550754Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-43-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550758Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-44-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550761Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-7-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550764Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-10-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550767Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        }
+      ],
+      "observed_evidence": [
+        "action_log",
+        "assertions",
+        "cleanup",
+        "metadata",
+        "probe",
+        "server_log"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": null,
+      "marked_at": "2026-09-15T21:30:05+09:00",
+      "fidelity": "real-http"
+    },
+    {
+      "id": "S-44",
+      "acceptance_ref": [
+        "AC-7",
+        "AC-10"
+      ],
+      "type": "e2e",
+      "expected": "`api-executor cleanup`를 실 SUT 대상으로 호출해 executor 계약의 입출력과 후속 상태를 단언한다",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "real-usage",
+      "surface_ref": "api-executor-cleanup",
+      "surface_kind": "executor-op",
+      "profile": "api",
+      "actors": [
+        "service"
+      ],
+      "steps": [
+        {
+          "id": "api-executor-cleanup-op",
+          "executor": "api"
+        }
+      ],
+      "assertions": [
+        {
+          "id": "S-44-a1",
+          "expected": "`api-executor cleanup`를 실 SUT 대상으로 호출해 executor 계약의 입출력과 후속 상태를 단언한다"
+        }
+      ],
+      "required_evidence": [
+        "metadata",
+        "server_log",
+        "action_log",
+        "assertions",
+        "cleanup"
+      ],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "S-40-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550741Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-41-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550749Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-42-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550754Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-43-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550758Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-44-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550761Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-7-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550764Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-10-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550767Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        }
+      ],
+      "observed_evidence": [
+        "action_log",
+        "assertions",
+        "cleanup",
+        "metadata",
+        "probe",
+        "server_log"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": null,
+      "marked_at": "2026-09-15T21:30:05+09:00",
+      "fidelity": "real-http"
+    },
+    {
+      "id": "S-45",
+      "acceptance_ref": [
+        "AC-7"
+      ],
+      "type": "integration",
+      "expected": "`GET /api/dashboard`를 실 SUT에서 호출해 status·응답 형태·후속 observable state를 단언한다",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "real-http",
+      "surface_ref": "sut-dashboard",
+      "surface_kind": "http",
+      "profile": "api",
+      "actors": [
+        "service"
+      ],
+      "steps": [
+        {
+          "id": "sut-dashboard-op",
+          "executor": "api"
+        }
+      ],
+      "assertions": [
+        {
+          "id": "S-45-a1",
+          "expected": "`GET /api/dashboard`를 실 SUT에서 호출해 status·응답 형태·후속 observable state를 단언한다"
+        }
+      ],
+      "required_evidence": [
+        "metadata",
+        "server_log",
+        "action_log",
+        "assertions",
+        "cleanup"
+      ],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "S-45-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T05:14:30.780026Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "a-total-projects",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 1,
+          "actual": 1,
+          "passed": true,
+          "at": "2026-09-15T05:14:30.780040Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "a-total-tasks",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 1,
+          "actual": 1,
+          "passed": true,
+          "at": "2026-09-15T05:14:30.780047Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "a-recent",
+          "verifier": "response",
+          "executor": "api",
+          "expected": "001-260101-w12-fixture",
+          "actual": "001-260101-w12-fixture",
+          "passed": true,
+          "at": "2026-09-15T05:14:30.780054Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "a-state",
+          "verifier": "state",
+          "executor": "api",
+          "expected": 1,
+          "actual": 1,
+          "passed": true,
+          "at": "2026-09-15T05:14:30.781160Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        }
+      ],
+      "observed_evidence": [
+        "action_log",
+        "assertions",
+        "cleanup",
+        "metadata",
+        "probe",
+        "server_log"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": null,
+      "marked_at": "2026-09-15T14:17:49+09:00",
+      "fidelity": "real-http"
+    },
+    {
+      "id": "S-46",
+      "acceptance_ref": [
+        "AC-7"
+      ],
+      "type": "integration",
+      "expected": "`GET /api/projects`를 실 SUT에서 호출해 status·응답 형태·후속 observable state를 단언한다",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "real-http",
+      "surface_ref": "sut-projects-list",
+      "surface_kind": "http",
+      "profile": "api",
+      "actors": [
+        "service"
+      ],
+      "steps": [
+        {
+          "id": "sut-projects-list-op",
+          "executor": "api"
+        }
+      ],
+      "assertions": [
+        {
+          "id": "S-46-a1",
+          "expected": "`GET /api/projects`를 실 SUT에서 호출해 status·응답 형태·후속 observable state를 단언한다"
+        }
+      ],
+      "required_evidence": [
+        "metadata",
+        "server_log",
+        "action_log",
+        "assertions",
+        "cleanup"
+      ],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "S-46-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T05:14:38.437915Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "a-name",
+          "verifier": "response",
+          "executor": "api",
+          "expected": "w12-fixture-proj",
+          "actual": "w12-fixture-proj",
+          "passed": true,
+          "at": "2026-09-15T05:14:38.437928Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "a-path",
+          "verifier": "response",
+          "executor": "api",
+          "expected": "/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/w12-home-40pm80k6/projects/w12-fixture-proj",
+          "actual": "/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/w12-home-40pm80k6/projects/w12-fixture-proj",
+          "passed": true,
+          "at": "2026-09-15T05:14:38.437936Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "a-is-opal",
+          "verifier": "response",
+          "executor": "api",
+          "expected": true,
+          "actual": true,
+          "passed": true,
+          "at": "2026-09-15T05:14:38.437942Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "a-task-count",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 1,
+          "actual": 1,
+          "passed": true,
+          "at": "2026-09-15T05:14:38.437947Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "a-state",
+          "verifier": "state",
+          "executor": "api",
+          "expected": "w12-fixture-proj",
+          "actual": "w12-fixture-proj",
+          "passed": true,
+          "at": "2026-09-15T05:14:38.438586Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        }
+      ],
+      "observed_evidence": [
+        "action_log",
+        "assertions",
+        "cleanup",
+        "metadata",
+        "probe",
+        "server_log"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": null,
+      "marked_at": "2026-09-15T14:17:50+09:00",
+      "fidelity": "real-http"
+    },
+    {
+      "id": "S-47",
+      "acceptance_ref": [
+        "AC-7"
+      ],
+      "type": "integration",
+      "expected": "`GET /api/projects/detail`를 실 SUT에서 호출해 status·응답 형태·후속 observable state를 단언한다",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "real-http",
+      "surface_ref": "sut-projects-detail",
+      "surface_kind": "http",
+      "profile": "api",
+      "actors": [
+        "service"
+      ],
+      "steps": [
+        {
+          "id": "sut-projects-detail-op",
+          "executor": "api"
+        }
+      ],
+      "assertions": [
+        {
+          "id": "S-47-a1",
+          "expected": "`GET /api/projects/detail`를 실 SUT에서 호출해 status·응답 형태·후속 observable state를 단언한다"
+        }
+      ],
+      "required_evidence": [
+        "metadata",
+        "server_log",
+        "action_log",
+        "assertions",
+        "cleanup"
+      ],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "S-47-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T05:14:35.198157Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "a-name",
+          "verifier": "response",
+          "executor": "api",
+          "expected": "w12-fixture-proj",
+          "actual": "w12-fixture-proj",
+          "passed": true,
+          "at": "2026-09-15T05:14:35.198170Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "a-path",
+          "verifier": "response",
+          "executor": "api",
+          "expected": "/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/w12-home-m1qjwt18/projects/w12-fixture-proj",
+          "actual": "/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/w12-home-m1qjwt18/projects/w12-fixture-proj",
+          "passed": true,
+          "at": "2026-09-15T05:14:35.198177Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "a-is-opal",
+          "verifier": "response",
+          "executor": "api",
+          "expected": true,
+          "actual": true,
+          "passed": true,
+          "at": "2026-09-15T05:14:35.198182Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "a-project-md",
+          "verifier": "response",
+          "executor": "api",
+          "expected": "# W-12 fixture PROJECT\n\n고정 문서.\n",
+          "actual": "# W-12 fixture PROJECT\n\n고정 문서.\n",
+          "passed": true,
+          "at": "2026-09-15T05:14:35.198186Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "a-doc",
+          "verifier": "response",
+          "executor": "api",
+          "expected": "PROJECT.md",
+          "actual": "PROJECT.md",
+          "passed": true,
+          "at": "2026-09-15T05:14:35.198192Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "a-state",
+          "verifier": "state",
+          "executor": "api",
+          "expected": "PROJECT.md",
+          "actual": "PROJECT.md",
+          "passed": true,
+          "at": "2026-09-15T05:14:35.199183Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        }
+      ],
+      "observed_evidence": [
+        "action_log",
+        "assertions",
+        "cleanup",
+        "metadata",
+        "probe",
+        "server_log"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": null,
+      "marked_at": "2026-09-15T14:17:50+09:00",
+      "fidelity": "real-http"
+    },
+    {
+      "id": "S-48",
+      "acceptance_ref": [
+        "AC-7"
+      ],
+      "type": "integration",
+      "expected": "`GET /api/projects/doc`를 실 SUT에서 호출해 status·응답 형태·후속 observable state를 단언한다",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "real-http",
+      "surface_ref": "sut-projects-doc",
+      "surface_kind": "http",
+      "profile": "api",
+      "actors": [
+        "service"
+      ],
+      "steps": [
+        {
+          "id": "sut-projects-doc-op",
+          "executor": "api"
+        }
+      ],
+      "assertions": [
+        {
+          "id": "S-48-a1",
+          "expected": "`GET /api/projects/doc`를 실 SUT에서 호출해 status·응답 형태·후속 observable state를 단언한다"
+        }
+      ],
+      "required_evidence": [
+        "metadata",
+        "server_log",
+        "action_log",
+        "assertions",
+        "cleanup"
+      ],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "S-48-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T05:14:36.969815Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "a-name",
+          "verifier": "response",
+          "executor": "api",
+          "expected": "PROJECT.md",
+          "actual": "PROJECT.md",
+          "passed": true,
+          "at": "2026-09-15T05:14:36.969828Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "a-content",
+          "verifier": "response",
+          "executor": "api",
+          "expected": "# W-12 fixture PROJECT\n\n고정 문서.\n",
+          "actual": "# W-12 fixture PROJECT\n\n고정 문서.\n",
+          "passed": true,
+          "at": "2026-09-15T05:14:36.969836Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "a-path",
+          "verifier": "response",
+          "executor": "api",
+          "expected": "/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/w12-home-eo1y_dn2/projects/w12-fixture-proj/docs/PROJECT.md",
+          "actual": "/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/w12-home-eo1y_dn2/projects/w12-fixture-proj/docs/PROJECT.md",
+          "passed": true,
+          "at": "2026-09-15T05:14:36.969841Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "a-state",
+          "verifier": "state",
+          "executor": "api",
+          "expected": "# W-12 fixture PROJECT\n\n고정 문서.\n",
+          "actual": "# W-12 fixture PROJECT\n\n고정 문서.\n",
+          "passed": true,
+          "at": "2026-09-15T05:14:36.970692Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        }
+      ],
+      "observed_evidence": [
+        "action_log",
+        "assertions",
+        "cleanup",
+        "metadata",
+        "probe",
+        "server_log"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": null,
+      "marked_at": "2026-09-15T14:17:50+09:00",
+      "fidelity": "real-http"
+    },
+    {
+      "id": "S-49",
+      "acceptance_ref": [
+        "AC-7"
+      ],
+      "type": "integration",
+      "expected": "`GET /api/tasks`를 실 SUT에서 호출해 status·응답 형태·후속 observable state를 단언한다",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "real-http",
+      "surface_ref": "sut-tasks-list",
+      "surface_kind": "http",
+      "profile": "api",
+      "actors": [
+        "service"
+      ],
+      "steps": [
+        {
+          "id": "sut-tasks-list-op",
+          "executor": "api"
+        }
+      ],
+      "assertions": [
+        {
+          "id": "S-49-a1",
+          "expected": "`GET /api/tasks`를 실 SUT에서 호출해 status·응답 형태·후속 observable state를 단언한다"
+        }
+      ],
+      "required_evidence": [
+        "metadata",
+        "server_log",
+        "action_log",
+        "assertions",
+        "cleanup"
+      ],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "S-49-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T05:14:43.432744Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "a-task-id",
+          "verifier": "response",
+          "executor": "api",
+          "expected": "001-260101-w12-fixture",
+          "actual": "001-260101-w12-fixture",
+          "passed": true,
+          "at": "2026-09-15T05:14:43.432756Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "a-column",
+          "verifier": "response",
+          "executor": "api",
+          "expected": "pending",
+          "actual": "pending",
+          "passed": true,
+          "at": "2026-09-15T05:14:43.432763Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "a-artifact-count",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 2,
+          "actual": 2,
+          "passed": true,
+          "at": "2026-09-15T05:14:43.432769Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "a-state",
+          "verifier": "state",
+          "executor": "api",
+          "expected": "001-260101-w12-fixture",
+          "actual": "001-260101-w12-fixture",
+          "passed": true,
+          "at": "2026-09-15T05:14:43.433821Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        }
+      ],
+      "observed_evidence": [
+        "action_log",
+        "assertions",
+        "cleanup",
+        "metadata",
+        "probe",
+        "server_log"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": null,
+      "marked_at": "2026-09-15T14:17:50+09:00",
+      "fidelity": "real-http"
+    },
+    {
+      "id": "S-50",
+      "acceptance_ref": [
+        "AC-7"
+      ],
+      "type": "integration",
+      "expected": "`GET /api/tasks/detail`를 실 SUT에서 호출해 status·응답 형태·후속 observable state를 단언한다",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "real-http",
+      "surface_ref": "sut-tasks-detail",
+      "surface_kind": "http",
+      "profile": "api",
+      "actors": [
+        "service"
+      ],
+      "steps": [
+        {
+          "id": "sut-tasks-detail-op",
+          "executor": "api"
+        }
+      ],
+      "assertions": [
+        {
+          "id": "S-50-a1",
+          "expected": "`GET /api/tasks/detail`를 실 SUT에서 호출해 status·응답 형태·후속 observable state를 단언한다"
+        }
+      ],
+      "required_evidence": [
+        "metadata",
+        "server_log",
+        "action_log",
+        "assertions",
+        "cleanup"
+      ],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "S-50-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T05:14:41.658586Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "a-task-id",
+          "verifier": "response",
+          "executor": "api",
+          "expected": "001-260101-w12-fixture",
+          "actual": "001-260101-w12-fixture",
+          "passed": true,
+          "at": "2026-09-15T05:14:41.658597Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "a-current-status",
+          "verifier": "response",
+          "executor": "api",
+          "expected": "pending",
+          "actual": "pending",
+          "passed": true,
+          "at": "2026-09-15T05:14:41.658605Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "a-artifact",
+          "verifier": "response",
+          "executor": "api",
+          "expected": "TASK.md",
+          "actual": "TASK.md",
+          "passed": true,
+          "at": "2026-09-15T05:14:41.658610Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "a-stats",
+          "verifier": "response",
+          "executor": "api",
+          "expected": false,
+          "actual": false,
+          "passed": true,
+          "at": "2026-09-15T05:14:41.658615Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "a-state",
+          "verifier": "state",
+          "executor": "api",
+          "expected": "001-260101-w12-fixture",
+          "actual": "001-260101-w12-fixture",
+          "passed": true,
+          "at": "2026-09-15T05:14:41.659741Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        }
+      ],
+      "observed_evidence": [
+        "action_log",
+        "assertions",
+        "cleanup",
+        "metadata",
+        "probe",
+        "server_log"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": null,
+      "marked_at": "2026-09-15T14:17:50+09:00",
+      "fidelity": "real-http"
+    },
+    {
+      "id": "S-51",
+      "acceptance_ref": [
+        "AC-7"
+      ],
+      "type": "integration",
+      "expected": "`GET /api/tasks/artifact`를 실 SUT에서 호출해 status·응답 형태·후속 observable state를 단언한다",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "real-http",
+      "surface_ref": "sut-tasks-artifact",
+      "surface_kind": "http",
+      "profile": "api",
+      "actors": [
+        "service"
+      ],
+      "steps": [
+        {
+          "id": "sut-tasks-artifact-op",
+          "executor": "api"
+        }
+      ],
+      "assertions": [
+        {
+          "id": "S-51-a1",
+          "expected": "`GET /api/tasks/artifact`를 실 SUT에서 호출해 status·응답 형태·후속 observable state를 단언한다"
+        }
+      ],
+      "required_evidence": [
+        "metadata",
+        "server_log",
+        "action_log",
+        "assertions",
+        "cleanup"
+      ],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "S-51-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T05:14:39.895309Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "a-name",
+          "verifier": "response",
+          "executor": "api",
+          "expected": "TASK.md",
+          "actual": "TASK.md",
+          "passed": true,
+          "at": "2026-09-15T05:14:39.895319Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "a-content",
+          "verifier": "response",
+          "executor": "api",
+          "expected": "# W-12 fixture TASK\n\n고정 산출물.\n",
+          "actual": "# W-12 fixture TASK\n\n고정 산출물.\n",
+          "passed": true,
+          "at": "2026-09-15T05:14:39.895326Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "a-task-id",
+          "verifier": "response",
+          "executor": "api",
+          "expected": "001-260101-w12-fixture",
+          "actual": "001-260101-w12-fixture",
+          "passed": true,
+          "at": "2026-09-15T05:14:39.895330Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "a-state",
+          "verifier": "state",
+          "executor": "api",
+          "expected": "# W-12 fixture TASK\n\n고정 산출물.\n",
+          "actual": "# W-12 fixture TASK\n\n고정 산출물.\n",
+          "passed": true,
+          "at": "2026-09-15T05:14:39.896437Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        }
+      ],
+      "observed_evidence": [
+        "action_log",
+        "assertions",
+        "cleanup",
+        "metadata",
+        "probe",
+        "server_log"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": null,
+      "marked_at": "2026-09-15T14:17:50+09:00",
+      "fidelity": "real-http"
+    },
+    {
+      "id": "S-52",
+      "acceptance_ref": [
+        "AC-7"
+      ],
+      "type": "integration",
+      "expected": "`GET /api/memory`를 실 SUT에서 호출해 status·응답 형태·후속 observable state를 단언한다",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "real-http",
+      "surface_ref": "sut-memory",
+      "surface_kind": "http",
+      "profile": "api",
+      "actors": [
+        "service"
+      ],
+      "steps": [
+        {
+          "id": "sut-memory-op",
+          "executor": "api"
+        }
+      ],
+      "assertions": [
+        {
+          "id": "S-52-a1",
+          "expected": "`GET /api/memory`를 실 SUT에서 호출해 status·응답 형태·후속 observable state를 단언한다"
+        }
+      ],
+      "required_evidence": [
+        "metadata",
+        "server_log",
+        "action_log",
+        "assertions",
+        "cleanup"
+      ],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "S-52-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T05:14:33.726948Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "a-rows",
+          "verifier": "response",
+          "executor": "api",
+          "expected": [],
+          "actual": [],
+          "passed": true,
+          "at": "2026-09-15T05:14:33.726959Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "a-history",
+          "verifier": "response",
+          "executor": "api",
+          "expected": [],
+          "actual": [],
+          "passed": true,
+          "at": "2026-09-15T05:14:33.726966Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "a-warning",
+          "verifier": "response",
+          "executor": "api",
+          "expected": null,
+          "actual": null,
+          "passed": true,
+          "at": "2026-09-15T05:14:33.726971Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "a-state",
+          "verifier": "state",
+          "executor": "api",
+          "expected": [],
+          "actual": [],
+          "passed": true,
+          "at": "2026-09-15T05:14:33.727939Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        }
+      ],
+      "observed_evidence": [
+        "action_log",
+        "assertions",
+        "cleanup",
+        "metadata",
+        "probe",
+        "server_log"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": null,
+      "marked_at": "2026-09-15T14:17:49+09:00",
+      "fidelity": "real-http"
+    },
+    {
+      "id": "S-53",
+      "acceptance_ref": [
+        "AC-7"
+      ],
+      "type": "integration",
+      "expected": "`GET /api/doctor`를 실 SUT에서 호출해 status·응답 형태·후속 observable state를 단언한다",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "real-http",
+      "surface_ref": "sut-doctor",
+      "surface_kind": "http",
+      "profile": "api",
+      "actors": [
+        "service"
+      ],
+      "steps": [
+        {
+          "id": "sut-doctor-op",
+          "executor": "api"
+        }
+      ],
+      "assertions": [
+        {
+          "id": "S-53-a1",
+          "expected": "`GET /api/doctor`를 실 SUT에서 호출해 status·응답 형태·후속 observable state를 단언한다"
+        }
+      ],
+      "required_evidence": [
+        "metadata",
+        "server_log",
+        "action_log",
+        "assertions",
+        "cleanup"
+      ],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "S-53-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T05:14:32.259609Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "a-opal-dir",
+          "verifier": "response",
+          "executor": "api",
+          "expected": "ok",
+          "actual": "ok",
+          "passed": true,
+          "at": "2026-09-15T05:14:32.259625Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "a-agent-md",
+          "verifier": "response",
+          "executor": "api",
+          "expected": "ok",
+          "actual": "ok",
+          "passed": true,
+          "at": "2026-09-15T05:14:32.259634Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "a-tasks",
+          "verifier": "response",
+          "executor": "api",
+          "expected": "ok",
+          "actual": "ok",
+          "passed": true,
+          "at": "2026-09-15T05:14:32.259641Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "a-state",
+          "verifier": "state",
+          "executor": "api",
+          "expected": "ok",
+          "actual": "ok",
+          "passed": true,
+          "at": "2026-09-15T05:14:32.260609Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        }
+      ],
+      "observed_evidence": [
+        "action_log",
+        "assertions",
+        "cleanup",
+        "metadata",
+        "probe",
+        "server_log"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": null,
+      "marked_at": "2026-09-15T14:17:49+09:00",
+      "fidelity": "real-http"
+    },
+    {
+      "id": "S-54",
+      "acceptance_ref": [
+        "AC-7"
+      ],
+      "type": "integration",
+      "expected": "`GET /api/brain/auth`를 실 SUT에서 호출해 status·응답 형태·후속 observable state를 단언한다",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "real-http",
+      "surface_ref": "sut-brain-auth",
+      "surface_kind": "http",
+      "profile": "api",
+      "actors": [
+        "service"
+      ],
+      "steps": [
+        {
+          "id": "sut-brain-auth-op",
+          "executor": "api"
+        }
+      ],
+      "assertions": [
+        {
+          "id": "S-54-a1",
+          "expected": "`GET /api/brain/auth`를 실 SUT에서 호출해 status·응답 형태·후속 observable state를 단언한다"
+        }
+      ],
+      "required_evidence": [
+        "metadata",
+        "server_log",
+        "action_log",
+        "assertions",
+        "cleanup"
+      ],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "S-54-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T05:14:18.623874Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "a-cli",
+          "verifier": "response",
+          "executor": "api",
+          "expected": true,
+          "actual": true,
+          "passed": true,
+          "at": "2026-09-15T05:14:18.623886Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "a-auth",
+          "verifier": "response",
+          "executor": "api",
+          "expected": true,
+          "actual": true,
+          "passed": true,
+          "at": "2026-09-15T05:14:18.623894Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "a-message",
+          "verifier": "response",
+          "executor": "api",
+          "expected": "",
+          "actual": "",
+          "passed": true,
+          "at": "2026-09-15T05:14:18.623899Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "a-state",
+          "verifier": "state",
+          "executor": "api",
+          "expected": true,
+          "actual": true,
+          "passed": true,
+          "at": "2026-09-15T05:14:18.624779Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        }
+      ],
+      "observed_evidence": [
+        "action_log",
+        "assertions",
+        "cleanup",
+        "metadata",
+        "probe",
+        "server_log"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": null,
+      "marked_at": "2026-09-15T14:17:49+09:00",
+      "fidelity": "real-http"
+    },
+    {
+      "id": "S-55",
+      "acceptance_ref": [
+        "AC-7"
+      ],
+      "type": "integration",
+      "expected": "`GET /api/brain/status`를 실 SUT에서 호출해 status·응답 형태·후속 observable state를 단언한다",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "real-http",
+      "surface_ref": "sut-brain-status",
+      "surface_kind": "http",
+      "profile": "api",
+      "actors": [
+        "service"
+      ],
+      "steps": [
+        {
+          "id": "sut-brain-status-op",
+          "executor": "api"
+        }
+      ],
+      "assertions": [
+        {
+          "id": "S-55-a1",
+          "expected": "`GET /api/brain/status`를 실 SUT에서 호출해 status·응답 형태·후속 observable state를 단언한다"
+        }
+      ],
+      "required_evidence": [
+        "metadata",
+        "server_log",
+        "action_log",
+        "assertions",
+        "cleanup"
+      ],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "S-55-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T05:14:25.443846Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "a-state",
+          "verifier": "response",
+          "executor": "api",
+          "expected": "idle",
+          "actual": "idle",
+          "passed": true,
+          "at": "2026-09-15T05:14:25.443860Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "a-active",
+          "verifier": "response",
+          "executor": "api",
+          "expected": false,
+          "actual": false,
+          "passed": true,
+          "at": "2026-09-15T05:14:25.443868Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "a-message",
+          "verifier": "response",
+          "executor": "api",
+          "expected": "",
+          "actual": "",
+          "passed": true,
+          "at": "2026-09-15T05:14:25.443873Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "a-sid",
+          "verifier": "response",
+          "executor": "api",
+          "expected": "w12-684cdafa-5d4c-44fb-b726-572f524d64ce",
+          "actual": "w12-684cdafa-5d4c-44fb-b726-572f524d64ce",
+          "passed": true,
+          "at": "2026-09-15T05:14:25.443881Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "a-observable",
+          "verifier": "state",
+          "executor": "api",
+          "expected": "idle",
+          "actual": "idle",
+          "passed": true,
+          "at": "2026-09-15T05:14:25.445200Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        }
+      ],
+      "observed_evidence": [
+        "action_log",
+        "assertions",
+        "cleanup",
+        "metadata",
+        "probe",
+        "server_log"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": null,
+      "marked_at": "2026-09-15T14:17:49+09:00",
+      "fidelity": "real-http"
+    },
+    {
+      "id": "S-56",
+      "acceptance_ref": [
+        "AC-7"
+      ],
+      "type": "integration",
+      "expected": "`POST /api/brain/prime`를 실 SUT에서 호출해 status·응답 형태·후속 observable state를 단언한다",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "real-http",
+      "surface_ref": "sut-brain-prime",
+      "surface_kind": "http",
+      "profile": "api",
+      "actors": [
+        "service"
+      ],
+      "steps": [
+        {
+          "id": "sut-brain-prime-op",
+          "executor": "api"
+        }
+      ],
+      "assertions": [
+        {
+          "id": "S-56-a1",
+          "expected": "`POST /api/brain/prime`를 실 SUT에서 호출해 status·응답 형태·후속 observable state를 단언한다"
+        }
+      ],
+      "required_evidence": [
+        "metadata",
+        "server_log",
+        "action_log",
+        "assertions",
+        "cleanup"
+      ],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "S-56-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T05:14:22.199635Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "a-priming",
+          "verifier": "response",
+          "executor": "api",
+          "expected": true,
+          "actual": true,
+          "passed": true,
+          "at": "2026-09-15T05:14:22.199648Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        }
+      ],
+      "observed_evidence": [
+        "action_log",
+        "assertions",
+        "cleanup",
+        "metadata",
+        "probe",
+        "server_log"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": null,
+      "marked_at": "2026-09-15T14:17:49+09:00",
+      "fidelity": "real-http"
+    },
+    {
+      "id": "S-57",
+      "acceptance_ref": [
+        "AC-7"
+      ],
+      "type": "integration",
+      "expected": "`POST /api/brain/query`를 실 SUT에서 호출해 status·응답 형태·후속 observable state를 단언한다",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "real-http",
+      "surface_ref": "sut-brain-query",
+      "surface_kind": "http",
+      "profile": "api",
+      "actors": [
+        "service"
+      ],
+      "steps": [
+        {
+          "id": "sut-brain-query-op",
+          "executor": "api"
+        }
+      ],
+      "assertions": [
+        {
+          "id": "S-57-a1",
+          "expected": "`POST /api/brain/query`를 실 SUT에서 호출해 status·응답 형태·후속 observable state를 단언한다"
+        }
+      ],
+      "required_evidence": [
+        "metadata",
+        "server_log",
+        "action_log",
+        "assertions",
+        "cleanup"
+      ],
+      "handoff": null,
+      "result": null,
+      "operational_status": null,
+      "observed_executors": [],
+      "assertion_results": [],
+      "observed_evidence": [],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": null,
+      "marked_at": null,
+      "fidelity": "mock"
+    },
+    {
+      "id": "S-58",
+      "acceptance_ref": [
+        "AC-7"
+      ],
+      "type": "integration",
+      "expected": "`GET /api/brain/job/{job_id}`를 실 SUT에서 호출해 status·응답 형태·후속 observable state를 단언한다",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "real-http",
+      "surface_ref": "sut-brain-job",
+      "surface_kind": "http",
+      "profile": "api",
+      "actors": [
+        "service"
+      ],
+      "steps": [
+        {
+          "id": "sut-brain-job-op",
+          "executor": "api"
+        }
+      ],
+      "assertions": [
+        {
+          "id": "S-58-a1",
+          "expected": "`GET /api/brain/job/{job_id}`를 실 SUT에서 호출해 status·응답 형태·후속 observable state를 단언한다"
+        }
+      ],
+      "required_evidence": [
+        "metadata",
+        "server_log",
+        "action_log",
+        "assertions",
+        "cleanup"
+      ],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "S-58-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T05:14:20.414125Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "a-job-id",
+          "verifier": "response",
+          "executor": "api",
+          "expected": "w12-absent-77837b5d-3d85-428c-b8eb-7064d2cfa84b",
+          "actual": "w12-absent-77837b5d-3d85-428c-b8eb-7064d2cfa84b",
+          "passed": true,
+          "at": "2026-09-15T05:14:20.414140Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "a-error-msg",
+          "verifier": "response",
+          "executor": "api",
+          "expected": "잡을 찾을 수 없습니다(세션이 재시작되었을 수 있습니다)",
+          "actual": "잡을 찾을 수 없습니다(세션이 재시작되었을 수 있습니다)",
+          "passed": true,
+          "at": "2026-09-15T05:14:20.414147Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "a-answer",
+          "verifier": "response",
+          "executor": "api",
+          "expected": "",
+          "actual": "",
+          "passed": true,
+          "at": "2026-09-15T05:14:20.414152Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "a-citations",
+          "verifier": "response",
+          "executor": "api",
+          "expected": [],
+          "actual": [],
+          "passed": true,
+          "at": "2026-09-15T05:14:20.414156Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "a-observable",
+          "verifier": "state",
+          "executor": "api",
+          "expected": "w12-absent-77837b5d-3d85-428c-b8eb-7064d2cfa84b",
+          "actual": "w12-absent-77837b5d-3d85-428c-b8eb-7064d2cfa84b",
+          "passed": true,
+          "at": "2026-09-15T05:14:20.415497Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        }
+      ],
+      "observed_evidence": [
+        "action_log",
+        "assertions",
+        "cleanup",
+        "metadata",
+        "probe",
+        "server_log"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": null,
+      "marked_at": "2026-09-15T14:17:49+09:00",
+      "fidelity": "real-http"
+    },
+    {
+      "id": "S-59",
+      "acceptance_ref": [
+        "AC-7"
+      ],
+      "type": "integration",
+      "expected": "`GET /api/config`를 실 SUT에서 호출해 status·응답 형태·후속 observable state를 단언한다",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "real-http",
+      "surface_ref": "sut-config-get",
+      "surface_kind": "http",
+      "profile": "api",
+      "actors": [
+        "service"
+      ],
+      "steps": [
+        {
+          "id": "sut-config-get-op",
+          "executor": "api"
+        }
+      ],
+      "assertions": [
+        {
+          "id": "S-59-a1",
+          "expected": "`GET /api/config`를 실 SUT에서 호출해 status·응답 형태·후속 observable state를 단언한다"
+        }
+      ],
+      "required_evidence": [
+        "metadata",
+        "server_log",
+        "action_log",
+        "assertions",
+        "cleanup"
+      ],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "S-59-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T05:14:27.223569Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "a-scan-root",
+          "verifier": "response",
+          "executor": "api",
+          "expected": "/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/w12-home-4wur4ol2/projects",
+          "actual": "/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/w12-home-4wur4ol2/projects",
+          "passed": true,
+          "at": "2026-09-15T05:14:27.223583Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "a-scan-depth",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 2,
+          "actual": 2,
+          "passed": true,
+          "at": "2026-09-15T05:14:27.223590Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "a-exclude",
+          "verifier": "response",
+          "executor": "api",
+          "expected": "node_modules",
+          "actual": "node_modules",
+          "passed": true,
+          "at": "2026-09-15T05:14:27.223596Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "a-prewarm",
+          "verifier": "response",
+          "executor": "api",
+          "expected": [],
+          "actual": [],
+          "passed": true,
+          "at": "2026-09-15T05:14:27.223600Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "a-state",
+          "verifier": "state",
+          "executor": "api",
+          "expected": 2,
+          "actual": 2,
+          "passed": true,
+          "at": "2026-09-15T05:14:27.224393Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        }
+      ],
+      "observed_evidence": [
+        "action_log",
+        "assertions",
+        "cleanup",
+        "metadata",
+        "probe",
+        "server_log"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": null,
+      "marked_at": "2026-09-15T14:17:49+09:00",
+      "fidelity": "real-http"
+    },
+    {
+      "id": "S-60",
+      "acceptance_ref": [
+        "AC-7"
+      ],
+      "type": "integration",
+      "expected": "`POST /api/config/prewarm`를 실 SUT에서 호출해 status·응답 형태·후속 observable state를 단언한다",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "real-http",
+      "surface_ref": "sut-config-prewarm",
+      "surface_kind": "http",
+      "profile": "api",
+      "actors": [
+        "service"
+      ],
+      "steps": [
+        {
+          "id": "sut-config-prewarm-op",
+          "executor": "api"
+        }
+      ],
+      "assertions": [
+        {
+          "id": "S-60-a1",
+          "expected": "`POST /api/config/prewarm`를 실 SUT에서 호출해 status·응답 형태·후속 observable state를 단언한다"
+        }
+      ],
+      "required_evidence": [
+        "metadata",
+        "server_log",
+        "action_log",
+        "assertions",
+        "cleanup"
+      ],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "S-60-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T05:14:29.006389Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "a-ok",
+          "verifier": "response",
+          "executor": "api",
+          "expected": true,
+          "actual": true,
+          "passed": true,
+          "at": "2026-09-15T05:14:29.006400Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "a-config",
+          "verifier": "response",
+          "executor": "api",
+          "expected": [],
+          "actual": [],
+          "passed": true,
+          "at": "2026-09-15T05:14:29.006407Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "a-state",
+          "verifier": "state",
+          "executor": "api",
+          "expected": [],
+          "actual": [],
+          "passed": true,
+          "at": "2026-09-15T05:14:29.007408Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        }
+      ],
+      "observed_evidence": [
+        "action_log",
+        "assertions",
+        "cleanup",
+        "metadata",
+        "probe",
+        "server_log"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": null,
+      "marked_at": "2026-09-15T14:17:49+09:00",
+      "fidelity": "real-http"
+    }
+  ]
+}

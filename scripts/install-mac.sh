@@ -48,6 +48,10 @@
 #   v4.8 2026-09-02 22:40 KST: emit_platform_agent_adapter/install_codex_agents의 `OPAL_ADAPTER_FIELD_SPEC="$spec_json" "$py" ...` 커맨드 prefix-assignment가 전역 `readonly OPAL_ADAPTER_FIELD_SPEC`(v4.7)와 이름이 같아 대입 자체가 거부되어 install-mac.sh 실행이 즉시 중단되던 결함 fix — 두 호출부 모두 `env OPAL_ADAPTER_FIELD_SPEC=... "$py"`로 전환(env(1) 인자 경유라 셸 readonly 판정을 거치지 않음). 폴백 스펙 리터럴 바이트는 무변경. 부수 원인 fix — 테스트 하네스(test_agent_adapter_fields.sh)가 함수 본문만 추출해 전역 readonly 선언 없이 실행했기 때문에 이 결함이 기존 14케이스를 통과했었다 → extract_sentinel() 신설로 전역 센티넬 블록을 함수보다 먼저 source하도록 seam을 프로덕션과 정합, TS-024(strict set -euo pipefail 기동 검증) 신규 추가 (105 fix)
 #   v4.9 2026-09-12 KST: self-pm-tool run.sh 실행 권한 chmod 블록 추가(worktree-tool 블록 직후, improve-tool/backlog-tool 패턴 답습) — opal-self-pm 스킬용 경량 실행 기록 도구 배포. 스킬·레지스트리·references는 기존 자동 복사 루프가 처리하므로 추가 분기 없음 (122)
 #   v5.0 2026-09-17 KST: oppb-runtime-tool run.sh 실행 권한 chmod 블록 추가(oppl-runtime-tool 블록 직후, 동일 패턴 답습) — OPPB 프로젝트빌드 런타임 도구 배포. OPPB 스킬 3종(opal-pilot-project-build/op-oppb-project-slice/op-oppb-knowledge-finalize, references/ 하위 포함)과 opal-capability-agent는 기존 opal/skills·opal/agents 전체 스캔 루프가 처리하므로 추가 분기 없음 (132)
+#   v4.10 2026-09-13: console_autostart() 기존 데몬 종료 폴백을 전역 프로세스 이름 패턴 종료(ASGI 경로 문자열 기준
+#     광역 종료, RK-1)에서 opal-cli/run.sh console stop 소스 트리 위임(FRAMEWORK_ROOT, 3분기: 배포본 우선 →
+#     소스 run.sh 위임 → 안전 실패)으로 교체 — E2E backend와 사용자 Console이 동일 ASGI 경로 문자열로 뜰 때
+#     서로를 오탐 종료하던 RK-1의 2지점 중 1지점 제거(TASK.md AC-3, CONTRACT.md §B.4 변경 지점 2, PLAN.md D-13, MV-21) (127-T02)
 #
 
 set -euo pipefail
@@ -1290,13 +1294,6 @@ install_opal() {
         install_dir "$opal_dir/tools" "$opal_home/tools" "OPAL 도구"
         strip_deploy_md_recursive "$opal_home/tools"
 
-        # ── playwright-tool 실행 권한 ──
-        local playwright_run="$opal_home/tools/playwright-tool/run.sh"
-        if [[ -f "$playwright_run" ]]; then
-            chmod +x "$playwright_run"
-            success "playwright-tool run.sh 실행 권한 설정"
-        fi
-
         # ── ego-browser-tool 실행 권한 ──
         local ego_browser_run="$opal_home/tools/ego-browser-tool/run.sh"
         if [[ -f "$ego_browser_run" ]]; then
@@ -1736,7 +1733,8 @@ install_opal_venv() {
     "$venv_dir/bin/pip" install --quiet --no-cache-dir -r "$req_src"
     success "Python 패키지 설치 완료 (requirements.txt)"
 
-    # playwright 브라우저 확인 및 설치
+    # Playwright 브라우저는 기본 설치 대상이 아니다 (opt-in).
+    # 이미 캐시를 보유한 사용자의 자산은 사용자 소유이므로 삭제·정리하지 않고 그대로 둔다.
     # Playwright 캐시 경로: macOS ~/Library/Caches, Linux ~/.cache (XDG 표준)
     # 출처: https://playwright.dev/docs/browsers#managing-browser-binaries
     local pw_cache
@@ -1745,31 +1743,10 @@ install_opal_venv() {
     else
         pw_cache="$USER_HOME/Library/Caches/ms-playwright"
     fi
-    local missing_browsers=()
 
     if [[ -d "$pw_cache" ]] && [[ -n "$(ls -A "$pw_cache" 2>/dev/null)" ]]; then
-        success "Playwright 브라우저 이미 설치됨 (스킵)"
-        echo -e "  ${CYAN}설치된 브라우저:${NC} $(ls "$pw_cache" | tr '\n' ' ')"
-
-        ls "$pw_cache" | grep -q "^chromium"  || missing_browsers+=("chromium")
-        ls "$pw_cache" | grep -q "^firefox"   || missing_browsers+=("firefox")
-        ls "$pw_cache" | grep -q "^webkit"    || missing_browsers+=("webkit")
-    else
-        info "Playwright 브라우저 설치 (기본: Chromium)..."
-        if "$venv_dir/bin/playwright" install chromium 2>/dev/null; then
-            success "Chromium 설치 완료"
-        else
-            warn "Chromium 설치 실패 — 수동 실행: ~/.opal/.venv/bin/playwright install chromium"
-        fi
-        missing_browsers+=("firefox" "webkit")
-    fi
-
-    if [[ ${#missing_browsers[@]} -gt 0 ]]; then
-        echo ""
-        echo -e "  ${CYAN}미설치 브라우저 설치 명령어:${NC}"
-        for browser in "${missing_browsers[@]}"; do
-            echo "    ~/.opal/.venv/bin/playwright install $browser"
-        done
+        info "기존 Playwright 브라우저 캐시 보존: $pw_cache"
+        echo -e "  ${CYAN}보존된 브라우저:${NC} $(ls "$pw_cache" | tr '\n' ' ')"
     fi
     echo ""
 }
@@ -1875,12 +1852,24 @@ console_autostart() {
         return
     fi
 
-    # ── 기존 데몬 종료 ──
-    # opal-cli console stop 우선, 미존재 시 pkill 폴백
+    # ── 기존 데몬 종료 (D-13) ──
+    # 배포본 opal-cli console stop 우선, 미존재 시 소스 트리 opal-cli/run.sh console stop 위임(FRAMEWORK_ROOT),
+    # 둘 다 없으면 아무것도 죽이지 않는 안전 실패(전역 프로세스 이름 패턴 종료는 RK-1이라 MV-21로 제거됨).
+    # 종료 로직을 1벌(console.sh 판정표)로만 유지해 두 지점의 drift 재발을 구조적으로 막는다.
     if [[ -x "$opal_cli" ]]; then
-        "$opal_cli" console stop 2>/dev/null || true
+        local stop_output
+        stop_output="$("$opal_cli" console stop 2>/dev/null)" || true
+        if echo "$stop_output" | grep -q 'stopped=false'; then
+            warn "기존 데몬을 종료하지 못했습니다 ($(echo "$stop_output" | grep -o 'reason=[a-z_]*' | head -1))"
+        fi
+    elif [[ -f "$FRAMEWORK_ROOT/opal/tools/opal-cli/run.sh" ]]; then
+        local stop_output
+        stop_output="$(OPAL_HOME="$opal_home" bash "$FRAMEWORK_ROOT/opal/tools/opal-cli/run.sh" console stop 2>/dev/null)" || true
+        if echo "$stop_output" | grep -q 'stopped=false'; then
+            warn "기존 데몬을 종료하지 못했습니다 ($(echo "$stop_output" | grep -o 'reason=[a-z_]*' | head -1))"
+        fi
     else
-        pkill -f "dashboard.backend.main:app" 2>/dev/null || true
+        warn "opal-cli 배포본과 소스 run.sh를 모두 찾을 수 없습니다 — 기존 데몬 종료를 건너뜁니다."
     fi
     # 프로세스 종료 대기 (최대 3초)
     local waited=0
@@ -2045,9 +2034,12 @@ install_mcp() {
         fi
     fi
 
-    # playwright cache 디렉토리 사전 생성 (args의 ~/.opal/cache/playwright-mcp 경로 보장)
-    mkdir -p "$USER_HOME/.opal/cache/playwright-mcp"
-    chmod 700 "$USER_HOME/.opal/cache"
+    # playwright MCP는 opt-in이다. 정의가 존재할 때만 output-dir을 0700으로 사전 생성한다
+    # (docs/SECURITY.md의 --output-dir 0700 요건 유지). 정의가 없으면 아무것도 만들지 않는다.
+    if [[ -f "$mcp_src/playwright.json" ]]; then
+        mkdir -p "$USER_HOME/.opal/cache/playwright-mcp"
+        chmod 700 "$USER_HOME/.opal/cache"
+    fi
 
     local count=0
     for mcp_file in "$mcp_src"/*.json; do

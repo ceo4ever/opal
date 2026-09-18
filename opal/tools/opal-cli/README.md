@@ -160,3 +160,17 @@ opal/tools/opal-cli/
 | v1.0 | 2026-05-08 11:00 | 초기 구현 — run.sh 디스패처 + 5개 서브커맨드 (install/update/doctor/uninstall/mcp) (139) |
 | v1.1 | 2026-07-10 10:00 | install 서브커맨드 제거 — dispatch/help/문서 정리 + lib/install.sh 삭제 (055) |
 | v1.2 | 2026-07-13 17:43 | console log 서브명령 신설 — tail -F 실시간 팔로우(-n N) + README console 항목 보강 (L2) |
+
+## console stop — stale 레코드 판정 (127)
+
+PID 레코드의 `started_at`이 시스템 부팅 시각보다 이르면 종료 대상으로 삼지 않고 stale로
+판정해 레코드만 정리한다(`stopped=false pid=<pid> reason=stale_record`, kill 0회).
+
+리부팅 후에는 PID가 재할당되므로, 부팅 이전에 기록된 레코드의 `pid`는 무관한 사용자
+프로세스를 가리킬 수 있다. 이 판정이 없으면 `install-mac.sh`가 무인 호출하는 경로에서
+리부팅 후 첫 설치가 임의 사용자 프로세스를 종료할 수 있었다.
+
+- 부팅 시각: macOS `sysctl -n kern.boottime` / Linux `/proc/stat` btime
+- `started_at` 파싱 실패는 **fail-open** — stale로 오판정하지 않고 기존 판정 경로를 유지한다
+- 신규 reason 토큰을 도입하지 않는다. 기존 `stale_record`에 합류한다
+

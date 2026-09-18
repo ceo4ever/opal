@@ -1,0 +1,256 @@
+{
+  "task_id": "127-260912-oppl-E2E-하네스-구현",
+  "skill": "opd",
+  "mode": "agentic",
+  "schema_version": "1.1",
+  "created_at": "2026-09-12 21:02:01",
+  "updated_at": "2026-09-18 14:05:47",
+  "current_status": "completed_unmerged",
+  "rows": [
+    {
+      "row_id": 1,
+      "stage": "TASK",
+      "item": "작업",
+      "key": "task.task_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-14 16:11:05",
+      "owner": "PM",
+      "note": "캡슐 교체 후 opd용 TASK.md 재작성 — AC-1~AC-16(원 14건 승계 + 안전결함 AC-15 + gitignore AC-16)"
+    },
+    {
+      "row_id": 2,
+      "stage": "TASK",
+      "item": "사용자 확인",
+      "key": "task.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-14 16:11:05",
+      "owner": "auto",
+      "note": "auto-approved on ANALYSIS entry"
+    },
+    {
+      "row_id": 3,
+      "stage": "ANALYSIS",
+      "item": "작업",
+      "key": "analysis.analysis_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-14 16:19:21",
+      "owner": "PM",
+      "note": null,
+      "worker_duration_minutes": 6
+    },
+    {
+      "row_id": 4,
+      "stage": "ANALYSIS",
+      "item": "PM Gate",
+      "key": "analysis.pm_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-14 16:19:21",
+      "owner": "PM",
+      "note": "Q1~Q7 실측 답변, PM 표본 재검증 5건 일치, C-1 위반 근거 0",
+      "gate": {
+        "artifacts": [
+          "ANALYSIS.md"
+        ],
+        "checklist": [
+          "sdlc-v2는 ANALYSIS.md first frontmatter template=sdlc-v2, 기존 문서는 legacy 재개 경로로 판정",
+          "sdlc-v2 Findings — 설계에 영향을 주는 확인 사실과 근거 존재",
+          "sdlc-v2 Change boundary — 직접 변경 후보·회귀 확인 대상·문서 갱신 후보 확인",
+          "sdlc-v2 Critical assumptions / Handoff — 남은 한계와 PLAN 결정 사항 분리",
+          "docs/PROJECT.md 레지스트리 기반 프로젝트/기획/설계 문서 선별 결과가 필요한 경우 반영됨",
+          "소스코드 원문 블록 0건 (코드펜스는 실행 명령·시그니처 한정)"
+        ]
+      }
+    },
+    {
+      "row_id": 5,
+      "stage": "ANALYSIS",
+      "item": "사용자 확인",
+      "key": "analysis.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-14 16:19:22",
+      "owner": "auto",
+      "note": "auto-approved on PLAN entry"
+    },
+    {
+      "row_id": 6,
+      "stage": "PLAN",
+      "item": "작업",
+      "key": "plan.plan_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-14 16:28:34",
+      "owner": "PM",
+      "note": null,
+      "worker_duration_minutes": 7
+    },
+    {
+      "row_id": 7,
+      "stage": "PLAN",
+      "item": "PM Gate",
+      "key": "plan.pm_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-14 16:28:35",
+      "owner": "PM",
+      "note": "W-1~W-15 계약 검사 2종 pass, AC 전건 연결, 지적 2건 반영",
+      "gate": {
+        "artifacts": [
+          "TASK.md",
+          "PLAN.md"
+        ],
+        "checklist": [
+          "sdlc-v2 TASK.md AC/C → Work items 완료 기준 연결; 기존 문서는 legacy 재개 검사 적용",
+          "sdlc-v2 PLAN.md Work items 필수 열·W-ID·선행 작업·실행 그룹·파일 충돌 없음 — state-tool verify <태스크폴더> --plan-contract-check 통과",
+          "sdlc-v2 PLAN.md Risks 절 존재, 실제 위험은 H-N 사용 또는 위험 없음 명시",
+          "sdlc-v2 PLAN.md Release and recovery 존재",
+          "code-scan 결과 인용 — state-tool verify <태스크폴더> --code-scan-citation-check 통과 (코드 변경 태스크 한정, 문서 태스크는 skipped)"
+        ]
+      }
+    },
+    {
+      "row_id": 8,
+      "stage": "PLAN",
+      "item": "사용자 확인",
+      "key": "plan.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-14 17:13:38",
+      "owner": "auto",
+      "note": "auto-approved on TEST-SCENARIO entry"
+    },
+    {
+      "row_id": 9,
+      "stage": "TEST-SCENARIO",
+      "item": "작업",
+      "key": "test_scenario.test_scenario_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-18 14:05:38",
+      "owner": "PM",
+      "note": "워커 소요 기록(ADD-1 CLOSE 게이트)",
+      "worker_duration_minutes": 5
+    },
+    {
+      "row_id": 10,
+      "stage": "TEST-SCENARIO",
+      "item": "목표-커버 게이트",
+      "key": "test_scenario.scenario_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-14 17:21:23",
+      "owner": "PM",
+      "note": "coverage-check exit 0 + evaluator verdict pass(2회차, 3축 2/2) 두 증거",
+      "gate": {
+        "artifacts": [
+          "TEST-SCENARIO.md"
+        ],
+        "checklist": [
+          "sdlc-v2는 TEST-SCENARIO.md first frontmatter template=sdlc-v2, 기존 문서는 legacy 재개 경로로 판정",
+          "sdlc-v2 Setup / Scenarios 섹션 존재",
+          "sdlc-v2 Scenarios ID·검증 대상·조건·행동·기대 결과·방법·환경·시점 필수 열 채움",
+          "모든 AC/C와 존재하는 H의 S 연결 완전 — op-scenario-gate 내부 scenario-coverage-build + scenario-coverage-check 통과",
+          "대역을 쓰면 Setup에 사용 경계·한계를 명시하고 실제 integration 증거를 대체하지 않음",
+          "manual 시나리오가 있으면 Setup에 실행자와 실행 조건 명시"
+        ]
+      }
+    },
+    {
+      "row_id": 11,
+      "stage": "TEST-SCENARIO",
+      "item": "사용자 확인",
+      "key": "test_scenario.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-14 17:32:54",
+      "owner": "user",
+      "note": "캡틴 승인 — TEST-SCENARIO 확정, EXECUTE 진입 전 RED-first 동결 선행"
+    },
+    {
+      "row_id": 12,
+      "stage": "EXECUTE",
+      "item": "작업",
+      "key": "execute.implement",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-18 14:05:38",
+      "owner": "PM",
+      "note": "워커 소요 기록(ADD-1 CLOSE 게이트)",
+      "worker_duration_minutes": 245
+    },
+    {
+      "row_id": 13,
+      "stage": "TEST",
+      "item": "작업",
+      "key": "test.run_tests",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-18 14:05:38",
+      "owner": "PM",
+      "note": "워커 소요 기록(ADD-1 CLOSE 게이트)",
+      "worker_duration_minutes": 60
+    },
+    {
+      "row_id": 14,
+      "stage": "TEST",
+      "item": "PM Gate",
+      "key": "test.pm_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-18 10:40:42",
+      "owner": "PM",
+      "note": "PM Gate Pass — AC 충족14/blocked1/미충족0, 금지사항 위반 0, C-1 diff 0, 동결 RED 무결(11/11), C-7 분기 실측 process.py 1곳",
+      "gate": {
+        "artifacts": [
+          "TEST-SCENARIO.md",
+          "test-scenario.json"
+        ],
+        "checklist": [
+          "TEST-SCENARIO.md는 실행 전 명세로만 읽고 결과·증거를 기록하지 않음",
+          "test-scenario.json의 모든 필수 시나리오가 PASS이고 FAIL/BLOCKED가 없으며 실제 실행 증거가 존재",
+          "test-scenario.json 코드품질·보안·회귀 항목 PASS",
+          "컨벤션 자동 진단 PASS (GC-CONVENTION-*.md Critical/High 0건 — 컨벤션 적용 대상 ≥1건 시 발동)"
+        ]
+      }
+    },
+    {
+      "row_id": 15,
+      "stage": "TEST",
+      "item": "사용자 확인",
+      "key": "test.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-18 13:38:59",
+      "owner": "user",
+      "note": "캡틴 승인 — TEST 결과 확인, CLOSE 진입"
+    },
+    {
+      "row_id": 16,
+      "stage": "CLOSE",
+      "item": "DONE.md 생성",
+      "key": "close.done_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-18 14:05:47",
+      "owner": "PM",
+      "note": "DONE.md 생성 — AC 충족15/blocked1/미충족0, 이월 5건, 회고적 학습 후보 3건"
+    },
+    {
+      "row_id": 17,
+      "stage": "CLOSE",
+      "item": "ADD-1 Ego Lite driver 흡수",
+      "key": "close.add_1",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-18 14:05:47",
+      "owner": "PM",
+      "note": "ADD-1 Ego Lite driver 흡수 — 424 passed, 동결 RED 수정 0, C-1 diff 0"
+    }
+  ],
+  "next_action": "태스크 완료",
+  "worktree": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_127"
+}

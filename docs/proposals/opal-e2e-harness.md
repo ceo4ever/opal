@@ -11,7 +11,8 @@
 # OPAL 범용 E2E 하네스 설계 제안서
 
 > 상태: 검토
-> 진행: 구현 태스크 1/9 완료 — 태스크 125 `E2E profile·verdict 계약`; 태스크 2~9 미착수
+> 진행: 구현 태스크 2/9 완료 — 태스크 125 `E2E profile·verdict 계약`, 태스크 127 `Console 실행·프로세스 소유권`(T01 주소 주입·CORS + T02 PID 레코드 소유권); 태스크 3~9 미착수
+> 잔여: 태스크 127의 백로그 T03~T16 14건이 `tasks/127-260912-oppl-E2E-하네스-구현/backlog.json`에 보존돼 있다. 수행 방식은 재검토 중이다
 > 선행본: `docs/proposals/archives/opal-agent-browser-e2e-harness.md`를 범용 E2E 계약으로 확장·대체
 > 작성: 알투(PM)
 > 작성일: 2026-09-12
