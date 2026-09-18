@@ -62,7 +62,14 @@ Stop 훅이 `cwd.parents`를 거슬러 올라가 허브 `tasks/`를 스캔하고
 
 ## 참고
 
-- **S-25 미수행(awaiting_human)** — 실제 Claude TUI 기동과 `opal-agent --provider claude --cwd <worktree_root> -p` 실행이 필요해 설치 이후에만 가능하다. 배포 후 수행으로 캡틴이 승인해 이월했다(resume token `s25-b3506b030b69`).
+- **S-25 배포 후 수행 결과(2026-09-18 20:2x, 부분 수행 — 4절 중 2절 관측 완료·2절 미수행)**
+  - §1 cwd 전달 — **pass**. 워크트리 루트에서 기동된 실제 세션 `07966882-…`의 SessionStart hook이 만든 registry 레코드 `cwd`가 워크트리 루트와 일치(추정 아님, 파일 실측).
+  - §1 session ID 전달 — **미충족(플랫폼 측)**. `echo $OPAL_SESSION_ID`가 빈값이고 `~/.claude/session-env/<id>/`가 빈 디렉터리다. 이 Claude Code 빌드가 `CLAUDE_ENV_FILE`을 훅에 주지 않는다. 배포된 훅에 `CLAUDE_ENV_FILE`을 직접 주면 `OPAL_SESSION_ID=<id>` 1줄을 정확히 append하므로 구현 결함이 아니다.
+  - §1 Stop hook 발화 — **pass**. 해당 세션 전사에서 Stop hook_success 3회(턴 3회)·전부 exit 0, stop-guard receipt `block_count=0`·`decision_kind=allow_inactive`로 그 시점 소유 태스크 없음과 일치.
+  - §4 D-21 조용한 부팅 — **pass**. `claim_source=session_start` 상태에서 배포된 Stop hook stdout 빈값(통과), evaluator 실측 `forced=False`·`classification=current_session_owned` 유지·`diagnostics=[passive_ownership]`.
+  - §4 상태 전진 후 차단 — **pass**. `claim_source=state_transition`으로 승격 후 같은 훅이 `{"decision":"block", …block_continue…transition_action=continue…}`를 출력. 동일 상태에서 허브 cwd는 통과(worktree_owned_shadow 비강제) — AC-1 설계와 일치.
+  - **부수 실측**: 기존 워크트리(`task_138`)에 D-20 발급값 사본이 없었고, 배포된 `worktree-tool status` 1회로 `.opal/task-ownership.json`이 생성됐다. 백필 트리거가 `create`/`status`뿐이라 배포 직후 기존 워크트리에는 사본 공백 구간이 존재한다.
+  - **미수행 2절** — §2 orca `--wt` 실기동 prompt receipt 관측은 실제 터미널 기동과 대상 태스크가 필요하고, S-25 기대결과 (3) `opal-agent --provider claude --cwd <worktree_root> -p`는 **이 머신에 `opal-agent`가 설치돼 있지 않아** 수행 불가다. §3 fixture 실캡처 교체는 S-29 범위다.
 - 허브 main이 127 계열로 전진해 **CLOSE 후 main 재병합이 필요**하다.
 - RED 코퍼스를 구현 계약보다 먼저 써서 **실재하지 않는 레이아웃·아키텍처를 전제한 사례가 4회**(shadow 술어·워크트리 registry·receipt 가드 우회·launcher 사설 writer) 나왔다. 매번 fixture를 실물에 맞추고 구현을 계약에 맞췄다.
 - 개선 후보 3건을 남긴다 — ① `scripts/merge-hooks.py`가 `_help` 등 `_` 접두 키를 이벤트로 순회한다 ② "hook 차단은 PM 승격 근거가 아니다"를 하네스에 명문화해야 한다 ③ 워커마다 같은 스위트를 반복 지시해 중복 실행이 발생했다.
