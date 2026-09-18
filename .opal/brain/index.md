@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-09-17 16:10
+> 갱신: 2026-09-18 17:44
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -25,6 +25,7 @@
 - [[opal-self-pm]] — opal-self-pm #skill #operator #pm #task-122
 - [[opal-skill-wizard]] — opal-skill-wizard (osw) #skill #skill-registry #project-scope #task-114
 - [[opal-workspace-sync]] — opal-workspace-sync (alias opws) #skill #workspace #git #operator
+- [[ownership-tool]] — ownership-tool #tool #ownership #hook #pipeline
 - [[pipeline-json-spec]] — pipeline.json (pilot 파이프라인 정의 SSOT) #state-tool #pipeline #schema #task-070
 - [[self-pm-tool]] — self-pm-tool #tool #cli #pm #task-122
 - [[skill-opal-pilot-data-design]] — opal-pilot-data-design (opdd) #pilot #orchestrator #data-design #db
@@ -261,6 +262,7 @@
 - [[pytest-subtests-parent-passed-masks-failure]] — pytest-subtests는 subtest 실패를 부모 PASSED로 표시한다 — 판정 단위를 서브케이스로 내린다 #testing #pytest #verification #lesson #task-096
 - [[read-based-gate-pattern]] — Read 기반 설정파일 게이트 패턴 #bootstrap #permission #gate #read-pattern #session-toggle
 - [[readme-ssot-principle]] — README는 SSOT를 따른다 — 문서·코드 불일치 시 SKILL.md가 정본 #readme #ssot #doc-code-mismatch #documentation
+- [[red-corpus-precedes-contract-fabricates-layout]] — RED 코퍼스를 구현 계약보다 먼저 쓰면 실재하지 않는 레이아웃을 전제한다 #red-first #fixture #test-design #lesson #task-138
 - [[red-first-hybrid-verification-track]] — RED-first 하이브리드 검증 트랙 — 도구 계약 변경 한정 적용 #verification #red-first #opal-agent #testing
 - [[red-test-commit-coercion-guard-lesson]] — RED 테스트가 실저장소 git archive 검증 시 커밋을 구조적으로 강요하는 결함 #red-first #test #git #lesson #guard
 - [[red-test-determinism-abort-trap]] — RED 테스트 결정론성 함정 — neverResolve fetch 대역의 abort 무반응 #testing #red-first #determinism #abort #fetch-mock
@@ -328,6 +330,7 @@
 - [[state-tool-next-action-auto-derivation]] — STATE.md 다음 액션 자동 파생 — 설계 반전 (state-tool) #state-tool #pipeline #architecture-decision #enforce-dont-advise
 - [[state-tool-owner-name-write-time-substitution]] — state-tool {owner_name} write-time 치환 메커니즘 #state-tool #identity #note #mechanism
 - [[state-tool-task-step-key-address]] — state-tool task-step 키 주소 체계 #state-tool #pipeline #key-address #task-070
+- [[stop-force-requires-state-transition-claim]] — Stop 강제 차단은 상태 전이 claim일 때만 성립한다 #stop-hook #ownership #agentic #lease #task-138
 - [[strip-deploy-runtime-token-neutral]] — strip_deploy_md 런타임 토큰 영향 0 — 변경이력 trim 측정 정정 교훈 #deploy-pipeline #token #install #measurement #lesson
 - [[subsection-number-insertion-preserves-citations]] — 하위 절 번호 삽입으로 외부 인용 보존 — 의미 위치와 주소 안정성 동시 확보 #documentation #reference-integrity #harness #task-095
 - [[switch-first-plumbing-later-verification]] — 배관을 먼저 깔고 스위치를 나중에 켜면 계약은 스위치 전까지 검증되지 않는다 #worktree #rollout #verification #contract #phasing
@@ -359,6 +362,7 @@
 - [[worker-abort-artifact-measured-adjudication]] — 워커 중단 시 재개 대신 산출물 실측 판정 — 중단과 미완은 별개 사실 #agentic #worker #pm-discipline #resilience #task-095
 - [[worker-bypassed-blocked-tool-filename-trigger]] — 워커가 차단된 도구를 우회한 사례 — 원인은 파일명 트리거 + 규율 부재 #worker-discipline #tool-bypass #pm-prompt #dispatch
 - [[worker-role-boundary-exposes-pm-measurement-error]] — 워커 역할경계 준수가 PM 측정식 결함을 드러낸다 #lesson #worker #governance #opds
+- [[worktree-locates-hub-by-issued-copy]] — 워크트리는 허브를 탐색하지 않고 발급값 사본으로 찾는다 #worktree #ownership #issued-value #hook #task-138
 - [[worktree-slot-existence-to-occupancy-judgment]] — 워크트리 슬롯 판정 — 존재에서 점유로 #worktree #git #lesson #non-trivial-resolution
 - [[worktree-task-root-allocator-root-split]] — 워크트리 태스크 루트 분리 — 해석용 task root와 발급용 allocator root #worktree #architecture #workspace #ownership #root-resolution
 - [[worktree-tasks-fixture-structural-limit]] — 워크트리 tasks 픽스처 구조적 한계 — 절대 수치 대신 기준선 대비 증분 #worktree #test-design #harness
