@@ -1,0 +1,25 @@
+{
+  "schema_version": "1.0",
+  "drivers": {
+    "ego-lite": {
+      "minimum_version": "0.0.0",
+      "tested_range": "*",
+      "ci_pin": "0.0.0"
+    },
+    "agent-browser": {
+      "minimum_version": "0.27.0",
+      "tested_range": "0.27.x",
+      "ci_pin": "0.27.0"
+    },
+    "cmux": {
+      "minimum_version": "0.0.0",
+      "tested_range": "*",
+      "ci_pin": "0.0.0"
+    },
+    "playwright": {
+      "minimum_version": "1.40.0",
+      "tested_range": "1.40.x - 1.55.x",
+      "ci_pin": "1.40.0"
+    }
+  }
+}

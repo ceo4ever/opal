@@ -8,6 +8,9 @@ description: |
   코드를 읽기만 하는 설명 요청, API 명세서(api-analyzer), 기획 문서(opal-pilot-write-tech), PR 리뷰, git 작업, 단순 설정 변경은 이 스킬이 아니다.
 ---
 
+> **[DEPRECATED]** 이 스킬 폴더는 하위호환을 위해 남아 있습니다. `opds` Short profile은 canonical Dev Pilot(`opal-pilot-dev`)이 소유하며, `//opds`·`//opal-pilot-dev-short` 요청은 모두 `opal-pilot-dev/SKILL.md`로 라우팅됩니다. **이 파일의 아래 절차는 실행에 사용되지 않습니다.** 사용법은 `opal-pilot-dev`를 참조하세요.
+
+
 # Short Task 오케스트레이터
 
 ## Harness

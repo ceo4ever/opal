@@ -3,9 +3,9 @@
   "module": "e2e_adapter",
   "layer": "util",
   "domain": "opal-tools",
-  "description": "Priority-ordered Ego Lite, cmux, and Playwright adapters with provider-unavailable-only traversal.",
+  "description": "legacy `integration` 서브명령의 후보 체인 adapter. 우선순위 순회(Ego Lite → cmux → Playwright)와 provider_unavailable 전용 전환은 이 모듈이 소유하고, 각 후보의 실제 연산과 §B.2 8연산 계약은 `lib.e2e.drivers.*`가 소유한다. 여기 남은 것은 후보 순회·결과 정규화·공통 판정 관문 소비다.",
   "exports": ["run_integration"],
-  "depends": ["lib.e2e_contract", "ego-browser-tool", "cmux-tool", "playwright-tool"]
+  "depends": ["lib.e2e_contract", "lib.e2e.drivers.ego_lite", "lib.e2e.drivers.cmux", "playwright-tool"]
 }
 
 Configured providers are candidates, not success evidence. Only
@@ -19,9 +19,17 @@ import shlex
 import subprocess
 from typing import Any, Dict, List, Optional
 
+from lib.e2e.drivers import cmux as cmux_driver
+from lib.e2e.drivers import ego_lite as ego_driver
+from lib.e2e.evidence import COMMON_REQUIRED_EVIDENCE
 from lib.e2e_contract import build_verdict, normalize_legacy_verdict, status_to_error
 
-FALLBACK_CODES = {"not_in_cmux", "cmux_not_installed"}
+FIDELITY_MOCK = "mock"
+
+# 어휘의 SSOT는 후보를 실제로 실행하는 `lib.e2e.drivers.cmux`다. 같은 객체를 재노출해
+# 복제본이 생기지 않게 한다 — 이름이 한 글자라도 갈라지면 cmux-tool을 고쳐야
+# 계약이 성립하게 되는데, 제약은 정확히 그 반대다(cmux-tool 변경 0, TRD.md §8).
+FALLBACK_CODES = cmux_driver.FALLBACK_CODES
 _EGO_DEFAULT = os.path.expanduser("~/.opal/tools/ego-browser-tool/run.sh")
 _CMUX_DEFAULT = os.path.expanduser("~/.opal/tools/cmux-tool/run.sh")
 _PLAYWRIGHT_DEFAULT = os.path.expanduser("~/.opal/tools/playwright-tool/run.sh")
@@ -68,14 +76,37 @@ def _call_cmux_tool(args: List[str], env=None) -> Dict[str, Any]:
     return data
 
 
+def _evidence_block(observed: Optional[List[str]] = None, fidelity: str = FIDELITY_MOCK) -> Dict[str, Any]:
+    """`CONTRACT.md` §A.1 공통 필수 증적 5종 요구와 실제 관측분을 함께 싣는다.
+
+    `required_evidence`를 `semantic_assertion` 한 항목으로 고정하면 계약이 요구하는 5종이
+    판정 관문에 전달되지 않는다(동결 RED S-5). 관측분은 실제 수집된 것만 올린다 — 요구치를
+    관측치로 베끼면 결손 자체가 보이지 않는다.
+    """
+    observed_list = list(observed or [])
+    missing = [item for item in COMMON_REQUIRED_EVIDENCE if item not in observed_list]
+    return {
+        "required_evidence": list(COMMON_REQUIRED_EVIDENCE),
+        "observed_evidence": observed_list,
+        "missing_evidence": missing,
+        "evidence_complete": not missing,
+        # [MUST] 증적이 불완전하면 real-usage가 아니다(동결 RED S-6).
+        "fidelity": FIDELITY_MOCK if missing else fidelity,
+    }
+
+
 def _response(status: str, *, e2e=None, detail=None, handoff=None) -> Dict[str, Any]:
+    e2e_block = dict(e2e or {"status": status})
+    # 후보가 무엇이든 증적 계약은 같다 — 봉투에서 한 번만 채운다.
+    for key, value in _evidence_block().items():
+        e2e_block.setdefault(key, value)
     output = {
         "ok": status == "pass",
         "command": "integration",
         "status": status,
         "error": status_to_error(status),
         "detail": detail,
-        "e2e": e2e or {"status": status},
+        "e2e": e2e_block,
         "api_db": {"status": "skip"},
         "contract_version": "2.0",
     }
@@ -101,18 +132,53 @@ def _asserted(name: str, raw: Dict[str, Any], url: Optional[str], expected: Opti
 
 
 def _run_ego(url, expected, install_choice, env=None) -> Dict[str, Any]:
+    """Ego Lite 후보 — 실행은 `lib.e2e.drivers.ego_lite`가 소유한다.
+
+    [MUST] **도구가 소유한 status를 재해석하지 않는다.** `ego-browser-tool` README 계약:
+    미설치는 `awaiting_human`(manual·r2·cancel 선택과 resume 정보)이고, **명시적 `cancel`과
+    비지원 플랫폼만** `provider_unavailable`이다. 전자를 후자로 바꾸면 사람의 설치 선택을
+    기다려야 할 자리에서 조용히 다음 후보로 넘어간다 — C-3가 금지하는 바로 그 전환이다.
+
+    `smoke`는 open과 텍스트 assert가 융합된 단일 연산이므로 driver도 `open`(URL 기록)
+    → `assert`(smoke 1회) 형태로 노출한다. 여기서 `probe`를 먼저 부르지 않는 이유는
+    같은 판정을 두 번 하지 않기 위해서다 — `smoke` 자신이 미설치 상태를 돌려준다.
+    """
     if not url:
         return {"status": "fail", "detail": "URL is required"}
-    args = ["smoke", url]
-    if expected:
-        args += ["--expect-text", expected]
-    if install_choice:
-        args += ["--install-choice", install_choice]
-    raw = _call_json(_tool_cmd(env, "OPAL_EGO_BROWSER_TOOL_CMD", _EGO_DEFAULT), args, env=env)
-    result = _asserted("ego-lite", raw, url, expected)
-    if raw.get("space_id") is not None and result.get("e2e"):
-        result["e2e"]["space_id"] = raw["space_id"]
-    return result
+    driver = ego_driver.EgoLiteDriver(
+        runtime_context={"env": env, "ego_install_choice": install_choice}
+    )
+    try:
+        driver.dispatch("open", {"url": url})
+        record = driver.dispatch(
+            "assert",
+            {"assertion": {"id": "expect-text", "verifier": "dom_text",
+                           "expected": expected, "match": "equals"}},
+        )
+    except ego_driver.EgoLiteToolError as exc:
+        # 도구 자체가 깨진 경우다. 다음 후보로 넘기지 않는다(C-3).
+        return {"status": "infra_error", "detail": exc.detail_code}
+    raw = driver.last_raw or {}
+    tool_status = raw.get("status")
+    # [MUST] 도구가 낸 status는 **전부** 그대로 올린다. 일부만 통과시키면 나머지가
+    # `build_verdict` 기본 경로로 떨어져 `fail`로 뭉개진다 — infra_error·blocked가
+    # 제품 실패로 위장되는 형태다(C-3·§C.7). 재해석하는 유일한 경우는 도구가 성공을
+    # 보고했을 때뿐이고, 그때의 pass 승격은 공통 관문이 판정한다.
+    if tool_status and tool_status not in {"pass", "ok"}:
+        return {"status": tool_status, "raw": raw, "detail": raw.get("detail")}
+    # 판정은 공통 관문이 내린다 — 이 모듈은 status 문자열을 만들지 않는다(§C.2).
+    verdict = build_verdict({
+        "status": "pass", "profile": "browser", "observed_executors": ["browser"],
+        "assertion_results": [record] if expected else [],
+        "required_evidence": ["semantic_assertion"],
+        "observed_evidence": ["semantic_assertion"] if expected else [],
+    })
+    status = verdict["status"]
+    e2e = {"driver": "ego-lite", "status": status, "url": url,
+           "expected": expected, "actual": record.get("actual")}
+    if raw.get("space_id") is not None:
+        e2e["space_id"] = raw["space_id"]
+    return {"status": status, "detail": verdict.get("detail"), "raw": raw, "e2e": e2e}
 
 
 def _cmux_error(raw: Dict[str, Any]) -> Dict[str, Any]:
@@ -123,34 +189,65 @@ def _cmux_error(raw: Dict[str, Any]) -> Dict[str, Any]:
     return normalize_legacy_verdict(payload)
 
 
+def _cmux_failure(exc: "cmux_driver.CmuxToolError") -> Dict[str, Any]:
+    """cmux-tool 오류를 공통 verdict로 정규화한다.
+
+    [MUST] `wait_kind`를 실어 보낸다 — `e2e_contract.py:229-231`이 `wait_failed`에서
+    `wait_kind == "assertion_condition"`일 때만 `fail`로, 아니면 `infra_error`로 가른다
+    (RK-6). 빠뜨리면 제품 실패인 assertion timeout이 인프라 오류로 기록된다.
+    """
+    raw = dict(getattr(exc, "raw", {}) or {})
+    payload = {
+        "status": "fallback" if exc.detail_code in FALLBACK_CODES else "escalated",
+        "fallback_reason": exc.detail_code,
+        "error": exc.detail_code,
+    }
+    if "wait_kind" in raw:
+        payload["wait_kind"] = raw["wait_kind"]
+    normalized = normalize_legacy_verdict(payload)
+    return {"status": normalized["status"], "detail": normalized.get("detail"), "raw": raw}
+
+
 def _run_cmux(url, expected, env=None) -> Dict[str, Any]:
-    opened = _call_cmux_tool(["open"] + ([url] if url else []), env=env)
-    if not opened.get("ok"):
-        normalized = _cmux_error(opened)
-        return {"status": normalized["status"], "detail": normalized.get("detail"), "raw": opened}
-    surface = opened.get("surface")
+    """cmux 후보 — 실행은 `lib.e2e.drivers.cmux`가 소유한다(W-6 이관).
+
+    mode A(`--surface` 미전달, 신규 surface 강제)와 `user_owned=true` surface 미정리는
+    driver가 구조로 강제한다. 여기서는 error code 정규화와 결과 봉투만 만든다.
+    """
+    driver = cmux_driver.CmuxDriver(runtime_context={"url": url}, env=env)
     try:
-        if url and surface:
-            navigated = _call_cmux_tool(["navigate", url], env=env)
-            if not navigated.get("ok"):
-                normalized = _cmux_error(navigated)
-                return {"status": normalized["status"], "detail": normalized.get("detail"), "raw": navigated}
+        opened = driver.dispatch("open", {"url": url})
+    except cmux_driver.CmuxToolError as exc:
+        return _cmux_failure(exc)
+    surface = opened.get("handle")
+    try:
         actual = None
+        record = None
         if expected:
-            observed = _call_cmux_tool(["eval", "--surface", str(surface), "--script", "document.body.innerText"], env=env)
-            if not observed.get("ok"):
-                normalized = _cmux_error(observed)
-                return {"status": normalized["status"], "detail": normalized.get("detail"), "raw": observed}
-            actual = observed.get("result")
+            record = driver.dispatch(
+                "assert",
+                {"assertion": {"id": "expect-text", "verifier": "dom_text",
+                               "expected": expected, "match": "equals"}},
+            )
+            actual = record.get("actual")
         verdict = build_verdict({
             "status": "pass", "profile": "browser", "observed_executors": ["browser"],
-            "assertion_results": ([{"id": "expect-text", "expected": expected, "actual": expected if expected and expected in str(actual or "") else actual}] if expected else []),
-            "required_evidence": ["semantic_assertion"], "observed_evidence": (["semantic_assertion"] if expected else []),
+            "assertion_results": [record] if record else [],
+            "required_evidence": ["semantic_assertion"],
+            "observed_evidence": ["semantic_assertion"] if record else [],
         })
         status = verdict["status"]
-        return {"status": status, "detail": verdict.get("detail"), "e2e": {"driver": "cmux", "status": status, "url": url, "surface": surface, "expected": expected, "actual": actual}}
+        return {"status": status, "detail": verdict.get("detail"),
+                "e2e": {"driver": "cmux", "status": status, "url": url,
+                        "surface": surface, "expected": expected, "actual": actual}}
+    except cmux_driver.CmuxToolError as exc:
+        return _cmux_failure(exc)
     finally:
-        _call_cmux_tool(["close"], env=env)
+        try:
+            driver.dispatch("close", {"handle": surface})
+        except cmux_driver.CmuxToolError:
+            # 정리 실패로 이미 정해진 판정을 덮지 않는다.
+            pass
 
 
 def _run_playwright(candidate, url, expected, env=None) -> Dict[str, Any]:

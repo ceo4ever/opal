@@ -86,7 +86,7 @@ icon: "🧪"
   - 컴포넌트 렌더링 및 스냅샷 테스트
   - 사용자 인터랙션 시나리오 (클릭, 입력, 탐색)
   - 접근성(Accessibility) 검사 (WCAG 기준)
-  - 브라우저 기반 E2E (Playwright / Cypress)
+  - 브라우저 기반 E2E (`test-tool` E2E contract의 browser executor 후보 — 후보 선택·전환은 계약이 소유)
 - **스킵**: API 직접 호출, DB 레벨 검증
 
 ### E2E mode (기본값)

@@ -24,9 +24,11 @@ anthropic>=0.39.0
 mcp>=1.1.0
 PyYAML>=6.0.0
 
-# --- Web Testing ---
-# 설치 후 별도 초기화 필요: ~/.opal/.venv/bin/playwright install
-playwright>=1.40.0
+# --- Web Testing (opt-in) ---
+# playwright는 기본 의존성이 아니다. E2E 하네스 기본 경로는 agent-browser/cmux를 사용하며,
+# Playwright driver는 명시적 opt-in에서만 필요하다. 기존 캐시는 제거하지 않는다.
+#   opt-in: ~/.opal/.venv/bin/pip install 'playwright>=1.40.0'
+#           ~/.opal/.venv/bin/playwright install chromium
 
 # --- OPAL Console Dashboard ---
 fastapi[standard]>=0.110.0

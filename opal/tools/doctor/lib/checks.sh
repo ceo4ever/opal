@@ -2,7 +2,7 @@
 #
 # opal/tools/doctor/lib/checks.sh — OPAL Doctor 체크 함수 모음
 #
-# check_deps        : 의존성 도구 버전 확인 (bash, git, node, python3, curl, playwright)
+# check_deps        : 의존성 도구 버전 확인 (bash, git, node, python3, curl)
 # check_paths       : OPAL 핵심 경로 존재 확인 (~/.opal/AGENT.md 등)
 # check_mcp         : MCP 등록 상태 확인 (claude/cursor/gemini)
 # check_bootstrappers: 부트스트래퍼 마커 확인 (CLAUDE.md/cursor rules/GEMINI.md)
@@ -47,7 +47,7 @@ _fail() { echo "${SYM_FAIL} $1"; ((FAIL_COUNT++)) || true; }
 # ─── check_deps ─────────────────────────────────────────────
 # 의존성 도구 확인:
 #   ✓ / ✗ 필수 — bash, git, node, python3, curl
-#   ⚠       옵션 — playwright (npx @playwright/mcp@latest)
+# playwright는 OPAL 기본 의존성이 아니다 (opt-in) — 진단하지 않는다.
 # ─────────────────────────────────────────────────────────────
 
 # 버전 하한 비교 — major.minor 만 비교한다.
@@ -176,13 +176,6 @@ check_deps() {
         _fail "curl — 미설치 (필수)"
     fi
 
-    # playwright (옵션)
-    if command -v npx &>/dev/null && npx --yes @playwright/mcp@latest --version &>/dev/null 2>&1; then
-        _pass "playwright (npx @playwright/mcp)"
-    else
-        _warn "playwright — 옵션, 미설치 (npx @playwright/mcp@latest)"
-    fi
-
     echo ""
 }
 
@@ -265,7 +258,7 @@ check_paths() {
 
 # ─── check_mcp ───────────────────────────────────────────────
 # MCP 등록 상태 확인 (claude CLI / cursor mcp.json / gemini settings.json 및 antigravity):
-#   OPAL 공식 MCP: context7, playwright, shadcn, sequential-thinking
+#   OPAL 공식 MCP: context7, shadcn, sequential-thinking (playwright는 opt-in — 분모 제외)
 #   플랫폼별 등록 여부를 확인하고, 누락 시 ⚠ (옵션 항목)
 # ─────────────────────────────────────────────────────────────
 
@@ -290,7 +283,7 @@ except Exception:
 _check_mcp_entry() {
     local platform="$1"   # claude / cursor / gemini
     local keys="$2"       # 공백 구분 등록 키 목록
-    local mcp_names=("context7" "playwright" "shadcn" "sequential-thinking")
+    local mcp_names=("context7" "shadcn" "sequential-thinking")
 
     local registered=()
     local missing=()

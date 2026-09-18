@@ -840,7 +840,7 @@ class TestOutputArtifacts(unittest.TestCase):
 
     def test_agentmd_cmux_routing(self):
         """[T044/TS-040] F-005 구현 후: AGENT.md 인지맵에 cmux-tool 행 존재,
-        localhost 행이 cmux-tool 1순위/playwright 폴백 명시.
+        localhost 행이 cmux-tool 1순위/후보 전환 규율 명시.
         RED 조건: AGENT.md에 cmux-tool 인지맵 행 없음 → FAIL.
         """
         self.assertTrue(
@@ -857,7 +857,7 @@ class TestOutputArtifacts(unittest.TestCase):
         )
 
         # localhost 상황에서 cmux-tool이 1순위로 명시되어야 함
-        # 예: "localhost | cmux-tool" 또는 "cmux-tool 우선 / playwright ... 폴백"
+        # 예: "localhost | cmux-tool" 또는 "cmux-tool 우선 / 후보 전환 ... 폴백"
         import re
         localhost_cmux_pattern = re.search(
             r"localhost.*cmux.?tool|cmux.?tool.*localhost",
@@ -869,15 +869,17 @@ class TestOutputArtifacts(unittest.TestCase):
             f"[TS-040] AGENT.md에 'localhost + cmux-tool' 연관 행 없음(1순위 미명시). path={_AGENT_MD}"
         )
 
-        # playwright 폴백 명시
-        playwright_fallback_pattern = re.search(
-            r"playwright.*fallback|fallback.*playwright|playwright.*폴백|폴백.*playwright",
+        # 브라우저 후보 전환 규율 명시 — 기본 후보는 cmux-tool 하나이며,
+        # 추가 browser provider는 test-tools.yaml opt-in 선언으로만 참여한다.
+        # 특정 provider(playwright 등)를 이름으로 요구하지 않는다(127/AC-14).
+        fallback_discipline_pattern = re.search(
+            r"(폴백|fallback|후보 전환|provider_unavailable)",
             content,
             re.IGNORECASE,
         )
         self.assertIsNotNone(
-            playwright_fallback_pattern,
-            f"[TS-040] AGENT.md에 playwright 폴백 명시 없음. path={_AGENT_MD}"
+            fallback_discipline_pattern,
+            f"[TS-040] AGENT.md에 browser 후보 전환 규율 명시 없음. path={_AGENT_MD}"
         )
 
     def test_agentmd_usage_discipline(self):

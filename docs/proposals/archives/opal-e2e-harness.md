@@ -10,8 +10,10 @@
 
 # OPAL 범용 E2E 하네스 설계 제안서
 
-> 상태: 검토
-> 진행: 구현 태스크 1/9 완료 — 태스크 125 `E2E profile·verdict 계약`; 태스크 2~9 미착수
+> 상태: 적용완료
+> 진행: 구현 태스크 **9/9 완료** — 태스크 125 `E2E profile·verdict 계약`(태스크 1), 태스크 127 `Console 실행·프로세스 소유권`(태스크 2, T01 주소 주입·CORS + T02 PID 레코드 소유권), 태스크 127 본 수행(태스크 3~9: Runtime Manager·browser driver 계약·증적/redaction 관문·판정 부정 검증·agent-browser·cmux 이전·API executor·Human handoff executor·Playwright 기본 설치 제거)
+> 규범 원문 소유: 실행 계약은 `opal/tools/test-tool/README.md`와 `lib/e2e_contract.py`(profile·final status·exit code), 충실도 정의는 `lib/scenario.py` `FIDELITY_ORDER`, Console 소유권·E2E 경계는 `docs/ARCHITECTURE.md` §OPAL Console이 소유한다. 이 문서는 소비형 입력물이며 규범 SSOT가 아니다
+> 잔여 이월: 태스크 127 DONE.md §참고의 5건(B-1 tool-scan main 상속 · B-2 `mcp add` 설치본 실패 · B-4 AC-12 격리 install 불성립 · B-5 `all_surfaces_green` 도달 불가 · B-6 cleanup 거짓 보고). 후속 설계는 `docs/proposals/e2e-journey-fragment-library.md`가 잇는다
 > 선행본: `docs/proposals/archives/opal-agent-browser-e2e-harness.md`를 범용 E2E 계약으로 확장·대체
 > 작성: 알투(PM)
 > 작성일: 2026-09-12

@@ -1,0 +1,591 @@
+{
+  "schema_version": "2.0",
+  "task_id": "T02-Console-프로세스-소유권",
+  "locked": true,
+  "created_at": "2026-09-13T00:48:11+09:00",
+  "locked_at": "2026-09-13T00:48:32+09:00",
+  "scenarios": [
+    {
+      "id": "S-1",
+      "acceptance_ref": "3",
+      "type": "contract",
+      "expected": "console.sh·install-mac.sh 양쪽 pkill -f 패턴 0건, pkill/pgrep/killall 0건, bash -n exit 0 (MV-21)",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "FAIL: pkill -f \"dashboard.backend.main:app\" 잔존 — console.sh=1, install-mac.sh=1. pkill/pgrep/killall 문자열 console.sh=1 install-mac.sh=2. MV-21 미달성",
+      "red_at": "2026-09-13T00:48:31+09:00",
+      "required_fidelity": "mock",
+      "surface_ref": "console-stop",
+      "surface_kind": "cli",
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [],
+      "assertion_results": [],
+      "observed_evidence": [],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "[T4b 보안수정 후 재실행 2026-09-13] PASS: pkill/pgrep/killall 양쪽 0건(console.sh:0 install-mac.sh:0), bash -n 양쪽 exit 0 (MV-21)",
+      "marked_at": "2026-09-13T09:23:02+09:00",
+      "fidelity": "mock"
+    },
+    {
+      "id": "S-2",
+      "acceptance_ref": "3",
+      "type": "contract",
+      "expected": "grep -rc 'console\\.pid' opal/tools/test-tool/ == 0 (MV-22 경계 회귀 감시). RED 시점 PASS가 정상 — 조작 금지",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "mock",
+      "surface_ref": "console-stop",
+      "surface_kind": "cli",
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [],
+      "assertion_results": [],
+      "observed_evidence": [],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "[T4b 보안수정 후 재실행 2026-09-13] PASS: grep -rc console.pid opal/tools/test-tool/ == 0 (MV-22 회귀 0)",
+      "marked_at": "2026-09-13T09:23:02+09:00",
+      "fidelity": "mock"
+    },
+    {
+      "id": "S-9",
+      "acceptance_ref": "3",
+      "type": "contract",
+      "expected": "install-mac.sh console_autostart가 D-13 3분기이고 FRAMEWORK_ROOT/opal/tools/opal-cli/run.sh 위임 + || true. bash -n exit 0",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "FAIL: install-mac.sh console_autostart에 D-13 3분기 위임 구조·FRAMEWORK_ROOT/opal/tools/opal-cli/run.sh·|| true 미발견. 현행은 2분기 + pkill 폴백",
+      "red_at": "2026-09-13T00:48:31+09:00",
+      "required_fidelity": "mock",
+      "surface_ref": "console-stop",
+      "surface_kind": "cli",
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [],
+      "assertion_results": [],
+      "observed_evidence": [],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "[T4b 보안수정 후 재실행 2026-09-13] PASS: install-mac.sh console_autostart D-13 3분기 위임 + || true. m-7 반영으로 stopped=false 시 reason= warn 승격",
+      "marked_at": "2026-09-13T09:23:02+09:00",
+      "fidelity": "mock"
+    },
+    {
+      "id": "S-10",
+      "acceptance_ref": "1",
+      "type": "contract",
+      "expected": "start 통합 정적(F-7): local pid=$! 가 nohup ... & 직후 줄, writer 5인자 호출, writer 이후 success에 $! 부재, D-12(가) 사전검증이 nohup 이전",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "FAIL: start 블록에 local pid=$! 캡처 부재(nohup=36줄, pid_capture=none), console_write_pid_record 5인자 호출 부재",
+      "red_at": "2026-09-13T00:48:31+09:00",
+      "required_fidelity": "mock",
+      "surface_ref": "console-start",
+      "surface_kind": "cli",
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [],
+      "assertion_results": [],
+      "observed_evidence": [],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "[T4b 보안수정 후 재실행 2026-09-13] PASS: nohup 직후 local pid=$!, writer 5인자 호출, 이후 $! 미사용, D-12(가) 사전검증이 nohup 이전 — M-3 수정 후에도 구조 유지",
+      "marked_at": "2026-09-13T09:23:02+09:00",
+      "fidelity": "mock"
+    },
+    {
+      "id": "S-13",
+      "acceptance_ref": "1,2",
+      "type": "contract",
+      "expected": "start 3분기 정적(F-6): ①레코드+kill -0+app_dir 일치 → return 0 ②health 응답 시 writer 호출 없이 lsof -ti tcp:7823 출력 + return 0 ③만 기동 진입",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "FAIL: start 3분기(레코드+kill -0+app_dir 일치 / 레코드없이 health응답 / 정상기동) 구조 전부 미발견. 현행은 health 단일 분기(console.sh:54-57)",
+      "red_at": "2026-09-13T00:48:31+09:00",
+      "required_fidelity": "mock",
+      "surface_ref": "console-start",
+      "surface_kind": "cli",
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [],
+      "assertion_results": [],
+      "observed_evidence": [],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "[T4b 보안수정 후 재실행 2026-09-13] PASS: start 3분기 유지 — ①레코드+생존+app_dir 일치 return 0 ②writer 미호출+lsof 토큰+return 0 ③만 기동",
+      "marked_at": "2026-09-13T09:23:02+09:00",
+      "fidelity": "mock"
+    },
+    {
+      "id": "S-3",
+      "acceptance_ref": "1",
+      "type": "unit",
+      "expected": "console_write_pid_record 호출 → run/console.pid 생성, json.tool 파싱, 키 정확히 6개, pid·port가 number, app_dir==opal_home+'/dashboard-server', started_at ISO-8601 (MV-23). 따옴표·개행 경로는 return 1 + 파일 미생성",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "FAIL: console_write_pid_record: command not found (exit 127). 레코드 파일 미생성 — writer 함수 미신설",
+      "red_at": "2026-09-13T00:48:31+09:00",
+      "required_fidelity": "mock",
+      "surface_ref": "console-start",
+      "surface_kind": "cli",
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [],
+      "assertion_results": [],
+      "observed_evidence": [],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "[T4b 보안수정 후 재실행 2026-09-13] PASS: 6필드 JSON 생성(MV-23). m-5/m-6 반영 — run/ 0700, 레코드 0600, tmp.$$ 경유 원자적 mv, 심볼릭 링크 거부",
+      "marked_at": "2026-09-13T09:23:02+09:00",
+      "fidelity": "mock"
+    },
+    {
+      "id": "S-11",
+      "acceptance_ref": "2",
+      "type": "unit",
+      "expected": "판정표 #2: 오염 레코드(pid:\"abc\") → stop → stopped=false pid=- reason=unreadable_record, 레코드 잔존, kill 0회",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "FAIL: 오염 레코드(pid:\"abc\")에도 pkill 전역 호출됨 — 스텁 로그에 -f dashboard.backend.main:app 기록. stdout에 reason=unreadable_record 부재",
+      "red_at": "2026-09-13T00:48:31+09:00",
+      "required_fidelity": "mock",
+      "surface_ref": "console-stop",
+      "surface_kind": "cli",
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [],
+      "assertion_results": [],
+      "observed_evidence": [],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "[T4b 보안수정 후 재실행 2026-09-13] PASS: 판정표 #2 — 비정수 pid → stopped=false pid=- reason=unreadable_record, 레코드 잔존, kill 0회. B-1 수정으로 pid=0/1/음수도 이 분기로 합류",
+      "marked_at": "2026-09-13T09:23:02+09:00",
+      "fidelity": "mock"
+    },
+    {
+      "id": "S-12",
+      "acceptance_ref": "2",
+      "type": "unit",
+      "expected": "판정표 #4: identity 일치 + 죽은 pid → stop → stopped=false pid=<N> reason=stale_record + 레코드 삭제",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "FAIL: 픽스처 레코드 생성 실패(console_write_pid_record 미신설). stale_record 분기·레코드 삭제 관측 원천 불가",
+      "red_at": "2026-09-13T00:48:31+09:00",
+      "required_fidelity": "mock",
+      "surface_ref": "console-stop",
+      "surface_kind": "cli",
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [],
+      "assertion_results": [],
+      "observed_evidence": [],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "[T4b 보안수정 후 재실행 2026-09-13] PASS: 판정표 #4 — 죽은 pid + identity 일치 → stopped=false pid=<N> reason=stale_record + 레코드 삭제",
+      "marked_at": "2026-09-13T09:23:02+09:00",
+      "fidelity": "mock"
+    },
+    {
+      "id": "S-14",
+      "acceptance_ref": "2",
+      "type": "unit",
+      "expected": "판정표 #6: SIGTERM 무시 프로세스 → stop → 약 5초 후 stopped=false pid=<N> reason=terminate_timeout, 프로세스 생존, 레코드 잔존",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "FAIL: 픽스처 레코드 생성 실패(writer 미신설). terminate_timeout 5초 분기 관측 원천 불가",
+      "red_at": "2026-09-13T00:48:31+09:00",
+      "required_fidelity": "mock",
+      "surface_ref": "console-stop",
+      "surface_kind": "cli",
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [],
+      "assertion_results": [],
+      "observed_evidence": [],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "[T4b 보안수정 후 재실행 2026-09-13] PASS: 판정표 #6 — SIGTERM 무시 프로세스 → 5초 후 stopped=false pid=<N> reason=terminate_timeout, 생존, 레코드 잔존",
+      "marked_at": "2026-09-13T09:23:02+09:00",
+      "fidelity": "mock"
+    },
+    {
+      "id": "S-8",
+      "acceptance_ref": "5",
+      "type": "integration",
+      "expected": "자기 전용 P1 + writer 레코드 → console status → pid·app_dir·opal_home·host·port·started_at 값 일치 단언 + health 원문이 레코드 줄보다 앞 + health 양 분기 모두 레코드 줄 출력(D-10)",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "FAIL: 픽스처 레코드 생성 실패(writer 미신설) + 현행 status에 레코드 줄 자체가 없음 — pid=/app_dir=/opal_home=/host=/port=/started_at= 값 단언 원천 불가",
+      "red_at": "2026-09-13T00:48:31+09:00",
+      "required_fidelity": "real-usage",
+      "surface_ref": "console-status",
+      "surface_kind": "cli",
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "status_pid_match",
+          "expected": "pid=<P1>",
+          "actual": "pid=<P1>"
+        },
+        {
+          "id": "status_app_dir_match",
+          "expected": "app_dir=<s8-home>/dashboard-server",
+          "actual": "app_dir=<s8-home>/dashboard-server"
+        },
+        {
+          "id": "status_six_fields",
+          "expected": "pid,app_dir,opal_home,host,port,started_at 6필드 값 일치",
+          "actual": "pid,app_dir,opal_home,host,port,started_at 6필드 값 일치"
+        },
+        {
+          "id": "status_output_order",
+          "expected": "health JSON 원문이 레코드 줄보다 앞",
+          "actual": "health JSON 원문이 레코드 줄보다 앞"
+        },
+        {
+          "id": "status_both_branches",
+          "expected": "health 성공·실패 양 분기 모두 레코드 줄 출력(D-10)",
+          "actual": "health 성공·실패 양 분기 모두 레코드 줄 출력(D-10)"
+        }
+      ],
+      "observed_evidence": [
+        "console_status_stdout",
+        "pid_record_file",
+        "user_7823_health_code"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "[T4b 보안수정 후 재실행 2026-09-13] 전용 서버 실기동 + console_write_pid_record 레코드 → console status 실행. 6필드 값 일치·출력 순서·양분기 출력 관측. 사용자 7823 200 불변 | T4b 보안수정(B-1 kill 0 차단·M-3 검증통일·M-1 단일스냅샷·m-4~m-8) 후 재실행에서 동일 관측 재현, 회귀 0",
+      "marked_at": "2026-09-13T09:23:02+09:00",
+      "fidelity": "real-usage"
+    },
+    {
+      "id": "S-4",
+      "acceptance_ref": "2",
+      "type": "e2e",
+      "expected": "레코드 부재: 두 서버 기동 → stop → 두 pid 생존 + health 200, stopped=false pid=- reason=no_record, D-9 토큰 lsof -ti tcp:7823 포함. RED는 D-16 (a)pgrep 집합중첩 + (b)pkill argv 스텁 둘 다",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "FAIL: (b)pkill argv 스텁 로그에 전역 패턴 -f dashboard.backend.main:app 기록됨, stdout에 reason=no_record 부재. (a)pgrep 집합중첩: 매치 집합이 P1·P2·사용자7823(8532) 모두 포함 — RK-1 사전 실패 증명(kill 0회)",
+      "red_at": "2026-09-13T00:48:31+09:00",
+      "required_fidelity": "real-usage",
+      "surface_ref": "console-stop",
+      "surface_kind": "cli",
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "both_servers_alive",
+          "expected": "P1 alive=1, P2 alive=1",
+          "actual": "P1 alive=1, P2 alive=1"
+        },
+        {
+          "id": "both_health_200",
+          "expected": "P1 health=200, P2 health=200",
+          "actual": "P1 health=200, P2 health=200"
+        },
+        {
+          "id": "stop_reason_no_record",
+          "expected": "stopped=false pid=- reason=no_record",
+          "actual": "stopped=false pid=- reason=no_record"
+        },
+        {
+          "id": "migration_token",
+          "expected": "lsof -ti tcp:7823 토큰 포함",
+          "actual": "lsof -ti tcp:7823 토큰 포함"
+        },
+        {
+          "id": "pgrep_overlap_rk1",
+          "expected": "pgrep 집합이 P1·P2·사용자8532 모두 포함",
+          "actual": "pgrep 집합이 P1·P2·사용자8532 모두 포함"
+        },
+        {
+          "id": "user_console_unchanged",
+          "expected": "7823 health 200",
+          "actual": "7823 health 200"
+        }
+      ],
+      "observed_evidence": [
+        "stop_stdout",
+        "process_liveness_kill0",
+        "health_http_code",
+        "pgrep_match_set"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "[T4b 보안수정 후 재실행 2026-09-13] 두 서버 실기동 → 레코드 부재 상태로 실제 console stop 호출 → kill 0회, 두 pid 생존·health 200 실관측. S-4(a) pgrep 집합 중첩이 RK-1 사전 실패 증명 | T4b 보안수정(B-1 kill 0 차단·M-3 검증통일·M-1 단일스냅샷·m-4~m-8) 후 재실행에서 동일 관측 재현, 회귀 0",
+      "marked_at": "2026-09-13T09:23:02+09:00",
+      "fidelity": "real-usage"
+    },
+    {
+      "id": "S-5",
+      "acceptance_ref": "2",
+      "type": "e2e",
+      "expected": "identity 불일치: 레코드 app_dir을 other-home으로 → stop → 두 서버 생존, stopped=false pid=- reason=identity_mismatch, 레코드 잔존. RED는 D-16 (b)",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "FAIL: 픽스처 레코드 생성 실패(writer 미신설). identity_mismatch 분기 관측 원천 불가. (b)스텁으로 전역 pkill 호출 관측",
+      "red_at": "2026-09-13T00:48:31+09:00",
+      "required_fidelity": "real-usage",
+      "surface_ref": "console-stop",
+      "surface_kind": "cli",
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "both_servers_alive",
+          "expected": "P1 alive=1, P2 alive=1",
+          "actual": "P1 alive=1, P2 alive=1"
+        },
+        {
+          "id": "stop_reason_identity_mismatch",
+          "expected": "stopped=false pid=- reason=identity_mismatch",
+          "actual": "stopped=false pid=- reason=identity_mismatch"
+        },
+        {
+          "id": "record_retained",
+          "expected": "레코드 파일 잔존",
+          "actual": "레코드 파일 잔존"
+        },
+        {
+          "id": "user_console_unchanged",
+          "expected": "7823 health 200",
+          "actual": "7823 health 200"
+        }
+      ],
+      "observed_evidence": [
+        "stop_stdout",
+        "process_liveness_kill0",
+        "pid_record_file",
+        "health_http_code"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "[T4b 보안수정 후 재실행 2026-09-13] 두 서버 실기동 + 레코드 app_dir을 other-home으로 기록 → 실제 console stop → 두 서버 생존, identity_mismatch, 레코드 잔존 실관측 | T4b 보안수정(B-1 kill 0 차단·M-3 검증통일·M-1 단일스냅샷·m-4~m-8) 후 재실행에서 동일 관측 재현, 회귀 0",
+      "marked_at": "2026-09-13T09:23:02+09:00",
+      "fidelity": "real-usage"
+    },
+    {
+      "id": "S-6",
+      "acceptance_ref": "2,4",
+      "type": "e2e",
+      "expected": "AC-3 정방향(MV-37): P1+P2 동시 기동 → 정상 레코드 → stop → P1 종료 AND P2 생존(kill -0 + health 200) AND 레코드 삭제 AND stopped=true pid=<N> stdout 단언 AND 사용자 7823 불변. RED는 D-16 (a)+(b) 둘 다",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "FAIL: 픽스처 레코드 생성 실패(writer 미신설) — (a)(b) 하위 단언 도달 전 차단. (a)pgrep 집합중첩으로 P1·P2·사용자7823 동시 매칭 확인",
+      "red_at": "2026-09-13T00:48:32+09:00",
+      "required_fidelity": "real-usage",
+      "surface_ref": "console-stop",
+      "surface_kind": "cli",
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "p1_terminated",
+          "expected": "P1 alive=0 (kill -0 실패 + health 연결 실패)",
+          "actual": "P1 alive=0 (kill -0 실패 + health 연결 실패)"
+        },
+        {
+          "id": "p2_survived",
+          "expected": "P2 alive=1 + health=200",
+          "actual": "P2 alive=1 + health=200"
+        },
+        {
+          "id": "record_deleted",
+          "expected": "레코드 파일 삭제됨",
+          "actual": "레코드 파일 삭제됨"
+        },
+        {
+          "id": "stop_stdout_success",
+          "expected": "stopped=true pid=<P1>",
+          "actual": "stopped=true pid=<P1>"
+        },
+        {
+          "id": "pgrep_overlap_rk1",
+          "expected": "pgrep 집합이 P1·P2·사용자8532 모두 포함",
+          "actual": "pgrep 집합이 P1·P2·사용자8532 모두 포함"
+        },
+        {
+          "id": "user_console_unchanged",
+          "expected": "7823 health 200 불변",
+          "actual": "7823 health 200 불변"
+        }
+      ],
+      "observed_evidence": [
+        "stop_stdout",
+        "process_liveness_kill0",
+        "health_http_code",
+        "pid_record_file",
+        "pgrep_match_set"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "[T4b 보안수정 후 재실행 2026-09-13] MV-37 정방향/AC-3: P1(콘솔역)+P2(E2E역)를 동일 ASGI 문자열로 동시 실기동 → 정상 레코드 → 실제 console stop → P1만 종료, P2 생존, 레코드 삭제, stopped=true 실관측. 사용자 7823 200 불변 | T4b 보안수정(B-1 kill 0 차단·M-3 검증통일·M-1 단일스냅샷·m-4~m-8) 후 재실행에서 동일 관측 재현, 회귀 0",
+      "marked_at": "2026-09-13T09:23:02+09:00",
+      "fidelity": "real-usage"
+    },
+    {
+      "id": "S-7",
+      "acceptance_ref": "4",
+      "type": "e2e",
+      "expected": "AC-3 역방향(MV-37, D-18): P2를 set -m으로 기동해 pgid==pid 단언 후 kill -- -<PGID> 그룹 종료 → P2 종료, P1 생존 + health 200 + 레코드 잔존, 사용자 7823 health 200 단언. 직후 console stop으로 stopped=true 관측(vacuity 제거). ④ stop 실호출 RED는 C-2로 면제",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "real-usage",
+      "surface_ref": "console-stop",
+      "surface_kind": "cli",
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "pgid_equals_pid",
+          "expected": "P2 pgid == P2 pid (set -m 그룹 기동)",
+          "actual": "P2 pgid == P2 pid (set -m 그룹 기동)"
+        },
+        {
+          "id": "p2_group_terminated",
+          "expected": "kill -- -<PGID> 후 P2 alive=0",
+          "actual": "kill -- -<PGID> 후 P2 alive=0"
+        },
+        {
+          "id": "p1_survived",
+          "expected": "P1 alive=1 + health=200",
+          "actual": "P1 alive=1 + health=200"
+        },
+        {
+          "id": "record_retained",
+          "expected": "레코드 파일 잔존",
+          "actual": "레코드 파일 잔존"
+        },
+        {
+          "id": "user_console_survived",
+          "expected": "7823 health 200",
+          "actual": "7823 health 200"
+        },
+        {
+          "id": "stop_after_group_kill",
+          "expected": "stopped=true pid=<P1> (레코드·identity 미훼손)",
+          "actual": "stopped=true pid=<P1> (레코드·identity 미훼손)"
+        }
+      ],
+      "observed_evidence": [
+        "process_group_pgid",
+        "process_liveness_kill0",
+        "health_http_code",
+        "pid_record_file",
+        "stop_stdout"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "[T4b 보안수정 후 재실행 2026-09-13] MV-37 역방향/AC-3: P2를 set -m으로 자기 프로세스 그룹에 기동(pgid==pid 단언) → kill -- -<PGID> 그룹 종료 → P2 종료, P1 생존+health 200+레코드 잔존, 사용자 7823 200. ④ 직후 실제 console stop이 stopped=true 반환 | T4b 보안수정(B-1 kill 0 차단·M-3 검증통일·M-1 단일스냅샷·m-4~m-8) 후 재실행에서 동일 관측 재현, 회귀 0",
+      "marked_at": "2026-09-13T09:23:03+09:00",
+      "fidelity": "real-usage"
+    }
+  ]
+}

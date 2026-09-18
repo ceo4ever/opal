@@ -3,7 +3,7 @@
  *   "module": "api-client",
  *   "layer": "api-client",
  *   "domain": "core",
- *   "description": "OPAL Console API 클라이언트 — fetch 래퍼(선택적 timeoutMs AbortController 타임아웃 가드 + AbortError→사용자 친화 메시지 변환) + TanStack QueryClient (refetchInterval 30s, staleTime 30s). 비정상 응답 시 JSON body의 detail 필드(FastAPI HTTPException=문자열, Pydantic 422=배열)를 파싱해 에러 메시지 뒤에 덧붙인다 — 파싱 실패 시 기존 메시지 그대로 폴백(안전 폴백).",
+ *   "description": "OPAL Console API 클라이언트 — fetch 래퍼(선택적 timeoutMs AbortController 타임아웃 가드 + AbortError→사용자 친화 메시지 변환) + TanStack QueryClient (refetchInterval 30s, staleTime 30s). API_BASE_URL은 import.meta.env.VITE_API_BASE_URL(빌드·기동 시점 주입)이며 미주입 시 빈 문자열(동일 오리진 상대 경로)로 폴백한다 — base에 /api 접두사를 넣지 않는다(TRD.md TD-6, TASK.md C-8). 비정상 응답 시 JSON body의 detail 필드(FastAPI HTTPException=문자열, Pydantic 422=배열)를 파싱해 에러 메시지 뒤에 덧붙인다 — 파싱 실패 시 기존 메시지 그대로 폴백(안전 폴백).",
  *   "exports": ["apiClient", "queryClient", "API_BASE_URL"],
  *   "task": "061"
  * }
@@ -11,7 +11,7 @@
 
 import { QueryClient } from "@tanstack/react-query";
 
-export const API_BASE_URL = "http://127.0.0.1:7823";
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "";
 
 /**
  * 에러 응답 body에서 FastAPI/Pydantic detail 사유를 문자열화한다.

@@ -118,7 +118,10 @@
 - [[dev-pilot-profile-unification]] — 개발 Pilot Full/Short profile 통합 계약 #pilot #dev #opd #opds #compatibility
 - [[dict-선행-model-ssot]] — DICT가 MODEL을 선행한다 — 사전이 속성명·타입 SSOT #architecture-decision #data-design #ssot #pipeline
 - [[dl-contract-download-verify-target-identity]] — DL-CONTRACT — 검증 대상과 다운로드 대상은 같은 파일이어야 한다 #deploy #release #install #checksum #contract
+- [[e2e-candidate-order-and-fidelity-ownership]] — E2E 후보 순서·충실도 소유 경계 — 계약이 소유하고 코드가 복제하지 않는다 #e2e #driver #fidelity #contract #ownership
 - [[e2e-cmux-first-playwright-fallback]] — E2E 도구 우선순위 — cmux 1순위 → playwright 폴백 (에러코드 소비) #testing #e2e #cmux #framework
+- [[e2e-frozen-spec-seeding-constraint]] — 동결 spec 시드 제약 — lock 이후 시나리오 추가 불가 #e2e #red-first #ssot #tool-gated
+- [[e2e-integration-gap-pattern]] — 통합 지점 공백 패턴 — 자체 테스트 통과·연결부 미검증 #e2e #integration #testing #contract
 - [[electron-main-owned-project-registry]] — Electron main-owned Project Registry #electron #security #workstudio
 - [[enforce-rule-legacy-data-surfacing-lesson]] — enforce 규칙 신설 시 잔존 데이터 표면화 — 배포 전 실 데이터 스캔 필요 교훈 #lesson #enforce #validate #brain-tool
 - [[enforcement-basis-must-be-structural-not-voluntary]] — 강제의 판정 근거는 자발적 표시가 아니라 구조여야 한다 — 3회 우회 후 행 기반 판정 + CLOSE 차단 #enforcement #governance #state-tool #worker #measurement #lesson-learned
@@ -320,6 +323,7 @@
 - [[skill-registry-index-registration-required-for-discovery]] — 신규 스킬은 파일 배포만으로 부족하다 — 레지스트리 인덱스 등록이 발견의 전제조건 #skill-registry #deployment-gap #discovery #lesson
 - [[skill-registry-validate-extension]] — skill-registry validate 확장 — dangling error 격상 + unregistered 역방향 감지 #skill-registry #validate #drift-detection #tooling
 - [[skill-rename-validate-pattern]] — 스킬 rename 후 레지스트리 정합 검증 패턴 #skill-registry #validate #rename #drift-detection #lesson
+- [[skip-gate-key-must-include-execution-identity]] — 재실행 생략 키는 실행 정체를 포함해야 한다 #e2e #fidelity #cache #gate #evidence
 - [[source-measured-figures-over-stale-docs]] — 규모 수치의 SSOT는 문서가 아니라 소스 실측이다 #ssot #documentation #drift #measurement #discipline
 - [[split-return-contract-no-denominator-expansion]] — 분리형 반환 계약 — 기존 키의 분모를 확대하지 않는다 #api-contract #return-value #denominator #silent-break #opd
 - [[stale-doc-assertions-outlive-restructuring]] — 문서 문면 단언은 재구조화를 따라가지 못하고 조용히 stale이 된다 #testing #documentation #drift #lesson #assertion

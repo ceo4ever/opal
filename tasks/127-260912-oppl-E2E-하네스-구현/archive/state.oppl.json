@@ -1,0 +1,279 @@
+{
+  "task_id": "127-260912-oppl-E2E-하네스-구현",
+  "skill": "oppl",
+  "mode": "agentic",
+  "schema_version": "1.1",
+  "created_at": "2026-09-12 21:02:01",
+  "updated_at": "2026-09-13 12:17:49",
+  "current_status": "completed_unmerged",
+  "rows": [
+    {
+      "row_id": 1,
+      "stage": "TASK",
+      "item": "TASK.md 작성",
+      "key": "task.task_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-12 21:02:32",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 2,
+      "stage": "TASK",
+      "item": "STATE.md 생성",
+      "key": "task.state_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-12 21:02:32",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 3,
+      "stage": "TASK",
+      "item": "사용자 확인",
+      "key": "task.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-12 21:03:14",
+      "owner": "auto",
+      "note": "auto-approved on ANALYSIS entry"
+    },
+    {
+      "row_id": 4,
+      "stage": "ANALYSIS",
+      "item": "D1 인터뷰 — 명확화 4요소(목표/범위/제약/완료기준)",
+      "key": "analysis.d1_interview",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-12 21:03:14",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 5,
+      "stage": "ANALYSIS",
+      "item": "D1.5 여정 매핑 (조건부 — user-facing 프로젝트만, `references/journey-flow.md`)",
+      "key": "analysis.d1_5_journey",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-12 21:03:14",
+      "owner": "PM",
+      "note": "스킵 — CLI 내부 자산 (journey-flow.md §2)"
+    },
+    {
+      "row_id": 6,
+      "stage": "PLAN",
+      "item": "D2 PRD 작성",
+      "key": "plan.d2_prd",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-12 21:10:35",
+      "owner": "PM",
+      "note": null,
+      "worker_duration_minutes": 4
+    },
+    {
+      "row_id": 7,
+      "stage": "PLAN",
+      "item": "D3 TRD 작성",
+      "key": "plan.d3_trd",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-12 21:25:15",
+      "owner": "PM",
+      "note": null,
+      "worker_duration_minutes": 12
+    },
+    {
+      "row_id": 8,
+      "stage": "PLAN",
+      "item": "D4 CONTRACT 작성 (`references/contract.md`)",
+      "key": "plan.d4_contract",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-12 21:39:41",
+      "owner": "PM",
+      "note": null,
+      "worker_duration_minutes": 11
+    },
+    {
+      "row_id": 9,
+      "stage": "WBS",
+      "item": "D5 백로그 생성 (`backlog-tool init`+`add-task`)",
+      "key": "wbs.d5_backlog",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-12 21:42:36",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 10,
+      "stage": "REVIEW",
+      "item": "D6 Evaluator 설계 검토 (phase: design-review)",
+      "key": "review.d6_evaluator",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-12 22:06:11",
+      "owner": "PM",
+      "note": null,
+      "worker_duration_minutes": 12
+    },
+    {
+      "row_id": 11,
+      "stage": "REVIEW",
+      "item": "PM Gate",
+      "key": "review.pm_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-12 22:06:11",
+      "owner": "PM",
+      "note": null,
+      "gate": {
+        "artifacts": [
+          "PRD.md",
+          "TRD.md",
+          "CONTRACT.md",
+          "BACKLOG.md"
+        ],
+        "checklist": [
+          "D6 Evaluator 설계 검토 verdict pass + 미해결 이슈 0",
+          "backlog-tool coverage-check 통과 (surface_uncovered·integration_task_missing 0건)"
+        ]
+      }
+    },
+    {
+      "row_id": 12,
+      "stage": "REVIEW",
+      "item": "D7 사용자 확정 게이트 (4요소 잠김 확인)",
+      "key": "review.d7_user_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-12 22:18:31",
+      "owner": "user",
+      "note": "캡틴 확인: Loop 1 4요소 확정 승인. docs/ 승격은 미지시로 보류, 태스크 폴더 유지"
+    },
+    {
+      "row_id": 13,
+      "stage": "EXECUTE",
+      "item": "L0 태스크 선택 (상세: 태스크 목록 참조 — `add-row`로 T{NN} 행 동적 삽입)",
+      "key": "execute.l0_select",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-12 23:44:34",
+      "owner": "PM",
+      "note": "L0 1회전: T01 선택·완주. 잔여 14건"
+    },
+    {
+      "row_id": 14,
+      "stage": "EXECUTE",
+      "item": "T01: 실행 스켈레톤 — 주소 주입·CORS 포함 FE→BE 관통 (T1~T5+G)",
+      "key": "execute.t01_1",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-12 23:44:34",
+      "owner": "PM",
+      "note": "시나리오 8/8 pass, real-usage 충족, test-tool 88 passed(회귀 0)",
+      "worker_duration_minutes": 82
+    },
+    {
+      "row_id": 15,
+      "stage": "EXECUTE",
+      "item": "T02: Console 프로세스 소유권 — PID 레코드·pkill 2지점 제거 (T1~T5+G)",
+      "key": "execute.t02_1",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-13 09:28:52",
+      "owner": "PM",
+      "note": "20/20 PASS, 시나리오 14/14, MV-21 양쪽 0건, pytest 88 passed, 7823 200 유지",
+      "worker_duration_minutes": 245
+    },
+    {
+      "row_id": 16,
+      "stage": "EXECUTE",
+      "item": "PM Gate",
+      "key": "execute.pm_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-13 12:15:57",
+      "owner": "PM",
+      "note": "T01·T02 Pass. 잔여 14건은 캡틴 지시로 중단",
+      "gate": {
+        "artifacts": [],
+        "checklist": [
+          "backlog-tool select-next가 next_task_id: null 반환 (백로그 전체 소진)",
+          "add-row로 삽입된 전체 T{NN} 행이 mark --done 완료",
+          "L∞ 관찰에서 파악된 blocked/범위 확장(add-task) 이슈 전부 처리"
+        ]
+      }
+    },
+    {
+      "row_id": 17,
+      "stage": "EXECUTE",
+      "item": "사용자 확인",
+      "key": "execute.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-13 12:15:58",
+      "owner": "user",
+      "note": "캡틴 지시: oppl 방식 부적합 판단, 일단 중단하고 정리"
+    },
+    {
+      "row_id": 18,
+      "stage": "VERIFY",
+      "item": "L✓ 종료 판정 (`backlog-tool done-check` all_done + 회귀 0)",
+      "key": "verify.done_check",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-13 12:15:58",
+      "owner": "PM",
+      "note": "done-check all_done=false (2/16) — 종료조건 충족이 아니라 사용자 지시에 의한 조기 종료. 회귀 0"
+    },
+    {
+      "row_id": 19,
+      "stage": "VERIFY",
+      "item": "PM Gate",
+      "key": "verify.pm_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-13 12:15:58",
+      "owner": "PM",
+      "note": "완료 2건 전건 검증 통과, 잔여 14건 백로그 보존",
+      "gate": {
+        "artifacts": [],
+        "checklist": [
+          "backlog-tool done-check → all_done:true",
+          "test-tool scenario-conformance → all_surfaces_green:true",
+          "회귀 0",
+          "user-facing 프로젝트는 여정 스모크 1회 통과 (references/journey-flow.md §6)"
+        ]
+      }
+    },
+    {
+      "row_id": 20,
+      "stage": "VERIFY",
+      "item": "사용자 확인",
+      "key": "verify.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-13 12:15:58",
+      "owner": "user",
+      "note": "캡틴 확인: 중단·정리 지시"
+    },
+    {
+      "row_id": 21,
+      "stage": "CLOSE",
+      "item": "DONE.md 생성",
+      "key": "close.done_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-13 12:17:49",
+      "owner": "PM",
+      "note": "조기 종료 — Loop 1 확정 + T01·T02 완주, 잔여 14건 백로그 보존"
+    }
+  ],
+  "next_action": "태스크 완료",
+  "worktree": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_127"
+}
