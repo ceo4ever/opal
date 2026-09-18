@@ -4,8 +4,8 @@
   "mode": "agentic",
   "schema_version": "1.1",
   "created_at": "2026-09-14 13:12:10",
-  "updated_at": "2026-09-15 10:39:06",
-  "current_status": "in_progress",
+  "updated_at": "2026-09-18 10:34:49",
+  "current_status": "done",
   "rows": [
     {
       "row_id": 1,
@@ -36,9 +36,10 @@
       "key": "analysis.analysis_md",
       "status": "done",
       "status_label": "✅",
-      "timestamp": "2026-09-14 13:24:29",
+      "timestamp": "2026-09-18 10:34:34",
       "owner": "PM",
-      "note": null
+      "note": "세션 압축 전 구간이라 워커 duration_ms 복구 불가 — 미측정 선언",
+      "worker_duration_unknown": true
     },
     {
       "row_id": 4,
@@ -82,9 +83,10 @@
       "key": "plan.plan_md",
       "status": "done",
       "status_label": "✅",
-      "timestamp": "2026-09-14 13:38:43",
+      "timestamp": "2026-09-18 10:34:35",
       "owner": "PM",
-      "note": null
+      "note": "세션 압축 전 구간이라 워커 duration_ms 복구 불가 — 미측정 선언",
+      "worker_duration_unknown": true
     },
     {
       "row_id": 7,
@@ -128,9 +130,10 @@
       "key": "test_scenario.test_scenario_md",
       "status": "done",
       "status_label": "✅",
-      "timestamp": "2026-09-14 13:41:15",
+      "timestamp": "2026-09-18 10:34:35",
       "owner": "PM",
-      "note": null
+      "note": "세션 압축 전 구간이라 워커 duration_ms 복구 불가 — 미측정 선언",
+      "worker_duration_unknown": true
     },
     {
       "row_id": 10,
@@ -185,22 +188,23 @@
       "stage": "TEST",
       "item": "작업",
       "key": "test.run_tests",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-18 10:34:35",
       "owner": "PM",
-      "note": null
+      "note": "세션 압축 전 구간이라 워커 duration_ms 복구 불가 — 미측정 선언",
+      "worker_duration_unknown": true
     },
     {
       "row_id": 14,
       "stage": "TEST",
       "item": "PM Gate",
       "key": "test.pm_gate",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-18 10:34:17",
       "owner": "PM",
-      "note": null,
+      "note": "132 CLOSE — 소유자 승인, W-34·W-36 이월",
       "gate": {
         "artifacts": [
           "TEST-SCENARIO.md",
@@ -219,24 +223,24 @@
       "stage": "TEST",
       "item": "사용자 확인",
       "key": "test.user_confirm",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
-      "owner": "PM",
-      "note": null
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-18 10:34:17",
+      "owner": "user",
+      "note": "132 CLOSE — 소유자 승인, W-34·W-36 이월"
     },
     {
       "row_id": 16,
       "stage": "CLOSE",
       "item": "DONE.md 생성",
       "key": "close.done_md",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
-      "owner": "PM",
-      "note": null
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-18 10:34:42",
+      "owner": "user",
+      "note": "소유자 CLOSE 승인 — W-34 실주행·W-36 출시 판정 이월"
     }
   ],
-  "next_action": "TEST 작업 진입",
+  "next_action": "태스크 완료",
   "worktree": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_132"
 }
