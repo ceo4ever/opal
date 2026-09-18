@@ -265,6 +265,17 @@ opal/core/mcps/*    ──── install ─→  claude mcp add --scope user (Cl
 
 ## OPAL Console (로컬 프로젝트 관리 대시보드)
 
+> **기동·종료 소유권 (127)**: Console 데몬의 PID 레코드는 `$OPAL_HOME/run/console.pid`가
+> 소유하며, `opal-cli console stop`은 **레코드에 등재된 프로세스만** 종료한다. 패턴 매칭
+> (`pkill`·`pgrep`·`killall`)을 쓰지 않는다. 레코드의 `started_at`이 시스템 부팅 시각보다
+> 이르면 PID 재할당 가능성이 있으므로 종료하지 않고 stale로 판정해 레코드만 정리한다
+> (`reason=stale_record`, kill 0회). 파싱 실패는 fail-open이다.
+>
+> **E2E 하네스와의 경계 (127)**: `test-tool e2e`는 Console을 SUT로 기동할 때 자기 소유의
+> 임대 포트를 쓰고 사용자 Console 포트(7823)를 임대 풀에서 제외한다. 회수는 `owned.json`
+> 대장에 등재된 자원만 대상으로 하며 `user_owned=true`는 제외한다 — 사용자가 상시 띄워 둔
+> Console과 E2E run이 서로 간섭하지 않는 근거다.
+
 로컬에서 OPAL로 작업하는 모든 프로젝트를 한 웹 화면에서 조망하는 **읽기 전용 대시보드**(태스크 021 신설). 데이터 SSOT를 새로 만들지 않고, OPAL 도구의 read-only 커맨드 + 마크다운 파서로 각 프로젝트 데이터를 수집·렌더한다. 네이티브 폴더 선택, PM Coordination 작업 공간, 독립 Terminal, 파일 트리 UI는 Console이 아니라 `workstudio/`의 **OPAL WorkStudio** 데스크톱 앱이 소유한다.
 
 ```

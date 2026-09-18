@@ -281,9 +281,13 @@ else
 fi
 
 # --- S-2 (MV-22 회귀 감시, red_required: false — RED 시점 PASS가 정상. 조작 금지) ---
-TC="S-2: grep -rc 'console\\.pid' opal/tools/test-tool/ == 0 (MV-22 경계 회귀 감시)"
-if grep -rq 'console\.pid' "$TEST_TOOL_DIR" 2>/dev/null; then
-    fail "$TC" "$(grep -rn 'console\.pid' "$TEST_TOOL_DIR" 2>/dev/null | head -5)"
+# 감시 대상은 **구현**이다. `tests/` 아래에는 "clean은 console.pid를 보지 않는다"를
+# 단언하는 경계 테스트가 그 문자열을 인용으로 들고 있으므로(예:
+# tests/test_e2e_status_clean.py), 문자열 출현만 보는 감시는 그 테스트를 위반으로
+# 오판정한다. 금지 대상과 금지를 단언하는 테스트를 같은 칸에 넣지 않는다.
+TC="S-2: grep -rc 'console\\.pid' opal/tools/test-tool/ (tests/ 제외) == 0 (MV-22 경계 회귀 감시)"
+if grep -rq --exclude-dir=tests --exclude-dir=__pycache__ 'console\.pid' "$TEST_TOOL_DIR" 2>/dev/null; then
+    fail "$TC" "$(grep -rn --exclude-dir=tests --exclude-dir=__pycache__ 'console\.pid' "$TEST_TOOL_DIR" 2>/dev/null | head -5)"
 else
     pass "$TC (RED 시점에도 PASS — 회귀 감시용, 통과시키려 조작하지 않음)"
 fi

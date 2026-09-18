@@ -4,8 +4,8 @@
   "mode": "agentic",
   "schema_version": "1.1",
   "created_at": "2026-09-12 21:02:01",
-  "updated_at": "2026-09-14 17:47:53",
-  "current_status": "in_progress",
+  "updated_at": "2026-09-18 13:41:05",
+  "current_status": "completed_unmerged",
   "rows": [
     {
       "row_id": 1,
@@ -174,33 +174,33 @@
       "stage": "EXECUTE",
       "item": "작업",
       "key": "execute.implement",
-      "status": "in_progress",
-      "status_label": "🔄",
-      "timestamp": "2026-09-14 17:47:53",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-18 10:32:00",
       "owner": "PM",
-      "note": null
+      "note": "W-1~W-15 완료 + W-14 적발분 3건 PM 직접 수정(F-4 human executor dispatch 분기·F-6 감시 grep 범위·AC-14 경쟁 정의). test-tool 424 passed, console 23/23 ALL PASS, C-1 diff 0"
     },
     {
       "row_id": 13,
       "stage": "TEST",
       "item": "작업",
       "key": "test.run_tests",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-18 10:39:55",
       "owner": "PM",
-      "note": null
+      "note": "AC 16건 관통 — 충족 14 / blocked 1(AC-12 범위밖) / AC-14 수정완료. C-9: test-tool 424 passed, console 23/23 ALL PASS, pkill 0/0, C-1 diff 0. vitest 131은 main 상속"
     },
     {
       "row_id": 14,
       "stage": "TEST",
       "item": "PM Gate",
       "key": "test.pm_gate",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-18 10:40:42",
       "owner": "PM",
-      "note": null,
+      "note": "PM Gate Pass — AC 충족14/blocked1/미충족0, 금지사항 위반 0, C-1 diff 0, 동결 RED 무결(11/11), C-7 분기 실측 process.py 1곳",
       "gate": {
         "artifacts": [
           "TEST-SCENARIO.md",
@@ -219,11 +219,11 @@
       "stage": "TEST",
       "item": "사용자 확인",
       "key": "test.user_confirm",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
-      "owner": "PM",
-      "note": null
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-18 13:38:59",
+      "owner": "user",
+      "note": "캡틴 승인 — TEST 결과 확인, CLOSE 진입"
     },
     {
       "row_id": 16,
@@ -237,6 +237,6 @@
       "note": null
     }
   ],
-  "next_action": "EXECUTE 작업 진행 중",
+  "next_action": "CLOSE DONE.md 생성 진입",
   "worktree": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_127"
 }

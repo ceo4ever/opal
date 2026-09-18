@@ -154,6 +154,41 @@ bash run.sh integration [--scope fe|be] [--url URL] [--project-root PATH]
 
 ---
 
+### `e2e run` (127)
+
+```
+test-tool e2e run --scenario <id> --task-path <path> --target <source-main|source-worktree|installed>
+                  [--worktree-root <path>] [--opal-home <path>]
+                  [--artifact-root <path>] [--run-id <id>]
+```
+
+대상 소스 트리를 해석하고 포트를 임대해 SUT를 기동한 뒤 health 통과를 확인하고 시나리오를
+실행한다. `--scenario`·`--task-path`·`--target` 3개는 필수다. exit은 `status_to_exit(status)`
+결과이며 값은 `{0,6,7,18,19,20}`을 벗어나지 않는다.
+
+- 대상 3종: `source-main`(허브 체크아웃) · `source-worktree`(작업본, `--worktree-root`) ·
+  `installed`(`--opal-home`. install을 호출하지 않으며 사용자 실제 `~/.opal`과 같은 경로면 거부)
+- 산출물은 `OPAL_E2E_ARTIFACT_DIR` 또는 OS 임시 경로에만 쓴다 — 저장소를 오염시키지 않는다
+- 사용자 Console 포트(7823)는 임대 풀에서 제외된다
+
+### `e2e resume` (127)
+
+```
+test-tool e2e resume --run-id <id> --token <resume-token> --submission <path> [--artifact-root <path>]
+```
+
+`awaiting_human`(exit 20)으로 정지한 run을 사람 제출로 재개한다. **사람 제출만으로는 `pass`가
+되지 않으며** 재개 후 `validate_pass_requirements`를 다시 통과해야 최종 판정이 난다.
+
+### `e2e status` / `e2e clean` (127)
+
+`status`는 지정 run의 상태·증적 경로·소유 자원을 반환한다. `clean`은 `owned.json` 대장에
+등재된 자원만 회수하고 `user_owned=true`는 `skipped[]`로 제외한다. 패턴 매칭
+(`pkill`·`pgrep`·`killall`)을 쓰지 않으며 `$OPAL_HOME/run/console.pid`를 보지 않는다.
+
+> 드라이버 후보 순서·충실도 등급·증적 계약의 원문은 이 도구가 소유한다. 파이프라인 문서는
+> 정의를 복제하지 않고 참조한다.
+
 ### `scenario-init`
 
 `test-scenario.json` 생성 (spec존, `locked=false`) — 태스크별 테스트 시나리오 SSOT.

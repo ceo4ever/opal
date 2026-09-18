@@ -326,16 +326,117 @@
         "cleanup"
       ],
       "handoff": null,
-      "result": null,
+      "result": "pass",
       "operational_status": null,
-      "observed_executors": [],
-      "assertion_results": [],
-      "observed_evidence": [],
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "S-40-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550741Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-41-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550749Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-42-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550754Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-43-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550758Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-44-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550761Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-7-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550764Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-10-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550767Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        }
+      ],
+      "observed_evidence": [
+        "action_log",
+        "assertions",
+        "cleanup",
+        "metadata",
+        "probe",
+        "server_log"
+      ],
       "handoff_state": null,
       "run_id": null,
       "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "marked_at": "2026-09-15T21:30:05+09:00",
+      "fidelity": "real-http"
     },
     {
       "id": "S-8",
@@ -377,16 +478,78 @@
         "cleanup"
       ],
       "handoff": null,
-      "result": null,
+      "result": "pass",
       "operational_status": null,
-      "observed_executors": [],
-      "assertion_results": [],
-      "observed_evidence": [],
+      "observed_executors": [
+        "browser"
+      ],
+      "assertion_results": [
+        {
+          "id": "S-34-a1",
+          "expected": "OPAL Console",
+          "actual": "OPAL Console",
+          "passed": true,
+          "verifier": "title",
+          "match": "equals",
+          "executor": "browser",
+          "observed_via_step": "st-ui"
+        },
+        {
+          "id": "S-8-a1",
+          "expected": "OPAL Console",
+          "actual": "OPAL Console",
+          "passed": true,
+          "verifier": "title",
+          "match": "equals",
+          "executor": "browser",
+          "observed_via_step": "st-ui"
+        },
+        {
+          "id": "S-37-a1",
+          "expected": "OPAL Console",
+          "actual": "OPAL Console",
+          "passed": true,
+          "verifier": "title",
+          "match": "equals",
+          "executor": "browser",
+          "observed_via_step": "st-ui"
+        },
+        {
+          "id": "S-38-a1",
+          "expected": "OPAL Console",
+          "actual": "OPAL Console",
+          "passed": true,
+          "verifier": "title",
+          "match": "equals",
+          "executor": "browser",
+          "observed_via_step": "st-ui"
+        },
+        {
+          "id": "S-39-a1",
+          "expected": "OPAL Console",
+          "actual": "OPAL Console",
+          "passed": true,
+          "verifier": "title",
+          "match": "equals",
+          "executor": "browser",
+          "observed_via_step": "st-ui"
+        }
+      ],
+      "observed_evidence": [
+        "action_log",
+        "assertions",
+        "cleanup",
+        "console",
+        "errors",
+        "metadata",
+        "probe",
+        "server_log"
+      ],
       "handoff_state": null,
       "run_id": null,
       "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "marked_at": "2026-09-15T21:28:32+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-9",
@@ -427,16 +590,38 @@
         "cleanup"
       ],
       "handoff": null,
-      "result": null,
+      "result": "pass",
       "operational_status": null,
-      "observed_executors": [],
-      "assertion_results": [],
-      "observed_evidence": [],
+      "observed_executors": [
+        "browser"
+      ],
+      "assertion_results": [
+        {
+          "id": "S-9-a1",
+          "expected": "OPAL Console",
+          "actual": "OPAL Console",
+          "passed": true,
+          "verifier": "title",
+          "match": "equals",
+          "executor": "browser",
+          "observed_via_step": "st-ui"
+        }
+      ],
+      "observed_evidence": [
+        "action_log",
+        "assertions",
+        "cleanup",
+        "console",
+        "errors",
+        "metadata",
+        "probe",
+        "server_log"
+      ],
       "handoff_state": null,
       "run_id": null,
       "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "marked_at": "2026-09-15T21:29:23+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-10",
@@ -477,16 +662,117 @@
         "cleanup"
       ],
       "handoff": null,
-      "result": null,
+      "result": "pass",
       "operational_status": null,
-      "observed_executors": [],
-      "assertion_results": [],
-      "observed_evidence": [],
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "S-40-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550741Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-41-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550749Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-42-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550754Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-43-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550758Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-44-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550761Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-7-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550764Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-10-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550767Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        }
+      ],
+      "observed_evidence": [
+        "action_log",
+        "assertions",
+        "cleanup",
+        "metadata",
+        "probe",
+        "server_log"
+      ],
       "handoff_state": null,
       "run_id": null,
       "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "marked_at": "2026-09-15T21:30:05+09:00",
+      "fidelity": "real-http"
     },
     {
       "id": "S-11",
@@ -1628,16 +1914,78 @@
         "cleanup"
       ],
       "handoff": null,
-      "result": null,
+      "result": "pass",
       "operational_status": null,
-      "observed_executors": [],
-      "assertion_results": [],
-      "observed_evidence": [],
+      "observed_executors": [
+        "browser"
+      ],
+      "assertion_results": [
+        {
+          "id": "S-34-a1",
+          "expected": "OPAL Console",
+          "actual": "OPAL Console",
+          "passed": true,
+          "verifier": "title",
+          "match": "equals",
+          "executor": "browser",
+          "observed_via_step": "st-ui"
+        },
+        {
+          "id": "S-8-a1",
+          "expected": "OPAL Console",
+          "actual": "OPAL Console",
+          "passed": true,
+          "verifier": "title",
+          "match": "equals",
+          "executor": "browser",
+          "observed_via_step": "st-ui"
+        },
+        {
+          "id": "S-37-a1",
+          "expected": "OPAL Console",
+          "actual": "OPAL Console",
+          "passed": true,
+          "verifier": "title",
+          "match": "equals",
+          "executor": "browser",
+          "observed_via_step": "st-ui"
+        },
+        {
+          "id": "S-38-a1",
+          "expected": "OPAL Console",
+          "actual": "OPAL Console",
+          "passed": true,
+          "verifier": "title",
+          "match": "equals",
+          "executor": "browser",
+          "observed_via_step": "st-ui"
+        },
+        {
+          "id": "S-39-a1",
+          "expected": "OPAL Console",
+          "actual": "OPAL Console",
+          "passed": true,
+          "verifier": "title",
+          "match": "equals",
+          "executor": "browser",
+          "observed_via_step": "st-ui"
+        }
+      ],
+      "observed_evidence": [
+        "action_log",
+        "assertions",
+        "cleanup",
+        "console",
+        "errors",
+        "metadata",
+        "probe",
+        "server_log"
+      ],
       "handoff_state": null,
       "run_id": null,
       "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "marked_at": "2026-09-15T21:28:32+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-35",
@@ -1778,16 +2126,78 @@
         "cleanup"
       ],
       "handoff": null,
-      "result": null,
+      "result": "pass",
       "operational_status": null,
-      "observed_executors": [],
-      "assertion_results": [],
-      "observed_evidence": [],
+      "observed_executors": [
+        "browser"
+      ],
+      "assertion_results": [
+        {
+          "id": "S-34-a1",
+          "expected": "OPAL Console",
+          "actual": "OPAL Console",
+          "passed": true,
+          "verifier": "title",
+          "match": "equals",
+          "executor": "browser",
+          "observed_via_step": "st-ui"
+        },
+        {
+          "id": "S-8-a1",
+          "expected": "OPAL Console",
+          "actual": "OPAL Console",
+          "passed": true,
+          "verifier": "title",
+          "match": "equals",
+          "executor": "browser",
+          "observed_via_step": "st-ui"
+        },
+        {
+          "id": "S-37-a1",
+          "expected": "OPAL Console",
+          "actual": "OPAL Console",
+          "passed": true,
+          "verifier": "title",
+          "match": "equals",
+          "executor": "browser",
+          "observed_via_step": "st-ui"
+        },
+        {
+          "id": "S-38-a1",
+          "expected": "OPAL Console",
+          "actual": "OPAL Console",
+          "passed": true,
+          "verifier": "title",
+          "match": "equals",
+          "executor": "browser",
+          "observed_via_step": "st-ui"
+        },
+        {
+          "id": "S-39-a1",
+          "expected": "OPAL Console",
+          "actual": "OPAL Console",
+          "passed": true,
+          "verifier": "title",
+          "match": "equals",
+          "executor": "browser",
+          "observed_via_step": "st-ui"
+        }
+      ],
+      "observed_evidence": [
+        "action_log",
+        "assertions",
+        "cleanup",
+        "console",
+        "errors",
+        "metadata",
+        "probe",
+        "server_log"
+      ],
       "handoff_state": null,
       "run_id": null,
       "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "marked_at": "2026-09-15T21:28:32+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-38",
@@ -1828,16 +2238,78 @@
         "cleanup"
       ],
       "handoff": null,
-      "result": null,
+      "result": "pass",
       "operational_status": null,
-      "observed_executors": [],
-      "assertion_results": [],
-      "observed_evidence": [],
+      "observed_executors": [
+        "browser"
+      ],
+      "assertion_results": [
+        {
+          "id": "S-34-a1",
+          "expected": "OPAL Console",
+          "actual": "OPAL Console",
+          "passed": true,
+          "verifier": "title",
+          "match": "equals",
+          "executor": "browser",
+          "observed_via_step": "st-ui"
+        },
+        {
+          "id": "S-8-a1",
+          "expected": "OPAL Console",
+          "actual": "OPAL Console",
+          "passed": true,
+          "verifier": "title",
+          "match": "equals",
+          "executor": "browser",
+          "observed_via_step": "st-ui"
+        },
+        {
+          "id": "S-37-a1",
+          "expected": "OPAL Console",
+          "actual": "OPAL Console",
+          "passed": true,
+          "verifier": "title",
+          "match": "equals",
+          "executor": "browser",
+          "observed_via_step": "st-ui"
+        },
+        {
+          "id": "S-38-a1",
+          "expected": "OPAL Console",
+          "actual": "OPAL Console",
+          "passed": true,
+          "verifier": "title",
+          "match": "equals",
+          "executor": "browser",
+          "observed_via_step": "st-ui"
+        },
+        {
+          "id": "S-39-a1",
+          "expected": "OPAL Console",
+          "actual": "OPAL Console",
+          "passed": true,
+          "verifier": "title",
+          "match": "equals",
+          "executor": "browser",
+          "observed_via_step": "st-ui"
+        }
+      ],
+      "observed_evidence": [
+        "action_log",
+        "assertions",
+        "cleanup",
+        "console",
+        "errors",
+        "metadata",
+        "probe",
+        "server_log"
+      ],
       "handoff_state": null,
       "run_id": null,
       "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "marked_at": "2026-09-15T21:28:32+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-39",
@@ -1878,16 +2350,78 @@
         "cleanup"
       ],
       "handoff": null,
-      "result": null,
+      "result": "pass",
       "operational_status": null,
-      "observed_executors": [],
-      "assertion_results": [],
-      "observed_evidence": [],
+      "observed_executors": [
+        "browser"
+      ],
+      "assertion_results": [
+        {
+          "id": "S-34-a1",
+          "expected": "OPAL Console",
+          "actual": "OPAL Console",
+          "passed": true,
+          "verifier": "title",
+          "match": "equals",
+          "executor": "browser",
+          "observed_via_step": "st-ui"
+        },
+        {
+          "id": "S-8-a1",
+          "expected": "OPAL Console",
+          "actual": "OPAL Console",
+          "passed": true,
+          "verifier": "title",
+          "match": "equals",
+          "executor": "browser",
+          "observed_via_step": "st-ui"
+        },
+        {
+          "id": "S-37-a1",
+          "expected": "OPAL Console",
+          "actual": "OPAL Console",
+          "passed": true,
+          "verifier": "title",
+          "match": "equals",
+          "executor": "browser",
+          "observed_via_step": "st-ui"
+        },
+        {
+          "id": "S-38-a1",
+          "expected": "OPAL Console",
+          "actual": "OPAL Console",
+          "passed": true,
+          "verifier": "title",
+          "match": "equals",
+          "executor": "browser",
+          "observed_via_step": "st-ui"
+        },
+        {
+          "id": "S-39-a1",
+          "expected": "OPAL Console",
+          "actual": "OPAL Console",
+          "passed": true,
+          "verifier": "title",
+          "match": "equals",
+          "executor": "browser",
+          "observed_via_step": "st-ui"
+        }
+      ],
+      "observed_evidence": [
+        "action_log",
+        "assertions",
+        "cleanup",
+        "console",
+        "errors",
+        "metadata",
+        "probe",
+        "server_log"
+      ],
       "handoff_state": null,
       "run_id": null,
       "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "marked_at": "2026-09-15T21:28:32+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-40",
@@ -1928,16 +2462,117 @@
         "cleanup"
       ],
       "handoff": null,
-      "result": null,
+      "result": "pass",
       "operational_status": null,
-      "observed_executors": [],
-      "assertion_results": [],
-      "observed_evidence": [],
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "S-40-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550741Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-41-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550749Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-42-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550754Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-43-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550758Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-44-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550761Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-7-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550764Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-10-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550767Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        }
+      ],
+      "observed_evidence": [
+        "action_log",
+        "assertions",
+        "cleanup",
+        "metadata",
+        "probe",
+        "server_log"
+      ],
       "handoff_state": null,
       "run_id": null,
       "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "marked_at": "2026-09-15T21:30:05+09:00",
+      "fidelity": "real-http"
     },
     {
       "id": "S-41",
@@ -1978,16 +2613,117 @@
         "cleanup"
       ],
       "handoff": null,
-      "result": null,
+      "result": "pass",
       "operational_status": null,
-      "observed_executors": [],
-      "assertion_results": [],
-      "observed_evidence": [],
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "S-40-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550741Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-41-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550749Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-42-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550754Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-43-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550758Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-44-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550761Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-7-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550764Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-10-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550767Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        }
+      ],
+      "observed_evidence": [
+        "action_log",
+        "assertions",
+        "cleanup",
+        "metadata",
+        "probe",
+        "server_log"
+      ],
       "handoff_state": null,
       "run_id": null,
       "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "marked_at": "2026-09-15T21:30:05+09:00",
+      "fidelity": "real-http"
     },
     {
       "id": "S-42",
@@ -2028,16 +2764,117 @@
         "cleanup"
       ],
       "handoff": null,
-      "result": null,
+      "result": "pass",
       "operational_status": null,
-      "observed_executors": [],
-      "assertion_results": [],
-      "observed_evidence": [],
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "S-40-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550741Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-41-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550749Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-42-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550754Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-43-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550758Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-44-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550761Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-7-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550764Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-10-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550767Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        }
+      ],
+      "observed_evidence": [
+        "action_log",
+        "assertions",
+        "cleanup",
+        "metadata",
+        "probe",
+        "server_log"
+      ],
       "handoff_state": null,
       "run_id": null,
       "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "marked_at": "2026-09-15T21:30:05+09:00",
+      "fidelity": "real-http"
     },
     {
       "id": "S-43",
@@ -2078,16 +2915,117 @@
         "cleanup"
       ],
       "handoff": null,
-      "result": null,
+      "result": "pass",
       "operational_status": null,
-      "observed_executors": [],
-      "assertion_results": [],
-      "observed_evidence": [],
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "S-40-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550741Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-41-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550749Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-42-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550754Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-43-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550758Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-44-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550761Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-7-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550764Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-10-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550767Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        }
+      ],
+      "observed_evidence": [
+        "action_log",
+        "assertions",
+        "cleanup",
+        "metadata",
+        "probe",
+        "server_log"
+      ],
       "handoff_state": null,
       "run_id": null,
       "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "marked_at": "2026-09-15T21:30:05+09:00",
+      "fidelity": "real-http"
     },
     {
       "id": "S-44",
@@ -2128,16 +3066,117 @@
         "cleanup"
       ],
       "handoff": null,
-      "result": null,
+      "result": "pass",
       "operational_status": null,
-      "observed_executors": [],
-      "assertion_results": [],
-      "observed_evidence": [],
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "S-40-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550741Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-41-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550749Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-42-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550754Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-43-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550758Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-44-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550761Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-7-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550764Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        },
+        {
+          "id": "S-10-a1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-09-15T12:29:54.550767Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "st-call"
+        }
+      ],
+      "observed_evidence": [
+        "action_log",
+        "assertions",
+        "cleanup",
+        "metadata",
+        "probe",
+        "server_log"
+      ],
       "handoff_state": null,
       "run_id": null,
       "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "marked_at": "2026-09-15T21:30:05+09:00",
+      "fidelity": "real-http"
     },
     {
       "id": "S-45",

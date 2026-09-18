@@ -68,6 +68,7 @@ _OUTCOME_SELECTED = "selected"
 _OUTCOME_PROVIDER_UNAVAILABLE = "provider_unavailable"
 
 _EXECUTOR_BROWSER = "browser"
+_EXECUTOR_HUMAN = "human"
 
 # §A.8 [MUST] probe는 **실행 근거로만** 가용성을 판정한다. `api` executor의 probe는 실제
 # SUT의 `/health`를 호출하므로(`executors/api.py` `op_probe`) SUT가 먼저 떠 있어야 한다.
@@ -620,6 +621,7 @@ def _run_e2e(
     )
     return _finalize(
         status=outcome["status"],
+        operational_status=outcome.get("operational_status"),
         executed=outcome["executed"],
         assertion_results=outcome["assertion_results"],
         observed_executor_types=outcome["observed_executor_types"],
@@ -705,6 +707,7 @@ def _run_scenario_steps(
         "assertion_results": [],
         "observed_executor_types": [],
         "fidelity_ceiling": None,
+        "operational_status": None,
         "detail_code": None,
         "detail": None,
         # §A.3 — driver가 연 page·profile. 정리는 이 대장에 오른 것만 대상으로 한다(C-2).
@@ -720,7 +723,18 @@ def _run_scenario_steps(
     journal.to(STATE_SCENARIO_RUNNING, {"steps": len(plan)})
 
     log = action_log or runtime_context.get("action_log") or e2e_executors.ActionLog()
-    context = dict(runtime_context, action_log=log, urls=urls, target=target, run_id=run_id)
+    # handoff 사양은 시나리오가 소유한다(§A.9). human executor가 이를 받지 못하면
+    # `handoff_contract_incomplete`로 `infra_error`가 되어 `awaiting_human`에 도달하지
+    # 못한다(AC-9).
+    context = dict(
+        runtime_context,
+        action_log=log,
+        urls=urls,
+        target=target,
+        run_id=run_id,
+        scenario_id=scenario.get("id"),
+        handoff=scenario.get("handoff"),
+    )
 
     try:
         instances = _open_executors(selected, context, driver_cache=driver_cache)
@@ -742,8 +756,21 @@ def _run_scenario_steps(
                     "e2e_step_executor_not_selected",
                     f"step {step.id!r} requires executor {step.executor!r} which is not selected",
                 )
-            instance["run_step"](step)
+            outcome = instance["run_step"](step)
             executed_ids.append(step.id)
+            if isinstance(outcome, dict) and outcome.get("awaiting_human"):
+                # §A.9·§B.1.2 — handoff 발행 시점에 run은 정지하고 제어를 사람에게
+                # 넘긴다. 뒤 step·assertion을 계속 돌리면 사람이 아직 하지 않은 일을
+                # 실패로 기록하게 되고, 재개 경로가 판정할 것이 남지 않는다(R-13).
+                blank.update(
+                    executed=True,
+                    status=None,
+                    operational_status="awaiting_human",
+                    observed_executor_types=sorted({s.executor for s in _ordered_plan(plan)}),
+                    handoff=outcome.get("handoff"),
+                )
+                journal.to("awaiting_human", {"handoff_id": (outcome.get("handoff") or {}).get("handoff_id")})
+                return blank
         assertion_results = _run_assertions(scenario, plan, instances, executed_ids)
         for instance in instances.values():
             instance["capture"]()
@@ -812,6 +839,54 @@ def _open_executors(
     return opened
 
 
+def _wrap_human_executor(executor: Any, context: Dict[str, Any]) -> Dict[str, Any]:
+    """human executor를 step 루프가 다루는 하나의 모양으로 감싼다.
+
+    `run_step`은 `handoff`를 발행하고, 발행 시점에 run은 `awaiting_human`으로 정지한다
+    (§A.9·§B.1.2). `assert`·`capture`는 사람 제출이 도착한 뒤 `resume` 경로에서 판정되므로
+    여기서는 관측을 만들지 않는다 — 만들면 사람 제출만으로 `pass`가 서는 우회가 된다(R-13).
+    """
+
+    def run_step(step: Any) -> Dict[str, Any]:
+        raw = getattr(step, "raw", None) or {}
+        handoff = executor.dispatch(
+            "handoff",
+            {
+                "run_id": context.get("run_id"),
+                "scenario_id": context.get("scenario_id"),
+                "step_id": step.id,
+                "handoff_spec": raw.get("handoff") or context.get("handoff"),
+            },
+        )
+        # 호출자가 이 신호를 보고 정지한다. 상태·exit 값은 여기서 만들지 않는다 —
+        # `e2e_contract`가 소유한다(C-1).
+        return {"awaiting_human": True, "handoff": handoff}
+
+    def run_assert(assertion: Dict[str, Any]) -> Dict[str, Any]:
+        # 판정은 `resume` 뒤 `validate_pass_requirements`가 내린다(C-1).
+        return {
+            "id": assertion.get("id"),
+            "expected": assertion.get("expected"),
+            "actual": None,
+            "passed": False,
+            "pending_human": True,
+        }
+
+    def capture() -> None:
+        return None
+
+    def close() -> None:
+        return None
+
+    return {
+        "run_step": run_step,
+        "assert": run_assert,
+        "capture": capture,
+        "close": close,
+        "instance": executor,
+    }
+
+
 def _open_executor(executor_type: str, context: Dict[str, Any]) -> Dict[str, Any]:
     factory = e2e_executors.registered_executors().get(executor_type)
     if factory is None:
@@ -819,16 +894,27 @@ def _open_executor(executor_type: str, context: Dict[str, Any]) -> Dict[str, Any
             "e2e_no_executor_registered", f"{executor_type} executor is no longer registered"
         )
     executor = factory(runtime_context=dict(context))
-    prepared = executor.dispatch(
-        "prepare",
-        {
-            "run_id": context.get("run_id"),
-            "target": context.get("target"),
-            "base_url": context.get("backend_url"),
-            "isolation_key": context.get("run_id"),
-        },
-    )
-    handle = prepared.get("handle")
+    operations = tuple(getattr(executor, "operations", ()) or ())
+    if executor_type == _EXECUTOR_HUMAN:
+        # human executor는 `probe`·`handoff`·`resume`만 가진다(§B.3,
+        # `executors/__init__.py` HUMAN_OPERATIONS). `prepare`를 내려보내면
+        # collaborative·manual profile이 실행 전에 거부되어 `awaiting_human`에
+        # 도달하지 못한다(AC-9). 연산 집합이 다른 executor를 하나의 호출 모양으로
+        # 밀어 넣지 않는다 — 여기서 갈라 흡수하는 것이 이 함수의 역할이다.
+        return _wrap_human_executor(executor, context)
+    if "prepare" in operations:
+        prepared = executor.dispatch(
+            "prepare",
+            {
+                "run_id": context.get("run_id"),
+                "target": context.get("target"),
+                "base_url": context.get("backend_url"),
+                "isolation_key": context.get("run_id"),
+            },
+        )
+        handle = prepared.get("handle")
+    else:
+        handle = context.get("run_id")
 
     def run_step(step: Any) -> Dict[str, Any]:
         return executor.dispatch(
@@ -1289,6 +1375,7 @@ def _finalize(
     observed_executor_types: Optional[List[str]] = None,
     fidelity_ceiling: Optional[str] = None,
     owned_browser: Optional[Dict[str, List[Any]]] = None,
+    operational_status: Optional[str] = None,
 ) -> dict:
     """SUT 회수 → lease 해제 → 산출물 기록 → stdout payload 조립.
 
@@ -1345,10 +1432,17 @@ def _finalize(
         status = STATUS_INFRA_ERROR
 
     verdict_input: Optional[Dict[str, Any]] = None
+    # `awaiting_human`은 아직 끝나지 않은 run이다. 증적·assertion 완결성을 요구하는
+    # 일반 경로로 보내면 사람이 아직 하지 않은 일이 결손으로 계산되어 `infra_error`가
+    # 된다 — §B.1.2대로 `status`는 null·exit 20으로 정지하고, 판정은 `e2e resume`
+    # 뒤의 `validate_pass_requirements`가 내린다(R-13).
+    if operational_status == "awaiting_human":
+        verdict = e2e_contract.build_verdict({"status": "awaiting_human"})
+        resolved_status = None
     # step runner가 돌았으면 시나리오·결과 전체를 verdict 입력으로 넘긴다 — pass 승격
     # 여부는 `build_verdict` → `validate_pass_requirements`가 결정하고 이 모듈은
     # 자체 pass 판정을 하지 않는다(§C.2 [MUST]).
-    if executed and scenario:
+    elif executed and scenario:
         verdict_input = e2e_scenario_adapter.build_verdict_input(
             scenario,
             status=status,
@@ -1359,18 +1453,24 @@ def _finalize(
                 set(writer.observed(required_evidence)) | _metadata_names(required_evidence)
             ),
         )
-    verdict = e2e_contract.build_verdict(dict(verdict_input) if verdict_input else {"status": status})
-    resolved_status = verdict.get("status") or status
+    if operational_status != "awaiting_human":
+        verdict = e2e_contract.build_verdict(
+            dict(verdict_input) if verdict_input else {"status": status}
+        )
+        resolved_status = verdict.get("status") or status
     # 기본 경로의 `error`는 status에서만 나온다(§B.1.1 — 값은 STATUS_ERROR_CODES 안). 더
     # 세분한 계약 error는 verdict에 남고 run.json의 `verdict_error`로 기록한다.
-    error = error_override or e2e_contract.status_to_error(resolved_status)
-    exit_code = e2e_contract.status_to_exit(resolved_status)
+    # `awaiting_human`은 `status`가 null인 채로 exit·error·operational_status를 갖는
+    # 유일한 상태다(§B.1.1 stdout 표·§A.2.1). 값은 전부 계약 함수에서 나온다(C-125-1).
+    exit_key = "awaiting_human" if operational_status == "awaiting_human" else resolved_status
+    error = error_override or e2e_contract.status_to_error(exit_key)
+    exit_code = e2e_contract.status_to_exit(exit_key)
 
     # §A.2.1 — 최종 상태는 cleanup_* **앞**에 기록된다. 조기 반환 경로들은 자기 사유와
     # 함께 이미 전이를 남겼으므로 중복해서 쌓지 않는다. [MUST] §A.2.2가 "중간 상태를
     # 건너뛴 pass"를 금지하므로, 이 전이가 빠지면 `evidence_captured` 바로 뒤에
     # `cleanup_complete`가 붙어 최종 판정이 이력에서 사라진다(MV-06 검증 대상).
-    if journal.state != resolved_status:
+    if operational_status != "awaiting_human" and journal.state != resolved_status:
         journal.to(resolved_status)
     journal.to(STATE_CLEANUP_COMPLETE if cleanup == CLEANUP_COMPLETE else STATE_CLEANUP_WARNING)
 
@@ -1437,7 +1537,7 @@ def _finalize(
         ),
         "state": final_state,
         "status": resolved_status,
-        "operational_status": _OPERATIONAL.get(resolved_status),
+        "operational_status": operational_status or _OPERATIONAL.get(resolved_status),
         "error": error,
         "exit_code": exit_code,
         "assertion_summary": (
