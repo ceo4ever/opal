@@ -1,6 +1,6 @@
 # 제안: `//e2e` operator와 여정·조각 라이브러리
 
-> 상태: 검토 | 작성: 알투(PM) | 작성일: 2026-09-15 | 확정 반영: 2026-09-18
+> 상태: 검토 | 작성: 알투(PM) | 작성일: 2026-09-15 | 최종 갱신: 2026-09-18(태스크 127 ADD-1 실증 반영)
 > 선행본: `docs/proposals/archives/opal-e2e-harness.md`(적용완료, 태스크 125·127) — 그 구현에서 실측된 제약이 이 제안의 근거다
 > 발단: 태스크 127(E2E 하네스 구현) 수행 중 캡틴 제기 — "TEST-SCENARIO+TEST가 이미 긴 단계인데 E2E까지 넣으면 더 느려진다"
 
@@ -26,7 +26,7 @@ E2E를 기존 TEST 단계에 끼워 넣으면 태스크마다 시나리오를 **
 | 저장 | 3폴더 — **추적 여부가 폴더로 갈린다**(§3) |
 | 재사용 | **조각(fragment)** — 이름 붙은 step 시퀀스 + 파라미터 + **사후 조건** |
 | 범위 축소 | **신선도 키** — `(여정 해시, 조각 해시, surface_id, 대상 commit)` |
-| 확장 | **선언형 driver wrapper** — 새 브라우저는 JSON 한 장(§7) |
+| 확장 | **선언형 driver wrapper** — 새 브라우저는 JSON 한 장(§7). ADD-1이 이 절의 전제를 실측으로 확인했고 **ops 게이트(Q-6)를 선행 조건으로 드러냈다** |
 | 협동 | 기존 `collaborative` profile·`awaiting_human`(exit 20)·resume token 재사용. 신규 구현 없음 |
 
 ## 3. 폴더 구성 — 가르는 축은 **git 추적 여부**다
@@ -198,6 +198,8 @@ postconditions:                           # [MUST] 없으면 등록 불가
 | `surfaces.json` | 표면 SSOT. 이 제안이 복제하지 않는다 |
 | `scenario-conformance` | 여정 커버리지 판정에 재사용 |
 | `FIDELITY_ORDER`(`lib/scenario.py:119`) | 충실도 정의 단일 소유. 이 제안은 참조만 한다 |
+| `CANDIDATE_ORDER`·C-DRV-3 | driver 우선순위. **ADD-1에서 `resolve_candidates(candidate_order=…)` 주입이 구현되고 C-DRV-3이 "기본 순서 + 재정의 가능"으로 개정됐다** — §7의 `order.json`은 이 인자에 파일 입력을 연결하는 작업으로 축소됐다 |
+| `drivers/ego_lite.py`(ADD-1) | 선언형 wrapper의 **참조 구현**이자 부분 driver의 첫 사례. `probe`·`open`·`assert`·`close`만 구현하고 나머지 4연산은 `probed=true`·`available=false`로 없음을 선언한다. 선언형 매니페스트 설계 시 이 구조를 기준으로 삼는다 |
 
 ## 9. 열린 쟁점
 
