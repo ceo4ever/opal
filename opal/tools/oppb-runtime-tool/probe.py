@@ -1,10 +1,10 @@
 """
 @header {
   "module": "probe",
-  "task": "132",
+  "task": "146",
   "layer": "util",
   "domain": "oppb-runtime",
-  "description": "OPPB Environment Probe Tool — 격리된 probe snapshot에서 bootstrap·build·test·검증 명령을 하나씩 단독 실행해 Git 미추적·ignored 생성·수정·삭제 경로, build cache·dependency 위치, port·DB·service 등 실행 자원, 환경변수로 재지정 가능한 출력과 고정 위치 출력을 관측한다. 관측 결과에 `shared_immutable`·`attempt_namespaced`·`exclusive` 정책과 adapter를 배정하고 `.opal/oppb-environment.json`에 command/config/lockfile/toolchain/bootstrap 입력 hash와 함께 원자 봉인한다(형태만 `oppl-runtime-tool/ledger.py:336-377` 복제 — 해당 도구를 import하지 않는다). 신선도 판정 입력은 repository tree 전체가 아니라 실행 command 정의·build/test config·lockfile·toolchain identity·bootstrap 정의 5종뿐이라 일반 source ACCEPT만으로 profile이 stale이 되지 않는다(제안서 §P2.2). Late environment discovery는 task contract revision당 첫 batch 하나만 run-local `environment-deltas/<fingerprint>.json`으로 무과금 회수하고, 같은 revision의 두 번째 미봉인 쓰기·probe 불일치·lease 교차·project 밖·민감 경로·정책 분류 불가는 `scope_violation`으로 승격해 그때부터 attempt·rework 예산을 차감한다. 이 profile은 Controller maintenance lane이 소유하며 capability Runner의 write lease로 주지 않는다. scope hash는 `controller.compute_scope_hash`·`controller.normalize_lease`를 호출하고 재구현하지 않는다. 표준 라이브러리와 git CLI만 사용하고 플랫폼 분기를 두지 않는다.",
+  "description": "OPPB Environment Probe Tool — accepted HEAD의 전체 tracked tree를 export-ignore 없이 격리 snapshot으로 물질화하고, bootstrap 명령은 순차 실행해 준비 baseline으로 승격한 뒤 build·test 등 비-bootstrap 관측 명령은 그 baseline의 독립 복사본에서 실행해 Git 미추적·ignored 생성·수정·삭제 경로, build cache·dependency 위치, port·DB·service 등 실행 자원, 환경변수로 재지정 가능한 출력과 고정 위치 출력을 관측한다. 관측 결과에 `shared_immutable`·`attempt_namespaced`·`exclusive` 정책과 adapter를 배정하고 `.opal/oppb-environment.json`에 command/config/lockfile/toolchain/bootstrap 입력 hash와 함께 원자 봉인한다(형태만 `oppl-runtime-tool/ledger.py:336-377` 복제 — 해당 도구를 import하지 않는다). 신선도 판정 입력은 repository tree 전체가 아니라 실행 command 정의·build/test config·lockfile·toolchain identity·bootstrap 정의 5종뿐이라 일반 source ACCEPT만으로 profile이 stale이 되지 않는다(제안서 §P2.2). Late environment discovery는 task contract revision당 첫 batch 하나만 run-local `environment-deltas/<fingerprint>.json`으로 무과금 회수하고, 같은 revision의 두 번째 미봉인 쓰기·probe 불일치·lease 교차·project 밖·민감 경로·정책 분류 불가는 `scope_violation`으로 승격해 그때부터 attempt·rework 예산을 차감한다. 이 profile은 Controller maintenance lane이 소유하며 capability Runner의 write lease로 주지 않는다. scope hash는 `controller.compute_scope_hash`·`controller.normalize_lease`를 호출하고 재구현하지 않는다. 표준 라이브러리와 git CLI만 사용하고 플랫폼 분기를 두지 않는다.",
   "exports": [
     "ERROR_CODES", "ProbeError", "EPHEMERAL_POLICIES",
     "PROFILE_RELPATH", "DELTA_DIRNAME", "DISCOVERY_FILENAME",
@@ -32,7 +32,6 @@ import os
 import pathlib
 import shutil
 import subprocess
-import tarfile
 import tempfile
 import uuid
 
@@ -62,6 +61,7 @@ EPHEMERAL_POLICIES = ("shared_immutable", "attempt_namespaced", "exclusive")
 INPUT_HASH_KEYS = ("commands", "config", "lockfile", "toolchain", "bootstrap")
 
 COMMAND_TIMEOUT_SECONDS = 180
+_TIMEOUT_OMITTED = object()
 
 # 전역 git config에 의존하지 않도록 probe snapshot 조작에 항상 주입한다.
 GIT_ISOLATION_ARGS = (
@@ -235,12 +235,17 @@ def snapshot_root(run_root):
 # ─────────────────────────────────────────────────────────────────────────────
 
 
-def _git(args, cwd):
+def _git(args, cwd, env=None):
+    run_env = None
+    if env is not None:
+        run_env = dict(os.environ)
+        run_env.update(env)
     return subprocess.run(
         ["git", *GIT_ISOLATION_ARGS, *args],
         cwd=str(cwd),
         capture_output=True,
         text=True,
+        env=run_env,
     )
 
 
@@ -307,32 +312,46 @@ def _ensure_profile_untracked(project_root):
 
 
 def _make_snapshot(project_root, dest):
-    """accepted head의 ref 미변경 snapshot을 만든다.
+    """accepted HEAD의 전체 tracked tree snapshot을 만든다.
 
-    `git archive HEAD`로 추적 tree만 복사하므로 프로젝트 worktree의 미추적·ignored
-    상태가 섞이지 않는다. snapshot 자체를 독립 저장소로 초기화해 명령 실행 전후를
+    임시 index에 `HEAD` tree를 읽고 checkout-index로 물질화하므로 source branch,
+    ref, 공유 index, worktree를 변경하지 않고 `.gitattributes export-ignore`도
+    적용하지 않는다. snapshot 자체를 독립 저장소로 초기화해 명령 실행 전후를
     git의 실제 ignore 판정으로 비교한다.
     """
     dest = pathlib.Path(dest)
     dest.mkdir(parents=True, exist_ok=True)
-    archive = dest.parent / ("%s.tar" % dest.name)
-    result = _git(["archive", "--format=tar", "-o", str(archive), "HEAD"], project_root)
-    if result.returncode != 0:
-        raise ProbeError(
-            "probe_snapshot_failed", (result.stderr or result.stdout).strip()
-        )
+    index_root = pathlib.Path(
+        tempfile.mkdtemp(prefix=".probe-index-", dir=str(dest.parent))
+    )
     try:
-        with tarfile.open(str(archive)) as handle:
-            handle.extractall(str(dest), filter="data")
-    except (OSError, tarfile.TarError) as exc:
-        raise ProbeError("probe_snapshot_failed", "%s: %s" % (archive, exc)) from exc
+        index_file = index_root / "index"
+        index_env = {"GIT_INDEX_FILE": str(index_file)}
+        result = _git(["read-tree", "HEAD"], project_root, env=index_env)
+        if result.returncode != 0:
+            raise ProbeError(
+                "probe_snapshot_failed",
+                "git read-tree: %s" % (result.stderr or result.stdout).strip(),
+            )
+        prefix = str(dest.resolve()) + os.sep
+        result = _git(
+            ["checkout-index", "--all", "--prefix=%s" % prefix],
+            project_root,
+            env=index_env,
+        )
+        if result.returncode != 0:
+            raise ProbeError(
+                "probe_snapshot_failed",
+                "git checkout-index: %s" % (result.stderr or result.stdout).strip(),
+            )
+    except OSError as exc:
+        raise ProbeError("probe_snapshot_failed", "%s: %s" % (dest, exc)) from exc
     finally:
-        with contextlib.suppress(OSError):
-            archive.unlink()
+        shutil.rmtree(str(index_root), ignore_errors=True)
 
     for args in (
         ["init", "-q", "-b", "main"],
-        ["add", "-A"],
+        ["add", "-A", "-f"],
         ["commit", "-q", "-m", "probe snapshot baseline", "--allow-empty"],
     ):
         result = _git(args, dest)
@@ -342,6 +361,25 @@ def _make_snapshot(project_root, dest):
                 "git %s: %s" % (args[0], (result.stderr or result.stdout).strip()),
             )
     return dest
+
+
+def _promote_snapshot_baseline(snapshot, message):
+    """현재 snapshot 상태를 다음 관측의 기준선으로 승격한다."""
+    for args in (
+        ["add", "-A", "-f"],
+        ["commit", "-q", "-m", message, "--allow-empty"],
+    ):
+        result = _git(args, snapshot)
+        if result.returncode != 0:
+            raise ProbeError(
+                "probe_snapshot_failed",
+                "git %s: %s" % (args[0], (result.stderr or result.stdout).strip()),
+            )
+
+
+def _copy_snapshot_baseline(source, dest):
+    """준비 baseline의 committed HEAD를 명령 전용 snapshot으로 다시 물질화한다."""
+    return _make_snapshot(source, dest)
 
 
 def _status_changes(snapshot):
@@ -383,6 +421,7 @@ def _status_changes(snapshot):
 def _run_command(command, snapshot):
     """명령 하나를 snapshot에서 단독 실행한다(다른 명령과 섞지 않는다)."""
     argv = command["argv"]
+    timeout_seconds = command.get("timeout_seconds", COMMAND_TIMEOUT_SECONDS)
     env = dict(os.environ)
     env["OPPB_PROBE"] = "1"
     started = datetime.datetime.now(datetime.timezone.utc)
@@ -393,31 +432,34 @@ def _run_command(command, snapshot):
             capture_output=True,
             text=True,
             env=env,
-            timeout=COMMAND_TIMEOUT_SECONDS,
+            timeout=timeout_seconds,
         )
+    except subprocess.TimeoutExpired as exc:
+        raise ProbeError(
+            "probe_command_failed",
+            "%s timeout_seconds=%d" % (command.get("id"), timeout_seconds),
+            command_id=command.get("id"),
+        ) from exc
     except (OSError, subprocess.SubprocessError) as exc:
         raise ProbeError(
-            "probe_command_failed", "%s: %s" % (command.get("id"), exc)
+            "probe_command_failed", "%s: %s" % (command.get("id"), exc),
+            command_id=command.get("id"),
         ) from exc
     elapsed = (datetime.datetime.now(datetime.timezone.utc) - started).total_seconds()
     return result, env, round(elapsed * 1000)
 
 
-def _observe_command(project_root, run_root, command, token):
-    """명령 하나의 격리 단독 실행 관측 — snapshot은 관측 후 회수한다."""
-    snapshot = snapshot_root(run_root) / token / str(command["id"])
-    try:
-        _make_snapshot(project_root, snapshot)
-        result, env, elapsed_ms = _run_command(command, snapshot)
-        if result.returncode != 0:
-            raise ProbeError(
-                "probe_command_failed",
-                "%s exit=%d stderr=%s"
-                % (command["id"], result.returncode, (result.stderr or "").strip()[:400]),
-            )
-        ephemeral, tracked = _status_changes(snapshot)
-    finally:
-        shutil.rmtree(str(snapshot), ignore_errors=True)
+def _observe_prepared_command(snapshot, command):
+    """이미 준비된 snapshot에서 명령 하나를 실행하고 delta를 관측한다."""
+    result, env, elapsed_ms = _run_command(command, snapshot)
+    if result.returncode != 0:
+        raise ProbeError(
+            "probe_command_failed",
+            "%s exit=%d stderr=%s"
+            % (command["id"], result.returncode, (result.stderr or "").strip()[:400]),
+            command_id=command["id"],
+        )
+    ephemeral, tracked = _status_changes(snapshot)
     return {
         "command_id": command["id"],
         "kind": command.get("kind", "build"),
@@ -427,6 +469,44 @@ def _observe_command(project_root, run_root, command, token):
         "tracked": tracked,
         "runtime_resources": _runtime_resources(command, env),
     }
+
+
+def _observe_command(project_root, run_root, command, token):
+    """명령 하나의 격리 단독 실행 관측 — snapshot은 관측 후 회수한다."""
+    snapshot = snapshot_root(run_root) / token / str(command["id"])
+    try:
+        _make_snapshot(project_root, snapshot)
+        return _observe_prepared_command(snapshot, command)
+    finally:
+        shutil.rmtree(str(snapshot), ignore_errors=True)
+
+
+def _observe_commands(project_root, run_root, commands, token):
+    """bootstrap 준비 baseline을 만든 뒤 비-bootstrap은 sibling snapshot에서 관측한다."""
+    token_root = snapshot_root(run_root) / token
+    baseline = token_root / "prepared-baseline"
+    observations = []
+    try:
+        _make_snapshot(project_root, baseline)
+        for command in commands:
+            if command.get("kind", "build") != "bootstrap":
+                continue
+            observations.append(_observe_prepared_command(baseline, command))
+            _promote_snapshot_baseline(
+                baseline, "probe bootstrap baseline: %s" % command["id"]
+            )
+
+        command_root = token_root / "commands"
+        command_root.mkdir(parents=True, exist_ok=True)
+        for command in commands:
+            if command.get("kind", "build") == "bootstrap":
+                continue
+            snapshot = command_root / str(command["id"])
+            _copy_snapshot_baseline(baseline, snapshot)
+            observations.append(_observe_prepared_command(snapshot, command))
+        return observations
+    finally:
+        shutil.rmtree(str(token_root), ignore_errors=True)
 
 
 def _runtime_resources(command, env):
@@ -543,6 +623,9 @@ def _command_identity(commands):
             "id": command["id"],
             "kind": command.get("kind", "build"),
             "argv": list(command["argv"]),
+            "timeout_seconds": command.get(
+                "timeout_seconds", COMMAND_TIMEOUT_SECONDS
+            ),
         }
         for command in sorted(commands, key=lambda item: item["id"])
     ]
@@ -601,6 +684,16 @@ def _load_json_argument(opts, key, codes):
         raise ProbeError(not_json, "%s: %s" % (path, exc)) from exc
 
 
+def _normalize_timeout_seconds(raw, path, error_code):
+    if raw is _TIMEOUT_OMITTED:
+        return COMMAND_TIMEOUT_SECONDS
+    if not isinstance(raw, int) or isinstance(raw, bool) or raw <= 0:
+        raise ProbeError(
+            error_code, "%s는 bool이 아닌 양의 정수여야 합니다." % path
+        )
+    return raw
+
+
 def _validate_commands(raw):
     if not isinstance(raw, dict):
         raise ProbeError("commands_invalid", "최상위는 object여야 합니다.")
@@ -629,6 +722,11 @@ def _validate_commands(raw):
                 "kind": entry.get("kind", "build"),
                 "argv": list(argv),
                 "runtime_resources": list(entry.get("runtime_resources", []) or []),
+                "timeout_seconds": _normalize_timeout_seconds(
+                    entry.get("timeout_seconds", _TIMEOUT_OMITTED),
+                    "commands[%d].timeout_seconds" % index,
+                    "commands_invalid",
+                ),
             }
         )
     def _string_list(key):
@@ -679,6 +777,11 @@ def _validate_observation(raw):
             "kind": command.get("kind", "build"),
             "argv": list(argv),
             "runtime_resources": list(command.get("runtime_resources", []) or []),
+            "timeout_seconds": _normalize_timeout_seconds(
+                command.get("timeout_seconds", _TIMEOUT_OMITTED),
+                "command.timeout_seconds",
+                "observation_invalid",
+            ),
         },
         "observed_paths": list(paths),
     }
@@ -898,10 +1001,7 @@ def cmd_seal(opts):
     )
 
     token = uuid.uuid4().hex[:12]
-    observations = []
-    for command in inputs["commands"]:
-        observations.append(_observe_command(project_root, run_root, command, token))
-    shutil.rmtree(str(snapshot_root(run_root) / token), ignore_errors=True)
+    observations = _observe_commands(project_root, run_root, inputs["commands"], token)
 
     ephemeral = []
     rejected = []

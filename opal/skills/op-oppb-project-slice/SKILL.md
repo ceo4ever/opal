@@ -184,8 +184,8 @@ Controller가 읽는 필드는 아래가 전부이며, 동결된 `schema/oppb-st
 ```json
 {
   "commands": [
-    { "id": "bootstrap", "kind": "bootstrap", "argv": ["..."], "runtime_resources": [] },
-    { "id": "build", "kind": "build", "argv": ["..."], "runtime_resources": [] },
+    { "id": "bootstrap", "kind": "bootstrap", "argv": ["..."], "runtime_resources": [], "timeout_seconds": 180 },
+    { "id": "build", "kind": "build", "argv": ["..."], "runtime_resources": [], "timeout_seconds": 120 },
     { "id": "e2e-dryrun", "kind": "build", "argv": ["..."], "runtime_resources": ["port:3000"] }
   ],
   "config": [],
@@ -199,20 +199,25 @@ Controller가 읽는 필드는 아래가 전부이며, 동결된 `schema/oppb-st
 - **R1 (역할)**: 그 명령의 exit code가 수용 판정에 쓰이지 않는다. `mini_tasks[].verify_command`와 전체
   테스트 스위트 실행은 등재하지 않는다. 기준은 도구 이름(pytest·unittest·node)이 아니라 exit code의
   용도다 — dry-run·validate처럼 판정에 쓰이지 않는 실행은 도구와 무관하게 `build`로 등재한다.
-- **R2 (스냅샷 자족성)**: `git archive --format=tar HEAD` 산출물만으로 exit 0이고 180초 안에 끝난다.
-  probe는 명령마다 추적 tree만 담은 새 스냅샷을 만들고 실행 후 지우므로, `.gitattributes`의
-  `export-ignore` 경로를 입력으로 전제하거나 앞 명령의 산출물(`node_modules` 등)에 의존하는 명령은
-  등재할 수 없다.
+- **R2 (격리 snapshot 계약)**: probe는 accepted `HEAD`의 전체 tracked tree를 `.gitattributes`
+  `export-ignore` 적용 없이 격리 snapshot으로 물질화한다. `bootstrap` 명령은 선언 순서대로 같은
+  snapshot에서 실행되고, 각 bootstrap delta를 한 번 관측한 뒤 현재 상태를 준비 baseline으로 승격한다.
+  모든 비-bootstrap 명령은 이 준비 baseline의 독립 복사본에서 실행되므로 bootstrap 산출물은 소비할 수
+  있지만 sibling 명령의 산출물은 볼 수 없다.
 
 그래서 `kind`는 `bootstrap`(의존성·환경 준비)과 `build`(그 외 관측 전용) 2종뿐이다. `test`·`verify`
 계열은 등재 자체를 하지 않으므로 어휘에 없다. 기준을 어긴 명령을 등재하면 `probe seal`이
 `probe_command_failed`로 거부한다.
 
+`timeout_seconds`는 선택 필드다. 생략하면 180으로 정규화되고 explicit 180과 같은 command identity/input hash를
+만든다. 값이 있으면 bool이 아닌 양의 정수만 허용하며, 다른 값은 명령 실행 전에 `commands_invalid`로 거부한다.
+180이 아닌 유효 값은 command identity와 `input_hash.commands`·`input_hash.bootstrap`에 반영된다.
+
 등재하지 않은 명령의 미추적 쓰기는 새 필드가 아니라 기존 lease 축으로 선언한다 — 사전에 아는 경로는
 `mini_tasks[].lease.ephemeral_writes`에, 포트·서비스·fixture 같은 자원은 `lease.runtime_resources`에
 적는다. 사전에 알 수 없는 잔여는 실행 중 late discovery(`probe observe-write`)가 revision당 1 batch로
 회수한다. 그래서 미등재는 관측 공백이 아니다. `.oppb-probe-commands.json`에 새 키를 만들지 않는다 —
-probe는 `id`·`kind`·`argv`·`runtime_resources`만 정규화하고 나머지는 조용히 버린다.
+probe는 `id`·`kind`·`argv`·`runtime_resources`·`timeout_seconds`를 정규화하고 나머지는 조용히 버린다.
 
 **probe 미등재는 검증 면제가 아니다** — 수용 판정은 §3.1 `mini_tasks[].verify_command`가 단독으로
 소유하며, Supervisor가 실제 워크트리에서 실행한다.

@@ -1,0 +1,78 @@
+{
+  "check": "convention",
+  "status": "pass",
+  "checked_files": [
+    "opal/tools/oppb-runtime-tool/probe.py",
+    "opal/tools/oppb-runtime-tool/tests/test_probe.py",
+    "opal/skills/op-oppb-project-slice/SKILL.md",
+    "docs/proposals/opal-oppb-project-build-pilot.md"
+  ],
+  "findings": [
+    {
+      "id": "GC-001",
+      "fingerprint": "414b572a0513795e",
+      "category": "documentation",
+      "severity": "low",
+      "confidence": "high",
+      "disposition": "advisory",
+      "rule_id": "CONVENTIONS.md §제안서 생명주기",
+      "source_tier": "T0",
+      "location": {
+        "file": "docs/proposals/opal-oppb-project-build-pilot.md",
+        "line": 3,
+        "symbol": "상태"
+      },
+      "evidence": "문서 상단 상태가 `초안`이다. 허용 어휘는 `제안`, `검토`, `적용완료`, `폐기`이며 main baseline에도 동일하게 존재한다.",
+      "impact": "제안서 lifecycle을 상태 문자열로 판독하는 사람이나 자동화가 이 문서를 일관되게 분류하지 못할 수 있다.",
+      "remediation": {
+        "guidance": "현재 lifecycle 의미가 작성 완료·검토 전이라면 상태를 `제안`으로 변경한다.",
+        "reference": "docs/CONVENTIONS.md §제안서 생명주기",
+        "auto_fixable": true
+      },
+      "verification": "문서 상단 `> 상태:` 값이 허용된 네 어휘 중 하나인지 확인한다.",
+      "suppression": null
+    },
+    {
+      "id": "GC-002",
+      "fingerprint": "c39d3d60c1cce5a9",
+      "category": "documentation",
+      "severity": "low",
+      "confidence": "high",
+      "disposition": "advisory",
+      "rule_id": "CONVENTIONS.md §문서 이력과 버전 / opal-doc-standard.md §5",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/skills/op-oppb-project-slice/SKILL.md",
+        "line": 268,
+        "symbol": "변경이력"
+      },
+      "evidence": "SKILL 하단에 `## 변경이력` 수기 누적 표가 있으며 main baseline에도 동일하게 존재한다.",
+      "impact": "git·태스크 기록과 SKILL 본문의 이력 정보가 중복되어 시간이 지나며 불일치할 수 있다.",
+      "remediation": {
+        "guidance": "수기 변경이력 절을 제거하고 이력은 git과 태스크 기록에서 조회한다. frontmatter version은 실제 소비 여부를 별도로 확인한다.",
+        "reference": "opal/core/references/opal-doc-standard.md §5",
+        "auto_fixable": false
+      },
+      "verification": "SKILL에서 수기 누적 이력 절이 제거되고 현재 행동 계약만 남았는지 확인한다.",
+      "suppression": null
+    }
+  ],
+  "evidence": [
+    "Read: docs/CONVENTIONS.md relevant Python/test/docs rules",
+    "Read: opal/core/references/opal-doc-standard.md §5",
+    "git diff --check main -- <4 target files> -> no output",
+    "trailing whitespace scan -> no output",
+    "code-scan target -> inline for both Python files",
+    "code-scan validate probe.py test_probe.py -> OK",
+    "T146 targeted pytest -> 9 passed, 8 deselected",
+    "git diff main comparison -> findings are persisting; new 0, resolved 0"
+  ],
+  "references": [
+    "docs/CONVENTIONS.md",
+    "opal/core/references/opal-doc-standard.md §5",
+    "opal/core/references/header-standard.md",
+    "main (target-file baseline before task changes)"
+  ],
+  "missing_capabilities": [],
+  "report_path": "tasks/146-260919-opds-프로브-핸드오프-계약개정/GC-CONVENTION-2026-09-19T23-24-00.md"
+}
