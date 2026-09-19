@@ -8,11 +8,11 @@
 |------|------|
 | 게이트 판단 | 21회 (Pass: 20 / Fail: 1) |
 | 3회 초과 Gate | 0건 (Critical: 0 / Normal: 0 / Minor: 0) |
-| 오류 발견 | 11건 |
-| 수정 지시 | 6건 (반영: 6 / 미반영: 0) |
-| PM 의사결정 | 29건 |
+| 오류 발견 | 12건 |
+| 수정 지시 | 7건 (반영: 7 / 미반영: 0) |
+| PM 의사결정 | 33건 |
 | 개선 사항 | 6건 |
-| 에스컬레이션 | 4건 |
+| 에스컬레이션 | 5건 |
 
 ## 대행 일지
 
@@ -93,3 +93,9 @@
 | 73 | 2026-09-19 21:12 | TEST | GATE | GC-001·GC-002 보완 직접 검증 — `description` 2843→**932자**(형제 분포 270~1753 안, 최장의 0.53배), 테스트 헤더 3줄이 현재 사실로 교정됨(S-2r·S-2n·S-10·S-12r·S-13 범위 명시, `(미구현)` 제거, docstring "구현 완료 후 전건 GREEN"). `git diff --stat` **2 files / +4 -4**로 헤더·docstring만 변경, `exports`·`depends`(hook) 무변경, assertion·본문·fixture 무변경. `pytest ownership-tool/tests -q` → **62 passed** 유지. GC-003(`test_session_start.py:14 import sys`)은 지시대로 그대로 남았다. | Pass |
 | 74 | 2026-09-19 21:12 | TEST | ERROR | 워커 보고에 경미한 오기 1건 — GC-003 미변경을 확인하며 "`import sys`는 `session_start_hook.py:18`에 그대로 있다"고 적었으나, GC-003의 대상은 `tests/test_session_start.py:14`다. 두 사실 모두 참이고(hook은 `sys`를 실제로 쓴다) 대상 파일이 미변경인 것도 PM이 직접 확인했으므로 결과에는 영향이 없다. 감사 추적 정확성을 위해서만 기록한다. | 영향 없음 |
 | 75 | 2026-09-19 21:13 | TEST | ESCALATION | TEST PM Gate 행(9)을 `state-tool block`으로 차단 상태에 두었다 — `transition_action=blocked`, `report_type=decision_request`. 이유: 게이트 체크리스트 2항("전건 PASS·FAIL/BLOCKED 없음")이 S-3b·S-4b 2건 때문에 미충족인데, 이는 PM이 자율 통과시킬 수 있는 항목이 아니다. 내가 PLAN `Release and recovery`에 직접 "이 증거가 없으면 PM Gate를 통과시키지 않는다"를 적어 뒀다. 상태를 `continue`로 둔 채 보고만 하면 Stop 가드가 진행을 강제해 실제로는 사용자 결정 없이 흘러갈 수 있으므로, 상태 자체를 `await_user`로 만들어 계약과 실제 동작을 일치시켰다. | 대기 |
+| 76 | 2026-09-19 21:01 | TEST | DECISION | 캡틴의 "승인"을 **선택지 A(S-3b·S-4b 후속 경계 이관 + CLOSE 진행)**로 해석했다. 근거 — B는 "승인"할 대상이 아니라 캡틴이 직접 수행하실 일(새 세션 기동)이라 승인 발화와 결합하지 않는다. 해석을 응답 첫 줄에 명시해 오독 시 즉시 멈출 수 있게 했다. TEST PM Gate 행(9)을 해소하고 prev_user_row(10)를 `--owner user`로 mark해 agentic CLOSE 진입 절차를 충족했다. | 완료 |
+| 77 | 2026-09-19 21:02 | CLOSE | ERROR | `close.done_md` mark가 도구에 거부됐다 — 워커 디스패치 규범 단계 3행(PLAN 작업·EXECUTE 작업·TEST 작업)이 워커 소요를 기록하지도 미측정을 선언하지도 않았다는 사유다. 태스크 알림의 `duration_ms`는 세션과 함께 사라지므로 사후 복구가 불가능하다는 도구 경고가 정확하다. | 보정 |
+| 78 | 2026-09-19 21:03 | CLOSE | FIX | ERROR #77 보정 — 세션에 남아 있던 태스크 알림의 `duration_ms` 실측값을 합산해 기록했다. PLAN 9분(워커 1건, 565971ms) · EXECUTE 51분(워커 12건 합산 3031463ms) · TEST 18분(워커 3건 합산 1067920ms). `--force` 우회를 쓰지 않았다 — 실측값이 컨텍스트에 남아 있어 추정할 필요가 없었다. 일부 구간이 병렬 실행이라 합산값이 벽시계보다 크다는 사실을 note에 명시했다. | 반영 |
+| 79 | 2026-09-19 21:03 | CLOSE | DECISION | `close.docs_sync`를 '해당 없음'으로 닫았다 — 구현으로 사실이 달라진 문서 2건(ownership-tool README·brain entity)은 W-9 Work item으로 이미 갱신됐고, `docs/PROJECT.md`·`CONVENTIONS.md`·`ARCHITECTURE.md`·`harness/worktree.md`에는 SessionStart·OPAL_SESSION_ID·ownership-set·owner_session_id 서술이 grep 0건이라 갱신 대상이 없다. `close.brain_ingest`도 직접 수행하지 않았다 — done-template 계약대로 워크트리는 후보만 선언하고 page 판정은 merge 후 허브 finalize가 소유한다. | 완료 |
+| 80 | 2026-09-19 21:04 | CLOSE | DECISION | CLOSE 최종 체크포인트를 만들었다(`5515f7c`) — guards.md가 agentic 워크트리 세션에 허용한 안정 경계 자율 커밋이며 미해결 사용자 결정이 없는 시점이다. 내 쉘은 여전히 `OPAL_SESSION_ID` 미export라, W-10과 같이 **배포본 hook이 만든 env 프리앰블을 source한 쉘**에서 호출했다(손타이핑 우회 미사용). stage 직전 `dist/` 부재를 다시 확인했다(H-4). `checkpoint_shas`가 2건(`a93a5ad`·`5515f7c`)으로 누적됐다. | 완료 |
+| 81 | 2026-09-19 21:04 | CLOSE | ESCALATION | `close.worktree_finalize`를 수행하지 않고 허브로 이관했다. 사유 — finalize/attribution은 main merge 확인 후 허브에서 도는 단계인데 TASK C-10이 merge를 범위에서 제외했고 guards.md도 merge를 별도 사용자 승인 경계로 둔다. 작업은 브랜치 체크포인트 2건에 보존됐고, merge 후 `state-tool finalize-attribution <task-path> --allocator-root <허브>`로 MEMORY 귀속과 회고 후보 4건의 brain page 판정이 이어진다. | 이관 |
