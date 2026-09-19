@@ -81,7 +81,7 @@ capability로 이름 붙이고 근거를 `PROJECT-DESIGN.md`에 남긴다.
 | 소유권 축 | 병렬 허용 조건 | spec 표현 |
 |---|---|---|
 | 추적 코드·테스트 | `tracked_writes(A) ∩ tracked_writes(B) = ∅` | `lease.tracked_writes` |
-| Git 미추적 산출물 | `ephemeral_write_hints`가 서로 다르거나 공유 불변·배타 정책이 있음 | probe 입력 → 봉인 후 `lease.ephemeral_writes` |
+| Git 미추적 산출물 | 미추적 쓰기 힌트가 서로 다르거나 공유 불변·배타 정책이 있음 | `lease.ephemeral_writes` 선언 + 관측 전용 명령의 probe 관측 → 봉인 후 `lease.ephemeral_writes` |
 | 계약 | 같은 contract revision을 동시에 바꾸지 않음. 공유 계약은 실행 전 동결 | `lease.contracts` |
 | 비즈니스 규칙 | 같은 정책 결정이나 완료조건 ID를 공동 소유하지 않음 | `acceptance[].contributing_tasks` 교집합 |
 | 실행 자원 | DB schema·port·service·fixture·queue가 분리되거나 namespace 격리됨 | `lease.runtime_resources` |
@@ -104,8 +104,10 @@ Controller가 기계적으로 lease를 발급하는 집합은 `controller.LEASE_
 내부의 순차 work item으로 둔다. 크기 때문에 반드시 나눠야 하면 별도 태스크로 남기되 `depends_on`으로
 순차 순서를 고정하고 그 근거를 `PROJECT-DESIGN.md`의 병렬 판정표에 `parallel_eligible: false`로 적는다.
 
-`ephemeral_write_hints`는 probe 입력일 뿐 최종 lease 계약이 아니다. 모든 전이 의존 도구의 미추적 쓰기
-경로를 미리 안다고 가정하지 않는다. 의미상 동일한 정책인지 기계적으로 판정할 수 없으면 병렬로 선언하지
+미추적 쓰기 힌트는 probe 입력이거나 `lease.ephemeral_writes` 선언일 뿐 최종 lease 계약이 아니다.
+probe가 관측하는 것은 §3.2 기준으로 등재한 관측 전용 명령뿐이고, 등재하지 않은 판정 명령의 미추적
+쓰기는 lease 선언과 late discovery가 담당한다. 모든 전이 의존 도구의 미추적 쓰기 경로를 미리 안다고
+가정하지 않는다. 의미상 동일한 정책인지 기계적으로 판정할 수 없으면 병렬로 선언하지
 말고 PM 판정 항목으로 올린다.
 
 ## 3. 구조화 출력 계약
@@ -184,7 +186,7 @@ Controller가 읽는 필드는 아래가 전부이며, 동결된 `schema/oppb-st
   "commands": [
     { "id": "bootstrap", "kind": "bootstrap", "argv": ["..."], "runtime_resources": [] },
     { "id": "build", "kind": "build", "argv": ["..."], "runtime_resources": [] },
-    { "id": "verify-T01", "kind": "test", "argv": ["..."], "runtime_resources": ["port:3000"] }
+    { "id": "e2e-dryrun", "kind": "build", "argv": ["..."], "runtime_resources": ["port:3000"] }
   ],
   "config": [],
   "lockfile": [],
@@ -192,8 +194,28 @@ Controller가 읽는 필드는 아래가 전부이며, 동결된 `schema/oppb-st
 }
 ```
 
-`mini_tasks[].verify_command`와 `mini_tasks[].run_command`에 쓴 argv는 여기에도 같은 내용으로 등재한다.
-등재되지 않은 명령의 미추적 출력은 봉인되지 않아 late discovery 또는 `scope_violation` 경로로 들어간다.
+등재 대상은 아래 두 기준을 **모두** 만족하는 관측 전용 명령뿐이다.
+
+- **R1 (역할)**: 그 명령의 exit code가 수용 판정에 쓰이지 않는다. `mini_tasks[].verify_command`와 전체
+  테스트 스위트 실행은 등재하지 않는다. 기준은 도구 이름(pytest·unittest·node)이 아니라 exit code의
+  용도다 — dry-run·validate처럼 판정에 쓰이지 않는 실행은 도구와 무관하게 `build`로 등재한다.
+- **R2 (스냅샷 자족성)**: `git archive --format=tar HEAD` 산출물만으로 exit 0이고 180초 안에 끝난다.
+  probe는 명령마다 추적 tree만 담은 새 스냅샷을 만들고 실행 후 지우므로, `.gitattributes`의
+  `export-ignore` 경로를 입력으로 전제하거나 앞 명령의 산출물(`node_modules` 등)에 의존하는 명령은
+  등재할 수 없다.
+
+그래서 `kind`는 `bootstrap`(의존성·환경 준비)과 `build`(그 외 관측 전용) 2종뿐이다. `test`·`verify`
+계열은 등재 자체를 하지 않으므로 어휘에 없다. 기준을 어긴 명령을 등재하면 `probe seal`이
+`probe_command_failed`로 거부한다.
+
+등재하지 않은 명령의 미추적 쓰기는 새 필드가 아니라 기존 lease 축으로 선언한다 — 사전에 아는 경로는
+`mini_tasks[].lease.ephemeral_writes`에, 포트·서비스·fixture 같은 자원은 `lease.runtime_resources`에
+적는다. 사전에 알 수 없는 잔여는 실행 중 late discovery(`probe observe-write`)가 revision당 1 batch로
+회수한다. 그래서 미등재는 관측 공백이 아니다. `.oppb-probe-commands.json`에 새 키를 만들지 않는다 —
+probe는 `id`·`kind`·`argv`·`runtime_resources`만 정규화하고 나머지는 조용히 버린다.
+
+**probe 미등재는 검증 면제가 아니다** — 수용 판정은 §3.1 `mini_tasks[].verify_command`가 단독으로
+소유하며, Supervisor가 실제 워크트리에서 실행한다.
 
 ### 3.3 `<task_folder>/PROJECT-DESIGN.md` 초안
 

@@ -541,8 +541,10 @@ workflow를 가지거나, 대량 가져오기가 별도 운영·성능·rollback
 
 #### P2.2 ENVIRONMENT PROBE & SEAL
 
-병렬 dispatch 전에 `oppb-runtime-tool probe`가 P0에서 수집하고 P2에서 확정한 bootstrap·build·test·검증
-명령을 격리된 probe snapshot에서 하나씩 단독 실행한다. probe는 다음을 관측한다.
+병렬 dispatch 전에 `oppb-runtime-tool probe`가 P0에서 수집하고 P2에서 확정한 관측 전용 명령
+(`bootstrap`·`build`)만 격리된 probe snapshot에서 하나씩 단독 실행한다. 수용 판정 명령은 probe가 실행하지
+않는다 — 판정은 Supervisor가 실제 워크트리에서 `mini_tasks[].verify_command`로 단독 소유한다.
+probe는 다음을 관측한다.
 
 - Git untracked·ignored 생성·수정·삭제 경로
 - build cache와 dependency environment의 실제 위치·도구 버전·설정 입력
@@ -568,8 +570,9 @@ benchmark의 공유 모듈 fixture에서 반드시 측정한다.
 #### Git 미추적·ignore 산출물 계약
 
 `node_modules`, `.venv`, `dist`, `.next`, `coverage`, `__pycache__`, compiler cache처럼 Git diff에 나타나지
-않는 경로도 쓰기 소유권이다. P2.2 probe가 각 실행·검증 명령의 실제 미추적 출력 경로와 다음 정책 중
-하나를 `ephemeral_write_set`으로 봉인한다.
+않는 경로도 쓰기 소유권이다. P2.2 probe가 등재된 관측 전용 명령의 실제 미추적 출력 경로와 다음 정책 중
+하나를 `ephemeral_write_set`으로 봉인한다. 등재하지 않은 판정 명령의 미추적 출력은 `lease.ephemeral_writes`
+힌트와 late discovery가 담당한다.
 
 | 정책 | 처리 |
 |---|---|
