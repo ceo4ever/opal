@@ -84,6 +84,41 @@ loaded = core.read_json(path)   # error: not_found | invalid_json | read_failed
 필수 키는 `allocator_root`·`task_home`·`task_folder`·`task_path`·`artifact_repo` 5종이며,
 `attribution_state`·`execution_ownership`은 키 부재가 정상(active)이다.
 
+## SessionStart hook 부트 계약
+
+### env 파일 줄 포맷
+
+`_append_session_id()`(`ownership_tool/session_start_hook.py:174-190`)는 어댑터가 알려준 env 파일에
+`export OPAL_SESSION_ID=<quoted id>` 1줄을 append한다(`:186-187`). 플랫폼은 이 파일을 dotenv로
+파싱하지 않고 Bash 도구의 **부모 쉘에서 `source`되는 쉘 프리앰블**로 실행하므로, `KEY=value` 대입만으로는
+자식 프로세스가 값을 상속하지 못한다 — `export` 접두가 필요하다. 값은 쉘 메타문자에 안전하도록
+`shlex.quote`로 quoting한다. 키 상수는 `SESSION_ID_ENV_LINE_KEY`(`:28`)이고, 파일 미제공
+(`env_file_not_provided`)·쓰기 실패(`env_file_write_failed:<...>`)는 진단만 남기고 세션 registry 등록은
+유지한다(`:182-190`).
+
+### registry 부트 owner 등록
+
+lease claim에 성공한 **워크트리** 세션은 이어서 허브 registry의
+`execution_ownership.owner_session_id`를 1회 등록한다(`session_start_hook.py:115-171`, 호출 지점
+`:247-250`). registry `execution_ownership`의 쓰기는 `worktree-tool ownership-set` CLI 경유만
+허용되므로(TASK 999 C-9) 이 모듈은 meta를 **읽기만** 하고 전이는 CLI에 맡긴다 — 파일 쓰기·lock·원자 교체는
+`worktree-tool` 소유라 dual writer가 생기지 않는다. 허브 위치는 `resolve_roots`가 준 `allocator_root`만
+쓰고 추론하지 않으며, `--generation`은 지정하지 않아 `prior+1` 단조 증가에 맡긴다.
+
+| 조건 | CLI 호출 | 결과 |
+|---|---|---|
+| `state == worktree_session_owned` ∧ `owner_session_id` 비어 있음 | 1회 (`:154-164`) | `registry_owner_registered: True` |
+| `owner_session_id`가 이미 자기 세션 | 0회 (멱등 게이트 `:143-144`) | 진단 없음 |
+| `owner_session_id`가 타 세션 | 0회 | 진단 `foreign_registry_owner`(`:145`) |
+| `state != worktree_session_owned` | 0회 | 진단 `registry_not_worktree_owned`(`:138-139`) |
+| registry 행 부재 | 0회 | 진단 `registry_row_absent`(`:135`, `:149`) |
+| CLI 실행 불가·timeout·비정상 종료 | 시도 후 실패 | 진단 `ownership_set_failed` + `ownership_set_detail:<...>`(`:165-170`) |
+
+호출 상한은 45초다(`_OWNERSHIP_SET_TIMEOUT_SEC`, `:43`) — CLI가 registry lock 대기를 자신의
+`REGISTRY_LOCK_TIMEOUT_MS=30000`으로 이미 상한하므로 정상 경합은 자르지 않으면서, 멈춘 CLI가 세션 부팅을
+막지 않게 한다. 어떤 분기에서도 예외로 새지 않고 구조화 반환하며 전 경로 fail-safe exit 0을 유지한다
+(`:274-278`).
+
 ## 세션 ID 해석 (PLAN D-18)
 
 `resolve_session_id(env, payload)` 순서:

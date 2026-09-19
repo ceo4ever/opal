@@ -19,7 +19,7 @@ exports:
 - task_ownership_copy_path
 - resolve_roots
 source_ref: opal/tools/ownership-tool/ownership_tool/ownership_core.py
-header_synced: 2026-09-18
+header_synced: 2026-09-19
 tags:
 - tool
 - ownership
@@ -28,6 +28,7 @@ tags:
 sources:
 - code:opal/tools/ownership-tool/
 - task:138
+- task:999
 related:
 - worktree-locates-hub-by-issued-copy
 - stop-force-requires-state-transition-claim
@@ -35,7 +36,7 @@ related:
 - worktree-tool
 - state-tool
 created: '2026-09-18'
-updated: '2026-09-18'
+updated: '2026-09-19'
 status: active
 ---
 ## 개요
@@ -46,7 +47,7 @@ status: active
 
 - **판정 로직은 이 도구가 소유한다.** 훅 어댑터는 봉투 파싱·출력 형식만 갖고 분류는 전부 `resolver`·`lease`에 위임한다.
 - **추론하지 않는다.** cwd 문자열 자르기·부모 디렉터리 순회·`.opal-worktrees` 문자열 탐색·mtime/`updated_at` 최신순 선택을 어느 모듈에서도 하지 않으며, 테스트가 그 부재를 집행한다.
-- **registry는 읽기 전용이다.** `<hub_root>/.opal-worktrees/.meta/task_<NNN>.json`을 읽기만 하고 발급 경로를 추측·보정하지 않는다 — 쓰기는 `worktree-tool`이 소유한다(dual-writer 금지).
+- **registry meta 파일을 직접 쓰지 않는다.** `<hub_root>/.opal-worktrees/.meta/task_<NNN>.json`은 읽기만 하고 발급 경로를 추측·보정하지 않는다. 부트 시점의 owner 등록을 포함해 registry 전이는 전부 `worktree-tool ownership-set` CLI 계약을 경유한다 — 파일 쓰기·lock·원자 교체는 여전히 `worktree-tool`이 소유하므로 dual-writer 불변식이 유지된다.
 - **실패는 예외가 아니라 구조화 반환이다.** 훅 진입점은 전 경로 fail-safe exit 0이라 어떤 실패도 세션을 막지 않는다.
 - **플랫폼 고유 환경변수명은 `claude_adapter` 한 곳에만 둔다**(D-18·C-15).
 
@@ -74,7 +75,7 @@ status: active
 
 ## 형제 도구와의 관계
 
-- **`worktree-tool`** — 발급 쪽. registry meta를 쓰고, 워크트리 생성 시 `<worktree_root>/.opal/task-ownership.json`에 발급값 사본을 배달한다. `ownership-tool`은 그 발급값을 읽기만 한다([[worktree-locates-hub-by-issued-copy]]).
+- **`worktree-tool`** — 발급 쪽. registry meta를 쓰고, 워크트리 생성 시 `<worktree_root>/.opal/task-ownership.json`에 발급값 사본을 배달한다. `ownership-tool`은 그 발급값을 읽기만 하고, 부트 시점 owner 등록이 필요하면 `ownership-set` CLI 호출로 전이를 위임한다([[worktree-locates-hub-by-issued-copy]]).
 - **`state-tool`** — 상태 전이 쪽. 첫 상태 전이에서 `claim_source=state_transition`으로 lease를 claim해, Stop 강제 차단 자격을 만든다([[stop-force-requires-state-transition-claim]]).
 
 ## 관련 페이지

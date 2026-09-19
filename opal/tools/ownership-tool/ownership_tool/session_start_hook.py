@@ -3,9 +3,9 @@
   "module": "ownership_tool.session_start_hook",
   "layer": "util",
   "domain": "opal-pipeline",
-  "description": "SessionStart hook 어댑터(W-7). 봉투의 session_id·cwd를 session_registry에 등록하고, 어댑터가 알려준 env 파일에 OPAL_SESSION_ID=<id> 1줄을 append해 이후 Bash 호출이 같은 ID를 받게 한다(파일 미제공·쓰기 실패는 진단만 남기고 등록은 유지). 루트 판정은 ownership_core.resolve_roots가 소유한다(D-20) — 워크트리 세션은 발급값 사본 <cwd>/.opal/task-ownership.json이 준 task_path를 canonical로 삼고, 허브 세션은 <allocator_root>/.opal-worktrees/.meta/task_*.json 발급값과 cwd가 정확히 일치할 때만 태스크를 얻으며, 루트가 해석되지 않으면 추측하지 않고 진단만 남기고 통과한다(등록·env append는 이 분기에서도 수행). 해석된 canonical task에만 lease.claim(claim_source=session_start — D-21 수동 소유권)을 시도하고 기존 live owner가 있으면 이전하지 않고 foreign_owner로 거부한다. TTL은 lease.resolve_ttl_sec 재사용이고 플랫폼 고유 변수명은 claude_adapter에만 둔다(C-15). 전 경로 fail-safe exit 0.",
+  "description": "SessionStart hook 어댑터(W-7). 봉투의 session_id·cwd를 session_registry에 등록하고, 어댑터가 알려준 env 파일에 `export OPAL_SESSION_ID=<shlex.quote한 id>` 1줄을 append해 이후 Bash 호출이 같은 ID를 받게 한다 — 이 파일은 dotenv가 아니라 부모 쉘에서 source되는 쉘 스크립트 프리앰블이므로 export 접두가 있어야 자식 프로세스가 값을 상속하고, 값은 쉘 메타문자에 안전하도록 quoting한다(파일 미제공·쓰기 실패는 진단만 남기고 등록은 유지). 루트 판정은 ownership_core.resolve_roots가 소유한다(D-20) — 워크트리 세션은 발급값 사본 <cwd>/.opal/task-ownership.json이 준 task_path를 canonical로 삼고, 허브 세션은 <allocator_root>/.opal-worktrees/.meta/task_*.json 발급값과 cwd가 정확히 일치할 때만 태스크를 얻으며, 루트가 해석되지 않으면 추측하지 않고 진단만 남기고 통과한다(등록·env append는 이 분기에서도 수행). 해석된 canonical task에만 lease.claim(claim_source=session_start — D-21 수동 소유권)을 시도하고 기존 live owner가 있으면 이전하지 않고 foreign_owner로 거부한다. lease.claim에 성공한 워크트리 세션은 이어서 허브 registry의 부트 owner 등록을 1회 시도한다(999 D-H) — resolve_roots가 준 allocator_root의 registry meta에서 canonical task_path와 동치인 행을 **읽기만** 하고, `execution_ownership.state == worktree_session_owned` ∧ `owner_session_id`가 비었을 때만 `{OPAL_HOME|~/.opal}/tools/worktree-tool/run.sh ownership-set --project-root <allocator_root> --task <N> --execution-ownership worktree_session_owned --attribution-state <prior attribution> --owner-session-id <session_id>`를 subprocess로 1회 호출한다. registry `execution_ownership`의 쓰기는 이 CLI 경유만 허용되므로(999 C-9) meta 파일을 직접 편집하지 않아 dual writer가 생기지 않고, `--generation`은 지정하지 않아 prior+1 단조 증가에 맡긴다(D-J). 이미 자기 세션이면 멱등 게이트로 호출을 생략하고, 타 세션 owner(foreign_registry_owner)·다른 state(registry_not_worktree_owned)·행 부재(registry_row_absent)·CLI 실패(ownership_set_failed)는 호출 없이 진단만 남긴다. 호출에는 45초 상한을 준다 — CLI가 registry lock 대기를 자신의 REGISTRY_LOCK_TIMEOUT_MS=30000으로 이미 상한하므로 정상 경합은 자르지 않으면서, 멈춘 CLI가 hook을 무한 대기시켜 세션 부팅을 막는 일은 없게 한다(실행 불가·timeout 모두 예외가 아니라 ownership_set_failed 구조화 반환이다). TTL은 lease.resolve_ttl_sec 재사용이고 플랫폼 고유 변수명은 claude_adapter에만 둔다(C-15). 전 경로 fail-safe exit 0.",
   "exports": ["SESSION_ID_ENV_LINE_KEY", "handle", "main"],
-  "depends": ["ownership_tool.ownership_core", "ownership_tool.lease", "ownership_tool.session_registry", "ownership_tool.claude_adapter"]
+  "depends": ["ownership_tool.ownership_core", "ownership_tool.lease", "ownership_tool.session_registry", "ownership_tool.claude_adapter", "worktree-tool ownership-set CLI"]
 }
 """
 from __future__ import annotations
@@ -13,6 +13,8 @@ from __future__ import annotations
 import json
 import os
 import pathlib
+import shlex
+import subprocess
 import sys
 
 if __package__:
@@ -27,6 +29,18 @@ SESSION_ID_ENV_LINE_KEY = "OPAL_SESSION_ID"
 
 # registry meta 파일명 패턴 — 발급 계약이 정한 위치만 읽는다(추론하지 않는다).
 _REGISTRY_META_GLOB = "task_*.json"
+
+# registry `execution_ownership` 전이는 worktree-tool CLI 경유만 허용된다(TASK 999 C-9).
+# 배포본 아래 고정 경로이며 허브 위치 해석은 worktree_tool.py:2254-2257의 기존 선례를 쓴다.
+_WORKTREE_TOOL_RUN_REL = "tools/worktree-tool/run.sh"
+# 부트 등록이 진입할 수 있는 유일한 registry 상태.
+_EXEC_STATE_WORKTREE_SESSION_OWNED = "worktree_session_owned"
+# CLI가 "attribution 키 부재"를 지칭하는 토큰(worktree_tool.py:142).
+_ATTRIBUTION_TOKEN_ACTIVE = "active"
+# ownership-set 호출 상한(초). CLI는 registry lock 대기를 자신이 REGISTRY_LOCK_TIMEOUT_MS=30000
+# (worktree_tool.py:165)으로 이미 상한하고 초과 시 registry_lock_timeout을 반환하므로, 그보다
+# 넉넉한 값을 둬 정상 경합을 잘라내지 않으면서도 hook이 무한 대기하지 않게 한다.
+_OWNERSHIP_SET_TIMEOUT_SEC = 45
 
 
 def _load_registry(allocator_root):
@@ -85,13 +99,92 @@ def _canonical_task_path(cwd):
     return None, None
 
 
+def _registry_entry_for_task(allocator_root, task_path):
+    """allocator_root registry에서 canonical task_path와 동치인 행 하나를 돌려준다.
+
+    발급값끼리의 경로 대조만 한다 — 문자열 접두·이름 추론을 쓰지 않는다(C-6).
+    """
+    target = str(pathlib.Path(str(task_path)))
+    for entry in _load_registry(allocator_root):
+        value = entry.get("task_path")
+        if value and str(pathlib.Path(str(value))) == target:
+            return entry
+    return None
+
+
+def _register_registry_owner(cwd, task_path, session_id, env):
+    """워크트리 세션의 부트 owner 등록을 1회 시도한다. (등록 여부, 진단 목록).
+
+    D-H: registry `execution_ownership`의 쓰기는 `worktree-tool ownership-set` 경유만
+    허용되므로(TASK 999 C-9) 이 모듈은 meta 파일을 **읽기만** 하고 전이는 CLI에 맡긴다 —
+    파일 쓰기·lock·원자 교체는 여전히 worktree-tool 소유라 dual writer가 생기지 않는다.
+    허브 위치는 `ownership_core.resolve_roots`가 준 `allocator_root`만 쓰고 추론하지 않는다.
+
+    분기는 5개다. `state == worktree_session_owned` ∧ `owner_session_id`가 비었을 때만
+    호출하고, 이미 자기 세션이면 멱등 게이트로 호출을 생략하며(D-J — generation 낭비 방지),
+    타 세션 owner·다른 state·registry 행 부재·CLI 실패는 호출 없이 진단만 남긴다.
+    `--generation`은 지정하지 않아 항상 `prior+1` 단조 증가에 맡긴다(D-J).
+    """
+    roots = ownership_core.resolve_roots(cwd)
+    if not roots.get("ok") or roots.get("kind") != "worktree":
+        return False, []
+    allocator_root = roots.get("allocator_root")
+
+    entry = _registry_entry_for_task(allocator_root, task_path)
+    if entry is None:
+        return False, ["registry_row_absent"]
+
+    block = entry.get("execution_ownership")
+    if not isinstance(block, dict) or block.get("state") != _EXEC_STATE_WORKTREE_SESSION_OWNED:
+        return False, ["registry_not_worktree_owned"]
+
+    owner = block.get("owner_session_id")
+    if owner:
+        if str(owner) == str(session_id):
+            return False, []  # 이미 자기 세션 — 멱등 게이트(호출 0회, 진단 없음).
+        return False, ["foreign_registry_owner"]
+
+    task = entry.get("task")
+    if not task:
+        return False, ["registry_row_absent"]
+
+    runner = pathlib.Path(
+        (env or {}).get("OPAL_HOME") or os.path.expanduser("~/.opal")
+    ) / _WORKTREE_TOOL_RUN_REL
+    argv = [
+        str(runner), "ownership-set",
+        "--project-root", str(allocator_root),
+        "--task", str(task),
+        "--execution-ownership", _EXEC_STATE_WORKTREE_SESSION_OWNED,
+        "--attribution-state", str(entry.get("attribution_state") or _ATTRIBUTION_TOKEN_ACTIVE),
+        "--owner-session-id", str(session_id),
+    ]
+    try:
+        completed = subprocess.run(
+            argv, capture_output=True, text=True, timeout=_OWNERSHIP_SET_TIMEOUT_SEC)
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        # 실행 불가도 멈춘 CLI도 세션을 막지 않는다 — 예외로 새지 않고 구조화 반환한다(fail-safe).
+        return False, ["ownership_set_failed", "ownership_set_detail:{}".format(exc)]
+    if completed.returncode != 0:
+        detail = ((completed.stderr or completed.stdout) or "").strip()
+        return False, ["ownership_set_failed", "ownership_set_detail:{}".format(detail)]
+    return True, []
+
+
 def _append_session_id(env_file_path, session_id):
-    """env 파일에 `OPAL_SESSION_ID=<id>` 1줄을 append한다. (성공 여부, 진단)."""
+    """env 파일에 `export OPAL_SESSION_ID=<quoted id>` 1줄을 append한다. (성공 여부, 진단).
+
+    플랫폼은 이 파일을 dotenv로 파싱하지 않고 Bash 도구의 **부모 쉘에서 실행되는 쉘
+    스크립트 프리앰블**로 `source`한다(D-A). 따라서 `KEY=value` 대입만으로는 자식
+    프로세스에 전파되지 않아 `export` 접두가 필요하고, 값은 쉘 메타문자에 안전하도록
+    `shlex.quote`로 quoting한다(D-B). 이 모듈은 자신의 `os.environ`을 수정하지 않는다.
+    """
     if not env_file_path:
         return False, "env_file_not_provided"
     try:
         with open(str(env_file_path), "a", encoding="utf-8") as handle:
-            handle.write("{}={}\n".format(SESSION_ID_ENV_LINE_KEY, session_id))
+            handle.write("export {}={}\n".format(
+                SESSION_ID_ENV_LINE_KEY, shlex.quote(str(session_id))))
         return True, None
     except OSError as exc:  # 쓰기 실패는 진단만 남기고 등록은 유지한다.
         return False, "env_file_write_failed:{}".format(exc)
@@ -101,7 +194,7 @@ def handle(payload, project_root=None, env_file_path=None, env=None, now=None):
     """SessionStart 봉투를 처리해 구조화 결과를 돌려준다. 예외를 던지지 않는다.
 
     반환 키: exit_code(항상 0) · session_id · registered · env_file_written ·
-    lease_claimed · classification · task_path · diagnostics.
+    lease_claimed · classification · task_path · registry_owner_registered · diagnostics.
     """
     payload = payload if isinstance(payload, dict) else {}
     env = os.environ if env is None else env
@@ -113,6 +206,7 @@ def handle(payload, project_root=None, env_file_path=None, env=None, now=None):
         "lease_claimed": False,
         "classification": None,
         "task_path": None,
+        "registry_owner_registered": False,
         "diagnostics": [],
     }
 
@@ -150,6 +244,10 @@ def handle(payload, project_root=None, env_file_path=None, env=None, now=None):
     if claimed.get("ok"):
         result["lease_claimed"] = True
         result["classification"] = "current_session_owned"
+        registered_owner, owner_diagnostics = _register_registry_owner(
+            cwd, task_path, session_id, env)
+        result["registry_owner_registered"] = registered_owner
+        result["diagnostics"].extend(owner_diagnostics)
         return result
 
     diagnostic = claimed.get("diagnostic")
