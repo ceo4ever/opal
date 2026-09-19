@@ -1,0 +1,15 @@
+[
+  {
+    "iteration": 1,
+    "missing": {"requirements": [], "features": [], "hypotheses": []},
+    "scores": {"goal": 2, "adoption": 2, "boundary": 1},
+    "gaps": [],
+    "verdict": "pass",
+    "reason": "converged",
+    "post_gate_corrections": [
+      "S-5 기대결과 정정 — evaluator가 실측으로 지적. install-mac.sh:239 strip_deploy_md_recursive가 배포본에서 '## 변경이력' 절을 제거하므로 정상 배포에서도 소스와 diff 0이 성립하지 않는다. '## 변경이력 절 제외 diff 0'으로 정정. PM 실측 재확인: 절 제외 diff 0",
+      "S-13 신설 — evaluator 보완 권고(경계 축 1점 사유: 집행 부정 경로 부재). 기준 위반 명령을 등재하면 probe seal이 probe_command_failed로 거부하는지 관측한다. 두 변경 모두 evaluator가 지시한 것이며 판정을 우회하는 방향이 아니다"
+    ],
+    "post_correction_coverage_check": "exit 0, all_covered true, scenarios 13"
+  }
+]
