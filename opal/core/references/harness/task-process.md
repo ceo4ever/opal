@@ -54,6 +54,7 @@
      1. 응답의 `task_path`를 `mkdir -p <task_path>`로 생성한다.
      2. 그 `task_path`에 TASK.md를 작성한다(채번 규칙 4항).
      3. 응답의 `worktree_root` 값을 아래 5번 `state init`의 `--worktree <path>`에 전달한다.
+     4. 워크트리 전용 터미널 기동은 여기서 하지 않는다 — 스텝 5 완료 후 5.5에서 수행한다.
 
      `warnings[]`가 있으면 그대로 사용자에게 전달한다(**차단하지 않는다**).
    - `ok: false` → **허브 `tasks/{폴더명}/`에 폴더를 생성하고 TASK.md를 작성한 뒤 `--worktree` 없이 5번으로 진행한다**(=`--worktree`를 전달하지 않으므로 `state.json`이 현행 스키마와 동일해진다). 이 시점에는 어느 위치에도 폴더가 없으므로 롤백할 대상이 없고 폴더는 한 위치에만 생긴다. 실패 사유(`error` 코드)를 사용자에게 보고한다. agentic 모드에서는 사용자 확인을 요구하지 않고 자동 계속하되 AGENTIC-LOG.md에 실패 사유를 기록한다.
@@ -80,6 +81,25 @@
 
    근거: `tasks/134-260501-opp-pipeline-state-tool/TASK.md` F-9 / `PLAN.md` §2.11 G-8 / §2.19.1 / §1.5 M-3
 
+5.5. **워크트리 전용 세션 기동 — `--worktree`/`--wt`로 4.5가 `ok: true`를 반환했을 때만 수행한다** (그 외에는 이 스텝 전체를 건너뛰고 5 → 6으로 직행한다 — 현행 동작 100% 유지).
+
+   ```bash
+   ~/.opal/tools/worktree-launcher/run.sh launch \
+     --adapter <orca>                              ← 폐쇄 목록. 자동 탐지·자동 폴백 없음
+     --project-root <허브 절대경로> \
+     --task <NNN> \
+     --worktree-root <4.5가 발급한 worktree_root> \
+     [--agent <이름>] [--command <셸 명령>] [--owner-session-id <id>]
+   ```
+
+   - **[MUST] 스텝 5보다 앞에서 기동하지 않는다.** 워크트리 세션은 부팅 직후 `state.json`을 읽어 브리핑하므로, `state init` 전에 띄우면 첫 턴이 읽을 상태가 없다.
+   - `--adapter`는 필수다. 값이 없거나 폐쇄 목록 밖이면 launcher가 거부하며, 오케스트레이터가 다른 어댑터로 대체하지 않는다.
+   - `--command`를 생략하면 launcher가 `launcher` 설정(`~/.opal/setting.json` + `{프로젝트}/.opal/setting.local.json` 2-레이어)에서 기동 명령을 결정한다. 설정이 없으면 코드 기본값으로 폴백한다. 스키마 원문은 `opal/tools/worktree-launcher/README.md`가 소유한다.
+   - **시작 발화는 기동 명령 인자가 소유한다.** `terminal send`·키 입력 에뮬레이션·별도 캡슐 파일을 쓰지 않는다. 태스크 식별은 워크트리와 canonical task의 1:1 관계, `state.json`, 부트 브리핑이 이미 결정론적으로 해결한다.
+   - **실패는 비차단이다.** `ok: false`면 사유를 사용자에게 보고하고(agentic은 AGENTIC-LOG.md에 기록) 허브 세션이 그대로 태스크를 이어간다. launcher는 실패 시 이미 만든 터미널을 닫고 registry를 `hub_owned`로 원자 복귀시키므로 파이프라인이 정리할 잔여물은 없다.
+   - 성공하면 registry `execution_ownership`이 `worktree_session_owned`로 전이하고 이후 그 태스크의 writer는 워크트리 세션이다. 허브 세션은 merge·회수 시점에 다시 개입한다(아래 §`--wt` 체크포인트 커밋과 merge 경계).
+   - 어댑터가 구성되지 않은 환경에서는 이 스텝을 수행하지 않는다 — 워크트리는 만들어지고 터미널은 열리지 않으며, 허브 세션이 그 워크트리를 작업한다.
+
 6. `state init` 응답의 `transition_action` / `report_type` / `next_action`을 소비해 보고한다.
    - `report_type=progress_report`이면 비차단 완료 보고만 남기고, `transition_action=continue`에 따라 다음 단계로 즉시 이어간다.
    - `report_type=decision_request`이면 사용자 결정이 필요한 질문으로 보고하고 대기한다.
@@ -94,6 +114,7 @@
 3. `interactive`는 기존 각 단계 사용자 승인 뒤 그 단계 산출물을 체크포인트 커밋하고 다음 단계로 진입한다. `semi-agentic`은 PLAN-equivalent 승인 뒤 명세 체크포인트를 만들고, EXECUTE·TEST 변경은 커밋하지 않고 누적하며, 기존 CLOSE 진입 승인 뒤 누적 구현·테스트 체크포인트를 만든다. 같은 CLOSE 승인은 승인된 CLOSE/finalize 범위의 최종 체크포인트까지 허용하되 merge·push 승인으로 확장되지 않는다. 새 사용자 Gate를 추가하지 않는다.
 4. 체크포인트 직전 staged 경로가 canonical task와 해당 worktree의 소유 변경으로 폐쇄되는지 검사한다. staged 변경이 0건이면 체크포인트를 만들지 않고 다음 단계로 진행한다. 성공 SHA는 lifecycle record에 기록하며 자동 amend·rebase·reset은 하지 않는다.
 5. `main`·기본 브랜치 commit, worktree branch의 merge·push, 배포와 worktree 제거는 체크포인트 예외 밖이다. 특히 `main`·기본 브랜치 merge는 모드와 무관하게 사용자 승인 뒤 허브에서만 수행한다.
+6. 회수(`worktree-tool remove`)는 3중 가드를 통과한 뒤 `git worktree remove` 직전에 워크트리 터미널을 1회 스윕한다. registry에 `execution_ownership.adapter`가 기록돼 있을 때만 동작하며, 스윕 실패는 회수를 차단하지 않고 경고로만 보고한다. 허브 세션은 `worktree-tool status`의 `completed_unmerged`로 워크트리 세션의 종료를 판정해 merge 안내의 입력으로 쓴다.
 
 체크포인트 후보 경계는 명세 Gate 완료, 검증된 독립 구현 단위, 전체 회귀 통과와 CLOSE/finalize 직전이며 실제 커밋 여부는 위 모드 규칙이 결정한다. 모든 state 행이나 단순 로그 갱신마다 커밋하지 않는다.
 

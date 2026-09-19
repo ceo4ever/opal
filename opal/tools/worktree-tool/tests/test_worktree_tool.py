@@ -3896,3 +3896,381 @@ def test_w21_no_inference_in_resolve_roots_source():
         and node.attr in {"split", "rsplit", "partition", "rpartition", "index"}
     ]
     assert not slicing, f"W-21: resolve_roots에 cwd 문자열 자르기가 있다: {slicing}"
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 태스크 145 W-3 — 회수 전 터미널 정리(S-7)와 복귀 감지 필드(S-8), checkpoint 경계 회귀(S-15)
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+class TestTerminalSweepAndAttributionState:
+    """[T145/S-7·S-8·S-15] 구현 전 RED.
+
+    S-7은 `remove`가 3중 가드 통과 **직후**·`git worktree remove` **직전**에
+    worktree-launcher `close`를 1회 스윕하는 계약(PLAN 145 D-H)을, S-8은 `status`의
+    `attribution_state` 방출 조건이 `task_ownership_version` 보유로 넓어지고 파생
+    불리언 `completed_unmerged`가 함께 실리는 계약(D-G)을 집행한다.
+
+    launcher CLI는 이 태스크의 다른 Work item이 신설 중이므로, 여기서는 `OPAL_HOME`
+    아래에 실행 가능한 가짜 `tools/worktree-launcher/run.sh`를 두어 호출 여부·호출
+    시점·성공/실패 분기만 실측한다(mock/patch 없이 실 subprocess 경계 그대로다).
+    호출 시점 증거는 가짜 run.sh가 기록하는 `worktree_present` 한 줄이다 —
+    `git worktree remove`가 먼저 돌았다면 그 경로는 이미 사라져 있다.
+
+    S-15(C-10)는 이번 변경이 `checkpoint`의 사용자 승인 경계를 건드리지 않았음을
+    고정하는 회귀다 — `main` 브랜치·허브 루트 대상 commit은 종전대로
+    `requires_user_approval`이다.
+    """
+
+    CLOSE_SUCCESS_JSON = (
+        '{"adapter": "orca", "exit_code": 0, "fallback_attempted": false, '
+        '"scope": "worktree_all", "closed": ["term-1"]}'
+    )
+
+    def _fake_opal_home(
+        self, tmp_path: pathlib.Path, name: str, *, succeed: bool
+    ) -> tuple[pathlib.Path, pathlib.Path]:
+        """`OPAL_HOME`으로 쓸 디렉터리에 가짜 worktree-launcher `run.sh`를 설치한다.
+
+        argv 전문과 `--worktree-root` 경로의 실재 여부를 probe 파일에 append하므로,
+        probe 파일의 **부재**가 곧 '호출되지 않았다'의 증거다.
+        """
+        home = tmp_path / name
+        run_sh = home / "tools" / "worktree-launcher" / "run.sh"
+        run_sh.parent.mkdir(parents=True, exist_ok=True)
+        probe = home / "close-probe.txt"
+        tail = (
+            f"echo '{self.CLOSE_SUCCESS_JSON}'\nexit 0\n"
+            if succeed
+            else 'echo "orca CLI를 찾을 수 없습니다" >&2\nexit 1\n'
+        )
+        run_sh.write_text(
+            "#!/bin/sh\n"
+            f'probe="{probe}"\n'
+            'wt=""\n'
+            'prev=""\n'
+            'for a in "$@"; do\n'
+            '  if [ "$prev" = "--worktree-root" ]; then wt="$a"; fi\n'
+            '  prev="$a"\n'
+            "done\n"
+            'echo "argv: $*" >> "$probe"\n'
+            'if [ -d "$wt" ]; then\n'
+            '  echo "worktree_present: yes" >> "$probe"\n'
+            "else\n"
+            '  echo "worktree_present: no" >> "$probe"\n'
+            "fi\n" + tail,
+            encoding="utf-8",
+        )
+        run_sh.chmod(0o755)
+        return home, probe
+
+    def _register_v2_meta(
+        self,
+        project_b,
+        task: str,
+        *,
+        adapter,
+        attribution_state=None,
+        with_worktree: bool = True,
+    ) -> pathlib.Path:
+        """v2 registry 행(발급 6필드) + `execution_ownership`을 실물 배치한다.
+
+        `adapter=None`이면 launch를 한 번도 수행하지 않은 슬롯이고, `execution_ownership`
+        자체가 없으면 `attribution_state` 방출이 version 축으로만 결정되는 S-8 변형이다.
+        """
+        branch = f"feat/OP-TASK-{task}"
+        wt_root = project_b.root / ".opal-worktrees" / f"task_{task}"
+        if with_worktree:
+            add_worktree(project_b.root, branch, wt_root)
+        task_folder = f"{task}-t145-fixture"
+        meta = {
+            "task": task,
+            "layout": "monorepo",
+            "branch": branch,
+            "created_at": "2026-09-19 00:00",
+            "worktree_root": str(wt_root),
+            "entries": [
+                {
+                    "repo": str(project_b.root),
+                    "path": str(wt_root),
+                    "branch": branch,
+                    "base_ref": "main",
+                }
+            ],
+            "pending_setup": [],
+            "allocator_root": str(project_b.root),
+            "task_home": str(wt_root),
+            "task_folder": task_folder,
+            "task_path": str(wt_root / "tasks" / task_folder),
+            "artifact_repo": ".",
+            "task_ownership_version": 2,
+            "memory_index_requests_resolved": [],
+        }
+        if adapter is not None:
+            meta["execution_ownership"] = {
+                "state": "released",
+                "owner_session_id": None,
+                "adapter": adapter,
+                "adapter_handle": "t145-handle",
+                "generation": 1,
+                "launch_receipt": {"issued_at": "2026-09-19 00:00"},
+                "prompt_receipt": {"issued_at": "2026-09-19 00:00"},
+                "failure_reason": None,
+                "checkpoint_shas": [],
+            }
+        if attribution_state is not None:
+            meta["attribution_state"] = attribution_state
+        write_json(
+            project_b.root / ".opal-worktrees" / ".meta" / f"task_{task}.json", meta
+        )
+        return wt_root
+
+    def _register_legacy_meta(self, project_b, task: str) -> pathlib.Path:
+        """`task_ownership_version` 부재 legacy 행 — 출력 바이트 보존 대조군이다."""
+        branch = f"feat/OP-TASK-{task}"
+        wt_root = project_b.root / ".opal-worktrees" / f"task_{task}"
+        add_worktree(project_b.root, branch, wt_root)
+        write_meta(
+            project_b.root,
+            task,
+            "monorepo",
+            branch,
+            [
+                {
+                    "repo": str(project_b.root),
+                    "path": str(wt_root),
+                    "branch": branch,
+                    "base_ref": "main",
+                }
+            ],
+            worktree_root=wt_root,
+        )
+        return wt_root
+
+    # ── S-7 ──────────────────────────────────────────────────────────────────
+
+    def test_s7_no_adapter_skips_sweep_and_preserves_response_keys(
+        self, project_b, tmp_path, monkeypatch
+    ):
+        """[S-7 ①] `execution_ownership.adapter` 미기록이면 close를 호출하지 않고
+        응답 키 집합이 legacy 회수와 동일하다(기존 키 집합 바이트 보존)."""
+        home, probe = self._fake_opal_home(tmp_path, "home_noadapter", succeed=True)
+        monkeypatch.setenv("OPAL_HOME", str(home))
+
+        self._register_legacy_meta(project_b, "s7legacy")
+        legacy = parse_json_stdout(
+            run_worktree_cli(
+                ["remove", "--project-root", str(project_b.root), "--task", "s7legacy"]
+            ),
+            "remove(S-7 legacy baseline)",
+        )
+        assert legacy.get("ok") is True, legacy
+
+        self._register_v2_meta(project_b, "s7noadapter", adapter=None)
+        payload = parse_json_stdout(
+            run_worktree_cli(
+                [
+                    "remove",
+                    "--project-root",
+                    str(project_b.root),
+                    "--task",
+                    "s7noadapter",
+                ]
+            ),
+            "remove(S-7 adapter 미기록)",
+        )
+        assert payload.get("ok") is True, payload
+        assert sorted(payload.keys()) == sorted(legacy.keys()), (
+            f"S-7: adapter 미기록 경로의 응답 키 집합이 달라졌다: {payload}"
+        )
+        assert not probe.exists(), (
+            f"S-7: adapter 미기록인데 launcher close가 호출됐다: {probe.read_text()}"
+        )
+
+    def test_s7_recorded_adapter_sweeps_before_worktree_remove(
+        self, project_b, tmp_path, monkeypatch
+    ):
+        """[S-7 ②] adapter 기록 시 close가 가드 통과 직후·`git worktree remove` 직전에
+        1회 호출되고 그 보고가 `terminals_closed`에 실린다."""
+        home, probe = self._fake_opal_home(tmp_path, "home_ok", succeed=True)
+        monkeypatch.setenv("OPAL_HOME", str(home))
+
+        wt_root = self._register_v2_meta(project_b, "s7ok", adapter="orca")
+        payload = parse_json_stdout(
+            run_worktree_cli(
+                ["remove", "--project-root", str(project_b.root), "--task", "s7ok"]
+            ),
+            "remove(S-7 close 성공)",
+        )
+        assert payload.get("ok") is True, payload
+        assert payload.get("terminals_closed", {}).get("closed") == ["term-1"], payload
+        assert "warnings" not in payload, payload
+
+        probe_text = probe.read_text(encoding="utf-8")
+        assert probe_text.count("argv: ") == 1, f"S-7: close가 1회가 아니다: {probe_text}"
+        assert "close" in probe_text and "--adapter orca" in probe_text, probe_text
+        assert "--all" in probe_text and "--json" in probe_text, probe_text
+        assert f"--worktree-root {wt_root}" in probe_text, probe_text
+        assert "worktree_present: yes" in probe_text, (
+            f"S-7: close가 `git worktree remove` 뒤에 호출됐다: {probe_text}"
+        )
+        assert not wt_root.exists(), "S-7: 회수가 완료되지 않았다"
+
+    def test_s7_close_failure_does_not_block_removal(
+        self, project_b, tmp_path, monkeypatch
+    ):
+        """[S-7 ③] close 실패(비-0 종료)는 회수를 차단하지 않고 `warnings`로만 보고된다."""
+        home, probe = self._fake_opal_home(tmp_path, "home_fail", succeed=False)
+        monkeypatch.setenv("OPAL_HOME", str(home))
+
+        wt_root = self._register_v2_meta(project_b, "s7fail", adapter="orca")
+        payload = parse_json_stdout(
+            run_worktree_cli(
+                ["remove", "--project-root", str(project_b.root), "--task", "s7fail"]
+            ),
+            "remove(S-7 close 실패)",
+        )
+        assert payload.get("ok") is True, f"S-7: close 실패가 회수를 차단했다: {payload}"
+        assert payload.get("warnings"), payload
+        assert "terminals_closed" not in payload, payload
+        assert probe.exists() and "argv: " in probe.read_text(encoding="utf-8")
+        assert not wt_root.exists(), "S-7: close 실패인데 회수가 수행되지 않았다"
+        assert not (
+            project_b.root / ".opal-worktrees" / ".meta" / "task_s7fail.json"
+        ).exists()
+
+    def test_s7_dirty_worktree_is_rejected_before_sweep(
+        self, project_b, tmp_path, monkeypatch
+    ):
+        """[S-7 ④] dirty 워크트리는 3중 가드에서 거부되어 스윕에 **도달하지 않는다**."""
+        home, probe = self._fake_opal_home(tmp_path, "home_dirty", succeed=True)
+        monkeypatch.setenv("OPAL_HOME", str(home))
+
+        wt_root = self._register_v2_meta(project_b, "s7dirty", adapter="orca")
+        (wt_root / "dirty.txt").write_text("uncommitted\n", encoding="utf-8")
+
+        payload = parse_json_stdout(
+            run_worktree_cli(
+                ["remove", "--project-root", str(project_b.root), "--task", "s7dirty"]
+            ),
+            "remove(S-7 dirty)",
+        )
+        assert payload.get("ok") is False, payload
+        assert payload.get("error") == "GUARD_DIRTY", payload
+        assert not probe.exists(), (
+            f"S-7: 가드 거부인데 launcher close가 호출됐다: {probe.read_text()}"
+        )
+        assert wt_root.exists(), "S-7: 가드 거부인데 워크트리가 사라졌다"
+
+    # ── S-8 ──────────────────────────────────────────────────────────────────
+
+    @pytest.mark.parametrize(
+        "attribution_state,expected_flag",
+        [
+            (None, False),
+            ("completed_unmerged", True),
+            ("closed", False),
+        ],
+    )
+    def test_s8_status_emits_attribution_state_without_execution_ownership(
+        self, project_b, attribution_state, expected_flag
+    ):
+        """[S-8 ①②③] `execution_ownership`이 없어도 `task_ownership_version`만 있으면
+        `attribution_state`가 방출되고, 파생 불리언 `completed_unmerged`가 일치한다."""
+        task = f"s8{attribution_state or 'absent'}".replace("_", "")
+        self._register_v2_meta(
+            project_b, task, adapter=None, attribution_state=attribution_state
+        )
+        payload = parse_json_stdout(
+            run_worktree_cli(
+                ["status", "--project-root", str(project_b.root), "--task", task]
+            ),
+            f"status(S-8 {attribution_state})",
+        )
+        assert payload.get("ok") is True, payload
+        assert "execution_ownership" not in payload, payload
+        assert "attribution_state" in payload, (
+            f"S-8: version 보유 메타인데 attribution_state가 없다: {payload}"
+        )
+        assert payload.get("attribution_state") == attribution_state, payload
+        assert payload.get("completed_unmerged") is expected_flag, payload
+
+    def test_s8_legacy_meta_output_is_unchanged(self, project_b):
+        """[S-8 ④] legacy(`task_ownership_version` 부재) 메타의 출력은 무변경이다 —
+        새 필드 `completed_unmerged`도 `attribution_state`도 실리지 않는다."""
+        self._register_legacy_meta(project_b, "s8legacy")
+        payload = parse_json_stdout(
+            run_worktree_cli(
+                ["status", "--project-root", str(project_b.root), "--task", "s8legacy"]
+            ),
+            "status(S-8 legacy)",
+        )
+        assert payload.get("ok") is True, payload
+        assert "attribution_state" not in payload, payload
+        assert "completed_unmerged" not in payload, payload
+        assert sorted(payload.keys()) == [
+            "branch",
+            "command",
+            "entries",
+            "error",
+            "ok",
+            "pending_setup",
+            "task",
+            "worktree_root",
+        ], payload
+
+    # ── S-15 (C-10 회귀) ─────────────────────────────────────────────────────
+
+    def test_s15_checkpoint_on_main_branch_still_requires_user_approval(
+        self, project_b
+    ):
+        """[S-15/C-10] `main` 브랜치 대상 checkpoint는 종전대로 거부된다."""
+        payload = parse_json_stdout(
+            run_worktree_cli(
+                [
+                    "checkpoint",
+                    "--worktree-root",
+                    str(project_b.root),
+                    "--mode",
+                    "agentic",
+                    "--stage",
+                    "execute",
+                ]
+            ),
+            "checkpoint(S-15 main)",
+        )
+        assert payload.get("ok") is False, payload
+        assert payload.get("error") == "requires_user_approval", payload
+        assert payload.get("reason") == "protected_branch_commit", payload
+
+    def test_s15_checkpoint_on_hub_root_still_requires_user_approval(self, project_b):
+        """[S-15/C-10] 허브 루트 대상 checkpoint도 종전대로 거부된다."""
+        run_git(["checkout", "-b", "feat/OP-TASK-s15hub"], cwd=project_b.root)
+        write_json(
+            project_b.root / ".opal" / "task-ownership.json",
+            {
+                "allocator_root": str(project_b.root),
+                "task_home": str(project_b.root),
+                "task_folder": "s15-hub-fixture",
+                "task_path": str(project_b.root / "tasks" / "s15-hub-fixture"),
+                "artifact_repo": ".",
+                "task_ownership_version": 2,
+            },
+        )
+        payload = parse_json_stdout(
+            run_worktree_cli(
+                [
+                    "checkpoint",
+                    "--worktree-root",
+                    str(project_b.root),
+                    "--mode",
+                    "agentic",
+                    "--stage",
+                    "execute",
+                ]
+            ),
+            "checkpoint(S-15 hub)",
+        )
+        assert payload.get("ok") is False, payload
+        assert payload.get("error") == "requires_user_approval", payload
+        assert payload.get("reason") == "hub_commit", payload

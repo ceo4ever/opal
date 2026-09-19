@@ -14,7 +14,6 @@ if ! PYTHONPATH="$SCRIPT_DIR" "$VENV_PYTHON" -c 'from worktree_launcher import l
   exit 1
 fi
 
-# CLI 표면(--adapter 명시 선택)은 adapter 2종(orca·generic)이 들어오는 후속 Work item이
-# 채운다. 현재는 lifecycle 코어만 있으므로 라이브러리 호출로만 사용한다.
-echo '{"ok":false,"command":"worktree-launcher","error":"not_implemented"}' >&2
-exit 1
+# CLI 표면(--adapter 명시 선택)은 worktree_launcher.cli가 소유한다 — 이 래퍼는 가드 2종
+# 뒤에서 인자를 그대로 넘기고 종료 코드를 그대로 돌려준다.
+PYTHONPATH="$SCRIPT_DIR" "$VENV_PYTHON" -m worktree_launcher.cli "$@"

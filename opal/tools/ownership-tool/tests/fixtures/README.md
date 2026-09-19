@@ -44,7 +44,9 @@
 | `launcher/fake_process-launch-failed.json` | launch 실패 경로 | S-15 | AC-7, AC-8, C-13 | 합성 |
 | `launcher/fake_process-prompt-failed.json` | prompt 제출 실패 경로 | S-15 | AC-7, AC-8, C-13 | 합성 |
 | `launcher/fake_process-cwd-mismatch.json` | `reported_cwd` 불일치 경로 | S-15 | AC-7, AC-8, C-13 | 합성 |
-| `launcher/orca-json-response.json` | `orca terminal create --json` 응답 가정 샘플. **필드명은 실측 `--help` 플래그(`--worktree`/`--command`/`--title`/`--focus`/`--json`)만 근거로 한 가정**이며 실제 stdout JSON 스키마는 미실측 | S-16 | AC-5, C-2, H-6 | `--help` 플래그만 실측, stdout 스키마는 가정 |
+| `launcher/orca-json-response.json` | `orca terminal create --json` **실측 stdout 원문**. 봉투는 `result.terminal`이고 cwd 원천은 `worktreeId`(`<repoId>::<path>`)다 — `cwd`·`worktree_selector` 키는 존재하지 않는다 | S-1, S-2, S-10 | AC-2, H-1, H-2 | 실측 캡처 2026-09-19 15:03 KST, orca 1.4.205, darwin |
+| `launcher/orca-terminal-read-response.json` | `orca terminal read --terminal <handle> --json` 실측 stdout 원문 | S-10 | AC-8 | 실측 캡처 2026-09-19 15:03 KST, orca 1.4.205 |
+| `launcher/orca-terminal-close-response.json` | `orca terminal close --terminal <handle> --json` 실측 stdout 원문 | S-10, S-13 | AC-8 | 실측 캡처 2026-09-19 15:03 KST, orca 1.4.205 |
 | `hook-payloads/session-start.json` | SessionStart 합성 봉투 | S-10, S-29 | H-1, H-3, C-9 | **합성** (`captured:false`) |
 | `hook-payloads/pretooluse.json` | PreToolUse 합성 봉투 | S-13 | AC-18, H-4 | **합성** |
 | `hook-payloads/posttooluse.json` | PostToolUse 합성 봉투 | S-12 | C-9, H-1 | **합성** |
@@ -55,7 +57,8 @@
 ## captured 여부 요약
 
 - **원본 실측**: 허브 실물 파일을 Read해 경로만 플레이스홀더로 치환한 것. registry meta 3종, `HUB-FOSSIL-AMBIGUOUS`/`WT-132` state.json 계열, `fingerprint/show-a-baseline.json`(및 그 파생 b/c), `ENV-CAPTURE.md`.
-- **스키마 파생**: PLAN D-5가 정의한 필드 목록을 그대로 따라 만든 합성 레코드(runtime/*, launcher/*).
+- **스키마 파생**: PLAN D-5가 정의한 필드 목록을 그대로 따라 만든 합성 레코드(runtime/*, launcher/fake_process-*).
+- **실측 캡처**: `launcher/orca-*.json` 3종은 실제 CLI stdout을 캡처한 것이며 워크트리 경로 성분만 `{WT}`로 치환했다. 각 파일이 `_captured_at`·`_orca_version`을 자기 안에 기록한다 — 버전 드리프트는 fixture가 아니라 live 테스트(`OPAL_LIVE_ORCA=1`)가 잡는다.
 - **합성**: 이 세션에서 실제 캡처할 수 없는 대상(hook 봉투 5종, HUB-MULTI/TWO-SESSIONS/SAME-WORKTREE 등 다중 세션 시나리오)을 Claude Code hooks 문서 공통 필드 스키마로 조립한 것. hook 봉투는 각 파일에 `"_fixture": {"captured": false, ...}`로 명시했다. **S-29(W-6 배포 후 실제 세션 1회 캡처)에서 실캡처로 교체된다.**
 
 ## H-2 실측 결과 (요약)

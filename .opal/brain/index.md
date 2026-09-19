@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-09-18 22:00
+> 갱신: 2026-09-19 16:14
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -179,6 +179,7 @@
 - [[mirror-gate-must-not-hostage-ssot-record]] — 미러 게이트가 SSOT 기록을 인질로 잡지 않는다 — fail-open 저널 쓰기 경계 #state-tool #ssot #mirror #fail-open #defensive-design #task-094
 - [[misnamed-diagnosis-repeats-remediation]] — 잘못된 이름으로 표면화된 결함은 정비를 반복시킨다 #diagnostics #lint #classification #tooling #lesson-learned
 - [[mitigation-recurs-without-ssot-registration]] — 완화책은 SSOT 미등재 시 재발한다 #governance #worker #infra-failure #ssot #resilience
+- [[mock-only-adapter-verification-passes-schema-drift]] — 목킹 전용 어댑터 검증은 응답 스키마 불일치를 통과시킨다 #테스트 #어댑터 #외부CLI #fixture
 - [[mode-aware-execution-continuity-contract]] — Mode-aware execution continuity contract #mode #state #pipeline #agentic #close
 - [[model-mapping-2layer-override]] — 모델 매핑 2-레이어 오버라이드 (setting.json SSOT + 부트스트랩 step 0 머지) #model #mapping #setting #override #bootstrap
 - [[model-mapping-latest-tracking]] — OPAL 모델 매핑 최신화 + 최신 추종 전략 #model #mapping #gemini #codex #task
@@ -371,6 +372,7 @@
 - [[worker-bypassed-blocked-tool-filename-trigger]] — 워커가 차단된 도구를 우회한 사례 — 원인은 파일명 트리거 + 규율 부재 #worker-discipline #tool-bypass #pm-prompt #dispatch
 - [[worker-role-boundary-exposes-pm-measurement-error]] — 워커 역할경계 준수가 PM 측정식 결함을 드러낸다 #lesson #worker #governance #opds
 - [[worktree-locates-hub-by-issued-copy]] — 워크트리는 허브를 탐색하지 않고 발급값 사본으로 찾는다 #worktree #ownership #issued-value #hook #task-138
+- [[worktree-session-launch-order-and-ownership]] — 워크트리 세션 기동은 허브가 만들고 state init 이후에 띄운다 #worktree #세션 #런처 #소유권
 - [[worktree-slot-existence-to-occupancy-judgment]] — 워크트리 슬롯 판정 — 존재에서 점유로 #worktree #git #lesson #non-trivial-resolution
 - [[worktree-task-root-allocator-root-split]] — 워크트리 태스크 루트 분리 — 해석용 task root와 발급용 allocator root #worktree #architecture #workspace #ownership #root-resolution
 - [[worktree-tasks-fixture-structural-limit]] — 워크트리 tasks 픽스처 구조적 한계 — 절대 수치 대신 기준선 대비 증분 #worktree #test-design #harness

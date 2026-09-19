@@ -1,0 +1,30 @@
+{
+  "_fixture_note": "실측 캡처: `orca terminal read --json` stdout 원문. 캡처 일시 2026-09-19 15:02 KST, orca 1.4.205, macOS(darwin). 워크트리 경로 성분만 {WT}로 치환했고 그 외 필드는 실제 값 그대로다.",
+  "_captured_at": "2026-09-19 15:02",
+  "_orca_version": "1.4.205",
+  "id": "b0292678-83ed-4785-89fb-0b969449c559",
+  "ok": true,
+  "result": {
+    "terminal": {
+      "handle": "term_6281f52a-c804-4fca-8aea-347a2b1f6203",
+      "status": "running",
+      "tail": [
+        "╭─░▒▓ /Volumes/D/AI/w/ai-framework/.opal-worktrees/task_997  feat/OP-TASK-997 !6         ✔  system   15:02:35 ▓▒░",
+        "╰─ echo OPAL-FIXTURE-CAPTURE",
+        "OPAL-FIXTURE-CAPTURE",
+        "╭─░▒▓ /Volumes/D/AI/w/ai-framework/.opal-worktrees/task_997  feat/OP-TASK-997 !6         ✔  system   15:02:35 ▓▒░",
+        "╰─"
+      ],
+      "truncated": false,
+      "limited": false,
+      "oldestCursor": "0",
+      "nextCursor": "10",
+      "latestCursor": "10",
+      "returnedLineCount": 5,
+      "source": "stream"
+    }
+  },
+  "_meta": {
+    "runtimeId": "d537d07c-a493-4701-8a11-bae47ecd876e"
+  }
+}

@@ -3,7 +3,7 @@
   "module": "launcher_core",
   "layer": "util",
   "domain": "opal-workspace",
-  "description": "허브에서 워크트리 실행 세션을 띄우는 launcher 공통 lifecycle. `run(adapter, hub_root=…, task=…, worktree_root=…, command=…)`이 preflight(registry meta 조회 → 등록된 worktree_root 동치 확인 → `hub_owned`이면 `session_launching`으로 전이, 이미 `session_launching`이면 그대로 이어받아 generation을 낭비하지 않는다) → `adapter.launch(worktree_root, command)` 1회 호출 → launch receipt({adapter, adapter_handle, reported_cwd, launched_at}) 수집 → reported_cwd가 registry worktree_root와 realpath 동치인지 검사 → handoff prompt 제출 receipt({prompt_id, submitted_at}) 수집 → `worktree_session_owned` 전이 순으로 진행한다. launch 실패·prompt 실패·cwd 불일치 어느 경로든 `failure_reason=launch_failed` + `hub_owned` + attribution 키 부재 + generation 증가를 단일 교체로 담는 원자 복귀를 호출해 dual owner·orphan `session_launching`을 남기지 않는다. 상태 쓰기는 전부 worktree-tool의 `ownership-set` 계약을 subprocess로 경유하며 이 모듈은 registry 쓰기 로직·lock·원자 교체를 복제하지 않는다(사설 ownership writer 금지). registry 읽기는 인자로 받은 hub_root·task로 만든 `<hub_root>/.opal-worktrees/.meta/task_{task}.json` 1경로에서만 하고 경로 문자열·basename·mtime으로 신원을 추론하지 않는다. adapter는 호출자가 명시 선택해 주입하며 OS·터미널 종류를 추측하지 않는다. 플랫폼 고유 env 변수명은 이 도구에 두지 않는다(C-15 — ownership-tool의 claude_adapter 전용).",
+  "description": "허브에서 워크트리 실행 세션을 띄우는 launcher 공통 lifecycle. `run(adapter, hub_root=…, task=…, worktree_root=…, command=…)`이 preflight(registry meta 조회 → 등록된 worktree_root 동치 확인 → `hub_owned`이면 `session_launching`으로 전이, 이미 `session_launching`이면 그대로 이어받아 generation을 낭비하지 않는다) → `adapter.launch(worktree_root, command)` 1회 호출 → launch receipt({adapter, adapter_handle, reported_cwd, launched_at}) 수집 → reported_cwd가 registry worktree_root와 realpath 동치인지 검사 → handoff prompt 제출 receipt({prompt_id, submitted_at}) 수집 → `worktree_session_owned` 전이 순으로 진행한다. launch 실패·prompt 실패·cwd 불일치·전이 거부 어느 경로든(`adapter_report_invalid`·`launch_receipt_missing`·`reported_cwd_mismatch`·`prompt_receipt_missing`·`ownership_set_rejected` 5경로 전건) `failure_reason=launch_failed` + `hub_owned` + attribution 키 부재 + generation 증가를 단일 교체로 담는 원자 복귀를 호출해 dual owner·orphan `session_launching`을 남기지 않는다. 복귀는 그 직전에 `adapter.close(handle=…)`를 1회 호출해 launch가 띄웠을 수 있는 터미널을 정리한다 — handle은 launch 보고 dict의 `adapter_handle`에서만 취하고 없으면 시도하지 않으며(대상 추측 금지), 스코프는 D-C의 정밀 close 하나다(워크스페이스 스윕은 회수 경로 소유). close의 예외·미구현(`AttributeError`)·비-0 exit는 전부 삼켜 반환 dict의 `terminal_close` 로그 필드로만 남기고 `ownership-set` 복귀는 반드시 수행한다 — 복귀가 정리 성공에 종속되면 dual owner가 남는다. 상태 쓰기는 전부 worktree-tool의 `ownership-set` 계약을 subprocess로 경유하며 이 모듈은 registry 쓰기 로직·lock·원자 교체를 복제하지 않는다(사설 ownership writer 금지). registry 읽기는 인자로 받은 hub_root·task로 만든 `<hub_root>/.opal-worktrees/.meta/task_{task}.json` 1경로에서만 하고 경로 문자열·basename·mtime으로 신원을 추론하지 않는다. adapter는 호출자가 명시 선택해 주입하며 OS·터미널 종류를 추측하지 않는다. 플랫폼 고유 env 변수명은 이 도구에 두지 않는다(C-15 — ownership-tool의 claude_adapter 전용).",
   "exports": [
     "WORKTREE_TOOL_PATH", "FAILURE_REASON_LAUNCH_FAILED",
     "LauncherError", "registry_meta_path", "read_registry_meta",
@@ -146,10 +146,52 @@ def ownership_set(hub_root, task: str, state: str, **options) -> dict:
     return response
 
 
-def _revert(hub_root, task: str, detail: str, adapter_name=None) -> dict:
+def _close_terminal(adapter, report) -> dict:
+    """복귀 직전의 터미널 정리 1회. **어떤 실패도 올리지 않고** 로그 dict로만 돌려준다.
+
+    handle은 launch 보고 dict의 `adapter_handle`에서만 취한다 — 보고가 dict가 아니거나
+    handle이 비면 대상을 추측하지 않고 시도 자체를 하지 않는다. 스코프는 D-C의 정밀
+    `close(handle=…)` 하나이며 워크스페이스 스윕(`worktree_root`+`all`)은 회수 경로의
+    것이라 여기서 쓰지 않는다(사용자의 다른 탭 보존).
+    """
+    handle = report.get("adapter_handle") if isinstance(report, dict) else None
+    if not handle:
+        return {"attempted": False, "reason": "handle_missing"}
+    try:
+        close = adapter.close
+    except AttributeError:
+        # close seam이 없는 어댑터도 복귀를 막지 않는다(덕타이핑 — 상속 계층 없음).
+        return {"attempted": False, "handle": handle, "reason": "close_unsupported"}
+    try:
+        close_report = close(handle=handle)
+    except Exception as exc:  # noqa: BLE001 — 정리 실패가 복귀를 막으면 dual owner가 남는다
+        return {
+            "attempted": True,
+            "ok": False,
+            "handle": handle,
+            "reason": "close_failed",
+            "detail": f"{type(exc).__name__}: {exc}",
+        }
+    exit_code = close_report.get("exit_code") if isinstance(close_report, dict) else None
+    if exit_code in (0, None):
+        return {"attempted": True, "ok": True, "handle": handle}
+    return {
+        "attempted": True,
+        "ok": False,
+        "handle": handle,
+        "reason": "close_rejected",
+        "detail": f"exit_code={exit_code}",
+    }
+
+
+def _revert(hub_root, task: str, detail: str, adapter_name=None, *, adapter=None, report=None) -> dict:
     """원자 복귀 — `failure_reason=launch_failed` + `hub_owned` + attribution 키 부재 +
     generation 증가를 `ownership-set` 한 번의 교체로 담는다(owner·receipt 소거는 그쪽이
-    같은 교체 안에서 수행하므로 중간 상태가 생기지 않는다)."""
+    같은 교체 안에서 수행하므로 중간 상태가 생기지 않는다).
+
+    복귀 **직전**에 launch가 띄웠을 수 있는 터미널을 1회 정리하고, 그 결과는 `terminal_close`
+    로그 필드로만 남긴다 — 복귀는 정리 성공 여부에 종속되지 않는다."""
+    terminal_close = _close_terminal(adapter, report)
     response = ownership_set(
         hub_root,
         task,
@@ -167,6 +209,7 @@ def _revert(hub_root, task: str, detail: str, adapter_name=None) -> dict:
         "detail": detail,
         "task": task,
         "generation": block.get("generation"),
+        "terminal_close": terminal_close,
         "meta_path": response.get("meta_path"),
     }
 
@@ -224,22 +267,34 @@ def run(adapter, *, hub_root, task, worktree_root, command, owner_session_id=Non
 
     report = adapter.launch(worktree_root, command)
     if not isinstance(report, dict):
-        return _revert(hub_root, task, "adapter_report_invalid", adapter_name)
+        return _revert(
+            hub_root, task, "adapter_report_invalid", adapter_name,
+            adapter=adapter, report=report,
+        )
     adapter_name = report.get("adapter") or adapter_name
 
     launch_receipt = build_launch_receipt(report)
     if launch_receipt is None:
-        return _revert(hub_root, task, "launch_receipt_missing", adapter_name)
+        return _revert(
+            hub_root, task, "launch_receipt_missing", adapter_name,
+            adapter=adapter, report=report,
+        )
 
     # [MUST] reported_cwd가 registry worktree_root와 일치하지 않으면 전이하지 않는다.
     if os.path.realpath(str(launch_receipt["reported_cwd"])) != os.path.realpath(
         str(registered_root)
     ):
-        return _revert(hub_root, task, "reported_cwd_mismatch", adapter_name)
+        return _revert(
+            hub_root, task, "reported_cwd_mismatch", adapter_name,
+            adapter=adapter, report=report,
+        )
 
     prompt_receipt = build_prompt_receipt(report)
     if prompt_receipt is None:
-        return _revert(hub_root, task, "prompt_receipt_missing", adapter_name)
+        return _revert(
+            hub_root, task, "prompt_receipt_missing", adapter_name,
+            adapter=adapter, report=report,
+        )
 
     response = ownership_set(
         hub_root,
@@ -252,7 +307,10 @@ def run(adapter, *, hub_root, task, worktree_root, command, owner_session_id=Non
         prompt_receipt=prompt_receipt,
     )
     if not response.get("ok"):
-        return _revert(hub_root, task, f"ownership_set_rejected: {response}", adapter_name)
+        return _revert(
+            hub_root, task, f"ownership_set_rejected: {response}", adapter_name,
+            adapter=adapter, report=report,
+        )
 
     owned = response.get("execution_ownership") or {}
     return {

@@ -1,0 +1,231 @@
+{
+  "task_id": "145-260919-opds-워크트리-터미널-런처-orca-배선",
+  "skill": "opds",
+  "mode": "agentic",
+  "schema_version": "1.2",
+  "created_at": "2026-09-19 14:28:42",
+  "updated_at": "2026-09-19 17:05:31",
+  "current_status": "completed_unmerged",
+  "rows": [
+    {
+      "row_id": 1,
+      "stage": "TASK",
+      "item": "작업",
+      "key": "task.task_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-19 14:29:03",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 2,
+      "stage": "TASK",
+      "item": "사용자 확인",
+      "key": "task.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-19 14:45:51",
+      "owner": "auto",
+      "note": "agentic auto-pass"
+    },
+    {
+      "row_id": 3,
+      "stage": "PLAN",
+      "item": "작업",
+      "key": "plan.plan_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-19 16:13:00",
+      "owner": "worker",
+      "note": "워커 소요 사후 기재(opal-plan-agent 456s)",
+      "worker_duration_minutes": 8
+    },
+    {
+      "row_id": 4,
+      "stage": "PLAN",
+      "item": "목표-커버 게이트",
+      "key": "plan.scenario_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-19 15:00:24",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 5,
+      "stage": "PLAN",
+      "item": "PM Gate",
+      "key": "plan.pm_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-19 15:00:46",
+      "owner": "PM",
+      "note": null,
+      "gate": {
+        "artifacts": [
+          "TASK.md",
+          "PLAN.md",
+          "TEST-SCENARIO.md"
+        ],
+        "checklist": [
+          "sdlc-v2 TASK/PLAN/TEST-SCENARIO first frontmatter template=sdlc-v2; 기존 문서는 legacy 재개 경로로 판정",
+          "sdlc-v2 TASK.md AC/C → PLAN.md Work items 완료 기준 연결",
+          "sdlc-v2 PLAN.md Work items 필수 열·W-ID·선행 작업·실행 그룹·파일 충돌 없음 — state-tool verify <태스크폴더> --plan-contract-check 통과",
+          "sdlc-v2 PLAN.md Risks 절 존재, 실제 위험은 H-N 사용 또는 위험 없음 명시",
+          "sdlc-v2 PLAN.md Release and recovery 존재",
+          "sdlc-v2 TEST-SCENARIO.md Setup / Scenarios 존재, 모든 AC/C와 존재하는 H의 연결 완전 — op-scenario-gate pass",
+          "code-scan 결과 인용 — state-tool verify <태스크폴더> --code-scan-citation-check 통과"
+        ]
+      }
+    },
+    {
+      "row_id": 6,
+      "stage": "PLAN",
+      "item": "사용자 확인",
+      "key": "plan.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-19 15:00:46",
+      "owner": "auto",
+      "note": "agentic auto-pass"
+    },
+    {
+      "row_id": 7,
+      "stage": "EXECUTE",
+      "item": "작업",
+      "key": "execute.implement",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-19 16:13:00",
+      "owner": "worker",
+      "note": "P1~P4 워커 8회 합산 2305s(W-2 191s·W-3 572s·W-4 359s·W-5 276+73s·W-6 278s·W-7 255s·W-8 150s·W-10 152s). P5 W-11은 PM 직접",
+      "worker_duration_minutes": 38
+    },
+    {
+      "row_id": 8,
+      "stage": "TEST",
+      "item": "작업",
+      "key": "test.run_tests",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-19 16:13:01",
+      "owner": "worker",
+      "note": "워커 소요 사후 기재(opal-test-agent 340s)",
+      "worker_duration_minutes": 6
+    },
+    {
+      "row_id": 9,
+      "stage": "TEST",
+      "item": "PM Gate",
+      "key": "test.pm_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-19 15:58:28",
+      "owner": "PM",
+      "note": null,
+      "gate": {
+        "artifacts": [
+          "TEST-SCENARIO.md",
+          "test-scenario.json"
+        ],
+        "checklist": [
+          "TEST-SCENARIO.md는 실행 전 명세로만 읽고 결과·증거를 기록하지 않음",
+          "test-scenario.json의 모든 필수 시나리오가 PASS이고 FAIL/BLOCKED가 없으며 실제 실행 증거가 존재",
+          "PLAN.md Work items에 정의된 필수 검증 PASS",
+          "컨벤션 자동 진단 PASS (GC-CONVENTION-*.md Critical/High 0건 — 컨벤션 적용 대상 ≥1건 시 발동)"
+        ]
+      }
+    },
+    {
+      "row_id": 10,
+      "stage": "TEST",
+      "item": "사용자 확인",
+      "key": "test.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-19 16:11:43",
+      "owner": "user",
+      "note": null
+    },
+    {
+      "row_id": 11,
+      "stage": "CLOSE",
+      "item": "DONE.md 생성",
+      "key": "close.done_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-19 16:13:01",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 12,
+      "stage": "CLOSE",
+      "item": "관련 문서 동기화 (조건부: 구현으로 문서 사실이 달라진 경우)",
+      "key": "close.docs_sync",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-19 16:13:09",
+      "owner": "PM",
+      "note": "해당 없음 — 구현으로 달라진 문서 사실은 W-9(task-process.md·worktree.md)와 W-10(launcher README)에서 이미 동기화했다. docs/PROJECT.md·ARCHITECTURE.md에 launcher 서술 0건(grep 확인)이라 추가 갱신 대상 없음",
+      "conditional": true
+    },
+    {
+      "row_id": 13,
+      "stage": "CLOSE",
+      "item": "brain ingest (조건부: 프로젝트 brain 사용 시)",
+      "key": "close.brain_ingest",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-19 16:14:15",
+      "owner": "PM",
+      "note": "brain concept 2건 ingest — mock-only-adapter-verification-passes-schema-drift, worktree-session-launch-order-and-ownership",
+      "conditional": true
+    },
+    {
+      "row_id": 14,
+      "stage": "CLOSE",
+      "item": "회고/개선 후보 기록",
+      "key": "close.retrospective",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-19 17:05:06",
+      "owner": "PM",
+      "note": "개선 후보 3건 fw-inbox 기록(조기 마킹·RED 원장 시점·디스패치 실측 표기). DONE.md 회고적 학습 후보를 brain page 2건으로 정정"
+    },
+    {
+      "row_id": 15,
+      "stage": "CLOSE",
+      "item": "worktree finalize/attribution (조건부: --wt 실행 시, 허브 수행)",
+      "key": "close.worktree_finalize",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-19 17:05:20",
+      "owner": "PM",
+      "note": "해당 없음 — --wt 미사용(허브 실행). worktree-tool status --task 145 → META_NOT_FOUND, git worktree list에 task_145 부재",
+      "conditional": true
+    },
+    {
+      "row_id": 16,
+      "stage": "CLOSE",
+      "item": "CLOSE 최종 상태 확정",
+      "key": "close.final",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-19 17:05:31",
+      "owner": "PM",
+      "note": "CLOSE 완료 — 제안서 아카이브 판정 자연 스킵(참조 0건)"
+    }
+  ],
+  "next_action": "태스크 완료",
+  "run_log": {
+    "contract_version": "1.0",
+    "mode": "shadow",
+    "completion_profile": "cooperative",
+    "completion_profile_receipt": null,
+    "active_run_id": "run_a4be994a-5d33-4906-aef1-71918e0f2299",
+    "status": "active",
+    "pending_events": []
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "_fixture_note": "실측 캡처: `orca terminal close --json` stdout 원문. 캡처 일시 2026-09-19 15:02 KST, orca 1.4.205, macOS(darwin). 워크트리 경로 성분만 {WT}로 치환했고 그 외 필드는 실제 값 그대로다.",
+  "_captured_at": "2026-09-19 15:02",
+  "_orca_version": "1.4.205",
+  "id": "0040dd4e-9f01-4f0d-8833-8f7db3d75865",
+  "ok": true,
+  "result": {
+    "close": {
+      "handle": "term_6281f52a-c804-4fca-8aea-347a2b1f6203",
+      "tabId": "5087aaa0-aa4a-4391-bb23-a2153cbea1ef",
+      "ptyKilled": true
+    }
+  },
+  "_meta": {
+    "runtimeId": "d537d07c-a493-4701-8a11-bae47ecd876e"
+  }
+}
