@@ -11,6 +11,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import pathlib
 import subprocess
@@ -185,6 +186,66 @@ def seal(run_root: str, repo: pathlib.Path, commands: pathlib.Path) -> dict:
         ]
     )
     return parse_json_stdout(result, "probe seal")
+
+
+def seal_result(
+    run_root: str, repo: pathlib.Path, commands: pathlib.Path
+) -> tuple[subprocess.CompletedProcess, dict]:
+    """seal의 프로세스 종료값과 공개 JSON 응답을 함께 보존한다."""
+    result = run_oppb(
+        [
+            "probe",
+            "seal",
+            "--run-root",
+            run_root,
+            "--project-root",
+            str(repo),
+            "--commands",
+            str(commands),
+        ]
+    )
+    return result, parse_json_stdout(result, "probe seal")
+
+
+def repository_fingerprint(repo: pathlib.Path, fixture_paths: list[str]) -> dict:
+    """probe 전후 원 저장소의 ref/index/status와 핵심 파일 내용을 비교한다."""
+    index = repo / ".git" / "index"
+    return {
+        "branch": run_git(["branch", "--show-current"], cwd=repo).stdout.strip(),
+        "head": run_git(["rev-parse", "HEAD"], cwd=repo).stdout.strip(),
+        "index_sha256": hashlib.sha256(index.read_bytes()).hexdigest(),
+        "status": run_git(
+            ["status", "--porcelain=v1", "--untracked-files=all", "--ignored=matching"],
+            cwd=repo,
+        ).stdout,
+        "files": {
+            relpath: hashlib.sha256((repo / relpath).read_bytes()).hexdigest()
+            for relpath in fixture_paths
+        },
+    }
+
+
+def prepare_controller_profile_slot(repo: pathlib.Path) -> pathlib.Path:
+    """실제 운용 계약처럼 Controller 소유 profile을 common-dir exclude에 등록한다."""
+    common_dir_raw = run_git(["rev-parse", "--git-common-dir"], cwd=repo).stdout.strip()
+    common_dir = pathlib.Path(common_dir_raw)
+    if not common_dir.is_absolute():
+        common_dir = (repo / common_dir).resolve()
+    exclude = common_dir / "info" / "exclude"
+    exclude.parent.mkdir(parents=True, exist_ok=True)
+    entry = f"/{PROFILE_RELPATH}\n"
+    current = exclude.read_text(encoding="utf-8") if exclude.exists() else ""
+    if entry not in current.splitlines(keepends=True):
+        exclude.write_text(current + entry, encoding="utf-8")
+
+    profile = repo / PROFILE_RELPATH
+    profile.parent.mkdir(parents=True, exist_ok=True)
+    profile.write_text("{}\n", encoding="utf-8")
+    ignored = run_git(["check-ignore", "-q", PROFILE_RELPATH], cwd=repo, check=False)
+    assert ignored.returncode == 0, (
+        f"Controller profile exclude 등록 실패: {exclude}, stderr={ignored.stderr!r}"
+    )
+    return profile
 
 
 def probe_status(run_root: str, repo: pathlib.Path) -> dict:
@@ -470,3 +531,314 @@ def test_s11_8_path_outside_project_root_escalates(probe_env, tmp_path):
     assert payload.get("error") == "scope_violation", payload
     assert payload.get("reason") in ("outside_project_root", "sensitive_path"), payload
     assert payload.get("budget_charged") is True, payload
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# Task 146: accepted HEAD snapshot·bootstrap baseline·timeout 계약
+# ═════════════════════════════════════════════════════════════════════════════
+
+
+def test_t146_s1_export_ignored_tracked_input_is_available_without_source_mutation(
+    tmp_path: pathlib.Path,
+):
+    """[T146/S-1,S-2] export-ignore는 배포 archive 힌트일 뿐 probe 입력 제외 규칙이
+    아니다. accepted HEAD의 tracked fixture를 읽되 원 저장소는 byte 단위로 불변이다."""
+    hub = make_hub_repo(tmp_path)
+    repo = make_project_repo(tmp_path)
+    _write(repo, ".gitattributes", "/tasks/ export-ignore\n")
+    _write(repo, "tasks/fixture/input.txt", "tracked probe input\n")
+    run_git(["add", "-A"], cwd=repo)
+    run_git(["commit", "-m", "add export-ignored probe input"], cwd=repo)
+    run_root = init_run(hub, repo)["run_root"]
+    commands = write_json(
+        tmp_path / "export-ignore-commands.json",
+        {
+            "project_root": str(repo),
+            "lockfile": ["lockfile.lock"],
+            "config": ["build.config.json"],
+            "toolchain": {"python": "3"},
+            "commands": [
+                {
+                    "id": "requires-export-ignored-input",
+                    "kind": "build",
+                    "argv": [
+                        "python3",
+                        "-c",
+                        "import pathlib;"
+                        "data=pathlib.Path('tasks/fixture/input.txt').read_text();"
+                        "p=pathlib.Path('build-out');p.mkdir(exist_ok=True);"
+                        "(p/'from-fixture.txt').write_text(data)",
+                    ],
+                }
+            ],
+        },
+    )
+    prepare_controller_profile_slot(repo)
+    fingerprint_before = repository_fingerprint(
+        repo,
+        [
+            ".gitattributes",
+            ".gitignore",
+            "lockfile.lock",
+            "build.config.json",
+            "tasks/fixture/input.txt",
+        ],
+    )
+
+    result, payload = seal_result(run_root, repo, commands)
+
+    fingerprint_after = repository_fingerprint(
+        repo,
+        [
+            ".gitattributes",
+            ".gitignore",
+            "lockfile.lock",
+            "build.config.json",
+            "tasks/fixture/input.txt",
+        ],
+    )
+    assert fingerprint_after == fingerprint_before, (
+        "probe가 원 저장소의 branch/HEAD/index/status/fixture를 변경했다: "
+        f"before={fingerprint_before}, after={fingerprint_after}"
+    )
+    assert result.returncode == 0 and payload.get("ok") is True, (
+        "accepted HEAD의 export-ignore tracked 입력을 snapshot에서 읽지 못했다: "
+        f"exit={result.returncode}, payload={payload}, stderr={result.stderr!r}"
+    )
+
+
+def test_t146_s3_bootstrap_outputs_carry_into_later_build(tmp_path: pathlib.Path):
+    """[T146/S-3,S-4] bootstrap은 선언 순서대로 준비 baseline을 누적하고 build는
+    두 bootstrap의 ignored 산출물을 모두 소비한다."""
+    hub = make_hub_repo(tmp_path)
+    repo = make_project_repo(tmp_path)
+    run_root = init_run(hub, repo)["run_root"]
+    commands = write_json(
+        tmp_path / "bootstrap-carry-over-commands.json",
+        {
+            "project_root": str(repo),
+            "lockfile": ["lockfile.lock"],
+            "config": ["build.config.json"],
+            "toolchain": {"python": "3"},
+            "commands": [
+                {
+                    "id": "bootstrap-directory",
+                    "kind": "bootstrap",
+                    "argv": [
+                        "python3",
+                        "-c",
+                        "import pathlib;p=pathlib.Path('dep-cache');p.mkdir(exist_ok=True);"
+                        "(p/'first').write_text('one')",
+                    ],
+                },
+                {
+                    "id": "bootstrap-ready",
+                    "kind": "bootstrap",
+                    "argv": [
+                        "python3",
+                        "-c",
+                        "import pathlib;p=pathlib.Path('dep-cache');p.mkdir(exist_ok=True);"
+                        "(p/'ready').write_text('ready')",
+                    ],
+                },
+                {
+                    "id": "build-requires-bootstrap-baseline",
+                    "kind": "build",
+                    "argv": [
+                        "python3",
+                        "-c",
+                        "import pathlib;d=pathlib.Path('dep-cache');"
+                        "assert (d/'first').read_text() == 'one';"
+                        "assert (d/'ready').read_text() == 'ready';"
+                        "p=pathlib.Path('build-out');p.mkdir(exist_ok=True);"
+                        "(p/'app.out').write_text('built')",
+                    ],
+                },
+            ],
+        },
+    )
+    prepare_controller_profile_slot(repo)
+    fingerprint_before = repository_fingerprint(
+        repo, [".gitignore", "lockfile.lock", "build.config.json", "src/app.py"]
+    )
+
+    result, payload = seal_result(run_root, repo, commands)
+
+    assert repository_fingerprint(
+        repo, [".gitignore", "lockfile.lock", "build.config.json", "src/app.py"]
+    ) == fingerprint_before, "bootstrap probe가 원 저장소를 변경했다"
+    assert result.returncode == 0 and payload.get("ok") is True, (
+        "bootstrap 준비 baseline이 후속 build로 전달되지 않았다: "
+        f"exit={result.returncode}, payload={payload}, stderr={result.stderr!r}"
+    )
+
+
+def test_t146_s4_non_bootstrap_siblings_are_isolated(tmp_path: pathlib.Path):
+    """[T146/S-4] 비-bootstrap 명령은 같은 준비 baseline에서 독립 분기하므로
+    build-A의 sentinel이 build-B에 보이지 않는다."""
+    hub = make_hub_repo(tmp_path)
+    repo = make_project_repo(tmp_path)
+    run_root = init_run(hub, repo)["run_root"]
+    commands = write_json(
+        tmp_path / "sibling-isolation-commands.json",
+        {
+            "project_root": str(repo),
+            "lockfile": ["lockfile.lock"],
+            "config": ["build.config.json"],
+            "toolchain": {"python": "3"},
+            "commands": [
+                {
+                    "id": "bootstrap-ready",
+                    "kind": "bootstrap",
+                    "argv": [
+                        "python3",
+                        "-c",
+                        "import pathlib;p=pathlib.Path('dep-cache');p.mkdir(exist_ok=True);"
+                        "(p/'ready').write_text('ready')",
+                    ],
+                },
+                {
+                    "id": "build-a",
+                    "kind": "build",
+                    "argv": [
+                        "python3",
+                        "-c",
+                        "import pathlib;assert pathlib.Path('dep-cache/ready').exists();"
+                        "p=pathlib.Path('build-out');p.mkdir(exist_ok=True);"
+                        "(p/'from-a').write_text('a')",
+                    ],
+                },
+                {
+                    "id": "build-b",
+                    "kind": "build",
+                    "argv": [
+                        "python3",
+                        "-c",
+                        "import pathlib;assert pathlib.Path('dep-cache/ready').exists();"
+                        "assert not pathlib.Path('build-out/from-a').exists();"
+                        "p=pathlib.Path('build-out');p.mkdir(exist_ok=True);"
+                        "(p/'from-b').write_text('b')",
+                    ],
+                },
+            ],
+        },
+    )
+
+    result, payload = seal_result(run_root, repo, commands)
+
+    assert result.returncode == 0 and payload.get("ok") is True, (
+        "비-bootstrap sibling이 격리된 bootstrap baseline을 소비하지 못했다: "
+        f"exit={result.returncode}, payload={payload}, stderr={result.stderr!r}"
+    )
+
+
+def _timeout_commands(
+    path: pathlib.Path,
+    repo: pathlib.Path,
+    *,
+    command_id: str,
+    timeout_seconds=None,
+    code: str = "pass",
+) -> pathlib.Path:
+    command = {
+        "id": command_id,
+        "kind": "build",
+        "argv": ["python3", "-c", code],
+    }
+    if timeout_seconds is not None:
+        command["timeout_seconds"] = timeout_seconds
+    return write_json(
+        path,
+        {
+            "project_root": str(repo),
+            "lockfile": ["lockfile.lock"],
+            "config": ["build.config.json"],
+            "toolchain": {"python": "3"},
+            "commands": [command],
+        },
+    )
+
+
+def test_t146_s5_timeout_default_explicit_and_valid_override(tmp_path: pathlib.Path):
+    """[T146/S-5] timeout 생략은 canonical 180이며 explicit 180과 같은 freshness를
+    만들고, 유효한 양의 정수 override는 profile 입력 계약에 보존된다."""
+    hub = make_hub_repo(tmp_path)
+    repo = make_project_repo(tmp_path)
+    run_root = init_run(hub, repo)["run_root"]
+    omitted = _timeout_commands(
+        tmp_path / "timeout-omitted.json", repo, command_id="timeout-default"
+    )
+    explicit = _timeout_commands(
+        tmp_path / "timeout-explicit.json",
+        repo,
+        command_id="timeout-default",
+        timeout_seconds=180,
+    )
+
+    omitted_result, omitted_payload = seal_result(run_root, repo, omitted)
+    assert omitted_result.returncode == 0 and omitted_payload.get("ok") is True, omitted_payload
+    omitted_profile = json.loads((repo / PROFILE_RELPATH).read_text(encoding="utf-8"))
+    explicit_result, explicit_payload = seal_result(run_root, repo, explicit)
+    assert explicit_result.returncode == 0 and explicit_payload.get("ok") is True, explicit_payload
+    explicit_profile = json.loads((repo / PROFILE_RELPATH).read_text(encoding="utf-8"))
+    assert omitted_profile["input_hash"]["commands"] == explicit_profile["input_hash"]["commands"]
+    assert explicit_profile["inputs"]["commands"][0]["timeout_seconds"] == 180
+
+    override = _timeout_commands(
+        tmp_path / "timeout-override.json",
+        repo,
+        command_id="timeout-default",
+        timeout_seconds=1,
+    )
+    override_result, override_payload = seal_result(run_root, repo, override)
+    assert override_result.returncode == 0 and override_payload.get("ok") is True, override_payload
+    override_profile = json.loads((repo / PROFILE_RELPATH).read_text(encoding="utf-8"))
+    assert override_profile["inputs"]["commands"][0]["timeout_seconds"] == 1
+    assert override_profile["input_hash"]["commands"] != explicit_profile["input_hash"]["commands"]
+
+
+@pytest.mark.parametrize("invalid_timeout", [True, 0, -1, "1"])
+def test_t146_s5_invalid_timeout_is_rejected_before_execution(
+    tmp_path: pathlib.Path, invalid_timeout,
+):
+    """[T146/S-5] bool을 포함한 비양의 정수/비정수 timeout은 실행 전에 거부한다."""
+    hub = make_hub_repo(tmp_path)
+    repo = make_project_repo(tmp_path)
+    run_root = init_run(hub, repo)["run_root"]
+    marker = repo / "should-not-run"
+    commands = _timeout_commands(
+        tmp_path / f"timeout-invalid-{invalid_timeout!s}.json",
+        repo,
+        command_id="invalid-timeout-command",
+        timeout_seconds=invalid_timeout,
+        code="import pathlib;pathlib.Path('should-not-run').write_text('ran')",
+    )
+
+    result, payload = seal_result(run_root, repo, commands)
+
+    assert result.returncode != 0, payload
+    assert payload.get("ok") is False and payload.get("error") == "commands_invalid", payload
+    assert not marker.exists(), "invalid timeout command가 validation 전에 실행됐다"
+
+
+def test_t146_s5_timeout_failure_preserves_command_identity(tmp_path: pathlib.Path):
+    """[T146/S-5] 실제 subprocess timeout도 일반 command failure 계약을 따르며 실패한
+    command id를 잃지 않는다."""
+    hub = make_hub_repo(tmp_path)
+    repo = make_project_repo(tmp_path)
+    run_root = init_run(hub, repo)["run_root"]
+    commands = _timeout_commands(
+        tmp_path / "timeout-failure.json",
+        repo,
+        command_id="slow-build",
+        timeout_seconds=1,
+        code="import time;time.sleep(2)",
+    )
+
+    result, payload = seal_result(run_root, repo, commands)
+
+    assert result.returncode != 0, payload
+    assert payload.get("ok") is False and payload.get("error") == "probe_command_failed", payload
+    assert payload.get("command_id") == "slow-build" or "slow-build" in payload.get(
+        "message", ""
+    ), payload

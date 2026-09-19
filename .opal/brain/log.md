@@ -452,3 +452,6 @@
 - 갱신: [[model-mapping-latest-tracking]]
 - 출처: official-openai-codex-models
 
+## [2026-09-19] ingest | CLOSE ingest — 태스크 146 OPPB Environment Probe 구조적 블로커 해결
+- 신규: [[environment-probe-baseline-isolation]]
+- 출처: task:146

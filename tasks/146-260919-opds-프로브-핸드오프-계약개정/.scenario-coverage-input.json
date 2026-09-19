@@ -1,0 +1,187 @@
+{
+  "goal": "Environment Probe가 export-ignore 여부와 무관하게 accepted HEAD의 전체 tracked tree를 격리 snapshot으로 물질화하고, bootstrap 명령을 순차 준비한 baseline을 후속 관측 명령이 소비할 수 있게 한다. 각 비-bootstrap 명령은 서로의 쓰기를 보지 않는 독립 snapshot에서 실행돼 명령별 관측 귀속을 유지한다. 명령별 timeout을 계약으로 선언할 수 있고, 태스크 144가 확정한 관측/판정 역할 분리는 그대로 유지된다. 소스·계약·공개 CLI 회귀 테스트·설치본을 함께 갱신하고, 설치본으로 태스크 142의 현행 P2 probe 명령을 원본 worktree 밖 격리 clone에서 성공·봉인한다. 작업 전후 태스크 142 원본의 파일 해시와 Git 상태는 동일해야 한다.",
+  "requirements": [
+    "AC-1",
+    "AC-2",
+    "AC-3",
+    "AC-4",
+    "AC-5",
+    "AC-6",
+    "AC-7",
+    "AC-8",
+    "AC-9",
+    "AC-10",
+    "C-1",
+    "C-2",
+    "C-3",
+    "C-4",
+    "C-5",
+    "C-6",
+    "C-7",
+    "C-8"
+  ],
+  "features": [],
+  "hypotheses": [
+    "H-1",
+    "H-2",
+    "H-3",
+    "H-4",
+    "H-5",
+    "H-6"
+  ],
+  "scenarios": [
+    {
+      "id": "S-1",
+      "covers_requirements": [
+        "AC-1",
+        "AC-7",
+        "C-2",
+        "C-5",
+        "C-8"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-2",
+      "covers_requirements": [
+        "AC-2",
+        "AC-7",
+        "C-2",
+        "C-5",
+        "C-7"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [
+        "H-1"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-3",
+      "covers_requirements": [
+        "AC-3",
+        "AC-7",
+        "C-2",
+        "C-4",
+        "C-8"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-4",
+      "covers_requirements": [
+        "AC-3",
+        "AC-4",
+        "AC-7",
+        "C-4"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [
+        "H-2",
+        "H-3"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-5",
+      "covers_requirements": [
+        "AC-5",
+        "AC-7",
+        "C-6",
+        "C-7"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [
+        "H-4"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-6",
+      "covers_requirements": [
+        "AC-6",
+        "AC-10",
+        "C-3",
+        "C-6"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [
+        "H-5"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-7",
+      "covers_requirements": [
+        "AC-7",
+        "AC-10",
+        "C-1",
+        "C-2",
+        "C-3",
+        "C-5",
+        "C-6",
+        "C-7"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-8",
+      "covers_requirements": [
+        "AC-8",
+        "AC-10",
+        "C-2",
+        "C-3",
+        "C-5",
+        "C-7"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [
+        "H-6"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-9",
+      "covers_requirements": [
+        "AC-9",
+        "AC-10",
+        "C-1",
+        "C-2",
+        "C-3",
+        "C-5"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [
+        "H-1",
+        "H-4",
+        "H-5",
+        "H-6"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    }
+  ]
+}

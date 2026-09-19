@@ -542,8 +542,10 @@ workflow를 가지거나, 대량 가져오기가 별도 운영·성능·rollback
 #### P2.2 ENVIRONMENT PROBE & SEAL
 
 병렬 dispatch 전에 `oppb-runtime-tool probe`가 P0에서 수집하고 P2에서 확정한 관측 전용 명령
-(`bootstrap`·`build`)만 격리된 probe snapshot에서 하나씩 단독 실행한다. 수용 판정 명령은 probe가 실행하지
-않는다 — 판정은 Supervisor가 실제 워크트리에서 `mini_tasks[].verify_command`로 단독 소유한다.
+(`bootstrap`·`build`)만 accepted HEAD의 전체 tracked-tree probe snapshot에서 실행한다. 이 snapshot은
+`.gitattributes export-ignore`를 적용하지 않고, source branch·ref·공유 index·worktree를 변경하지 않는다.
+수용 판정 명령은 probe가 실행하지 않는다 — 판정은 Supervisor가 실제 워크트리에서
+`mini_tasks[].verify_command`로 단독 소유한다.
 probe는 다음을 관측한다.
 
 - Git untracked·ignored 생성·수정·삭제 경로
@@ -551,12 +553,17 @@ probe는 다음을 관측한다.
 - port·DB·service·queue·browser profile 등 실행 자원
 - 환경 변수로 재지정 가능한 출력과 고정 위치 출력
 
-Environment Probe Tool은 관측 결과에 `shared_immutable`, `attempt_namespaced`, `exclusive` 정책과 adapter를
+Environment Probe Tool은 `bootstrap` 명령을 선언 순서대로 같은 snapshot에서 실행한다. 각 bootstrap delta는
+해당 command id로 한 번 관측한 뒤 현재 상태를 준비 baseline으로 승격한다. 모든 비-bootstrap 명령은 그
+준비 baseline의 독립 복사본에서 실행하므로 bootstrap 산출물은 소비할 수 있지만 sibling 명령의 산출물은
+서로 보지 않는다. 관측 결과에는 `shared_immutable`, `attempt_namespaced`, `exclusive` 정책과 adapter를
 배정하고 `.opal/oppb-environment.json`에 command/config/lockfile/toolchain input hash와 함께 원자적으로
 봉인한다. 여기서 신선도를 판정하는 입력 hash는 repository tree 전체가 아니라 **실행 command 정의,
-관련 build/test config, lockfile, toolchain identity와 bootstrap 정의**만 포함한다. 일반 source ACCEPT만으로
-profile을 stale 처리하지 않는다. Controller는 profile이 없거나 이 한정 입력 hash가 현재 값과 다르면 병렬
-dispatch를 거부한다.
+관련 build/test config, lockfile, toolchain identity와 bootstrap 정의**만 포함한다. command 정의에는
+정규화된 `timeout_seconds`가 포함된다. 생략값은 180초이며 explicit 180과 같은 hash를 만들고, bool을 포함한
+비양의 정수·비정수 값은 실행 전에 거부한다. 180이 아닌 유효 값은 command hash와 bootstrap hash를 바꾼다.
+일반 source ACCEPT만으로 profile을 stale 처리하지 않는다. Controller는 profile이 없거나 이 한정 입력 hash가
+현재 값과 다르면 병렬 dispatch를 거부한다.
 이 파일은 capability Runner의 write lease가 아니라 Controller maintenance lane이 소유한다. 최초 봉인은 P3
 전에 수행하고, 실행 중 갱신은 영향 subgraph의 active lease가 0인 상태에서만 후보 checkpoint에 포함한다.
 

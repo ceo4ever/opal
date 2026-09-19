@@ -1,0 +1,360 @@
+{
+  "schema_version": "2.0",
+  "task_id": "146-260919-opds-프로브-핸드오프-계약개정",
+  "locked": true,
+  "created_at": "2026-09-19T22:01:50+09:00",
+  "locked_at": "2026-09-19T22:04:48+09:00",
+  "scenarios": [
+    {
+      "id": "S-1",
+      "acceptance_ref": null,
+      "type": null,
+      "expected": null,
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "pytest test_t146_s1... exit=1; probe_command_failed command_id=requires-export-ignored-input; source branch/HEAD/index/status/hash unchanged",
+      "red_at": "2026-09-19T22:04:48+09:00",
+      "required_fidelity": "mock",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "s1",
+          "expected": "RED preserved and GREEN integration passes without source mutation",
+          "actual": "RED preserved and GREEN integration passes without source mutation"
+        }
+      ],
+      "observed_evidence": [
+        "command_output"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "Pre-existing RED retained: probe_command_failed requires-export-ignored-input with source unchanged. Current public CLI test suite: 17 passed in 19.31s.",
+      "marked_at": "2026-09-19T23:23:30+09:00",
+      "fidelity": "real-usage"
+    },
+    {
+      "id": "S-2",
+      "acceptance_ref": null,
+      "type": null,
+      "expected": null,
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "mock",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "s2",
+          "expected": "tracked export-ignored input available and original HEAD/index/tracked files unchanged",
+          "actual": "tracked export-ignored input available and original HEAD/index/tracked files unchanged"
+        }
+      ],
+      "observed_evidence": [
+        "command_output"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "test_t146_s1 public CLI integration passed; installed verifier fixture returned source_head_index_tracked_unchanged=true.",
+      "marked_at": "2026-09-19T23:23:30+09:00",
+      "fidelity": "real-usage"
+    },
+    {
+      "id": "S-3",
+      "acceptance_ref": null,
+      "type": null,
+      "expected": null,
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "pytest test_t146_s3... exit=1; probe_command_failed command_id=build-requires-bootstrap-baseline; source repo unchanged",
+      "red_at": "2026-09-19T22:04:48+09:00",
+      "required_fidelity": "mock",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "s3",
+          "expected": "RED preserved and sequential bootstrap behavior passes after implementation",
+          "actual": "RED preserved and sequential bootstrap behavior passes after implementation"
+        }
+      ],
+      "observed_evidence": [
+        "command_output"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "Pre-existing RED retained: build-requires-bootstrap-baseline probe_command_failed. Current test_t146_s3 passes within 17-pass public CLI suite.",
+      "marked_at": "2026-09-19T23:23:30+09:00",
+      "fidelity": "real-usage"
+    },
+    {
+      "id": "S-4",
+      "acceptance_ref": null,
+      "type": null,
+      "expected": null,
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "mock",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "s4",
+          "expected": "bootstrap deltas accumulate once per command and non-bootstrap siblings are isolated",
+          "actual": "bootstrap deltas accumulate once per command and non-bootstrap siblings are isolated"
+        }
+      ],
+      "observed_evidence": [
+        "command_output"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "test_t146_s3 and test_t146_s4 pass; installed absolute CLI fixture completed bootstrap-one/bootstrap-ready/build-a/build-b with original tracked state unchanged.",
+      "marked_at": "2026-09-19T23:23:30+09:00",
+      "fidelity": "real-usage"
+    },
+    {
+      "id": "S-5",
+      "acceptance_ref": null,
+      "type": null,
+      "expected": null,
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "mock",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "s5",
+          "expected": "timeout default/explicit canonicalization, valid override, invalid rejection, and command-id timeout failure all pass",
+          "actual": "timeout default/explicit canonicalization, valid override, invalid rejection, and command-id timeout failure all pass"
+        }
+      ],
+      "observed_evidence": [
+        "command_output"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "Three parameterized public CLI tests test_t146_s5_* passed in the 17-pass probe suite, including actual subprocess timeout.",
+      "marked_at": "2026-09-19T23:23:31+09:00",
+      "fidelity": "real-usage"
+    },
+    {
+      "id": "S-6",
+      "acceptance_ref": null,
+      "type": null,
+      "expected": null,
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "mock",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "s6",
+          "expected": "source/install/proposal contracts align and verify ownership plus scope_violation behavior remain",
+          "actual": "source/install/proposal contracts align and verify ownership plus scope_violation behavior remain"
+        }
+      ],
+      "observed_evidence": [
+        "command_output"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "Slice §3.2 source/install hashes both f890dcfd...; proposal P2.2 states full tracked-tree snapshot, sequential bootstrap, sibling isolation, timeout normalization, verify_command exclusion and Supervisor ownership. Existing late discovery/scope_violation tests passed.",
+      "marked_at": "2026-09-19T23:23:31+09:00",
+      "fidelity": "real-usage"
+    },
+    {
+      "id": "S-7",
+      "acceptance_ref": null,
+      "type": null,
+      "expected": null,
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "mock",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "s7",
+          "expected": "probe and full runtime regression pass with scoped diff and no mock/patch",
+          "actual": "probe and full runtime regression pass with scoped diff and no mock/patch"
+        }
+      ],
+      "observed_evidence": [
+        "command_output"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "probe: 17 passed in 19.31s; full runtime escalated rerun after sandbox ps denial: 139 passed, 13 subtests in 202.52s; git diff --check clean; implementation diff limited to probe.py, test_probe.py, slice skill, proposal; no mock/patch usage.",
+      "marked_at": "2026-09-19T23:23:31+09:00",
+      "fidelity": "real-usage"
+    },
+    {
+      "id": "S-8",
+      "acceptance_ref": null,
+      "type": null,
+      "expected": null,
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "mock",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "s8",
+          "expected": "installed probe and contract match source, run.sh executable, installed CLI seals real fixtures",
+          "actual": "installed probe and contract match source, run.sh executable, installed CLI seals real fixtures"
+        }
+      ],
+      "observed_evidence": [
+        "command_output"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "probe.py source/install SHA-256 both a237f3ea17daa82ac7aa3dedffc9f208dacf6752aff8999174ff80032358c561; run.sh mode -rwxr-xr-x; slice §3.2 hashes equal; /tmp verifier exited 0 using installed absolute CLI.",
+      "marked_at": "2026-09-19T23:23:31+09:00",
+      "fidelity": "real-usage"
+    },
+    {
+      "id": "S-9",
+      "acceptance_ref": null,
+      "type": null,
+      "expected": null,
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "mock",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "s9",
+          "expected": "task142 external clone seals 8 commands and original fingerprints remain identical",
+          "actual": "task142 external clone seals 8 commands and original fingerprints remain identical"
+        }
+      ],
+      "observed_evidence": [
+        "command_output"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "/tmp/verify_installed_probe_146.py exit 0: ok=true, task142 clone probe_runs=8, all_exit_zero=true, profile_sealed=true, original_unchanged=true; 7 hashes and full status signature compared before/after. Command JSON count=8, kinds only bootstrap/build, has_verify_command=false.",
+      "marked_at": "2026-09-19T23:23:32+09:00",
+      "fidelity": "real-usage"
+    }
+  ]
+}

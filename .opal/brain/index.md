@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-09-19 22:20
+> 갱신: 2026-09-19 23:30
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -127,6 +127,7 @@
 - [[electron-main-owned-project-registry]] — Electron main-owned Project Registry #electron #security #workstudio
 - [[enforce-rule-legacy-data-surfacing-lesson]] — enforce 규칙 신설 시 잔존 데이터 표면화 — 배포 전 실 데이터 스캔 필요 교훈 #lesson #enforce #validate #brain-tool
 - [[enforcement-basis-must-be-structural-not-voluntary]] — 강제의 판정 근거는 자발적 표시가 아니라 구조여야 한다 — 3회 우회 후 행 기반 판정 + CLOSE 차단 #enforcement #governance #state-tool #worker #measurement #lesson-learned
+- [[environment-probe-baseline-isolation]] — Environment Probe 준비 baseline 격리 #environment-probe #git #isolation #bootstrap #oppb
 - [[erd-modeler-deprecation]] — erd-modeler deprecate — op-data-model/ddl로 분해, //erm 하위호환 #architecture-decision #deprecation #erd-modeler #migration
 - [[evaluator-self-weakness-disclosure-pattern]] — 평가자에 PM 자기약점 명시 전달 + 신고사실 감점면제 금지 명문화 #lesson #evaluator #governance #opds
 - [[evidence-tier-asis-tobe-jurisdiction]] — 근거 등급 5단계 + AS-IS/TO-BE 관할 2축 #evidence #citation #architecture #opds
