@@ -133,6 +133,13 @@
   ],
   "history": [
     {
+      "title": "146 프로브 핸드오프 계약개정",
+      "date": "2026-09-19",
+      "stage": "완료",
+      "path": "tasks/146-260919-opds-프로브-핸드오프-계약개정/",
+      "result": "OPPB Environment Probe를 전체 tracked-tree snapshot과 순차 bootstrap 준비 baseline으로 개정하고 명령별 독립 실행·timeout 계약을 추가했다. probe 17건이 통과해 태스크 142의 P2 probe 재개가 가능해졌다."
+    },
+    {
       "title": "145 워크트리 터미널 런처 orca 배선",
       "date": "2026-09-19",
       "stage": "완료",
@@ -159,13 +166,6 @@
       "stage": "완료",
       "path": "tasks/141-260918-opds-E2E-제안서-보강/",
       "result": "e2e-journey-fragment-library 제안서(검토) 개정 — §2 착수 선행 조건 열 신설, Q-1 선행 조건 승격, §5 신선도 키에 driver 정체·달성 충실도 추가, §4 redaction 지점 지목, §3 승격 도구 게이트화, Q-5 결번 해소. S-1~S-13 전건 PASS. 제안 자체는 미채택"
-    },
-    {
-      "title": "127 E2E 하네스 구현",
-      "date": "2026-09-18",
-      "stage": "완료",
-      "path": "tasks/127-260912-oppl-E2E-하네스-구현/",
-      "result": "test-tool e2e 4서브명령(run/resume/status/clean)과 driver(agent-browser·cmux·ego-lite)·executor(api·human)·증적 단일 관문을 신설. console stop의 부팅시각 stale 판정으로 리부팅 후 첫 설치가 임의 사용자 프로세스를 죽이던 결함을 닫고, Playwright를 기본 설치에서 opt-in으로 강등. AC 충족15/blocked1, test-tool 428 passed."
     }
   ]
 }
