@@ -4,8 +4,8 @@
   "mode": "agentic",
   "schema_version": "1.2",
   "created_at": "2026-09-19 17:38:36",
-  "updated_at": "2026-09-19 20:22:36",
-  "current_status": "in_progress",
+  "updated_at": "2026-09-19 21:03:29",
+  "current_status": "blocked",
   "rows": [
     {
       "row_id": 1,
@@ -36,9 +36,10 @@
       "key": "plan.plan_md",
       "status": "done",
       "status_label": "✅",
-      "timestamp": "2026-09-19 18:00:54",
+      "timestamp": "2026-09-19 21:02:36",
       "owner": "PM",
-      "note": "actor=worker 유지 결정 반영 — PM 직접 7행을 opal-task-agent/opal-test-agent로 재배정(D-N), H-5 추가, 현재 세션 실측은 PM Gate 증거 축으로 분리"
+      "note": "opal-plan-agent 1건 실측(565971ms)",
+      "worker_duration_minutes": 9
     },
     {
       "row_id": 4,
@@ -94,34 +95,36 @@
       "stage": "EXECUTE",
       "item": "작업",
       "key": "execute.implement",
-      "status": "in_progress",
-      "status_label": "🔄",
-      "timestamp": "2026-09-19 20:22:36",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-19 21:02:36",
       "owner": "PM",
-      "note": "W-8 registry 등록 실측 — 재배포 후 부트 경계 재현",
-      "step": "5/11"
+      "note": "워커 12건 합산 실측(3031463ms) — 일부 구간 병렬 실행이라 벽시계보다 큼",
+      "step": "6/11",
+      "worker_duration_minutes": 51
     },
     {
       "row_id": 8,
       "stage": "TEST",
       "item": "작업",
       "key": "test.run_tests",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-19 21:02:37",
       "owner": "PM",
-      "note": null
+      "note": "워커 3건 합산 실측(1067920ms) — W-11 회귀·컨벤션 검사·헤더 보완",
+      "worker_duration_minutes": 18
     },
     {
       "row_id": 9,
       "stage": "TEST",
       "item": "PM Gate",
       "key": "test.pm_gate",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-19 21:00:29",
       "owner": "PM",
-      "note": null,
+      "note": "캡틴 결정(선택지 A) — S-3b·S-4b를 후속 경계로 이관. 게이트 4항 중 ①TEST-SCENARIO.md 결과 미기록 ③PLAN 필수 검증 PASS(853 passed/0 failed) ④컨벤션 Critical·High 0건 충족, ②는 blocked 2건을 후속 경계로 소유자가 확정해 해소",
       "gate": {
         "artifacts": [
           "TEST-SCENARIO.md",
@@ -140,33 +143,33 @@
       "stage": "TEST",
       "item": "사용자 확인",
       "key": "test.user_confirm",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
-      "owner": "PM",
-      "note": null
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-19 21:00:29",
+      "owner": "user",
+      "note": "캡틴 확인: 승인 — S-3b·S-4b 후속 경계 이관 및 CLOSE 진입"
     },
     {
       "row_id": 11,
       "stage": "CLOSE",
       "item": "DONE.md 생성",
       "key": "close.done_md",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-19 21:02:37",
       "owner": "PM",
-      "note": null
+      "note": "DONE.md 작성 — 회고 후보 4건 선언, 후속 경계(S-3b·S-4b, Stop 판정 계약) 명시"
     },
     {
       "row_id": 12,
       "stage": "CLOSE",
       "item": "관련 문서 동기화 (조건부: 구현으로 문서 사실이 달라진 경우)",
       "key": "close.docs_sync",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-19 21:02:59",
       "owner": "PM",
-      "note": null,
+      "note": "해당 없음 — 구현으로 사실이 달라진 문서 2건(ownership-tool README·brain entity)은 W-9 Work item으로 이미 갱신 완료. docs/PROJECT.md·CONVENTIONS.md·ARCHITECTURE.md·harness/worktree.md에는 SessionStart·OPAL_SESSION_ID·ownership-set·owner_session_id 서술이 0건이라 갱신 대상 없음(grep 확인)",
       "conditional": true
     },
     {
@@ -174,11 +177,11 @@
       "stage": "CLOSE",
       "item": "brain ingest (조건부: 프로젝트 brain 사용 시)",
       "key": "close.brain_ingest",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-19 21:03:20",
       "owner": "PM",
-      "note": null,
+      "note": "워크트리 실행이므로 직접 ingest하지 않는다 — done-template 계약대로 DONE.md §회고적 학습 후보에 page 경로 4건을 선언했고, 실제 page 생성·갱신·생략 판정은 merge 후 허브 finalize가 수행한다",
       "conditional": true
     },
     {
@@ -186,11 +189,11 @@
       "stage": "CLOSE",
       "item": "회고/개선 후보 기록",
       "key": "close.retrospective",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-19 21:03:29",
       "owner": "PM",
-      "note": null
+      "note": "improve-tool record --scope fw 3건 기록 — ① gitignore 대상 부산물을 git status로 탐지 불가(H-4 대응 결함) ② opal-pilot-dev SKILL STEP 4와 harness/actor.md의 actor 분기 충돌 ③ Stop 가드 진행 판정 축이 운영 경로에서 전부 비어 있음"
     },
     {
       "row_id": 15,
@@ -216,7 +219,7 @@
       "note": null
     }
   ],
-  "next_action": "EXECUTE 작업 진행 중",
+  "next_action": "CLOSE worktree finalize/attribution (조건부: --wt 실행 시, 허브 수행) 진입",
   "worktree": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_999",
   "run_log": {
     "contract_version": "1.0",

@@ -131,3 +131,50 @@ if not session_id or block.get("owner_session_id") != session_id:
 ## 5.5 이 절의 경계
 
 읽기만 수행했다. `ownership-set`·`checkpoint`를 호출하지 않았고 registry·lease·터미널을 변경하지 않았다.
+
+---
+
+# 6. 실세션 Stop 차단 관측 (PM Gate 증거 축, 비계획 수집)
+
+> 관측 시각: 2026-09-19 20:39 KST · 관측 주체: PM 세션 자신 · 수집 경위: 계획된 프로브가 아니라 **실제로 발생한 사건**
+
+## 6.1 무슨 일이 일어났나
+
+PM이 진행 보고를 마치고 응답을 종료하려 하자, 플랫폼이 등록된 Stop hook을 호출했고 **차단이 발화했다.**
+
+```
+OPAL Stop guard: block_continue. 판정 대상 1건 —
+task_id=999-260919-opds-세션상속-스톱가드-목업검증 | transition_action=continue |
+next_action=EXECUTE 작업 진행 중 · 이 태스크가 아직 transition_action=continue다.
+응답을 끝내지 말고 이어서 진행하라.
+```
+
+stop-guard receipt: `block_count` **9 → 10**, `decision_kind: block_continue`.
+
+## 6.2 이 관측이 기존 증거와 다른 점
+
+| 축 | W-3·W-5의 프로브 | 이번 관측 |
+|---|---|---|
+| hook 호출 주체 | 워커가 stdin으로 봉투 주입 | **플랫폼이 실제 Stop 시점에 호출** |
+| 봉투 | 워커가 구성 | **플랫폼이 생성** |
+| 차단 대상 | 없음(관측만) | **PM의 실제 응답이 실제로 차단됨** |
+| 세션 부팅 시점 | 동일(수정 이전) | 동일(수정 이전) |
+
+즉 이 관측은 **호출 경로의 실사용 충실도**에서 기존 증거보다 높다 — 사람이 흉내 낸 봉투가 아니라
+플랫폼이 스스로 만든 봉투로, 판정이 실제 집행(응답 종료 차단)까지 이어졌다.
+
+## 6.3 한계 — S-3b·S-4b를 대체하지 않는다
+
+이 세션은 W-1 수정 **이전에** 부팅했으므로 `OPAL_SESSION_ID`가 여전히 미export다.
+그럼에도 차단이 성립한 이유는 D-G가 확정한 대로 evaluator가 `ownership_core.resolve_session_id`
+(env → 플랫폼 어댑터 → 봉투)로 세션 ID를 얻어 **export 결함의 영향을 받지 않기** 때문이다.
+
+따라서 이 관측이 입증하는 것은 **Stop 차단 경로의 실사용 동작**이지, 수정 후 신규 세션에서의
+종단 상속이 아니다. S-3b(실세션 `typeset -x` + 전이)와 S-4b(신규 세션 3값 재현)는
+**여전히 미이행**이며 재배포 이후 부팅하는 다음 워크트리 세션에서 확인해야 한다.
+
+## 6.4 부수 사실
+
+lease `claim_source=state_transition`(W-2가 승격)이 유지되고 있어 강제 후보 자격이 성립했다.
+`claim_source`가 `session_start`에 머물렀다면 이 차단은 발화하지 않았을 것이다
+(`.opal/brain/pages/concept/stop-force-requires-state-transition-claim.md`).

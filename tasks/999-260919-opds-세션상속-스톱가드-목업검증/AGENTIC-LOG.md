@@ -6,13 +6,13 @@
 
 | 항목 | 건수 |
 |------|------|
-| 게이트 판단 | 16회 (Pass: 15 / Fail: 1) |
+| 게이트 판단 | 21회 (Pass: 20 / Fail: 1) |
 | 3회 초과 Gate | 0건 (Critical: 0 / Normal: 0 / Minor: 0) |
-| 오류 발견 | 9건 |
-| 수정 지시 | 5건 (반영: 4 / 미반영: 0) |
-| PM 의사결정 | 23건 |
-| 개선 사항 | 3건 |
-| 에스컬레이션 | 2건 |
+| 오류 발견 | 11건 |
+| 수정 지시 | 6건 (반영: 6 / 미반영: 0) |
+| PM 의사결정 | 29건 |
+| 개선 사항 | 6건 |
+| 에스컬레이션 | 4건 |
 
 ## 대행 일지
 
@@ -74,3 +74,22 @@
 | 54 | 2026-09-19 20:20 | EXECUTE | IMPROVE | W-8이 H-4 판정의 허점을 실측으로 잡았다 — 재배포가 `dashboard/frontend/dist/`를 실제로 생성했으나 gitignore 대상이라 `git status --porcelain dashboard/`는 **빈 출력**이었다. PLAN H-4의 대응이 porcelain 확인이었는데 그것만으로는 탐지되지 않는다. `api-env-files.test.ts:57`이 `existsSync(...dist)`를 보므로 **파일시스템 확인이 필요**하다. 워커가 `rm -rf`로 삭제했고 PM이 부재를 재현했다. DONE.md 회고 후보로 올린다. | 반영 |
 | 55 | 2026-09-19 20:21 | EXECUTE | ERROR | W-10 착수 전 함정을 PM이 선제 발견했다 — 이 PM 세션은 **수정 이전에 부팅**해 `OPAL_SESSION_ID`가 미export 쉘 변수로만 존재한다(`typeset -p`에 `-x` 없음, `sh -c` → `unset`). `worktree_tool.py`의 checkpoint 소유권 검사가 `os.environ`을 읽으므로 그대로 호출하면 `checkpoint_ownership_denied / foreign_owner`로 거부되어 **수정이 옳은데도 AC-13이 실패로 보인다**(H-5가 경고한 상황). | 선제 차단 |
 | 56 | 2026-09-19 20:21 | EXECUTE | DECISION | ERROR #55 대응 — W-10에 "배포본 hook이 만든 env 파일을 `source`한 쉘에서 checkpoint를 호출하라"를 명시하고, 호출 직전 자식 프로세스 관측으로 registry `owner_session_id`와 바이트 일치를 기록하도록 했다. `export`를 손으로 타이핑하는 우회를 금지한 이유 — 값은 같아도 **수정된 계약이 실제로 작동함을 보이는 것**이 이 태스크의 목적이기 때문이다. 실패 시 원인 4분류(export 미해결/scope 위반/mode 경계/진짜 소유권 불일치) 반환도 요구했다. | 진행 |
+| 57 | 2026-09-19 20:31 | EXECUTE | GATE | **W-10 Pass — AC-13 충족.** PM 직접 재현: 허브 registry `checkpoint_shas` `[]`→`[a93a5ad8f0b55f9f5aef0cd39b209c4bcf2a7ac6]` append(응답 `commit`과 동일 SHA), `state`·`owner_session_id`·`generation 3`·`failure_reason`·receipt 2종 전건 불변. C-10 검증 — `branch=feat/OP-TASK-999`, `main=aa9c18f`(호출 전과 동일), `git branch --contains a93a5ad`가 feat 브랜치 **단 1건**, `rev-list --left-right --count main...HEAD = 0/1`, upstream 미설정으로 push 0건. `checkpoint_ownership_denied` 0건. | Pass |
+| 58 | 2026-09-19 20:31 | EXECUTE | IMPROVE | W-10이 인과를 경로로 실증했다 — 이 세션은 W-1 수정 **이전에** 부팅해 checkpoint가 통과할 수 없었고, **수정된 hook이 만든 env 파일을 경유해서야** 통과했다. 즉 W-1의 `export` 계약이 checkpoint 소유권 검사의 실질적 전제임이 드러났다. "수정 전 부팅 세션은 재부팅 또는 env 파일 재적용 전까지 checkpoint를 통과할 수 없다"는 운영 사실이며 DONE.md 회고 후보로 올린다(이번 범위 밖). | 기록 |
+| 59 | 2026-09-19 20:32 | EXECUTE | DECISION | 마지막 Work item W-11(회귀 4스위트)을 opal-test-agent에 디스패치했다. 구현자(opal-task-agent)와 테스트 판정자를 분리해 독립 검증 경계를 유지한다. D-K의 핵심인 `test_launcher_core.py:81·110·143` 복귀 경로 단언 3건 통과를 명시 확인 항목으로 넣었다 — W-6의 registry 부트 등록이 `hub_owned` 복귀 불변식을 깨지 않았음이 이번 태스크 회귀 방어의 핵심이기 때문이다. 실패 1건이라도 있으면 고치지 말고 blocked 반환하도록 했다(시나리오 `locked: true`). | 진행 |
+| 60 | 2026-09-19 20:38 | EXECUTE | DECISION | 캡틴의 "승인" 발화를 **CLOSE 진입 사전 승인**으로 해석했다. 직전 응답의 하단 액션이 `▶ PM 다음 작업`이라 대기 중인 질문이 없었고, 내가 예고한 유일한 승인 항목이 CLOSE 진입이었기 때문이다(재배포 승인은 앞서 소비 완료). 다만 **지금 소비하지 않는다** — W-11 회귀 결과가 아직 없고 TEST PM Gate도 수행 전이다. 증거 없이 CLOSE로 넘어가면 PRINCIPLES §4 "완료는 증거를 요구한다"와 §1 "나중에 추가된 기준은 합리화다"를 동시에 위반한다. W-11 통과 + TEST PM Gate Pass 뒤 상황을 보고하고 그 시점에 소비한다. W-11이 실패하면 이 승인을 소비하지 않고 에스컬레이션한다. | 보류 소비 |
+| 61 | 2026-09-19 20:39 | EXECUTE | IMPROVE | **계획 밖 증거를 실사건으로 수집했다** — PM이 응답을 종료하려 하자 플랫폼이 등록된 Stop hook을 호출해 실제로 차단했다(`block_count` 9→10, `decision_kind=block_continue`). W-3·W-5의 프로브는 워커가 봉투를 stdin으로 주입한 것이지만, 이번 것은 **플랫폼이 스스로 만든 봉투로 판정이 실제 집행(응답 종료 차단)까지 이어진** 사건이라 호출 경로 충실도가 더 높다. `PROBE-BASELINE.md` §6에 기록했다. | 기록 |
+| 62 | 2026-09-19 20:39 | EXECUTE | DECISION | §6이 S-3b·S-4b를 **대체하지 않음**을 명시했다. 이 세션은 수정 이전 부팅이라 `OPAL_SESSION_ID`가 여전히 미export이고, 차단이 성립한 것은 D-G대로 evaluator가 `resolve_session_id`(env→어댑터→봉투)로 값을 얻어 export 결함의 영향을 받지 않기 때문이다. 충실도가 높다고 해서 다른 축의 미이행을 덮지 않는다 — 두 시나리오는 재배포 이후 부팅하는 다음 워크트리 세션에서 확인해야 한다. | 완료 |
+| 63 | 2026-09-19 20:43 | EXECUTE | GATE | W-11 부분 직접 검증(빠른 축) — PM 재실행: `ownership-tool` 62 passed, `worktree-launcher` 110 passed/1 skipped, **D-K 복귀 경로 3건**(`test_launch_failed_path_reverts_atomically`·`test_prompt_failed_path_reverts_atomically`·`test_cwd_mismatch_path_reverts_atomically`) 3 passed. S-17 — `session_start_hook.py`에 `os.environ` **수정** 패턴 7종 grep 0건(C-3 준수, 전파는 부모 쉘 프리앰블 파일 경로에만 존재). S-19 — state-tool 프로덕션 `*.py`에 플랫폼 고유 변수명 3종 0건(C-7 준수). 장시간 2스위트(state-tool·worktree-tool)는 백그라운드 재실행 중이며 종료 코드로 판정한다. | 부분 Pass |
+| 64 | 2026-09-19 20:43 | EXECUTE | DECISION | 워커 보고를 그대로 수용하지 않고 4스위트를 **전부 PM이 재실행**하기로 했다. 이유 — AC-7은 이 태스크의 마지막 미충족 AC이고, 회귀 0건 주장은 CLOSE 진입 판단의 직접 근거가 된다. 빠른 2스위트는 즉시 재현했고 장시간 2스위트는 백그라운드로 돌려 exit code로 판정한다. 결과가 나오기 전에는 AC-7을 충족으로 기록하지 않는다. | 진행 |
+| 65 | 2026-09-19 20:43 | EXECUTE | IMPROVE | 워커가 S-19에서 지시문과의 엄밀한 불일치 1건을 자발적으로 명시했다 — `state-tool/tests/test_state_tool_ownership.py:6` 모듈 독스트링에 `CLAUDE_CODE_SESSION_ID`가 서술 문자열로 존재한다. 내 지시는 "state-tool 전체 0건"이었으나 실제 계약(C-7)은 **프로덕션 코드의 변수 소비** 축이므로 테스트 독스트링은 위반이 아니다. 워커가 통과시키지 않고 드러낸 판단이 옳다 — 내 지시문이 계약보다 넓었다. | 수용 |
+| 66 | 2026-09-19 20:52 | TEST | GATE | **AC-7 확정 — PM이 4스위트를 전건 재실행했다.** `ownership-tool` 62 passed(1.42s) · `state-tool` 535 passed+339 subtests/3 skipped(329.45s, exit 0) · `worktree-tool` 146 passed(115.30s, exit 0) · `worktree-launcher` 110 passed/1 skipped(2.66s). 합계 **853 passed / 0 failed / 4 skipped**, 4스위트 모두 exit 0. 워커 보고 수치와 일치. | Pass |
+| 67 | 2026-09-19 20:53 | TEST | DECISION | 잔여 시나리오 7건을 마킹했다. S-16은 게이트 선후를 파일 생성 시각으로 대조해 통과시켰다 — S-4 판정(PROBE-STOP.md 18:28:21) < W-6 변경(18:34:37) < PROBE-MOCKUP.md(18:35:23) < PROBE-GAPS.md(18:43:37)로 P4 이후 산출물이 전부 게이트 통과보다 늦다(C-2 준수). S-16n은 S-4가 통과해 미달 분기에 진입하지 않았으므로 계약대로 생략하지 않고 '해당 없음'으로 기록했다. | 완료 |
+| 68 | 2026-09-19 20:54 | TEST | ESCALATION | **S-3b·S-4b를 `blocked`로 기록했다 — pass로 위장하지 않는다.** 두 시나리오는 '재배포 후 진짜 새 Orca 세션'에서의 종단 확인인데, 이 PM 세션은 W-1 수정 **이전에** 부팅해 플랫폼이 이미 구 포맷 env 프리앰블을 썼으므로 현재 세션 안에서 재현할 수 없다. 워크트리에 두 번째 세션을 띄우면 `execution_ownership`·lease가 충돌한다. PLAN `Release and recovery`에 내가 직접 "이 증거가 없으면 PM Gate를 통과시키지 않는다"를 적어 뒀으므로, 자체 판단으로 통과시키지 않고 캡틴께 올린다. | 대기 |
+| 69 | 2026-09-19 20:55 | TEST | DECISION | TEST 작업 행(8)을 완료하고 PM Gate 체크리스트 4항 중 컨벤션 자동 진단을 `opal-convention-checker`에 디스패치했다. 컨벤션 적용 대상이 4파일(코드 2·문서 2)로 ≥1건이라 발동 조건을 충족한다. 검사 범위를 태스크 999 변경분 4파일로 한정하고 `tasks/999-…` 산출물은 태스크 기록물이라 제외했다. 구현자와 검사자를 분리해 독립 검증 경계를 유지한다. | 진행 |
+| 70 | 2026-09-19 21:02 | TEST | GATE | 컨벤션 자동 진단 수신 — **PASS_WITH_ADVISORIES, Critical 0 / High 0**으로 PM Gate 수치 기준 충족. 검사자가 확인 요청 5항 중 4항(플랫폼 분기 격리·수기 이력 절·Citation 전수 14+3건·도구 배포 경계) PASS, 1항(@header 현재 사실) 부분 이상. Citation은 샘플이 아니라 **전수** 확인했고 전건 일치. | Pass |
+| 71 | 2026-09-19 21:02 | TEST | ERROR | advisory 2건이 **내가 W-1·W-6·W-9 게이트에서 통과시킨 것**이다. PM 실측으로 재확인 — (GC-001) `session_start_hook.py` @header `description`이 1110→**2843자**로 형제 분포(270~1753) 최장의 1.6배가 됐다. `header-standard.md:177`은 description을 "코드량이 늘어도 길이가 늘지 않는 축"으로 규정하는데, 늘어난 분량이 README 6행 표·함수 docstring과 **3중 사본**이 됐다. (GC-002) `test_session_start.py` 헤더가 `S-10, S-13`만 적어 S-2r·S-2n·S-12r 범위를 누락하고, `depends`의 `(미구현)`과 docstring의 "RED — 구현 전 … ImportError로 실패해야 한다"가 전부 사실과 반대다. | 재지시 |
+| 72 | 2026-09-19 21:03 | TEST | FIX | ERROR #71을 opal-task-agent에 재지시했다. 헤더 주석 3줄 + 모듈 docstring 1줄로 한정하고 **assertion·본문·fixture 접근을 금지**했다(시나리오 locked, RED 증거 동결). GC-003(`import sys` 미사용, low)은 `a93a5ad~1` 시점에도 있던 **선존** 항목이라 고치지 말라고 명시했다 — PRINCIPLES §3 "계획이 지목한 것만 건드린다". `(미구현)` 토큰이 형제 테스트 6종 공통 패턴인 것도 이 파일만 고치도록 경계를 그었다. | 진행 |
+| 73 | 2026-09-19 21:12 | TEST | GATE | GC-001·GC-002 보완 직접 검증 — `description` 2843→**932자**(형제 분포 270~1753 안, 최장의 0.53배), 테스트 헤더 3줄이 현재 사실로 교정됨(S-2r·S-2n·S-10·S-12r·S-13 범위 명시, `(미구현)` 제거, docstring "구현 완료 후 전건 GREEN"). `git diff --stat` **2 files / +4 -4**로 헤더·docstring만 변경, `exports`·`depends`(hook) 무변경, assertion·본문·fixture 무변경. `pytest ownership-tool/tests -q` → **62 passed** 유지. GC-003(`test_session_start.py:14 import sys`)은 지시대로 그대로 남았다. | Pass |
+| 74 | 2026-09-19 21:12 | TEST | ERROR | 워커 보고에 경미한 오기 1건 — GC-003 미변경을 확인하며 "`import sys`는 `session_start_hook.py:18`에 그대로 있다"고 적었으나, GC-003의 대상은 `tests/test_session_start.py:14`다. 두 사실 모두 참이고(hook은 `sys`를 실제로 쓴다) 대상 파일이 미변경인 것도 PM이 직접 확인했으므로 결과에는 영향이 없다. 감사 추적 정확성을 위해서만 기록한다. | 영향 없음 |
+| 75 | 2026-09-19 21:13 | TEST | ESCALATION | TEST PM Gate 행(9)을 `state-tool block`으로 차단 상태에 두었다 — `transition_action=blocked`, `report_type=decision_request`. 이유: 게이트 체크리스트 2항("전건 PASS·FAIL/BLOCKED 없음")이 S-3b·S-4b 2건 때문에 미충족인데, 이는 PM이 자율 통과시킬 수 있는 항목이 아니다. 내가 PLAN `Release and recovery`에 직접 "이 증거가 없으면 PM Gate를 통과시키지 않는다"를 적어 뒀다. 상태를 `continue`로 둔 채 보고만 하면 Stop 가드가 진행을 강제해 실제로는 사용자 결정 없이 흘러갈 수 있으므로, 상태 자체를 `await_user`로 만들어 계약과 실제 동작을 일치시켰다. | 대기 |

@@ -2,10 +2,10 @@
 # module: ownership_tool.tests.test_session_start
 # layer: test
 # domain: ownership
-# description: RED-first — ownership_tool.session_start_hook 공개 계약 검증 (S-10, S-13 claim 경로)
+# description: ownership_tool.session_start_hook 공개 계약 검증 — S-2r(export 접두·실제 셸 상속 관측), S-2n(env 미제공·쓰기 실패 fail-safe 불변), S-10, S-12r(registry 부트 owner 등록 4분기), S-13(claim 경로)
 # exports: (none — pytest module)
-# depends: ownership_tool.session_start_hook (미구현), fixtures/hook-payloads, fixtures/registry
-"""RED 테스트 — 구현 전. ownership_tool.session_start_hook 미구현이므로 ImportError로 실패해야 한다."""
+# depends: ownership_tool.session_start_hook, fixtures/hook-payloads, fixtures/registry
+"""ownership_tool.session_start_hook 공개 계약 테스트 — 구현 완료 후 전건 GREEN."""
 from __future__ import annotations
 
 import json
