@@ -222,6 +222,25 @@ mkdir -p "$OLD_OUT" "$NEW_OUT"
 run_emit_all "$OLD_FUNCS" "$OLD_OUT"
 run_emit_all "$NEW_FUNCS" "$NEW_OUT"
 
+# 의도된 Codex 모델 세대 교체는 emitter 구조 회귀가 아니다. 구판 골든의 모델
+# 세 값만 현행값으로 정규화한 뒤 나머지 바이트 동일성을 비교한다.
+"$PY_BIN" - "$OLD_OUT/codex" <<'PYNORMALIZE'
+from pathlib import Path
+import sys
+
+root = Path(sys.argv[1])
+replacements = {
+    'gpt-5.4-mini': 'gpt-5.6-luna',
+    'gpt-5.4': 'gpt-5.6-terra',
+    'gpt-5.5': 'gpt-5.6-sol',
+}
+for path in root.glob('*.toml'):
+    text = path.read_text(encoding='utf-8')
+    for old, new in replacements.items():
+        text = text.replace(old, new)
+    path.write_text(text, encoding='utf-8')
+PYNORMALIZE
+
 DIFF_OUT="$SCRATCH_DIR/golden.diff"
 if diff -r "$OLD_OUT/claude" "$NEW_OUT/claude" > "$DIFF_OUT" 2>&1 \
     && diff -r "$OLD_OUT/cursor" "$NEW_OUT/cursor" >> "$DIFF_OUT" 2>&1 \
@@ -299,6 +318,8 @@ PROBE_HIGH="$SCRATCH_DIR/probe_high"
 make_probe_agent "$PROBE_HIGH" "high"
 PROBE_MAX="$SCRATCH_DIR/probe_max"
 make_probe_agent "$PROBE_MAX" "max"
+PROBE_MINIMAL="$SCRATCH_DIR/probe_minimal"
+make_probe_agent "$PROBE_MINIMAL" "minimal"
 PROBE_TYPO="$SCRATCH_DIR/probe_typo"
 make_probe_agent "$PROBE_TYPO" "hihg"
 PROBE_NONE="$SCRATCH_DIR/probe_none"
@@ -416,16 +437,19 @@ else
     fail "TS-006: Gemini/Cursor 산출물에 effort 관련 문자열 검출"
 fi
 
-# TS-007 (값 축약) — effort: max → Claude는 max 그대로, Codex는 xhigh로 축약
+# TS-007 (GPT-5.6 effort 정합) — max는 항등, 기존 minimal은 Codex none으로 변환
 DST_CL="$SCRATCH_DIR/ts007_claude.md"
 DST_CX="$SCRATCH_DIR/ts007_codex.toml"
+DST_CX_MIN="$SCRATCH_DIR/ts007_codex_minimal.toml"
 emit_one "$NEW_FUNCS" "$PROBE_MAX" "$DST_CL" "claude" "$SCRATCH_DIR/ts007cl.err"
 emit_one_codex "$NEW_FUNCS" "$PROBE_MAX" "$DST_CX" "$SCRATCH_DIR/ts007cx.err"
+emit_one_codex "$NEW_FUNCS" "$PROBE_MINIMAL" "$DST_CX_MIN" "$SCRATCH_DIR/ts007cx_min.err"
 if grep -qE '^effort:[[:space:]]*max$' "$DST_CL" 2>/dev/null \
-    && grep -qE '^model_reasoning_effort[[:space:]]*=[[:space:]]*"xhigh"$' "$DST_CX" 2>/dev/null; then
-    pass "TS-007: effort:max → Claude=max / Codex=xhigh 축약 확인"
+    && grep -qE '^model_reasoning_effort[[:space:]]*=[[:space:]]*"max"$' "$DST_CX" 2>/dev/null \
+    && grep -qE '^model_reasoning_effort[[:space:]]*=[[:space:]]*"none"$' "$DST_CX_MIN" 2>/dev/null; then
+    pass "TS-007: effort:max → Claude/Codex=max, Codex minimal→none 확인"
 else
-    fail "TS-007: 값 축약(max→xhigh) 미검출 (스펙 미도입 — RED 예상)"
+    fail "TS-007: GPT-5.6 effort 변환(max 항등/minimal→none) 불일치"
 fi
 
 # TS-008 (미정의 값 방어) — effort: hihg(오타) → stderr 경고 1행 + 산출물에 effort 키 부재

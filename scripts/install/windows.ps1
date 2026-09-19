@@ -471,19 +471,44 @@ function Install-OpalCore {
         Copy-Item -Path $settingSrc -Destination $settingDst
         Write-OpalOk "OPAL setting.json (기본값) → $settingDst"
     } elseif ((Test-Path $settingSrc) -and (Test-Path $settingDst)) {
-        # 파일 존재: models 키 없으면 scaffold 병합 (멱등) — install-mac.sh install_opal_setting 패리티
+        # 파일 존재: models 키 없으면 scaffold 병합하고, 이전 Codex 기본값만 현행값으로 승격
+        # 사용자 지정 셀은 보존한다 — install-mac.sh install_opal_setting 패리티.
         try {
             $existing = Get-Content -Raw -Path $settingDst | ConvertFrom-Json
+            $default = Get-Content -Raw -Path $settingSrc | ConvertFrom-Json
             if (-not $existing.PSObject.Properties['models']) {
-                $default = Get-Content -Raw -Path $settingSrc | ConvertFrom-Json
                 $existing | Add-Member -NotePropertyName 'models' -NotePropertyValue $default.models
                 ($existing | ConvertTo-Json -Depth 10) | Set-Content -Path $settingDst -Encoding UTF8
                 Write-OpalInfo 'setting.json에 models scaffold 병합 완료'
             } else {
-                Write-OpalInfo 'setting.json 이미 존재 + models 보유 — 무변 (멱등)'
+                $migrated = @()
+                $legacyCodexDefaults = [ordered]@{
+                    light = 'gpt-5.4-mini'
+                    standard = 'gpt-5.4'
+                    advanced = 'gpt-5.5'
+                }
+                $existingCodex = $existing.models.PSObject.Properties['codex']
+                $defaultCodex = $default.models.PSObject.Properties['codex']
+                if ($null -ne $existingCodex -and $null -ne $defaultCodex) {
+                    foreach ($level in $legacyCodexDefaults.Keys) {
+                        $currentProperty = $existingCodex.Value.PSObject.Properties[$level]
+                        $replacementProperty = $defaultCodex.Value.PSObject.Properties[$level]
+                        if ($null -ne $currentProperty -and $null -ne $replacementProperty -and
+                            $currentProperty.Value -eq $legacyCodexDefaults[$level]) {
+                            $currentProperty.Value = $replacementProperty.Value
+                            $migrated += "models.codex.$level"
+                        }
+                    }
+                }
+                if ($migrated.Count -gt 0) {
+                    ($existing | ConvertTo-Json -Depth 10) | Set-Content -Path $settingDst -Encoding UTF8
+                    Write-OpalInfo "setting.json의 이전 Codex 기본값 승격 완료 — $($migrated -join ', ')"
+                } else {
+                    Write-OpalInfo 'setting.json 이미 존재 + 사용자 설정 보존 — 무변 (멱등)'
+                }
             }
         } catch {
-            Write-OpalInfo 'setting.json models 병합 실패 — 기존 파일 유지'
+            Write-OpalInfo 'setting.json models 병합/승격 실패 — 기존 파일 유지'
         }
     }
 
@@ -1736,7 +1761,7 @@ function Install-OpalMcp {
 # mac 쪽 JSON 리터럴과 바이트 동일 — 값을 바꿀 때는 양쪽을 함께 갱신한다 (§3.1.2 D-결정1).
 $OpalAdapterFieldSpecMirror = @'
 # >>> OPAL_ADAPTER_FIELD_SPEC >>>
-readonly OPAL_ADAPTER_FIELD_SPEC='{"fields":[{"opal":"name","order":10,"platforms":{"claude":{"mode":"key","to":"name"},"cursor":{"mode":"key","to":"name"},"gemini":{"mode":"key","to":"name"},"codex":{"mode":"key","to":"name"}}},{"opal":"description","order":20,"omit_if_empty":true,"flatten":true,"platforms":{"claude":{"mode":"key","to":"description"},"cursor":{"mode":"key","to":"description"},"gemini":{"mode":"key","to":"description"},"codex":{"mode":"key","to":"description"}}},{"opal":"model","order":30,"default":"standard","platforms":{"claude":{"mode":"key","to":"model","values":{"light":"haiku","standard":"sonnet","advanced":"opus"},"fallback":"inherit"},"cursor":{"mode":"key","to":"model","values":{"light":"inherit","standard":"inherit","advanced":"inherit"},"fallback":"inherit"},"gemini":{"mode":"key","to":"model","values":{"light":"gemini-3.1-flash-lite","standard":"gemini-flash-latest","advanced":"gemini-pro-latest"},"fallback":"inherit"},"codex":{"mode":"key","to":"model","values":{"light":"gpt-5.4-mini","standard":"gpt-5.4","advanced":"gpt-5.5"},"fallback":"gpt-5.5"}}},{"opal":"effort","order":40,"platforms":{"claude":{"mode":"key","to":"effort","values":{"low":"low","medium":"medium","high":"high","xhigh":"xhigh","max":"max"}},"cursor":{"mode":"omit","note":"reserved: model_param/effort - cursor inherit policy pending"},"gemini":{"mode":"omit"},"codex":{"mode":"key","to":"model_reasoning_effort","values":{"minimal":"minimal","low":"low","medium":"medium","high":"high","xhigh":"xhigh","max":"xhigh"}}}}]}'
+readonly OPAL_ADAPTER_FIELD_SPEC='{"fields":[{"opal":"name","order":10,"platforms":{"claude":{"mode":"key","to":"name"},"cursor":{"mode":"key","to":"name"},"gemini":{"mode":"key","to":"name"},"codex":{"mode":"key","to":"name"}}},{"opal":"description","order":20,"omit_if_empty":true,"flatten":true,"platforms":{"claude":{"mode":"key","to":"description"},"cursor":{"mode":"key","to":"description"},"gemini":{"mode":"key","to":"description"},"codex":{"mode":"key","to":"description"}}},{"opal":"model","order":30,"default":"standard","platforms":{"claude":{"mode":"key","to":"model","values":{"light":"haiku","standard":"sonnet","advanced":"opus"},"fallback":"inherit"},"cursor":{"mode":"key","to":"model","values":{"light":"inherit","standard":"inherit","advanced":"inherit"},"fallback":"inherit"},"gemini":{"mode":"key","to":"model","values":{"light":"gemini-3.1-flash-lite","standard":"gemini-flash-latest","advanced":"gemini-pro-latest"},"fallback":"inherit"},"codex":{"mode":"key","to":"model","values":{"light":"gpt-5.6-luna","standard":"gpt-5.6-terra","advanced":"gpt-5.6-sol"},"fallback":"gpt-5.6-sol"}}},{"opal":"effort","order":40,"platforms":{"claude":{"mode":"key","to":"effort","values":{"low":"low","medium":"medium","high":"high","xhigh":"xhigh","max":"max"}},"cursor":{"mode":"omit","note":"reserved: model_param/effort - cursor inherit policy pending"},"gemini":{"mode":"omit"},"codex":{"mode":"key","to":"model_reasoning_effort","values":{"minimal":"none","low":"low","medium":"medium","high":"high","xhigh":"xhigh","max":"max"}}}}]}'
 # <<< OPAL_ADAPTER_FIELD_SPEC <<<
 '@
 

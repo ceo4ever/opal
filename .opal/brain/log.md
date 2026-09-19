@@ -448,3 +448,7 @@
 
 ## [2026-09-18] ingest | task:143 — OPAL Docs 사이드바+README 렌더 전환. 시나리오 13/13 pass. 실측에서 결함 F-1(vite base './' → 2단 경로 자산 로드 실패로 백지) 발견·수정. 지식 2건 신설: bundle-asset-path-needs-real-usage-check, slot-extraction-needs-corpus-distribution-first
 
+## [2026-09-19] ingest | Codex 모델 매핑 GPT-5.6 Luna/Terra/Sol 전환 및 effort 정합
+- 갱신: [[model-mapping-latest-tracking]]
+- 출처: official-openai-codex-models
+

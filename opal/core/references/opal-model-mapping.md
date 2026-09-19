@@ -20,15 +20,15 @@
 
 | 레벨 | Claude | Gemini | OpenAI (참조전용) | Codex |
 |------|--------|--------|--------|-------|
-| `light` | haiku | gemini-3.1-flash-lite | gpt-5.4-mini | gpt-5.4-mini |
-| `standard` | sonnet | gemini-flash-latest | gpt-5.4 | gpt-5.4 |
-| `advanced` | opus | gemini-pro-latest | gpt-5.5 | gpt-5.5 |
+| `light` | haiku | gemini-3.1-flash-lite | gpt-5.4-mini | gpt-5.6-luna |
+| `standard` | sonnet | gemini-flash-latest | gpt-5.4 | gpt-5.6-terra |
+| `advanced` | opus | gemini-pro-latest | gpt-5.5 | gpt-5.6-sol |
 
 > 플랫폼별 최신 모델이 출시되면 이 테이블과 setting.default.json을 함께 갱신한다.
 
 > **OpenAI 컬럼 = 참조 전용(install 어댑터 미연동)** — `install-mac.sh` mapping dict에 `openai` 키 없음(호출처 전체에 `platform="openai"` 없음). Codex 경로가 OpenAI 모델을 ChatGPT-auth로 사용한다.
 
-> **Codex 정합 기록 (2026-06-17, 태스크 028)**: 이 테이블 Codex 컬럼(v1.4: `light=gpt-5.4-mini / standard=gpt-5.4 / advanced=gpt-5.5`)이 SSOT다. `install-mac.sh:562`·`:704-708` 및 `windows.ps1:1539`의 3개소가 v1.3 잔재(`standard=gpt-5.5 / advanced=gpt-5.3-codex`)로 stale했음을 확인하여 태스크 028에서 install 코드를 SSOT v1.4로 정정하였다.
+> **Codex 현행 매핑 (2026-09-19)**: ChatGPT 로그인 기반 Codex의 공식 교체 지침에 따라 `light=gpt-5.6-luna / standard=gpt-5.6-terra / advanced=gpt-5.6-sol`을 사용한다. GPT-6 Astra는 비용·계정별 가용성이 다른 최상위 선택지이므로 기본 매핑이 아니라 프로젝트 오버라이드로 사용한다.
 
 > **Codex tool-backed 인라인 주입 시 model 매핑**: PM이 Codex tool-backed 세션에서 워커를 디스패치할 때 OPAL model 레벨을 이 테이블 Codex 컬럼으로 매핑한다 (→ `agents.md §Codex tool-backed 인라인 주입`).
 
@@ -39,7 +39,7 @@
 | Claude | https://docs.anthropic.com/en/docs/about-claude/models |
 | Gemini | https://ai.google.dev/gemini-api/docs/models |
 | OpenAI | https://developers.openai.com/api/docs/models |
-| Codex | https://developers.openai.com/codex/config-reference |
+| Codex | https://developers.openai.com/codex/models |
 
 ## 3. 스킬에서의 참조 형식
 
@@ -107,7 +107,7 @@ model: standard
     "claude": { "light": "haiku", "standard": "sonnet", "advanced": "opus" },
     "gemini": { "light": "gemini-3.1-flash-lite", "standard": "gemini-flash-latest", "advanced": "gemini-pro-latest" },
     "openai": { "light": "gpt-5.4-mini", "standard": "gpt-5.4", "advanced": "gpt-5.5" },
-    "codex":  { "light": "gpt-5.4-mini", "standard": "gpt-5.4", "advanced": "gpt-5.5" },
+    "codex":  { "light": "gpt-5.6-luna", "standard": "gpt-5.6-terra", "advanced": "gpt-5.6-sol" },
     "cursor": { "light": "inherit", "standard": "inherit", "advanced": "inherit" }
   }
 }
@@ -145,7 +145,7 @@ model: standard
 
 - install은 `opal/core/setting.default.json`(SSOT, 실모델명)을 `~/.opal/setting.json`에 시드한다.
 - 기존 `~/.opal/setting.json`에 `models` 키가 **없으면**: `setting.default.json`의 `models` 블록을 통째로 병합한다(실모델값 그대로).
-- 기존 `~/.opal/setting.json`에 `models` 키가 **있으면**: 사용자 선택 보존 — 무변.
+- 기존 `~/.opal/setting.json`에 `models` 키가 **있으면**: 사용자 선택 보존. 단, Codex 셀이 OPAL이 배포한 직전 기본값(`gpt-5.4-mini`/`gpt-5.4`/`gpt-5.5`)과 정확히 같은 셀만 현행 기본값으로 승격한다.
 - `bootstrap` 등 기존 키·값은 병합 시 절대 변경하지 않는다(멱등).
 
 ## 6. 갱신 가이드라인
@@ -160,7 +160,7 @@ model: standard
 - Claude(`haiku/sonnet/opus`)·Gemini standard/advanced(`gemini-flash-latest`/`gemini-pro-latest`)는 부동 별칭으로 자동 추종 → 갱신 불요.
 - **별칭이 없는 Gemini light(`gemini-3.1-flash-lite`)·Codex·OpenAI는 분기마다 [Gemini API Models](https://ai.google.dev/gemini-api/docs/models) / [Codex Models](https://developers.openai.com/codex/models) / [OpenAI All Models](https://developers.openai.com/api/docs/models/all) 점검 후 핀 갱신.**
 - `gemini-pro-latest`는 현 시점 preview 빌드를 가리킬 수 있다. preview 거동 변동 시 구체 ID 핀으로 임시 전환 가능. `gemini-*-latest` 별칭이 Gemini 3.x(3 Flash·3.5 Flash·3 Pro)를 추종하는지는 런타임에서 확인한다.
-- **Codex 특화 핀 폐지 (2026-06-17)**: `gpt-5.3-codex`는 2026-06-30 일몰(신규 API 요청 중단)되며, 범용 대체 `gpt-5.5-codex`는 존재하지 않는다. Codex 특화 라인은 `gpt-5.3-codex-spark`(리서치 프리뷰·ChatGPT Pro·텍스트only)뿐이라 범용 advanced로 부적합 → Codex advanced는 프런티어 `gpt-5.5`로 통일한다.
+- **Codex GPT-5.6 계열 전환 (2026-09-19)**: ChatGPT 로그인 기반 Codex에서 `gpt-5.4-mini`·`gpt-5.4`는 2026-08-31 퇴역했고 `gpt-5.5`는 2026-10-14 퇴역 예정이다. 공식 직접 후속인 Luna·Terra·Sol로 각각 교체한다. GPT-6 Astra는 기본값에 넣지 않고 프로젝트별 `advanced` 오버라이드로 선택한다.
 - Claude advanced는 `opus`(부동) 유지. 최상위 `claude-fable-5`는 비용 2배·thinking 상시·30일 보존 필수 등 거동 차이로 기본 핀에서 보류(필요 시 별도 검토).
 
 ---

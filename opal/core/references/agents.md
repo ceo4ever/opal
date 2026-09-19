@@ -214,20 +214,20 @@ OPAL frontmatter → 플랫폼 frontmatter:
 |----------|------------|--------|-----------|-----------|
 | `name` | `name` (그대로) | `name` (그대로) | `name` (그대로) | `name` (그대로) |
 | `description` | `description` (그대로) | `description` (그대로) | `description` (그대로) | `description` (그대로) |
-| `model: light` | `model: haiku` | `model: inherit` | `model: gemini-3.1-flash-lite` | `model: gpt-5.4-mini` |
-| `model: standard` | `model: sonnet` | `model: inherit` | `model: gemini-flash-latest` | `model: gpt-5.4` |
-| `model: advanced` | `model: opus` | `model: inherit` | `model: gemini-pro-latest` | `model: gpt-5.5` |
+| `model: light` | `model: haiku` | `model: inherit` | `model: gemini-3.1-flash-lite` | `model: gpt-5.6-luna` |
+| `model: standard` | `model: sonnet` | `model: inherit` | `model: gemini-flash-latest` | `model: gpt-5.6-terra` |
+| `model: advanced` | `model: opus` | `model: inherit` | `model: gemini-pro-latest` | `model: gpt-5.6-sol` |
 | `icon` | (제거 — 미지원) | (제거 — 미지원) | (제거 — 미지원) | (제거 — 미지원) |
-| `effort` | `effort` (그대로) | (제거 — 예약, `inherit` 정책 해제 전 미적용) | (제거 — 미지원) | `model_reasoning_effort` (`max`→`xhigh`, 그 외 그대로) |
+| `effort` | `effort` (그대로) | (제거 — 예약, `inherit` 정책 해제 전 미적용) | (제거 — 미지원) | `model_reasoning_effort` (`minimal`→`none`, 그 외 그대로) |
 | (변환 테이블 미등재 필드) | (제거) | (제거) | (제거) | (제거) |
 
-> Codex 컬럼 모델값은 `opal/core/references/opal-model-mapping.md` §2 Codex 컬럼(SSOT v1.4)과 동일하게 유지한다. `gpt-5.3-codex`는 2026-06-30 일몰 예정이므로 사용하지 않는다.
+> Codex 컬럼 모델값은 `opal/core/setting.default.json`의 `models.codex`와 동일하게 유지한다. GPT-5.4 계열은 ChatGPT 로그인 기반 Codex에서 2026-08-31 퇴역했으며, GPT-5.5는 2026-10-14 퇴역 예정이므로 사용하지 않는다.
 
 > Cursor는 사용자가 IDE에서 모델 제공자를 직접 설정하므로 `inherit`로 위임한다 (→ `opal/core/references/opal-model-mapping.md` §4 Cursor 특이사항).
 
 > Cursor `inherit` 정책은 사용자 IDE 모델 설정 위임을 의미한다. Cursor가 향후 `light/standard/advanced` alias를 도입하면 본 표와 `scripts/install-mac.sh` `emit_platform_agent_adapter` 함수의 인라인 매핑을 동시 갱신해야 한다.
 
-> `effort` 값역: 공통 `low`/`medium`/`high`/`xhigh`는 4플랫폼(적용 대상: Claude·Codex) 모두 항등 변환. Claude 전용 `max`는 항등(`max`→`max`). Codex 전용 `minimal`은 항등(`minimal`→`minimal`), Codex는 추가로 `max`→`xhigh` 축약 변환을 적용한다. 스펙에 없는 미정의 값은 stderr 경고 후 해당 필드만 생략(종료코드 0, 나머지 필드는 정상 emit).
+> `effort` 값역: 공통 `low`/`medium`/`high`/`xhigh`/`max`는 적용 대상인 Claude·Codex에서 항등 변환한다. 기존 OPAL 값 `minimal`은 Codex의 GPT-5.6 값역에 맞춰 `none`으로 변환한다. 스펙에 없는 미정의 값은 stderr 경고 후 해당 필드만 생략(종료코드 0, 나머지 필드는 정상 emit).
 
 > `effort` 행을 포함해 이 표의 셀 값은 **사람이 읽는 미러**이며 SSOT가 아니다. 실제 변환 규칙의 SSOT는 코드 상수다 — `scripts/install-mac.sh`의 `OPAL_ADAPTER_FIELD_SPEC`(센티넬 `# >>> OPAL_ADAPTER_FIELD_SPEC >>>` ~ `# <<< OPAL_ADAPTER_FIELD_SPEC <<<` 구간)과 `scripts/install/windows.ps1`의 `$OpalAdapterFieldSpec`(`$OpalAdapterFieldSpecMirror` here-string, 동일 센티넬 마커)이며, 양자는 **바이트 동일**해야 하는 규약이다(TS-011). 표와 스펙이 어긋나면 스펙이 옳다 — 표를 스펙에 맞춰 정정한다.
 

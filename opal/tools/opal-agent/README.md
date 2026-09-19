@@ -128,7 +128,7 @@ follow = call_agent("방금 결과에서 가장 취약한 모듈은?",
 opal-agent "이 함수 리팩터링해줘" --provider claude --system-prompt "너는 시니어 엔지니어다"
 
 # 전체 JSON 출력 (session_id·메타 포함, 스킬 파싱용)
-opal-agent "..." --provider codex --model gpt-5.4 --json
+opal-agent "..." --provider codex --model gpt-5.6-terra --json
 
 # 세션 이어가기
 opal-agent "후속 질문" --provider claude --resume <session_id> --json

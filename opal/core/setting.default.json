@@ -6,7 +6,7 @@
     "claude": { "light": "haiku", "standard": "sonnet", "advanced": "opus" },
     "gemini": { "light": "gemini-3.1-flash-lite", "standard": "gemini-flash-latest", "advanced": "gemini-pro-latest" },
     "openai": { "light": "gpt-5.4-mini", "standard": "gpt-5.4", "advanced": "gpt-5.5" },
-    "codex":  { "light": "gpt-5.4-mini", "standard": "gpt-5.4", "advanced": "gpt-5.5" },
+    "codex":  { "light": "gpt-5.6-luna", "standard": "gpt-5.6-terra", "advanced": "gpt-5.6-sol" },
     "cursor": { "light": "inherit", "standard": "inherit", "advanced": "inherit" }
   },
   "launcher": {

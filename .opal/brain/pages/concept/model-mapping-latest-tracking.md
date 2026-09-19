@@ -11,29 +11,44 @@ sources:
 - task:011
 related: []
 created: '2026-06-11'
-updated: '2026-06-11'
-status: draft
+updated: '2026-09-19'
+status: active
 ---
 ## 개념 요약
 
-OPAL 플랫폼별 모델 매핑(`opal-model-mapping.md`)을 2026-06 최신 라인업으로 갱신하고, Claude/Gemini에 "최신 추종 부동 별칭" 전략을 도입했다. 4개 동기화 지점(opal-model-mapping.md, install-mac.sh, agents.md, windows.ps1)을 모두 정합화했다.
+OPAL의 ChatGPT 로그인 기반 Codex 모델 매핑을 OpenAI의 2026-09 공식 권장 모델에 맞춰 GPT-5.6 계열로 전환했다. `setting.default.json`이 실모델 SSOT이며, 배포 어댑터와 사용자 설정 마이그레이션이 같은 값을 사용한다.
 
-## 배경·문제 (WHY)
+## 현재 결정
 
-TASK 배경 분석이 모델 ID 3곳 불일치를 식별했다. 또한 Gemini가 `-latest` 부동 별칭을 지원하게 되어 stale 자동 해소 전략 도입이 가능해졌다.
+| OPAL 레벨 | Codex 모델 | 역할 |
+|---|---|---|
+| `light` | `gpt-5.6-luna` | 빠르고 저렴한 검색·분류·보조 워커 |
+| `standard` | `gpt-5.6-terra` | 일반 구현·분석 |
+| `advanced` | `gpt-5.6-sol` | 복잡한 계획·설계·고난도 구현 |
 
-## 결정 내용 (HOW)
+GPT-6 Astra는 비용과 계정별 가용성이 다른 최상위 선택지이므로 기본 `advanced`에 넣지 않고 프로젝트의 `setting.local.json`에서 선택적으로 오버라이드한다.
 
-- 부동 별칭 자동 추종: Claude(`haiku/sonnet/opus`) + Gemini standard/advanced(`gemini-flash-latest`/`gemini-pro-latest`).
-- 핀 + 분기점검: Gemini light(`gemini-3.1-flash-lite`)·Codex·OpenAI는 `-latest` 미존재 → §5 "분기마다 공식 docs 점검" 운영 규칙 추가.
-- OpenAI 컬럼: "미배선 죽은 컬럼"으로 판정 → 참조전용 각주 추가.
-- windows.ps1(4번째 동기화 지점)을 TASK 범위 외에서 신규 발견하여 포함.
+## 전환 근거
+
+- ChatGPT 로그인 기반 Codex에서 `gpt-5.4-mini`와 `gpt-5.4`는 2026-08-31 퇴역했다.
+- `gpt-5.5`는 2026-10-14 퇴역 예정이다.
+- OpenAI의 직접 교체 지침은 각각 `gpt-5.6-luna`, `gpt-5.6-terra`, `gpt-5.6-sol`이다.
+- OpenAI API 참조용 `models.openai`는 Codex 퇴역 정책의 적용 대상이 아니므로 이번 변경에서 유지한다.
+
+공식 근거: https://developers.openai.com/codex/models
+
+## reasoning effort 정합
+
+GPT-5.6의 지원 값역에 맞춰 Codex 어댑터 변환을 `minimal`→`none`, `max`→`max`로 변경했다. 기존 `max`→`xhigh` 축약은 제거했다.
+
+## 기존 설치 마이그레이션
+
+설치기는 기존 `setting.json`의 Codex 셀이 직전 OPAL 기본값과 정확히 일치할 때만 새 기본값으로 셀 단위 승격한다. 사용자 지정 모델과 프로젝트 `setting.local.json`은 수정하지 않는다.
 
 ## 영향·관계
 
-- 변경 파일: `opal/core/references/opal-model-mapping.md` v1.3, `scripts/install-mac.sh` v2.7, `opal/core/references/agents.md` v1.5, `scripts/install/windows.ps1` v1.9.0.
-- [[codex-platform-integration]] 에서 도입된 Codex 모델 매핑 갱신.
-
-## 근거 출처
-
-`sources: task:011` — DONE.md §최종 확정 매핑 참조.
+- 모델 SSOT: `opal/core/setting.default.json`
+- 플랫폼 어댑터 SSOT: `scripts/install-mac.sh`의 `OPAL_ADAPTER_FIELD_SPEC`
+- Windows 미러: `scripts/install/windows.ps1`
+- 사용자 설정 결정: [[model-mapping-2layer-override]]
+- 누락 셀 정책: [[model-mapping-missing-cell-error-policy]]
