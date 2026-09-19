@@ -133,6 +133,13 @@
   ],
   "history": [
     {
+      "title": "145 워크트리 터미널 런처 orca 배선",
+      "date": "2026-09-19",
+      "stage": "완료",
+      "path": "tasks/145-260919-opds-워크트리-터미널-런처-orca-배선/",
+      "result": "하네스 스텝 5.5 신설 + worktree-launcher CLI 구현 + orca 어댑터 실물 봉투 파싱으로 --wt 태스크가 전용 터미널을 열고 세션이 사람 입력 0회로 첫 턴을 시작하며 회수 시 터미널까지 정리된다. 목킹 전용 검증이 스키마 드리프트를 통과시킨 근본 원인을 fixture 실측 교체로 제거. 실물 완주 관측 완료"
+    },
+    {
       "title": "144 oppb probe 명령 역할분리",
       "date": "2026-09-19",
       "stage": "완료",
@@ -159,13 +166,6 @@
       "stage": "완료",
       "path": "tasks/127-260912-oppl-E2E-하네스-구현/",
       "result": "test-tool e2e 4서브명령(run/resume/status/clean)과 driver(agent-browser·cmux·ego-lite)·executor(api·human)·증적 단일 관문을 신설. console stop의 부팅시각 stale 판정으로 리부팅 후 첫 설치가 임의 사용자 프로세스를 죽이던 결함을 닫고, Playwright를 기본 설치에서 opt-in으로 강등. AC 충족15/blocked1, test-tool 428 passed."
-    },
-    {
-      "title": "132 oppb 프로젝트빌드 파일럿 신설",
-      "date": "2026-09-18",
-      "stage": "완료",
-      "path": "tasks/132-260914-opd-oppb-프로젝트빌드-파일럿-신설/",
-      "result": "(PM 보강 대기)"
     }
   ]
 }
