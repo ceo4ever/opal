@@ -43,6 +43,8 @@ OPPB가 `.gitattributes` `export-ignore`를 쓰는 저장소에서 P2 `environme
 
 ## 참고
 
+- **이 태스크는 143에서 144로 재번호됐다.** 채번 직후 다른 세션이 같은 번호로 `tasks/143-260918-opds-스킬-문서-사이드바`를 만들어 main에 먼저 머지했다(`e6911aa`). 나중에 완료된 이쪽이 양보했다. 문서 본문과 커밋 `a275431`의 "143" 표기는 실행 당시 사실이며 재작성하지 않았다 — 식별자는 폴더명 `144-260918-opds-oppb-probe-명령-역할분리`가 소유한다. `state.json`의 `task_id`도 init 시점 기록이라 `143-...`로 남아 있다(도구가 이후 호출에서는 폴더명을 쓴다). 채번이 원자적이지 않았던 원인은 별도 태스크가 소유한다.
+
 - **TC-E 선재 실패(143과 무관).** `scripts/tests/test_archive_contents.sh:139-149`가 `opal/core/hooks/claude-hooks.json`에 `transition_action`·`continue`·`next_action`·`stop_hook_active` 4종을 요구하는데, 작업 트리·HEAD·`feat/OP-TASK-138` 브랜치 모두 0건이다. Stop 가드가 `ownership_tool/stop_hook.py`로 이동하면서 문자열이 JSON에서 빠졌는데 테스트가 옛 훅 형태를 그대로 단언한다. 그 파일의 마지막 커밋은 `9553d3a`(태스크 138)다. 143은 그 파일을 건드리지 않았다(`git status` 0행). **AC-8의 '동일'은 충족, '통과'는 이 1건이 미충족이며 별도 태스크 후보다.**
 - **142 `.oppb-probe-commands.json`이 git 미추적이다.** `.gitignore`가 `.opal/*`를 무시해 바이트 기준선이 없고, "변경 전과 동일" 절을 사후 입증할 수 없다. 이번에는 간접 대조(142 `PROJECT-DESIGN.md:45`의 동일 id·자원 기록)로 갈음했다. OPPB가 이 파일을 추적하거나 EXECUTE가 변경 전 사본을 남기는 절차가 필요하다 — 후속 후보.
 - **제안서 상태 행이 어휘 밖이다.** `opal-oppb-project-build-pilot.md:3`이 `> 상태: 초안`인데 `harness/proposal-lifecycle.md` §상태 어휘는 `제안`·`검토`·`적용완료`·`폐기` 4종만 허용한다. PLAN이 명명하지 않은 변경이라 손대지 않았다.
