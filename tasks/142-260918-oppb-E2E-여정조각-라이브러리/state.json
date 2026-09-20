@@ -4,7 +4,7 @@
   "mode": "semi-agentic",
   "schema_version": "1.2",
   "created_at": "2026-09-18 17:25:56",
-  "updated_at": "2026-09-20 17:10:20",
+  "updated_at": "2026-09-20 17:23:49",
   "current_status": "in_progress",
   "rows": [
     {
@@ -300,22 +300,22 @@
       "stage": "P5",
       "item": "project-run pre-finalize guard — active lease 0·미처리 result 0·checkpoint 밖 dirty source 0·MEMORY/brain diff 0",
       "key": "p5.pre_finalize_guard",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-20 17:23:49",
       "owner": "PM",
-      "note": null
+      "note": "공식 checkpoint 0bd5bcf 게시 후 pre-finalize 통과: active lease 0, unprocessed result 0, dirty source outside checkpoint 0, MEMORY/brain diff 0"
     },
     {
       "row_id": 24,
       "stage": "P5",
       "item": "사용자 게이트 — 최종 project head 허브 merge 승인",
       "key": "p5.user_merge_gate",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
-      "owner": "PM",
-      "note": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-20 17:23:49",
+      "owner": "user",
+      "note": "캡틴 명시 승인: 승인, 계속 진행해서 해결 못하는 이슈가 없으면 CLOSE까지. project head 0bd5bcf의 허브 merge와 CLOSE 승인",
       "gate": {
         "artifacts": [],
         "checklist": [
@@ -366,7 +366,7 @@
       "note": null
     }
   ],
-  "next_action": "P5 project-run pre-finalize guard — active lease 0·미처리 result 0·checkpoint 밖 dirty source 0·MEMORY/brain diff 0 진입",
+  "next_action": "P5 Project Knowledge Finalizer — MEMORY·brain 프로젝트 batch 1회 진입",
   "worktree": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_142",
   "run_log": {
     "contract_version": "1.0",
