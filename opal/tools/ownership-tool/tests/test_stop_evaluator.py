@@ -4,7 +4,10 @@
 # domain: ownership
 # description: RED-first — ownership_tool.stop_evaluator.evaluate() 공개 계약 검증 (S-1, S-2, S-5, S-6) +
 #   PLAN D-21 claim_source 기반 강제후보 판정(session_start→passive_ownership 비강제,
-#   state_transition→기존 block_continue 보전 + evidence.claim_source 노출) RED
+#   state_transition→기존 block_continue 보전 + evidence.claim_source 노출) RED +
+#   TASK-147.S-8 (PLAN D-8) run_log.last_report를 Stop 판정 입력으로 쓰는 단위 계약 RED —
+#   decision_request 또는 user_input_required=true는 통과, progress_report∧false∧continue만
+#   block_continue이며 last_report 부재 시 _STATUS_TRANSITION 폴백 보존
 # exports: (none — pytest module)
 # depends: ownership_tool.stop_evaluator (미구현), fixtures/hub, fixtures/registry, fixtures/hook-payloads, fixtures/runtime
 """RED 테스트 — 구현 전. ownership_tool.stop_evaluator가 아직 존재하지 않으므로
@@ -389,3 +392,190 @@ def test_d21_current_session_owned_state_transition_forced_block_continue(monkey
     assert any(c.get("task_id") == "205-state-transition-forced" for c in forced)
     candidate = next(c for c in result["candidates"] if c.get("task_id") == "205-state-transition-forced")
     assert candidate.get("evidence", {}).get("claim_source") == "state_transition"
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# TASK-147 S-8 (AC-4, C-3) — GREEN: W-8. **구현 전 RED**.
+#
+# PLAN D-8 — `stop_evaluator.evaluate()`의 판정 입력을 `current_status` 추정에서
+# `state.json.run_log.last_report`로 바꾼다. `report_type=decision_request` 또는
+# `user_input_required=true`이면 통과(강제 후보 아님), `progress_report` ∧
+# `user_input_required=false` ∧ `transition_action=continue`일 때만 `block_continue`다.
+# `last_report`가 없으면 기존 `_STATUS_TRANSITION` 폴백 결과가 변경 전과 같아야 한다.
+#
+# 이 축은 **단위 계약 전용**이다(TEST-SCENARIO Setup) — AC-4·AC-6의 근거는
+# test_stop_hook_process.py의 실제 훅 프로세스 실행이다.
+#
+# 판정 경계: `evaluate()`의 공개 반환값만 본다. private 함수(`_candidate_transition`
+# 등)를 직접 호출하지 않고, 판정 경로에 monkeypatch를 걸지 않는다(앰비언트 세션
+# env 격리는 기존 S-1~S-6과 같은 setup 용도다).
+#
+# 현재 관찰: `resolver._read_state()`가 보존하는 필드가
+# `task_id`/`current_status`/`next_action` 3종뿐이고 `stop_evaluator`는
+# `last_report`를 어디서도 읽지 않는다(2026-09-19 실측). 따라서 (a)(b)가
+# current_status=in_progress 폴백으로 `block_continue`가 되어 실패한다.
+# ─────────────────────────────────────────────────────────────────────────────
+
+_T147_LAST_REPORT_CASES = (
+    (
+        "a_decision_request",
+        {"report_type": "decision_request", "transition_action": "await_user",
+         "user_input_required": True},
+        False,   # block_continue여서는 안 된다
+    ),
+    (
+        "b_progress_report_awaiting_user",
+        {"report_type": "progress_report", "transition_action": "continue",
+         "user_input_required": True},
+        False,
+    ),
+    (
+        "c_progress_report_continue",
+        {"report_type": "progress_report", "transition_action": "continue",
+         "user_input_required": False},
+        True,    # 이 조합만 block_continue
+    ),
+)
+
+
+def _t147_capsule_with_last_report(hub_tmp, task_id, last_report):
+    """허브 아래 실제 태스크 캡슐을 만들고 `run_log.last_report`를 심는다.
+
+    `last_report`가 None이면 §1.4 선택 필드를 아예 두지 않는다(폴백 경로 대조군).
+    lease는 claim_source=state_transition으로 두어 강제 후보 조건을 만족시킨다
+    (D-21 — session_start 자동 claim은 강제 후보가 아니다)."""
+    state = json.loads(
+        (FIXTURES_ROOT / "hub" / "HUB-MULTI" / "tasks" / "200-multi-task-x" / "state.json")
+        .read_text(encoding="utf-8")
+    )
+    state["task_id"] = task_id
+    run_log = {
+        "contract_version": "1.0",
+        "mode": "shadow",
+        "completion_profile": "cooperative",
+        "completion_profile_receipt": None,
+        "active_run_id": "run_t147s8",
+        "status": "active",
+        "pending_events": [],
+    }
+    if last_report is not None:
+        run_log["last_report"] = dict(last_report, event_id="evt_t147-s8-report",
+                                      at="2026-09-19T05:00:00.000Z")
+    state["run_log"] = run_log
+
+    task_dir = hub_tmp / "tasks" / task_id
+    task_dir.mkdir(parents=True, exist_ok=True)
+    (task_dir / "state.json").write_text(json.dumps(state, ensure_ascii=False),
+                                         encoding="utf-8")
+
+    owner_path = task_dir / "run" / ".runtime" / "owner.json"
+    owner_path.parent.mkdir(parents=True, exist_ok=True)
+    owner_path.write_text(json.dumps({
+        "task_path": str(task_dir),
+        "owner_session_id": "sess-live-0001",
+        "generation": 1,
+        "claimed_at": "2026-09-17 09:00:00+09:00",
+        "heartbeat_at": "2026-09-17 09:30:00+09:00",
+        "lease_expires_at": "2026-09-17 19:20:00+09:00",
+        "status": "active",
+        "claim_source": "state_transition",
+    }), encoding="utf-8")
+    return task_dir
+
+
+@pytest.mark.parametrize("label,last_report,expect_block", _T147_LAST_REPORT_CASES)
+def test_t147_s8_last_report_drives_stop_decision(label, last_report, expect_block, monkeypatch):
+    """TASK-147.S-8 — `last_report`의 3축이 Stop 판정을 가른다(D-8)."""
+    from ownership_tool import stop_evaluator
+
+    monkeypatch.delenv("CLAUDE_CODE_SESSION_ID", raising=False)
+    monkeypatch.delenv("OPAL_SESSION_ID", raising=False)
+
+    tmp, hub_tmp, wt_tmp = _clone_fixtures()
+    task_id = f"147-s8-{label}"
+    _t147_capsule_with_last_report(hub_tmp, task_id, last_report)
+
+    payload = _load(tmp, "hook-payloads/stop.json")
+    payload["cwd"] = str(hub_tmp)
+    payload["stop_hook_active"] = False
+
+    result = stop_evaluator.evaluate(payload, project_root=hub_tmp,
+                                     now="2026-09-17T15:20:00+09:00")
+
+    if expect_block:
+        assert result["decision_kind"] == "block_continue", (
+            f"TASK-147.S-8({label}) progress_report ∧ false ∧ continue인데 차단되지 "
+            f"않음 — {result['decision_kind']}")
+    else:
+        assert result["decision_kind"] != "block_continue", (
+            f"TASK-147.S-8({label}) last_report={last_report}인데 강제 후보로 차단됨 — "
+            f"판정 입력이 아직 current_status 추정이다(D-8) — {result['decision_kind']}")
+
+
+def test_t147_s8_absent_last_report_keeps_status_transition_fallback(monkeypatch):
+    """TASK-147.S-8 대조군 — `last_report`가 없으면 기존 `_STATUS_TRANSITION` 폴백
+    결과(current_status=in_progress → block_continue)가 변경 전과 같다.
+
+    이 건은 보존 가드이므로 개정 전에도 통과한다(구현 전 RED 아님)."""
+    from ownership_tool import stop_evaluator
+
+    monkeypatch.delenv("CLAUDE_CODE_SESSION_ID", raising=False)
+    monkeypatch.delenv("OPAL_SESSION_ID", raising=False)
+
+    tmp, hub_tmp, wt_tmp = _clone_fixtures()
+    _t147_capsule_with_last_report(hub_tmp, "147-s8-fallback", None)
+
+    payload = _load(tmp, "hook-payloads/stop.json")
+    payload["cwd"] = str(hub_tmp)
+    payload["stop_hook_active"] = False
+
+    result = stop_evaluator.evaluate(payload, project_root=hub_tmp,
+                                     now="2026-09-17T15:20:00+09:00")
+    assert result["decision_kind"] == "block_continue", (
+        f"TASK-147.S-8 폴백 경로가 변경 전과 다름 — {result['decision_kind']}")
+
+
+def test_t147_w8_receipt_pending_decisions_are_closed_and_fifo_bounded(monkeypatch):
+    """W-8: 모든 Stop 판정은 닫힌 receipt 항목으로 남고 최근 32건만 보관한다.
+
+    실제 resolver·atomic receipt 경로를 사용한다. fixture의 `last_assistant_message`
+    같은 Stop 봉투 원문은 pending_decisions에 복사될 수 없다.
+    """
+    from ownership_tool import ownership_core, stop_evaluator
+
+    monkeypatch.delenv("CLAUDE_CODE_SESSION_ID", raising=False)
+    monkeypatch.delenv("OPAL_SESSION_ID", raising=False)
+
+    tmp, hub_tmp, wt_tmp = _clone_fixtures()
+    task_id = "147-w8-receipt"
+    task_dir = _t147_capsule_with_last_report(
+        hub_tmp, task_id,
+        {"report_type": "progress_report", "transition_action": "continue",
+         "user_input_required": False},
+    )
+    payload = _load(tmp, "hook-payloads/stop.json")
+    payload["cwd"] = str(hub_tmp)
+    payload["stop_hook_active"] = False
+
+    for index in range(34):
+        result = stop_evaluator.evaluate(
+            payload, project_root=hub_tmp,
+            now=f"2026-09-19T05:00:{index:02d}.000Z",
+        )
+        assert result["decision_kind"] == "block_continue"
+
+    receipt = ownership_core.read_json(
+        ownership_core.stop_receipt_path(hub_tmp, "sess-live-0001"))["data"]
+    pending = receipt["pending_decisions"]
+    assert len(pending) == 32
+    assert pending[0]["decided_at"] == "2026-09-19T05:00:02.000Z"
+    assert pending[-1]["decided_at"] == "2026-09-19T05:00:33.000Z"
+    expected_keys = {
+        "decision_kind", "diagnostics", "block_count", "claim_source",
+        "report_event_id", "task_path", "decided_at",
+    }
+    for entry in pending:
+        assert set(entry) == expected_keys
+        assert entry["task_path"] == str(task_dir)
+        assert entry["report_event_id"] == "evt_t147-s8-report"
+        assert "{REDACTED}" not in json.dumps(entry, ensure_ascii=False)

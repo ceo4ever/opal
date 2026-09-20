@@ -3,7 +3,7 @@
   "module": "test_run_log_tool",
   "layer": "test",
   "domain": "opal-tools",
-  "description": "run-log-tool 서브명령(init/append/validate-run/import-agentic/import-oppl) 계약 테스트. §1.1/§1.2 폐쇄형 스키마, §1.3 4축 조합 전수·명시적 거부·사건별 actor 제약, 요청 식별자 멱등, 16 KiB 직렬화 상한, actor_sequence 범위, legacy·oppl 가져오기 멱등·구조 정규화, active 모드 source 제약, 기존 회귀 무손상을 S-3~S-29 시나리오로 판정한다. 이와 별개로 가져오기 읽기 경로의 심볼릭 링크·하드 링크·비정규 파일(FIFO) 거부와 정상 입력 비차단을 잠긴 시나리오 목록 밖에서 회귀 고정한다(보안 검사가 실측한 방어 대상). run.sh subprocess 실호출 + 디스크 조각 파일 검사만으로 판정하며, mock/patch/MagicMock/스텁/가짜 파일시스템은 사용하지 않는다(opal/tools/backlog-tool/tests/test_backlog_tool.py 관례 복제, red-first.md §4). state.json·state_tool 결합 0건을 정적+동적으로 함께 판정한다(AC-19/MV-24, TRD D-5). 시크릿 마스킹 3경로·redact 멱등과 크기 순서·마스킹과 보존 식별자 공존·세그먼트 경계 동시성 배리어·심볼릭 링크 방어 재사용·닫힌 세그먼트 불변성과 세그먼트 간 시퀀스·duration span 산출과 reconcile을 S1~S7 클래스로 회귀 고정한다. 태스크 137: CONTRACT §1.3 PM activity payload 축 폐쇄(A4 한정)를 인프로세스 append()와 run-log-tool append CLI 두 생산 경로에서 schema_invalid 거부·조각 바이트 불변으로 판정하고, A8 import·A2 worker direct 조합의 다중 키 data 수용으로 적용 조건 경계가 새지 않음을 함께 고정한다.",
+  "description": "run-log-tool 서브명령(init/append/validate-run/import-agentic/import-oppl) 계약 테스트. §1.1/§1.2 폐쇄형 스키마, §1.3 4축 조합 전수·명시적 거부·사건별 actor 제약, 요청 식별자 멱등, 16 KiB 직렬화 상한, actor_sequence 범위, legacy·oppl 가져오기 멱등·구조 정규화, active 모드 source 제약, 기존 회귀 무손상을 S-3~S-29 시나리오로 판정한다. 이와 별개로 가져오기 읽기 경로의 심볼릭 링크·하드 링크·비정규 파일(FIFO) 거부와 정상 입력 비차단을 잠긴 시나리오 목록 밖에서 회귀 고정한다(보안 검사가 실측한 방어 대상). run.sh subprocess 실호출 + 디스크 조각 파일 검사만으로 판정하며, mock/patch/MagicMock/스텁/가짜 파일시스템은 사용하지 않는다(opal/tools/backlog-tool/tests/test_backlog_tool.py 관례 복제, red-first.md §4). state.json·state_tool 결합 0건을 정적+동적으로 함께 판정한다(AC-19/MV-24, TRD D-5). 시크릿 마스킹 3경로·redact 멱등과 크기 순서·마스킹과 보존 식별자 공존·세그먼트 경계 동시성 배리어·심볼릭 링크 방어 재사용·닫힌 세그먼트 불변성과 세그먼트 간 시퀀스·duration span 산출과 reconcile을 S1~S7 클래스로 회귀 고정한다. 태스크 147: 사건 14종 확장(pm.report·stop.decision)의 허용 조합 1종 폐쇄(A4·A7, 조합표 밖 전수 provenance_invalid)와 data 폐쇄 3키·6키 위반(여분 키·키 누락·enum 밖 값) schema_invalid·조각 바이트 불변, 두 사건의 redact() 통과 후 조각 평문 0건, activity.data.kind 4종 폐쇄 불변을 S-3·S-4로 판정하고, run_log_core의 _STOP_DECISION_KINDS·_STOP_DIAGNOSTICS가 ownership_tool/decisions.py의 SSOT와 같은 집합인지와 기록 코어의 ownership-tool import 0건을 D-4 기계 대조로 고정한다. 태스크 137: CONTRACT §1.3 PM activity payload 축 폐쇄(A4 한정)를 인프로세스 append()와 run-log-tool append CLI 두 생산 경로에서 schema_invalid 거부·조각 바이트 불변으로 판정하고, A8 import·A2 worker direct 조합의 다중 키 data 수용으로 적용 조건 경계가 새지 않음을 함께 고정한다.",
   "exports": [
     "TestInitIdempotent", "TestAppendEvent", "TestValidateRunPass",
     "TestPathContractRejection", "TestSchemaRejection", "TestStateAssetIndependence",
@@ -22,12 +22,16 @@
     "TestS5SegmentBoundarySymlinkDefenseReuse", "TestS6ClosedSegmentImmutabilityCrossSegmentSequence",
     "TestS7DurationSpansAndReconcile",
     "TestPmActivityDataClosureInProcess", "TestPmActivityDataClosureCli",
-    "TestPmActivityDataClosureScopeBoundary"
+    "TestPmActivityDataClosureScopeBoundary",
+    "TestT147S3NewEventVocabularyAndCombinationClosure",
+    "TestT147S4NewEventDataClosureAndRedaction",
+    "TestT147D4StopEnumMachineCrossCheck"
   ],
   "scenarios": [
     "S-3", "S-4", "S-5", "S-6", "S-7", "S-8",
     "S-10", "S-11", "S-12", "S-13", "S-14", "S-15", "S-16", "S-17", "S-18", "S-19",
-    "S-20", "S-21", "S-22", "S-23", "S-24", "S-25", "S-26", "S-27", "S-28", "S-29"
+    "S-20", "S-21", "S-22", "S-23", "S-24", "S-25", "S-26", "S-27", "S-28", "S-29",
+    "TASK-147.S-3", "TASK-147.S-4"
   ]
 }
 
@@ -60,6 +64,7 @@ surfaces.json 근거: run-log-tool.init/.append/.validate-run/.import-agentic/.i
 CONTRACT §2.1 응답 봉투: {"ok":true,"data":{...}} / {"ok":false,"error":{"code","message","detail"}}.
 """
 
+import importlib.util
 import io
 import json
 import os
@@ -641,6 +646,28 @@ class TestEventActorConstraintExhaustive(unittest.TestCase):
             })
         if event == "worker.capability.revoked":
             return dict(data={"token_id": f"wlt_{req_id}", "reason": f"s12-revoke-{req_id}"})
+        # TASK-147 — 사건 14종 확장으로 늘어난 2행. 이 시나리오가 판정하는 단일 축은
+        # **사건 종류별 actor 제약**이므로, 두 사건의 조건부 필수 필드(summary)와 §1.3
+        # data 폐쇄 키를 유효하게 채워 거부 사유가 actor 제약 하나로만 좁혀지게 한다.
+        if event == "pm.report":
+            return dict(summary=(
+                "pm.report: report_type=progress_report; transition_action=continue; "
+                "user_input_required=false"), data={
+                "report_type": "progress_report",
+                "transition_action": "continue",
+                "user_input_required": False,
+            })
+        if event == "stop.decision":
+            return dict(summary=(
+                "stop.decision: decision_kind=block_continue; diagnostics=none; block_count=0; "
+                "claim_source=null; report_event_id=null; last_activity_event_id=null"), data={
+                "decision_kind": "block_continue",
+                "diagnostics": [],
+                "block_count": 0,
+                "claim_source": None,
+                "report_event_id": None,
+                "last_activity_event_id": None,
+            })
         return {}
 
     def test_actor_constraint_matrix(self):
@@ -674,7 +701,15 @@ class TestEventActorConstraintExhaustive(unittest.TestCase):
                         self.assertFalse(data.get("ok", True), f"S-12 {label} 기대 ok:false — {data}")
                         self.assertEqual(data.get("error", {}).get("code"), "provenance_invalid",
                                           f"S-12 {label} 오류 코드 불일치 — {data}")
-            self.assertEqual(pair_count, 60, "S-12 전수 쌍 수가 60건이 아님(12사건×5actor)")
+            expected_pairs = len(core.ALLOWED_EVENTS) * len(actor_kinds)
+            self.assertEqual(
+                pair_count, expected_pairs,
+                f"S-12 전수 쌍 수가 {expected_pairs}건이 아님"
+                f"({len(core.ALLOWED_EVENTS)}사건×{len(actor_kinds)}actor)")
+            self.assertEqual(
+                expected_pairs, 70,
+                "S-12 전수 쌍 수 기대값이 70(14사건×5actor)이 아님 — "
+                "TASK-147 D-1로 사건 종류가 12종에서 14종으로 늘었다(CONTRACT §1.2)")
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -2713,6 +2748,523 @@ class TestPmActivityDataClosureScopeBoundary(unittest.TestCase):
                 result.get("ok"),
                 f"T137 S-5(b) A2 worker 조합의 다중 키 data가 거부됨 — 폐쇄가 적용 조건(A4) "
                 f"밖으로 샜다(D-10) — {result}")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# TASK-147 S-3 / S-4 — 사건 어휘 14종 확장(`pm.report`·`stop.decision`)의
+# 조합 폐쇄·payload 폐쇄·마스킹 초크포인트. **구현 전 RED**(GREEN: W-4).
+#
+# 기대값의 유일한 원천은 개정된 `docs/run-log/CONTRACT.md`다 —
+#   §1.2 사건 종류 14종 표(`pm.report`·`stop.decision` 2행)
+#   §1.3 『`pm.report`의 허용 조합과 사건 고유 payload 축 폐쇄 목록』(A4·3키)
+#   §1.3 『`stop.decision`의 허용 조합과 사건 고유 payload 축 폐쇄 목록』(A7·6키)
+#   §4 MV-32(조합표 밖 전건 `provenance_invalid`)·MV-33(`data` 폐쇄 `schema_invalid`)
+# 그리고 PLAN.md D-1~D-5(어휘 확장·조합·enum 물리분리·오류 코드 불신설).
+#
+# 판정 경계(harness/red-first.md §2): 공개 인터페이스만 본다 —
+# `run-log-tool append` CLI의 exit code·§2.1 응답 봉투, 기록 코어의 공개
+# 인프로세스 append()(CONTRACT §2.6), 그리고 디스크 조각 파일의 실제 바이트.
+# private 함수를 직접 호출하지 않으며 mock/patch/MagicMock을 쓰지 않는다.
+#
+# `stop.decision`(A7)은 `recorded_by.id=state-tool`과 **사전 확정 event_id**를
+# 요구하는데 `append` CLI에는 `--recorded-by-id`·`--event-id` 플래그가 없다
+# (2026-09-19 `append --help` 실측). 따라서 A7 경로는 CONTRACT §2.6이 계약한
+# 인프로세스 append()로 판정한다 — 우회가 아니라 그 조합을 표현할 수 있는
+# 유일한 공개 표면이다.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# CONTRACT §1.2 — 확장 후 사건 종류 수와 새 2종.
+_T147_EXPECTED_EVENT_COUNT = 14
+_T147_NEW_EVENTS = ("pm.report", "stop.decision")
+
+# CONTRACT §1.3 — 각 사건이 허용하는 (actor.kind, provenance.type,
+# recorded_by.kind, source.kind) 조합. `pm.report`는 A4 하나,
+# `stop.decision`은 A7 하나다.
+_T147_ALLOWED_COMBOS = {
+    "pm.report": {
+        ("PM", "direct", "PM", None),
+        ("PM", "direct", "tool", None),
+    },
+    "stop.decision": {
+        ("tool", "direct", "tool", None),
+    },
+}
+
+# CONTRACT §1.3 — `pm.report` data 폐쇄 3키와 값 enum.
+_T147_PM_REPORT_DATA = {
+    "report_type": "progress_report",
+    "transition_action": "continue",
+    "user_input_required": False,
+}
+
+# CONTRACT §1.3 — `stop.decision` data 폐쇄 6키.
+_T147_STOP_DECISION_DATA = {
+    "decision_kind": "block_continue",
+    "diagnostics": ["no_progress_same_fingerprint"],
+    "block_count": 1,
+    "claim_source": "state_transition",
+    "report_event_id": None,
+    "last_activity_event_id": None,
+}
+
+_T147_EVENT_DATA = {
+    "pm.report": _T147_PM_REPORT_DATA,
+    "stop.decision": _T147_STOP_DECISION_DATA,
+}
+
+# A7이 요구하는 의미상 주체/제출 주체 분리(§1.1.1).
+_T147_ACTOR_IDS = {"pm.report": "PM", "stop.decision": "ownership-tool"}
+_T147_RECORDED_BY_IDS = {"pm.report": "PM", "stop.decision": "state-tool"}
+
+
+def _t147_build_event(event_name, combo, *, request_id, data=None, summary=None,
+                      reason=None, event_id=None):
+    """CONTRACT §1.1 공통 필드를 갖춘 인프로세스 append() 입력을 조립한다.
+
+    combo는 (actor.kind, provenance.type, recorded_by.kind, source.kind) 4튜플이다.
+    source.kind가 있으면 A1/A3/A8이 요구하는 출처 증거 3필드를 함께 채워, 거부가
+    일어난다면 그 사유가 **조합** 하나로만 좁혀지도록 한다(기존 S-10과 같은 관례).
+    """
+    actor_kind, prov_type, recorded_by_kind, source_kind = combo
+    source = None
+    if source_kind is not None:
+        source = {
+            "kind": source_kind,
+            "id": f"src-{request_id}",
+            "sha256": hashlib.sha256(request_id.encode("utf-8")).hexdigest(),
+            "observed_at": "2026-09-19T00:00:00.000Z",
+            "locator": "fixture#L1",
+            "upstream_event_id": None,
+        }
+    event = {
+        "request_id": request_id,
+        "event": event_name,
+        "actor": {
+            "kind": actor_kind,
+            "id": _T147_ACTOR_IDS[event_name] if actor_kind in ("PM", "tool") else "x",
+            "provider": None,
+            "session_id": None,
+        },
+        "provenance": {
+            "type": prov_type,
+            "recorded_by": {
+                "kind": recorded_by_kind,
+                "id": _T147_RECORDED_BY_IDS[event_name] if recorded_by_kind == "tool" else recorded_by_kind,
+            },
+            "worker_log_token_id": None,
+            "source": source,
+        },
+        # D-16 — 허용 fixture도 호출자 자유문구가 아니라 공개 renderer 결과를 쓴다.
+        # data 위반 fixture는 유효 data의 renderer 결과를 유지해 거부 사유를 data 축으로
+        # 한정한다.
+        "summary": (summary if summary is not None else _import_core().render_event_summary(
+            event_name, _T147_EVENT_DATA[event_name])),
+        "data": dict(_T147_EVENT_DATA[event_name]) if data is None else data,
+    }
+    if reason is not None:
+        event["reason"] = reason
+    if event_id is not None:
+        event["event_id"] = event_id
+    if actor_kind == "worker":
+        # actor.kind=worker는 worker_run_id가 별도 필수다 — 없으면 조합과 무관하게
+        # schema_invalid가 먼저 나서 "조합만이 유일한 거부 사유"라는 판정 축이 깨진다.
+        event["worker_run_id"] = f"wr_{request_id}"
+    return event
+
+
+class TestT147S3NewEventVocabularyAndCombinationClosure(unittest.TestCase):
+    """TASK-147 S-3 (AC-2, AC-3, C-1, H-5) — GREEN: W-4. **구현 전 RED**.
+
+    현재 관찰: `run_log_core.ALLOWED_EVENTS`는 12종이며 `pm.report`·`stop.decision`을
+    포함하지 않는다(2026-09-19 실측). 따라서 두 사건의 append는 허용 조합에서도
+    사건 enum 위반으로 거부되고, 아래 4건 전부가 실패한다.
+    """
+
+    def test_allowed_events_is_fourteen_including_both_new_events(self):
+        core = _import_core()
+        allowed = set(core.ALLOWED_EVENTS)
+        for name in _T147_NEW_EVENTS:
+            self.assertIn(
+                name, allowed,
+                f"T147 S-3 CONTRACT §1.2 사건 14종에 {name}가 없음 — 현재 {sorted(allowed)}")
+        self.assertEqual(
+            len(allowed), _T147_EXPECTED_EVENT_COUNT,
+            f"T147 S-3 사건 종류가 14종이 아님(§1.2) — {len(allowed)}종 {sorted(allowed)}")
+
+    def test_activity_data_kind_remains_four_after_extension(self):
+        """C-1 — 두 사건의 추가가 `activity.data.kind` 4종 폐쇄를 바꾸지 않는다(§1.2).
+
+        폐쇄 4종 밖 값(`heartbeat`)은 확장 뒤에도 `schema_invalid`여야 한다.
+        """
+        core = _import_core()
+        with tempfile.TemporaryDirectory() as tmp:
+            task_path = _abs_task_dir(tmp, "t147-s3-activity")
+            run_id = "run_t147s3act"
+            self.assertTrue(core.init(str(task_path), run_id).get("ok"))
+            result = core.append(str(task_path), run_id, _t147_build_event(
+                "pm.report", ("PM", "direct", "PM", None),
+                request_id="req_t147_s3_probe"))
+            # 위 append는 GREEN 이후 성립한다. 판정 대상은 아래 activity다.
+            del result
+            event = {
+                "request_id": "req_t147_s3_act",
+                "event": "activity",
+                "actor": {"kind": "PM", "id": "PM", "provider": None, "session_id": None},
+                "provenance": {"type": "direct", "recorded_by": {"kind": "PM", "id": "PM"},
+                               "worker_log_token_id": None, "source": None},
+                "summary": "T147 S-3 activity 4종 폐쇄 확인",
+                "data": {"kind": "heartbeat"},
+            }
+            rejected = core.append(str(task_path), run_id, event)
+            self.assertFalse(
+                rejected.get("ok", True),
+                f"T147 S-3 activity.data.kind 4종 폐쇄가 헐거워짐(heartbeat 수용) — {rejected}")
+            self.assertEqual(
+                rejected.get("error", {}).get("code"), "schema_invalid",
+                f"T147 S-3 activity 4종 폐쇄 위반의 오류 코드가 schema_invalid가 아님 — {rejected}")
+
+    def test_pm_report_allowed_combination_accepted_via_append_cli(self):
+        """A4 허용 조합 1건이 `run-log-tool append` CLI에서 수용된다(§2.4·MV-32)."""
+        with tempfile.TemporaryDirectory() as tmp:
+            task_path = _abs_task_dir(tmp, "t147-s3-pmreport-cli")
+            run_id = "run_t147s3pm"
+            code0, out0, err0, _ = _run(
+                ["init", "--task", str(task_path), "--run-id", run_id, "--format", "json"])
+            self.assertEqual(code0, 0, f"T147 S-3 선행 init 실패 — {out0!r} {err0!r}")
+
+            code, out, errtext, data = _run([
+                "append", "--task", str(task_path), "--run-id", run_id,
+                "--request-id", "req_t147_s3_pm", "--event", "pm.report",
+                "--actor-kind", "PM", "--actor-id", "PM",
+                "--provenance-type", "direct", "--recorded-by-kind", "PM",
+                "--summary", _import_core().render_event_summary(
+                    "pm.report", _T147_PM_REPORT_DATA),
+                "--data", json.dumps(_T147_PM_REPORT_DATA, ensure_ascii=False),
+                "--format", "json",
+            ])
+            self.assertEqual(
+                code, 0,
+                f"T147 S-3 A4 pm.report가 append CLI에서 거부됨 — exit={code} "
+                f"stdout={out!r} stderr={errtext!r}")
+            self.assertTrue(data.get("ok"), f"T147 S-3 ok:false — {data}")
+
+            records = [json.loads(l) for l in
+                       _segment_of(task_path, run_id).read_text(encoding="utf-8").splitlines() if l.strip()]
+            reports = [r for r in records if r.get("event") == "pm.report"]
+            self.assertEqual(len(reports), 1, f"T147 S-3 조각의 pm.report가 1건이 아님 — {records}")
+            self.assertEqual(
+                reports[0].get("data"), _T147_PM_REPORT_DATA,
+                f"T147 S-3 기록된 data가 폐쇄 3키와 다름 — {reports[0].get('data')}")
+
+    def test_stop_decision_allowed_combination_accepted_via_append_cli(self):
+        """A7 허용 조합 1건이 실제 run-log-tool append CLI에서 수용된다."""
+        with tempfile.TemporaryDirectory() as tmp:
+            task_path = _abs_task_dir(tmp, "t147-s3-stopdecision")
+            run_id = "run_t147s3sd"
+            code0, out0, err0, _ = _run(
+                ["init", "--task", str(task_path), "--run-id", run_id, "--format", "json"])
+            self.assertEqual(code0, 0, f"T147 S-3 선행 init 실패 — {out0!r} {err0!r}")
+
+            code, out, errtext, data = _run([
+                "append", "--task", str(task_path), "--run-id", run_id,
+                "--request-id", "req_t147_s3_stop", "--event", "stop.decision",
+                "--actor-kind", "tool", "--actor-id", "ownership-tool",
+                "--provenance-type", "direct", "--recorded-by-kind", "tool",
+                "--recorded-by-id", "state-tool",
+                "--summary", _import_core().render_event_summary(
+                    "stop.decision", _T147_STOP_DECISION_DATA),
+                "--data", json.dumps(_T147_STOP_DECISION_DATA, ensure_ascii=False),
+                "--format", "json",
+            ])
+            self.assertEqual(code, 0, f"T147 S-3 A7 stop.decision CLI 거부 — {out!r} {errtext!r}")
+            self.assertTrue(data.get("ok"), f"T147 S-3 A7 stop.decision ok:false — {data}")
+
+            records = [json.loads(l) for l in
+                       _segment_of(task_path, run_id).read_text(encoding="utf-8").splitlines() if l.strip()]
+            decisions_recorded = [r for r in records if r.get("event") == "stop.decision"]
+            self.assertEqual(len(decisions_recorded), 1,
+                             f"T147 S-3 조각의 stop.decision이 1건이 아님 — {records}")
+            rec = decisions_recorded[0]
+            self.assertEqual(rec.get("actor", {}).get("id"), "ownership-tool",
+                             f"T147 S-3 actor.id가 ownership-tool이 아님(§1.1.1) — {rec.get('actor')}")
+            self.assertEqual(rec.get("provenance", {}).get("recorded_by"),
+                             {"kind": "tool", "id": "state-tool"},
+                             f"T147 S-3 recorded_by가 state-tool이 아님 — {rec.get('provenance')}")
+
+    def test_all_combinations_outside_allowed_set_rejected_provenance_invalid(self):
+        """MV-32 — 두 사건 각각에 대해 허용 조합(A4·A7) 밖 조합 **전수**가
+        `provenance_invalid`로 거부되고 조각 바이트가 변하지 않는다."""
+        core = _import_core()
+        combos = list(core.iter_all_combinations())
+        self.assertGreater(len(combos), 0, "T147 S-3 iter_all_combinations()가 조합을 생성하지 않음")
+
+        for event_name in _T147_NEW_EVENTS:
+            with self.subTest(event=event_name):
+                with tempfile.TemporaryDirectory() as tmp:
+                    task_path = _abs_task_dir(tmp, f"t147-s3-combo-{event_name.replace('.', '-')}")
+                    run_id = "run_t147s3combo"
+                    self.assertTrue(core.init(str(task_path), run_id).get("ok"))
+                    segment = _segment_of(task_path, run_id)
+                    before = segment.read_bytes()
+
+                    allowed = _T147_ALLOWED_COMBOS[event_name]
+                    rejected_combos = [c for c in combos if tuple(c) not in allowed]
+                    self.assertGreater(len(rejected_combos), 0,
+                                       f"T147 S-3 {event_name} 거부 대상 조합이 0건")
+
+                    for i, combo in enumerate(rejected_combos):
+                        event = _t147_build_event(
+                            event_name, tuple(combo), request_id=f"req_t147_s3_{i}",
+                            # D-16 renderer 위반도 함께 넣어 기존 provenance_invalid
+                            # 우선순위가 schema_invalid에 가려지지 않음을 고정한다.
+                            summary="caller-owned summary must not mask invalid provenance")
+                        result = core.append(str(task_path), run_id, event)
+                        self.assertFalse(
+                            result.get("ok", True),
+                            f"T147 S-3 {event_name} 조합 {tuple(combo)}가 수용됨(§1.3 위반) — {result}")
+                        self.assertEqual(
+                            result.get("error", {}).get("code"), "provenance_invalid",
+                            f"T147 S-3 {event_name} 조합 {tuple(combo)} 오류 코드가 "
+                            f"provenance_invalid가 아님(D-5 — 새 코드 불신설) — {result}")
+
+                    self.assertEqual(
+                        segment.read_bytes(), before,
+                        f"T147 S-3 {event_name} 거부된 조합들이 조각 파일을 변경함(부분 쓰기)")
+
+
+class TestT147S4NewEventDataClosureAndRedaction(unittest.TestCase):
+    """TASK-147 S-4 (AC-7, C-5) — GREEN: W-4. **구현 전 RED**.
+
+    (a) `data` 폐쇄 키 밖 여분 키·키 누락·enum 밖 값은 `schema_invalid`로 거부되고
+        조각 바이트가 불변이다(MV-33, D-5 — 새 오류 코드 불신설).
+    (b) D-16 renderer 밖 summary 및 네 서술 축의 원문은 redact 이전에
+        `schema_invalid`로 거부되고 조각 바이트가 불변이다. 공통 redact() 4종 회귀는
+        TestS1~S3이 별도로 고정한다.
+
+    현재 관찰: 두 사건 자체가 `ALLOWED_EVENTS` 밖이라 (a)는 `schema_invalid`가
+    아닌 사건 enum 위반으로, (b)는 append 자체가 성립하지 않아 실패한다.
+    """
+
+    def _violation_payloads(self, event_name):
+        """폐쇄 위반 data 3종 — 여분 키 / 키 누락 / enum·타입 밖 값."""
+        base = dict(_T147_EVENT_DATA[event_name])
+        extra = dict(base)
+        # 원본 프롬프트·chain-of-thought를 담을 수 있는 여분 키가 이 경로다.
+        extra["raw_prompt"] = "내부 사고 과정 원문"
+        missing = dict(base)
+        missing.pop(sorted(base.keys())[0])
+        bad_enum = dict(base)
+        if event_name == "pm.report":
+            bad_enum["report_type"] = "final_report"
+        else:
+            bad_enum["decision_kind"] = "allow_everything"
+        return {"extra_key": extra, "missing_key": missing, "bad_enum": bad_enum}
+
+    def test_data_closure_violations_rejected_without_partial_write(self):
+        core = _import_core()
+        # [MUST] 거부 사유를 `data` 폐쇄로 좁힌다. 사건 자체가 §1.2 밖이면 어떤
+        # payload든 `schema_invalid`가 나므로, 그 상태로 통과하는 판정은 아무것도
+        # 지키지 않는 거짓 통과다(MV-33은 "폐쇄 키 위반"을 판정한다).
+        for event_name in _T147_NEW_EVENTS:
+            self.assertIn(
+                event_name, set(core.ALLOWED_EVENTS),
+                f"T147 S-4 선행 조건 미성립 — {event_name}가 §1.2 사건 14종에 없어 "
+                f"data 폐쇄 판정에 도달할 수 없다")
+        for event_name in _T147_NEW_EVENTS:
+            allowed_combo = sorted(_T147_ALLOWED_COMBOS[event_name])[0]
+            for label, payload in self._violation_payloads(event_name).items():
+                with self.subTest(event=event_name, violation=label):
+                    with tempfile.TemporaryDirectory() as tmp:
+                        task_path = _abs_task_dir(
+                            tmp, f"t147-s4-{event_name.replace('.', '-')}-{label}")
+                        run_id = "run_t147s4"
+                        self.assertTrue(core.init(str(task_path), run_id).get("ok"))
+                        segment = _segment_of(task_path, run_id)
+                        before = segment.read_bytes()
+
+                        event = _t147_build_event(
+                            event_name, allowed_combo,
+                            request_id=f"req_t147_s4_{label}", data=payload)
+                        result = core.append(str(task_path), run_id, event)
+
+                        self.assertFalse(
+                            result.get("ok", True),
+                            f"T147 S-4 {event_name} data 폐쇄 위반({label})이 수용됨 — {result}")
+                        self.assertEqual(
+                            result.get("error", {}).get("code"), "schema_invalid",
+                            f"T147 S-4 {event_name}/{label} 오류 코드가 schema_invalid가 "
+                            f"아님(MV-33, D-5) — {result}")
+                        self.assertEqual(
+                            segment.read_bytes(), before,
+                            f"T147 S-4 {event_name}/{label} 거부된 사건이 조각을 변경함(부분 쓰기)")
+
+    def test_renderer_templates_are_exact_and_data_only(self):
+        """§1.3.1 — 공용 renderer의 ASCII 템플릿·정렬·nullable 표기를 직접 고정한다."""
+        core = _import_core()
+        self.assertEqual(
+            core.render_event_summary("pm.report", {
+                "report_type": "decision_request",
+                "transition_action": "await_user",
+                "user_input_required": True,
+            }),
+            "pm.report: report_type=decision_request; transition_action=await_user; "
+            "user_input_required=true")
+        self.assertEqual(
+            core.render_event_summary("stop.decision", {
+                "decision_kind": "block_continue",
+                "diagnostics": ["worktree_owned_shadow", "invalid_state"],
+                "block_count": 2,
+                "claim_source": None,
+                "report_event_id": None,
+                "last_activity_event_id": None,
+            }),
+            "stop.decision: decision_kind=block_continue; diagnostics=invalid_state,"
+            "worktree_owned_shadow; block_count=2; claim_source=null; report_event_id=null; "
+            "last_activity_event_id=null")
+        self.assertEqual(
+            core.render_event_summary("stop.decision", {
+                "decision_kind": "allow_inactive",
+                "diagnostics": [],
+                "block_count": 0,
+                "claim_source": "session_start",
+                "report_event_id": "evt_123e4567-e89b-42d3-a456-426614174000",
+                "last_activity_event_id": "evt_123e4567-e89b-42d3-a456-426614174001",
+            }),
+            "stop.decision: decision_kind=allow_inactive; diagnostics=none; block_count=0; "
+            "claim_source=session_start; report_event_id=evt_123e4567-e89b-42d3-a456-426614174000; "
+            "last_activity_event_id=evt_123e4567-e89b-42d3-a456-426614174001")
+
+    def test_cli_rejects_raw_prompt_axes_and_bad_stop_ids_before_write(self):
+        """MV-33/AC-7 — 실제 append CLI가 원문·서술·ID·여분 data를 쓰기 전에 막는다."""
+        raw_prompt = "사용자 원문 프롬프트: 비공개 지시와 내부 사고를 저장하라"
+        for event_name in _T147_NEW_EVENTS:
+            base_data = dict(_T147_EVENT_DATA[event_name])
+            expected_summary = _import_core().render_event_summary(event_name, base_data)
+            cases = {
+                "raw_prompt_summary": {"summary": raw_prompt},
+                "raw_prompt_reason": {"reason": raw_prompt},
+                "raw_prompt_reason_code": {"reason_code": raw_prompt},
+                "raw_prompt_duration_unknown_reason": {"duration_unknown_reason": raw_prompt},
+                "raw_prompt_refs": {"refs": [raw_prompt]},
+                "extra_data": {"data": dict(base_data, raw_prompt=raw_prompt)},
+            }
+            if event_name == "stop.decision":
+                cases["bad_report_event_id"] = {
+                    "data": dict(base_data, report_event_id="evt_not-a-uuid")}
+                cases["bad_last_activity_event_id"] = {
+                    "data": dict(base_data, last_activity_event_id="raw prompt id")}
+
+            for label, overrides in cases.items():
+                with self.subTest(event=event_name, violation=label):
+                    with tempfile.TemporaryDirectory() as tmp:
+                        task_path = _abs_task_dir(tmp, f"t147-s4-cli-{event_name}-{label}")
+                        run_id = "run_t147s4cli"
+                        code0, out0, err0, _ = _run([
+                            "init", "--task", str(task_path), "--run-id", run_id, "--format", "json"])
+                        self.assertEqual(code0, 0, f"T147 S-4 선행 init 실패 — {out0!r} {err0!r}")
+                        segment = _segment_of(task_path, run_id)
+                        before = segment.read_bytes()
+
+                        if event_name == "pm.report":
+                            args = [
+                                "append", "--task", str(task_path), "--run-id", run_id,
+                                "--request-id", f"req_t147_s4_{label}", "--event", event_name,
+                                "--actor-kind", "PM", "--actor-id", "PM",
+                                "--provenance-type", "direct", "--recorded-by-kind", "PM",
+                            ]
+                        else:
+                            args = [
+                                "append", "--task", str(task_path), "--run-id", run_id,
+                                "--request-id", f"req_t147_s4_{label}", "--event", event_name,
+                                "--actor-kind", "tool", "--actor-id", "ownership-tool",
+                                "--provenance-type", "direct", "--recorded-by-kind", "tool",
+                                "--recorded-by-id", "state-tool",
+                            ]
+                        args += ["--summary", overrides.get("summary", expected_summary)]
+                        for flag, key in (("--reason", "reason"), ("--reason-code", "reason_code"),
+                                          ("--duration-unknown-reason", "duration_unknown_reason")):
+                            if key in overrides:
+                                args += [flag, overrides[key]]
+                        if "refs" in overrides:
+                            args += ["--refs"] + overrides["refs"]
+                        args += ["--data", json.dumps(overrides.get("data", base_data), ensure_ascii=False),
+                                 "--format", "json"]
+
+                        code, out, errtext, data = _run(args)
+                        self.assertNotEqual(code, 0, f"T147 S-4 {event_name}/{label}가 CLI에서 수용됨 — {out!r}")
+                        self.assertFalse(data.get("ok", True), f"T147 S-4 {event_name}/{label} ok:true — {data}")
+                        self.assertEqual(data.get("error", {}).get("code"), "schema_invalid",
+                                         f"T147 S-4 {event_name}/{label} 오류 코드 불일치 — {data}")
+                        self.assertEqual(segment.read_bytes(), before,
+                                         f"T147 S-4 {event_name}/{label} 거부 뒤 조각이 변경됨")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# TASK-147 D-4 — `decision_kind`·`diagnostics` 값 집합의 "물리 분리 + 기계 대조".
+#
+# CONTRACT §3.1("`run-log-core`는 … 채널 분기를 갖지 않는다")에 따라 기록 코어는
+# ownership-tool을 import하지 않고 자기 상수로 같은 집합을 둔다. 두 집합이 갈라지면
+# 기록 코어가 SSOT 밖 값을 통과시키거나 정당한 판정을 거부하므로, 이 대조 테스트가
+# 유일한 집행 지점이다 — `RUN_LOG_ERROR_CODES` ↔ `RUN_LOG_STATE_ERROR_CODES`가 이미
+# 쓰는 관례와 같은 형태다.
+# ─────────────────────────────────────────────────────────────────────────────
+
+_OWNERSHIP_DECISIONS_SRC = (
+    _TOOL_DIR.parent / "ownership-tool" / "ownership_tool" / "decisions.py"
+)
+
+
+def _import_ownership_decisions():
+    """SSOT 모듈을 **파일 경로로** 적재한다 — 기록 코어의 import 그래프를 건드리지
+    않고 테스트 프로세스 안에서만 대조하기 위해서다."""
+    spec = importlib.util.spec_from_file_location(
+        "t147_ownership_decisions", _OWNERSHIP_DECISIONS_SRC)
+    module = importlib.util.module_from_spec(spec)
+    # dataclass 정의가 모듈 해석을 위해 sys.modules 등재를 요구한다(Python 3.14).
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+class TestT147D4StopEnumMachineCrossCheck(unittest.TestCase):
+    """TASK-147 D-4 (AC-3, C-5) — 기록 코어의 stop 판정 enum 사본이 SSOT와 같다."""
+
+    def test_stop_decision_kinds_match_ownership_tool_ssot(self):
+        core = _import_core()
+        ssot = _import_ownership_decisions()
+        self.assertEqual(
+            set(core._STOP_DECISION_KINDS), set(ssot.DECISION_KINDS),
+            "T147 D-4 run_log_core._STOP_DECISION_KINDS가 "
+            "ownership_tool/decisions.py DECISION_KINDS와 다름(계약 위반) — "
+            f"코어만: {sorted(set(core._STOP_DECISION_KINDS) - set(ssot.DECISION_KINDS))}, "
+            f"SSOT만: {sorted(set(ssot.DECISION_KINDS) - set(core._STOP_DECISION_KINDS))}")
+        self.assertEqual(
+            len(core._STOP_DECISION_KINDS), 7,
+            f"T147 D-4 decision_kind가 7종이 아님 — {core._STOP_DECISION_KINDS}")
+
+    def test_stop_diagnostics_match_ownership_tool_ssot(self):
+        core = _import_core()
+        ssot = _import_ownership_decisions()
+        self.assertEqual(
+            set(core._STOP_DIAGNOSTICS), set(ssot.DIAGNOSTICS),
+            "T147 D-4 run_log_core._STOP_DIAGNOSTICS가 "
+            "ownership_tool/decisions.py DIAGNOSTICS와 다름(계약 위반) — "
+            f"코어만: {sorted(set(core._STOP_DIAGNOSTICS) - set(ssot.DIAGNOSTICS))}, "
+            f"SSOT만: {sorted(set(ssot.DIAGNOSTICS) - set(core._STOP_DIAGNOSTICS))}")
+        self.assertEqual(
+            len(core._STOP_DIAGNOSTICS), 11,
+            f"T147 D-4 diagnostics가 11종이 아님 — {core._STOP_DIAGNOSTICS}")
+
+    def test_core_source_does_not_import_ownership_tool(self):
+        """§3.1 — 물리 분리의 다른 반쪽. 사본을 두는 이유가 import 회피이므로
+        대조 테스트만으로는 부족하고 결합 0건을 정적으로 함께 고정한다."""
+        source = _CORE_SRC.read_text(encoding="utf-8")
+        for line in source.splitlines():
+            stripped = line.strip()
+            if stripped.startswith("import ") or stripped.startswith("from "):
+                self.assertNotIn(
+                    "ownership", stripped,
+                    f"T147 D-4 기록 코어가 ownership-tool을 import함(§3.1 위반) — {stripped!r}")
 
 
 if __name__ == "__main__":

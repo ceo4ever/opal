@@ -3,9 +3,9 @@
   "module": "test_state_tool_run_log",
   "layer": "test",
   "domain": "opal-pipeline",
-  "description": "state-tool run-log 계약 RED-first 테스트 — T02 관통분(초기화 관통·미지정 경로 바이트 동일성·기존 회귀 기준선)과 T05 보관함분(활성 계약 기록 삭제의 run_log_missing 진단, 중단된 초기화의 보관함 복구와 멱등 재전송, 상태 전이의 state.changed 원자 커밋, 기록 실패 시 전건 보존과 비교착, 128건·4 KiB 상한 집행, 스키마 1.2 등재, 미지정 경로 무영향)을 함께 판정한다. run.sh subprocess 실호출 + 디스크 산출물 검사만 사용하고 mock/patch/MagicMock은 쓰지 않는다(red-first.md §4). 기록 실패는 조각 파일 권한 제거(0o400)로, 보관함 상한은 state.json fixture 주입으로 실제 유발한다. TASK-137 W-3 추가분은 CONTRACT §2.5 `missing_pm_activity` 트리거 조문(앵커 2종·대조 술어·정렬·항목 형태)을 양방향으로 고정한다 — 자동 승인 행 미대응(TASK-137.S-6), 기록 시 해소와 부분 기록 대조군(TASK-137.S-7), override 앵커와 배열 말미 정렬(TASK-137.S-8)은 W-4·W-5의 `_run_log_completeness_check()` 구현으로 GREEN이며, run_log 블록이 없는 1.0/1.1 경로의 응답 키 집합·산출물 불변(TASK-137.S-9)은 명시 키 집합 리터럴 기준선으로 자기 대조하는 보존 가드다. TASK-137 W-7은 보존 가드 4건의 비교 기준을 정정했다 — 개정 전 동작을 움직이는 `HEAD` 참조로 대리하던 3건은 기본값 전환 커밋 f8aba0a 머지와 동시에 자기무효화됐으므로 고정 커밋 상수 `_PRE_RUN_LOG_DEFAULT_SHA`(=f8aba0a 직전 state_tool.py 빌드, 무플래그 init이 run_log 블록을 만들지 않음을 실측 관측해 고정)로 핀했고, 기존 스위트 회귀 가드 1건은 중첩 pytest 기동을 인터프리터 게이트(15fee62)를 통과하는 OPAL 테스트 인터프리터로 바꿨다. 네 가드 모두 원래 검증 축(비활성화 경로 산출물·응답 키 불변, 기존 스위트 실패 0건)을 그대로 유지한다.",
-  "exports": ["TestShadowInitPierce", "TestOffModeInitByteIdentical", "TestExistingRegressionBaseline", "TestRunLogMissingDiagnosis", "TestInterruptedInitRecovery", "TestStateChangedAtomicCommit", "TestOutboxPreservesOnWriteFailure", "TestOutboxLimits", "TestSchema12Registered", "TestOffModeTransitionUnaffected", "TestWorkerDurationDerivedAndConflict", "TestOffModeDurationPathByteIdentical", "TestAutoApprovedRowsEachGetIndependentStateChanged", "TestLogEventSurfaceForPmActivity", "TestPmActivityWhitelistRejection", "TestGateRequestResolvePairing", "TestShadowMissingIsNonBlockingDiagnosis", "TestActiveCompletionEvidenceGate", "TestVerifyCompletenessCheckThreeObservationFields", "TestCompletenessMissingPmActivityAutoApprovedRows", "TestCompletenessMissingPmActivityClearedByLoggedDecision", "TestCompletenessMissingPmActivityOverrideAnchor", "TestSchema10And11WithoutRunLogBlockUnchanged", "TestCompletenessCheckIndependentFromStructuralValidation", "TestModeInventoryEquality"],
-  "scenarios": ["S-1", "S-2", "S-3", "S-4", "S-5", "S-6", "S-7", "S-9", "TEST-SCENARIO(W-7).S-8", "TEST-SCENARIO(W-7).S-9", "TASK-135.S-1", "TASK-135.S-2", "TASK-135.S-3", "TASK-135.S-4", "TASK-135.S-5", "TASK-135.S-6", "TASK-135.S-7", "TASK-135.S-8", "TASK-135.S-9", "TASK-137.S-6", "TASK-137.S-7", "TASK-137.S-8", "TASK-137.S-9"]
+  "description": "state-tool run-log 계약 RED-first 테스트 — T02 관통분(초기화 관통·미지정 경로 바이트 동일성·기존 회귀 기준선)과 T05 보관함분(활성 계약 기록 삭제의 run_log_missing 진단, 중단된 초기화의 보관함 복구와 멱등 재전송, 상태 전이의 state.changed 원자 커밋, 기록 실패 시 전건 보존과 비교착, 128건·4 KiB 상한 집행, 스키마 1.2 등재, 미지정 경로 무영향)을 함께 판정한다. run.sh subprocess 실호출 + 디스크 산출물 검사만 사용하고 mock/patch/MagicMock은 쓰지 않는다(red-first.md §4). 기록 실패는 조각 파일 권한 제거(0o400)로, 보관함 상한은 state.json fixture 주입으로 실제 유발한다. TASK-137 W-3 추가분은 CONTRACT §2.5 `missing_pm_activity` 트리거 조문(앵커 2종·대조 술어·정렬·항목 형태)을 양방향으로 고정한다 — 자동 승인 행 미대응(TASK-137.S-6), 기록 시 해소와 부분 기록 대조군(TASK-137.S-7), override 앵커와 배열 말미 정렬(TASK-137.S-8)은 W-4·W-5의 `_run_log_completeness_check()` 구현으로 GREEN이며, run_log 블록이 없는 1.0/1.1 경로의 응답 키 집합·산출물 불변(TASK-137.S-9)은 명시 키 집합 리터럴 기준선으로 자기 대조하는 보존 가드다. TASK-137 W-7은 보존 가드 4건의 비교 기준을 정정했다 — 개정 전 동작을 움직이는 `HEAD` 참조로 대리하던 3건은 기본값 전환 커밋 f8aba0a 머지와 동시에 자기무효화됐으므로 고정 커밋 상수 `_PRE_RUN_LOG_DEFAULT_SHA`(=f8aba0a 직전 state_tool.py 빌드, 무플래그 init이 run_log 블록을 만들지 않음을 실측 관측해 고정)로 핀했고, 기존 스위트 회귀 가드 1건은 중첩 pytest 기동을 인터프리터 게이트(15fee62)를 통과하는 OPAL 테스트 인터프리터로 바꿨다. 네 가드 모두 원래 검증 축(비활성화 경로 산출물·응답 키 불변, 기존 스위트 실패 0건)을 그대로 유지한다. TASK-147 W-5는 같은 계열 가드 5건(TestOffModeTransitionUnaffected 1건·TestOffModeDurationPathByteIdentical 2건·TestSchema10And11WithoutRunLogBlockUnchanged 2건)의 앰비언트 환경 의존을 보정했다(H-6) — 셸에 세션 식별자가 있으면 advance/mark가 lease를 claim해 <task>/run/.runtime/이 생기고 「run_log 비활성 태스크의 산출물은 종전과 바이트 동일」 단언이 실행 위치에 따라 뒤집혔다. _env_without_session_ids()가 OPAL_SESSION_ID와 claude_adapter.SESSION_ID_ENV를 둘 다 제거한 env를 만들고 _run()/_run_direct()의 새 env 인자가 그것을 병합 없이 그대로 서브프로세스에 넘긴다(dict.update 병합은 키 삭제를 전달하지 못한다). 플랫폼 고유 변수명은 테스트에 하드코딩하지 않고 claude_adapter가 소유한 상수를 spec_from_file_location으로 적재해 얻는다(C-15). 프로덕션 코드는 바꾸지 않았고 다섯 가드의 검증 축도 그대로다.",
+  "exports": ["TestShadowInitPierce", "TestOffModeInitByteIdentical", "TestExistingRegressionBaseline", "TestRunLogMissingDiagnosis", "TestInterruptedInitRecovery", "TestStateChangedAtomicCommit", "TestOutboxPreservesOnWriteFailure", "TestOutboxLimits", "TestSchema12Registered", "TestOffModeTransitionUnaffected", "TestWorkerDurationDerivedAndConflict", "TestOffModeDurationPathByteIdentical", "TestAutoApprovedRowsEachGetIndependentStateChanged", "TestLogEventSurfaceForPmActivity", "TestPmActivityWhitelistRejection", "TestGateRequestResolvePairing", "TestShadowMissingIsNonBlockingDiagnosis", "TestActiveCompletionEvidenceGate", "TestVerifyCompletenessCheckThreeObservationFields", "TestCompletenessMissingPmActivityAutoApprovedRows", "TestCompletenessMissingPmActivityClearedByLoggedDecision", "TestCompletenessMissingPmActivityOverrideAnchor", "TestSchema10And11WithoutRunLogBlockUnchanged", "TestCompletenessCheckIndependentFromStructuralValidation", "TestModeInventoryEquality", "TestT147S5PmReportSurfaceAndLastReportPointer", "TestT147S6PmReportAxisEnumsAndDualValidation", "TestT147S7StopDecisionReceiptDrain", "TestT147S9StopVerdictAxesClassifyFourCases", "TestT147S10UnanchoredActivityAndProgressExclusion"],
+  "scenarios": ["S-1", "S-2", "S-3", "S-4", "S-5", "S-6", "S-7", "S-9", "TEST-SCENARIO(W-7).S-8", "TEST-SCENARIO(W-7).S-9", "TASK-135.S-1", "TASK-135.S-2", "TASK-135.S-3", "TASK-135.S-4", "TASK-135.S-5", "TASK-135.S-6", "TASK-135.S-7", "TASK-135.S-8", "TASK-135.S-9", "TASK-137.S-6", "TASK-137.S-7", "TASK-137.S-8", "TASK-137.S-9", "TASK-147.S-5", "TASK-147.S-6", "TASK-147.S-7", "TASK-147.S-9", "TASK-147.S-10"]
 }
 
 W-7 추가분(123 RED-b, AC-12/C-3/H-6) — 아래 두 클래스가 다루는 `S-8`·`S-9`는 위
@@ -35,7 +35,9 @@ PLAN.md(T02) §테스트 시나리오 초안 근거:
     tests/test_state_tool.py·schema/state.schema.json 미변경
 """
 
+import importlib.util
 import json
+import os
 import pathlib
 import shutil
 import subprocess
@@ -103,10 +105,56 @@ def _pre_revision_state_tool_source(test_case, dest_dir, scenario):
 # 공통 헬퍼
 # ─────────────────────────────────────────────────────────────────────────────
 
-def _run(args, cwd=None):
-    """run.sh를 subprocess로 실행하여 (returncode, stdout_text, stderr_text, parsed_json) 반환."""
+_CLAUDE_ADAPTER_PATH = (
+    _STATE_TOOL_DIR.parent / "ownership-tool" / "ownership_tool" / "claude_adapter.py")
+
+
+def _load_claude_adapter_session_id_env():
+    """`claude_adapter`가 소유한 플랫폼 고유 세션 변수명 상수를 얻는다.
+
+    [MUST] 변수명을 이 테스트에 하드코딩하지 않는다(`~/.opal/PRINCIPLES.md`
+    §Core Stance 플랫폼 격리 / TASK-138 D-18·C-15 — 플랫폼 고유 이름은 어댑터
+    한 곳에만 둔다). 하드코딩하면 플랫폼이 변수명을 바꾸거나 변수가 늘어났을 때
+    아래 가드가 조용히 무력해진다. `test_state_tool_ownership.py`(TASK-147 W-12)가
+    같은 방식을 쓴다."""
+    spec = importlib.util.spec_from_file_location(
+        "ownership_tool.claude_adapter", _CLAUDE_ADAPTER_PATH)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module.SESSION_ID_ENV
+
+
+_CLAUDE_SESSION_ID_ENV = _load_claude_adapter_session_id_env()
+
+
+def _env_without_session_ids():
+    """세션 식별자 계열 변수를 **전부 제거한** 서브프로세스 env를 만든다(H-6).
+
+    왜 필요한가 — 앰비언트 세션 식별자가 있으면 `cmd_advance`/`cmd_mark`의
+    `_claim_task_lease_if_needed()`가 lease를 claim해 `<task>/run/.runtime/`을
+    만든다(TASK-138 W-9). 그러면 "run_log 비활성 태스크의 산출물은 종전과 바이트
+    동일하다"(C-3·C-6)를 판정하는 보존 가드가 **실행 위치에 따라** 뒤집힌다 —
+    Claude 세션 셸에서는 실패하고 변수 없는 CI에서는 통과한다. 검증 대상은
+    run-log 경로의 불변성이지 lease 소유권 배선이 아니므로, 전제를 명시적으로
+    고정한다(프로덕션 코드는 바꾸지 않는다).
+
+    [MUST] `dict(os.environ)` + `update` 병합으로는 이 일을 할 수 없다 — 병합은
+    **키 삭제를 전달하지 못해** 앰비언트 값이 그대로 되살아난다. 그래서 완성된
+    env dict를 그대로 넘긴다(W-12가 밝힌 함정).
+    """
+    env = dict(os.environ)
+    env.pop("OPAL_SESSION_ID", None)
+    env.pop(_CLAUDE_SESSION_ID_ENV, None)
+    return env
+
+
+def _run(args, cwd=None, env=None):
+    """run.sh를 subprocess로 실행하여 (returncode, stdout_text, stderr_text, parsed_json) 반환.
+
+    `env`를 주면 **병합하지 않고 그대로** 서브프로세스 환경으로 쓴다 — 키 삭제를
+    전달해야 하는 호출부(`_env_without_session_ids()`)가 있기 때문이다."""
     cmd = ["bash", str(_RUN_SH)] + args
-    result = subprocess.run(cmd, capture_output=True, text=True, cwd=cwd)
+    result = subprocess.run(cmd, capture_output=True, text=True, cwd=cwd, env=env)
     stdout = result.stdout.strip()
     try:
         data = json.loads(stdout) if stdout else {}
@@ -115,12 +163,14 @@ def _run(args, cwd=None):
     return result.returncode, stdout, result.stderr, data
 
 
-def _run_direct(state_tool_source, args):
+def _run_direct(state_tool_source, args, env=None):
     """지정된 state_tool.py 소스를 venv python으로 직접 실행한다(임의 서브커맨드).
     run.sh 래퍼가 아니라 소스 파일을 직접 지정해, HEAD 사본과 현재본을 동일 조건으로
-    비교할 수 있게 한다(S-9)."""
+    비교할 수 있게 한다(S-9).
+
+    `env`는 `_run()`과 같은 계약이다 — 주면 병합 없이 그대로 쓴다."""
     cmd = [str(_VENV_PYTHON), str(state_tool_source)] + args
-    result = subprocess.run(cmd, capture_output=True, text=True)
+    result = subprocess.run(cmd, capture_output=True, text=True, env=env)
     stdout = result.stdout.strip()
     try:
         data = json.loads(stdout) if stdout else {}
@@ -585,14 +635,19 @@ class TestOffModeTransitionUnaffected(unittest.TestCase):
     트리거만 --run-log-mode off 명시로 옮긴다."""
 
     def test_transition_without_run_log_block_is_unchanged(self):
+        # [H-6] 앰비언트 세션 식별자를 제거한 env로 호출한다 — 변수가 있으면 전이가
+        # lease를 claim해 `run/.runtime/`이 생기고 아래 "run/ 미생성" 단언이 실행
+        # 위치에 따라 뒤집힌다. 검증 축(비활성화 경로 무영향)은 그대로다.
+        clean_env = _env_without_session_ids()
         with tempfile.TemporaryDirectory() as tmp:
             task = _mktask(tmp)
             code, out, errtxt, data = _run(
                 ["init", str(task), "--skill", "oppl", "--mode", "agentic",
-                 "--rows-spec", _ROWS_SPEC, "--run-log-mode", "off"])
+                 "--rows-spec", _ROWS_SPEC, "--run-log-mode", "off"], env=clean_env)
             self.assertEqual(code, 0, f"T05 S-7 init 실패 — {out!r}")
 
-            code, out, errtxt, data = _run(["advance", str(task), "--row", "1"])
+            code, out, errtxt, data = _run(["advance", str(task), "--row", "1"],
+                                           env=clean_env)
             self.assertEqual(code, 0, f"T05 S-7 advance 실패 — {out!r}")
             self.assertNotIn("run_log", data, "T05 S-7 off 태스크 응답에 run_log 키가 생김")
 
@@ -600,7 +655,7 @@ class TestOffModeTransitionUnaffected(unittest.TestCase):
             self.assertNotIn("run_log", state, "T05 S-7 off 태스크 state.json에 run_log 키가 생김")
             self.assertFalse((task / "run").exists(), "T05 S-7 off 태스크에 run/ 생성됨")
 
-            code, out, errtxt, data = _run(["validate", str(task)])
+            code, out, errtxt, data = _run(["validate", str(task)], env=clean_env)
             self.assertEqual(code, 0, f"T05 S-7 off 태스크 validate 실패 — {out!r}")
             self.assertEqual(data.get("violations"), [], f"T05 S-7 위반 발생 — {out!r}")
 
@@ -854,6 +909,11 @@ class TestOffModeDurationPathByteIdentical(unittest.TestCase):
         return state
 
     def _assert_schema_variant_matches_head(self, rows_spec, label):
+        # [H-6] 두 빌드 모두 앰비언트 세션 식별자를 제거한 env로 실행한다. 변수가
+        # 있으면 현재본의 `advance`/`mark`만 lease를 claim해(개정 전 빌드에는 그
+        # 코드가 없다) `run/.runtime/`이 생기고, 아래 "run/ 미생성" 단언이 실행
+        # 위치에 따라 뒤집힌다. 비교 대칭성을 위해 양쪽에 같은 env를 준다.
+        clean_env = _env_without_session_ids()
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = pathlib.Path(tmp)
             head_source = self._head_source(tmp_path)
@@ -880,22 +940,25 @@ class TestOffModeDurationPathByteIdentical(unittest.TestCase):
             # 초 경계를 straddle해도 더 이상 거짓 실패가 나지 않는다(과거 5회 재시도는
             # 비교 방법 자체의 결함을 완화하려던 우회책이었다). 현재본만 --run-log-mode
             # off를 명시한다 — HEAD는 이 값을 모르므로 미지정 그대로 호출한다.
-            code_a, out_a, err_a, _ = _run_direct(head_source, _init_args(task_a))
-            code_b, out_b, err_b, _ = _run_direct(_CURRENT_STATE_TOOL, _init_args(task_b, off=True))
+            code_a, out_a, err_a, _ = _run_direct(
+                head_source, _init_args(task_a), env=clean_env)
+            code_b, out_b, err_b, _ = _run_direct(
+                _CURRENT_STATE_TOOL, _init_args(task_b, off=True), env=clean_env)
             self.assertEqual(code_a, 0, f"S-9({label}) HEAD init 실패 — {out_a!r} {err_a!r}")
             self.assertEqual(code_b, 0, f"S-9({label}) 현재본 init 실패 — {out_b!r} {err_b!r}")
 
             code_a, out_a, err_a, adv_data_a = _run_direct(
-                head_source, ["advance", str(task_a), "--row", "1"])
+                head_source, ["advance", str(task_a), "--row", "1"], env=clean_env)
             code_b, out_b, err_b, adv_data_b = _run_direct(
-                _CURRENT_STATE_TOOL, ["advance", str(task_b), "--row", "1"])
+                _CURRENT_STATE_TOOL, ["advance", str(task_b), "--row", "1"], env=clean_env)
             self.assertEqual(code_a, 0, f"S-9({label}) HEAD advance 실패 — {out_a!r} {err_a!r}")
             self.assertEqual(code_b, 0, f"S-9({label}) 현재본 advance 실패 — {out_b!r} {err_b!r}")
 
             code_a, out_a, err_a, mark_data_a = _run_direct(
-                head_source, ["mark", str(task_a), "--row", "1", "--done"])
+                head_source, ["mark", str(task_a), "--row", "1", "--done"], env=clean_env)
             code_b, out_b, err_b, mark_data_b = _run_direct(
-                _CURRENT_STATE_TOOL, ["mark", str(task_b), "--row", "1", "--done"])
+                _CURRENT_STATE_TOOL, ["mark", str(task_b), "--row", "1", "--done"],
+                env=clean_env)
             self.assertEqual(code_a, 0, f"S-9({label}) HEAD mark 실패 — {out_a!r} {err_a!r}")
             self.assertEqual(code_b, 0, f"S-9({label}) 현재본 mark 실패 — {out_b!r} {err_b!r}")
 
@@ -1677,17 +1740,23 @@ class TestSchema10And11WithoutRunLogBlockUnchanged(unittest.TestCase):
 
     def _assert_transition_path_unchanged(self, task, label, row_args,
                                           advance_keys, mark_keys, schema_version):
+        # [H-6] 앰비언트 세션 식별자를 제거한 env로 전이를 호출한다 — 변수가 있으면
+        # `advance`/`mark`가 lease를 claim해 `run/.runtime/`이 생기고 아래
+        # "run 디렉터리 미생성" 단언이 실행 위치에 따라 뒤집힌다(프로덕션 코드는
+        # 바꾸지 않는다 — 이 가드의 검증 축은 run-log 경로의 산출물 불변이다).
+        clean_env = _env_without_session_ids()
         state_before = _read_state(task)
         self.assertNotIn("run_log", state_before,
                          f"TASK-137.S-9 {label} off 경로인데 run_log 블록이 생성됨 — {state_before.keys()!r}")
         top_keys_before = set(state_before.keys())
 
-        code, out, err, data = _run(["advance", str(task)] + row_args)
+        code, out, err, data = _run(["advance", str(task)] + row_args, env=clean_env)
         self.assertEqual(code, 0, f"TASK-137.S-9 {label} advance 실패 — {out!r} {err!r}")
         self.assertEqual(set(data.keys()), advance_keys,
                          f"TASK-137.S-9 {label} advance 응답 키 집합이 기준선과 다름(C-6) — {sorted(data.keys())!r}")
 
-        code, out, err, data = _run(["mark", str(task)] + row_args + ["--done"])
+        code, out, err, data = _run(["mark", str(task)] + row_args + ["--done"],
+                                    env=clean_env)
         self.assertEqual(code, 0, f"TASK-137.S-9 {label} mark 실패 — {out!r} {err!r}")
         self.assertEqual(set(data.keys()), mark_keys,
                          f"TASK-137.S-9 {label} mark 응답 키 집합이 기준선과 다름(C-6) — {sorted(data.keys())!r}")
@@ -1848,3 +1917,788 @@ class TestModeInventoryEquality(unittest.TestCase):
                 shadow_kinds, active_kinds,
                 f"TASK-135.S-1 shadow/active 관측 가능 event 종류 불일치 — "
                 f"shadow={shadow_kinds!r} active={active_kinds!r}")
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# TASK-147 — PM 보고 표면·`last_report` 포인터·`stop.decision` drain·정지 판정 축
+#
+#   TASK-147.S-5  (AC-2, AC-7, C-2, C-5, H-2) → GREEN: W-5  [구현 전 RED]
+#   TASK-147.S-6  (AC-2, C-2)                 → GREEN: W-5  [구현 전 RED]
+#   TASK-147.S-7  (AC-3, AC-7, C-3, H-4)      → GREEN: W-7  [구현 전 RED]
+#   TASK-147.S-9  (AC-5, C-1)                 → GREEN: W-9  [구현 전 RED]
+#   TASK-147.S-10 (AC-1, C-1)                 → GREEN: W-9  [구현 전 RED]
+#
+# 기대값의 유일한 원천은 개정된 `docs/run-log/CONTRACT.md`다 —
+#   §1.2 사건 14종(`pm.report` A4·3키 / `stop.decision` A7·6키)
+#   §1.4 『`last_report` 포인터 계약』(5키 폐쇄·같은 원자 쓰기·admission 거부 시 미갱신)
+#   §2.4 `state-tool.log-event` 불변식(수용 `--event`는 `activity`·`pm.report` 2종)
+#   §2.5 『정지 판정 목록 5종』과 MV-34
+# 그리고 PLAN.md D-2·D-3·D-7·D-14, W-5·W-7·W-9.
+#
+# 판정 경계(harness/red-first.md §2): `run.sh` subprocess 실호출의 exit code·
+# §2.1 응답 봉투와 디스크 산출물(`state.json` 바이트, 조각 JSONL, stop-guard
+# receipt 파일)만 본다. `state_tool.py`의 내부 함수를 직접 import하지 않으며
+# mock/patch/MagicMock을 쓰지 않는다.
+# ═════════════════════════════════════════════════════════════════════════════
+
+_T147_RUN_LOG_RUN_SH = _STATE_TOOL_DIR.parent / "run-log-tool" / "run.sh"
+
+
+def _run_run_log_tool(args, cwd=None):
+    """`run-log-tool run.sh`를 subprocess로 실호출한다(기록 코어 집행 지점 대조용).
+
+    `run_log_core`를 import하지 않고 CLI 표면만 쓴다 — state-tool 테스트가 기록
+    도구 내부에 결합되지 않게 한다(§3.1 단방향 의존)."""
+    cmd = ["bash", str(_T147_RUN_LOG_RUN_SH)] + args
+    result = subprocess.run(cmd, capture_output=True, text=True, cwd=cwd)
+    stdout = result.stdout.strip()
+    try:
+        data = json.loads(stdout) if stdout else {}
+    except json.JSONDecodeError:
+        data = {"_raw": stdout}
+    return result.returncode, stdout, result.stderr, data
+
+
+# CONTRACT §1.4 — `last_report` 포인터의 폐쇄 5키.
+_T147_LAST_REPORT_KEYS = {
+    "event_id", "report_type", "transition_action", "user_input_required", "at"}
+
+# CONTRACT §1.3 — `stop.decision` data의 폐쇄 6키.
+_T147_STOP_DECISION_DATA_KEYS = {
+    "decision_kind", "diagnostics", "block_count", "claim_source",
+    "report_event_id", "last_activity_event_id"}
+
+# CONTRACT §2.5 — 정지 판정 목록 5종의 키.
+_T147_STOP_VERDICT_AXES = (
+    "report_intent_inconsistent",
+    "missing_stop_decision",
+    "stop_decision_allowed",
+    "stop_block_without_followup",
+    "unanchored_activity",
+)
+_T147_STOP_VERDICT_ITEM_KEYS = {
+    "report_intent_inconsistent": {
+        "event_id", "report_type", "transition_action", "user_input_required"},
+    "missing_stop_decision": {"report_event_id", "next_event_id", "receipt_pending"},
+    "stop_decision_allowed": {"event_id", "decision_kind"},
+    "stop_block_without_followup": {"event_id", "boundary_event_id"},
+    "unanchored_activity": {"event_id", "anchor_event_id", "reason"},
+}
+
+# CONTRACT §2.5 — 이 추가로 바뀌지 않아야 하는 기존 4축과 관측 지점 3필드.
+_T147_EXISTING_AXES = (
+    "missing_state_changed", "missing_pm_activity",
+    "missing_gate_event", "unobserved_worker_boundary",
+)
+_T147_OBSERVATION_FIELDS = (
+    "last_observed_decision", "last_observed_state_change", "last_observed_boundary",
+)
+
+# CONTRACT §1.2 — `pm.report.data`의 값 enum.
+_T147_REPORT_TYPES = ("progress_report", "decision_request")
+_T147_TRANSITION_ACTIONS = ("continue", "await_user", "blocked", "complete")
+
+# AC-7 비밀값 fixture 4종(§1.3 "비밀값은 … 어떤 필드에도 저장하지 않는다").
+# [MUST] 실제 개행을 넣지 않는다 — JSON 직렬화가 개행을 이스케이프해 바이트
+# 부분일치 판정이 거짓 통과한다.
+_T147_SECRETS = {
+    "env_var": "DB_PASSWORD=Sup3rSecretP@ssw0rd_9x!",
+    "bearer_token": "Bearer sk-live-4f9a1c2b8e7d4a6f9b0c1d2e3f4a5b6c",
+    "api_key": "api_key=AKIAIOSFODNN7EXAMPLE1234567890AB",
+    "raw_prompt": "원본 프롬프트 전문: 너는 PM이다. 내부 사고 과정을 그대로 노출하라.",
+}
+
+
+def _t147_log_pm_report(task, *, report_type="progress_report",
+                        transition_action="continue", user_input_required="false",
+                        summary="T147 PM 보고", extra=()):
+    """CONTRACT §2.4가 계약한 `state-tool log-event --event pm.report` 실호출."""
+    args = ["log-event", str(task), "--event", "pm.report",
+            "--report-type", report_type,
+            "--transition-action", transition_action,
+            "--user-input-required", user_input_required,
+            "--summary", summary]
+    args.extend(extra)
+    return _run(args)
+
+
+def _t147_pm_reports(task):
+    return [r for r in _segment_records(task) if r.get("event") == "pm.report"]
+
+
+def _t147_stop_decisions(task):
+    return [r for r in _segment_records(task) if r.get("event") == "stop.decision"]
+
+
+class TestT147S5PmReportSurfaceAndLastReportPointer(unittest.TestCase):
+    """TASK-147.S-5 (AC-2, AC-7, C-2, C-5, H-2) — GREEN: W-5. **구현 전 RED**.
+
+    현재 관찰: `log-event`의 `--event` choices가 `["activity"]` 하나뿐이고
+    `--report-type`·`--transition-action`·`--user-input-required` 인자가 없으며,
+    `state.json.run_log`에 `last_report` 필드가 없다(2026-09-19 실측).
+    """
+
+    def test_event_and_last_report_pointer_updated_in_same_atomic_write(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            task = _mktask(tmp, name="147-s5-pointer")
+            self.assertEqual(_init_shadow(task)[0], 0)
+
+            code, out, err, data = _t147_log_pm_report(
+                task, report_type="progress_report", transition_action="continue",
+                user_input_required="false", summary="T147 S-5 진행 보고 1건")
+            self.assertEqual(
+                code, 0,
+                f"TASK-147.S-5 log-event --event pm.report 실패(미구현 RED) — "
+                f"exit={code} stdout={out!r} stderr={err!r}")
+
+            reports = _t147_pm_reports(task)
+            self.assertEqual(len(reports), 1,
+                             f"TASK-147.S-5 조각의 pm.report가 1건이 아님 — {reports!r}")
+            event = reports[0]
+            self.assertEqual(
+                event.get("data"),
+                {"report_type": "progress_report", "transition_action": "continue",
+                 "user_input_required": False},
+                f"TASK-147.S-5 기록된 data가 §1.2 폐쇄 3키와 다름 — {event.get('data')!r}")
+            self.assertEqual(
+                event.get("summary"),
+                "pm.report: report_type=progress_report; transition_action=continue; "
+                "user_input_required=false",
+                "TASK-147.S-5 pm.report summary가 D-16 renderer 템플릿과 다름")
+            for field in ("reason", "reason_code", "duration_unknown_reason", "refs"):
+                self.assertIsNone(
+                    event.get(field),
+                    f"TASK-147.S-5 pm.report {field}가 D-16 null 폐쇄를 어김")
+
+            block = _read_state(task).get("run_log") or {}
+            pointer = block.get("last_report")
+            self.assertIsInstance(
+                pointer, dict,
+                f"TASK-147.S-5 state.json run_log.last_report가 없음(§1.4) — {block!r}")
+            self.assertEqual(
+                set(pointer.keys()), _T147_LAST_REPORT_KEYS,
+                f"TASK-147.S-5 last_report 키가 5키 폐쇄와 다름(§1.4) — {sorted(pointer)}")
+            self.assertEqual(pointer["event_id"], event["event_id"],
+                             "TASK-147.S-5 포인터가 방금 기록한 사건을 가리키지 않음")
+            self.assertEqual(pointer["report_type"], "progress_report")
+            self.assertEqual(pointer["transition_action"], "continue")
+            self.assertIs(pointer["user_input_required"], False)
+
+    def test_rejected_admission_updates_neither_event_nor_pointer(self):
+        """H-2 — admission이 거부되면 사건도 포인터도 갱신되지 않는다(§1.4 (b))."""
+        with tempfile.TemporaryDirectory() as tmp:
+            task = _mktask(tmp, name="147-s5-rejected")
+            self.assertEqual(_init_shadow(task)[0], 0)
+            before_state = (task / "state.json").read_bytes()
+            before_events = len(_segment_records(task))
+
+            code, out, err, data = _t147_log_pm_report(
+                task, extra=("--stage", "x" * 5000))  # 항목당 UTF-8 4 KiB 상한 초과(§1.4)
+            self.assertNotEqual(
+                code, 0,
+                f"TASK-147.S-5 4 KiB 초과 보고가 수용됨 — stdout={out!r}")
+            # [MUST] 거부 사유를 admission 한도로 좁힌다. `--report-type` 인자
+            # 자체가 없어 argparse가 내는 사용법 오류로 통과하면 이 가드는
+            # 아무것도 지키지 않는다(거짓 통과).
+            error_code = (data.get("error", {}).get("code")
+                          if isinstance(data.get("error"), dict) else data.get("error"))
+            self.assertEqual(
+                error_code, "event_too_large",
+                f"TASK-147.S-5 거부 사유가 §1.4 항목 4 KiB 상한(event_too_large)이 "
+                f"아님 — exit={code} stdout={out!r} stderr={err!r}")
+            self.assertEqual(
+                (task / "state.json").read_bytes(), before_state,
+                "TASK-147.S-5 거부됐는데 state.json이 변경됨(포인터 누수)")
+            self.assertEqual(
+                len(_segment_records(task)), before_events,
+                "TASK-147.S-5 거부됐는데 조각에 사건이 추가됨")
+            self.assertIsNone(
+                (_read_state(task).get("run_log") or {}).get("last_report"),
+                "TASK-147.S-5 거부됐는데 last_report 포인터가 갱신됨")
+
+    def test_secret_in_summary_absent_from_segment_pending_and_pointer(self):
+        """AC-7 — 조각·`pending_events`·`last_report` 어디에도 평문 0건."""
+        for kind, secret in _T147_SECRETS.items():
+            with self.subTest(kind=kind):
+                with tempfile.TemporaryDirectory() as tmp:
+                    task = _mktask(tmp, name=f"147-s5-secret-{kind}")
+                    self.assertEqual(_init_shadow(task)[0], 0)
+
+                    code, out, err, data = _t147_log_pm_report(
+                        task, summary=f"T147 S-5 {kind} 투입: {secret}")
+                    self.assertEqual(
+                        code, 0,
+                        f"TASK-147.S-5 {kind} log-event 실패(미구현 RED) — {out!r} {err!r}")
+
+                    state = _read_state(task)
+                    block = state.get("run_log") or {}
+                    pending_text = json.dumps(block.get("pending_events") or [],
+                                              ensure_ascii=False)
+                    pointer_text = json.dumps(block.get("last_report"), ensure_ascii=False)
+                    segment_text = "".join(
+                        seg.read_text(encoding="utf-8")
+                        for seg in sorted((task / "run").glob("run-log-*.jsonl")))
+
+                    self.assertNotIn(secret, segment_text,
+                                     f"TASK-147.S-5 {kind}: 조각 파일에 평문이 남음")
+                    self.assertNotIn(secret, pending_text,
+                                     f"TASK-147.S-5 {kind}: pending_events에 평문이 남음")
+                    self.assertNotIn(secret, pointer_text,
+                                     f"TASK-147.S-5 {kind}: last_report 포인터에 평문이 남음")
+
+    def test_reason_and_refs_are_rejected_before_any_write(self):
+        """D-16 — pm.report의 닫힌 서술 축을 여는 CLI 인자는 schema_invalid다."""
+        for option, value in (
+            ("--reason", _T147_SECRETS["raw_prompt"]),
+            ("--refs", "evidence/raw-prompt.txt"),
+        ):
+            with self.subTest(option=option):
+                with tempfile.TemporaryDirectory() as tmp:
+                    task = _mktask(tmp, name=f"147-s5-reject-{option[2:]}")
+                    self.assertEqual(_init_shadow(task)[0], 0)
+                    before_state = (task / "state.json").read_bytes()
+                    before_segments = [p.read_bytes() for p in sorted(
+                        (task / "run").glob("run-log-*.jsonl"))]
+
+                    code, out, err, data = _t147_log_pm_report(
+                        task, extra=(option, value))
+                    self.assertNotEqual(code, 0,
+                                        f"TASK-147.S-5 {option}가 수용됨 — {out!r}")
+                    error_code = (data.get("error", {}).get("code")
+                                  if isinstance(data.get("error"), dict)
+                                  else data.get("error"))
+                    self.assertEqual(error_code, "schema_invalid",
+                                     f"TASK-147.S-5 {option} 거부 코드가 schema_invalid가 아님 — {out!r} {err!r}")
+                    self.assertEqual((task / "state.json").read_bytes(), before_state,
+                                     f"TASK-147.S-5 {option} 거부가 state.json을 변경함")
+                    self.assertEqual(
+                        [p.read_bytes() for p in sorted((task / "run").glob("run-log-*.jsonl"))],
+                        before_segments,
+                        f"TASK-147.S-5 {option} 거부가 조각 바이트를 변경함")
+
+
+class TestT147S6PmReportAxisEnumsAndDualValidation(unittest.TestCase):
+    """TASK-147.S-6 (AC-2, C-2) — GREEN: W-5. **구현 전 RED**.
+
+    3축의 유효 조합 전수(2 × 4 × 2 = 16)가 각각 식별 가능한 값으로 기록·조회되고,
+    enum 밖 값은 앞단 `_build_pm_report_data()`(= `state-tool log-event`)와 기록
+    코어(= `run-log-tool append`)가 **같은** `schema_invalid`를 낸다(§1.3 중복 방어
+    "두 지점의 판정 결과는 항상 일치한다").
+    """
+
+    def test_all_valid_axis_combinations_recorded_distinctly(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            task = _mktask(tmp, name="147-s6-enums")
+            self.assertEqual(_init_shadow(task)[0], 0)
+
+            expected = []
+            for report_type in _T147_REPORT_TYPES:
+                for transition_action in _T147_TRANSITION_ACTIONS:
+                    for flag, value in (("true", True), ("false", False)):
+                        code, out, err, _ = _t147_log_pm_report(
+                            task, report_type=report_type,
+                            transition_action=transition_action,
+                            user_input_required=flag,
+                            summary=f"T147 S-6 {report_type}/{transition_action}/{flag}")
+                        self.assertEqual(
+                            code, 0,
+                            f"TASK-147.S-6 유효 조합 {report_type}/{transition_action}/"
+                            f"{flag} 거부됨(미구현 RED) — {out!r} {err!r}")
+                        expected.append({
+                            "report_type": report_type,
+                            "transition_action": transition_action,
+                            "user_input_required": value,
+                        })
+
+            recorded = [r.get("data") for r in _t147_pm_reports(task)]
+            self.assertEqual(
+                recorded, expected,
+                f"TASK-147.S-6 기록된 3축 값이 입력과 다름 — {recorded!r}")
+
+    def test_enum_violation_gets_same_schema_invalid_at_both_enforcement_points(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            task = _mktask(tmp, name="147-s6-enum-violation")
+            self.assertEqual(_init_shadow(task)[0], 0)
+            run_id = ((_read_state(task).get("run_log") or {}).get("active_run_id"))
+            self.assertTrue(run_id, "TASK-147.S-6 active_run_id 부재")
+
+            bad_payloads = [
+                {"report_type": "final_report", "transition_action": "continue",
+                 "user_input_required": False},
+                {"report_type": "progress_report", "transition_action": "retry",
+                 "user_input_required": False},
+                {"report_type": "progress_report", "transition_action": "continue",
+                 "user_input_required": "false"},
+                {"report_type": "progress_report", "transition_action": "continue",
+                 "user_input_required": False, "raw_prompt": "내부 사고 과정 원문"},
+            ]
+
+            for i, payload in enumerate(bad_payloads):
+                with self.subTest(payload=payload):
+                    before_state = (task / "state.json").read_bytes()
+                    before_events = len(_segment_records(task))
+
+                    # ① 앞단 중복 방어 — state-tool log-event
+                    code_f, out_f, err_f, data_f = _run([
+                        "log-event", str(task), "--event", "pm.report",
+                        "--summary", f"T147 S-6 위반 {i}",
+                        "--data", json.dumps(payload, ensure_ascii=False)])
+                    self.assertNotEqual(
+                        code_f, 0,
+                        f"TASK-147.S-6 앞단이 enum 밖 payload를 수용함 — {out_f!r}")
+                    front_code = (data_f.get("error", {}).get("code")
+                                  if isinstance(data_f.get("error"), dict)
+                                  else data_f.get("error"))
+                    self.assertEqual(
+                        front_code, "schema_invalid",
+                        f"TASK-147.S-6 앞단 오류 코드가 schema_invalid가 아님 — {out_f!r} {err_f!r}")
+
+                    # ② 집행 지점 — 기록 코어(run-log-tool append)
+                    code_c, out_c, err_c, data_c = _run_run_log_tool([
+                        "append", "--task", str(task), "--run-id", run_id,
+                        "--request-id", f"req_t147_s6_{i}", "--event", "pm.report",
+                        "--actor-kind", "PM", "--actor-id", "PM",
+                        "--provenance-type", "direct", "--recorded-by-kind", "PM",
+                        "--summary", f"T147 S-6 위반 {i}",
+                        "--data", json.dumps(payload, ensure_ascii=False),
+                        "--format", "json"])
+                    self.assertNotEqual(
+                        code_c, 0,
+                        f"TASK-147.S-6 기록 코어가 enum 밖 payload를 수용함 — {out_c!r}")
+                    self.assertEqual(
+                        data_c.get("error", {}).get("code"), "schema_invalid",
+                        f"TASK-147.S-6 코어 오류 코드가 schema_invalid가 아님 — {out_c!r}")
+
+                    self.assertEqual(
+                        (task / "state.json").read_bytes(), before_state,
+                        "TASK-147.S-6 거부됐는데 state.json이 변경됨")
+                    self.assertEqual(
+                        len(_segment_records(task)), before_events,
+                        "TASK-147.S-6 거부됐는데 조각에 사건이 추가됨")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# TASK-147.S-7 / S-9 / S-10 공통 — 프로젝트 루트 캡슐과 조각 사건 fixture
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _t147_project_capsule(tmp, name):
+    """`<tmp>/proj/tasks/<name>` 캡슐을 `state-tool init --run-log-mode shadow`로
+    실제로 만들고 (project_root, task_path)를 돌려준다.
+
+    stop-guard receipt는 `<project_root>/.opal/run/.runtime/stop-guard/`에 있으므로
+    (ownership_core.stop_receipt_path) 캡슐을 프로젝트 루트 아래 `tasks/`에 둔다 —
+    실물 배치와 같은 형태여야 drain 경로가 receipt를 찾을 수 있다."""
+    project_root = pathlib.Path(tmp) / "proj"
+    task = project_root / "tasks" / name
+    task.mkdir(parents=True)
+    code, out, err, _ = _init_shadow(task)
+    assert code == 0, f"init 실패 — {out!r} {err!r}"
+    return project_root, task
+
+
+def _t147_next_sequence(task):
+    records = _segment_records(task)
+    return max([r.get("sequence") or 0 for r in records] + [0]) + 1
+
+
+def _t147_seg_event(task, event_name, *, sequence, actor, recorded_by, data,
+                    summary, timestamp, caused_by_event_id=None, event_id=None,
+                    actor_sequence=1):
+    """CONTRACT §1.1 공통 필드를 갖춘 사건 1건을 활성 조각에 직접 append한다.
+
+    `pm.report`·`stop.decision`을 방출하는 정규 CLI 경로가 아직 없으므로(W-4·W-5·W-7
+    미구현) §2.5 읽기 판정이 전제하는 사건 조각을 실제 디스크 파일로 만든다 —
+    mock/patch가 아니라 실제 조각 조작이며, 기존 `_append_segment_line` 관례와 같다."""
+    block = _read_state(task).get("run_log") or {}
+    event = {
+        "schema_version": "1.0",
+        "event_id": event_id or f"evt_{uuid.uuid4()}",
+        "request_id": f"req_{uuid.uuid4()}",
+        "sequence": sequence,
+        "actor_sequence": actor_sequence,
+        "timestamp": timestamp,
+        "task_id": pathlib.Path(task).name,
+        "run_id": block.get("active_run_id"),
+        "parent_run_id": None,
+        "worker_run_id": None,
+        "caused_by_event_id": caused_by_event_id,
+        "stage": "EXECUTE",
+        "task_step": None,
+        "work_item": None,
+        "gate_id": None,
+        "event": event_name,
+        "actor": actor,
+        "provenance": {"type": "direct", "recorded_by": recorded_by,
+                       "worker_log_token_id": None, "source": None},
+        "summary": summary,
+        "reason": None,
+        "reason_code": None,
+        "duration_ms": None,
+        "duration_source": None,
+        "duration_unknown_reason": None,
+        "refs": [],
+        "data": data,
+    }
+    _append_segment_line(task, event)
+    return event
+
+
+_T147_PM_ACTOR = {"kind": "PM", "id": "PM", "provider": None, "session_id": None}
+_T147_PM_RECORDED_BY = {"kind": "PM", "id": "PM"}
+_T147_TOOL_ACTOR = {"kind": "tool", "id": "ownership-tool",
+                    "provider": None, "session_id": None}
+_T147_TOOL_RECORDED_BY = {"kind": "tool", "id": "state-tool"}
+
+
+def _t147_report_event(task, *, sequence, report_type, transition_action,
+                       user_input_required, timestamp, summary="T147 보고"):
+    return _t147_seg_event(
+        task, "pm.report", sequence=sequence, actor=_T147_PM_ACTOR,
+        recorded_by=_T147_PM_RECORDED_BY, summary=summary, timestamp=timestamp,
+        data={"report_type": report_type, "transition_action": transition_action,
+              "user_input_required": user_input_required})
+
+
+def _t147_decision_event(task, *, sequence, decision_kind, timestamp,
+                         report_event_id=None, last_activity_event_id=None,
+                         summary="T147 정지 판정"):
+    event_id = f"evt_{uuid.uuid4()}"
+    return _t147_seg_event(
+        task, "stop.decision", sequence=sequence, actor=_T147_TOOL_ACTOR,
+        recorded_by=_T147_TOOL_RECORDED_BY, summary=summary, timestamp=timestamp,
+        event_id=event_id, caused_by_event_id=report_event_id,
+        data={"decision_kind": decision_kind, "diagnostics": [], "block_count": 1,
+              "claim_source": "state_transition",
+              "report_event_id": report_event_id,
+              "last_activity_event_id": last_activity_event_id})
+
+
+def _t147_activity_event(task, *, sequence, timestamp, summary, kind="progress"):
+    return _t147_seg_event(
+        task, "activity", sequence=sequence, actor=_T147_PM_ACTOR,
+        recorded_by=_T147_PM_RECORDED_BY, summary=summary, timestamp=timestamp,
+        data={"kind": kind})
+
+
+def _t147_axes(data):
+    """응답에서 정지 판정 5축만 뽑는다. 축이 없으면 KeyError 대신 sentinel."""
+    return {axis: data.get(axis, "<missing>") for axis in _T147_STOP_VERDICT_AXES}
+
+
+def _assert_t147_stop_verdict_item_shapes(test_case, data, scenario):
+    """D-14 5축 항목은 축별 고정 키만 반환한다(자유문 복사 방지 포함)."""
+    for axis, expected_keys in _T147_STOP_VERDICT_ITEM_KEYS.items():
+        for item in data.get(axis) or []:
+            test_case.assertEqual(
+                set(item), expected_keys,
+                f"{scenario} {axis} 항목 키가 고정 계약과 다름 — {item!r}")
+
+
+class TestT147S7StopDecisionReceiptDrain(unittest.TestCase):
+    """TASK-147.S-7 (AC-3, AC-7, C-3, H-4) — GREEN: W-7. **구현 전 RED**.
+
+    훅 receipt의 `pending_decisions[]` 1건이 `state-tool` 상태 전이 1회에서
+    `stop.decision`(조합 A7)으로 조각에 커밋되고 receipt에서 제거된다.
+    `caused_by_event_id`는 대응 `pm.report`의 `event_id`이고,
+    `data.last_activity_event_id`는 판정 시각 직전 마지막 `activity`를 가리킨다.
+    `data`는 폐쇄 6키만 가지며 receipt에 섞인 자유 서술·비밀값은 조각에 평문 0건이다.
+
+    현재 관찰: `StopReceipt`에 `pending_decisions` 필드 자체가 없고
+    `run_log_commit()`에 drain 경로가 없다(2026-09-19 실측).
+    """
+
+    def test_pending_decision_is_committed_and_removed_on_state_transition(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            project_root, task = _t147_project_capsule(tmp, "147-s7-drain")
+
+            # ① 판정 입력이 된 pm.report와 그 뒤의 activity를 실제 조각에 둔다.
+            report = _t147_report_event(
+                task, sequence=_t147_next_sequence(task),
+                report_type="progress_report", transition_action="continue",
+                user_input_required=False, timestamp="2026-09-19T01:00:00.000Z")
+            activity = _t147_activity_event(
+                task, sequence=_t147_next_sequence(task),
+                timestamp="2026-09-19T01:01:00.000Z", summary="T147 S-7 직전 활동")
+
+            # ② 훅 receipt에 판정 1건을 적재한다. 자유 서술·비밀값을 일부러 섞는다.
+            session_id = "sess-t147-s7"
+            receipt_path = (project_root / ".opal" / "run" / ".runtime" /
+                            "stop-guard" / f"{session_id}.json")
+            receipt_path.parent.mkdir(parents=True, exist_ok=True)
+            receipt_path.write_text(json.dumps({
+                "session_id": session_id,
+                "fingerprint": "f" * 64,
+                "decision_kind": "block_continue",
+                "decided_at": "2026-09-19T01:02:00.000Z",
+                "block_count": 1,
+                # Stop 봉투의 원문도 receipt에 남을 수 있지만 W-7 drain은 이를
+                # 사건으로 복사하지 않는다(AC-7).
+                "last_assistant_message": (
+                    f"T147 S-7 fixture assistant message: {_T147_SECRETS['raw_prompt']}"),
+                "pending_decisions": [{
+                    "decision_kind": "block_continue",
+                    "diagnostics": ["no_progress_same_fingerprint"],
+                    "block_count": 1,
+                    "claim_source": "state_transition",
+                    "report_event_id": report["event_id"],
+                    "task_path": str(task),
+                    "decided_at": "2026-09-19T01:02:00.000Z",
+                    # 폐쇄 6키 밖 — 커밋된 사건에 실려서는 안 되는 자유 서술·비밀값
+                    "note": f"T147 S-7 자유 서술 {_T147_SECRETS['raw_prompt']}",
+                    "secret": _T147_SECRETS["bearer_token"],
+                }],
+            }, ensure_ascii=False), encoding="utf-8")
+
+            # ③ 상태 전이 1회 — drain 경로 진입
+            env = dict(os.environ, OPAL_SESSION_ID=session_id)
+            cmd = ["bash", str(_RUN_SH), "mark", str(task), "--row", "1", "--done"]
+            proc = subprocess.run(cmd, capture_output=True, text=True, env=env)
+            self.assertEqual(
+                proc.returncode, 0,
+                f"TASK-147.S-7 상태 전이 실패 — stdout={proc.stdout!r} stderr={proc.stderr!r}")
+
+            decisions_recorded = _t147_stop_decisions(task)
+            self.assertEqual(
+                len(decisions_recorded), 1,
+                f"TASK-147.S-7 drain된 stop.decision이 1건이 아님(미구현 RED) — "
+                f"{[r.get('event') for r in _segment_records(task)]}")
+            decision = decisions_recorded[0]
+
+            self.assertEqual(
+                decision.get("caused_by_event_id"), report["event_id"],
+                "TASK-147.S-7 caused_by_event_id가 대응 pm.report를 가리키지 않음")
+            self.assertEqual(
+                decision.get("actor", {}).get("id"), "ownership-tool",
+                f"TASK-147.S-7 actor.id가 ownership-tool이 아님(§1.1.1) — {decision.get('actor')}")
+            self.assertEqual(
+                decision.get("provenance", {}).get("recorded_by"),
+                {"kind": "tool", "id": "state-tool"},
+                f"TASK-147.S-7 recorded_by가 state-tool이 아님 — {decision.get('provenance')}")
+            self.assertEqual(
+                set((decision.get("data") or {}).keys()), _T147_STOP_DECISION_DATA_KEYS,
+                f"TASK-147.S-7 data가 폐쇄 6키와 다름(§1.3) — {decision.get('data')!r}")
+            self.assertEqual(
+                decision["data"].get("last_activity_event_id"), activity["event_id"],
+                "TASK-147.S-7 last_activity_event_id가 판정 직전 activity를 가리키지 않음")
+            self.assertEqual(
+                decision["data"].get("report_event_id"), report["event_id"],
+                "TASK-147.S-7 report_event_id가 대응 pm.report와 다름")
+            self.assertEqual(
+                decision.get("summary"),
+                ("stop.decision: decision_kind=block_continue; "
+                 "diagnostics=no_progress_same_fingerprint; block_count=1; "
+                 "claim_source=state_transition; report_event_id="
+                 f"{report['event_id']}; last_activity_event_id={activity['event_id']}"),
+                "TASK-147.S-7 summary가 D-16 renderer 템플릿과 다름")
+            self.assertEqual(
+                decision.get("event_id"), decision.get("request_id"),
+                "TASK-147.S-7 stop.decision event_id/request_id가 사전 확정 동일값이 아님")
+            for field in ("reason", "reason_code", "duration_unknown_reason", "refs"):
+                self.assertIsNone(
+                    decision.get(field),
+                    f"TASK-147.S-7 {field}가 D-16의 null 폐쇄를 어김 — {decision.get(field)!r}")
+
+            remaining = json.loads(receipt_path.read_text(encoding="utf-8"))
+            self.assertEqual(
+                remaining.get("pending_decisions") or [], [],
+                f"TASK-147.S-7 커밋 후 receipt에 판정이 남아 있음 — {remaining!r}")
+
+            segment_text = "".join(
+                seg.read_text(encoding="utf-8")
+                for seg in sorted((task / "run").glob("run-log-*.jsonl")))
+            pending_text = json.dumps((_read_state(task).get("run_log") or {}).get("pending_events") or [],
+                                      ensure_ascii=False)
+            for kind in ("raw_prompt", "bearer_token"):
+                self.assertNotIn(
+                    _T147_SECRETS[kind], segment_text,
+                    f"TASK-147.S-7 receipt의 {kind} 평문이 조각에 실림(AC-7 위반)")
+                self.assertNotIn(
+                    _T147_SECRETS[kind], pending_text,
+                    f"TASK-147.S-7 receipt의 {kind} 평문이 pending_events에 실림(AC-7 위반)")
+
+
+class TestT147S9StopVerdictAxesClassifyFourCases(unittest.TestCase):
+    """TASK-147.S-9 (AC-5, C-1) — GREEN: W-9. **구현 전 RED**.
+
+    MV-34 — 4분류 재현 조각 4벌이 각각 `report_intent_inconsistent` /
+    `missing_stop_decision` / `stop_decision_allowed` / `stop_block_without_followup`
+    **하나에만** 잡히고, 정상 흐름 조각에서는 5축 전부 빈 배열이다. 기존 4축과
+    관측 지점 3필드는 불변이며 read-only·비차단(exit 0)이다.
+
+    현재 관찰: `verify --run-log-completeness-check` 응답에 5축이 하나도 없다
+    (2026-09-19 실측 — 응답 키는 기존 4축 + 관측 3필드뿐).
+    """
+
+    def _assert_exactly_one_axis(self, task, expected_axis, scenario):
+        code, out, err, data, unchanged = _completeness(task)
+        self.assertEqual(code, 0,
+                         f"{scenario} 비차단(exit 0) 위반 — exit={code} {out!r} {err!r}")
+        self.assertTrue(unchanged, f"{scenario} read-only 위반 — state.json이 변경됨")
+        _assert_t147_stop_verdict_item_shapes(self, data, scenario)
+        for axis in _T147_STOP_VERDICT_AXES:
+            self.assertIn(axis, data, f"{scenario} 판정 축 {axis} 부재(§2.5) — {sorted(data)}")
+        for field in _T147_EXISTING_AXES + _T147_OBSERVATION_FIELDS:
+            self.assertIn(field, data,
+                          f"{scenario} 기존 축·관측 필드 {field}가 사라짐(§2.5 불변) — {sorted(data)}")
+        axes = _t147_axes(data)
+        self.assertTrue(axes[expected_axis],
+                        f"{scenario} {expected_axis}에 잡히지 않음 — {axes!r}")
+        for axis, items in axes.items():
+            if axis == expected_axis:
+                continue
+            self.assertEqual(items, [],
+                             f"{scenario} {axis}에도 잡힘(하나에만 잡혀야 함) — {axes!r}")
+
+    def test_report_intent_inconsistent_only(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            task = _mktask(tmp, name="147-s9-intent")
+            self.assertEqual(_init_shadow(task)[0], 0)
+            # decision_request ∧ transition_action=continue — 뒤 앵커를 두지 않아
+            # missing_stop_decision의 앵커 쌍이 성립하지 않는다(§2.5).
+            _t147_report_event(
+                task, sequence=_t147_next_sequence(task),
+                report_type="decision_request", transition_action="continue",
+                user_input_required=True, timestamp="2026-09-19T02:00:00.000Z")
+            self._assert_exactly_one_axis(task, "report_intent_inconsistent",
+                                          "TASK-147.S-9(a)")
+
+    def test_missing_stop_decision_only(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            task = _mktask(tmp, name="147-s9-missing")
+            self.assertEqual(_init_shadow(task)[0], 0)
+            _t147_report_event(
+                task, sequence=_t147_next_sequence(task),
+                report_type="progress_report", transition_action="await_user",
+                user_input_required=False, timestamp="2026-09-19T02:00:00.000Z")
+            # 보고보다 늦은 사건(뒤 앵커)은 있는데 그 사이에 stop.decision이 없다.
+            _t147_activity_event(
+                task, sequence=_t147_next_sequence(task),
+                timestamp="2026-09-19T02:05:00.000Z", summary="T147 S-9 다음 턴 활동")
+            self._assert_exactly_one_axis(task, "missing_stop_decision",
+                                          "TASK-147.S-9(b)")
+
+    def test_stop_decision_allowed_only(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            task = _mktask(tmp, name="147-s9-allowed")
+            self.assertEqual(_init_shadow(task)[0], 0)
+            report = _t147_report_event(
+                task, sequence=_t147_next_sequence(task),
+                report_type="decision_request", transition_action="await_user",
+                user_input_required=True, timestamp="2026-09-19T02:00:00.000Z")
+            _t147_decision_event(
+                task, sequence=_t147_next_sequence(task),
+                decision_kind="allow_await_user",
+                timestamp="2026-09-19T02:01:00.000Z",
+                report_event_id=report["event_id"])
+            self._assert_exactly_one_axis(task, "stop_decision_allowed",
+                                          "TASK-147.S-9(c)")
+
+    def test_stop_block_without_followup_only(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            task = _mktask(tmp, name="147-s9-block")
+            self.assertEqual(_init_shadow(task)[0], 0)
+            report = _t147_report_event(
+                task, sequence=_t147_next_sequence(task),
+                report_type="progress_report", transition_action="continue",
+                user_input_required=False, timestamp="2026-09-19T02:00:00.000Z")
+            _t147_decision_event(
+                task, sequence=_t147_next_sequence(task),
+                decision_kind="block_continue",
+                timestamp="2026-09-19T02:01:00.000Z",
+                report_event_id=report["event_id"])
+            # 차단 뒤 run 종료까지 activity·state.changed 0건.
+            self._assert_exactly_one_axis(task, "stop_block_without_followup",
+                                          "TASK-147.S-9(d)")
+
+    def test_normal_flow_leaves_all_five_axes_empty(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            task = _mktask(tmp, name="147-s9-normal")
+            self.assertEqual(_init_shadow(task)[0], 0)
+            # 상태 전이(state.changed)에 앵커된 활동 + 의도가 일관된 마지막 보고.
+            self.assertEqual(_run(["advance", str(task), "--row", "1"])[0], 0)
+            _t147_activity_event(
+                task, sequence=_t147_next_sequence(task),
+                timestamp="2026-09-19T03:00:00.000Z", summary="T147 S-9 앵커된 활동")
+            _t147_report_event(
+                task, sequence=_t147_next_sequence(task),
+                report_type="decision_request", transition_action="await_user",
+                user_input_required=True, timestamp="2026-09-19T03:01:00.000Z")
+
+            code, out, err, data, unchanged = _completeness(task)
+            self.assertEqual(code, 0, f"TASK-147.S-9(e) exit 0 위반 — {out!r} {err!r}")
+            self.assertTrue(unchanged, "TASK-147.S-9(e) read-only 위반")
+            for axis in _T147_STOP_VERDICT_AXES:
+                self.assertIn(axis, data,
+                              f"TASK-147.S-9(e) 판정 축 {axis} 부재(§2.5) — {sorted(data)}")
+                self.assertEqual(data[axis], [],
+                                 f"TASK-147.S-9(e) 정상 흐름인데 {axis}가 비어 있지 않음 — {data[axis]!r}")
+
+
+class TestT147S10UnanchoredActivityAndProgressExclusion(unittest.TestCase):
+    """TASK-147.S-10 (AC-1, C-1) — GREEN: W-9. **구현 전 RED**.
+
+    D-10(b) 오인 방지 — 동일 결과가 반복되는 `activity`와 어떤 상태 전이에도
+    앵커되지 않는 `activity`는 `unanchored_activity`에 잡히고 진행으로 계산되지
+    않는다. `pm.report`·`stop.decision`은 `activity`가 아니므로(§1.2) 이 판정의
+    대상이 아니고 어떤 진행 집계에도 포함되지 않는다.
+    """
+
+    def test_repeated_and_unanchored_activities_are_flagged(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            task = _mktask(tmp, name="147-s10-unanchored")
+            self.assertEqual(_init_shadow(task)[0], 0)
+
+            repeated = []
+            for i in range(3):
+                repeated.append(_t147_activity_event(
+                    task, sequence=_t147_next_sequence(task),
+                    timestamp=f"2026-09-19T04:0{i}:00.000Z",
+                    summary="T147 S-10 동일 결과 반복"))
+            drifting = _t147_activity_event(
+                task, sequence=_t147_next_sequence(task),
+                timestamp="2026-09-19T04:10:00.000Z",
+                summary="T147 S-10 어떤 상태 전이에도 앵커되지 않는 활동")
+
+            code, out, err, data, unchanged = _completeness(task)
+            self.assertEqual(code, 0, f"TASK-147.S-10 exit 0 위반 — {out!r} {err!r}")
+            self.assertTrue(unchanged, "TASK-147.S-10 read-only 위반")
+            _assert_t147_stop_verdict_item_shapes(self, data, "TASK-147.S-10(a)")
+            self.assertIn("unanchored_activity", data,
+                          f"TASK-147.S-10 unanchored_activity 축 부재(§2.5) — {sorted(data)}")
+            _assert_t147_stop_verdict_item_shapes(self, data, "TASK-147.S-10(b)")
+            items_text = json.dumps(data["unanchored_activity"], ensure_ascii=False)
+            self.assertTrue(
+                data["unanchored_activity"],
+                f"TASK-147.S-10 반복·무앵커 activity가 잡히지 않음 — {data!r}")
+            for event in repeated[1:] + [drifting]:
+                self.assertIn(
+                    event["event_id"], items_text,
+                    f"TASK-147.S-10 {event['summary']!r}가 unanchored_activity에 없음 — {items_text}")
+
+    def test_pm_report_and_stop_decision_are_not_counted_as_activity(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            task = _mktask(tmp, name="147-s10-exclusion")
+            self.assertEqual(_init_shadow(task)[0], 0)
+
+            report = _t147_report_event(
+                task, sequence=_t147_next_sequence(task),
+                report_type="progress_report", transition_action="continue",
+                user_input_required=False, timestamp="2026-09-19T05:00:00.000Z")
+            decision = _t147_decision_event(
+                task, sequence=_t147_next_sequence(task),
+                decision_kind="block_continue",
+                timestamp="2026-09-19T05:01:00.000Z",
+                report_event_id=report["event_id"])
+
+            code, out, err, data, unchanged = _completeness(task)
+            self.assertEqual(code, 0, f"TASK-147.S-10 exit 0 위반 — {out!r} {err!r}")
+            self.assertIn("unanchored_activity", data,
+                          f"TASK-147.S-10 unanchored_activity 축 부재(§2.5) — {sorted(data)}")
+            items_text = json.dumps(data["unanchored_activity"], ensure_ascii=False)
+            self.assertEqual(
+                data["unanchored_activity"], [],
+                f"TASK-147.S-10 pm.report·stop.decision이 activity 판정에 포함됨 — {items_text}")
+            for event_id in (report["event_id"], decision["event_id"]):
+                self.assertNotIn(
+                    event_id, items_text,
+                    f"TASK-147.S-10 {event_id}가 activity 진행 집계에 들어감(§1.2 위반)")

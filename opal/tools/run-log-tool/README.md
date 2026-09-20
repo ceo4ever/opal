@@ -3,16 +3,16 @@
 태스크 실행 로그 기록 CLI. `run_log_core.py`(기록 코어)를 감싸는 외부 호출 표면이며, 표준
 사건을 append 전용 줄 단위 기록 조각(`run/run-log-{run_id}-{segment}.jsonl`)에 기록한다.
 전문은 `docs/run-log/CONTRACT.md`·`docs/run-log/TRD.md`가 소유하며, 이 README는 설치된
-5서브명령의 사용례와 오류 코드 카탈로그만 다룬다.
+6서브명령의 사용례와 오류 코드 카탈로그만 다룬다.
 
-## 서브명령 (5종)
+## 서브명령 (6종)
 
 ```bash
 run-log-tool init --task <절대경로> --run-id <run_id> [--format json]
 
 run-log-tool append --task <절대경로> --run-id <run_id> --request-id <id> \
   --event <event_type> --actor-kind <kind> --actor-id <id> \
-  --provenance-type <type> --recorded-by-kind <kind> \
+  --provenance-type <type> --recorded-by-kind <kind> [--recorded-by-id <id>] \
   [--summary <text>] [--data <json>] [--worker-run-id <id>] [--gate-id <id>] \
   [--stage <id>] [--task-step <id>] [--work-item <id>] [--refs <path>...] \
   [--source-kind <kind>] [--source-id <id>] [--source-sha256 <hex64>] \
@@ -24,10 +24,17 @@ run-log-tool append --task <절대경로> --run-id <run_id> --request-id <id> \
 
 run-log-tool validate-run --task <절대경로> --run-id <run_id> [--format json]
 
+run-log-tool reconcile-duration --task <절대경로> --run-id <run_id> \
+  --worker-run-id <worker_run_id> [--worker-duration-minutes <int>] [--format json]
+
 run-log-tool import-agentic --task <절대경로> [--run-id <run_id>] [--dry-run] [--format json]
 
 run-log-tool import-oppl --task <절대경로> [--run-id <run_id>] [--dry-run] [--format json]
 ```
+
+`--event`는 `docs/run-log/CONTRACT.md` §1.2의 폐쇄된 사건 14종을 수용한다. 그중
+`pm.report`와 `stop.decision`은 `activity`와 별개이며, 결정론 summary와 닫힌 서술 축은
+기록 코어가 검증한다(§1.3.1). `--recorded-by-id`를 생략하면 기존처럼 `actor_id`를 사용한다.
 
 - `append`의 `--mode`(선택, `shadow`/`active`)는 §1.3 말미의 active 전용 source 제약을
   게이트한다. 미지정 시 그 제약을 적용하지 않는다 — 도구는 이 값을 어디서도 읽지 않고
@@ -63,7 +70,7 @@ run-log-tool import-oppl --task <절대경로> [--run-id <run_id>] [--dry-run] [
 중첩, `state-tool`에서는 평면으로 나온다. 계약 본문(§2.1) 자체의 정정은 이 도구의 소관이
 아니며 PM이 판단한다.
 
-## 오류 코드 카탈로그 (8종)
+## 오류 코드 카탈로그 (11종)
 
 `run_log_core.RUN_LOG_ERROR_CODES`가 SSOT다 — `state_tool.ERROR_CODES`와 물리적으로
 분리된 별도 테이블이며, 상태 도구의 동결 회귀 테스트를 건드리지 않는다(PLAN D-A).
@@ -75,9 +82,12 @@ run-log-tool import-oppl --task <절대경로> [--run-id <run_id>] [--dry-run] [
 | `run_log_write_failed` | 조각 생성·append·fsync 실패, 또는 가져오기 원본이 심볼릭 링크·태스크 경계 밖 |
 | `run_log_missing` | `append`/`validate-run` 대상 실행 디렉터리·조각 부재, 또는 가져오기 원본(`AGENTIC-LOG.md`/`.oppl-run/`) 부재 |
 | `schema_invalid` | 폐쇄형 최상위 키·`event` enum·사건별 조건부 필수 필드 위반, 또는 `--run-id` 생략 시 조각의 run_id가 여럿이라 모호함 |
+| `run_id_invalid` | `run_id`가 허용 정규식 밖이라 파일 경로에 사용할 수 없음 |
 | `provenance_invalid` | §1.3 4축 허용 조합 표 밖, 사건별 actor 제약 위반, adapter/import 필수 증거 결측·형식 위반, active 모드 source 제약 위반 |
 | `request_id_conflict` | 동일 `(run_id, request_id)`에 다른 payload를 재사용 |
 | `event_too_large` | 직렬화(마스킹 후) 크기가 16 KiB를 초과 |
+| `redaction_failed` | 입력 구조가 안전한 공통 마스킹 범위를 벗어나 저장 거부 |
+| `worker_duration_conflict` | 명시 워커 소요시간과 terminal 사건 파생 분값 불일치 |
 
 `profile_not_found`는 이 테이블에 없다 — 그 의미(`profiles.json` 배정값 판정)는 CONTRACT
 §3.1이 `state-tool` 소유로 규정한 영역이므로, 상태 도구 쪽 `RUN_LOG_STATE_ERROR_CODES`
@@ -91,10 +101,23 @@ import하지 않는다. `opal/tools/run-log-tool/tests/`는 상태 자산 없이
 
 ## 마스킹 초크포인트 (D-9)
 
-`run_log_core.redact()`가 디스크 직렬화 직전 공통 마스킹 경로다. 현재는 pass-through이며
-본문을 채우는 것은 이 도구가 다루지 않는 범위다 — writer별 개별 마스킹은 추가하지 않는다.
+`run_log_core.redact()`가 디스크 직렬화 직전 공통 마스킹 경로다. 환경변수형 비밀값·
+Bearer/token·API key·private key 블록 4종을 문자열 값에서 치환한다.
+writer별 개별 마스킹은 추가하지 않는다.
 가져오기(`import-agentic`/`import-oppl`)가 만든 사건도 append() 내부에서 이 초크포인트를
-그대로 통과하므로, 이 함수의 본문이 채워지면 가져오기 경로에도 자동 적용된다.
+그대로 통과한다.
+
+## 외부 에이전트 도구 어댑터 배선
+
+`adapters/agent_tool_adapter.py`는 Claude `PostToolUse`의 단일 matcher `Agent|Task`에서 현재
+`Agent`와 legacy `Task` 봉투를 받아 같은 A1 표준 worker 사건으로 정규화하는
+`adapter.pm-agent-tool` 구현이다. 호출 등록의 SSOT는
+`opal/core/hooks/claude-hooks.json`, 표면 선언은 `docs/run-log/surfaces.json`이다. 어댑터는
+`run-log-tool append` CLI만 호출하며 기록 코어 import, 상태 전이, 조각 직접 읽기, 자체 마스킹을
+하지 않는다. 플랫폼 고유 키와 원본 경로 해석은 이 어댑터 파일 안에 격리된다.
+
+어댑터가 만든 사건은 `recorded_by.id=agent-tool-adapter`로 식별되고, 조합·출처·완료 기여 규칙은
+`docs/run-log/CONTRACT.md` §1.3·§1.5와 `docs/run-log/surfaces.json`의 해당 표면을 따른다.
 
 ## 가져오기 읽기 경로의 방어
 

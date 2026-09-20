@@ -12,7 +12,7 @@
 
 STATE.md는 **의사결정 로그·블로커·자유 기재를 담는 저널**이다(094 R-6). 파이프라인 현황(행 상태·진행·`current_status`·다음 액션)의 SSOT는 `state.json`이며, 조회는 `state-tool show`로 한다 — STATE.md는 그 값을 파생 렌더하지 않는다.
 
-`state-tool` 응답의 `transition_action` / `report_type` / `next_action`은 런타임 전이 판단의 SSOT다. `transition_action=continue`와 `report_type=progress_report`는 비차단 보고 후 다음 행으로 계속한다는 뜻이고, `transition_action=await_user|blocked`와 `report_type=decision_request`만 사용자 결정 또는 차단 조치가 필요하다는 뜻이다. 이 필드는 stdout 계약이며 `state.json`에 영속하지 않는다.
+`state-tool` 응답의 `transition_action` / `report_type` / `next_action`은 런타임 전이 판단의 SSOT다. `transition_action=continue`와 `report_type=progress_report`는 비차단 보고 후 다음 행으로 계속한다는 뜻이고, `transition_action=await_user|blocked`와 `report_type=decision_request`만 사용자 결정 또는 차단 조치가 필요하다는 뜻이다. 전이 응답 자체는 stdout 계약이지만, PM이 사용자에게 보고할 때는 그 구조화 판정을 `state-tool log-event --event pm.report`로 먼저 기록한다. 표준 사건이 영속 SSOT이고 `state.json.run_log.last_report`는 같은 원자 쓰기에서 갱신되는 Stop 판정용 파생 포인터다. 상세 계약은 `docs/run-log/CONTRACT.md` §1.2·§1.4·§2.4를 따른다.
 
 > **[강제]** 아래 각 이벤트 발생 시 `state-tool` 호출은 **필수**다. 호출 미수행 시 다음 단계 진입이 금지된다. 행 mark 자체가 state 기록이며, 단계 건너뛰기·순서 위반은 state-tool stage-transition guard가 차단한다. PM은 PM Gate 직전에 상태 자가 점검(아래 §상태 자가 점검)으로 갱신 여부를 확인한다.
 
@@ -39,6 +39,7 @@ STATE.md는 **의사결정 로그·블로커·자유 기재를 담는 저널**�
 | 추가작업 진입 | 오케스트레이터 | - | 추가작업중 (CLOSE 단계 재진입) | **필수** | `~/.opal/tools/state-tool/run.sh add-row <task-path> --after-task-step <key> --stage <단계> --item <항목>` |
 | 추가작업 완료 | 오케스트레이터 | - | 추가작업완료 (CLOSE 재진입 완료) | **필수** | `~/.opal/tools/state-tool/run.sh status <task-path> --set additional_work_done` |
 | 현황 조회 (모든 시점) | PM/워커 | - | - | - | `~/.opal/tools/state-tool/run.sh show <task-path> [--format md|json|full]` |
+| PM 보고 | PM | `pm.report` 사건 + `run_log.last_report` 파생 포인터 | stdout 전이 판정 불변 | **필수** | `~/.opal/tools/state-tool/run.sh log-event <task-path> --event pm.report ...` |
 
 **갱신 모델**: 워커가 1차 갱신을 수행하고(best effort), PM이 PM Gate 직전 상태 자가 점검에서 확인하여 미갱신/오갱신 시 즉시 보완한다.
 

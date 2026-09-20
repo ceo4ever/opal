@@ -326,6 +326,52 @@
           "items": {
             "type": "object"
           }
+        },
+        "last_report": {
+          "oneOf": [
+            {
+              "type": "object",
+              "required": [
+                "event_id",
+                "report_type",
+                "transition_action",
+                "user_input_required",
+                "at"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "event_id": {
+                  "type": "string",
+                  "description": "가리키는 pm.report 사건의 event_id — 사건이 SSOT이고 이 포인터는 파생이다"
+                },
+                "report_type": {
+                  "enum": [
+                    "progress_report",
+                    "decision_request"
+                  ]
+                },
+                "transition_action": {
+                  "enum": [
+                    "continue",
+                    "await_user",
+                    "blocked",
+                    "complete"
+                  ]
+                },
+                "user_input_required": {
+                  "type": "boolean"
+                },
+                "at": {
+                  "type": "string",
+                  "description": "가리키는 사건의 timestamp(RFC3339 ms, UTC)"
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "직전 pm.report 사건의 파생 포인터 — CONTRACT §1.4 선택 필드(TASK-147 D-7). Stop hook이 조각을 직접 읽거나 CLI를 추가로 띄우지 않고 판정 입력(report_type/transition_action/user_input_required)을 얻게 하는 유일한 경로다. state-tool log-event --event pm.report가 사건 적재와 같은 원자 쓰기로 갱신하며, admission이 거부되면 갱신하지 않는다(H-2). optional — run_log 블록의 필수 필드는 7종 그대로다(§1.4). 자유 서술(summary·reason)은 이 포인터에 복제하지 않는다(§1.3)."
         }
       }
     },

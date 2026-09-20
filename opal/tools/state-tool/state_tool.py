@@ -4,7 +4,7 @@
   "module": "state_tool",
   "layer": "util",
   "domain": "opal-pipeline",
-  "description": "OPAL 파이프라인 현황판 JSON SSOT 관리 CLI. 서브커맨드: init/show/resolve-mode/advance/mark/block/validate/add-row/status/run-start/finalize-attribution/spec-validate/event-verify/log-event/gate-request/gate-resolve, gate-pass(deprecated). resolve-mode는 명시 플래그 > 유효 저장 mode > 신규 semi-agentic 기본값으로 effective mode를 판정하고 기존 태스크의 명시 override는 mode만 원자 갱신한다. run-start <task-path>는 `run-<UTC YYYYMMDDHHMMSS>-<8자리 hex>` 형식의 새 run_id를 발급해 state.json.run_id에 기록하고 단일 라인 JSON으로 반환한다 — 현재 run은 항상 1개라 재호출 시 교체되며 이력을 누적하지 않고, run_id는 schema properties에만 있는 optional 필드라 init은 만들지 않으며 required 8필드는 불변이다(run_id 없는 기존 state.json도 계속 validate를 통과한다). 이 run_id는 run_log.active_run_id(run-log 계열, `run_<UUIDv4>`)와 서로 다른 축이다. event-verify는 단계 진입 전에 event-loader receipt의 이벤트·manifest·문서 hash 최신성을 검증하고 상태 파일은 변경하지 않는다. interactive/semi-agentic/agentic 3-way 모드를 지원하며 PLAN-equivalent 이전 단계(TASK/ANALYSIS/PLAN/TEST-SCENARIO/SPEC/REVIEW/DESIGN/WBS/WIREFRAME/DICT/MODEL/DDL·MIGRATION)는 semi-agentic 모드에서 사용자 검토를 강제한다. STATE.md는 state.json에서 파생되는 저널(의사결정 로그+블로커)이며 파이프라인 표·현재 상태·다음 액션 섹션은 없다(레거시 마커 포맷은 하위호환 인식만 유지). mark --step N/M은 N<M이면 in_progress를 유지하고 N==M에서만 done으로 닫는다. can_auto_approve_user_confirmation()은 CLOSE 축과 모드 축 2축 합성으로 사용자 확인 행 자동 승인 가부를 단일 판정하며, cmd_mark 사전검사와 cmd_validate 사후검사가 서로 다른 소비 범위(validate는 CLOSE 축 미평가)로 이를 참조한다. auto_approve_prior_user_confirmations()는 advance/mark가 대상 행 이전 구간의 미완 확인 행을 자동 승인하되 대상 행 자체가 CLOSE면 관여하지 않는다. 행 주소는 task-step 키 체계(--task-step/--task-step-id, --row는 deprecated)로 지정한다. check_gate_artifacts()는 task_steps[].gate.artifacts 존재를 검사하고(정적 경로·글롭 지원, 절대경로·'..' 이탈 토큰은 거부), 미충족 시 gate_artifact_missing으로 막되 --force+--note 조합에만 통과를 허용하며 그 경우 decision 로그에 gate_artifact_force를 강제 기록한다. verify 서브커맨드는 상호 배타적인 7개 검사 라우트를 갖는다 — --red-check(RED 증거 게이트), --fix-mode(+--changed-files/--test-globs, 테스트 불변성 게이트), --clarification-check(TASK 잠금 판정: sdlc-v2 5절 또는 legacy 명확화 4요소), --evidence-check(『명확화 결과』·『확정된 설계 방향』 인용을 근거 등급 4축으로 판정, 두 소스의 분모는 서로 분리 — confirmed_ratio는 명확화 결과 항목 수 기준 불변), --code-scan-citation-check(PLAN.md Work items 또는 legacy §4.2 파일 경로의 code-scan 인용 집행), --plan-contract-check(sdlc-v2 Work items 계약 검사), --run-log-completeness-check(135 W-4 run-log 완전성 진단, 비차단). task_root()는 task path 조상에서 .opal/MEMORY.json 앵커를 찾는 task root 목적 전용 탐색이며(118 D-4), 허브 쓰기 대상인 allocator root는 이 탐색으로 추론하지 않고 worktree registry 발급값을 명시 인자로만 받는다. 신규 pipeline은 명시적 close.final 행에서만 current_status를 completed_unmerged로 확정하고, close.final이 없는 legacy pipeline만 마지막 CLOSE 행을 final로 인정하며 MEMORY.json을 건드리지 않는다(118 D-4b, 136 W-2). 허브 .opal/MEMORY.json 이력 append는 finalize-attribution <task-path> --allocator-root <abs>가 전담한다 — link_memory_history()가 그 구현이고 동일 path 행이 있으면 건너뛰어 멱등이며, --allocator-root 미지정·상대경로는 추론 없이 exit 1로 거부된다. resolve_owner_placeholder()는 note 작성 경로(advance/mark/add-row/block/status/init)에서 '{owner_name}' 플레이스홀더를 identity.md owner_name으로 write-time 치환한다(부재 시 원문 유지, fail-safe). worker_duration_minutes는 1.0/1.1(run_log 블록 부재) 태스크에서는 종전과 동일하게 mark --worker-duration-minutes로 선택 기록되고, 워커 디스패치 행을 소요시간 없이 done 처리하면 --worker-duration-unknown 억제 인자가 없는 한 응답 warnings 배열에 worker_duration_missing이 실린다(exit 0 유지). 1.2 태스크(run_log 블록 보유)에서는 mark가 `_reconcile_worker_duration_minutes()`로 `_import_run_log_core()` 경로의 `run_log_core.reconcile_duration()`(W-6)을 호출해 해당 run의 terminal 사건(worker.completed/failed/blocked)에서 파생 분값을 읽는다(W-7, CONTRACT §2.5 시간 절, D-P8) — `--worker-run-id` 표면 인자가 없어 `_resolve_sole_terminal_worker_run_id()`가 `이 run의 terminal에 실린 worker_run_id가 정확히 1개`인 경우에만 그 값을 대상으로 삼고, 0건·2건 이상이면 조회를 건너뛰어 파생값 없음으로 처리한다. 파생값이 있으면 `--worker-duration-minutes` 미지정 시 자동 기록(경고 없음), 명시값이 파생값과 같으면 수용하되 `worker_duration_minutes_deprecated` 경고를 얹고, 다르면 상태 변경 이전 시점에 `worker_duration_conflict`(RUN_LOG_STATE_ERROR_CODES 등재, ERROR_CODES와 물리 분리)로 즉시 거부해 state.json을 손대지 않는다. 파생값을 아직 얻을 수 없으면(terminal 미기록 등) 명시값을 그대로 통과시켜 기존 수동 경로와 응답 키 집합이 바이트 동일하다(H-6, S-9). CONTRACT §2.5의 채널 등급·override 조항은 이번 범위에 포함하지 않는다(D-P9). build_todo_mirror()는 stdout 전용 파생 미러(state.json 비접촉)로 PostToolUse hook이 세션에 결정론적으로 주입한다. init --run-log-mode {shadow,active}는 CONTRACT §2.5 state-tool.init.run-log-mode를 구현한다 — shadow는 항상 지원하고, active는 `_resolve_active_channel()`이 호출자가 명시적으로 넘긴 `--profiles` 파일에서 `--channel-id` 항목을 찾은 경우에만 그 channel의 completion_profile/adapter_id/adapter_sha256/receipt_sha256을 completion_profile_receipt로 고정해 수용하며(135 W-4, H-4 — profiles.json 자체 생성·channel 자동 승격은 하지 않는다), 그 외(미지정 `--profiles`·미승인 channel)는 여전히 profile_not_found로 거부한다. _cmd_init_run_log()가 outbox 2단 원자 쓰기(_atomic_write_state_json, pending→기록 코어 init/append lock_held=True 호출→active)로 state.json schema_version 1.2 + run_log 블록과 첫 run.started 사건을 만든다. `_check_active_completion_evidence()`(135 W-4, CONTRACT §1.5)는 cmd_mark가 완료(--done, --step 최종 단계 포함) 전이를 시도할 때 row 주소 해석보다 먼저 실행되어, active mode + completion_profile≠cooperative인 run에 trusted terminal 사건 정확히 1건(그리고 observed_trajectory면 PM이 아닌 actor의 trusted activity 1건 이상)이 없으면 `completion_evidence_missing`으로 거부하고 state.json을 손대지 않는다. `verify --run-log-completeness-check`(135 W-4, CONTRACT §1.4/§1.5, 7번째 상호 배타 라우트)는 `_run_log_completeness_check()`로 state.json rows와 조각(committed)·보관함(pending) 사건을 대조해 `missing_state_changed`/`missing_pm_activity`/`missing_gate_event`/`unobserved_worker_boundary` 4종 누락 목록과, committed+pending 전 구간에서 조회하는 `last_observed_decision`/`last_observed_state_change`/`last_observed_boundary` 3필드(`{event_id, ts, ref}` 또는 None)를 항상 반환한다 — 구조 검증(run-log-tool validate-run)과 별개 축이며 read-only·비차단(exit 0)이다. `missing_pm_activity`는 CONTRACT §2.5 트리거 조문의 상태 앵커 2종(① `status=done` ∧ `owner=auto` ∧ `key` 보유 행에 `task_step` 일치 PM activity(decision)가 없으면 행마다 1건을 row_id 오름차순으로, ② `run_log.status=overridden`인데 run 전역에 PM activity(decision)가 0건이면 배열 마지막에 1건)을 committed+pending 합집합 사건과 대조해 채우며, 항목은 `row_id`·`row_key`·`stage`·`expected`·`anchor` 5키 고정이다(137 W-5). --run-log-mode 미지정 경로는 기존 save_state_json()을 그대로 타 바이트 동일성을 유지한다(D-L, C-3). _atomic_write_state_json()은 tmp→fsync→os.replace 원자 쓰기이며, run_log.pending_events가 있으면 쓰기 직전 기록 코어의 redact() 초크포인트를 통과시킨다(D-9, GC-001). _import_run_log_core()는 importlib.util.spec_from_file_location으로 기록 코어를 sys.path 오염 없이 단일 모듈 적재한다(GC-007) — 형제 배치 우선, 없으면 배포본(_run_log_core_dir(), D-C). RUN_LOG_STATE_ERROR_CODES는 run-log 계열 상태 도구 오류 코드(profile_not_found/run_log_missing/run_log_pending/run_log_outbox_full/run_log_write_failed/event_too_large) 전용 별도 테이블이며 ERROR_CODES 딕셔너리 리터럴과 물리 분리된다(D-A, F-6) — err()의 _error_template()가 ERROR_CODES→RUN_LOG_STATE_ERROR_CODES 순으로 조회만 하고, 두 테이블 모두에 없는 코드는 .format() 호출 없이 code 문자열 그대로를 메시지로 쓴다(GC-008). run_log_commit()이 advance/mark/block/add-row/status의 상태 변경과 state.changed 적재(단일 event 또는 event list, build_state_changed_event, 조합 A7·event_id 사전 확정)를 한 번의 원자 쓰기로 커밋한 뒤 _run_log_drain()의 멱등 append와 보관함 비우기로 잇는다(CONTRACT §1.4, TRD D-2, D-3) — advance/mark는 auto_approve_prior_user_confirmations()가 자동 승인한 각 사용자 확인 행과 대상 행 전이를 각각 독립 state.changed로 만들어 event list로 넘기며, 리스트 admission은 순서대로 전부 통과해야만 보관함에 반영되는 전부-아니면-전무다(H-1) — append가 실패해도 상태 전이는 이미 커밋돼 교착되지 않고 응답 warnings에 run_log_pending만 실린다. run_log_outbox_admit()은 항목당 4 KiB·전체 128건(최악 512 KiB) 상한을 집행하며 일반 한도는 128 − 보관함 override 사건 수이고, 위반 시 각각 event_too_large·run_log_outbox_full로 전이를 시작하지 않는다. _run_log_drain()은 완전한 사건만 순서대로 재전송하고 첫 실패에서 멈추며 이미 조각에 있는 event_id는 건너뛰고, 보관함에 run.started가 있을 때만 실행 디렉터리·첫 조각을 다시 만든다(복구 가능 초기화). run_log_diagnose()는 validate에 합류해 보관함 잔량을 run_log_pending(recoverable_init 표시)으로, 활성 계약인데 조각·run.started가 없으면 run_log_missing으로 보고하며 스키마를 강등하거나 블록을 지우지 않는다(§1.4, AC-3). run_log 블록이 없는 1.0/1.1 태스크는 run_log_commit()이 곧바로 save_state_json()으로 우회해 산출물·응답 키 집합이 종전과 동일하다(C-3). state.schema.json은 schema_version 1.2와 run_log 블록(필수 7필드·pending_events maxItems 128)을 등재한다. init --actor pm은 --skill opd/opds에서만 지원되며(그 외 skill과 조합 시 actor_unsupported_for_skill로 exit 1) 지정 시에만 state.json에 actor 키를 조건부 영속화한다. cmd_advance/cmd_mark는 상태 전이 진입 경계(load_state_json 직후)에서 `_claim_task_lease_if_needed()`를 1회 호출해 OPAL_SESSION_ID가 있을 때 `_import_ownership_lease()`(ownership_tool.lease, 형제 배치 우선·sys.path 비오염 패키지 적재)의 claim(claim_source=state_transition — 138 D-21 능동 소유권)으로 `<task>/run/.runtime/owner.json` lease를 원자 생성하거나 기존 session_start lease를 승격한다(138 W-9) — cmd_init은 claim하지 않고, OPAL_SESSION_ID 부재·적재 실패·타 세션 live lease(foreign_owner)는 모두 stderr 경고 1줄만 남긴 채 전이를 그대로 통과시키며(fail-safe) 응답 JSON 키 집합도 바꾸지 않는다. run-log 사건 4개 기록부의 actor.session_id는 `_current_session_id()`(OPAL 중립 변수 OPAL_SESSION_ID 단독, 플랫폼 고유 변수명은 ownership-tool 어댑터가 소유 — C-15)로 채워지며 미설정 시 종전과 동일하게 None이다(run-log CONTRACT §58 선택 필드, 스키마 무변경). log-event/gate-request/gate-resolve(135 W-3, CONTRACT §2.4)는 run_log_commit()의 같은 outbox/admission/drain 경로를 재사용해 PM activity·gate.requested·gate.resolved 사건을 기록하며 (actor_not_allowed/schema_invalid/refs_invalid/gate_not_requested/gate_duplicate/task_path_not_absolute를 방출), run_log_core는 호출하지 않아 TRD D-5 단방향 의존을 유지한다.",
+  "description": "OPAL 파이프라인 현황판 JSON SSOT 관리 CLI. 서브커맨드: init/show/resolve-mode/advance/mark/block/validate/add-row/status/run-start/finalize-attribution/spec-validate/event-verify/log-event/gate-request/gate-resolve, gate-pass(deprecated). resolve-mode는 명시 플래그 > 유효 저장 mode > 신규 semi-agentic 기본값으로 effective mode를 판정하고 기존 태스크의 명시 override는 mode만 원자 갱신한다. run-start <task-path>는 `run-<UTC YYYYMMDDHHMMSS>-<8자리 hex>` 형식의 새 run_id를 발급해 state.json.run_id에 기록하고 단일 라인 JSON으로 반환한다 — 현재 run은 항상 1개라 재호출 시 교체되며 이력을 누적하지 않고, run_id는 schema properties에만 있는 optional 필드라 init은 만들지 않으며 required 8필드는 불변이다(run_id 없는 기존 state.json도 계속 validate를 통과한다). 이 run_id는 run_log.active_run_id(run-log 계열, `run_<UUIDv4>`)와 서로 다른 축이다. event-verify는 단계 진입 전에 event-loader receipt의 이벤트·manifest·문서 hash 최신성을 검증하고 상태 파일은 변경하지 않는다. interactive/semi-agentic/agentic 3-way 모드를 지원하며 PLAN-equivalent 이전 단계(TASK/ANALYSIS/PLAN/TEST-SCENARIO/SPEC/REVIEW/DESIGN/WBS/WIREFRAME/DICT/MODEL/DDL·MIGRATION)는 semi-agentic 모드에서 사용자 검토를 강제한다. STATE.md는 state.json에서 파생되는 저널(의사결정 로그+블로커)이며 파이프라인 표·현재 상태·다음 액션 섹션은 없다(레거시 마커 포맷은 하위호환 인식만 유지). mark --step N/M은 N<M이면 in_progress를 유지하고 N==M에서만 done으로 닫는다. can_auto_approve_user_confirmation()은 CLOSE 축과 모드 축 2축 합성으로 사용자 확인 행 자동 승인 가부를 단일 판정하며, cmd_mark 사전검사와 cmd_validate 사후검사가 서로 다른 소비 범위(validate는 CLOSE 축 미평가)로 이를 참조한다. auto_approve_prior_user_confirmations()는 advance/mark가 대상 행 이전 구간의 미완 확인 행을 자동 승인하되 대상 행 자체가 CLOSE면 관여하지 않는다. 행 주소는 task-step 키 체계(--task-step/--task-step-id, --row는 deprecated)로 지정한다. check_gate_artifacts()는 task_steps[].gate.artifacts 존재를 검사하고(정적 경로·글롭 지원, 절대경로·'..' 이탈 토큰은 거부), 미충족 시 gate_artifact_missing으로 막되 --force+--note 조합에만 통과를 허용하며 그 경우 decision 로그에 gate_artifact_force를 강제 기록한다. verify 서브커맨드는 상호 배타적인 7개 검사 라우트를 갖는다 — --red-check(RED 증거 게이트), --fix-mode(+--changed-files/--test-globs, 테스트 불변성 게이트), --clarification-check(TASK 잠금 판정: sdlc-v2 5절 또는 legacy 명확화 4요소), --evidence-check(『명확화 결과』·『확정된 설계 방향』 인용을 근거 등급 4축으로 판정, 두 소스의 분모는 서로 분리 — confirmed_ratio는 명확화 결과 항목 수 기준 불변), --code-scan-citation-check(PLAN.md Work items 또는 legacy §4.2 파일 경로의 code-scan 인용 집행), --plan-contract-check(sdlc-v2 Work items 계약 검사), --run-log-completeness-check(135 W-4 run-log 완전성 진단, 비차단). task_root()는 task path 조상에서 .opal/MEMORY.json 앵커를 찾는 task root 목적 전용 탐색이며(118 D-4), 허브 쓰기 대상인 allocator root는 이 탐색으로 추론하지 않고 worktree registry 발급값을 명시 인자로만 받는다. 신규 pipeline은 명시적 close.final 행에서만 current_status를 completed_unmerged로 확정하고, close.final이 없는 legacy pipeline만 마지막 CLOSE 행을 final로 인정하며 MEMORY.json을 건드리지 않는다(118 D-4b, 136 W-2). 허브 .opal/MEMORY.json 이력 append는 finalize-attribution <task-path> --allocator-root <abs>가 전담한다 — link_memory_history()가 그 구현이고 동일 path 행이 있으면 건너뛰어 멱등이며, --allocator-root 미지정·상대경로는 추론 없이 exit 1로 거부된다. resolve_owner_placeholder()는 note 작성 경로(advance/mark/add-row/block/status/init)에서 '{owner_name}' 플레이스홀더를 identity.md owner_name으로 write-time 치환한다(부재 시 원문 유지, fail-safe). worker_duration_minutes는 1.0/1.1(run_log 블록 부재) 태스크에서는 종전과 동일하게 mark --worker-duration-minutes로 선택 기록되고, 워커 디스패치 행을 소요시간 없이 done 처리하면 --worker-duration-unknown 억제 인자가 없는 한 응답 warnings 배열에 worker_duration_missing이 실린다(exit 0 유지). 1.2 태스크(run_log 블록 보유)에서는 mark가 `_reconcile_worker_duration_minutes()`로 `_import_run_log_core()` 경로의 `run_log_core.reconcile_duration()`(W-6)을 호출해 해당 run의 terminal 사건(worker.completed/failed/blocked)에서 파생 분값을 읽는다(W-7, CONTRACT §2.5 시간 절, D-P8) — `--worker-run-id` 표면 인자가 없어 `_resolve_sole_terminal_worker_run_id()`가 `이 run의 terminal에 실린 worker_run_id가 정확히 1개`인 경우에만 그 값을 대상으로 삼고, 0건·2건 이상이면 조회를 건너뛰어 파생값 없음으로 처리한다. 파생값이 있으면 `--worker-duration-minutes` 미지정 시 자동 기록(경고 없음), 명시값이 파생값과 같으면 수용하되 `worker_duration_minutes_deprecated` 경고를 얹고, 다르면 상태 변경 이전 시점에 `worker_duration_conflict`(RUN_LOG_STATE_ERROR_CODES 등재, ERROR_CODES와 물리 분리)로 즉시 거부해 state.json을 손대지 않는다. 파생값을 아직 얻을 수 없으면(terminal 미기록 등) 명시값을 그대로 통과시켜 기존 수동 경로와 응답 키 집합이 바이트 동일하다(H-6, S-9). CONTRACT §2.5의 채널 등급·override 조항은 이번 범위에 포함하지 않는다(D-P9). build_todo_mirror()는 stdout 전용 파생 미러(state.json 비접촉)로 PostToolUse hook이 세션에 결정론적으로 주입한다. init --run-log-mode {shadow,active}는 CONTRACT §2.5 state-tool.init.run-log-mode를 구현한다 — shadow는 항상 지원하고, active는 `_resolve_active_channel()`이 호출자가 명시적으로 넘긴 `--profiles` 파일에서 `--channel-id` 항목을 찾은 경우에만 그 channel의 completion_profile/adapter_id/adapter_sha256/receipt_sha256을 completion_profile_receipt로 고정해 수용하며(135 W-4, H-4 — profiles.json 자체 생성·channel 자동 승격은 하지 않는다), 그 외(미지정 `--profiles`·미승인 channel)는 여전히 profile_not_found로 거부한다. _cmd_init_run_log()가 outbox 2단 원자 쓰기(_atomic_write_state_json, pending→기록 코어 init/append lock_held=True 호출→active)로 state.json schema_version 1.2 + run_log 블록과 첫 run.started 사건을 만든다. `_check_active_completion_evidence()`(135 W-4, CONTRACT §1.5)는 cmd_mark가 완료(--done, --step 최종 단계 포함) 전이를 시도할 때 row 주소 해석보다 먼저 실행되어, active mode + completion_profile≠cooperative인 run에 trusted terminal 사건 정확히 1건(그리고 observed_trajectory면 PM이 아닌 actor의 trusted activity 1건 이상)이 없으면 `completion_evidence_missing`으로 거부하고 state.json을 손대지 않는다. `verify --run-log-completeness-check`(135 W-4, CONTRACT §1.4/§1.5, 7번째 상호 배타 라우트)는 `_run_log_completeness_check()`로 state.json rows와 조각(committed)·보관함(pending) 사건을 대조해 `missing_state_changed`/`missing_pm_activity`/`missing_gate_event`/`unobserved_worker_boundary` 4종 누락 목록과, committed+pending 전 구간에서 조회하는 `last_observed_decision`/`last_observed_state_change`/`last_observed_boundary` 3필드(`{event_id, ts, ref}` 또는 None)를 항상 반환한다 — 구조 검증(run-log-tool validate-run)과 별개 축이며 read-only·비차단(exit 0)이다. `missing_pm_activity`는 CONTRACT §2.5 트리거 조문의 상태 앵커 2종(① `status=done` ∧ `owner=auto` ∧ `key` 보유 행에 `task_step` 일치 PM activity(decision)가 없으면 행마다 1건을 row_id 오름차순으로, ② `run_log.status=overridden`인데 run 전역에 PM activity(decision)가 0건이면 배열 마지막에 1건)을 committed+pending 합집합 사건과 대조해 채우며, 항목은 `row_id`·`row_key`·`stage`·`expected`·`anchor` 5키 고정이다(137 W-5). --run-log-mode 미지정 경로는 기존 save_state_json()을 그대로 타 바이트 동일성을 유지한다(D-L, C-3). _atomic_write_state_json()은 tmp→fsync→os.replace 원자 쓰기이며, run_log.pending_events가 있으면 쓰기 직전 기록 코어의 redact() 초크포인트를 통과시킨다(D-9, GC-001). _import_run_log_core()는 importlib.util.spec_from_file_location으로 기록 코어를 sys.path 오염 없이 단일 모듈 적재한다(GC-007) — 형제 배치 우선, 없으면 배포본(_run_log_core_dir(), D-C). RUN_LOG_STATE_ERROR_CODES는 run-log 계열 상태 도구 오류 코드(profile_not_found/run_log_missing/run_log_pending/run_log_outbox_full/run_log_write_failed/event_too_large) 전용 별도 테이블이며 ERROR_CODES 딕셔너리 리터럴과 물리 분리된다(D-A, F-6) — err()의 _error_template()가 ERROR_CODES→RUN_LOG_STATE_ERROR_CODES 순으로 조회만 하고, 두 테이블 모두에 없는 코드는 .format() 호출 없이 code 문자열 그대로를 메시지로 쓴다(GC-008). run_log_commit()이 advance/mark/block/add-row/status의 상태 변경과 state.changed 적재(단일 event 또는 event list, build_state_changed_event, 조합 A7·event_id 사전 확정)를 한 번의 원자 쓰기로 커밋한 뒤 _run_log_drain()의 멱등 append와 보관함 비우기로 잇는다(CONTRACT §1.4, TRD D-2, D-3) — advance/mark는 auto_approve_prior_user_confirmations()가 자동 승인한 각 사용자 확인 행과 대상 행 전이를 각각 독립 state.changed로 만들어 event list로 넘기며, 리스트 admission은 순서대로 전부 통과해야만 보관함에 반영되는 전부-아니면-전무다(H-1) — append가 실패해도 상태 전이는 이미 커밋돼 교착되지 않고 응답 warnings에 run_log_pending만 실린다. run_log_outbox_admit()은 항목당 4 KiB·전체 128건(최악 512 KiB) 상한을 집행하며 일반 한도는 128 − 보관함 override 사건 수이고, 위반 시 각각 event_too_large·run_log_outbox_full로 전이를 시작하지 않는다. _run_log_drain()은 완전한 사건만 순서대로 재전송하고 첫 실패에서 멈추며 이미 조각에 있는 event_id는 건너뛰고, 보관함에 run.started가 있을 때만 실행 디렉터리·첫 조각을 다시 만든다(복구 가능 초기화). run_log_diagnose()는 validate에 합류해 보관함 잔량을 run_log_pending(recoverable_init 표시)으로, 활성 계약인데 조각·run.started가 없으면 run_log_missing으로 보고하며 스키마를 강등하거나 블록을 지우지 않는다(§1.4, AC-3). run_log 블록이 없는 1.0/1.1 태스크는 run_log_commit()이 곧바로 save_state_json()으로 우회해 산출물·응답 키 집합이 종전과 동일하다(C-3). state.schema.json은 schema_version 1.2와 run_log 블록(필수 7필드·pending_events maxItems 128)을 등재한다. init --actor pm은 --skill opd/opds에서만 지원되며(그 외 skill과 조합 시 actor_unsupported_for_skill로 exit 1) 지정 시에만 state.json에 actor 키를 조건부 영속화한다. cmd_advance/cmd_mark는 상태 전이 진입 경계(load_state_json 직후)에서 `_claim_task_lease_if_needed()`를 1회 호출해 OPAL_SESSION_ID가 있을 때 `_import_ownership_lease()`(ownership_tool.lease, 형제 배치 우선·sys.path 비오염 패키지 적재)의 claim(claim_source=state_transition — 138 D-21 능동 소유권)으로 `<task>/run/.runtime/owner.json` lease를 원자 생성하거나 기존 session_start lease를 승격한다(138 W-9) — cmd_init은 claim하지 않고, OPAL_SESSION_ID 부재·적재 실패·타 세션 live lease(foreign_owner)는 모두 stderr 경고 1줄만 남긴 채 전이를 그대로 통과시키며(fail-safe) 응답 JSON 키 집합도 바꾸지 않는다. run-log 사건 4개 기록부의 actor.session_id는 `_current_session_id()`(OPAL 중립 변수 OPAL_SESSION_ID 단독, 플랫폼 고유 변수명은 ownership-tool 어댑터가 소유 — C-15)로 채워지며 미설정 시 종전과 동일하게 None이다(run-log CONTRACT §58 선택 필드, 스키마 무변경). log-event/gate-request/gate-resolve(135 W-3, CONTRACT §2.4)는 run_log_commit()의 같은 outbox/admission/drain 경로를 재사용해 PM activity·gate.requested·gate.resolved 사건을 기록하며 (actor_not_allowed/schema_invalid/refs_invalid/gate_not_requested/gate_duplicate/task_path_not_absolute를 방출), run_log_core는 호출하지 않아 TRD D-5 단방향 의존을 유지한다. log-event의 --event는 activity와 pm.report 2종을 수용한다(TASK-147 W-5, D-2, §2.4) — stop.decision은 이 표면이 수용하지 않으며 Stop hook receipt의 drain 경로가 조립한다(D-6). _build_pm_report_data()는 _build_pm_activity_data()의 형제 앞단 중복 방어로, --data 원문 JSON이나 --report-type/--transition-action/--user-input-required 인자에서 data 폐쇄 3키를 구성하고 report_type 2종·transition_action 4종 enum과 user_input_required boolean 위반을 schema_invalid로 거부한다 — 두 enum 인자에 argparse choices를 걸지 않는 것은 argparse usage 오류(exit 2)가 기록 코어의 schema_invalid와 갈리면 §1.3이 요구하는 「두 지점의 판정 결과가 항상 일치한다」가 깨지기 때문이다. _PM_REPORT_DATA_KEYS·_PM_REPORT_TYPE_ENUM·_PM_TRANSITION_ACTION_ENUM은 기록 코어 동명 상수의 물리 분리 사본이며 상수를 import하지 않는다(§3.1 단방향 의존). _build_pm_report_event()는 _build_pm_activity_event()의 형제로 조합 A4 pm.report 사건을 조립하고, run_log_commit()은 커밋할 사건 목록에 pm.report가 있으면 admission 전건 통과 직후 같은 원자 쓰기 안에서 state.run_log.last_report 파생 포인터(폐쇄 5키 event_id/report_type/transition_action/user_input_required/at)를 갱신한다(D-7) — admission이 거부되면 err()가 먼저 종료시키므로 사건도 포인터도 남지 않는다(H-2, 사건이 SSOT·포인터는 파생). 포인터에는 summary·reason 같은 자유 서술을 복제하지 않아 §1.3의 원본 프롬프트·비밀값 비저장이 포인터에도 유지된다. state.schema.json의 run_log 블록에는 last_report가 선택 필드로 등재되며 필수 7필드는 불변이다(§1.4).",
   "note": "boot-summary는 허브 direct 태스크와 registry 발급 canonical task_path를 통합해 최신 3건, 잔여 건수, bounded 경로 이상을 읽기 전용 JSON으로 반환한다.",
   "exports": [
     "cmd_init", "cmd_show", "cmd_resolve_mode", "cmd_advance", "cmd_mark",
@@ -27,11 +27,15 @@
     "cmd_log_event", "cmd_gate_request", "cmd_gate_resolve",
     "_require_absolute_task_path", "_run_log_all_records",
     "_validate_run_log_refs", "_build_pm_activity_data",
-    "_build_pm_activity_event", "_build_gate_event",
+    "_build_pm_activity_event", "_build_pm_report_data",
+    "_build_pm_report_event", "_build_gate_event",
     "_resolve_active_channel", "_check_active_completion_evidence",
     "_run_log_completeness_check",
     "_current_session_id", "_ownership_tool_dir", "_import_ownership_lease",
-    "_claim_task_lease_if_needed"
+    "_import_ownership_fingerprint", "_claim_task_lease_if_needed",
+    "_stop_decision_project_root", "_last_activity_before",
+    "_build_stop_decision_event", "_load_pending_stop_decisions",
+    "_drain_pending_stop_decisions", "_pending_stop_receipt_count"
   ]
 }
 """
@@ -657,6 +661,7 @@ def _ownership_tool_dir():
 
 
 _OWNERSHIP_LEASE_MODULE_CACHE = {}
+_OWNERSHIP_FINGERPRINT_MODULE_CACHE = {}
 
 
 def _import_ownership_lease():
@@ -685,6 +690,40 @@ def _import_ownership_lease():
     lease_spec.loader.exec_module(lease)
     _OWNERSHIP_LEASE_MODULE_CACHE[pkg_dir] = lease
     return lease
+
+
+def _import_ownership_fingerprint():
+    """`ownership_tool.fingerprint`를 형제 도구의 모듈 API로 적재한다.
+
+    Stop receipt는 ownership-tool의 런타임 저장소다. state-tool은 그 경로를
+    직접 열거나 편집하지 않고, lease 적재와 같은 패키지 적재 경계를 통해 이
+    모듈의 ``load_receipt``/``save_receipt`` API만 호출한다(W-7, §3.1).
+    """
+    pkg_dir = os.path.join(_ownership_tool_dir(), "ownership_tool")
+    cached = _OWNERSHIP_FINGERPRINT_MODULE_CACHE.get(pkg_dir)
+    if cached is not None:
+        return cached
+
+    # 전이 진입 시 lease가 먼저 적재된 경우에는 그 패키지 객체를 재사용한다.
+    # 그렇지 않은 경로(log-event/gate 표면)도 독립적으로 동작하도록 패키지를
+    # 먼저 등록한다. 이는 _import_ownership_lease()의 hyphen-directory 우회와
+    # 같은 관례이며 sys.path를 변경하지 않는다.
+    pkg = sys.modules.get("ownership_tool")
+    if pkg is None or pkg_dir not in list(getattr(pkg, "__path__", []) or []):
+        pkg_spec = importlib.util.spec_from_file_location(
+            "ownership_tool", os.path.join(pkg_dir, "__init__.py"),
+            submodule_search_locations=[pkg_dir])
+        pkg = importlib.util.module_from_spec(pkg_spec)
+        sys.modules["ownership_tool"] = pkg
+        pkg_spec.loader.exec_module(pkg)
+
+    fingerprint_spec = importlib.util.spec_from_file_location(
+        "ownership_tool.fingerprint", os.path.join(pkg_dir, "fingerprint.py"))
+    fingerprint = importlib.util.module_from_spec(fingerprint_spec)
+    sys.modules["ownership_tool.fingerprint"] = fingerprint
+    fingerprint_spec.loader.exec_module(fingerprint)
+    _OWNERSHIP_FINGERPRINT_MODULE_CACHE[pkg_dir] = fingerprint
+    return fingerprint
 
 
 def _claim_task_lease_if_needed(task_path):
@@ -1199,8 +1238,16 @@ def run_log_commit(task_path, state, command, event=None):
 
     core = _import_run_log_core()
 
+    # W-7 — Stop hook은 run-log에 직접 쓰지 않고 ownership receipt에 판정만
+    # 적재한다. 다음 state-tool 커밋이 그 receipt를 A7 사건으로 중개한다. receipt
+    # 항목은 **state outbox 원자 커밋 뒤에만** 제거한다. 따라서 admission 거부나
+    # 상태 저장 실패가 나면 다음 전이에서 다시 시도할 증거가 사라지지 않는다.
+    stop_decision_events, stop_receipt_token = _load_pending_stop_decisions(task_path, state)
+    events = list(stop_decision_events)
     if event is not None:
-        events = event if isinstance(event, list) else [event]
+        events.extend(event if isinstance(event, list) else [event])
+
+    if events:
         # H-1: admission 판정을 working copy(pending 스냅샷 누적)로 전부 통과시킨
         # 뒤에만 block["pending_events"]를 갱신한다 — 전부-아니면-전무.
         _working_pending = list(block.get("pending_events") or [])
@@ -1212,15 +1259,43 @@ def run_log_commit(task_path, state, command, event=None):
             _working_pending = _working_pending + [_ev]
         block["pending_events"] = _working_pending
 
+        # TASK-147 D-7/H-2 — `pm.report` 커밋은 `run_log.last_report` 파생 포인터를
+        # **같은 원자 쓰기 안에서** 갱신한다. 위 admission 루프가 하나라도 거부하면
+        # `err()`가 이미 프로세스를 끝냈으므로 여기에 닿지 않는다 — 즉 거부된
+        # 보고는 사건도 포인터도 남기지 않는다(사건이 SSOT, 포인터는 파생).
+        # 포인터에는 §1.4 폐쇄 5키만 싣는다. `summary`·`reason` 같은 자유 서술은
+        # 절대 복제하지 않는다 — 그것이 §1.3 "원본 프롬프트·chain-of-thought·
+        # 비밀값을 어떤 필드에도 저장하지 않는다"를 포인터에서 지키는 방법이다.
+        for _ev in events:
+            if _ev.get("event") != "pm.report":
+                continue
+            _report_data = _ev.get("data") or {}
+            block["last_report"] = {
+                "event_id": _ev.get("event_id"),
+                "report_type": _report_data.get("report_type"),
+                "transition_action": _report_data.get("transition_action"),
+                "user_input_required": _report_data.get("user_input_required"),
+                "at": _ev.get("timestamp"),
+            }
+
     if block.get("pending_events") and block.get("status") != "overridden":
         block["status"] = "pending"
     _atomic_write_state_json(task_path, state)
+
+    # receipt는 outbox에 먼저 영속된 사건의 보조 증거일 뿐이다. 이 제거가 실패해도
+    # 상태 전이와 이미 커밋된 보관함을 되돌리지 않는다. 다음 호출에서 receipt가
+    # 남아 있음을 stderr 경고로만 드러낸다(fail-safe).
+    receipt_failure = _drain_pending_stop_decisions(stop_receipt_token)
+    if receipt_failure is not None:
+        _ownership_warn(receipt_failure["code"],
+                        "stop receipt pending_decisions 제거 실패: "
+                        f"{receipt_failure.get('message')}")
 
     drained, failure = _run_log_drain(task_path, block, core)
 
     if not block.get("pending_events") and block.get("status") == "pending":
         block["status"] = "active"
-    if drained or failure is not None or event is not None:
+    if drained or failure is not None or events:
         _atomic_write_state_json(task_path, state)
 
     pending_count = len(block.get("pending_events") or [])
@@ -1299,6 +1374,20 @@ def run_log_diagnose(task_path, state):
 
 _PM_ACTIVITY_KIND_ENUM = {"decision", "validation", "retry", "progress"}
 
+# ── TASK-147 D-2 — `pm.report` data 폐쇄 3키와 값 enum ──
+# [MUST] 이 상수들은 기록 코어 `run_log_core._PM_REPORT_DATA_KEYS`·
+# `_PM_REPORT_TYPES`·`_PM_TRANSITION_ACTIONS`의 **물리 분리 사본**이다(D-5·§3.1
+# 단방향 의존 — 상태 도구는 기록 코어를 `_import_run_log_core()` 경로로만 만지고
+# 검증 상수를 import해 결합을 만들지 않는다). 앞단 검증은 같은 규칙의 **중복
+# 방어**이며 두 지점의 판정 결과는 항상 일치해야 한다(§1.3, TASK-147.S-6).
+_PM_REPORT_DATA_KEYS = {"report_type", "transition_action", "user_input_required"}
+_PM_REPORT_TYPE_ENUM = ("progress_report", "decision_request")
+_PM_TRANSITION_ACTION_ENUM = ("continue", "await_user", "blocked", "complete")
+
+# CONTRACT §1.4 — `run_log.last_report` 포인터의 폐쇄 5키(D-7).
+_RUN_LOG_LAST_REPORT_KEYS = (
+    "event_id", "report_type", "transition_action", "user_input_required", "at")
+
 
 def _require_absolute_task_path(task_path_str, command):
     """CONTRACT §3.2 (M-2) — task path는 절대 경로여야 한다.
@@ -1325,6 +1414,228 @@ def _run_log_all_records(task_path, block):
     committed = _run_log_segment_records(task_path, run_id) or []
     pending = list(block.get("pending_events") or [])
     return committed + pending
+
+
+def _stop_decision_project_root(task_path):
+    """표준 ``<project>/tasks/<task>`` 배치에서 receipt 프로젝트 루트를 얻는다.
+
+    이 함수는 receipt 경로를 만들지 않는다. 경로 계산·읽기·쓰기 모두
+    ownership-tool의 fingerprint API가 소유하고, 여기서는 대상 task가 표준
+    ``tasks/`` 아래인지 확인하는 데만 쓴다.
+    """
+    task_dir = pathlib.Path(task_path).resolve()
+    if task_dir.parent.name != "tasks":
+        return None
+    return task_dir.parent.parent
+
+
+def _timestamp_sort_key(value):
+    """UTC 시각의 결정론적 비교 키. 잘못된 값은 판정 후보에서 제외한다."""
+    if not isinstance(value, str):
+        return None
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        return None
+    return parsed.astimezone(timezone.utc).timestamp()
+
+
+def _last_activity_before(records, decided_at):
+    """판정 시각 *직전* 마지막 activity의 event_id를 시각·ID 순으로 고른다."""
+    decision_key = _timestamp_sort_key(decided_at)
+    if decision_key is None:
+        return None
+    candidates = []
+    for record in records:
+        if not isinstance(record, dict) or record.get("event") != "activity":
+            continue
+        timestamp_key = _timestamp_sort_key(record.get("timestamp"))
+        event_id = record.get("event_id")
+        if timestamp_key is None or timestamp_key >= decision_key or not isinstance(event_id, str):
+            continue
+        candidates.append((timestamp_key, event_id))
+    return max(candidates)[1] if candidates else None
+
+
+def _build_stop_decision_event(state, *, task_id, receipt_decision, last_activity_event_id):
+    """ownership-tool receipt의 닫힌 판정 축만 A7 ``stop.decision``으로 조립한다.
+
+    receipt의 task_path/decided_at 외 자유 필드, Stop envelope, last assistant
+    message는 사건에 옮기지 않는다. ``data`` 6키와 summary는 각각 CONTRACT
+    §1.3/§1.3.1의 유일한 저장 후보이며, event/request ID는 같은 사전 확정 값이다.
+    """
+    core = _import_run_log_core()
+    block = _run_log_block(state) or {}
+    event_id = core.new_event_id()
+    report_event_id = receipt_decision.get("report_event_id")
+    data = {
+        "decision_kind": receipt_decision.get("decision_kind"),
+        "diagnostics": list(receipt_decision.get("diagnostics") or []),
+        "block_count": receipt_decision.get("block_count"),
+        "claim_source": receipt_decision.get("claim_source"),
+        "report_event_id": report_event_id,
+        "last_activity_event_id": last_activity_event_id,
+    }
+    return {
+        "schema_version": "1.0",
+        "event_id": event_id,
+        "request_id": event_id,
+        "task_id": task_id,
+        "run_id": block.get("active_run_id"),
+        "parent_run_id": None,
+        "worker_run_id": None,
+        "caused_by_event_id": report_event_id,
+        "stage": None,
+        "task_step": None,
+        "work_item": None,
+        "gate_id": None,
+        "event": "stop.decision",
+        "actor": {"kind": "tool", "id": "ownership-tool", "provider": None,
+                  "session_id": _current_session_id()},
+        "provenance": {
+            "type": "direct",
+            "recorded_by": {"kind": "tool", "id": "state-tool"},
+            "worker_log_token_id": None,
+            "source": None,
+        },
+        "summary": core.render_event_summary("stop.decision", data),
+        "reason": None,
+        "reason_code": None,
+        "duration_ms": None,
+        "duration_source": None,
+        "duration_unknown_reason": None,
+        "refs": None,
+        "timestamp": receipt_decision.get("decided_at"),
+        "data": data,
+    }
+
+
+def _load_pending_stop_decisions(task_path, state):
+    """현재 세션·대상 태스크의 receipt를 API로 읽어 drain 후보를 만든다.
+
+    반환한 receipt token은 state의 첫 원자 커밋 뒤에만 비운다. 따라서 admission이
+    거부되거나 state 저장이 실패한 경우 receipt는 증거로 남는다.
+    """
+    session_id = _current_session_id()
+    project_root = _stop_decision_project_root(task_path)
+    if session_id is None or project_root is None:
+        return [], None
+    try:
+        fingerprint = _import_ownership_fingerprint()
+        receipt = fingerprint.load_receipt(str(project_root), session_id)
+    except Exception as exc:  # noqa: BLE001 — receipt 경계는 상태 전이를 막지 않는다.
+        _ownership_warn("ownership_stop_receipt_load_failed",
+                        f"stop receipt 조회 실패({exc.__class__.__name__}: {exc}).")
+        return [], None
+    if not isinstance(receipt, dict):
+        return [], None
+
+    pending = receipt.get("pending_decisions")
+    if not isinstance(pending, list):
+        return [], None
+    canonical_task_path = pathlib.Path(task_path).resolve()
+    selected_indexes = []
+    for index, decision in enumerate(pending):
+        if not isinstance(decision, dict) or not isinstance(decision.get("task_path"), str):
+            continue
+        # `/var` → `/private/var`처럼 동등한 task 경로가 표기만 다른 macOS
+        # 배치를 수용하되, receipt의 경로는 비교 외 어떤 파일 연산에도 쓰지 않는다.
+        try:
+            is_target = pathlib.Path(decision["task_path"]).resolve() == canonical_task_path
+        except (OSError, RuntimeError):
+            is_target = False
+        if is_target:
+            selected_indexes.append(index)
+    if not selected_indexes:
+        return [], None
+
+    records = _run_log_all_records(task_path, _run_log_block(state) or {})
+    events = []
+    admitted_indexes = []
+    core = _import_run_log_core()
+    for index in selected_indexes:
+        decision = pending[index]
+        try:
+            event = _build_stop_decision_event(
+                state, task_id=pathlib.Path(task_path).name,
+                receipt_decision=decision,
+                last_activity_event_id=_last_activity_before(records, decision.get("decided_at")))
+        except (KeyError, TypeError, ValueError):
+            # 비정상 receipt를 보관함에 복사하면 원문이 pending_events라는 우회
+            # 저장소에 남을 수 있다. receipt는 남기고, 값 자체는 경고에도 싣지 않는다.
+            _ownership_warn("ownership_stop_receipt_schema_invalid",
+                            "stop receipt 판정이 폐쇄 event 형태로 조립되지 않아 보류했습니다.")
+            continue
+        if core.validate_event(event) or core.validate_provenance(event):
+            _ownership_warn("ownership_stop_receipt_schema_invalid",
+                            "stop receipt 판정이 run-log 폐쇄 스키마를 통과하지 않아 보류했습니다.")
+            continue
+        events.append(event)
+        admitted_indexes.append(index)
+    if not events:
+        return [], None
+    return events, {
+        "fingerprint": fingerprint,
+        "project_root": str(project_root),
+        "receipt": receipt,
+        "selected_indexes": frozenset(admitted_indexes),
+    }
+
+
+def _drain_pending_stop_decisions(token):
+    """state outbox 커밋 뒤 선택한 receipt 항목만 ownership API로 제거한다."""
+    if token is None:
+        return None
+    receipt = dict(token["receipt"])
+    pending = receipt.get("pending_decisions") or []
+    receipt["pending_decisions"] = [
+        decision for index, decision in enumerate(pending)
+        if index not in token["selected_indexes"]
+    ]
+    try:
+        result = token["fingerprint"].save_receipt(token["project_root"], receipt)
+    except Exception as exc:  # noqa: BLE001 — receipt 경계는 상태 전이를 막지 않는다.
+        return {"code": "ownership_stop_receipt_drain_failed",
+                "message": f"{exc.__class__.__name__}: {exc}"}
+    if not isinstance(result, dict) or not result.get("ok"):
+        return {"code": "ownership_stop_receipt_drain_failed",
+                "message": (result or {}).get("error") if isinstance(result, dict) else None}
+    return None
+
+
+def _pending_stop_receipt_count(task_path):
+    """현재 세션 receipt에서 대상 task의 미커밋 Stop 판정 수를 읽기 전용 조회한다.
+
+    D-14의 ``missing_stop_decision``은 hook 미실행과 receipt에는 있으나 아직
+    outbox로 drain되지 않은 경우를 구별해야 한다. receipt 경로를 직접 열지 않고
+    W-7과 같은 ownership-tool API만 사용하며, 완전성 진단 자체는 어떤 실패도
+    경고·쓰기 없이 빈 값으로 폴백한다.
+    """
+    session_id = _current_session_id()
+    project_root = _stop_decision_project_root(task_path)
+    if session_id is None or project_root is None:
+        return 0
+    try:
+        receipt = _import_ownership_fingerprint().load_receipt(
+            str(project_root), session_id)
+    except Exception:  # noqa: BLE001 — read-only 진단은 항상 비차단이다.
+        return 0
+    pending = receipt.get("pending_decisions") if isinstance(receipt, dict) else None
+    if not isinstance(pending, list):
+        return 0
+    canonical_task_path = pathlib.Path(task_path).resolve()
+    count = 0
+    for decision in pending:
+        if not isinstance(decision, dict) or not isinstance(decision.get("task_path"), str):
+            continue
+        try:
+            if pathlib.Path(decision["task_path"]).resolve() == canonical_task_path:
+                count += 1
+        except (OSError, RuntimeError):
+            continue
+    return count
 
 
 _RUN_LOG_TERMINAL_EVENTS = ("worker.completed", "worker.failed", "worker.blocked")
@@ -1391,6 +1702,14 @@ def _run_log_completeness_check(task_path):
         "missing_pm_activity": [],
         "missing_gate_event": [],
         "unobserved_worker_boundary": [],
+        # TASK-147 D-14/D-10(b) — 정지 원인 4분류와 오인 방지 activity 축.
+        # 모든 항목은 아래 구현부의 고정 키만 쓰며, 자유 summary·reason을 읽거나
+        # 응답으로 복사하지 않는다. 기존 4축/관측 3필드는 순서·의미 모두 불변이다.
+        "report_intent_inconsistent": [],
+        "missing_stop_decision": [],
+        "stop_decision_allowed": [],
+        "stop_block_without_followup": [],
+        "unanchored_activity": [],
         "last_observed_decision": None,
         "last_observed_state_change": None,
         "last_observed_boundary": None,
@@ -1512,6 +1831,112 @@ def _run_log_completeness_check(task_path):
         })
     result["missing_pm_activity"] = missing_pm_activity
 
+    # ── TASK-147 D-14 — Stop 판정 4분류 + D-10(b) activity 오인 방지.
+    #
+    # `all_records`는 조각의 append 순서 뒤에 outbox 순서를 붙인 결정론적 사건열이다.
+    # 이 축은 timestamp나 summary 같은 자유 서술을 재해석하지 않는다. 특히 fixture의
+    # 수동 시각이 실제 append 시각과 달라도 사건 *순서*라는 계약을 보존한다.
+    # 각 배열은 이 사건열 순서(동일 입력이면 동일 순서)로 생성한다.
+    report_intent_inconsistent = []
+    missing_stop_decision = []
+    stop_decision_allowed = []
+    stop_block_without_followup = []
+    unanchored_activity = []
+    # missing_stop_decision의 뒤 앵커가 된 사건은 해당 "다음 턴"을 증명하는
+    # 용도다. 같은 사건을 unanchored_activity에도 중복 계상하면 D-14의 4분류가
+    # 서로 배타라는 S-9 계약을 깨므로 구조적 앵커로 소비한다.
+    missing_stop_anchor_event_ids = set()
+    receipt_pending_count = _pending_stop_receipt_count(task_path)
+
+    # activity 앵커는 마지막 state.changed 이후 아직 소비하지 않은 1건이다. 따라서
+    # 같은 상태 변화에 기대어 activity를 반복해 "진전"으로 세는 길이 생기지 않는다.
+    # data.kind/사건 존재만 보며 summary는 어떤 비교에도 쓰지 않는다.
+    available_state_anchor_id = None
+    for index, rec in enumerate(all_records):
+        if not isinstance(rec, dict):
+            continue
+        event_type = rec.get("event")
+        if event_type == "state.changed":
+            available_state_anchor_id = rec.get("event_id")
+            continue
+
+        if event_type == "pm.report":
+            data = rec.get("data") if isinstance(rec.get("data"), dict) else {}
+            report_type = data.get("report_type")
+            transition_action = data.get("transition_action")
+            user_input_required = data.get("user_input_required")
+            if ((report_type == "decision_request" and transition_action == "continue")
+                    or (report_type == "progress_report" and user_input_required is True)):
+                report_intent_inconsistent.append({
+                    "event_id": rec.get("event_id"),
+                    "report_type": report_type,
+                    "transition_action": transition_action,
+                    "user_input_required": user_input_required,
+                })
+
+            # "부재"는 바로 다음 사건이라는 뒤 앵커가 있을 때만 확정한다. 다음
+            # stop.decision이면 hook이 실행된 것이고, 어떤 다른 사건이면 그 사이에
+            # Stop 판정이 없었던 것이다. 마지막 보고는 뒤 앵커가 없어 제외한다.
+            if index + 1 < len(all_records):
+                next_rec = all_records[index + 1]
+                if isinstance(next_rec, dict) and next_rec.get("event") != "stop.decision":
+                    missing_stop_anchor_event_ids.add(next_rec.get("event_id"))
+                    missing_stop_decision.append({
+                        "report_event_id": rec.get("event_id"),
+                        "next_event_id": next_rec.get("event_id"),
+                        "receipt_pending": receipt_pending_count > 0,
+                    })
+            continue
+
+        if event_type == "stop.decision":
+            data = rec.get("data") if isinstance(rec.get("data"), dict) else {}
+            decision_kind = data.get("decision_kind")
+            if isinstance(decision_kind, str) and decision_kind.startswith("allow_"):
+                stop_decision_allowed.append({
+                    "event_id": rec.get("event_id"),
+                    "decision_kind": decision_kind,
+                })
+            if decision_kind == "block_continue":
+                boundary_event_id = None
+                has_followup = False
+                for later_rec in all_records[index + 1:]:
+                    if not isinstance(later_rec, dict):
+                        continue
+                    later_event = later_rec.get("event")
+                    if later_event in ("stop.decision", "run.completed"):
+                        boundary_event_id = later_rec.get("event_id")
+                        break
+                    if later_event in ("activity", "state.changed"):
+                        has_followup = True
+                        break
+                if not has_followup:
+                    stop_block_without_followup.append({
+                        "event_id": rec.get("event_id"),
+                        "boundary_event_id": boundary_event_id,
+                    })
+            continue
+
+        if event_type != "activity":
+            continue
+        if rec.get("event_id") in missing_stop_anchor_event_ids:
+            continue
+        if available_state_anchor_id is None:
+            unanchored_activity.append({
+                "event_id": rec.get("event_id"),
+                "anchor_event_id": None,
+                "reason": "no_state_change_anchor",
+            })
+        else:
+            # 한 state.changed는 activity 한 건의 구조 앵커일 뿐이다. 이 소비 규칙은
+            # 동일 결과의 반복을 summary 파싱 없이 결정론적으로 드러낸다.
+            available_state_anchor_id = None
+
+    result["report_intent_inconsistent"] = report_intent_inconsistent
+    result["missing_stop_decision"] = missing_stop_decision
+    result["stop_decision_allowed"] = stop_decision_allowed
+    result["stop_block_without_followup"] = stop_block_without_followup
+    result["unanchored_activity"] = unanchored_activity
+
     # ── 관측 지점 3필드 (AC-7) — committed+pending 전 구간에서 마지막 레코드를 찾는다.
     def _observation(rec):
         if not rec:
@@ -1573,6 +1998,64 @@ def _build_pm_activity_data(args, command):
     return {"kind": kind}
 
 
+def _build_pm_report_data(args, command):
+    """CONTRACT §1.3 `pm.report` 폐쇄 목록 — `data`는 `report_type`·
+    `transition_action`·`user_input_required` **정확히 3키**이고 값은 각각
+    2종·4종 enum과 boolean이다. 위반은 `schema_invalid`로 거부한다(D-2).
+
+    `_build_pm_activity_data()`의 **형제**이며 같은 앞단 중복 방어 형태를 그대로
+    복제한다 — 집행 지점은 기록 코어 `validate_event()` 한 곳이고(§1.3), 여기서는
+    CLI 인자 단계에서 더 구체적인 detail을 내기 위해 같은 판정을 한 번 더 한다.
+    [MUST] 두 지점의 판정 결과는 항상 일치한다(TASK-147.S-6이 이를 단언한다) —
+    그래서 `--report-type`·`--transition-action` 값 검증을 argparse `choices`로
+    하지 않는다. argparse가 거르면 앞단 오류 코드가 usage 오류(exit 2)가 되어
+    기록 코어의 `schema_invalid`와 갈린다.
+    """
+    raw_data = getattr(args, "data", None)
+    if raw_data:
+        try:
+            parsed = json.loads(raw_data)
+        except json.JSONDecodeError as exc:
+            _rl_err(command, "schema_invalid", detail=f"--data가 유효한 JSON이 아님: {exc}")
+        if not isinstance(parsed, dict) or set(parsed.keys()) != _PM_REPORT_DATA_KEYS:
+            keys = sorted(parsed.keys()) if isinstance(parsed, dict) else None
+            _rl_err(command, "schema_invalid",
+                detail=f"pm.report data는 {sorted(_PM_REPORT_DATA_KEYS)} 3키 폐쇄입니다"
+                       f"(CONTRACT §1.3) — 받은 키: {keys}")
+        report_type = parsed.get("report_type")
+        transition_action = parsed.get("transition_action")
+        user_input_required = parsed.get("user_input_required")
+    else:
+        report_type = getattr(args, "report_type", None)
+        transition_action = getattr(args, "transition_action", None)
+        raw_flag = getattr(args, "user_input_required", None)
+        if raw_flag is None:
+            user_input_required = None
+        elif isinstance(raw_flag, bool):
+            user_input_required = raw_flag
+        elif raw_flag in ("true", "false"):
+            user_input_required = (raw_flag == "true")
+        else:
+            user_input_required = raw_flag
+
+    if report_type not in _PM_REPORT_TYPE_ENUM:
+        _rl_err(command, "schema_invalid",
+            detail=f"data.report_type={report_type!r}는 2종 enum 밖입니다(CONTRACT §1.3)")
+    if transition_action not in _PM_TRANSITION_ACTION_ENUM:
+        _rl_err(command, "schema_invalid",
+            detail=f"data.transition_action={transition_action!r}는 4종 enum 밖입니다"
+                   "(CONTRACT §1.3)")
+    if not isinstance(user_input_required, bool):
+        _rl_err(command, "schema_invalid",
+            detail=f"data.user_input_required={user_input_required!r}는 boolean이어야 "
+                   "합니다(CONTRACT §1.3)")
+    return {
+        "report_type": report_type,
+        "transition_action": transition_action,
+        "user_input_required": user_input_required,
+    }
+
+
 def _build_pm_activity_event(state, *, task_id, command, kind, summary, reason, refs,
                              stage, task_step, work_item):
     """PM `activity` 사건(조합 A4: actor.kind=PM, provenance.type=direct,
@@ -1614,8 +2097,59 @@ def _build_pm_activity_event(state, *, task_id, command, kind, summary, reason, 
     }
 
 
+def _build_pm_report_event(state, *, task_id, command, data, stage, task_step,
+                           work_item):
+    """PM `pm.report` 사건(조합 A4: actor.kind=PM, provenance.type=direct,
+    recorded_by.kind=PM) — §1.1 공통 필드 전건 + §1.3 `data` 폐쇄 3키 준수 payload.
+
+    `_build_pm_activity_event()`의 **형제**다 — 공통 필드 골격은 동일하고 `event`와
+    `data`만 다르다. `activity`의 하위 축이 아니라 별도 사건이므로 완료 게이트에
+    기여하지 않는다(D-1·D-2). D-16은 호출자 자유 서술을 저장 후보로 만들지 않는다:
+    기록 코어의 결정론 renderer가 구조화 3축만 받아 summary를 만들고, 나머지 서술
+    축은 null로 닫는다.
+    """
+    core = _import_run_log_core()
+    block = _run_log_block(state) or {}
+    return {
+        "schema_version": "1.0",
+        "event_id": core.new_event_id(),
+        "request_id": f"req_{uuid.uuid4()}",
+        "task_id": task_id,
+        "run_id": block.get("active_run_id"),
+        "parent_run_id": None,
+        "worker_run_id": None,
+        "caused_by_event_id": None,
+        "stage": stage,
+        "task_step": task_step,
+        "work_item": work_item,
+        "gate_id": None,
+        "event": "pm.report",
+        "actor": {"kind": "PM", "id": "PM", "provider": None,
+                  "session_id": _current_session_id()},
+        "provenance": {
+            "type": "direct",
+            "recorded_by": {"kind": "PM", "id": "PM"},
+            "worker_log_token_id": None,
+            "source": None,
+        },
+        "summary": core.render_event_summary("pm.report", data),
+        "reason": None,
+        "reason_code": None,
+        "duration_ms": None,
+        "duration_source": None,
+        "duration_unknown_reason": None,
+        "refs": None,
+        "timestamp": core.utc_now_ms(),
+        "data": data,
+    }
+
+
 def cmd_log_event(args):
-    """state-tool log-event — PM direct activity 기록 (CONTRACT §2.4 state-tool.log-event).
+    """state-tool log-event — PM direct 사건 기록 (CONTRACT §2.4 state-tool.log-event).
+
+    `--event`는 `activity`·`pm.report` 2종을 수용한다(TASK-147 D-2, §2.4).
+    `stop.decision`은 이 표면이 수용하지 않는다 — 그 사건은 Stop hook receipt의
+    drain 경로가 조립한다(D-6).
 
     `actor.kind=worker` 지정은 `actor_not_allowed`로 거부한다(§9) — 이 표면은
     PM actor 사건만 수용한다. run_log_commit()의 공통 outbox/admission/drain
@@ -1629,15 +2163,30 @@ def cmd_log_event(args):
     task_path = _require_absolute_task_path(args.task_path, command)
     state = load_state_json(task_path, command)
 
-    data_kind = _build_pm_activity_data(args, command)
-    refs = _validate_run_log_refs(getattr(args, "refs", None), command)
+    event_name = getattr(args, "event", None)
 
-    event = _build_pm_activity_event(
-        state, task_id=task_path.name, command=command,
-        kind=data_kind, summary=args.summary, reason=getattr(args, "reason", None),
-        refs=refs, stage=getattr(args, "stage", None),
-        task_step=getattr(args, "task_step", None),
-        work_item=getattr(args, "work_item", None))
+    if event_name == "pm.report":
+        # D-16 / CONTRACT §1.3.1 — legacy `--summary`는 CLI 호환을 위해 수용하되
+        # 저장하지 않는다. 반대로 reason/refs는 사건의 닫힌 서술 축을 열므로 어떤
+        # 값도 검증·정규화하지 않고 쓰기 전에 schema_invalid로 거부한다.
+        if getattr(args, "reason", None) is not None or getattr(args, "refs", None) is not None:
+            _rl_err(command, "schema_invalid",
+                    detail="pm.report는 --reason 또는 --refs를 허용하지 않습니다(CONTRACT §1.3.1)")
+        report_data = _build_pm_report_data(args, command)
+        event = _build_pm_report_event(
+            state, task_id=task_path.name, command=command,
+            data=report_data, stage=getattr(args, "stage", None),
+            task_step=getattr(args, "task_step", None),
+            work_item=getattr(args, "work_item", None))
+    else:
+        refs = _validate_run_log_refs(getattr(args, "refs", None), command)
+        data_kind = _build_pm_activity_data(args, command)
+        event = _build_pm_activity_event(
+            state, task_id=task_path.name, command=command,
+            kind=data_kind, summary=args.summary, reason=getattr(args, "reason", None),
+            refs=refs, stage=getattr(args, "stage", None),
+            task_step=getattr(args, "task_step", None),
+            work_item=getattr(args, "work_item", None))
 
     fields = run_log_commit(task_path, state, command, event=event)
     warnings = fields.get("warnings") or []
@@ -6148,10 +6697,28 @@ def build_parser():
         "log-event",
         help="PM direct activity 기록 (CONTRACT §2.4 state-tool.log-event)")
     p_log.add_argument("task_path", metavar="<task-path>")
-    p_log.add_argument("--event", required=True, choices=["activity"],
-                       help="현재 activity만 지원")
+    p_log.add_argument("--event", required=True, choices=["activity", "pm.report"],
+                       help="activity 또는 pm.report(TASK-147 D-2, §2.4). "
+                            "stop.decision은 이 표면이 수용하지 않는다(D-6 — Stop hook "
+                            "receipt drain 경로가 조립한다)")
     p_log.add_argument("--kind", choices=sorted(_PM_ACTIVITY_KIND_ENUM),
-                       help="--data 미지정 시 필수. data.kind 값(§1.3 4종 enum)")
+                       help="--event activity에서 --data 미지정 시 필수. "
+                            "data.kind 값(§1.3 4종 enum)")
+    # ── TASK-147 W-5 — `--event pm.report`의 data 폐쇄 3축 ──
+    # [MUST] choices를 걸지 않는다. argparse가 거르면 앞단 거부가 usage 오류(exit 2)가
+    # 되어 기록 코어의 `schema_invalid`와 판정이 갈린다(§1.3 중복 방어 일치 계약).
+    # 값 검증은 `_build_pm_report_data()`가 한다.
+    p_log.add_argument("--report-type", dest="report_type",
+                       help="--event pm.report에서 --data 미지정 시 필수. "
+                            "data.report_type(§1.3 2종 enum: "
+                            f"{', '.join(_PM_REPORT_TYPE_ENUM)})")
+    p_log.add_argument("--transition-action", dest="transition_action",
+                       help="--event pm.report에서 --data 미지정 시 필수. "
+                            "data.transition_action(§1.3 4종 enum: "
+                            f"{', '.join(_PM_TRANSITION_ACTION_ENUM)})")
+    p_log.add_argument("--user-input-required", dest="user_input_required",
+                       help="--event pm.report에서 --data 미지정 시 필수. "
+                            "data.user_input_required(true|false)")
     p_log.add_argument("--summary", required=True)
     p_log.add_argument("--reason")
     p_log.add_argument("--stage")
@@ -6159,8 +6726,9 @@ def build_parser():
     p_log.add_argument("--work-item", dest="work_item")
     p_log.add_argument("--refs", nargs="*", default=None)
     p_log.add_argument("--data",
-                       help="activity data 객체 원문 JSON(§1.3 폐쇄 목록 검증 대상, "
-                            "미지정 시 --kind로 구성)")
+                       help="사건 data 객체 원문 JSON(§1.3 폐쇄 목록 검증 대상). "
+                            "미지정 시 activity는 --kind로, pm.report는 "
+                            "--report-type/--transition-action/--user-input-required로 구성")
     p_log.add_argument("--format", dest="format", choices=["json"])
     p_log.set_defaults(func=cmd_log_event)
 

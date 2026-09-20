@@ -112,10 +112,20 @@ def _read_state(task_dir):
     data = read["data"]
     if not isinstance(data, dict):
         return None, "invalid_json"
+    run_log = data.get("run_log")
+    run_log_view = {}
+    if isinstance(run_log, dict):
+        # Stop 판정에 필요한 파생 포인터만 보존한다. state.json 원문(특히
+        # pending_events)은 후보 반환값으로 복사하지 않는다.
+        run_log_view = {
+            "active_run_id": run_log.get("active_run_id"),
+            "last_report": run_log.get("last_report"),
+        }
     return {
         "task_id": data.get("task_id"),
         "current_status": data.get("current_status"),
         "next_action": data.get("next_action"),
+        "run_log": run_log_view,
     }, None
 
 

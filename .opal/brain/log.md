@@ -455,3 +455,7 @@
 ## [2026-09-19] ingest | CLOSE ingest — 태스크 146 OPPB Environment Probe 구조적 블로커 해결
 - 신규: [[environment-probe-baseline-isolation]]
 - 출처: task:146
+
+## [2026-09-20] ingest | CLOSE ingest — 태스크 147 실제 플랫폼 Agent 훅 3경계 검증으로 어댑터 fixture 맹점 원칙 승격
+- 갱신: [[pages/concept/mock-only-adapter-verification-passes-schema-drift.md]]
+- 출처: task:147

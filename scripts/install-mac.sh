@@ -47,6 +47,8 @@
 #   v4.7 2026-09-02 21:40 KST: 플랫폼 sub-agent 어댑터 확장 필드 통로 신설 — 센티넬 주석으로 감싼 OPAL_ADAPTER_FIELD_SPEC JSON 상수(name/description/model/effort × 4플랫폼) 도입, emit_platform_agent_adapter의 인라인 mapping dict·out_lines 3줄 고정과 install_codex_agents의 codex_model_map·4줄 고정 write를 build_pairs()+serialize_yaml()/serialize_toml() 스펙 순회로 교체(값 인용은 기존 yaml_escape/toml_escape 재사용, 플랫폼명 리터럴 비교 없이 mode 값에만 분기). effort를 Claude(독립 key)/Codex(model_reasoning_effort, max→xhigh 축약)에 첫 적용, Cursor는 예약(omit)·Gemini는 미지원(omit). 미정의 effort 값은 stderr 경고 후 필드만 생략(종료코드 0). 기존 3필드 emit 결과는 바이트 동일 유지(TS-001) (105)
 #   v4.8 2026-09-02 22:40 KST: emit_platform_agent_adapter/install_codex_agents의 `OPAL_ADAPTER_FIELD_SPEC="$spec_json" "$py" ...` 커맨드 prefix-assignment가 전역 `readonly OPAL_ADAPTER_FIELD_SPEC`(v4.7)와 이름이 같아 대입 자체가 거부되어 install-mac.sh 실행이 즉시 중단되던 결함 fix — 두 호출부 모두 `env OPAL_ADAPTER_FIELD_SPEC=... "$py"`로 전환(env(1) 인자 경유라 셸 readonly 판정을 거치지 않음). 폴백 스펙 리터럴 바이트는 무변경. 부수 원인 fix — 테스트 하네스(test_agent_adapter_fields.sh)가 함수 본문만 추출해 전역 readonly 선언 없이 실행했기 때문에 이 결함이 기존 14케이스를 통과했었다 → extract_sentinel() 신설로 전역 센티넬 블록을 함수보다 먼저 source하도록 seam을 프로덕션과 정합, TS-024(strict set -euo pipefail 기동 검증) 신규 추가 (105 fix)
 #   v4.9 2026-09-12 KST: self-pm-tool run.sh 실행 권한 chmod 블록 추가(worktree-tool 블록 직후, improve-tool/backlog-tool 패턴 답습) — opal-self-pm 스킬용 경량 실행 기록 도구 배포. 스킬·레지스트리·references는 기존 자동 복사 루프가 처리하므로 추가 분기 없음 (122)
+#   v5.2 2026-09-20 KST: Claude Code 2.1.278 실측 PostToolUse:Agent 수용 — agent-tool-adapter는 Agent|Task 단일 matcher로 배포하며, merge-hooks의 command 소유 교체가 기존 Task 단일 matcher를 회수해 재설치도 멱등으로 유지한다 (147 S-19 fix)
+#   v5.1 2026-09-19 KST: run-log-tool 채널 변환기(adapters/agent_tool_adapter.py) 배포 확인 블록 추가(run-log-tool run.sh 블록 직후, 동일 패턴 답습) — claude-hooks.json에 새로 등재한 PostToolUse(matcher Task) 훅이 배포본 경로를 직접 실행하므로 존재·실행권한을 install에서 확정한다. 훅 항목 자체는 기존 merge_hooks_config → scripts/merge-hooks.py 멱등 upsert 경로가 그대로 처리하므로 추가 분기 없음 (147)
 #   v5.0 2026-09-17 KST: oppb-runtime-tool run.sh 실행 권한 chmod 블록 추가(oppl-runtime-tool 블록 직후, 동일 패턴 답습) — OPPB 프로젝트빌드 런타임 도구 배포. OPPB 스킬 3종(opal-pilot-project-build/op-oppb-project-slice/op-oppb-knowledge-finalize, references/ 하위 포함)과 opal-capability-agent는 기존 opal/skills·opal/agents 전체 스캔 루프가 처리하므로 추가 분기 없음 (132)
 #   v4.10 2026-09-13: console_autostart() 기존 데몬 종료 폴백을 전역 프로세스 이름 패턴 종료(ASGI 경로 문자열 기준
 #     광역 종료, RK-1)에서 opal-cli/run.sh console stop 소스 트리 위임(FRAMEWORK_ROOT, 3분기: 배포본 우선 →
@@ -1433,6 +1435,18 @@ install_opal() {
         if [[ -f "$run_log_run" ]]; then
             chmod +x "$run_log_run"
             success "run-log-tool run.sh 실행 권한 설정"
+        fi
+
+        # ── run-log-tool 채널 변환기 배포 확인 (147 W-6) ──
+        # claude-hooks.json의 PostToolUse(matcher Agent|Task)가 이 경로를 직접 실행한다.
+        # 파일 자체는 위 install_dir이 tools/ 재귀 복사로 배포하므로 여기서는
+        # 존재 확인 + 실행 권한만 맞춘다(state-tool/run-log-tool run.sh 패턴 답습).
+        local agent_tool_adapter="$opal_home/tools/run-log-tool/adapters/agent_tool_adapter.py"
+        if [[ -f "$agent_tool_adapter" ]]; then
+            chmod +x "$agent_tool_adapter"
+            success "run-log-tool agent_tool_adapter.py 배포 확인 (PostToolUse Agent|Task 변환기)"
+        else
+            warn "run-log-tool agent_tool_adapter.py 없음 — PostToolUse(Agent|Task) 변환기 비활성"
         fi
 
         # ── opal-action-monitor 실행 권한 (067) ──

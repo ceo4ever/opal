@@ -3,14 +3,15 @@
   "module": "run_log_core",
   "layer": "util",
   "domain": "opal-tools",
-  "description": "태스크 실행 로그 기록 코어 — append 전용 줄 단위 기록 조각(run/run-log-{run_id}-{segment}.jsonl) 관리. init/append/validate_run/import_agentic/import_oppl/reconcile_duration/reconcile_duration_check 7개 공개 함수가 CONTRACT.md §2.6 인프로세스 호출 형태(task_path, run_id, ..., *, lock_held=False, lock_timeout_ms=30000)를 따른다. reconcile_duration(task_path, run_id, worker_run_id)은 같은 worker_run_id의 terminal 사건에서 duration_ms·floor(duration_ms/60000)(duration_minutes)을 조회하는 단일 대상 점조회이며, reconcile_duration_check(task_path, run_id=None, worker_run_id=None)은 run-log-tool reconcile-duration CLI 표면이 쓰는 범위 감사 조회다(worker_run_id 지정 시 불일치를 worker_duration_conflict로 즉시 거부, 미지정 시 {checked, mismatches}로 보고) — 둘 다 상태 원천 파일을 읽지 않는다(W-6, TASK C-4). 상태 원천 파일을 읽지도 쓰지도 않으며 상태 도구 모듈을 import하지 않는다(TRD D-5 단방향 의존, AC-19/MV-24). append()는 §1.1/§1.2 폐쇄형 스키마(validate_event)와 §1.3 4축 허용 조합·필수 증거(validate_provenance)를 조각 스캔 전에 순수 인메모리로 판정하고, 표 밖 조합·명시적 거부·사건별 actor 제약 위반을 provenance_invalid로, 폐쇄형 스키마·조건부 필수 필드 위반을 schema_invalid로 나눈다. validate_event()는 §1.3의 PM activity payload 폐쇄도 집행한다 — 조합 A4(actor.kind=PM ∧ provenance.type=direct)의 activity 사건에서 data가 있으면 키 집합이 정확히 {kind}여야 하고, kind 외의 키가 있으면 schema_invalid로 거부한다(값 enum 판정이 먼저이므로 단일 키의 enum 밖 값은 기존 사유로 거부된다). 적용 조건은 A4에 한정되어 A1(adapter)·A8(import)은 조건식으로 자연 배제되며, 이 폐쇄를 위한 새 오류 코드·조합표·validate_provenance() 변경은 없다. 따라서 append()를 통과하는 모든 A4 생산 경로(run-log-tool append CLI, state-tool을 포함한 인프로세스 호출)가 같은 판정을 받는다. COMBINATION_TABLE(A1~A8)과 iter_all_combinations()가 §1.3 조합 판정의 단일 원천이며 전수 열거가 그 표에서만 파생된다. 요청 식별자 멱등(AC-7)은 canonical_digest()가 발급 필드(event_id/sequence/actor_sequence/timestamp)를 제외한 정규 직렬화 SHA-256으로 판정하며, scan_run() 1회 조각 스캔에서 순번 발급과 함께 수행한다. actor_sequence 범위는 actor.kind=worker면 worker_run_id, 그 외에는 (actor.kind, actor.id)다. append()의 명시적 키워드 전용 mode 인자(None|shadow|active)는 active 전용 source.kind 제약(§1.3 말미)을 게이트하며, 코어는 이 값을 인자로만 받고 상태 원천에서 읽지 않는다. 직렬화 상한 16 KiB는 redact() 통과 후 최종 줄의 UTF-8 바이트로 잰다. import_agentic()/import_oppl()은 legacy AGENTIC-LOG.md·Project Loop .oppl-run/ 원본을 각각 형식별 규칙으로 표준 activity 사건(조합 A8)으로 정규화해 append()로 위임하며, 멱등 키는 원본 식별자·위치자·정규화 해시로 파생한 request_id로 환원해 append()의 멱등 판정을 그대로 탄다(역변환 금지, 완료 게이트 불기여). 가져오기 원본 읽기는 조각 경로와 동일한 심볼릭 링크·경계 이탈 방어(_reject_symlink_or_escape·_safe_read_bytes, O_NOFOLLOW)를 거치고, 신뢰 불가 원본의 디코딩 실패·타입 불일치·중첩 초과·달력 오류는 예외를 던지지 않고 해당 행·파일만 건너뛴다. 배타 락은 <task-path>/.opal-task.lock 1개이고 fcntl.flock(LOCK_EX+LOCK_NB) 재시도 루프로 30,000ms 기본 상한을 집행하며 초과 시 task_lock_timeout을 반환한다(§2.7). task_lock()은 이 락을 상태 도구와 공유하는 공개 컨텍스트매니저다. 락 파일·조각 파일은 0600, run/ 디렉터리는 0700으로 생성한다. run_id는 화이트리스트 정규식(RUN_ID_PATTERN)으로 검증한 뒤에만 파일명 보간·glob 패턴에 사용하고 glob.escape()·resolve() 포함 관계 확인을 덧댄다. 조각 생성은 O_CREAT|O_EXCL|O_NOFOLLOW, append는 O_WRONLY|O_APPEND|O_NOFOLLOW 단일 open()으로 TOCTOU·심볼릭 링크 추종 간극을 없앤다. 조각 상한(SEGMENT_MAX_BYTES, 4 MiB)에 다음 단일 사건의 최대 크기(MAX_EVENT_BYTES, 16 KiB) 여유가 남지 않으면 append()가 상한 검사·다음 번호 선택·새 조각 생성을 같은 `_with_lock()` 구간 안에서 연속 수행해 다음 번호 조각으로 전환한다(D-P5, W-5) — 새 조각 자리도 조각 경로와 같은 심볼릭 링크·경계 이탈 방어(`_reject_symlink_or_escape`)를 거치고, 이미 닫힌(이전 번호) 조각은 다시 열지 않는다. `scan_run()`은 번호 순 전 조각을 열거하므로 전환 이후에도 run 전역 순번·요청 식별자 멱등 판정 범위가 유지된다(D-P6). 순번은 색인 없이 조각 전량 스캔으로 발급하며, 디코딩·파싱 실패 줄은 예외를 던지지 않고 위반/손상 신호로 집계한다. 사건 시각은 Python 표준 라이브러리 UTC로 발급하고 날짜 도구를 타지 않는다(§1.1) — legacy 가져오기만 예외로 KST(+09:00) 고정 오프셋을 UTC로 옮긴다. redact()는 디스크 직렬화 직전 공통 마스킹 초크포인트이며 멱등 계약을 갖는다 — 환경변수형 비밀값·Bearer/token·API key·private key 블록 4종을 문자열 값 안에서만 규칙 기반 치환하고 키 집합·타입·중첩 구조는 보존한다(D-9, writer별 개별 마스킹 금지). 마스킹을 안전하게 판정할 수 없는 입력(적대적으로 깊은 중첩)은 저장을 거부하고 redaction_failed 오류 봉투만 반환한다. RUN_LOG_ERROR_CODES는 run-log 계열 오류 코드의 자기 SSOT다(상태 도구의 오류 코드 테이블과 물리 분리) — profile_not_found는 §3.1 소유 경계에 따라 이 테이블에 없다(상태 도구 쪽 소유). err()는 미등록 코드에 대해 .format() 호출을 건너뛴다. 런타임 색인·락 정책, 상태 보관함·복구, 원본 상한·마스킹 규칙 본문, 채널 변환기, 가져온 사건의 완료 게이트 불기여 집행은 이 모듈이 다루지 않는다 — 소유 배정은 `tasks/{NNN}-*/PLAN.md` 범위 경계표를 참조한다.",
+  "description": "태스크 실행 로그 기록 코어 — append 전용 줄 단위 기록 조각(run/run-log-{run_id}-{segment}.jsonl) 관리. init/append/validate_run/import_agentic/import_oppl/reconcile_duration/reconcile_duration_check 7개 공개 함수가 CONTRACT.md §2.6 인프로세스 호출 형태(task_path, run_id, ..., *, lock_held=False, lock_timeout_ms=30000)를 따른다. reconcile_duration(task_path, run_id, worker_run_id)은 같은 worker_run_id의 terminal 사건에서 duration_ms·floor(duration_ms/60000)(duration_minutes)을 조회하는 단일 대상 점조회이며, reconcile_duration_check(task_path, run_id=None, worker_run_id=None)은 run-log-tool reconcile-duration CLI 표면이 쓰는 범위 감사 조회다(worker_run_id 지정 시 불일치를 worker_duration_conflict로 즉시 거부, 미지정 시 {checked, mismatches}로 보고) — 둘 다 상태 원천 파일을 읽지 않는다(W-6, TASK C-4). 상태 원천 파일을 읽지도 쓰지도 않으며 상태 도구 모듈을 import하지 않는다(TRD D-5 단방향 의존, AC-19/MV-24). append()는 §1.1/§1.2 폐쇄형 스키마(validate_event)와 §1.3 4축 허용 조합·필수 증거(validate_provenance)를 조각 스캔 전에 순수 인메모리로 판정하고, 표 밖 조합·명시적 거부·사건별 actor 제약 위반을 provenance_invalid로, 폐쇄형 스키마·조건부 필수 필드 위반을 schema_invalid로 나눈다. validate_event()는 §1.2 사건 14종 폐쇄를 집행한다 — TASK-147 D-1이 기존 12종에 pm.report(조합 A4 하나, data 폐쇄 3키 report_type/transition_action/user_input_required)와 stop.decision(조합 A7 하나, data 폐쇄 6키 decision_kind/diagnostics/block_count/claim_source/report_event_id/last_activity_event_id)을 더했고, 두 사건은 activity의 하위 축이 아니어서 activity.data.kind 4종 폐쇄를 바꾸지 않는다. 두 사건의 data 키 집합 불일치·값 enum 위반은 schema_invalid, 사건별 허용 조합(EVENT_COMBINATION_CONSTRAINTS) 위반은 provenance_invalid이며 새 오류 코드·COMBINATION_TABLE·validate_provenance() 변경은 없다(D-5, 조합 전수 660건 판정 불변). stop.decision의 decision_kind 7종·diagnostics 11종 값 집합 SSOT는 ownership-tool의 decisions.py이고 기록 코어는 §3.1 채널 분기 금지에 따라 그 모듈을 import하지 않은 채 _STOP_DECISION_KINDS·_STOP_DIAGNOSTICS 자기 상수 사본을 두며 계약 테스트가 기계 대조한다(D-4, RUN_LOG_ERROR_CODES ↔ RUN_LOG_STATE_ERROR_CODES와 같은 물리 분리 관례). validate_event()는 §1.3의 PM activity payload 폐쇄도 집행한다 — 조합 A4(actor.kind=PM ∧ provenance.type=direct)의 activity 사건에서 data가 있으면 키 집합이 정확히 {kind}여야 하고, kind 외의 키가 있으면 schema_invalid로 거부한다(값 enum 판정이 먼저이므로 단일 키의 enum 밖 값은 기존 사유로 거부된다). 적용 조건은 A4에 한정되어 A1(adapter)·A8(import)은 조건식으로 자연 배제되며, 이 폐쇄를 위한 새 오류 코드·조합표·validate_provenance() 변경은 없다. 따라서 append()를 통과하는 모든 A4 생산 경로(run-log-tool append CLI, state-tool을 포함한 인프로세스 호출)가 같은 판정을 받는다. COMBINATION_TABLE(A1~A8)과 iter_all_combinations()가 §1.3 조합 판정의 단일 원천이며 전수 열거가 그 표에서만 파생된다. 요청 식별자 멱등(AC-7)은 canonical_digest()가 발급 필드(event_id/sequence/actor_sequence/timestamp)를 제외한 정규 직렬화 SHA-256으로 판정하며, scan_run() 1회 조각 스캔에서 순번 발급과 함께 수행한다. actor_sequence 범위는 actor.kind=worker면 worker_run_id, 그 외에는 (actor.kind, actor.id)다. append()의 명시적 키워드 전용 mode 인자(None|shadow|active)는 active 전용 source.kind 제약(§1.3 말미)을 게이트하며, 코어는 이 값을 인자로만 받고 상태 원천에서 읽지 않는다. 직렬화 상한 16 KiB는 redact() 통과 후 최종 줄의 UTF-8 바이트로 잰다. import_agentic()/import_oppl()은 legacy AGENTIC-LOG.md·Project Loop .oppl-run/ 원본을 각각 형식별 규칙으로 표준 activity 사건(조합 A8)으로 정규화해 append()로 위임하며, 멱등 키는 원본 식별자·위치자·정규화 해시로 파생한 request_id로 환원해 append()의 멱등 판정을 그대로 탄다(역변환 금지, 완료 게이트 불기여). 가져오기 원본 읽기는 조각 경로와 동일한 심볼릭 링크·경계 이탈 방어(_reject_symlink_or_escape·_safe_read_bytes, O_NOFOLLOW)를 거치고, 신뢰 불가 원본의 디코딩 실패·타입 불일치·중첩 초과·달력 오류는 예외를 던지지 않고 해당 행·파일만 건너뛴다. 배타 락은 <task-path>/.opal-task.lock 1개이고 fcntl.flock(LOCK_EX+LOCK_NB) 재시도 루프로 30,000ms 기본 상한을 집행하며 초과 시 task_lock_timeout을 반환한다(§2.7). task_lock()은 이 락을 상태 도구와 공유하는 공개 컨텍스트매니저다. 락 파일·조각 파일은 0600, run/ 디렉터리는 0700으로 생성한다. run_id는 화이트리스트 정규식(RUN_ID_PATTERN)으로 검증한 뒤에만 파일명 보간·glob 패턴에 사용하고 glob.escape()·resolve() 포함 관계 확인을 덧댄다. 조각 생성은 O_CREAT|O_EXCL|O_NOFOLLOW, append는 O_WRONLY|O_APPEND|O_NOFOLLOW 단일 open()으로 TOCTOU·심볼릭 링크 추종 간극을 없앤다. 조각 상한(SEGMENT_MAX_BYTES, 4 MiB)에 다음 단일 사건의 최대 크기(MAX_EVENT_BYTES, 16 KiB) 여유가 남지 않으면 append()가 상한 검사·다음 번호 선택·새 조각 생성을 같은 `_with_lock()` 구간 안에서 연속 수행해 다음 번호 조각으로 전환한다(D-P5, W-5) — 새 조각 자리도 조각 경로와 같은 심볼릭 링크·경계 이탈 방어(`_reject_symlink_or_escape`)를 거치고, 이미 닫힌(이전 번호) 조각은 다시 열지 않는다. `scan_run()`은 번호 순 전 조각을 열거하므로 전환 이후에도 run 전역 순번·요청 식별자 멱등 판정 범위가 유지된다(D-P6). 순번은 색인 없이 조각 전량 스캔으로 발급하며, 디코딩·파싱 실패 줄은 예외를 던지지 않고 위반/손상 신호로 집계한다. 사건 시각은 Python 표준 라이브러리 UTC로 발급하고 날짜 도구를 타지 않는다(§1.1) — legacy 가져오기만 예외로 KST(+09:00) 고정 오프셋을 UTC로 옮긴다. redact()는 디스크 직렬화 직전 공통 마스킹 초크포인트이며 멱등 계약을 갖는다 — 환경변수형 비밀값·Bearer/token·API key·private key 블록 4종을 문자열 값 안에서만 규칙 기반 치환하고 키 집합·타입·중첩 구조는 보존한다(D-9, writer별 개별 마스킹 금지). 마스킹을 안전하게 판정할 수 없는 입력(적대적으로 깊은 중첩)은 저장을 거부하고 redaction_failed 오류 봉투만 반환한다. RUN_LOG_ERROR_CODES는 run-log 계열 오류 코드의 자기 SSOT다(상태 도구의 오류 코드 테이블과 물리 분리) — profile_not_found는 §3.1 소유 경계에 따라 이 테이블에 없다(상태 도구 쪽 소유). err()는 미등록 코드에 대해 .format() 호출을 건너뛴다. 런타임 색인·락 정책, 상태 보관함·복구, 원본 상한·마스킹 규칙 본문, 채널 변환기, 가져온 사건의 완료 게이트 불기여 집행은 이 모듈이 다루지 않는다 — 소유 배정은 `tasks/{NNN}-*/PLAN.md` 범위 경계표를 참조한다.",
   "exports": [
     "ok", "err", "redact", "require_absolute", "task_lock",
     "new_event_id", "new_run_id", "utc_now_ms", "segment_path",
     "ACTOR_KINDS", "PROVENANCE_TYPES", "RECORDED_BY_KINDS", "SOURCE_KINDS",
     "ALLOWED_EVENTS", "ALLOWED_TOP_LEVEL_KEYS", "EVENT_ACTOR_CONSTRAINTS",
+    "EVENT_COMBINATION_CONSTRAINTS",
     "COMBINATION_TABLE", "combination_of", "iter_all_combinations",
-    "canonical_digest", "scan_run", "validate_event", "validate_provenance",
+    "canonical_digest", "scan_run", "render_event_summary", "validate_event", "validate_provenance",
     "init", "append", "validate_run", "import_agentic", "import_oppl",
     "reconcile_duration", "reconcile_duration_check"
   ]
@@ -52,6 +53,11 @@ RUN_LOG_ERROR_CODES = {
 
 # run_id 형식 화이트리스트 (GC-003) — 파일명 보간·glob 패턴에 넣기 전 검증한다.
 RUN_ID_PATTERN = re.compile(r"^run_[A-Za-z0-9_-]+$")
+# CONTRACT §1.3.1 — stop.decision의 두 참조는 자유 서술 우회 경로가 될 수 없도록
+# 정확히 `evt_` + canonical UUIDv4 형식만 수용한다.
+_EVENT_ID_UUID4_PATTERN = re.compile(
+    r"^evt_[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+)
 
 # CONTRACT §1.1 최상위 필드 전체 (폐쇄형 스키마 — 이 밖의 키는 거부)
 ALLOWED_TOP_LEVEL_KEYS = {
@@ -62,12 +68,15 @@ ALLOWED_TOP_LEVEL_KEYS = {
     "duration_ms", "duration_source", "duration_unknown_reason", "refs", "data",
 }
 
-# CONTRACT §1.2 사건 종류 12종
+# CONTRACT §1.2 사건 종류 14종 — 기존 12종 + `pm.report`·`stop.decision`(TASK-147 D-1).
+# 두 사건은 `activity`의 하위 축이 아니라 서로 다른 최상위 event 값이며, 추가가
+# `activity.data.kind` 4종 폐쇄를 바꾸지 않는다(§1.2 말미, TASK-147 C-1).
 ALLOWED_EVENTS = {
     "run.started", "state.changed", "worker.started",
     "worker.capability.issued", "worker.capability.revoked", "activity",
     "worker.completed", "worker.failed", "worker.blocked",
     "gate.requested", "gate.resolved", "run.completed",
+    "pm.report", "stop.decision",
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -102,6 +111,10 @@ EVENT_ACTOR_CONSTRAINTS = {
     "gate.requested": ("PM",),
     "gate.resolved": ("PM", "user", "auto"),
     "run.completed": ("tool",),
+    # TASK-147 D-1/D-2/D-3 — §1.2 "주체" 열: `pm.report`는 PM만, `stop.decision`은
+    # 판정을 수행한 의미상 주체가 ownership-tool이므로 tool만 허용한다(§1.1.1).
+    "pm.report": ("PM",),
+    "stop.decision": ("tool",),
 }
 
 _TERMINAL_EVENTS = ("worker.completed", "worker.failed", "worker.blocked")
@@ -109,9 +122,67 @@ _REASON_REQUIRED_EVENTS = ("worker.failed", "worker.blocked", "run.completed")
 # summary는 activity·gate 사건에만 조건부 필수다 — terminal 사건은 구조화된
 # duration_*/reason 필드로 결과를 담고 summary를 요구하지 않는다(실사용 증거 — 워커
 # terminal 사건 payload에 summary가 실리지 않는다).
-_SUMMARY_REQUIRED_EVENTS = ("activity", "gate.requested", "gate.resolved")
+_SUMMARY_REQUIRED_EVENTS = ("activity", "gate.requested", "gate.resolved",
+                            "pm.report", "stop.decision")
 _GATE_EVENTS = ("gate.requested", "gate.resolved")
 _ACTIVITY_DATA_KINDS = ("progress", "decision", "validation", "retry")
+
+# ─────────────────────────────────────────────────────────────────────────────
+# TASK-147 — `pm.report`·`stop.decision`의 사건 고유 payload 폐쇄 (CONTRACT §1.2·§1.3)
+#
+# 두 사건의 허용 조합은 각각 A4·A7 **하나씩**이다. COMBINATION_TABLE은 사건 종류와
+# 직교한 4축 조합의 단일 원천이므로 표 자체는 바꾸지 않고(기존 조합 전수 660건 판정
+# 불변 — PLAN H-5), 사건별 허용 조합 id를 EVENT_ACTOR_CONSTRAINTS와 같은 형태의
+# 사건별 제약 테이블로 따로 둔다. 위반의 오류 코드는 `provenance_invalid`이며 새
+# 오류 코드를 신설하지 않는다(D-5, MV-32).
+# ─────────────────────────────────────────────────────────────────────────────
+
+EVENT_COMBINATION_CONSTRAINTS = {
+    "pm.report": frozenset({"A4"}),
+    "stop.decision": frozenset({"A7"}),
+}
+
+# §1.3 `pm.report` data 폐쇄 3키와 값 enum.
+_PM_REPORT_DATA_KEYS = frozenset({"report_type", "transition_action", "user_input_required"})
+_PM_REPORT_TYPES = ("progress_report", "decision_request")
+_PM_TRANSITION_ACTIONS = ("continue", "await_user", "blocked", "complete")
+
+# §1.3 `stop.decision` data 폐쇄 6키.
+_STOP_DECISION_DATA_KEYS = frozenset({
+    "decision_kind", "diagnostics", "block_count", "claim_source",
+    "report_event_id", "last_activity_event_id",
+})
+_STOP_CLAIM_SOURCES = ("session_start", "state_transition", None)
+
+# D-4 — `decision_kind`·`diagnostics`의 값 집합 SSOT는
+# `opal/tools/ownership-tool/ownership_tool/decisions.py`의 `DECISION_KINDS`·
+# `DIAGNOSTICS`다. 기록 코어는 §3.1("`run-log-core`는 … 채널 분기를 갖지 않는다")에
+# 따라 ownership-tool을 import하지 않고 **자기 상수로 같은 집합을 두며**, 두 집합이
+# 정확히 같은지는 계약 테스트가 기계 대조한다 — `RUN_LOG_ERROR_CODES`(이 파일)와
+# `RUN_LOG_STATE_ERROR_CODES`(상태 도구 쪽 테이블)가 이미 쓰는 "물리 분리 + 기계 대조"
+# 관례와 같은 형태다. 집합이 어긋나면 계약 위반이다.
+_STOP_DECISION_KINDS = (
+    "allow_complete",
+    "allow_await_user",
+    "allow_inactive",
+    "allow_no_progress_same_fingerprint",
+    "allow_block_cap_reached",
+    "block_continue",
+    "defer_to_pm",
+)
+_STOP_DIAGNOSTICS = (
+    "no_owned_task",
+    "multiple_hub_tasks",
+    "worktree_owned_shadow",
+    "foreign_owner",
+    "invalid_registry",
+    "invalid_state",
+    "launch_failed",
+    "no_progress_same_fingerprint",
+    "lease_expired",
+    "foreign_owner_bash_unclassified",
+    "passive_ownership",
+)
 
 # §1.1의 폐쇄형 스키마는 최상위 키만이 아니라 중첩 객체(actor/provenance와 그
 # 하위 recorded_by/source)에도 적용된다(GC-208, §1.1.1·§1.1.2). 여기서 닫지
@@ -722,9 +793,124 @@ def _valid_rfc3339_ms(value):
     return isinstance(value, str) and bool(_RFC3339_MS_RE.match(value))
 
 
+def _closure_key_error(event_type, data, allowed_keys):
+    """`data` 키 집합이 폐쇄 집합과 정확히 같은지 판정한다(여분 키·키 누락 모두 위반).
+
+    여분 키는 원본 프롬프트·chain-of-thought·비밀값이 들어올 수 있는 경로이고
+    키 누락은 사후 재구성을 불가능하게 하므로 둘 다 `schema_invalid`다(§1.3).
+    """
+    if not isinstance(data, dict):
+        return err("schema_invalid",
+                   detail=f"{event_type}는 data 폐쇄 {len(allowed_keys)}키가 필수입니다")
+    keys = set(data.keys())
+    if keys != set(allowed_keys):
+        extra = sorted(keys - set(allowed_keys))
+        missing = sorted(set(allowed_keys) - keys)
+        return err("schema_invalid",
+                   detail=f"CONTRACT §1.3 {event_type} data 폐쇄 {len(allowed_keys)}키 위반 — "
+                          f"여분 키: {extra}, 누락 키: {missing}")
+    return None
+
+
+def _validate_pm_report_data(data):
+    """§1.3 `pm.report` data 폐쇄 3키와 값 enum·타입."""
+    key_err = _closure_key_error("pm.report", data, _PM_REPORT_DATA_KEYS)
+    if key_err:
+        return key_err
+    report_type = data.get("report_type")
+    if report_type not in _PM_REPORT_TYPES:
+        return err("schema_invalid",
+                   detail=f"pm.report data.report_type가 폐쇄 enum 밖입니다: {report_type!r}")
+    transition_action = data.get("transition_action")
+    if transition_action not in _PM_TRANSITION_ACTIONS:
+        return err("schema_invalid",
+                   detail="pm.report data.transition_action이 폐쇄 enum 밖입니다: "
+                          f"{transition_action!r}")
+    if not isinstance(data.get("user_input_required"), bool):
+        return err("schema_invalid",
+                   detail="pm.report data.user_input_required는 boolean이어야 합니다")
+    return None
+
+
+def _validate_stop_decision_data(data):
+    """§1.3 `stop.decision` data 폐쇄 6키와 값 enum·타입.
+
+    `decision_kind`·`diagnostics`의 값 집합은 ownership-tool의 판정 모듈이 SSOT이며
+    여기 상수는 그 집합의 물리 분리 사본이다(D-4 — 계약 테스트가 기계 대조한다).
+    """
+    key_err = _closure_key_error("stop.decision", data, _STOP_DECISION_DATA_KEYS)
+    if key_err:
+        return key_err
+
+    decision_kind = data.get("decision_kind")
+    if decision_kind not in _STOP_DECISION_KINDS:
+        return err("schema_invalid",
+                   detail=f"stop.decision data.decision_kind가 폐쇄 enum 밖입니다: "
+                          f"{decision_kind!r}")
+
+    diagnostics = data.get("diagnostics")
+    if not isinstance(diagnostics, list):
+        return err("schema_invalid", detail="stop.decision data.diagnostics는 array여야 합니다")
+    for diagnostic in diagnostics:
+        if diagnostic not in _STOP_DIAGNOSTICS:
+            return err("schema_invalid",
+                       detail="stop.decision data.diagnostics 원소가 폐쇄 enum 밖입니다: "
+                              f"{diagnostic!r}")
+
+    block_count = data.get("block_count")
+    if not isinstance(block_count, int) or isinstance(block_count, bool) or block_count < 0:
+        return err("schema_invalid",
+                   detail="stop.decision data.block_count는 0 이상의 integer여야 합니다")
+
+    if data.get("claim_source") not in _STOP_CLAIM_SOURCES:
+        return err("schema_invalid",
+                   detail="stop.decision data.claim_source가 폐쇄 enum 밖입니다: "
+                          f"{data.get('claim_source')!r}")
+
+    for nullable_id in ("report_event_id", "last_activity_event_id"):
+        value = data.get(nullable_id)
+        if value is not None and (not isinstance(value, str)
+                                  or not _EVENT_ID_UUID4_PATTERN.fullmatch(value)):
+            return err("schema_invalid",
+                       detail=f"stop.decision data.{nullable_id}는 evt_<UUIDv4> 또는 null이어야 합니다")
+    return None
+
+
+def render_event_summary(event_type, data):
+    """CONTRACT §1.3.1의 두 폐쇄 사건 summary를 구조화된 data만으로 렌더한다.
+
+    이 함수는 호출자 문구·receipt·원본 프롬프트를 읽거나 변형하지 않는 순수 renderer다.
+    validate_event()가 먼저 data의 키·enum·타입을 닫은 뒤 이 결과와 summary의 UTF-8
+    문자열 동치를 검사한다.
+    """
+    if event_type == "pm.report":
+        user_input_required = "true" if data["user_input_required"] else "false"
+        return ("pm.report: report_type=" + data["report_type"]
+                + "; transition_action=" + data["transition_action"]
+                + "; user_input_required=" + user_input_required)
+    if event_type == "stop.decision":
+        diagnostics = sorted(data["diagnostics"])
+        diagnostics_value = ",".join(diagnostics) if diagnostics else "none"
+
+        def nullable(value):
+            return value if value is not None else "null"
+
+        return ("stop.decision: decision_kind=" + data["decision_kind"]
+                + "; diagnostics=" + diagnostics_value
+                + "; block_count=" + str(data["block_count"])
+                + "; claim_source=" + nullable(data["claim_source"])
+                + "; report_event_id=" + nullable(data["report_event_id"])
+                + "; last_activity_event_id=" + nullable(data["last_activity_event_id"]))
+    raise ValueError(f"structured summary를 지원하지 않는 event: {event_type!r}")
+
+
 def validate_event(event):
-    """§1.1 폐쇄형 최상위 키·타입과 §1.2 사건별 조건부 필수 필드만 판정한다.
-    §1.3 조합 전수·필수 증거는 validate_provenance()가 판정한다(D-T03-3 경계)."""
+    """§1.1 폐쇄형 최상위 키·타입과 §1.2 사건별 조건부 필수 필드를 판정한다.
+    §1.3 조합 전수·필수 증거는 validate_provenance()가 판정한다(D-T03-3 경계) —
+    다만 `pm.report`·`stop.decision`의 **사건별 허용 조합 1종 제약**(A4·A7)은
+    사건 종류에 붙은 조건이므로 이 함수의 사건별 조건 블록이 집행한다(TASK-147 D-1,
+    PLAN H-5 — COMBINATION_TABLE·validate_provenance()는 불변으로 둔다). 그 위반의
+    오류 코드는 조합 사유이므로 `provenance_invalid`다."""
     if not isinstance(event, dict):
         return err("schema_invalid", detail="event는 object여야 합니다")
 
@@ -816,6 +1002,55 @@ def validate_event(event):
                 return err("schema_invalid",
                            detail="CONTRACT §1.3 PM activity payload 폐쇄 — A4 activity의 "
                                   f"data는 kind 1개 키만 허용합니다: {sorted(extra_data_keys)}")
+
+    # TASK-147 §1.3 — `pm.report`·`stop.decision`의 사건 고유 payload 축 폐쇄.
+    # 위 activity 블록과 **같은 형태**의 사건별 조건 블록이며, 키 집합 불일치(여분
+    # 키·키 누락)와 값 enum·타입 위반을 모두 `schema_invalid`로 거부한다(MV-33).
+    # 여분 키 경로가 원본 프롬프트·chain-of-thought·비밀값이 들어올 수 있는 유일한
+    # data 구멍이므로, 폐쇄는 "정확히 같은 키 집합"으로 잰다.
+    if event_type == "pm.report":
+        closure_err = _validate_pm_report_data(data)
+        if closure_err:
+            return closure_err
+    elif event_type == "stop.decision":
+        closure_err = _validate_stop_decision_data(data)
+        if closure_err:
+            return closure_err
+
+    # TASK-147 §1.3 — 두 사건의 허용 조합은 각각 A4·A7 하나뿐이다. 4축 조합표
+    # (COMBINATION_TABLE)와 validate_provenance()는 사건 종류와 직교하므로 손대지
+    # 않고(기존 조합 전수 660건 판정 불변), 사건별 허용 조합 제약만 여기서 집행한다.
+    # 오류 코드는 조합 사유이므로 `provenance_invalid`이며 새 코드는 없다(D-5, MV-32).
+    allowed_combo_ids = EVENT_COMBINATION_CONSTRAINTS.get(event_type)
+    if allowed_combo_ids is not None:
+        source_obj = provenance.get("source") or None
+        combo_id = combination_of(
+            actor.get("kind"),
+            provenance.get("type"),
+            recorded_by.get("kind"),
+            source_obj.get("kind") if source_obj else None,
+        )
+        if combo_id not in allowed_combo_ids:
+            return err("provenance_invalid",
+                       detail=f"{event_type}의 허용 조합은 "
+                              f"{sorted(allowed_combo_ids)} 뿐입니다(§1.3): "
+                              f"actor={actor.get('kind')} type={provenance.get('type')} "
+                              f"recorded_by={recorded_by.get('kind')} "
+                              f"source={source_obj.get('kind') if source_obj else None}")
+
+    # CONTRACT §1.3.1 — 두 사건은 일반 summary/reason 축을 쓰지 않는다. 위의
+    # 사건별 허용 조합을 먼저 판정해 기존 provenance_invalid 우선순위를 유지한 뒤,
+    # 폐쇄 data만 입력으로 하는 renderer 결과와 정확히 같아야 한다. 이 검증도
+    # redact()/직렬화보다 앞선 append()의 in-memory 경로에 있다.
+    if event_type in ("pm.report", "stop.decision"):
+        expected_summary = render_event_summary(event_type, data)
+        if event.get("summary") != expected_summary:
+            return err("schema_invalid",
+                       detail=f"{event_type} summary는 CONTRACT §1.3.1 renderer 결과와 정확히 같아야 합니다")
+        for field in ("reason", "reason_code", "duration_unknown_reason", "refs"):
+            if event.get(field) is not None:
+                return err("schema_invalid",
+                           detail=f"{event_type} {field}는 CONTRACT §1.3.1에 따라 null이어야 합니다")
 
     # terminal(worker.completed/failed/blocked) duration 필드 — 정확히 하나만 허용.
     if event_type in _TERMINAL_EVENTS:
