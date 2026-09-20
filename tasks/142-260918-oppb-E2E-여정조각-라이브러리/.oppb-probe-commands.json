@@ -1,0 +1,115 @@
+{
+  "commands": [
+    {
+      "id": "bootstrap-toolchain",
+      "kind": "bootstrap",
+      "argv": [
+        "bash",
+        "-c",
+        "\"$HOME/.opal/.venv/bin/python\" -V && \"$HOME/.opal/.venv/bin/python\" -c 'from importlib.metadata import version; print(\"jsonschema\", version(\"jsonschema\"))' && python3 -V && node -v && git --version"
+      ],
+      "runtime_resources": []
+    },
+    {
+      "id": "bootstrap-browser-binaries",
+      "kind": "bootstrap",
+      "argv": [
+        "bash",
+        "-c",
+        "for b in ego cmux agent-browser playwright; do printf '%s=' \"$b\"; command -v \"$b\" || echo ABSENT; done; printf 'OPAL_E2E_EGO_BIN=%s\\n' \"${OPAL_E2E_EGO_BIN:-UNSET}\""
+      ],
+      "runtime_resources": [
+        "browser-binary:ego",
+        "browser-binary:cmux",
+        "browser-binary:agent-browser",
+        "browser-binary:playwright"
+      ]
+    },
+    {
+      "id": "bootstrap-e2e-paths",
+      "kind": "bootstrap",
+      "argv": [
+        "bash",
+        "-c",
+        "cd \"$(git rev-parse --show-toplevel)\" && printf 'TMPDIR=%s\\n' \"${TMPDIR:-/tmp}\" && printf 'OPAL_E2E_ARTIFACT_ROOT=%s\\n' \"${OPAL_E2E_ARTIFACT_ROOT:-UNSET}\" && printf 'OPAL_E2E_ARTIFACT_DIR=%s\\n' \"${OPAL_E2E_ARTIFACT_DIR:-UNSET}\" && ls -d \"${TMPDIR:-/tmp}\"opal-e2e-runs .e2e docs/e2e .opal/e2e 2>&1 || true"
+      ],
+      "runtime_resources": [
+        "e2e-artifact-root"
+      ]
+    },
+    {
+      "id": "bootstrap-git-baseline",
+      "kind": "bootstrap",
+      "argv": [
+        "bash",
+        "-c",
+        "cd \"$(git rev-parse --show-toplevel)\" && git status --porcelain"
+      ],
+      "runtime_resources": [
+        "repo-git-index"
+      ]
+    },
+    {
+      "id": "build-compileall",
+      "kind": "build",
+      "argv": [
+        "bash",
+        "-c",
+        "cd opal/tools/test-tool && \"$HOME/.opal/.venv/bin/python\" -m compileall -q lib test_tool.py"
+      ],
+      "runtime_resources": []
+    },
+    {
+      "id": "probe-e2e-clean-dryrun",
+      "kind": "build",
+      "argv": [
+        "bash",
+        "-c",
+        "cd opal/tools/test-tool && \"$HOME/.opal/.venv/bin/python\" test_tool.py e2e clean --stale --dry-run"
+      ],
+      "runtime_resources": [
+        "e2e-artifact-root"
+      ]
+    },
+    {
+      "id": "probe-skill-registry-validate",
+      "kind": "build",
+      "argv": [
+        "bash",
+        "-c",
+        "cd \"$(git rev-parse --show-toplevel)\" && node opal/tools/skill-registry/skill-registry.js validate"
+      ],
+      "runtime_resources": [
+        "skill-registry-index"
+      ]
+    },
+    {
+      "id": "bootstrap-npm-ci",
+      "kind": "bootstrap",
+      "argv": [
+        "bash",
+        "-c",
+        "cd dashboard/frontend && npm ci"
+      ],
+      "runtime_resources": [
+        "dependency-environment:dashboard/frontend/node_modules"
+      ]
+    }
+  ],
+  "config": [
+    ".gitignore",
+    ".opal/e2e/order.json",
+    ".opal/e2e/drivers/ego-lite.json",
+    "opal/tools/test-tool/lib/e2e/drivers/manifest.json",
+    "opal/core/references/opal-skills-registry.json"
+  ],
+  "lockfile": [
+    "dashboard/frontend/package-lock.json"
+  ],
+  "toolchain": {
+    "python": "[MUST] 모든 파이썬 실행은 \"$HOME/.opal/.venv/bin/python\"이다 (run.sh가 쓰는 경로와 동일). 시스템 python3(3.14.3)에는 jsonschema가 없어 test_scenario.py 2건이 ModuleNotFoundError로 실패하고 수집 테스트 수도 425 vs 428로 다르다 — PM·워커 양측 실행으로 확인. 절대경로 하드코딩 금지, $HOME 전개형만 쓴다",
+    "node": "node v25.8.2 (실측) — skill-registry validate 전용",
+    "git": "git 2.50.1 (실측) — 추적 경계·저장소 무오염 판정",
+    "browser_binaries": "ego·cmux·agent-browser·playwright 전건 PATH 부재(실측 2026-09-18). driver-verify 실제 실행 검사는 binary 부재를 pass로 처리하면 안 된다"
+  }
+}

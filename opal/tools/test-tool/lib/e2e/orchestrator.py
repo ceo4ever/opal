@@ -3,13 +3,14 @@
   "module": "orchestrator",
   "layer": "util",
   "domain": "opal-tools",
-  "description": "T03 run 수명주기 — created→context_resolved→ports_leased→(sut_starting→sut_ready)→최종 상태→cleanup_* 상태 머신을 돌리고 run.json(§A.1)·journal.json(§A.2)·owned.json(§A.3)을 $OPAL_E2E_ARTIFACT_DIR에만 기록한다. 상태·exit·error 문자열은 전부 lib.e2e_contract의 상수·함수에서 끌어오며 리터럴로 만들지 않는다(CONTRACT.md 계약 규칙 C-125-1, TRD.md RK-8).",
+  "description": "T03 run 수명주기 — created→context_resolved→ports_leased→(sut_starting→sut_ready)→최종 상태→cleanup_* 상태 머신을 돌리고 run.json(§A.1)·journal.json(§A.2)·owned.json(§A.3)을 프로젝트 로컬 기본 경로 또는 명시적 격리 경로에 기록한다. 상태·exit·error 문자열은 전부 lib.e2e_contract의 상수·함수에서 끌어오며 리터럴로 만들지 않는다(CONTRACT.md 계약 규칙 C-125-1, TRD.md RK-8).",
   "exports": ["RUN_ID_PATTERN", "run_e2e"]
 }
 
 lib.e2e.orchestrator — 1회 실행이며 재시도 루프를 내장하지 않는다(CONTRACT.md §B.1.1
-[MUST], test_tool.py 모듈 계약). 저장소에는 아무것도 쓰지 않는다(TASK.md C-5). 프로세스
-회수는 lib/e2e/process.py의 pgid 단위 경로만 쓰고 이름 패턴 매칭을 쓰지 않는다(C-9, §C.1).
+[MUST], test_tool.py 모듈 계약). 기본 산출물은 Git에서 전량 제외된 `.e2e/artifacts/`에
+쓰며 최근 20개만 보존한다. 프로세스 회수는 lib/e2e/process.py의 pgid 단위 경로만 쓰고
+이름 패턴 매칭을 쓰지 않는다(C-9, §C.1).
 """
 
 from __future__ import annotations
@@ -17,6 +18,8 @@ from __future__ import annotations
 import json
 import os
 import re
+import shutil
+import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -25,10 +28,12 @@ from lib import e2e_contract
 from lib.e2e import drivers as e2e_drivers
 from lib.e2e import evidence as e2e_evidence
 from lib.e2e import executors as e2e_executors
+from lib.e2e import freshness as e2e_freshness
 from lib.e2e import ports as e2e_ports
 from lib.e2e import process as e2e_process
 from lib.e2e import runtime as e2e_runtime
 from lib.e2e import scenario_adapter as e2e_scenario_adapter
+from lib.e2e import journey as e2e_journey
 from lib.e2e import target as e2e_target
 
 SCHEMA_VERSION = e2e_contract.E2E_CONTRACT_SCHEMA_VERSION
@@ -79,7 +84,8 @@ _SUT_DEPENDENT_EXECUTOR_TYPES = ("api",)
 
 _ROLE_BACKEND = "backend"
 _ROLE_FRONTEND = "frontend"
-_DEFAULT_ARTIFACT_DIRNAME = "opal-e2e-runs"
+_DEFAULT_ARTIFACT_RELATIVE = Path(".e2e") / "artifacts"
+DEFAULT_ARTIFACT_RETENTION = 20
 _SCENARIO_FILENAME = "test-scenario.json"
 
 # CONTRACT.md §A.1 `fidelity` enum. 값은 scenario.py의 FIDELITY_ORDER가 소유하며 여기서는
@@ -125,11 +131,76 @@ def _pid_run_id() -> str:
     return f"e2e-{datetime.now().strftime('%Y%m%d')}-{os.getpid() % 1000:03d}"
 
 
+def _repository_root() -> str:
+    """현재 디렉터리가 속한 저장소 루트. 저장소 밖이면 cwd를 쓴다."""
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "--show-toplevel"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return os.path.abspath(os.getcwd())
+    return result.stdout.strip() if result.returncode == 0 else os.path.abspath(os.getcwd())
+
+
+def default_artifact_root(project_root: Optional[str] = None) -> str:
+    """기본 산출물 루트인 `<project>/.e2e/artifacts`를 반환한다.
+
+    `OPAL_E2E_ARTIFACT_ROOT`는 기존처럼 명시적 override로 가장 먼저 적용한다.
+    """
+    configured = os.environ.get("OPAL_E2E_ARTIFACT_ROOT")
+    if configured:
+        return os.path.abspath(configured)
+    root = os.path.abspath(project_root or _repository_root())
+    return str(Path(root) / _DEFAULT_ARTIFACT_RELATIVE)
+
+
+def enforce_artifact_retention(run_parent: Path, *, keep: int = DEFAULT_ARTIFACT_RETENTION) -> List[str]:
+    """`run_parent` 아래 run 산출물을 최신 ``keep``개만 남긴다.
+
+    아직 `run.json`이 없는 디렉터리는 동시 실행 중일 수 있으므로 건드리지 않는다.
+    최신성은 `run.json.ended_at`, 파일 mtime, run id 순으로 결정한다.
+    """
+    if keep < 1:
+        raise ValueError("artifact retention must keep at least one run")
+    if not run_parent.is_dir():
+        return []
+
+    candidates = []
+    for path in run_parent.iterdir():
+        if not path.is_dir() or not RUN_ID_PATTERN.fullmatch(path.name):
+            continue
+        metadata_path = path / e2e_evidence.EVIDENCE_PATHS["metadata"]
+        metadata = _read_json(metadata_path)
+        if metadata is None:
+            continue
+        candidates.append(
+            (
+                str(metadata.get("ended_at") or ""),
+                metadata_path.stat().st_mtime,
+                path.name,
+                path,
+            )
+        )
+
+    removed = []
+    for _, _, _, path in sorted(candidates, reverse=True)[keep:]:
+        try:
+            shutil.rmtree(path)
+        except OSError:
+            continue
+        removed.append(str(path))
+    return removed
+
+
 def _resolve_artifact_layout(
     *,
     artifact_root_arg: Optional[str],
     run_id_arg: Optional[str],
     project_id: str,
+    project_root: Optional[str] = None,
 ) -> tuple:
     """`(artifact_root, artifact_dir, run_id)`를 해석한다 (TRD.md TD-10).
 
@@ -147,7 +218,7 @@ def _resolve_artifact_layout(
         return (artifact_root, artifact_dir, run_id_arg or _pid_run_id())
 
     artifact_root = os.path.abspath(
-        artifact_root_arg or env_root or str(e2e_process.temp_root() / _DEFAULT_ARTIFACT_DIRNAME)
+        artifact_root_arg or env_root or default_artifact_root(project_root)
     )
     base = Path(artifact_root) / project_id
     base.mkdir(parents=True, exist_ok=True)
@@ -204,7 +275,7 @@ def _emit_server_log(writer: e2e_evidence.EvidenceWriter, handles: List[e2e_runt
     )
 
 
-def _load_scenario(task_path: str, scenario_id: str) -> tuple:
+def _load_scenario(task_path: str, scenario_id: str, *, project_root: Optional[str] = None) -> tuple:
     """`(scenario, detail_code, detail, contract_check)` — 해석 실패 시 scenario가 None.
 
     두 인자는 §B.1.1의 필수 인자이므로 argparse가 이미 존재를 보장한다.
@@ -217,14 +288,14 @@ def _load_scenario(task_path: str, scenario_id: str) -> tuple:
     거기서 꺼내 쓴다(C-125-1).
     """
     spec_path = Path(task_path) / _SCENARIO_FILENAME
-    if not spec_path.is_file():
-        return (None, "e2e_scenario_not_found", f"{_SCENARIO_FILENAME} not found under --task-path", None)
-    try:
-        spec = json.loads(spec_path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as exc:
-        return (None, "e2e_scenario_not_found", f"cannot read {_SCENARIO_FILENAME}: {exc}", None)
+    spec = None
+    if spec_path.is_file():
+        try:
+            spec = json.loads(spec_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            return (None, "e2e_scenario_not_found", f"cannot read {_SCENARIO_FILENAME}: {exc}", None)
 
-    raw_scenarios = spec.get("scenarios")
+    raw_scenarios = spec.get("scenarios") if isinstance(spec, dict) else None
     if isinstance(raw_scenarios, list):
         for item in raw_scenarios:
             if not isinstance(item, dict) or str(item.get("id")) != str(scenario_id):
@@ -243,13 +314,63 @@ def _load_scenario(task_path: str, scenario_id: str) -> tuple:
             break
 
     # C-125-2 — schema_version이 "2.0"이 아닌 spec은 실행 대상으로 받지 않는다.
-    validated = e2e_contract.validate_scenario_contract(spec, legacy_defaults=False)
-    if not validated["ok"]:
-        return (None, "e2e_scenario_contract_invalid", str(validated.get("detail")), None)
-    for item in validated["normalized"].get("scenarios") or []:
-        if str(item.get("id")) == str(scenario_id):
-            return (item, None, None, None)
-    return (None, "e2e_scenario_not_found", f"scenario {scenario_id!r} is not in {_SCENARIO_FILENAME}", None)
+    if isinstance(spec, dict):
+        validated = e2e_contract.validate_scenario_contract(spec, legacy_defaults=False)
+        if not validated["ok"]:
+            return (None, "e2e_scenario_contract_invalid", str(validated.get("detail")), None)
+        for item in validated["normalized"].get("scenarios") or []:
+            if str(item.get("id")) == str(scenario_id):
+                return (item, None, None, None)
+
+    # 프로젝트 라이브러리는 test-scenario.json을 복제하지 않는다. 동일 id의 capsule
+    # scenario가 없을 때만 docs/e2e 원본을 직접 읽어 scenario v2 형태로 전개한다.
+    scenario_name = str(scenario_id)
+    if (
+        project_root
+        and (
+            scenario_name in {"", ".", ".."}
+            or "/" in scenario_name
+            or "\\" in scenario_name
+            or Path(scenario_name).name != scenario_name
+        )
+    ):
+        return (
+            None,
+            "e2e_scenario_contract_invalid",
+            f"{scenario_name!r}: library journey id must be a single filename",
+            None,
+        )
+    journey_path = (
+        Path(project_root) / "docs" / "e2e" / "journeys" / f"{scenario_name}.md"
+        if project_root
+        else None
+    )
+    if journey_path is not None and journey_path.is_file():
+        try:
+            journey_scenario = e2e_journey.load_and_expand_journey(journey_path)
+        except (e2e_journey.JourneyError, OSError) as exc:
+            return (None, "e2e_scenario_contract_invalid", str(exc), None)
+        check = e2e_scenario_adapter.static_executor_contract_error(journey_scenario)
+        if check is not None:
+            return (
+                journey_scenario,
+                "e2e_executor_contract_mismatch",
+                f"{scenario_id}: {check.get('detail')}",
+                check,
+            )
+        validated = e2e_contract.validate_scenario_contract(
+            {"schema_version": e2e_contract.E2E_CONTRACT_SCHEMA_VERSION, "scenarios": [journey_scenario]},
+            legacy_defaults=False,
+        )
+        if not validated["ok"]:
+            return (None, "e2e_scenario_contract_invalid", str(validated.get("detail")), None)
+        return (validated["normalized"]["scenarios"][0], None, None, None)
+
+    if spec is None:
+        detail = f"{_SCENARIO_FILENAME} not found under --task-path"
+    else:
+        detail = f"scenario {scenario_id!r} is not in {_SCENARIO_FILENAME}"
+    return (None, "e2e_scenario_not_found", detail, None)
 
 
 def run_e2e(
@@ -350,6 +471,7 @@ def _run_e2e(
         artifact_root_arg=artifact_root,
         run_id_arg=run_id,
         project_id=project_id,
+        project_root=context.project_root if context is not None else None,
     )
     # 증적 단일 관문(§A.12). 이 시점 이후의 모든 파일 쓰기는 writer를 통과한다.
     writer = e2e_evidence.EvidenceWriter(artifact_dir, resolved_run_id)
@@ -416,7 +538,9 @@ def _run_e2e(
     )
 
     # ── 시나리오 해석 ────────────────────────────────────────────────────────
-    scenario, detail_code, detail, contract_check = _load_scenario(task_path, scenario_id)
+    scenario, detail_code, detail, contract_check = _load_scenario(
+        task_path, scenario_id, project_root=context.project_root
+    )
     if contract_check is not None:
         # §C.4 집행 1 — 실행 전 정적 거부. SUT를 기동하지 않고 끝내며 `executed=false`로
         # "실행 중 실패가 아니라 실행 자체를 하지 않았다"를 기록에 남긴다(S-12(b), TD-17).
@@ -481,12 +605,14 @@ def _run_e2e(
     # §A.4 `actions.jsonl`은 run 전체가 하나의 로그를 공유한다 — driver와 api executor가
     # 각자 적어도 `seq`가 한 줄기로 이어져야 §A.11 상호참조가 성립한다.
     action_log = e2e_executors.ActionLog()
+    freshness_checked = False
 
     if not needs_sut_for_probe:
         candidates, probes = _resolve_executor_candidates(
             scenario,
             runtime_context=_executor_runtime_context(
                 artifact_dir, task_path, writer,
+                project_root=context.project_root,
                 action_log=action_log, run_id=resolved_run_id,
             ),
             driver_cache=driver_cache,
@@ -517,6 +643,19 @@ def _run_e2e(
                 detail_code=gate_detail_code,
                 detail=gate_detail,
             )
+        reused = _reuse_fresh_evidence(
+            scenario=scenario,
+            context=context,
+            candidates=candidates,
+            leases=leases,
+            reclaimed=reclaimed,
+            artifact_root=resolved_root,
+            artifact_dir=artifact_dir,
+            writer=writer,
+        )
+        freshness_checked = True
+        if reused is not None:
+            return reused
 
     # ── sut_starting → sut_ready ─────────────────────────────────────────────
     journal.to(STATE_SUT_STARTING)
@@ -557,6 +696,7 @@ def _run_e2e(
             scenario,
             runtime_context=_executor_runtime_context(
                 artifact_dir, task_path, writer,
+                project_root=context.project_root,
                 backend_url=_urls(leases)[_ROLE_BACKEND],
                 action_log=action_log, run_id=resolved_run_id,
             ),
@@ -591,6 +731,21 @@ def _run_e2e(
             detail_code=gate_detail_code,
             detail=gate_detail,
         )
+
+    if not freshness_checked:
+        reused = _reuse_fresh_evidence(
+            scenario=scenario,
+            context=context,
+            candidates=candidates,
+            leases=leases,
+            reclaimed=reclaimed,
+            artifact_root=resolved_root,
+            artifact_dir=artifact_dir,
+            writer=writer,
+            handles=handles,
+        )
+        if reused is not None:
+            return reused
 
     journal.to(
         STATE_EXECUTOR_READY,
@@ -643,6 +798,67 @@ def _run_e2e(
         detail_code=outcome["detail_code"],
         detail=outcome["detail"],
     )
+
+
+def _reuse_fresh_evidence(
+    *,
+    scenario: dict,
+    context: e2e_target.TargetContext,
+    candidates: List[Dict[str, Any]],
+    leases: List[e2e_ports.LeaseRecord],
+    reclaimed: List[str],
+    artifact_root: str,
+    artifact_dir: str,
+    writer: e2e_evidence.EvidenceWriter,
+    handles: Optional[List[e2e_runtime.SutHandle]] = None,
+) -> Optional[dict]:
+    """Reuse a matching library-journey pass and record the reuse explicitly."""
+    source = e2e_freshness.source_identity(scenario, project_root=context.project_root)
+    if source is None:
+        return None
+    identity = e2e_freshness.selected_driver_identity(candidates)
+    required_fidelity = str(scenario.get("required_fidelity") or FIDELITY_MOCK)
+    path = e2e_freshness.ledger_path(context.project_root)
+    entry = e2e_freshness.find_reusable(
+        path,
+        source=source,
+        target_commit=context.commit,
+        driver_identity=identity,
+        required_fidelity=required_fidelity,
+    )
+    if entry is None:
+        return None
+
+    if handles:
+        e2e_runtime.stop_all(handles)
+    e2e_ports.release_leases(artifact_root, leases)
+    writer.purge()
+    try:
+        Path(artifact_dir).rmdir()
+    except OSError:
+        pass
+    e2e_freshness.record_reuse(
+        path,
+        entry=entry,
+        requested_fidelity=required_fidelity,
+    )
+    previous = json.loads(Path(str(entry["run_json_path"])).read_text(encoding="utf-8"))
+    return {
+        "run_id": previous.get("run_id") or entry.get("run_id"),
+        "scenario_id": previous.get("scenario_id") or scenario.get("id"),
+        "profile": previous.get("profile") or scenario.get("profile"),
+        "status": previous.get("status"),
+        "operational_status": previous.get("operational_status"),
+        "error": previous.get("error"),
+        "exit_code": previous.get("exit_code"),
+        "run_json_path": entry.get("run_json_path"),
+        "artifact_dir": previous.get("artifact_dir") or str(Path(str(entry["run_json_path"])).parent),
+        "executed": False,
+        "urls": previous.get("urls") or {"frontend": None, "backend": None},
+        "project_root": previous.get("project_root") or context.project_root,
+        "lease_reclaimed": list(reclaimed),
+        "candidates": list(candidates),
+    }
 
 
 # §A.4 step_role 실행 순서. 시나리오가 선언한 원소 순서는 그룹 **안에서** 그대로
@@ -1137,6 +1353,7 @@ def _executor_runtime_context(
     task_path: str,
     writer: e2e_evidence.EvidenceWriter,
     *,
+    project_root: Optional[str] = None,
     backend_url: Optional[str] = None,
     action_log: Optional[e2e_executors.ActionLog] = None,
     run_id: Optional[str] = None,
@@ -1154,6 +1371,7 @@ def _executor_runtime_context(
     return {
         "backend_url": backend_url,
         "artifact_dir": artifact_dir,
+        "project_root": project_root,
         "task_path": task_path,
         "writer": writer,
         "action_log": action_log,
@@ -1190,11 +1408,16 @@ class _DriverCache:
     def __init__(self) -> None:
         self._instances: Dict[tuple, Any] = {}
 
-    def registry(self) -> Dict[tuple, Any]:
+    def registry(self, project_root: Optional[str] = None) -> Dict[tuple, Any]:
         """`resolve_candidates(registry=...)`에 넘길 메모이즈 레지스트리."""
+        factories = e2e_drivers.registered_drivers()
+        if project_root:
+            from lib.e2e.drivers import declarative
+
+            factories.update(declarative.load_project_manifests(project_root))
         return {
             key: self._memoized(key, factory)
-            for key, factory in e2e_drivers.registered_drivers().items()
+            for key, factory in factories.items()
         }
 
     def _memoized(self, key: tuple, factory: Any) -> Any:
@@ -1236,8 +1459,10 @@ def _resolve_executor_candidates(
     # browser 후보가 먼저다 — C-DRV-3 후보 순서가 배열 앞쪽을 차지해야 §A.1.2 `order`가
     # 실제 시도 순서와 일치한다.
     if _EXECUTOR_BROWSER in required:
+        project_root = (runtime_context or {}).get("project_root")
         browser_candidates, browser_probes = e2e_drivers.resolve_candidates(
             required_capabilities=_required_browser_capabilities(scenario),
+            required_operations=e2e_scenario_adapter.required_driver_operations(scenario),
             # driver 인스턴스가 여기서 만들어져 step 실행까지 재사용되므로(§C.7·S-27),
             # 증적 관문과 행동 로그를 생성 시점에 함께 넘긴다.
             runtime_context=dict(
@@ -1245,7 +1470,8 @@ def _resolve_executor_candidates(
                 profile=profile,
                 surface_kind=scenario.get("surface_kind"),
             ),
-            registry=driver_cache.registry() if driver_cache is not None else None,
+            registry=driver_cache.registry(project_root) if driver_cache is not None else None,
+            candidate_order=e2e_drivers.load_candidate_order(project_root),
         )
         probes.extend(browser_probes)
         for item in browser_candidates:
@@ -1604,6 +1830,31 @@ def _finalize(
         observed=False,
     )
 
+    # Library journeys participate in freshness reuse.  The ledger is written
+    # only after the pass evidence exists; non-pass runs never become reusable.
+    if resolved_status == "pass" and context is not None and scenario is not None:
+        source = e2e_freshness.source_identity(scenario, project_root=context.project_root)
+        if source is not None:
+            e2e_freshness.record_pass(
+                e2e_freshness.ledger_path(context.project_root),
+                source=source,
+                target_commit=context.commit,
+                driver_identity=e2e_freshness.selected_driver_identity(candidates or []),
+                achieved_fidelity=fidelity,
+                run_id=run_id,
+                run_json_path=run_json_path,
+            )
+
+    # 표준 layout(root/project-id/run-id)에만 최근 N개 정책을 적용한다. 호출자가
+    # OPAL_E2E_ARTIFACT_DIR로 지정한 단일 격리 디렉터리는 소유 경계가 다르므로 제외한다.
+    run_path = Path(artifact_dir)
+    try:
+        is_standard_layout = run_path.parent.parent.resolve() == Path(artifact_root).resolve()
+    except OSError:
+        is_standard_layout = False
+    if is_standard_layout:
+        enforce_artifact_retention(run_path.parent)
+
     return {
         # CONTRACT.md §B.1.1 규정 필드.
         "run_id": run_id,
@@ -1646,14 +1897,6 @@ ERROR_RUN_NOT_FOUND = "run_not_found"
 EVIDENCE_RUN_JSON = e2e_evidence.EVIDENCE_PATHS["metadata"]
 EVIDENCE_OWNED_JSON = e2e_evidence.EVIDENCE_PATHS["owned"]
 EVIDENCE_JOURNAL_JSON = e2e_evidence.EVIDENCE_PATHS["journal"]
-
-
-def default_artifact_root() -> str:
-    """`${OPAL_E2E_ARTIFACT_ROOT:-${TMPDIR}/opal-e2e-runs}`(§B.1.1 표·§C.6)."""
-    return os.path.abspath(
-        os.environ.get("OPAL_E2E_ARTIFACT_ROOT")
-        or str(e2e_process.temp_root() / _DEFAULT_ARTIFACT_DIRNAME)
-    )
 
 
 def _read_json(path: Path) -> Optional[dict]:

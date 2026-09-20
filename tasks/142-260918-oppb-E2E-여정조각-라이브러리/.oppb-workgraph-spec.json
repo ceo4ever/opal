@@ -1,0 +1,320 @@
+{
+  "budget": {
+    "max_runner_dispatches": 21,
+    "max_executor_dispatches": 63,
+    "max_verifier_dispatches": 21,
+    "max_total_dispatches": 105,
+    "max_active_runners": 2,
+    "max_active_executors": 2,
+    "max_total_agent_processes": 4,
+    "max_attempts_per_task": 3
+  },
+  "mini_tasks": [
+    {
+      "id": "T01",
+      "capability": "E2E 저장소 경계와 산출물 수명",
+      "depends_on": [],
+      "lease": {
+        "tracked_writes": [
+          ".gitignore",
+          "docs/e2e/README.md",
+          "docs/e2e/fragments/.gitkeep",
+          "docs/e2e/journeys/.gitkeep",
+          ".opal/e2e/README.md",
+          "opal/tools/test-tool/lib/e2e/orchestrator.py",
+          "opal/tools/test-tool/test_tool.py",
+          "opal/tools/test-tool/README.md",
+          "opal/tools/test-tool/tests/test_e2e_artifact_retention.py"
+        ],
+        "ephemeral_writes": [],
+        "contracts": [
+          "e2e-artifact-root-default",
+          "git-tracking-boundary"
+        ],
+        "runtime_resources": [
+          "repo-git-index",
+          "e2e-artifact-root"
+        ]
+      },
+      "run_command": null,
+      "verify_command": [
+        "bash",
+        "-c",
+        "cd opal/tools/test-tool && \"$HOME/.opal/.venv/bin/python\" -m unittest discover -s tests -t tests -p 'test_e2e_artifact_retention.py' && \"$HOME/.opal/.venv/bin/python\" -m unittest discover -s tests -t tests -p 'test_red_s4_no_repo_pollution.py' && git check-ignore -q --no-index \"$(git rev-parse --show-toplevel)/.e2e/probe\" && \"$HOME/.opal/.venv/bin/python\" -m unittest discover -s tests -t tests"
+      ],
+      "executors": [
+        { "id": "tracking-boundary", "run_command": null },
+        { "id": "artifact-root-and-retention", "run_command": null },
+        { "id": "retention-tests", "run_command": null }
+      ]
+    },
+    {
+      "id": "T02",
+      "capability": "증적 비밀 마스킹",
+      "depends_on": ["T01"],
+      "lease": {
+        "tracked_writes": [
+          "opal/tools/test-tool/lib/e2e/redaction.py",
+          "opal/tools/test-tool/lib/e2e/evidence.py",
+          "opal/tools/test-tool/tests/test_e2e_action_value_redaction.py"
+        ],
+        "ephemeral_writes": [],
+        "contracts": [
+          "task127-C-6-redaction",
+          "evidence-single-gateway-A.12"
+        ],
+        "runtime_resources": []
+      },
+      "run_command": null,
+      "verify_command": [
+        "bash",
+        "-c",
+        "cd opal/tools/test-tool && \"$HOME/.opal/.venv/bin/python\" -m unittest discover -s tests -t tests -p 'test_e2e_action_value_redaction.py' && \"$HOME/.opal/.venv/bin/python\" -m unittest discover -s tests -t tests -p 'test_red_s7_redaction.py' && \"$HOME/.opal/.venv/bin/python\" -m unittest discover -s tests -t tests"
+      ],
+      "executors": [
+        { "id": "redaction-rule", "run_command": null },
+        { "id": "gateway-enforcement", "run_command": null },
+        { "id": "masking-tests", "run_command": null }
+      ]
+    },
+    {
+      "id": "T03",
+      "capability": "driver 연산 이행 검증과 실행 전 후보 게이트",
+      "depends_on": ["T02"],
+      "lease": {
+        "tracked_writes": [
+          "opal/tools/test-tool/lib/e2e/drivers/__init__.py",
+          "opal/tools/test-tool/lib/e2e/driver_conformance.py",
+          "opal/tools/test-tool/lib/e2e/scenario_adapter.py",
+          "opal/tools/test-tool/lib/e2e/orchestrator.py",
+          "opal/tools/test-tool/test_tool.py",
+          "opal/tools/test-tool/README.md",
+          "opal/tools/test-tool/tests/test_e2e_driver_verify.py",
+          "opal/tools/test-tool/tests/test_e2e_ops_gate.py"
+        ],
+        "ephemeral_writes": [],
+        "contracts": [
+          "driver-8op-B.2",
+          "candidate-record-A.1.2",
+          "task127-C-3-candidate-switch",
+          "e2e-cli-subcommand-surface"
+        ],
+        "runtime_resources": [
+          "browser-binary:agent-browser",
+          "browser-binary:cmux",
+          "browser-binary:ego"
+        ]
+      },
+      "run_command": null,
+      "verify_command": [
+        "bash",
+        "-c",
+        "cd opal/tools/test-tool && \"$HOME/.opal/.venv/bin/python\" -m unittest discover -s tests -t tests -p 'test_e2e_driver_verify.py' && \"$HOME/.opal/.venv/bin/python\" -m unittest discover -s tests -t tests -p 'test_e2e_ops_gate.py' && \"$HOME/.opal/.venv/bin/python\" -m unittest discover -s tests -t tests"
+      ],
+      "executors": [
+        { "id": "required-ops-extraction", "run_command": null },
+        { "id": "pre-execution-gate", "run_command": null },
+        { "id": "driver-verify-subcommand", "run_command": null },
+        { "id": "conformance-tests", "run_command": null }
+      ]
+    },
+    {
+      "id": "T04",
+      "capability": "선언형 driver 등록과 후보 순서 데이터화",
+      "depends_on": ["T03"],
+      "lease": {
+        "tracked_writes": [
+          "opal/tools/test-tool/lib/e2e/drivers/__init__.py",
+          "opal/tools/test-tool/lib/e2e/drivers/declarative.py",
+          "opal/tools/test-tool/lib/e2e/drivers/manifest.json",
+          "opal/tools/test-tool/lib/e2e/orchestrator.py",
+          "opal/tools/test-tool/README.md",
+          ".opal/e2e/order.json",
+          ".opal/e2e/drivers/ego-lite.json",
+          "opal/tools/test-tool/tests/test_e2e_declarative_driver.py",
+          "opal/tools/test-tool/tests/test_e2e_candidate_order_file.py"
+        ],
+        "ephemeral_writes": [],
+        "contracts": [
+          "C-DRV-3-default-order-and-override",
+          "driver-manifest-A.15",
+          "driver-8op-B.2"
+        ],
+        "runtime_resources": [
+          "browser-binary:ego"
+        ]
+      },
+      "run_command": null,
+      "verify_command": [
+        "bash",
+        "-c",
+        "cd opal/tools/test-tool && \"$HOME/.opal/.venv/bin/python\" -m unittest discover -s tests -t tests -p 'test_e2e_declarative_driver.py' && \"$HOME/.opal/.venv/bin/python\" -m unittest discover -s tests -t tests -p 'test_e2e_candidate_order_file.py' && \"$HOME/.opal/.venv/bin/python\" -m unittest discover -s tests -t tests"
+      ],
+      "executors": [
+        { "id": "declarative-driver-runtime", "run_command": null },
+        { "id": "manifest-authoring", "run_command": null },
+        { "id": "order-file-binding", "run_command": null },
+        { "id": "registration-tests", "run_command": null }
+      ]
+    },
+    {
+      "id": "T05",
+      "capability": "여정·조각 라이브러리",
+      "depends_on": ["T02", "T04"],
+      "lease": {
+        "tracked_writes": [
+          "opal/tools/test-tool/lib/e2e/fragment.py",
+          "opal/tools/test-tool/lib/e2e/journey.py",
+          "opal/tools/test-tool/lib/e2e/scenario_adapter.py",
+          "opal/tools/test-tool/lib/e2e/orchestrator.py",
+          "opal/tools/test-tool/test_tool.py",
+          "opal/tools/test-tool/README.md",
+          "docs/e2e/README.md",
+          "docs/e2e/fragments/login.md",
+          "docs/e2e/journeys/login-to-dashboard.md",
+          "opal/tools/test-tool/tests/test_e2e_fragment_registry.py",
+          "opal/tools/test-tool/tests/test_e2e_fragment_expansion_duplicate_scope.py"
+        ],
+        "ephemeral_writes": [],
+        "contracts": [
+          "fragment-postcondition-required",
+          "actions-jsonl-expansion-A.4",
+          "S-27-duplicate-signature-scope"
+        ],
+        "runtime_resources": [
+          "e2e-artifact-root"
+        ]
+      },
+      "run_command": null,
+      "verify_command": [
+        "bash",
+        "-c",
+        "cd opal/tools/test-tool && \"$HOME/.opal/.venv/bin/python\" -m unittest discover -s tests -t tests -p 'test_e2e_fragment_registry.py' && \"$HOME/.opal/.venv/bin/python\" -m unittest discover -s tests -t tests -p 'test_e2e_fragment_expansion_duplicate_scope.py' && \"$HOME/.opal/.venv/bin/python\" -m unittest discover -s tests -t tests -p 'test_red_s27_no_retry_on_product_failure.py' && \"$HOME/.opal/.venv/bin/python\" -m unittest discover -s tests -t tests"
+      ],
+      "executors": [
+        { "id": "duplicate-signature-scope", "run_command": null },
+        { "id": "fragment-registration-and-postconditions", "run_command": null },
+        { "id": "journey-expansion-into-actions", "run_command": null },
+        { "id": "library-seed-and-tests", "run_command": null }
+      ]
+    },
+    {
+      "id": "T06",
+      "capability": "신선도 원장과 재실행 생략 기록",
+      "depends_on": ["T05"],
+      "lease": {
+        "tracked_writes": [
+          "opal/tools/test-tool/lib/e2e/freshness.py",
+          "opal/tools/test-tool/lib/e2e/orchestrator.py",
+          "opal/tools/test-tool/test_tool.py",
+          "opal/tools/test-tool/README.md",
+          "opal/tools/test-tool/tests/test_e2e_freshness_key.py",
+          "opal/tools/test-tool/tests/test_e2e_skip_record.py"
+        ],
+        "ephemeral_writes": [],
+        "contracts": [
+          "freshness-key-composition",
+          "skip-is-evidence-reuse-record",
+          "fidelity-order-read-only"
+        ],
+        "runtime_resources": [
+          "e2e-freshness-ledger",
+          "e2e-artifact-root"
+        ]
+      },
+      "run_command": null,
+      "verify_command": [
+        "bash",
+        "-c",
+        "cd opal/tools/test-tool && \"$HOME/.opal/.venv/bin/python\" -m unittest discover -s tests -t tests -p 'test_e2e_freshness_key.py' && \"$HOME/.opal/.venv/bin/python\" -m unittest discover -s tests -t tests -p 'test_e2e_skip_record.py' && \"$HOME/.opal/.venv/bin/python\" -m unittest discover -s tests -t tests"
+      ],
+      "executors": [
+        { "id": "key-composition", "run_command": null },
+        { "id": "ledger-io", "run_command": null },
+        { "id": "skip-record-surface", "run_command": null },
+        { "id": "freshness-tests", "run_command": null }
+      ]
+    },
+    {
+      "id": "T07",
+      "capability": "//e2e 발동층과 여정 승격 판정",
+      "depends_on": ["T06"],
+      "lease": {
+        "tracked_writes": [
+          "opal/skills/opal-e2e/SKILL.md",
+          "opal/skills/opal-e2e/references/authoring.md",
+          "opal/core/references/opal-skills-registry.json",
+          "opal/tools/test-tool/lib/e2e/promotion.py",
+          "opal/tools/test-tool/test_tool.py",
+          "opal/tools/test-tool/README.md",
+          "docs/e2e/README.md",
+          "opal/tools/test-tool/tests/test_e2e_promote_gate.py"
+        ],
+        "ephemeral_writes": [],
+        "contracts": [
+          "promotion-requires-pass-evidence",
+          "skill-registry-entry",
+          "verdict-owned-by-test-tool"
+        ],
+        "runtime_resources": [
+          "skill-registry-index",
+          "e2e-artifact-root"
+        ]
+      },
+      "run_command": null,
+      "verify_command": [
+        "bash",
+        "-c",
+        "cd \"$(git rev-parse --show-toplevel)\" && node opal/tools/skill-registry/skill-registry.js validate && cd opal/tools/test-tool && \"$HOME/.opal/.venv/bin/python\" -m unittest discover -s tests -t tests -p 'test_e2e_promote_gate.py' && \"$HOME/.opal/.venv/bin/python\" -m unittest discover -s tests -t tests"
+      ],
+      "executors": [
+        { "id": "promotion-gate", "run_command": null },
+        { "id": "skill-modes", "run_command": null },
+        { "id": "registry-entry", "run_command": null },
+        { "id": "operator-tests", "run_command": null }
+      ]
+    }
+  ],
+  "acceptance": [
+    {
+      "id": "AC-STORAGE-LIFECYCLE",
+      "description": "INTENT C-11·C-13 — docs/e2e/·.opal/e2e/는 추적되고 .e2e/는 .gitignore 1줄로 전량 무시되어 git status를 더럽히지 않으며, .e2e/artifacts/ 보존 정책이 집행되어 무한 증가하지 않는다.",
+      "contributing_tasks": ["T01"]
+    },
+    {
+      "id": "AC-EVIDENCE-SECRET",
+      "description": "INTENT C-1 — fill 계열 action의 입력값이 actions.jsonl에 원문으로 남지 않고, 마스킹 실패 시 원문을 남기지 않고 infra_error로 끝나는 기존 계약이 유지된다.",
+      "contributing_tasks": ["T02"]
+    },
+    {
+      "id": "AC-DRIVER-CONFORMANCE",
+      "description": "INTENT C-2·C-3 — 시나리오 step이 요구하는 연산을 제공하지 않는 driver 후보가 실행 전에 걸러지고, e2e driver-verify가 8연산 이행을 실제 실행으로 검사해 부분 driver를 통과시키지 않는다.",
+      "contributing_tasks": ["T03"]
+    },
+    {
+      "id": "AC-DECLARATIVE-DRIVER",
+      "description": "INTENT C-5·C-6 — .opal/e2e/drivers/의 매니페스트 JSON 한 장으로 driver가 등록되고 driver-verify를 통과해야 후보가 되며, .opal/e2e/order.json 값이 resolve_candidates(candidate_order=...)에 전달되어 후보 우선순위를 재정의한다.",
+      "contributing_tasks": ["T04"]
+    },
+    {
+      "id": "AC-FRAGMENT-LIBRARY",
+      "description": "INTENT C-4·C-7 — 사후 조건 없는 조각은 등록이 거부되고 전개 결과가 actions.jsonl에 실제 연산 단위로 남으며, 전개분과 본문에 같은 연산 signature가 함께 나타나도 재시도로 오판되지 않는다(동결 RED S-27 기대 계약 불변).",
+      "contributing_tasks": ["T05"]
+    },
+    {
+      "id": "AC-FRESHNESS-SKIP",
+      "description": "INTENT C-8·C-9 — 신선도 키가 (여정 해시, 조각 해시 집합, surface_id, 대상 commit, 선택 driver 정체, 달성 충실도)로 판정되어 order.json만 바꿔 이전 pass 증적을 재인용하는 경로가 막히고, 생략이 '이전 증적 재인용'으로 기록되어 보인다.",
+      "contributing_tasks": ["T06"]
+    },
+    {
+      "id": "AC-E2E-OPERATOR",
+      "description": "INTENT C-10·C-12 — opal-e2e 스킬(alias //e2e)이 author·run·status 3모드로 동작하고 레지스트리에서 매칭되며 판정은 test-tool 호출 결과 해석만 하고, docs/e2e/ 승격 자격을 도구가 pass 증적으로 판정한다.",
+      "contributing_tasks": ["T07"]
+    },
+    {
+      "id": "AC-NO-REGRESSION",
+      "description": "INTENT C-14 — test-tool 기존 테스트와 E2E 계약 테스트가 프로젝트 전후로 모두 통과한다. 모든 미니 태스크의 verify_command 말미가 전체 스위트를 재실행해 이 조건을 태스크마다 확인한다.",
+      "contributing_tasks": ["T01", "T02", "T03", "T04", "T05", "T06", "T07"]
+    }
+  ]
+}

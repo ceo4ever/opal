@@ -59,6 +59,15 @@ SECRET_QUERY_KEYS = frozenset(
     }
 )
 
+# Browser action 중 사용자가 입력한 값을 소비하는 계열. `value` 자체는 URL·단언값 등
+# 비밀이 아닌 곳에서도 널리 쓰이므로 전역 secret key로 취급하지 않는다. 대신 같은
+# action 레코드의 discriminator(`kind` 또는 `action`)가 아래 값일 때만 sibling `value`를
+# 마스킹한다. 현재 driver가 만드는 두 형태를 모두 포괄한다:
+#
+#   {"kind": "fill", "target": "#pw", "value": "secret"}
+#   {"action": "fill", "target": "#pw", "value": "secret"}
+SECRET_VALUE_ACTIONS = frozenset({"fill", "type", "select"})
+
 _QUERY_PATTERN = re.compile(
     r"(?i)(?P<sep>[?&;]|\A)(?P<key>" + "|".join(sorted(SECRET_QUERY_KEYS)) + r")=(?P<value>[^&\s;\"']*)"
 )
@@ -101,6 +110,15 @@ class RedactionResult:
 
 def is_secret_header(name: Any) -> bool:
     return isinstance(name, str) and name.strip().lower() in SECRET_HEADER_NAMES
+
+
+def _is_secret_value_action(value: Mapping[Any, Any]) -> bool:
+    """mapping이 사용자 입력값을 소비하는 browser action 레코드인지 판정한다."""
+    for discriminator in ("kind", "action"):
+        action = value.get(discriminator)
+        if isinstance(action, str) and action.strip().lower() in SECRET_VALUE_ACTIONS:
+            return True
+    return False
 
 
 def redact_headers(headers: Mapping[str, Any], *, path: str = "headers") -> Tuple[Dict[str, Any], List[str]]:
@@ -182,8 +200,13 @@ def redact_value(value: Any, *, path: str = "$") -> Tuple[Any, List[str]]:
     if isinstance(value, Mapping):
         out: Dict[Any, Any] = {}
         touched: List[str] = []
+        secret_action_value = _is_secret_value_action(value)
         for key, item in value.items():
             child_path = f"{path}.{key}"
+            if secret_action_value and isinstance(key, str) and key.strip().lower() == "value":
+                out[key] = MASK
+                touched.append(child_path)
+                continue
             if is_secret_header(key):
                 out[key] = MASK
                 touched.append(child_path)

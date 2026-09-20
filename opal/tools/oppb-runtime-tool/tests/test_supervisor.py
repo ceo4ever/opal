@@ -3,7 +3,7 @@
   "module": "test_supervisor",
   "layer": "test",
   "domain": "oppb-runtime",
-  "description": "oppb-runtime-tool Supervisor 공개 CLI·run root 파일 계약 RED 테스트. 132 TEST-SCENARIO.md S-4(AC-11, AC-10 — 비정상 종료 후 재기동 시 살아 있는 프로세스 재부착·죽은 프로세스 결과 수확·사람 개입 없는 tick 재개, 고아 프로세스 0, 상태 손상 0)와 S-5(AC-10 — max_active_runners=2·max_active_executors=2·max_total_agent_processes=4 포화 상태에서 첫 반환 slot이 신규 Runner가 아닌 Verifier에 배정)를 검증한다. 제안서 §4.6 Supervisor 실행 모델·§9.3 동시성 예산이 근거다. PLAN H-6에 따라 내부 함수·클래스를 import하지 않고 공개 CLI(run.sh)와 run root 파일(events.jsonl·workgraph.json·attempts/<task>/<attempt>/result.json)만으로 검증한다. mock/patch 금지 — 실제 자식 프로세스를 띄우고 실제 SIGKILL로 비정상 종료를 만든다(PLAN W-10).",
+  "description": "oppb-runtime-tool Supervisor 공개 CLI·run root 파일 계약 RED 테스트. 132 TEST-SCENARIO.md S-4(AC-11, AC-10 — 비정상 종료 후 재기동 시 살아 있는 프로세스 재부착·죽은 프로세스 결과 수확·사람 개입 없는 tick 재개, 고아 프로세스 0, 상태 손상 0)와 S-5(AC-10 — max_active_runners=2·max_active_executors=2·max_total_agent_processes=4 포화 상태에서 첫 반환 slot이 신규 Runner가 아닌 Verifier에 배정), run_command=null이면 opal-agent Runner로 실행하는 capability 계약을 검증한다. 제안서 §4.6 Supervisor 실행 모델·§9.3 동시성 예산과 op-oppb-project-slice 실행 계약이 근거다. PLAN H-6에 따라 내부 함수·클래스를 import하지 않고 공개 CLI(run.sh)와 run root 파일(events.jsonl·workgraph.json·attempts/<task>/<attempt>/result.json)만으로 검증한다. mock/patch 금지 — 실제 자식 프로세스를 띄우고 실제 SIGKILL로 비정상 종료를 만든다(PLAN W-10).",
   "exports": [],
   "depends": ["opal/tools/oppb-runtime-tool/run.sh", "opal/tools/opal-agent/opal_agent.py", "git CLI 2.x"]
 }
@@ -63,7 +63,12 @@ def make_hub_repo(base: pathlib.Path, name: str = "hub") -> pathlib.Path:
     return repo
 
 
-def run_oppb(args: list[str], cwd: pathlib.Path | None = None, timeout: int = 180):
+def run_oppb(
+    args: list[str],
+    cwd: pathlib.Path | None = None,
+    timeout: int = 180,
+    env: dict[str, str] | None = None,
+):
     """공개 인터페이스(run.sh)로만 호출한다. 내부 import 금지(PLAN H-6).
     run.sh 미존재는 W-6~W-9 구현 전 RED 증거다."""
     if not RUN_SH.exists():
@@ -77,6 +82,7 @@ def run_oppb(args: list[str], cwd: pathlib.Path | None = None, timeout: int = 18
         capture_output=True,
         text=True,
         timeout=timeout,
+        env=env,
     )
 
 
@@ -230,6 +236,167 @@ def _reap_strays():
             kill_hard(int(line.split(None, 1)[0]))
         except (ValueError, IndexError):
             pass
+
+
+# ================================================ capability agent fallback
+
+
+def test_null_run_command_launches_opal_agent_runner(tmp_path, _reap_strays):
+    """run_command=null은 현재 플랫폼 provider의 opal-agent Runner를 기동한다."""
+    marker = _reap_strays
+    run = bootstrap_run(
+        tmp_path,
+        budget={
+            "max_active_runners": 1,
+            "max_active_executors": 0,
+            "max_total_agent_processes": 1,
+            "max_attempts_per_task": 1,
+        },
+        mini_tasks=[
+            {
+                "id": "mt-agent-fallback",
+                "capability": marker,
+                "lease": {"tracked_writes": ["src/fallback.txt"]},
+                "run_command": None,
+                "executors": [
+                    {"id": "internal-a", "run_command": None},
+                    {"id": "internal-b", "run_command": None},
+                ],
+            }
+        ],
+    )
+    run_root = run["run_root"]
+
+    fake_bin = tmp_path / "bin"
+    fake_bin.mkdir()
+    for name in ("claude", "codex"):
+        stub = fake_bin / name
+        stub.write_text("#!/bin/sh\nexit 1\n", encoding="utf-8")
+        stub.chmod(0o755)
+    env = dict(os.environ)
+    env["PATH"] = f"{fake_bin}{os.pathsep}{env.get('PATH', '')}"
+    env["CODEX_SESSION_ID"] = "test-codex-session"
+    for key in ("CLAUDE_CODE_SESSION_ID", "CLAUDECODE"):
+        env.pop(key, None)
+
+    started = ok(
+        run_oppb(["start", "--run-root", str(run_root)], env=env), "start"
+    )
+    supervisor_pid = int(started["supervisor_pid"])
+    try:
+        wait_until(
+            lambda: next(
+                (
+                    event
+                    for event in read_events(run_root)
+                    if event.get("event") == "attempt_launched"
+                    and event.get("task_id") == "mt-agent-fallback"
+                ),
+                None,
+            ),
+            timeout=10,
+            label="run_command=null opal-agent Runner 기동",
+        )
+    finally:
+        kill_hard(supervisor_pid)
+
+    spec_path = (
+        run_root
+        / "attempts"
+        / "mt-agent-fallback"
+        / "mt-agent-fallback.runner.1"
+        / "attempt-spec.json"
+    )
+    assert spec_path.exists(), "run_command=null Runner execution packet이 생성되지 않음"
+    spec = json.loads(spec_path.read_text(encoding="utf-8"))
+    assert spec["role"] == "runner"
+    assert spec["provider"] == "opal-agent"
+    assert "--provider" in spec["command"]
+    provider_index = spec["command"].index("--provider")
+    assert spec["command"][provider_index + 1] == "codex"
+    timeout_index = spec["command"].index("--timeout")
+    assert spec["command"][timeout_index + 1] == "900"
+    prompt = spec["command"][2]
+    packet_path = spec_path.parent / "execution-packet.json"
+    assert prompt.startswith("[WORKER]\n")
+    assert str(packet_path) in prompt
+
+    packet = json.loads(packet_path.read_text(encoding="utf-8"))
+    assert packet["profile"] == "standard"
+    assert packet["budget"]["limits"]["max_attempts_per_task"] == 1
+    assert packet["contract"]["acceptance_cluster"]
+    assert packet["lease_receipt"]["state"] == "active"
+    assert packet["lease_receipt"]["attempt_id"] == "mt-agent-fallback.runner.1"
+
+    launched = [
+        event
+        for event in read_events(run_root)
+        if event.get("event") == "attempt_launched"
+    ]
+    assert [event["role"] for event in launched] == ["runner"], (
+        "run_command=null 내부 work item을 Supervisor가 별도 Executor로 중복 기동함"
+    )
+
+
+def test_executors_are_batched_within_active_pool_limit(tmp_path, _reap_strays):
+    """선언된 executor 수가 pool 상한보다 커도 상한 안에서 나눠 전부 실행한다."""
+    marker = _reap_strays
+    run = bootstrap_run(
+        tmp_path,
+        budget={
+            "max_active_runners": 1,
+            "max_active_executors": 2,
+            "max_total_agent_processes": 3,
+        },
+        mini_tasks=[
+            {
+                "id": "mt-batched-executors",
+                "capability": "batched-executors",
+                "lease": {"tracked_writes": ["src/batched.txt"]},
+                "run_command": marker_command(marker, 3),
+                "executors": [
+                    {"id": f"ex-{index}", "run_command": marker_command(marker, 1)}
+                    for index in range(3)
+                ],
+            }
+        ],
+    )
+    run_root = run["run_root"]
+
+    started = ok(run_oppb(["start", "--run-root", str(run_root)]), "start")
+    try:
+        wait_until(
+            lambda: status(run_root)["mini_tasks"][0]["state"] == "accepted",
+            timeout=30,
+            label="executor 배치 실행 완료",
+        )
+    finally:
+        kill_hard(int(started["supervisor_pid"]))
+
+    events = read_events(run_root)
+    executor_launches = [
+        event
+        for event in events
+        if event.get("event") == "attempt_launched" and event.get("role") == "executor"
+    ]
+    assert {event.get("executor_id") for event in executor_launches} == {
+        "ex-0",
+        "ex-1",
+        "ex-2",
+    }
+
+    live: dict[str, str] = {}
+    peak_executors = 0
+    for event in events:
+        if event.get("event") == "attempt_launched":
+            live[event["attempt_id"]] = event.get("role")
+        elif event.get("event") == "attempt_exited":
+            live.pop(event.get("attempt_id"), None)
+        peak_executors = max(
+            peak_executors,
+            sum(1 for role in live.values() if role == "executor"),
+        )
+    assert peak_executors <= 2
 
 
 # ================================================================= S-4 crash recovery

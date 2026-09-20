@@ -9,7 +9,8 @@
     "observed_executors", "assertion_summary", "build_verdict_input",
     "verify_step_ids_by_executor", "missing_assertion_results",
     "core_ui_assertion_ids", "api_substituted_core_ui_assertions", "ACTION_KEYS", "ASSERTION_KEYS",
-    "static_executor_contract_error"
+    "required_driver_operations", "static_executor_contract_error",
+    "scoped_operation_signature"
   ]
 }
 
@@ -25,10 +26,15 @@ lib.e2e.scenario_adapter — 시나리오 파일은 동결돼 있다(`test-scena
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+import os
 from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple
 
 from lib import e2e_contract
 from lib.e2e import executors as e2e_executors
+
+
+_DRIVER_STEP_OPERATIONS: Tuple[str, ...] = ("act", "wait", "snapshot", "capture")
+_DRIVER_ALWAYS_OPERATIONS: Tuple[str, ...] = ("probe", "open", "capture", "close")
 
 
 @dataclass
@@ -70,7 +76,10 @@ ACTION_KEYS: Dict[str, Tuple[str, ...]] = {
     "api": ("method", "url", "headers", "body", "timeout_ms", "observe_url"),
     # §B.2 `act` — `{kind, target, value?}`. `kind`는 `_ACT_SUBCOMMANDS`의 키이고
     # `target`은 셀렉터·URL, `value`는 fill·type·select의 입력값이다.
-    "browser": ("kind", "target", "value"),
+    "browser": (
+        "kind", "target", "value", "value_ref",
+        "origin_scope", "origin_id", "origin_step_id",
+    ),
     # human executor는 `act`를 갖지 않는다(§B.3 — probe·handoff·resume 3연산).
     "human": (),
 }
@@ -100,6 +109,19 @@ def build_execution_plan(scenario: Mapping[str, Any]) -> List[ExecutionStep]:
                 f"steps[{index}].executor={executor!r} is not one of {e2e_contract.EXECUTOR_TYPES}",
             )
         action = {key: raw[key] for key in ACTION_KEYS.get(executor, ()) if key in raw}
+        if executor == "browser" and "value_ref" in action:
+            reference = action.pop("value_ref")
+            if not isinstance(reference, str) or not reference:
+                raise e2e_executors.ExecutorError(
+                    "fragment_value_ref_invalid",
+                    f"steps[{index}].value_ref must name an environment variable",
+                )
+            if reference not in os.environ:
+                raise e2e_executors.ExecutorError(
+                    "fragment_value_ref_missing",
+                    f"steps[{index}].value_ref environment variable {reference!r} is not set",
+                )
+            action["value"] = os.environ[reference]
         plan.append(
             ExecutionStep(
                 id=str(raw.get("id") or f"step-{index}"),
@@ -110,6 +132,53 @@ def build_execution_plan(scenario: Mapping[str, Any]) -> List[ExecutionStep]:
             )
         )
     return plan
+
+
+def scoped_operation_signature(step: ExecutionStep) -> Tuple[str, str, str, str]:
+    """연산 중복을 저작 범위와 함께 식별한다.
+
+    같은 kind/target이 조각 전개분과 여정 본문에 각각 있으면 둘은 서로 다른 정상
+    연산이다. 같은 전개 step이 다시 실행될 때만 동일 signature가 된다.
+    """
+    raw = step.raw
+    return (
+        str(raw.get("origin_scope") or "scenario"),
+        str(step.id),
+        str(step.action.get("kind") or step.action.get("method") or "act"),
+        str(step.action.get("target") or step.action.get("url") or ""),
+    )
+
+
+def required_driver_operations(scenario: Mapping[str, Any]) -> Tuple[str, ...]:
+    """browser 후보가 이 시나리오를 끝까지 실행하려면 필요한 §B.2 연산.
+
+    현재 scenario v2의 일반 browser step은 ``act``다. 여정/조각 입력은 향후
+    ``operation`` 또는 ``driver_operation``으로 ``wait``·``snapshot``·``capture``를
+    명시할 수 있고, 같은 이름의 ``kind``도 보수적으로 인식한다. orchestrator가 모든
+    browser run에서 수행하는 probe/open/capture/close와 browser assertion의 assert도
+    함께 포함해 실행 중 미구현 연산이 처음 드러나는 경로를 막는다.
+    """
+    required = set(_DRIVER_ALWAYS_OPERATIONS)
+    browser_steps = [
+        item for item in (scenario.get("steps") or [])
+        if isinstance(item, Mapping) and item.get("executor") == "browser"
+    ]
+    for step in browser_steps:
+        declared = step.get("operation") or step.get("driver_operation")
+        if declared not in _DRIVER_STEP_OPERATIONS:
+            kind = step.get("kind")
+            declared = kind if kind in _DRIVER_STEP_OPERATIONS else "act"
+        required.add(str(declared))
+
+    if browser_steps and any(
+        isinstance(item, Mapping) and item.get("executor") in (None, "", "browser")
+        for item in (scenario.get("assertions") or [])
+    ):
+        required.add("assert")
+
+    # 계약 SSOT의 순서를 그대로 써 결과와 진단 문자열을 안정화한다.
+    from lib.e2e import drivers as e2e_drivers
+    return tuple(item for item in e2e_drivers.DRIVER_OPERATIONS if item in required)
 
 
 def required_executor_types(scenario: Mapping[str, Any]) -> Tuple[str, ...]:

@@ -754,6 +754,16 @@ def create_execution_packet(
     if role not in ROLES:
         raise ControllerError("role_invalid", "받은 값: %r" % role)
 
+    acceptance = read_acceptance(run_root) or {}
+    acceptance_cluster = [
+        {
+            "id": item.get("id"),
+            "description": item.get("description", ""),
+        }
+        for item in acceptance.get("criteria") or []
+        if task_id in (item.get("contributing_tasks") or [])
+    ]
+
     with workgraph_transaction(run_root) as document:
         task = find_task(document, task_id)
         contract = task.get("contract", {})
@@ -773,6 +783,11 @@ def create_execution_packet(
 
         _apply_debit(document, role, 1)
 
+        if not acceptance_cluster:
+            acceptance_cluster = [
+                {"id": task_id, "description": task.get("capability", "")}
+            ]
+
         packet = {
             "schema_version": SCHEMA_VERSION,
             "run_id": document.get("run_id"),
@@ -783,6 +798,19 @@ def create_execution_packet(
             "executor_id": executor_id,
             "capability": task.get("capability"),
             "depends_on": list(task.get("depends_on", [])),
+            "profile": task.get("profile", DEFAULT_TASK_PROFILE),
+            "budget": json.loads(json.dumps(document.get("budget") or {})),
+            "contract": {
+                "acceptance_cluster": acceptance_cluster,
+                "business_rules": [],
+                "external_contracts": list(
+                    (contract.get("lease") or {}).get("contracts") or []
+                ),
+                "verify_command": contract.get("verify_command"),
+                "approved_work_items": [
+                    item.get("id") for item in contract.get("executors") or []
+                ],
+            },
             "lease": contract.get("lease", {}),
             "command": command,
             "created_at": _now(),

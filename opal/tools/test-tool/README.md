@@ -24,7 +24,7 @@ bash ~/.opal/tools/test-tool/run.sh <서브명령> [옵션]
 bash opal/tools/test-tool/run.sh <서브명령> [옵션]
 ```
 
-**의존**: `.venv python` (OPAL 설치) + PyYAML. E2E executor는 `test-tools.yaml`와 E2E contract의 profile/executor 선언을 따른다. 브라우저 후보 기본 순서는 Ego Lite → cmux → Playwright다.
+**의존**: `.venv python` (OPAL 설치) + PyYAML. E2E executor는 `test-tools.yaml`와 E2E contract의 profile/executor 선언을 따른다. 브라우저 후보 기본 순서는 agent-browser(orca-managed) → cmux(owned-surface) → agent-browser(standalone) → Ego Lite → Playwright(opt-in)다.
 
 ---
 
@@ -169,10 +169,26 @@ test-tool e2e run --scenario <id> --task-path <path> --target <source-main|sourc
 실행한다. `--scenario`·`--task-path`·`--target` 3개는 필수다. exit은 `status_to_exit(status)`
 결과이며 값은 `{0,6,7,18,19,20}`을 벗어나지 않는다.
 
+`--task-path/test-scenario.json`에 같은 id가 없으면 `<project>/docs/e2e/journeys/<id>.md`를
+직접 읽는다. 여정의 `{fragment: <id>, with: {...}}` step은 `docs/e2e/fragments/<id>.md`의
+실제 연산과 필수 사후 조건으로 전개된다. 조각의 `fill`·`type` 값은 `value_ref`가 가리키는
+환경 변수에서 실행 직전에 읽으며, 조각 문서에 원문 값을 둘 수 없다. 전개 연산은 축약된
+조각 호출 한 행이 아니라 실제 연산별 `actions.jsonl` 행으로 남는다.
+
 - 대상 3종: `source-main`(허브 체크아웃) · `source-worktree`(작업본, `--worktree-root`) ·
   `installed`(`--opal-home`. install을 호출하지 않으며 사용자 실제 `~/.opal`과 같은 경로면 거부)
-- 산출물은 `OPAL_E2E_ARTIFACT_DIR` 또는 OS 임시 경로에만 쓴다 — 저장소를 오염시키지 않는다
+- 산출물 기본값은 프로젝트의 `.e2e/artifacts/`이며 최근 20개 run만 보존한다. `.e2e/`는
+  저장소 전체 무시 경계라 `git status`를 오염시키지 않는다. `OPAL_E2E_ARTIFACT_DIR` 또는
+  `OPAL_E2E_ARTIFACT_ROOT`로 격리 경로를 명시할 수 있다.
 - 사용자 Console 포트(7823)는 임대 풀에서 제외된다
+
+프로젝트 여정 실행이 `pass`하면 `.e2e/freshness.json`에 여정 해시, 참조 조각 해시 집합,
+`surface_id`, 대상 commit, 선택 driver의 `driver`+`session_mode`, 실제 달성 충실도를
+기록한다. 다음 실행은 이 값이 일치하고 기존 `run.json`이 여전히 완전한 `pass` 증적이며
+달성 충실도가 현재 요구치 이상일 때만 실행을 생략한다. `.opal/e2e/order.json` 변경으로
+선택 driver가 달라지면 이전 증적은 재사용되지 않는다. 생략은 새 `pass`를 만들지 않고
+원장의 `events[]`에 `kind: evidence_reuse`, `description: 이전 증적 재인용`, 기존 run과
+증적 경로를 기록한다. 따라서 후속 status/DONE 소비자는 생략을 미실행으로 숨기지 않는다.
 
 ### `e2e resume` (127)
 
@@ -191,6 +207,46 @@ test-tool e2e resume --run-id <id> --token <resume-token> --submission <path> [-
 
 > 드라이버 후보 순서·충실도 등급·증적 계약의 원문은 이 도구가 소유한다. 파이프라인 문서는
 > 정의를 복제하지 않고 참조한다.
+
+### `e2e driver-verify`
+
+```bash
+test-tool e2e driver-verify --driver <name>
+```
+
+등록된 browser driver의 계약 8연산(`probe/open/snapshot/act/wait/assert/capture/close`)을
+순서대로 실제 dispatch하고 최소 출력 형태를 검사한다. 일부 연산만 구현한 driver와
+바이너리가 없어 `provider_unavailable`인 driver는 통과하지 않는다(exit `1`). 모든 등록
+variant가 8연산을 실제 수행한 경우에만 `ok=true`, `outcome=pass`로 종료한다(exit `0`).
+
+`e2e run`도 시나리오의 browser step이 요구하는 연산을 실행 전에 추출한다. 해당 연산을
+구현하지 않은 후보는 `excluded_by=capability_missing`과 `missing_operations:...` 사유로
+제외되므로, 실행 중 `driver_operation_unimplemented`로 처음 실패하지 않는다.
+
+프로젝트 전용 브라우저는 Python 모듈 대신 `.opal/e2e/drivers/*.json` 한 장으로 등록할 수
+있다. 매니페스트는 `driver`, `session_mode`, binary 탐색 규칙과 계약 8연산의 `argv`(또는
+`act.map`)를 선언한다. 8연산 중 하나라도 빠지면 등록 자체가 거부되며, 실제 사용 전 위
+`driver-verify`가 live command 출력까지 통과하는지 확인한다. 각 command의 마지막 stdout
+줄은 §B.2 최소 출력 형태의 JSON 객체여야 한다. 특수 프로토콜은 기존 Python driver로
+유지할 수 있다.
+
+후보 순서는 프로젝트의 `.opal/e2e/order.json`에 `candidate_order` 배열로 재정의한다.
+각 원소는 `driver`, `session_mode`, `opt_in`을 가지며 이 배열은 그대로
+`resolve_candidates(candidate_order=...)`에 전달된다. 파일이 없을 때만 C-DRV-3 기본값을
+사용하고, 잘못된 파일을 조용히 기본값으로 대체하지 않는다.
+
+### `e2e promote-check`
+
+```bash
+test-tool e2e promote-check --journey <id> \
+  (--run-id <id> | --artifact-dir <path> | --run-json <path>) [--artifact-root <path>]
+```
+
+태스크 초안을 `docs/e2e/`로 승격할 자격만 읽기 전용으로 판정한다. 같은 journey id의
+`run.json`이 `status=pass`, pass exit, `executed=true`, `evidence_complete=true`,
+`missing_evidence=[]`를 모두 만족해야 `eligible=true`와 exit `0`을 반환한다. 그 밖에는
+`eligible=false`와 exit `1`이다. 이 명령은 파일을 복사하지 않고, 호출자 산문이나 별도
+합격 플래그를 입력으로 받지 않는다.
 
 ### `scenario-init`
 
