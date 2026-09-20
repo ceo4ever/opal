@@ -1,0 +1,129 @@
+{
+  "goal": "`semi-agentic`은 PLAN-equivalent 승인 이후 구현·검증·CLOSE 최종 행까지 연속 수행하며, 구조화된 미해결 이슈나 별도 권한이 필요한 행동이 있을 때만 사용자 결정을 기다린다. `agentic`도 같은 CLOSE 자동진입 계약을 사용하고 `interactive`의 명시 승인 경계는 보존한다.",
+  "requirements": [
+    "AC-1",
+    "AC-2",
+    "AC-3",
+    "AC-4",
+    "AC-5",
+    "AC-6",
+    "AC-7",
+    "AC-8",
+    "AC-9",
+    "C-1",
+    "C-2",
+    "C-3",
+    "C-4",
+    "C-5",
+    "C-6",
+    "C-7"
+  ],
+  "features": [],
+  "hypotheses": [
+    "H-1",
+    "H-2",
+    "H-3",
+    "H-4"
+  ],
+  "scenarios": [
+    {
+      "id": "S-1",
+      "covers_requirements": [
+        "AC-1",
+        "AC-2",
+        "AC-3",
+        "AC-5",
+        "AC-8",
+        "C-1",
+        "C-3",
+        "C-6"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [
+        "H-2",
+        "H-3"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-2",
+      "covers_requirements": [
+        "AC-4",
+        "C-2"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-3",
+      "covers_requirements": [
+        "AC-6",
+        "C-3",
+        "C-4"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-4",
+      "covers_requirements": [
+        "AC-8",
+        "C-6"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [
+        "H-1"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-5",
+      "covers_requirements": [
+        "AC-7",
+        "C-1",
+        "C-2",
+        "C-7"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-6",
+      "covers_requirements": [
+        "AC-9",
+        "C-5"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [
+        "H-4"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-7",
+      "covers_requirements": [
+        "C-5"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    }
+  ]
+}

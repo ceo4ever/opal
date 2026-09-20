@@ -104,7 +104,7 @@ PM Gate에서 해당 단계에 관련된 하네스 모듈이 적용되었는지 
 ~/.opal/tools/state-tool/run.sh mark tasks/{NNN}-.../ --row <State Gate 행 N+1> --done
 ```
 
-CLOSE 단계 첫 행 mark 시 도구가 prev_user_row 자동 검증을 수행한다. prev_user_row(owner=user, status=done)가 미존재하거나 조건 불충족이면 도구가 `close_gate_violation`으로 거부한다. 이 경우 사용자 확인 행을 먼저 `--owner user`로 mark한 뒤 재시도한다.
+CLOSE 단계 첫 행은 interactive mode에서만 prev_user_row 자동 검증을 수행한다. prev_user_row(owner=user, status=done)가 미존재하거나 조건 불충족이면 도구가 `close_gate_violation`으로 거부한다. 이 경우 사용자 확인 행을 먼저 `--owner user`로 mark한 뒤 재시도한다. 확인 행이 없는 Pilot도 첫 CLOSE 행을 `--owner user`로 명시 승인한다. semi-agentic·agentic의 자동 CLOSE는 `harness/modes.md` §CLOSE 전이 계약이 소유한다.
 근거: PLAN §2.16 G-13
 
 미갱신 시 PM이 즉시 갱신한다. 갱신 확인 후 사용자 확인으로 진입한다.

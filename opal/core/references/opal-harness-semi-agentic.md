@@ -9,8 +9,8 @@
 | 모드 | 설명 |
 |------|------|
 | `interactive`   | 모든 단계 게이트마다 사용자 승인 (`--interactive` 명시) |
-| `semi-agentic`  | **기본** — PLAN-equivalent 단계까지 사용자 검토, EXECUTE-equivalent 진입 후 PM 자율 통과. CLOSE 진입은 사용자 승인 필수 |
-| `agentic`       | 모든 게이트 PM 자율 통과 (CLOSE 진입 제외) — `--agentic` 명시 |
+| `semi-agentic`  | **기본** — PLAN-equivalent 단계까지 사용자 검토, 승인 뒤 EXECUTE-equivalent·TEST·CLOSE final까지 PM 자율 통과 |
+| `agentic`       | 정상 전 구간과 CLOSE final까지 PM 자율 통과 — `--agentic` 명시 |
 
 ## 2. 활성화 방법
 
@@ -32,7 +32,7 @@
 | opsdd | Phase 3 DESIGN 사용자 Gate (D-DEC-2) | Phase 4 EXECUTE-LOOP 첫 행 |
 | opdd  | DICT·MODEL·DDL/MIGRATION 사용자 확인 행 3건 전부 (설계 확정 게이트, `MODE_BOUNDARY_STAGES`) | QA 작업 행 (QA는 경계 상수 밖 — QA 사용자 확인 행은 자동 승인) |
 | oppl  | REVIEW D7 사용자 확정 게이트 행 | EXECUTE 작업 행(L0 태스크 선택) |
-| opgc  | (사용자 확인 행 없음 — 전 구간 자동) | CLOSE 첫 행이 유일한 소유자 승인 지점(`check_close_gate` 폴백 — `--owner user` 필수) |
+| opgc  | 사용자 확인 행 없음 — 전 구간 자동 | CLOSE 첫 행도 mode-aware 자동 경로; interactive에서만 `--owner user`가 필요 |
 
 ## 4. PLAN-equivalent까지의 동작 (interactive 준용)
 
@@ -46,7 +46,7 @@
 
 - PM 자율 통과 (사용자 확인 행은 도구가 자동 승인 — 아래 참조)
 - 보정 가능한 이슈는 권한 범위 안에서 수정·재검증하고, 통과하면 사용자에게 중간 결정을 요구하지 않고 이어간다. unresolved 실패·계약 충돌·사용자 선택·재시도 한도 초과만 기존 승인·에스컬레이션 경계를 따른다 (`harness/guards.md` §커밋 규칙).
-- 등록된 전용 worktree에서도 EXECUTE·TEST 중간 체크포인트 커밋은 자율 수행하지 않는다. 변경은 누적하고, §6의 기존 CLOSE 진입 사용자 승인을 받은 뒤 구현·테스트 체크포인트를 만든다 (`harness/guards.md` §커밋 규칙).
+- 등록된 전용 worktree에서도 EXECUTE·TEST 중간 체크포인트 커밋은 자율 수행하지 않는다. 자동 CLOSE는 구현·테스트 체크포인트, merge·push·배포 또는 worktree 제거 권한을 부여하지 않는다 (`harness/guards.md` §커밋 규칙).
 - AGENTIC-LOG.md 자동 생성 (EXECUTE 등가 첫 행 advance/mark 시점에 PM이 생성)
 - Gate 루핑 규칙: `opal-harness-agentic.md §5` 적용
 - PM 대행 의무(판단 기록/직접 검증/완수/품질 책임/투명성/에스컬레이션/폴백 승인): `opal-harness-agentic.md §3` 적용
@@ -54,7 +54,7 @@
 
 **사용자 확인 행 — PM 명시 호출 불필요 (도구 자동 승인, 093)**:
 
-사용자 확인 행은 전 모드 `pending / ⬜ / owner=PM`으로 초기화되며, PM이 `--auto-pass`를 별도로 호출하지 않는다. 다음 단계 진입(`advance` 또는 `mark`) 시 도구가 stage-transition guard 직전에 `auto_approve_prior_user_confirmations`를 실행하여, 대상 행 앞 구간(`[0, row_index)`)의 미완 "사용자 확인" 행을 자동 승인한다(`status = done`, `owner = auto`, `timestamp`, `note = "auto-approved on <stage> entry"`). `--as-worker` · `--force` · 대상 행 `stage = CLOSE`이면 즉시 no-op이며, `advance`/`mark` 응답의 `auto_approved` 배열로 관측한다.
+사용자 확인 행은 전 모드 `pending / ⬜ / owner=PM`으로 초기화되며, PM이 `--auto-pass`를 별도로 호출하지 않는다. 다음 단계 진입(`advance` 또는 `mark`) 시 도구가 stage-transition guard 직전에 `auto_approve_prior_user_confirmations`를 실행하여, 대상 행 앞 구간(`[0, row_index)`)의 미완 "사용자 확인" 행을 자동 승인한다(`status = done`, `owner = auto`, `timestamp`, `note = "auto-approved on <stage> entry"`). `--as-worker`·`--force`면 no-op이며, CLOSE도 PLAN-equivalent 승인 뒤에는 같은 판정을 따른다. `advance`/`mark` 응답의 `auto_approved` 배열로 관측한다.
 
 **semi-agentic 자동 승인 불가 구간 — 캡틴 승인 필요**:
 
@@ -72,27 +72,11 @@ semi-agentic 모드에서 자동 승인은 **EXECUTE-equivalent 이후 구간에
 
 - 근거: 093 F-002·F-003·F-004 / `state_tool.py` `MODE_BOUNDARY_STAGES` · `can_auto_approve_user_confirmation`
 
-## 6. CLOSE 진입 게이트 (공통)
+## 6. CLOSE 전이 (공통)
 
-- agentic 모드와 동일하게 CLOSE 첫 행 `--auto-pass` 거부 (`agentic_close_gate_requires_user`)
-- semi-agentic / agentic 양쪽 모두 동일 에러 코드로 거부
+PLAN-equivalent 사용자 승인 뒤 필수 검증을 통과하고 실제 미해결 이슈가 없으면, semi-agentic은 사용자 추가 발화 없이 CLOSE 첫 행부터 `close.final`까지 진행한다. 직전 확인 행이 있으면 도구가 `done/auto`와 `auto_approved`로 기록하고, 없으면 첫 CLOSE 행을 바로 진행한다. `progress_report + continue`는 보고 후 계속 처리한다.
 
-CLOSE 진입 절차:
-1. PM이 소유자에게 CLOSE 진입 직전 상황을 보고한다
-2. 소유자(사용자)의 승인 발화(`승인`/`확인`/`확인완료` 등)를 받는다
-3. 직전 단계 사용자 확인 행(prev_user_row)을 `--owner user`로 mark한다:
-   ```
-   ~/.opal/tools/state-tool/run.sh mark tasks/{NNN}-.../ \
-     --row <사용자 확인 행 N> --done \
-     --owner user \
-     --note "{owner_name} 확인: <발화 요약>"
-   ```
-4. 이후 CLOSE 첫 행 mark 시 도구가 prev_user_row 자동 검증을 통과시킨다
-5. 등록된 전용 worktree이면 이 승인이 누적 EXECUTE·TEST 산출물의 체크포인트와 승인된 CLOSE/finalize 범위의 최종 체크포인트를 허용한다.
-   - 새 사용자 Gate를 만들지 않는다.
-   - 허브·기본 브랜치 commit, merge·push·배포, 이력 재작성과 worktree 제거는 포함하지 않으며 별도 사용자 승인을 유지한다.
-
-근거: `opal-harness-agentic.md §4` CLOSE 진입 게이트 / `PLAN.md §2.16 G-13` / D-DEC-5b
+interactive는 이 자동 경로를 쓰지 않는다. CLOSE 첫 행 전 prev_user_row를 `--owner user`로 완료해야 하며, 확인 행이 없는 opgc도 첫 CLOSE `--owner user`가 필요하다. 실제 미해결 이슈와 별도 권한 행동은 mode와 관계없이 `await_user|blocked` / `decision_request`로 에스컬레이션한다. merge/push/deploy/worktree 제거와 OPPB P5 merge gate는 자동 CLOSE 범위 밖이다 (`harness/modes.md` §CLOSE 전이 계약).
 
 ## 7. AGENTIC-LOG.md 생성 시점
 
@@ -118,11 +102,11 @@ CLOSE 진입 절차:
 | TEST-SCENARIO 완료 | 사용자 승인 | 사용자 승인 (모드 경계) | PM 자율 | opd 전용 |
 | EXECUTE 완료  | 사용자 승인 | PM 자율 | PM 자율 | |
 | TEST 완료     | 사용자 승인 | PM 자율 | PM 자율 | |
-| CLOSE 진입    | 사용자 승인 | 사용자 승인 (공통 게이트) | 사용자 승인 (공통 게이트) | |
+| CLOSE 및 final | 사용자 승인 | 자동 진행 | 자동 진행 | 실제 미해결 이슈와 별도 권한 행동은 예외 |
 
 ## 9. 유지되는 규칙 (opal-harness.md §1 Guards 그대로 적용)
 
-- 구현 금지 원칙 / 커밋 규칙 / 디스패치 의무 / 자동 루핑 제약 / CLOSE 진입 게이트
+- 구현 금지 원칙 / 커밋 규칙 / 디스패치 의무 / 자동 루핑 제약 / `harness/modes.md` §CLOSE 전이 계약
 - 에스컬레이션 조건: `opal-harness-agentic.md §6` 동일 적용
 
 ---

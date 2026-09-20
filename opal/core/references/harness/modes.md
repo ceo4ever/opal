@@ -46,4 +46,16 @@ load: pilot.start
 
 - `progress_report`는 비차단 통지다. 보고 후 `transition_action=continue`이면 같은 응답 안에서 다음 단계 도구 호출을 이어간다.
 - `decision_request`만 사용자 응답을 기다리는 신호다. 이때 `transition_action`은 `await_user` 또는 `blocked`다.
-- `complete`는 전체 파이프라인의 명시 final 행까지 끝난 뒤에만 반환된다. CLOSE 진입 승인 예외는 각 모드 하네스와 `harness/guards.md`가 유지한다.
+- `complete`는 전체 파이프라인의 명시 final 행까지 끝난 뒤에만 반환된다.
+
+## CLOSE 전이 계약
+
+`state-tool`의 mode 판정과 구조화 전이 출력이 CLOSE 진입·tail 진행의 유일한 런타임 근거다.
+
+| effective mode | CLOSE 첫 행 진입 |
+|---|---|
+| `interactive` 또는 invalid stored mode (`fail_closed`) | 직전 사용자 확인 행을 `owner=user`, `status=done`으로 명시 승인한 뒤에만 허용한다. |
+| `semi-agentic` | PLAN-equivalent 승인 뒤 필수 검증을 통과하고 실제 미해결 이슈가 없으면, 직전 확인 행은 `owner=auto`로 처리하고 사용자 대기 없이 CLOSE 첫 행과 `close.final`까지 계속한다. |
+| `agentic` | 정상 전 구간에서 `semi-agentic`과 같은 자동 CLOSE 경로를 사용한다. |
+
+확인 행이 없는 pipeline도 같은 판정을 적용한다. 따라서 `semi-agentic`·`agentic`은 자동 CLOSE, `interactive`는 첫 CLOSE 행에서 `--owner user` 명시 승인을 요구한다. `transition_action=await_user|blocked`와 `report_type=decision_request`는 실제 미해결 이슈·사용자 선택·사람 전용 검증·권한 부족·보안 또는 데이터 손실 위험·재시도 상한 초과에서만 대기한다. `progress_report + continue`는 보고 후 같은 응답에서 다음 행을 계속 처리한다. merge/push/deploy/worktree 제거와 OPPB P5 merge gate는 이 계약으로 자동 승인되지 않는다 (`harness/guards.md` §커밋 규칙).

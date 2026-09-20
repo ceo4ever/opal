@@ -758,7 +758,7 @@ opal-harness-agentic.md / opal-harness-semi-agentic.md 참조. 본 절은 이 �
 
 ### 기본 모드 (semi-agentic)
 
-기본 호출(`//oppd {작업}`)은 semi-agentic 모드. Phase 1+2(PLAN-equivalent)까지 사용자 검토, Phase 3 이후(EXECUTE-equivalent) PM 자율, CLOSE 진입은 사용자 승인 필수.
+기본 호출(`//oppd {작업}`)은 semi-agentic 모드. Phase 1+2(PLAN-equivalent)까지 사용자 검토하고, 승인 뒤 Phase 3·VERIFY·CLOSE final까지 PM 자율로 진행한다.
 
 **모드 경계** (이 시점부터 PM 자율):
 - Phase 2 WBS 사용자 확정 행 통과 후 → Phase 3 액션 실행 첫 행부터 PM 자율 (D-DEC-1)
@@ -770,7 +770,7 @@ opal-harness-agentic.md / opal-harness-semi-agentic.md 참조. 본 절은 이 �
 |------|------|
 | `//oppd 작업` | semi-agentic (기본) |
 | `//oppd --interactive 작업` | interactive — 모든 단계 사용자 승인 |
-| `//oppd --agentic 작업` | agentic — 모든 단계 PM 자율 (CLOSE 진입 제외) |
+| `//oppd --agentic 작업` | agentic — 정상 전 구간과 CLOSE final까지 PM 자율 |
 | `//oppd --wbs 작업` | `--wbs` 플래그와 조합 가능 |
 
 ### 자율 게이트 흐름 (semi-agentic)
@@ -799,9 +799,9 @@ Phase 1 Gate → Phase 2 Gate → Phase 3 (액션 내부 Gate + 액션 간 Gate)
   - 각 액션 완료 시 AGENTIC-LOG.md에 `GATE` 엔트리 기록
   - 액션 실패(status: failed) 시에도 PM이 판단: 재시도 가능 → `FIX` + 재디스패치, 불가 → `ESCALATION`
 
-### CLOSE 진입 게이트 (공통)
+### CLOSE 전이 (공통)
 
-semi-agentic / agentic 모두 CLOSE 첫 행 `--auto-pass` 거부 (`agentic_close_gate_requires_user`). 소유자 발화 후 직전 사용자 확인 행 `--owner user` mark 필수.
+행 키는 `close.done_md`와 `close.final`이다. 자동/대기 판정은 `harness/modes.md` §CLOSE 전이 계약을 따른다.
 
 ### AGENTIC-LOG.md 생성 시점
 
@@ -816,6 +816,6 @@ opal-harness-agentic.md "에스컬레이션 조건" 공통 기준에 추가:
 
 ### 단계 보고 전이 계약
 
-각 단계 행 mark/advance 직후 `state-tool` stdout의 `transition_action` / `report_type` / `next_action`을 소비한다. `report_type=progress_report`는 비차단 보고이며 `transition_action=continue`이면 같은 응답에서 다음 단계로 이어간다. `report_type=decision_request`는 `transition_action=await_user|blocked`일 때만 사용하고, CLOSE 진입 승인 예외는 유지한다.
+각 단계 행 mark/advance 직후 `state-tool` stdout의 `transition_action` / `report_type` / `next_action`을 소비한다. `report_type=progress_report`는 비차단 보고이며 `transition_action=continue`이면 같은 응답에서 다음 단계와 CLOSE tail로 이어간다. `report_type=decision_request`는 `transition_action=await_user|blocked`일 때만 사용한다.
 
 ---

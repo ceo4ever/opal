@@ -34,11 +34,11 @@
 |---|---|
 | `//opd 작업` / `//opds 작업` | semi-agentic (기본) |
 | `--interactive` | 모든 단계 사용자 승인 |
-| `--agentic` | 모든 단계 PM 자율 (CLOSE 진입 제외) |
+| `--agentic` | 정상 전 구간과 CLOSE final까지 PM 자율 |
 
 `--pm` 플래그를 지정하면 일부 단계(ANALYSIS·PLAN·EXECUTE)를 PM이 워커 디스패치 없이 직접 수행한다. 단, TEST-SCENARIO의 목표-커버 게이트와 TEST 단계의 실제 실행 검증은 `--pm`과 무관하게 항상 독립된 서브에이전트가 수행한다.
 
-어떤 모드·프로필이라도 **CLOSE 진입은 항상 사용자 승인이 필요**하다.
+모드별 CLOSE 전이는 공통 SSOT `harness/modes.md` §CLOSE 전이 계약을 따른다. Full/Short의 행 키는 각 pipeline JSON을 사용한다.
 
 ## 파이프라인
 

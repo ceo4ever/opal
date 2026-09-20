@@ -32,9 +32,9 @@
 |---|---|
 | `//opp 작업` | semi-agentic (기본) — PLAN까지 사용자 검토, EXECUTE부터 PM 자율 |
 | `//opp --interactive 작업` | interactive — 모든 단계 사용자 승인 |
-| `//opp --agentic 작업` | agentic — 모든 단계 PM 자율 (CLOSE 진입 제외) |
+| `//opp --agentic 작업` | agentic — 정상 전 구간과 CLOSE final까지 PM 자율 |
 
-어떤 모드라도 **CLOSE 진입은 항상 사용자 승인이 필요**하다.
+모드별 CLOSE 전이는 공통 SSOT `harness/modes.md` §CLOSE 전이 계약을 따른다.
 
 ## 파이프라인
 
@@ -69,4 +69,4 @@ TASK → PLAN → EXECUTE → CLOSE
 PM이 PLAN.md를 직접 읽고 TASK.md 요구사항이 모두 반영됐는지, 실행 체크리스트에 완료 기준이 명시됐는지, 설계상 빈틈이 없는지를 확인한 뒤에만 EXECUTE로 넘어간다.
 
 ### agentic 모드에서도 승인이 필요한 순간이 있나요?
-있다. CLOSE 단계 진입만큼은 어떤 모드에서도 사용자 승인이 필수다.
+있다. 사용자 선택, 사람 전용 검증, 권한 부족, 보안·데이터 손실 위험과 merge/push/deploy 같은 별도 권한 행동은 agentic에서도 에스컬레이션한다. 정상 CLOSE는 `harness/modes.md` §CLOSE 전이 계약을 따라 `close.final`까지 자동 진행하며, 명시 사용자 승인은 interactive 또는 fail-closed 경로에만 필요하다.

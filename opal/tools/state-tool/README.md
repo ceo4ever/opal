@@ -68,7 +68,7 @@
 - `--next-action`: `state.json` `next_action` 필드로 영속화된다(기본값 `"PLAN 단계 진입"`). 이후 `advance`/`mark` 시 파이프라인 프론티어(첫 미완료 행)에서 자동 파생·갱신된다(072) — PM 수동 갱신 불필요. **094부터 이를 렌더하는 STATE.md 전용 섹션은 없다**(저널화로 `## 다음 액션` 자동 파생 섹션 삭제) — 현재 값은 `show`(md의 `- 다음 액션:` 줄 또는 json의 `next_action` 필드)로 조회한다
 - `--force` 사용 시 `--note` 필수 (`note_required_for_force`)
 - 구 STATE.md 표 흡수 옵션(`import`+`existing` 합성명, 094 이전 사용): **094(STATE.md 저널화)에서 제거됨** — 호출 시 rows 파싱 없이 항상 `import_existing_removed`로 거부된다(exit 1). 파싱 대상이던 파이프라인 표 자체가 STATE.md에서 소멸했기 때문이다. 행 구성은 `--rows-from <pipeline.json>` 또는 `--rows-spec`을 사용한다. (해당 인자는 argparse에 `help=argparse.SUPPRESS`로만 존치 — 완전히 삭제하면 미인식 인자로 exit 2 비-JSON 출력이 발생해 stdout 계약이 깨지므로, 인자는 받되 즉시 거부하는 방식을 택했다. 이 문서는 SUPPRESS 취지에 따라 정확한 플래그 철자를 의도적으로 노출하지 않는다)
-- 모든 모드의 사용자 확인 행은 `pending`으로 초기화된다. agentic 자동 승인은 다음 단계 진입 시 저장 mode를 읽는 단일 판정 훅이 수행하며 CLOSE는 제외한다.
+- 모든 모드의 사용자 확인 행은 `pending`으로 초기화된다. 다음 단계 진입 시 저장 mode를 읽는 단일 판정 훅이 자동 승인 여부를 결정한다. `semi-agentic`은 PLAN-equivalent 승인 뒤, `agentic`은 정상 전 구간에서 CLOSE 직전 행을 포함해 `done/auto`로 처리할 수 있으며 interactive 또는 invalid mode는 fail-closed한다.
 - `--note`(`--force` 시 기재)에 `{owner_name}` 플레이스홀더를 쓰면 `~/.opal/identity.md`의 `owner_name`으로 write-time 치환된다. identity.md 부재/`owner_name` 공란/파싱 실패 시 원문(`{owner_name}`) 그대로 유지(fail-safe) — 054
 
 **성공 응답 예시**:
@@ -108,7 +108,7 @@
 
 - 행 주소는 `--task-step`(key) / `--task-step-id`(숫자) / `--row`(숫자, deprecated 별칭) 중 정확히 하나 (070 R-4)
 - `pending` 상태인 행만 `in_progress`로 전환 (T-7)
-- CLOSE 단계 첫 행이면 직전 사용자 확인 게이트 자동 검증 (§2.16 G-13)
+- CLOSE 단계 첫 행의 처리도 mode-aware 단일 판정을 따른다. interactive/fail-closed만 직전 사용자 확인 또는 확인 행 없는 Pilot의 `--owner user` 승인을 요구한다.
 - `state.json` `next_action`이 파이프라인 프론티어(첫 미완료 행)에서 자동 파생·갱신된다. `--next-action <text>` 지정 시 해당 값이 파생값보다 우선하며, 이 오버라이드는 **해당 전이 1회에만** 적용된다 — 다음 전이가 `--next-action` 없이 실행되면 자동 파생으로 복귀한다(072). **094부터 STATE.md에 이를 렌더하는 `## 현재 상태`/`## 다음 액션` 섹션은 없다** — 현재 상태 조회는 `show`로 한다
 - STATE.md는 `> 최종 갱신:` 헤더 타임스탬프만 갱신된다(저널 후처리, 094)
 - `--note`의 `{owner_name}` 플레이스홀더는 identity.md `owner_name`으로 write-time 치환된다. 부재/공란/파싱 실패 시 원문 유지(fail-safe) — 054
@@ -151,7 +151,7 @@
 - `--worker-duration-unknown`(103 R-21)은 그 행의 워커 소요를 **알 수 없음을 명시**한다(중단된 워커·PM 직접 수행·소급 불가 과거 데이터). 경고를 억제하며 행에는 필드를 만들지 않는다 — 기록 결과는 인자 미지정과 완전히 동형이므로 "미측정"이 `0`("측정했으나 1분 미만")으로 오독되지 않는다
   - `--worker-duration-minutes`와 **배타적**이다(값과 미상 선언은 동시에 성립할 수 없음). 둘 다 지정하면 argparse가 exit 2로 거부한다 — `--owner`/`--auto-pass` 배타와 동일 계열이므로 전용 에러 코드는 신설하지 않았다
 - `--auto-pass` 사용 시 `owner = "auto"`, note에 "agentic auto-pass" 자동 기재
-- CLOSE 첫 행 + agentic/semi-agentic 모드 + `--auto-pass` 조합 거부 (`agentic_close_gate_requires_user`)
+- `--auto-pass`는 직접 명시한 자동 승인 옵션이며, CLOSE 진입의 mode-aware 자동 전이는 다음 행 `advance`/`mark`의 내부 원자 경로가 수행한다. 정상 semi-agentic/agentic CLOSE 경로에서 `agentic_close_gate_requires_user`는 방출하지 않는다. 오류 코드는 하위호환 카탈로그로만 유지한다.
 - `--force` 사용 시 `--note` 필수 + 의사결정 로그 자동 기재
 - `state.json` `next_action`이 파이프라인 프론티어(첫 미완료 행)에서 자동 파생·갱신된다. `--next-action <text>` 지정 시 해당 값이 파생값보다 우선하며, 이 오버라이드는 **해당 전이 1회에만** 적용된다 — 다음 전이가 `--next-action` 없이 실행되면 자동 파생으로 복귀한다(072). **094부터 STATE.md에 이를 렌더하는 `## 다음 액션` 섹션은 없다** — 현재 상태 조회는 `show`로 한다
 - 신규 CLOSE tail pipeline은 `close.final` 행이 완료될 때만 `current_status=completed_unmerged`를 확정한다. `close.final`이 없는 legacy 단일 CLOSE pipeline은 기존처럼 CLOSE 마지막 행 완료를 final로 인정한다.
@@ -601,7 +601,7 @@
 | 12 | `owner_flag_conflict` | mark | 1 | --owner와 --auto-pass 동시 사용 |
 | 13 | `auto_pass_in_interactive_mode` | validate | 1 | interactive 모드에서 owner=auto |
 | 14 | `close_gate_violation` | mark/advance | 1 | CLOSE 진입 게이트 위반 |
-| 15 | `agentic_close_gate_requires_user` | mark | 1 | agentic/semi-agentic CLOSE 첫 행에 --auto-pass 거부 |
+| 15 | `agentic_close_gate_requires_user` | mark | 1 | 하위호환 오류 코드. 레거시 직접 `--auto-pass` CLOSE 호출의 거부를 식별하며 정상 mode-aware 자동 전이에서는 방출하지 않음 |
 | 16 | `semi_agentic_pre_execute_auto_pass_denied` | mark / validate | 1 | semi-agentic 모드에서 EXECUTE 등가 단계 이전 행에 --auto-pass 사용 불가 |
 | 17 | `mode_flag_conflict` | (state init 포함 -- 향후) | 1 | 다중 모드 플래그 동시 사용 불가 |
 | 18 | `note_required_for_force` | init --force / mark --force | 1 | --force 시 --note 미제공 |

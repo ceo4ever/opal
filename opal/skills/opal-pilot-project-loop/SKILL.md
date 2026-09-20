@@ -454,7 +454,7 @@ opal-harness-agentic.md / opal-harness-semi-agentic.md 참조. 본 절은 이 �
 
 ### 기본 모드 (semi-agentic)
 
-기본 호출(`//oppl {요청}`)은 semi-agentic 모드. **Loop 1(설계 수렴, PLAN-equivalent)까지 사용자 검토**, **Loop 2(실행 수렴, EXECUTE-equivalent) 이후 PM 자율**, CLOSE 진입은 사용자 승인 필수.
+기본 호출(`//oppl {요청}`)은 semi-agentic 모드. **Loop 1(설계 수렴, PLAN-equivalent)까지 사용자 검토**, **Loop 2(실행 수렴, EXECUTE-equivalent) 이후와 CLOSE final까지 PM 자율**이다.
 
 **모드 경계** (이 시점부터 PM 자율):
 - D7 사용자 확정 게이트(Loop 1 종료) 통과 후 → Loop 2 L0 첫 행부터 PM 자율
@@ -466,7 +466,7 @@ opal-harness-agentic.md / opal-harness-semi-agentic.md 참조. 본 절은 이 �
 |------|------|
 | `//oppl 요청` | semi-agentic (기본) |
 | `//oppl --interactive 요청` | interactive — 모든 단계 사용자 승인 (Loop 2 태스크 시작 전마다 게이트) |
-| `//oppl --agentic 요청` | agentic — 모든 단계 PM 자율 (CLOSE 진입 제외) |
+| `//oppl --agentic 요청` | agentic — 정상 전 구간과 CLOSE final까지 PM 자율 |
 
 ### 활성화
 
@@ -479,8 +479,8 @@ TASK (사용자 승인)
   → Loop 1 D1~D6      -- 사용자 검토 (인터뷰/PRD/TRD/CONTRACT/백로그/D6 Evaluator 검토 축적)
   → D7 사용자 확정 게이트  -- 사용자 승인 (모드 경계)
   → Loop 2 L0~L✓       -- PM 자율 관리 (태스크별 루프 액션 에이전트 디스패치, G 게이트 + T4a/T4b 포함)
-  → VERIFY (L✓ 종료 판정) -- PM 직접 확인 → 사용자 Gate (= CLOSE 진입 게이트)
-  → CLOSE              -- (사용자 승인 후) DONE.md 생성 + 최종 보고
+  → VERIFY (L✓ 종료 판정) -- PM 직접 확인
+  → CLOSE              -- mode-aware 자동 전이 후 DONE.md 생성 + 최종 보고
 ```
 
 ### 자율 게이트 흐름 (agentic)
@@ -491,9 +491,9 @@ TASK (사용자 승인)
 
 명세 리뷰(G) verdict `fail` → T1 재지시. 재지시는 `oppl-runtime-tool admit` 허가를 받은 새 attempt로만 성립하며, 상한 수치는 `references/loop-control.md` §2와 `pilot.start`가 전달한 `guards`의 PLAN 재진입 규칙이 SSOT다. `admit`이 거부 코드를 반환하면 → 사용자 에스컬레이션.
 
-### CLOSE 진입 게이트 (공통)
+### CLOSE 전이 (공통)
 
-semi-agentic / agentic 모두 CLOSE 첫 행(#19) `--auto-pass` 거부 (`agentic_close_gate_requires_user`). 소유자 발화 후 직전 사용자 확인 행(#18) `--owner user` mark 필수.
+행 키는 `close.done_md`와 `close.final`이다. `semi-agentic`·`agentic`은 실제 미해결 이슈가 없으면 자동 진행하며 interactive만 `--owner user` 확인을 유지한다 (`harness/modes.md` §CLOSE 전이 계약).
 
 ### AGENTIC-LOG.md 생성 시점
 
@@ -536,7 +536,7 @@ opal-harness-agentic.md 공통 기준에 추가:
 
 ## DONE.md / CLOSE
 
-Loop 2 종료(L✓ all_done + 회귀 0) 및 사용자 확인(CLOSE 진입 게이트) 후 프로젝트를 마감한다.
+Loop 2 종료(L✓ all_done + 회귀 0) 뒤 state-tool의 mode-aware CLOSE 전이로 프로젝트를 마감한다.
 
 ```markdown
 # DONE: {프로젝트명} 루프 개발
@@ -562,7 +562,7 @@ Loop 2 종료(L✓ all_done + 회귀 0) 및 사용자 확인(CLOSE 진입 게이
 {전체 루프 진행 요약, 재회전 횟수, 에스컬레이션 이력, 다음 단계}
 ```
 
-1. CLOSE 첫 행(#19) `--auto-pass` 거부 준수 — 위 "CLOSE 진입 게이트" 절 참조.
+1. CLOSE 행은 공통 mode-aware 전이를 따른다 — 위 "CLOSE 전이" 절 참조.
 2. **관련 문서 업데이트** (op-brain-ingest 디스패치 직전): `docs/PROJECT.md` 문서 레지스트리와 이번 프로젝트의 `changed_files`를 종합하여 관련 문서(ARCHITECTURE.md 등)를 최신화한다. 대상 없으면 no-op.
 3. **op-brain-ingest 디스패치** (DONE.md 생성 직후): `.opal/brain/` 존재 시 워커 디스패치(PRD/TRD/CONTRACT 결정·DONE.md를 brain에 누적), 부재 시 no-op — 어떤 경우도 CLOSE를 중단시키지 않는다.
    - 탐색 경로: `{프로젝트}/.opal/skills/op-brain-ingest/SKILL.md` → `~/.opal/skills/op-brain-ingest/SKILL.md`
@@ -619,6 +619,6 @@ Loop 1 재회전 {N}회 · Loop 2 태스크 {M}개 완주.
 
 ## 단계 보고 전이 계약
 
-각 단계 행 mark/advance 직후 `state-tool` stdout의 `transition_action` / `report_type` / `next_action`을 소비한다. `report_type=progress_report`는 비차단 보고이며 `transition_action=continue`이면 같은 응답에서 다음 단계로 이어간다. `report_type=decision_request`는 `transition_action=await_user|blocked`일 때만 사용하고, CLOSE 진입 승인 예외는 유지한다.
+각 단계 행 mark/advance 직후 `state-tool` stdout의 `transition_action` / `report_type` / `next_action`을 소비한다. `report_type=progress_report`는 비차단 보고이며 `transition_action=continue`이면 같은 응답에서 다음 단계와 CLOSE tail로 이어간다. `report_type=decision_request`는 `transition_action=await_user|blocked`일 때만 사용한다.
 
 ---

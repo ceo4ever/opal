@@ -168,7 +168,7 @@ PLAN 완료
 >   다음 단계 진입 시 도구가 자동 승인한다. 계약 SSOT: `opal-harness-agentic.md §4` / `opal-harness-semi-agentic.md §5`.
 > - 그 외(interactive 전 구간 / semi-agentic의 모드 경계 내) — 소유자에게 보고하고 승인 발화를 받은 뒤
 >   `~/.opal/tools/state-tool/run.sh mark <task-path> --task-step test_scenario.user_confirm --done --owner user --note '{owner_name} 확인: ...'` 호출.
-> CLOSE 진입 전 이 행의 `owner=user` 여부를 도구가 자동 검증한다 (§2.16 G-13).
+> CLOSE 전이는 이 행의 mode-aware 자동 승인 여부를 포함해 `harness/modes.md` §CLOSE 전이 계약이 소유한다.
 > 근거: `PLAN.md` §3 Step 8 P-1 / P-5 / §2.16 G-13 / `tasks/073-260723-opd-시나리오-목표커버리지-루프/PLAN.md` §3.5.2 (목표-커버 게이트 접합)
 
 ## STEP 4: EXECUTE
@@ -254,7 +254,7 @@ opal-test-agent 워커 디스패치. TEST-SCENARIO.md를 실행 명세로 읽고
      - [ ] 회귀 테스트 항목 Pass
      - [ ] 설계 피드백 미해결 빈틈 없음
      - [ ] 컨벤션 자동 진단 PASS (changed_files 컨벤션 적용 대상 ≥1건 시 발동, GC-CONVENTION-*.md 보고서 Critical/High 0건)
-→ PM Gate 통과 후 해당 행을 단일 mark. 사용자에게 완료 보고 후 CLOSE 단계 진입 승인 요청.
+→ PM Gate 통과 후 해당 행을 단일 mark. 완료를 비차단 보고하고 state-tool 전이 출력에 따라 CLOSE를 계속한다.
 
 > **사용자 확인 (P-5)**: 이 행은 **모드에 따라 주체가 다르다**.
 > - 자동 승인 구간(agentic 전 구간 / semi-agentic의 EXECUTE-equivalent 이후) — **PM은 호출하지 않는다.**
@@ -269,7 +269,7 @@ opal-test-agent 워커 디스패치. TEST-SCENARIO.md를 실행 명세로 읽고
 📎 변경 파일: {changed_files}
 📎 산출물: {TEST-SCENARIO.md 등}
 전이: {transition_action} / 보고: {report_type}
-다음 액션: CLOSE 진입 승인이 필요하면 `decision_request`로 보고한다.
+다음 액션: `decision_request`는 실제 미해결 이슈일 때만 보고하고, `progress_report + continue`면 CLOSE를 계속한다.
 ```
 
 ### FAIL 시 (루핑 — 최대 3회, 하네스 §1 L3a)
@@ -337,7 +337,7 @@ opal-test-agent 워커 디스패치. TEST-SCENARIO.md를 실행 명세로 읽고
      - **회수 거부 사유 안내**: `remove`는 미처리 memory index 요청이 남아 있으면 `MEMORY_INDEX_REQUEST_PENDING`으로 먼저 거부하고, 이어서 dirty→unpushed→unmerged 3중 가드를 적용한다. 해소 경로는 `--force` 우회가 아니라 **(a)의 merge _전_ `worktree-tool finalize`** 실행이다 — merge 후 실행이 아니다.
 6. 완료 보고
 
-> **CLOSE 진입 게이트 자동 검증**: CLOSE 단계 첫 행 mark 시 도구가 직전 단계 사용자 확인 행의 `owner=user` 여부를 자동 검증한다. 미통과 시 `close_gate_violation` 에러 반환 — agentic 모드의 `--auto-pass`도 거부됨 (§2.16 G-13 / PLAN §3 Step 8 P-8).
+> **CLOSE 전이**: 해당 Pilot의 행 키와 mode-aware 승인·거부·`close.final` 계약은 `harness/modes.md` §CLOSE 전이 계약을 따른다.
 > **추가작업 진입 (P-6)**: `~/.opal/tools/state-tool/run.sh add-row <task-path> --after <N> --stage CLOSE --item '...'` 호출 → current_status 자동 `additional_work` 전환. 완료 시 `~/.opal/tools/state-tool/run.sh status <task-path> --set additional_work_done`.
 > 근거: `PLAN.md` §3 Step 8 P-1 / P-6 / P-8 / §2.16 G-13
 
@@ -378,7 +378,7 @@ opal-harness-agentic.md / opal-harness-semi-agentic.md 참조. 본 절은 이 �
 
 ### 기본 모드 (semi-agentic)
 
-기본 호출(`//opd {작업}`)은 semi-agentic 모드. TEST-SCENARIO-equivalent까지 사용자 검토, EXECUTE-equivalent 이후 PM 자율, CLOSE 진입은 사용자 승인 필수.
+기본 호출(`//opd {작업}`)은 semi-agentic 모드. TEST-SCENARIO-equivalent까지 사용자 검토하고, 승인 뒤 EXECUTE·TEST·CLOSE final까지 PM 자율로 진행한다.
 
 **모드 경계** (이 시점부터 PM 자율):
 - TEST-SCENARIO 사용자 확인 행 통과 후 → EXECUTE 작업 행부터 PM 자율
@@ -389,13 +389,13 @@ opal-harness-agentic.md / opal-harness-semi-agentic.md 참조. 본 절은 이 �
 |------|------|
 | `//opd 작업` | semi-agentic (기본) |
 | `//opd --interactive 작업` | interactive — 모든 단계 사용자 승인 |
-| `//opd --agentic 작업` | agentic — 모든 단계 PM 자율 (CLOSE 진입 제외) |
+| `//opd --agentic 작업` | agentic — 정상 전 구간과 CLOSE final까지 PM 자율 |
 
 ### 활성화
 
 > **[MUST] agentic 모드 STATE 갱신**: 게이트 자율 통과 시 `~/.opal/tools/state-tool/run.sh mark <task-path> --task-step <task-step-key> --done` 호출 (P-8). **사용자 확인 행은 PM이 명시 호출하지 않는다** — 다음 단계 진입 시 도구가 자동 승인한다. 계약 SSOT: `opal/core/references/opal-harness-agentic.md §4` / `opal-harness-semi-agentic.md §5`.
 >
-> **[MUST] CLOSE 진입 게이트 거부 정책 (P-8 / §2.16 G-13)**: CLOSE 단계 첫 행은 `--auto-pass` 거부(`agentic_close_gate_requires_user` 에러). agentic/semi-agentic 모드라도 CLOSE 진입 직전 소유자에게 보고 후 사용자 발화("확인"/"승인")를 받아 직전 단계 사용자 확인 행을 `--owner user`로 mark한 뒤 CLOSE 첫 행을 진행한다.
+> **[MUST] CLOSE 전이**: `harness/modes.md` §CLOSE 전이 계약을 따른다. `semi-agentic`·`agentic`은 실제 미해결 이슈가 없으면 `test.user_confirm`을 자동 처리하고 `close.done_md`부터 `close.final`까지 계속한다. interactive만 `--owner user` 확인을 유지한다.
 >
 > 근거: `tasks/134-260501-opp-pipeline-state-tool/TASK.md` F-15 / `PLAN.md` §2.15 G-12 / §2.16 G-13 / §3 Step 8 P-8
 
@@ -410,15 +410,15 @@ TASK → ANALYSIS Gate → PLAN Gate → TEST-SCENARIO Gate → EXECUTE Gate →
 - TASK→ANALYSIS→PLAN→TEST-SCENARIO Gate까지 사용자 승인 필수 (interactive 동작)
 - TEST-SCENARIO 사용자 확인 행 통과 후 EXECUTE/TEST Gate는 PM 자율 통과
 - EXECUTE 진입 = PM이 대행 승인 (구현 금지 원칙의 "실행 허가"를 PM이 판단)
-- CLOSE 진입은 사용자 승인 필수 (공통 게이트)
+- CLOSE는 공통 mode-aware 계약을 따른다 (`harness/modes.md` §CLOSE 전이 계약)
 - 각 게이트에서 opal-harness-agentic.md "Gate 루핑 규칙" 적용
 - AGENTIC-LOG.md 생성: EXECUTE 등가 첫 행 advance/mark 시점
 
-### CLOSE 진입 게이트 (공통)
+### CLOSE 전이 (공통)
 
-semi-agentic / agentic 모두 CLOSE 첫 행 `--auto-pass` 거부 (`agentic_close_gate_requires_user`). 소유자 발화 후 직전 사용자 확인 행 `--owner user` mark 필수.
+행 키는 `close.done_md`와 `close.final`이다. 자동/대기 판정은 공통 SSOT를 따르며, `progress_report + continue`는 tail을 계속하고 실제 미해결 이슈만 대기한다 (`harness/modes.md` §CLOSE 전이 계약).
 
-> **[MUST] actor 무관 유지**: 이 게이트는 `actor` 값과 무관하게 항상 동일하게 적용된다 — `actor=pm`에서도 `--auto-pass`가 거부되고 `--owner user` mark가 필수다(`harness/actor.md` §독립 검증 경계).
+> **[MUST] actor 무관 유지**: CLOSE 전이는 `actor` 값과 무관하게 같은 effective mode 판정을 적용한다. `actor=pm`도 이를 우회하지 않으며, interactive/fail-closed는 `--owner user`를 유지하고 semi-agentic·agentic은 실제 미해결 이슈가 없으면 자동 진행한다. merge/push/deploy 등 별도 권한 경계는 `harness/actor.md` §독립 검증 경계와 `harness/modes.md` §CLOSE 전이 계약을 따른다.
 
 ### AGENTIC-LOG.md 생성 시점
 
@@ -427,4 +427,4 @@ semi-agentic / agentic 모두 CLOSE 첫 행 `--auto-pass` 거부 (`agentic_close
 
 ### 단계 보고 전이 계약
 
-각 단계 행 mark/advance 직후 `state-tool` stdout의 `transition_action` / `report_type` / `next_action`을 소비한다. `report_type=progress_report`는 비차단 보고이며 `transition_action=continue`이면 같은 응답에서 다음 단계로 이어간다. `report_type=decision_request`는 `transition_action=await_user|blocked`일 때만 사용하고, CLOSE 진입 승인 예외는 유지한다.
+각 단계 행 mark/advance 직후 `state-tool` stdout의 `transition_action` / `report_type` / `next_action`을 소비한다. `report_type=progress_report`는 비차단 보고이며 `transition_action=continue`이면 같은 응답에서 다음 단계와 CLOSE tail로 이어간다. `report_type=decision_request`는 `transition_action=await_user|blocked`일 때만 사용한다.

@@ -32,10 +32,10 @@ STATE.md는 **의사결정 로그·블로커·자유 기재를 담는 저널**�
 | 단계 시작 | 오케스트레이터 | 해당 단계 작업 행 → 🔄 | 진행 중 | **필수** | `~/.opal/tools/state-tool/run.sh advance <task-path> --task-step <key>` |
 | 단계 완료(작업) | 워커(1차) + PM(확인) | 해당 단계 작업 행 → ✅ (산출물 생성은 작업 행에 흡수) | - | **필수** | `~/.opal/tools/state-tool/run.sh mark <task-path> --task-step <key> --done` |
 | PM Gate 통과 (문서검증 포함) | PM | PM Gate 행 → ✅ | - | **필수** | `~/.opal/tools/state-tool/run.sh mark <task-path> --task-step <key> --done` |
-| 사용자 확인 완료 | PM | 사용자 확인 행 → ✅ | 완료 (직전 단계가 CLOSE 진입 게이트인 경우) | **필수** | `~/.opal/tools/state-tool/run.sh mark <task-path> --task-step <key> --done --owner user` |
+| 사용자 확인 완료 | PM 또는 자동 전이 | 사용자 확인 행 → ✅ | mode-aware (CLOSE 직전에는 아래 계약 적용) | **필수** | interactive/fail-closed: `mark ... --owner user`; semi-agentic/agentic 허용 구간: 다음 행 진입 시 자동 승인 |
 | EXECUTE Step 완료 | 워커(1차) + PM(확인) | - | 진행: Step N/M(행 `note`에 기록, `show`로 조회) | **필수** | `~/.opal/tools/state-tool/run.sh mark <task-path> --task-step <key> --done --as-worker --worker-stage EXECUTE --step <N/M>` |
 | 블로커 | 워커 | 해당 행 → ❌ | 블로커 | **필수** | `~/.opal/tools/state-tool/run.sh block <task-path> --task-step <key> --reason <text>` |
-| 태스크 완료 | 오케스트레이터 | CLOSE 단계 `DONE.md 생성` 행 → ✅ | 완료 (CLOSE 단계 완료 시 발생) | **필수** | `~/.opal/tools/state-tool/run.sh mark <task-path> --task-step <key> --done` |
+| 태스크 완료 | 오케스트레이터 | 명시 `close.final` 행 → ✅ | 완료 | **필수** | `~/.opal/tools/state-tool/run.sh mark <task-path> --task-step close.final --done` |
 | 추가작업 진입 | 오케스트레이터 | - | 추가작업중 (CLOSE 단계 재진입) | **필수** | `~/.opal/tools/state-tool/run.sh add-row <task-path> --after-task-step <key> --stage <단계> --item <항목>` |
 | 추가작업 완료 | 오케스트레이터 | - | 추가작업완료 (CLOSE 재진입 완료) | **필수** | `~/.opal/tools/state-tool/run.sh status <task-path> --set additional_work_done` |
 | 현황 조회 (모든 시점) | PM/워커 | - | - | - | `~/.opal/tools/state-tool/run.sh show <task-path> [--format md|json|full]` |
@@ -45,6 +45,12 @@ STATE.md는 **의사결정 로그·블로커·자유 기재를 담는 저널**�
 **note 소유자 호칭**: note에 소유자 호칭이 필요하면 `{owner_name}` 플레이스홀더를 사용한다 — state-tool이 identity.md `owner_name`으로 치환한다. 규칙 상세: `opal/core/AGENT.md` §정체성 적용(오염 금지).
 
 **수행 순서 강제 원칙**: 파이프라인 행(`state.json` `rows[]`, `state-tool show`로 조회)은 위에서 아래로 순서대로 처리한다. 현재 행이 ✅가 아니면 다음 행으로 진행 불가. 일반 단계 행은 `작업 / PM Gate / 사용자 확인`으로 구성된다(문서 QA는 PM Gate가 흡수, 별도 QA Gate·State Gate 행 없음). Gate가 없는 단계(TASK 등)는 PM Gate 행을 생략한다.
+
+### CLOSE mode-aware 전이
+
+실제 다음 행동은 `state-tool` stdout의 `transition_action`·`report_type`·`next_action`만 소비한다. `semi-agentic`은 PLAN-equivalent 사용자 승인 이후, `agentic`은 정상 전 구간에서 CLOSE 직전 pending 사용자 확인 행을 원자 전이 안에서 `done/auto`로 처리하고 CLOSE 첫 행을 허용한다. 확인 행이 없는 pipeline도 동일하다. `interactive`와 invalid mode의 fail-closed 경로는 직전 확인을 `mark --owner user`로 완료하지 않으면 `close_gate_violation` 또는 `user_confirmation_required`로 거부한다. `close.final` 전에는 완료로 판정하지 않는다.
+
+`progress_report + continue`는 비차단 보고 후 tail을 계속한다. `await_user|blocked`와 `decision_request`는 실제 미해결 이슈에만 사용한다. state-tool은 user confirmation 자동 승인, CLOSE gate, 원자 저장과 오류 코드를 집행하며, 이 문서는 이를 재구현하지 않는다.
 
 **`current_status` 전이 흐름** (`state.json` `current_status` 필드 — 조회: `state-tool show --format json`):
 
