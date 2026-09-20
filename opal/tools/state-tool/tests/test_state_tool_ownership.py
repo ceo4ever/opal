@@ -11,6 +11,7 @@
 
 from __future__ import annotations
 
+import importlib.util
 import json
 import os
 import subprocess
@@ -20,6 +21,29 @@ import unittest
 from pathlib import Path
 
 STATE_TOOL_PATH = Path(__file__).parent.parent / "state_tool.py"
+
+_CLAUDE_ADAPTER_PATH = (
+    Path(__file__).parent.parent.parent
+    / "ownership-tool"
+    / "ownership_tool"
+    / "claude_adapter.py"
+)
+
+
+def _load_claude_adapter_session_id_env() -> str:
+    """`claude_adapter`가 소유한 플랫폼 고유 세션 변수명 상수를 얻는다.
+
+    변수명을 이 테스트에 하드코딩하지 않기 위해 `claude_adapter.SESSION_ID_ENV`를
+    직접 적재한다(D-18·C-15 — 플랫폼 고유 이름은 어댑터 한 곳에만 둔다)."""
+    spec = importlib.util.spec_from_file_location(
+        "ownership_tool.claude_adapter", _CLAUDE_ADAPTER_PATH
+    )
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module.SESSION_ID_ENV
+
+
+CLAUDE_SESSION_ID_ENV = _load_claude_adapter_session_id_env()
 
 SIMPLE_ROWS_SPEC = json.dumps(
     [
@@ -143,7 +167,17 @@ class TestS11OwnershipSessionIntegration(unittest.TestCase):
 
         clean_env = dict(os.environ)
         clean_env.pop("OPAL_SESSION_ID", None)
-        result = _run(["advance", str(self.task_path), "--row", "1"], env=clean_env)
+        clean_env.pop(CLAUDE_SESSION_ID_ENV, None)
+        # `_run()`의 dict.update 병합은 부재 키를 지우지 못해 앰비언트 값이 되살아난다
+        # (full_env=dict(os.environ) 후 clean_env로 update해도 clean_env에 없는 키는
+        # 그대로 남는다) — 이 케이스는 진짜 "미설정" 서브프로세스 env가 필요하므로
+        # 병합을 거치지 않고 구성한 env를 그대로 넘긴다.
+        result = subprocess.run(
+            [sys.executable, str(STATE_TOOL_PATH), "advance", str(self.task_path), "--row", "1"],
+            capture_output=True,
+            text=True,
+            env=clean_env,
+        )
         self.assertEqual(result.returncode, 0, result.stderr)
 
         state_path = self.task_path / "state.json"

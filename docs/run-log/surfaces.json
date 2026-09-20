@@ -80,6 +80,7 @@
           "--recorded-by-kind <enum>"
         ],
         "optional": [
+          "--recorded-by-id <id>",
           "--worker-run-id <id>",
           "--worker-log-token <token>",
           "--source-kind <enum>",
@@ -413,17 +414,21 @@
       "request_shape": {
         "required": [
           "<task-path>",
-          "--event activity",
+          "--event <activity|pm.report>",
           "--kind <progress|decision|validation|retry>",
           "--summary <text>"
         ],
         "optional": [
+          "--report-type <progress_report|decision_request>",
+          "--transition-action <continue|await_user|blocked|complete>",
+          "--user-input-required <true|false>",
           "--stage <id>",
           "--task-step <id>",
           "--work-item <id>",
           "--refs <path>...",
           "--format json"
-        ]
+        ],
+        "note": "--kind는 --event activity에만 필수다. --event pm.report는 --kind를 쓰지 않고 --report-type·--transition-action·--user-input-required 3종이 필수이며, 사건 적재와 같은 원자 쓰기로 state.json의 run_log.last_report를 갱신한다. --summary는 두 사건 모두 필수다. stop.decision은 이 표면이 수용하지 않는다(CONTRACT.md §1.3 A7)."
       },
       "response_shape": {
         "ok": {

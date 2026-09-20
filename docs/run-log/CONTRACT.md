@@ -33,10 +33,10 @@ template: sdlc-v2
 | `task_step` | string \| null | 선택 | `state.json`의 task step 키 |
 | `work_item` | string \| null | 선택 | Work item 식별자 |
 | `gate_id` | string \| null | 조건부 | `gate.requested`/`gate.resolved`에 필수, 그 외 `null` |
-| `event` | string | 필수 | §1.2 사건 종류 12종 enum |
+| `event` | string | 필수 | §1.2 사건 종류 14종 enum |
 | `actor` | object | 필수 | §1.1.1 |
 | `provenance` | object | 필수 | §1.1.2 |
-| `summary` | string \| null | 조건부 | 사람이 읽는 1줄 요약. `activity`·terminal·gate 사건에 필수 |
+| `summary` | string \| null | 조건부 | 사람이 읽는 1줄 요약. `activity`·terminal·gate·`pm.report`·`stop.decision` 사건에 필수 |
 | `reason` | string \| null | 조건부 | `worker.failed`/`worker.blocked`/`run.completed`에 필수 |
 | `reason_code` | string \| null | 선택 | terminal 분류 코드. `pre_activity_failure` 포함 |
 | `duration_ms` | integer \| null | 조건부 | terminal 사건에 필수(또는 `duration_unknown_reason`). 0 이상 |
@@ -88,11 +88,11 @@ adapter와 importer는 `actor`가 아니다. 사건을 **수행한 의미상 주
 - 재구축: 런타임 권한 테이블은 `worker.capability.issued`의 `token_sha256`·`scope`·`expires_at`과 `revoked`·terminal·`run.completed`·만료를 함께 적용해 사건만으로 전량 재구축된다(§1.7, AC-9). 원문은 재구축에 필요하지 않다.
 - `worker_log_token_id` 명명: `wlt_<UUIDv4>`.
 
-### 1.2 사건 종류 12종과 추가 필수 조건
+### 1.2 사건 종류 14종과 추가 필수 조건
 
-원천: 제안서 §4.1.
+원천: 제안서 §4.1. `pm.report`·`stop.decision` 2종은 본 계약이 확정한다(PM 보고 의도와 Stop 집행 결과를 `activity`와 분리해 기록하기 위한 확장).
 
-`mode`(`shadow` | `active`)는 기록할 사건 종류를 줄이지 않는다. 아래 12종 사건은 shadow·active 두 모드 모두 같은 표준 payload로 기록하며, mode에 따라 관측 가능한 사건 종류나 스키마가 달라지지 않는다. 두 모드의 차이는 §1.5가 정의하는 완료 게이트 기여 여부(active) 대 비차단 진단(shadow)뿐이다.
+`mode`(`shadow` | `active`)는 기록할 사건 종류를 줄이지 않는다. 아래 14종 사건은 shadow·active 두 모드 모두 같은 표준 payload로 기록하며, mode에 따라 관측 가능한 사건 종류나 스키마가 달라지지 않는다. 두 모드의 차이는 §1.5가 정의하는 완료 게이트 기여 여부(active) 대 비차단 진단(shadow)뿐이다.
 
 | `event` | 주체 | 유일성 | 추가 필수 조건 |
 |---|---|---|---|
@@ -107,11 +107,15 @@ adapter와 importer는 `actor`가 아니다. 사건을 **수행한 의미상 주
 | `worker.blocked` | worker | `worker_run_id`마다 1건 | `actor.kind=worker`. `reason` 필수. terminal 공통 조건 |
 | `gate.requested` | PM | `gate_id`마다 1건 | `actor.kind=PM`. `gate_id` 필수 |
 | `gate.resolved` | PM / user / auto | `gate_id`마다 1건 | `actor.kind ∈ {PM, user, auto}`. `gate_id` 필수. 같은 `gate_id`의 `gate.requested` 선행 필수 |
+| `pm.report` | PM | 제한 없음 | `actor.kind=PM` ∧ `provenance.type=direct`(조합 **A4**). `summary`는 §1.3.1 renderer 결과와 바이트 동일해야 한다. `data` 폐쇄 3키 — `report_type ∈ {progress_report, decision_request}`, `transition_action ∈ {continue, await_user, blocked, complete}`, `user_input_required`(boolean). `reason`·`reason_code`·`duration_unknown_reason`·`refs`는 모두 `null`. 완료 게이트 불기여 |
+| `stop.decision` | `ownership-tool`(제출은 `state-tool`) | Stop 판정마다 1건 | `actor.kind=tool` ∧ `actor.id=ownership-tool`, `recorded_by={kind: tool, id: state-tool}`, `provenance.type=direct`(조합 **A7**), 사전 확정 `event_id`(= `request_id`). `summary`는 §1.3.1 renderer 결과와 바이트 동일해야 한다. `data` 폐쇄 6키는 §1.3. `reason`·`reason_code`·`duration_unknown_reason`·`refs`는 모두 `null`. `caused_by_event_id`는 판정에 쓰인 `pm.report`의 `event_id`이며 없으면 `null`(추정 금지) |
 | `run.completed` | `state-tool` | run 종료마다 1건 | `actor.kind=tool`. `reason` 필수(`close` \| `restart`) |
 
 **terminal 공통 조건** (`worker.completed`/`failed`/`blocked`): 같은 `worker_run_id`에 정확히 1건. `duration_ms`+`duration_source` 또는 `duration_unknown_reason` 중 정확히 하나. active 모드는 `duration_source=adapter_monotonic`만 허용한다. `data.duration_spans[]`는 `{source_id, duration_ms}` 배열이며 `duration_ms`는 span 합과 같아야 하고 같은 `source_id` 중복은 거부한다(제안서 §5.2).
 
 `activity.data.kind`는 1차에서 4종만 허용한다. heartbeat, artifact별 사건, requested/committed 2단 사건, correction 사건은 이 계약에 없다(제안서 §4.1 말미).
+
+`pm.report`와 `stop.decision`은 **`activity`의 하위 축이 아니라 서로 다른 최상위 `event` 값**이다. 두 사건을 `activity.data.kind`로 표현하지 않으며, 두 사건의 추가는 `activity.data.kind` 4종 폐쇄를 바꾸지 않는다. 따라서 PM 보고와 Stop 판정은 `activity`를 세는 어떤 진행·궤적 집계에도 포함되지 않는다.
 
 ### 1.3 `actor.kind` × `provenance.type` × `recorded_by.kind` × `source.kind` 허용 조합
 
@@ -130,13 +134,39 @@ adapter와 importer는 `actor`가 아니다. 사건을 **수행한 의미상 주
 
 **PM `activity`의 사건 고유 payload 축 폐쇄 목록**: `actor.kind=PM` ∧ `provenance.type=direct`인 `activity` 사건에서, §1.1 공통 필드(`schema_version`·`event_id`·`timestamp`·`run_id`·`sequence`·`event`·`actor`·`provenance`·`caused_by_event_id`·`worker_run_id`·`stage`·`task_step`·`work_item` 등)는 §1.1 계약 그대로 적용되며 이 조문이 제한하지 않는다. 이 조문이 폐쇄하는 것은 사건 고유 의미 payload 두 축뿐이다: (a) `data` 객체 — `kind` 1개 키만 허용하고 값은 `{decision, validation, retry, progress}` 4종 enum, (b) 사람이 읽는 서술 축 — `summary`·`reason`·`refs` 외의 자유 서술 필드를 새로 만들지 않는다. 원본 프롬프트, chain-of-thought(내부 사고 과정), 비밀값은 `summary`·`reason`·`refs`·`data`를 포함한 어떤 필드에도 저장하지 않는다. `data`에 `kind` 외의 키가 있거나 `kind` 값이 4종 enum 밖이면 `schema_invalid`로 거부한다. **이 폐쇄의 집행 지점은 기록 코어의 `run_log_core.validate_event()`다.** 따라서 `run_log_core.append()`를 통과하는 **모든 A4 생산 경로**에 동일하게 적용된다 — `run-log-tool append` CLI, `state-tool`을 포함한 인프로세스 호출(§2.6), 그 밖에 코어 append를 거치는 임의의 호출자가 모두 같은 판정을 받는다. 위반의 오류 코드는 `schema_invalid`이며, 이 폐쇄를 위해 새 오류 코드를 신설하지 않는다(§2.2). `state-tool.log-event`의 입력 검증(`_build_pm_activity_data()`)은 제거하지 않고 **같은 규칙의 앞단 중복 방어**로 유지한다. 두 지점의 판정 결과는 항상 일치한다 — 앞단이 수용한 payload를 코어가 거부하거나 그 반대인 경우는 계약 위반이다. 적용 조건은 조합 **A4**(`actor.kind=PM` ∧ `provenance.type=direct`)에 한정한다. A1(adapter 경로)·A8(import 경로)은 조합 자체가 이 조건을 만족하지 않으므로 이 조문의 대상이 아니며, 이는 집행의 빈틈이 아니라 적용 범위의 정의다. 최상위 키 폐쇄 판정은 §1.1이 소유하므로 여기서 재서술하지 않는다.
 
+**`pm.report`의 허용 조합과 사건 고유 payload 축 폐쇄 목록**: `pm.report`의 허용 조합은 **A4** 하나다 — `actor.kind=PM` ∧ `provenance.type=direct` ∧ `recorded_by.kind ∈ {PM, tool}` ∧ `source.kind=null`. A4의 완료 게이트 불기여가 그대로 적용된다. `data`는 `report_type`·`transition_action`·`user_input_required` **정확히 3개 키**만 허용하며 값은 각각 `{progress_report, decision_request}`, `{continue, await_user, blocked, complete}`, boolean이다. `summary` 및 네 개 null 필드는 §1.3.1이 폐쇄하며, 원본 프롬프트·chain-of-thought·비밀값은 어떤 필드에도 저장하지 않는다. 3키 밖 키·키 누락·enum 또는 타입 위반·§1.3.1 위반은 `schema_invalid`다. **집행 지점은 기록 코어의 `run_log_core.validate_event()`**이므로 `run_log_core.append()`를 통과하는 모든 생산 경로(`run-log-tool append`, `state-tool` 인프로세스 호출 및 임의 코어 호출)가 같은 판정을 받는다. `state-tool.log-event`의 `_build_pm_report_data()`는 같은 규칙의 앞단 중복 방어로 유지하며, 앞단과 코어의 판정 불일치는 계약 위반이다. 최상위 키 폐쇄는 §1.1이 소유한다. 판정: MV-32·MV-33.
+
+**`stop.decision`의 허용 조합과 사건 고유 payload 축 폐쇄 목록**: `stop.decision`의 허용 조합은 **A7** 하나다 — `actor.kind=tool` ∧ `actor.id=ownership-tool` ∧ `provenance.type=direct` ∧ `recorded_by={kind: tool, id: state-tool}` ∧ `source.kind=null`, 그리고 사전 확정 `event_id`(= `request_id`). 의미상 판정 주체 `ownership-tool`과 제출 주체 `state-tool`은 §1.1.1에 따라 `actor`와 `recorded_by`로 분리하며, A7의 완료 게이트 비기여가 그대로 적용된다. `data`는 `decision_kind`·`diagnostics`·`block_count`·`claim_source`·`report_event_id`·`last_activity_event_id` **정확히 6개 키**만 허용한다. `summary` 및 네 개 null 필드는 §1.3.1이 폐쇄하고, 두 event-id 값은 그 절의 null 또는 `evt_<UUIDv4>` 제약을 따른다. 원본 프롬프트·chain-of-thought·비밀값은 어떤 필드에도 저장하지 않는다. 6키 밖 키·키 누락·값 제약·§1.3.1 위반은 `schema_invalid`다. **집행 지점은 기록 코어의 `run_log_core.validate_event()`**이므로 모든 `stop.decision` 생산 경로가 같은 판정을 받으며, 최상위 키 폐쇄는 §1.1이 소유한다. 판정: MV-32·MV-33.
+
+| `data` 키 | 타입 | 필수 | 값·제약 |
+|---|---|---|---|
+| `decision_kind` | string | 필수 | 판정 종류. **값 집합은 이 문서가 복제하지 않고 `opal/tools/ownership-tool/ownership_tool/decisions.py`의 `DECISION_KINDS`가 소유한다**(아래 대조 조항) |
+| `diagnostics` | array\<string\> | 필수 | 이유 코드 목록(빈 배열 허용). **값 집합은 같은 모듈의 `DIAGNOSTICS`가 소유한다** |
+| `block_count` | integer | 필수 | 0 이상 |
+| `claim_source` | string \| null | 필수(널 허용) | `session_start` \| `state_transition` \| `null`. 판정 입력이 된 소유권 주장 원천을 후보 근거로 노출한다 — 차단·통과 사유를 사후에 재구성할 수 있어야 한다 |
+| `report_event_id` | string \| null | 필수(널 허용) | 판정에 쓰인 `pm.report`의 `event_id`. `null` 또는 정확히 `evt_<UUIDv4>`만 허용하며, 값이 있으면 `caused_by_event_id`와 같다 |
+| `last_activity_event_id` | string \| null | 필수(널 허용) | 판정 시각 직전 마지막 `activity`의 `event_id`. `null` 또는 정확히 `evt_<UUIDv4>`만 허용 |
+
+**`decision_kind`·`diagnostics` 값 집합의 소유와 기계 대조**: 두 enum의 SSOT는 `ownership-tool`의 판정 모듈이며 이 계약 문서는 값을 복제하지 않는다 — 복제하면 두 곳이 갈라질 때 어느 쪽이 참인지 정할 수 없다. 기록 코어는 §3.1("`run-log-core`는 … 채널 분기를 갖지 않는다")에 따라 `ownership-tool`을 import하지 않고 **자기 상수로 같은 집합을 두며**, 두 상수 집합이 판정 모듈의 집합과 정확히 같은지를 계약 테스트가 기계 대조한다. 이는 `RUN_LOG_ERROR_CODES`와 `RUN_LOG_STATE_ERROR_CODES`가 이미 쓰는 "물리 분리 + 기계 대조" 관례와 같은 형태다. 집합이 어긋나면 계약 위반이며, 집합 밖 값을 실은 사건은 `schema_invalid`로 거부한다.
+
+#### 1.3.1 `pm.report`·`stop.decision` 결정론적 summary renderer (D-16)
+
+두 사건의 서술은 기록 코어의 단일 renderer만 생성한다. renderer의 입력은 각 사건의 폐쇄형 `data`이며, 호출자·receipt·원본 프롬프트의 문자열은 입력이 아니다. renderer의 결과는 아래 ASCII 템플릿과 **UTF-8 바이트 단위로 정확히 일치**해야 한다. 공백 추가·줄바꿈·다른 순서·호출자 제공 문구는 허용하지 않는다.
+
+- `pm.report`: `pm.report: report_type={report_type}; transition_action={transition_action}; user_input_required={true|false}`. boolean은 소문자 `true` 또는 `false`로 렌더링한다.
+- `stop.decision`: `stop.decision: decision_kind={decision_kind}; diagnostics={sorted_csv_or_none}; block_count={block_count}; claim_source={value_or_null}; report_event_id={value_or_null}; last_activity_event_id={value_or_null}`. `diagnostics`는 사전식 오름차순으로 정렬한 뒤 `,`로 연결하고 빈 배열은 `none`으로 렌더링한다. nullable 값은 값이 있으면 그 값, 없으면 소문자 `null`로 렌더링한다.
+
+두 사건에서 `summary`는 위 renderer의 결과 외 값을 가질 수 없고, `reason`·`reason_code`·`duration_unknown_reason`·`refs`는 **모두 `null`**이어야 한다. 하나라도 어기면 기록 전 `schema_invalid`로 거부한다. 이 닫힘은 앞 단락의 일반적인 1줄 안내 표현보다 우선한다. `stop.decision.data.report_event_id`와 `last_activity_event_id`는 각각 `null` 또는 정확히 `evt_<UUIDv4>`여야 하며, 임의 문자열을 서술 우회로 쓸 수 없다.
+
+공통 `redact()`의 환경변수형 비밀값·Bearer/token·API key·private key 블록 **4종**은 변경하지 않는다. 자연어 원본 프롬프트를 추측·분류하는 정규식은 추가하지 않는다. 이 사건들은 원문을 받아 마스킹하는 대신, 원문이 저장 후보가 되지 않도록 위 구조화 renderer와 null 폐쇄로 차단한다. 이는 TRD D-9의 모든 writer 공통 초크포인트와 양립하며, `run-log-tool append`·`state-tool` 경로·인프로세스 호출은 같은 기록 코어 판정을 공유한다.
+
 **명시적 거부 조합**
 
 - `actor.kind=worker` + `recorded_by.kind=PM` — PM 대필. 스키마 단계에서 거부한다(제안서 §4.3 표 5행).
 - `actor.kind=worker` + `provenance.type=direct` + `worker_log_token_id` 부재.
 - `provenance.type=adapter` + `recorded_by.kind ≠ adapter`.
 - `provenance.type=import` + `recorded_by.kind ≠ tool`.
-- 사건 종류별 actor 제약 위반: `worker.*`는 `worker`만, `worker.capability.*`는 actor·recorded_by 모두 `tool`만, `run.started`/`run.completed`/`state.changed`는 `tool`만, `gate.requested`는 `PM`만, `gate.resolved`는 `PM|user|auto`만(제안서 §5.1).
+- 사건 종류별 actor 제약 위반: `worker.*`는 `worker`만, `worker.capability.*`는 actor·recorded_by 모두 `tool`만, `run.started`/`run.completed`/`state.changed`는 `tool`만, `gate.requested`는 `PM`만, `gate.resolved`는 `PM|user|auto`만(제안서 §5.1), `pm.report`는 `PM`만, `stop.decision`은 `tool`만(본 계약 §1.2).
 - active 모드의 사건별 source 제약 위반: `worker.started`는 `process_start|agent_handshake`, `activity`는 `agent_message|stream_event|tool_result`, terminal은 `process_exit|agent_error`만(제안서 §5.1 말미).
 
 **trusted adapter event 정의**: `actor.kind=worker` ∧ `provenance.type=adapter` ∧ `provenance.recorded_by.kind=adapter`를 모두 만족하는 사건. 조합 A1만 해당한다.
@@ -168,7 +198,14 @@ adapter와 importer는 `actor`가 아니다. 사건을 **수행한 의미상 주
     },
     "active_run_id": "run_...",
     "status": "active",
-    "pending_events": []
+    "pending_events": [],
+    "last_report": {
+      "event_id": "evt_...",
+      "report_type": "progress_report",
+      "transition_action": "continue",
+      "user_input_required": false,
+      "at": "2026-09-19T03:32:08.123Z"
+    }
   }
 }
 ```
@@ -182,6 +219,11 @@ adapter와 importer는 `actor`가 아니다. 사건을 **수행한 의미상 주
 | `active_run_id` | string | 필수 | 현재 run |
 | `status` | string | 필수 | `active` \| `pending` \| `overridden`. outbox와 전이 규칙으로만 변경 |
 | `pending_events` | array | 필수 | 미전송 사건 보관함. 아래 상한 |
+| `last_report` | object \| null | **선택** | 마지막 `pm.report`의 파생 포인터. 키는 `event_id`·`report_type`·`transition_action`·`user_input_required`·`at` 5개 폐쇄이며 값 제약은 §1.2 `pm.report` 행과 같다. 아래 조항 참조 |
+
+> **필수 필드는 위 7종 그대로다.** `last_report`는 선택 필드이므로 블록에 없어도 스키마 검증을 통과하며, 이 필드의 추가가 기존 7필드의 필수 여부·타입·의미를 바꾸지 않는다.
+
+**`last_report` 포인터 계약**: 이 필드는 Stop 판정이 PM 보고 의도를 추가 프로세스 없이 읽을 수 있게 하는 **파생 포인터**이며 사건이 SSOT다. 따라서 (a) `state-tool log-event --event pm.report`가 사건 적재와 **같은 원자 쓰기**로만 갱신하고, (b) 사건 적재(admission)가 거부되면 포인터도 갱신하지 않으며, (c) 포인터가 사건과 어긋나면 사건이 참이다. 이 포인터는 사건을 대체하지 않으므로 포인터만 있고 대응 사건이 없는 구간은 §2.5 읽기 판정이 드러낸다. 포인터에는 §1.3이 금지한 원본 프롬프트·chain-of-thought·비밀값을 담지 않는다 — 5키 폐쇄가 그 경로를 구조적으로 막는다. 특히 `pm.report`의 호환 `--summary` 입력과 renderer summary 어느 것도 포인터에 복사하지 않으며, 포인터는 구조화 3축만 보존한다.
 
 > 위 예시의 `channel_id`·`completion_profile`·`adapter_id` 값은 **형태를 보이기 위한 예시이며 계약이 아니다.** 실제 채널별 등급 배정은 Phase 0 산출 `profiles.json`이 소유한다(§1.6, TRD D-8).
 
@@ -192,7 +234,7 @@ adapter와 importer는 `actor`가 아니다. 사건을 **수행한 의미상 주
 - 전체 건수 상한: `TOTAL_LIMIT = 128`. 전체 payload 최악 크기 = 512 KiB.
 - 일반 admission 한도 = `TOTAL_LIMIT − (보관함에 있는 override 사건 수)`. 별도 예약 슬롯 자료구조를 두지 않는다.
 - override bundle은 `activity(data.kind=decision)` 1건 + 강제 `state.changed` 1건의 **정확히 2건**이며, 일반 admission 한도와 무관하게 **정확히 한 번만** 적재된다.
-- 보관함에 적재 대상인 사건: `state.changed`, `run.started`, `run.completed`, `gate.requested`, `gate.resolved`, PM `activity`. 워커 직접·adapter 사건은 보관함을 쓰지 않고 `run-log-tool`이 직접 append한다(제안서 §6.2 말미).
+- 보관함에 적재 대상인 사건: `state.changed`, `run.started`, `run.completed`, `gate.requested`, `gate.resolved`, PM `activity`, `pm.report`, `stop.decision`. 뒤의 2종은 `state-tool`이 제출하므로 앞의 사건들과 같은 admission→원자 쓰기→drain 경로를 쓴다. 워커 직접·adapter 사건은 보관함을 쓰지 않고 `run-log-tool`이 직접 append한다(제안서 §6.2 말미).
 
 **계약 무결성**: `run_log` 블록을 손편집으로 제거하면 스키마 검증 실패다. active 태스크에서 outbox 복구 근거 없이 기록이 사라지면 legacy로 강등하지 않고 `run_log_missing`으로 진단한다. 반대로 보관함에 `run.started`가 남아 있으면 `run_log_missing`이 아니라 **복구 가능 초기화**다(제안서 §6.1).
 
@@ -462,9 +504,11 @@ adapter와 importer는 `actor`가 아니다. 사건을 **수행한 의미상 주
 | 표면 id | 계약 불변식 |
 |---|---|
 | `state-tool.restart-run` | 기존 run을 `run.completed(reason=restart)`로 닫고 새 `run_id` 발급. 두 사건을 한 번의 상태 원자 쓰기로 커밋. **호출 전에 존재한 미해소 보관함이 있으면 거부**하며, restart 자체가 커밋하는 2건은 이 사전검사 대상이 아니다 |
-| `state-tool.log-event` | PM actor 사건만 수용. `actor.kind=worker` 지정은 `actor_not_allowed`로 거부 |
+| `state-tool.log-event` | PM actor 사건만 수용. `actor.kind=worker` 지정은 `actor_not_allowed`로 거부. **수용하는 `--event` 값은 `activity`와 `pm.report` 2종**이며 둘 다 조합 A4로 기록한다. `--event pm.report`는 §1.2의 `data` 폐쇄 3키를 앞단에서 같은 규칙으로 검증하고(§1.3 중복 방어), 사건 적재와 **같은 원자 쓰기**로 §1.4 `run_log.last_report` 포인터를 갱신한다 — 적재가 거부되면 포인터도 갱신하지 않는다. `stop.decision`은 이 표면이 수용하지 않는다(`actor.kind=tool`이며 `state-tool`이 drain 경로로 제출한다, §1.3 A7) |
 | `state-tool.gate-request` | 고유 `gate_id` 유일성 검사. 보관함 중개 |
 | `state-tool.gate-resolve` | 같은 `gate_id`의 선행 requested 필수. 중복 resolved 거부. 대기 시간은 두 사건의 UTC 차분으로만 계산 |
+
+`state-tool log-event --event pm.report`의 자유 `--summary` 인자는 기존 호출자 호환성을 위해 계속 수용한다. 다만 이 인자는 사건·보관함·`last_report`에 저장하지 않으며, state-tool은 §1.3.1 renderer에 필요한 3개 구조화 인자만 기록 코어에 넘긴다. 따라서 두 CLI 경로의 `pm.report` 저장 summary와 거부 판정은 동일하다.
 
 ### 2.5 `state-tool` 개정 2개 표면
 
@@ -473,7 +517,7 @@ adapter와 importer는 `actor`가 아니다. 사건을 **수행한 의미상 주
 | `state-tool.init.run-log-mode` | `--run-log-mode <off\|shadow\|active>` 추가. **기본값은 `shadow`** — 플래그를 생략하면 `shadow`로 초기화되며, 개정 전과 동일하게 run-log 계약을 비활성화하려면 `off`를 명시해야 한다(`off`는 개정 전 "미지정" 경로와 산출물·응답 키 집합이 바이트 동일). active는 `--channel-id` 필수이며 배포된 `profiles.json` 항목과 hash를 검증해 `completion_profile_receipt`에 고정한다. 첫 원자 쓰기는 `status=pending` + `run.started` 보관함 적재, 이후 segment 생성·멱등 append·보관함 제거가 성공해야 `status=active` |
 | `state-tool.mark.completion-gate` | 완료 표시 시 채널 등급·provenance·시간 증거를 함께 검사. `--run-log-override`는 `--owner user` + `--note` 동시 필수이며 override bundle 2건을 한 번만 적재하고 `status=overridden`으로 둔다. 이후 해당 전이 1건 뒤에는 reconcile 외 추가 전이를 허용하지 않는다. `--worker-duration-minutes`는 1.0/1.1에서 현행 수용, 1.2에서 파생값 일치 시 수용+deprecated 경고, 불일치 시 `worker_duration_conflict` |
 
-**`state-tool verify --run-log-completeness-check`** (D-6, AC-7·AC-8): 기존 `verify` 명령의 7번째 상호 배타 검사 라우트다. `state.json` 현재 행과 조각(committed)·보관함(pending) 사건을 대조해 자동 승인을 포함한 누락을 진단한다. read-only·비차단(exit 0)이며, `run-log-tool validate-run`의 조각 자체 순번·스키마·provenance 검증과 별개 축이다 — `run-log-core`가 상태 파일을 읽지 않는 단방향 의존(§3.1) 때문에 상태 대조는 `state-tool`만 수행할 수 있다. 반환은 누락 목록 4종(`missing_state_changed`·`missing_pm_activity`·`missing_gate_event`·`unobserved_worker_boundary`)과 관측 지점 3필드(`last_observed_decision`·`last_observed_state_change`·`last_observed_boundary`, 각 `{event_id, ts, ref}` 또는 `null`)이며, 3필드는 누락 목록과 무관하게 항상 반환한다. 이 라우트는 기존 `state-tool.verify` CLI 표면의 플래그 확장이며 `surfaces.json`에 별도 표면 id를 신설하지 않는다(D-7, PLAN 범위 제약 — 신규 id 필요 여부는 PM 판단 대상으로 남긴다).
+**`state-tool verify --run-log-completeness-check`** (D-6, AC-7·AC-8): 기존 `verify` 명령의 7번째 상호 배타 검사 라우트다. `state.json` 현재 행과 조각(committed)·보관함(pending) 사건을 대조해 자동 승인을 포함한 누락을 진단한다. read-only·비차단(exit 0)이며, `run-log-tool validate-run`의 조각 자체 순번·스키마·provenance 검증과 별개 축이다 — `run-log-core`가 상태 파일을 읽지 않는 단방향 의존(§3.1) 때문에 상태 대조는 `state-tool`만 수행할 수 있다. 반환은 누락 목록 4종(`missing_state_changed`·`missing_pm_activity`·`missing_gate_event`·`unobserved_worker_boundary`), 아래 **정지 판정 목록 5종**, 그리고 관측 지점 3필드(`last_observed_decision`·`last_observed_state_change`·`last_observed_boundary`, 각 `{event_id, ts, ref}` 또는 `null`)이며, 3필드는 목록과 무관하게 항상 반환한다. 이 라우트는 기존 `state-tool.verify` CLI 표면의 플래그 확장이며 `surfaces.json`에 별도 표면 id를 신설하지 않는다(D-7, PLAN 범위 제약 — 신규 id 필요 여부는 PM 판단 대상으로 남긴다).
 
 **`missing_pm_activity`의 트리거 조건**: 이 목록은 아래 **앵커 2종** 각각에 대해 대응 사건이 없으면 1건씩을 싣는다. 앵커는 `state.json`의 현재 상태 사실이므로 이 판정은 `state-tool`이 전담한다 — 상태 원천을 읽지 않는 기록 코어(§3.1 단방향 의존)는 이 판정에 참여하지 않는다.
 
@@ -491,6 +535,18 @@ adapter와 importer는 `actor`가 아니다. 사건을 **수행한 의미상 주
 **정렬**: 앵커 ① 항목을 `row_id` 오름차순으로 먼저 싣고, 앵커 ② 항목이 있으면 배열 마지막에 1건을 붙인다. 같은 상태·사건 입력에는 순서까지 같은 배열을 반환한다.
 
 **항목 형태**: 모든 항목은 `row_id`·`row_key`·`stage`·`expected`·`anchor` 5키를 갖는다. 앵커 ①은 `{"row_id": <행 id>, "row_key": <row.key>, "stage": <행 stage>, "expected": "activity(decision)", "anchor": "auto_approved_row"}`이고, 앵커 ②는 같은 5키이되 `row_id`·`row_key`·`stage`가 `null`이고 `"anchor": "override_bundle"`이다.
+
+**정지 판정 목록 5종**: `pm.report`·`stop.decision`·`activity`·`state.changed`의 **존재·부재·순서만으로** 판정하며, 자유 서술을 파싱하거나 현재 상태에서 과거 의도를 추정하지 않는다. "부재"는 기존 4종과 같은 방식으로 **앵커 쌍**으로만 확정한다 — 앞 앵커는 `pm.report`, 뒤 앵커는 그보다 늦은 임의의 사건이며, 뒤 앵커가 있어야 "턴이 끝나고 다음 턴이 시작됐다"가 사실로 성립한다. 5종 전부 기존 4종과 같은 비차단 응답에 합류하고 이 목록은 완료를 차단하지 않는다.
+
+| 목록 키 | 무엇을 가르는가 | 판정 술어 |
+|---|---|---|
+| `report_intent_inconsistent` | PM의 잘못된 정지 의도 | `pm.report` 중 `report_type=decision_request` ∧ `transition_action=continue`, 또는 `report_type=progress_report` ∧ `user_input_required=true` |
+| `missing_stop_decision` | Stop hook 미실행 | 어떤 `pm.report`보다 늦은 사건이 있는데 그 사이에 `stop.decision`이 없음. 항목은 미커밋 receipt 잔량 유무를 함께 실어 "미실행"과 "미커밋"을 항목 수준에서 가른다 |
+| `stop_decision_allowed` | hook 허용 판정 | `stop.decision`의 `data.decision_kind`가 허용 계열(`allow_*`) |
+| `stop_block_without_followup` | 차단 뒤 후속 활동 부재 | `decision_kind=block_continue`인 `stop.decision` 뒤로 다음 `stop.decision` 또는 run 종료까지 `activity`·`state.changed`가 0건 |
+| `unanchored_activity` | 진행으로 오인될 `activity` | 동일 결과가 반복되거나 어떤 상태 전이에도 앵커되지 않는 `activity`. `pm.report`·`stop.decision`은 `activity`가 아니므로(§1.2) 이 판정의 대상이 아니고 어떤 진행 집계에도 포함되지 않는다 |
+
+각 항목은 고정 키 집합을 갖고 배열마다 결정론적 정렬 기준을 갖는다 — 같은 상태·사건 입력에는 순서까지 같은 배열을 반환한다. 기존 4종 목록과 관측 지점 3필드의 키·의미·정렬은 이 추가로 바뀌지 않는다. 판정: MV-34.
 
 이 조문은 오류 코드도, `surfaces.json` 표면 id도 신설하지 않는다. 이 라우트의 read-only·비차단(exit 0) 규정은 위와 같이 유지된다.
 
@@ -691,6 +747,9 @@ TRD `## 구성요소와 책임 경계`를 계약 문장으로 확정한다.
 
 | MV-30 | 오류 코드 ↔ 표면 양방향 일치 | 두 자산: `CONTRACT.md` §2.2 오류 코드 표와 §2.2.1 대응, 그리고 `surfaces.json` | (a) §2.2 표의 모든 코드가 §2.2.1에 발생 표면을 갖는다, (b) §2.2.1이 지정한 표면의 `response_shape.err`에 그 코드가 있다, (c) `surfaces.json`의 모든 `err` 값이 §2.2 표에 존재한다, (d) `kind=cli` 17개 표면 전부가 `task_path_not_absolute`·`task_lock_timeout`을 갖는다. 4항 중 하나라도 어긋나면 실패. 검사 대상은 `kind=cli` 표면만이며 `adapter.*` 2종은 제외한다 | 전 CLI 표면 17종 | 본 계약 §2.2.1 / §9.1 |
 | MV-31 | 등급의 호출 조건 종속 | `profiles.json`의 각 채널 항목과 해당 변환기의 실제 호출 조건 | `observation_preconditions`가 비어 있지 않은 채널에서, 변환기가 실제로 사용하는 호출 조건이 `condition`과 일치한다. 불일치하면 실패이며 배정을 무효로 판정한다. 필드 자체가 조건부 필수인데 비어 있어도 실패 | `adapter.pm-agent-tool`, `adapter.oppl-headless-cli` | 본 계약 §1.6 / Phase 0 실측 |
+| MV-32 | 새 사건 2종의 조합 폐쇄 | `pm.report`·`stop.decision` 각각에 대해 §1.3 조합표 밖의 actor×type×recorded_by×source 조합 전수, 그리고 각각의 허용 조합(A4·A7) 1건 | 조합표 밖은 **전건 `provenance_invalid`** 거부이고 조각 바이트가 변하지 않는다. 허용 조합은 수용된다. 기존 조합 전수 판정(MV-2)의 건수와 결과는 불변이다 — 사건 종류는 조합 축과 직교한다 | `run-log-tool.append` | 본 계약 §1.2·§1.3 / TASK.md AC-2·AC-3 |
+| MV-33 | 새 사건 2종의 data·서술·ID 폐쇄 | `pm.report`의 3키 밖 키·키 누락·enum 밖 값·renderer와 다른 summary·비null `reason`/`reason_code`/`duration_unknown_reason`/`refs`, `stop.decision`의 6키 밖 키·키 누락·enum 밖 값·renderer와 다른 summary·같은 4필드의 비null 값·`report_event_id`/`last_activity_event_id`의 null도 `evt_<UUIDv4>`도 아닌 값을 투입한다. 각 사건은 실제 두 생산 경로(`run-log-tool append` 및 state-tool의 `pm.report=log-event`, `stop.decision=drain`)로 투입한다 | 전건 **`schema_invalid`** 거부이고 두 경로의 판정 결과가 같다. 거부 전후 각 조각의 바이트가 불변이며, 새 오류 코드는 나타나지 않는다 — §2.2 코드 집합·§1.3 조합표·`surfaces.json`의 err 집합은 변경 전과 같다. 허용 입력의 summary는 renderer 결과와 바이트 동일하고, 기존 공통 `redact()` 4종의 결과와 두 CLI의 조각 형식도 불변이다 | `run-log-tool.append`, `state-tool.log-event` | 본 계약 §1.3.1 / TASK.md AC-2·AC-3·AC-7·C-5 |
+| MV-34 | 정지 원인 4분류 판정 | §2.5 읽기 판정 라우트에 4분류를 각각 재현하는 사건 조각 4벌과 정상 흐름 조각 1벌 | 4벌이 각각 `report_intent_inconsistent`(PM의 잘못된 정지 의도) / `missing_stop_decision`(hook 미실행) / `stop_decision_allowed`(hook 허용) / `stop_block_without_followup`(차단 뒤 후속 활동 부재) **하나에만** 잡힌다. 정상 흐름에서는 이 4축과 `unanchored_activity`가 전부 빈 배열이다. 기존 4축(`missing_state_changed`·`missing_pm_activity`·`missing_gate_event`·`unobserved_worker_boundary`)과 관측 지점 3필드의 키·의미·정렬은 불변이고 read-only·비차단(exit 0)이다 | — (§2.5가 새 표면 id를 신설하지 않는다) | 본 계약 §2.5 / TASK.md AC-5 |
 
 **변환기 표면 수에 관한 조항**: 변환기 표면의 최종 개수는 Phase 0 `profiles.json`의 active 채널 수로 확정된다(제안서 §9.1). 이 계약 시점에는 판정 대상 2축(`adapter.pm-agent-tool`, `adapter.oppl-headless-cli`)을 각각 1개 표면으로 등재하며, Phase 0 결과에 따라 `cooperative`로 판정된 축은 변환기를 만들지 않고 표면이 비활성으로 남는다.
 

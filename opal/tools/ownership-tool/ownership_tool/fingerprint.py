@@ -113,6 +113,11 @@ def save_receipt(project_root, receipt):
         receipt_dict = receipt.to_dict()
     else:
         receipt_dict = dict(receipt)
+    pending = receipt_dict.get("pending_decisions")
+    if isinstance(pending, list):
+        # Stop 훅은 임계 경로에서 상태 도구의 outbox 락을 잡지 않는다. 미전송
+        # 판정은 최근 32건만 receipt에 보관하며, 오래된 항목부터 버린다.
+        receipt_dict["pending_decisions"] = pending[-32:]
     session_id = receipt_dict.get("session_id")
     path = ownership_core.stop_receipt_path(project_root, session_id)
     return ownership_core.write_json_atomic(path, receipt_dict)

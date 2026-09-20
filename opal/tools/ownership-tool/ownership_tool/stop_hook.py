@@ -12,7 +12,9 @@ from __future__ import annotations
 
 import json
 import pathlib
+import subprocess
 import sys
+from datetime import datetime, timezone
 
 if __package__:
     from . import stop_evaluator
@@ -23,6 +25,32 @@ else:
 
 # 차단 채널로 내보내는 판정 2종. 나머지 decision_kind는 무출력 통과다.
 _BLOCKING_KINDS = ("block_continue", "defer_to_pm")
+_SHOW_TIMEOUT_SECONDS = 0.75
+
+
+def _state_tool_show(task_path):
+    """상태 도구를 딱 한 번 read-only로 호출한다. 실패는 None이다."""
+    if not task_path:
+        return None
+    state_tool = pathlib.Path(__file__).resolve().parent.parent.parent / "state-tool" / "run.sh"
+    try:
+        completed = subprocess.run(
+            ["bash", str(state_tool), "show", str(task_path), "--format", "json"],
+            capture_output=True,
+            text=True,
+            timeout=_SHOW_TIMEOUT_SECONDS,
+            check=False,
+        )
+        if completed.returncode != 0:
+            return None
+        result = json.loads(completed.stdout)
+        return result if isinstance(result, dict) and result.get("ok") is True else None
+    except (OSError, subprocess.SubprocessError, ValueError):
+        return None
+
+
+def _utc_now():
+    return datetime.now(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z")
 
 
 def to_hook_output(result):
@@ -48,7 +76,12 @@ def main():
     project_root = payload.get("cwd")
     if not project_root:
         return
-    output = to_hook_output(stop_evaluator.evaluate(payload, project_root=project_root))
+    now = _utc_now()
+    show_path = stop_evaluator.state_path_for_payload(payload, project_root, now=now)
+    show_json = _state_tool_show(show_path)
+    output = to_hook_output(stop_evaluator.evaluate(
+        payload, project_root=project_root, show_json=show_json, now=now,
+    ))
     if output is not None:
         print(json.dumps(output, ensure_ascii=False))
 

@@ -42,7 +42,7 @@ hook 어댑터는 판정 로직을 갖지 않는다 — 봉투 파싱·출력 �
 |---|---|---|
 | 세션 registry | `<project_root>/.opal/run/.runtime/sessions/<session_id>.json` | `SessionRecord{session_id, cwd, started_at, heartbeat_at, expires_at, status}` |
 | hub task lease | `<canonical_task_path>/run/.runtime/owner.json` | `LeaseRecord{task_path, owner_session_id, generation, claimed_at, heartbeat_at, lease_expires_at, status}` |
-| stop receipt | `<project_root>/.opal/run/.runtime/stop-guard/<session_id>.json` | `StopReceipt{session_id, fingerprint, decision_kind, decided_at, block_count}` |
+| stop receipt | `<project_root>/.opal/run/.runtime/stop-guard/<session_id>.json` | `StopReceipt{session_id, fingerprint, decision_kind, decided_at, block_count, pending_decisions}` |
 
 경로 계산 함수는 각각 `session_registry_path()`·`hub_lease_path()`·`stop_receipt_path()`다.
 세 경로 모두 `.gitignore`의 `.opal/*`(:2)와 `tasks/**/run/.runtime/`(:49)로 이미 추적 제외이므로
@@ -128,6 +128,28 @@ lease claim에 성공한 **워크트리** 세션은 이어서 허브 registry의
 3. hook 봉투 `payload["session_id"]`
 
 `ownership_core`에는 플랫폼 고유 변수명이 등장하지 않는다.
+
+## Stop 보고 입력과 판정 receipt
+
+Stop 판정은 후보 상태의 `run_log.last_report`가 있으면 그 포인터의 구조화 보고 의도를 우선
+사용하고, 없을 때만 기존 상태 기반 전이 추정으로 폴백한다. `last_report`는 `pm.report` 사건의
+파생 포인터이며 사건을 대체하지 않는다. 필드와 유효성의 원문은
+`docs/run-log/CONTRACT.md` §1.4, 판정 분기는 `ownership_tool/stop_evaluator.py`가 소유한다.
+
+`stop_evaluator`는 project root와 session ID가 해석된 Stop 판정을 receipt의
+`pending_decisions`에 추가한다. Stop 임계 경로는
+run-log/state-tool 공용 락을 잡거나 기록 조각에 직접 쓰지 않으며, 목록은 최근 32건으로 제한된다.
+다음 `state-tool` 기록 커밋이 이 목록을 `stop.decision` 사건으로 변환해 기존
+admission→원자 쓰기→drain 경로로 제출한 뒤 성공 항목을 receipt에서 제거한다. append 또는 receipt
+갱신에 실패한 항목은 다음 호출에서 다시 처리할 수 있도록 남는다. 정확한 사건 계약과 읽기 진단은
+`docs/run-log/CONTRACT.md` §1.2·§1.4·§2.5를 따른다.
+
+`stop_hook.py`는 판정 전에 선택된 태스크를 `state-tool show --format json`으로 한 번만 읽고
+(0.75초 상한), 같은 호출에서 만든 UTC 시각과 함께 evaluator에 넘긴다. 이 배선으로 실제 hook에서도
+fingerprint·`decided_at`이 채워지고, 상태 진전 없는 반복 Stop은
+`allow_no_progress_same_fingerprint` 경로에 도달한다. show 실패·timeout이면 `None`으로 폴백하며
+hook의 무출력 exit 0 fail-safe는 유지된다. 구현 위치는 `stop_hook.py`의 `_state_tool_show()`와
+`main()`, 판정 위치는 `stop_evaluator.py`의 반복 Stop 가드다.
 
 ## 폐쇄 enum (PLAN D-3)
 

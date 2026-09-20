@@ -38,6 +38,11 @@ load: pilot.start
 모든 Pilot은 단계 작업·PM Gate·사용자 확인 행을 갱신한 직후 `state-tool` stdout의
 구조화 전이 필드를 소비한다. 산문 보고 문구나 스킬별 관용 표현은 전이 판정 근거가 아니다.
 
+사용자에게 진행 또는 결정 요청을 보고하기 직전에 PM은 `state-tool log-event --event pm.report`로
+그 구조화 전이 판정을 기록해야 한다. 이 호출이 만든 사건과 `run_log.last_report` 포인터가 Stop
+판정의 영속 입력이며, 자유 형식 보고문은 판정 입력이 아니다. 입력·저장 계약은
+`docs/run-log/CONTRACT.md` §1.2·§1.3.1·§1.4·§2.4를 따른다.
+
 | 필드 | 계약 |
 |------|------|
 | `transition_action` | `continue` / `await_user` / `blocked` / `complete` 중 하나. 다음 행동의 SSOT |

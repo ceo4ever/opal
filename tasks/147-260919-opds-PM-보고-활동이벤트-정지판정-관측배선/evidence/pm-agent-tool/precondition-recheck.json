@@ -1,0 +1,80 @@
+{
+  "schema_version": "1.0",
+  "produced_by": "task-147-W-1",
+  "recheck_of": {
+    "profiles_path": "tasks/123-260912-oppl-태스크-실행로그-표준화/archive/tasks/T01-채널-관측-능력-실측/profiles.json",
+    "channel_id": "pm-agent-tool",
+    "condition": "하네스가 서브에이전트 실행 파일(시작 메타·증분 전사)을 기록하고 호출자 전사에 종료 알림을 남긴다",
+    "phase0_probe_script": "tasks/123-260912-oppl-태스크-실행로그-표준화/archive/tasks/T01-채널-관측-능력-실측/evidence/pm-agent-tool/adapter-probe.py",
+    "phase0_probe_evidence_reused_for_diff": "tasks/123-260912-oppl-태스크-실행로그-표준화/archive/tasks/T01-채널-관측-능력-실측/evidence/pm-agent-tool/trial-01.probe.json"
+  },
+  "observation_scope": {
+    "executed_at_local": "2026-09-19 22:47 (Asia/Seoul, via `node ~/.opal/tools/date/date.js datetime`)",
+    "method": "Phase 0 프로브 스크립트(adapter-probe.py)를 그대로 재사용해 이 세션에서 서브에이전트 1회(Agent 도구, subagent_type=general-purpose, 짧은 echo 작업)를 디스패치하고, 프로브가 세션 subagents 디렉터리와 호출자 전사를 폴링한 결과를 관측했다. 프로브는 읽기 전용이며 자기 출력 파일 외에는 쓰지 않는다.",
+    "commands_run": [
+      "python3 tasks/123-260912-oppl-태스크-실행로그-표준화/archive/tasks/T01-채널-관측-능력-실측/evidence/pm-agent-tool/adapter-probe.py <out_prefix> <session_dir> <caller_jsonl> 90 <tasks_dir>  (백그라운드 실행, limit=90s)",
+      "Agent 도구 1회 디스패치 (subagent_type=general-purpose, description=\"W-1 precondition recheck probe dispatch\")",
+      "shasum -a 256 <meta.json> / <jsonl>",
+      "wc -l <jsonl>",
+      "python3 -c 'json.load(...)' 로 probe.json의 start_events/intermediate_growth/terminal/monotonic_span 필드 검사"
+    ],
+    "watched_paths": {
+      "subagents_dir": "/Users/iskang/.claude/projects/-Volumes-Data-AIStudio-workspace-ai-framework--opal-worktrees-task-147/<session-uuid>/subagents",
+      "caller_transcript": "/Users/iskang/.claude/projects/-Volumes-Data-AIStudio-workspace-ai-framework--opal-worktrees-task-147/<session-uuid>.jsonl",
+      "tasks_dir": "/private/tmp/claude-501/-Volumes-Data-AIStudio-workspace-ai-framework--opal-worktrees-task-147/<session-uuid>/tasks"
+    },
+    "dispatched_agent_id": "a6b62f8f4ffc24ea8",
+    "probe_output_file": "scratchpad/w1-probe.probe.json (세션 scratchpad, 태스크 evidence 범위 밖 임시 산출물이라 이 파일에 복제하지 않음)"
+  },
+  "observed": {
+    "start": true,
+    "intermediate": true,
+    "terminal": true,
+    "monotonic_span": true
+  },
+  "observation_detail": {
+    "start": {
+      "artifact_path_pattern": "{subagents_dir}/agent-{toolUseId 유래 16진 id}.meta.json",
+      "observed_instance": "agent-a6b62f8f4ffc24ea8.meta.json",
+      "format": "단일 JSON 오브젝트, 하네스가 서브에이전트 생성 시 기록",
+      "top_level_keys": ["agentType", "description", "toolUseId", "parentAgentId", "spawnDepth", "requestShape", "requestNonInteractive"],
+      "size_bytes": 240,
+      "sha256": "7f5137f9f14f4d70d6ab95ddf1dc7fe06d1701626947d1c7aea5cfae07dcce08",
+      "note": "content 필드에는 프롬프트 원문이 없고 디스패치 메타(에이전트 종류·설명·호출자 toolUseId 등)만 있다"
+    },
+    "intermediate": {
+      "artifact_path_pattern": "{subagents_dir}/agent-{id}.jsonl",
+      "observed_instance": "agent-a6b62f8f4ffc24ea8.jsonl",
+      "format": "JSON Lines, 서브에이전트 실행 중 하네스가 증분 append. 각 라인 top-level 키: parentUuid, isSidechain, promptId, agentId, type, message, uuid, timestamp, userType, entrypoint, cwd, sessionId, version, gitBranch",
+      "growth_samples": 7,
+      "line_count_progression": "프로브 관측 구간 동안 7줄 -> 29줄로 증가(단조 증가, 종료 전 7개 샘플 모두 캡처)",
+      "final_size_bytes": 271081,
+      "final_sha256": "04889a93b54601441ee6008bd361b2b26c25cf2c9d0e0a19460dc5e4b1300069",
+      "note": "본문 텍스트(message 필드 값)는 이 파일에 옮기지 않았다. 형식·키 이름·건수만 기록"
+    },
+    "terminal": {
+      "artifact_location": "호출자 전사 {caller_transcript} 내 <task-notification> 블록 (이 워커 자신의 이번 턴 컨텍스트에도 system-reminder로 동시 전달됨)",
+      "source_kind": "task_notification",
+      "matched_by": "task-id/tool-use-id가 start_events에서 관측한 agentId·toolUseId와 일치",
+      "raw_snippet_sha256": "probe.json.terminal.snippet_sha256 필드에 별도 보관(프로브 자체 산출물, 원문은 이 파일에 옮기지 않음)",
+      "note": "<task-notification> 안에 <task-id>, <tool-use-id>, <output-file>, <status>completed</status>, <summary>가 있고 <result> 뒤에 서브에이전트 최종 응답 요약이 붙는다. 원문 결과 텍스트는 옮기지 않았다"
+    },
+    "monotonic_span": {
+      "clock": "time.monotonic() (프로브 자체 계측, 벽시계 아님)",
+      "duration_ms": 10401.968,
+      "duration_source": "adapter_monotonic",
+      "note": "시작 관측부터 terminal 검출까지 프로브가 자체 단조 시계로 구간을 계측했다. Phase 0 trial-01과 동일한 계측 방식"
+    }
+  },
+  "claimed_profile": "observed_trajectory",
+  "claimed_profile_derivation": "observed.{start,intermediate,terminal,monotonic_span} 4개가 모두 true이므로, CONTRACT.md §1.3 A1(actor.kind=worker ∧ provenance.type=adapter ∧ recorded_by.kind=adapter, 추가 증거 source.id+source.sha256+source.observed_at)을 만드는 데 필요한 원본이 모두 실존한다: source.id는 meta.json의 toolUseId/파일명에서, source.sha256은 관측된 각 파일의 해시로, source.observed_at은 하네스 기록 시각 또는 프로브 관측 시각으로 얻을 수 있다. 4 bool 전부 true -> observed_trajectory 등급 유지(Phase 0과 동일 배정, 추정 아님 — 이번 실측으로 재확인)",
+  "verdict": "성립",
+  "verdict_basis": [
+    "start 관측: agent-a6b62f8f4ffc24ea8.meta.json이 디스패치 직후 신규 생성되어 안정적 경로 패턴(agent-<id>.meta.json)과 고정 키셋을 유지",
+    "intermediate 관측: agent-a6b62f8f4ffc24ea8.jsonl이 7회 샘플에서 7->29줄로 단조 증가하며 append됨(중간 전사 성립)",
+    "terminal 관측: 호출자 전사에 <task-notification>이 기록되고 이 워커 자신의 턴에도 system-reminder로 동일 알림이 도달함(이중 확인)"
+  ],
+  "w6_blocked": false,
+  "pm_escalation_required": false,
+  "escalation_reason": null
+}

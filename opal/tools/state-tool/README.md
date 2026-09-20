@@ -12,7 +12,7 @@
 
 - STATE.md는 **의사결정 로그·블로커·자유 기재를 담는 저널**이다. 파이프라인 현황(행 상태·진행·다음 액션)의 SSOT는 `state.json`이며, 조회는 `state-tool show`로 한다.
 - **출력 형식**: 모든 응답은 단일 라인 JSON
-- **전이 출력 계약**: `show`/`advance`/`mark`/`block`/`add-row`/`status`와 차단 응답은 `transition_action`(`continue`/`await_user`/`blocked`/`complete`), `report_type`(`progress_report`/`decision_request`), `next_action`을 함께 반환한다. `progress_report`는 비차단 통지이고, `decision_request`만 사용자 응답을 기다리는 신호다. 이 필드는 stdout 계약이며 `state.json`에 영속하지 않는다.
+- **전이 출력 계약**: `show`/`advance`/`mark`/`block`/`add-row`/`status`와 차단 응답은 `transition_action`(`continue`/`await_user`/`blocked`/`complete`), `report_type`(`progress_report`/`decision_request`), `next_action`을 함께 반환한다. `progress_report`는 비차단 통지이고, `decision_request`만 사용자 응답을 기다리는 신호다. 응답 자체는 stdout 계약이며, PM 보고 시 `log-event --event pm.report`가 보고 사건과 `state.json.run_log.last_report` 파생 포인터를 같은 원자 쓰기로 영속한다(`docs/run-log/CONTRACT.md` §1.4·§2.4).
 
 ## 호출 형식
 
@@ -356,6 +356,24 @@
 
 ---
 
+### `log-event` — PM 활동·보고 사건 기록
+
+```bash
+~/.opal/tools/state-tool/run.sh log-event <task-path> --event activity ...
+~/.opal/tools/state-tool/run.sh log-event <task-path> --event pm.report ...
+```
+
+- `--event`는 `activity`와 `pm.report` 두 값만 수용한다. `stop.decision`은 Stop receipt를
+  소비하는 내부 drain 경로가 제출한다.
+- `activity`는 기존 `--kind` 경로를 유지한다. `pm.report`는 구조화 보고 인자를 받아 기록 코어의
+  결정론 renderer를 사용하며, 호환용 `--summary` 문자열은 저장하지 않는다.
+- `pm.report`가 admission을 통과하면 사건과 `run_log.last_report` 포인터가 같은 원자 쓰기에서
+  갱신된다. 거부되면 둘 다 바뀌지 않는다.
+- 사건별 필드·폐쇄 규칙을 이 README에 복제하지 않는다. CLI 계약은
+  `docs/run-log/CONTRACT.md` §1.2·§1.3.1·§1.4·§2.4를 따른다.
+
+---
+
 ### `verify` — TEST-SCENARIO.md 검증 + TASK/PLAN 게이트 (013/016/005/098/100/111)
 
 위 11개 번호 명령과 별개로 동작하는 검증 전용 명령. task-path 하나에 여러 독립
@@ -508,10 +526,11 @@
 - `run-log-tool validate-run`(조각 자체의 순번·스키마·provenance 검증)과는 별개 축이다.
   이 검사만 `state.json`과 대조한다 — `run-log-core`가 상태 파일을 읽지 않는 단방향 의존
   때문에 이 대조는 `state-tool`만 수행할 수 있다(CONTRACT §2.5·§3.1).
-- 반환: 누락 목록 4종(`missing_state_changed`/`missing_pm_activity`/`missing_gate_event`/
-  `unobserved_worker_boundary`)과 관측 지점 3필드(`last_observed_decision`/
+- 반환: 기존 누락 목록 4종(`missing_state_changed`/`missing_pm_activity`/`missing_gate_event`/
+  `unobserved_worker_boundary`)에 PM 보고·Stop 판정 진단 5종을 더한 목록 9종과 관측 지점 3필드(`last_observed_decision`/
   `last_observed_state_change`/`last_observed_boundary`, 각 `{event_id, ts, ref}` 또는 `null`).
-  3필드는 누락 목록과 무관하게 항상 반환된다.
+  새 진단 이름과 판정식은 `docs/run-log/CONTRACT.md` §2.5가 소유한다. 3필드는 누락 목록과
+  무관하게 항상 반환된다.
 - `missing_pm_activity`는 앵커 2종을 대조해 대응 PM `activity(decision)`가 없으면 1건씩 싣는다 —
   ① `status=done`·`owner=auto`·`key` 보유 행에 `task_step` 일치 사건이 없으면 그 행마다 1건,
   ② `run_log.status=overridden`인데 run 전역에 사건이 0건이면 배열 마지막에 1건. 항목은
@@ -581,7 +600,33 @@
 
 ---
 
-## 에러 코드 카탈로그 (53종 실측 SSOT — PLAN §2.18 E-1 + 070 R-1/R-4/R-9 + 091 F-004 R-10/R-11 + 093 F-004 R-4 + 094 R-3/R-4/R-9 + 098 F-003 R-4 + 106 F-004 R-4 + 111 W-1 + 118 W-4 + 122 W-2 + 134 W-2)
+## 에러 코드 카탈로그 (53종)
+
+코드는 `state_tool.py`의 두 물리 분리 테이블이 소유한다. 기본 상태 오류는 `ERROR_CODES` 53종,
+run-log 연동 오류는 `RUN_LOG_STATE_ERROR_CODES` 15종이다. `err()`가 조회 시에만 두 테이블을
+합성하며, 종수는 문서가 아니라 코드의 키 집합을 실측한다.
+
+### run-log 연동 오류 (15종)
+
+| 코드 | 의미 |
+|---|---|
+| `profile_not_found` | active 초기화에 필요한 채널 profile 부재 |
+| `run_log_missing` | 활성 계약의 기록 또는 필수 사건 부재 |
+| `run_log_pending` | 보관함 사건 미전송 |
+| `run_log_outbox_full` | 보관함 admission 상한 도달 |
+| `run_log_write_failed` | 기록 append 실패 |
+| `event_too_large` | 보관함 항목 크기 상한 초과 |
+| `completion_evidence_missing` | active 완료 profile의 신뢰 증거 부족 |
+| `worker_duration_conflict` | 명시 소요시간과 사건 파생값 불일치 |
+| `task_path_not_absolute` | run-log 표면에 상대 task path 전달 |
+| `task_lock_timeout` | 공용 task lock 대기 상한 초과 |
+| `actor_not_allowed` | PM 전용 사건 표면에 다른 actor 지정 |
+| `gate_not_requested` | 선행 `gate.requested` 부재 |
+| `gate_duplicate` | 같은 gate 사건 중복 |
+| `refs_invalid` | 허용되지 않는 절대경로 ref |
+| `schema_invalid` | 폐쇄형 사건 스키마 위반 |
+
+### 기본 상태 오류 (53종 실측 SSOT — PLAN §2.18 E-1 + 070 R-1/R-4/R-9 + 091 F-004 R-10/R-11 + 093 F-004 R-4 + 094 R-3/R-4/R-9 + 098 F-003 R-4 + 106 F-004 R-4 + 111 W-1 + 118 W-4 + 122 W-2 + 134 W-2)
 
 > 종수는 `len(ERROR_CODES)`(`state_tool.py`) 실측값이 기준이다 — 이 헤더 숫자를 리터럴로 신뢰하지 말고 코드 실측으로 재검증할 것(094 R-9 ①, S-7/S-15).
 

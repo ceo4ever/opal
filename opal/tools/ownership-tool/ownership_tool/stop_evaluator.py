@@ -4,7 +4,7 @@
   "layer": "util",
   "domain": "opal-pipeline",
   "description": "Stop hook 판정 조립기(W-6). cwd를 registry(<project_root>/.opal-worktrees/.meta/task_*.json)로 해석해 worktree/hub 후보를 고르고 분류는 resolver에 위임한다 — cwd 문자열 파싱·.opal-worktrees 문자열 추론·부모 디렉터리 순회·mtime·updated_at 최신순 선택을 하지 않는다. 현재 세션 강제 후보가 정확히 1건이면 그 태스크의 transition_action만 평가하고, 복수면 defer_to_pm + multiple_hub_tasks로 무소유·만료 후보까지 한 반환에 담는다(무조건 fail-open도, 임의 단일 선택도 하지 않는다). stop_hook_active면 먼저 직전 receipt의 block_count를 플랫폼 상한과 비교해 allow_block_cap_reached로 빠져나가고(상한 env 미설정이면 검사 생략, 자체 고정 상한 없음), 이어 직전 fingerprint와 같으면 allow_no_progress_same_fingerprint로 통과하며 달라졌을 때만 재차단한다. D-21대로 claim_source=session_start인 current_session_owned 후보(SessionStart 자동 claim만 있는 수동 소유)는 강제 후보에서 빼고 passive_ownership 진단만 남기며 소유권 분류 자체는 유지한다 — claim_source=state_transition일 때만 강제 후보다(hub_canonical·worktree_canonical 취급은 무변경). foreign_session_owned·worktree_owned_shadow 후보는 강제 후보가 아니므로 Stop을 통과시키고 진단에만 남는다. block_continue·defer_to_pm은 판정 대상 task_id 전건과 각 transition_action·next_action을 나열한 reason을 함께 반환한다. decision_kind·diagnostic은 decisions의 D-3 폐쇄 enum 값만 쓴다.",
-  "exports": ["evaluate", "build_reason"],
+  "exports": ["evaluate", "build_reason", "state_path_for_payload"],
   "depends": ["ownership_tool.decisions", "ownership_tool.fingerprint", "ownership_tool.ownership_core", "ownership_tool.resolver", "ownership_tool.claude_adapter"]
 }
 """
@@ -43,6 +43,43 @@ _TRANSITION_DECISION = {
 }
 
 
+def _last_report_transition(candidate):
+    """유효한 last_report가 있으면 Stop 판정용 전이를 돌려준다.
+
+    보고의 사용자 입력 의도는 상태 행의 추정보다 우선한다. 포인터가 없거나
+    형태가 맞지 않으면 None을 돌려 기존 current_status 폴백을 그대로 사용한다.
+    """
+    state = candidate.get("state") or {}
+    run_log = state.get("run_log")
+    report = run_log.get("last_report") if isinstance(run_log, dict) else None
+    if not isinstance(report, dict):
+        return None, None
+    report_type = report.get("report_type")
+    user_input_required = report.get("user_input_required")
+    transition = report.get("transition_action")
+    if report_type == "decision_request" or user_input_required is True:
+        return "await_user", report
+    if report_type == "progress_report" and user_input_required is False:
+        return transition, report
+    return None, None
+
+
+def _receipt_pending_decision(kind, diagnostics, block_count, candidate, report, now):
+    """state-tool drain이 소비할 폐쇄형 Stop receipt 항목만 만든다."""
+    evidence = candidate.get("evidence") if isinstance(candidate, dict) else {}
+    evidence = evidence if isinstance(evidence, dict) else {}
+    report_event_id = report.get("event_id") if isinstance(report, dict) else None
+    return {
+        "decision_kind": kind,
+        "diagnostics": list(diagnostics),
+        "block_count": block_count,
+        "claim_source": evidence.get("claim_source"),
+        "report_event_id": report_event_id,
+        "task_path": candidate.get("task_path") if isinstance(candidate, dict) else None,
+        "decided_at": now,
+    }
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # registry 로드 — 발급된 meta 디렉터리만 읽는다
 # ─────────────────────────────────────────────────────────────────────────────
@@ -77,6 +114,33 @@ def _registry_entry_for_home(entries, cwd):
         if home and str(pathlib.Path(str(home))) == target:
             return entry
     return None
+
+
+def state_path_for_payload(payload, project_root, env=None, now=None):
+    """Stop adapter가 read-only `state-tool show`에 줄 단일 task 경로를 고른다.
+
+    판정과 같은 registry/resolver 경계를 쓰되, 후보가 하나로 닫히지 않으면 추측하지
+    않고 project_root를 돌려준다. show 실패는 adapter의 None 폴백으로 이어진다.
+    """
+    payload = payload if isinstance(payload, dict) else {}
+    env = os.environ if env is None else env
+    session_id = ownership_core.resolve_session_id(env, payload)
+    cwd = payload.get("cwd") or project_root
+    registry = _load_registry(project_root)
+    home_entry = _registry_entry_for_home(registry, cwd)
+    if home_entry is not None:
+        candidates = resolver.resolve_worktree(home_entry.get("task_home"), registry)
+    else:
+        candidates = resolver.resolve_hub(project_root, registry, session_id, now=now)
+    forced = [
+        candidate for candidate in candidates
+        if candidate.get("forced")
+        and candidate.get("classification") in _FORCED_CLASSIFICATIONS
+        and (candidate.get("evidence") or {}).get("claim_source") != _PASSIVE_CLAIM_SOURCE
+    ]
+    if len(forced) == 1 and forced[0].get("task_path"):
+        return forced[0]["task_path"]
+    return project_root
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -193,6 +257,12 @@ def evaluate(payload, project_root=None, now=None, show_json=None, prior_receipt
         "stop_hook_active": stop_hook_active,
     }
 
+    # 모든 receipt 항목은 닫힌 일곱 필드를 갖는다. 반복 Stop 가드는 아래에서
+    # 조기 반환하므로, 그 전에 단일 판정 대상의 보고 포인터를 확보한다.
+    receipt_candidate = forced[0] if len(forced) == 1 else None
+    _, report = (_last_report_transition(receipt_candidate)
+                 if receipt_candidate is not None else (None, None))
+
     current_fingerprint = fingerprint.compute(show_json) if show_json is not None else None
     if current_fingerprint is not None:
         evidence["fingerprint"] = current_fingerprint
@@ -214,17 +284,20 @@ def evaluate(payload, project_root=None, now=None, show_json=None, prior_receipt
             evidence["block_cap"] = block_cap
             evidence["prior_block_count"] = prior_block_count
             return _finish("allow_block_cap_reached", diagnostics, candidates, evidence,
-                           project_root, session_id, current_fingerprint, prior_block_count, now)
+                           project_root, session_id, current_fingerprint, prior_block_count, now,
+                           pending_candidate=receipt_candidate, report=report,
+                           prior_receipt=receipt)
         if current_fingerprint is not None and current_fingerprint == receipt.get("fingerprint"):
             if "no_progress_same_fingerprint" not in diagnostics:
                 diagnostics.append("no_progress_same_fingerprint")
             evidence["prior_block_count"] = prior_block_count
             return _finish("allow_no_progress_same_fingerprint", diagnostics, candidates, evidence,
-                           project_root, session_id, current_fingerprint, prior_block_count, now)
+                           project_root, session_id, current_fingerprint, prior_block_count, now,
+                           pending_candidate=receipt_candidate, report=report,
+                           prior_receipt=receipt)
 
     # ③ 강제 후보 수로 갈린다.
     view_transition = _state_view_transition(show_json)
-
     if len(forced) > 1:
         if "multiple_hub_tasks" not in diagnostics:
             diagnostics.append("multiple_hub_tasks")
@@ -239,11 +312,13 @@ def evaluate(payload, project_root=None, now=None, show_json=None, prior_receipt
         return _finish("defer_to_pm", diagnostics, candidates, evidence,
                        project_root, session_id, current_fingerprint, prior_block_count, now,
                        reason=build_reason("defer_to_pm", rows),
-                       block_count=prior_block_count + 1)
+                       block_count=prior_block_count + 1,
+                       pending_candidate=None, report=None, prior_receipt=receipt)
 
     if len(forced) == 1:
         target = forced[0]
-        transition = view_transition or _candidate_transition(target)
+        report_transition, report = _last_report_transition(target)
+        transition = report_transition or view_transition or _candidate_transition(target)
         next_action = (target.get("state") or {}).get("next_action") or _state_view_next_action(show_json)
         rows = [(target.get("task_id"), transition, next_action)]
     elif show_json is not None:
@@ -257,20 +332,26 @@ def evaluate(payload, project_root=None, now=None, show_json=None, prior_receipt
         if "no_owned_task" not in diagnostics:
             diagnostics.append("no_owned_task")
         return _finish("allow_inactive", diagnostics, candidates, evidence,
-                       project_root, session_id, current_fingerprint, prior_block_count, now)
+                       project_root, session_id, current_fingerprint, prior_block_count, now,
+                       prior_receipt=receipt)
 
     kind = _TRANSITION_DECISION.get(transition, "allow_inactive")
     if kind != "block_continue":
         return _finish(kind, diagnostics, candidates, evidence,
-                       project_root, session_id, current_fingerprint, prior_block_count, now)
+                       project_root, session_id, current_fingerprint, prior_block_count, now,
+                       pending_candidate=receipt_candidate, report=report,
+                       prior_receipt=receipt)
     return _finish("block_continue", diagnostics, candidates, evidence,
                    project_root, session_id, current_fingerprint, prior_block_count, now,
                    reason=build_reason("block_continue", rows),
-                   block_count=prior_block_count + 1)
+                   block_count=prior_block_count + 1,
+                   pending_candidate=receipt_candidate, report=report,
+                   prior_receipt=receipt)
 
 
 def _finish(kind, diagnostics, candidates, evidence, project_root, session_id,
-            current_fingerprint, prior_block_count, now, reason=None, block_count=None):
+            current_fingerprint, prior_block_count, now, reason=None, block_count=None,
+            pending_candidate=None, report=None, prior_receipt=None):
     """판정 결과를 조립하고 다음 Stop과 비교할 receipt를 남긴다."""
     result = decisions.Decision(
         decision_kind=kind,
@@ -285,6 +366,12 @@ def _finish(kind, diagnostics, candidates, evidence, project_root, session_id,
         result["block_count"] = block_count
 
     if project_root is not None and session_id:
+        prior_pending = (prior_receipt.get("pending_decisions")
+                         if isinstance(prior_receipt, dict) else None)
+        pending = list(prior_pending) if isinstance(prior_pending, list) else []
+        pending.append(_receipt_pending_decision(
+            kind, diagnostics, effective_block_count, pending_candidate, report, now,
+        ))
         fingerprint.save_receipt(
             project_root,
             {
@@ -293,6 +380,7 @@ def _finish(kind, diagnostics, candidates, evidence, project_root, session_id,
                 "decision_kind": kind,
                 "decided_at": now,
                 "block_count": effective_block_count,
+                "pending_decisions": pending,
             },
         )
     return result

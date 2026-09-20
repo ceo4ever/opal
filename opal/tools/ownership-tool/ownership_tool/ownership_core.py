@@ -116,6 +116,7 @@ class StopReceipt:
     decision_kind: str = None
     decided_at: str = None
     block_count: int = None
+    pending_decisions: list = None
 
     def to_dict(self):
         return asdict(self)

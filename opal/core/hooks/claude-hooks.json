@@ -41,6 +41,15 @@
       ]
     },
     {
+      "matcher": "Agent|Task",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "\"$HOME/.opal/.venv/bin/python\" \"$HOME/.opal/tools/run-log-tool/adapters/agent_tool_adapter.py\""
+        }
+      ]
+    },
+    {
       "matcher": "",
       "hooks": [
         {

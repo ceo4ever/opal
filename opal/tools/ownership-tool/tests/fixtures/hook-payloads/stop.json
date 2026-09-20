@@ -1,8 +1,31 @@
 {
-  "_fixture": {"captured": false, "source": "hooks-guide schema", "verify_in": "S-29"},
+  "_fixture": {
+    "captured": true,
+    "source": "live Stop hook envelope",
+    "verify_in": "S-2",
+    "captured_at_utc": "2026-09-19T13:58:19Z",
+    "platform": "macOS-26.6.2-arm64-arm-64bit",
+    "platform_system": "Darwin",
+    "harness_version": "2.1.278 (Claude Code)",
+    "capture_method": "tasks/147-260919-opds-PM-보고-활동이벤트-정지판정-관측배선/evidence/stop-envelope/capture_stop_envelope.py, temporarily registered as hooks.Stop in the worktree .claude/settings.local.json and reverted right after the capture",
+    "sanitized": {
+      "session_id": "real session UUID replaced with a fixed dummy",
+      "prompt_id": "real prompt UUID replaced with a fixed dummy",
+      "transcript_path": "absolute path relativized to {HOME}/{PROJECT_SLUG} placeholders and pointed at the dummy session id",
+      "cwd": "absolute worktree path relativized to {WT}",
+      "last_assistant_message": "assistant output text removed per TASK C-5 (no prompts or transcript content is stored); only the key and its string type are preserved"
+    },
+    "key_set_note": "existing synthetic keys are preserved; background_tasks, effort, last_assistant_message, permission_mode, prompt_id and session_crons were present only in the live envelope"
+  },
   "session_id": "sess-live-0001",
-  "transcript_path": "/tmp/synthetic-transcript.jsonl",
-  "cwd": "{WT}/task_138",
+  "transcript_path": "{HOME}/.claude/projects/{PROJECT_SLUG}/sess-live-0001.jsonl",
+  "cwd": "{WT}/task_147",
   "hook_event_name": "Stop",
-  "stop_hook_active": false
+  "stop_hook_active": false,
+  "background_tasks": [],
+  "effort": {"level": "medium"},
+  "last_assistant_message": "{REDACTED}",
+  "permission_mode": "default",
+  "prompt_id": "prompt-live-0001",
+  "session_crons": []
 }

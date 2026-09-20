@@ -73,7 +73,10 @@ def cmd_append(args):
         },
         "provenance": {
             "type": args.provenance_type,
-            "recorded_by": {"kind": args.recorded_by_kind, "id": args.actor_id},
+            "recorded_by": {
+                "kind": args.recorded_by_kind,
+                "id": args.recorded_by_id if args.recorded_by_id is not None else args.actor_id,
+            },
             "worker_log_token_id": None,
             "source": _build_source(args),
         },
@@ -138,6 +141,7 @@ def build_parser():
     p_append.add_argument("--actor-id", required=True, dest="actor_id")
     p_append.add_argument("--provenance-type", required=True, dest="provenance_type")
     p_append.add_argument("--recorded-by-kind", required=True, dest="recorded_by_kind")
+    p_append.add_argument("--recorded-by-id", dest="recorded_by_id")
     p_append.add_argument("--worker-run-id", dest="worker_run_id")
     p_append.add_argument("--source-kind", dest="source_kind")
     p_append.add_argument("--source-id", dest="source_id")
