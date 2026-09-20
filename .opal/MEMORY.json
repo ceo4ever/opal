@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_task_number": 145,
+  "last_task_number": 148,
   "memories": [
     {
       "title": "변경이력 제거 검토 결정 — A안 확정",
@@ -157,6 +157,20 @@
   ],
   "history": [
     {
+      "title": "142 E2E 여정조각 라이브러리",
+      "date": "2026-09-20",
+      "stage": "완료",
+      "path": "tasks/142-260918-oppb-E2E-여정조각-라이브러리/",
+      "result": "여정·조각 재사용, 신선도 생략, 선언형 driver, //e2e 승격 게이트 구현 및 배포 검증"
+    },
+    {
+      "title": "E2E 여정·조각 라이브러리",
+      "date": "2026-09-20",
+      "stage": "완료",
+      "path": "tasks/142-260918-oppb-E2E-여정조각-라이브러리",
+      "result": "여정·조각 재사용, 신선도 생략, 선언형 driver, //e2e 승격 게이트 구현"
+    },
+    {
       "title": "148 semi agentic close 자율주행",
       "date": "2026-09-20",
       "stage": "완료",
@@ -176,20 +190,6 @@
       "stage": "완료",
       "path": "tasks/146-260919-opds-프로브-핸드오프-계약개정/",
       "result": "OPPB Environment Probe를 전체 tracked-tree snapshot과 순차 bootstrap 준비 baseline으로 개정하고 명령별 독립 실행·timeout 계약을 추가했다. probe 17건이 통과해 태스크 142의 P2 probe 재개가 가능해졌다."
-    },
-    {
-      "title": "145 워크트리 터미널 런처 orca 배선",
-      "date": "2026-09-19",
-      "stage": "완료",
-      "path": "tasks/145-260919-opds-워크트리-터미널-런처-orca-배선/",
-      "result": "하네스 스텝 5.5 신설 + worktree-launcher CLI 구현 + orca 어댑터 실물 봉투 파싱으로 --wt 태스크가 전용 터미널을 열고 세션이 사람 입력 0회로 첫 턴을 시작하며 회수 시 터미널까지 정리된다. 목킹 전용 검증이 스키마 드리프트를 통과시킨 근본 원인을 fixture 실측 교체로 제거. 실물 완주 관측 완료"
-    },
-    {
-      "title": "144 oppb probe 명령 역할분리",
-      "date": "2026-09-19",
-      "stage": "완료",
-      "path": "tasks/144-260918-opds-oppb-probe-명령-역할분리/",
-      "result": "OPPB probe 등재 계약을 R1(판정 미사용)·R2(스냅샷 자족+180s) 2조건으로 개정, kind를 bootstrap·build 2종으로 확정. 제안서 §P2.2 2문장 정합. probe 미등재≠검증 면제 명시. 결과로 태스크 142 probe seal 통과(8건 exit 0). 143은 다른 세션과 번호 충돌해 144로 재번호"
     }
   ]
 }
