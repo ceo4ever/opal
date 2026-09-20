@@ -1,0 +1,36 @@
+{
+  "driver": "ego-lite",
+  "session_mode": "standalone",
+  "binary": {
+    "env": "OPAL_E2E_EGO_BIN",
+    "discover": ["ego"]
+  },
+  "version": {"argv": ["--version"]},
+  "minimum_version": "0.0.0",
+  "tested_range": "*",
+  "ci_pin": "0.0.0",
+  "ops": {
+    "probe": {"argv": ["session", "list"]},
+    "open": {"argv": ["open", "{url}"]},
+    "snapshot": {"argv": ["snapshot", "{handle}", "{label}"]},
+    "act": {
+      "map": {
+        "click": ["click", "{target}"],
+        "fill": ["fill", "{target}", "{value}"],
+        "reload": ["reload"]
+      }
+    },
+    "wait": {"argv": ["wait", "{handle}", "{wait_kind}"]},
+    "assert": {"argv": ["assert", "{handle}", "{verifier}", "{expected}"]},
+    "capture": {"argv": ["capture", "{handle}"]},
+    "close": {"argv": ["close", "{handle}"]}
+  },
+  "capabilities": {
+    "snapshot": "probe",
+    "screenshot": "probe",
+    "console": "none",
+    "errors": "none",
+    "network_har": "none",
+    "isolated_profile": "none"
+  }
+}

@@ -215,13 +215,33 @@ def cmd_integration(args: argparse.Namespace) -> None:
 
 
 def cmd_e2e(args: argparse.Namespace) -> None:
-    """e2e 서브명령군 라우터 — `run`·`resume`·`status`·`clean`(§B.1.1~§B.1.4).
+    """e2e 서브명령군 라우터 — run/resume/status/clean/driver-verify/promote-check.
 
     `run`·`resume`의 exit은 `status_to_exit()` 결과로만 결정한다. 재시도 루프를 내장하지
     않는다. `status`·`clean`은 조회·정리 명령이므로 exit `0`이며(§B.1.3·§B.1.4) 새 exit
     값을 배정하지 않는다 — `clean`의 `infra_error` 승격도 payload로만 알린다.
     """
     from lib.e2e.orchestrator import run_e2e
+
+    if args.e2e_command == "promote-check":
+        from lib.e2e.promotion import check_promotion
+
+        checked = check_promotion(
+            run_id=getattr(args, "run_id", None),
+            artifact_dir=getattr(args, "artifact_dir", None),
+            artifact_root=getattr(args, "artifact_root", None),
+            run_json=getattr(args, "run_json", None),
+            journey_id=args.journey,
+        )
+        _respond(checked, 0 if checked.get("eligible") else 1)
+        return
+
+    if args.e2e_command == "driver-verify":
+        from lib.e2e.driver_conformance import verify_registered_driver
+
+        verified = verify_registered_driver(args.driver)
+        _respond(verified, 0 if verified.get("ok") else 1)
+        return
 
     if args.e2e_command == "status":
         from lib.e2e.orchestrator import run_status
@@ -336,7 +356,7 @@ def _build_parser() -> argparse.ArgumentParser:
     p_e2e_run.add_argument("--worktree-root", metavar="PATH",
                            help="--target=source-worktree일 때 (미지정 시 git rev-parse --show-toplevel)")
     p_e2e_run.add_argument("--opal-home", metavar="PATH", help="--target=installed일 때 준비된 격리 OPAL_HOME")
-    p_e2e_run.add_argument("--artifact-root", metavar="PATH", help="산출물·lease 루트 (기본 ${TMPDIR}/opal-e2e-runs)")
+    p_e2e_run.add_argument("--artifact-root", metavar="PATH", help="산출물·lease 루트 (기본 <project>/.e2e/artifacts)")
     p_e2e_run.add_argument("--run-id", metavar="ID", help="run_id 지정 (미지정 시 생성)")
 
     # §B.1.2 표 — --run-id·--token·--submission 필수, --artifact-root만 선택.
@@ -347,7 +367,7 @@ def _build_parser() -> argparse.ArgumentParser:
     p_e2e_resume.add_argument("--token", required=True, metavar="TOKEN", help="handoff가 발행한 resume token")
     p_e2e_resume.add_argument("--submission", required=True, metavar="PATH",
                               help="CONTRACT.md §A.10 스키마 제출물 JSON 경로")
-    p_e2e_resume.add_argument("--artifact-root", metavar="PATH", help="산출물·lease 루트 (기본 ${TMPDIR}/opal-e2e-runs)")
+    p_e2e_resume.add_argument("--artifact-root", metavar="PATH", help="산출물·lease 루트 (기본 <project>/.e2e/artifacts)")
 
     # §B.1.3 표 — (--run-id | --artifact-dir) 택일 + --artifact-root 선택. 조회 명령이므로
     # 아무것도 변경하지 않으며 exit은 0이다.
@@ -357,7 +377,7 @@ def _build_parser() -> argparse.ArgumentParser:
     status_target = p_e2e_status.add_mutually_exclusive_group(required=True)
     status_target.add_argument("--run-id", metavar="ID", help="조회할 run의 run_id")
     status_target.add_argument("--artifact-dir", metavar="PATH", help="run 산출물 디렉터리 직접 지정")
-    p_e2e_status.add_argument("--artifact-root", metavar="PATH", help="산출물·lease 루트 (기본 ${TMPDIR}/opal-e2e-runs)")
+    p_e2e_status.add_argument("--artifact-root", metavar="PATH", help="산출물·lease 루트 (기본 <project>/.e2e/artifacts)")
 
     # §B.1.4 표 — (--run-id | --stale) 택일 + --artifact-root·--dry-run 선택.
     # [MUST] 회수 대상은 owned.json 대장에 오른 자원뿐이며(TD-15) 프로세스 이름 패턴
@@ -370,8 +390,23 @@ def _build_parser() -> argparse.ArgumentParser:
     clean_target.add_argument(
         "--stale", action="store_true", help="owner_pid가 죽은 lease record와 그에 딸린 프로세스 그룹 회수"
     )
-    p_e2e_clean.add_argument("--artifact-root", metavar="PATH", help="산출물·lease 루트 (기본 ${TMPDIR}/opal-e2e-runs)")
+    p_e2e_clean.add_argument("--artifact-root", metavar="PATH", help="산출물·lease 루트 (기본 <project>/.e2e/artifacts)")
     p_e2e_clean.add_argument("--dry-run", action="store_true", help="회수 대상만 계산하고 실제로 회수하지 않는다")
+
+    p_e2e_driver_verify = e2e_sub.add_parser(
+        "driver-verify", help="등록된 browser driver의 §B.2 8연산을 실제 dispatch로 검사한다"
+    )
+    p_e2e_driver_verify.add_argument("--driver", required=True, metavar="NAME", help="검사할 driver 이름")
+
+    p_e2e_promote = e2e_sub.add_parser(
+        "promote-check", help="완전한 pass 증적으로 docs/e2e 승격 자격을 읽기 전용 판정한다"
+    )
+    p_e2e_promote.add_argument("--journey", required=True, metavar="ID", help="승격할 journey id")
+    promotion_source = p_e2e_promote.add_mutually_exclusive_group(required=True)
+    promotion_source.add_argument("--run-id", metavar="ID", help="검증할 E2E run id")
+    promotion_source.add_argument("--artifact-dir", metavar="PATH", help="검증할 run 산출물 디렉터리")
+    promotion_source.add_argument("--run-json", metavar="PATH", help="검증할 run.json 직접 경로")
+    p_e2e_promote.add_argument("--artifact-root", metavar="PATH", help="--run-id 탐색용 산출물 루트")
 
     # scenario-init / scenario-lock / scenario-mark / scenario-status (lib/scenario.py로 격리)
     add_scenario_subparsers(subparsers)

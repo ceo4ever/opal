@@ -9,7 +9,8 @@
     "DriverError", "BrowserDriver", "default_capabilities", "load_manifest",
     "normalize_probe_result", "parse_semver", "compare_versions",
     "meets_minimum_version", "in_tested_range", "register_driver",
-    "registered_drivers", "resolve_candidates", "write_probe_json"
+    "registered_drivers", "implemented_operations", "missing_operations",
+    "resolve_candidates", "load_candidate_order", "write_probe_json"
   ]
 }
 
@@ -30,6 +31,7 @@ lib.e2e.drivers — CONTRACT.md §B.2의 JSON 입출력이 계약 표면이며 �
 from __future__ import annotations
 
 import json
+import os
 import re
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence, Tuple
@@ -131,6 +133,56 @@ def load_manifest(path: Optional[str] = None) -> Dict[str, Any]:
         if missing:
             raise DriverError("driver_manifest_invalid", f"{name}: missing {missing}")
     return data
+
+
+def _project_root(explicit: Optional[str] = None) -> Optional[Path]:
+    """Resolve the project containing tracked ``.opal/e2e`` configuration."""
+    if explicit:
+        return Path(explicit).resolve()
+    configured = os.environ.get("OPAL_PROJECT_ROOT")
+    if configured:
+        return Path(configured).resolve()
+    for candidate in (Path.cwd(), *Path.cwd().parents):
+        if (candidate / ".opal" / "e2e").is_dir():
+            return candidate
+    return None
+
+
+def load_candidate_order(project_root: Optional[str] = None) -> Optional[List[Dict[str, Any]]]:
+    """Read a project-local candidate order, or return ``None`` for C-DRV-3 defaults."""
+    root = _project_root(project_root)
+    if root is None:
+        return None
+    path = root / ".opal" / "e2e" / "order.json"
+    if not path.is_file():
+        return None
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise DriverError("candidate_order_unreadable", f"{path}: {exc}") from exc
+    if isinstance(payload, Mapping):
+        payload = payload.get("candidate_order", payload.get("order"))
+    if not isinstance(payload, list) or not payload:
+        raise DriverError("candidate_order_invalid", f"{path}: order must be a non-empty array")
+    order: List[Dict[str, Any]] = []
+    for index, raw in enumerate(payload):
+        if isinstance(raw, str):
+            driver, separator, mode = raw.partition("/")
+            raw = {"driver": driver, "session_mode": mode if separator else "standalone"}
+        if not isinstance(raw, Mapping):
+            raise DriverError("candidate_order_invalid", f"{path}: item {index} must be an object")
+        driver = raw.get("driver")
+        mode = raw.get("session_mode")
+        if not isinstance(driver, str) or mode not in SESSION_MODES:
+            raise DriverError("candidate_order_invalid", f"{path}: invalid item {index}")
+        order.append(
+            {
+                "driver": driver,
+                "session_mode": mode,
+                "opt_in": bool(raw.get("opt_in", False)),
+            }
+        )
+    return order
 
 
 def parse_semver(version: Any) -> Optional[Tuple[int, int, int]]:
@@ -307,10 +359,41 @@ class BrowserDriver:
         raise DriverError("driver_operation_unimplemented", f"{self.name}: close")
 
 
+def implemented_operations(driver: "BrowserDriver") -> Tuple[str, ...]:
+    """driver가 기반 클래스의 미구현 fallback 없이 제공하는 §B.2 연산.
+
+    후보 게이트는 실제 browser에 부수효과를 만들 수 없으므로 구현 소유 여부를 정적으로
+    확인한다. 선언형 wrapper처럼 하나의 dispatch 구현이 연산 집합을 소유하는 경우에는
+    ``operations`` 선언을 우선 소비하고, 일반 Python driver는 ``op_*`` override를 본다.
+    """
+    declared = getattr(driver, "operations", None)
+    if callable(declared):
+        declared = declared()
+    if declared is not None:
+        available = {str(item) for item in declared}
+        return tuple(item for item in DRIVER_OPERATIONS if item in available)
+
+    available = []
+    for operation in DRIVER_OPERATIONS:
+        attribute = "op_assert" if operation == "assert" else f"op_{operation}"
+        implementation = getattr(type(driver), attribute, None)
+        if implementation is not None and implementation is not getattr(BrowserDriver, attribute, None):
+            available.append(operation)
+    return tuple(available)
+
+
+def missing_operations(driver: "BrowserDriver", required: Sequence[str]) -> List[str]:
+    """요구 연산 중 driver가 제공하지 않는 항목을 계약 순서로 반환한다."""
+    required_set = {str(item) for item in required if item in DRIVER_OPERATIONS}
+    available = set(implemented_operations(driver))
+    return [item for item in DRIVER_OPERATIONS if item in required_set and item not in available]
+
+
 # ─── 후보 해석 (§A.1.2) ──────────────────────────────────────────────────────
 def resolve_candidates(
     *,
     required_capabilities: Sequence[str] = (),
+    required_operations: Sequence[str] = (),
     runtime_context: Optional[Mapping[str, Any]] = None,
     manifest: Optional[Mapping[str, Any]] = None,
     registry: Optional[Mapping[Tuple[str, Optional[str]], Callable[..., "BrowserDriver"]]] = None,
@@ -324,8 +407,33 @@ def resolve_candidates(
     `provider_unavailable`로만 기록하고, 실행 오류는 `infra_error`로 기록해 호출자가
     `can_try_next_provider()`로 판단하게 한다(TASK.md C-3, §C.7).
     """
-    policies = (manifest or load_manifest()).get("drivers") or {}
+    policies = dict((manifest or load_manifest()).get("drivers") or {})
     available_drivers = dict(registry) if registry is not None else registered_drivers()
+    # Project-local declarative drivers are resolved per run instead of mutating the
+    # process-global registry.  This keeps two projects in the same test process from
+    # leaking driver registrations into one another.
+    from lib.e2e.drivers import declarative
+
+    project_root = (runtime_context or {}).get("project_root")
+    root = _project_root(str(project_root) if project_root else None)
+    # An explicit registry is a complete caller-owned test/integration boundary.
+    # Project discovery belongs only to the normal resolver path; augmenting an
+    # explicit registry would make ``registry={}`` depend on the caller's cwd.
+    if registry is None and root is not None:
+        declared = declarative.load_project_manifests(str(root))
+        for key, factory in declared.items():
+            available_drivers.setdefault(key, factory)
+        for (name, _mode), factory in declared.items():
+            driver_manifest = getattr(factory, "driver_manifest", {})
+            if driver_manifest:
+                minimum_default = ".".join(("0", "0", "0"))
+                policies[name] = {
+                    "minimum_version": driver_manifest.get("minimum_version", minimum_default),
+                    "tested_range": driver_manifest.get("tested_range", "*"),
+                    "ci_pin": driver_manifest.get(
+                        "ci_pin", driver_manifest.get("minimum_version", minimum_default)
+                    ),
+                }
     candidates: List[Dict[str, Any]] = []
     probes: List[Dict[str, Any]] = []
     selected_found = False
@@ -427,6 +535,28 @@ def resolve_candidates(
             record["outcome"] = OUTCOME_EXCLUDED
             record["excluded_by"] = EXCLUDED_BY_CAPABILITY_MISSING
             record["reason"] = f"missing_capabilities:{','.join(sorted(lacking))}"
+            candidates.append(record)
+            continue
+
+        # 명시적 ``operations`` 공표 또는 probe 외 실행 연산 override가 있는 driver는
+        # 실행 전 gate를 적용한다. probe-only legacy adapter는 기존 후보 선택 계약을
+        # 유지해 dispatch 단계의 capability gap(`blocked`)으로 남긴다.
+        declared_operations = getattr(driver, "operations", None)
+        implemented = set(implemented_operations(driver))
+        operation_contract_known = (
+            declared_operations is not None or bool(implemented - {"probe"})
+        )
+        lacking_operations = (
+            missing_operations(driver, required_operations)
+            if operation_contract_known
+            else []
+        )
+        if lacking_operations:
+            # A.1.2의 frozen excluded_by enum은 확장하지 않는다. operation 제공 여부도
+            # 후보의 실행 capability이므로 기존 capability_missing 분류 안에 기록한다.
+            record["outcome"] = OUTCOME_EXCLUDED
+            record["excluded_by"] = EXCLUDED_BY_CAPABILITY_MISSING
+            record["reason"] = f"missing_operations:{','.join(lacking_operations)}"
             candidates.append(record)
             continue
 

@@ -1,0 +1,380 @@
+{
+  "task_id": "142-260918-oppb-E2E-여정조각-라이브러리",
+  "skill": "oppb",
+  "mode": "semi-agentic",
+  "schema_version": "1.2",
+  "created_at": "2026-09-18 17:25:56",
+  "updated_at": "2026-09-20 17:23:49",
+  "current_status": "in_progress",
+  "rows": [
+    {
+      "row_id": 1,
+      "stage": "P0",
+      "item": "OPAL 프로젝트 여부·프로젝트 태스크 번호·기존 문서·입력 충분성 판정",
+      "key": "p0.context_probe",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-18 17:26:16",
+      "owner": "PM",
+      "note": "기존 OPAL 프로젝트(docs/PROJECT.md 존재) → 레지스트리 라우팅 경로. 태스크 142 채번, 프로젝트 worktree 1개(feat/OP-TASK-142). 입력은 제안서 e2e-journey-fragment-library.md(141 개정분)로 충분 — PRD·TRD 신규 생성 불요 판정"
+    },
+    {
+      "row_id": 2,
+      "stage": "P0",
+      "item": "프로젝트 태스크 캡슐과 P0~P5 `state.json` 생성 (`state-tool init --skill oppb --rows-from`)",
+      "key": "p0.task_capsule",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-18 17:26:16",
+      "owner": "PM",
+      "note": "TASK.md(sdlc-v2, AC-1~AC-14·C-1~C-7) + state.json 22행 생성. oppb-runtime-tool init 완료 — run_id 20260918T082602Z-f7e1d147, .git/info/exclude에 .opal-runs/·.opal-cache/oppb/ 등록"
+    },
+    {
+      "row_id": 3,
+      "stage": "P1",
+      "item": "`INTENT.md` 작성 — 목표·제외 범위·완료조건·비가역 제약·예산",
+      "key": "p1.intent_draft",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-18 17:27:23",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 4,
+      "stage": "P1",
+      "item": "조건부 PRD 판정 — 기존 문서 충분 시 requirement ID 선택만, 부족 시에만 `opwt`·planning agent 호출",
+      "key": "p1.conditional_prd",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-18 17:27:23",
+      "owner": "PM",
+      "note": "PRD·TRD 신규 생성 불요 판정. 근거: 제품 요구가 제안서 e2e-journey-fragment-library.md(141 개정분)에 이미 확정 문장으로 있고, 기술 기준은 ARCHITECTURE·CONVENTIONS·test-tool CONTRACT가 계속 소유한다. 레지스트리 등록 문서만으로 INTENT 완료조건 14건을 채웠으므로 opwt·planning agent 호출 0"
+    },
+    {
+      "row_id": 5,
+      "stage": "P1",
+      "item": "사용자 게이트 — INTENT 승인",
+      "key": "p1.user_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-18 17:29:42",
+      "owner": "user",
+      "note": "캡틴 확인: INTENT 승인 — 목표·제외 범위(import 모드 제외 포함)·완료조건 14건·비가역 제약·예산 전건 승인. PRD·TRD 신규 생성 불요 확정",
+      "gate": {
+        "artifacts": [
+          "INTENT.md"
+        ],
+        "checklist": [
+          "목표·제외 범위·완료조건·비가역 제약 4요소 승인",
+          "PRD 신규 생성 여부 확정"
+        ]
+      }
+    },
+    {
+      "row_id": 6,
+      "stage": "P2",
+      "item": "`PROJECT-DESIGN.md` 작성 — `op-oppb-project-slice` 주입 슬라이스 초안",
+      "key": "p2.project_design",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-18 17:42:42",
+      "owner": "PM",
+      "note": "PROJECT-DESIGN.md 초안 수신 — 미니 태스크 7건(T01~T07), INTENT C-1~C-14 전건 역인덱스 연결, acceptance 8건. PM 판정 5건 중 4건은 PM 확정(1·3·4·5), S-27 범위 정정(2)은 INTENT 비가역 제약 해당이라 사용자 게이트 ②로 이월"
+    },
+    {
+      "row_id": 7,
+      "stage": "P2",
+      "item": "`workgraph.json`·`acceptance.json` 생성과 Controller 기계 검증",
+      "key": "p2.workgraph",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-18 17:43:20",
+      "owner": "PM",
+      "note": "Controller 기계 검증 통과 — workgraph.json·acceptance.json 생성, revision 1, 미니 태스크 7건(T01~T07), acceptance 8건, 예산 상한 runner21/executor63/verifier21/total105"
+    },
+    {
+      "row_id": 8,
+      "stage": "P2",
+      "item": "조건부 Critical 설계 검토 (`opal-evaluator-agent` design-review)",
+      "key": "p2.critical_review",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-18 17:48:07",
+      "owner": "PM",
+      "note": "opal-evaluator-agent design-review verdict pass — 재슬라이싱 불요. D-1 concern(S-27 버킷 키 미확정)·D-4 concern(C-9 DONE 렌더 소유자 부재), D-2·D-3 pass. gaps G-1~G-6은 해당 미니 태스크 디스패치 전 수용 기준 조임으로 처리"
+    },
+    {
+      "row_id": 9,
+      "stage": "P2",
+      "item": "Environment Probe 실행과 `.opal/oppb-environment.json` 봉인",
+      "key": "p2.environment_seal",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-20 00:36:37",
+      "owner": "PM",
+      "note": "배포된 task146 probe로 재봉인 성공: 8개 명령 exit 0, rejected_paths 0, fresh=true, parallel_dispatch_allowed=true"
+    },
+    {
+      "row_id": 10,
+      "stage": "P2",
+      "item": "사용자 게이트 — 중대한 신규 기술 결정 승인 (조건부, TRD delta 있을 때만)",
+      "key": "p2.user_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-20 00:38:34",
+      "owner": "user",
+      "note": "캡틴 승인: S-27 핵심 단언은 유지하고 조각 전개분/본문 구분 집계로 측정 범위 정정; 해결 불가 이슈가 없으면 CLOSE까지 진행",
+      "gate": {
+        "artifacts": [
+          "PROJECT-DESIGN.md"
+        ],
+        "checklist": [
+          "DAG·계약·완료조건 역인덱스 유효",
+          "probe 봉인 완료",
+          "병렬 lease 교집합 0"
+        ]
+      }
+    },
+    {
+      "row_id": 11,
+      "stage": "P3",
+      "item": "Runtime Supervisor 기동과 process 예산 배정",
+      "key": "p3.supervisor_start",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-20 00:39:33",
+      "owner": "PM",
+      "note": "Runtime Supervisor 단일 기동 성공: pid 57822, recovery reattach/harvest/orphan 0"
+    },
+    {
+      "row_id": 12,
+      "stage": "P3",
+      "item": "미니 태스크 연속 실행 — RUN·PROVE·ACCEPT 무인 진행",
+      "key": "p3.continuous_execution",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-20 16:28:48",
+      "owner": "PM",
+      "note": "최종 완료: 초기 Supervisor 결함과 T04 호환성 회귀는 추가작업 행 13·15·17 및 PM 보정으로 해소. run 20260920T053616Z-375ae84f T01~T07 전건 accepted; 과거 차단 원인은 AGENTIC-LOG와 추가작업 행에 보존",
+      "worker_duration_unknown": true
+    },
+    {
+      "row_id": 13,
+      "stage": "P3",
+      "item": "추가작업 — run_command=null capability Runner 폴백 회귀수정과 테스트",
+      "key": "p3.supervisor_fallback_fix",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-20 11:10:13",
+      "owner": "PM",
+      "note": "PM 직접 수정 완료: run_command=null Runner 폴백 및 executor pool 배치 admission 보정. 신규 RED 2건→GREEN, Supervisor 7 passed, OPPB 전체 132 passed+13 subtests, 설치본 해시 일치·7 passed",
+      "worker_duration_unknown": true
+    },
+    {
+      "row_id": 14,
+      "stage": "P3",
+      "item": "추가작업 — 실패 run 정식 회수·workgraph 재생성 후 P3 재개",
+      "key": "p3.failed_run_recovery",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-20 16:28:48",
+      "owner": "PM",
+      "note": "복구 완료: Claude 오라우팅 원인 정정 후 provider=codex 보정, 새 run 20260920T053616Z-375ae84f로 실패 예산과 실행 상태를 정식 교체",
+      "worker_duration_unknown": true
+    },
+    {
+      "row_id": 15,
+      "stage": "P3",
+      "item": "추가작업 — auto 플랫폼 provider 라우팅 보정·배포",
+      "key": "p3.provider_routing_fix",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-20 13:10:46",
+      "owner": "PM",
+      "note": "PM 직접 수정 완료: provider 누락 RED→GREEN, Supervisor 7 passed, OPPB 132 passed+13 subtests, 공식 설치·설치본 테스트·Codex 실호출 성공. 새 run에서 provider=codex 4 process 확인",
+      "worker_duration_unknown": true
+    },
+    {
+      "row_id": 16,
+      "stage": "P3",
+      "item": "추가작업 — capability execution packet·worker dispatch 계약 보정",
+      "key": "p3.worker_dispatch_contract",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-20 16:28:48",
+      "owner": "PM",
+      "note": "후속 행 17에서 해소: execution packet 경로·budget·contract·lease receipt·단일 owner 계약 보정 및 설치본 검증 완료",
+      "worker_duration_unknown": true
+    },
+    {
+      "row_id": 17,
+      "stage": "P3",
+      "item": "추가작업 — capability packet·lease·단일 owner 계약 수정 재시도",
+      "key": "p3.worker_dispatch_contract_fix",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-20 13:30:25",
+      "owner": "PM",
+      "note": "PM 직접 수정 완료: worker prompt에 execution-packet 경로·agent 지침 주입, packet budget/contract/active lease receipt 보강, null executor 중복기동 제거, launch 예외 lease 회수. RED→GREEN, Supervisor 7 passed, OPPB 132 passed+13 subtests, 공식 설치본 해시 일치·7 passed, 잔여 테스트 process 0.",
+      "worker_duration_unknown": true
+    },
+    {
+      "row_id": 18,
+      "stage": "P3",
+      "item": "PM Gate — 모든 필수 미니 태스크 accepted 또는 구조화 blocked",
+      "key": "p3.pm_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-20 16:28:36",
+      "owner": "PM",
+      "note": "run 20260920T053616Z-375ae84f: T01~T07 전건 accepted, active agent 0, active lease 0, 미처리 result 0, scope_violation 0. T04 호환성 PM 보정 뒤 지원 resume 1회는 승인된 추가작업 복구 예외로 보존하며 T05~T07은 무인 연속 완주",
+      "gate": {
+        "artifacts": [],
+        "checklist": [
+          "PM tick·수동 재촉·강제 resume 0",
+          "미처리 result 0",
+          "`scope_violation` 회수 완료"
+        ]
+      },
+      "worker_duration_unknown": true
+    },
+    {
+      "row_id": 19,
+      "stage": "P4",
+      "item": "모든 write lease 종료 후 최종 project checkpoint 생성",
+      "key": "p4.project_checkpoint",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-20 17:10:20",
+      "owner": "PM",
+      "note": "최종 project checkpoint: changed_files=48, content fingerprint=56feada41d4fad9c1f11ebf15034e0dfcb5e4713ec61515939b923cae916814b, active write lease 0, HEAD=8c852ec020cec95ce44b1d28b68520df555ee459",
+      "worker_duration_unknown": true
+    },
+    {
+      "row_id": 20,
+      "stage": "P4",
+      "item": "Integration·Security·Convention Verifier 실행",
+      "key": "p4.three_verifiers",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-20 17:10:20",
+      "owner": "PM",
+      "note": "Integration: test-tool 472/472 + OPPB 132/132 및 13 subtests. Security: 경로 이탈 1건 발견·Repair 후 신규 경계 포함 14/14, 차단 finding 0. Convention: diff-check·py_compile·skill-registry validate 통과",
+      "worker_duration_unknown": true
+    },
+    {
+      "row_id": 21,
+      "stage": "P4",
+      "item": "Acceptance Evaluator 완료조건↔증거 대응 판정 (`phase: acceptance`)",
+      "key": "p4.acceptance",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-20 17:10:20",
+      "owner": "PM",
+      "note": "acceptance.json 8/8 satisfied; 독립 P4 Integration·Security·Convention evidence 21건 불변 색인, AC-NO-REGRESSION evidence 21건 연결",
+      "worker_duration_unknown": true
+    },
+    {
+      "row_id": 22,
+      "stage": "P4",
+      "item": "PM Gate — 전체 회귀·통합 보안·컨벤션·완료조건 통과",
+      "key": "p4.pm_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-20 17:10:20",
+      "owner": "PM",
+      "note": "차단 지표 All Pass, 신규 차단 결함 0, 귀속 불명 실패 0; P4 보안 Repair 후 전체 회귀 재통과",
+      "gate": {
+        "artifacts": [],
+        "checklist": [
+          "차단 지표 All Pass",
+          "신규 차단 결함 0",
+          "귀속 불명 실패 0"
+        ]
+      },
+      "worker_duration_unknown": true
+    },
+    {
+      "row_id": 23,
+      "stage": "P5",
+      "item": "project-run pre-finalize guard — active lease 0·미처리 result 0·checkpoint 밖 dirty source 0·MEMORY/brain diff 0",
+      "key": "p5.pre_finalize_guard",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-20 17:23:49",
+      "owner": "PM",
+      "note": "공식 checkpoint 0bd5bcf 게시 후 pre-finalize 통과: active lease 0, unprocessed result 0, dirty source outside checkpoint 0, MEMORY/brain diff 0"
+    },
+    {
+      "row_id": 24,
+      "stage": "P5",
+      "item": "사용자 게이트 — 최종 project head 허브 merge 승인",
+      "key": "p5.user_merge_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-20 17:23:49",
+      "owner": "user",
+      "note": "캡틴 명시 승인: 승인, 계속 진행해서 해결 못하는 이슈가 없으면 CLOSE까지. project head 0bd5bcf의 허브 merge와 CLOSE 승인",
+      "gate": {
+        "artifacts": [],
+        "checklist": [
+          "pre-finalize guard 4항목 통과",
+          "Git 조상 관계 검사 통과"
+        ]
+      }
+    },
+    {
+      "row_id": 25,
+      "stage": "P5",
+      "item": "Project Knowledge Finalizer — MEMORY·brain 프로젝트 batch 1회",
+      "key": "p5.knowledge_batch",
+      "status": "pending",
+      "status_label": "⬜",
+      "timestamp": null,
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 26,
+      "stage": "P5",
+      "item": "프로젝트 `DONE.md`·evidence manifest 렌더",
+      "key": "p5.done_md",
+      "status": "pending",
+      "status_label": "⬜",
+      "timestamp": null,
+      "owner": "PM",
+      "note": null,
+      "gate": {
+        "artifacts": [
+          "DONE.md"
+        ],
+        "checklist": [
+          "DONE.md·evidence manifest 렌더 완료"
+        ]
+      }
+    },
+    {
+      "row_id": 27,
+      "stage": "P5",
+      "item": "`worktree-tool finalize`·귀속 확정·worktree 회수",
+      "key": "p5.worktree_finalize",
+      "status": "pending",
+      "status_label": "⬜",
+      "timestamp": null,
+      "owner": "PM",
+      "note": null
+    }
+  ],
+  "next_action": "P5 Project Knowledge Finalizer — MEMORY·brain 프로젝트 batch 1회 진입",
+  "worktree": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_142",
+  "run_log": {
+    "contract_version": "1.0",
+    "mode": "shadow",
+    "completion_profile": "cooperative",
+    "completion_profile_receipt": null,
+    "active_run_id": "run_051f5ab6-0fd3-4b80-a1df-3b97398b63e5",
+    "status": "active",
+    "pending_events": []
+  }
+}

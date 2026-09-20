@@ -1,7 +1,7 @@
 {
   "$schema": "opal-skills-registry-v1",
-  "version": "3.19.0",
-  "updated_at": "2026-09-17",
+  "version": "3.20.0",
+  "updated_at": "2026-09-20",
   "groups": {
     "opal-pilot": [
       {
@@ -736,6 +736,23 @@
           "~/.opal/skills/opal-action-status/SKILL.md"
         ],
         "domain": "dev"
+      },
+      {
+        "name": "opal-e2e",
+        "alias": "e2e",
+        "description": "프로젝트 E2E 여정·조각 operator — author·run·status 3모드, test-tool 판정 해석 전용",
+        "triggers": [
+          "^e2e$",
+          "^opal-e2e$",
+          "(?i)(e2e\\s*여정|여정\\s*(작성|실행|조회))"
+        ],
+        "paths": [
+          "{project}/opal/skills/opal-e2e/SKILL.md",
+          "{project}/.opal/skills/opal-e2e/SKILL.md",
+          "~/.opal/skills/opal-e2e/SKILL.md"
+        ],
+        "domain": "quality",
+        "pipeline": "MODE: author | run | status"
       },
       {
         "name": "opal-workspace-sync",

@@ -1,0 +1,9 @@
+{
+  "candidate_order": [
+    {"driver": "agent-browser", "session_mode": "orca-managed", "opt_in": false},
+    {"driver": "cmux", "session_mode": "owned-surface", "opt_in": false},
+    {"driver": "agent-browser", "session_mode": "standalone", "opt_in": false},
+    {"driver": "ego-lite", "session_mode": "standalone", "opt_in": false},
+    {"driver": "playwright", "session_mode": "standalone", "opt_in": true}
+  ]
+}

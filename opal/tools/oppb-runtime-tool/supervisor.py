@@ -4,7 +4,7 @@
   "task": "132",
   "layer": "util",
   "domain": "oppb-runtime",
-  "description": "OPPB Runtime Supervisor — 동시성 상한 집행·Verifier 우선 배정·비정상 종료 복구를 소유한다. `max_active_runners`·`max_active_executors`·`max_total_agent_processes` 3종 상한을 집행하고, 상한이 포화된 뒤 반환되는 첫 slot은 신규 Runner가 아니라 준비된 candidate의 Verifier에 배정한다(제안서 §9.3, 수용기준 10). 비정상 종료·재시작 복구는 판정 로직을 재구현하지 않는다 — `opal-agent`의 `reconcile-attempts` CLI를 호출해 받은 reattach/harvest/orphan 3분류와 `reclaim_required`를 소비만 하며, attempt record를 직접 파싱하거나 PID 생존·PGID·경과시간 identity 판정을 자체 구현하지 않는다(PLAN W-8 / W-38 B-1). 복구 후에는 사람 개입 없이 tick을 자동 재개한다 — PM tick·수동 재촉·강제 resume 경로를 만들지 않는다(제안서 §4.1, 수용기준 10). `workgraph.json`·`acceptance.json`·`execution-packet.json`은 쓰지 않고 `controller.py`의 revision lock API로만 전진시킨다(§4.5 writer 소유권). run 1개당 Supervisor 1개는 `supervisor.lock` flock으로 강제한다(§4.6). 표준 라이브러리 전용, 플랫폼 분기 없음.",
+  "description": "OPPB Runtime Supervisor — 동시성 상한 집행·Verifier 우선 배정·비정상 종료 복구를 소유한다. `max_active_runners`·`max_active_executors`·`max_total_agent_processes` 3종 상한을 집행하고, 선언된 Executor가 pool 상한보다 많으면 같은 runner 세대 안에서 빈 slot만큼 배치하며, 상한이 포화된 뒤 반환되는 첫 slot은 신규 Runner보다 준비된 candidate의 Verifier에 우선 배정한다(제안서 §9.3, 수용기준 10). run_command가 null인 capability는 구현 생략으로 처리하지 않고 `opal-agent` Runner로 기동하며, effective setting의 `models.platform` 또는 auto 세션 표식으로 provider를 명시해 `opal-agent` 기본 Claude로 잘못 강등되지 않게 한다. 비정상 종료·재시작 복구는 판정 로직을 재구현하지 않는다 — `opal-agent`의 `reconcile-attempts` CLI를 호출해 받은 reattach/harvest/orphan 3분류와 `reclaim_required`를 소비만 하며, attempt record를 직접 파싱하거나 PID 생존·PGID·경과시간 identity 판정을 자체 구현하지 않는다(PLAN W-8 / W-38 B-1). 복구 후에는 사람 개입 없이 tick을 자동 재개한다 — PM tick·수동 재촉·강제 resume 경로를 만들지 않는다(제안서 §4.1, 수용기준 10). `workgraph.json`·`acceptance.json`·`execution-packet.json`은 쓰지 않고 `controller.py`의 revision lock API로만 전진시킨다(§4.5 writer 소유권). run 1개당 Supervisor 1개는 `supervisor.lock` flock으로 강제한다(§4.6). 표준 라이브러리 전용.",
   "exports": [
     "SUPERVISOR_ERROR_CODES", "SupervisorError", "Supervisor",
     "start_supervisor", "read_status", "main"
@@ -34,6 +34,7 @@ import time
 import uuid
 
 import controller
+import lease
 
 SCHEMA_VERSION = "1.0"
 
@@ -80,6 +81,9 @@ RECONCILE_INTERVAL_SEC = 2.0
 HANDSHAKE_TIMEOUT_SEC = 60.0
 PGID_REAP_TIMEOUT_SEC = 10.0
 LAUNCH_PID_WAIT_SEC = 15.0
+# Capability 단위는 구현과 프로젝트 전체 회귀를 한 attempt 안에서 수행한다. opal-agent의
+# 기본 300초는 실제 T01/T03에서 정상 작업 중 hard timeout을 냈으므로 OPPB는 15분을 명시한다.
+CAPABILITY_AGENT_TIMEOUT_SEC = 900
 
 SUPERVISOR_ERROR_CODES = {
     "run_lock_held": "이 run에는 이미 살아 있는 Supervisor가 있습니다 — run lock을 얻지 못했습니다.",
@@ -188,6 +192,39 @@ def opal_agent_entrypoint():
     if run_sh.is_file():
         return ["bash", str(run_sh)]
     return [sys.executable, str(agent_dir / "opal_agent.py")]
+
+
+def agent_provider(project_root):
+    """effective `models.platform`을 provider로 해석한다.
+
+    `auto`는 Supervisor를 기동한 현재 하네스의 환경 표식을 사용한다. 아무 표식도
+    없는 기존 호출은 opal-agent의 종전 기본값인 Claude를 유지한다.
+    """
+    platform = "auto"
+    opal_home = pathlib.Path(os.environ.get("OPAL_HOME") or pathlib.Path.home() / ".opal")
+    paths = [opal_home / "setting.json"]
+    if project_root:
+        paths.append(pathlib.Path(project_root) / ".opal" / "setting.local.json")
+    for path in paths:
+        try:
+            document = _read_json(path)
+        except (OSError, json.JSONDecodeError):
+            continue
+        declared = (document.get("models") or {}).get("platform")
+        if isinstance(declared, str) and declared:
+            platform = declared
+
+    if platform != "auto":
+        return "codex" if platform == "openai" else platform
+    if os.environ.get("CODEX_SESSION_ID") or os.environ.get("CODEX_THREAD_ID"):
+        return "codex"
+    if os.environ.get("CLAUDE_CODE_SESSION_ID") or os.environ.get("CLAUDECODE"):
+        return "claude"
+    if os.environ.get("GEMINI_CLI"):
+        return "gemini"
+    if os.environ.get("CURSOR_AGENT"):
+        return "cursor"
+    return "claude"
 
 
 def reconcile_attempt_dir(directory):
@@ -489,9 +526,14 @@ class Supervisor:
             exit_code=result.get("exit_code"),
             disposition=disposition,
         )
-        self._apply_outcome(task_id, role, status == "succeeded")
+        self._apply_outcome(
+            task_id,
+            role,
+            status == "succeeded",
+            executor_id=result.get("executor_id") or (entry or {}).get("executor_id"),
+        )
 
-    def _apply_outcome(self, task_id, role, succeeded):
+    def _apply_outcome(self, task_id, role, succeeded, executor_id=None):
         task = self.task(task_id)
         if task is None or task.get("state") in TERMINAL_TASK_STATES:
             return
@@ -504,8 +546,12 @@ class Supervisor:
 
         # runner / executor — 같은 세대의 attempt가 모두 끝나야 태스크가 전진한다.
         outcomes = dict(task.get("generation_outcomes") or {})
-        # Executor는 여러 개라도 한 축으로 합산한다 — 하나라도 실패하면 세대가 실패다.
-        key = ROLE_RUNNER if role == ROLE_RUNNER else ROLE_EXECUTOR
+        # Executor별 결과를 분리해 배치 사이에도 완료 여부를 보존한다.
+        key = (
+            ROLE_RUNNER
+            if role == ROLE_RUNNER
+            else "%s:%s" % (ROLE_EXECUTOR, executor_id)
+        )
         outcomes[key] = (
             bool(succeeded) if key not in outcomes
             else bool(outcomes[key]) and bool(succeeded)
@@ -516,16 +562,83 @@ class Supervisor:
 
         self.refresh()
         task = self.task(task_id)
+        if any(value is False for value in outcomes.values()):
+            self._release_runner_lease(task_id)
+            self._retry_or_fail(task, STATE_PENDING, "runner_attempts")
+            return
+        if self._pending_executors(task):
+            self.set_state(task_id, STATE_RUNNING, generation_outcomes=outcomes)
+            return
         if all(outcomes.get(key, False) for key in (ROLE_RUNNER, *self._executor_keys(task))):
+            self._release_runner_lease(task_id)
             if self.contract(task).get("verify_command"):
                 self.set_state(task_id, STATE_CANDIDATE_READY, generation_outcomes={})
             else:
                 self.set_state(task_id, STATE_ACCEPTED, generation_outcomes={})
         else:
+            self._release_runner_lease(task_id)
             self._retry_or_fail(task, STATE_PENDING, "runner_attempts")
 
     def _executor_keys(self, task):
-        return [ROLE_EXECUTOR] if self.contract(task).get("executors") else []
+        return [
+            "%s:%s" % (ROLE_EXECUTOR, item.get("id"))
+            for item in self.contract(task).get("executors") or []
+            if item.get("run_command") is not None
+        ]
+
+    def _pending_executors(self, task):
+        """현재 runner 세대에서 아직 dispatch하지 않은 Executor만 반환한다."""
+        generation = int(task.get("runner_attempts") or 0)
+        launched = {
+            item.get("attempt_id")
+            for item in task.get("attempts") or []
+        }
+        return [
+            executor
+            for executor in self.contract(task).get("executors") or []
+            if executor.get("run_command") is not None
+            if "%s.%s.%d" % (task["id"], executor.get("id"), generation)
+            not in launched
+        ]
+
+    def _acquire_runner_lease(self, task, attempt_id):
+        """capability owner의 task lease를 발급하고 packet에 실을 receipt를 돌려준다."""
+        declared = self.contract(task).get("lease") or {}
+        payload = {
+            "task_id": task.get("id"),
+            "capability_id": task.get("id"),
+            "tracked_write_set": list(declared.get("tracked_writes") or []),
+            "ephemeral_write_set": list(declared.get("ephemeral_writes") or []),
+            "contracts": list(declared.get("contracts") or []),
+            "business_rules": [],
+            "acceptance_ids": [],
+            "runtime_resources": list(declared.get("runtime_resources") or []),
+            "global_outputs": [],
+        }
+        fd, path = tempfile.mkstemp(prefix="oppb-lease-", suffix=".json")
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as handle:
+                json.dump(payload, handle, ensure_ascii=False)
+            return lease.cmd_acquire(
+                {
+                    "run_root": str(self.run_root),
+                    "attempt": attempt_id,
+                    "spec": path,
+                    "_values": {"spec": [path]},
+                }
+            )
+        finally:
+            with contextlib.suppress(OSError):
+                os.unlink(path)
+
+    def _release_runner_lease(self, task_id):
+        store = lease.read_leases(self.run_root)
+        if not any(
+            item.get("state") == "active" and item.get("task_id") == task_id
+            for item in store.get("leases") or []
+        ):
+            return
+        lease.cmd_release({"run_root": str(self.run_root), "task_id": task_id})
 
     def _retry_or_fail(self, task, retry_state, counter_key):
         """실패한 attempt를 재시도하거나 태스크를 실패로 확정한다.
@@ -591,22 +704,37 @@ class Supervisor:
             task for task in self.tasks()
             if task.get("state") in (STATE_PENDING, None) and self._deps_accepted(task)
         ]
+        continuable = [
+            task for task in self.tasks()
+            if task.get("state") == STATE_RUNNING
+            and not any(
+                value is False
+                for value in (task.get("generation_outcomes") or {}).values()
+            )
+            and self._pending_executors(task)
+        ]
         if self.saturated:
             order = [(ROLE_VERIFIER, t) for t in verifiable]
+            order += [(ROLE_EXECUTOR, t) for t in continuable]
             order += [(ROLE_RUNNER, t) for t in runnable]
         else:
             order = []
             verifiable_ids = {t["id"] for t in verifiable}
+            continuable_ids = {t["id"] for t in continuable}
             runnable_ids = {t["id"] for t in runnable}
             for task in self.tasks():
                 if task["id"] in verifiable_ids:
                     order.append((ROLE_VERIFIER, task))
+                elif task["id"] in continuable_ids:
+                    order.append((ROLE_EXECUTOR, task))
                 elif task["id"] in runnable_ids:
                     order.append((ROLE_RUNNER, task))
 
         for kind, task in order:
             if kind == ROLE_VERIFIER:
                 self._admit_verifier(task)
+            elif kind == ROLE_EXECUTOR:
+                self._admit_executors(task)
             else:
                 self._admit_task(task)
 
@@ -623,24 +751,13 @@ class Supervisor:
     def _admit_task(self, task):
         """Runner와 그 Executor를 하나의 admission 단위로 승인한다.
 
-        Executor는 이미 승인된 작업의 일부다 — Runner만 넣고 Executor 자리를 못 잡으면
-        in-flight 작업이 반쪽으로 남으므로, 전부 들어갈 수 있을 때만 승인한다.
+        Executor는 이미 승인된 작업의 일부지만 pool 상한보다 많을 수 있다. Runner를 먼저
+        승인하고 빈 slot만큼 배치하며, 다음 tick이 같은 세대의 잔여 Executor를 이어서 넣는다.
         """
-        contract = self.contract(task)
-        executors = list(contract.get("executors") or [])
-        if not contract.get("run_command"):
-            if contract.get("verify_command"):
-                self.set_state(task["id"], STATE_CANDIDATE_READY)
-            else:
-                self.set_state(task["id"], STATE_ACCEPTED)
-            return
-
-        runners, running_executors, total = self.counts()
+        runners, _, total = self.counts()
         if runners + 1 > int(self.limits["max_active_runners"]):
             return
-        if running_executors + len(executors) > int(self.limits["max_active_executors"]):
-            return
-        if total + 1 + len(executors) > int(self.limits["max_total_agent_processes"]):
+        if total + 1 > int(self.limits["max_total_agent_processes"]):
             return
 
         used = int(task.get("runner_attempts") or 0) + 1
@@ -648,47 +765,81 @@ class Supervisor:
             task["id"], STATE_RUNNING, runner_attempts=used, generation_outcomes={}
         )
         self.launch(task["id"], ROLE_RUNNER, used)
-        for executor in executors:
-            self.launch(task["id"], ROLE_EXECUTOR, used, executor_id=executor.get("id"))
+        self.refresh()
+        self._admit_executors(self.task(task["id"]))
+
+    def _admit_executors(self, task):
+        """현재 세대의 미실행 Executor를 전역 pool의 빈 slot만큼 배치한다."""
+        if task is None:
+            return
+        generation = int(task.get("runner_attempts") or 0)
+        for executor in self._pending_executors(task):
+            _, running_executors, total = self.counts()
+            if running_executors >= int(self.limits["max_active_executors"]):
+                return
+            if total >= int(self.limits["max_total_agent_processes"]):
+                return
+            self.launch(
+                task["id"], ROLE_EXECUTOR, generation, executor_id=executor.get("id")
+            )
+            self.refresh()
+            task = self.task(task["id"])
 
     def launch(self, task_id, role, generation, executor_id=None):
         """execution-packet을 Controller에 요청하고 attempt 실행기를 기동한다."""
         attempt_id = "%s.%s.%d" % (task_id, executor_id or role, generation)
-        _, packet = controller.create_execution_packet(
-            self.run_root, task_id, attempt_id, role=role, executor_id=executor_id
+        task = self.task(task_id) or {}
+        fallback_runner = (
+            role == ROLE_RUNNER and self.contract(task).get("run_command") is None
         )
-        self.refresh()
-        directory = controller.attempt_dir(self.run_root, task_id, attempt_id)
-        directory.mkdir(parents=True, exist_ok=True)
-        (directory / AGENT_RUN_DIRNAME).mkdir(exist_ok=True)
-
-        command = packet.get("command") or self._agent_command(task_id, role, directory)
-        spec = {
-            "attempt_id": attempt_id,
-            "task_id": task_id,
-            "role": role,
-            "executor_id": executor_id,
-            "command": command,
-            "cwd": self.project_root,
-            "attempt_dir": str(directory),
-            "provider": "command" if packet.get("command") else "opal-agent",
-        }
-        spec_path = directory / ATTEMPT_SPEC_NAME
-        _atomic_write_json(spec_path, spec)
-
-        log = open(directory / ATTEMPT_RUNNER_LOG_NAME, "ab")
+        receipt = self._acquire_runner_lease(task, attempt_id) if fallback_runner else None
         try:
-            proc = subprocess.Popen(
-                [sys.executable, str(pathlib.Path(__file__).resolve()),
-                 "__attempt__", "--spec", str(spec_path)],
-                stdout=log,
-                stderr=log,
-                stdin=subprocess.DEVNULL,
-                # Supervisor가 죽어도 attempt는 살아남아야 재부착을 관측할 수 있다.
-                start_new_session=True,
+            packet_path, packet = controller.create_execution_packet(
+                self.run_root,
+                task_id,
+                attempt_id,
+                role=role,
+                executor_id=executor_id,
+                **({"lease_receipt": receipt} if receipt else {}),
             )
-        finally:
-            log.close()
+            self.refresh()
+            directory = controller.attempt_dir(self.run_root, task_id, attempt_id)
+            directory.mkdir(parents=True, exist_ok=True)
+            (directory / AGENT_RUN_DIRNAME).mkdir(exist_ok=True)
+
+            command = packet.get("command") or self._agent_command(
+                task_id, role, directory, packet_path
+            )
+            spec = {
+                "attempt_id": attempt_id,
+                "task_id": task_id,
+                "role": role,
+                "executor_id": executor_id,
+                "command": command,
+                "cwd": self.project_root,
+                "attempt_dir": str(directory),
+                "provider": "command" if packet.get("command") else "opal-agent",
+            }
+            spec_path = directory / ATTEMPT_SPEC_NAME
+            _atomic_write_json(spec_path, spec)
+
+            log = open(directory / ATTEMPT_RUNNER_LOG_NAME, "ab")
+            try:
+                proc = subprocess.Popen(
+                    [sys.executable, str(pathlib.Path(__file__).resolve()),
+                     "__attempt__", "--spec", str(spec_path)],
+                    stdout=log,
+                    stderr=log,
+                    stdin=subprocess.DEVNULL,
+                    # Supervisor가 죽어도 attempt는 살아남아야 재부착을 관측할 수 있다.
+                    start_new_session=True,
+                )
+            finally:
+                log.close()
+        except BaseException:
+            if fallback_runner:
+                self._release_runner_lease(task_id)
+            raise
 
         pid = None
         deadline = time.monotonic() + LAUNCH_PID_WAIT_SEC
@@ -719,17 +870,26 @@ class Supervisor:
             pid=pid,
         )
 
-    def _agent_command(self, task_id, role, directory):
+    def _agent_command(self, task_id, role, directory, packet_path):
         """실행 명령이 계약에 없으면 `opal-agent` CLI로 기동한다.
 
         provider CLI를 Supervisor가 직접 spawn하지 않는다 — 기동도 `opal-agent`를
         경유한다(W-38 B-2). 산출물이 섞이지 않게 opal-agent에는 전용 하위 run-dir을 준다.
         """
         task = self.task(task_id) or {}
-        prompt = "capability %s (%s)" % (task.get("capability"), role)
+        prompt = (
+            "[WORKER]\n"
+            "You are the OPPB opal-capability-agent for role %s. "
+            "Read and follow ~/.opal/agents/opal-capability-agent/AGENT.md first. "
+            "Then read the execution packet at %s and perform only that packet's "
+            "task, role, lease, contract, and budget. Return the required structured JSON."
+            % (role, packet_path)
+        )
         return [
             *opal_agent_entrypoint(),
             prompt,
+            "--provider", agent_provider(self.project_root),
+            "--timeout", str(CAPABILITY_AGENT_TIMEOUT_SEC),
             "--run-dir", str(directory / AGENT_RUN_DIRNAME),
             "--phase", str(task_id),
             "--attempt", role,
