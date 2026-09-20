@@ -4,7 +4,7 @@
   "mode": "semi-agentic",
   "schema_version": "1.2",
   "created_at": "2026-09-18 17:25:56",
-  "updated_at": "2026-09-20 17:23:49",
+  "updated_at": "2026-09-20 17:28:18",
   "current_status": "in_progress",
   "rows": [
     {
@@ -329,22 +329,22 @@
       "stage": "P5",
       "item": "Project Knowledge Finalizer — MEMORY·brain 프로젝트 batch 1회",
       "key": "p5.knowledge_batch",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-20 17:26:00",
       "owner": "PM",
-      "note": null
+      "note": "hub merge 7c80663 관측 후 프로젝트 지식 batch 정확히 1회. accepted result 지식 후보 0건, brain 쓰기 0건, MEMORY history 1건, receipt=knowledge-receipt.json; 기존 MEMORY 위반 10건·brain lint 35건은 진단에 보존"
     },
     {
       "row_id": 26,
       "stage": "P5",
       "item": "프로젝트 `DONE.md`·evidence manifest 렌더",
       "key": "p5.done_md",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-20 17:28:18",
       "owner": "PM",
-      "note": null,
+      "note": "Controller workgraph render-done이 acceptance 8/8, accepted mini-task 7개, evidence 21건 SHA-256 manifest를 결정론적으로 렌더. DONE sha256=1330022194953c2542a76f3bd750af9ff3c76a118af8a32d06a19bb27855899c",
       "gate": {
         "artifacts": [
           "DONE.md"
@@ -366,7 +366,7 @@
       "note": null
     }
   ],
-  "next_action": "P5 Project Knowledge Finalizer — MEMORY·brain 프로젝트 batch 1회 진입",
+  "next_action": "P5 `worktree-tool finalize`·귀속 확정·worktree 회수 진입",
   "worktree": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_142",
   "run_log": {
     "contract_version": "1.0",

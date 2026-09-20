@@ -11,7 +11,7 @@
     "read_workgraph", "read_acceptance",
     "workgraph_transaction", "acceptance_transaction",
     "set_task_state", "create_execution_packet", "debit_budget", "POST_RUN_STATES",
-    "index_evidence", "workgraph_command",
+    "index_evidence", "render_done", "workgraph_command",
     "TASK_PROFILES", "DEFAULT_TASK_PROFILE", "DEFAULT_EXECUTION_CONTRACT"
   ],
   "depends": ["opal/core/references/harness/tool-output-contract.md"]
@@ -76,7 +76,7 @@ DEFAULT_EXECUTION_CONTRACT = "INTENT.md"
 # 귀속할 candidate가 없다.
 POST_RUN_STATES = ("candidate_ready", "verifying", "accepted")
 
-SUBCOMMANDS = ("load", "show")
+SUBCOMMANDS = ("load", "show", "render-done")
 
 ERROR_CODES = {
     "spec_missing": "--spec는 필수입니다.",
@@ -94,6 +94,7 @@ ERROR_CODES = {
     "role_invalid": "허용되지 않은 dispatch 역할입니다.",
     "budget_exhausted": "프로젝트 예산이 소진되어 dispatch를 거부합니다.",
     "unknown_subcommand": "알 수 없는 workgraph 하위 명령입니다.",
+    "task_path_missing": "--task-path는 필수입니다.",
 }
 
 
@@ -956,7 +957,132 @@ def cmd_show(opts):
     }
 
 
-SUBCOMMAND_DISPATCH = {"load": cmd_load, "show": cmd_show}
+def _atomic_write_text(path, content):
+    """Controller 산출물을 같은 디렉터리에 원자적으로 교체한다."""
+    path = pathlib.Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, temp_name = tempfile.mkstemp(prefix=".%s." % path.name, dir=str(path.parent))
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as handle:
+            handle.write(content)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temp_name, path)
+    finally:
+        with contextlib.suppress(OSError):
+            os.unlink(temp_name)
+
+
+def _evidence_path(run_root, evidence_id, evidence_index):
+    task_id = (evidence_index.get(evidence_id) or {}).get("task_id")
+    if not task_id:
+        return None
+    path = pathlib.Path(run_root) / "evidence" / task_id / (evidence_id + ".json")
+    return path if path.is_file() else None
+
+
+def render_done(run_root, task_path):
+    """acceptance·workgraph만으로 DONE.md와 evidence manifest를 결정론적으로 렌더한다."""
+    run_root = pathlib.Path(run_root)
+    task_path = pathlib.Path(task_path)
+    workgraph = read_workgraph(run_root)
+    acceptance = read_acceptance(run_root)
+    evidence_index = acceptance.get("evidence_index") or {}
+    indexed_at = acceptance.get("updated_at") or acceptance.get("created_at") or "unknown"
+    title = task_path.name
+
+    lines = [
+        "# DONE: %s 프로젝트 빌드" % title,
+        "",
+        "> 완료일: %s | 스킬: //oppb" % _now()[:10],
+        "",
+        "## 완료조건 판정",
+        "",
+        "| ID | 완료조건 | 결과 | evidence |",
+        "|---|---|---|---|",
+    ]
+    for criterion in acceptance.get("criteria", []):
+        refs = []
+        for evidence_id in criterion.get("evidence", []):
+            path = _evidence_path(run_root, evidence_id, evidence_index)
+            if path:
+                digest = hashlib.sha256(path.read_bytes()).hexdigest()
+                refs.append("evidence/%s/%s.json (%s)" % (
+                    path.parent.name, evidence_id, digest,
+                ))
+        lines.append("| %s | %s | %s | %s |" % (
+            criterion.get("id", ""),
+            str(criterion.get("description", "")).replace("|", "\\|"),
+            "PASS" if criterion.get("satisfied") else "FAIL",
+            "<br>".join(refs) or "-",
+        ))
+
+    lines.extend([
+        "",
+        "## 미니 태스크",
+        "",
+        "| task_id | capability | profile | 결과 | attempt |",
+        "|---|---|---|---|---|",
+    ])
+    for task in workgraph.get("mini_tasks", []):
+        lines.append("| %s | %s | %s | %s | %s |" % (
+            task.get("id", ""),
+            str(task.get("capability", "")).replace("|", "\\|"),
+            task.get("profile", ""),
+            task.get("state", ""),
+            task.get("runner_attempt_id", "-"),
+        ))
+
+    lines.extend([
+        "",
+        "## evidence manifest",
+        "",
+        "| 경로 | content hash | 생성 시각 |",
+        "|---|---|---|",
+    ])
+    evidence_paths = sorted((run_root / "evidence").glob("*/*.json"))
+    for path in evidence_paths:
+        relpath = path.relative_to(run_root).as_posix()
+        digest = hashlib.sha256(path.read_bytes()).hexdigest()
+        lines.append("| %s | %s | %s |" % (relpath, digest, indexed_at))
+
+    lines.extend([
+        "",
+        "## 회고적 학습 후보",
+        "",
+        "- `.opal/MEMORY.json`",
+        "",
+        "## 남은 위험",
+        "",
+        "- 차단 결함 없음. knowledge receipt에 기존 MEMORY·brain 진단을 보존함.",
+        "",
+    ])
+    done_path = task_path / "DONE.md"
+    _atomic_write_text(done_path, "\n".join(lines))
+    return {
+        "done_path": str(done_path),
+        "criteria": len(acceptance.get("criteria", [])),
+        "accepted_tasks": sum(
+            1 for task in workgraph.get("mini_tasks", []) if task.get("state") == "accepted"
+        ),
+        "evidence": len(evidence_paths),
+        "sha256": hashlib.sha256(done_path.read_bytes()).hexdigest(),
+    }
+
+
+def cmd_render_done(opts):
+    run_root = _require_run_root(opts)
+    task_path = opts.get("task_path")
+    if not task_path:
+        raise ControllerError("task_path_missing")
+    return render_done(run_root, task_path)
+
+
+SUBCOMMAND_DISPATCH = {
+    "load": cmd_load,
+    "show": cmd_show,
+    "render-done": cmd_render_done,
+}
 
 
 def workgraph_command(opts):

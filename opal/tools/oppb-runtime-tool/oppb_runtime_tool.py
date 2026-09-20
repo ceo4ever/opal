@@ -141,7 +141,7 @@ def err(command, code, message="", exit_code=EXIT_ERROR, **fields):
 
 FLAGS = (
     "--allocator-root", "--project-root", "--run-root", "--spec",
-    "--file", "--task-id", "--attempt", "--candidate",
+    "--file", "--task-id", "--task-path", "--attempt", "--candidate",
     "--commands", "--observation",
     # recover 서브 명령 전용 플래그(W-16) — 본체는 recovery.py가 소유한다.
     "--task", "--pid", "--violation",
