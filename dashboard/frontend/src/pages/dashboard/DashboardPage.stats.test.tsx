@@ -726,6 +726,43 @@ describe("B-1·B-2 3계열 렌더 (R-18)", () => {
       within(screen.getByTestId("block-b1")).getByTestId("b1-worker-unmeasured"),
     ).toBeInTheDocument();
   });
+
+  it("B-2 우측 값은 막대와 같은 누적 소요를 표시한다", async () => {
+    dashFixture = FX_DASH_WORKER_LABELS;
+    await renderDashboard();
+
+    const bar = within(screen.getByTestId("block-b2"))
+      .getAllByTestId("b2-bar")
+      .find((b) => b.getAttribute("data-stage") === "EXECUTE")!;
+
+    expect(bar).toHaveTextContent("49시간 35분");
+    expect(bar).not.toHaveTextContent("1시간 44분");
+    expect(screen.getByText("막대·값 = 누적 작업·대기")).toBeInTheDocument();
+  });
+});
+
+describe("B-3 리드타임 가독성", () => {
+  it("제곱근 축으로 짧은 작업을 확대하고 1~2시간 구간을 강조한다", async () => {
+    await renderDashboard();
+
+    const columns = within(screen.getByTestId("block-b3")).getAllByTestId("b3-column");
+    const fiveHours = columns.find(
+      (c) => c.getAttribute("data-task-id") === "092-260815-opd-워크트리-작업공간-분리",
+    )!;
+    const bar = fiveHours.querySelector<HTMLElement>("span.block")!;
+    const linearPct = (342 / 2519) * 100;
+    expect(fiveHours.getAttribute("data-height-scale")).toBe("sqrt");
+    expect(parseFloat(bar.style.height)).toBeGreaterThan(linearPct * 2);
+
+    selectWorkflow("opp");
+    const emphasized = within(screen.getByTestId("block-b3"))
+      .getAllByTestId("b3-column")
+      .find((c) => c.getAttribute("data-task-id") === "088-260811-opp-클로즈-메모리히스토리-자동연결")!;
+    expect(emphasized.getAttribute("data-duration-band")).toBe("one-to-two-hours");
+    expect((emphasized.querySelector<HTMLElement>("span.block")!).style.opacity).toBe("0.9");
+    expect(screen.getByText("1~2시간 강조")).toBeInTheDocument();
+    expect(screen.getByText(/√시간 축/)).toBeInTheDocument();
+  });
 });
 
 /* ------------------------------------------------------------------ */

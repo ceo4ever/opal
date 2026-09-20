@@ -917,16 +917,49 @@ def _acquire_registry_lock(lock_path: pathlib.Path, timeout_ms: int):
             time.sleep(_LOCK_POLL_INTERVAL_SEC)
 
 
+def _unlink_lock_if_current(lock_path: pathlib.Path, fd: int) -> None:
+    """열린 fd와 경로가 같은 inode일 때만 lock 이름을 회수한다.
+
+    다른 프로세스가 경로를 교체한 경우 새 lock을 지우면 상호배제가 갈라지므로, dev/inode가
+    일치하는 경우에만 unlink한다. 열린 fd의 flock은 이름을 지운 뒤에도 close까지 유지된다.
+    """
+    try:
+        opened = os.fstat(fd)
+        current = os.stat(lock_path, follow_symlinks=False)
+        if (opened.st_dev, opened.st_ino) == (current.st_dev, current.st_ino):
+            lock_path.unlink()
+    except FileNotFoundError:
+        pass
+
+
 @contextlib.contextmanager
-def registry_lock(meta_path: pathlib.Path, timeout_ms: int = REGISTRY_LOCK_TIMEOUT_MS):
+def registry_lock(
+    meta_path: pathlib.Path,
+    timeout_ms: int = REGISTRY_LOCK_TIMEOUT_MS,
+    *,
+    remove_on_success: bool = False,
+):
     """registry meta 1건에 대한 배타 락(`<meta>.lock`). 상한 초과는 즉시 오류 반환이다 —
     두 축(`execution_ownership`·`attribution_state`)을 한 번에 교체하는 구간만 감싼다."""
-    fd = _acquire_registry_lock(pathlib.Path(str(meta_path) + ".lock"), timeout_ms)
+    lock_path = pathlib.Path(str(meta_path) + ".lock")
+    fd = _acquire_registry_lock(lock_path, timeout_ms)
     if fd is None:
         err_response("registry_lock_timeout", path=str(meta_path), timeout_ms=timeout_ms)
+    completed = False
     try:
+        # meta를 읽고 lock을 기다리는 사이 remove가 완료됐을 수 있다. 이 경우 writer가
+        # 사라진 registry를 되살리지 못하게 yield 전에 차단하고, 자신이 연 lock도 회수한다.
+        if not meta_path.is_file():
+            _unlink_lock_if_current(lock_path, fd)
+            err_response("META_NOT_FOUND", path=str(meta_path))
         yield
+        completed = True
     finally:
+        # remove 성공 경로는 meta를 먼저 삭제하고, 같은 inode의 lock 이름을 잠금 보유 중에
+        # 지운다. 이미 이 inode를 열고 기다리던 writer는 잠금 획득 뒤 위 META_NOT_FOUND
+        # 재검사에서 멈추며, 새 writer는 meta 부재 때문에 registry를 재생성하지 못한다.
+        if remove_on_success and completed and not meta_path.exists():
+            _unlink_lock_if_current(lock_path, fd)
         try:
             fcntl.flock(fd, fcntl.LOCK_UN)
         except OSError:
@@ -2407,7 +2440,11 @@ def cmd_remove(args) -> None:
             )
         removed.append(entry["path"])
 
-    _delete_meta(project_root, args.task)
+    # registry meta와 그 배타 lock은 한 lifecycle 단위다. lock을 잡은 채 meta를 삭제하고
+    # context 종료 시 동일 inode의 lock 이름까지 회수해 stale `*.json.lock`을 남기지 않는다.
+    meta_path = _meta_path(project_root, args.task)
+    with registry_lock(meta_path, remove_on_success=True):
+        _delete_meta(project_root, args.task)
 
     # ── (3) 슬롯 루트 회수 (DEC-7 정리 범위 확장) ──
     # 레포별 worktree 경로(entry["path"])만 회수하면 그 상위 디렉토리(예: multi-repo의

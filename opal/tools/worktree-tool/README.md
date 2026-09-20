@@ -171,6 +171,11 @@ staged 변경의 **로컬 commit 하나**만 수행한다. 검사 순서는 금�
 - **multi-repo 전용**: entry를 생성의 역순(자식 → 루트)으로 순회하며 **경로 실재 × Git 등록** 2축으로 판정한다. 둘 다 없으면 이미 회수된 것으로 보고 skip한다(오류가 아니며 `--force`를 요구하지 않는다). 한쪽만 있으면 mismatch(`registration_without_path` 또는 `path_without_registration`)를 실은 `WORKTREE_REMOVE_FAILED`로 차단·보존하며 **자동 복구하지 않는다**(`git worktree prune`을 호출하지 않고 미등록 잔여 디렉토리를 삭제하지 않는다). 전 entry 회수가 성공한 뒤에만 메타와 슬롯 루트(`task_{NNN}/`)를 삭제하고, 하나라도 실패하면 메타·슬롯을 보존해 재시도 여지를 남긴다. `--force`는 이 실패 판정을 우회하지 않는다.
 - **monorepo·비워크트리**: 경로 부재 시 `WORKTREE_NOT_FOUND`(`--force`면 skip)를 반환하고, 반환값을 검사하지 않는 무조건 회수를 수행한다.
 
+성공 시 registry lock을 보유한 채 `task_{NNN}.json`을 삭제하고, 같은 inode의
+`task_{NNN}.json.lock`도 잠금 해제 전에 함께 회수한다. 대기 중이던 writer는 잠금을 얻은 뒤
+메타 부재를 재검사해 `META_NOT_FOUND`로 멈추므로 registry를 되살리지 않는다. 가드나 entry
+회수 실패 시에는 active 메타와 lock을 모두 보존한다.
+
 `.opal-worktrees/`와 `.meta/` 디렉토리 자체는 남긴다. `remove`는 canonical path 해석기를 호출하지 않는다.
 
 ```json

@@ -178,6 +178,7 @@ canonical path 판정은 registry meta의 `attribution_state` 한 값을 **더 �
 
 - **[MUST] 회수·롤백은 생성의 역순으로 순회한다.**
 - **[MUST] 전 entry의 `git worktree remove`가 성공한 뒤에만 메타와 slot root를 삭제한다.** 각 호출의 반환코드를 확인하고, 하나라도 실패하면 `WORKTREE_REMOVE_FAILED`(실패 repo·stderr 동봉)로 반환하며 메타 삭제와 slot 삭제를 실행하지 않는다. 메타가 남아 있어야 재시도와 수동 복구가 가능하다.
+- **[MUST] 성공한 회수는 registry lock을 보유한 상태에서 메타를 삭제하고, 같은 inode의 `<meta>.lock` 이름도 잠금 해제 전에 회수한다.** 대기 writer는 lock 획득 뒤 메타 존재를 재검사하며, 메타가 없으면 `META_NOT_FOUND`로 중단해 삭제된 registry를 재생성하지 않는다. 가드·entry 회수 실패에서는 메타와 lock을 함께 보존한다.
 - `--force`는 가드 우회에만 적용되며 이 실패 판정을 우회하지 않는다.
 - 롤백 실패도 같은 계약을 따른다. 자기 생성물을 역순 회수하다 실패하면 slot을 지워 흔적을 없애지 않고, 잔존 entry의 경로·repo·branch를 오류 payload에 실어 수동 복구 대상을 명시한다.
 

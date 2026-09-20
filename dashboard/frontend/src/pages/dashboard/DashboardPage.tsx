@@ -555,6 +555,14 @@ function sizePct(part: number, whole: number) {
   return whole > 0 ? (part / whole) * 100 : 0;
 }
 
+/**
+ * 리드타임 막대 전용 제곱근 축. 최장 작업 하나가 선형 축을 독점해 1~2시간 작업이
+ * 사실상 점으로 보이는 문제를 줄인다. 시간 문자열은 계속 BE 라벨을 직독한다.
+ */
+function leadtimeHeightPct(minutes: number, maxMinutes: number) {
+  return minutes > 0 && maxMinutes > 0 ? Math.sqrt(minutes / maxMinutes) * 100 : 0;
+}
+
 /* ------------------------------------------------------------------ */
 /* 구획 호버 툴팁 (R-20) — 조회 전용                                      */
 /* 시간 문자열은 BE `*_label` 직독이며 FE는 분→시간 변환을 하지 않는다(P-7). */
@@ -896,7 +904,7 @@ function WorkflowStageBars({ stat, ownerTerm }: { stat: WorkflowStat; ownerTerm:
         <BlockHeading
           code="B-2"
           title="단계별 소요 — 어디가 병목인가"
-          aside="막대 = 누적 작업·대기 · 값 = 중앙값"
+          aside="막대·값 = 누적 작업·대기"
         />
         <TooltipProvider delayDuration={120}>
         <div className="space-y-1.5">
@@ -1042,7 +1050,7 @@ function WorkflowStageBars({ stat, ownerTerm }: { stat: WorkflowStat; ownerTerm:
                     st.is_peak ? "font-semibold" : "text-muted-foreground",
                   )}
                 >
-                  {st.median_label}
+                  {totalLabel}
                 </span>
               </div>
             );
@@ -1082,12 +1090,17 @@ function TaskLeadtimeChart({ stat, ownerTerm }: { stat: WorkflowStat; ownerTerm:
   return (
     <Card data-testid="block-b3">
       <CardContent className="p-5">
-        <BlockHeading code="B-3" title="태스크별 리드타임" aside="막대 = 총 소요 · 완료 태스크만" />
+        <BlockHeading
+          code="B-3"
+          title="태스크별 리드타임"
+          aside="높이 = √총 소요 · 긴 작업 압축 · 완료 태스크만"
+        />
         <TooltipProvider delayDuration={120}>
         <div className="flex items-end gap-1.5 h-32 overflow-x-auto">
           {tasks.map((t) => {
             // 호버 지표 — BE 라벨 직독. 라벨이 없는 옛 응답은 `—`로 축퇴한다 (P-7)
             const measured = t.worker_measured ?? false;
+            const oneToTwoHours = t.total_minutes >= 60 && t.total_minutes < 180;
             return (
             <ChartTip
               key={t.task_id}
@@ -1107,6 +1120,8 @@ function TaskLeadtimeChart({ stat, ownerTerm }: { stat: WorkflowStat; ownerTerm:
               <div
                 data-testid="b3-column"
                 data-task-id={t.task_id}
+                data-duration-band={oneToTwoHours ? "one-to-two-hours" : "other"}
+                data-height-scale="sqrt"
                 tabIndex={0}
                 className={cn(
                   "flex flex-col items-center justify-end gap-1 h-full min-w-[24px] flex-1",
@@ -1116,9 +1131,9 @@ function TaskLeadtimeChart({ stat, ownerTerm }: { stat: WorkflowStat; ownerTerm:
                 <span
                   className="block w-full rounded-t"
                   style={{
-                    height: `${sizePct(t.total_minutes, maxMinutes)}%`,
+                    height: `${leadtimeHeightPct(t.total_minutes, maxMinutes)}%`,
                     background: t.is_peak ? "var(--brand-secondary)" : "var(--brand-primary)",
-                    opacity: t.is_peak ? 1 : 0.45,
+                    opacity: t.is_peak ? 1 : oneToTwoHours ? 0.9 : 0.45,
                   }}
                 />
                 <span className="font-mono text-[9.5px] text-muted-foreground">
@@ -1151,6 +1166,14 @@ function TaskLeadtimeChart({ stat, ownerTerm }: { stat: WorkflowStat; ownerTerm:
             />
             그 외
           </span>
+          <span className="inline-flex items-center gap-1.5 font-mono">
+            <i
+              className="inline-block h-2.5 w-2.5 rounded-sm"
+              style={{ background: "var(--brand-primary)", opacity: 0.9 }}
+            />
+            1~2시간 강조
+          </span>
+          <span className="font-mono">√시간 축 — 긴 작업을 압축해 짧은 작업을 확대</span>
         </div>
       </CardContent>
     </Card>

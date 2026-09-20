@@ -353,16 +353,39 @@ def test_s8_remove_rejects_unmerged_branch(tmp_path):
 
 
 def test_s9_remove_succeeds_when_all_guards_clear_and_keeps_branch(tmp_path):
-    """[T092/L2-F8d] S-9 — 3조건 모두 해소 시 성공, worktree 제거되지만 브랜치는 잔존."""
+    """[T092/L2-F8d] S-9 — 성공 시 worktree·registry meta/lock 회수, 브랜치는 잔존."""
     g = build_guard_repo(tmp_path, "clean")
+    meta_path = g.project_root / ".opal-worktrees" / ".meta" / f"task_{g.task}.json"
+    lock_path = pathlib.Path(str(meta_path) + ".lock")
+    lock_path.touch(mode=0o600)
     result = run_worktree_cli(
         ["remove", "--project-root", str(g.project_root), "--task", g.task]
     )
     payload = parse_json_stdout(result, "remove(S-9)")
     assert payload.get("ok") is True, f"3조건 해소 시 성공 기대: {payload}"
     assert not g.wt_path.exists(), "성공 시 worktree 디렉토리가 제거돼야 한다"
+    assert not meta_path.exists(), "성공 시 registry meta가 제거돼야 한다"
+    assert not lock_path.exists(), "성공 시 registry lock도 함께 제거돼야 한다"
     branch_list = run_git(["branch", "--list", g.branch], cwd=g.repo).stdout
     assert g.branch in branch_list, "remove는 브랜치를 삭제하면 안 된다(user sovereignty)"
+
+
+def test_s9_remove_rejection_keeps_registry_lock(tmp_path):
+    """회수 거부 중에는 active registry의 lock 이름을 삭제하면 안 된다."""
+    g = build_guard_repo(tmp_path, "dirty", name_suffix="_lock_kept")
+    meta_path = g.project_root / ".opal-worktrees" / ".meta" / f"task_{g.task}.json"
+    lock_path = pathlib.Path(str(meta_path) + ".lock")
+    lock_path.touch(mode=0o600)
+
+    result = run_worktree_cli(
+        ["remove", "--project-root", str(g.project_root), "--task", g.task]
+    )
+    payload = parse_json_stdout(result, "remove(S-9 lock kept)")
+
+    assert payload.get("ok") is False
+    assert payload.get("error") == "GUARD_DIRTY"
+    assert meta_path.exists(), "거부 시 registry meta가 보존돼야 한다"
+    assert lock_path.exists(), "거부 시 active registry lock이 보존돼야 한다"
 
 
 def test_s10_remove_force_bypasses_guard_and_records_it(tmp_path):
