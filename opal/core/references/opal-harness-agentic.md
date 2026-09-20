@@ -12,7 +12,7 @@ PM이 사용자를 대행하여 단계 게이트를 자율 통과하는 모드.
 | 모드 | 설명 |
 |------|------|
 | `interactive` | `--interactive` 명시. 각 단계 완료 시 사용자 승인을 받는다. |
-| `semi-agentic` | **기본**. PLAN-equivalent까지 사용자 승인, EXECUTE-equivalent 이후 PM 자율. CLOSE 진입은 사용자 승인 필수 (공통 게이트). 본 문서의 §3~§9는 semi-agentic의 EXECUTE 이후 동작에도 동일 적용된다. |
+| `semi-agentic` | **기본**. PLAN-equivalent까지 사용자 승인, EXECUTE-equivalent 이후와 CLOSE final까지 자율 진행한다. 본 문서의 §3~§9는 semi-agentic의 EXECUTE 이후 동작에도 동일 적용된다. |
 | `agentic` | `--agentic` 명시. PM이 사용자를 대행하여 자율 진행. PM은 사용자 역할을 맡으므로 interactive보다 **높은 검토 기준과 기록 의무**를 진다. |
 
 ## 2. 활성화 방법
@@ -46,7 +46,7 @@ PM이 사용자를 대행하는 만큼, interactive 모드보다 **책임과 의
 
 각 단계 완료 시 PM이 PM Gate를 **강화 검토**로 수행한다. 문서 QA(요구사항→설계 검토)는 별도 QA Gate 단계를 두지 않고 PM Gate가 직접 흡수한다 (검증 기준 라이브러리: `op-dev-qa` / `op-task-qa` SKILL.md를 PM이 참조).
 
-PM Gate와 사용자 확인 행 갱신 직후에는 `state-tool` 응답의 `transition_action` / `report_type` / `next_action`을 소비한다. agentic의 정상 중간 경계는 `transition_action=continue`, `report_type=progress_report`이므로 사용자 질문 없이 다음 행으로 이어간다. `decision_request`는 `await_user` 또는 `blocked`와 함께 반환된 경우에만 사용하며, CLOSE 진입 승인·Critical 에스컬레이션·실행 불가 같은 공통 예외만 대기한다.
+PM Gate와 사용자 확인 행 갱신 직후에는 `state-tool` 응답의 `transition_action` / `report_type` / `next_action`을 소비한다. agentic의 정상 경계와 CLOSE tail은 `transition_action=continue`, `report_type=progress_report`이므로 사용자 질문 없이 `close.final`까지 이어간다. `decision_request`는 `await_user` 또는 `blocked`와 함께 반환된 실제 미해결 이슈, Critical 에스컬레이션, 실행 불가 또는 별도 권한 행동에서만 대기한다.
 
 **강화 검토 기준**:
 1. TASK.md 요구사항 100% 충족
@@ -81,35 +81,18 @@ PM Gate와 사용자 확인 행 갱신 직후에는 `state-tool` 응답의 `tran
 사용자 확인 행은 전 모드 `pending / ⬜ / owner=PM`으로 초기화되며, PM이 `--auto-pass`를 별도로 호출하지 않는다. 다음 단계 진입(`advance` 또는 `mark`) 시 도구가 stage-transition guard 직전에 `auto_approve_prior_user_confirmations`를 실행하여, 대상 행 앞 구간(`[0, row_index)`)의 미완 "사용자 확인" 행을 자동 승인한다.
 
 - 자동 승인 결과: `status = done`, `owner = auto`, `timestamp` 기록, `note = "auto-approved on <stage> entry"`
-- 자동 승인 가부는 `can_auto_approve_user_confirmation(stage, mode)` 단일 판정을 따른다 — agentic 모드는 CLOSE를 제외한 전 구간에서 허용된다
+- 자동 승인 가부는 `can_auto_approve_user_confirmation(stage, mode)` 단일 판정을 따른다 — agentic 모드는 정상 전 구간과 CLOSE 진입에서 허용된다
 - `advance` / `mark` 응답의 `auto_approved` 배열로 어떤 행이 자동 승인되었는지 관측한다
-- `--as-worker`(워커 호출) · `--force` · 대상 행 `stage = CLOSE`이면 자동 승인은 즉시 no-op이다
+- `--as-worker`(워커 호출) · `--force`이면 자동 승인은 즉시 no-op이다
 - 자동 승인 불가 구간에서는 도구가 `user_confirmation_required` 에러로 거부하며, 사용자가 `mark --owner user`로 승인해야 한다
 - 자동 승인 사실은 state.json `note`에 기재되므로 별도 감사 로그는 불필요하다 (PLAN §2.8)
 - 근거: TASK F-12 / PLAN §2.15 G-12 / 093 F-001·F-002·F-003
 
-**CLOSE 진입 게이트 (agentic 모드 예외)**:
+**CLOSE 전이 (agentic)**:
 
-CLOSE 단계 첫 행은 `--auto-pass` 거부됨. 도구가 `agentic_close_gate_requires_user` 에러로 거부한다.
+필수 검증을 통과하고 실제 미해결 이슈가 없으면, 다음 CLOSE 첫 행 `advance` 또는 `mark`가 직전 pending 사용자 확인 행을 `done/auto`로 원자 처리하고 `auto_approved`로 반환한다. 확인 행이 없는 pipeline도 첫 CLOSE 행이 곧바로 진행한다. PM은 `progress_report + continue`를 비차단 보고로 소비해 `close.final`까지 계속한다.
 
-```json
-{"ok": false, "error": "agentic_close_gate_requires_user", "row_id": N}
-```
-
-CLOSE 진입 절차:
-1. PM이 소유자에게 CLOSE 진입 직전 상황을 보고한다
-2. 소유자(사용자)의 승인 발화(`승인`/`확인`/`확인완료` 등)를 받는다
-3. 직전 단계 사용자 확인 행(prev_user_row)을 `--owner user`로 mark한다:
-   ```
-   ~/.opal/tools/state-tool/run.sh mark tasks/{NNN}-.../ \
-     --row <사용자 확인 행 N> --done \
-     --owner user \
-     --note "{owner_name} 확인: <발화 요약>"
-   ```
-4. 이후 CLOSE 첫 행 mark 시 도구가 prev_user_row 자동 검증을 통과시킨다
-
-- `--force` 우회 시 STATE.md 의사결정 로그 자동 기재 + `--note` 필수 (미제공 시 `note_required_for_force` 거부)
-- 근거: PLAN §2.16 G-13 / R-12
+사용자 선택, 사람 전용 검증, 권한 부족, 보안·데이터 손실 위험, 재시도 상한 초과는 이 자동 경로를 사용하지 않고 `await_user|blocked` / `decision_request`로 에스컬레이션한다. merge/push/deploy/worktree 제거와 OPPB P5 merge gate는 별도 권한 경계다 (`harness/modes.md` §CLOSE 전이 계약).
 
 ## 5. Gate 루핑 규칙
 
@@ -157,7 +140,7 @@ PM이 자율 진행을 중단하고 사용자에게 올리는 기준:
 | `커밋 규칙` | 등록된 전용 worktree의 1:1 소유 세션은 검증된 안정 경계에서 worktree branch 체크포인트를 자율 커밋할 수 있다. 허브·기본 브랜치 commit, merge·push·배포와 이력 재작성은 사용자 승인 경계를 유지한다 (`harness/guards.md` §커밋 규칙). |
 | `디스패치 의무 원칙` | 워커 디스패치로 정의된 단계는 반드시 서브에이전트 사용 |
 | `자동 루핑 제약` | 공통 하네스 §1 Guards의 기존 한도 그대로 적용 |
-| `CLOSE 진입 게이트` | 사용자의 확인된 지시(`승인`/`확인`/`확인완료` 등)가 없으면 CLOSE 단계 진입 불가. agentic / semi-agentic 양쪽 모두 이 규칙은 유지 — 다른 Gate는 PM 자율 통과 허용이나 CLOSE 진입은 예외. CLOSE 첫 행에 `--auto-pass` 시도 시 도구가 `agentic_close_gate_requires_user`로 거부한다 (agentic/semi-agentic 모두 동일 코드). PM은 CLOSE 진입 직전 소유자 보고 후 사용자 발화를 받아 prev_user_row를 `--owner user`로 mark해야 한다 (§4 CLOSE 진입 게이트 절차 참조 / PLAN §2.16 G-13 / R-12). |
+| `CLOSE 전이` | 정상 경로는 `harness/modes.md` §CLOSE 전이 계약을 따른다. agentic은 사용자 확인 행 유무와 관계없이 자동 CLOSE와 `close.final`까지 진행하며, 실제 미해결 이슈와 별도 권한 행동만 에스컬레이션한다. |
 
 ## 8. AGENTIC-LOG.md (PM 대행 일지)
 
@@ -237,8 +220,8 @@ PM이 수행한 모든 활동을 시계열로 기록하여, 사용자가 사후�
 | v1.1 | 2026-04-02 | §3 폴백 승인 의무, §4 검증 체크포인트, §6 배치 패턴 실패, §8 BATCH_FAIL 카테고리 추가 (071) |
 | v1.2 | 2026-04-06 | §4 강화 검토 기준에 Artifact Gate 항목 추가 (090) |
 | v1.3 | 2026-04-12 | §4 Artifact Gate 참조(§2.5) → PM Gate 자가 진단 참조로 수정 + §7.6 참조를 모듈화 구조에 맞게 갱신 (111) |
-| v1.4 | 2026-04-15 | §7 유지되는 규칙 테이블에 "CLOSE 진입 게이트" 행 추가 — agentic 모드에서도 CLOSE 진입은 사용자 승인 필수 (121) |
-| v1.5 | 2026-05-01 | §4 Pass 시 state-tool `mark --done` / `--auto-pass` 호출 표기 추가 + CLOSE 진입 게이트 4단계 절차 신설 (agentic_close_gate_requires_user 거부 / --owner user 필수 / §2.16 G-13 R-12). §3 판단 기록 의무에 auto-pass note 자동 기재 설명 추가. §7 CLOSE 진입 게이트 행 보강 (134) |
+| v1.4 | 2026-04-15 | §7에 당시 CLOSE 처리 규칙을 추가 (121) |
+| v1.5 | 2026-05-01 | §4 Pass 처리와 당시 CLOSE 처리 절차를 정비하고 auto-pass note 설명을 보강 (134) |
 | v1.6 | 2026-05-09 11:22 | §1 모드 정의에 semi-agentic 행 추가 / §7 CLOSE 게이트 행 semi-agentic 공통 적용 명시 / §8 AGENTIC-LOG 생성 시점 분기 (140) |
 | v1.7 | 2026-05-09 18:30 | 개인 식별자 누설 정정 — "캡틴" → "소유자" / note 예시 "{owner_name} 확인" placeholder 치환 (139) |
 | v1.8 | 2026-06-07 | §4 QA→PM Gate 통합 정합화 — "QA Gate + PM Gate" → "PM Gate"(문서 QA 흡수), 강화 검토 기준 2번을 PM 직접 문서 QA 검증으로, Artifact Gate의 "QA 에이전트 재소환" → "워커 재지시"로 수정(QA 에이전트 디스패치 없음, op-dev-qa/op-task-qa는 검증 기준 라이브러리). 동작 검증(TEST/verify) 영역 불변 (014 Phase 4-2) |

@@ -29,9 +29,9 @@
 |---|---|
 | `//opdw 작업` | semi-agentic (기본) — WIREFRAME까지 사용자 검토, EXECUTE부터 PM 자율 |
 | `//opdw --interactive 작업` | interactive — 모든 단계 사용자 승인 |
-| `//opdw --agentic 작업` | agentic — 모든 단계 PM 자율 (CLOSE 진입 제외) |
+| `//opdw --agentic 작업` | agentic — 정상 전 구간과 CLOSE final까지 PM 자율 |
 
-어떤 모드라도 **CLOSE 진입은 항상 사용자 승인이 필요**하다.
+모드별 CLOSE 전이는 공통 SSOT `harness/modes.md` §CLOSE 전이 계약을 따른다.
 
 ## 파이프라인
 

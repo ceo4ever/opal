@@ -64,7 +64,7 @@ Phase 3: DESIGN    워커       op-sdd-plan → SPEC-PLAN.md (아키텍처 + ACT
 Phase 4: EXECUTE   ACT 루프   사용자 Gate → opal-sdd-action-agent 디스패치
                               → 결과 수신 → DONE.md
 Phase 5: VERIFY    PM 직접    test-tool E2E → TEST-SCENARIOS.md 추적 매트릭스 갱신
-                              → 전체 TS Green 확인 → 사용자 Gate (= CLOSE 진입 게이트)
+                              → 전체 TS Green 확인 → mode-aware CLOSE 전이
 Phase 6: CLOSE     PM 직접    최종 확인 → DONE.md 생성
 ```
 
@@ -301,7 +301,7 @@ ACT 완료마다 state-tool을 호출하여 파이프라인 행(`state.json`)을
 
 ## Phase 6: CLOSE
 
-모든 ACT 완료 및 VERIFY Phase 통과(사용자 확인 = CLOSE 진입 게이트) 후 태스크를 마감한다.
+모든 ACT 완료 및 VERIFY Phase 통과 후 mode-aware CLOSE 전이로 태스크를 마감한다.
 
 1. 전체 TS Green 확인 (STATE.md TS 현황)
 2. 전체 ACT DONE.md 존재 확인
@@ -311,7 +311,7 @@ ACT 완료마다 state-tool을 호출하여 파이프라인 행(`state.json`)을
 ~/.opal/tools/state-tool/run.sh mark <task-path> --task-step close.done_md --done  # DONE.md 생성 (CLOSE 완료)
 ```
 
-> **CLOSE 게이트 제약 (§2.16 G-13)**: CLOSE 단계 최초 진입 행(#25)은 `--auto-pass` 적용 불가 (`close_gate_violation`). 반드시 위 명시 호출로 처리한다.
+> **CLOSE 전이**: 최초 CLOSE 행(`#25`, `close.done_md`)의 자동/대기 판정은 `harness/modes.md` §CLOSE 전이 계약을 따른다.
 
 4. **관련 문서 업데이트** (op-brain-ingest 디스패치 직전 실행):
    - `<프로젝트-루트>/docs/PROJECT.md`의 "프로젝트 문서" 레지스트리와 이번 태스크의 `changed_files`(EXECUTE 산출)를 양쪽 종합하여, 태스크 결과로 내용이 달라진 관련 문서(ARCHITECTURE.md·SPEC·기획서 등)를 식별한다.
@@ -399,7 +399,7 @@ opal-harness-agentic.md / opal-harness-semi-agentic.md 참조. 본 절은 이 �
 
 ### 기본 모드 (semi-agentic)
 
-기본 호출(`//opsdd {기능 설명}`)은 semi-agentic 모드. DESIGN(Phase 3, PLAN-equivalent)까지 사용자 검토, EXECUTE-LOOP(Phase 4) 이후 PM 자율, CLOSE 진입은 사용자 승인 필수.
+기본 호출(`//opsdd {기능 설명}`)은 semi-agentic 모드. DESIGN(Phase 3, PLAN-equivalent)까지 사용자 검토하고, 승인 뒤 EXECUTE-LOOP·VERIFY·CLOSE final까지 PM 자율로 진행한다.
 
 **모드 경계** (이 시점부터 PM 자율):
 - Phase 3 DESIGN 사용자 Gate 통과 후 → Phase 4 EXECUTE-LOOP 첫 행부터 PM 자율 (D-DEC-2)
@@ -411,7 +411,7 @@ opal-harness-agentic.md / opal-harness-semi-agentic.md 참조. 본 절은 이 �
 |------|------|
 | `//opsdd 기능 설명` | semi-agentic (기본) |
 | `//opsdd --interactive 기능 설명` | interactive — 모든 단계 사용자 승인 |
-| `//opsdd --agentic 기능 설명` | agentic — 모든 단계 PM 자율 (CLOSE 진입 제외) |
+| `//opsdd --agentic 기능 설명` | agentic — 정상 전 구간과 CLOSE final까지 PM 자율 |
 
 ### 활성화
 
@@ -429,8 +429,8 @@ TASK (사용자 승인)
   → REVIEW           -- 사용자 승인 (구조검증 + TS작성 + 커버리지)
   → DESIGN Gate      -- 사용자 승인 (모드 경계)
   → EXECUTE-LOOP     -- PM 자율 관리 (ACT별 Gate + L1/L2 검증 포함)
-  → VERIFY           -- PM 직접 수행 (test-tool E2E + TS 전체 Green 확인 + 사용자 Gate = CLOSE 진입 게이트)
-  → CLOSE            -- (사용자 승인 후) DONE.md 생성 + 최종 보고
+  → VERIFY           -- PM 직접 수행 (test-tool E2E + TS 전체 Green 확인)
+  → CLOSE            -- mode-aware 자동 전이 후 DONE.md 생성 + 최종 보고
 ```
 
 ### 자율 게이트 흐름 (agentic)
@@ -441,8 +441,8 @@ TASK (PM 직접)
   → REVIEW           -- PM 직접 수행 (구조검증 + TS작성 + 커버리지)
   → DESIGN Gate      -- PM 자율 검토
   → EXECUTE-LOOP     -- PM 자율 관리 (ACT별 Gate + L1/L2 검증 포함)
-  → VERIFY           -- PM 직접 수행 (test-tool E2E + TS 전체 Green 확인 + 사용자 Gate = CLOSE 진입 게이트)
-  → CLOSE            -- (사용자 승인 후) DONE.md 생성 + 최종 보고
+  → VERIFY           -- PM 직접 수행 (test-tool E2E + TS 전체 Green 확인)
+  → CLOSE            -- mode-aware 자동 전이 후 DONE.md 생성 + 최종 보고
 ```
 
 - agentic: 모든 Phase Gate를 PM이 자율 통과
@@ -452,13 +452,12 @@ TASK (PM 직접)
   ~/.opal/tools/state-tool/run.sh mark <task-path> --task-step <key> --done
   ```
 - 사용자 확인 행은 PM이 명시 호출하지 않는다 — 다음 단계 진입 시 도구가 자동 승인한다 (계약 SSOT: `opal/core/references/opal-harness-agentic.md §4` / `opal-harness-semi-agentic.md §5`)
-- **CLOSE 단계 최초 진입 행(#25)은 `--auto-pass` 금지** (`agentic_close_gate_requires_user` — §2.16 G-13); 반드시 명시 호출
 - R-10 비표준 행 구성: `gate-pass` deprecated(014) — mark 개별 호출 필수 (agentic/semi-agentic에서도 동일 적용)
 - AGENTIC-LOG.md에 모든 판단/오류/수정/의사결정 기록
 
-### CLOSE 진입 게이트 (공통)
+### CLOSE 전이 (공통)
 
-semi-agentic / agentic 모두 CLOSE 첫 행 `--auto-pass` 거부 (`agentic_close_gate_requires_user`). 소유자 발화 후 직전 사용자 확인 행 `--owner user` mark 필수.
+행 키는 `close.done_md`와 `close.final`이다. 자동/대기 판정은 `harness/modes.md` §CLOSE 전이 계약을 따른다.
 
 ### AGENTIC-LOG.md 생성 시점
 
@@ -492,6 +491,6 @@ opal-harness-agentic.md §6 공통 기준에 추가:
 
 ### 단계 보고 전이 계약
 
-각 단계 행 mark/advance 직후 `state-tool` stdout의 `transition_action` / `report_type` / `next_action`을 소비한다. `report_type=progress_report`는 비차단 보고이며 `transition_action=continue`이면 같은 응답에서 다음 단계로 이어간다. `report_type=decision_request`는 `transition_action=await_user|blocked`일 때만 사용하고, CLOSE 진입 승인 예외는 유지한다.
+각 단계 행 mark/advance 직후 `state-tool` stdout의 `transition_action` / `report_type` / `next_action`을 소비한다. `report_type=progress_report`는 비차단 보고이며 `transition_action=continue`이면 같은 응답에서 다음 단계와 CLOSE tail로 이어간다. `report_type=decision_request`는 `transition_action=await_user|blocked`일 때만 사용한다.
 
 ---

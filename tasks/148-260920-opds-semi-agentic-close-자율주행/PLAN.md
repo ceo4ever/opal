@@ -1,0 +1,45 @@
+---
+template: sdlc-v2
+---
+# PLAN: semi-agentic 구현 이후 CLOSE 자율주행
+
+> 입력: [TASK.md](TASK.md)
+
+## Approach
+
+`state-tool`의 기존 단일 모드 판정과 구조화 전이 출력을 확장해 CLOSE 진입도 mode-aware로 결정한다. `semi-agentic`은 PLAN-equivalent 경계 통과 뒤, `agentic`은 정상 경로에서 CLOSE 직전 확인 행의 유무와 무관하게 `progress_report + continue`로 `close.final`까지 진행한다. `interactive`, invalid mode의 fail-closed, 실제 미해결 이슈와 별도 권한 행동은 계속 `decision_request + await_user|blocked`로 남긴다. 기존 `state.json` 스키마와 Pilot `pipeline*.json` 행은 변경하지 않는다. 현재 코드는 CLOSE를 모드 무관 승인 축으로 판정하고 첫 CLOSE 행을 항상 대기로 파생하며, CLOSE 진입 시 자동 승인을 no-op 처리한 뒤 `owner=user`를 강제한다 (`opal/tools/state-tool/state_tool.py:100-128`, `opal/tools/state-tool/state_tool.py:414-441`, `opal/tools/state-tool/state_tool.py:2326-2376`, `opal/tools/state-tool/state_tool.py:2383-2431`). code-scan의 `domain opal-pipeline` 조회도 `state_tool.py`와 mode/transition 테스트를 이 계약의 구현·회귀 소유자로 식별했다.
+
+## Decisions and contracts
+
+| 결정 | 변경 후 계약 | 선택 이유·근거 |
+|---|---|---|
+| D-1. CLOSE 자동진입은 공통 mode 판정이 소유 | `interactive` 또는 invalid stored mode는 CLOSE 첫 행 전에 `owner=user/status=done`을 요구한다. `semi-agentic`·`agentic`은 필수 검증 통과와 미해결 이슈 부재 시 CLOSE 직전 확인 행을 `owner=auto`로 처리하고 첫 CLOSE 행을 허용한다. | 현행 단일 판정 함수가 mode 경계의 SSOT이고 invalid mode를 interactive로 fail-closed한다 (`opal/tools/state-tool/state_tool.py:90-128`). 이를 유지한 채 CLOSE 축만 mode-aware로 바꾸면 C-1~C-4를 한 지점에서 집행할 수 있다. |
+| D-2. 구조화 전이가 사용자 대기 여부의 유일한 런타임 신호 | 자동진입 가능한 CLOSE 프론티어는 `transition_action=continue`, `report_type=progress_report`; interactive 승인 대기와 실제 이슈는 `await_user|blocked`, `decision_request`; 완료는 `close.final` 뒤에만 `complete`다. | 공통 계약은 산문이 아니라 이 세 필드가 다음 행동을 소유하고 `progress_report + continue`는 같은 응답에서 계속하도록 규정한다 (`opal/core/references/harness/modes.md:36-49`). 현행 `_transition_from_state`의 CLOSE 무조건 대기 분기가 이 계약과 TASK 목표의 충돌 지점이다 (`opal/tools/state-tool/state_tool.py:429-440`; `TASK.md:25-30`). |
+| D-3. 기존 행과 스키마는 그대로 두고 진입 시점에만 자동 승인 | Pilot의 CLOSE 직전 `사용자 확인` 행을 삭제하거나 pipeline JSON을 마이그레이션하지 않는다. 자율 모드에서는 첫 CLOSE `advance|mark`의 기존 원자 저장 경로가 해당 pending 행을 `done/auto`로 만들고 `auto_approved`에 기록한다. 확인 행이 없는 Pilot도 같은 mode 판정으로 통과한다. | 기존 자동 승인 훅은 상태·timestamp·note와 응답 증거를 이미 생성하지만 대상이 CLOSE면 조기 반환한다 (`opal/tools/state-tool/state_tool.py:2326-2375`). 이 제한을 mode-aware 판정으로 대체하면 C-6과 확인 행 유무 양쪽 AC를 만족한다. |
+| D-4. interactive와 PLAN-equivalent 경계는 보존 | interactive의 모든 확인 행과 CLOSE는 계속 명시 사용자 승인을 요구한다. semi-agentic의 `MODE_BOUNDARY_STAGES`는 변경하지 않아 PLAN-equivalent 이전 확인을 자동 승인하지 않는다. | 경계 집합과 interactive/semi 판정은 이미 단일 함수에 모여 있다 (`opal/tools/state-tool/state_tool.py:78-85`, `opal/tools/state-tool/state_tool.py:120-128`). TASK가 이 두 경계를 명시적으로 불변으로 둔다 (`TASK.md:16-18`, `TASK.md:27-29`). |
+| D-5. CLOSE 자동진입은 외부 권한을 확장하지 않음 | 허브·기본 브랜치 commit/merge/push, 배포, rebase/reset/amend, worktree 제거는 계속 별도 사용자 승인 대상이다. `opal-pilot-project-build`의 P5 merge gate도 자동 CLOSE 대상에서 제외한다. | 공통 Git 가드는 이 행동을 모드 무관 별도 승인으로 둔다 (`opal/core/references/harness/guards.md:57-71`). TASK 역시 이를 범위 밖으로 고정한다 (`TASK.md:13`, `TASK.md:20`). |
+| D-6. 공통 SSOT를 먼저 고치고 Pilot 문서는 포인터로 축소 | 규칙 원문은 `harness/{modes,state,guards}.md`와 세 mode 하네스에 두고, Pilot SKILL/README의 “모든 모드 CLOSE 승인” 중복 문구는 새 공통 계약 참조와 해당 Pilot의 경계·행 키만 남긴다. | 현재 공통 guards는 agentic까지 CLOSE 사용자 승인을 강제하고 (`opal/core/references/harness/guards.md:52-55`), 공개 README도 semi/agentic에 같은 예외를 반복한다 (`README.md:816-826`). 문서와 목표 계약의 충돌은 TASK의 승인된 Proposed outcome으로 정합화한다 (`TASK.md:9-10`, `TASK.md:31`). |
+
+## Work items
+
+| 작업 | 담당 | 변경 대상 | 구체적 변경 | 선행 작업 | 실행 그룹 | 완료 기준 연결 |
+|---|---|---|---|---|---|---|
+| W-1. state-tool mode-aware CLOSE 전이 및 회귀 테스트 | opal-task-agent — 나열한 도구·테스트 파일 단독 소유 | `opal/tools/state-tool/state_tool.py`<br>`opal/tools/state-tool/tests/test_mode_resolution.py`<br>`opal/tools/state-tool/tests/test_mode_transition_contract.py`<br>`opal/tools/state-tool/tests/test_state_tool.py` | (1) `can_auto_approve_user_confirmation`을 interactive/fail-closed CLOSE만 거부하고 semi/agentic CLOSE를 허용하는 단일 판정으로 갱신한다. (2) `_transition_from_state`, `_derive_next_action`, todo 파생이 CLOSE 직전 pending 확인 행과 첫 CLOSE 행을 같은 판정으로 건너뛰거나 대기시켜 `continue/progress_report`와 `await_user/decision_request`를 정확히 낸다. (3) CLOSE 대상 조기 no-op과 `check_close_gate`의 모드 무관 `owner=user` 강제를 mode-aware로 바꾸되 `--as-worker`, `--force`, 원자 저장, invalid mode fail-closed는 유지한다. (4) 세 모드 × 확인 행 있음/없음 × `advance`/`mark` × legacy 단일 CLOSE/명시 `close.final`을 공개 CLI로 검증하고, semi PLAN 이전 거부, blocked/실패, close tail 연속 진행, state/pipeline 구조 불변을 회귀 고정한다. 기존 `agentic_close_gate_requires_user` 오류 코드는 하위호환 카탈로그에서 제거하지 않되 정상 새 경로에서는 방출하지 않는다. | 없음 | P1 | AC-1, AC-2, AC-3, AC-4, AC-5, AC-6, AC-8, C-1, C-2, C-3, C-4, C-6 |
+| W-2. 공통 CLOSE·mode·guard 문서 계약 정합화 | opal-task-agent — 나열한 공통 문서 단독 소유 | `opal/core/references/harness/modes.md`<br>`opal/core/references/harness/state.md`<br>`opal/core/references/harness/guards.md`<br>`opal/core/references/harness/pm-review-gate.md`<br>`opal/core/references/opal-harness-agentic.md`<br>`opal/core/references/opal-harness-semi-agentic.md`<br>`opal/core/references/opal-harness-interactive.md`<br>`opal/tools/state-tool/README.md`<br>`docs/CONVENTIONS.md` | D-1~D-5를 공통 SSOT에 반영한다. semi/agentic은 CLOSE 직전 사용자 승인 요청을 비차단 완료 보고로 바꾸고 `state-tool` 출력에 따라 tail을 계속하며, interactive는 `owner=user` 거부·승인 절차를 유지한다. 미해결 이슈·사람 검증·권한·보안/손실 위험·재시도 상한의 에스컬레이션과 외부 Git/배포 권한은 그대로 명시한다. `pm-review-gate`의 mode 무관 prev-user 검사를 mode-aware 자가진단으로, state-tool README의 기존 거부 설명을 새 CLI 계약과 잔존 호환 오류 코드 설명으로 정정한다. | W-1 | P2 | AC-1, AC-2, AC-3, AC-4, AC-5, AC-6, AC-7, C-1, C-2, C-3, C-4, C-5, C-7 |
+| W-3. 적용 대상 Pilot·공개 README 정합화와 설치본 검증 | opal-task-agent — 나열한 Pilot/공개 문서 단독 소유 | `README.md`<br>`opal/skills/opal-pilot-dev/SKILL.md`<br>`opal/skills/opal-pilot-dev/README.md`<br>`opal/skills/opal-pilot-dev-short/SKILL.md`<br>`opal/skills/opal-pilot-dev-short/README.md`<br>`opal/skills/opal-pilot-dev-wireframe/SKILL.md`<br>`opal/skills/opal-pilot-dev-wireframe/README.md`<br>`opal/skills/opal-pilot-project/SKILL.md`<br>`opal/skills/opal-pilot-project/README.md`<br>`opal/skills/opal-pilot-write-tech/SKILL.md`<br>`opal/skills/opal-pilot-sdd/SKILL.md`<br>`opal/skills/opal-pilot-sdd/README.md`<br>`opal/skills/opal-pilot-data-design/SKILL.md`<br>`opal/skills/opal-pilot-project-dev/SKILL.md`<br>`opal/skills/opal-pilot-project-loop/SKILL.md`<br>`opal/skills/opal-pilot-gc/SKILL.md` | 적용 대상 10개 pipeline 프로필(opd/opds/opdw/opp/opwt/opsdd/opdd/oppd/oppl/opgc)의 중복 CLOSE 승인·`--auto-pass` 거부·`owner=user` 지시를 공통 mode-aware 계약 참조로 교체한다. 확인 행이 없는 opgc도 semi/agentic 자동진입, interactive 첫 CLOSE `--owner user`를 명시한다. `opal-pilot-project-build/SKILL.md`의 P5 merge gate는 D-5에 따라 변경하지 않고 회귀 검토 대상으로 둔다. 문서/테스트 통과 뒤 프로젝트 소스에서 installer를 실행해 설치본을 동기화하고, 설치된 `state-tool` 공개 CLI로 세 모드의 CLOSE 전이와 `close.final` 완료를 재검증한다. `~/.opal/` 파일은 직접 편집하지 않는다 (`docs/CONVENTIONS.md` §배포 경계). | W-2 | P3 | AC-7, AC-9, C-1, C-3, C-4, C-5, C-7 |
+
+## Risks
+
+| 위험 | 깨질 수 있는 동작·계약 | 영향 | 설계 대응 |
+|---|---|---|---|
+| H-1. 자동 승인 후 후속 가드 실패가 상태 일부만 저장할 수 있음 | CLOSE 직전 확인 행의 원자성·run-log state.changed 순서 | 실패 재시도에서 이미 승인된 것처럼 보이거나 감사 사건이 어긋남 | W-1에서 기존 “가드 전량 통과 후 1회 저장” 순서를 유지하고, 실패 호출 전후 `state.json` 바이트 동일성과 성공 시 `auto_approved`/owner/note를 검증한다 (`opal/tools/state-tool/state_tool.py:2330-2337`). |
+| H-2. 확인 행이 없는 opgc와 확인 행이 있는 Pilot의 경로를 한쪽만 고치면 mode별 교착 또는 과잉 통과가 남음 | AC-3/AC-5 및 10개 Pilot 공통 CLOSE 진입 | interactive 승인 우회 또는 autonomous mode 정지 | W-1 공개 CLI 매트릭스에 행 유무 양쪽을 넣고, W-3에서 opgc 전용 문구와 나머지 Pilot 포인터를 별도로 확인한다. |
+| H-3. `transition_action` 파생과 실제 mark 가드가 다른 판정을 쓰면 보고는 continue인데 다음 호출은 실패할 수 있음 | 비차단 진행 보고와 실제 연속 실행 | 자율주행이 CLOSE 직전 또는 첫 행에서 다시 멈춤 | W-1에서 전이·next action·todo·auto-approve·close gate가 동일 mode 판정 함수를 소비하도록 하고 `show → advance/mark → close.final` 왕복 테스트로 고정한다. |
+| H-4. 설치본이 source와 달라 공개 CLI 결과가 다를 수 있음 | AC-9 및 실제 사용자 경로 | 소스 테스트는 통과하지만 배포 환경은 구계약 유지 | W-3 완료 조건에 source 테스트 후 installer 재배포와 설치본 CLI 재실행을 포함하고, 실패 시 source 수정→재설치 순서만 허용한다. |
+
+## Release and recovery
+
+- 적용 순서: P1에서 state-tool과 공개 CLI 회귀 테스트를 확정하고, P2에서 공통 SSOT를 정합화한 뒤, P3에서 Pilot/README를 공통 계약에 연결한다. 전체 source 검증 통과 후에만 별도 권한 경계를 확인해 `./scripts/install-mac.sh`로 설치본을 갱신한다.
+- 검증 범위: `python -m unittest discover -s opal/tools/state-tool/tests -p 'test_mode_*.py'`, `python -m unittest discover -s opal/tools/state-tool/tests -p 'test_state_tool.py'`, `python -m unittest discover -s opal/tools/state-tool/tests -p 'test_pilot_shared_contract.py'`를 실행한다. 실제 source `run.sh`와 설치본 `~/.opal/tools/state-tool/run.sh` 각각에서 interactive/semi-agentic/agentic, 확인 행 있음/없음, pending PLAN 경계, blocked 오류, CLOSE tail~`close.final`을 검증하고 `state-tool verify <task-folder> --plan-contract-check`, `--code-scan-citation-check`를 통과시킨다.
+- 실측 경계: 각 CLI 호출의 종료 코드와 단일 JSON에서 `transition_action`, `report_type`, `next_action`, `auto_approved`, 최종 `current_status`를 기록한다. `continue/progress_report` 뒤 다음 행 호출이 실제 성공하고 `await_user|blocked`에서는 상태 파일이 오염되지 않는 시점까지를 완료로 본다.
+- 실패 시: 설치 전에는 W별 source 변경을 되돌려 기존 명시 CLOSE 승인 계약으로 복구한다. 설치 후 회귀가 발견되면 승인된 이전 source revision으로 복원한 뒤 installer를 다시 실행하며 `~/.opal/`을 직접 편집하지 않는다. 이미 생성된 Git 이력은 reset/amend하지 않고 별도 승인된 보정 변경으로 복구하고, merge/push/배포/worktree 제거는 수행하지 않는다.

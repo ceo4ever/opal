@@ -110,23 +110,23 @@ def can_auto_approve_user_confirmation(stage, mode, *, include_close_axis=True):
                      "semi_agentic_pre_execute", "invalid_mode_requires_user"}
 
     두 축 합성:
-      축1 CLOSE 여부  — 모드 무관 무조건 거부 (check_close_gate와 동일 규범, 별개 상수 규칙)
+      축1 CLOSE 여부  — interactive/fail-closed만 거부하고, semi-agentic/agentic은 허용
       축2 모드별 경계  — interactive는 전 stage 거부 / semi-agentic은 모드 경계 상수 한정 거부
-    두 축은 상호 배타다 — "CLOSE"는 모드 경계 상수에 속하지 않는다.
+    CLOSE는 모드 경계 상수에 속하지 않으므로 자율 모드에서 축2와 충돌하지 않는다.
 
     include_close_axis=False — 축1을 평가하지 않고 축2만 합성한다. cmd_validate 전용
     (H-4): 현행 validate는 CLOSE 축을 갖지 않으므로 CLOSE 행에도 모드 축 판정을 그대로
     적용해야 표 B V-7(CLOSE×interactive → auto_pass_in_interactive_mode)과
     V-8·V-9(CLOSE×semi-agentic/agentic → 위반 없음)가 동시에 성립한다.
     """
-    if include_close_axis and stage == "CLOSE":
-        return (False, "close_requires_user")            # 축1 — 최우선
     _effective_mode, mode_source, _warnings = normalize_stored_mode(mode)
     if mode_source == "fail_closed":
         return (False, "invalid_mode_requires_user")
     mode = _effective_mode
     if mode == "interactive":
         return (False, "interactive_requires_user")      # 축2-a — stage 무관
+    if include_close_axis and stage == "CLOSE":
+        return (True, None)                                # 축1 — 자율 모드 CLOSE 진입
     if mode == "semi-agentic" and stage in MODE_BOUNDARY_STAGES:
         return (False, "semi_agentic_pre_execute")       # 축2-b — stage 한정
     return (True, None)                                  # agentic 전 구간 / semi-agentic 경계 밖
@@ -431,17 +431,16 @@ def _transition_from_state(state):
         if row.get("status") == "failed":
             return "blocked", "decision_request", next_action
         if row.get("item") == "사용자 확인":
-            next_row = rows[idx + 1] if idx + 1 < len(rows) else None
-            next_is_close = bool(next_row and next_row.get("stage") == "CLOSE")
-            if not next_is_close:
-                allowed, _ = can_auto_approve_user_confirmation(row.get("stage"), mode)
-                if allowed:
-                    continue
+            allowed, _ = can_auto_approve_user_confirmation(row.get("stage"), mode)
+            if allowed:
+                continue
             return "await_user", "decision_request", next_action
         if row.get("stage") == "CLOSE":
             first_close = idx == 0 or rows[idx - 1].get("stage") != "CLOSE"
             if first_close:
-                return "await_user", "decision_request", next_action
+                allowed, _ = can_auto_approve_user_confirmation("CLOSE", mode)
+                if not allowed:
+                    return "await_user", "decision_request", next_action
         return "continue", "progress_report", next_action
 
     return "complete", "progress_report", next_action
@@ -2655,16 +2654,11 @@ def _derive_next_action(state):
         if st in _COMPLETE_STATUSES:
             continue
         # R-11 G-3-a: 다음 진입 시 도구가 자동 승인할 사용자 확인 행은 프론티어가 아니다.
-        # 단, CLOSE 진입 직전 확인 행은 예외 — auto_approve_prior_user_confirmations가
-        # target_row.stage=="CLOSE"이면 무조건 자동 승인을 no-op하므로(H-8 1차 방어와 동형),
-        # 바로 다음 행이 CLOSE면 이 확인 행은 실제로 소유자 승인이 필요한 프론티어다.
+        # CLOSE 직전 행도 can_auto_approve_user_confirmation()의 같은 mode 판정을 따른다.
         if row.get("item") == "사용자 확인":
-            next_row = rows[idx + 1] if idx + 1 < len(rows) else None
-            next_is_close = bool(next_row and next_row.get("stage") == "CLOSE")
-            if not next_is_close:
-                allowed, _ = can_auto_approve_user_confirmation(row.get("stage"), mode)
-                if allowed:
-                    continue
+            allowed, _ = can_auto_approve_user_confirmation(row.get("stage"), mode)
+            if allowed:
+                continue
         stage, item = row.get("stage", ""), row.get("item", "")
         if st == "in_progress":
             return f"{stage} {item} 진행 중"
@@ -2891,9 +2885,6 @@ def auto_approve_prior_user_confirmations(
         return []          # --force 우회 경로 — 가드 자체가 스킵되므로 훅도 no-op
 
     target_row = state["rows"][row_index]
-    if target_row["stage"] == "CLOSE":
-        return []          # [MUST] CLOSE 진입 경로에서는 어떤 행도 자동 승인하지 않는다 (DEC-D 1차 방어)
-
     approved = []
     for i in range(row_index):                        # [0, row_index) — full scope와 동일 범위
         prev = state["rows"][i]
@@ -2948,12 +2939,15 @@ def check_close_gate(state, row_index, command, auto_pass=False, force=False, ow
     if not is_first_close:
         return
 
-    # agentic / semi-agentic 모드 + auto-pass 거부 (§2.16 G-13 / D-DEC-5b)
-    if auto_pass and state.get("mode") in ("agentic", "semi-agentic"):
-        err(command, "agentic_close_gate_requires_user", row_id=row["row_id"])
-
     if force:
         return  # force 우회
+
+    # The shared mode decision also owns close-gate admission.  Keep the legacy
+    # agentic_close_gate_requires_user catalog entry for compatibility, but do not
+    # emit it on this mode-aware path.
+    allowed, _ = can_auto_approve_user_confirmation("CLOSE", state.get("mode"))
+    if allowed:
+        return
 
     # 직전 단계 사용자 확인 행 검색 (역순)
     prev_user_row = None
@@ -2972,6 +2966,10 @@ def check_close_gate(state, row_index, command, auto_pass=False, force=False, ow
                     "CLOSE first row must be marked with --owner user"))
         return
 
+    # A prior explicit user confirmation is the interactive/fail-closed CLOSE
+    # admission.  Do not require a second --owner user on the first CLOSE row:
+    # that would make a completed confirmation ineffective and would also make
+    # `advance` impossible despite the owner already having approved the gate.
     if prev_user_row["status"] != "done" or prev_user_row.get("owner") != "user":
         err(command, "close_gate_violation",
             violation_detail=(
@@ -3739,6 +3737,11 @@ def cmd_advance(args):
 
     # CLOSE 진입 게이트 (§2.16 G-13) — 선행 행이 모두 완료된 뒤 판정한다.
     check_close_gate(state, row_index, command)
+
+    # CLOSE/PM Gate artifacts must reject an advance before any in-memory auto
+    # approval can be persisted.  This mirrors cmd_mark's pre-save guard.
+    check_gate_artifacts(task_path, row, command,
+                         force=getattr(args, "force", False))
 
     # 005 명확화 게이트 — TASK→다음 단계 첫 행 진입 차단 (상태 변경 전)
     _run_clarification_hook(task_path, state, row_index, command,

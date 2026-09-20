@@ -133,9 +133,10 @@ PM Gate는 별도 QA Gate 단계를 두지 않고, 문서 QA(요구사항→설�
 2. 각 Gate 직후 State Gate 행이 즉시 ✅ 처리되었는가
 3. **워커를 디스패치한 행을 `--as-worker --worker-stage`로 마킹했는가** — 이 표시가 없으면 소요를 넘길 자리도 없고 도구 경고도 발동하지 않는다
 4. **그 행에 소요를 기록했거나 미측정을 선언했는가** — `--worker-duration-minutes` 또는 `--worker-duration-unknown`. **침묵은 CLOSE에서 차단된다**(`worker_duration_undeclared`). 누락 시 그 시간이 PM 몫으로 잘못 귀속되며 소급 복구가 불가능하다 (§워커 완료 선언)
-5. CLOSE 진입 게이트 통과 확인 — CLOSE 단계 첫 행 mark 시 prev_user_row(owner=user, status=done)가 존재하는가
-   - 미통과 시 도구가 `close_gate_violation`으로 거부함 — 사용자 확인 행 먼저 처리 필요
-   - 근거: PLAN §2.16 G-13
+5. CLOSE 진입 mode-aware 자가 진단 — `state-tool resolve-mode`의 effective mode와 전이 stdout을 확인한다
+   - `interactive` 또는 fail-closed이면 CLOSE 첫 행 전에 prev_user_row가 `owner=user, status=done`인지 확인한다. 미통과면 도구가 거부하므로 사용자 확인 행을 먼저 처리한다.
+   - `semi-agentic`·`agentic`은 필수 검증 통과와 실제 미해결 이슈 부재 시 prev_user_row 유무와 관계없이 자동 전이를 허용하며, `auto_approved`와 `progress_report + continue`를 관측한다.
+   - 근거: `harness/modes.md` §CLOSE 전이 계약
 4. 최근 24시간 의사결정 로그에 `--force` 사용 0건 확인
    - 누적 발생 시 별도 태스크로 우회 제한 정책 재설계 필요
    - 근거: legacy PLAN §2.17 트리거 #1/#3/#8 / R-11

@@ -26,7 +26,7 @@
 //opds {작업 요청}
 ```
 
-호출하면 `opal-pilot-dev`의 Short profile 절차(TASK → PLAN → EXECUTE → TEST → CLOSE)를 그대로 따른다. 모드 플래그(`--interactive`/`--semi-agentic`/`--agentic`)와 CLOSE 진입 시 사용자 승인 필수 규칙도 `opal-pilot-dev`와 동일하다.
+호출하면 `opal-pilot-dev`의 Short profile 절차(TASK → PLAN → EXECUTE → TEST → CLOSE)를 그대로 따른다. 모드 플래그와 CLOSE 전이는 `harness/modes.md` §CLOSE 전이 계약 및 `opal-pilot-dev`의 Short profile 행 키를 따른다.
 
 ## 파이프라인
 

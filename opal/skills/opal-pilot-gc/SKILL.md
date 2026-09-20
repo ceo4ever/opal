@@ -56,7 +56,7 @@ blocker다. 부트 캐시를 근거로 공통 문서를 직접 재Read하는 우
 | `--convention` | - | 컨벤션 진단 토글 (동일 규칙) |
 | `--scope staged` | ✅ 기본 | git staged 파일 대상 |
 | `--scope all` | - | 프로젝트 전체 파일 대상 |
-| `--agentic` | - | Agentic Mode 활성화 (CLOSE 진입 게이트만 유지) |
+| `--agentic` | - | Agentic Mode 활성화 (정상 전 구간과 CLOSE final 자동 진행) |
 
 **토글 조합 규칙**:
 - 둘 다 생략 → 둘 다 실행 (기본)
@@ -346,7 +346,7 @@ Case D — Fallback (프로젝트 구성 섹션 부재):
 
 **산출물**: `GC-SECURITY-{ts}[-{element}].md` × N, `GC-CONVENTION-{ts}[-{element}].md` × N, `GC-REPORT-{ts}.md`, `gc-report.json`, PM이 STATE.md 저널(자유 기재)에 실행 요약과 `op-gc-report` 판정(`verdict`·delta 건수) 직접 기록
 
-**게이트**: 사용자 확인 (기본, 대화형 — pipeline.json 행 아님) — Agentic 모드에서 자율 통과. 이 확인의 결과는 별도 행으로 기록되지 않고 CLOSE 첫 행(`close.done_md`) `--owner user` mark로 집행된다(R-11 G-2, §4.2 참조).
+**게이트**: 보고는 비차단이다. pipeline.json에 사용자 확인 행이 없으므로, CLOSE 첫 행(`close.done_md`)은 `harness/modes.md` §CLOSE 전이 계약의 mode-aware 판정으로 집행된다.
 
 보고 형식:
 ```
@@ -356,7 +356,7 @@ Case D — Fallback (프로젝트 구성 섹션 부재):
 📎 컨벤션 보고서: GC-CONVENTION-{ts}[-{element}].md × {N} (총 {N}건)
 📎 문서 업데이트 제안: {N}건
 
-CLOSE로 진행할까요? 수정이 필요하면 CLOSE 단계에서 //opds 체인 안내를 드립니다.
+CLOSE 결과를 계속 처리합니다. 수정이 필요하면 CLOSE 단계에서 //opds 체인 안내를 드립니다.
 ```
 
 ---
@@ -365,8 +365,7 @@ CLOSE로 진행할까요? 수정이 필요하면 CLOSE 단계에서 //opds 체�
 
 **목적**: 실행 요약 집계, DONE.md 생성, 필요 시 opds 수동 체인 안내
 
-> **[MUST] CLOSE 진입 게이트 (R-11 G-2 — 확인 행 0개 파이프라인 폴백)**: opgc `references/pipeline.json`에는 "사용자 확인" 행이 없다. 이 경우 `check_close_gate`는 **CLOSE 첫 행(`close.done_md`) 자체를 유일한 소유자 승인 지점**으로 취급한다 — 소유자에게 REPORT 결과를 보고하고 승인 발화를 받은 뒤 `--owner user`로 mark해야 하며, 생략 시 `close_gate_violation`으로 거부된다(`--force` 불요 — `--force`는 정책 우회이므로 사용하지 않는다).
-> (`pilot.start`가 전달한 `guards`, `opal/tools/state-tool/state_tool.py` `check_close_gate` G-2 폴백 / `opal/core/references/opal-harness-semi-agentic.md` §3 opgc 행 / TASK.md §제약조건 원문 준수)
+> **[MUST] CLOSE 전이 (확인 행 0개 pipeline)**: opgc `references/pipeline.json`에는 "사용자 확인" 행이 없다. 따라서 semi-agentic·agentic은 `close.done_md`부터 자동 진행하고, interactive만 첫 CLOSE 행을 `--owner user`로 명시 승인한다. `--force`는 정책 우회이므로 사용하지 않는다. 계약 원문은 `harness/modes.md` §CLOSE 전이 계약이다.
 
 ### 4.1 DONE.md 생성
 
@@ -377,14 +376,14 @@ CLOSE로 진행할까요? 수정이 필요하면 CLOSE 단계에서 //opds 체�
 
 ### 4.2 CLOSE 행 갱신
 
-소유자 승인 발화 수신 + DONE.md 생성 완료 후 state-tool로 행 갱신:
+DONE.md 생성 완료 후 state-tool로 행 갱신한다. interactive에서만 아래 명시 사용자 승인 형태를 사용한다:
 
 ```
 ~/.opal/tools/state-tool/run.sh mark <task-path> --task-step close.done_md --done --owner user --note '{owner_name} 확인: GC 결과 확인 후 CLOSE 진행'
 ```
 
 > **[MUST] 행 갱신**: mark하는 것 자체가 state 기록이며 별도의 State Gate 행은 존재하지 않는다. state-tool stage-transition guard가 이전 단계 필수 행 완료 여부를 자동 검증한다.
-> **CLOSE 진입 게이트 (R-11 G-2 / §2.16 G-13)**: opgc는 확인 행이 0개이므로 CLOSE 첫 행(`close.done_md`)이 유일한 소유자 승인 지점이다. `--owner user` 누락 시 `close_gate_violation`으로 거부된다(`--force` 불요). `--auto-pass`는 agentic/semi-agentic 모드에서 별도로 `agentic_close_gate_requires_user`로 거부된다.
+> **CLOSE 전이**: opgc는 확인 행이 0개이므로 semi-agentic·agentic은 CLOSE 첫 행을 자동 진행한다. interactive만 `--owner user`를 요구한다. 세부 판정은 `harness/modes.md` §CLOSE 전이 계약을 따른다.
 
 **관련 문서 업데이트** (op-brain-ingest 디스패치 직전 실행):
 
@@ -495,27 +494,22 @@ opgc 실행 결과 {N}건 이슈 감지
 `~/.opal/references/opal-harness-agentic.md`를 Read한다.
 
 Agentic 모드 특수 규칙:
-- **CLOSE 진입 게이트만 유지** — REPORT 사용자 확인 게이트(대화형, pipeline.json 행 아님)는 자율 통과
+- REPORT는 비차단이며, CLOSE도 mode-aware 자동 전이를 따른다
 - `AGENTIC-LOG.md`를 태스크 폴더에 생성하여 자율 결정 내역을 기록
 - 보고서 내 `[?] review` 항목은 **건너뛰지 않고** 주석에 "agentic: 사용자 확인 필요" 표기
 - 자율 통과 시 state-tool mark 호출 (P-8):
   ```
   ~/.opal/tools/state-tool/run.sh mark <task-path> --task-step <task-step-key> --done
   ```
-- **opgc는 "사용자 확인" 행 자체가 없다(R-11 G-2)** — 다른 pilot의 "사용자 확인 행은 PM이 명시 호출하지 않는다"(자동 승인) 규칙은 opgc에 적용 대상이 없다. 대신 **CLOSE 첫 행(`close.done_md`)이 유일한 소유자 승인 지점**이며, agentic 모드라도 이 행은 `--owner user`를 명시하여 mark해야 한다(자동 승인 대상 아님, `check_close_gate` G-2 폴백).
-- **CLOSE 단계 첫 행(`close.done_md`)은 `--auto-pass` 금지** (`close_gate_violation` / agentic·semi-agentic은 `agentic_close_gate_requires_user` — §2.16 G-13); 반드시 `--owner user` 포함 명시 호출
+- **opgc는 "사용자 확인" 행 자체가 없다.** semi-agentic·agentic은 `close.done_md`부터 자동 진행하고, interactive에서만 `--owner user` 명시 호출을 사용한다 (`harness/modes.md` §CLOSE 전이 계약).
 - init 시 `--mode agentic` 플래그 추가:
   ```
   ~/.opal/tools/state-tool/run.sh init <task-path> --skill opgc --mode agentic --rows-from opal/skills/opal-pilot-gc/references/pipeline.json
   ```
-- CLOSE 진입 전 소유자 확인 메시지 표시:
-  ```
-  [Agentic CLOSE 게이트] 자율 실행 완료. CLOSE 진입 승인? (y/n)
-  ```
 
 ### 단계 보고 전이 계약
 
-각 단계 행 mark/advance 직후 `state-tool` stdout의 `transition_action` / `report_type` / `next_action`을 소비한다. `report_type=progress_report`는 비차단 보고이며 `transition_action=continue`이면 같은 응답에서 다음 단계로 이어간다. `report_type=decision_request`는 `transition_action=await_user|blocked`일 때만 사용하고, CLOSE 진입 승인 예외는 유지한다.
+각 단계 행 mark/advance 직후 `state-tool` stdout의 `transition_action` / `report_type` / `next_action`을 소비한다. `report_type=progress_report`는 비차단 보고이며 `transition_action=continue`이면 같은 응답에서 다음 단계와 CLOSE tail로 이어간다. `report_type=decision_request`는 `transition_action=await_user|blocked`일 때만 사용한다.
 
 ---
 

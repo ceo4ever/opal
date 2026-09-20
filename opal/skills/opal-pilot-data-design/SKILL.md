@@ -275,7 +275,7 @@ QA 통과 시:
    태스크가 완료되었습니다.
    ```
 
-> **CLOSE 진입 게이트**: CLOSE 단계 첫 행 mark 시 도구가 직전 단계 사용자 확인 행의 `owner=user` 여부를 자동 검증한다 (§2.16 G-13). agentic 모드의 `--auto-pass`도 거부됨.
+> **CLOSE 전이**: mode-aware 자동/대기와 `close.final` 계약은 `harness/modes.md` §CLOSE 전이 계약이 소유한다.
 
 ---
 
@@ -286,7 +286,7 @@ QA 통과 시:
 > **행 구성 SSOT**: `references/pipeline.json` `task_steps[]`. 현재 행 목록은
 > `~/.opal/tools/state-tool/run.sh show <task-path>` 또는 pipeline.json을 직접 조회한다.
 
-> `model.user_confirm`(MODEL 사용자 확인) 이후부터 PM 자율 — 모드 경계(U-5 확정). CLOSE 진입은 사용자 승인 필수(공통).
+> `model.user_confirm`(MODEL 사용자 확인) 이후부터 PM 자율 — 모드 경계(U-5 확정). CLOSE도 공통 mode-aware 계약을 따른다.
 
 ---
 
@@ -316,7 +316,7 @@ opal-harness-agentic.md / opal-harness-semi-agentic.md 참조. 본 절은 이 �
 |------|------|
 | `//opdd 작업` | semi-agentic (기본) |
 | `//opdd --interactive 작업` | interactive — 모든 단계 사용자 승인 |
-| `//opdd --agentic 작업` | agentic — 모든 단계 PM 자율 (CLOSE 진입 제외) |
+| `//opdd --agentic 작업` | agentic — 정상 전 구간과 CLOSE final까지 PM 자율 |
 
 ### 트랙 축 (--reverse / --greenfield)
 
@@ -338,14 +338,14 @@ TASK → DICT Gate → MODEL Gate → DDL Gate → QA Gate → CLOSE
 
 - TASK→DICT Gate→MODEL Gate까지 사용자 승인 필수
 - MODEL 사용자 확인(`model.user_confirm`) 통과 후 DDL·QA Gate는 PM 자율 통과
-- CLOSE 진입은 사용자 승인 필수 (공통 게이트)
+- CLOSE는 공통 mode-aware 계약을 따른다 (`harness/modes.md` §CLOSE 전이 계약)
 
-### CLOSE 진입 게이트 (공통)
+### CLOSE 전이 (공통)
 
-semi-agentic / agentic 모두 CLOSE 첫 행 `--auto-pass` 거부 (`agentic_close_gate_requires_user`). 소유자 발화 후 직전 사용자 확인 행 `--owner user` mark 필수.
+행 키는 pipeline JSON의 CLOSE 행과 `close.final`이다. 자동/대기 판정은 `harness/modes.md` §CLOSE 전이 계약을 따른다.
 
 ### 단계 보고 전이 계약
 
-각 단계 행 mark/advance 직후 `state-tool` stdout의 `transition_action` / `report_type` / `next_action`을 소비한다. `report_type=progress_report`는 비차단 보고이며 `transition_action=continue`이면 같은 응답에서 다음 단계로 이어간다. `report_type=decision_request`는 `transition_action=await_user|blocked`일 때만 사용하고, CLOSE 진입 승인 예외는 유지한다.
+각 단계 행 mark/advance 직후 `state-tool` stdout의 `transition_action` / `report_type` / `next_action`을 소비한다. `report_type=progress_report`는 비차단 보고이며 `transition_action=continue`이면 같은 응답에서 다음 단계와 CLOSE tail로 이어간다. `report_type=decision_request`는 `transition_action=await_user|blocked`일 때만 사용한다.
 
 ---

@@ -1354,8 +1354,9 @@ class TestErrorCodes(BaseTestCase):
         self.assertEqual(code, "close_gate_violation")
 
     # ── E-16: agentic_close_gate_requires_user ───────────────────────────────
-    def test_agentic_close_gate_requires_user(self):
-        """#16 agentic_close_gate_requires_user: agentic + CLOSE 첫 행 + --auto-pass (PLAN §2.18 #16, §2.16 G-13)"""
+    def test_agentic_close_auto_pass_preserves_clarification_guard(self):
+        """#16 agentic CLOSE no longer emits the legacy close-gate error, but --auto-pass
+        may not bypass the independent clarification guard."""
         rows = json.dumps([
             {"stage": "TASK",  "item": "사용자 확인"},
             {"stage": "CLOSE", "item": "State Gate"},
@@ -1364,14 +1365,18 @@ class TestErrorCodes(BaseTestCase):
         # 093 F-001: 사용자 확인 행은 init 시 pending이며, CLOSE 직전 행이라 훅이
         # 자동 승인하지 않는다(DEC-D) — 캡틴 승인으로 CLOSE 게이트 축까지 도달시킨다.
         self._mark(1, owner="user")
+        before = (self.task_path / "state.json").read_bytes()
         # agentic 모드에서 CLOSE 첫 행에 auto-pass 시도
         with _mock_now():
             args = make_args(
                 task_path=str(self.task_path),
                 row=2, done=True, auto_pass=True,
             )
-            code = self._err_code(ST.cmd_mark, args)
-        self.assertEqual(code, "agentic_close_gate_requires_user")
+            exit_code, result = self._call_cmd(ST.cmd_mark, args)
+        self.assertEqual(exit_code, 1, result)
+        self.assertEqual(result.get("error"), "clarification_gate_unmet", result)
+        self.assertNotEqual(result.get("error"), "agentic_close_gate_requires_user", result)
+        self.assertEqual((self.task_path / "state.json").read_bytes(), before)
 
     # ── E-17: note_required_for_force ────────────────────────────────────────
     def test_note_required_for_force_init(self):
@@ -1721,12 +1726,14 @@ class TestG13CloseGate(BaseTestCase):
         self.assertEqual(exit_code, 1)
         self.assertEqual(result.get("error"), "close_gate_violation")
 
-    def test_g13_agentic_close_gate_auto_pass_rejected(self):
-        """G-13: agentic 모드 CLOSE 첫 행 + --auto-pass → agentic_close_gate_requires_user (PLAN §2.16 G-13)"""
+    def test_g13_agentic_close_auto_pass_remains_clarification_guarded(self):
+        """G-13: agentic CLOSE does not use the legacy close error; independent
+        clarification protection still rejects manual --auto-pass."""
         self._init(rows_spec=self._make_close_rows(), mode="agentic")
         # 093 F-001: TASK 사용자 확인 행은 전 모드 pending으로 초기화된다.
         # CLOSE 직전 사용자 확인 행이므로 훅이 자동 승인하지 않는다(DEC-D) — 캡틴 승인 필수.
         self._mark(1, owner="user")
+        before = (self.task_path / "state.json").read_bytes()
         # CLOSE 첫 행에 auto-pass 시도
         with _mock_now():
             args = make_args(
@@ -1734,8 +1741,10 @@ class TestG13CloseGate(BaseTestCase):
                 row=2, done=True, auto_pass=True,
             )
             exit_code, result = self._call_cmd(ST.cmd_mark, args)
-        self.assertEqual(exit_code, 1)
-        self.assertEqual(result.get("error"), "agentic_close_gate_requires_user")
+        self.assertEqual(exit_code, 1, result)
+        self.assertEqual(result.get("error"), "clarification_gate_unmet", result)
+        self.assertNotEqual(result.get("error"), "agentic_close_gate_requires_user", result)
+        self.assertEqual((self.task_path / "state.json").read_bytes(), before)
 
     def test_g13_force_bypass_decision_log(self):
         """G-13: --force 우회 시 의사결정 로그 자동 기재 (PLAN §2.17 트리거 #8)"""
@@ -2533,8 +2542,9 @@ class TestConflictConstraints(BaseTestCase):
         self.assertEqual(exit_code, 1)
         self.assertEqual(result.get("error"), "note_required_for_force")
 
-    def test_c6_agentic_auto_pass_close_first_row(self):
-        """C-6 모드 제약: agentic + CLOSE 첫 행 + auto-pass → agentic_close_gate_requires_user (PLAN §2.19 C-6)"""
+    def test_c6_agentic_auto_pass_close_first_row_preserves_clarification_guard(self):
+        """C-6: the obsolete close-gate rejection is removed without weakening the
+        clarification guard for manual --auto-pass."""
         rows = json.dumps([
             {"stage": "TASK",  "item": "사용자 확인"},
             {"stage": "CLOSE", "item": "State Gate"},
@@ -2542,14 +2552,17 @@ class TestConflictConstraints(BaseTestCase):
         self._init(rows_spec=rows, mode="agentic", force=True, note="재초기화")
         # 093 F-001/F-002: 사용자 확인 행은 pending 초기화 + CLOSE 직전이라 훅 제외(DEC-D)
         self._mark(1, owner="user")
+        before = (self.task_path / "state.json").read_bytes()
         with _mock_now():
             args = make_args(
                 task_path=str(self.task_path),
                 row=2, done=True, auto_pass=True,
             )
             exit_code, result = self._call_cmd(ST.cmd_mark, args)
-        self.assertEqual(exit_code, 1)
-        self.assertEqual(result.get("error"), "agentic_close_gate_requires_user")
+        self.assertEqual(exit_code, 1, result)
+        self.assertEqual(result.get("error"), "clarification_gate_unmet", result)
+        self.assertNotEqual(result.get("error"), "agentic_close_gate_requires_user", result)
+        self.assertEqual((self.task_path / "state.json").read_bytes(), before)
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -5798,8 +5811,7 @@ class TestTaskStepAddressing(BaseTestCase):
         self.assertEqual(data.get("error"), "task_step_addr_conflict")
 
     def test_close_gate_regression_via_task_step_addressing_subprocess(self):
-        """[T070/S-13, H-7] agentic CLOSE 첫 행을 --task-step 주소로 --auto-pass 시도 →
-        agentic_close_gate_requires_user 거부가 유지되어야 한다(item 한글 판정 불변, R-A5).
+        """[T070/S-13, H-7] agentic CLOSE first row reaches mode-aware auto entry by task-step.
         subprocess 실호출.
 
         [PM 승인 정정] 최초 버전은 `--rows-spec`(inline JSON — key 미부여 경로)으로
@@ -5823,8 +5835,9 @@ class TestTaskStepAddressing(BaseTestCase):
         # row 8(execute.user_confirm)은 CLOSE 직전 행이라 훅이 손대지 않으며(DEC-D 1차 방어)
         # 캡틴 승인(--owner user)이 필수다. 나머지(1,3,4,6,7)만 mark.
         for rid in (1, 3, 4, 6, 7):
+            extra = ["--worker-duration-unknown"] if rid in (3, 6) else []
             code, stdout, stderr, data = _run070(
-                ["mark", str(agentic_task), "--row", str(rid), "--done"]
+                ["mark", str(agentic_task), "--row", str(rid), "--done", *extra]
             )
             self.assertEqual(code, 0, f"사전 행 {rid} mark 실패: {stdout!r}")
 
@@ -5841,9 +5854,8 @@ class TestTaskStepAddressing(BaseTestCase):
             "--task-step", "close.done_md",
             "--done", "--auto-pass",
         ])
-        self.assertEqual(code, 1, f"agentic CLOSE 첫 행 auto-pass가 거부되어야 함 (stdout={stdout!r})")
-        self.assertEqual(data.get("error"), "agentic_close_gate_requires_user",
-                         f"CLOSE 게이트 회귀 — 실제 응답: {data!r} (stdout={stdout!r})")
+        self.assertEqual(code, 0, f"agentic CLOSE 첫 행 auto-pass가 통과해야 함 (stdout={stdout!r})")
+        self.assertTrue(data.get("ok"), f"CLOSE 게이트 회귀 — 실제 응답: {data!r}")
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -8358,10 +8370,8 @@ class TestT093AutoApproveHook(_T093Base):
 class TestT093AutoApproveBoundary(_T093Base):
     """F-002 CLOSE·워커 구조적 제외 + F-003 경계 불변 + F-004 전용 에러."""
 
-    def test_close_entry_does_not_auto_approve_T093_L2_GOAL(self):
-        """[T093/L2-GOAL] S-6 — agentic에서 TEST 사용자 확인 행을 pending으로 둔 채
-        CLOSE 첫 행 mark → 차단(exit 1) + 파일 재로드 시 그 행이 여전히 pending.
-        이후 --owner user로 승인하면 CLOSE 진입이 정상 통과(DEC-D 1차 방어)."""
+    def test_close_entry_auto_approves_in_agentic_mode_T093_L2_GOAL(self):
+        """[T093/L2-GOAL] S-6 — agentic CLOSE entry atomically approves its prior confirmation."""
         d = self._task_dir("s6-close")
         self._init(d, "agentic", rows_spec=_t093_json([
             {"stage": "TEST",  "item": "작업"},
@@ -8376,31 +8386,24 @@ class TestT093AutoApproveBoundary(_T093Base):
                          "S-6 전제: TEST 사용자 확인 행은 init 직후 pending이어야 한다")
 
         code, stdout, stderr, data = self._mark(d, 3)
-        self.assertEqual(code, 1, f"S-6 CLOSE 첫 행 mark가 차단되지 않음 (stdout={stdout!r})")
+        self.assertEqual(code, 0, f"S-6 CLOSE 첫 행 mark가 통과하지 않음 (stdout={stdout!r})")
         r2 = self._row(d, 2)
-        self.assertEqual(r2["status"], "pending",
-                         f"S-6 훅이 CLOSE 진입 경로에서 앞 행을 승인함 — {r2!r}")
-        self.assertNotEqual(r2.get("owner"), "auto")
-
-        self._assert_ok(self._mark(d, 2, "--owner", "user"), "S-6 캡틴 승인")
-        self._assert_ok(self._mark(d, 3), "S-6 CLOSE 재진입")
+        self.assertEqual(r2["status"], "done", r2)
+        self.assertEqual(r2.get("owner"), "auto", r2)
         self.assertEqual(self._row(d, 3)["status"], "done")
 
-    def test_close_first_row_auto_pass_denied_T093_L1_F3(self):
-        """[T093/L1-F3] S-7 — agentic·semi-agentic 모두 CLOSE 첫 행
-        mark --done --auto-pass가 agentic_close_gate_requires_user로 거부(exit 1).
-        에러 코드 문자열까지 대조."""
+    def test_close_first_row_auto_pass_allowed_T093_L1_F3(self):
+        """[T093/L1-F3] S-7 — autonomous modes accept CLOSE auto-pass."""
         for mode in ("agentic", "semi-agentic"):
             with self.subTest(mode=mode):
                 d = self._init_b(mode, name=f"s7-{mode}")
                 self._assert_ok(self._mark(d, 1), "prep row1")
                 self._assert_ok(self._mark(d, 2, "--owner", "user"), "prep row2")
-                self._assert_ok(self._mark(d, 3), "prep row3")
+                self._assert_ok(self._mark(d, 3, "--worker-duration-unknown"), "prep row3")
                 self._assert_ok(self._mark(d, 4, "--auto-pass"), "prep row4")
                 code, stdout, stderr, data = self._mark(d, 5, "--auto-pass")
-                self.assertEqual(code, 1, f"S-7/{mode} 미차단 (stdout={stdout!r})")
-                self.assertEqual(data.get("error"), "agentic_close_gate_requires_user",
-                                 f"S-7/{mode} 에러 코드 회귀 — {data!r}")
+                self.assertEqual(code, 0, f"S-7/{mode} CLOSE auto-pass가 통과하지 않음 (stdout={stdout!r})")
+                self.assertTrue(data.get("ok"), f"S-7/{mode} mode-aware CLOSE 회귀 — {data!r}")
 
     def test_worker_path_hook_disabled_T093_L2_GOAL(self):
         """[T093/L2-GOAL] S-8 — --as-worker --worker-stage EXECUTE 경로에서 앞 단계
@@ -8506,8 +8509,8 @@ class TestT093AutoApproveBoundary(_T093Base):
         ("B-5", 4, "semi-agentic", 0, None),
         ("B-6", 4, "agentic",      0, None),
         ("B-7", 5, "interactive",  1, "close_gate_violation"),
-        ("B-8", 5, "semi-agentic", 1, "agentic_close_gate_requires_user"),
-        ("B-9", 5, "agentic",      1, "agentic_close_gate_requires_user"),
+        ("B-8", 5, "semi-agentic", 0, None),
+        ("B-9", 5, "agentic",      0, None),
     ]
 
     def test_boundary_table_a_mark_auto_pass_T093_L1_F3(self):
@@ -8519,7 +8522,7 @@ class TestT093AutoApproveBoundary(_T093Base):
                 self._assert_ok(self._mark(d, 1), f"{cell} prep row1")
                 if target >= 4:
                     self._assert_ok(self._mark(d, 2, "--owner", "user"), f"{cell} prep row2")
-                    self._assert_ok(self._mark(d, 3), f"{cell} prep row3")
+                    self._assert_ok(self._mark(d, 3, "--worker-duration-unknown"), f"{cell} prep row3")
                 if target >= 5:
                     self._assert_ok(self._mark(d, 4, "--auto-pass"), f"{cell} prep row4")
 
@@ -8929,9 +8932,9 @@ class TestT093SingleDecisionSource(unittest.TestCase):
         fn = getattr(ST, self._FN, None)
         self.assertIsNotNone(fn, f"판정 함수 {self._FN} 부재 (F-003 미구현)")
         cases = [
-            ("CLOSE",   "interactive",  (False, "close_requires_user")),
-            ("CLOSE",   "semi-agentic", (False, "close_requires_user")),
-            ("CLOSE",   "agentic",      (False, "close_requires_user")),
+            ("CLOSE",   "interactive",  (False, "interactive_requires_user")),
+            ("CLOSE",   "semi-agentic", (True,  None)),
+            ("CLOSE",   "agentic",      (True,  None)),
             ("TASK",    "interactive",  (False, "interactive_requires_user")),
             ("TASK",    "semi-agentic", (False, "semi_agentic_pre_execute")),
             ("TASK",    "agentic",      (True,  None)),
@@ -9089,11 +9092,8 @@ class TestR11CloseGateFallback(_T093Base):
             self._assert_ok(self._mark_key(d, key), f"S-35 prep {key}")
         return d
 
-    def test_opgc_close_fallback_owner_axis_and_opd_control_S35(self):
-        """S-35 — 확인 행이 없는 opgc는 CLOSE 첫 행 자체가 소유자 승인 지점이 된다.
-        ① --owner user 있으면 ok:true(--force 불요) ② 없으면 close_gate_violation
-        ③ 대조군 — 확인 행이 있는 opd는 기존 prev_user_row 검증 경로가 그대로 동작
-        (폴백이 기존 게이트를 무력화하지 않음)."""
+    def test_opgc_and_opd_close_entry_are_mode_aware_S35(self):
+        """S-35 — agentic CLOSE entry proceeds with or without a confirmation row."""
         with self.subTest(case="opgc-owner-user-passes-without-force"):
             d = self._opgc_ready("s35-owner-user")
             code, stdout, stderr, data = self._mark_key(d, "close.done_md", "--owner", "user")
@@ -9102,12 +9102,11 @@ class TestR11CloseGateFallback(_T093Base):
                 f"(폴백 미구현 — --force 없이는 영구 데드락) — {stdout!r}")
             self.assertEqual(data.get("status"), "done", f"S-35 {data!r}")
 
-        with self.subTest(case="opgc-without-owner-still-denied"):
+        with self.subTest(case="opgc-without-owner-proceeds"):
             d2 = self._opgc_ready("s35-no-owner")
             code, stdout, stderr, data = self._mark_key(d2, "close.done_md")
-            self.assertEqual(code, 1,
-                f"S-35 --owner user 없이 통과됨 — 폴백이 게이트를 무력화함 — {stdout!r}")
-            self.assertEqual(data.get("error"), "close_gate_violation", f"S-35 {data!r}")
+            self.assertEqual(code, 0, f"S-35 agentic opgc CLOSE가 진행하지 못함 — {stdout!r}")
+            self.assertTrue(data.get("ok"), data)
 
         with self.subTest(case="opd-control-prev-user-row-path-unaffected"):
             d3 = self._task_dir("s35-opd-control")
@@ -9119,13 +9118,13 @@ class TestR11CloseGateFallback(_T093Base):
                     r["status"] = "done"
                     r["status_label"] = "✅"
                     r["owner"] = "auto"
+                    if r.get("item") != "사용자 확인":
+                        r["worker_duration_unknown"] = True
             state_path.write_text(json.dumps(state, ensure_ascii=False, indent=2),
                                   encoding="utf-8")
             code, stdout, stderr, data = self._mark_key(d3, "close.done_md")
-            self.assertEqual(code, 1,
-                f"S-35 대조군 — 확인 행이 있는 opd(test.user_confirm owner=auto)에서도 "
-                f"CLOSE 게이트가 무력화됨(G-2 회귀) — {stdout!r}")
-            self.assertEqual(data.get("error"), "close_gate_violation", f"S-35 대조군 {data!r}")
+            self.assertEqual(code, 0, f"S-35 agentic opd CLOSE가 진행하지 못함 — {stdout!r}")
+            self.assertTrue(data.get("ok"), data)
 
 
 class TestR11DerivedSignals(_T093Base):
@@ -9159,8 +9158,8 @@ class TestR11DerivedSignals(_T093Base):
 
     def test_agentic_next_action_suppresses_hollow_confirmation_S36(self):
         """S-36 — agentic opd 16행 전 구간에서 next_action이 '사용자 확인'을 가리키지
-        않는다. 단, CLOSE 진입 직전(test.user_confirm, id15)은 실제 승인 필요 지점이므로
-        예외. 대조군 — interactive 모드는 확인 프론티어를 정상적으로 노출해야 한다
+        않는다. CLOSE 직전(test.user_confirm)도 자동 진입 경계이므로 다음 CLOSE 행을
+        가리킨다. 대조군 — interactive 모드는 확인 프론티어를 정상적으로 노출해야 한다
         (과잉 억제 방지)."""
         d = self._opd_task("s36-agentic")
         steps = [
@@ -9192,12 +9191,11 @@ class TestR11DerivedSignals(_T093Base):
                       if k != "test.pm_gate" and na and "사용자 확인" in na}
             self.assertEqual(hollow, {}, f"S-36 헛 확인 잔존(자동 승인 예정 행이 노출됨) — {hollow!r}")
 
-        with self.subTest(check="close-adjacent-exception-preserved"):
+        with self.subTest(check="close-adjacent-confirmation-is-suppressed"):
             na = captured["test.pm_gate"]
             self.assertIsNotNone(na, "S-36 test.pm_gate 이후 next_action 미획득")
-            self.assertIn("사용자 확인", na,
-                          "S-36 CLOSE 진입 직전(test.user_confirm) 노출이 과잉 억제됨 — "
-                          "실제 승인이 필요한 유일 지점이다")
+            self.assertIn("CLOSE DONE.md 생성", na,
+                          "S-36 agentic CLOSE 직전 확인 행이 자동 진입 경로를 가리키지 않음")
 
         with self.subTest(check="interactive-control-still-shows-confirmation"):
             d2 = self._opd_task("s36-interactive", mode="interactive")
@@ -11107,7 +11105,7 @@ class TestT111SdlcV2StateContracts(_T093Base):
         self.assertEqual(tuple(ST.can_auto_approve_user_confirmation("EXECUTE", "semi-agentic")),
                          (True, None))
         self.assertEqual(tuple(ST.can_auto_approve_user_confirmation("CLOSE", "agentic")),
-                         (False, "close_requires_user"))
+                         (True, None))
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -11849,4 +11847,3 @@ class TestT132OppbSpecValidateSkillEnum(unittest.TestCase):
             "spec_skill_invalid", codes,
             f"미지정 skill 'nope'인데 spec_skill_invalid 없음(회귀 실패): {data.get('violations')}",
         )
-

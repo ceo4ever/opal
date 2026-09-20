@@ -820,10 +820,10 @@ OPAL Pilot은 **사용자 검토**와 **PM 자율** 사이의 균형을 작업�
 | 모드 | 호출 | 동작 |
 |------|------|------|
 | `interactive` | `//opp --interactive {작업}` | 모든 단계 게이트마다 사용자 승인 필요 — 가장 보수적 |
-| `semi-agentic` (**기본**) | `//opp {작업}` (플래그 없음) 또는 `//opp --semi-agentic {작업}` | PLAN까지 사용자 검토, EXECUTE 이후 PM 자율, **CLOSE 진입 사용자 승인 필수** |
-| `agentic` | `//opp --agentic {작업}` | 전 단계 PM 자율 통과 — CLOSE 진입만 사용자 승인 필수 |
+| `semi-agentic` (**기본**) | `//opp {작업}` (플래그 없음) 또는 `//opp --semi-agentic {작업}` | PLAN-equivalent 사용자 승인 뒤 EXECUTE·TEST/VERIFY·CLOSE final까지 PM 자율 |
+| `agentic` | `//opp --agentic {작업}` | 정상 전 구간과 CLOSE final까지 PM 자율 |
 
-> 모든 Pilot(`opds` / `opd` / `opdw` / `opp` / `opsdd` / `opwt` / `oppd`)에 동일하게 적용된다.
+> 적용 Pilot의 CLOSE 전이는 `harness/modes.md` §CLOSE 전이 계약이 소유한다. interactive만 명시 사용자 승인을 유지하며, 확인 행 없는 opgc도 semi-agentic·agentic에서는 자동 CLOSE로 진행한다. OPPB P5 merge gate와 merge/push/deploy/worktree 제거는 별도 사용자 권한 경계다.
 
 **자율 실행 (semi-agentic / agentic) 동작**:
 - 각 단계 완료 후 PM이 품질을 자체 검토하고 다음 단계로 진행

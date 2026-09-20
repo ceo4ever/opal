@@ -184,11 +184,17 @@ class ModeResolutionCliContractTest(unittest.TestCase):
                 )
                 self._mark(task, 1)
                 self._assert_ok(self._run("resolve-mode", str(task)))
+                if mode == "semi-agentic":
+                    self._mark(task, 2, "--owner", "user")
                 completed, payload = self._run(
                     "advance", str(task), "--task-step-id", "3",
                 )
-                self.assertEqual(completed.returncode, 1, payload)
-                self.assertEqual(payload and payload.get("error"), "close_gate_violation")
+                self.assertEqual(completed.returncode, 0, payload)
+                self.assertTrue(payload and payload.get("ok"), payload)
+                self.assertEqual(
+                    payload and payload.get("auto_approved"),
+                    [] if mode == "semi-agentic" else [2],
+                )
 
     def test_s4_invalid_legacy_modes_resolve_fail_closed_without_mutation(self):
         invalid_values = ("missing", None, 7, "", "future-mode")

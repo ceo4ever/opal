@@ -210,8 +210,8 @@ OPAL 본체(스킬·에이전트·도구·하네스)를 작성할 때 따라야 
 - 사용자가 명시적으로 "승인", "진행해", "구현해" 등의 실행 허가를 내리기 전까지 코드를 작성하거나 파일을 생성·수정하지 않는다.
   - 허용: 산출물 문서(.md) 작성, QA 에이전트 호출, 코드베이스 읽기·분석
   - 금지(승인 전): 소스 코드 파일 생성·수정, 패키지 설치, 설정 파일 수정
-- CLOSE 단계 진입 직전에는 사용자의 명시적 확인(`승인`/`확인`/`확인완료`)이 반드시 있어야 한다 (agentic/semi-agentic 모드에서도 유지).
-- 근거: `opal/core/references/harness/guards.md` §구현 금지 원칙·§CLOSE 진입 게이트
+- CLOSE 첫 행은 `state-tool`의 mode-aware 전이만 따른다. interactive 또는 invalid mode는 명시 사용자 승인(`--owner user`)이 필요하고, semi-agentic은 PLAN-equivalent 승인 뒤, agentic은 정상 전 구간에서 필수 검증 통과·실제 미해결 이슈 부재 시 `close.final`까지 자동 진행한다.
+- 근거: `opal/core/references/harness/guards.md` §구현 금지 원칙·§CLOSE 진입 게이트, `harness/modes.md` §CLOSE 전이 계약
 
 ### 디스패치 의무
 
@@ -242,7 +242,7 @@ OPAL 본체(스킬·에이전트·도구·하네스)를 작성할 때 따라야 
 - Pilot의 신규 시작·재개 mode는 `state-tool resolve-mode` 하나로 판정한다. 우선순위는 명시 플래그 > 유효한 저장 mode > 신규 태스크 semi-agentic 기본값이며, invalid 기존 mode는 interactive fail-closed, malformed JSON은 차단한다. 브리프 문구나 LLM 기억으로 mode를 다시 정하지 않는다.
 - 단계 경계의 런타임 행동은 `state-tool`이 내보내는 `transition_action`(`continue`/`await_user`/`blocked`/`complete`), `report_type`(`progress_report`/`decision_request`), `next_action`으로만 판정한다. `progress_report`는 비차단 보고이며 `decision_request`만 사용자 응답 대기를 뜻한다. interactive는 일반 단계 경계마다 사용자 확인, semi-agentic은 Pilot별 `transition_contract.semi_agentic_boundary` 이전 검토 경계, agentic은 공통 예외 외 자동 계속을 기본값으로 한다.
 - **PM Gate 정의의 SSOT는 pilot `references/pipeline.json`의 `task_steps[].gate`**(`artifacts`·`checklist`)다 — SKILL.md에 산출물·체크리스트를 표로 중복 게재하지 않는다. `mark`가 `artifacts` 존재를 결정론 검증하여 미충족 시 `gate_artifact_missing`으로 거부하고, 통과 시 `checklist`를 stdout `gate_checklist`로 반환한다. `artifacts`에는 **해당 게이트 시점에 반드시 존재하는 태스크 폴더 기준 상대 경로/글롭만** 올린다 — 조건부 산출물·논리 개념은 `checklist`에 문안으로 둔다(잘못 올리면 그 게이트가 영구 차단된다). `--force --note`로 우회하면 STATE.md 의사결정 로그에 `gate_artifact_force`가 강제 기록된다 (091).
-- 파이프라인 "사용자 확인" 행은 전 모드 `pending / owner=PM`으로 초기화되며, 다음 단계 진입 시 `state-tool`이 자동 승인한다(`done / owner=auto / timestamp`). 자동 승인 불가 구간(CLOSE 직전·interactive·semi-agentic의 `MODE_BOUNDARY_STAGES`)에서는 `user_confirmation_required` 에러가 반환되며 캡틴 승인(`mark --owner user`)이 필요하다 (093). 신규 pipeline의 CLOSE는 `close.done_md` 이후 tail 행을 계속 진행하고, 명시 final 행인 `close.final` 완료 전에는 전체 완료로 판정하지 않는다.
+- 파이프라인 "사용자 확인" 행은 전 모드 `pending / owner=PM`으로 초기화되며, 다음 단계 진입 시 `state-tool`이 mode-aware로 자동 승인한다(`done / owner=auto / timestamp`). interactive와 invalid mode, semi-agentic의 PLAN-equivalent 이전 `MODE_BOUNDARY_STAGES`만 `user_confirmation_required`와 `mark --owner user`를 유지한다. semi-agentic은 PLAN-equivalent 승인 뒤, agentic은 정상 전 구간에서 확인 행 유무와 관계없이 CLOSE로 진행하며 `close.final` 완료 전에는 전체 완료로 판정하지 않는다. `progress_report + continue`는 보고 후 계속하고 실제 미해결 이슈만 `await_user|blocked` / `decision_request`로 대기한다.
 - 근거: `opal/core/references/harness/state.md`
 
 ### 도구 우선 원칙

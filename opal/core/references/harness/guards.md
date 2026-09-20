@@ -51,8 +51,9 @@ legacy TASK는 기존 `## 명확화 결과` 기반 검증을 재개 호환으로
 
 ## CLOSE 진입 게이트
 
-사용자의 확인된 지시(`승인`, `확인`, `확인완료` 등 명시적 표현)가 없으면 CLOSE 단계 진입 불가다.
-이 규칙은 agentic 모드에서도 유지된다. 다른 Gate는 PM 자율 통과를 허용할 수 있지만 CLOSE 진입은 예외다.
+`harness/modes.md` §CLOSE 전이 계약의 effective mode 판정이 CLOSE 첫 행을 집행한다. `interactive`와 invalid stored mode(`fail_closed`)만 직전 사용자 확인을 `owner=user/status=done`으로 명시 승인해야 한다. `semi-agentic`은 PLAN-equivalent 승인 뒤, `agentic`은 정상 전 구간에서 필수 검증 통과와 실제 미해결 이슈 부재 시 사용자 확인 행 유무와 무관하게 자동 진입한다.
+
+자동 CLOSE는 태스크 내부 state 전이 권한만 다룬다. 사용자 선택, 사람 전용 검증, 권한 부족, 보안·데이터 손실 위험, 재시도 상한 초과는 계속 `await_user|blocked` / `decision_request`로 올린다. 아래 커밋 규칙과 외부 행동 승인 경계는 mode와 무관하게 유지한다.
 
 ## 커밋 규칙
 
@@ -62,13 +63,13 @@ legacy TASK는 기존 `## 명확화 결과` 기반 검증을 재개 호환으로
 
 - 현재 세션이 registry의 canonical task와 worktree를 1:1로 소유하고, 현재 브랜치가 registry에 기록된 worktree branch와 일치해야 한다.
 - `agentic` 모드는 사용자 판단이 필요한 미해결 사항이 없고 해당 단계의 필수 Gate·검증이 통과한 안정 경계에서 PM이 worktree 브랜치 커밋을 자율 수행할 수 있다.
-- `interactive` 모드는 기존 각 단계 사용자 승인이 그 단계 산출물의 worktree 체크포인트 커밋 승인도 겸한다. `semi-agentic`은 PLAN-equivalent 사용자 승인 뒤 명세 체크포인트를 만들고, EXECUTE·TEST에서는 자율 커밋하지 않으며, 기존 CLOSE 진입 승인이 누적 구현·테스트 체크포인트와 그 승인 범위 안의 CLOSE/finalize 최종 체크포인트를 허용한다. 어느 모드에도 새 사용자 Gate를 추가하지 않는다.
+- `interactive` 모드는 기존 각 단계 사용자 승인이 그 단계 산출물의 worktree 체크포인트 커밋 승인도 겸한다. `semi-agentic`은 PLAN-equivalent 사용자 승인 뒤 명세 체크포인트를 만들고, EXECUTE·TEST에서는 자율 커밋하지 않으며, 자동 CLOSE 진입은 누적 구현·테스트 체크포인트를 커밋할 별도 권한을 부여하지 않는다. 어느 모드에도 새 사용자 Gate를 추가하지 않는다.
 - 일시적 오류나 검증 실패는 권한 범위 안에서 보정하고 재검증한다. 보정 뒤 필수 검증이 통과하면 사용자에게 중간 결정을 요구하지 않고 커밋 후 다음 단계로 진행한다.
 - unresolved 실패, 계약 충돌, 사용자 선택 필요, 재시도 한도 초과 상태는 커밋하지 않고 해당 승인·에스컬레이션 경계를 따른다.
 - 커밋에는 해당 canonical task와 worktree 세션이 소유한 변경만 포함한다. 다른 태스크·허브 working tree 변경을 stage하거나 커밋하지 않는다.
 - 성공한 체크포인트의 commit SHA를 task lifecycle 기록에 남긴다. 이미 생성한 체크포인트는 자동 amend·rebase·reset으로 재작성하지 않고 보정 커밋을 추가한다.
 
-체크포인트는 모든 state 행마다 만드는 것이 아니라, 모드가 허용한 명세 Gate, 검증된 독립 구현 단위, 전체 회귀와 CLOSE/finalize처럼 재개 가능한 안정 경계에서만 만든다. semi-agentic의 EXECUTE·TEST 안정 경계는 커밋 조건이 아니라 누적 시점이며 기존 CLOSE 승인 전에는 커밋하지 않는다. `main`·기본 브랜치로의 merge와 그에 수반되는 merge commit은 항상 별도 사용자 승인 후 허브에서 수행한다.
+체크포인트는 모든 state 행마다 만드는 것이 아니라, 모드가 허용한 명세 Gate, 검증된 독립 구현 단위, 전체 회귀와 CLOSE/finalize처럼 재개 가능한 안정 경계에서만 만든다. semi-agentic의 EXECUTE·TEST 안정 경계는 커밋 조건이 아니라 누적 시점이다. `main`·기본 브랜치로의 merge와 그에 수반되는 merge commit은 항상 별도 사용자 승인 후 허브에서 수행한다.
 
 ## 자동 루핑 제약 (Verification Loop Guards)
 
@@ -93,4 +94,4 @@ legacy TASK는 기존 `## 명확화 결과` 기반 검증을 재개 호환으로
 > **워커 비정상 종료 행 보충**: 동일 컨텍스트 재개가 같은 지점에서 재실패하면 재시도를 즉시 중단한다(관측: 재개 3회가 전부 동일 지점에서 재실패). 중단 후 실제 산출물을 확정하고 잔여만 재배치하는 절차는 `harness/pm-review-gate.md` §워커 중단 시 산출물 실측 판정을 따른다. 본 표는 재시도 수치만 소유하고 절차·분할 기준을 재서술하지 않는다.
 
 - **회귀 방지**: 자동 수정 후 이전 통과 테스트를 재실행한다. 회귀 발생 시 루프 즉시 중단 + 에스컬레이션
-- **사용자 게이트 유지**: 루핑은 agentic이지만 최종 확정은 반드시 사용자를 거친다
+- **사용자 게이트 유지**: 루핑 중 실제 미해결 이슈와 별도 권한 행동만 사용자 에스컬레이션한다. mode별 CLOSE 전이는 `harness/modes.md` §CLOSE 전이 계약을 따른다.
