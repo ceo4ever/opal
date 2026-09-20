@@ -68,6 +68,7 @@ def make_args(**kwargs):
         "tags": None,
         "sources": None,
         "related": None,
+        "fix": False,
         # add-page 미실체 게이트 (071) — body_file 미지정 시 기존 템플릿 본문 경로(하위호환)
         "note": None,
         "body_file": None,
@@ -306,6 +307,7 @@ class TestAddPage(BrainTestCase):
         text = page_file.read_text(encoding="utf-8")
         fm, _ = BT.parse_frontmatter(text)
         self.assertEqual(fm.get("related"), ["state-tool", "brain-tool"])
+        self.assertIn("related: [state-tool, brain-tool]", text)
 
     def test_add_page_without_related_keeps_default(self):
         """053 R-4: --related 미지정 시 템플릿 기본값(related: []) 유지(기존 동작 불변)."""
@@ -314,6 +316,7 @@ class TestAddPage(BrainTestCase):
         text = page_file.read_text(encoding="utf-8")
         fm, _ = BT.parse_frontmatter(text)
         self.assertEqual(fm.get("related"), [], f"related 미지정 시 템플릿 기본값이 변경됨: {fm.get('related')}")
+        self.assertIn("related: []", text)
 
     def test_add_synthesis_page(self):
         """add-page synthesis: 정상 생성 확인."""
@@ -2328,6 +2331,7 @@ class TestUpdatePage(BrainTestCase):
         fm, _ = BT.parse_frontmatter(self.page.read_text(encoding="utf-8"))
         self.assertEqual(fm["related"], ["other-page"],
                          f"related가 평탄 리스트로 기록되지 않음: {fm['related']!r}")
+        self.assertIn("related: [other-page]", self.page.read_text(encoding="utf-8"))
         self.assertIn("related", result["updated_fields"])
 
     def test_created_preserved_and_updated_bumped(self):
@@ -2422,9 +2426,50 @@ class TestLintFrontmatterInvalid(BrainTestCase):
             encoding="utf-8",
         )
 
-    def _lint(self):
-        args = make_args(brain_path=str(self.brain_root))
+    def _lint(self, fix=False):
+        args = make_args(brain_path=str(self.brain_root), fix=fix)
         return self._call(BT.cmd_lint, args)
+
+    def test_block_related_surfaces_as_frontmatter_invalid(self):
+        """의미상 평탄 리스트여도 블록 표기는 운영 호환성 위반으로 검출한다."""
+        self._write_raw("block-rel", "related:\n  - page-a\n  - page-b\n")
+        before = (self.brain_root / "pages" / "concept" / "block-rel.md").read_text(
+            encoding="utf-8"
+        )
+
+        _, result = self._lint()
+
+        matching = [
+            issue for issue in result["issues"]
+            if issue["kind"] == "frontmatter_invalid"
+            and issue["page"] == "block-rel"
+            and "inline array syntax" in issue["detail"]
+        ]
+        self.assertEqual(len(matching), 1, result["issues"])
+        after = (self.brain_root / "pages" / "concept" / "block-rel.md").read_text(
+            encoding="utf-8"
+        )
+        self.assertEqual(after, before, "기본 lint가 파일을 수정함")
+        self.assertEqual(result["fixed_count"], 0)
+
+    def test_lint_fix_rewrites_only_valid_block_related(self):
+        """명시적 --fix는 평탄한 블록 related를 인라인 배열로 교정하고 본문을 보존한다."""
+        self._write_raw("block-rel", "related:\n  - page-a\n  - page-b\n")
+
+        _, result = self._lint(fix=True)
+
+        text = (self.brain_root / "pages" / "concept" / "block-rel.md").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("related: [page-a, page-b]", text)
+        self.assertIn("## 개념 요약\n\n본문.", text)
+        self.assertEqual(result["fixed"], ["block-rel"])
+        self.assertEqual(result["fixed_count"], 1)
+        remaining = [
+            issue for issue in result["issues"]
+            if issue["page"] == "block-rel" and "inline array syntax" in issue["detail"]
+        ]
+        self.assertEqual(remaining, [])
 
     def test_nested_related_surfaces_as_frontmatter_invalid(self):
         """중첩 리스트 related는 frontmatter_invalid로 나온다 — 실제 붕괴 형태 재현."""

@@ -3,7 +3,7 @@
   "module": "brain_tool",
   "layer": "util",
   "domain": "opal-brain",
-  "description": "OPAL Project Brain 지식 위키 결정론적 집행 CLI — 11개 서브 명령(init/add-page/update-page/index/log/search/sync-header/lint/validate/analyze/ingest-scan). index/log/링크 무결성을 brain-tool이 집행(LLM 직접 편집 금지). 페이지 타입은 SCHEMA §1.5·init의 schema-template.md에서 동적 로드(하드코딩 없음). frontmatter 파싱은 PyYAML, KST 타임스탬프는 date.js subprocess. sync-header는 code-scan @header → brain entity frontmatter 단방향 동기화만 수행. analyze는 code-scan @header 정량 집계 → JSON. ingest-scan은 docs/skills/tasks 목록 반환. lint는 term 일관성 위반 2종(term_duplicate·alias_collision)과 frontmatter_invalid kind(validate_frontmatter를 lint 경로에서도 호출하며 related 붕괴 페이지의 missing_link 중복 보고를 억제)를 판정하고, speculative kind를 SPECULATIVE_MARKERS 구조적 헤딩 탐지로 검사한다. search는 draft 필터(--include-draft, R-6 term 한정)를 지원한다. validate_frontmatter는 선택 필드(tags/sources/related)의 평탄성(flat string[])을 검사해 중첩 리스트·비문자열 요소를 frontmatter_invalid violation으로 집행하고, 링크필드(related) 값을 검사해 '[[', ']]', '.md' 포함 슬러그를 frontmatter_invalid로 집행한다. add-page는 --related(CSV→평탄 리스트) 플래그와 미실체 거부 게이트(--body-file/--force/--note, speculative_content)를 갖는다. update-page는 기존 페이지 갱신 도구 경로다(부분 갱신·created 보존·updated 자동). 루트는 용도별로 분리한다(계약 SSOT: opal/core/references/harness/worktree.md §task root와 allocator root 계약): 조회의 cwd 파생 경로 조립 지점(_load_code_scan_json·ingest-scan 스캔 루트·--brain-path 기본값)은 _task_root_cwd()로 cwd 작업본(task_root) 기준으로 해석하며 허브로 수렴하지 않는다. 회고적 학습 쓰기(add-page·update-page)는 require_write_root/finalize_brain_root가 명시 allocator_root(허브 절대 경로)만 받고 cwd 추론을 거부한다(allocator_root_required). --brain-path 명시값은 _DefaultBrainPath 센티넬로 기본값과 구분해 cwd 파생 해석 대상에서 제외한다.",
+  "description": "OPAL Project Brain 지식 위키 결정론적 집행 CLI — 11개 서브 명령(init/add-page/update-page/index/log/search/sync-header/lint/validate/analyze/ingest-scan). index/log/링크 무결성을 brain-tool이 집행(LLM 직접 편집 금지). 페이지 타입은 SCHEMA §1.5·init의 schema-template.md에서 동적 로드(하드코딩 없음). frontmatter 파싱은 PyYAML, KST 타임스탬프는 date.js subprocess. sync-header는 code-scan @header → brain entity frontmatter 단방향 동기화만 수행. analyze는 code-scan @header 정량 집계 → JSON. ingest-scan은 docs/skills/tasks 목록 반환. lint는 term 일관성 위반 2종(term_duplicate·alias_collision)과 frontmatter_invalid kind(validate_frontmatter를 lint 경로에서도 호출하며 related 붕괴 페이지의 missing_link 중복 보고를 억제)를 판정하고, speculative kind를 SPECULATIVE_MARKERS 구조적 헤딩 탐지로 검사한다. related는 저장 시 단일행 인라인 배열(`related: []` 또는 `related: [a, b]`)로 고정하며, lint는 블록 배열 표기를 검출하고 명시적 --fix에서만 교정한다. search는 draft 필터(--include-draft, R-6 term 한정)를 지원한다. validate_frontmatter는 선택 필드(tags/sources/related)의 평탄성(flat string[])을 검사해 중첩 리스트·비문자열 요소를 frontmatter_invalid violation으로 집행하고, 링크필드(related) 값을 검사해 '[[', ']]', '.md' 포함 슬러그를 frontmatter_invalid로 집행한다. add-page는 --related(CSV→평탄 리스트) 플래그와 미실체 거부 게이트(--body-file/--force/--note, speculative_content)를 갖는다. update-page는 기존 페이지 갱신 도구 경로다(부분 갱신·created 보존·updated 자동). 루트는 용도별로 분리한다(계약 SSOT: opal/core/references/harness/worktree.md §task root와 allocator root 계약): 조회의 cwd 파생 경로 조립 지점(_load_code_scan_json·ingest-scan 스캔 루트·--brain-path 기본값)은 _task_root_cwd()로 cwd 작업본(task_root) 기준으로 해석하며 허브로 수렴하지 않는다. 회고적 학습 쓰기(add-page·update-page)는 require_write_root/finalize_brain_root가 명시 allocator_root(허브 절대 경로)만 받고 cwd 추론을 거부한다(allocator_root_required). --brain-path 명시값은 _DefaultBrainPath 센티넬로 기본값과 구분해 cwd 파생 해석 대상에서 제외한다.",
   "exports": [
     "cmd_init", "cmd_add_page", "cmd_update_page", "cmd_index", "cmd_log",
     "cmd_search", "cmd_sync_header", "cmd_lint", "cmd_validate",
@@ -405,12 +405,55 @@ def validate_frontmatter(fm, page_types=None):
     # entity 페이지는 추가 키 일부 권장 (source_ref) — 누락은 경고가 아닌 정보용으로 생략
     return issues
 
+
+class _InlineRelated(list):
+    """`related`만 YAML flow sequence로 렌더하기 위한 표식 타입."""
+
+
+class _FrontmatterDumper(yaml.SafeDumper):
+    """기본 block 스타일을 유지하면서 표식 타입만 인라인으로 쓰는 안전 Dumper."""
+
+
+def _represent_inline_related(dumper, value):
+    return dumper.represent_sequence(
+        "tag:yaml.org,2002:seq", list(value), flow_style=True
+    )
+
+
+_FrontmatterDumper.add_representer(_InlineRelated, _represent_inline_related)
+
+
+def dump_frontmatter(fm):
+    """frontmatter를 렌더한다. `related`는 운영 정본인 단일행 인라인 배열로 고정한다.
+
+    빈 값은 `related: []`, 값이 있으면 `related: [campaign, mission]` 형태다.
+    tags/sources 등 다른 배열의 스타일은 기존 SafeDumper 기본값을 유지한다.
+    """
+    rendered = dict(fm)
+    if isinstance(rendered.get("related"), list):
+        rendered["related"] = _InlineRelated(rendered["related"])
+    return yaml.dump(
+        rendered,
+        Dumper=_FrontmatterDumper,
+        allow_unicode=True,
+        sort_keys=False,
+        default_flow_style=False,
+    ).strip()
+
+
+_RELATED_INLINE_RE = re.compile(r"(?m)^related: \[[^\n]*\]\s*$")
+
+
+def related_uses_inline_array(frontmatter_text):
+    """raw frontmatter의 related가 정확한 단일행 flow sequence인지 판정한다."""
+    return bool(_RELATED_INLINE_RE.search(frontmatter_text or ""))
+
 # ─────────────────────────────────────────────────────────────────────────────
 # 페이지 스캔
 # ─────────────────────────────────────────────────────────────────────────────
 
 def scan_pages(brain_root):
-    """pages/ 하위 모든 .md 페이지를 스캔 → [{path, rel, fm, body}] 반환."""
+    """pages/ 하위 모든 .md 페이지를 스캔 → path/rel/fm/body/frontmatter_text 반환."""
     pages = []
     pages_dir = brain_root / "pages"
     if not pages_dir.exists():
@@ -418,11 +461,13 @@ def scan_pages(brain_root):
     for md_file in sorted(pages_dir.rglob("*.md")):
         text = md_file.read_text(encoding="utf-8")
         fm, body = parse_frontmatter(text)
+        match = _FRONTMATTER_RE.match(text)
         pages.append({
             "path": md_file,
             "rel":  md_file.stem,  # 파일명(확장자 제외) = 링크 키
             "fm":   fm,
             "body": body,
+            "frontmatter_text": match.group(1) if match else "",
         })
     return pages
 
@@ -635,7 +680,7 @@ def cmd_add_page(args):
         fm_tpl["speculative_override"] = True
         fm_tpl["override_note"] = args.note
 
-    fm_yaml = yaml.safe_dump(fm_tpl, allow_unicode=True, sort_keys=False, default_flow_style=False).strip()
+    fm_yaml = dump_frontmatter(fm_tpl)
     page_content = f"---\n{fm_yaml}\n---\n{body}"
     page_path.write_text(page_content, encoding="utf-8")
 
@@ -729,7 +774,7 @@ def cmd_update_page(args):
             fm["speculative_override"] = True
             fm["override_note"] = args.note
 
-    fm_yaml = yaml.safe_dump(fm, allow_unicode=True, sort_keys=False, default_flow_style=False).strip()
+    fm_yaml = dump_frontmatter(fm)
     page_path.write_text(f"---\n{fm_yaml}\n---\n{body}", encoding="utf-8")
 
     # index 재생성 (title 변경이 index에 반영되어야 한다)
@@ -1032,7 +1077,7 @@ def cmd_sync_header(args):
 
 def _rewrite_page_fm(pg, fm):
     """페이지의 frontmatter를 새 fm으로 교체 후 저장 (본문 보존)."""
-    fm_yaml = yaml.safe_dump(fm, allow_unicode=True, sort_keys=False, default_flow_style=False).strip()
+    fm_yaml = dump_frontmatter(fm)
     content = f"---\n{fm_yaml}\n---\n{pg['body']}"
     pg["path"].write_text(content, encoding="utf-8")
 
@@ -1053,6 +1098,20 @@ def cmd_lint(args):
 
     dyn_types, _type_to_cat = load_page_types(brain_root)
     pages = scan_pages(brain_root)
+    fixed = []
+    if getattr(args, "fix", False):
+        for pg in pages:
+            fm = pg["fm"] or {}
+            related = fm.get("related")
+            if (
+                isinstance(related, list)
+                and all(isinstance(item, str) for item in related)
+                and not related_uses_inline_array(pg.get("frontmatter_text", ""))
+            ):
+                _rewrite_page_fm(pg, fm)
+                fixed.append(pg["rel"])
+        if fixed:
+            pages = scan_pages(brain_root)
     page_keys = {pg["rel"] for pg in pages}
     issues = []
 
@@ -1076,6 +1135,16 @@ def cmd_lint(args):
         for fi in fm_issues:
             issues.append({"kind": "frontmatter_invalid", "page": rel, "detail": fi})
         related_broken = any("related" in fi for fi in fm_issues)
+        if (
+            not related_broken
+            and isinstance(fm.get("related"), list)
+            and not related_uses_inline_array(pg.get("frontmatter_text", ""))
+        ):
+            issues.append({
+                "kind": "frontmatter_invalid",
+                "page": rel,
+                "detail": "related must use inline array syntax: related: [] or related: [page-a, page-b]",
+            })
 
         # stale: status == stale
         if fm.get("status") == "stale":
@@ -1185,7 +1254,7 @@ def cmd_lint(args):
                             "detail": f"alias '{alias}' 정규화 충돌 — {other_rels}",
                         })
 
-    ok(command, issues=issues, issues_count=len(issues))
+    ok(command, issues=issues, issues_count=len(issues), fixed=fixed, fixed_count=len(fixed))
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 8. validate
@@ -1523,6 +1592,8 @@ def build_parser():
     # ── lint ──
     p_lint = sub.add_parser("lint", help="링크 무결성·고아·stale·근거 누락·frontmatter 위반 탐지")
     p_lint.add_argument("--brain-path", dest="brain_path", default=DEFAULT_BRAIN_PATH)
+    p_lint.add_argument("--fix", action="store_true",
+                        help="유효한 related 블록 배열을 인라인 배열로 명시적 자동 수정")
     p_lint.set_defaults(func=cmd_lint)
 
     # ── validate ──

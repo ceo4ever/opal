@@ -82,6 +82,7 @@ run.sh update-page <path> [--title ..] [--tags a,b] [--sources x,y] [--related a
 - **부분 갱신**: 지정한 필드만 바뀐다. 미지정 필드는 그대로 둔다.
 - `created`는 보존하고 `updated`만 오늘(KST)로 갱신한다.
 - `add-page`와 동일한 frontmatter 계약을 집행한다 — `related`에 `[[ ]]`·`.md`·중첩 리스트가 있으면 `frontmatter_invalid`로 거부한다.
+- `add-page`·`update-page`가 저장하는 `related`는 운영 호환 정본인 인라인 배열로 고정된다. 빈 값은 `related: []`, 값이 있으면 `related: [campaign, mission]`이다.
 - `--body-file` 지정 시에만 미실체 게이트를 재판정한다(본문이 바뀐 경우에만).
 - title 변경은 index.md에 반영된다(갱신 후 index 자동 재생성).
 - 출력: `{ok, page, type, title, updated_fields:[...], indexed:true}`
@@ -135,13 +136,14 @@ run.sh sync-header [--scope X] [--page P] [--brain-path .]
 ### 7. `lint` — 무결성 점검
 
 ```bash
-run.sh lint [--brain-path .]
+run.sh lint [--brain-path .] [--fix]
 ```
 
 고아·stale·끊어진 링크·누락 링크·근거 없는 페이지·미실체 지식을 탐지한다.
 
-- 출력: `{ok, issues:[{kind, page, detail}]}` (kind ∈ orphan/stale/broken_link/missing_link/unsourced/contradiction/speculative)
+- 출력: `{ok, issues:[{kind, page, detail}], issues_count, fixed, fixed_count}` (kind ∈ orphan/stale/broken_link/missing_link/unsourced/contradiction/speculative/frontmatter_invalid)
 - `speculative`: 미실체 마커(섹션 헤딩) 소급 검출 — `add-page` 경로와 무관하게 이미 등록된 페이지의 본문을 스캔한다. 검출까지만 수행하며 자동 삭제·수정은 하지 않는다(`speculative_override` 기재 페이지도 계속 리포트).
+- `related`가 YAML 블록 배열이면 값이 평탄하더라도 `frontmatter_invalid`로 보고한다. 기본 lint는 비파괴이며, `lint --fix`를 명시한 경우에만 유효한 블록 배열을 인라인 배열로 교정한다.
 
 ### 8. `validate` — 표준 검증
 
