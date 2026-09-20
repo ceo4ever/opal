@@ -4,7 +4,7 @@
   "mode": "agentic",
   "schema_version": "1.2",
   "created_at": "2026-09-19 14:28:42",
-  "updated_at": "2026-09-19 17:08:26",
+  "updated_at": "2026-09-20 13:25:05",
   "current_status": "done",
   "rows": [
     {
@@ -190,9 +190,9 @@
       "key": "close.retrospective",
       "status": "done",
       "status_label": "✅",
-      "timestamp": "2026-09-19 17:05:06",
+      "timestamp": "2026-09-19 18:51:36",
       "owner": "PM",
-      "note": "개선 후보 3건 fw-inbox 기록(조기 마킹·RED 원장 시점·디스패치 실측 표기). DONE.md 회고적 학습 후보를 brain page 2건으로 정정"
+      "note": "개선 후보 4건 기록 — fw 1건(RED 원장을 EXECUTE 첫 디스패치 전에 확정), local 3건(워커 디스패치 직후 마킹 금지·비차단 보고 후 턴 종료 금지·외부 CLI 플래그 실측 확인)"
     },
     {
       "row_id": 15,
@@ -201,9 +201,9 @@
       "key": "close.worktree_finalize",
       "status": "done",
       "status_label": "✅",
-      "timestamp": "2026-09-19 17:05:20",
+      "timestamp": "2026-09-19 18:51:36",
       "owner": "PM",
-      "note": "해당 없음 — --wt 미사용(허브 실행). worktree-tool status --task 145 → META_NOT_FOUND, git worktree list에 task_145 부재",
+      "note": "해당 없음 — 이 태스크는 허브 main에서 --wt 없이 수행했다. worktree finalize/attribution 대상이 아니다",
       "conditional": true
     },
     {
@@ -213,12 +213,12 @@
       "key": "close.final",
       "status": "done",
       "status_label": "✅",
-      "timestamp": "2026-09-19 17:05:31",
+      "timestamp": "2026-09-19 18:51:37",
       "owner": "PM",
       "note": "CLOSE 완료 — 제안서 아카이브 판정 자연 스킵(참조 0건)"
     }
   ],
-  "next_action": "태스크 완료",
+  "next_action": "완료",
   "run_log": {
     "contract_version": "1.0",
     "mode": "shadow",

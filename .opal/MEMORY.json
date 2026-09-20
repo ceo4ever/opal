@@ -129,6 +129,30 @@
       "status": "candidate",
       "file": "memory/태스크_140_상세_화면_공백을_배포_후에야_발견했다.md",
       "summary": "140은 슬롯 7종 파서를 만들고 화면까지 완성했으나 실 코퍼스 55건 전부에서 추출 결과가 0건이었다. 파서 테스트는 파서가 기대하는 형태의…"
+    },
+    {
+      "title": "워커 디스패치 직후 작업 행을 마킹하지 않는다",
+      "date": "2026-09-19",
+      "type": "improvement",
+      "status": "candidate",
+      "file": "memory/워커_디스패치_직후_작업_행을_마킹하지_않는다.md",
+      "summary": "145에서 PLAN 워커를 디스패치한 직후 3행을 done으로 마킹했다. 워커는 비동기로 아직 실행 중이었고, state-tool에는 ✅→⬜…"
+    },
+    {
+      "title": "비차단 보고 후 턴을 끝내지 않는다",
+      "date": "2026-09-19",
+      "type": "improvement",
+      "status": "candidate",
+      "file": "memory/비차단_보고_후_턴을_끝내지_않는다.md",
+      "summary": "agentic 모드에서 state-tool이 transition_action=continue·report_type=progress_report…"
+    },
+    {
+      "title": "디스패치 프롬프트의 외부 CLI 플래그는 실측으로 확인하고 적는다",
+      "date": "2026-09-19",
+      "type": "improvement",
+      "status": "candidate",
+      "file": "memory/디스패치_프롬프트의_외부_CLI_플래그는_실측으로_확인하고_적는다.md",
+      "summary": "145에서 PM이 워커 프롬프트에 'orca terminal read --scrollback/--lines'라고 적었으나 실제 플래그는 --c…"
     }
   ],
   "history": [

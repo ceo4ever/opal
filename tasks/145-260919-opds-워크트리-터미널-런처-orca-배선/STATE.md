@@ -1,6 +1,6 @@
 # STATE: 워크트리 전용 터미널 런처 orca 경로 배선
 
-> 최종 갱신: 2026-09-19 17:08:26
+> 최종 갱신: 2026-09-20 13:25:05
 > 파이프라인 현황(rows/상태/다음 액션)의 SSOT는 `state.json`입니다.
 > 조회: `~/.opal/tools/state-tool/run.sh show <task-path>`
 
@@ -11,6 +11,7 @@
 | 2 | 2026-09-19 14:45:51 | agentic auto-pass at row 2, item=사용자 확인 | agentic mode |
 | 3 | 2026-09-19 15:00:46 | agentic auto-pass at row 6, item=사용자 확인 | agentic mode |
 | 4 | 2026-09-19 17:08:26 | current_status changed: completed_unmerged → done | (none) |
+| 5 | 2026-09-20 13:25:05 | current_status changed: completed_unmerged → done | 허브 main 완료 태스크의 귀속 상태 복구 — retrospective 재마킹 후 completed_unmerged 재계산 정정 |
 
 ## 블로커
 없음
