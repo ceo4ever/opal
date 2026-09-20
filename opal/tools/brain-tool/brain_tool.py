@@ -438,6 +438,9 @@ def dump_frontmatter(fm):
         allow_unicode=True,
         sort_keys=False,
         default_flow_style=False,
+        # PyYAML 기본 width=80은 flow sequence도 여러 줄로 접는다. related 운영 정본은
+        # 길이와 무관한 단일행이므로 현실적으로 도달할 수 없는 폭으로 wrapping을 막는다.
+        width=10**9,
     ).strip()
 
 

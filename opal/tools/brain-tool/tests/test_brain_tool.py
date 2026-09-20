@@ -318,6 +318,38 @@ class TestAddPage(BrainTestCase):
         self.assertEqual(fm.get("related"), [], f"related 미지정 시 템플릿 기본값이 변경됨: {fm.get('related')}")
         self.assertIn("related: []", text)
 
+    def test_add_page_long_related_stays_on_one_line(self):
+        """80자를 넘는 related도 PyYAML 자동 wrapping 없이 단일행 정본을 유지한다."""
+        related = (
+            "service-overview,campaign-overview,campaign-lifecycle,"
+            "mission-policy,db-attr-policy-link"
+        )
+        exit_code, result = self._add_page(
+            name="long-related-page",
+            page_type="concept",
+            title="긴 related 테스트",
+            related=related,
+        )
+        self.assertEqual(exit_code, 0, result)
+        page_file = self.brain_root / "pages" / "concept" / "long-related-page.md"
+        text = page_file.read_text(encoding="utf-8")
+        expected = (
+            "related: [service-overview, campaign-overview, campaign-lifecycle, "
+            "mission-policy, db-attr-policy-link]"
+        )
+        self.assertIn(expected, text)
+        fm_text = BT._FRONTMATTER_RE.match(text).group(1)
+        self.assertTrue(BT.related_uses_inline_array(fm_text))
+
+        args = make_args(brain_path=str(self.brain_root), fix=False)
+        _, lint_result = self._call(BT.cmd_lint, args)
+        format_issues = [
+            issue for issue in lint_result["issues"]
+            if issue["page"] == "long-related-page"
+            and "inline array syntax" in issue["detail"]
+        ]
+        self.assertEqual(format_issues, [])
+
     def test_add_synthesis_page(self):
         """add-page synthesis: 정상 생성 확인."""
         exit_code, result = self._add_page(name="my-synthesis", page_type="synthesis",

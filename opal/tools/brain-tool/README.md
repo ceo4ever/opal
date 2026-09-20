@@ -82,7 +82,7 @@ run.sh update-page <path> [--title ..] [--tags a,b] [--sources x,y] [--related a
 - **부분 갱신**: 지정한 필드만 바뀐다. 미지정 필드는 그대로 둔다.
 - `created`는 보존하고 `updated`만 오늘(KST)로 갱신한다.
 - `add-page`와 동일한 frontmatter 계약을 집행한다 — `related`에 `[[ ]]`·`.md`·중첩 리스트가 있으면 `frontmatter_invalid`로 거부한다.
-- `add-page`·`update-page`가 저장하는 `related`는 운영 호환 정본인 인라인 배열로 고정된다. 빈 값은 `related: []`, 값이 있으면 `related: [campaign, mission]`이다.
+- `add-page`·`update-page`가 저장하는 `related`는 운영 호환 정본인 인라인 배열로 고정된다. 빈 값은 `related: []`, 값이 있으면 `related: [campaign, mission]`이며, 80자를 넘어도 PyYAML 자동 줄바꿈 없이 한 줄을 유지한다.
 - `--body-file` 지정 시에만 미실체 게이트를 재판정한다(본문이 바뀐 경우에만).
 - title 변경은 index.md에 반영된다(갱신 후 index 자동 재생성).
 - 출력: `{ok, page, type, title, updated_fields:[...], indexed:true}`
