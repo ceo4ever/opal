@@ -1,6 +1,6 @@
 # STATE: E2E 여정·조각 라이브러리 구축
 
-> 최종 갱신: 2026-09-20 17:23:49
+> 최종 갱신: 2026-09-20 17:28:18
 > 파이프라인 현황(rows/상태/다음 액션)의 SSOT는 `state.json`입니다.
 > 조회: `~/.opal/tools/state-tool/run.sh show <task-path>`
 
