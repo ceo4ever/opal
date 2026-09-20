@@ -133,6 +133,13 @@
   ],
   "history": [
     {
+      "title": "147 PM 보고 활동이벤트 정지판정 관측배선",
+      "date": "2026-09-20",
+      "stage": "완료",
+      "path": "tasks/147-260919-opds-PM-보고-활동이벤트-정지판정-관측배선/",
+      "result": "PM 보고 의도와 Stop 판정, 워커 활동을 표준 run-log 사건으로 연결하고 Claude Agent 훅의 시작·활동·완료 3경계를 실제 설치본에서 검증했다. 병합 후 전체 회귀 709 passed, 3 skipped, 431 subtests를 확인했다."
+    },
+    {
       "title": "146 프로브 핸드오프 계약개정",
       "date": "2026-09-19",
       "stage": "완료",
@@ -159,13 +166,6 @@
       "stage": "완료",
       "path": "tasks/138-260916-opds-스톱-훅-태스크-소유권-결정론화/",
       "result": "Stop 훅이 태스크 소유권을 세션 단위로 결정론 판정하도록 재설계. ownership-tool 신설(14모듈·훅 5종)로 task-side lease·session registry·stop-guard receipt 3축을 분리하고, worktree-launcher로 --wt 전용 세션 기동 경계를 세움. worktree-tool에 execution_ownership·발급값 사본 내려보내기를 추가해 워크트리가 허브를 사본으로 역참조한다. claude-hooks.json을 5개 OPAL 이벤트로 재구성하고 인라인 python -c 원본은 retired로 보존. 결과: 부트스트랩 세션의 무확인 태스크 진입이 해소(forced 후보 0건→allow_inactive), 실제 허브에서 태스크 132가 hub_canonical/forced=True에서 worktree_owned_shadow/forced=False로 전이함을 실측. 테스트 763건 0 failed, 시나리오 29건 중 28 pass(S-25는 배포 후 수동 E2E 이월)."
-    },
-    {
-      "title": "141 E2E 제안서 보강",
-      "date": "2026-09-18",
-      "stage": "완료",
-      "path": "tasks/141-260918-opds-E2E-제안서-보강/",
-      "result": "e2e-journey-fragment-library 제안서(검토) 개정 — §2 착수 선행 조건 열 신설, Q-1 선행 조건 승격, §5 신선도 키에 driver 정체·달성 충실도 추가, §4 redaction 지점 지목, §3 승격 도구 게이트화, Q-5 결번 해소. S-1~S-13 전건 PASS. 제안 자체는 미채택"
     }
   ]
 }
