@@ -6,13 +6,13 @@
 
 | 항목 | 건수 |
 |------|------|
-| 게이트 판단 | 0회 (Pass: 0 / Fail: 0) |
+| 게이트 판단 | 17회 (Pass: 15 / Fail: 1) |
 | 3회 초과 Gate | 0건 (Critical: 0 / Normal: 0 / Minor: 0) |
-| 오류 발견 | 0건 |
-| 수정 지시 | 0건 (반영: 0 / 미반영: 0) |
-| PM 의사결정 | 2건 |
-| 개선 사항 | 0건 |
-| 에스컬레이션 | 0건 |
+| 오류 발견 | 7건 |
+| 수정 지시 | 3건 (반영: 3 / 미반영: 0) |
+| PM 의사결정 | 9건 |
+| 개선 사항 | 6건 |
+| 에스컬레이션 | 1건 |
 
 ## 대행 일지
 
@@ -61,3 +61,4 @@
 | 41 | 2026-09-22 18:41 | CLOSE | `GATE` | **CLOSE 진행 — DONE.md·docs_sync·brain ingest 완료**. DONE.md: 결과(달라진 것 5축·유지된 것 5축)·변경 파일 18건·검증(RED 9건 부재 실패 → 시나리오 18/18 PASS → 회귀 5스위트 → 실환경 4건)·회고 후보 3건·참고 5건. docs_sync: `docs/PROJECT.md` 문서 레지스트리에 `harness/worktree.md` 등재 — **이번 결함의 재발 경로와 직결된 실질 누락**이었다. 그 문서가 실행 소유권 계약의 SSOT가 됐는데 레지스트리에 없으면 PM 컨텍스트 주입이 선별하지 못해 "계약은 있는데 아무도 안 읽는" 상태가 그대로 재현된다. ARCHITECTURE.md의 lease 언급 6건은 전부 oppb scope lease로 별개 개념(stale 아님), CONVENTIONS.md 해당 없음 | Pass |
 | 42 | 2026-09-22 18:41 | CLOSE | `IMPROVE` | **brain concept 2페이지 자율 ingest + lint 자기 정리**. `lease-handoff-before-terminal-launch`(기동 시점에 수신자 세션 id를 모르므로 **대상 루트를 키로** 인계한다 — 단순 해제가 실패하는 이유와 `_is_live` 순서 함정 포함), `contract-absent-from-harness-docs-passes-review`(코드에만 있고 규범 문서에 없는 계약은 리뷰를 통과한다 + 집행자 배포 전까지 증상이 없어 늦게 드러난 경위). 최초 ingest 직후 lint가 내 페이지에서 orphan·missing_link 9건을 지적해 관련 절과 상호 링크를 추가했고, 존재하지 않는 `opal-doc-standard` 페이지 링크는 경로 인용으로 대체했다. 최종 내 페이지 issue 0건(전체 330→321) | 반영 |
 | 43 | 2026-09-22 18:41 | CLOSE | `IMPROVE` | **개선 후보 2건을 fw-inbox에 정식 등록**. (1) `state-tool` 스위트가 중첩 pytest로 자기 자신을 한 번 더 실행(단일 테스트 198.87초 = 전체 51%, 단언이 바깥 실행과 동어반복, 자기 파일은 `--ignore`라 자기 회귀 미탐지) (2) `scenario-coverage-build`가 evaluator 소관 판단 플래그 3종을 전건 `false`로 출력해 "미판정"과 "판정 결과 거짓"이 구분되지 않음(게이트 판정 무영향, 사후 추적성 문제). 두 건 모두 태스크 150 범위 밖으로 분리한 근거를 문서에 남겼다 | 등록 |
+| 44 | 2026-09-22 21:12 | CLOSE | `GATE` | **CLOSE final — 태스크 완료**. 커밋 `ce3b325`(37 files, +4663/-34). 스테이징에서 3건을 의도적으로 제외했다 — `identity-template.md`·`opal-onboarding/SKILL.md`(저자 불명, 원본 보존), `.claude/skills/`(무관한 기존 untracked). 커밋 직전 `opal/tools/state-tool/.opal/run/.runtime/stop-guard/<내 세션>.json`을 발견해 삭제했다 — **태스크 149가 고치려는 결함(훅 런타임 루트를 cwd로 채택)이 이 저장소에서 실물로 재현된 것**이다. 오전 점검 때는 0건이었고 워커들이 하위 디렉터리에서 장시간 작업하면서 발생했다. 149 제보의 사실성이 이 세션에서 독립 확인됐다. `transition_action=complete` | 완료 |
