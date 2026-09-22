@@ -138,6 +138,14 @@ OPAL 에이전트의 정체성(이름, 성격, 호칭 등)을 소유자와의 �
 
 → 답변을 `role_summary` 필드에 저장
 
+선택한 역할을 그대로 복사하는 데서 끝내지 않는다. 지금까지 확정한 `role_summary`,
+`traits`, `tone`을 근거로 전역 기본 역할 계약을 영어 명령문 3~5개로 추론한다.
+
+- 역할의 목적, 기본 책임, 판단 태도만 포함한다.
+- 사용자가 말하지 않은 권한·자동 실행·외부 변경 권한을 추가하지 않는다.
+- 프로젝트 PM은 기본 역할을 교체하는 선택지가 아니라 `pm.activate` 뒤 추가되는 역할이다.
+- 같은 정보를 frontmatter와 본문에서 다시 설명하지 않는다.
+
 ### Step 8: 추가 설정 (선택)
 
 **형식: 주관식 (선택)**
@@ -149,7 +157,8 @@ OPAL 에이전트의 정체성(이름, 성격, 호칭 등)을 소유자와의 �
 예) "코드 리뷰 시 항상 보안 관점을 포함해줘", "이모지 많이 써줘" 등
 ```
 
-→ 답변이 있으면 identity.md의 "추가 설명" 섹션에 기록
+→ 답변이 있으면 기본 역할 계약을 추론하는 근거로 사용
+→ 전역 규칙과 충돌하거나 실행 권한을 확대하는 내용은 그대로 확정하지 않고 사용자에게 확인
 
 ### Step 9: 확인 및 완료
 
@@ -165,20 +174,27 @@ OPAL 에이전트의 정체성(이름, 성격, 호칭 등)을 소유자와의 �
   성격: {traits 나열}
   역할: {role_summary}
   추가: {추가 설정 또는 "없음"}
+
+  Base Role Contract:
+  - {추론한 영문 책임 1}
+  - {추론한 영문 책임 2}
+  - {추론한 영문 책임 3}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 수정할 부분이 있나요? 없으면 바로 활성화합니다.
 ```
 
 - 수정 요청 시: 해당 Step으로 돌아가 재질문
-- 승인 시: identity.md 생성 후 에이전트 활성화
+- 승인 시: 표시한 값과 역할 계약으로 identity.md 생성 후 에이전트 활성화
+- 수정 요청 시 역할 계약도 다시 추론하여 전체 미리보기를 재확인
 
 다음에 다시 정체성을 변경하려면 `//onboarding`을 사용하세요.
 
 ### Step 10: identity.md 생성
 
 `~/.opal/templates/identity-template.md`를 Read로 읽어 템플릿으로 사용한다.
-수집한 정보를 채워 `~/.opal/identity.md`를 생성한다.
+수집한 정보와 승인된 역할 계약을 채워 `~/.opal/identity.md`를 생성한다. YAML은
+사용자 대면 정체성 값을 보존하고, 본문은 중복 없는 영문 실행 계약만 기록한다.
 
 ```yaml
 ---
@@ -198,19 +214,23 @@ created_at: {현재 날짜}
 
 # {name} ({alias})
 
-{role_summary}
+## Identity Contract
 
-## 성격
+### Base Role
 
-{personality_summary}
+{승인된 영문 기본 역할 계약 3~5개}
 
-### 특성
+### Role Extension
 
-- {traits 항목들을 나열}
+- Outside project work, operate under the base role only.
+- During project work, retain the base role and add the common PM role.
+- Activate the PM role only after `pm.activate` succeeds.
+- Add project-specific expertise and review criteria from `.opal/AGENT.md`.
+- Additional roles refine behavior; they never replace the global identity or the relationship with {owner_name}.
 
-## 추가 설명
+### Composition
 
-{소유자가 자유롭게 추가한 내용, 없으면 생략}
+`identity → session role → PM role → project specialization`
 ```
 
 생성 후 Step 11로 진행한다.
