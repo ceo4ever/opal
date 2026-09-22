@@ -3,8 +3,8 @@
   "module": "test_state_tool_run_log",
   "layer": "test",
   "domain": "opal-pipeline",
-  "description": "state-tool run-log 계약 RED-first 테스트 — T02 관통분(초기화 관통·미지정 경로 바이트 동일성·기존 회귀 기준선)과 T05 보관함분(활성 계약 기록 삭제의 run_log_missing 진단, 중단된 초기화의 보관함 복구와 멱등 재전송, 상태 전이의 state.changed 원자 커밋, 기록 실패 시 전건 보존과 비교착, 128건·4 KiB 상한 집행, 스키마 1.2 등재, 미지정 경로 무영향)을 함께 판정한다. run.sh subprocess 실호출 + 디스크 산출물 검사만 사용하고 mock/patch/MagicMock은 쓰지 않는다(red-first.md §4). 기록 실패는 조각 파일 권한 제거(0o400)로, 보관함 상한은 state.json fixture 주입으로 실제 유발한다. TASK-137 W-3 추가분은 CONTRACT §2.5 `missing_pm_activity` 트리거 조문(앵커 2종·대조 술어·정렬·항목 형태)을 양방향으로 고정한다 — 자동 승인 행 미대응(TASK-137.S-6), 기록 시 해소와 부분 기록 대조군(TASK-137.S-7), override 앵커와 배열 말미 정렬(TASK-137.S-8)은 W-4·W-5의 `_run_log_completeness_check()` 구현으로 GREEN이며, run_log 블록이 없는 1.0/1.1 경로의 응답 키 집합·산출물 불변(TASK-137.S-9)은 명시 키 집합 리터럴 기준선으로 자기 대조하는 보존 가드다. TASK-137 W-7은 보존 가드 4건의 비교 기준을 정정했다 — 개정 전 동작을 움직이는 `HEAD` 참조로 대리하던 3건은 기본값 전환 커밋 f8aba0a 머지와 동시에 자기무효화됐으므로 고정 커밋 상수 `_PRE_RUN_LOG_DEFAULT_SHA`(=f8aba0a 직전 state_tool.py 빌드, 무플래그 init이 run_log 블록을 만들지 않음을 실측 관측해 고정)로 핀했고, 기존 스위트 회귀 가드 1건은 중첩 pytest 기동을 인터프리터 게이트(15fee62)를 통과하는 OPAL 테스트 인터프리터로 바꿨다. 네 가드 모두 원래 검증 축(비활성화 경로 산출물·응답 키 불변, 기존 스위트 실패 0건)을 그대로 유지한다. TASK-147 W-5는 같은 계열 가드 5건(TestOffModeTransitionUnaffected 1건·TestOffModeDurationPathByteIdentical 2건·TestSchema10And11WithoutRunLogBlockUnchanged 2건)의 앰비언트 환경 의존을 보정했다(H-6) — 셸에 세션 식별자가 있으면 advance/mark가 lease를 claim해 <task>/run/.runtime/이 생기고 「run_log 비활성 태스크의 산출물은 종전과 바이트 동일」 단언이 실행 위치에 따라 뒤집혔다. _env_without_session_ids()가 OPAL_SESSION_ID와 claude_adapter.SESSION_ID_ENV를 둘 다 제거한 env를 만들고 _run()/_run_direct()의 새 env 인자가 그것을 병합 없이 그대로 서브프로세스에 넘긴다(dict.update 병합은 키 삭제를 전달하지 못한다). 플랫폼 고유 변수명은 테스트에 하드코딩하지 않고 claude_adapter가 소유한 상수를 spec_from_file_location으로 적재해 얻는다(C-15). 프로덕션 코드는 바꾸지 않았고 다섯 가드의 검증 축도 그대로다.",
-  "exports": ["TestShadowInitPierce", "TestOffModeInitByteIdentical", "TestExistingRegressionBaseline", "TestRunLogMissingDiagnosis", "TestInterruptedInitRecovery", "TestStateChangedAtomicCommit", "TestOutboxPreservesOnWriteFailure", "TestOutboxLimits", "TestSchema12Registered", "TestOffModeTransitionUnaffected", "TestWorkerDurationDerivedAndConflict", "TestOffModeDurationPathByteIdentical", "TestAutoApprovedRowsEachGetIndependentStateChanged", "TestLogEventSurfaceForPmActivity", "TestPmActivityWhitelistRejection", "TestGateRequestResolvePairing", "TestShadowMissingIsNonBlockingDiagnosis", "TestActiveCompletionEvidenceGate", "TestVerifyCompletenessCheckThreeObservationFields", "TestCompletenessMissingPmActivityAutoApprovedRows", "TestCompletenessMissingPmActivityClearedByLoggedDecision", "TestCompletenessMissingPmActivityOverrideAnchor", "TestSchema10And11WithoutRunLogBlockUnchanged", "TestCompletenessCheckIndependentFromStructuralValidation", "TestModeInventoryEquality", "TestT147S5PmReportSurfaceAndLastReportPointer", "TestT147S6PmReportAxisEnumsAndDualValidation", "TestT147S7StopDecisionReceiptDrain", "TestT147S9StopVerdictAxesClassifyFourCases", "TestT147S10UnanchoredActivityAndProgressExclusion"],
+  "description": "state-tool run-log 공개 계약을 실제 CLI와 디스크 산출물로 검증한다. shadow 초기화·비활성 경로 호환성·보관함 복구와 상한·상태 사건 원자 커밋·완전성 진단·PM 보고 및 stop 판정·schema 1.0/1.1/1.2 등록을 다루며, mock 없이 실패 조건을 실제 파일 I/O로 유발한다.",
+  "exports": ["TestShadowInitPierce", "TestOffModeInitByteIdentical", "TestLegacySchemaVersionsRegistered", "TestRunLogMissingDiagnosis", "TestInterruptedInitRecovery", "TestStateChangedAtomicCommit", "TestOutboxPreservesOnWriteFailure", "TestOutboxLimits", "TestSchema12Registered", "TestOffModeTransitionUnaffected", "TestWorkerDurationDerivedAndConflict", "TestOffModeDurationPathByteIdentical", "TestAutoApprovedRowsEachGetIndependentStateChanged", "TestLogEventSurfaceForPmActivity", "TestPmActivityWhitelistRejection", "TestGateRequestResolvePairing", "TestShadowMissingIsNonBlockingDiagnosis", "TestActiveCompletionEvidenceGate", "TestVerifyCompletenessCheckThreeObservationFields", "TestCompletenessMissingPmActivityAutoApprovedRows", "TestCompletenessMissingPmActivityClearedByLoggedDecision", "TestCompletenessMissingPmActivityOverrideAnchor", "TestSchema10And11WithoutRunLogBlockUnchanged", "TestCompletenessCheckIndependentFromStructuralValidation", "TestModeInventoryEquality", "TestT147S5PmReportSurfaceAndLastReportPointer", "TestT147S6PmReportAxisEnumsAndDualValidation", "TestT147S7StopDecisionReceiptDrain", "TestT147S9StopVerdictAxesClassifyFourCases", "TestT147S10UnanchoredActivityAndProgressExclusion"],
   "scenarios": ["S-1", "S-2", "S-3", "S-4", "S-5", "S-6", "S-7", "S-9", "TEST-SCENARIO(W-7).S-8", "TEST-SCENARIO(W-7).S-9", "TASK-135.S-1", "TASK-135.S-2", "TASK-135.S-3", "TASK-135.S-4", "TASK-135.S-5", "TASK-135.S-6", "TASK-135.S-7", "TASK-135.S-8", "TASK-135.S-9", "TASK-137.S-6", "TASK-137.S-7", "TASK-137.S-8", "TASK-137.S-9", "TASK-147.S-5", "TASK-147.S-6", "TASK-147.S-7", "TASK-147.S-9", "TASK-147.S-10"]
 }
 
@@ -23,7 +23,7 @@ scenarios 목록의 T02/T05 구간 `S-1..S-9`(run-log-tool 초기 계약)와 **I
     쓰던 원래 방식은 기본값 전환 커밋 `f8aba0a` 머지와 동시에 자기무효화됐다
     (TASK-137 W-7에서 고정 SHA 핀으로 정정). 이 시나리오는 보존·회귀 가드이며
     구현 전 RED가 아니다 — 이 파일의 기존 동류 보존 시나리오
-    (TestOffModeInitByteIdentical·TestExistingRegressionBaseline)가 각각 주석에
+    (TestOffModeInitByteIdentical·TestLegacySchemaVersionsRegistered)가 각각 주석에
     `red_required=false`로 명시한 것과 같은 성격이다.
 
 PLAN.md(T02) §테스트 시나리오 초안 근거:
@@ -31,8 +31,7 @@ PLAN.md(T02) §테스트 시나리오 초안 근거:
     첫 조각(run/run-log-{run_id}-0001.jsonl) 1줄(run.started, sequence==1, actor_sequence==1)
   - S-2 (C-3) --run-log-mode off init은 개정 전 빌드(고정 커밋
     _PRE_RUN_LOG_DEFAULT_SHA에서 꺼낸 state_tool.py, 미지정 호출)와 state.json 바이트 동일
-  - S-9 (C-2) 기존 state-tool 회귀 0건 — pytest 실패 0건·종료 코드 0 재현(통과 개수는 형제 태스크가 이동시키므로 상수로 고정하지 않는다),
-    tests/test_state_tool.py·schema/state.schema.json 미변경
+  - S-9 (C-3) legacy schema 1.0·1.1이 state.schema.json 허용 enum에 계속 등록됨
 """
 
 import importlib.util
@@ -309,49 +308,11 @@ class TestOffModeInitByteIdentical(unittest.TestCase):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# S-9 — 기존 state-tool 회귀 0건 (C-2, red_required=false)
+# S-9 — legacy schema 1.0·1.1 병행 허용 (C-3, red_required=false)
 # ─────────────────────────────────────────────────────────────────────────────
 
-class TestExistingRegressionBaseline(unittest.TestCase):
-    def test_existing_suite_matches_baseline_and_frozen_files_untouched(self):
-        # [MUST] 이 테스트 파일 자신(test_state_tool_run_log.py)은 --ignore로 제외한다 —
-        # tests/ 디렉터리 전체를 그대로 지정하면 자신이 재귀적으로 포함되어, S-9가
-        # 자신을 실행하는 pytest를 다시 기동하는 무한 재귀가 된다. 기준선 425
-        # passed/3 skipped/111 subtests passed는 tests/ 안의 나머지 3개 파일
-        # (test_state_tool.py·test_event_verify.py·test_todo_mirror_hook.py) 합산 실측이다.
-        # [TASK-137 W-7] 중첩 pytest를 `python3`이 아니라 **OPAL 테스트 인터프리터**로
-        # 기동한다. 커밋 `15fee62`("테스트 인터프리터 게이트 신설")가 conftest에
-        # 인터프리터 게이트를 추가한 뒤로, `python3`(homebrew 3.14 — jsonschema·yaml
-        # 미설치)로 들어간 중첩 실행은 테스트를 **수집조차 못 하고** 게이트 오류로
-        # 즉시 종료했다. 그래서 이 가드는 "기존 스위트 회귀 0건"을 판정하지 못한 채
-        # 실패했다 — 제품 회귀가 아니라 하네스 결함이었다.
-        # 이 가드의 검증 축(기존 스위트 실패 0건 + 1.0/1.1 병행 허용 유지)은 그대로
-        # 두고, 기동 인터프리터만 게이트를 통과하는 것으로 바꾼다.
-        self_path = pathlib.Path(__file__).resolve()
-        result = subprocess.run(
-            [str(_VENV_PYTHON), "-m", "pytest", "opal/tools/state-tool/tests/", "-q",
-             f"--ignore={self_path}"],
-            cwd=str(_REPO_ROOT), capture_output=True, text=True,
-        )
-        combined = result.stdout + result.stderr
-        # [불안정 기준선 제거 — 123 opd 전환] 통과 **개수**를 상수로 박으면 형제 태스크가
-        # 테스트를 늘릴 때마다 구현이 정상인데도 거짓 실패가 난다(실제 발생: 425→441,
-        # main의 122·131 유입). 더구나 개수 단언은 누군가 테스트를 지우고 수를 맞춰도
-        # 통과시켜 계약을 지키지 못한다. 이 단언이 지키려는 계약은 "기존 테스트가 깨지지
-        # 않았다"이므로 **실패 0건**이라는 불변 조건으로 판정한다.
-        self.assertNotIn("failed", combined,
-                         f"S-9 회귀 실패 — 기존 테스트가 깨졌다. 출력 말미: {combined[-2000:]}")
-        self.assertIn("passed", combined,
-                      f"S-9 테스트가 수집되지 않았다(스위트 자체 실패 의심). 출력 말미: {combined[-2000:]}")
-        self.assertEqual(0, result.returncode,
-                         f"S-9 pytest 종료 코드 비정상({result.returncode}). 출력 말미: {combined[-2000:]}")
-
-        # T02의 동결 대상(`tests/test_state_tool.py`·`schema/state.schema.json`)은
-        # T05(AC-4)가 스키마 1.2 등재를 인계받으면서 해제됐다 — 등재는 두 파일을
-        # 반드시 건드리므로 "미변경" 단언과 양립하지 않는다. 회귀를 지키는 실질
-        # 판정은 위의 건수 기준선(425/3/111)이며, 그 수치가 그대로인 한 1.0/1.1
-        # 태스크의 동작은 바뀌지 않았다(C-2·C-3). 1.2 등재 자체의 판정은 S-6이
-        # 소유한다.
+class TestLegacySchemaVersionsRegistered(unittest.TestCase):
+    def test_schema_1_0_and_1_1_remain_registered(self):
         schema = json.loads(
             (_STATE_TOOL_DIR / "schema" / "state.schema.json").read_text(encoding="utf-8"))
         self.assertLessEqual(

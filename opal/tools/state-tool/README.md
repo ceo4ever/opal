@@ -14,6 +14,25 @@
 - **출력 형식**: 모든 응답은 단일 라인 JSON
 - **전이 출력 계약**: `show`/`advance`/`mark`/`block`/`add-row`/`status`와 차단 응답은 `transition_action`(`continue`/`await_user`/`blocked`/`complete`), `report_type`(`progress_report`/`decision_request`), `next_action`을 함께 반환한다. `progress_report`는 비차단 통지이고, `decision_request`만 사용자 응답을 기다리는 신호다. 응답 자체는 stdout 계약이며, PM 보고 시 `log-event --event pm.report`가 보고 사건과 `state.json.run_log.last_report` 파생 포인터를 같은 원자 쓰기로 영속한다(`docs/run-log/CONTRACT.md` §1.4·§2.4).
 
+## 테스트 실행
+
+책임 영역별 `test_*.py`는 서로 독립 수집할 수 있다. 기본 회귀 확인에는 파일별
+pytest 프로세스를 최대 4개 병렬 실행하는 다음 명령을 사용한다.
+
+```bash
+bash opal/tools/state-tool/run-tests.sh --jobs 4
+```
+
+실패한 파일이 있어도 나머지 파일을 모두 실행한 뒤 전체 명령이 비정상 종료한다.
+재현·진단을 위해 단일 pytest 프로세스에서 순서대로 실행하는 경로도 유지한다.
+
+```bash
+~/.opal/.venv/bin/python -m pytest opal/tools/state-tool/tests/ -q
+```
+
+병렬 runner에 pytest 옵션을 추가하려면 `--` 뒤에 둔다. 예를 들어
+`run-tests.sh --jobs 2 -- -x`처럼 실행할 수 있다. 외부 병렬 플러그인은 필요하지 않다.
+
 ## 호출 형식
 
 ```bash
