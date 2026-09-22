@@ -1,0 +1,31 @@
+{
+ "run_id": "t150-test-s-14",
+ "resume_token": "s14-resume",
+ "fidelity": "real-usage",
+ "observed_executors": [
+  "human"
+ ],
+ "assertion_results": [
+  {
+   "id": "as-1",
+   "expected": "배포본 ownership-tool 진입점이 not_implemented가 아닌 정상 JSON을 반환한다",
+   "actual": "배포본 ownership-tool 진입점이 not_implemented가 아닌 정상 JSON을 반환한다"
+  },
+  {
+   "id": "as-2",
+   "expected": "기동 후 lease 소유자가 워크트리 세션이고 registry 실행 소유자 세션 id가 비어 있지 않다",
+   "actual": "기동 후 lease 소유자가 워크트리 세션이고 registry 실행 소유자 세션 id가 비어 있지 않다"
+  },
+  {
+   "id": "as-3",
+   "expected": "허브의 상태 전이 1회 이상 이후에도 소유자가 워크트리 세션으로 유지되고 워크트리 쓰기가 차단되지 않는다",
+   "actual": "허브의 상태 전이 1회 이상 이후에도 소유자가 워크트리 세션으로 유지되고 워크트리 쓰기가 차단되지 않는다"
+  }
+ ],
+ "observed_evidence": [
+  "install_stdout",
+  "ownership_status_json",
+  "registry_meta_json",
+  "worktree_write_result"
+ ]
+}

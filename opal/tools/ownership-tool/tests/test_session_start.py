@@ -479,3 +479,175 @@ def test_s12r_skips_when_registry_state_is_not_worktree_owned(tmp_path, monkeypa
     assert calls == [], "worktree_session_owned가 아니면 ownership-set을 호출하지 않는다"
     assert result.get("registry_owner_registered") is not True
     assert "registry_not_worktree_owned" in result.get("diagnostics", []), result.get("diagnostics")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# TASK 150 — S-7(AC-3, AC-4) SessionStart의 이관 소비와 등록 진단
+#
+# @header 보강: layer=test / domain=opal-pipeline. W-4는 `handle()`의 `lease.claim(...)`에
+# `claimant_root=cwd`를 추가하고, claim 실패 분기에 `registry_owner_not_registered:<diagnostic>`
+# 진단을 더한다(성공 분기 동작·반환 키 집합은 불변). registry `execution_ownership` 쓰기는
+# `worktree-tool ownership-set` 경유만 허용되므로(C-9) 여기서도 검증 대상은 "meta 파일이
+# 바뀌었는가"가 아니라 "ownership-set이 올바른 인자로 몇 번 호출되는가"다 —
+# 기존 S-12r 절의 `_record_ownership_set` substitute를 그대로 재사용한다.
+# ─────────────────────────────────────────────────────────────────────────────
+
+S7_TASK_NUMBER = "310"
+S7_TASK_FOLDER = "310-handoff-session-start"
+S7_OTHER_TASK_NUMBER = "311"
+S7_HUB_SESSION = "sess-hub-150"
+S7_WT_SESSION = "sess-worktree-150"
+S7_NOW = "2026-09-22T10:00:00+09:00"
+
+# handle()의 반환 키 집합 — W-4는 이 집합을 바꾸지 않는다(AC-4 "반환 키 집합은 변하지 않는다").
+S7_RESULT_KEYS = {
+    "exit_code",
+    "session_id",
+    "registered",
+    "env_file_written",
+    "lease_claimed",
+    "classification",
+    "task_path",
+    "registry_owner_registered",
+    "diagnostics",
+}
+
+
+def _build_s7_handoff_case(tmp_path):
+    """이관 대상 워크트리 + 허브 registry + canonical task를 tmp_path 안에 조립한다."""
+    hub_root = tmp_path / "hub"
+    wt_parent = hub_root / ".opal-worktrees"
+    meta_dir = wt_parent / ".meta"
+    worktree_root = wt_parent / ("task_" + S7_TASK_NUMBER)
+    task_dir = worktree_root / "tasks" / S7_TASK_FOLDER
+    meta_dir.mkdir(parents=True, exist_ok=True)
+    task_dir.mkdir(parents=True, exist_ok=True)
+
+    registry_entry = {
+        "task": S7_TASK_NUMBER,
+        "layout": "monorepo",
+        "branch": "feat/OP-TASK-" + S7_TASK_NUMBER,
+        "worktree_root": str(worktree_root),
+        "allocator_root": str(hub_root),
+        "task_home": str(worktree_root),
+        "task_folder": S7_TASK_FOLDER,
+        "task_path": str(task_dir),
+        "artifact_repo": ".",
+        "task_ownership_version": 2,
+        "attribution_state": "active",
+        "execution_ownership": _execution_ownership(None),
+    }
+    (meta_dir / ("task_" + S7_TASK_NUMBER + ".json")).write_text(
+        json.dumps(registry_entry, ensure_ascii=False), encoding="utf-8"
+    )
+    _write_task_ownership_copy(worktree_root, registry_entry)
+
+    template_state = json.loads(
+        (FIXTURES_ROOT / "hub" / "HUB-MULTI" / "tasks" / "200-multi-task-x" / "state.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    template_state["task_id"] = S7_TASK_FOLDER
+    (task_dir / "state.json").write_text(json.dumps(template_state), encoding="utf-8")
+
+    assert not (worktree_root / ".opal-worktrees").exists()
+    return hub_root, registry_entry, worktree_root, task_dir
+
+
+def _hand_off_to(task_dir, worktree_root_value):
+    """허브 세션이 lease를 잡고 registry 발급 worktree_root로 이관한다."""
+    from ownership_tool import lease  # RED: lease.handoff 미구현
+
+    assert lease.claim(
+        task_dir, session_id=S7_HUB_SESSION, claim_source="state_transition", now=S7_NOW
+    )["ok"] is True
+    handed = lease.handoff(
+        task_dir, session_id=S7_HUB_SESSION, to_worktree_root=worktree_root_value, now=S7_NOW
+    )
+    assert handed["ok"] is True, handed
+    return handed
+
+
+def _s7_lease_record(task_dir):
+    return json.loads((task_dir / "run" / ".runtime" / "owner.json").read_text(encoding="utf-8"))
+
+
+def test_s7_target_worktree_cwd_session_start_consumes_handoff_and_registers_owner(
+    tmp_path, monkeypatch
+):
+    """S-7(a)(AC-3): 이관 대상 worktree 루트를 cwd로 하는 SessionStart는 claim에 성공하고,
+    registry 실행 소유자 세션 id가 실제 세션 id로 기록된다."""
+    from ownership_tool import session_start_hook  # RED: claimant_root 미구현
+
+    monkeypatch.delenv("CLAUDE_CODE_SESSION_ID", raising=False)
+    monkeypatch.delenv("OPAL_SESSION_ID", raising=False)
+
+    hub_root, registry_entry, worktree_root, task_dir = _build_s7_handoff_case(tmp_path)
+    _hand_off_to(task_dir, registry_entry["worktree_root"])
+    calls = _record_ownership_set(monkeypatch)
+
+    result = session_start_hook.handle(
+        {"cwd": str(worktree_root), "session_id": S7_WT_SESSION},
+        project_root=worktree_root,
+        env_file_path=tmp_path / "env_file.sh",
+        env={},
+        now=S7_NOW,
+    )
+
+    assert result.get("exit_code", 0) == 0
+    assert set(result) == S7_RESULT_KEYS
+    assert result["task_path"] == str(task_dir)
+    assert result["lease_claimed"] is True, result
+    assert result["classification"] == "current_session_owned"
+    assert result["registry_owner_registered"] is True, result
+
+    assert len(calls) == 1, "ownership-set은 정확히 1회 호출돼야 한다: {}".format(calls)
+    assert _flag_value(calls[0], "--owner-session-id") == S7_WT_SESSION
+    assert _flag_value(calls[0], "--execution-ownership") == "worktree_session_owned"
+    assert _flag_value(calls[0], "--project-root") == str(hub_root)
+    assert _flag_value(calls[0], "--task") == S7_TASK_NUMBER
+
+    record = _s7_lease_record(task_dir)
+    assert record["owner_session_id"] == S7_WT_SESSION
+    assert record["status"] == "active"
+    assert record.get("handoff_to_worktree_root") is None
+
+
+def test_s7_non_target_cwd_session_start_fails_claim_and_leaves_diagnostic(tmp_path, monkeypatch):
+    """S-7(b)(AC-4): 이관 대상이 아닌 cwd의 SessionStart는 claim에 실패하고, registry
+    미등록 사유가 진단 목록에 남으며 반환 키 집합은 변하지 않는다."""
+    from ownership_tool import session_start_hook  # RED: 진단 미구현
+
+    monkeypatch.delenv("CLAUDE_CODE_SESSION_ID", raising=False)
+    monkeypatch.delenv("OPAL_SESSION_ID", raising=False)
+
+    hub_root, registry_entry, worktree_root, task_dir = _build_s7_handoff_case(tmp_path)
+    _hand_off_to(task_dir, registry_entry["worktree_root"])
+    before = _s7_lease_record(task_dir)
+
+    # 같은 canonical task를 가리키지만 **이관 대상이 아닌** 다른 루트에서 부팅한 세션.
+    other_root = hub_root / ".opal-worktrees" / ("task_" + S7_OTHER_TASK_NUMBER)
+    other_root.mkdir(parents=True, exist_ok=True)
+    _write_task_ownership_copy(other_root, registry_entry)
+
+    calls = _record_ownership_set(monkeypatch)
+    result = session_start_hook.handle(
+        {"cwd": str(other_root), "session_id": "sess-not-the-target-150"},
+        project_root=other_root,
+        env_file_path=tmp_path / "env_file_other.sh",
+        env={},
+        now=S7_NOW,
+    )
+
+    assert result.get("exit_code", 0) == 0
+    assert set(result) == S7_RESULT_KEYS
+    assert result["task_path"] == str(task_dir)
+    assert result["lease_claimed"] is False, result
+    assert result["classification"] == "handoff_pending"
+    assert "handoff_pending" in result["diagnostics"], result["diagnostics"]
+    assert "registry_owner_not_registered:handoff_pending" in result["diagnostics"], result[
+        "diagnostics"
+    ]
+    assert result["registry_owner_registered"] is False
+    assert calls == [], "claim 실패 시 registry 등록을 시도하지 않는다: {}".format(calls)
+    assert _s7_lease_record(task_dir) == before

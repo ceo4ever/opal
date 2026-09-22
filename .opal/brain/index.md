@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-09-20 10:27
+> 갱신: 2026-09-22 18:40
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -108,6 +108,7 @@
 - [[console-settings-incremental-scope-policy]] — 콘솔 설정 화면 점진 확장 방침 #product-decision #console #scope #security
 - [[console-write-exception-router-isolation]] — 콘솔 쓰기 예외 라우터 격리 패턴 #architecture #console #security #pattern #write-isolation
 - [[context-tag-suppresses-false-positive-without-removing-hit]] — 오탐 억제는 hit를 배열에서 빼지 않고 context 태그로 분류한다 #false-positive #pattern-scan #risk-detection #task-105
+- [[contract-absent-from-harness-docs-passes-review]] — 규범 문서에 없는 계약은 리뷰를 통과한다 #contract #harness #review #deployment-gap #task-150 #lesson
 - [[count-notation-scattered-across-docs]] — 개수·열거 표기는 문서 여러 곳에 흩어져 조용히 낡는다 #documentation #drift #task-122 #lesson
 - [[daemon-as-tool-orchestrator]] — 데몬은 도구 오케스트레이터 — 데이터 SSOT는 프로젝트 파일 #architecture #dashboard #ssot
 - [[decision-vs-fact-claim-separation]] — 결정과 사실 주장의 분리 — 결정은 근거 판정 대상이 아니다 #evidence #citation #decision #opds
@@ -166,6 +167,7 @@
 - [[kanban-pipeline-stage-grouping]] — 파이프라인 스테퍼 stage 그룹화 (BE 단일 소스, na/skipped 제외) #opal-console #pipeline #stage-grouping #be-single-source
 - [[knowledge-assets-as-flow-entrypoint]] — 지식 자산은 흐름의 끝이 아니라 시작점이다 — 참조 순서 기준 계층 배치 + 도구·자산 범주 분리 #architecture #knowledge-asset #layering #diagram #decision
 - [[lean-core-relocation-benefit-precondition]] — lean core 이관 이익의 전제 조건 — PM 전용 + Phase B 기 로드 #lean-core #agent-md #relocation #pm-tier #assistant-tier
+- [[lease-handoff-before-terminal-launch]] — 실행 주체 인계는 수신자 id가 아니라 대상 루트를 키로 한다 #lease #ownership #worktree #handoff #task-150 #pattern
 - [[legacy-row-address-gate-insertion-regression]] — 레거시 행번호 파이프라인에 게이트 행 삽입 시 전수 수정 결합 회귀 #state-tool #pipeline #legacy-row #regression #scenario-gate #task-075
 - [[linux-install-script]] — Linux 설치 스크립트 신설 (단순 위임 전략) #install #linux #deploy #task
 - [[literal-version-test-expectation-fragility]] — 리터럴 버전번호를 테스트 기대값으로 쓰면 동시 작업이 깨뜨린다 #testing #concurrency #test-scenario #lesson

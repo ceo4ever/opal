@@ -3,20 +3,31 @@
   "module": "ownership_tool.lease",
   "layer": "util",
   "domain": "opal-pipeline",
-  "description": "hub task lease 저장소(<canonical_task>/run/.runtime/owner.json) claim·heartbeat·release·classify. D-5 스키마(task_path·owner_session_id·generation·claimed_at·heartbeat_at·lease_expires_at·status)로 ownership_core.write_json_atomic을 통해 원자 기록한다. TTL 우선순위는 resolve_ttl_sec — ① claim(ttl_sec=) 명시 인자 ② <project_root>/.opal/setting.local.json의 ownership.lease_ttl_sec ③ 기본 14400(fail-safe, 설정 파일 부재·파싱 실패·비정수는 예외 없이 ③으로 폴백). project_root는 추론하지 않고 호출자가 명시적으로 전달할 때만 ②를 적용한다. 레코드는 claim 출처를 claim_source(폐쇄 enum session_start·state_transition)로 함께 기록한다 — resolve_claim_source가 키 없는 구버전 레코드를 state_transition으로 접어 하위호환을 지키고, enum 밖 값은 예외 대신 claim_source_invalid 거부이며 파일을 쓰지 않는다. 같은 세션 재-claim은 session_start→state_transition 승격만 하고 강등하지 않으며 승격 시 generation·claimed_at·owner_session_id는 불변이다. classify는 lease_expires_at과 요청 session_id만으로 current_session_owned·foreign_session_owned·unowned·lease_expired 중 하나를 판정하며 예외 대신 구조화 값을 반환한다.",
-  "exports": ["claim", "heartbeat", "release", "classify", "resolve_ttl_sec", "resolve_claim_source", "CLAIM_SOURCES"],
+  "description": "hub task lease 저장소(<canonical_task>/run/.runtime/owner.json) claim·heartbeat·release·classify. D-5 스키마(task_path·owner_session_id·generation·claimed_at·heartbeat_at·lease_expires_at·status)로 ownership_core.write_json_atomic을 통해 원자 기록한다. TTL 우선순위는 resolve_ttl_sec — ① claim(ttl_sec=) 명시 인자 ② <project_root>/.opal/setting.local.json의 ownership.lease_ttl_sec ③ 기본 14400(fail-safe, 설정 파일 부재·파싱 실패·비정수는 예외 없이 ③으로 폴백). project_root는 추론하지 않고 호출자가 명시적으로 전달할 때만 ②를 적용한다. 레코드는 claim 출처를 claim_source(폐쇄 enum session_start·state_transition)로 함께 기록한다 — resolve_claim_source가 키 없는 구버전 레코드를 state_transition으로 접어 하위호환을 지키고, enum 밖 값은 예외 대신 claim_source_invalid 거부이며 파일을 쓰지 않는다. 같은 세션 재-claim은 session_start→state_transition 승격만 하고 강등하지 않으며 승격 시 generation·claimed_at·owner_session_id는 불변이다. classify는 lease_expires_at과 요청 session_id만으로 current_session_owned·foreign_session_owned·unowned·lease_expired 중 하나를 판정하며 예외 대신 구조화 값을 반환한다. handoff/handoff_cancel은 허브→워크트리 대상 지정 이관(D-3)이다 — handoff는 소유 세션의 live lease를 status=handoff_pending·owner_session_id=None·handoff_to_worktree_root·handoff_from_session_id·handoff_expires_at로 원자 교체하고(generation 불변, 소유자 불일치는 not_owner 거부, live lease 부재는 파일을 만들지 않는 no_live_lease no-op), handoff_cancel은 이관을 수행한 세션만 그 세션 소유 lease로 되돌린다(그 외 not_handoff_owner). claim의 keyword-only claimant_root는 이관 대기 레코드에서만 의미를 가지며 — 이 분기는 foreign_owner 검사보다 앞에 놓인다 — claimant_root가 handoff_to_worktree_root와 realpath 동치이거나 그 하위일 때만 신규 claim을 허용하고 그 외(제3 경로·미지정)는 handoff_pending 거부다. 이관 대상 루트는 호출자가 준 registry 발급값만 쓰고 이 모듈이 경로에서 추론하지 않는다. 이관 TTL은 DEFAULT_HANDOFF_TTL_SEC로 lease TTL과 분리되며, 만료된 이관 레코드는 종전 무소유와 동일 경로로 접혀 허브가 되찾을 수 있다. 소비된 이관 필드는 claim 성공·handoff_cancel 성공 후 레코드에 잔존하지 않는다. classify는 이관 분기를 두지 않는다 — owner_session_id가 비어 이미 unowned로 판정되고, 이 성질이 가드 비차단과 heartbeat no-op을 함께 성립시킨다.",
+  "exports": ["claim", "heartbeat", "release", "classify", "handoff", "handoff_cancel", "resolve_ttl_sec", "resolve_claim_source", "CLAIM_SOURCES"],
   "depends": ["ownership_tool.ownership_core"]
 }
 """
 from __future__ import annotations
 
 import json
+import os
 import pathlib
 from datetime import datetime, timedelta, timezone
 
 from . import ownership_core
 
 DEFAULT_TTL_SEC = 14400
+# D-3/D-5 — lease 이관(handoff) 상태와 그 전용 만료. 이관 TTL은 lease TTL과 분리한
+# 별도 기본값이며 resolve_ttl_sec의 해석 경로(claim ttl_sec·setting.local.json)를
+# 공유하지 않는다 — 워크트리 터미널 기동에 필요한 짧은 창만 열어 둔다.
+HANDOFF_STATUS = "handoff_pending"
+DEFAULT_HANDOFF_TTL_SEC = 900
+_HANDOFF_FIELDS = (
+    "handoff_to_worktree_root",
+    "handoff_from_session_id",
+    "handoff_expires_at",
+)
 # D-21 — claim 출처 폐쇄 enum. session_start는 SessionStart 자동 claim(수동 소유권),
 # state_transition은 state-tool 상태 전이 claim(능동 소유권)이다.
 CLAIM_SOURCES = ("session_start", "state_transition")
@@ -112,7 +123,34 @@ def _is_live(record, now_dt):
     return now_dt < expires
 
 
-def claim(task_path, *, session_id, claim_source=None, now=None, ttl_sec=None, project_root=None):
+def _handoff_is_live(record, now_dt):
+    """이관 레코드가 아직 만료 전인지 판정한다. handoff_expires_at 부재·파싱 실패는 만료로 접는다."""
+    expires = _parse_dt(record.get("handoff_expires_at"))
+    if expires is None:
+        return False
+    return now_dt < expires
+
+
+def _root_accepts(claimant_root, target_root):
+    """claimant_root가 이관 대상 루트와 realpath 동치이거나 그 하위인지 판정한다.
+
+    경로는 호출자가 준 인자와 레코드에 적힌 발급값만 쓰며 cwd·task path 조상·
+    `.opal-worktrees` 문자열로 추론하지 않는다(worktree.md task root 계약, C-4).
+    """
+    if not claimant_root or not target_root:
+        return False
+    try:
+        claimant = os.path.realpath(str(claimant_root))
+        target = os.path.realpath(str(target_root))
+    except (OSError, ValueError):
+        return False
+    if claimant == target:
+        return True
+    return claimant.startswith(target.rstrip(os.sep) + os.sep)
+
+
+def claim(task_path, *, session_id, claim_source=None, now=None, ttl_sec=None, project_root=None,
+          claimant_root=None):
     """<task_path>/run/.runtime/owner.json에 lease를 기록한다.
 
     기존 lease가 live(만료 전 + released 아님)이고 다른 세션이면 이전하지 않고
@@ -138,7 +176,20 @@ def claim(task_path, *, session_id, claim_source=None, now=None, ttl_sec=None, p
     effective_ttl = resolve_ttl_sec(project_root, ttl_sec)
     existing = _load_owner(task_path)
 
-    if existing and _is_live(existing, now_dt) and existing.get("owner_session_id") != session_id:
+    # [MUST] 이관 분기는 foreign_owner 검사보다 **앞**에 온다 — 이관 레코드도 _is_live가
+    # True이므로(released가 아니고 lease_expires_at이 미래) 순서가 뒤바뀌면 대상 루트에서
+    # 온 claim이 foreign_owner로 거부된다.
+    if existing and existing.get("status") == HANDOFF_STATUS:
+        if _handoff_is_live(existing, now_dt):
+            if not _root_accepts(claimant_root, existing.get("handoff_to_worktree_root")):
+                return {
+                    "ok": False,
+                    "diagnostic": HANDOFF_STATUS,
+                    "task_path": str(task_path),
+                    "handoff_to_worktree_root": existing.get("handoff_to_worktree_root"),
+                }
+        # 대상 루트 일치 또는 이관 만료 — 둘 다 종전 무소유와 동일한 신규 claim 경로로 접는다.
+    elif existing and _is_live(existing, now_dt) and existing.get("owner_session_id") != session_id:
         return {
             "ok": False,
             "diagnostic": "foreign_owner",
@@ -214,6 +265,76 @@ def release(task_path, *, session_id, now=None):
     record = dict(existing)
     record["status"] = "released"
     record["heartbeat_at"] = _fmt(now_dt)
+    write = ownership_core.write_json_atomic(_owner_path(task_path), record)
+    if not write["ok"]:
+        return {"ok": False, "diagnostic": write["error"], "path": write.get("path")}
+    result = dict(record)
+    result["ok"] = True
+    return result
+
+
+def handoff(task_path, *, session_id, to_worktree_root, now=None):
+    """현 소유 lease를 지정한 워크트리 루트 앞으로 이관 대기 상태(D-3)로 원자 교체한다.
+
+    소유자 불일치는 {"ok": False, "diagnostic": "not_owner"} 거부이고, live lease가
+    없으면 파일을 만들지 않고 {"ok": True, "noop": True, "diagnostic": "no_live_lease"}다.
+    일치하면 status=HANDOFF_STATUS, owner_session_id=None과 이관 3필드를 기록한다 —
+    generation은 이관으로 증가하지 않는다(소유권 세대는 실제 claim에서만 늘어난다).
+    to_worktree_root는 호출자가 준 registry 발급값을 그대로 저장하며 이 모듈이
+    경로로부터 추론하지 않는다(C-4).
+    """
+    now_dt = _now_dt(now)
+    existing = _load_owner(task_path)
+
+    if existing and existing.get("owner_session_id") not in (None, session_id):
+        return {
+            "ok": False,
+            "diagnostic": "not_owner",
+            "task_path": str(task_path),
+            "owner_session_id": existing.get("owner_session_id"),
+        }
+
+    if not _is_live(existing, now_dt) or existing.get("owner_session_id") != session_id:
+        return {"ok": True, "noop": True, "diagnostic": "no_live_lease"}
+
+    record = dict(existing)
+    record["status"] = HANDOFF_STATUS
+    record["owner_session_id"] = None
+    record["handoff_to_worktree_root"] = str(to_worktree_root)
+    record["handoff_from_session_id"] = session_id
+    record["handoff_expires_at"] = _fmt(now_dt + timedelta(seconds=DEFAULT_HANDOFF_TTL_SEC))
+    write = ownership_core.write_json_atomic(_owner_path(task_path), record)
+    if not write["ok"]:
+        return {"ok": False, "diagnostic": write["error"], "path": write.get("path")}
+    result = dict(record)
+    result["ok"] = True
+    return result
+
+
+def handoff_cancel(task_path, *, session_id):
+    """이관 대기를 취소하고 이관을 수행한 세션 소유 lease로 되돌린다.
+
+    status가 HANDOFF_STATUS이고 handoff_from_session_id가 session_id일 때만 허용하며,
+    그 외는 {"ok": False, "diagnostic": "not_handoff_owner"} 거부이고 파일을 쓰지 않는다.
+    generation은 불변이고 소비된 이관 필드는 레코드에서 제거한다.
+    """
+    existing = _load_owner(task_path)
+    if (
+        not existing
+        or existing.get("status") != HANDOFF_STATUS
+        or existing.get("handoff_from_session_id") != session_id
+    ):
+        return {
+            "ok": False,
+            "diagnostic": "not_handoff_owner",
+            "task_path": str(task_path),
+        }
+
+    record = dict(existing)
+    record["status"] = "active"
+    record["owner_session_id"] = session_id
+    for field in _HANDOFF_FIELDS:
+        record.pop(field, None)
     write = ownership_core.write_json_atomic(_owner_path(task_path), record)
     if not write["ok"]:
         return {"ok": False, "diagnostic": write["error"], "path": write.get("path")}

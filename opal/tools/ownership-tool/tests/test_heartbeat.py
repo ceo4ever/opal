@@ -5,15 +5,22 @@
 # description: ownership_tool.heartbeat_hook / session_end_hook 공개 계약 검증 (S-12 hooks). 기존
 #   3건은 GREEN. 4번째(closed 세션 registry가 PostToolUse heartbeat로 되살아나지 않아야 한다)는
 #   heartbeat_hook이 세션 registry 레코드의 status를 보지 않고 존재 여부만으로 재등록해 RED다.
+#   태스크 150 추가분(S-3, AC-1·H-4) — 허브→워크트리 이관(D-3) 대기 lease가 이관을 수행한
+#   허브 세션의 heartbeat로 되살아나지 않는지를 고정한다: lease.claim→lease.handoff 실호출로
+#   만든 handoff_pending 레코드에 lease.heartbeat를 걸어 {"ok": True, "noop": True} 반환과
+#   레코드 파일 mtime·size·내용 불변을 확인하고, 실제 PostToolUse 진입점
+#   heartbeat_hook.handle의 갱신 대상이 0건인지도 함께 확인한다.
 # exports: (none — pytest module)
 # depends: ownership_tool.heartbeat_hook, ownership_tool.session_end_hook, ownership_tool.session_registry,
-#   ownership_tool.ownership_core, fixtures/hook-payloads
-"""S-12 hooks 공개 계약 회귀 — 3건 GREEN + closed 세션 재활성화 방지 1건(RED, 결함②)."""
+#   ownership_tool.ownership_core, ownership_tool.lease, fixtures/hook-payloads
+"""S-12 hooks 공개 계약 회귀 — 3건 GREEN + closed 세션 재활성화 방지 1건(RED, 결함②) +
+태스크 150 S-3(이관 대기 lease의 허브 heartbeat no-op) 회귀 가드 1건."""
 from __future__ import annotations
 
 import json
 import shutil
 import tempfile
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from ownership_tool import ownership_core, session_registry
@@ -187,3 +194,103 @@ def test_posttooluse_after_sessionend_keeps_registry_closed_and_does_not_refresh
         "closed 세션 registry가 PostToolUse heartbeat로 되살아나면 안 된다 "
         f"(actual status={reread['data'].get('status')!r})"
     )
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# S-3(AC-1·H-4) — 이관 대기 lease는 이관을 수행한 허브 세션의 heartbeat로 되살아나면
+# 안 된다. 허브 세션은 매 도구 호출마다 PostToolUse heartbeat를 발화하므로, 이 경로가
+# handoff_pending 레코드를 갱신하면 AC-1(이관된 태스크의 소유자는 워크트리 세션이다)이
+# 수 초 만에 깨진다. lease.heartbeat 공개 반환값과 레코드 파일의 불변성, 그리고 실제
+# PostToolUse 진입점(heartbeat_hook.handle)의 갱신 대상 0건을 함께 고정한다.
+# 레코드는 손으로 조립하지 않고 lease.claim → lease.handoff 실호출로 만든다.
+# ─────────────────────────────────────────────────────────────────────────────
+
+_KST = timezone(timedelta(hours=9))
+
+
+def _iso(dt: datetime) -> str:
+    return dt.isoformat()
+
+
+def _seed_handoff_pending_worktree(hub_tmp, wt_tmp, task_num, task_folder, registry_entry_out=None):
+    """<wt_tmp>/task_<num> 워크트리와 그 안의 canonical task를 실물 배치하고 발급값 사본
+    (<worktree_root>/.opal/task-ownership.json)을 내려보낸다 — heartbeat_hook의 cwd→task
+    해석이 이 사본을 읽는다(test_integration.py `_seed_manual_worktree`와 같은 방식)."""
+    worktree_root = wt_tmp / "task_{}".format(task_num)
+    worktree_root.mkdir(parents=True, exist_ok=True)
+    task_dir = worktree_root / "tasks" / task_folder
+    task_dir.mkdir(parents=True, exist_ok=True)
+    registry_entry = {
+        "allocator_root": str(hub_tmp),
+        "task_home": str(worktree_root),
+        "task_folder": task_folder,
+        "task_path": str(task_dir),
+        "artifact_repo": ".",
+        "task_ownership_version": 2,
+    }
+    meta_dir = wt_tmp / ".meta"
+    meta_dir.mkdir(parents=True, exist_ok=True)
+    (meta_dir / "task_{}.json".format(task_num)).write_text(
+        json.dumps(registry_entry, ensure_ascii=False), encoding="utf-8"
+    )
+    copy_path = ownership_core.task_ownership_copy_path(worktree_root)
+    copy_path.parent.mkdir(parents=True, exist_ok=True)
+    copy_path.write_text(json.dumps(registry_entry, ensure_ascii=False), encoding="utf-8")
+    return worktree_root, task_dir
+
+
+def test_s3_hub_heartbeat_does_not_revive_handoff_pending_lease(monkeypatch):
+    """이관 대기 lease + 이관을 수행한 허브 세션 id → heartbeat는 no-op이고 파일을 쓰지 않는다."""
+    from ownership_tool import heartbeat_hook, lease
+
+    # setup(B-5): 앰비언트 세션 env 격리(다른 케이스와 동일 사유).
+    monkeypatch.delenv("CLAUDE_CODE_SESSION_ID", raising=False)
+    monkeypatch.delenv("OPAL_SESSION_ID", raising=False)
+
+    tmp, hub_tmp, wt_tmp = _clone_fixtures()
+    worktree_root, task_dir = _seed_handoff_pending_worktree(
+        hub_tmp, wt_tmp, "150", "150-handoff-heartbeat-noop")
+
+    hub_session = "sess-150-hub"
+    now = datetime.now(_KST).replace(microsecond=0)
+
+    # ① 허브 세션이 canonical task lease를 실제로 확보한 뒤 ② 워크트리 앞으로 이관한다 —
+    # 이관 대기 레코드는 손으로 쓰지 않고 공개 API 연쇄가 만든다.
+    claimed = lease.claim(str(task_dir), session_id=hub_session,
+                          claim_source="state_transition", now=_iso(now))
+    assert claimed["ok"] is True
+    handed = lease.handoff(str(task_dir), session_id=hub_session,
+                           to_worktree_root=str(worktree_root),
+                           now=_iso(now + timedelta(seconds=1)))
+    assert handed["ok"] is True
+
+    lease_path = ownership_core.hub_lease_path(task_dir)
+    before_record = json.loads(lease_path.read_text(encoding="utf-8"))
+    assert before_record["status"] == lease.HANDOFF_STATUS
+    assert before_record["owner_session_id"] is None
+    before_stat = lease_path.stat()
+
+    # ③ 허브 세션 id로 heartbeat를 호출한다 — 반환은 정확히 no-op 계약이어야 한다.
+    beat = lease.heartbeat(str(task_dir), session_id=hub_session,
+                           now=_iso(now + timedelta(seconds=2)), project_root=worktree_root)
+    assert beat == {"ok": True, "noop": True}, beat
+
+    # ④ 파일이 쓰이지 않았다 — mtime·size 불변으로 확인한다(갱신은 원자 교체라 mtime이 바뀐다).
+    after_stat = lease_path.stat()
+    assert after_stat.st_mtime_ns == before_stat.st_mtime_ns
+    assert after_stat.st_size == before_stat.st_size
+
+    # ⑤ 소유자 필드와 이관 3필드를 포함해 레코드 전체가 불변이다.
+    assert json.loads(lease_path.read_text(encoding="utf-8")) == before_record
+
+    # ⑥ 실제 PostToolUse 진입점도 이 레코드를 갱신 후보로 잡지 않는다(H-4의 실질) —
+    # 허브 세션은 매 도구 호출마다 이 경로를 밟는다.
+    payload = json.loads((tmp / "hook-payloads/posttooluse.json").read_text(encoding="utf-8"))
+    payload["cwd"] = str(worktree_root)
+    payload["session_id"] = hub_session
+    hook_result = heartbeat_hook.handle(
+        payload, project_root=worktree_root, now=_iso(now + timedelta(seconds=3)))
+    assert hook_result["refreshed"] == [], hook_result
+
+    assert lease_path.stat().st_mtime_ns == before_stat.st_mtime_ns
+    assert json.loads(lease_path.read_text(encoding="utf-8")) == before_record

@@ -10,10 +10,22 @@
 #   PreToolUse guard·lease 상호작용, hub 자동(state_transition) claim → Stop 강제 후보 판정,
 #   claim 거부 세션의 Stop이 foreign_owner 진단으로 비차단 통과하는지를 실측 API 호출 연쇄로
 #   구성한다.
+#   태스크 150 W-8 추가분(T8~T13) — 허브→워크트리 lease 이관(D-3) end-to-end: lease.handoff →
+#   워크트리 SessionStart claim → PreToolUse 가드 비차단 → state-tool 전이(실제 CLI 서브프로세스)
+#   한 줄기(S-2), 같은 워크트리 루트의 세션 교체 경계 2케이스(SessionEnd 선행 성공 / 미선행 거부
+#   후 해제 재시도 성공, S-18), 이관 만료가 종전 무소유로 접혀 허브가 되찾는 경로(S-10·H-5),
+#   해제→무소유→타 세션 SessionStart claim(S-6), 이관 필드 없는 기존 형식 lease와 worktree 키
+#   없는 허브 태스크의 비 `--wt` 회귀(S-11·AC-10)를 덮는다.
+#   태스크 150 S-16 추가분(T14, C-1) — 이관 경로 fail-safe 유지 회귀: 이관 대기(handoff_pending)
+#   lease에 예외 유발 조건 3종(손상 JSON / chmod 000 권한 없음 / 경로가 디렉터리)을 걸고 훅
+#   진입점 5종(session_start·session_end·heartbeat·pretooluse_guard·stop)의 `__main__`을 각각
+#   subprocess로 띄워 15조합 전건이 exit 0 · 차단 출력 없음 · 트레이스백 미전파인지 확인한다.
 # exports: (none — pytest module)
 # depends: ownership_tool.session_start_hook, ownership_tool.heartbeat_hook, ownership_tool.session_end_hook,
-#   ownership_tool.pretooluse_guard_hook, ownership_tool.stop_evaluator, ownership_tool.lease,
-#   ownership_tool.fingerprint, fixtures/hub, fixtures/registry, fixtures/hook-payloads, fixtures/fingerprint
+#   ownership_tool.pretooluse_guard_hook, ownership_tool.stop_evaluator, ownership_tool.stop_hook,
+#   ownership_tool.lease, ownership_tool.ownership_core, ownership_tool.fingerprint,
+#   ownership_tool.claude_adapter, state-tool state_tool.py (CLI subprocess),
+#   fixtures/hub, fixtures/registry, fixtures/hook-payloads, fixtures/fingerprint
 """통합 회귀 — 이미 GREEN인 모듈들의 실행 API를 실제 순서대로 연쇄 호출해 단일 모듈 단위
 테스트로는 드러나지 않는 경계간 상호작용(레지스트리 파일 → lease → 판정 → 해제)을 검증한다.
 
@@ -22,7 +34,10 @@
 from __future__ import annotations
 
 import json
+import os
 import shutil
+import subprocess
+import sys
 import tempfile
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -477,3 +492,580 @@ def test_hub_fossil_ambiguous_shadow_not_forced_and_guard_resolves_no_canonical_
     guard_result = pretooluse_guard_hook.handle(guard_payload, project_root=hub_tmp, session_id="sess-fossil")
     assert guard_result.get("decision") != "block"
     assert guard_result.get("task_path") is None
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# 태스크 150 W-8 — 허브→워크트리 lease 이관(D-3) 통합 경로.
+#
+# 단위 테스트(test_lease.py·test_session_start.py·test_pretooluse_guard.py·
+# test_state_tool_ownership.py)는 각 모듈의 이관 계약을 owner.json 직접 주입이나 단일
+# 함수 호출로 독립 검증한다. 여기서는 그 조각들을 **손으로 조립하지 않고** 실제 함수를
+# 이관 순서대로 태워, 한 모듈이 디스크에 남긴 상태를 다음 모듈이 그대로 읽는 경계간
+# 데이터 흐름만 검증한다(PRINCIPLES §2 — 단일 모듈 계약을 재검증하지 않는다).
+# ═════════════════════════════════════════════════════════════════════════════
+
+# state-tool CLI 실물. 이관 소비의 마지막 고리(상태 전이 claim)는 ownership-tool 안에서
+# 재현할 수 없으므로 실제 CLI를 서브프로세스로 태운다(test_state_tool_ownership.py와
+# 같은 관례 — 경로만 반대 방향으로 참조한다).
+_STATE_TOOL_PATH = Path(__file__).resolve().parent.parent.parent / "state-tool" / "state_tool.py"
+
+# state-tool init이 요구하는 최소 rows-spec. 이관 경로 검증에 필요한 전이 1개만 있으면 된다.
+_SIMPLE_ROWS_SPEC = json.dumps(
+    [
+        {"stage": "TASK", "item": "작업"},
+        {"stage": "EXECUTE", "item": "작업"},
+        {"stage": "CLOSE", "item": "State Gate"},
+    ],
+    ensure_ascii=False,
+)
+
+
+def _session_id_env_names():
+    """세션 ID를 싣는 환경변수 이름 2종을 얻는다.
+
+    플랫폼 고유 이름은 claude_adapter가 소유하므로(C-15) 이 테스트에 하드코딩하지 않고
+    상수를 읽는다. OPAL 중립 이름은 session_start_hook이 소유한다."""
+    from ownership_tool import claude_adapter, session_start_hook
+
+    return (session_start_hook.SESSION_ID_ENV_LINE_KEY, claude_adapter.SESSION_ID_ENV)
+
+
+def _run_state_tool(cwd, args, session_id=None):
+    """state-tool CLI를 지정 cwd에서 실행한다 — claimant_root가 그 cwd에서 오기 때문이다.
+
+    앰비언트 세션 변수는 항상 제거한 뒤 필요할 때만 주입한다(merge 방식으로는 부재 키를
+    지울 수 없다 — test_state_tool_ownership.py `_run_at`의 선례와 같은 이유)."""
+    env = dict(os.environ)
+    neutral_key, platform_key = _session_id_env_names()
+    env.pop(neutral_key, None)
+    env.pop(platform_key, None)
+    if session_id is not None:
+        env[neutral_key] = session_id
+    return subprocess.run(
+        [sys.executable, str(_STATE_TOOL_PATH), *args],
+        capture_output=True, text=True, env=env, cwd=str(cwd),
+    )
+
+
+def _seed_manual_worktree(tmp, hub_tmp, wt_tmp, task_num, task_folder):
+    """registry 발급값을 직접 구성한 워크트리 1개를 조립한다(T3의 task_220 선례와 동일 방식).
+
+    canonical task_path는 워크트리 안(`<worktree_root>/tasks/<task_folder>`)이다 — 실제
+    `--wt` 태스크의 배치와 같다. 반환: (worktree_root, task_dir, registry_entry)."""
+    from ownership_tool import ownership_core
+
+    worktree_root = wt_tmp / "task_{}".format(task_num)
+    worktree_root.mkdir(parents=True, exist_ok=True)
+    task_dir = worktree_root / "tasks" / task_folder
+    task_dir.mkdir(parents=True, exist_ok=True)
+    registry_entry = {
+        "allocator_root": str(hub_tmp),
+        "task_home": str(worktree_root),
+        "task_folder": task_folder,
+        "task_path": str(task_dir),
+        "artifact_repo": ".",
+        "task_ownership_version": 2,
+    }
+    meta_dir = wt_tmp / ".meta"
+    meta_dir.mkdir(parents=True, exist_ok=True)
+    (meta_dir / "task_{}.json".format(task_num)).write_text(
+        json.dumps(registry_entry, ensure_ascii=False), encoding="utf-8"
+    )
+    _write_task_ownership_copy(ownership_core, worktree_root, registry_entry)
+    return worktree_root, task_dir, registry_entry
+
+
+def _session_start(tmp, worktree_root, session_id, now):
+    """SessionStart 봉투를 실제 handle()에 태운다(봉투는 fixture 원본을 쓴다)."""
+    from ownership_tool import session_start_hook
+
+    payload = _load(tmp, "hook-payloads/session-start.json")
+    payload["cwd"] = str(worktree_root)
+    payload["session_id"] = session_id
+    return session_start_hook.handle(
+        payload, project_root=worktree_root, env_file_path=None, now=_iso(now)
+    )
+
+
+def _session_end(tmp, worktree_root, session_id, now):
+    from ownership_tool import session_end_hook
+
+    payload = _load(tmp, "hook-payloads/sessionend.json")
+    payload["cwd"] = str(worktree_root)
+    payload["session_id"] = session_id
+    return session_end_hook.handle(payload, project_root=worktree_root, now=_iso(now))
+
+
+def _guard_edit(tmp, cwd, session_id, now=None):
+    """PreToolUse 가드를 Edit 봉투로 직접 호출한다 — 가드 판정은 구조적 방증이 아니라
+    handle()의 반환값으로만 읽는다(coding-principles §4)."""
+    from ownership_tool import pretooluse_guard_hook
+
+    payload = _load(tmp, "hook-payloads/pretooluse.json")
+    payload["cwd"] = str(cwd)
+    payload["tool_name"] = "Edit"
+    return pretooluse_guard_hook.handle(
+        payload, project_root=cwd, session_id=session_id, now=None if now is None else _iso(now)
+    )
+
+
+def _read_lease(task_dir):
+    from ownership_tool import ownership_core
+
+    return json.loads(ownership_core.hub_lease_path(task_dir).read_text(encoding="utf-8"))
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# T8 — S-2(AC-2): 이관 → 워크트리 SessionStart claim → PreToolUse 가드 통과 →
+# state-tool 전이. 네 모듈이 각각 소유한 판정이 한 owner.json을 거쳐 이어지는지를
+# 실제 함수 호출 순서로 확인한다(어느 단계도 레코드를 손으로 쓰지 않는다).
+# ─────────────────────────────────────────────────────────────────────────────
+
+def test_s2_handoff_then_worktree_claim_guard_pass_and_state_tool_transition(monkeypatch):
+    from ownership_tool import lease
+
+    monkeypatch.delenv("CLAUDE_CODE_SESSION_ID", raising=False)
+    monkeypatch.delenv("OPAL_SESSION_ID", raising=False)
+
+    tmp, hub_tmp, wt_tmp = _clone_fixtures()
+    worktree_root, task_dir, _entry = _seed_manual_worktree(
+        tmp, hub_tmp, wt_tmp, "150", "150-handoff-e2e")
+
+    hub_session = "sess-150-hub"
+    wt_session = "sess-150-wt"
+    now = _now_kst()
+
+    # setup — state-tool이 전이할 실제 태스크를 CLI로 만든다(state.json을 손으로 쓰지 않는다).
+    init_result = _run_state_tool(
+        worktree_root,
+        ["init", str(task_dir), "--skill", "opds", "--mode", "agentic",
+         "--task-title", "150 W-8 handoff e2e", "--rows-spec", _SIMPLE_ROWS_SPEC],
+    )
+    assert init_result.returncode == 0, init_result.stderr
+
+    # ① 허브 세션이 canonical task lease를 실제로 확보한다.
+    claimed = lease.claim(
+        str(task_dir), session_id=hub_session, claim_source="state_transition", now=_iso(now))
+    assert claimed["ok"] is True
+
+    # ② 허브가 워크트리 루트 앞으로 이관한다(launcher가 adapter.launch 직전에 하는 호출).
+    handed = lease.handoff(
+        str(task_dir), session_id=hub_session,
+        to_worktree_root=str(worktree_root), now=_iso(now + timedelta(seconds=1)))
+    assert handed["ok"] is True
+    pending = _read_lease(task_dir)
+    assert pending["status"] == lease.HANDOFF_STATUS
+    assert pending["owner_session_id"] is None
+    # 이관 대기 동안 어느 세션도 소유자가 아니다 — 가드가 비차단이어야 터미널이 뜬다.
+    assert lease.classify(str(task_dir), wt_session, now=_iso(now + timedelta(seconds=2))) == "unowned"
+
+    # ③ 워크트리 세션의 SessionStart가 이관을 소비해 claim에 성공한다(claimant_root=cwd).
+    started = _session_start(tmp, worktree_root, wt_session, now + timedelta(seconds=3))
+    assert started["lease_claimed"] is True, started["diagnostics"]
+    assert started["classification"] == "current_session_owned"
+    assert started["task_path"] == str(task_dir)
+    after_claim = _read_lease(task_dir)
+    assert after_claim["owner_session_id"] == wt_session
+    assert after_claim["status"] == "active"
+    # 소비된 이관 필드는 레코드에 잔존하지 않는다.
+    for field in ("handoff_to_worktree_root", "handoff_from_session_id", "handoff_expires_at"):
+        assert field not in after_claim
+
+    # ④ 같은 워크트리에서 그 세션의 쓰기는 가드를 통과한다(소유자 자신이므로 차단 없음).
+    guard_owner = _guard_edit(tmp, worktree_root, wt_session)
+    assert guard_owner["decision"] != "block", guard_owner
+    assert guard_owner["classification"] == "current_session_owned"
+    assert guard_owner["task_path"] == str(task_dir)
+
+    # ④' 반대로 이관을 내보낸 허브 세션의 쓰기는 같은 lease를 foreign으로 보고 차단된다 —
+    # ③의 claim이 실제로 소유권을 옮겼다는 것을 가드 자신의 판정으로 확인한다.
+    guard_foreign = _guard_edit(tmp, worktree_root, hub_session)
+    assert guard_foreign["decision"] == "block"
+    assert guard_foreign["classification"] == "foreign_session_owned"
+
+    # ⑤ 워크트리 cwd의 state-tool 전이가 같은 lease를 state_transition으로 승격한다.
+    advance = _run_state_tool(
+        worktree_root, ["advance", str(task_dir), "--row", "1"], session_id=wt_session)
+    assert advance.returncode == 0, advance.stderr
+    final = _read_lease(task_dir)
+    assert final["owner_session_id"] == wt_session
+    assert final["status"] == "active"
+    assert final["claim_source"] == "state_transition"
+    # 같은 세션 재-claim이므로 세대는 늘지 않는다(소유권 이동이 아니다).
+    assert final["generation"] == after_claim["generation"]
+    state = json.loads((task_dir / "state.json").read_text(encoding="utf-8"))
+    assert state["rows"][0]["status"] == "in_progress"
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# T9 — S-18(C-2·C-3·AC-6) 세션 교체 (a): 같은 워크트리 루트에서 세션 A가 SessionEnd로
+# 먼저 물러난 뒤 세션 B의 SessionStart가 claim에 성공한다.
+# ─────────────────────────────────────────────────────────────────────────────
+
+def test_s18_session_swap_after_session_end_lets_next_session_claim(monkeypatch):
+    from ownership_tool import lease
+
+    monkeypatch.delenv("CLAUDE_CODE_SESSION_ID", raising=False)
+    monkeypatch.delenv("OPAL_SESSION_ID", raising=False)
+
+    tmp, hub_tmp, wt_tmp = _clone_fixtures()
+    worktree_root, task_dir, _entry = _seed_manual_worktree(
+        tmp, hub_tmp, wt_tmp, "151", "151-session-swap-clean")
+    now = _now_kst()
+
+    a = _session_start(tmp, worktree_root, "sess-151-a", now)
+    assert a["lease_claimed"] is True
+    generation_a = _read_lease(task_dir)["generation"]
+
+    ended = _session_end(tmp, worktree_root, "sess-151-a", now + timedelta(minutes=1))
+    assert ended["released"] is True
+    assert str(task_dir) in ended["released_tasks"]
+    assert lease.classify(str(task_dir), "sess-151-b", now=_iso(now + timedelta(minutes=2))) == "unowned"
+
+    b = _session_start(tmp, worktree_root, "sess-151-b", now + timedelta(minutes=2))
+    assert b["lease_claimed"] is True, b["diagnostics"]
+    record = _read_lease(task_dir)
+    assert record["owner_session_id"] == "sess-151-b"
+    # 소유권이 실제로 이동했으므로 세대가 단조 증가한다.
+    assert record["generation"] == generation_a + 1
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# T10 — S-18(C-2·C-3·AC-6) 세션 교체 (b): SessionEnd 없이 세션 B가 SessionStart를
+# 발화하면 거부되고 진단이 남는다. 이후 A의 해제가 그 거부를 실제로 풀어준다.
+# ─────────────────────────────────────────────────────────────────────────────
+
+def test_s18_session_swap_without_session_end_is_rejected_then_release_unblocks(monkeypatch):
+    monkeypatch.delenv("CLAUDE_CODE_SESSION_ID", raising=False)
+    monkeypatch.delenv("OPAL_SESSION_ID", raising=False)
+
+    tmp, hub_tmp, wt_tmp = _clone_fixtures()
+    worktree_root, task_dir, _entry = _seed_manual_worktree(
+        tmp, hub_tmp, wt_tmp, "152", "152-session-swap-dirty")
+    now = _now_kst()
+
+    a = _session_start(tmp, worktree_root, "sess-152-a", now)
+    assert a["lease_claimed"] is True
+    before = _read_lease(task_dir)
+
+    # ① SessionEnd 없이 온 B는 claim에 실패하고 registry owner로도 등록되지 않는다(D-7).
+    b_denied = _session_start(tmp, worktree_root, "sess-152-b", now + timedelta(minutes=1))
+    assert b_denied["lease_claimed"] is False
+    assert b_denied["classification"] == "foreign_owner"
+    assert "foreign_owner" in b_denied["diagnostics"]
+    assert "registry_owner_not_registered:foreign_owner" in b_denied["diagnostics"]
+    assert b_denied["registry_owner_registered"] is False
+    # 거부는 레코드를 건드리지 않는다(A의 소유가 그대로다).
+    assert _read_lease(task_dir) == before
+
+    # ② A가 해제하면 같은 B의 재시도가 성공한다 — 거부의 원인이 lease 하나임을 확인한다.
+    ended = _session_end(tmp, worktree_root, "sess-152-a", now + timedelta(minutes=2))
+    assert ended["released"] is True
+
+    b_retry = _session_start(tmp, worktree_root, "sess-152-b", now + timedelta(minutes=3))
+    assert b_retry["lease_claimed"] is True, b_retry["diagnostics"]
+    assert _read_lease(task_dir)["owner_session_id"] == "sess-152-b"
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# T11 — S-10(H-5): 이관 만료. 워크트리 세션이 끝내 뜨지 않아 이관 TTL이 지나면 레코드는
+# 종전 무소유와 동일 경로로 접히고 허브가 되찾는다(가드는 그 사이 비차단이다).
+# ─────────────────────────────────────────────────────────────────────────────
+
+def test_s10_expired_handoff_folds_to_unowned_and_hub_reclaims(monkeypatch):
+    from ownership_tool import lease
+
+    monkeypatch.delenv("CLAUDE_CODE_SESSION_ID", raising=False)
+    monkeypatch.delenv("OPAL_SESSION_ID", raising=False)
+
+    tmp, hub_tmp, wt_tmp = _clone_fixtures()
+    worktree_root, task_dir, _entry = _seed_manual_worktree(
+        tmp, hub_tmp, wt_tmp, "153", "153-handoff-expiry")
+
+    hub_session = "sess-153-hub"
+    now = _now_kst()
+    assert lease.claim(
+        str(task_dir), session_id=hub_session,
+        claim_source="state_transition", now=_iso(now))["ok"] is True
+    assert lease.handoff(
+        str(task_dir), session_id=hub_session,
+        to_worktree_root=str(worktree_root), now=_iso(now))["ok"] is True
+
+    expired_at = now + timedelta(seconds=lease.DEFAULT_HANDOFF_TTL_SEC + 1)
+
+    # 만료 시점에도 판정은 무소유다 — 가드가 차단하지 않는다(이관 분기를 classify에 두지
+    # 않았다는 계약이 통합 경로에서도 성립한다).
+    assert lease.classify(str(task_dir), hub_session, now=_iso(expired_at)) == "unowned"
+    guard = _guard_edit(tmp, worktree_root, "sess-153-passerby", now=expired_at)
+    assert guard["decision"] != "block", guard
+    assert guard["classification"] == "unowned"
+
+    # 허브(=이관 대상 밖 루트)의 claim이 만료된 이관을 접고 성공한다.
+    reclaimed = lease.claim(
+        str(task_dir), session_id=hub_session, claim_source="state_transition",
+        now=_iso(expired_at), claimant_root=str(hub_tmp))
+    assert reclaimed["ok"] is True, reclaimed
+    record = _read_lease(task_dir)
+    assert record["owner_session_id"] == hub_session
+    assert record["status"] == "active"
+    for field in ("handoff_to_worktree_root", "handoff_from_session_id", "handoff_expires_at"):
+        assert field not in record
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# T12 — S-6(AC-6): 해제 → 무소유 → 타 세션 claim. T9가 SessionEnd 경유 경로를 보는 것과
+# 달리, 여기서는 lease.release 직접 호출이 만든 released 레코드를 SessionStart가 읽고
+# 새 소유자로 전이하는지를 본다(released 레코드는 파일이 남아 있어도 무소유다).
+# ─────────────────────────────────────────────────────────────────────────────
+
+def test_s6_explicit_release_then_unowned_then_other_session_claims(monkeypatch):
+    from ownership_tool import lease, ownership_core
+
+    monkeypatch.delenv("CLAUDE_CODE_SESSION_ID", raising=False)
+    monkeypatch.delenv("OPAL_SESSION_ID", raising=False)
+
+    tmp, hub_tmp, wt_tmp = _clone_fixtures()
+    worktree_root, task_dir, _entry = _seed_manual_worktree(
+        tmp, hub_tmp, wt_tmp, "154", "154-release-then-claim")
+    now = _now_kst()
+
+    owner = _session_start(tmp, worktree_root, "sess-154-owner", now)
+    assert owner["lease_claimed"] is True
+
+    released = lease.release(str(task_dir), session_id="sess-154-owner",
+                             now=_iso(now + timedelta(minutes=1)))
+    assert released["ok"] is True and not released.get("noop")
+    assert ownership_core.hub_lease_path(task_dir).exists()
+    assert _read_lease(task_dir)["status"] == "released"
+    assert lease.classify(str(task_dir), "sess-154-next", now=_iso(now + timedelta(minutes=2))) == "unowned"
+
+    nxt = _session_start(tmp, worktree_root, "sess-154-next", now + timedelta(minutes=2))
+    assert nxt["lease_claimed"] is True, nxt["diagnostics"]
+    assert _read_lease(task_dir)["owner_session_id"] == "sess-154-next"
+    guard = _guard_edit(tmp, worktree_root, "sess-154-next")
+    assert guard["decision"] != "block", guard
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# T13 — S-11(AC-10) 비 `--wt` 회귀: 이관 필드가 없는 기존 형식 lease와 worktree 키가
+# 없는 허브 태스크의 동작·산출물이 이관 도입 전과 같아야 한다. 레코드 키 집합과 claim
+# 판정, 허브 cwd의 가드·SessionStart 결과를 함께 고정한다.
+# ─────────────────────────────────────────────────────────────────────────────
+
+_LEGACY_LEASE_KEYS = {
+    "task_path", "owner_session_id", "generation", "claimed_at",
+    "heartbeat_at", "lease_expires_at", "status", "ttl_sec", "claim_source",
+}
+
+
+def test_s11_legacy_lease_and_non_worktree_task_behaviour_unchanged(monkeypatch):
+    from ownership_tool import lease
+
+    monkeypatch.delenv("CLAUDE_CODE_SESSION_ID", raising=False)
+    monkeypatch.delenv("OPAL_SESSION_ID", raising=False)
+
+    tmp, hub_tmp, wt_tmp = _clone_fixtures()
+    # worktree 키가 없는 허브 직속 태스크 — registry 발급값이 이 태스크를 가리키지 않는다.
+    (wt_tmp / ".meta").mkdir(parents=True, exist_ok=True)
+    task_dir = hub_tmp / "tasks" / "155-plain-hub-task"
+    task_dir.mkdir(parents=True, exist_ok=True)
+    now = _now_kst()
+
+    # ① claim 산출물에 이관 필드가 생기지 않는다(키 집합 고정).
+    claimed = lease.claim(str(task_dir), session_id="sess-155-a",
+                          claim_source="state_transition", now=_iso(now))
+    assert claimed["ok"] is True
+    record = _read_lease(task_dir)
+    assert set(record) == _LEGACY_LEASE_KEYS
+
+    # ② claimant_root 없이 온 타 세션 claim은 종전과 같이 foreign_owner로만 거부된다
+    # (handoff_pending이 아니다 — 이관 분기를 타지 않았다는 실측).
+    denied = lease.claim(str(task_dir), session_id="sess-155-b",
+                         claim_source="state_transition", now=_iso(now + timedelta(minutes=1)))
+    assert denied["ok"] is False
+    assert denied["diagnostic"] == "foreign_owner"
+    assert _read_lease(task_dir) == record
+
+    # ③ 같은 세션 재-claim은 종전대로 멱등(세대 불변)이고 키 집합도 그대로다.
+    again = lease.claim(str(task_dir), session_id="sess-155-a",
+                        claim_source="state_transition", now=_iso(now + timedelta(minutes=2)))
+    assert again["ok"] is True
+    assert again["generation"] == record["generation"]
+    assert set(_read_lease(task_dir)) == _LEGACY_LEASE_KEYS
+
+    # ④ 허브 루트 cwd는 세션 시작만으로 태스크를 얻지 못하고, 가드도 차단하지 않는다.
+    from ownership_tool import session_start_hook
+
+    payload = _load(tmp, "hook-payloads/session-start.json")
+    payload["cwd"] = str(hub_tmp)
+    payload["session_id"] = "sess-155-b"
+    started = session_start_hook.handle(
+        payload, project_root=hub_tmp, env_file_path=None, now=_iso(now + timedelta(minutes=3)))
+    assert started["lease_claimed"] is False
+    assert started["task_path"] is None
+    assert "no_owned_task" in started["diagnostics"]
+
+    guard = _guard_edit(tmp, hub_tmp, "sess-155-b")
+    assert guard["decision"] != "block", guard
+    assert guard["task_path"] is None
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# T14 — S-16(C-1): 이관 경로에서 예외를 유발하는 조건 3종(손상 JSON / 권한 없음 /
+# 경로가 디렉터리) × 훅 진입점 5종 = 15조합이 모두 fail-safe를 유지하는지 고정한다.
+# C-1은 "fail-safe를 **유지**한다"는 불변 제약이다 — 이번 이관(D-3) 경로 추가로 새 예외
+# 경로가 생기지 않았음을 보증하는 회귀 가드이며, 깨지면 훅이 세션을 막는다.
+# 판정은 구조적 방증이 아니라 실제 진입점 프로세스의 exit code·stdout·stderr로만 한다
+# (coding-principles §4, red-first §2) — 그래서 handle()이 아니라 `__main__` 경로를
+# subprocess로 띄운다.
+# ─────────────────────────────────────────────────────────────────────────────
+
+_OWNERSHIP_TOOL_DIR = Path(__file__).resolve().parent.parent
+
+# (훅 모듈, 그 훅이 stdin으로 받는 봉투 fixture) — 5개 진입점 전건.
+_HOOK_ENTRYPOINTS = (
+    ("session_start_hook", "hook-payloads/session-start.json"),
+    ("session_end_hook", "hook-payloads/sessionend.json"),
+    ("heartbeat_hook", "hook-payloads/posttooluse.json"),
+    ("pretooluse_guard_hook", "hook-payloads/pretooluse.json"),
+    ("stop_hook", "hook-payloads/stop.json"),
+)
+
+
+def _run_hook_entrypoint(module_name, payload, cwd, session_id):
+    """훅 `.py`를 실제 진입점(`__main__`)으로 띄운다 — 봉투는 stdin, 출력은 stdout 1줄.
+
+    PYTHONPATH는 run.sh가 훅에 주는 것과 같은 tool-dir이다."""
+    hook_path = _OWNERSHIP_TOOL_DIR / "ownership_tool" / "{}.py".format(module_name)
+    env = dict(os.environ)
+    env["PYTHONPATH"] = str(_OWNERSHIP_TOOL_DIR)
+    neutral_key, platform_key = _session_id_env_names()
+    env.pop(platform_key, None)
+    env[neutral_key] = session_id
+    return subprocess.run(
+        [sys.executable, str(hook_path)],
+        input=json.dumps(payload, ensure_ascii=False),
+        capture_output=True, text=True, cwd=str(cwd), env=env,
+    )
+
+
+def _assert_hook_is_fail_safe(module_name, completed):
+    """exit 0 · 차단 출력 없음 · 트레이스백 미전파를 한 훅 실행에 대해 확인한다."""
+    label = "{} exit={} stdout={!r} stderr={!r}".format(
+        module_name, completed.returncode, completed.stdout, completed.stderr)
+    assert completed.returncode == 0, label
+    assert "Traceback" not in completed.stderr, label
+
+    out = completed.stdout.strip()
+    if not out:
+        return
+    for line in out.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        decoded = json.loads(line)  # 훅 출력 규약은 1줄 JSON이다 — 깨지면 그것도 결함이다.
+        # Stop 훅의 차단 형식.
+        assert decoded.get("decision") != "block", label
+        # PreToolUse 가드의 차단 형식.
+        specific = decoded.get("hookSpecificOutput") or {}
+        assert specific.get("permissionDecision") != "deny", label
+
+
+def _seed_handoff_pending_task(tmp, hub_tmp, wt_tmp, task_num, task_folder, hub_session):
+    """이관 대기(handoff_pending) lease를 실제 공개 API 연쇄로 만든 워크트리를 돌려준다.
+    (worktree_root, task_dir, lease_path)."""
+    from ownership_tool import lease, ownership_core
+
+    worktree_root, task_dir, _entry = _seed_manual_worktree(
+        tmp, hub_tmp, wt_tmp, task_num, task_folder)
+    now = _now_kst()
+    claimed = lease.claim(str(task_dir), session_id=hub_session,
+                          claim_source="state_transition", now=_iso(now))
+    assert claimed["ok"] is True
+    handed = lease.handoff(str(task_dir), session_id=hub_session,
+                           to_worktree_root=str(worktree_root),
+                           now=_iso(now + timedelta(seconds=1)))
+    assert handed["ok"] is True
+    return worktree_root, task_dir, ownership_core.hub_lease_path(task_dir)
+
+
+def _run_all_hooks_against(tmp, worktree_root, session_id):
+    """훅 5종 전건을 같은 워크트리 cwd에서 실행하고 각각 fail-safe를 확인한다."""
+    ran = []
+    for module_name, fixture_rel in _HOOK_ENTRYPOINTS:
+        payload = _load(tmp, fixture_rel)
+        payload.pop("_fixture", None)
+        payload["cwd"] = str(worktree_root)
+        payload["session_id"] = session_id
+        completed = _run_hook_entrypoint(module_name, payload, worktree_root, session_id)
+        _assert_hook_is_fail_safe(module_name, completed)
+        ran.append(module_name)
+    return ran
+
+
+def test_s16_all_hooks_fail_safe_on_corrupt_handoff_lease_json(monkeypatch):
+    """(a) 손상 JSON 레코드 — 이관 대기 lease 파일이 파싱 불가일 때 훅 5종 전건이 비차단 통과."""
+    monkeypatch.delenv("CLAUDE_CODE_SESSION_ID", raising=False)
+    monkeypatch.delenv("OPAL_SESSION_ID", raising=False)
+
+    tmp, hub_tmp, wt_tmp = _clone_fixtures()
+    _worktree_root, _task_dir, lease_path = _seed_handoff_pending_task(
+        tmp, hub_tmp, wt_tmp, "161", "161-failsafe-corrupt-json", "sess-161-hub")
+    worktree_root = _worktree_root
+
+    # 이관 대기 레코드를 잘린 JSON으로 손상시킨다(부분 기록·디스크 오류 재현).
+    lease_path.write_text('{"status": "handoff_pending", "owner_sess', encoding="utf-8")
+
+    ran = _run_all_hooks_against(tmp, worktree_root, "sess-161-wt")
+    assert len(ran) == len(_HOOK_ENTRYPOINTS)
+
+
+def test_s16_all_hooks_fail_safe_on_unreadable_handoff_lease(monkeypatch):
+    """(b) 권한 없음 — 이관 대기 lease 파일을 읽을 수 없을 때 훅 5종 전건이 비차단 통과."""
+    import pytest
+
+    if hasattr(os, "geteuid") and os.geteuid() == 0:
+        pytest.skip("root는 chmod 000을 무시하고 읽으므로 '권한 없음' 조건이 성립하지 않는다")
+
+    monkeypatch.delenv("CLAUDE_CODE_SESSION_ID", raising=False)
+    monkeypatch.delenv("OPAL_SESSION_ID", raising=False)
+
+    tmp, hub_tmp, wt_tmp = _clone_fixtures()
+    worktree_root, _task_dir, lease_path = _seed_handoff_pending_task(
+        tmp, hub_tmp, wt_tmp, "162", "162-failsafe-no-permission", "sess-162-hub")
+
+    lease_path.chmod(0o000)
+    # 조건이 실제로 성립했는지 먼저 확인한다(성립하지 않으면 이 케이스는 아무것도 증명하지 않는다).
+    try:
+        lease_path.read_text(encoding="utf-8")
+    except PermissionError:
+        pass
+    else:
+        lease_path.chmod(0o600)
+        pytest.skip("이 파일시스템에서 chmod 000이 읽기를 막지 못한다")
+
+    try:
+        ran = _run_all_hooks_against(tmp, worktree_root, "sess-162-wt")
+    finally:
+        # 임시 디렉터리가 정리될 수 있도록 권한을 되돌린다.
+        lease_path.chmod(0o600)
+    assert len(ran) == len(_HOOK_ENTRYPOINTS)
+
+
+def test_s16_all_hooks_fail_safe_when_lease_path_is_a_directory(monkeypatch):
+    """(c) 경로가 디렉터리 — lease 파일 자리에 디렉터리가 있을 때 훅 5종 전건이 비차단 통과.
+
+    읽기는 IsADirectoryError, 원자 교체(os.replace)는 OSError를 던지는 조건이다."""
+    monkeypatch.delenv("CLAUDE_CODE_SESSION_ID", raising=False)
+    monkeypatch.delenv("OPAL_SESSION_ID", raising=False)
+
+    tmp, hub_tmp, wt_tmp = _clone_fixtures()
+    worktree_root, _task_dir, lease_path = _seed_handoff_pending_task(
+        tmp, hub_tmp, wt_tmp, "163", "163-failsafe-path-is-dir", "sess-163-hub")
+
+    lease_path.unlink()
+    lease_path.mkdir()
+    assert lease_path.is_dir()
+
+    ran = _run_all_hooks_against(tmp, worktree_root, "sess-163-wt")
+    assert len(ran) == len(_HOOK_ENTRYPOINTS)

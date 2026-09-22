@@ -1,0 +1,238 @@
+{
+  "task_id": "150-260922-opds-워크트리-태스크-소유권-이관-계약",
+  "skill": "opds",
+  "mode": "agentic",
+  "schema_version": "1.2",
+  "created_at": "2026-09-22 15:43:26",
+  "updated_at": "2026-09-22 18:41:57",
+  "current_status": "in_progress",
+  "rows": [
+    {
+      "row_id": 1,
+      "stage": "TASK",
+      "item": "작업",
+      "key": "task.task_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-22 15:43:46",
+      "owner": "PM",
+      "note": "TASK.md 작성 + clarification-check pass. --wt 미사용(자기참조 교착 회피)"
+    },
+    {
+      "row_id": 2,
+      "stage": "TASK",
+      "item": "사용자 확인",
+      "key": "task.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-22 15:45:38",
+      "owner": "auto",
+      "note": "auto-approved on PLAN entry"
+    },
+    {
+      "row_id": 3,
+      "stage": "PLAN",
+      "item": "작업",
+      "key": "plan.plan_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-22 18:37:29",
+      "owner": "PM",
+      "note": "opal-plan-agent 392334ms",
+      "worker_duration_minutes": 7
+    },
+    {
+      "row_id": 4,
+      "stage": "PLAN",
+      "item": "목표-커버 게이트",
+      "key": "plan.scenario_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-22 16:03:46",
+      "owner": "PM",
+      "note": "iteration 2 pass (goal2/adoption2/boundary2, avg 2.0). coverage-check all_covered=true, scenarios 18"
+    },
+    {
+      "row_id": 5,
+      "stage": "PLAN",
+      "item": "PM Gate",
+      "key": "plan.pm_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-22 16:04:43",
+      "owner": "PM",
+      "note": "체크리스트 7항목 전건 pass. AC/C/H 미커버 0건",
+      "gate": {
+        "artifacts": [
+          "TASK.md",
+          "PLAN.md",
+          "TEST-SCENARIO.md"
+        ],
+        "checklist": [
+          "sdlc-v2 TASK/PLAN/TEST-SCENARIO first frontmatter template=sdlc-v2; 기존 문서는 legacy 재개 경로로 판정",
+          "sdlc-v2 TASK.md AC/C → PLAN.md Work items 완료 기준 연결",
+          "sdlc-v2 PLAN.md Work items 필수 열·W-ID·선행 작업·실행 그룹·파일 충돌 없음 — state-tool verify <태스크폴더> --plan-contract-check 통과",
+          "sdlc-v2 PLAN.md Risks 절 존재, 실제 위험은 H-N 사용 또는 위험 없음 명시",
+          "sdlc-v2 PLAN.md Release and recovery 존재",
+          "sdlc-v2 TEST-SCENARIO.md Setup / Scenarios 존재, 모든 AC/C와 존재하는 H의 연결 완전 — op-scenario-gate pass",
+          "code-scan 결과 인용 — state-tool verify <태스크폴더> --code-scan-citation-check 통과"
+        ]
+      }
+    },
+    {
+      "row_id": 6,
+      "stage": "PLAN",
+      "item": "사용자 확인",
+      "key": "plan.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-22 16:07:46",
+      "owner": "auto",
+      "note": "auto-approved on EXECUTE entry"
+    },
+    {
+      "row_id": 7,
+      "stage": "EXECUTE",
+      "item": "작업",
+      "key": "execute.implement",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-22 18:37:29",
+      "owner": "PM",
+      "note": "워커 7건 합산 3311424ms (RED 742181 + W-1 207955 + W-3 211616 + W-4 100586 + W-5 1035270 + W-6 167493 + W-8 846323)",
+      "worker_duration_minutes": 55
+    },
+    {
+      "row_id": 8,
+      "stage": "TEST",
+      "item": "작업",
+      "key": "test.run_tests",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-22 18:37:29",
+      "owner": "PM",
+      "note": "opal-test-agent 529217ms + fix 워커 274304ms = 803521ms",
+      "worker_duration_minutes": 13
+    },
+    {
+      "row_id": 9,
+      "stage": "TEST",
+      "item": "PM Gate",
+      "key": "test.pm_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-22 18:35:29",
+      "owner": "PM",
+      "note": "시나리오 18/18 PASS, fidelity all_met, 회귀 5스위트 0 failed. 타입 검사는 mypy 미설치로 미확보 — 캡틴 승인으로 설치하지 않고 진행(DONE.md 명시)",
+      "gate": {
+        "artifacts": [
+          "TEST-SCENARIO.md",
+          "test-scenario.json"
+        ],
+        "checklist": [
+          "TEST-SCENARIO.md는 실행 전 명세로만 읽고 결과·증거를 기록하지 않음",
+          "test-scenario.json의 모든 필수 시나리오가 PASS이고 FAIL/BLOCKED가 없으며 실제 실행 증거가 존재",
+          "PLAN.md Work items에 정의된 필수 검증 PASS",
+          "컨벤션 자동 진단 PASS (GC-CONVENTION-*.md Critical/High 0건 — 컨벤션 적용 대상 ≥1건 시 발동)"
+        ]
+      }
+    },
+    {
+      "row_id": 10,
+      "stage": "TEST",
+      "item": "사용자 확인",
+      "key": "test.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-22 18:35:56",
+      "owner": "auto",
+      "note": "auto-approved on CLOSE entry"
+    },
+    {
+      "row_id": 11,
+      "stage": "CLOSE",
+      "item": "DONE.md 생성",
+      "key": "close.done_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-22 18:37:35",
+      "owner": "PM",
+      "note": "DONE.md 작성 — 결과·변경파일 18건·검증·회고 후보 3건·참고 5건"
+    },
+    {
+      "row_id": 12,
+      "stage": "CLOSE",
+      "item": "관련 문서 동기화 (조건부: 구현으로 문서 사실이 달라진 경우)",
+      "key": "close.docs_sync",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-22 18:38:12",
+      "owner": "PM",
+      "note": "PROJECT.md 문서 레지스트리에 harness/worktree.md 등재(실행 소유권 계약 SSOT). ARCHITECTURE.md의 lease 언급 6건은 전부 oppb scope lease로 별개 개념 — stale 없음. CONVENTIONS.md 해당 없음. ownership-tool/README.md는 W-3이 갱신",
+      "conditional": true
+    },
+    {
+      "row_id": 13,
+      "stage": "CLOSE",
+      "item": "brain ingest (조건부: 프로젝트 brain 사용 시)",
+      "key": "close.brain_ingest",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-22 18:40:14",
+      "owner": "PM",
+      "note": "concept 2페이지 ingest — lease-handoff-before-terminal-launch(대상 루트를 키로 한 인계 모델), contract-absent-from-harness-docs-passes-review(규범 문서 부재가 리뷰를 통과시킨 경위). 상호 링크·관련 절 추가 후 lint 자기 페이지 0건. entity/ownership-tool.md는 sync-header drift 0건",
+      "conditional": true
+    },
+    {
+      "row_id": 14,
+      "stage": "CLOSE",
+      "item": "회고/개선 후보 기록",
+      "key": "close.retrospective",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-22 18:41:50",
+      "owner": "PM",
+      "note": "fw-inbox 2건 등록(state-tool 중첩 회귀 가드 199초, scenario-coverage-build 판단 플래그). brain concept 2페이지 ingest. AGENTIC-LOG 43엔트리"
+    },
+    {
+      "row_id": 15,
+      "stage": "CLOSE",
+      "item": "worktree finalize/attribution (조건부: --wt 실행 시, 허브 수행)",
+      "key": "close.worktree_finalize",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-22 18:41:57",
+      "owner": "PM",
+      "note": "조건부 행 해당 없음 — 태스크 150은 --wt 없이 허브에서 수행했다(state.json에 worktree 키 부재). 귀속 대상 워크트리·브랜치가 없으므로 finalize 불요",
+      "conditional": true
+    },
+    {
+      "row_id": 16,
+      "stage": "CLOSE",
+      "item": "CLOSE 최종 상태 확정",
+      "key": "close.final",
+      "status": "pending",
+      "status_label": "⬜",
+      "timestamp": null,
+      "owner": "PM",
+      "note": null
+    }
+  ],
+  "next_action": "CLOSE CLOSE 최종 상태 확정 진입",
+  "run_log": {
+    "contract_version": "1.0",
+    "mode": "shadow",
+    "completion_profile": "cooperative",
+    "completion_profile_receipt": null,
+    "active_run_id": "run_3703dfcf-848c-46eb-ae0b-4ed28ebf7203",
+    "status": "active",
+    "pending_events": [],
+    "last_report": {
+      "event_id": "evt_113807d0-d922-4842-aef6-a1abaaab024c",
+      "report_type": "decision_request",
+      "transition_action": "blocked",
+      "user_input_required": true,
+      "at": "2026-09-22T08:22:04.988Z"
+    }
+  }
+}

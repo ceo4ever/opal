@@ -9,11 +9,9 @@ if [[ ! -x "$VENV_PYTHON" ]]; then
   exit 1
 fi
 
-# CLI 표면(ownership_tool/cli.py)은 아직 없다. 현재는 패키지 import 가능 여부만 확인한다.
 if ! PYTHONPATH="$SCRIPT_DIR" "$VENV_PYTHON" -c 'import ownership_tool' >/dev/null 2>&1; then
   echo '{"ok":false,"command":"ownership-tool","error":"package_import_failed"}' >&2
   exit 1
 fi
 
-echo '{"ok":false,"command":"ownership-tool","error":"not_implemented"}' >&2
-exit 1
+exec env PYTHONPATH="$SCRIPT_DIR" "$VENV_PYTHON" -m ownership_tool.cli "$@"

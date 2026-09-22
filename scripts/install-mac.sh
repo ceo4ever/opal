@@ -1477,6 +1477,14 @@ install_opal() {
             success "worktree-tool run.sh 실행 권한 설정"
         fi
 
+        # ── ownership-tool 실행 권한 (150) ──
+        # CLI 표면이 생기면서 run.sh가 사용자 호출 진입점이 되었다 — 원본 권한 보존에 의존하지 않는다.
+        local ownership_run="$opal_home/tools/ownership-tool/run.sh"
+        if [[ -f "$ownership_run" ]]; then
+            chmod +x "$ownership_run"
+            success "ownership-tool run.sh 실행 권한 설정"
+        fi
+
         # ── self-pm-tool 실행 권한 (122) ──
         local self_pm_run="$opal_home/tools/self-pm-tool/run.sh"
         if [[ -f "$self_pm_run" ]]; then

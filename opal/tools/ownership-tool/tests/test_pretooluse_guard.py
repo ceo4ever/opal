@@ -180,3 +180,159 @@ def test_foreign_owner_allows_read_and_ls_with_diagnostic(monkeypatch):
     result_ls = pretooluse_guard_hook.handle(ls_payload, project_root=worktree_root, session_id="sess-foreign")
     assert result_ls.get("decision") != "block"
     assert "foreign_owner_bash_unclassified" in result_ls.get("diagnostics", [])
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# TASK 150 — S-2(AC-2, C-2, H-1) 가드 절반: 이관은 가드 판정을 차단으로 만들지 않는다
+#
+# @header 보강: layer=test / domain=opal-pipeline. D-8은 차단 로직을 **건드리지 않고**
+# 이관만으로 AC-2가 성립해야 한다고 정한다 — `handoff_pending` 레코드는 owner_session_id가
+# 비어 `classify`가 `unowned`을 돌려주고, 대상 루트에서 claim한 뒤에는
+# `current_session_owned`가 된다. 두 국면 모두 `foreign_session_owned`가 아니므로
+# 차단 분기에 닿지 않는다. 판정은 공개 진입점 `pretooluse_guard_hook.handle`로만 관측한다.
+# 시간 의존은 고정 now 인자로 주입한다.
+# ─────────────────────────────────────────────────────────────────────────────
+
+import os
+
+S2_NOW = "2026-09-22T10:00:00+09:00"
+S2_HUB_SESSION = "sess-hub-150"
+S2_WT_SESSION = "sess-worktree-150"
+
+# D-6 폐쇄 목록에서 실제 차단 대상이 되는 쓰기 봉투들 — 여기서 하나라도 block이 나오면
+# 이관된 태스크의 워크트리 세션이 첫 쓰기부터 막힌다(AC-2 위반).
+_S2_WRITE_ENVELOPES = (
+    ("Edit", {"file_path": "TASK.md", "old_string": "a", "new_string": "b"}),
+    ("Write", {"file_path": "TASK.md", "content": "x"}),
+    ("NotebookEdit", {"notebook_path": "nb.ipynb", "new_source": "x"}),
+    ("Bash", {"command": "git commit -m handoff"}),
+    ("Bash", {"command": "state-tool advance --task 308"}),
+)
+
+
+def _build_handoff_worktree(tmp_path, task_number="308", task_folder="308-handoff-guard"):
+    """이관 대상 워크트리를 실물 동형으로 조립한다.
+
+    워크트리 세션의 루트 해석은 `ownership_core.resolve_roots` ② 분기 —
+    `<worktree_root>/.opal/task-ownership.json` 발급값 사본 — 를 탄다. 워크트리 안쪽에는
+    `.opal-worktrees`를 만들지 않는다(실물 허브 대조 형상).
+    """
+    hub_root = tmp_path / "hub"
+    wt_parent = hub_root / ".opal-worktrees"
+    meta_dir = wt_parent / ".meta"
+    worktree_root = wt_parent / ("task_" + task_number)
+    task_dir = worktree_root / "tasks" / task_folder
+    meta_dir.mkdir(parents=True, exist_ok=True)
+    task_dir.mkdir(parents=True, exist_ok=True)
+
+    entry = {
+        "task": task_number,
+        "worktree_root": str(worktree_root),
+        "allocator_root": str(hub_root),
+        "task_home": str(worktree_root),
+        "task_folder": task_folder,
+        "task_path": str(task_dir),
+        "artifact_repo": ".",
+        "task_ownership_version": 2,
+    }
+    (meta_dir / ("task_" + task_number + ".json")).write_text(
+        json.dumps(entry, ensure_ascii=False), encoding="utf-8"
+    )
+    copy_path = worktree_root / ".opal" / "task-ownership.json"
+    copy_path.parent.mkdir(parents=True, exist_ok=True)
+    copy_path.write_text(json.dumps(entry, ensure_ascii=False), encoding="utf-8")
+
+    assert not (worktree_root / ".opal-worktrees").exists()
+    return hub_root, entry, worktree_root, task_dir
+
+
+def _guard(pretooluse_guard_hook, worktree_root, session_id, tool_name, tool_input):
+    payload = {
+        "cwd": str(worktree_root),
+        "session_id": session_id,
+        "tool_name": tool_name,
+        "tool_input": tool_input,
+    }
+    return pretooluse_guard_hook.handle(
+        payload, project_root=worktree_root, session_id=session_id, env={}, now=S2_NOW
+    )
+
+
+def test_s2_handoff_pending_and_claimed_worktree_session_are_not_blocked(tmp_path, monkeypatch):
+    """S-2(AC-2, C-2, H-1): 이관 대기 중에도, 대상 루트에서 claim한 뒤에도 워크트리 세션의
+    쓰기 도구·쓰기 Bash 봉투가 가드에 차단되지 않는다."""
+    from ownership_tool import lease, pretooluse_guard_hook  # RED: lease.handoff 미구현
+
+    monkeypatch.delenv("CLAUDE_CODE_SESSION_ID", raising=False)
+    monkeypatch.delenv("OPAL_SESSION_ID", raising=False)
+
+    hub_root, entry, worktree_root, task_dir = _build_handoff_worktree(tmp_path)
+
+    assert lease.claim(
+        task_dir, session_id=S2_HUB_SESSION, claim_source="state_transition", now=S2_NOW
+    )["ok"] is True
+    assert lease.handoff(
+        task_dir,
+        session_id=S2_HUB_SESSION,
+        to_worktree_root=entry["worktree_root"],
+        now=S2_NOW,
+    )["ok"] is True
+
+    # ① 이관 대기 국면 — 소유자 필드가 비어 classify가 unowned이므로 차단 분기에 닿지 않는다.
+    for tool_name, tool_input in _S2_WRITE_ENVELOPES:
+        result = _guard(pretooluse_guard_hook, worktree_root, S2_WT_SESSION, tool_name, tool_input)
+        assert result.get("task_path") == str(task_dir)
+        assert result.get("classification") == "unowned", (tool_name, result)
+        assert result.get("decision") != "block", (tool_name, result)
+
+    # ② 대상 루트에서 claim 성공 후 — current_session_owned이므로 역시 차단되지 않는다.
+    claimed = lease.claim(
+        task_dir,
+        session_id=S2_WT_SESSION,
+        claim_source="session_start",
+        now=S2_NOW,
+        claimant_root=str(worktree_root),
+    )
+    assert claimed["ok"] is True, claimed
+
+    for tool_name, tool_input in _S2_WRITE_ENVELOPES:
+        result = _guard(pretooluse_guard_hook, worktree_root, S2_WT_SESSION, tool_name, tool_input)
+        assert result.get("classification") == "current_session_owned", (tool_name, result)
+        assert result.get("decision") != "block", (tool_name, result)
+
+
+def test_s2_hub_session_is_blocked_after_the_worktree_session_claims(tmp_path, monkeypatch):
+    """S-2 대칭 확인: 이관이 소비된 뒤에는 **허브 세션**이 그 태스크의 쓰기에서 차단된다 —
+    이관이 소유권을 실제로 옮겼음을 차단 판정의 반대편에서 관측한다(AC-1)."""
+    from ownership_tool import lease, pretooluse_guard_hook
+
+    monkeypatch.delenv("CLAUDE_CODE_SESSION_ID", raising=False)
+    monkeypatch.delenv("OPAL_SESSION_ID", raising=False)
+
+    hub_root, entry, worktree_root, task_dir = _build_handoff_worktree(
+        tmp_path, task_number="309", task_folder="309-handoff-guard-symmetry"
+    )
+    assert lease.claim(
+        task_dir, session_id=S2_HUB_SESSION, claim_source="state_transition", now=S2_NOW
+    )["ok"] is True
+    assert lease.handoff(
+        task_dir,
+        session_id=S2_HUB_SESSION,
+        to_worktree_root=entry["worktree_root"],
+        now=S2_NOW,
+    )["ok"] is True
+    assert lease.claim(
+        task_dir,
+        session_id=S2_WT_SESSION,
+        claim_source="session_start",
+        now=S2_NOW,
+        claimant_root=str(worktree_root),
+    )["ok"] is True
+
+    result = _guard(
+        pretooluse_guard_hook, worktree_root, S2_HUB_SESSION, "Edit",
+        {"file_path": "TASK.md", "old_string": "a", "new_string": "b"},
+    )
+    assert result.get("classification") == "foreign_session_owned", result
+    assert result.get("decision") == "block", result
+    assert "foreign_owner" in result.get("diagnostics", [])

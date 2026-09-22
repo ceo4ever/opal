@@ -459,3 +459,7 @@
 ## [2026-09-20] ingest | CLOSE ingest — 태스크 147 실제 플랫폼 Agent 훅 3경계 검증으로 어댑터 fixture 맹점 원칙 승격
 - 갱신: [[pages/concept/mock-only-adapter-verification-passes-schema-drift.md]]
 - 출처: task:147
+## [2026-09-22] ingest | 태스크 150 CLOSE 자율 ingest — --wt 소유권 이관 설계와 규범 문서 부재 교훈
+- 신규: [[concept/lease-handoff-before-terminal-launch]], [[concept/contract-absent-from-harness-docs-passes-review]]
+- 출처: task:150
+

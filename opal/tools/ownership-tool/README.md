@@ -2,16 +2,17 @@
 
 태스크 소유권 판정의 런타임 저장소·폐쇄 enum 계약과 플랫폼 hook 어댑터를 소유하는 도구다.
 hook 어댑터는 `opal/core/hooks/claude-hooks.json`에 등재돼 Claude Code가 직접 실행한다(등재 지점이 SSOT).
-CLI 표면(`ownership_tool/cli.py`)은 아직 없어 `run.sh`는 패키지 import만 확인하고 `not_implemented`를 반환한다.
+CLI 표면은 `ownership_tool/cli.py`가 소유하며 `run.sh`가 그 진입점에 위임한다.
 
 ## 패키지 레이아웃 (PLAN D-19)
 
 ```
 opal/tools/ownership-tool/
-├── run.sh                      # OPAL .venv 래퍼 (CLI 미구현 — not_implemented 반환)
+├── run.sh                      # OPAL .venv 래퍼 (ownership_tool.cli에 위임)
 ├── README.md
 ├── ownership_tool/             # 파이썬 패키지
 │   ├── __init__.py
+│   ├── cli.py                  # 공개 CLI 표면 (status·release·handoff·handoff-cancel)
 │   ├── ownership_core.py       # 경로·스키마·lock·registry 어댑터·세션 ID 해석
 │   ├── decisions.py            # D-3 폐쇄 enum과 구조화 판정 결과
 │   ├── claude_adapter.py       # 플랫폼 고유 env 변수명 격리 (D-18, C-15)
@@ -33,8 +34,31 @@ opal/tools/ownership-tool/
 hook 어댑터는 판정 로직을 갖지 않는다 — 봉투 파싱·출력 형식만 소유하고 판정은 `stop_evaluator`·`lease`·
 `resolver`가 맡는다. 어떤 실패에서도 세션을 막지 않는 fail-safe(전 경로 예외 삼킴 + exit 0)가 공통 규약이다.
 
+`cli.py`도 같은 경계를 지킨다 — 인자 파싱·경로 절대성 검사·세션 id 해석·출력 형식만 소유하고 상태 전이는
+전부 `lease`에 위임한다. hook 어댑터와 달리 사람·도구가 부르는 표면이므로 fail-safe exit 0이 아니라
+거부를 0이 아닌 종료코드로 드러낸다.
+
 `ownership-tool`은 하이픈 디렉터리라 패키지명이 될 수 없으므로 `ownership_tool/` 하위 패키지를 둔다.
 테스트는 `from ownership_tool import decisions` 형태로 import하며 `tests/conftest.py`가 경로를 잇는다.
+
+## CLI 표면
+
+`run.sh <subcommand> ...`는 `ownership_tool.cli`에 위임하며, 전 경로에서 stdout에 단일 라인 JSON
+`{"ok": bool, "command": "ownership-tool", ...}` 1줄만 낸다.
+
+| 서브명령 | 인자 | 동작 |
+|---|---|---|
+| `status` | `--task-path` | lease 레코드 전문 + 요청 세션 기준 `lease.classify` 결과 + `handoff_*` 필드 |
+| `release` | `--task-path` `[--session-id]` | 소유 세션 일치에만 해제 |
+| `handoff` | `--task-path` `--to-worktree-root` | `lease.handoff` 위임 |
+| `handoff-cancel` | `--task-path` | `lease.handoff_cancel` 위임 |
+
+- 세션 id는 `--session-id` > `ownership_core.resolve_session_id(os.environ, {})` 순이다. 플랫폼 고유
+  환경변수명은 `claude_adapter`가 단독으로 소유하고 `cli.py`에는 두지 않는다.
+- `release`는 타 세션이 소유한 live lease를 `not_owner`로 거부하고 0이 아닌 종료코드를 내며 레코드를
+  쓰지 않는다. 레코드 부재·`released`·만료는 `noop: true` + 종료코드 0이다. 강제 해제 표면은 없다.
+- `--task-path`·`--to-worktree-root`의 상대경로는 cwd·task path 조상·워크트리 디렉터리명으로 보정하지
+  않고 `path_not_absolute`로 거부한다(`harness/worktree.md` task root 계약).
 
 ## 런타임 저장소 3경로 (PLAN D-5)
 

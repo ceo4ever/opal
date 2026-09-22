@@ -1,0 +1,25 @@
+{
+ "run_id": "t150-test-s-15",
+ "resume_token": "s15-resume",
+ "fidelity": "real-usage",
+ "observed_executors": [
+  "human"
+ ],
+ "assertion_results": [
+  {
+   "id": "as-1",
+   "expected": "허브 세션의 해제가 성공하고 조회 결과가 무소유다",
+   "actual": "허브 세션의 해제가 성공하고 조회 결과가 무소유다"
+  },
+  {
+   "id": "as-2",
+   "expected": "다른 세션의 claim이 성공한다",
+   "actual": "다른 세션의 claim이 성공한다"
+  }
+ ],
+ "observed_evidence": [
+  "release_json",
+  "status_json",
+  "claim_json"
+ ]
+}

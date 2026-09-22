@@ -256,6 +256,7 @@ TEST-SCENARIO 단계를 "목표 달성 검증"으로 재정의 — 루브릭 채
 | `docs/architecture-diagram/opal_framework_architecture.html` | 프레임워크 구조 다이어그램 (시각 SSOT) | 3층 구조·파이프라인·도구 관계 시각화 (태스크 086 산출) | Framework | 구조 설명·온보딩 시 |
 | `docs/SECURITY.md` | 프로젝트 보안 기준 | `op-gc-security`가 공식 표준 baseline보다 우선 적용하는 프로젝트 누적 기준 | Framework | 보안 체크(opgc CHECK) 시 |
 | `opal/core/references/harness/actor.md` | 실행 주체(actor) 축 SSOT | 모드 축과 직교하는 `--pm` 정의, 지원 Pilot 폐쇄 목록, `--pm` 실행 계약, 독립 검증 경계·GC 호출 지점 | Framework | `pilot.start` 이벤트 |
+| `opal/core/references/harness/worktree.md` | 워크스페이스 축·실행 소유권 SSOT | `--wt` 축 정의, task root와 allocator root 계약, **실행 소유권(lease) 계약**(획득·이관·해제·가드 적용 범위·저장 위치), canonical path 발급, cone 확장, multi-repo 캡슐 소유권 | Framework | `pilot.start` 이벤트. `--wt` 태스크 생성·기동·회수, lease 소유권 판단, 워크트리 세션 차단 진단 시 |
 | `opal/core/references/harness/modes.md` | 실행 모드 SSOT | interactive/semi-agentic/agentic의 단계 경계·자동 계속·사용자 대기 계약 | Framework | `pilot.start` 이벤트와 기존 태스크 재개, mode 전이 판단 시 |
 | `opal/core/references/harness/state.md` | state-tool 전이 계약 | `transition_action`/`report_type`/`next_action`, CLOSE final, 사용자 확인 자동 승인 예외 | Framework | 상태 전이·재개·CLOSE tail·사용자 확인 행 처리 시 |
 | `opal/core/references/harness/task-process.md` | TASK 단계 전이 계약 | TASK 완료 보고가 구조화 전이 출력을 소비하고, 산문 승인 질문을 전이 판정 근거로 쓰지 않도록 하는 단계 경계 규칙 | Framework | TASK 작성·완료 직후 다음 행동 판정 시 |
