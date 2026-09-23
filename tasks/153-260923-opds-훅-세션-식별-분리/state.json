@@ -229,6 +229,13 @@
     "completion_profile_receipt": null,
     "active_run_id": "run_9c3147c8-fc7b-475e-9148-83423407bf98",
     "status": "active",
-    "pending_events": []
+    "pending_events": [],
+    "last_report": {
+      "event_id": "evt_a1f74e2f-a003-4463-8c95-c5172c773283",
+      "report_type": "progress_report",
+      "transition_action": "complete",
+      "user_input_required": false,
+      "at": "2026-09-23T15:32:53.961Z"
+    }
   }
 }
