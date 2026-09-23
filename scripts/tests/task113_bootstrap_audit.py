@@ -61,6 +61,12 @@ PARITY_PATHS = (
     ("opal/tools/event-loader/event_loader.py", "tools/event-loader/event_loader.py"),
     ("opal/tools/event-loader/run.sh", "tools/event-loader/run.sh"),
     ("opal/tools/event-loader/README.md", "tools/event-loader/README.md"),
+    ("opal/tools/terminal-context/terminal_context.py", "tools/terminal-context/terminal_context.py"),
+    ("opal/tools/terminal-context/run.sh", "tools/terminal-context/run.sh"),
+    ("opal/tools/terminal-context/README.md", "tools/terminal-context/README.md"),
+    ("opal/tools/worktree-launcher/worktree_launcher/cli.py", "tools/worktree-launcher/worktree_launcher/cli.py"),
+    ("opal/tools/worktree-launcher/worktree_launcher/adapters/cmux.py", "tools/worktree-launcher/worktree_launcher/adapters/cmux.py"),
+    ("opal/tools/worktree-launcher/README.md", "tools/worktree-launcher/README.md"),
     ("opal/core/references/opal-harness.md", "references/opal-harness.md"),
     ("opal/core/references/harness/guards.md", "references/harness/guards.md"),
     ("opal/core/references/harness/modes.md", "references/harness/modes.md"),
@@ -427,6 +433,45 @@ def run_source_audit(project_root: Path, iterations: int = 3) -> dict[str, Any]:
     missing = [fragment for fragment in required_fragments if fragment not in body]
     if missing:
         raise AuditFailure(f"bootstrap contract fragments missing: {missing}")
+
+    # Task 152 S-2 — terminal context는 setting/marker skip gate를 통과한 세션에서만
+    # 한 번 감지하고, 닫힌 4필드 결과를 내부 세션 컨텍스트로 소비한다. 네 플랫폼의
+    # body parity는 위에서 먼저 확인했으므로 대표 body 한 건의 위치·문구 검사가 곧
+    # 네 bootstrapper 모두의 계약 검사다.
+    terminal_context_command = "~/.opal/tools/terminal-context/run.sh"
+    terminal_context_fragments = (
+        terminal_context_command,
+        "`host`, `multiplexers`, `confidence`, `evidence`",
+        "내부 세션 컨텍스트로 소비",
+    )
+    terminal_missing = [
+        fragment for fragment in terminal_context_fragments if fragment not in body
+    ]
+    if terminal_missing:
+        raise AuditFailure(
+            f"terminal-context bootstrap contract fragments missing: {terminal_missing}"
+        )
+    if body.count(terminal_context_command) != 1:
+        raise AuditFailure("terminal-context command must appear exactly once")
+    terminal_order = (
+        body.index("bootstrap`이 정확히 `off`"),
+        body.index("정확히 `[WORKER]`"),
+        body.index(terminal_context_command),
+        body.index("load --event session.assistant"),
+    )
+    if terminal_order != tuple(sorted(terminal_order)):
+        raise AuditFailure(
+            "terminal-context must run after off/[WORKER] gates and before session load: "
+            f"{terminal_order}"
+        )
+    checks.append(
+        {
+            "name": "terminal_context_bootstrap_gate",
+            "platforms": 4,
+            "off_worker_calls": 0,
+            "allowed_session_calls": 1,
+        }
+    )
     forbidden_commands = (
         "load --event pm.activate",
         "load --event pilot.start",

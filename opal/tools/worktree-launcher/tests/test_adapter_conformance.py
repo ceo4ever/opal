@@ -32,6 +32,7 @@ from conftest import FIXTURES_ROOT, load_launcher_fixture
 #: 적합성 계약을 집행할 어댑터 모듈명. 새 어댑터는 여기에 1줄을 더한다.
 CONFORMANCE_ADAPTERS = [
     "orca",
+    "cmux",
 ]
 
 #: 어댑터별 실측 응답 fixture와 subprocess seam 이름.
@@ -41,6 +42,12 @@ ADAPTER_FIXTURES = {
         "launch": "orca-json-response.json",
         "read": "orca-terminal-read-response.json",
         "close": "orca-terminal-close-response.json",
+    },
+    "cmux": {
+        "subprocess_seam": "_run_subprocess",
+        "launch": "cmux-workspace-create-response.json",
+        "read": "cmux-workspace-read-response.json",
+        "close": "cmux-workspace-close-response.json",
     },
 }
 
@@ -78,6 +85,7 @@ ALLOWED_ADAPTER_MODULES = {
     "generic.py",
     "opal_agent_fallback.py",
     "orca.py",
+    "cmux.py",
 }
 #: C-1 — 이번 태스크에서 손대지 않기로 한 어댑터 모듈(범위 밖).
 UNTOUCHED_ADAPTER_MODULES = ("generic.py", "opal_agent_fallback.py")
@@ -235,6 +243,9 @@ def test_failure_is_a_report_not_an_exception(
     module = _import_adapter(adapter)
     worktree_root = _worktree_root(tmp_path)
 
+    if adapter == "cmux" and mode == "unparsable_stdout" and verb != "launch":
+        pytest.skip("cmux read/close stdout은 JSON 봉투가 아닌 원문 계약이다")
+
     if mode == "cli_missing":
         seam = ADAPTER_FIXTURES[adapter]["subprocess_seam"]
 
@@ -300,12 +311,12 @@ def test_success_launch_builds_both_receipts(adapter, monkeypatch, tmp_path):
 # ─────────────────────────────────────────────────────────────────────────────
 
 
-@pytest.mark.parametrize("adapter", CONFORMANCE_ADAPTERS)
 @pytest.mark.parametrize(
-    "kwargs, expected_scope",
+    "adapter, kwargs, expected_scope",
     [
-        ({"handle": HANDLE_FOR_TESTS}, "terminal"),
-        ({"worktree_root": "{WT}", "all": True}, "worktree_all"),
+        ("orca", {"handle": HANDLE_FOR_TESTS}, "terminal"),
+        ("orca", {"worktree_root": "{WT}", "all": True}, "worktree_all"),
+        ("cmux", {"handle": "workspace:42"}, "terminal"),
     ],
 )
 def test_close_accepts_exactly_one_scope(
@@ -394,13 +405,13 @@ def _code_strings(tree: ast.Module) -> list[str]:
 
 
 def test_c1_adapter_module_set_is_frozen():
-    """신규 어댑터 모듈 0건이고 `cmux.py`는 존재하지 않는다."""
+    """허용된 adapter 모듈 집합은 Orca와 cmux를 포함해 고정한다."""
     present = {
         path.name for path in ADAPTERS_DIR.glob("*.py") if path.name != "__pycache__"
     }
 
     assert present == ALLOWED_ADAPTER_MODULES
-    assert not (ADAPTERS_DIR / "cmux.py").exists()
+    assert (ADAPTERS_DIR / "cmux.py").is_file()
 
 
 def test_c1_out_of_scope_adapters_are_untouched():

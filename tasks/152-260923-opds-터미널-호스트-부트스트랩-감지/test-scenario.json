@@ -1,0 +1,215 @@
+{
+  "schema_version": "2.0",
+  "task_id": "152-260923-opds-터미널-호스트-부트스트랩-감지",
+  "locked": true,
+  "created_at": "2026-09-23T21:09:43+09:00",
+  "locked_at": "2026-09-23T21:22:09+09:00",
+  "scenarios": [
+    {
+      "id": "S-1",
+      "acceptance_ref": "AC-1,AC-2,AC-5,C-1,C-2,H-1",
+      "type": "unit",
+      "expected": "terminal-context가 우선순위대로 4키 비밀 비노출 JSON을 반환",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "pytest opal/tools/terminal-context/tests/test_terminal_context.py; exit=1; terminal_context.py/run.sh absent; 1 failed + 9 errors",
+      "red_at": "2026-09-23T21:22:08+09:00",
+      "required_fidelity": "mock",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [],
+      "assertion_results": [],
+      "observed_evidence": [],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "Re-verify after fix (ancestor comm=/basename only). /Users/iskang/.opal/.venv/bin/python -m pytest opal/tools/terminal-context/tests/test_terminal_context.py -v: 11 passed in 0.21s exit 0 (5 orig + test_ancestor_arguments_never_decide_host new; function names unchanged, no diff to existing bodies). Source CLI opal/tools/terminal-context/run.sh -> {\"host\":\"orca\",\"multiplexers\":[],\"confidence\":\"high\",\"evidence\":[\"ancestor:orca\"]} exit 0. Installed CLI ~/.opal/tools/terminal-context/run.sh -> identical output exit 0. Independent defect check via terminal_context._host_from_ancestors: mixed ancestors [bogus-argv-with-'cmux'-word, real 'Orca' executable] -> orca (correct, argv text ignored); basename merely containing 'cmux' substring (not exact/bundle) -> None (no false match); exact 'cmux' basename -> cmux; Orca.app bundle path -> orca. All assertions passed, defect (AC-5/C-1 argv-decides-host) confirmed fixed with no new false-match regressions.",
+      "marked_at": "2026-09-23T22:24:52+09:00",
+      "fidelity": "real-usage"
+    },
+    {
+      "id": "S-2",
+      "acceptance_ref": "AC-3,C-3,H-3",
+      "type": "integration",
+      "expected": "4종 bootstrapper의 off/worker 호출 0회와 허용 session 호출 1회",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "python scripts/tests/task113_bootstrap_audit.py --mode source; exit=1; terminal-context command/four-key/session-context fragments absent",
+      "red_at": "2026-09-23T21:22:08+09:00",
+      "required_fidelity": "mock",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [],
+      "assertion_results": [],
+      "observed_evidence": [],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "python3 scripts/tests/task113_bootstrap_audit.py --mode source: ok=true exit 0. terminal_context_bootstrap_gate: off_worker_calls=0, allowed_session_calls=1, platforms=4. bootstrapper_body_parity: platforms=4. Re-run post-fix, unchanged from prior pass, gate logic untouched by fix scope.",
+      "marked_at": "2026-09-23T22:24:52+09:00",
+      "fidelity": "real-usage"
+    },
+    {
+      "id": "S-3",
+      "acceptance_ref": "AC-4,AC-5,C-4,C-5,H-2,H-4",
+      "type": "integration",
+      "expected": "host와 같은 adapter만 명시 선택하고 unknown은 폴백하지 않음",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "pytest opal/tools/worktree-launcher/tests/test_adapter_cmux.py; exit=1; cmux adapter import absent; 6 failed",
+      "red_at": "2026-09-23T21:22:09+09:00",
+      "required_fidelity": "mock",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [],
+      "assertion_results": [],
+      "observed_evidence": [],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "python -m pytest opal/tools/worktree-launcher/tests/: 143 passed, 3 skipped (live-cmux/live-orca gated, expected) in 3.11s exit 0. python -m pytest opal/tools/ownership-tool/tests/test_integration.py: 16 passed in 1.61s exit 0. Adapter selection (cmux/orca exact-only, unknown fallback=0, cmux parse-failure structured dict) unaffected by terminal-context fix scope; re-verified as regression guard post-fix.",
+      "marked_at": "2026-09-23T22:24:52+09:00",
+      "fidelity": "real-usage"
+    },
+    {
+      "id": "S-4",
+      "acceptance_ref": "AC-4,H-2",
+      "type": "integration",
+      "expected": "opt-in 실제 cmux workspace launch/read/close 성공",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "real-usage",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "expected": "residual=0",
+          "actual": "residual=0",
+          "evidence": "CMUX_QUIET=1 cmux --id-format both workspace list (before) vs after OPAL_LIVE_CMUX=1 pytest tests/test_adapter_cmux.py -k live -v; UUID set diff empty (diff before/after = no output); grep -i opal-live-cmux-s4 on after-list returned no match",
+          "id": "residual_workspace_count"
+        },
+        {
+          "expected": "exit=0; 1 passed",
+          "actual": "exit=0; 1 passed",
+          "evidence": "pytest output: 'tests/test_adapter_cmux.py::test_live_cmux_launch_read_close_leaves_no_workspace PASSED [100%]' / '1 passed, 6 deselected in 2.45s', command exit code 0",
+          "id": "live_pytest_exit"
+        }
+      ],
+      "observed_evidence": [
+        "command_output",
+        "workspace_list_snapshot"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": null,
+      "marked_at": "2026-09-23T23:19:03+09:00",
+      "fidelity": "real-usage"
+    },
+    {
+      "id": "S-5",
+      "acceptance_ref": "AC-6,C-6",
+      "type": "integration",
+      "expected": "installer 후 source-installed parity와 설치본 CLI 4키 JSON",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "real-usage",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "expected": "exit=0; 11 passed; 143 passed,4 skipped; 16 passed",
+          "actual": "exit=0; 11 passed; 143 passed,4 skipped; 16 passed",
+          "evidence": "python -m pytest opal/tools/terminal-context -q => '11 passed in 0.21s' exit 0; python -m pytest opal/tools/worktree-launcher -q => '143 passed, 4 skipped in 2.88s' exit 0; python -m pytest opal/tools/ownership-tool/tests/test_integration.py -q => '16 passed in 1.47s' exit 0",
+          "id": "source_tests_exit"
+        },
+        {
+          "expected": "exit=0; ok=true",
+          "actual": "exit=0; ok=true",
+          "evidence": "python3 scripts/tests/task113_bootstrap_audit.py --mode installed => exit 0, JSON ok:true, all 21 checked entries with matching sha256 source vs installed",
+          "id": "bootstrap_audit_installed"
+        },
+        {
+          "expected": "exit=0; ok=true",
+          "actual": "exit=0; ok=true",
+          "evidence": "python3 scripts/tests/task113_bootstrap_audit.py --mode all => exit 0, JSON mode:'all' ok:true, nested source(ok:true) and installed(ok:true) results, changed_markdown_history_sections hits:0",
+          "id": "bootstrap_audit_all"
+        },
+        {
+          "expected": "mismatch=0",
+          "actual": "mismatch=0",
+          "evidence": "diff opal/core/AGENT.md (history-stripped) vs ~/.opal/AGENT.md: 0 diff lines (strip_deploy_md transform matches installed); diff opal/core/references/tools.md vs ~/.opal/references/tools.md: only 변경이력(changelog) section differs (37 lines), an intentional deploy-time strip already audited by task113_bootstrap_audit changed_markdown_history_sections check (hits:0); grep 'OPAL START' ~/.claude/CLAUDE.md confirms claude-bootstrap.md section installed and content matches system-provided CLAUDE.md contents verbatim; bootstrap_audit installed-mode sha256 match covers opal/core/references/harness/worktree.md, opal/core/references/harness/task-process.md, opal/tools/worktree-launcher/worktree_launcher/cli.py, opal/tools/worktree-launcher/worktree_launcher/adapters/cmux.py, opal/tools/worktree-launcher/README.md, opal/tools/terminal-context/* all matching source sha256",
+          "id": "changed_deploy_file_mismatch"
+        },
+        {
+          "expected": "perm=rwxr-xr-x; keys=['confidence','evidence','host','multiplexers']",
+          "actual": "perm=rwxr-xr-x; keys=['confidence','evidence','host','multiplexers']",
+          "evidence": "ls -la ~/.opal/tools/terminal-context/run.sh => -rwxr-xr-x; ~/.opal/tools/terminal-context/run.sh executed, exit 0, JSON keys sorted = ['confidence','evidence','host','multiplexers']",
+          "id": "installed_terminal_context_run"
+        },
+        {
+          "expected": "ok_prefixed='workspace:7'; unprefixed=None",
+          "actual": "ok_prefixed='workspace:7'; unprefixed=None",
+          "evidence": "python3 importing /Users/iskang/.opal/tools/worktree-launcher/worktree_launcher/adapters/cmux._workspace_ref: _workspace_ref('OK workspace:7\\n') -> 'workspace:7'; _workspace_ref('workspace:7\\n') -> None; no real workspace created, function call only",
+          "id": "installed_cmux_workspace_ref"
+        }
+      ],
+      "observed_evidence": [
+        "command_output",
+        "sha256_comparison",
+        "file_permission_check"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": null,
+      "marked_at": "2026-09-23T23:19:03+09:00",
+      "fidelity": "real-usage"
+    }
+  ]
+}

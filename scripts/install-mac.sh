@@ -1392,6 +1392,13 @@ install_opal() {
             success "cmux-tool run.sh 실행 권한 설정"
         fi
 
+        # ── terminal-context 실행 권한 ──
+        local terminal_context_run="$opal_home/tools/terminal-context/run.sh"
+        if [[ -f "$terminal_context_run" ]]; then
+            chmod +x "$terminal_context_run"
+            success "terminal-context run.sh 실행 권한 설정"
+        fi
+
         # ── cmux-tool lib/ 및 examples/ 실행 권한 ──
         local cmux_lib_dir="$opal_home/tools/cmux-tool/lib"
         local cmux_examples_dir="$opal_home/tools/cmux-tool/examples"

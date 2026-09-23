@@ -38,6 +38,7 @@ OPAL이 배포하는 도구 전수 목록이다. 이 표는 **어떤 도구가 �
 | `self-pm-tool` | `opal-self-pm`의 PM 직접 수행 실행을 경량 JSON으로 기록(SSOT 무접촉) | `~/.opal/tools/self-pm-tool/run.sh` | `opal/tools/self-pm-tool/README.md` |
 | `skill-registry` | 스킬 레지스트리 로드 기반 매칭·조회·검증·마이그레이션·위험 스캔 | `node ~/.opal/tools/skill-registry/skill-registry.js` | `opal/tools/skill-registry/README.md` |
 | `state-tool` | OPAL 파이프라인 현황판 JSON SSOT(`state.json`) 관리와 이벤트 receipt 검증 | `~/.opal/tools/state-tool/run.sh` | `opal/tools/state-tool/README.md` |
+| `terminal-context` | 현재 프로세스에 연결된 terminal host와 중첩 multiplexer를 닫힌 JSON으로 판별 | `~/.opal/tools/terminal-context/run.sh` | `opal/tools/terminal-context/README.md` |
 | `test-tool` | `test-tools.yaml`을 읽어 FE/BE×단계별 테스트 도구를 실행·판정하는 얇은 래퍼 | `~/.opal/tools/test-tool/run.sh` | `opal/tools/test-tool/README.md` |
 | `tool-scan` | capability(도구·MCP·스킬) 검색과 권위 출처(live `--help`) 사용법 확인 | `~/.opal/tools/tool-scan/run.sh` | `opal/tools/tool-scan/README.md` |
 | `worktree-tool` | 태스크별 코드 작업본을 git worktree로 격리 | `~/.opal/tools/worktree-tool/run.sh` | `opal/tools/worktree-tool/README.md` |
@@ -59,6 +60,7 @@ OPAL이 배포하는 도구 전수 목록이다. 이 표는 **어떤 도구가 �
 
 | 버전 | 날짜 | 내용 |
 |------|------|------|
+| v2.22 | 2026-09-23 | terminal-context 등록 — 현재 프로세스의 host·multiplexer·confidence·evidence 판별 도구 |
 | v2.14 | 2026-08-15 19:40 | worktree-tool `init` 서브명령 추가(4→**5서브명령**) — 프로젝트 구조 탐지 기반 `.opal/worktree.json` 초안 생성. 독립 `.git` ≥1이면 multi-repo, 0이면 monorepo(추적 최상위 중 manifest 보유). `setup[]`은 lock 파일로 결정론 매핑(repos 이하 depth 2까지, 빌드 산출물 디렉토리 제외), `copy[]`·`portOffset`은 미추측(후보는 `_copy_candidates` 주석 키). 기존 파일은 `CONFIG_EXISTS` 거부·`--force`로만 덮어씀, `--dry-run`은 쓰지 않고 `draft` 키 반환 (092 ADD-1 DEC-8) |
 | v2.15 | 2026-08-16 13:26 | STATE.md 저널화 — state-tool 섹션 `:71` 용도 서술을 "`state.json` 파이프라인 JSON SSOT 관리(STATE.md는 의사결정 로그·블로커 저널)"로 교체, `show` 커맨드 주석 2곳(`:87,:170`) "현황판" → "파이프라인 행 현황"으로 치환. `marker_missing`(validate 응답 예시·종료 코드 표) → `user_confirmation_owner_mismatch`로 교체, `--import-existing` 옵션·사용 예시 삭제 (094) |
 | v1.0 | 2026-04-03 | xlsx-tool 등록 (076) |

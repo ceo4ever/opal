@@ -83,9 +83,13 @@
 
 5.5. **워크트리 전용 세션 기동 — `--worktree`/`--wt`로 4.5가 `ok: true`를 반환했을 때만 수행한다** (그 외에는 이 스텝 전체를 건너뛰고 5 → 6으로 직행한다 — 현행 동작 100% 유지).
 
+   먼저 bootstrap에서 소비한 `terminal_context`의 stale 가능성을 제거하기 위해 기동 직전에
+   `~/.opal/tools/terminal-context/run.sh`를 다시 실행하고, 성공 JSON의 `host`만 읽는다.
+   `multiplexers`는 관측 정보이며 adapter 선택에 사용하지 않는다.
+
    ```bash
    ~/.opal/tools/worktree-launcher/run.sh launch \
-     --adapter <orca>                              ← 폐쇄 목록. 자동 탐지·자동 폴백 없음
+     --adapter <terminal_context.host>             ← `orca` 또는 `cmux`와 정확히 일치할 때만
      --project-root <허브 절대경로> \
      --task <NNN> \
      --worktree-root <4.5가 발급한 worktree_root> \
@@ -94,12 +98,12 @@
 
    - **[MUST] 스텝 5보다 앞에서 기동하지 않는다.** 워크트리 세션은 부팅 직후 `state.json`을 읽어 브리핑하므로, `state init` 전에 띄우면 첫 턴이 읽을 상태가 없다.
    - **[MUST] launcher는 터미널을 띄우기 직전에 태스크 lease를 그 worktree_root로 이관한다.** 스텝 5의 `state init` 뒤 첫 상태 전이에서 허브가 이미 lease를 잡으므로, 이관이 없으면 워크트리 세션의 부팅 시 획득이 거부되어 그 세션은 첫 쓰기부터 전건 차단된다. 이관 계약 원문은 `opal/core/references/harness/worktree.md` §실행 소유권(lease) 계약이 소유한다.
-   - `--adapter`는 필수다. 값이 없거나 폐쇄 목록 밖이면 launcher가 거부하며, 오케스트레이터가 다른 어댑터로 대체하지 않는다.
+   - `--adapter`는 필수다. terminal context의 `host`가 launcher 폐쇄 목록과 정확히 일치할 때만 그 값을 명시 주입한다. `unknown`·일반 터미널·미지원 host면 launcher를 호출하지 않고 허브 세션이 이어서 수행한다. 설치된 앱, 전역 실행 프로세스, `multiplexers`를 근거로 다른 adapter를 추측하지 않는다.
    - `--command`를 생략하면 launcher가 `launcher` 설정(`~/.opal/setting.json` + `{프로젝트}/.opal/setting.local.json` 2-레이어)에서 기동 명령을 결정한다. 설정이 없으면 코드 기본값으로 폴백한다. 스키마 원문은 `opal/tools/worktree-launcher/README.md`가 소유한다.
    - **시작 발화는 기동 명령 인자가 소유한다.** `terminal send`·키 입력 에뮬레이션·별도 캡슐 파일을 쓰지 않는다. 태스크 식별은 워크트리와 canonical task의 1:1 관계, `state.json`, 부트 브리핑이 이미 결정론적으로 해결한다.
    - **실패는 비차단이다.** `ok: false`면 사유를 사용자에게 보고하고(agentic은 AGENTIC-LOG.md에 기록) 허브 세션이 그대로 태스크를 이어간다. launcher는 실패 시 이미 만든 터미널을 닫고 이관을 취소한 뒤 registry를 `hub_owned`로 원자 복귀시키므로 파이프라인이 정리할 잔여물은 없다 — 이관 취소 자체의 실패는 복귀를 막지 않고 진단으로만 남는다.
    - 성공하면 registry `execution_ownership`이 `worktree_session_owned`로 전이하고, 워크트리 세션이 부팅하며 이관된 lease를 획득해 이후 그 태스크의 writer가 된다. registry 전이만으로는 쓰기 권한이 생기지 않는다 — 권한 판정의 입력은 lease 하나다. 허브 세션은 merge·회수 시점에 다시 개입한다(아래 §`--wt` 체크포인트 커밋과 merge 경계).
-   - 어댑터가 구성되지 않은 환경에서는 이 스텝을 수행하지 않는다 — 워크트리는 만들어지고 터미널은 열리지 않으며, 허브 세션이 그 워크트리를 작업한다.
+   - 감지기가 실패하거나 host와 같은 어댑터가 구성되지 않은 환경에서는 이 스텝을 수행하지 않는다 — 워크트리는 만들어지고 터미널은 열리지 않으며, 허브 세션이 그 워크트리를 작업한다.
 
 6. `state init` 응답의 `transition_action` / `report_type` / `next_action`을 소비해 보고한다.
    - `report_type=progress_report`이면 비차단 완료 보고만 남기고, `transition_action=continue`에 따라 다음 단계로 즉시 이어간다.

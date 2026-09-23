@@ -72,22 +72,22 @@ def test_adapter_missing_is_rejected(capsys, sub):
 
 @pytest.mark.parametrize("sub", SUBCOMMANDS)
 def test_adapter_outside_closed_list_is_rejected(capsys, sub):
-    """미구현 어댑터(`cmux`)는 폐쇄 목록 밖이므로 거부한다 — orca로 자동 폴백하지 않는다."""
-    code, payload = _invoke(capsys, [sub, "--adapter", "cmux", *SUBCOMMAND_ARGS[sub]])
+    """미구현 어댑터는 폐쇄 목록 밖이므로 거부하고 자동 폴백하지 않는다."""
+    code, payload = _invoke(capsys, [sub, "--adapter", "unsupported", *SUBCOMMAND_ARGS[sub]])
 
     assert code == 1
     assert payload["ok"] is False
     assert payload["error"] == "adapter_unsupported"
-    assert payload["adapter"] == "cmux"
+    assert payload["adapter"] == "unsupported"
     # 폐쇄 목록은 응답이 스스로 밝힌다. 자동 탐지·자동 폴백 0건.
-    assert payload["supported"] == ["orca"]
+    assert payload["supported"] == ["orca", "cmux"]
     assert payload.get("fallback_attempted") is False
 
 
-def test_closed_adapter_list_is_orca_only():
+def test_closed_adapter_list_contains_orca_and_cmux():
     from worktree_launcher import cli  # RED
 
-    assert list(cli.SUPPORTED_ADAPTERS) == ["orca"]
+    assert list(cli.SUPPORTED_ADAPTERS) == ["orca", "cmux"]
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -443,7 +443,7 @@ def test_run_sh_has_no_not_implemented_and_keeps_guards():
 def test_run_sh_delegates_to_cli():
     """실제 run.sh 실행이 CLI 구조화 오류를 단일 라인 JSON으로 돌려준다."""
     result = subprocess.run(
-        [str(RUN_SH), "close", "--adapter", "cmux", "--terminal", "t-1"],
+        [str(RUN_SH), "close", "--adapter", "unsupported", "--terminal", "t-1"],
         capture_output=True,
         text=True,
     )
