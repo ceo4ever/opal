@@ -1,11 +1,11 @@
 """
 @header {
   "module": "test_scenario",
-  "task": "056,069,073,111,125",
+  "task": "056,069,073,111,125,151",
   "layer": "test",
   "domain": "opal-tools",
-  "description": "test-tool scenario-* public CLI regression tests for RED locking, coverage, fidelity, conformance, E2E v2 schema/runtime validation, status preservation, and human handoff/resume.",
-  "scenarios": ["S-011", "S-012", "S-007", "S-014", "T069/S-5", "T069/S-6", "T069/S-7", "T073/S-1", "T073/S-2", "T111/S-6", "T111/S-7", "T111/S-8", "T111/S-9", "T111/S-10", "T111/S-11", "T111/S-18", "T125/S-2", "T125/S-5", "T125/S-7", "T125/S-8"],
+  "description": "test-tool scenario-* public CLI regression tests for RED locking, coverage, escape-aware Markdown table parsing, malformed-row rejection, fidelity, conformance, E2E v2 schema/runtime validation, status preservation, and human handoff/resume.",
+  "scenarios": ["S-011", "S-012", "S-007", "S-014", "T069/S-5", "T069/S-6", "T069/S-7", "T073/S-1", "T073/S-2", "T111/S-6", "T111/S-7", "T111/S-8", "T111/S-9", "T111/S-10", "T111/S-11", "T111/S-18", "T125/S-2", "T125/S-5", "T125/S-7", "T125/S-8", "T151/S-1", "T151/S-2"],
   "exports": [
     "TestScenarioLockRedGate",
     "TestScenarioMarkLockGate",
@@ -937,6 +937,39 @@ class TestScenarioCoverageBuildSdlcV2(BaseScenarioTestCase):
         self.assertEqual(check_code, 0, f"coverage-check 회귀 실패 stdout={check_stdout!r}")
         self.assertTrue(check_data.get("all_covered"))
 
+    def test_preserves_scenario_row_with_escaped_pipe(self):
+        """[T151/S-1] 셀 안의 Markdown escape 파이프는 행 구분자가 아니다."""
+        _write_sdlc_v2_docs(
+            self.task_path,
+            scenario_body="""---
+template: sdlc-v2
+---
+# TEST-SCENARIO: Escaped pipe
+
+## Setup
+- 환경: 임시 태스크 폴더
+
+## Scenarios
+
+| ID | 검증 대상 | 조건 | 행동 | 기대 결과 | 방법·환경 | 시점 |
+|---|---|---|---|---|---|---|
+| S-1 | AC-1, C-1, H-1 | grep 체인 | `grep a \\| grep b` 실행 | 행 보존 | CLI | 구현 전 RED, 구현 후 |
+| S-2 | AC-2, C-2, H-2 | 정상 문서 | build 실행 | 커버 유지 | CLI | 구현 전 RED, 구현 후 |
+""",
+        )
+
+        code, stdout, data = _scenario_coverage_build(self.task_path)
+
+        self.assertEqual(code, 0, f"기대 exit 0, 실제 stdout={stdout!r}")
+        output_path = pathlib.Path(data.get("coverage_input"))
+        payload = json.loads(output_path.read_text(encoding="utf-8"))
+        self.assertEqual(
+            [scenario.get("id") for scenario in payload.get("scenarios", [])],
+            ["S-1", "S-2"],
+        )
+        self.assertEqual(payload["scenarios"][0]["covers_requirements"], ["AC-1", "C-1"])
+        self.assertEqual(payload["scenarios"][0]["covers_hypotheses"], ["H-1"])
+
     def test_allows_zero_hypotheses_when_risks_declares_none(self):
         _write_sdlc_v2_docs(
             self.task_path,
@@ -1043,6 +1076,90 @@ template: sdlc-v2
         self.assertFalse(data.get("ok"))
         self.assertEqual(data.get("error"), "coverage_input_invalid")
         self.assertIn("Acceptance criteria", str(data.get("detail")))
+
+    def test_rejects_malformed_scenario_table_row_instead_of_dropping_it(self):
+        """[T151/S-2] 열 수가 다른 S 행은 조용히 유실되지 않고 입력 오류가 된다."""
+        _write_sdlc_v2_docs(
+            self.task_path,
+            scenario_body="""---
+template: sdlc-v2
+---
+# TEST-SCENARIO: Malformed row
+
+## Setup
+- 환경: 임시 태스크 폴더
+
+## Scenarios
+
+| ID | 검증 대상 | 조건 | 행동 | 기대 결과 | 방법·환경 | 시점 |
+|---|---|---|---|---|---|---|
+| S-1 | AC-1 | 열 수 부족 |
+| S-2 | AC-1, AC-2, C-1, C-2, H-1, H-2 | 정상 문서 | build 실행 | 커버 유지 | CLI | 구현 전 RED, 구현 후 |
+""",
+        )
+
+        code, stdout, data = _scenario_coverage_build(self.task_path)
+
+        self.assertEqual(code, 17, f"기대 exit 17, 실제 stdout={stdout!r}")
+        self.assertFalse(data.get("ok"))
+        self.assertEqual(data.get("error"), "coverage_input_invalid")
+        self.assertIn("S-1", str(data.get("detail")))
+
+    def test_rejects_malformed_row_without_trailing_pipe(self):
+        """[T151/S-2] 후미 테두리 파이프가 없는 불완전 S 행도 입력 오류가 된다."""
+        _write_sdlc_v2_docs(
+            self.task_path,
+            scenario_body="""---
+template: sdlc-v2
+---
+# TEST-SCENARIO: Missing trailing border
+
+## Setup
+- 환경: 임시 태스크 폴더
+
+## Scenarios
+
+| ID | 검증 대상 | 조건 | 행동 | 기대 결과 | 방법·환경 | 시점 |
+|---|---|---|---|---|---|---|
+| S-1 | AC-1 | 열 수 부족
+| S-2 | AC-1, AC-2, C-1, C-2, H-1, H-2 | 정상 문서 | build 실행 | 커버 유지 | CLI | 구현 전 RED, 구현 후 |
+""",
+        )
+
+        code, stdout, data = _scenario_coverage_build(self.task_path)
+
+        self.assertEqual(code, 17, f"기대 exit 17, 실제 stdout={stdout!r}")
+        self.assertFalse(data.get("ok"))
+        self.assertEqual(data.get("error"), "coverage_input_invalid")
+        self.assertIn("S-1", str(data.get("detail")))
+
+    def test_rejects_malformed_row_without_leading_pipe(self):
+        """[T151/S-2] 선두 테두리 파이프가 없는 불완전 S 행도 입력 오류가 된다."""
+        _write_sdlc_v2_docs(
+            self.task_path,
+            scenario_body="""---
+template: sdlc-v2
+---
+# TEST-SCENARIO: Missing leading border
+
+## Setup
+- 환경: 임시 태스크 폴더
+
+## Scenarios
+
+| ID | 검증 대상 | 조건 | 행동 | 기대 결과 | 방법·환경 | 시점 |
+|---|---|---|---|---|---|---|
+S-1 | AC-1 | 열 수 부족 |
+| S-2 | AC-1, AC-2, C-1, C-2, H-1, H-2 | 정상 문서 | build 실행 | 커버 유지 | CLI | 구현 전 RED, 구현 후 |
+""",
+        )
+
+        code, stdout, data = _scenario_coverage_build(self.task_path)
+
+        self.assertEqual(code, 17, f"기대 exit 17, 실제 stdout={stdout!r}")
+        self.assertFalse(data.get("ok"))
+        self.assertEqual(data.get("error"), "coverage_input_invalid")
+        self.assertIn("S-1", str(data.get("detail")))
 
     def test_rejects_missing_risks_section(self):
         _write_sdlc_v2_docs(

@@ -65,8 +65,9 @@ test-tool scenario-* 핸들러 — test-scenario.json SSOT (spec존/result존 �
 [MUST] (111/W-5) scenario-coverage-build — sdlc-v2 TASK/PLAN/TEST-SCENARIO를
   `{task_folder}/.scenario-coverage-input.json`으로 변환한다. TASK AC/C, TEST S 및
   검증 대상 토큰을 고정 파싱하고, PLAN H는 optional로 파싱한다. W는 features로 넣지
-  않는다. unknown ref, 필수 AC/C 추출 실패, S 0건, 중복 S-ID는
-  coverage_input_invalid exit 17로 거부한다.
+  않는다. Markdown escape 파이프(`\\|`)는 셀 내용으로 보존하고, 열 수가 다른 표 행,
+  unknown ref, 필수 AC/C 추출 실패, S 0건, 중복 S-ID는 coverage_input_invalid exit 17로
+  거부한다.
 """
 
 import argparse
@@ -813,25 +814,81 @@ def _tokens_by_prefix(text: str, prefixes: Sequence[str]) -> Dict[str, List[str]
     return result
 
 
+def _split_markdown_table_row(line: str) -> List[str]:
+    """Markdown 표 한 행을 escape되지 않은 `|`에서만 분리한다.
+
+    Markdown의 선두·후미 테두리 파이프는 선택 사항이므로 있으면 제거하되,
+    셀 안의 ``\\|``는 텍스트로 보존한다.
+    """
+    content = line.strip()
+    if content.startswith("|"):
+        content = content[1:]
+
+    trailing_backslashes = 0
+    for char in reversed(content[:-1]) if content.endswith("|") else ():
+        if char != "\\":
+            break
+        trailing_backslashes += 1
+    if content.endswith("|") and trailing_backslashes % 2 == 0:
+        content = content[:-1]
+
+    cells: List[str] = []
+    current: List[str] = []
+    escaped = False
+    for char in content:
+        if escaped:
+            if char == "|":
+                current.append("|")
+            else:
+                current.extend(("\\", char))
+            escaped = False
+        elif char == "\\":
+            escaped = True
+        elif char == "|":
+            cells.append("".join(current).strip())
+            current = []
+        else:
+            current.append(char)
+    if escaped:
+        current.append("\\")
+    cells.append("".join(current).strip())
+    return cells
+
+
 def _parse_markdown_table_rows(section: str) -> List[Dict[str, str]]:
     rows: List[List[str]] = []
-    for raw_line in section.splitlines():
+    row_lines: List[tuple[int, str]] = []
+    header_found = False
+    for line_number, raw_line in enumerate(section.splitlines(), start=1):
         line = raw_line.strip()
-        if not line.startswith("|") or not line.endswith("|"):
+        if "|" not in line:
             continue
-        cells = [cell.strip() for cell in line.strip("|").split("|")]
+        cells = _split_markdown_table_row(line)
+        if not header_found:
+            if cells and cells[0].strip().lower() == "id":
+                header_found = True
+                rows.append(cells)
+                row_lines.append((line_number, line))
+            continue
         if cells and all(re.fullmatch(r":?-{3,}:?", cell.replace(" ", "")) for cell in cells):
             continue
+        if not cells or not re.fullmatch(r"S-\d+", cells[0].strip()):
+            continue
         rows.append(cells)
+        row_lines.append((line_number, line))
 
     if not rows:
         return []
 
     header = rows[0]
     parsed: List[Dict[str, str]] = []
-    for cells in rows[1:]:
+    for index, cells in enumerate(rows[1:], start=1):
         if len(cells) != len(header):
-            continue
+            line_number, line = row_lines[index]
+            raise ValueError(
+                f"Scenarios 표 {line_number}행 열 수 불일치: "
+                f"expected={len(header)}, actual={len(cells)}, row={line}"
+            )
         parsed.append({header[i]: cells[i] for i in range(len(header))})
     return parsed
 
@@ -868,7 +925,11 @@ def _build_sdlc_v2_coverage_payload(task_folder: pathlib.Path) -> Dict[str, Any]
 
     legacy_feature_ids = _ids_from_section(plan_text, "기능 목록", ("F",))
     scenario_section = _section_body(scenario_text, "Scenarios")
-    rows = _parse_markdown_table_rows(scenario_section)
+    try:
+        rows = _parse_markdown_table_rows(scenario_section)
+    except ValueError as exc:
+        _error("coverage_input_invalid", command, 17, detail=str(exc))
+        return {}
     scenarios: List[Dict[str, Any]] = []
     known_requirements = set(acceptance_ids + constraint_ids)
     known_hypotheses = set(hypothesis_ids)
