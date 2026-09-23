@@ -159,6 +159,20 @@ class _StopHookHarness(unittest.TestCase):
         task = project_root / "tasks" / f"147-stop-hook-e2e-{name}"
         task.mkdir(parents=True)
 
+        # [MUST] 프로젝트 루트 앵커. 기대값 약화가 아니라 **픽스처를 실제 루트 정의에
+        # 맞추는 보정**이다(TASK-149 D-30b, PM 승인 B-1).
+        #
+        # - `state_tool.task_root()`(state_tool.py:2696-2710)가 태스크 118 이래
+        #   `.opal/MEMORY.json`을 **운영 중인 task root 앵커**로 쓴다. D-30b는 그 확립된
+        #   정의를 훅 어댑터(ownership_core.resolve_project_root)에 적용한 것이다.
+        # - `task_root()`의 반환 None 의미도 동일하다 — "호출자는 subprocess를 아예
+        #   띄우지 말고 조기 반환". 훅의 D-25 무출력 종료와 같은 계약이다.
+        # - 이 캡슐은 `opi` 없이 `proj/tasks/X`만 만든 합성 구조라 그동안 "루트처럼 생긴
+        #   디렉토리"였다. `state-tool init`은 `.opal/`을 만들지 않는다(실측). 이전에는
+        #   어댑터가 payload["cwd"]를 무검증 채택해 그 차이가 드러나지 않았을 뿐이다.
+        (project_root / ".opal").mkdir(parents=True, exist_ok=True)
+        (project_root / ".opal" / "MEMORY.json").write_text("{}", encoding="utf-8")
+
         code, out, err, _ = _state_tool([
             "init", str(task), "--skill", "oppl", "--mode", "agentic",
             "--rows-spec", _ROWS_SPEC, "--run-log-mode", "shadow"])
@@ -413,6 +427,236 @@ class TestT147S12DrainAndRepeatStopPath(_StopHookHarness):
         self.assertEqual(decisions[0].get("caused_by_event_id"), report["event_id"])
         self._assert_exact_stop_axis(
             task, "stop_block_without_followup", "TASK-147.W-10(5d)")
+
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# TASK-149 RED-first — S-4 · S-5 · S-6. 런타임 루트를 cwd가 아닌 project_root로
+# 해석하는 D-22/D-23 구현 전에는 stop_hook.py가 여전히 cwd 아래에 파일을 만든다.
+# 여기서는 state-tool 캡슐을 쓰지 않고 evaluate()가 project_root/session_id만
+# 있으면 receipt를 남긴다는 사실(stop_evaluator._finish)을 그대로 관찰 도구로 쓴다.
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _minimal_env():
+    """호스트 세션의 OPAL_PROJECT_ROOT·CLAUDE_PROJECT_DIR이 새지 않는 최소 env."""
+    env = {}
+    for key in ("PATH", "HOME"):
+        if key in os.environ:
+            env[key] = os.environ[key]
+    return env
+
+
+def _run_stop_hook_raw(payload, cwd, env):
+    result = subprocess.run(
+        [str(_VENV_PYTHON), str(_STOP_HOOK)],
+        input=json.dumps(payload, ensure_ascii=False),
+        capture_output=True, text=True,
+        cwd=str(cwd), env=env,
+    )
+    return result.returncode, result.stdout, result.stderr
+
+
+def _snapshot_tree(root):
+    """root 아래 전체 파일·디렉터리 경로 집합(정렬)."""
+    paths = set()
+    for p in pathlib.Path(root).rglob("*"):
+        paths.add(str(p.relative_to(root)))
+    return paths
+
+
+class TestT149S4NoEvidenceRootProducesNoOutput(unittest.TestCase):
+    """S-4 (AC-5, C-1, C-2, C-6) — 무증거형 루트의 하위 cwd, env에 OPAL_PROJECT_ROOT·
+    CLAUDE_PROJECT_DIR 모두 없음. exit 0 · stdout 무출력 · stderr traceback 없음 ·
+    임시 트리 전체 신규 파일/디렉토리 0건이어야 한다.
+
+    RED: 지금은 stop_hook.main()이 project_root = payload.get("cwd")를 그대로 채택해
+    `<cwd>/.opal/run/.runtime/stop-guard/<sid>.json`을 만든다 — 신규 파일이 생겨
+    실패해야 정상이다.
+    """
+
+    def setUp(self):
+        self._tmp = tempfile.mkdtemp(prefix="t149-s4-")
+        self.addCleanup(shutil.rmtree, self._tmp, True)
+        self.bare_root = pathlib.Path(self._tmp) / "bare_root"
+        self.sub_cwd = self.bare_root / "sub" / "nested"
+        self.sub_cwd.mkdir(parents=True)
+
+    def test_no_evidence_root_subdir_stop_is_silent_and_writes_nothing(self):
+        before = _snapshot_tree(self._tmp)
+        payload = {
+            "cwd": str(self.sub_cwd),
+            "session_id": "sess-t149-s4",
+            "hook_event_name": "Stop",
+            "stop_hook_active": False,
+        }
+        code, stdout, stderr = _run_stop_hook_raw(payload, self.sub_cwd, _minimal_env())
+        after = _snapshot_tree(self._tmp)
+
+        self.assertEqual(code, 0, f"S-4 fail-safe exit 0 위반 — {stderr!r}")
+        self.assertEqual(stdout, "", f"S-4 무출력 위반 — {stdout!r}")
+        self.assertNotIn("Traceback", stderr, f"S-4 stderr에 traceback이 있음 — {stderr!r}")
+        new_paths = after - before
+        self.assertEqual(
+            new_paths, set(),
+            f"S-4 위반 — 무증거형 루트에서 신규 파일/디렉토리가 생성됨: {sorted(new_paths)}",
+        )
+
+
+class TestT149S5WorktreeRootReceiptOnlyAtRoot(unittest.TestCase):
+    """S-5 (AC-1) — 워크트리형 루트의 sub/nested를 cwd로 담은 Stop. env로 루트를
+    명시 주입(OPAL_PROJECT_ROOT)하면 receipt가 `<루트>/.opal/run/.runtime/stop-guard/
+    <sid>.json`에만 생기고, `<루트>/sub/` 이하에는 `.opal/` 경로가 0건이어야 한다.
+
+    RED: 지금은 project_root = payload.get("cwd")라서 receipt가 sub/nested 아래에
+    생긴다 — 루트 위치 검사가 실패해야 정상이다.
+    """
+
+    def setUp(self):
+        self._tmp = tempfile.mkdtemp(prefix="t149-s5-")
+        self.addCleanup(shutil.rmtree, self._tmp, True)
+        self.wt_root = pathlib.Path(self._tmp) / "wt_root"
+        (self.wt_root / ".opal").mkdir(parents=True)
+        (self.wt_root / ".opal" / "task-ownership.json").write_text(
+            json.dumps({
+                "allocator_root": str(pathlib.Path(self._tmp) / "hub"),
+                "task_path": str(pathlib.Path(self._tmp) / "hub" / "tasks" / "t149-s5"),
+            }),
+            encoding="utf-8",
+        )
+        self.sub_cwd = self.wt_root / "sub" / "nested"
+        self.sub_cwd.mkdir(parents=True)
+        self.session_id = "sess-t149-s5"
+
+    def _receipt_at(self, root):
+        return (pathlib.Path(root) / ".opal" / "run" / ".runtime"
+                / "stop-guard" / f"{self.session_id}.json")
+
+    def test_worktree_root_receipt_created_only_at_root_not_under_sub(self):
+        payload = {
+            "cwd": str(self.sub_cwd),
+            "session_id": self.session_id,
+            "hook_event_name": "Stop",
+            "stop_hook_active": False,
+        }
+        env = _minimal_env()
+        env["OPAL_PROJECT_ROOT"] = str(self.wt_root)
+        code, _stdout, stderr = _run_stop_hook_raw(payload, self.sub_cwd, env)
+        self.assertEqual(code, 0, f"S-5 fail-safe exit 0 위반 — {stderr!r}")
+
+        root_receipt = self._receipt_at(self.wt_root)
+        self.assertTrue(
+            root_receipt.exists(),
+            f"S-5 위반 — 루트 receipt가 생성되지 않음: {root_receipt}",
+        )
+        sub_opal_paths = list((self.wt_root / "sub").rglob(".opal")) + [
+            p for p in (self.wt_root / "sub").rglob("*") if p.name == ".opal" or ".opal" in p.parts
+        ]
+        self.assertEqual(
+            sub_opal_paths, [],
+            f"S-5 위반 — sub/ 아래에 .opal/ 경로가 생김: {sub_opal_paths}",
+        )
+
+
+class TestT149S6BlockCountAccumulatesAcrossCwd(unittest.TestCase):
+    """S-6 (AC-3) — 같은 session_id·동일 fingerprint 상태에서 1회차 cwd는 루트,
+    2회차 cwd는 sub/nested. 2회차가 1회차 receipt를 루트에서 읽어 block_count가
+    누적되고 decision_kind가 allow_no_progress_same_fingerprint여야 한다.
+
+    RED: 지금은 각 실행이 자신의 cwd 아래에 독립 receipt를 쓰므로 2회차가 1회차
+    receipt를 찾지 못해 누적되지 않는다.
+    """
+
+    def setUp(self):
+        self._tmp = tempfile.mkdtemp(prefix="t149-s6-")
+        self.addCleanup(shutil.rmtree, self._tmp, True)
+        self.wt_root = pathlib.Path(self._tmp) / "wt_root"
+        (self.wt_root / ".opal").mkdir(parents=True)
+        (self.wt_root / ".opal" / "task-ownership.json").write_text(
+            json.dumps({
+                "allocator_root": str(pathlib.Path(self._tmp) / "hub"),
+                "task_path": str(self.wt_root / "tasks" / "t149-s6"),
+            }),
+            encoding="utf-8",
+        )
+        self.sub_cwd = self.wt_root / "sub" / "nested"
+        self.sub_cwd.mkdir(parents=True)
+        self.session_id = "sess-t149-s6"
+        self.env = _minimal_env()
+        self.env["OPAL_PROJECT_ROOT"] = str(self.wt_root)
+
+        # [MUST] 해석된 project_root 아래에 **실제 캡슐과 lease**가 있어야 한다. 없으면
+        # stop_evaluator가 no_owned_task로 빠져 show_json is None → current_fingerprint
+        # is None이 되고, 이 시나리오가 겨냥하는 allow_no_progress_same_fingerprint
+        # 분기에 아예 도달하지 못한다. 캡슐·lease 배치는 같은 파일 T147 harness의
+        # _create_capsule과 같은 패턴이다.
+        #
+        # 위치가 `<project_root>/tasks/<task_id>`인 것은 resolver.resolve_hub가
+        # `<hub_root>/tasks/` 직계 자식만 1단계 여는 계약이기 때문이다(resolver.py:241).
+        # 여기서 hub_root 인자로 들어가는 값은 해석된 project_root(=wt_root)다.
+        self.task = self.wt_root / "tasks" / "t149-s6"
+        self.task.mkdir(parents=True)
+        code, out, err, _ = _state_tool([
+            "init", str(self.task), "--skill", "oppl", "--mode", "agentic",
+            "--rows-spec", _ROWS_SPEC, "--run-log-mode", "shadow"])
+        self.assertEqual(code, 0, f"S-6 검증용 캡슐 init 실패 — {out!r} {err!r}")
+
+        owner = self.task / "run" / ".runtime" / "owner.json"
+        owner.parent.mkdir(parents=True, exist_ok=True)
+        owner.write_text(json.dumps({
+            "task_path": str(self.task),
+            "owner_session_id": self.session_id,
+            "generation": 1,
+            "claimed_at": "2026-09-19 09:00:00+09:00",
+            "heartbeat_at": "2026-09-19 09:30:00+09:00",
+            "lease_expires_at": "2099-01-01 00:00:00+09:00",
+            "status": "active",
+            "ttl_sec": 14400,
+            "claim_source": "state_transition",
+        }, ensure_ascii=False), encoding="utf-8")
+
+    def _receipt(self):
+        path = (pathlib.Path(self.wt_root) / ".opal" / "run" / ".runtime"
+                / "stop-guard" / f"{self.session_id}.json")
+        if not path.exists():
+            return None
+        return json.loads(path.read_text(encoding="utf-8"))
+
+    def test_second_stop_from_subdir_reads_root_receipt_and_accumulates(self):
+        base_payload = {
+            "session_id": self.session_id,
+            "hook_event_name": "Stop",
+        }
+
+        first_payload = dict(base_payload, cwd=str(self.wt_root), stop_hook_active=False)
+        code1, _out1, err1 = _run_stop_hook_raw(first_payload, self.wt_root, self.env)
+        self.assertEqual(code1, 0, f"S-6 1회차 fail-safe exit 0 위반 — {err1!r}")
+
+        receipt_after_first = self._receipt()
+        self.assertIsInstance(
+            receipt_after_first, dict,
+            "S-6 위반 — 1회차 이후 루트 receipt가 없음",
+        )
+        first_block_count = receipt_after_first.get("block_count")
+
+        second_payload = dict(base_payload, cwd=str(self.sub_cwd), stop_hook_active=True)
+        code2, _out2, err2 = _run_stop_hook_raw(second_payload, self.sub_cwd, self.env)
+        self.assertEqual(code2, 0, f"S-6 2회차 fail-safe exit 0 위반 — {err2!r}")
+
+        receipt_after_second = self._receipt()
+        self.assertIsInstance(
+            receipt_after_second, dict,
+            "S-6 위반 — 2회차 이후 루트 receipt가 없음(2회차가 sub/nested 아래에 독립 "
+            "receipt를 쓴 것으로 보인다)",
+        )
+        self.assertEqual(
+            receipt_after_second.get("decision_kind"), "allow_no_progress_same_fingerprint",
+            f"S-6 위반 — 2회차 decision_kind가 다름: {receipt_after_second!r}",
+        )
+        self.assertEqual(
+            receipt_after_second.get("block_count"), first_block_count,
+            f"S-6 위반 — block_count가 1회차에서 리셋되지 않고 이어져야 한다: "
+            f"1회차={first_block_count!r} 2회차={receipt_after_second.get('block_count')!r}",
+        )
 
 
 if __name__ == "__main__":

@@ -3,7 +3,7 @@
   "module": "ownership_tool.heartbeat_hook",
   "layer": "util",
   "domain": "opal-pipeline",
-  "description": "PostToolUse hook 어댑터(W-8). matcher 없이 모든 PostToolUse에서 발화해, 해석된 세션이 이미 소유한 lease의 heartbeat_at·lease_expires_at만 lease.heartbeat로 갱신하고 이미 존재하고 status가 session_registry.STATUS_ACTIVE인 세션 registry 엔트리만 session_registry.register로 재등록해 만료를 늦춘다 — register는 status를 무조건 active로 덮어쓰므로 SessionEnd가 closed로 닫은 레코드는 재등록 대상에서 제외해 되살아나지 않게 한다(registry_refreshed 거짓). ownership을 생성·이전하지 않는다 — claim을 호출하지 않으며 봉투가 canonical task를 명시해도 그것을 근거로 소유를 얻지 않고, 소유하지 않은 세션에는 아무 파일도 쓰지 않는다(완전 no-op). 소유 판정은 lease.classify의 current_session_owned 단일 기준이고 후보 task_path는 ownership_core.resolve_roots가 준 발급값(워크트리 사본의 task_path, 허브 registry 발급값)에서만 모은다 — cwd 문자열 자르기·부모 순회·디렉터리 탐색으로 추론하지 않는다. 세션 ID 해석은 ownership_core.resolve_session_id(D-18)에 위임하고 플랫폼 고유 변수명은 갖지 않는다(C-15). 전 경로 fail-safe exit 0.",
+  "description": "PostToolUse hook 어댑터(W-8). matcher 없이 모든 PostToolUse에서 발화해, 해석된 세션이 이미 소유한 lease의 heartbeat_at·lease_expires_at만 lease.heartbeat로 갱신하고 이미 존재하고 status가 session_registry.STATUS_ACTIVE인 세션 registry 엔트리만 session_registry.register로 재등록해 만료를 늦춘다 — register는 status를 무조건 active로 덮어쓰므로 SessionEnd가 closed로 닫은 레코드는 재등록 대상에서 제외해 되살아나지 않게 한다(registry_refreshed 거짓). ownership을 생성·이전하지 않는다 — claim을 호출하지 않으며 봉투가 canonical task를 명시해도 그것을 근거로 소유를 얻지 않고, 소유하지 않은 세션에는 아무 파일도 쓰지 않는다(완전 no-op). 소유 판정은 lease.classify의 current_session_owned 단일 기준이고 후보 task_path는 ownership_core.resolve_roots가 준 발급값(워크트리 사본의 task_path, 허브 registry 발급값)에서만 모은다 — cwd 문자열 자르기·부모 순회·디렉터리 탐색으로 추론하지 않는다. 세션 ID 해석은 ownership_core.resolve_session_id(D-18)에 위임하고 플랫폼 고유 변수명은 갖지 않는다(C-15). 실행 루트는 봉투 cwd를 그대로 쓰지 않고 ownership_core.resolve_project_root(① 명시 오버라이드 OPAL_PROJECT_ROOT → ② 봉투 cwd부터 조상으로 올라가며 .opal/MEMORY.json 또는 .opal/AGENT.md를 파일로 가진 첫 디렉토리 → ③ None)가 해석하며, 미해석이면 파일 I/O 이전에 종료한다(D-30b·D-25). 해석된 루트는 handle() 내부의 루트 파생 호출에도 그대로 전파한다(D-27). 전 경로 fail-safe exit 0.",
   "exports": ["owned_task_paths", "handle", "main"],
   "depends": ["ownership_tool.ownership_core", "ownership_tool.lease", "ownership_tool.session_registry"]
 }
@@ -129,7 +129,7 @@ def handle(payload, project_root=None, env=None, now=None):
                     "session_register_failed:{}".format(registered.get("error"))
                 )
 
-    owned, roots_diagnostic = owned_task_paths(cwd, session_id, now=now)
+    owned, roots_diagnostic = owned_task_paths(root, session_id, now=now)
     if roots_diagnostic:
         result["diagnostics"].append(roots_diagnostic)
 
@@ -152,7 +152,7 @@ def main():
         return
     if not isinstance(payload, dict):
         return
-    project_root = payload.get("cwd")
+    project_root = ownership_core.resolve_project_root(payload, os.environ)
     if not project_root:
         return
     handle(payload, project_root=project_root)

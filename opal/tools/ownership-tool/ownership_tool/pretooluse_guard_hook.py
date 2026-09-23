@@ -3,7 +3,7 @@
   "module": "ownership_tool.pretooluse_guard_hook",
   "layer": "util",
   "domain": "opal-pipeline",
-  "description": "PreToolUse hook 어댑터(W-19, D-6). 첫 분기에서 ownership_core.resolve_roots가 cwd 루트를 해석하지 못하면 후보 수집·lease 조회 없이 즉시 no-op exit 0으로 끝난다(등록 worktree 밖 latency 방어 — 이 경로는 어떤 파일도 쓰지 않는다). 루트가 해석되면 session_start_hook이 소유한 exact 발급값 대조로 canonical task를 얻고 lease.classify가 foreign_session_owned로 판정할 때만 차단을 검토한다. 차단 대상은 D-6의 폐쇄 목록뿐이다 — Edit·Write·NotebookEdit 전건과 Bash 중 git·state-tool·worktree-tool의 쓰기 서브명령이며, 그 밖의 Bash와 읽기 전용 도구(Read·Grep·Glob)는 허용하고 Bash에는 foreign_owner_bash_unclassified 진단만 남긴다(전면 Bash 차단은 D-6이 기각한 대안이다). 진단 어휘는 decisions.DIAGNOSTICS 폐쇄 enum을 재사용하며 새 값을 만들지 않는다. 세션 ID 해석은 ownership_core.resolve_session_id(D-18)에 위임하고 플랫폼 고유 변수명은 갖지 않는다(C-15). 전 경로 fail-safe exit 0.",
+  "description": "PreToolUse hook 어댑터(W-19, D-6). 첫 분기에서 ownership_core.resolve_roots가 cwd 루트를 해석하지 못하면 후보 수집·lease 조회 없이 즉시 no-op exit 0으로 끝난다(등록 worktree 밖 latency 방어 — 이 경로는 어떤 파일도 쓰지 않는다). 루트가 해석되면 session_start_hook이 소유한 exact 발급값 대조로 canonical task를 얻고 lease.classify가 foreign_session_owned로 판정할 때만 차단을 검토한다. 차단 대상은 D-6의 폐쇄 목록뿐이다 — Edit·Write·NotebookEdit 전건과 Bash 중 git·state-tool·worktree-tool의 쓰기 서브명령이며, 그 밖의 Bash와 읽기 전용 도구(Read·Grep·Glob)는 허용하고 Bash에는 foreign_owner_bash_unclassified 진단만 남긴다(전면 Bash 차단은 D-6이 기각한 대안이다). 진단 어휘는 decisions.DIAGNOSTICS 폐쇄 enum을 재사용하며 새 값을 만들지 않는다. 세션 ID 해석은 ownership_core.resolve_session_id(D-18)에 위임하고 플랫폼 고유 변수명은 갖지 않는다(C-15). 실행 루트는 봉투 cwd를 그대로 쓰지 않고 ownership_core.resolve_project_root(① 명시 오버라이드 OPAL_PROJECT_ROOT → ② 봉투 cwd부터 조상으로 올라가며 .opal/MEMORY.json 또는 .opal/AGENT.md를 파일로 가진 첫 디렉토리 → ③ None)가 해석하며, 미해석이면 파일 I/O 이전에 종료한다(D-30b·D-25). 해석된 루트는 handle() 내부의 루트 파생 호출에도 그대로 전파한다(D-27). 전 경로 fail-safe exit 0.",
   "exports": ["BLOCKED_TOOLS", "BLOCKED_SUBCOMMANDS", "classify_bash", "handle", "to_hook_output", "main"],
   "depends": ["ownership_tool.ownership_core", "ownership_tool.lease", "ownership_tool.session_start_hook"]
 }
@@ -131,9 +131,10 @@ def handle(payload, project_root=None, session_id=None, env=None, now=None):
     cwd = payload.get("cwd") or project_root
     if not cwd:
         return result
+    root = project_root if project_root is not None else cwd
 
     # ── 첫 분기: 등록 worktree/허브가 아니면 여기서 끝난다(파일 I/O 없음) ──────────
-    roots = ownership_core.resolve_roots(cwd)
+    roots = ownership_core.resolve_roots(root)
     if not roots.get("ok"):
         result["diagnostics"].append(roots.get("diagnostic"))
         return result
@@ -148,7 +149,7 @@ def handle(payload, project_root=None, session_id=None, env=None, now=None):
     # canonical task 해석은 session_start_hook이 소유한 exact 발급값 대조를 재사용한다
     # (PRINCIPLES §2 — 같은 패턴을 복제하지 않는다). 이 태스크에서 그 모듈은 동결이라
     # 공개 이름으로 승격하지 않고 그대로 호출한다.
-    task_path, _roots_diagnostic = session_start_hook._canonical_task_path(cwd)
+    task_path, _roots_diagnostic = session_start_hook._canonical_task_path(root)
     if not task_path:
         return result
     result["task_path"] = task_path
@@ -210,7 +211,7 @@ def main():
         return
     if not isinstance(payload, dict):
         return
-    project_root = payload.get("cwd")
+    project_root = ownership_core.resolve_project_root(payload, os.environ)
     if not project_root:
         return
     output = to_hook_output(handle(payload, project_root=project_root))

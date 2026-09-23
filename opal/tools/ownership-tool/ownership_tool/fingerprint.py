@@ -3,7 +3,7 @@
   "module": "ownership_tool.fingerprint",
   "layer": "util",
   "domain": "opal-pipeline",
-  "description": "state-tool show --format json 응답에서 파이프라인 전이에 영향을 주는 의미 필드만 추출해 정규화하고 안정적인 SHA-256 fingerprint를 계산한다(S-6/TASK C-10). created_at/updated_at/timestamp/note 자유문(Step N/M 추출값 제외)/run_log/활동 로그/worker_duration_*/owner는 정규화 dict에서 제외한다. stop-guard receipt(StopReceipt)는 ownership_core의 경로·락·원자쓰기 헬퍼로 저장/조회한다.",
+  "description": "D-26 — save_receipt는 project_root가 falsy면 경로 계산·쓰기 없이 no_project_root로 돌려준다. state-tool show --format json 응답에서 파이프라인 전이에 영향을 주는 의미 필드만 추출해 정규화하고 안정적인 SHA-256 fingerprint를 계산한다(S-6/TASK C-10). created_at/updated_at/timestamp/note 자유문(Step N/M 추출값 제외)/run_log/활동 로그/worker_duration_*/owner는 정규화 dict에서 제외한다. stop-guard receipt(StopReceipt)는 ownership_core의 경로·락·원자쓰기 헬퍼로 저장/조회한다.",
   "exports": ["normalize", "compute", "save_receipt", "load_receipt"],
   "depends": ["ownership_core"]
 }
@@ -108,7 +108,12 @@ def compute(show_json, registry_meta=None, lease=None, decision_kind=None):
 
 
 def save_receipt(project_root, receipt):
-    """receipt(dict 또는 StopReceipt)를 stop_receipt_path(project_root, session_id)에 원자 저장한다."""
+    """receipt(dict 또는 StopReceipt)를 stop_receipt_path(project_root, session_id)에 원자 저장한다.
+
+    D-26 — `project_root`가 falsy면 경로 계산·쓰기 없이 no_project_root로 돌려준다.
+    """
+    if not project_root:
+        return {"ok": False, "error": "no_project_root"}
     if hasattr(receipt, "to_dict"):
         receipt_dict = receipt.to_dict()
     else:

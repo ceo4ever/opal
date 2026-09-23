@@ -1,0 +1,239 @@
+{
+  "task_id": "149-260922-opds-stop-guard-런타임-경로-허브-루트-해석",
+  "skill": "opds",
+  "mode": "agentic",
+  "schema_version": "1.2",
+  "created_at": "2026-09-22 13:45:48",
+  "updated_at": "2026-09-23 10:01:57",
+  "current_status": "completed_unmerged",
+  "rows": [
+    {
+      "row_id": 1,
+      "stage": "TASK",
+      "item": "작업",
+      "key": "task.task_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-22 13:46:55",
+      "owner": "PM",
+      "note": "TASK.md 작성 + clarification-check pass"
+    },
+    {
+      "row_id": 2,
+      "stage": "TASK",
+      "item": "사용자 확인",
+      "key": "task.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-22 18:31:57",
+      "owner": "auto",
+      "note": "auto-approved on PLAN entry"
+    },
+    {
+      "row_id": 3,
+      "stage": "PLAN",
+      "item": "작업",
+      "key": "plan.plan_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-22 21:30:40",
+      "owner": "PM",
+      "note": "PLAN.md 수신. PM 직접 Read 검증 + plan-contract-check/code-scan-citation-check/validate 재실행 전건 pass. 인용 줄번호 4곳 실측 대조 일치(claude_adapter.py·ownership_core.py:170/350·session_registry.py:34·fingerprint.py:110). 블로커(베이스 미확정)는 150 머지 + ff로 해소",
+      "worker_duration_minutes": 8
+    },
+    {
+      "row_id": 4,
+      "stage": "PLAN",
+      "item": "목표-커버 게이트",
+      "key": "plan.scenario_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-22 21:36:27",
+      "owner": "PM",
+      "note": "iteration 1 pass. 증거 2건 — coverage-check exit 0 (all_covered=true, req 15/hyp 2/scenarios 13) + opal-evaluator-agent scenario-rubric verdict pass (goal 2/adoption 2/boundary 2, 평균 2.0, gaps 0)"
+    },
+    {
+      "row_id": 5,
+      "stage": "PLAN",
+      "item": "PM Gate",
+      "key": "plan.pm_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-22 21:36:43",
+      "owner": "PM",
+      "note": "PLAN PM Gate Pass. 체크리스트 5항 전건 — AC/C 매핑 누락 0, Work items 7열 전건 기재, Risks H-1·H-2 실제 위험, Release and recovery에 source→installed·실사례 측정·복구 기준 존재, plan-contract-check/code-scan-citation-check/validate 재실행 pass. 목표-커버 게이트 증거 2건 확보. 회귀 기준선 실측 120건(ownership 100 + hook-parity 20)",
+      "gate": {
+        "artifacts": [
+          "TASK.md",
+          "PLAN.md",
+          "TEST-SCENARIO.md"
+        ],
+        "checklist": [
+          "sdlc-v2 TASK/PLAN/TEST-SCENARIO first frontmatter template=sdlc-v2; 기존 문서는 legacy 재개 경로로 판정",
+          "sdlc-v2 TASK.md AC/C → PLAN.md Work items 완료 기준 연결",
+          "sdlc-v2 PLAN.md Work items 필수 열·W-ID·선행 작업·실행 그룹·파일 충돌 없음 — state-tool verify <태스크폴더> --plan-contract-check 통과",
+          "sdlc-v2 PLAN.md Risks 절 존재, 실제 위험은 H-N 사용 또는 위험 없음 명시",
+          "sdlc-v2 PLAN.md Release and recovery 존재",
+          "sdlc-v2 TEST-SCENARIO.md Setup / Scenarios 존재, 모든 AC/C와 존재하는 H의 연결 완전 — op-scenario-gate pass",
+          "code-scan 결과 인용 — state-tool verify <태스크폴더> --code-scan-citation-check 통과"
+        ]
+      }
+    },
+    {
+      "row_id": 6,
+      "stage": "PLAN",
+      "item": "사용자 확인",
+      "key": "plan.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-23 08:02:57",
+      "owner": "auto",
+      "note": "auto-approved on EXECUTE entry"
+    },
+    {
+      "row_id": 7,
+      "stage": "EXECUTE",
+      "item": "작업",
+      "key": "execute.implement",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-23 08:02:57",
+      "owner": "PM",
+      "note": "W-1~W-6 전건 완료. PM 독립 검증: pytest ownership-tool 114 passed / hook-parity 20 passed / AC-6 1행(ownership_core.py:423) / AC-7 0건. T147 회귀 4건은 assertion 무변경으로 복구(git diff 삭제 줄 0건). 워커 소요 합산 22분(RED 7 + GREEN 8 + RED2 2 + 재작업 5)",
+      "worker_duration_minutes": 22
+    },
+    {
+      "row_id": 8,
+      "stage": "TEST",
+      "item": "작업",
+      "key": "test.run_tests",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-23 08:15:31",
+      "owner": "PM",
+      "note": "opal-test-agent 검증 완료 — scenario-status passed 11 / failed 0 / blocked 1(S-13 배포 승인 대기). 충실도: 훅 진입점 subprocess 실행분(S-4~S-8·S-12) real-usage, grep·AST·회귀(S-2·S-3·S-9~S-11) mock",
+      "worker_duration_minutes": 5
+    },
+    {
+      "row_id": 9,
+      "stage": "TEST",
+      "item": "PM Gate",
+      "key": "test.pm_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-23 08:16:21",
+      "owner": "PM",
+      "note": "TEST PM Gate Pass. 체크리스트: 자동 시나리오 11/11 pass(failed 0) · code-scan validate newly_uncovered 0 · 시크릿 0건 · 회귀 114+20 passed · 컨벤션 GC-001(High)·GC-002 수정 후 PM 결정론 재검증으로 Critical/High 0건 · 설계 피드백 미해결 없음. S-13(설치 후 실제 세션 관찰)은 blocked 이월 — AC-1은 S-5, AC-3은 S-6이 real-usage로 이미 커버하므로 AC 커버리지 공백 없음. S-13은 PLAN Release and recovery의 배포 후 확인 항목이며 배포는 소유자 승인 경계다",
+      "gate": {
+        "artifacts": [
+          "TEST-SCENARIO.md",
+          "test-scenario.json"
+        ],
+        "checklist": [
+          "TEST-SCENARIO.md는 실행 전 명세로만 읽고 결과·증거를 기록하지 않음",
+          "test-scenario.json의 모든 필수 시나리오가 PASS이고 FAIL/BLOCKED가 없으며 실제 실행 증거가 존재",
+          "PLAN.md Work items에 정의된 필수 검증 PASS",
+          "컨벤션 자동 진단 PASS (GC-CONVENTION-*.md Critical/High 0건 — 컨벤션 적용 대상 ≥1건 시 발동)"
+        ]
+      }
+    },
+    {
+      "row_id": 10,
+      "stage": "TEST",
+      "item": "사용자 확인",
+      "key": "test.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-23 08:17:30",
+      "owner": "auto",
+      "note": "auto-approved on CLOSE entry"
+    },
+    {
+      "row_id": 11,
+      "stage": "CLOSE",
+      "item": "DONE.md 생성",
+      "key": "close.done_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-23 08:17:30",
+      "owner": "PM",
+      "note": "DONE.md 작성. 회고적 학습 후보 3건 선언(concept 2·entity 1). S-13 blocked 이월과 배포 시 151 충돌 주의를 §참고에 명시"
+    },
+    {
+      "row_id": 12,
+      "stage": "CLOSE",
+      "item": "관련 문서 동기화 (조건부: 구현으로 문서 사실이 달라진 경우)",
+      "key": "close.docs_sync",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-23 10:00:27",
+      "owner": "PM",
+      "note": "no-op 판정. 레지스트리 문서의 ownership-tool 기재 2곳(docs/PROJECT.md:263·docs/ARCHITECTURE.md:270)은 모두 Stop hook의 *소유권 판정*(세션 소유 태스크를 registry로 해석) 서술이며 이번 변경은 *루트 해석* 축이라 어느 문장도 무효화하지 않는다. 도구 레벨 문서(ownership-tool/README.md §실행 루트 해석)는 W-6으로 이미 갱신",
+      "conditional": true
+    },
+    {
+      "row_id": 13,
+      "stage": "CLOSE",
+      "item": "brain ingest (조건부: 프로젝트 brain 사용 시)",
+      "key": "close.brain_ingest",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-23 10:00:27",
+      "owner": "PM",
+      "note": "worktree 태스크이므로 실행 중 brain 파일을 직접 변경하지 않는다(done-template.md §회고적 학습 후보 계약). 후보 3건을 DONE.md에 레포 상대 경로로 선언했고 실제 page 생성·갱신·생략 판정은 merge 후 허브 finalize가 수행한다",
+      "conditional": true
+    },
+    {
+      "row_id": 14,
+      "stage": "CLOSE",
+      "item": "회고/개선 후보 기록",
+      "key": "close.retrospective",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-23 10:01:13",
+      "owner": "PM",
+      "note": "improve-tool record --scope fw 4건 기록. 관측 후보는 7건이었으나 1·2·3·4번(worktree.md 오독·커버리지 빌더 파서·@header 집행 주장 미검증·PM Gate 인용 범위)은 허브에서 진행 중인 태스크 151이 같은 파일을 이미 수정 중이라 중복 기록 대신 이번 태스크의 실측 사례 3건을 회귀 입력으로 묶어 1건에 담았다. fw-inbox 153건 누적 + triage 부재가 이미 미해소 항목이라 노이즈를 늘리지 않는 쪽을 택했다"
+    },
+    {
+      "row_id": 15,
+      "stage": "CLOSE",
+      "item": "worktree finalize/attribution (조건부: --wt 실행 시, 허브 수행)",
+      "key": "close.worktree_finalize",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-23 10:01:33",
+      "owner": "PM",
+      "note": "worktree-tool finalize 성공 — attribution_state completed_unmerged→closed, declared 6건 / observed 0건 / violations 0건. 워크트리에서 brain·MEMORY를 직접 변경하지 않았으므로 S⊆D 판정 통과. 커밋·머지는 소유자 권한이라 수행하지 않았다",
+      "conditional": true
+    },
+    {
+      "row_id": 16,
+      "stage": "CLOSE",
+      "item": "CLOSE 최종 상태 확정",
+      "key": "close.final",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-23 10:01:57",
+      "owner": "PM",
+      "note": "태스크 완료. 114+20 passed, 시나리오 11/11 pass(S-13 배포 후 관찰 이월). merge 대기 상태"
+    }
+  ],
+  "next_action": "태스크 완료",
+  "worktree": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_149",
+  "run_log": {
+    "contract_version": "1.0",
+    "mode": "shadow",
+    "completion_profile": "cooperative",
+    "completion_profile_receipt": null,
+    "active_run_id": "run_d9e8c697-6489-4807-835e-01cf194ffb99",
+    "status": "active",
+    "pending_events": [],
+    "last_report": {
+      "event_id": "evt_fe7698a6-5869-4af9-9d4f-a04c851587a0",
+      "report_type": "decision_request",
+      "transition_action": "blocked",
+      "user_input_required": true,
+      "at": "2026-09-22T12:40:10.054Z"
+    }
+  }
+}

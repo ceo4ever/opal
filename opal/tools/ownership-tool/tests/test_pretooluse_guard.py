@@ -2,10 +2,12 @@
 # module: ownership_tool.tests.test_pretooluse_guard
 # layer: test
 # domain: ownership
-# description: RED-first — ownership_tool.pretooluse_guard_hook 공개 계약 검증 (S-13)
+# description: ownership_tool.pretooluse_guard_hook 공개 계약 검증 (S-13) + TASK-149 S-12 —
+#   하위 cwd PreToolUse 3상태(타 세션 live lease→block, 이관 중(무소유)→비차단,
+#   만료 lease→비차단)를 subprocess 실호출로 고정한다
 # exports: (none — pytest module)
-# depends: ownership_tool.pretooluse_guard_hook (미구현), fixtures/hook-payloads
-"""RED 테스트 — 구현 전."""
+# depends: ownership_tool.pretooluse_guard_hook, ownership_tool.lease, fixtures/hook-payloads
+"""pretooluse_guard_hook 계약 테스트. 판정 경로에 mock을 쓰지 않는다."""
 from __future__ import annotations
 
 import json
@@ -45,7 +47,7 @@ def _clone_fixtures() -> tuple[Path, Path, Path]:
 
 def test_outside_registered_worktree_exits_immediately_no_io(tmp_path, monkeypatch):
     """등록 worktree 밖 cwd → guard가 파일 I/O 없이 즉시 exit 0."""
-    from ownership_tool import pretooluse_guard_hook  # RED
+    from ownership_tool import pretooluse_guard_hook
 
     # setup(B-5): 앰비언트 세션 env 격리(다른 케이스와 동일 사유) — env -u 유무와 무관하게
     # 동일 결과가 나와야 한다.
@@ -67,7 +69,7 @@ def test_outside_registered_worktree_exits_immediately_no_io(tmp_path, monkeypat
 
 def test_foreign_owner_blocks_edit_and_git_commit(monkeypatch):
     """foreign_owner에서 Edit/Write/NotebookEdit·git commit 차단."""
-    from ownership_tool import pretooluse_guard_hook  # RED
+    from ownership_tool import pretooluse_guard_hook
 
     # setup(B-5): 앰비언트 세션 env 격리(다른 케이스와 동일 사유).
     monkeypatch.delenv("CLAUDE_CODE_SESSION_ID", raising=False)
@@ -127,7 +129,7 @@ def test_foreign_owner_blocks_edit_and_git_commit(monkeypatch):
 
 def test_foreign_owner_allows_read_and_ls_with_diagnostic(monkeypatch):
     """Read 허용, ls는 허용 + foreign_owner_bash_unclassified 진단."""
-    from ownership_tool import pretooluse_guard_hook  # RED
+    from ownership_tool import pretooluse_guard_hook
 
     # setup(B-5): 앰비언트 세션 env 격리(다른 케이스와 동일 사유).
     monkeypatch.delenv("CLAUDE_CODE_SESSION_ID", raising=False)
@@ -261,7 +263,7 @@ def _guard(pretooluse_guard_hook, worktree_root, session_id, tool_name, tool_inp
 def test_s2_handoff_pending_and_claimed_worktree_session_are_not_blocked(tmp_path, monkeypatch):
     """S-2(AC-2, C-2, H-1): 이관 대기 중에도, 대상 루트에서 claim한 뒤에도 워크트리 세션의
     쓰기 도구·쓰기 Bash 봉투가 가드에 차단되지 않는다."""
-    from ownership_tool import lease, pretooluse_guard_hook  # RED: lease.handoff 미구현
+    from ownership_tool import lease, pretooluse_guard_hook
 
     monkeypatch.delenv("CLAUDE_CODE_SESSION_ID", raising=False)
     monkeypatch.delenv("OPAL_SESSION_ID", raising=False)
@@ -336,3 +338,129 @@ def test_s2_hub_session_is_blocked_after_the_worktree_session_claims(tmp_path, m
     assert result.get("classification") == "foreign_session_owned", result
     assert result.get("decision") == "block", result
     assert "foreign_owner" in result.get("diagnostics", [])
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# TASK-149 S-12 (H-2, C-2). 하위 cwd PreToolUse 3상태(타 세션 live lease→
+# block, 이관 중(무소유)→비차단, 만료 lease→비차단)를 subprocess로 실행해 고정한다.
+# 출력 채널은 기존 1줄(hookSpecificOutput)뿐이고 새 채널이 생기지 않는다.
+#
+# 이 3건은 어댑터가 봉투 cwd를 무검증 채택하던 결함을 고정한다 — 하위 cwd 자신에는
+# `.opal/task-ownership.json` 사본이 없어 첫 분기에서 no-op으로 빠졌고, 타 세션 live
+# lease 상태에서도 차단이 발동하지 않았다. 이제 루트는 ownership_core.
+# resolve_project_root(D-30b 조상 탐색)가 해석하므로 하위 cwd에서도 ⑴이 차단된다.
+# ─────────────────────────────────────────────────────────────────────────────
+
+import os as _t149_os
+import subprocess as _t149_subprocess
+
+from ownership_tool import lease as _t149_lease
+
+_T149_TOOL_DIR = Path(__file__).resolve().parent.parent
+_T149_GUARD_HOOK = _T149_TOOL_DIR / "ownership_tool" / "pretooluse_guard_hook.py"
+_T149_VENV_PYTHON = Path.home() / ".opal" / ".venv" / "bin" / "python"
+
+
+def _t149_minimal_env():
+    env = {}
+    for key in ("PATH", "HOME"):
+        if key in _t149_os.environ:
+            env[key] = _t149_os.environ[key]
+    return env
+
+
+def _t149_run_guard(cwd, session_id, tool_name, tool_input, env):
+    payload = {
+        "cwd": str(cwd),
+        "session_id": session_id,
+        "hook_event_name": "PreToolUse",
+        "tool_name": tool_name,
+        "tool_input": tool_input,
+    }
+    result = _t149_subprocess.run(
+        [str(_T149_VENV_PYTHON), str(_T149_GUARD_HOOK)],
+        input=json.dumps(payload, ensure_ascii=False),
+        capture_output=True, text=True,
+        cwd=str(cwd), env=env,
+    )
+    return result.returncode, result.stdout, result.stderr
+
+
+def _t149_setup_worktree(tmp_path, name):
+    wt_root = tmp_path / f"wt_root_{name}"
+    task_dir = tmp_path / "hub" / "tasks" / f"t149-s12-{name}"
+    (wt_root / ".opal").mkdir(parents=True)
+    (wt_root / ".opal" / "task-ownership.json").write_text(
+        json.dumps({
+            "allocator_root": str(tmp_path / "hub"),
+            "task_path": str(task_dir),
+        }),
+        encoding="utf-8",
+    )
+    sub_cwd = wt_root / "sub" / "nested"
+    sub_cwd.mkdir(parents=True)
+    env = _t149_minimal_env()
+    env["OPAL_PROJECT_ROOT"] = str(wt_root)
+    return wt_root, task_dir, sub_cwd, env
+
+
+def test_t149_s12_1_foreign_live_lease_blocks_from_subdir(tmp_path):
+    wt_root, task_dir, sub_cwd, env = _t149_setup_worktree(tmp_path, "foreign")
+    # [MUST] "live lease"는 훅 프로세스의 실제 시계 기준으로 살아 있어야 한다. 고정
+    # 과거 시각 + 기본 TTL(14400s)로 claim하면 테스트 실행일이 지나는 순간 lease가
+    # 만료로 판정돼 시나리오 의도(타 세션 live lease → block)가 무너진다. 현재 시각
+    # 기준 + 넉넉한 TTL로 claim해 시계 의존을 제거한다. 대칭적으로 S-12(3)은 고정
+    # 과거 시각 + ttl_sec=1로 "확정 만료"를 만든다.
+    now = datetime.now(timezone(timedelta(hours=9)))
+    assert _t149_lease.claim(
+        task_dir, session_id="sess-t149-s12-foreign-owner", now=now, ttl_sec=86400,
+    )["ok"] is True
+
+    code, stdout, stderr = _t149_run_guard(
+        sub_cwd, "sess-t149-s12-me", "Edit",
+        {"file_path": "TASK.md", "old_string": "a", "new_string": "b"}, env,
+    )
+    assert code == 0, f"T149.S-12(1) fail-safe exit 0 위반 — {stderr!r}"
+    lines = [l for l in stdout.splitlines() if l.strip()]
+    assert len(lines) == 1, f"T149.S-12(1) 위반 — 출력 채널이 1줄이 아님: {stdout!r}"
+    decision = json.loads(lines[0])
+    assert decision.get("hookSpecificOutput", {}).get("permissionDecision") == "deny", (
+        f"T149.S-12(1) 위반 — 타 세션 live lease인데 차단되지 않음: {decision!r}"
+    )
+
+
+def test_t149_s12_2_handoff_pending_unowned_does_not_block(tmp_path):
+    wt_root, task_dir, sub_cwd, env = _t149_setup_worktree(tmp_path, "handoff")
+    now = datetime(2026, 9, 22, 10, 0, 0, tzinfo=timezone(timedelta(hours=9)))
+    assert _t149_lease.claim(
+        task_dir, session_id="sess-t149-s12-hub", now=now,
+    )["ok"] is True
+    assert _t149_lease.handoff(
+        task_dir, session_id="sess-t149-s12-hub", to_worktree_root=str(wt_root), now=now,
+    )["ok"] is True
+
+    code, stdout, stderr = _t149_run_guard(
+        sub_cwd, "sess-t149-s12-incoming", "Edit",
+        {"file_path": "TASK.md", "old_string": "a", "new_string": "b"}, env,
+    )
+    assert code == 0, f"T149.S-12(2) fail-safe exit 0 위반 — {stderr!r}"
+    assert stdout.strip() == "", (
+        f"T149.S-12(2) 위반 — 이관 중(무소유) 상태인데 차단됨: {stdout!r}"
+    )
+
+
+def test_t149_s12_3_expired_lease_does_not_block(tmp_path):
+    wt_root, task_dir, sub_cwd, env = _t149_setup_worktree(tmp_path, "expired")
+    past = datetime(2020, 1, 1, 10, 0, 0, tzinfo=timezone(timedelta(hours=9)))
+    assert _t149_lease.claim(
+        task_dir, session_id="sess-t149-s12-old-owner", now=past, ttl_sec=1,
+    )["ok"] is True
+
+    code, stdout, stderr = _t149_run_guard(
+        sub_cwd, "sess-t149-s12-me2", "Edit",
+        {"file_path": "TASK.md", "old_string": "a", "new_string": "b"}, env,
+    )
+    assert code == 0, f"T149.S-12(3) fail-safe exit 0 위반 — {stderr!r}"
+    assert stdout.strip() == "", (
+        f"T149.S-12(3) 위반 — 만료 lease인데 차단됨: {stdout!r}"
+    )

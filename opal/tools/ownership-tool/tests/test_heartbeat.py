@@ -294,3 +294,96 @@ def test_s3_hub_heartbeat_does_not_revive_handoff_pending_lease(monkeypatch):
 
     assert lease_path.stat().st_mtime_ns == before_stat.st_mtime_ns
     assert json.loads(lease_path.read_text(encoding="utf-8")) == before_record
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# TASK-149 RED-first — S-8 (AC-4). `<루트>/.opal/setting.local.json`의
+# `ownership.lease_ttl_sec`를 기본값(14400)과 다른 값으로 두고, 봉투 cwd는 하위
+# 디렉토리인 상태에서 heartbeat_hook.py를 subprocess로 실행하면 그 설정값이
+# 적용돼야 한다(14400으로 폴백하지 않는다).
+#
+# RED: 지금은 heartbeat_hook.main()이 project_root = payload.get("cwd")(하위
+# 디렉토리)를 그대로 채택하므로 lease.heartbeat에 넘기는 project_root가 루트가
+# 아니라서 resolve_ttl_sec가 루트의 setting.local.json을 못 읽는다(폴백 14400).
+# ─────────────────────────────────────────────────────────────────────────────
+
+import os as _t149_os
+import subprocess as _t149_subprocess
+
+_T149_TOOL_DIR = Path(__file__).resolve().parent.parent
+_T149_HEARTBEAT_HOOK = _T149_TOOL_DIR / "ownership_tool" / "heartbeat_hook.py"
+_T149_VENV_PYTHON = Path.home() / ".opal" / ".venv" / "bin" / "python"
+_T149_CUSTOM_TTL = 999
+
+
+def _t149_minimal_env():
+    env = {}
+    for key in ("PATH", "HOME"):
+        if key in _t149_os.environ:
+            env[key] = _t149_os.environ[key]
+    return env
+
+
+def test_t149_s8_heartbeat_applies_root_setting_ttl_from_subdir_cwd(tmp_path):
+    wt_root = tmp_path / "wt_root"
+    task_dir = tmp_path / "hub" / "tasks" / "t149-s8"
+    (wt_root / ".opal").mkdir(parents=True)
+    (wt_root / ".opal" / "task-ownership.json").write_text(
+        json.dumps({
+            "allocator_root": str(tmp_path / "hub"),
+            "task_path": str(task_dir),
+        }),
+        encoding="utf-8",
+    )
+    (wt_root / ".opal" / "setting.local.json").write_text(
+        json.dumps({"ownership": {"lease_ttl_sec": _T149_CUSTOM_TTL}}),
+        encoding="utf-8",
+    )
+
+    session_id = "sess-t149-s8"
+    now = datetime(2026, 9, 22, 10, 0, 0, tzinfo=timezone(timedelta(hours=9)))
+    owner_path = task_dir / "run" / ".runtime" / "owner.json"
+    owner_path.parent.mkdir(parents=True, exist_ok=True)
+    # ttl_sec 없는 구버전 레코드 — heartbeat가 resolve_ttl_sec(project_root)로
+    # 재해석하게 만든다(lease.heartbeat 구현 — ttl_sec 없으면 project_root 설정을 읽는다).
+    owner_path.write_text(json.dumps({
+        "task_path": str(task_dir),
+        "owner_session_id": session_id,
+        "generation": 1,
+        "claimed_at": now.isoformat(),
+        "heartbeat_at": now.isoformat(),
+        "lease_expires_at": (now + timedelta(hours=4)).isoformat(),
+        "status": "active",
+        "claim_source": "state_transition",
+    }), encoding="utf-8")
+
+    sub_cwd = wt_root / "sub" / "nested"
+    sub_cwd.mkdir(parents=True)
+
+    payload = {
+        "cwd": str(sub_cwd),
+        "session_id": session_id,
+        "hook_event_name": "PostToolUse",
+        "tool_name": "Bash",
+        "tool_input": {"command": "echo hi"},
+        "tool_response": {"stdout": "hi\n", "stderr": "", "exit_code": 0},
+    }
+    env = _t149_minimal_env()
+    env["OPAL_PROJECT_ROOT"] = str(wt_root)
+
+    result = _t149_subprocess.run(
+        [str(_T149_VENV_PYTHON), str(_T149_HEARTBEAT_HOOK)],
+        input=json.dumps(payload, ensure_ascii=False),
+        capture_output=True, text=True,
+        cwd=str(sub_cwd), env=env,
+    )
+    assert result.returncode == 0, f"T149.S-8 fail-safe exit 0 위반 — {result.stderr!r}"
+
+    updated = json.loads(owner_path.read_text(encoding="utf-8"))
+    heartbeat_at = datetime.fromisoformat(updated["heartbeat_at"])
+    lease_expires_at = datetime.fromisoformat(updated["lease_expires_at"])
+    applied_ttl_sec = round((lease_expires_at - heartbeat_at).total_seconds())
+    assert applied_ttl_sec == _T149_CUSTOM_TTL, (
+        f"T149.S-8 위반 — heartbeat가 루트 setting.local.json의 lease_ttl_sec({_T149_CUSTOM_TTL})을 "
+        f"적용하지 않음(적용된 TTL={applied_ttl_sec}, 14400 기본 폴백으로 보인다): {updated!r}"
+    )

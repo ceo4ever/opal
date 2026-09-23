@@ -72,6 +72,12 @@ hook 어댑터는 판정 로직을 갖지 않는다 — 봉투 파싱·출력 �
 세 경로 모두 `.gitignore`의 `.opal/*`(:2)와 `tasks/**/run/.runtime/`(:49)로 이미 추적 제외이므로
 gitignore 추가 편집이 필요 없다.
 
+**`<project_root>`의 출처는 `resolve_project_root()`다**(아래 §실행 루트 해석). 훅 봉투의 `cwd`를
+그대로 쓰지 않는다 — `cwd`는 훅 발화 시점의 작업 디렉토리라 에이전트가 하위 디렉토리로 이동한 뒤
+턴을 끝내면 그 하위 경로가 되고, 그대로 채택하면 저장소가 그 아래에 생긴다. 단 `.gitignore`의
+`.opal/*`는 레포 루트 고정 패턴이라 하위 디렉토리의 `.opal/`은 덮지 않으므로, 그 오염은 곧바로
+`git status`에 untracked로 노출된다.
+
 ## lock 계약 (PLAN D-7)
 
 - 락 파일은 저장소 파일마다 `<path>.lock` 1개이며 `<task-path>/.opal-task.lock`(run-log/state-tool
@@ -142,6 +148,43 @@ lease claim에 성공한 **워크트리** 세션은 이어서 허브 registry의
 `REGISTRY_LOCK_TIMEOUT_MS=30000`으로 이미 상한하므로 정상 경합은 자르지 않으면서, 멈춘 CLI가 세션 부팅을
 막지 않게 한다. 어떤 분기에서도 예외로 새지 않고 구조화 반환하며 전 경로 fail-safe exit 0을 유지한다
 (`:274-278`).
+
+## 실행 루트 해석 (PLAN D-30)
+
+`resolve_project_root(payload, env=None)` 순서:
+
+1. `env["OPAL_PROJECT_ROOT"]` — 명시 오버라이드. 실제 디렉토리일 때만 채택한다
+2. 봉투 `cwd`부터 **조상으로 올라가며** `.opal/MEMORY.json` 또는 `.opal/AGENT.md`를 **파일로**
+   가진 첫 디렉토리
+3. 없으면 `None`
+
+이 함수가 어댑터 5종이 공유하는 **유일한 루트 채택 지점**이다. 다른 모듈은 루트를 스스로 만들지 않는다.
+
+### 왜 조상 탐색인가
+
+훅이 쓰는 루트는 `.opal` 설정·state의 저장 위치를 정하는 값이므로 `allocator_root`가 아니라
+**`task_root`** 축이다. `task_root`의 결정 방법은 "canonical task path에서 가장 가까운 `.git`·`.opal`
+작업본"으로 정의돼 있다 — 계약 원문은 `opal/core/references/harness/worktree.md` §task root와
+allocator root 계약이며 여기에 복제하지 않는다. 같은 절의 "조상으로 추론하지 않는다" [MUST]는
+`allocator_root` 전용이다. 선례는 `state-tool`의 `task_root()`로, 조상에서 `.opal/MEMORY.json` 앵커를
+찾으면서 같은 docstring에 allocator root 제외를 병기한다.
+
+플랫폼 환경변수(`CLAUDE_PROJECT_DIR` 등)는 **쓰지 않는다**. 조상 탐색은 전 플랫폼에서 성립하지만
+플랫폼 변수는 그렇지 않아, 루트 해석을 그쪽에 묶으면 단일 실패점이 되고 플랫폼 독립성과 충돌한다.
+
+### 앵커는 마커 파일이다
+
+`.opal/` 디렉토리 존재만으로는 루트로 인정하지 않는다. 훅이 저장소를 잘못 만들던 시기의 오염은
+`<하위>/.opal/run/.runtime/…` 형태라 `.opal/` 디렉토리는 있고 마커 파일은 없다. 디렉토리 존재를
+앵커로 쓰면 오염된 하위가 루트로 승격돼 결함이 자기증식한다.
+
+### 미해석이면 기록하지 않는다
+
+`None`이면 훅 어댑터 `main()`이 **파일 I/O 이전에** 무출력·exit 0으로 종료한다. 루트를 확정하지
+못한 상태에서 임의 위치에 쓰는 것보다 미기록이 낫다. 보강 방어선으로 `session_registry.register`와
+`fingerprint.save_receipt`도 falsy 루트를 `{"ok": False, "error": "no_project_root"}`로 거부한다.
+`state-tool`의 `task_root()`가 `None`일 때 "호출자는 subprocess를 아예 띄우지 말고 조기 반환"하는
+것과 같은 계약이다.
 
 ## 세션 ID 해석 (PLAN D-18)
 

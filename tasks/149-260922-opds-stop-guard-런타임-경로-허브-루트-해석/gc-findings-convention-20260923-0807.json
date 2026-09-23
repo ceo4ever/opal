@@ -1,0 +1,97 @@
+{
+  "check": "convention",
+  "status": "pass",
+  "checked_files": [
+    "opal/tools/ownership-tool/ownership_tool/ownership_core.py",
+    "opal/tools/ownership-tool/ownership_tool/fingerprint.py",
+    "opal/tools/ownership-tool/ownership_tool/session_registry.py",
+    "opal/tools/ownership-tool/ownership_tool/stop_hook.py",
+    "opal/tools/ownership-tool/ownership_tool/session_start_hook.py",
+    "opal/tools/ownership-tool/ownership_tool/heartbeat_hook.py",
+    "opal/tools/ownership-tool/ownership_tool/session_end_hook.py",
+    "opal/tools/ownership-tool/ownership_tool/pretooluse_guard_hook.py",
+    "opal/tools/ownership-tool/tests/test_root_resolution.py",
+    "opal/tools/ownership-tool/tests/test_stop_hook_process.py",
+    "opal/tools/ownership-tool/tests/test_session_start.py",
+    "opal/tools/ownership-tool/tests/test_heartbeat.py",
+    "opal/tools/ownership-tool/tests/test_pretooluse_guard.py",
+    "opal/tools/ownership-tool/README.md"
+  ],
+  "findings": [
+    {
+      "id": "GC-001",
+      "fingerprint": "a1c3f8e2b7d94510",
+      "category": "@header 현재 사실",
+      "severity": "high",
+      "confidence": "high",
+      "disposition": "blocking",
+      "rule_id": "docs/CONVENTIONS.md §구현 규칙 §@header 규칙 (\"코드 @header에는 현재 사실만 기재한다\")",
+      "source_tier": "T0",
+      "location": {"file": "opal/tools/ownership-tool/ownership_tool/stop_hook.py", "line": 6},
+      "evidence": "5개 hook 어댑터(stop_hook.py:6, session_start_hook.py:6, heartbeat_hook.py:6, session_end_hook.py:6, pretooluse_guard_hook.py:6)의 @header description이 동일 문구로 'ownership_core.resolve_project_root(OPAL_PROJECT_ROOT → 플랫폼 변수 → 디스크 증거가 있는 봉투 cwd → None)'를 서술한다. 그러나 실제 ownership_core.resolve_project_root() 구현(ownership_core.py:385-433)은 정확히 ①env OPAL_PROJECT_ROOT ②봉투 cwd 조상 탐색(.opal/MEMORY.json 또는 .opal/AGENT.md 마커 파일) ③None 의 3단계뿐이며, '플랫폼 변수' 단계도 '디스크 증거가 있는 봉투 cwd' 단계도 존재하지 않는다. 이는 resolve_project_root 자신의 docstring(\"체인은 정확히 3단계이며 그 밖의 경로는 없다\")과도, README.md §실행 루트 해석(정확히 일치하는 3단계 서술)과도 배치된다.",
+      "impact": "이 태스크의 핵심 변경(플랫폼 고유 변수 CLAUDE_PROJECT_DIR 의존 제거 + 조상 탐색 단일화)이 정확히 이 5개 파일의 헤더에 반영되지 않아, 헤더만 읽는 후속 워커·도구(code-scan)가 존재하지 않는 '플랫폼 변수' 폴백 단계를 사실로 오인할 위험이 있다. 컨벤션 §구현 규칙이 명시한 '현재 사실만 기재' 원칙 위반이며, 5개 파일에 동일 결함이 반복(빈도 트리거 충족)된다.",
+      "remediation": {
+        "guidance": "5개 hook 파일의 @header description에서 'ownership_core.resolve_project_root(OPAL_PROJECT_ROOT → 플랫폼 변수 → 디스크 증거가 있는 봉투 cwd → None)' 구절을 실제 구현과 일치하는 'ownership_core.resolve_project_root(OPAL_PROJECT_ROOT 명시 오버라이드 → 봉투 cwd 조상 탐색(.opal/MEMORY.json 또는 .opal/AGENT.md 마커) → None)'로 교체한다. README.md §실행 루트 해석의 서술을 참조 기준으로 삼는다.",
+        "reference": "opal/tools/ownership-tool/README.md §실행 루트 해석 (152-187행)",
+        "auto_fixable": false
+      },
+      "verification": "5개 파일의 @header description을 grep '플랫폼 변수\\|디스크 증거가 있는 봉투 cwd'로 검색해 0건이 되는지, 그리고 새 문구가 resolve_project_root()의 3단계 실 구현과 문자 그대로 일치하는지 확인한다.",
+      "suppression": null
+    },
+    {
+      "id": "GC-002",
+      "fingerprint": "d4e29a6c1f087bb3",
+      "category": "@header 현재 사실",
+      "severity": "medium",
+      "confidence": "medium",
+      "disposition": "advisory",
+      "rule_id": "docs/CONVENTIONS.md §구현 규칙 §@header 규칙 (\"현재 사실만 기재\")",
+      "source_tier": "T0",
+      "location": {"file": "opal/tools/ownership-tool/tests/test_pretooluse_guard.py", "line": 5},
+      "evidence": "test_pretooluse_guard.py의 @header description이 'RED-first — ownership_tool.pretooluse_guard_hook 공개 계약 검증'이고 모듈 docstring도 'RED 테스트 — 구현 전'이라고 서술한다. 그러나 이번 태스크의 결정론 검사에서 이미 pytest 114 passed(전 테스트 GREEN, pretooluse_guard_hook.py 구현 완료)가 확인됐다 — 더 이상 '구현 전' 상태가 아니다.",
+      "impact": "파일이 아직 RED(미구현) 상태라는 오인을 유발할 수 있다. 다만 이 파일 자체는 이번 태스크의 target_files는 아니고(target_files 목록에 test_pretooluse_guard.py가 포함되어 있으므로 실제 대상) 과거 태스크에서 작성된 서술을 caller가 갱신하지 않은 것으로 보인다 — 이번 diff가 이 파일을 직접 손대지 않았다면 pre-existing 성격이 강해 심각도를 낮춘다.",
+      "remediation": {
+        "guidance": "description·모듈 docstring에서 'RED-first'/'구현 전' 표현을 제거하고 현재 상태('ownership_tool.pretooluse_guard_hook 공개 계약 검증 (S-13)')로 갱신한다.",
+        "reference": "opal/core/references/harness/header-rules.md §파일 수정 시",
+        "auto_fixable": false
+      },
+      "verification": "파일 상단 description·docstring에 'RED'·'구현 전' 문구가 남아있지 않은지 확인한다.",
+      "suppression": null
+    },
+    {
+      "id": "GC-003",
+      "fingerprint": "7b910c4de2a6f158",
+      "category": "@header 형식 일관성",
+      "severity": "low",
+      "confidence": "medium",
+      "disposition": "advisory",
+      "rule_id": "opal/core/references/harness/header-rules.md §주석 문법 (~/.opal/references/header-standard.md §3 참조 — 원문 미확인)",
+      "source_tier": "T2",
+      "location": {"file": "opal/tools/ownership-tool/tests/test_session_start.py", "line": 1},
+      "evidence": "target_files 중 test_root_resolution.py·test_stop_hook_process.py는 `\"\"\"@header {...}\"\"\"` JSON 블록 형식을 쓰는 반면, test_session_start.py·test_heartbeat.py·test_pretooluse_guard.py는 `# @header` 줄 주석 + key: value 형식을 쓴다. 같은 디렉토리·같은 layer(test) 내에서 두 형식이 혼재한다.",
+      "impact": "code-scan 등 헤더 파서가 두 형식을 모두 지원하지 않으면 일부 파일의 헤더가 누락 처리될 수 있다. header-standard.md 원문(§3 주석 문법)을 이번 실행에서 직접 로드하지 않아 어느 쪽이 표준인지 단정할 근거가 부족하므로 advisory로 남긴다.",
+      "remediation": {
+        "guidance": "header-standard.md §3 주석 문법을 확인해 두 형식 중 표준 형식으로 통일할지 판단한다. 이번 태스크가 신규 작성한 파일이 아니라면 소급 통일은 별도 태스크로 분리해도 무방하다.",
+        "reference": "~/.opal/references/header-standard.md §3",
+        "auto_fixable": false
+      },
+      "verification": "header-standard.md §3을 로드해 두 형식 중 표준을 확정하고, 표준과 다른 파일 수를 재확인한다.",
+      "suppression": null
+    }
+  ],
+  "evidence": [
+    "grep -rn 'CLAUDE_' opal/tools/ownership-tool/ownership_tool/*.py | grep -v claude_adapter.py → 0건 (PM 실측과 재확인 일치)",
+    ".opal/code-scan.json headerSource=inline 확인",
+    "Read: ownership_core.py, fingerprint.py, session_registry.py, stop_hook.py, session_start_hook.py, heartbeat_hook.py, session_end_hook.py, pretooluse_guard_hook.py, test_root_resolution.py, README.md, test_stop_hook_process.py/test_session_start.py/test_heartbeat.py/test_pretooluse_guard.py 상단 헤더",
+    "grep '플랫폼 변수|디스크 증거가 있는 봉투 cwd|resolve_project_root' README.md → 3건, 모두 실제 3단계 서술과 일치"
+  ],
+  "references": [
+    "docs/CONVENTIONS.md",
+    ".opal/AGENT.md",
+    "opal/core/references/opal-doc-standard.md §5",
+    "opal/core/references/harness/header-rules.md",
+    "opal/core/references/harness/gc-finding-schema.md"
+  ],
+  "missing_capabilities": [],
+  "report_path": "tasks/149-260922-opds-stop-guard-런타임-경로-허브-루트-해석/GC-CONVENTION-20260923-0807.md"
+}
