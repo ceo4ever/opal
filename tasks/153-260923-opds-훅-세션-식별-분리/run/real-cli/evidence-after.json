@@ -1,9 +1,9 @@
 {
-  "mode": "before",
+  "mode": "after",
   "hooks_wired": true,
-  "project_root": "/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/verify-real-cli-before-fnemy9zq/project",
-  "task_dir": "/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/verify-real-cli-before-fnemy9zq/project/tasks/000-real-cli-verify-before",
-  "parent_id_last": "real-cli-parent-before-6d53ca2a",
+  "project_root": "/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/verify-real-cli-after-lw5cb292/project",
+  "task_dir": "/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/verify-real-cli-after-lw5cb292/project/tasks/000-real-cli-verify-after",
+  "parent_id_last": "real-cli-parent-after-a564faaa",
   "commands": [
     {
       "variant": "get",
@@ -18,9 +18,9 @@
       "exit_code": 0,
       "stdout_tail": "context7:\n  Scope: Project config (shared via .mcp.json)\n  Status: ⏸ Pending approval (run `claude` to approve)\n  Type: stdio\n  Command: npx\n  Args: -y @upstash/context7-mcp@latest\n\nTo remove this server, run: claude mcp remove context7 -s project\n",
       "stderr_tail": "",
-      "parent_id": "real-cli-parent-before-6d53ca2a",
-      "lease_status_after": "released",
-      "registry_status_after": "closed"
+      "parent_id": "real-cli-parent-after-a564faaa",
+      "lease_status_after": "active",
+      "registry_status_after": "active"
     },
     {
       "variant": "list",
@@ -34,14 +34,14 @@
       "exit_code": 0,
       "stdout_tail": "Checking MCP server health…\n\nclaude.ai Claude Docs: https://api.anthropic.com/v1/pages/mcp - ✔ Connected\nclaude.ai Helium 10 : https://mcp.helium10.com/mcp - ! Needs authentication\nclaude.ai Canva: https://mcp.canva.com/mcp - ! Needs authentication\nclaude.ai higgsfield: https://mcp.higgsfield.ai/mcp - ! Needs authentication\nclaude.ai Gmail: https://gmailmcp.googleapis.com/mcp/v1 - ✔ Connected\nclaude.ai Google Calendar: https://calendarmcp.googleapis.com/mcp/v1 - ✔ Connected\nclaude.ai Google Drive: https://drivemcp.googleapis.com/mcp/v1 - ✔ Connected\nclaude.ai Notion: https://mcp.notion.com/mcp - ✔ Connected\nclaude.ai Figma: https://mcp.figma.com/mcp - ! Needs authentication\ncontext7: npx -y @upstash/context7-mcp@latest - ⏸ Pending approval (run `claude` to approve)\n",
       "stderr_tail": "",
-      "parent_id": "real-cli-parent-before-6d53ca2a",
-      "lease_status_after": "released",
-      "registry_status_after": "closed"
+      "parent_id": "real-cli-parent-after-a564faaa",
+      "lease_status_after": "active",
+      "registry_status_after": "active"
     }
   ],
   "captured_envelope_session_ids": {
-    "before-SessionEnd-0.json": "2b5c28b6-d842-4f4a-a535-397e72f9f8ab",
-    "before-SessionEnd-1.json": "05b6769e-7f44-4d86-a97e-1267cebe72cc"
+    "after-SessionEnd-0.json": "9027c8cc-4451-4748-a021-0d519534e7b2",
+    "after-SessionEnd-1.json": "601c45f6-badc-407e-9201-59b10bd51e6e"
   },
   "real_owner_before": {
     "exists": true,
@@ -55,5 +55,5 @@
     "status": "active",
     "generation": 1
   },
-  "recorded_at": "2026-09-24T00:27:27.152077+09:00"
+  "recorded_at": "2026-09-24T00:27:43.073081+09:00"
 }

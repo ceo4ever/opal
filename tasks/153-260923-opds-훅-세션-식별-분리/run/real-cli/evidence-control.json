@@ -1,9 +1,9 @@
 {
   "mode": "control",
   "hooks_wired": false,
-  "project_root": "/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/verify-real-cli-control-8lsl3_fo/project",
-  "task_dir": "/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/verify-real-cli-control-8lsl3_fo/project/tasks/000-real-cli-verify-control",
-  "parent_id_last": "real-cli-parent-control-c51da1bc",
+  "project_root": "/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/verify-real-cli-control-643onsu4/project",
+  "task_dir": "/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/verify-real-cli-control-643onsu4/project/tasks/000-real-cli-verify-control",
+  "parent_id_last": "real-cli-parent-control-ba45a0e3",
   "commands": [
     {
       "variant": "get",
@@ -15,10 +15,10 @@
         "get",
         "context7"
       ],
-      "exit_code": 1,
-      "stdout_tail": "",
-      "stderr_tail": "No MCP server named \"context7\". Configured servers: claude.ai Canva, claude.ai Claude Docs, claude.ai Figma, claude.ai Gmail, claude.ai Google Calendar, claude.ai Google Drive, claude.ai Helium 10 , claude.ai Notion (and 1 more — run `claude mcp list` to see all)\n",
-      "parent_id": "real-cli-parent-control-c51da1bc",
+      "exit_code": 0,
+      "stdout_tail": "context7:\n  Scope: Project config (shared via .mcp.json)\n  Status: ⏸ Pending approval (run `claude` to approve)\n  Type: stdio\n  Command: npx\n  Args: -y @upstash/context7-mcp@latest\n\nTo remove this server, run: claude mcp remove context7 -s project\n",
+      "stderr_tail": "",
+      "parent_id": "real-cli-parent-control-ba45a0e3",
       "lease_status_after": "active",
       "registry_status_after": "active"
     },
@@ -32,9 +32,9 @@
         "list"
       ],
       "exit_code": 0,
-      "stdout_tail": "Checking MCP server health…\n\nclaude.ai Claude Docs: https://api.anthropic.com/v1/pages/mcp - ✔ Connected\nclaude.ai Helium 10 : https://mcp.helium10.com/mcp - ! Needs authentication\nclaude.ai Canva: https://mcp.canva.com/mcp - ! Needs authentication\nclaude.ai higgsfield: https://mcp.higgsfield.ai/mcp - ! Needs authentication\nclaude.ai Gmail: https://gmailmcp.googleapis.com/mcp/v1 - ✔ Connected\nclaude.ai Google Calendar: https://calendarmcp.googleapis.com/mcp/v1 - ✔ Connected\nclaude.ai Google Drive: https://drivemcp.googleapis.com/mcp/v1 - ✔ Connected\nclaude.ai Notion: https://mcp.notion.com/mcp - ✔ Connected\nclaude.ai Figma: https://mcp.figma.com/mcp - ! Needs authentication\n",
+      "stdout_tail": "Checking MCP server health…\n\nclaude.ai Claude Docs: https://api.anthropic.com/v1/pages/mcp - ✔ Connected\nclaude.ai Helium 10 : https://mcp.helium10.com/mcp - ! Needs authentication\nclaude.ai Canva: https://mcp.canva.com/mcp - ! Needs authentication\nclaude.ai higgsfield: https://mcp.higgsfield.ai/mcp - ! Needs authentication\nclaude.ai Gmail: https://gmailmcp.googleapis.com/mcp/v1 - ✔ Connected\nclaude.ai Google Calendar: https://calendarmcp.googleapis.com/mcp/v1 - ✔ Connected\nclaude.ai Google Drive: https://drivemcp.googleapis.com/mcp/v1 - ✔ Connected\nclaude.ai Notion: https://mcp.notion.com/mcp - ✔ Connected\nclaude.ai Figma: https://mcp.figma.com/mcp - ! Needs authentication\ncontext7: npx -y @upstash/context7-mcp@latest - ⏸ Pending approval (run `claude` to approve)\n",
       "stderr_tail": "",
-      "parent_id": "real-cli-parent-control-c51da1bc",
+      "parent_id": "real-cli-parent-control-ba45a0e3",
       "lease_status_after": "active",
       "registry_status_after": "active"
     }
@@ -52,5 +52,5 @@
     "status": "active",
     "generation": 1
   },
-  "recorded_at": "2026-09-24T00:05:31.919404+09:00"
+  "recorded_at": "2026-09-24T00:26:51.402206+09:00"
 }

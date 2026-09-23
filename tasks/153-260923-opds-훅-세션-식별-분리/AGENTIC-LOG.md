@@ -3,7 +3,16 @@
 > 모드: agentic | 시작: 2026-09-23 23:46 | 스킬: //opds
 
 ## 요약
-진행 중. 최종 집계는 CLOSE에서 확정한다.
+
+| 항목 | 건수 |
+|------|------|
+| 게이트 판단 | 7회 (Pass: 6 / Fail: 1) |
+| 3회 초과 Gate | 0건 (Critical: 0 / Normal: 0 / Minor: 0) |
+| 오류 발견 | 3건 |
+| 수정 지시 | 4건 (반영: 4 / 미반영: 0) |
+| PM 의사결정 | 5건 |
+| 개선 사항 | 4건 (fw-inbox 기록) |
+| 에스컬레이션 | 0건 |
 
 ## 대행 일지
 | # | 시점 | 단계 | 카테고리 | 내용 | 결과 |
@@ -24,3 +33,8 @@
 | 14 | 2026-09-24 00:12 | EXECUTE | FIX | #13 참조. 탐침으로 임시 프로젝트 `.mcp.json`(context7 프로젝트 스코프)+`enableAllProjectMcpServers` 시 get/list 모두 exit 0 확인 → S-1 Setup에 fixture 명시, TEST 단계에서 control/before/after 재실행. 판정 기준·RED 계약은 불변 | 반영 |
 | 15 | 2026-09-24 00:16 | EXECUTE | ERROR | GREEN 적용 후 S-2 테스트만 실패: fixture 임시 루트에 `.opal/AGENT.md` 마커·`OPAL_PROJECT_ROOT`가 없어 SessionEnd `main()`이 루트 미해석 no-op — RED가 결함이 아닌 fixture 때문에 실패한 것(Setup 위반). S-3·S-7 테스트 미작성도 확인 | test-agent 재지시 |
 | 16 | 2026-09-24 00:16 | EXECUTE | FIX | env 리터럴 정적 검사가 session_start_hook docstring 2곳의 `export OPAL_SESSION_ID=` 표기를 잡음 → 기록 키 상수 참조(`<SESSION_ID_ENV_LINE_KEY>`) 표기로 교체(W-4 범위, 동작 무변경). test_decisions 기대 집합 12종 갱신(W-2) | 반영 |
+| 17 | 2026-09-24 00:30 | EXECUTE | GATE | EXECUTE 완료: ownership 157 pass, state-tool ownership 8, worktree 12, run-log T147 대조 3 pass(W-7), code-scan newly_uncovered 0. run-log import 계열 4건 실패는 HEAD 사본에서도 동일한 기존 결함(범위 밖). 체크포인트 1b46140 | Pass |
+| 18 | 2026-09-24 00:35 | TEST | GATE | 컨벤션 자동 진단(opal-convention-checker): Critical/High 0, Low 1(GC-001 stop_evaluator.state_path_for_payload의 env 미사용 파라미터) → Pass. GC-001은 훅 handle/evaluate의 env 파라미터와 같이 호출 시그니처 호환을 위해 의도적으로 유지(DECISION) | Pass |
+| 19 | 2026-09-24 00:45 | TEST | GATE | TEST PM Gate: opal-test-agent(7분) S-1~S-9 9/9 PASS·locked·RED 5/5. 실 CLI 증거 직접 Read — before 부모 released/closed, after active/active, 4회 exit 0, 봉투 session_id≠부모 id, 실제 owner 불변. 회귀 ownership 157·state-tool 8·worktree 12·run-log T147 3 pass, 컨벤션 Pass, validate 0 | Pass |
+| 20 | 2026-09-24 00:32 | CLOSE | IMPROVE | 회고: improve-tool fw 4건(red mode 실패 사유 검증, actor=pm CLOSE owner 규칙 도구 미집행, --pm RED W 담당 기본값, 실 CLI 훅 격리 레시피) | 기록 |
+| 21 | 2026-09-24 00:34 | CLOSE | GATE | worktree finalize: attribution closed, declared brain 후보 1건, violations 0. merge·push·~/.opal 배포는 승인 범위 밖으로 미수행 | Pass |

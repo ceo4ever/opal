@@ -124,7 +124,7 @@ def _make_deployment(tmp_root: pathlib.Path, mode: str) -> pathlib.Path:
     if mode == "before":
         archive_path = tmp_root / "before.tar"
         subprocess.run(
-            ["git", "-C", str(CODE_ROOT), "archive", "HEAD", "opal/tools/ownership-tool",
+            ["git", "-C", str(CODE_ROOT), "archive", "ace8368", "opal/tools/ownership-tool",
              "-o", str(archive_path)],
             check=True, capture_output=True, text=True,
         )
@@ -159,27 +159,47 @@ printf '%s' "$STDIN_DATA" | exec "{python}" "{hook}"
     return wrapper_path
 
 
-def _write_settings(project: pathlib.Path, deployment_hooks_dir: pathlib.Path, mode: str,
+def _write_mcp_fixture(project: pathlib.Path):
+    """`--setting-sources project`는 사용자 스코프 MCP를 읽지 않으므로, `mcp get/list`가
+    exit 0으로 끝나도록 임시 프로젝트에 프로젝트 스코프 context7 MCP 서버를 등록한다
+    (PM 탐침 결과 반영 — 판정 기준 변경 아님, fixture 보강)."""
+    (project / ".mcp.json").write_text(
+        json.dumps({
+            "mcpServers": {
+                "context7": {
+                    "type": "stdio",
+                    "command": "npx",
+                    "args": ["-y", "@upstash/context7-mcp@latest"],
+                }
+            }
+        }, indent=2),
+        encoding="utf-8",
+    )
+
+
+def _write_settings(project: pathlib.Path, deployment_hooks_dir: pathlib.Path | None, mode: str,
                      evidence_payload_dir: pathlib.Path):
     """임시 프로젝트 .claude/settings.json에 SessionStart·SessionEnd·PostToolUse(heartbeat)
-    훅을 배포본 사본 경유 캡처 래퍼로 배선한다."""
+    훅(배선 대상 모드에서만)과 enableAllProjectMcpServers를 배선한다."""
     claude_dir = project / ".claude"
     claude_dir.mkdir(parents=True, exist_ok=True)
 
-    session_start_wrapper = _write_wrapper(
-        evidence_payload_dir, deployment_hooks_dir / "session_start_hook.py", mode, "SessionStart")
-    session_end_wrapper = _write_wrapper(
-        evidence_payload_dir, deployment_hooks_dir / "session_end_hook.py", mode, "SessionEnd")
-    heartbeat_wrapper = _write_wrapper(
-        evidence_payload_dir, deployment_hooks_dir / "heartbeat_hook.py", mode, "PostToolUse")
+    settings = {"enableAllProjectMcpServers": True}
 
-    settings = {
-        "hooks": {
+    if deployment_hooks_dir is not None:
+        session_start_wrapper = _write_wrapper(
+            evidence_payload_dir, deployment_hooks_dir / "session_start_hook.py", mode, "SessionStart")
+        session_end_wrapper = _write_wrapper(
+            evidence_payload_dir, deployment_hooks_dir / "session_end_hook.py", mode, "SessionEnd")
+        heartbeat_wrapper = _write_wrapper(
+            evidence_payload_dir, deployment_hooks_dir / "heartbeat_hook.py", mode, "PostToolUse")
+
+        settings["hooks"] = {
             "SessionStart": [{"hooks": [{"type": "command", "command": str(session_start_wrapper)}]}],
             "SessionEnd": [{"hooks": [{"type": "command", "command": str(session_end_wrapper)}]}],
             "PostToolUse": [{"matcher": "*", "hooks": [{"type": "command", "command": str(heartbeat_wrapper)}]}],
         }
-    }
+
     (claude_dir / "settings.json").write_text(json.dumps(settings, indent=2), encoding="utf-8")
 
 
@@ -271,10 +291,11 @@ def run_mode(mode: str) -> dict:
 
     evidence_payload_dir = EVIDENCE_DIR / "payloads"
 
+    _write_mcp_fixture(project)
+
     hooks_wired = mode in ("before", "after")
-    if hooks_wired:
-        deployment_hooks_dir = _make_deployment(tmp_root, mode)
-        _write_settings(project, deployment_hooks_dir, mode, evidence_payload_dir)
+    deployment_hooks_dir = _make_deployment(tmp_root, mode) if hooks_wired else None
+    _write_settings(project, deployment_hooks_dir, mode, evidence_payload_dir)
 
     commands = []
     for variant in ("get", "list"):

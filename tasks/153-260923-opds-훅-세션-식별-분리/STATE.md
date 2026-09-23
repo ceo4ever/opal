@@ -1,6 +1,6 @@
 # STATE: 훅-세션-식별-분리
 
-> 최종 갱신: 2026-09-24 00:21:54
+> 최종 갱신: 2026-09-24 00:32:35
 > 파이프라인 현황(rows/상태/다음 액션)의 SSOT는 `state.json`입니다.
 > 조회: `~/.opal/tools/state-tool/run.sh show <task-path>`
 
