@@ -27,7 +27,7 @@ def test_decision_kinds_enum_has_exactly_seven_members():
 
 
 def test_diagnostics_enum_is_closed_member_set():
-    """DIAGNOSTICS는 11종 멤버로 고정된 폐쇄 enum이다(개수뿐 아니라 각 값도 고정)."""
+    """DIAGNOSTICS는 12종 멤버로 고정된 폐쇄 enum이다(개수뿐 아니라 각 값도 고정). task 153이 no_session_id를 추가했다."""
     from ownership_tool import decisions  # RED
 
     expected = {
@@ -42,6 +42,7 @@ def test_diagnostics_enum_is_closed_member_set():
         "lease_expired",
         "foreign_owner_bash_unclassified",
         "passive_ownership",
+        "no_session_id",
     }
     assert set(decisions.DIAGNOSTICS) == expected
 

@@ -186,13 +186,19 @@ allocator root 계약이며 여기에 복제하지 않는다. 같은 절의 "조
 `state-tool`의 `task_root()`가 `None`일 때 "호출자는 subprocess를 아예 띄우지 말고 조기 반환"하는
 것과 같은 계약이다.
 
-## 세션 ID 해석 (PLAN D-18)
+## 세션 ID 해석 (PLAN D-18 · task 153)
 
-`resolve_session_id(env, payload)` 순서:
+식별 경로는 호출 주체에 따라 둘로 나뉜다.
 
-1. `env["OPAL_SESSION_ID"]`
-2. `claude_adapter.session_id_from_env(env)` — 플랫폼 고유 변수명은 이 어댑터 한 곳에만 둔다
-3. hook 봉투 `payload["session_id"]`
+| 호출 주체 | 함수 | 순서 |
+|---|---|---|
+| 훅 5종(SessionStart·SessionEnd·PostToolUse heartbeat·PreToolUse·Stop) | `hook_session_id(payload)` | 봉투 `payload["session_id"]`만. env를 받지 않는다 |
+| 일반 CLI(`cli.py`) | `resolve_session_id(env, payload)` | ① `env["OPAL_SESSION_ID"]` ② `claude_adapter.session_id_from_env(env)` ③ 봉투 |
+
+훅이 env를 읽으면 부모 세션의 env를 상속한 자식 Claude CLI의 종료가 부모 lease를 해제하고 부모
+registry를 닫는다. 그래서 훅은 이벤트가 스스로 밝힌 신원만 쓴다. 봉투 `session_id`가 없거나 공백·비문자이면
+`no_session_id` 진단만 남기고 어떤 파일도 쓰지 않는다(PreToolUse는 차단 없이 통과, Stop은 receipt 미기록).
+플랫폼 고유 변수명은 `claude_adapter` 한 곳에만 둔다.
 
 `ownership_core`에는 플랫폼 고유 변수명이 등장하지 않는다.
 
@@ -226,7 +232,7 @@ hook의 무출력 exit 0 fail-safe는 유지된다. 구현 위치는 `stop_hook.
 | enum | 값 |
 |---|---|
 | `DECISION_KINDS` | `allow_complete` · `allow_await_user` · `allow_inactive` · `allow_no_progress_same_fingerprint` · `allow_block_cap_reached` · `block_continue` · `defer_to_pm` |
-| `DIAGNOSTICS` | `no_owned_task` · `multiple_hub_tasks` · `worktree_owned_shadow` · `foreign_owner` · `invalid_registry` · `invalid_state` · `launch_failed` · `no_progress_same_fingerprint` · `lease_expired` · `foreign_owner_bash_unclassified` · `passive_ownership` |
+| `DIAGNOSTICS` | `no_owned_task` · `multiple_hub_tasks` · `worktree_owned_shadow` · `foreign_owner` · `invalid_registry` · `invalid_state` · `launch_failed` · `no_progress_same_fingerprint` · `lease_expired` · `foreign_owner_bash_unclassified` · `passive_ownership` · `no_session_id` |
 
 값 집합의 SSOT는 `ownership_tool/decisions.py`의 두 튜플이며, 위 표는 그 사본이다.
 

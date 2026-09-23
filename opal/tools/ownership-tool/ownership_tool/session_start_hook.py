@@ -3,7 +3,7 @@
   "module": "ownership_tool.session_start_hook",
   "layer": "util",
   "domain": "opal-pipeline",
-  "description": "SessionStart hook 어댑터(W-7). 봉투의 session_id·cwd를 session_registry에 등록하고, 어댑터가 알려준 env 파일에 `export OPAL_SESSION_ID=<quoted id>` 1줄을 append한다 — 이 파일은 dotenv가 아니라 부모 쉘이 source하는 쉘 프리앰블이라 export 접두가 있어야 자식 프로세스가 값을 상속한다. 루트 판정은 ownership_core.resolve_roots가 소유하고(D-20), 해석된 canonical task에만 lease.claim(claim_source=session_start — D-21 수동 소유권)을 시도하며, claim 주체 루트를 봉투의 cwd로 명시 전달한다(claimant_root) — 허브가 터미널 기동 직전에 남긴 이관 대기 lease는 이관 대상 루트와 realpath 동치이거나 그 하위에서 온 claim만 수용하므로(harness/worktree.md §이관), 이 전달이 워크트리 세션이 이관을 소비하는 유일한 연결점이다. claim 실패는 classification과 함께 `registry_owner_not_registered:<diagnostic>` 진단을 남기고 registry 등록을 시도하지 않는다(D-7) — 소유하지 않은 세션이 registry owner가 되지 않게 한다. lease를 잡은 워크트리 세션은 이어서 허브 registry의 부트 owner 등록을 worktree-tool `ownership-set` CLI 경유로 1회 위임한다(999 D-H) — registry `execution_ownership` 쓰기는 이 CLI만 허용되므로 meta 파일을 직접 편집하지 않는다(C-9). 플랫폼 고유 변수명은 claude_adapter에만 둔다(C-15). 실행 루트는 봉투 cwd를 그대로 쓰지 않고 ownership_core.resolve_project_root(① 명시 오버라이드 OPAL_PROJECT_ROOT → ② 봉투 cwd부터 조상으로 올라가며 .opal/MEMORY.json 또는 .opal/AGENT.md를 파일로 가진 첫 디렉토리 → ③ None)가 해석하며, 미해석이면 파일 I/O 이전에 종료한다(D-30b·D-25). 해석된 루트는 handle() 내부의 루트 파생 호출에도 그대로 전파한다(D-27). 전 경로 fail-safe exit 0.",
+  "description": "SessionStart hook 어댑터(W-7). 봉투의 session_id·cwd를 session_registry에 등록하고, 어댑터가 알려준 env 파일에 `export <SESSION_ID_ENV_LINE_KEY>=<quoted id>` 1줄을 append한다 — 이 파일은 dotenv가 아니라 부모 쉘이 source하는 쉘 프리앰블이라 export 접두가 있어야 자식 프로세스가 값을 상속한다. 루트 판정은 ownership_core.resolve_roots가 소유하고(D-20), 해석된 canonical task에만 lease.claim(claim_source=session_start — D-21 수동 소유권)을 시도하며, claim 주체 루트를 봉투의 cwd로 명시 전달한다(claimant_root) — 허브가 터미널 기동 직전에 남긴 이관 대기 lease는 이관 대상 루트와 realpath 동치이거나 그 하위에서 온 claim만 수용하므로(harness/worktree.md §이관), 이 전달이 워크트리 세션이 이관을 소비하는 유일한 연결점이다. claim 실패는 classification과 함께 `registry_owner_not_registered:<diagnostic>` 진단을 남기고 registry 등록을 시도하지 않는다(D-7) — 소유하지 않은 세션이 registry owner가 되지 않게 한다. lease를 잡은 워크트리 세션은 이어서 허브 registry의 부트 owner 등록을 worktree-tool `ownership-set` CLI 경유로 1회 위임한다(999 D-H) — registry `execution_ownership` 쓰기는 이 CLI만 허용되므로 meta 파일을 직접 편집하지 않는다(C-9). 세션 ID는 ownership_core.hook_session_id로 봉투 session_id만 읽는다 — 부모 세션 env를 상속한 자식 프로세스가 부모 신원으로 등록·claim하지 않도록 세션 환경변수·플랫폼 env로 대체하지 않으며, 봉투 신원이 없으면 no_session_id 진단만 남긴다(task 153). 플랫폼 고유 변수명은 claude_adapter에만 둔다(C-15). 실행 루트는 봉투 cwd를 그대로 쓰지 않고 ownership_core.resolve_project_root(① 명시 오버라이드 OPAL_PROJECT_ROOT → ② 봉투 cwd부터 조상으로 올라가며 .opal/MEMORY.json 또는 .opal/AGENT.md를 파일로 가진 첫 디렉토리 → ③ None)가 해석하며, 미해석이면 파일 I/O 이전에 종료한다(D-30b·D-25). 해석된 루트는 handle() 내부의 루트 파생 호출에도 그대로 전파한다(D-27). 전 경로 fail-safe exit 0.",
   "exports": ["SESSION_ID_ENV_LINE_KEY", "handle", "main"],
   "depends": ["ownership_tool.ownership_core", "ownership_tool.lease", "ownership_tool.session_registry", "ownership_tool.claude_adapter", "worktree-tool ownership-set CLI"]
 }
@@ -172,7 +172,7 @@ def _register_registry_owner(cwd, task_path, session_id, env):
 
 
 def _append_session_id(env_file_path, session_id):
-    """env 파일에 `export OPAL_SESSION_ID=<quoted id>` 1줄을 append한다. (성공 여부, 진단).
+    """env 파일에 `export <SESSION_ID_ENV_LINE_KEY>=<quoted id>` 1줄을 append한다. (성공 여부, 진단).
 
     플랫폼은 이 파일을 dotenv로 파싱하지 않고 Bash 도구의 **부모 쉘에서 실행되는 쉘
     스크립트 프리앰블**로 `source`한다(D-A). 따라서 `KEY=value` 대입만으로는 자식
@@ -210,7 +210,7 @@ def handle(payload, project_root=None, env_file_path=None, env=None, now=None):
         "diagnostics": [],
     }
 
-    session_id = ownership_core.resolve_session_id(env, payload)
+    session_id = ownership_core.hook_session_id(payload)
     result["session_id"] = session_id
     if not session_id:
         result["diagnostics"].append("no_session_id")

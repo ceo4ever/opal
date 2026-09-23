@@ -3,7 +3,7 @@
   "module": "decisions",
   "layer": "util",
   "domain": "opal-pipeline",
-  "description": "D-3 폐쇄 enum과 구조화 판정 결과 계약. DECISION_KINDS 7종·DIAGNOSTICS 11종(D-21 passive_ownership 포함)을 고정하고 Decision dataclass와 validate()로 enum 밖 값·필수 키 누락을 거부한다. 어떤 시스템 상태도 읽지 않는 순수 모듈이다.",
+  "description": "D-3 폐쇄 enum과 구조화 판정 결과 계약. DECISION_KINDS 7종·DIAGNOSTICS 12종(D-21 passive_ownership·task 153 no_session_id 포함)을 고정하고 Decision dataclass와 validate()로 enum 밖 값·필수 키 누락을 거부한다. 어떤 시스템 상태도 읽지 않는 순수 모듈이다.",
   "exports": ["DECISION_KINDS", "DIAGNOSTICS", "RESULT_KEYS", "Decision", "validate"],
   "depends": []
 }
@@ -36,6 +36,7 @@ DIAGNOSTICS = (
     "lease_expired",
     "foreign_owner_bash_unclassified",
     "passive_ownership",
+    "no_session_id",
 )
 
 # 구조화 판정 결과의 필수 키
