@@ -54,7 +54,7 @@ OPAL 자산은 Global/Project 2-레이어로 배치되고, 런타임은 세션 �
 
 ### 부트스트랩과 JIT 이벤트 모델
 
-부트스트래퍼는 effective setting과 첫 줄 마커를 판정한 뒤 `session.*` 이벤트만 처리한다. 이벤트별 필수 문서의 단일 레지스트리는 `opal/core/references/events.json`, 전문·해시·receipt 로드는 `opal/tools/event-loader`가 소유한다. 프로젝트 존재만으로 PM을 활성화하지 않는다.
+부트스트래퍼는 effective setting과 첫 줄 마커를 판정한 뒤 허용 session에서 `terminal-context`의 닫힌 4필드(`host`, `multiplexers`, `confidence`, `evidence`)를 내부 컨텍스트로 소비하고 `session.*` 이벤트를 처리한다. 이벤트별 필수 문서의 단일 레지스트리는 `opal/core/references/events.json`, 전문·해시·receipt 로드는 `opal/tools/event-loader`가 소유한다. 프로젝트 존재만으로 PM을 활성화하지 않는다.
 
 | 상태·이벤트 | 트리거 | 로드 범위 |
 |-------------|--------|-----------|
@@ -89,7 +89,7 @@ OPAL 자산은 Global/Project 2-레이어로 배치되고, 런타임은 세션 �
 | `agents/` | 서브에이전트 16개 (전문 9 + 범용 7) |
 | `community-skills/` | 커뮤니티 스킬 — clone-copy(git)로 사용자가 온디맨드 설치 (검색은 `npx skills find`). 사용자 등록분 `user-registry.json` 포함, install 불가침 |
 | `references/` | 레지스트리·표준·운영 문서 **21 엔트리**(최상위 19파일 + 하위 디렉토리 2). `events.json`이 이벤트별 필수 문서 집합을 소유하고 `opal-harness.md`는 호환 인덱스만 제공한다. 하위 디렉토리는 `harness/`(실행 규칙 owner 23파일)와 `pm/`(PM 프로세스 owner 7파일)이다. |
-| `tools/` | CLI 도구 **25종**(도구 디렉토리 기준). 파이프라인 집행(`state-tool`, `test-tool`, `backlog-tool`, `opal-action-monitor`), 이벤트 전문·해시·receipt와 프로젝트 부트 브리핑 집행(`event-loader`), 환경·배포, 탐색·연동, 지식·코드 지도 도구로 구성된다. 세부 공개 계약은 각 도구의 README가 소유한다. |
+| `tools/` | CLI 도구 **28종**(도구 디렉토리 기준). 파이프라인 집행(`state-tool`, `test-tool`, `backlog-tool`, `opal-action-monitor`), 이벤트 전문·해시·receipt와 프로젝트 부트 브리핑 집행(`event-loader`), 현재 터미널 계층 판별(`terminal-context`), 환경·배포, 탐색·연동, 지식·코드 지도 도구로 구성된다. 세부 공개 계약은 각 도구의 README가 소유한다. |
 | `.venv/` | Python 가상환경 (openpyxl, pandas, playwright 등 — requirements.txt로 관리) |
 | `templates/` | 프로젝트 에이전트 템플릿 |
 
@@ -449,6 +449,7 @@ opal/                                    ← 이 저장소
 │   │   └── hooks/                       Claude Code hooks 설정
 │   ├── tools/                           CLI 도구 25종 (+ check-env.js 보조 스크립트, requirements.txt)
 │   │   ├── event-loader/                이벤트 전문·해시·receipt 검증 + 프로젝트 부트 브리핑
+│   │   ├── terminal-context/            현재 host·multiplexer 구조화 판별
 │   │   ├── state-tool/                  파이프라인 현황판 JSON SSOT (서브명령 11종)
 │   │   ├── test-tool/                   테스트 단계 결정론 집행 (resolve/check/unit/integration + scenario-* + E2E profile/verdict 계약)
 │   │   ├── backlog-tool/                oppl 백로그 backlog.json SSOT

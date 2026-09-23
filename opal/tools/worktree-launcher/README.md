@@ -18,6 +18,7 @@ opal/tools/worktree-launcher/
 │   └── adapters/
 │       ├── __init__.py
 │       ├── orca.py             # Orca 터미널 adapter (3동사)
+│       ├── cmux.py             # cmux workspace adapter (3동사)
 │       ├── generic.py          # 템플릿 실행 adapter (launch만)
 │       └── opal_agent_fallback.py  # opal-agent one-shot 폴백 (launch만)
 └── tests/
@@ -47,9 +48,11 @@ import하며 tool-dir `conftest.py`가 경로를 잇는다.
 ~/.opal/tools/worktree-launcher/run.sh read  --adapter orca --terminal <handle> [--cursor N] [--limit N] [--screen]
 ~/.opal/tools/worktree-launcher/run.sh close --adapter orca --terminal <handle>
 ~/.opal/tools/worktree-launcher/run.sh close --adapter orca --worktree-root <root> --all [--json]
+~/.opal/tools/worktree-launcher/run.sh launch --adapter cmux \
+  --project-root <hub> --task 152 --worktree-root <root> [--command …]
 ```
 
-`--adapter`는 **전 서브명령 필수**이고 값은 폐쇄 목록 `cli.SUPPORTED_ADAPTERS`(현재 `orca` 1종)
+`--adapter`는 **전 서브명령 필수**이고 값은 폐쇄 목록 `cli.SUPPORTED_ADAPTERS`(현재 `orca`, `cmux` 2종)
 안에서만 해석한다 — 목록 밖 이름은 import를 시도조차 하지 않는다. 다른 어댑터로 자동 폴백하거나
 OS·터미널 종류를 자동 탐지하는 경로는 없다(설정도 adapter를 소유하지 않는다).
 
@@ -140,10 +143,16 @@ handoff prompt는 별도 seam 없이 `--command`로 띄운 TUI에 함께 제출�
 기동 argv 하나뿐이다 — `prompt_receipt_source`는 항상 `launch_argv`, `prompt_id`는 실제로 실어
 보낸 명령 문자열의 sha256 앞 16자, `submitted_at`은 exit 0을 관측한 시각이다.
 
-### 이번 범위의 adapter
+### 지원 adapter
 
-3동사를 갖춘 adapter는 `orca` 하나다. `generic`·`opal_agent_fallback`은 `launch`만 있어
-적합성 스위트 대상이 아니며, cmux adapter는 존재하지 않는다.
+3동사를 갖춘 adapter는 `orca`와 `cmux`다. `generic`·`opal_agent_fallback`은 `launch`만 있어
+적합성 스위트 대상이 아니다. cmux는 `new-workspace --cwd --command`의 stdout 한 줄 `OK workspace:<n>`에서
+workspace ref를 handle로 사용하고 `read-screen --workspace`, `close-workspace --workspace`로 같은 workspace만
+읽고 닫는다. worktree 경로만으로 cmux workspace를 추측하는 광역 close는 지원하지 않는다.
+
+adapter 선택은 이 도구가 자동으로 하지 않는다. bootstrap과 `--wt` orchestration이
+`terminal-context`의 `host`를 읽어 폐쇄 목록과 정확히 일치할 때만 명시 `--adapter`로 전달한다.
+`tmux`는 multiplexer이므로 adapter가 아니며, `unknown`에는 폴백하지 않는다.
 
 ## 설정 (`launcher` 블록)
 
@@ -186,8 +195,8 @@ adapter 미기록 경로는 분기에 진입조차 하지 않는다. close 실�
 ~/.opal/.venv/bin/python -m pytest opal/tools/worktree-launcher/tests/ -q
 ```
 
-기본 스위트는 실제 orca CLI를 한 번도 호출하지 않는다 — 어댑터의 subprocess seam만 대체하고
-응답은 실측 캡처 fixture를 쓴다.
+기본 스위트는 실제 Orca/cmux CLI를 한 번도 호출하지 않는다 — 어댑터의 subprocess seam만
+대체하고 응답 fixture를 쓴다.
 
 ### 적합성 스위트 — 새 어댑터의 유일한 계약
 
@@ -203,3 +212,8 @@ adapter 미기록 경로는 분기에 진입조차 하지 않는다. close 실�
 `tests/test_adapter_orca.py`의 live 대조 1건은 `OPAL_LIVE_ORCA=1`이고 `orca`가 PATH에 있을 때만
 돈다(그 외 skip). 대상 워크트리는 `OPAL_LIVE_ORCA_WORKTREE`, 없으면
 `orca worktree list --json`에서 레포 루트와 일치하는 항목으로만 정하며 워크트리를 새로 만들지 않는다.
+
+`tests/test_adapter_cmux.py`의 live 대조 1건(S-4)은 `OPAL_LIVE_CMUX=1`이고 `cmux`가 PATH에 있을 때만
+돈다. 실행마다 고유 이름의 임시 디렉터리로 workspace 1개를 만들어 cwd·command 전달과 유계 read를
+확인하고, 같은 handle로 닫은 뒤 그 이름의 workspace가 0개인지 목록 반영을 기다려 확인한다.
+사용자의 기존 workspace는 건드리지 않는다.

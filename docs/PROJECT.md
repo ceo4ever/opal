@@ -36,7 +36,7 @@
 | `skills/` | 독립 스킬 소스 | 파이프라인 없이 단독 사용하는 스킬 (8종) |
 | `opal/skills/` | OPAL 스킬 소스 | 오케스트레이터, 단계 스킬 등 OPAL 전용 (44종) |
 | `opal/agents/` | 워커 에이전트 소스 | 모든 서브에이전트 정의 (16종) |
-| `opal/tools/` | OPAL 도구 소스 | 결정론 집행 CLI (27종, `event-loader`와 `ego-browser-tool` 포함) |
+| `opal/tools/` | OPAL 도구 소스 | 결정론 집행 CLI (28종, `event-loader`·`ego-browser-tool`·`terminal-context` 포함) |
 | `opal/core/` | 프레임워크 코어 | 레퍼런스, MCP 설정, 도구 |
 | `opal/bootstrapper/` | 부트스트래퍼 | 플랫폼별 부트스트랩 진입점 (claude/codex/cursor/gemini) |
 | `opal/templates/` | 템플릿 | 배포 시 참조하는 설정 템플릿 |

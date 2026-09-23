@@ -102,12 +102,13 @@ load: pilot.start
 | 국면 | 주체 | 경계 |
 |---|---|---|
 | 워크트리·브랜치 생성, 발급값 배달 | 허브 세션 | `worktree-tool`이 단일 소유자다. 터미널 도구가 대체하지 않는다 |
-| 전용 터미널 기동 | 허브 세션 | `state init` 완료 후에만 수행한다. 어댑터는 명시 주입이며 실패는 비차단이다 |
+| 전용 터미널 기동 | 허브 세션 | `state init` 완료 후 terminal context의 현재 `host`와 같은 어댑터만 명시 주입하며 실패는 비차단이다 |
 | 단계 실행·체크포인트 커밋·CLOSE | 워크트리 세션 | `completed_unmerged`까지 진행한다 |
 | `main` merge·push | 허브 세션 | 승인 경계는 `harness/guards.md` §커밋 규칙이, 허용 merge 경로는 위 §merge 경로가 소유한다 |
 | 터미널 회수·worktree 제거 | 허브 세션 | 회수는 3중 가드 통과 뒤 터미널 스윕을 선행한다 |
 
 - **[MUST] 기동은 `state init` 이후다.** 워크트리 세션은 부팅 직후 `state.json`을 읽으므로, 그 전에 띄우면 첫 턴이 읽을 상태가 없다.
+- **[MUST] host와 multiplexer를 섞지 않는다.** `terminal-context`의 `host`만 adapter 선택에 사용한다. `tmux` 같은 `multiplexers`와 설치·전역 실행 중인 다른 앱은 선택 근거가 아니다. 기동 직전에 재감지하며 `unknown`·미지원 host는 추측 폴백 없이 허브 소유를 유지한다.
 - **시작 발화는 기동 명령 인자가 소유한다.** 태스크 식별은 워크트리와 canonical task의 1:1 관계와 `state.json`이 이미 결정론적으로 해결하므로 별도 캡슐 파일이나 터미널 입력 채널을 만들지 않는다.
 - 어댑터가 구성되지 않은 환경에서는 워크트리만 생기고 터미널은 열리지 않는다. 허브 세션이 그 워크트리를 그대로 작업하며, 이는 축 도입 이전과 같은 동작이다.
 - 허브가 워크트리 세션의 종료를 아는 수단은 registry `attribution_state`(`completed_unmerged`) 조회 하나다. 별도 통지 채널을 만들지 않는다.

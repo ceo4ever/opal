@@ -3,12 +3,13 @@
   "module": "cli",
   "layer": "interface",
   "domain": "opal-workspace",
-  "description": "worktree-launcher의 CLI 표면. `launch`/`read`/`close` 3서브명령을 argparse로 노출하고 결과를 tool-output-contract의 단일 라인 JSON 하나로 stdout에 쓴다(성공 exit 0 / 실패 exit 1). `--adapter`는 **전 서브명령 필수**이며 값은 폐쇄 목록 `SUPPORTED_ADAPTERS`(현재 `orca` 1종)에서만 해석한다 — 누락은 `adapter_required`, 목록 밖은 `adapter_unsupported`로 거부하고 다른 어댑터로 자동 폴백하거나 OS·터미널을 자동 탐지하지 않는다(AC-1, D-E — 설정은 adapter를 소유하지 않고 이 인자가 단독 소유한다). `launch`는 `--project-root`·`--task`·`--worktree-root` 필수, `--agent`·`--command`·`--owner-session-id` 선택이며 어댑터 모듈을 그대로 `launcher_core.run()`에 주입한다. `--command` 미지정이면 `settings.load_launcher_settings(project_root)` + `resolve_command(settings, agent, task_path)`가 명령을 결정하고, 이때 `task_path`는 registry meta(`launcher_core.read_registry_meta`)가 발급한 canonical 값만 쓴다 — 없으면 `--worktree-root`로 대신하지 않고 `task_path_unresolved`로 거부한다(harness/worktree.md §canonical path 발급 계약, C-6: 경로를 추측하지 않는다). `read`는 `--terminal` 필수 + `--cursor`·`--limit`·`--screen` 선택, `close`는 `--terminal` 또는 `--worktree-root`+`--all` 중 **정확히 하나**만 받고 위반은 어댑터를 호출하기 전에 `close_scope_invalid`로 거부한다(`--json`은 worktree-tool 회수 스윕 호출 형태와의 호환용 no-op — 출력은 항상 JSON이다). argparse 자체 usage 오류도 exit 2 + 사람용 usage로 새지 않고 `invalid_arguments` 구조화 오류 + exit 1로 바뀐다. 어댑터 실패는 예외가 아니라 `exit_code != 0` 보고 dict이므로 그 `failure_reason`을 `error`로 싣는다(D-J). 이 모듈은 registry를 읽기만 하고 쓰지 않으며 상태 전이는 전부 `launcher_core`가 소유한다.",
+  "description": "worktree-launcher CLI. `launch`/`read`/`close`와 명시 `--adapter` 폐쇄 목록(`orca`, `cmux`)을 노출하고 자동 탐지·자동 폴백 없이 단일 라인 JSON을 반환한다.",
   "exports": ["SUPPORTED_ADAPTERS", "build_parser", "main"],
   "depends": [
     "worktree_launcher/launcher_core.py(run·read_registry_meta·LauncherError)",
     "worktree_launcher/settings.py(load_launcher_settings·resolve_command)",
-    "worktree_launcher/adapters/orca.py(launch·read·close 3동사)"
+    "worktree_launcher/adapters/orca.py(launch·read·close 3동사)",
+    "worktree_launcher/adapters/cmux.py(launch·read·close 3동사)"
   ]
 }
 """
@@ -27,6 +28,7 @@ TOOL_NAME = "worktree-launcher"
 # 폐쇄 목록 — 어댑터 이름 → 모듈 경로. 목록에 없는 이름은 import를 시도조차 하지 않는다.
 SUPPORTED_ADAPTERS = {
     "orca": "worktree_launcher.adapters.orca",
+    "cmux": "worktree_launcher.adapters.cmux",
 }
 
 EXIT_OK = 0

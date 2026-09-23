@@ -28,6 +28,11 @@
 ### 이벤트 로드
 
 - `session.disabled`와 `session.worker`는 세션 문서를 읽지 않는다.
+- `session.assistant`와 `session.project`는 이벤트 문서를 load하기 전에
+  `~/.opal/tools/terminal-context/run.sh`를 1회 실행하고, 성공 stdout의 닫힌 4필드
+  `host`, `multiplexers`, `confidence`, `evidence`를 내부 `terminal_context`로 소비한다.
+  환경변수 값이나 프로세스 원문을 별도로 보관하지 않는다. 명령 실패 시 OPAL 활성화를
+  중단하고 오류를 보고한다.
 - `session.assistant`는 event-loader로 같은 이벤트를 load하고 성공 응답의
   `documents[].content` 전문을 소비한다. 누락 또는 오류면 OPAL 활성화를 중단한다.
 - 이 문서가 `session.assistant` load 응답의 `documents[].content`로 전달되었다면
