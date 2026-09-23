@@ -1,0 +1,19 @@
+[
+  {
+    "iteration": 1,
+    "pilot": "opds",
+    "producer_artifact": "TEST-SCENARIO.md",
+    "missing": {"requirements": [], "features": [], "hypotheses": []},
+    "scores": {"goal": 2, "adoption": 2, "boundary": 2},
+    "gaps": [],
+    "verdict": "pass",
+    "reason": "converged",
+    "evidence": {
+      "coverage_check_exit": 0,
+      "all_covered": true,
+      "counts": {"requirements": 15, "features": 0, "hypotheses": 2, "scenarios": 13},
+      "evaluator": "opal-evaluator-agent scenario-rubric",
+      "evaluator_average": 2.0
+    }
+  }
+]

@@ -3,7 +3,7 @@
   "module": "ownership_tool.session_registry",
   "layer": "util",
   "domain": "opal-pipeline",
-  "description": "D-5 세션 registry 저장소(<project_root>/.opal/run/.runtime/sessions/<session_id>.json) 기록기. register가 {session_id, cwd, started_at, heartbeat_at, expires_at, status} 레코드를 ownership_core.write_json_atomic으로 원자 기록하며, 같은 세션 재등록은 started_at을 보존하고 heartbeat_at·expires_at만 갱신한다(멱등). TTL은 lease.resolve_ttl_sec를 재사용해 lease와 같은 값으로 만료되게 하고 자체 기본값을 두지 않는다. 실패는 예외가 아니라 ok/error 구조화 dict로 반환한다.",
+  "description": "D-26 — project_root가 falsy면 경로 계산·쓰기 없이 no_project_root로 돌려준다. D-5 세션 registry 저장소(<project_root>/.opal/run/.runtime/sessions/<session_id>.json) 기록기. register가 {session_id, cwd, started_at, heartbeat_at, expires_at, status} 레코드를 ownership_core.write_json_atomic으로 원자 기록하며, 같은 세션 재등록은 started_at을 보존하고 heartbeat_at·expires_at만 갱신한다(멱등). TTL은 lease.resolve_ttl_sec를 재사용해 lease와 같은 값으로 만료되게 하고 자체 기본값을 두지 않는다. 실패는 예외가 아니라 ok/error 구조화 dict로 반환한다.",
   "exports": ["STATUS_ACTIVE", "register"],
   "depends": ["ownership_tool.ownership_core", "ownership_tool.lease"]
 }
@@ -39,6 +39,9 @@ def register(project_root, session_id, cwd, *, now=None, ttl_sec=None):
     """
     if not session_id:
         return {"ok": False, "error": "no_session_id"}
+    # D-26 — 루트가 미해석이면 경로 계산도 쓰기도 하지 않는다(D-25의 보강 방어선).
+    if not project_root:
+        return {"ok": False, "error": "no_project_root"}
 
     path = ownership_core.session_registry_path(project_root, session_id)
     now_dt = _now_dt(now)

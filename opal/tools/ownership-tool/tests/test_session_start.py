@@ -651,3 +651,101 @@ def test_s7_non_target_cwd_session_start_fails_claim_and_leaves_diagnostic(tmp_p
     assert result["registry_owner_registered"] is False
     assert calls == [], "claim 실패 시 registry 등록을 시도하지 않는다: {}".format(calls)
     assert _s7_lease_record(task_dir) == before
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# TASK-149 RED-first — S-7 (AC-2). 워크트리형 루트의 하위 cwd로 SessionStart →
+# SessionEnd를 subprocess로 순서 실행하면, session registry가
+# `<루트>/.opal/run/.runtime/sessions/<sid>.json` 한 곳에만 생성·갱신돼야 한다
+# (SessionStart가 active로 만들고 SessionEnd가 같은 파일을 closed로 바꾼다).
+# 하위 디렉토리 아래에 `.opal/` 경로가 0건이어야 한다.
+#
+# RED: 지금은 session_start_hook.main()·session_end_hook.main()이 각각
+# `project_root = payload.get("cwd")`를 그대로 채택해 sub/nested 아래에 독립
+# registry 레코드를 만든다 — 루트 단일 기록 검사가 실패해야 정상이다.
+# ─────────────────────────────────────────────────────────────────────────────
+
+import os as _t149_os
+
+_T149_TESTS_DIR = Path(__file__).resolve().parent
+_T149_TOOL_DIR = _T149_TESTS_DIR.parent
+_T149_SESSION_START_HOOK = _T149_TOOL_DIR / "ownership_tool" / "session_start_hook.py"
+_T149_SESSION_END_HOOK = _T149_TOOL_DIR / "ownership_tool" / "session_end_hook.py"
+_T149_VENV_PYTHON = Path.home() / ".opal" / ".venv" / "bin" / "python"
+
+
+def _t149_minimal_env():
+    env = {}
+    for key in ("PATH", "HOME"):
+        if key in _t149_os.environ:
+            env[key] = _t149_os.environ[key]
+    return env
+
+
+def _t149_run_hook(hook_path, payload, cwd, env):
+    result = subprocess.run(
+        [str(_T149_VENV_PYTHON), str(hook_path)],
+        input=json.dumps(payload, ensure_ascii=False),
+        capture_output=True, text=True,
+        cwd=str(cwd), env=env,
+    )
+    return result.returncode, result.stdout, result.stderr
+
+
+def test_t149_s7_session_start_then_end_registers_only_at_root(tmp_path):
+    wt_root = tmp_path / "wt_root"
+    (wt_root / ".opal").mkdir(parents=True)
+    (wt_root / ".opal" / "task-ownership.json").write_text(
+        json.dumps({
+            "allocator_root": str(tmp_path / "hub"),
+            "task_path": str(tmp_path / "hub" / "tasks" / "t149-s7"),
+        }),
+        encoding="utf-8",
+    )
+    sub_cwd = wt_root / "sub" / "nested"
+    sub_cwd.mkdir(parents=True)
+    session_id = "sess-t149-s7"
+
+    env = _t149_minimal_env()
+    env["OPAL_PROJECT_ROOT"] = str(wt_root)
+
+    start_payload = {
+        "cwd": str(sub_cwd),
+        "session_id": session_id,
+        "hook_event_name": "SessionStart",
+        "source": "startup",
+    }
+    code, _out, err = _t149_run_hook(_T149_SESSION_START_HOOK, start_payload, sub_cwd, env)
+    assert code == 0, f"T149.S-7 SessionStart fail-safe exit 0 위반 — {err!r}"
+
+    registry_path = ownership_core.session_registry_path(wt_root, session_id)
+    assert registry_path.exists(), (
+        f"T149.S-7 위반 — SessionStart 후 루트 registry 레코드가 없음: {registry_path}"
+    )
+    record = json.loads(registry_path.read_text(encoding="utf-8"))
+    assert record.get("status") == "active", f"T149.S-7 위반 — 시작 상태가 active가 아님: {record!r}"
+
+    sub_registry_dirs = list((wt_root / "sub").rglob("sessions"))
+    assert sub_registry_dirs == [], (
+        f"T149.S-7 위반 — sub/ 아래에 sessions/ 경로가 생김: {sub_registry_dirs}"
+    )
+
+    end_payload = {
+        "cwd": str(sub_cwd),
+        "session_id": session_id,
+        "hook_event_name": "SessionEnd",
+        "reason": "exit",
+    }
+    code, _out, err = _t149_run_hook(_T149_SESSION_END_HOOK, end_payload, sub_cwd, env)
+    assert code == 0, f"T149.S-7 SessionEnd fail-safe exit 0 위반 — {err!r}"
+
+    record_after = json.loads(registry_path.read_text(encoding="utf-8"))
+    assert record_after.get("status") == "closed", (
+        f"T149.S-7 위반 — SessionEnd 후 같은 루트 레코드가 closed로 바뀌지 않음: {record_after!r}"
+    )
+
+    sub_registry_dirs_after = list((wt_root / "sub").rglob("sessions"))
+    assert sub_registry_dirs_after == [], (
+        f"T149.S-7 위반 — SessionEnd 후 sub/ 아래에 sessions/ 경로가 생김: "
+        f"{sub_registry_dirs_after}"
+    )

@@ -3,13 +3,13 @@
   "module": "ownership_core",
   "layer": "util",
   "domain": "opal-pipeline",
-  "description": "ownership-tool 런타임 저장소 코어. D-5의 3개 저장소 경로 계산(session_registry_path·hub_lease_path·stop_receipt_path)과 스키마 dataclass(SessionRecord·LeaseRecord·StopReceipt), D-7의 저장소별 lock(<path>.lock, O_CREAT+O_RDWR+O_NOFOLLOW·0o600·LOCK_EX+LOCK_NB 재시도, 상한 2000ms) + temp→os.replace 원자 교체 헬퍼(write_json_atomic·read_json), .opal-worktrees/.meta/task_<NNN>.json 읽기 전용 어댑터(read_registry_meta), 세션 ID 해석(resolve_session_id), 실행 루트 해석(resolve_roots — <cwd>/.opal-worktrees/.meta/ 존재 시 허브, 부재 시 worktree-tool이 내려보낸 <cwd>/.opal/task-ownership.json 발급값 사본에서 allocator_root·task_path를 읽고, 둘 다 없으면 roots_unresolved 진단만 남긴다 — 어느 분기에서도 cwd 문자열 자르기·부모 순회·.opal-worktrees 문자열 탐색으로 추론하지 않는다)을 제공한다. 실패는 예외가 아니라 ok/error 구조화 dict로 반환하며 플랫폼 고유 환경변수는 claude_adapter에만 둔다.",
+  "description": "ownership-tool 런타임 저장소 코어. D-5의 3개 저장소 경로 계산(session_registry_path·hub_lease_path·stop_receipt_path)과 스키마 dataclass(SessionRecord·LeaseRecord·StopReceipt), D-7의 저장소별 lock(<path>.lock, O_CREAT+O_RDWR+O_NOFOLLOW·0o600·LOCK_EX+LOCK_NB 재시도, 상한 2000ms) + temp→os.replace 원자 교체 헬퍼(write_json_atomic·read_json), .opal-worktrees/.meta/task_<NNN>.json 읽기 전용 어댑터(read_registry_meta), 세션 ID 해석(resolve_session_id), 실행 루트 해석(resolve_roots — <cwd>/.opal-worktrees/.meta/ 존재 시 허브, 부재 시 worktree-tool이 내려보낸 <cwd>/.opal/task-ownership.json 발급값 사본에서 allocator_root·task_path를 읽고, 둘 다 없으면 roots_unresolved 진단만 남긴다 — 어느 분기에서도 cwd 문자열 자르기·부모 순회·.opal-worktrees 문자열 탐색으로 추론하지 않는다), 프로젝트 루트(task_root 축) 해석 단일 진입점(resolve_project_root — D-30b의 ① 명시 오버라이드 OPAL_PROJECT_ROOT → ② 봉투 cwd부터 조상으로 올라가며 .opal/MEMORY.json 또는 .opal/AGENT.md를 파일로 가진 첫 디렉토리 채택 → ③ None 3단계, 어댑터 5종이 공유하는 유일한 루트 채택 지점이며 플랫폼 환경변수를 읽지 않는다)을 제공한다. 실패는 예외가 아니라 ok/error 구조화 dict 또는 None으로 반환하며 플랫폼 고유 환경변수는 claude_adapter에만 둔다.",
   "exports": [
     "DEFAULT_LOCK_TIMEOUT_MS", "RUNTIME_DIR_MODE", "RUNTIME_FILE_MODE",
     "session_registry_path", "hub_lease_path", "stop_receipt_path", "registry_meta_path",
     "SessionRecord", "LeaseRecord", "StopReceipt",
     "write_json_atomic", "read_json", "read_registry_meta", "resolve_session_id",
-    "task_ownership_copy_path", "resolve_roots"
+    "task_ownership_copy_path", "resolve_roots", "resolve_project_root"
   ],
   "depends": ["claude_adapter"]
 }
@@ -297,8 +297,9 @@ def resolve_roots(cwd):
 
     [MUST] 어느 분기에서도 추론하지 않는다 — cwd 문자열 자르기·부모 디렉터리 순회
     (`.parents`)·`.opal-worktrees` 문자열 탐색(`os.walk`/`iterdir`)을 쓰지 않는다
-    (harness/worktree.md §task root와 allocator root 계약). 이 금지는 test_resolve_roots의
-    AST 검사가 집행한다.
+    (harness/worktree.md §task root와 allocator root 계약). 이 금지는
+    tests/test_root_resolution.py의 test_s9_resolve_roots_three_branches_preserved가
+    수행하는 AST 검사가 집행한다.
 
     ②의 사본은 **읽기 snapshot**이다(harness/worktree.md §cone 확장 계약) — allocator_root는
     사본이 적어준 값을 그대로 돌려주며, 사본이 있다고 워크트리를 허브로 승격시키지 않는다
@@ -365,4 +366,68 @@ def resolve_session_id(env, payload=None):
         value = payload.get("session_id")
         if isinstance(value, str) and value.strip():
             return value.strip()
+    return None
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 프로젝트 루트 해석 (D-30)
+# ─────────────────────────────────────────────────────────────────────────────
+
+# D-30c — 조상 탐색의 앵커는 **마커 파일**이다. `.opal/` 디렉토리 존재는 앵커가 아니다.
+# 이번 결함이 하위에 남기는 오염은 `<하위>/.opal/run/.runtime/…`뿐이고 마커 파일을 만들지
+# 않으므로, 파일 앵커만 인정하면 오염된 하위가 루트로 승격되는 자기증식이 차단된다.
+_PROJECT_ROOT_MARKERS = (
+    ("MEMORY.json",),
+    ("AGENT.md",),
+)
+
+
+def resolve_project_root(payload, env=None):
+    """hook 봉투와 env에서 프로젝트 루트를 해석하는 **단일 진입점**이다(D-30b).
+
+    이 루트는 `allocator_root`가 아니라 **`task_root`** 축이다(D-30a) — 소비자가
+    `session_registry_path`·`stop_receipt_path`·`lease.resolve_ttl_sec`로 전부 `.opal`
+    설정·state다. 계약 원문은 `opal/core/references/harness/worktree.md`
+    §task root와 allocator root 계약의 `task_root` 행이며, 그 정의가 "가장 가까운
+    `.git`·`.opal` 작업본"이다.
+
+    체인은 정확히 3단계이며 그 밖의 경로는 없다.
+
+    ① env["OPAL_PROJECT_ROOT"] — 문자열이고 실제 디렉토리면 채택한다. 저장소에 이 변수를
+       쓰는 주체는 없고 테스트·수동 **명시 오버라이드 전용**이다(D-30e).
+    ② 봉투 cwd에서 시작하는 **조상 탐색** — cwd 자신부터 위로 올라가며
+       `.opal/MEMORY.json` 또는 `.opal/AGENT.md`를 **파일로** 가진 첫 디렉토리를 채택한다
+       (D-30c). 파일시스템 루트에서 멈춘다. "가장 가까운 조상" 규칙이므로 워크트리 안에서는
+       허브가 아니라 워크트리 `.opal`이 먼저 잡힌다.
+    ③ 그 외 None — 호출자는 None을 "루트 미해석"으로 보고 파일 I/O 이전에 종료한다(D-25).
+
+    선례는 `state_tool.task_root()`이며 같은 `for cand in (p, *p.parents)` 패턴이다.
+    다만 `task_root()`와 달리 **`.resolve()`를 걸지 않는다** — macOS에서 `/var` ↔
+    `/private/var` 심볼릭 정규화가 일어나 봉투가 준 경로와 반환값의 문자열 동등이
+    깨지고 tests/test_root_resolution.py의 S-9 ⑶이 실패한다. 이관 판정은
+    `lease._root_accepts`가 양쪽에 realpath를 걸므로 영향받지 않는다(D-28).
+    `resolve_roots`(allocator_root 축)는 호출하지 않는다 — 두 축은 독립이며
+    `resolve_roots`의 시그니처·3분기·반환 키는 이 함수와 무관하게 무변경이다.
+
+    [MUST] 예외를 던지지 않는다. 어떤 실패도 None으로 흡수한다(C-1 fail-safe).
+    [MUST] 플랫폼 고유 환경변수를 읽지 않는다 — 조상 탐색이 전 플랫폼(claude·codex·
+    cursor·gemini)에서 동일하게 성립하므로 루트 해석은 플랫폼 독립이다(D-30d).
+    """
+    env = env or {}
+
+    value = env.get("OPAL_PROJECT_ROOT")
+    if isinstance(value, str) and value.strip() and os.path.isdir(value.strip()):
+        return value.strip()
+
+    if isinstance(payload, dict):
+        cwd = payload.get("cwd")
+        if isinstance(cwd, str) and cwd.strip():
+            try:
+                start = pathlib.Path(cwd.strip())
+                for cand in (start, *start.parents):
+                    for marker in _PROJECT_ROOT_MARKERS:
+                        if cand.joinpath(".opal", *marker).is_file():
+                            return str(cand)
+            except Exception:  # noqa: BLE001 — 조상 탐색 실패는 미해석(None)으로 흡수한다.
+                return None
     return None
