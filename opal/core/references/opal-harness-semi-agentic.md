@@ -1,6 +1,6 @@
 # opal-harness-semi-agentic
 
-> semi-agentic 모드(기본) 전용 하네스. 공통 하네스(opal-harness.md)와 함께 로드한다. `--semi-agentic` 플래그(또는 모드 플래그 미지정 — 기본 모드) 활성화 시 이 문서를 로드한다.
+> semi-agentic 모드 전용 하네스. 공통 하네스(opal-harness.md)와 함께 로드한다. `--semi-agentic` 플래그 또는 기본 mode가 semi-agentic인 Pilot의 무플래그 신규 태스크에서 이 문서를 로드한다(Pilot별 기본값 원문: `harness/modes.md` §신규 태스크 기본 mode).
 
 ---
 
@@ -9,14 +9,14 @@
 | 모드 | 설명 |
 |------|------|
 | `interactive`   | 모든 단계 게이트마다 사용자 승인 (`--interactive` 명시) |
-| `semi-agentic`  | **기본** — PLAN-equivalent 단계까지 사용자 검토, 승인 뒤 EXECUTE-equivalent·TEST·CLOSE final까지 PM 자율 통과 |
-| `agentic`       | 정상 전 구간과 CLOSE final까지 PM 자율 통과 — `--agentic` 명시 |
+| `semi-agentic`  | `opd`·`opds`·`oppd`·`oppl`·`oppb` 외 Pilot의 기본 — PLAN-equivalent 단계까지 사용자 검토, 승인 뒤 EXECUTE-equivalent·TEST·CLOSE final까지 PM 자율 통과 |
+| `agentic`       | 정상 전 구간과 CLOSE final까지 PM 자율 통과 — 위 5개 Pilot의 기본 또는 `--agentic` 명시 |
 
 ## 2. 활성화 방법
 
-- 기본: 모드 플래그 미지정 시 semi-agentic
+- 기본: 위 5개 Pilot 외 Pilot의 무플래그 신규 태스크는 semi-agentic
 - 명시: `--semi-agentic` 플래그
-- 충돌: `--interactive` 또는 `--agentic`과 동시 사용 시 `mode_flag_conflict` 에러
+- 충돌: `--interactive` 또는 `--agentic`과 동시 사용 시 `state-tool resolve-start`가 `mode_flag_conflict`로 거부
 - 활성화 시 STATE.md 모드 필드를 `semi-agentic`으로 기록 (`state init --mode semi-agentic`)
 
 ## 3. 모드 경계 (PLAN-equivalent → EXECUTE-equivalent 전환점)

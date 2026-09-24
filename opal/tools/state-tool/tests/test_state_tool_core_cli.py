@@ -2321,7 +2321,8 @@ class TestErrorCodesCompleteness(unittest.TestCase):
 
     [122 W-2] --actor 미지원 skill 거부 코드 1종 등재로 51→52.
     [134 W-2] 손상 state.json의 mode 복원 거부 코드 1종 등재로 52→53. PM 승인
-    (카탈로그 정합 보존)."""
+    (카탈로그 정합 보존).
+    [156 W-1] 세 축 resolver·init workspace 게이트 거부 코드 6종 등재로 53→59."""
 
     EXPECTED_CODES = [
         # 기존 25종 (PLAN §2.18 + 이전 추가분) 중 23종 존치
@@ -2391,6 +2392,13 @@ class TestErrorCodesCompleteness(unittest.TestCase):
         "finalize_attribution_failed",
         # 122 W-2 신규 1종 (--actor pm이 opd/opds 외 skill과 결합 시 거부 게이트)
         "actor_unsupported_for_skill",
+        # 156 W-1 신규 6종 (resolve-start 충돌·재개 축 잠금, init actor·workspace 게이트)
+        "workspace_flag_conflict",
+        "actor_flag_conflict",
+        "workspace_required_for_skill",
+        "resume_axis_locked",
+        "actor_pm_retired",
+        "worktree_path_required",
         # 134 W-2 신규 1종 (손상 state.json의 mode 복원 하드 블록)
         "state_json_malformed",
     ]
@@ -2402,15 +2410,16 @@ class TestErrorCodesCompleteness(unittest.TestCase):
         111 W-1이 `plan_contract_unmet` 1종을 등재해 47종, 118 W-4가
         finalize-attribution 전용 4종을 등재해 51종, 122 W-2가
         `actor_unsupported_for_skill` 1종을 등재해 52종, 134 W-2가
-        `state_json_malformed` 1종을 등재해 53종이다.
+        `state_json_malformed` 1종을 등재해 53종, 156 W-1이 resolver·init
+        게이트 코드 6종을 등재해 59종이다.
 
         갱신 근거: 신규 에러 코드 등재가 종수 단언을 같이 깨므로 등재 태스크가
         기대값을 함께 옮긴다. 111 W-1은 PLAN Work items 계약을 차단형 게이트로
         집행하므로 전용 에러 코드를 추가한다. 122 W-2는 `--actor pm`이 opd/opds
         외 skill과 결합될 때 전용 에러 코드로 거부한다(PM 승인, 카탈로그 정합
         보존)."""
-        self.assertEqual(len(ST.ERROR_CODES), 53,
-                         "[134 W-2] 손상 state.json 거부 코드 등재 후 53종 기대")
+        self.assertEqual(len(ST.ERROR_CODES), 59,
+                         "[156 W-1] resolver·init 게이트 코드 6종 등재 후 59종 기대")
 
     def test_all_28_codes_registered(self):
         """[098 H-10 선갱신 + 106/111/122/134 종수 갱신] 53종 각각이 ERROR_CODES에 등재됨."""
@@ -2450,10 +2459,10 @@ class TestErrorCodesCompleteness(unittest.TestCase):
         self.assertEqual(readme_count, actual_count,
                          f"README 기재 종수({readme_count})와 실측 len(ERROR_CODES)"
                          f"({actual_count})가 불일치함(D-5 ① 정합 위반)")
-        # [134 W-2] 종수 53 하드 기대 — state_json_malformed 신규 등재 반영
-        self.assertEqual(actual_count, 53,
-                         "[134 W-2] len(ERROR_CODES)==53 기대 — allocator_root_* / "
+        # [156 W-1] 종수 59 하드 기대 — resolver·init 게이트 6종 등재 반영
+        self.assertEqual(actual_count, 59,
+                         "[156 W-1] len(ERROR_CODES)==59 기대 — allocator_root_* / "
                          "finalize_attribution_failed / actor_unsupported_for_skill "
                          "/ state_json_malformed 등재가 유실되면 실패")
-        self.assertEqual(readme_count, 53,
-                         "[134 W-2] README 헤더 종수==53 기대 — 카탈로그 정정 누락")
+        self.assertEqual(readme_count, 59,
+                         "[156 W-1] README 헤더 종수==59 기대 — 카탈로그 정정 누락")

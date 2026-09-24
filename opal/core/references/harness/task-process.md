@@ -25,9 +25,9 @@
 2. 응답 JSON의 `last_task_number` 값이 이번 태스크 번호다 (계산하지 않는다).
 3. 폴더명 `{NNN}-{YYMMDD}-{스킬약어}-{태스크명}`을 확정한다 (아직 만들지 않는다)
    - `{YYMMDD}`: `node ~/.opal/tools/date/date.js yymmdd` 실행하여 KST 기준 취득
-4. 폴더 생성과 TASK.md 작성 순서는 **`--worktree`/`--wt` 유무로만** 갈린다.
-   - **`--wt` 없음(기본)**: 허브 `tasks/{폴더명}/`을 생성하고 TASK.md를 작성한 뒤 5번으로 간다. **현행 순서(폴더 → TASK.md → `state init`) 100% 유지 — 어떤 조건부 분기도 실행되지 않는다.**
-   - **`--wt` 있음**: 폴더를 만들지 않고 4.5로 간다. worktree를 먼저 만들고, `create` 응답의 `task_path`를 생성한 뒤 그 경로에 TASK.md를 작성한다.
+4. 폴더 생성과 TASK.md 작성 순서는 **`state-tool resolve-start`가 판정한 `workspace`로만** 갈린다(아래 공통 영역 4).
+   - **`workspace=hub`**: 허브 `tasks/{폴더명}/`을 생성하고 TASK.md를 작성한 뒤 5번으로 간다(폴더 → TASK.md → `state init`).
+   - **`workspace=worktree`**: 폴더를 만들지 않고 4.5로 간다. worktree를 먼저 만들고, `create` 응답의 `task_path`를 생성한 뒤 그 경로에 TASK.md를 작성한다.
 
 > `.opal/MEMORY.json`이 없고 `.opal/MEMORY.md`만 있으면 도구가 자동 변환 후 처리한다.
 > 둘 다 없으면 `memory_json_not_found` — `memory-tool init`을 먼저 실행한다.
@@ -36,9 +36,9 @@
 #### 오케스트레이터 공통 영역 (스킬 완료 후 후처리)
 
 3. **STEP 5(오케스트레이터 선택)에서 결정된 스킬약어**를 폴더명과 `state init --skill`에 반영한다. 신규 `template: sdlc-v2` TASK.md에는 스킬 헤더를 쓰지 않는다. legacy TASK를 재개할 때만 기존 헤더를 해석 호환으로 읽는다.
-4. **모드 플래그(`--interactive` / `--semi-agentic` / `--agentic`)는 `state init --mode`에만 기록한다** (`interactive` / `semi-agentic` (기본) / `agentic`). 신규 `template: sdlc-v2` TASK.md에는 모드 헤더를 쓰지 않는다.
+4. **세 축은 `state-tool resolve-start <task-path> --skill <약어> --new-task <사용자 원문 플래그>`로 한 번에 판정한다.** 응답의 `effective_mode`·`workspace`·`actor`와 `init_args`만 사용하며, 플래그를 산문으로 다시 해석하지 않는다. 신규 기본값은 Pilot별 표(`harness/modes.md`·`harness/worktree.md`·`harness/actor.md`)를 따른다. 충돌·미지원 조합은 도구 오류 코드로 멈추고 사용자에게 보고한다. 신규 `template: sdlc-v2` TASK.md에는 모드 헤더를 쓰지 않는다.
 
-4.5. **`--worktree`/`--wt` 플래그가 있을 때만 수행한다** (플래그가 없으면 이 스텝 전체를 건너뛰고 4 → 5로 직행한다 — 현행 동작 100% 유지).
+4.5. **`resolve-start`가 `workspace=worktree`를 반환했을 때만 수행한다** (`hub`면 이 스텝 전체를 건너뛰고 4 → 5로 직행한다).
 
    ```bash
    ~/.opal/tools/worktree-tool/run.sh create \
@@ -57,8 +57,9 @@
      4. 워크트리 전용 터미널 기동은 여기서 하지 않는다 — 스텝 5 완료 후 5.5에서 수행한다.
 
      `warnings[]`가 있으면 그대로 사용자에게 전달한다(**차단하지 않는다**).
-   - `ok: false` → **허브 `tasks/{폴더명}/`에 폴더를 생성하고 TASK.md를 작성한 뒤 `--worktree` 없이 5번으로 진행한다**(=`--worktree`를 전달하지 않으므로 `state.json`이 현행 스키마와 동일해진다). 이 시점에는 어느 위치에도 폴더가 없으므로 롤백할 대상이 없고 폴더는 한 위치에만 생긴다. 실패 사유(`error` 코드)를 사용자에게 보고한다. agentic 모드에서는 사용자 확인을 요구하지 않고 자동 계속하되 AGENTIC-LOG.md에 실패 사유를 기록한다.
+   - `ok: false` → **[MUST] 허브 `tasks/`에 폴더를 만들지 않고, TASK.md도 쓰지 않고, 허브에서 코드 수정을 시작하지 않는다.** mode와 무관하게 `blocked`로 멈추고 실패 사유(`error` 코드)와 두 해결 경로를 `decision_request`로 보고한다 — (1) worktree 설정·환경을 고친 뒤 같은 명령으로 재시작, (2) 사용자가 허브 작업본을 원하면 `--no-wt`로 다시 시작(oppb는 불가). 이 시점에는 어느 위치에도 폴더가 없으므로 롤백할 대상이 없다. 채번된 번호는 재사용하지 않고 실패 기록으로 남긴다. agentic 모드도 자동 계속하지 않으며 실패 사유를 사용자 보고와 함께 남긴다. `state-tool init --workspace worktree`는 `--worktree` 없이 호출되면 `worktree_path_required`로 거부하므로 허브 초기화 폴백은 도구가 막는다.
      - 오류가 `CONFIG_NOT_FOUND`이면 `~/.opal/tools/worktree-tool/run.sh init --project-root <프로젝트> [--dry-run]`을 안내한다. `init`은 독립 `.git` 발견 시 multi-repo, 없으면 monorepo 초안을 만들 뿐 자동 확정하지 않으므로 사용자가 검토·수정한다. 수동 작성은 `~/.opal/templates/worktree-multi-repo.json` 또는 `worktree-monorepo.json`을 복사해 시작한다.
+     - 오류가 `PROJECT_ROOT_IS_WORKTREE`이면 `--project-root`를 허브 절대경로로 고쳐 다시 호출한다. 작업본 안에 작업본을 만들지 않는다.
    - 도구는 부분 실패 시 자기가 만든 worktree·브랜치만 스스로 되돌린다(all-or-nothing) — 파이프라인이 정리할 잔여물은 없다.
    - 축 정의 SSOT: `opal/core/references/harness/worktree.md`.
    - 태스크 문서·설정을 해석하는 `task_root`와 채번·귀속 쓰기에만 쓰는 `allocator_root`의 판정 규칙은 `opal/core/references/harness/worktree.md` §task root와 allocator root 계약이 SSOT다. canonical task path의 기계 계약은 worktree-tool metadata/schema가 소유한다.
@@ -67,11 +68,10 @@
 
    ```bash
    ~/.opal/tools/state-tool/run.sh init <task-path> \
-     --skill <약어> \
-     --mode <interactive|semi-agentic|agentic> \
+     <resolve-start 응답의 init_args> \          ← --skill·--mode·--workspace·(opd/opds) --actor
      [--task-title <태스크 제목>] \
      [--next-action <첫 액션 텍스트>] \
-     [--worktree <worktree_root 절대경로>]      ← 4.5가 ok:true를 반환한 경우에만 전달
+     [--worktree <worktree_root 절대경로>]      ← workspace=worktree면 4.5가 발급한 값을 반드시 전달
    ```
 
    - `<task-path>`: `--wt` 태스크는 4.5가 발급한 **워크트리 안 canonical `task_path`**(허브 `tasks/` 아래가 아니다), 그 외에는 허브 `tasks/{폴더명}` 경로다. cwd나 `.opal-worktrees` 문자열로 추측하지 않는다.
@@ -81,7 +81,7 @@
 
    근거: `tasks/134-260501-opp-pipeline-state-tool/TASK.md` F-9 / `PLAN.md` §2.11 G-8 / §2.19.1 / §1.5 M-3
 
-5.5. **워크트리 전용 세션 기동 — `--worktree`/`--wt`로 4.5가 `ok: true`를 반환했을 때만 수행한다** (그 외에는 이 스텝 전체를 건너뛰고 5 → 6으로 직행한다 — 현행 동작 100% 유지).
+5.5. **워크트리 전용 세션 기동 — `workspace=worktree`로 4.5가 `ok: true`를 반환했을 때만 수행한다** (그 외에는 이 스텝 전체를 건너뛰고 5 → 6으로 직행한다).
 
    먼저 bootstrap에서 소비한 `terminal_context`의 stale 가능성을 제거하기 위해 기동 직전에
    `~/.opal/tools/terminal-context/run.sh`를 다시 실행하고, 성공 JSON의 `host`만 읽는다.
@@ -101,7 +101,7 @@
    - `--adapter`는 필수다. terminal context의 `host`가 launcher 폐쇄 목록과 정확히 일치할 때만 그 값을 명시 주입한다. `unknown`·일반 터미널·미지원 host면 launcher를 호출하지 않고 허브 세션이 이어서 수행한다. 설치된 앱, 전역 실행 프로세스, `multiplexers`를 근거로 다른 adapter를 추측하지 않는다.
    - `--command`를 생략하면 launcher가 `launcher` 설정(`~/.opal/setting.json` + `{프로젝트}/.opal/setting.local.json` 2-레이어)에서 기동 명령을 결정한다. 설정이 없으면 코드 기본값으로 폴백한다. 스키마 원문은 `opal/tools/worktree-launcher/README.md`가 소유한다.
    - **시작 발화는 기동 명령 인자가 소유한다.** `terminal send`·키 입력 에뮬레이션·별도 캡슐 파일을 쓰지 않는다. 태스크 식별은 워크트리와 canonical task의 1:1 관계, `state.json`, 부트 브리핑이 이미 결정론적으로 해결한다.
-   - **실패는 비차단이다.** `ok: false`면 사유를 사용자에게 보고하고(agentic은 AGENTIC-LOG.md에 기록) 허브 세션이 그대로 태스크를 이어간다. launcher는 실패 시 이미 만든 터미널을 닫고 이관을 취소한 뒤 registry를 `hub_owned`로 원자 복귀시키므로 파이프라인이 정리할 잔여물은 없다 — 이관 취소 자체의 실패는 복귀를 막지 않고 진단으로만 남는다.
+   - **실패는 비차단이다.** `ok: false`면 사유를 사용자에게 보고하고(agentic은 AGENTIC-LOG.md에 기록) 허브 세션이 그대로 태스크를 이어간다. 이때도 코드 작업본은 이미 만든 worktree이며 허브 `tasks/`나 허브 작업본으로 옮기지 않는다. launcher는 실패 시 이미 만든 터미널을 닫고 이관을 취소한 뒤 registry를 `hub_owned`로 원자 복귀시키므로 파이프라인이 정리할 잔여물은 없다 — 이관 취소 자체의 실패는 복귀를 막지 않고 진단으로만 남는다.
    - 성공하면 registry `execution_ownership`이 `worktree_session_owned`로 전이하고, 워크트리 세션이 부팅하며 이관된 lease를 획득해 이후 그 태스크의 writer가 된다. registry 전이만으로는 쓰기 권한이 생기지 않는다 — 권한 판정의 입력은 lease 하나다. 허브 세션은 merge·회수 시점에 다시 개입한다(아래 §`--wt` 체크포인트 커밋과 merge 경계).
    - 감지기가 실패하거나 host와 같은 어댑터가 구성되지 않은 환경에서는 이 스텝을 수행하지 않는다 — 워크트리는 만들어지고 터미널은 열리지 않으며, 허브 세션이 그 워크트리를 작업한다.
 

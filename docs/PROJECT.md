@@ -74,7 +74,9 @@
 | `opal-pilot-project-dev` | oppd | 오케스트레이터 | 프로젝트 개발 라이프사이클 3 Phase — PLAN → WBS → EXECUTE. 기획은 opwt, 코드 실행은 opal-task-action-agent에 위임하고 PM이 조율 |
 | `opal-pilot-project-build` | oppb | 오케스트레이터 | 프로젝트 빌드 — 이미 확정된 실행 계약을 capability 단위 미니 태스크로 소화. P0~P5 6단계·사용자 게이트 6종, 프로젝트 worktree 1개·실행 계약 `INTENT.md` 1개. P0~P2·P5는 대화형 Product Flow가, P3~P4는 `oppb-runtime-tool start` 1회로 Runtime Supervisor가 headless 무인 실행 |
 
-> **actor 축**: `--pm`은 모드 축과 직교하는 별도 실행 주체(actor) 축이다 — 지원 Pilot 폐쇄 목록은 `opal-pilot-dev`(alias `opd`·`opds`) 하나뿐이며, `//opds --pm ...`처럼 조합하면 PM이 각 단계 skill을 워커 디스패치 없이 직접 수행한다. 정의·지원 범위·실행 계약 원문 SSOT는 `opal/core/references/harness/actor.md`.
+> **actor 축**: 모드 축과 직교하는 별도 실행 주체(actor) 축이다 — 지원 Pilot 폐쇄 목록은 `opal-pilot-dev`(alias `opd`·`opds`) 하나뿐이며, 신규 태스크 기본값은 PM 조율(`actor=coordinator`, `--pm`과 같음)이다. PM이 TASK·분석·PLAN·TEST-SCENARIO와 분배·파일 소유권·검토·재작업·마감을 맡고, 구현·자가 점검·TEST FAIL 수정은 전문 워커가 맡는다. `--no-pm`은 분석·PLAN까지 워커가 수행하는 `actor=worker`다. legacy `actor=pm`(PM 직접 수행) 태스크는 재개만 지원한다. 정의·지원 범위·계약 원문 SSOT는 `opal/core/references/harness/actor.md`.
+>
+> **신규 태스크 기본 실행 (Task 156)**: `opd`·`opds`·`oppd`·`oppl`·`oppb` 신규 태스크는 플래그 없이 agentic·worktree로 시작한다. 그 외 Pilot은 semi-agentic·허브다. 세 축(mode·workspace·actor)은 `state-tool resolve-start`가 원문 플래그로 판정하고, 재개는 저장값을 상속한다. worktree 생성 실패 시 허브로 폴백하지 않는다. 원문은 `harness/modes.md`·`harness/worktree.md`·`harness/actor.md`.
 
 > **Pilot 선택 기준**: 목표·계약·백로그가 실행 증거에 따라 반복 변경되는 **수렴형 프로젝트는 `oppl`**, 한 번의 설계 승인으로 목표·계약·완료조건을 잠글 수 있는 **확정 실행 계약의 무인 소화는 `oppb`**다. 제품 명세(PRD·TRD) 작성부터 필요하면 `oppd`(또는 `opwt`로 명세를 만든 뒤 `oppb`로 실행), 단일 태스크 규모면 `opd`·`opds`다. 네 Pilot은 병존하며 대체·후계·deprecate 관계가 아니다. `oppb`에서 무인 실행이 보장되는 구간은 P3~P4뿐이며, P0~P2와 P5는 대화형 세션(Product Flow)이 몰고 간다 — P5 merge 게이트는 `--auto-pass`를 거부하고 소유자 발화를 요구한다.
 
@@ -255,9 +257,9 @@ TEST-SCENARIO 단계를 "목표 달성 검증"으로 재정의 — 루브릭 채
 | `README.md` | 프레임워크 공개 소개 문서 | Pilot 개념, 사용 사례, 프레임워크 철학 정의 | Framework | Pilot 추가/변경 시, 사용자 대면 문서 작업 시, 프레임워크 철학/방향 관련 작업 시 |
 | `docs/architecture-diagram/opal_framework_architecture.html` | 프레임워크 구조 다이어그램 (시각 SSOT) | 3층 구조·파이프라인·도구 관계 시각화 (태스크 086 산출) | Framework | 구조 설명·온보딩 시 |
 | `docs/SECURITY.md` | 프로젝트 보안 기준 | `op-gc-security`가 공식 표준 baseline보다 우선 적용하는 프로젝트 누적 기준 | Framework | 보안 체크(opgc CHECK) 시 |
-| `opal/core/references/harness/actor.md` | 실행 주체(actor) 축 SSOT | 모드 축과 직교하는 `--pm` 정의, 지원 Pilot 폐쇄 목록, `--pm` 실행 계약, 독립 검증 경계·GC 호출 지점 | Framework | `pilot.start` 이벤트 |
-| `opal/core/references/harness/worktree.md` | 워크스페이스 축·실행 소유권 SSOT | `--wt` 축 정의, task root와 allocator root 계약, **실행 소유권(lease) 계약**(획득·이관·해제·가드 적용 범위·저장 위치), canonical path 발급, cone 확장, multi-repo 캡슐 소유권 | Framework | `pilot.start` 이벤트. `--wt` 태스크 생성·기동·회수, lease 소유권 판단, 워크트리 세션 차단 진단 시 |
-| `opal/core/references/harness/modes.md` | 실행 모드 SSOT | interactive/semi-agentic/agentic의 단계 경계·자동 계속·사용자 대기 계약 | Framework | `pilot.start` 이벤트와 기존 태스크 재개, mode 전이 판단 시 |
+| `opal/core/references/harness/actor.md` | 실행 주체(actor) 축 SSOT | actor 값(`coordinator`/`worker`/legacy `pm`)·신규 기본값·재개 상속, 지원 Pilot 폐쇄 목록, PM 조율 계약, 독립 검증 경계·GC 호출 지점 | Framework | `pilot.start` 이벤트 |
+| `opal/core/references/harness/worktree.md` | 워크스페이스 축·실행 소유권 SSOT | `--wt`/`--no-wt` 축 정의·신규 기본 workspace·생성 실패 시 허브 폴백 금지·작업본 중첩 차단, task root와 allocator root 계약, **실행 소유권(lease) 계약**(획득·이관·해제·가드 적용 범위·저장 위치), canonical path 발급, cone 확장, multi-repo 캡슐 소유권 | Framework | `pilot.start` 이벤트. `--wt` 태스크 생성·기동·회수, lease 소유권 판단, 워크트리 세션 차단 진단 시 |
+| `opal/core/references/harness/modes.md` | 실행 모드 SSOT | Pilot별 신규 태스크 기본 mode, `resolve-start` 라우팅, interactive/semi-agentic/agentic의 단계 경계·자동 계속·사용자 대기 계약 | Framework | `pilot.start` 이벤트와 기존 태스크 재개, mode 전이 판단 시 |
 | `opal/core/references/harness/state.md` | state-tool 전이 계약 | `transition_action`/`report_type`/`next_action`, CLOSE final, 사용자 확인 자동 승인 예외 | Framework | 상태 전이·재개·CLOSE tail·사용자 확인 행 처리 시 |
 | `opal/core/references/harness/task-process.md` | TASK 단계 전이 계약 | TASK 완료 보고가 구조화 전이 출력을 소비하고, 산문 승인 질문을 전이 판정 근거로 쓰지 않도록 하는 단계 경계 규칙 | Framework | TASK 작성·완료 직후 다음 행동 판정 시 |
 | `opal/core/hooks/claude-hooks.json` | Claude Code hook source | Stop hook은 `ownership-tool`의 stop hook 어댑터에 위임한다 — 세션 소유 태스크를 registry로 판정한 뒤 `transition_action=continue`이면 종료 차단·`next_action` 재개 안내를 반환하고, 무소유·타세션 소유·판정 불능은 통과시킨다 | Framework | 설치·아카이브 검증과 Claude 플랫폼 실행 지속성 점검 시 |

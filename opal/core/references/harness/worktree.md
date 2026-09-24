@@ -8,16 +8,30 @@ load: pilot.start
 
 ## 모드 축과 직교하는 별개 축
 
-`--worktree`(약칭 `--wt`)는 모드 축(`--interactive`/`--semi-agentic`/`--agentic`)과 **직교**한다.
+워크스페이스 축(`--worktree`/약칭 `--wt`, 해제 `--no-wt`)은 모드 축(`--interactive`/`--semi-agentic`/`--agentic`)과 **직교**한다.
 
 - 모드 축은 "PM이 얼마나 자율적으로 진행하는가"를, 워크스페이스 축은 "코드를 어느 작업본에서 만지는가"를 결정한다.
-- 조합 가능: `//opd --agentic --wt`, `//opds --wt` 모두 유효하다.
-- `mode_flag_conflict` 판정 대상이 **아니다**. 모드 플래그 개수 검사에 `--wt`를 세지 않는다.
+- 조합 가능: `//opd --agentic --wt`, `//opds --no-wt` 모두 유효하다.
+- `mode_flag_conflict` 판정 대상이 **아니다**. 모드 플래그 개수 검사에 `--wt`·`--no-wt`를 세지 않는다.
 - 서브 하네스 로딩 규칙에 영향을 주지 않는다.
+- 판정은 `state-tool resolve-start`가 집행한다(`harness/modes.md` §라우팅 계약 2).
 
-## `--wt` 미사용 시 = 현행 동작 100% 유지
+## 신규 태스크 기본 workspace와 명시 선택
 
-플래그가 없으면 다음이 전부 현행과 동일하다. 어떤 조건부 분기도 실행되지 않는다.
+| Pilot | 무플래그 신규 태스크 | `--no-wt` |
+|---|---|---|
+| `opd`·`opds`·`oppd`·`oppl` | worktree | 허브 작업본 |
+| `oppb` | worktree(프로젝트 worktree 1개·Supervisor 구조) | `workspace_required_for_skill`로 거부 |
+| 그 외 Pilot | 허브 작업본 | 허브 작업본(기본값과 같음) |
+
+- `--wt`와 `--no-wt`를 함께 주면 `workspace_flag_conflict`로 거부한다.
+- **[MUST] 기존 태스크 재개는 저장 workspace를 상속한다.** `state.json`의 `worktree` 키가 있으면 worktree, 없으면 허브다. 저장값과 다른 workspace 플래그는 `resume_axis_locked`로 거부하며 작업본을 옮기지 않는다.
+- **[MUST] worktree로 판정된 태스크는 worktree 생성이 실패해도 허브로 폴백하지 않는다.** 허브 작업본은 사용자가 `--no-wt`를 명시했을 때만 쓴다. 실패 처리 절차는 `harness/task-process.md` 스텝 4.5가 소유하고, `state-tool init --workspace worktree`가 `--worktree` 없는 초기화를 `worktree_path_required`로 막는다.
+- **[MUST] 작업본 안에서 새 작업본을 만들지 않는다.** `worktree-tool create`는 `--project-root`가 조상 허브의 `.opal-worktrees/` 하위이거나 Git linked worktree면 `PROJECT_ROOT_IS_WORKTREE`로 거부한다. 워크트리 세션이 새 태스크를 시작하려면 허브 절대경로를 `--project-root`로 지정한다(§cone 확장 계약).
+
+## 허브 작업본 태스크
+
+허브 작업본으로 판정된 태스크는 다음이 이 축 도입 이전과 같다.
 
 - `state.json` 스키마: `worktree` 키가 **아예 생성되지 않는다**(`state-tool init`에 `--worktree`를 전달하지 않는다).
 - STATE.md 렌더 결과 · 산출물 경로 · 워커 디스패치 프롬프트(`pm/dispatch-process.md` §작업 경로 블록 미주입).
@@ -103,7 +117,7 @@ load: pilot.start
 | 국면 | 주체 | 경계 |
 |---|---|---|
 | 워크트리·브랜치 생성, 발급값 배달 | 허브 세션 | `worktree-tool`이 단일 소유자다. 터미널 도구가 대체하지 않는다 |
-| 전용 터미널 기동 | 허브 세션 | `state init` 완료 후 terminal context의 현재 `host`와 같은 어댑터만 명시 주입하며 실패는 비차단이다 |
+| 전용 터미널 기동 | 허브 세션 | `state init` 완료 후 terminal context의 현재 `host`와 같은 어댑터만 명시 주입하며 실패는 비차단이다 — 작업본은 이미 있으므로 허브 세션이 그 작업본에서 이어 수행하고 허브 `tasks/`로 옮기지 않는다 |
 | 단계 실행·체크포인트 커밋·CLOSE | 워크트리 세션 | `completed_unmerged`까지 진행한다 |
 | `main` merge·push | 허브 세션 | 승인 경계는 `harness/guards.md` §커밋 규칙이, 허용 merge 경로는 위 §merge 경로가 소유한다 |
 | 터미널 회수·worktree 제거 | 허브 세션 | 회수는 3중 가드 통과 뒤 터미널 스윕을 선행한다 |

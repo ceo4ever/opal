@@ -229,8 +229,10 @@ worktree **하나**를 만든다.
 ## STATE.md 초기 생성
 
 ```
-~/.opal/tools/state-tool/run.sh init <task-path> --skill oppb --mode <interactive|semi-agentic|agentic> --rows-from opal/skills/opal-pilot-project-build/references/pipeline.json
+~/.opal/tools/state-tool/run.sh init <task-path> <resolve-start init_args> --worktree <worktree_root> --rows-from opal/skills/opal-pilot-project-build/references/pipeline.json
 ```
+
+> **[MUST] 세 축 선결**: init 전에 `state-tool resolve-start <task-path> --skill oppb [--new-task] <사용자 원문 플래그>`로 mode·workspace를 판정하고 `init_args`를 그대로 전달한다. 신규 기본값은 agentic이고 workspace는 항상 프로젝트 worktree 1개다. `--no-wt`와 `init --workspace hub`는 `workspace_required_for_skill`로 거부되며 조용히 무시하거나 허브로 폴백하지 않는다. `worktree-tool create`가 실패하면 P0에서 멈추고 사용자에게 보고한다(`harness/task-process.md` 스텝 4.5). actor 축은 적용하지 않는다.
 
 > **행 구성 SSOT**: `references/pipeline.json` `task_steps[]` (P0~P5 22행). 현재 행 목록은
 > `~/.opal/tools/state-tool/run.sh show <task-path>`로 조회한다.
@@ -440,8 +442,9 @@ P3 이후는 Supervisor가 `opal-agent` headless attempt로 실행한다.
 
 `opal-harness-agentic.md` / `opal-harness-semi-agentic.md` 참조. 본 절은 이 스킬의 차이점만 기술한다.
 
-- 기본 호출(`//oppb {요청}`)은 semi-agentic. **P2 사용자 게이트까지 사용자 검토**, P3 Supervisor 기동 이후 PM 자율,
-  CLOSE 진입은 사용자 승인 필수.
+- 무플래그 신규 호출(`//oppb {요청}`)은 agentic이다(`harness/modes.md` §신규 태스크 기본 mode). 기존 태스크 재개는 저장 mode를 상속한다.
+  agentic에서도 P0~P2의 제품 결정은 실제 미해결 결정이면 사용자에게 올리고, P5 `p5.user_merge_gate`는 소유자 발화로만 통과한다.
+- `--semi-agentic`을 명시하면 **P2 사용자 게이트까지 사용자 검토**, P3 Supervisor 기동 이후 PM 자율이다.
 - P3은 설계상 무인 구간이다. agentic·semi-agentic 어느 모드에서도 Supervisor tick을 사람이 재촉하지 않는다.
 - CLOSE 진입 게이트(공통): `p5.user_merge_gate`는 `--auto-pass`를 거부한다. 소유자 발화 후에만 `--owner user`로 mark한다.
 - AGENTIC-LOG.md 생성 시점 — agentic: P0 시작 시점 / semi-agentic: P3 첫 행 advance 시점.

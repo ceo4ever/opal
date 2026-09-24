@@ -1,0 +1,11 @@
+opal/skills/opal-pilot-data-design/references/pipeline.json True
+opal/skills/opal-pilot-dev-wireframe/references/pipeline.json True
+opal/skills/opal-pilot-dev/references/pipeline-short.json True
+opal/skills/opal-pilot-dev/references/pipeline.json True
+opal/skills/opal-pilot-gc/references/pipeline.json True
+opal/skills/opal-pilot-project-build/references/pipeline.json True
+opal/skills/opal-pilot-project-dev/references/pipeline.json True
+opal/skills/opal-pilot-project-loop/references/pipeline.json True
+opal/skills/opal-pilot-project/references/pipeline.json True
+opal/skills/opal-pilot-sdd/references/pipeline.json True
+opal/skills/opal-pilot-write-tech/references/pipeline.json True

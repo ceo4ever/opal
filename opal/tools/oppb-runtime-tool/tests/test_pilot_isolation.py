@@ -58,7 +58,6 @@ REPO_ROOT = Path(__file__).resolve().parents[4]
 STATE_TOOL_PATH = REPO_ROOT / "opal" / "tools" / "state-tool" / "state_tool.py"
 REGISTRY_PATH = REPO_ROOT / "opal" / "core" / "references" / "opal-skills-registry.json"
 AGENTS_MD_PATH = REPO_ROOT / "opal" / "core" / "references" / "agents.md"
-ACTOR_MD_PATH = REPO_ROOT / "opal" / "core" / "references" / "harness" / "actor.md"
 EVALUATOR_AGENT_MD_PATH = REPO_ROOT / "opal" / "agents" / "opal-evaluator-agent" / "AGENT.md"
 SCENARIO_GATE_SKILL_MD_PATH = REPO_ROOT / "opal" / "skills" / "op-scenario-gate" / "SKILL.md"
 OPPB_TOOL_DIR = REPO_ROOT / "opal" / "tools" / "oppb-runtime-tool"
@@ -66,6 +65,7 @@ OPPB_TOOL_DIR = REPO_ROOT / "opal" / "tools" / "oppb-runtime-tool"
 # git-relative(POSIX, 슬래시) 경로 — git show/log는 OS 경로 구분자가 아니라 이 형식을 요구한다.
 REGISTRY_REL = "opal/core/references/opal-skills-registry.json"
 AGENTS_MD_REL = "opal/core/references/agents.md"
+ACTOR_MD_REL = "opal/core/references/harness/actor.md"
 
 # 검사 1 대상 — 기존 3종 파일럿(W-35 디스패치 지시가 명시한 고정 목록).
 # W-49의 discover_pilots()처럼 opal/skills/opal-pilot-* 전체를 동적 스캔하지 않는다 —
@@ -411,12 +411,30 @@ class SharedInfraAdditiveTest(unittest.TestCase):
                 )
 
     def test_actor_md_existing_scope_boundary_preserved(self):
-        base_text = _git_show(BASELINE_COMMIT, "opal/core/references/harness/actor.md")
-        current_text = ACTOR_MD_PATH.read_text(encoding="utf-8")
-        missing = _lines_content_preserved(base_text, current_text)
+        """132가 actor.md를 바꾼 마지막 커밋과 baseline을 비교한다. HEAD와 비교하지 않는다 —
+        이 검사가 묻는 것은 "132가 기존 내용을 지웠는가"이며, HEAD 비교는 132 이후 태스크의
+        정당한 actor 계약 변경까지 132 위반으로 오판한다."""
+        commits = _commits_touching_path(BASELINE_COMMIT, ACTOR_MD_REL)
+        owned_by_132 = [
+            line for line in commits
+            if TASK_132_COMMIT_PATTERN.search(line.split(" ", 1)[1] if " " in line else line)
+        ]
+        if not owned_by_132:
+            self.skipTest(
+                f"baseline({BASELINE_COMMIT[:7]}) 이후 actor.md를 바꾼 132 소유 커밋이 없다 — "
+                f"비교할 132 변경이 없으므로 귀속 검사 대상이 아니다. 전체 변경 커밋: {commits}"
+            )
+        last_132_commit = owned_by_132[0].split(" ", 1)[0]
+        base_text = _git_show(BASELINE_COMMIT, ACTOR_MD_REL)
+        task132_text = _git_show(last_132_commit, ACTOR_MD_REL)
+        self.assertNotEqual(
+            base_text, task132_text,
+            f"132 커밋 {last_132_commit}의 actor.md가 baseline과 같다 — 비교 기준이 잘못 잡혔다.",
+        )
+        missing = _lines_content_preserved(base_text, task132_text)
         self.assertEqual(
             missing, [],
-            f"harness/actor.md에서 baseline 대비 사라진 내용: {missing}",
+            f"harness/actor.md에서 132 커밋 {last_132_commit}이 baseline 대비 지운 내용: {missing}",
         )
 
     def test_evaluator_agent_existing_four_phases_survive(self):

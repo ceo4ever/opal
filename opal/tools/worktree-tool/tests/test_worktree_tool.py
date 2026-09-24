@@ -4297,3 +4297,74 @@ class TestTerminalSweepAndAttributionState:
         assert payload.get("ok") is False, payload
         assert payload.get("error") == "requires_user_approval", payload
         assert payload.get("reason") == "hub_commit", payload
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 156 S-6 (DEC-9) — 작업본 중첩 차단: PROJECT_ROOT_IS_WORKTREE (구현 전 RED)
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+def _copy_worktree_config(project_root, dest_root) -> None:
+    """project_b.config_path의 유효한 .opal/worktree.json을 dest_root 아래에 복제해
+    CONFIG_NOT_FOUND로 먼저 끝나지 않게 한다."""
+    src = project_root / ".opal" / "worktree.json"
+    write_json(dest_root / ".opal" / "worktree.json", json.loads(src.read_text(encoding="utf-8")))
+
+
+def test_t156_s6_linked_worktree_project_root_is_rejected(project_b: ProjectB):
+    """[T156/DEC-9] S-6(a) — --project-root가 실제 `git worktree add`로 만든 linked
+    worktree(git-dir != git-common-dir)면 PROJECT_ROOT_IS_WORKTREE로 거부되고 새
+    worktree·브랜치·meta가 생기지 않는다."""
+    linked_dest = project_b.root.parent / "linked_901"
+    add_worktree(project_b.root, "feat/OP-TASK-901-linked", linked_dest, base="main")
+    _copy_worktree_config(project_b.root, linked_dest)
+
+    result = run_worktree_cli(
+        ["create", "--project-root", str(linked_dest), "--task", "901"]
+    )
+    payload = parse_json_stdout(result, "create(S-6a linked worktree)")
+    assert payload.get("ok") is False, f"linked worktree project-root가 거부되지 않음: {payload}"
+    assert payload.get("error") == "PROJECT_ROOT_IS_WORKTREE", payload
+
+    meta_path = linked_dest / ".opal-worktrees" / ".meta" / "task_901.json"
+    assert not meta_path.exists(), "linked worktree 아래에 meta가 생성됨(DEC-9 위반)"
+    assert not (linked_dest / ".opal-worktrees" / "task_901").exists(), (
+        "linked worktree 아래에 새 worktree 디렉터리가 생성됨(DEC-9 위반)"
+    )
+
+
+def test_t156_s6_nested_opal_worktrees_project_root_is_rejected(project_b: ProjectB):
+    """[T156/DEC-9] S-6(b) — --project-root가 조상 허브 `H/.opal-worktrees/`
+    (H에 `.opal-worktrees/.meta` 디렉터리 존재) 아래면 PROJECT_ROOT_IS_WORKTREE로
+    거부되고 새 worktree·브랜치·meta가 생기지 않는다."""
+    hub = project_b.root
+    meta_dir = hub / ".opal-worktrees" / ".meta"
+    meta_dir.mkdir(parents=True, exist_ok=True)
+
+    nested_root = hub / ".opal-worktrees" / "task_900" / "cone"
+    (nested_root / "workspace").mkdir(parents=True, exist_ok=True)
+    run_git(["init", "-b", "main", str(nested_root / "workspace")], cwd=nested_root)
+    _copy_worktree_config(hub, nested_root)
+
+    result = run_worktree_cli(
+        ["create", "--project-root", str(nested_root), "--task", "901"]
+    )
+    payload = parse_json_stdout(result, "create(S-6b nested .opal-worktrees)")
+    assert payload.get("ok") is False, f"중첩 .opal-worktrees project-root가 거부되지 않음: {payload}"
+    assert payload.get("error") == "PROJECT_ROOT_IS_WORKTREE", payload
+
+    meta_path = nested_root / ".opal-worktrees" / ".meta" / "task_901.json"
+    assert not meta_path.exists(), "중첩 project-root 아래에 meta가 생성됨(DEC-9 위반)"
+    assert not (nested_root / ".opal-worktrees" / "task_901").exists(), (
+        "중첩 project-root 아래에 새 worktree 디렉터리가 생성됨(DEC-9 위반)"
+    )
+
+
+def test_t156_s6_normal_hub_root_still_succeeds(project_b: ProjectB):
+    """[T156/DEC-9] S-6(c) — 정상 허브 root는 종전대로 ok:true (기존 fixture로 확인,
+    회귀 없음)."""
+    result = run_worktree_cli(
+        ["create", "--project-root", str(project_b.root), "--task", "902"]
+    )
+    payload = parse_json_stdout(result, "create(S-6c normal hub)")
+    assert payload.get("ok") is True, f"정상 허브 root가 거부됨(회귀): {payload}"

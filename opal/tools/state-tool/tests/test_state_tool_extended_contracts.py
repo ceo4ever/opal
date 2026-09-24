@@ -760,11 +760,12 @@ class TestT103WorkerDuration(_T093Base):
 
         [122 W-2] 종수 리터럴을 51→52로 옮긴다 — `actor_unsupported_for_skill`
         등재분이며 103 축과 무관하다. [134 W-2] `state_json_malformed` 등재로
-        52→53이며 역시 103 축과 무관하다."""
+        52→53이며 역시 103 축과 무관하다. [156 W-1] resolver·init 게이트 6종 등재로
+        53→59이며 103 축과 무관하다."""
         self.assertNotIn("worker_duration_invalid", ST.ERROR_CODES,
                          "103이 ERROR_CODES를 신설했음 — 카탈로그 종수 계약 위반")
-        self.assertEqual(len(ST.ERROR_CODES), 53,
-                         f"ERROR_CODES 종수가 변했음(134 W-2 기준 53): {len(ST.ERROR_CODES)}")
+        self.assertEqual(len(ST.ERROR_CODES), 59,
+                         f"ERROR_CODES 종수가 변했음(156 W-1 기준 59): {len(ST.ERROR_CODES)}")
 
 
 class TestT103WorkerDurationWarning(_T093Base):
@@ -1004,11 +1005,12 @@ class TestT103WorkerDurationWarning(_T093Base):
 
         [122 W-2] 종수 리터럴을 51→52로 옮긴다 — `actor_unsupported_for_skill`
         등재분이며 R-21 축과 무관하다. [134 W-2] `state_json_malformed` 등재로
-        52→53이며 역시 R-21 축과 무관하다."""
+        52→53이며 역시 R-21 축과 무관하다. [156 W-1] resolver·init 게이트 6종 등재로
+        53→59이며 R-21 축과 무관하다."""
         self.assertNotIn(self._CODE, ST.ERROR_CODES,
                          "R-21이 ERROR_CODES를 늘렸음 — 카탈로그 종수 계약 위반")
-        self.assertEqual(len(ST.ERROR_CODES), 53,
-                         f"ERROR_CODES 종수가 변했음(134 W-2 기준 53): {len(ST.ERROR_CODES)}")
+        self.assertEqual(len(ST.ERROR_CODES), 59,
+                         f"ERROR_CODES 종수가 변했음(156 W-1 기준 59): {len(ST.ERROR_CODES)}")
         self.assertIn(self._CODE, ST.WARNING_CODES,
                       "WARNING_CODES에 worker_duration_missing 미등재")
 
@@ -1594,19 +1596,21 @@ class TestActorFlag(BaseTestCase):
             "rows[] 16행의 key·순서·상태가 Task 136 기준 스냅샷과 달라짐(C-3 위반)",
         )
 
-    # ── S-2: --actor pm --skill opds → state["actor"] == "pm", 행 16개 유지 ──
+    # ── S-2: --actor coordinator --skill opds → state["actor"] == "coordinator", 행 16개 유지 ──
+    # [156 W-1] legacy `pm`은 신규 init에서 actor_pm_retired로 거부되므로(test_start_resolution
+    # S-4) 조건부 영속화 계약은 새 PM 조율 값 `coordinator`로 검증한다.
 
-    def test_s2_actor_pm_skill_opds_sets_actor_key_rows_unchanged(self):
-        """[T122/S-2] `--actor pm --skill opds` → state["actor"] == "pm"이고
-        rows[]는 S-1과 동일하게 16행이어야 한다."""
-        task_path = self._new_task_path("s2_actor_pm")
-        exit_code, _ = self._init_opds(task_path, actor="pm")
-        self.assertEqual(exit_code, 0, "--actor pm --skill opds init은 exit 0이어야 한다")
+    def test_s2_actor_coordinator_skill_opds_sets_actor_key_rows_unchanged(self):
+        """[T122/S-2 → 156] `--actor coordinator --skill opds` → state["actor"] ==
+        "coordinator"이고 rows[]는 S-1과 동일하게 16행이어야 한다."""
+        task_path = self._new_task_path("s2_actor_coordinator")
+        exit_code, _ = self._init_opds(task_path, actor="coordinator")
+        self.assertEqual(exit_code, 0, "--actor coordinator --skill opds init은 exit 0이어야 한다")
 
         state = json.loads((task_path / "state.json").read_text(encoding="utf-8"))
         self.assertEqual(
-            state.get("actor"), "pm",
-            "--actor pm 지정 시 state['actor']가 'pm'이어야 한다(AC-1 위반 — GREEN 이전 RED)",
+            state.get("actor"), "coordinator",
+            "--actor coordinator 지정 시 state['actor']가 'coordinator'여야 한다",
         )
         rows = state.get("rows")
         self.assertEqual(len(rows), 16, "actor 지정과 무관하게 rows[]는 16행이어야 한다(AC-4)")
@@ -1617,14 +1621,14 @@ class TestActorFlag(BaseTestCase):
             "actor 지정이 rows[] key·순서·상태를 바꾸면 안 된다(AC-4 위반)",
         )
 
-    # ── S-3: --actor pm --skill opwt → exit 1, ok:false / actor_unsupported_for_skill ──
+    # ── S-3: --actor coordinator --skill opwt → exit 1, ok:false / actor_unsupported_for_skill ──
 
     def test_s3_actor_pm_skill_opwt_rejected_with_dedicated_error(self):
-        """[T122/S-3] `--actor pm --skill opwt` → exit 1 + stdout JSON
+        """[T122/S-3 → 156] `--actor coordinator --skill opwt` → exit 1 + stdout JSON
         `ok:false`·`error == "actor_unsupported_for_skill"`. traceback(미포착 예외)이
         발생하지 않아야 한다 — SystemExit 이외의 예외가 나면 이 테스트 자체가 에러로
         실패해 그 사실을 드러낸다."""
-        task_path = self._new_task_path("s3_actor_pm_opwt")
+        task_path = self._new_task_path("s3_actor_coordinator_opwt")
         kwargs = dict(
             task_path=str(task_path),
             skill="opwt",
@@ -1635,7 +1639,7 @@ class TestActorFlag(BaseTestCase):
             import_existing=False,
             next_action=None,
             task_title=None,
-            actor="pm",
+            actor="coordinator",
         )
         with _mock_now():
             args = make_args(**kwargs)
@@ -1643,7 +1647,7 @@ class TestActorFlag(BaseTestCase):
 
         self.assertEqual(
             exit_code, 1,
-            f"--actor pm --skill opwt는 exit 1로 거부되어야 한다(현재 결과: {result!r})",
+            f"--actor coordinator --skill opwt는 exit 1로 거부되어야 한다(현재 결과: {result!r})",
         )
         self.assertFalse(result.get("ok"), f"ok:false여야 한다: {result!r}")
         self.assertEqual(

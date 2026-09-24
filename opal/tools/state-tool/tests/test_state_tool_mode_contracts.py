@@ -1137,6 +1137,13 @@ class TestR11Invariants(_T093Base):
                 "finalize_attribution_failed",
                 "actor_unsupported_for_skill",  # 122 W-2
                 "state_json_malformed",         # 134 W-2
+                # 156 W-1 — resolve-start 충돌·재개 축 잠금, init actor·workspace 게이트
+                "workspace_flag_conflict",
+                "actor_flag_conflict",
+                "workspace_required_for_skill",
+                "resume_axis_locked",
+                "actor_pm_retired",
+                "worktree_path_required",
             }
             head_src = subprocess.run(
                 ["git", "show", "HEAD:./state_tool.py"],

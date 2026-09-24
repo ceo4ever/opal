@@ -40,7 +40,7 @@ AI 도구(Claude Code, Cursor 등)를 쓰다 보면 공통적인 한계에 부�
 - **Pilot 기반 파이프라인** — 개발, 기획, 문서 등 목적에 맞는 파이프라인을 선택해 실행
 - **PM 역할 분리** — 에이전트가 프로젝트 매니저로서 워커(서브에이전트)를 지휘
 - **QA 내장** — 테스트 시나리오 작성 → 구현 → 자동 검증이 파이프라인 안에 포함
-- **3-way 실행 모드** — `interactive` / `semi-agentic`(기본) / `agentic` — 사용자 검토와 PM 자율의 균형을 작업별로 선택
+- **3-way 실행 모드** — `interactive` / `semi-agentic` / `agentic` — 사용자 검토와 PM 자율의 균형을 작업별로 선택(개발·프로젝트 Pilot 5종은 agentic, 그 외는 semi-agentic이 기본)
 - **전문 에이전트(Specialist Agent)** — 도메인별 전문 워커가 FE/BE/DB/기획/테스트를 담당
 - **프로젝트 브레인(`//opbr`)** — 프로젝트 WHY·HOW 지식을 마크다운 위키로 누적·질의
 - **경량 품질 게이트(`//opgc`)** — 커밋 전 보안·컨벤션 진단 (OWASP/CWE/SANS 기반)
@@ -260,14 +260,14 @@ OPAL 에이전트는 **비서**와 **PM** 두 가지 역할을 수행한다.
 
 프로젝트에 `.opal/AGENT.md`가 있으면 PM 모드로 자동 전환된다. PM 모드에서는 `//` 커맨드로 파이프라인을 실행할 때 워커(서브에이전트)를 지휘하고 각 단계의 품질을 검토한다. `.opal/AGENT.md`가 없는 환경에서는 비서 모드로 동작하여 일반적인 대화와 업무를 지원한다.
 
-### PM 직접 수행 진입점
+### 실행 주체 진입점
 
-OPAL은 파이프라인을 "누가 수행하는가"(**실행 주체**, actor 축)를 3가지 진입점으로 지원한다. actor 축은 모드 축(`--interactive`/`--semi-agentic`/`--agentic`)과 **직교**하며 워크스페이스 축(`--wt`)과도 자유롭게 조합된다 — 예: `//opds --pm --agentic --wt`.
+OPAL은 파이프라인을 "누가 수행하는가"(**실행 주체**, actor 축)를 3가지 진입점으로 지원한다. actor 축은 모드 축(`--interactive`/`--semi-agentic`/`--agentic`)과 **직교**하며 워크스페이스 축(`--wt`/`--no-wt`)과도 자유롭게 조합된다 — 예: `//opds --no-pm --semi-agentic --no-wt`.
 
 | 진입점 | 실행 주체 | 설명 |
 |------|----------|------|
-| `//opd` / `//opds` | 워커(서브에이전트) | 단계별 전문 워커가 파이프라인을 수행한다 (기본, 플래그 없음 = 기존 동작 그대로) |
-| `//opd --pm` / `//opds --pm` | PM | 단계 순서·`state.json`·PLAN·TEST-SCENARIO·Gate는 그대로 유지한 채 PM이 해당 단계 skill을 직접 Read하고 수행한다. 현재 `--pm`은 `opal-pilot-dev`(`opd`/`opds`)만 지원한다 |
+| `//opd` / `//opds` (기본, `--pm`과 같음) | PM 조율 + 전문 워커 | PM이 TASK·분석·PLAN·TEST-SCENARIO를 쓰고 분배·파일 소유권·검토·재작업·마감을 맡는다. 구현·자가 점검·TEST FAIL 수정은 FE/BE/DB 등 전문 워커가 맡고, 병렬은 의존성이 없고 변경 파일이 겹치지 않을 때만 쓴다. actor 축은 `opal-pilot-dev`(`opd`/`opds`)만 지원한다 |
+| `//opd --no-pm` / `//opds --no-pm` | 워커(서브에이전트) | 분석·PLAN까지 단계별 전문 워커가 수행한다 |
 | `//oppm` | PM | 태스크 파이프라인이 아니라 종료 조건을 가진 질문 반복형 대화 루프다. PM이 직접 조회·작성·수정·검증한다 |
 
 `//oppm`은 다음 3가지를 보장한다.
@@ -815,13 +815,13 @@ CDN 기반 정적 HTML 화면을 빠르게 생성한다. 태스크 컨텍스트�
 
 ## Pilot 실행 모드 (3-way)
 
-OPAL Pilot은 **사용자 검토**와 **PM 자율** 사이의 균형을 작업별로 선택할 수 있는 3가지 실행 모드를 제공한다. 모드 플래그를 명시하지 않으면 기본 `semi-agentic`으로 동작한다.
+OPAL Pilot은 **사용자 검토**와 **PM 자율** 사이의 균형을 작업별로 선택할 수 있는 3가지 실행 모드를 제공한다. 모드 플래그 없는 신규 태스크의 기본값은 Pilot별로 다르다 — `opd`·`opds`·`oppd`·`oppl`·`oppb`는 `agentic`과 worktree 작업본, 그 외 Pilot은 `semi-agentic`과 허브 작업본이다. 기존 태스크를 재개하면 저장된 mode·작업본·실행 주체를 그대로 쓴다. worktree가 기본인 Pilot에서 worktree 생성이 실패하면 허브로 넘어가지 않고 멈추며, 허브 작업본은 `--no-wt`로 명시할 때만 쓴다(`oppb`는 불가).
 
 | 모드 | 호출 | 동작 |
 |------|------|------|
 | `interactive` | `//opp --interactive {작업}` | 모든 단계 게이트마다 사용자 승인 필요 — 가장 보수적 |
-| `semi-agentic` (**기본**) | `//opp {작업}` (플래그 없음) 또는 `//opp --semi-agentic {작업}` | PLAN-equivalent 사용자 승인 뒤 EXECUTE·TEST/VERIFY·CLOSE final까지 PM 자율 |
-| `agentic` | `//opp --agentic {작업}` | 정상 전 구간과 CLOSE final까지 PM 자율 |
+| `semi-agentic` | `//opp {작업}` (opp 등의 기본) 또는 `--semi-agentic` | PLAN-equivalent 사용자 승인 뒤 EXECUTE·TEST/VERIFY·CLOSE final까지 PM 자율 |
+| `agentic` | `//opds {작업}` (개발·프로젝트 Pilot 5종의 기본) 또는 `--agentic` | 정상 전 구간과 CLOSE final까지 PM 자율. 실제 미해결 결정·권한 경계·재시도 상한·merge 승인은 그대로 사용자에게 올린다 |
 
 > 적용 Pilot의 CLOSE 전이는 `harness/modes.md` §CLOSE 전이 계약이 소유한다. interactive만 명시 사용자 승인을 유지하며, 확인 행 없는 opgc도 semi-agentic·agentic에서는 자동 CLOSE로 진행한다. OPPB P5 merge gate와 merge/push/deploy/worktree 제거는 별도 사용자 권한 경계다.
 
@@ -834,9 +834,10 @@ OPAL Pilot은 **사용자 검토**와 **PM 자율** 사이의 균형을 작업�
 
 | 상황 | 권장 모드 |
 |------|---------|
-| 일상적인 개발·문서 작업 (기본) | `semi-agentic` (플래그 없음) |
+| 개발·프로젝트 작업 (`opd`·`opds`·`oppd`·`oppl`·`oppb` 기본) | `agentic` (플래그 없음) |
+| 문서·설정 등 그 외 Pilot 작업 (기본) | `semi-agentic` (플래그 없음) |
+| PLAN까지 직접 검토하고 싶을 때 | `--semi-agentic` |
 | 처음 해보는 유형 / 규모가 크고 단계마다 확인하고 싶을 때 | `--interactive` |
-| 작업 범위가 명확하고 중간 확인이 불필요할 때 | `--agentic` |
 
 ---
 

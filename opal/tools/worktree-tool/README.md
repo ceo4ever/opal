@@ -233,6 +233,7 @@ registry meta의 `attribution_state`가 판정에 들어간다.
 | `CONFIG_EXISTS` | `init` — 설정 파일이 이미 존재(`--force`로만 덮어쓰기) |
 | `CONFIG_UNKNOWN_REPO` | `baseBranchOverrides`의 키가 `repos[]` 또는 `"."`와 불일치 |
 | `PROJECT_ROOT_NOT_FOUND` | 지정한 프로젝트 루트가 존재하지 않음 |
+| `PROJECT_ROOT_IS_WORKTREE` | `create`의 `--project-root`가 작업본임 — 조상 허브의 `.opal-worktrees/` 하위(`reason: inside_opal_worktrees`)이거나 Git linked worktree(`reason: linked_worktree`). 설정 사본을 읽기 전에 거부하며 아무것도 만들지 않는다. 허브 경로는 추론하지 않는다 |
 | `WORKTREE_EXISTS` | 대상 worktree 경로가 이미 점유됨 |
 | `BRANCH_EXISTS` | 브랜치가 다른 worktree에 체크아웃 중 |
 | `REPO_NOT_FOUND` | 지정된 `repos` 경로가 존재하지 않음 |

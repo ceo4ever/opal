@@ -7,25 +7,26 @@
 ## 1. 모드 정의
 
 PM이 사용자를 대행하여 단계 게이트를 자율 통과하는 모드.
-신규 태스크에서는 **opt-in 방식**이다. 기존 agentic 태스크의 무플래그 재개는 `state-tool resolve-mode`가 저장 mode를 상속한다.
+신규 태스크 기본 mode는 Pilot별로 다르다 — `opd`·`opds`·`oppd`·`oppl`·`oppb`는 무플래그 신규 태스크가 agentic이고, 그 외 Pilot은 `--agentic` 명시가 필요하다(표 원문: `harness/modes.md` §신규 태스크 기본 mode). 기존 태스크의 무플래그 재개는 `state-tool resolve-start`가 저장 mode를 상속한다.
 
 | 모드 | 설명 |
 |------|------|
 | `interactive` | `--interactive` 명시. 각 단계 완료 시 사용자 승인을 받는다. |
-| `semi-agentic` | **기본**. PLAN-equivalent까지 사용자 승인, EXECUTE-equivalent 이후와 CLOSE final까지 자율 진행한다. 본 문서의 §3~§9는 semi-agentic의 EXECUTE 이후 동작에도 동일 적용된다. |
-| `agentic` | `--agentic` 명시. PM이 사용자를 대행하여 자율 진행. PM은 사용자 역할을 맡으므로 interactive보다 **높은 검토 기준과 기록 의무**를 진다. |
+| `semi-agentic` | 위 5개 Pilot 외의 기본. PLAN-equivalent까지 사용자 승인, EXECUTE-equivalent 이후와 CLOSE final까지 자율 진행한다. 본 문서의 §3~§9는 semi-agentic의 EXECUTE 이후 동작에도 동일 적용된다. |
+| `agentic` | 위 5개 Pilot의 기본 또는 `--agentic` 명시. PM이 사용자를 대행하여 자율 진행. PM은 사용자 역할을 맡으므로 interactive보다 **높은 검토 기준과 기록 의무**를 진다. |
 
 ## 2. 활성화 방법
 
-- 신규 태스크를 agentic으로 시작하거나 기존 태스크의 mode를 변경할 때는 `--agentic` 플래그를 포함한다. 가급적 스킬명 바로 뒤에 위치.
-- 기존 태스크의 무플래그 재개는 저장 mode를 상속하고, 신규 태스크의 무플래그 호출만 공통 하네스 기본값인 semi-agentic으로 동작한다.
+- 기본값이 agentic이 아닌 Pilot을 agentic으로 시작하거나 기존 태스크의 mode를 변경할 때는 `--agentic` 플래그를 포함한다. 가급적 스킬명 바로 뒤에 위치.
+- 기존 태스크의 무플래그 재개는 저장 mode를 상속하고, 신규 태스크의 무플래그 호출만 Pilot별 기본값으로 동작한다.
+- agentic 기본값은 기존 agentic 모드를 기본으로 고른 것이며 새 권한을 추가하지 않는다. §6 에스컬레이션, §7 유지 규칙, OPPB P5 사용자 전용 merge 게이트, merge·push·배포 승인 경계는 그대로다.
 - 활성화 시 STATE.md 모드 필드를 `agentic`으로 기록한다.
 
 ```
 예시:
-  //opds --agentic 로그인 버그 수정
-  //oppd --agentic 프로젝트 개발 시작
-  //opd --agentic 회원가입 기능 구현
+  //opds 로그인 버그 수정              (기본 agentic)
+  //oppd 프로젝트 개발 시작            (기본 agentic)
+  //opp --agentic 설정 문서 정리       (기본 semi-agentic Pilot의 명시)
 ```
 
 ## 3. PM 대행 의무 (agentic 핵심 원칙)
@@ -136,9 +137,9 @@ PM이 자율 진행을 중단하고 사용자에게 올리는 기준:
 
 | 규칙 | agentic 적용 내용 |
 |------|-----------------|
-| `구현 금지 원칙` | EXECUTE 단계 진입은 PM이 대행 승인하되, 코드 생성/수정은 워커만 수행 |
+| `구현 금지 원칙` | EXECUTE 단계 진입은 PM이 대행 승인하되, 코드 생성/수정은 저장 actor가 정한 구현 주체만 수행(`harness/actor.md`) |
 | `커밋 규칙` | 등록된 전용 worktree의 1:1 소유 세션은 검증된 안정 경계에서 worktree branch 체크포인트를 자율 커밋할 수 있다. 허브·기본 브랜치 commit, merge·push·배포와 이력 재작성은 사용자 승인 경계를 유지한다 (`harness/guards.md` §커밋 규칙). |
-| `디스패치 의무 원칙` | 워커 디스패치로 정의된 단계는 반드시 서브에이전트 사용 |
+| `디스패치 의무 원칙` | 저장 actor가 허용한 범위 밖의 워커 디스패치 단계는 반드시 서브에이전트 사용(`harness/guards.md` §디스패치 의무 원칙) |
 | `자동 루핑 제약` | 공통 하네스 §1 Guards의 기존 한도 그대로 적용 |
 | `CLOSE 전이` | 정상 경로는 `harness/modes.md` §CLOSE 전이 계약을 따른다. agentic은 사용자 확인 행 유무와 관계없이 자동 CLOSE와 `close.final`까지 진행하며, 실제 미해결 이슈와 별도 권한 행동만 에스컬레이션한다. |
 

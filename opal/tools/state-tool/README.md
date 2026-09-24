@@ -50,10 +50,23 @@ bash opal/tools/state-tool/run-tests.sh --jobs 4
   [--new-task]
 ```
 
-- 우선순위: 명시 `--mode` > 유효한 기존 `state.json.mode` > 신규 태스크(`--new-task`)의 `semi-agentic` 기본값.
+- 우선순위: 명시 `--mode` > 유효한 기존 `state.json.mode` > 신규 태스크(`--new-task`) 기본값. `--skill`을 주면 아래 `resolve-start`와 같은 Pilot별 기본값 표를 쓰고, 생략하면 `semi-agentic`이다(호환). Pilot 시작·재개의 표준 판정은 세 축을 함께 보는 `resolve-start`다.
 - 기존 태스크의 무플래그 재개는 저장 mode를 상속한다. 명시값이 다르면 rows·`created_at`을 보존하고 mode만 원자 갱신하며 STATE.md에 결정을 기록한다.
 - 기존 mode 누락·비문자·허용값 밖 값은 파일을 고치지 않고 `interactive` / `fail_closed`로 반환한다. 명시값으로만 복구할 수 있다.
 - JSON 문법 오류나 top-level 비객체는 `state_json_malformed`로 차단한다. 프로젝트 브리프의 mode 문구는 표시 전용이며 이 JSON 응답이 판정 SSOT다.
+
+### `resolve-start` — Pilot 시작·재개의 mode·workspace·actor 판정
+
+```bash
+~/.opal/tools/state-tool/run.sh resolve-start <task-path> --skill <alias> [--new-task] \
+  [--interactive|--semi-agentic|--agentic] [--wt|--worktree|--no-wt] [--pm|--no-pm]
+```
+
+- 사용자가 입력한 원문 플래그를 그대로 넘긴다. 응답: `effective_mode`·`mode_source`, `workspace`(`worktree`|`hub`)·`workspace_source`, `actor`(`coordinator`|`worker`|`pm`)·`actor_source`(`default`|`explicit`|`state`|`legacy_default`), `warnings`. 신규는 `init_args`도 반환한다.
+- 신규 기본값(`NEW_TASK_DEFAULTS`): `opd`·`opds`·`oppd`·`oppl`·`oppb`는 `agentic`·`worktree`, 그 외 Pilot은 `semi-agentic`·`hub`. actor는 `opd`·`opds`만 `coordinator`이고 그 외는 `worker`(state.json에 키를 만들지 않음). 축별 원문은 `harness/modes.md`·`worktree.md`·`actor.md`가 소유한다.
+- 신규는 읽기 전용이다. `init_args`(`--skill`·`--mode`·`--workspace`·opd/opds만 `--actor`)에 worktree면 `worktree-tool create`가 발급한 `--worktree <worktree_root>`를 덧붙여 `init`에 넘긴다.
+- 충돌: 모드 플래그 2개 이상 `mode_flag_conflict`, `--wt`+`--no-wt` `workspace_flag_conflict`, `--pm`+`--no-pm` `actor_flag_conflict`, opd/opds 밖 `--pm` `actor_unsupported_for_skill`(`--no-pm`은 경고 `no_pm_redundant`만), oppb `--no-wt` `workspace_required_for_skill`.
+- 재개(state.json 존재, `--new-task` 없음): 저장값을 상속한다. workspace는 `worktree` 키 유무, actor는 키 값(부재 시 `worker`/`legacy_default`). 저장값과 다른 workspace·actor 플래그는 `resume_axis_locked`(`axis` 동봉). 명시 mode 플래그만 `resolve-mode`와 같이 mode를 원자 갱신한다.
 
 ## 종료 코드
 
@@ -71,8 +84,11 @@ bash opal/tools/state-tool/run-tests.sh --jobs 4
 
 ```bash
 ~/.opal/tools/state-tool/run.sh init <task-path> \
-  --skill <opp|opd|opds|opdw|opwt|opgc|oppd|opsdd|oppl|opdd> \
+  --skill <opp|opd|opds|opdw|opwt|opgc|oppd|opsdd|oppl|opdd|oppb> \
   --mode <interactive|semi-agentic|agentic> \
+  [--workspace <worktree|hub>]          # resolve-start init_args \
+  [--worktree <worktree_root 절대경로>] \
+  [--actor <coordinator|worker>]        # opd/opds 전용 \
   [--task-title <text>] \
   [--next-action <text>] \
   [--rows-spec <inline-json>] \
@@ -86,6 +102,8 @@ bash opal/tools/state-tool/run-tests.sh --jobs 4
 - `--rows-from`은 확장자로 분기한다(070 R-2): `.json`이면 `pipeline.json` 스펙 검증 후 로딩(rows에 task-step `key` 영속, `conditional` 메타데이터 저장), `.md`이면 기존 SKILL.md 표 파싱(레거시) + stderr에 deprecation 경고 1줄 출력. 두 경로 모두 stdout 응답 계약은 동일.
 - `--next-action`: `state.json` `next_action` 필드로 영속화된다(기본값 `"PLAN 단계 진입"`). 이후 `advance`/`mark` 시 파이프라인 프론티어(첫 미완료 행)에서 자동 파생·갱신된다(072) — PM 수동 갱신 불필요. **094부터 이를 렌더하는 STATE.md 전용 섹션은 없다**(저널화로 `## 다음 액션` 자동 파생 섹션 삭제) — 현재 값은 `show`(md의 `- 다음 액션:` 줄 또는 json의 `next_action` 필드)로 조회한다
 - `--force` 사용 시 `--note` 필수 (`note_required_for_force`)
+- `--workspace worktree`는 `--worktree` 없이 `worktree_path_required`, `--workspace hub --skill oppb`는 `workspace_required_for_skill`로 기록 전에 거부한다. 미지정은 기존 동작이다.
+- `--actor`는 opd/opds에서만 받으며 지정 시에만 `actor` 키를 만든다. legacy `--actor pm`은 `actor_pm_retired`로 거부한다.
 - 구 STATE.md 표 흡수 옵션(`import`+`existing` 합성명, 094 이전 사용): **094(STATE.md 저널화)에서 제거됨** — 호출 시 rows 파싱 없이 항상 `import_existing_removed`로 거부된다(exit 1). 파싱 대상이던 파이프라인 표 자체가 STATE.md에서 소멸했기 때문이다. 행 구성은 `--rows-from <pipeline.json>` 또는 `--rows-spec`을 사용한다. (해당 인자는 argparse에 `help=argparse.SUPPRESS`로만 존치 — 완전히 삭제하면 미인식 인자로 exit 2 비-JSON 출력이 발생해 stdout 계약이 깨지므로, 인자는 받되 즉시 거부하는 방식을 택했다. 이 문서는 SUPPRESS 취지에 따라 정확한 플래그 철자를 의도적으로 노출하지 않는다)
 - 모든 모드의 사용자 확인 행은 `pending`으로 초기화된다. 다음 단계 진입 시 저장 mode를 읽는 단일 판정 훅이 자동 승인 여부를 결정한다. `semi-agentic`은 PLAN-equivalent 승인 뒤, `agentic`은 정상 전 구간에서 CLOSE 직전 행을 포함해 `done/auto`로 처리할 수 있으며 interactive 또는 invalid mode는 fail-closed한다.
 - `--note`(`--force` 시 기재)에 `{owner_name}` 플레이스홀더를 쓰면 `~/.opal/identity.md`의 `owner_name`으로 write-time 치환된다. identity.md 부재/`owner_name` 공란/파싱 실패 시 원문(`{owner_name}`) 그대로 유지(fail-safe) — 054
@@ -619,7 +637,7 @@ bash opal/tools/state-tool/run-tests.sh --jobs 4
 
 ---
 
-## 에러 코드 카탈로그 (53종)
+## 에러 코드 카탈로그 (59종)
 
 코드는 `state_tool.py`의 두 물리 분리 테이블이 소유한다. 기본 상태 오류는 `ERROR_CODES` 53종,
 run-log 연동 오류는 `RUN_LOG_STATE_ERROR_CODES` 15종이다. `err()`가 조회 시에만 두 테이블을
@@ -645,7 +663,7 @@ run-log 연동 오류는 `RUN_LOG_STATE_ERROR_CODES` 15종이다. `err()`가 조
 | `refs_invalid` | 허용되지 않는 절대경로 ref |
 | `schema_invalid` | 폐쇄형 사건 스키마 위반 |
 
-### 기본 상태 오류 (53종 실측 SSOT — PLAN §2.18 E-1 + 070 R-1/R-4/R-9 + 091 F-004 R-10/R-11 + 093 F-004 R-4 + 094 R-3/R-4/R-9 + 098 F-003 R-4 + 106 F-004 R-4 + 111 W-1 + 118 W-4 + 122 W-2 + 134 W-2)
+### 기본 상태 오류 (59종 실측 SSOT — PLAN §2.18 E-1 + 070 R-1/R-4/R-9 + 091 F-004 R-10/R-11 + 093 F-004 R-4 + 094 R-3/R-4/R-9 + 098 F-003 R-4 + 106 F-004 R-4 + 111 W-1 + 118 W-4 + 122 W-2 + 134 W-2 + 156 W-1)
 
 > 종수는 `len(ERROR_CODES)`(`state_tool.py`) 실측값이 기준이다 — 이 헤더 숫자를 리터럴로 신뢰하지 말고 코드 실측으로 재검증할 것(094 R-9 ①, S-7/S-15).
 
@@ -702,8 +720,14 @@ run-log 연동 오류는 `RUN_LOG_STATE_ERROR_CODES` 15종이다. `err()`가 조
 | 49 | `allocator_root_not_absolute` | finalize-attribution | 1 | `--allocator-root`가 상대경로 — 절대경로만 허용 (118 W-4, AC-4) |
 | 50 | `allocator_root_invalid` | finalize-attribution | 1 | `--allocator-root` 하위에 `.opal/MEMORY.json`이 없음 (118 W-4, AC-4) |
 | 51 | `finalize_attribution_failed` | finalize-attribution | 1 | 허브 MEMORY history append 실패(memory-tool 부재·손상 JSON·호출 실패) — 파일은 변경되지 않는다 (118 W-4, AC-4) |
-| 52 | `actor_unsupported_for_skill` | init | 1 | `--actor pm`이 `--skill` opd/opds 외 값과 함께 지정됨 — `--actor pm`은 opd/opds에서만 지원 (122 W-2, D-4/AC-1) |
-| 53 | `state_json_malformed` | resolve-mode | 1 | `state.json`이 유효한 JSON 객체가 아니어서 저장 mode를 신뢰할 수 없음 — 명시 모드로도 자동 덮어쓰지 않고 복구를 요구 (134 W-2) |
+| 52 | `actor_unsupported_for_skill` | init, resolve-start | 1 | actor 축(`init --actor`, `resolve-start --pm`)이 opd/opds 외 Pilot과 함께 지정됨 — actor 축은 opd/opds에서만 지원 |
+| 53 | `state_json_malformed` | resolve-mode, resolve-start | 1 | `state.json`이 유효한 JSON 객체가 아니어서 저장 mode를 신뢰할 수 없음 — 명시 모드로도 자동 덮어쓰지 않고 복구를 요구 (134 W-2) |
+| 54 | `workspace_flag_conflict` | resolve-start | 1 | `--wt`(`--worktree`)와 `--no-wt`를 함께 지정 |
+| 55 | `actor_flag_conflict` | resolve-start | 1 | `--pm`과 `--no-pm`을 함께 지정 |
+| 56 | `workspace_required_for_skill` | resolve-start, init | 1 | 프로젝트 worktree가 필수인 Pilot(oppb)에 허브 작업본(`--no-wt`, `init --workspace hub`)을 요청 — 조용히 무시하거나 허브로 폴백하지 않는다 |
+| 57 | `resume_axis_locked` | resolve-start | 1 | 기존 태스크 재개 중 저장값과 다른 workspace·actor 플래그 — 응답 `axis`가 잠긴 축을 가리킨다 |
+| 58 | `actor_pm_retired` | init | 1 | `--actor pm`(legacy PM 직접 수행)으로 신규 태스크를 만들려 함 — `coordinator`·`worker`만 허용, legacy `pm` 태스크는 재개만 지원 |
+| 59 | `worktree_path_required` | init | 1 | `--workspace worktree`인데 `--worktree <worktree_root>`가 없음 — worktree 생성 실패 뒤 허브로 폴백하는 init을 막는다 |
 
 > `spec-validate` 서브 명령 자체의 violations[] 내부 코드(`spec_missing_field`/`spec_skill_invalid`/`spec_stage_invalid`/`spec_key_format_invalid`/`spec_key_duplicate`/`spec_id_sequence_invalid`/`spec_key_stage_mismatch`)는 `cmd_validate`의 `schema_violation`처럼 인라인 문자열로 쓰이며 ERROR_CODES 템플릿을 거치지 않는다(070 §3.1.2). (`spec_gate_*` 4종은 동일하게 violations[]에 인라인 append되지만 ERROR_CODES에 등록되어 있어 위 카탈로그에 포함된다 — 091이 만든 예외.)
 

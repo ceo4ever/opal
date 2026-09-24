@@ -125,8 +125,10 @@ tasks/{NNN}-oppd-{프로젝트명}/
 state-tool을 호출하여 초기화한다:
 
 ```
-~/.opal/tools/state-tool/run.sh init <task-path> --skill oppd --mode <interactive|semi-agentic|agentic> --rows-from opal/skills/opal-pilot-project-dev/references/pipeline.json
+~/.opal/tools/state-tool/run.sh init <task-path> <resolve-start init_args> [--worktree <worktree_root>] --rows-from opal/skills/opal-pilot-project-dev/references/pipeline.json
 ```
+
+> **[MUST] 세 축 선결**: init 전에 `state-tool resolve-start <task-path> --skill oppd [--new-task] <사용자 원문 플래그>`로 mode·workspace를 판정하고 응답의 `init_args`를 그대로 전달한다. 신규 기본값은 agentic·worktree이며 actor 축은 적용하지 않는다(`--pm`은 `actor_unsupported_for_skill`). `workspace=worktree`면 `harness/task-process.md` 스텝 4.5가 발급한 `--worktree <worktree_root>`를 덧붙이고, worktree 생성이 실패하면 허브로 폴백하지 않고 멈춘다. 기존 태스크 재개는 저장 mode·작업본을 상속한다.
 
 > **행 구성 SSOT**: `references/pipeline.json` `task_steps[]`. 현재 행 목록은
 > `~/.opal/tools/state-tool/run.sh show <task-path>` 또는 pipeline.json을 직접 조회한다.
@@ -756,11 +758,11 @@ DONE.md 생성 직후 **op-brain-ingest 디스패치**를 수행한다:
 
 opal-harness-agentic.md / opal-harness-semi-agentic.md 참조. 본 절은 이 스킬의 차이점만 기술한다.
 
-### 기본 모드 (semi-agentic)
+### 기본 모드 (agentic)
 
-기본 호출(`//oppd {작업}`)은 semi-agentic 모드. Phase 1+2(PLAN-equivalent)까지 사용자 검토하고, 승인 뒤 Phase 3·VERIFY·CLOSE final까지 PM 자율로 진행한다.
+무플래그 신규 호출(`//oppd {작업}`)은 agentic 모드·worktree 작업본이다(`harness/modes.md` §신규 태스크 기본 mode). 기존 태스크 재개는 저장 mode를 상속한다. `--semi-agentic`을 명시하면 Phase 1+2(PLAN-equivalent)까지 사용자 검토하고, 승인 뒤 Phase 3·VERIFY·CLOSE final까지 PM 자율로 진행한다.
 
-**모드 경계** (이 시점부터 PM 자율):
+**semi-agentic 모드 경계** (이 시점부터 PM 자율):
 - Phase 2 WBS 사용자 확정 행 통과 후 → Phase 3 액션 실행 첫 행부터 PM 자율 (D-DEC-1)
 - Phase 1 내부 opwt 위임 결과(PRD/TRD)는 Phase 1 사용자 확정 행에서 검토 — 별도 모드 경계 없음
 
@@ -768,9 +770,9 @@ opal-harness-agentic.md / opal-harness-semi-agentic.md 참조. 본 절은 이 �
 
 | 호출 | 모드 |
 |------|------|
-| `//oppd 작업` | semi-agentic (기본) |
+| `//oppd 작업` | agentic (신규 기본) — 정상 전 구간과 CLOSE final까지 PM 자율 |
+| `//oppd --semi-agentic 작업` | semi-agentic — Phase 1+2까지 사용자 검토 |
 | `//oppd --interactive 작업` | interactive — 모든 단계 사용자 승인 |
-| `//oppd --agentic 작업` | agentic — 정상 전 구간과 CLOSE final까지 PM 자율 |
 | `//oppd --wbs 작업` | `--wbs` 플래그와 조합 가능 |
 
 ### 자율 게이트 흐름 (semi-agentic)

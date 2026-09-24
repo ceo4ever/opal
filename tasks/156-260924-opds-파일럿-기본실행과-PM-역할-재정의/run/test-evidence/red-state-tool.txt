@@ -1,0 +1,688 @@
+....FFFFFFFFFFFFFF.FFFF                                  [100%]
+=================================== FAILURES ===================================
+_ StartResolutionCliContractTest.test_s1_new_task_agentic_worktree_defaults (skill='opd') _
+
+self = <test_start_resolution.StartResolutionCliContractTest testMethod=test_s1_new_task_agentic_worktree_defaults>
+
+    def test_s1_new_task_agentic_worktree_defaults(self):
+        for skill in AGENTIC_WORKTREE_SKILLS:
+            with self.subTest(skill=skill):
+                task = self.root / f"new-{skill}"
+                result = self._run(
+                    "resolve-start", str(task), "--skill", skill, "--new-task",
+                )
+>               payload = self._assert_ok(result)
+                          ^^^^^^^^^^^^^^^^^^^^^^^
+
+opal/tools/state-tool/tests/test_start_resolution.py:93: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/state-tool/tests/test_start_resolution.py:59: in _assert_ok
+    self.assertEqual(completed.returncode, 0, completed.stderr or completed.stdout)
+E   AssertionError: 2 != 0 : usage: state-tool [-h] <command> ...
+E   state-tool: error: argument <command>: invalid choice: 'resolve-start' (choose from init, show, resolve-mode, advance, mark, block, validate, add-row, status, run-start, finalize-attribution, boot-summary, boot-brief, gate-pass, spec-validate, event-verify, verify, log-event, gate-request, gate-resolve)
+_ StartResolutionCliContractTest.test_s1_new_task_agentic_worktree_defaults (skill='opds') _
+
+self = <test_start_resolution.StartResolutionCliContractTest testMethod=test_s1_new_task_agentic_worktree_defaults>
+
+    def test_s1_new_task_agentic_worktree_defaults(self):
+        for skill in AGENTIC_WORKTREE_SKILLS:
+            with self.subTest(skill=skill):
+                task = self.root / f"new-{skill}"
+                result = self._run(
+                    "resolve-start", str(task), "--skill", skill, "--new-task",
+                )
+>               payload = self._assert_ok(result)
+                          ^^^^^^^^^^^^^^^^^^^^^^^
+
+opal/tools/state-tool/tests/test_start_resolution.py:93: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/state-tool/tests/test_start_resolution.py:59: in _assert_ok
+    self.assertEqual(completed.returncode, 0, completed.stderr or completed.stdout)
+E   AssertionError: 2 != 0 : usage: state-tool [-h] <command> ...
+E   state-tool: error: argument <command>: invalid choice: 'resolve-start' (choose from init, show, resolve-mode, advance, mark, block, validate, add-row, status, run-start, finalize-attribution, boot-summary, boot-brief, gate-pass, spec-validate, event-verify, verify, log-event, gate-request, gate-resolve)
+_ StartResolutionCliContractTest.test_s1_new_task_agentic_worktree_defaults (skill='oppd') _
+
+self = <test_start_resolution.StartResolutionCliContractTest testMethod=test_s1_new_task_agentic_worktree_defaults>
+
+    def test_s1_new_task_agentic_worktree_defaults(self):
+        for skill in AGENTIC_WORKTREE_SKILLS:
+            with self.subTest(skill=skill):
+                task = self.root / f"new-{skill}"
+                result = self._run(
+                    "resolve-start", str(task), "--skill", skill, "--new-task",
+                )
+>               payload = self._assert_ok(result)
+                          ^^^^^^^^^^^^^^^^^^^^^^^
+
+opal/tools/state-tool/tests/test_start_resolution.py:93: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/state-tool/tests/test_start_resolution.py:59: in _assert_ok
+    self.assertEqual(completed.returncode, 0, completed.stderr or completed.stdout)
+E   AssertionError: 2 != 0 : usage: state-tool [-h] <command> ...
+E   state-tool: error: argument <command>: invalid choice: 'resolve-start' (choose from init, show, resolve-mode, advance, mark, block, validate, add-row, status, run-start, finalize-attribution, boot-summary, boot-brief, gate-pass, spec-validate, event-verify, verify, log-event, gate-request, gate-resolve)
+_ StartResolutionCliContractTest.test_s1_new_task_agentic_worktree_defaults (skill='oppl') _
+
+self = <test_start_resolution.StartResolutionCliContractTest testMethod=test_s1_new_task_agentic_worktree_defaults>
+
+    def test_s1_new_task_agentic_worktree_defaults(self):
+        for skill in AGENTIC_WORKTREE_SKILLS:
+            with self.subTest(skill=skill):
+                task = self.root / f"new-{skill}"
+                result = self._run(
+                    "resolve-start", str(task), "--skill", skill, "--new-task",
+                )
+>               payload = self._assert_ok(result)
+                          ^^^^^^^^^^^^^^^^^^^^^^^
+
+opal/tools/state-tool/tests/test_start_resolution.py:93: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/state-tool/tests/test_start_resolution.py:59: in _assert_ok
+    self.assertEqual(completed.returncode, 0, completed.stderr or completed.stdout)
+E   AssertionError: 2 != 0 : usage: state-tool [-h] <command> ...
+E   state-tool: error: argument <command>: invalid choice: 'resolve-start' (choose from init, show, resolve-mode, advance, mark, block, validate, add-row, status, run-start, finalize-attribution, boot-summary, boot-brief, gate-pass, spec-validate, event-verify, verify, log-event, gate-request, gate-resolve)
+_ StartResolutionCliContractTest.test_s1_new_task_agentic_worktree_defaults (skill='oppb') _
+
+self = <test_start_resolution.StartResolutionCliContractTest testMethod=test_s1_new_task_agentic_worktree_defaults>
+
+    def test_s1_new_task_agentic_worktree_defaults(self):
+        for skill in AGENTIC_WORKTREE_SKILLS:
+            with self.subTest(skill=skill):
+                task = self.root / f"new-{skill}"
+                result = self._run(
+                    "resolve-start", str(task), "--skill", skill, "--new-task",
+                )
+>               payload = self._assert_ok(result)
+                          ^^^^^^^^^^^^^^^^^^^^^^^
+
+opal/tools/state-tool/tests/test_start_resolution.py:93: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/state-tool/tests/test_start_resolution.py:59: in _assert_ok
+    self.assertEqual(completed.returncode, 0, completed.stderr or completed.stdout)
+E   AssertionError: 2 != 0 : usage: state-tool [-h] <command> ...
+E   state-tool: error: argument <command>: invalid choice: 'resolve-start' (choose from init, show, resolve-mode, advance, mark, block, validate, add-row, status, run-start, finalize-attribution, boot-summary, boot-brief, gate-pass, spec-validate, event-verify, verify, log-event, gate-request, gate-resolve)
+_ StartResolutionCliContractTest.test_s1_new_task_semi_agentic_hub_defaults (skill='opp') _
+
+self = <test_start_resolution.StartResolutionCliContractTest testMethod=test_s1_new_task_semi_agentic_hub_defaults>
+
+    def test_s1_new_task_semi_agentic_hub_defaults(self):
+        for skill in SEMI_HUB_SKILLS:
+            with self.subTest(skill=skill):
+                task = self.root / f"new-{skill}"
+                result = self._run(
+                    "resolve-start", str(task), "--skill", skill, "--new-task",
+                )
+>               payload = self._assert_ok(result)
+                          ^^^^^^^^^^^^^^^^^^^^^^^
+
+opal/tools/state-tool/tests/test_start_resolution.py:107: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/state-tool/tests/test_start_resolution.py:59: in _assert_ok
+    self.assertEqual(completed.returncode, 0, completed.stderr or completed.stdout)
+E   AssertionError: 2 != 0 : usage: state-tool [-h] <command> ...
+E   state-tool: error: argument <command>: invalid choice: 'resolve-start' (choose from init, show, resolve-mode, advance, mark, block, validate, add-row, status, run-start, finalize-attribution, boot-summary, boot-brief, gate-pass, spec-validate, event-verify, verify, log-event, gate-request, gate-resolve)
+_ StartResolutionCliContractTest.test_s1_new_task_semi_agentic_hub_defaults (skill='opwt') _
+
+self = <test_start_resolution.StartResolutionCliContractTest testMethod=test_s1_new_task_semi_agentic_hub_defaults>
+
+    def test_s1_new_task_semi_agentic_hub_defaults(self):
+        for skill in SEMI_HUB_SKILLS:
+            with self.subTest(skill=skill):
+                task = self.root / f"new-{skill}"
+                result = self._run(
+                    "resolve-start", str(task), "--skill", skill, "--new-task",
+                )
+>               payload = self._assert_ok(result)
+                          ^^^^^^^^^^^^^^^^^^^^^^^
+
+opal/tools/state-tool/tests/test_start_resolution.py:107: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/state-tool/tests/test_start_resolution.py:59: in _assert_ok
+    self.assertEqual(completed.returncode, 0, completed.stderr or completed.stdout)
+E   AssertionError: 2 != 0 : usage: state-tool [-h] <command> ...
+E   state-tool: error: argument <command>: invalid choice: 'resolve-start' (choose from init, show, resolve-mode, advance, mark, block, validate, add-row, status, run-start, finalize-attribution, boot-summary, boot-brief, gate-pass, spec-validate, event-verify, verify, log-event, gate-request, gate-resolve)
+_ StartResolutionCliContractTest.test_s1_new_task_semi_agentic_hub_defaults (skill='opsdd') _
+
+self = <test_start_resolution.StartResolutionCliContractTest testMethod=test_s1_new_task_semi_agentic_hub_defaults>
+
+    def test_s1_new_task_semi_agentic_hub_defaults(self):
+        for skill in SEMI_HUB_SKILLS:
+            with self.subTest(skill=skill):
+                task = self.root / f"new-{skill}"
+                result = self._run(
+                    "resolve-start", str(task), "--skill", skill, "--new-task",
+                )
+>               payload = self._assert_ok(result)
+                          ^^^^^^^^^^^^^^^^^^^^^^^
+
+opal/tools/state-tool/tests/test_start_resolution.py:107: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/state-tool/tests/test_start_resolution.py:59: in _assert_ok
+    self.assertEqual(completed.returncode, 0, completed.stderr or completed.stdout)
+E   AssertionError: 2 != 0 : usage: state-tool [-h] <command> ...
+E   state-tool: error: argument <command>: invalid choice: 'resolve-start' (choose from init, show, resolve-mode, advance, mark, block, validate, add-row, status, run-start, finalize-attribution, boot-summary, boot-brief, gate-pass, spec-validate, event-verify, verify, log-event, gate-request, gate-resolve)
+_ StartResolutionCliContractTest.test_s1_new_task_semi_agentic_hub_defaults (skill='opdd') _
+
+self = <test_start_resolution.StartResolutionCliContractTest testMethod=test_s1_new_task_semi_agentic_hub_defaults>
+
+    def test_s1_new_task_semi_agentic_hub_defaults(self):
+        for skill in SEMI_HUB_SKILLS:
+            with self.subTest(skill=skill):
+                task = self.root / f"new-{skill}"
+                result = self._run(
+                    "resolve-start", str(task), "--skill", skill, "--new-task",
+                )
+>               payload = self._assert_ok(result)
+                          ^^^^^^^^^^^^^^^^^^^^^^^
+
+opal/tools/state-tool/tests/test_start_resolution.py:107: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/state-tool/tests/test_start_resolution.py:59: in _assert_ok
+    self.assertEqual(completed.returncode, 0, completed.stderr or completed.stdout)
+E   AssertionError: 2 != 0 : usage: state-tool [-h] <command> ...
+E   state-tool: error: argument <command>: invalid choice: 'resolve-start' (choose from init, show, resolve-mode, advance, mark, block, validate, add-row, status, run-start, finalize-attribution, boot-summary, boot-brief, gate-pass, spec-validate, event-verify, verify, log-event, gate-request, gate-resolve)
+_ StartResolutionCliContractTest.test_s1_new_task_semi_agentic_hub_defaults (skill='opgc') _
+
+self = <test_start_resolution.StartResolutionCliContractTest testMethod=test_s1_new_task_semi_agentic_hub_defaults>
+
+    def test_s1_new_task_semi_agentic_hub_defaults(self):
+        for skill in SEMI_HUB_SKILLS:
+            with self.subTest(skill=skill):
+                task = self.root / f"new-{skill}"
+                result = self._run(
+                    "resolve-start", str(task), "--skill", skill, "--new-task",
+                )
+>               payload = self._assert_ok(result)
+                          ^^^^^^^^^^^^^^^^^^^^^^^
+
+opal/tools/state-tool/tests/test_start_resolution.py:107: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/state-tool/tests/test_start_resolution.py:59: in _assert_ok
+    self.assertEqual(completed.returncode, 0, completed.stderr or completed.stdout)
+E   AssertionError: 2 != 0 : usage: state-tool [-h] <command> ...
+E   state-tool: error: argument <command>: invalid choice: 'resolve-start' (choose from init, show, resolve-mode, advance, mark, block, validate, add-row, status, run-start, finalize-attribution, boot-summary, boot-brief, gate-pass, spec-validate, event-verify, verify, log-event, gate-request, gate-resolve)
+_ StartResolutionCliContractTest.test_s1_new_task_semi_agentic_hub_defaults (skill='opdw') _
+
+self = <test_start_resolution.StartResolutionCliContractTest testMethod=test_s1_new_task_semi_agentic_hub_defaults>
+
+    def test_s1_new_task_semi_agentic_hub_defaults(self):
+        for skill in SEMI_HUB_SKILLS:
+            with self.subTest(skill=skill):
+                task = self.root / f"new-{skill}"
+                result = self._run(
+                    "resolve-start", str(task), "--skill", skill, "--new-task",
+                )
+>               payload = self._assert_ok(result)
+                          ^^^^^^^^^^^^^^^^^^^^^^^
+
+opal/tools/state-tool/tests/test_start_resolution.py:107: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/state-tool/tests/test_start_resolution.py:59: in _assert_ok
+    self.assertEqual(completed.returncode, 0, completed.stderr or completed.stdout)
+E   AssertionError: 2 != 0 : usage: state-tool [-h] <command> ...
+E   state-tool: error: argument <command>: invalid choice: 'resolve-start' (choose from init, show, resolve-mode, advance, mark, block, validate, add-row, status, run-start, finalize-attribution, boot-summary, boot-brief, gate-pass, spec-validate, event-verify, verify, log-event, gate-request, gate-resolve)
+_ StartResolutionCliContractTest.test_s2_opd_opds_default_actor_coordinator_persisted (skill='opd') _
+
+self = <test_start_resolution.StartResolutionCliContractTest testMethod=test_s2_opd_opds_default_actor_coordinator_persisted>
+
+    def test_s2_opd_opds_default_actor_coordinator_persisted(self):
+        for skill in ("opd", "opds"):
+            with self.subTest(skill=skill):
+                task = self.root / f"actor-{skill}"
+>               resolved = self._assert_ok(self._run(
+                    "resolve-start", str(task), "--skill", skill, "--new-task",
+                ))
+
+opal/tools/state-tool/tests/test_start_resolution.py:122: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/state-tool/tests/test_start_resolution.py:59: in _assert_ok
+    self.assertEqual(completed.returncode, 0, completed.stderr or completed.stdout)
+E   AssertionError: 2 != 0 : usage: state-tool [-h] <command> ...
+E   state-tool: error: argument <command>: invalid choice: 'resolve-start' (choose from init, show, resolve-mode, advance, mark, block, validate, add-row, status, run-start, finalize-attribution, boot-summary, boot-brief, gate-pass, spec-validate, event-verify, verify, log-event, gate-request, gate-resolve)
+_ StartResolutionCliContractTest.test_s2_opd_opds_default_actor_coordinator_persisted (skill='opds') _
+
+self = <test_start_resolution.StartResolutionCliContractTest testMethod=test_s2_opd_opds_default_actor_coordinator_persisted>
+
+    def test_s2_opd_opds_default_actor_coordinator_persisted(self):
+        for skill in ("opd", "opds"):
+            with self.subTest(skill=skill):
+                task = self.root / f"actor-{skill}"
+>               resolved = self._assert_ok(self._run(
+                    "resolve-start", str(task), "--skill", skill, "--new-task",
+                ))
+
+opal/tools/state-tool/tests/test_start_resolution.py:122: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/state-tool/tests/test_start_resolution.py:59: in _assert_ok
+    self.assertEqual(completed.returncode, 0, completed.stderr or completed.stdout)
+E   AssertionError: 2 != 0 : usage: state-tool [-h] <command> ...
+E   state-tool: error: argument <command>: invalid choice: 'resolve-start' (choose from init, show, resolve-mode, advance, mark, block, validate, add-row, status, run-start, finalize-attribution, boot-summary, boot-brief, gate-pass, spec-validate, event-verify, verify, log-event, gate-request, gate-resolve)
+_ StartResolutionCliContractTest.test_s2_oppd_oppl_oppb_default_actor_worker_no_key (skill='oppd') _
+
+self = <test_start_resolution.StartResolutionCliContractTest testMethod=test_s2_oppd_oppl_oppb_default_actor_worker_no_key>
+
+    def test_s2_oppd_oppl_oppb_default_actor_worker_no_key(self):
+        for skill in ("oppd", "oppl", "oppb"):
+            with self.subTest(skill=skill):
+                task = self.root / f"actor-{skill}"
+>               resolved = self._assert_ok(self._run(
+                    "resolve-start", str(task), "--skill", skill, "--new-task",
+                ))
+
+opal/tools/state-tool/tests/test_start_resolution.py:135: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/state-tool/tests/test_start_resolution.py:59: in _assert_ok
+    self.assertEqual(completed.returncode, 0, completed.stderr or completed.stdout)
+E   AssertionError: 2 != 0 : usage: state-tool [-h] <command> ...
+E   state-tool: error: argument <command>: invalid choice: 'resolve-start' (choose from init, show, resolve-mode, advance, mark, block, validate, add-row, status, run-start, finalize-attribution, boot-summary, boot-brief, gate-pass, spec-validate, event-verify, verify, log-event, gate-request, gate-resolve)
+_ StartResolutionCliContractTest.test_s2_oppd_oppl_oppb_default_actor_worker_no_key (skill='oppl') _
+
+self = <test_start_resolution.StartResolutionCliContractTest testMethod=test_s2_oppd_oppl_oppb_default_actor_worker_no_key>
+
+    def test_s2_oppd_oppl_oppb_default_actor_worker_no_key(self):
+        for skill in ("oppd", "oppl", "oppb"):
+            with self.subTest(skill=skill):
+                task = self.root / f"actor-{skill}"
+>               resolved = self._assert_ok(self._run(
+                    "resolve-start", str(task), "--skill", skill, "--new-task",
+                ))
+
+opal/tools/state-tool/tests/test_start_resolution.py:135: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/state-tool/tests/test_start_resolution.py:59: in _assert_ok
+    self.assertEqual(completed.returncode, 0, completed.stderr or completed.stdout)
+E   AssertionError: 2 != 0 : usage: state-tool [-h] <command> ...
+E   state-tool: error: argument <command>: invalid choice: 'resolve-start' (choose from init, show, resolve-mode, advance, mark, block, validate, add-row, status, run-start, finalize-attribution, boot-summary, boot-brief, gate-pass, spec-validate, event-verify, verify, log-event, gate-request, gate-resolve)
+_ StartResolutionCliContractTest.test_s2_oppd_oppl_oppb_default_actor_worker_no_key (skill='oppb') _
+
+self = <test_start_resolution.StartResolutionCliContractTest testMethod=test_s2_oppd_oppl_oppb_default_actor_worker_no_key>
+
+    def test_s2_oppd_oppl_oppb_default_actor_worker_no_key(self):
+        for skill in ("oppd", "oppl", "oppb"):
+            with self.subTest(skill=skill):
+                task = self.root / f"actor-{skill}"
+>               resolved = self._assert_ok(self._run(
+                    "resolve-start", str(task), "--skill", skill, "--new-task",
+                ))
+
+opal/tools/state-tool/tests/test_start_resolution.py:135: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/state-tool/tests/test_start_resolution.py:59: in _assert_ok
+    self.assertEqual(completed.returncode, 0, completed.stderr or completed.stdout)
+E   AssertionError: 2 != 0 : usage: state-tool [-h] <command> ...
+E   state-tool: error: argument <command>: invalid choice: 'resolve-start' (choose from init, show, resolve-mode, advance, mark, block, validate, add-row, status, run-start, finalize-attribution, boot-summary, boot-brief, gate-pass, spec-validate, event-verify, verify, log-event, gate-request, gate-resolve)
+______ StartResolutionCliContractTest.test_s2_oppd_with_pm_flag_rejected _______
+
+self = <test_start_resolution.StartResolutionCliContractTest testMethod=test_s2_oppd_with_pm_flag_rejected>
+
+    def test_s2_oppd_with_pm_flag_rejected(self):
+        task = self.root / "oppd-pm"
+>       self._assert_err(
+            self._run(
+                "resolve-start", str(task), "--skill", "oppd", "--new-task", "--pm",
+            ),
+            "actor_unsupported_for_skill",
+        )
+
+opal/tools/state-tool/tests/test_start_resolution.py:146: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/state-tool/tests/test_start_resolution.py:66: in _assert_err
+    self.assertEqual(completed.returncode, 1, completed.stderr or completed.stdout)
+E   AssertionError: 2 != 1 : usage: state-tool [-h] <command> ...
+E   state-tool: error: argument <command>: invalid choice: 'resolve-start' (choose from init, show, resolve-mode, advance, mark, block, validate, add-row, status, run-start, finalize-attribution, boot-summary, boot-brief, gate-pass, spec-validate, event-verify, verify, log-event, gate-request, gate-resolve)
+_ StartResolutionCliContractTest.test_s3_agentic_hub_worker_resumes_stored_values _
+
+self = <test_start_resolution.StartResolutionCliContractTest testMethod=test_s3_agentic_hub_worker_resumes_stored_values>
+
+    def test_s3_agentic_hub_worker_resumes_stored_values(self):
+        task = self._make_existing_state("resume-d", mode="agentic")
+>       resolved = self._assert_ok(self._run("resolve-start", str(task), "--skill", "oppd"))
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+opal/tools/state-tool/tests/test_start_resolution.py:215: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/state-tool/tests/test_start_resolution.py:59: in _assert_ok
+    self.assertEqual(completed.returncode, 0, completed.stderr or completed.stdout)
+E   AssertionError: 2 != 0 : usage: state-tool [-h] <command> ...
+E   state-tool: error: argument <command>: invalid choice: 'resolve-start' (choose from init, show, resolve-mode, advance, mark, block, validate, add-row, status, run-start, finalize-attribution, boot-summary, boot-brief, gate-pass, spec-validate, event-verify, verify, log-event, gate-request, gate-resolve)
+_ StartResolutionCliContractTest.test_s3_agentic_worktree_coordinator_resumes_stored_values _
+
+self = <test_start_resolution.StartResolutionCliContractTest testMethod=test_s3_agentic_worktree_coordinator_resumes_stored_values>
+
+    def test_s3_agentic_worktree_coordinator_resumes_stored_values(self):
+        task = self._make_existing_state(
+            "resume-a", mode="agentic",
+            extra={"worktree": str(self.root / "wt-a"), "actor": "coordinator"},
+        )
+>       resolved = self._assert_ok(self._run("resolve-start", str(task), "--skill", "opd"))
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+opal/tools/state-tool/tests/test_start_resolution.py:178: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/state-tool/tests/test_start_resolution.py:59: in _assert_ok
+    self.assertEqual(completed.returncode, 0, completed.stderr or completed.stdout)
+E   AssertionError: 2 != 0 : usage: state-tool [-h] <command> ...
+E   state-tool: error: argument <command>: invalid choice: 'resolve-start' (choose from init, show, resolve-mode, advance, mark, block, validate, add-row, status, run-start, finalize-attribution, boot-summary, boot-brief, gate-pass, spec-validate, event-verify, verify, log-event, gate-request, gate-resolve)
+_ StartResolutionCliContractTest.test_s3_explicit_mode_flag_updates_mode_only __
+
+self = <test_start_resolution.StartResolutionCliContractTest testMethod=test_s3_explicit_mode_flag_updates_mode_only>
+
+    def test_s3_explicit_mode_flag_updates_mode_only(self):
+        task = self._make_existing_state(
+            "resume-mode-only", mode="agentic",
+            extra={"worktree": str(self.root / "wt-mode-only"), "actor": "coordinator"},
+        )
+        before = json.loads((task / "state.json").read_text(encoding="utf-8"))
+>       resolved = self._assert_ok(self._run(
+            "resolve-start", str(task), "--skill", "opd", "--interactive",
+        ))
+
+opal/tools/state-tool/tests/test_start_resolution.py:261: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/state-tool/tests/test_start_resolution.py:59: in _assert_ok
+    self.assertEqual(completed.returncode, 0, completed.stderr or completed.stdout)
+E   AssertionError: 2 != 0 : usage: state-tool [-h] <command> ...
+E   state-tool: error: argument <command>: invalid choice: 'resolve-start' (choose from init, show, resolve-mode, advance, mark, block, validate, add-row, status, run-start, finalize-attribution, boot-summary, boot-brief, gate-pass, spec-validate, event-verify, verify, log-event, gate-request, gate-resolve)
+_ StartResolutionCliContractTest.test_s3_interactive_worktree_legacy_pm_advance_ok _
+
+self = <test_start_resolution.StartResolutionCliContractTest testMethod=test_s3_interactive_worktree_legacy_pm_advance_ok>
+
+    def test_s3_interactive_worktree_legacy_pm_advance_ok(self):
+        task = self._make_existing_state(
+            "resume-c", mode="interactive",
+            extra={"worktree": str(self.root / "wt-c"), "actor": "pm"},
+        )
+>       resolved = self._assert_ok(self._run("resolve-start", str(task), "--skill", "opd"))
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+opal/tools/state-tool/tests/test_start_resolution.py:199: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/state-tool/tests/test_start_resolution.py:59: in _assert_ok
+    self.assertEqual(completed.returncode, 0, completed.stderr or completed.stdout)
+E   AssertionError: 2 != 0 : usage: state-tool [-h] <command> ...
+E   state-tool: error: argument <command>: invalid choice: 'resolve-start' (choose from init, show, resolve-mode, advance, mark, block, validate, add-row, status, run-start, finalize-attribution, boot-summary, boot-brief, gate-pass, spec-validate, event-verify, verify, log-event, gate-request, gate-resolve)
+_ StartResolutionCliContractTest.test_s3_invalid_stored_mode_falls_back_interactive_fail_closed _
+
+self = <test_start_resolution.StartResolutionCliContractTest testMethod=test_s3_invalid_stored_mode_falls_back_interactive_fail_closed>
+
+    def test_s3_invalid_stored_mode_falls_back_interactive_fail_closed(self):
+        task = self.root / "resume-e"
+        task.mkdir(parents=True)
+        completed, payload = self._run(
+            "init", str(task), "--skill", "opd", "--mode", "agentic",
+            "--rows-spec", ROWS,
+        )
+        self.assertEqual(completed.returncode, 0, completed.stderr or completed.stdout)
+        state_path = task / "state.json"
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+        state["mode"] = "bogus-mode"
+        state_path.write_text(json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8")
+>       resolved = self._assert_ok(self._run("resolve-start", str(task), "--skill", "opd"))
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+opal/tools/state-tool/tests/test_start_resolution.py:233: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/state-tool/tests/test_start_resolution.py:59: in _assert_ok
+    self.assertEqual(completed.returncode, 0, completed.stderr or completed.stdout)
+E   AssertionError: 2 != 0 : usage: state-tool [-h] <command> ...
+E   state-tool: error: argument <command>: invalid choice: 'resolve-start' (choose from init, show, resolve-mode, advance, mark, block, validate, add-row, status, run-start, finalize-attribution, boot-summary, boot-brief, gate-pass, spec-validate, event-verify, verify, log-event, gate-request, gate-resolve)
+_ StartResolutionCliContractTest.test_s3_resume_axis_locked_on_workspace_and_actor_flag_change _
+
+self = <test_start_resolution.StartResolutionCliContractTest testMethod=test_s3_resume_axis_locked_on_workspace_and_actor_flag_change>
+
+    def test_s3_resume_axis_locked_on_workspace_and_actor_flag_change(self):
+        task = self._make_existing_state(
+            "resume-lock-ws", mode="agentic",
+            extra={"worktree": str(self.root / "wt-lock"), "actor": "coordinator"},
+        )
+>       payload = self._assert_err(
+            self._run("resolve-start", str(task), "--skill", "opd", "--no-wt"),
+            "resume_axis_locked",
+        )
+
+opal/tools/state-tool/tests/test_start_resolution.py:242: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/state-tool/tests/test_start_resolution.py:66: in _assert_err
+    self.assertEqual(completed.returncode, 1, completed.stderr or completed.stdout)
+E   AssertionError: 2 != 1 : usage: state-tool [-h] <command> ...
+E   state-tool: error: argument <command>: invalid choice: 'resolve-start' (choose from init, show, resolve-mode, advance, mark, block, validate, add-row, status, run-start, finalize-attribution, boot-summary, boot-brief, gate-pass, spec-validate, event-verify, verify, log-event, gate-request, gate-resolve)
+_ StartResolutionCliContractTest.test_s3_semi_agentic_hub_no_actor_key_legacy_default_worker _
+
+self = <test_start_resolution.StartResolutionCliContractTest testMethod=test_s3_semi_agentic_hub_no_actor_key_legacy_default_worker>
+
+    def test_s3_semi_agentic_hub_no_actor_key_legacy_default_worker(self):
+        task = self._make_existing_state("resume-b", mode="semi-agentic")
+>       resolved = self._assert_ok(self._run("resolve-start", str(task), "--skill", "opp"))
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+opal/tools/state-tool/tests/test_start_resolution.py:188: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/state-tool/tests/test_start_resolution.py:59: in _assert_ok
+    self.assertEqual(completed.returncode, 0, completed.stderr or completed.stdout)
+E   AssertionError: 2 != 0 : usage: state-tool [-h] <command> ...
+E   state-tool: error: argument <command>: invalid choice: 'resolve-start' (choose from init, show, resolve-mode, advance, mark, block, validate, add-row, status, run-start, finalize-attribution, boot-summary, boot-brief, gate-pass, spec-validate, event-verify, verify, log-event, gate-request, gate-resolve)
+__________ StartResolutionCliContractTest.test_s4_actor_flag_conflict __________
+
+self = <test_start_resolution.StartResolutionCliContractTest testMethod=test_s4_actor_flag_conflict>
+
+    def test_s4_actor_flag_conflict(self):
+        task = self.root / "conflict-actor"
+>       self._assert_err(
+            self._run(
+                "resolve-start", str(task), "--skill", "opd", "--new-task",
+                "--pm", "--no-pm",
+            ),
+            "actor_flag_conflict",
+        )
+
+opal/tools/state-tool/tests/test_start_resolution.py:299: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/state-tool/tests/test_start_resolution.py:66: in _assert_err
+    self.assertEqual(completed.returncode, 1, completed.stderr or completed.stdout)
+E   AssertionError: 2 != 1 : usage: state-tool [-h] <command> ...
+E   state-tool: error: argument <command>: invalid choice: 'resolve-start' (choose from init, show, resolve-mode, advance, mark, block, validate, add-row, status, run-start, finalize-attribution, boot-summary, boot-brief, gate-pass, spec-validate, event-verify, verify, log-event, gate-request, gate-resolve)
+_________ StartResolutionCliContractTest.test_s4_init_actor_pm_retired _________
+
+self = <test_start_resolution.StartResolutionCliContractTest testMethod=test_s4_init_actor_pm_retired>
+
+    def test_s4_init_actor_pm_retired(self):
+        task = self.root / "init-actor-pm-retired"
+        task.mkdir(parents=True)
+>       self._assert_err(
+            self._run(
+                "init", str(task), "--skill", "opds", "--mode", "agentic",
+                "--rows-spec", ROWS, "--actor", "pm",
+            ),
+            "actor_pm_retired",
+        )
+
+opal/tools/state-tool/tests/test_start_resolution.py:321: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/state-tool/tests/test_start_resolution.py:66: in _assert_err
+    self.assertEqual(completed.returncode, 1, completed.stderr or completed.stdout)
+E   AssertionError: 0 != 1 : {"ok": true, "command": "init", "task_path": "/private/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/tmp4ds2pv28/init-actor-pm-retired", "task_id": "init-actor-pm-retired", "rows_count": 2, "created_at": "2026-09-24 16:45:31", "import_existing": false, "todo_mirror": {"action": "create", "todos": [{"id": "stage:TASK", "content": "TASK 단계", "activeForm": "TASK 단계 진행 중", "status": "pending"}, {"id": "stage:EXECUTE", "content": "EXECUTE 단계", "activeForm": "EXECUTE 단계 진행 중", "status": "pending"}]}, "run_id": "run_dceb8010-87b9-42ed-885e-0ea78bd54eff", "run_log": {"contract_version": "1.0", "mode": "shadow", "completion_profile": "cooperative", "completion_profile_receipt": null, "active_run_id": "run_dceb8010-87b9-42ed-885e-0ea78bd54eff", "status": "active", "pending_events": []}, "status": "active"}
+__________ StartResolutionCliContractTest.test_s4_mode_flag_conflict ___________
+
+self = <test_start_resolution.StartResolutionCliContractTest testMethod=test_s4_mode_flag_conflict>
+
+    def test_s4_mode_flag_conflict(self):
+        task = self.root / "conflict-mode"
+>       payload = self._assert_err(
+            self._run(
+                "resolve-start", str(task), "--skill", "opd", "--new-task",
+                "--agentic", "--interactive",
+            ),
+            "mode_flag_conflict",
+        )
+
+opal/tools/state-tool/tests/test_start_resolution.py:277: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/state-tool/tests/test_start_resolution.py:66: in _assert_err
+    self.assertEqual(completed.returncode, 1, completed.stderr or completed.stdout)
+E   AssertionError: 2 != 1 : usage: state-tool [-h] <command> ...
+E   state-tool: error: argument <command>: invalid choice: 'resolve-start' (choose from init, show, resolve-mode, advance, mark, block, validate, add-row, status, run-start, finalize-attribution, boot-summary, boot-brief, gate-pass, spec-validate, event-verify, verify, log-event, gate-request, gate-resolve)
+_ StartResolutionCliContractTest.test_s4_opds_no_pm_resolves_and_persists_worker _
+
+self = <test_start_resolution.StartResolutionCliContractTest testMethod=test_s4_opds_no_pm_resolves_and_persists_worker>
+
+    def test_s4_opds_no_pm_resolves_and_persists_worker(self):
+        task = self.root / "opds-no-pm"
+>       resolved = self._assert_ok(self._run(
+            "resolve-start", str(task), "--skill", "opds", "--new-task", "--no-pm",
+        ))
+
+opal/tools/state-tool/tests/test_start_resolution.py:332: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/state-tool/tests/test_start_resolution.py:59: in _assert_ok
+    self.assertEqual(completed.returncode, 0, completed.stderr or completed.stdout)
+E   AssertionError: 2 != 0 : usage: state-tool [-h] <command> ...
+E   state-tool: error: argument <command>: invalid choice: 'resolve-start' (choose from init, show, resolve-mode, advance, mark, block, validate, add-row, status, run-start, finalize-attribution, boot-summary, boot-brief, gate-pass, spec-validate, event-verify, verify, log-event, gate-request, gate-resolve)
+_ StartResolutionCliContractTest.test_s4_oppb_no_wt_workspace_required_for_skill _
+
+self = <test_start_resolution.StartResolutionCliContractTest testMethod=test_s4_oppb_no_wt_workspace_required_for_skill>
+
+    def test_s4_oppb_no_wt_workspace_required_for_skill(self):
+        task = self.root / "conflict-oppb"
+>       self._assert_err(
+            self._run(
+                "resolve-start", str(task), "--skill", "oppb", "--new-task", "--no-wt",
+            ),
+            "workspace_required_for_skill",
+        )
+
+opal/tools/state-tool/tests/test_start_resolution.py:310: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/state-tool/tests/test_start_resolution.py:66: in _assert_err
+    self.assertEqual(completed.returncode, 1, completed.stderr or completed.stdout)
+E   AssertionError: 2 != 1 : usage: state-tool [-h] <command> ...
+E   state-tool: error: argument <command>: invalid choice: 'resolve-start' (choose from init, show, resolve-mode, advance, mark, block, validate, add-row, status, run-start, finalize-attribution, boot-summary, boot-brief, gate-pass, spec-validate, event-verify, verify, log-event, gate-request, gate-resolve)
+________ StartResolutionCliContractTest.test_s4_workspace_flag_conflict ________
+
+self = <test_start_resolution.StartResolutionCliContractTest testMethod=test_s4_workspace_flag_conflict>
+
+    def test_s4_workspace_flag_conflict(self):
+        task = self.root / "conflict-ws"
+>       self._assert_err(
+            self._run(
+                "resolve-start", str(task), "--skill", "opd", "--new-task",
+                "--wt", "--no-wt",
+            ),
+            "workspace_flag_conflict",
+        )
+
+opal/tools/state-tool/tests/test_start_resolution.py:288: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/state-tool/tests/test_start_resolution.py:66: in _assert_err
+    self.assertEqual(completed.returncode, 1, completed.stderr or completed.stdout)
+E   AssertionError: 2 != 1 : usage: state-tool [-h] <command> ...
+E   state-tool: error: argument <command>: invalid choice: 'resolve-start' (choose from init, show, resolve-mode, advance, mark, block, validate, add-row, status, run-start, finalize-attribution, boot-summary, boot-brief, gate-pass, spec-validate, event-verify, verify, log-event, gate-request, gate-resolve)
+_ StartResolutionCliContractTest.test_s5_init_workspace_hub_opds_ok_no_worktree_key _
+
+self = <test_start_resolution.StartResolutionCliContractTest testMethod=test_s5_init_workspace_hub_opds_ok_no_worktree_key>
+
+    def test_s5_init_workspace_hub_opds_ok_no_worktree_key(self):
+        task = self.root / "ws-hub-opds"
+        task.mkdir(parents=True)
+        completed, payload = self._run(
+            "init", str(task), "--skill", "opds", "--mode", "agentic",
+            "--rows-spec", ROWS, "--workspace", "hub",
+        )
+>       self.assertEqual(completed.returncode, 0, completed.stderr or completed.stdout)
+E       AssertionError: 2 != 0 : usage: state-tool [-h] <command> ...
+E       state-tool: error: unrecognized arguments: --workspace hub
+
+opal/tools/state-tool/tests/test_start_resolution.py:381: AssertionError
+___ StartResolutionCliContractTest.test_s5_init_workspace_hub_oppb_rejected ____
+
+self = <test_start_resolution.StartResolutionCliContractTest testMethod=test_s5_init_workspace_hub_oppb_rejected>
+
+    def test_s5_init_workspace_hub_oppb_rejected(self):
+        task = self.root / "ws-hub-oppb"
+        task.mkdir(parents=True)
+>       self._assert_err(
+            self._run(
+                "init", str(task), "--skill", "oppb", "--mode", "agentic",
+                "--rows-spec", ROWS, "--workspace", "hub",
+            ),
+            "workspace_required_for_skill",
+        )
+
+opal/tools/state-tool/tests/test_start_resolution.py:365: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/state-tool/tests/test_start_resolution.py:66: in _assert_err
+    self.assertEqual(completed.returncode, 1, completed.stderr or completed.stdout)
+E   AssertionError: 2 != 1 : usage: state-tool [-h] <command> ...
+E   state-tool: error: unrecognized arguments: --workspace hub
+_ StartResolutionCliContractTest.test_s5_init_workspace_worktree_requires_worktree_path _
+
+self = <test_start_resolution.StartResolutionCliContractTest testMethod=test_s5_init_workspace_worktree_requires_worktree_path>
+
+    def test_s5_init_workspace_worktree_requires_worktree_path(self):
+        task = self.root / "ws-worktree-missing"
+        task.mkdir(parents=True)
+>       self._assert_err(
+            self._run(
+                "init", str(task), "--skill", "opds", "--mode", "agentic",
+                "--rows-spec", ROWS, "--workspace", "worktree",
+            ),
+            "worktree_path_required",
+        )
+
+opal/tools/state-tool/tests/test_start_resolution.py:352: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/state-tool/tests/test_start_resolution.py:66: in _assert_err
+    self.assertEqual(completed.returncode, 1, completed.stderr or completed.stdout)
+E   AssertionError: 2 != 1 : usage: state-tool [-h] <command> ...
+E   state-tool: error: unrecognized arguments: --workspace worktree
+_ StartResolutionCliContractTest.test_s5_init_workspace_worktree_with_path_ok_has_worktree_key _
+
+self = <test_start_resolution.StartResolutionCliContractTest testMethod=test_s5_init_workspace_worktree_with_path_ok_has_worktree_key>
+
+    def test_s5_init_workspace_worktree_with_path_ok_has_worktree_key(self):
+        task = self.root / "ws-worktree-ok"
+        task.mkdir(parents=True)
+        wt_path = self.root / "wt-ok"
+        completed, payload = self._run(
+            "init", str(task), "--skill", "opds", "--mode", "agentic",
+            "--rows-spec", ROWS, "--workspace", "worktree", "--worktree", str(wt_path),
+        )
+>       self.assertEqual(completed.returncode, 0, completed.stderr or completed.stdout)
+E       AssertionError: 2 != 0 : usage: state-tool [-h] <command> ...
+E       state-tool: error: unrecognized arguments: --workspace worktree
+
+opal/tools/state-tool/tests/test_start_resolution.py:394: AssertionError
+=========================== short test summary info ============================
+SUBFAILED(skill='opd') opal/tools/state-tool/tests/test_start_resolution.py::StartResolutionCliContractTest::test_s1_new_task_agentic_worktree_defaults
+SUBFAILED(skill='opds') opal/tools/state-tool/tests/test_start_resolution.py::StartResolutionCliContractTest::test_s1_new_task_agentic_worktree_defaults
+SUBFAILED(skill='oppd') opal/tools/state-tool/tests/test_start_resolution.py::StartResolutionCliContractTest::test_s1_new_task_agentic_worktree_defaults
+SUBFAILED(skill='oppl') opal/tools/state-tool/tests/test_start_resolution.py::StartResolutionCliContractTest::test_s1_new_task_agentic_worktree_defaults
+SUBFAILED(skill='oppb') opal/tools/state-tool/tests/test_start_resolution.py::StartResolutionCliContractTest::test_s1_new_task_agentic_worktree_defaults
+SUBFAILED(skill='opp') opal/tools/state-tool/tests/test_start_resolution.py::StartResolutionCliContractTest::test_s1_new_task_semi_agentic_hub_defaults
+SUBFAILED(skill='opwt') opal/tools/state-tool/tests/test_start_resolution.py::StartResolutionCliContractTest::test_s1_new_task_semi_agentic_hub_defaults
+SUBFAILED(skill='opsdd') opal/tools/state-tool/tests/test_start_resolution.py::StartResolutionCliContractTest::test_s1_new_task_semi_agentic_hub_defaults
+SUBFAILED(skill='opdd') opal/tools/state-tool/tests/test_start_resolution.py::StartResolutionCliContractTest::test_s1_new_task_semi_agentic_hub_defaults
+SUBFAILED(skill='opgc') opal/tools/state-tool/tests/test_start_resolution.py::StartResolutionCliContractTest::test_s1_new_task_semi_agentic_hub_defaults
+SUBFAILED(skill='opdw') opal/tools/state-tool/tests/test_start_resolution.py::StartResolutionCliContractTest::test_s1_new_task_semi_agentic_hub_defaults
+SUBFAILED(skill='opd') opal/tools/state-tool/tests/test_start_resolution.py::StartResolutionCliContractTest::test_s2_opd_opds_default_actor_coordinator_persisted
+SUBFAILED(skill='opds') opal/tools/state-tool/tests/test_start_resolution.py::StartResolutionCliContractTest::test_s2_opd_opds_default_actor_coordinator_persisted
+SUBFAILED(skill='oppd') opal/tools/state-tool/tests/test_start_resolution.py::StartResolutionCliContractTest::test_s2_oppd_oppl_oppb_default_actor_worker_no_key
+SUBFAILED(skill='oppl') opal/tools/state-tool/tests/test_start_resolution.py::StartResolutionCliContractTest::test_s2_oppd_oppl_oppb_default_actor_worker_no_key
+SUBFAILED(skill='oppb') opal/tools/state-tool/tests/test_start_resolution.py::StartResolutionCliContractTest::test_s2_oppd_oppl_oppb_default_actor_worker_no_key
+FAILED opal/tools/state-tool/tests/test_start_resolution.py::StartResolutionCliContractTest::test_s2_oppd_with_pm_flag_rejected
+FAILED opal/tools/state-tool/tests/test_start_resolution.py::StartResolutionCliContractTest::test_s3_agentic_hub_worker_resumes_stored_values
+FAILED opal/tools/state-tool/tests/test_start_resolution.py::StartResolutionCliContractTest::test_s3_agentic_worktree_coordinator_resumes_stored_values
+FAILED opal/tools/state-tool/tests/test_start_resolution.py::StartResolutionCliContractTest::test_s3_explicit_mode_flag_updates_mode_only
+FAILED opal/tools/state-tool/tests/test_start_resolution.py::StartResolutionCliContractTest::test_s3_interactive_worktree_legacy_pm_advance_ok
+FAILED opal/tools/state-tool/tests/test_start_resolution.py::StartResolutionCliContractTest::test_s3_invalid_stored_mode_falls_back_interactive_fail_closed
+FAILED opal/tools/state-tool/tests/test_start_resolution.py::StartResolutionCliContractTest::test_s3_resume_axis_locked_on_workspace_and_actor_flag_change
+FAILED opal/tools/state-tool/tests/test_start_resolution.py::StartResolutionCliContractTest::test_s3_semi_agentic_hub_no_actor_key_legacy_default_worker
+FAILED opal/tools/state-tool/tests/test_start_resolution.py::StartResolutionCliContractTest::test_s4_actor_flag_conflict
+FAILED opal/tools/state-tool/tests/test_start_resolution.py::StartResolutionCliContractTest::test_s4_init_actor_pm_retired
+FAILED opal/tools/state-tool/tests/test_start_resolution.py::StartResolutionCliContractTest::test_s4_mode_flag_conflict
+FAILED opal/tools/state-tool/tests/test_start_resolution.py::StartResolutionCliContractTest::test_s4_opds_no_pm_resolves_and_persists_worker
+FAILED opal/tools/state-tool/tests/test_start_resolution.py::StartResolutionCliContractTest::test_s4_oppb_no_wt_workspace_required_for_skill
+FAILED opal/tools/state-tool/tests/test_start_resolution.py::StartResolutionCliContractTest::test_s4_workspace_flag_conflict
+FAILED opal/tools/state-tool/tests/test_start_resolution.py::StartResolutionCliContractTest::test_s5_init_workspace_hub_opds_ok_no_worktree_key
+FAILED opal/tools/state-tool/tests/test_start_resolution.py::StartResolutionCliContractTest::test_s5_init_workspace_hub_oppb_rejected
+FAILED opal/tools/state-tool/tests/test_start_resolution.py::StartResolutionCliContractTest::test_s5_init_workspace_worktree_requires_worktree_path
+FAILED opal/tools/state-tool/tests/test_start_resolution.py::StartResolutionCliContractTest::test_s5_init_workspace_worktree_with_path_ok_has_worktree_key
+34 failed, 5 passed in 4.92s

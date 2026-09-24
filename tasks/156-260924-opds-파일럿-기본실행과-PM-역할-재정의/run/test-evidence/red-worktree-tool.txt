@@ -1,0 +1,59 @@
+FF.                                                                      [100%]
+=================================== FAILURES ===================================
+____________ test_t156_s6_linked_worktree_project_root_is_rejected _____________
+
+project_b = ProjectB(root=PosixPath('/private/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/pytest-of-iskang/pytest-1381/test_t1...kvjn3mxfk6nyzkw_8b740000gn/T/pytest-of-iskang/pytest-1381/test_t156_s6_linked_worktree_p0/proj_b/.opal/worktree.json'))
+
+    def test_t156_s6_linked_worktree_project_root_is_rejected(project_b: ProjectB):
+        """[T156/DEC-9] S-6(a) — --project-root가 실제 `git worktree add`로 만든 linked
+        worktree(git-dir != git-common-dir)면 PROJECT_ROOT_IS_WORKTREE로 거부되고 새
+        worktree·브랜치·meta가 생기지 않는다."""
+        linked_dest = project_b.root.parent / "linked_901"
+        add_worktree(project_b.root, "feat/OP-TASK-901-linked", linked_dest, base="main")
+        _copy_worktree_config(project_b.root, linked_dest)
+    
+        result = run_worktree_cli(
+            ["create", "--project-root", str(linked_dest), "--task", "901"]
+        )
+        payload = parse_json_stdout(result, "create(S-6a linked worktree)")
+>       assert payload.get("ok") is False, f"linked worktree project-root가 거부되지 않음: {payload}"
+E       AssertionError: linked worktree project-root가 거부되지 않음: {'ok': True, 'error': None, 'command': 'create', 'task': '901', 'allocator_root': '/private/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/pytest-of-iskang/pytest-1381/test_t156_s6_linked_worktree_p0/linked_901', 'task_home': '/private/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/pytest-of-iskang/pytest-1381/test_t156_s6_linked_worktree_p0/linked_901/.opal-worktrees/task_901', 'task_folder': None, 'task_path': None, 'artifact_repo': '.', 'task_ownership_version': 2, 'layout': 'monorepo', 'worktree_root': '/private/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/pytest-of-iskang/pytest-1381/test_t156_s6_linked_worktree_p0/linked_901/.opal-worktrees/task_901', 'branch': 'feat/OP-TASK-901', 'entries': [{'repo': '/private/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/pytest-of-iskang/pytest-1381/test_t156_s6_linked_worktree_p0/linked_901', 'path': '/private/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/pytest-of-iskang/pytest-1381/test_t156_s6_linked_worktree_p0/linked_901/.opal-worktrees/task_901', 'branch': 'feat/OP-TASK-901', 'base_ref': 'origin/main'}], 'gitignore': 'created', 'settings_provisioned': None, 'copied': [], 'pending_setup': [], 'port_offset': 100, 'warnings': []}
+E       assert True is False
+E        +  where True = <built-in method get of dict object at 0x1094cfe00>('ok')
+E        +    where <built-in method get of dict object at 0x1094cfe00> = {'ok': True, 'error': None, 'command': 'create', 'task': '901', ...}.get
+
+opal/tools/worktree-tool/tests/test_worktree_tool.py:4326: AssertionError
+_________ test_t156_s6_nested_opal_worktrees_project_root_is_rejected __________
+
+project_b = ProjectB(root=PosixPath('/private/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/pytest-of-iskang/pytest-1381/test_t1...kvjn3mxfk6nyzkw_8b740000gn/T/pytest-of-iskang/pytest-1381/test_t156_s6_nested_opal_workt0/proj_b/.opal/worktree.json'))
+
+    def test_t156_s6_nested_opal_worktrees_project_root_is_rejected(project_b: ProjectB):
+        """[T156/DEC-9] S-6(b) — --project-root가 조상 허브 `H/.opal-worktrees/`
+        (H에 `.opal-worktrees/.meta` 디렉터리 존재) 아래면 PROJECT_ROOT_IS_WORKTREE로
+        거부되고 새 worktree·브랜치·meta가 생기지 않는다."""
+        hub = project_b.root
+        meta_dir = hub / ".opal-worktrees" / ".meta"
+        meta_dir.mkdir(parents=True, exist_ok=True)
+    
+        nested_root = hub / ".opal-worktrees" / "task_900" / "cone"
+        (nested_root / "workspace").mkdir(parents=True, exist_ok=True)
+        run_git(["init", "-b", "main", str(nested_root / "workspace")], cwd=nested_root)
+        _copy_worktree_config(hub, nested_root)
+    
+        result = run_worktree_cli(
+            ["create", "--project-root", str(nested_root), "--task", "901"]
+        )
+        payload = parse_json_stdout(result, "create(S-6b nested .opal-worktrees)")
+        assert payload.get("ok") is False, f"중첩 .opal-worktrees project-root가 거부되지 않음: {payload}"
+>       assert payload.get("error") == "PROJECT_ROOT_IS_WORKTREE", payload
+E       AssertionError: {'ok': False, 'error': 'NOT_A_GIT_REPO', 'message': '지정된 경로가 git 저장소가 아닙니다.', 'path': '/private/var/folders/fc/w424kvj...6nyzkw_8b740000gn/T/pytest-of-iskang/pytest-1381/test_t156_s6_nested_opal_workt0/proj_b/.opal-worktrees/task_900/cone'}
+E       assert 'NOT_A_GIT_REPO' == 'PROJECT_ROOT_IS_WORKTREE'
+E         
+E         - PROJECT_ROOT_IS_WORKTREE
+E         + NOT_A_GIT_REPO
+
+opal/tools/worktree-tool/tests/test_worktree_tool.py:4354: AssertionError
+=========================== short test summary info ============================
+FAILED opal/tools/worktree-tool/tests/test_worktree_tool.py::test_t156_s6_linked_worktree_project_root_is_rejected
+FAILED opal/tools/worktree-tool/tests/test_worktree_tool.py::test_t156_s6_nested_opal_worktrees_project_root_is_rejected
+2 failed, 1 passed, 147 deselected in 1.69s

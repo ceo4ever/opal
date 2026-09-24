@@ -28,15 +28,16 @@
 //opds {작업 요청}      # Short profile
 ```
 
-모드 플래그:
+신규 태스크 기본값(플래그 없음): **agentic · worktree · PM 조율(`actor=coordinator`)**. 기존 태스크 재개는 저장된 mode·작업본·actor를 그대로 쓴다. 판정은 `state-tool resolve-start`가 한다.
 
-| 호출 | 모드 |
+| 플래그 | 효과 |
 |---|---|
-| `//opd 작업` / `//opds 작업` | semi-agentic (기본) |
-| `--interactive` | 모든 단계 사용자 승인 |
-| `--agentic` | 정상 전 구간과 CLOSE final까지 PM 자율 |
+| `--semi-agentic` / `--interactive` / `--agentic` | 모드 선택 (둘 이상이면 `mode_flag_conflict`) |
+| `--no-wt` | worktree 대신 허브 작업본 (`--wt`와 함께면 `workspace_flag_conflict`) |
+| `--no-pm` | PM 조율 해제 — 분석·PLAN도 전문 워커가 수행(`actor=worker`) |
+| `--pm` | PM 조율 명시(기본값과 같음) |
 
-`--pm` 플래그를 지정하면 일부 단계(ANALYSIS·PLAN·EXECUTE)를 PM이 워커 디스패치 없이 직접 수행한다. 단, TEST-SCENARIO의 목표-커버 게이트와 TEST 단계의 실제 실행 검증은 `--pm`과 무관하게 항상 독립된 서브에이전트가 수행한다.
+PM 조율에서는 PM이 TASK·분석·PLAN·TEST-SCENARIO와 분배·파일 소유권·검토·재작업·마감을 맡고, 구현·자가 점검·TEST FAIL 수정은 전문 워커가 맡는다. TEST-SCENARIO의 목표-커버 게이트와 TEST 단계의 실제 실행 검증은 actor와 무관하게 항상 독립된 서브에이전트가 수행한다. 계약 원문은 `opal/core/references/harness/actor.md`다.
 
 모드별 CLOSE 전이는 공통 SSOT `harness/modes.md` §CLOSE 전이 계약을 따른다. Full/Short의 행 키는 각 pipeline JSON을 사용한다.
 

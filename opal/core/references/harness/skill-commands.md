@@ -31,14 +31,14 @@
 
 - `//` 뒤에 이어지는 텍스트는 작업 설명(arguments)으로 전달한다
 
-actor 옵션(`--pm`)의 해석 규칙 원문은 `harness/actor.md`가 소유한다(여기서는 복제하지 않는다).
+모드·워크스페이스·actor 플래그의 해석은 `state-tool resolve-start`가 집행하고, 신규 기본값 원문은 `harness/modes.md`·`harness/worktree.md`·`harness/actor.md`가 소유한다(여기서는 복제하지 않는다). `opd`·`opds`·`oppd`·`oppl`·`oppb`는 무플래그 신규 태스크가 agentic·worktree이고, `opd`·`opds`는 PM 조율(`--pm`과 같음)이 기본이다.
 
 ```
-형식: //{스킬명 또는 약식} [--interactive|--semi-agentic|--agentic] [--pm] {작업 설명}
-예시: //opds 로그인 버그 수정해줘                  (기본 — semi-agentic)
+형식: //{스킬명 또는 약식} [--interactive|--semi-agentic|--agentic] [--wt|--no-wt] [--pm|--no-pm] {작업 설명}
+예시: //opds 로그인 버그 수정해줘                  (기본 — agentic·worktree·PM 조율)
       //opd --interactive 회원가입 기능 전체 개발해줘
-      //opp --agentic 자율 진행
-      //opds --pm 로그인 버그 수정해줘 (PM 직접 수행 — 단계·상태·Gate 유지)
+      //opds --no-pm --no-wt 로그인 버그 수정해줘 (허브 작업본, 분석·PLAN도 전문 워커)
+      //opp --agentic 자율 진행                    (opp 기본은 semi-agentic·허브)
       //oppm 워커 디스패치 정책을 함께 정리하고 반영해줘 (대화형 PM 작업 루프)
       //api-analyzer https://api.example.com
 ```

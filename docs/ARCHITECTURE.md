@@ -73,7 +73,8 @@ OPAL 자산은 Global/Project 2-레이어로 배치되고, 런타임은 세션 �
 - **전이 출력**: 단계 경계의 다음 행동은 `state-tool` stdout의 `transition_action`(`continue`/`await_user`/`blocked`/`complete`), `report_type`(`progress_report`/`decision_request`), `next_action`이 소유한다. 산문 보고와 스킬 문구는 이 구조화 출력을 해석할 뿐이며, `progress_report`는 응답을 멈추는 승인 요청이 아니다.
 - **CLOSE tail**: 신규 Pilot pipeline은 `close.done_md` 뒤에 문서 동기화, brain ingest, 회고, worktree finalize/attribution, `close.final` 행을 둔다. 전체 완료(`complete`/`completed_unmerged`)는 `close.final`에서만 확정하며, `close.final`이 없는 기존 단일 CLOSE pipeline은 하위호환 경로로만 인정한다.
 - **`//opi` 불변식**: 비프로젝트 세션도 비서 커널에서 `//` 진입을 해석할 수 있으므로 새 프로젝트 초기화 경로가 유지된다.
-- **actor 축**: `--pm`은 위 다이어그램의 `PM JIT 활성화`(오케스트레이터) 층에 속하는 실행 주체 선택 축이다 — 하네스 적용(Guards/Gates/State)과 서브에이전트 디스패치 층은 그대로 두고 각 단계 skill을 누가 수행하는지만 바꾼다. 원문 SSOT는 `opal/core/references/harness/actor.md`.
+- **actor 축**: 위 다이어그램의 `PM JIT 활성화`(오케스트레이터) 층에 속하는 실행 주체 선택 축이다 — 하네스 적용(Guards/Gates/State)과 서브에이전트 디스패치 층은 그대로 두고 각 단계 skill을 누가 수행하는지만 바꾼다. opd/opds 신규 기본값은 PM 조율(`coordinator`: PM이 분석·PLAN·TEST-SCENARIO와 분배·검토, 전문 워커가 구현·FAIL 수정)이고 `--no-pm`은 전부 워커(`worker`)다. 원문 SSOT는 `opal/core/references/harness/actor.md`.
+- **세 축 판정**: mode·workspace·actor는 `state-tool resolve-start`가 사용자 원문 플래그로 한 번에 판정한다. `opd`·`opds`·`oppd`·`oppl`·`oppb` 신규 태스크는 agentic·worktree가 기본이고, 재개는 저장값을 상속한다. `state init --workspace worktree`는 `--worktree` 없이 거부되고 `worktree-tool create`는 작업본 안의 작업본 생성을 거부해, worktree 실패가 허브 코드 수정으로 새지 않는다.
 
 ## 2-레이어 모델
 
@@ -218,7 +219,7 @@ OPAL 자산은 Global/Project 2-레이어로 배치되고, 런타임은 세션 �
 | 요소 | 역할 |
 |------|------|
 | Guards | `harness/guards.md` — 구현·CLOSE·커밋 경계와 검증 루프 상한 |
-| Modes | `harness/modes.md` — interactive/semi-agentic/agentic 라우팅 |
+| Modes | `harness/modes.md` — Pilot별 신규 기본 mode와 interactive/semi-agentic/agentic 라우팅 |
 | Worktree | `harness/worktree.md` — 축 판정과 허브 루트 해석 |
 | Capability | `harness/capability.md` — 디스패치 시점 런타임 capability 주입 |
 | State·TASK·Gates | `harness/state.md`, `harness/task-process.md`, 각 gate owner 문서 |

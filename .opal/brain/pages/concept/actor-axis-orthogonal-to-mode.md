@@ -6,9 +6,11 @@ tags:
 - mode
 - orthogonal-axis
 - task-122
+- task-156
 - pattern
 sources:
 - task:122
+- task:156
 related:
 - auto-approve-user-confirmation-axis-separation
 - worktree-tool
@@ -16,9 +18,18 @@ related:
 - opal-self-pm
 - self-pm-tool
 created: '2026-09-12'
-updated: '2026-09-12'
+updated: '2026-09-24'
 status: active
 ---
+## 현행 계약 (task 156)
+
+- actor 저장값은 `coordinator`(PM 조율)·`worker`(전부 워커)·legacy `pm`(PM 직접 수행, 재개 전용) 세 가지다. opd/opds 신규 태스크 기본값이 `coordinator`이며 `--pm`은 이를 명시하는 플래그, `--no-pm`은 `worker`로 해제하는 플래그다(근거: task:156 PLAN.md DEC-4·DEC-5).
+- PM 조율에서는 PM이 TASK·분석·PLAN·TEST-SCENARIO와 분배·파일 소유권·검토·재작업·마감을 맡고, 구현·자가 점검·TEST FAIL 수정은 PLAN `담당`의 전문 워커가 맡는다. 병렬은 선행 관계가 없고 변경 파일이 겹치지 않을 때만 허용한다(근거: task:156 PLAN.md DEC-6, `opal/core/references/harness/actor.md` §PM 조율 계약).
+- 세 축(mode·workspace·actor)의 판정은 `state-tool resolve-start`가 원문 플래그로 결정론 집행하고, 재개 중 workspace·actor 변경은 `resume_axis_locked`로 거부한다. 새 값을 legacy `pm`과 분리한 이유는 진행 중 legacy 태스크를 새 의미로 재해석하지 않기 위해서다(근거: task:156 PLAN.md DEC-2·DEC-3).
+- CLOSE 전이는 actor와 무관하게 `harness/modes.md` §CLOSE 전이 계약 하나를 따른다. 이전의 "actor=pm CLOSE 첫 행 `--owner user`" 문장은 런타임이 집행하지 않는 모순이라 제거했다(근거: task:156 PLAN.md DEC-7).
+
+아래는 task 122 도입 당시의 결정 배경이다. 당시 `--pm`은 PM 직접 수행을 뜻했다.
+
 ## 개요
 
 파이프라인을 "누가 자율적으로 진행하는가"(모드 축)와 "누가 실제로 구현을 수행하는가"(실행 주체 축)는 서로 독립된 두 개의 축이며, 후자를 전자의 하위 옵션으로 우겨넣지 않는다. `--pm` 플래그는 모드도 워크스페이스 선택도 아닌 세 번째의 독립 축으로 신설됐다(근거: task:122 PLAN.md D-3).

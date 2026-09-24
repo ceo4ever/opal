@@ -10,25 +10,34 @@ load: pilot.start
 
 | 모드 | 선택 조건 | 서브 하네스 |
 |------|-----------|-------------|
-| `semi-agentic` | 신규 태스크의 모드 플래그 없음(기본) 또는 `--semi-agentic` | `opal-harness-semi-agentic.md` |
+| `semi-agentic` | 아래 §신규 태스크 기본 mode가 `semi-agentic`인 Pilot의 무플래그 신규 태스크 또는 `--semi-agentic` | `opal-harness-semi-agentic.md` |
 | `interactive` | `--interactive` | `opal-harness-interactive.md` |
-| `agentic` | `--agentic` | `opal-harness-agentic.md` |
+| `agentic` | 아래 §신규 태스크 기본 mode가 `agentic`인 Pilot의 무플래그 신규 태스크 또는 `--agentic` | `opal-harness-agentic.md` |
 
 소스 checkout에서는 `{source_root}/opal/core/references/{서브 하네스}`, 설치본에서는
 `{deployed_root}/references/{서브 하네스}`를 읽는다(기본 설치 루트는 `~/.opal`).
 
+## 신규 태스크 기본 mode
+
+| Pilot | 무플래그 신규 태스크 mode |
+|---|---|
+| `opd`·`opds`·`oppd`·`oppl`·`oppb` | `agentic` |
+| 그 외 Pilot(`opp`·`opdw`·`opwt`·`opsdd`·`opdd`·`opgc` 등) | `semi-agentic` |
+
+agentic 기본값은 기존 agentic 모드를 기본으로 고르는 것일 뿐이다. 실제 미해결 결정, 권한 경계, 독립 검증, 재시도·예산 상한, OPPB P5 사용자 전용 merge 게이트, merge·push·배포 승인 경계는 그대로다(`harness/guards.md`). 이 표의 기계 사본은 `state-tool`의 `NEW_TASK_DEFAULTS`다.
+
 ## 라우팅 계약
 
 1. pilot은 `pilot.start` 이벤트 load와 receipt 계약을 먼저 충족한다.
-2. 태스크 경로를 확정한 뒤 `state-tool resolve-mode <task-path> [--mode <mode>] [--new-task]`를 호출한다. 신규 태스크만 `--new-task`를 사용한다.
-3. effective mode 우선순위는 **명시 플래그 > 유효한 `state.json.mode` > 신규 태스크의 `semi-agentic` 기본값**이다. 기존 태스크의 무플래그 재개는 저장 mode를 상속한다.
+2. 태스크 경로를 확정한 뒤 `state-tool resolve-start <task-path> --skill <alias> [--new-task] <사용자 원문 플래그>`를 호출한다. 신규 태스크만 `--new-task`를 사용한다. 이 명령이 mode·workspace·actor를 한 번에 판정한다. `resolve-mode`는 mode만 보는 호환 표면이다.
+3. effective mode 우선순위는 **명시 플래그 > 유효한 `state.json.mode` > 신규 태스크의 Pilot별 기본값(위 표)**이다. 기존 태스크의 무플래그 재개는 저장 mode를 상속하며 신규 기본값으로 바꾸지 않는다.
 4. 기존 state의 mode가 누락·비문자·허용값 밖이면 `interactive` / `fail_closed`로 판정해 자동 승인을 막고 파일은 고치지 않는다. 명시 플래그만 mode를 복구할 수 있으며, JSON 자체가 손상되면 `state_json_malformed`로 중단한다.
 5. resolver의 구조화 결과로 모드를 하나만 확정한 뒤 해당 서브 하네스 전문 하나를 읽는다. 프로젝트 브리프의 mode 표시는 안내이며 판정 입력으로 파싱하지 않는다.
-6. 둘 이상의 모드 플래그가 동시에 있으면 `mode_flag_conflict`로 거부한다. state init도 같은 판정을 따라야 한다.
-7. `--worktree`/`--wt`는 모드가 아니라 별도 워크스페이스 축이므로 모드 플래그 개수에 포함하지 않는다. 해당 축의 원문은 `harness/worktree.md`가 소유한다.
+6. 둘 이상의 모드 플래그가 동시에 있으면 `resolve-start`가 `mode_flag_conflict`로 거부한다. Pilot은 이 판정을 통과한 결과로만 `state init --mode`를 호출한다.
+7. `--worktree`/`--wt`/`--no-wt`는 모드가 아니라 별도 워크스페이스 축이므로 모드 플래그 개수에 포함하지 않는다. 해당 축의 원문은 `harness/worktree.md`가 소유한다.
 8. 선택된 서브 하네스가 현재 세션에 이미 로드되었으면 중복 Read를 생략할 수 있다. receipt가 필요한 이벤트 자체를 생략할 수 있다는 뜻은 아니다.
 9. 새 모드는 이 문서의 폐쇄된 라우팅 표와 대응 서브 하네스를 함께 변경해야 한다.
-10. `--pm`은 모드가 아니라 별도 실행 주체(actor) 축이므로 모드 플래그 개수에 포함하지 않는다. 해당 축의 원문은 `harness/actor.md`가 소유한다.
+10. `--pm`/`--no-pm`은 모드가 아니라 별도 실행 주체(actor) 축이므로 모드 플래그 개수에 포함하지 않는다. 해당 축의 원문은 `harness/actor.md`가 소유한다.
 
 모드별 단계 게이트와 사용자 확인 동작은 각 서브 하네스가 소유한다. 모든 모드에
 공통인 승인·CLOSE·자동 루핑 경계는 `harness/guards.md`가 소유한다.

@@ -215,15 +215,17 @@ PM(대화)는 원칙적으로 PM이 직접 수행하며 워커를 디스패치�
 | "그냥 해" 또는 "직접 수행" | `//oppm` 대화형 PM 직접 수행 루프 제안 (사용자 승인 시 진입) | 하단 §PM 직접 수행 진입점 참조 |
 | "비서로" | PM 해제, 비서 전환 | 프로젝트 컨텍스트 해제 |
 
-#### PM 직접 수행 진입점
+#### 실행 주체 진입점
 
-PM 직접 수행에는 실행 주체(actor) 축으로 진입하는 경로가 3종 있다. 이 절은 진입점 선택 기준만 서술하며 규칙 원문을 복제하지 않는다 — actor 축 정의·지원 Pilot 폐쇄 목록·`--pm` 실행 계약의 단일 SSOT는 `harness/actor.md`이고, 대화형 PM 직접 수행 루프의 단일 SSOT는 `opal/skills/opal-self-pm/SKILL.md`(alias `oppm`)다.
+실행 주체 진입 경로는 3종이다. 이 절은 진입점 선택 기준만 서술하며 규칙 원문을 복제하지 않는다 — actor 축 정의·지원 Pilot 폐쇄 목록·PM 조율 계약의 단일 SSOT는 `harness/actor.md`이고, 대화형 PM 직접 수행 루프의 단일 SSOT는 `opal/skills/opal-self-pm/SKILL.md`(alias `oppm`)다.
 
 | 진입점 | 실행 주체 | 유지되는 것 | 원문 SSOT |
 |------|--------|-----------|------|
-| `//opd`·`//opds` (기본) | 전문 워커(actor=worker) | 단계·상태·Gate 전체, 워커 디스패치 | `pm/dispatch-process.md` |
-| `--pm` (Pilot 옵션) | PM 직접 수행(actor=pm) | 단계·상태·Gate·독립 검증 경계는 유지, 워커 디스패치만 PM 직접 수행으로 대체 | `harness/actor.md` §`--pm` 실행 계약 |
+| `//opd`·`//opds` (기본, `--pm`과 같음) | PM 조율(actor=coordinator) — PM이 TASK·분석·PLAN·TEST-SCENARIO와 분배·검토·마감, 전문 워커가 구현·FAIL 수정 | 단계·상태·Gate·독립 검증 경계 전체 | `harness/actor.md` §PM 조율 계약 |
+| `//opd --no-pm`·`//opds --no-pm` | 전문 워커(actor=worker) — 분석·PLAN도 워커 | 단계·상태·Gate 전체, 워커 디스패치 | `pm/dispatch-process.md` |
 | `//oppm` | PM 직접 수행(대화형 질문 반복 루프) | 태스크 파이프라인 대신 6항목 계약 승인·8영역 지식 동기화 판정·사용자 최종 확인 게이트 | `opal/skills/opal-self-pm/SKILL.md` |
+
+legacy `actor=pm`(PM 직접 수행) 태스크는 재개만 지원한다(`harness/actor.md` §legacy `pm` 재개 계약).
 
 **규모(파일 수·변경량)는 실행 주체 결정 근거가 아니다.** 세 진입점 중 무엇을 쓸지는 사용자가 명시한 커맨드·옵션으로만 성립하며, PM이 작업 규모를 근거로 임의로 대체 경로를 선택하지 않는다.
 

@@ -49,7 +49,7 @@ OPAL FW 저장소는 스킬의 개발·배포 위치이며 실행 대상의 문�
 
 ## 관계 (HOW)
 
-- [[actor-axis-orthogonal-to-mode]] — 같은 태스크가 신설한 또 다른 실행 경로(`--pm` actor 축)와 대비되는 대안이다. `--pm`은 기존 Pilot 파이프라인(`opd`/`opds`)의 단계·상태·Gate를 유지한 채 실행 주체만 PM으로 바꾸는 반면, `//oppm`은 파이프라인 자체가 없는 별개의 대화형 루프다. 소유자는 이 둘과 기본 워커 실행(`//opd`·`//opds`) 사이에서 셋 중 하나를 고른다.
+- [[actor-axis-orthogonal-to-mode]] — Pilot actor 축과 대비되는 별개 경로다. task 156 이후 `//opd`·`//opds` 기본은 PM 조율(PM이 분석·PLAN·검토, 전문 워커가 구현)이고 `--no-pm`은 전부 워커 실행이다. PM이 직접 조회·작성·수정까지 하는 경로는 파이프라인 없는 대화형 루프인 `//oppm`뿐이다(근거: task:156 PLAN.md DEC-6).
 - [[self-pm-tool]] — `opal-self-pm`의 모든 단계 전이가 기록되는 전용 CLI. 현재 실행 기록은 이 도구가 소유하고 시간순 사건 이력은 `run-log-tool`, 검토용 문서는 PM이 소유하며, 3-SSOT(`state.json`·`test-scenario.json`·`backlog.json`)에는 접촉하지 않는다.
 - `op-gc-security`·`op-gc-convention`·`op-gc-report` — 독립 검증이 필요할 때 호출만 하는 대상. 파라미터·finding 스키마는 각 스킬이 소유한다.
 

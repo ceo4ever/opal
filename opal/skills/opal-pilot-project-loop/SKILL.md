@@ -151,8 +151,10 @@ tasks/{NNN}-oppl-{프로젝트명}/
 state-tool을 호출하여 초기화한다:
 
 ```
-~/.opal/tools/state-tool/run.sh init <task-path> --skill oppl --mode <interactive|semi-agentic|agentic> --rows-from opal/skills/opal-pilot-project-loop/references/pipeline.json
+~/.opal/tools/state-tool/run.sh init <task-path> <resolve-start init_args> [--worktree <worktree_root>] --rows-from opal/skills/opal-pilot-project-loop/references/pipeline.json
 ```
+
+> **[MUST] 세 축 선결**: init 전에 `state-tool resolve-start <task-path> --skill oppl [--new-task] <사용자 원문 플래그>`로 mode·workspace를 판정하고 응답의 `init_args`를 그대로 전달한다. 신규 기본값은 agentic·worktree이며 actor 축은 적용하지 않는다(`--pm`은 `actor_unsupported_for_skill`). `workspace=worktree`면 `harness/task-process.md` 스텝 4.5가 발급한 `--worktree <worktree_root>`를 덧붙이고, worktree 생성이 실패하면 허브로 폴백하지 않고 멈춘다. 기존 태스크 재개는 저장 mode·작업본을 상속한다.
 
 > state-tool의 `--skill` choices·schema enum에 `oppl`이 등록되어 있다(F-003). `state-tool`이 `references/pipeline.json`을 읽어 state.json을 초기화한다.
 
@@ -452,11 +454,11 @@ CONTRACT.md는 oppl의 1급 산출물이다 — 작성=Planner(D4) / 리뷰=Eval
 
 opal-harness-agentic.md / opal-harness-semi-agentic.md 참조. 본 절은 이 스킬의 차이점만 기술한다.
 
-### 기본 모드 (semi-agentic)
+### 기본 모드 (agentic)
 
-기본 호출(`//oppl {요청}`)은 semi-agentic 모드. **Loop 1(설계 수렴, PLAN-equivalent)까지 사용자 검토**, **Loop 2(실행 수렴, EXECUTE-equivalent) 이후와 CLOSE final까지 PM 자율**이다.
+무플래그 신규 호출(`//oppl {요청}`)은 agentic 모드·worktree 작업본이다(`harness/modes.md` §신규 태스크 기본 mode). 기존 태스크 재개는 저장 mode를 상속한다. 비가역 행동(D7 TRD/PRD 확정·배포·DB 마이그레이션)은 아래 agentic 흐름 설명대로 여전히 사용자 승인을 받는다(loop-control.md §9). `--semi-agentic`을 명시하면 **Loop 1(설계 수렴, PLAN-equivalent)까지 사용자 검토**, **Loop 2(실행 수렴, EXECUTE-equivalent) 이후와 CLOSE final까지 PM 자율**이다.
 
-**모드 경계** (이 시점부터 PM 자율):
+**semi-agentic 모드 경계** (이 시점부터 PM 자율):
 - D7 사용자 확정 게이트(Loop 1 종료) 통과 후 → Loop 2 L0 첫 행부터 PM 자율
 - Loop 1 내부(D1~D6)는 사용자 검토 영역 — 각 워커 디스패치 결과(PRD/TRD/CONTRACT/D6 verdict)를 D7 이전에 축적하여 한 번에 검토받는다(oppd Phase 1~2와 동일 정신)
 
@@ -464,9 +466,9 @@ opal-harness-agentic.md / opal-harness-semi-agentic.md 참조. 본 절은 이 �
 
 | 호출 | 모드 |
 |------|------|
-| `//oppl 요청` | semi-agentic (기본) |
+| `//oppl 요청` | agentic (신규 기본) — 정상 전 구간과 CLOSE final까지 PM 자율(비가역 행동은 사용자 승인) |
+| `//oppl --semi-agentic 요청` | semi-agentic — Loop 1까지 사용자 검토 |
 | `//oppl --interactive 요청` | interactive — 모든 단계 사용자 승인 (Loop 2 태스크 시작 전마다 게이트) |
-| `//oppl --agentic 요청` | agentic — 정상 전 구간과 CLOSE final까지 PM 자율 |
 
 ### 활성화
 

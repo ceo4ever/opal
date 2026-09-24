@@ -1,0 +1,26 @@
+# isolated install (HOME=$SCRATCH/fakehome) observation, 2026-09-24 17:33
+$ resolve-start <tmp>/x --skill opds --new-task
+{"ok": true, "command": "resolve-start", "skill": "opds", "new_task": true, "effective_mode": "agentic", "mode_source": "default", "workspace": "worktree", "workspace_source": "default", "actor": "coordinator", "actor_source": "default", "persisted": false, "init_args": ["--skill", "opds", "--mode", "agentic", "--workspace", "worktree", "--actor", "coordinator"], "warnings": []}
+ exit=0
+$ resolve-start <tmp>/x --skill oppb --new-task
+{"ok": true, "command": "resolve-start", "skill": "oppb", "new_task": true, "effective_mode": "agentic", "mode_source": "default", "workspace": "worktree", "workspace_source": "default", "actor": "worker", "actor_source": "default", "persisted": false, "init_args": ["--skill", "oppb", "--mode", "agentic", "--workspace", "worktree"], "warnings": []}
+ exit=0
+$ resolve-start <tmp>/x --skill opp --new-task
+{"ok": true, "command": "resolve-start", "skill": "opp", "new_task": true, "effective_mode": "semi-agentic", "mode_source": "default", "workspace": "hub", "workspace_source": "default", "actor": "worker", "actor_source": "default", "persisted": false, "init_args": ["--skill", "opp", "--mode", "semi-agentic", "--workspace", "hub"], "warnings": []}
+ exit=0
+$ resolve-start <tmp>/x --skill oppb --new-task --no-wt
+{"ok": false, "command": "resolve-start", "error": "workspace_required_for_skill", "message": "oppb은 프로젝트 worktree가 필수입니다 — 허브 작업본(--no-wt, --workspace hub)을 쓸 수 없습니다", "skill": "oppb", "transition_action": "blocked", "report_type": "decision_request", "next_action": "oppb은 프로젝트 worktree가 필수입니다 — 허브 작업본(--no-wt, --workspace hub)을 쓸 수 없습니다"}
+ exit=1
+$ resolve-start <tmp>/x --skill oppd --new-task --pm
+{"ok": false, "command": "resolve-start", "error": "actor_unsupported_for_skill", "message": "actor 축(--pm/--no-pm, --actor)은 opd/opds에서만 지원됩니다 — oppd은 지원되지 않습니다", "skill": "oppd", "transition_action": "blocked", "report_type": "decision_request", "next_action": "actor 축(--pm/--no-pm, --actor)은 opd/opds에서만 지원됩니다 — oppd은 지원되지 않습니다"}
+ exit=1
+--- installed doc checks (count)
+actor.md 'PM 조율 계약': 6
+task-process.md no-hub-fallback: 1
+--- source vs installed sha256
+references/harness/actor.md src=611b0ecf27ed inst=611b0ecf27ed
+references/harness/modes.md src=6efbf6d59f62 inst=6efbf6d59f62
+references/harness/worktree.md src=9f76c3dcbf4a inst=9f76c3dcbf4a
+references/harness/task-process.md src=a3d8424de770 inst=a3d8424de770
+tools/state-tool/state_tool.py src=e2760c93f8e1 inst=e2760c93f8e1
+tools/worktree-tool/worktree_tool.py src=ec14c35f896a inst=ec14c35f896a

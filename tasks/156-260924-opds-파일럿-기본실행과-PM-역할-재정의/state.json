@@ -4,7 +4,7 @@
   "mode": "agentic",
   "schema_version": "1.2",
   "created_at": "2026-09-24 16:30:56",
-  "updated_at": "2026-09-24 16:41:13",
+  "updated_at": "2026-09-24 17:33:33",
   "current_status": "in_progress",
   "rows": [
     {
@@ -83,22 +83,23 @@
       "stage": "PLAN",
       "item": "사용자 확인",
       "key": "plan.user_confirm",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
-      "owner": "PM",
-      "note": null
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-24 16:41:55",
+      "owner": "auto",
+      "note": "auto-approved on EXECUTE entry"
     },
     {
       "row_id": 7,
       "stage": "EXECUTE",
       "item": "작업",
       "key": "execute.implement",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-24 17:33:33",
       "owner": "PM",
-      "note": null
+      "note": "PM 직접 수행(legacy actor=pm): W-1~W-6 완료, W-7은 격리 설치 관측(실설치는 merge 뒤)",
+      "worker_duration_unknown": true
     },
     {
       "row_id": 8,
@@ -215,7 +216,7 @@
       "note": null
     }
   ],
-  "next_action": "EXECUTE 작업 진입",
+  "next_action": "TEST 작업 진입",
   "worktree": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_156",
   "actor": "pm",
   "run_log": {
@@ -225,6 +226,13 @@
     "completion_profile_receipt": null,
     "active_run_id": "run_c0f2d245-2bdb-4a1b-a181-84f1b163000d",
     "status": "active",
-    "pending_events": []
+    "pending_events": [],
+    "last_report": {
+      "event_id": "evt_0b7f00cd-3105-4bf5-b60b-4dbdc3c03b32",
+      "report_type": "progress_report",
+      "transition_action": "continue",
+      "user_input_required": false,
+      "at": "2026-09-24T07:41:55.645Z"
+    }
   }
 }
