@@ -1,0 +1,3 @@
+검증 첫 시도: 구조 검사 및 git diff --check 통과 후 중단.
+원인: 동시에 실행한 install-mac.sh가 설치 도구 디렉터리를 교체하는 동안 /Users/iskang/.opal/tools/code-scan/run.sh 경로가 없어 FileNotFoundError 발생.
+대응: 설치 파일 교체가 끝난 뒤 동일 검사를 다시 수행하며 이 실패 기록을 보존한다.

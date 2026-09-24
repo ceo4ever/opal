@@ -164,6 +164,8 @@ tasks/{NNN}-{YYMMDD}-{스킬약어}-{태스크명}/
 └── DONE.md               완료 보고
 ```
 
+- `oppm`도 위 정식 태스크 폴더 규칙을 사용한다. TASK.md·DONE.md는 PM의 필수 수행·검토 기록이며 PLAN.md 등은 필요 시 작성한다. Pilot 단계 산출물로 취급하지 않고 `state.json`을 생성하지 않는다. 현재 기록은 self-pm-tool, 사건은 표준 run-log로 남긴다. 상세: `opal/skills/opal-self-pm/references/task-records.md`.
+
 - STATE.md는 **의사결정 로그·블로커·자유 기재를 담는 저널**이다. 파이프라인 현황(행 상태·진행·다음 액션)의 SSOT는 `state.json`이며, 조회는 `state-tool show`로 한다. `state.json`은 `state-tool`이 전량 갱신하고, STATE.md는 저널 골격 보증(`ensure_journal_skeleton`)과 의사결정 로그 기재(`append_decision_log`)만 `state-tool`이 자동 수행하며, 블로커 내용·자유 기재는 PM이 수동으로 기록한다.
 
 ## 브랜치 전략

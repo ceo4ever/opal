@@ -163,7 +163,7 @@ OPAL 자산은 Global/Project 2-레이어로 배치되고, 런타임은 세션 �
 | | opal-onboarding | 에이전트 온보딩 |
 | | opal-skill-manager | 스킬 관리 |
 | | opal-brain (opbr) | 프로젝트 브레인 — 영속 지식 위키 생성·누적·질의·정비 |
-| | opal-self-pm (oppm) | PM 직접 수행 대화형 루프 — 질문 반복형 범위 확정 + PM 직접 조회·작성·수정·검증 + 8영역 지식 동기화 판정 (opal-brain과 동일 유형, 단계 파이프라인·워커 디스패치 없음) |
+| | opal-self-pm (oppm) | PM 직접 수행 대화형 루프 — 정식 태스크 폴더의 TASK·DONE 수행 기록 + self-pm 현재 기록 + 표준 run-log 사건 이력 + 8영역 실제 지식 동기화 (단계 파이프라인·워커 디스패치 없음) |
 | | opal-help (help) | 스킬 카탈로그 & 사용법 안내 (목록 Mode 1 / 개별 안내 Mode 2) |
 | | opal-improve (opim) | PM 개선 루프 — 관찰→분류→기록→보고→승인 5단계 (로컬 `.opal/` / FW `~/.opal/fw-inbox`) |
 | | opal-action-status (opas) | 루프 액션 에이전트 진행 현황 발동층 — 자동 탐지 + 해석 보고 |

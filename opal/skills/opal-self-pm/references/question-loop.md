@@ -35,13 +35,16 @@
 | 시작 | `docs/PROJECT.md`, project memory brief(`memory-tool show --boot-brief` 결과), 관련 brain(`.opal/brain/` 존재 시 `brain-tool search "<키워드>"`), 코드 구조(`code-scan scan`/`domain`/`search`) | 프로젝트 좌표와 과거 결정 확인 |
 | 요구 발견 | 기획서, 정책서, 사용자 흐름, 현행 산출물 | 목표·제약·용어 확정 |
 | 설계 결정 | 아키텍처, 인터페이스, 데이터 모델, 관련 코드 | 소비자와 변경 영향 확정 |
-| 수정 직전 | `docs/CONVENTIONS.md`, `docs/SECURITY.md`, 운영·배포 제약 | 구현 규칙과 위험 확인 |
+| 수정 직전 | PROJECT에서 찾은 공통·영역별 컨벤션·보안·운영·배포 문서, 실제 린터·테스트 설정과 인접 코드 | 구현 규칙과 위험 확인 |
 | 범위 변경 | 새 범위에 맞춰 원천 재선별 | 누락된 영향 재평가 |
-| 완료 직전 | 변경 파일과 관련 docs·brain·memory·코드맵(`code-scan`) | 낡은 원천 동기화 |
+| 검증 계획·완료 직전 | 프로젝트 테스트 지침·설정·기존 테스트와 `opal-e2e` 스킬 적용 가능성 | 테스트 범위·실행 증거·E2E 실행/미실행 근거 확인 |
+| 완료 직전 | 대상 PROJECT의 문서 목록·구성과 변경 파일·결정·테스트 결과 | 실제 경로별 지식 동기화 대상 선별 |
+
+`docs/PROJECT.md`는 관련 파일·문서를 찾는 진입점이다. 레지스트리의 적용 범위·참조 시점으로 필요한 문서를 선별하고 실제 변경 대상 코드까지 확인한다(`pm/dispatch-process.md` Steps 1~3). 이미 읽은 원천이 현재 세션에서 유효하면 재사용하고, 변경되었거나 새 범위가 생기면 관련 부분을 다시 읽는다. 참조 경로와 핵심 제약은 TASK.md에 남긴다.
 
 각 영역은 `update` 또는 `no-op + 근거`로 판정한다(완료 직전 판정의 8영역 세부는 `references/knowledge-sync.md` 참조). "관련 없어 보임" 같은 무근거 생략은 허용하지 않는다.
 
-## 3. 이 프로젝트에서의 구체화
+## 3. 대상 프로젝트에서의 조회
 
 - "관련 brain" 조회는 `.opal/brain/` 디렉토리가 존재할 때만 수행한다. 부재 시 이 조회 항목은 건너뛰되, §완료 직전 knowledge_impact 판정에서 brain 영역을 `no-op + 근거: brain 미초기화`로 기록한다.
 - "project memory brief" 조회는 `~/.opal/tools/memory-tool/run.sh show --boot-brief`로 수행한다.

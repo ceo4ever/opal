@@ -2,8 +2,8 @@
 name: opal-self-pm
 description: |
   **대화형 PM 직접 수행 루프**. Pilot이 아니라 종료 조건을 가진 질문 반복형 작업 루프다 — 질문 1개→조회·정리를 반복해 범위를 확정하고, PM이 직접 조회·작성·수정·검증을 수행하며, 완료 전 지식 영향을 전수 판정한 뒤 사용자 최종 확인을 받고서야 종료한다.
-  필수 입력: 사용자의 자연어 요청(목표)과 실행 맥락(진행 중이면 해당 `tasks/NNN/` 폴더, 아니면 프로젝트 루트).
-  보장 출력: 사용자와 합의한 계약 범위 안의 산출물 변경, `self-pm-tool` 경량 실행 기록(8필드 JSON), 8영역(기획·설계·프로젝트 문서·CONVENTIONS·SECURITY·brain·memory·code-scan) 지식 동기화 판정(`update` 또는 `no-op + 근거`).
+  필수 입력: 사용자의 자연어 요청(목표)과 실행 맥락(진행 중이면 해당 태스크 폴더, 아니면 프로젝트 루트에서 정식 태스크를 생성).
+  보장 출력: 사용자와 합의한 계약 범위 안의 산출물 변경, 정식 태스크 폴더의 `TASK.md`·`DONE.md` 수행 기록, `self-pm-tool` 현재 기록(8필드 JSON)과 표준 run-log, 8영역(기획·설계·프로젝트 문서·CONVENTIONS·SECURITY·brain·memory·code-scan) 지식 동기화 판정(`update` 또는 `no-op + 근거`).
   반드시 이 스킬을 사용해야 하는 상황: `//oppm`, "opal-self-pm", 또는 사용자가 "대화하면서 직접 해줘"·"하나씩 질문하며 PM이 처리해줘"처럼 질문 반복형 PM 직접 수행을 요청할 때.
 alias: oppm
 triggers:
@@ -18,7 +18,7 @@ pipeline: "없음 — 대화형 루프(operator 스킬). opal-brain과 동일 �
   "module": "opal-self-pm-skill",
   "layer": "reference",
   "domain": "opal-pipeline",
-  "description": "질문 1개→조회·정리 반복으로 범위를 확정하고 PM이 직접 조회·작성·수정·검증을 수행한 뒤 8영역 지식 동기화 판정과 사용자 최종 확인을 거쳐 종료하는 대화형 PM 직접 수행 루프를 규정한다.",
+  "description": "정식 태스크 폴더에서 PM이 직접 수행하며 TASK·DONE 수행 기록, 표준 run-log, 관련 문서 조회와 실제 지식 동기화를 남기는 대화형 루프를 규정한다.",
   "exports": ["설계 원천과 경계", "루프 개요", "진입", "질문 단계", "작업 계약 확정", "PM 작업·검증", "범위 변경 시 복귀", "지식·산출물 동기화", "사용자 최종 확인", "종료", "self-pm-tool 호출 지점 요약", "권한 경계"]
 }
 -->
@@ -27,15 +27,18 @@ pipeline: "없음 — 대화형 루프(operator 스킬). opal-brain과 동일 �
 
 ## 0. 설계 원천과 경계
 
+이 스킬은 OPAL을 사용하는 실제 개발 프로젝트에서 실행한다. 프로젝트 문서·코드·테스트 경로는 **대상 프로젝트의 PROJECT 문서와 실제 구성**에서 찾는다. OPAL 규칙·스킬·도구는 설치된 프레임워크 자산에서 읽으며, 대상 프로젝트에 `opal/` 소스 트리가 있다고 가정하지 않는다.
+
+
 - 이 스킬이 `opal-self-pm` 대화형 루프 절차의 원문을 소유한다. 질문 루프·계약 승인·지식 동기화·최종 확인의 판정 기준은 이 문서와 `references/`가 정한다.
 - 독립 검증 경계(생성자≠평가자 예외)와 GC 3종 호출 지점의 공유 계약은 `opal/core/references/harness/actor.md` §독립 검증 경계와 GC 호출 지점이 소유한다. 이 문서는 호출 시점만 규정하고 원문을 복제하지 않는다.
 - 권한 경계(외부 skill·package 설치, 프로젝트 밖 쓰기, 비가역 변경, 허브·기본 브랜치 commit, merge·push·배포, 사용자 Gate)는 작업 방식 승인과 별개로 항상 유지된다. 등록된 전용 worktree 체크포인트의 모드별 예외를 포함한 원문은 `harness/guards.md`가 소유한다.
-- `opal-self-pm`은 Pilot이 아니다. `state.json`·`test-scenario.json`·`backlog.json` 3-SSOT를 읽지도 쓰지도 않는다. 경량 실행 기록은 별도 `self-pm-tool`이 전담한다(§3).
+- `opal-self-pm`은 Pilot이 아니다. `state.json`·`test-scenario.json`·`backlog.json` 3-SSOT를 읽지도 쓰지도 않는다. 현재 실행 기록은 `self-pm-tool`, 사건 이력은 `run-log-tool`, 사람이 검토할 수행 기록은 PM이 작성하는 태스크 문서가 소유한다. 기록 계약은 `references/task-records.md`를 따른다.
 
 ## 1. 루프 개요
 
 ```text
-[진입] self-pm-tool init
+[진입] 정식 태스크 폴더 + TASK.md + self-pm/run-log 초기화
    │
    ▼
 질문(1개) → 조회·검토·정리 → 질문(1개) → 조회·검토·정리 → ...
@@ -63,12 +66,11 @@ PM 작업·검증  ──(범위 변경·새 결정 발생 시)──▶ 질문 
 
 ## 2. 진입
 
-1. `task_root`를 정한다 — 대화가 특정 `tasks/NNN/` 폴더 맥락(예: 진행 중인 태스크 안에서 발동)이면 그 폴더, 아니면 프로젝트 루트.
-2. run 기록을 생성한다.
-   ```bash
-   ~/.opal/tools/self-pm-tool/run.sh init --task-root <task_root> --objective "<사용자 요청 원문>"
-   ```
-   반환된 `run_id`를 이후 모든 `update`/`show` 호출에 사용한다. 생성 직후 `status`는 도구가 `discovering`으로 채운다(별도 `update` 불필요).
+1. `pm/dispatch-process.md` Steps 1~3으로 현재 실행 범위·관련 brain·코드맵을 확인하고, `docs/PROJECT.md` 레지스트리에서 기획·설계·코드 컨벤션·운영 문서를 선별해 읽는다. 현재 세션에서 이미 읽었고 변경되지 않은 내용은 재사용하며, 변경·누락·범위 확대 시 해당 원천만 다시 읽는다. 기억만으로 확인을 생략하지 않는다.
+2. `references/task-records.md`의 신규·재개 규칙으로 정식 태스크 폴더의 절대경로를 확정한다. 프로젝트 루트나 임시 폴더를 실행 기록 위치로 사용하지 않는다.
+3. 같은 참조 문서에 따라 `TASK.md`와 두 도구의 실행 기록을 준비한다. 반환·확정한 태스크 경로와 `run_id`를 이후 모든 호출에 사용한다.
+
+`TASK.md`·`DONE.md`는 PM이 수행하면서 남기는 필수 기록이다. `PLAN.md`·조사·검증 문서는 과정에서 필요할 때 작성한다. 문서 생성 자체를 단계 파이프라인이나 별도 승인 게이트로 만들지 않는다.
 
 ## 3. 질문 단계 — 한 개씩
 
@@ -88,7 +90,7 @@ PM 작업·검증  ──(범위 변경·새 결정 발생 시)──▶ 질문 
 
 ## 4. 작업 계약 확정 — [MUST] 쓰기 전 승인
 
-**[MUST]** 파일·설정·데이터를 쓰기 전에 다음 6항목 계약을 한 번에 제시하고 사용자 승인을 받는다. 승인 없이는 어떤 쓰기도 시작하지 않는다.
+**[MUST]** 파일·설정·데이터를 쓰기 전에 다음 6항목 계약을 한 번에 제시하고 사용자 승인을 받는다. 승인 전에는 계약 대상의 구현·설정·데이터 변경을 시작하지 않는다. 진입 시 태스크 채번·폴더·TASK.md 및 실행 기록을 준비하는 일은 스킬 수행 기록에 포함된다. 기존 사용자 발화로 승인된 범위는 TASK.md에 근거를 남기고 중복 승인받지 않는다.
 
 1. 목표와 완료 조건
 2. 포함 범위와 제외 범위
@@ -97,7 +99,7 @@ PM 작업·검증  ──(범위 변경·새 결정 발생 시)──▶ 질문 
 5. 검증 방법
 6. 예상되는 docs·기획·설계·brain·memory 영향
 
-계약을 확정하면 기록한다(6항목 전체를 배열로 전체 교체 — `approved_scope`는 계약 그 자체이므로 append가 아니라 set):
+6항목 계약과 승인 근거는 `TASK.md`에도 갱신한다. 계약을 확정하면 기록한다(6항목 전체를 배열로 전체 교체 — `approved_scope`는 계약 그 자체이므로 append가 아니라 set):
 ```bash
 ~/.opal/tools/self-pm-tool/run.sh update --task-root <task_root> --run-id <run_id> \
   --set-field approved_scope '["1. 목표/완료조건: ...", "2. 포함/제외 범위: ...", "3. 변경 대상: ...", "4. 결정/가정: ...", "5. 검증 방법: ...", "6. 예상 영향: ..."]' \
@@ -113,7 +115,7 @@ PM 작업·검증  ──(범위 변경·새 결정 발생 시)──▶ 질문 
 
 ## 5. PM 작업·검증
 
-PM이 확정 계약에 따라 직접 조회·작성·수정한다. 서브에이전트에게 구현을 넘기면 그 실행 단위는 PM 직접 수행으로 기록하지 않는다(§0, `actor.md` §독립 검증 경계).
+PM이 확정 계약에 따라 직접 조회·작성·수정한다. 중요한 진행·결정·검증·재시도는 `references/task-records.md`에 따라 발생 시점에 run-log로 남기고, 검토에 필요한 과정은 TASK.md 또는 선택 문서에 기록한다. 서브에이전트에게 구현을 넘기면 그 실행 단위는 PM 직접 수행으로 기록하지 않는다(§0, `actor.md` §독립 검증 경계).
 
 - 파일을 바꿀 때마다 기록한다:
   ```bash
@@ -127,6 +129,12 @@ PM이 확정 계약에 따라 직접 조회·작성·수정한다. 서브에이�
     --append-field validation "<검증 방법과 결과>"
   ```
 
+### 수정 전 컨벤션과 테스트 근거
+
+**[MUST]** 코드·설정 수정 전에 대상 프로젝트의 PROJECT 문서가 연결한 공통·영역별 컨벤션, 하위 지침, 린터·포매터·테스트 설정과 인접 코드의 기존 방식을 확인한다. 읽은 경로·적용 규칙을 TASK.md에 남긴다. 현재 세션에서 확인한 규칙이 유효하면 재사용하되 변경 영역이 넓어지면 다시 선별한다. 문서가 없으면 실제 설정과 기존 코드에서 확인한 관례를 기록하며, 부재를 규칙 확인 생략으로 처리하지 않는다.
+
+**[MUST]** 검증은 `references/testing-evidence.md`에 따라 계획·실행하고 실제 결과와 재현 가능한 증거를 보존한다. `opal-e2e` 스킬을 이용한 테스트의 적용 여부를 매 작업 검토해 실행 또는 미실행 근거를 남긴다. 테스트 증거와 E2E 검토 기록이 빠진 상태로 최종 확인을 요청하지 않는다.
+
 ### GC 3종 호출 지점
 
 독립 검증(보안·컨벤션·리포트)이 필요하면 `op-gc-security`·`op-gc-convention`·`op-gc-report`를 **호출만** 한다(스킬 본체·파라미터·finding 스키마는 변경하지 않는다). 입력 필드는 각 스킬이 소유하며 이 문서는 복제하지 않는다 — `op-gc-security`는 `opal/skills/op-gc-security/SKILL.md` §1, `op-gc-convention`은 `opal/skills/op-gc-convention/SKILL.md` §입력, `op-gc-report`는 `opal/skills/op-gc-report/SKILL.md` §입력과 책임을 그대로 따른다. `project_root`·`target_files`(=현재까지 `changed_files`)·`output_dir`·`timestamp`를 채워 호출한다.
@@ -137,7 +145,7 @@ PM이 확정 계약에 따라 직접 조회·작성·수정한다. 서브에이�
 
 ### 완료 게이트 — code-scan validate
 
-완료 직전(§6 진입 전) `git diff --name-only HEAD`(+untracked)로 변경 파일을 재구성해 `code-scan validate --changed <목록>`을 실행한다. 판정·차단 조건은 `opal/core/references/harness/header-rules.md` §갱신 시점 (4단) (d)를 참조한다(원문 복제 없음). 차단되면 §6 지식 동기화에 앞서 그 자리에서 @header를 기록해 재검증한다.
+완료 직전(§7 진입 전) `git diff --name-only HEAD`(+untracked)로 변경 파일을 재구성해 `code-scan validate --changed <목록>`을 실행한다. 판정·차단 조건은 `opal/core/references/harness/header-rules.md` §갱신 시점 (4단) (d)를 참조한다(원문 복제 없음). 차단되면 §7 지식 동기화에 앞서 그 자리에서 @header를 기록해 재검증한다.
 
 ## 6. 범위 변경 시 복귀
 
@@ -150,7 +158,9 @@ PM이 확정 계약에 따라 직접 조회·작성·수정한다. 서브에이�
 
 ## 7. 지식·산출물 동기화
 
-완료 직전 8영역을 모두 판정한다. 판정 기준·owner 문서·"무근거 생략 금지" [MUST]는 `references/knowledge-sync.md`를 따른다(이 문서에 복제하지 않는다).
+완료 직전 대상 프로젝트의 PROJECT 문서를 기준으로 실제 동기화 대상을 선별하고 8영역을 누락 방지 관점으로 모두 판정한다. 판정 기준·owner 문서·"무근거 생략 금지" [MUST]는 `references/knowledge-sync.md`를 따른다(이 문서에 복제하지 않는다).
+
+`update` 판정은 실제 갱신·추가와 검증을 마친 뒤 기록한다. 수행 예정 표시만으로 닫지 않는다. 작업 결과·검증·지식 동기화 근거는 `DONE.md`에 작성하고, 표준 로그를 `validate-run`으로 검증한다(`references/task-records.md`).
 
 각 영역 판정을 기록한다(영역마다 1회 append, 또는 한 번에 8건을 순서대로 append):
 ```bash
@@ -172,7 +182,7 @@ PM이 확정 계약에 따라 직접 조회·작성·수정한다. 서브에이�
 
 ## 9. 종료
 
-사용자 최종 확인 발화 이후에만 기록하고 종료한다:
+사용자 최종 확인 발화 이후에만 DONE.md에 확인 결과를 반영하고, 최종 결정 사건 기록·run-log 검증을 마친 뒤 종료 상태를 기록한다:
 ```bash
 ~/.opal/tools/self-pm-tool/run.sh update --task-root <task_root> --run-id <run_id> --status done
 ```

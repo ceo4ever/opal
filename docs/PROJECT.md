@@ -212,8 +212,8 @@ PM이 직접 조회·작성·수정·검증을 수행하는 대화형 operator �
 
 | 컴포넌트 | 약어 | 유형 | 설명 |
 |----------|------|------|------|
-| `opal-self-pm` | oppm | operator (대화형 루프) | 종료 조건을 가진 질문 반복형 PM 직접 수행 루프 — 질문 1개→조회·정리 반복으로 범위 확정 → 작업 계약 승인 → PM 직접 수행·검증 → 8영역(기획·설계·프로젝트 문서·CONVENTIONS·SECURITY·brain·memory·code-scan) 지식 동기화 판정 → 사용자 최종 확인 |
-| `self-pm-tool` | - | 도구 | `opal-self-pm` 실행 기록(8필드 JSON) 전담 CLI. `state.json`·`test-scenario.json`·`backlog.json` 3-SSOT는 읽지도 쓰지도 않는다 |
+| `opal-self-pm` | oppm | operator (대화형 루프) | 정식 `tasks/{NNN}-{YYMMDD}-oppm-{태스크명}/`에서 PM 직접 수행. TASK·DONE 필수 수행 기록, PLAN 등은 필요 시 작성. 대상 프로젝트의 PROJECT 기반 동기화 대상 선별·수정 전 컨벤션 확인·테스트 증거 보존·opal-e2e 적용 검토, 표준 run-log와 8영역 실제 지식 동기화 후 사용자 최종 확인 |
+| `self-pm-tool` | - | 도구 | `opal-self-pm` 현재 실행 기록(8필드 JSON) 전담 CLI. 사건 이력은 같은 태스크·실행 ID의 `run-log-tool`이 소유한다. `state.json`·`test-scenario.json`·`backlog.json` 3-SSOT는 읽지도 쓰지도 않는다 |
 
 > 독립 검증 경계(생성자≠평가자 예외)와 GC 3종(`op-gc-security`·`op-gc-convention`·`op-gc-report`) 호출 지점의 공유 계약은 `opal/core/references/harness/actor.md` §독립 검증 경계와 GC 호출 지점이 소유한다.
 

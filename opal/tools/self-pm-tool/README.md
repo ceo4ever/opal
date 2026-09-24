@@ -14,6 +14,8 @@
 `improve-tool`(`opal/tools/improve-tool/`)의 구조를 그대로 답습한다 — argparse 서브파서,
 JSON stdout, `run.sh` 얇은 래퍼.
 
+`oppm`은 정식 태스크 폴더를 `--task-root`에 전달한다. 폴더 채번·TASK.md·DONE.md 작성은 PM, 현재 기록 JSON은 이 도구, 사건 이력은 `run-log-tool`이 소유한다. 두 도구에 공통 `run_<UUIDv4>`를 `--run-id`로 명시 전달하며, 스킬의 `references/task-records.md`가 호출 순서·재개 규칙을 소유한다. 이 도구 자체는 태스크 폴더 정책이나 Markdown 문서를 생성·검증하지 않는다.
+
 ## 서브명령
 
 ### init

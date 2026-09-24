@@ -1,0 +1,77 @@
+{
+  "timestamp": "2026-09-24T05:31:50.813366+00:00",
+  "head": "25c68ce41cde1b21ed18f827a8f0d9bf043fa322",
+  "target": "current working tree (uncommitted)",
+  "files": [
+    {
+      "path": "opal/skills/opal-self-pm/README.md",
+      "sha256": "98768e567535585a161ab131e6f7f4341335fed050cec7c6c99f53de686785b8"
+    },
+    {
+      "path": "opal/skills/opal-self-pm/SKILL.md",
+      "sha256": "a5d1c208a4da27974c64517fdffa9494661604e983047079b746ed71a6ba1cd2"
+    },
+    {
+      "path": "opal/skills/opal-self-pm/references/knowledge-sync.md",
+      "sha256": "e48f07dd6ec8094a6ea1c1b5c2f423c70b6ae6563b69b62554a51ae33de1b922"
+    },
+    {
+      "path": "opal/skills/opal-self-pm/references/testing-evidence.md",
+      "sha256": "deb89c9f7238eee9ba3820f8fa0813573414aac9b58debb490fde5d14242b060"
+    },
+    {
+      "path": "opal/skills/opal-self-pm/references/question-loop.md",
+      "sha256": "d326ce539f5008fbcdf642d56cd2f8455f529d2352a8179a7e568de5815a4fbc"
+    },
+    {
+      "path": "opal/skills/opal-self-pm/references/task-records.md",
+      "sha256": "3ad2e8fca496b4dc0b29a2402fc25cb8b17d25b68d5758c18b2046d14d7402f8"
+    }
+  ],
+  "structural_checks": "YAML, header JSON, README reference paths and opal-e2e source existence passed",
+  "checks": [
+    {
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "cwd": "/Volumes/Data/AIStudio/workspace/ai-framework",
+      "exit_code": 0,
+      "output": "tasks/154-260924-opd-oppm-태스크-기록-정식화/evidence/followup-check-1.txt"
+    },
+    {
+      "command": [
+        "/Users/iskang/.opal/tools/code-scan/run.sh",
+        "validate",
+        "--changed",
+        "opal/skills/opal-self-pm/README.md,opal/skills/opal-self-pm/SKILL.md,opal/skills/opal-self-pm/references/knowledge-sync.md,opal/skills/opal-self-pm/references/testing-evidence.md,opal/skills/opal-self-pm/references/question-loop.md,opal/skills/opal-self-pm/references/task-records.md"
+      ],
+      "cwd": "/Volumes/Data/AIStudio/workspace/ai-framework",
+      "exit_code": 0,
+      "output": "tasks/154-260924-opd-oppm-태스크-기록-정식화/evidence/followup-check-2.txt"
+    },
+    {
+      "command": [
+        "/Users/iskang/.opal/tools/run-log-tool/run.sh",
+        "validate-run",
+        "--task",
+        "/Volumes/Data/AIStudio/workspace/ai-framework/tasks/154-260924-opd-oppm-태스크-기록-정식화",
+        "--run-id",
+        "run_154_oppm_records",
+        "--format",
+        "json"
+      ],
+      "cwd": "/Volumes/Data/AIStudio/workspace/ai-framework",
+      "exit_code": 0,
+      "output": "tasks/154-260924-opd-oppm-태스크-기록-정식화/evidence/followup-check-3.txt"
+    }
+  ],
+  "prior_attempt": "followup-attempt-1.txt",
+  "e2e_review": {
+    "skill": "opal/skills/opal-e2e/SKILL.md",
+    "decision": "미실행",
+    "reason": "스킬 지침·참조 문서 변경으로 앱 UI/API 실행 동작 변경 없음. 구조·참조·배포 정합 검사 적용.",
+    "unverified": "독립 에이전트의 전체 oppm 대화 루프 수행."
+  }
+}
