@@ -3,15 +3,33 @@
   "module": "ownership_core",
   "layer": "util",
   "domain": "opal-pipeline",
-  "description": "ownership-tool 런타임 저장소 코어. D-5의 3개 저장소 경로 계산(session_registry_path·hub_lease_path·stop_receipt_path)과 스키마 dataclass(SessionRecord·LeaseRecord·StopReceipt), D-7의 저장소별 lock(<path>.lock, O_CREAT+O_RDWR+O_NOFOLLOW·0o600·LOCK_EX+LOCK_NB 재시도, 상한 2000ms) + temp→os.replace 원자 교체 헬퍼(write_json_atomic·read_json), .opal-worktrees/.meta/task_<NNN>.json 읽기 전용 어댑터(read_registry_meta), 세션 ID 해석 2종(일반 CLI용 resolve_session_id — env OPAL_SESSION_ID → 플랫폼 env → 봉투 순, 훅 이벤트용 hook_session_id — 봉투 session_id만 읽고 env로 대체하지 않는다), 실행 루트 해석(resolve_roots — <cwd>/.opal-worktrees/.meta/ 존재 시 허브, 부재 시 worktree-tool이 내려보낸 <cwd>/.opal/task-ownership.json 발급값 사본에서 allocator_root·task_path를 읽고, 둘 다 없으면 roots_unresolved 진단만 남긴다 — 어느 분기에서도 cwd 문자열 자르기·부모 순회·.opal-worktrees 문자열 탐색으로 추론하지 않는다), 프로젝트 루트(task_root 축) 해석 단일 진입점(resolve_project_root — D-30b의 ① 명시 오버라이드 OPAL_PROJECT_ROOT → ② 봉투 cwd부터 조상으로 올라가며 .opal/MEMORY.json 또는 .opal/AGENT.md를 파일로 가진 첫 디렉토리 채택 → ③ None 3단계, 어댑터 5종이 공유하는 유일한 루트 채택 지점이며 플랫폼 환경변수를 읽지 않는다)을 제공한다. 실패는 예외가 아니라 ok/error 구조화 dict 또는 None으로 반환하며 플랫폼 고유 환경변수는 claude_adapter에만 둔다.",
+  "description": "ownership-tool 런타임 저장소 코어. D-5의 3개 저장소 경로 계산(session_registry_path·hub_lease_path·stop_receipt_path)과 스키마 dataclass(SessionRecord·LeaseRecord·StopReceipt), D-7의 저장소별 lock(<path>.lock, O_CREAT+O_RDWR+O_NOFOLLOW·0o600·LOCK_EX+LOCK_NB 재시도, 상한 2000ms) + temp→os.replace 원자 교체 헬퍼(write_json_atomic·read_json), .opal-worktrees/.meta/task_<NNN>.json 읽기 전용 어댑터(read_registry_meta), 세션 ID 해석 2종(일반 CLI용 resolve_session_id — env OPAL_SESSION_ID → 플랫폼 env → 봉투 순, 훅 이벤트용 hook_session_id — 봉투 session_id만 읽고 env로 대체하지 않는다), 실행 루트 해석(resolve_roots — <cwd>/.opal-worktrees/.meta/ 존재 시 허브, 부재 시 worktree-tool이 내려보낸 <cwd>/.opal/task-ownership.json 발급값 사본에서 allocator_root·task_path를 읽고, 둘 다 없으면 roots_unresolved 진단만 남긴다 — 어느 분기에서도 cwd 문자열 자르기·부모 순회·.opal-worktrees 문자열 탐색으로 추론하지 않는다), 프로젝트 루트(task_root 축) 해석 단일 진입점(resolve_project_root — D-30b의 ① 명시 오버라이드 OPAL_PROJECT_ROOT → ② 봉투 cwd부터 조상으로 올라가며 .opal/MEMORY.json 또는 .opal/AGENT.md를 파일로 가진 첫 디렉토리 채택 → ③ None 3단계, 어댑터 5종이 공유하는 유일한 루트 채택 지점이며 플랫폼 환경변수를 읽지 않는다)을 제공한다. 실패는 예외가 아니라 ok/error 구조화 dict 또는 None으로 반환하며 플랫폼 고유 환경변수는 Claude/Codex adapter가 소유한다. 일반 신원 우선순위는 OPAL→Claude→Codex→payload이며 available_session_sources는 값 없이 source 이름만 보고하고 session_launch_env는 adapter 선언 부모 신원을 제거한다.",
   "exports": [
-    "DEFAULT_LOCK_TIMEOUT_MS", "RUNTIME_DIR_MODE", "RUNTIME_FILE_MODE",
-    "session_registry_path", "hub_lease_path", "stop_receipt_path", "registry_meta_path",
-    "SessionRecord", "LeaseRecord", "StopReceipt",
-    "write_json_atomic", "read_json", "read_registry_meta", "resolve_session_id", "hook_session_id",
-    "task_ownership_copy_path", "resolve_roots", "resolve_project_root"
+    "DEFAULT_LOCK_TIMEOUT_MS",
+    "RUNTIME_DIR_MODE",
+    "RUNTIME_FILE_MODE",
+    "session_registry_path",
+    "hub_lease_path",
+    "stop_receipt_path",
+    "registry_meta_path",
+    "SessionRecord",
+    "LeaseRecord",
+    "StopReceipt",
+    "write_json_atomic",
+    "read_json",
+    "read_registry_meta",
+    "resolve_session_id",
+    "hook_session_id",
+    "task_ownership_copy_path",
+    "resolve_roots",
+    "resolve_project_root",
+    "available_session_sources",
+    "session_launch_env"
   ],
-  "depends": ["claude_adapter"]
+  "depends": [
+    "claude_adapter",
+    "codex_adapter"
+  ]
 }
 """
 from __future__ import annotations
@@ -351,7 +369,7 @@ def resolve_roots(cwd):
 def resolve_session_id(env, payload=None):
     """① env OPAL_SESSION_ID ② 플랫폼 어댑터 ③ hook 봉투 session_id 순으로 해석한다.
 
-    플랫폼 고유 변수명은 claude_adapter가 소유하며 이 모듈에는 두지 않는다. 없으면 None.
+    플랫폼 고유 변수명은 claude_adapter·codex_adapter가 소유하며 이 모듈에는 두지 않는다. 없으면 None.
     """
     env = env or {}
     value = env.get("OPAL_SESSION_ID")
@@ -362,11 +380,32 @@ def resolve_session_id(env, payload=None):
     if value:
         return value
 
+    from . import codex_adapter
+    value = codex_adapter.session_id_from_env(env)
+    if value:
+        return value
+
     if isinstance(payload, dict):
         value = payload.get("session_id")
         if isinstance(value, str) and value.strip():
             return value.strip()
     return None
+
+
+def available_session_sources(env):
+    """Return available source names only; never expose identity values in diagnostics."""
+    from . import codex_adapter
+    keys = ("OPAL_SESSION_ID", claude_adapter.SESSION_ID_ENV, codex_adapter.SESSION_ID_ENV)
+    return [key for key in keys if isinstance(env.get(key), str) and env[key].strip()]
+
+
+def session_launch_env(env):
+    """Isolate a new runtime from its parent's ownership and platform identities."""
+    from . import codex_adapter
+    cleaned = dict(env)
+    for key in ("OPAL_SESSION_ID",) + claude_adapter.INHERITED_IDENTITY_KEYS + codex_adapter.INHERITED_IDENTITY_KEYS:
+        cleaned.pop(key, None)
+    return cleaned
 
 
 def hook_session_id(payload):

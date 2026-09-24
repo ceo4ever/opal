@@ -1,0 +1,38 @@
+{
+  "ok": true,
+  "status": "worktree_session_owned",
+  "failure_reason": null,
+  "task": "155",
+  "generation": 2,
+  "adapter": "orca",
+  "adapter_handle": "term_08d7fb07-ee1b-4212-8101-fd35bab539c1",
+  "launch_receipt": {
+    "adapter": "orca",
+    "adapter_handle": "term_08d7fb07-ee1b-4212-8101-fd35bab539c1",
+    "reported_cwd": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_155",
+    "launched_at": "2026-09-24T06:09:26.768284+00:00"
+  },
+  "prompt_receipt": {
+    "prompt_id": "3db3139f535c2ad6",
+    "submitted_at": "2026-09-24T06:09:26.768284+00:00"
+  },
+  "lease_handoff": {
+    "ok": true,
+    "command": "ownership-tool",
+    "subcommand": "handoff",
+    "session_id": "01a0d1f4-614c-7e82-b2c8-c3352dc0c600",
+    "claim_source": "state_transition",
+    "claimed_at": "2026-09-24T15:09:26.197103+09:00",
+    "generation": 1,
+    "heartbeat_at": "2026-09-24T15:09:26.197103+09:00",
+    "lease_expires_at": "2026-09-24T19:09:26.197103+09:00",
+    "owner_session_id": null,
+    "status": "handoff_pending",
+    "task_path": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_155/tasks/155-260924-opds-\ucf54\ub371\uc2a4-\uc138\uc158-\uc774\uad00-\ubcf5\uad6c/run/real-e2e-final/child-cwd/tasks/155-fixture",
+    "ttl_sec": 14400,
+    "handoff_to_worktree_root": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_155",
+    "handoff_from_session_id": "01a0d1f4-614c-7e82-b2c8-c3352dc0c600",
+    "handoff_expires_at": "2026-09-24T15:24:26.376574+09:00"
+  },
+  "meta_path": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_155/tasks/155-260924-opds-\ucf54\ub371\uc2a4-\uc138\uc158-\uc774\uad00-\ubcf5\uad6c/run/real-e2e-final/allocator-fixture/.opal-worktrees/.meta/task_155.json"
+}

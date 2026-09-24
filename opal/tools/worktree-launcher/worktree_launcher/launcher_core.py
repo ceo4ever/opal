@@ -3,16 +3,25 @@
   "module": "launcher_core",
   "layer": "util",
   "domain": "opal-workspace",
-  "description": "허브에서 워크트리 실행 세션을 띄우는 launcher 공통 lifecycle. `run(adapter, hub_root=…, task=…, worktree_root=…, command=…)`이 preflight(registry meta 조회 → 등록된 worktree_root 동치 확인 → `hub_owned`이면 `session_launching`으로 전이, 이미 `session_launching`이면 그대로 이어받아 generation을 낭비하지 않는다) → `adapter.launch(worktree_root, command)` 1회 호출 → launch receipt({adapter, adapter_handle, reported_cwd, launched_at}) 수집 → reported_cwd가 registry worktree_root와 realpath 동치인지 검사 → handoff prompt 제출 receipt({prompt_id, submitted_at}) 수집 → `worktree_session_owned` 전이 순으로 진행한다. launch 실패·prompt 실패·cwd 불일치·전이 거부 어느 경로든(`adapter_report_invalid`·`launch_receipt_missing`·`reported_cwd_mismatch`·`prompt_receipt_missing`·`ownership_set_rejected` 5경로 전건) `failure_reason=launch_failed` + `hub_owned` + attribution 키 부재 + generation 증가를 단일 교체로 담는 원자 복귀를 호출해 dual owner·orphan `session_launching`을 남기지 않는다. 복귀는 그 직전에 `adapter.close(handle=…)`를 1회 호출해 launch가 띄웠을 수 있는 터미널을 정리한다 — handle은 launch 보고 dict의 `adapter_handle`에서만 취하고 없으면 시도하지 않으며(대상 추측 금지), 스코프는 D-C의 정밀 close 하나다(워크스페이스 스윕은 회수 경로 소유). close의 예외·미구현(`AttributeError`)·비-0 exit는 전부 삼켜 반환 dict의 `terminal_close` 로그 필드로만 남기고 `ownership-set` 복귀는 반드시 수행한다 — 복귀가 정리 성공에 종속되면 dual owner가 남는다. 실행 소유권(lease) 이관은 registry 발급 `task_path`·`worktree_root`만을 대상으로 preflight 전이 직후·`adapter.launch` 직전에 `lease_handoff`를 1회 호출하고, 응답이 `ok`도 `noop`도 아니면 기동하지 않고 복귀한다(`lease_handoff_failed`). 복귀 경로는 `ownership-set` 복귀 호출 **앞**에서 `lease_handoff_cancel`을 1회 호출하며 그 결과는 `terminal_close`와 동형의 `lease_handoff_cancel` 로그 필드로만 남는다 — 취소의 예외·거부는 삼켜 복귀를 막지 않는다. lease 판정·저장·lock은 ownership-tool의 `handoff`·`handoff-cancel` CLI 계약이 소유하며 이 모듈은 얇은 subprocess 위임자일 뿐이다(사설 lease writer 금지). 상태 쓰기는 전부 worktree-tool의 `ownership-set` 계약을 subprocess로 경유하며 이 모듈은 registry 쓰기 로직·lock·원자 교체를 복제하지 않는다(사설 ownership writer 금지). registry 읽기는 인자로 받은 hub_root·task로 만든 `<hub_root>/.opal-worktrees/.meta/task_{task}.json` 1경로에서만 하고 경로 문자열·basename·mtime으로 신원을 추론하지 않는다. adapter는 호출자가 명시 선택해 주입하며 OS·터미널 종류를 추측하지 않는다. 플랫폼 고유 env 변수명은 이 도구에 두지 않는다(C-15 — ownership-tool의 claude_adapter 전용).",
+  "description": "워크트리 launcher lifecycle: registry 발급 경로 검증, 명시 ID 또는 ownership resolver의 신원 preflight, session_launching 전이, 고정 ID handoff, 공개 session-launch 부모 신원 격리, terminal/command receipt·cwd 검증, 공개 ownership-set --owner-from-lease 최종 전이. 실패는 정확한 terminal handle만 close하고 같은 ID로 cancel한 뒤 hub_owned 원자 복귀한다. 진단은 cause·adapter·가용 identity source 이름을 포함한다. lease·registry private writer를 만들지 않고 공개 ownership-tool/worktree-tool 계약에 위임한다.",
   "exports": [
-    "WORKTREE_TOOL_PATH", "OWNERSHIP_TOOL_DIR", "FAILURE_REASON_LAUNCH_FAILED",
-    "LauncherError", "registry_meta_path", "read_registry_meta",
-    "build_launch_receipt", "build_prompt_receipt", "ownership_set",
-    "lease_handoff", "lease_handoff_cancel", "run"
+    "WORKTREE_TOOL_PATH",
+    "OWNERSHIP_TOOL_DIR",
+    "FAILURE_REASON_LAUNCH_FAILED",
+    "LauncherError",
+    "registry_meta_path",
+    "read_registry_meta",
+    "build_launch_receipt",
+    "build_prompt_receipt",
+    "ownership_set",
+    "lease_handoff",
+    "lease_handoff_cancel",
+    "run"
   ],
   "depends": [
-    "opal/tools/worktree-tool/worktree_tool.py(ownership-set CLI 계약)",
-    "opal/tools/ownership-tool/ownership_tool/cli.py(handoff·handoff-cancel CLI 계약)"
+    "opal/tools/worktree-tool/worktree_tool.py",
+    "ownership_tool.ownership_core",
+    "ownership_tool.cli"
   ]
 }
 """
@@ -22,6 +31,7 @@ from __future__ import annotations
 import json
 import os
 import pathlib
+import shlex
 import subprocess
 import sys
 
@@ -46,6 +56,10 @@ PROMPT_RECEIPT_FIELDS = ("prompt_id", "submitted_at")
 
 OWNERSHIP_SET_TIMEOUT_SEC = 60
 LEASE_TIMEOUT_SEC = 60
+
+sys.path.insert(0, str(OWNERSHIP_TOOL_DIR))
+from ownership_tool import ownership_core
+
 
 
 class LauncherError(RuntimeError):
@@ -135,6 +149,8 @@ def ownership_set(hub_root, task: str, state: str, **options) -> dict:
     ):
         if value:
             argv += [flag, str(value)]
+    if options.get("owner_from_lease"):
+        argv.append("--owner-from-lease")
     for flag, receipt in (
         ("--launch-receipt", options.get("launch_receipt")),
         ("--prompt-receipt", options.get("prompt_receipt")),
@@ -184,11 +200,12 @@ def _lease_cli(subcommand: str, argv_tail, label: str) -> dict:
         ) from exc
 
 
-def lease_handoff(task_path, worktree_root) -> dict:
+def lease_handoff(task_path, worktree_root, session_id=None) -> dict:
     """`ownership-tool handoff` 1회. 대상은 **registry 발급값**만 받는다(C-4, D-4)."""
     return _lease_cli(
         "handoff",
         [
+            "--session-id", str(session_id),
             "--task-path",
             str(task_path),
             "--to-worktree-root",
@@ -198,28 +215,28 @@ def lease_handoff(task_path, worktree_root) -> dict:
     )
 
 
-def lease_handoff_cancel(task_path) -> dict:
+def lease_handoff_cancel(task_path, session_id=None) -> dict:
     """`ownership-tool handoff-cancel` 1회 — 이관 출발 세션만 취소할 수 있다."""
     return _lease_cli(
-        "handoff-cancel", ["--task-path", str(task_path)], "lease_handoff_cancel"
+        "handoff-cancel", ["--task-path", str(task_path), "--session-id", str(session_id)], "lease_handoff_cancel"
     )
 
 
-def _lease_handoff_for_launch(task_path, worktree_root) -> dict:
+def _lease_handoff_for_launch(task_path, worktree_root, session_id) -> dict:
     """기동 직전 이관 1회. registry가 `task_path`를 발급하지 않은 태스크는 이관 대상 자체가
     없으므로 noop으로 통과시킨다 — 경로를 cwd·문자열로 지어내지 않는다(C-4)."""
     if not task_path:
         return {"ok": True, "noop": True, "diagnostic": "registry_task_path_missing"}
-    return lease_handoff(task_path, worktree_root)
+    return lease_handoff(task_path, worktree_root, session_id=session_id)
 
 
-def _cancel_lease_handoff(task_path) -> dict:
+def _cancel_lease_handoff(task_path, session_id) -> dict:
     """복귀 직전의 이관취소 1회. **어떤 실패도 올리지 않고** 로그 dict로만 돌려준다 —
     복귀가 취소 성공에 종속되면 dual owner가 남는다(`_close_terminal`과 동형)."""
     if not task_path:
         return {"attempted": False, "reason": "task_path_missing"}
     try:
-        return lease_handoff_cancel(task_path)
+        return lease_handoff_cancel(task_path, session_id=session_id)
     except Exception as exc:  # noqa: BLE001 — 취소 실패가 복귀를 막으면 dual owner가 남는다
         return {
             "ok": False,
@@ -276,6 +293,8 @@ def _revert(
     adapter=None,
     report=None,
     lease_task_path=None,
+    owner_session_id=None,
+    cause=None,
 ) -> dict:
     """원자 복귀 — `failure_reason=launch_failed` + `hub_owned` + attribution 키 부재 +
     generation 증가를 `ownership-set` 한 번의 교체로 담는다(owner·receipt 소거는 그쪽이
@@ -287,7 +306,7 @@ def _revert(
     같은 결로 `ownership-set` 복귀 호출 **앞**에서 lease 이관을 1회 취소하고, 그 결과는
     `lease_handoff_cancel` 로그 필드로만 남긴다 — 취소의 거부·예외·미구현은 전부 삼킨다."""
     terminal_close = _close_terminal(adapter, report)
-    lease_cancel = _cancel_lease_handoff(lease_task_path)
+    lease_cancel = _cancel_lease_handoff(lease_task_path, owner_session_id)
     response = ownership_set(
         hub_root,
         task,
@@ -303,6 +322,9 @@ def _revert(
         "status": block.get("state"),
         "failure_reason": FAILURE_REASON_LAUNCH_FAILED,
         "detail": detail,
+        "cause": cause,
+        "adapter": adapter_name,
+        "available_identity_sources": ownership_core.available_session_sources(os.environ),
         "task": task,
         "generation": block.get("generation"),
         "terminal_close": terminal_close,
@@ -340,6 +362,20 @@ def run(adapter, *, hub_root, task, worktree_root, command, owner_session_id=Non
     prior_state = block.get("state")
     adapter_name = block.get("adapter") or getattr(adapter, "name", None)
 
+    owner_session_id = owner_session_id or ownership_core.resolve_session_id(os.environ)
+    if not owner_session_id:
+        return {"ok": False, "error": "session_id_unresolved", "cause": "identity_preflight",
+                "adapter": adapter_name, "available_identity_sources":
+                ownership_core.available_session_sources(os.environ), "task": task}
+
+    if meta.get("task_path"):
+        lease_status = _lease_cli("status", ["--task-path", str(meta["task_path"]),
+                                 "--session-id", owner_session_id], "lease_preflight")
+        if lease_status.get("classification") == "foreign_session_owned":
+            return {"ok": False, "error": "foreign_session_owned", "cause": "lease_preflight",
+                    "task": task, "adapter": adapter_name,
+                    "available_identity_sources": ownership_core.available_session_sources(os.environ)}
+
     if prior_state == EXEC_STATE_HUB_OWNED:
         # 허브 소유에서만 launching을 새로 연다. 이미 session_launching이면 그 소유를
         # 이어받아 generation을 낭비하지 않는다(멱등 재진입).
@@ -365,18 +401,28 @@ def run(adapter, *, hub_root, task, worktree_root, command, owner_session_id=Non
     # [MUST] 이관 대상은 registry meta 발급값에서만 취한다(C-4, D-4) — cwd·경로 문자열·
     # `.opal-worktrees` 토큰으로 구성하지 않는다. 기동 **직전**에 정확히 1회 수행한다.
     lease_task_path = meta.get("task_path")
-    lease_result = _lease_handoff_for_launch(lease_task_path, registered_root)
+    try:
+        lease_result = _lease_handoff_for_launch(lease_task_path, registered_root, owner_session_id)
+    except Exception as exc:
+        lease_result = {"ok": False, "error": type(exc).__name__, "message": str(exc)}
     if not (lease_result.get("ok") or lease_result.get("noop")):
         return _revert(
             hub_root, task, "lease_handoff_failed", adapter_name,
-            lease_task_path=lease_task_path,
+            lease_task_path=lease_task_path, owner_session_id=owner_session_id, cause=lease_result,
         )
 
-    report = adapter.launch(worktree_root, command)
+    launch_command = shlex.join([str(OWNERSHIP_TOOL_DIR / "run.sh"),
+                                 "session-launch", "--command", command])
+    try:
+        report = adapter.launch(worktree_root, launch_command)
+    except Exception as exc:
+        return _revert(hub_root, task, "adapter_launch_failed", adapter_name,
+                       lease_task_path=lease_task_path, owner_session_id=owner_session_id,
+                       cause={"error": type(exc).__name__, "message": str(exc)})
     if not isinstance(report, dict):
         return _revert(
             hub_root, task, "adapter_report_invalid", adapter_name,
-            adapter=adapter, report=report, lease_task_path=lease_task_path,
+            adapter=adapter, report=report, lease_task_path=lease_task_path, owner_session_id=owner_session_id,
         )
     adapter_name = report.get("adapter") or adapter_name
 
@@ -384,7 +430,7 @@ def run(adapter, *, hub_root, task, worktree_root, command, owner_session_id=Non
     if launch_receipt is None:
         return _revert(
             hub_root, task, "launch_receipt_missing", adapter_name,
-            adapter=adapter, report=report, lease_task_path=lease_task_path,
+            adapter=adapter, report=report, lease_task_path=lease_task_path, owner_session_id=owner_session_id,
         )
 
     # [MUST] reported_cwd가 registry worktree_root와 일치하지 않으면 전이하지 않는다.
@@ -393,21 +439,21 @@ def run(adapter, *, hub_root, task, worktree_root, command, owner_session_id=Non
     ):
         return _revert(
             hub_root, task, "reported_cwd_mismatch", adapter_name,
-            adapter=adapter, report=report, lease_task_path=lease_task_path,
+            adapter=adapter, report=report, lease_task_path=lease_task_path, owner_session_id=owner_session_id,
         )
 
     prompt_receipt = build_prompt_receipt(report)
     if prompt_receipt is None:
         return _revert(
             hub_root, task, "prompt_receipt_missing", adapter_name,
-            adapter=adapter, report=report, lease_task_path=lease_task_path,
+            adapter=adapter, report=report, lease_task_path=lease_task_path, owner_session_id=owner_session_id,
         )
 
     response = ownership_set(
         hub_root,
         task,
         EXEC_STATE_WORKTREE_SESSION_OWNED,
-        owner_session_id=owner_session_id,
+        owner_from_lease=True,
         adapter=adapter_name,
         adapter_handle=launch_receipt["adapter_handle"],
         launch_receipt=launch_receipt,
@@ -416,7 +462,7 @@ def run(adapter, *, hub_root, task, worktree_root, command, owner_session_id=Non
     if not response.get("ok"):
         return _revert(
             hub_root, task, f"ownership_set_rejected: {response}", adapter_name,
-            adapter=adapter, report=report, lease_task_path=lease_task_path,
+            adapter=adapter, report=report, lease_task_path=lease_task_path, owner_session_id=owner_session_id,
         )
 
     owned = response.get("execution_ownership") or {}

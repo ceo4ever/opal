@@ -1,0 +1,6 @@
+{
+  "ok": true,
+  "identity_result": null,
+  "stderr": "{\"warning\": \"ownership_import_failed\", \"message\": \"[Errno 2] No such file or directory: '/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/tmpcx0qcqd2/ownership_tool/__init__.py'\"}\n",
+  "missing_dependency_dir": "/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/tmpcx0qcqd2"
+}

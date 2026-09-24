@@ -4,7 +4,7 @@
   "layer": "util",
   "domain": "opal-pipeline",
   "description": "Claude Code 플랫폼 고유 환경변수 어댑터(D-18·C-15). CLAUDE_CODE_SESSION_ID·CLAUDE_CODE_STOP_HOOK_BLOCK_CAP 등 플랫폼 변수명을 이 모듈 한 곳에만 두고 OPAL 중립 값으로 매핑한다. 판정 로직은 갖지 않는다.",
-  "exports": ["SESSION_ID_ENV", "ENV_FILE_ENV", "STOP_HOOK_BLOCK_CAP_ENV", "session_id_from_env", "stop_hook_block_cap"],
+  "exports": ["INHERITED_IDENTITY_KEYS", "SESSION_ID_ENV", "ENV_FILE_ENV", "STOP_HOOK_BLOCK_CAP_ENV", "session_id_from_env", "stop_hook_block_cap"],
   "depends": []
 }
 """
@@ -13,6 +13,7 @@ from __future__ import annotations
 SESSION_ID_ENV = "CLAUDE_CODE_SESSION_ID"
 ENV_FILE_ENV = "CLAUDE_ENV_FILE"
 STOP_HOOK_BLOCK_CAP_ENV = "CLAUDE_CODE_STOP_HOOK_BLOCK_CAP"
+INHERITED_IDENTITY_KEYS = (SESSION_ID_ENV, ENV_FILE_ENV)
 
 
 def session_id_from_env(env):

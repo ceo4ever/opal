@@ -266,3 +266,13 @@ OR
 - 소급 확장은 태스크 중단이 불가능할 때만 사용한다. 각 slot에서 `.opal/AGENT.md`, `.opal/code-scan.json`, 필요한 `tasks` fixture가 실체화되고 code-scan·event-loader가 기대한 설정을 읽는지 검증한다.
 - 문서의 명시 `project_root` 약속만으로는 CLI 인자가 없는 code-scan 호출을 보호하지 못한다. 파일 실체화나 drain 없이 Phase 1에 진입하지 않는다.
 - **[MUST] gate의 실제 통과(drain 또는 소급 확장)는 Phase 2 진입 전 조건이며, 이 절차를 문서에 기재하는 태스크의 완료 조건이 아니다.** gate 미통과 상태에서 Phase 1 코드가 머지되어 있으면 남은 legacy slot에서의 code-scan·event-loader 결과를 신뢰하지 않는다.
+
+### Codex identity 연결 (task 155)
+
+플랫폼 env는 ownership-tool의 Claude/Codex adapter가 소유한다. core resolver는
+OPAL 중립 ID 우선과 기존 Claude 우선을 보존하고 native Codex root session을 해석한다.
+훅 payload-only 경계는 유지한다. launcher는 시작 ID를 고정해 handoff/cancel에 명시 전달하고,
+공개 session-launch가 부모 신원을 제거한다. 설치된 Codex bootstrap의 codex-start는 실제
+새 native ID를 payload로 정규화하여 등록·claim·heartbeat를 수행한다. 최종 registry 전이는
+worktree-tool ownership-set --owner-from-lease 경유이며, pending일 때 부모 ID를 owner로
+남기지 않는다. 실제 기동/lease/registry 증거가 없으면 E2E 완료로 판정하지 않는다.

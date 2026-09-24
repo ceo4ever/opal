@@ -1,0 +1,8 @@
+{
+  "ok": false,
+  "error": "launch_failed",
+  "detail": "lease_handoff_failed",
+  "cancel_error": "session_id_unresolved",
+  "state": "hub_owned",
+  "generation": 2
+}

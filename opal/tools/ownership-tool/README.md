@@ -43,7 +43,7 @@ hook 어댑터는 판정 로직을 갖지 않는다 — 봉투 파싱·출력 �
 
 ## CLI 표면
 
-`run.sh <subcommand> ...`는 `ownership_tool.cli`에 위임하며, 전 경로에서 stdout에 단일 라인 JSON
+`run.sh <subcommand> ...`는 `ownership_tool.cli`에 위임하며, session-launch 외 경로에서 stdout에 단일 라인 JSON
 `{"ok": bool, "command": "ownership-tool", ...}` 1줄만 낸다.
 
 | 서브명령 | 인자 | 동작 |
@@ -51,10 +51,12 @@ hook 어댑터는 판정 로직을 갖지 않는다 — 봉투 파싱·출력 �
 | `status` | `--task-path` | lease 레코드 전문 + 요청 세션 기준 `lease.classify` 결과 + `handoff_*` 필드 |
 | `release` | `--task-path` `[--session-id]` | 소유 세션 일치에만 해제 |
 | `handoff` | `--task-path` `--to-worktree-root` | `lease.handoff` 위임 |
-| `handoff-cancel` | `--task-path` | `lease.handoff_cancel` 위임 |
+| `handoff-cancel` | `--task-path` `[--session-id]` | `lease.handoff_cancel` 위임 |
+| `codex-start` | `--cwd` | 실제 native ID의 등록·claim·heartbeat |
+| `session-launch` | `--command` | 부모 신원 제거 후 exec; 자식 출력/종료 코드 보존 |
 
 - 세션 id는 `--session-id` > `ownership_core.resolve_session_id(os.environ, {})` 순이다. 플랫폼 고유
-  환경변수명은 `claude_adapter`가 단독으로 소유하고 `cli.py`에는 두지 않는다.
+  환경변수명은 Claude/Codex adapter가 소유하고 `cli.py`에는 두지 않는다.
 - `release`는 타 세션이 소유한 live lease를 `not_owner`로 거부하고 0이 아닌 종료코드를 내며 레코드를
   쓰지 않는다. 레코드 부재·`released`·만료는 `noop: true` + 종료코드 0이다. 강제 해제 표면은 없다.
 - `--task-path`·`--to-worktree-root`의 상대경로는 cwd·task path 조상·워크트리 디렉터리명으로 보정하지
@@ -193,12 +195,12 @@ allocator root 계약이며 여기에 복제하지 않는다. 같은 절의 "조
 | 호출 주체 | 함수 | 순서 |
 |---|---|---|
 | 훅 5종(SessionStart·SessionEnd·PostToolUse heartbeat·PreToolUse·Stop) | `hook_session_id(payload)` | 봉투 `payload["session_id"]`만. env를 받지 않는다 |
-| 일반 CLI(`cli.py`) | `resolve_session_id(env, payload)` | ① `env["OPAL_SESSION_ID"]` ② `claude_adapter.session_id_from_env(env)` ③ 봉투 |
+| 일반 CLI(`cli.py`) | `resolve_session_id(env, payload)` | ① `env["OPAL_SESSION_ID"]` ② `claude_adapter.session_id_from_env(env)` ③ `codex_adapter.session_id_from_env(env)` ④ 봉투 |
 
 훅이 env를 읽으면 부모 세션의 env를 상속한 자식 Claude CLI의 종료가 부모 lease를 해제하고 부모
 registry를 닫는다. 그래서 훅은 이벤트가 스스로 밝힌 신원만 쓴다. 봉투 `session_id`가 없거나 공백·비문자이면
 `no_session_id` 진단만 남기고 어떤 파일도 쓰지 않는다(PreToolUse는 차단 없이 통과, Stop은 receipt 미기록).
-플랫폼 고유 변수명은 `claude_adapter` 한 곳에만 둔다.
+플랫폼 고유 변수명은 해당 Claude/Codex adapter에만 둔다.
 
 `ownership_core`에는 플랫폼 고유 변수명이 등장하지 않는다.
 
@@ -241,3 +243,25 @@ hook의 무출력 exit 0 fail-safe는 유지된다. 구현 위치는 `stop_hook.
 ```bash
 ~/.opal/.venv/bin/python -m pytest opal/tools/ownership-tool/tests -q
 ```
+
+## Codex native 세션 시작과 부모 신원 격리 (task 155)
+
+CLI 신원 순서는 명시 `--session-id` > `OPAL_SESSION_ID` > Claude adapter >
+Codex adapter(`CODEX_SESSION_ID`) > payload다. 훅 5종은 계속 payload-only다.
+`CODEX_THREAD_ID`와 `ORCA_SESSION_ID`는 신원 fallback이 아니다.
+
+- `run.sh session-launch --command '<원래 셸 명령>'`: adapter가 소유한 부모 session/thread/env-file
+  키와 `OPAL_SESSION_ID`를 제거한 환경에서 원래 명령을 exec한다. stdout·종료 코드는 자식의 것이다.
+- `run.sh codex-start --cwd <현재 절대 경로>`: Codex 도구 프로세스에 주입된 실제 native ID로
+  기존 공개 SessionStart와 heartbeat를 실행한다. 부모 OPAL ID와 충돌하면 쓰기 전에 실패한다.
+  설치된 Codex AGENTS bootstrap이 설정·worker 마커 게이트 이후 호출한다. 영구 export나
+  비공식 Codex env 파일에 의존하지 않는다. native ID가 없으면 추측 없이 실패한다.
+  registry 등록 실패·foreign owner도 성공으로 감추지 않고 nonzero 진단한다.
+  state-tool의 상태 전이 claim과 run-log actor 역시 동일 resolver를 소비한다.
+
+공식 `openai/codex` commit `53446f90a56692dede3c8f413e8d486a6adb77b5`의
+`core/src/exec_env.rs`는 session ID를 도구 환경에 주입하며,
+`core/src/session/session.rs`는 이를 root와 descendant가 공유하는 identity로 정의한다.
+따라서 subagent thread를 별도 lease owner로 취급하지 않는다. 별도 Codex root 실행의
+새 ID는 실제 기동으로 검증해야 한다. 로컬 standalone 0.154.0 배포에는 Rust 소스가 없어
+해당 바이너리와 공개 commit의 완전 동일성·모든 resume 경로의 수명은 보증하지 않는다.

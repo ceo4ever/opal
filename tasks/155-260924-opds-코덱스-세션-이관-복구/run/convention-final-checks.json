@@ -1,0 +1,24 @@
+[
+  {
+    "argv": [
+      "/Users/iskang/.opal/tools/code-scan/run.sh",
+      "validate",
+      "--changed",
+      "opal/tools/ownership-tool/ownership_tool/claude_adapter.py,opal/tools/ownership-tool/ownership_tool/cli.py,opal/tools/ownership-tool/ownership_tool/ownership_core.py,opal/tools/worktree-launcher/tests/test_integration.py,opal/tools/worktree-launcher/tests/test_launcher_core.py,opal/tools/worktree-launcher/worktree_launcher/launcher_core.py,opal/tools/worktree-tool/worktree_tool.py,opal/tools/ownership-tool/ownership_tool/codex_adapter.py,opal/tools/ownership-tool/tests/test_codex_identity.py,opal/tools/worktree-launcher/tests/test_codex_handoff.py,opal/tools/state-tool/state_tool.py,opal/tools/state-tool/tests/test_state_tool_ownership.py",
+      "--json"
+    ],
+    "exit_code": 0,
+    "stdout": "{\"ok\":true,\"command\":\"validate\",\"mode\":\"changed\",\"coverage\":{\"total\":12,\"inline\":10,\"manifest\":0,\"covered\":10,\"percent\":83.3},\"counts\":{\"orphan\":0,\"uncovered\":2,\"conflict\":0,\"draft\":0,\"exports_not_found\":0,\"worker_scope_violation\":0,\"newly_uncovered\":0,\"pre_existing\":2,\"manifest_oversize\":0,\"header_history\":3},\"violations\":[{\"code\":\"uncovered\",\"sub\":\"pre_existing\",\"file\":\"opal/tools/worktree-launcher/tests/test_integration.py\",\"detail\":\"\"},{\"code\":\"uncovered\",\"sub\":\"pre_existing\",\"file\":\"opal/tools/worktree-launcher/tests/test_launcher_core.py\",\"detail\":\"\"},{\"code\":\"header_history\",\"sub\":\"description\",\"file\":\"opal/tools/worktree-tool/worktree_tool.py\",\"key\":\"worktree_tool.py\",\"detail\":\"138,145\",\"tasks\":2},{\"code\":\"header_history\",\"sub\":\"description\",\"file\":\"opal/tools/state-tool/state_tool.py\",\"key\":\"state_tool.py\",\"detail\":\"118,128,135,136,137,138,147,150,512\",\"tasks\":9},{\"code\":\"header_history\",\"sub\":\"description\",\"file\":\"opal/tools/state-tool/tests/test_state_tool_ownership.py\",\"key\":\"test_state_tool_ownership.py\",\"detail\":\"138,150\",\"tasks\":2}],\"skipped\":[],\"headerSource\":\"inline\"}\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "diff",
+      "--check"
+    ],
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  }
+]

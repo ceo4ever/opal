@@ -1,0 +1,56 @@
+[
+  {
+    "id": "S-1",
+    "acceptance_ref": "AC-1, C-1",
+    "expected": "실제 입력 신원 해석, 공백/누락은 미해석, core에 플랫폼 변수 리터럴 없음",
+    "red_required": true
+  },
+  {
+    "id": "S-2",
+    "acceptance_ref": "AC-1, C-1",
+    "expected": "OPAL 우선·기존 Claude 우선순위 보존·payload fallback",
+    "red_required": false
+  },
+  {
+    "id": "S-3",
+    "acceptance_ref": "AC-2, C-5",
+    "expected": "공개 handoff가 명시 ID로 성공, 새 세션 기동 1회",
+    "red_required": true
+  },
+  {
+    "id": "S-4",
+    "acceptance_ref": "AC-2, AC-5, C-5",
+    "expected": "handoff와 같은 ID로 cancel, 허브 lease 복원",
+    "red_required": true
+  },
+  {
+    "id": "S-5",
+    "acceptance_ref": "AC-3, AC-4, AC-6, C-2, C-4, C-6, H-1, H-2, H-3",
+    "expected": "수동 OPAL export 없이 native ID 사용, registry worktree_session_owned와 live lease owner 일치, 허브 writer 종료, 실제 terminal receipt 및 결과 존재",
+    "red_required": false
+  },
+  {
+    "id": "S-6",
+    "acceptance_ref": "AC-3, AC-4, C-2, C-5, H-2",
+    "expected": "child≠hub, generation 증가·heartbeat 갱신, 두 순서 owner 정합, foreign live lease 불변·거부",
+    "red_required": false
+  },
+  {
+    "id": "S-7",
+    "acceptance_ref": "AC-5, C-5",
+    "expected": "preflight 미해석은 상태 불변, 실패 terminal 정확히 1개 정리·hub_owned 원복, cause/adapter/source 이름 관측·ID 원문 불필요 노출 없음",
+    "red_required": false
+  },
+  {
+    "id": "S-8",
+    "acceptance_ref": "AC-1, AC-6, C-1, C-3",
+    "expected": "Claude 동작 유지, 훅은 payload-only, 타세션 lease에 쓰지 않음",
+    "red_required": false
+  },
+  {
+    "id": "S-9",
+    "acceptance_ref": "AC-3, AC-6, C-3, C-4, H-1, H-3",
+    "expected": "기동 자식에는 부모 신원 없음, Codex가 자기 native ID 주입, 시작은 실제 ID payload 사용, 사용자 템플릿 보존·정식 설치 패키지/부트 일치",
+    "red_required": true
+  }
+]

@@ -1,0 +1,8 @@
+{
+  "ok": false,
+  "error": "session_id_unresolved",
+  "cause": "identity_preflight",
+  "adapter": "generic",
+  "available_identity_sources": [],
+  "task": "220"
+}

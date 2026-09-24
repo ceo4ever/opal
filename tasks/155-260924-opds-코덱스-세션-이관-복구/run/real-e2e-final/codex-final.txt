@@ -1,0 +1,3 @@
+[부트스트랩] ✅ session.assistant ⏳ PM
+
+Probe 실행 완료. `proof.json`의 `pass` 값은 **`true`**입니다.

@@ -1,0 +1,20 @@
+{
+  "change": "comment-only YAML to JSON @header",
+  "contract": "test-tool README scenario-lock freezes scenario spec; lib/scenario.py:369-400 does not lock test file hashes. red-first.md section 1.5 forbids weakening or deleting RED expectations. No header-only mutation API exists; spec and verdict left untouched; runtime AST and body bytes unchanged.",
+  "files": [
+    {
+      "path": "opal/tools/ownership-tool/tests/test_codex_identity.py",
+      "ast_sha256_before": "1351a7af0420bccb4ebe7275b1f366dfe2b98eed460433af69137e4aa8fa5246",
+      "ast_sha256_after": "1351a7af0420bccb4ebe7275b1f366dfe2b98eed460433af69137e4aa8fa5246",
+      "ast_identical": true,
+      "body_bytes_identical": true
+    },
+    {
+      "path": "opal/tools/worktree-launcher/tests/test_codex_handoff.py",
+      "ast_sha256_before": "adcfcbe543bc5beb7eb7e6ab59b8ccacc4737724de73d672e2049b5d19638ecb",
+      "ast_sha256_after": "adcfcbe543bc5beb7eb7e6ab59b8ccacc4737724de73d672e2049b5d19638ecb",
+      "ast_identical": true,
+      "body_bytes_identical": true
+    }
+  ]
+}

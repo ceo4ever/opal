@@ -1,0 +1,84 @@
+{
+  "status": "pass",
+  "fidelity": "real-usage",
+  "assertion_results": [
+    {
+      "id": "raw_thread_matches",
+      "expected": true,
+      "actual": true
+    },
+    {
+      "id": "parent_distinct",
+      "expected": true,
+      "actual": true
+    },
+    {
+      "id": "neutral_not_inherited",
+      "expected": true,
+      "actual": true
+    },
+    {
+      "id": "cli_success",
+      "expected": true,
+      "actual": true
+    },
+    {
+      "id": "raw_owners_match",
+      "expected": true,
+      "actual": true
+    },
+    {
+      "id": "active_worktree_owner",
+      "expected": true,
+      "actual": true
+    },
+    {
+      "id": "claim_generation_increased",
+      "expected": true,
+      "actual": true
+    },
+    {
+      "id": "heartbeat_increased",
+      "expected": true,
+      "actual": true
+    },
+    {
+      "id": "heartbeat_generation_stable",
+      "expected": true,
+      "actual": true
+    },
+    {
+      "id": "lease_live",
+      "expected": true,
+      "actual": true
+    },
+    {
+      "id": "receipt_match",
+      "expected": true,
+      "actual": true
+    },
+    {
+      "id": "bootstrap_body_match",
+      "expected": true,
+      "actual": true
+    },
+    {
+      "id": "exact_terminal_closed",
+      "expected": true,
+      "actual": true
+    }
+  ],
+  "required_evidence": [
+    "real_codex_events",
+    "raw_lease_registry",
+    "installed_hashes",
+    "terminal_close"
+  ],
+  "observed_evidence": [
+    "real_codex_events",
+    "raw_lease_registry",
+    "installed_hashes",
+    "terminal_close"
+  ],
+  "evidence": "Independent raw checks: real-e2e-final/proof.json + codex-events.jsonl + launch.json + terminal-close.json; live lease owner matches native child distinct from parent, generation1->2, heartbeat strictly advances, source/installed7hash match. Early child registry race and foreign owner immutability covered by independent-launcher148pass; late child covered by actual live registry generation3. independent-e2e-raw-check.json; independent-installed-hash-check.json."
+}

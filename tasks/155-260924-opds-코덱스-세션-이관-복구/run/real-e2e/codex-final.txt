@@ -1,0 +1,1 @@
+`proof.json`의 `pass` 값은 **`true`**입니다.

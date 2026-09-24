@@ -1,0 +1,24 @@
+{
+  "secret_pattern_findings": [],
+  "platform_identity_literals_in_core": [],
+  "scanned_files": [
+    "docs/ARCHITECTURE.md",
+    "opal/bootstrapper/codex-bootstrap.md",
+    "opal/core/references/harness/worktree.md",
+    "opal/tools/ownership-tool/README.md",
+    "opal/tools/ownership-tool/ownership_tool/claude_adapter.py",
+    "opal/tools/ownership-tool/ownership_tool/cli.py",
+    "opal/tools/ownership-tool/ownership_tool/ownership_core.py",
+    "opal/tools/state-tool/state_tool.py",
+    "opal/tools/state-tool/tests/test_state_tool_ownership.py",
+    "opal/tools/worktree-launcher/README.md",
+    "opal/tools/worktree-launcher/tests/test_integration.py",
+    "opal/tools/worktree-launcher/tests/test_launcher_core.py",
+    "opal/tools/worktree-launcher/worktree_launcher/launcher_core.py",
+    "opal/tools/worktree-tool/README.md",
+    "opal/tools/worktree-tool/worktree_tool.py",
+    "opal/tools/ownership-tool/ownership_tool/codex_adapter.py",
+    "opal/tools/ownership-tool/tests/test_codex_identity.py",
+    "opal/tools/worktree-launcher/tests/test_codex_handoff.py"
+  ]
+}

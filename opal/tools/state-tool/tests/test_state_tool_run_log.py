@@ -108,7 +108,7 @@ _CLAUDE_ADAPTER_PATH = (
     _STATE_TOOL_DIR.parent / "ownership-tool" / "ownership_tool" / "claude_adapter.py")
 
 
-def _load_claude_adapter_session_id_env():
+def _load_adapter_session_id_env(adapter_name):
     """`claude_adapter`가 소유한 플랫폼 고유 세션 변수명 상수를 얻는다.
 
     [MUST] 변수명을 이 테스트에 하드코딩하지 않는다(`~/.opal/PRINCIPLES.md`
@@ -117,13 +117,14 @@ def _load_claude_adapter_session_id_env():
     아래 가드가 조용히 무력해진다. `test_state_tool_ownership.py`(TASK-147 W-12)가
     같은 방식을 쓴다."""
     spec = importlib.util.spec_from_file_location(
-        "ownership_tool.claude_adapter", _CLAUDE_ADAPTER_PATH)
+        f"ownership_tool.{adapter_name}", _CLAUDE_ADAPTER_PATH.with_name(f"{adapter_name}.py"))
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module.SESSION_ID_ENV
 
 
-_CLAUDE_SESSION_ID_ENV = _load_claude_adapter_session_id_env()
+_CLAUDE_SESSION_ID_ENV = _load_adapter_session_id_env("claude_adapter")
+_CODEX_SESSION_ID_ENV = _load_adapter_session_id_env("codex_adapter")
 
 
 def _env_without_session_ids():
@@ -144,6 +145,7 @@ def _env_without_session_ids():
     env = dict(os.environ)
     env.pop("OPAL_SESSION_ID", None)
     env.pop(_CLAUDE_SESSION_ID_ENV, None)
+    env.pop(_CODEX_SESSION_ID_ENV, None)
     return env
 
 

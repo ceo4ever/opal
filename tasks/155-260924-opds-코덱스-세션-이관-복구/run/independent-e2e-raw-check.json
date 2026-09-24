@@ -1,0 +1,18 @@
+{
+  "ok": true,
+  "checks": {
+    "raw_thread_matches": true,
+    "parent_distinct": true,
+    "neutral_not_inherited": true,
+    "cli_success": true,
+    "raw_owners_match": true,
+    "active_worktree_owner": true,
+    "claim_generation_increased": true,
+    "heartbeat_increased": true,
+    "heartbeat_generation_stable": true,
+    "lease_live": true,
+    "receipt_match": true,
+    "bootstrap_body_match": true
+  },
+  "terminal_handle": "term_08d7fb07-ee1b-4212-8101-fd35bab539c1"
+}

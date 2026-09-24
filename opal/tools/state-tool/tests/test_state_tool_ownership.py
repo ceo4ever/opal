@@ -3,7 +3,7 @@
   "module": "test_state_tool_ownership",
   "layer": "test",
   "domain": "opal-pipeline",
-  "description": "태스크 138 S-11 — state-tool init→첫 advance에서 OPAL_SESSION_ID(또는 CLAUDE_CODE_SESSION_ID 매핑) 존재 시 lease 원자 생성 1회 + run-log actor.session_id 채움을 검증한다. env 미설정 시 종전과 동일 전이여야 한다(회귀). 기존 test_state_tool.py는 수정하지 않고 별도 파일로 신설했다. 태스크 150 S-11(W-5, AC-1·AC-10·C-6) — `TestT150W5ClaimantRoot`가 `_claim_task_lease_if_needed()`의 `claimant_root=os.getcwd()` 전달을 고정한다: 이관 대기(handoff_pending) 태스크에서 허브 cwd의 advance/mark는 lease를 되찾지 못하지만(레코드 불변) 전이는 exit 0으로 통과하고, 워크트리 루트 cwd의 전이는 이관을 소비해 claim에 성공하며(SessionStart 실패 시 자가 치유), 이관 필드가 없는 기존 형식 lease의 claim·foreign_owner 동작과 비 `--wt` 태스크의 응답 키 집합·state.json 산출물은 변경 전과 동일하다. lease 레코드는 손으로 조립하지 않고 `ownership_tool.lease`의 claim/handoff 함수만 거친다.",
+  "description": "Codex-only 공개 advance의 lease owner와 run-log actor 신원 연결을 검증한다. 태스크 138 S-11 — state-tool init→첫 advance에서 OPAL_SESSION_ID(또는 CLAUDE_CODE_SESSION_ID 매핑) 존재 시 lease 원자 생성 1회 + run-log actor.session_id 채움을 검증한다. env 미설정 시 종전과 동일 전이여야 한다(회귀). 기존 test_state_tool.py는 수정하지 않고 별도 파일로 신설했다. 태스크 150 S-11(W-5, AC-1·AC-10·C-6) — `TestT150W5ClaimantRoot`가 `_claim_task_lease_if_needed()`의 `claimant_root=os.getcwd()` 전달을 고정한다: 이관 대기(handoff_pending) 태스크에서 허브 cwd의 advance/mark는 lease를 되찾지 못하지만(레코드 불변) 전이는 exit 0으로 통과하고, 워크트리 루트 cwd의 전이는 이관을 소비해 claim에 성공하며(SessionStart 실패 시 자가 치유), 이관 필드가 없는 기존 형식 lease의 claim·foreign_owner 동작과 비 `--wt` 태스크의 응답 키 집합·state.json 산출물은 변경 전과 동일하다. lease 레코드는 손으로 조립하지 않고 `ownership_tool.lease`의 claim/handoff 함수만 거친다.",
   "exports": [],
   "depends": ["state_tool.py (CLI subprocess)", "ownership_tool.lease", "ownership_tool.claude_adapter (SESSION_ID_ENV 상수)"]
 }
@@ -58,6 +58,8 @@ SIMPLE_ROWS_SPEC = json.dumps(
 
 def _run(args: list[str], env: dict | None = None) -> subprocess.CompletedProcess:
     full_env = dict(os.environ)
+    full_env.pop("CODEX_SESSION_ID", None)
+    full_env.pop("CODEX_THREAD_ID", None)
     if env is not None:
         full_env.update(env)
     return subprocess.run(
@@ -160,6 +162,35 @@ class TestS11OwnershipSessionIntegration(unittest.TestCase):
             f"run-log 사건(조각+pending_events)에 actor.session_id가 채워져야 한다 — events={events!r}",
         )
 
+    def test_codex_only_advance_fills_lease_owner_and_run_log_actor(self):
+        """중립 export 없는 Codex CLI 전이가 native 신원으로 lease와 사건을 기록한다."""
+        native_id = "15500000-0000-4000-8000-000000000001"
+        init_result = _run_at(
+            self.task_path,
+            ["init", str(self.task_path), "--skill", "opds", "--mode", "agentic",
+             "--task-title", "Codex native identity", "--rows-spec", SIMPLE_ROWS_SPEC,
+             "--run-log-mode", "shadow"],
+        )
+        self.assertEqual(init_result.returncode, 0, init_result.stdout + init_result.stderr)
+        advanced = _run_at(
+            self.task_path,
+            ["advance", str(self.task_path), "--task-step-id", "1"],
+            env={"CODEX_SESSION_ID": native_id},
+        )
+        self.assertEqual(advanced.returncode, 0, advanced.stdout + advanced.stderr)
+        lease_file = self.task_path / "run/.runtime/owner.json"
+        self.assertTrue(lease_file.exists(), advanced.stdout + advanced.stderr)
+        owner = json.loads(lease_file.read_text(encoding="utf-8"))
+        self.assertEqual(owner["owner_session_id"], native_id)
+        self.assertEqual(owner["status"], "active")
+        events = []
+        for segment in sorted((self.task_path / "run").glob("run-log-*.jsonl")):
+            events.extend(json.loads(line) for line in segment.read_text().splitlines() if line.strip())
+        state = json.loads((self.task_path / "state.json").read_text())
+        events.extend(state.get("run_log", {}).get("pending_events") or [])
+        self.assertIn(native_id, [event.get("actor", {}).get("session_id") for event in events])
+        self.assertNotIn("ownership_session_id_missing", advanced.stdout + advanced.stderr)
+
     def test_env_unset_transition_unchanged_regression_guard(self):
         """OPAL_SESSION_ID 미설정 시 state 전이 결과·transition_action이 종전과 동일해야 한다
         (이 케이스는 기존 동작 보존이므로 GREEN 이후에도 PASS 유지되어야 하는 회귀 가드)."""
@@ -169,6 +200,8 @@ class TestS11OwnershipSessionIntegration(unittest.TestCase):
         clean_env = dict(os.environ)
         clean_env.pop("OPAL_SESSION_ID", None)
         clean_env.pop(CLAUDE_SESSION_ID_ENV, None)
+        clean_env.pop("CODEX_SESSION_ID", None)
+        clean_env.pop("CODEX_THREAD_ID", None)
         # `_run()`의 dict.update 병합은 부재 키를 지우지 못해 앰비언트 값이 되살아난다
         # (full_env=dict(os.environ) 후 clean_env로 update해도 clean_env에 없는 키는
         # 그대로 남는다) — 이 케이스는 진짜 "미설정" 서브프로세스 env가 필요하므로
@@ -246,6 +279,8 @@ def _normalize(value):
 def _run_at(cwd, args, env=None):
     """`_run()`과 같되 서브프로세스 cwd를 지정한다 — claimant_root가 cwd에서 오기 때문이다."""
     full_env = dict(os.environ)
+    full_env.pop("CODEX_SESSION_ID", None)
+    full_env.pop("CODEX_THREAD_ID", None)
     full_env.pop("OPAL_SESSION_ID", None)
     full_env.pop(CLAUDE_SESSION_ID_ENV, None)
     if env is not None:

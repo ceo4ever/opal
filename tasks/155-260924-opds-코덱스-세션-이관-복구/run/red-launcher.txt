@@ -1,0 +1,43 @@
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+___________ test_s3_explicit_owner_handoff_with_disagreeing_ambient ____________
+
+tmp_path = PosixPath('/private/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/pytest-of-iskang/pytest-1361/test_s3_explicit_owner_handoff0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x107c78c30>
+
+    def test_s3_explicit_owner_handoff_with_disagreeing_ambient(tmp_path, monkeypatch):
+        hub, task = setup_hub(tmp_path)
+        monkeypatch.setenv('OPAL_SESSION_ID', 'ambient-other')
+        adapter = Terminal(hub, task, monkeypatch)
+        result = launcher_core.run(adapter, hub_root=hub.hub, task=hub.task, worktree_root=hub.worktree_root, command='codex', owner_session_id='hub-explicit')
+>       assert result['ok'], result
+E       AssertionError: {'ok': False, 'status': 'hub_owned', 'failure_reason': 'launch_failed', 'detail': 'lease_handoff_failed', ...}
+E       assert False
+
+opal/tools/worktree-launcher/tests/test_codex_handoff.py:56: AssertionError
+___________ test_s4_cancel_reuses_explicit_id_after_ambient_changes ____________
+
+tmp_path = PosixPath('/private/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/pytest-of-iskang/pytest-1361/test_s4_cancel_reuses_explicit0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x1075f9e00>
+
+    def test_s4_cancel_reuses_explicit_id_after_ambient_changes(tmp_path, monkeypatch):
+        hub, task = setup_hub(tmp_path)
+        monkeypatch.setenv('OPAL_SESSION_ID', 'hub-explicit')
+        adapter = Terminal(hub, task, monkeypatch, fail=True)
+        result = launcher_core.run(adapter, hub_root=hub.hub, task=hub.task, worktree_root=hub.worktree_root, command='codex', owner_session_id='hub-explicit')
+        assert not result['ok']
+        assert len(adapter.calls) == 1
+        assert adapter.pending['handoff_from_session_id'] == 'hub-explicit'
+        restored = json.loads((task / 'run/.runtime/owner.json').read_text())
+>       assert restored['status'] == 'active', result
+E       AssertionError: {'ok': False, 'status': 'hub_owned', 'failure_reason': 'launch_failed', 'detail': 'prompt_receipt_missing', ...}
+E       assert 'handoff_pending' == 'active'
+E         
+E         - active
+E         + handoff_pending
+
+opal/tools/worktree-launcher/tests/test_codex_handoff.py:72: AssertionError
+=========================== short test summary info ============================
+FAILED opal/tools/worktree-launcher/tests/test_codex_handoff.py::test_s3_explicit_owner_handoff_with_disagreeing_ambient
+FAILED opal/tools/worktree-launcher/tests/test_codex_handoff.py::test_s4_cancel_reuses_explicit_id_after_ambient_changes
+2 failed in 0.61s

@@ -1,0 +1,21 @@
+[
+  {
+    "iteration": 1,
+    "missing": {
+      "requirements": [],
+      "features": [],
+      "hypotheses": []
+    },
+    "scores": {
+      "goal": 2,
+      "adoption": 2,
+      "boundary": 2
+    },
+    "average": 2,
+    "gaps": [],
+    "verdict": "pass",
+    "reason": "converged",
+    "evaluator": "independent scenario_gate worker",
+    "evidence": "run/scenario-gate-i1.json"
+  }
+]

@@ -1,0 +1,41 @@
+{
+  "status": "skipped",
+  "deferred": true,
+  "reason": "worktree_defer_until_hub_finalize_after_merge",
+  "ingested_pages": [],
+  "summary": "워크트리에서는 후보 선언만 검증; 실제 brain 갱신은 merge 후 허브 finalize에서 수행",
+  "skill": "/Users/iskang/.opal/skills/op-brain-ingest/SKILL.md",
+  "contract": "/Users/iskang/.opal/references/harness/done-template.md §회고적 학습 후보 계약",
+  "contract_quote": "워크트리 태스크는 실행 중 워크트리의 brain 파일을 직접 바꾸지 않는다.",
+  "task_folder": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_155/tasks/155-260924-opds-코덱스-세션-이관-복구",
+  "source": "DONE.md ## 회고적 학습 후보",
+  "candidates": [
+    {
+      "path": ".opal/brain/pages/entity/ownership-tool.md",
+      "exists": true,
+      "sha256": "e4b25f5571e38a79266c84df7393ec0727c40c7722ba355745e8e96e1695bf6b",
+      "decision": "candidate_for_post_merge_update"
+    },
+    {
+      "path": ".opal/brain/pages/concept/worktree-session-launch-order-and-ownership.md",
+      "exists": true,
+      "sha256": "e29464b7841142723783fc90d382e50d213f2e5684b10258c32301685b7832f5",
+      "decision": "candidate_for_post_merge_update"
+    }
+  ],
+  "eligibility": [
+    "ownership-tool: Codex adapter 및 공개 CLI 신원 계약/부모 상속 격리 변경을 기존 entity에 보강할 후보",
+    "worktree-session-launch-order-and-ownership: 실제 lease 기반 registry owner 정합으로 기존 미확정 신원 문제를 갱신할 후보"
+  ],
+  "brain_mutated": false,
+  "memory_mutated": false,
+  "hub_mutated": false,
+  "commands_not_executed": [
+    "brain-tool add-page",
+    "brain-tool update-page",
+    "brain-tool index",
+    "brain-tool log"
+  ],
+  "worker_dispatch_receipt": "/tmp/task155-worker-close.json",
+  "worker_dispatch_verified": true
+}

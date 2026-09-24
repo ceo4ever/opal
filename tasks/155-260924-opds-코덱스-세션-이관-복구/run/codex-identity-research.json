@@ -1,0 +1,20 @@
+{
+  "installed_version": "0.154.0",
+  "installed_binary": "/Users/iskang/.codex/packages/standalone/releases/0.154.0-aarch64-apple-darwin/bin/codex",
+  "binary_sha256": "4f85982624b3898c8991cb80c0981b2aa71070e3537046c9a95950318a95afcc",
+  "source_bundled": false,
+  "official_source_commit": "53446f90a56692dede3c8f413e8d486a6adb77b5",
+  "source_matches_installed_binary": "not established",
+  "observed_root_session_id": "01a0d1f4-614c-7e82-b2c8-c3352dc0c600",
+  "observed_thread_id_equals_root": true,
+  "parent_root_session_id": "01a0d1f1-228e-7411-a17e-3f7b295943dc",
+  "sources": {
+    "core/src/exec_env.rs": "https://github.com/openai/codex/blob/53446f90a56692dede3c8f413e8d486a6adb77b5/codex-rs/core/src/exec_env.rs",
+    "core/src/unified_exec/process_manager.rs": "https://github.com/openai/codex/blob/53446f90a56692dede3c8f413e8d486a6adb77b5/codex-rs/core/src/unified_exec/process_manager.rs",
+    "core/src/session/session.rs": "https://github.com/openai/codex/blob/53446f90a56692dede3c8f413e8d486a6adb77b5/codex-rs/core/src/session/session.rs",
+    "protocol/src/session_id.rs": "https://github.com/openai/codex/blob/53446f90a56692dede3c8f413e8d486a6adb77b5/codex-rs/protocol/src/session_id.rs",
+    "protocol/src/thread_id.rs": "https://github.com/openai/codex/blob/53446f90a56692dede3c8f413e8d486a6adb77b5/codex-rs/protocol/src/thread_id.rs"
+  },
+  "official_docs": "https://learn.chatgpt.com/docs/hooks",
+  "limits": "Native runtime injects shared root session ID per shell command; thread ID is separate. UUIDv7 generation is not a per-process identity guarantee; descendants share root session. Resume behavior must not be inferred from current equal values."
+}

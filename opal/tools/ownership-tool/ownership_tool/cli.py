@@ -3,9 +3,16 @@
   "module": "ownership_tool.cli",
   "layer": "util",
   "domain": "opal-pipeline",
-  "description": "ownership-tool 공개 CLI 표면(run.sh가 위임하는 진입점). argparse 4서브명령 status·release·handoff·handoff-cancel을 제공하며 전 경로에서 stdout에 단일 라인 JSON {ok, command: 'ownership-tool', ...}만 내보낸다. status는 lease 레코드 전문·요청 세션 기준 lease.classify 결과·handoff_* 필드를 함께 돌려주고, release는 소유 세션 일치에만 해제를 수행한다 — 타 세션 소유 live lease는 not_owner 구조화 거부 + 0이 아닌 종료코드이고 레코드를 쓰지 않으며, 레코드 부재·released·만료는 noop true + 종료코드 0이다(강제 해제 표면 없음, C-3). handoff·handoff-cancel은 lease.handoff·lease.handoff_cancel에 그대로 위임한다. 세션 id는 --session-id 인자가 우선하고 없으면 ownership_core.resolve_session_id(os.environ)로 해석하며, 플랫폼 고유 환경변수명은 이 모듈에 두지 않는다(어댑터 전담, C-5). --task-path·--to-worktree-root의 상대경로는 cwd·task path 조상·워크트리 디렉터리명으로 보정하지 않고 path_not_absolute로 거부한다(worktree.md task root 계약, C-4). argparse 사용법 오류도 같은 단일 라인 JSON 계약을 따른다.",
-  "exports": ["main", "build_parser"],
-  "depends": ["ownership_tool.lease", "ownership_tool.ownership_core"]
+  "description": "ownership-tool 공개 CLI: status·release·handoff·handoff-cancel·codex-start는 단일 JSON을 반환하고 session-launch는 부모 신원을 제거한 환경에서 명령을 exec하여 자식 stdout/종료 코드를 보존한다. CLI 신원은 명시 --session-id 이후 core resolver, codex-start는 native adapter의 실제 신원만 사용한다. 모든 대상 경로는 절대 경로를 요구하며 lease 판정·쓰기와 payload-only 훅 처리는 기존 소유 모듈에 위임한다.",
+  "exports": [
+    "main",
+    "build_parser"
+  ],
+  "depends": [
+    "ownership_tool.lease",
+    "ownership_tool.ownership_core",
+    "ownership_tool.codex_adapter"
+  ]
 }
 """
 from __future__ import annotations
@@ -15,7 +22,7 @@ import json
 import os
 import sys
 
-from . import lease, ownership_core
+from . import codex_adapter, lease, ownership_core
 
 COMMAND = "ownership-tool"
 EXIT_OK = 0
@@ -76,6 +83,10 @@ def build_parser():
     handoff = _with_task_path("handoff", "지정 워크트리 루트 앞으로 이관 대기 전환")
     handoff.add_argument("--to-worktree-root", required=True)
     _with_task_path("handoff-cancel", "이관 대기 취소")
+    start = subparsers.add_parser("codex-start", help="Codex native 신원으로 등록·claim·heartbeat")
+    start.add_argument("--cwd", required=True)
+    launch = subparsers.add_parser("session-launch", help="부모 신원을 제거한 새 runtime 실행")
+    launch.add_argument("--command", required=True)
     return parser
 
 
@@ -176,6 +187,16 @@ def main(argv=None):
         args = build_parser().parse_args(argv if argv is not None else sys.argv[1:])
     except SystemExit as exc:
         return exc.code if isinstance(exc.code, int) else EXIT_USAGE
+
+    if args.subcommand == "session-launch":
+        os.execve("/bin/sh", ["sh", "-c", args.command], ownership_core.session_launch_env(os.environ))
+    if args.subcommand == "codex-start":
+        rejection = _reject_relative(args.subcommand, "--cwd", args.cwd)
+        if rejection:
+            return _emit(rejection, EXIT_REJECTED)
+        result = codex_adapter.start(args.cwd, os.environ)
+        return _emit(_merge(_base(args.subcommand, result["ok"]), result),
+                     EXIT_OK if result["ok"] else EXIT_REJECTED)
 
     rejection = _reject_relative(args.subcommand, "--task-path", args.task_path)
     if rejection is None and args.subcommand == "handoff":

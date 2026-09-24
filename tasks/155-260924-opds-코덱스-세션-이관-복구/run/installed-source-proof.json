@@ -1,0 +1,49 @@
+{
+  "formal_installer": "scripts/install-mac.sh interactive menu1",
+  "files": [
+    {
+      "path": "ownership-tool/ownership_tool/codex_adapter.py",
+      "source_sha256": "4cff8906ddee276c4cc4f4cd6b083ef77739c0af65990eafd4f9a829f39656d6",
+      "installed_sha256": "4cff8906ddee276c4cc4f4cd6b083ef77739c0af65990eafd4f9a829f39656d6",
+      "match": true
+    },
+    {
+      "path": "ownership-tool/ownership_tool/claude_adapter.py",
+      "source_sha256": "7a1623603bf71a0ac16ef0ac0d8730dc43d92fff26ac77920a0729624d2b4639",
+      "installed_sha256": "7a1623603bf71a0ac16ef0ac0d8730dc43d92fff26ac77920a0729624d2b4639",
+      "match": true
+    },
+    {
+      "path": "ownership-tool/ownership_tool/ownership_core.py",
+      "source_sha256": "aac52c4f94c3935d8a081de8754c1d0d39c235ffabc72a07d58dee462bde71e4",
+      "installed_sha256": "aac52c4f94c3935d8a081de8754c1d0d39c235ffabc72a07d58dee462bde71e4",
+      "match": true
+    },
+    {
+      "path": "ownership-tool/ownership_tool/cli.py",
+      "source_sha256": "6c824f28219a8ba10cc171e1660c54853b1b06bae570de49cde69226a189f1da",
+      "installed_sha256": "6c824f28219a8ba10cc171e1660c54853b1b06bae570de49cde69226a189f1da",
+      "match": true
+    },
+    {
+      "path": "worktree-launcher/worktree_launcher/launcher_core.py",
+      "source_sha256": "565adfc57c599d013488bd2baf2f8110afae2b06fb25d6730976ccf99a18e3e5",
+      "installed_sha256": "565adfc57c599d013488bd2baf2f8110afae2b06fb25d6730976ccf99a18e3e5",
+      "match": true
+    },
+    {
+      "path": "worktree-tool/worktree_tool.py",
+      "source_sha256": "16d996574471f2cda55212676434346211363c6ed0b7b879560f91e46f8e60a2",
+      "installed_sha256": "16d996574471f2cda55212676434346211363c6ed0b7b879560f91e46f8e60a2",
+      "match": true
+    },
+    {
+      "path": "state-tool/state_tool.py",
+      "source_sha256": "a57c3a5ea31033fe441dede213aebcc4b0ad466336ebfb19db004d7c0a033629",
+      "installed_sha256": "a57c3a5ea31033fe441dede213aebcc4b0ad466336ebfb19db004d7c0a033629",
+      "match": true
+    }
+  ],
+  "codex_bootstrap_matches": true,
+  "all_match": true
+}

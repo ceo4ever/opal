@@ -1,0 +1,8 @@
+{
+  "fixture_only": true,
+  "workspace": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_155",
+  "hub": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_155/tasks/155-260924-opds-\ucf54\ub371\uc2a4-\uc138\uc158-\uc774\uad00-\ubcf5\uad6c/run/real-e2e-final/allocator-fixture",
+  "child_cwd": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_155/tasks/155-260924-opds-\ucf54\ub371\uc2a4-\uc138\uc158-\uc774\uad00-\ubcf5\uad6c/run/real-e2e-final/child-cwd",
+  "task": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_155/tasks/155-260924-opds-\ucf54\ub371\uc2a4-\uc138\uc158-\uc774\uad00-\ubcf5\uad6c/run/real-e2e-final/child-cwd/tasks/155-fixture",
+  "parent_session_id": "01a0d1f4-614c-7e82-b2c8-c3352dc0c600"
+}

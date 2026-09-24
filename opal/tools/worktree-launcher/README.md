@@ -217,3 +217,16 @@ adapter 미기록 경로는 분기에 진입조차 하지 않는다. close 실�
 돈다. 실행마다 고유 이름의 임시 디렉터리로 workspace 1개를 만들어 cwd·command 전달과 유계 read를
 확인하고, 같은 handle로 닫은 뒤 그 이름의 workspace가 0개인지 목록 반영을 기다려 확인한다.
 사용자의 기존 workspace는 건드리지 않는다.
+
+## 신원 preflight와 Codex 시작 (task 155)
+
+launcher는 명시 owner 또는 ownership-tool resolver의 신원을 시작 시 한 번 확정한다.
+미해석이면 registry/lease/terminal 변경 전에 `session_id_unresolved`로 종료한다.
+실패에는 `cause`, adapter, 사용 가능한 identity **source 이름**을 남긴다.
+같은 확정 ID를 handoff와 handoff-cancel의 `--session-id`로 전달한다.
+기동 명령은 공개 `ownership-tool session-launch`로 감싸 부모 플랫폼 신원을 지운다.
+
+최종 registry owner는 허브 입력 ID를 재사용하지 않고 공개
+`worktree-tool ownership-set --owner-from-lease`로 연결한다. 자식이 먼저 claim하면
+실제 lease owner를 기록하고, 아직 pending이면 빈 owner를 남겨 자식 SessionStart가
+등록하게 한다. receipt 수신은 명령 제출 증거이며 실제 Codex 실행/claim 완료 증거는 아니다.

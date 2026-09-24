@@ -1,0 +1,17 @@
+{
+  "installer": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_155/scripts/install-mac.sh",
+  "selection": "interactive menu 1 OPAL only; menu 2 MCP not selected",
+  "effects": [
+    "replace ~/.opal managed framework directories",
+    "merge platform bootstrap and supported platform config",
+    "rebuild/restart OPAL Console",
+    "preserve settings identity user data by installer contract"
+  ],
+  "forbidden_targets": [
+    "hub .opal/MEMORY.json",
+    "hub untracked .claude/skills",
+    "opal-studio/task_008"
+  ],
+  "source": "task_155 uncommitted source",
+  "no_direct_installed_edits": true
+}

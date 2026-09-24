@@ -21,7 +21,14 @@
    - 마커가 없고 프로젝트 루트에 `.opal/AGENT.md`가 존재:
      `session.project`.
    - 그 외: `session.assistant`.
-4. `session.assistant` 또는 `session.project`는 아래 명령을 1회 실행하고 stdout의
+4. `session.assistant` 또는 `session.project`는 먼저 현재 작업 디렉터리의 절대 경로를
+   명시하여 `~/.opal/tools/ownership-tool/run.sh codex-start --cwd <absolute-cwd>`를
+   실행한다. 실제 `CODEX_SESSION_ID`를 공개 SessionStart payload로 정규화하여
+   session registry·pending lease claim·heartbeat를 연결한다. 실패하면 다른 세션의
+   ID를 대입하거나 lease를 탈취하지 말고 진단 후 중단한다. 부모 OPAL identity
+   상속은 launcher의 `session-launch` 경계에서 제거하며 영구 export하지 않는다.
+
+   이어서 아래 명령을 1회 실행하고 stdout의
    `host`, `multiplexers`, `confidence`, `evidence`만 내부 세션 컨텍스트로 소비한다.
 
    `~/.opal/tools/terminal-context/run.sh`

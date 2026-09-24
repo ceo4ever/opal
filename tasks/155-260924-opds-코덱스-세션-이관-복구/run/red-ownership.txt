@@ -1,0 +1,60 @@
+F.....FF                                                                 [100%]
+=================================== FAILURES ===================================
+________________ test_s1_codex_only_identity_and_public_status _________________
+
+tmp_path = PosixPath('/private/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/pytest-of-iskang/pytest-1360/test_s1_codex_only_identity_an0')
+
+    def test_s1_codex_only_identity_and_public_status(tmp_path):
+>       assert core.resolve_session_id({'CODEX_SESSION_ID': CHILD}, {}) == CHILD
+E       AssertionError: assert None == '11111111-1111-4111-8111-111111111111'
+E        +  where None = <function resolve_session_id at 0x10bba96f0>({'CODEX_SESSION_ID': '11111111-1111-4111-8111-111111111111'}, {})
+E        +    where <function resolve_session_id at 0x10bba96f0> = core.resolve_session_id
+
+opal/tools/ownership-tool/tests/test_codex_identity.py:33: AssertionError
+_______ test_s9_session_launch_strips_parent_identity_preserves_command ________
+
+tmp_path = PosixPath('/private/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/pytest-of-iskang/pytest-1360/test_s9_session_launch_strips_0')
+
+    def test_s9_session_launch_strips_parent_identity_preserves_command(tmp_path):
+        output = tmp_path / 'child-env.json'
+        script = 'import os,json,pathlib; pathlib.Path(' + repr(str(output)) + ').write_text(json.dumps(dict(os.environ)))'
+        command = shlex.join([sys.executable, '-c', script])
+        result = cli('session-launch', '--command', command, extra_env={**dict.fromkeys(IDENTITY_KEYS, 'parent'), 'KEEP_TASK_VALUE': 'literal value'})
+>       assert result.returncode == 0, result.stdout + result.stderr
+E       AssertionError: {"ok": false, "command": "ownership-tool", "subcommand": "ownership-tool", "error": "invalid_usage", "message": "argument subcommand: invalid choice: 'session-launch' (choose from status, release, handoff, handoff-cancel)"}
+E         
+E       assert 2 == 0
+E        +  where 2 = CompletedProcess(args=['/Users/iskang/.opal/.venv/bin/python', '-m', 'ownership_tool.cli', 'session-launch', '--comman... subcommand: invalid choice: \'session-launch\' (choose from status, release, handoff, handoff-cancel)"}\n', stderr='').returncode
+
+opal/tools/ownership-tool/tests/test_codex_identity.py:61: AssertionError
+______ test_s9_codex_start_claims_native_id_and_rejects_inherited_parent _______
+
+tmp_path = PosixPath('/private/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/pytest-of-iskang/pytest-1360/test_s9_codex_start_claims_nat0')
+
+    def test_s9_codex_start_claims_native_id_and_rejects_inherited_parent(tmp_path):
+        root = tmp_path / 'worktree'
+        task = root / 'tasks' / '220-test'
+        task.mkdir(parents=True)
+        (root / '.opal').mkdir()
+        (root / '.opal/AGENT.md').write_text('# fixture')
+        (root / '.opal/task-ownership.json').write_text(json.dumps({'allocator_root': str(tmp_path), 'task_home': str(root), 'task_folder': task.name, 'task_path': str(task), 'artifact_repo': '.', 'task_ownership_version': 2}))
+        assert lease.claim(task, session_id='parent', claim_source='state_transition')['ok']
+        assert lease.handoff(task, session_id='parent', to_worktree_root=root)['ok']
+        owner = task / 'run/.runtime/owner.json'
+        before = owner.read_bytes()
+        conflict = cli('codex-start', '--cwd', root, extra_env={'CODEX_SESSION_ID': CHILD, 'OPAL_SESSION_ID': 'parent'})
+        assert conflict.returncode != 0
+        assert owner.read_bytes() == before
+        result = cli('codex-start', '--cwd', root, extra_env={'CODEX_SESSION_ID': CHILD})
+>       assert result.returncode == 0, result.stdout + result.stderr
+E       AssertionError: {"ok": false, "command": "ownership-tool", "subcommand": "ownership-tool", "error": "invalid_usage", "message": "argument subcommand: invalid choice: 'codex-start' (choose from status, release, handoff, handoff-cancel)"}
+E         
+E       assert 2 == 0
+E        +  where 2 = CompletedProcess(args=['/Users/iskang/.opal/.venv/bin/python', '-m', 'ownership_tool.cli', 'codex-start', '--cwd', '/p...ent subcommand: invalid choice: \'codex-start\' (choose from status, release, handoff, handoff-cancel)"}\n', stderr='').returncode
+
+opal/tools/ownership-tool/tests/test_codex_identity.py:82: AssertionError
+=========================== short test summary info ============================
+FAILED opal/tools/ownership-tool/tests/test_codex_identity.py::test_s1_codex_only_identity_and_public_status
+FAILED opal/tools/ownership-tool/tests/test_codex_identity.py::test_s9_session_launch_strips_parent_identity_preserves_command
+FAILED opal/tools/ownership-tool/tests/test_codex_identity.py::test_s9_codex_start_claims_native_id_and_rejects_inherited_parent
+3 failed, 5 passed in 0.51s

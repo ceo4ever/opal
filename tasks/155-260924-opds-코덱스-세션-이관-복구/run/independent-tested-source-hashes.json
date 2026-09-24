@@ -1,0 +1,21 @@
+{
+  "docs/ARCHITECTURE.md": "cd7f923e12b43585c1373488544aeb5b512c60e9d6fe2baf410ef544f5c2b1aa",
+  "opal/bootstrapper/codex-bootstrap.md": "96945e29cfb0423b0dbc5c3cbc985b3d618c2176fe85e960f3e83046e0d41a10",
+  "opal/core/references/harness/worktree.md": "36c60adf87a7eea20fd0299abd305ebd025324a8876e44bd47cf7411c2016735",
+  "opal/tools/ownership-tool/README.md": "67171719547fe765412d3e91f60db5e3342ea657cc91f223b433b86ed7b98bde",
+  "opal/tools/ownership-tool/ownership_tool/claude_adapter.py": "7a1623603bf71a0ac16ef0ac0d8730dc43d92fff26ac77920a0729624d2b4639",
+  "opal/tools/ownership-tool/ownership_tool/cli.py": "6c824f28219a8ba10cc171e1660c54853b1b06bae570de49cde69226a189f1da",
+  "opal/tools/ownership-tool/ownership_tool/ownership_core.py": "aac52c4f94c3935d8a081de8754c1d0d39c235ffabc72a07d58dee462bde71e4",
+  "opal/tools/state-tool/state_tool.py": "a57c3a5ea31033fe441dede213aebcc4b0ad466336ebfb19db004d7c0a033629",
+  "opal/tools/state-tool/tests/test_state_tool_ownership.py": "26cc0336688db2dea2bbb1eb8d550b186cdb939fa83845536c5b9d1bf625ebcb",
+  "opal/tools/state-tool/tests/test_state_tool_run_log.py": "0ccbe90c9262ee8e09761cc04388a66439d68c52b6fbfa31337035642adc854d",
+  "opal/tools/worktree-launcher/README.md": "5c3101801a671d077c95e066e6765efa4f59258931539a1559585cb1de3ede4d",
+  "opal/tools/worktree-launcher/tests/test_integration.py": "b985abb5cf09c56261a3e6e0773510b113fb69091a0a5d460d455564d8443901",
+  "opal/tools/worktree-launcher/tests/test_launcher_core.py": "3c0699bb287708fed575c3930c29c81eb1c8dcb68a16e14d917c11301e35458a",
+  "opal/tools/worktree-launcher/worktree_launcher/launcher_core.py": "565adfc57c599d013488bd2baf2f8110afae2b06fb25d6730976ccf99a18e3e5",
+  "opal/tools/worktree-tool/README.md": "4b5634e6645cab493075481ae989bb97242eb9f279dc45bc29948cb4bdcf63fd",
+  "opal/tools/worktree-tool/worktree_tool.py": "16d996574471f2cda55212676434346211363c6ed0b7b879560f91e46f8e60a2",
+  "opal/tools/ownership-tool/ownership_tool/codex_adapter.py": "4cff8906ddee276c4cc4f4cd6b083ef77739c0af65990eafd4f9a829f39656d6",
+  "opal/tools/ownership-tool/tests/test_codex_identity.py": "6b1e8ed843f4632fc1c7efa8d737130fba82cce0a45558a94c54dd1e8ae35c2b",
+  "opal/tools/worktree-launcher/tests/test_codex_handoff.py": "db40340e5215ddc9ea20ba0ee0980c210c957150aed1147ebc22ee7a981cfd79"
+}

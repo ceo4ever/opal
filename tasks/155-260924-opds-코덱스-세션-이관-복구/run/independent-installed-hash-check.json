@@ -1,0 +1,33 @@
+{
+  "all_match": true,
+  "files": [
+    {
+      "path": "ownership-tool/ownership_tool/codex_adapter.py",
+      "match": true
+    },
+    {
+      "path": "ownership-tool/ownership_tool/claude_adapter.py",
+      "match": true
+    },
+    {
+      "path": "ownership-tool/ownership_tool/ownership_core.py",
+      "match": true
+    },
+    {
+      "path": "ownership-tool/ownership_tool/cli.py",
+      "match": true
+    },
+    {
+      "path": "worktree-launcher/worktree_launcher/launcher_core.py",
+      "match": true
+    },
+    {
+      "path": "worktree-tool/worktree_tool.py",
+      "match": true
+    },
+    {
+      "path": "state-tool/state_tool.py",
+      "match": true
+    }
+  ]
+}

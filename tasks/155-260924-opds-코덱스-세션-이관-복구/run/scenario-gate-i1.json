@@ -1,0 +1,67 @@
+{
+  "phase": "scenario-rubric",
+  "pilot": "opds",
+  "iteration": 1,
+  "producer_artifact": "TEST-SCENARIO.md",
+  "verification": {
+    "worker_dispatch": "ok: true; verified 4 documents",
+    "build": {
+      "command": "scenario-coverage-build --template sdlc-v2",
+      "exit_code": 0,
+      "ok": true,
+      "counts": {
+        "requirements": 12,
+        "features": 0,
+        "hypotheses": 3,
+        "scenarios": 9
+      }
+    },
+    "check": {
+      "command": "scenario-coverage-check --coverage-input .scenario-coverage-input.json",
+      "exit_code": 0,
+      "ok": true,
+      "all_covered": true
+    }
+  },
+  "rubric": {
+    "iteration": 1,
+    "missing": {
+      "requirements": [],
+      "features": [],
+      "hypotheses": []
+    },
+    "scores": {
+      "goal": 2,
+      "adoption": 2,
+      "boundary": 2
+    },
+    "average": 2,
+    "gaps": [],
+    "verdict": "pass",
+    "reason": "converged",
+    "evaluator": "independent scenario_gate worker",
+    "evidence": "run/scenario-gate-i1.json"
+  },
+  "records": [
+    {
+      "axis": "goal",
+      "score": 2,
+      "reason": "S-5는 정식 설치 후 실제 Orca/Codex 기동과 공개 CLI claim/heartbeat 및 registry/lease owner 일치를 검증한다. S-6는 child != hub 및 generation/heartbeat 관측을 요구한다."
+    },
+    {
+      "axis": "adoption",
+      "score": 2,
+      "reason": "S-5/9는 수동 OPAL export 없이 native ID와 정식 bootstrap/설치 경로 채택 및 부모 identity 제거를 확인한다. S-2/8은 유지해야 하는 Claude 경로를 별도 회귀한다."
+    },
+    {
+      "axis": "boundary",
+      "score": 2,
+      "reason": "S-1/2는 공백/누락/우선순위, S-4/7은 cancel/terminal 정리/원복/진단, S-6은 foreign live owner 거부, S-8/9는 payload-only 및 상속 경계를 직접 검증한다."
+    }
+  ],
+  "limitations": [
+    "시나리오 설계의 충분성 판정이며 제품 구현 또는 실제 E2E 실행 성공 판정이 아니다.",
+    "S-5/9의 실제 Orca/Codex·정식 설치 증거가 없으면 후속 TEST/CLOSE 통과 근거로 사용할 수 없다."
+  ],
+  "elapsed_minutes": 4
+}

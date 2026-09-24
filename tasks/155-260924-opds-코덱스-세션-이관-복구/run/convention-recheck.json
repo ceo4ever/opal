@@ -1,0 +1,37 @@
+[
+  {
+    "argv": [
+      "/Users/iskang/.opal/tools/code-scan/run.sh",
+      "validate",
+      "--changed",
+      "opal/tools/ownership-tool/ownership_tool/claude_adapter.py,opal/tools/ownership-tool/ownership_tool/cli.py,opal/tools/ownership-tool/ownership_tool/ownership_core.py,opal/tools/ownership-tool/ownership_tool/codex_adapter.py,opal/tools/worktree-launcher/worktree_launcher/launcher_core.py,opal/tools/worktree-tool/worktree_tool.py,opal/tools/ownership-tool/tests/test_codex_identity.py,opal/tools/worktree-launcher/tests/test_codex_handoff.py,opal/tools/worktree-launcher/tests/test_launcher_core.py,opal/tools/worktree-launcher/tests/test_integration.py",
+      "--json"
+    ],
+    "exit_code": 0,
+    "stdout": "{\"ok\":true,\"command\":\"validate\",\"mode\":\"changed\",\"coverage\":{\"total\":10,\"inline\":8,\"manifest\":0,\"covered\":8,\"percent\":80},\"counts\":{\"orphan\":0,\"uncovered\":2,\"conflict\":0,\"draft\":0,\"exports_not_found\":0,\"worker_scope_violation\":0,\"newly_uncovered\":0,\"pre_existing\":2,\"manifest_oversize\":0,\"header_history\":1},\"violations\":[{\"code\":\"header_history\",\"sub\":\"description\",\"file\":\"opal/tools/worktree-tool/worktree_tool.py\",\"key\":\"worktree_tool.py\",\"detail\":\"138,145\",\"tasks\":2},{\"code\":\"uncovered\",\"sub\":\"pre_existing\",\"file\":\"opal/tools/worktree-launcher/tests/test_launcher_core.py\",\"detail\":\"\"},{\"code\":\"uncovered\",\"sub\":\"pre_existing\",\"file\":\"opal/tools/worktree-launcher/tests/test_integration.py\",\"detail\":\"\"}],\"skipped\":[],\"headerSource\":\"inline\"}\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "diff",
+      "--check"
+    ],
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "rg",
+      "-n",
+      "CODEX_|CLAUDE_|ORCA_",
+      "opal/tools/ownership-tool/ownership_tool/ownership_core.py",
+      "opal/tools/worktree-launcher/worktree_launcher/launcher_core.py",
+      "opal/tools/worktree-tool/worktree_tool.py"
+    ],
+    "exit_code": 1,
+    "stdout": "",
+    "stderr": ""
+  }
+]

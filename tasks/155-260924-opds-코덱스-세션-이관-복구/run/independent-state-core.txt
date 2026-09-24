@@ -1,0 +1,108 @@
+................................................................... [ 34%]
+................................................................. [ 68%]
+..............F...FF................FF.......................   [100%]
+=================================== FAILURES ===================================
+_ TestOffModeTransitionUnaffected.test_transition_without_run_log_block_is_unchanged _
+
+self = <test_state_tool_run_log.TestOffModeTransitionUnaffected testMethod=test_transition_without_run_log_block_is_unchanged>
+
+    def test_transition_without_run_log_block_is_unchanged(self):
+        # [H-6] 앰비언트 세션 식별자를 제거한 env로 호출한다 — 변수가 있으면 전이가
+        # lease를 claim해 `run/.runtime/`이 생기고 아래 "run/ 미생성" 단언이 실행
+        # 위치에 따라 뒤집힌다. 검증 축(비활성화 경로 무영향)은 그대로다.
+        clean_env = _env_without_session_ids()
+        with tempfile.TemporaryDirectory() as tmp:
+            task = _mktask(tmp)
+            code, out, errtxt, data = _run(
+                ["init", str(task), "--skill", "oppl", "--mode", "agentic",
+                 "--rows-spec", _ROWS_SPEC, "--run-log-mode", "off"], env=clean_env)
+            self.assertEqual(code, 0, f"T05 S-7 init 실패 — {out!r}")
+    
+            code, out, errtxt, data = _run(["advance", str(task), "--row", "1"],
+                                           env=clean_env)
+            self.assertEqual(code, 0, f"T05 S-7 advance 실패 — {out!r}")
+            self.assertNotIn("run_log", data, "T05 S-7 off 태스크 응답에 run_log 키가 생김")
+    
+            state = _read_state(task)
+            self.assertNotIn("run_log", state, "T05 S-7 off 태스크 state.json에 run_log 키가 생김")
+>           self.assertFalse((task / "run").exists(), "T05 S-7 off 태스크에 run/ 생성됨")
+E           AssertionError: True is not false : T05 S-7 off 태스크에 run/ 생성됨
+
+opal/tools/state-tool/tests/test_state_tool_run_log.py:617: AssertionError
+_ TestOffModeDurationPathByteIdentical.test_schema_1_0_mark_advance_match_head _
+
+self = <test_state_tool_run_log.TestOffModeDurationPathByteIdentical testMethod=test_schema_1_0_mark_advance_match_head>
+
+    def test_schema_1_0_mark_advance_match_head(self):
+>       self._assert_schema_variant_matches_head(_ROWS_SPEC, "1-0")
+
+opal/tools/state-tool/tests/test_state_tool_run_log.py:950: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/state-tool/tests/test_state_tool_run_log.py:908: in _assert_schema_variant_matches_head
+    self.assertEqual(code_a, 0, f"S-9({label}) HEAD init 실패 — {out_a!r} {err_a!r}")
+E   AssertionError: 2 != 0 : S-9(1-0) HEAD init 실패 — '{"ok": false, "command": "init", "error": "date_tool_failed", "message": "exit=1, stderr=node:internal/modules/cjs/loader:1478\\n  throw err;\\n  ^\\n\\nError: Cannot find module \'/Users/iskang/.opal/tools/date/date.js\'\\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1475:15)\\n    at wrapResolveFilename (node:internal/modules/cjs/loader:1048:27)\\n    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1072:10)\\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1093:12)\\n    at Module._load (node:internal/modules/cjs/loader:1261:25)\\n    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)\\n    at Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)\\n    at node:internal/main/run_main_module:33:47 {\\n  code: \'MODULE_NOT_FOUND\',\\n  requireStack: []\\n}\\n\\nNode.js v25.8.2", "transition_action": "blocked", "report_type": "decision_request", "next_action": "exit=1, stderr=node:internal/modules/cjs/loader:1478\\n  throw err;\\n  ^\\n\\nError: Cannot find module \'/Users/iskang/.opal/tools/date/date.js\'\\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1475:15)\\n    at wrapResolveFilename (node:internal/modules/cjs/loader:1048:27)\\n    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1072:10)\\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1093:12)\\n    at Module._load (node:internal/modules/cjs/loader:1261:25)\\n    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)\\n    at Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)\\n    at node:internal/main/run_main_module:33:47 {\\n  code: \'MODULE_NOT_FOUND\',\\n  requireStack: []\\n}\\n\\nNode.js v25.8.2"}' ''
+_ TestOffModeDurationPathByteIdentical.test_schema_1_1_mark_advance_match_head _
+
+self = <test_state_tool_run_log.TestOffModeDurationPathByteIdentical testMethod=test_schema_1_1_mark_advance_match_head>
+
+    def test_schema_1_1_mark_advance_match_head(self):
+>       self._assert_schema_variant_matches_head(_ROWS_SPEC_11, "1-1")
+
+opal/tools/state-tool/tests/test_state_tool_run_log.py:953: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/state-tool/tests/test_state_tool_run_log.py:908: in _assert_schema_variant_matches_head
+    self.assertEqual(code_a, 0, f"S-9({label}) HEAD init 실패 — {out_a!r} {err_a!r}")
+E   AssertionError: 2 != 0 : S-9(1-1) HEAD init 실패 — '{"ok": false, "command": "init", "error": "date_tool_failed", "message": "exit=1, stderr=node:internal/modules/cjs/loader:1478\\n  throw err;\\n  ^\\n\\nError: Cannot find module \'/Users/iskang/.opal/tools/date/date.js\'\\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1475:15)\\n    at wrapResolveFilename (node:internal/modules/cjs/loader:1048:27)\\n    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1072:10)\\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1093:12)\\n    at Module._load (node:internal/modules/cjs/loader:1261:25)\\n    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)\\n    at Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)\\n    at node:internal/main/run_main_module:33:47 {\\n  code: \'MODULE_NOT_FOUND\',\\n  requireStack: []\\n}\\n\\nNode.js v25.8.2", "transition_action": "blocked", "report_type": "decision_request", "next_action": "exit=1, stderr=node:internal/modules/cjs/loader:1478\\n  throw err;\\n  ^\\n\\nError: Cannot find module \'/Users/iskang/.opal/tools/date/date.js\'\\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1475:15)\\n    at wrapResolveFilename (node:internal/modules/cjs/loader:1048:27)\\n    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1072:10)\\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1093:12)\\n    at Module._load (node:internal/modules/cjs/loader:1261:25)\\n    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)\\n    at Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)\\n    at node:internal/main/run_main_module:33:47 {\\n  code: \'MODULE_NOT_FOUND\',\\n  requireStack: []\\n}\\n\\nNode.js v25.8.2"}' ''
+_ TestSchema10And11WithoutRunLogBlockUnchanged.test_schema_1_0_task_without_run_log_block _
+
+self = <test_state_tool_run_log.TestSchema10And11WithoutRunLogBlockUnchanged testMethod=test_schema_1_0_task_without_run_log_block>
+
+    def test_schema_1_0_task_without_run_log_block(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            task = _mktask(tmp, name="137-s9-schema-1-0")
+            code, out, err, _ = _run([
+                "init", str(task), "--skill", "oppl", "--mode", "agentic",
+                "--rows-spec", _ROWS_SPEC_KEYLESS, "--run-log-mode", "off",
+            ])
+            self.assertEqual(code, 0, f"TASK-137.S-9 1.0 init 실패 — {out!r} {err!r}")
+            self.assertEqual(_read_state(task).get("schema_version"), "1.0")
+    
+            self._assert_completeness_is_empty(task, "1.0")
+>           self._assert_transition_path_unchanged(
+                task, "1.0", ["--row", "1"],
+                _OFF_MODE_ADVANCE_KEYS_KEYLESS, _OFF_MODE_MARK_KEYS_KEYLESS, "1.0")
+
+opal/tools/state-tool/tests/test_state_tool_run_log.py:1749: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/state-tool/tests/test_state_tool_run_log.py:1733: in _assert_transition_path_unchanged
+    self.assertFalse((pathlib.Path(task) / "run").exists(),
+E   AssertionError: True is not false : TASK-137.S-9 1.0 run_log 없는 태스크에 run 디렉터리가 생성됨
+_ TestSchema10And11WithoutRunLogBlockUnchanged.test_schema_1_1_task_without_run_log_block _
+
+self = <test_state_tool_run_log.TestSchema10And11WithoutRunLogBlockUnchanged testMethod=test_schema_1_1_task_without_run_log_block>
+
+    def test_schema_1_1_task_without_run_log_block(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            spec_path = _write_keyed_pipeline(tmp)
+            task = _mktask(tmp, name="137-s9-schema-1-1")
+            code, out, err, _ = _init_keyed(task, spec_path, run_log_mode="off")
+            self.assertEqual(code, 0, f"TASK-137.S-9 1.1 init 실패 — {out!r} {err!r}")
+            self.assertEqual(_read_state(task).get("schema_version"), "1.1")
+    
+            self._assert_completeness_is_empty(task, "1.1")
+>           self._assert_transition_path_unchanged(
+                task, "1.1", ["--task-step", "execute.impl_a"],
+                _OFF_MODE_ADVANCE_KEYS_KEYED, _OFF_MODE_MARK_KEYS_KEYED, "1.1")
+
+opal/tools/state-tool/tests/test_state_tool_run_log.py:1762: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/state-tool/tests/test_state_tool_run_log.py:1733: in _assert_transition_path_unchanged
+    self.assertFalse((pathlib.Path(task) / "run").exists(),
+E   AssertionError: True is not false : TASK-137.S-9 1.1 run_log 없는 태스크에 run 디렉터리가 생성됨
+=========================== short test summary info ============================
+FAILED opal/tools/state-tool/tests/test_state_tool_run_log.py::TestOffModeTransitionUnaffected::test_transition_without_run_log_block_is_unchanged
+FAILED opal/tools/state-tool/tests/test_state_tool_run_log.py::TestOffModeDurationPathByteIdentical::test_schema_1_0_mark_advance_match_head
+FAILED opal/tools/state-tool/tests/test_state_tool_run_log.py::TestOffModeDurationPathByteIdentical::test_schema_1_1_mark_advance_match_head
+FAILED opal/tools/state-tool/tests/test_state_tool_run_log.py::TestSchema10And11WithoutRunLogBlockUnchanged::test_schema_1_0_task_without_run_log_block
+FAILED opal/tools/state-tool/tests/test_state_tool_run_log.py::TestSchema10And11WithoutRunLogBlockUnchanged::test_schema_1_1_task_without_run_log_block
+5 failed, 188 passed, 93 subtests passed in 113.58s (0:01:53)

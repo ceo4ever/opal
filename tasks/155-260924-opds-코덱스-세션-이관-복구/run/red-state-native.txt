@@ -1,0 +1,31 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_ TestS11OwnershipSessionIntegration.test_codex_only_advance_fills_lease_owner_and_run_log_actor _
+
+self = <test_state_tool_ownership.TestS11OwnershipSessionIntegration testMethod=test_codex_only_advance_fills_lease_owner_and_run_log_actor>
+
+    def test_codex_only_advance_fills_lease_owner_and_run_log_actor(self):
+        """중립 export 없는 Codex CLI 전이가 native 신원으로 lease와 사건을 기록한다."""
+        native_id = "15500000-0000-4000-8000-000000000001"
+        init_result = _run_at(
+            self.task_path,
+            ["init", str(self.task_path), "--skill", "opds", "--mode", "agentic",
+             "--task-title", "Codex native identity", "--rows-spec", SIMPLE_ROWS_SPEC,
+             "--run-log-mode", "shadow"],
+        )
+        self.assertEqual(init_result.returncode, 0, init_result.stdout + init_result.stderr)
+        advanced = _run_at(
+            self.task_path,
+            ["advance", str(self.task_path), "--task-step-id", "1"],
+            env={"CODEX_SESSION_ID": native_id},
+        )
+        self.assertEqual(advanced.returncode, 0, advanced.stdout + advanced.stderr)
+        lease_file = self.task_path / "run/.runtime/owner.json"
+>       self.assertTrue(lease_file.exists(), advanced.stdout + advanced.stderr)
+E       AssertionError: False is not true : {"ok": true, "command": "advance", "row_id": 1, "stage": "TASK", "item": "작업", "status": "in_progress", "timestamp": "2026-09-24 15:03:56", "auto_approved": [], "todo_mirror": {"action": "update", "todos": [{"id": "stage:TASK", "content": "TASK 단계", "activeForm": "TASK 단계 진행 중", "status": "in_progress"}, {"id": "stage:PLAN", "content": "PLAN 단계", "activeForm": "PLAN 단계 진행 중", "status": "pending"}, {"id": "stage:EXECUTE", "content": "EXECUTE 단계", "activeForm": "EXECUTE 단계 진행 중", "status": "pending"}, {"id": "stage:CLOSE", "content": "CLOSE 단계", "activeForm": "CLOSE 단계 진행 중", "status": "pending"}]}, "run_log": {"status": "active", "pending": 0, "active_run_id": "run_b4a83a38-05ac-4ed6-affe-ad3fdfc9ef3f"}}
+E       {"warning": "ownership_session_id_missing", "message": "OPAL_SESSION_ID가 없어 task lease를 claim하지 않았습니다. 상태 전이는 그대로 진행됩니다."}
+
+opal/tools/state-tool/tests/test_state_tool_ownership.py:182: AssertionError
+=========================== short test summary info ============================
+FAILED opal/tools/state-tool/tests/test_state_tool_ownership.py::TestS11OwnershipSessionIntegration::test_codex_only_advance_fills_lease_owner_and_run_log_actor
+1 failed, 8 deselected in 0.41s

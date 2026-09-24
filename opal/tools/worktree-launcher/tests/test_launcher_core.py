@@ -42,7 +42,10 @@ def test_success_path_sets_worktree_session_owned_only_after_both_receipts(tmp_p
         command="claude",
     )
 
-    assert adapter.calls == [(hub.worktree_root, "claude")]
+    assert len(adapter.calls) == 1
+    assert adapter.calls[0][0] == hub.worktree_root
+    import shlex
+    assert shlex.split(adapter.calls[0][1])[-3:] == ["session-launch", "--command", "claude"]
     assert result["status"] == "worktree_session_owned"
 
     data = read_meta(hub.meta_path)
@@ -176,7 +179,7 @@ def test_no_dual_owner_or_orphan_session_launching_across_all_paths(tmp_path):
         if eo["state"] == "hub_owned":
             assert eo["owner_session_id"] is None, f"{name}: hub_owned인데 owner 잔존(orphan)"
         if eo["state"] == "worktree_session_owned":
-            assert eo["owner_session_id"] is not None
+            assert eo["owner_session_id"] is None  # no child claim in this fixture
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -514,12 +517,12 @@ def _patch_lease_seams(monkeypatch, launcher_core, order, *, handoff_result=None
     handoff_calls = []
     cancel_calls = []
 
-    def _fake_handoff(task_path, worktree_root):
+    def _fake_handoff(task_path, worktree_root, session_id=None):
         order.append("lease_handoff")
         handoff_calls.append((str(task_path), str(worktree_root)))
         return dict(handoff_result if handoff_result is not None else {"ok": True})
 
-    def _fake_cancel(task_path):
+    def _fake_cancel(task_path, session_id=None):
         order.append("lease_handoff_cancel")
         cancel_calls.append(str(task_path))
         if cancel_raises is not None:
@@ -787,3 +790,62 @@ def test_s9_lease_owner_returns_to_the_hub_session_on_launch_failure(tmp_path, m
     assert record["status"] == "active", record
     assert record.get("handoff_to_worktree_root") is None, record
     assert lease.classify(record, LEASE_HUB_SESSION) == "current_session_owned"
+
+
+def test_codex_preflight_missing_identity_is_read_only(tmp_path, monkeypatch):
+    from worktree_launcher import launcher_core
+    monkeypatch.setattr(launcher_core.ownership_core, 'resolve_session_id', lambda env: None)
+    hub = build_launcher_hub(tmp_path, prior_state='hub_owned')
+    before = hub.meta_path.read_bytes()
+    adapter = _FakeAdapter({})
+    result = launcher_core.run(adapter, hub_root=hub.hub, task=hub.task,
+                               worktree_root=hub.worktree_root, command='codex')
+    assert result['error'] == 'session_id_unresolved'
+    assert result['cause'] == 'identity_preflight'
+    assert adapter.calls == []
+    assert hub.meta_path.read_bytes() == before
+
+
+def test_codex_child_claim_before_launcher_final_uses_child_owner(tmp_path):
+    from worktree_launcher import launcher_core
+    from ownership_tool import lease
+    hub = build_launcher_hub(tmp_path, prior_state='hub_owned')
+    task_path = hub.worktree_root / 'tasks' / '220-test'
+    task_path.mkdir(parents=True)
+    meta = read_meta(hub.meta_path)
+    meta['task_path'] = str(task_path)
+    hub.meta_path.write_text(json.dumps(meta))
+    assert lease.claim(task_path, session_id='hub', claim_source='state_transition')['ok']
+
+    class EarlyChild(_FakeAdapter):
+        def launch(self, root, command):
+            assert lease.claim(task_path, session_id='child', claim_source='session_start', claimant_root=root)['ok']
+            return super().launch(root, command)
+
+    adapter = EarlyChild(load_launcher_fixture('fake_process-success.json', hub.hub, hub.wt_parent))
+    result = launcher_core.run(adapter, hub_root=hub.hub, task=hub.task,
+                               worktree_root=hub.worktree_root, command='codex', owner_session_id='hub')
+    assert result['ok'], result
+    assert read_meta(hub.meta_path)['execution_ownership']['owner_session_id'] == 'child'
+
+
+def test_codex_foreign_live_owner_stops_before_registry_mutation(tmp_path):
+    from worktree_launcher import launcher_core
+    from ownership_tool import lease
+    hub = build_launcher_hub(tmp_path, prior_state='hub_owned')
+    task_path = hub.worktree_root / 'tasks/220-foreign'
+    task_path.mkdir(parents=True)
+    meta = read_meta(hub.meta_path)
+    meta['task_path'] = str(task_path)
+    hub.meta_path.write_text(json.dumps(meta))
+    assert lease.claim(task_path, session_id='other-live-owner', claim_source='state_transition')['ok']
+    before = hub.meta_path.read_bytes()
+    owner = task_path / 'run/.runtime/owner.json'
+    before_owner = owner.read_bytes()
+    adapter = _FakeAdapter({})
+    result = launcher_core.run(adapter, hub_root=hub.hub, task=hub.task,
+                               worktree_root=hub.worktree_root, command='codex', owner_session_id='hub')
+    assert result['error'] == 'foreign_session_owned'
+    assert adapter.calls == []
+    assert hub.meta_path.read_bytes() == before
+    assert owner.read_bytes() == before_owner

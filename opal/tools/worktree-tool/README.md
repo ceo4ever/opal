@@ -292,3 +292,11 @@ registry meta의 `attribution_state`가 판정에 들어간다.
 - `baseBranchOverrides`는 `resolve_base_ref`의 `declared` 자리에 값을 넣을 뿐 **3단 폴백 순서를 바꾸지 않는다.**
 - `remove`는 브랜치를 삭제하지 않는다 — 머지 후 브랜치 정리는 사용자의 몫이다.
 - `.gitignore`·캐시 볼륨·code-scan exclude·동시 슬롯 수는 전부 비차단 진단이라 `warnings[]`를 읽지 않으면 문제가 있어도 알 수 없다.
+
+## Launcher의 실제 새 owner 등록 (task 155)
+
+`ownership-set --owner-from-lease`는 `worktree_session_owned`와 함께 사용하며
+`--owner-session-id`와는 상호 배타다. registry lock 안에서 발급된 canonical task의
+live lease를 읽고 해당 owner를 기록한다. pending·만료·부재이면 owner를 비워
+늦게 시작하는 자식의 공개 SessionStart 등록을 허용한다. registry private writer는 없다.
+checkpoint 신원도 ownership-tool resolver를 사용해 Codex native ID를 지원한다.

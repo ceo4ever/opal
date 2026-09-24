@@ -542,3 +542,13 @@ opal/                                    ← 이 저장소
 │   └── architecture-diagram/            정본 10계층 구조도 HTML (태스크 086)
 └── .opal/                               이 프로젝트의 PM 프로필 + 메모리 인덱스(MEMORY.json)
 ```
+
+### Codex identity 연결 (task 155)
+
+플랫폼 env는 ownership-tool의 Claude/Codex adapter가 소유한다. core resolver는
+OPAL 중립 ID 우선과 기존 Claude 우선을 보존하고 native Codex root session을 해석한다.
+훅 payload-only 경계는 유지한다. launcher는 시작 ID를 고정해 handoff/cancel에 명시 전달하고,
+공개 session-launch가 부모 신원을 제거한다. 설치된 Codex bootstrap의 codex-start는 실제
+새 native ID를 payload로 정규화하여 등록·claim·heartbeat를 수행한다. 최종 registry 전이는
+worktree-tool ownership-set --owner-from-lease 경유이며, pending일 때 부모 ID를 owner로
+남기지 않는다. 실제 기동/lease/registry 증거가 없으면 E2E 완료로 판정하지 않는다.

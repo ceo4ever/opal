@@ -108,7 +108,10 @@ def test_generic_adapter_real_launch_through_launcher_core_updates_registry(tmp_
 
     # adapter seam이 실제로 1회 호출됐고, launcher_core가 넘긴 worktree_root가 그대로
     # generic._run_subprocess의 cwd로 전달됐다(render_template → shlex.split → subprocess 경계).
-    assert adapter.calls == [(hub.worktree_root, "claude")]
+    assert len(adapter.calls) == 1
+    assert adapter.calls[0][0] == hub.worktree_root
+    import shlex
+    assert shlex.split(adapter.calls[0][1])[-3:] == ["session-launch", "--command", "claude"]
     assert recorded["cwd"] == str(hub.worktree_root)
     assert "--cwd" in recorded["args"] or any(str(hub.worktree_root) in a for a in recorded["args"])
 
@@ -175,7 +178,10 @@ def test_orca_adapter_real_launch_failure_reverts_registry_atomically(tmp_path, 
         adapter, hub_root=hub.hub, task=hub.task, worktree_root=hub.worktree_root, command="claude"
     )
 
-    assert adapter.calls == [(hub.worktree_root, "claude")]
+    assert len(adapter.calls) == 1
+    assert adapter.calls[0][0] == hub.worktree_root
+    import shlex
+    assert shlex.split(adapter.calls[0][1])[-3:] == ["session-launch", "--command", "claude"]
     assert result["ok"] is False
     assert result["failure_reason"] == "launch_failed"
 
